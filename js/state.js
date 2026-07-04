@@ -1,0 +1,410 @@
+"use strict";
+/* ============================================================
+   STATE + LocalStorage + กติกากลางของเกม
+   (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
+   ============================================================ */
+const STORAGE_KEY = 'petVocabAdventure_v1';
+
+const CURE_COST      = 1000;               // ค่ารักษาป่วย
+const HUNGRY_SICK_MS = 2*60*60*1000;       // หิวเกิน 2 ชม. ไม่ได้กิน → ป่วย
+const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 6 ชม. → ป่วย (ยกเว้นมังกร/มีแอร์)
+const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
+
+const DEFAULT_STATE = {
+  student:null,                       // {first, last, grade}
+  quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
+  quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
+  rp:0,                               // Rank Points
+  coins:0,
+  daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
+  sound:true, totalMatches:0,
+  owned:[],                           // ไอเทมที่ซื้อแล้ว (ตู้เสื้อผ้ารวม ใช้ได้ทุกตัว)
+  pets:[],                            // สัตว์ที่เลี้ยงอยู่ทั้งหมด (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+  active:0,                           // ตัวที่กำลังดูแลอยู่
+  home:null,                          // 'basic' | 'medium' | 'castle'
+  ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
+  bills:{},                           // บิลรายเดือน: {maint:{month:'YYYY-MM', due, paid}, ...} (ค่าไฟ/น้ำ/เน็ต/ขยะ เสียบเพิ่มได้ · trash มี field fine สะสมค่าปรับ)
+  pendingRuin:null,                   // บ้านเพิ่งพัง (id บ้าน) — ให้ UI โชว์ฉากบ้านพังแล้วเคลียร์
+  powerCut:false,                     // ถูกตัดไฟ (ค้างค่าไฟข้ามเดือน) — บ้านมืด แอร์ใช้ไม่ได้
+  transformerBought:false,            // ซื้อหม้อแปลงใหม่แล้ว รอจ่ายบิลค้างเพื่อให้ไฟกลับมา
+  waterCut:false,                     // ถูกตัดน้ำ (ค้างค่าน้ำข้ามเดือน) — สัตว์ขาดน้ำจนป่วย
+  plumbingBought:false,               // จ่ายค่าติดตั้งระบบน้ำใหม่แล้ว รอจ่ายบิลค้างเพื่อให้น้ำกลับมา
+  phone:false,                        // มีมือถือ (โบนัสจับคู่ +5/ข้อ · ค่าเน็ต 1,000/เดือน)
+  netCut:false,                       // ถูกตัดเน็ต (ค้างค่าเน็ตข้ามเดือน) — โบนัสมือถือระงับ
+  farm:[],                            // ต้นไม้ที่ปลูกอยู่: {id:'orange'..., plantedAt:ts} ไม่จำกัดจำนวน
+  computer:false,                     // มีคอมพิวเตอร์ (รายได้ +0.01 เหรียญ/วิ · ค่าบริการข้อมูล 5,000/เดือน)
+  compSince:null,                     // timestamp ที่ตกเหรียญรายได้คอมครั้งล่าสุด (เศษวินาทีสะสมต่อจากนี้)
+  compEarned:0,                       // เหรียญที่คอมทำให้ทั้งหมด (ไว้โชว์)
+  dataCut:false,                      // ถูกตัดบริการข้อมูล (ค้างข้ามเดือน) — รายได้คอมหยุดนิ่ง
+  collection:[],                      // สินค้าสะสมที่ถือครอง (array of id — มีชิ้นซ้ำได้)
+  listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
+  tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
+  rankKey:null,                       // key แรงค์ล่าสุดที่ฉลองไปแล้ว (ไว้เทียบเลื่อน/ลด — ดู refreshRank)
+};
+
+/* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
+   อาหารธรรมดาอิ่มถึงมื้อถัดไป (3 ชม.) / feast อิ่มข้าม 1 มื้อ (6 ชม.) ---------- */
+const SLOT_MS = 3*60*60*1000;
+function currentSlotStart(now){
+  const d = new Date(now);
+  d.setMinutes(0,0,0);
+  d.setHours(Math.floor(d.getHours()/3)*3);
+  return d.getTime();
+}
+function nextSlotStart(now){ return currentSlotStart(now) + SLOT_MS; }
+
+function newPet(type){
+  return {type, level:1, exp:0,
+          equipped:{head:null, face:null, neck:null},
+          sick:false, sickCause:null,
+          fedUpTo:0,        // timestamp มื้อที่กินครอบคลุมแล้ว (0 = ยังไม่เคยกิน)
+          heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
+          thirstFrom:null,  // เริ่มนับขาดน้ำสะสมตั้งแต่เมื่อไหร่ (null = น้ำปกติ)
+          rainSickDay:null};// วันที่ป่วยเพราะฝนล่าสุด (กันป่วยซ้ำในฝนรอบเดียวกัน)
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const old = JSON.parse(raw);
+      const s = Object.assign(structuredClone(DEFAULT_STATE), old);
+      /* ---- migration เซฟรุ่นเก่า (สัตว์ตัวเดียว) → รุ่นใหม่ (หลายตัว) ---- */
+      if(!Array.isArray(s.pets)) s.pets = [];
+      if(old.pet !== undefined && !Array.isArray(old.pets)){
+        if(old.pet && PETS[old.pet]){
+          const now = Date.now();
+          let eq = old.equipped || {head:null, face:null, neck:null};
+          if(Array.isArray(old.wearing)){          // เซฟช่วงทดลองระบบชุดผสม
+            eq = {head:null, face:null, neck:null};
+            const it = ITEMS.find(i=>i.id === old.wearing[0]);
+            if(it) eq[it.slot] = it.id;
+          }
+          const p = newPet(old.pet);
+          p.level = old.level || 1; p.exp = old.exp || 0;
+          p.equipped = eq;
+          p.sick = !!old.sick; p.sickCause = old.sick ? 'hunger' : null;
+          // ความหิวระบบเก่า (เกจ 0-100) → ระบบมื้อ: ถ้ายังไม่ท้องว่างถือว่ากินมื้อนี้แล้ว
+          p.fedUpTo = (old.hunger == null || old.hunger > 0) ? currentSlotStart(now) : 0;
+          s.pets = [p];
+        }
+        s.active = 0;
+      }
+      for(const k of ['pet','level','exp','hunger','lastTick','hungrySince','sick','fullUntil','equipped','wearing'])
+        delete s[k];
+      // ทำความสะอาดข้อมูลสัตว์ทุกตัว (กันสัตว์ที่ถูกตัดออก/ฟิลด์หาย)
+      s.pets = s.pets.filter(p=>p && PETS[p.type]);
+      for(const p of s.pets){
+        if(!p.equipped) p.equipped = {head:null, face:null, neck:null};
+        // ใส่ได้ทีละ 1 ชิ้น: ถ้าติดมาหลายชิ้นให้เหลือชิ้นเดียว (หัว > หน้า > คอ)
+        const firstWorn = p.equipped.head ? 'head' : p.equipped.face ? 'face' : p.equipped.neck ? 'neck' : null;
+        for(const slot of ['head','face','neck']) if(slot !== firstWorn) p.equipped[slot] = null;
+        if(p.fedUpTo == null) p.fedUpTo = 0;
+        if(p.heatFrom === undefined) p.heatFrom = null;
+        if(p.thirstFrom === undefined) p.thirstFrom = null;
+        if(p.rainSickDay === undefined) p.rainSickDay = null;
+        if(p.sickCause === undefined) p.sickCause = p.sick ? 'hunger' : null;
+      }
+      if(s.active >= s.pets.length) s.active = 0;
+      if(!s.daily || typeof s.daily !== 'object') s.daily = {date:'', coins:0};
+      if(!s.bills || typeof s.bills !== 'object') s.bills = {};
+      if(s.pendingRuin === undefined) s.pendingRuin = null;
+      // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
+      if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
+      if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
+      if(s.home && !s.bills.water) s.bills.water = {month: ymStr(Date.now()), due: 0, paid: 0};
+      // ค่าจัดการขยะ (ข้อ 13): เซฟเก่ามีบ้านไม่มีบิลขยะ → ฟรีเดือนนี้ / ไม่มีบ้าน → ล้างบิลขยะ
+      if(s.home && !s.bills.trash) s.bills.trash = {month: ymStr(Date.now()), due: 0, paid: 0, fine: 0};
+      if(!s.home){ s.powerCut = false; s.transformerBought = false; s.waterCut = false; s.plumbingBought = false; delete s.bills.trash; }
+      // เซฟเก่าที่มีมือถือแต่ยังไม่มีบิลเน็ต → เริ่มเดือนนี้แบบฟรี / ไม่มีมือถือ → ล้างสถานะตัดเน็ต
+      if(s.phone && !s.bills.net) s.bills.net = {month: ymStr(Date.now()), due: 0, paid: 0};
+      if(!s.phone){ s.netCut = false; delete s.bills.net; }
+      // คอมพิวเตอร์ (ข้อ 11): เซฟเก่ามีคอมไม่มีบิล data → ฟรีเดือนนี้ / ไม่มีคอม → ล้างสถานะ
+      if(s.computer && !s.bills.data) s.bills.data = {month: ymStr(Date.now()), due: 0, paid: 0};
+      if(s.computer && s.compSince == null) s.compSince = Date.now();
+      if(!s.computer){ s.dataCut = false; s.compSince = null; delete s.bills.data; }
+      if(typeof s.compEarned !== 'number') s.compEarned = 0;
+      // สวนผลไม้ (ข้อ 12): เซฟเก่าไม่มีสวน → เริ่มว่าง / คัดต้นที่ข้อมูลเสียทิ้ง
+      if(!Array.isArray(s.farm)) s.farm = [];
+      s.farm = s.farm.filter(t=>t && fruitInfo(t.id) && typeof t.plantedAt === 'number');
+      // สินค้าสะสม + ตลาดขายต่อ: เซฟเก่าไม่มี → เริ่มว่าง / คัดข้อมูลที่เสียทิ้ง
+      if(!Array.isArray(s.collection)) s.collection = [];
+      s.collection = s.collection.filter(id=>collectInfo(id));
+      if(!Array.isArray(s.listings)) s.listings = [];
+      s.listings = s.listings.filter(l=>l && collectInfo(l.id) && typeof l.price === 'number' && typeof l.listedAt === 'number');
+      if(!Array.isArray(s.tradeSold)) s.tradeSold = [];
+      return s;
+    }
+  }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }
+  return structuredClone(DEFAULT_STATE);
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+/* ---------- helpers ---------- */
+function activePet(){ return state.pets[state.active] || null; }
+function petStage(p){
+  p = p || activePet();
+  if(!p) return null;
+  return p.level >= 3 ? 'adult' : (p.level === 2 ? 'baby' : 'egg');
+}
+function isAdult(p){ return petStage(p) === 'adult'; }
+function abilityOn(p){ p = p || activePet(); return !!p && petStage(p) === 'adult' && !p.sick; }
+function hasPetType(type){ return state.pets.some(p=>p.type === type); }
+
+/* ---------- เหรียญ: สะสมทั้งหมด + ที่หาได้วันนี้ ---------- */
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function dailyTick(){
+  if(state.daily.date !== todayStr()) state.daily = {date:todayStr(), coins:0};
+}
+function addCoins(n){        // ใช้ตอน "ได้" เหรียญเท่านั้น (ตอนจ่ายหักตรงๆ ได้เลย)
+  dailyTick();
+  state.coins += n;
+  state.daily.coins += n;
+  // การเลื่อน/ลดแรงค์ตรวจรวมที่ refreshRank() (เรียกใน careTick) เพราะ net worth
+  // เปลี่ยนได้จากหลายทาง (ได้เหรียญ/ซื้อ-ขายทรัพย์สิน/จ่ายบิล) — ตรวจที่จุดนิ่งจุดเดียวกันเที่ยงตรงกว่า
+}
+
+/* ============================================================
+   มูลค่าทรัพย์สินสุทธิ (net worth) — ฐานของระบบแรงค์
+   = เหรียญคงเหลือ + มูลค่าทรัพย์สินที่ถือครองอยู่ทั้งหมด
+   ทรัพย์สินทุกชิ้นที่ยังถืออยู่คิด "ราคาเต็มที่ซื้อ" (ราคาขายคืนใช้ตอนขายจริงเท่านั้น
+   ซึ่งได้กลับมาเป็นเหรียญไปแล้ว) → ซื้อแล้ว net worth เท่าเดิมเป๊ะ แรงค์ไม่ตก
+   ============================================================ */
+function assetValue(){
+  let v = 0;
+  for(const p of state.pets){ const c = PETS[p.type]; if(c) v += c.price; }               // สัตว์เลี้ยง
+  if(state.home){ const h = homeInfo(state.home); if(h) v += h.price; }                    // ที่พัก
+  if(state.ac) v += AC_PRICE + AC_INSTALL;                                                 // แอร์ (รวมติดตั้ง)
+  for(const id of state.owned){ const it = ITEMS.find(i=>i.id === id); if(it) v += it.price; } // เสื้อผ้าในตู้
+  if(state.phone) v += PHONE_PRICE;                                                        // มือถือ (ราคาเต็ม)
+  if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
+  for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
+  for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
+  for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)
+  return v;
+}
+function netWorth(){ return state.coins + assetValue(); }
+
+/* ตรวจการเปลี่ยนแรงค์ที่ "จุดนิ่ง" (เรียกใน careTick หลัง net worth นิ่งแล้ว):
+   เลื่อนข้ามแรงค์ใหญ่ → ฉากอลังการ · เลื่อนขั้นย่อย → toast · ลดลง → เงียบๆ */
+function refreshRank(){
+  const after = rankInfo(netWorth());
+  if(state.rankKey == null){ state.rankKey = after.key; return; }   // ครั้งแรก/เซฟเก่า — จำไว้เฉยๆ ไม่ฉลอง
+  if(after.key > state.rankKey){
+    const before = rankFromKey(state.rankKey);
+    if(after.idx > before.idx){
+      setTimeout(()=>showRankUp(before, after), 700);              // ข้ามแรงค์ใหญ่ → ฉากอลังการ
+    }else{
+      setTimeout(()=>{ sfx.levelup(); toast(`🎖️ เลื่อนขั้นเป็น ${after.rank.emoji} ${after.label}!`, 2400); }, 700);
+    }
+  }
+  state.rankKey = after.key;   // อัปเดตทั้งเลื่อนขึ้น (ฉลองแล้ว) และลดลง (เงียบๆ)
+}
+
+/* ---------- ความหิว (มื้อทุก 3 ชม.) + ความร้อน (ป่วยทุก 6 ชม.) ---------- */
+function heatProtected(){
+  if(state.powerCut) return false;    // ถูกตัดไฟ → แอร์ใช้ไม่ได้ (แม้ปราสาทที่มีแอร์ในตัว)
+  return state.home === 'castle' || (state.home === 'medium' && state.ac);
+}
+function rainProtected(){             // กันฝนได้ต้องมีบ้าน "สภาพดี" (บ้านทรุดโทรมหลังคารั่ว)
+  return !!state.home && !homeDecayed();
+}
+function petHungry(p){ return p.level >= 2 && p.fedUpTo < currentSlotStart(Date.now()); }
+function heatPct(p){
+  if(p.heatFrom == null) return 0;
+  return Math.min(100, (Date.now() - p.heatFrom)/HEAT_SICK_MS*100);
+}
+
+/* ============================================================
+   เครื่องยนต์บิลรายเดือน (กลาง — ค่าบำรุงบ้านตอนนี้ / ค่าไฟ-น้ำ-เน็ต เสียบเพิ่มได้)
+   state.bills[id] = {month:'YYYY-MM', due, paid}
+   ============================================================ */
+function ymStr(now){
+  const d = new Date(now);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+function billOutstanding(id){
+  const b = state.bills[id];
+  return b ? Math.max(0, b.due - b.paid) : 0;
+}
+/* ทะเบียนสาธารณูปโภครายเดือน: active() = ต้องออกบิลไหม · cutKey = ถูกตัดแล้ว
+   fixKey = ต้องซื้ออุปกรณ์ซ่อมก่อนจ่ายบิลค้าง (null = จ่ายค้างได้เลย)
+   (ข้อความ/ปุ่ม UI อยู่ใน UTILITY_UI ที่ ui.js) */
+const UTILITIES = {
+  elec:  {cost: elecCost,  cutKey: 'powerCut', fixKey: 'transformerBought', active: ()=>!!state.home},
+  water: {cost: waterCost, cutKey: 'waterCut', fixKey: 'plumbingBought',    active: ()=>!!state.home},
+  net:   {cost: netCost,   cutKey: 'netCut',   fixKey: null,                active: ()=>!!state.phone},
+  data:  {cost: dataCost,  cutKey: 'dataCut',  fixKey: null,                active: ()=>!!state.computer},
+};
+const HOME_UTILITIES = ['elec','water'];   // ชนิดที่แสดงในการ์ดบ้าน (เน็ตอยู่การ์ดมือถือ)
+/* บ้านเสื่อมสภาพ = ค้างค่าบำรุงตั้งแต่วันที่ 5 ของเดือนเป็นต้นไป (คำนวณสด ไม่ต้องเซฟ) */
+function homeDecayed(){
+  return !!state.home && billOutstanding('maint') > 0 && new Date(Date.now()).getDate() >= DECAY_DAY;
+}
+function billTick(now){
+  const ym = ymStr(now);
+  if(state.home){
+    const b = state.bills.maint;
+    if(!b || b.month !== ym){
+      if(b && b.due - b.paid > 0){
+        // ข้ามเข้าเดือนใหม่ทั้งที่ยังค้างจ่าย → บ้านพัง กลายเป็นคนไร้บ้าน
+        state.pendingRuin = state.home;
+        state.home = null;
+        state.ac = false;
+        delete state.bills.maint;
+      }else{
+        // วันที่ 1 ของเดือนใหม่ → ออกบิลรอบใหม่
+        state.bills.maint = {month: ym, due: maintCost(state.home), paid: 0};
+      }
+    }
+  }
+  /* ค่าจัดการขยะ (บิล id 'trash' — โครงคล้ายค่าบำรุง แต่ "ไม่ตัดบริการ/ไม่ทำบ้านพัง"):
+     ค้างข้ามเดือน → โดนค่าปรับ +TRASH_FINE ทบสะสม (จ่ายแบบ all-or-nothing เหมือน maint
+     จึง track ยอดค่าปรับสะสมใน b.fine ได้ตรงๆ — จ่ายครบ carry=0 ค่าปรับรีเซ็ตเอง) */
+  if(state.home){
+    const b = state.bills.trash;
+    if(!b || b.month !== ym){
+      const carry = b ? Math.max(0, b.due - b.paid) : 0;
+      const addFine  = carry > 0 ? TRASH_FINE : 0;
+      const prevFine = carry > 0 ? (b.fine || 0) : 0;   // จ่ายครบแล้ว (carry 0) ค่าปรับสะสมหายไป
+      state.bills.trash = {month: ym, due: carry + addFine + trashCost(state.home), paid: 0, fine: prevFine + addFine};
+    }
+  }
+  /* สาธารณูปโภค (ค่าไฟ/ค่าน้ำ/ค่าเน็ต): ค้างจ่ายข้ามเดือน → ถูกตัด
+     (บิลค้างทบเข้าบิลเดือนใหม่ ไม่หายไปไหน) ชนิดที่มี fixKey อุปกรณ์พังตอนโดนตัด
+     ต้องซื้อ/ติดตั้งใหม่ก่อน จ่ายบิลครบแล้วถึงกลับมาใช้ได้ */
+  for(const [id, u] of Object.entries(UTILITIES)){
+    if(u.active()){
+      const b = state.bills[id];
+      if(!b || b.month !== ym){
+        const carry = b ? Math.max(0, b.due - b.paid) : 0;
+        if(carry > 0 && !state[u.cutKey]){
+          state[u.cutKey] = true;
+          if(u.fixKey) state[u.fixKey] = false;
+        }
+        state.bills[id] = {month: ym, due: carry + u.cost(state.home), paid: 0};
+      }
+    }else{
+      delete state.bills[id];
+      state[u.cutKey] = false;
+      if(u.fixKey) state[u.fixKey] = false;
+    }
+  }
+  if(!state.home){ delete state.bills.maint; delete state.bills.trash; }
+}
+
+/* ---------- รายได้คอมพิวเตอร์ (ข้อ 11): +0.01 เหรียญ/วิ = ตกเหรียญเต็มทุก 100 วิ
+   ถูกตัดบริการข้อมูล → เข็มหยุดเดิน (compSince เลื่อนตามเวลา ไม่สะสม) ---------- */
+function compTick(now){
+  if(!state.computer || state.compSince == null) return;
+  if(state.dataCut){ state.compSince = now; return; }   // ถูกตัด → รายได้หยุดนิ่ง
+  const whole = Math.floor((now - state.compSince)/1000 * COMP_RATE);
+  if(whole > 0){
+    addCoins(whole);
+    state.compEarned += whole;
+    state.compSince += whole/COMP_RATE * 1000;          // เก็บเศษวินาทีไว้รอบถัดไป
+  }
+}
+
+/* ---------- ตลาดขายต่อสินค้าสะสม (ข้อใหม่): ลูกค้าจำลองมาซื้อของที่เราลงขาย
+   ตามเวลาที่ราคาเหมาะสม (ตั้งถูก = ขายไว) — จ่ายเงินเข้ากระเป๋าแล้วรอผู้เล่นรับทราบ ---------- */
+function marketTick(now){
+  if(!Array.isArray(state.listings) || !state.listings.length) return;
+  const remain = [];
+  for(const l of state.listings){
+    const c = collectInfo(l.id);
+    if(!c) continue;                                   // ของเสีย ทิ้ง
+    const dur = listingSellMs(l.price / c.price);
+    if(dur !== Infinity && (now - l.listedAt) >= dur){
+      addCoins(l.price);                               // มีลูกค้ามาซื้อ! เงินเข้ากระเป๋า
+      state.tradeSold.push({id: l.id, price: l.price, ts: now});
+    }else{
+      remain.push(l);
+    }
+  }
+  state.listings = remain;
+  if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
+}
+
+/* เดินระบบดูแลสัตว์ทุกตัวตามเวลาจริง (เรียกทุกครั้งที่วาดหน้า + ทุก 1 นาที) */
+function careTick(){
+  const now = Date.now();
+  compTick(now);          // ตกรายได้ค้างก่อน แล้วค่อยเช็กบิล/ตัดบริการ
+  billTick(now);
+  marketTick(now);        // ลูกค้ามาซื้อของสะสมที่เราลงขาย (net worth ขยับก่อน refreshRank)
+  for(const p of state.pets){
+    if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน
+    // หิวเกิน 2 ชม. โดยไม่ได้กินอะไรเลย → ป่วย
+    const slot = currentSlotStart(now);
+    if(!p.sick && p.fedUpTo < slot && (now - slot) >= HUNGRY_SICK_MS){
+      p.sick = true; p.sickCause = 'hunger';
+    }
+    // ความร้อนสะสม: มังกรทนร้อน / มีที่พักติดแอร์ = ปลอดภัย
+    if(p.type === 'dragon' || heatProtected()){
+      p.heatFrom = null;
+    }else{
+      if(p.heatFrom == null) p.heatFrom = now;
+      if(!p.sick && (now - p.heatFrom) >= HEAT_SICK_MS){
+        p.sick = true; p.sickCause = 'heat';
+        p.heatFrom = now;                        // เริ่มนับรอบใหม่หลังหายป่วย
+      }
+    }
+    // ฝนตกประจำวัน 19:00: ไม่มีบ้านสภาพดี → เปียกจนป่วยทันที (ป่วยครั้งเดียวต่อฝน 1 รอบ)
+    if(rainNow(now) && !rainProtected()){
+      const rainKey = new Date(now).toDateString();
+      if(!p.sick && p.rainSickDay !== rainKey){
+        p.sick = true; p.sickCause = 'rain';
+        p.rainSickDay = rainKey;
+      }
+    }
+    // ขาดน้ำสะสม: บ้านถูกตัดน้ำ → ครบ 6 ชม. ป่วย (โดนทุกชนิด มังกรก็ต้องกินน้ำ)
+    if(!state.waterCut){
+      p.thirstFrom = null;
+    }else{
+      if(p.thirstFrom == null) p.thirstFrom = now;
+      if(!p.sick && (now - p.thirstFrom) >= THIRST_SICK_MS){
+        p.sick = true; p.sickCause = 'thirst';
+        p.thirstFrom = now;                      // เริ่มนับรอบใหม่หลังหายป่วย
+      }
+    }
+  }
+  refreshRank();          // ตรวจเลื่อน/ลดแรงค์ตาม net worth ที่นิ่งแล้ว
+  saveState();
+}
+
+/* ---------- EXP / เลเวล (แยกรายตัว) ----------
+   ปรับให้เปลี่ยนช่วงวัยยากขึ้น: ฟักไข่/ลืมตา (Lv.2) ต้องสะสม 250 EXP
+   โตเต็มวัย (Lv.3) ต้องสะสมอีก 600 EXP — เลเวลถัดๆ ไปเลเวลละ 400 */
+function expNeed(level){
+  if(level === 1) return 250;
+  if(level === 2) return 600;
+  return 400;
+}
+function addExp(amount, p){
+  p = p || activePet();
+  if(!p || amount <= 0) return;
+  p.exp += amount;
+  while(p.exp >= expNeed(p.level)){
+    p.exp -= expNeed(p.level);
+    p.level++;
+    if(p.level === 2){
+      // เพิ่งฟักไข่/ลืมตา → เริ่มนับหิวและความร้อนตั้งแต่ตอนนี้
+      p.fedUpTo = currentSlotStart(Date.now());
+      p.heatFrom = null;
+      p.sick = false; p.sickCause = null;
+    }
+    showLevelUp(p);
+  }
+}
+
+/* ---------- Rank Points (แต้มความพยายามสะสม — โชว์ในหน้าสถิติ
+   แรงค์จริงยึดยอดเหรียญคงเหลือแล้ว ดู addCoins) ---------- */
+function addRP(n){
+  dailyTick();
+  state.rp += n;
+  saveState();
+}
