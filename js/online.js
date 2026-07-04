@@ -1,0 +1,155 @@
+"use strict";
+/* ============================================================
+   ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
+   - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง
+   - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
+   ------------------------------------------------------------
+   หลักการ "มีก็ใช้ ไม่มีก็ไม่พัง": โหลด Firebase SDK แบบ dynamic
+   ถ้าออฟไลน์/โหลดไม่สำเร็จ → Online.ready = false ตลอด
+   การ์ดเพื่อนถอยไปใช้เพื่อนจำลองเดิม เกมเล่นได้ครบทุกระบบ
+   ------------------------------------------------------------
+   โครงข้อมูลใน DB:
+   /presence/<id>    = {n:ชื่อ, g:ชั้น, act:กำลังทำอะไร, at:เวลา}  (ลบเองเมื่อหลุด)
+   /leaderboard/<id> = {n:ชื่อ, g:ชั้น, coins:เหรียญ, at:เวลา}
+   <id> = state.onlineId สุ่มครั้งเดียวต่อเครื่อง เก็บในเซฟ
+   ============================================================ */
+
+const Online = {
+  ready:false,      // ต่อ Firebase สำเร็จและกำลังเชื่อมต่ออยู่
+  db:null,
+  friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
+  board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
+  lastCoins:null,   // เหรียญล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำโดยไม่จำเป็น)
+};
+
+const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
+const ONLINE_BEAT_MS   = 60*1000;      // ส่งสถานะ/คะแนนทุก 1 นาที
+const LEADERBOARD_SIZE = 50;
+
+/* ชื่อที่โชว์สาธารณะ: ชื่อจริง + อักษรแรกนามสกุล (ถนอมความเป็นส่วนตัวเด็ก) */
+function onlineDisplayName(){
+  if(!state.student) return null;
+  const last = (state.student.last || '').trim();
+  return state.student.first + (last ? ' ' + last[0] + '.' : '');
+}
+
+/* ผู้เล่นกำลังทำอะไรอยู่ (ดูจากหน้าจอที่เปิด) — โชว์ในการ์ดเพื่อน */
+function onlineActivity(){
+  const map = {
+    'screen-game' : 'กำลังจับคู่คำศัพท์ 🎮',
+    'screen-quiz' : 'กำลังสอบคำศัพท์ 📝',
+    'screen-cats' : 'กำลังอ่านหมวดคำศัพท์ 📚',
+    'screen-stats': 'กำลังดูผลการเรียน 📊',
+    'screen-select': 'กำลังเลือกสัตว์เลี้ยง 🐾',
+  };
+  for(const id in map){
+    const s = document.getElementById(id);
+    if(s && s.classList.contains('active')) return map[id];
+  }
+  return 'กำลังดูแลน้องสัตว์ 🏠';
+}
+
+/* id ประจำเครื่อง (สุ่มครั้งเดียว เก็บในเซฟ — ไม่ใช่ข้อมูลส่วนตัว) */
+function ensureOnlineId(){
+  if(!state.onlineId){
+    state.onlineId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    saveState();
+  }
+  return state.onlineId;
+}
+
+/* ---------- ส่งสถานะตัวเองขึ้น DB (เรียกซ้ำได้ ปลอดภัย) ---------- */
+function onlinePushPresence(){
+  if(!Online.ready || !state.student) return;
+  Online.db.ref('presence/' + ensureOnlineId()).set({
+    n: onlineDisplayName(),
+    g: state.student.grade,
+    act: onlineActivity(),
+    at: firebase.database.ServerValue.TIMESTAMP,
+  }).catch(()=>{});
+}
+function onlinePushScore(){
+  if(!Online.ready || !state.student) return;
+  if(Online.lastCoins === state.coins) return;         // เหรียญไม่ขยับ ไม่ต้องเขียน
+  Online.lastCoins = state.coins;
+  Online.db.ref('leaderboard/' + ensureOnlineId()).set({
+    n: onlineDisplayName(),
+    g: state.student.grade,
+    coins: Math.round(state.coins),
+    at: firebase.database.ServerValue.TIMESTAMP,
+  }).catch(()=>{});
+}
+
+/* วาดการ์ดที่เกี่ยวข้องใหม่ เฉพาะตอนเปิดหน้า Dashboard อยู่ */
+function onlineRerender(){
+  const dash = document.getElementById('screen-dashboard');
+  if(!dash || !dash.classList.contains('active')) return;
+  if(typeof renderOnlineCard === 'function') renderOnlineCard();
+  if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
+}
+
+/* ---------- เริ่มระบบหลัง SDK โหลดสำเร็จ ---------- */
+function onlineStart(){
+  firebase.initializeApp(FIREBASE_CONFIG);
+  Online.db = firebase.database();
+  const id = ensureOnlineId();
+  const presRef = Online.db.ref('presence/' + id);
+
+  // สถานะการเชื่อมต่อ: ต่อได้ → ลงทะเบียน onDisconnect (หลุดแล้วลบตัวเองออก)
+  Online.db.ref('.info/connected').on('value', (snap)=>{
+    const ok = snap.val() === true;
+    Online.ready = ok;
+    if(ok){
+      presRef.onDisconnect().remove();
+      onlinePushPresence();
+      Online.lastCoins = null;       // ต่อใหม่ ส่งคะแนนรอบใหม่เสมอ
+      onlinePushScore();
+    }
+    onlineRerender();
+  });
+
+  // ฟังรายชื่อคนออนไลน์ (ตัด: ตัวเอง/ข้อมูลเสีย/ผีค้างเกิน 10 นาที)
+  Online.db.ref('presence').on('value', (snap)=>{
+    const now = Date.now(), out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(ch.key === id || !v || typeof v.n !== 'string') return;
+      if(typeof v.at === 'number' && now - v.at > ONLINE_STALE_MS) return;
+      out.push({id: ch.key, n: v.n, g: v.g || '', act: v.act || 'กำลังเล่นอยู่ 🎮'});
+    });
+    Online.friends = out;
+    onlineRerender();
+  });
+
+  // ฟัง Leaderboard Top 50 (RTDB ให้มาเรียงน้อย→มาก กลับด้านเป็นมาก→น้อย)
+  Online.db.ref('leaderboard').orderByChild('coins').limitToLast(LEADERBOARD_SIZE).on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(!v || typeof v.coins !== 'number' || typeof v.n !== 'string') return;
+      out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins});
+    });
+    out.sort((a,b)=>b.coins - a.coins);
+    Online.board = out;
+    onlineRerender();
+  });
+
+  // ส่งสถานะ + คะแนนเป็นระยะ (เหรียญไม่ขยับจะไม่เขียน leaderboard ซ้ำ)
+  setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);
+}
+
+/* ---------- โหลด Firebase SDK แบบ dynamic (ไม่บล็อกเกม ออฟไลน์ไม่พัง) ---------- */
+(function onlineInit(){
+  if(typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.databaseURL) return;
+  const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
+  const load = (f)=>new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    s.src = base + f;
+    s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
+  load('firebase-app-compat.js')
+    .then(()=>load('firebase-database-compat.js'))
+    .then(()=>onlineStart())
+    .catch(()=>{ /* ออฟไลน์/โหลดไม่ได้ → เล่นโหมดเพื่อนจำลองตามเดิม */ });
+})();

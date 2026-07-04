@@ -40,6 +40,7 @@ const DEFAULT_STATE = {
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
   rankKey:null,                       // key แรงค์ล่าสุดที่ฉลองไปแล้ว (ไว้เทียบเลื่อน/ลด — ดู refreshRank)
+  onlineId:null,                      // id ประจำเครื่องสำหรับระบบออนไลน์ (สุ่มครั้งเดียวใน online.js)
 };
 
 /* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
@@ -133,6 +134,8 @@ function loadState(){
       if(!Array.isArray(s.listings)) s.listings = [];
       s.listings = s.listings.filter(l=>l && collectInfo(l.id) && typeof l.price === 'number' && typeof l.listedAt === 'number');
       if(!Array.isArray(s.tradeSold)) s.tradeSold = [];
+      // ระบบออนไลน์: เซฟเก่าไม่มี id → ให้ online.js สุ่มใหม่ตอนเชื่อมต่อ
+      if(typeof s.onlineId !== 'string') s.onlineId = null;
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }

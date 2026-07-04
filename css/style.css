@@ -533,6 +533,28 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 @keyframes onlinePulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.55;transform:scale(.8);}}
 .online-name{font-weight:bold;color:#5a4a6a;white-space:nowrap;}
 .online-act{color:#9a8aac;font-size:12px;flex:1;text-align:right;}
+.online-live{
+  font-size:11px;color:#2e7d44;background:var(--green);border:1.5px solid var(--green-d);
+  border-radius:999px;padding:1px 8px;vertical-align:middle;white-space:nowrap;
+}
+.online-note{text-align:center;font-size:12.5px;color:#9a8aac;padding:8px 4px 2px;}
+
+/* ---------- Leaderboard 🏆 (อันดับเหรียญ Top 50 — ข้อมูลจริงจาก Firebase) ---------- */
+.lb-empty{text-align:center;font-size:13.5px;color:#9a8aac;padding:10px 6px;}
+.lb-list{max-height:330px;overflow-y:auto;border-radius:12px;}
+.lb-row{
+  display:flex;align-items:center;gap:8px;font-size:13.5px;
+  padding:5px 6px;border-bottom:1px dashed #e6d9f5;
+}
+.lb-row:last-child{border-bottom:none;}
+.lb-row.lb-me{
+  background:var(--yellow);border:2px solid var(--yellow-d);border-radius:12px;
+  margin:2px 0;
+}
+.lb-rank{width:34px;text-align:center;font-weight:bold;color:#7d5fc0;flex-shrink:0;}
+.lb-name{font-weight:bold;color:#5a4a6a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-name small{color:#9a8aac;font-weight:normal;font-size:11px;}
+.lb-coins{color:#b8860b;font-weight:bold;white-space:nowrap;}
 .big-btn.purple{background:linear-gradient(180deg,#c39df0,#9a6fdc);box-shadow:0 6px 0 #7d5fc0;font-size:19px;padding:13px;}
 .big-btn.purple:active{box-shadow:0 2px 0 #7d5fc0;}
 .big-btn.blue{background:linear-gradient(180deg,#8fc7f7,#5b9fd6);box-shadow:0 6px 0 #3d7fb5;font-size:17px;padding:11px;}

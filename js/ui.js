@@ -109,11 +109,36 @@ function renderRainBar(){
 
 /* ============================================================
    การ์ด "คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา"
-   (เพื่อนจำลอง — สุ่มหมุนเวียนทุก 5 นาทีตามช่วงเวลา ไม่มีเซิร์ฟเวอร์)
+   ต่อ Firebase สำเร็จ → โชว์ผู้เล่นจริงที่ออนไลน์อยู่ (Online.friends)
+   ออฟไลน์/ต่อไม่ได้ → ถอยไปใช้เพื่อนจำลองเดิม (สุ่มหมุนเวียนทุก 5 นาที)
    ============================================================ */
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
+  const meName = state.student ? `${state.student.first} (หนูเอง)` : 'หนูเอง';
+  const meGrade = state.student ? state.student.grade : '';
+  const meRow = `<div class="online-row online-me">
+      <span class="online-dot"></span>
+      <span class="online-name">⭐ ${meName}</span>
+      <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
+    </div>`;
+
+  /* ---- โหมดออนไลน์จริง ---- */
+  if(typeof Online !== 'undefined' && Online.ready){
+    const rows = Online.friends.map(f=>`<div class="online-row">
+      <span class="online-dot"></span>
+      <span class="online-name">${f.n}</span>
+      <span class="online-act">ชั้น ${f.g} · ${f.act}</span>
+    </div>`).join('');
+    el.innerHTML = `
+      <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา <span class="online-live">🌏 ออนไลน์จริง</span></h3>
+      <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
+      ${meRow}${rows}
+      ${Online.friends.length ? '' : '<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>'}`;
+    return;
+  }
+
+  /* ---- โหมดออฟไลน์: เพื่อนจำลองเดิม ---- */
   const seed = Math.floor(Date.now()/(5*60*1000));      // ชุดรายชื่อเปลี่ยนทุก 5 นาที
   const rnd = seededRand(seed * 7919);
   const count = Math.min(ONLINE_NAMES.length, onlineBaseCount(new Date().getHours()) + Math.floor(rnd()*3));
@@ -123,24 +148,45 @@ function renderOnlineCard(){
     [pool[i],pool[j]] = [pool[j],pool[i]];
   }
   const friends = pool.slice(0, count);
-  const meName = state.student ? `${state.student.first} (หนูเอง)` : 'หนูเอง';
-  const meGrade = state.student ? state.student.grade : '';
-  const rows = [
-    `<div class="online-row online-me">
-      <span class="online-dot"></span>
-      <span class="online-name">⭐ ${meName}</span>
-      <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
-    </div>`,
-    ...friends.map(f=>`<div class="online-row">
+  const rows = friends.map(f=>`<div class="online-row">
       <span class="online-dot"></span>
       <span class="online-name">${f.n}</span>
       <span class="online-act">ชั้น ${f.g} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
-    </div>`),
-  ].join('');
+    </div>`).join('');
   el.innerHTML = `
     <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</h3>
     <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚</div>
-    ${rows}`;
+    ${meRow}${rows}`;
+}
+
+/* ============================================================
+   การ์ด Leaderboard 🏆 — อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
+   (ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน)
+   ============================================================ */
+function renderLeaderboardCard(){
+  const el = document.getElementById('leaderboard-card');
+  if(!el) return;
+  const title = `<h3 class="shop-title">🏆 สุดยอดนักสะสมเหรียญ Top ${LEADERBOARD_SIZE}</h3>`;
+  if(typeof Online === 'undefined' || !Online.ready){
+    el.innerHTML = title + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
+    return;
+  }
+  if(!Online.board.length){
+    el.innerHTML = title + `<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเกมเก็บเหรียญเป็นคนแรกเลย! 🥇</div>`;
+    return;
+  }
+  const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+  const myId = state.onlineId;
+  const myIdx = Online.board.findIndex(r=>r.id === myId);
+  const rows = Online.board.map((r,i)=>`
+    <div class="lb-row${r.id === myId ? ' lb-me' : ''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name">${r.id === myId ? '⭐ ' : ''}${r.n}<small> ชั้น ${r.g}</small></span>
+      <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
+    </div>`).join('');
+  el.innerHTML = title + `
+    <div class="online-count">${myIdx >= 0 ? `หนูอยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
+    <div class="lb-list">${rows}</div>`;
 }
 
 /* ============================================================
@@ -213,6 +259,7 @@ function renderDashboard(){
   renderClock();
   renderRankCard();
   renderOnlineCard();
+  renderLeaderboardCard();
 
   /* ---- สภาพอากาศ ---- */
   const w = weatherNow();
