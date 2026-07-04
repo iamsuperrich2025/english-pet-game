@@ -8,6 +8,7 @@
 **Pet Vocab Adventure** — เว็บเกมเลี้ยงสัตว์เพื่อเรียนคำศัพท์อังกฤษ สำหรับนักเรียน ป.1–ม.6 (ผู้ใช้คือครู/ผู้ปกครองชาวไทย ตอบเป็นภาษาไทยเสมอ)
 
 - โฟลเดอร์: `C:\Users\rober\english-pet-game\` เปิดได้ทั้ง file:// และ http:// — **ห้าม**ใช้ fetch กับไฟล์ local ให้ใช้ `new Image()` probe (`probeImages()` ใน js/images.js)
+- **🌐 ออนไลน์แล้ว (5 ก.ค. 2026):** repo GitHub `iamsuperrich2025/english-pet-game` (branch `main`) + GitHub Pages เปิดแล้ว → เกมเล่นได้ที่ **https://iamsuperrich2025.github.io/english-pet-game/** · โฟลเดอร์ในเครื่องเป็น git repo แล้ว (identity ตั้งเป็น iamsuperrich2025 / freddommun@gmail.com, push ผ่าน HTTPS credential ในเครื่องใช้ได้เลย ไม่มี gh CLI) · **ธรรมเนียมใหม่: แก้เกมเสร็จ+ทดสอบผ่าน ให้ commit + push ด้วย** (Pages อัปเดตเองใน 1–2 นาที)
 - เซฟใน LocalStorage key `petVocabAdventure_v1` ผ่าน `state` + `saveState()`/`loadState()` — `loadState()` มี **migration เซฟรุ่นเก่า (สัตว์ตัวเดียว) → รุ่นใหม่ (หลายตัว)** แล้ว
 - ทดสอบ: preview server `english-pet-game` (python http.server พอร์ต 8642 ใน `C:\Users\rober\.claude\launch.json`) — ทดสอบเสร็จให้ `localStorage.removeItem('petVocabAdventure_v1')` + reload เสมอ
 - เครื่องนี้ไม่มี Node มีแต่ Python 3.12
