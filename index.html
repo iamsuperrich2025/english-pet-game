@@ -5,10 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Pet Vocab Adventure 🐾 เกมคำศัพท์เลี้ยงสัตว์</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Itim&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/lobby.css">
 </head>
 <body>
+
+<!-- จอตั้ง → ชวนหมุนจอ (เกมออกแบบเป็นแนวนอนอย่างเดียว — อัพเดท 5725691826) -->
+<div id="rotate-overlay">
+  <div class="rotate-box">
+    <div class="rotate-phone">📱</div>
+    <p><b>หมุนจอเป็นแนวนอน</b><br>เพื่อเข้าเมือง Pet Vocab Adventure นะ! 🏙️✨</p>
+  </div>
+</div>
+
 <div id="app">
 
   <!-- ===== 00) Google Login (บังคับ login ก่อนเข้าเกม — ข้อ 0.1) ===== -->
@@ -62,71 +72,97 @@
     <div class="egg-grid" id="egg-grid"></div>
   </section>
 
-  <!-- ===== 2) Pet Dashboard ===== -->
+  <!-- ===== 2) Pet Dashboard — LOBBY แนวนอน (โฉมใหม่ "อัพเดท 5725691826") =====
+       สัตว์ active เด่นกลางจอ · เมนูไอคอนซ้าย · การ์ดสดขวา · แผงรายละเอียดกลางจอ
+       ⚠️ id ทุกตัวคงเดิมทั้งหมด — ฟังก์ชัน render ใน ui.js ใช้ต่อได้โดยไม่แก้ logic -->
   <section id="screen-dashboard" class="screen">
-    <div class="topbar">
-      <div class="topbar-coins">
-        <div class="coin-pill">🪙 <span id="coin-count">0</span></div>
-        <div class="coin-pill today">📅 วันนี้ +<span id="coin-today">0</span></div>
+
+    <header class="lobby-top">
+      <div class="profile-plate">
+        <div class="student-chip" id="student-chip"></div>
+        <div class="student-chip clock-chip" id="clock-chip"></div>
       </div>
+      <button class="rank-mini" id="rank-mini" title="ดูแรงค์ของหนู"></button>
+      <div class="top-flex"></div>
+      <div class="coin-pill">🪙 <span id="coin-count">0</span></div>
+      <div class="coin-pill today">📅 +<span id="coin-today">0</span></div>
       <button class="icon-btn" id="sound-toggle">🔊</button>
+      <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
+      <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
+    </header>
+
+    <div class="lobby-mid">
+      <nav class="lobby-rail">
+        <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน</button>
+        <button class="rail-btn" data-panel="panel-shop"><span class="rail-ico">🛍️</span>ร้านค้า</button>
+        <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">🌳</span>ฟาร์ม</button>
+        <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>
+        <button class="rail-btn" id="btn-stats"><span class="rail-ico">📊</span>สถิติ</button>
+      </nav>
+
+      <main class="lobby-stage">
+        <div class="weather-banner" id="weather-banner"></div>
+        <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
+        <div class="pet-card" id="pet-card">
+          <!-- filled by JS -->
+        </div>
+      </main>
+
+      <aside class="lobby-side">
+        <div class="shop-card side-card" id="online-card">
+          <!-- filled by JS -->
+        </div>
+        <div class="shop-card side-card" id="leaderboard-card">
+          <!-- filled by JS -->
+        </div>
+      </aside>
     </div>
 
-    <div class="student-chip" id="student-chip"></div>
-    <div class="student-chip clock-chip" id="clock-chip"></div>
-    <div class="rank-card" id="rank-card"></div>
-    <div class="weather-banner" id="weather-banner"></div>
-    <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
+    <footer class="lobby-bottom">
+      <button class="big-btn purple lobby-quiz-btn" id="btn-cats">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</button>
+      <button class="big-btn lobby-play-btn" id="btn-play">🎮 เล่นเกมจับคู่คำศัพท์!</button>
+    </footer>
 
-    <div class="pet-card" id="pet-card">
-      <!-- filled by JS -->
+    <!-- ===== แผงรายละเอียดกลางจอ (เปิดจากเมนูซ้าย — logic ใน js/lobby.js) ===== -->
+    <div class="panel-overlay" id="panel-overlay">
+      <div class="panel-box">
+        <div class="panel-head">
+          <h3 id="panel-title"></h3>
+          <button class="panel-close" id="panel-close">✕</button>
+        </div>
+        <div class="panel-body">
+
+          <div class="panel-page" id="panel-home">
+            <!-- แถบเตือนฝนอยู่ติดกับการ์ดที่พัก (ผู้ใช้สั่ง 5 ก.ค. 2026) -->
+            <div class="rain-banner" id="rain-banner"></div>
+            <div class="shop-card" id="home-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-shop">
+            <!-- ห้องแต่งตัวอยู่ติดกับน้อง (ผู้ใช้สั่ง 5 ก.ค. 2026) — ในโฉมใหม่คือแผงร้านค้า -->
+            <div class="shop-card">
+              <h3 class="shop-title">🛍️ ร้านค้า &amp; ห้องแต่งตัว</h3>
+              <div id="shop-grid-wrap"></div>
+            </div>
+            <div class="shop-card" id="phone-card"></div>
+            <div class="shop-card" id="computer-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-farm">
+            <div class="shop-card" id="farm-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-factory">
+            <div class="shop-card" id="collect-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-rank">
+            <div class="rank-card" id="rank-card"></div>
+          </div>
+
+        </div>
+      </div>
     </div>
-
-    <!-- ห้องแต่งตัวอยู่ติดกับน้อง (ผู้ใช้สั่ง 5 ก.ค. 2026) -->
-    <div class="shop-card">
-      <h3 class="shop-title">🛍️ ร้านค้า &amp; ห้องแต่งตัว</h3>
-      <div id="shop-grid-wrap"></div>
-    </div>
-
-    <button class="big-btn" id="btn-play">🎮 เล่นเกมจับคู่คำศัพท์!</button>
-    <button class="big-btn purple" id="btn-cats">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</button>
-    <button class="big-btn blue" id="btn-stats">📊 ผลการเรียนรู้ของหนู</button>
-
-    <div class="shop-card" id="online-card">
-      <!-- filled by JS -->
-    </div>
-
-    <div class="shop-card" id="leaderboard-card">
-      <!-- filled by JS -->
-    </div>
-
-    <!-- แถบเตือนฝนอยู่ติดกับการ์ดที่พัก (ผู้ใช้สั่ง 5 ก.ค. 2026) -->
-    <div class="rain-banner" id="rain-banner"></div>
-
-    <div class="shop-card" id="home-card">
-      <!-- filled by JS -->
-    </div>
-
-    <div class="shop-card" id="phone-card">
-      <!-- filled by JS -->
-    </div>
-
-    <div class="shop-card" id="computer-card">
-      <!-- filled by JS -->
-    </div>
-
-    <div class="shop-card" id="farm-card">
-      <!-- filled by JS -->
-    </div>
-
-    <div class="shop-card" id="collect-card">
-      <!-- filled by JS -->
-    </div>
-
-    <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด (ลบข้อมูล)" ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026
-         (อันตราย: เด็กเข้าใจผิดว่าเป็นปุ่ม logout แล้วเซฟหายถาวรทั้ง cloud)
-         จำเป็นต้องรีเซ็ตจริงๆ ให้ทำผ่านเครื่องมือทดสอบ/console เท่านั้น -->
-    <button class="reset-link" id="btn-logout">🚪 ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)</button>
   </section>
 
   <!-- ===== 3) Vocabulary Arena ===== -->
@@ -196,6 +232,7 @@
 <script src="js/state.js"></script>
 <script src="js/images.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/lobby.js"></script>  <!-- ระบบแผง Lobby แนวนอน (อัพเดท 5725691826) -->
 <script src="js/game.js"></script>
 <script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->
 <script src="js/online.js"></script>

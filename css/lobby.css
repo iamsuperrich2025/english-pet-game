@@ -1,0 +1,248 @@
+/* ============================================================
+   THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน (อัพเดท 5725691826)
+   โหลดทับ style.css (cascade ทีหลังชนะ) — เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic
+   โทนสี: น้ำเงินเข้ม(กรอบ) ฟ้า(ปุ่ม/หัวการ์ด) ขาว(เนื้อหา) เทา-ดำ(ตัวหนังสือ)
+   เหลืองทอง = เงิน/ราคา/ปุ่มหลัก/ไฮไลต์ตัวเอง เท่านั้น
+   ============================================================ */
+:root{
+  --navy:#0a1f3c; --navy-2:#123a6b; --sky:#3b8dde; --sky-d:#1b5fa8;
+  --gold:#f5c542; --gold-d:#c8901a; --panel-bg:#eef5fc; --ink2:#22364f;
+  --glass:rgba(7,25,52,.78); --glass-line:rgba(120,170,230,.35);
+}
+
+html,body{height:100%;}
+body{
+  font-family:'Kanit','Itim',sans-serif;
+  color:var(--ink2);
+  background-color:var(--navy);
+  background-image:
+    linear-gradient(180deg, rgba(5,22,48,.62) 0%, rgba(5,22,48,.18) 26%, rgba(5,22,48,.16) 68%, rgba(5,22,48,.66) 100%),
+    url('../img/theme/theme_bg_wide.png');
+  background-size:100% 100%, cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+*{scrollbar-width:thin;scrollbar-color:#9cc4ec transparent;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-thumb{background:#9cc4ec;border-radius:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+
+#app{max-width:none;padding:0;}
+
+h1{color:var(--sky-d);text-shadow:none;}
+.subtitle{color:#5b7ea6;}
+.shop-title{color:var(--sky-d);}
+
+/* ---------- จอตั้ง → บังคับหมุนจอ ---------- */
+#rotate-overlay{display:none;}
+@media (orientation:portrait){
+  #rotate-overlay{
+    position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+    background-color:var(--navy);
+    background-image:linear-gradient(180deg,rgba(5,22,48,.88),rgba(5,22,48,.94)),url('../img/theme/theme_bg.png');
+    background-size:100% 100%,cover;background-position:center;background-repeat:no-repeat;
+  }
+  .rotate-box{text-align:center;color:#eaf4ff;padding:24px;}
+  .rotate-phone{font-size:64px;display:inline-block;animation:rotateHint 1.6s ease-in-out infinite;}
+  @keyframes rotateHint{0%,20%{transform:rotate(0deg);}60%,100%{transform:rotate(90deg);}}
+  .rotate-box p{font-size:19px;margin:14px 0 0;line-height:1.6;color:#cfe4fa;}
+  .rotate-box b{color:var(--gold);}
+}
+
+/* ============================================================
+   หน้าอื่นๆ (login/ลงทะเบียน/ร้านสัตว์/เกม/สอบ/สถิติ)
+   = แผงลอยสีขาวกึ่งกลางจอ เหนือฉากเมือง (scroll ภายในแผง)
+   ============================================================ */
+.screen.active:not(#screen-dashboard){
+  display:block;width:min(780px,94vw);margin:12px auto;
+  max-height:calc(100dvh - 24px);overflow-y:auto;
+  background:rgba(238,245,252,.95);
+  border:1px solid rgba(181,212,244,.9);border-radius:22px;
+  padding:16px 22px 26px;box-shadow:0 18px 50px rgba(3,15,35,.5);
+}
+
+/* เกมจับคู่: จอกว้าง → อังกฤษซ้าย ไทยขวา (แนวนอนเต็มตา) */
+@media (min-width:640px){
+  /* ต้องใช้ #id.screen.active ให้ specificity เท่ากับ .screen.active:not(#screen-dashboard)
+     (:not(#id) นับ specificity เท่า id) — rule นี้อยู่ทีหลังเลยชนะ */
+  #screen-game.screen.active{
+    width:min(900px,96vw);display:grid;grid-template-columns:1fr 1fr;
+    grid-template-areas:"top top" "timer timer" "lblen lblth" "en th" "hint hint";
+    column-gap:18px;align-content:start;
+  }
+  #screen-game .game-top{grid-area:top;}
+  #screen-game .timer-wrap{grid-area:timer;}
+  #screen-game p.board-label:nth-of-type(1){grid-area:lblen;}
+  #screen-game p.board-label:nth-of-type(2){grid-area:lblth;}
+  #screen-game #en-grid{grid-area:en;align-self:start;}
+  #screen-game #th-grid{grid-area:th;align-self:start;}
+  #screen-game .hint-btn{grid-area:hint;}
+  /* ร้านสัตว์เลี้ยง 3 ตัวเรียงแถวเดียว */
+  .egg-grid{grid-template-columns:repeat(3,1fr);}
+  .egg-grid > .egg-card:last-child:nth-child(odd){grid-column:auto;width:auto;margin:0;}
+}
+
+/* คำไทยใช้โทนเหลืองอ่อน (แทนชมพูเดิม) ให้ต่างจากฝั่งอังกฤษสีฟ้า */
+.word-card.th{background:var(--yellow);color:#8a6d1a;}
+.quiz-choice{background:#fff;color:var(--sky-d);border-color:#cfe2f6;}
+.quiz-choice.right{background:var(--green);color:#2e7d44;border-color:var(--green-d);}
+.quiz-choice.wrong{background:#ffd9d9;color:#c0392b;border-color:#ff8f8f;}
+
+/* ปุ่มหลักโทนฟ้า (จากชมพูเดิม) */
+.big-btn{background:linear-gradient(180deg,#4f9de8,#2f7cc4);box-shadow:0 6px 0 var(--sky-d);}
+.big-btn:active{box-shadow:0 2px 0 var(--sky-d);}
+.big-btn.purple{background:linear-gradient(180deg,#7c94c8,#54679f);box-shadow:0 6px 0 #3d4c78;}
+.big-btn.purple:active{box-shadow:0 2px 0 #3d4c78;}
+
+/* ============================================================
+   LOBBY แนวนอน (screen-dashboard)
+   ============================================================ */
+#screen-dashboard.active{
+  display:flex;flex-direction:column;gap:8px;
+  height:100vh;height:100dvh;padding:10px 14px 12px;overflow:hidden;
+  width:auto;max-width:none;margin:0;background:none;border:none;box-shadow:none;
+}
+
+/* ---------- แถบบน ---------- */
+.lobby-top{display:flex;align-items:center;gap:8px;flex-shrink:0;min-width:0;}
+.top-flex{flex:1;}
+.profile-plate{
+  background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
+  padding:5px 14px;line-height:1.3;min-width:0;max-width:34vw;
+}
+.profile-plate .student-chip{
+  font-size:13.5px;font-weight:500;color:#fff;background:none;border:none;box-shadow:none;
+  padding:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-align:left;
+}
+.profile-plate .clock-chip{
+  font-size:11px;color:#8fb8e8;background:none;border:none;box-shadow:none;
+  padding:0;margin:0;display:block;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-variant-numeric:tabular-nums;
+}
+.rank-mini{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+  background:var(--glass);border:1px solid rgba(245,197,66,.55);border-radius:999px;
+  padding:4px 13px 4px 7px;font-family:inherit;font-size:13px;font-weight:500;
+  color:#ffe9a8;cursor:pointer;transition:transform .12s;
+}
+.rank-mini:active{transform:scale(.95);}
+.rank-mini img{width:26px;height:26px;object-fit:contain;}
+.rank-mini .rank-badge-emoji{font-size:19px;filter:none;}
+.lobby-top .coin-pill{font-size:15px;padding:3px 13px;white-space:nowrap;box-shadow:0 3px 8px rgba(3,15,35,.35);}
+.lobby-top .coin-pill.today{font-size:12.5px;padding:3px 11px;}
+.lobby-top .icon-btn{
+  font-size:16px;padding:4px 11px;background:var(--glass);
+  border-color:var(--glass-line);color:#fff;box-shadow:none;
+}
+
+/* ---------- ส่วนกลาง: เมนูซ้าย + เวทีสัตว์ + การ์ดสดขวา ---------- */
+.lobby-mid{flex:1;display:flex;gap:10px;min-height:0;}
+
+.lobby-rail{display:flex;flex-direction:column;gap:7px;width:76px;flex-shrink:0;overflow-y:auto;}
+.rail-btn{
+  display:flex;flex-direction:column;align-items:center;gap:1px;
+  background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
+  color:#cfe4fa;font-family:inherit;font-size:12px;font-weight:500;
+  padding:8px 2px;cursor:pointer;transition:background .15s, transform .12s;flex-shrink:0;
+}
+.rail-btn .rail-ico{font-size:21px;line-height:1.15;}
+.rail-btn:hover{background:rgba(27,95,168,.85);}
+.rail-btn:active{transform:scale(.94);}
+.rail-btn.on{background:var(--sky);color:#fff;border-color:#7fc0f5;}
+
+.lobby-stage{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;overflow:hidden;}
+.lobby-stage .weather-banner{
+  margin:0;padding:3px 16px;font-size:12.5px;flex-shrink:0;
+  background:var(--glass);border:1px solid var(--glass-line);color:#cfe4fa;
+  border-radius:999px;box-shadow:none;max-width:96%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.lobby-stage .weather-banner b{color:#ffe9a8;}
+.lobby-stage .pet-tabs{margin:0;justify-content:center;flex-shrink:0;flex-wrap:nowrap;max-width:100%;overflow-x:auto;}
+.pet-tab{background:rgba(7,25,52,.7);border:2px solid var(--glass-line);color:#cfe4fa;}
+.pet-tab.on{background:#fff;border-color:var(--gold);color:var(--ink2);font-weight:500;}
+.pet-tab.add{border-style:dashed;color:#8fb8e8;background:rgba(7,25,52,.45);}
+
+#screen-dashboard .pet-card{
+  flex:1;min-height:0;width:min(440px,100%);overflow-y:auto;
+  background:rgba(255,255,255,.88);backdrop-filter:blur(6px);
+  border:1px solid rgba(181,212,244,.9);border-radius:20px;
+  box-shadow:0 14px 36px rgba(3,15,35,.4);
+  margin:0;padding:12px 16px 16px;
+}
+
+.lobby-side{width:238px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;min-height:0;}
+.lobby-side .side-card{
+  flex:1;min-height:0;overflow-y:auto;margin:0;
+  background:rgba(255,255,255,.9);backdrop-filter:blur(6px);
+  border:1px solid rgba(181,212,244,.9);border-radius:16px;
+  box-shadow:0 10px 26px rgba(3,15,35,.35);padding:10px 11px;
+}
+.lobby-side .shop-title{font-size:14px;margin:0 0 6px;}
+.lobby-side .online-count{font-size:12px;}
+.lobby-side .online-row{padding:4px 2px;}
+.lobby-side .online-name{font-size:12.5px;}
+.lobby-side .online-act{font-size:10.5px;}
+.side-card .lb-list{max-height:none;overflow:visible;}
+.lobby-side .lb-row{font-size:12px;padding:4px 4px;}
+.lobby-side .lb-rank{width:26px;}
+
+/* ---------- แถบล่าง: ปุ่มเล่นเกม ---------- */
+.lobby-bottom{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
+.lobby-bottom .big-btn{width:auto;display:inline-block;margin:0;}
+.lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
+.lobby-play-btn{
+  background:linear-gradient(180deg,#ffd76e,#f5b93a) !important;color:#5a3c05 !important;
+  box-shadow:0 5px 0 #cf9722 !important;font-size:18px !important;padding:11px 28px !important;
+}
+.lobby-play-btn:active{box-shadow:0 2px 0 #cf9722 !important;}
+
+/* ============================================================
+   แผงรายละเอียดกลางจอ (panel) — คลิกเมนูแล้วเด้งขึ้น มี scroll ภายใน
+   ============================================================ */
+.panel-overlay{
+  position:fixed;inset:0;z-index:40;display:none;
+  background:rgba(4,15,32,.62);backdrop-filter:blur(3px);
+  align-items:center;justify-content:center;padding:16px;
+}
+.panel-overlay.open{display:flex;animation:fadeIn .22s ease;}
+.panel-box{
+  width:min(880px,96vw);max-height:min(600px,92dvh);
+  background:var(--panel-bg);border:1px solid #b5d4f4;border-radius:18px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);animation:popIn .28s cubic-bezier(.2,1.4,.4,1);
+}
+.panel-head{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+  background:var(--navy-2);color:#fff;padding:9px 16px;
+}
+.panel-head h3{margin:0;font-size:17px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.panel-close{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:999px;
+  width:32px;height:32px;color:#fff;font-family:inherit;font-size:15px;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:background .15s;
+}
+.panel-close:hover{background:rgba(255,80,80,.65);}
+.panel-body{flex:1;overflow-y:auto;padding:14px 16px;}
+.panel-page{display:none;}
+.panel-page.on{display:block;animation:fadeIn .2s ease;}
+.panel-body .shop-card,.panel-body .rank-card{margin-left:auto;margin-right:auto;}
+.panel-body .shop-card{
+  background:#fff;border:1px solid #cfe2f6;border-radius:16px;
+  box-shadow:0 3px 12px rgba(27,95,168,.08);
+}
+
+/* จอเตี้ยมาก (มือถือแนวนอน) — ย่อส่วนให้พอดีจอ */
+@media (max-height:430px){
+  #screen-dashboard.active{padding:6px 10px 8px;gap:5px;}
+  .pet-stage{width:130px;height:130px;}
+  .pet-img{width:118px;height:118px;}
+  .pet-name{font-size:17px;}
+  .lobby-side{width:205px;}
+  .lobby-rail{width:66px;}
+  .rail-btn{font-size:11px;padding:6px 2px;}
+  .rail-btn .rail-ico{font-size:18px;}
+  .lobby-play-btn{font-size:15px !important;padding:8px 20px !important;}
+  .lobby-quiz-btn{font-size:13px !important;padding:7px 14px !important;}
+  .profile-plate .clock-chip{font-size:10px;}
+}

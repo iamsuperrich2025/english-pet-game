@@ -215,6 +215,11 @@ function renderRankCard(){
       <div class="rank-bar"><div class="rank-fill" style="width:${Math.round(info.prog*100)}%;background:${r.color}"></div></div>
       <div class="rank-text">${nextText}</div>
     </div>`;
+
+  /* ป้ายแรงค์เล็กบนแถบบน Lobby (คลิกเปิดแผงแรงค์เต็ม — โฉมใหม่ 5725691826) */
+  const mini = document.getElementById('rank-mini');
+  if(mini) mini.innerHTML =
+    `${rankBadgeHTML(r.id, r.emoji, 'rank-mini-img')}<span>${info.label}</span>`;
 }
 
 /* ฉากอัพแรงค์ใหญ่: เหรียญตราใหญ่ + รัศมีหมุน (สไตล์เกมยิงแรงค์) */
