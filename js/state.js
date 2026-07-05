@@ -12,6 +12,7 @@ const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ข�
 
 const DEFAULT_STATE = {
   student:null,                       // {first, last, grade}
+  profileName:null,                   // ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว โชว์ใน presence/leaderboard)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
@@ -151,6 +152,8 @@ function loadState(){
       // Google Login (ข้อ 0.1): เซฟเก่าไม่มี field → default (ownerUid null = ยังไม่ผูกบัญชี)
       if(typeof s.savedAt !== 'number') s.savedAt = 0;
       if(typeof s.ownerUid !== 'string') s.ownerUid = null;
+      // ชื่อในเกม (ข้อ 0.2): เซฟเก่าไม่มี → null (auth.js จะเด้งกล่องบังคับตั้งชื่อตอนเข้าเกม)
+      if(typeof s.profileName !== 'string') s.profileName = null;
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }

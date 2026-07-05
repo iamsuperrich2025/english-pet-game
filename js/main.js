@@ -11,11 +11,20 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
     toast('กรอกชื่อและนามสกุลให้ครบก่อนนะ 😊');
     return;
   }
+  // ชื่อในเกม (ข้อ 0.2): ตรวจ regex ไทย/อังกฤษ/เลข/เว้นวรรค + คำหยาบ (badwords.js)
+  const nick = checkName(document.getElementById('reg-nick').value, 2, 20);
+  if(!nick.ok){
+    sfx.wrong();
+    toast('ชื่อในเกม: ' + nick.msg, 2400);
+    return;
+  }
   state.student = {first, last, grade};
+  state.profileName = nick.name;
   saveState();
+  authPushProfile();                   // ชื่อในเกมขึ้น /users/<uid>/profile/name
   authPushSave(true);                  // ลงทะเบียนเสร็จ ส่งเซฟขึ้นบัญชีทันที
   sfx.levelup();
-  toast(`ยินดีต้อนรับ ${first}! 🎉`);
+  toast(`ยินดีต้อนรับ ${nick.name}! 🎉`);
   renderDashboard();
   showScreen('screen-dashboard');
 });
@@ -73,6 +82,8 @@ function bootGame(){
   }else{
     renderDashboard();
     showScreen('screen-dashboard');
+    // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
+    if(!state.profileName) authAskProfileName();
   }
 }
 

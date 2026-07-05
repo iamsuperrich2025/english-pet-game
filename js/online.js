@@ -9,9 +9,10 @@
    การ์ดเพื่อนถอยไปใช้เพื่อนจำลองเดิม เกมเล่นได้ครบทุกระบบ
    ------------------------------------------------------------
    โครงข้อมูลใน DB:
-   /presence/<id>    = {n:ชื่อ, g:ชั้น, act:กำลังทำอะไร, at:เวลา}  (ลบเองเมื่อหลุด)
-   /leaderboard/<id> = {n:ชื่อ, g:ชั้น, coins:เหรียญ, at:เวลา}
-   <id> = state.onlineId สุ่มครั้งเดียวต่อเครื่อง เก็บในเซฟ
+   /presence/<uid>    = {n:ชื่อ, g:ชั้น, act:กำลังทำอะไร, at:เวลา}  (ลบเองเมื่อหลุด)
+   /leaderboard/<uid> = {n:ชื่อ, g:ชั้น, coins:เหรียญ, at:เวลา}
+   <uid> = uid บัญชี Google (เปลี่ยนจาก onlineId เดิมตอนข้อ 0.2 —
+   เกมบังคับ login เสมอ · onlineId สุ่มเดิมเหลือไว้เป็น fallback กันพัง)
    ============================================================ */
 
 const Online = {
@@ -26,8 +27,10 @@ const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 �
 const ONLINE_BEAT_MS   = 60*1000;      // ส่งสถานะ/คะแนนทุก 1 นาที
 const LEADERBOARD_SIZE = 50;
 
-/* ชื่อที่โชว์สาธารณะ: ชื่อจริง + อักษรแรกนามสกุล (ถนอมความเป็นส่วนตัวเด็ก) */
+/* ชื่อที่โชว์สาธารณะ: ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว)
+   fallback เซฟเก่าที่ยังไม่ทันตั้งชื่อ: ชื่อจริง + อักษรแรกนามสกุล (แบบเดิม) */
 function onlineDisplayName(){
+  if(state.profileName) return state.profileName;
   if(!state.student) return null;
   const last = (state.student.last || '').trim();
   return state.student.first + (last ? ' ' + last[0] + '.' : '');
@@ -49,7 +52,7 @@ function onlineActivity(){
   return 'กำลังดูแลน้องสัตว์ 🏠';
 }
 
-/* id ประจำเครื่อง (สุ่มครั้งเดียว เก็บในเซฟ — ไม่ใช่ข้อมูลส่วนตัว) */
+/* id ประจำเครื่อง (สุ่มครั้งเดียว เก็บในเซฟ — fallback เผื่อไม่มี Auth.user เท่านั้น) */
 function ensureOnlineId(){
   if(!state.onlineId){
     state.onlineId = 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -58,10 +61,16 @@ function ensureOnlineId(){
   return state.onlineId;
 }
 
+/* key ประจำตัวใน /presence และ /leaderboard — ข้อ 0.2 เปลี่ยนเป็น uid บัญชี Google
+   (rules ผูก auth.uid === $uid ได้ + ข้อ 0.3 ใช้ join กับรายชื่อเพื่อน) */
+function onlineKey(){
+  return (typeof Auth !== 'undefined' && Auth.user) ? Auth.user.uid : ensureOnlineId();
+}
+
 /* ---------- ส่งสถานะตัวเองขึ้น DB (เรียกซ้ำได้ ปลอดภัย) ---------- */
 function onlinePushPresence(){
   if(!Online.ready || !state.student) return;
-  Online.db.ref('presence/' + ensureOnlineId()).set({
+  Online.db.ref('presence/' + onlineKey()).set({
     n: onlineDisplayName(),
     g: state.student.grade,
     act: onlineActivity(),
@@ -72,7 +81,7 @@ function onlinePushScore(){
   if(!Online.ready || !state.student) return;
   if(Online.lastCoins === state.coins) return;         // เหรียญไม่ขยับ ไม่ต้องเขียน
   Online.lastCoins = state.coins;
-  Online.db.ref('leaderboard/' + ensureOnlineId()).set({
+  Online.db.ref('leaderboard/' + onlineKey()).set({
     n: onlineDisplayName(),
     g: state.student.grade,
     coins: Math.round(state.coins),
@@ -92,7 +101,7 @@ function onlineRerender(){
    initializeApp ทำแล้วใน authStart) ---------- */
 function onlineStart(){
   Online.db = firebase.database();
-  const id = ensureOnlineId();
+  const id = onlineKey();
   const presRef = Online.db.ref('presence/' + id);
 
   // สถานะการเชื่อมต่อ: ต่อได้ → ลงทะเบียน onDisconnect (หลุดแล้วลบตัวเองออก)

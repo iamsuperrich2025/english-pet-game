@@ -14,6 +14,13 @@ function shuffle(arr){
 
 function fmtNum(n){ return n.toLocaleString('en-US'); }   // 25000 → "25,000"
 
+/* escape ก่อนแทรกข้อความลง innerHTML — ใช้กับข้อความจากผู้เล่นคนอื่น (ชื่อบน
+   presence/leaderboard มาจาก DB) กันสคริปต์/แท็กแฝง (ข้อ 0.2) */
+function escapeHTML(s){
+  return String(s == null ? '' : s)
+    .replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 /* สุ่มแบบกำหนด seed ได้ (mulberry32) — ให้ทุกเครื่องเห็นผลเดียวกันในช่วงเวลาเดียวกัน */
 function seededRand(seed){
   let t = seed >>> 0;

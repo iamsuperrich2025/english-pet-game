@@ -48,6 +48,63 @@ function authSaveRef(uid){ return firebase.database().ref('users/' + uid + '/sav
 function authFetchCloud(uid){ return authSaveRef(uid).get().then(s=>s.val()); }
 function authWriteCloud(uid, payload){ return authSaveRef(uid).set(payload); }
 function authDeleteCloud(uid){ return authSaveRef(uid).remove(); }
+function authWriteProfileName(uid, name){
+  return firebase.database().ref('users/' + uid + '/profile/name').set(name);
+}
+
+/* ---------- ชื่อในเกม (ข้อ 0.2) → /users/<uid>/profile/name ----------
+   สำเนาสาธารณะฝั่ง DB (rules validate ความยาว 2–20 ซ้ำอีกชั้น) —
+   ข้อ 0.3 จะใช้ค้นหาเพื่อน · เรียกซ้ำได้ ปลอดภัย (เขียนค่าเดิมทับ) */
+function authPushProfile(){
+  if(!Auth.user || !state.profileName) return;
+  try{
+    authWriteProfileName(Auth.user.uid, state.profileName).catch(()=>{});
+  }catch(e){ /* SDK ยังไม่พร้อม — รอบหน้าค่อยส่ง */ }
+}
+
+/* ---------- กล่องบังคับตั้งชื่อในเกม (ผู้เล่นเดิมที่เซฟยังไม่มีชื่อ — ข้อ 0.2)
+   ปิดข้ามไม่ได้: ชื่อนี้ใช้โชว์บน presence/leaderboard แทนชื่อจริง ---------- */
+function authAskProfileName(){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box">
+    <div class="lv-emoji">📛</div>
+    <h2>ตั้งชื่อในเกมกันเถอะ!</h2>
+    <p style="font-size:14.5px;color:#8a7aa0;margin:6px 0 10px">
+      ชื่อนี้คือชื่อที่เพื่อนๆ ทั้งเกมจะเห็น (ไทย/อังกฤษ 2–20 ตัว)<br>
+      ไม่ต้องใช้ชื่อ-นามสกุลจริงก็ได้นะ 😊</p>
+    <input id="pf-name-input" maxlength="20" placeholder="เช่น น้องบีม, Beam123"
+      style="width:88%;padding:10px 12px;border:2px solid #d9c9ef;border-radius:12px;font-size:16px;font-family:inherit;text-align:center">
+    <p id="pf-name-err" style="color:#e05555;font-size:13.5px;min-height:18px;margin:8px 0 2px"></p>
+    <button class="cf-ok" id="pf-name-ok">ใช้ชื่อนี้เลย ✅</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('#pf-name-input');
+  const err   = overlay.querySelector('#pf-name-err');
+  const submit = ()=>{
+    const r = checkName(input.value, 2, 20);
+    if(!r.ok){
+      sfx.wrong();
+      err.textContent = r.msg;
+      return;
+    }
+    state.profileName = r.name;
+    saveState();
+    authPushProfile();
+    authPushSave(true);
+    overlay.remove();
+    sfx.levelup();
+    toast(`📛 ตั้งชื่อ "${r.name}" เรียบร้อย!`);
+    // อัปเดตชื่อบน presence/leaderboard ทันที (lastCoins = null บังคับเขียนกระดานใหม่)
+    if(typeof Online !== 'undefined') Online.lastCoins = null;
+    if(typeof onlinePushPresence === 'function') onlinePushPresence();
+    if(typeof onlinePushScore === 'function') onlinePushScore();
+    renderDashboard();
+  };
+  overlay.querySelector('#pf-name-ok').addEventListener('click', submit);
+  input.addEventListener('keydown', e=>{ if(e.key === 'Enter') submit(); });
+  setTimeout(()=>input.focus(), 50);
+}
 
 /* ---------- เริ่มระบบหลัง SDK โหลดครบ (เรียกจาก online.js) ---------- */
 function authStart(){
@@ -192,6 +249,7 @@ function authEnterGame(){
   Auth.booted = true;
   onlineStart();                                   // เพื่อนออนไลน์ + leaderboard (ใน online.js)
   bootGame();                                      // careTick + เข้าหน้า ลงทะเบียน/dashboard (ใน main.js)
+  authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);
   window.addEventListener('beforeunload', ()=>authPushSave(false));
   document.addEventListener('visibilitychange', ()=>{
@@ -219,7 +277,7 @@ function authLogout(){
       const finish = ()=>{
         if(done) return;
         done = true;
-        try{ if(Online.ready && state.onlineId) Online.db.ref('presence/' + state.onlineId).remove(); }catch(e){}
+        try{ if(Online.ready) Online.db.ref('presence/' + onlineKey()).remove(); }catch(e){}
         firebase.auth().signOut().catch(()=>{}).then(()=>{
           localStorage.removeItem(STORAGE_KEY);    // เครื่องโรงเรียนใช้ร่วมกัน — ไม่ทิ้งเซฟไว้
           location.reload();

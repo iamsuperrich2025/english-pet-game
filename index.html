@@ -49,6 +49,9 @@
       <label>นามสกุล
         <input id="reg-last" placeholder="เช่น พวงเงิน" maxlength="30">
       </label>
+      <label>ชื่อในเกม (เพื่อนๆ ทั้งเกมจะเห็นชื่อนี้ — ไทย/อังกฤษ 2–20 ตัว)
+        <input id="reg-nick" placeholder="เช่น น้องบีม, Beam123" maxlength="20">
+      </label>
       <label>ชั้น (คำศัพท์จะยาก-ง่ายตามระดับชั้น)
         <select id="reg-grade">
           <option>ป.1</option><option>ป.2</option><option>ป.3</option>
@@ -226,6 +229,7 @@
 <script src="js/data/fruits.js"></script>
 <script src="js/data/collectibles.js"></script>
 <script src="js/data/players.js"></script>
+<script src="js/data/badwords.js"></script>  <!-- ตัวกรองชื่อ+คำหยาบ (ข้อ 0.2 ชื่อผู้เล่น / ข้อ 7 ชื่อสัตว์) -->
 <script src="js/data/firebase-config.js"></script>
 <!-- ============ ENGINE ============ -->
 <script src="js/util.js"></script>

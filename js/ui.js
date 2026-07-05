@@ -116,11 +116,11 @@ function renderRainBar(){
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
-  const meName = state.student ? `${state.student.first} (หนูเอง)` : 'หนูเอง';
+  const meName = state.profileName || (state.student ? state.student.first : '') || 'หนูเอง';
   const meGrade = state.student ? state.student.grade : '';
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
-      <span class="online-name">⭐ ${meName}</span>
+      <span class="online-name">⭐ ${escapeHTML(meName)} (หนูเอง)</span>
       <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
@@ -128,8 +128,8 @@ function renderOnlineCard(){
   if(typeof Online !== 'undefined' && Online.ready){
     const rows = Online.friends.map(f=>`<div class="online-row">
       <span class="online-dot"></span>
-      <span class="online-name">${f.n}</span>
-      <span class="online-act">ชั้น ${f.g} · ${f.act}</span>
+      <span class="online-name">${escapeHTML(f.n)}</span>
+      <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
     </div>`).join('');
     el.innerHTML = `
       <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา <span class="online-live">🌏 ออนไลน์จริง</span></h3>
@@ -177,12 +177,12 @@ function renderLeaderboardCard(){
     return;
   }
   const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
-  const myId = state.onlineId;
+  const myId = onlineKey();
   const myIdx = Online.board.findIndex(r=>r.id === myId);
   const rows = Online.board.map((r,i)=>`
     <div class="lb-row${r.id === myId ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name">${r.id === myId ? '⭐ ' : ''}${r.n}<small> ชั้น ${r.g}</small></span>
+      <span class="lb-name">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
   el.innerHTML = title + `
