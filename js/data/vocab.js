@@ -9,7 +9,7 @@
 
 const VOCAB_BANDS = [
   /* ---------- ระดับ 1: ป.1–ป.2 ---------- */
-  {band:1, grades:['ป.1','ป.2'], label:'ประถมต้น (ป.1–ป.2)', cats:[
+  {band:1, grades:['ต่ำกว่าประถมศึกษา','ป.1','ป.2'], label:'ประถมต้น (ป.1–ป.2)', cats:[
     {id:'animals', name:'สัตว์', emoji:'🐾', reward:100, words:[
       ['cat','แมว'],['dog','สุนัข'],['bird','นก'],['fish','ปลา'],['rabbit','กระต่าย'],
       ['elephant','ช้าง'],['tiger','เสือ'],['monkey','ลิง'],['horse','ม้า'],['chicken','ไก่'],
@@ -153,7 +153,7 @@ const VOCAB_BANDS = [
   ]},
 
   /* ---------- ระดับ 5: ม.4–ม.6 ---------- */
-  {band:5, grades:['ม.4','ม.5','ม.6'], label:'มัธยมปลาย (ม.4–ม.6)', cats:[
+  {band:5, grades:['ม.4','ม.5','ม.6','ปริญญาตรี','สูงกว่าปริญญาตรี'], label:'มัธยมปลาย (ม.4–ม.6)', cats:[
     {id:'b5_academic', name:'คำศัพท์วิชาการ', emoji:'🎓', reward:100, words:[
       ['analyze','วิเคราะห์'],['research','การวิจัย'],['theory','ทฤษฎี'],['evidence','หลักฐาน'],['conclusion','บทสรุป'],
       ['hypothesis','สมมติฐาน'],['experiment','การทดลอง'],['definition','คำจำกัดความ'],['comparison','การเปรียบเทียบ'],['evaluate','ประเมินผล'],
