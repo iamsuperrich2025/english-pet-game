@@ -138,12 +138,13 @@ h1{color:var(--sky-d);text-shadow:none;}
   filter:drop-shadow(0 1px 2px rgba(20,50,90,.35));
   animation:glassdrop 6s ease-in forwards;
 }
-/* --o = ความทึบสูงสุด, --r = องศาเอียง (สุ่มต่อเม็ดใน rainFxDrop) */
+/* --o = ความทึบสูงสุด, --r = องศาเอียง, --fall = ระยะไหลลง (สุ่มต่อเม็ดใน rainFxDrop)
+   ease-in + เกาะที่ 25% ของระยะช่วงแรก แล้วรูดลงเต็มระยะช่วงท้าย = เหมือนน้ำเกาะแล้วรูดวูบ */
 @keyframes glassdrop{
-  0%  {opacity:0;                 transform:translateY(-2px) scale(.8)  rotate(var(--r,0deg))}
-  10% {opacity:var(--o,.7)}
-  70% {opacity:calc(var(--o,.7)*.82); transform:translateY(1px) scale(1) rotate(var(--r,0deg))}
-  100%{opacity:0;                 transform:translateY(12px) scale(.92) rotate(var(--r,0deg))}
+  0%  {opacity:0;                     transform:translateY(-2px) scale(.8) rotate(var(--r,0deg))}
+  12% {opacity:var(--o,.7)}
+  65% {opacity:calc(var(--o,.7)*.85); transform:translateY(calc(var(--fall,12px)*.22)) scale(1) rotate(var(--r,0deg))}
+  100%{opacity:0;                     transform:translateY(var(--fall,12px)) scale(.94) rotate(var(--r,0deg))}
 }
 
 /* ---------- แผงเพื่อน 👥 (ข้อ 0.3) ---------- */

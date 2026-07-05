@@ -135,15 +135,22 @@ function rainFxDrop(glass){
   const img = document.createElement('img');
   img.className = 'glass-drop';
   img.src = 'img/fx/' + RAIN_DROP_IMGS[Math.floor(Math.random()*RAIN_DROP_IMGS.length)];
-  const size = 16 + Math.random()*30;
+  /* 2 แบบให้เหมือนฝนจริง: ~45% "รูดเร็ว-ไกล" (เกาะแป๊บเดียวแล้วไหลลงยาว)
+     ที่เหลือ "เกาะช้า" (ค้างอยู่กับที่แล้วจางหาย) — ease-in ทำให้เริ่มช้าแล้วเร่ง */
+  const streak = Math.random() < 0.45;
+  const size = (streak ? 14 : 18) + Math.random()*(streak ? 16 : 28);
+  const fall = streak ? 130 + Math.random()*310 : 6 + Math.random()*26;    // ระยะไหลลง (px)
+  const dur  = streak ? 1.1 + Math.random()*1.5 : 4.5 + Math.random()*2.6;  // ระยะเวลา (วิ) เร็ว/ช้า
   img.style.left  = (2 + Math.random()*92).toFixed(1) + '%';
-  img.style.top   = (2 + Math.random()*84).toFixed(1) + '%';
+  img.style.top   = (streak ? 1 + Math.random()*38 : 2 + Math.random()*80).toFixed(1) + '%'; // เม็ดรูดเริ่มบนๆ จะได้มีที่ไหล
   img.style.width = size.toFixed(0) + 'px';
-  img.style.setProperty('--o', (0.4 + Math.random()*0.4).toFixed(2));   // ความทึบสูงสุด (จางแบบน้ำ)
+  img.style.setProperty('--o', (0.4 + Math.random()*0.4).toFixed(2));      // ความทึบสูงสุด (จางแบบน้ำ)
   img.style.setProperty('--r', (Math.random()*16 - 8).toFixed(1) + 'deg'); // เอียงเล็กน้อยไม่ให้เหมือนกันเป๊ะ
+  img.style.setProperty('--fall', fall.toFixed(0) + 'px');
+  img.style.animationDuration = dur.toFixed(2) + 's';
   glass.appendChild(img);
-  setTimeout(()=>img.remove(), 6100);
-  setTimeout(()=>rainFxDrop(glass), 300 + Math.random()*750);
+  setTimeout(()=>img.remove(), dur*1000 + 150);
+  setTimeout(()=>rainFxDrop(glass), 250 + Math.random()*600);
 }
 
 /* ============================================================
