@@ -109,6 +109,37 @@ function renderRainBar(){
 }
 
 /* ============================================================
+   เอฟเฟกต์ฝนเต็มจอ (รอบยี่สิบ): ฝนตกจริง (19:00-20:00) + ไม่มีบ้านสภาพดี
+   → เม็ดฝนจางๆ ทั้งจอ + หยดน้ำเกาะ "กระจกจอ" ชั่วคราว (แค่ภาพ ไม่แตะ state)
+   ============================================================ */
+function rainFxTick(){
+  const on = typeof Auth !== 'undefined' && Auth.booted
+          && rainNow(Date.now()) && !rainProtected();
+  let fx = document.getElementById('rain-fx');
+  if(on && !fx){
+    fx = document.createElement('div');
+    fx.id = 'rain-fx';
+    fx.innerHTML = `<div class="rain-layer l1"></div><div class="rain-layer l2"></div><div class="rain-glass"></div>`;
+    document.body.appendChild(fx);
+    rainFxDrop(fx.querySelector('.rain-glass'));
+  }else if(!on && fx){
+    fx.remove();                       // ฝนหยุด/ซื้อบ้านแล้ว → เอฟเฟกต์หาย
+  }
+}
+/* หยดน้ำเกาะกระจก: โผล่สุ่มตำแหน่ง เกาะ ~6 วิ แล้วไหลลงจางหาย — spawn ต่อเนื่อง
+   จนกว่า overlay ถูกถอด (เช็ก document.contains ทุกรอบ กัน loop ค้าง) */
+function rainFxDrop(glass){
+  if(!document.body.contains(glass)) return;
+  const d = document.createElement('span');
+  d.className = 'glass-drop';
+  const size = 6 + Math.random()*14;
+  d.style.cssText = `left:${(2+Math.random()*94).toFixed(1)}%;top:${(2+Math.random()*88).toFixed(1)}%;width:${size.toFixed(0)}px;height:${(size*1.2).toFixed(0)}px`;
+  glass.appendChild(d);
+  setTimeout(()=>d.remove(), 6100);
+  setTimeout(()=>rainFxDrop(glass), 350 + Math.random()*800);
+}
+
+/* ============================================================
    การ์ด "คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา"
    ต่อ Firebase สำเร็จ → โชว์ผู้เล่นจริงที่ออนไลน์อยู่ (Online.friends)
    ออฟไลน์/ต่อไม่ได้ → ถอยไปใช้เพื่อนจำลองเดิม (สุ่มหมุนเวียนทุก 5 นาที)
@@ -259,8 +290,15 @@ function renderDashboard(){
   document.getElementById('coin-count').textContent = fmtNum(state.coins);
   document.getElementById('coin-today').textContent = fmtNum(state.daily.coins);
   document.getElementById('sound-toggle').textContent = state.sound ? '🔊' : '🔇';
-  document.getElementById('student-chip').textContent = state.student
-    ? `🎓 ${state.student.first} ${state.student.last} · ชั้น ${state.student.grade} (ศัพท์${gradeBand(state.student.grade).label})` : '';
+  /* แถบโปรไฟล์: ชื่อในเกมเด่นก่อน (ข้อ 0.2) + ✏️ แก้ชื่อ + ชื่อจริง/ชั้นต่อท้าย */
+  const chip = document.getElementById('student-chip');
+  if(state.student){
+    chip.innerHTML = `📛 <b>${escapeHTML(state.profileName || state.student.first)}</b>`
+      + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
+      + ` · 🎓 ${escapeHTML(state.student.first)} ${escapeHTML(state.student.last)}`
+      + ` · ชั้น ${state.student.grade} (ศัพท์${gradeBand(state.student.grade).label})`;
+    document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
+  }else chip.textContent = '';
 
   renderClock();
   renderRankCard();
@@ -285,7 +323,7 @@ function renderDashboard(){
       const stage = petStage(p);
       const face = stage === 'egg' ? (PETS[p.type].startKey==='egg'?'🥚':'🧺') : PETS[p.type][stage];
       const alert = p.sick ? ' 🤒' : (petHungry(p) ? ' 😫' : '');
-      return `<button class="pet-tab ${i===state.active?'on':''}" data-i="${i}">${face} ${PETS[p.type].name}${alert}</button>`;
+      return `<button class="pet-tab ${i===state.active?'on':''}" data-i="${i}">${face} ${escapeHTML(p.name)}${alert}</button>`;
     }).join('') + `<button class="pet-tab add" id="tab-addpet">➕</button>`;
     tabs.querySelectorAll('.pet-tab[data-i]').forEach(b=>b.addEventListener('click', ()=>{
       state.active = +b.dataset.i; saveState(); sfx.select(); renderDashboard();
@@ -394,7 +432,7 @@ function renderDashboard(){
       <div class="hunger-text">${hungerStatus}</div>
       ${heatUI}
       ${thirstUI}
-      ${p.sick ? `<div class="sick-banner">🤒 <b>${conf.name}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
+      ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       <div class="care-row">
         <button class="care-btn btn-feed" id="btn-feed" ${p.sick?'disabled':''}>🍽️ ให้อาหาร</button>
         ${p.sick ? `<button class="care-btn btn-cure" id="btn-cure">💊 รักษา 🪙${fmtNum(CURE_COST)}</button>` : ''}
@@ -410,7 +448,7 @@ function renderDashboard(){
     <div class="stage-hero">${petVisualHTML(p)}</div>
     <div class="stage-plate">
       <div class="plate-head">
-        <span class="pet-name">${conf.name}</span>
+        <span class="pet-name">${escapeHTML(p.name)} <button class="chip-edit" id="btn-pet-rename" title="เปลี่ยนชื่อน้อง">✏️</button></span>
         <span class="stage-label">${stageNames[stage]}</span>
         <span class="level-badge">Lv.${p.level}</span>
         <div class="exp-bar"><div class="exp-fill" style="width:${Math.min(100, p.exp/expNeed(p.level)*100)}%"></div></div>
@@ -430,6 +468,23 @@ function renderDashboard(){
   if(feedBtn) feedBtn.addEventListener('click', feedPet);
   const cureBtn = document.getElementById('btn-cure');
   if(cureBtn) cureBtn.addEventListener('click', curePet);
+
+  // ปุ่ม ✏️ เปลี่ยนชื่อน้อง (ข้อ 7 — ตรวจชื่อชุดเดียวกับชื่อผู้เล่น แค่ 1–15 ตัว)
+  document.getElementById('btn-pet-rename').addEventListener('click', ()=>{
+    askNameDialog({
+      emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
+      desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
+      placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
+      okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
+      onOk:(name)=>{
+        p.name = name;
+        saveState();
+        sfx.select();
+        toast(`🏷️ เปลี่ยนชื่อน้องเป็น "${name}" แล้ว!`);
+        renderDashboard();
+      },
+    });
+  });
 
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
@@ -481,7 +536,7 @@ function openFoodMenu(p, hungry){
         const usable = hungry || f.skipNext;
         return `
         <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${(state.coins < f.price || !usable) ? 'cant-afford' : ''}" data-food="${f.id}">
-          ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${PETS[p.type].name}!</span>` : ''}
+          ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
           <span class="fd-emoji">${f.emoji}</span>
           <span class="fd-en">${f.en}</span>
           <span class="fd-name">${f.name}</span>
@@ -1674,17 +1729,26 @@ function renderPetShop(){
       askConfirm(`<h2>รับ${conf.eggName}มาเลี้ยง?</h2>
         <p style="font-size:16px;margin:6px 0">${conf.eggDesc}<br>ราคา <b>🪙${fmtNum(conf.price)}</b><br><small>${conf.ability}</small></p>`,
         'รับเลย! 🥰', ()=>{
-          state.coins -= conf.price;
-          state.pets.push(newPet(key));
-          state.active = state.pets.length - 1;
-          saveState();
-          sfx.levelup();
-          toast(conf.startKey === 'egg'
-            ? `ได้${conf.eggName}แล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`
-            : `ได้${conf.eggName}แล้ว! เล่นเกมให้น้องแข็งแรงจนลืมตากันเถอะ 🎉`);
-          renderDashboard();
-          showScreen('screen-dashboard');
-          probeImages(petImageKeys(key)).then(renderDashboard);
+          // ข้อ 7: บังคับตั้งชื่อก่อนรับน้อง (กดยกเลิก = ไม่ซื้อ เหรียญไม่หาย)
+          askNameDialog({
+            emoji:'🏷️', title:`ตั้งชื่อให้${conf.name}ก่อนรับกลับบ้าน`,
+            desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว (เปลี่ยนทีหลังได้ที่ปุ่ม ✏️)',
+            placeholder:'เช่น บ็อบบี้, Lucky', min:1, max:15,
+            okText:'รับเลย! 🥰', cancelText:'ยังไม่รับ',
+            onOk:(name)=>{
+              state.coins -= conf.price;
+              state.pets.push(newPet(key, name));
+              state.active = state.pets.length - 1;
+              saveState();
+              sfx.levelup();
+              toast(conf.startKey === 'egg'
+                ? `ได้ ${name} มาแล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`
+                : `ได้ ${name} มาแล้ว! เล่นเกมให้น้องแข็งแรงจนลืมตากันเถอะ 🎉`);
+              renderDashboard();
+              showScreen('screen-dashboard');
+              probeImages(petImageKeys(key)).then(renderDashboard);
+            },
+          });
         });
     });
   });
@@ -1696,21 +1760,22 @@ function renderPetShop(){
 function showLevelUp(p){
   sfx.levelup();
   const conf = PETS[p.type];
+  const pname = escapeHTML(p.name || conf.name);
   let title = `เลเวลอัพ! Lv.${p.level} 🎊`;
-  let emoji = '⭐', msg = `${conf.name}เก่งขึ้นแล้ว!`;
+  let emoji = '⭐', msg = `${pname}เก่งขึ้นแล้ว!`;
   if(p.level === 2){
     if(conf.startKey === 'egg'){
       title = '🥚💥 ไข่ฟักแล้ว!';
-      msg = `${conf.name}ออกมาจากไข่แล้ว น่ารักมาก! ปลดล็อกแอนิเมชันดุ๊กดิ๊ก`;
+      msg = `${pname}ออกมาจากไข่แล้ว น่ารักมาก! ปลดล็อกแอนิเมชันดุ๊กดิ๊ก`;
     }else{
       title = '👀 น้องลืมตาแล้ว!';
-      msg = `${conf.name}ลืมตาและออกจากตะกร้าแล้ว! ปลดล็อกแอนิเมชันดุ๊กดิ๊ก<br>
+      msg = `${pname}ลืมตาและออกจากตะกร้าแล้ว! ปลดล็อกแอนิเมชันดุ๊กดิ๊ก<br>
         <small>🔍 รู้ไหม? ลูกหมาและลูกแมวแรกเกิดจะหลับตา แล้วค่อยลืมตาตอนอายุราว 1–2 สัปดาห์</small>`;
     }
     emoji = conf.baby;
   }else if(p.level === 3){
     title = '🌟 โตเต็มวัยแล้ว!';
-    emoji = conf.adult; msg = `${conf.name}โตเต็มวัย มีออร่าประกาย ✨ ปลดล็อก: ${conf.ability}`;
+    emoji = conf.adult; msg = `${pname}โตเต็มวัย มีออร่าประกาย ✨ ปลดล็อก: ${conf.ability}`;
   }
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
@@ -1755,7 +1820,7 @@ function renderStats(){
     ? state.pets.map(p=>{
         const stage = petStage(p);
         const face = stage === 'egg' ? (PETS[p.type].startKey==='egg'?'🥚':'🧺') : PETS[p.type][stage];
-        return `<div class="stats-row"><span>${face} ${PETS[p.type].name}</span><span>Lv.${p.level}${p.sick?' 🤒':''}</span></div>`;
+        return `<div class="stats-row"><span>${face} ${escapeHTML(p.name)} <small>(${PETS[p.type].name})</small></span><span>Lv.${p.level}${p.sick?' 🤒':''}</span></div>`;
       }).join('')
     : '<div class="cat-info">ยังไม่มีสัตว์เลี้ยง</div>';
   document.getElementById('stats-body').innerHTML = `

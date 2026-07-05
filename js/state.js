@@ -61,8 +61,10 @@ function currentSlotStart(now){
 }
 function nextSlotStart(now){ return currentSlotStart(now) + SLOT_MS; }
 
-function newPet(type){
-  return {type, level:1, exp:0,
+function newPet(type, name){
+  return {type,
+          name: name || PETS[type].name,   // ชื่อตั้งเอง (ข้อ 7) — ไม่ส่งมา = ชื่อชนิด เช่น "น้องหมา"
+          level:1, exp:0,
           equipped:{head:null, face:null, neck:null},
           sick:false, sickCause:null,
           fedUpTo:0,        // timestamp มื้อที่กินครอบคลุมแล้ว (0 = ยังไม่เคยกิน)
@@ -102,6 +104,10 @@ function loadState(){
         delete s[k];
       // ทำความสะอาดข้อมูลสัตว์ทุกตัว (กันสัตว์ที่ถูกตัดออก/ฟิลด์หาย)
       s.pets = s.pets.filter(p=>p && PETS[p.type]);
+      // ชื่อสัตว์ (ข้อ 7): ตัวเดิมไม่มีชื่อ → default ชื่อชนิด (เช่น "น้องหมา")
+      for(const p of s.pets){
+        if(typeof p.name !== 'string' || !p.name.trim()) p.name = PETS[p.type].name;
+      }
       for(const p of s.pets){
         if(!p.equipped) p.equipped = {head:null, face:null, neck:null};
         // ใส่ได้ทีละ 1 ชิ้น: ถ้าติดมาหลายชิ้นให้เหลือชิ้นเดียว (หัว > หน้า > คอ)

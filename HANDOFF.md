@@ -1,7 +1,69 @@
 # HANDOFF.md — แม่แบบส่งต่องานสำหรับ session ใหม่
 
 > ไฟล์นี้คือบริบททั้งหมดของโปรเจกต์ อ่านจบแล้วทำงานต่อได้ทันที
-> **สถานะล่าสุด (5 ก.ค. 2026 ดึก):** ✅ **ข้อ 0.1 Google Login + sync เซฟ cloud ปิดงานสมบูรณ์ ("รอบสิบห้า") 🎉** — บังคับ login แบบ ก. · rules โซน `/users` วางแล้ว (REST ผ่าน 15 เคส) · ผู้ใช้ทดสอบ login จริงบน Pages ผ่านครบ · ✅ รอบสิบหก: ถอดปุ่มรีเซ็ตอันตราย + แคตตาล็อกโรงงานแบ่งหน้า 5 รายการปัดซ้ายขวา — ✅ **รอบสิบแปด (6 ก.ค. 2026): ข้อ 0.2 display name เสร็จ** — js/data/badwords.js (ตัวกรองชื่อ+คำหยาบ แชร์กับข้อ 7) + ตั้งชื่อในเกมตอนลงทะเบียน/กล่องบังคับตั้งชื่อผู้เล่นเดิม + presence/leaderboard เปลี่ยน key เป็น uid + escape ชื่อจาก DB — ทดสอบ preview ผ่านครบ **⚠️ ค้าง: ผู้ใช้ต้องวาง rules ฉบับใหม่ (อยู่ท้ายรอบสิบแปด) + ทดสอบจริงบน Pages** — **🎯 ถัดไป: ข้อ 0.3 เพื่อน** → 0.4 แชท → 0.5 ของขวัญ (สเปกใหม่ดูข้อ 0.5 · ภาพ 38/50) — **งานขนาน:** ข้อ 9 คำศัพท์ให้ Sonnet 5 ทำ session แยกตาม `TASK_VOCAB_SONNET.md` (ยังไม่ได้รัน) · ธีมเมืองโทนฟ้าภาพครบ 6/6 พร้อมทำ session แยก · 🆕 อัพเดท 5725691326 บันทึกครบแล้ว (0.5 แก้สเปก · ข้อ 7/8/9 ใหม่) · ✅ **อัพเดท 5725691826 เสร็จแล้ว ("รอบสิบเจ็ด" 5 ก.ค. ดึก): ยกเครื่อง UI ทั้งเกมเป็น Lobby แนวนอนธีมเมืองโทนฟ้า + การ์ดสินค้าสไตล์ Trade HQ — ทดสอบผ่านครบ commit+push แล้ว (เหลือผู้ใช้ลองบนมือถือจริง)** · ⚠️⚠️ **ระวังสุดๆ: "รอบสิบเจ็ด" มี hotfix ด่วน — commit 9accb89 เคยทำเกมพังทั้งเว็บ (เข้าเกมไม่ได้เลย) เพราะเผลอติด script tag `js/data/vocab/band1-5.js` ที่ยังไม่มีไฟล์จริงขึ้น production (งานคำศัพท์ Sonnet ทำค้างครึ่งทาง — มีแค่ band1.js ยังไม่ commit) — ห้ามแก้ index.html ชี้ vocab/ จนกว่างานคำศัพท์เสร็จครบทุกไฟล์และ commit พร้อมกันในครั้งเดียว** · 🆕 **Project Dictionary A–Z จดไว้แล้ว (backlog ข้อ 10 + `TASK_DICTIONARY_SONNET.md`) — ผู้ใช้ให้ Fable/Opus เลือกจังหวะทำเอง** · ✅ **ภาพของขวัญครบ 50/50 แล้ว** (ผู้ใช้วางการ์ดเทศกาล 12 ไฟล์สุดท้าย — ข้อ 0.5 พร้อมด้านภาพ)
+> **สถานะล่าสุด (5 ก.ค. 2026 ดึก):** ✅ **ข้อ 0.1 Google Login + sync เซฟ cloud ปิดงานสมบูรณ์ ("รอบสิบห้า") 🎉** — บังคับ login แบบ ก. · rules โซน `/users` วางแล้ว (REST ผ่าน 15 เคส) · ผู้ใช้ทดสอบ login จริงบน Pages ผ่านครบ · ✅ รอบสิบหก: ถอดปุ่มรีเซ็ตอันตราย + แคตตาล็อกโรงงานแบ่งหน้า 5 รายการปัดซ้ายขวา — ✅ **รอบสิบแปด (6 ก.ค. 2026): ข้อ 0.2 display name เสร็จ** — js/data/badwords.js (ตัวกรองชื่อ+คำหยาบ แชร์กับข้อ 7) + ตั้งชื่อในเกมตอนลงทะเบียน/กล่องบังคับตั้งชื่อผู้เล่นเดิม + presence/leaderboard เปลี่ยน key เป็น uid + escape ชื่อจาก DB — ทดสอบ preview ผ่านครบ **⚠️ ค้าง: ผู้ใช้ต้องวาง rules ฉบับใหม่ (อยู่ท้ายรอบสิบแปด) + ทดสอบจริงบน Pages** — ✅ **รอบสิบเก้า: ข้อ 7 ตั้งชื่อสัตว์ + ✏️ แก้ชื่อในเกม + 📛 บนแถบโปรไฟล์** · ✅ **รอบยี่สิบ: เอฟเฟกต์ฝนเต็มจอ** — **🎯 session ถัดไป (Opus): อ่านหัวข้อ "📌 แผนสำหรับ session ถัดไป" ด้านล่างก่อนเลย** (งานถัดไป: ข้อ 0.3 เพื่อน → 0.4 แชท → 0.5 ของขวัญ + rules รอผู้ใช้วาง) (สเปกใหม่ดูข้อ 0.5 · ภาพ 38/50) — **งานขนาน:** ข้อ 9 คำศัพท์ให้ Sonnet 5 ทำ session แยกตาม `TASK_VOCAB_SONNET.md` (ยังไม่ได้รัน) · ธีมเมืองโทนฟ้าภาพครบ 6/6 พร้อมทำ session แยก · 🆕 อัพเดท 5725691326 บันทึกครบแล้ว (0.5 แก้สเปก · ข้อ 7/8/9 ใหม่) · ✅ **อัพเดท 5725691826 เสร็จแล้ว ("รอบสิบเจ็ด" 5 ก.ค. ดึก): ยกเครื่อง UI ทั้งเกมเป็น Lobby แนวนอนธีมเมืองโทนฟ้า + การ์ดสินค้าสไตล์ Trade HQ — ทดสอบผ่านครบ commit+push แล้ว (เหลือผู้ใช้ลองบนมือถือจริง)** · ⚠️⚠️ **ระวังสุดๆ: "รอบสิบเจ็ด" มี hotfix ด่วน — commit 9accb89 เคยทำเกมพังทั้งเว็บ (เข้าเกมไม่ได้เลย) เพราะเผลอติด script tag `js/data/vocab/band1-5.js` ที่ยังไม่มีไฟล์จริงขึ้น production (งานคำศัพท์ Sonnet ทำค้างครึ่งทาง — มีแค่ band1.js ยังไม่ commit) — ห้ามแก้ index.html ชี้ vocab/ จนกว่างานคำศัพท์เสร็จครบทุกไฟล์และ commit พร้อมกันในครั้งเดียว** · 🆕 **Project Dictionary A–Z จดไว้แล้ว (backlog ข้อ 10 + `TASK_DICTIONARY_SONNET.md`) — ผู้ใช้ให้ Fable/Opus เลือกจังหวะทำเอง** · ✅ **ภาพของขวัญครบ 50/50 แล้ว** (ผู้ใช้วางการ์ดเทศกาล 12 ไฟล์สุดท้าย — ข้อ 0.5 พร้อมด้านภาพ)
+
+## 📌 แผนสำหรับ session ถัดไป (Fable เขียนไว้ตอนใกล้เต็ม limit — 6 ก.ค. 2026 · Opus อ่านหัวข้อนี้ก่อนหัวข้ออื่น)
+
+**สถานะ:** ข้อ 0.2 (ชื่อในเกม+badwords) ✅ · ข้อ 7 (ชื่อสัตว์) ✅ · เอฟเฟกต์ฝนเต็มจอ ✅ — ทดสอบผ่าน+commit+push ครบแล้ว ไม่มีงานเขียนโค้ดค้างครึ่งทาง
+
+**งานเรียงลำดับ:**
+1. **(ฝั่งผู้ใช้ — เตือนก่อนเริ่มงานอื่น)** วาง Security Rules ฉบับใหม่ (JSON ข้างล่างนี้ วางแทนทั้งหมดใน console → Realtime Database → Rules) แล้วผู้ใช้ทดสอบจริงบน Pages: login → เจอกล่องตั้งชื่อ → ชื่อขึ้นการ์ดเพื่อน/กระดาน → มี `/users/<uid>/profile/name` ใน DB
+2. **ข้อ 0.3 ค้นหา id + add friend** (สเปกอยู่ backlog ข้อ 0.3) — presence/leaderboard ใช้ uid แล้ว (`onlineKey()` ใน online.js) join ได้เลย · รหัสเพื่อน 6 ตัวจาก uid hash · โซนใหม่ `/friendCodes` `/friendReq` `/friends` ต้องส่ง rules เพิ่มให้ผู้ใช้วางอีกรอบ (เขียนรวมกับฉบับล่างแล้วส่งทั้งก้อน)
+3. ข้อ 0.4 แชท → 0.5 ของขวัญ (สเปกใน backlog · 0.5 มีคำถามค้างต้องถามผู้ใช้ก่อนทำ)
+
+**Rules ฉบับปัจจุบันที่รอผู้ใช้วาง (ครอบข้อ 0.2 แล้ว — ทำ 0.3 ให้เพิ่มโซนใหม่เข้าก้อนนี้):**
+```json
+{
+  "rules": {
+    "presence": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n','g','act','at'])",
+        "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":   { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "act": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "at":  { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "leaderboard": {
+      ".read": true,
+      ".indexOn": "coins",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n','g','coins','at'])",
+        "n":     { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":     { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "coins": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "at":    { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "save": {
+          "data": { ".validate": "newData.isString()" },
+          "at":   { ".validate": "newData.isNumber()" }
+        },
+        "profile": {
+          "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" }
+        }
+      }
+    }
+  }
+}
+```
+
+**💰 แนวทางประหยัด tokens (งานไม่เสีย):**
+- **ห้ามอ่านไฟล์ใหญ่ทั้งไฟล์** โดยเฉพาะ ui.js (~1,800 บรรทัด) / HANDOFF.md / vocab.js / collectibles.js — ใช้ Grep หาชื่อฟังก์ชันก่อน แล้ว Read เฉพาะช่วงบรรทัดที่เกี่ยว (offset+limit)
+- HANDOFF อ่านแค่: บรรทัดสถานะบนสุด + หัวข้อนี้ + หัวข้อกติกาเฉพาะระบบที่จะแตะ + สเปก backlog ข้อที่ทำ — ประวัติ "รอบ..." เก่าๆ ไม่ต้องอ่านถ้าไม่ติดปัญหา
+- mock login สำหรับทดสอบ: สูตรอยู่หัวข้อ "ธรรมเนียมการทำงาน" (มี authWriteProfileName แล้ว) · ทดสอบเฉพาะจุดที่แก้ ไม่ต้อง regression ทั้งเกม · กดปุ่มใน overlay ผ่าน eval ให้แยกคนละ call กับตอนสร้าง overlay (เคย race 2 ครั้ง) · screenshot อาจ timeout — เช็ก DOM ผ่าน eval แทน
+- commit: add เฉพาะไฟล์ที่แก้ **ห้าม `git add -A`** (มี `js/data/vocab/` untracked ของงาน Sonnet ค้างอยู่ — ห้ามแตะ ห้าม commit จนงานคำศัพท์เสร็จครบ)
+- ตอบผู้ใช้กระชับ ตารางสั้น ไม่ต้องเล่ารายละเอียดโค้ดยาว
 
 ## ภาพรวมโปรเจกต์
 
@@ -42,7 +104,8 @@ js/auth.js            เครื่องยนต์ Google Login (ข้อ 
                       authSyncOnLogin (เทียบ savedAt vs cloud.at · ถามผูกเซฟเก่า authAskLink 2 ชั้น) ·
                       authPushSave (ทุก 1 นาที+ปิด/พับแท็บ เฉพาะเซฟขยับ) · authLogout (push→signOut→ล้าง cache→reload) ·
                       authGateOffline (SDK ไม่มา 20 วิ/config หาย) · จุด mock ทดสอบ: stub authFetchCloud/authWriteCloud/authDeleteCloud+onlineStart แล้วเรียก authOnLogin({uid,email})
-js/util.js            shuffle/fmtNum/toast/floatFx/sfx(beep)/showScreen/askConfirm/seededRand(mulberry32)
+js/util.js            shuffle/fmtNum/escapeHTML/toast/floatFx/sfx(beep)/showScreen/askConfirm/seededRand(mulberry32)
+                      + askNameDialog(opt) กล่องตั้งชื่อกลาง (validate ด้วย checkName — ใช้ทั้งชื่อผู้เล่น/ชื่อสัตว์ · ไม่ส่ง cancelText = บังคับตั้ง)
 js/state.js           state, DEFAULT_STATE, loadState (migration), careTick, addCoins/addRP/addExp,
                       expNeed(level), currentSlotStart/nextSlotStart, heatProtected, CURE_COST=1000,
                       เครื่องยนต์บิลรายเดือน: ymStr/billOutstanding/homeDecayed/billTick (state.bills)
@@ -99,6 +162,10 @@ img/                  ภาพสัตว์ · img/rank/ ✅ครบ 7 · im
 - **📛 ชื่อในเกม (ข้อ 0.2 — "รอบสิบแปด"):** `state.profileName` (migration: ไม่ใช่ string → null) ตั้งตอนลงทะเบียน (ช่อง `#reg-nick`) · ผู้เล่นเดิมไม่มีชื่อ → กล่องบังคับตั้ง `authAskProfileName()` ตอนเข้า dashboard (ปิดข้ามไม่ได้) · ตรวจด้วย `checkName(raw,2,20)` จาก badwords.js · เก็บสำเนาสาธารณะที่ `/users/<uid>/profile/name` (`authPushProfile()` — push ตอนตั้งชื่อ+ทุก login) · `onlineDisplayName()` ใช้ profileName ก่อน (fallback ชื่อจริง+อักษรแรกนามสกุลแบบเดิม) · ชื่อจาก DB ทุกจุด escape ด้วย `escapeHTML()` (util.js) ก่อนแทรก innerHTML
 
 ## ทดสอบล่าสุด — ผ่านทุกข้อใน preview
+
+**รอบยี่สิบ (6 ก.ค. 2026 — Fable session เอฟเฟกต์ฝนเต็มจอ ✅ ตามคำสั่งผู้ใช้):** ฝนตกจริง (19:00–20:00 `rainNow`) + ไม่มีบ้านสภาพดี (`!rainProtected()` — บ้านทรุดก็โดน) → overlay `#rain-fx` เต็มจอ (pointer-events:none z-index 9000 ทุกหน้าจอ): เม็ดฝนจาง 2 ชั้น (CSS repeating-gradient แกน 100°/96° เส้นเกือบตั้งเอียง ~10° · เลื่อน**ขนานกับเส้น**ให้ loop เนียน — ⚠️ เคยพลาดใช้ 170° แล้วเส้นออกมาเกือบนอน) + หยดน้ำเกาะกระจกจอ `.glass-drop` (spawn สุ่มทุก 0.35–1.15 วิ เกาะ ~6 วิ แล้วไหลลงจางหาย · loop เช็ก `document.contains` หยุดเองเมื่อ overlay ถูกถอด) · `rainFxTick()` ใน ui.js + interval 5 วิใน main.js (guard `Auth.booted`) · **แค่ภาพล้วน ไม่แตะ state/เซฟ** · ทดสอบ: mock 19:30 โชว์ 2 ชั้น+หยดเพิ่มเรื่อยๆ / ซื้อบ้าน→หายทันที / ขายบ้าน→กลับมา / mock 20:30 ฝนหยุด→หาย+spawn หยุด / screenshot สวย เส้นฝนเฉียงธรรมชาติ / ไม่มี console error / รีเซ็ตคืนหน้า login
+
+**รอบสิบเก้า (6 ก.ค. 2026 — Fable session ต่อยอดข้อ 0.2: ข้อ 7 ตั้งชื่อสัตว์ + ✏️ แก้ชื่อในเกม + 📛 บนแถบโปรไฟล์ ✅):** util.js เพิ่ม `askNameDialog(opt)` กล่องตั้งชื่อกลาง (ใช้ 4 จุด: ตั้งชื่อผู้เล่นครั้งแรก/แก้ชื่อผู้เล่น/ตั้งชื่อสัตว์ตอนซื้อ/เปลี่ยนชื่อสัตว์ — id เดิม `#pf-name-input/#pf-name-err/#pf-name-ok/#pf-name-cancel`) / auth.js refactor `authAskProfileName` ใช้กล่องกลาง + `authApplyProfileName(name)` (จุดเดียว: save+push profile+push save+รีเฟรช presence/leaderboard) + `authEditProfileName()` / state.js `newPet(type,name)` + migration สัตว์ไม่มีชื่อ→ชื่อชนิด / ui.js: student-chip เป็น `📛 <b>ชื่อในเกม</b> ✏️ · 🎓 ชื่อจริง · ชั้น...` (ปุ่ม `#btn-edit-name`) · ซื้อสัตว์: askConfirm เดิม → ต่อด้วยกล่องบังคับตั้งชื่อ (ยกเลิก=ไม่ซื้อ เหรียญไม่หัก) · ชื่อสัตว์โชว์แทนชื่อชนิดที่ plate-head (+ปุ่ม `#btn-pet-rename` ✏️)/pet-tabs/sick-banner/fav-tag/showLevelUp/สถิติ (สถิติมีวงเล็บชนิดต่อท้าย) — escape ทุกจุด / lobby.css `.chip-edit` · **ทดสอบผ่านครบ:** ลงทะเบียน→chip โชว์ 📛 ชื่อในเกม+✏️ / แก้ชื่อในเกม: prefill ชื่อเดิม·ยกเลิกได้ชื่อเดิมอยู่·เปลี่ยนแล้ว chip+การ์ดเพื่อน+push profile อัปเดตทันที (spy 2 รายการ) / ซื้อหมา: ยืนยัน→กล่องตั้งชื่อ·ยกเลิก=ไม่ซื้อเหรียญเท่าเดิม·ชื่อหยาบ "ควยทอง" ถูกบล็อกกล่องไม่ปิด·"บ็อบบี้" ซื้อสำเร็จ −3,000 ชื่อขึ้น plate+tab / เปลี่ยนชื่อน้อง→"Lucky 8" อัปเดต plate/tab/สถิติ "Lucky 8 (น้องหมา)" / checkName 16 ตัวถูกบล็อก·1 ตัวผ่าน (ข้อ 7 ใช้ 1–15) / migration เซฟเก่า: สัตว์ไม่มีชื่อ→"น้องหมา" + ไม่มี profileName→กล่องบังคับ (ไม่มีปุ่มยกเลิก) ตั้งแล้ว push ถูก / ไม่มี console error-warning / จบงานรีเซ็ต localStorage คืนหน้า login · **หมายเหตุทดสอบ:** กดปุ่มใน overlay ผ่าน eval ควรแยกเป็นคนละ eval call กับตอนสร้าง overlay (คลิกรวดเดียวใน call เดียวอาจ race — เจอ 2 ครั้งในรอบนี้) · screenshot timeout ได้ ให้เช็ก DOM ผ่าน eval แทน
 
 **รอบสิบแปด (6 ก.ค. 2026 — Fable session ข้อ 0.2 display name ✅):** สร้าง `js/data/badwords.js` (BAD_PART/BAD_EXACT + nameNormalize + checkName — แชร์กับข้อ 7 ตั้งชื่อสัตว์: `checkName(raw,1,15)`) / state.js `profileName` + migration / index.html ช่อง `#reg-nick` + script badwords / main.js validate ชื่อตอนลงทะเบียน + เรียก `authAskProfileName()` ใน bootGame / auth.js `authWriteProfileName`/`authPushProfile` (push ตอนตั้งชื่อ+ทุก login) + กล่องบังคับตั้งชื่อ + logout ลบ presence ด้วย `onlineKey()` / online.js `onlineKey()` = uid (fallback onlineId) + `onlineDisplayName()` ใช้ profileName ก่อน / ui.js ไฮไลต์ตัวเองด้วย uid + `escapeHTML()` (เพิ่มใน util.js) ชื่อ/ชั้น/act จาก DB ทุกจุด · **ทดสอบผ่านครบ:** ตัวกรอง 27/27 เคส (คำปกติผ่านหมด รวม ฟักทอง/แมงมุม/กะหรี่ปั๊บ/Bob/กูเกิล · คำหยาบโดนดักทุกท่า: เว้นวรรคหลบ "ค ว ย" / ตัวซ้ำ fuuuck / เลขแทน Sh1t / ไม่มีวรรณยุกต์ เหีย / แฝงในชื่อ) / ลงทะเบียน: ชื่อหยาบ+อักขระพิเศษถูกบล็อกพร้อม toast · ชื่อดี " น้องบีม   007 " → จัดระเบียบเป็น "น้องบีม 007" เข้าเกม + push profile {uid:test1} / ผู้เล่นเดิมเซฟไม่มี profileName → เข้า dashboard เจอกล่องบังคับตั้งชื่อ ชื่อหยาบขึ้น error แดงกล่องไม่ปิด ชื่อดีปิดกล่อง+push+การ์ดอัปเดตทันที / การ์ดเพื่อน+leaderboard: ชื่อแฝง `<img onerror>`/`<script>` โชว์เป็นข้อความเฉยๆ ไม่ทำงาน (escapeHTML) + ไฮไลต์ตัวเอง "⭐ ...(หนูเอง)" ด้วย uid ถูกแถว / ไม่มี console error-warning ทั้งเซสชัน / จบงานรีเซ็ต localStorage คืนหน้า login — **⚠️ งานค้างฝั่งผู้ใช้: วาง Security Rules ฉบับใหม่ใน console** (เพิ่ม validate `/users/$uid/profile/name` ≤20 + ผูก presence/leaderboard เข้ากับ `auth.uid === $uid` — rules ฉบับเต็มดูในแชท session รอบสิบแปด หรือขอ Claude สร้างใหม่ได้) แล้วทดสอบ login จริงบน Pages: ตั้งชื่อ → ชื่อขึ้นการ์ดเพื่อน/กระดาน → เช็ก `/users/<uid>/profile/name` ใน console · **หมายเหตุ:** rules ใหม่ปิดเขียน presence/leaderboard แบบไม่มี token → seed ทดสอบผ่าน REST ธรรมดาไม่ได้แล้ว (ตามแผนเดิม — ใช้หน้าเกมจริง/Emulator แทน) · เอนทรีเก่าใน DB ที่ key เป็น onlineId ถูกลบทิ้งแล้ว (เปลี่ยนเป็น uid)
 
@@ -188,7 +255,7 @@ img/                  ภาพสัตว์ · img/rank/ ✅ครบ 7 · im
 4. **การ์ดสรุปส่งครู** — ปุ่มในหน้าสถิติ สร้างการ์ดใบเดียว (ชื่อ วัน-เวลา เหรียญวันนี้ แรงค์ คะแนนสอบล่าสุด) ให้เด็กแคปส่งไลน์ครู
 5. **เสียง/แอนิเมชันเพิ่ม** — เสียงตอนซื้อบ้าน, แอนิเมชันหยดฝนตอนฝนตก
 6. **ภาพที่ยังไม่เจน:** dragon เกือบทั้งชุด + dog/cat_newborn (PROMPTS.md) · บ้านเสีย 12 ภาพ + มือถือ 2 + คอม 2 (PROMPTS_RANK_HOME.md) · สวนผลไม้ (ยังไม่มี prompt) · **ของขวัญ 50 ภาพ (PROMPTS_GIFTS.md)** · **ธีม 6 ภาพ (PROMPTS_THEME.md)**
-7. **⭐ ตั้งชื่อสัตว์เลี้ยง (อัพเดท 5725691326 ข้อ 3 — 5 ก.ค. 2026):** ซื้อสัตว์ → กล่อง**บังคับ**ตั้งชื่อก่อน (ยกเลิกไม่ตั้ง = ไม่ซื้อ) · แก้ชื่อภายหลังได้ (ปุ่ม ✏️ ในการ์ดสัตว์) · เก็บใน `p.name` (migration: ตัวเดิมไม่มีชื่อ → default ชื่อชนิด เช่น "น้องหมา") · **ระบบตรวจชื่อ:** อนุญาตเฉพาะไทย/อังกฤษ/ตัวเลข/เว้นวรรค 1–15 ตัว (regex โครงเดียวกับข้อ 0.2) + blacklist คำหยาบ/คำต้องห้ามไทย-อังกฤษ (แชร์ `js/data/badwords.js` กับข้อ 0.2 — ตรวจแบบ normalize ตัดวรรค/ตัวซ้ำ) + **กันอักขระพิเศษ/ข้อความที่ทำระบบพังเด็ดขาด** (⚠️ UI วาดด้วย innerHTML — ชื่อที่ผ่านตัวกรอง regex ขาวล้วนจะไม่มี `<>"'&` อยู่แล้ว แต่ให้ escape ตอนแสดงซ้ำอีกชั้น)
+7. **✅ ตั้งชื่อสัตว์เลี้ยง — เสร็จ "รอบสิบเก้า" (6 ก.ค. 2026 ตามสเปกครบ: บังคับตั้งตอนซื้อ ยกเลิก=ไม่ซื้อ · ปุ่ม ✏️ เปลี่ยนชื่อในการ์ดสัตว์ · `p.name`+migration ตัวเดิม=ชื่อชนิด · checkName(raw,1,15) จาก badwords.js · escape ทุกจุดแสดงผล)** — สเปกเดิม: (อัพเดท 5725691326 ข้อ 3 — 5 ก.ค. 2026): ซื้อสัตว์ → กล่อง**บังคับ**ตั้งชื่อก่อน (ยกเลิกไม่ตั้ง = ไม่ซื้อ) · แก้ชื่อภายหลังได้ (ปุ่ม ✏️ ในการ์ดสัตว์) · เก็บใน `p.name` (migration: ตัวเดิมไม่มีชื่อ → default ชื่อชนิด เช่น "น้องหมา") · **ระบบตรวจชื่อ:** อนุญาตเฉพาะไทย/อังกฤษ/ตัวเลข/เว้นวรรค 1–15 ตัว (regex โครงเดียวกับข้อ 0.2) + blacklist คำหยาบ/คำต้องห้ามไทย-อังกฤษ (แชร์ `js/data/badwords.js` กับข้อ 0.2 — ตรวจแบบ normalize ตัดวรรค/ตัวซ้ำ) + **กันอักขระพิเศษ/ข้อความที่ทำระบบพังเด็ดขาด** (⚠️ UI วาดด้วย innerHTML — ชื่อที่ผ่านตัวกรอง regex ขาวล้วนจะไม่มี `<>"'&` อยู่แล้ว แต่ให้ escape ตอนแสดงซ้ำอีกชั้น)
 8. **⭐ รายได้ออนไลน์ +0.01 เหรียญ/วิ (อัพเดท 5725691326 ข้อ 4):** ผู้เล่นออนไลน์อยู่ในเกม (เล่นอยู่หรือเปิดค้างไว้ก็ได้) → เหรียญยอดรวม +0.01/วิ · **แสดงผลโดดเด่นชัดเจนน่าดึงดูด** (ตัวเลขวิ่งสด — โครง `compTick`/`#comp-live` ของคอมใช้ซ้ำได้ แต่อันนี้ฟรีทุกคนไม่ต้องซื้ออะไร) จุดประสงค์: ดึงดูดให้เข้ามาเล่นบ่อยๆ · ตอนทำต้องเคาะ: นิยาม "ออนไลน์" (แท็บเปิดอยู่? ต้อง focus ไหม?) + นับเฉพาะตอน login แล้ว · เหรียญส่วนนี้เข้า daily/leaderboard ตามปกติ
 9. **⭐ คำศัพท์ (อัพเดท 5725691326 ข้อ 5/5.1/5.2 — มอบ Sonnet 5):** แยก vocab.js → `js/data/vocab/band1-5.js + index.js` · เพิ่ม part of speech ตัวที่ 3 `['research','การวิจัย','n']` โชว์ท้ายคำแบบ `research (n.)` ทั้งเกมจับคู่+ข้อสอบ (แก้ game.js 4 จุด) · ขยาย ≥40 คำ/หมวด + หมวดใหม่ 2-4/band รวม ≥2,000 คำ ตรงช่วงชั้น สพฐ./CEFR — **คำสั่งเต็มเขียนไว้แล้วใน `TASK_VOCAB_SONNET.md` ผู้ใช้เปิด session ใหม่เลือก Sonnet แล้วสั่งอ่านไฟล์นั้นได้เลย** (ห้ามเปลี่ยน id หมวด/en ห้ามซ้ำใน band/th ห้ามซ้ำในหมวด — เหตุผลอยู่ในไฟล์) · เสร็จแล้ว Fable 5/Opus 4.8 ตรวจใน session ถัดไป
 10. **🆕 Project Dictionary A–Z (ผู้ใช้สั่ง note ไว้ 5 ก.ค. 2026 ดึก — "จะทำตอนไหนให้ Fable หรือ Opus พิจารณาตามความเหมาะสม"):** พจนานุกรมอังกฤษ→ไทยเรียง a–z ครอบคลุมถึง idioms + phrasal verbs · รูปแบบต่อคำ: `คำ (pos) /IPA/ เสียงอ่านไทย` + ประโยคอังกฤษง่ายๆ อธิบายความหมาย + ความหมายไทย (ตัวอย่าง: `cat (n.) /kæt/ แคท · A cat is a small pet. It says "meow." · แมว`) · **มอบ Sonnet ทำหลาย session** — กฎเหล็กผู้ใช้: เขียนใส่ไฟล์ในเครื่อง/GitHub · **ทุกๆ ~5k tokens ขึ้นไฟล์ใหม่ ห้ามอ่านไฟล์เก่าย้อนหลัง (ประหยัด tokens)** · ก่อนขึ้น session ใหม่ต้องบันทึกเสมอว่าคำล่าสุดคือคำไหน+คำถัดไปเริ่มคำไหน กันหลุด/ตกหล่น · **สเปกเต็ม+โครงไฟล์+ตารางความคืบหน้าเขียนไว้แล้วใน `TASK_DICTIONARY_SONNET.md`** · ฝั่งเกม (ทำทีหลัง): ปุ่ม Dictionary ที่ Lobby → เปิด layer กลางจอ **พื้นฟ้าไล่เฉดสไตล์หนัง sci-fi ล้ำสมัย** (reuse ระบบแผง lobby.js ได้) + แนะนำช่องค้นหา/แถบ A–Z/lazy-load · ข้อมูลเริ่มรันขนานได้ทุกเมื่อ (ไม่ชนไฟล์เกม) ปุ่ม+layer แนะนำหลัง 0.2–0.5

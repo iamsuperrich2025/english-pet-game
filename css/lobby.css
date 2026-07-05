@@ -115,6 +115,46 @@ h1{color:var(--sky-d);text-shadow:none;}
   font-size:13.5px;font-weight:500;color:#fff;background:none;border:none;box-shadow:none;
   padding:0;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-align:left;
 }
+/* ---------- เอฟเฟกต์ฝนเต็มจอ (รอบยี่สิบ — ฝนตก+ไม่มีบ้านสภาพดี) ---------- */
+#rain-fx{position:fixed;inset:0;pointer-events:none;z-index:9000;overflow:hidden;}
+/* เส้นฝน: gradient แกน ~100deg → เส้น stripe เกือบตั้ง (เอียง ~10° เหมือนฝนจริง)
+   แล้วเลื่อน "ขนานกับเส้น" (translate x,y ตามสัดส่วน sin/cos) ให้ loop เนียนไม่กระตุก */
+.rain-layer{
+  position:absolute;inset:-15% -8%;
+  background:repeating-linear-gradient(100deg,
+    transparent 0 17px, rgba(190,220,255,.28) 17px 18.5px, transparent 18.5px 40px);
+  animation:rainfall .7s linear infinite;opacity:.5;
+}
+.rain-layer.l2{
+  background:repeating-linear-gradient(96deg,
+    transparent 0 26px, rgba(210,235,255,.18) 26px 27px, transparent 27px 58px);
+  animation-name:rainfall2;animation-duration:1.15s;opacity:.4;
+}
+@keyframes rainfall{from{transform:translate(-7px,-40px)}to{transform:translate(7px,40px)}}
+@keyframes rainfall2{from{transform:translate(-5px,-50px)}to{transform:translate(5px,50px)}}
+.rain-glass{position:absolute;inset:0;}
+.glass-drop{
+  position:absolute;border-radius:48% 52% 58% 58%;
+  background:radial-gradient(circle at 35% 28%, rgba(255,255,255,.6),
+    rgba(195,225,255,.28) 55%, rgba(160,200,245,.12) 85%);
+  box-shadow:inset 0 -1px 2px rgba(40,80,150,.22);
+  animation:glassdrop 6s ease-in forwards;
+}
+@keyframes glassdrop{
+  0%{opacity:0;transform:scale(.3)}
+  8%{opacity:.95;transform:scale(1)}
+  72%{opacity:.8;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(9px) scale(.85)}
+}
+
+/* ปุ่ม ✏️ เล็กๆ แก้ชื่อในเกม/ชื่อสัตว์ (ข้อ 0.2 + ข้อ 7) — อยู่บนพื้นกระจกเข้มได้ */
+.chip-edit{
+  border:none;background:rgba(255,255,255,.22);border-radius:8px;cursor:pointer;
+  font-size:11px;padding:2px 6px;line-height:1.2;vertical-align:middle;
+  font-family:inherit;transition:transform .12s, background .12s;
+}
+.chip-edit:hover{background:rgba(255,255,255,.42);}
+.chip-edit:active{transform:scale(.9);}
 .profile-plate .clock-chip{
   font-size:11px;color:#8fb8e8;background:none;border:none;box-shadow:none;
   padding:0;margin:0;display:block;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;

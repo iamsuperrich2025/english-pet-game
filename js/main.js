@@ -99,6 +99,9 @@ setInterval(()=>{
   }
 }, 60000);
 
+// เอฟเฟกต์ฝนเต็มจอ (รอบยี่สิบ) — เช็กทุก 5 วิ ทุกหน้าจอ (โชว์เฉพาะฝนตก+ไม่มีบ้านสภาพดี)
+setInterval(()=>{ if(Auth.booted) rainFxTick(); }, 5000);
+
 // นาฬิกาใต้ชื่อผู้เล่น เดินทุกวินาที (เฉพาะตอนเปิดหน้า Dashboard)
 setInterval(()=>{
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderClock();

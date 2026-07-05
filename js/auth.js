@@ -62,48 +62,42 @@ function authPushProfile(){
   }catch(e){ /* SDK ยังไม่พร้อม — รอบหน้าค่อยส่ง */ }
 }
 
+/* บันทึกชื่อในเกม + อัปเดตทุกที่ที่ชื่อโชว์ (จุดเดียว — ใช้ทั้งตั้งครั้งแรก/แก้ชื่อ) */
+function authApplyProfileName(name){
+  state.profileName = name;
+  saveState();
+  authPushProfile();
+  authPushSave(true);
+  // อัปเดตชื่อบน presence/leaderboard ทันที (lastCoins = null บังคับเขียนกระดานใหม่)
+  if(typeof Online !== 'undefined') Online.lastCoins = null;
+  if(typeof onlinePushPresence === 'function') onlinePushPresence();
+  if(typeof onlinePushScore === 'function') onlinePushScore();
+  sfx.levelup();
+  toast(`📛 ชื่อในเกมของหนูคือ "${name}" 🎉`);
+  renderDashboard();
+}
+
 /* ---------- กล่องบังคับตั้งชื่อในเกม (ผู้เล่นเดิมที่เซฟยังไม่มีชื่อ — ข้อ 0.2)
    ปิดข้ามไม่ได้: ชื่อนี้ใช้โชว์บน presence/leaderboard แทนชื่อจริง ---------- */
 function authAskProfileName(){
-  const overlay = document.createElement('div');
-  overlay.className = 'levelup-overlay';
-  overlay.innerHTML = `<div class="levelup-box">
-    <div class="lv-emoji">📛</div>
-    <h2>ตั้งชื่อในเกมกันเถอะ!</h2>
-    <p style="font-size:14.5px;color:#8a7aa0;margin:6px 0 10px">
-      ชื่อนี้คือชื่อที่เพื่อนๆ ทั้งเกมจะเห็น (ไทย/อังกฤษ 2–20 ตัว)<br>
-      ไม่ต้องใช้ชื่อ-นามสกุลจริงก็ได้นะ 😊</p>
-    <input id="pf-name-input" maxlength="20" placeholder="เช่น น้องบีม, Beam123"
-      style="width:88%;padding:10px 12px;border:2px solid #d9c9ef;border-radius:12px;font-size:16px;font-family:inherit;text-align:center">
-    <p id="pf-name-err" style="color:#e05555;font-size:13.5px;min-height:18px;margin:8px 0 2px"></p>
-    <button class="cf-ok" id="pf-name-ok">ใช้ชื่อนี้เลย ✅</button>
-  </div>`;
-  document.body.appendChild(overlay);
-  const input = overlay.querySelector('#pf-name-input');
-  const err   = overlay.querySelector('#pf-name-err');
-  const submit = ()=>{
-    const r = checkName(input.value, 2, 20);
-    if(!r.ok){
-      sfx.wrong();
-      err.textContent = r.msg;
-      return;
-    }
-    state.profileName = r.name;
-    saveState();
-    authPushProfile();
-    authPushSave(true);
-    overlay.remove();
-    sfx.levelup();
-    toast(`📛 ตั้งชื่อ "${r.name}" เรียบร้อย!`);
-    // อัปเดตชื่อบน presence/leaderboard ทันที (lastCoins = null บังคับเขียนกระดานใหม่)
-    if(typeof Online !== 'undefined') Online.lastCoins = null;
-    if(typeof onlinePushPresence === 'function') onlinePushPresence();
-    if(typeof onlinePushScore === 'function') onlinePushScore();
-    renderDashboard();
-  };
-  overlay.querySelector('#pf-name-ok').addEventListener('click', submit);
-  input.addEventListener('keydown', e=>{ if(e.key === 'Enter') submit(); });
-  setTimeout(()=>input.focus(), 50);
+  askNameDialog({
+    emoji:'📛', title:'ตั้งชื่อในเกมกันเถอะ!',
+    desc:'ชื่อนี้คือชื่อที่เพื่อนๆ ทั้งเกมจะเห็น (ไทย/อังกฤษ 2–20 ตัว)<br>ไม่ต้องใช้ชื่อ-นามสกุลจริงก็ได้นะ 😊',
+    placeholder:'เช่น น้องบีม, Beam123', min:2, max:20,
+    okText:'ใช้ชื่อนี้เลย ✅',
+    onOk:authApplyProfileName,
+  });
+}
+
+/* ---------- ปุ่ม ✏️ แก้ชื่อในเกมภายหลัง (แถบโปรไฟล์บน Lobby) ---------- */
+function authEditProfileName(){
+  askNameDialog({
+    emoji:'✏️', title:'เปลี่ยนชื่อในเกม',
+    desc:'ชื่อใหม่จะไปโชว์บนการ์ดเพื่อนและกระดานอันดับทันที (ไทย/อังกฤษ 2–20 ตัว)',
+    placeholder:'เช่น น้องบีม, Beam123', value:state.profileName || '', min:2, max:20,
+    okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
+    onOk:authApplyProfileName,
+  });
 }
 
 /* ---------- เริ่มระบบหลัง SDK โหลดครบ (เรียกจาก online.js) ---------- */

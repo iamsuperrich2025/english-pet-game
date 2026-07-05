@@ -87,6 +87,49 @@ const sfx = {
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
 };
 
+/* ---------- ป๊อปอัพตั้งชื่อ (ใช้ร่วม: ชื่อในเกมข้อ 0.2 + ชื่อสัตว์ข้อ 7) ----------
+   opt = {emoji, title, desc(html), placeholder, value, min, max,
+          okText, cancelText (ไม่ใส่ = บังคับตั้ง ปิดข้ามไม่ได้), onOk(name), onCancel}
+   ตรวจด้วย checkName (badwords.js) — ไม่ผ่านโชว์ข้อความแดง กล่องไม่ปิด */
+function askNameDialog(opt){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box">
+    <div class="lv-emoji">${opt.emoji || '📛'}</div>
+    <h2>${opt.title}</h2>
+    <p style="font-size:14.5px;color:#8a7aa0;margin:6px 0 10px">${opt.desc || ''}</p>
+    <input id="pf-name-input" maxlength="${opt.max}" placeholder="${opt.placeholder || ''}"
+      style="width:88%;padding:10px 12px;border:2px solid #d9c9ef;border-radius:12px;font-size:16px;font-family:inherit;text-align:center">
+    <p id="pf-name-err" style="color:#e05555;font-size:13.5px;min-height:18px;margin:8px 0 2px"></p>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+      ${opt.cancelText ? `<button class="cf-no" id="pf-name-cancel" style="background:#b8a8cc;box-shadow:0 4px 0 #96859f">${opt.cancelText}</button>` : ''}
+      <button class="cf-ok" id="pf-name-ok">${opt.okText}</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const input = overlay.querySelector('#pf-name-input');
+  const err   = overlay.querySelector('#pf-name-err');
+  input.value = opt.value || '';
+  const submit = ()=>{
+    const r = checkName(input.value, opt.min, opt.max);
+    if(!r.ok){
+      sfx.wrong();
+      err.textContent = r.msg;
+      return;
+    }
+    overlay.remove();
+    opt.onOk(r.name);
+  };
+  overlay.querySelector('#pf-name-ok').addEventListener('click', submit);
+  input.addEventListener('keydown', e=>{ if(e.key === 'Enter') submit(); });
+  const cancel = overlay.querySelector('#pf-name-cancel');
+  if(cancel) cancel.addEventListener('click', ()=>{
+    overlay.remove();
+    if(opt.onCancel) opt.onCancel();
+  });
+  setTimeout(()=>input.focus(), 50);
+}
+
 /* ---------- ป๊อปอัพยืนยัน (แทน confirm ของเบราว์เซอร์) ---------- */
 function askConfirm(html, okText, onOk){
   const overlay = document.createElement('div');
