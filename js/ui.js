@@ -126,17 +126,24 @@ function rainFxTick(){
     fx.remove();                       // ฝนหยุด/ซื้อบ้านแล้ว → เอฟเฟกต์หาย
   }
 }
-/* หยดน้ำเกาะกระจก: โผล่สุ่มตำแหน่ง เกาะ ~6 วิ แล้วไหลลงจางหาย — spawn ต่อเนื่อง
-   จนกว่า overlay ถูกถอด (เช็ก document.contains ทุกรอบ กัน loop ค้าง) */
+/* หยดน้ำเกาะกระจก: ภาพเม็ดฝนจริง 5 แบบ (img/fx/) สุ่มแบบ/ขนาด/ตำแหน่ง/
+   ความทึบ/องศาเอียง เกาะ ~6 วิ แล้วไหลลงจางหาย — spawn ต่อเนื่องจนกว่า overlay
+   ถูกถอด (เช็ก document.contains ทุกรอบ กัน loop ค้าง) */
+const RAIN_DROP_IMGS = ['raindrop.png','raindrop_1.png','raindrop_2.png','raindrop_3.png','raindrop_4.png'];
 function rainFxDrop(glass){
   if(!document.body.contains(glass)) return;
-  const d = document.createElement('span');
-  d.className = 'glass-drop';
-  const size = 6 + Math.random()*14;
-  d.style.cssText = `left:${(2+Math.random()*94).toFixed(1)}%;top:${(2+Math.random()*88).toFixed(1)}%;width:${size.toFixed(0)}px;height:${(size*1.2).toFixed(0)}px`;
-  glass.appendChild(d);
-  setTimeout(()=>d.remove(), 6100);
-  setTimeout(()=>rainFxDrop(glass), 350 + Math.random()*800);
+  const img = document.createElement('img');
+  img.className = 'glass-drop';
+  img.src = 'img/fx/' + RAIN_DROP_IMGS[Math.floor(Math.random()*RAIN_DROP_IMGS.length)];
+  const size = 16 + Math.random()*30;
+  img.style.left  = (2 + Math.random()*92).toFixed(1) + '%';
+  img.style.top   = (2 + Math.random()*84).toFixed(1) + '%';
+  img.style.width = size.toFixed(0) + 'px';
+  img.style.setProperty('--o', (0.4 + Math.random()*0.4).toFixed(2));   // ความทึบสูงสุด (จางแบบน้ำ)
+  img.style.setProperty('--r', (Math.random()*16 - 8).toFixed(1) + 'deg'); // เอียงเล็กน้อยไม่ให้เหมือนกันเป๊ะ
+  glass.appendChild(img);
+  setTimeout(()=>img.remove(), 6100);
+  setTimeout(()=>rainFxDrop(glass), 300 + Math.random()*750);
 }
 
 /* ============================================================
