@@ -106,6 +106,15 @@ function checkMatch(){
     addCoins(coins);
     addRP(rp);
 
+    // แต้มผลิตโรงงาน (ตอบถูก 1 คำ = 1 แต้ม) — ครบแล้วเปิดฉากผลิตสำเร็จ
+    const made = addCraft(1);
+    if(made){
+      setTimeout(()=>showCollectReveal(made, null, true), 650);
+    }else if(state.producing){
+      const cc = collectInfo(state.producing.id);
+      notes.push(`🏭 ${cc.name} ${state.producing.progress}/${cc.words}`);
+    }
+
     sfx.correct(); sfx.coin();
     floatFx(`+${coins} 🪙 +${rp} RP${exp>0 ? ` +${exp} EXP` : ''}`, '#f2994a');
     if(game.combo >= 2){
@@ -260,6 +269,8 @@ function finishQuiz(){
     addCoins(coins);
   }
   addRP(rp);
+  // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)
+  const made = addCraft(quiz.correct);
   // โบนัสตามบ้าน (ข้อ 8): ทำข้อสอบครบ 10 ข้อ เพิง +0 / บ้านกลาง +100 / ปราสาท +200
   const homeB = homeInfo(state.home);
   const homeBonus = homeB ? homeB.quizBonus : 0;
@@ -279,6 +290,8 @@ function finishQuiz(){
         ? (firstPass ? `รับรางวัลพิเศษ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}! 🎁` : `ผ่านอีกครั้ง รับ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}`)
         : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก 8 ข้อขึ้นไปถึงจะได้รางวัลพิเศษ ลองใหม่อีกครั้งนะ`}
       ${homeBonus > 0 ? `<br>${homeB.emoji} โบนัสขยันจาก${homeB.name} <b>+${homeBonus} 🪙</b>` : ''}
+      ${quiz.correct > 0 && made ? `<br>🏭 แต้มผลิต +${quiz.correct} — <b>ผลิตสำเร็จ!</b> 🎉` : ''}
+      ${quiz.correct > 0 && !made && state.producing ? `<br>🏭 แต้มผลิต +${quiz.correct} (${collectInfo(state.producing.id).name} ${state.producing.progress}/${collectInfo(state.producing.id).words})` : ''}
     </p>
     <button>ตกลง</button>
   </div>`;
@@ -288,5 +301,6 @@ function finishQuiz(){
     showScreen('screen-cats');
   });
   document.body.appendChild(overlay);
+  if(made) setTimeout(()=>showCollectReveal(made, null, true), 600);
   if(passed) sfx.levelup(); else sfx.wrong();
 }

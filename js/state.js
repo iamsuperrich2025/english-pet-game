@@ -36,9 +36,13 @@ const DEFAULT_STATE = {
   compSince:null,                     // timestamp ที่ตกเหรียญรายได้คอมครั้งล่าสุด (เศษวินาทีสะสมต่อจากนี้)
   compEarned:0,                       // เหรียญที่คอมทำให้ทั้งหมด (ไว้โชว์)
   dataCut:false,                      // ถูกตัดบริการข้อมูล (ค้างข้ามเดือน) — รายได้คอมหยุดนิ่ง
-  collection:[],                      // สินค้าสะสมที่ถือครอง (array of id — มีชิ้นซ้ำได้)
+  collection:[],                      // สินค้าที่ถือครอง (array of id — มีชิ้นซ้ำได้)
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
+  producing:null,                     // งานผลิตในโรงงาน: {id, progress} (ตอบคำศัพท์ถูก 1 คำ = progress +1)
+  producedCount:0,                    // จำนวนสินค้าที่ผลิตสำเร็จทั้งหมด (โชว์ในสถิติ)
+  orders:[],                          // ออเดอร์พิเศษจากลูกค้าจำลอง: {key, id, buyer, grade, payout, expireAt}
+  nextOrderAt:0,                      // เวลาที่ออเดอร์ใหม่จะเข้ามา (orderTick)
   rankKey:null,                       // key แรงค์ล่าสุดที่ฉลองไปแล้ว (ไว้เทียบเลื่อน/ลด — ดู refreshRank)
   onlineId:null,                      // id ประจำเครื่องสำหรับระบบออนไลน์ (สุ่มครั้งเดียวใน online.js)
 };
@@ -134,6 +138,12 @@ function loadState(){
       if(!Array.isArray(s.listings)) s.listings = [];
       s.listings = s.listings.filter(l=>l && collectInfo(l.id) && typeof l.price === 'number' && typeof l.listedAt === 'number');
       if(!Array.isArray(s.tradeSold)) s.tradeSold = [];
+      // โรงงานผลิต + ออเดอร์พิเศษ (5 ก.ค. 2026): เซฟเก่าไม่มี → เริ่มว่าง / คัดข้อมูลเสียทิ้ง
+      if(!s.producing || !collectInfo(s.producing.id) || typeof s.producing.progress !== 'number' || s.producing.progress < 0) s.producing = null;
+      if(typeof s.producedCount !== 'number') s.producedCount = 0;
+      if(!Array.isArray(s.orders)) s.orders = [];
+      s.orders = s.orders.filter(o=>o && collectInfo(o.id) && typeof o.payout === 'number' && typeof o.expireAt === 'number');
+      if(typeof s.nextOrderAt !== 'number') s.nextOrderAt = 0;
       // ระบบออนไลน์: เซฟเก่าไม่มี id → ให้ online.js สุ่มใหม่ตอนเชื่อมต่อ
       if(typeof s.onlineId !== 'string') s.onlineId = null;
       return s;
@@ -333,12 +343,58 @@ function marketTick(now){
   if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
 }
 
+/* ============================================================
+   โรงงานผลิตสินค้า: จ่ายค่าผลิตด้วย "แต้มคำศัพท์"
+   ตอบถูกในเกมจับคู่ 1 คำ / ข้อสอบ 1 ข้อ = 1 แต้ม ไหลเข้างานที่เลือกค้างไว้
+   ครบตามจำนวนคำของสินค้า → เข้าคลัง คืนค่า id ให้ UI เปิดฉากฉลอง
+   ============================================================ */
+function addCraft(n){
+  if(!state.producing || n <= 0) return null;
+  const c = collectInfo(state.producing.id);
+  if(!c){ state.producing = null; return null; }
+  state.producing.progress += n;
+  if(state.producing.progress < c.words) return null;
+  state.collection.push(c.id);       // ผลิตสำเร็จ! (แต้มเกินไม่ทบไปชิ้นถัดไป — เริ่มงานใหม่นับใหม่)
+  state.producedCount++;
+  state.producing = null;
+  return c.id;
+}
+
+/* ---------- ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตสินค้าเจาะจง จ่ายแพงกว่าราคาฐาน 30–80%
+   มีเวลาส่งมอบ 24 ชม. · เข้ามาใหม่ทุก 2–4 ชม. · ค้างได้สูงสุด 2 ออเดอร์
+   หมดเวลา → หายไปเงียบๆ (เดี๋ยวออเดอร์ใหม่ก็มา) ---------- */
+const ORDER_MAX         = 2;
+const ORDER_LIFE_MS     = 24*60*60*1000;
+const ORDER_GAP_MIN_MS  = 2*60*60*1000;
+const ORDER_GAP_SPAN_MS = 2*60*60*1000;
+const ORDER_TIER_WEIGHT = {common:40, rare:35, epic:18, legendary:6, mythic:1};   // เน้นของที่เด็กผลิตไหว
+function newOrder(now){
+  // มือใหม่ที่ยังไม่เคยผลิตของ → ออเดอร์แรกๆ เป็นของ common ที่ทำไหวเสมอ
+  const pool = state.producedCount === 0 ? COLLECTIBLES.filter(c=>c.tier === 'common') : COLLECTIBLES;
+  let total = 0;
+  for(const c of pool) total += ORDER_TIER_WEIGHT[c.tier] || 0;
+  let r = Math.random()*total, item = pool[0];
+  for(const c of pool){ r -= ORDER_TIER_WEIGHT[c.tier] || 0; if(r <= 0){ item = c; break; } }
+  const buyer = ONLINE_NAMES[Math.floor(Math.random()*ONLINE_NAMES.length)];
+  const mult = 1.3 + Math.random()*0.5;
+  const payout = Math.max(10, Math.round(item.price*mult/10)*10);
+  return {key: now + '-' + Math.floor(Math.random()*1e6), id:item.id,
+          buyer:buyer.n, grade:buyer.g, payout, expireAt: now + ORDER_LIFE_MS};
+}
+function orderTick(now){
+  state.orders = state.orders.filter(o=>o.expireAt > now);
+  if(state.orders.length >= ORDER_MAX || now < state.nextOrderAt) return;
+  state.orders.push(newOrder(now));
+  state.nextOrderAt = now + ORDER_GAP_MIN_MS + Math.random()*ORDER_GAP_SPAN_MS;
+}
+
 /* เดินระบบดูแลสัตว์ทุกตัวตามเวลาจริง (เรียกทุกครั้งที่วาดหน้า + ทุก 1 นาที) */
 function careTick(){
   const now = Date.now();
   compTick(now);          // ตกรายได้ค้างก่อน แล้วค่อยเช็กบิล/ตัดบริการ
   billTick(now);
-  marketTick(now);        // ลูกค้ามาซื้อของสะสมที่เราลงขาย (net worth ขยับก่อน refreshRank)
+  marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
+  orderTick(now);         // ออเดอร์พิเศษหมดเวลา/เข้าใหม่
   for(const p of state.pets){
     if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน
     // หิวเกิน 2 ชม. โดยไม่ได้กินอะไรเลย → ป่วย

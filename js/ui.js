@@ -3,12 +3,9 @@
    UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
    ============================================================ */
 
-/* ---- สถานะหน้าตลาดสินค้าสะสม (ในหน่วยความจำ ไม่ต้องเซฟ) ---- */
-let marketFilter = 'all';       // ตัวกรอง dropdown หน้าตลาดซื้อ ('all' | id สินค้า)
-let collectView = 'shop';       // มุมมองการ์ด: 'shop' (ตลาดซื้อ) | 'mine' (คลังของฉัน)
-let marketBought = new Set();    // ประกาศที่ซื้อไปแล้วในรอบเวลานี้ (กันโชว์ซ้ำ)
-let marketBoughtSlot = null;     // รอบเวลา (10 นาที) ล่าสุดของ marketBought
-const MARKET_ROTATE_MS = 10*60*1000;   // ประกาศขายในตลาดหมุนเวียนทุก 10 นาที
+/* ---- สถานะการ์ดโรงงานผลิต (ในหน่วยความจำ ไม่ต้องเซฟ) ---- */
+let collectView = 'factory';    // มุมมองการ์ด: 'factory' (โรงงานผลิต) | 'mine' (คลังของฉัน)
+let factoryCat = 'all';         // ตัวกรองหมวดสินค้าในแคตตาล็อกโรงงาน ('all' | id หมวด)
 
 /* ---------- ภาพเริ่มต้น (ตะกร้า/ไข่ วาดด้วย CSS ถ้าไม่มีภาพเจน) ---------- */
 function startHTML(key){
@@ -73,6 +70,7 @@ function renderClock(){
   const compLive = document.getElementById('comp-live');
   if(compLive) compLive.textContent = compLiveTotal().toFixed(2);   // ตัวเลขรายได้คอมวิ่งทุกวินาที
   renderFarmClock();                                 // นาฬิกานับถอยหลังต้นไม้เดินพร้อมนาฬิกา
+  renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
 }
 
 /* ============================================================
@@ -438,6 +436,7 @@ function renderDashboard(){
   renderPhoneCard();
   renderComputerCard();
   renderFarmCard();
+  renderCollectCard();
   renderShop();
 }
 
@@ -1211,44 +1210,18 @@ function sellAllFruit(){
 }
 
 /* ============================================================
-   สินค้าสะสมฟุ่มเฟือย + ตลาดซื้อขายต่อ (Global Trade HQ ในเครื่อง)
-   - ตลาดซื้อ: ประกาศขายจากผู้เล่นจำลอง สุ่ม deterministic หมุนทุก 10 นาที
-     + dropdown ค้นหาสินค้าที่อยากได้ · ซื้อแล้วเปิดภาพใหญ่ (คล้ายฉากอัปแรงค์)
-   - คลังของฉัน: ของสะสมที่มี → ตั้งราคาขายเอง · ลูกค้าจำลองมาซื้อตามเวลา (marketTick)
-   หมายเหตุ: ผู้ซื้อ-ขายเป็น "จำลอง" (ยังไม่มี backend) — เฟส 2 ค่อยต่อ Firebase
+   โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+   - โรงงานผลิต: เลือกสินค้าค้างไว้ → เล่นเกมคำศัพท์ ตอบถูก 1 คำ = 1 แต้มผลิต
+     (เครื่องยนต์ addCraft ใน state.js — hook อยู่ใน game.js) ครบแล้วเข้าคลัง
+   - ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตเจาะจง จ่ายแพงกว่าราคาฐาน (orderTick ใน state.js)
+   - คลังของฉัน: ตั้งราคาขายเอง · ลูกค้าจำลองมาซื้อตามเวลา (marketTick)
+   หมายเหตุ: ผู้ซื้อเป็น "จำลอง" — เฟส 2 ต่อ Firebase ให้ผู้เล่นจริงซื้อขายของที่เพื่อนผลิต
    ============================================================ */
 function collectImg(id){ return IMG_FILES[`collect_${id}`] || null; }
-
-/* สร้าง seed ของรอบตลาด (เปลี่ยนทุก 10 นาที + ต่างกันตามตัวกรอง) */
-function marketSeed(filterId){
-  const slot = Math.floor(Date.now()/MARKET_ROTATE_MS);
-  let h = 0;
-  for(const ch of (filterId || 'all')) h = (h*31 + ch.charCodeAt(0)) >>> 0;
-  return (Math.imul(slot, 7919) ^ h) >>> 0;
-}
-/* ประกาศขายจากผู้เล่นจำลอง — เลือกตัวกรองแล้วสร้างเฉพาะสินค้านั้น (ค้นหาเจอเสมอ) */
-function marketListings(filterId){
-  const rnd = seededRand(marketSeed(filterId));
-  const specific = filterId && filterId !== 'all';
-  const pool = specific ? [collectInfo(filterId)] : COLLECTIBLES;
-  const count = specific ? 5 : 8;
-  const out = [];
-  for(let i=0;i<count;i++){
-    const item = pool.length === 1 ? pool[0] : pool[Math.floor(rnd()*pool.length)];
-    const seller = ONLINE_NAMES[Math.floor(rnd()*ONLINE_NAMES.length)];
-    const mult = 0.6 + rnd()*0.8;                              // 0.6–1.4 เท่าของราคาฐาน
-    const price = Math.max(100, Math.round(item.price*mult/100)*100);   // ปัดหลักร้อย
-    out.push({sig:`${i}`, id:item.id, seller:seller.n, grade:seller.g, price});
-  }
-  out.sort((a,b)=>a.price - b.price);                          // เรียงถูก → แพง
-  return out;
-}
 
 function renderCollectCard(){
   const el = document.getElementById('collect-card');
   if(!el) return;
-  const slot = Math.floor(Date.now()/MARKET_ROTATE_MS);
-  if(marketBoughtSlot !== slot){ marketBought.clear(); marketBoughtSlot = slot; }   // รอบใหม่ = สต๊อกใหม่
 
   /* กล่องแจ้ง "ขายของสำเร็จ" (ลูกค้าจำลองมาซื้อของที่เราลงขาย) */
   let soldUI = '';
@@ -1258,17 +1231,18 @@ function renderCollectCard(){
       const c = collectInfo(x.id);
       return `<li>${c ? c.emoji+' '+c.name : x.id} — 🪙${fmtNum(x.price)}</li>`;
     }).join('');
-    soldUI = `<div class="mkt-sold">📬 <b>ขายของสะสมได้ ${state.tradeSold.length} ชิ้น!</b> รับเงินรวม 🪙${fmtNum(total)}
+    soldUI = `<div class="mkt-sold">📬 <b>ขายสินค้าได้ ${state.tradeSold.length} ชิ้น!</b> รับเงินรวม 🪙${fmtNum(total)}
       <ul>${items}</ul>
       <button id="mkt-sold-ok">รับทราบ ✅</button></div>`;
   }
 
-  const body = collectView === 'mine' ? renderCollectMine() : renderCollectShop();
-  el.innerHTML = `<h3 class="shop-title">🏆 สินค้าสะสม &amp; ตลาดซื้อขาย</h3>
-    <p class="collect-sub">ของเล่นสุดหรูซื้อสะสม โชว์ภาพใหญ่ตอนได้มา · ตั้งราคาขายต่อเองได้แบบตลาดโลก 🌍</p>
+  const body = collectView === 'mine' ? renderCollectMine() : renderFactory();
+  el.innerHTML = `<h3 class="shop-title">🏭 โรงงานผลิตสินค้า &amp; ตลาด</h3>
+    <p class="collect-sub">เล่นเกมคำศัพท์เพื่อผลิตสินค้า (ตอบถูก 1 คำ = 1 แต้มผลิต) ผลิตเสร็จตั้งขายทำกำไรได้เลย 🌍</p>
     ${soldUI}
+    ${renderOrdersUI()}
     <div class="mkt-tabs">
-      <button class="mkt-tab ${collectView==='shop'?'on':''}" data-v="shop">🛒 ตลาดซื้อ</button>
+      <button class="mkt-tab ${collectView==='factory'?'on':''}" data-v="factory">🏭 โรงงานผลิต</button>
       <button class="mkt-tab ${collectView==='mine'?'on':''}" data-v="mine">🎁 คลังของฉัน${state.collection.length?` (${state.collection.length})`:''}</button>
     </div>
     ${body}`;
@@ -1278,36 +1252,141 @@ function renderCollectCard(){
   }));
   const soldOk = document.getElementById('mkt-sold-ok');
   if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderCollectCard(); });
-  const filt = document.getElementById('mkt-filter');
-  if(filt) filt.addEventListener('change', ()=>{ marketFilter = filt.value; sfx.select(); renderCollectCard(); });
-  el.querySelectorAll('.mkt-buy').forEach(b=>b.addEventListener('click',
-    ()=>buyFromMarket(b.dataset.sig, b.dataset.id, +b.dataset.price)));
+  const catSel = document.getElementById('factory-cat');
+  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; sfx.select(); renderCollectCard(); });
+  el.querySelectorAll('.craft-make').forEach(b=>b.addEventListener('click', ()=>startProduce(b.dataset.id)));
+  const goBtn = document.getElementById('craft-go');
+  if(goBtn) goBtn.addEventListener('click', ()=>startGame(null));
+  const cancelBtn = document.getElementById('craft-cancel');
+  if(cancelBtn) cancelBtn.addEventListener('click', cancelProduce);
+  el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
 }
 
-/* ---- มุมมอง "ตลาดซื้อ": dropdown ค้นหา + รายการประกาศขาย ---- */
-function renderCollectShop(){
-  const opts = `<option value="all">🔍 ทุกสินค้า</option>` +
-    COLLECTIBLES.map(c=>`<option value="${c.id}" ${marketFilter===c.id?'selected':''}>${c.emoji} ${c.name}</option>`).join('');
-  const listings = marketListings(marketFilter).filter(l=>!marketBought.has(l.sig));
-  const rows = listings.length ? listings.map(l=>{
-    const c = collectInfo(l.id), tier = COLLECT_TIERS[c.tier], img = collectImg(l.id);
-    const ratio = l.price / c.price;
-    const diff = Math.round((1 - ratio)*100);
-    const diffTxt = diff >= 5 ? ` <small class="mkt-price-lo">(ถูกกว่าปกติ ${diff}%)</small>`
-                  : diff <= -5 ? ` <small class="mkt-price-hi">(แพงกว่าปกติ ${-diff}%)</small>` : '';
-    const priceCls = ratio < 0.95 ? 'mkt-price-lo' : ratio > 1.1 ? 'mkt-price-hi' : '';
-    const afford = state.coins >= l.price;
+/* ---- มุมมอง "โรงงานผลิต": งานที่กำลังผลิต + แคตตาล็อกเลือกสินค้า ---- */
+function renderFactory(){
+  let jobUI;
+  if(state.producing){
+    const c = collectInfo(state.producing.id), tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
+    const pct = Math.min(100, state.producing.progress/c.words*100);
+    jobUI = `<div class="craft-box" style="border-color:${tier.color}">
+      <div class="craft-head">
+        <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
+        <div class="mkt-info"><b>กำลังผลิต: ${c.name}</b> <span class="mkt-tier-stars" style="color:${tier.color}">${tier.stars}</span><br>
+          <small>ตอบคำศัพท์ถูกอีก <b>${fmtNum(c.words - state.producing.progress)}</b> คำ ผลิตเสร็จ! (ขายได้ ~🪙${fmtNum(c.price)})</small></div>
+      </div>
+      <div class="craft-bar"><div class="craft-fill" style="width:${pct}%;background:${tier.color}"></div></div>
+      <div class="craft-text">🔤 แต้มผลิต ${fmtNum(state.producing.progress)}/${fmtNum(c.words)} (${Math.floor(pct)}%)</div>
+      <div class="craft-btn-row">
+        <button class="big-btn home-btn" id="craft-go">🎮 ไปเล่นเกมเก็บแต้มผลิต</button>
+        <button class="craft-cancel" id="craft-cancel">ยกเลิก</button>
+      </div>
+    </div>`;
+  }else{
+    jobUI = `<div class="home-current none">
+      <span class="home-emoji">🏭</span>
+      <div><b>โรงงานยังว่างอยู่</b><br>
+        <small>เลือกสินค้าจากแคตตาล็อกด้านล่าง แล้วเล่นเกมคำศัพท์เพื่อสะสมแต้มผลิต — ยิ่งเก่งยิ่งผลิตไว ผลิตเสร็จขายได้เงิน!</small>
+      </div>
+    </div>`;
+  }
+  const opts = `<option value="all">📦 ทุกหมวดสินค้า (${COLLECTIBLES.length} ชนิด)</option>` +
+    COLLECT_CATS.map(g=>`<option value="${g.id}" ${factoryCat===g.id?'selected':''}>${g.emoji} หมวด${g.name}</option>`).join('');
+  const rows = COLLECTIBLES.filter(c=>factoryCat==='all' || c.cat===factoryCat).map(c=>{
+    const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
+    const cur = state.producing && state.producing.id === c.id;
     return `<div class="mkt-row">
       <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
-      <div class="mkt-info"><b>${c.name}</b> <span class="mkt-tier-stars" style="color:${tier.color}">${tier.stars}</span>${diffTxt}<br>
-        <small>👤 ${l.seller} · ชั้น ${l.grade}</small></div>
-      <button class="mkt-buy ${afford?'':'cant'}" data-sig="${l.sig}" data-id="${l.id}" data-price="${l.price}">
-        <span class="${priceCls}">🪙${fmtNum(l.price)}</span><br>ซื้อ</button>
+      <div class="mkt-info"><b>${c.name}</b> <span class="mkt-tier-stars" style="color:${tier.color}">${tier.stars}</span><br>
+        <small>🔤 ใช้ ${fmtNum(c.words)} คำ · ขายได้ ~🪙${fmtNum(c.price)}</small></div>
+      <button class="mkt-buy craft-make ${cur?'cant':''}" data-id="${c.id}">${cur?'กำลัง<br>ผลิต':'🏭<br>ผลิต'}</button>
     </div>`;
-  }).join('') : `<div class="mkt-empty">ยังไม่มีประกาศขายสินค้านี้ตอนนี้ — ลองเลือกสินค้าอื่น หรือรออีกสักครู่นะ 🕐</div>`;
-  return `<select class="mkt-filter" id="mkt-filter">${opts}</select>${rows}`;
+  }).join('');
+  return jobUI + `<select class="mkt-filter" id="factory-cat">${opts}</select>` + rows;
+}
+
+/* ---- ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตเจาะจง จ่ายแพงกว่าราคาฐาน 30–80% ---- */
+function renderOrdersUI(){
+  if(!state.orders.length) return '';
+  const now = Date.now();
+  const rows = state.orders.map((o,i)=>{
+    const c = collectInfo(o.id), img = collectImg(o.id);
+    const have = state.collection.includes(o.id);
+    const bonus = Math.round((o.payout/c.price - 1)*100);
+    return `<div class="order-row">
+      <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
+      <div class="mkt-info"><b>${c.name}</b> <span class="mkt-price-lo">+${bonus}% 💰</span><br>
+        <small>👤 ${o.buyer} · ชั้น ${o.grade} สั่งผลิต · ⏳ เหลือ <span id="order-left-${i}">${fmtMins(Math.max(0, o.expireAt - now))}</span></small></div>
+      ${have
+        ? `<button class="order-deliver" data-i="${i}">📦 ส่งมอบ<br>🪙${fmtNum(o.payout)}</button>`
+        : `<span class="order-need">🪙${fmtNum(o.payout)}<br><small>ยังไม่มีของ</small></span>`}
+    </div>`;
+  }).join('');
+  return `<div class="order-head">📦 ออเดอร์พิเศษ — ลูกค้าจ่ายแพงกว่าราคาตลาด!</div>${rows}`;
+}
+
+function startProduce(id){
+  const c = collectInfo(id);
+  if(!c) return;
+  if(state.producing && state.producing.id === id){
+    sfx.select(); toast(`🏭 กำลังผลิต${c.name}อยู่แล้ว — ไปเล่นเกมเก็บแต้มกันเถอะ!`); return;
+  }
+  const doStart = ()=>{
+    state.producing = {id, progress:0};
+    sfx.buy();
+    toast(`🏭 เริ่มผลิต${c.name}! ตอบคำศัพท์ถูกให้ครบ ${fmtNum(c.words)} คำนะ`);
+    saveState();
+    renderCollectCard();
+  };
+  if(state.producing && state.producing.progress > 0){
+    const oc = collectInfo(state.producing.id);
+    askConfirm(`<h2>🏭 เปลี่ยนสินค้าที่ผลิต?</h2>
+      <p style="font-size:15px;margin:6px 0">ตอนนี้กำลังผลิต${oc.name} (${fmtNum(state.producing.progress)}/${fmtNum(oc.words)} แต้ม)<br>
+      ถ้าเปลี่ยนไปผลิต${c.name} <b>แต้มเดิมจะหายนะ</b></p>`, 'เปลี่ยนเลย', doStart);
+  }else{
+    doStart();
+  }
+}
+
+function cancelProduce(){
+  if(!state.producing) return;
+  const c = collectInfo(state.producing.id);
+  askConfirm(`<h2>ยกเลิกการผลิต?</h2>
+    <p style="font-size:15px;margin:6px 0">แต้มผลิต${c ? c.name : ''}ที่สะสมไว้ (${fmtNum(state.producing.progress)} แต้ม) จะหายไปนะ</p>`,
+    'ยกเลิกการผลิต', ()=>{
+      state.producing = null;
+      sfx.select();
+      toast('ยกเลิกการผลิตแล้ว — เลือกสินค้าใหม่ได้เลย');
+      saveState();
+      renderCollectCard();
+    });
+}
+
+function deliverOrder(i){
+  const o = state.orders[i];
+  if(!o) return;
+  const c = collectInfo(o.id);
+  const idx = state.collection.indexOf(o.id);
+  if(idx < 0){ sfx.wrong(); toast(`ยังไม่มี${c.name}ในคลัง — ผลิตให้เสร็จก่อนนะ`); return; }
+  state.collection.splice(idx, 1);
+  state.orders.splice(i, 1);
+  addCoins(o.payout);
+  sfx.levelup();
+  floatFx(`+🪙${fmtNum(o.payout)}`);
+  toast(`📦 ส่งมอบ${c.name}ให้ ${o.buyer} เรียบร้อย! รับ 🪙${fmtNum(o.payout)} 🎉`);
+  saveState();
+  renderDashboard();
+}
+
+/* นาฬิกานับถอยหลังออเดอร์พิเศษ (เดินพร้อมนาฬิกา — หมดเวลาแล้ว careTick รอบถัดไปลบเอง) */
+function renderOrderClock(){
+  if(!state.orders || !state.orders.length) return;
+  const now = Date.now();
+  state.orders.forEach((o,i)=>{
+    const el = document.getElementById('order-left-'+i);
+    if(el) el.textContent = fmtMins(Math.max(0, o.expireAt - now));
+  });
 }
 
 /* ---- มุมมอง "คลังของฉัน": ของสะสม (ตั้งขายได้) + รายการที่กำลังลงขาย ---- */
@@ -1327,7 +1406,7 @@ function renderCollectMine(){
       </div>`;
     }).join('') + `</div>`;
   }else{
-    ownedUI = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปช้อปที่ <b>🛒 ตลาดซื้อ</b> กันเถอะ!<br>ซื้อของสะสมแล้วเก็บไว้ ขายต่อทำกำไรได้ 💰</div>`;
+    ownedUI = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปผลิตสินค้าชิ้นแรกที่แท็บ <b>🏭 โรงงานผลิต</b> กันเถอะ!<br>ผลิตเสร็จเอามาตั้งขาย หรือส่งมอบออเดอร์พิเศษได้เงินเพิ่ม 💰</div>`;
   }
   let listUI = '';
   if(state.listings.length){
@@ -1344,22 +1423,6 @@ function renderCollectMine(){
       }).join('');
   }
   return ownedUI + listUI;
-}
-
-function buyFromMarket(sig, id, price){
-  const c = collectInfo(id);
-  if(!c) return;
-  if(state.coins < price){
-    sfx.wrong();
-    toast(`เหรียญไม่พอ ต้องมี 🪙${fmtNum(price)} — ไปเล่นเกมเก็บเหรียญกัน!`);
-    return;
-  }
-  state.coins -= price;
-  state.collection.push(id);
-  marketBought.add(sig);
-  sfx.buy();
-  saveState();
-  showCollectReveal(id, price);      // เปิดภาพใหญ่ฉลอง (กดปิดแล้ว renderDashboard)
 }
 
 /* กล่องตั้งราคาขายเอง (พิมพ์ราคา + โชว์สถานะราคาสด) */
@@ -1420,23 +1483,27 @@ function cancelListing(i){
   renderDashboard();
 }
 
-/* ฉากเปิดภาพใหญ่ตอนได้ของสะสมใหม่ (สไตล์เดียวกับฉากอัปแรงค์ ใช้สีตามระดับ) */
-function showCollectReveal(id, price){
+/* ฉากเปิดภาพใหญ่ตอนได้สินค้าใหม่ (สไตล์เดียวกับฉากอัปแรงค์ ใช้สีตามระดับ)
+   produced=true → ฉาก "ผลิตสำเร็จ" (เรียกจาก game.js ตอนแต้มผลิตครบ) */
+function showCollectReveal(id, price, produced){
   const c = collectInfo(id), tier = COLLECT_TIERS[c.tier];
   sfx.rankup();
   const img = collectImg(id);
   const overlay = document.createElement('div');
   overlay.className = 'rankup-overlay';
+  const sub = produced
+    ? `ผลิตด้วยแต้มคำศัพท์ ${fmtNum(c.words)} คำ เก่งมาก! เก็บเข้าคลังแล้ว 🏆<br>ตั้งขายในตลาด หรือส่งมอบออเดอร์พิเศษได้เลย!`
+    : `${price != null ? `ซื้อมาในราคา 🪙${fmtNum(price)} · ` : ''}เก็บเข้าคลังสะสมแล้ว 🏆<br>ตั้งราคาขายต่อในตลาดได้ทุกเมื่อ!`;
   overlay.innerHTML = `
     <div class="rankup-rays" style="--rank-color:${tier.color}"></div>
     <div class="rankup-content">
-      <div class="rankup-title">🎁 ได้ของสะสมใหม่!</div>
+      <div class="rankup-title">${produced ? '🏭 ผลิตสำเร็จ!' : '🎁 ได้ของสะสมใหม่!'}</div>
       <div class="collect-reveal-frame" style="--rank-color:${tier.color}">
         ${img ? `<img class="collect-reveal-img" src="${img}" alt="">` : `<span class="cr-emoji">${c.emoji}</span>`}
       </div>
       <div class="rankup-name" style="color:${tier.color}">${c.name}</div>
       <div class="collect-reveal-stars" style="color:${tier.color}">${tier.stars} ${tier.label}</div>
-      <p class="rankup-sub">${price != null ? `ซื้อมาในราคา 🪙${fmtNum(price)} · ` : ''}เก็บเข้าคลังสะสมแล้ว 🏆<br>ตั้งราคาขายต่อในตลาดได้ทุกเมื่อ!</p>
+      <p class="rankup-sub">${sub}</p>
       <button class="rankup-btn">เยี่ยมไปเลย! 🎉</button>
     </div>`;
   overlay.querySelector('.rankup-btn').addEventListener('click', ()=>{
@@ -1646,6 +1713,7 @@ function renderStats(){
       <div class="stats-row"><span>สอบไปแล้วทั้งหมด</span><span><b>${state.quizLog.length}</b> ครั้ง</span></div>
       <div class="stats-row"><span>หมวดที่สอบผ่านแล้ว (ระดับชั้นนี้)</span><span><b>${catsForStudent().filter(c=>state.quizPassed.includes(c.id)).length}</b> / ${catsForStudent().length} หมวด</span></div>
       <div class="stats-row"><span>จับคู่คำศัพท์ถูกสะสม</span><span><b>${state.totalMatches}</b> คำ</span></div>
+      <div class="stats-row"><span>🏭 สินค้าที่ผลิตสำเร็จ</span><span><b>${fmtNum(state.producedCount)}</b> ชิ้น</span></div>
     </div>
     <div class="stats-card"><h3 class="stats-title">🐾 สัตว์เลี้ยงของหนู</h3>${petRows}</div>
     <div class="stats-card"><h3 class="stats-title">📚 คะแนนสูงสุดรายหมวด (${gradeBand(s.grade).label})</h3>${catRows}</div>
