@@ -11,6 +11,7 @@ const PANEL_TITLES = {
   'panel-shop'   : '🛍️ ร้านค้า & ของใช้',
   'panel-farm'   : '🌳 สวนผลไม้',
   'panel-factory': '🏭 โรงงานผลิต & ตลาด',
+  'panel-friends': '👥 เพื่อนของหนู',
   'panel-rank'   : '🎖️ แรงค์ของหนู',
 };
 

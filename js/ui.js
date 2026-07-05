@@ -222,6 +222,129 @@ function renderLeaderboardCard(){
 }
 
 /* ============================================================
+   แผงเพื่อน 👥 (ข้อ 0.3): รหัสเพื่อน + ค้นหา + คำขอ + รายชื่อเพื่อน
+   - ตัวโครง (รหัส/ช่องค้นหา) สร้างครั้งเดียว (dataset.built) กันช่องค้นหา
+     ถูกล้างตอน presence tick · ส่วนที่ขยับ (คำขอ/เพื่อน) refresh แยก
+   ============================================================ */
+function updateFriendBadge(){
+  const b = document.getElementById('friend-badge');
+  if(!b) return;
+  const n = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
+  if(n > 0){ b.textContent = n; b.style.display = ''; }
+  else b.style.display = 'none';
+}
+
+function renderFriendPanel(){
+  const el = document.getElementById('friend-card');
+  if(!el) return;
+  updateFriendBadge();
+  if(typeof Online === 'undefined' || !Online.ready){
+    el.dataset.built = '';
+    el.innerHTML = `<h3 class="shop-title">👥 เพื่อนของหนู</h3>
+      <div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อเพิ่มเพื่อนและเล่นด้วยกันนะ!</div>`;
+    return;
+  }
+  if(el.dataset.built !== '1'){
+    el.innerHTML = `<h3 class="shop-title">👥 เพื่อนของหนู</h3>
+      <div class="fr-code-box">
+        <div class="fr-code-label">🎫 รหัสเพื่อนของหนู — บอกเพื่อนให้มาเพิ่มได้เลย</div>
+        <div class="fr-code-row">
+          <span class="fr-code" id="fr-my-code">${Online.myCode || '...'}</span>
+          <button class="fr-copy-btn" id="fr-copy">📋 คัดลอก</button>
+        </div>
+      </div>
+      <div class="fr-search-box">
+        <div class="fr-code-label">🔍 ค้นหาเพื่อนจากรหัส 6 ตัว</div>
+        <div class="fr-search-row">
+          <input id="fr-search-input" maxlength="6" placeholder="เช่น ABC234" autocomplete="off">
+          <button class="fr-search-btn" id="fr-search-go">ค้นหา</button>
+        </div>
+        <div id="fr-search-result"></div>
+      </div>
+      <div id="fr-reqs"></div>
+      <div class="fr-list-title">👫 เพื่อนของฉัน (<span id="fr-count">0</span> คน)</div>
+      <div id="fr-list"></div>`;
+    el.dataset.built = '1';
+    document.getElementById('fr-copy').addEventListener('click', ()=>{
+      const code = Online.myCode || '';
+      if(navigator.clipboard) navigator.clipboard.writeText(code).catch(()=>{});
+      sfx.select(); toast('📋 คัดลอกรหัส ' + code + ' แล้ว!');
+    });
+    const input = document.getElementById('fr-search-input');
+    input.addEventListener('input', ()=>{ input.value = input.value.toUpperCase().replace(/[^A-Z2-9]/g, ''); });
+    document.getElementById('fr-search-go').addEventListener('click', friendDoSearch);
+    input.addEventListener('keydown', e=>{ if(e.key === 'Enter') friendDoSearch(); });
+  }else{
+    const codeEl = document.getElementById('fr-my-code');
+    if(codeEl) codeEl.textContent = Online.myCode || '...';
+  }
+  refreshFriendData();
+}
+
+/* ค้นหารหัสเพื่อน → โชว์ผล + ปุ่มส่งคำขอ (แยกจาก refresh เพื่อไม่โดนล้างตอน tick) */
+function friendDoSearch(){
+  const input = document.getElementById('fr-search-input');
+  const out = document.getElementById('fr-search-result');
+  if(!input || !out) return;
+  const code = input.value.trim();
+  if(code.length !== 6){ out.innerHTML = `<div class="fr-hint">พิมพ์รหัส 6 ตัวให้ครบนะ</div>`; return; }
+  out.innerHTML = `<div class="fr-hint">🔎 กำลังค้นหา...</div>`;
+  friendSearch(code).then(r=>{
+    if(!r){ out.innerHTML = `<div class="fr-hint">😕 ไม่พบรหัสนี้ ลองเช็กอีกครั้งนะ</div>`; return; }
+    if(r.self){ out.innerHTML = `<div class="fr-hint">😄 นี่คือรหัสของหนูเองนะ!</div>`; return; }
+    const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>`;
+    if(r.already){ out.innerHTML = `<div class="fr-found">${nameHTML}<span class="fr-hint">✅ เป็นเพื่อนกันแล้ว</span></div>`; return; }
+    out.innerHTML = `<div class="fr-found">${nameHTML}<button class="fr-add-btn" id="fr-send-req">➕ ส่งคำขอเป็นเพื่อน</button></div>`;
+    document.getElementById('fr-send-req').addEventListener('click', ()=>{
+      const btn = document.getElementById('fr-send-req');
+      btn.disabled = true;
+      friendRequest(r.uid)
+        .then(()=>{ sfx.buy(); out.innerHTML = `<div class="fr-hint">📨 ส่งคำขอถึง ${escapeHTML(r.n)} แล้ว! รอเพื่อนกดรับนะ 😊</div>`; })
+        .catch(()=>{ btn.disabled = false; toast('ส่งคำขอไม่สำเร็จ ลองใหม่นะ'); });
+    });
+  }).catch(err=>{ out.innerHTML = `<div class="fr-hint">${escapeHTML(String(err))}</div>`; });
+}
+
+/* อัปเดตเฉพาะส่วนที่ขยับบ่อย: คำขอ + รายชื่อเพื่อน + badge */
+function refreshFriendData(){
+  updateFriendBadge();
+  const reqEl = document.getElementById('fr-reqs');
+  if(reqEl){
+    if(Online.reqs.length){
+      reqEl.innerHTML = `<div class="fr-list-title">📨 คำขอเป็นเพื่อน (${Online.reqs.length})</div>` +
+        Online.reqs.map(r=>`<div class="fr-row fr-req">
+          <span class="fr-row-name">${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
+          <span class="fr-req-btns">
+            <button class="fr-accept" data-uid="${escapeHTML(r.uid)}">✅ รับ</button>
+            <button class="fr-decline" data-uid="${escapeHTML(r.uid)}">✕</button>
+          </span></div>`).join('');
+      reqEl.querySelectorAll('.fr-accept').forEach(b=>b.addEventListener('click', ()=>{
+        b.disabled = true;
+        friendAccept(b.dataset.uid).then(()=>{ sfx.buy(); toast('🎉 เป็นเพื่อนกันแล้ว!'); })
+          .catch(()=>{ b.disabled = false; toast('เพิ่มเพื่อนไม่สำเร็จ ลองใหม่นะ'); });
+      }));
+      reqEl.querySelectorAll('.fr-decline').forEach(b=>b.addEventListener('click', ()=>{
+        friendDecline(b.dataset.uid).catch(()=>{});
+      }));
+    }else reqEl.innerHTML = '';
+  }
+  const cnt = document.getElementById('fr-count');
+  if(cnt) cnt.textContent = Online.myFriends.length;
+  const listEl = document.getElementById('fr-list');
+  if(listEl){
+    if(Online.myFriends.length){
+      listEl.innerHTML = Online.myFriends.map(f=>{
+        const on = Online.presenceMap && Online.presenceMap[f.uid];
+        return `<div class="fr-row">
+          <span class="online-dot${on ? '' : ' off'}"></span>
+          <span class="fr-row-name">${escapeHTML(f.n)}<small> ชั้น ${escapeHTML(f.g)}</small></span>
+          <span class="fr-row-status">${on ? '💚 ออนไลน์' : '⚪ ออฟไลน์'}</span></div>`;
+      }).join('');
+    }else listEl.innerHTML = `<div class="lb-empty">ยังไม่มีเพื่อน — บอกรหัสของหนูให้เพื่อน หรือค้นหารหัสเพื่อนด้านบนเพื่อเพิ่มกันนะ! 🤝</div>`;
+  }
+}
+
+/* ============================================================
    RANK CARD + ฉากเลื่อนแรงค์
    ============================================================ */
 function rankBadgeHTML(rankId, emoji, cls){
@@ -304,6 +427,7 @@ function renderDashboard(){
   renderRankCard();
   renderOnlineCard();
   renderLeaderboardCard();
+  renderFriendPanel();
 
   /* ---- สภาพอากาศ ---- */
   const w = weatherNow();

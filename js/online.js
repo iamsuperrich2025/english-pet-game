@@ -21,6 +21,11 @@ const Online = {
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
   lastCoins:null,   // เหรียญล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำโดยไม่จำเป็น)
+  /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
+  myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
+  presenceMap:{},   // uid → true ของทุกคนที่ออนไลน์สดตอนนี้ (ไว้ join สถานะเพื่อน)
+  reqs:[],          // คำขอเป็นเพื่อนที่ส่งมาหาเรา: [{uid,n,g,ts}]
+  myFriends:[],     // เพื่อนของเรา: [{uid,n,g,ts}]
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -95,6 +100,73 @@ function onlineRerender(){
   if(!dash || !dash.classList.contains('active')) return;
   if(typeof renderOnlineCard === 'function') renderOnlineCard();
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
+  if(typeof renderFriendPanel === 'function') renderFriendPanel();
+}
+
+/* ============================================================
+   ระบบเพื่อน (ข้อ 0.3): รหัสเพื่อน + ค้นหา + ส่ง/รับคำขอ
+   โครงข้อมูลใน DB:
+   /friendCodes/<code>       = uid            (แผนที่รหัส→uid สำหรับค้นหา)
+   /friendReq/<toUid>/<from> = {n,g,ts}       (คำขอที่ส่งไปหา toUid)
+   /friends/<uid>/<friend>   = {n,g,ts}       (เพื่อนที่รับแล้ว เขียนทั้งสองฝั่ง)
+   ============================================================ */
+
+/* รหัสเพื่อน 6 ตัว สร้างจาก uid แบบ deterministic (uid เดิม = รหัสเดิมเสมอ)
+   ใช้ตัวอักษร/เลขที่ไม่สับสน (ตัด I L O 0 1) */
+const FRIEND_ALPHA = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function friendCode(uid){
+  let h = 5381;
+  for(let i=0;i<uid.length;i++) h = (Math.imul(h, 33) ^ uid.charCodeAt(i)) >>> 0;
+  let code = '';
+  for(let i=0;i<6;i++){
+    h = (Math.imul(h, 33) ^ (h >>> 13)) >>> 0;   // มิกซ์ใหม่ทุกตำแหน่ง กระจายทั่ว
+    code += FRIEND_ALPHA[h % FRIEND_ALPHA.length];
+  }
+  return code;
+}
+
+/* ค้นหาผู้เล่นจากรหัสเพื่อน → {uid, n, g, self?, already?} หรือ null (ไม่พบ) */
+function friendSearch(rawCode){
+  const code = String(rawCode || '').toUpperCase().replace(/[^A-Z2-9]/g, '');
+  if(code.length !== 6) return Promise.reject('รหัสเพื่อนต้องมี 6 ตัวนะ');
+  const me = onlineKey();
+  return Online.db.ref('friendCodes/' + code).get().then(s=>{
+    const uid = s.val();
+    if(!uid || typeof uid !== 'string') return null;
+    if(uid === me) return {uid, self:true};
+    // อ่านชื่อ/ชั้นจาก leaderboard (อ่านสาธารณะได้ + มีทุกคนที่เคย login)
+    return Online.db.ref('leaderboard/' + uid).get().then(ls=>{
+      const v = ls.val() || {};
+      return {uid, n: typeof v.n === 'string' ? v.n : 'ผู้เล่น', g: v.g || '',
+              already: Online.myFriends.some(f=>f.uid === uid)};
+    });
+  });
+}
+
+/* ส่งคำขอเป็นเพื่อนไปหา toUid */
+function friendRequest(toUid){
+  if(!Online.ready || !state.student) return Promise.reject('offline');
+  return Online.db.ref('friendReq/' + toUid + '/' + onlineKey()).set({
+    n: onlineDisplayName(), g: state.student.grade,
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  });
+}
+
+/* รับคำขอ: เขียนเพื่อนทั้งสองฝั่ง แล้วลบคำขอออกจากกล่องเรา */
+function friendAccept(fromUid){
+  const me = onlineKey();
+  const req = Online.reqs.find(r=>r.uid === fromUid) || {};
+  const meData   = {n: onlineDisplayName(), g: state.student.grade, ts: firebase.database.ServerValue.TIMESTAMP};
+  const themData = {n: req.n || 'ผู้เล่น', g: req.g || '', ts: firebase.database.ServerValue.TIMESTAMP};
+  return Promise.all([
+    Online.db.ref('friends/' + me + '/' + fromUid).set(themData),
+    Online.db.ref('friends/' + fromUid + '/' + me).set(meData),
+  ]).then(()=>Online.db.ref('friendReq/' + me + '/' + fromUid).remove());
+}
+
+/* ปฏิเสธคำขอ: ลบออกจากกล่องเราเฉยๆ */
+function friendDecline(fromUid){
+  return Online.db.ref('friendReq/' + onlineKey() + '/' + fromUid).remove();
 }
 
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
@@ -113,20 +185,50 @@ function onlineStart(){
       onlinePushPresence();
       Online.lastCoins = null;       // ต่อใหม่ ส่งคะแนนรอบใหม่เสมอ
       onlinePushScore();
+      // เผยแพร่รหัสเพื่อนของเรา (แผนที่ code→uid ให้คนอื่นค้นหาได้ — ข้อ 0.3)
+      Online.myCode = friendCode(id);
+      Online.db.ref('friendCodes/' + Online.myCode).set(id).catch(()=>{});
     }
     onlineRerender();
   });
 
-  // ฟังรายชื่อคนออนไลน์ (ตัด: ตัวเอง/ข้อมูลเสีย/ผีค้างเกิน 10 นาที)
+  // ฟังรายชื่อคนออนไลน์ (ตัด: ข้อมูลเสีย/ผีค้างเกิน 10 นาที) + สร้างแผนที่ presence
   Online.db.ref('presence').on('value', (snap)=>{
-    const now = Date.now(), out = [];
+    const now = Date.now(), out = [], pmap = {};
     snap.forEach(ch=>{
       const v = ch.val();
-      if(ch.key === id || !v || typeof v.n !== 'string') return;
+      if(!v || typeof v.n !== 'string') return;
       if(typeof v.at === 'number' && now - v.at > ONLINE_STALE_MS) return;
+      pmap[ch.key] = true;                          // ทุกคนที่ออนไลน์สด (รวมตัวเอง) — ไว้ join เพื่อน
+      if(ch.key === id) return;
       out.push({id: ch.key, n: v.n, g: v.g || '', act: v.act || 'กำลังเล่นอยู่ 🎮'});
     });
     Online.friends = out;
+    Online.presenceMap = pmap;
+    onlineRerender();
+  });
+
+  // ฟังคำขอเป็นเพื่อนที่ส่งมาหาเรา (ข้อ 0.3)
+  Online.db.ref('friendReq/' + id).on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(v && typeof v.n === 'string') out.push({uid: ch.key, n: v.n, g: v.g || '', ts: v.ts || 0});
+    });
+    out.sort((a,b)=>b.ts - a.ts);
+    Online.reqs = out;
+    onlineRerender();
+  });
+
+  // ฟังรายชื่อเพื่อนของเรา (ข้อ 0.3)
+  Online.db.ref('friends/' + id).on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(v && typeof v.n === 'string') out.push({uid: ch.key, n: v.n, g: v.g || '', ts: v.ts || 0});
+    });
+    out.sort((a,b)=>a.n.localeCompare(b.n, 'th'));
+    Online.myFriends = out;
     onlineRerender();
   });
 

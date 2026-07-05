@@ -1,18 +1,18 @@
 # HANDOFF.md — แม่แบบส่งต่องานสำหรับ session ใหม่
 
 > ไฟล์นี้คือบริบททั้งหมดของโปรเจกต์ อ่านจบแล้วทำงานต่อได้ทันที
-> **สถานะล่าสุด (5 ก.ค. 2026 ดึก):** ✅ **ข้อ 0.1 Google Login + sync เซฟ cloud ปิดงานสมบูรณ์ ("รอบสิบห้า") 🎉** — บังคับ login แบบ ก. · rules โซน `/users` วางแล้ว (REST ผ่าน 15 เคส) · ผู้ใช้ทดสอบ login จริงบน Pages ผ่านครบ · ✅ รอบสิบหก: ถอดปุ่มรีเซ็ตอันตราย + แคตตาล็อกโรงงานแบ่งหน้า 5 รายการปัดซ้ายขวา — ✅ **รอบสิบแปด (6 ก.ค. 2026): ข้อ 0.2 display name เสร็จ** — js/data/badwords.js (ตัวกรองชื่อ+คำหยาบ แชร์กับข้อ 7) + ตั้งชื่อในเกมตอนลงทะเบียน/กล่องบังคับตั้งชื่อผู้เล่นเดิม + presence/leaderboard เปลี่ยน key เป็น uid + escape ชื่อจาก DB — ทดสอบ preview ผ่านครบ **⚠️ ค้าง: ผู้ใช้ต้องวาง rules ฉบับใหม่ (อยู่ท้ายรอบสิบแปด) + ทดสอบจริงบน Pages** — ✅ **รอบสิบเก้า: ข้อ 7 ตั้งชื่อสัตว์ + ✏️ แก้ชื่อในเกม + 📛 บนแถบโปรไฟล์** · ✅ **รอบยี่สิบ: เอฟเฟกต์ฝนเต็มจอ** — **🎯 session ถัดไป (Opus): อ่านหัวข้อ "📌 แผนสำหรับ session ถัดไป" ด้านล่างก่อนเลย** (งานถัดไป: ข้อ 0.3 เพื่อน → 0.4 แชท → 0.5 ของขวัญ + rules รอผู้ใช้วาง) (สเปกใหม่ดูข้อ 0.5 · ภาพ 38/50) — **งานขนาน:** ข้อ 9 คำศัพท์ให้ Sonnet 5 ทำ session แยกตาม `TASK_VOCAB_SONNET.md` (ยังไม่ได้รัน) · ธีมเมืองโทนฟ้าภาพครบ 6/6 พร้อมทำ session แยก · 🆕 อัพเดท 5725691326 บันทึกครบแล้ว (0.5 แก้สเปก · ข้อ 7/8/9 ใหม่) · ✅ **อัพเดท 5725691826 เสร็จแล้ว ("รอบสิบเจ็ด" 5 ก.ค. ดึก): ยกเครื่อง UI ทั้งเกมเป็น Lobby แนวนอนธีมเมืองโทนฟ้า + การ์ดสินค้าสไตล์ Trade HQ — ทดสอบผ่านครบ commit+push แล้ว (เหลือผู้ใช้ลองบนมือถือจริง)** · ⚠️⚠️ **ระวังสุดๆ: "รอบสิบเจ็ด" มี hotfix ด่วน — commit 9accb89 เคยทำเกมพังทั้งเว็บ (เข้าเกมไม่ได้เลย) เพราะเผลอติด script tag `js/data/vocab/band1-5.js` ที่ยังไม่มีไฟล์จริงขึ้น production (งานคำศัพท์ Sonnet ทำค้างครึ่งทาง — มีแค่ band1.js ยังไม่ commit) — ห้ามแก้ index.html ชี้ vocab/ จนกว่างานคำศัพท์เสร็จครบทุกไฟล์และ commit พร้อมกันในครั้งเดียว** · 🆕 **Project Dictionary A–Z จดไว้แล้ว (backlog ข้อ 10 + `TASK_DICTIONARY_SONNET.md`) — ผู้ใช้ให้ Fable/Opus เลือกจังหวะทำเอง** · ✅ **ภาพของขวัญครบ 50/50 แล้ว** (ผู้ใช้วางการ์ดเทศกาล 12 ไฟล์สุดท้าย — ข้อ 0.5 พร้อมด้านภาพ)
+> **สถานะล่าสุด (5 ก.ค. 2026 ดึก):** ✅ **ข้อ 0.1 Google Login + sync เซฟ cloud ปิดงานสมบูรณ์ ("รอบสิบห้า") 🎉** — บังคับ login แบบ ก. · rules โซน `/users` วางแล้ว (REST ผ่าน 15 เคส) · ผู้ใช้ทดสอบ login จริงบน Pages ผ่านครบ · ✅ รอบสิบหก: ถอดปุ่มรีเซ็ตอันตราย + แคตตาล็อกโรงงานแบ่งหน้า 5 รายการปัดซ้ายขวา — ✅ **รอบสิบแปด (6 ก.ค. 2026): ข้อ 0.2 display name เสร็จ** — js/data/badwords.js (ตัวกรองชื่อ+คำหยาบ แชร์กับข้อ 7) + ตั้งชื่อในเกมตอนลงทะเบียน/กล่องบังคับตั้งชื่อผู้เล่นเดิม + presence/leaderboard เปลี่ยน key เป็น uid + escape ชื่อจาก DB — ทดสอบ preview ผ่านครบ **⚠️ ค้าง: ผู้ใช้ต้องวาง rules ฉบับใหม่ (อยู่ท้ายรอบสิบแปด) + ทดสอบจริงบน Pages** — ✅ **รอบสิบเก้า: ข้อ 7 ตั้งชื่อสัตว์ + ✏️ แก้ชื่อในเกม + 📛 บนแถบโปรไฟล์** · ✅ **รอบยี่สิบ: เอฟเฟกต์ฝนเต็มจอ** · ✅ **รอบยี่สิบเอ็ด: ข้อ 0.3 ค้นหา id + เพิ่มเพื่อน (แผง 👥)** — **🎯 session ถัดไป: อ่านหัวข้อ "📌 แผนสำหรับ session ถัดไป" ด้านบนสุดก่อนเลย** (งานถัดไป: ข้อ 0.4 แชท → 0.5 ของขวัญ · ⚠️ rules ใหม่รอผู้ใช้วาง) (สเปกใหม่ดูข้อ 0.5 · ภาพ 38/50) — **งานขนาน:** ข้อ 9 คำศัพท์ให้ Sonnet 5 ทำ session แยกตาม `TASK_VOCAB_SONNET.md` (ยังไม่ได้รัน) · ธีมเมืองโทนฟ้าภาพครบ 6/6 พร้อมทำ session แยก · 🆕 อัพเดท 5725691326 บันทึกครบแล้ว (0.5 แก้สเปก · ข้อ 7/8/9 ใหม่) · ✅ **อัพเดท 5725691826 เสร็จแล้ว ("รอบสิบเจ็ด" 5 ก.ค. ดึก): ยกเครื่อง UI ทั้งเกมเป็น Lobby แนวนอนธีมเมืองโทนฟ้า + การ์ดสินค้าสไตล์ Trade HQ — ทดสอบผ่านครบ commit+push แล้ว (เหลือผู้ใช้ลองบนมือถือจริง)** · ⚠️⚠️ **ระวังสุดๆ: "รอบสิบเจ็ด" มี hotfix ด่วน — commit 9accb89 เคยทำเกมพังทั้งเว็บ (เข้าเกมไม่ได้เลย) เพราะเผลอติด script tag `js/data/vocab/band1-5.js` ที่ยังไม่มีไฟล์จริงขึ้น production (งานคำศัพท์ Sonnet ทำค้างครึ่งทาง — มีแค่ band1.js ยังไม่ commit) — ห้ามแก้ index.html ชี้ vocab/ จนกว่างานคำศัพท์เสร็จครบทุกไฟล์และ commit พร้อมกันในครั้งเดียว** · 🆕 **Project Dictionary A–Z จดไว้แล้ว (backlog ข้อ 10 + `TASK_DICTIONARY_SONNET.md`) — ผู้ใช้ให้ Fable/Opus เลือกจังหวะทำเอง** · ✅ **ภาพของขวัญครบ 50/50 แล้ว** (ผู้ใช้วางการ์ดเทศกาล 12 ไฟล์สุดท้าย — ข้อ 0.5 พร้อมด้านภาพ)
 
 ## 📌 แผนสำหรับ session ถัดไป (Fable เขียนไว้ตอนใกล้เต็ม limit — 6 ก.ค. 2026 · Opus อ่านหัวข้อนี้ก่อนหัวข้ออื่น)
 
-**สถานะ:** ข้อ 0.2 (ชื่อในเกม+badwords) ✅ · ข้อ 7 (ชื่อสัตว์) ✅ · เอฟเฟกต์ฝนเต็มจอ ✅ — ทดสอบผ่าน+commit+push ครบแล้ว ไม่มีงานเขียนโค้ดค้างครึ่งทาง
+**สถานะ:** ข้อ 0.2 (ชื่อในเกม+badwords) ✅ · ข้อ 7 (ชื่อสัตว์) ✅ · เอฟเฟกต์ฝนเต็มจอ ✅ · **ข้อ 0.3 (ค้นหา id + เพิ่มเพื่อน) ✅ "รอบยี่สิบเอ็ด"** — ทดสอบ preview ผ่าน+commit+push ครบแล้ว ไม่มีงานเขียนโค้ดค้างครึ่งทาง
 
 **งานเรียงลำดับ:**
-1. **(ฝั่งผู้ใช้ — เตือนก่อนเริ่มงานอื่น)** วาง Security Rules ฉบับใหม่ (JSON ข้างล่างนี้ วางแทนทั้งหมดใน console → Realtime Database → Rules) แล้วผู้ใช้ทดสอบจริงบน Pages: login → เจอกล่องตั้งชื่อ → ชื่อขึ้นการ์ดเพื่อน/กระดาน → มี `/users/<uid>/profile/name` ใน DB
-2. **ข้อ 0.3 ค้นหา id + add friend** (สเปกอยู่ backlog ข้อ 0.3) — presence/leaderboard ใช้ uid แล้ว (`onlineKey()` ใน online.js) join ได้เลย · รหัสเพื่อน 6 ตัวจาก uid hash · โซนใหม่ `/friendCodes` `/friendReq` `/friends` ต้องส่ง rules เพิ่มให้ผู้ใช้วางอีกรอบ (เขียนรวมกับฉบับล่างแล้วส่งทั้งก้อน)
-3. ข้อ 0.4 แชท → 0.5 ของขวัญ (สเปกใน backlog · 0.5 มีคำถามค้างต้องถามผู้ใช้ก่อนทำ)
+1. **(ฝั่งผู้ใช้ — เตือนก่อนเริ่มงานอื่น) วาง Security Rules ฉบับใหม่ข้างล่าง (เพิ่มโซนเพื่อน `/friendCodes` `/friendReq` `/friends` แล้ว)** วางแทนทั้งหมดใน console → Realtime Database → Rules · **ยังไม่วาง = ระบบเพื่อน (0.3) เขียน DB ไม่ได้เลย** (แต่ข้อ 0.2 ที่วางไปแล้วยังทำงานปกติ) · ทดสอบจริงบน Pages: เปิด 2 บัญชี → คนแรกคัดลอกรหัสเพื่อน → คนที่สองค้นหารหัส+ส่งคำขอ → คนแรกกดรับ → ทั้งคู่เห็นกันในรายชื่อเพื่อน + สถานะออนไลน์
+2. **ข้อ 0.4 แชทกับเพื่อน (มี emoji)** — สเปก backlog ข้อ 0.4 · pairId = uid 2 ตัวเรียง alphabet · ข้อความผ่านตัวกรอง badwords (`checkName`? ไม่ใช่ — ข้อความยาวได้ ใช้ `nameHasBadWord()` ตรวจแทน · badwords.js export ได้) · โซนใหม่ `/chats/$pairId` ต้องเพิ่ม rules อีก · **มี `Online.myFriends` พร้อมใช้เลือกคนแชท**
+3. ข้อ 0.5 ของขวัญ (สเปก backlog · **มีคำถามค้างต้องถามผู้ใช้ก่อนทำ**: collectible ที่ถูกปฏิเสธคืนคลังไหม + ค้าง "ยังไม่มีผู้รับ" นานๆ หมดอายุไหม)
 
-**Rules ฉบับปัจจุบันที่รอผู้ใช้วาง (ครอบข้อ 0.2 แล้ว — ทำ 0.3 ให้เพิ่มโซนใหม่เข้าก้อนนี้):**
+**Rules ฉบับปัจจุบันที่รอผู้ใช้วาง (ครอบ 0.1+0.2+0.3 — ทำ 0.4 ให้เพิ่ม `/chats` เข้าก้อนนี้):**
 ```json
 {
   "rules": {
@@ -41,6 +41,39 @@
         "$other": { ".validate": false }
       }
     },
+    "friendCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && newData.val() === auth.uid",
+        ".validate": "newData.isString()"
+      }
+    },
+    "friendReq": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          ".validate": "newData.hasChildren(['n','g','ts'])",
+          "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$friendUid": {
+          ".write": "auth != null && (auth.uid === $uid || auth.uid === $friendUid)",
+          ".validate": "newData.hasChildren(['n','g','ts'])",
+          "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
@@ -61,7 +94,8 @@
 **💰 แนวทางประหยัด tokens (งานไม่เสีย):**
 - **ห้ามอ่านไฟล์ใหญ่ทั้งไฟล์** โดยเฉพาะ ui.js (~1,800 บรรทัด) / HANDOFF.md / vocab.js / collectibles.js — ใช้ Grep หาชื่อฟังก์ชันก่อน แล้ว Read เฉพาะช่วงบรรทัดที่เกี่ยว (offset+limit)
 - HANDOFF อ่านแค่: บรรทัดสถานะบนสุด + หัวข้อนี้ + หัวข้อกติกาเฉพาะระบบที่จะแตะ + สเปก backlog ข้อที่ทำ — ประวัติ "รอบ..." เก่าๆ ไม่ต้องอ่านถ้าไม่ติดปัญหา
-- mock login สำหรับทดสอบ: สูตรอยู่หัวข้อ "ธรรมเนียมการทำงาน" (มี authWriteProfileName แล้ว) · ทดสอบเฉพาะจุดที่แก้ ไม่ต้อง regression ทั้งเกม · กดปุ่มใน overlay ผ่าน eval ให้แยกคนละ call กับตอนสร้าง overlay (เคย race 2 ครั้ง) · screenshot อาจ timeout — เช็ก DOM ผ่าน eval แทน
+- mock login สำหรับทดสอบ: สูตรอยู่หัวข้อ "ธรรมเนียมการทำงาน" (มี authWriteProfileName แล้ว) · ทดสอบเฉพาะจุดที่แก้ ไม่ต้อง regression ทั้งเกม · กดปุ่มใน overlay/async ผ่าน eval ให้แยกคนละ call กับตอนสร้าง (เคย race หลายครั้ง) · screenshot อาจ timeout — เช็ก DOM ผ่าน eval แทน · จอ preview จัตุรัสจะโดน overlay "หมุนจอ" — `preview_resize` เป็น 1280×720 ก่อน screenshot
+- **⚠️ http.server cache เหนียวมาก** (แก้ไฟล์ js แล้ว reload ยังได้โค้ดเก่า — เช็กด้วย `typeof ฟังก์ชันใหม่`): บังคับโหลดใหม่ด้วย eval `await Promise.all(files.map(f=>fetch(f,{cache:'reload'})))` (URL ตรงไม่มี query) แล้ว `location.reload()` — ทดสอบระบบเพื่อนใช้ fake `Online.db={ref:path=>({get,set,remove})}` + `Online.ready=true` (firebase SDK โหลดจริงบน localhost ได้ ServerValue.TIMESTAMP ใช้ได้)
 - commit: add เฉพาะไฟล์ที่แก้ **ห้าม `git add -A`** (มี `js/data/vocab/` untracked ของงาน Sonnet ค้างอยู่ — ห้ามแตะ ห้าม commit จนงานคำศัพท์เสร็จครบ)
 - ตอบผู้ใช้กระชับ ตารางสั้น ไม่ต้องเล่ารายละเอียดโค้ดยาว
 
@@ -96,6 +130,8 @@ js/data/badwords.js   ตัวกรองชื่อ (ข้อ 0.2 + ข้�
                       nameNormalize (ตัวเล็ก→เลขแทนอักษร→ตัดวรรค→ตัดวรรณยุกต์→ยุบตัวซ้ำ) · checkName(raw,min,max)→{ok,name|msg}
 js/data/firebase-config.js  FIREBASE_CONFIG (config สาธารณะ + databaseURL asia-southeast1) — ลบไฟล์/ค่าไม่ครบ = เกมเข้าโหมดออฟไลน์เอง
 js/online.js          เครื่องยนต์ออนไลน์: โหลด Firebase SDK 10.14.1 (compat) แบบ dynamic ไม่บล็อกเกม ·
+                      + ระบบเพื่อน (ข้อ 0.3): friendCode(uid) รหัส 6 ตัว deterministic · friendSearch/friendRequest/friendAccept/friendDecline ·
+                        Online.myCode/reqs/myFriends/presenceMap · listen /friendReq/<uid> + /friends/<uid> · เผยแพร่ /friendCodes/<code>=uid ตอน connect
                       Online {ready,friends,board} · presence (onDisconnect ลบเอง + กรองผีค้าง 10 นาที) ·
                       leaderboard push ทุก 1 นาทีเฉพาะเหรียญขยับ + ฟัง Top 50 (orderByChild coins) ·
                       onlineDisplayName (ชื่อ+อักษรแรกนามสกุล — ถนอมความเป็นส่วนตัวเด็ก) · onlineActivity (ดูจาก screen ที่เปิด)
@@ -162,6 +198,8 @@ img/                  ภาพสัตว์ · img/rank/ ✅ครบ 7 · im
 - **📛 ชื่อในเกม (ข้อ 0.2 — "รอบสิบแปด"):** `state.profileName` (migration: ไม่ใช่ string → null) ตั้งตอนลงทะเบียน (ช่อง `#reg-nick`) · ผู้เล่นเดิมไม่มีชื่อ → กล่องบังคับตั้ง `authAskProfileName()` ตอนเข้า dashboard (ปิดข้ามไม่ได้) · ตรวจด้วย `checkName(raw,2,20)` จาก badwords.js · เก็บสำเนาสาธารณะที่ `/users/<uid>/profile/name` (`authPushProfile()` — push ตอนตั้งชื่อ+ทุก login) · `onlineDisplayName()` ใช้ profileName ก่อน (fallback ชื่อจริง+อักษรแรกนามสกุลแบบเดิม) · ชื่อจาก DB ทุกจุด escape ด้วย `escapeHTML()` (util.js) ก่อนแทรก innerHTML
 
 ## ทดสอบล่าสุด — ผ่านทุกข้อใน preview
+
+**รอบยี่สิบเอ็ด (6 ก.ค. 2026 — Opus session ข้อ 0.3 ค้นหา id + เพิ่มเพื่อน ✅):** online.js เพิ่มระบบเพื่อน (friendCode/Search/Request/Accept/Decline + listeners + presenceMap + Online.myCode/reqs/myFriends) / index.html ปุ่มเมนู "👥 เพื่อน" (+badge คำขอ) + `#panel-friends`/`#friend-card` / lobby.js PANEL_TITLES / ui.js renderFriendPanel (สร้างโครงครั้งเดียว dataset.built กันช่องค้นหาโดนล้างตอน tick) + friendDoSearch + refreshFriendData + updateFriendBadge (เรียกใน renderDashboard+onlineRerender) / lobby.css `.fr-*`/`.rail-badge`/`.online-dot.off` · **ทดสอบผ่านครบ (fake Online.db):** friendCode 6 ตัว deterministic/ตัวอักษรถูก/uid ต่างกันรหัสไม่ชน / render: รหัสตัวเองถูก + badge นับคำขอ + เพื่อน dot ออนไลน์/ออฟไลน์ตาม presenceMap + ชื่อ XSS `<img onerror>` escape เป็นข้อความไม่ยิง / ค้นหา: รหัสตัวเอง→"นี่คือหนูเอง" · ไม่พบ→ข้อความ · เจอ→ชื่อ+ปุ่มส่งคำขอ · <6 ตัว→เตือน / ส่งคำขอ→เขียน `friendReq/<toUid>/<me>={n,g,ts}` / รับ→เขียน `friends/<me>/<from>`+`friends/<from>/<me>` แล้วลบ `friendReq/<me>/<from>` / ปฏิเสธ→ลบคำขอ / ไม่มีเพื่อน→ข้อความชวน / offline→ข้อความต่อเน็ต + built reset / ไม่มี console error-warning / รีเซ็ต localStorage คืนหน้า login · **⚠️ รอผู้ใช้วาง rules ใหม่ (เพิ่มโซนเพื่อน — ดูหัวข้อแผนบนสุด) ก่อนใช้จริงบน Pages**
 
 **รอบยี่สิบ (6 ก.ค. 2026 — Fable session เอฟเฟกต์ฝนเต็มจอ ✅ ตามคำสั่งผู้ใช้):** ฝนตกจริง (19:00–20:00 `rainNow`) + ไม่มีบ้านสภาพดี (`!rainProtected()` — บ้านทรุดก็โดน) → overlay `#rain-fx` เต็มจอ (pointer-events:none z-index 9000 ทุกหน้าจอ): เม็ดฝนจาง 2 ชั้น (CSS repeating-gradient แกน 100°/96° เส้นเกือบตั้งเอียง ~10° · เลื่อน**ขนานกับเส้น**ให้ loop เนียน — ⚠️ เคยพลาดใช้ 170° แล้วเส้นออกมาเกือบนอน) + หยดน้ำเกาะกระจกจอ `.glass-drop` (spawn สุ่มทุก 0.35–1.15 วิ เกาะ ~6 วิ แล้วไหลลงจางหาย · loop เช็ก `document.contains` หยุดเองเมื่อ overlay ถูกถอด) · `rainFxTick()` ใน ui.js + interval 5 วิใน main.js (guard `Auth.booted`) · **แค่ภาพล้วน ไม่แตะ state/เซฟ** · ทดสอบ: mock 19:30 โชว์ 2 ชั้น+หยดเพิ่มเรื่อยๆ / ซื้อบ้าน→หายทันที / ขายบ้าน→กลับมา / mock 20:30 ฝนหยุด→หาย+spawn หยุด / screenshot สวย เส้นฝนเฉียงธรรมชาติ / ไม่มี console error / รีเซ็ตคืนหน้า login
 
@@ -238,7 +276,7 @@ img/                  ภาพสัตว์ · img/rank/ ✅ครบ 7 · im
 0. **⭐⭐⭐ ระบบสังคมออนไลน์ (ผู้ใช้สั่ง 5 ก.ค. 2026 "อัพเดท 572569641" — งานใหญ่ งานถัดไป)** — ทำทีละขั้นตามลำดับนี้ (แต่ละขั้นทดสอบก่อนไปขั้นถัดไป):
    - **✅ 0.1 Google Login — เสร็จ "รอบสิบห้า" (5 ก.ค. 2026):** ผู้ใช้เปิด provider+domain ใน console แล้ว · ผู้ใช้เลือก**แบบ ก. บังคับ login เท่านั้น** (ไม่มีโหมดทดลองเล่น) · สเปกที่ทำจริงดูหัวข้อกติกา "🔐 Google Login" · ค้าง: วาง rules `/users` + ผู้ใช้ทดสอบจริง — สเปกเดิม: เปิดใน Firebase console: Authentication → Sign-in method → เปิด Google (+เช็ก Authorized domains มี `iamsuperrich2025.github.io`) — Claude ทำเองไม่ได้ · ใช้ Firebase Auth (compat SDK เดียวกับ online.js) `signInWithPopup(GoogleAuthProvider)` · เซฟ sync ขึ้น `/users/$uid/save` (localStorage เป็น cache — โหลดจาก cloud ถ้าใหม่กว่า, push ขึ้นเป็นระยะ+ตอน beforeunload) · rules: `/users/$uid` อ่าน-เขียนได้เฉพาะ `auth.uid === $uid` · ผู้เล่นเดิม (เซฟ local) → login ครั้งแรกถามผูกเซฟปัจจุบันเข้าบัญชี · **ผู้ใช้ระบุ "login ด้วย Google เท่านั้น"** — เข้าเกมไม่ login ไม่ได้ (หรือโหมดทดลองเล่นไม่เซฟ? ถามผู้ใช้ตอนทำ)
    - **✅ 0.2 ชื่อที่แสดง (display name) — เสร็จ "รอบสิบแปด" (6 ก.ค. 2026 · สิ่งที่ทำจริงดูหัวข้อกติกา "📛 ชื่อในเกม" + รอบสิบแปด — ⚠️ รอผู้ใช้วาง rules ใหม่):** สเปกเดิม: ตั้งตอน login ครั้งแรก ไทย/อังกฤษได้ · **ระบบตรวจ:** อนุญาตเฉพาะ ก-ฮ สระ วรรณยุกต์ a-z A-Z 0-9 เว้นวรรค (regex `/^[฀-๿a-zA-Z0-9 ]{2,20}$/`) + blacklist คำหยาบไทย-อังกฤษ (ทำ list ใน js/data/badwords.js ตรวจแบบ normalize ตัดวรรค/ตัวซ้ำ) · เก็บใน `/users/$uid/profile/name` + validate ซ้ำใน rules (length ≤20) · ใช้แทน onlineDisplayName เดิมใน presence/leaderboard
-   - **0.3 ค้นหา id + add friend:** ผู้เล่นมี **รหัสเพื่อน** สั้นๆ (เช่น 6 ตัว จาก uid hash — โชว์ใน dashboard ให้บอกเพื่อน) · ค้นหาผ่าน `/friendCodes/$code → uid` · ส่งคำขอ → `/friendReq/$toUid/$fromUid` → อีกฝ่ายกดรับ → เขียน `/friends/$uid/$friendUid` ทั้งสองฝั่ง · การ์ดเพื่อน: รายชื่อเพื่อน+สถานะออนไลน์ (join กับ presence)
+   - **✅ 0.3 ค้นหา id + add friend — เสร็จ "รอบยี่สิบเอ็ด" (6 ก.ค. 2026 · ทำครบตามสเปก — รหัส 6 ตัว/ค้นหา/ส่ง-รับคำขอ/รายชื่อเพื่อน+สถานะออนไลน์ · แผง 👥 ในเมนูซ้าย · รอผู้ใช้วาง rules ใหม่):** สเปกเดิม: ผู้เล่นมี **รหัสเพื่อน** สั้นๆ (เช่น 6 ตัว จาก uid hash — โชว์ใน dashboard ให้บอกเพื่อน) · ค้นหาผ่าน `/friendCodes/$code → uid` · ส่งคำขอ → `/friendReq/$toUid/$fromUid` → อีกฝ่ายกดรับ → เขียน `/friends/$uid/$friendUid` ทั้งสองฝั่ง · การ์ดเพื่อน: รายชื่อเพื่อน+สถานะออนไลน์ (join กับ presence)
    - **0.4 แชทกับเพื่อน (มี emoji):** `/chats/$pairId` ($pairId = uid สองตัวเรียง alphabet ต่อกัน) เก็บ {from, text, ts} · rules อ่าน-เขียนได้เฉพาะสมาชิกคู่นั้น + text ≤200 ตัว · UI กล่องแชท + **แผง emoji picker** (ชุด emoji ที่คัดแล้ว ~40 ตัว แทรกเข้าข้อความ) · **ข้อความผ่านตัวกรองคำหยาบเดียวกับ 0.2 ก่อนส่ง** (ปลอดภัยสำหรับเด็ก) · จำกัดเก็บ 100 ข้อความล่าสุดต่อคู่
    - **0.5 ส่งของขวัญ:** ใช้แคตตาล็อกของขวัญจาก **PROMPTS_GIFTS.md 50 แบบ** (สร้าง js/data/gifts.js: id/emoji/name/price/หมวด เค้ก-กุหลาบ-การ์ด) · ซื้อด้วยเหรียญแล้วส่งให้เพื่อน → `/gifts/$toUid` push {id, from, ts} · ผู้รับเห็นกล่อง "ได้รับของขวัญ" + ฉากเปิด (reuse showCollectReveal สไตล์) → เข้า **`state.giftBox` (ห้องของขวัญแยกต่างหาก)** — **⚠️ กติกาผู้ใช้: ของขวัญที่ได้รับขายต่อไม่ได้** ไม่รวมกับ collection/ตลาด/assetValue · UI ห้องของขวัญโชว์ของ+ใครส่ง+วันที่ — **🆕 แก้สเปกตามอัพเดท 5725691326 (5 ก.ค. 2026): (1) ส่งเป็นของขวัญได้ทุกอย่าง — ทั้งของขวัญจากร้าน (gifts.js 50 แบบ) และ*สินค้า collectibles ทุกชิ้นจากคลังผู้ส่ง* · ของที่รับมาขายต่อ/ส่งต่อให้คนอื่นไม่ได้ (2) ผู้รับเลือก "รับ"/"ไม่รับ" ได้ — ผู้ส่งเห็นสถานะ: ยังไม่กดอะไร = "สินค้ายังไม่มีผู้รับ" · กดรับ = "สินค้าส่งถึงผู้รับแล้ว" · กดไม่รับ = "ผู้รับยังไม่สะดวกรับ" · ❓ถามผู้ใช้ตอนทำ: collectible ที่ถูกปฏิเสธคืนเข้าคลังผู้ส่งไหม + ค้าง "ยังไม่มีผู้รับ" นานๆ หมดอายุคืนของไหม**
    - **rules ทุกโซนใหม่ต้องส่งให้ผู้ใช้วางใน console + ทดสอบ allow/deny ผ่าน REST เหมือนรอบสิบสาม** (โซนที่มี auth ทดสอบผ่านหน้าเกมจริง/Emulator แทน เพราะ REST ธรรมดาไม่มี token)

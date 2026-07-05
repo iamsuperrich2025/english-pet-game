@@ -147,6 +147,57 @@ h1{color:var(--sky-d);text-shadow:none;}
   100%{opacity:0;transform:translateY(9px) scale(.85)}
 }
 
+/* ---------- แผงเพื่อน 👥 (ข้อ 0.3) ---------- */
+.rail-btn{position:relative;}
+.rail-badge{
+  position:absolute;top:2px;right:6px;min-width:18px;height:18px;padding:0 4px;
+  background:#e8483f;color:#fff;border-radius:999px;font-size:11px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(180,30,20,.5);
+}
+.fr-code-box,.fr-search-box{
+  background:rgba(255,255,255,.6);border:1px solid rgba(120,160,220,.4);
+  border-radius:14px;padding:10px 12px;margin-bottom:10px;
+}
+.fr-code-label{font-size:12.5px;color:#3a5578;font-weight:500;margin-bottom:6px;}
+.fr-code-row,.fr-search-row{display:flex;align-items:center;gap:8px;}
+.fr-code{
+  flex:1;font-size:22px;font-weight:700;letter-spacing:3px;color:#1a4b8c;
+  font-family:'Kanit',monospace;background:#fff;border:2px dashed #9dc0ea;
+  border-radius:10px;padding:4px 10px;text-align:center;
+}
+.fr-copy-btn,.fr-search-btn,.fr-add-btn,.fr-accept,.fr-decline{
+  border:none;border-radius:10px;cursor:pointer;font-family:inherit;font-weight:600;
+  padding:7px 12px;font-size:13px;transition:transform .1s,filter .1s;flex-shrink:0;
+}
+.fr-copy-btn{background:#dceaff;color:#1a4b8c;}
+.fr-search-btn{background:#3a7bd5;color:#fff;}
+.fr-add-btn{background:#f5c542;color:#5a4300;box-shadow:0 3px 0 #cea01e;}
+.fr-accept{background:#4caf7d;color:#fff;}
+.fr-decline{background:#e6d6ea;color:#8a5a95;}
+.fr-copy-btn:active,.fr-search-btn:active,.fr-add-btn:active,.fr-accept:active,.fr-decline:active{transform:scale(.94);}
+.fr-copy-btn:disabled,.fr-add-btn:disabled,.fr-accept:disabled{filter:grayscale(.6);opacity:.6;cursor:default;}
+#fr-search-input{
+  flex:1;min-width:0;padding:8px 12px;border:2px solid #b9d2f0;border-radius:10px;
+  font-family:'Kanit',monospace;font-size:16px;letter-spacing:2px;text-transform:uppercase;text-align:center;
+}
+#fr-search-result{margin-top:8px;}
+.fr-found{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:space-between;
+  background:#fff;border:1px solid #cfe0f5;border-radius:10px;padding:8px 10px;
+}
+.fr-hint{font-size:12.5px;color:#5a6b82;padding:4px 2px;}
+.fr-list-title{font-size:13.5px;font-weight:600;color:#2a4368;margin:12px 2px 6px;}
+.fr-row{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.55);border-radius:10px;padding:7px 10px;margin-bottom:5px;
+}
+.fr-req{background:#fff6dd;border:1px solid #f0dca0;}
+.fr-row-name{flex:1;font-size:14px;color:#22344d;font-weight:500;min-width:0;}
+.fr-row-name small{color:#7c8ba0;font-weight:400;}
+.fr-row-status{font-size:12px;color:#5a6b82;flex-shrink:0;}
+.fr-req-btns{display:flex;gap:6px;flex-shrink:0;}
+.online-dot.off{background:#b6c2d0;box-shadow:none;}
+
 /* ปุ่ม ✏️ เล็กๆ แก้ชื่อในเกม/ชื่อสัตว์ (ข้อ 0.2 + ข้อ 7) — อยู่บนพื้นกระจกเข้มได้ */
 .chip-edit{
   border:none;background:rgba(255,255,255,.22);border-radius:8px;cursor:pointer;
