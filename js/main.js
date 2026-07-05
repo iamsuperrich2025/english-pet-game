@@ -42,22 +42,9 @@ document.getElementById('sound-toggle').addEventListener('click', ()=>{
   document.getElementById('sound-toggle').textContent = state.sound ? '🔊' : '🔇';
   if(state.sound) sfx.select();
 });
-document.getElementById('btn-reset').addEventListener('click', ()=>{
-  askConfirm('<h2>🔄 เริ่มเกมใหม่ทั้งหมด?</h2><p style="font-size:15px">ลบข้อมูลทั้งหมด รวมสัตว์เลี้ยงทุกตัว เหรียญ แรงค์ และประวัติการสอบ<br>เซฟที่เก็บในบัญชี Google ก็ถูกลบด้วยนะ ☁️</p>',
-    'ลบแล้วเริ่มใหม่', ()=>{
-      localStorage.removeItem(STORAGE_KEY);
-      state = loadState();
-      if(Auth.user){
-        state.ownerUid = Auth.user.uid;          // ยัง login อยู่ — เซฟใหม่เป็นของบัญชีนี้เลย
-        saveState();
-        authDeleteCloud(Auth.user.uid).catch(()=>{});
-        Auth.lastPushedAt = 0;
-      }
-      document.getElementById('reg-first').value = '';
-      document.getElementById('reg-last').value = '';
-      showScreen('screen-register');
-    });
-});
+/* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป
+   (เด็กเข้าใจผิดว่าเป็น logout → เซฟหายถาวรทั้งเครื่องและ cloud)
+   ถ้าต้องรีเซ็ตจริงให้ทำผ่าน console: localStorage.removeItem(STORAGE_KEY) + ลบ /users/<uid>/save ใน DB */
 
 /* ---------- INIT ---------- */
 // ตรวจหาภาพเริ่มต้น (ตะกร้า/ไข่ ในร้านสัตว์เลี้ยง) + เหรียญตราแรงค์ + ที่พัก

@@ -59,7 +59,7 @@ js/ui.js              renderDashboard/renderClock/renderOnlineCard/renderShop/re
 js/game.js            เกมจับคู่ + หมวด/แบบทดสอบ (renderCats/startQuiz/finishQuiz) + hook แต้มผลิต: จับคู่ถูก addCraft(1)+note "🏭 x/y" · finishQuiz addCraft(ข้อถูก) — ครบแล้วเรียก showCollectReveal(id,null,true)
 js/main.js            ปุ่ม + init: โชว์ #screen-login รอ auth → bootGame() (เรียกจาก authEnterGame ครั้งเดียว) ·
                       careTick interval ทุก 1 นาที guard ด้วย Auth.booted (ห้ามเดินก่อน login — จะบัมพ์ savedAt
-                      ทำให้เซฟเก่าในเครื่องดูใหม่กว่า cloud) + renderClock ทุก 1 วินาที · reset ลบเซฟ cloud ด้วย
+                      ทำให้เซฟเก่าในเครื่องดูใหม่กว่า cloud) + renderClock ทุก 1 วินาที · ปุ่มรีเซ็ตถูกถอดแล้ว (ดูกติกา 🔐)
 TASK_VOCAB_SONNET.md  คำสั่งงานคำศัพท์ (backlog ข้อ 9 = อัพเดท 5725691326 ข้อ 5/5.1/5.2) ให้ Sonnet 5 ทำใน session ใหม่ — แยกไฟล์ vocab/ + POS + ขยาย ≥2,000 คำ (⬜ ยังไม่ได้รัน)
 PROMPTS.md            prompt ภาพสัตว์ 75 ภาพ (เจนแล้ว ~52 เหลือ dragon เกือบหมด + dog/cat_newborn)
 PROMPTS_RANK_HOME.md  prompt เหรียญตราแรงค์ 7 + ที่พัก 3 (✅เจนแล้ว) + บ้านเสื่อม 3 + บ้านพัง 3 + บ้านถูกตัดไฟ (มืด) 3 + บ้านถูกตัดน้ำ (แห้ง) 3 (⬜ยังไม่เจน)
@@ -91,7 +91,7 @@ img/                  ภาพสัตว์ · img/rank/ ✅ครบ 7 · im
 - **คำศัพท์ตามชั้น**: register เลือก ป.1–ม.6 → `gradeBand()` เลือก band; เกม/หมวด/สถิติ ใช้ `catsForStudent()`/`vocabForStudent()`
 - **ล็อกร้านค้า**: ไม่มีสัตว์ หรือ active ตัวเป็นไข่/แรกเกิด (Lv.1) → ร้านไอเทมโชว์ lock-banner
 - เล่นเกม/สอบได้แม้ยังไม่มีสัตว์ (ได้เหรียญ+RP แต่ไม่ได้ EXP) — เริ่มเกมต้องเก็บ 3,000 ก่อนซื้อหมา/แมว
-- **🔐 Google Login (ข้อ 0.1 — "รอบสิบห้า")**: เข้าเกมต้อง login เท่านั้น (แบบ ก. ผู้ใช้เลือก) หน้า `#screen-login` (สถานะ เชื่อมต่อ/พร้อม/offline+ปุ่มลองใหม่) · เซฟจริงอยู่ `/users/<uid>/save = {data: JSON ทั้ง state, at}` — localStorage เป็น cache เทียบ `state.savedAt` (บัมพ์ทุก saveState) vs `cloud.at` เอาอันใหม่กว่า · `state.ownerUid` = เจ้าของเซฟ (null = เซฟยุคก่อน login → ถามผูกเข้าบัญชี 2 ชั้นกันกดพลาด · เป็นของบัญชีอื่น → เริ่มใหม่เงียบๆ กันขโมยเซฟ) · push ขึ้น cloud ทุก 1 นาที (เฉพาะเซฟขยับ) + beforeunload/พับแท็บ + จุดสำคัญ (ลงทะเบียน/ผูก/logout) · logout = push→signOut→ล้าง cache→reload · reset = ลบเซฟ cloud ด้วย · อ่าน cloud fail (rules ยังไม่วาง) → เข้าเกมด้วยเซฟเครื่อง+toast เตือน · ⚠️ login จริงได้เฉพาะ http/https (localhost/Pages) — file:// ไม่ได้ · presence/leaderboard ยังใช้ onlineId เดิม (เปลี่ยนเป็น uid ตอน 0.2-0.3)
+- **🔐 Google Login (ข้อ 0.1 — "รอบสิบห้า")**: เข้าเกมต้อง login เท่านั้น (แบบ ก. ผู้ใช้เลือก) หน้า `#screen-login` (สถานะ เชื่อมต่อ/พร้อม/offline+ปุ่มลองใหม่) · เซฟจริงอยู่ `/users/<uid>/save = {data: JSON ทั้ง state, at}` — localStorage เป็น cache เทียบ `state.savedAt` (บัมพ์ทุก saveState) vs `cloud.at` เอาอันใหม่กว่า · `state.ownerUid` = เจ้าของเซฟ (null = เซฟยุคก่อน login → ถามผูกเข้าบัญชี 2 ชั้นกันกดพลาด · เป็นของบัญชีอื่น → เริ่มใหม่เงียบๆ กันขโมยเซฟ) · push ขึ้น cloud ทุก 1 นาที (เฉพาะเซฟขยับ) + beforeunload/พับแท็บ + จุดสำคัญ (ลงทะเบียน/ผูก/logout) · logout = push→signOut→ล้าง cache→reload · **ปุ่มรีเซ็ตเกมถูกถอดออกแล้ว (ผู้ใช้สั่ง 5 ก.ค. ดึก — เด็กเข้าใจผิดว่าเป็น logout แล้วเซฟหายถาวร อันตราย)** รีเซ็ตได้เฉพาะทาง console/เครื่องมือทดสอบ: `localStorage.removeItem(STORAGE_KEY)` + ลบ `/users/<uid>/save` · อ่าน cloud fail (rules ยังไม่วาง) → เข้าเกมด้วยเซฟเครื่อง+toast เตือน · ⚠️ login จริงได้เฉพาะ http/https (localhost/Pages) — file:// ไม่ได้ · presence/leaderboard ยังใช้ onlineId เดิม (เปลี่ยนเป็น uid ตอน 0.2-0.3)
 
 ## ทดสอบล่าสุด — ผ่านทุกข้อใน preview
 
