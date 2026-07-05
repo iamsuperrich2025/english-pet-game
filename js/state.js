@@ -45,6 +45,8 @@ const DEFAULT_STATE = {
   nextOrderAt:0,                      // เวลาที่ออเดอร์ใหม่จะเข้ามา (orderTick)
   rankKey:null,                       // key แรงค์ล่าสุดที่ฉลองไปแล้ว (ไว้เทียบเลื่อน/ลด — ดู refreshRank)
   onlineId:null,                      // id ประจำเครื่องสำหรับระบบออนไลน์ (สุ่มครั้งเดียวใน online.js)
+  savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
+  ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
 };
 
 /* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
@@ -146,12 +148,18 @@ function loadState(){
       if(typeof s.nextOrderAt !== 'number') s.nextOrderAt = 0;
       // ระบบออนไลน์: เซฟเก่าไม่มี id → ให้ online.js สุ่มใหม่ตอนเชื่อมต่อ
       if(typeof s.onlineId !== 'string') s.onlineId = null;
+      // Google Login (ข้อ 0.1): เซฟเก่าไม่มี field → default (ownerUid null = ยังไม่ผูกบัญชี)
+      if(typeof s.savedAt !== 'number') s.savedAt = 0;
+      if(typeof s.ownerUid !== 'string') s.ownerUid = null;
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }
   return structuredClone(DEFAULT_STATE);
 }
-function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState(){
+  state.savedAt = Date.now();          // ตราเวลาเซฟ (ไว้เทียบกับเซฟ cloud ใน auth.js)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
 let state = loadState();
 
 /* ---------- helpers ---------- */

@@ -13,11 +13,16 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
   }
   state.student = {first, last, grade};
   saveState();
+  authPushSave(true);                  // ลงทะเบียนเสร็จ ส่งเซฟขึ้นบัญชีทันที
   sfx.levelup();
   toast(`ยินดีต้อนรับ ${first}! 🎉`);
   renderDashboard();
   showScreen('screen-dashboard');
 });
+
+document.getElementById('btn-google-login').addEventListener('click', authLoginClick);
+document.getElementById('btn-login-retry').addEventListener('click', ()=>location.reload());
+document.getElementById('btn-logout').addEventListener('click', authLogout);
 
 document.getElementById('btn-play').addEventListener('click', ()=>startGame(null));
 document.getElementById('btn-cats').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
@@ -38,10 +43,16 @@ document.getElementById('sound-toggle').addEventListener('click', ()=>{
   if(state.sound) sfx.select();
 });
 document.getElementById('btn-reset').addEventListener('click', ()=>{
-  askConfirm('<h2>🔄 เริ่มเกมใหม่ทั้งหมด?</h2><p style="font-size:15px">ลบข้อมูลทั้งหมด รวมสัตว์เลี้ยงทุกตัว เหรียญ แรงค์ และประวัติการสอบ</p>',
+  askConfirm('<h2>🔄 เริ่มเกมใหม่ทั้งหมด?</h2><p style="font-size:15px">ลบข้อมูลทั้งหมด รวมสัตว์เลี้ยงทุกตัว เหรียญ แรงค์ และประวัติการสอบ<br>เซฟที่เก็บในบัญชี Google ก็ถูกลบด้วยนะ ☁️</p>',
     'ลบแล้วเริ่มใหม่', ()=>{
       localStorage.removeItem(STORAGE_KEY);
       state = loadState();
+      if(Auth.user){
+        state.ownerUid = Auth.user.uid;          // ยัง login อยู่ — เซฟใหม่เป็นของบัญชีนี้เลย
+        saveState();
+        authDeleteCloud(Auth.user.uid).catch(()=>{});
+        Auth.lastPushedAt = 0;
+      }
       document.getElementById('reg-first').value = '';
       document.getElementById('reg-last').value = '';
       showScreen('screen-register');
@@ -56,23 +67,34 @@ probeImages(Object.keys(PETS).map(k=>startImgKey(k))).then(()=>{
 Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages()]).then(()=>{
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
 });
-// ตรวจหาภาพทุกแบบของสัตว์ที่เลี้ยงอยู่
-for(const p of state.pets){
-  probeImages(petImageKeys(p.type)).then(()=>{
-    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
-  });
+
+/* เข้าเกมจริง — เรียกครั้งเดียวจาก authEnterGame (auth.js) หลัง login + sync เซฟเสร็จ
+   (ก่อนหน้านั้นห้ามเรียก careTick เพราะ saveState จะไปบัมพ์ savedAt
+   ทำให้เซฟเก่าในเครื่องดู "ใหม่กว่า" เซฟ cloud ทั้งที่ไม่ได้เล่นจริง) */
+function bootGame(){
+  // ตรวจหาภาพทุกแบบของสัตว์ที่เลี้ยงอยู่ (ทำหลัง sync — เซฟอาจเพิ่งโหลดมาจาก cloud)
+  for(const p of state.pets){
+    probeImages(petImageKeys(p.type)).then(()=>{
+      if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    });
+  }
+  careTick();
+  if(!state.student){
+    const acc = document.getElementById('reg-account');
+    if(acc && Auth.user) acc.textContent = '☁️ บัญชี: ' + (Auth.user.email || '');
+    showScreen('screen-register');     // ครั้งแรกของบัญชีนี้: ลงทะเบียนนักเรียนก่อน
+  }else{
+    renderDashboard();
+    showScreen('screen-dashboard');
+  }
 }
 
-careTick();
-if(!state.student){
-  showScreen('screen-register');       // ครั้งแรก: ลงทะเบียนนักเรียนก่อน
-}else{
-  renderDashboard();
-  showScreen('screen-dashboard');
-}
+// ระหว่างรอ auth โชว์หน้า login ไว้ก่อน (auth.js พาไปหน้าถัดไปเอง)
+showScreen('screen-login');
 
 // อัปเดตสถานะสัตว์เป็นระยะ (ทุก 1 นาที) ระหว่างเปิดหน้า Dashboard ค้างไว้
 setInterval(()=>{
+  if(!Auth.booted) return;             // ยังไม่เข้าเกม — ห้ามเดิน careTick (จะไปบัมพ์ savedAt)
   careTick();
   if(document.getElementById('screen-dashboard').classList.contains('active')){
     renderDashboard();

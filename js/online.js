@@ -88,9 +88,9 @@ function onlineRerender(){
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
 }
 
-/* ---------- เริ่มระบบหลัง SDK โหลดสำเร็จ ---------- */
+/* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
+   initializeApp ทำแล้วใน authStart) ---------- */
 function onlineStart(){
-  firebase.initializeApp(FIREBASE_CONFIG);
   Online.db = firebase.database();
   const id = ensureOnlineId();
   const presRef = Online.db.ref('presence/' + id);
@@ -138,9 +138,14 @@ function onlineStart(){
   setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);
 }
 
-/* ---------- โหลด Firebase SDK แบบ dynamic (ไม่บล็อกเกม ออฟไลน์ไม่พัง) ---------- */
+/* ---------- โหลด Firebase SDK แบบ dynamic (app → auth → database)
+   เกมบังคับ login (ข้อ 0.1): โหลดครบ → authStart() พาเข้าระบบ login
+   โหลดไม่ได้/config หาย → หน้าประตู offline ใน auth.js (เข้าเกมไม่ได้) ---------- */
 (function onlineInit(){
-  if(typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.databaseURL) return;
+  if(typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.databaseURL){
+    setTimeout(()=>authGateOffline('ตั้งค่าระบบออนไลน์ไม่ครบ (firebase-config) แจ้งคุณครูให้ตรวจสอบนะ 🛠️'), 0);
+    return;
+  }
   const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
   const load = (f)=>new Promise((res, rej)=>{
     const s = document.createElement('script');
@@ -149,7 +154,8 @@ function onlineStart(){
     document.head.appendChild(s);
   });
   load('firebase-app-compat.js')
+    .then(()=>load('firebase-auth-compat.js'))
     .then(()=>load('firebase-database-compat.js'))
-    .then(()=>onlineStart())
-    .catch(()=>{ /* ออฟไลน์/โหลดไม่ได้ → เล่นโหมดเพื่อนจำลองตามเดิม */ });
+    .then(()=>authStart())
+    .catch(()=>authGateOffline());
 })();

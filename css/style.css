@@ -491,6 +491,21 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   background:none;border:none;font-family:inherit;text-decoration:underline;cursor:pointer;width:100%;
 }
 
+/* ---------- หน้า Google Login (บังคับ login ก่อนเข้าเกม — ข้อ 0.1) ---------- */
+.login-card{text-align:center;}
+.login-pets{font-size:44px;margin-bottom:4px;letter-spacing:6px;}
+.login-status{font-size:15.5px;color:#7a5ca8;min-height:22px;margin:0 0 12px;}
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  background:#fff;border:2px solid #dcd0ee;border-radius:22px;padding:13px 16px;
+  font-family:inherit;font-size:19px;color:#444;cursor:pointer;
+  box-shadow:0 5px 0 #d5c8e8;transition:transform .1s;margin-bottom:6px;box-sizing:border-box;
+}
+.google-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #d5c8e8;}
+.google-btn svg{flex-shrink:0;}
+.login-note{font-size:12.5px;color:#a89ac0;line-height:1.6;margin:10px 0 0;}
+.login-account{text-align:center;font-size:13.5px;color:#5a7a9a;margin:-8px 0 10px;}
+
 /* ---------- ลงทะเบียนนักเรียน ---------- */
 .register-card{
   background:rgba(255,255,255,.85);border:3px solid #fff;border-radius:26px;
