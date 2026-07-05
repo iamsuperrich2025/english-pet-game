@@ -299,7 +299,7 @@ function renderDashboard(){
   const card = document.getElementById('pet-card');
   const p = activePet();
   if(!p){
-    card.className = 'pet-card';
+    card.className = 'pet-card no-pet';   // ยังไม่มีสัตว์ → คงการ์ดกระจกแบบเดิม (มีสัตว์ = โชว์ตัวใหญ่กลางจอ)
     card.innerHTML = `
       <div class="pet-emoji" style="font-size:64px">🏪</div>
       <div class="pet-name">ยังไม่มีสัตว์เลี้ยง</div>
@@ -404,22 +404,26 @@ function renderDashboard(){
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '');
+  /* โฉมใหม่ (feedback ผู้ใช้ 5 ก.ค.): น้องตัวใหญ่เต็มเวทีแบบตัวละครหน้า lobby เกม shooter
+     ข้อความ/แถบสถานะทั้งหมดย่อลงไปอยู่ "แผ่นสถานะ" แผ่นเดียวด้านล่าง (scroll ภายในถ้าล้น) */
   card.innerHTML = `
-    ${petVisualHTML(p)}
-    <div class="pet-name">${conf.name}</div>
-    <div class="stage-label">${stageNames[stage]}</div>
-    <div class="level-row">
-      <span class="level-badge">Lv.${p.level}</span>
-      <div class="exp-bar"><div class="exp-fill" style="width:${Math.min(100, p.exp/expNeed(p.level)*100)}%"></div></div>
-    </div>
-    <div class="exp-text">EXP ${p.exp}/${expNeed(p.level)} · จับคู่ถูกสะสม ${state.totalMatches} คำ</div>
-    ${hungerUI}
-    <div class="ability-box ${abilityOn(p)?'':'locked'}">
-      ${!isAdult(p)
-        ? `🔒 ความสามารถพิเศษจะปลดล็อกเมื่อโตเต็มวัย (Lv.3)<br><small>${conf.ability}</small>`
-        : p.sick
-          ? `🤒 ป่วยอยู่ ใช้ความสามารถพิเศษไม่ได้<br><small>${conf.ability}</small>`
-          : `<b>ความสามารถพิเศษ:</b> ${conf.ability}`}
+    <div class="stage-hero">${petVisualHTML(p)}</div>
+    <div class="stage-plate">
+      <div class="plate-head">
+        <span class="pet-name">${conf.name}</span>
+        <span class="stage-label">${stageNames[stage]}</span>
+        <span class="level-badge">Lv.${p.level}</span>
+        <div class="exp-bar"><div class="exp-fill" style="width:${Math.min(100, p.exp/expNeed(p.level)*100)}%"></div></div>
+        <span class="exp-text">EXP ${p.exp}/${expNeed(p.level)} · สะสม ${state.totalMatches} คำ</span>
+      </div>
+      ${hungerUI}
+      <div class="ability-box ${abilityOn(p)?'':'locked'}">
+        ${!isAdult(p)
+          ? `🔒 ความสามารถพิเศษจะปลดล็อกเมื่อโตเต็มวัย (Lv.3)<br><small>${conf.ability}</small>`
+          : p.sick
+            ? `🤒 ป่วยอยู่ ใช้ความสามารถพิเศษไม่ได้<br><small>${conf.ability}</small>`
+            : `<b>ความสามารถพิเศษ:</b> ${conf.ability}`}
+      </div>
     </div>`;
 
   const feedBtn = document.getElementById('btn-feed');

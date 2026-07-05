@@ -163,13 +163,57 @@ h1{color:var(--sky-d);text-shadow:none;}
 .pet-tab.on{background:#fff;border-color:var(--gold);color:var(--ink2);font-weight:500;}
 .pet-tab.add{border-style:dashed;color:#8fb8e8;background:rgba(7,25,52,.45);}
 
+/* ---------- น้องตัวใหญ่เต็มเวทีแบบตัวละคร lobby เกม shooter (feedback ผู้ใช้ 5 ก.ค.) ----------
+   น้อง = layer หลัง (absolute เต็มการ์ด ยืนชิดล่างกลางจอ) · แผ่นสถานะ = layer หน้าทับปลายเท้า */
 #screen-dashboard .pet-card{
-  flex:1;min-height:0;width:min(440px,100%);overflow-y:auto;
+  position:relative;flex:1;min-height:0;width:min(680px,100%);margin:0;padding:0;
+  background:none;border:none;box-shadow:none;overflow:visible;display:block;
+}
+.lobby-stage{overflow:visible;}
+.lobby-stage .weather-banner,.lobby-stage .pet-tabs{position:relative;z-index:3;}
+/* ยังไม่มีสัตว์ → คงการ์ดกระจกแบบเดิม */
+#screen-dashboard .pet-card.no-pet{
+  flex:1;width:min(440px,100%);overflow-y:auto;
   background:rgba(255,255,255,.88);backdrop-filter:blur(6px);
   border:1px solid rgba(181,212,244,.9);border-radius:20px;
-  box-shadow:0 14px 36px rgba(3,15,35,.4);
-  margin:0;padding:12px 16px 16px;
+  box-shadow:0 14px 36px rgba(3,15,35,.4);padding:12px 16px 16px;
+  display:block;
 }
+.stage-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:30px;}
+.stage-hero .pet-stage{
+  transform:scale(var(--pet-zoom,1.4));transform-origin:center bottom;
+  filter:drop-shadow(0 14px 22px rgba(3,15,35,.55));
+}
+@media (min-height:480px){ :root{--pet-zoom:1.9;} }
+@media (min-height:620px){ :root{--pet-zoom:2.5;} }
+
+/* แผ่นสถานะเดียวทับปลายเท้าน้อง: ชื่อ+เลเวล+แถบทุกอย่างแบบย่อ (scroll ภายในถ้าล้น) */
+.stage-plate{
+  position:absolute;left:50%;bottom:0;transform:translateX(-50%);z-index:2;
+  width:min(620px,100%);max-height:116px;overflow-y:auto;
+  background:rgba(8,24,50,.78);backdrop-filter:blur(6px);color:#dcebfb;
+  border:1px solid rgba(120,170,230,.4);border-radius:14px;padding:7px 12px 9px;
+}
+.stage-plate .plate-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.stage-plate .pet-name{font-size:16px;font-weight:500;color:#fff;margin:0;line-height:1.2;}
+.stage-plate .stage-label{font-size:11.5px;color:#9fc3ea;}
+.stage-plate .level-badge{font-size:11px;padding:1px 9px;}
+.stage-plate .plate-head .exp-bar{flex:1;min-width:80px;height:10px;border:none;background:rgba(255,255,255,.16);box-shadow:none;}
+.stage-plate .exp-text{font-size:10.5px;color:#9fc3ea;}
+.stage-plate .level-row{margin:5px 0 2px;gap:8px;}
+.stage-plate .hunger-bar,.stage-plate .heat-bar{height:10px;border:none;background:rgba(255,255,255,.14);box-shadow:none;}
+.stage-plate .hunger-text,.stage-plate .heat-text,.stage-plate .thirst-text{font-size:11px;color:#c9ddf3;margin-top:1px;}
+.stage-plate .heat-text.safe{background:rgba(90,170,230,.16);color:#a8d4f5;padding:2px 10px;margin-top:5px;}
+.stage-plate .heat-text small,.stage-plate .thirst-text small,.stage-plate .hunger-text small{color:#8fb3d8;}
+.stage-plate .sick-banner{font-size:11.5px;padding:6px 9px;line-height:1.4;}
+.stage-plate .care-row{margin-top:7px;gap:8px;}
+.stage-plate .care-btn{font-size:13px;padding:7px 16px;}
+.stage-plate .ability-box{
+  font-size:11px;padding:5px 9px;margin-top:7px;line-height:1.4;
+  background:rgba(255,255,255,.09);border-color:rgba(140,190,240,.35);color:#c9ddf3;
+}
+.stage-plate .ability-box.locked{background:rgba(255,255,255,.05);border-color:rgba(140,190,240,.2);color:#8fa9c6;}
+.stage-plate .ability-box small{color:#8fb3d8;}
 
 .lobby-side{width:238px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;min-height:0;}
 .lobby-side .side-card{
@@ -208,7 +252,8 @@ h1{color:var(--sky-d);text-shadow:none;}
 .panel-overlay.open{display:flex;animation:fadeIn .22s ease;}
 .panel-box{
   width:min(880px,96vw);max-height:min(600px,92dvh);
-  background:var(--panel-bg);border:1px solid #b5d4f4;border-radius:18px;
+  background:linear-gradient(180deg,#cfe7fb 0%,#a9cff2 55%,#8fbfec 100%);  /* โทนฟ้าแบบ Trade HQ (feedback ผู้ใช้: พื้นขาวเหมือนเว็บ shopping) */
+  border:1px solid #b5d4f4;border-radius:18px;
   display:flex;flex-direction:column;overflow:hidden;
   box-shadow:0 20px 60px rgba(0,0,0,.5);animation:popIn .28s cubic-bezier(.2,1.4,.4,1);
 }
@@ -228,9 +273,14 @@ h1{color:var(--sky-d);text-shadow:none;}
 .panel-page.on{display:block;animation:fadeIn .2s ease;}
 .panel-body .shop-card,.panel-body .rank-card{margin-left:auto;margin-right:auto;}
 .panel-body .shop-card{
-  background:#fff;border:1px solid #cfe2f6;border-radius:16px;
-  box-shadow:0 3px 12px rgba(27,95,168,.08);
+  background:rgba(255,255,255,.5);border:1px solid #8ebbe8;border-radius:16px;
+  box-shadow:0 3px 12px rgba(15,60,110,.16);
 }
+.collect-sub{color:#3d5c7e;}
+.mkt-empty{color:#3d5c7e;}
+.craft-box{background:rgba(255,255,255,.66);border-color:#8ebbe8;}
+.mkt-listing{background:rgba(255,255,255,.55);}
+.mkt-filter{background:#fff;}
 
 /* ============================================================
    การ์ดสินค้าสไตล์ Trade HQ (เฟส 3 — แคตตาล็อกโรงงาน + คลังของฉัน)
@@ -239,14 +289,15 @@ h1{color:var(--sky-d);text-shadow:none;}
    ============================================================ */
 .hq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:6px;}
 .hq-card{
-  background:#fff;border:2px solid #cfe2f6;border-radius:14px;overflow:hidden;
+  background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;border-radius:14px;overflow:hidden;
   display:flex;flex-direction:column;text-align:center;
-  box-shadow:0 3px 10px rgba(27,95,168,.12);transition:transform .12s;
+  box-shadow:0 4px 12px rgba(15,60,110,.22);transition:transform .12s;
 }
 .hq-card:hover{transform:translateY(-2px);}
 .hq-head{
-  background:var(--navy-2);color:#eaf4ff;font-size:13px;font-weight:500;
+  background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;font-size:13px;font-weight:500;
   padding:5px 6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:0 1px 2px rgba(10,40,80,.4);
 }
 .hq-pic{position:relative;height:98px;display:flex;align-items:center;justify-content:center;padding:6px;}
 .hq-pic img{width:76px;height:76px;object-fit:contain;}
@@ -269,11 +320,13 @@ h1{color:var(--sky-d);text-shadow:none;}
 .shop-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;}
 .shop-item{
   display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:14px;
-  background:#fff;border:2px solid #cfe2f6;box-shadow:0 3px 8px rgba(27,95,168,.1);
+  background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;
+  box-shadow:0 4px 12px rgba(15,60,110,.22);
 }
 .shop-item .it-name{
-  order:-1;background:var(--navy-2);color:#eaf4ff;font-size:12px;font-weight:500;
+  order:-1;background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;font-size:12px;font-weight:500;
   padding:4px 4px;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  text-shadow:0 1px 2px rgba(10,40,80,.4);
 }
 .shop-item .it-emoji{font-size:38px;padding:12px 0 8px;}
 .shop-item .it-price{
@@ -284,8 +337,8 @@ h1{color:var(--sky-d);text-shadow:none;}
 .shop-item.equipped{border-color:var(--gold);background:#fffbe8;}
 .shop-item.owned{border-color:var(--green-d);}
 .mkt-filter{border-color:var(--sky);color:var(--ink2);}
-.mkt-tab{border-color:#cfe2f6;color:#5b7ea6;background:#fff;}
-.mkt-tab.on{border-color:var(--sky-d);color:var(--sky-d);box-shadow:0 3px 8px rgba(27,95,168,.15);}
+.mkt-tab{border-color:#8ebbe8;color:#2a5580;background:rgba(255,255,255,.55);}
+.mkt-tab.on{border-color:var(--sky-d);color:var(--sky-d);background:#fff;box-shadow:0 3px 8px rgba(15,60,110,.2);}
 .pg-btn{background:var(--sky);box-shadow:0 3px 0 var(--sky-d);}
 .pg-btn:disabled{background:#c9dcf0;box-shadow:0 3px 0 #aac6e4;}
 .pg-btn:active:not(:disabled){box-shadow:0 1px 0 var(--sky-d);}
