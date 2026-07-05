@@ -232,6 +232,65 @@ h1{color:var(--sky-d);text-shadow:none;}
   box-shadow:0 3px 12px rgba(27,95,168,.08);
 }
 
+/* ============================================================
+   การ์ดสินค้าสไตล์ Trade HQ (เฟส 3 — แคตตาล็อกโรงงาน + คลังของฉัน)
+   หัวการ์ดน้ำเงินชื่อสินค้า · ภาพใหญ่กลางการ์ด · badge มุมขวาบน
+   · แถบราคาพื้นทอง = ปุ่มกดสั่งงาน
+   ============================================================ */
+.hq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:6px;}
+.hq-card{
+  background:#fff;border:2px solid #cfe2f6;border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;text-align:center;
+  box-shadow:0 3px 10px rgba(27,95,168,.12);transition:transform .12s;
+}
+.hq-card:hover{transform:translateY(-2px);}
+.hq-head{
+  background:var(--navy-2);color:#eaf4ff;font-size:13px;font-weight:500;
+  padding:5px 6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.hq-pic{position:relative;height:98px;display:flex;align-items:center;justify-content:center;padding:6px;}
+.hq-pic img{width:76px;height:76px;object-fit:contain;}
+.hq-emoji{font-size:50px;line-height:1;}
+.hq-badge{
+  position:absolute;top:5px;right:6px;background:var(--panel-bg);border:1px solid #b5d4f4;
+  border-radius:999px;font-size:11px;padding:0 8px;color:var(--sky-d);font-weight:500;
+}
+.hq-stars{position:absolute;bottom:3px;left:8px;font-size:11px;letter-spacing:1px;}
+.hq-price{
+  border:none;border-top:2px solid #f0d68a;background:#faeeda;color:#7a5410;
+  font-family:inherit;font-size:12.5px;font-weight:500;padding:8px 4px;cursor:pointer;
+  transition:filter .15s;margin-top:auto;line-height:1.25;
+}
+.hq-price:hover{filter:brightness(1.05);}
+.hq-price:active{filter:brightness(.95);}
+.hq-card.hq-cur .hq-price{background:#e9e4f6;border-top-color:#cabfe8;color:#6b5b95;cursor:default;}
+
+/* ร้านแต่งตัว: จัดทรงการ์ดสินค้าแบบเดียวกัน (CSS ล้วน — markup เดิม) */
+.shop-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;}
+.shop-item{
+  display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:14px;
+  background:#fff;border:2px solid #cfe2f6;box-shadow:0 3px 8px rgba(27,95,168,.1);
+}
+.shop-item .it-name{
+  order:-1;background:var(--navy-2);color:#eaf4ff;font-size:12px;font-weight:500;
+  padding:4px 4px;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shop-item .it-emoji{font-size:38px;padding:12px 0 8px;}
+.shop-item .it-price{
+  background:#faeeda;border-top:2px solid #f0d68a;color:#7a5410;
+  font-size:12px;font-weight:500;padding:6px 2px;margin-top:auto;
+}
+.shop-item .it-tag{margin:6px auto 9px;font-size:11px;padding:1px 10px;}
+.shop-item.equipped{border-color:var(--gold);background:#fffbe8;}
+.shop-item.owned{border-color:var(--green-d);}
+.mkt-filter{border-color:var(--sky);color:var(--ink2);}
+.mkt-tab{border-color:#cfe2f6;color:#5b7ea6;background:#fff;}
+.mkt-tab.on{border-color:var(--sky-d);color:var(--sky-d);box-shadow:0 3px 8px rgba(27,95,168,.15);}
+.pg-btn{background:var(--sky);box-shadow:0 3px 0 var(--sky-d);}
+.pg-btn:disabled{background:#c9dcf0;box-shadow:0 3px 0 #aac6e4;}
+.pg-btn:active:not(:disabled){box-shadow:0 1px 0 var(--sky-d);}
+.pg-dot.on{background:var(--sky);}
+
 /* จอเตี้ยมาก (มือถือแนวนอน) — ย่อส่วนให้พอดีจอ */
 @media (max-height:430px){
   #screen-dashboard.active{padding:6px 10px 8px;gap:5px;}

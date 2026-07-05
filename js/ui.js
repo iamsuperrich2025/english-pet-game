@@ -1331,14 +1331,19 @@ function renderFactory(){
   const items = COLLECTIBLES.filter(c=>factoryCat==='all' || c.cat===factoryCat);
   const pages = Math.max(1, Math.ceil(items.length/FACTORY_PAGE_SIZE));
   factoryPage = Math.min(Math.max(factoryPage, 0), pages - 1);
+  /* การ์ดสินค้าสไตล์ Trade HQ (โฉมใหม่ 5725691826): หัวการ์ดชื่อสินค้า + ภาพใหญ่
+     + badge แต้มคำ + แถบราคาทองเป็นปุ่มผลิต — โครง pagination/ปัดซ้ายขวาเดิมทั้งหมด */
   const rows = items.slice(factoryPage*FACTORY_PAGE_SIZE, (factoryPage+1)*FACTORY_PAGE_SIZE).map(c=>{
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     const cur = state.producing && state.producing.id === c.id;
-    return `<div class="mkt-row">
-      <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
-      <div class="mkt-info"><b>${c.name}</b> <span class="mkt-tier-stars" style="color:${tier.color}">${tier.stars}</span><br>
-        <small>🔤 ใช้ ${fmtNum(c.words)} คำ · ขายได้ ~🪙${fmtNum(c.price)}</small></div>
-      <button class="mkt-buy craft-make ${cur?'cant':''}" data-id="${c.id}">${cur?'กำลัง<br>ผลิต':'🏭<br>ผลิต'}</button>
+    return `<div class="hq-card ${cur?'hq-cur':''}" style="border-color:${tier.color}">
+      <div class="hq-head">${c.name}</div>
+      <div class="hq-pic">
+        ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+        <span class="hq-badge">🔤 ${fmtNum(c.words)}</span>
+        <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
+      </div>
+      <button class="hq-price craft-make" data-id="${c.id}">${cur?'⏳ กำลังผลิตอยู่...':`🏭 ผลิต · ขาย ~🪙${fmtNum(c.price)}`}</button>
     </div>`;
   }).join('');
   const dots = Array.from({length: pages}, (_,i)=>`<span class="pg-dot ${i===factoryPage?'on':''}"></span>`).join('');
@@ -1348,7 +1353,7 @@ function renderFactory(){
       <button class="pg-btn" id="factory-next" ${factoryPage===pages-1?'disabled':''}>▶</button>
     </div>` : '';
   return jobUI + `<select class="mkt-filter" id="factory-cat">${opts}</select>` +
-    `<div class="mkt-catalog${factorySlide?' slide-'+factorySlide:''}" id="factory-list">${rows}</div>` + pager;
+    `<div class="mkt-catalog hq-grid${factorySlide?' slide-'+factorySlide:''}" id="factory-list">${rows}</div>` + pager;
 }
 
 /* ---- ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตเจาะจง จ่ายแพงกว่าราคาฐาน 30–80% ---- */
@@ -1441,13 +1446,17 @@ function renderCollectMine(){
   const ids = COLLECTIBLES.map(c=>c.id).filter(id=>counts[id]);
   let ownedUI;
   if(ids.length){
-    ownedUI = `<div class="collect-grid">` + ids.map(id=>{
+    /* การ์ดสินค้าสไตล์ Trade HQ เหมือนแคตตาล็อกโรงงาน (โฉมใหม่ 5725691826) */
+    ownedUI = `<div class="hq-grid">` + ids.map(id=>{
       const c = collectInfo(id), tier = COLLECT_TIERS[c.tier], img = collectImg(id);
-      return `<div class="collect-cell" style="border-color:${tier.color}">
-        <div class="cc-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</div>
-        <div class="cc-name">${c.name}</div>
-        <span class="cc-count" style="color:${tier.color}">${tier.stars} ×${counts[id]}</span>
-        <button class="cc-list-btn" data-id="${id}">🏷️ ตั้งราคาขาย</button>
+      return `<div class="hq-card" style="border-color:${tier.color}">
+        <div class="hq-head">${c.name}</div>
+        <div class="hq-pic">
+          ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+          <span class="hq-badge">×${counts[id]}</span>
+          <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
+        </div>
+        <button class="hq-price cc-list-btn" data-id="${id}">🏷️ ตั้งราคาขาย</button>
       </div>`;
     }).join('') + `</div>`;
   }else{
