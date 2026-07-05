@@ -802,6 +802,24 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   font-family:inherit;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #96859f;flex-shrink:0;
 }
 .craft-cancel:active{transform:translateY(2px);box-shadow:0 1px 0 #96859f;}
+
+/* ---------- แคตตาล็อกโรงงานแบ่งหน้า 5 รายการ (ปัดซ้าย-ขวา/ปุ่มลูกศร) ---------- */
+.mkt-catalog{touch-action:pan-y;}   /* ให้เลื่อนจอแนวตั้งได้ปกติ ระบบปัดซ้ายขวาจับเอง */
+.mkt-catalog.slide-left{animation:pgSlideL .28s ease;}
+.mkt-catalog.slide-right{animation:pgSlideR .28s ease;}
+@keyframes pgSlideL{from{transform:translateX(46px);opacity:.25;}to{transform:none;opacity:1;}}
+@keyframes pgSlideR{from{transform:translateX(-46px);opacity:.25;}to{transform:none;opacity:1;}}
+.mkt-pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:8px;}
+.pg-btn{
+  background:var(--purple-d);color:#fff;border:none;border-radius:999px;width:40px;height:40px;
+  font-family:inherit;font-size:16px;cursor:pointer;box-shadow:0 3px 0 #7d5fc0;flex-shrink:0;
+}
+.pg-btn:disabled{background:#ded3ef;box-shadow:0 3px 0 #cbbde0;cursor:default;}
+.pg-btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #7d5fc0;}
+.pg-mid{text-align:center;color:#a89ac0;font-size:11.5px;line-height:1.5;}
+.pg-dots{display:flex;gap:5px;justify-content:center;margin-bottom:2px;flex-wrap:wrap;}
+.pg-dot{width:8px;height:8px;border-radius:50%;background:#e2d7f2;display:inline-block;}
+.pg-dot.on{background:var(--purple-d);}
 .order-head{font-weight:bold;font-size:14px;color:#a8791a;margin:4px 0 8px;}
 .order-row{
   display:flex;gap:10px;align-items:center;background:#fff9e8;border:2px solid #f0d68a;

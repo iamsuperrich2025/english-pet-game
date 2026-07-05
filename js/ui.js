@@ -6,6 +6,9 @@
 /* ---- สถานะการ์ดโรงงานผลิต (ในหน่วยความจำ ไม่ต้องเซฟ) ---- */
 let collectView = 'factory';    // มุมมองการ์ด: 'factory' (โรงงานผลิต) | 'mine' (คลังของฉัน)
 let factoryCat = 'all';         // ตัวกรองหมวดสินค้าในแคตตาล็อกโรงงาน ('all' | id หมวด)
+let factoryPage = 0;            // หน้าปัจจุบันของแคตตาล็อก (5 รายการ/หน้า — ปัดซ้ายขวา/กดลูกศรเปลี่ยนหน้า)
+let factorySlide = '';          // ทิศอนิเมชันตอนเปลี่ยนหน้า ('left'|'right'|'' = ไม่เล่น)
+const FACTORY_PAGE_SIZE = 5;
 
 /* ---------- ภาพเริ่มต้น (ตะกร้า/ไข่ วาดด้วย CSS ถ้าไม่มีภาพเจน) ---------- */
 function startHTML(key){
@@ -1253,7 +1256,33 @@ function renderCollectCard(){
   const soldOk = document.getElementById('mkt-sold-ok');
   if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderCollectCard(); });
   const catSel = document.getElementById('factory-cat');
-  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; sfx.select(); renderCollectCard(); });
+  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; factoryPage = 0; sfx.select(); renderCollectCard(); });
+  /* เปลี่ยนหน้าแคตตาล็อก: ปุ่มลูกศร (เมาส์) + ปัดซ้ายขวา (จอสัมผัส) */
+  const goPage = (d)=>{
+    factorySlide = d > 0 ? 'left' : 'right';   // ปัดไปหน้าถัดไป → รายการใหม่สไลด์เข้าจากขวา
+    factoryPage += d;
+    sfx.select();
+    renderCollectCard();
+    factorySlide = '';
+  };
+  const prevB = document.getElementById('factory-prev');
+  const nextB = document.getElementById('factory-next');
+  if(prevB) prevB.addEventListener('click', ()=>{ if(!prevB.disabled) goPage(-1); });
+  if(nextB) nextB.addEventListener('click', ()=>{ if(!nextB.disabled) goPage(1); });
+  const flist = document.getElementById('factory-list');
+  if(flist){
+    let sx = 0, sy = 0;
+    flist.addEventListener('touchstart', (e)=>{
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+    }, {passive:true});
+    flist.addEventListener('touchend', (e)=>{
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if(Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)*1.5) return;   // ปัดสั้นไป/ตั้งใจเลื่อนจอแนวตั้ง
+      if(dx < 0 && nextB && !nextB.disabled) goPage(1);                  // ปัดซ้าย = หน้าถัดไป
+      if(dx > 0 && prevB && !prevB.disabled) goPage(-1);                 // ปัดขวา = หน้าก่อนหน้า
+    }, {passive:true});
+  }
   el.querySelectorAll('.craft-make').forEach(b=>b.addEventListener('click', ()=>startProduce(b.dataset.id)));
   const goBtn = document.getElementById('craft-go');
   if(goBtn) goBtn.addEventListener('click', ()=>startGame(null));
@@ -1293,7 +1322,11 @@ function renderFactory(){
   }
   const opts = `<option value="all">📦 ทุกหมวดสินค้า (${COLLECTIBLES.length} ชนิด)</option>` +
     COLLECT_CATS.map(g=>`<option value="${g.id}" ${factoryCat===g.id?'selected':''}>${g.emoji} หมวด${g.name}</option>`).join('');
-  const rows = COLLECTIBLES.filter(c=>factoryCat==='all' || c.cat===factoryCat).map(c=>{
+  /* แบ่งหน้า 5 รายการ/หน้า (ผู้ใช้สั่ง 5 ก.ค. 2026) — ปัดซ้ายขวาบนจอสัมผัส หรือกดลูกศร */
+  const items = COLLECTIBLES.filter(c=>factoryCat==='all' || c.cat===factoryCat);
+  const pages = Math.max(1, Math.ceil(items.length/FACTORY_PAGE_SIZE));
+  factoryPage = Math.min(Math.max(factoryPage, 0), pages - 1);
+  const rows = items.slice(factoryPage*FACTORY_PAGE_SIZE, (factoryPage+1)*FACTORY_PAGE_SIZE).map(c=>{
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     const cur = state.producing && state.producing.id === c.id;
     return `<div class="mkt-row">
@@ -1303,7 +1336,14 @@ function renderFactory(){
       <button class="mkt-buy craft-make ${cur?'cant':''}" data-id="${c.id}">${cur?'กำลัง<br>ผลิต':'🏭<br>ผลิต'}</button>
     </div>`;
   }).join('');
-  return jobUI + `<select class="mkt-filter" id="factory-cat">${opts}</select>` + rows;
+  const dots = Array.from({length: pages}, (_,i)=>`<span class="pg-dot ${i===factoryPage?'on':''}"></span>`).join('');
+  const pager = pages > 1 ? `<div class="mkt-pager">
+      <button class="pg-btn" id="factory-prev" ${factoryPage===0?'disabled':''}>◀</button>
+      <div class="pg-mid"><div class="pg-dots">${dots}</div><small>หน้า ${factoryPage+1}/${pages} · ปัดซ้าย-ขวาเพื่อดูเพิ่ม</small></div>
+      <button class="pg-btn" id="factory-next" ${factoryPage===pages-1?'disabled':''}>▶</button>
+    </div>` : '';
+  return jobUI + `<select class="mkt-filter" id="factory-cat">${opts}</select>` +
+    `<div class="mkt-catalog${factorySlide?' slide-'+factorySlide:''}" id="factory-list">${rows}</div>` + pager;
 }
 
 /* ---- ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตเจาะจง จ่ายแพงกว่าราคาฐาน 30–80% ---- */
