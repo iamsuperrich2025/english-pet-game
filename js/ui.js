@@ -347,15 +347,93 @@ function refreshFriendData(){
   const listEl = document.getElementById('fr-list');
   if(listEl){
     if(Online.myFriends.length){
-      listEl.innerHTML = Online.myFriends.map(f=>{
+      listEl.innerHTML = Online.myFriends.map((f,i)=>{
         const on = Online.presenceMap && Online.presenceMap[f.uid];
         return `<div class="fr-row">
           <span class="online-dot${on ? '' : ' off'}"></span>
           <span class="fr-row-name">${escapeHTML(f.n)}<small> ชั้น ${escapeHTML(f.g)}</small></span>
-          <span class="fr-row-status">${on ? '💚 ออนไลน์' : '⚪ ออฟไลน์'}</span></div>`;
+          <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
+          <button class="fr-chat-btn" data-i="${i}">💬 แชท</button></div>`;
       }).join('');
+      listEl.querySelectorAll('.fr-chat-btn').forEach(b=>b.addEventListener('click', ()=>{
+        openChat(Online.myFriends[+b.dataset.i]);
+      }));
     }else listEl.innerHTML = `<div class="lb-empty">ยังไม่มีเพื่อน — บอกรหัสของหนูให้เพื่อน หรือค้นหารหัสเพื่อนด้านบนเพื่อเพิ่มกันนะ! 🤝</div>`;
   }
+}
+
+/* ============================================================
+   แชทกับเพื่อน (ข้อ 0.4) — กล่องแชทลอยกลางจอ + แผง emoji
+   ============================================================ */
+const CHAT_EMOJIS = ['😀','😄','😁','😊','🥰','😍','😎','🤩','😂','😉','😜','😇',
+  '🥳','😴','😮','😢','😭','😡','👍','👎','👏','🙏','💪','🤝','👋','🎉','🎁','⭐',
+  '🌈','🔥','💯','❤️','💖','💙','💚','💛','🐶','🐱','🐣','🍎','🍰','⚽','🎮','☀️'];
+let chatUnsub = null;   // ฟังก์ชันเลิกฟังแชทที่เปิดอยู่ (มีได้ทีละกล่อง)
+
+function openChat(friend){
+  if(!friend) return;
+  if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะแชทได้นะ 📡'); return; }
+  const me = onlineKey();
+  const overlay = document.createElement('div');
+  overlay.className = 'chat-overlay';
+  overlay.innerHTML = `<div class="chat-box">
+    <div class="chat-head">
+      <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ชั้น ${escapeHTML(friend.g)}</small></span>
+      <button class="chat-close" id="chat-close" type="button">✕</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs"><div class="chat-empty">กำลังโหลดข้อความ... 💬</div></div>
+    <div class="chat-emoji" id="chat-emoji" style="display:none">
+      ${CHAT_EMOJIS.map(e=>`<button class="chat-emo" type="button">${e}</button>`).join('')}
+    </div>
+    <div class="chat-input-row">
+      <button class="chat-emoji-btn" id="chat-emoji-btn" type="button">😊</button>
+      <input id="chat-input" maxlength="200" placeholder="พิมพ์ข้อความ..." autocomplete="off">
+      <button class="chat-send" id="chat-send" type="button">ส่ง</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  const msgsEl = overlay.querySelector('#chat-msgs');
+  const input  = overlay.querySelector('#chat-input');
+  const emojiPanel = overlay.querySelector('#chat-emoji');
+
+  overlay.querySelector('#chat-emoji-btn').addEventListener('click', ()=>{
+    emojiPanel.style.display = emojiPanel.style.display === 'none' ? '' : 'none';
+  });
+  overlay.querySelectorAll('.chat-emo').forEach(b=>b.addEventListener('click', ()=>{
+    if(input.value.length < 200) input.value += b.textContent;
+    input.focus();
+  }));
+
+  const send = ()=>{
+    if(!input.value.trim()) return;
+    const btn = overlay.querySelector('#chat-send');
+    btn.disabled = true;
+    chatSend(friend.uid, input.value)
+      .then(()=>{ input.value = ''; sfx.select(); })
+      .catch(msg=>{ sfx.wrong(); toast(typeof msg === 'string' ? msg : 'ส่งไม่สำเร็จ ลองใหม่นะ'); })
+      .then(()=>{ btn.disabled = false; input.focus(); });
+  };
+  overlay.querySelector('#chat-send').addEventListener('click', send);
+  input.addEventListener('keydown', e=>{ if(e.key === 'Enter') send(); });
+
+  const close = ()=>{
+    if(chatUnsub){ chatUnsub(); chatUnsub = null; }
+    overlay.remove();
+  };
+  overlay.querySelector('#chat-close').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+
+  if(chatUnsub) chatUnsub();          // ปิดกล่องเก่าถ้ามีค้าง
+  chatUnsub = chatListen(friend.uid, (msgs)=>{
+    if(!document.body.contains(overlay)){ if(chatUnsub){ chatUnsub(); chatUnsub = null; } return; }
+    if(!msgs.length){ msgsEl.innerHTML = `<div class="chat-empty">ยังไม่มีข้อความ — ทักทายเพื่อนก่อนเลย! 👋</div>`; return; }
+    msgsEl.innerHTML = msgs.map(m=>
+      `<div class="chat-bubble${m.f === me ? ' mine' : ''}">${escapeHTML(m.t)}</div>`).join('');
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  });
+  setTimeout(()=>input.focus(), 60);
+  sfx.select();
 }
 
 /* ============================================================

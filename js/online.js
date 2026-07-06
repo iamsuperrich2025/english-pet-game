@@ -169,6 +169,69 @@ function friendDecline(fromUid){
   return Online.db.ref('friendReq/' + onlineKey() + '/' + fromUid).remove();
 }
 
+/* ============================================================
+   ระบบแชทกับเพื่อน (ข้อ 0.4)
+   /chats/<pairId>/<msgId> = {f:uidผู้ส่ง, t:ข้อความ, ts:เวลา}
+   pairId = uid สองตัวเรียง alphabet ต่อกันด้วย "_" (uid Google เป็น a-zA-Z0-9
+   ไม่มี "_" อยู่แล้ว → แยกสมาชิกได้ชัดใน rules ด้วย $pairId.contains(auth.uid))
+   เก็บ 100 ข้อความล่าสุด/คู่ (chatPrune ตัดตัวเก่าทิ้งตอนส่ง)
+   ตรวจคำหยาบด้วย nameHasBadWord (badwords.js) ก่อนส่ง — ข้อความยาวได้ ≤200 ตัว
+   ============================================================ */
+const CHAT_MAX_LEN  = 200;   // ความยาวข้อความสูงสุด
+const CHAT_KEEP      = 100;   // เก็บกี่ข้อความล่าสุด/คู่
+
+function chatPairId(otherUid){
+  return [onlineKey(), otherUid].sort().join('_');
+}
+function chatRef(otherUid){
+  return Online.db.ref('chats/' + chatPairId(otherUid));
+}
+
+/* ฟังข้อความ 100 ตัวล่าสุด (real-time) → cb([{key,f,t,ts},...] เก่า→ใหม่)
+   คืนฟังก์ชันสำหรับเลิกฟัง (เรียกตอนปิดกล่องแชท) */
+function chatListen(otherUid, cb){
+  const q = chatRef(otherUid).orderByKey().limitToLast(CHAT_KEEP);
+  const handler = q.on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(v && typeof v.t === 'string' && typeof v.f === 'string')
+        out.push({key: ch.key, f: v.f, t: v.t, ts: v.ts || 0});
+    });
+    cb(out);
+  });
+  return ()=>q.off('value', handler);
+}
+
+/* ส่งข้อความ → resolve เมื่อสำเร็จ · reject(ข้อความบอกเหตุ) เมื่อไม่ผ่าน
+   (ปลอดภัยสำหรับเด็ก: กรองคำหยาบชุดเดียวกับตั้งชื่อ ข้อ 0.2) */
+function chatSend(otherUid, rawText){
+  if(!Online.ready) return Promise.reject('ต้องต่ออินเทอร์เน็ตก่อนถึงจะแชทได้นะ 📡');
+  const text = String(rawText || '').replace(/\s+/g, ' ').trim();
+  if(!text) return Promise.reject('ยังไม่ได้พิมพ์ข้อความเลยนะ');
+  if(text.length > CHAT_MAX_LEN) return Promise.reject(`ข้อความยาวเกินไป (ไม่เกิน ${CHAT_MAX_LEN} ตัว)`);
+  if(nameHasBadWord(text)) return Promise.reject('ข้อความมีคำไม่สุภาพอยู่ พิมพ์ใหม่นะ 😊');
+  const base = chatRef(otherUid);
+  return base.push({
+    f:  onlineKey(),
+    t:  text,
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  }).then(()=>chatPrune(base));
+}
+
+/* ตัดข้อความเก่าให้เหลือ 100 ล่าสุด (best-effort — ล้มเหลวไม่กระทบการส่ง) */
+function chatPrune(base){
+  return base.once('value').then(snap=>{
+    const keys = [];
+    snap.forEach(ch=>{ keys.push(ch.key); });
+    if(keys.length > CHAT_KEEP){
+      const upd = {};
+      keys.slice(0, keys.length - CHAT_KEEP).forEach(k=>{ upd[k] = null; });
+      return base.update(upd);
+    }
+  }).catch(()=>{});
+}
+
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
    initializeApp ทำแล้วใน authStart) ---------- */
 function onlineStart(){
