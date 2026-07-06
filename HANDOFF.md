@@ -7,6 +7,11 @@
 
 ## 📌 แผนสำหรับ session ถัดไป (Fable เขียนไว้ตอนใกล้เต็ม limit — 6 ก.ค. 2026 · Opus อ่านหัวข้อนี้ก่อนหัวข้ออื่น)
 
+**✅ รอบยี่สิบเก้า (6 ก.ค. 2026 · Opus session): แยกปุ่ม "โรงงาน" กับ "ตลาด" เป็นคนละแผง (ผู้ใช้สั่ง) — push แล้ว**
+- เดิม `#collect-card` แผงเดียวมี 2 แท็บ (โรงงานผลิต/คลังของฉัน) → **แยกเป็น 2 rail buttons + 2 แผง:** `panel-factory` (🏭 โรงงาน = `#factory-card` เฉพาะสายผลิต: งานผลิต+แคตตาล็อก) · `panel-market` (🏪 ตลาด = `#market-card`: ออเดอร์พิเศษ+คลังของฉัน+ตั้งราคาขาย+กล่องขายสำเร็จ)
+- ui.js: `renderCollectCard`(ลบ) → `renderFactoryCard()`+`renderMarketCard()` · ถอด `collectView`/`.mkt-tabs` · renderDashboard เรียกทั้งคู่ (2 จุด) · startProduce/cancelProduce→renderFactoryCard · index.html rail เพิ่มปุ่มตลาด+panel-market · lobby.js PANEL_TITLES · **ทดสอบ preview:** factory มีแต่ผลิต(catalog 5+งานผลิต ไม่มี orders/ขาย) · market มี orders+sold+คลัง(ตั้งราคาขาย ไม่มี catalog) · rail 8 ปุ่ม · produce/list dialog ทำงาน · ไม่มี console error (screenshot 2 แผงสวยแยกกัน) · version.json→.3
+- **⚠️ ของขวัญที่รับมา (giftBox) ส่งต่อ/ขายต่อไม่ได้** — ยืนยันแล้ว: picker ดึงจาก `state.collection` เท่านั้น (ไม่ใช่ giftBox) · giftBox ไม่เข้า assetValue/ตลาด/listings
+
 **✅ รอบยี่สิบแปด (6 ก.ค. 2026 · Opus session): ข้อ 0.5 ส่งของขวัญ เสร็จ + ต่อยอดแผง emoji แชทเป็นหมวด — ทดสอบ preview ผ่านครบ (ยังไม่ commit จนกว่าจะอ่านหมายเหตุท้าย)**
 - **คำถามค้าง 3 ข้อ ผู้ใช้เคาะแล้ว (ทั้งหมดเลือกตัวแนะนำ):** (1) ปฏิเสธ collectible → **คืนเข้าคลังผู้ส่ง** (2) ค้าง "ยังไม่มีผู้รับ" เกิน **7 วัน → หมดอายุคืนของ** (3) กด "ส่ง" → **ตัดของ/หักเหรียญออกจากผู้ส่งทันที (escrow)** · เพิ่มเอง: ของขวัญร้าน (ซื้อด้วยเหรียญ) ถ้าถูกปฏิเสธ/หมดอายุ → **คืนเหรียญ**
 - **ไฟล์ใหม่:** `js/data/gifts.js` (GIFTS 50 แบบ id/emoji/name/price/cat[cake/rose/card] + GIFT_CATS + giftInfo · ภาพ img/gifts/gift_<id>.png ครบ 50)
@@ -237,9 +242,8 @@ js/ui.js              renderDashboard/renderClock/renderOnlineCard/renderShop/re
                       renderPetShop/renderRankCard/showRankUp/showLevelUp/feedPet/curePet/renderStats
                       + UI สาธารณูปโภคกลาง: UTILITY_UI (ข้อความ/ปุ่ม/onRestored ต่อชนิด) +
                       utilityBillUI(id,h,lastDay)/payUtility(id)/buyUtilityFix(id) — ค่าเน็ต (ข้อ 7) เสียบเพิ่มได้
-                      + โรงงานผลิต+ตลาด: renderCollectCard/renderFactory/renderOrdersUI/renderCollectMine/
-                      startProduce/cancelProduce/deliverOrder/renderOrderClock/openListDialog/cancelListing/
-                      showCollectReveal(id,price,produced)/collectImg (การ์ด #collect-card · module var collectView/factoryCat)
+                      + โรงงานผลิต & ตลาด (**แยกคนละแผงแล้ว "รอบยี่สิบเก้า" 6 ก.ค.**): renderFactoryCard (การ์ด #factory-card = renderFactory แคตตาล็อก+งานผลิต) · renderMarketCard (การ์ด #market-card = soldUI+renderOrdersUI+renderCollectMine) · startProduce/cancelProduce→renderFactoryCard · deliverOrder/openListDialog/cancelListing→renderDashboard · renderOrderClock/showCollectReveal(id,price,produced)/collectImg · module var factoryCat/factoryPage
+                      + ของขวัญ (ข้อ 0.5): renderGiftPanel/openGiftPicker/confirmSendGift/doSendGift/acceptGift/declineGift/showGiftReveal/giftImg (การ์ด #gift-card)
 js/game.js            เกมจับคู่ + หมวด/แบบทดสอบ (renderCats/startQuiz/finishQuiz) + hook แต้มผลิต: จับคู่ถูก addCraft(1)+note "🏭 x/y" · finishQuiz addCraft(ข้อถูก) — ครบแล้วเรียก showCollectReveal(id,null,true)
 js/main.js            ปุ่ม + init: โชว์ #screen-login รอ auth → bootGame() (เรียกจาก authEnterGame ครั้งเดียว) ·
                       careTick interval ทุก 1 นาที guard ด้วย Auth.booted (ห้ามเดินก่อน login — จะบัมพ์ savedAt

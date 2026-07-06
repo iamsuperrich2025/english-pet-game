@@ -4,7 +4,6 @@
    ============================================================ */
 
 /* ---- สถานะการ์ดโรงงานผลิต (ในหน่วยความจำ ไม่ต้องเซฟ) ---- */
-let collectView = 'factory';    // มุมมองการ์ด: 'factory' (โรงงานผลิต) | 'mine' (คลังของฉัน)
 let factoryCat = 'all';         // ตัวกรองหมวดสินค้าในแคตตาล็อกโรงงาน ('all' | id หมวด)
 let factoryPage = 0;            // หน้าปัจจุบันของแคตตาล็อก (5 รายการ/หน้า — ปัดซ้ายขวา/กดลูกศรเปลี่ยนหน้า)
 let factorySlide = '';          // ทิศอนิเมชันตอนเปลี่ยนหน้า ('left'|'right'|'' = ไม่เล่น)
@@ -925,7 +924,8 @@ function renderDashboard(){
     renderPhoneCard();
     renderComputerCard();
     renderFarmCard();
-    renderCollectCard();
+    renderFactoryCard();
+    renderMarketCard();
     renderShop();
     return;
   }
@@ -1079,7 +1079,8 @@ function renderDashboard(){
   renderPhoneCard();
   renderComputerCard();
   renderFarmCard();
-  renderCollectCard();
+  renderFactoryCard();
+  renderMarketCard();
   renderShop();
 }
 
@@ -1862,47 +1863,25 @@ function sellAllFruit(){
    ============================================================ */
 function collectImg(id){ return IMG_FILES[`collect_${id}`] || null; }
 
-function renderCollectCard(){
-  const el = document.getElementById('collect-card');
+/* ============================================================
+   โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+   เฉพาะสายการผลิต: งานที่กำลังผลิต + แคตตาล็อกเลือกสินค้าผลิต
+   ============================================================ */
+function renderFactoryCard(){
+  const el = document.getElementById('factory-card');
   if(!el) return;
+  el.innerHTML = `<h3 class="shop-title">🏭 โรงงานผลิตสินค้า</h3>
+    <p class="collect-sub">เล่นเกมคำศัพท์เพื่อผลิตสินค้า (ตอบถูก 1 คำ = 1 แต้มผลิต) ผลิตเสร็จเก็บเข้าคลัง เอาไปตั้งขายที่เมนู 🏪 ตลาดได้เลย</p>
+    ${renderFactory()}`;
 
-  /* กล่องแจ้ง "ขายของสำเร็จ" (ลูกค้าจำลองมาซื้อของที่เราลงขาย) */
-  let soldUI = '';
-  if(state.tradeSold.length){
-    const total = state.tradeSold.reduce((s,x)=>s + x.price, 0);
-    const items = state.tradeSold.slice().reverse().map(x=>{
-      const c = collectInfo(x.id);
-      return `<li>${c ? c.emoji+' '+c.name : x.id} — 🪙${fmtNum(x.price)}</li>`;
-    }).join('');
-    soldUI = `<div class="mkt-sold">📬 <b>ขายสินค้าได้ ${state.tradeSold.length} ชิ้น!</b> รับเงินรวม 🪙${fmtNum(total)}
-      <ul>${items}</ul>
-      <button id="mkt-sold-ok">รับทราบ ✅</button></div>`;
-  }
-
-  const body = collectView === 'mine' ? renderCollectMine() : renderFactory();
-  el.innerHTML = `<h3 class="shop-title">🏭 โรงงานผลิตสินค้า &amp; ตลาด</h3>
-    <p class="collect-sub">เล่นเกมคำศัพท์เพื่อผลิตสินค้า (ตอบถูก 1 คำ = 1 แต้มผลิต) ผลิตเสร็จตั้งขายทำกำไรได้เลย 🌍</p>
-    ${soldUI}
-    ${renderOrdersUI()}
-    <div class="mkt-tabs">
-      <button class="mkt-tab ${collectView==='factory'?'on':''}" data-v="factory">🏭 โรงงานผลิต</button>
-      <button class="mkt-tab ${collectView==='mine'?'on':''}" data-v="mine">🎁 คลังของฉัน${state.collection.length?` (${state.collection.length})`:''}</button>
-    </div>
-    ${body}`;
-
-  el.querySelectorAll('.mkt-tab').forEach(b=>b.addEventListener('click', ()=>{
-    collectView = b.dataset.v; sfx.select(); renderCollectCard();
-  }));
-  const soldOk = document.getElementById('mkt-sold-ok');
-  if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderCollectCard(); });
   const catSel = document.getElementById('factory-cat');
-  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; factoryPage = 0; sfx.select(); renderCollectCard(); });
+  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; factoryPage = 0; sfx.select(); renderFactoryCard(); });
   /* เปลี่ยนหน้าแคตตาล็อก: ปุ่มลูกศร (เมาส์) + ปัดซ้ายขวา (จอสัมผัส) */
   const goPage = (d)=>{
     factorySlide = d > 0 ? 'left' : 'right';   // ปัดไปหน้าถัดไป → รายการใหม่สไลด์เข้าจากขวา
     factoryPage += d;
     sfx.select();
-    renderCollectCard();
+    renderFactoryCard();
     factorySlide = '';
   };
   const prevB = document.getElementById('factory-prev');
@@ -1928,6 +1907,38 @@ function renderCollectCard(){
   if(goBtn) goBtn.addEventListener('click', ()=>startGame(null));
   const cancelBtn = document.getElementById('craft-cancel');
   if(cancelBtn) cancelBtn.addEventListener('click', cancelProduce);
+}
+
+/* ============================================================
+   ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+   ออเดอร์พิเศษ + คลังของฉัน (ตั้งราคาขาย) + รายการที่กำลังลงขาย + กล่องขายสำเร็จ
+   ============================================================ */
+function renderMarketCard(){
+  const el = document.getElementById('market-card');
+  if(!el) return;
+
+  /* กล่องแจ้ง "ขายของสำเร็จ" (ลูกค้าจำลองมาซื้อของที่เราลงขาย) */
+  let soldUI = '';
+  if(state.tradeSold.length){
+    const total = state.tradeSold.reduce((s,x)=>s + x.price, 0);
+    const items = state.tradeSold.slice().reverse().map(x=>{
+      const c = collectInfo(x.id);
+      return `<li>${c ? c.emoji+' '+c.name : x.id} — 🪙${fmtNum(x.price)}</li>`;
+    }).join('');
+    soldUI = `<div class="mkt-sold">📬 <b>ขายสินค้าได้ ${state.tradeSold.length} ชิ้น!</b> รับเงินรวม 🪙${fmtNum(total)}
+      <ul>${items}</ul>
+      <button id="mkt-sold-ok">รับทราบ ✅</button></div>`;
+  }
+
+  el.innerHTML = `<h3 class="shop-title">🏪 ตลาดขายสินค้า</h3>
+    <p class="collect-sub">เอาสินค้าที่ผลิตจากโรงงานมาตั้งราคาขาย หรือส่งมอบออเดอร์พิเศษให้ลูกค้าทำกำไร 🌍</p>
+    ${soldUI}
+    ${renderOrdersUI()}
+    <div class="mkt-listhead">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
+    ${renderCollectMine()}`;
+
+  const soldOk = document.getElementById('mkt-sold-ok');
+  if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderMarketCard(); });
   el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
@@ -2022,7 +2033,7 @@ function startProduce(id){
     sfx.buy();
     toast(`🏭 เริ่มผลิต${c.name}! ตอบคำศัพท์ถูกให้ครบ ${fmtNum(c.words)} คำนะ`);
     saveState();
-    renderCollectCard();
+    renderFactoryCard();
   };
   if(state.producing && state.producing.progress > 0){
     const oc = collectInfo(state.producing.id);
@@ -2044,7 +2055,7 @@ function cancelProduce(){
       sfx.select();
       toast('ยกเลิกการผลิตแล้ว — เลือกสินค้าใหม่ได้เลย');
       saveState();
-      renderCollectCard();
+      renderFactoryCard();
     });
 }
 
@@ -2095,7 +2106,7 @@ function renderCollectMine(){
       </div>`;
     }).join('') + `</div>`;
   }else{
-    ownedUI = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปผลิตสินค้าชิ้นแรกที่แท็บ <b>🏭 โรงงานผลิต</b> กันเถอะ!<br>ผลิตเสร็จเอามาตั้งขาย หรือส่งมอบออเดอร์พิเศษได้เงินเพิ่ม 💰</div>`;
+    ownedUI = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปผลิตสินค้าชิ้นแรกที่เมนู <b>🏭 โรงงาน</b> กันเถอะ!<br>ผลิตเสร็จเอามาตั้งขาย หรือส่งมอบออเดอร์พิเศษได้เงินเพิ่ม 💰</div>`;
   }
   let listUI = '';
   if(state.listings.length){
