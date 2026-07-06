@@ -65,6 +65,18 @@ h1{color:var(--sky-d);text-shadow:none;}
   padding:16px 22px 26px;box-shadow:0 18px 50px rgba(3,15,35,.5);
 }
 
+/* จอเตี้ย (มือถือแนวนอน) → บีบหน้า login/ลงทะเบียนให้พอดีจอ ไม่ต้องเลื่อนหาปุ่ม */
+@media (max-height:520px){
+  #screen-login.screen.active, #screen-register.screen.active{ margin:6px auto; padding:10px 20px 16px; }
+  #screen-login h1, #screen-register h1{ font-size:19px; margin:2px 0 1px; }
+  #screen-login .subtitle, #screen-register .subtitle{ font-size:13px; margin:0 0 8px; }
+  #screen-login .register-card{ padding:12px 16px; }
+  #screen-login .login-pets{ font-size:30px; margin-bottom:2px; }
+  #screen-login .login-status{ font-size:14px; min-height:16px; margin:0 0 8px; }
+  #screen-login .google-btn{ font-size:17px; padding:10px 14px; box-shadow:0 4px 0 #d5c8e8; }
+  #screen-login .login-note{ font-size:11px; margin:6px 0 0; line-height:1.5; }
+}
+
 /* เกมจับคู่: จอกว้าง → อังกฤษซ้าย ไทยขวา (แนวนอนเต็มตา) */
 @media (min-width:640px){
   /* ต้องใช้ #id.screen.active ให้ specificity เท่ากับ .screen.active:not(#screen-dashboard)
