@@ -134,11 +134,17 @@ function friendSearch(rawCode){
     const uid = s.val();
     if(!uid || typeof uid !== 'string') return null;
     if(uid === me) return {uid, self:true};
-    // อ่านชื่อ/ชั้นจาก leaderboard (อ่านสาธารณะได้ + มีทุกคนที่เคย login)
-    return Online.db.ref('leaderboard/' + uid).get().then(ls=>{
-      const v = ls.val() || {};
-      return {uid, n: typeof v.n === 'string' ? v.n : 'ผู้เล่น', g: v.g || '',
-              already: Online.myFriends.some(f=>f.uid === uid)};
+    // อ่านชื่อ/ชั้นจากหลายแหล่งสาธารณะ: presence (สดถ้าออนไลน์อยู่) + leaderboard (ค้างถาวร)
+    // เผื่อบางคนยังไม่มีเอนทรีใดเอนทรีหนึ่ง จะได้ไม่ตกไปเป็นคำว่า "ผู้เล่น"
+    return Promise.all([
+      Online.db.ref('presence/' + uid).get().catch(()=>null),
+      Online.db.ref('leaderboard/' + uid).get().catch(()=>null),
+    ]).then(([ps, ls])=>{
+      const p = (ps && ps.val()) || {};
+      const l = (ls && ls.val()) || {};
+      const n = (typeof p.n === 'string' && p.n) || (typeof l.n === 'string' && l.n) || 'ผู้เล่น';
+      const g = p.g || l.g || '';
+      return {uid, n, g, already: Online.myFriends.some(f=>f.uid === uid)};
     });
   });
 }

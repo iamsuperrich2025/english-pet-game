@@ -23,6 +23,10 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
   saveState();
   authPushProfile();                   // ชื่อในเกมขึ้น /users/<uid>/profile/name
   authPushSave(true);                  // ลงทะเบียนเสร็จ ส่งเซฟขึ้นบัญชีทันที
+  // ประกาศตัวขึ้น presence/leaderboard ทันที เพื่อให้เพื่อนค้นหาเจอ "ชื่อ+ชั้น" ได้เลย
+  // (ไม่ต้องรอ beat 60 วิ — กันเคสค้นเจอแต่ชื่อขึ้นว่า "ผู้เล่น")
+  if(typeof onlinePushPresence === 'function') onlinePushPresence();
+  if(typeof onlinePushScore    === 'function') onlinePushScore();
   sfx.levelup();
   toast(`ยินดีต้อนรับ ${nick.name}! 🎉`);
   renderDashboard();
