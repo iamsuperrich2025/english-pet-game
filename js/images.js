@@ -36,6 +36,7 @@ function probeImages(keys, dir='img'){
 }
 function probeRankImages(){ return probeImages(RANKS.map(r=>`rank_${r.id}`), 'img/rank'); }
 function probeCollectImages(){ return probeImages(COLLECTIBLES.map(c=>`collect_${c.id}`), 'img/collectibles'); }
+function probeGiftImages(){ return probeImages(GIFTS.map(g=>`gift_${g.id}`), 'img/gifts'); }
 function probeHomeImages(){
   // ภาพบ้านปกติ + เสื่อมสภาพ (ค้างค่าบำรุง) + พัง (ฉากแจ้งเตือน) + มืด (ถูกตัดไฟ) + แห้ง (ถูกตัดน้ำ)
   return probeImages(HOMES.flatMap(h=>[`home_${h.id}`, `home_${h.id}_decayed`, `home_${h.id}_ruined`, `home_${h.id}_dark`, `home_${h.id}_nowater`]), 'img/home');

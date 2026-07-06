@@ -49,6 +49,7 @@ const DEFAULT_STATE = {
   savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
+  giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
 };
 
 /* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
@@ -163,6 +164,10 @@ function loadState(){
       if(typeof s.profileName !== 'string') s.profileName = null;
       // แชท (ข้อ 0.4): บันทึกว่าอ่านถึงข้อความไหนของแต่ละคู่แล้ว (ไว้แจ้งเตือนข้อความใหม่)
       if(!s.chatSeen || typeof s.chatSeen !== 'object' || Array.isArray(s.chatSeen)) s.chatSeen = {};
+      // ห้องของขวัญ (ข้อ 0.5): เซฟเก่าไม่มี → เริ่มว่าง / คัดชิ้นที่ข้อมูลเสียทิ้ง
+      if(!Array.isArray(s.giftBox)) s.giftBox = [];
+      s.giftBox = s.giftBox.filter(x=>x && (x.k === 'shop' || x.k === 'collect') &&
+        (x.k === 'shop' ? giftInfo(x.id) : collectInfo(x.id)));
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }

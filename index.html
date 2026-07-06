@@ -116,6 +116,7 @@
         <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">🌳</span>ฟาร์ม</button>
         <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>
         <button class="rail-btn" data-panel="panel-friends"><span class="rail-ico">👥</span>เพื่อน<span class="rail-badge" id="friend-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-gifts"><span class="rail-ico">🎁</span>ของขวัญ<span class="rail-badge" id="gift-badge" style="display:none"></span></button>
         <button class="rail-btn" id="btn-stats"><span class="rail-ico">📊</span>สถิติ</button>
       </nav>
 
@@ -177,6 +178,10 @@
 
           <div class="panel-page" id="panel-friends">
             <div class="shop-card" id="friend-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-gifts">
+            <div class="shop-card" id="gift-card"></div>
           </div>
 
           <div class="panel-page" id="panel-rank">
@@ -248,6 +253,7 @@
 <script src="js/data/homes.js"></script>
 <script src="js/data/fruits.js"></script>
 <script src="js/data/collectibles.js"></script>
+<script src="js/data/gifts.js"></script>  <!-- ของขวัญส่งเพื่อน (ข้อ 0.5) -->
 <script src="js/data/players.js"></script>
 <script src="js/data/badwords.js"></script>  <!-- ตัวกรองชื่อ+คำหยาบ (ข้อ 0.2 ชื่อผู้เล่น / ข้อ 7 ชื่อสัตว์) -->
 <script src="js/data/firebase-config.js"></script>

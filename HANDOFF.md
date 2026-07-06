@@ -7,6 +7,18 @@
 
 ## 📌 แผนสำหรับ session ถัดไป (Fable เขียนไว้ตอนใกล้เต็ม limit — 6 ก.ค. 2026 · Opus อ่านหัวข้อนี้ก่อนหัวข้ออื่น)
 
+**✅ รอบยี่สิบแปด (6 ก.ค. 2026 · Opus session): ข้อ 0.5 ส่งของขวัญ เสร็จ + ต่อยอดแผง emoji แชทเป็นหมวด — ทดสอบ preview ผ่านครบ (ยังไม่ commit จนกว่าจะอ่านหมายเหตุท้าย)**
+- **คำถามค้าง 3 ข้อ ผู้ใช้เคาะแล้ว (ทั้งหมดเลือกตัวแนะนำ):** (1) ปฏิเสธ collectible → **คืนเข้าคลังผู้ส่ง** (2) ค้าง "ยังไม่มีผู้รับ" เกิน **7 วัน → หมดอายุคืนของ** (3) กด "ส่ง" → **ตัดของ/หักเหรียญออกจากผู้ส่งทันที (escrow)** · เพิ่มเอง: ของขวัญร้าน (ซื้อด้วยเหรียญ) ถ้าถูกปฏิเสธ/หมดอายุ → **คืนเหรียญ**
+- **ไฟล์ใหม่:** `js/data/gifts.js` (GIFTS 50 แบบ id/emoji/name/price/cat[cake/rose/card] + GIFT_CATS + giftInfo · ภาพ img/gifts/gift_<id>.png ครบ 50)
+- **DB:** `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}` · ผู้รับอ่านทั้งกล่อง `/gifts/<toUid>` · ผู้ส่งอ่าน-เขียนซับทรีตัวเอง `/gifts/<toUid>/<fromUid>` (เฝ้าสถานะ+คืนของ) · **คลัง collectible เป็น state ในเครื่อง → "คืนของ" ทำฝั่งผู้ส่ง (giftOutWatch) ตอนผู้ส่งออนไลน์**
+- **online.js:** `giftSend/giftAccept/giftDecline` + ผู้รับ `giftInWatch`(เฝ้า `/gifts/<me>` → `Online.giftIn`+toast+badge) + ผู้ส่ง `giftOutWatchSync`/`giftOutRebuild`(เฝ้า `/gifts/<friend>/<me>` ต่อเพื่อน → accepted:toast+ลบ node · declined/หมดอายุ:`giftReclaim`(collect→คลัง · shop→คืนเหรียญ)+toast+ลบ · pending→`Online.giftOut` โชว์ "ยังไม่มีผู้รับ") + `Online.giftOutDone` กันคืนซ้ำ · เรียก giftInWatch ใน onlineStart · giftOutWatchSync ในตัวฟัง `/friends`
+- **ui.js:** แผง `renderGiftPanel`(รับ/ของฉัน/ที่ส่งไป) · `openGiftPicker(friend)`(แท็บ ซื้อของขวัญ gifts.js / จากคลัง collectibles) · `confirmSendGift`/`doSendGift`(escrow+rollback) · `acceptGift`/`declineGift` · `showGiftReveal` · ปุ่ม `.fr-gift-btn` 🎁 ในแถวเพื่อน · hook renderGiftPanel ใน renderDashboard+onlineRerender · state.js `giftBox:[]`+migration (ไม่รวม assetValue/ขายต่อไม่ได้)
+- **➕ ต่อยอดแชท (ผู้ใช้สั่งระหว่างทาง):** แผง emoji เดิม 44 ตัวเรียงพรืด → **`CHAT_EMOJI_CATS` 7 หมวด 163 ตัว** (หน้ายิ้ม/มือ/หัวใจ/สัตว์/อาหาร/กิจกรรม/สัญลักษณ์) แถบไอคอนหมวดด้านบน คลิกสลับกริด · CSS `.chat-emoji-cats/.chat-emoji-cat` (lobby.css)
+- **ไฟล์แตะ:** `js/data/gifts.js`(ใหม่) · `index.html`(script+rail 🎁+panel-gifts+badge) · `js/images.js`(probeGiftImages) · `js/main.js`(probe) · `js/state.js`(giftBox) · `js/online.js` · `js/ui.js` · `js/lobby.js`(PANEL_TITLES) · `css/lobby.css` · `version.json`(bump .2) · `HANDOFF.md`(rules /gifts)
+- **ทดสอบ preview (mock login + fake reactive Firebase db) ผ่านครบ:** T1 giftSend เขียน node k/id/fn/ts/st+giftOut โชว์ pending · T3 doSendGift shop หักเหรียญ 20,000 · T4 doSendGift collect ตัดของออกคลัง · T5 รับของขวัญ→giftIn+toast · T6 รับ→giftBox+1+DB st=accepted+giftIn เคลียร์ · T7 ไม่รับ→st=declined · T8 ผู้ส่งเห็น declined→คืน collectible เข้าคลัง+ลบ node+toast · T8b shop declined→คืนเหรียญ (1000→2500) · T9 pending เกิน 7 วัน→คืนของ+toast "หมดอายุ" · XSS ชื่อผู้ส่ง `<img onerror>` escape เป็น text · picker 22 การ์ดเค้ก/3 chips/2 tabs · emoji 7 หมวดสลับได้+แทรกลง input · ไม่มี console error · ภาพของขวัญโหลดจริง (screenshot)
+- ⚠️ **ค้างฝั่งผู้ใช้: (1) publish rules ใหม่ (เพิ่มโซน `/gifts` — ก้อนเต็มด้านล่าง) ไม่งั้นส่งของขวัญ reject (2) ทดสอบจริงบน Pages 2 บัญชี** · **หมายเหตุ commit:** ยังไม่ได้ commit — ให้ commit เฉพาะไฟล์ที่แตะ (ห้าม `git add -A` เพราะมี js/data/vocab/ ค้าง)
+
+
 **✅ รอบยี่สิบเจ็ด (6 ก.ค. 2026): จอเต็ม fullscreen + ปุ่มติดตั้งแอพในเกม + ระบบแจ้งเวอร์ชันใหม่ — push+deploy แล้ว (commit `65612b5`, `8cf2031`) · ผู้ใช้ยืนยัน fullscreen ซ่อน status bar สำเร็จ 🎉**
 - **ที่มา:** ต่อจากรอบยี่สิบหก (PWA standalone → แถบ URL หายแล้ว) ผู้ใช้ยังติดใจว่า **status bar Android (นาฬิกา/แบต/สัญญาณ) ด้านบนยังกินพื้นที่จอแนวนอนเตี้ย**
 - **สิ่งที่ทำ 3 อย่าง:**
@@ -48,7 +60,7 @@
 1. **✅ ข้อ 0.4 แชทกับเพื่อน (มี emoji) — เสร็จ "รอบยี่สิบสอง" (6 ก.ค. 2026):** online.js เพิ่ม chat engine (`chatPairId`=uid 2 ตัวเรียง alphabet ต่อด้วย `_` · `chatRef`/`chatListen`(limitToLast 100 real-time)/`chatSend`(กรอง `nameHasBadWord`+≤200 ตัว)/`chatPrune`(ตัดเหลือ 100 ล่าสุดตอนส่ง)) · ui.js `openChat(friend)` กล่องแชทลอย + emoji picker 44 ตัว (`CHAT_EMOJIS`) + ปุ่ม `.fr-chat-btn` 💬 ในแถวเพื่อน (`refreshFriendData`) · lobby.css `.chat-*`/`.fr-chat-btn` · **⚠️ ค้างฝั่งผู้ใช้: วาง rules ใหม่ (มีโซน `/chats` แล้ว ดูก้อนด้านล่าง) + ทดสอบแชทจริงบน Pages 2 บัญชี** · ทดสอบ preview ผ่านครบ (fake in-memory Firebase — ดูรอบยี่สิบสองท้ายไฟล์)
 2. **ข้อ 0.5 ส่งของขวัญ (งานถัดไป)** — สเปก backlog ข้อ 0.5 · **มีคำถามค้างต้องถามผู้ใช้ก่อนทำ**: collectible ที่ถูกปฏิเสธคืนคลังไหม + ค้าง "ยังไม่มีผู้รับ" นานๆ หมดอายุไหม
 
-**Rules (ครอบ 0.1+0.2+0.3+0.4 — มีโซน `/chats` · ✅ ผู้ใช้ publish แล้ว "รอบยี่สิบสาม" · เก็บไว้อ้างอิง/เผื่อวางใหม่ · self-heal ไม่ต้องแก้ rules ชุดนี้):**
+**Rules (ครอบ 0.1+0.2+0.3+0.4+0.5 — เพิ่มโซน `/gifts` แล้ว "รอบยี่สิบแปด" · ⚠️ ผู้ใช้ต้อง publish ใหม่ให้ระบบส่งของขวัญเขียน server ได้ · เดิม `/chats` publish แล้วรอบยี่สิบสาม · self-heal ไม่ต้องแก้):**
 ```json
 {
   "rules": {
@@ -125,6 +137,24 @@
         }
       }
     },
+    "gifts": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".read":  "auth != null && auth.uid === $fromUid",
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          "$giftKey": {
+            ".validate": "newData.hasChildren(['k','id','fn','ts','st'])",
+            "k":  { ".validate": "newData.isString() && (newData.val() === 'shop' || newData.val() === 'collect')" },
+            "id": { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "fn": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "st": { ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'accepted' || newData.val() === 'declined')" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
+    },
     "users": {
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
@@ -171,6 +201,7 @@ js/data/items.js      ITEMS ราคาใหม่: โบว์ 500 · ทั
                       + มือถือ (PHONE_PRICE/SELL/BONUS · NET_FEE · netCost) + คอม (COMP_PRICE/SELL/RATE · DATA_FEE · dataCost)
 js/data/fruits.js     FRUITS 4 ชนิด (ส้ม/แอปเปิล/มังคุด/ทุเรียน) + fruitInfo/fruitGrowMs/fruitMsLeft — ข้อ 12 ✅ เสร็จครบ (UI ใน ui.js: renderFarmCard/renderFarmClock/fruitCountdown/buyFruit/sellFruit)
 js/data/collectibles.js  COLLECTIBLES 50 ชิ้น (5 หมวด×10 · tier common→mythic ราคาฐาน 500–2M · field `words`=แต้มคำผลิต ~25-300 เหรียญ/คำตาม tier) + COLLECT_TIERS (มี common ใหม่ 🔹) + COLLECT_CATS 5 หมวด + collectInfo/collectTier + listingSellMs/listingStatus — สินค้าผลิต+ตลาดขายต่อ
+js/data/gifts.js      GIFTS 50 ของขวัญ (id/emoji/name/price/cat cake·rose·card) + GIFT_CATS + giftInfo — ข้อ 0.5 ส่งของขวัญ (ภาพ img/gifts/gift_<id>.png)
 js/data/vocab.js      VOCAB_BANDS 5 ระดับ (ป.1-2/ป.3-4/ป.5-6/ม.1-3/ม.4-6) × 8 หมวด × 10 คำ
                       band 1 คง id เดิม (animals,...) เพื่อ compat เซฟเก่า / gradeBand(), catsForStudent(), findCat()
 js/data/ranks.js      RANKS 7 แรงค์ + rankInfo(worth) [net worth] + rankFromKey — ขั้นย่อย III→II→I

@@ -64,7 +64,7 @@ document.getElementById('sound-toggle').addEventListener('click', ()=>{
 probeImages(Object.keys(PETS).map(k=>startImgKey(k))).then(()=>{
   if(document.getElementById('screen-select').classList.contains('active')) renderPetShop();
 });
-Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages()]).then(()=>{
+Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGiftImages()]).then(()=>{
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
 });
 

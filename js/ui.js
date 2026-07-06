@@ -419,10 +419,14 @@ function refreshFriendData(){
           <span class="online-dot${on ? '' : ' off'}"></span>
           <span class="fr-row-name">${escapeHTML(f.n)}<small> ชั้น ${escapeHTML(f.g)}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
+          <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
           <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
       }).join('');
       listEl.querySelectorAll('.fr-chat-btn').forEach(b=>b.addEventListener('click', ()=>{
         openChat(Online.myFriends[+b.dataset.i]);
+      }));
+      listEl.querySelectorAll('.fr-gift-btn').forEach(b=>b.addEventListener('click', ()=>{
+        openGiftPicker(Online.myFriends[+b.dataset.gi]);
       }));
     }else listEl.innerHTML = `<div class="lb-empty">ยังไม่มีเพื่อน — บอกรหัสของหนูให้เพื่อน หรือค้นหารหัสเพื่อนด้านบนเพื่อเพิ่มกันนะ! 🤝</div>`;
   }
@@ -431,9 +435,29 @@ function refreshFriendData(){
 /* ============================================================
    แชทกับเพื่อน (ข้อ 0.4) — กล่องแชทลอยกลางจอ + แผง emoji
    ============================================================ */
-const CHAT_EMOJIS = ['😀','😄','😁','😊','🥰','😍','😎','🤩','😂','😉','😜','😇',
-  '🥳','😴','😮','😢','😭','😡','👍','👎','👏','🙏','💪','🤝','👋','🎉','🎁','⭐',
-  '🌈','🔥','💯','❤️','💖','💙','💚','💛','🐶','🐱','🐣','🍎','🍰','⚽','🎮','☀️'];
+/* แผง emoji แบบจัดกลุ่มเป็นหมวด (professional) — ทุกตัวปลอดภัยสำหรับเด็ก
+   แต่ละหมวด: icon = ไอคอนบนแถบหมวด · list = emoji ในหมวดนั้น */
+const CHAT_EMOJI_CATS = [
+  {id:'faces', icon:'😊', list:[
+    '😀','😃','😄','😁','😆','😊','🙂','🙃','😉','😌','😍','🥰','😘','😋','😜','🤪',
+    '🤗','🤩','🥳','😎','🤓','🥺','😢','😭','😴','😮','😯','🤔','😇','😐','😅','😬']},
+  {id:'gestures', icon:'👍', list:[
+    '👍','👎','👌','✌️','🤞','🤟','🤙','👋','🙌','👏','🙏','💪','🤝','👊','✊','🖐️','🤚','☝️']},
+  {id:'hearts', icon:'❤️', list:[
+    '❤️','🧡','💛','💚','💙','💜','🤍','🖤','💖','💗','💓','💞','💕','💝','💘','❣️','💔','💌']},
+  {id:'animals', icon:'🐶', list:[
+    '🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷','🐸','🐵','🐔',
+    '🐧','🐦','🐤','🦄','🐝','🐢','🐬','🐟','🦋','🐙','🐳']},
+  {id:'food', icon:'🍰', list:[
+    '🍎','🍓','🍌','🍉','🍇','🍑','🍒','🍰','🎂','🧁','🍩','🍪','🍫','🍬','🍭','🍦',
+    '🍨','🍿','🍕','🍔','🍟','🥤','🧃','☕']},
+  {id:'activities', icon:'⚽', list:[
+    '⚽','🏀','🏈','⚾','🎾','🏐','🎮','🕹️','🎯','🎲','🎨','🎵','🎸','🎤','🏆','🥇',
+    '🎳','🚗','✈️','🚀','🎡','🚲']},
+  {id:'symbols', icon:'🎉', list:[
+    '🎉','🎊','✨','⭐','🌟','💫','🔥','🌈','☀️','🌸','🌷','🌹','🎁','🎈','💯','✅',
+    '❌','❓','❗','💤','👑','🔔']},
+];
 let chatUnsub = null;   // ฟังก์ชันเลิกฟังแชทที่เปิดอยู่ (มีได้ทีละกล่อง)
 
 function openChat(friend){
@@ -448,8 +472,11 @@ function openChat(friend){
       <button class="chat-close" id="chat-close" type="button">✕</button>
     </div>
     <div class="chat-msgs" id="chat-msgs"><div class="chat-empty">กำลังโหลดข้อความ... 💬</div></div>
-    <div class="chat-emoji" id="chat-emoji" style="display:none">
-      ${CHAT_EMOJIS.map(e=>`<button class="chat-emo" type="button">${e}</button>`).join('')}
+    <div class="chat-emoji-wrap" id="chat-emoji" style="display:none">
+      <div class="chat-emoji-cats" id="chat-emoji-cats">
+        ${CHAT_EMOJI_CATS.map((c,i)=>`<button class="chat-emoji-cat${i === 0 ? ' on' : ''}" data-ci="${i}" type="button">${c.icon}</button>`).join('')}
+      </div>
+      <div class="chat-emoji" id="chat-emoji-grid"></div>
     </div>
     <div class="chat-input-row">
       <button class="chat-emoji-btn" id="chat-emoji-btn" type="button">😊</button>
@@ -466,10 +493,21 @@ function openChat(friend){
   overlay.querySelector('#chat-emoji-btn').addEventListener('click', ()=>{
     emojiPanel.style.display = emojiPanel.style.display === 'none' ? '' : 'none';
   });
-  overlay.querySelectorAll('.chat-emo').forEach(b=>b.addEventListener('click', ()=>{
-    if(input.value.length < 200) input.value += b.textContent;
-    input.focus();
+  // แผง emoji แบบหมวด: คลิกหมวด → เปลี่ยนกริด · คลิก emoji → แทรกลงข้อความ
+  const emojiGrid = overlay.querySelector('#chat-emoji-grid');
+  const renderEmojiGrid = (ci)=>{
+    emojiGrid.innerHTML = CHAT_EMOJI_CATS[ci].list
+      .map(e=>`<button class="chat-emo" type="button">${e}</button>`).join('');
+    emojiGrid.querySelectorAll('.chat-emo').forEach(b=>b.addEventListener('click', ()=>{
+      if(input.value.length < 200) input.value += b.textContent;
+      input.focus();
+    }));
+  };
+  overlay.querySelectorAll('.chat-emoji-cat').forEach(b=>b.addEventListener('click', ()=>{
+    overlay.querySelectorAll('.chat-emoji-cat').forEach(t=>t.classList.toggle('on', t === b));
+    renderEmojiGrid(+b.dataset.ci);
   }));
+  renderEmojiGrid(0);
 
   const send = ()=>{
     if(!input.value.trim()) return;
@@ -506,6 +544,255 @@ function openChat(friend){
   });
   setTimeout(()=>input.focus(), 60);
   sfx.select();
+}
+
+/* ============================================================
+   ระบบส่งของขวัญ (ข้อ 0.5) — ห้องของขวัญ + กล่องเลือกส่ง + ฉากเปิด
+   ============================================================ */
+function giftImg(id){ return IMG_FILES[`gift_${id}`] || null; }
+
+function giftDateStr(ts){
+  if(!ts) return '';
+  try{ return new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'}); }
+  catch(e){ return ''; }
+}
+
+/* ภาพ/ชื่อของขวัญ 1 ชิ้น (k='shop' → gifts.js · k='collect' → collectibles.js) */
+function giftItemPic(k, id){
+  if(k === 'shop'){ const g = giftInfo(id), img = giftImg(id);
+    return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g ? g.emoji : '🎁'}</span>`; }
+  const c = collectInfo(id), img = collectImg(id);
+  return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c ? c.emoji : '📦'}</span>`;
+}
+function giftItemName(k, id){
+  if(k === 'shop'){ const g = giftInfo(id); return g ? g.name : 'ของขวัญ'; }
+  const c = collectInfo(id); return c ? c.name : 'สินค้า';
+}
+
+function updateGiftBadge(){
+  const b = document.getElementById('gift-badge');
+  if(!b) return;
+  const n = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  if(n > 0){ b.textContent = n; b.style.display = ''; }
+  else b.style.display = 'none';
+}
+
+/* แผงห้องของขวัญ: (1) ของที่รับมารอกดรับ/ไม่รับ (2) ของขวัญของฉัน (3) ที่ส่งไปยังรอผู้รับ */
+function renderGiftPanel(){
+  const el = document.getElementById('gift-card');
+  if(!el) return;
+  updateGiftBadge();
+  if(typeof Online === 'undefined' || !Online.ready){
+    el.innerHTML = `<h3 class="shop-title">🎁 ห้องของขวัญ</h3>
+      <div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อส่ง–รับของขวัญกับเพื่อนนะ!<br>
+      ส่งของขวัญให้เพื่อนได้ที่เมนู 👥 เพื่อน (ปุ่ม 🎁 ส่งของขวัญ)</div>`;
+    return;
+  }
+  let html = `<h3 class="shop-title">🎁 ห้องของขวัญ</h3>`;
+
+  const inbox = Online.giftIn || [];
+  if(inbox.length){
+    html += `<div class="gift-sec-title">📨 มีของขวัญส่งมาถึงหนู (${inbox.length})</div>`;
+    html += inbox.map((it,i)=>`<div class="gift-in-row">
+        <span class="gift-in-pic">${giftItemPic(it.k, it.id)}</span>
+        <div class="gift-in-info"><b>${escapeHTML(giftItemName(it.k, it.id))}</b><br>
+          <small>💌 จาก ${escapeHTML(it.fn)} · ${giftDateStr(it.ts)}</small></div>
+        <span class="gift-in-btns">
+          <button class="gift-accept" data-i="${i}">💝 รับ</button>
+          <button class="gift-decline" data-i="${i}">✕ ไม่รับ</button>
+        </span></div>`).join('');
+  }
+
+  const box = state.giftBox || [];
+  html += `<div class="gift-sec-title">🎀 ของขวัญของฉัน (${box.length})</div>`;
+  if(box.length){
+    html += `<div class="hq-grid">` + box.map(x=>`<div class="hq-card gift-box-card" style="border-color:#e6a4c4">
+        <div class="hq-head">${escapeHTML(giftItemName(x.k, x.id))}</div>
+        <div class="hq-pic">${giftItemPic(x.k, x.id)}</div>
+        <div class="gift-box-from">💌 จาก ${escapeHTML(x.fn || 'เพื่อน')}<br><small>${giftDateStr(x.ts)}</small></div>
+      </div>`).join('') + `</div>`;
+    html += `<div class="gift-note">💝 ของขวัญเก็บไว้เป็นที่ระลึก ขายต่อหรือส่งต่อไม่ได้นะ</div>`;
+  }else{
+    html += `<div class="mkt-empty">ยังไม่มีของขวัญเลย — เมื่อเพื่อนส่งของขวัญมาแล้วหนูกด "รับ" จะมาเก็บที่นี่ 🎁</div>`;
+  }
+
+  const out = Online.giftOut || [];
+  if(out.length){
+    html += `<div class="gift-sec-title">📤 ของขวัญที่หนูส่งไป (${out.length})</div>`;
+    html += out.map(o=>`<div class="gift-out-row">
+        <span class="gift-in-pic">${giftItemPic(o.k, o.id)}</span>
+        <div class="gift-in-info"><b>${escapeHTML(giftItemName(o.k, o.id))}</b><br>
+          <small>ส่งให้ ${escapeHTML(o.toName || 'เพื่อน')} · 🕓 สินค้ายังไม่มีผู้รับ</small></div>
+      </div>`).join('');
+  }
+
+  el.innerHTML = html;
+  el.querySelectorAll('.gift-accept').forEach(b=>b.addEventListener('click', ()=>{
+    const it = (Online.giftIn || [])[+b.dataset.i]; if(it) acceptGift(it);
+  }));
+  el.querySelectorAll('.gift-decline').forEach(b=>b.addEventListener('click', ()=>{
+    const it = (Online.giftIn || [])[+b.dataset.i]; if(it) declineGift(it);
+  }));
+}
+
+/* ผู้รับกด "รับ": ยืนยันสถานะกับ server ก่อน (กันรับซ้ำ) → เก็บเข้าห้องของขวัญ + ฉากเปิด */
+function acceptGift(it){
+  return giftAccept(it).then(()=>{
+    state.giftBox.push({k: it.k, id: it.id, from: it.from, fn: it.fn, ts: it.ts || Date.now()});
+    saveState();
+    Online.giftIn = (Online.giftIn || []).filter(g=>!(g.from === it.from && g.key === it.key));
+    showGiftReveal(it);
+    renderDashboard();
+  }).catch(()=>{ sfx.wrong(); toast('รับของขวัญไม่สำเร็จ ลองใหม่นะ'); });
+}
+
+/* ผู้รับกด "ไม่รับ": ตั้งสถานะ declined → ผู้ส่งเห็นแล้วได้ของ/เหรียญคืน */
+function declineGift(it){
+  return giftDecline(it).then(()=>{
+    Online.giftIn = (Online.giftIn || []).filter(g=>!(g.from === it.from && g.key === it.key));
+    sfx.select(); toast('บอกเพื่อนแล้วว่ายังไม่สะดวกรับนะ');
+    renderGiftPanel();
+  }).catch(()=>{ sfx.wrong(); toast('ทำรายการไม่สำเร็จ ลองใหม่นะ'); });
+}
+
+/* ฉากเปิดของขวัญ (สไตล์เดียวกับฉากได้ของสะสม โทนชมพู) */
+function showGiftReveal(it){
+  if(sfx.rankup) sfx.rankup();
+  const name = giftItemName(it.k, it.id);
+  const img  = it.k === 'shop' ? giftImg(it.id) : collectImg(it.id);
+  const emo  = it.k === 'shop' ? ((giftInfo(it.id) || {}).emoji || '🎁') : ((collectInfo(it.id) || {}).emoji || '📦');
+  const pic  = img ? `<img class="collect-reveal-img" src="${img}" alt="">` : `<span class="cr-emoji">${emo}</span>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'rankup-overlay';
+  overlay.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#e6a4c4"></div>
+    <div class="rankup-content">
+      <div class="rankup-title">🎁 ได้รับของขวัญ!</div>
+      <div class="collect-reveal-frame" style="--rank-color:#e6a4c4">${pic}</div>
+      <div class="rankup-name" style="color:#d6467f">${escapeHTML(name)}</div>
+      <p class="rankup-sub">💌 จาก ${escapeHTML(it.fn || 'เพื่อน')}<br>เก็บไว้ในห้องของขวัญเป็นที่ระลึกนะ 💝</p>
+      <button class="rankup-btn">ขอบคุณนะ! 🥰</button>
+    </div>`;
+  overlay.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    overlay.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(overlay);
+}
+
+/* กล่องเลือกของขวัญส่งเพื่อน: แท็บ "ซื้อของขวัญ" (gifts.js) / "จากคลังของฉัน" (collectibles) */
+let giftPickCat = 'cake';
+function openGiftPicker(friend){
+  if(!friend) return;
+  if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะส่งของขวัญได้นะ 📡'); return; }
+  sfx.select();
+  const overlay = document.createElement('div');
+  overlay.className = 'gift-pick-overlay';
+  overlay.innerHTML = `<div class="gift-pick-box">
+    <div class="gift-pick-head">
+      <span>🎁 ส่งของขวัญให้ ${escapeHTML(friend.n)}</span>
+      <button class="gift-pick-close" type="button">✕</button>
+    </div>
+    <div class="gift-pick-tabs">
+      <button class="gp-tab on" data-tab="shop" type="button">🛍️ ซื้อของขวัญ</button>
+      <button class="gp-tab" data-tab="mine" type="button">📦 จากคลังของฉัน</button>
+    </div>
+    <div class="gift-pick-body" id="gift-pick-body"></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const body = overlay.querySelector('#gift-pick-body');
+  let tab = 'shop';
+
+  function renderBody(){
+    if(tab === 'shop'){
+      const chips = GIFT_CATS.map(c=>`<button class="gp-chip${giftPickCat === c.id ? ' on' : ''}" data-cat="${c.id}" type="button">${c.emoji} ${c.name}</button>`).join('');
+      const items = GIFTS.filter(g=>g.cat === giftPickCat);
+      const grid = `<div class="hq-grid">` + items.map(g=>{
+        const img = giftImg(g.id), afford = state.coins >= g.price;
+        return `<div class="hq-card gp-card${afford ? '' : ' gp-poor'}" data-k="shop" data-id="${g.id}" style="border-color:#e6a4c4">
+          <div class="hq-head">${g.name}</div>
+          <div class="hq-pic">${img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g.emoji}</span>`}</div>
+          <div class="hq-price gp-price">🪙 ${fmtNum(g.price)}</div>
+        </div>`;
+      }).join('') + `</div>`;
+      body.innerHTML = `<div class="gp-chips">${chips}</div>${grid}`;
+      body.querySelectorAll('.gp-chip').forEach(b=>b.addEventListener('click', ()=>{ giftPickCat = b.dataset.cat; renderBody(); }));
+    }else{
+      const counts = {};
+      for(const id of state.collection) counts[id] = (counts[id] || 0) + 1;
+      const ids = COLLECTIBLES.map(c=>c.id).filter(id=>counts[id]);
+      if(!ids.length){
+        body.innerHTML = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปผลิตสินค้าที่แท็บ 🏭 โรงงานก่อน แล้วค่อยเอามาส่งให้เพื่อนได้นะ</div>`;
+      }else{
+        body.innerHTML = `<div class="gp-note">ส่งสินค้าจากคลังให้เพื่อน — ส่งแล้วชิ้นนั้นออกจากคลังทันที (ถ้าเพื่อนไม่รับหรือค้างนานเกิน 7 วัน ของจะกลับคืนคลังให้เอง)</div><div class="hq-grid">` + ids.map(id=>{
+          const c = collectInfo(id), tier = COLLECT_TIERS[c.tier], img = collectImg(id);
+          return `<div class="hq-card gp-card" data-k="collect" data-id="${id}" style="border-color:${tier.color}">
+            <div class="hq-head">${c.name}</div>
+            <div class="hq-pic">${img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c.emoji}</span>`}<span class="hq-badge">×${counts[id]}</span></div>
+            <div class="hq-price gp-price">มูลค่า 🪙${fmtNum(c.price)}</div>
+          </div>`;
+        }).join('') + `</div>`;
+      }
+    }
+    body.querySelectorAll('.gp-card').forEach(card=>card.addEventListener('click', ()=>{
+      confirmSendGift(friend, card.dataset.k, card.dataset.id, ()=>overlay.remove());
+    }));
+  }
+
+  overlay.querySelectorAll('.gp-tab').forEach(b=>b.addEventListener('click', ()=>{
+    tab = b.dataset.tab;
+    overlay.querySelectorAll('.gp-tab').forEach(t=>t.classList.toggle('on', t === b));
+    renderBody();
+  }));
+  overlay.querySelector('.gift-pick-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
+  renderBody();
+}
+
+/* กล่องยืนยันก่อนส่ง — เช็กเหรียญ/ของในคลัง */
+function confirmSendGift(friend, k, id, onDone){
+  const name = giftItemName(k, id);
+  const img  = k === 'shop' ? giftImg(id) : collectImg(id);
+  const emo  = k === 'shop' ? ((giftInfo(id) || {}).emoji || '🎁') : ((collectInfo(id) || {}).emoji || '📦');
+  const pic  = img ? `<img src="${img}" alt="">` : `<span>${emo}</span>`;
+  let costLine;
+  if(k === 'shop'){
+    const g = giftInfo(id); if(!g) return;
+    if(state.coins < g.price){
+      askConfirm(`<div class="ld-pic">${pic}</div><div class="ld-name">${escapeHTML(name)}</div>
+        <p class="ld-note">ราคา 🪙${fmtNum(g.price)} — เหรียญไม่พอนะ (มี 🪙${fmtNum(state.coins)})<br>หาเหรียญเพิ่มก่อนแล้วค่อยมาส่งนะ 😊</p>`, 'ปิด', ()=>{});
+      return;
+    }
+    costLine = `ราคา 🪙${fmtNum(g.price)} (หักตอนส่ง)`;
+  }else{
+    if(!state.collection.includes(id)){ toast('ไม่มีชิ้นนี้ในคลังแล้ว'); return; }
+    costLine = `ส่งจากคลังของหนู — ชิ้นนี้จะออกจากคลังทันที`;
+  }
+  askConfirm(`<div class="ld-pic">${pic}</div><div class="ld-name">${escapeHTML(name)}</div>
+    <p class="ld-note">ส่งให้ <b>${escapeHTML(friend.n)}</b><br>${costLine}</p>`,
+    '🎁 ส่งเลย!', ()=>{ doSendGift(friend, k, id); if(onDone) onDone(); });
+}
+
+/* ส่งจริง: ตัดของ/หักเหรียญทันที (escrow) → เขียน DB · ส่งไม่สำเร็จคืนให้ */
+function doSendGift(friend, k, id){
+  if(k === 'shop'){
+    const g = giftInfo(id); if(!g) return;
+    if(state.coins < g.price){ toast('เหรียญไม่พอนะ'); return; }
+    state.coins -= g.price; saveState(); renderDashboard();
+    giftSend(friend.uid, 'shop', id)
+      .then(()=>{ sfx.buy(); toast(`🎁 ส่ง${g.name}ให้ ${friend.n} แล้ว! รอเพื่อนกดรับนะ`); })
+      .catch(msg=>{ state.coins += g.price; saveState(); renderDashboard();
+        sfx.wrong(); toast(typeof msg === 'string' ? msg : 'ส่งไม่สำเร็จ คืนเหรียญให้แล้ว'); });
+  }else{
+    const idx = state.collection.indexOf(id);
+    if(idx < 0){ toast('ไม่มีชิ้นนี้ในคลังแล้ว'); return; }
+    const c = collectInfo(id);
+    state.collection.splice(idx, 1); saveState(); renderDashboard();
+    giftSend(friend.uid, 'collect', id)
+      .then(()=>{ sfx.buy(); toast(`🎁 ส่ง${c ? c.name : 'ของ'}ให้ ${friend.n} แล้ว! รอเพื่อนกดรับนะ`); })
+      .catch(msg=>{ state.collection.push(id); saveState(); renderDashboard();
+        sfx.wrong(); toast(typeof msg === 'string' ? msg : 'ส่งไม่สำเร็จ คืนของให้แล้ว'); });
+  }
 }
 
 /* ============================================================
@@ -592,6 +879,7 @@ function renderDashboard(){
   renderOnlineCard();
   renderLeaderboardCard();
   renderFriendPanel();
+  renderGiftPanel();
 
   /* ---- สภาพอากาศ ---- */
   const w = weatherNow();

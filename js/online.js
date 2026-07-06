@@ -28,6 +28,10 @@ const Online = {
   myFriends:[],     // เพื่อนของเรา: [{uid,n,g,ts}]
   chatUnread:{},    // uid เพื่อน → true ถ้ามีข้อความใหม่ที่ยังไม่ได้อ่าน (ข้อ 0.4)
   friendsHealed:{}, // uid เพื่อน → true ถ้าซ่อมฝั่งตรงข้ามให้ครบสองฝ่ายแล้วในเซสชันนี้
+  /* ---- ระบบส่งของขวัญ (ข้อ 0.5) ---- */
+  giftIn:[],        // ของขวัญที่มีคนส่งมาหาเรา รอกดรับ/ไม่รับ: [{from,fn,k,id,ts,key}]
+  giftOut:[],       // ของขวัญที่เราส่งไป ยังรอผู้รับ (โชว์สถานะ "ยังไม่มีผู้รับ"): [{to,k,id,ts,key}]
+  giftOutDone:{},   // key ของขวัญที่ประมวลผลผลลัพธ์แล้วในเซสชันนี้ (กันคืนของซ้ำจาก snapshot รัว)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -128,6 +132,7 @@ function onlineRerender(){
   if(typeof renderOnlineCard === 'function') renderOnlineCard();
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
   if(typeof renderFriendPanel === 'function') renderFriendPanel();
+  if(typeof renderGiftPanel === 'function') renderGiftPanel();
 }
 
 /* ============================================================
@@ -352,6 +357,158 @@ function chatWatchSync(){
   }
 }
 
+/* ============================================================
+   ระบบส่งของขวัญ (ข้อ 0.5)
+   /gifts/<toUid>/<fromUid>/<giftKey> = {k, id, fn, ts, st}
+     k  = 'shop' (ของขวัญจากร้าน gifts.js) | 'collect' (สินค้าจากคลังผู้ส่ง)
+     id = id ของขวัญ/สินค้า · fn = ชื่อผู้ส่ง (โชว์ให้ผู้รับ) · ts = เวลาส่ง
+     st = 'pending' (ยังไม่มีผู้รับ) | 'accepted' (รับแล้ว) | 'declined' (ไม่รับ)
+   สิทธิ์ (rules): ผู้รับอ่านทั้งกล่อง /gifts/<toUid> · ผู้ส่งอ่าน-เขียนได้เฉพาะ
+   ซับทรีของตัวเอง /gifts/<toUid>/<fromUid> → ผู้ส่งเฝ้าสถานะของขวัญตัวเองได้
+   คลัง collectible เป็น state ในเครื่อง (ไม่ได้อยู่ใน DB) → "คืนของ" ตอนถูก
+   ปฏิเสธ/หมดอายุ ทำที่ฝั่งผู้ส่ง (giftOutWatch) เมื่อผู้ส่งออนไลน์
+   ============================================================ */
+const GIFT_EXPIRE_MS = 7*24*60*60*1000;   // ค้าง "ยังไม่มีผู้รับ" เกิน 7 วัน = หมดอายุ คืนของ
+
+/* ส่งของขวัญไปหา toUid (ผู้เรียกจัดการหักเหรียญ/ตัดของออกจากคลังเองก่อน) */
+function giftSend(toUid, kind, id){
+  if(!Online.ready || !state.student) return Promise.reject('ต้องต่ออินเทอร์เน็ตก่อนถึงจะส่งของขวัญได้นะ 📡');
+  const name = onlineDisplayName();
+  if(!name) return Promise.reject('ตั้งชื่อในเกมก่อนถึงจะส่งของขวัญได้นะ');
+  if(kind !== 'shop' && kind !== 'collect') return Promise.reject('ของขวัญไม่ถูกต้อง');
+  return Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
+    k: kind, id: id, fn: name, st: 'pending',
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  });
+}
+
+/* ผู้รับกด "รับ": จำของเข้าห้องของขวัญ (ผู้เรียกทำ) + ตั้งสถานะ accepted ให้ผู้ส่งเห็น */
+function giftAccept(item){
+  return Online.db.ref('gifts/' + onlineKey() + '/' + item.from + '/' + item.key + '/st').set('accepted');
+}
+/* ผู้รับกด "ไม่รับ": ตั้งสถานะ declined → ผู้ส่งเห็นแล้วคืนของให้ตัวเอง */
+function giftDecline(item){
+  return Online.db.ref('gifts/' + onlineKey() + '/' + item.from + '/' + item.key + '/st').set('declined');
+}
+
+/* ---------- ผู้รับ: เฝ้ากล่องของขวัญของเรา (แจ้งเตือนของขวัญใหม่) ---------- */
+let giftInPrimed = false;                 // ครั้งแรก = ของเก่า (ตั้ง badge เงียบๆ ไม่เด้ง toast)
+function giftInWatch(){
+  if(!Online.ready || !Online.db) return;
+  Online.db.ref('gifts/' + onlineKey()).on('value', (snap)=>{
+    const out = [];
+    snap.forEach(fromNode=>{
+      const from = fromNode.key;
+      fromNode.forEach(gNode=>{
+        const v = gNode.val();
+        if(!v || (v.st && v.st !== 'pending')) return;          // ข้ามที่รับ/ปฏิเสธไปแล้ว
+        if(v.k !== 'shop' && v.k !== 'collect') return;
+        const ok = v.k === 'shop' ? giftInfo(v.id) : (typeof collectInfo === 'function' && collectInfo(v.id));
+        if(!ok) return;
+        out.push({from, key: gNode.key, k: v.k, id: v.id, fn: v.fn || 'เพื่อน', ts: v.ts || 0});
+      });
+    });
+    out.sort((a,b)=>b.ts - a.ts);
+    const wasPrimed = giftInPrimed; giftInPrimed = true;
+    const grew = out.length > Online.giftIn.length;             // มีของขวัญใหม่เข้ามา
+    Online.giftIn = out;
+    if(wasPrimed && grew){
+      if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+      if(typeof toast === 'function') toast('🎁 มีของขวัญส่งมาถึงหนู! เปิดดูในเมนู 🎁 ของขวัญ');
+    }
+    if(typeof onlineRerender === 'function') onlineRerender();
+  });
+}
+
+/* ---------- ผู้ส่ง: เฝ้าของขวัญที่เราส่งไปหาเพื่อนแต่ละคน (สถานะ + คืนของ) ---------- */
+let giftOutWatchers = {};                 // friendUid → ฟังก์ชันเลิกฟัง
+
+/* คืนของให้ผู้ส่ง (ถูกปฏิเสธ/หมดอายุ): collectible กลับเข้าคลัง · ของร้านคืนเหรียญ */
+function giftReclaim(rec){
+  if(rec.k === 'collect' && typeof collectInfo === 'function' && collectInfo(rec.id)){
+    state.collection.push(rec.id);
+  }else if(rec.k === 'shop'){
+    const g = giftInfo(rec.id);
+    if(g) state.coins += g.price;         // คืนเหรียญ (ไม่ผ่าน addCoins กันบวกยอดวันนี้ซ้ำ)
+  }
+  saveState();
+}
+
+function giftOutWatchSync(){
+  if(!Online.ready || !Online.db) return;
+  const me = onlineKey();
+  const want = {};
+  (Online.myFriends || []).forEach(f=>{ if(f.uid && f.uid !== me) want[f.uid] = true; });
+  // รื้อ watcher ของคนที่ไม่ใช่เพื่อนแล้ว
+  for(const uid in giftOutWatchers){
+    if(!(uid in want)){ try{ giftOutWatchers[uid](); }catch(e){} delete giftOutWatchers[uid]; }
+  }
+  // ตั้ง watcher ใหม่: /gifts/<friendUid>/<me> = ของขวัญที่เราส่งไปหาเพื่อนคนนี้
+  for(const friendUid in want){
+    if(giftOutWatchers[friendUid]) continue;
+    const ref = Online.db.ref('gifts/' + friendUid + '/' + me);
+    const handler = ref.on('value', (snap)=>{
+      const now = Date.now();
+      snap.forEach(gNode=>{
+        const key = gNode.key, v = gNode.val();
+        if(!v) return;
+        const rec = {k: v.k, id: v.id};
+        if(v.st === 'accepted'){
+          if(!Online.giftOutDone[key]){
+            Online.giftOutDone[key] = true;
+            const g = v.k === 'shop' ? giftInfo(v.id) : (typeof collectInfo === 'function' && collectInfo(v.id));
+            if(typeof toast === 'function') toast('🎉 เพื่อนรับ' + (g ? g.name : 'ของขวัญ') + 'แล้ว! ดีใจด้วยนะ');
+            ref.child(key).remove().catch(()=>{});
+          }
+        }else if(v.st === 'declined'){
+          if(!Online.giftOutDone[key]){
+            Online.giftOutDone[key] = true;
+            giftReclaim(rec);
+            const g = v.k === 'shop' ? giftInfo(v.id) : (typeof collectInfo === 'function' && collectInfo(v.id));
+            const back = v.k === 'shop' ? 'คืนเหรียญให้แล้ว' : 'ของกลับเข้าคลังแล้ว';
+            if(typeof toast === 'function') toast('💔 เพื่อนยังไม่สะดวกรับ' + (g ? g.name : '') + ' — ' + back);
+            ref.child(key).remove().catch(()=>{});
+          }
+        }else if(typeof v.ts === 'number' && now - v.ts > GIFT_EXPIRE_MS){
+          if(!Online.giftOutDone[key]){
+            Online.giftOutDone[key] = true;
+            giftReclaim(rec);
+            const g = v.k === 'shop' ? giftInfo(v.id) : (typeof collectInfo === 'function' && collectInfo(v.id));
+            const back = v.k === 'shop' ? 'คืนเหรียญให้แล้ว' : 'ของกลับเข้าคลังแล้ว';
+            if(typeof toast === 'function') toast('⏰ ของขวัญ' + (g ? g.name : '') + 'ยังไม่มีผู้รับ หมดอายุแล้ว — ' + back);
+            ref.child(key).remove().catch(()=>{});
+          }
+        }
+      });
+      giftOutRebuild();
+    });
+    giftOutWatchers[friendUid] = ()=>ref.off('value', handler);
+  }
+  giftOutRebuild();
+}
+
+/* รวมรายการของขวัญที่ยังค้าง "ยังไม่มีผู้รับ" จากทุก watcher (ไว้โชว์สถานะฝั่งผู้ส่ง)
+   อ่านสดจาก DB ทีละเพื่อน — best-effort ไม่บล็อก */
+function giftOutRebuild(){
+  const me = onlineKey();
+  const friends = (Online.myFriends || []).filter(f=>f.uid && f.uid !== me);
+  Promise.all(friends.map(f=>
+    Online.db.ref('gifts/' + f.uid + '/' + me).get().then(s=>({f, s})).catch(()=>null)
+  )).then(results=>{
+    const out = [];
+    results.forEach(r=>{
+      if(!r || !r.s) return;
+      r.s.forEach(gNode=>{
+        const v = gNode.val();
+        if(v && (!v.st || v.st === 'pending')) out.push({to: r.f.uid, toName: r.f.n, k: v.k, id: v.id, ts: v.ts || 0, key: gNode.key});
+      });
+    });
+    out.sort((a,b)=>b.ts - a.ts);
+    Online.giftOut = out;
+    if(typeof onlineRerender === 'function') onlineRerender();
+  });
+}
+
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
    initializeApp ทำแล้วใน authStart) ---------- */
 function onlineStart(){
@@ -414,6 +571,7 @@ function onlineStart(){
     Online.myFriends = out;
     friendsHeal();                 // ซ่อมเพื่อนให้ครบสองฝ่ายอัตโนมัติ (self-heal)
     chatWatchSync();               // เพื่อนเปลี่ยน → ปรับ watcher ข้อความใหม่ให้ครบ (ข้อ 0.4)
+    giftOutWatchSync();            // เพื่อนเปลี่ยน → ปรับ watcher สถานะของขวัญที่เราส่งไป (ข้อ 0.5)
     onlineRerender();
   });
 
@@ -431,6 +589,9 @@ function onlineStart(){
     Online.board = out;
     onlineRerender();
   });
+
+  // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)
+  giftInWatch();
 
   // ส่งสถานะ + คะแนนเป็นระยะ (เหรียญไม่ขยับจะไม่เขียน leaderboard ซ้ำ)
   setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);
