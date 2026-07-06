@@ -221,6 +221,20 @@ function assetValue(){
   return v;
 }
 function netWorth(){ return state.coins + assetValue(); }
+/* จำนวนชิ้นทรัพย์สินที่ถือครอง (นับคู่กับ assetValue เพื่อโชว์ในการ์ดผู้เล่น) */
+function assetCount(){
+  let n = 0;
+  n += state.pets.length;                 // สัตว์เลี้ยง
+  if(state.home) n += 1;                   // ที่พัก
+  if(state.ac) n += 1;                      // แอร์
+  n += state.owned.length;                 // เสื้อผ้าในตู้
+  if(state.phone) n += 1;                   // มือถือ
+  if(state.computer) n += 1;                // คอม
+  n += state.farm.length;                  // ต้นไม้ในสวน
+  n += state.collection.length;            // สินค้าสะสมในคลัง
+  n += state.listings.length;              // ของที่ลงขายอยู่
+  return n;
+}
 
 /* ตรวจการเปลี่ยนแรงค์ที่ "จุดนิ่ง" (เรียกใน careTick หลัง net worth นิ่งแล้ว):
    เลื่อนข้ามแรงค์ใหญ่ → ฉากอลังการ · เลื่อนขั้นย่อย → toast · ลดลง → เงียบๆ */

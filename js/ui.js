@@ -163,9 +163,10 @@ function renderOnlineCard(){
   if(!el) return;
   const meName = state.profileName || (state.student ? state.student.first : '') || 'หนูเอง';
   const meGrade = state.student ? state.student.grade : '';
+  const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
-      <span class="online-name">⭐ ${escapeHTML(meName)} (หนูเอง)</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)} (หนูเอง)</span>
       <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
@@ -173,9 +174,10 @@ function renderOnlineCard(){
   if(typeof Online !== 'undefined' && Online.ready){
     const rows = Online.friends.map(f=>`<div class="online-row">
       <span class="online-dot"></span>
-      <span class="online-name">${escapeHTML(f.n)}</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(f.id||'')}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">${escapeHTML(f.n)}</span>
       <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
     </div>`).join('');
+    bindPlayerClicks();
     el.innerHTML = `
       <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา <span class="online-live">🌏 ออนไลน์จริง</span></h3>
       <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
@@ -203,6 +205,7 @@ function renderOnlineCard(){
     <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</h3>
     <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚</div>
     ${meRow}${rows}`;
+  bindPlayerClicks();
 }
 
 /* ============================================================
@@ -227,12 +230,71 @@ function renderLeaderboardCard(){
   const rows = Online.board.map((r,i)=>`
     <div class="lb-row${r.id === myId ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
   el.innerHTML = title + `
     <div class="online-count">${myIdx >= 0 ? `หนูอยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
     <div class="lb-list">${rows}</div>`;
+  bindPlayerClicks();
+}
+
+/* ============================================================
+   การ์ดข้อมูลผู้เล่น 👤 — คลิกชื่อในการ์ดเพื่อน/กระดาน แล้วโชว์
+   เงินรวม · จำนวนทรัพย์สิน · มูลค่าทรัพย์สินรวม (แยกกัน ไม่รวมยอด)
+   เพื่อเป็นแรงบันดาลใจให้ผู้เล่นอื่นตั้งใจเล่น
+   ============================================================ */
+function bindPlayerClicks(){
+  if(window.__plClickBound) return;         // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
+  window.__plClickBound = true;
+  document.addEventListener('click', (e)=>{
+    const t = e.target.closest('.pl-click');
+    if(!t) return;
+    showPlayerCard(t.dataset.uid, t.dataset.n || 'ผู้เล่น', t.dataset.g || '');
+  });
+}
+
+function showPlayerCard(uid, name, grade){
+  const ov = document.createElement('div');
+  ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="pl-card">
+      <button class="pl-close">✕</button>
+      <div class="pl-head">👤 <span>${escapeHTML(name)}</span></div>
+      <div class="pl-grade">ชั้น ${escapeHTML(grade)}</div>
+      <div class="pl-body"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = ()=>ov.remove();
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
+  ov.querySelector('.pl-close').addEventListener('click', close);
+
+  const statsFn = (typeof fetchPlayerStats === 'function') ? fetchPlayerStats(uid) : Promise.resolve(null);
+  statsFn.then(d=>{
+    const body = ov.querySelector('.pl-body');
+    if(!body) return;
+    if(!d){
+      body.innerHTML = `<div class="pl-none">ยังไม่มีข้อมูลของผู้เล่นคนนี้ 😅<br>
+        <small>ผู้เล่นต้องเข้าเกมสักครั้งเพื่อบันทึกข้อมูลก่อนนะ</small></div>`;
+      return;
+    }
+    const av = (d.av == null) ? '—' : fmtNum(d.av) + ' 🪙';
+    const ni = (d.ni == null) ? '—' : fmtNum(d.ni) + ' ชิ้น';
+    body.innerHTML = `
+      ${d.me ? '<div class="pl-me-tag">⭐ นี่คือหนูเอง</div>' : ''}
+      <div class="pl-stat">
+        <span class="pl-lbl">💰 เงินรวม</span>
+        <span class="pl-val pl-gold">${fmtNum(d.coins)} 🪙</span>
+      </div>
+      <div class="pl-stat">
+        <span class="pl-lbl">📦 จำนวนทรัพย์สิน</span>
+        <span class="pl-val">${ni}</span>
+      </div>
+      <div class="pl-stat">
+        <span class="pl-lbl">🏆 มูลค่าทรัพย์สินรวม</span>
+        <span class="pl-val pl-gold">${av}</span>
+      </div>
+      <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
+  });
 }
 
 /* ============================================================

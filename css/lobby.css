@@ -277,6 +277,48 @@ h1{color:var(--sky-d);text-shadow:none;}
 .chat-send:active{transform:scale(.94);}
 .chat-send:disabled{filter:grayscale(.5);opacity:.6;}
 
+/* ---------- การ์ดข้อมูลผู้เล่น 👤 (คลิกชื่อในการ์ดเพื่อน/กระดาน) ---------- */
+.pl-click{cursor:pointer;text-decoration:underline dotted rgba(120,170,230,.6);
+  text-underline-offset:3px;transition:color .12s;}
+.pl-click:hover{color:var(--sky-d);}
+.pl-click:active{opacity:.7;}
+.pl-overlay{
+  position:fixed;inset:0;z-index:90;background:rgba(8,22,48,.5);
+  display:flex;align-items:center;justify-content:center;animation:fadeIn .22s;
+}
+.pl-card{
+  width:min(90vw,340px);
+  background:linear-gradient(180deg,#eaf3fd,#dbe9fa);border:3px solid var(--sky-d);
+  border-radius:20px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.35);
+  animation:popIn .3s cubic-bezier(.2,1.5,.4,1);position:relative;
+}
+.pl-close{
+  position:absolute;top:10px;right:10px;border:none;background:rgba(255,255,255,.25);
+  color:#fff;border-radius:9px;width:30px;height:30px;font-size:15px;cursor:pointer;z-index:1;
+}
+.pl-head{
+  background:linear-gradient(180deg,var(--sky),var(--sky-d));color:#fff;
+  padding:16px 44px 6px 18px;font-size:19px;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.pl-grade{background:var(--sky-d);color:#dcecff;padding:0 18px 12px;font-size:13.5px;}
+.pl-body{padding:16px 16px 18px;}
+.pl-loading,.pl-none{text-align:center;color:#5a6b82;font-size:14.5px;padding:14px 6px;line-height:1.6;}
+.pl-none small{color:#8496ac;font-size:12.5px;}
+.pl-me-tag{text-align:center;color:var(--gold-d);font-weight:700;font-size:14px;margin-bottom:10px;}
+.pl-stat{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:#fff;border:1px solid #cfe0f4;border-radius:13px;
+  padding:11px 14px;margin-bottom:9px;
+}
+.pl-lbl{font-size:14.5px;color:#3a4c63;font-weight:500;}
+.pl-val{font-size:16px;font-weight:700;color:var(--ink2);white-space:nowrap;}
+.pl-val.pl-gold{color:var(--gold-d);}
+.pl-tip{
+  text-align:center;font-size:13px;color:#5773a0;margin-top:12px;
+  background:rgba(59,141,222,.1);border-radius:11px;padding:9px 12px;line-height:1.5;
+}
+
 /* ปุ่ม ✏️ เล็กๆ แก้ชื่อในเกม/ชื่อสัตว์ (ข้อ 0.2 + ข้อ 7) — อยู่บนพื้นกระจกเข้มได้ */
 .chip-edit{
   border:none;background:rgba(255,255,255,.22);border-radius:8px;cursor:pointer;

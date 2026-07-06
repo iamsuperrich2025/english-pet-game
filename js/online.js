@@ -20,7 +20,7 @@ const Online = {
   db:null,
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
-  lastCoins:null,   // เหรียญล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำโดยไม่จำเป็น)
+  lastScoreSig:null, // ลายเซ็น coins|av|ni ล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำ)
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
   presenceMap:{},   // uid → true ของทุกคนที่ออนไลน์สดตอนนี้ (ไว้ join สถานะเพื่อน)
@@ -86,14 +86,39 @@ function onlinePushPresence(){
 }
 function onlinePushScore(){
   if(!Online.ready || !state.student) return;
-  if(Online.lastCoins === state.coins) return;         // เหรียญไม่ขยับ ไม่ต้องเขียน
-  Online.lastCoins = state.coins;
-  Online.db.ref('leaderboard/' + onlineKey()).set({
-    n: onlineDisplayName(),
-    g: state.student.grade,
-    coins: Math.round(state.coins),
-    at: firebase.database.ServerValue.TIMESTAMP,
-  }).catch(()=>{});
+  const coins = Math.round(state.coins);
+  const av    = Math.round(assetValue());   // มูลค่าทรัพย์สินรวม (โชว์ในการ์ดผู้เล่น)
+  const ni    = assetCount();               // จำนวนชิ้นทรัพย์สิน
+  const sig   = coins + '|' + av + '|' + ni;
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สินไม่ขยับ ไม่ต้องเขียนซ้ำ
+  Online.lastScoreSig = sig;
+  const base = { n: onlineDisplayName(), g: state.student.grade, coins,
+                 at: firebase.database.ServerValue.TIMESTAMP };
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni}, base)).catch(()=>{
+    // เผื่อ rules ยังไม่รองรับ av/ni (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง
+    Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+  });
+}
+
+/* ดึงข้อมูลการเงินของผู้เล่นคนหนึ่งมาโชว์ในการ์ด (คลิกชื่อ)
+   - ตัวเราเอง: ใช้ค่าสดจาก state · คนอื่น: อ่านล่าสุดจาก /leaderboard/<uid>
+   คืน {coins, av, ni, me} หรือ null ถ้ายังไม่มีข้อมูล */
+function fetchPlayerStats(uid){
+  if(uid && uid === onlineKey()){
+    return Promise.resolve({coins: Math.round(state.coins), av: Math.round(assetValue()),
+                            ni: assetCount(), me: true});
+  }
+  if(!Online.ready || !uid) return Promise.resolve(null);
+  return Online.db.ref('leaderboard/' + uid).get().then(s=>{
+    const v = s && s.val();
+    if(!v) return null;
+    return {
+      coins: typeof v.coins === 'number' ? v.coins : 0,
+      av:    typeof v.av    === 'number' ? v.av    : null,   // null = ผู้เล่นยังไม่ได้อัปเดตหลังเพิ่มฟีเจอร์
+      ni:    typeof v.ni    === 'number' ? v.ni    : null,
+      me: false,
+    };
+  }).catch(()=>null);
 }
 
 /* วาดการ์ดที่เกี่ยวข้องใหม่ เฉพาะตอนเปิดหน้า Dashboard อยู่ */
@@ -398,7 +423,9 @@ function onlineStart(){
     snap.forEach(ch=>{
       const v = ch.val();
       if(!v || typeof v.coins !== 'number' || typeof v.n !== 'string') return;
-      out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins});
+      out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins,
+                av: typeof v.av === 'number' ? v.av : null,
+                ni: typeof v.ni === 'number' ? v.ni : null});
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;
