@@ -1,0 +1,56 @@
+# ARCHITECTURE.md — ภาพรวมโปรเจกต์ + โครงสร้างไฟล์
+
+> อ่านเมื่อ: หาไฟล์/ฟังก์ชัน/โครงสร้างโค้ด · ก่อนแก้โค้ดส่วนที่ยังไม่คุ้น
+
+## ภาพรวม
+**Pet Vocab Adventure** — เว็บเกมเลี้ยงสัตว์เพื่อเรียนคำศัพท์อังกฤษ สำหรับนักเรียน ป.1–ม.6
+- โฟลเดอร์: `C:\Users\rober\english-pet-game\` เปิดได้ทั้ง file:// และ http:// — **ห้าม fetch ไฟล์ local** ใช้ `new Image()` probe (`probeImages()`)
+- **🌐 ออนไลน์:** repo `iamsuperrich2025/english-pet-game` (branch `main`) + GitHub Pages → เล่นได้ที่ **https://iamsuperrich2025.github.io/english-pet-game/**
+- **🔥 Firebase:** ดู `handoff/RULES.md` (โปรเจกต์ english-pet-game · RTDB asia-southeast1)
+- เซฟใน LocalStorage key `petVocabAdventure_v1` ผ่าน `state` + `saveState()`/`loadState()` — `loadState()` มี migration เซฟรุ่นเก่า→ใหม่ (field ใหม่ทุกตัวต้องมี default)
+- ทดสอบ: preview server `english-pet-game` (python http.server พอร์ต 8642) — เครื่องนี้ไม่มี Node มีแต่ Python 3.12
+- **PWA:** `manifest.json` (`display:fullscreen`) + `sw.js` (network-first โค้ด/cache-first รูป/ข้าม Firebase · CACHE_VERSION='pet-vocab-v1') + `img/icons/` 4 ไฟล์ · ปุ่ม 📲 ติดตั้ง (`#btn-install`/`#btn-install-top`) · ระบบแจ้งเวอร์ชันใหม่ (`version.json` + `.update-banner`) · `.nojekyll` · **แก้ manifest (display/icon/ชื่อ) เท่านั้นที่ต้องติดตั้งใหม่** โค้ดปกติได้อัตโนมัติ (network-first)
+
+## โครงสร้างไฟล์ (แยก data ออกจาก logic)
+
+```
+index.html            โครง HTML + โหลดสคริปต์ตามลำดับ (data → engine)
+css/style.css         CSS หลัก (rank-card, rankup-overlay, heat-bar, online-card, clock-chip, farm-*, mkt-*/collect-*, install-btn, update-banner)
+css/lobby.css         ธีม Lobby แนวนอน (โหลดทับ style.css) + chat-*/gift-*/gp-*/chat-emoji-cats ฯลฯ
+js/data/pets.js       PETS (dog/cat 3,000 · dragon 10,000) + FOODS (100–500 · feast 1,000 อิ่ม 6 ชม.)
+js/data/items.js      ITEMS (โบว์ 500 · ทั่วไป 1,200–5,000 · มงกุฎ 25,000) + มือถือ (PHONE_*) + คอม (COMP_*)
+js/data/fruits.js     FRUITS 4 ชนิด + fruitInfo/fruitGrowMs/fruitMsLeft
+js/data/collectibles.js  COLLECTIBLES 50 ชิ้น (5 หมวด×10 · tier common→mythic · field words=แต้มผลิต) + COLLECT_TIERS + COLLECT_CATS + collectInfo/collectTier + listingSellMs/listingStatus
+js/data/gifts.js      GIFTS 50 ของขวัญ (id/emoji/name/price/cat cake·rose·card) + GIFT_CATS + giftInfo — ข้อ 0.5 (ภาพ img/gifts/gift_<id>.png)
+js/data/vocab.js      VOCAB_BANDS 5 ระดับ × 8 หมวด × 10 คำ + gradeBand()/catsForStudent()/findCat()
+js/data/ranks.js      RANKS 7 แรงค์ + rankInfo(worth) + rankFromKey — ขั้นย่อย III→II→I
+js/data/homes.js      HOMES 3 ระดับ + AC + MAINT_RATE/ELEC_RATE/WATER_RATE/TRASH_RATE (0.5%/เดือน) + maint/elec/water/trashCost + WEATHERS + weatherNow/rainNow
+js/data/players.js    ONLINE_NAMES + ONLINE_ACTIVITIES + onlineBaseCount(hour) — เพื่อนจำลอง fallback
+js/data/badwords.js   ตัวกรองชื่อ+คำหยาบ (ข้อ 0.2 + ข้อ 7): NAME_ALLOWED_RE + BAD_PART/BAD_EXACT + nameNormalize + checkName(raw,min,max)→{ok,name|msg} + nameHasBadWord
+js/data/firebase-config.js  FIREBASE_CONFIG (databaseURL asia-southeast1) — ลบ/ค่าไม่ครบ = เข้าโหมดออฟไลน์
+js/online.js          เครื่องยนต์ออนไลน์ (Firebase SDK 10.14.1 compat dynamic): presence/leaderboard · ระบบเพื่อน (friendCode/Search/Request/Accept/Decline/friendsHeal) · แชท (chatPairId/chatRef/chatListen/chatSend/chatPrune/chatWatchSync/chatMarkSeen) · ของขวัญ (giftSend/giftAccept/giftDecline/giftInWatch/giftOutWatchSync/giftOutRebuild/giftReclaim · GIFT_EXPIRE_MS 7 วัน) · Online{ready,friends,board,myCode,reqs,myFriends,presenceMap,chatUnread,giftIn,giftOut} · onlineKey()=uid · onlineDisplayName()
+js/auth.js            Google Login (ข้อ 0.1): Auth{user,booted,...} · authStart/authLoginClick/authSyncOnLogin/authPushSave/authLogout/authGateOffline · authAskProfileName/authApplyProfileName/authEditProfileName/authPushProfile (ข้อ 0.2) · จุด mock: stub authFetchCloud/Write/Delete+onlineStart แล้วเรียก authOnLogin({uid,email})
+js/util.js            shuffle/fmtNum/escapeHTML/toast/floatFx/sfx/showScreen/askConfirm/seededRand + askNameDialog(opt) กล่องตั้งชื่อกลาง (validate checkName)
+js/state.js           state/DEFAULT_STATE/loadState(migration)/saveState · careTick/dailyTick · addCoins/addRP/addExp/expNeed · currentSlotStart/nextSlotStart · heatProtected/rainProtected · assetValue/netWorth/assetCount/refreshRank · บิลรายเดือน ymStr/billOutstanding/homeDecayed/billTick + UTILITIES{elec,water} · compTick · marketTick · addCraft/newOrder/orderTick · giftBox:[] (ข้อ 0.5 · ไม่รวม assetValue/ขายต่อไม่ได้)
+js/images.js          IMG_FILES + probeImages(keys,dir)/probeCollectImages/probeGiftImages/probeRankImages/probeHomeImages · currentPetImg/equippedItem/makeHappy
+js/ui.js              renderDashboard + การ์ดทั้งหมด · UTILITY_UI/utilityBillUI/payUtility/buyUtilityFix ·
+                      โรงงาน & ตลาด (แยกคนละแผง "รอบยี่สิบเก้า"): renderFactoryCard(#factory-card=renderFactory) · renderMarketCard(#market-card=soldUI+renderOrdersUI+renderCollectMine) · startProduce/cancelProduce→renderFactoryCard · deliverOrder/openListDialog/cancelListing→renderDashboard · renderOrderClock/showCollectReveal/collectImg · module var factoryCat/factoryPage
+                      แชท (ข้อ 0.4): openChat + CHAT_EMOJI_CATS 7 หมวด (แผง emoji จัดกลุ่ม) + refreshFriendData ปุ่ม 💬
+                      ของขวัญ (ข้อ 0.5): renderGiftPanel/openGiftPicker/confirmSendGift/doSendGift/acceptGift/declineGift/showGiftReveal/giftImg (#gift-card) + ปุ่ม 🎁 .fr-gift-btn
+js/lobby.js           ระบบแผง Lobby: openPanel/closePanel + PANEL_TITLES (home/shop/farm/factory/market/friends/gifts/rank) · wrap showScreen ปิดแผงอัตโนมัติ
+js/game.js            เกมจับคู่ + หมวด/แบบทดสอบ (renderCats/startQuiz/finishQuiz) + hook แต้มผลิต (addCraft) → showCollectReveal
+js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGame() · careTick interval guard ด้วย Auth.booted · renderClock ทุกวินาที · ปุ่มรีเซ็ตถูกถอดแล้ว
+```
+
+## ไฟล์งานที่มอบ Sonnet / prompt ภาพ
+```
+TASK_VOCAB_SONNET.md       งานคำศัพท์ (backlog ข้อ 9) — แยก vocab/ + POS + ≥2,000 คำ (🔶 ค้างครึ่งทาง มีแค่ band1.js untracked · ⚠️ เคยทำ production พัง)
+TASK_DICTIONARY_SONNET.md  Project Dictionary A–Z (backlog ข้อ 10) — ยังไม่เริ่ม
+PROMPTS*.md                prompt ภาพสัตว์/แรงค์/ที่พัก/สินค้า/ของขวัญ/ธีม
+img/                       สัตว์ · rank/ ✅7 · home/ ✅3 · collectibles/ ✅50 · gifts/ ✅50 · theme/ ✅6 · icons/ ✅4
+```
+
+## ⚠️ กับดักที่เคยเจอ
+- **ห้ามแก้ index.html ชี้ `js/data/vocab/band1-5.js`** จนกว่างานคำศัพท์ Sonnet เสร็จครบทุกไฟล์และ commit พร้อมกัน — commit `9accb89` เคยทำเกมพังทั้งเว็บ (`gradeBand is not defined`) เพราะ script tag ชี้ไฟล์ untracked
+- commit ต้องตรวจว่าไม่มี script tag ชี้ไฟล์ที่ยังไม่ถูก commit
+- GitHub Pages build หน่วง ~2–5 นาทีหลัง push — อย่าเพิ่งทดสอบ/ติดตั้งมือถือทันที (เช็ก `curl` version.json/manifest.json บน Pages ว่าขึ้นค่าใหม่ยัง)

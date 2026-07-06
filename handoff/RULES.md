@@ -1,0 +1,130 @@
+# RULES.md — Firebase Security Rules
+
+> อ่านไฟล์นี้เมื่อ: แตะ Firebase / เพิ่มโซนใหม่ / ต้องส่ง rules ให้ผู้ใช้ publish
+> **⚠️ กติกาผู้ใช้: ส่ง rules ให้ผู้ใช้ต้องส่ง "เต็มทั้งหน้า" เสมอ ห้ามส่งเฉพาะโซน** (คัดลอกทั้งก้อนไปวางทับใน Firebase console → Realtime Database → Rules → Publish)
+
+**Firebase:** โปรเจกต์ `english-pet-game` (Google account ผู้ใช้ · Spark ฟรี) · RTDB `https://english-pet-game-default-rtdb.asia-southeast1.firebasedatabase.app` · console: https://console.firebase.google.com/project/english-pet-game/database
+Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
+
+## สถานะการ publish
+- ✅ `/presence` + `/leaderboard` (+ av/ni) + `/users` + `/friendCodes` + `/friendReq` + `/friends` + `/chats` — publish แล้ว
+- ⚠️ **`/gifts` (ข้อ 0.5) — เพิ่มใน "รอบยี่สิบแปด" ยังไม่ publish** → ถ้าไม่ publish การส่งของขวัญจะถูก reject
+- 🔑 ทุกครั้งที่เพิ่มโซนใหม่ → ส่งก้อนเต็มด้านล่างให้ผู้ใช้ publish ใหม่
+
+## ก้อนเต็ม (ครอบ 0.1+0.2+0.3+0.4+0.5)
+
+```json
+{
+  "rules": {
+    "presence": {
+      ".read": true,
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n','g','act','at'])",
+        "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":   { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "act": { ".validate": "newData.isString() && newData.val().length <= 60" },
+        "at":  { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "leaderboard": {
+      ".read": true,
+      ".indexOn": "coins",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['n','g','coins','at'])",
+        "n":     { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":     { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "coins": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "av":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "ni":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "at":    { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "friendCodes": {
+      "$code": {
+        ".read": true,
+        ".write": "auth != null && newData.val() === auth.uid",
+        ".validate": "newData.isString()"
+      }
+    },
+    "friendReq": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          ".validate": "newData.hasChildren(['n','g','ts'])",
+          "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "friends": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$friendUid": {
+          ".write": "auth != null && (auth.uid === $uid || auth.uid === $friendUid)",
+          ".validate": "newData.hasChildren(['n','g','ts'])",
+          "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "chats": {
+      "$pairId": {
+        ".read":  "auth != null && $pairId.contains(auth.uid)",
+        ".write": "auth != null && $pairId.contains(auth.uid)",
+        "$msgId": {
+          ".validate": "newData.hasChildren(['f','t','ts'])",
+          "f":  { ".validate": "newData.isString() && newData.val() === auth.uid" },
+          "t":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "gifts": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".read":  "auth != null && auth.uid === $fromUid",
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          "$giftKey": {
+            ".validate": "newData.hasChildren(['k','id','fn','ts','st'])",
+            "k":  { ".validate": "newData.isString() && (newData.val() === 'shop' || newData.val() === 'collect')" },
+            "id": { ".validate": "newData.isString() && newData.val().length <= 40" },
+            "fn": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "st": { ".validate": "newData.isString() && (newData.val() === 'pending' || newData.val() === 'accepted' || newData.val() === 'declined')" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "save": {
+          "data": { ".validate": "newData.isString()" },
+          "at":   { ".validate": "newData.isNumber()" }
+        },
+        "profile": {
+          "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" }
+        }
+      }
+    }
+  }
+}
+```
+
+## หมายเหตุโครง /gifts (ข้อ 0.5)
+- `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`
+- ผู้รับอ่านทั้งกล่อง `/gifts/<toUid>` (auth.uid===toUid) · ผู้ส่งอ่าน-เขียนเฉพาะซับทรีตัวเอง `/gifts/<toUid>/<fromUid>` (เฝ้าสถานะ+คืนของ)
+- คลัง collectible เป็น state ในเครื่อง (ไม่ได้อยู่ใน DB) → "คืนของ" ตอนถูกปฏิเสธ/หมดอายุ ทำที่ฝั่งผู้ส่ง (giftOutWatch) เมื่อผู้ส่งออนไลน์
