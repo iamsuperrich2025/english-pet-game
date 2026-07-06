@@ -243,7 +243,10 @@ function renderLeaderboardCard(){
 function updateFriendBadge(){
   const b = document.getElementById('friend-badge');
   if(!b) return;
-  const n = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
+  // รวมทั้งคำขอเป็นเพื่อน + เพื่อนที่ส่งข้อความใหม่มา (ข้อ 0.4) เป็นตัวเลขเดียวบนปุ่ม "เพื่อน"
+  const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
+  const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
+  const n = reqs + chats;
   if(n > 0){ b.textContent = n; b.style.display = ''; }
   else b.style.display = 'none';
 }
@@ -349,11 +352,12 @@ function refreshFriendData(){
     if(Online.myFriends.length){
       listEl.innerHTML = Online.myFriends.map((f,i)=>{
         const on = Online.presenceMap && Online.presenceMap[f.uid];
+        const unread = Online.chatUnread && Online.chatUnread[f.uid];
         return `<div class="fr-row">
           <span class="online-dot${on ? '' : ' off'}"></span>
           <span class="fr-row-name">${escapeHTML(f.n)}<small> ชั้น ${escapeHTML(f.g)}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
-          <button class="fr-chat-btn" data-i="${i}">💬 แชท</button></div>`;
+          <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
       }).join('');
       listEl.querySelectorAll('.fr-chat-btn').forEach(b=>b.addEventListener('click', ()=>{
         openChat(Online.myFriends[+b.dataset.i]);
@@ -427,10 +431,16 @@ function openChat(friend){
   if(chatUnsub) chatUnsub();          // ปิดกล่องเก่าถ้ามีค้าง
   chatUnsub = chatListen(friend.uid, (msgs)=>{
     if(!document.body.contains(overlay)){ if(chatUnsub){ chatUnsub(); chatUnsub = null; } return; }
-    if(!msgs.length){ msgsEl.innerHTML = `<div class="chat-empty">ยังไม่มีข้อความ — ทักทายเพื่อนก่อนเลย! 👋</div>`; return; }
+    if(!msgs.length){
+      msgsEl.innerHTML = `<div class="chat-empty">ยังไม่มีข้อความ — ทักทายเพื่อนก่อนเลย! 👋</div>`;
+      if(typeof chatMarkSeen === 'function') chatMarkSeen(friend.uid);
+      return;
+    }
     msgsEl.innerHTML = msgs.map(m=>
       `<div class="chat-bubble${m.f === me ? ' mine' : ''}">${escapeHTML(m.t)}</div>`).join('');
     msgsEl.scrollTop = msgsEl.scrollHeight;
+    // เปิดกล่องอยู่ = อ่านแล้ว: จำ ts ล่าสุด กันเด้งแจ้งเตือนซ้ำ (ข้อ 0.4)
+    if(typeof chatMarkSeen === 'function') chatMarkSeen(friend.uid, msgs[msgs.length - 1].ts || Date.now());
   });
   setTimeout(()=>input.focus(), 60);
   sfx.select();

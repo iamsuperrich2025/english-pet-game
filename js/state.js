@@ -48,6 +48,7 @@ const DEFAULT_STATE = {
   onlineId:null,                      // id ประจำเครื่องสำหรับระบบออนไลน์ (สุ่มครั้งเดียวใน online.js)
   savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
+  chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
 };
 
 /* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
@@ -160,6 +161,8 @@ function loadState(){
       if(typeof s.ownerUid !== 'string') s.ownerUid = null;
       // ชื่อในเกม (ข้อ 0.2): เซฟเก่าไม่มี → null (auth.js จะเด้งกล่องบังคับตั้งชื่อตอนเข้าเกม)
       if(typeof s.profileName !== 'string') s.profileName = null;
+      // แชท (ข้อ 0.4): บันทึกว่าอ่านถึงข้อความไหนของแต่ละคู่แล้ว (ไว้แจ้งเตือนข้อความใหม่)
+      if(!s.chatSeen || typeof s.chatSeen !== 'object' || Array.isArray(s.chatSeen)) s.chatSeen = {};
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }

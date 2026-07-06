@@ -26,6 +26,7 @@ const Online = {
   presenceMap:{},   // uid → true ของทุกคนที่ออนไลน์สดตอนนี้ (ไว้ join สถานะเพื่อน)
   reqs:[],          // คำขอเป็นเพื่อนที่ส่งมาหาเรา: [{uid,n,g,ts}]
   myFriends:[],     // เพื่อนของเรา: [{uid,n,g,ts}]
+  chatUnread:{},    // uid เพื่อน → true ถ้ามีข้อความใหม่ที่ยังไม่ได้อ่าน (ข้อ 0.4)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -238,6 +239,71 @@ function chatPrune(base){
   }).catch(()=>{});
 }
 
+/* ---------- แจ้งเตือนข้อความใหม่ (แม้ไม่ได้เปิดกล่องแชท) ----------
+   เฝ้าข้อความล่าสุดของเพื่อนทุกคน (limitToLast 1 = เบา) เทียบกับ state.chatSeen
+   ที่จำว่าอ่านถึงข้อความไหนแล้ว → ตั้ง Online.chatUnread[uid] + เด้ง toast/badge */
+let chatWatchers = {};   // pairId → ฟังก์ชันเลิกฟัง (มีทีละคู่ต่อเพื่อน 1 คน)
+
+function chatSeenTs(otherUid){
+  const v = state.chatSeen && state.chatSeen[chatPairId(otherUid)];
+  return typeof v === 'number' ? v : 0;
+}
+
+/* จำว่าอ่านข้อความถึง ts นี้แล้ว (เรียกตอนเปิด/อยู่ในกล่องแชท) → เคลียร์ unread */
+function chatMarkSeen(otherUid, ts){
+  const pid = chatPairId(otherUid);
+  const t = typeof ts === 'number' ? ts : Date.now();
+  if(!state.chatSeen || typeof state.chatSeen !== 'object') state.chatSeen = {};
+  if((state.chatSeen[pid] || 0) < t){ state.chatSeen[pid] = t; saveState(); }
+  if(Online.chatUnread[otherUid]){
+    delete Online.chatUnread[otherUid];
+    if(typeof onlineRerender === 'function') onlineRerender();
+  }
+}
+
+/* จำนวนเพื่อนที่มีข้อความใหม่ค้างอยู่ (ไว้โชว์ badge) */
+function chatUnreadCount(){ return Object.keys(Online.chatUnread).length; }
+
+/* ตั้ง/รื้อ watcher ให้ตรงกับรายชื่อเพื่อนปัจจุบัน (เรียกทุกครั้งที่เพื่อนเปลี่ยน) */
+function chatWatchSync(){
+  if(!Online.ready || !Online.db) return;
+  const me = onlineKey();
+  const want = {};                                  // pairId → uid เพื่อน
+  (Online.myFriends || []).forEach(f=>{ want[chatPairId(f.uid)] = f.uid; });
+  // รื้อ watcher ของคนที่ไม่ใช่เพื่อนแล้ว + ล้าง unread ค้าง
+  for(const pid in chatWatchers){
+    if(!(pid in want)){ try{ chatWatchers[pid](); }catch(e){} delete chatWatchers[pid]; }
+  }
+  for(const uid in Online.chatUnread){
+    if(!(Online.myFriends || []).some(f=>f.uid === uid)) delete Online.chatUnread[uid];
+  }
+  // ตั้ง watcher ใหม่ให้เพื่อนที่ยังไม่มี
+  for(const pid in want){
+    if(chatWatchers[pid]) continue;
+    const otherUid = want[pid];
+    const q = Online.db.ref('chats/' + pid).orderByKey().limitToLast(1);
+    let primed = false;                             // ครั้งแรก = snapshot เก่า (ตั้ง badge เงียบๆ ไม่เด้ง toast)
+    const handler = q.on('value', (snap)=>{
+      let last = null;
+      snap.forEach(ch=>{ last = ch.val(); });
+      const wasPrimed = primed; primed = true;
+      if(!last || typeof last.f !== 'string' || typeof last.ts !== 'number') return;
+      if(last.f === me) return;                      // ข้อความของเราเอง ไม่นับว่ายังไม่อ่าน
+      if(last.ts <= chatSeenTs(otherUid)) return;    // อ่านแล้ว
+      const wasUnread = !!Online.chatUnread[otherUid];
+      Online.chatUnread[otherUid] = true;
+      if(wasPrimed && !wasUnread){                   // ข้อความใหม่สดๆ ที่เพิ่งเข้ามา → แจ้งเตือน
+        const fr = (Online.myFriends || []).find(f=>f.uid === otherUid);
+        const nm = fr ? fr.n : 'เพื่อน';
+        if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+        if(typeof toast === 'function') toast('💬 ' + nm + ' ส่งข้อความหาหนู!');
+      }
+      if(typeof onlineRerender === 'function') onlineRerender();
+    });
+    chatWatchers[pid] = ()=>q.off('value', handler);
+  }
+}
+
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
    initializeApp ทำแล้วใน authStart) ---------- */
 function onlineStart(){
@@ -298,6 +364,7 @@ function onlineStart(){
     });
     out.sort((a,b)=>a.n.localeCompare(b.n, 'th'));
     Online.myFriends = out;
+    chatWatchSync();               // เพื่อนเปลี่ยน → ปรับ watcher ข้อความใหม่ให้ครบ (ข้อ 0.4)
     onlineRerender();
   });
 
