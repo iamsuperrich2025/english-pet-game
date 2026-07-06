@@ -48,6 +48,9 @@ h1{color:var(--sky-d);text-shadow:none;}
   @keyframes rotateHint{0%,20%{transform:rotate(0deg);}60%,100%{transform:rotate(90deg);}}
   .rotate-box p{font-size:19px;margin:14px 0 0;line-height:1.6;color:#cfe4fa;}
   .rotate-box b{color:var(--gold);}
+  .rotate-hint{font-size:15px !important;margin-top:18px !important;color:#a9c7e6 !important;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+    border-radius:12px;padding:10px 14px;display:inline-block;}
 }
 
 /* ============================================================
