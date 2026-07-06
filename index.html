@@ -43,6 +43,8 @@
       </button>
       <button class="big-btn" id="btn-login-retry" style="display:none">🔄 ลองใหม่อีกครั้ง</button>
       <p class="login-note">เซฟเก็บไว้ในบัญชี Google ของหนู ☁️<br>เปิดเครื่องไหนก็เล่นต่อได้ · ครั้งแรกให้ผู้ปกครองช่วยเลือกบัญชีได้เลย</p>
+      <!-- ปุ่มติดตั้งเป็นแอพ (PWA) — โผล่เฉพาะตอนติดตั้งได้จริง (js ท้ายไฟล์คุมการแสดง) -->
+      <button class="install-btn" id="btn-install" style="display:none">📲 ติดตั้งเป็นแอพ<span>เล่นเต็มจอ ลื่นกว่า ไม่มีแถบบัง 🎮</span></button>
     </div>
   </section>
 
@@ -101,6 +103,8 @@
       <div class="coin-pill">🪙 <span id="coin-count">0</span></div>
       <div class="coin-pill today">📅 +<span id="coin-today">0</span></div>
       <button class="icon-btn" id="sound-toggle">🔊</button>
+      <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
+      <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>
       <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
       <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
     </header>
@@ -264,6 +268,109 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
     navigator.serviceWorker.register('sw.js').catch(()=>{});
   });
 }
+</script>
+<!-- แจ้งเตือนเวอร์ชันใหม่: เทียบ version.json บน server กับเวอร์ชันที่กำลังรัน
+     ถ้าไม่ตรง = มีอัปเดต → เด้งแถบให้กดรีโหลด (ทำงานร่วมกับ network-first ใน sw.js)
+     ⚠️ เวลา deploy โค้ดใหม่ ให้บัมพ์เลข "v" ใน version.json ทุกครั้ง ผู้ใช้ถึงจะเห็นแถบนี้ -->
+<script>
+(function(){
+  if(!location.protocol.startsWith('http')) return;   // file:// ข้าม
+  var running = null;                                  // เวอร์ชันที่กำลังรันอยู่ (ตั้งจากการเช็กครั้งแรก)
+  function fetchVer(){
+    return fetch('version.json', {cache:'no-store'})   // no-store = ไม่เอาจาก HTTP cache (network-first ใน SW ดึงสดให้)
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ return d && d.v != null ? String(d.v) : null; })
+      .catch(function(){ return null; });              // ออฟไลน์/ล้มเหลว → null (ไม่เด้งหลอก)
+  }
+  function showBanner(){
+    if(document.getElementById('update-banner')) return;   // โชว์อยู่แล้ว
+    var b = document.createElement('div');
+    b.id = 'update-banner'; b.className = 'update-banner';
+    b.innerHTML = '<span>✨ มีเกมเวอร์ชันใหม่!</span>'
+      + '<button id="update-reload">🔄 อัปเดตเลย</button>'
+      + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
+    document.body.appendChild(b);
+    b.querySelector('#update-reload').onclick = function(){ location.reload(); };
+    b.querySelector('#update-dismiss').onclick = function(){ b.remove(); };
+  }
+  function check(){
+    if(document.hidden) return;                        // อยู่แท็บอื่น → ข้าม
+    fetchVer().then(function(v){
+      if(!v) return;
+      if(running === null){ running = v; return; }     // ครั้งแรก = จำเวอร์ชันที่กำลังรัน (ไม่เด้ง)
+      if(v !== running) showBanner();                  // server เปลี่ยน → มีอัปเดต
+    });
+  }
+  window.addEventListener('load', check);
+  setInterval(check, 3 * 60 * 1000);                   // เช็กทุก 3 นาที
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) check(); });
+  window.addEventListener('online', check);            // กลับมาออนไลน์ → เช็กทันที
+})();
+</script>
+<!-- ปุ่มติดตั้งเป็นแอพ (PWA install) — Android ใช้ beforeinstallprompt · iOS โชว์วิธี manual -->
+<script>
+(function(){
+  if(!location.protocol.startsWith('http')) return;    // file:// ข้าม
+  function isStandalone(){                              // เปิดจากแอพที่ติดตั้งแล้วหรือยัง
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.matchMedia('(display-mode: minimal-ui)').matches
+        || navigator.standalone === true;              // iOS
+  }
+  if(isStandalone()) return;                            // ติดตั้งแล้ว → ไม่ต้องเสนอ
+
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var deferredPrompt = null;
+  var btns = [document.getElementById('btn-install'), document.getElementById('btn-install-top')];
+  function show(){ btns.forEach(function(b){ if(b) b.style.display=''; }); }
+  function hide(){ btns.forEach(function(b){ if(b) b.style.display='none'; }); }
+
+  function guide(html){                                 // overlay สอนวิธีติดตั้ง
+    var o = document.createElement('div'); o.className = 'install-guide-overlay';
+    o.innerHTML = '<div class="install-guide">' + html
+      + '<button class="install-guide-close">เข้าใจแล้ว 👍</button></div>';
+    document.body.appendChild(o);
+    function close(){ o.remove(); }
+    o.querySelector('.install-guide-close').onclick = close;
+    o.onclick = function(e){ if(e.target === o) close(); };
+  }
+  function iosGuide(){
+    guide('<h3>📲 ติดตั้งลงหน้าจอโฮม</h3>'
+      + '<ol class="install-steps">'
+      + '<li>แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น ⬆️) ด้านล่างจอ Safari</li>'
+      + '<li>เลื่อนหา <b>“เพิ่มไปยังหน้าจอโฮม” (Add to Home Screen)</b> แล้วแตะ</li>'
+      + '<li>แตะ <b>เพิ่ม (Add)</b> มุมขวาบน</li>'
+      + '<li>เปิดเกมจาก <b>ไอคอนบนหน้าจอ</b> → เต็มจอไม่มีแถบบัง! 🎉</li>'
+      + '</ol><p class="ig-note">* ต้องเปิดด้วย <b>Safari</b> เท่านั้นนะ</p>');
+  }
+  function manualGuide(){
+    guide('<h3>📲 ติดตั้งเป็นแอพ</h3>'
+      + '<ol class="install-steps">'
+      + '<li>แตะเมนู <b>⋮</b> มุมขวาบนของเบราว์เซอร์</li>'
+      + '<li>เลือก <b>“ติดตั้งแอป”</b> หรือ <b>“เพิ่มลงในหน้าจอหลัก”</b></li>'
+      + '<li>เปิดเกมจากไอคอน → เต็มจอ! 🎉</li>'
+      + '</ol>');
+  }
+  function doInstall(){
+    if(deferredPrompt){                                 // Android/Chrome: เด้ง prompt ติดตั้งจริง
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(c){
+        if(c && c.outcome === 'accepted') hide();
+        deferredPrompt = null;
+      }).catch(function(){ deferredPrompt = null; });
+    } else if(isIOS){ iosGuide(); }                     // iOS: สอน manual
+    else { manualGuide(); }                             // อื่นๆ ที่ยังไม่มี prompt: สอน manual
+  }
+  btns.forEach(function(b){ if(b) b.onclick = doInstall; });
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();                                 // คุมปุ่มเอง (กันแถบ default ของ Chrome)
+    deferredPrompt = e; show();
+  });
+  window.addEventListener('appinstalled', function(){ deferredPrompt = null; hide(); });
+
+  if(isIOS) show();                                     // iOS ไม่มี beforeinstallprompt → โชว์ปุ่มเลย
+})();
 </script>
 </body>
 </html>
