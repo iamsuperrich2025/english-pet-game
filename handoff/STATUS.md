@@ -9,7 +9,11 @@
 1. **publish Security Rules ใหม่** (เพิ่มโซน `/gifts` — ก้อนเต็มใน `handoff/RULES.md`) ไม่งั้นส่งของขวัญถูก reject · ก้อนนี้ครอบ av/ni ใน /leaderboard ด้วย
 2. **ทดสอบจริงบน Pages 2 บัญชี:** ส่ง-รับของขวัญ + แชท + self-heal เพื่อน (ยังไม่เคยทดสอบ 2 บัญชีจริง)
 
-## 📌 ประวัติรอบล่าสุด (24–29)
+## 📌 ประวัติรอบล่าสุด
+
+**✅ รอบสามสิบ (6 ก.ค. · Opus): แก้ toast โดนบัง (ทดสอบ 2 บัญชีจริงบน Pages)** — ผู้ใช้เจอตอนส่งของขวัญ toast ข้างล่างอ่านไม่ออก เพราะแถบ PWA `.update-banner` (z-index 120, bottom-center) ทับ toast (เดิม z-index 95, bottom:30) · **แก้ `.toast` (style.css): z-index 95→9990 + bottom 30→76px + เพิ่มเงา** → toast ลอยเหนือ overlay/banner ทุกตัว ไม่โดนบังอีก · ทดสอบ preview: toast อยู่เหนือ update-banner 20px ไม่ overlap (version.json→.4)
+
+
 
 **✅ รอบยี่สิบเก้า (6 ก.ค. · Opus): แยกปุ่ม "โรงงาน" กับ "ตลาด" เป็นคนละแผง (ผู้ใช้สั่ง) — push แล้ว (commit `8294428`)**
 - เดิม `#collect-card` แผงเดียว 2 แท็บ → **2 rail buttons + 2 แผง:** `panel-factory` (🏭 `#factory-card` = งานผลิต+แคตตาล็อก) · `panel-market` (🏪 `#market-card` = ออเดอร์+คลัง+ตั้งราคาขาย+กล่องขายสำเร็จ)
