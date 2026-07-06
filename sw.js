@@ -1,0 +1,86 @@
+/* Service Worker — Pet Vocab Adventure (PWA)
+   กลยุทธ์:
+   - โค้ดเกม (HTML/JS/CSS): network-first → ออนไลน์ได้โค้ดใหม่เสมอ (กันปัญหาโค้ดค้าง),
+     ออฟไลน์ค่อย fallback แคช
+   - รูปภาพ/ฟอนต์: cache-first → โหลดไว ประหยัดเน็ต (รูปแทบไม่เปลี่ยน)
+   - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
+   อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
+*/
+const CACHE_VERSION = 'pet-vocab-v1';
+
+/* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
+const SHELL = [
+  './',
+  './index.html',
+  './manifest.json',
+  './css/style.css',
+  './css/lobby.css',
+  './js/data/pets.js',
+  './js/data/items.js',
+  './js/data/vocab.js',
+  './js/data/ranks.js',
+  './js/data/homes.js',
+  './js/data/fruits.js',
+  './js/data/collectibles.js',
+  './js/data/players.js',
+  './js/data/badwords.js',
+  './js/data/firebase-config.js',
+  './js/util.js',
+  './js/state.js',
+  './js/images.js',
+  './js/ui.js',
+  './js/lobby.js',
+  './js/game.js',
+  './js/auth.js',
+  './js/online.js',
+  './js/main.js',
+  './img/icons/icon-192.png',
+  './img/icons/icon-512.png',
+];
+
+self.addEventListener('install', (e)=>{
+  e.waitUntil(
+    caches.open(CACHE_VERSION)
+      .then(c=>c.addAll(SHELL))
+      .then(()=>self.skipWaiting())          // ให้ SW ใหม่ทำงานทันที
+      .catch(()=>{})                          // ไฟล์ใดโหลดไม่ได้ ไม่ให้ install ล้มทั้งชุด
+  );
+});
+
+self.addEventListener('activate', (e)=>{
+  e.waitUntil(
+    caches.keys()
+      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE_VERSION).map(k=>caches.delete(k))))
+      .then(()=>self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (e)=>{
+  const req = e.request;
+  if(req.method !== 'GET') return;                        // เขียนข้อมูล → ปล่อยผ่าน
+  const url = new URL(req.url);
+  if(url.origin !== self.location.origin) return;         // Firebase/Google/ฟอนต์ → ปล่อยผ่าน
+
+  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url.pathname);
+
+  if(isImg){
+    // cache-first สำหรับรูป
+    e.respondWith(
+      caches.match(req).then(hit=> hit || fetch(req).then(res=>{
+        const copy = res.clone();
+        caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+        return res;
+      }).catch(()=>hit))
+    );
+    return;
+  }
+
+  // network-first สำหรับโค้ด/หน้าเว็บ (ออนไลน์ได้ของใหม่ ออฟไลน์ใช้แคช)
+  e.respondWith(
+    fetch(req).then(res=>{
+      const copy = res.clone();
+      caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+      return res;
+    }).catch(()=> caches.match(req).then(hit=> hit || caches.match('./index.html')))
+  );
+});

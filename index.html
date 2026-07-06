@@ -2,8 +2,16 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Pet Vocab Adventure 🐾 เกมคำศัพท์เลี้ยงสัตว์</title>
+<!-- PWA (ติดตั้งเป็นแอพบนมือถือได้) -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#123a6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pet Vocab">
+<link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
@@ -249,5 +257,13 @@
 <script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->
 <script src="js/online.js"></script>
 <script src="js/main.js"></script>
+<!-- ลงทะเบียน Service Worker (PWA) — เฉพาะ https/localhost เท่านั้น (file:// ไม่รองรับ) -->
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
 </body>
 </html>
