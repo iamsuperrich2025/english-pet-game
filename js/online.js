@@ -27,6 +27,7 @@ const Online = {
   reqs:[],          // คำขอเป็นเพื่อนที่ส่งมาหาเรา: [{uid,n,g,ts}]
   myFriends:[],     // เพื่อนของเรา: [{uid,n,g,ts}]
   chatUnread:{},    // uid เพื่อน → true ถ้ามีข้อความใหม่ที่ยังไม่ได้อ่าน (ข้อ 0.4)
+  friendsHealed:{}, // uid เพื่อน → true ถ้าซ่อมฝั่งตรงข้ามให้ครบสองฝ่ายแล้วในเซสชันนี้
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -174,6 +175,28 @@ function friendAccept(fromUid){
 /* ปฏิเสธคำขอ: ลบออกจากกล่องเราเฉยๆ */
 function friendDecline(fromUid){
   return Online.db.ref('friendReq/' + onlineKey() + '/' + fromUid).remove();
+}
+
+/* ซ่อมเพื่อนให้ครบสองฝ่ายอัตโนมัติ (self-heal mutual friendship)
+   ปัญหา: ข้อมูลเพื่อน "ไม่ครบสองฝ่าย" (A มี B ในรายชื่อ แต่ B ไม่มี A) ค้างมาจาก
+   ช่วง rules /chats ยังไม่ถูก publish → ฝั่งที่หายไปไม่มีทั้งปุ่มแชทและตัวเฝ้าข้อความ
+   วิธีซ่อม: สำหรับเพื่อนทุกคนในรายชื่อของเรา เขียนยืนยันฝั่งตรงข้าม
+   friends/<f.uid>/<me> = ตัวเรา (rules อนุญาต เพราะ auth.uid === $friendUid = ตัวเรา)
+   throttle: ทำครั้งเดียวต่อ uid/เซสชัน กันเขียนรัวทุก tick presence */
+function friendsHeal(){
+  if(!Online.ready || !state.student) return;
+  const me   = onlineKey();
+  const name = onlineDisplayName();
+  if(!name) return;                        // กัน validate ล้ม (n ต้อง 1–40 ตัว)
+  const meData = {n: name, g: state.student.grade, ts: firebase.database.ServerValue.TIMESTAMP};
+  (Online.myFriends || []).forEach(f=>{
+    if(!f.uid || f.uid === me) return;
+    if(Online.friendsHealed[f.uid]) return; // ซ่อมไปแล้วในเซสชันนี้
+    Online.friendsHealed[f.uid] = true;
+    Online.db.ref('friends/' + f.uid + '/' + me).set(meData).catch(()=>{
+      delete Online.friendsHealed[f.uid];   // เขียนล้ม → ปลดล็อกให้ลองใหม่รอบหน้า
+    });
+  });
 }
 
 /* ============================================================
@@ -364,6 +387,7 @@ function onlineStart(){
     });
     out.sort((a,b)=>a.n.localeCompare(b.n, 'th'));
     Online.myFriends = out;
+    friendsHeal();                 // ซ่อมเพื่อนให้ครบสองฝ่ายอัตโนมัติ (self-heal)
     chatWatchSync();               // เพื่อนเปลี่ยน → ปรับ watcher ข้อความใหม่ให้ครบ (ข้อ 0.4)
     onlineRerender();
   });
