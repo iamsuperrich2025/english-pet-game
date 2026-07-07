@@ -48,8 +48,30 @@ function showScreen(id){
 }
 
 /* ---------- FX ---------- */
+// คำเตือน/ทำรายการไม่สำเร็จ → ค้างจนผู้ใช้กดปิด · ข้อความแจ้งสำเร็จ → หายเอง
+const TOAST_WARN_RE = /ไม่สำเร็จ|ไม่พอ|ไม่ได้|ไม่มี|ยังไม่|หมดเวลา|หมดอายุ|ลองใหม่|ป่วย|ให้ครบ|มากกว่า 0|อินเทอร์เน็ต|ต้อง.{0,20}ก่อน|⚠️|❌|🚫|💔|⏰|🤒/;
+function restackToasts(){
+  const list = [...document.querySelectorAll('.toast-warn')];
+  let b = 76;                              // ตรงกับ bottom ใน .toast (css)
+  for(let i = list.length - 1; i >= 0; i--){   // อันใหม่สุดอยู่ล่างสุด อันเก่าดันขึ้นไป
+    list[i].style.bottom = b + 'px';
+    b += list[i].offsetHeight + 10;
+  }
+}
 function toast(msg, ms=1800){
   const t = document.createElement('div');
+  if(TOAST_WARN_RE.test(msg)){
+    t.className = 'toast toast-warn';
+    const span = document.createElement('span');
+    span.className = 'toast-msg'; span.textContent = msg;
+    const x = document.createElement('button');
+    x.className = 'toast-x'; x.textContent = '✕'; x.setAttribute('aria-label','ปิด');
+    x.onclick = ()=>{ t.remove(); restackToasts(); };
+    t.appendChild(span); t.appendChild(x);
+    document.body.appendChild(t);
+    restackToasts();                       // ค้างไว้ ไม่ตั้ง setTimeout
+    return;
+  }
   t.className = 'toast'; t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), ms);
