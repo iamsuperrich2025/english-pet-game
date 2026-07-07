@@ -24,6 +24,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 32d (7 ก.ค. · Opus): หน้าตั้งค่า + กล่องเตือนบริการถูกตัด — commit `c4a1444` · version→.6**
+- **หน้าตั้งค่า:** ปุ่ม ⚙️ `#btn-settings` ใน header (index.html) เปิด `openSettings()` (util.js) โมดัลรวมสวิตช์ เสียง/สั่น (`.set-row`/`.set-switch` on/off) แทนปุ่มไอคอน 🔊/📳 2 อันเดิม (ถอดออกจาก header + ลบ handler เดิม main.js + ลบ sound-toggle sync ui.js) · แถวสั่นโผล่เฉพาะ `'vibrate' in navigator`
+- **กล่องเตือนบริการถูกตัด:** เดิม `billTick` ตัดบริการเงียบๆ ไม่แจ้งเลย · เพิ่ม `state.pendingCut` (default [], มี migration) push id ตอนตัด (state.js) → `renderDashboard` เรียก `showCutNotice()` (ui.js) เด้ง alertBox รายชื่อบริการที่ถูกตัด+ผลกระทบ (ใช้ UTILITY_UI cutIcon/cutName/cutMsg ครอบ ไฟ/น้ำ/เน็ต/ข้อมูล) · ปุ่ม "ไปจ่ายบิล"
+- **บ้านพัง:** `showHomeRuined` เป็นกล่องกลางจอ+รูปบ้านพังอยู่แล้ว ไม่แตะ
+- ✅ ทดสอบ preview: settings สลับ+สะท้อน state+ปิดถูก · showCutNotice แสดง 2 บริการ+เคลียร์ pendingCut · integration `billTick` บิลค้าง→powerCut+reset หม้อแปลง+push pendingCut ครบ · ไม่มี console error (screenshot tool ค้างกับ overlay เต็มจอ ใช้ DOM/getBoundingClientRect ยืนยันแทน)
+
 **✅ รอบ 32c (7 ก.ค. · Opus): สวิตช์สั่นแยกจากเสียง + กล่องเตือนสำคัญกลางจอ — commit `044242c` · version→.5**
 - **`state.haptic`** (default true, เพิ่มใน DEFAULT_STATE) แยกจาก `state.sound` · ปุ่ม `#haptic-toggle` ใน header (index.html) สลับ 📳/📴 · โผล่เฉพาะเครื่องที่ `'vibrate' in navigator` (main.js `initHapticToggle`) · toast/alert สั่นตาม `state.haptic !== false` ไม่ผูกเสียงแล้ว
 - **`alertBox(html, okText)`** (util.js) กล่องเตือนกลางจอ reuse `.levelup-overlay` (z100) + `.alert-box` ขอบแดง + `.alert-ok` ปุ่มแดง · แตะพื้นหลัง/ปุ่ม = ปิด · แตะในกล่องไม่ปิด · เล่น sfx.wrong + สั่น
