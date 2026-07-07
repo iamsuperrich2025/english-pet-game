@@ -26,7 +26,7 @@
 
 **9. ⭐ คำศัพท์ (มอบ Sonnet 5):** แยก vocab.js → `js/data/vocab/band1-5.js + index.js` · เพิ่ม part of speech ตัวที่ 3 `['research','การวิจัย','n']` โชว์ `research (n.)` ทั้งเกมจับคู่+ข้อสอบ (แก้ game.js 4 จุด) · ขยาย ≥40 คำ/หมวด + หมวดใหม่ 2-4/band รวม ≥2,000 คำ — **คำสั่งเต็มใน `TASK_VOCAB_SONNET.md`** (ห้ามเปลี่ยน id หมวด/en ห้ามซ้ำใน band/th ห้ามซ้ำในหมวด) · 🔶 ค้างครึ่งทาง มีแค่ band1.js untracked · ⚠️ **ห้ามชี้ index.html ไป vocab/ จนเสร็จครบ+commit พร้อมกัน** (เคยทำ production พัง)
 
-**10. 🆕 Project Dictionary A–Z (มอบ Sonnet หลาย session):** อังกฤษ→ไทยเรียง a–z + idioms + phrasal verbs · รูปแบบ `คำ (pos) /IPA/ เสียงอ่านไทย · ประโยคอังกฤษง่ายๆ · ความหมายไทย` · กฎเหล็ก: ทุกๆ ~5k tokens ขึ้นไฟล์ใหม่ ห้ามอ่านไฟล์เก่าย้อนหลัง · บันทึกคำล่าสุด/ถัดไปก่อนขึ้น session ใหม่ · **สเปกเต็มใน `TASK_DICTIONARY_SONNET.md`** · ฝั่งเกม (ทำทีหลัง): ปุ่ม Dictionary ที่ Lobby → layer พื้นฟ้า sci-fi (reuse ระบบแผง) + ช่องค้นหา/แถบ A–Z/lazy-load
+**10. 🔁 Project Dictionary A–Z (เปลี่ยนแผน 7 ก.ค.: ข้อมูลมอบ Gemini — ผู้ใช้รันเอง prompt ใน `PROMPT_DICT_GEMINI.md` · ฝั่ง Claude เหลือต่อระบบเข้าเกม):** อังกฤษ→ไทยเรียง a–z + idioms + phrasal verbs · รูปแบบ `คำ (pos) /IPA/ เสียงอ่านไทย · ประโยคอังกฤษง่ายๆ · ความหมายไทย` · กฎเหล็ก: ทุกๆ ~5k tokens ขึ้นไฟล์ใหม่ ห้ามอ่านไฟล์เก่าย้อนหลัง · บันทึกคำล่าสุด/ถัดไปก่อนขึ้น session ใหม่ · **สเปกเต็มใน `TASK_DICTIONARY_SONNET.md`** · ฝั่งเกม (ทำทีหลัง): ปุ่ม Dictionary ที่ Lobby → layer พื้นฟ้า sci-fi (reuse ระบบแผง) + ช่องค้นหา/แถบ A–Z/lazy-load
 
 ---
 
