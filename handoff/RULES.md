@@ -7,9 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
-- ✅ `/presence` + `/leaderboard` (+ av/ni) + `/users` + `/friendCodes` + `/friendReq` + `/friends` + `/chats` — publish แล้ว
-- ⚠️ **`/gifts` (ข้อ 0.5) — เพิ่มใน "รอบยี่สิบแปด" ยังไม่ publish** → ถ้าไม่ publish การส่งของขวัญจะถูก reject
-- ⚠️ **`/world` + `/tinv` (โลก 3D multiplayer + คำเชิญ — รอบ 41) + c/ct แชทลอยหัว (รอบ 42) + `/rtc` (voice chat — รอบ 43) ยังไม่ publish** → ไม่ publish = ไม่เห็นผู้เล่นอื่น/คำชวน/แชทลอยหัว/เสียงพูดถูก reject ทั้งหมด
+- ✅ **ชุดเต็มล่าสุด publish แล้ว 8 ก.ค. 2026 (ครบถึงรอบ 49):** `/presence` `/leaderboard` `/users` `/friendCodes` `/friendReq` `/friends` `/chats` `/gifts` `/world` (รวม c/ct/m/w) `/tinv` `/rtc` `/class` (muteAll+podium)
+- ✅ ตรวจจากภายนอกแล้ว (curl REST): /presence อ่านได้ 200 · /world และ /class อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้อง
+- ⏳ เหลือ**ทดสอบจริง 2 บัญชี/2 เครื่องบน Pages** (ดู checklist ใน TASKS.md)
 - 🔑 ทุกครั้งที่เพิ่มโซนใหม่ → ส่งก้อนเต็มด้านล่างให้ผู้ใช้ publish ใหม่
 
 ## ก้อนเต็ม (ครอบ 0.1+0.2+0.3+0.4+0.5 + โลก 3D)
