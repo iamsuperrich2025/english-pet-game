@@ -725,7 +725,7 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 
 /* level up overlay */
 .levelup-overlay{
-  position:fixed;inset:0;background:rgba(120,90,160,.45);z-index:70;
+  position:fixed;inset:0;background:rgba(120,90,160,.45);z-index:100;
   display:flex;align-items:center;justify-content:center;animation:fadeIn .3s;
 }
 .levelup-box{

@@ -10,7 +10,7 @@
 4. **จบงาน: บัมพ์ `version.json` → commit เฉพาะไฟล์ที่แก้ (ห้าม `git add -A`) → อัปเดต `handoff/TASKS.md`**
 
 ## 📸 สถานะปัจจุบัน (7 ก.ค. 2026)
-- ✅ **บั๊ก "ของขวัญโดนบัง" แก้แล้ว** (รอบ 31) — ต้นตอ: รูปในกล่องยืนยัน `askConfirm` ไม่ถูกคุมขนาด (CSS scope เฉพาะ `.list-dialog`) · แก้ scope เป็น `.levelup-box` · รอผู้ใช้ hard-refresh ยืนยันบน Pages
+- ✅ **บั๊ก "ของขวัญโดนบัง" แก้แล้ว 2 จุด** (รอบ 31) — (1) รูปในกล่องยืนยัน `askConfirm` ไม่ถูกคุมขนาด → แก้ CSS scope `.list-dialog`→`.levelup-box` · (2) กล่องยืนยัน z-index 70 < picker 85 เลยอยู่หลัง → แก้ `.levelup-overlay` z70→100 · version .2 · รอผู้ใช้ hard-refresh ยืนยันบน Pages
 - ✅ เกม feature-complete · item 0 สังคมออนไลน์เสร็จครบ 0.1–0.5 (login/ชื่อ/เพื่อน/แชท/ของขวัญ)
 - ⚠️ **ค้างฝั่งผู้ใช้:** publish Firebase rules ใหม่ (โซน `/gifts` — ก้อนเต็มใน `handoff/RULES.md`) + ทดสอบจริง 2 บัญชี
 - 🎯 งานถัดไป: เลือกจาก `handoff/TASKS.md` → backlog (item 8 รายได้ออนไลน์ · item 2 ตลาดออนไลน์ · item 3 daily quest)
