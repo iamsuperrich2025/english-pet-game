@@ -40,6 +40,8 @@ const DEFAULT_STATE = {
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
+  voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
+  voiceMode:'all',                    // voice chat: 'all'=คุยทุกคนใน map · 'friends'=เฉพาะเพื่อนที่ invite กันใน map นั้น (ไมค์ไม่จำ — ปิดทุกครั้งที่เข้า เพื่อความปลอดภัยเด็ก)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
@@ -214,6 +216,8 @@ function loadState(){
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
+      if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
+      if(s.voiceMode !== 'all' && s.voiceMode !== 'friends') s.voiceMode = 'all';
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};

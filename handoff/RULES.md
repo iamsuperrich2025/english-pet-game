@@ -9,7 +9,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ## สถานะการ publish
 - ✅ `/presence` + `/leaderboard` (+ av/ni) + `/users` + `/friendCodes` + `/friendReq` + `/friends` + `/chats` — publish แล้ว
 - ⚠️ **`/gifts` (ข้อ 0.5) — เพิ่มใน "รอบยี่สิบแปด" ยังไม่ publish** → ถ้าไม่ publish การส่งของขวัญจะถูก reject
-- ⚠️ **`/world` + `/tinv` (โลก 3D multiplayer + คำเชิญเล่นด้วยกัน — รอบสี่สิบ) ยังไม่ publish** → ถ้าไม่ publish จะเล่นโลก 3D ได้แต่ไม่เห็นผู้เล่นอื่น และส่งคำชวนไม่ได้
+- ⚠️ **`/world` + `/tinv` (โลก 3D multiplayer + คำเชิญ — รอบ 41) + c/ct แชทลอยหัว (รอบ 42) + `/rtc` (voice chat — รอบ 43) ยังไม่ publish** → ไม่ publish = ไม่เห็นผู้เล่นอื่น/คำชวน/แชทลอยหัว/เสียงพูดถูก reject ทั้งหมด
 - 🔑 ทุกครั้งที่เพิ่มโซนใหม่ → ส่งก้อนเต็มด้านล่างให้ผู้ใช้ publish ใหม่
 
 ## ก้อนเต็ม (ครอบ 0.1+0.2+0.3+0.4+0.5 + โลก 3D)
@@ -152,6 +152,23 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "$other": { ".validate": false }
         }
       }
+    },
+    "rtc": {
+      "$map": {
+        "$toUid": {
+          ".read": "auth != null && auth.uid === $toUid",
+          ".write": "auth != null && auth.uid === $toUid",
+          "$msgId": {
+            ".write": "auth != null && newData.child('f').val() === auth.uid",
+            ".validate": "($map === 'adv' || $map === 'haunt') && newData.hasChildren(['f','t','d','ts'])",
+            "f":  { ".validate": "newData.isString() && newData.val().length <= 128" },
+            "t":  { ".validate": "newData.isString() && (newData.val() === 'offer' || newData.val() === 'answer' || newData.val() === 'ice')" },
+            "d":  { ".validate": "newData.isString() && newData.val().length <= 8000" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
     }
   }
 }
@@ -160,6 +177,11 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ## หมายเหตุโครง /world + /tinv (โลก 3D multiplayer — รอบสี่สิบ)
 - `/world/<map>/<uid> = {n, av, x, z, yaw, ts, c?, ct?}` — ตำแหน่งผู้เล่นใน map ('adv'|'haunt') · เขียนเองอ่านได้ทุกคนที่ login · onDisconnect ลบตัวเอง · ส่งถี่สุด ~5.5Hz เฉพาะตอนขยับ · **c/ct = แชทลอยหัว (รอบ 42)**: ข้อความ ≤60 + Date.now ฝั่งส่ง (คงที่ต่อข้อความ — ฝั่งรับเห็น ct เปลี่ยน = ข้อความใหม่ โชว์ 5 วิ) แนบไปกับ set ระหว่างยังสด ผ่านตัวกรอง nameHasBadWord ก่อนส่ง
 - `/tinv/<toUid>/<fromUid> = {map, n, ts}` — คำเชิญเล่นโลก 3D ด้วยกัน · ผู้รับอ่านกล่องตัวเอง ผู้ส่ง/ผู้รับลบได้ · ฝั่งส่งจำใน state.tinvSent (เซฟ cloud) · เจอกันใน map จริงครั้งแรก → ต่างคนต่างรับเงินคืน TINV_CASHBACK (2,000) ฝั่ง client แล้วผู้รับลบคำเชิญ
+
+## หมายเหตุโครง /rtc (voice chat — รอบ 43)
+- `/rtc/<map>/<toUid>/<msgId> = {f:ผู้ส่ง, t:'offer'|'answer'|'ice', d:JSON(SDP/ICE ≤8000), ts}` — **signaling เท่านั้น เสียงจริงวิ่ง P2P (WebRTC) ไม่ผ่าน Firebase**
+- ผู้รับอ่าน+ลบกล่องตัวเอง (ประมวลผลแล้วลบทันที + ล้างตอน join) · คนอื่น push ได้เฉพาะข้อความที่ `f` = uid ตัวเอง
+- ฝั่งเกม: `Voice` ใน adventure3d.js — mesh ต่อสายเมื่อเจอกันใน map (uid น้อยกว่าเป็นผู้ offer) · STUN ของ Google ฟรี ไม่มี TURN (เน็ตมือถือบางเจ้าอาจต่อไม่ติด — ข้อจำกัดที่ยอมรับ) · ไมค์ default ปิดทุกครั้งที่เข้า
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

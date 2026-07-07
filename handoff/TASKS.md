@@ -11,7 +11,7 @@
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
 **โลก 3D ครบ 2 โลกแล้ว (รอบ 40 กลางวัน + รอบ 41 ผีสิง/multiplayer/ชวนเพื่อน) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
-- ⚠️ **ค้างฝั่งผู้ใช้ (รอบ 41): publish Firebase rules ใหม่ (โซน `/world`+`/tinv` — ก้อนเต็ม `handoff/RULES.md`)** ไม่งั้น multiplayer มองไม่เห็นกัน + ส่งคำชวนถูก reject · และถ้าจะอัปเกรดเสียงผี → เจนจาก Suno ตาม `PROMPTS_SOUND.md` วาง `sound/haunt_*.mp3` (ไม่วางก็เล่นได้ เสียงสังเคราะห์ทำงานอยู่แล้ว)
+- ⚠️ **ค้างฝั่งผู้ใช้ (รอบ 41–43): publish Firebase rules ชุดเต็ม (โซน `/world`+c/ct + `/tinv` + `/rtc` — ก้อนเต็ม `handoff/RULES.md`)** ไม่งั้น multiplayer/แชทลอยหัว/คำชวน/voice ถูก reject ทั้งหมด · และถ้าจะอัปเกรดเสียงผี → เจนจาก Suno ตาม `PROMPTS_SOUND.md` วาง `sound/haunt_*.mp3` (ไม่วางก็เล่นได้ เสียงสังเคราะห์ทำงานอยู่แล้ว)
 - ⏳ **รอผู้ใช้ทดสอบจริงบน Pages:** โลก 3D ทั้ง 2 โลก เดสก์ท็อป (เมาส์+WASD) และมือถือ landscape (จอยซ้าย+ลากมองขวา+ปุ่มยิง 🔥 เฉพาะโลกกลางวัน) — ยังไม่ได้เทสต์ touch จริงบนอุปกรณ์ + multiplayer 2 เครื่องจริง + งานค้าง .12–.17 เดิม
 - 🧪 **testkit โลก 3D:** `Adventure3D._t` มี getter camera()/letters/monsters(=ผีในโหมด haunt)/words/inv/peers/hp/mode/running + `damagePlayer(n)/caught()/give(ch,n)(ยัดตัวอักษร→ประกอบคำอัตโนมัติ)/onPeerData(fakeSnap)(จำลองเพื่อนโผล่)/tinvCheck(uid)/exitWorld()` · เข้าเกม: `Adventure3D.start('adv'|'haunt')` ผ่านปุ่มการ์ดตั๋ว · ระวัง: careTick เด้ง alertBox คนป่วยซ้อนหลายชั้นตอน fake state — ตั้ง `playerFedDay=playerSickDay=mealDayKey(Date.now())` ก่อน
 
@@ -31,6 +31,14 @@
 3. (ถ้าต้องการ) เจนเสียงหลอนจาก Suno ตาม `PROMPTS_SOUND.md` → วาง `sound/haunt_ambient.mp3 / haunt_chase.mp3 / haunt_scare.mp3`
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
+
+**✅ รอบ 43 (7 ก.ค. · Fable): Voice chat ใน map 🎤 + quick chat + bubble ธีมหลอน — version→.21**
+- **Voice chat (WebRTC P2P mesh):** เสียงพูดวิ่งตรงระหว่างเครื่อง (ไม่ผ่าน Firebase — ฟรีเหมือนเดิม) · signaling ผ่านโซนใหม่ `/rtc/<map>/<toUid>/<msgId>={f,t:'offer'|'answer'|'ice',d,ts}` ผู้รับอ่าน+ลบกล่องตัวเอง · uid น้อยกว่าเป็นผู้ offer (กัน glare) · `addTransceiver('audio')` ตั้งแต่ต่อสาย → เปิด/ปิดไมค์ใช้ `replaceTrack` ไม่ต้อง renegotiate · STUN Google ฟรี ไม่มี TURN (NAT บางเจ้าต่อไม่ติด — ยอมรับ)
+- **ปุ่ม HUD ขวา 3 ปุ่ม (`.adv-vbtn`):** 🎤 เปิด/ปิดไมค์ (**default ปิดทุกครั้งที่เข้า — ความปลอดภัยเด็ก ไม่จำ**) · 🔊/🔇 ลำโพง (ปิด = mute audio ทุกสาย) · 🌐 ทุกคน/👥 เพื่อน (เฉพาะที่ invite กันใน map นี้ — `tinvLinked()` เช็ก tinvSent+Online.tinv · สลับโหมดตัดสาย/ต่อสายทันที + ไม่รับ offer คนนอก) · spk+mode จำใน `state.voiceSpk/voiceMode`+migration · เสียงเบาตามระยะ (volume=1.15-d/45 ใน tickPeers) · exitWorld → ปิด pc ทุกสาย + `track.stop()` คืนไมค์ให้เครื่อง
+- **Quick chat (ไอเดียต่อยอด 1):** แถวชิป 6 ข้อความใน `#adv-chat-box` (สวัสดี/มาทางนี้/ไปเก็บคำกัน/ช่วยด้วย/เก่งมาก/หนีเร็ว!!) แตะเดียวส่งเลย — เด็กเล็กพิมพ์ช้า+ปลอดภัย
+- **Bubble ธีมหลอน (ไอเดียต่อยอด 2):** โหมด haunt — bubble/echo/ชิป เป็นกรอบดำ ตัวเขียวเรืองแสง (#7cffb0 + shadowBlur)
+- **RULES.md เพิ่มโซน `/rtc`** (รวม /world c/ct + /tinv — **ผู้ใช้ยังไม่ publish ทั้งชุด**)
+- ✅ ทดสอบ preview (โลกผี): ปุ่ม 3 ปุ่มโผล่+สถานะเริ่มถูก (ไมค์ปิด/ลำโพงเปิด/ทุกคน) · สลับลำโพง/โหมดจำใน state · `allowed()` โหมดเพื่อน: invited=true คนแปลกหน้า=falsy · ชิป quick chat ส่ง echo+ปิดกล่อง · bubble ธีมหลอนสร้างได้ · pc ensure/drop สะอาด · setMic ใน preview ไม่มีสิทธิ์ → toast ไม่ crash · ไม่มี console error · **เสียงจริง 2 เครื่องต้องเทสต์บน Pages (ผู้ใช้)**
 
 **✅ รอบ 42 (7 ก.ค. · Fable): แชทลอยหัวใน map แบบ Roblox 💬 — version→.20**
 - **ส่ง:** ปุ่ม 💬 ใต้ปุ่มออก (หรือกด Enter บนเดสก์ท็อป) → กล่องพิมพ์ ≤60 ตัว → ผ่าน `nameHasBadWord` ก่อนส่ง → echo ของตัวเองโผล่ล่างจอ 5 วิ · แนบไปกับ `/world` เดิมเป็น field `c`(ข้อความ)+`ct`(Date.now ฝั่งส่ง คงที่ต่อข้อความ) ระหว่างยังสด ≤6 วิ — **ไม่มีโซน DB ใหม่ แต่ rules /world ต้องเพิ่ม validator c/ct (รอผู้ใช้ publish รอบเดียวกับ /world+/tinv)**

@@ -161,12 +161,15 @@ function bubbleSprite(text){
   if(lines.length<2 && cur) lines.push(cur);
   if(lines.length===2 && cur && lines[1]!==cur) lines[1]=lines[1].slice(0,-1)+'…';
   const h=lines.length>1?110:78;
+  const spooky=mode==='haunt';                    // โลกผี: กรอบดำ ตัวเขียวเรืองแสง
   c.clearRect(0,0,360,120);
-  c.fillStyle='rgba(255,255,255,.95)';
+  c.fillStyle=spooky?'rgba(8,8,20,.92)':'rgba(255,255,255,.95)';
   c.beginPath(); c.roundRect(6,6,348,h-12,20); c.fill();
-  c.strokeStyle='rgba(0,0,0,.25)'; c.lineWidth=3; c.stroke();
-  c.fillStyle='#333'; c.textAlign='center'; c.textBaseline='middle';
+  c.strokeStyle=spooky?'rgba(124,255,176,.75)':'rgba(0,0,0,.25)'; c.lineWidth=3; c.stroke();
+  if(spooky){ c.shadowColor='#7cffb0'; c.shadowBlur=14; }
+  c.fillStyle=spooky?'#7cffb0':'#333'; c.textAlign='center'; c.textBaseline='middle';
   lines.forEach((ln,i)=>c.fillText(ln,180,(lines.length>1?36:h/2)+i*36));
+  c.shadowBlur=0;
   const tex=new THREE.CanvasTexture(cv);
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
   spr.scale.set(3.0,1.0,1);
@@ -739,6 +742,7 @@ function netJoin(){
   worldRef.on('child_added',onPeerData);
   worldRef.on('child_changed',onPeerData);
   worldRef.on('child_removed',s=>removePeer(s.key));
+  Voice.join();
 }
 function sendPos(force){
   if(!myRef) return;
@@ -793,6 +797,7 @@ function onPeerData(snap){
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
     tinvCheck(uid);
+    Voice.onPeer(uid);
   }
   p.tgt={x:d.x,z:d.z};
   // แชทลอยหัว: ct เปลี่ยน = ข้อความใหม่ (ct คงที่ต่อข้อความ ฝั่งส่งแนบซ้ำได้ไม่เด้งซ้ำ)
@@ -805,10 +810,12 @@ function removePeer(uid){
   const p=peers[uid];
   if(!p) return;
   removePeerBubble(p);
+  Voice.drop(uid);
   scene.remove(p.spr); p.spr.material.map.dispose(); p.spr.material.dispose();
   delete peers[uid];
 }
 function netLeave(){
+  Voice.leave();
   if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
   if(myRef){ myRef.remove().catch(()=>{}); }
   Object.keys(peers).forEach(removePeer);
@@ -825,7 +832,146 @@ function tickPeers(dt,now){
       if(now>p.bubble.until) removePeerBubble(p);
       else p.bubble.spr.position.set(p.cur.x,3.1,p.cur.z);   // ลอยตามหัว
     }
+    // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
+    const en=Voice.pcs[uid];
+    if(en && en.audio && !en.audio.muted){
+      const d=Math.hypot(p.cur.x-camera.position.x,p.cur.z-camera.position.z);
+      en.audio.volume=Math.max(0,Math.min(1,1.15-d/45));
+    }
   });
+}
+
+/* ============================================================
+   Voice chat ใน map — WebRTC P2P mesh (เสียงวิ่งตรงระหว่างเครื่อง)
+   Firebase ใช้แค่ signaling: /rtc/<map>/<toUid>/<msgId>={f,t,d,ts}
+   (ผู้รับอ่าน+ลบกล่องตัวเอง · ผู้ส่ง push ได้เฉพาะ f=ตัวเอง)
+   🎤 ไมค์ปิดเป็นค่าเริ่มต้นทุกครั้งที่เข้า (ความปลอดภัยเด็ก — ไม่จำข้ามรอบ)
+   🔊 ลำโพง + โหมด (all=ทุกคนใน map / friends=เฉพาะเพื่อนที่ invite กันใน map นี้)
+   จำใน state.voiceSpk/voiceMode · เสียงเบาลงตามระยะห่างในโลก (สไตล์ Roblox)
+   ============================================================ */
+const RTC_CFG={iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
+function tinvLinked(uid){
+  const sent=state.tinvSent && state.tinvSent[uid];
+  const got=(typeof Online!=='undefined' && Online.tinv)?Online.tinv[uid]:null;
+  return (sent && sent.map===mode) || (got && got.map===mode);
+}
+const Voice={
+  mic:false, spk:true, vmode:'all',
+  stream:null, pcs:{}, inRef:null,
+  allowed(uid){ return this.vmode==='all' || tinvLinked(uid); },
+  join(){
+    if(!netReady()) return;
+    this.spk=state.voiceSpk!==false;
+    this.vmode=state.voiceMode==='friends'?'friends':'all';
+    this.mic=false;                                        // ปิดไมค์เสมอตอนเข้า
+    this.inRef=Online.db.ref('rtc/'+mode+'/'+onlineKey());
+    this.inRef.remove().catch(()=>{});                     // ล้างข้อความค้างจากรอบก่อน
+    this.inRef.on('child_added',(s)=>{ const m=s.val(); s.ref.remove().catch(()=>{}); if(m) this.handle(m); });
+    updateVoiceBtns();
+  },
+  leave(){
+    if(this.inRef){ this.inRef.off(); this.inRef.remove().catch(()=>{}); this.inRef=null; }
+    Object.keys(this.pcs).forEach(uid=>this.drop(uid));
+    if(this.stream){ this.stream.getTracks().forEach(tr=>tr.stop()); this.stream=null; }  // คืนไมค์ให้เครื่อง
+    this.mic=false;
+  },
+  sig(uid,t,d){
+    if(!netReady()) return;
+    Online.db.ref('rtc/'+mode+'/'+uid).push({
+      f:onlineKey(), t, d:JSON.stringify(d), ts:firebase.database.ServerValue.TIMESTAMP,
+    }).catch(()=>{});
+  },
+  ensure(uid){
+    if(this.pcs[uid]) return this.pcs[uid];
+    const pc=new RTCPeerConnection(RTC_CFG);
+    const en=this.pcs[uid]={pc, audio:null, sender:null, iceQ:[], haveRemote:false};
+    const tr=pc.addTransceiver('audio',{direction:'sendrecv'});   // ช่องเสียงมีเสมอ — สลับ track ทีหลัง ไม่ต้อง renegotiate
+    en.sender=tr.sender;
+    if(this.mic && this.stream) tr.sender.replaceTrack(this.stream.getAudioTracks()[0]).catch(()=>{});
+    pc.onicecandidate=e=>{ if(e.candidate) this.sig(uid,'ice',e.candidate.toJSON()); };
+    pc.ontrack=e=>{
+      if(!en.audio){ en.audio=document.createElement('audio'); en.audio.autoplay=true; document.body.appendChild(en.audio); }
+      en.audio.srcObject=e.streams[0];
+      en.audio.muted=!this.spk;
+    };
+    return en;
+  },
+  drop(uid){
+    const en=this.pcs[uid];
+    if(!en) return;
+    try{ en.pc.close(); }catch(e){}
+    if(en.audio){ en.audio.srcObject=null; en.audio.remove(); }
+    delete this.pcs[uid];
+  },
+  onPeer(uid){                                             // เพื่อนโผล่ใน map → ฝั่ง uid น้อยกว่าเป็นคนชวนต่อสาย (กันชนกัน)
+    if(!this.inRef || !this.allowed(uid) || this.pcs[uid]) return;
+    if(onlineKey()<uid) this.call(uid);
+  },
+  async call(uid){
+    const en=this.ensure(uid);
+    try{
+      const of=await en.pc.createOffer();
+      await en.pc.setLocalDescription(of);
+      this.sig(uid,'offer',en.pc.localDescription.toJSON());
+    }catch(e){}
+  },
+  async handle(m){
+    const uid=m.f;
+    let d; try{ d=JSON.parse(m.d); }catch(e){ return; }
+    if(m.t==='offer'){
+      if(!this.allowed(uid)) return;                       // โหมดเพื่อน: ไม่รับสายคนนอก
+      const en=this.ensure(uid);
+      try{
+        await en.pc.setRemoteDescription(d); en.haveRemote=true;
+        en.iceQ.splice(0).forEach(c=>en.pc.addIceCandidate(c).catch(()=>{}));
+        const an=await en.pc.createAnswer();
+        await en.pc.setLocalDescription(an);
+        this.sig(uid,'answer',en.pc.localDescription.toJSON());
+      }catch(e){}
+    }else if(m.t==='answer'){
+      const en=this.pcs[uid]; if(!en) return;
+      try{ await en.pc.setRemoteDescription(d); en.haveRemote=true;
+           en.iceQ.splice(0).forEach(c=>en.pc.addIceCandidate(c).catch(()=>{})); }catch(e){}
+    }else if(m.t==='ice'){
+      const en=this.pcs[uid]; if(!en) return;
+      if(en.haveRemote) en.pc.addIceCandidate(d).catch(()=>{});
+      else en.iceQ.push(d);
+    }
+  },
+  async setMic(on){
+    if(on && !this.stream){
+      try{ this.stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
+      catch(e){ sfx.wrong(); toast('🎤 เปิดไมค์ไม่สำเร็จ — ต้องกด "อนุญาต" ไมโครโฟนในเบราว์เซอร์นะ'); updateVoiceBtns(); return; }
+    }
+    this.mic=on;
+    const track=on&&this.stream?this.stream.getAudioTracks()[0]:null;
+    Object.values(this.pcs).forEach(en=>{ if(en.sender) en.sender.replaceTrack(track).catch(()=>{}); });
+    showBanner(on?'🎤 <b>เปิดไมค์แล้ว</b><br><small>เพื่อนใน map ได้ยินเสียงหนู</small>'
+                 :'🎤 <b>ปิดไมค์แล้ว</b><br><small>ไม่มีใครได้ยินเสียงหนู</small>');
+    updateVoiceBtns();
+  },
+  setSpk(on){
+    this.spk=on; state.voiceSpk=on; saveState();
+    Object.values(this.pcs).forEach(en=>{ if(en.audio) en.audio.muted=!on; });
+    updateVoiceBtns();
+  },
+  setMode(m){
+    this.vmode=m; state.voiceMode=m; saveState();
+    Object.keys(this.pcs).forEach(uid=>{ if(!this.allowed(uid)) this.drop(uid); });   // ตัดสายคนนอกทันที
+    Object.keys(peers).forEach(uid=>this.onPeer(uid));                                // ต่อสายที่ขาด (ฝั่งเราเป็นผู้ชวน)
+    showBanner(m==='friends'?'👥 <b>คุยเฉพาะเพื่อนที่ชวนกัน</b><br><small>ได้ยิน/พูดเฉพาะเพื่อนที่ invite กันใน map นี้</small>'
+                            :'🌐 <b>คุยกับทุกคนใน map</b>');
+    updateVoiceBtns();
+  },
+};
+function updateVoiceBtns(){
+  const mic=document.getElementById('adv-mic'), spk=document.getElementById('adv-spk'), vm=document.getElementById('adv-vmode');
+  if(!mic) return;
+  mic.textContent=Voice.mic?'🎤 เปิด':'🎤 ปิด';
+  mic.classList.toggle('v-off',!Voice.mic);
+  spk.textContent=Voice.spk?'🔊 เปิด':'🔇 ปิด';
+  spk.classList.toggle('v-off',!Voice.spk);
+  vm.textContent=Voice.vmode==='friends'?'👥 เพื่อน':'🌐 ทุกคน';
 }
 
 /* ---------- ส่วนลดชวนเพื่อน: เจอกันใน map จริง → เงินคืน (ครั้งเดียว/map) ---------- */
@@ -973,15 +1119,27 @@ function buildDom(){
   .adv-touch #adv-hint{display:none}
   #adv-chat-btn{position:absolute;top:160px;right:8px;pointer-events:auto;background:rgba(33,150,243,.92);
     color:#fff;border:2px solid #fff;border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
-  #adv-chat-box{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:none;gap:6px;
+  .adv-vbtn{position:absolute;right:8px;pointer-events:auto;background:rgba(67,160,71,.92);color:#fff;
+    border:2px solid #fff;border-radius:12px;font-weight:800;font-size:13px;padding:6px 10px;font-family:inherit;min-width:86px}
+  .adv-vbtn.v-off{background:rgba(97,97,97,.92)}
+  #adv-mic{top:202px} #adv-spk{top:242px} #adv-vmode{top:282px;background:rgba(123,31,162,.92)}
+  #adv-chat-box{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;gap:6px;
     background:rgba(0,0,0,.6);border-radius:14px;padding:8px;pointer-events:auto;width:min(420px,86vw)}
+  .adv-chat-row{display:flex;gap:6px}
+  #adv-quick{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+  .adv-qc{background:rgba(255,255,255,.92);border:none;border-radius:9px;padding:5px 10px;
+    font-size:13px;font-weight:700;font-family:inherit;color:#333}
+  .adv-qc:active{background:#ffe082}
   #adv-chat-input{flex:1;border:none;border-radius:9px;padding:8px 10px;font-size:15px;font-family:inherit;outline:none}
   #adv-chat-send{background:#43a047;color:#fff;border:none;border-radius:9px;font-weight:800;font-size:14px;
     padding:8px 14px;font-family:inherit}
   #adv-selfmsg{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);max-width:70vw;
     background:rgba(255,255,255,.95);color:#333;border-radius:14px;padding:5px 13px;font-size:14px;font-weight:600;
     display:none;pointer-events:none}
-  #adv-selfmsg.on{display:block}`;
+  #adv-selfmsg.on{display:block}
+  .adv-haunt #adv-selfmsg{background:rgba(8,8,20,.92);color:#7cffb0;border:1px solid rgba(124,255,176,.6);
+    text-shadow:0 0 8px rgba(124,255,176,.8)}
+  .adv-haunt .adv-qc{background:rgba(20,20,38,.95);color:#7cffb0;border:1px solid rgba(124,255,176,.4)}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -1001,9 +1159,15 @@ function buildDom(){
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <button id="adv-shoot">🔥</button>
     <button id="adv-chat-btn">💬 แชท</button>
+    <button class="adv-vbtn v-off" id="adv-mic">🎤 ปิด</button>
+    <button class="adv-vbtn" id="adv-spk">🔊 เปิด</button>
+    <button class="adv-vbtn" id="adv-vmode">🌐 ทุกคน</button>
     <div id="adv-chat-box">
-      <input id="adv-chat-input" maxlength="60" placeholder="พิมพ์สั้นๆ โชว์ลอยหัว 5 วิ...">
-      <button id="adv-chat-send">ส่ง</button>
+      <div id="adv-quick"></div>
+      <div class="adv-chat-row">
+        <input id="adv-chat-input" maxlength="60" placeholder="พิมพ์สั้นๆ โชว์ลอยหัว 5 วิ...">
+        <button id="adv-chat-send">ส่ง</button>
+      </div>
     </div>
     <div id="adv-selfmsg"></div>
     <div class="adv-hud" id="adv-hint"></div>`;
@@ -1029,9 +1193,22 @@ function buildDom(){
   shootBtn.addEventListener('touchstart',e=>{ e.preventDefault(); shoot(); },{passive:false});
   shootBtn.addEventListener('click',e=>{ e.preventDefault(); shoot(); });
 
+  overlayEl.querySelector('#adv-mic').addEventListener('click',()=>Voice.setMic(!Voice.mic));
+  overlayEl.querySelector('#adv-spk').addEventListener('click',()=>Voice.setSpk(!Voice.spk));
+  overlayEl.querySelector('#adv-vmode').addEventListener('click',()=>Voice.setMode(Voice.vmode==='all'?'friends':'all'));
+
   overlayEl.querySelector('#adv-chat-btn').addEventListener('click',()=>toggleChatBox());
   overlayEl.querySelector('#adv-chat-send').addEventListener('click',()=>{
     sendChat(chatInputEl.value); toggleChatBox(false);
+  });
+  // quick chat: เด็กเล็กพิมพ์ช้า → แตะเดียวส่งเลย (ปลอดภัย ไม่ต้องพิมพ์เอง)
+  const QUICK_CHATS=['สวัสดี! 👋','มาทางนี้! 🏃','ไปเก็บคำกัน! 🔤','ช่วยด้วย! 🆘','เก่งมาก! 🎉','หนีเร็ว!! 👻'];
+  const quickEl=overlayEl.querySelector('#adv-quick');
+  QUICK_CHATS.forEach(txt=>{
+    const b=document.createElement('button');
+    b.className='adv-qc'; b.textContent=txt;
+    b.addEventListener('click',()=>{ sendChat(txt); toggleChatBox(false); });
+    quickEl.appendChild(b);
   });
   chatInputEl.addEventListener('keydown',e=>{
     e.stopPropagation();                                   // กัน WASD ในช่องพิมพ์ไปขยับตัวละคร
@@ -1087,7 +1264,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box')) continue;
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn')) continue;
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -1235,6 +1412,10 @@ function start(md){
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
   hintEl.textContent=M.hint;
   hudHuntEl.style.display='none';
+  Voice.spk=state.voiceSpk!==false;                        // สะท้อนค่าที่จำไว้แม้ยังออฟไลน์ (join ทับอีกทีตอนต่อเน็ต)
+  Voice.vmode=state.voiceMode==='friends'?'friends':'all';
+  Voice.mic=false;
+  updateVoiceBtns();
 
   overlayEl.classList.add('on');
   renderer.setSize(window.innerWidth,window.innerHeight);
@@ -1274,7 +1455,7 @@ window.Adventure3D={
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
-    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat,
+    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
