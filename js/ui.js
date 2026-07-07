@@ -1014,10 +1014,10 @@ function renderDashboard(){
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
   document.getElementById('coin-count').textContent = fmtNum(state.coins);
   document.getElementById('coin-today').textContent = fmtNum(state.daily.coins);
-  /* แถบโปรไฟล์: ชื่อในเกมเด่นก่อน (ข้อ 0.2) + ✏️ แก้ชื่อ + ชื่อจริง/ชั้นต่อท้าย */
+  /* แถบโปรไฟล์: ตัวละคร (ข้อ 4) + ชื่อในเกมเด่นก่อน (ข้อ 0.2) + ✏️ แก้ชื่อ + ชื่อจริง/ชั้นต่อท้าย */
   const chip = document.getElementById('student-chip');
   if(state.student){
-    chip.innerHTML = `📛 <b>${escapeHTML(state.profileName || state.student.first)}</b>`
+    chip.innerHTML = `${playerAvatarHTML()} <b>${escapeHTML(state.profileName || state.student.first)}</b>`
       + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
       + ` · 🎓 ${escapeHTML(state.student.first)} ${escapeHTML(state.student.last)}`
       + ` · ชั้น ${state.student.grade} (ศัพท์${gradeBand(state.student.grade).label})`;
@@ -1074,6 +1074,7 @@ function renderDashboard(){
     renderHomeCard();
     renderPhoneCard();
     renderComputerCard();
+    renderTicketCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -1268,6 +1269,7 @@ function renderDashboard(){
   renderHomeCard();
   renderPhoneCard();
   renderComputerCard();
+  renderTicketCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -1430,6 +1432,15 @@ function feedWith(p, food){
   saveState();
   makeHappy(4000);
   showFeedResult(p, food, shapeChange);
+}
+
+/* ตัวละครผู้เลี้ยง (ข้อ 4): มีภาพ player_male/female.png ใช้ภาพ ไม่มีใช้อีโมจิแทน */
+const AVATAR_UI = {male:{emoji:'🦸‍♂️', name:'เด็กชาย'}, female:{emoji:'🦸‍♀️', name:'เด็กหญิง'}};
+function playerAvatarHTML(){
+  const av = state.playerAvatar;
+  if(!av || !AVATAR_UI[av]) return '📛';
+  const img = IMG_FILES[`player_${av}`];
+  return img ? `<img class="avatar-chip-img" src="${img}" alt="">` : AVATAR_UI[av].emoji;
 }
 
 /* ข้อความประจำร่าง (ข้อ 5.2) — ใช้ทั้งการ์ดสัตว์ + กล่องกินเสร็จ */
@@ -2125,6 +2136,65 @@ function sellComputer(){
       addCoins(COMP_SELL);
       sfx.buy();
       toast(`💸 ขายคอมพิวเตอร์แล้ว ได้เงินคืน 🪙${fmtNum(COMP_SELL)}`);
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* ============================================================
+   🎫 การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7)
+   ซื้อได้เมื่อมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัว — ยังไม่โต = ล็อก
+   ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · โลกผจญภัย 3D (ข้อ 8) กำลังก่อสร้าง
+   ============================================================ */
+function renderTicketCard(){
+  const el = document.getElementById('ticket-card');
+  if(!el) return;
+  const hasAdult = state.pets.some(p=>isAdult(p));
+  let body;
+  if(state.advTicket){
+    body = `
+      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🎫✨</div>
+        <b>หนูมีตั๋วโลกผจญภัยแล้ว!</b><br>
+        <small>🚧 โลกผจญภัย 3D กำลังก่อสร้าง เปิดเร็วๆ นี้ — ตั๋วของหนูพร้อมใช้ทันทีที่ประตูเปิด<br>
+        (ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)</small>
+      </div>`;
+  }else if(!hasAdult){
+    body = `
+      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — เลี้ยงน้องให้<b>โตเต็มวัย (Lv.3)</b> อย่างน้อย 1 ตัวก่อน ถึงจะซื้อตั๋วเข้าโลกผจญภัย 3D ได้นะ</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
+      <div class="home-desc">
+        <div style="font-size:44px">🎫</div>
+        <div><b>ตั๋วเข้าโลกผจญภัย 3D</b><br>
+        <small>ออกตามหาตัวอักษรมาประกอบคำศัพท์ในโลกกว้าง ได้เหรียญมากกว่าเกมจับคู่!<br>
+        🚧 กำลังก่อสร้าง เปิดเร็วๆ นี้ — ซื้อตั๋วเตรียมไว้ก่อนได้ · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้</small></div>
+      </div>
+      <button class="big-btn blue home-btn" id="btn-buy-ticket">🎫 ซื้อตั๋ว 🪙${fmtNum(TICKET_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-ticket');
+  if(buy) buy.addEventListener('click', buyTicket);
+}
+
+function buyTicket(){
+  if(state.advTicket) return;
+  if(!state.pets.some(p=>isAdult(p))){ sfx.wrong(); toast('🔒 ต้องมีสัตว์โตเต็มวัย (Lv.3) ก่อนถึงจะซื้อตั๋วได้นะ'); return; }
+  if(state.coins < TICKET_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกผจญภัย 🪙${fmtNum(TICKET_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🎫 ซื้อตั๋วโลกผจญภัย</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(TICKET_PRICE)}</b><br>
+    ตั๋วเข้าโลกผจญภัย 3D — ตามหาตัวอักษรประกอบคำศัพท์<br>
+    <small>🚧 โลกกำลังก่อสร้าง เปิดเร็วๆ นี้ ตั๋วพร้อมใช้ทันทีที่เปิด<br>ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย!', ()=>{
+      state.coins -= TICKET_PRICE;
+      state.advTicket = true;
+      sfx.buy();
+      toast('🎫 ได้ตั๋วโลกผจญภัยแล้ว! รอประตูเปิดเร็วๆ นี้ 🚧✨');
       saveState();
       renderDashboard();
     });

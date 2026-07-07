@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v1';
+const CACHE_VERSION = 'pet-vocab-v2';   // v2: ล้าง 404 ที่เคยถูก cache (บั๊กรูปใหม่ไม่โผล่)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -64,11 +64,14 @@ self.addEventListener('fetch', (e)=>{
   const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url.pathname);
 
   if(isImg){
-    // cache-first สำหรับรูป
+    // cache-first สำหรับรูป — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
+    // ห้าม cache 404: ภาพที่ยังไม่ได้เจน พอเจนเสร็จวางไฟล์แล้วต้องโผล่ได้เลย
     e.respondWith(
       caches.match(req).then(hit=> hit || fetch(req).then(res=>{
-        const copy = res.clone();
-        caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+        if(res.ok){
+          const copy = res.clone();
+          caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+        }
         return res;
       }).catch(()=>hit))
     );
@@ -76,10 +79,13 @@ self.addEventListener('fetch', (e)=>{
   }
 
   // network-first สำหรับโค้ด/หน้าเว็บ (ออนไลน์ได้ของใหม่ ออฟไลน์ใช้แคช)
+  // cache เฉพาะ res.ok — กัน error ทับสำเนาดีที่เคยมี
   e.respondWith(
     fetch(req).then(res=>{
-      const copy = res.clone();
-      caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+      if(res.ok){
+        const copy = res.clone();
+        caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
+      }
       return res;
     }).catch(()=> caches.match(req).then(hit=> hit || caches.match('./index.html')))
   );

@@ -916,6 +916,33 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 .shape-text.shape-thin{color:#b23a48;background:#ffe8e8;}
 .shape-text.shape-progress{color:#3d8fb5;background:#e8f6ff;}
 
+/* ---------- ตัวละครผู้เลี้ยง (คิว 7725691507 ข้อ 4) ---------- */
+.avatar-pick{display:flex;gap:10px;justify-content:center;margin:6px 0 10px;}
+.avatar-opt{
+  flex:1;max-width:150px;background:#fff8ef;border:2px solid #f5ddc0;border-radius:16px;
+  padding:10px 6px;font-family:inherit;font-size:14px;color:#6a5a78;cursor:pointer;transition:transform .1s;
+}
+.avatar-opt:active{transform:scale(.95);}
+.avatar-opt .av-face{display:block;font-size:34px;margin-bottom:2px;}
+.avatar-opt.sel{
+  background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:var(--yellow-d);
+  box-shadow:0 0 10px 2px rgba(245,197,66,.55);font-weight:bold;color:#a8791a;
+}
+.avatar-chip-img{width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:-5px;}
+.set-avatar-btns{display:flex;gap:6px;}
+.avatar-mini{
+  border:2px solid #e0d4f0;background:#f6f0ff;border-radius:999px;padding:4px 10px;
+  font-family:inherit;font-size:13px;color:#7a5ca8;cursor:pointer;
+}
+.avatar-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:var(--yellow-d);color:#a8791a;font-weight:bold;}
+
+/* ---------- การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7) ---------- */
+.ticket-owned{
+  background:linear-gradient(180deg,#f3e9ff,#e2d0ff);border:2px solid var(--purple-d);
+  border-radius:16px;padding:10px 12px;font-size:14px;color:#5a4a6a;line-height:1.5;
+}
+.ticket-owned small{color:#8a7aa0;}
+
 /* ============================================================
    สินค้าสะสม & ตลาดซื้อขายต่อ (Global Trade HQ)
    ============================================================ */

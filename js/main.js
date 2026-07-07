@@ -2,6 +2,16 @@
 /* ============================================================
    ปุ่มหลัก + INIT
    ============================================================ */
+/* ข้อ 4: เลือกตัวละครผู้เลี้ยง (ชาย/หญิง) ตอนลงทะเบียน — ไฮไลต์ตัวที่เลือก */
+let regAvatar = null;
+document.querySelectorAll('#reg-avatar .avatar-opt').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    sfx.select();
+    regAvatar = btn.dataset.av;
+    document.querySelectorAll('#reg-avatar .avatar-opt').forEach(b=>b.classList.toggle('sel', b === btn));
+  });
+});
+
 document.getElementById('btn-register').addEventListener('click', ()=>{
   const first = document.getElementById('reg-first').value.trim();
   const last  = document.getElementById('reg-last').value.trim();
@@ -18,8 +28,14 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
     toast('ชื่อในเกม: ' + nick.msg, 2400);
     return;
   }
+  if(!regAvatar){
+    sfx.wrong();
+    toast('เลือกตัวละครของหนูก่อนนะ 🦸');
+    return;
+  }
   state.student = {first, last, grade};
   state.profileName = nick.name;
+  state.playerAvatar = regAvatar;      // ข้อ 4: ตัวละครผู้เลี้ยง
   state.playerFedDay = mealDayKey(Date.now());   // ข้อ 6: ผู้เล่นใหม่ถือว่าอิ่มมื้อล่าสุด (เริ่มนับมื้อหน้า กันป่วยตั้งแต่วันแรก)
   saveState();
   authPushProfile();                   // ชื่อในเกมขึ้น /users/<uid>/profile/name
@@ -66,7 +82,8 @@ document.getElementById('settings-badge').addEventListener('click', (e)=>{ e.sto
 probeImages(Object.keys(PETS).map(k=>startImgKey(k))).then(()=>{
   if(document.getElementById('screen-select').classList.contains('active')) renderPetShop();
 });
-Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGiftImages()]).then(()=>{
+Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGiftImages(),
+             probeImages(['player_male','player_female'])]).then(()=>{   // ข้อ 4: ภาพตัวละครผู้เลี้ยง
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
 });
 

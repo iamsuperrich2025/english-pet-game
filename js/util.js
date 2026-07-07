@@ -227,6 +227,13 @@ function openSettings(){
       <span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
       <button class="set-switch"></button>
     </div>
+    <div class="set-row" id="set-avatar">
+      <span class="set-label">🦸 ตัวละครของหนู</span>
+      <span class="set-avatar-btns">
+        <button class="avatar-mini" data-av="male">🦸‍♂️ ชาย</button>
+        <button class="avatar-mini" data-av="female">🦸‍♀️ หญิง</button>
+      </span>
+    </div>
     <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
     <div style="margin-top:16px"><button class="set-close">เสร็จแล้ว</button></div>
   </div>`;
@@ -240,7 +247,14 @@ function openSettings(){
     const animOn = !state.noAnim;   // สวิตช์ "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     a.textContent = animOn ? 'เปิด' : 'ปิด';
     a.className = 'set-switch ' + (animOn ? 'on' : 'off');
+    // ข้อ 4: ไฮไลต์ตัวละครที่เลือกอยู่ (ผู้เล่นเดิมยังไม่เลือก = ไม่ไฮไลต์)
+    overlay.querySelectorAll('.avatar-mini').forEach(b=>b.classList.toggle('sel', state.playerAvatar === b.dataset.av));
   };
+  overlay.querySelectorAll('.avatar-mini').forEach(b=>b.addEventListener('click', ()=>{
+    state.playerAvatar = b.dataset.av;
+    saveState(); sfx.select(); paint();
+    if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ทันที
+  }));
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
   });
@@ -275,7 +289,8 @@ function openHelp(){
       <div class="help-item"><b>💰 หาเงินเพิ่ม</b><br>🌳 ฟาร์มปลูกผัก · 🏭 โรงงานผลิตของ · 🏪 ตลาดขายของ · 📱 มือถือ/💻 คอมพิวเตอร์ ช่วยเพิ่มรายได้</div>
       <div class="help-item"><b>📚 หมวดคำศัพท์ &amp; แบบทดสอบ</b><br>ฝึกคำศัพท์เป็นหมวด สอบผ่านรับรางวัลใหญ่ครั้งแรก</div>
       <div class="help-item"><b>👥 เพื่อน &amp; 🎁 ของขวัญ</b><br>เพิ่มเพื่อนด้วยรหัส 6 ตัว แชทและส่งของขวัญให้กันได้</div>
-      <div class="help-item"><b>⚙️ ตั้งค่า</b><br>เปิด/ปิด เสียง สั่นเตือน และเอฟเฟกต์เคลื่อนไหว (ปิดได้ถ้าเครื่องช้า)</div>
+      <div class="help-item"><b>🎫 ตั๋วโลกผจญภัย</b><br>เลี้ยงน้องให้โตเต็มวัย (Lv.3) แล้วซื้อตั๋วเข้า <b>โลกผจญภัย 3D</b> ได้ที่ร้านค้า (🪙5,000) — ตามหาตัวอักษรมาประกอบคำศัพท์ ได้เหรียญเยอะกว่าเกมจับคู่! 🚧 กำลังก่อสร้าง เปิดเร็วๆ นี้</div>
+      <div class="help-item"><b>⚙️ ตั้งค่า</b><br>เปิด/ปิด เสียง สั่นเตือน และเอฟเฟกต์เคลื่อนไหว (ปิดได้ถ้าเครื่องช้า) · เปลี่ยนตัวละครของหนู 🦸 ได้ที่นี่ด้วย</div>
     </div>
     <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
   </div>`;

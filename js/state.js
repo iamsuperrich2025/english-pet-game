@@ -32,6 +32,8 @@ const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ข�
 const DEFAULT_STATE = {
   student:null,                       // {first, last, grade}
   profileName:null,                   // ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว โชว์ใน presence/leaderboard)
+  playerAvatar:null,                  // ข้อ 4: ตัวละครผู้เลี้ยง 'male'/'female' (เลือกตอนลงทะเบียน · เปลี่ยนได้ในตั้งค่า · โชว์เฉพาะในเครื่อง)
+  advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
@@ -198,6 +200,8 @@ function loadState(){
       // คิว 7725691507 ข้อ 6: เซฟเก่ายังไม่มีระบบข้าวเย็นคน → ถือว่ากินมื้อล่าสุดแล้ว (เริ่มนับมื้อหน้า)
       if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
       if(typeof s.foodQuizDay !== 'string') s.foodQuizDay = '';
+      if(s.playerAvatar !== 'male' && s.playerAvatar !== 'female') s.playerAvatar = null;  // ข้อ 4: ผู้เล่นเดิมค่อยเลือกในตั้งค่า
+      if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
@@ -293,6 +297,7 @@ function assetValue(){
   for(const id of state.owned){ const it = ITEMS.find(i=>i.id === id); if(it) v += it.price; } // เสื้อผ้าในตู้
   if(state.phone) v += PHONE_PRICE;                                                        // มือถือ (ราคาเต็ม)
   if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
+  if(state.advTicket) v += TICKET_PRICE;                                                   // การ์ดตั๋วโลกผจญภัย (ข้อ 7)
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
   for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)
