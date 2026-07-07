@@ -24,6 +24,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 32e (7 ก.ค. · Opus): ตั้งค่าเพิ่ม (ปิดแอนิเมชัน+วิธีเล่น) + จุดแดงแจ้งบิลค้าง — commit `35b4762` · version→.7**
+- **ปิดแอนิเมชัน:** สวิตช์ "✨ เอฟเฟกต์เคลื่อนไหว" ในตั้งค่า · `state.noAnim` (default false, มี migration) → `html.no-anim` (CSS `animation:none!important;transition:none!important`) · `applyNoAnim()` เรียกใน renderDashboard + ตอนสลับ
+- **วิธีเล่น:** ปุ่ม `#set-help` ในตั้งค่า → `openHelp()` กล่องสรุป 7 หัวข้อ (เกมจับคู่/เลี้ยงน้อง/บ้าน+บิล/หาเงิน/แบบทดสอบ/เพื่อน+ของขวัญ/ตั้งค่า)
+- **จุดแดงแจ้งบิลค้าง (ผู้ใช้เลือก = จุดแดง ไม่เด้งป๊อปอัพ):** `updateBillBadges()` ใน renderDashboard · badge `#home-bill-badge` (บ้าน: maint/elec/water/trash) · `#shop-bill-badge` (ร้านค้า: net/data) ใช้ `.rail-badge` เดิม แสดง "!"
+- **ธีมมืด: ผู้ใช้เลือกข้ามไว้ก่อน** (สไตล์ชีตฝังสีขาว/สีสดเยอะ ทำเต็มเป็นงานใหญ่ + screenshot tool ค้าง verify ยาก) — ถ้าจะทำรอบหน้าต้องแมป hardcoded colors → CSS var ก่อน
+- ✅ ทดสอบ preview (DOM/computed): badge บ้าน/ร้านค้าโผล่-หายตามบิลถูก · no-anim ตัด transition .15s→0s จริง · settings anim toggle+state+class ครบ · openHelp 7 หัวข้อ · ไม่มี console error
+
 **✅ รอบ 32d (7 ก.ค. · Opus): หน้าตั้งค่า + กล่องเตือนบริการถูกตัด — commit `c4a1444` · version→.6**
 - **หน้าตั้งค่า:** ปุ่ม ⚙️ `#btn-settings` ใน header (index.html) เปิด `openSettings()` (util.js) โมดัลรวมสวิตช์ เสียง/สั่น (`.set-row`/`.set-switch` on/off) แทนปุ่มไอคอน 🔊/📳 2 อันเดิม (ถอดออกจาก header + ลบ handler เดิม main.js + ลบ sound-toggle sync ui.js) · แถวสั่นโผล่เฉพาะ `'vibrate' in navigator`
 - **กล่องเตือนบริการถูกตัด:** เดิม `billTick` ตัดบริการเงียบๆ ไม่แจ้งเลย · เพิ่ม `state.pendingCut` (default [], มี migration) push id ตอนตัด (state.js) → `renderDashboard` เรียก `showCutNotice()` (ui.js) เด้ง alertBox รายชื่อบริการที่ถูกตัด+ผลกระทบ (ใช้ UTILITY_UI cutIcon/cutName/cutMsg ครอบ ไฟ/น้ำ/เน็ต/ข้อมูล) · ปุ่ม "ไปจ่ายบิล"
