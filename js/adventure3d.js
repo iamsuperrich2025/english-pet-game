@@ -744,6 +744,7 @@ function netJoin(){
   worldRef.on('child_changed',onPeerData);
   worldRef.on('child_removed',s=>removePeer(s.key));
   Voice.join();
+  podiumJoin();
 }
 function sendPos(force){
   if(!myRef) return;
@@ -830,6 +831,7 @@ function removePeer(uid){
   renderBoard();
 }
 function netLeave(){
+  podiumLeave();
   Voice.leave();
   if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
   if(myRef){ myRef.remove().catch(()=>{}); }
@@ -1026,6 +1028,78 @@ function updateVoiceBtns(){
   tm.style.display=teacher?'block':'none';
   tm.textContent=Voice.roomMuted?'👩‍🏫 เปิดเสียงห้อง':'👩‍🏫 ปิดเสียงห้อง';
   tm.classList.toggle('v-muting',Voice.roomMuted);
+  const pb=document.getElementById('adv-podbtn');
+  if(pb) pb.style.display=teacher?'block':'none';
+}
+
+/* ============================================================
+   🏁 พิธีประกาศแชมป์ (ครูกด "จบรอบแข่ง") — /class/<map>/podium
+   ครู snapshot อันดับ top 3 เขียนขึ้น DB → ทุกเครื่องเห็นโพเดียม 🥇🥈🥉
+   + แตรฉลอง · คนติดโพเดียมรับโบนัส (เช็ก uid ตัวเอง) · จบพิธีคะแนน
+   รีเซ็ตเริ่มรอบใหม่ · ครูลบ node ใน 15 วิ + กันเล่นซ้ำด้วย id ในหน่วยความจำ
+   ============================================================ */
+const PODIUM_BONUS=[100,50,25];       // โบนัสที่ 1/2/3
+let podiumRef=null, lastPodiumId=0;
+function podiumJoin(){
+  if(!netReady()) return;
+  podiumRef=Online.db.ref('class/'+mode+'/podium');
+  podiumRef.on('value',(s)=>{
+    const v=s.val();
+    if(!v || typeof v.id!=='number' || v.id===lastPodiumId) return;
+    if(Math.abs(Date.now()-v.id)>5*60*1000) return;   // พิธีเก่าค้าง DB — ไม่เล่นซ้ำ
+    lastPodiumId=v.id;
+    showPodium(v);
+  });
+}
+function podiumLeave(){ if(podiumRef){ podiumRef.off(); podiumRef=null; } }
+function endRound(){
+  if(!(typeof isTeacher==='function' && isTeacher())) return;
+  if(!podiumRef){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — จบรอบแข่งไม่ได้'); return; }
+  const rows=[{u:onlineKey(), n:onlineDisplayName(), w:sessionWords}];
+  Object.keys(peers).forEach(uid=>rows.push({u:uid, n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
+  rows.sort((a,b)=>b.w-a.w);
+  const ref=podiumRef;
+  ref.set({id:Date.now(), by:onlineDisplayName(),
+           ts:firebase.database.ServerValue.TIMESTAMP, top:rows.slice(0,3)}).catch(()=>{});
+  setTimeout(()=>{ ref.remove().catch(()=>{}); },15000);
+}
+function showPodium(v){
+  const top=Array.isArray(v.top)?v.top:Object.values(v.top||{});
+  const me=(typeof onlineKey==='function' && typeof Auth!=='undefined' && Auth.user)?onlineKey():'';
+  let myBonus=0;
+  top.forEach((r,i)=>{ if(r && me && r.u===me) myBonus=PODIUM_BONUS[i]||0; });
+  if(myBonus){ addCoins(myBonus); saveState(); sessionCoins+=myBonus; }
+  sessionWords=0;                                    // เริ่มรอบแข่งใหม่ทุกคน
+  if(myRef) sendPos(true);
+  renderBoard(); renderHudTop();
+  const wasRunning=running;
+  running=false;                                     // พักเกมระหว่างพิธี (ผีไม่แอบจับ)
+  const medal=['🥇','🥈','🥉'], hgt=[104,74,56], ord=[1,0,2];   // วางเรียง 2-1-3
+  const cols=ord.filter(i=>top[i]).map(i=>{
+    const r=top[i];
+    return `<div class="adv-pd-col">
+      <div class="adv-pd-name">${medal[i]} ${escapeHTML(r.n||'?')}<br><small>${r.w||0} คำ</small></div>
+      <div class="adv-pd-stand s${i}" style="height:${hgt[i]}px">${i+1}</div>
+    </div>`;
+  }).join('');
+  const pd=document.getElementById('adv-podium');
+  pd.innerHTML=`<div class="adv-pd-box">
+    <div class="adv-pd-title">🏁 จบรอบแข่ง! ผลจาก ${escapeHTML(v.by||'คุณครู')}</div>
+    <div class="adv-pd-row">${cols||'<small style="color:#fff">รอบนี้ยังไม่มีคะแนน — รอบใหม่เริ่มแล้ว!</small>'}</div>
+    <div class="adv-pd-me">${myBonus?`🎁 หนูได้โบนัสโพเดียม +${myBonus} 🪙!`:'รอบใหม่เริ่มแล้ว เก็บคำเลย! 🔤'}</div>
+    <small class="adv-pd-hint">แตะเพื่อปิด</small>
+  </div>`;
+  pd.classList.add('on');
+  sfx.rankup();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([80,60,80]);
+  const close=()=>{
+    pd.classList.remove('on'); pd.removeEventListener('click',close); clearTimeout(tm);
+    if(wasRunning && overlayEl.classList.contains('on') && hp>0 && !banEl.classList.contains('stay')){
+      running=true; clock.getDelta(); loop();
+    }
+  };
+  const tm=setTimeout(close,8000);
+  pd.addEventListener('click',close);
 }
 
 /* ---------- ส่วนลดชวนเพื่อน: เจอกันใน map จริง → เงินคืน (ครั้งเดียว/map) ---------- */
@@ -1200,6 +1274,25 @@ function buildDom(){
   #adv-mic{top:202px} #adv-spk{top:242px} #adv-vmode{top:282px;background:rgba(123,31,162,.92)}
   #adv-tmute{top:322px;background:rgba(198,40,40,.92);display:none}
   #adv-tmute.v-muting{background:rgba(46,125,50,.92)}
+  #adv-podbtn{top:362px;background:rgba(249,168,37,.95);color:#5d3a00;display:none}
+  #adv-podium{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.74);z-index:8;pointer-events:auto}
+  #adv-podium.on{display:flex}
+  .adv-pd-box{text-align:center;max-width:88vw}
+  .adv-pd-title{color:#ffd54f;font-weight:900;font-size:20px;text-shadow:0 2px 6px #000;margin-bottom:14px}
+  .adv-pd-row{display:flex;align-items:flex-end;gap:12px;justify-content:center}
+  .adv-pd-col{display:flex;flex-direction:column;align-items:center;gap:6px;animation:advPdRise .7s ease-out}
+  .adv-pd-name{color:#fff;font-weight:800;font-size:15px;text-shadow:0 1px 4px #000;max-width:120px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .adv-pd-name small{color:#ffe082;font-weight:700;white-space:normal}
+  .adv-pd-stand{width:92px;border-radius:9px 9px 0 0;color:rgba(0,0,0,.55);font-weight:900;font-size:26px;
+    display:flex;align-items:center;justify-content:center}
+  .adv-pd-stand.s0{background:linear-gradient(180deg,#ffe082,#f9a825)}
+  .adv-pd-stand.s1{background:linear-gradient(180deg,#e8e8e8,#9e9e9e)}
+  .adv-pd-stand.s2{background:linear-gradient(180deg,#ffab91,#8d6e63)}
+  .adv-pd-me{margin-top:14px;color:#8ef7a5;font-weight:900;font-size:17px;text-shadow:0 1px 4px #000}
+  .adv-pd-hint{display:block;margin-top:8px;color:#ccc;font-size:11px}
+  @keyframes advPdRise{0%{opacity:0;transform:translateY(42px)}100%{opacity:1;transform:translateY(0)}}
   #adv-chat-box{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;gap:6px;
     background:rgba(0,0,0,.6);border-radius:14px;padding:8px;pointer-events:auto;width:min(420px,86vw)}
   .adv-chat-row{display:flex;gap:6px}
@@ -1241,6 +1334,8 @@ function buildDom(){
     <button class="adv-vbtn" id="adv-spk">🔊 เปิด</button>
     <button class="adv-vbtn" id="adv-vmode">🌐 ทุกคน</button>
     <button class="adv-vbtn" id="adv-tmute">👩‍🏫 ปิดเสียงห้อง</button>
+    <button class="adv-vbtn" id="adv-podbtn">🏁 จบรอบแข่ง</button>
+    <div id="adv-podium"></div>
     <div id="adv-chat-box">
       <div id="adv-quick"></div>
       <div class="adv-chat-row">
@@ -1277,6 +1372,7 @@ function buildDom(){
   overlayEl.querySelector('#adv-spk').addEventListener('click',()=>Voice.setSpk(!Voice.spk));
   overlayEl.querySelector('#adv-vmode').addEventListener('click',()=>Voice.setMode(Voice.vmode==='all'?'friends':'all'));
   overlayEl.querySelector('#adv-tmute').addEventListener('click',()=>Voice.toggleRoomMute());
+  overlayEl.querySelector('#adv-podbtn').addEventListener('click',endRound);
 
   overlayEl.querySelector('#adv-chat-btn').addEventListener('click',()=>toggleChatBox());
   overlayEl.querySelector('#adv-chat-send').addEventListener('click',()=>{
@@ -1345,7 +1441,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn')) continue;
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium')) continue;
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -1536,7 +1632,7 @@ window.Adventure3D={
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
-    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked,
+    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
