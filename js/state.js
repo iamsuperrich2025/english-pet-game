@@ -293,8 +293,14 @@ function dailyTick(){
 }
 function addCoins(n){        // ใช้ตอน "ได้" เหรียญเท่านั้น (ตอนจ่ายหักตรงๆ ได้เลย)
   dailyTick();
+  const before = state.coins;
   state.coins += n;
   state.daily.coins += n;
+  // เหรียญเพิ่งข้ามเส้นราคาน้องที่ยังไม่มี → แจ้งทันที ไม่ต้องกลับไปเช็กที่ร้าน (เด้งเฉพาะจังหวะข้ามเส้น)
+  if(typeof PETS !== 'undefined' && typeof toast === 'function'){
+    const got = Object.keys(PETS).filter(k => before < PETS[k].price && state.coins >= PETS[k].price && !hasPetType(k));
+    if(got.length) toast(`🎉 เหรียญพอรับ${got.map(k=>PETS[k].eggName).join(' และ ')}แล้ว! ไปร้านสัตว์เลี้ยงได้เลย`);
+  }
   // การเลื่อน/ลดแรงค์ตรวจรวมที่ refreshRank() (เรียกใน careTick) เพราะ net worth
   // เปลี่ยนได้จากหลายทาง (ได้เหรียญ/ซื้อ-ขายทรัพย์สิน/จ่ายบิล) — ตรวจที่จุดนิ่งจุดเดียวกันเที่ยงตรงกว่า
 }
