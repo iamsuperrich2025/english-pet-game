@@ -62,6 +62,7 @@ document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderD
 document.getElementById('btn-stats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-quiz-back').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
 document.getElementById('btn-petshop-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
+document.getElementById('btn-petshop-play').addEventListener('click', ()=>startGame(null)); // ลิงก์ใต้เหรียญในร้านสัตว์เลี้ยง → เข้าเกมสะสมเหรียญ
 document.getElementById('btn-back').addEventListener('click', ()=>{
   clearInterval(game.timerId);
   renderDashboard();

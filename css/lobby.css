@@ -28,7 +28,8 @@ body{
 *::-webkit-scrollbar-thumb{background:#9cc4ec;border-radius:8px;}
 *::-webkit-scrollbar-track{background:transparent;}
 
-#app{max-width:none;padding:0;}
+/* flow-root กัน margin ของ .screen collapse ทะลุขึ้น html (ไม่งั้นทั้งหน้าสูงเกินจอ → scrollbar 8-12px) */
+#app{max-width:none;padding:0;display:flow-root;}
 
 h1{color:var(--sky-d);text-shadow:none;}
 .subtitle{color:#5b7ea6;}
@@ -64,6 +65,25 @@ h1{color:var(--sky-d);text-shadow:none;}
   border:1px solid rgba(181,212,244,.9);border-radius:22px;
   padding:16px 22px 26px;box-shadow:0 18px 50px rgba(3,15,35,.5);
 }
+
+/* ---------- ร้านสัตว์เลี้ยง: บีบให้พอดีจอเดียว ไม่มี scrollbar (ขนาดอิงความสูงจอ dvh) ---------- */
+#screen-select.screen.active{margin:8px auto;padding:10px 22px 14px;max-height:calc(100dvh - 16px);}
+#screen-select .game-top{margin-bottom:4px;}
+#screen-select h1{font-size:clamp(18px,4.8dvh,24px);margin:0;}
+#screen-select .subtitle{font-size:clamp(12px,3.1dvh,15px);margin:2px 0 10px;line-height:1.4;}
+#screen-select .egg-card{padding:8px 8px 10px;}
+#screen-select .egg-img{width:auto;height:clamp(56px,18dvh,104px);}
+#screen-select .egg-name{font-size:clamp(14px,3.6dvh,17px);margin-top:4px;}
+#screen-select .egg-desc{font-size:clamp(11px,2.6dvh,12.5px);}
+#screen-select .pet-price{margin-top:4px;font-size:13.5px;padding:1px 12px;}
+/* มุมขวาบน: เหรียญ + ลิงก์เข้าเล่นเกม (เกมคือทางหาเหรียญ) */
+.petshop-topright{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.petshop-play-link{
+  background:none;border:none;padding:0;cursor:pointer;font-family:inherit;
+  font-size:clamp(12px,3dvh,14px);font-weight:600;color:var(--sky-d);
+  text-decoration:underline;text-underline-offset:3px;
+}
+.petshop-play-link:active{opacity:.7;}
 
 /* จอเตี้ย (มือถือแนวนอน) → บีบหน้า login/ลงทะเบียนให้พอดีจอ ไม่ต้องเลื่อนหาปุ่ม */
 @media (max-height:520px){
