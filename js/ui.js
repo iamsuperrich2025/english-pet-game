@@ -308,6 +308,20 @@ function updateBillBadges(){
   const set = (id, on)=>{ const b = document.getElementById(id); if(!b) return; if(on){ b.textContent = '!'; b.style.display = ''; } else b.style.display = 'none'; };
   set('home-bill-badge', homeDue);
   set('shop-bill-badge', shopDue);
+  updateSettingsBadge();
+}
+
+/* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด (attention รวมให้เห็นแต่ไกล) */
+function updateSettingsBadge(){
+  const b = document.getElementById('settings-badge');
+  if(!b) return;
+  const bills = ['maint','elec','water','trash','net','data'].filter(id => billOutstanding(id) > 0).length;
+  const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
+  const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
+  const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  const n = bills + reqs + chats + gifts;
+  if(n > 0){ b.textContent = n; b.style.display = ''; }
+  else b.style.display = 'none';
 }
 function updateFriendBadge(){
   const b = document.getElementById('friend-badge');
@@ -318,6 +332,7 @@ function updateFriendBadge(){
   const n = reqs + chats;
   if(n > 0){ b.textContent = n; b.style.display = ''; }
   else b.style.display = 'none';
+  updateSettingsBadge();
 }
 
 function renderFriendPanel(){
@@ -582,6 +597,7 @@ function updateGiftBadge(){
   const n = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
   if(n > 0){ b.textContent = n; b.style.display = ''; }
   else b.style.display = 'none';
+  updateSettingsBadge();
 }
 
 /* แผงห้องของขวัญ: (1) ของที่รับมารอกดรับ/ไม่รับ (2) ของขวัญของฉัน (3) ที่ส่งไปยังรอผู้รับ */
