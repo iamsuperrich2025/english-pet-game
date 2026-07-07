@@ -27,6 +27,11 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 32g (7 ก.ค. · Opus): badge ปุ่มตั้งค่า เด้ง+สั่นตอนเลขเพิ่ม + แตะเปิดเมนูสรุป — commit `64f9a1d` · version→.9**
+- **เด้ง+สั่น:** `updateSettingsBadge` เก็บ `_lastSettingsN` · เลข "เพิ่ม" (มีของใหม่) → `.badge-pop` (keyframe `badgePop` .45s) + `navigator.vibrate(30)` ครั้งเดียว · ไม่เด้งตอนโหลดแรก/เลขเท่าเดิม/ลด · เคารพ `html.no-anim` (animName→none) + `state.haptic`
+- **เมนูสรุป:** แตะ `#settings-badge` → `openAttentionSummary()` (js/ui.js) กล่อง `.attn-box` รายการที่ค้าง (บิลบ้าน→panel-home · บิลร้านค้า net/data→panel-shop · เพื่อน/แชท→panel-friends · ของขวัญ→panel-gifts) แต่ละแถวกด→`openPanel()` ไปหน้านั้น · wire ใน main.js `e.stopPropagation()` กันเปิดหน้าตั้งค่า
+- ✅ ทดสอบ preview (mock login): เด้ง/สั่นถูกทุกเคส (เพิ่ม/เท่าเดิม/ลด/haptic ปิด) · เมนู 4 แถวถูก กด→เปิด panel ถูก · แตะ badge เปิดสรุปไม่เปิดตั้งค่า · keyframe computed = badgePop, no-anim = none · ไม่มี console error
+
 **✅ รอบ 32f (7 ก.ค. · Opus): จุดแดงเลขรวมบนปุ่ม ⚙️ ตั้งค่า — commit `2065b8e` · version→.8**
 - badge `#settings-badge` บนปุ่ม `#btn-settings` (index.html) แสดง **เลขรวม attention** = บิลค้าง(6 ชนิด, นับจำนวนบิล) + คำขอเพื่อน/แชทใหม่ + ของขวัญที่ยังไม่เปิด (ผู้ใช้เคาะ: รวมของขวัญ + เลขรวม)
 - `updateSettingsBadge()` (js/ui.js) ผูกท้าย `updateBillBadges`/`updateFriendBadge`/`updateGiftBadge` → อัปเดตสดทุกจุดที่ badge ย่อยอัปเดต (+ renderDashboard ผ่าน updateBillBadges)
