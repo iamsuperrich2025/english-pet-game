@@ -26,6 +26,7 @@ const DEFAULT_STATE = {
   ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
   bills:{},                           // บิลรายเดือน: {maint:{month:'YYYY-MM', due, paid}, ...} (ค่าไฟ/น้ำ/เน็ต/ขยะ เสียบเพิ่มได้ · trash มี field fine สะสมค่าปรับ)
   pendingRuin:null,                   // บ้านเพิ่งพัง (id บ้าน) — ให้ UI โชว์ฉากบ้านพังแล้วเคลียร์
+  pendingCut:[],                      // บริการเพิ่งถูกตัด (['elec','water'...]) — ให้ UI เด้งกล่องเตือนแล้วเคลียร์
   powerCut:false,                     // ถูกตัดไฟ (ค้างค่าไฟข้ามเดือน) — บ้านมืด แอร์ใช้ไม่ได้
   transformerBought:false,            // ซื้อหม้อแปลงใหม่แล้ว รอจ่ายบิลค้างเพื่อให้ไฟกลับมา
   waterCut:false,                     // ถูกตัดน้ำ (ค้างค่าน้ำข้ามเดือน) — สัตว์ขาดน้ำจนป่วย
@@ -125,6 +126,7 @@ function loadState(){
       if(!s.daily || typeof s.daily !== 'object') s.daily = {date:'', coins:0};
       if(!s.bills || typeof s.bills !== 'object') s.bills = {};
       if(s.pendingRuin === undefined) s.pendingRuin = null;
+      if(!Array.isArray(s.pendingCut)) s.pendingCut = [];
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
@@ -337,6 +339,8 @@ function billTick(now){
         if(carry > 0 && !state[u.cutKey]){
           state[u.cutKey] = true;
           if(u.fixKey) state[u.fixKey] = false;
+          if(!Array.isArray(state.pendingCut)) state.pendingCut = [];
+          state.pendingCut.push(id);   // ให้ UI เด้งกล่องเตือน "ถูกตัด..." (showCutNotice)
         }
         state.bills[id] = {month: ym, due: carry + u.cost(state.home), paid: 0};
       }

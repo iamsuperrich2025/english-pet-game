@@ -734,6 +734,26 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   font-family:inherit;font-size:17px;font-weight:bold;cursor:pointer;
 }
 .alert-ok:active{transform:translateY(2px);box-shadow:0 2px 0 #a83a35;}
+/* หน้าตั้งค่า (openSettings) */
+.settings-box{max-width:330px;}
+.set-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  margin-top:12px;padding:11px 14px;background:#f3eef8;border-radius:14px;
+}
+.set-label{font-weight:bold;font-size:16px;color:#5a4a6a;}
+.set-switch{
+  border:none;cursor:pointer;border-radius:999px;padding:8px 20px;min-width:70px;
+  font-family:inherit;font-size:14px;font-weight:bold;color:#fff;
+}
+.set-switch.on{background:linear-gradient(135deg,#4fbf6a,#3da354);box-shadow:0 3px 0 #2f8442;}
+.set-switch.off{background:#b8a8cc;box-shadow:0 3px 0 #96859f;}
+.set-switch:active{transform:translateY(2px);box-shadow:none;}
+.set-close{
+  background:linear-gradient(135deg,#8a6fb0,#7358a0);box-shadow:0 4px 0 #5c467f;
+  color:#fff;border:none;border-radius:999px;padding:10px 28px;
+  font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;
+}
+.set-close:active{transform:translateY(2px);box-shadow:0 2px 0 #5c467f;}
 
 /* แถบแจ้งเวอร์ชันใหม่ (PWA update) — ค้างจนกดอัปเดต/ปิด */
 .update-banner{

@@ -857,12 +857,12 @@ function showRankUp(before, after){
 function renderDashboard(){
   careTick();
   dailyTick();
+  if(Array.isArray(state.pendingCut) && state.pendingCut.length) showCutNotice();
   const now = Date.now();
 
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
   document.getElementById('coin-count').textContent = fmtNum(state.coins);
   document.getElementById('coin-today').textContent = fmtNum(state.daily.coins);
-  document.getElementById('sound-toggle').textContent = state.sound ? '🔊' : '🔇';
   /* แถบโปรไฟล์: ชื่อในเกมเด่นก่อน (ข้อ 0.2) + ✏️ แก้ชื่อ + ชื่อจริง/ชั้นต่อท้าย */
   const chip = document.getElementById('student-chip');
   if(state.student){
@@ -1286,6 +1286,25 @@ function showHomeRuined(){
   </div>`;
   overlay.querySelector('button').addEventListener('click', ()=>{ overlay.remove(); renderDashboard(); });
   document.body.appendChild(overlay);
+}
+
+/* กล่องเตือนบริการถูกตัด (ค่าไฟ/น้ำ/เน็ต/ข้อมูล — billTick ตั้ง state.pendingCut ไว้) */
+function showCutNotice(){
+  const ids = (state.pendingCut || []).filter(id => UTILITY_UI[id]);
+  state.pendingCut = [];
+  saveState();
+  if(!ids.length) return;
+  const rows = ids.map(id=>{
+    const u = UTILITY_UI[id];
+    return `<div style="margin-top:10px;text-align:left;background:#fbeceb;border-radius:12px;padding:9px 12px">
+      <div style="font-weight:bold;color:#b23a48">${u.cutIcon} ${u.cutName}</div>
+      <div style="color:#6a5a78;font-size:13.5px;line-height:1.45;margin-top:2px">${u.cutMsg}</div>
+    </div>`;
+  }).join('');
+  alertBox(`<div style="font-size:52px;line-height:1">⚠️</div>
+    <div style="font-size:20px;font-weight:bold;margin-top:6px;color:#b23a48">มีบริการถูกตัดแล้ว!</div>
+    <div style="color:#6a5a78;margin-top:4px;font-size:13.5px;line-height:1.45">ค้างจ่ายข้ามเดือนเลยโดนตัด — รีบไปจ่ายบิลค้างที่การ์ดบ้าน/มือถือ/คอม เพื่อให้กลับมาใช้ได้นะ</div>
+    ${rows}`, 'ไปจ่ายบิล');
 }
 
 function renderHomeCard(){

@@ -202,3 +202,41 @@ function alertBox(html, okText='เข้าใจแล้ว'){
   if(typeof sfx !== 'undefined') sfx.wrong();
   if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,60,40]);
 }
+
+/* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น ไว้ที่เดียว) ---------- */
+function openSettings(){
+  const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay settings-overlay';
+  overlay.innerHTML = `<div class="levelup-box settings-box">
+    <h2 style="margin:0 0 6px">⚙️ ตั้งค่า</h2>
+    <div class="set-row" id="set-sound">
+      <span class="set-label">🔊 เสียงในเกม</span>
+      <button class="set-switch"></button>
+    </div>
+    ${hapticSupported ? `<div class="set-row" id="set-haptic">
+      <span class="set-label">📳 สั่นเตือน</span>
+      <button class="set-switch"></button>
+    </div>` : ''}
+    <div style="margin-top:18px"><button class="set-close">เสร็จแล้ว</button></div>
+  </div>`;
+  const paint = ()=>{
+    const s = overlay.querySelector('#set-sound .set-switch');
+    s.textContent = state.sound ? 'เปิด' : 'ปิด';
+    s.className = 'set-switch ' + (state.sound ? 'on' : 'off');
+    const h = overlay.querySelector('#set-haptic .set-switch');
+    if(h){ const on = state.haptic !== false; h.textContent = on ? 'เปิด' : 'ปิด'; h.className = 'set-switch ' + (on ? 'on' : 'off'); }
+  };
+  overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
+    state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
+  });
+  const hSwitch = overlay.querySelector('#set-haptic .set-switch');
+  if(hSwitch) hSwitch.addEventListener('click', ()=>{
+    state.haptic = (state.haptic === false); saveState(); paint();
+    if(state.haptic && navigator.vibrate) navigator.vibrate(50);
+  });
+  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  paint();
+  document.body.appendChild(overlay);
+}
