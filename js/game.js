@@ -24,7 +24,7 @@ function startGame(cat){
   hintBtn.style.display = (p && p.type==='cat' && abilityOn(p)) ? 'block' : 'none';
   newRound();
   showScreen('screen-game');
-  if(p && p.sick) toast('🤒 น้องป่วยอยู่ จะไม่ได้ EXP — เก็บเหรียญไปจ่ายค่ารักษานะ!', 2600);
+  if(p && p.sick) alertBox('<div style="font-size:56px;line-height:1">🤒</div><div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">น้องป่วยอยู่นะ</div><div style="margin-top:8px;color:#6a5a78;line-height:1.5">เล่นได้เหรียญตามปกติ แต่ <b>จะไม่ได้ EXP</b> จนกว่าจะรักษาหาย — เก็บเหรียญไปจ่ายค่ารักษากันนะ! 🩺</div>', 'ลุยเก็บเหรียญ!');
 }
 
 function newRound(){

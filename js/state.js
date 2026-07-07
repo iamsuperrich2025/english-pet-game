@@ -18,7 +18,7 @@ const DEFAULT_STATE = {
   rp:0,                               // Rank Points
   coins:0,
   daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
-  sound:true, totalMatches:0,
+  sound:true, haptic:true, totalMatches:0,
   owned:[],                           // ไอเทมที่ซื้อแล้ว (ตู้เสื้อผ้ารวม ใช้ได้ทุกตัว)
   pets:[],                            // สัตว์ที่เลี้ยงอยู่ทั้งหมด (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
   active:0,                           // ตัวที่กำลังดูแลอยู่

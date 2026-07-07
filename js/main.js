@@ -55,6 +55,20 @@ document.getElementById('sound-toggle').addEventListener('click', ()=>{
   document.getElementById('sound-toggle').textContent = state.sound ? '🔊' : '🔇';
   if(state.sound) sfx.select();
 });
+// ปุ่มสั่นเตือน (แยกจากเสียง) — โผล่เฉพาะเครื่องที่รองรับ navigator.vibrate (มือถือ)
+(function initHapticToggle(){
+  const b = document.getElementById('haptic-toggle');
+  if(!b || !('vibrate' in navigator)) return;   // เดสก์ท็อปไม่รองรับ → ซ่อนปุ่มไว้
+  b.style.display = '';
+  const paint = ()=>{ b.textContent = (state.haptic !== false) ? '📳' : '📴'; };
+  paint();
+  b.addEventListener('click', ()=>{
+    state.haptic = (state.haptic === false);   // ปิดอยู่ → เปิด · ไม่งั้น → ปิด
+    saveState();
+    paint();
+    if(state.haptic) navigator.vibrate(50);
+  });
+})();
 /* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป
    (เด็กเข้าใจผิดว่าเป็น logout → เซฟหายถาวรทั้งเครื่องและ cloud)
    ถ้าต้องรีเซ็ตจริงให้ทำผ่าน console: localStorage.removeItem(STORAGE_KEY) + ลบ /users/<uid>/save ใน DB */

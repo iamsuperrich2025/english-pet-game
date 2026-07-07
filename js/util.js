@@ -86,7 +86,7 @@ function toast(msg, ms=1800){
     t.appendChild(span); t.appendChild(x);
     document.body.appendChild(t);
     if(nowMs() - lastWrongAt > 200 && typeof sfx !== 'undefined') sfx.wrong();  // เสียงเตือน (ไม่ซ้ำถ้าเพิ่งเล่นไป)
-    if(state.sound && navigator.vibrate) navigator.vibrate(50);                 // สั่นเบาๆ
+    if(state.haptic !== false && navigator.vibrate) navigator.vibrate(50);      // สั่นเบาๆ (สวิตช์แยกจากเสียง)
     restackToasts();                       // ค้างไว้ ไม่ตั้ง setTimeout
     return;
   }
@@ -184,4 +184,21 @@ function askConfirm(html, okText, onOk){
   overlay.querySelector('.cf-no').addEventListener('click', ()=>overlay.remove());
   overlay.querySelector('.cf-ok').addEventListener('click', ()=>{ overlay.remove(); onOk(); });
   document.body.appendChild(overlay);
+}
+
+/* ---------- กล่องเตือนสำคัญกลางจอ (สำหรับคำเตือนที่ห้ามพลาด เช่น น้องป่วย) ---------- */
+// html = เนื้อหา (ใส่ emoji ใหญ่ + ข้อความได้) · ปุ่มเดียว กด/แตะนอกกล่อง = ปิด
+function alertBox(html, okText='เข้าใจแล้ว'){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay alert-overlay';
+  overlay.innerHTML = `<div class="levelup-box alert-box">
+    ${html}
+    <div style="margin-top:16px"><button class="cf-ok alert-ok">${okText}</button></div>
+  </div>`;
+  const close = ()=>overlay.remove();
+  overlay.querySelector('.cf-ok').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });   // แตะพื้นหลังปิดได้
+  document.body.appendChild(overlay);
+  if(typeof sfx !== 'undefined') sfx.wrong();
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,60,40]);
 }
