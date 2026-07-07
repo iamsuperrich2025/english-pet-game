@@ -143,6 +143,11 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .attn-txt{flex:1;line-height:1.35;}
 .attn-txt small{color:#8a7a9a;}
 .attn-go{font-size:22px;color:#a98bec;font-weight:bold;flex:none;}
+.attn-total{
+  margin-top:12px;text-align:center;font-size:15px;color:#5a4a6a;
+  background:var(--yellow);border:2px dashed var(--yellow-d);border-radius:12px;padding:8px 10px;
+}
+.attn-total b{color:#b8860b;}
 .attn-box .set-close{display:block;margin:0 auto;}
 
 /* ---------- สภาพอากาศ ---------- */

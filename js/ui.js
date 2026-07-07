@@ -311,8 +311,25 @@ function updateBillBadges(){
   updateSettingsBadge();
 }
 
+/* ตั้งเลข badge + เด้งครั้งเดียวตอน "เพิ่มขึ้น" (มีของใหม่เข้า) — ใช้ร่วมกันทุก badge นับเลข (เพื่อน/ของขวัญ/รวม)
+   คืน true ถ้าเลขเพิ่ม (ให้ badge รวมเอาไปสั่น) · ไม่เด้งตอนโหลดแรก/เลขเท่าเดิม/ลด · no-anim ปิดการเด้งเอง */
+const _badgeLast = {};
+function setBadge(el, n){
+  if(!el) return false;
+  if(n > 0){ el.textContent = n; el.style.display = ''; }
+  else el.style.display = 'none';
+  const key = el.id, last = _badgeLast[key];
+  const increased = (last != null && n > last && n > 0);
+  if(increased){
+    el.classList.remove('badge-pop'); void el.offsetWidth;   // รีสตาร์ตแอนิเมชัน
+    el.classList.add('badge-pop');
+    el.addEventListener('animationend', ()=>el.classList.remove('badge-pop'), {once:true});
+  }
+  _badgeLast[key] = n;
+  return increased;
+}
+
 /* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด (attention รวมให้เห็นแต่ไกล) */
-let _lastSettingsN = null;   // เลขล่าสุด — เด้ง/สั่นเฉพาะตอน "เพิ่มขึ้น" (มีของใหม่เข้า)
 function updateSettingsBadge(){
   const b = document.getElementById('settings-badge');
   if(!b) return;
@@ -320,29 +337,25 @@ function updateSettingsBadge(){
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
-  const n = bills + reqs + chats + gifts;
-  if(n > 0){ b.textContent = n; b.style.display = ''; }
-  else b.style.display = 'none';
-  // มีของใหม่เข้า (เลขเพิ่ม) → เด้งครั้งเดียว + สั่นเบาๆ · ไม่เด้งตอนโหลดครั้งแรก/ตอนเลขลด
-  if(_lastSettingsN !== null && n > _lastSettingsN && n > 0){
-    b.classList.remove('badge-pop'); void b.offsetWidth;   // รีสตาร์ตแอนิเมชัน (no-anim จะไม่เด้งเองอัตโนมัติ)
-    b.classList.add('badge-pop');
-    b.addEventListener('animationend', ()=>b.classList.remove('badge-pop'), {once:true});
-    if(typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
-  }
-  _lastSettingsN = n;
+  // สั่นครั้งเดียวที่ badge รวม (แหล่งเดียว กันสั่นซ้ำกับ badge ย่อย) · badge ย่อยเด้งภาพพร้อมกันเอง
+  if(setBadge(b, bills + reqs + chats + gifts)
+     && typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
 }
 
 /* แตะ badge บนปุ่ม ⚙️ → เมนูสรุปว่าค้างอะไร กดแถวไหนพาไปหน้านั้นเลย */
 function openAttentionSummary(){
-  const homeBills = ['maint','elec','water','trash'].filter(id => billOutstanding(id) > 0).length;
-  const shopBills = ['net','data'].filter(id => billOutstanding(id) > 0).length;
+  const homeIds = ['maint','elec','water','trash'], shopIds = ['net','data'];
+  const homeBills = homeIds.filter(id => billOutstanding(id) > 0).length;
+  const shopBills = shopIds.filter(id => billOutstanding(id) > 0).length;
+  const homeTotal = homeIds.reduce((s,id)=> s + billOutstanding(id), 0);
+  const shopTotal = shopIds.reduce((s,id)=> s + billOutstanding(id), 0);
+  const billTotal = homeTotal + shopTotal;
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
   const rows = [];
-  if(homeBills > 0)   rows.push({ico:'🏠', txt:`บิลบ้านค้าง ${homeBills} รายการ`, sub:'ค่าบำรุง/ไฟ/น้ำ/ขยะ', panel:'panel-home'});
-  if(shopBills > 0)   rows.push({ico:'🛍️', txt:`บิลร้านค้าค้าง ${shopBills} รายการ`, sub:'ค่าเน็ต/ค่าบริการข้อมูล', panel:'panel-shop'});
+  if(homeBills > 0)   rows.push({ico:'🏠', txt:`บิลบ้านค้าง ${homeBills} รายการ`, sub:`ค่าบำรุง/ไฟ/น้ำ/ขยะ · รวม 🪙${fmtNum(homeTotal)}`, panel:'panel-home'});
+  if(shopBills > 0)   rows.push({ico:'🛍️', txt:`บิลร้านค้าค้าง ${shopBills} รายการ`, sub:`ค่าเน็ต/ค่าบริการข้อมูล · รวม 🪙${fmtNum(shopTotal)}`, panel:'panel-shop'});
   if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
   if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
   if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
@@ -356,6 +369,7 @@ function openAttentionSummary(){
         <span class="attn-txt"><b>${r.txt}</b><br><small>${r.sub}</small></span>
         <span class="attn-go">›</span>
       </button>`).join('')}</div>
+    ${billTotal > 0 ? `<div class="attn-total">💰 บิลที่ต้องจ่ายรวม <b>🪙${fmtNum(billTotal)}</b></div>` : ''}
     <div style="margin-top:14px"><button class="set-close">ปิด</button></div>
   </div>`;
   overlay.querySelectorAll('.attn-row').forEach(btn=>{
@@ -371,9 +385,7 @@ function updateFriendBadge(){
   // รวมทั้งคำขอเป็นเพื่อน + เพื่อนที่ส่งข้อความใหม่มา (ข้อ 0.4) เป็นตัวเลขเดียวบนปุ่ม "เพื่อน"
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
-  const n = reqs + chats;
-  if(n > 0){ b.textContent = n; b.style.display = ''; }
-  else b.style.display = 'none';
+  setBadge(b, reqs + chats);   // เด้งภาพเมื่อมีคำขอ/ข้อความใหม่ (สั่นให้ badge รวมจัดการ)
   updateSettingsBadge();
 }
 
@@ -637,8 +649,7 @@ function updateGiftBadge(){
   const b = document.getElementById('gift-badge');
   if(!b) return;
   const n = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
-  if(n > 0){ b.textContent = n; b.style.display = ''; }
-  else b.style.display = 'none';
+  setBadge(b, n);   // เด้งภาพเมื่อมีของขวัญใหม่ (สั่นให้ badge รวมจัดการ)
   updateSettingsBadge();
 }
 
