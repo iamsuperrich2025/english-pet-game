@@ -19,6 +19,8 @@ function petImageKeys(pet){
     for(const m of MOODS) keys.push(`${pet}_${stage}_${m}`);
     for(const it of ITEMS) keys.push(`${pet}_${stage}_${it.id}`);
   }
+  // ข้อ 5.2: รูปร่างตามคุณภาพการกิน (เฉพาะโตเต็มวัย — prompt ใน PROMPTS_CHARACTERS.md)
+  for(const s of ['fat','thin','strong']) keys.push(`${pet}_adult_${s}`);
   return keys;
 }
 
@@ -62,7 +64,8 @@ function makeHappy(ms){
   }, ms + 100);
 }
 
-/* เลือกภาพที่จะแสดง: ป่วย > หิว > ดีใจ > ใส่ชุด > ปกติ */
+/* เลือกภาพที่จะแสดง: ป่วย > หิว > ดีใจ > รูปร่าง (ข้อ 5.2) > ใส่ชุด > ปกติ
+   (ร่างอ้วน/ผอมโซ/ล่ำ คือผลจากการกิน — สำคัญกว่าชุดเพื่อให้เด็กเห็นผลชัด ภาพไม่มีก็ตกไปชุด/ปกติ) */
 function currentPetImg(p){
   p = p || activePet();
   if(!p) return null;
@@ -73,7 +76,10 @@ function currentPetImg(p){
   if(p.sick) candidates.push(`${pet}_${stage}_sick`);
   else if(petHungry(p)) candidates.push(`${pet}_${stage}_hungry`);
   else if(happyNow()) candidates.push(`${pet}_${stage}_happy`);
-  else if(worn) candidates.push(`${pet}_${stage}_${worn.id}`);
+  else{
+    if(stage === 'adult' && p.shape && p.shape !== 'normal') candidates.push(`${pet}_adult_${p.shape}`);
+    if(worn) candidates.push(`${pet}_${stage}_${worn.id}`);
+  }
   candidates.push(`${pet}_${stage}_normal`);
   for(const k of candidates){ if(IMG_FILES[k]) return IMG_FILES[k]; }
   return null;

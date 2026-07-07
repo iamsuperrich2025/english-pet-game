@@ -103,6 +103,7 @@ function checkMatch(){
     if(state.phone && !state.netCut){ coins += PHONE_BONUS; notes.push(`📱 มือถือ +${PHONE_BONUS}`); }   // โบนัสมือถือ (ระงับตอนถูกตัดเน็ต)
     if(!p) exp = 0;                                   // ยังไม่มีสัตว์ → ไม่มี EXP แต่ได้เหรียญ+RP เต็มๆ
     else if(p.sick){ exp = 0; notes.push('🤒 ป่วยอยู่ ไม่ได้ EXP'); }
+    else if(p.shape === 'strong'){ exp += SHAPE_EXP_BONUS; notes.push(`💪 ล่ำกำยำ +${SHAPE_EXP_BONUS} EXP`); }   // ข้อ 5.2: กินดีร่างล่ำ = โตไวขึ้น
     addCoins(coins);
     addRP(rp);
 

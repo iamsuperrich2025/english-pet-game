@@ -1171,6 +1171,15 @@ function renderDashboard(){
           ${!p.sick ? `<button class="detox-btn" id="btn-detox">🧪 ขับพิษ 🪙${fmtNum(DETOX_COST)}</button>` : ''}</div>`;
     }
 
+    /* ---- รูปร่างตามคุณภาพการกิน (ข้อ 5.2): ล่ำ=โบนัส EXP · อ้วน/ผอมโซ=ชวนกลับมากินดี ---- */
+    let shapeUI = '';
+    if(p.shape && p.shape !== 'normal'){
+      const su = SHAPE_UI[p.shape];
+      shapeUI = `<div class="heat-text shape-text shape-${p.shape}">${su.icon} <b>${su.name}</b> — ${su.tip}</div>`;
+    }else if((p.cleanMeals||0) > 0){
+      shapeUI = `<div class="heat-text shape-text shape-progress">💪 กินดีต่อเนื่อง ${p.cleanMeals}/${SHAPE_CLEAN_MEALS} มื้อ — ครบแล้ว${escapeHTML(p.name)}จะล่ำกำยำ ได้โบนัส EXP!</div>`;
+    }
+
     hungerUI = `
       <div class="level-row">
         <span class="level-badge" style="background:var(--orange-d)">🍖 อิ่ม</span>
@@ -1180,6 +1189,7 @@ function renderDashboard(){
       ${heatUI}
       ${thirstUI}
       ${toxinUI}
+      ${shapeUI}
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       ${sleepHintHTML(p, now)}
       <div class="care-row">
@@ -1411,15 +1421,28 @@ function feedWith(p, food){
   if(foodBadFor(food, p.type)){
     p.toxin = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
     if(p.toxin >= TOXIN_FULL && !p.sick){ p.sick = true; p.sickCause = 'toxin'; }
+    p.mealJunk = true;                 // ข้อ 5.2: มื้อนี้มีอาหารโทษปน
   }
+  /* ข้อ 5.2: กินจนเต็มหลอด = จบมื้อ → นับมื้อสะอาด/มื้อโทษ อัปเดตรูปร่าง */
+  const shapeChange = p.fullness >= MEAL_FULL ? shapeMealDone(p, now) : null;
   sfx.buy();
   if(food.exp) addExp(food.exp, p);   // เมนูโปรด: ได้ EXP แถม (อาจเลเวลอัพได้เลย)
   saveState();
   makeHappy(4000);
-  showFeedResult(p, food);
+  showFeedResult(p, food, shapeChange);
 }
 
-function showFeedResult(p, food){
+/* ข้อความประจำร่าง (ข้อ 5.2) — ใช้ทั้งการ์ดสัตว์ + กล่องกินเสร็จ */
+const SHAPE_UI = {
+  fat:   {icon:'🍩', name:'อ้วนกลม',
+          tip:`กินของโทษติดกัน ${SHAPE_JUNK_MEALS} มื้อ — กินอาหารดีๆ เต็มหลอดให้ครบ ${SHAPE_CLEAN_MEALS} มื้อติด จะกลับมาหุ่นดีเหมือนเดิม`},
+  thin:  {icon:'🦴', name:'ผอมโซ',
+          tip:'อดข้าวบ่อยจนผอม — กินให้อิ่มเต็มหลอดทุกมื้อ น้องจะค่อยๆ กลับมาแข็งแรง'},
+  strong:{icon:'💪', name:'ล่ำกำยำ',
+          tip:`กินดีครบ ${SHAPE_CLEAN_MEALS} มื้อติด! ได้ EXP แถม +${SHAPE_EXP_BONUS} ทุกคำที่จับคู่ถูก`},
+};
+
+function showFeedResult(p, food, shapeChange){
   const conf = PETS[p.type];
   const stage = petStage(p);
   const overlay = document.createElement('div');
@@ -1441,7 +1464,10 @@ function showFeedResult(p, food){
     ${food.exp ? `<div class="feed-gain" style="background:var(--purple);border-color:var(--purple-d);color:#6a48a8">💖 เมนูโปรด! ได้ EXP แถม +${food.exp} ✨</div>` : ''}
     ${food.skipNext ? `<div class="feed-gain" style="background:var(--yellow);border-color:var(--yellow-d);color:#a8791a">🍱 อาหารวิเศษ! เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้เลย ⏳</div>` : ''}
     ${gotToxin ? `<div class="feed-gain" style="background:#f0e3fb;border-color:#b98ae0;color:#7a3ab0">☠️ พิษสะสม +${food.toxin} → ตอนนี้ <b>${p.toxin}/${TOXIN_FULL}</b>${toxinSick ? '' : ' — อย่าให้กินบ่อยนะ!'}</div>` : ''}
-    ${toxinSick ? `<div class="feed-gain" style="background:#ffe3e3;border-color:#ff8f8f;color:#b23a48">🤒 พิษเต็มหลอด! ${escapeHTML(p.name)}ป่วยแล้ว — ต้องพาไปขับพิษ+รักษา 🪙${fmtNum(CURE_COST)}</div>` : ''}<br>
+    ${toxinSick ? `<div class="feed-gain" style="background:#ffe3e3;border-color:#ff8f8f;color:#b23a48">🤒 พิษเต็มหลอด! ${escapeHTML(p.name)}ป่วยแล้ว — ต้องพาไปขับพิษ+รักษา 🪙${fmtNum(CURE_COST)}</div>` : ''}
+    ${shapeChange === 'strong' ? `<div class="feed-gain" style="background:#e8f8e8;border-color:#8fd48f;color:#2e7d43">💪 ${escapeHTML(p.name)}ล่ำกำยำแล้ว! กินดีครบ ${SHAPE_CLEAN_MEALS} มื้อติด — ได้ EXP แถม +${SHAPE_EXP_BONUS} ทุกคำที่จับคู่ถูก</div>` : ''}
+    ${shapeChange === 'fat' ? `<div class="feed-gain" style="background:#ffefd9;border-color:#e8b93f;color:#a8791a">🍩 ${escapeHTML(p.name)}ตัวกลมปุ๊กแล้ว! กินของโทษติดกัน ${SHAPE_JUNK_MEALS} มื้อ — กลับมากินดีๆ ${SHAPE_CLEAN_MEALS} มื้อติดจะหุ่นดีเหมือนเดิม</div>` : ''}
+    ${shapeChange === 'normal' ? `<div class="feed-gain">😊 ${escapeHTML(p.name)}กลับมาหุ่นปกติแล้ว — กินดีต่อเนื่องอีกนิดจะล่ำกำยำเลยนะ</div>` : ''}<br>
     <button>${toxinSick ? 'พาไปหาหมอ 🩺' : stillHungry ? 'กินต่อ 🍽️' : 'อิ่มแล้ว 😋'}</button>
   </div>`;
   overlay.querySelector('button').addEventListener('click', ()=>{

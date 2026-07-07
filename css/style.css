@@ -909,6 +909,13 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 }
 .detox-btn:active{transform:translateY(2px);box-shadow:none;}
 
+/* ---------- รูปร่างตามคุณภาพการกิน (คิว 7725691507 ข้อ 5.2) ---------- */
+.shape-text{border-radius:12px;padding:4px 10px;margin-top:8px;}
+.shape-text.shape-strong{color:#2e7d43;background:#e8f8e8;}
+.shape-text.shape-fat{color:#a8791a;background:#fff4d6;}
+.shape-text.shape-thin{color:#b23a48;background:#ffe8e8;}
+.shape-text.shape-progress{color:#3d8fb5;background:#e8f6ff;}
+
 /* ============================================================
    สินค้าสะสม & ตลาดซื้อขายต่อ (Global Trade HQ)
    ============================================================ */

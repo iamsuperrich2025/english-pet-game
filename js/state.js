@@ -21,6 +21,11 @@ const DETOX_COST     = 1000;               // ค่าขับพิษ (ล�
 const FOODQUIZ_Q     = 5;                  // จำนวนข้อต่อรอบ
 const FOODQUIZ_COIN  = 10;                 // เหรียญต่อข้อที่ถูก (เท่าจับคู่ถูก 1 คำ)
 const FOODQUIZ_BONUS = 25;                 // โบนัสตอบถูกครบทุกข้อ
+/* คิว 7725691507 ข้อ 5.2: รูปร่างสัตว์ตามคุณภาพการกิน (ภาพ <pet>_adult_fat/thin/strong.png) */
+const SHAPE_JUNK_MEALS  = 3;               // กินอาหารโทษติดกันกี่มื้อ → อ้วน
+const SHAPE_CLEAN_MEALS = 3;               // กินสะอาดเต็มหลอดติดกันกี่มื้อ → ล่ำกำยำ
+const SHAPE_MISS_MEALS  = 2;               // อดข้าว (ป่วยเพราะหิว) กี่มื้อ → ผอมโซ
+const SHAPE_EXP_BONUS   = 2;               // ร่างล่ำ: EXP แถมต่อคำที่จับคู่ถูก
 const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 6 ชม. → ป่วย (ยกเว้นมังกร/มีแอร์)
 const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
 
@@ -102,6 +107,12 @@ function newPet(type, name){
           fullness:0,       // ข้อ 3: ความอิ่มสะสมของมื้อปัจจุบัน (0–100 ครบ 100 = อิ่มมื้อนี้)
           mealSlot:0,       // slot ที่ fullness นับอยู่ (เปลี่ยนมื้อ → รีเซ็ต 0)
           toxin:0,          // ข้อ 5.1: พิษสะสมจากอาหารโทษ (0–100 เต็ม → ป่วย · ไม่ลดเอง ขับพิษ 1,000)
+          shape:'normal',   // ข้อ 5.2: รูปร่างตามคุณภาพการกิน normal/fat/thin/strong (ภาพเฉพาะโตเต็มวัย)
+          junkMeals:0,      // ข้อ 5.2: มื้อที่มีอาหารโทษติดต่อกัน (ครบ 3 → อ้วน)
+          cleanMeals:0,     // ข้อ 5.2: มื้อสะอาดเต็มหลอดติดต่อกัน (ครบ 3 → ล่ำกำยำ)
+          missedMeals:0,    // ข้อ 5.2: มื้อที่อดจนป่วยติดต่อกัน (ครบ 2 → ผอมโซ)
+          mealJunk:false,   // ข้อ 5.2: มื้อปัจจุบันกินอาหารโทษไปแล้วหรือยัง (รีเซ็ตเมื่อขึ้นมื้อใหม่/นับมื้อจบ)
+          shapeSlot:0,      // ข้อ 5.2: slot มื้อล่าสุดที่นับรูปร่างไปแล้ว (กัน feast/กินซ้ำนับมื้อเดียวสองรอบ)
           sleeping:false,   // ข้อ 1: กำลังหลับอยู่ (ตื่นเอง 06:00)
           sleepSickDay:null,// ข้อ 1: nightKey คืนที่ป่วยเพราะไม่นอนไปแล้ว (กันป่วยซ้ำคืนเดียวกัน)
           heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
@@ -164,6 +175,13 @@ function loadState(){
         }
         if(typeof p.mealSlot !== 'number') p.mealSlot = 0;
         if(typeof p.toxin !== 'number') p.toxin = 0;   // ข้อ 5.1: เซฟเก่าเริ่มบาร์พิษว่าง
+        // ข้อ 5.2: เซฟเก่าเริ่มรูปร่างปกติ นับมื้อใหม่จากศูนย์
+        if(typeof p.shape !== 'string') p.shape = 'normal';
+        if(typeof p.junkMeals !== 'number') p.junkMeals = 0;
+        if(typeof p.cleanMeals !== 'number') p.cleanMeals = 0;
+        if(typeof p.missedMeals !== 'number') p.missedMeals = 0;
+        if(typeof p.mealJunk !== 'boolean') p.mealJunk = false;
+        if(typeof p.shapeSlot !== 'number') p.shapeSlot = 0;
         if(typeof p.sleeping !== 'boolean') p.sleeping = false;
         if(p.sleepSickDay === undefined) p.sleepSickDay = null;
         if(p.heatFrom === undefined) p.heatFrom = null;
@@ -321,6 +339,32 @@ function rainProtected(){             // กันฝนได้ต้องม
   return !!state.home && !homeDecayed();
 }
 function petHungry(p){ return p.level >= 2 && p.fedUpTo < currentSlotStart(Date.now()); }
+
+/* ---------- รูปร่างตามคุณภาพการกิน (ข้อ 5.2) ----------
+   ผอมโซ > อ้วน > ล่ำ: อดข้าวสำคัญสุด แล้วค่อยดูของโทษ/กินดี */
+function petShapeOf(p){
+  if((p.missedMeals||0) >= SHAPE_MISS_MEALS) return 'thin';
+  if((p.junkMeals||0)  >= SHAPE_JUNK_MEALS)  return 'fat';
+  if((p.cleanMeals||0) >= SHAPE_CLEAN_MEALS) return 'strong';
+  return 'normal';
+}
+function updatePetShape(p){
+  const s = petShapeOf(p);
+  if(p.shape === s) return null;
+  p.shape = s;
+  return s;                        // เปลี่ยนร่าง → คืนร่างใหม่ให้ผู้เรียกแจ้งผู้เล่น
+}
+/* นับมื้อที่กินจนเต็มหลอด — ครั้งเดียวต่อ slot (feast ตุนพรุ่งนี้ไม่นับมื้อพรุ่งนี้ให้) */
+function shapeMealDone(p, now){
+  const slot = currentSlotStart(now);
+  if(p.shapeSlot === slot) return null;
+  p.shapeSlot = slot;
+  if(p.mealJunk){ p.junkMeals = (p.junkMeals||0) + 1; p.cleanMeals = 0; }
+  else          { p.cleanMeals = (p.cleanMeals||0) + 1; p.junkMeals = 0; }
+  p.missedMeals = 0;
+  p.mealJunk = false;
+  return updatePetShape(p);
+}
 function heatPct(p){
   if(p.heatFrom == null) return 0;
   return Math.min(100, (Date.now() - p.heatFrom)/HEAT_SICK_MS*100);
@@ -496,10 +540,13 @@ function careTick(){
   for(const p of state.pets){
     if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
     // ข้อ 3: ขึ้นมื้อใหม่ (18:00) แล้วยังไม่อิ่มครอบมื้อนี้ → เริ่มนับความอิ่มสะสมใหม่จาก 0
-    if(p.mealSlot !== slot && p.fedUpTo < slot){ p.mealSlot = slot; p.fullness = 0; }
+    if(p.mealSlot !== slot && p.fedUpTo < slot){ p.mealSlot = slot; p.fullness = 0; p.mealJunk = false; }
     // ข้อ 2: หิวมื้อเย็น 18:00 — เกิน 2 ชม. (20:00) ยังกินไม่เต็มหลอด → ป่วย
     if(!p.sick && p.fedUpTo < slot && (now - slot) >= HUNGRY_SICK_MS){
       p.sick = true; p.sickCause = 'hunger';
+      // ข้อ 5.2: อดข้าวติดกันหลายมื้อ → ผอมโซ
+      p.missedMeals = (p.missedMeals||0) + 1; p.cleanMeals = 0; p.mealJunk = false;
+      updatePetShape(p);
     }
     // ข้อ 1: ตื่นนอนอัตโนมัติช่วงเช้า (06:00 ถึงก่อน 20:00)
     if(p.sleeping && hourNow >= WAKE_HOUR && hourNow < SLEEP_FROM_HOUR) p.sleeping = false;

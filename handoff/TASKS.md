@@ -28,6 +28,15 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 36 (7 ก.ค. · Fable): ระบบรูปร่างตามคุณภาพการกิน (ผูกภาพข้อ 5.2 เข้าเกมจริง) — version→.14**
+- **กติกา (โปร่งใสสำหรับเด็ก):** กินสะอาดเต็มหลอด 3 มื้อติด = **ล่ำกำยำ 💪** (EXP แถม +2/คำใน checkMatch) · มื้อที่มีอาหารโทษปน 3 มื้อติด = **อ้วนกลม 🍩** · ป่วยเพราะอดข้าว 2 มื้อ = **ผอมโซ 🦴** · ลำดับ thin>fat>strong · กลับมากินดีก็ฟื้นได้เสมอ
+- **state.js:** `p.shape/junkMeals/cleanMeals/missedMeals/mealJunk/shapeSlot` + migration · `petShapeOf/updatePetShape/shapeMealDone` (นับครั้งเดียว/slot — feast ตุนพรุ่งนี้ไม่นับมื้อพรุ่งนี้) · hook careTick: hunger sick → missedMeals++ · ขึ้นมื้อใหม่รีเซ็ต mealJunk
+- **ui.js:** feedWith จด mealJunk + นับมื้อเมื่อเต็มหลอด → showFeedResult แจ้งเปลี่ยนร่าง (ล่ำ/อ้วน/กลับมาปกติ) · การ์ดสัตว์โชว์สถานะร่าง (`SHAPE_UI` + `.shape-text`) + แถบคืบหน้า "กินดีต่อเนื่อง x/3"
+- **images.js:** probe `<pet>_adult_fat/thin/strong` (9 คีย์) · currentPetImg ลำดับใหม่ ป่วย>หิว>ดีใจ>ร่าง>ชุด>ปกติ (ไม่มีภาพ→fallback ปกติ ระหว่างผู้ใช้ทยอยเจนภาพ)
+- **game.js:** ร่าง strong ไม่ป่วย → exp 5+2 + note "💪 ล่ำกำยำ" · **util.js:** วิธีเล่นเพิ่มหัวข้อรูปร่าง · PROMPTS_CHARACTERS.md อัปเดตหมายเหตุ (9 ภาพร่างผูกแล้ว เหลือ player_male/female เป็นภาพอนาคต)
+- ✅ ทดสอบ preview (mock login + fake time ข้ามวัน + บ้านปราสาทกันร้อน): feast×3 มื้อ → strong + แจ้งถูก · นม+feast×3 → มื้อแรก strong→normal (สตรีคขาด) → fat ที่มื้อ 3 (toxin 60 ไม่ทันป่วย) · อดข้าว 2 มื้อ (ป่วย-รักษา-ป่วย) → thin · จับคู่ถูกตอน strong ได้ exp 7 (5+2) จริง · ภาพ fallback ทำงาน (ยังไม่มีภาพร่าง) · ไม่มี console error
+- 📝 **ภาพ 9 ร่างผู้ใช้กำลังทยอยเจน** — วางใน `img/` แล้วเกมโชว์เองทันที ไม่ต้องแก้โค้ด
+
 **✅ รอบ 35 (7 ก.ค. · Fable): ไอเดียต่อยอด — prompt กลุ่ม C (ข้อ 4+5.2) + มินิเกมควิซอาหารปลอดภัย — version→.13**
 - **ข้อ 4+5.2 (prompt):** ไฟล์ใหม่ `PROMPTS_CHARACTERS.md` 11 ภาพ — ผู้เลี้ยงชาย/หญิง modern fantasy (`player_male/female.png`) + รูปร่างสัตว์ 3 ชนิด×3 ร่าง (`<pet>_adult_fat/thin/strong.png`) สไตล์/หน้าตาตรงชุดเดิมใน PROMPTS.md · ⚠️ เกมยังไม่ดึงภาพชุดนี้ (ระบบอนาคต) เจนเก็บไว้ก่อนได้
 - **🛡️ ควิซอาหารปลอดภัย:** ปุ่มเขียวใหม่ `#btn-foodquiz` แถบล่าง lobby (index.html + `.lobby-foodquiz-btn` lobby.css) → `openFoodQuiz()` (ui.js) สุ่ม 5 ข้อจาก (สัตว์ 3 × FOODS 9) ถาม "ให้กินได้ไหม?" เฉลยพร้อมเหตุผลจริง · รางวัลรอบแรกของวัน +10/ข้อ +25 ถูกครบ (`FOODQUIZ_*` state.js · `state.foodQuizDay`+migration) เล่นซ้ำ=รอบฝึกซ้อมไม่ได้เหรียญ (กันฟาร์ม)
