@@ -6,7 +6,14 @@
 const STORAGE_KEY = 'petVocabAdventure_v1';
 
 const CURE_COST      = 1000;               // ค่ารักษาป่วย
-const HUNGRY_SICK_MS = 2*60*60*1000;       // หิวเกิน 2 ชม. ไม่ได้กิน → ป่วย
+const HUNGRY_SICK_MS = 2*60*60*1000;       // หิวเกิน 2 ชม. (ถึง 20:00) ยังกินไม่เต็มหลอด → ป่วย
+/* คิว 7725691507 กลุ่ม A (ข้อ 1,2,3,6) */
+const MEAL_HOUR       = 18;                // ข้อ 2+6: มื้อเย็นวันละครั้ง 18:00 (ทั้งสัตว์และคน)
+const MEAL_FULL       = 100;               // ข้อ 3: ต้องกินสะสมความอิ่มครบ 100 ถึงนับว่าอิ่มมื้อนี้
+const SLEEP_FROM_HOUR = 20;                // ข้อ 1: พาสัตว์เข้านอนได้ตั้งแต่ 20:00
+const SLEEP_SICK_HOUR = 23;                // ข้อ 1: ถึง 23:00 ยังไม่นอน → ป่วย (ครั้งเดียวต่อคืน)
+const WAKE_HOUR       = 6;                 // ข้อ 1: ตื่นนอนอัตโนมัติ 06:00
+const DINNER_COST     = 200;               // ข้อ 6: ค่าข้าวเย็นของผู้เล่น (เมนูคนจริงมากลุ่ม B)
 const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 6 ชม. → ป่วย (ยกเว้นมังกร/มีแอร์)
 const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
 
@@ -51,18 +58,31 @@ const DEFAULT_STATE = {
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
+  playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
+  playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
+  playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
+  playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว
 };
 
-/* ---------- มื้ออาหาร: สัตว์หิวทุก 3 ชั่วโมง (slot เริ่ม 0,3,6,...,21 น.)
-   อาหารธรรมดาอิ่มถึงมื้อถัดไป (3 ชม.) / feast อิ่มข้าม 1 มื้อ (6 ชม.) ---------- */
-const SLOT_MS = 3*60*60*1000;
+/* ---------- มื้ออาหาร (ข้อ 2): หิวมื้อเย็นวันละครั้ง เวลา 18:00
+   slot = เวลา 18:00 ของมื้อล่าสุด · กินสะสมความอิ่มครบ 100 (ข้อ 3) → fedUpTo = slot
+   feast เต็มหลอด + fedUpTo = มื้อพรุ่งนี้ (ตุนข้ามมื้อ) ---------- */
+const SLOT_MS = 24*60*60*1000;
 function currentSlotStart(now){
   const d = new Date(now);
-  d.setMinutes(0,0,0);
-  d.setHours(Math.floor(d.getHours()/3)*3);
+  d.setHours(MEAL_HOUR,0,0,0);
+  if(d.getTime() > now) d.setDate(d.getDate()-1);   // ก่อน 18:00 → มื้อล่าสุดคือเมื่อวาน
   return d.getTime();
 }
 function nextSlotStart(now){ return currentSlotStart(now) + SLOT_MS; }
+/* key ประจำมื้อ (วันที่ของเวลา 18:00 มื้อล่าสุด) — ใช้กับข้าวเย็นคน (ข้อ 6) */
+function mealDayKey(now){ return new Date(currentSlotStart(now)).toDateString(); }
+/* key ประจำคืน (ข้อ 1): คืนนี้เริ่ม 20:00 ถึงเช้า 06:00 — หลังเที่ยงคืนยังนับเป็นคืนของเมื่อวาน */
+function nightKeyOf(now){
+  const d = new Date(now);
+  if(d.getHours() < WAKE_HOUR) d.setDate(d.getDate()-1);
+  return d.toDateString();
+}
 
 function newPet(type, name){
   return {type,
@@ -71,6 +91,10 @@ function newPet(type, name){
           equipped:{head:null, face:null, neck:null},
           sick:false, sickCause:null,
           fedUpTo:0,        // timestamp มื้อที่กินครอบคลุมแล้ว (0 = ยังไม่เคยกิน)
+          fullness:0,       // ข้อ 3: ความอิ่มสะสมของมื้อปัจจุบัน (0–100 ครบ 100 = อิ่มมื้อนี้)
+          mealSlot:0,       // slot ที่ fullness นับอยู่ (เปลี่ยนมื้อ → รีเซ็ต 0)
+          sleeping:false,   // ข้อ 1: กำลังหลับอยู่ (ตื่นเอง 06:00)
+          sleepSickDay:null,// ข้อ 1: nightKey คืนที่ป่วยเพราะไม่นอนไปแล้ว (กันป่วยซ้ำคืนเดียวกัน)
           heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
           thirstFrom:null,  // เริ่มนับขาดน้ำสะสมตั้งแต่เมื่อไหร่ (null = น้ำปกติ)
           rainSickDay:null};// วันที่ป่วยเพราะฝนล่าสุด (กันป่วยซ้ำในฝนรอบเดียวกัน)
@@ -117,6 +141,21 @@ function loadState(){
         const firstWorn = p.equipped.head ? 'head' : p.equipped.face ? 'face' : p.equipped.neck ? 'neck' : null;
         for(const slot of ['head','face','neck']) if(slot !== firstWorn) p.equipped[slot] = null;
         if(p.fedUpTo == null) p.fedUpTo = 0;
+        // คิว 7725691507 กลุ่ม A: เซฟเก่าเพิ่งเข้าระบบมื้อเย็น 18:00 + การนอน
+        // → ผ่อนผัน: ถือว่าอิ่มมื้อล่าสุดแล้ว + ไม่ลงโทษคืนแรก (กันป่วยย้อนหลังทันทีที่อัปเดต)
+        if(typeof p.fullness !== 'number'){
+          const nowMig = Date.now();
+          p.fullness = 0; p.mealSlot = 0;
+          if(p.fedUpTo > 0 && p.fedUpTo < currentSlotStart(nowMig)){
+            p.fedUpTo = currentSlotStart(nowMig);
+            p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
+          }
+          p.sleeping = false;
+          p.sleepSickDay = nightKeyOf(nowMig);
+        }
+        if(typeof p.mealSlot !== 'number') p.mealSlot = 0;
+        if(typeof p.sleeping !== 'boolean') p.sleeping = false;
+        if(p.sleepSickDay === undefined) p.sleepSickDay = null;
         if(p.heatFrom === undefined) p.heatFrom = null;
         if(p.thirstFrom === undefined) p.thirstFrom = null;
         if(p.rainSickDay === undefined) p.rainSickDay = null;
@@ -128,6 +167,8 @@ function loadState(){
       if(s.pendingRuin === undefined) s.pendingRuin = null;
       if(!Array.isArray(s.pendingCut)) s.pendingCut = [];
       if(typeof s.noAnim !== 'boolean') s.noAnim = false;
+      // คิว 7725691507 ข้อ 6: เซฟเก่ายังไม่มีระบบข้าวเย็นคน → ถือว่ากินมื้อล่าสุดแล้ว (เริ่มนับมื้อหน้า)
+      if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
@@ -260,7 +301,7 @@ function refreshRank(){
   state.rankKey = after.key;   // อัปเดตทั้งเลื่อนขึ้น (ฉลองแล้ว) และลดลง (เงียบๆ)
 }
 
-/* ---------- ความหิว (มื้อทุก 3 ชม.) + ความร้อน (ป่วยทุก 6 ชม.) ---------- */
+/* ---------- ความหิว (มื้อเย็นวันละครั้ง 18:00) + ความร้อน (ป่วยทุก 6 ชม.) ---------- */
 function heatProtected(){
   if(state.powerCut) return false;    // ถูกตัดไฟ → แอร์ใช้ไม่ได้ (แม้ปราสาทที่มีแอร์ในตัว)
   return state.home === 'castle' || (state.home === 'medium' && state.ac);
@@ -439,12 +480,25 @@ function careTick(){
   billTick(now);
   marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
   orderTick(now);         // ออเดอร์พิเศษหมดเวลา/เข้าใหม่
+  const slot = currentSlotStart(now);
+  const hourNow = new Date(now).getHours();
   for(const p of state.pets){
-    if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน
-    // หิวเกิน 2 ชม. โดยไม่ได้กินอะไรเลย → ป่วย
-    const slot = currentSlotStart(now);
+    if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
+    // ข้อ 3: ขึ้นมื้อใหม่ (18:00) แล้วยังไม่อิ่มครอบมื้อนี้ → เริ่มนับความอิ่มสะสมใหม่จาก 0
+    if(p.mealSlot !== slot && p.fedUpTo < slot){ p.mealSlot = slot; p.fullness = 0; }
+    // ข้อ 2: หิวมื้อเย็น 18:00 — เกิน 2 ชม. (20:00) ยังกินไม่เต็มหลอด → ป่วย
     if(!p.sick && p.fedUpTo < slot && (now - slot) >= HUNGRY_SICK_MS){
       p.sick = true; p.sickCause = 'hunger';
+    }
+    // ข้อ 1: ตื่นนอนอัตโนมัติช่วงเช้า (06:00 ถึงก่อน 20:00)
+    if(p.sleeping && hourNow >= WAKE_HOUR && hourNow < SLEEP_FROM_HOUR) p.sleeping = false;
+    // ข้อ 1: ถึง 23:00 (จนถึงเช้า) ยังไม่ได้เข้านอน → ป่วย (ครั้งเดียวต่อคืน)
+    if(!p.sleeping && (hourNow >= SLEEP_SICK_HOUR || hourNow < WAKE_HOUR)){
+      const nightKey = nightKeyOf(now);
+      if(!p.sick && p.sleepSickDay !== nightKey){
+        p.sick = true; p.sickCause = 'sleep';
+        p.sleepSickDay = nightKey;
+      }
     }
     // ความร้อนสะสม: มังกรทนร้อน / มีที่พักติดแอร์ = ปลอดภัย
     if(p.type === 'dragon' || heatProtected()){
@@ -475,6 +529,13 @@ function careTick(){
       }
     }
   }
+  // ข้อ 6: ผู้เล่น (คน) ต้องกินข้าวเย็น 18:00 — เกิน 20:00 ยังไม่กิน → ป่วย (ครั้งเดียวต่อมื้อ)
+  const mKey = mealDayKey(now);
+  if(state.student && !state.playerSick && state.playerFedDay !== mKey && state.playerSickDay !== mKey
+     && (now - slot) >= HUNGRY_SICK_MS){
+    state.playerSick = true; state.playerSickDay = mKey;
+    state.playerSickPending = true;              // ให้ UI เด้งกล่องแจ้งครั้งเดียว
+  }
   refreshRank();          // ตรวจเลื่อน/ลดแรงค์ตาม net worth ที่นิ่งแล้ว
   saveState();
 }
@@ -495,8 +556,9 @@ function addExp(amount, p){
     p.exp -= expNeed(p.level);
     p.level++;
     if(p.level === 2){
-      // เพิ่งฟักไข่/ลืมตา → เริ่มนับหิวและความร้อนตั้งแต่ตอนนี้
+      // เพิ่งฟักไข่/ลืมตา → เริ่มนับหิวและความร้อนตั้งแต่ตอนนี้ (อิ่มมื้อล่าสุดมาแล้ว)
       p.fedUpTo = currentSlotStart(Date.now());
+      p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
       p.heatFrom = null;
       p.sick = false; p.sickCause = null;
     }

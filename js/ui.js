@@ -39,6 +39,7 @@ function petVisualHTML(p){
     const worn = equippedItem(p);
     if(worn) overlays += `<span class="wear wear-${worn.slot}">${worn.emoji}</span>`;
     if(p.sick) overlays += `<span class="sick-badge">🤒</span>`;
+    else if(p.sleeping) overlays += `<span class="sick-badge sleep-badge">💤</span>`;
   }
   const auraHTML = (stage === 'adult' && !p.sick)
     ? `<div class="aura"><span class="sparkle sp1">✨</span><span class="sparkle sp2">✨</span><span class="sparkle sp3">✨</span></div>`
@@ -46,10 +47,12 @@ function petVisualHTML(p){
   return `<div class="pet-stage">${auraHTML}<div class="pet-wrap" id="pet-tap">${core}${overlays}</div></div>`;
 }
 
-/* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อทุก 3 ชม.) ---------- */
+/* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อเย็นวันละครั้ง 18:00 — ข้อ 2) ---------- */
 function mealLabel(ts){
-  const d = new Date(ts);
-  const day = d.getDate() !== new Date().getDate() ? 'พรุ่งนี้ ' : '';
+  const d = new Date(ts), today = new Date();
+  today.setHours(0,0,0,0);
+  const dayDiff = Math.round((new Date(ts).setHours(0,0,0,0) - today.getTime())/86400000);
+  const day = dayDiff >= 2 ? 'มะรืนนี้ ' : dayDiff === 1 ? 'พรุ่งนี้ ' : '';
   return `${day}${String(d.getHours()).padStart(2,'0')}:00 น.`;
 }
 function fmtMins(ms){
@@ -73,6 +76,60 @@ function renderClock(){
   if(compLive) compLive.textContent = compLiveTotal().toFixed(2);   // ตัวเลขรายได้คอมวิ่งทุกวินาที
   renderFarmClock();                                 // นาฬิกานับถอยหลังต้นไม้เดินพร้อมนาฬิกา
   renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
+  renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา
+}
+
+/* ============================================================
+   ข้าวเย็นของผู้เล่น (คิว 7725691507 ข้อ 6)
+   คนก็ต้องกินมื้อเย็น 18:00 — เกิน 20:00 ไม่กิน → ป่วย จ่ายค่ารักษา 1,000
+   ปุ่ม 🍚 ใน header โผล่ช่วงเย็น (18:00 ถึงตี 6) จนกว่าจะกิน · ป่วย → กลายเป็น 🤒
+   ============================================================ */
+function dinnerDue(now){
+  now = now || Date.now();
+  const h = new Date(now).getHours();
+  return (h >= MEAL_HOUR || h < WAKE_HOUR) && state.playerFedDay !== mealDayKey(now);
+}
+function renderDinnerChip(){
+  const btn = document.getElementById('btn-dinner');
+  if(!btn || typeof state === 'undefined') return;
+  if(state.playerSick){
+    btn.style.display = ''; btn.textContent = '🤒';
+    btn.title = 'หนูป่วยเพราะไม่กินข้าวเย็น — แตะเพื่อไปรักษา';
+  }else if(dinnerDue()){
+    btn.style.display = ''; btn.textContent = '🍚';
+    btn.title = `ได้เวลากินข้าวเย็นของหนูแล้ว (🪙${fmtNum(DINNER_COST)})`;
+  }else btn.style.display = 'none';
+}
+function dinnerClick(){
+  sfx.select();
+  if(state.playerSick){
+    askConfirm(`<div style="font-size:56px;line-height:1">🤒</div>
+      <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">หนูป่วยเพราะไม่ได้กินข้าวเย็น</div>
+      <div style="margin-top:8px;color:#6a5a78;line-height:1.5">ไปหาหมอรักษาให้หายก่อนนะ<br>ค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
+      `💊 รักษา 🪙${fmtNum(CURE_COST)}`, ()=>{
+        if(state.coins < CURE_COST){ sfx.wrong(); toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ`); return; }
+        state.coins -= CURE_COST;
+        state.playerSick = false;
+        sfx.levelup();
+        toast('💊 รักษาหายแล้ว! คราวหน้าอย่าลืมกินข้าวเย็นตอน 18:00 นะ');
+        saveState();
+        renderDashboard();
+      });
+    return;
+  }
+  if(!dinnerDue()){ toast('😋 วันนี้กินข้าวเย็นแล้ว ไว้เจอกันมื้อพรุ่งนี้ 18:00 นะ'); return; }
+  askConfirm(`<div style="font-size:56px;line-height:1">🍚</div>
+    <div style="font-size:21px;font-weight:bold;margin-top:8px">กินข้าวเย็นของหนู</div>
+    <div style="margin-top:8px;color:#6a5a78;line-height:1.5">คนก็ต้องกินข้าวให้ตรงเวลาเหมือนน้องนะ<br>ค่าข้าวเย็น <b>🪙${fmtNum(DINNER_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
+    `🍽️ กินเลย 🪙${fmtNum(DINNER_COST)}`, ()=>{
+      if(state.coins < DINNER_COST){ sfx.wrong(); toast(`ค่าข้าวเย็น 🪙${fmtNum(DINNER_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ`); return; }
+      state.coins -= DINNER_COST;
+      state.playerFedDay = mealDayKey(Date.now());
+      sfx.buy();
+      toast('🍚 อิ่มอร่อย! กินข้าวเย็นตรงเวลา สุขภาพแข็งแรง 💪');
+      saveState();
+      renderDashboard();
+    });
 }
 
 /* ============================================================
@@ -337,8 +394,9 @@ function updateSettingsBadge(){
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  const meal  = (state.playerSick || dinnerDue()) ? 1 : 0;   // ข้อ 6: ข้าวเย็นคนยังไม่กิน/ป่วย
   // สั่นครั้งเดียวที่ badge รวม (แหล่งเดียว กันสั่นซ้ำกับ badge ย่อย) · badge ย่อยเด้งภาพพร้อมกันเอง
-  if(setBadge(b, bills + reqs + chats + gifts)
+  if(setBadge(b, bills + reqs + chats + gifts + meal)
      && typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
 }
 
@@ -358,13 +416,15 @@ function openAttentionSummary(){
   if(shopBills > 0)   rows.push({ico:'🛍️', txt:`บิลร้านค้าค้าง ${shopBills} รายการ`, sub:`ค่าเน็ต/ค่าบริการข้อมูล · รวม 🪙${fmtNum(shopTotal)}`, panel:'panel-shop'});
   if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
   if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
+  if(state.playerSick)   rows.push({ico:'🤒', txt:'หนูป่วยเพราะไม่กินข้าวเย็น', sub:`ไปหาหมอ ค่ารักษา 🪙${fmtNum(CURE_COST)}`, act:'dinner'});
+  else if(dinnerDue())   rows.push({ico:'🍚', txt:'ยังไม่ได้กินข้าวเย็นของหนู', sub:`กินก่อน 20:00 ไม่งั้นป่วยนะ · 🪙${fmtNum(DINNER_COST)}`, act:'dinner'});
   if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay attn-overlay';
   overlay.innerHTML = `<div class="levelup-box attn-box">
     <h2 style="margin:0 0 8px">🔔 มีอะไรต้องจัดการ</h2>
     <div class="attn-list">${rows.map(r=>`
-      <button class="attn-row" data-panel="${r.panel}">
+      <button class="attn-row" data-panel="${r.panel||''}" data-act="${r.act||''}">
         <span class="attn-ico">${r.ico}</span>
         <span class="attn-txt"><b>${r.txt}</b><br><small>${r.sub}</small></span>
         <span class="attn-go">›</span>
@@ -373,7 +433,11 @@ function openAttentionSummary(){
     <div style="margin-top:14px"><button class="set-close">ปิด</button></div>
   </div>`;
   overlay.querySelectorAll('.attn-row').forEach(btn=>{
-    btn.addEventListener('click', ()=>{ overlay.remove(); openPanel(btn.dataset.panel); });
+    btn.addEventListener('click', ()=>{
+      overlay.remove();
+      if(btn.dataset.act === 'dinner') dinnerClick();       // ข้าวเย็นคน (ข้อ 6) เปิดกล่องกิน/รักษา
+      else openPanel(btn.dataset.panel);
+    });
   });
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
@@ -935,6 +999,14 @@ function renderDashboard(){
   careTick();
   dailyTick();
   if(Array.isArray(state.pendingCut) && state.pendingCut.length) showCutNotice();
+  // ข้อ 6: เพิ่งป่วยเพราะไม่กินข้าวเย็น → เด้งกล่องแจ้งครั้งเดียว
+  if(state.playerSickPending){
+    state.playerSickPending = false;
+    saveState();
+    alertBox(`<div style="font-size:56px;line-height:1">🤒</div>
+      <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">หนูป่วยแล้ว!</div>
+      <div style="margin-top:8px;color:#6a5a78;line-height:1.5">เพราะไม่ได้กินข้าวเย็นตอน <b>18:00 น.</b><br>แตะปุ่ม 🤒 มุมขวาบนเพื่อไปหาหมอ (ค่ารักษา 🪙${fmtNum(CURE_COST)})<br>คราวหน้ากินข้าวให้ตรงเวลานะ</div>`, 'รับทราบ 😢');
+  }
   applyNoAnim();
   updateBillBadges();
   const now = Date.now();
@@ -1016,7 +1088,7 @@ function renderDashboard(){
     : 'แรกเกิดหลับปุ๋ย 🧺 (เล่นเกมให้น้องโตจนลืมตา!)';
   const stageNames = {egg:startStageName, baby:'ร่างเด็ก 🍼', adult:'ร่างโตเต็มวัย 🌟'};
 
-  /* ---- ความหิวระบบมื้อ (หิวทุก 3 ชม.) ---- */
+  /* ---- ความหิวระบบมื้อเย็น (ข้อ 2+3): หิว 18:00 วันละครั้ง กินสะสมให้เต็ม 100 ---- */
   let hungerUI = '';
   if(stage !== 'egg'){
     const slot = currentSlotStart(now);
@@ -1025,16 +1097,19 @@ function renderDashboard(){
     if(p.sick){
       hungerStatus = '🤒 ป่วยอยู่... ต้องรักษาก่อนถึงจะกินได้';
       barPct = 0;
+    }else if(p.sleeping){
+      hungerStatus = `😴 กำลังหลับปุ๋ย... ตื่นเองตอน ${String(WAKE_HOUR).padStart(2,'0')}:00 น.`;
+      barPct = petHungry(p) ? Math.min(100, p.fullness||0) : 100;
     }else if(hungry){
       const msLeft = Math.max(0, HUNGRY_SICK_MS - (now - slot));
-      hungerStatus = `😫 หิวแล้ว! ให้อาหารภายใน <b>${fmtMins(msLeft)}</b> ไม่งั้นน้องจะป่วยนะ`;
-      barPct = (msLeft/HUNGRY_SICK_MS)*100; barCls = 'hungry';
+      hungerStatus = `😫 หิวข้าวเย็นแล้ว! ความอิ่ม <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — กินให้เต็มหลอดภายใน <b>${fmtMins(msLeft)}</b> ไม่งั้นน้องจะป่วยนะ`;
+      barPct = Math.min(100, p.fullness||0); barCls = 'hungry';
     }else{
-      const covered = p.fedUpTo >= nextSlotStart(now) - 1;   // feast ครอบมื้อถัดไปแล้ว
+      const covered = p.fedUpTo >= nextSlotStart(now) - 1;   // feast ครอบมื้อพรุ่งนี้แล้ว
       const nextMeal = p.fedUpTo > slot ? nextSlotStart(now) + SLOT_MS : nextSlotStart(now);
       hungerStatus = covered
-        ? `🍱 อิ่มพิเศษ! ข้ามมื้อถัดไปได้เลย มื้อต่อไป: ${mealLabel(nextMeal)}`
-        : `😋 อิ่มมีความสุข · มื้อถัดไป: ${mealLabel(nextMeal)}`;
+        ? `🍱 อิ่มพิเศษ! ตุนข้ามมื้อพรุ่งนี้ได้เลย มื้อต่อไป: ${mealLabel(nextMeal)}`
+        : `😋 อิ่มมีความสุข · มื้อเย็นถัดไป: ${mealLabel(nextMeal)}`;
       barPct = 100; if(covered) barCls = 'buffed';
     }
     const sickCauseText = p.sickCause === 'heat'
@@ -1043,7 +1118,9 @@ function renderDashboard(){
         ? 'เพราะบ้านถูกตัดน้ำ ไม่มีน้ำกิน-อาบ (จ่ายค่าน้ำค้างให้น้ำกลับมานะ)'
         : p.sickCause === 'rain'
           ? 'เพราะโดนฝนเปียกทั้งตัว ไม่มีที่หลบฝนสภาพดี (หาที่พักให้น้องนะ)'
-          : 'เพราะหิวนานเกินไป';
+          : p.sickCause === 'sleep'
+            ? `เพราะนอนดึกเกินไป ไม่ได้เข้านอนก่อน ${SLEEP_SICK_HOUR}:00 น. (พาเข้านอนได้ตั้งแต่ ${SLEEP_FROM_HOUR}:00 น. ทุกคืนนะ)`
+            : 'เพราะหิวนานเกินไป';
 
     /* ---- ความร้อนสะสม (ป่วยทุก 6 ชม. ถ้าไม่มีที่พักติดแอร์ — มังกรไม่ป่วย) ---- */
     let heatUI;
@@ -1088,15 +1165,17 @@ function renderDashboard(){
       ${heatUI}
       ${thirstUI}
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
+      ${sleepHintHTML(p, now)}
       <div class="care-row">
-        <button class="care-btn btn-feed" id="btn-feed" ${p.sick?'disabled':''}>🍽️ ให้อาหาร</button>
+        <button class="care-btn btn-feed" id="btn-feed" ${(p.sick || p.sleeping)?'disabled':''}>🍽️ ให้อาหาร</button>
+        ${sleepBtnHTML(p, now)}
         ${p.sick ? `<button class="care-btn btn-cure" id="btn-cure">💊 รักษา 🪙${fmtNum(CURE_COST)}</button>` : ''}
       </div>`;
   }
 
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
-                   + (sickGray ? ' pet-sick' : '');
+                   + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
   /* โฉมใหม่ (feedback ผู้ใช้ 5 ก.ค.): น้องตัวใหญ่เต็มเวทีแบบตัวละครหน้า lobby เกม shooter
      ข้อความ/แถบสถานะทั้งหมดย่อลงไปอยู่ "แผ่นสถานะ" แผ่นเดียวด้านล่าง (scroll ภายในถ้าล้น) */
   card.innerHTML = `
@@ -1123,6 +1202,10 @@ function renderDashboard(){
   if(feedBtn) feedBtn.addEventListener('click', feedPet);
   const cureBtn = document.getElementById('btn-cure');
   if(cureBtn) cureBtn.addEventListener('click', curePet);
+  const sleepBtn = document.getElementById('btn-sleep');
+  if(sleepBtn) sleepBtn.addEventListener('click', sleepAllPets);
+  const wakeBtn = document.getElementById('btn-wake');
+  if(wakeBtn) wakeBtn.addEventListener('click', wakeAllPets);
 
   // ปุ่ม ✏️ เปลี่ยนชื่อน้อง (ข้อ 7 — ตรวจชื่อชุดเดียวกับชื่อผู้เล่น แค่ 1–15 ตัว)
   document.getElementById('btn-pet-rename').addEventListener('click', ()=>{
@@ -1146,7 +1229,7 @@ function renderDashboard(){
   tap.style.cursor = 'pointer'; tap.style.pointerEvents = 'auto';
   tap.addEventListener('click', ()=>{
     sfx.select();
-    if(!p.sick && stage!=='egg' && !petHungry(p) && IMG_FILES[`${p.type}_${stage}_happy`]){
+    if(!p.sick && !p.sleeping && stage!=='egg' && !petHungry(p) && IMG_FILES[`${p.type}_${stage}_happy`]){
       makeHappy(2500);
     }else{
       tap.style.transform = 'scale(1.15) rotate(-5deg)';
@@ -1164,12 +1247,57 @@ function renderDashboard(){
 }
 
 /* ============================================================
-   ให้อาหาร (ระบบมื้อ)
+   การนอน (คิว 7725691507 ข้อ 1)
+   เข้านอนได้ตั้งแต่ 20:00 · ถึง 23:00 ยังไม่นอน = ป่วย · ตื่นเอง 06:00
+   ปุ่มเดียวพาสัตว์ทุกตัว (Lv.2 ขึ้นไป) เข้านอนพร้อมกัน
+   ============================================================ */
+function sleepBtnHTML(p, now){
+  const h = new Date(now).getHours();
+  if(p.sleeping) return `<button class="care-btn btn-sleep" id="btn-wake">⏰ ปลุกน้อง</button>`;
+  if(h >= SLEEP_FROM_HOUR || h < WAKE_HOUR)
+    return `<button class="care-btn btn-sleep" id="btn-sleep">🌙 พาเข้านอน</button>`;
+  return '';
+}
+function sleepHintHTML(p, now){
+  const h = new Date(now).getHours();
+  if(p.sick || p.sleeping) return '';
+  if(h >= SLEEP_FROM_HOUR && h < SLEEP_SICK_HOUR){
+    const deadline = new Date(now); deadline.setHours(SLEEP_SICK_HOUR,0,0,0);
+    return `<div class="heat-text">🌙 ได้เวลาเตรียมนอนแล้ว — พาน้องเข้านอนก่อน <b>${SLEEP_SICK_HOUR}:00 น.</b> (อีก ${fmtMins(deadline.getTime() - now)}) ไม่งั้นน้องจะป่วยนะ</div>`;
+  }
+  if(h >= SLEEP_SICK_HOUR || h < WAKE_HOUR)
+    return `<div class="heat-text">🌙 ดึกมากแล้ว รีบพาน้องเข้านอนเถอะ!</div>`;
+  return '';
+}
+function sleepAllPets(){
+  const h = new Date(Date.now()).getHours();
+  if(h < SLEEP_FROM_HOUR && h >= WAKE_HOUR){
+    sfx.wrong(); toast(`🌙 ยังไม่ถึงเวลานอน — พาเข้านอนได้ตั้งแต่ ${SLEEP_FROM_HOUR}:00 น. นะ`); return;
+  }
+  let n = 0;
+  for(const p of state.pets){ if(p.level >= 2 && !p.sleeping){ p.sleeping = true; n++; } }
+  if(!n) return;
+  sfx.select();
+  saveState();
+  toast(`😴 พาน้องเข้านอนครบ ${n} ตัวแล้ว ฝันดีนะ 💤 (ตื่นเอง ${String(WAKE_HOUR).padStart(2,'0')}:00 น.)`);
+  renderDashboard();
+}
+function wakeAllPets(){
+  for(const p of state.pets) p.sleeping = false;
+  sfx.select();
+  saveState();
+  toast(`⏰ ปลุกน้องตื่นแล้ว — ก่อน ${SLEEP_SICK_HOUR}:00 น. พากลับไปนอนด้วยนะ`);
+  renderDashboard();
+}
+
+/* ============================================================
+   ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
    ============================================================ */
 function feedPet(){
   const p = activePet();
   if(!p) return;
   if(p.sick){ alertBox('<div style="font-size:56px;line-height:1">🤒</div><div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">น้องป่วยอยู่นะ</div><div style="margin-top:8px;color:#6a5a78;line-height:1.5">กินไม่ลงเลย... ต้องพาไป <b>รักษา</b> ก่อน น้องถึงจะหายแล้วกลับมากินได้ 🩺</div>', 'พาไปรักษา'); return; }
+  if(p.sleeping){ sfx.wrong(); toast('😴 น้องหลับอยู่ อย่าเพิ่งปลุกมากินข้าวเลยนะ'); return; }
   const hungry = petHungry(p);
   const canFeast = p.fedUpTo < nextSlotStart(Date.now());
   if(!hungry && !canFeast){
@@ -1186,7 +1314,9 @@ function openFoodMenu(p, hungry){
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box food-box">
     <h2>🍽️ เลือกเมนูให้น้องกิน</h2>
-    ${hungry ? '' : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มมื้อนี้แล้ว — มีแต่ชุดอาหารวิเศษที่กินตุนข้ามมื้อได้</p>`}
+    ${hungry
+      ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
+      : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มมื้อนี้แล้ว — มีแต่ชุดอาหารวิเศษที่กินตุนข้ามมื้อพรุ่งนี้ได้</p>`}
     <div class="food-grid">
       ${menuFoods.map(f=>{
         const usable = hungry || f.skipNext;
@@ -1196,9 +1326,9 @@ function openFoodMenu(p, hungry){
           <span class="fd-emoji">${f.emoji}</span>
           <span class="fd-en">${f.en}</span>
           <span class="fd-name">${f.name}</span>
-          <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม ${f.skipNext ? 6 : 3} ชม.</span>
+          <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม +${f.fill}</span>
           ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
-          ${f.skipNext ? `<span class="fd-exp">⏳ อิ่มตุนข้ามมื้อถัดไปได้เลย!</span>` : ''}
+          ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
         </div>`;}).join('')}
     </div>
     <button class="food-cancel">ไว้ก่อน</button>
@@ -1225,7 +1355,15 @@ function openFoodMenu(p, hungry){
 function feedWith(p, food){
   const now = Date.now();
   state.coins -= food.price;
-  p.fedUpTo = food.skipNext ? nextSlotStart(now) : currentSlotStart(now);
+  // ข้อ 3: สะสมความอิ่ม — ครบ 100 ถึงนับว่าอิ่มมื้อนี้ (feast เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้)
+  p.mealSlot = currentSlotStart(now);
+  if(food.skipNext){
+    p.fullness = MEAL_FULL;
+    p.fedUpTo = nextSlotStart(now);
+  }else{
+    p.fullness = Math.min(MEAL_FULL, (p.fullness||0) + (food.fill||0));
+    if(p.fullness >= MEAL_FULL && p.fedUpTo < currentSlotStart(now)) p.fedUpTo = currentSlotStart(now);
+  }
   sfx.buy();
   if(food.exp) addExp(food.exp, p);   // เมนูโปรด: ได้ EXP แถม (อาจเลเวลอัพได้เลย)
   saveState();
@@ -1239,17 +1377,24 @@ function showFeedResult(p, food){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   const happyImg = IMG_FILES[`${p.type}_${stage}_happy`] || IMG_FILES[`${p.type}_${stage}_normal`];
+  const stillHungry = petHungry(p);          // กินแล้วแต่ยังไม่เต็มหลอด → ชวนกินต่อ
   const nextMeal = p.fedUpTo >= nextSlotStart(Date.now()) - 1
     ? nextSlotStart(Date.now()) + SLOT_MS : nextSlotStart(Date.now());
   overlay.innerHTML = `<div class="levelup-box feed-box">
     <h2>${food.emoji} หม่ำ ${food.en} อร่อยจัง!</h2>
     <div class="feed-pet">${happyImg ? `<img src="${happyImg}" alt="">` : (conf[stage] || '😋')}${food.emoji}</div>
-    <div class="feed-gain">อิ่มมื้อนี้เรียบร้อย 🎉 มื้อถัดไป: ${mealLabel(nextMeal)}</div>
+    ${stillHungry
+      ? `<div class="feed-gain" style="background:var(--orange);border-color:var(--orange-d);color:#a85a1a">ความอิ่ม ${Math.min(100, p.fullness||0)}/${MEAL_FULL} — ยังไม่เต็มหลอด กินต่ออีกหน่อยนะ 😋</div>`
+      : `<div class="feed-gain">อิ่มมื้อนี้เรียบร้อย 🎉 มื้อเย็นถัดไป: ${mealLabel(nextMeal)}</div>`}
     ${food.exp ? `<div class="feed-gain" style="background:var(--purple);border-color:var(--purple-d);color:#6a48a8">💖 เมนูโปรด! ได้ EXP แถม +${food.exp} ✨</div>` : ''}
-    ${food.skipNext ? `<div class="feed-gain" style="background:var(--yellow);border-color:var(--yellow-d);color:#a8791a">🍱 อาหารวิเศษ! อิ่มตุนข้ามมื้อถัดไปเลย ⏳</div>` : ''}<br>
-    <button>อิ่มแล้ว 😋</button>
+    ${food.skipNext ? `<div class="feed-gain" style="background:var(--yellow);border-color:var(--yellow-d);color:#a8791a">🍱 อาหารวิเศษ! เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้เลย ⏳</div>` : ''}<br>
+    <button>${stillHungry ? 'กินต่อ 🍽️' : 'อิ่มแล้ว 😋'}</button>
   </div>`;
-  overlay.querySelector('button').addEventListener('click', ()=>{ overlay.remove(); renderDashboard(); });
+  overlay.querySelector('button').addEventListener('click', ()=>{
+    overlay.remove();
+    if(stillHungry){ openFoodMenu(p, true); }
+    else renderDashboard();
+  });
   document.body.appendChild(overlay);
 }
 
@@ -1264,6 +1409,7 @@ function curePet(){
   state.coins -= CURE_COST;
   p.sick = false; p.sickCause = null;
   p.fedUpTo = currentSlotStart(Date.now());          // หายป่วยแล้วอิ่มมีแรง
+  p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
   p.heatFrom = (p.type === 'dragon' || heatProtected()) ? null : Date.now();
   p.thirstFrom = state.waterCut ? Date.now() : null; // ยังถูกตัดน้ำอยู่ → เริ่มนับรอบใหม่
   sfx.levelup();

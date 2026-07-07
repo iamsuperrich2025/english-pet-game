@@ -28,6 +28,16 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 33 (7 ก.ค. · Opus): คิว 7725691507 กลุ่ม A (ข้อ 1,2,3,6) มื้อเย็น 18:00 + ความอิ่มสะสม + การนอน + ข้าวเย็นคน — version→.11**
+- **ผู้ใช้เคาะสเปก (AskUserQuestion):** กินไม่ทัน 2 ชม. (20:00)=ป่วย · นอนได้ 20:00 ตื่น 06:00 · คนไม่กิน=ป่วยรักษา 1,000 · ข้าวเย็นคน 200
+- **ข้อ 2:** `currentSlotStart` เปลี่ยนจาก slot 3 ชม. → มื้อเย็นรายวัน 18:00 (`SLOT_MS`=24 ชม. `MEAL_HOUR`=18) · เพิ่ม `mealDayKey`/`nightKeyOf` (state.js)
+- **ข้อ 3:** FOODS เพิ่ม `fill` (คุกกี้20 แอปเปิ้ล25 ไก่40 ก๋วยเตี๋ยว50 เค้ก65 เมนูโปรด45 feast100+ตุนพรุ่งนี้) · pet เพิ่ม `fullness/mealSlot` ครบ 100 → `fedUpTo=slot` · หลอดหิวโชว์ความอิ่ม · กล่องกินเสร็จมีปุ่ม "กินต่อ" จนเต็ม
+- **ข้อ 1:** pet เพิ่ม `sleeping/sleepSickDay` · ปุ่ม 🌙 `sleepAllPets()` นอนทุกตัว/⏰ ปลุก (ui.js) · careTick: ตื่นเอง 06:00 · 23:00–ตี 6 ไม่นอน → ป่วย cause `sleep` ครั้งเดียว/คืน (`nightKeyOf` กันซ้ำ) · หลับ = feed disabled + badge 💤 + `.pet-asleep` หรี่แสง
+- **ข้อ 6:** state เพิ่ม `playerFedDay/playerSick/playerSickDay/playerSickPending` · ปุ่ม 🍚 `#btn-dinner` header (index.html, อัปเดตใน renderClock) กิน 200 ผ่าน `dinnerClick()` · เกิน 20:00 ไม่กิน → ป่วย 🤒 เด้ง alertBox ครั้งเดียว (pending consume ใน renderDashboard) รักษา 1,000 · นับใน `updateSettingsBadge`+แถวใน `openAttentionSummary` (data-act='dinner')
+- **Migration กันป่วยย้อนหลัง:** เซฟเก่า (ไม่มี `fullness`) → ถือว่าอิ่มมื้อล่าสุด + `sleepSickDay`=คืนนี้ + `playerFedDay`=มื้อล่าสุด · ผู้เล่นใหม่ตั้ง `playerFedDay` ตอนลงทะเบียน (main.js) · careTick คนป่วยเฉพาะ `state.student` มีแล้ว
+- อัปเดตวิธีเล่น (util.js openHelp) ตามกติกาใหม่ · ไฟล์แก้: pets.js/state.js/ui.js/util.js/main.js/index.html/style.css
+- ✅ ทดสอบ preview (mock login + fake `Date.now`): หิว 18:30 รีเซ็ต 0 → คุกกี้×2=40 ยังหิว → เค้ก=100 อิ่ม · "กินต่อ" เปิดเมนูซ้ำ · 20:30 ไม่เต็ม→ป่วย hunger · นอน/ปลุก/หลับ badge ครบ · 23:30 ไม่นอน→ป่วย sleep + คนป่วย+alertBox ครั้งเดียว ไม่ป่วยซ้ำ · 06:30 ตื่นเอง · กิน/รักษาคนหักเหรียญถูก · badge ⚙️ นับ +1 + แถวเมนูสรุปกดได้ · migration เซฟเก่า 21:00 ไม่ป่วยย้อนหลัง · ไม่มี console error
+
 **✅ รอบ 32h (7 ก.ค. · Opus): เมนูสรุปโชว์ยอดบิลรวม + badge ย่อยเด้งพร้อมกัน — commit `661e290` · version→.10**
 - **badge ย่อยเด้งพร้อมกัน:** รีแฟคเป็น helper `setBadge(el,n)` (js/ui.js) ตั้งเลข+เด้ง `badge-pop` ตอนเลขเพิ่ม เก็บ `_badgeLast[id]` ต่อ badge · ใช้กับ friend/gift/settings badge → เด้งภาพพร้อมกันทั้งเกม · **สั่นครั้งเดียวที่ badge รวมเท่านั้น** (setBadge คืน increased, updateSettingsBadge สั่ง vibrate) กันสั่นซ้ำกับ badge ย่อย · home/shop-bill-badge ยังเป็น '!' คงเดิม (ไม่ใช่เลข)
 - **ยอดบิลรวมในเมนูสรุป:** `openAttentionSummary` คำนวณ `billOutstanding` sum ต่อกลุ่ม → sub แต่ละแถวโชว์ "รวม 🪙X" + บรรทัด `.attn-total` ยอดรวมทั้งหมด

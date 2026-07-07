@@ -399,6 +399,16 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 }
 .pet-sick .pet-wrap{filter:grayscale(.75) brightness(.95);animation:none!important;}
 
+/* ---------- การนอน (คิว 7725691507 ข้อ 1) ---------- */
+.pet-asleep .pet-wrap{filter:brightness(.6);animation:none!important;}
+.sleep-badge{animation:sleepFloat 2.2s ease-in-out infinite;}
+@keyframes sleepFloat{0%,100%{transform:translateY(0) scale(1);opacity:.85;}50%{transform:translateY(-10px) scale(1.12);opacity:1;}}
+.btn-sleep{background:linear-gradient(180deg,#8f7fe8,#6a5acd);box-shadow:0 4px 0 #4a3f96;}
+
+/* ---------- ข้าวเย็นผู้เล่น (คิว 7725691507 ข้อ 6): ปุ่ม 🍚/🤒 เต้นเรียกให้กดใน header ---------- */
+.dinner-btn{animation:dinnerPulse 1.6s ease-in-out infinite;}
+@keyframes dinnerPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+
 /* ---------- เมนูเลือกอาหาร ---------- */
 .food-box{border-color:var(--orange-d);max-width:340px;}
 .food-box h2{color:#e0812f;}
