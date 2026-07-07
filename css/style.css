@@ -717,6 +717,15 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   font-size:14px;line-height:1;padding:0;
 }
 .toast-warn .toast-x:hover{background:rgba(255,255,255,.4);}
+/* ปุ่มปิดทั้งหมด — โผล่เมื่อคำเตือนซ้อน ≥2 อัน */
+.toast-clear-all{
+  position:fixed;left:50%;transform:translateX(-50%);
+  z-index:9991;border:none;cursor:pointer;
+  background:rgba(90,74,106,.96);color:#fff;
+  padding:7px 16px;border-radius:999px;font-size:13px;font-weight:bold;
+  box-shadow:0 4px 14px rgba(0,0,0,.3);transition:bottom .18s;animation:fadeIn .3s;
+}
+.toast-clear-all:hover{background:rgba(70,56,86,.99);}
 
 /* แถบแจ้งเวอร์ชันใหม่ (PWA update) — ค้างจนกดอัปเดต/ปิด */
 .update-banner{

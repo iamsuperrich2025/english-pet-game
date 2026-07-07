@@ -50,12 +50,28 @@ function showScreen(id){
 /* ---------- FX ---------- */
 // คำเตือน/ทำรายการไม่สำเร็จ → ค้างจนผู้ใช้กดปิด · ข้อความแจ้งสำเร็จ → หายเอง
 const TOAST_WARN_RE = /ไม่สำเร็จ|ไม่พอ|ไม่ได้|ไม่มี|ยังไม่|หมดเวลา|หมดอายุ|ลองใหม่|ป่วย|ให้ครบ|มากกว่า 0|อินเทอร์เน็ต|ต้อง.{0,20}ก่อน|⚠️|❌|🚫|💔|⏰|🤒/;
+let lastWrongAt = 0;                       // กันเสียงเตือนซ้ำ (call site เรียก sfx.wrong ก่อน toast อยู่แล้ว)
+const nowMs = ()=> (window.performance ? performance.now() : Date.now());
 function restackToasts(){
   const list = [...document.querySelectorAll('.toast-warn')];
   let b = 76;                              // ตรงกับ bottom ใน .toast (css)
   for(let i = list.length - 1; i >= 0; i--){   // อันใหม่สุดอยู่ล่างสุด อันเก่าดันขึ้นไป
     list[i].style.bottom = b + 'px';
     b += list[i].offsetHeight + 10;
+  }
+  // ปุ่ม "ปิดทั้งหมด" — โผล่เมื่อมีคำเตือนซ้อน ≥2 อัน วางเหนือกอง
+  let clr = document.getElementById('toast-clear-all');
+  if(list.length >= 2){
+    if(!clr){
+      clr = document.createElement('button');
+      clr.id = 'toast-clear-all'; clr.className = 'toast-clear-all';
+      clr.textContent = '✕ ปิดทั้งหมด';
+      clr.onclick = ()=>{ document.querySelectorAll('.toast-warn').forEach(t=>t.remove()); restackToasts(); };
+      document.body.appendChild(clr);
+    }
+    clr.style.bottom = b + 'px';
+  }else if(clr){
+    clr.remove();
   }
 }
 function toast(msg, ms=1800){
@@ -69,6 +85,8 @@ function toast(msg, ms=1800){
     x.onclick = ()=>{ t.remove(); restackToasts(); };
     t.appendChild(span); t.appendChild(x);
     document.body.appendChild(t);
+    if(nowMs() - lastWrongAt > 200 && typeof sfx !== 'undefined') sfx.wrong();  // เสียงเตือน (ไม่ซ้ำถ้าเพิ่งเล่นไป)
+    if(state.sound && navigator.vibrate) navigator.vibrate(50);                 // สั่นเบาๆ
     restackToasts();                       // ค้างไว้ ไม่ตั้ง setTimeout
     return;
   }
@@ -102,7 +120,7 @@ function beep(freq, dur, delay=0, type='sine', vol=0.15){
 const sfx = {
   select : ()=>{ beep(660,.12); },
   correct: ()=>{ beep(660,.12); beep(880,.18,.1); },
-  wrong  : ()=>{ beep(180,.25,0,'sawtooth',.08); },
+  wrong  : ()=>{ lastWrongAt = nowMs(); beep(180,.25,0,'sawtooth',.08); },
   coin   : ()=>{ beep(1320,.1,.05,'triangle'); },
   levelup: ()=>{ [523,659,784,1047].forEach((f,i)=>beep(f,.2,i*.13)); },
   buy    : ()=>{ beep(880,.1); beep(1175,.15,.08); },
