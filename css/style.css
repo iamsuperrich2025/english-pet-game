@@ -437,6 +437,19 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   padding:1px 10px;font-size:11.5px;margin-bottom:2px;
 }
 .fd-exp{font-size:12.5px;color:#7d5fc0;font-weight:bold;display:block;}
+/* เมนู 2 ชุด (ข้อ 5.1): หัวข้อคั่นชุดอาหารสัตว์/อาหารคน + อาหารที่เป็นโทษกับสัตว์ตัวนี้ */
+.food-sec{
+  grid-column:1/-1;text-align:left;font-size:13.5px;font-weight:bold;color:#3d8fb5;
+  background:#e8f6ff;border-radius:10px;padding:4px 10px;margin-top:4px;
+}
+.food-sec-human{color:#b5722a;background:#fff4d6;}
+.food-item.food-bad{background:#fff0f0;border-color:#f0b8b8;}
+.bad-tag{
+  display:inline-block;background:#e8483f;color:#fff;border-radius:999px;
+  padding:1px 8px;font-size:11px;margin-bottom:2px;
+}
+.fd-toxin{font-size:12px;color:#7a3ab0;font-weight:bold;display:block;}
+.fd-safe{font-size:12px;color:#2e7d43;display:block;}
 .food-cancel{
   margin-top:12px;background:#efe8fa!important;color:#7a5ca8!important;
   box-shadow:0 4px 0 #cfc0e8!important;
@@ -863,6 +876,17 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 .thirst-fill{background:linear-gradient(90deg,#7ec8f7,#3a7bd5);}       /* แถบขาดน้ำตอนถูกตัดน้ำ */
 .thirst-text{color:#2e6da8;}
 .thirst-text small{color:#7aa8cc;}
+
+/* ---------- พิษสะสมจากอาหารโทษ (คิว 7725691507 ข้อ 5.1) ---------- */
+.toxin-fill{background:linear-gradient(90deg,#c08ae0,#7a3ab0);}
+.toxin-text{color:#7a3ab0;}
+.toxin-text small{color:#a883c4;}
+.detox-btn{
+  display:inline-block;margin-left:8px;border:none;border-radius:999px;padding:4px 12px;
+  font-family:inherit;font-size:13px;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,#a86fd4,#7a3ab0);box-shadow:0 3px 0 #5a2a84;
+}
+.detox-btn:active{transform:translateY(2px);box-shadow:none;}
 
 /* ============================================================
    สินค้าสะสม & ตลาดซื้อขายต่อ (Global Trade HQ)

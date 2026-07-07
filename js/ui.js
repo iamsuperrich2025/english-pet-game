@@ -1120,7 +1120,9 @@ function renderDashboard(){
           ? 'เพราะโดนฝนเปียกทั้งตัว ไม่มีที่หลบฝนสภาพดี (หาที่พักให้น้องนะ)'
           : p.sickCause === 'sleep'
             ? `เพราะนอนดึกเกินไป ไม่ได้เข้านอนก่อน ${SLEEP_SICK_HOUR}:00 น. (พาเข้านอนได้ตั้งแต่ ${SLEEP_FROM_HOUR}:00 น. ทุกคืนนะ)`
-            : 'เพราะหิวนานเกินไป';
+            : p.sickCause === 'toxin'
+              ? 'เพราะพิษจากอาหารสะสมเต็มหลอด (อาหารคนบางอย่างเป็นโทษกับสัตว์นะ — หมอจะขับพิษให้ตอนรักษา)'
+              : 'เพราะหิวนานเกินไป';
 
     /* ---- ความร้อนสะสม (ป่วยทุก 6 ชม. ถ้าไม่มีที่พักติดแอร์ — มังกรไม่ป่วย) ---- */
     let heatUI;
@@ -1156,6 +1158,19 @@ function renderDashboard(){
           <small>บ้านถูกตัดน้ำอยู่ — จ่ายค่าน้ำค้างให้น้ำกลับมานะ</small></div>`;
     }
 
+    /* ---- พิษสะสมจากอาหารโทษ (ข้อ 5.1): ไม่ลดเอง เต็ม 100 → ป่วยทันที · ขับพิษ 1,000 ---- */
+    let toxinUI = '';
+    if((p.toxin||0) > 0){
+      toxinUI = `
+        <div class="level-row">
+          <span class="level-badge" style="background:#7a3ab0">☠️ พิษ</span>
+          <div class="heat-bar"><div class="heat-fill toxin-fill" style="width:${p.toxin}%"></div></div>
+        </div>
+        <div class="heat-text toxin-text">☠️ พิษสะสม ${p.toxin}/${TOXIN_FULL} — เต็มหลอดน้องจะป่วยทันที<br>
+          <small>พิษจากอาหารคนที่เป็นโทษ ไม่ลดเอง</small>
+          ${!p.sick ? `<button class="detox-btn" id="btn-detox">🧪 ขับพิษ 🪙${fmtNum(DETOX_COST)}</button>` : ''}</div>`;
+    }
+
     hungerUI = `
       <div class="level-row">
         <span class="level-badge" style="background:var(--orange-d)">🍖 อิ่ม</span>
@@ -1164,6 +1179,7 @@ function renderDashboard(){
       <div class="hunger-text">${hungerStatus}</div>
       ${heatUI}
       ${thirstUI}
+      ${toxinUI}
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       ${sleepHintHTML(p, now)}
       <div class="care-row">
@@ -1206,6 +1222,8 @@ function renderDashboard(){
   if(sleepBtn) sleepBtn.addEventListener('click', sleepAllPets);
   const wakeBtn = document.getElementById('btn-wake');
   if(wakeBtn) wakeBtn.addEventListener('click', wakeAllPets);
+  const detoxBtn = document.getElementById('btn-detox');
+  if(detoxBtn) detoxBtn.addEventListener('click', ()=>detoxPet(p));
 
   // ปุ่ม ✏️ เปลี่ยนชื่อน้อง (ข้อ 7 — ตรวจชื่อชุดเดียวกับชื่อผู้เล่น แค่ 1–15 ตัว)
   document.getElementById('btn-pet-rename').addEventListener('click', ()=>{
@@ -1309,7 +1327,27 @@ function feedPet(){
 function openFoodMenu(p, hungry){
   sfx.select();
   const fav = Object.assign({id:'favorite'}, PETS[p.type].favFood);
-  const menuFoods = [fav, ...FOODS];
+  /* ข้อ 5.1: แยกเมนู 2 ชุด — ชุดอาหารสัตว์ (fav+ปลอดภัย) กับชุดอาหารคน (บางอย่างเป็นโทษ) */
+  const petFoods = [fav, ...FOODS.filter(f=>!f.human)];
+  const humanFoods = FOODS.filter(f=>f.human);
+  const menuFoods = [...petFoods, ...humanFoods];
+  const itemHTML = f=>{
+    const usable = hungry || f.skipNext;
+    const bad = foodBadFor(f, p.type);
+    return `
+        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${(state.coins < f.price || !usable) ? 'cant-afford' : ''}" data-food="${f.id}">
+          ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
+          ${bad ? `<span class="bad-tag">⚠️ เป็นโทษกับน้อง!</span>` : ''}
+          <span class="fd-emoji">${f.emoji}</span>
+          <span class="fd-en">${f.en}</span>
+          <span class="fd-name">${f.name}</span>
+          <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม +${f.fill}</span>
+          ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
+          ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
+          ${bad ? `<span class="fd-toxin">☠️ พิษสะสม +${f.toxin}</span>`
+                : f.human ? `<span class="fd-safe">✅ ${p.type==='dragon' ? 'มังกรกินได้' : 'น้องกินได้'}</span>` : ''}
+        </div>`;
+  };
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box food-box">
@@ -1318,18 +1356,10 @@ function openFoodMenu(p, hungry){
       ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
       : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มมื้อนี้แล้ว — มีแต่ชุดอาหารวิเศษที่กินตุนข้ามมื้อพรุ่งนี้ได้</p>`}
     <div class="food-grid">
-      ${menuFoods.map(f=>{
-        const usable = hungry || f.skipNext;
-        return `
-        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${(state.coins < f.price || !usable) ? 'cant-afford' : ''}" data-food="${f.id}">
-          ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
-          <span class="fd-emoji">${f.emoji}</span>
-          <span class="fd-en">${f.en}</span>
-          <span class="fd-name">${f.name}</span>
-          <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม +${f.fill}</span>
-          ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
-          ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
-        </div>`;}).join('')}
+      <div class="food-sec">🐾 ชุดอาหารสัตว์ (ปลอดภัย)</div>
+      ${petFoods.map(itemHTML).join('')}
+      <div class="food-sec food-sec-human">🧑 ชุดอาหารคน — ⚠️ บางอย่างเป็นโทษกับสัตว์</div>
+      ${humanFoods.map(itemHTML).join('')}
     </div>
     <button class="food-cancel">ไว้ก่อน</button>
   </div>`;
@@ -1346,6 +1376,19 @@ function openFoodMenu(p, hungry){
         return;
       }
       overlay.remove();
+      /* ข้อ 5.1: อาหารโทษ → ป๊อปอัพเตือนก่อน กดรับทราบแล้วถึงป้อนได้ (กินอิ่มจริงแต่พิษสะสม) */
+      if(foodBadFor(food, p.type)){
+        const toxAfter = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
+        sfx.wrong();
+        askConfirm(`<div style="font-size:56px;line-height:1">${food.emoji}⚠️</div>
+          <div style="font-size:20px;font-weight:bold;margin-top:8px;color:#b23a48">${food.name}เป็นโทษกับ${escapeHTML(p.name)}นะ!</div>
+          <div style="margin-top:8px;color:#6a5a78;line-height:1.5">${escapeHTML(food.why||'')}<br><br>
+          กินแล้วอิ่มได้ (+${food.fill}) แต่ <b style="color:#7a3ab0">พิษจะสะสม +${food.toxin}</b><br>
+          บาร์พิษ: <b>${p.toxin||0} → ${toxAfter}/${TOXIN_FULL}</b>${toxAfter >= TOXIN_FULL ? ' — <b style="color:#b23a48">เต็มแล้วน้องจะป่วยทันที!</b>' : ''}<br>
+          <small>พิษไม่ลดเอง ต้องจ่ายค่าขับพิษ 🪙${fmtNum(DETOX_COST)}</small></div>`,
+          'เข้าใจแล้ว ให้กินเลย', ()=>feedWith(p, food));
+        return;
+      }
       feedWith(p, food);
     });
   });
@@ -1364,6 +1407,11 @@ function feedWith(p, food){
     p.fullness = Math.min(MEAL_FULL, (p.fullness||0) + (food.fill||0));
     if(p.fullness >= MEAL_FULL && p.fedUpTo < currentSlotStart(now)) p.fedUpTo = currentSlotStart(now);
   }
+  /* ข้อ 5.1: อาหารโทษ → พิษสะสม (ไม่ลดเอง) ครบ 100 → ป่วยทันที cause 'toxin' */
+  if(foodBadFor(food, p.type)){
+    p.toxin = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
+    if(p.toxin >= TOXIN_FULL && !p.sick){ p.sick = true; p.sickCause = 'toxin'; }
+  }
   sfx.buy();
   if(food.exp) addExp(food.exp, p);   // เมนูโปรด: ได้ EXP แถม (อาจเลเวลอัพได้เลย)
   saveState();
@@ -1377,18 +1425,24 @@ function showFeedResult(p, food){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   const happyImg = IMG_FILES[`${p.type}_${stage}_happy`] || IMG_FILES[`${p.type}_${stage}_normal`];
-  const stillHungry = petHungry(p);          // กินแล้วแต่ยังไม่เต็มหลอด → ชวนกินต่อ
+  const gotToxin = foodBadFor(food, p.type);            // ข้อ 5.1: มื้อนี้ได้พิษสะสมมาด้วย
+  const toxinSick = p.sick && p.sickCause === 'toxin';  // พิษเต็ม 100 → ป่วยทันที
+  const stillHungry = petHungry(p) && !p.sick;          // กินแล้วแต่ยังไม่เต็มหลอด → ชวนกินต่อ (ป่วยแล้วห้ามกินต่อ)
   const nextMeal = p.fedUpTo >= nextSlotStart(Date.now()) - 1
     ? nextSlotStart(Date.now()) + SLOT_MS : nextSlotStart(Date.now());
   overlay.innerHTML = `<div class="levelup-box feed-box">
     <h2>${food.emoji} หม่ำ ${food.en} อร่อยจัง!</h2>
     <div class="feed-pet">${happyImg ? `<img src="${happyImg}" alt="">` : (conf[stage] || '😋')}${food.emoji}</div>
-    ${stillHungry
-      ? `<div class="feed-gain" style="background:var(--orange);border-color:var(--orange-d);color:#a85a1a">ความอิ่ม ${Math.min(100, p.fullness||0)}/${MEAL_FULL} — ยังไม่เต็มหลอด กินต่ออีกหน่อยนะ 😋</div>`
-      : `<div class="feed-gain">อิ่มมื้อนี้เรียบร้อย 🎉 มื้อเย็นถัดไป: ${mealLabel(nextMeal)}</div>`}
+    ${toxinSick
+      ? `<div class="feed-gain" style="background:var(--orange);border-color:var(--orange-d);color:#a85a1a">ความอิ่ม ${Math.min(100, p.fullness||0)}/${MEAL_FULL} — กินไม่ลงแล้ว ไม่สบายตัว...</div>`
+      : stillHungry
+        ? `<div class="feed-gain" style="background:var(--orange);border-color:var(--orange-d);color:#a85a1a">ความอิ่ม ${Math.min(100, p.fullness||0)}/${MEAL_FULL} — ยังไม่เต็มหลอด กินต่ออีกหน่อยนะ 😋</div>`
+        : `<div class="feed-gain">อิ่มมื้อนี้เรียบร้อย 🎉 มื้อเย็นถัดไป: ${mealLabel(nextMeal)}</div>`}
     ${food.exp ? `<div class="feed-gain" style="background:var(--purple);border-color:var(--purple-d);color:#6a48a8">💖 เมนูโปรด! ได้ EXP แถม +${food.exp} ✨</div>` : ''}
-    ${food.skipNext ? `<div class="feed-gain" style="background:var(--yellow);border-color:var(--yellow-d);color:#a8791a">🍱 อาหารวิเศษ! เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้เลย ⏳</div>` : ''}<br>
-    <button>${stillHungry ? 'กินต่อ 🍽️' : 'อิ่มแล้ว 😋'}</button>
+    ${food.skipNext ? `<div class="feed-gain" style="background:var(--yellow);border-color:var(--yellow-d);color:#a8791a">🍱 อาหารวิเศษ! เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้เลย ⏳</div>` : ''}
+    ${gotToxin ? `<div class="feed-gain" style="background:#f0e3fb;border-color:#b98ae0;color:#7a3ab0">☠️ พิษสะสม +${food.toxin} → ตอนนี้ <b>${p.toxin}/${TOXIN_FULL}</b>${toxinSick ? '' : ' — อย่าให้กินบ่อยนะ!'}</div>` : ''}
+    ${toxinSick ? `<div class="feed-gain" style="background:#ffe3e3;border-color:#ff8f8f;color:#b23a48">🤒 พิษเต็มหลอด! ${escapeHTML(p.name)}ป่วยแล้ว — ต้องพาไปขับพิษ+รักษา 🪙${fmtNum(CURE_COST)}</div>` : ''}<br>
+    <button>${toxinSick ? 'พาไปหาหมอ 🩺' : stillHungry ? 'กินต่อ 🍽️' : 'อิ่มแล้ว 😋'}</button>
   </div>`;
   overlay.querySelector('button').addEventListener('click', ()=>{
     overlay.remove();
@@ -1407,6 +1461,7 @@ function curePet(){
     return;
   }
   state.coins -= CURE_COST;
+  if(p.sickCause === 'toxin') p.toxin = 0;           // ข้อ 5.1: หมอขับพิษให้ตอนรักษา (เฉพาะป่วยจากพิษ)
   p.sick = false; p.sickCause = null;
   p.fedUpTo = currentSlotStart(Date.now());          // หายป่วยแล้วอิ่มมีแรง
   p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
@@ -1416,6 +1471,25 @@ function curePet(){
   toast('💊 รักษาหายแล้ว! น้องกลับมาแข็งแรงร่าเริง 🎉');
   saveState();
   renderDashboard();
+}
+
+/* ข้อ 5.1: ขับพิษก่อนป่วย — พิษไม่ลดเอง จ่าย 1,000 ล้างบาร์พิษเป็น 0 */
+function detoxPet(p){
+  if(!p || !(p.toxin > 0) || p.sick) return;
+  sfx.select();
+  askConfirm(`<div style="font-size:56px;line-height:1">🧪</div>
+    <div style="font-size:20px;font-weight:bold;margin-top:8px;color:#7a3ab0">ขับพิษให้${escapeHTML(p.name)}</div>
+    <div style="margin-top:8px;color:#6a5a78;line-height:1.5">พิษสะสมตอนนี้ <b>${p.toxin}/${TOXIN_FULL}</b> — ถ้าเต็มหลอดน้องจะป่วยทันที<br>
+    หมอจะล้างพิษให้เหลือ 0 ค่าขับพิษ <b>🪙${fmtNum(DETOX_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
+    `🧪 ขับพิษ 🪙${fmtNum(DETOX_COST)}`, ()=>{
+      if(state.coins < DETOX_COST){ sfx.wrong(); toast(`ค่าขับพิษ 🪙${fmtNum(DETOX_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ`); return; }
+      state.coins -= DETOX_COST;
+      p.toxin = 0;
+      sfx.levelup();
+      toast(`🧪 ขับพิษเรียบร้อย! ${p.name}ตัวเบาสบายแล้ว — เลือกอาหารดีๆ ให้น้องนะ`);
+      saveState();
+      renderDashboard();
+    });
 }
 
 /* ============================================================

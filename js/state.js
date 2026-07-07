@@ -14,6 +14,9 @@ const SLEEP_FROM_HOUR = 20;                // ข้อ 1: พาสัตว์
 const SLEEP_SICK_HOUR = 23;                // ข้อ 1: ถึง 23:00 ยังไม่นอน → ป่วย (ครั้งเดียวต่อคืน)
 const WAKE_HOUR       = 6;                 // ข้อ 1: ตื่นนอนอัตโนมัติ 06:00
 const DINNER_COST     = 200;               // ข้อ 6: ค่าข้าวเย็นของผู้เล่น (เมนูคนจริงมากลุ่ม B)
+/* คิว 7725691507 ข้อ 5.1 (กลุ่ม B): พิษสะสมจากอาหารคนที่เป็นโทษกับสัตว์ */
+const TOXIN_FULL     = 100;                // พิษสะสมครบ 100 → ป่วยทันที cause 'toxin'
+const DETOX_COST     = 1000;               // ค่าขับพิษ (ล้างบาร์พิษก่อนป่วย) — พิษไม่ลดเอง
 const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 6 ชม. → ป่วย (ยกเว้นมังกร/มีแอร์)
 const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
 
@@ -93,6 +96,7 @@ function newPet(type, name){
           fedUpTo:0,        // timestamp มื้อที่กินครอบคลุมแล้ว (0 = ยังไม่เคยกิน)
           fullness:0,       // ข้อ 3: ความอิ่มสะสมของมื้อปัจจุบัน (0–100 ครบ 100 = อิ่มมื้อนี้)
           mealSlot:0,       // slot ที่ fullness นับอยู่ (เปลี่ยนมื้อ → รีเซ็ต 0)
+          toxin:0,          // ข้อ 5.1: พิษสะสมจากอาหารโทษ (0–100 เต็ม → ป่วย · ไม่ลดเอง ขับพิษ 1,000)
           sleeping:false,   // ข้อ 1: กำลังหลับอยู่ (ตื่นเอง 06:00)
           sleepSickDay:null,// ข้อ 1: nightKey คืนที่ป่วยเพราะไม่นอนไปแล้ว (กันป่วยซ้ำคืนเดียวกัน)
           heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
@@ -154,6 +158,7 @@ function loadState(){
           p.sleepSickDay = nightKeyOf(nowMig);
         }
         if(typeof p.mealSlot !== 'number') p.mealSlot = 0;
+        if(typeof p.toxin !== 'number') p.toxin = 0;   // ข้อ 5.1: เซฟเก่าเริ่มบาร์พิษว่าง
         if(typeof p.sleeping !== 'boolean') p.sleeping = false;
         if(p.sleepSickDay === undefined) p.sleepSickDay = null;
         if(p.heatFrom === undefined) p.heatFrom = null;
