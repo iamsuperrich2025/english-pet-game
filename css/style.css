@@ -818,10 +818,10 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .mkt-sold button{margin-top:4px;background:var(--green-d);color:#fff;border:none;border-radius:999px;padding:6px 20px;font-family:inherit;font-size:14px;cursor:pointer;}
 
 /* กล่องตั้งราคาขาย */
-.list-dialog .ld-pic{font-size:56px;height:90px;display:flex;align-items:center;justify-content:center;}
-.list-dialog .ld-pic img{width:84px;height:84px;object-fit:contain;}
-.list-dialog .ld-name{font-weight:bold;font-size:18px;}
-.list-dialog .ld-note{font-size:13px;color:#9a8aac;margin:4px 0 10px;line-height:1.45;}
+.levelup-box .ld-pic{font-size:56px;height:90px;display:flex;align-items:center;justify-content:center;}
+.levelup-box .ld-pic img{width:84px;height:84px;object-fit:contain;}
+.levelup-box .ld-name{font-weight:bold;font-size:18px;}
+.levelup-box .ld-note{font-size:13px;color:#9a8aac;margin:4px 0 10px;line-height:1.45;}
 .list-dialog .ld-input{font-size:20px;}
 .list-dialog .ld-input input{
   width:130px;padding:8px;border-radius:12px;border:2px solid var(--purple-d);
