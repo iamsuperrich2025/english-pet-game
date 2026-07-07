@@ -235,6 +235,8 @@ function openSettings(){
       </span>
     </div>
     <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
+    ${(typeof isTeacher==='function' && isTeacher()) ?
+      `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
     <div style="margin-top:16px"><button class="set-close">เสร็จแล้ว</button></div>
   </div>`;
   const paint = ()=>{
@@ -267,6 +269,8 @@ function openSettings(){
     state.noAnim = !state.noAnim; saveState(); applyNoAnim(); paint();
   });
   overlay.querySelector('#set-help').addEventListener('click', openHelp);
+  const tg = overlay.querySelector('#set-teacher');
+  if(tg) tg.addEventListener('click', openTeacherGuide);
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   paint();
@@ -289,8 +293,30 @@ function openHelp(){
       <div class="help-item"><b>💰 หาเงินเพิ่ม</b><br>🌳 ฟาร์มปลูกผัก · 🏭 โรงงานผลิตของ · 🏪 ตลาดขายของ · 📱 มือถือ/💻 คอมพิวเตอร์ ช่วยเพิ่มรายได้</div>
       <div class="help-item"><b>📚 หมวดคำศัพท์ &amp; แบบทดสอบ</b><br>ฝึกคำศัพท์เป็นหมวด สอบผ่านรับรางวัลใหญ่ครั้งแรก</div>
       <div class="help-item"><b>👥 เพื่อน &amp; 🎁 ของขวัญ</b><br>เพิ่มเพื่อนด้วยรหัส 6 ตัว แชทและส่งของขวัญให้กันได้</div>
-      <div class="help-item"><b>🎫 ตั๋วโลกผจญภัย</b><br>เลี้ยงน้องให้โตเต็มวัย (Lv.3) แล้วซื้อตั๋วเข้า <b>โลกผจญภัย 3D</b> ได้ที่ร้านค้า (🪙5,000) — ตามหาตัวอักษรมาประกอบคำศัพท์ ได้เหรียญเยอะกว่าเกมจับคู่! 🚧 กำลังก่อสร้าง เปิดเร็วๆ นี้</div>
+      <div class="help-item"><b>🌍 โลก 3D (ตั๋วที่ร้านค้า)</b><br>เลี้ยงน้องให้โตเต็มวัย (Lv.3) แล้วซื้อ <b>🎫 ตั๋วโลกผจญภัย</b> (🪙5,000) — เดินเก็บตัวอักษรมาประกอบคำศัพท์ คำละ 🪙15 ระวัง monster 👾 ยิงสู้ได้ · เก่งแล้วลอง <b>🎃 ตั๋วโลกผีสิง</b> (🪙10,000) คำละ 🪙25 แต่ผีสู้ไม่ได้ต้องหนี! · ในโลกเจอเพื่อนจริงๆ เดินไปมา แชทลอยหัว 💬 คุยเสียง 🎤 ได้ · 📨 ชวนเพื่อนเข้าโลกพร้อมกันครั้งแรก รับเงินคืนคนละ 🪙2,000 · กระดาน 🏆 มุมซ้ายบนโชว์ว่าใครประกอบคำเก่งสุดรอบนี้</div>
       <div class="help-item"><b>⚙️ ตั้งค่า</b><br>เปิด/ปิด เสียง สั่นเตือน และเอฟเฟกต์เคลื่อนไหว (ปิดได้ถ้าเครื่องช้า) · เปลี่ยนตัวละครของหนู 🦸 ได้ที่นี่ด้วย</div>
+    </div>
+    <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
+  </div>`;
+  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
+/* ---------- 👩‍🏫 คู่มือครู (เปิดจากหน้าตั้งค่า — เห็นเฉพาะบัญชีใน TEACHER_EMAILS) ---------- */
+function openTeacherGuide(){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay help-overlay';
+  overlay.innerHTML = `<div class="levelup-box help-box">
+    <h2 style="margin:0 0 8px">👩‍🏫 คู่มือครู — เครื่องมือคุมห้องในโลก 3D</h2>
+    <div class="help-body">
+      <div class="help-item"><b>🔑 บัญชีครูคืออะไร</b><br>บัญชี Google ที่ลงทะเบียนไว้ใน <code>TEACHER_EMAILS</code> (ไฟล์ js/auth.js) จะเห็นปุ่มพิเศษ 2 ปุ่มในโลก 3D ทั้งกลางวันและผีสิง — เด็กมองไม่เห็นปุ่มเหล่านี้ · อยากเพิ่มครูคนอื่น เพิ่มอีเมลต่อท้ายรายชื่อในไฟล์ได้เลย</div>
+      <div class="help-item"><b>👩‍🏫 ปิด/เปิดเสียงห้อง</b><br>ปุ่มแดงในโลก 3D — กดแล้ว<b>ไมค์เด็กทุกคนใน map ดับทันที</b>และถูกล็อก (ปุ่มไมค์เด็กขึ้น "🎤 ครูปิด") เด็กที่เข้ามาทีหลังก็โดนล็อกด้วย · กดอีกครั้ง = เปิดห้อง เด็กเปิดไมค์เองได้ · ไมค์ครูไม่ติดล็อก — เหมาะกับตอนอธิบายกติกาหรือคุมความเรียบร้อย</div>
+      <div class="help-item"><b>🏁 จบรอบแข่ง (พิธีประกาศแชมป์)</b><br>กดแล้ว<b>ทุกเครื่องใน map</b> เห็นโพเดียม 🥇🥈🥉 พร้อมแตรฉลอง · เด็กที่ติดอันดับรับโบนัสอัตโนมัติ <b>ที่ 1 +100 · ที่ 2 +50 · ที่ 3 +25</b> เหรียญ · จบพิธีคะแนนทุกคน<b>รีเซ็ตเป็น 0 เริ่มรอบใหม่ทันที</b> — กดแข่งหลายยกในคาบเดียวได้</div>
+      <div class="help-item"><b>🏆 กระดานคะแนน (มุมซ้ายบนใน map)</b><br>โชว์อันดับสด "ใครประกอบคำได้เยอะสุดรอบนี้" — คนนำมีมงกุฎ 👑 แถวของเด็กแต่ละคนไฮไลต์เขียวบนจอตัวเอง · คะแนนนับต่อรอบเล่น (ออกจาก map = เริ่มนับใหม่)</div>
+      <div class="help-item"><b>📋 สูตรจัดแข่งในคาบ (แนะนำ)</b><br>1) ให้เด็กซื้อตั๋วแล้วเข้าโลกเดียวกัน (เช่น โลกผจญภัย 🌍)<br>2) กด 👩‍🏫 ปิดเสียงห้อง แล้วอธิบายกติกา+เวลา เช่น "10 นาที ใครได้เยอะสุดชนะ"<br>3) เปิดเสียงห้อง ปล่อยเด็กลุย — ดูอันดับสดจากกระดาน 🏆<br>4) หมดเวลา กด 🏁 จบรอบแข่ง — โพเดียมเด้งทุกจอ รางวัลเข้าอัตโนมัติ<br>5) แข่งยกต่อไปได้ทันที คะแนนรีเซ็ตให้แล้ว</div>
+      <div class="help-item"><b>🛡️ ความปลอดภัยที่ระบบดูแลให้แล้ว</b><br>ไมค์เด็ก<b>ปิดเป็นค่าเริ่มต้น</b>ทุกครั้งที่เข้า map (ต้องกดเปิดเอง) · คนเปิดไมค์มี 🎤 ลอยเหนือหัว มองเห็นชัด · เด็กปิดลำโพง 🔇 เองได้ถ้าไม่อยากได้ยินใคร · โหมด 👥 คุยเฉพาะเพื่อนที่ชวนกัน · แชทลอยหัวผ่าน<b>ตัวกรองคำหยาบ</b>เดียวกับระบบตั้งชื่อ · ข้อความโชว์แค่ 5 วินาทีแล้วหาย</div>
+      <div class="help-item"><b>📨 โบนัสชวนเพื่อน</b><br>เด็กกดปุ่มชวนบนการ์ดตั๋ว เลือกเพื่อน แล้วเข้าโลกพร้อมกันครั้งแรก → ได้เงินคืน<b>คนละ 🪙2,000</b> (ครั้งเดียวต่อโลก) — ใช้กระตุ้นให้เด็กชวนกันเข้าคาบแข่งได้</div>
     </div>
     <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
   </div>`;
