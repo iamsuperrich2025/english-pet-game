@@ -125,7 +125,25 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   font-family:inherit;font-size:16px;color:var(--ink);cursor:pointer;box-shadow:var(--card-shadow);
 }
 /* จุดแดงเลขรวมบนปุ่ม ⚙️ ตั้งค่า — วางมุมนอกขวาบนของปุ่มกลม */
-#settings-badge{top:-7px;right:-7px;}
+#settings-badge{top:-7px;right:-7px;cursor:pointer;}
+/* เด้งครั้งเดียวตอนเลขเพิ่ม (มีของใหม่เข้า) — html.no-anim จะไม่เด้งเองอัตโนมัติ */
+@keyframes badgePop{0%{transform:scale(1);}30%{transform:scale(1.55);}60%{transform:scale(.88);}100%{transform:scale(1);}}
+.badge-pop{animation:badgePop .45s ease;}
+/* เมนูสรุปสิ่งที่ค้าง (openAttentionSummary) */
+.attn-box{max-width:340px;text-align:left;}
+.attn-box h2{text-align:center;}
+.attn-list{display:flex;flex-direction:column;gap:8px;}
+.attn-row{
+  display:flex;align-items:center;gap:10px;width:100%;
+  background:#f7f3fb;border:2px solid #e6d9f5;border-radius:14px;padding:10px 12px;
+  font-family:inherit;font-size:14px;color:#5a4a6a;cursor:pointer;text-align:left;
+}
+.attn-row:active{transform:translateY(1px);}
+.attn-ico{font-size:24px;flex:none;line-height:1;}
+.attn-txt{flex:1;line-height:1.35;}
+.attn-txt small{color:#8a7a9a;}
+.attn-go{font-size:22px;color:#a98bec;font-weight:bold;flex:none;}
+.attn-box .set-close{display:block;margin:0 auto;}
 
 /* ---------- สภาพอากาศ ---------- */
 .weather-banner{

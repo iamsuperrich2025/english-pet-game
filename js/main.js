@@ -51,6 +51,8 @@ document.getElementById('btn-back').addEventListener('click', ()=>{
 });
 // หน้าตั้งค่า (รวมสวิตช์เสียง/สั่นไว้ที่เดียว — openSettings อยู่ใน util.js)
 document.getElementById('btn-settings').addEventListener('click', openSettings);
+// แตะ badge เลขรวมบนปุ่ม ⚙️ → เมนูสรุปสิ่งที่ค้าง (ไม่เปิดหน้าตั้งค่า)
+document.getElementById('settings-badge').addEventListener('click', (e)=>{ e.stopPropagation(); openAttentionSummary(); });
 /* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป
    (เด็กเข้าใจผิดว่าเป็น logout → เซฟหายถาวรทั้งเครื่องและ cloud)
    ถ้าต้องรีเซ็ตจริงให้ทำผ่าน console: localStorage.removeItem(STORAGE_KEY) + ลบ /users/<uid>/save ใน DB */

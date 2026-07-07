@@ -312,6 +312,7 @@ function updateBillBadges(){
 }
 
 /* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด (attention รวมให้เห็นแต่ไกล) */
+let _lastSettingsN = null;   // เลขล่าสุด — เด้ง/สั่นเฉพาะตอน "เพิ่มขึ้น" (มีของใหม่เข้า)
 function updateSettingsBadge(){
   const b = document.getElementById('settings-badge');
   if(!b) return;
@@ -322,6 +323,47 @@ function updateSettingsBadge(){
   const n = bills + reqs + chats + gifts;
   if(n > 0){ b.textContent = n; b.style.display = ''; }
   else b.style.display = 'none';
+  // มีของใหม่เข้า (เลขเพิ่ม) → เด้งครั้งเดียว + สั่นเบาๆ · ไม่เด้งตอนโหลดครั้งแรก/ตอนเลขลด
+  if(_lastSettingsN !== null && n > _lastSettingsN && n > 0){
+    b.classList.remove('badge-pop'); void b.offsetWidth;   // รีสตาร์ตแอนิเมชัน (no-anim จะไม่เด้งเองอัตโนมัติ)
+    b.classList.add('badge-pop');
+    b.addEventListener('animationend', ()=>b.classList.remove('badge-pop'), {once:true});
+    if(typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
+  }
+  _lastSettingsN = n;
+}
+
+/* แตะ badge บนปุ่ม ⚙️ → เมนูสรุปว่าค้างอะไร กดแถวไหนพาไปหน้านั้นเลย */
+function openAttentionSummary(){
+  const homeBills = ['maint','elec','water','trash'].filter(id => billOutstanding(id) > 0).length;
+  const shopBills = ['net','data'].filter(id => billOutstanding(id) > 0).length;
+  const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
+  const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
+  const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  const rows = [];
+  if(homeBills > 0)   rows.push({ico:'🏠', txt:`บิลบ้านค้าง ${homeBills} รายการ`, sub:'ค่าบำรุง/ไฟ/น้ำ/ขยะ', panel:'panel-home'});
+  if(shopBills > 0)   rows.push({ico:'🛍️', txt:`บิลร้านค้าค้าง ${shopBills} รายการ`, sub:'ค่าเน็ต/ค่าบริการข้อมูล', panel:'panel-shop'});
+  if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
+  if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
+  if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay attn-overlay';
+  overlay.innerHTML = `<div class="levelup-box attn-box">
+    <h2 style="margin:0 0 8px">🔔 มีอะไรต้องจัดการ</h2>
+    <div class="attn-list">${rows.map(r=>`
+      <button class="attn-row" data-panel="${r.panel}">
+        <span class="attn-ico">${r.ico}</span>
+        <span class="attn-txt"><b>${r.txt}</b><br><small>${r.sub}</small></span>
+        <span class="attn-go">›</span>
+      </button>`).join('')}</div>
+    <div style="margin-top:14px"><button class="set-close">ปิด</button></div>
+  </div>`;
+  overlay.querySelectorAll('.attn-row').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ overlay.remove(); openPanel(btn.dataset.panel); });
+  });
+  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 function updateFriendBadge(){
   const b = document.getElementById('friend-badge');
