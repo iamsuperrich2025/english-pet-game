@@ -754,7 +754,7 @@ function sendPos(force){
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
     n:onlineDisplayName(), av:state.playerAvatar||'',
-    x, z, yaw:y, ts:firebase.database.ServerValue.TIMESTAMP,
+    x, z, yaw:y, m:Voice.mic?1:0, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
@@ -800,6 +800,15 @@ function onPeerData(snap){
     Voice.onPeer(uid);
   }
   p.tgt={x:d.x,z:d.z};
+  // ไอคอน 🎤 เหนือหัวคนที่เปิดไมค์ (เด็กเห็นชัดว่าเดินเข้าใกล้ใครแล้วคุยได้)
+  if(d.m===1 && !p.micSpr){
+    p.micSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture('🎤'),transparent:true}));
+    p.micSpr.scale.set(.7,.7,1);
+    p.micSpr.position.set(p.cur.x,2.72,p.cur.z);
+    scene.add(p.micSpr);
+  }else if(d.m!==1 && p.micSpr){
+    scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null;   // texture 🎤 อยู่ใน cache ห้าม dispose map
+  }
   // แชทลอยหัว: ct เปลี่ยน = ข้อความใหม่ (ct คงที่ต่อข้อความ ฝั่งส่งแนบซ้ำได้ไม่เด้งซ้ำ)
   if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){
     p.lastCt=d.ct;
@@ -810,6 +819,7 @@ function removePeer(uid){
   const p=peers[uid];
   if(!p) return;
   removePeerBubble(p);
+  if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
   scene.remove(p.spr); p.spr.material.map.dispose(); p.spr.material.dispose();
   delete peers[uid];
@@ -832,6 +842,7 @@ function tickPeers(dt,now){
       if(now>p.bubble.until) removePeerBubble(p);
       else p.bubble.spr.position.set(p.cur.x,3.1,p.cur.z);   // ลอยตามหัว
     }
+    if(p.micSpr) p.micSpr.position.set(p.cur.x,2.72+Math.sin(now/300)*.06,p.cur.z);
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
     if(en && en.audio && !en.audio.muted){
@@ -858,6 +869,7 @@ function tinvLinked(uid){
 const Voice={
   mic:false, spk:true, vmode:'all',
   stream:null, pcs:{}, inRef:null,
+  roomMuted:false, classRef:null, _prevRoom:null,   // 👩‍🏫 ครูปิดเสียงทั้งห้อง (/class/<map>/muteAll)
   allowed(uid){ return this.vmode==='all' || tinvLinked(uid); },
   join(){
     if(!netReady()) return;
@@ -867,9 +879,29 @@ const Voice={
     this.inRef=Online.db.ref('rtc/'+mode+'/'+onlineKey());
     this.inRef.remove().catch(()=>{});                     // ล้างข้อความค้างจากรอบก่อน
     this.inRef.on('child_added',(s)=>{ const m=s.val(); s.ref.remove().catch(()=>{}); if(m) this.handle(m); });
+    // 👩‍🏫 ฟังสถานะ "ครูปิดเสียงทั้งห้อง" ของ map นี้ (สถานะค้างอยู่ใน DB — เด็กเข้าทีหลังก็โดนล็อกด้วย)
+    this._prevRoom=null;
+    this.classRef=Online.db.ref('class/'+mode+'/muteAll');
+    this.classRef.on('value',(s)=>{
+      const v=s.val();
+      const on=!!(v && v.on);
+      this.roomMuted=on;
+      const teacher=(typeof isTeacher==='function' && isTeacher());
+      if(on && !teacher && this.mic) this.setMic(false);   // ตัดไมค์เด็กที่เปิดค้างทันที
+      if(this._prevRoom!==null || on){                     // เข้ามาเจอห้องปิดอยู่ก็แจ้ง / สถานะเปลี่ยนก็แจ้ง
+        if(this._prevRoom!==on){
+          showBanner(on?'👩‍🏫 <b>คุณครูปิดเสียงทั้งห้อง</b><br><small>ไมค์ทุกคนถูกปิดชั่วคราว</small>'
+                       :'👩‍🏫 <b>คุณครูเปิดเสียงห้องแล้ว</b><br><small>เปิดไมค์คุยกันได้เลย</small>');
+        }
+      }
+      this._prevRoom=on;
+      updateVoiceBtns();
+    });
     updateVoiceBtns();
   },
   leave(){
+    if(this.classRef){ this.classRef.off(); this.classRef=null; }
+    this.roomMuted=false; this._prevRoom=null;
     if(this.inRef){ this.inRef.off(); this.inRef.remove().catch(()=>{}); this.inRef=null; }
     Object.keys(this.pcs).forEach(uid=>this.drop(uid));
     if(this.stream){ this.stream.getTracks().forEach(tr=>tr.stop()); this.stream=null; }  // คืนไมค์ให้เครื่อง
@@ -939,6 +971,9 @@ const Voice={
     }
   },
   async setMic(on){
+    if(on && this.roomMuted && !(typeof isTeacher==='function' && isTeacher())){
+      sfx.wrong(); toast('👩‍🏫 คุณครูปิดเสียงห้องอยู่ — เปิดไมค์ไม่ได้ตอนนี้นะ'); return;
+    }
     if(on && !this.stream){
       try{ this.stream=await navigator.mediaDevices.getUserMedia({audio:true}); }
       catch(e){ sfx.wrong(); toast('🎤 เปิดไมค์ไม่สำเร็จ — ต้องกด "อนุญาต" ไมโครโฟนในเบราว์เซอร์นะ'); updateVoiceBtns(); return; }
@@ -946,9 +981,16 @@ const Voice={
     this.mic=on;
     const track=on&&this.stream?this.stream.getAudioTracks()[0]:null;
     Object.values(this.pcs).forEach(en=>{ if(en.sender) en.sender.replaceTrack(track).catch(()=>{}); });
+    if(myRef) sendPos(true);                               // ประกาศสถานะไมค์ (ไอคอน 🎤 เหนือหัว) ทันที
     showBanner(on?'🎤 <b>เปิดไมค์แล้ว</b><br><small>เพื่อนใน map ได้ยินเสียงหนู</small>'
                  :'🎤 <b>ปิดไมค์แล้ว</b><br><small>ไม่มีใครได้ยินเสียงหนู</small>');
     updateVoiceBtns();
+  },
+  /* 👩‍🏫 ครูสลับปิด/เปิดเสียงทั้งห้อง (เฉพาะบัญชีใน TEACHER_EMAILS — auth.js) */
+  toggleRoomMute(){
+    if(!this.classRef){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — สั่งปิดเสียงห้องไม่ได้'); return; }
+    const on=!this.roomMuted;
+    this.classRef.set({on, by:onlineDisplayName(), ts:firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});
   },
   setSpk(on){
     this.spk=on; state.voiceSpk=on; saveState();
@@ -965,13 +1007,20 @@ const Voice={
   },
 };
 function updateVoiceBtns(){
-  const mic=document.getElementById('adv-mic'), spk=document.getElementById('adv-spk'), vm=document.getElementById('adv-vmode');
+  const mic=document.getElementById('adv-mic'), spk=document.getElementById('adv-spk'),
+        vm=document.getElementById('adv-vmode'), tm=document.getElementById('adv-tmute');
   if(!mic) return;
-  mic.textContent=Voice.mic?'🎤 เปิด':'🎤 ปิด';
+  const teacher=(typeof isTeacher==='function' && isTeacher());
+  const locked=Voice.roomMuted && !teacher;
+  mic.textContent=locked?'🎤 ครูปิด':(Voice.mic?'🎤 เปิด':'🎤 ปิด');
   mic.classList.toggle('v-off',!Voice.mic);
+  mic.classList.toggle('v-lock',locked);
   spk.textContent=Voice.spk?'🔊 เปิด':'🔇 ปิด';
   spk.classList.toggle('v-off',!Voice.spk);
   vm.textContent=Voice.vmode==='friends'?'👥 เพื่อน':'🌐 ทุกคน';
+  tm.style.display=teacher?'block':'none';
+  tm.textContent=Voice.roomMuted?'👩‍🏫 เปิดเสียงห้อง':'👩‍🏫 ปิดเสียงห้อง';
+  tm.classList.toggle('v-muting',Voice.roomMuted);
 }
 
 /* ---------- ส่วนลดชวนเพื่อน: เจอกันใน map จริง → เงินคืน (ครั้งเดียว/map) ---------- */
@@ -1122,7 +1171,10 @@ function buildDom(){
   .adv-vbtn{position:absolute;right:8px;pointer-events:auto;background:rgba(67,160,71,.92);color:#fff;
     border:2px solid #fff;border-radius:12px;font-weight:800;font-size:13px;padding:6px 10px;font-family:inherit;min-width:86px}
   .adv-vbtn.v-off{background:rgba(97,97,97,.92)}
+  .adv-vbtn.v-lock{background:rgba(230,126,34,.92)}
   #adv-mic{top:202px} #adv-spk{top:242px} #adv-vmode{top:282px;background:rgba(123,31,162,.92)}
+  #adv-tmute{top:322px;background:rgba(198,40,40,.92);display:none}
+  #adv-tmute.v-muting{background:rgba(46,125,50,.92)}
   #adv-chat-box{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:none;flex-direction:column;gap:6px;
     background:rgba(0,0,0,.6);border-radius:14px;padding:8px;pointer-events:auto;width:min(420px,86vw)}
   .adv-chat-row{display:flex;gap:6px}
@@ -1162,6 +1214,7 @@ function buildDom(){
     <button class="adv-vbtn v-off" id="adv-mic">🎤 ปิด</button>
     <button class="adv-vbtn" id="adv-spk">🔊 เปิด</button>
     <button class="adv-vbtn" id="adv-vmode">🌐 ทุกคน</button>
+    <button class="adv-vbtn" id="adv-tmute">👩‍🏫 ปิดเสียงห้อง</button>
     <div id="adv-chat-box">
       <div id="adv-quick"></div>
       <div class="adv-chat-row">
@@ -1196,6 +1249,7 @@ function buildDom(){
   overlayEl.querySelector('#adv-mic').addEventListener('click',()=>Voice.setMic(!Voice.mic));
   overlayEl.querySelector('#adv-spk').addEventListener('click',()=>Voice.setSpk(!Voice.spk));
   overlayEl.querySelector('#adv-vmode').addEventListener('click',()=>Voice.setMode(Voice.vmode==='all'?'friends':'all'));
+  overlayEl.querySelector('#adv-tmute').addEventListener('click',()=>Voice.toggleRoomMute());
 
   overlayEl.querySelector('#adv-chat-btn').addEventListener('click',()=>toggleChatBox());
   overlayEl.querySelector('#adv-chat-send').addEventListener('click',()=>{

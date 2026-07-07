@@ -136,6 +136,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "ts":  { ".validate": "newData.isNumber()" },
           "c":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
           "ct":  { ".validate": "newData.isNumber()" },
+          "m":   { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }
       }
@@ -169,6 +170,21 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           }
         }
       }
+    },
+    "class": {
+      "$map": {
+        ".read": "auth != null",
+        ".validate": "$map === 'adv' || $map === 'haunt'",
+        "muteAll": {
+          ".write": "auth != null",
+          ".validate": "newData.hasChildren(['on','by','ts'])",
+          "on": { ".validate": "newData.isBoolean()" },
+          "by": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        },
+        "$other": { ".validate": false }
+      }
     }
   }
 }
@@ -177,6 +193,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ## หมายเหตุโครง /world + /tinv (โลก 3D multiplayer — รอบสี่สิบ)
 - `/world/<map>/<uid> = {n, av, x, z, yaw, ts, c?, ct?}` — ตำแหน่งผู้เล่นใน map ('adv'|'haunt') · เขียนเองอ่านได้ทุกคนที่ login · onDisconnect ลบตัวเอง · ส่งถี่สุด ~5.5Hz เฉพาะตอนขยับ · **c/ct = แชทลอยหัว (รอบ 42)**: ข้อความ ≤60 + Date.now ฝั่งส่ง (คงที่ต่อข้อความ — ฝั่งรับเห็น ct เปลี่ยน = ข้อความใหม่ โชว์ 5 วิ) แนบไปกับ set ระหว่างยังสด ผ่านตัวกรอง nameHasBadWord ก่อนส่ง
 - `/tinv/<toUid>/<fromUid> = {map, n, ts}` — คำเชิญเล่นโลก 3D ด้วยกัน · ผู้รับอ่านกล่องตัวเอง ผู้ส่ง/ผู้รับลบได้ · ฝั่งส่งจำใน state.tinvSent (เซฟ cloud) · เจอกันใน map จริงครั้งแรก → ต่างคนต่างรับเงินคืน TINV_CASHBACK (2,000) ฝั่ง client แล้วผู้รับลบคำเชิญ
+
+## หมายเหตุโครง /class (ครูคุมห้อง — รอบ 44)
+- `/class/<map>/muteAll = {on:bool, by:ชื่อครู, ts}` — สถานะ "ครูปิดเสียงทั้งห้อง" ค้างใน DB (เด็กเข้าทีหลังก็โดนล็อก) · ทุก client ฟัง on('value') → ล็อกปุ่มไมค์+ตัดไมค์ที่เปิดค้าง
+- **บัญชีครู = อีเมลใน `TEACHER_EMAILS` (js/auth.js — เพิ่มอีเมลต่อท้าย array ได้)** เห็นปุ่ม 👩‍🏫 · ⚠️ rules ยอมให้ทุก auth เขียนได้ (UI ซ่อนปุ่มจากเด็ก) — ยอมรับระดับความเสี่ยงเดียวกับ coins ฝั่ง client · field `m` ใน /world = สถานะไมค์ (โชว์ 🎤 เหนือหัว)
 
 ## หมายเหตุโครง /rtc (voice chat — รอบ 43)
 - `/rtc/<map>/<toUid>/<msgId> = {f:ผู้ส่ง, t:'offer'|'answer'|'ice', d:JSON(SDP/ICE ≤8000), ts}` — **signaling เท่านั้น เสียงจริงวิ่ง P2P (WebRTC) ไม่ผ่าน Firebase**

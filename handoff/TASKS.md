@@ -32,6 +32,18 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 45 (8 ก.ค. · Fable): หน้าร้านสัตว์เลี้ยงพอดีจอไม่มี scrollbar + ลิงก์เข้าเล่นเกมใต้เหรียญ — version→.23**
+- **บีบหน้าร้าน (`#screen-select`) พอดีจอเดียว:** ชุด CSS ใหม่ใน lobby.css — h1/subtitle/egg-name/egg-desc ใช้ `clamp(..dvh..)` · `egg-img` สูง `clamp(56px,18dvh,104px)` · margin/padding แผง+การ์ดลดลง → จอเตี้ยสุด 360px ก็ไม่มี scrollbar ในแผง
+- **🐞 root cause "ทั้งหน้า scroll ได้ 8–12px" (เป็นทุกหน้า ไม่ใช่แค่ร้าน):** margin ของ `.screen.active` collapse ทะลุ `#app`+`body` ขึ้นไปดัน `<html>` สูงเกิน viewport → แก้จุดเดียว `#app{display:flow-root}` (lobby.css) ตัด scrollbar ทั้งเว็บ
+- **ลิงก์ใต้เหรียญ:** index.html ห่อ coin-pill ด้วย `.petshop-topright` + ปุ่ม `#btn-petshop-play` "🎮 เข้าเล่นเกมสะสมเหรียญ" (สไตล์ลิงก์ขีดเส้นใต้) → main.js ผูก `startGame(null)` (เกมจับคู่คละระดับ เหมือนปุ่มเล่นใน lobby)
+- ✅ ทดสอบ preview (mock login · 868×390 และ 740×360): แผง scrollHeight=clientHeight + page scroll ไม่ได้ (scrollY ค้าง 0) · ลิงก์อยู่ใต้เหรียญชิดขวา · คลิกลิงก์เข้า screen-game จริง · dashboard ที่วัดได้สูงเกิน 10px = แอนิเมชัน fadeIn ค้างเฟรมแรกเพราะแท็บ preview ถูกซ่อน (document.hidden — เครื่องจริงไม่เป็น) · ไม่มี console error · ⚠️ screenshot tool ค้างอีกรอบ ใช้ getBoundingClientRect ยืนยันแทน (กฎทอง 3)
+
+**✅ รอบ 44 (7 ก.ค. · Fable): ไอคอน 🎤 เหนือหัว + ครูปิดเสียงทั้งห้อง 👩‍🏫 — version→.22**
+- **🎤 เหนือหัว:** `/world` เพิ่ม field `m` (0/1 สถานะไมค์ — แนบใน sendPos · setMic → sendPos(true) ทันที) → เพื่อนเห็น sprite 🎤 ลอยดุ๊กดิ๊กเหนือหัว (y=2.72 · ใต้ bubble) สร้าง/ลบใน onPeerData ตาม m · texture 🎤 มาจาก cache — dispose เฉพาะ material
+- **👩‍🏫 ครูคุมห้อง:** บัญชีครู = อีเมลใน **`TEACHER_EMAILS` (js/auth.js — user คือ freddommun@gmail.com เพิ่มแล้ว)** + helper `isTeacher()` · ปุ่มแดง `#adv-tmute` (เห็นเฉพาะครู · updateVoiceBtns คุม) → เขียน `/class/<map>/muteAll={on,by,ts}` (โซนใหม่) · ทุก client ฟัง on('value'): on=true → ตัดไมค์เด็กที่เปิดค้าง + ล็อกปุ่ม ("🎤 ครูปิด" ส้ม `.v-lock`) + banner แจ้ง · เด็กเข้าทีหลังก็โดน (สถานะค้างใน DB) · ครูเองไม่ติดล็อก · off → banner "เปิดเสียงห้องแล้ว" เด็กเปิดไมค์เองได้
+- ⚠️ **rules /class ยอมให้ทุก auth เขียน** (UI ซ่อนปุ่มจากเด็ก — ยอมรับระดับเดียวกับ coins ฝั่ง client) · RULES.md อัปเดตแล้ว (/world +m · /class ใหม่)
+- ✅ ทดสอบ preview: เด็ก (t@test.com) ปุ่มครูซ่อน · roomMuted → ปุ่มไมค์ "ครูปิด"+setMic(true) โดนบล็อก · ปลดล็อกคืนปกติ · เพื่อน m=1 → 🎤 โผล่+ลอยตาม, m=0 → หาย · push อีเมลเข้า TEACHER_EMAILS → เข้าใหม่เห็นปุ่ม "👩‍🏫 ปิดเสียงห้อง" กดตอนออฟไลน์ toast ไม่ crash · ครูไม่ติด guard · ไม่มี console error · **ของจริง (ครูกด→ไมค์เด็กดับทั้งห้อง) ต้องเทสต์ 2 เครื่องบน Pages หลัง publish rules**
+
 **✅ รอบ 43 (7 ก.ค. · Fable): Voice chat ใน map 🎤 + quick chat + bubble ธีมหลอน — version→.21**
 - **Voice chat (WebRTC P2P mesh):** เสียงพูดวิ่งตรงระหว่างเครื่อง (ไม่ผ่าน Firebase — ฟรีเหมือนเดิม) · signaling ผ่านโซนใหม่ `/rtc/<map>/<toUid>/<msgId>={f,t:'offer'|'answer'|'ice',d,ts}` ผู้รับอ่าน+ลบกล่องตัวเอง · uid น้อยกว่าเป็นผู้ offer (กัน glare) · `addTransceiver('audio')` ตั้งแต่ต่อสาย → เปิด/ปิดไมค์ใช้ `replaceTrack` ไม่ต้อง renegotiate · STUN Google ฟรี ไม่มี TURN (NAT บางเจ้าต่อไม่ติด — ยอมรับ)
 - **ปุ่ม HUD ขวา 3 ปุ่ม (`.adv-vbtn`):** 🎤 เปิด/ปิดไมค์ (**default ปิดทุกครั้งที่เข้า — ความปลอดภัยเด็ก ไม่จำ**) · 🔊/🔇 ลำโพง (ปิด = mute audio ทุกสาย) · 🌐 ทุกคน/👥 เพื่อน (เฉพาะที่ invite กันใน map นี้ — `tinvLinked()` เช็ก tinvSent+Online.tinv · สลับโหมดตัดสาย/ต่อสายทันที + ไม่รับ offer คนนอก) · spk+mode จำใน `state.voiceSpk/voiceMode`+migration · เสียงเบาตามระยะ (volume=1.15-d/45 ใน tickPeers) · exitWorld → ปิด pc ทุกสาย + `track.stop()` คืนไมค์ให้เครื่อง

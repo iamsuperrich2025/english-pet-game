@@ -23,6 +23,14 @@ const Auth = {
 const AUTH_PUSH_MS        = 60*1000;   // push เซฟขึ้น cloud ทุก 1 นาที
 const AUTH_SDK_TIMEOUT_MS = 20*1000;   // รอ SDK นานสุดก่อนถือว่าออฟไลน์
 
+/* ---------- บัญชีครู (รอบ 43+: ปุ่มคุมห้องในโลก 3D เช่น ปิดเสียงทั้งห้อง) ----------
+   เพิ่มอีเมลครูต่อท้าย array ได้เลย (ตัวพิมพ์เล็ก) — บัญชีอื่นไม่เห็นปุ่มครู */
+const TEACHER_EMAILS = ['freddommun@gmail.com'];
+function isTeacher(){
+  return !!(Auth.user && Auth.user.email
+    && TEACHER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
+}
+
 /* ---------- หน้าจอ login: สลับสถานะ เชื่อมต่อ/พร้อม/ออฟไลน์ ---------- */
 function authSetStatus(mode, msg){
   const st    = document.getElementById('login-status');
