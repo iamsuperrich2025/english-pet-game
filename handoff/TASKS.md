@@ -11,13 +11,14 @@
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
 ### ⭐ งานที่ผู้ใช้เคาะแล้ว รอทำเลย: จุดแดงรวมบนปุ่ม ⚙️ ตั้งค่า
-ผู้ใช้ (7 ก.ค. รอบ 32e) ขอ **จุดแดง "รวม" บนปุ่ม ⚙️ `#btn-settings`** (ใน header, index.html ~บรรทัด 106) ให้เห็นแต่ไกลว่ามี "อะไรต้องจัดการ" = **บิลค้าง + คำขอเพื่อน** (สรุปรวมจุดเดียว)
-- **สเปก:** เพิ่ม `<span class="rail-badge" id="settings-badge" style="display:none">` ไว้บนปุ่ม ⚙️ (ปุ่มนี้อยู่ header ไม่ใช่ rail — เช็ก CSS `.rail-badge` position:absolute ใช้ได้ แต่ปุ่ม `.icon-btn` ต้อง `position:relative`; อาจต้องทำคลาส badge เฉพาะ/ปรับ top-right ให้พอดีปุ่มกลม) · แนะนำโชว์เป็นจุดแดงเปล่า (ไม่ต้องมีเลข) หรือเลขรวมก็ได้ — ถามผู้ใช้ถ้าไม่ชัด
-- **ตรรกะรวม (มีฟังก์ชันคำนวณอยู่แล้ว ไม่ต้องคิดใหม่):**
-  - บิลค้าง: `['maint','elec','water','trash','net','data'].some(id=>billOutstanding(id)>0)` (ดู `updateBillBadges()` js/ui.js)
-  - คำขอเพื่อน + แชทใหม่: `Online.reqs.length + Object.keys(Online.chatUnread||{}).length` (ดู `updateFriendBadge()` js/ui.js:304) · **ของขวัญ (gift-badge) จะรวมด้วยไหม → ถามผู้ใช้** (ผู้ใช้พูดแค่ "บิล/คำขอเพื่อน")
-  - ทำ `updateSettingsBadge()` รวมเงื่อนไข แล้วเรียกใน `renderDashboard` (ใกล้ๆ `updateBillBadges()`) · อาจเรียกจาก online listener ด้วยถ้าอยากให้อัปเดตสดตอนมีคำขอเพื่อนเข้า (ดูจุดที่เรียก updateFriendBadge)
-- **หมายเหตุ semantic:** ปุ่ม ⚙️ เปิดหน้าตั้งค่า (ไม่ใช่ที่จ่ายบิล/รับเพื่อน) — จุดแดงนี้เป็น "attention รวม" เฉยๆ ผู้ใช้เข้าใจแล้วว่าต้องการแบบนี้
+ผู้ใช้ (7 ก.ค. รอบ 32e) ขอ **badge เลขรวมบนปุ่ม ⚙️ `#btn-settings`** (ใน header, index.html ~บรรทัด 106) ให้เห็นแต่ไกลว่ามี "อะไรต้องจัดการ" · **ผู้ใช้เคาะแล้ว: รวม บิล + คำขอเพื่อน/แชท + ของขวัญ · แสดงเป็นเลขรวม (ไม่ใช่จุดเปล่า)**
+- **สเปก:** เพิ่ม `<span class="rail-badge" id="settings-badge" style="display:none">` บนปุ่ม ⚙️ · ปุ่มนี้เป็น `.icon-btn` ใน header (ไม่ใช่ rail) → CSS `.rail-badge` เป็น position:absolute แต่ `.icon-btn` **ยังไม่มี position:relative** ต้องเพิ่มให้ (หรือทำคลาส badge เฉพาะ) + ปรับ top/right ให้พอดีปุ่มกลม
+- **เลขรวม = บิล + เพื่อน + ของขวัญ (ฟังก์ชันคำนวณมีอยู่แล้ว ไม่ต้องคิดสูตรใหม่):**
+  - บิลค้าง (นับ 1 ถ้ามีบิลค้างอย่างน้อยหนึ่ง — หรือจะนับจำนวนบิลก็ได้): `['maint','elec','water','trash','net','data'].filter(id=>billOutstanding(id)>0).length` (ดู `updateBillBadges()` js/ui.js)
+  - คำขอเพื่อน + แชทใหม่: `Online.reqs.length + Object.keys(Online.chatUnread||{}).length` (ดู `updateFriendBadge()` js/ui.js:304)
+  - ของขวัญที่ยังไม่เปิด: จำนวนใน `gift-badge` (ดู `updateGiftBadge()`/js/ui.js:572 ว่านับจากอะไร แล้วใช้ตัวเลขเดียวกัน)
+  - รวม 3 ก้อน → ถ้า >0 โชว์เลข ไม่งั้นซ่อน · ทำ `updateSettingsBadge()` แล้วเรียกใน `renderDashboard` (ใกล้ `updateBillBadges()`) + เรียกเพิ่มทุกจุดที่เรียก `updateFriendBadge()`/`updateGiftBadge()` (online listener) เพื่อให้อัปเดตสดตอนมีคำขอ/ของขวัญเข้า
+- **หมายเหตุ semantic:** ปุ่ม ⚙️ เปิดหน้าตั้งค่า (ไม่ใช่ที่จ่ายบิล/รับเพื่อน) — เลขรวมนี้เป็น "attention รวม" เฉยๆ ผู้ใช้ยืนยันแล้วว่าต้องการแบบนี้
 - **จบงาน:** บัมพ์ version → commit เฉพาะไฟล์ที่แก้ (index.html, js/ui.js, อาจมี css) → อัปเดต TASKS นี้
 
 ### backlog อื่น (เสนอผู้ใช้เลือก → รอเคาะ อ่านสเปกเต็มใน `handoff/BACKLOG.md`)
