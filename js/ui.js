@@ -2152,15 +2152,25 @@ function renderTicketCard(){
   if(!el) return;
   const hasAdult = state.pets.some(p=>isAdult(p));
   let body;
-  if(state.advTicket){
+  if(state.advTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>บาดเจ็บจากโลกผจญภัย!</b><br>
+        <small>พลังหมดตอนผจญภัย ต้องรักษาตัวก่อนถึงจะกลับเข้าโลก 3D ได้อีกครั้ง</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-adv-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.advTicket){
     body = `
       <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
       <div class="ticket-owned">
         <div style="font-size:44px">🎫✨</div>
-        <b>หนูมีตั๋วโลกผจญภัยแล้ว!</b><br>
-        <small>🚧 โลกผจญภัย 3D กำลังก่อสร้าง เปิดเร็วๆ นี้ — ตั๋วของหนูพร้อมใช้ทันทีที่ประตูเปิด<br>
-        (ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)</small>
-      </div>`;
+        <b>ประตูโลกผจญภัยเปิดแล้ว!</b><br>
+        <small>เดินเก็บตัวอักษรมาประกอบคำศัพท์ คำละ 🪙15 · ระวัง monster 👾 ยิงสู้ได้<br>
+        พลังหมดต้องกลับมารักษา 🪙${fmtNum(CURE_COST)} · ออกจากโลกเมื่อไหร่ก็ได้</small>
+      </div>
+      <button class="big-btn green home-btn" id="btn-enter-adv">🌍 เข้าโลกผจญภัย 3D</button>`;
   }else if(!hasAdult){
     body = `
       <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
@@ -2179,6 +2189,66 @@ function renderTicketCard(){
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-ticket');
   if(buy) buy.addEventListener('click', buyTicket);
+  const enter = document.getElementById('btn-enter-adv');
+  if(enter) enter.addEventListener('click', enterAdventure3D);
+  const heal = document.getElementById('btn-adv-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+}
+
+/* ---------- ข้อ 8: เข้าโลกผจญภัย 3D — โหลด engine เฉพาะตอนกดเข้า (กันหน้าหลักหนัก) ---------- */
+function loadScriptOnce(src){
+  return new Promise((resolve,reject)=>{
+    let s = document.querySelector(`script[src="${src}"]`);
+    if(s){
+      if(s.dataset.loaded){ resolve(); return; }
+      s.addEventListener('load', resolve); s.addEventListener('error', reject);
+      return;
+    }
+    s = document.createElement('script');
+    s.src = src;
+    s.addEventListener('load', ()=>{ s.dataset.loaded='1'; resolve(); });
+    s.addEventListener('error', reject);
+    document.head.appendChild(s);
+  });
+}
+let advLoading = false;
+async function enterAdventure3D(){
+  if(!state.advTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('🌍 กำลังเปิดประตูโลกผจญภัย...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกผจญภัยไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start();
+}
+
+/* พลังหมดในโลก 3D → บาดเจ็บ ต้องจ่ายค่ารักษาก่อนเข้าใหม่ (สเปก 8.5) */
+function advHealClick(){
+  if(!state.advHurt) return;
+  if(state.coins < CURE_COST){
+    sfx.wrong();
+    toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมจับคู่เก็บเหรียญก่อนนะ!`);
+    return;
+  }
+  askConfirm(`<h2>💊 รักษาตัว</h2>
+    <p style="font-size:15px;margin:6px 0">จ่ายค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b><br>
+    <small>หายดีแล้วกลับเข้าโลกผจญภัย 3D ได้ทันที</small></p>`,
+    'รักษาเลย', ()=>{
+      state.coins -= CURE_COST;
+      state.advHurt = false;
+      sfx.buy();
+      toast('💪 หายดีแล้ว! กลับเข้าโลกผจญภัยได้เลย');
+      saveState();
+      renderDashboard();
+    });
 }
 
 function buyTicket(){

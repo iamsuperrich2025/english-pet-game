@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v2';   // v2: ล้าง 404 ที่เคยถูก cache (บั๊กรูปใหม่ไม่โผล่)
+const CACHE_VERSION = 'pet-vocab-v3';   // v3: เพิ่มโลกผจญภัย 3D (three.js vendor + adventure3d.js)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -34,6 +34,8 @@ const SHELL = [
   './js/auth.js',
   './js/online.js',
   './js/main.js',
+  './js/vendor/three.min.js',
+  './js/adventure3d.js',
   './img/icons/icon-192.png',
   './img/icons/icon-512.png',
 ];
@@ -61,10 +63,11 @@ self.addEventListener('fetch', (e)=>{
   const url = new URL(req.url);
   if(url.origin !== self.location.origin) return;         // Firebase/Google/ฟอนต์ → ปล่อยผ่าน
 
-  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url.pathname);
+  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url.pathname)
+    || url.pathname.includes('/js/vendor/');   // vendor (three.min.js ~600KB) แทบไม่เปลี่ยน → cache-first ประหยัดเน็ต
 
   if(isImg){
-    // cache-first สำหรับรูป — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
+    // cache-first สำหรับรูป/vendor — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
     // ห้าม cache 404: ภาพที่ยังไม่ได้เจน พอเจนเสร็จวางไฟล์แล้วต้องโผล่ได้เลย
     e.respondWith(
       caches.match(req).then(hit=> hit || fetch(req).then(res=>{

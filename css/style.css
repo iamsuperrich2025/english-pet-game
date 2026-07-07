@@ -673,6 +673,10 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .big-btn.purple:active{box-shadow:0 2px 0 #7d5fc0;}
 .big-btn.blue{background:linear-gradient(180deg,#8fc7f7,#5b9fd6);box-shadow:0 6px 0 #3d7fb5;font-size:17px;padding:11px;}
 .big-btn.blue:active{box-shadow:0 2px 0 #3d7fb5;}
+.big-btn.green{background:linear-gradient(180deg,#8fe3a0,#4caf6d);box-shadow:0 6px 0 #358550;font-size:17px;padding:11px;}
+.big-btn.green:active{box-shadow:0 2px 0 #358550;}
+.big-btn.red{background:linear-gradient(180deg,#f2938c,#d9534f);box-shadow:0 6px 0 #b03835;font-size:17px;padding:11px;}
+.big-btn.red:active{box-shadow:0 2px 0 #b03835;}
 
 /* ---------- หมวดคำศัพท์ ---------- */
 .cat-card{

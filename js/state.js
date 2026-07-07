@@ -34,6 +34,8 @@ const DEFAULT_STATE = {
   profileName:null,                   // ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว โชว์ใน presence/leaderboard)
   playerAvatar:null,                  // ข้อ 4: ตัวละครผู้เลี้ยง 'male'/'female' (เลือกตอนลงทะเบียน · เปลี่ยนได้ในตั้งค่า · โชว์เฉพาะในเครื่อง)
   advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
+  advDone:[],                         // ข้อ 8: คำที่ประกอบสำเร็จแล้วในโลกผจญภัย 3D (ไม่สุ่มซ้ำ · ครบทุกคำของระดับชั้นแล้วล้างเริ่มรอบใหม่)
+  advHurt:false,                      // ข้อ 8: พลังหมดในโลกผจญภัย → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าใหม่
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
@@ -202,6 +204,8 @@ function loadState(){
       if(typeof s.foodQuizDay !== 'string') s.foodQuizDay = '';
       if(s.playerAvatar !== 'male' && s.playerAvatar !== 'female') s.playerAvatar = null;  // ข้อ 4: ผู้เล่นเดิมค่อยเลือกในตั้งค่า
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
+      if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
+      if(typeof s.advHurt !== 'boolean') s.advHurt = false;                                // ข้อ 8
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
