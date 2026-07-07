@@ -32,6 +32,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 46 (8 ก.ค. · Fable): กระดานคะแนนสดใน map 🏆 — version→.24**
+- **`/world` เพิ่ม field `w`** = จำนวนคำที่ประกอบได้รอบนี้ (sessionWords — แนบใน sendPos · completeWord → sendPos(true) ประกาศทันที) · rules /world เพิ่ม validator w (≥0) — **รอ publish รวมชุดเดิม**
+- **`#adv-board` มุมซ้ายบน (ดันแผงคำลง top:132px):** จัดอันดับ me+เพื่อนใน map ตาม w มาก→น้อย · ที่ 1 ได้ 👑 (เฉพาะ w>0) · แถวตัวเองไฮไลต์เขียว `.me` · โชว์ top 4 — เราหลุดอันดับ → แถว `⋯` + แถวตัวเองพร้อมอันดับจริงต่อท้าย · วาดใหม่เมื่อ: เข้าโลก/ประกอบคำ/เพื่อน w เปลี่ยน (onPeerData)/เพื่อนออก (removePeer)
+- 📝 commit `4c38737` รอบนี้เก็บงานรอบ 45 ของ session คู่ขนานที่ค้างไม่ได้ commit ให้ด้วย (โค้ด lobby.css/index.html/main.js — docs ติดไปกับ 24bd972 แล้ว)
+- ✅ ทดสอบ preview (โลกกลางวัน · mock login): เริ่มเกมกระดานโชว์ตัวเอง 0 · เพื่อน fake 2 คน → เรียงถูก 👑 ที่คนนำ + me ไฮไลต์ · เราประกอบคำ → คะแนนขยับขึ้นกระดาน · เพื่อนอัปเดตแซง (child_changed) → มงกุฎย้ายทันที · เพื่อน 5 คนเราหลุด top 4 → "⋯ 6. Tester" · rect: กระดานจบ 131px แผงคำเริ่ม 132px ไม่ทับ · ไม่มี console error · ⚠️ screenshot tool ค้างอีก ใช้ rect ยืนยัน (กฎทอง 3)
+
 **✅ รอบ 45 (8 ก.ค. · Fable): หน้าร้านสัตว์เลี้ยงพอดีจอไม่มี scrollbar + ลิงก์เข้าเล่นเกมใต้เหรียญ — version→.23**
 - **บีบหน้าร้าน (`#screen-select`) พอดีจอเดียว:** ชุด CSS ใหม่ใน lobby.css — h1/subtitle/egg-name/egg-desc ใช้ `clamp(..dvh..)` · `egg-img` สูง `clamp(56px,18dvh,104px)` · margin/padding แผง+การ์ดลดลง → จอเตี้ยสุด 360px ก็ไม่มี scrollbar ในแผง
 - **🐞 root cause "ทั้งหน้า scroll ได้ 8–12px" (เป็นทุกหน้า ไม่ใช่แค่ร้าน):** margin ของ `.screen.active` collapse ทะลุ `#app`+`body` ขึ้นไปดัน `<html>` สูงเกิน viewport → แก้จุดเดียว `#app{display:flow-root}` (lobby.css) ตัด scrollbar ทั้งเว็บ

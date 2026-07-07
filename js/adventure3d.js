@@ -60,7 +60,7 @@ let letters=[];                   // ตัวอักษรในโลก [{c
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -376,7 +376,8 @@ function completeWord(i){
   fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); });
   ensureCoverage();
   saveState();
-  renderHudWords(); renderHudInv(); renderHudTop();
+  if(myRef) sendPos(true);                  // ประกาศคะแนนใหม่ขึ้นกระดานทุกเครื่องทันที
+  renderHudWords(); renderHudInv(); renderHudTop(); renderBoard();
 }
 
 /* ============================================================
@@ -754,7 +755,7 @@ function sendPos(force){
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
     n:onlineDisplayName(), av:state.playerAvatar||'',
-    x, z, yaw:y, m:Voice.mic?1:0, ts:firebase.database.ServerValue.TIMESTAMP,
+    x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
@@ -800,6 +801,9 @@ function onPeerData(snap){
     Voice.onPeer(uid);
   }
   p.tgt={x:d.x,z:d.z};
+  // 🏆 กระดานคะแนน: จำนวนคำที่เพื่อนประกอบได้รอบนี้ (field w) — เปลี่ยนเมื่อไหร่วาดใหม่
+  const w=typeof d.w==='number'?d.w:0;
+  if(p.w!==w){ p.w=w; renderBoard(); }
   // ไอคอน 🎤 เหนือหัวคนที่เปิดไมค์ (เด็กเห็นชัดว่าเดินเข้าใกล้ใครแล้วคุยได้)
   if(d.m===1 && !p.micSpr){
     p.micSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture('🎤'),transparent:true}));
@@ -823,6 +827,7 @@ function removePeer(uid){
   Voice.drop(uid);
   scene.remove(p.spr); p.spr.material.map.dispose(); p.spr.material.dispose();
   delete peers[uid];
+  renderBoard();
 }
 function netLeave(){
   Voice.leave();
@@ -1069,6 +1074,19 @@ function renderHudInv(){
     ? ks.map(ch=>`<span class="adv-inv-ch">${ch.toUpperCase()}${inv[ch]>1?'×'+inv[ch]:''}</span>`).join('')
     : '<span class="adv-inv-empty">เดินชนตัวอักษรเพื่อเก็บ ✨</span>';
 }
+/* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ (me + เพื่อนใน map) */
+function renderBoard(){
+  if(!hudBoardEl) return;
+  const rows=[{n:state.profileName||'หนู', w:sessionWords, me:true}];
+  Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
+  rows.sort((a,b)=>b.w-a.w);
+  const meIdx=rows.findIndex(r=>r.me);
+  const row=(r,i)=>`<div class="adv-b-row${r.me?' me':''}">
+    <span class="adv-b-nm">${i===0&&r.w>0?'👑':(i+1)+'.'} ${escapeHTML(r.n)}</span><b>${r.w}</b></div>`;
+  let html=rows.slice(0,4).map(row).join('');
+  if(meIdx>=4) html+=`<div class="adv-b-more">⋯</div>`+row(rows[meIdx],meIdx);   // เราหลุด top 4 → โชว์แถวตัวเองต่อท้าย
+  hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html;
+}
 function drawMinimap(){
   const S=mapCv.width, sc=S/(HALF*2+8);
   mapCtx.clearRect(0,0,S,S);
@@ -1109,7 +1127,14 @@ function buildDom(){
   .adv-hp-fill{height:100%;background:#66bb6a;transition:width .25s}
   .adv-hp-fill.low{background:#ef5350}
   #adv-coin{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px #000;white-space:nowrap}
-  #adv-words{top:8px;left:8px;max-height:72vh;overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:auto}
+  #adv-board{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);border-radius:12px;
+    padding:6px 9px;min-width:132px;max-width:190px;pointer-events:none}
+  .adv-b-title{color:#ffd54f;font-weight:800;font-size:12px;margin-bottom:2px;white-space:nowrap}
+  .adv-b-row{color:#fff;font-size:12px;font-weight:600;display:flex;gap:8px;justify-content:space-between;line-height:1.4}
+  .adv-b-row.me{color:#8ef7a5}
+  .adv-b-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+  .adv-b-more{color:#bbb;font-size:10px;line-height:.7;text-align:center}
+  #adv-words{top:132px;left:8px;max-height:calc(100vh - 145px);overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:auto}
   .adv-word{margin:3px 0;display:flex;align-items:center;gap:2px;flex-wrap:wrap}
   .adv-word small{color:#ffe082;font-size:10px;margin-left:5px}
   .adv-ch{display:inline-block;min-width:15px;text-align:center;padding:1px 3px;border-radius:5px;
@@ -1199,6 +1224,7 @@ function buildDom(){
   overlayEl.innerHTML=`
     <canvas id="adv-canvas"></canvas>
     <div class="adv-hud" id="adv-topbar"><div class="adv-hp"><div class="adv-hp-fill" id="adv-hp"></div></div><span id="adv-coin"></span></div>
+    <div class="adv-hud" id="adv-board"></div>
     <div class="adv-hud" id="adv-words"></div>
     <canvas class="adv-hud" id="adv-map" width="120" height="120"></canvas>
     <button class="adv-hud" id="adv-exit">🚪 ออก</button>
@@ -1228,6 +1254,7 @@ function buildDom(){
 
   canvasEl=overlayEl.querySelector('#adv-canvas');
   dmgFlashEl=overlayEl.querySelector('#adv-dmg');
+  hudBoardEl=overlayEl.querySelector('#adv-board');
   hudWordsEl=overlayEl.querySelector('#adv-words');
   hudInvEl=overlayEl.querySelector('#adv-inv');
   hudHpEl=overlayEl.querySelector('#adv-hp');
@@ -1474,7 +1501,7 @@ function start(md){
   overlayEl.classList.add('on');
   renderer.setSize(window.innerWidth,window.innerHeight);
   camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-  renderHudTop(); renderHudWords(); renderHudInv();
+  renderHudTop(); renderHudWords(); renderHudInv(); renderBoard();
   lastSpawn=performance.now(); lastEnsure=performance.now();
   netJoin();
   if(mode==='haunt') HSound.startAmbient();

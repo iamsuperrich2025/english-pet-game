@@ -137,6 +137,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "c":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
           "ct":  { ".validate": "newData.isNumber()" },
           "m":   { ".validate": "newData.isNumber()" },
+          "w":   { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "$other": { ".validate": false }
         }
       }
@@ -191,7 +192,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ```
 
 ## หมายเหตุโครง /world + /tinv (โลก 3D multiplayer — รอบสี่สิบ)
-- `/world/<map>/<uid> = {n, av, x, z, yaw, ts, c?, ct?}` — ตำแหน่งผู้เล่นใน map ('adv'|'haunt') · เขียนเองอ่านได้ทุกคนที่ login · onDisconnect ลบตัวเอง · ส่งถี่สุด ~5.5Hz เฉพาะตอนขยับ · **c/ct = แชทลอยหัว (รอบ 42)**: ข้อความ ≤60 + Date.now ฝั่งส่ง (คงที่ต่อข้อความ — ฝั่งรับเห็น ct เปลี่ยน = ข้อความใหม่ โชว์ 5 วิ) แนบไปกับ set ระหว่างยังสด ผ่านตัวกรอง nameHasBadWord ก่อนส่ง
+- `/world/<map>/<uid> = {n, av, x, z, yaw, ts, c?, ct?, m?, w?}` — ตำแหน่งผู้เล่นใน map ('adv'|'haunt') · เขียนเองอ่านได้ทุกคนที่ login · onDisconnect ลบตัวเอง · ส่งถี่สุด ~5.5Hz เฉพาะตอนขยับ · **c/ct = แชทลอยหัว (รอบ 42)**: ข้อความ ≤60 + Date.now ฝั่งส่ง (คงที่ต่อข้อความ — ฝั่งรับเห็น ct เปลี่ยน = ข้อความใหม่ โชว์ 5 วิ) แนบไปกับ set ระหว่างยังสด ผ่านตัวกรอง nameHasBadWord ก่อนส่ง · **m = สถานะไมค์ (รอบ 44 — โชว์ 🎤 เหนือหัว)** · **w = จำนวนคำที่ประกอบได้รอบนี้ (รอบ 46 — กระดานคะแนนสด 🏆 มุมซ้ายบน)**
 - `/tinv/<toUid>/<fromUid> = {map, n, ts}` — คำเชิญเล่นโลก 3D ด้วยกัน · ผู้รับอ่านกล่องตัวเอง ผู้ส่ง/ผู้รับลบได้ · ฝั่งส่งจำใน state.tinvSent (เซฟ cloud) · เจอกันใน map จริงครั้งแรก → ต่างคนต่างรับเงินคืน TINV_CASHBACK (2,000) ฝั่ง client แล้วผู้รับลบคำเชิญ
 
 ## หมายเหตุโครง /class (ครูคุมห้อง — รอบ 44)
