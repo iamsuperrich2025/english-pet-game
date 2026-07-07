@@ -54,12 +54,16 @@ const FOODS = [
   {id:'cake',    emoji:'🍰', en:'Cake',    name:'เค้ก',       price:500, fill:65, human:true,
    toxin:30, badFor:['dog','cat','dragon'], why:'หวานจัด มีเนย ครีม และน้ำตาลเยอะมาก สัตว์กินแล้วป่วยง่าย'},
   {id:'choco',   emoji:'🍫', en:'Chocolate', name:'ช็อกโกแลต', price:200, fill:30, human:true,
-   toxin:40, badFor:['dog','cat','dragon'], why:'ช็อกโกแลตมีสารธีโอโบรมีน เป็นพิษจริงกับหมาและแมว อันตรายมาก!'},
+   toxin:40, badFor:['dog','cat','dragon'], why:'ช็อกโกแลตมีสารธีโอโบรมีน เป็นพิษจริงกับหมาและแมว อันตรายมาก!',
+   whyDragon:'มังกรเป็นสัตว์ไฟชอบของเผ็ดร้อน ขนมหวานเข้มข้นอย่างช็อกโกแลตไม่ดีกับท้องมังกรเลย'},
   {id:'grapes',  emoji:'🍇', en:'Grapes',  name:'องุ่น',      price:150, fill:25, human:true,
    toxin:35, badFor:['dog','cat'], why:'องุ่นเป็นพิษกับไตของหมาและแมวจริงๆ แม้กินแค่ไม่กี่ลูก (มังกรตัวใหญ่ กินผลไม้ได้)'},
   {id:'milk',    emoji:'🥛', en:'Milk',    name:'นมวัว',      price:120, fill:20, human:true,
-   toxin:20, badFor:['dog','cat','dragon'], why:'หมาแมวโตแล้วย่อยนมวัวไม่ได้ กินแล้วท้องเสีย'},
+   toxin:20, badFor:['dog','cat','dragon'], why:'หมาแมวโตแล้วย่อยนมวัวไม่ได้ กินแล้วท้องเสีย',
+   whyDragon:'มังกรเป็นสัตว์ไฟ ท้องรับนมวัวเย็นๆ ไม่ได้ กินแล้วท้องเสียเหมือนกัน'},
 ];
 
 /* อาหารนี้เป็นโทษกับสัตว์ชนิดนี้ไหม (ข้อ 5.1) */
 function foodBadFor(food, type){ return Array.isArray(food.badFor) && food.badFor.includes(type); }
+/* เหตุผลที่ใช้สอน — มังกรมีเหตุผลเฉพาะ (whyDragon) เพราะเหตุผลจริงของหมาแมวใช้กับสัตว์ในนิทานไม่ได้ */
+function foodWhy(food, type){ return (type === 'dragon' && food.whyDragon) ? food.whyDragon : (food.why || ''); }

@@ -17,6 +17,10 @@ const DINNER_COST     = 200;               // ข้อ 6: ค่าข้าว
 /* คิว 7725691507 ข้อ 5.1 (กลุ่ม B): พิษสะสมจากอาหารคนที่เป็นโทษกับสัตว์ */
 const TOXIN_FULL     = 100;                // พิษสะสมครบ 100 → ป่วยทันที cause 'toxin'
 const DETOX_COST     = 1000;               // ค่าขับพิษ (ล้างบาร์พิษก่อนป่วย) — พิษไม่ลดเอง
+/* ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1): ทายว่าอาหารไหนให้สัตว์กินได้ — รางวัลรอบแรกของวัน */
+const FOODQUIZ_Q     = 5;                  // จำนวนข้อต่อรอบ
+const FOODQUIZ_COIN  = 10;                 // เหรียญต่อข้อที่ถูก (เท่าจับคู่ถูก 1 คำ)
+const FOODQUIZ_BONUS = 25;                 // โบนัสตอบถูกครบทุกข้อ
 const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 6 ชม. → ป่วย (ยกเว้นมังกร/มีแอร์)
 const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
 
@@ -62,6 +66,7 @@ const DEFAULT_STATE = {
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
+  foodQuizDay:'',                     // ควิซอาหารปลอดภัย: วัน (toDateString) ที่รับรางวัลรอบแรกไปแล้ว (เล่นซ้ำได้แต่ไม่ได้เหรียญ)
   playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
   playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
   playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว
@@ -174,6 +179,7 @@ function loadState(){
       if(typeof s.noAnim !== 'boolean') s.noAnim = false;
       // คิว 7725691507 ข้อ 6: เซฟเก่ายังไม่มีระบบข้าวเย็นคน → ถือว่ากินมื้อล่าสุดแล้ว (เริ่มนับมื้อหน้า)
       if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
+      if(typeof s.foodQuizDay !== 'string') s.foodQuizDay = '';
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};

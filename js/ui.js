@@ -1382,7 +1382,7 @@ function openFoodMenu(p, hungry){
         sfx.wrong();
         askConfirm(`<div style="font-size:56px;line-height:1">${food.emoji}⚠️</div>
           <div style="font-size:20px;font-weight:bold;margin-top:8px;color:#b23a48">${food.name}เป็นโทษกับ${escapeHTML(p.name)}นะ!</div>
-          <div style="margin-top:8px;color:#6a5a78;line-height:1.5">${escapeHTML(food.why||'')}<br><br>
+          <div style="margin-top:8px;color:#6a5a78;line-height:1.5">${escapeHTML(foodWhy(food, p.type))}<br><br>
           กินแล้วอิ่มได้ (+${food.fill}) แต่ <b style="color:#7a3ab0">พิษจะสะสม +${food.toxin}</b><br>
           บาร์พิษ: <b>${p.toxin||0} → ${toxAfter}/${TOXIN_FULL}</b>${toxAfter >= TOXIN_FULL ? ' — <b style="color:#b23a48">เต็มแล้วน้องจะป่วยทันที!</b>' : ''}<br>
           <small>พิษไม่ลดเอง ต้องจ่ายค่าขับพิษ 🪙${fmtNum(DETOX_COST)}</small></div>`,
@@ -1490,6 +1490,88 @@ function detoxPet(p){
       saveState();
       renderDashboard();
     });
+}
+
+/* ============================================================
+   🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
+   ทายว่า "ให้สัตว์ชนิดนี้กินอาหารนี้ได้ไหม" 5 ข้อ/รอบ — เฉลยพร้อมเหตุผลจริง (food.why)
+   รางวัลเฉพาะรอบแรกของวัน (+10/ข้อ +25 ถูกครบ) เล่นซ้ำเป็นรอบฝึกซ้อม
+   ============================================================ */
+function openFoodQuiz(){
+  sfx.select();
+  const rewarded = state.foodQuizDay === new Date(Date.now()).toDateString();  // วันนี้รับรางวัลแล้ว → รอบฝึกซ้อม
+  // สุ่มคู่ (สัตว์, อาหาร) ไม่ซ้ำกันในรอบ — คละให้มีทั้งข้อ "กินได้" และ "เป็นโทษ"
+  const combos = [];
+  for(const type of Object.keys(PETS)) for(const f of FOODS) combos.push({type, f});
+  const qs = shuffle(combos).slice(0, FOODQUIZ_Q);
+  let idx = 0, score = 0;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  document.body.appendChild(overlay);
+
+  const renderQ = ()=>{
+    const q = qs[idx];
+    const conf = PETS[q.type];
+    overlay.innerHTML = `<div class="levelup-box fq-box">
+      <h2>🛡️ ควิซอาหารปลอดภัย</h2>
+      <p class="fq-progress">ข้อ ${idx+1}/${FOODQUIZ_Q} · ถูกแล้ว ${score} ข้อ${rewarded ? ' · <b>รอบฝึกซ้อม (รับเหรียญไปแล้ววันนี้)</b>' : ''}</p>
+      <div class="fq-pair"><span>${conf.adult}</span><span class="fq-q">❓</span><span>${q.f.emoji}</span></div>
+      <div class="fq-ask">ให้<b>${conf.name}</b>กิน <b>${q.f.emoji} ${q.f.name}</b> (${q.f.en}) ได้ไหม?</div>
+      <div class="fq-btns">
+        <button class="fq-yes">✅ ให้กินได้</button>
+        <button class="fq-no">🚫 ไม่ควรให้</button>
+      </div>
+      <button class="food-cancel fq-quit">เลิกเล่น</button>
+    </div>`;
+    overlay.querySelector('.fq-quit').addEventListener('click', ()=>overlay.remove());
+    const answer = saidYes=>{
+      const bad = foodBadFor(q.f, q.type);
+      const correct = saidYes !== bad;        // กินได้=ตอบใช่ถูกเมื่อไม่เป็นโทษ
+      if(correct){ score++; sfx.correct(); } else sfx.wrong();
+      const reason = bad
+        ? (foodWhy(q.f, q.type) || 'อาหารนี้เป็นโทษกับสัตว์ชนิดนี้')
+        : (q.f.human ? `${q.f.name}เป็นอาหารคนก็จริง แต่${conf.name}กินได้ ไม่เป็นโทษ` : `${q.f.name}เป็นอาหารที่ปลอดภัยสำหรับสัตว์ทุกตัว`);
+      overlay.innerHTML = `<div class="levelup-box fq-box">
+        <h2>${correct ? '🎉 ถูกต้อง!' : '💦 ยังไม่ใช่'}</h2>
+        <div class="fq-pair"><span>${conf.adult}</span><span class="fq-q">${bad ? '🚫' : '✅'}</span><span>${q.f.emoji}</span></div>
+        <div class="fq-ask"><b>${bad ? `ไม่ควรให้${conf.name}กิน${q.f.name}` : `${conf.name}กิน${q.f.name}ได้`}</b></div>
+        <div class="fq-why">${escapeHTML(reason)}</div>
+        <div class="fq-btns"><button class="fq-next">${idx+1 < FOODQUIZ_Q ? 'ข้อต่อไป ➡️' : 'ดูผล 🏁'}</button></div>
+      </div>`;
+      overlay.querySelector('.fq-next').addEventListener('click', ()=>{
+        idx++;
+        if(idx < FOODQUIZ_Q) renderQ(); else renderEnd();
+      });
+    };
+    overlay.querySelector('.fq-yes').addEventListener('click', ()=>answer(true));
+    overlay.querySelector('.fq-no').addEventListener('click', ()=>answer(false));
+  };
+
+  const renderEnd = ()=>{
+    let coins = 0;
+    if(!rewarded){
+      coins = score * FOODQUIZ_COIN + (score === FOODQUIZ_Q ? FOODQUIZ_BONUS : 0);
+      if(coins > 0){ addCoins(coins); state.foodQuizDay = new Date(Date.now()).toDateString(); saveState(); }
+    }
+    if(score === FOODQUIZ_Q) sfx.levelup(); else sfx.select();
+    overlay.innerHTML = `<div class="levelup-box fq-box">
+      <h2>${score === FOODQUIZ_Q ? '🏆 สุดยอดผู้พิทักษ์!' : '🏁 จบรอบแล้ว'}</h2>
+      <div style="font-size:44px;margin:6px 0">${score === FOODQUIZ_Q ? '🛡️✨' : '🛡️'}</div>
+      <div class="fq-ask">ตอบถูก <b>${score}/${FOODQUIZ_Q}</b> ข้อ</div>
+      ${coins > 0 ? `<div class="feed-gain">ได้เหรียญ +${fmtNum(coins)} 🪙${score === FOODQUIZ_Q ? ` (รวมโบนัสครบทุกข้อ +${FOODQUIZ_BONUS}!)` : ''}</div>` : ''}
+      ${rewarded ? `<div class="fq-why">รอบฝึกซ้อม — พรุ่งนี้กลับมารับเหรียญได้อีกนะ</div>`
+                 : coins === 0 ? `<div class="fq-why">ยังไม่ได้เหรียญ — ลองใหม่ได้เลย รางวัลวันนี้ยังรออยู่!</div>` : ''}
+      <div class="fq-btns">
+        <button class="fq-again">เล่นอีกรอบ 🔁</button>
+        <button class="fq-next">ปิด</button>
+      </div>
+    </div>`;
+    overlay.querySelector('.fq-again').addEventListener('click', ()=>{ overlay.remove(); openFoodQuiz(); });
+    overlay.querySelector('.fq-next').addEventListener('click', ()=>{ overlay.remove(); renderDashboard(); });
+  };
+
+  renderQ();
 }
 
 /* ============================================================

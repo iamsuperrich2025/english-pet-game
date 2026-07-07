@@ -461,6 +461,8 @@ h1{color:var(--sky-d);text-shadow:none;}
 .lobby-bottom{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
 .lobby-bottom .big-btn{width:auto;display:inline-block;margin:0;}
 .lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
+.lobby-foodquiz-btn{background:linear-gradient(180deg,#7ed49a,#4cb56d) !important;box-shadow:0 6px 0 #368a50 !important;}
+.lobby-foodquiz-btn:active{box-shadow:0 2px 0 #368a50 !important;}
 .lobby-play-btn{
   background:linear-gradient(180deg,#ffd76e,#f5b93a) !important;color:#5a3c05 !important;
   box-shadow:0 5px 0 #cf9722 !important;font-size:18px !important;padding:11px 28px !important;
