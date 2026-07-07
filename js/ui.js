@@ -301,6 +301,14 @@ function showPlayerCard(uid, name, grade){
    - ตัวโครง (รหัส/ช่องค้นหา) สร้างครั้งเดียว (dataset.built) กันช่องค้นหา
      ถูกล้างตอน presence tick · ส่วนที่ขยับ (คำขอ/เพื่อน) refresh แยก
    ============================================================ */
+/* จุดแดงแจ้งบิลค้างบนปุ่มเมนู — บ้าน (บำรุง/ไฟ/น้ำ/ขยะ) · ร้านค้า (เน็ต/ข้อมูล) */
+function updateBillBadges(){
+  const homeDue = ['maint','elec','water','trash'].some(id => billOutstanding(id) > 0);
+  const shopDue = ['net','data'].some(id => billOutstanding(id) > 0);
+  const set = (id, on)=>{ const b = document.getElementById(id); if(!b) return; if(on){ b.textContent = '!'; b.style.display = ''; } else b.style.display = 'none'; };
+  set('home-bill-badge', homeDue);
+  set('shop-bill-badge', shopDue);
+}
 function updateFriendBadge(){
   const b = document.getElementById('friend-badge');
   if(!b) return;
@@ -858,6 +866,8 @@ function renderDashboard(){
   careTick();
   dailyTick();
   if(Array.isArray(state.pendingCut) && state.pendingCut.length) showCutNotice();
+  applyNoAnim();
+  updateBillBadges();
   const now = Date.now();
 
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */

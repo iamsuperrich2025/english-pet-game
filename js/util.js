@@ -203,7 +203,12 @@ function alertBox(html, okText='เข้าใจแล้ว'){
   if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,60,40]);
 }
 
-/* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น ไว้ที่เดียว) ---------- */
+/* ---------- ปิด/เปิดแอนิเมชัน (สำหรับเครื่องช้า) ---------- */
+function applyNoAnim(){
+  document.documentElement.classList.toggle('no-anim', !!(typeof state !== 'undefined' && state.noAnim));
+}
+
+/* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
 function openSettings(){
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
   const overlay = document.createElement('div');
@@ -218,7 +223,12 @@ function openSettings(){
       <span class="set-label">📳 สั่นเตือน</span>
       <button class="set-switch"></button>
     </div>` : ''}
-    <div style="margin-top:18px"><button class="set-close">เสร็จแล้ว</button></div>
+    <div class="set-row" id="set-anim">
+      <span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
+      <button class="set-switch"></button>
+    </div>
+    <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
+    <div style="margin-top:16px"><button class="set-close">เสร็จแล้ว</button></div>
   </div>`;
   const paint = ()=>{
     const s = overlay.querySelector('#set-sound .set-switch');
@@ -226,6 +236,10 @@ function openSettings(){
     s.className = 'set-switch ' + (state.sound ? 'on' : 'off');
     const h = overlay.querySelector('#set-haptic .set-switch');
     if(h){ const on = state.haptic !== false; h.textContent = on ? 'เปิด' : 'ปิด'; h.className = 'set-switch ' + (on ? 'on' : 'off'); }
+    const a = overlay.querySelector('#set-anim .set-switch');
+    const animOn = !state.noAnim;   // สวิตช์ "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
+    a.textContent = animOn ? 'เปิด' : 'ปิด';
+    a.className = 'set-switch ' + (animOn ? 'on' : 'off');
   };
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
@@ -235,8 +249,34 @@ function openSettings(){
     state.haptic = (state.haptic === false); saveState(); paint();
     if(state.haptic && navigator.vibrate) navigator.vibrate(50);
   });
+  overlay.querySelector('#set-anim .set-switch').addEventListener('click', ()=>{
+    state.noAnim = !state.noAnim; saveState(); applyNoAnim(); paint();
+  });
+  overlay.querySelector('#set-help').addEventListener('click', openHelp);
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   paint();
+  document.body.appendChild(overlay);
+}
+
+/* ---------- วิธีเล่นเกม (เปิดจากหน้าตั้งค่า) ---------- */
+function openHelp(){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay help-overlay';
+  overlay.innerHTML = `<div class="levelup-box help-box">
+    <h2 style="margin:0 0 8px">📖 วิธีเล่น Pet Vocab Adventure</h2>
+    <div class="help-body">
+      <div class="help-item"><b>🎮 เล่นเกมจับคู่คำศัพท์</b><br>กดปุ่ม "เล่นเกมจับคู่คำศัพท์!" ตอบให้ถูกเพื่อรับ 🪙 เหรียญ ยิ่งเก่งยิ่งได้เยอะ</div>
+      <div class="help-item"><b>🐾 เลี้ยงน้อง</b><br>เอาเหรียญไปซื้ออาหารให้น้องกิน อย่าให้หิวหรือร้อนเกินไป ไม่งั้นน้องจะป่วย 🤒 (ต้องจ่ายค่ารักษา)</div>
+      <div class="help-item"><b>🏠 บ้าน &amp; บิล</b><br>ซื้อบ้านให้น้องหลบแดดหลบฝน · ทุกเดือนมีค่าบำรุง/ค่าไฟ/ค่าน้ำ/ค่าขยะ — ถ้ามี <span style="color:#e8483f;font-weight:bold">จุดแดง</span> บนปุ่มแปลว่ามีบิลค้าง รีบไปจ่ายนะ</div>
+      <div class="help-item"><b>💰 หาเงินเพิ่ม</b><br>🌳 ฟาร์มปลูกผัก · 🏭 โรงงานผลิตของ · 🏪 ตลาดขายของ · 📱 มือถือ/💻 คอมพิวเตอร์ ช่วยเพิ่มรายได้</div>
+      <div class="help-item"><b>📚 หมวดคำศัพท์ &amp; แบบทดสอบ</b><br>ฝึกคำศัพท์เป็นหมวด สอบผ่านรับรางวัลใหญ่ครั้งแรก</div>
+      <div class="help-item"><b>👥 เพื่อน &amp; 🎁 ของขวัญ</b><br>เพิ่มเพื่อนด้วยรหัส 6 ตัว แชทและส่งของขวัญให้กันได้</div>
+      <div class="help-item"><b>⚙️ ตั้งค่า</b><br>เปิด/ปิด เสียง สั่นเตือน และเอฟเฟกต์เคลื่อนไหว (ปิดได้ถ้าเครื่องช้า)</div>
+    </div>
+    <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
+  </div>`;
+  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }

@@ -18,7 +18,7 @@ const DEFAULT_STATE = {
   rp:0,                               // Rank Points
   coins:0,
   daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
-  sound:true, haptic:true, totalMatches:0,
+  sound:true, haptic:true, noAnim:false, totalMatches:0,
   owned:[],                           // ไอเทมที่ซื้อแล้ว (ตู้เสื้อผ้ารวม ใช้ได้ทุกตัว)
   pets:[],                            // สัตว์ที่เลี้ยงอยู่ทั้งหมด (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
   active:0,                           // ตัวที่กำลังดูแลอยู่
@@ -127,6 +127,7 @@ function loadState(){
       if(!s.bills || typeof s.bills !== 'object') s.bills = {};
       if(s.pendingRuin === undefined) s.pendingRuin = null;
       if(!Array.isArray(s.pendingCut)) s.pendingCut = [];
+      if(typeof s.noAnim !== 'boolean') s.noAnim = false;
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};

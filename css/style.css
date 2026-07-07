@@ -754,6 +754,25 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;
 }
 .set-close:active{transform:translateY(2px);box-shadow:0 2px 0 #5c467f;}
+.set-help{
+  display:block;width:100%;margin-top:14px;
+  background:#f3eef8;color:#7358a0;border:2px solid #d9c9f0;
+  border-radius:14px;padding:11px;font-family:inherit;font-size:15px;font-weight:bold;cursor:pointer;
+}
+.set-help:active{transform:translateY(1px);}
+/* กล่องวิธีเล่น */
+.help-box{max-width:360px;text-align:left;}
+.help-box h2{text-align:center;}
+.help-item{
+  background:#f7f3fb;border-radius:12px;padding:10px 12px;margin-top:10px;
+  font-size:14px;line-height:1.5;color:#5a4a6a;
+}
+.help-box .set-close{display:block;margin:0 auto;}
+/* ปิดเอฟเฟกต์เคลื่อนไหว (เครื่องช้า) — html.no-anim */
+html.no-anim *, html.no-anim *::before, html.no-anim *::after{
+  animation:none !important;
+  transition:none !important;
+}
 
 /* แถบแจ้งเวอร์ชันใหม่ (PWA update) — ค้างจนกดอัปเดต/ปิด */
 .update-banner{
