@@ -19,6 +19,9 @@ function startGame(cat){
   game.combo = 0;
   updateComboPill();
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
+  // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — ยังไม่เลือกตัวละคร = ซ่อนไว้
+  const gav = document.getElementById('game-avatar');
+  if(gav){ gav.innerHTML = playerAvatarHTML(''); gav.style.display = state.playerAvatar ? '' : 'none'; }
   const p = activePet();
   const hintBtn = document.getElementById('hint-btn');
   hintBtn.style.display = (p && p.type==='cat' && abilityOn(p)) ? 'block' : 'none';
@@ -117,6 +120,9 @@ function checkMatch(){
     }
 
     sfx.correct(); sfx.coin();
+    // ตัวละครเด้งเชียร์ตอนตอบถูก (เคารพ html.no-anim อัตโนมัติผ่าน CSS)
+    const gav = document.getElementById('game-avatar');
+    if(gav && state.playerAvatar){ gav.classList.remove('cheer'); void gav.offsetWidth; gav.classList.add('cheer'); }
     floatFx(`+${coins} 🪙 +${rp} RP${exp>0 ? ` +${exp} EXP` : ''}`, '#f2994a');
     if(game.combo >= 2){
       setTimeout(()=>floatFx(`🔥 COMBO ×${game.combo}!`, '#ff6fa7'), 250);

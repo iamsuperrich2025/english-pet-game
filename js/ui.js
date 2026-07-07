@@ -1434,11 +1434,12 @@ function feedWith(p, food){
   showFeedResult(p, food, shapeChange);
 }
 
-/* ตัวละครผู้เลี้ยง (ข้อ 4): มีภาพ player_male/female.png ใช้ภาพ ไม่มีใช้อีโมจิแทน */
+/* ตัวละครผู้เลี้ยง (ข้อ 4): มีภาพ player_male/female.png ใช้ภาพ ไม่มีใช้อีโมจิแทน
+   fallback = สิ่งที่โชว์เมื่อผู้เล่นยังไม่เลือกตัวละคร (แต่ละจุดใช้ต่างกัน) */
 const AVATAR_UI = {male:{emoji:'🦸‍♂️', name:'เด็กชาย'}, female:{emoji:'🦸‍♀️', name:'เด็กหญิง'}};
-function playerAvatarHTML(){
+function playerAvatarHTML(fallback){
   const av = state.playerAvatar;
-  if(!av || !AVATAR_UI[av]) return '📛';
+  if(!av || !AVATAR_UI[av]) return fallback !== undefined ? fallback : '📛';
   const img = IMG_FILES[`player_${av}`];
   return img ? `<img class="avatar-chip-img" src="${img}" alt="">` : AVATAR_UI[av].emoji;
 }
@@ -2908,7 +2909,7 @@ function renderStats(){
     : '<div class="cat-info">ยังไม่มีสัตว์เลี้ยง</div>';
   document.getElementById('stats-body').innerHTML = `
     <div class="stats-card">
-      <h3 class="stats-title">👧 ${s.first} ${s.last} · ชั้น ${s.grade}</h3>
+      <h3 class="stats-title">${playerAvatarHTML('👧')} ${escapeHTML(s.first)} ${escapeHTML(s.last)} · ชั้น ${s.grade}${state.profileName ? ` <small class="stats-nick">(${escapeHTML(state.profileName)})</small>` : ''}</h3>
       <div class="stats-row"><span>🎖️ แรงค์ปัจจุบัน (ตามมูลค่าทรัพย์สินสุทธิ)</span>
         <span style="color:${info.rank.color};font-weight:bold">${info.rank.emoji} ${info.label}</span></div>
       <div class="stats-row"><span>💪 แต้มความพยายามสะสม</span><span><b>${fmtNum(state.rp)}</b> RP</span></div>

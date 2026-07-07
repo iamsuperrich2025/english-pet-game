@@ -935,6 +935,19 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
   font-family:inherit;font-size:13px;color:#7a5ca8;cursor:pointer;
 }
 .avatar-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:var(--yellow-d);color:#a8791a;font-weight:bold;}
+/* ตัวละครมาเชียร์ในฉากเกม (ข้อ 4 ต่อยอด) */
+.game-avatar{font-size:26px;line-height:1;display:flex;align-items:center;}
+.game-avatar .avatar-chip-img{width:38px;height:38px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.game-avatar.cheer{animation:avatarCheer .5s ease;}
+@keyframes avatarCheer{
+  0%{transform:scale(1) rotate(0);}
+  35%{transform:scale(1.35) rotate(-8deg);}
+  70%{transform:scale(1.15) rotate(6deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+/* หัวการ์ดสถิติ/สรุปส่งครู */
+.stats-title .avatar-chip-img{width:34px;height:34px;vertical-align:-10px;}
+.stats-nick{font-size:13px;color:#9a8aac;font-weight:normal;}
 
 /* ---------- การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7) ---------- */
 .ticket-owned{
