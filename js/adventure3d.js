@@ -64,8 +64,12 @@ let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, mapCv, mapC
 let texCache={};
 
 /* ---------- multiplayer ---------- */
-let peers={};                     // uid → {spr, cur:{x,z}, tgt:{x,z}, n, av}
+let peers={};                     // uid → {spr, cur:{x,z}, tgt:{x,z}, n, av, bubble, lastCt}
 let worldRef=null, myRef=null, lastNetSend=0, lastSent=null;
+/* แชทลอยหัวแบบ Roblox: พิมพ์สั้นๆ โชว์เหนือหัว BUBBLE_MS */
+const CHAT_MAX=60, BUBBLE_MS=5000;
+let myChat=null;                  // {text, ts} — แนบไปกับ sendPos ระหว่างยังสด (ct ใช้ Date.now คงที่ กันเด้งซ้ำ)
+let chatBoxEl=null, chatInputEl=null, selfMsgEl=null;
 
 /* ============================================================
    คำศัพท์ — ตามระดับชั้น + ไม่ซ้ำคำที่ประกอบแล้ว (8.1/8.6) · แยกคลังต่อโหมด
@@ -141,6 +145,45 @@ function makePeerSprite(name, av){
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
   spr.scale.set(1.7,2.26,1);
   return spr;
+}
+
+/* ---------- แชทลอยหัว (Roblox-style) ---------- */
+function bubbleSprite(text){
+  const cv=document.createElement('canvas'); cv.width=360; cv.height=120;
+  const c=cv.getContext('2d');
+  c.font='600 26px Arial';
+  // ตัดเป็น ≤2 บรรทัดตามความกว้างจริง (รองรับไทย/อังกฤษปน)
+  const maxW=320, lines=[]; let cur='';
+  for(const ch of String(text)){
+    if(c.measureText(cur+ch).width>maxW){ lines.push(cur); cur=ch; if(lines.length===2) break; }
+    else cur+=ch;
+  }
+  if(lines.length<2 && cur) lines.push(cur);
+  if(lines.length===2 && cur && lines[1]!==cur) lines[1]=lines[1].slice(0,-1)+'…';
+  const h=lines.length>1?110:78;
+  c.clearRect(0,0,360,120);
+  c.fillStyle='rgba(255,255,255,.95)';
+  c.beginPath(); c.roundRect(6,6,348,h-12,20); c.fill();
+  c.strokeStyle='rgba(0,0,0,.25)'; c.lineWidth=3; c.stroke();
+  c.fillStyle='#333'; c.textAlign='center'; c.textBaseline='middle';
+  lines.forEach((ln,i)=>c.fillText(ln,180,(lines.length>1?36:h/2)+i*36));
+  const tex=new THREE.CanvasTexture(cv);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+  spr.scale.set(3.0,1.0,1);
+  return spr;
+}
+function showPeerBubble(p, text){
+  if(p.bubble){ scene.remove(p.bubble.spr); p.bubble.spr.material.map.dispose(); p.bubble.spr.material.dispose(); }
+  const spr=bubbleSprite(text);
+  spr.position.set(p.cur.x, 3.1, p.cur.z);
+  scene.add(spr);
+  p.bubble={spr, until:performance.now()+BUBBLE_MS};
+  sfx.select();
+}
+function removePeerBubble(p){
+  if(!p.bubble) return;
+  scene.remove(p.bubble.spr); p.bubble.spr.material.map.dispose(); p.bubble.spr.material.dispose();
+  p.bubble=null;
 }
 
 /* ============================================================
@@ -705,10 +748,38 @@ function sendPos(force){
         y=Math.round(yaw*100)/100;
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
-  myRef.set({
+  const payload={
     n:onlineDisplayName(), av:state.playerAvatar||'',
     x, z, yaw:y, ts:firebase.database.ServerValue.TIMESTAMP,
-  }).catch(()=>{});
+  };
+  // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
+  if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
+  myRef.set(payload).catch(()=>{});
+}
+/* ส่งแชทลอยหัว: กรองคำหยาบ + echo ของตัวเองมุมล่าง */
+function sendChat(text){
+  text=String(text||'').trim().slice(0,CHAT_MAX);
+  if(!text) return;
+  if(typeof nameHasBadWord==='function' && nameHasBadWord(text)){
+    sfx.wrong(); toast('⚠️ ข้อความมีคำไม่สุภาพ ลองพิมพ์ใหม่นะ'); return;
+  }
+  myChat={text, ts:Date.now()};
+  if(myRef) sendPos(true);
+  selfMsgEl.textContent='💬 '+text;
+  selfMsgEl.classList.add('on');
+  clearTimeout(selfMsgEl._tm);
+  selfMsgEl._tm=setTimeout(()=>selfMsgEl.classList.remove('on'),BUBBLE_MS);
+  sfx.select();
+}
+function toggleChatBox(open){
+  const showing=getComputedStyle(chatBoxEl).display!=='none';   // CSS ตั้ง none ไว้ inline ยังว่าง — ต้องดู computed
+  const want=open===undefined?!showing:open;
+  chatBoxEl.style.display=want?'flex':'none';
+  if(want){
+    if(document.pointerLockElement) document.exitPointerLock();
+    chatInputEl.value='';
+    setTimeout(()=>chatInputEl.focus(),50);
+  }
 }
 function onPeerData(snap){
   const uid=snap.key;
@@ -724,10 +795,16 @@ function onPeerData(snap){
     tinvCheck(uid);
   }
   p.tgt={x:d.x,z:d.z};
+  // แชทลอยหัว: ct เปลี่ยน = ข้อความใหม่ (ct คงที่ต่อข้อความ ฝั่งส่งแนบซ้ำได้ไม่เด้งซ้ำ)
+  if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){
+    p.lastCt=d.ct;
+    showPeerBubble(p, d.c);
+  }
 }
 function removePeer(uid){
   const p=peers[uid];
   if(!p) return;
+  removePeerBubble(p);
   scene.remove(p.spr); p.spr.material.map.dispose(); p.spr.material.dispose();
   delete peers[uid];
 }
@@ -744,6 +821,10 @@ function tickPeers(dt,now){
     p.cur.x+=(p.tgt.x-p.cur.x)*k;
     p.cur.z+=(p.tgt.z-p.cur.z)*k;
     p.spr.position.set(p.cur.x,1.5+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
+    if(p.bubble){
+      if(now>p.bubble.until) removePeerBubble(p);
+      else p.bubble.spr.position.set(p.cur.x,3.1,p.cur.z);   // ลอยตามหัว
+    }
   });
 }
 
@@ -889,7 +970,18 @@ function buildDom(){
   .adv-touch #adv-shoot{display:block}
   .adv-touch.adv-haunt #adv-shoot{display:none}
   #adv-hint{bottom:8px;right:8px;color:#fff;font-size:11px;text-shadow:0 1px 3px #000;text-align:right;opacity:.85}
-  .adv-touch #adv-hint{display:none}`;
+  .adv-touch #adv-hint{display:none}
+  #adv-chat-btn{position:absolute;top:160px;right:8px;pointer-events:auto;background:rgba(33,150,243,.92);
+    color:#fff;border:2px solid #fff;border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
+  #adv-chat-box{position:absolute;bottom:56px;left:50%;transform:translateX(-50%);display:none;gap:6px;
+    background:rgba(0,0,0,.6);border-radius:14px;padding:8px;pointer-events:auto;width:min(420px,86vw)}
+  #adv-chat-input{flex:1;border:none;border-radius:9px;padding:8px 10px;font-size:15px;font-family:inherit;outline:none}
+  #adv-chat-send{background:#43a047;color:#fff;border:none;border-radius:9px;font-weight:800;font-size:14px;
+    padding:8px 14px;font-family:inherit}
+  #adv-selfmsg{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);max-width:70vw;
+    background:rgba(255,255,255,.95);color:#333;border-radius:14px;padding:5px 13px;font-size:14px;font-weight:600;
+    display:none;pointer-events:none}
+  #adv-selfmsg.on{display:block}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -908,6 +1000,12 @@ function buildDom(){
     <div id="adv-scare"><span>👻</span></div>
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <button id="adv-shoot">🔥</button>
+    <button id="adv-chat-btn">💬 แชท</button>
+    <div id="adv-chat-box">
+      <input id="adv-chat-input" maxlength="60" placeholder="พิมพ์สั้นๆ โชว์ลอยหัว 5 วิ...">
+      <button id="adv-chat-send">ส่ง</button>
+    </div>
+    <div id="adv-selfmsg"></div>
     <div class="adv-hud" id="adv-hint"></div>`;
   document.body.appendChild(overlayEl);
 
@@ -922,11 +1020,24 @@ function buildDom(){
   scareEl=overlayEl.querySelector('#adv-scare');
   hintEl=overlayEl.querySelector('#adv-hint');
   mapCv=overlayEl.querySelector('#adv-map'); mapCtx=mapCv.getContext('2d');
+  chatBoxEl=overlayEl.querySelector('#adv-chat-box');
+  chatInputEl=overlayEl.querySelector('#adv-chat-input');
+  selfMsgEl=overlayEl.querySelector('#adv-selfmsg');
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   const shootBtn=overlayEl.querySelector('#adv-shoot');
   shootBtn.addEventListener('touchstart',e=>{ e.preventDefault(); shoot(); },{passive:false});
   shootBtn.addEventListener('click',e=>{ e.preventDefault(); shoot(); });
+
+  overlayEl.querySelector('#adv-chat-btn').addEventListener('click',()=>toggleChatBox());
+  overlayEl.querySelector('#adv-chat-send').addEventListener('click',()=>{
+    sendChat(chatInputEl.value); toggleChatBox(false);
+  });
+  chatInputEl.addEventListener('keydown',e=>{
+    e.stopPropagation();                                   // กัน WASD ในช่องพิมพ์ไปขยับตัวละคร
+    if(e.code==='Enter'){ sendChat(chatInputEl.value); toggleChatBox(false); }
+    if(e.code==='Escape') toggleChatBox(false);
+  });
 
   bindInput();
 }
@@ -952,7 +1063,12 @@ function confirmExit(){
    ============================================================ */
 const IS_TOUCH='ontouchstart' in window;
 function bindInput(){
-  document.addEventListener('keydown',e=>{ if(overlayEl.classList.contains('on')) keys[e.code]=true; });
+  document.addEventListener('keydown',e=>{
+    if(!overlayEl.classList.contains('on')) return;
+    if(e.target && e.target.tagName==='INPUT') return;     // กำลังพิมพ์แชท
+    if(e.code==='Enter' && running){ toggleChatBox(true); e.preventDefault(); return; }
+    keys[e.code]=true;
+  });
   document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 
   if(!IS_TOUCH){
@@ -971,7 +1087,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner')) continue;
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box')) continue;
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -1139,6 +1255,9 @@ function exitWorld(){
   if(document.pointerLockElement) document.exitPointerLock();
   netLeave();
   HSound.stopAll();
+  toggleChatBox(false);
+  selfMsgEl.classList.remove('on');
+  myChat=null;
   overlayEl.classList.remove('on','adv-hunted','adv-shake');
   scareEl.classList.remove('on');
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
@@ -1155,8 +1274,14 @@ window.Adventure3D={
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
-    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld,
+    camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
+    step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
+      const now=performance.now(); dt=dt||.016;
+      tickPlayer(dt,now);
+      if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
+      tickPeers(dt,now); drawMinimap(); renderer.render(scene,camera);
+    },
   },
 };
 })();
