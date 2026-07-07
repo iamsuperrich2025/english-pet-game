@@ -3025,6 +3025,7 @@ function renderPetShop(){
       <div class="egg-name">${p.eggName}</div>
       <div class="egg-desc">${p.eggDesc}</div>
       ${owned ? '<div class="pet-price owned">✅ เลี้ยงอยู่แล้ว</div>' : `<div class="pet-price">🪙${fmtNum(p.price)}</div>`}
+      ${!owned && !afford ? `<div class="egg-need">ขาดอีก 🪙${fmtNum(p.price - state.coins)} ≈ เล่นอีก ${fmtNum(Math.ceil((p.price - state.coins)/10))} คำ</div>` : ''}
     </div>`;
   }).join('');
   grid.querySelectorAll('.egg-card').forEach(card=>{

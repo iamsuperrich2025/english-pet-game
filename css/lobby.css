@@ -76,6 +76,8 @@ h1{color:var(--sky-d);text-shadow:none;}
 #screen-select .egg-name{font-size:clamp(14px,3.6dvh,17px);margin-top:4px;}
 #screen-select .egg-desc{font-size:clamp(11px,2.6dvh,12.5px);}
 #screen-select .pet-price{margin-top:4px;font-size:13.5px;padding:1px 12px;}
+/* เป้าหมายบนการ์ดที่เหรียญยังไม่พอ: ขาดอีกเท่าไหร่ ≈ อีกกี่คำ (ฐาน 10🪙/คำ) */
+.egg-need{font-size:clamp(10px,2.5dvh,12px);color:#b8860b;font-weight:600;margin-top:2px;line-height:1.2;}
 /* มุมขวาบน: เหรียญ + ลิงก์เข้าเล่นเกม (เกมคือทางหาเหรียญ) */
 .petshop-topright{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
 .petshop-play-link{
