@@ -10,18 +10,9 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-### ⭐ งานที่ผู้ใช้เคาะแล้ว รอทำเลย: จุดแดงรวมบนปุ่ม ⚙️ ตั้งค่า
-ผู้ใช้ (7 ก.ค. รอบ 32e) ขอ **badge เลขรวมบนปุ่ม ⚙️ `#btn-settings`** (ใน header, index.html ~บรรทัด 106) ให้เห็นแต่ไกลว่ามี "อะไรต้องจัดการ" · **ผู้ใช้เคาะแล้ว: รวม บิล + คำขอเพื่อน/แชท + ของขวัญ · แสดงเป็นเลขรวม (ไม่ใช่จุดเปล่า)**
-- **สเปก:** เพิ่ม `<span class="rail-badge" id="settings-badge" style="display:none">` บนปุ่ม ⚙️ · ปุ่มนี้เป็น `.icon-btn` ใน header (ไม่ใช่ rail) → CSS `.rail-badge` เป็น position:absolute แต่ `.icon-btn` **ยังไม่มี position:relative** ต้องเพิ่มให้ (หรือทำคลาส badge เฉพาะ) + ปรับ top/right ให้พอดีปุ่มกลม
-- **เลขรวม = บิล + เพื่อน + ของขวัญ (ฟังก์ชันคำนวณมีอยู่แล้ว ไม่ต้องคิดสูตรใหม่):**
-  - บิลค้าง (นับ 1 ถ้ามีบิลค้างอย่างน้อยหนึ่ง — หรือจะนับจำนวนบิลก็ได้): `['maint','elec','water','trash','net','data'].filter(id=>billOutstanding(id)>0).length` (ดู `updateBillBadges()` js/ui.js)
-  - คำขอเพื่อน + แชทใหม่: `Online.reqs.length + Object.keys(Online.chatUnread||{}).length` (ดู `updateFriendBadge()` js/ui.js:304)
-  - ของขวัญที่ยังไม่เปิด: จำนวนใน `gift-badge` (ดู `updateGiftBadge()`/js/ui.js:572 ว่านับจากอะไร แล้วใช้ตัวเลขเดียวกัน)
-  - รวม 3 ก้อน → ถ้า >0 โชว์เลข ไม่งั้นซ่อน · ทำ `updateSettingsBadge()` แล้วเรียกใน `renderDashboard` (ใกล้ `updateBillBadges()`) + เรียกเพิ่มทุกจุดที่เรียก `updateFriendBadge()`/`updateGiftBadge()` (online listener) เพื่อให้อัปเดตสดตอนมีคำขอ/ของขวัญเข้า
-- **หมายเหตุ semantic:** ปุ่ม ⚙️ เปิดหน้าตั้งค่า (ไม่ใช่ที่จ่ายบิล/รับเพื่อน) — เลขรวมนี้เป็น "attention รวม" เฉยๆ ผู้ใช้ยืนยันแล้วว่าต้องการแบบนี้
-- **จบงาน:** บัมพ์ version → commit เฉพาะไฟล์ที่แก้ (index.html, js/ui.js, อาจมี css) → อัปเดต TASKS นี้
+เกม feature-complete + ระบบตั้งค่า/แจ้งเตือนครบแล้ว · **ขั้นตอน: เสนอ backlog ให้ผู้ใช้เลือก → รอเคาะ → ทำทีละข้อ**
 
-### backlog อื่น (เสนอผู้ใช้เลือก → รอเคาะ อ่านสเปกเต็มใน `handoff/BACKLOG.md`)
+### backlog (เสนอผู้ใช้เลือก → รอเคาะ อ่านสเปกเต็มใน `handoff/BACKLOG.md`)
 - 💰 **item 8** รายได้ออนไลน์ +0.01/วิ
 - 🏪 **item 2** ตลาดออนไลน์จริง (ซื้อขายข้ามผู้เล่น)
 - 🎯 **item 3** daily quest
@@ -35,6 +26,12 @@
 2. **ทดสอบจริง 2 บัญชี:** ส่ง-รับของขวัญ + แชท + self-heal เพื่อน + กล่องยืนยันของขวัญไม่บวม (fix รอบ 31)
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
+
+**✅ รอบ 32f (7 ก.ค. · Opus): จุดแดงเลขรวมบนปุ่ม ⚙️ ตั้งค่า — commit `2065b8e` · version→.8**
+- badge `#settings-badge` บนปุ่ม `#btn-settings` (index.html) แสดง **เลขรวม attention** = บิลค้าง(6 ชนิด, นับจำนวนบิล) + คำขอเพื่อน/แชทใหม่ + ของขวัญที่ยังไม่เปิด (ผู้ใช้เคาะ: รวมของขวัญ + เลขรวม)
+- `updateSettingsBadge()` (js/ui.js) ผูกท้าย `updateBillBadges`/`updateFriendBadge`/`updateGiftBadge` → อัปเดตสดทุกจุดที่ badge ย่อยอัปเดต (+ renderDashboard ผ่าน updateBillBadges)
+- CSS: `.icon-btn` เพิ่ม `position:relative` · `#settings-badge{top:-7px;right:-7px}` มุมขวาบนปุ่มกลม
+- ✅ ทดสอบ preview (mock login + getBoundingClientRect): รวม 6=2บิล+1คำขอ+1แชท+2ของขวัญ ถูก · badge อยู่มุมขวาบนปุ่มจริง เลข "3" · ว่าง→ซ่อน · ไม่มี console error (screenshot tool ค้างทั้ง session ใช้ rect ยืนยันแทน)
 
 **✅ รอบ 32e (7 ก.ค. · Opus): ตั้งค่าเพิ่ม (ปิดแอนิเมชัน+วิธีเล่น) + จุดแดงแจ้งบิลค้าง — commit `35b4762` · version→.7**
 - **ปิดแอนิเมชัน:** สวิตช์ "✨ เอฟเฟกต์เคลื่อนไหว" ในตั้งค่า · `state.noAnim` (default false, มี migration) → `html.no-anim` (CSS `animation:none!important;transition:none!important`) · `applyNoAnim()` เรียกใน renderDashboard + ตอนสลับ
