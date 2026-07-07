@@ -32,6 +32,9 @@ const Online = {
   giftIn:[],        // ของขวัญที่มีคนส่งมาหาเรา รอกดรับ/ไม่รับ: [{from,fn,k,id,ts,key}]
   giftOut:[],       // ของขวัญที่เราส่งไป ยังรอผู้รับ (โชว์สถานะ "ยังไม่มีผู้รับ"): [{to,k,id,ts,key}]
   giftOutDone:{},   // key ของขวัญที่ประมวลผลผลลัพธ์แล้วในเซสชันนี้ (กันคืนของซ้ำจาก snapshot รัว)
+  /* ---- คำเชิญเล่นโลก 3D ด้วยกัน (ส่วนลดคนละ 2,000 เมื่อเจอกันใน map) ---- */
+  tinv:{},          // คำเชิญที่ส่งมาหาเรา: {fromUid:{map:'adv'|'haunt', n:ชื่อผู้ชวน, ts}}
+  tinvSeen:{},      // fromUid ที่เด้ง toast ไปแล้วในเซสชันนี้ (กันเด้งซ้ำ)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -511,6 +514,41 @@ function giftOutRebuild(){
 
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
    initializeApp ทำแล้วใน authStart) ---------- */
+/* ============================================================
+   คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
+   ผู้ชวนจำคำเชิญที่ส่งใน state.tinvSent · ผู้ถูกชวนเห็นจาก watch นี้
+   เจอกันใน map จริงทั้งคู่ → ต่างคนต่างรับเงินคืน TINV_CASHBACK (ครั้งเดียว/map)
+   ============================================================ */
+function tinvSend(toUid, map){
+  if(!Online.ready || !Online.db) return Promise.reject();
+  const me = onlineKey();
+  return Online.db.ref('tinv/' + toUid + '/' + me).set({
+    map, n: onlineDisplayName(), ts: firebase.database.ServerValue.TIMESTAMP,
+  });
+}
+function tinvClear(fromUid){
+  if(!Online.db) return;
+  Online.db.ref('tinv/' + onlineKey() + '/' + fromUid).remove().catch(()=>{});
+}
+function tinvWatch(){
+  Online.db.ref('tinv/' + onlineKey()).on('value', (snap)=>{
+    const out = {};
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(v && (v.map === 'adv' || v.map === 'haunt')) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
+    });
+    Online.tinv = out;
+    Object.keys(out).forEach(uid=>{
+      if(Online.tinvSeen[uid]) return;
+      Online.tinvSeen[uid] = true;
+      const w = out[uid].map === 'haunt' ? 'โลกผีสิง 👻' : 'โลกผจญภัย 🌍';
+      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${w}ด้วยกัน! เจอกันใน map รับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
+    });
+    if(typeof renderTicketCard === 'function') renderTicketCard();
+    if(typeof renderHauntCard === 'function') renderHauntCard();
+  });
+}
+
 function onlineStart(){
   Online.db = firebase.database();
   const id = onlineKey();
@@ -592,6 +630,9 @@ function onlineStart(){
 
   // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)
   giftInWatch();
+
+  // ฟังคำเชิญเล่นโลก 3D ด้วยกัน (path คงที่ ตั้งครั้งเดียว)
+  tinvWatch();
 
   // ส่งสถานะ + คะแนนเป็นระยะ (เหรียญไม่ขยับจะไม่เขียน leaderboard ซ้ำ)
   setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);

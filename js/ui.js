@@ -1075,6 +1075,7 @@ function renderDashboard(){
     renderPhoneCard();
     renderComputerCard();
     renderTicketCard();
+    renderHauntCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -1270,6 +1271,7 @@ function renderDashboard(){
   renderPhoneCard();
   renderComputerCard();
   renderTicketCard();
+  renderHauntCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -2168,9 +2170,13 @@ function renderTicketCard(){
         <div style="font-size:44px">🎫✨</div>
         <b>ประตูโลกผจญภัยเปิดแล้ว!</b><br>
         <small>เดินเก็บตัวอักษรมาประกอบคำศัพท์ คำละ 🪙15 · ระวัง monster 👾 ยิงสู้ได้<br>
-        พลังหมดต้องกลับมารักษา 🪙${fmtNum(CURE_COST)} · ออกจากโลกเมื่อไหร่ก็ได้</small>
+        พลังหมดต้องกลับมารักษา 🪙${fmtNum(CURE_COST)} · ออกจากโลกเมื่อไหร่ก็ได้<br>
+        🧑‍🤝‍🧑 ผู้เล่นอื่นที่อยู่ในโลกจะโผล่ใน map ให้เจอกัน (สไตล์ Roblox)</small>
       </div>
-      <button class="big-btn green home-btn" id="btn-enter-adv">🌍 เข้าโลกผจญภัย 3D</button>`;
+      ${tinvNoticeHTML('adv')}
+      <button class="big-btn green home-btn" id="btn-enter-adv">🌍 เข้าโลกผจญภัย 3D</button>
+      ${state.tinvClaimed.adv ? '' :
+        `<button class="big-btn blue home-btn" id="btn-inv-adv">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
   }else if(!hasAdult){
     body = `
       <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
@@ -2182,8 +2188,9 @@ function renderTicketCard(){
         <div style="font-size:44px">🎫</div>
         <div><b>ตั๋วเข้าโลกผจญภัย 3D</b><br>
         <small>ออกตามหาตัวอักษรมาประกอบคำศัพท์ในโลกกว้าง ได้เหรียญมากกว่าเกมจับคู่!<br>
-        🚧 กำลังก่อสร้าง เปิดเร็วๆ นี้ — ซื้อตั๋วเตรียมไว้ก่อนได้ · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้</small></div>
+        ✅ ประตูเปิดแล้ว ซื้อตั๋วเข้าไปเล่นได้เลย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้</small></div>
       </div>
+      ${tinvNoticeHTML('adv')}
       <button class="big-btn blue home-btn" id="btn-buy-ticket">🎫 ซื้อตั๋ว 🪙${fmtNum(TICKET_PRICE)}</button>`;
   }
   el.innerHTML = body;
@@ -2193,6 +2200,8 @@ function renderTicketCard(){
   if(enter) enter.addEventListener('click', enterAdventure3D);
   const heal = document.getElementById('btn-adv-heal');
   if(heal) heal.addEventListener('click', advHealClick);
+  const inv = document.getElementById('btn-inv-adv');
+  if(inv) inv.addEventListener('click', ()=>openTinvPicker('adv'));
 }
 
 /* ---------- ข้อ 8: เข้าโลกผจญภัย 3D — โหลด engine เฉพาะตอนกดเข้า (กันหน้าหลักหนัก) ---------- */
@@ -2227,7 +2236,26 @@ async function enterAdventure3D(){
     }
     advLoading = false;
   }
-  Adventure3D.start();
+  Adventure3D.start('adv');
+}
+
+/* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
+async function enterHaunted3D(){
+  if(!state.hauntTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('👻 กำลังเปิดประตูโลกผีสิง...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกผีสิงไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('haunt');
 }
 
 /* พลังหมดในโลก 3D → บาดเจ็บ ต้องจ่ายค่ารักษาก่อนเข้าใหม่ (สเปก 8.5) */
@@ -2240,7 +2268,7 @@ function advHealClick(){
   }
   askConfirm(`<h2>💊 รักษาตัว</h2>
     <p style="font-size:15px;margin:6px 0">จ่ายค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b><br>
-    <small>หายดีแล้วกลับเข้าโลกผจญภัย 3D ได้ทันที</small></p>`,
+    <small>หายดีแล้วกลับเข้าโลก 3D ได้ทันที (ทั้งโลกผจญภัยและโลกผีสิง)</small></p>`,
     'รักษาเลย', ()=>{
       state.coins -= CURE_COST;
       state.advHurt = false;
@@ -2259,16 +2287,145 @@ function buyTicket(){
   }
   askConfirm(`<h2>🎫 ซื้อตั๋วโลกผจญภัย</h2>
     <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(TICKET_PRICE)}</b><br>
-    ตั๋วเข้าโลกผจญภัย 3D — ตามหาตัวอักษรประกอบคำศัพท์<br>
-    <small>🚧 โลกกำลังก่อสร้าง เปิดเร็วๆ นี้ ตั๋วพร้อมใช้ทันทีที่เปิด<br>ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    ตั๋วเข้าโลกผจญภัย 3D — ตามหาตัวอักษรประกอบคำศัพท์ คำละ 🪙15<br>
+    <small>✅ ประตูเปิดแล้ว ซื้อแล้วเข้าเล่นได้ทันที<br>ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
     'ซื้อเลย!', ()=>{
       state.coins -= TICKET_PRICE;
       state.advTicket = true;
       sfx.buy();
-      toast('🎫 ได้ตั๋วโลกผจญภัยแล้ว! รอประตูเปิดเร็วๆ นี้ 🚧✨');
+      toast('🎫 ได้ตั๋วโลกผจญภัยแล้ว! กดปุ่มเขียวเข้าโลก 3D ได้เลย 🌍✨');
       saveState();
       renderDashboard();
     });
+}
+
+/* ============================================================
+   🎃 การ์ดตั๋วโลกผีสิงกลางคืน (ต่อยอดข้อ 8 · ผู้ใช้เคาะ 7 ก.ค.)
+   ซื้อได้เมื่อมีตั๋วโลกผจญภัยก่อน · 25🪙/คำ · ผีสู้ไม่ได้ ต้องหนี
+   โดนจับ = game over + รักษา 1,000 (สถานะบาดเจ็บใช้ร่วมกับโลกกลางวัน)
+   ============================================================ */
+function renderHauntCard(){
+  const el = document.getElementById('haunt-card');
+  if(!el) return;
+  let body;
+  if(state.hauntTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อน (ปุ่มรักษาอยู่ที่การ์ดตั๋วโลกผจญภัย หรือกดที่นี่ก็ได้)</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-haunt-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.hauntTicket){
+    body = `
+      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">👻🌙</div>
+        <b>ประตูโลกผีสิงเปิดแล้ว... กล้าเข้าไหม?</b><br>
+        <small>กลางคืนสุดหลอน เก็บตัวอักษรประกอบคำ คำละ 🪙25<br>
+        👻 ผีโผล่ทีละ 20 วิแล้วย้ายที่ · <b>สู้ไม่ได้ ต้องหนีอย่างเดียว!</b> โดนจับ = จบเกม รักษา 🪙${fmtNum(CURE_COST)}<br>
+        🧑‍🤝‍🧑 ผู้เล่นอื่นโผล่ใน map ให้เจอกัน (สไตล์ Roblox)</small>
+      </div>
+      ${tinvNoticeHTML('haunt')}
+      <button class="big-btn purple home-btn" id="btn-enter-haunt">👻 เข้าโลกผีสิง 3D</button>
+      ${state.tinvClaimed.haunt ? '' :
+        `<button class="big-btn blue home-btn" id="btn-inv-haunt">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
+  }else if(!state.advTicket){
+    body = `
+      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกผจญภัย 🎫</b>ก่อน ถึงจะกล้าเข้าโลกผีสิงกลางคืนได้นะ</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <div class="home-desc">
+        <div style="font-size:44px">🎃</div>
+        <div><b>ตั๋วเข้าโลกผีสิงกลางคืน 3D</b><br>
+        <small>โลกมืดสุดหลอน รางวัลคำละ 🪙25 (มากกว่าโลกกลางวัน!)<br>
+        👻 ผีเยอะ สู้ไม่ได้ ต้องหนีอย่างเดียว · ใจไม่ถึงอย่าเข้า...<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      </div>
+      ${tinvNoticeHTML('haunt')}
+      <button class="big-btn blue home-btn" id="btn-buy-haunt">🎃 ซื้อตั๋ว 🪙${fmtNum(HAUNT_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-haunt');
+  if(buy) buy.addEventListener('click', buyHauntTicket);
+  const enter = document.getElementById('btn-enter-haunt');
+  if(enter) enter.addEventListener('click', enterHaunted3D);
+  const heal = document.getElementById('btn-haunt-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+  const inv = document.getElementById('btn-inv-haunt');
+  if(inv) inv.addEventListener('click', ()=>openTinvPicker('haunt'));
+}
+
+function buyHauntTicket(){
+  if(state.hauntTicket) return;
+  if(!state.advTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกผจญภัยก่อนถึงจะซื้อตั๋วโลกผีสิงได้นะ'); return; }
+  if(state.coins < HAUNT_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกผีสิง 🪙${fmtNum(HAUNT_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🎃 ซื้อตั๋วโลกผีสิง</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(HAUNT_PRICE)}</b><br>
+    โลกกลางคืนสุดหลอน — รางวัลคำละ 🪙25<br>
+    <small>👻 ผีสู้ไม่ได้ ต้องหนีอย่างเดียว โดนจับ = จบเกม รักษา 🪙${fmtNum(CURE_COST)}<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'กล้าซื้อ! 👻', ()=>{
+      state.coins -= HAUNT_PRICE;
+      state.hauntTicket = true;
+      sfx.buy();
+      toast('🎃 ได้ตั๋วโลกผีสิงแล้ว! กดปุ่มม่วงเข้าโลกกลางคืน... ถ้ากล้า 👻');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
+function tinvNoticeHTML(map){
+  if(state.tinvClaimed && state.tinvClaimed[map]) return '';
+  if(!(window.Online && Online.tinv)) return '';
+  const from = Object.values(Online.tinv).filter(v=>v.map===map);
+  if(!from.length) return '';
+  return `<div class="tinv-note">📨 <b>${escapeHTML(from[0].n)}</b> ชวนหนูไปเล่นด้วยกัน!
+    เข้าโลกให้เจอกันใน map แล้วรับเงินคืนคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
+}
+function openTinvPicker(map){
+  if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
+  const friends = (Online.myFriends || []);
+  if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
+  const w = map==='haunt' ? 'โลกผีสิง 👻' : 'โลกผจญภัย 🌍';
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
+    <h2 style="font-size:18px">📨 ชวนเพื่อนไปเล่น${w}</h2>
+    <p style="font-size:13px;margin:4px 0">เล่นพร้อมกันใน map ครั้งแรก รับเงินคืน<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
+    <div style="max-height:44vh;overflow-y:auto;margin:8px 0">
+      ${friends.map(f=>{
+        const on = Online.presenceMap && Online.presenceMap[f.uid];
+        const sent = state.tinvSent[f.uid] && state.tinvSent[f.uid].map===map;
+        return `<button class="big-btn ${sent?'':'blue'}" data-uid="${f.uid}" data-n="${escapeHTML(f.n)}" ${sent?'disabled style="opacity:.55"':''}
+          style="width:100%;margin:3px 0;font-size:14px;padding:8px">${on?'🟢':'⚪'} ${escapeHTML(f.n)}${sent?' · ✅ ชวนแล้ว':''}</button>`;
+      }).join('')}
+    </div>
+    <button class="big-btn" id="tinv-close" style="width:100%;font-size:14px;padding:8px">ปิด</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  overlay.querySelector('#tinv-close').addEventListener('click', ()=>overlay.remove());
+  overlay.querySelectorAll('button[data-uid]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const uid = btn.dataset.uid;
+      tinvSend(uid, map).then(()=>{
+        state.tinvSent[uid] = {map, ts: Date.now()};
+        saveState();
+        sfx.buy();
+        toast(`📨 ส่งคำชวนถึง ${btn.dataset.n} แล้ว! เข้าโลกรอเจอกันได้เลย`);
+        overlay.remove();
+      }).catch(()=>{
+        sfx.wrong(); toast('⚠️ ส่งคำชวนไม่สำเร็จ — ลองใหม่อีกครั้งนะ');
+      });
+    });
+  });
 }
 
 /* ============================================================

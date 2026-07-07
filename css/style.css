@@ -678,6 +678,12 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .big-btn.red{background:linear-gradient(180deg,#f2938c,#d9534f);box-shadow:0 6px 0 #b03835;font-size:17px;padding:11px;}
 .big-btn.red:active{box-shadow:0 2px 0 #b03835;}
 
+/* ป้ายคำเชิญเล่นโลก 3D ด้วยกัน (เงินคืนคนละ 2,000) */
+.tinv-note{
+  background:#fff8dc;border:2px dashed #e0a93d;border-radius:12px;
+  padding:7px 10px;margin:8px 0;font-size:13px;color:#7a5a1e;text-align:center;
+}
+
 /* ---------- หมวดคำศัพท์ ---------- */
 .cat-card{
   background:rgba(255,255,255,.85);border:3px solid #fff;border-radius:20px;

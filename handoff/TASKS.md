@@ -10,9 +10,10 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-**ข้อ 8 โลกผจญภัย 3D เสร็จแล้ว (รอบ 40) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบโลก 3D จริง
-- ⏳ **รอผู้ใช้ทดสอบจริงบน Pages:** โลก 3D บนเดสก์ท็อป (เมาส์+WASD) และมือถือ landscape (จอยซ้าย+ลากมองขวา+ปุ่มยิง 🔥) — ยังไม่ได้เทสต์ touch จริงบนอุปกรณ์ (preview เป็นเดสก์ท็อป) + งานค้าง .12–.17 เดิม
-- 🧪 **testkit โลก 3D:** `Adventure3D._t` มี getter camera/letters/monsters/words/inv/hp/running + `damage()/shoot()/spawnMonster()/step(dt,now)` — **rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง** ให้เรียก `_t.step(.016, performance.now())` เดินเกมเอง · ระวัง: ตอนหน้าต่าง preview เรนเดอร์ rAF เดินจริง ผู้เล่นยืนนิ่งจะโดน monster รุมจน KO ระหว่าง eval ได้
+**โลก 3D ครบ 2 โลกแล้ว (รอบ 40 กลางวัน + รอบ 41 ผีสิง/multiplayer/ชวนเพื่อน) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
+- ⚠️ **ค้างฝั่งผู้ใช้ (รอบ 41): publish Firebase rules ใหม่ (โซน `/world`+`/tinv` — ก้อนเต็ม `handoff/RULES.md`)** ไม่งั้น multiplayer มองไม่เห็นกัน + ส่งคำชวนถูก reject · และถ้าจะอัปเกรดเสียงผี → เจนจาก Suno ตาม `PROMPTS_SOUND.md` วาง `sound/haunt_*.mp3` (ไม่วางก็เล่นได้ เสียงสังเคราะห์ทำงานอยู่แล้ว)
+- ⏳ **รอผู้ใช้ทดสอบจริงบน Pages:** โลก 3D ทั้ง 2 โลก เดสก์ท็อป (เมาส์+WASD) และมือถือ landscape (จอยซ้าย+ลากมองขวา+ปุ่มยิง 🔥 เฉพาะโลกกลางวัน) — ยังไม่ได้เทสต์ touch จริงบนอุปกรณ์ + multiplayer 2 เครื่องจริง + งานค้าง .12–.17 เดิม
+- 🧪 **testkit โลก 3D:** `Adventure3D._t` มี getter camera()/letters/monsters(=ผีในโหมด haunt)/words/inv/peers/hp/mode/running + `damagePlayer(n)/caught()/give(ch,n)(ยัดตัวอักษร→ประกอบคำอัตโนมัติ)/onPeerData(fakeSnap)(จำลองเพื่อนโผล่)/tinvCheck(uid)/exitWorld()` · เข้าเกม: `Adventure3D.start('adv'|'haunt')` ผ่านปุ่มการ์ดตั๋ว · ระวัง: careTick เด้ง alertBox คนป่วยซ้อนหลายชั้นตอน fake state — ตั้ง `playerFedDay=playerSickDay=mealDayKey(Date.now())` ก่อน
 
 ### backlog อื่นที่เหลือ (อ่านสเปกเต็มใน `handoff/BACKLOG.md`)
 - 💰 **item 8** รายได้ออนไลน์ +0.01/วิ
@@ -25,10 +26,20 @@
 - publish Security Rules โซน `/gifts` (ก้อนเต็ม `handoff/RULES.md`) · ทดสอบ flow ส่ง-รับของขวัญเต็ม 2 บัญชี (บัญชีเทสต์มี 0 เหรียญ ยังไม่ได้ส่งจริงครบวง)
 
 ## ⚠️ ค้างฝั่งผู้ใช้ (ต้องทำเองบน console/มือถือ)
-1. **publish Security Rules ใหม่** (เพิ่มโซน `/gifts` — ก้อนเต็มใน `handoff/RULES.md`) ไม่งั้นส่งของขวัญถูก reject · ก้อนนี้ครอบ av/ni ใน /leaderboard ด้วย
-2. **ทดสอบจริง 2 บัญชี:** ส่ง-รับของขวัญ + แชท + self-heal เพื่อน + กล่องยืนยันของขวัญไม่บวม (fix รอบ 31)
+1. **publish Security Rules ใหม่** (เพิ่มโซน `/gifts` + `/world` + `/tinv` — ก้อนเต็มใน `handoff/RULES.md`) ไม่งั้นส่งของขวัญ/multiplayer/คำชวนถูก reject · ก้อนนี้ครอบ av/ni ใน /leaderboard ด้วย
+2. **ทดสอบจริง 2 บัญชี:** ส่ง-รับของขวัญ + แชท + self-heal เพื่อน + กล่องยืนยันของขวัญไม่บวม (fix รอบ 31) + **โลก 3D เจอกันใน map + คำชวน+เงินคืน 2,000 (รอบ 41)**
+3. (ถ้าต้องการ) เจนเสียงหลอนจาก Suno ตาม `PROMPTS_SOUND.md` → วาง `sound/haunt_ambient.mp3 / haunt_chase.mp3 / haunt_scare.mp3`
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
+
+**✅ รอบ 41 (7 ก.ค. · Fable): โลกผีสิงกลางคืน 👻 + multiplayer 2 โลก (สไตล์ Roblox) + ชวนเพื่อนเงินคืน 2,000 — version→.19**
+- **ผู้ใช้เคาะสเปก (AskUserQuestion):** ตั๋วผีสิง 10,000 · ต้องมีตั๋วโลกผจญภัยก่อน · รางวัล 25🪙/คำ · jump scare เต็มที่ (มีเด็กประถมแต่ผู้ใช้เลือกเต็ม)
+- **โลกผีสิง (adventure3d.js รีแฟคเป็น MODES adv/haunt — ฉาก static แยก cache ต่อโหมด):** กลางคืนหมอกดำ+พระจันทร์+ต้นไม้ตาย+หลุมศพ+ฟักทอง+วิญญาณเขียว · **ผี 8 ตัว (👻💀🧟) โผล่ตัวละ 20 วิแล้วสุ่มย้ายที่** (fade in/out 0.6 วิ) · เกิดใกล้ (<18m)/เดินเข้าใกล้ (<11m) → ไล่ 5.0 m/s (ผู้เล่น 6 หนีทัน) + วูบเสียง whoosh+สั่น · **สู้ไม่ได้** (ซ่อนปุ่มยิง/crosshair/HP bar) ต้องหนีจนผีครบ 20 วิหายเอง — HUD นับถอยหลัง "หนี! อีก X วิ" + ขอบจอแดง pulse + เสียงหัวใจเต้นเร่งตามระยะ · **โดนแตะ = game over ทันที**: jump scare 👻 เต็มจอ+จอสั่น+เสียงกรีด+สั่น 400ms → advHurt=true รักษา 1,000 (ใช้ร่วมกับโลกกลางวัน) · คำแยกคลัง `state.hauntDone`
+- **เสียงหลอน `HSound` (Web Audio สังเคราะห์ ปลอดลิขสิทธิ์):** ambient ลมหอน noise+lowpass LFO + drone 55Hz คู่เพี้ยน + โน้ตหลอนสุ่ม · heartbeat ตุบ-ตับเร่งตามระยะผี · wail ผีหวีดตอนไล่ · whoosh ตอนโผล่ · scream ตอนโดนจับ · **probe `sound/haunt_ambient/chase/scare.mp3` ด้วย Audio element — มีไฟล์ (เจนจาก Suno ตาม `PROMPTS_SOUND.md` ใหม่) สลับใช้อัตโนมัติ** · เคารพ state.sound ทุกจุด
+- **Multiplayer 2 โลก:** `/world/<map>/<uid>={n,av,x,z,yaw,ts}` เขียน ~5.5Hz เฉพาะตอนขยับ + onDisconnect ลบ · เพื่อนโผล่เป็น sprite ป้ายชื่อ+ภาพ player_male/female (fallback อีโมจิ) เดิน lerp นุ่ม + จุดเขียวใน minimap + banner "X อยู่ในโลกนี้ด้วย!" · letters/ผี/monster ไม่ sync (ของใครของมัน — เห็นตัวกันอย่างเดียวสไตล์ presence)
+- **ชวนเพื่อน+เงินคืน:** ปุ่ม 📨 บนการ์ดตั๋วทั้ง 2 ใบ → picker รายชื่อเพื่อน (จุดเขียวออนไลน์) → เขียน `/tinv/<toUid>/<fromUid>={map,n,ts}` + จำฝั่งส่งใน `state.tinvSent` · ผู้รับเห็น toast+ป้ายเหลืองบนการ์ด (`tinvNoticeHTML`) · **เจอกันใน map จริงครั้งแรก → ต่างคนต่างรับ +2,000 (`TINV_CASHBACK` ครั้งเดียว/map ใน `state.tinvClaimed`)** แล้วผู้รับลบคำเชิญ · online.js เพิ่ม `tinvSend/tinvClear/tinvWatch` (watch ตั้งใน onlineStart)
+- **จุดแก้อื่น:** items.js `HAUNT_PRICE/TINV_CASHBACK` · state.js `hauntTicket/hauntDone/tinvClaimed/tinvSent`+migration+assetValue รวมตั๋วผี · index.html `#haunt-card` · ui.js `renderHauntCard` (4 สถานะ)+`buyHauntTicket/enterHaunted3D/openTinvPicker/tinvNoticeHTML`+ล้างข้อความ 🚧 เก่า · style.css `.tinv-note` · sw.js cache-first เพิ่ม mp3/wav/ogg · **RULES.md เพิ่มโซน `/world`+`/tinv` (รอผู้ใช้ publish!)**
+- ✅ ทดสอบ preview (mock login ป.3): การ์ดผีล็อกจนมีตั๋วแรก → ซื้อ 2 ตั๋ว 45000→35000 + assetValue รวม · โลกกลางวันเดิมปกติ (10 คำ/ประกอบ button +15/ยิงได้) · จำลองเพื่อนโผล่ → sprite+เช็กคำชวน → +2,000 ครั้งเดียว · โลกผี: ผี 8/ซ่อน HP+ยิง/ผีไล่จริง+นับถอยหลัง+ขอบแดง/ครบ 20 วิย้ายที่ไกล/`caught()` → scare เต็มจอ+สั่น+KO "โดนผีจับ!" → advHurt · รักษา 1,000 จากการ์ดผีได้ · ไม่มี console error · ⚠️ ระวัง alertBox คนป่วยเด้งซ้อนตอน fake state (ดู testkit)
 
 **✅ รอบ 40 (7 ก.ค. · Fable): ข้อ 8 โลกผจญภัย 3D (First-person เก็บตัวอักษรประกอบคำ) — version→.18**
 - **ผู้ใช้เคาะสเปก (AskUserQuestion):** Three.js ฝังไฟล์ใน repo · monster สู้กลับได้ (ยิง) · รางวัล 15🪙/คำ

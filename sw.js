@@ -63,11 +63,11 @@ self.addEventListener('fetch', (e)=>{
   const url = new URL(req.url);
   if(url.origin !== self.location.origin) return;         // Firebase/Google/ฟอนต์ → ปล่อยผ่าน
 
-  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico)$/i.test(url.pathname)
-    || url.pathname.includes('/js/vendor/');   // vendor (three.min.js ~600KB) แทบไม่เปลี่ยน → cache-first ประหยัดเน็ต
+  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico|mp3|wav|ogg)$/i.test(url.pathname)
+    || url.pathname.includes('/js/vendor/');   // vendor (three.min.js ~600KB) + เสียง แทบไม่เปลี่ยน → cache-first ประหยัดเน็ต
 
   if(isImg){
-    // cache-first สำหรับรูป/vendor — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
+    // cache-first สำหรับรูป/เสียง/vendor — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
     // ห้าม cache 404: ภาพที่ยังไม่ได้เจน พอเจนเสร็จวางไฟล์แล้วต้องโผล่ได้เลย
     e.respondWith(
       caches.match(req).then(hit=> hit || fetch(req).then(res=>{

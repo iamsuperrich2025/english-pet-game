@@ -9,9 +9,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ## สถานะการ publish
 - ✅ `/presence` + `/leaderboard` (+ av/ni) + `/users` + `/friendCodes` + `/friendReq` + `/friends` + `/chats` — publish แล้ว
 - ⚠️ **`/gifts` (ข้อ 0.5) — เพิ่มใน "รอบยี่สิบแปด" ยังไม่ publish** → ถ้าไม่ publish การส่งของขวัญจะถูก reject
+- ⚠️ **`/world` + `/tinv` (โลก 3D multiplayer + คำเชิญเล่นด้วยกัน — รอบสี่สิบ) ยังไม่ publish** → ถ้าไม่ publish จะเล่นโลก 3D ได้แต่ไม่เห็นผู้เล่นอื่น และส่งคำชวนไม่ได้
 - 🔑 ทุกครั้งที่เพิ่มโซนใหม่ → ส่งก้อนเต็มด้านล่างให้ผู้ใช้ publish ใหม่
 
-## ก้อนเต็ม (ครอบ 0.1+0.2+0.3+0.4+0.5)
+## ก้อนเต็ม (ครอบ 0.1+0.2+0.3+0.4+0.5 + โลก 3D)
 
 ```json
 {
@@ -119,10 +120,44 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" }
         }
       }
+    },
+    "world": {
+      "$map": {
+        ".read": "auth != null",
+        ".validate": "$map === 'adv' || $map === 'haunt'",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
+          "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "av":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "x":   { ".validate": "newData.isNumber()" },
+          "z":   { ".validate": "newData.isNumber()" },
+          "yaw": { ".validate": "newData.isNumber()" },
+          "ts":  { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
+    "tinv": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          ".validate": "newData.hasChildren(['map','n','ts'])",
+          "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'haunt')" },
+          "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "ts":  { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
     }
   }
 }
 ```
+
+## หมายเหตุโครง /world + /tinv (โลก 3D multiplayer — รอบสี่สิบ)
+- `/world/<map>/<uid> = {n, av, x, z, yaw, ts}` — ตำแหน่งผู้เล่นใน map ('adv'|'haunt') · เขียนเองอ่านได้ทุกคนที่ login · onDisconnect ลบตัวเอง · ส่งถี่สุด ~5.5Hz เฉพาะตอนขยับ
+- `/tinv/<toUid>/<fromUid> = {map, n, ts}` — คำเชิญเล่นโลก 3D ด้วยกัน · ผู้รับอ่านกล่องตัวเอง ผู้ส่ง/ผู้รับลบได้ · ฝั่งส่งจำใน state.tinvSent (เซฟ cloud) · เจอกันใน map จริงครั้งแรก → ต่างคนต่างรับเงินคืน TINV_CASHBACK (2,000) ฝั่ง client แล้วผู้รับลบคำเชิญ
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

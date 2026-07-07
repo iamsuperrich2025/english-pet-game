@@ -35,7 +35,11 @@ const DEFAULT_STATE = {
   playerAvatar:null,                  // ข้อ 4: ตัวละครผู้เลี้ยง 'male'/'female' (เลือกตอนลงทะเบียน · เปลี่ยนได้ในตั้งค่า · โชว์เฉพาะในเครื่อง)
   advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
   advDone:[],                         // ข้อ 8: คำที่ประกอบสำเร็จแล้วในโลกผจญภัย 3D (ไม่สุ่มซ้ำ · ครบทุกคำของระดับชั้นแล้วล้างเริ่มรอบใหม่)
-  advHurt:false,                      // ข้อ 8: พลังหมดในโลกผจญภัย → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าใหม่
+  advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
+  hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
+  hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
+  tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
+  tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
@@ -206,6 +210,10 @@ function loadState(){
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
       if(typeof s.advHurt !== 'boolean') s.advHurt = false;                                // ข้อ 8
+      if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
+      if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
+      if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
+      if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
       if(s.home && !s.bills.maint) s.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};
       if(s.home && !s.bills.elec)  s.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};
@@ -302,6 +310,7 @@ function assetValue(){
   if(state.phone) v += PHONE_PRICE;                                                        // มือถือ (ราคาเต็ม)
   if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
   if(state.advTicket) v += TICKET_PRICE;                                                   // การ์ดตั๋วโลกผจญภัย (ข้อ 7)
+  if(state.hauntTicket) v += HAUNT_PRICE;                                                  // ตั๋วโลกผีสิงกลางคืน
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
   for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)
