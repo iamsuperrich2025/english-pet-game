@@ -24,6 +24,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 32c (7 ก.ค. · Opus): สวิตช์สั่นแยกจากเสียง + กล่องเตือนสำคัญกลางจอ — commit `044242c` · version→.5**
+- **`state.haptic`** (default true, เพิ่มใน DEFAULT_STATE) แยกจาก `state.sound` · ปุ่ม `#haptic-toggle` ใน header (index.html) สลับ 📳/📴 · โผล่เฉพาะเครื่องที่ `'vibrate' in navigator` (main.js `initHapticToggle`) · toast/alert สั่นตาม `state.haptic !== false` ไม่ผูกเสียงแล้ว
+- **`alertBox(html, okText)`** (util.js) กล่องเตือนกลางจอ reuse `.levelup-overlay` (z100) + `.alert-box` ขอบแดง + `.alert-ok` ปุ่มแดง · แตะพื้นหลัง/ปุ่ม = ปิด · แตะในกล่องไม่ปิด · เล่น sfx.wrong + สั่น
+- ใช้ alertBox กับ "น้องป่วย" 2 จุด: `feedPet()` ui.js:1093 · `startGame` game.js:27 (เดิมเป็น toast)
+- ✅ ทดสอบ preview (geometry+interaction — screenshot tool ค้างกับ full-screen overlay ใช้ getBoundingClientRect แทน): ปุ่ม haptic สลับไอคอน+state ถูก · สั่นตาม haptic ไม่ตามเสียง · กล่องกึ่งกลางจอไม่บวม (136×115 scaled) · ปิด 3 ทางถูกหมด
+- 💡 ต่อยอด: ยังมีคำเตือนสำคัญอื่นที่อาจย้ายมา alertBox ได้ (บ้านพัง/ถูกตัดไฟ) — ยังไม่ทำ รอผู้ใช้เคาะ
+
 **✅ รอบ 32b (7 ก.ค. · Opus): คำเตือน toast เพิ่มเสียง+สั่น + ปุ่ม "ปิดทั้งหมด" — commit `c36c4c4` · version→.4**
 - ต่อยอดจากรอบ 32: คำเตือนเด้ง → เล่น `sfx.wrong()` + `navigator.vibrate(50)`
 - กันเสียงซ้ำ: `sfx.wrong` บันทึก `lastWrongAt` · toast จะไม่บีปถ้าเพิ่งเล่นภายใน 200ms (call site ~20 จุดเรียก sfx.wrong ก่อน toast อยู่แล้ว + คำเตือนรัวๆ นับเป็น burst เดียว) · สั่นเฉพาะเมื่อ `state.sound`
