@@ -8,6 +8,7 @@
 2. **Grep ก่อน Read** — ไฟล์ใหญ่ (`ui.js` ~2,000 บรรทัด, `vocab.js`, `collectibles.js`) หาชื่อฟังก์ชันด้วย Grep แล้ว Read เฉพาะช่วง (offset+limit) · **ห้ามอ่านทั้งไฟล์**
 3. **preview: resize landscape ก่อน · เชื่อ `getBoundingClientRect` ไม่เชื่อ screenshot/elementFromPoint** (ดู 🖥️ ล่าง)
 4. **จบงาน: บัมพ์ `version.json` → commit เฉพาะไฟล์ที่แก้ (ห้าม `git add -A`) → อัปเดต `handoff/TASKS.md`**
+5. **เลือก session ตามการประหยัด token:** งาน/ขั้นตอนไหน **ทำใน session เดิมถูกกว่า** (context โหลดแล้ว งานเล็ก) → **ทำเลย ไม่ต้องเสนอแยก session** · ไหน **New session ถูกกว่า** (session เดิมยาว/context บวม, งานใหม่ที่ไม่พึ่งของเดิม) → **เสนอให้เริ่ม New session ทุกครั้ง**
 
 ## 📸 สถานะปัจจุบัน (7 ก.ค. 2026)
 - ✅ **บั๊ก "ของขวัญโดนบัง" แก้เสร็จ + ผู้ใช้ทดสอบจริงยืนยันแล้ว** (รอบ 31, version .2, 7 ก.ค.) — 2 จุด: (1) รูปในกล่องยืนยัน `askConfirm` ไม่ถูกคุมขนาด → CSS scope `.list-dialog`→`.levelup-box` · (2) กล่องยืนยัน z-index 70 < picker 85 เลยอยู่หลัง → `.levelup-overlay` z70→100 · **จบแล้ว ไม่มีบั๊กค้าง**
