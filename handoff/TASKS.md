@@ -28,6 +28,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 70 (8 ก.ค. · Fable): สถิติสายฟ้าแลบ + เข็มสายฟ้า ⚡ (ต่อยอดรอบ 67 ผู้ใช้สั่ง "สนใจ") — version→.48** (commit หลังรอบ 71 — เลขรอบจองไว้ก่อน)
+- **นับสะสม `state.thunderCount`** ทุกครั้งที่ทำสายฟ้าแลบ (จับคู่ไวไม่พลาด / สอบสายฟ้า — `addThunder()` ใน game.js เรียกจาก 2 จุด trigger รอบ 67) + migration default 0
+- **เข็มสายฟ้า `state.thunderBadge`** สไตล์เดียวกับเข็มนักบิน: ครบ **5=⚡ เข็มสายฟ้า · 15=🌩️ เข็มพายุฟ้าคะนอง · 30=⛈️ เข็มมหาพายุ** (`THUNDER_TIERS`/`THUNDER_TIER_UI`/`thunderEmoji` ใน game.js) — ได้แล้วไม่หาย · ประกาศเข็มด้วย sfx.rankup+toast (delay 1.9 วิ รอฟ้าผ่าจบ) · **ติดท้ายชื่อต่อจากเข็มนักบิน** ใน `/world` payload + กระดานคะแนน (adventure3d.js 2 จุด — ไม่มี field/rules ใหม่)
+- **หน้าสถิติ:** แถวใหม่ "⚡ สายฟ้าแลบ (เคลียร์ไว ≤5 วิ ไม่พลาดเลย) X ครั้ง · เข็มที่ได้" (ui.js renderStats)
+- ✅ ทดสอบ preview: เคลียร์ไว → count 0→1 · ตั้ง count=4 เคลียร์ไวอีก → 5 + badge 1 + toast "🎉 ได้⚡ เข็มสายฟ้า!" · ครั้งที่ 6 ไม่ประกาศซ้ำ · persist ลง localStorage · แถวสถิติโชว์ "6 ครั้ง · ⚡ เข็มสายฟ้า" · thunderEmoji คืน ''/⚡/🌩️/⛈️ · ไม่มี console error
+- ⚙️ **หมายเหตุ commit:** adventure3d.js มีงานผี WIP ของ session คู่ขนานปนใน worktree → stage เฉพาะ hunk ของงานนี้ด้วย `git apply --cached` (patch กรองคำ thunderEmoji) — ห้าม commit ทั้งไฟล์ตอนมี WIP คนอื่น
+
 **✅ รอบ 71 (8 ก.ค. · Fable): เสียงชื่อตัวอักษร 🔠 (เก็บในโลก 3D) + ผู้ทดสอบน้องโตเต็มวัย 🧪 — version→.47** (รอบ 70 = เข็มสายฟ้า session คู่ขนาน)
 - **เสียงตัวอักษร (ไอเดียต่อยอดรอบ 55 ผู้ใช้สั่งทำ):** `tools/gen_word_audio.py` เจนเพิ่ม `sound/letters/<a-z>.mp3` 26 ไฟล์ (316KB · text "A." จุดท้ายให้อ่านเป็นชื่อตัวอักษร) · `speakLetter(ch)` ใน util.js (แชร์ตัวเล่น `wordAudioNow` กับ speakWord — เก็บตัวสุดท้ายแล้วคำสำเร็จ เสียงคำ (delay .7 วิ) ตัดเสียงตัวอักษรเอง · fallback TTS) · เรียกที่จุดเก็บ 2 จุดใน adventure3d.js (เดินเก็บ tickPlayer + ลงจอดเก็บ tickHeli) — ครอบ 3 โลก
 - **ผู้ทดสอบ (ปิดงานค้าง "สุนัขโตเต็มวัยเข้าโลก 3D"):** `testerBoost` (auth.js) เพิ่มข้อ (2) สัตว์ทุกตัว level<3 → เซ็ต Lv.3 ตรงๆ พร้อม side-effect ช่วงลืมตา (ไม่ผ่าน addExp กัน overlay เด้งซ้อน) · hook เพิ่มหลังซื้อสัตว์ (ui.js) — ซื้อปุ๊บโตปั๊บ ตั๋ว 3D ปลดล็อกทันที ไม่ต้อง login ใหม่

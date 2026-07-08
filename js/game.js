@@ -13,6 +13,24 @@ const game = {
 };
 const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
+/* ⚡ รอบ 70: สถิติสายฟ้าแลบสะสม + เข็มสายฟ้า (สไตล์เดียวกับเข็มนักบิน รอบ 62)
+   ครบ 5=⚡ · 15=🌩️ · 30=⛈️ — ได้แล้วไม่หาย ติดท้ายชื่อใน map/กระดานให้เพื่อนเห็น */
+const THUNDER_TIERS = [[5,1],[15,2],[30,3]];
+const THUNDER_TIER_UI = ['', '⚡ เข็มสายฟ้า', '🌩️ เข็มพายุฟ้าคะนอง', '⛈️ เข็มมหาพายุ'];
+function thunderEmoji(b){ return ['','⚡','🌩️','⛈️'][b||0] || ''; }
+function addThunder(){
+  state.thunderCount = (state.thunderCount||0) + 1;
+  const tier = THUNDER_TIERS.filter(t=>state.thunderCount >= t[0]).pop();
+  if(tier && tier[1] > (state.thunderBadge||0)){
+    state.thunderBadge = tier[1];
+    setTimeout(()=>{   // รอเอฟเฟกต์ฟ้าผ่า (~1.8 วิ) จบก่อนค่อยประกาศเข็ม
+      sfx.rankup();
+      toast(`🎉 ได้${THUNDER_TIER_UI[tier[1]]}! ทำสายฟ้าแลบครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นใน map เลยนะ`, 4000);
+    }, 1900);
+  }
+  saveState();
+}
+
 function startGame(cat){
   careTick();
   game.pool = cat ? cat.words : vocabForStudent();   // เล่นเฉพาะหมวด หรือคละตามระดับชั้น
@@ -154,6 +172,7 @@ function checkMatch(){
       if(thunder){
         thunderFx();
         sfx.spark();
+        addThunder();
         setTimeout(()=>floatFx('⚡ สายฟ้าแลบ! ไวเวอร์!', '#7fd4ff'), 200);
       }
       setTimeout(()=>{
@@ -306,7 +325,7 @@ function finishQuiz(){
 
   // ⚡ สอบสายฟ้า: ตอบถูกทุกข้อ + แต่ละข้อไม่เกิน 5 วิ → ฟ้าผ่าเต็มจอ+จอสั่น+เสียง spark
   const thunder = quiz.fastAll && quiz.correct === quiz.questions.length;
-  if(thunder){ thunderFx(); sfx.spark(); }
+  if(thunder){ thunderFx(); sfx.spark(); addThunder(); }
 
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
