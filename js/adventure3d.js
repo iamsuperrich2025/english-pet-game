@@ -55,6 +55,7 @@ const MODES = {
 MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
 const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อยิง monster แตก (โหมด adv)
+const AD_COUNT = 10;            // ป้ายโฆษณาบนยอดตึกในเมืองเฮลิฯ (เลขป้ายคงที่ — เมือง seed แล้ว)
 
 /* ---------- สถานะรอบเล่น ---------- */
 let mode='adv', M=MODES.adv;
@@ -133,6 +134,52 @@ function emojiTexture(emo){
   const t=new THREE.CanvasTexture(cv);
   texCache[key]=t; return t;
 }
+/* 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — พื้นหลังคนละสไตล์ต่อป้าย + เลขป้ายมุมซ้ายเสมอ
+   ยังไม่มีลูกค้า = ข้อความ "ติดต่อโฆษณา โทร 064-357 6645"
+   วางไฟล์ img/ads/ad_<เลข>.png (สัดส่วน 8:3 เช่น 1024×384) → ภาพลูกค้าขึ้นแทนทันที */
+const AD_STYLES=[
+  ['#ff8a80','#b71c1c','#fff'],['#81d4fa','#0d47a1','#fff'],['#c5e1a5','#33691e','#1b3609'],
+  ['#ffd54f','#e65100','#5d3a00'],['#ce93d8','#4a148c','#fff'],['#f8bbd0','#880e4f','#fff'],
+  ['#80cbc4','#004d40','#fff'],['#ffab91','#bf360c','#fff'],['#cfd8dc','#263238','#eceff1'],
+  ['#fff59d','#f9a825','#5d3a00'],
+];
+function adBoardTexture(n){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=192;
+  const c=cv.getContext('2d');
+  const [c1,c2,tc]=AD_STYLES[(n-1)%AD_STYLES.length];
+  const tex=new THREE.CanvasTexture(cv);
+  const draw=(img)=>{
+    const g=c.createLinearGradient(0,0,512,192);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    c.fillStyle=g; c.fillRect(0,0,512,192);
+    // ลวดลายพื้นหลังต่างกัน 3 ตระกูล (แถบ/จุด/ดาว) สลับตามเลขป้าย
+    c.globalAlpha=.14; c.fillStyle='#fff';
+    if(n%3===0){ for(let x=0;x<512;x+=64) c.fillRect(x,0,20,192); }
+    else if(n%3===1){ for(let x=28;x<512;x+=72) for(let y=28;y<192;y+=68){ c.beginPath(); c.arc(x,y,13,0,7); c.fill(); } }
+    else{ c.font='40px serif'; for(let x=14;x<512;x+=92) c.fillText('✦',x,58+((x/92|0)%2)*84); }
+    c.globalAlpha=1;
+    if(img){
+      c.drawImage(img,6,6,500,180);                    // โฆษณาลูกค้าเต็มป้าย (เว้นกรอบ 6px)
+    }else{
+      c.fillStyle=tc; c.textAlign='center';
+      c.font='900 42px Kanit, Tahoma, Arial'; c.fillText('ติดต่อโฆษณา',256,76);
+      c.font='900 50px Kanit, Tahoma, Arial'; c.fillText('โทร 064-357 6645',256,142);
+    }
+    // กรอบขาว + เลขป้าย (โชว์ตลอดแม้มีโฆษณา — ลูกค้าใช้อ้างอิงว่าลงป้ายไหน)
+    c.lineWidth=8; c.strokeStyle='rgba(255,255,255,.9)'; c.strokeRect(4,4,504,184);
+    c.fillStyle='rgba(0,0,0,.68)';
+    c.beginPath(); c.roundRect(10,10,92,38,10); c.fill();
+    c.fillStyle='#ffd54f'; c.font='900 24px Arial'; c.textAlign='center';
+    c.fillText('ป้าย '+n,56,37);
+    tex.needsUpdate=true;
+  };
+  draw(null);
+  const img=new Image();                               // probe ภาพลูกค้า (กติกาเดียวกับ probeImages)
+  img.onload=()=>draw(img);
+  img.src='img/ads/ad_'+n+'.png';
+  return tex;
+}
+
 /* ป้ายผู้เล่นคนอื่น: ชื่อ + ภาพตัวละคร (player_male/female.png ถ้ามี · ไม่มีใช้อีโมจิ)
    โหมดเฮลิคอปเตอร์: เพื่อนเป็น 🚁 บินอยู่ (ตำแหน่ง+ความสูงจริงจาก /world) */
 function makePeerSprite(name, av){
@@ -290,16 +337,19 @@ function buildScene(md){
       r2.rotation.x=-Math.PI/2; r2.position.set(i*24,.02,0); sc.add(r2);
     }
     // ตึก: กริดทุก 24m เว้นลานกลาง (จุดเกิด) · เก็บ footprint ไว้เช็กชน+วางตัวอักษร
+    // ⚠️ ผังเมือง seed คงที่ (รอบ 58): ทุกเครื่อง/ทุกรอบเห็นเมืองเดียวกันเป๊ะ —
+    //    เพื่อน multiplayer ไม่บินทะลุตึกกัน + ป้ายโฆษณาเลขเดิมอยู่ตำแหน่งเดิมเสมอ (ลูกค้าเลือกป้ายได้)
+    const rnd=seededRand(87251);
     const cols=[0x9fb2c8,0xc8b89f,0xb0c8a8,0xc8a8b8,0x9fc8c4,0xbfae90];
     const list=[];
     for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
       if(gx===0 && gz===0) continue;                    // ลานกลาง = จุดเกิด/สนามบินหลัก
-      if(Math.random()<.22) continue;                   // เว้นช่องว่างให้เมืองโปร่ง
-      const x=gx*24 + (Math.random()*4-2);
-      const z=gz*24 + (Math.random()*4-2);
-      const w=9+Math.random()*4, d=9+Math.random()*4, h=8+Math.random()*20;
+      if(rnd()<.22) continue;                           // เว้นช่องว่างให้เมืองโปร่ง
+      const x=gx*24 + (rnd()*4-2);
+      const z=gz*24 + (rnd()*4-2);
+      const w=9+rnd()*4, d=9+rnd()*4, h=8+rnd()*20;
       const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
-        new THREE.MeshLambertMaterial({color:cols[Math.floor(Math.random()*cols.length)]}));
+        new THREE.MeshLambertMaterial({color:cols[Math.floor(rnd()*cols.length)]}));
       b.position.set(x,h/2,z); sc.add(b);
       // ขอบดาดฟ้า + วง helipad ให้เล็งง่าย
       const pad=new THREE.Mesh(new THREE.CircleGeometry(3.2,20),
@@ -310,6 +360,28 @@ function buildScene(md){
       ring.rotation.x=-Math.PI/2; ring.position.set(x,h+.06,z); sc.add(ring);
       list.push({x,z,w,d,h});
     }
+    // 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — ตึกเว้นตึก สูงสุด AD_COUNT ป้าย เลขคงที่
+    // พื้นหลังต่างกันทุกป้าย · วางไฟล์ img/ads/ad_<เลข>.png = โฆษณาลูกค้าขึ้นแทนทันที
+    const ads=[];
+    list.forEach((b,i)=>{
+      if(ads.length>=AD_COUNT || i%2===1) return;
+      const n=ads.length+1;
+      const pw=Math.min(b.w+2,11), ph=pw*3/8;
+      const panel=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),
+        new THREE.MeshBasicMaterial({map:adBoardTexture(n),side:THREE.DoubleSide}));
+      panel.position.set(b.x, b.h+2.2+ph/2, b.z);
+      panel.lookAt(0, panel.position.y, 0);             // หันหน้าเข้ากลางเมือง มองเห็นตอนบิน
+      // เสาค้ำ 2 ต้น (ลูกของ panel — หมุนตามอัตโนมัติ)
+      const poleG=new THREE.CylinderGeometry(.12,.12,2.4,6);
+      const poleM=new THREE.MeshLambertMaterial({color:0x37474f});
+      [-pw/3,pw/3].forEach(off=>{
+        const p=new THREE.Mesh(poleG,poleM);
+        p.position.set(off,-ph/2-1.1,0);
+        panel.add(p);
+      });
+      sc.add(panel);
+      ads.push({n, x:b.x, z:b.z, h:b.h});
+    });
     // ลานจอดกลางเมือง (จุดเกิด)
     const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),
       new THREE.MeshLambertMaterial({color:0x3d434b}));
@@ -317,7 +389,7 @@ function buildScene(md){
     const baseH=new THREE.Mesh(new THREE.RingGeometry(3.4,4.2,24),
       new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
     baseH.rotation.x=-Math.PI/2; baseH.position.set(0,.06,0); sc.add(baseH);
-    worlds[md]={scene:sc, trees:tr, buildings:list};
+    worlds[md]={scene:sc, trees:tr, buildings:list, ads};
     return;
   }else{
     // ต้นไม้ตายกิ่งโกร๋น + ป้ายหลุมศพ + ฟักทอง + ดวงไฟวิญญาณ
@@ -2055,7 +2127,8 @@ window.Adventure3D={
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
-                        rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl}; },
+                        rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
+                        ads:(worlds.heli&&worlds.heli.ads)||[]}; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
