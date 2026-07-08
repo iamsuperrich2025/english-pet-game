@@ -268,7 +268,7 @@ function probeGhostImages(){
   if(ghostProbed) return; ghostProbed=true;
   for(let i=1;i<=GHOST_IMG_MAX;i++){
     const img=new Image();                             // probe ด้วย Image (ห้าม fetch local — กติกาเดียวกับ probeImages)
-    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; ghostTex.push(t); };
+    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; t.userData={gi:i}; ghostTex.push(t); };  // gi=เลขไฟล์ (ghost_2=เปรตตัวสูง)
     img.src='img/ghosts/ghost_'+i+'.png';
   }
 }
@@ -798,11 +798,18 @@ function spawnGhost(first){
   respawnGhost(g, first?28:0);              // ตอนเริ่มเกม บังคับเกิดไกลผู้เล่นก่อน (ยังไม่ทันตั้งตัว)
   monsters.push(g);
 }
+const GHOST_TALL_INDEX=2;   // ghost_2.png = เปรต ผอมสูงโย่งเท่าต้นตาล ต้องสเกลสูงพิเศษ
+function applyGhostSize(g){  // ปรับสเกล+ความสูงลอยตามว่าเป็นเปรตไหม (เรียกทุกครั้งที่สลับภาพ)
+  const map=g.spr.material.map;
+  if(map && map.userData && map.userData.gi===GHOST_TALL_INDEX){ g.spr.scale.set(2.7,6.4,1); g.baseY=3.15; }  // เปรต สูงเด่นแต่ไกล เท้าอยู่พื้น
+  else{ g.spr.scale.set(2.6,2.6,1); g.baseY=1.35; }
+}
 function respawnGhost(g, minDist){
   // ภาพผีเจนเสร็จโหลดช้ากว่าเกมเริ่ม → สลับเป็นภาพจริง (และสุ่มตัวใหม่) ทุกครั้งที่ย้ายที่
   if(ghostTex.length){ g.spr.material.map=ghostTexture(); g.spr.material.needsUpdate=true; }
+  applyGhostSize(g);
   const p=randPos(minDist!==undefined?minDist:0);
-  g.spr.position.set(p.x,1.35,p.z);
+  g.spr.position.set(p.x,g.baseY,p.z);
   g.born=performance.now();
   g.tgt=randPos(0); g.wanderAt=0;
   const d=Math.hypot(p.x-camera.position.x,p.z-camera.position.z);
@@ -840,7 +847,7 @@ function tickGhosts(dt,now){
       const dd=Math.hypot(g.tgt.x-mp.x,g.tgt.z-mp.z);
       if(dd>.3){ mp.x+=(g.tgt.x-mp.x)/dd*.8*dt; mp.z+=(g.tgt.z-mp.z)/dd*.8*dt; }
     }
-    mp.y=1.35+Math.sin(now/260+mp.x)*.22;
+    mp.y=(g.baseY||1.35)+Math.sin(now/260+mp.x)*.22;
     if(d<1.25 && g.spr.material.opacity>.5) caught();      // โดนจับ = จบทันที
   });
   // HUD นับถอยหลังหนี + เสียงหัวใจเต้นตามความใกล้
