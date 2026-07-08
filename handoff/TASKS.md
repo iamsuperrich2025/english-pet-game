@@ -28,6 +28,11 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 56 (8 ก.ค. · Fable): บัญชีผู้ทดสอบเกม 🧪 (Sumpajit) — version→.34**
+- **`TESTER_EMAILS` ใน auth.js (ข้างบัญชีครู):** ตอนนี้มี `sumpajitshami@gmail.com` (ถามอีเมลจากผู้ใช้แล้ว — ผูกอีเมลไม่ผูกชื่อในเกม กันเด็กตั้งชื่อเลียนแบบรับเหรียญฟรี) · เพิ่มผู้ทดสอบคนต่อไป = เติมอีเมลต่อท้าย array
+- **`testerBoost()` เรียกใน `authEnterGame` (จุดเดียวหลัง login ทุกเส้นทาง):** เหรียญ < `TESTER_COINS` 60,000 → `addCoins` เติมให้เต็มเพดาน + saveState + toast 🧪 · เกิน/เท่ากับ = ไม่ทำอะไร · ใช้เงินไปแล้ว login รอบถัดไปเติมกลับเอง (ผู้ทดสอบมีแต้มพอเสมอ — ตั๋ว 3 โลก 5k+10k+15k เหลือเผื่อสัตว์/รักษา/อาหาร)
+- ✅ ทดสอบ preview: login tester (ทั้งอีเมลตัวเล็ก/ผสมใหญ่) → 60,000 + toast จริง · เด็กธรรมดา → 0 ไม่เติม · จำลองเหลือ 59,000 → เติมกลับ 60,000 · ไม่มี console error
+
 **✅ รอบ 55 (8 ก.ค. · Fable): โลก 3D อ่านออกเสียงคำที่ผสมสำเร็จ 🔊 — version→.33**
 - **จุดเดียวครอบ 3 โลก:** `completeWord()` ใน adventure3d.js (โค้ดร่วม adv/haunt/heli) เพิ่ม `setTimeout(()=>speakWord(w.en), 700)` — อ่านคำหลังแตรฉลอง sfx.levelup จบ · ใช้ MP3 Neural จากรอบ 53 (คำโลก 3D มาจาก vocab.js เดียวกัน → มีไฟล์ครบ) fallback Web Speech
 - ✅ ทดสอบ preview (โลกกลางวัน · mock login + `_t.give` ยัดตัวอักษร): ผสม "chicken" สำเร็จ → speakWord ถูกเรียก + `chicken.mp3` เล่นจริง (1.78s) · คำเติมกลับครบ 10 · ไม่มี console error · หมายเหตุ: ต้อง `loadScriptOnce('js/vendor/three.min.js')` ก่อน `adventure3d.js` ตอนเทสต์ (เกมจริงโหลดผ่านปุ่มการ์ดตั๋วอยู่แล้ว)

@@ -31,6 +31,22 @@ function isTeacher(){
     && TEACHER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
 
+/* ---------- บัญชีผู้ทดสอบเกม (รอบ 56) ----------
+   login แล้วเหรียญต่ำกว่าเพดานจะเติมให้อัตโนมัติ — พอซื้อตั๋วโลก 3D ครบ 3 โลก
+   (5,000+10,000+15,000) + สัตว์เลี้ยง/อาหาร/รักษา · เพิ่มอีเมลต่อท้าย array ได้เลย (ตัวพิมพ์เล็ก) */
+const TESTER_EMAILS = ['sumpajitshami@gmail.com'];
+const TESTER_COINS  = 60000;
+function isTester(){
+  return !!(Auth.user && Auth.user.email
+    && TESTER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
+}
+function testerBoost(){
+  if(!isTester() || state.coins >= TESTER_COINS) return;
+  addCoins(TESTER_COINS - state.coins);
+  saveState();
+  setTimeout(()=>toast(`🧪 บัญชีผู้ทดสอบเกม — เติมเหรียญให้เป็น ${fmtNum(TESTER_COINS)} 🪙 แล้ว เข้าทดสอบโลก 3D ได้เลย!`), 900);
+}
+
 /* ---------- หน้าจอ login: สลับสถานะ เชื่อมต่อ/พร้อม/ออฟไลน์ ---------- */
 function authSetStatus(mode, msg){
   const st    = document.getElementById('login-status');
@@ -251,6 +267,7 @@ function authEnterGame(){
   Auth.booted = true;
   onlineStart();                                   // เพื่อนออนไลน์ + leaderboard (ใน online.js)
   bootGame();                                      // careTick + เข้าหน้า ลงทะเบียน/dashboard (ใน main.js)
+  testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
   authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);
   window.addEventListener('beforeunload', ()=>authPushSave(false));
