@@ -1577,6 +1577,11 @@ function buildDom(){
   .adv-b-more{color:#bbb;font-size:10px;line-height:.7;text-align:center}
   #adv-words{top:132px;left:8px;max-height:calc(100vh - 145px);overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:none}  /* แค่ลิสต์อ้างอิง — ปล่อยนิ้วทะลุไปโดนคันบังคับซ้ายได้ (มือถือ) */
   .adv-word{margin:3px 0;display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+  /* มือถือจอแนวนอนเตี้ย: ย้ายแผงคำเป็นแถบแนวนอนบนซ้าย (ใต้กระดานคะแนน · เว้นขวาให้ minimap)
+     → พ้นคอนโซลเฮลิฯด้านล่าง + พ้นนิ้วซ้าย(เดิน)/ขวา(มอง) ที่อยู่ครึ่งล่าง */
+  .adv-touch #adv-words{top:60px;left:8px;right:140px;max-height:30vh;overflow:hidden;
+    display:flex;flex-wrap:wrap;align-content:flex-start;gap:3px 10px}
+  .adv-touch .adv-word{margin:0}
   .adv-word small{color:#ffe082;font-size:10px;margin-left:5px}
   .adv-ch{display:inline-block;min-width:15px;text-align:center;padding:1px 3px;border-radius:5px;
     background:rgba(255,255,255,.16);color:#fff;font-weight:800;font-size:12px;margin:1px}
