@@ -264,11 +264,25 @@ function emojiTexture(emo){
 const GHOST_IMG_MAX=5;
 const ghostTex=[];
 let ghostProbed=false;
+// วัดกรอบตัวผี (พิกเซลไม่โปร่งใส) ตอนโหลด → คืนสัดส่วนไว้ฟิตสเกลอัตโนมัติ (ไม่ต้อง hardcode ทีละตัว · ครอบภาพผีที่เจนใหม่ในอนาคตด้วย)
+function measureGhostBox(img){
+  const cw=img.naturalWidth||img.width, ch=img.naturalHeight||img.height, aspect=cw/ch;
+  const w=160, h=Math.max(1,Math.round(160*ch/cw));    // ย่อวัดพอ (สัดส่วนเท่าเดิม เร็วกว่าสแกนเต็มภาพ)
+  try{
+    const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+    const x=cv.getContext('2d'); x.drawImage(img,0,0,w,h);
+    const d=x.getImageData(0,0,w,h).data;
+    let top=h, bot=-1;
+    for(let y=0;y<h;y++){ for(let px=0;px<w;px++){ if(d[(y*w+px)*4+3]>16){ if(y<top)top=y; bot=y; break; } } }
+    if(bot<top) return {aspect, fhFrac:.95, belowFrac:.03};   // ภาพโปร่งหมด → ค่ากันเหนียว
+    return {aspect, fhFrac:(bot-top+1)/h, belowFrac:(h-1-bot)/h};  // สัดส่วนตัว + ระยะขอบล่างถึงเท้า
+  }catch(e){ return {aspect, fhFrac:.95, belowFrac:.03}; }     // canvas tainted → เดาสัดส่วน
+}
 function probeGhostImages(){
   if(ghostProbed) return; ghostProbed=true;
   for(let i=1;i<=GHOST_IMG_MAX;i++){
     const img=new Image();                             // probe ด้วย Image (ห้าม fetch local — กติกาเดียวกับ probeImages)
-    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; t.userData={gi:i}; ghostTex.push(t); };  // gi=เลขไฟล์ (ghost_2=เปรตตัวสูง)
+    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; t.userData=Object.assign({gi:i},measureGhostBox(img)); ghostTex.push(t); };  // gi=เลขไฟล์ + สัดส่วนตัวจริง
     img.src='img/ghosts/ghost_'+i+'.png';
   }
 }
@@ -798,11 +812,17 @@ function spawnGhost(first){
   respawnGhost(g, first?28:0);              // ตอนเริ่มเกม บังคับเกิดไกลผู้เล่นก่อน (ยังไม่ทันตั้งตัว)
   monsters.push(g);
 }
-const GHOST_TALL_INDEX=2;   // ghost_2.png = เปรต ผอมสูงโย่งเท่าต้นตาล ต้องสเกลสูงพิเศษ
-function applyGhostSize(g){  // ปรับสเกล+ความสูงลอยตามว่าเป็นเปรตไหม (เรียกทุกครั้งที่สลับภาพ)
-  const map=g.spr.material.map;
-  if(map && map.userData && map.userData.gi===GHOST_TALL_INDEX){ g.spr.scale.set(3.6,6.0,1); g.baseY=2.96; }  // เปรต สูงโย่งเท่าต้นตาลแต่ไม่ยืดเบี้ยว (สัดส่วนตัว H/W~3.8) เท้าอยู่พื้น
-  else{ g.spr.scale.set(2.6,2.6,1); g.baseY=1.35; }
+// สไตล์เฉพาะตัว (index=เลขไฟล์ ghost_N · ไม่มี = ใช้ค่า default) · h=ความสูงตัวในโลก · squeeze<1 = ผอมกว่าสัดส่วนจริง
+const GHOST_STYLE={ 2:{h:5.8, squeeze:.6} };   // เปรต ghost_2: สูงโย่งเท่าต้นตาล + ผอมพิเศษ (look ที่ผู้ใช้เลือก)
+const GHOST_H_DEFAULT=2.5;                      // ผีทั่วไปสูงเท่านี้ในโลกจริง
+function applyGhostSize(g){  // ฟิตสเกลอัตโนมัติจากสัดส่วนภาพจริง → ไม่บิดเบี้ยว(ภาพแนวตั้งไม่โดนบีบ) เท้าแตะพื้น ครอบภาพผีทุกตัว
+  const u=g.spr.material.map && g.spr.material.map.userData;
+  if(u && u.fhFrac){
+    const st=GHOST_STYLE[u.gi]||{}, Hf=st.h||GHOST_H_DEFAULT, sq=st.squeeze||1;
+    const sy=Hf/u.fhFrac, sx=sy*u.aspect*sq;   // sy จากความสูงตัวที่อยากได้ · sx รักษาสัดส่วนภาพจริง (×squeeze)
+    g.spr.scale.set(sx,sy,1);
+    g.baseY=sy*(0.5-u.belowFrac);              // ดันขอบล่างตัว (เท้า) ให้แตะพื้นพอดี
+  } else { g.spr.scale.set(2.6,2.6,1); g.baseY=1.35; }   // emoji / ยังวัดไม่เสร็จ → ค่าเดิม
 }
 function respawnGhost(g, minDist){
   // ภาพผีเจนเสร็จโหลดช้ากว่าเกมเริ่ม → สลับเป็นภาพจริง (และสุ่มตัวใหม่) ทุกครั้งที่ย้ายที่
