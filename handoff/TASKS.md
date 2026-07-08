@@ -28,6 +28,16 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 52 (8 ก.ค. · Fable): โลกเฮลิคอปเตอร์ Bell 🚁 (การ์ดที่ 3 · cockpit view) — version→.30**
+- **ตั๋ว 15,000** (`HELI_PRICE` items.js · ล็อกจนมีตั๋วโลกผจญภัย · `state.heliTicket/heliDone`+migration+assetValue) · การ์ด `#heli-card` (index.html) + `renderHeliCard` 4 สถานะ + `buyHeliTicket/enterHeli3D` (ui.js) · รางวัล **30🪙/คำ** สูงสุด 3 โลก
+- **โหมด heli ใน adventure3d.js (MODES.heli):** เมืองตึกสูง 19-25 ตึก (กริด 24m สุ่มสูง 8-28m + วง helipad เหลืองบนดาดฟ้า + ถนน + ลานจอดกลางเมือง) · **ตัวอักษรอยู่บนยอดตึกเท่านั้น** (spawnLetter/relocate สุ่มตึก · `l.baseY` กันโค้ดลอยดึงตกตึก) · **ต้อง "ลงจอดแล้ว" ใกล้ตัวอักษร (<3.6m) ถึงเก็บได้**
+- **ฟิสิกส์บินอาร์เคด (tickHeli — สไตล์ Helicopter Flight Pilot):** เดสก์ท็อป W/S เอียง A/D สไลด์ Q/E หัน Space ขึ้น Shift/C ลง · มือถือ จอยซ้าย=เอียง ลากขวาแนวตั้ง=collective แนวนอน=หัน (ปล่อยนิ้ว=hover) · auto-hover + drag + top speed 17m/s · จอดเบา (|vy|≤7)=ลงจอด · กระแทกแรง -25 HP · **ชนผนังตึก** (ทะลุ footprint ใต้ยอด) ดันออก+เด้ง -20 HP (คูลดาวน์ 1 วิ) · HP หมด → KO title "🚁💥 เฮลิคอปเตอร์พัง" (M.koTitle) → advHurt รักษา 1,000 ร่วม 3 โลก
+- **Cockpit + หน้าปัด:** `#adv-cockpit` ชิดล่างจอ — probe `img/heli_cockpit.png` (เจนตาม `PROMPTS_HELI.md` ใหม่) ไม่มี→แผง CSS จำลอง (BELL 206) · `#adv-inst` โชว์ ⛰️ความสูง 🚀ความเร็ว 🛬สถานะจอด · ซ่อน crosshair/ปุ่มยิง (class .adv-heli)
+- **เสียงใบพัด `HeliSound`:** สังเคราะห์ Web Audio (sawtooth AM ด้วย LFO ใบพัด ~13Hz + noise swish) pitch/ดังตาม collective · thud ตอนชน/แตะพื้น · probe `sound/heli_rotor.mp3` (Suno prompt ใน PROMPTS_HELI.md) ใช้แทนอัตโนมัติ · เคารพ state.sound · stop ตอนออก/KO
+- **Multiplayer ครบเหมือน 2 โลกแรก:** map id `heli` — เพื่อนเป็น 🚁+ชื่อ บินตามความสูงจริง (**field `y` ใหม่ใน /world** · peers lerp y · bubble/ไอคอนไมค์ลอยตามความสูง) · แชท/voice/กระดาน/พิธีแชมป์/ครูคุมห้อง ทำงานอัตโนมัติ (โค้ด mode-agnostic) · tinv ชวนเพื่อน+เงินคืน 2,000 รองรับ map heli (online.js/ui.js เพิ่ม label 🚁)
+- **⚠️ RULES.md แก้ใหม่ — รอผู้ใช้ publish:** เพิ่ม `heli` ในทุก enum ($map ของ /world /rtc /class + map ของ /tinv) + field `y` ใน /world — ไม่ publish = โลกเฮลิฯ เล่นเดี่ยวได้แต่ online ใน map นั้นถูก reject
+- ✅ ทดสอบ preview: ซื้อตั๋ว 50000→35000+assetValue · เข้าโลก: ตึก 19 ตัวอักษรบนดาดฟ้าครบ 59 cockpit CSS+หน้าปัดโชว์ · เทคออฟ Space จริง · บินหน้า 11.5m/2วิ+หน้าปัดอัปเดต · ลงจอดดาดฟ้าตึก 27.3m นุ่ม → **เก็บตัวอักษรตอนจอดได้จริง** · ประกอบคำ +30 · ชนผนังตึก -20+ดันออก · เครื่องพัง → KO title heli + การ์ดโชว์บาดเจ็บ · ไม่มี console error · ⚠️ screenshot ค้าง ใช้ DOM/rect ยืนยัน (กฎทอง 3) · **บินจริงบนมือถือ+multiplayer heli รอเทสต์หลัง publish rules**
+
 **✅ รอบ 51 (8 ก.ค. · Fable): เสียงอ่านคำศัพท์อังกฤษ 🔊 (เกมจับคู่ + สอบ) — version→.29**
 - **`speakWord(word)` ใน util.js** (ต่อท้าย sfx) — Web Speech API ไม่ใช้ไฟล์เสียง · `pickSpeakVoice()` ให้คะแนนเลือกเสียง human สุดที่เครื่องมี: Natural/Neural (Edge) > Google (Chrome/Android) > Samantha ฯลฯ (iOS/macOS) > en-US · เคารพ `state.sound` · `cancel()` ก่อนพูดกันเสียงซ้อนตอนแตะรัว · rate 0.9 · เบราว์เซอร์โหลดรายชื่อเสียงช้า → รอบแรกใช้ default แล้วอัปเกรดผ่าน `onvoiceschanged`
 - **เกมจับคู่:** `pickCard` (game.js) — แตะการ์ดฝั่งอังกฤษ = อ่านออกเสียง (ฝั่งไทยไม่อ่าน)

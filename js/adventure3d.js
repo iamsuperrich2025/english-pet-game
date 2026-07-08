@@ -41,8 +41,18 @@ const MODES = {
     ghostEmoji:['👻','👻','👻','💀','🧟'],
     intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>โดนจับ = จบเกมทันที</small>',
     hint:'คลิกจอ=ล็อกเมาส์ · WASD วิ่งหนี · สู้ไม่ได้!! · Esc ปลดเมาส์แล้วค่อยกดออก',
+    koTitle:'💫 พลังหมดแล้ว!',
+  },
+  heli: {
+    label:'โลกเฮลิคอปเตอร์', emoji:'🚁', reward:30, doneKey:'heliDone',
+    shoot:false, ghost:false, heli:true,
+    sky:0x9fd9f7, fogN:45, fogF:150, ground:0x8a8f96,
+    intro:'🚁 <b>โลกเฮลิคอปเตอร์ Bell!</b><br><small>ตัวอักษรอยู่บนยอดตึก — บินลอดระหว่างตึก<br>แล้ว<b>ลงจอดบนดาดฟ้า</b>เพื่อเก็บ · ระวังชนตึก!</small>',
+    hint:'W/S เอียงหน้า-หลัง · A/D สไลด์ · Q/E หันหัว · Space ขึ้น · Shift ลง · จอดเบาๆ บนดาดฟ้าเพื่อเก็บตัวอักษร',
+    koTitle:'🚁💥 เฮลิคอปเตอร์พังแล้ว!',
   },
 };
+MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
 const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อยิง monster แตก (โหมด adv)
 
@@ -50,8 +60,11 @@ const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อ�
 let mode='adv', M=MODES.adv;
 let built=false, running=false, rafId=0;
 let renderer, camera, clock;
-let worlds={};                    // ฉาก static ต่อโหมด {scene,trees} สร้างครั้งเดียว
-let scene=null, trees=[];
+let worlds={};                    // ฉาก static ต่อโหมด {scene,trees,buildings} สร้างครั้งเดียว
+let scene=null, trees=[], buildings=[];
+/* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
+const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
+let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hudInstEl=null, cockpitEl=null;
 let yaw=0, pitch=0;
 let hp=100, sessionCoins=0, sessionWords=0;
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
@@ -120,10 +133,12 @@ function emojiTexture(emo){
   const t=new THREE.CanvasTexture(cv);
   texCache[key]=t; return t;
 }
-/* ป้ายผู้เล่นคนอื่น: ชื่อ + ภาพตัวละคร (player_male/female.png ถ้ามี · ไม่มีใช้อีโมจิ) */
+/* ป้ายผู้เล่นคนอื่น: ชื่อ + ภาพตัวละคร (player_male/female.png ถ้ามี · ไม่มีใช้อีโมจิ)
+   โหมดเฮลิคอปเตอร์: เพื่อนเป็น 🚁 บินอยู่ (ตำแหน่ง+ความสูงจริงจาก /world) */
 function makePeerSprite(name, av){
   const cv=document.createElement('canvas'); cv.width=128; cv.height=170;
   const tex=new THREE.CanvasTexture(cv);
+  const heliMode=M.heli;
   const draw=(img)=>{
     const c=cv.getContext('2d');
     c.clearRect(0,0,128,170);
@@ -132,18 +147,19 @@ function makePeerSprite(name, av){
     c.fillStyle='#fff'; c.font='bold 19px Arial'; c.textAlign='center'; c.textBaseline='middle';
     let nm=(name||'เพื่อน'); if(nm.length>9) nm=nm.slice(0,8)+'…';
     c.fillText(nm,64,18);
-    if(img){ c.drawImage(img,14,36,100,130); }
+    if(heliMode){ c.font='96px serif'; c.fillText('🚁',64,105); }
+    else if(img){ c.drawImage(img,14,36,100,130); }
     else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,105); }
     tex.needsUpdate=true;
   };
   draw(null);
-  if(av==='male' || av==='female'){
+  if(!heliMode && (av==='male' || av==='female')){
     const img=new Image();
     img.onload=()=>draw(img);
     img.src='img/player_'+av+'.png';
   }
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
-  spr.scale.set(1.7,2.26,1);
+  spr.scale.set(heliMode?2.6:1.7,heliMode?3.45:2.26,1);
   return spr;
 }
 
@@ -202,7 +218,7 @@ function buildScene(md){
   if(md==='adv'){
     sc.add(new THREE.HemisphereLight(0xffffff,0x6faa50,1.05));
     const sun=new THREE.DirectionalLight(0xfff2cc,.8); sun.position.set(30,60,20); sc.add(sun);
-  }else{
+  }else if(md==='haunt'){
     sc.add(new THREE.HemisphereLight(0x9db4ff,0x1a2418,.38));
     const moonL=new THREE.DirectionalLight(0xbfd0ff,.3); moonL.position.set(-40,50,-30); sc.add(moonL);
     // พระจันทร์เต็มดวงสีซีด
@@ -210,6 +226,7 @@ function buildScene(md){
       new THREE.MeshBasicMaterial({color:0xf5f0d8,fog:false}));
     moon.position.set(-45,38,-70); moon.lookAt(0,EYE_H,0); sc.add(moon);
   }
+  // (โหมด heli ใส่แสงของตัวเองในบล็อกเมืองด้านล่าง)
 
   const ground=new THREE.Mesh(
     new THREE.PlaneGeometry(HALF*2+20,HALF*2+20),
@@ -260,6 +277,48 @@ function buildScene(md){
         sc.add(f);
       }
     });
+  }else if(md==='heli'){
+    // เมืองตึกสูง: ตัวอักษรวางบนดาดฟ้า ต้องบินลอดตึกแล้วลงจอดเก็บ
+    sc.add(new THREE.HemisphereLight(0xffffff,0x777a80,1.0));
+    const sun=new THREE.DirectionalLight(0xfff4d6,.7); sun.position.set(40,80,30); sc.add(sun);
+    // ถนนตาราง (เส้นเข้มบนพื้น)
+    const roadM=new THREE.MeshLambertMaterial({color:0x50545a});
+    for(let i=-2;i<=2;i++){
+      const r1=new THREE.Mesh(new THREE.PlaneGeometry(HALF*2+20,6),roadM);
+      r1.rotation.x=-Math.PI/2; r1.position.set(0,.02,i*24); sc.add(r1);
+      const r2=new THREE.Mesh(new THREE.PlaneGeometry(6,HALF*2+20),roadM);
+      r2.rotation.x=-Math.PI/2; r2.position.set(i*24,.02,0); sc.add(r2);
+    }
+    // ตึก: กริดทุก 24m เว้นลานกลาง (จุดเกิด) · เก็บ footprint ไว้เช็กชน+วางตัวอักษร
+    const cols=[0x9fb2c8,0xc8b89f,0xb0c8a8,0xc8a8b8,0x9fc8c4,0xbfae90];
+    const list=[];
+    for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
+      if(gx===0 && gz===0) continue;                    // ลานกลาง = จุดเกิด/สนามบินหลัก
+      if(Math.random()<.22) continue;                   // เว้นช่องว่างให้เมืองโปร่ง
+      const x=gx*24 + (Math.random()*4-2);
+      const z=gz*24 + (Math.random()*4-2);
+      const w=9+Math.random()*4, d=9+Math.random()*4, h=8+Math.random()*20;
+      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
+        new THREE.MeshLambertMaterial({color:cols[Math.floor(Math.random()*cols.length)]}));
+      b.position.set(x,h/2,z); sc.add(b);
+      // ขอบดาดฟ้า + วง helipad ให้เล็งง่าย
+      const pad=new THREE.Mesh(new THREE.CircleGeometry(3.2,20),
+        new THREE.MeshLambertMaterial({color:0x3d434b}));
+      pad.rotation.x=-Math.PI/2; pad.position.set(x,h+.03,z); sc.add(pad);
+      const ring=new THREE.Mesh(new THREE.RingGeometry(2.4,3.0,20),
+        new THREE.MeshBasicMaterial({color:0xffd54f,side:THREE.DoubleSide}));
+      ring.rotation.x=-Math.PI/2; ring.position.set(x,h+.06,z); sc.add(ring);
+      list.push({x,z,w,d,h});
+    }
+    // ลานจอดกลางเมือง (จุดเกิด)
+    const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),
+      new THREE.MeshLambertMaterial({color:0x3d434b}));
+    basePad.rotation.x=-Math.PI/2; basePad.position.set(0,.03,0); sc.add(basePad);
+    const baseH=new THREE.Mesh(new THREE.RingGeometry(3.4,4.2,24),
+      new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
+    baseH.rotation.x=-Math.PI/2; baseH.position.set(0,.06,0); sc.add(baseH);
+    worlds[md]={scene:sc, trees:tr, buildings:list};
+    return;
   }else{
     // ต้นไม้ตายกิ่งโกร๋น + ป้ายหลุมศพ + ฟักทอง + ดวงไฟวิญญาณ
     const trunkM=new THREE.MeshLambertMaterial({color:0x2e2019});
@@ -311,10 +370,18 @@ function randPos(minFromPlayer){
 }
 function spawnLetter(ch){
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-  const p=randPos(10);
-  spr.position.set(p.x,1.15,p.z); spr.scale.set(1.5,1.5,1);
+  if(M.heli && buildings.length){
+    // โหมดเฮลิคอปเตอร์: ตัวอักษรอยู่บนยอดตึก (สุ่มตึก) — ต้องลงจอดเก็บ
+    const b=buildings[Math.floor(Math.random()*buildings.length)];
+    spr.position.set(b.x,b.h+1.3,b.z);
+    spr.scale.set(2.2,2.2,1);                    // ใหญ่ขึ้น มองเห็นจากไกล
+  }else{
+    const p=randPos(10);
+    spr.position.set(p.x,1.15,p.z);
+    spr.scale.set(1.5,1.5,1);
+  }
   scene.add(spr);
-  letters.push({ch,spr,born:performance.now()});
+  letters.push({ch,spr,born:performance.now(),baseY:spr.position.y});
 }
 function spawnLettersForWord(w){ w.en.split('').forEach(spawnLetter); }
 /* เติมตัวอักษรที่ยังขาด (ผู้เล่นอาจใช้ตัวอักษรของคำ A ไปประกอบคำ B) */
@@ -334,8 +401,14 @@ function ensureCoverage(){
 function relocateLetters(now){
   letters.forEach(l=>{
     if(now-l.born>=RELOCATE_MS){
-      const p=randPos(10);
-      l.spr.position.set(p.x,1.15,p.z);
+      if(M.heli && buildings.length){
+        const b=buildings[Math.floor(Math.random()*buildings.length)];
+        l.spr.position.set(b.x,b.h+1.3,b.z);
+      }else{
+        const p=randPos(10);
+        l.spr.position.set(p.x,1.15,p.z);
+      }
+      l.baseY=l.spr.position.y;
       l.born=now;
     }
   });
@@ -564,7 +637,8 @@ function caught(){
 function knockedOut(){
   running=false;
   state.advHurt=true; saveState();
-  banEl.innerHTML=`<div class="adv-ko">💫 พลังหมดแล้ว!<br>
+  if(M.heli) HeliSound.stop();
+  banEl.innerHTML=`<div class="adv-ko">${M.koTitle||'💫 พลังหมดแล้ว!'}<br>
     <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
     รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small><br>
     <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
@@ -758,6 +832,7 @@ function sendPos(force){
     n:onlineDisplayName(), av:state.playerAvatar||'',
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
+  if(M.heli) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิคอปเตอร์)
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   myRef.set(payload).catch(()=>{});
@@ -792,16 +867,17 @@ function onPeerData(snap){
   if(typeof onlineKey==='function' && uid===onlineKey()) return;
   const d=snap.val()||{};
   if(typeof d.x!=='number' || typeof d.z!=='number') return;
+  const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
   if(!p){
-    p=peers[uid]={spr:makePeerSprite(d.n,d.av), cur:{x:d.x,z:d.z}, tgt:{x:d.x,z:d.z}, n:d.n||'เพื่อน'};
-    p.spr.position.set(d.x,1.5,d.z);
+    p=peers[uid]={spr:makePeerSprite(d.n,d.av), cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน'};
+    p.spr.position.set(d.x,py,d.z);
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
     tinvCheck(uid);
     Voice.onPeer(uid);
   }
-  p.tgt={x:d.x,z:d.z};
+  p.tgt={x:d.x,z:d.z,y:py};
   // 🏆 กระดานคะแนน: จำนวนคำที่เพื่อนประกอบได้รอบนี้ (field w) — เปลี่ยนเมื่อไหร่วาดใหม่
   const w=typeof d.w==='number'?d.w:0;
   if(p.w!==w){ p.w=w; renderBoard(); }
@@ -844,12 +920,14 @@ function tickPeers(dt,now){
     const k=Math.min(1,dt*6);                     // lerp นุ่มๆ ระหว่างแพ็กเก็ต
     p.cur.x+=(p.tgt.x-p.cur.x)*k;
     p.cur.z+=(p.tgt.z-p.cur.z)*k;
-    p.spr.position.set(p.cur.x,1.5+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
+    p.cur.y+=((p.tgt.y||1.5)-(p.cur.y||1.5))*k;
+    const baseY=M.heli?(p.cur.y||1.5):1.5;        // เฮลิคอปเตอร์เพื่อนบินตามความสูงจริง
+    p.spr.position.set(p.cur.x,baseY+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
     if(p.bubble){
       if(now>p.bubble.until) removePeerBubble(p);
-      else p.bubble.spr.position.set(p.cur.x,3.1,p.cur.z);   // ลอยตามหัว
+      else p.bubble.spr.position.set(p.cur.x,baseY+1.6,p.cur.z);   // ลอยตามหัว
     }
-    if(p.micSpr) p.micSpr.position.set(p.cur.x,2.72+Math.sin(now/300)*.06,p.cur.z);
+    if(p.micSpr) p.micSpr.position.set(p.cur.x,baseY+1.22+Math.sin(now/300)*.06,p.cur.z);
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
     if(en && en.audio && !en.audio.muted){
@@ -1263,6 +1341,22 @@ function buildDom(){
   .adv-touch #adv-joy{display:block}
   .adv-touch #adv-shoot{display:block}
   .adv-touch.adv-haunt #adv-shoot{display:none}
+  .adv-touch.adv-heli #adv-shoot{display:none}
+  .adv-heli #adv-cross{display:none}
+  #adv-inst{top:34px;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:13px;
+    text-shadow:0 1px 3px #000;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 12px;display:none;white-space:nowrap}
+  .adv-heli #adv-inst{display:block}
+  #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
+  .adv-heli #adv-cockpit{display:block}
+  #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
+  /* ไม่มีภาพ (ยังไม่เจนจาก PROMPTS_HELI.md) → cockpit จำลองด้วย CSS: แผงหน้าปัด+เสากรอบ */
+  #adv-cockpit .cp-css{height:15vh;background:linear-gradient(180deg,#2a2f38,#14171d);
+    border-top:4px solid #3d4450;border-radius:24px 24px 0 0;margin:0 -2vw;position:relative}
+  #adv-cockpit .cp-css:before{content:'';position:absolute;left:50%;top:-11vh;transform:translateX(-50%);
+    width:3vw;height:11vh;background:linear-gradient(180deg,rgba(40,44,52,.0),#2a2f38);border-radius:8px}
+  #adv-cockpit .cp-dash{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    display:flex;gap:14px;color:#8fe3a0;font-weight:800;font-size:12px;font-family:monospace}
+  #adv-cockpit .cp-dash span{background:#0d0f13;border:2px solid #3d4450;border-radius:8px;padding:3px 10px}
   #adv-hint{bottom:8px;right:8px;color:#fff;font-size:11px;text-shadow:0 1px 3px #000;text-align:right;opacity:.85}
   .adv-touch #adv-hint{display:none}
   #adv-chat-btn{position:absolute;top:160px;right:8px;pointer-events:auto;background:rgba(33,150,243,.92);
@@ -1322,6 +1416,8 @@ function buildDom(){
     <canvas class="adv-hud" id="adv-map" width="120" height="120"></canvas>
     <button class="adv-hud" id="adv-exit">🚪 ออก</button>
     <div class="adv-hud" id="adv-hunt"></div>
+    <div class="adv-hud" id="adv-inst"></div>
+    <div id="adv-cockpit"></div>
     <div class="adv-hud" id="adv-inv"></div>
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
@@ -1362,6 +1458,13 @@ function buildDom(){
   chatBoxEl=overlayEl.querySelector('#adv-chat-box');
   chatInputEl=overlayEl.querySelector('#adv-chat-input');
   selfMsgEl=overlayEl.querySelector('#adv-selfmsg');
+  hudInstEl=overlayEl.querySelector('#adv-inst');
+  cockpitEl=overlayEl.querySelector('#adv-cockpit');
+  // cockpit: ใช้ภาพ img/heli_cockpit.png ถ้าเจนแล้ว (PROMPTS_HELI.md) · ไม่มี → แผง CSS จำลอง
+  const cpImg=new Image();
+  cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); };
+  cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"><div class="cp-dash"><span>ALT</span><span>SPD</span><span>FUEL ∞</span><span>BELL 206</span></div></div>`; };
+  cpImg.src='img/heli_cockpit.png';
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   const shootBtn=overlayEl.querySelector('#adv-shoot');
@@ -1459,8 +1562,14 @@ function bindInput(){
           joy.dx=dx*cl/max; joy.dy=dy*cl/max;
           dotEl.style.transform=`translate(calc(-50% + ${dx*cl}px),calc(-50% + ${dy*cl}px))`;
         }else if(lookTouch && t.identifier===lookTouch.id){
-          yaw-=(t.clientX-lookTouch.x)*.005;
-          pitch=Math.max(-1.25,Math.min(1.25,pitch-(t.clientY-lookTouch.y)*.005));
+          if(M.heli){
+            // โหมดเฮลิคอปเตอร์: ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (collective)
+            yaw-=(t.clientX-lookTouch.x)*.004;
+            hCol=Math.max(-1,Math.min(1,hCol-(t.clientY-lookTouch.y)*.012));
+          }else{
+            yaw-=(t.clientX-lookTouch.x)*.005;
+            pitch=Math.max(-1.25,Math.min(1.25,pitch-(t.clientY-lookTouch.y)*.005));
+          }
           lookTouch.x=t.clientX; lookTouch.y=t.clientY;
         }
       }
@@ -1470,7 +1579,7 @@ function bindInput(){
         if(t.identifier===joyId){ joyId=null; joy.on=false; joy.dx=joy.dy=0;
           dotEl.style.transform='translate(-50%,-50%)';
           joyEl.style.left='18px'; joyEl.style.top='auto'; joyEl.style.bottom='18px'; }
-        if(lookTouch && t.identifier===lookTouch.id) lookTouch=null;
+        if(lookTouch && t.identifier===lookTouch.id){ lookTouch=null; hCol=0; }   // ปล่อยนิ้ว = hover
       }
     };
     overlayEl.addEventListener('touchend',endTouch,{passive:true});
@@ -1525,8 +1634,175 @@ function tickPlayer(dt,now){
       tryCompleteWords();
     }
   }
-  letters.forEach(l=>{ l.spr.position.y=1.15+Math.sin(now/400+l.spr.position.x*2)*.12; });
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
 }
+
+/* ============================================================
+   🚁 โหมดเฮลิคอปเตอร์ Bell — ฟิสิกส์บินแบบอาร์เคด (สไตล์ Helicopter Flight Pilot)
+   จอยซ้าย/WASD = เอียงตัว (cyclic) · ลากขวาแนวตั้ง/Space-Shift = ขึ้นลง (collective)
+   ลากขวาแนวนอน/Q-E = หันหัว (yaw) · ลงจอดเบาๆ บนดาดฟ้าใกล้ตัวอักษร = เก็บ
+   ============================================================ */
+function heliFloorAt(x,z){
+  let f=0;
+  for(const b of buildings){
+    if(Math.abs(x-b.x)<=b.w/2+.4 && Math.abs(z-b.z)<=b.d/2+.4 && b.h>f) f=b.h;
+  }
+  return f;
+}
+function tickHeli(dt,now){
+  // ---- อ่านอินพุต ----
+  let fw=0,sd=0,yawIn=0;
+  if(keys.KeyW||keys.ArrowUp) fw+=1;
+  if(keys.KeyS||keys.ArrowDown) fw-=1;
+  if(keys.KeyA||keys.ArrowLeft) sd-=1;
+  if(keys.KeyD||keys.ArrowRight) sd+=1;
+  if(keys.KeyQ) yawIn+=1;
+  if(keys.KeyE) yawIn-=1;
+  let col=0;
+  if(keys.Space) col+=1;
+  if(keys.ShiftLeft||keys.ShiftRight||keys.KeyC) col-=1;
+  if(joy.on){ fw=-joy.dy; sd=joy.dx; }
+  col+=hCol;                                   // จากลากนิ้วครึ่งขวา (มือถือ)
+  col=Math.max(-1,Math.min(1,col));
+  yaw+=yawIn*1.5*dt;
+
+  // ---- ฟิสิกส์ ----
+  const sin=Math.sin(yaw),cos=Math.cos(yaw);
+  if(hLanded){
+    if(col>.25){ hLanded=false; hVel.y=2.5; }  // ดึง collective ขึ้น = เทคออฟ
+  }else{
+    hVel.x+=(-sin*fw+cos*sd)*13*dt;
+    hVel.z+=(-cos*fw-sin*sd)*13*dt;
+    hVel.y+=(col*9 - hVel.y*1.8)*dt;           // ไต่/ลดระดับนุ่มๆ auto-hover
+    const drag=Math.max(0,1-1.4*dt);
+    hVel.x*=drag; hVel.z*=drag;
+    const hs=Math.hypot(hVel.x,hVel.z);
+    if(hs>17){ hVel.x*=17/hs; hVel.z*=17/hs; }
+  }
+  let nx=camera.position.x+hVel.x*dt;
+  let ny=camera.position.y+hVel.y*dt;
+  let nz=camera.position.z+hVel.z*dt;
+  nx=Math.max(-HALF+2,Math.min(HALF-2,nx));
+  nz=Math.max(-HALF+2,Math.min(HALF-2,nz));
+  ny=Math.min(60,ny);
+
+  // ---- ชนตึกด้านข้าง: บินต่ำกว่ายอด + ทะลุ footprint → เด้งออก+เจ็บ ----
+  for(const b of buildings){
+    const inX=Math.abs(nx-b.x)<=b.w/2+.9, inZ=Math.abs(nz-b.z)<=b.d/2+.9;
+    if(inX && inZ && ny<b.h-.5){
+      const pushX=(nx>b.x?1:-1)*((b.w/2+1)-Math.abs(nx-b.x));
+      const pushZ=(nz>b.z?1:-1)*((b.d/2+1)-Math.abs(nz-b.z));
+      if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
+      hVel.x*=-.25; hVel.z*=-.25;
+      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); }
+      break;
+    }
+  }
+
+  // ---- พื้น/ดาดฟ้า: แตะพื้นเบา = ลงจอด · กระแทกแรง = เจ็บ ----
+  const floor=heliFloorAt(nx,nz), minY=floor+HELI_SKID;
+  if(ny<=minY){
+    if(hVel.y<-7 && now-hHitAt>1000){ hHitAt=now; damagePlayer(25); HeliSound.thud(); ny=minY; hVel.y=2.2; }
+    else{
+      ny=minY;
+      if(!hLanded && Math.abs(hVel.y)<=7 && col<=.1){
+        hLanded=true; hVel={x:0,y:0,z:0}; sfx.select(); HeliSound.thud(.4);
+      }
+      hVel.y=Math.max(0,hVel.y);
+      if(hLanded){ hVel.x=0; hVel.z=0; }
+    }
+  }
+  camera.position.set(nx,ny,nz);
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw);
+  camera.rotateX(-fw*.12+(pitch*0));            // ก้มเงยตามการเอียง (cockpit feedback)
+  camera.rotateZ(-sd*.09);
+
+  // ---- เก็บตัวอักษร: ต้อง "ลงจอดแล้ว" บนดาดฟ้า/พื้นใกล้ตัวอักษร ----
+  if(hLanded){
+    for(let i=letters.length-1;i>=0;i--){
+      const lp=letters[i].spr.position;
+      if(Math.hypot(lp.x-nx,lp.z-nz)<3.6 && Math.abs((letters[i].baseY-1.3)-floor)<2){
+        const ch=letters[i].ch;
+        inv[ch]=(inv[ch]||0)+1;
+        removeLetter(i);
+        sfx.coin();
+        renderHudInv(); renderHudWords();
+        tryCompleteWords();
+      }
+    }
+  }
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
+
+  // ---- หน้าปัด + เสียงใบพัด ----
+  if(hudInstEl){
+    const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
+    hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม. ${hLanded?'· 🛬 จอดแล้ว':''}`;
+  }
+  HeliSound.update(col,hLanded);
+}
+
+/* ---------- เสียงใบพัด Bell — สังเคราะห์ (ปลอดลิขสิทธิ์) · มีไฟล์ sound/heli_rotor.mp3 ใช้แทนอัตโนมัติ ---------- */
+const HeliSound={
+  ctx:null,master:null,lfo:null,nodes:[],file:null,probed:false,on:false,
+  probe(){
+    if(this.probed) return; this.probed=true;
+    const a=new Audio();
+    a.addEventListener('canplaythrough',()=>{ this.file=a; },{once:true});
+    a.preload='auto'; a.src='sound/heli_rotor.mp3';
+  },
+  start(){
+    if(!state.sound || this.on) return;
+    this.probe(); this.on=true;
+    if(this.file){ this.file.loop=true; this.file.volume=.6; this.file.play().catch(()=>{}); return; }
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!this.ctx){ this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.connect(this.ctx.destination); }
+    if(this.ctx.state==='suspended') this.ctx.resume().catch(()=>{});
+    this.master.gain.value=.5;
+    // ตุบใบพัด: sawtooth ทุ้ม AM ด้วย LFO ความถี่ใบพัด ~13Hz + ลมหมุนจาก noise
+    const osc=this.ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.value=27;
+    const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=140;
+    const og=this.ctx.createGain(); og.gain.value=.001;
+    const len=this.ctx.sampleRate*2, buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const noi=this.ctx.createBufferSource(); noi.buffer=buf; noi.loop=true;
+    const bp=this.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=650; bp.Q.value=.8;
+    const ng=this.ctx.createGain(); ng.gain.value=.001;
+    this.lfo=this.ctx.createOscillator(); this.lfo.type='square'; this.lfo.frequency.value=13;
+    const lg1=this.ctx.createGain(); lg1.gain.value=.14;
+    const lg2=this.ctx.createGain(); lg2.gain.value=.05;
+    this.lfo.connect(lg1); lg1.connect(og.gain);
+    this.lfo.connect(lg2); lg2.connect(ng.gain);
+    osc.connect(lp); lp.connect(og); og.connect(this.master);
+    noi.connect(bp); bp.connect(ng); ng.connect(this.master);
+    osc.start(); noi.start(); this.lfo.start();
+    this.nodes=[osc,noi,this.lfo];
+  },
+  update(col,landed){
+    if(!this.on) return;
+    if(!state.sound){ this.stop(); return; }
+    if(this.file){ this.file.playbackRate=landed?.85:1+col*.18; this.file.volume=landed?.4:.6+col*.2; return; }
+    if(this.lfo) this.lfo.frequency.value=(landed?11:13)+col*3;
+    if(this.master) this.master.gain.value=(landed?.3:.5)+Math.max(0,col)*.25;
+  },
+  thud(vol){
+    if(!state.sound || !this.ctx) { sfx.wrong(); return; }
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(70,t);
+    o.frequency.exponentialRampToValueAtTime(35,t+.25);
+    const g=this.ctx.createGain(); g.gain.setValueAtTime(vol||.6,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+.3);
+    o.connect(g); g.connect(this.master||this.ctx.destination);
+    o.start(t); o.stop(t+.32);
+  },
+  stop(){
+    this.on=false;
+    if(this.file){ this.file.pause(); }
+    this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
+    this.nodes=[]; this.lfo=null;
+    if(this.master) this.master.gain.value=0;
+  },
+};
 
 /* ============================================================
    Loop หลัก
@@ -1535,12 +1811,15 @@ function loop(){
   if(!running) return;
   rafId=requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),.1), now=performance.now();
-  tickPlayer(dt,now);
-  if(M.ghost){ tickGhosts(dt,now); }
+  if(M.heli){ tickHeli(dt,now); }
   else{
-    tickMonsters(dt,now);
-    tickShots(dt);
-    if(now-lastSpawn>M.monSpawnMs){ lastSpawn=now; spawnMonster(); }
+    tickPlayer(dt,now);
+    if(M.ghost){ tickGhosts(dt,now); }
+    else{
+      tickMonsters(dt,now);
+      tickShots(dt);
+      if(now-lastSpawn>M.monSpawnMs){ lastSpawn=now; spawnMonster(); }
+    }
   }
   if(now-lastEnsure>5000){ lastEnsure=now; relocateLetters(now); ensureCoverage(); }
   tickPeers(dt,now);
@@ -1558,10 +1837,11 @@ function clearEntities(){
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
 }
 function start(md){
-  mode=(md==='haunt')?'haunt':'adv';
+  mode=(md==='haunt'||md==='heli')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
+  if(mode==='heli' && !state.heliTicket){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
 
   if(!built){
@@ -1574,19 +1854,26 @@ function start(md){
   }
   if(scene) clearEntities();                       // ล้างของโหมดก่อนหน้า (ถ้าเคยเข้า)
   if(!worlds[mode]) buildScene(mode);
-  scene=worlds[mode].scene; trees=worlds[mode].trees;
+  scene=worlds[mode].scene; trees=worlds[mode].trees||[]; buildings=worlds[mode].buildings||[];
 
   hp=100; sessionCoins=0; sessionWords=0; inv={}; keys={}; yaw=0; pitch=0;
-  camera.position.set(0,EYE_H,0);
+  if(M.heli){
+    camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
+    hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0;
+  }else{
+    camera.position.set(0,EYE_H,0);
+  }
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   words.forEach(spawnLettersForWord);
   for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
   if(M.ghost){ for(let i=0;i<M.ghostMax;i++) spawnGhost(true); }
-  else spawnMonster();
+  else if(!M.heli) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
+  overlayEl.classList.toggle('adv-heli',mode==='heli');
+  if(mode==='heli') HeliSound.start();
   hintEl.textContent=M.hint;
   hudHuntEl.style.display='none';
   Voice.spk=state.voiceSpk!==false;                        // สะท้อนค่าที่จำไว้แม้ยังออฟไลน์ (join ทับอีกทีตอนต่อเน็ต)
@@ -1613,6 +1900,7 @@ function exitWorld(){
   if(document.pointerLockElement) document.exitPointerLock();
   netLeave();
   HSound.stopAll();
+  HeliSound.stop();
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
   myChat=null;
@@ -1634,10 +1922,16 @@ window.Adventure3D={
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
+    get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt}; },
+    set landed(v){ hLanded=v; },
+    setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
-      tickPlayer(dt,now);
-      if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
+      if(M.heli){ tickHeli(dt,now); }
+      else{
+        tickPlayer(dt,now);
+        if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
+      }
       tickPeers(dt,now); drawMinimap(); renderer.render(scene,camera);
     },
   },

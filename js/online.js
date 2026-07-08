@@ -535,17 +535,18 @@ function tinvWatch(){
     const out = {};
     snap.forEach(ch=>{
       const v = ch.val();
-      if(v && (v.map === 'adv' || v.map === 'haunt')) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
+      if(v && (v.map === 'adv' || v.map === 'haunt' || v.map === 'heli')) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
     });
     Online.tinv = out;
     Object.keys(out).forEach(uid=>{
       if(Online.tinvSeen[uid]) return;
       Online.tinvSeen[uid] = true;
-      const w = out[uid].map === 'haunt' ? 'โลกผีสิง 👻' : 'โลกผจญภัย 🌍';
+      const w = out[uid].map === 'haunt' ? 'โลกผีสิง 👻' : out[uid].map === 'heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : 'โลกผจญภัย 🌍';
       toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${w}ด้วยกัน! เจอกันใน map รับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
     });
     if(typeof renderTicketCard === 'function') renderTicketCard();
     if(typeof renderHauntCard === 'function') renderHauntCard();
+    if(typeof renderHeliCard === 'function') renderHeliCard();
   });
 }
 

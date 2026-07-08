@@ -38,6 +38,8 @@ const DEFAULT_STATE = {
   advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
   hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
+  heliTicket:false,                   // ตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 51 · ซื้อได้เมื่อมีตั๋วโลกผจญภัย)
+  heliDone:[],                        // คำที่ประกอบสำเร็จแล้วในโลกเฮลิคอปเตอร์ (แยกคลังต่อโลก)
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
@@ -214,6 +216,8 @@ function loadState(){
       if(typeof s.advHurt !== 'boolean') s.advHurt = false;                                // ข้อ 8
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
+      if(typeof s.heliTicket !== 'boolean') s.heliTicket = false;                          // โลกเฮลิคอปเตอร์
+      if(!Array.isArray(s.heliDone)) s.heliDone = [];
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
@@ -321,6 +325,7 @@ function assetValue(){
   if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
   if(state.advTicket) v += TICKET_PRICE;                                                   // การ์ดตั๋วโลกผจญภัย (ข้อ 7)
   if(state.hauntTicket) v += HAUNT_PRICE;                                                  // ตั๋วโลกผีสิงกลางคืน
+  if(state.heliTicket) v += HELI_PRICE;                                                    // ตั๋วโลกเฮลิคอปเตอร์
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
   for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)

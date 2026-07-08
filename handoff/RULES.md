@@ -7,7 +7,8 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
-- ✅ **ชุดเต็มล่าสุด publish แล้ว 8 ก.ค. 2026 (ครบถึงรอบ 49):** `/presence` `/leaderboard` `/users` `/friendCodes` `/friendReq` `/friends` `/chats` `/gifts` `/world` (รวม c/ct/m/w) `/tinv` `/rtc` `/class` (muteAll+podium)
+- ⚠️ **รอบ 52 (โลกเฮลิคอปเตอร์) แก้ rules อีกครั้ง — รอผู้ใช้ publish:** เพิ่ม map `heli` ในทุก enum (/world /rtc /class /tinv) + field `y` (ความสูงบิน) ใน /world · **ไม่ publish = โลกเฮลิฯ เล่นได้แต่ระบบ online ทั้งหมดใน map นั้นถูก reject** (โลกเก่า 2 โลกไม่กระทบ)
+- ✅ ชุดก่อนหน้า publish แล้ว 8 ก.ค. 2026 (ครบถึงรอบ 49): `/presence` `/leaderboard` `/users` `/friendCodes` `/friendReq` `/friends` `/chats` `/gifts` `/world` (รวม c/ct/m/w) `/tinv` `/rtc` `/class` (muteAll+podium)
 - ✅ ตรวจจากภายนอกแล้ว (curl REST): /presence อ่านได้ 200 · /world และ /class อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้อง
 - ⏳ เหลือ**ทดสอบจริง 2 บัญชี/2 เครื่องบน Pages** (ดู checklist ใน TASKS.md)
 - 🔑 ทุกครั้งที่เพิ่มโซนใหม่ → ส่งก้อนเต็มด้านล่างให้ผู้ใช้ publish ใหม่
@@ -124,7 +125,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "world": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli'",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
@@ -132,6 +133,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "av":  { ".validate": "newData.isString() && newData.val().length <= 8" },
           "x":   { ".validate": "newData.isNumber()" },
           "z":   { ".validate": "newData.isNumber()" },
+          "y":   { ".validate": "newData.isNumber()" },
           "yaw": { ".validate": "newData.isNumber()" },
           "ts":  { ".validate": "newData.isNumber()" },
           "c":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
@@ -148,7 +150,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$fromUid": {
           ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
           ".validate": "newData.hasChildren(['map','n','ts'])",
-          "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'haunt')" },
+          "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'haunt' || newData.val() === 'heli')" },
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "ts":  { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
@@ -162,7 +164,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && auth.uid === $toUid",
           "$msgId": {
             ".write": "auth != null && newData.child('f').val() === auth.uid",
-            ".validate": "($map === 'adv' || $map === 'haunt') && newData.hasChildren(['f','t','d','ts'])",
+            ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli') && newData.hasChildren(['f','t','d','ts'])",
             "f":  { ".validate": "newData.isString() && newData.val().length <= 128" },
             "t":  { ".validate": "newData.isString() && (newData.val() === 'offer' || newData.val() === 'answer' || newData.val() === 'ice')" },
             "d":  { ".validate": "newData.isString() && newData.val().length <= 8000" },
@@ -175,7 +177,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "class": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli'",
         "muteAll": {
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['on','by','ts'])",

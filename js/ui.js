@@ -1076,6 +1076,7 @@ function renderDashboard(){
     renderComputerCard();
     renderTicketCard();
     renderHauntCard();
+    renderHeliCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -1272,6 +1273,7 @@ function renderDashboard(){
   renderComputerCard();
   renderTicketCard();
   renderHauntCard();
+  renderHeliCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -2380,6 +2382,106 @@ function buyHauntTicket(){
     });
 }
 
+/* ============================================================
+   🚁 การ์ดตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 52)
+   บิน cockpit view เก็บตัวอักษรบนยอดตึก ต้องลงจอดบนดาดฟ้า · 30🪙/คำ
+   ซื้อได้เมื่อมีตั๋วโลกผจญภัย (คู่ขนานกับโลกผี ไม่บังคับผ่านกันและกัน)
+   ============================================================ */
+function renderHeliCard(){
+  const el = document.getElementById('heli-card');
+  if(!el) return;
+  let body;
+  if(state.heliTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับขึ้นบินได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-heli-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.heliTicket){
+    body = `
+      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🚁🏙️</div>
+        <b>กัปตันพร้อมบิน!</b><br>
+        <small>มุมมอง cockpit เฮลิคอปเตอร์ Bell · ตัวอักษรอยู่บนยอดตึก คำละ 🪙30<br>
+        บินลอดระหว่างตึกแล้ว<b>ลงจอดเบาๆ บนดาดฟ้า</b>เพื่อเก็บ · ชนตึก/กระแทกแรง = เจ็บ เครื่องพังต้องรักษา 🪙${fmtNum(CURE_COST)}<br>
+        🧑‍🤝‍🧑 เห็นเพื่อนบิน 🚁 ในเมืองเดียวกันแบบสด</small>
+      </div>
+      ${tinvNoticeHTML('heli')}
+      <button class="big-btn green home-btn" id="btn-enter-heli">🚁 ขึ้นบิน!</button>
+      ${state.tinvClaimed.heli ? '' :
+        `<button class="big-btn blue home-btn" id="btn-inv-heli">📨 ชวนเพื่อนบินด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
+  }else if(!state.advTicket){
+    body = `
+      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกผจญภัย 🎫</b>ก่อน ถึงจะสอบใบขับขี่เฮลิคอปเตอร์ได้นะ</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
+      <div class="home-desc">
+        <div style="font-size:44px">🚁</div>
+        <div><b>ตั๋วโลกเฮลิคอปเตอร์ Bell 3D</b><br>
+        <small>ขับเฮลิคอปเตอร์มุมมองห้องนักบิน! รางวัลสูงสุด <b>คำละ 🪙30</b><br>
+        ตัวอักษรอยู่บนยอดตึก — ต้องบินหลบตึกแล้วลงจอดบนดาดฟ้าให้นุ่ม 🛬<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      </div>
+      ${tinvNoticeHTML('heli')}
+      <button class="big-btn blue home-btn" id="btn-buy-heli">🚁 ซื้อตั๋ว 🪙${fmtNum(HELI_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-heli');
+  if(buy) buy.addEventListener('click', buyHeliTicket);
+  const enter = document.getElementById('btn-enter-heli');
+  if(enter) enter.addEventListener('click', enterHeli3D);
+  const heal = document.getElementById('btn-heli-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+  const inv = document.getElementById('btn-inv-heli');
+  if(inv) inv.addEventListener('click', ()=>openTinvPicker('heli'));
+}
+
+function buyHeliTicket(){
+  if(state.heliTicket) return;
+  if(!state.advTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกผจญภัยก่อนถึงจะซื้อตั๋วเฮลิคอปเตอร์ได้นะ'); return; }
+  if(state.coins < HELI_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกเฮลิคอปเตอร์ 🪙${fmtNum(HELI_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🚁 ซื้อตั๋วโลกเฮลิคอปเตอร์</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(HELI_PRICE)}</b><br>
+    ขับเฮลิคอปเตอร์ Bell เก็บตัวอักษรบนยอดตึก — คำละ 🪙30<br>
+    <small>🛬 ต้องลงจอดบนดาดฟ้าให้นุ่มถึงจะเก็บได้ · ชนตึกเครื่องพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย กัปตัน! 🚁', ()=>{
+      state.coins -= HELI_PRICE;
+      state.heliTicket = true;
+      sfx.buy();
+      toast('🚁 ได้ตั๋วโลกเฮลิคอปเตอร์แล้ว! กดปุ่มเขียว "ขึ้นบิน" ได้เลย กัปตัน ✈️');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
+async function enterHeli3D(){
+  if(!state.heliTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('🚁 กำลังสตาร์ทเครื่องยนต์...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกเฮลิคอปเตอร์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('heli');
+}
+
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
 function tinvNoticeHTML(map){
   if(state.tinvClaimed && state.tinvClaimed[map]) return '';
@@ -2393,7 +2495,7 @@ function openTinvPicker(map){
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
   const friends = (Online.myFriends || []);
   if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
-  const w = map==='haunt' ? 'โลกผีสิง 👻' : 'โลกผจญภัย 🌍';
+  const w = map==='haunt' ? 'โลกผีสิง 👻' : map==='heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : 'โลกผจญภัย 🌍';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
