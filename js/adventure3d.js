@@ -71,6 +71,77 @@ const HELI_SKID=1.35;             // ความสูงตาคนขับ�
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
+let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
+
+/* ============================================================
+   📻 หอบังคับการบิน (รอบ 64) — วิทยุ ATC พูดไทย (Web Speech th-TH)
+   + ข้อความเขียวเรืองบนจอ + เสียง "ซ่า-คลิก" squelch ก่อนพูด
+   รายงานลม/ทัศนวิสัย/ความสูง/เพื่อนร่วมน่านฟ้า · อนุญาตขึ้นบิน ·
+   ชมลงจอดนุ่ม · ครูฝึกลุ้นตอนใกล้ได้เข็มนักบิน
+   ============================================================ */
+const ATC={
+  el:null, nextAt:0, _tm:0, voice:null, voiceTried:false,
+  WINDS:['เหนือ','ตะวันออกเฉียงเหนือ','ตะวันออก','ตะวันออกเฉียงใต้','ใต้','ตะวันตกเฉียงใต้','ตะวันตก','ตะวันตกเฉียงเหนือ'],
+  thVoice(){
+    if(this.voiceTried) return this.voice;
+    try{
+      const find=()=>{ const vs=speechSynthesis.getVoices().filter(v=>/^th/i.test(v.lang)); if(vs.length) this.voice=vs[0]; };
+      find();
+      if(!this.voice) speechSynthesis.addEventListener('voiceschanged',find,{once:true});
+      this.voiceTried=true;
+    }catch(e){ this.voiceTried=true; }
+    return this.voice;
+  },
+  say(text){
+    if(this.el){
+      this.el.textContent='📻 '+text;
+      this.el.classList.add('show');
+      clearTimeout(this._tm);
+      this._tm=setTimeout(()=>this.el.classList.remove('show'),6500);
+    }
+    HeliSound.squelch();
+    // เสียงพูดไทย (ถ้าเครื่องมีเสียงไทย · ไม่มีก็เหลือข้อความ+เสียงวิทยุ) — ไม่พูดทับของเก่า
+    if(state.sound && 'speechSynthesis' in window && !speechSynthesis.speaking){
+      try{
+        const u=new SpeechSynthesisUtterance(text);
+        u.lang='th-TH'; u.rate=1.04; u.pitch=.85; u.volume=.9;   // โทนต่ำนิดๆ แบบเจ้าหน้าที่หอ
+        const v=this.thVoice(); if(v) u.voice=v;
+        setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} },180);  // รอ squelch จบ
+      }catch(e){}
+    }
+  },
+  pick(){
+    const alt=Math.max(0,camera.position.y-HELI_SKID);
+    const wd=this.WINDS[Math.floor(Math.random()*this.WINDS.length)];
+    const ws=5+Math.floor(Math.random()*16);
+    const msgs=[
+      `หอบังคับเรียกกัปตัน ลมพัดจากทิศ${wd} ความเร็ว ${ws} กิโลเมตรต่อชั่วโมง`,
+      'ทัศนวิสัยดีมาก ท้องฟ้าแจ่มใส บินสบายๆ ได้เลยกัปตัน',
+      `ระดับความสูงของคุณ ${Math.round(alt)} เมตร รักษาระดับสวยๆ แบบนี้ต่อไป`,
+      'ตัวอักษรรออยู่บนดาดฟ้าหลายตึก ลงจอดเบาๆ นะกัปตัน',
+      `รายงานสภาพอากาศ ลมทิศ${wd} กำลังอ่อน อุณหภูมิกำลังดี เหมาะกับการบิน`,
+    ];
+    if(alt>38) msgs.push('บินสูงมากแล้วกัปตัน มองเห็นทั้งเมืองเลย ระวังอย่าลดระดับเร็วเกินไป');
+    const pk=Object.keys(peers);
+    if(pk.length) msgs.push(`มีเฮลิคอปเตอร์ของ${peers[pk[0]].n} อยู่ในน่านฟ้าเดียวกัน รักษาระยะห่างด้วยกัปตัน`);
+    if((state.heliStreak||0)>2) msgs.push(`สถิติบินไม่ชน ${state.heliStreak} คำติดแล้ว ฝีมือเยี่ยมมากกัปตัน`);
+    return msgs[Math.floor(Math.random()*msgs.length)];
+  },
+  tick(now){
+    if(!running || !HeliSound.ready) return;
+    if(!this.nextAt) this.nextAt=now+18000;               // ข้อความสภาพแวดล้อมแรก ~18 วิหลังพร้อมบิน
+    if(now<this.nextAt) return;
+    if(now-lastBanAt<4000 || (banEl && banEl.classList.contains('stay'))) return; // ไม่พูดทับจังหวะฉลอง/KO
+    this.nextAt=now+45000+Math.random()*30000;            // คุยทุก ~45–75 วิ
+    this.say(this.pick());
+  },
+  reset(){
+    this.nextAt=0;
+    clearTimeout(this._tm);
+    if(this.el) this.el.classList.remove('show');
+    try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
+  },
+};
 let yaw=0, pitch=0;
 let hp=100, sessionCoins=0, sessionWords=0;
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
@@ -529,6 +600,9 @@ function completeWord(i){
   // 🎖️ สตรีคนักบิน (รอบ 62): ประกอบคำในโลกเฮลิฯ +1 · ข้ามเส้น 5/15/30 → เข็มใหม่ (ไม่มีวันหลุด)
   if(M.heli){
     state.heliStreak=(state.heliStreak||0)+1;
+    // 🎧 ครูฝึกลุ้นตอนเหลืออีก 1 คำจะได้เข็มใหม่ (รอจังหวะฉลองคำ+อ่านคำจบก่อน)
+    const near=PILOT_TIERS.find(t=>t[1]>state.pilotBadge && state.heliStreak===t[0]-1);
+    if(near) setTimeout(()=>{ if(running) ATC.say(`อีกคำเดียวจะได้เข็มนักบิน${near[3]}แล้วกัปตัน ใจเย็นๆ บินระวังๆ นะ`); },3200);
     const tier=PILOT_TIERS.filter(t=>state.heliStreak>=t[0]).pop();
     if(tier && tier[1]>state.pilotBadge){
       state.pilotBadge=tier[1];
@@ -1297,8 +1371,10 @@ function tinvCheck(uid){
 /* ============================================================
    HUD
    ============================================================ */
+let lastBanAt=0;                  // เวลา banner ล่าสุด (ATC เว้นจังหวะไม่พูดทับ)
 function showBanner(html){
   if(banEl.classList.contains('stay')) return;
+  lastBanAt=performance.now();
   banEl.innerHTML=html;
   banEl.classList.remove('show'); void banEl.offsetWidth; banEl.classList.add('show');
 }
@@ -1456,6 +1532,13 @@ function buildDom(){
   #adv-gauges{position:absolute;bottom:1vh;left:50%;transform:translateX(-50%);width:min(560px,72vw);
     pointer-events:none;display:none;z-index:4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))}
   .adv-heli #adv-gauges{display:block}
+  #adv-radio{position:absolute;bottom:calc(1vh + 14vh);left:50%;transform:translateX(-50%);max-width:82vw;
+    pointer-events:none;display:none;z-index:5;background:rgba(6,14,8,.78);color:#8ef7a5;
+    border:1px solid rgba(142,247,165,.45);border-radius:10px;padding:5px 14px;
+    font-size:13.5px;font-weight:700;letter-spacing:.3px;text-shadow:0 0 7px rgba(142,247,165,.7);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #adv-radio.show{display:block;animation:advRadioIn .25s ease-out}
+  @keyframes advRadioIn{0%{opacity:0;transform:translateX(-50%) translateY(8px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
   /* ไม่มีภาพ (ยังไม่เจนจาก PROMPTS_HELI.md) → cockpit จำลองด้วย CSS: แผงหน้าปัด+เสากรอบ */
   #adv-cockpit .cp-css{height:15vh;background:linear-gradient(180deg,#2a2f38,#14171d);
     border-top:4px solid #3d4450;border-radius:24px 24px 0 0;margin:0 -2vw;position:relative}
@@ -1527,6 +1610,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-warn"></div>
     <div id="adv-cockpit"></div>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
+    <div id="adv-radio"></div>
     <div class="adv-hud" id="adv-inv"></div>
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
@@ -1571,6 +1655,7 @@ function buildDom(){
   hudWarnEl=overlayEl.querySelector('#adv-warn');
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
   gaugeCtx=overlayEl.querySelector('#adv-gauges').getContext('2d');
+  ATC.el=overlayEl.querySelector('#adv-radio');
   // cockpit: ใช้ภาพ img/heli_cockpit.png ถ้าเจนแล้ว (PROMPTS_HELI.md) · ไม่มี → แผง CSS จำลอง
   // (เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับด้านหน้าเสมอ — รอบ 61)
   const cpImg=new Image();
@@ -1819,6 +1904,7 @@ function tickHeli(dt,now){
       ny=minY;
       if(!hLanded && Math.abs(hVel.y)<=7 && col<=.1){
         hLanded=true; hVel={x:0,y:0,z:0}; sfx.select(); HeliSound.thud(.4);
+        if(Math.random()<.35) ATC.say('ลงจอดนุ่มมาก สวยงามกัปตัน');   // 📻 หอชมเป็นครั้งคราว
       }
       hVel.y=Math.max(0,hVel.y);
       if(hLanded){ hVel.x=0; hVel.z=0; }
@@ -1889,6 +1975,13 @@ function tickHeli(dt,now){
   }
   HeliSound.update(col,hLanded,dt);
   drawGauges();
+  // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
+  if(HeliSound.ready && !hAtcCleared){
+    hAtcCleared=true;
+    ATC.say('สตาร์ทเครื่องเรียบร้อย หอบังคับอนุญาตขึ้นบินได้ โชคดีกัปตัน');
+    ATC.nextAt=now+40000;
+  }
+  ATC.tick(now);
 }
 
 /* ============================================================
@@ -2084,6 +2177,28 @@ const HeliSound={
     if(this.whine){ this.whine.frequency.value=230+r*360; this.whineG.gain.value=.02+r*.05; }
     if(this.master) this.master.gain.value=.18+r*.32;
   },
+  /* เสียงวิทยุ "ซ่า-คลิก" (squelch) ก่อนหอบังคับพูด — สไตล์วิทยุการบินจริง */
+  squelch(){
+    if(!state.sound) return;
+    this.ensureCtx();
+    const t=this.ctx.currentTime;
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuf?this.noiseBuf():(function(ctx){
+      const len=ctx.sampleRate*.5, b=ctx.createBuffer(1,len,ctx.sampleRate);
+      const d=b.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1; return b;
+    })(this.ctx);
+    const bp=this.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1500; bp.Q.value=1.2;
+    const g=this.ctx.createGain();
+    g.gain.setValueAtTime(.09,t);
+    g.gain.exponentialRampToValueAtTime(.001,t+.13);
+    n.connect(bp); bp.connect(g); g.connect(this.master||this.ctx.destination);
+    n.start(t); n.stop(t+.15);
+    const o=this.ctx.createOscillator(); o.type='square'; o.frequency.value=1750;  // คลิกปลาย
+    const og=this.ctx.createGain();
+    og.gain.setValueAtTime(.06,t+.13);
+    og.gain.exponentialRampToValueAtTime(.001,t+.18);
+    o.connect(og); og.connect(this.master||this.ctx.destination);
+    o.start(t+.13); o.stop(t+.19);
+  },
   /* เสียงเตือนใกล้ชน: บี๊บถี่ขึ้นตามระดับ (1=ห่าง 2=ใกล้ 3=ใกล้มาก) — สไตล์ proximity warning */
   _proxLvl:0,_proxTm:0,
   proximity(level){
@@ -2183,6 +2298,7 @@ function start(md){
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
     hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
+    hAtcCleared=false; ATC.reset();
     if(hudWarnEl) hudWarnEl.style.display='none';
   }else{
     camera.position.set(0,EYE_H,0);
@@ -2225,6 +2341,7 @@ function exitWorld(){
   netLeave();
   HSound.stopAll();
   HeliSound.stop();
+  ATC.reset();
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
   myChat=null;
@@ -2248,7 +2365,7 @@ window.Adventure3D={
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
-                        ads:(worlds.heli&&worlds.heli.ads)||[]}; },
+                        ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC}; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
