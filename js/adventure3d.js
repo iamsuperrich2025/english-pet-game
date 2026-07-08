@@ -264,6 +264,9 @@ function emojiTexture(emo){
 const GHOST_IMG_MAX=5;
 const ghostTex=[];
 let ghostProbed=false;
+let ghostProbeLeft=0;      // จำนวนภาพที่ยัง probe ไม่เสร็จ (โหลดสำเร็จ/พลาด)
+let onGhostReady=null;     // callback เรียกครั้งเดียวเมื่อ probe ครบทุกภาพ
+let ghostGen=0;            // token ทุกครั้งที่ล้าง/เปลี่ยนด่าน — กัน spawn ที่ค้างอยู่ปล่อยผีผิดด่าน
 // วัดกรอบตัวผี (พิกเซลไม่โปร่งใส) ตอนโหลด → คืนสัดส่วนไว้ฟิตสเกลอัตโนมัติ (ไม่ต้อง hardcode ทีละตัว · ครอบภาพผีที่เจนใหม่ในอนาคตด้วย)
 function measureGhostBox(img){
   const cw=img.naturalWidth||img.width, ch=img.naturalHeight||img.height, aspect=cw/ch;
@@ -280,11 +283,19 @@ function measureGhostBox(img){
 }
 function probeGhostImages(){
   if(ghostProbed) return; ghostProbed=true;
+  ghostProbeLeft=GHOST_IMG_MAX;
+  const settle=()=>{ if(--ghostProbeLeft<=0 && onGhostReady){ const f=onGhostReady; onGhostReady=null; f(); } };  // ครบทุกภาพ → เรียก callback
   for(let i=1;i<=GHOST_IMG_MAX;i++){
     const img=new Image();                             // probe ด้วย Image (ห้าม fetch local — กติกาเดียวกับ probeImages)
-    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; t.userData=Object.assign({gi:i},measureGhostBox(img)); ghostTex.push(t); };  // gi=เลขไฟล์ + สัดส่วนตัวจริง
+    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; t.userData=Object.assign({gi:i},measureGhostBox(img)); ghostTex.push(t); settle(); };  // gi=เลขไฟล์ + สัดส่วนตัวจริง
+    img.onerror=settle;                                // ภาพหาย/โหลดพลาด ก็นับว่า settle (ไม่ให้ค้างรอ)
     img.src='img/ghosts/ghost_'+i+'.png';
   }
+}
+// เรียก cb เมื่อภาพผีพร้อม (probe ครบทุกภาพแล้ว ไม่ว่าโหลดได้กี่ภาพ) · ถ้าครบอยู่แล้ว → เรียกทันที
+function whenGhostsReady(cb){
+  if(!ghostProbed || ghostProbeLeft<=0) cb();
+  else onGhostReady=cb;
 }
 function ghostTexture(){
   if(ghostTex.length) return ghostTex[Math.floor(Math.random()*ghostTex.length)];
@@ -2402,6 +2413,7 @@ function loop(){
    เข้า/ออกโลก
    ============================================================ */
 function clearEntities(){
+  ghostGen++;                                      // ออก/เปลี่ยนด่าน → ยกเลิก spawn ผีที่ยังรอภาพโหลดค้างอยู่
   while(letters.length) removeLetter(0);
   monsters.forEach(m=>{ scene.remove(m.spr); m.spr.material.dispose(); }); monsters=[];
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
@@ -2439,7 +2451,14 @@ function start(md){
   words=pickWords(GUIDE_WORDS);
   words.forEach(spawnLettersForWord);
   for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
-  if(M.ghost){ probeGhostImages(); for(let i=0;i<M.ghostMax;i++) spawnGhost(true); }
+  if(M.ghost){
+    probeGhostImages();
+    const gen=ghostGen;                            // ปล่อยผีเฉพาะตอนภาพโหลดเสร็จ (ยังโหลด=ด่านว่างไว้ก่อน ไม่โผล่ emoji)
+    let spawned=false;
+    const spawnAll=()=>{ if(spawned||gen!==ghostGen) return; spawned=true; for(let i=0;i<M.ghostMax;i++) spawnGhost(true); };
+    whenGhostsReady(spawnAll);
+    setTimeout(spawnAll, 9000);                     // กันเหนียว: ภาพค้างเกิน 9 วิ (เน็ตแย่/หาย) → ปล่อยไปก่อน (ด่านต้องมีผีเสมอ)
+  }
   else if(!M.heli) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
