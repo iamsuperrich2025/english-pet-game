@@ -353,6 +353,31 @@ function adBoardTexture(n){
   return tex;
 }
 
+/* 🏙️ ผนังตึกโลกเฮลิฯ — default วาดหน้าต่างเรียงชั้น (procedural) ให้ดูมีมิติกว่ากล่องสีล้วน
+   วางไฟล์ img/buildings/facade_<n>.png (n=1..6 · ภาพต่อกันได้/seamless จัตุรัส) → ผนังจริงขึ้นแทน tile ขึ้นตึกอัตโนมัติ
+   prompt อยู่ใน PROMPTS_BUILDINGS.md */
+const BUILDING_TINTS=[0x9fb2c8,0xc8b89f,0xb0c8a8,0xc8a8b8,0x9fc8c4,0xbfae90];
+function buildingFacadeTexture(n){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  const tex=new THREE.CanvasTexture(cv);
+  tex.wrapS=tex.wrapT=THREE.RepeatWrapping;            // tile ซ้ำขึ้นตึก (repeat ตั้งตามขนาดตึกตอนสร้าง)
+  const base='#'+('000000'+BUILDING_TINTS[(n-1)%BUILDING_TINTS.length].toString(16)).slice(-6);
+  const drawProc=()=>{
+    c.fillStyle=base; c.fillRect(0,0,128,128);
+    for(let gy=0;gy<3;gy++)for(let gx=0;gx<3;gx++){       // หน้าต่าง 3×3 ต่อกระเบื้อง (บางบานติดไฟ)
+      c.fillStyle=Math.random()<.45?'rgba(255,236,170,.92)':'rgba(28,38,54,.85)';
+      c.fillRect(gx*42+9,gy*42+9,26,30);
+    }
+    tex.needsUpdate=true;
+  };
+  drawProc();
+  const img=new Image();                               // probe รูปผนังจริง (กติกาเดียวกับ probeImages)
+  img.onload=()=>{ tex.image=img; tex.needsUpdate=true; };
+  img.src='img/buildings/facade_'+n+'.png';
+  return tex;
+}
+
 /* ป้ายผู้เล่นคนอื่น: ชื่อ + ภาพตัวละคร (player_male/female.png ถ้ามี · ไม่มีใช้อีโมจิ)
    โหมดเฮลิคอปเตอร์: เพื่อนเป็น 🚁 บินอยู่ (ตำแหน่ง+ความสูงจริงจาก /world) */
 function makePeerSprite(name, av){
@@ -513,7 +538,6 @@ function buildScene(md){
     // ⚠️ ผังเมือง seed คงที่ (รอบ 58): ทุกเครื่อง/ทุกรอบเห็นเมืองเดียวกันเป๊ะ —
     //    เพื่อน multiplayer ไม่บินทะลุตึกกัน + ป้ายโฆษณาเลขเดิมอยู่ตำแหน่งเดิมเสมอ (ลูกค้าเลือกป้ายได้)
     const rnd=seededRand(87251);
-    const cols=[0x9fb2c8,0xc8b89f,0xb0c8a8,0xc8a8b8,0x9fc8c4,0xbfae90];
     const list=[];
     for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
       if(gx===0 && gz===0) continue;                    // ลานกลาง = จุดเกิด/สนามบินหลัก
@@ -521,8 +545,11 @@ function buildScene(md){
       const x=gx*24 + (rnd()*4-2);
       const z=gz*24 + (rnd()*4-2);
       const w=9+rnd()*4, d=9+rnd()*4, h=8+rnd()*20;
+      const tn=Math.floor(rnd()*6)+1;                   // 1 rnd() ต่อตึก (เท่าเดิม → ผังเมือง seed คงเดิมเป๊ะ)
+      const facade=buildingFacadeTexture(tn);
+      facade.repeat.set(Math.max(1,Math.round(w/8)), Math.max(2,Math.round(h/6)));  // หน้าต่าง ~ทุก 8m กว้าง / ทุกชั้น ~6m
       const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
-        new THREE.MeshLambertMaterial({color:cols[Math.floor(rnd()*cols.length)]}));
+        new THREE.MeshLambertMaterial({map:facade}));
       b.position.set(x,h/2,z); sc.add(b);
       // ขอบดาดฟ้า + วง helipad ให้เล็งง่าย
       const pad=new THREE.Mesh(new THREE.CircleGeometry(3.2,20),
