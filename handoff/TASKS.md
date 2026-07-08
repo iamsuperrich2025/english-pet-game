@@ -28,6 +28,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 72 (8 ก.ค. · Opus): ภาพผีไทยในโลก 3D 👻 (แทน emoji ที่น่ารักเกินไป — ผู้ใช้สั่ง) — version→.49** (commit 9dd0c09)
+- **โลกผีสิง `haunt` ใช้ภาพจริงแทน emoji:** `probeGhostImages()` (adventure3d.js) probe `img/ghosts/ghost_1.png … ghost_5.png` ด้วย `new Image()` (ห้าม fetch local — กติกา NOTES.md) ตอน `start('haunt')` · `ghostTexture()` สุ่มจากภาพที่โหลดได้ ไม่มีเลย → fallback `emojiTexture(ghostEmoji)` เดิม · ผีสลับเป็นภาพจริงตอน `respawnGhost` (ทุก 20 วิ) เผื่อภาพโหลดเสร็จหลังเกมเริ่ม · **มีกี่ภาพใช้เท่านั้น (ไม่ครบ 5 ก็ได้)**
+- **`PROMPTS_GHOSTS.md` (ไฟล์ใหม่):** prompt ผีไทย 5 ตัว — กระสือ/เปรต/ผีสาวชุดไทย(แม่นาค)/ปอบ/ผีผ้าขาว · เน้นหลอนแบบไทยไม่ใช่ฝรั่ง · เรืองแสงในตัว (ฉากมืดสนิท) · `no blood, no gore` เหมาะเด็กประถม · วาง `img/ghosts/` (โฟลเดอร์ใหม่)
+- ✅ ทดสอบ preview: เข้าโลกผี 8 ตัว probe ยิง 5 request · วางไฟล์จริงชั่วคราว (1×1) → reload → ผีตัวใหม่ได้ `ghost_1.png` · บังคับ born ครบ 20 วิ → respawn สลับจาก emoji เป็นภาพจริง · ลบไฟล์ทดสอบออกแล้ว · ไม่มี console error
+- ⏳ **ค้างฝั่งผู้ใช้:** เจนภาพ 5 ตัวจาก `PROMPTS_GHOSTS.md` → ลบพื้น → วาง `img/ghosts/ghost_1..5.png` (ไม่วางก็เล่นได้ ใช้ emoji เดิม)
+
 **✅ รอบ 70 (8 ก.ค. · Fable): สถิติสายฟ้าแลบ + เข็มสายฟ้า ⚡ (ต่อยอดรอบ 67 ผู้ใช้สั่ง "สนใจ") — version→.48** (commit หลังรอบ 71 — เลขรอบจองไว้ก่อน)
 - **นับสะสม `state.thunderCount`** ทุกครั้งที่ทำสายฟ้าแลบ (จับคู่ไวไม่พลาด / สอบสายฟ้า — `addThunder()` ใน game.js เรียกจาก 2 จุด trigger รอบ 67) + migration default 0
 - **เข็มสายฟ้า `state.thunderBadge`** สไตล์เดียวกับเข็มนักบิน: ครบ **5=⚡ เข็มสายฟ้า · 15=🌩️ เข็มพายุฟ้าคะนอง · 30=⛈️ เข็มมหาพายุ** (`THUNDER_TIERS`/`THUNDER_TIER_UI`/`thunderEmoji` ใน game.js) — ได้แล้วไม่หาย · ประกาศเข็มด้วย sfx.rankup+toast (delay 1.9 วิ รอฟ้าผ่าจบ) · **ติดท้ายชื่อต่อจากเข็มนักบิน** ใน `/world` payload + กระดานคะแนน (adventure3d.js 2 จุด — ไม่มี field/rules ใหม่)
