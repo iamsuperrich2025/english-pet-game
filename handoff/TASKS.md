@@ -28,6 +28,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 73 (8 ก.ค. · Opus): jump scare ภาพผีไทยเต็มจอ 👻 (ต่อยอดรอบ 72 · ผู้ใช้สั่ง "เอาไอเดียต่อยอดทั้งหมด") — version→.50** (commit 18630b1)
+- **`caught()` (adventure3d.js):** โดนผีจับ → `ghostScareSrc()` สุ่ม src ภาพผีจาก `ghostTex` (ที่ probe ไว้รอบ 72) → ถ้ามี set `<img id="adv-scare-img">`.src + `scareEl.classList.add('has-img')` → CSS ซ่อน `span` (emoji) แสดง `img` เต็มจอ (object-fit contain, max 100vw/vh, drop-shadow แดง) · ไม่มีภาพ/โหลดไม่ทัน → `remove('has-img')` → emoji 👻 เดิม · animation `advScare` (zoom-punch) + `adv-shake` เดิมใช้ต่อ · haptic `[400,90,220]` แรงขึ้น
+- **`PROMPTS_GHOSTS.md`:** ระบุว่าภาพชุด ghost_1..5 ใช้กับ jump scare ด้วย — ไม่ต้องเจนภาพเพิ่ม
+- **ไอเดียต่อยอดข้อ "เสียง Suno":** ตรวจแล้ว `PROMPTS_SOUND.md` มี prompt ครบ (haunt_ambient/chase/scare + spark) · โค้ด `HSound` รับไฟล์อัตโนมัติแล้ว (`files.scare` ใน `scream()`) → **ไม่มีงานโค้ดเหลือ รอผู้ใช้เจนไฟล์เอง** (ทำแทนไม่ได้ ต้องบัญชี Suno)
+- ✅ ทดสอบ preview: วางไฟล์จริงชั่วคราว → caught() → has-img=true ภาพเต็มจอ emoji ซ่อน · ลบไฟล์+unregister sw(`pet-vocab-v3`)+ล้าง cache+reload → fetch 404 จริง → caught() has-img=false fallback emoji 👻 แสดง · ไม่มี console error
+- ⚠️ **หมายเหตุ:** sw.js (`pet-vocab-v3`) cache ภาพเหนียวมาก — เทสต์ fallback ต้อง unregister sw + `caches.delete` + reload ไม่งั้น sw serve ภาพเก่าแม้ไฟล์ลบ
+
 **✅ รอบ 72 (8 ก.ค. · Opus): ภาพผีไทยในโลก 3D 👻 (แทน emoji ที่น่ารักเกินไป — ผู้ใช้สั่ง) — version→.49** (commit 9dd0c09)
 - **โลกผีสิง `haunt` ใช้ภาพจริงแทน emoji:** `probeGhostImages()` (adventure3d.js) probe `img/ghosts/ghost_1.png … ghost_5.png` ด้วย `new Image()` (ห้าม fetch local — กติกา NOTES.md) ตอน `start('haunt')` · `ghostTexture()` สุ่มจากภาพที่โหลดได้ ไม่มีเลย → fallback `emojiTexture(ghostEmoji)` เดิม · ผีสลับเป็นภาพจริงตอน `respawnGhost` (ทุก 20 วิ) เผื่อภาพโหลดเสร็จหลังเกมเริ่ม · **มีกี่ภาพใช้เท่านั้น (ไม่ครบ 5 ก็ได้)**
 - **`PROMPTS_GHOSTS.md` (ไฟล์ใหม่):** prompt ผีไทย 5 ตัว — กระสือ/เปรต/ผีสาวชุดไทย(แม่นาค)/ปอบ/ผีผ้าขาว · เน้นหลอนแบบไทยไม่ใช่ฝรั่ง · เรืองแสงในตัว (ฉากมืดสนิท) · `no blood, no gore` เหมาะเด็กประถม · วาง `img/ghosts/` (โฟลเดอร์ใหม่)
