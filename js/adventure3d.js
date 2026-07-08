@@ -443,6 +443,7 @@ function completeWord(i){
   addCoins(M.reward);
   sessionCoins+=M.reward; sessionWords++;
   sfx.levelup();
+  setTimeout(()=>speakWord(w.en), 700);     // 🔊 อ่านคำที่ผสมสำเร็จ (รอแตรฉลองจบก่อน)
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(60);
   showBanner(`🎉 <b>${escapeHTML(w.en.toUpperCase())}</b> = ${escapeHTML(w.th)}<br><span class="adv-ban-coin">+${M.reward} 🪙</span>`);
   const fresh=pickWords(1);                 // เติมคำใหม่ให้ครบ 10 (8.4)
