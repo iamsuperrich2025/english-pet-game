@@ -1499,15 +1499,15 @@ function renderHudTop(){
   hudHpEl.className='adv-hp-fill'+(hp<=30?' low':'');
   hudCoinEl.textContent=`🪙 +${fmtNum(sessionCoins)} · 📖 ${sessionWords} คำ`;
 }
-function renderHudWords(){
-  hudWordsEl.innerHTML=words.map(w=>{
-    const have=Object.assign({},inv);
-    const chips=w.en.split('').map(ch=>{
-      const ok=(have[ch]||0)>0; if(ok) have[ch]--;
-      return `<span class="adv-ch${ok?' got':''}">${ch.toUpperCase()}</span>`;
-    }).join('');
-    return `<div class="adv-word">${chips}<small>${escapeHTML(w.th)}</small></div>`;
+function renderHudWords(){   // โชว์คำเป้าหมายปัจจุบัน (words[0]) เป็นคำใหญ่ทีละคำ · ตัวอักษรที่เก็บแล้วไฮไลต์เขียว
+  const w=words[0];
+  if(!w){ hudWordsEl.innerHTML=''; return; }
+  const have=Object.assign({},inv);
+  const chips=w.en.split('').map(ch=>{
+    const ok=(have[ch]||0)>0; if(ok) have[ch]--;
+    return `<span class="adv-fch${ok?' got':''}">${ch.toUpperCase()}</span>`;
   }).join('');
+  hudWordsEl.innerHTML=`<div class="adv-fword">${chips}</div><div class="adv-fth">${escapeHTML(w.th)}</div>`;
 }
 function renderHudInv(){
   const ks=Object.keys(inv).sort();
@@ -1575,17 +1575,15 @@ function buildDom(){
   .adv-b-row.me{color:#8ef7a5}
   .adv-b-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
   .adv-b-more{color:#bbb;font-size:10px;line-height:.7;text-align:center}
-  #adv-words{top:132px;left:8px;max-height:calc(100vh - 145px);overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:none}  /* แค่ลิสต์อ้างอิง — ปล่อยนิ้วทะลุไปโดนคันบังคับซ้ายได้ (มือถือ) */
-  .adv-word{margin:3px 0;display:flex;align-items:center;gap:2px;flex-wrap:wrap}
-  /* มือถือจอแนวนอนเตี้ย: ย้ายแผงคำเป็นแถบแนวนอนบนซ้าย (ใต้กระดานคะแนน · เว้นขวาให้ minimap)
-     → พ้นคอนโซลเฮลิฯด้านล่าง + พ้นนิ้วซ้าย(เดิน)/ขวา(มอง) ที่อยู่ครึ่งล่าง */
-  .adv-touch #adv-words{top:60px;left:8px;right:140px;max-height:30vh;overflow:hidden;
-    display:flex;flex-wrap:wrap;align-content:flex-start;gap:3px 10px}
-  .adv-touch .adv-word{margin:0}
-  .adv-word small{color:#ffe082;font-size:10px;margin-left:5px}
-  .adv-ch{display:inline-block;min-width:15px;text-align:center;padding:1px 3px;border-radius:5px;
-    background:rgba(255,255,255,.16);color:#fff;font-weight:800;font-size:12px;margin:1px}
-  .adv-ch.got{background:#66bb6a;color:#fff;box-shadow:0 0 5px #66bb6a}
+  /* คำเป้าหมายใหญ่ทีละคำ กลางบนจอ (แทนลิสต์ 10 คำเดิม) — ตัวอักษรเก็บแล้วไฮไลต์เขียว จบคำแล้วเด้งคำถัดไปเอง
+     · top:82 เลี่ยงชนแถบ "👻 หนี!" (top:52) + topbar · pointer-events:none ไม่บังนิ้ว · อยู่เหนือ crosshair/คอนโซล */
+  #adv-words{top:82px;left:50%;transform:translateX(-50%);text-align:center;background:rgba(0,0,0,.4);
+    border-radius:16px;padding:7px 16px;pointer-events:none;max-width:94vw}
+  .adv-fword{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+  .adv-fch{display:inline-block;min-width:30px;text-align:center;font-size:clamp(20px,5.5vw,34px);font-weight:800;
+    color:#fff;background:rgba(255,255,255,.15);border-radius:9px;padding:3px 8px;text-shadow:0 2px 4px #000;transition:background .2s,box-shadow .2s}
+  .adv-fch.got{background:#66bb6a;box-shadow:0 0 13px #66bb6a}
+  .adv-fth{color:#ffe082;font-size:clamp(13px,3.4vw,18px);font-weight:700;margin-top:4px;text-shadow:0 1px 3px #000}
   #adv-map{top:8px;right:8px}
   #adv-exit{top:118px;right:8px;pointer-events:auto;background:rgba(211,47,47,.92);color:#fff;border:2px solid #fff;
     border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
