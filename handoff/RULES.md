@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⚠️ **รอบ 82 (คำเดียวกันในปาร์ตี้) แก้ rules — รอผู้ใช้ publish:** เพิ่ม field `cw` (คำเป้าหมายปัจจุบัน string "en|th" ≤60) ใน `/world/$map/$uid` · **ไม่ publish = ระบบ "คนที่ invite กันเห็นคำเดียวกัน" ไม่ทำงาน** (set /world ที่มี cw จะโดน reject เพราะ $other:false → ตำแหน่งเพื่อนอาจไม่อัปเดตด้วย) · โลกเล่นได้ปกติถ้าไม่มีเพื่อนในปาร์ตี้
 - ⚠️ **รอบ 52 (โลกเฮลิคอปเตอร์) แก้ rules อีกครั้ง — รอผู้ใช้ publish:** เพิ่ม map `heli` ในทุก enum (/world /rtc /class /tinv) + field `y` (ความสูงบิน) ใน /world · **ไม่ publish = โลกเฮลิฯ เล่นได้แต่ระบบ online ทั้งหมดใน map นั้นถูก reject** (โลกเก่า 2 โลกไม่กระทบ)
 - ✅ ชุดก่อนหน้า publish แล้ว 8 ก.ค. 2026 (ครบถึงรอบ 49): `/presence` `/leaderboard` `/users` `/friendCodes` `/friendReq` `/friends` `/chats` `/gifts` `/world` (รวม c/ct/m/w) `/tinv` `/rtc` `/class` (muteAll+podium)
 - ✅ ตรวจจากภายนอกแล้ว (curl REST): /presence อ่านได้ 200 · /world และ /class อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้อง
@@ -140,6 +141,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "ct":  { ".validate": "newData.isNumber()" },
           "m":   { ".validate": "newData.isNumber()" },
           "w":   { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "cw":  { ".validate": "newData.isString() && newData.val().length <= 60" },
           "$other": { ".validate": false }
         }
       }

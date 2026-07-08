@@ -205,6 +205,7 @@ let texCache={};
 /* ---------- multiplayer ---------- */
 let peers={};                     // uid → {spr, cur:{x,z}, tgt:{x,z}, n, av, bubble, lastCt}
 let worldRef=null, myRef=null, lastNetSend=0, lastSent=null;
+let lastSharedDone=null;          // 🤝 คำล่าสุดที่ประกอบเสร็จ — กันลูกทีมที่ทำเสร็จก่อนวนกลับไปรับคำเดิมของหัวหน้า
 /* แชทลอยหัวแบบ Roblox: พิมพ์สั้นๆ โชว์เหนือหัว BUBBLE_MS */
 const CHAT_MAX=60, BUBBLE_MS=5000;
 let myChat=null;                  // {text, ts} — แนบไปกับ sendPos ระหว่างยังสด (ct ใช้ Date.now คงที่ กันเด้งซ้ำ)
@@ -711,6 +712,7 @@ function tryCompleteWords(){
 function completeWord(i){
   const w=words[i];
   words.splice(i,1);
+  lastSharedDone=w.en;                      // 🤝 กันลูกทีมที่ทำคำนี้เสร็จก่อน วนกลับไปรับคำเดิมของหัวหน้า (รอหัวหน้าเปลี่ยนคำก่อน)
   doneList().push(w.en);
   addCoins(M.reward);
   sessionCoins+=M.reward; sessionWords++;
@@ -721,6 +723,7 @@ function completeWord(i){
   const fresh=pickWords(1);                 // เติมคำใหม่ให้ครบ 10 (8.4)
   fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); });
   ensureCoverage();
+  if(myRef) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
   // 🎖️ สตรีคนักบิน (รอบ 62): ประกอบคำในโลกเฮลิฯ +1 · ข้ามเส้น 5/15/30 → เข็มใหม่ (ไม่มีวันหลุด)
   if(M.heli){
     state.heliStreak=(state.heliStreak||0)+1;
@@ -1147,6 +1150,9 @@ function sendPos(force){
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิคอปเตอร์)
+  // 🤝 คำเป้าหมายปัจจุบัน — ส่งเฉพาะตอนมีเพื่อนปาร์ตี้(invite กัน)อยู่ในโลกจริง
+  // (คนเล่นทั่วไปไม่ส่ง → ไม่ผูกกับ rules ใหม่ ไม่มีทางทำ /world พังถ้ายังไม่ publish)
+  if(words[0] && Object.keys(peers).some(uid=>tinvLinked(uid))) payload.cw=words[0].en+'|'+words[0].th;
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   myRef.set(payload).catch(()=>{});
@@ -1195,6 +1201,7 @@ function onPeerData(snap){
   // 🏆 กระดานคะแนน: จำนวนคำที่เพื่อนประกอบได้รอบนี้ (field w) — เปลี่ยนเมื่อไหร่วาดใหม่
   const w=typeof d.w==='number'?d.w:0;
   if(p.w!==w){ p.w=w; renderBoard(); }
+  p.cw=(typeof d.cw==='string')?d.cw:null;             // 🤝 คำเป้าหมายของเพื่อน (ใช้ตอนเราเป็นลูกทีมตามหัวหน้า)
   // ไอคอน 🎤 เหนือหัวคนที่เปิดไมค์ (เด็กเห็นชัดว่าเดินเข้าใกล้ใครแล้วคุยได้)
   if(d.m===1 && !p.micSpr){
     p.micSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture('🎤'),transparent:true}));
@@ -1249,6 +1256,7 @@ function tickPeers(dt,now){
       en.audio.volume=Math.max(0,Math.min(1,1.15-d/45));
     }
   });
+  syncPartyWord();                                // 🤝 ลูกทีมตามคำของหัวหน้าปาร์ตี้ (เห็นคำเดียวกัน)
 }
 
 /* ============================================================
@@ -1264,6 +1272,33 @@ function tinvLinked(uid){
   const sent=state.tinvSent && state.tinvSent[uid];
   const got=(typeof Online!=='undefined' && Online.tinv)?Online.tinv[uid]:null;
   return (sent && sent.map===mode) || (got && got.map===mode);
+}
+/* 🤝 คำเป้าหมายร่วมของปาร์ตี้ที่ invite กัน — หัวหน้า = key น้อยสุดในกลุ่ม (ทุกเครื่องคำนวณตรงกัน)
+   เราเป็นหัวหน้า/เล่นคนเดียว → คืน null (ใช้คำตัวเอง) · เป็นลูกทีม → คืนคำของหัวหน้า {e,t} */
+function partyWord(){
+  const linked=Object.keys(peers).filter(uid=>tinvLinked(uid));
+  if(!linked.length) return null;
+  const me=(typeof onlineKey==='function')?onlineKey():null;
+  if(!me) return null;
+  const leader=[me,...linked].sort()[0];
+  if(leader===me) return null;                        // เราเป็นหัวหน้า → คนอื่นตามคำเรา
+  const cw=peers[leader] && peers[leader].cw;
+  if(!cw) return null;
+  const i=cw.indexOf('|');
+  return i>0 ? {e:cw.slice(0,i), t:cw.slice(i+1)} : null;
+}
+/* ลูกทีมดันคำของหัวหน้าขึ้นเป็นคำเป้าหมาย (words[0]) → เห็นคำเดียวกัน ช่วยกันเก็บตัวอักษรได้ */
+function syncPartyWord(){
+  const pw=partyWord();
+  if(!pw || !pw.e) return;                            // ไม่ใช่ลูกทีม / หัวหน้ายังไม่ส่งคำ
+  if(pw.e===lastSharedDone) return;                   // คำนี้เราทำเสร็จก่อนแล้ว → เล่นคำตัวเองไปก่อน รอหัวหน้าเปลี่ยนคำ
+  if(words[0] && words[0].en===pw.e) return;          // ตรงกับหัวหน้าอยู่แล้ว
+  const idx=words.findIndex(w=>w.en===pw.e);
+  if(idx>=0){ const [w]=words.splice(idx,1); words.unshift(w); }   // มีอยู่แล้ว → ดันขึ้นหน้าสุด
+  else words.unshift({en:pw.e, th:pw.t});             // ยังไม่มี → เพิ่มคำหัวหน้า
+  lastSharedDone=null;
+  ensureCoverage();                                   // สร้างตัวอักษรของคำนี้ในโลกให้เก็บได้
+  renderHudInv(); renderHudWords();
 }
 const Voice={
   mic:false, spk:true, vmode:'all',
