@@ -1575,7 +1575,7 @@ function buildDom(){
   .adv-b-row.me{color:#8ef7a5}
   .adv-b-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
   .adv-b-more{color:#bbb;font-size:10px;line-height:.7;text-align:center}
-  #adv-words{top:132px;left:8px;max-height:calc(100vh - 145px);overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:auto}
+  #adv-words{top:132px;left:8px;max-height:calc(100vh - 145px);overflow-y:auto;background:rgba(0,0,0,.42);border-radius:12px;padding:7px 9px;pointer-events:none}  /* แค่ลิสต์อ้างอิง — ปล่อยนิ้วทะลุไปโดนคันบังคับซ้ายได้ (มือถือ) */
   .adv-word{margin:3px 0;display:flex;align-items:center;gap:2px;flex-wrap:wrap}
   .adv-word small{color:#ffe082;font-size:10px;margin-left:5px}
   .adv-ch{display:inline-block;min-width:15px;text-align:center;padding:1px 3px;border-radius:5px;
@@ -1882,7 +1882,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
