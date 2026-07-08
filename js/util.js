@@ -125,7 +125,123 @@ const sfx = {
   levelup: ()=>{ [523,659,784,1047].forEach((f,i)=>beep(f,.2,i*.13)); },
   buy    : ()=>{ beep(880,.1); beep(1175,.15,.08); },
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
+  spark  : ()=>{ playSpark(); },   // ⚡ ฟ้าผ่า/กระแสไฟ (จับคู่ครบใน 5 วิ / สอบสายฟ้า)
 };
+
+/* ---------- ⚡ เสียงฟ้าผ่า+ประกายไฟ ----------
+   ชั้น 1: ไฟล์ sound/spark.mp3 (เจนจาก Suno ได้ — prompt ใน PROMPTS_SOUND.md หัวข้อ spark)
+   ชั้น 2 (ไม่มีไฟล์): สังเคราะห์ WebAudio — เปรี๊ยะไฟฟ้า + zap ไล่ลง + ฟ้าร้องท้าย */
+let sparkAudio = null, sparkFileMiss = false;
+function playSpark(){
+  if(!state.sound) return;
+  if(!sparkFileMiss){
+    try{
+      sparkAudio = sparkAudio || new Audio('sound/spark.mp3');
+      sparkAudio.onerror = ()=>{ sparkFileMiss = true; sparkSynth(); };
+      sparkAudio.currentTime = 0;
+      const p = sparkAudio.play();
+      if(p && p.catch) p.catch(()=>{ sparkFileMiss = true; sparkSynth(); });
+      return;
+    }catch(e){ sparkFileMiss = true; }
+  }
+  sparkSynth();
+}
+function sparkSynth(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const noise = (at,dur,type,freq,vol)=>{   // ช็อตเสียงซ่าผ่านฟิลเตอร์ (เปรี๊ยะ/ฟ้าร้อง)
+      const len = Math.ceil(audioCtx.sampleRate*dur);
+      const buf = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+      const d = buf.getChannelData(0);
+      for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+      const src = audioCtx.createBufferSource(); src.buffer = buf;
+      const f = audioCtx.createBiquadFilter(); f.type = type; f.frequency.value = freq;
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(vol, t+at);
+      g.gain.exponentialRampToValueAtTime(0.001, t+at+dur);
+      src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+      src.start(t+at);
+    };
+    noise(0,  .08,'highpass',2600,.3);    // เปรี๊ยะแรก
+    noise(.05,.15,'bandpass',1800,.25);   // ไฟช็อตต่อเนื่อง
+    noise(.12,.09,'highpass',3200,.22);   // เปรี๊ยะซ้ำ
+    noise(.5, .1, 'highpass',2900,.16);   // ประกายท้าย (รับจังหวะฟ้าผ่าลูกถัดไป)
+    noise(.18,1.15,'lowpass',150,.5);     // ฟ้าร้องกลบท้าย
+    const o = audioCtx.createOscillator(), g2 = audioCtx.createGain();
+    o.type = 'sawtooth';                  // zap ไล่เสียงสูง→ต่ำ
+    o.frequency.setValueAtTime(2800, t);
+    o.frequency.exponentialRampToValueAtTime(160, t+.22);
+    g2.gain.setValueAtTime(.12, t);
+    g2.gain.exponentialRampToValueAtTime(.001, t+.24);
+    o.connect(g2); g2.connect(audioCtx.destination);
+    o.start(t); o.stop(t+.26);
+  }catch(e){}
+}
+
+/* ---------- ⚡ เอฟเฟกต์ฟ้าผ่า+กระแสไฟฟ้าเต็มจอ (canvas ชั่วคราว วาดเอง ไม่ใช้ asset) ----------
+   ฟ้าผ่า 5 ลูกไล่จังหวะ สุ่มตำแหน่ง เส้นหยักแตกกิ่ง + แฟลชขาวทั้งจอ + จอสั่น (เคารพ no-anim) */
+function thunderFx(dur = 1800){
+  if(typeof state !== 'undefined' && state.noAnim) return;
+  const cv = document.createElement('canvas');
+  cv.className = 'thunder-fx';
+  const W = cv.width = innerWidth, H = cv.height = innerHeight;
+  document.body.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const t0 = performance.now();
+  const strikes = [];
+  for(let i=0;i<5;i++) strikes.push({at: i===0 ? 0 : 120+i*260+Math.random()*120,
+                                     x: (0.1+0.8*Math.random())*W, bolt:null});
+  function mkBolt(x){
+    const pts = [[x+(Math.random()*40-20), 0]];
+    let y = 0, px = pts[0][0];
+    while(y < H){
+      y += H*(0.06+Math.random()*0.09);
+      px += (Math.random()*90-45);
+      pts.push([px, Math.min(y,H)]);
+    }
+    const branches = [];
+    for(let b=0; b<1+Math.floor(Math.random()*2); b++){
+      const i = 2+Math.floor(Math.random()*Math.max(1, pts.length-3));
+      let bx = pts[i][0], by = pts[i][1];
+      const bp = [[bx,by]];
+      for(let k=0;k<3;k++){ bx += (Math.random()*120-60); by += H*0.07*Math.random()+20; bp.push([bx,by]); }
+      branches.push(bp);
+    }
+    return {pts, branches};
+  }
+  function drawPath(pts, w, alpha){
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i][0], pts[i][1]);
+    ctx.strokeStyle = `rgba(215,242,255,${alpha})`;
+    ctx.lineWidth = w;
+    ctx.shadowColor = '#7fd4ff'; ctx.shadowBlur = 18;
+    ctx.stroke();
+  }
+  function frame(now){
+    const t = now - t0;
+    ctx.clearRect(0,0,W,H);
+    let flash = 0;
+    for(const s of strikes){
+      const age = t - s.at;
+      if(age < 0) continue;
+      if(!s.bolt) s.bolt = mkBolt(s.x);
+      const a = Math.max(0, 1 - age/320);
+      if(a > 0){
+        drawPath(s.bolt.pts, 4, a);                 // แกนหนาเรือง
+        drawPath(s.bolt.pts, 1.3, Math.min(1, a*1.5)); // ไส้ขาวจ้า
+        for(const b of s.bolt.branches) drawPath(b, 1.6, a*0.7);
+        flash = Math.max(flash, a*0.3);
+      }
+    }
+    if(flash > 0){ ctx.fillStyle = `rgba(224,242,255,${flash})`; ctx.fillRect(0,0,W,H); }
+    if(t < dur) requestAnimationFrame(frame);
+    else cv.remove();
+  }
+  requestAnimationFrame(frame);
+  document.body.classList.add('quake');
+  setTimeout(()=>document.body.classList.remove('quake'), 650);
+}
 
 /* ---------- 🔊 เสียงอ่านคำศัพท์อังกฤษ ----------
    ชั้น 1: ไฟล์ MP3 เสียง Neural ของ Microsoft (ตัวเดียวกับ Edge) เจนล่วงหน้าด้วย

@@ -9,7 +9,9 @@ const game = {
   combo:0, hintUsed:false,
   timerId:null, timeLeft:0, totalTime:60, checking:false,
   pool:null,
+  roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
 };
+const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
 function startGame(cat){
   careTick();
@@ -35,6 +37,7 @@ function newRound(){
   game.pairs = shuffle(game.pool || vocabForStudent()).slice(0,4).map(([en,th])=>({en,th}));
   game.selEn = null; game.selTh = null;
   game.matched = 0; game.hintUsed = false; game.checking = false;
+  game.roundAt = Date.now(); game.roundClean = true;
 
   const enGrid = document.getElementById('en-grid');
   const thGrid = document.getElementById('th-grid');
@@ -146,14 +149,22 @@ function checkMatch(){
       addRP(5);
       saveState();
       document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
+      // ⚡ สายฟ้าแลบ: เคลียร์ครบ 4 คู่ ไม่พลาดเลย ภายใน 5 วิ → ฟ้าผ่าเต็มจอ+จอสั่น+เสียง spark
+      const thunder = game.roundClean && (Date.now() - game.roundAt) <= THUNDER_MS;
+      if(thunder){
+        thunderFx();
+        sfx.spark();
+        setTimeout(()=>floatFx('⚡ สายฟ้าแลบ! ไวเวอร์!', '#7fd4ff'), 200);
+      }
       setTimeout(()=>{
         sfx.levelup();
         floatFx('🎉 เก่งมาก! โบนัส +20 🪙 +5 RP', '#5fc46a');
-      }, 400);
-      setTimeout(newRound, 1600);
+      }, thunder ? 900 : 400);
+      setTimeout(newRound, thunder ? 2100 : 1600);
     }
   }else{
     sfx.wrong();
+    game.roundClean = false;    // พลาดแล้ว รอบนี้อดสายฟ้า
     en.classList.add('shake'); th.classList.add('shake');
     game.combo = 0;
     updateComboPill();
@@ -217,7 +228,8 @@ function renderCats(){
     b.addEventListener('click', ()=>startQuiz(findCat(b.dataset.cat))));
 }
 
-const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false};
+const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
+              qAt:0, fastAll:true};   // ⚡ สอบสายฟ้า: ถูกทุกข้อ + ข้อละไม่เกิน 5 วิ
 
 function startQuiz(cat){
   // สุ่ม 10 ข้อจากหมวด: โจทย์อังกฤษ + ช้อยส์ไทย 4 ตัว (ตัวลวงจากหมวดเดียวกัน)
@@ -225,7 +237,7 @@ function startQuiz(cat){
     const wrong = shuffle(cat.words.filter(w=>w[1] !== th)).slice(0,3).map(w=>w[1]);
     return {en, correct:th, choices:shuffle([th, ...wrong])};
   });
-  quiz.cat = cat; quiz.idx = 0; quiz.correct = 0;
+  quiz.cat = cat; quiz.idx = 0; quiz.correct = 0; quiz.fastAll = true;
   renderQuizQuestion();
   showScreen('screen-quiz');
 }
@@ -233,6 +245,7 @@ function startQuiz(cat){
 function renderQuizQuestion(){
   const q = quiz.questions[quiz.idx];
   quiz.answered = false;
+  quiz.qAt = Date.now();   // ⚡ เริ่มจับเวลาข้อนี้
   document.getElementById('quiz-progress').textContent =
     `${quiz.cat.emoji} หมวด${quiz.cat.name} · ข้อ ${quiz.idx+1} จาก ${quiz.questions.length} · คำนี้แปลว่าอะไร?`;
   document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
@@ -245,6 +258,7 @@ function renderQuizQuestion(){
     btn.addEventListener('click', ()=>{
       if(quiz.answered) return;
       quiz.answered = true;
+      if(btn.textContent !== q.correct || Date.now() - quiz.qAt > THUNDER_MS) quiz.fastAll = false;
       if(btn.textContent === q.correct){
         quiz.correct++;
         btn.classList.add('right');
@@ -290,12 +304,17 @@ function finishQuiz(){
   if(exp && p && !p.sick) addExp(exp, p);
   saveState();
 
+  // ⚡ สอบสายฟ้า: ตอบถูกทุกข้อ + แต่ละข้อไม่เกิน 5 วิ → ฟ้าผ่าเต็มจอ+จอสั่น+เสียง spark
+  const thunder = quiz.fastAll && quiz.correct === quiz.questions.length;
+  if(thunder){ thunderFx(); sfx.spark(); }
+
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box">
-    <h2>${passed ? '🏆 สอบผ่าน เก่งมาก!' : '💪 เกือบแล้ว สู้ๆ!'}</h2>
-    <div class="lv-emoji" style="font-size:56px">${passed ? '🎉' : '📖'}</div>
+    <h2>${thunder ? '⚡ สอบสายฟ้า สุดยอดไปเลย!' : passed ? '🏆 สอบผ่าน เก่งมาก!' : '💪 เกือบแล้ว สู้ๆ!'}</h2>
+    <div class="lv-emoji" style="font-size:56px">${thunder ? '⚡' : passed ? '🎉' : '📖'}</div>
     <p style="margin:8px 0 0;font-size:17px">หมวด${cat.name}: ตอบถูก <b>${quiz.correct}/${quiz.questions.length}</b> ข้อ<br>
+      ${thunder ? '<b style="color:#3b8dde">ถูกทุกข้อ แถมไวปานสายฟ้า (ข้อละไม่เกิน 5 วิ)! ⚡</b><br>' : ''}
       ${passed
         ? (firstPass ? `รับรางวัลพิเศษ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}! 🎁` : `ผ่านอีกครั้ง รับ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}`)
         : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก 8 ข้อขึ้นไปถึงจะได้รางวัลพิเศษ ลองใหม่อีกครั้งนะ`}

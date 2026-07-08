@@ -44,8 +44,25 @@ short, no vocals, no melody, horror movie jump scare sound effect
 
 ---
 
+## 4) `sound/spark.mp3` — ⚡ เสียงฟ้าผ่า+ประกายไฟ (ดังครั้งเดียวตอน "สายฟ้าแลบ")
+> ใช้ตอนจับคู่ครบ 4 คู่ไม่พลาดใน 5 วิ และตอน "สอบสายฟ้า" (ถูกทุกข้อ ข้อละ ≤5 วิ)
+> เกมมีเสียงสังเคราะห์ในตัวแล้ว — ไฟล์นี้เป็นตัวอัปเกรด วางแล้วสลับใช้เองอัตโนมัติ
+
+**Prompt (วางใน Style of Music · ติ๊ก Instrumental):**
+```
+massive thunder strike sound effect, sharp electric crackle and sizzle,
+high voltage electricity zap, bright lightning impact followed by rolling
+thunder rumble, energetic and exciting, very short, no vocals, no melody,
+no music, cinematic sound design, video game victory lightning effect
+```
+> เคล็ดลับ: เลือกท่อนที่ "เปรี้ยง" ชัดสุด ตัดเหลือ ~2–3 วินาที เปิดมาต้องดังทันที
+> (เอฟเฟกต์ภาพฟ้าผ่ายาว ~1.8 วิ — เสียงสั้นกว่าหรือเท่ากันกำลังพอดี)
+
+---
+
 ## เช็กลิสต์หลังวางไฟล์
-- [ ] ไฟล์อยู่ที่ `sound/haunt_ambient.mp3` · `sound/haunt_chase.mp3` · `sound/haunt_scare.mp3` (ชื่อตรงเป๊ะ ตัวพิมพ์เล็กทั้งหมด)
+- [ ] ไฟล์อยู่ที่ `sound/haunt_ambient.mp3` · `sound/haunt_chase.mp3` · `sound/haunt_scare.mp3` · `sound/spark.mp3` (ชื่อตรงเป๊ะ ตัวพิมพ์เล็กทั้งหมด)
 - [ ] commit + push (sw.js cache ให้เองแบบ cache-first — ผู้เล่นโหลดครั้งเดียว)
 - [ ] เข้าโลกผีสิง: ได้ยินเสียงบรรยากาศทันที · ผีไล่มีเสียงเร่งเร้า · โดนจับเสียงตูมดัง
+- [ ] เกมจับคู่: เคลียร์ 4 คู่ใน 5 วิไม่พลาด → ฟ้าผ่า+เสียงเปรี้ยง
 - ℹ️ ลิขสิทธิ์: เพลงที่เจนจากบัญชี Suno แบบเสียเงินใช้เชิงพาณิชย์ได้ / บัญชีฟรีใช้แบบไม่ใช่การค้า+ให้เครดิต Suno — เกมนี้แจกฟรีบน GitHub Pages ใช้ได้ทั้งสองแบบ (ใส่เครดิตใน README ถ้าใช้บัญชีฟรี)

@@ -28,6 +28,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 67 (8 ก.ค. · Fable): เอฟเฟกต์สายฟ้าแลบ ⚡ (ผู้ใช้สั่ง: ฟ้าผ่า/กระแสไฟ+เสียง spark ตอนเล่นไวใน 5 วิ) — version→.44**
+- **เงื่อนไข 2 จุด (เพดานร่วม `THUNDER_MS`=5000 ใน game.js):** ① เกมจับคู่: เคลียร์ครบ 4 คู่ **ไม่พลาดเลย** (`game.roundClean` — พลาดคู่ไหน=อด) ภายใน ≤5 วิจากเริ่มรอบ (`game.roundAt`) ② แบบทดสอบ: **ถูกทุกข้อ + แต่ละข้อตอบใน ≤5 วิ** (`quiz.fastAll`+`quiz.qAt`) → หัวกล่องผลสอบเปลี่ยนเป็น "⚡ สอบสายฟ้า สุดยอดไปเลย!"
+- **เอฟเฟกต์ `thunderFx()` (util.js):** canvas เต็มจอชั่วคราว z-9980 — ฟ้าผ่า 5 ลูกไล่จังหวะ ~1.8 วิ เส้นหยักแตกกิ่ง+ไส้ขาวเรือง shadowBlur ฟ้า + แฟลชขาวทั้งจอตามจังหวะ + `body.quake` จอสั่น .55 วิ (style.css) · เคารพ `state.noAnim` (ข้ามทั้งหมด)
+- **เสียง `sfx.spark` (util.js):** ชั้น 1 ไฟล์ `sound/spark.mp3` (ยังไม่มี — **prompt Suno ใน PROMPTS_SOUND.md ข้อ 4** วางแล้วสลับใช้เอง) · ชั้น 2 สังเคราะห์ WebAudio: เปรี๊ยะ highpass 3 ช็อต + zap sawtooth 2800→160Hz + ฟ้าร้อง lowpass 1.15 วิ · เคารพ state.sound
+- ✅ ทดสอบ preview: เคลียร์ 4 คู่ 243ms → canvas+quake มา · เกิน 5 วิ → ไม่มา · พลาด 1 คู่แล้วเคลียร์ไว → ไม่มา · ควิซตอบไว fastAll คง true / ช้า (>5 วิ) → false · finishQuiz 10/10+fastAll → ฟ้าผ่า+หัว "⚡ สอบสายฟ้า" / fastAll=false → หัวปกติไม่มีฟ้าผ่า · ไม่มี console error · **หมายเหตุ:** แท็บ background rAF ไม่เดิน canvas ค้าง — เครื่องจริงแท็บ visible ไม่เจอ
+
 **✅ รอบ 66 (8 ก.ค. · Fable): หอบังคับ ATC เปลี่ยนเป็นอังกฤษล้วน 📻🇬🇧 (ผู้ใช้สั่ง) — version→.43**
 - **เสียงพูด+ข้อความจอวิทยุเป็น Aviation English ทั้งหมด** (เด็กได้ซึมซับอังกฤษเพิ่ม): clearance "Engine start complete. Tower clears you for takeoff." · ลม `wind from the {north...} at N kilometers per hour` · ทัศนวิสัย/ความสูง/เตือน traffic/ชมสตรีค · ลงจอด "Beautiful landing, captain." · ครูฝึก "One more word for your {bronze/silver/gold} pilot badge, captain."
 - **เสียง:** `en-US` rate .98 pitch .85 — ใช้ `pickSpeakVoice()` ตัวเดียวกับระบบอ่านคำศัพท์ (ได้เสียง Natural/Neural ดีสุดของเครื่อง · fallback หาเสียง en เอง) · traffic alert ใช้ "another helicopter" แทนชื่อเพื่อน (ชื่อไทยอ่านด้วยเสียงอังกฤษจะเพี้ยน)

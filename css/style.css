@@ -321,6 +321,19 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .rankup-btn:hover{filter:brightness(1.06);}
 .rankup-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #cf9722;}
 
+/* ---------- ⚡ เอฟเฟกต์ฟ้าผ่า (จับคู่ครบใน 5 วิ / สอบสายฟ้า — canvas จาก thunderFx ใน util.js) ---------- */
+.thunder-fx{position:fixed;inset:0;z-index:9980;pointer-events:none;}
+body.quake{animation:quakeShake .55s ease;}
+@keyframes quakeShake{
+  0%,100%{transform:none;}
+  15%{transform:translate(4px,-5px);}
+  30%{transform:translate(-5px,4px);}
+  45%{transform:translate(4px,3px);}
+  60%{transform:translate(-3px,-4px);}
+  80%{transform:translate(2px,2px);}
+}
+html.no-anim body.quake{animation:none;}
+
 /* ---------- แท็บสลับสัตว์ (เลี้ยงหลายตัว) ---------- */
 .pet-tabs{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .pet-tab{
