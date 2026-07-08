@@ -1059,12 +1059,17 @@ function renderDashboard(){
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
 
-  /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย (ผู้ใช้สั่ง 8 ก.ค. 2026) ---- */
+  /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย + badge เลขบอกป่วยกี่ตัว ---- */
   const railCure = document.getElementById('btn-rail-cure');
   if(railCure){
-    const anySick = state.pets.some(x=>x.sick);
-    railCure.disabled = !anySick;
-    railCure.classList.toggle('cure-alert', anySick);
+    const sickCount = state.pets.filter(x=>x.sick).length;
+    railCure.disabled = sickCount === 0;
+    railCure.classList.toggle('cure-alert', sickCount > 0);
+    const cb = document.getElementById('cure-badge');
+    if(cb){
+      cb.style.display = sickCount > 0 ? '' : 'none';
+      cb.textContent = sickCount;
+    }
   }
 
   /* ---- การ์ดสัตว์เลี้ยง ---- */
@@ -1439,7 +1444,7 @@ function feedWith(p, food){
   /* ข้อ 5.1: อาหารโทษ → พิษสะสม (ไม่ลดเอง) ครบ 100 → ป่วยทันที cause 'toxin' */
   if(foodBadFor(food, p.type)){
     p.toxin = Math.min(TOXIN_FULL, (p.toxin||0) + (food.toxin||0));
-    if(p.toxin >= TOXIN_FULL && !p.sick){ p.sick = true; p.sickCause = 'toxin'; }
+    if(p.toxin >= TOXIN_FULL && !p.sick){ p.sick = true; p.sickCause = 'toxin'; sfx.siren(); }   // 🚨 ล้มป่วยคามือ
     p.mealJunk = true;                 // ข้อ 5.2: มื้อนี้มีอาหารโทษปน
   }
   /* ข้อ 5.2: กินจนเต็มหลอด = จบมื้อ → นับมื้อสะอาด/มื้อโทษ อัปเดตรูปร่าง */

@@ -126,7 +126,29 @@ const sfx = {
   buy    : ()=>{ beep(880,.1); beep(1175,.15,.08); },
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
   spark  : ()=>{ playSpark(); },   // ⚡ ฟ้าผ่า/กระแสไฟ (จับคู่ครบใน 5 วิ / สอบสายฟ้า)
+  siren  : ()=>{ sirenSynth(); },  // 🚨 หวอเบาๆ ตอนน้องเพิ่งล้มป่วย
 };
+
+/* ---------- 🚨 เสียงหวอเบาๆ (วี้-หว่อ 2 รอบ เสียงนุ่มไม่ทำเด็กตกใจ) ---------- */
+function sirenSynth(){
+  if(!state.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(620, t);
+    o.frequency.linearRampToValueAtTime(920, t+.35);
+    o.frequency.linearRampToValueAtTime(620, t+.7);
+    o.frequency.linearRampToValueAtTime(920, t+1.05);
+    o.frequency.linearRampToValueAtTime(620, t+1.4);
+    g.gain.setValueAtTime(.055, t);
+    g.gain.setValueAtTime(.055, t+1.25);
+    g.gain.exponentialRampToValueAtTime(.001, t+1.5);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(t); o.stop(t+1.5);
+  }catch(e){}
+}
 
 /* ---------- ⚡ เสียงฟ้าผ่า+ประกายไฟ ----------
    ชั้น 1: ไฟล์ sound/spark.mp3 (เจนจาก Suno ได้ — prompt ใน PROMPTS_SOUND.md หัวข้อ spark)

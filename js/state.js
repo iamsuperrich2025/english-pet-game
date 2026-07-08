@@ -568,6 +568,7 @@ function orderTick(now){
 /* เดินระบบดูแลสัตว์ทุกตัวตามเวลาจริง (เรียกทุกครั้งที่วาดหน้า + ทุก 1 นาที) */
 function careTick(){
   const now = Date.now();
+  const sickBefore = state.pets.filter(pp=>pp.sick).length;   // 🚨 ไว้เทียบท้ายฟังก์ชัน (หวอตอนเพิ่งล้มป่วย)
   compTick(now);          // ตกรายได้ค้างก่อน แล้วค่อยเช็กบิล/ตัดบริการ
   billTick(now);
   marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
@@ -632,6 +633,13 @@ function careTick(){
     state.playerSickPending = true;              // ให้ UI เด้งกล่องแจ้งครั้งเดียว
   }
   refreshRank();          // ตรวจเลื่อน/ลดแรงค์ตาม net worth ที่นิ่งแล้ว
+  // 🚨 มีน้องเพิ่งล้มป่วยใน tick นี้ → หวอเบาๆ + toast บอกชื่อ (เด็กรู้ตัวไวแม้กำลังเล่นเกมอยู่
+  //    ไม่ปล่อยน้องป่วยข้ามวัน) — badge เลขบนปุ่ม 💊 อัปเดตผ่าน renderDashboard ตามปกติ
+  const sickPets = state.pets.filter(pp=>pp.sick);
+  if(sickPets.length > sickBefore && typeof sfx !== 'undefined'){
+    sfx.siren();
+    toast(`🚨 ${sickPets.map(pp=>pp.name).join(', ')} ล้มป่วยแล้ว! กดปุ่ม 💊 รักษาได้เลยนะ`, 3200);
+  }
   saveState();
 }
 
