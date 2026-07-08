@@ -257,8 +257,9 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 
 /* ---------- ฉากเลื่อนแรงค์ใหญ่ (เหรียญตราใหญ่ + รัศมี) ---------- */
 .rankup-overlay{
-  position:fixed;inset:0;background:radial-gradient(circle at 50% 42%,#3d4258 0%,#1e2130 70%);
-  z-index:90;display:flex;align-items:center;justify-content:center;animation:fadeIn .35s;
+  position:fixed;inset:0;
+  background:radial-gradient(circle at 50% 44%,#3d4258 0%,#232637 62%,#171a26 100%);
+  z-index:90;display:flex;animation:fadeIn .35s;
   overflow:hidden;
 }
 .rankup-rays{
@@ -276,13 +277,20 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   opacity:.18;animation:raysSpin 14s linear infinite;
 }
 @keyframes raysSpin{from{transform:translate(-50%,-50%) rotate(0);}to{transform:translate(-50%,-50%) rotate(360deg);}}
-.rankup-content{position:relative;text-align:center;padding:20px;animation:popIn .5s cubic-bezier(.2,1.6,.4,1);}
+/* ทุกขนาดอิง vmin (จอเตี้ยสุดคือมือถือแนวนอน) — เนื้อหาย่อ-ขยายพอดีจอเสมอ ไม่ถูกตัดหัว/ท้าย */
+.rankup-content{
+  position:relative;text-align:center;margin:auto;
+  padding:clamp(10px,2.5vmin,20px) 20px;max-width:min(92vw,600px);
+  animation:popIn .5s cubic-bezier(.2,1.6,.4,1);
+}
 .rankup-title{
-  font-size:22px;color:#ffd76e;letter-spacing:6px;font-weight:bold;
-  text-shadow:0 0 12px rgba(255,215,110,.8);margin-bottom:14px;
+  font-size:clamp(15px,3.8vmin,22px);color:#ffd76e;font-weight:bold;
+  letter-spacing:.4em;padding-left:.4em; /* ชดเชย letter-spacing ท้ายตัวสุดท้ายให้กึ่งกลางจริง */
+  text-shadow:0 0 12px rgba(255,215,110,.8);margin-bottom:clamp(8px,2.4vmin,14px);
 }
 .rankup-badge{
-  width:190px;height:190px;margin:0 auto;border-radius:50%;
+  width:clamp(104px,36vmin,190px);height:clamp(104px,36vmin,190px);
+  margin:0 auto;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   background:radial-gradient(circle,rgba(255,255,255,.14) 0%,transparent 65%);
   box-shadow:0 0 60px 12px var(--rank-color,#e0a92e);
@@ -292,16 +300,25 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
   0%,100%{box-shadow:0 0 40px 8px var(--rank-color,#e0a92e);}
   50%{box-shadow:0 0 80px 20px var(--rank-color,#e0a92e);}
 }
-.rankup-badge-img{width:170px;height:170px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));}
-.rankup-badge .rank-badge-emoji{font-size:110px;}
-.rankup-name{font-size:34px;font-weight:bold;margin-top:16px;text-shadow:0 2px 8px rgba(0,0,0,.6);}
-.rankup-en{font-size:15px;color:#cfd4e8;letter-spacing:8px;margin-top:2px;}
-.rankup-sub{font-size:15px;color:#aeb4cc;margin:12px 0 0;}
-.rankup-btn{
-  margin-top:18px;background:linear-gradient(180deg,#ffd76e,#f5b93a);color:#7a5410;
-  border:none;border-radius:999px;padding:12px 34px;font-family:inherit;font-size:19px;
-  cursor:pointer;box-shadow:0 5px 0 #cf9722;
+.rankup-badge-img{width:89%;height:89%;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5));}
+.rankup-badge .rank-badge-emoji{font-size:clamp(60px,21vmin,110px);}
+.rankup-name{
+  font-size:clamp(21px,6.4vmin,34px);font-weight:bold;
+  margin-top:clamp(8px,2.6vmin,16px);text-shadow:0 2px 8px rgba(0,0,0,.6);
 }
+.rankup-en{
+  font-size:clamp(11px,2.8vmin,15px);color:#cfd4e8;
+  letter-spacing:.55em;padding-left:.55em;margin-top:2px;
+}
+.rankup-sub{font-size:clamp(12.5px,2.9vmin,15px);color:#aeb4cc;margin:clamp(7px,2vmin,12px) 0 0;line-height:1.5;}
+.rankup-btn{
+  margin-top:clamp(10px,3vmin,18px);background:linear-gradient(180deg,#ffd76e,#f5b93a);color:#7a5410;
+  border:none;border-radius:999px;
+  padding:clamp(8px,2.2vmin,12px) clamp(24px,6vmin,34px);
+  font-family:inherit;font-size:clamp(15px,3.5vmin,19px);font-weight:bold;
+  cursor:pointer;box-shadow:0 5px 0 #cf9722;transition:filter .15s;
+}
+.rankup-btn:hover{filter:brightness(1.06);}
 .rankup-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #cf9722;}
 
 /* ---------- แท็บสลับสัตว์ (เลี้ยงหลายตัว) ---------- */
@@ -1044,13 +1061,14 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 
 /* ฉากเปิดของสะสมใหญ่ (ใช้ .rankup-overlay/.rankup-rays ร่วมกับฉากอัปแรงค์) */
 .collect-reveal-frame{
-  width:220px;height:220px;margin:0 auto;display:flex;align-items:center;justify-content:center;
+  width:clamp(120px,40vmin,220px);height:clamp(120px,40vmin,220px);
+  margin:0 auto;display:flex;align-items:center;justify-content:center;
   border-radius:26px;background:radial-gradient(circle,rgba(255,255,255,.16) 0%,transparent 68%);
   box-shadow:0 0 60px 14px var(--rank-color,#f5a623);animation:badgePulse 1.8s ease-in-out infinite;
 }
-.collect-reveal-img{width:200px;height:200px;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5));}
-.collect-reveal-frame .cr-emoji{font-size:140px;}
-.collect-reveal-stars{font-size:22px;margin-top:8px;letter-spacing:4px;}
+.collect-reveal-img{width:91%;height:91%;object-fit:contain;filter:drop-shadow(0 8px 16px rgba(0,0,0,.5));}
+.collect-reveal-frame .cr-emoji{font-size:clamp(76px,26vmin,140px);}
+.collect-reveal-stars{font-size:clamp(15px,3.6vmin,22px);margin-top:clamp(4px,1.4vmin,8px);letter-spacing:4px;}
 
 /* ---------- โรงงานผลิตสินค้า (ผลิตด้วยแต้มคำศัพท์) + ออเดอร์พิเศษ ---------- */
 .craft-box{background:#fff;border:2px solid #eee;border-radius:16px;padding:10px 12px;margin-bottom:10px;text-align:left;}
