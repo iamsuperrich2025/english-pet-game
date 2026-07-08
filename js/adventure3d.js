@@ -1622,6 +1622,24 @@ function drawMinimap(){
     const p=peers[uid]; const [x,y]=rel(p.cur.x,p.cur.z);
     mapCtx.beginPath(); mapCtx.arc(x,y,3,0,7); mapCtx.fill();
   });
+  // ➡️ ลูกศรขอบเรดาร์: ชี้ไปตัวอักษรที่ยังต้องเก็บซึ่งอยู่ไกลเกินขอบวง (จัดกลุ่มตามมุมทุก 30° กันรก · เก็บตัวใกล้สุดต่อกลุ่ม)
+  const edgeR=S/2-6, off={};
+  letters.forEach(l=>{
+    if(!(need[l.ch]>0)) return;
+    const dx=l.spr.position.x-cx, dz=l.spr.position.z-cz, len=Math.hypot(dx,dz);
+    if(len*sc<=S/2-3) return;                 // อยู่ในเรดาร์แล้ว ไม่ต้องมีลูกศร
+    const b=Math.round(Math.atan2(dz,dx)/(Math.PI/6));
+    if(!off[b] || len<off[b].len) off[b]={len, nx:dx/len, nz:dz/len};
+  });
+  Object.keys(off).forEach(b=>{
+    const o=off[b];
+    mapCtx.save();
+    mapCtx.translate(o.nx*edgeR, o.nz*edgeR); mapCtx.rotate(Math.atan2(o.nz,o.nx));
+    mapCtx.fillStyle='#ffe14d'; mapCtx.strokeStyle='rgba(0,0,0,.55)'; mapCtx.lineWidth=.6;
+    mapCtx.beginPath(); mapCtx.moveTo(5,0); mapCtx.lineTo(-2.5,3.6); mapCtx.lineTo(-2.5,-3.6); mapCtx.closePath();
+    mapCtx.fill(); mapCtx.stroke();
+    mapCtx.restore();
+  });
   mapCtx.restore();
   // จุดผู้เล่น: อยู่กลางเรดาร์ ชี้ขึ้นเสมอ (โลกหมุนรอบตัวนี้)
   mapCtx.fillStyle='#fff';
