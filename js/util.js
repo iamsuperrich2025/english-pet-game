@@ -291,6 +291,27 @@ function speakWord(word){
     if(p && p.catch) p.catch(fail);
   }catch(e){ speakWordTTS(word); }
 }
+/* 🔠 เสียงชื่อตัวอักษร (เอ บี ซี — เก็บตัวอักษรในโลก 3D เด็กเล็กฝึกจำตัวอักษร)
+   ไฟล์ sound/letters/<a-z>.mp3 (เจนจากสคริปต์เดียวกัน) · แชร์ตัวเล่นกับ speakWord —
+   เก็บตัวสุดท้ายแล้วคำสำเร็จ เสียงอ่านทั้งคำ (delay 0.7 วิ) จะตัดเสียงตัวอักษรให้เอง */
+function speakLetter(ch){
+  ch = String(ch || '').toLowerCase();
+  if(!state.sound || !/^[a-z]$/.test(ch)) return;
+  try{
+    if(wordAudioNow){ wordAudioNow.pause(); }
+    const key = 'letter:' + ch;
+    if(wordAudio[key] === 'miss') return speakWordTTS(ch.toUpperCase() + '.');
+    const a = wordAudio[key] || new Audio('sound/letters/' + ch + '.mp3');
+    wordAudio[key] = a;
+    let failed = false;
+    const fail = ()=>{ if(failed) return; failed = true; wordAudio[key] = 'miss'; speakWordTTS(ch.toUpperCase() + '.'); };
+    a.onerror = fail;
+    wordAudioNow = a;
+    a.currentTime = 0;
+    const p = a.play();
+    if(p && p.catch) p.catch(fail);
+  }catch(e){}
+}
 let speakVoice = null;
 function pickSpeakVoice(){
   const vs = window.speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));

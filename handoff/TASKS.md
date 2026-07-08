@@ -28,6 +28,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 71 (8 ก.ค. · Fable): เสียงชื่อตัวอักษร 🔠 (เก็บในโลก 3D) + ผู้ทดสอบน้องโตเต็มวัย 🧪 — version→.47** (รอบ 70 = เข็มสายฟ้า session คู่ขนาน)
+- **เสียงตัวอักษร (ไอเดียต่อยอดรอบ 55 ผู้ใช้สั่งทำ):** `tools/gen_word_audio.py` เจนเพิ่ม `sound/letters/<a-z>.mp3` 26 ไฟล์ (316KB · text "A." จุดท้ายให้อ่านเป็นชื่อตัวอักษร) · `speakLetter(ch)` ใน util.js (แชร์ตัวเล่น `wordAudioNow` กับ speakWord — เก็บตัวสุดท้ายแล้วคำสำเร็จ เสียงคำ (delay .7 วิ) ตัดเสียงตัวอักษรเอง · fallback TTS) · เรียกที่จุดเก็บ 2 จุดใน adventure3d.js (เดินเก็บ tickPlayer + ลงจอดเก็บ tickHeli) — ครอบ 3 โลก
+- **ผู้ทดสอบ (ปิดงานค้าง "สุนัขโตเต็มวัยเข้าโลก 3D"):** `testerBoost` (auth.js) เพิ่มข้อ (2) สัตว์ทุกตัว level<3 → เซ็ต Lv.3 ตรงๆ พร้อม side-effect ช่วงลืมตา (ไม่ผ่าน addExp กัน overlay เด้งซ้อน) · hook เพิ่มหลังซื้อสัตว์ (ui.js) — ซื้อปุ๊บโตปั๊บ ตั๋ว 3D ปลดล็อกทันที ไม่ต้อง login ใหม่
+- **⚠️ commit แบบ partial stage (`git apply --cached`):** adventure3d.js/ui.js มีงานรอบ 70 (เข็มสายฟ้า) ของ session คู่ขนานปนอยู่ — stage เฉพาะ hunk ของรอบนี้ กันพาโค้ดอ้าง `THUNDER_TIER_UI` (game.js ยังไม่ commit) ขึ้น Pages แล้วพัง
+- ✅ ทดสอบ preview: เดินทับตัวอักษร g (ผ่าน `_t.step`) → เก็บเข้า inv + `letters/g.mp3` เล่นจริง · tester login มีไข่สุนัข Lv.1 → Lv.3 adult ตั๋วปลดล็อก เหรียญ 60,000 · ไม่มี console error
+
 **✅ รอบ 69 (8 ก.ค. · Fable): badge เลขป่วยบนปุ่มรักษา 💊② + เสียงหวอตอนเพิ่งล้มป่วย 🚨 (ต่อยอดรอบ 64 ผู้ใช้สั่ง) — version→.46**
 - **badge:** `#cure-badge` (class `.rail-badge` เดิม) บนปุ่ม `#btn-rail-cure` — โชว์จำนวนตัวที่ป่วย ซ่อนเมื่อ 0 · sync ใน block railCure ของ `renderDashboard` (ui.js)
 - **เสียงหวอ `sfx.siren` (util.js `sirenSynth`):** sine 620↔920Hz วี้-หว่อ 2 รอบ 1.5 วิ gain .055 (เบา ไม่ทำเด็กตกใจ) เคารพ state.sound

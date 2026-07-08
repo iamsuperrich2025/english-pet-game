@@ -3188,6 +3188,7 @@ function renderPetShop(){
               state.pets.push(newPet(key, name));
               state.active = state.pets.length - 1;
               saveState();
+              if(typeof testerBoost === 'function') testerBoost();  // 🧪 ผู้ทดสอบ: น้องโตเต็มวัยทันที ไม่ต้อง login ใหม่
               sfx.levelup();
               toast(conf.startKey === 'egg'
                 ? `ได้ ${name} มาแล้ว! เล่นเกมเพื่อฟักไข่กันเถอะ 🎉`

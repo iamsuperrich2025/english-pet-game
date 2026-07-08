@@ -25,6 +25,7 @@ RATE  = "-15%"                # ช้าลงนิดให้เด็กฟ
 ROOT  = Path(__file__).resolve().parent.parent
 VOCAB = ROOT / "js" / "data" / "vocab.js"
 OUT   = ROOT / "sound" / "words"
+OUT_LETTERS = ROOT / "sound" / "letters"   # ชื่อตัวอักษร A-Z (เก็บตัวอักษรในโลก 3D)
 CONCURRENCY = 6
 
 def word_key(word: str) -> str:
@@ -43,29 +44,33 @@ def extract_words() -> list[str]:
             out.append(w)
     return out
 
-async def gen_one(sem: asyncio.Semaphore, word: str) -> str:
-    path = OUT / f"{word_key(word)}.mp3"
+async def gen_one(sem: asyncio.Semaphore, path: Path, text: str, label: str) -> str:
     if path.exists() and path.stat().st_size > 0:
         return "skip"
     async with sem:
         for attempt in range(3):
             try:
                 tmp = path.with_suffix(".tmp")
-                await edge_tts.Communicate(word, VOICE, rate=RATE).save(str(tmp))
+                await edge_tts.Communicate(text, VOICE, rate=RATE).save(str(tmp))
                 tmp.replace(path)
                 return "ok"
             except Exception as e:
                 if attempt == 2:
-                    print(f"  FAIL {word}: {e}", file=sys.stderr)
+                    print(f"  FAIL {label}: {e}", file=sys.stderr)
                     return "fail"
                 await asyncio.sleep(1.5 * (attempt + 1))
 
 async def main():
     words = extract_words()
     OUT.mkdir(parents=True, exist_ok=True)
-    print(f"words in vocab.js: {len(words)} · voice {VOICE} rate {RATE}")
+    OUT_LETTERS.mkdir(parents=True, exist_ok=True)
     sem = asyncio.Semaphore(CONCURRENCY)
-    results = await asyncio.gather(*(gen_one(sem, w) for w in words))
+    jobs = [gen_one(sem, OUT / f"{word_key(w)}.mp3", w, w) for w in words]
+    # ชื่อตัวอักษร A-Z — จุด "." ท้ายให้ TTS อ่านเป็นชื่อตัวอักษร (เอ บี ซี) ไม่ใช่คำ
+    letters = [chr(c) for c in range(ord("a"), ord("z") + 1)]
+    jobs += [gen_one(sem, OUT_LETTERS / f"{ch}.mp3", f"{ch.upper()}.", f"letter {ch}") for ch in letters]
+    print(f"words in vocab.js: {len(words)} + letters {len(letters)} · voice {VOICE} rate {RATE}")
+    results = await asyncio.gather(*jobs)
     ok, skip, fail = (results.count(x) for x in ("ok", "skip", "fail"))
     print(f"done: generated {ok} · skipped(existing) {skip} · failed {fail}")
     if fail:

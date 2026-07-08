@@ -31,9 +31,12 @@ function isTeacher(){
     && TEACHER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
 
-/* ---------- บัญชีผู้ทดสอบเกม (รอบ 56) ----------
-   login แล้วเหรียญต่ำกว่าเพดานจะเติมให้อัตโนมัติ — พอซื้อตั๋วโลก 3D ครบ 3 โลก
-   (5,000+10,000+15,000) + สัตว์เลี้ยง/อาหาร/รักษา · เพิ่มอีเมลต่อท้าย array ได้เลย (ตัวพิมพ์เล็ก) */
+/* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------
+   สิทธิ์: (1) เหรียญต่ำกว่าเพดาน → เติมให้อัตโนมัติ — พอตั๋วโลก 3D ครบ 3 โลก
+   (5,000+10,000+15,000) + สัตว์เลี้ยง/อาหาร/รักษา
+   (2) สัตว์เลี้ยงทุกตัวโตเต็มวัย (Lv.3) ทันที — ตั๋ว 3D ปลดล็อกเมื่อมีตัวเต็มวัย
+   เรียกตอน login (authEnterGame) + หลังซื้อสัตว์ (ui.js) — ซื้อปุ๊บโตปั๊บไม่ต้อง login ใหม่
+   เพิ่มผู้ทดสอบ: เติมอีเมลต่อท้าย array (ตัวพิมพ์เล็ก) */
 const TESTER_EMAILS = ['sumpajitshami@gmail.com'];
 const TESTER_COINS  = 60000;
 function isTester(){
@@ -41,10 +44,25 @@ function isTester(){
     && TESTER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
 function testerBoost(){
-  if(!isTester() || state.coins >= TESTER_COINS) return;
-  addCoins(TESTER_COINS - state.coins);
+  if(!isTester()) return;
+  const got = [];
+  if(state.coins < TESTER_COINS){
+    addCoins(TESTER_COINS - state.coins);
+    got.push(`เติมเหรียญเป็น ${fmtNum(TESTER_COINS)} 🪙`);
+  }
+  (state.pets || []).forEach(p=>{
+    if(p.level >= 3) return;
+    if(p.level < 2){                    // side-effect ช่วงฟักไข่→ลืมตา (เหมือนใน addExp)
+      p.fedUpTo = currentSlotStart(Date.now());
+      p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
+      p.heatFrom = null; p.sick = false; p.sickCause = null;
+    }
+    p.level = 3; p.exp = 0;             // โตเต็มวัย — ไม่ผ่าน addExp กัน overlay ฉลองเด้งซ้อนตอน login
+    got.push(`${p.name || 'น้อง'} โตเต็มวัย 🌟`);
+  });
+  if(!got.length) return;
   saveState();
-  setTimeout(()=>toast(`🧪 บัญชีผู้ทดสอบเกม — เติมเหรียญให้เป็น ${fmtNum(TESTER_COINS)} 🪙 แล้ว เข้าทดสอบโลก 3D ได้เลย!`), 900);
+  setTimeout(()=>toast(`🧪 บัญชีผู้ทดสอบเกม — ${got.join(' · ')} เข้าทดสอบโลก 3D ได้เลย!`), 900);
 }
 
 /* ---------- หน้าจอ login: สลับสถานะ เชื่อมต่อ/พร้อม/ออฟไลน์ ---------- */

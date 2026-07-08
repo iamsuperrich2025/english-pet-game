@@ -1899,6 +1899,7 @@ function tickPlayer(dt,now){
       inv[ch]=(inv[ch]||0)+1;
       removeLetter(i);
       sfx.coin();
+      speakLetter(ch);                       // 🔠 อ่านชื่อตัวอักษร (เอ บี ซี)
       renderHudInv(); renderHudWords();
       tryCompleteWords();
     }
@@ -2001,6 +2002,7 @@ function tickHeli(dt,now){
         inv[ch]=(inv[ch]||0)+1;
         removeLetter(i);
         sfx.coin();
+        speakLetter(ch);                     // 🔠 อ่านชื่อตัวอักษร (เอ บี ซี)
         renderHudInv(); renderHudWords();
         tryCompleteWords();
       }
