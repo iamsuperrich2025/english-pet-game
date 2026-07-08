@@ -28,6 +28,11 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 66 (8 ก.ค. · Fable): หอบังคับ ATC เปลี่ยนเป็นอังกฤษล้วน 📻🇬🇧 (ผู้ใช้สั่ง) — version→.43**
+- **เสียงพูด+ข้อความจอวิทยุเป็น Aviation English ทั้งหมด** (เด็กได้ซึมซับอังกฤษเพิ่ม): clearance "Engine start complete. Tower clears you for takeoff." · ลม `wind from the {north...} at N kilometers per hour` · ทัศนวิสัย/ความสูง/เตือน traffic/ชมสตรีค · ลงจอด "Beautiful landing, captain." · ครูฝึก "One more word for your {bronze/silver/gold} pilot badge, captain."
+- **เสียง:** `en-US` rate .98 pitch .85 — ใช้ `pickSpeakVoice()` ตัวเดียวกับระบบอ่านคำศัพท์ (ได้เสียง Natural/Neural ดีสุดของเครื่อง · fallback หาเสียง en เอง) · traffic alert ใช้ "another helicopter" แทนชื่อเพื่อน (ชื่อไทยอ่านด้วยเสียงอังกฤษจะเพี้ยน)
+- ✅ ทดสอบ preview (spy `speechSynthesis.speak`): ทุก utterance เป็น en-US + ไม่มีอักษรไทย · clearance/env/near-badge ("silver pilot badge") ขึ้นจอเป็นอังกฤษครบ · ไม่มี console error
+
 **✅ รอบ 65 (8 ก.ค. · Fable): หอบังคับการบิน 📻 + เสียงครูฝึกลุ้นเข็ม (โลกเฮลิฯ) — version→.42**
 - **`ATC` (adventure3d.js):** วิทยุหอบังคับพูดไทยผ่าน Web Speech (`th-TH` rate 1.04 pitch .85 โทนเจ้าหน้าที่ · ไม่มีเสียงไทยในเครื่อง = เหลือข้อความ+เสียงวิทยุ ไม่ crash) + **ข้อความเขียวเรือง `#adv-radio`** เหนือแผงเกจ 6.5 วิ + **เสียง squelch "ซ่า-คลิก"** ก่อนพูด (`HeliSound.squelch` — noise bandpass 1.5kHz + คลิกปลาย สไตล์วิทยุการบิน)
 - **จังหวะพูด:** ① สตาร์ทเสร็จ → "หอบังคับอนุญาตขึ้นบินได้" (ครั้งเดียว/รอบ — flag `hAtcCleared`) ② สุ่มทุก 45–75 วิ: ลมทิศ+ความเร็ว (สุ่ม cosmetic) / ทัศนวิสัย / ความสูงจริง / เตือนเพื่อนร่วมน่านฟ้า (ชื่อจาก peers) / ชมสตรีค ③ ลงจอดนุ่ม → ชม 35% ④ **ครูฝึก: สตรีคเหลือ 1 คำถึงเข็มถัดไป → "อีกคำเดียวจะได้เข็มนักบิน{ทองแดง/เงิน/ทอง}แล้วกัปตัน"** (delay 3.2 วิ รอฉลอง+อ่านคำจบ)

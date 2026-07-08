@@ -74,18 +74,20 @@ let gaugeCtx=null;                // canvas หน้าปัดเข็มข
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
 
 /* ============================================================
-   📻 หอบังคับการบิน (รอบ 64) — วิทยุ ATC พูดไทย (Web Speech th-TH)
-   + ข้อความเขียวเรืองบนจอ + เสียง "ซ่า-คลิก" squelch ก่อนพูด
-   รายงานลม/ทัศนวิสัย/ความสูง/เพื่อนร่วมน่านฟ้า · อนุญาตขึ้นบิน ·
-   ชมลงจอดนุ่ม · ครูฝึกลุ้นตอนใกล้ได้เข็มนักบิน
+   📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
+   Aviation English — เสียงพูด+ข้อความบนจอเป็นอังกฤษ (เด็กได้ซึมซับเพิ่ม)
+   ใช้เสียงอังกฤษที่ดีที่สุดของเครื่อง (pickSpeakVoice เดียวกับระบบอ่านคำศัพท์)
+   + เสียง "ซ่า-คลิก" squelch ก่อนพูด · รายงานลม/ทัศนวิสัย/ความสูง/
+   เพื่อนร่วมน่านฟ้า · อนุญาตขึ้นบิน · ชมลงจอดนุ่ม · ครูฝึกลุ้นใกล้ได้เข็ม
    ============================================================ */
 const ATC={
   el:null, nextAt:0, _tm:0, voice:null, voiceTried:false,
-  WINDS:['เหนือ','ตะวันออกเฉียงเหนือ','ตะวันออก','ตะวันออกเฉียงใต้','ใต้','ตะวันตกเฉียงใต้','ตะวันตก','ตะวันตกเฉียงเหนือ'],
-  thVoice(){
+  WINDS:['north','northeast','east','southeast','south','southwest','west','northwest'],
+  enVoice(){
     if(this.voiceTried) return this.voice;
     try{
-      const find=()=>{ const vs=speechSynthesis.getVoices().filter(v=>/^th/i.test(v.lang)); if(vs.length) this.voice=vs[0]; };
+      if(typeof pickSpeakVoice==='function'){ this.voice=pickSpeakVoice(); this.voiceTried=true; return this.voice; }
+      const find=()=>{ const vs=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang)); if(vs.length) this.voice=vs[0]; };
       find();
       if(!this.voice) speechSynthesis.addEventListener('voiceschanged',find,{once:true});
       this.voiceTried=true;
@@ -100,31 +102,30 @@ const ATC={
       this._tm=setTimeout(()=>this.el.classList.remove('show'),6500);
     }
     HeliSound.squelch();
-    // เสียงพูดไทย (ถ้าเครื่องมีเสียงไทย · ไม่มีก็เหลือข้อความ+เสียงวิทยุ) — ไม่พูดทับของเก่า
+    // เสียงพูดอังกฤษ (เสียงดีสุดที่เครื่องมี) — ไม่พูดทับของเก่า
     if(state.sound && 'speechSynthesis' in window && !speechSynthesis.speaking){
       try{
         const u=new SpeechSynthesisUtterance(text);
-        u.lang='th-TH'; u.rate=1.04; u.pitch=.85; u.volume=.9;   // โทนต่ำนิดๆ แบบเจ้าหน้าที่หอ
-        const v=this.thVoice(); if(v) u.voice=v;
+        u.lang='en-US'; u.rate=.98; u.pitch=.85; u.volume=.9;   // โทนต่ำนิดๆ แบบเจ้าหน้าที่หอ
+        const v=this.enVoice(); if(v) u.voice=v;
         setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} },180);  // รอ squelch จบ
       }catch(e){}
     }
   },
   pick(){
-    const alt=Math.max(0,camera.position.y-HELI_SKID);
+    const alt=Math.round(Math.max(0,camera.position.y-HELI_SKID));
     const wd=this.WINDS[Math.floor(Math.random()*this.WINDS.length)];
     const ws=5+Math.floor(Math.random()*16);
     const msgs=[
-      `หอบังคับเรียกกัปตัน ลมพัดจากทิศ${wd} ความเร็ว ${ws} กิโลเมตรต่อชั่วโมง`,
-      'ทัศนวิสัยดีมาก ท้องฟ้าแจ่มใส บินสบายๆ ได้เลยกัปตัน',
-      `ระดับความสูงของคุณ ${Math.round(alt)} เมตร รักษาระดับสวยๆ แบบนี้ต่อไป`,
-      'ตัวอักษรรออยู่บนดาดฟ้าหลายตึก ลงจอดเบาๆ นะกัปตัน',
-      `รายงานสภาพอากาศ ลมทิศ${wd} กำลังอ่อน อุณหภูมิกำลังดี เหมาะกับการบิน`,
+      `Tower to captain: wind from the ${wd} at ${ws} kilometers per hour.`,
+      'Visibility is excellent. Clear skies. Enjoy your flight, captain.',
+      `Your altitude is ${alt} meters. Keep it steady, captain.`,
+      'Letters are waiting on the rooftops. Land gently, captain.',
+      `Weather report: light ${wd} wind. Perfect flying conditions.`,
     ];
-    if(alt>38) msgs.push('บินสูงมากแล้วกัปตัน มองเห็นทั้งเมืองเลย ระวังอย่าลดระดับเร็วเกินไป');
-    const pk=Object.keys(peers);
-    if(pk.length) msgs.push(`มีเฮลิคอปเตอร์ของ${peers[pk[0]].n} อยู่ในน่านฟ้าเดียวกัน รักษาระยะห่างด้วยกัปตัน`);
-    if((state.heliStreak||0)>2) msgs.push(`สถิติบินไม่ชน ${state.heliStreak} คำติดแล้ว ฝีมือเยี่ยมมากกัปตัน`);
+    if(alt>38) msgs.push('You are flying very high, captain. Watch your descent rate.');
+    if(Object.keys(peers).length) msgs.push('Traffic alert: another helicopter is in your airspace. Keep your distance, captain.');
+    if((state.heliStreak||0)>2) msgs.push(`Your no-crash streak is ${state.heliStreak} words. Excellent flying, captain!`);
     return msgs[Math.floor(Math.random()*msgs.length)];
   },
   tick(now){
@@ -602,7 +603,9 @@ function completeWord(i){
     state.heliStreak=(state.heliStreak||0)+1;
     // 🎧 ครูฝึกลุ้นตอนเหลืออีก 1 คำจะได้เข็มใหม่ (รอจังหวะฉลองคำ+อ่านคำจบก่อน)
     const near=PILOT_TIERS.find(t=>t[1]>state.pilotBadge && state.heliStreak===t[0]-1);
-    if(near) setTimeout(()=>{ if(running) ATC.say(`อีกคำเดียวจะได้เข็มนักบิน${near[3]}แล้วกัปตัน ใจเย็นๆ บินระวังๆ นะ`); },3200);
+    if(near) setTimeout(()=>{
+      if(running) ATC.say(`One more word for your ${['','bronze','silver','gold'][near[1]]} pilot badge, captain. Stay calm and fly safe!`);
+    },3200);
     const tier=PILOT_TIERS.filter(t=>state.heliStreak>=t[0]).pop();
     if(tier && tier[1]>state.pilotBadge){
       state.pilotBadge=tier[1];
@@ -1904,7 +1907,7 @@ function tickHeli(dt,now){
       ny=minY;
       if(!hLanded && Math.abs(hVel.y)<=7 && col<=.1){
         hLanded=true; hVel={x:0,y:0,z:0}; sfx.select(); HeliSound.thud(.4);
-        if(Math.random()<.35) ATC.say('ลงจอดนุ่มมาก สวยงามกัปตัน');   // 📻 หอชมเป็นครั้งคราว
+        if(Math.random()<.35) ATC.say('Beautiful landing, captain. Very smooth!');   // 📻 หอชมเป็นครั้งคราว
       }
       hVel.y=Math.max(0,hVel.y);
       if(hLanded){ hVel.x=0; hVel.z=0; }
@@ -1978,7 +1981,7 @@ function tickHeli(dt,now){
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
     hAtcCleared=true;
-    ATC.say('สตาร์ทเครื่องเรียบร้อย หอบังคับอนุญาตขึ้นบินได้ โชคดีกัปตัน');
+    ATC.say('Engine start complete. Tower clears you for takeoff. Good luck, captain!');
     ATC.nextAt=now+40000;
   }
   ATC.tick(now);
