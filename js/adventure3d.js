@@ -259,6 +259,23 @@ function emojiTexture(emo){
   const t=new THREE.CanvasTexture(cv);
   texCache[key]=t; return t;
 }
+/* 👻 ภาพผีไทย (อัปเกรดจาก emoji) — วาง img/ghosts/ghost_1.png … ghost_5.png (PNG โปร่งใส 1024×1024)
+   ภาพไหนโหลดได้ใช้แทน emoji · ผีที่ลอยอยู่แล้วสลับภาพตอน respawn (ทุก 20 วิ) · prompt ใน PROMPTS_GHOSTS.md */
+const GHOST_IMG_MAX=5;
+const ghostTex=[];
+let ghostProbed=false;
+function probeGhostImages(){
+  if(ghostProbed) return; ghostProbed=true;
+  for(let i=1;i<=GHOST_IMG_MAX;i++){
+    const img=new Image();                             // probe ด้วย Image (ห้าม fetch local — กติกาเดียวกับ probeImages)
+    img.onload=()=>{ const t=new THREE.Texture(img); t.needsUpdate=true; ghostTex.push(t); };
+    img.src='img/ghosts/ghost_'+i+'.png';
+  }
+}
+function ghostTexture(){
+  if(ghostTex.length) return ghostTex[Math.floor(Math.random()*ghostTex.length)];
+  return emojiTexture(M.ghostEmoji[Math.floor(Math.random()*M.ghostEmoji.length)]);
+}
 /* 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — พื้นหลังคนละสไตล์ต่อป้าย + เลขป้ายมุมซ้ายเสมอ
    ยังไม่มีลูกค้า = ข้อความ "ติดต่อโฆษณา โทร 064-357 6645"
    วางไฟล์ img/ads/ad_<เลข>.png (สัดส่วน 8:3 เช่น 1024×384) → ภาพลูกค้าขึ้นแทนทันที */
@@ -768,8 +785,7 @@ function tickShots(dt){
    โหมด haunt: ผีโผล่ 20 วิ → ย้ายที่ · สู้ไม่ได้ · โดนจับ = game over
    ============================================================ */
 function spawnGhost(first){
-  const emo=M.ghostEmoji[Math.floor(Math.random()*M.ghostEmoji.length)];
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture(emo),transparent:true,opacity:0}));
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:0}));
   spr.scale.set(2.6,2.6,1);
   scene.add(spr);
   const g={spr,born:0,hunting:false,tgt:{x:0,z:0},wanderAt:0,wailAt:0};
@@ -777,6 +793,8 @@ function spawnGhost(first){
   monsters.push(g);
 }
 function respawnGhost(g, minDist){
+  // ภาพผีเจนเสร็จโหลดช้ากว่าเกมเริ่ม → สลับเป็นภาพจริง (และสุ่มตัวใหม่) ทุกครั้งที่ย้ายที่
+  if(ghostTex.length){ g.spr.material.map=ghostTexture(); g.spr.material.needsUpdate=true; }
   const p=randPos(minDist!==undefined?minDist:0);
   g.spr.position.set(p.x,1.35,p.z);
   g.born=performance.now();
@@ -2381,7 +2399,7 @@ function start(md){
   words=pickWords(GUIDE_WORDS);
   words.forEach(spawnLettersForWord);
   for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
-  if(M.ghost){ for(let i=0;i<M.ghostMax;i++) spawnGhost(true); }
+  if(M.ghost){ probeGhostImages(); for(let i=0;i<M.ghostMax;i++) spawnGhost(true); }
   else if(!M.heli) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
