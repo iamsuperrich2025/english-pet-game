@@ -708,7 +708,9 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .quiz-word-card{
   background:var(--blue);border:3px solid #fff;border-radius:22px;padding:26px 10px;
   text-align:center;font-size:34px;color:#2f6ea5;box-shadow:var(--card-shadow);margin-bottom:14px;
+  cursor:pointer;user-select:none;
 }
+.quiz-speak{font-size:20px;opacity:.55;vertical-align:middle;}
 .quiz-choice{
   display:block;width:100%;margin-bottom:10px;padding:13px;border:3px solid #fff;border-radius:18px;
   background:var(--pink);color:#c04a82;font-family:inherit;font-size:19px;cursor:pointer;

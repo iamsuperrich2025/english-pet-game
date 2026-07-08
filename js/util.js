@@ -127,6 +127,36 @@ const sfx = {
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
 };
 
+/* ---------- 🔊 เสียงอ่านคำศัพท์อังกฤษ (Web Speech API — ไม่ต้องใช้ไฟล์เสียง) ----------
+   เลือกเสียงที่เป็นธรรมชาติสุดที่เครื่องมี: Edge "Natural" > Google > เสียง iOS/macOS */
+let speakVoice = null;
+function pickSpeakVoice(){
+  const vs = window.speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
+  if(!vs.length) return null;
+  const score = v=>{
+    const n = v.name.toLowerCase();
+    return (/(natural|neural)/.test(n)?8:0) + (n.includes('google')?6:0)
+         + (/(samantha|karen|daniel|moira|tessa|ava|allison)/.test(n)?5:0)
+         + (/^en-us$/i.test(v.lang)?3:0) + (n.includes('online')?1:0);
+  };
+  return vs.sort((a,b)=>score(b)-score(a))[0];
+}
+function speakWord(word){
+  if(!state.sound || !word || !('speechSynthesis' in window)) return;
+  try{
+    if(!speakVoice){
+      speakVoice = pickSpeakVoice();
+      // บางเบราว์เซอร์โหลดรายชื่อเสียงช้า — รอบแรกใช้เสียง default ไปก่อนแล้วอัปเกรดเอง
+      if(!speakVoice) window.speechSynthesis.onvoiceschanged = ()=>{ speakVoice = pickSpeakVoice(); };
+    }
+    window.speechSynthesis.cancel();               // ตัดคิวเสียงเก่า กันพูดซ้อนตอนแตะรัว
+    const u = new SpeechSynthesisUtterance(word);
+    u.lang = 'en-US'; u.rate = 0.9; u.pitch = 1;
+    if(speakVoice) u.voice = speakVoice;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+
 /* ---------- ป๊อปอัพตั้งชื่อ (ใช้ร่วม: ชื่อในเกมข้อ 0.2 + ชื่อสัตว์ข้อ 7) ----------
    opt = {emoji, title, desc(html), placeholder, value, min, max,
           okText, cancelText (ไม่ใส่ = บังคับตั้ง ปิดข้ามไม่ได้), onOk(name), onCancel}

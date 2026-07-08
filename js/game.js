@@ -81,6 +81,7 @@ function updateComboPill(){
 function pickCard(card, lang){
   if(game.checking || card.classList.contains('matched')) return;
   sfx.select();
+  if(lang === 'en') speakWord(card.dataset.word);   // 🔊 อ่านออกเสียงคำอังกฤษ
   const key = lang === 'en' ? 'selEn' : 'selTh';
   if(game[key]) game[key].classList.remove('selected');
   if(game[key] === card){ game[key] = null; return; }  // แตะซ้ำ = ยกเลิก
@@ -235,7 +236,9 @@ function renderQuizQuestion(){
   document.getElementById('quiz-progress').textContent =
     `${quiz.cat.emoji} หมวด${quiz.cat.name} · ข้อ ${quiz.idx+1} จาก ${quiz.questions.length} · คำนี้แปลว่าอะไร?`;
   document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
-  document.getElementById('quiz-word').textContent = q.en;
+  const wordEl = document.getElementById('quiz-word');
+  wordEl.innerHTML = `${escapeHTML(q.en)} <span class="quiz-speak">🔊</span>`;
+  wordEl.onclick = ()=>speakWord(q.en);             // 🔊 แตะการ์ดคำโจทย์ = อ่านออกเสียง
   const box = document.getElementById('quiz-choices');
   box.innerHTML = q.choices.map(c=>`<button class="quiz-choice">${c}</button>`).join('');
   box.querySelectorAll('.quiz-choice').forEach(btn=>{
