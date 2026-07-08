@@ -801,7 +801,7 @@ function spawnGhost(first){
 const GHOST_TALL_INDEX=2;   // ghost_2.png = เปรต ผอมสูงโย่งเท่าต้นตาล ต้องสเกลสูงพิเศษ
 function applyGhostSize(g){  // ปรับสเกล+ความสูงลอยตามว่าเป็นเปรตไหม (เรียกทุกครั้งที่สลับภาพ)
   const map=g.spr.material.map;
-  if(map && map.userData && map.userData.gi===GHOST_TALL_INDEX){ g.spr.scale.set(2.7,6.4,1); g.baseY=3.15; }  // เปรต สูงเด่นแต่ไกล เท้าอยู่พื้น
+  if(map && map.userData && map.userData.gi===GHOST_TALL_INDEX){ g.spr.scale.set(3.6,6.0,1); g.baseY=2.96; }  // เปรต สูงโย่งเท่าต้นตาลแต่ไม่ยืดเบี้ยว (สัดส่วนตัว H/W~3.8) เท้าอยู่พื้น
   else{ g.spr.scale.set(2.6,2.6,1); g.baseY=1.35; }
 }
 function respawnGhost(g, minDist){
