@@ -23,24 +23,48 @@ background scenery, only the dashboard panel, wide 21:9 aspect ratio
 > 💡 เคล็ดลับ: ถ้าภาพที่ได้มีวิวท้องฟ้าติดมา ให้ crop เหลือเฉพาะแผงหน้าปัดด้านล่างก่อนวางไฟล์
 > (ขอบบนของภาพควรเป็นขอบบนของแผงหน้าปัดพอดี — เกมวาง object-position:top ให้เอง)
 
-## 2) เสียงใบพัด `sound/heli_rotor.mp3` (วนลูปตลอดการบิน — เจนจาก Suno)
+## 2) เสียงเครื่องยนต์ 3 ไฟล์ (เจนจาก Suno — รอบ 53 ระบบเสียงสมจริง)
+
+> เกมมีระบบเสียงเครื่องยนต์ 3 จังหวะแล้ว: **สตาร์ทเครื่อง → ลูปบินปกติ → เร่งเครื่องเต็มกำลัง**
+> (เสียงสังเคราะห์ทำครบทั้ง 3 จังหวะอยู่แล้ว — ไฟล์คืออัปเกรดความสมจริง วางกี่ไฟล์ก็ได้ ไม่ต้องครบชุด)
+> เกมมีโมเดล RPM แรงเฉื่อย: ดึงขึ้น = เสียงค่อยๆ เร่ง · ปล่อย = ค่อยๆ เบา · มีไฟล์ high จะ crossfade ให้เอง
 
 **วิธีใช้:** Suno → Create → ติ๊ก **Instrumental** → วาง prompt → โหลด MP3 →
-เปลี่ยนชื่อเป็น `heli_rotor.mp3` → วางในโฟลเดอร์ `sound/` → commit+push
+เปลี่ยนชื่อไฟล์ให้ตรงเป๊ะ → วางในโฟลเดอร์ `sound/` → commit+push
 
-**Prompt (Style of Music):**
+### 2.1) `sound/heli_start.mp3` — สตาร์ทเครื่อง (เล่นครั้งเดียวตอนเข้าโลก · ระหว่างนี้ยังบินไม่ได้)
+```
+Bell 206 helicopter turbine engine startup sequence, igniter clicking,
+jet turbine spooling up from silence, engine whine slowly rising in pitch,
+rotor blades starting to turn slowly then accelerating to full steady speed,
+ends at full power, mechanical sound effect only, no music, no melody,
+no drums, no vocals
+```
+> ✂️ ตัดให้จบที่จังหวะ "ใบพัดหมุนเต็มรอบพอดี" ~5–9 วินาที (เกมรอไฟล์จบแล้วค่อยปลดล็อกบิน สูงสุด 9 วิ)
+
+### 2.2) `sound/heli_rotor.mp3` — ลูปบินปกติ/เดินเบา (วนตลอดการบิน)
 ```
 realistic helicopter rotor blades spinning, steady rhythmic blade chop,
 deep turbine engine hum, Bell 206 helicopter flight ambience, constant
 speed, mechanical sound effect only, no music, no melody, no drums,
 no vocals, seamless loop
 ```
-> ℹ️ เกมปรับ pitch/ความดังเองตามการบิน (จอดเบา-ไต่ระดับดังขึ้น) ทั้งกับเสียงสังเคราะห์และไฟล์จริง
-> ℹ️ Suno ถนัดเพลงมากกว่า sound effect — ถ้าได้ผลไม่สมจริง ลองเจนหลายรอบแล้วเลือกท่อนที่ "ตุบๆ" สม่ำเสมอสุด หรือใช้เสียงสังเคราะห์ในเกมต่อไปก็ได้ (ทำงานดีอยู่แล้ว)
+
+### 2.3) `sound/heli_rotor_high.mp3` — ลูปเร่งเครื่องเต็มกำลัง (ตอนไต่ระดับ/ดึง collective)
+```
+helicopter at full power climbing hard, fast aggressive rotor blade chop,
+high RPM screaming turbine whine, loud straining jet engine, intense
+Bell 206 helicopter maximum throttle, mechanical sound effect only,
+no music, no melody, no drums, no vocals, seamless loop
+```
+> ℹ️ มีครบทั้ง 2.2+2.3 → เกม crossfade สองลูปตาม RPM (เนียนสุด) · มีแค่ 2.2 → เกมปรับ pitch/ดังของลูปเดียวแทน
+> ℹ️ Suno ถนัดเพลงมากกว่า sound effect — เจนหลายรอบแล้วเลือกท่อนที่สม่ำเสมอสุด หรือใช้เสียงสังเคราะห์ต่อก็ได้
 
 ---
 
 ## เช็กลิสต์หลังวางไฟล์
 - [ ] `img/heli_cockpit.png` — เข้าโลกเฮลิฯ แล้วเห็นแผงหน้าปัดจริงแทนแผง CSS
-- [ ] `sound/heli_rotor.mp3` — ได้ยินเสียงใบพัดจริงแทนเสียงสังเคราะห์ทันทีที่ขึ้นบิน
-- ℹ️ ทั้งสองไฟล์ sw.js cache แบบ cache-first ให้อัตโนมัติ (โหลดครั้งเดียว)
+- [ ] `sound/heli_start.mp3` — เข้าโลกได้ยินซีเควนซ์สตาร์ทจริง (หน้าปัดขึ้น "กำลังสตาร์ทเครื่องยนต์...")
+- [ ] `sound/heli_rotor.mp3` — เสียงใบพัดจริงแทนเสียงสังเคราะห์ระหว่างบิน
+- [ ] `sound/heli_rotor_high.mp3` — ดึงขึ้นแรงๆ แล้วเสียงเปลี่ยนเป็นเร่งเครื่องเต็มกำลัง (crossfade)
+- ℹ️ ทุกไฟล์ sw.js cache แบบ cache-first ให้อัตโนมัติ (โหลดครั้งเดียว)

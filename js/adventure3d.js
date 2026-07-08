@@ -1669,7 +1669,7 @@ function tickHeli(dt,now){
   // ---- ฟิสิกส์ ----
   const sin=Math.sin(yaw),cos=Math.cos(yaw);
   if(hLanded){
-    if(col>.25){ hLanded=false; hVel.y=2.5; }  // ดึง collective ขึ้น = เทคออฟ
+    if(col>.25 && HeliSound.ready){ hLanded=false; hVel.y=2.5; }  // เทคออฟได้เมื่อสตาร์ทเครื่องเสร็จ
   }else{
     hVel.x+=(-sin*fw+cos*sd)*13*dt;
     hVel.z+=(-cos*fw-sin*sd)*13*dt;
@@ -1736,30 +1736,38 @@ function tickHeli(dt,now){
 
   // ---- หน้าปัด + เสียงใบพัด ----
   if(hudInstEl){
-    const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
-    hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม. ${hLanded?'· 🛬 จอดแล้ว':''}`;
+    if(!HeliSound.ready){
+      hudInstEl.textContent='🔑 กำลังสตาร์ทเครื่องยนต์... รอใบพัดหมุนเต็มรอบ';
+    }else{
+      const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
+      hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม. ${hLanded?'· 🛬 จอดแล้ว':''}`;
+    }
   }
-  HeliSound.update(col,hLanded);
+  HeliSound.update(col,hLanded,dt);
 }
 
 /* ---------- เสียงใบพัด Bell — สังเคราะห์ (ปลอดลิขสิทธิ์) · มีไฟล์ sound/heli_rotor.mp3 ใช้แทนอัตโนมัติ ---------- */
 const HeliSound={
-  ctx:null,master:null,lfo:null,nodes:[],file:null,probed:false,on:false,
+  ctx:null,master:null,lfo:null,whine:null,whineG:null,nodes:[],
+  files:{start:null,rotor:null,high:null},probed:false,on:false,
+  ready:false,rpm:0,_startTm:0,highOn:false,
   probe(){
     if(this.probed) return; this.probed=true;
-    const a=new Audio();
-    a.addEventListener('canplaythrough',()=>{ this.file=a; },{once:true});
-    a.preload='auto'; a.src='sound/heli_rotor.mp3';
+    // 3 ไฟล์อัปเกรดจาก Suno (PROMPTS_HELI.md): สตาร์ทเครื่อง / ลูปบินปกติ / ลูปเร่งเครื่องเต็มกำลัง
+    [['start','sound/heli_start.mp3'],['rotor','sound/heli_rotor.mp3'],['high','sound/heli_rotor_high.mp3']].forEach(([k,src])=>{
+      const a=new Audio();
+      a.addEventListener('canplaythrough',()=>{ this.files[k]=a; },{once:true});
+      a.preload='auto'; a.src=src;
+    });
   },
-  start(){
-    if(!state.sound || this.on) return;
-    this.probe(); this.on=true;
-    if(this.file){ this.file.loop=true; this.file.volume=.6; this.file.play().catch(()=>{}); return; }
+  ensureCtx(){
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!this.ctx){ this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.connect(this.ctx.destination); }
     if(this.ctx.state==='suspended') this.ctx.resume().catch(()=>{});
-    this.master.gain.value=.5;
-    // ตุบใบพัด: sawtooth ทุ้ม AM ด้วย LFO ความถี่ใบพัด ~13Hz + ลมหมุนจาก noise
+  },
+  buildNodes(){
+    this.ensureCtx();
+    // ตุบใบพัด: sawtooth ทุ้ม AM ด้วย LFO ความถี่ใบพัด + ลมหมุนจาก noise + หวีดเทอร์ไบน์
     const osc=this.ctx.createOscillator(); osc.type='sawtooth'; osc.frequency.value=27;
     const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=140;
     const og=this.ctx.createGain(); og.gain.value=.001;
@@ -1768,22 +1776,84 @@ const HeliSound={
     const noi=this.ctx.createBufferSource(); noi.buffer=buf; noi.loop=true;
     const bp=this.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=650; bp.Q.value=.8;
     const ng=this.ctx.createGain(); ng.gain.value=.001;
-    this.lfo=this.ctx.createOscillator(); this.lfo.type='square'; this.lfo.frequency.value=13;
+    this.lfo=this.ctx.createOscillator(); this.lfo.type='square'; this.lfo.frequency.value=2;
     const lg1=this.ctx.createGain(); lg1.gain.value=.14;
     const lg2=this.ctx.createGain(); lg2.gain.value=.05;
     this.lfo.connect(lg1); lg1.connect(og.gain);
     this.lfo.connect(lg2); lg2.connect(ng.gain);
+    // เสียงหวีดเทอร์ไบน์ (เร่ง-เบาตาม RPM)
+    this.whine=this.ctx.createOscillator(); this.whine.type='triangle'; this.whine.frequency.value=120;
+    this.whineG=this.ctx.createGain(); this.whineG.gain.value=.0001;
+    this.whine.connect(this.whineG); this.whineG.connect(this.master);
     osc.connect(lp); lp.connect(og); og.connect(this.master);
     noi.connect(bp); bp.connect(ng); ng.connect(this.master);
-    osc.start(); noi.start(); this.lfo.start();
-    this.nodes=[osc,noi,this.lfo];
+    osc.start(); noi.start(); this.lfo.start(); this.whine.start();
+    this.nodes=[osc,noi,this.lfo,this.whine];
   },
-  update(col,landed){
+  start(){                       // เข้าโลก → ซีเควนซ์สตาร์ทเครื่องก่อน (ready แล้วถึงบินได้)
+    if(this.on) return;
+    this.on=true; this.ready=false; this.rpm=0; this.highOn=false;
+    this.probe();
+    if(!state.sound){ this.ready=true; this.rpm=.55; return; }   // ปิดเสียง = ข้ามซีเควนซ์ บินได้เลย
+    if(this.files.start){
+      const a=this.files.start;
+      a.currentTime=0; a.volume=.85; a.play().catch(()=>{});
+      const durMs=Math.min(((a.duration||5)*1000)||5000, 9000);
+      this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; this.loopStart(); },durMs);
+      return;
+    }
+    // สังเคราะห์: เทอร์ไบน์สปูลขึ้น + ใบพัดค่อยๆ หมุนเร็วขึ้น ~3.5 วิ
+    this.buildNodes();
+    const t=this.ctx.currentTime;
+    this.master.gain.setValueAtTime(.1,t);
+    this.master.gain.linearRampToValueAtTime(.45,t+3.3);
+    this.whine.frequency.setValueAtTime(85,t);
+    this.whine.frequency.exponentialRampToValueAtTime(430,t+3.2);
+    this.whineG.gain.setValueAtTime(.0001,t);
+    this.whineG.gain.exponentialRampToValueAtTime(.055,t+1.6);
+    this.lfo.frequency.setValueAtTime(1.6,t);
+    this.lfo.frequency.linearRampToValueAtTime(10.5,t+3.4);
+    this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; },3600);
+  },
+  loopStart(){                   // จบไฟล์สตาร์ท → เข้าลูปบิน (ไฟล์ถ้ามี · ไม่มีใช้สังเคราะห์)
+    if(!state.sound) return;
+    if(this.files.rotor){
+      this.files.rotor.loop=true; this.files.rotor.volume=.55;
+      this.files.rotor.play().catch(()=>{});
+      if(this.files.high){
+        this.files.high.loop=true; this.files.high.volume=0;
+        this.files.high.play().catch(()=>{});
+      }
+    }else{
+      this.buildNodes();
+      this.master.gain.value=.4;
+      this.whine.frequency.value=380; this.whineG.gain.value=.05;
+      this.lfo.frequency.value=10.5;
+    }
+  },
+  update(col,landed,dt){
     if(!this.on) return;
-    if(!state.sound){ this.stop(); return; }
-    if(this.file){ this.file.playbackRate=landed?.85:1+col*.18; this.file.volume=landed?.4:.6+col*.2; return; }
-    if(this.lfo) this.lfo.frequency.value=(landed?11:13)+col*3;
-    if(this.master) this.master.gain.value=(landed?.3:.5)+Math.max(0,col)*.25;
+    if(!state.sound){ this.stop(); this.on=true; this.ready=true; return; }  // ปิดเสียงกลางคัน: เงียบแต่ยังบินได้
+    if(!this.ready) return;                       // ระหว่างสตาร์ทเครื่อง ไม่ปรับ RPM
+    // โมเดล RPM มีแรงเฉื่อย: เร่ง/เบาเครื่องค่อยเป็นค่อยไป (สมจริง ไม่กระโดด)
+    const target=landed?.55:(1+Math.max(0,col)*.45);
+    this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*.9);
+    const r=this.rpm;
+    if(this.files.rotor){
+      this.files.rotor.playbackRate=.8+r*.35;
+      if(this.files.high){
+        const hi=Math.max(0,Math.min(1,(r-.85)/.5));   // crossfade ลูปปกติ ↔ ลูปเร่งเครื่อง
+        this.files.high.playbackRate=.9+r*.2;
+        this.files.high.volume=.7*hi;
+        this.files.rotor.volume=.55*(1-hi*.75);
+      }else{
+        this.files.rotor.volume=.3+r*.3;
+      }
+      return;
+    }
+    if(this.lfo) this.lfo.frequency.value=6.5+r*6.5;
+    if(this.whine){ this.whine.frequency.value=230+r*360; this.whineG.gain.value=.02+r*.05; }
+    if(this.master) this.master.gain.value=.18+r*.32;
   },
   thud(vol){
     if(!state.sound || !this.ctx) { sfx.wrong(); return; }
@@ -1796,10 +1866,11 @@ const HeliSound={
     o.start(t); o.stop(t+.32);
   },
   stop(){
-    this.on=false;
-    if(this.file){ this.file.pause(); }
+    this.on=false; this.ready=false; this.rpm=0;
+    clearTimeout(this._startTm);
+    Object.values(this.files).forEach(f=>{ if(f) f.pause(); });
     this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
-    this.nodes=[]; this.lfo=null;
+    this.nodes=[]; this.lfo=null; this.whine=null; this.whineG=null;
     if(this.master) this.master.gain.value=0;
   },
 };
@@ -1922,7 +1993,8 @@ window.Adventure3D={
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
-    get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt}; },
+    get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
+                        rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound}; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
