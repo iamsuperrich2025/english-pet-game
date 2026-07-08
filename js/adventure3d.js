@@ -1595,23 +1595,37 @@ function drawMinimap(){
   mapCtx.clearRect(0,0,S,S);
   mapCtx.fillStyle=mode==='haunt'?'rgba(18,14,34,.78)':'rgba(20,40,20,.72)';
   mapCtx.beginPath(); mapCtx.arc(S/2,S/2,S/2,0,7); mapCtx.fill();
-  const wx=v=>S/2+v*sc, wz=v=>S/2+v*sc;
-  mapCtx.fillStyle='#ffd54f';
-  letters.forEach(l=>{ mapCtx.beginPath(); mapCtx.arc(wx(l.spr.position.x),wz(l.spr.position.z),2.2,0,7); mapCtx.fill(); });
+  // ตัวอักษรที่ "ยังต้องเก็บ" ของคำปัจจุบัน (words[0]) — หักที่มีในมือแล้ว → ไฮไลต์คนละสี
+  const need={};
+  if(words[0]) words[0].en.split('').forEach(c=>need[c]=(need[c]||0)+1);
+  for(const c in need) need[c]=Math.max(0,need[c]-(inv[c]||0));
+  const cx=camera.position.x, cz=camera.position.z;
+  mapCtx.save();
+  mapCtx.beginPath(); mapCtx.arc(S/2,S/2,S/2,0,7); mapCtx.clip();   // กันจุดล้นออกนอกวงเรดาร์
+  mapCtx.translate(S/2,S/2);
+  mapCtx.rotate(yaw);                          // 🧭 heading-up: ทิศที่หันอยู่ = ขึ้นบนเสมอ · โลกหมุนรอบผู้เล่นตรงกลาง
+  const rel=(ex,ez)=>[(ex-cx)*sc,(ez-cz)*sc];  // ตำแหน่งเทียบผู้เล่น (ctx หมุนให้เอง)
+  letters.forEach(l=>{
+    const [x,y]=rel(l.spr.position.x,l.spr.position.z);
+    const want=need[l.ch]>0;                   // ตัวที่ต้องเก็บของคำนี้
+    mapCtx.fillStyle=want?'#ffe14d':'rgba(150,162,175,.5)';
+    mapCtx.beginPath(); mapCtx.arc(x,y,want?3:1.7,0,7); mapCtx.fill();
+    if(want){ mapCtx.strokeStyle='rgba(255,255,255,.9)'; mapCtx.lineWidth=.8; mapCtx.stroke(); }
+  });
   monsters.forEach(m=>{
+    const [x,y]=rel(m.spr.position.x,m.spr.position.z);
     mapCtx.fillStyle=(mode==='haunt' && !m.hunting)?'#b0bfff':'#ff5252';
-    mapCtx.beginPath(); mapCtx.arc(wx(m.spr.position.x),wz(m.spr.position.z),3,0,7); mapCtx.fill();
+    mapCtx.beginPath(); mapCtx.arc(x,y,3,0,7); mapCtx.fill();
   });
   mapCtx.fillStyle='#69f0ae';
   Object.keys(peers).forEach(uid=>{
-    const p=peers[uid];
-    mapCtx.beginPath(); mapCtx.arc(wx(p.cur.x),wz(p.cur.z),3,0,7); mapCtx.fill();
+    const p=peers[uid]; const [x,y]=rel(p.cur.x,p.cur.z);
+    mapCtx.beginPath(); mapCtx.arc(x,y,3,0,7); mapCtx.fill();
   });
-  const px=wx(camera.position.x), pz=wz(camera.position.z);
-  mapCtx.save(); mapCtx.translate(px,pz); mapCtx.rotate(-yaw);
-  mapCtx.fillStyle='#fff';
-  mapCtx.beginPath(); mapCtx.moveTo(0,-6); mapCtx.lineTo(4.5,5); mapCtx.lineTo(-4.5,5); mapCtx.closePath(); mapCtx.fill();
   mapCtx.restore();
+  // จุดผู้เล่น: อยู่กลางเรดาร์ ชี้ขึ้นเสมอ (โลกหมุนรอบตัวนี้)
+  mapCtx.fillStyle='#fff';
+  mapCtx.beginPath(); mapCtx.moveTo(S/2,S/2-6); mapCtx.lineTo(S/2+4.5,S/2+5); mapCtx.lineTo(S/2-4.5,S/2+5); mapCtx.closePath(); mapCtx.fill();
 }
 
 /* ============================================================
