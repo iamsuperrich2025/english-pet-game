@@ -28,6 +28,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 74 (8 ก.ค. · Opus): เปรตตัวสูงพิเศษ + prompt ผีสไตล์ Ju-on 👻 (ผู้ใช้สั่ง หลังทำภาพเสร็จ) — version .50** (commit 74b312b)
+- **เปรตตัวสูง (adventure3d.js):** `ghost_2.png`=เปรต · `probeGhostImages` เก็บ `t.userData={gi:i}` (เลขไฟล์) ไว้กับ texture · `applyGhostSize(g)` ตรวจ `map.userData.gi===GHOST_TALL_INDEX(2)` → `scale.set(2.7,6.4,1)`+`baseY=3.15` (สูง ~2.5 เท่า เท้าอยู่พื้น) · ตัวอื่น `2.6×2.6`+`baseY=1.35` · เรียกใน `respawnGhost` ทุกครั้งที่สลับภาพ · bobbing บรรทัด ~849 ใช้ `g.baseY` ต่อตัว (เดิม 1.35 คงที่ เปรตจะจมพื้น) · `caught()` วัดระยะแนวราบ x,z ไม่กระทบ
+- **`PROMPTS_GHOSTS.md` เขียนใหม่ทั้ง 5:** เดิม 1-4 ออกมาการ์ตูน (เพราะสั่ง "stylized") · ผู้ใช้บอกภาพ 5 (ผีผ้าขาว) หลอนพอ อยากได้สไตล์นั้น+หนัง Ju-on → ทุกตัวยึด **ตาโบ๋ดำ+ผิวซีดเทา+โทน Ju-on หม่นเงาจัด photorealistic** · ยังผีไทย+no blood/gore · มีเคล็ดลับปรับจูน (หลอนขึ้น/ลด/เลี่ยง safety filter/ลุคเข้าชุด)
+- ✅ ทดสอบ preview: unregister sw+ล้าง cache+reload (โค้ดสด) → start haunt → บังคับ respawn จนเจอ gi=2 → **เปรต scaleY 6.4/baseY 3.15 · ตัวปกติ gi=3 scaleY 2.6/1.35** · ไม่มี console error
+- ℹ️ **เทสสเกลผีต้องบังคับ respawn** (ตั้ง `g.born=performance.now()-999999`) เพราะ spawn แรก ghostTex ยังว่าง ผีได้ emoji ก่อน เปลี่ยนภาพจริงตอน respawn(20วิ)
+
 **✅ รอบ 73 (8 ก.ค. · Opus): jump scare ภาพผีไทยเต็มจอ 👻 (ต่อยอดรอบ 72 · ผู้ใช้สั่ง "เอาไอเดียต่อยอดทั้งหมด") — version→.50** (commit 18630b1)
 - **`caught()` (adventure3d.js):** โดนผีจับ → `ghostScareSrc()` สุ่ม src ภาพผีจาก `ghostTex` (ที่ probe ไว้รอบ 72) → ถ้ามี set `<img id="adv-scare-img">`.src + `scareEl.classList.add('has-img')` → CSS ซ่อน `span` (emoji) แสดง `img` เต็มจอ (object-fit contain, max 100vw/vh, drop-shadow แดง) · ไม่มีภาพ/โหลดไม่ทัน → `remove('has-img')` → emoji 👻 เดิม · animation `advScare` (zoom-punch) + `adv-shake` เดิมใช้ต่อ · haptic `[400,90,220]` แรงขึ้น
 - **`PROMPTS_GHOSTS.md`:** ระบุว่าภาพชุด ghost_1..5 ใช้กับ jump scare ด้วย — ไม่ต้องเจนภาพเพิ่ม
