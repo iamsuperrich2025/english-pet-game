@@ -1,49 +1,60 @@
-# 👻 PROMPTS_GHOSTS.md — ภาพผีไทยโลกผีสิง (แทน emoji เดิมที่น่ารักเกินไป)
+# 👻 PROMPTS_GHOSTS.md — ภาพผีไทยโลกผีสิง (สไตล์หนัง Ju-on · หลอนจริง)
 
-ผีในโลกผีสิงกลางคืน 👻 เดิมเป็น emoji (👻💀🧟) — เจนภาพชุดนี้แล้วผีไทยหลอนขึ้นทันที
+ผีในโลกผีสิงกลางคืน 👻 เดิมเป็น emoji (👻💀🧟) — เจนภาพชุดนี้แล้วผีหลอนขึ้นทันที
 รวม **5 ภาพ** — คัดลอกไปวางใน Copilot ได้ทันที
+
+> **🔧 ปรับใหม่ (ผู้ใช้ feedback):** เวอร์ชันแรก prompt 1–4 ออกมาการ์ตูนไม่น่ากลัว (เพราะสั่ง "stylized")
+> เวอร์ชันนี้ยึด**สไตล์ภาพที่ 5 ที่หลอนสุด** (ตาโบ๋ดำสนิท + ผิวซีดเทา + มินิมอล) + ภาษาภาพแบบหนัง **Ju-on: The Grudge**
+> (โฟโต้เรียล · โทนสีหม่นเย็น · เงาจัด contrast สูง · สีหน้าตายเปล่า) — ยังเป็นผีไทย แต่ถ่ายทอดแบบหนังสยองเอเชีย
 
 ## 📌 กติกาสำคัญ
 
 1. **ชื่อไฟล์ต้องตรงเป๊ะ** ตามหัวข้อ (ตัวพิมพ์เล็ก นามสกุล `.png`)
-2. **PNG พื้นหลังโปร่งใส** จัตุรัส 1024×1024 — Copilot ทำพื้นโปร่งไม่ได้ให้สั่ง `plain solid dark background` (ผีตัวซีดเรืองแสง ตัดกับพื้นมืด ลบพื้นง่าย) แล้วลบพื้นด้วย remove.bg
+2. **PNG พื้นหลังโปร่งใส** จัตุรัส 1024×1024 — Copilot ทำพื้นโปร่งไม่ได้ให้สั่ง `plain solid black background` (ผีตัวซีดตัดกับพื้นดำ ลบพื้นง่าย) แล้วลบพื้นด้วย remove.bg
 3. วางในโฟลเดอร์ **`img/ghosts/`** (โฟลเดอร์ใหม่ สร้างเองได้เลย)
 4. ✅ **ผูกเข้าเกมแล้ว** — เข้าโลกผีเกมตรวจหา `ghost_1.png` … `ghost_5.png` เอง · มีกี่ภาพใช้เท่านั้น (ไม่ครบ 5 ก็ได้ เกมสุ่มจากที่มี) · ภาพไหนไม่มีใช้ emoji เดิม · ผีสลับเป็นภาพใหม่ทุกครั้งที่ย้ายที่ (ทุก 20 วิ) · **ภาพชุดนี้ใช้กับ jump scare ตอนโดนผีจับด้วย** (สุ่มตัวนึงพุ่งเต็มจอแทน emoji 👻 เดิม — ไม่ต้องเจนภาพเพิ่ม)
-5. **โทนภาพ:** น่ากลัวแบบผีไทย แต่**ห้ามเลือด/ความรุนแรงชัดๆ** (คนเล่นเป็นเด็กประถม) — ทุก prompt ใส่ `no blood, no gore` กำกับแล้ว
-6. ฉากในเกมมืดสนิท → ผีต้อง**เรืองแสงในตัวเอง** (ทุก prompt สั่ง glow ไว้แล้ว) ไม่งั้นกลืนหายไปกับความมืด
+5. **จุดที่ทำให้หลอน (ยึด 3 อย่างนี้ทุกตัว):** 👁️ **ตาโบ๋ดำสนิท** (deep pitch-black hollow eyes) · 🧟 **ผิวซีดเทาเหมือนศพ** (deathly pale grey skin) · 🎬 **โทนหม่นเงาจัดแบบหนัง Ju-on** (desaturated cold grade) — นี่คือ 3 คำที่ทำให้ต่างจากการ์ตูน
+6. **หลอนแต่ต้องคุมได้ (คนเล่นเป็นเด็กประถม):** ทุก prompt ใส่ `no blood, no gore, creepy but not graphic` แล้ว · ฉากในเกมมืดสนิท → ผีต้อง**มีแสงขอบจางๆ (rim light) / ผิวซีดจับแสงจันทร์** ให้เห็นตัดกับความมืด (สั่งไว้ทุก prompt) ไม่งั้นกลืนหาย
 
 ---
 
 ## ผีตัวที่ 1 · กระสือ — `ghost_1.png`
 
 ```text
-A terrifying Thai Krasue ghost from Thai folklore: a floating pale woman's head with long messy black hair, glowing red eyes and a wide eerie grin, with swirling glowing red-orange spectral wisps and ghostly light trailing below her neck instead of a body, hovering in the air. Scary Thai horror style but no blood, no gore, suitable for a children's horror game. Eerie green and red glow, semi-transparent ghostly aura, dark fantasy game art, slightly stylized not photorealistic, facing the viewer, centered composition, plain solid dark background, square 1:1 image, no text, no watermark.
+A floating severed woman's head — the Thai Krasue ghost from Thai folklore — with long stringy wet black hair hanging down over her deathly pale grey face, and dim glowing red-orange spectral wisps and ghostly light trailing below her neck instead of a body, hovering in the darkness. Photorealistic cinematic horror in the style of the Japanese horror film Ju-on: The Grudge — deathly pale greyish corpse-like skin, deep sunken pitch-black hollow eyes, a cold desaturated color grade, dim eerie moonlight with deep shadows and high contrast, a blank dead unsettling stare, and a subtle pale rim light so the figure stands out against pure darkness. Scary Asian horror movie still, NOT cute, NOT cartoon, but no blood and no gore, creepy yet not graphic (for a children's horror game). Facing the viewer, centered composition, plain solid black background, square 1:1 image, no text, no watermark.
 ```
 
 ## ผีตัวที่ 2 · เปรต — `ghost_2.png`
 
 ```text
-A terrifying Thai Pret (Preta) hungry ghost from Thai folklore: an extremely tall and impossibly skinny humanoid ghost with grey-pale skin stretched over bones, a very long neck, a tiny round mouth open as if wailing, hollow glowing white eyes, long bony arms reaching forward, wearing tattered dark cloth. Scary Thai horror style but no blood, no gore, suitable for a children's horror game. Faint sickly green glow around the body, lower body fading into ghostly mist, dark fantasy game art, slightly stylized not photorealistic, full body facing the viewer, centered composition, plain solid dark background, square 1:1 image, no text, no watermark.
+An extremely tall and gaunt Thai Pret (Preta) hungry ghost from Thai folklore: an impossibly thin skeletal humanoid figure with ashen grey corpse skin stretched tight over its bones, a very long thin neck, a tiny round mouth frozen open in a silent wail, long bony arms reaching slowly toward the viewer, wearing tattered dark rags, its lower body fading into cold ghostly mist. Photorealistic cinematic horror in the style of the Japanese horror film Ju-on: The Grudge — deathly pale greyish corpse-like skin, deep sunken pitch-black hollow eyes, a cold desaturated color grade, dim eerie moonlight with deep shadows and high contrast, a blank dead unsettling expression, and a subtle pale rim light so the figure stands out against pure darkness. Scary Asian horror movie still, NOT cute, NOT cartoon, but no blood and no gore, creepy yet not graphic (for a children's horror game). Full body facing the viewer, centered composition, plain solid black background, square 1:1 image, no text, no watermark.
 ```
 
 ## ผีตัวที่ 3 · ผีสาวชุดไทย (แม่นาค) — `ghost_3.png`
 
 ```text
-A terrifying Thai female ghost in traditional Thai dress: a pale ghostly woman wearing an old-fashioned Thai sabai wrap dress, very long straight black hair partly covering her face, one glowing white eye peeking through the hair, unnaturally long arms hanging down, floating with her feet fading into mist. Scary Thai horror style but no blood, no gore, suitable for a children's horror game. Cold blue-white glow around her body, semi-transparent ghostly aura, dark fantasy game art, slightly stylized not photorealistic, full body facing the viewer, centered composition, plain solid dark background, square 1:1 image, no text, no watermark.
+A pale Thai female ghost in an old traditional Thai dress from Thai folklore: a corpse-pale woman wearing a faded antique Thai sabai wrap dress, with long straight wet black hair hanging down over her face and only one deep dark hollow eye peeking through the strands, unnaturally long thin arms hanging limply at her sides, floating just above the ground with her feet fading into cold mist. Photorealistic cinematic horror in the style of the Japanese horror film Ju-on: The Grudge — deathly pale greyish corpse-like skin, deep sunken pitch-black hollow eyes, a cold desaturated color grade, dim eerie moonlight with deep shadows and high contrast, a blank dead unsettling stare, and a subtle pale rim light so the figure stands out against pure darkness. Scary Asian horror movie still, NOT cute, NOT cartoon, but no blood and no gore, creepy yet not graphic (for a children's horror game). Full body facing the viewer, centered composition, plain solid black background, square 1:1 image, no text, no watermark.
 ```
 
 ## ผีตัวที่ 4 · ผีปอบ — `ghost_4.png`
 
 ```text
-A terrifying Thai Pob ghost from Thai folklore: a hunched old woman ghost with wild grey hair, wrinkled grey-green skin, glowing green eyes, a wide creepy hungry grin, long dark claw-like fingernails, wearing a ragged old Thai sarong, crouching as if about to chase. Scary Thai horror style but no blood, no gore, suitable for a children's horror game. Eerie green glow around the body, ghostly mist at the feet, dark fantasy game art, slightly stylized not photorealistic, full body facing the viewer, centered composition, plain solid dark background, square 1:1 image, no text, no watermark.
+A crouching Thai Pob ghost from Thai folklore: a gaunt old woman ghost with wild stringy grey-black hair falling over her face, wrinkled ashen grey corpse skin, long dark claw-like fingernails, wearing a ragged old Thai sarong, crawling low toward the viewer on all fours with a dead hungry stare, her lower body dissolving into cold ghostly mist. Photorealistic cinematic horror in the style of the Japanese horror film Ju-on: The Grudge — deathly pale greyish corpse-like skin, deep sunken pitch-black hollow eyes, a cold desaturated color grade, dim eerie moonlight with deep shadows and high contrast, a blank dead unsettling expression, and a subtle pale rim light so the figure stands out against pure darkness. Scary Asian horror movie still, NOT cute, NOT cartoon, but no blood and no gore, creepy yet not graphic (for a children's horror game). Full body facing the viewer, centered composition, plain solid black background, square 1:1 image, no text, no watermark.
 ```
 
 ## ผีตัวที่ 5 · ผีผ้าขาว (ตาโบ๋) — `ghost_5.png`
 
+> ⭐ ตัวนี้ผู้ใช้บอกว่าเวอร์ชันเดิมพอรับได้แล้ว — เวอร์ชันนี้แค่เพิ่มโทนหนัง Ju-on ให้เข้าชุด
+
 ```text
-A terrifying Thai shrouded ghost: a floating figure completely wrapped in an old white funeral cloth in traditional Thai style, only the pale face showing with deep hollow pitch-black empty eye sockets and a slightly open dark mouth, arms wrapped inside the shroud, hovering above the ground with the cloth fading into mist at the bottom. Scary Thai horror style but no blood, no gore, suitable for a children's horror game. Faint cold white-green glow, semi-transparent ghostly aura, dark fantasy game art, slightly stylized not photorealistic, full body facing the viewer, centered composition, plain solid dark background, square 1:1 image, no text, no watermark.
+A figure completely wrapped in an old white Thai funeral shroud, hovering in the darkness: only the deathly pale grey face shows, with deep hollow pitch-black empty eye sockets and a slightly open dark mouth, arms bound inside the shroud, the lower cloth fading into cold ghostly mist. Photorealistic cinematic horror in the style of the Japanese horror film Ju-on: The Grudge — deathly pale greyish corpse-like skin, deep sunken pitch-black hollow eyes, a cold desaturated color grade, dim eerie moonlight with deep shadows and high contrast, a blank dead unsettling expression, and a subtle pale rim light so the figure stands out against pure darkness. Scary Asian horror movie still, NOT cute, NOT cartoon, but no blood and no gore, creepy yet not graphic (for a children's horror game). Full body facing the viewer, centered composition, plain solid black background, square 1:1 image, no text, no watermark.
 ```
 
 ---
 
-💡 **เคล็ดลับ:** ถ้าเจนแล้วยังน่ารักไป เติมท้าย prompt ว่า `make it much scarier and more unsettling, horror movie poster mood` · ถ้าน่ากลัวเกินไปสำหรับเด็ก ตัดคำว่า `terrifying` เหลือ `spooky`
+## 💡 เคล็ดลับปรับจูน
+
+- **ยังไม่หลอนพอ?** เติมท้าย prompt: `make it much more terrifying and unsettling, horror film key art, deep dread` · หรือย้ำ `Ju-on Kayako style, wet black hair over a pale corpse face, empty black eyes`
+- **หลอนเกินไปสำหรับเด็ก?** ลดคำ `terrifying/corpse` เหลือ `spooky/pale` · หรือเพิ่ม `slightly softened, spooky but friendly` (แต่ระวังกลับไปการ์ตูน)
+- **AI ไม่ยอมเจน (ติดเซฟตี้)?** ตัดคำชื่อหนัง `Ju-on: The Grudge` ออก เหลือแค่บรรยายลุค: `desaturated Asian horror film look, pale corpse skin, black hollow eyes` — ได้ผลใกล้เคียงกันโดยไม่อ้างชื่อหนัง
+- **สำคัญ:** ถ้าเจนต่อเนื่องในแชทเดียว สั่ง *"same lighting and color grade as the previous image"* ให้ผีทั้ง 5 ตัวลุคเข้าชุดกัน
