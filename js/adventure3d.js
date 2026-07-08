@@ -64,7 +64,7 @@ let worlds={};                    // ฉาก static ต่อโหมด {sce
 let scene=null, trees=[], buildings=[];
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
-let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hudInstEl=null, cockpitEl=null;
+let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
 let yaw=0, pitch=0;
 let hp=100, sessionCoins=0, sessionWords=0;
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
@@ -1347,6 +1347,13 @@ function buildDom(){
   #adv-inst{top:34px;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:13px;
     text-shadow:0 1px 3px #000;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 12px;display:none;white-space:nowrap}
   .adv-heli #adv-inst{display:block}
+  #adv-warn{top:60px;left:50%;transform:translateX(-50%);display:none;color:#fff;font-weight:900;font-size:15px;
+    background:rgba(198,40,40,.92);border:2px solid #fff;border-radius:12px;padding:3px 14px;white-space:nowrap;
+    text-shadow:0 1px 3px #000}
+  #adv-warn.warn1{animation:advWarnBlink 1s infinite}
+  #adv-warn.warn2{animation:advWarnBlink .5s infinite}
+  #adv-warn.warn3{animation:advWarnBlink .22s infinite;background:rgba(255,23,23,.98);font-size:17px}
+  @keyframes advWarnBlink{0%,100%{opacity:1}50%{opacity:.35}}
   #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
   #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
@@ -1418,6 +1425,7 @@ function buildDom(){
     <button class="adv-hud" id="adv-exit">🚪 ออก</button>
     <div class="adv-hud" id="adv-hunt"></div>
     <div class="adv-hud" id="adv-inst"></div>
+    <div class="adv-hud" id="adv-warn"></div>
     <div id="adv-cockpit"></div>
     <div class="adv-hud" id="adv-inv"></div>
     <div class="adv-hud" id="adv-cross"></div>
@@ -1460,6 +1468,7 @@ function buildDom(){
   chatInputEl=overlayEl.querySelector('#adv-chat-input');
   selfMsgEl=overlayEl.querySelector('#adv-selfmsg');
   hudInstEl=overlayEl.querySelector('#adv-inst');
+  hudWarnEl=overlayEl.querySelector('#adv-warn');
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
   // cockpit: ใช้ภาพ img/heli_cockpit.png ถ้าเจนแล้ว (PROMPTS_HELI.md) · ไม่มี → แผง CSS จำลอง
   const cpImg=new Image();
@@ -1735,6 +1744,33 @@ function tickHeli(dt,now){
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
 
+  // ---- ระบบเตือนภัยใกล้ชน (proximity warning — บี๊บถี่ขึ้นตามระยะ + ไฟแดงกะพริบ) ----
+  hWarnLvl=0; let warnMsg='';
+  if(!hLanded && HeliSound.ready){
+    let wallDist=99;
+    for(const b of buildings){
+      if(ny>b.h+.8) continue;                          // อยู่เหนือยอดตึกนี้แล้ว ไม่มีทางชน
+      const dx=Math.max(0,Math.abs(nx-b.x)-b.w/2);
+      const dz=Math.max(0,Math.abs(nz-b.z)-b.d/2);
+      const dw=Math.hypot(dx,dz);
+      if(dw<wallDist) wallDist=dw;
+    }
+    if(wallDist<3.5){ hWarnLvl=3; warnMsg='🚨 ใกล้ตึกมาก! หลบเดี๋ยวนี้!'; }
+    else if(wallDist<6){ hWarnLvl=2; warnMsg='⚠️ ใกล้ตึก! ระวังชน'; }
+    else if(wallDist<10){ hWarnLvl=1; warnMsg='⚠️ มีตึกใกล้ๆ'; }
+    if(hVel.y<-6 && ny-floor<9){                       // ดิ่งเร็วใกล้พื้น/ดาดฟ้า → PULL UP
+      if(hWarnLvl<2){ hWarnLvl=2; warnMsg='⬇️ ลดระดับเร็วเกิน! ดึงขึ้น!'; }
+    }
+  }
+  if(hudWarnEl){
+    if(hWarnLvl>0){
+      hudWarnEl.style.display='block';
+      hudWarnEl.textContent=warnMsg;
+      hudWarnEl.className='adv-hud warn'+hWarnLvl;
+    }else hudWarnEl.style.display='none';
+  }
+  HeliSound.proximity(hWarnLvl);
+
   // ---- หน้าปัด + เสียงใบพัด ----
   if(hudInstEl){
     if(!HeliSound.ready){
@@ -1856,6 +1892,28 @@ const HeliSound={
     if(this.whine){ this.whine.frequency.value=230+r*360; this.whineG.gain.value=.02+r*.05; }
     if(this.master) this.master.gain.value=.18+r*.32;
   },
+  /* เสียงเตือนใกล้ชน: บี๊บถี่ขึ้นตามระดับ (1=ห่าง 2=ใกล้ 3=ใกล้มาก) — สไตล์ proximity warning */
+  _proxLvl:0,_proxTm:0,
+  proximity(level){
+    if(level===this._proxLvl) return;
+    this._proxLvl=level;
+    if(this._proxTm){ clearInterval(this._proxTm); this._proxTm=0; }
+    if(!level) return;
+    const gap=[0,640,330,150][level], vol=[0,.1,.14,.2][level], freq=level===3?1180:950;
+    const blip=()=>{
+      if(!state.sound || !this.ctx) return;
+      const t=this.ctx.currentTime;
+      const o=this.ctx.createOscillator(); o.type='square'; o.frequency.value=freq;
+      const g=this.ctx.createGain();
+      g.gain.setValueAtTime(vol,t);
+      g.gain.exponentialRampToValueAtTime(.001,t+.07);
+      o.connect(g); g.connect(this.master||this.ctx.destination);
+      o.start(t); o.stop(t+.08);
+    };
+    this.ensureCtx();
+    blip();
+    this._proxTm=setInterval(blip,gap);
+  },
   thud(vol){
     if(!state.sound || !this.ctx) { sfx.wrong(); return; }
     const t=this.ctx.currentTime;
@@ -1868,6 +1926,7 @@ const HeliSound={
   },
   stop(){
     this.on=false; this.ready=false; this.rpm=0;
+    this.proximity(0);
     clearTimeout(this._startTm);
     Object.values(this.files).forEach(f=>{ if(f) f.pause(); });
     this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
@@ -1931,7 +1990,8 @@ function start(md){
   hp=100; sessionCoins=0; sessionWords=0; inv={}; keys={}; yaw=0; pitch=0;
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
-    hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0;
+    hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
+    if(hudWarnEl) hudWarnEl.style.display='none';
   }else{
     camera.position.set(0,EYE_H,0);
   }
@@ -1995,7 +2055,7 @@ window.Adventure3D={
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
-                        rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound}; },
+                        rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl}; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
