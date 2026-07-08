@@ -10,8 +10,12 @@
   --glass:rgba(7,25,52,.78); --glass-line:rgba(120,170,230,.35);
 }
 
-html,body{height:100%;}
+/* เพจต้องพอดีจอเสมอ ไม่มี scrollbar ระดับเอกสาร — ทุก screen จัดการ scroll ภายในตัวเอง
+   (กัน 2 ตัวการ: body min-height:100vh สูงกว่าจอจริงบนมือถือตอนแถบ URL โผล่ ·
+    fadeIn translateY(10px) ดันก้นหน้าเกินจอตอนเปิดหน้า/แท็บ background) */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
 body{
+  min-height:100dvh;
   font-family:'Kanit','Itim',sans-serif;
   color:var(--ink2);
   background-color:var(--navy);

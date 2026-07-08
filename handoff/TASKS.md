@@ -28,6 +28,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 60 (8 ก.ค. · Fable): ตัด scrollbar ระดับเพจถาวร 📵 (เพจพอดีจอเสมอ) — version→.38**
+- **อาการ (screenshot ผู้ใช้):** ทั้งเพจเลื่อนได้ + มี scrollbar ขวาสุด ทั้งที่ดีไซน์คือทุก screen scroll ภายในตัวเอง — **2 ตัวการ:** ① `body{min-height:100vh}` (style.css) บนมือถือ 100vh สูงกว่าจอจริงตอนแถบ URL โผล่ → เพจสูงเกินถาวร ② อนิเมชันเปิดหน้า `fadeIn` เริ่ม `translateY(10px)` ดันก้น `.screen` เกินจอ (ชั่วคราวตอนเปิดหน้า / **ค้างถาวรในแท็บ background** เพราะอนิเมชันแช่เฟรม 0)
+- **แก้ (css/lobby.css จุดเดียว):** `html,body{overflow:hidden;overscroll-behavior:none}` + `body{min-height:100dvh}` — เอกสารห้าม scroll เด็ดขาด ทุก screen ใช้ scroll ภายในของตัวเองตามดีไซน์เดิม (`.screen.active:not(#screen-dashboard)` มี `max-height:100dvh-24 + overflow-y:auto` อยู่แล้ว)
+- ✅ ทดสอบ preview 953×428 (mock login → dashboard): docH=428=จอพอดี ไม่มี scrollbar gutter · `window.scrollTo(0,50)` → ค้าง 0 · แม้ transform 10px ค้าง (แท็บ bg) เพจก็ไม่ขยับ · หน้าสถิติยัง scroll ภายในได้ (สูง 1118 ในกรอบ 404 เลื่อนถึง 716) · กลับ dashboard ปกติ · ไม่มี console error
+- **หมายเหตุเทสต์ preview:** แท็บ preview เป็น background → CSS animation แช่เฟรมแรก (`getAnimations()[0].currentTime=0` ค้าง) — วัด layout ที่ผูกกับ animation ให้ `el.getAnimations().forEach(a=>a.finish())` ก่อน
+
 **✅ รอบ 59 (8 ก.ค. · Fable): ฉาก Rank Up พอดีจอทุกขนาด 🎖️ (fix ล้นจอแนวนอน) — version→.37**
 - **อาการ (screenshot ผู้ใช้):** มือถือแนวนอน หัวข้อ "RANK UP!" โดนตัดขอบบน + ปุ่ม "รับตำแหน่ง" จมขอบล่าง — ต้นตอ: ขนาดใน CSS เป็น px ตายตัว (เหรียญ 190px ชื่อ 34px) รวม ~450px สูงกว่าจอแนวนอน (~400px) → flex กึ่งกลางตัดทั้งหัว-ท้าย
 - **แก้ (css/style.css เท่านั้น):** ทุกขนาดฉาก `.rankup-*` + `.collect-reveal-*` เปลี่ยนเป็น `clamp(min, Xvmin, max)` — จอเตี้ยย่อลงพอดี จอใหญ่คงขนาดเดิมเป๊ะ · `.rankup-content` ใช้ `margin:auto` (กันตัดขอบถ้าล้น) · จัดกึ่งกลางจริงด้วย padding-left ชดเชย letter-spacing (title/en) · ปุ่มเพิ่ม hover+font-weight · พื้นหลังไล่เฉดขอบมืดขึ้นเล็กน้อย · **ครอบ 3 ฉากที่ใช้ CSS ร่วมกัน: อัปแรงค์ / เปิดของขวัญ / ได้ของสะสม-ผลิตสำเร็จ**
