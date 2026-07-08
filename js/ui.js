@@ -1205,11 +1205,12 @@ function renderDashboard(){
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
-  /* โฉมใหม่ (feedback ผู้ใช้ 5 ก.ค.): น้องตัวใหญ่เต็มเวทีแบบตัวละครหน้า lobby เกม shooter
-     ข้อความ/แถบสถานะทั้งหมดย่อลงไปอยู่ "แผ่นสถานะ" แผ่นเดียวด้านล่าง (scroll ภายในถ้าล้น) */
+  /* โฉมใหม่ 2 (ผู้ใช้สั่ง 8 ก.ค.): น้องตัวใหญ่กลางเวที ห้ามมีแผงทับตัว
+     สถานะแยก 2 แผงใส sci-fi ขนาบข้าง — ซ้าย=ข้อมูลน้อง · ขวา=การดูแล (ร่างไข่ไม่มีแผงขวา) */
   card.innerHTML = `
     <div class="stage-hero">${petVisualHTML(p)}</div>
-    <div class="stage-plate">
+    <div class="stage-plate plate-left">
+      <div class="plate-title">⬢ ข้อมูลน้อง</div>
       <div class="plate-head">
         <span class="pet-name">${escapeHTML(p.name)} <button class="chip-edit" id="btn-pet-rename" title="เปลี่ยนชื่อน้อง">✏️</button></span>
         <span class="stage-label">${stageNames[stage]}</span>
@@ -1217,7 +1218,6 @@ function renderDashboard(){
         <div class="exp-bar"><div class="exp-fill" style="width:${Math.min(100, p.exp/expNeed(p.level)*100)}%"></div></div>
         <span class="exp-text">EXP ${p.exp}/${expNeed(p.level)} · สะสม ${state.totalMatches} คำ</span>
       </div>
-      ${hungerUI}
       <div class="ability-box ${abilityOn(p)?'':'locked'}">
         ${!isAdult(p)
           ? `🔒 ความสามารถพิเศษจะปลดล็อกเมื่อโตเต็มวัย (Lv.3)<br><small>${conf.ability}</small>`
@@ -1225,7 +1225,12 @@ function renderDashboard(){
             ? `🤒 ป่วยอยู่ ใช้ความสามารถพิเศษไม่ได้<br><small>${conf.ability}</small>`
             : `<b>ความสามารถพิเศษ:</b> ${conf.ability}`}
       </div>
-    </div>`;
+    </div>
+    ${hungerUI ? `
+    <div class="stage-plate plate-right">
+      <div class="plate-title">⬢ การดูแล</div>
+      ${hungerUI}
+    </div>` : ''}`;
 
   const feedBtn = document.getElementById('btn-feed');
   if(feedBtn) feedBtn.addEventListener('click', feedPet);
@@ -2410,6 +2415,9 @@ function renderHeliCard(){
         บินลอดระหว่างตึกแล้ว<b>ลงจอดเบาๆ บนดาดฟ้า</b>เพื่อเก็บ · ชนตึก/กระแทกแรง = เจ็บ เครื่องพังต้องรักษา 🪙${fmtNum(CURE_COST)}<br>
         🧑‍🤝‍🧑 เห็นเพื่อนบิน 🚁 ในเมืองเดียวกันแบบสด</small>
       </div>
+      <div class="tinv-note" style="border-color:#c9a227;background:#fffbe8">🎖️ <b>ใบอนุญาตนักบิน:</b>
+        ${['ยังไม่มีเข็ม — บิน 5 คำติดไม่ชนรับเข็มทองแดง 🥉','เข็มทองแดง 🥉 (เป้าถัดไป 15 คำ = เงิน 🥈)','เข็มเงิน 🥈 (เป้าถัดไป 30 คำ = ทอง 🥇)','เข็มทอง 🥇 — สุดยอดกัปตัน!'][state.pilotBadge||0]}
+        · สตรีคปัจจุบัน <b>${state.heliStreak||0}</b> คำ</div>
       ${tinvNoticeHTML('heli')}
       <button class="big-btn green home-btn" id="btn-enter-heli">🚁 ขึ้นบิน!</button>
       ${state.tinvClaimed.heli ? '' :

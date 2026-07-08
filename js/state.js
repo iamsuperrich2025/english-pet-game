@@ -40,6 +40,8 @@ const DEFAULT_STATE = {
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
   heliTicket:false,                   // ตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 51 · ซื้อได้เมื่อมีตั๋วโลกผจญภัย)
   heliDone:[],                        // คำที่ประกอบสำเร็จแล้วในโลกเฮลิคอปเตอร์ (แยกคลังต่อโลก)
+  heliStreak:0,                       // รอบ 62: สตรีคประกอบคำในโลกเฮลิฯ โดยไม่ชนเลย (สะสมข้ามรอบ · ชน/กระแทกแรง = รีเซ็ต)
+  pilotBadge:0,                       // รอบ 62: เข็มนักบินสูงสุดที่เคยได้ 0=ยังไม่มี 1=🥉(สตรีค 5) 2=🥈(15) 3=🥇(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
@@ -218,6 +220,8 @@ function loadState(){
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
       if(typeof s.heliTicket !== 'boolean') s.heliTicket = false;                          // โลกเฮลิคอปเตอร์
       if(!Array.isArray(s.heliDone)) s.heliDone = [];
+      if(typeof s.heliStreak !== 'number') s.heliStreak = 0;                               // รอบ 62
+      if(typeof s.pilotBadge !== 'number') s.pilotBadge = 0;
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
