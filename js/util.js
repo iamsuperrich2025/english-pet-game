@@ -127,8 +127,32 @@ const sfx = {
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
 };
 
-/* ---------- 🔊 เสียงอ่านคำศัพท์อังกฤษ (Web Speech API — ไม่ต้องใช้ไฟล์เสียง) ----------
-   เลือกเสียงที่เป็นธรรมชาติสุดที่เครื่องมี: Edge "Natural" > Google > เสียง iOS/macOS */
+/* ---------- 🔊 เสียงอ่านคำศัพท์อังกฤษ ----------
+   ชั้น 1: ไฟล์ MP3 เสียง Neural ของ Microsoft (ตัวเดียวกับ Edge) เจนล่วงหน้าด้วย
+           tools/gen_word_audio.py → sound/words/<word>.mp3 — ทุกเบราว์เซอร์เสียงเดียวกันเป๊ะ
+   ชั้น 2 (สำรอง — ไม่มีไฟล์/โหลดพลาด): Web Speech API เลือกเสียงธรรมชาติสุดที่เครื่องมี */
+const wordAudio = {};        // cache Audio ต่อคำ ('miss' = ไม่มีไฟล์ ใช้ชั้น 2 ตลอด)
+let wordAudioNow = null;
+function wordAudioFile(word){  // กติกาชื่อไฟล์ต้องตรงกับ word_key() ใน gen_word_audio.py
+  return 'sound/words/' + word.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '.mp3';
+}
+function speakWord(word){
+  if(!state.sound || !word) return;
+  try{
+    if(wordAudioNow){ wordAudioNow.pause(); }      // ตัดเสียงเก่า กันพูดซ้อนตอนแตะรัว
+    const key = word.toLowerCase();
+    if(wordAudio[key] === 'miss') return speakWordTTS(word);
+    const a = wordAudio[key] || new Audio(wordAudioFile(word));
+    wordAudio[key] = a;
+    let failed = false;
+    const fail = ()=>{ if(failed) return; failed = true; wordAudio[key] = 'miss'; speakWordTTS(word); };
+    a.onerror = fail;
+    wordAudioNow = a;
+    a.currentTime = 0;
+    const p = a.play();
+    if(p && p.catch) p.catch(fail);
+  }catch(e){ speakWordTTS(word); }
+}
 let speakVoice = null;
 function pickSpeakVoice(){
   const vs = window.speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
@@ -141,7 +165,7 @@ function pickSpeakVoice(){
   };
   return vs.sort((a,b)=>score(b)-score(a))[0];
 }
-function speakWord(word){
+function speakWordTTS(word){
   if(!state.sound || !word || !('speechSynthesis' in window)) return;
   try{
     if(!speakVoice){
@@ -149,7 +173,7 @@ function speakWord(word){
       // บางเบราว์เซอร์โหลดรายชื่อเสียงช้า — รอบแรกใช้เสียง default ไปก่อนแล้วอัปเกรดเอง
       if(!speakVoice) window.speechSynthesis.onvoiceschanged = ()=>{ speakVoice = pickSpeakVoice(); };
     }
-    window.speechSynthesis.cancel();               // ตัดคิวเสียงเก่า กันพูดซ้อนตอนแตะรัว
+    window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(word);
     u.lang = 'en-US'; u.rate = 0.9; u.pitch = 1;
     if(speakVoice) u.voice = speakVoice;
