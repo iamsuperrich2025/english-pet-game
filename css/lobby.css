@@ -402,6 +402,13 @@ h1{color:var(--sky-d);text-shadow:none;}
 .rail-btn:hover{background:rgba(27,95,168,.85);}
 .rail-btn:active{transform:scale(.94);}
 .rail-btn.on{background:var(--sky);color:#fff;border-color:#7fc0f5;}
+/* ปุ่มรักษาด่วน: ไม่มีน้องป่วย=จางกดไม่ได้ · มีน้องป่วย=แดงกะพริบเรียกสายตา */
+.rail-btn:disabled{opacity:.35;cursor:default;}
+.rail-btn:disabled:hover{background:var(--glass);}
+.rail-btn:disabled:active{transform:none;}
+.rail-btn.cure-alert{background:rgba(168,32,44,.82);border-color:#ff9c9c;color:#fff;animation:cureBlink 1.1s ease-in-out infinite;}
+.rail-btn.cure-alert:hover{background:rgba(200,45,58,.9);}
+@keyframes cureBlink{0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,0);}50%{box-shadow:0 0 14px 3px rgba(255,90,90,.6);}}
 
 .lobby-stage{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;overflow:hidden;}
 .lobby-stage .weather-banner{

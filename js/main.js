@@ -58,6 +58,7 @@ document.getElementById('btn-play').addEventListener('click', ()=>startGame(null
 document.getElementById('btn-foodquiz').addEventListener('click', openFoodQuiz);   // ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
 document.getElementById('btn-cats').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
 document.getElementById('btn-stats').addEventListener('click', ()=>{ renderStats(); showScreen('screen-stats'); });
+document.getElementById('btn-rail-cure').addEventListener('click', railCureClick);   // ปุ่มรักษาด่วน (กดได้เฉพาะตอนมีน้องป่วย)
 document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-stats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-quiz-back').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });

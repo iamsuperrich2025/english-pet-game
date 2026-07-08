@@ -1059,6 +1059,14 @@ function renderDashboard(){
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
 
+  /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย (ผู้ใช้สั่ง 8 ก.ค. 2026) ---- */
+  const railCure = document.getElementById('btn-rail-cure');
+  if(railCure){
+    const anySick = state.pets.some(x=>x.sick);
+    railCure.disabled = !anySick;
+    railCure.classList.toggle('cure-alert', anySick);
+  }
+
   /* ---- การ์ดสัตว์เลี้ยง ---- */
   const card = document.getElementById('pet-card');
   const p = activePet();
@@ -1518,6 +1526,19 @@ function curePet(){
   toast('💊 รักษาหายแล้ว! น้องกลับมาแข็งแรงร่าเริง 🎉');
   saveState();
   renderDashboard();
+}
+
+/* ปุ่มรักษาด่วนในรางซ้าย: น้องป่วยตัวไหนก็รักษาได้จากปุ่มเดียว
+   (ถ้าตัวที่ป่วยไม่ใช่ตัวที่เปิดอยู่ → สลับแท็บไปหาตัวนั้นก่อนแล้วรักษาเลย) */
+function railCureClick(){
+  let p = activePet();
+  if(!p || !p.sick){
+    const i = state.pets.findIndex(x=>x.sick);
+    if(i < 0) return;
+    state.active = i;
+    renderDashboard();
+  }
+  curePet();
 }
 
 /* ข้อ 5.1: ขับพิษก่อนป่วย — พิษไม่ลดเอง จ่าย 1,000 ล้างบาร์พิษเป็น 0 */
