@@ -276,6 +276,12 @@ function ghostTexture(){
   if(ghostTex.length) return ghostTex[Math.floor(Math.random()*ghostTex.length)];
   return emojiTexture(M.ghostEmoji[Math.floor(Math.random()*M.ghostEmoji.length)]);
 }
+// jump scare: คืน src ภาพผีสุ่มตัว (ถ้าผู้ใช้วางภาพแล้ว) ไม่มี = null → ใช้ emoji 👻 เต็มจอเดิม
+function ghostScareSrc(){
+  if(!ghostTex.length) return null;
+  const t=ghostTex[Math.floor(Math.random()*ghostTex.length)];
+  return (t.image && t.image.src) || null;
+}
 /* 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — พื้นหลังคนละสไตล์ต่อป้าย + เลขป้ายมุมซ้ายเสมอ
    ยังไม่มีลูกค้า = ข้อความ "ติดต่อโฆษณา โทร 064-357 6645"
    วางไฟล์ img/ads/ad_<เลข>.png (สัดส่วน 8:3 เช่น 1024×384) → ภาพลูกค้าขึ้นแทนทันที */
@@ -857,7 +863,10 @@ function caught(){
   state.advHurt=true; saveState();
   HSound.heartbeat(null);
   HSound.scream();
-  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(400);
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([400,90,220]);
+  const gsrc=ghostScareSrc(), scareImg=scareEl.querySelector('img');   // ผีไทยพุ่งเต็มจอถ้ามีภาพ ไม่มี=👻 emoji เดิม
+  if(gsrc && scareImg){ scareImg.src=gsrc; scareEl.classList.add('has-img'); }
+  else scareEl.classList.remove('has-img');
   scareEl.classList.add('on');
   overlayEl.classList.add('adv-shake');
   setTimeout(()=>{
@@ -1569,6 +1578,10 @@ function buildDom(){
     background:radial-gradient(ellipse at center,rgba(120,0,0,.85),#000 78%)}
   #adv-scare.on{display:flex;animation:advScare 1.5s ease-out forwards}
   #adv-scare span{font-size:56vh;line-height:1;filter:drop-shadow(0 0 40px #f00)}
+  #adv-scare img{display:none;max-width:100vw;max-height:100vh;object-fit:contain;
+    filter:drop-shadow(0 0 55px #f00) contrast(1.12) saturate(1.15)}
+  #adv-scare.has-img img{display:block}
+  #adv-scare.has-img span{display:none}
   @keyframes advScare{0%{opacity:0;transform:scale(.25)}8%{opacity:1;transform:scale(1.15)}
     16%{transform:scale(.95)}24%{transform:scale(1.08)}70%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
   .adv-shake{animation:advShake .12s linear 9}
@@ -1701,7 +1714,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
     <div id="adv-banner"></div>
-    <div id="adv-scare"><span>👻</span></div>
+    <div id="adv-scare"><img id="adv-scare-img" alt=""><span>👻</span></div>
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <button id="adv-shoot">🔥</button>
     <button id="adv-chat-btn">💬 แชท</button>
