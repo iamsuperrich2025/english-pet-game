@@ -80,8 +80,19 @@ let hAtcCleared=false;            // รอบ 64: หอบังคับป�
    + เสียง "ซ่า-คลิก" squelch ก่อนพูด · รายงานลม/ทัศนวิสัย/ความสูง/
    เพื่อนร่วมน่านฟ้า · อนุญาตขึ้นบิน · ชมลงจอดนุ่ม · ครูฝึกลุ้นใกล้ได้เข็ม
    ============================================================ */
+/* 🎙️ วลีตอบวิทยุของนักบิน (รอบ 67) — อังกฤษ + คำแปลไทย (เด็กไม่รู้จะตอบอะไรก็อ่านตามได้) */
+const ATC_REPLIES=[
+  ['Roger!','รับทราบ!'],
+  ['Copy that, tower!','ทราบแล้ว หอบังคับ!'],
+  ['Wilco!','จะปฏิบัติตาม!'],
+];
+const ATC_CLOSERS=[
+  'Good copy, captain.',
+  'Loud and clear, captain. Tower out.',
+  'Read you loud and clear. Safe flying!',
+];
 const ATC={
-  el:null, nextAt:0, _tm:0, voice:null, voiceTried:false,
+  el:null, replyEl:null, nextAt:0, _tm:0, _rtm:0, voice:null, voiceTried:false,
   WINDS:['north','northeast','east','southeast','south','southwest','west','northwest'],
   enVoice(){
     if(this.voiceTried) return this.voice;
@@ -94,7 +105,7 @@ const ATC={
     }catch(e){ this.voiceTried=true; }
     return this.voice;
   },
-  say(text){
+  say(text,noReply){
     if(this.el){
       this.el.textContent='📻 '+text;
       this.el.classList.add('show');
@@ -111,6 +122,42 @@ const ATC={
         setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){} },180);  // รอ squelch จบ
       }catch(e){}
     }
+    // 🎙️ หอพูดจบ → เปิดปุ่มให้นักบินตอบ (ยกเว้นประโยคปิดท้าย)
+    if(noReply) this.hideReply(); else this.showReply();
+  },
+  showReply(){
+    if(!this.replyEl) return;
+    this.replyEl.classList.add('show');
+    clearTimeout(this._rtm);
+    this._rtm=setTimeout(()=>this.hideReply(),9000);
+  },
+  hideReply(){
+    if(!this.replyEl) return;
+    clearTimeout(this._rtm);
+    this.replyEl.classList.remove('show');
+  },
+  reply(i){
+    const r=ATC_REPLIES[i]; if(!r) return;
+    this.hideReply();
+    sfx.select();
+    if(this.el){                                  // echo คำตอบของเราขึ้นจอวิทยุ
+      this.el.textContent='🎙️ '+r[0]+' — '+r[1];
+      this.el.classList.add('show');
+      clearTimeout(this._tm);
+      this._tm=setTimeout(()=>this.el.classList.remove('show'),3500);
+    }
+    if(state.sound && 'speechSynthesis' in window){
+      try{
+        speechSynthesis.cancel();                 // ตัดเสียงหอ (ตอบแทรกแบบวิทยุจริง)
+        const u=new SpeechSynthesisUtterance(r[0]);
+        u.lang='en-US'; u.rate=1.0; u.pitch=1.18; u.volume=.95;  // โทนสูงขึ้น = เสียงนักบินตัวน้อย
+        const v=this.enVoice(); if(v) u.voice=v;
+        speechSynthesis.speak(u);
+      }catch(e){}
+    }
+    if(Math.random()<.5) setTimeout(()=>{         // หอตอบปิดท้ายเป็นครั้งคราว
+      if(running) this.say(ATC_CLOSERS[Math.floor(Math.random()*ATC_CLOSERS.length)],true);
+    },2000);
   },
   pick(){
     const alt=Math.round(Math.max(0,camera.position.y-HELI_SKID));
@@ -140,6 +187,7 @@ const ATC={
     this.nextAt=0;
     clearTimeout(this._tm);
     if(this.el) this.el.classList.remove('show');
+    this.hideReply();
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
   },
 };
@@ -1542,6 +1590,17 @@ function buildDom(){
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   #adv-radio.show{display:block;animation:advRadioIn .25s ease-out}
   @keyframes advRadioIn{0%{opacity:0;transform:translateX(-50%) translateY(8px)}100%{opacity:1;transform:translateX(-50%) translateY(0)}}
+  #adv-reply{position:absolute;bottom:calc(1vh + 14vh + 40px);left:50%;transform:translateX(-50%);
+    display:none;z-index:5;text-align:center;pointer-events:auto}
+  #adv-reply.show{display:block;animation:advRadioIn .25s ease-out}
+  .adv-reply-hint{color:#d7ffe2;font-size:12px;font-weight:700;text-shadow:0 1px 4px #000;margin-bottom:5px;
+    background:rgba(6,14,8,.6);border-radius:8px;padding:2px 10px;display:inline-block}
+  .adv-reply-row{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+  .adv-rp{background:rgba(6,20,10,.88);color:#8ef7a5;border:1.5px solid rgba(142,247,165,.55);
+    border-radius:11px;padding:5px 13px;font-family:inherit;font-weight:900;font-size:14px;line-height:1.15;
+    text-shadow:0 0 6px rgba(142,247,165,.6)}
+  .adv-rp small{display:block;color:#b8d9c2;font-size:10.5px;font-weight:600;text-shadow:none}
+  .adv-rp:active{background:rgba(142,247,165,.25)}
   /* ไม่มีภาพ (ยังไม่เจนจาก PROMPTS_HELI.md) → cockpit จำลองด้วย CSS: แผงหน้าปัด+เสากรอบ */
   #adv-cockpit .cp-css{height:15vh;background:linear-gradient(180deg,#2a2f38,#14171d);
     border-top:4px solid #3d4450;border-radius:24px 24px 0 0;margin:0 -2vw;position:relative}
@@ -1614,6 +1673,12 @@ function buildDom(){
     <div id="adv-cockpit"></div>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
     <div id="adv-radio"></div>
+    <div id="adv-reply">
+      <div class="adv-reply-hint">🗣️ แตะตอบหอบังคับ แล้วลองพูดตามดังๆ ดูสิ!</div>
+      <div class="adv-reply-row">
+        ${ATC_REPLIES.map((r,i)=>`<button class="adv-rp" data-i="${i}">${r[0]}<small>${r[1]}</small></button>`).join('')}
+      </div>
+    </div>
     <div class="adv-hud" id="adv-inv"></div>
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
@@ -1659,6 +1724,10 @@ function buildDom(){
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
   gaugeCtx=overlayEl.querySelector('#adv-gauges').getContext('2d');
   ATC.el=overlayEl.querySelector('#adv-radio');
+  ATC.replyEl=overlayEl.querySelector('#adv-reply');
+  ATC.replyEl.querySelectorAll('.adv-rp').forEach(b=>{
+    b.addEventListener('click',()=>ATC.reply(+b.dataset.i));
+  });
   // cockpit: ใช้ภาพ img/heli_cockpit.png ถ้าเจนแล้ว (PROMPTS_HELI.md) · ไม่มี → แผง CSS จำลอง
   // (เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับด้านหน้าเสมอ — รอบ 61)
   const cpImg=new Image();
@@ -1744,7 +1813,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium')) continue;
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-words,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
