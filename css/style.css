@@ -799,6 +799,14 @@ html.no-anim body.quake{animation:none;}
 }
 .hint-btn:disabled{opacity:.45;box-shadow:none;}
 
+/* รอบ 85: ป้ายบอกว่าเล่นได้เรื่อยๆ ด่านไม่ตัน + วิธีออกจากเกม (เติมพื้นที่ว่างล่างกระดาน) */
+.game-endless-note{
+  margin:14px auto 4px;max-width:520px;text-align:center;line-height:1.7;
+  font-size:14px;color:#7a6a92;background:rgba(255,255,255,.55);
+  border:2px dashed #d6c7ec;border-radius:16px;padding:11px 16px;
+}
+.game-endless-note b{color:#5b8def;}
+
 /* floating effects */
 .float-fx{
   position:fixed;left:50%;top:40%;transform:translateX(-50%);
