@@ -33,6 +33,14 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 108 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — แถวเข็มในการ์ดผู้เล่น + แจ้งเตือนเพื่อนได้เข็ม + กระดานเข็ม 🏅 — version .88** (commit 718ec3b) — ผู้ใช้สั่ง "เอา 3 ข้อเลย" (ต่อจากรอบ 107)
+- **helper กลาง (game.js):** `BADGE_META` (อิโมจิ→{ชื่อ,แต้ม 1-3}) + `splitNameBadges(n)` (แยกชื่อสะอาด/เข็มท้าย) + `badgeEmojis(str)` + `badgeScore(str)` · แตกเข็มที่ baked ท้ายชื่อ `presence/leaderboard.n` (จากรอบ 107) มาใช้ได้ **โดยไม่ต้องเพิ่ม field/publish rules**
+- **① 🖼️ การ์ดข้อมูลผู้เล่น (คลิกชื่อ) โชว์ "แถวเข็ม"** — `showPlayerCard` แยกเข็มจากชื่อ → หัวการ์ดชื่อสะอาด + `.pl-badges` ชิป (emoji ตัวโต + ชื่อเข็มไทย) · me-row `data-n` ใส่เข็มเองด้วย (ป๊อปอัปของเราโชว์เข็ม) · CSS `.pl-badges/.pl-badge-chip` (lobby.css)
+- **② 🔔 แจ้งเตือนเพื่อนได้เข็มใหม่** — `notifyFriendBadges(list)` (online.js) เรียกใน presence listener · เพื่อน (ใน `Online.myFriends`) ที่ออนไลน์ + แต้มเข็มเพิ่มขึ้น → `toast` ให้กำลังใจ · `Online.seenBadges` จำ baseline (ครั้งแรกที่เห็น=เงียบ · เท่าเดิม=ไม่ซ้ำ · คนแปลกหน้า=เมิน)
+- **③ 🥇 กระดานเข็มสะสม** — การ์ดใหม่ `#badge-leaderboard-card` (index.html aside) + `renderBadgeLeaderboardCard()` (ui.js) เรียกใน `renderDashboard`+`onlineRerender` · จัดอันดับด้วย **แต้มรวมเข็ม** (`badgeScore` ผลรวมระดับ 1-3) จาก `Online.board`+เราสด (แทนที่ n เราด้วย `badgeSuffix()` สด) · กรอง 0 แต้ม · me ไฮไลต์ · CSS `.lb-hint/.lb-badgeline` (style.css)
+- ✅ ยืนยัน preview: split/emojis/score ถูก (🥈⚡🏆=6, 🥇🌩️🔥🎖️=10) · การ์ดผู้เล่น 4 ชิป+หัวชื่อสะอาด "น้องบี" · กระดานเข็มเรียง 10>2>1 กรอง 0 แต้มออก me ⭐เข็มสด อันดับ 2/3 · แจ้งเตือน 4 เคส (baseline เงียบ/ได้เพิ่ม→toast/แปลกหน้าเมิน/ไม่ซ้ำ) · ไม่มี console error
+- ⚠️ commit เฉพาะ game.js/ui.js/online.js/index.html/style.css/lobby.css/version (pin pathspec)
+
 **✅ รอบ 107 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — ปุ่มลัดตู้เข็ม + ฉลองทุกเข็มเหมือนกัน + เข็มโชว์ให้เพื่อนหน้าเมือง 🏆 — version .87** (commit 7450ddd) — ผู้ใช้สั่ง "ลุยทั้ง 3 ข้อ" (ต่อจากรอบ 106)
 - **① 🏆 ปุ่มลัดตู้เข็มในราง lobby** — index.html `#btn-rail-trophy` (ต่อจาก 📊 สถิติ) · main.js ผูก `showProgressReport` → เปิดรายงานความก้าวหน้า/ตู้เข็มจากหน้าเมืองได้เลย ไม่ต้องเข้าเกม
 - **② 🎊 celebrateBadge ใช้กับทุกเข็ม (สวยเท่ากัน)** — thunder (game.js `addThunder`) เปลี่ยน toast→celebrateBadge · pilot (adventure3d ~869) + daredevil (~2460) เปลี่ยน `showBanner`→`celebrateBadge` (แบนเนอร์เด้ง+โปรยเหรียญ) · ตัด `sfx.rankup` ซ้ำ (celebrateBadge เล่นเอง) · celebrateBadge เป็น global game.js เรียกจาก adventure3d ได้
