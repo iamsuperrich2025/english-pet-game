@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 98 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปผลงานทุกครั้งที่ออก + โปรยเหรียญตอนทำสถิติใหม่ 🎊 — version .78** (commit e1da45b) — ต่อยอดการ์ดสรุป (รอบ 96) · ผู้ใช้สั่งทำ
+- **การ์ดทุกครั้ง:** `exitGame` เก็บเหรียญได้ (>0) เด้งการ์ดสรุปเสมอ โชว์ "เก็บได้ X 🪙 · 🔤 จับคู่ถูก Y คำ" (`game.sessionMatches` reset ใน startGame · ++ ใน checkMatch คู่กับ totalMatches) · เก็บ 0 = ออกเลย
+- **ทำสถิติใหม่ = ฉลองพิเศษ:** burst 🎉 + ป้ายสถิติ + `sprinkleConfetti(overlay)` โปรยเหรียญ/ดาว 20 ชิ้น (absolute z-1 หลังการ์ด z-2 · `@keyframes confFall` ตกจากบน · auto-remove 3.6s) · ไม่ทำสถิติ = การ์ดปกติ burst 👏 ไม่มีโปรย · `sprinkleConfetti` ข้ามเมื่อ `state.noAnim`
+- ✅ ยืนยัน preview: ไม่สถิติ(220<1000)=👏+"6 คำ"+0 badge+0 confetti · สถิติ(400>100)=🎉+badge+20 confetti · all-time(best 0)=2 badge · เก็บ0=ออกเลย · noAnim=0 confetti · confetti animation-name confFall/absolute · ไม่มี error · **screenshot ค้าง→inspect ยืนยัน**
+- ⚠️ commit game.js/style.css/version (ไม่แตะไฟล์ session คู่ขนาน)
+
 **✅ รอบ 97 (9 ก.ค. · Opus): การ์ด "วิธีเล่น" ตอนเข้าโลก 3D ครั้งแรก ❓📱 — version .77** (งานเดี่ยว ไม่แตะไฟล์ session คู่ขนาน) — ผู้ใช้มอบอำนาจทำงานต่อเนื่องช่วงไม่อยู่ (อนุมัติทุกงานที่ทำให้เกมดีขึ้น)
 - **โจทย์:** เดิม `#adv-hint` (คอนโทรล) เป็นข้อความจิ๋วมุมขวาล่าง + **ซ่อนสนิทบนจอสัมผัส** (`.adv-touch #adv-hint{display:none}`) → เด็กบนมือถือเข้าโลก 3D ครั้งแรกไม่มีบอกวิธีบังคับเลย
 - **ทำ (ทั้งหมดอยู่ใน `js/adventure3d.js` ไฟล์เดียว — JS + CSS ที่ inject เอง ไม่แตะ state.js/game.js/index.html/style.css ที่ session คู่ขนานแก้ค้าง):** การ์ด `#adv-intro` เต็มจอโผล่ตอน `start(mode)` **ครั้งแรกของแต่ละโลก** (จำแยกต่อโลกใน `localStorage['pvadv_intro_v1']` — ไม่ยุ่ง state เกม) · เนื้อหา: 🎯 เป้าหมาย + คอนโทรลตามอุปกรณ์ (`IS_TOUCH` → แสดงชุดจอสัมผัส/คีย์บอร์ด) ต่อโลก (adv/haunt/heli/drone แยกกัน ตรงตามโค้ด input จริง) + tip `+{reward}🪙/คำ` · ปุ่ม "เริ่มเล่นเลย! 🚀" · **พักเกมระหว่างอ่าน** (running=false, `renderer.render` โชว์ฉากข้างหลัง) กด→`beginPlay()` (clock.getDelta ทิ้ง dt ค้าง แล้ว loop) · ปุ่ม **❓ ซ้ายมินิแมป** เปิดวิธีเล่นซ้ำได้ทุกเมื่อ (พัก→"เล่นต่อ ▶") · ธีมการ์ดโลกผีเป็นโทนเขียวหลอน · เพิ่ม `#adv-help,#adv-intro` ใน touch-exclude list กันนิ้วแตะการ์ดไปโดนจอย/คันมอง
