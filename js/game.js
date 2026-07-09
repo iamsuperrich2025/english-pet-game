@@ -11,6 +11,7 @@ const game = {
   pool:null,
   roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
   sessionCoins:0,               // 🪙 เหรียญที่เก็บได้ "ครั้งนี้" (เริ่มนับใหม่ทุกครั้งที่เข้าเกม) — โชว์เป็นกำลังใจ
+  sessionMatches:0,             // จำนวนคำที่จับคู่ถูก "ครั้งนี้" (ไว้โชว์การ์ดสรุปตอนออก)
   sessMilestone:0,              // หลักเหรียญครั้งนี้ที่ฉลองไปแล้วสูงสุด (กันฉลองซ้ำ)
   prevBest:0,                   // สถิติเหรียญ/ครั้ง "สัปดาห์นี้" เดิม (ตอนเข้าเกม) — ไว้เทียบว่าทำลายสถิติหรือยัง
   prevAllBest:0,                // สถิติเหรียญ/ครั้ง "ตลอดกาล" เดิม (ตอนเข้าเกม) — ไว้เช็กว่าเป็นสถิติสูงสุดตลอดกาลด้วยไหม
@@ -84,40 +85,56 @@ function rolloverWeekBest(){   // ถ้าข้ามสัปดาห์แ�
   if(state.weekKey !== wk){ state.weekKey = wk; state.weekBestCoins = 0; }
 }
 
-/* 🚪 ออกจากเกม (ปุ่ม ⬅ กลับ) — ถ้ารอบเล่นนี้ทำสถิติใหม่ เด้งการ์ดสรุปฉลองก่อนแล้วค่อยออก */
+/* 🚪 ออกจากเกม (ปุ่ม ⬅ กลับ) — เก็บเหรียญได้เด้งการ์ดสรุปผลงานทุกครั้ง (ทำสถิติใหม่=ฉลองพิเศษ+โปรยเหรียญ) */
 function exitGame(){
   clearInterval(game.timerId);
   const earned = game.sessionCoins;
-  const madeRecord = earned > 0 && earned > game.prevBest;   // เก็บเกินสถิติสัปดาห์เดิม = สถิติใหม่
   const doExit = ()=>{ renderDashboard(); showScreen('screen-dashboard'); };
-  if(madeRecord){
-    const allTime = earned > game.prevAllBest;               // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
-    showSessionSummary(earned, allTime, doExit);
-  }else{
-    doExit();
-  }
+  if(earned <= 0){ doExit(); return; }   // ยังไม่ได้เก็บเหรียญเลย (แค่แวะเข้ามา) → ออกเลย ไม่ต้องมีการ์ด
+  const isRecord = earned > game.prevBest;             // เกินสถิติสัปดาห์เดิม = สถิติใหม่
+  const allTime  = isRecord && earned > game.prevAllBest;   // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
+  showSessionSummary(earned, game.sessionMatches, isRecord, allTime, doExit);
 }
 
-/* 🎉 การ์ดสรุปตอนจบการเล่น (เมื่อทำสถิติใหม่) */
-function showSessionSummary(earned, allTime, onClose){
+/* 🎉 การ์ดสรุปตอนจบการเล่น — โชว์เหรียญ+จำนวนคำที่ทำได้ทุกครั้ง · ทำสถิติใหม่=ฉลอง+โปรยเหรียญ */
+function showSessionSummary(earned, matches, isRecord, allTime, onClose){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay summary-overlay';
   overlay.innerHTML = `<div class="levelup-box summary-box">
-    <div class="sm-burst">🎉</div>
-    <h2 class="sm-title">เก่งมากเลย!</h2>
+    <div class="sm-burst">${isRecord ? '🎉' : '👏'}</div>
+    <h2 class="sm-title">${isRecord ? 'เก่งมากเลย!' : 'เล่นได้เยี่ยม!'}</h2>
     <p class="sm-line">รอบเล่นนี้หนูเก็บได้</p>
     <div class="sm-coin">${fmtNum(earned)} 🪙</div>
-    <div class="sm-badge">🏆 ทำสถิติสัปดาห์ใหม่!</div>
+    <p class="sm-matches">🔤 จับคู่ถูก <b>${fmtNum(matches)}</b> คำ</p>
+    ${isRecord ? `<div class="sm-badge">🏆 ทำสถิติสัปดาห์ใหม่!</div>` : ''}
     ${allTime ? `<div class="sm-badge sm-badge-all">⭐ และเป็นสถิติสูงสุดตลอดกาลด้วย!</div>` : ''}
-    <p class="sm-cheer">พักได้เลย เดี๋ยวมาทำลายสถิติใหม่กันอีกนะ 💪</p>
+    <p class="sm-cheer">${isRecord ? 'พักได้เลย เดี๋ยวมาทำลายสถิติใหม่กันอีกนะ 💪' : 'เก็บเพิ่มได้อีกเรื่อยๆ นะ เยี่ยมมาก! 😊'}</p>
     <button class="cf-ok summary-ok">ออกไปพัก 😊</button>
   </div>`;
   const close = ()=>{ overlay.remove(); if(onClose) onClose(); };
   overlay.querySelector('.summary-ok').addEventListener('click', close);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });   // แตะพื้นหลัง = ออกเหมือนกัน
   document.body.appendChild(overlay);
-  if(typeof sfx !== 'undefined') sfx.rankup();
-  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,50,40,50,90]);
+  if(isRecord) sprinkleConfetti(overlay);   // ทำสถิติใหม่ → โปรยเหรียญ/ดาวฉลอง
+  if(typeof sfx !== 'undefined') sfx[isRecord ? 'rankup' : 'levelup']();
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate(isRecord ? [40,50,40,50,90] : [30,40,30]);
+}
+
+/* ✨ โปรยเหรียญ/ดาวตกจากด้านบนการ์ด (ข้าม ถ้าผู้ใช้ปิดแอนิเมชันเพื่อเครื่องช้า) */
+function sprinkleConfetti(container){
+  if(state.noAnim) return;
+  const items = ['🪙','⭐','🎉','✨','🪙','⭐'];
+  for(let i=0; i<20; i++){
+    const s = document.createElement('span');
+    s.className = 'confetti';
+    s.textContent = items[i % items.length];
+    s.style.left = Math.random()*100 + '%';
+    s.style.fontSize = (14 + Math.random()*16) + 'px';
+    s.style.animationDelay = (Math.random()*0.7) + 's';
+    s.style.animationDuration = (1.6 + Math.random()*1.3) + 's';
+    container.appendChild(s);
+    setTimeout(()=>s.remove(), 3600);
+  }
 }
 
 /* 📊 รายงานความก้าวหน้าของเด็ก (แยกต่างหาก) — รวมพัฒนาการตั้งแต่เริ่มเล่นทั้งหมด
@@ -263,6 +280,7 @@ function startGame(cat){
     `🇬🇧 คำศัพท์ภาษาอังกฤษ${cat ? ` · หมวด${cat.name}` : ''}`;
   game.combo = 0;
   game.sessionCoins = 0;   // เริ่มนับเหรียญ "ครั้งนี้" ใหม่ทุกครั้งที่เข้าเกม
+  game.sessionMatches = 0;
   game.sessMilestone = 0;
   game.beatBestShown = false;
   rolloverWeekBest();                            // ข้ามสัปดาห์ (จันทร์) → ล้างสถิติสัปดาห์ก่อน
@@ -356,6 +374,7 @@ function checkMatch(){
   if(correct){
     game.combo++;
     game.matched++;
+    game.sessionMatches++;
     state.totalMatches++;
 
     // ---- คำนวณรางวัล + ความสามารถพิเศษ ----
