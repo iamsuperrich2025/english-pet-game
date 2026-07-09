@@ -2005,21 +2005,25 @@ function buildDom(){
   #adv-intro.on{display:flex;animation:advIntroIn .28s ease-out}
   @keyframes advIntroIn{0%{opacity:0}100%{opacity:1}}
   .adv-intro-card{background:linear-gradient(180deg,rgba(24,32,48,.98),rgba(12,16,28,.98));
-    border:2px solid rgba(120,200,255,.55);border-radius:20px;padding:16px 20px;max-width:min(500px,92vw);
-    box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 30px rgba(80,160,255,.25);text-align:center;max-height:94vh;overflow:auto}
-  .adv-intro-emoji{font-size:38px;line-height:1;margin-bottom:2px}
-  .adv-intro-card h2{color:#fff;font-size:19px;font-weight:900;margin:2px 0 8px;text-shadow:0 2px 6px #000}
-  .adv-intro-goal{color:#dbe8ff;font-size:14px;line-height:1.45;margin:0 0 12px;
+    border:2px solid rgba(120,200,255,.55);border-radius:20px;padding:14px 20px;max-width:min(640px,94vw);
+    box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 30px rgba(80,160,255,.25);text-align:center;max-height:96vh;overflow:auto}
+  .adv-intro-emoji{font-size:34px;line-height:1;margin-bottom:0}
+  .adv-intro-card h2{color:#fff;font-size:19px;font-weight:900;margin:0 0 10px;text-shadow:0 2px 6px #000}
+  .adv-intro-body{display:flex;gap:16px;text-align:left;margin-bottom:12px}
+  .adv-intro-side{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:9px;justify-content:center}
+  .adv-intro-goal{color:#dbe8ff;font-size:13.5px;line-height:1.45;margin:0;
     background:rgba(80,140,255,.14);border-radius:12px;padding:8px 12px}
   .adv-intro-goal b{color:#ffe082}
-  .adv-intro-ctrl-h{color:#8fd4ff;font-size:12.5px;font-weight:800;letter-spacing:.3px;text-align:left;margin:0 2px 6px}
-  .adv-intro-list{list-style:none;margin:0 0 12px;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px}
-  .adv-intro-list li{display:flex;align-items:center;gap:10px;color:#eef4ff;font-size:13.5px;line-height:1.35}
-  .adv-intro-list .ic{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;
-    font-size:18px;background:rgba(255,255,255,.08);border-radius:10px}
+  .adv-intro-ctrl-h{color:#8fd4ff;font-size:12.5px;font-weight:800;letter-spacing:.3px;text-align:left;margin:0}
+  .adv-intro-list{list-style:none;margin:0;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px}
+  .adv-intro-list li{display:flex;align-items:center;gap:10px;color:#eef4ff;font-size:13px;line-height:1.32}
+  .adv-intro-list .ic{flex:0 0 32px;height:32px;display:flex;align-items:center;justify-content:center;
+    font-size:17px;background:rgba(255,255,255,.08);border-radius:9px}
   .adv-intro-list b{color:#ffe082}
-  .adv-intro-tip{color:#bcd0e8;font-size:12.5px;line-height:1.4;margin:0 0 14px}
+  .adv-intro-tip{color:#bcd0e8;font-size:12px;line-height:1.4;margin:0}
   .adv-intro-tip b{color:#ffe082}
+  @media (max-width:560px){.adv-intro-body{flex-direction:column;gap:9px}}
+  @media (max-height:430px){.adv-intro-emoji{font-size:26px}.adv-intro-card{padding:11px 18px}.adv-intro-card h2{font-size:17px;margin-bottom:8px}.adv-intro-body{margin-bottom:9px}}
   #adv-intro-go{background:linear-gradient(180deg,#5eb7ff,#2f7fe0);color:#fff;border:none;border-radius:14px;
     font-family:inherit;font-weight:900;font-size:17px;padding:11px 30px;box-shadow:0 4px 14px rgba(47,127,224,.55)}
   #adv-intro-go:active{transform:scale(.96)}
@@ -3046,12 +3050,18 @@ function showIntro(md,reopen){
     <div class="adv-intro-card">
       <div class="adv-intro-emoji">${m.emoji}</div>
       <h2>วิธีเล่น${m.label}</h2>
-      <p class="adv-intro-goal">🎯 ${info.goal}</p>
-      <div class="adv-intro-ctrl-h">${IS_TOUCH?'📱 การบังคับ (แตะจอ)':'⌨️ การบังคับ (คีย์บอร์ด + เมาส์)'}</div>
-      <ul class="adv-intro-list">
-        ${rows.map(r=>`<li><span class="ic">${r[0]}</span><span>${r[1]}</span></li>`).join('')}
-      </ul>
-      <p class="adv-intro-tip">💡 ต่อครบ 1 คำ = <b>+${m.reward}🪙</b> · กดปุ่ม 🚪 มุมขวาบนออกได้ทุกเมื่อ</p>
+      <div class="adv-intro-body">
+        <div class="adv-intro-side">
+          <p class="adv-intro-goal">🎯 ${info.goal}</p>
+          <p class="adv-intro-tip">💡 ต่อครบ 1 คำ = <b>+${m.reward}🪙</b> · กดปุ่ม 🚪 มุมขวาบนออกได้ทุกเมื่อ</p>
+        </div>
+        <div class="adv-intro-side">
+          <div class="adv-intro-ctrl-h">${IS_TOUCH?'📱 การบังคับ (แตะจอ)':'⌨️ การบังคับ (คีย์บอร์ด + เมาส์)'}</div>
+          <ul class="adv-intro-list">
+            ${rows.map(r=>`<li><span class="ic">${r[0]}</span><span>${r[1]}</span></li>`).join('')}
+          </ul>
+        </div>
+      </div>
       <button id="adv-intro-go">${reopen?'เล่นต่อ ▶':'เริ่มเล่นเลย! 🚀'}</button>`+`</div>`;
   introEl.classList.add('on');
   introEl.querySelector('#adv-intro-go').addEventListener('click',()=>closeIntro(md));
