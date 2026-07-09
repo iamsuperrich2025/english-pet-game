@@ -33,6 +33,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 106 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — ฉลองเข็มขยันอลัง + ตู้เข็มสะสม + tier 15 รอบ 🏆 — version .86** (commit 37f1928) — ผู้ใช้สั่ง "ทำทั้ง 3 ข้อ" (ไอเดียต่อยอดจากรอบ 105/105B)
+- **① 🎊 ฉลองได้เข็มนักเล่นขยันอลัง** — `celebrateBadge(emoji,title,sub)` (game.js): แบนเนอร์เด้งกลางจอ (bcPop/bcSpin) + โปรยเหรียญ (reuse `sprinkleConfetti`) + `sfx.rankup`+haptic แทน toast เดิม · overlay `position:fixed pointer-events:none z60` = ไม่บังการเล่น หายเอง ~3s (bc-out fade) · `addDiligent` เรียก celebrateBadge แทน toast · CSS `.badge-celebrate*` ใน style.css
+- **② 🏆 ตู้เข็มสะสม** ในรายงานความก้าวหน้า (`showProgressReport`) — แทนชิปเข็มเดิม · 3 สายที่นับจำนวนถาวร (⚡สายฟ้า/🎯ผาดโผน/🏅ขยัน): แต่ละสายมีแถบ % ไปเข็มถัดไป (คิดจากช่วง prevTier→nextTier) + อีโมจิเรียง 3 ระดับ (ได้=สว่าง `.rp-em.earned` · ยังไม่ได้=จาง grayscale) + note "อีก N = <เข็มถัดไป>" · ✈️ นักบิน = แถวสถานะ (อิงสตรีค ไม่มีแถบ) · CSS `.rp-tline/.rp-tl-*/.rp-em`
+- **③ 🔥 tier โบนัสเล่นต่อ +300** — `REPLAY_BONUS_TIERS` เพิ่ม `[15,300]` → 3→50, 6→100, 9-14→200, 15 ขึ้นไป→300 (ไม่ตันที่ 200)
+- ✅ ยืนยัน preview: โบนัสจ่าย 15/18→+300 · celebrateBadge overlay กลางจอ(356/711) + 20 confetti + pointer-events none + auto-remove 1→0 · ตู้เข็ม bar% ถูก (สายฟ้า 12 ครั้ง→70%, ●○○) + ผาดโผน 0→0% + ขยัน 100→100% ●●● "ครบทุกเข็ม" + นักบิน 🥈 · ไม่มี console error
+- ⚠️ commit เฉพาะ game.js/style.css/version (pin pathspec)
+
 **✅ รอบ 105B (9 ก.ค. · Opus): เข็มนักเล่นขยัน 🏅 — สะสม "เล่นต่ออีกรอบ" ถาวร 20/50/100 — version .85** — ต่อจากรอบ 105 · ผู้ใช้สั่ง (งาน B ที่ pin ไว้)
 - แพตเทิร์นเดียวกับเข็มสายฟ้า/นักบิน: `state.diligentCount/diligentBadge` (state.js + migration) · game.js `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]` + `DILIGENT_TIER_UI`(🏅เข็มนักเล่นขยัน/🎖️นักเล่นตัวยง/🏆ยอดนักสู้คำศัพท์) + `diligentEmoji()` + `addDiligent()` (เรียกใน closure replay ของ exitGame ทุกครั้งที่กดเล่นต่อ · toast ประกาศเข็มหน่วง 1.2s)
 - ต่อ `diligentEmoji(state.diligentBadge)` ท้ายชื่อใน adventure3d.js **map peer publish (1285)** + **กระดานคะแนน renderBoard (1722)** ต่อจาก pilot/thunder/daredevil (เพื่อนเห็นทุกโลก) · ⚠️ `pilotEmoji` เป็น local ของ adventure3d แต่ `diligentEmoji` เป็น global game.js (เข้าถึงได้)
