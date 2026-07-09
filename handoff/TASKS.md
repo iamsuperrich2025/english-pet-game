@@ -33,6 +33,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 109 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — กระดานแท็บเดียว + เข็มลับ 👑 + กราฟเข็มรายสัปดาห์ 🏅 — version .89** (commit 905f851) — ผู้ใช้สั่ง "ทำ 3 อย่างเลย" (ต่อจากรอบ 108)
+- **① 🎖️ กระดานแท็บเดียว (ประหยัดจอ)** — รวม leaderboard เหรียญ+เข็มเป็นการ์ดเดียว `#leaderboard-card` มีแท็บ 🪙 เหรียญ / 🏅 เข็ม (ui.js: `lbTab` + `bindLbTabs` delegated + `lbCoinHtml()`/`lbBadgeHtml()`) · แถวเข็มคลิกดูการ์ดผู้เล่นได้ (pl-click) · **ลบการ์ด `#badge-leaderboard-card` แยก** (index.html) + call ใน onlineRerender · CSS `.lb-tabs/.lb-tab.active`
+- **② 👑 เข็มลับ "นักสะสมเข็ม"** — ได้เมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน อย่างละ ≥1) · `state.crownBadge` + `checkCrown()` (game.js) เรียกท้าย `addThunder`/`addDiligent`/pilot/daredevil (adventure3d) + ตอนเข้าเมือง (renderDashboard — ครอบผู้เล่นเดิม) · `badgeSuffix` นำหน้าด้วย 👑 · `BADGE_META['👑']={p:5}` (ดันขึ้นต้นกระดานเข็ม) · `celebrateBadge` ฉลอง (หน่วง 3.6s พ้นเข็มสายที่ 4) · regex `NAME_BADGE_RE`/`badgeEmojis` รวม 👑 · state migration
+- **③ 📈 กราฟแต้มเข็มรายสัปดาห์ในตู้เข็ม** — `currentBadgeScore()`+`rolloverBadgeWeek()` (game.js · เรียกใน renderDashboard) เก็บ `badgeWeekHist` [{wk,gain}] 8 สัปดาห์ล่าสุด (สแนปต้นสัปดาห์ด้วย weekKeyStr เดิม) · `showProgressReport` เพิ่มกราฟแท่ง 5 สัปดาห์ก่อน+สัปดาห์นี้ (แท่งเหลืองเด่น สูงตามสัดส่วน) + บรรทัด "สัปดาห์นี้ +X แต้ม" + แถวสถานะเข็มลับ 👑 · CSS `.rp-wgraph/.rp-wcol/.rp-wbar.now/.rp-crown` · fields ใหม่ state.js (crownBadge/badgeWeekKey/badgeWeekStartScore/badgeWeekHist) + migration
+- ✅ ยืนยัน preview: crown ครบ4สาย→true · badgeSuffix `👑🥉⚡🎯🏅` (👑นำหน้า) · badgeScore `👑🥇⛈️🔥🏆`=17 · แท็บสลับ coins↔badges (เข็ม น้องบี15/มะปราง3 เรียงถูก กรอง0) · กราฟ 4 แท่งสูง 50/100/25/100% แท่ง"นี้"เหลือง +4 แต้ม · crown row + "สัปดาห์นี้ +4 แต้ม 🔥" · ไม่มี console error
+- ⚠️ commit เฉพาะ css/style.css/index.html/adventure3d.js/game.js/online.js/state.js/ui.js/version (pin pathspec)
+
 **✅ รอบ 108 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — แถวเข็มในการ์ดผู้เล่น + แจ้งเตือนเพื่อนได้เข็ม + กระดานเข็ม 🏅 — version .88** (commit 718ec3b) — ผู้ใช้สั่ง "เอา 3 ข้อเลย" (ต่อจากรอบ 107)
 - **helper กลาง (game.js):** `BADGE_META` (อิโมจิ→{ชื่อ,แต้ม 1-3}) + `splitNameBadges(n)` (แยกชื่อสะอาด/เข็มท้าย) + `badgeEmojis(str)` + `badgeScore(str)` · แตกเข็มที่ baked ท้ายชื่อ `presence/leaderboard.n` (จากรอบ 107) มาใช้ได้ **โดยไม่ต้องเพิ่ม field/publish rules**
 - **① 🖼️ การ์ดข้อมูลผู้เล่น (คลิกชื่อ) โชว์ "แถวเข็ม"** — `showPlayerCard` แยกเข็มจากชื่อ → หัวการ์ดชื่อสะอาด + `.pl-badges` ชิป (emoji ตัวโต + ชื่อเข็มไทย) · me-row `data-n` ใส่เข็มเองด้วย (ป๊อปอัปของเราโชว์เข็ม) · CSS `.pl-badges/.pl-badge-chip` (lobby.css)
