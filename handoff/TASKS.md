@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 92 (9 ก.ค. · Opus): ปุ่มโลก 3D ในราง — badge จำนวนคำที่พิชิต + ราคาตั๋วโลกที่ล็อก 🏅🪙 — version .70** (commit fa2a89b) — ต่อยอดปุ่มลัดโลก 3D (คอมมิตก่อนหน้า c9ba3f0) ตามไอเดียที่เสนอ · ผู้ใช้สั่งทำ
+- `js/ui.js` WORLD3D เพิ่ม `doneKey`+`price` (โลกใหม่ยังเพิ่มบรรทัดเดียว) · `renderRailWorlds()` ต่อ: ปลดล็อกแล้ว→`.rail-count` badge ทองมุมขวาบน = `state[doneKey].length` (โชว์เฉพาะ >0) · ยังล็อก→`.rail-price` ใต้ชื่อ `🪙price` (coins>=price = เขียวเรือง `.afford`, ไม่พอ = เหลืองทอง) + 🔒 คงเดิม
+- `css/lobby.css`: `.rail-world .rail-count` (ทอง #f5c542 ต่างจาก badge แดง=เตือน) · `.rail-price` + `.rail-price.afford` (เขียวเรือง) · locked opacity .62
+- ✅ ยืนยัน preview 1280×720: 4 เคส (adv done7=badge"7" · haunt locked+afford=เขียว🪙10,000 · heli done0=ไม่มี badge · drone locked ไม่พอ=เหลือง🪙20,000) + live unlock (ซื้อตั๋ว haunt→ราคา/🔒 หาย badge"3" โผล่)
+- ⚠️ commit เฉพาะ `css/lobby.css js/ui.js version.json` (style.css/state.js modified = ของ session คู่ขนาน — ไม่แตะ · pin pathspec)
+
 **✅ รอบ 91 (9 ก.ค. · Opus): เกมจับคู่ — ฉลองหลักเหรียญครั้งนี้ + ทำลายสถิติเหรียญตัวเอง 🎉🏆 — version .69** (commit 6b80700) — ต่อยอดตัวนับเหรียญ "ครั้งนี้" (รอบ 87) · ผู้ใช้เห็นชอบไอเดีย
 - **หลักเหรียญ:** `SESSION_MILESTONES=[100,250,500,1000,2000,3000,5000,8000,10000]` (game.js) · ใน `addSessionCoins` ข้ามหลักใหม่ (หลักสูงสุดที่เพิ่งข้าม กันเด้งรัว) → `floatFx('🎉 ว้าว! ครั้งนี้ X 🪙 แล้ว!')`+`sfx.levelup` หน่วง 620ms · `game.sessMilestone` กันซ้ำ · reset ใน startGame
 - **ทำลายสถิติ:** `state.bestSessionCoins` (field ใหม่ state.js — migrate เองผ่าน Object.assign defaults) · startGame จำ `game.prevBest` · เก็บเกิน prevBest ครั้งแรก → `toast('🏆 ทำลายสถิติตัวเอง! เกิน X')`+`sfx.rankup` (flag `beatBestShown` เด้งครั้งเดียว · **prevBest=0 ครั้งแรกไม่เด้ง**) · best อัปเดตสด เซฟผ่าน saveState เดิม
