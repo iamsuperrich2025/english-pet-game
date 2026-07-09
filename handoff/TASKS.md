@@ -10,6 +10,11 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 86 (9 ก.ค. commit e188b46) — push ภาพผี 5 ตัวขึ้นเว็บ 👻
+- **อาการ:** ผู้ใช้เจนภาพผีวาง `img/ghosts/` แล้ว แต่มือถือยังเห็นแต่ emoji · **ต้นตอ:** `img/ghosts/ghost_1..5.png` ไม่เคยถูก track ใน git → live Pages ตอบ **404** → โค้ด fallback emoji (ในเครื่อง preview เห็นเพราะมีไฟล์จริง)
+- **แก้:** `git add` เฉพาะ 5 ไฟล์จริง (ไม่แตะ `img/ghosts_recovered/` = โฟลเดอร์สำรอง) + บัมพ์ version .90→.91 → push · ยืนยัน live ครบทั้ง 5 = HTTP 200
+- 💡 **บทเรียน:** asset ที่ผู้ใช้เจนเอง (ghosts/models/ads/theme/buildings/sound) ต้อง `git add` เจาะจงถึงจะขึ้นเว็บ — ถ้าผู้ใช้บอก "วางภาพแล้วแต่มือถือไม่ขึ้น" → เช็ก `git ls-files` + curl live 404 ก่อนเสมอ
+
 ### ✅ เสร็จแล้ว (9 ก.ค. รอบ 105/105B) — A+B "สตรีคเล่นต่อ" ต่อยอดรอบ 101
 - **A) โบนัสสตรีคเล่นต่อไล่ระดับ ✅** (รอบ 105 · commit 749cce9) — `REPLAY_BONUS_TIERS=[[9,200],[6,100],[3,50]]` + `replayBonusFor(streak)` · closure replay จ่ายตาม tier (3→50,6→100,9+→200 คงที่) · `.sm-streak` โชว์โบนัสเป้าถัดไป · ยืนยัน preview
 - **B) เข็มนักเล่นขยัน 🏅 ✅** (รอบ 105B) — `diligentCount/diligentBadge` (state.js) · `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]`+`diligentEmoji()`+`addDiligent()` (game.js) เรียกใน closure replay · ต่อท้ายชื่อใน map peer+กระดาน (adventure3d.js 1285/1722) · แถวสถิติ (ui.js) + รายงานฯ · ยืนยัน preview (เข็มขึ้น 20/50/100)
