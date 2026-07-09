@@ -35,6 +35,16 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 104 (9 ก.ค. · Opus): ตัวละคร Lobby เป็นโมเดล 3D จริง (idle + ปัดหมุน 360°) 🧊 — version .83** (commit c31e545) — ผู้ใช้สั่ง "ตัวละครต้องเป็น 3D ขยับ idle แบบ COD lobby + ปัดซ้ายขวาหมุนดูรอบตัว" · ผู้ใช้เลือกแนวทาง **โมเดล GLB จริง** (จาก AskUserQuestion)
+- **`js/lobby3d.js`** (โมดูล `Lobby3D`): viewer Three.js วางทับ `.stage-hero` (canvas โปร่งใส z1 · แผง z2 อยู่บน) · โหลด `img/models/caretaker_{male|female}.glb` + `pet_{dog|cat|dragon}.glb` · fit โมเดล (สูงตามระดับร่างยักษ์ `PET_H/OWNER_H`) เท้าแตะพื้น · **idle procedural** (sway.position.y/rotation.z sin) + เล่น AnimationMixer คลิปชื่อ idle/breath/stand ถ้ามี · **ปัด/ลาก pointer = หมุน spin.rotation.y 360°** + โมเมนตัม (spinVel decay) · หยุด RAF เมื่อออกจาก dashboard
+- **fallback ปลอดภัยสุด:** `attach` เช็ก `isFileProto()` + `modelsExist()` (HEAD fetch cache ต่อ avatar|pet) **ก่อนโหลด three** → ไม่มีไฟล์/ไม่ครบ/file:// = ไม่โหลด three (ประหยัด ~700KB) ซ่อน canvas โชว์ `.hero-scene` PNG เดิม · โหลด glb พลาดก็ fallback (ไม่ถือเป็นบั๊ก)
+- **`js/vendor/GLTFLoader.js`** (global build three r147 · เข้ากับ three r149 ที่เกมใช้ — examples/js ถูกถอดหลัง r147 เลยดึงตัวนี้มา) โหลด dynamic ผ่าน `loadScriptOnce`
+- index.html โหลด `js/lobby3d.js` (โมดูลเล็ก · three โหลดตอน attach) · ui.js `renderDashboard` เรียก `Lobby3D.attach(hero,{avatar,petType,stage,giant})` (เช็ก `typeof Lobby3D!=='undefined'` — เป็น const ไม่ใช่ window prop!) เฉพาะ stage!=='egg'
+- **คู่มือ:** `PROMPTS_MODELS_3D.md` + `img/models/README.txt` — เจนโมเดลจากภาพตัวละครเดิมด้วย image-to-3D (Meshy/Tripo/Luma) → .glb ชื่อตรงเป๊ะ · ผู้เลี้ยงอยากได้ท่าจริงเข้า Mixamo ตั้งชื่อคลิป idle · **ส่ง Artifact ปุ่มคัดลอกแล้ว**
+- ✅ ยืนยัน preview (ใส่ Fox.glb ทดสอบชั่วคราว—ไม่ commit): โหลด three+GLTFLoader สำเร็จ · GLB เรนเดอร์จริง (renderer.info triangles=1152) · canvas ทับ hero แผง/UI ครบ · ปัดแล้ว `targetRot`→2.88 rad (หมุนตอบสนอง) · **ลบไฟล์ทดสอบ→ fallback: three ไม่โหลด, canvas ไม่สร้าง, PNG โชว์, ไม่มี error** · มี `Lobby3D._debug()` ช่วยเช็ก (RAF ถูก throttle ตอน preview background — rotY ค้างแต่ targetRot อัปเดต = ปกติ)
+- ⚠️ **ค้างฝั่งผู้ใช้:** เจนไฟล์ `.glb` วาง `img/models/` (ดู Artifact/PROMPTS_MODELS_3D.md) — ยังไม่วาง = PNG เดิม · การจัดวาง/กล้อง 3D ทดสอบด้วย Fox placeholder ยังต้องจูนจริงตอนมีโมเดลจริง (แก้ที่ `applyLayout`/`frameCamera` ใน lobby3d.js)
+- ⚠️ commit เฉพาะ 8 ไฟล์ (pin pathspec · ไม่แตะ .claude/img ghosts/vocab ของ session อื่น)
+
 **✅ รอบ 103 (9 ก.ค. · Opus): สัตว์ขนาดปกติ + อัพเกรด "ร่างยักษ์" 🦣 — version .82** (commit 5036ca1 · หมายเหตุ: ข้อความ commit เผลอพิมพ์ "รอบ 102" — จริงคือ 103 ต่อจาก lobby COD) — ต่อจากรอบ 102 · ผู้ใช้สั่ง "สัตว์ขนาดปกติ แต่อัพเกรดให้ยักษ์จนผู้เลี้ยงสูงแค่เข่าได้"
 - **ค่าเริ่มต้นน้องขนาดปกติ:** เลิกน้องตัวโตเกินผู้เลี้ยง — g0 น้องเตี้ยกว่าผู้เลี้ยงเล็กน้อย (owner/pet ≈ 1.17)
 - **ระบบร่างยักษ์ 4 ระดับ** (ui.js): `GIANT_MAX=4` · `GIANT_COST=[_,2k,4k,8k,16k]` · คุมขนาดด้วยความสูง vh: `GIANT_PET_VH=[29,42,54,64,74]` / `GIANT_OWNER_VH=[34,33,30,26,22]` → g4 owner/pet ≈ 0.30 (ระดับเข่า) · `upgradeGiant()/resetGiant()/giantLevel()` · หักเหรียญ `state.coins-=cost` (แนวเดียวกับซื้อของอื่น) · เหรียญไม่พอ=บล็อก+toast · ย่อกลับฟรี (ไม่คืนเหรียญ)
