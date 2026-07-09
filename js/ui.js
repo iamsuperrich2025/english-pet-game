@@ -214,15 +214,24 @@ function rainFxDrop(glass){
    ต่อ Firebase สำเร็จ → โชว์ผู้เล่นจริงที่ออนไลน์อยู่ (Online.friends)
    ออฟไลน์/ต่อไม่ได้ → ถอยไปใช้เพื่อนจำลองเดิม (สุ่มหมุนเวียนทุก 5 นาที)
    ============================================================ */
+/* คำเรียกตัวเองตามระดับชั้น — ป.1-ป.6/อนุบาล = "หนู" (น่ารักสำหรับเด็ก) ·
+   ตั้งแต่ ม.1 ขึ้นไป (รวม ปริญญา) = "คุณ" (สุภาพ เหมาะกับวัยโต) */
+function selfPronoun(){
+  const g = state.student ? state.student.grade : '';
+  const junior = (g === 'ต่ำกว่าประถมศึกษา') || /^ป\.[1-6]$/.test(g);
+  return junior ? 'หนู' : 'คุณ';
+}
+function selfTag(){ return selfPronoun() + 'เอง'; }   // "หนูเอง" / "คุณเอง"
+
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
-  const meName = state.profileName || (state.student ? state.student.first : '') || 'หนูเอง';
+  const meName = state.profileName || (state.student ? state.student.first : '') || selfTag();
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
-      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)} (หนูเอง)</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)} (${selfTag()})</span>
       <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
@@ -290,7 +299,7 @@ function renderLeaderboardCard(){
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
   el.innerHTML = title + `
-    <div class="online-count">${myIdx >= 0 ? `หนูอยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
+    <div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
     <div class="lb-list">${rows}</div>`;
   bindPlayerClicks();
 }
@@ -336,7 +345,7 @@ function showPlayerCard(uid, name, grade){
     const av = (d.av == null) ? '—' : fmtNum(d.av) + ' 🪙';
     const ni = (d.ni == null) ? '—' : fmtNum(d.ni) + ' ชิ้น';
     body.innerHTML = `
-      ${d.me ? '<div class="pl-me-tag">⭐ นี่คือหนูเอง</div>' : ''}
+      ${d.me ? `<div class="pl-me-tag">⭐ นี่คือ${selfTag()}</div>` : ''}
       <div class="pl-stat">
         <span class="pl-lbl">💰 เงินรวม</span>
         <span class="pl-val pl-gold">${fmtNum(d.coins)} 🪙</span>
@@ -510,7 +519,7 @@ function friendDoSearch(){
   out.innerHTML = `<div class="fr-hint">🔎 กำลังค้นหา...</div>`;
   friendSearch(code).then(r=>{
     if(!r){ out.innerHTML = `<div class="fr-hint">😕 ไม่พบรหัสนี้ ลองเช็กอีกครั้งนะ</div>`; return; }
-    if(r.self){ out.innerHTML = `<div class="fr-hint">😄 นี่คือรหัสของหนูเองนะ!</div>`; return; }
+    if(r.self){ out.innerHTML = `<div class="fr-hint">😄 นี่คือรหัสของ${selfTag()}นะ!</div>`; return; }
     const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>`;
     if(r.already){ out.innerHTML = `<div class="fr-found">${nameHTML}<span class="fr-hint">✅ เป็นเพื่อนกันแล้ว</span></div>`; return; }
     out.innerHTML = `<div class="fr-found">${nameHTML}<button class="fr-add-btn" id="fr-send-req">➕ ส่งคำขอเป็นเพื่อน</button></div>`;
@@ -2625,10 +2634,10 @@ async function enterDrone3D(){
    แล้วปุ่มจะโผล่ในรางเอง · มีตั๋ว = กดเข้าโลกเลย · ยังไม่มีตั๋ว = 🔒 พาไปการ์ดซื้อในร้านค้า
    ============================================================ */
 const WORLD3D = [
-  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   card:'ticket-card', enter:enterAdventure3D },
-  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', card:'haunt-card',  enter:enterHaunted3D },
-  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  card:'heli-card',   enter:enterHeli3D },
-  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', card:'drone-card',  enter:enterDrone3D },
+  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   price:TICKET_PRICE, card:'ticket-card', enter:enterAdventure3D },
+  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', price:HAUNT_PRICE,  card:'haunt-card',  enter:enterHaunted3D },
+  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  price:HELI_PRICE,   card:'heli-card',   enter:enterHeli3D },
+  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
 ];
 
 function scrollShopCardIntoView(id){
@@ -2662,19 +2671,43 @@ function renderRailWorlds(){
       const b = document.createElement('button');
       b.className = 'rail-btn rail-world';
       b.id = 'btn-world-' + w.mode;
-      b.innerHTML = `<span class="rail-ico">${w.ico}</span>${w.label}<span class="rail-lock" style="display:none">🔒</span>`;
+      b.innerHTML = `<span class="rail-ico">${w.ico}</span>${w.label}`
+        + `<span class="rail-lock" style="display:none">🔒</span>`          // มุมขวาบน: ล็อกอยู่
+        + `<span class="rail-count" style="display:none">0</span>`          // มุมขวาบน: จำนวนคำที่พิชิตแล้ว (ปลดล็อกแล้ว)
+        + `<span class="rail-price" style="display:none"></span>`;          // ใต้ชื่อ: ราคาตั๋ว (ยังไม่มีตั๋ว)
       b.addEventListener('click', ()=>railWorldClick(w));
       box.appendChild(b);
     });
     rail.appendChild(box);
   }
-  WORLD3D.forEach(w=>{                                       // ล็อก(ยังไม่มีตั๋ว) จาง+🔒 · ปลดล็อกแล้วสว่างปกติ
+  WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
     const locked = !state[w.ticketKey];
+    const done   = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
+    const afford = state.coins >= w.price;
     b.classList.toggle('locked', locked);
     const lk = b.querySelector('.rail-lock');
-    if(lk) lk.style.display = locked ? '' : 'none';
+    const cnt = b.querySelector('.rail-count');
+    const pr  = b.querySelector('.rail-price');
+    if(locked){                                               // ยังไม่มีตั๋ว → 🔒 + ราคาตั๋ว (พอซื้อ=เขียว "พร้อม!")
+      if(lk) lk.style.display = '';
+      if(cnt) cnt.style.display = 'none';
+      if(pr){
+        pr.style.display = '';
+        pr.textContent = '🪙' + fmtNum(w.price);
+        pr.classList.toggle('afford', afford);
+        pr.title = afford ? 'เหรียญพอซื้อตั๋วแล้ว!' : '';
+      }
+    }else{                                                    // ปลดล็อกแล้ว → ซ่อนราคา · โชว์จำนวนคำที่พิชิต (ถ้ามี)
+      if(lk) lk.style.display = 'none';
+      if(pr) pr.style.display = 'none';
+      if(cnt){
+        cnt.style.display = done > 0 ? '' : 'none';
+        cnt.textContent = fmtNum(done);
+        cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ';
+      }
+    }
   });
 }
 
