@@ -50,6 +50,10 @@ const DEFAULT_STATE = {
   thunderBadge:0,                     // รอบ 70: เข็มสายฟ้าสูงสุดที่เคยได้ 0=ไม่มี 1=⚡(5 ครั้ง) 2=🌩️(15) 3=⛈️(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   diligentCount:0,                    // รอบ 105: จำนวน "รอบเล่นต่อ" สะสมถาวร (กดเล่นต่ออีกรอบในเกมจับคู่) — สู่เข็มนักเล่นขยัน
   diligentBadge:0,                    // รอบ 105: เข็มนักเล่นขยันสูงสุดที่เคยได้ 0=ไม่มี 1=🏅(20 รอบ) 2=🎖️(50) 3=🏆(100) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
+  crownBadge:0,                       // รอบ 109: เข็มลับ 👑 "นักสะสมเข็ม" — ได้เมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน) · โชว์นำหน้าชื่อ
+  badgeWeekKey:'',                    // รอบ 109: คีย์สัปดาห์ (วันจันทร์) ที่เริ่มนับแต้มเข็มรายสัปดาห์
+  badgeWeekStartScore:0,              // รอบ 109: แต้มเข็มรวมตอนต้นสัปดาห์นี้ (ไว้คิดว่าสัปดาห์นี้เก็บเพิ่มกี่แต้ม)
+  badgeWeekHist:[],                   // รอบ 109: ประวัติแต้มเข็มที่เก็บเพิ่มรายสัปดาห์ [{wk,gain}] เก็บ 8 สัปดาห์ล่าสุด (กราฟในตู้เข็ม)
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
@@ -244,6 +248,10 @@ function loadState(){
       if(typeof s.thunderBadge !== 'number') s.thunderBadge = 0;
       if(typeof s.diligentCount !== 'number') s.diligentCount = 0;                         // รอบ 105
       if(typeof s.diligentBadge !== 'number') s.diligentBadge = 0;
+      if(typeof s.crownBadge !== 'number') s.crownBadge = 0;                               // รอบ 109
+      if(typeof s.badgeWeekKey !== 'string') s.badgeWeekKey = '';
+      if(typeof s.badgeWeekStartScore !== 'number') s.badgeWeekStartScore = 0;
+      if(!Array.isArray(s.badgeWeekHist)) s.badgeWeekHist = [];
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;

@@ -136,7 +136,6 @@ function onlineRerender(){
   if(!dash || !dash.classList.contains('active')) return;
   if(typeof renderOnlineCard === 'function') renderOnlineCard();
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
-  if(typeof renderBadgeLeaderboardCard === 'function') renderBadgeLeaderboardCard();
   if(typeof renderFriendPanel === 'function') renderFriendPanel();
   if(typeof renderGiftPanel === 'function') renderGiftPanel();
 }

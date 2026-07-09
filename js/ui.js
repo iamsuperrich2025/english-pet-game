@@ -324,21 +324,41 @@ function renderOnlineCard(){
 }
 
 /* ============================================================
-   การ์ด Leaderboard 🏆 — อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
-   (ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน)
+   การ์ด Leaderboard — สลับ 2 แท็บในการ์ดเดียว (ประหยัดพื้นที่):
+   🪙 เหรียญ (นักสะสมเหรียญ Top 50) · 🏅 เข็ม (แต้มรวมเข็มสะสม)
+   ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
+let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่: 'coins' | 'badges'
+function bindLbTabs(){
+  if(window.__lbTabBound) return;                      // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
+  window.__lbTabBound = true;
+  document.addEventListener('click', (e)=>{
+    const t = e.target.closest('.lb-tab');
+    if(!t) return;
+    lbTab = t.dataset.tab === 'badges' ? 'badges' : 'coins';
+    if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
+    renderLeaderboardCard();
+  });
+}
 function renderLeaderboardCard(){
   const el = document.getElementById('leaderboard-card');
   if(!el) return;
-  const title = `<h3 class="shop-title">🏆 สุดยอดนักสะสมเหรียญ Top ${LEADERBOARD_SIZE}</h3>`;
+  bindLbTabs();
+  const tabs = `<div class="lb-tabs">
+    <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
+    <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
+  </div>`;
   if(typeof Online === 'undefined' || !Online.ready){
-    el.innerHTML = title + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
+    el.innerHTML = tabs + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
     return;
   }
-  if(!Online.board.length){
-    el.innerHTML = title + `<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเกมเก็บเหรียญเป็นคนแรกเลย! 🥇</div>`;
-    return;
-  }
+  el.innerHTML = tabs + (lbTab === 'badges' ? lbBadgeHtml() : lbCoinHtml());
+  bindPlayerClicks();
+}
+
+/* 🪙 เนื้อหาแท็บเหรียญ */
+function lbCoinHtml(){
+  if(!Online.board.length) return `<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเกมเก็บเหรียญเป็นคนแรกเลย! 🥇</div>`;
   const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
   const myId = onlineKey();
   const myIdx = Online.board.findIndex(r=>r.id === myId);
@@ -348,49 +368,33 @@ function renderLeaderboardCard(){
       <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
-  el.innerHTML = title + `
-    <div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
+  return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
     <div class="lb-list">${rows}</div>`;
-  bindPlayerClicks();
 }
 
-/* ============================================================
-   การ์ดกระดานเข็มสะสม 🏅 — จัดอันดับใครสะสมเข็มได้ "แต้มรวม" มากสุด (แยกจากกระดานเหรียญ)
-   ข้อมูลเข็มถูก baked ในชื่อ (presence/leaderboard.n) อยู่แล้ว → แตกด้วย badgeScore
-   ============================================================ */
-function renderBadgeLeaderboardCard(){
-  const el = document.getElementById('badge-leaderboard-card');
-  if(!el) return;
-  const title = `<h3 class="shop-title">🏅 กระดานเข็มสะสม <span class="lb-hint">แต้มรวมจากทุกเข็ม</span></h3>`;
-  if(typeof Online === 'undefined' || !Online.ready || typeof badgeScore !== 'function'){
-    el.innerHTML = title + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับเข็มของเพื่อนๆ นะ!</div>`;
-    return;
-  }
+/* 🏅 เนื้อหาแท็บเข็ม — จัดอันดับด้วยแต้มรวมเข็ม (baked ในชื่อ presence/leaderboard.n) */
+function lbBadgeHtml(){
+  if(typeof badgeScore !== 'function') return `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับเข็มของเพื่อนๆ นะ!</div>`;
   const myId = onlineKey();
   const meName = state.profileName || (state.student ? state.student.first : '') || 'หนู';
   const meBadges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
-  // รวมผู้เล่นจากกระดานเหรียญ (ชื่อมีเข็ม baked) + แทนที่ตัวเราด้วยเข็มสดจาก state
-  const map = {};
+  const map = {};                                      // รวมผู้เล่นจากกระดานเหรียญ + แทนที่เราด้วยเข็มสด
   (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
   map[myId] = {id:myId, n: meName + meBadges, g: (state.student ? state.student.grade : '')};
   let rows = Object.values(map).map(r=>{
     const sp = splitNameBadges(r.n);
-    return {id:r.id, name:sp.name, badges:sp.badges, score:badgeScore(r.n), me:r.id===myId};
+    return {id:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId};
   }).filter(r=>r.score > 0);
   rows.sort((a,b)=> b.score - a.score || badgeEmojis(b.badges).length - badgeEmojis(a.badges).length);
-  if(!rows.length){
-    el.innerHTML = title + `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
-    return;
-  }
+  if(!rows.length) return `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
   const myIdx = rows.findIndex(r=>r.me);
   const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
   const list = rows.slice(0, LEADERBOARD_SIZE).map((r,i)=>`
     <div class="lb-row${r.me ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.name + r.badges)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม</small></span>
     </div>`).join('');
-  el.innerHTML = title + `
-    <div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับเข็มที่ ${myIdx + 1} จาก ${rows.length} คน 🏅` : `ยังไม่มีเข็ม — เก็บเข็มแล้วมาไต่กระดานนะ 💪`}</div>
+  return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับเข็มที่ ${myIdx + 1} จาก ${rows.length} คน 🏅` : `ยังไม่มีเข็ม — เก็บเข็มแล้วมาไต่กระดานนะ 💪`}</div>
     <div class="lb-list">${list}</div>`;
 }
 
@@ -1133,9 +1137,10 @@ function renderDashboard(){
 
   renderClock();
   renderRankCard();
+  if(typeof checkCrown === 'function') checkCrown();          // 👑 เข็มลับ (ครอบผู้เล่นเดิมที่ครบ 4 สายอยู่แล้ว)
+  if(typeof rolloverBadgeWeek === 'function') rolloverBadgeWeek();   // 📈 สแนปแต้มเข็มต้นสัปดาห์
   renderOnlineCard();
   renderLeaderboardCard();
-  renderBadgeLeaderboardCard();
   renderFriendPanel();
   renderGiftPanel();
 

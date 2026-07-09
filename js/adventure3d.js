@@ -868,6 +868,7 @@ function completeWord(i){
       setTimeout(()=>{
         celebrateBadge(tier[2], `ได้เข็มนักบิน${tier[3]}!`,
           `บิน ${tier[0]} คำติดโดยไม่ชนเลย — สุดยอดกัปตัน! เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
+        if(typeof checkCrown === 'function') checkCrown();   // 👑 เช็กเข็มลับ (ครบ 4 สาย)
         if(myRef) sendPos(true);            // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
       },2600);                              // รอ banner ฉลองคำจบก่อน
     }
@@ -2459,6 +2460,7 @@ function awardDaredevil(){
       if(!running) return;
       celebrateBadge(daredevilEmoji(tier[1]), `ได้${DAREDEVIL_TIER_UI[tier[1]]}!`,
         `บินเฉียดสุดๆ ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
+      if(typeof checkCrown === 'function') checkCrown();     // 👑 เช็กเข็มลับ (ครบ 4 สาย)
       if(myRef) sendPos(true);                              // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
     }, 1400);
   }

@@ -251,6 +251,27 @@ function showProgressReport(){
   const pilotHtml = state.pilotBadge
     ? `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span><b>${pilotNames[state.pilotBadge]}</b></span></div>`
     : `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span style="color:#9a8aac">ยังไม่ได้ — บินเก็บ 5 คำติดไม่ชน 🥉</span></div>`;
+  const crownHtml = state.crownBadge
+    ? `<div class="rp-crown">👑 <b>เข็มลับ "นักสะสมเข็ม"</b> — สะสมครบทั้ง 4 สาย! สุดยอด</div>`
+    : `<div class="rp-row"><span>👑 เข็มลับ "นักสะสมเข็ม"</span><span style="color:#9a8aac">ได้เข็มครบทั้ง 4 สายแล้วปลดล็อก</span></div>`;
+
+  // 📈 กราฟแต้มเข็มที่เก็บได้รายสัปดาห์ (ประวัติ + สัปดาห์นี้ที่กำลังนับ)
+  const wkShort = (wk)=>{ const p = String(wk||'').split('-'); return p.length===3 ? (+p[2])+'/'+(+p[1]) : ''; };
+  const curScore = (typeof currentBadgeScore === 'function') ? currentBadgeScore() : 0;
+  const curGain  = Math.max(0, curScore - (state.badgeWeekStartScore||0));
+  const bwBars   = (state.badgeWeekHist||[]).slice(-5).concat([{wk:state.badgeWeekKey||'', gain:curGain, now:true}]);
+  const bwMax    = Math.max(1, ...bwBars.map(b=>b.gain||0));
+  const bwGraph  = bwBars.some(b=>(b.gain||0) > 0)
+    ? `<div class="rp-wgraph">${bwBars.map(b=>{
+        const h = Math.round(((b.gain||0)/bwMax)*100);
+        return `<div class="rp-wcol"><div class="rp-wval">${(b.gain||0)>0 ? '+'+b.gain : ''}</div>`
+          + `<div class="rp-wbar${b.now?' now':''}" style="height:${(b.gain||0)>0 ? Math.max(14,h) : 4}%"></div>`
+          + `<div class="rp-wlbl">${b.now ? 'นี้' : wkShort(b.wk)}</div></div>`;
+      }).join('')}</div>`
+    : `<div class="rp-empty">เริ่มเก็บเข็มสัปดาห์นี้ แล้วสัปดาห์หน้าจะเห็นกราฟความก้าวหน้า 📊</div>`;
+  const weekBadgeHtml = `<div class="rp-wtitle">📈 แต้มเข็มที่เก็บได้รายสัปดาห์</div>
+    <div class="rp-wnow">สัปดาห์นี้เก็บเพิ่ม <b>+${curGain}</b> แต้มเข็ม ${curGain>0 ? '🔥 เก่งมาก!' : '— ไปเก็บเข็มเพิ่มกันเถอะ!'}</div>
+    ${bwGraph}`;
 
   // สัตว์เลี้ยง
   const petCount = state.pets.length;
@@ -301,6 +322,8 @@ function showProgressReport(){
       <h3 class="rp-h3">🏆 ตู้เข็มสะสมของ${name}</h3>
       ${trophyHtml}
       ${pilotHtml}
+      ${crownHtml}
+      ${weekBadgeHtml}
     </div>
 
     <div class="rp-section">
@@ -342,21 +365,23 @@ function diligentEmoji(b){ return ['','🏅','🎖️','🏆'][b||0] || ''; }
    กระดานหน้าเมือง (บันทึกลง presence.n/leaderboard.n ให้เพื่อนเห็นด้วย) · pilotEmoji เป็น local
    ของ adventure3d จึง inline อาร์เรย์นักบินที่นี่ให้เป็นฟังก์ชัน global */
 function badgeSuffix(){
-  return (['','🥉','🥈','🥇'][state.pilotBadge||0]||'')
+  return (state.crownBadge ? '👑' : '')                // 👑 เข็มลับ นักสะสมเข็ม — นำหน้าเสมอ
+    + (['','🥉','🥈','🥇'][state.pilotBadge||0]||'')
     + thunderEmoji(state.thunderBadge)
     + daredevilEmoji(state.daredevilBadge)
     + diligentEmoji(state.diligentBadge);
 }
 
-/* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน presence/leaderboard
-   (โชว์แถวเข็มในการ์ดผู้เล่น + คิดคะแนนกระดานเข็ม + ตรวจเพื่อนได้เข็มใหม่) */
+/* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3 · เข็มลับ 👑=5) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน
+   presence/leaderboard (โชว์แถวเข็มในการ์ดผู้เล่น + คิดคะแนนกระดานเข็ม + ตรวจเพื่อนได้เข็มใหม่) */
 const BADGE_META = {
+  '👑':{n:'นักสะสมเข็ม (เข็มลับ)',p:5},
   '🥉':{n:'ใบอนุญาตนักบิน',p:1}, '🥈':{n:'นักบินฝีมือดี',p:2}, '🥇':{n:'กัปตันมือทอง',p:3},
   '⚡':{n:'เข็มสายฟ้า',p:1}, '🌩️':{n:'เข็มพายุฟ้าคะนอง',p:2}, '⛈️':{n:'เข็มมหาพายุ',p:3},
   '🎯':{n:'เข็มเฉียดเฉี่ยว',p:1}, '🌀':{n:'เข็มนักบินผาดโผน',p:2}, '🔥':{n:'เข็มเจ้าเวหา',p:3},
   '🏅':{n:'เข็มนักเล่นขยัน',p:1}, '🎖️':{n:'เข็มนักเล่นตัวยง',p:2}, '🏆':{n:'เข็มยอดนักสู้คำศัพท์',p:3},
 };
-const NAME_BADGE_RE = /(?:🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆)+$/u;
+const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆)+$/u;
 function splitNameBadges(full){                        // แยก "ชื่อสะอาด" กับ "เข็มท้ายชื่อ"
   full = String(full || '');
   const m = full.match(NAME_BADGE_RE);
@@ -364,12 +389,48 @@ function splitNameBadges(full){                        // แยก "ชื่�
   return { name: badges ? full.slice(0, full.length - badges.length).trim() : full, badges };
 }
 function badgeEmojis(str){                              // แตกอิโมจิเข็มเป็นอาร์เรย์ตามลำดับที่พบ
-  const arr = [], re = /🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆/gu; let x;
+  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆/gu; let x;
   while((x = re.exec(String(str || '')))) arr.push(x[0]);
   return arr;
 }
 function badgeScore(str){                               // คะแนนรวม (ผลรวมระดับเข็ม) — ใช้จัดอันดับกระดานเข็ม
   return badgeEmojis(str).reduce((a,e)=>a + ((BADGE_META[e] && BADGE_META[e].p) || 0), 0);
+}
+
+/* 👑 เข็มลับ "นักสะสมเข็ม" — ปลดเมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน อย่างละ ≥1)
+   เรียกท้ายทุกครั้งที่ได้เข็มใหม่ + ตอนเข้าหน้าเมือง (ครอบผู้เล่นเดิมที่ครบอยู่แล้ว) · ฉลองครั้งเดียว */
+function checkCrown(){
+  if(state.crownBadge) return false;
+  if((state.pilotBadge||0) > 0 && (state.thunderBadge||0) > 0 &&
+     (state.daredevilBadge||0) > 0 && (state.diligentBadge||0) > 0){
+    state.crownBadge = 1;
+    saveState();
+    setTimeout(()=>{                                   // หน่วงให้พ้นการฉลองเข็มสายที่ 4 ที่เพิ่งได้
+      celebrateBadge('👑', 'ได้เข็มลับ "นักสะสมเข็ม"!',
+        'สะสมเข็มครบทั้ง 4 สาย — สุดยอดไปเลย! 👑 โชว์นำหน้าชื่อให้เพื่อนเห็นทุกโลก');
+    }, 3600);
+    return true;
+  }
+  return false;
+}
+
+/* 📈 แต้มเข็มรวมของเราตอนนี้ (จาก badgeSuffix ของตัวเอง) — ใช้คิดความก้าวหน้ารายสัปดาห์ */
+function currentBadgeScore(){ return badgeScore(badgeSuffix()); }
+
+/* 🗓️ สรุปแต้มเข็มที่เก็บเพิ่มรายสัปดาห์ (จันทร์รีเซ็ต) → เก็บ gain ของสัปดาห์ก่อนลง badgeWeekHist
+   ให้กราฟในตู้เข็มโชว์พัฒนาการ · เรียกตอนเข้าหน้าเมือง */
+function rolloverBadgeWeek(){
+  const wk = (typeof weekKeyStr === 'function') ? weekKeyStr() : '';
+  const cur = currentBadgeScore();
+  if(state.badgeWeekKey !== wk){
+    if(state.badgeWeekKey){                            // ปิดสัปดาห์เก่า: บันทึกว่าเก็บเพิ่มกี่แต้ม
+      const gain = Math.max(0, cur - (state.badgeWeekStartScore||0));
+      state.badgeWeekHist = (state.badgeWeekHist||[]).concat([{wk:state.badgeWeekKey, gain}]).slice(-8);
+    }
+    state.badgeWeekKey = wk;
+    state.badgeWeekStartScore = cur;
+    saveState();
+  }
 }
 function addDiligent(){                                 // เรียกทุกครั้งที่กด "เล่นต่ออีกรอบ"
   state.diligentCount = (state.diligentCount||0) + 1;
@@ -382,6 +443,7 @@ function addDiligent(){                                 // เรียกทุ
     }, 1200);
   }
   saveState();
+  checkCrown();                                        // 👑 เช็กเข็มลับ (ครบ 4 สาย)
 }
 
 /* 🎊 ฉลอง "ได้เข็มใหม่" อลังกลางจอ — แบนเนอร์เด้ง + โปรยเหรียญ + เสียง (reuse sprinkleConfetti)
@@ -411,6 +473,7 @@ function addThunder(){
     }, 1900);
   }
   saveState();
+  checkCrown();                                        // 👑 เช็กเข็มลับ (ครบ 4 สาย)
 }
 
 function startGame(cat){
