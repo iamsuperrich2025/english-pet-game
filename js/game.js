@@ -11,15 +11,45 @@ const game = {
   pool:null,
   roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
   sessionCoins:0,               // 🪙 เหรียญที่เก็บได้ "ครั้งนี้" (เริ่มนับใหม่ทุกครั้งที่เข้าเกม) — โชว์เป็นกำลังใจ
+  sessMilestone:0,              // หลักเหรียญครั้งนี้ที่ฉลองไปแล้วสูงสุด (กันฉลองซ้ำ)
+  prevBest:0,                   // สถิติเหรียญ/ครั้ง เดิม (ตอนเข้าเกม) — ไว้เทียบว่าทำลายสถิติหรือยัง
+  beatBestShown:false,          // เด้ง "ทำลายสถิติ!" ไปแล้วในครั้งนี้ (โชว์ครั้งเดียวพอ)
 };
 
-/* 🪙 อัปเดตตัวเลข "เล่นครั้งนี้เก็บไปแล้ว X" ในป้ายล่าง + เด้งเล็กๆ ให้เห็นว่าเพิ่ม */
+/* 🎉 หลักเหรียญที่จะเด้งฉลอง "ว้าว! ครั้งนี้ X 🪙 แล้ว!" (ฐาน 10🪙/คู่ · 60/รอบ) */
+const SESSION_MILESTONES = [100, 250, 500, 1000, 2000, 3000, 5000, 8000, 10000];
+
+/* 🪙 อัปเดตตัวเลข "เล่นครั้งนี้เก็บไปแล้ว X" ในป้ายล่าง + เด้ง + ฉลองหลักเหรียญ/ทำลายสถิติ */
 function addSessionCoins(n){
   game.sessionCoins += n;
   const el = document.getElementById('game-session-coins');
-  if(!el) return;
-  el.textContent = fmtNum(game.sessionCoins) + ' 🪙';
-  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  if(el){
+    el.textContent = fmtNum(game.sessionCoins) + ' 🪙';
+    el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+  }
+  if(n <= 0) return;   // รีเซ็ต/โหลดป้าย ไม่ต้องฉลอง
+
+  // 🎉 ฉลองเมื่อข้ามหลักเหรียญใหม่ (เด้งหลักสูงสุดที่เพิ่งข้าม กันเด้งรัวหลายหลักพร้อมกัน)
+  const passed = SESSION_MILESTONES.filter(m => game.sessionCoins >= m && m > game.sessMilestone).pop();
+  if(passed){
+    game.sessMilestone = passed;
+    setTimeout(()=>{   // หน่วงให้พ้น float +เหรียญ/คอมโบ ก่อน
+      sfx.levelup();
+      floatFx(`🎉 ว้าว! ครั้งนี้ ${fmtNum(passed)} 🪙 แล้ว!`, '#ffb521');
+    }, 620);
+  }
+
+  // 🏆 ทำลายสถิติเหรียญ/ครั้งของตัวเอง (เฉพาะคนที่เคยมีสถิติ > 0 · เด้งครั้งเดียว/ครั้งเล่น)
+  if(!game.beatBestShown && game.prevBest > 0 && game.sessionCoins > game.prevBest){
+    game.beatBestShown = true;
+    setTimeout(()=>{
+      sfx.rankup();
+      toast(`🏆 ทำลายสถิติตัวเอง! ครั้งนี้เก็บเกิน ${fmtNum(game.prevBest)} 🪙 ที่เคยทำได้แล้ว เก่งขึ้นทุกวันเลย!`, 3200);
+    }, passed ? 1500 : 700);   // ถ้าเพิ่งเด้งหลักเหรียญ ให้เหลื่อมกันไม่ให้ทับ
+  }
+
+  // อัปเดตสถิติสูงสุด (เซฟจะถูกบันทึกโดย saveState ที่ตามมาใน checkMatch)
+  if(game.sessionCoins > (state.bestSessionCoins||0)) state.bestSessionCoins = game.sessionCoins;
 }
 const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
@@ -48,6 +78,9 @@ function startGame(cat){
     `🇬🇧 คำศัพท์ภาษาอังกฤษ${cat ? ` · หมวด${cat.name}` : ''}`;
   game.combo = 0;
   game.sessionCoins = 0;   // เริ่มนับเหรียญ "ครั้งนี้" ใหม่ทุกครั้งที่เข้าเกม
+  game.sessMilestone = 0;
+  game.beatBestShown = false;
+  game.prevBest = state.bestSessionCoins || 0;   // จำสถิติเดิมไว้เทียบ (ก่อนครั้งนี้จะไปทับ)
   updateComboPill();
   addSessionCoins(0);      // รีเซ็ตป้ายเป็น 0 🪙
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
