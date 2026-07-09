@@ -3482,6 +3482,8 @@ function renderStats(){
       <div class="stats-row"><span>จับคู่คำศัพท์ถูกสะสม</span><span><b>${state.totalMatches}</b> คำ</span></div>
       <div class="stats-row"><span>⚡ สายฟ้าแลบ (เคลียร์ไว ≤5 วิ ไม่พลาดเลย)</span>
         <span><b>${fmtNum(state.thunderCount||0)}</b> ครั้ง${(state.thunderBadge||0) > 0 ? ` · ${THUNDER_TIER_UI[state.thunderBadge]}` : ''}</span></div>
+      <div class="stats-row"><span>🎯 บินเฉียดสุดๆ (โลกเฮลิฯ/โดรน แบบไม่ชน)</span>
+        <span><b>${fmtNum(state.daredevilCount||0)}</b> ครั้ง${(state.daredevilBadge||0) > 0 ? ` · ${DAREDEVIL_TIER_UI[state.daredevilBadge]}` : ''}</span></div>
       <div class="stats-row"><span>🏭 สินค้าที่ผลิตสำเร็จ</span><span><b>${fmtNum(state.producedCount)}</b> ชิ้น</span></div>
     </div>
     <div class="stats-card"><h3 class="stats-title">🐾 สัตว์เลี้ยงของหนู</h3>${petRows}</div>

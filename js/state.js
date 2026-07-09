@@ -44,6 +44,8 @@ const DEFAULT_STATE = {
   pilotBadge:0,                       // รอบ 62: เข็มนักบินสูงสุดที่เคยได้ 0=ยังไม่มี 1=🥉(สตรีค 5) 2=🥈(15) 3=🥇(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   droneTicket:false,                  // รอบ 85: ตั๋วโลกโดรน FPV Racing (ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์)
   droneDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกโดรน (แยกคลังต่อโลก)
+  daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
+  daredevilBadge:0,                   // รอบ 87: เข็มนักบินผาดโผนสูงสุดที่เคยได้ 0=ไม่มี 1=🎯(10) 2=🌀(30) 3=🔥(60) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
   thunderBadge:0,                     // รอบ 70: เข็มสายฟ้าสูงสุดที่เคยได้ 0=ไม่มี 1=⚡(5 ครั้ง) 2=🌩️(15) 3=⛈️(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
@@ -229,6 +231,8 @@ function loadState(){
       if(typeof s.pilotBadge !== 'number') s.pilotBadge = 0;
       if(typeof s.droneTicket !== 'boolean') s.droneTicket = false;                         // รอบ 85: โลกโดรน FPV
       if(!Array.isArray(s.droneDone)) s.droneDone = [];
+      if(typeof s.daredevilCount !== 'number') s.daredevilCount = 0;                        // รอบ 87
+      if(typeof s.daredevilBadge !== 'number') s.daredevilBadge = 0;
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70
       if(typeof s.thunderBadge !== 'number') s.thunderBadge = 0;
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};

@@ -79,7 +79,7 @@ let worlds={};                    // ฉาก static ต่อโหมด {sce
 let scene=null, trees=[], buildings=[];
 let solids=[];                    // 🛸 กล่องกันชนของตึกร้าง (โหมด drone) — {x,y,z,hx,hy,hz}
 /* 💨 โบนัสบินเฉียด (near-miss · รอบ 86) — ใช้ทั้ง heli/drone: เข้าใกล้กำแพงแล้วถอยรอดโดยไม่ชน = ได้เหรียญ */
-let nmActive=false, nmMin=99, nmCrashed=false, nmCombo=0, nmLastAt=0, nmPopEl=null;
+let nmActive=false, nmMin=99, nmCrashed=false, nmCombo=0, nmLastAt=0, nmPopEl=null, comboFxEl=null;
 /* ---------- โดรน FPV (โหมด drone) — เร็วและคล่องกว่าเฮลิฯ บินเข้าตึกได้ ---------- */
 const DRONE_R     = 0.6;          // รัศมีตัวโดรน (กันชนกับกำแพง)
 const DRONE_ACCEL = 30;           // แรงเร่งเดินหน้า/สไลด์ (เฮลิฯ = 13 → โดรนแรงกว่ามาก)
@@ -1273,7 +1273,7 @@ function sendPos(force){
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
-    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge),   // 🎖️⚡ เข็มนักบิน+เข็มสายฟ้าติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
+    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge),   // 🎖️⚡🎯 เข็มนักบิน+สายฟ้า+ผาดโผน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
     av:state.playerAvatar||'',
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
@@ -1708,7 +1708,7 @@ function renderHudInv(){
 /* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
-  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge), w:sessionWords, me:true}];
+  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge), w:sessionWords, me:true}];
   Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
@@ -1881,6 +1881,19 @@ function buildDom(){
     30%{transform:translate(-50%,-10px) scale(1)}
     78%{opacity:1;transform:translate(-50%,-24px)}
     100%{opacity:0;transform:translate(-50%,-38px)}}
+  /* 🔥 คอมโบร้อน: ป๊อปเรืองแสงส้ม/แดง + ตัวใหญ่ขึ้น */
+  #adv-nearmiss.combo-hot{background:rgba(60,20,0,.55);color:#ffe0a3;
+    text-shadow:0 0 10px rgba(255,140,20,.9),0 2px 5px #000;box-shadow:0 0 18px rgba(255,120,20,.6)}
+  #adv-nearmiss.combo-fire{background:rgba(70,10,0,.6);color:#ffd0a0;font-size:clamp(17px,4.2vw,25px);
+    text-shadow:0 0 14px rgba(255,80,10,1),0 2px 6px #000;box-shadow:0 0 26px rgba(255,70,10,.8)}
+  #adv-nearmiss.combo-fire .nm-coin{color:#fff2b0}
+  /* ไฟลุกวาบขอบจอตอนคอมโบร้อน (ไม่บังนิ้ว) */
+  #adv-combofx{position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0}
+  #adv-combofx.on.lv1{animation:advCombo .7s ease-out;
+    background:radial-gradient(ellipse at center,transparent 52%,rgba(255,160,30,.5))}
+  #adv-combofx.on.lv2{animation:advCombo .85s ease-out;
+    background:radial-gradient(ellipse at center,transparent 44%,rgba(255,70,10,.72))}
+  @keyframes advCombo{0%{opacity:0}25%{opacity:1}100%{opacity:0}}
   #adv-inst{top:34px;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:13px;
     text-shadow:0 1px 3px #000;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 12px;display:none;white-space:nowrap}
   .adv-heli #adv-inst{display:block}
@@ -1994,6 +2007,7 @@ function buildDom(){
       </div>
     </div>
     <div class="adv-hud" id="adv-inv"></div>
+    <div id="adv-combofx"></div>
     <div class="adv-hud" id="adv-nearmiss"></div>
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
@@ -2037,6 +2051,7 @@ function buildDom(){
   hudInstEl=overlayEl.querySelector('#adv-inst');
   hudWarnEl=overlayEl.querySelector('#adv-warn');
   nmPopEl=overlayEl.querySelector('#adv-nearmiss');
+  comboFxEl=overlayEl.querySelector('#adv-combofx');
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
   gaugeCtx=overlayEl.querySelector('#adv-gauges').getContext('2d');
   ATC.el=overlayEl.querySelector('#adv-radio');
@@ -2337,20 +2352,65 @@ function nearMissTick(d, now, enterR, exitR, superR){
     if(!nmCrashed && now-nmLastAt>700){
       nmLastAt=now; nmCombo++;
       const superClose=nmMin<superR;
-      const bonus=(superClose?4:2)+Math.min(4,nmCombo-1);   // คอมโบเพิ่มสูงสุด +4
-      addCoins(bonus); sessionCoins+=bonus; sfx.coin();
-      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(25);
-      showNearMiss(superClose,bonus,nmCombo);
+      const hot=nmCombo>=3;                                 // 🔥 คอมโบไฟลุก (≥3): โบนัสพิเศษ+เอฟเฟกต์+เสียงเชียร์
+      let bonus=(superClose?4:2)+Math.min(4,nmCombo-1);     // คอมโบเพิ่มสูงสุด +4
+      if(hot) bonus+=2;                                     // โบนัสไฟลุก
+      addCoins(bonus); sessionCoins+=bonus;
+      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(hot?[20,30,20]:25);
+      showNearMiss(superClose,bonus,nmCombo,hot);
+      if(hot){ comboCheer(nmCombo); comboFlash(nmCombo>=5?2:1); } else sfx.coin();
+      if(superClose) awardDaredevil();                      // 🎯 นับสถิติผาดโผน → เข็มนักบินผาดโผน
       renderHudTop();
     }
     nmActive=false; nmMin=99; nmCrashed=false;
   }
 }
-function showNearMiss(superClose,bonus,combo){
+function showNearMiss(superClose,bonus,combo,hot){
   if(!nmPopEl) return;
   const cmb=combo>1?` <b>×${combo}</b>`:'';
-  nmPopEl.innerHTML=`💨 ${superClose?'เฉียดสุดๆ!':'เฉียดหวุดหวิด!'}${cmb} <span class="nm-coin">+${bonus}🪙</span>`;
-  nmPopEl.classList.remove('show'); void nmPopEl.offsetWidth; nmPopEl.classList.add('show');
+  const flame=combo>=5?'🔥🔥 ':(hot?'🔥 ':'');
+  const label=superClose?'เฉียดสุดๆ!':'เฉียดหวุดหวิด!';
+  nmPopEl.innerHTML=`${flame}💨 ${label}${cmb} <span class="nm-coin">+${bonus}🪙</span>`;
+  nmPopEl.className='adv-hud'+(combo>=5?' combo-fire':(hot?' combo-hot':''));
+  void nmPopEl.offsetWidth; nmPopEl.classList.add('show');
+}
+/* 🎯 นับ "บินเฉียดสุดๆ" สะสม → ปลดเข็มนักบินผาดโผน (สไตล์เดียวกับเข็มสายฟ้า/นักบิน) */
+function awardDaredevil(){
+  state.daredevilCount=(state.daredevilCount||0)+1;
+  const tier=DAREDEVIL_TIERS.filter(t=>state.daredevilCount>=t[0]).pop();
+  if(tier && tier[1]>(state.daredevilBadge||0)){
+    state.daredevilBadge=tier[1];
+    renderBoard();                                          // อัปเดตเข็มท้ายชื่อในกระดานคะแนนทันที
+    setTimeout(()=>{
+      if(!running) return;
+      showBanner(`${daredevilEmoji(tier[1])} <b>ได้${DAREDEVIL_TIER_UI[tier[1]]}!</b><br><small>บินเฉียดสุดๆ ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นในทุกโลกแล้ว!</small>`);
+      sfx.rankup();
+      if(myRef) sendPos(true);                              // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
+    }, 1400);
+  }
+  saveState();
+}
+/* 🎉 เสียงเชียร์คอมโบ — อาร์เพจโจขึ้นบันได (ยิ่งคอมโบยิ่งหลายโน้ต) ใช้ ctx ของเครื่องที่กำลังบิน */
+function comboCheer(combo){
+  if(!state.sound) return;
+  const S=M.drone?DroneSound:HeliSound;
+  S.ensureCtx(); const ctx=S.ctx; if(!ctx) return;
+  const t=ctx.currentTime, notes=[523,659,784,1047,1319];
+  const n=Math.min(notes.length, 2+Math.floor(combo/2));
+  for(let i=0;i<n;i++){
+    const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=notes[i];
+    const g=ctx.createGain();
+    g.gain.setValueAtTime(.0001,t+i*.07);
+    g.gain.exponentialRampToValueAtTime(.14,t+i*.07+.02);
+    g.gain.exponentialRampToValueAtTime(.001,t+i*.07+.22);
+    o.connect(g); g.connect(S.master||ctx.destination); o.start(t+i*.07); o.stop(t+i*.07+.24);
+  }
+}
+/* ไฟลุกวาบขอบจอตอนคอมโบร้อน (1=ทอง · 2=แดงส้มแรงกว่า) */
+function comboFlash(level){
+  if(!comboFxEl) return;
+  comboFxEl.className=''; void comboFxEl.offsetWidth;
+  comboFxEl.classList.add('on','lv'+level);
 }
 function heliFloorAt(x,z){
   let f=0;
