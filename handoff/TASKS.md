@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 96 (9 ก.ค. · Opus): เกมจับคู่ — กดปุ่มกลับแล้วถ้าทำสถิติใหม่ เด้งการ์ดสรุปฉลองก่อนออก 🎉🚪 — version .76** (commit a9755f3) — ต่อยอดสถิติ (รอบ 95) · ผู้ใช้สั่งทำ
+- **`exitGame()` (game.js):** ปุ่ม ⬅ กลับ (main.js `btn-back`→`exitGame`) · ถ้า `sessionCoins > game.prevBest` (เกินสถิติสัปดาห์เดิม) → `showSessionSummary(earned, allTime, doExit)` เด้งการ์ด "รอบเล่นนี้หนูเก็บได้ X 🪙 · 🏆 ทำสถิติสัปดาห์ใหม่!" ก่อน แล้วปิด(ปุ่ม/พื้นหลัง)ค่อย renderDashboard+showScreen · ถ้าเกิน `game.prevAllBest` (สถิติตลอดกาลเดิม เก็บตอน startGame) เพิ่มป้าย "⭐ สถิติสูงสุดตลอดกาล" · ไม่ทำสถิติ/เก็บ 0 → ออกทันที
+- `css/style.css`: `.summary-box` `.sm-coin` (ทองไล่เฉด reuse sessRainbow) `.sm-badge`/`.sm-badge-all`
+- ✅ ยืนยัน preview 4 เคส: A เกินสถิติสัปดาห์(370>300 <2000)=การ์ด 1 ป้าย · B เกินตลอดกาล(600>500)=2 ป้าย · C ไม่เกิน(200<1000)=ออกเลยไม่มีการ์ด · D เก็บ0=ออกเลย · ปุ่ม/พื้นหลังปิด→ไป dashboard · ไม่มี error · **screenshot ค้างทั้ง session→inspect ยืนยันแทน**
+- ⚠️ commit game.js/main.js/style.css/version (main.js แก้ 1 บรรทัด · ไม่แตะ adventure3d/ui.js/lobby.css ของ session คู่ขนาน)
+
 **✅ รอบ 95 (9 ก.ค. · Opus): เกมจับคู่ — สถิติเหรียญรายสัปดาห์ (รีเซ็ตจันทร์) + หน้ารายงานความก้าวหน้า 🗓️📊 — version .74** (commit e41022d) — ต่อยอดสถิติ (รอบ 91/94) · ผู้ใช้สั่งทำ
 - **รายสัปดาห์:** เป้าในเกม (`game.prevBest`) เปลี่ยนจาก all-time → `state.weekBestCoins` · `weekKeyStr()`=วันจันทร์ของสัปดาห์ (Mon=0) · `rolloverWeekBest()` ใน startGame ล้างเมื่อข้ามสัปดาห์ → เด็กทำลายสถิติใหม่ได้เรื่อยๆ ไม่ตัน · ยังอัปเดต `bestSessionCoins` (all-time) เงียบๆ ไว้โชว์รายงาน · toast/updateBestTarget เปลี่ยนคำเป็น "สถิติสัปดาห์นี้"
 - **รายงาน:** ปุ่ม `#btn-report` ในเกม (`.onclick=showProgressReport` กันซ้อน) → overlay (`.levelup-overlay`+`.report-box`): ระดับนักคำศัพท์ (50 คำ/ระดับ · VOCAB_RANK_NAMES 5 ชื่อ)+แถบ%, การ์ดเด่น 4 (คำ/lifetimeCoins/สถิติดีสุด/สัปดาห์นี้), แบบทดสอบ (ผ่านกี่หมวด/สอบ/เฉลี่ย%), คำพิชิตโลก 3D รายโลก (โชว์เฉพาะมีตั๋วหรือ>0), เข็มรางวัล (thunder/daredevil/pilot), สัตว์เลี้ยง, คำชมตามระดับ · ปิดด้วย ✕/ปุ่ม/คลิกพื้นหลัง
