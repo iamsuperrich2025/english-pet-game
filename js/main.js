@@ -64,11 +64,7 @@ document.getElementById('btn-stats-back').addEventListener('click', ()=>{ render
 document.getElementById('btn-quiz-back').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
 document.getElementById('btn-petshop-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-petshop-play').addEventListener('click', ()=>startGame(null)); // ลิงก์ใต้เหรียญในร้านสัตว์เลี้ยง → เข้าเกมสะสมเหรียญ
-document.getElementById('btn-back').addEventListener('click', ()=>{
-  clearInterval(game.timerId);
-  renderDashboard();
-  showScreen('screen-dashboard');
-});
+document.getElementById('btn-back').addEventListener('click', exitGame);   // ออกจากเกม + เด้งการ์ดสรุปถ้าทำสถิติใหม่ (exitGame ใน game.js)
 // หน้าตั้งค่า (รวมสวิตช์เสียง/สั่นไว้ที่เดียว — openSettings อยู่ใน util.js)
 document.getElementById('btn-settings').addEventListener('click', openSettings);
 // ข้าวเย็นผู้เล่น (คิว 7725691507 ข้อ 6) — กิน 200 / ป่วยรักษา 1,000

@@ -12,7 +12,8 @@ const game = {
   roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
   sessionCoins:0,               // 🪙 เหรียญที่เก็บได้ "ครั้งนี้" (เริ่มนับใหม่ทุกครั้งที่เข้าเกม) — โชว์เป็นกำลังใจ
   sessMilestone:0,              // หลักเหรียญครั้งนี้ที่ฉลองไปแล้วสูงสุด (กันฉลองซ้ำ)
-  prevBest:0,                   // สถิติเหรียญ/ครั้ง เดิม (ตอนเข้าเกม) — ไว้เทียบว่าทำลายสถิติหรือยัง
+  prevBest:0,                   // สถิติเหรียญ/ครั้ง "สัปดาห์นี้" เดิม (ตอนเข้าเกม) — ไว้เทียบว่าทำลายสถิติหรือยัง
+  prevAllBest:0,                // สถิติเหรียญ/ครั้ง "ตลอดกาล" เดิม (ตอนเข้าเกม) — ไว้เช็กว่าเป็นสถิติสูงสุดตลอดกาลด้วยไหม
   beatBestShown:false,          // เด้ง "ทำลายสถิติ!" ไปแล้วในครั้งนี้ (โชว์ครั้งเดียวพอ)
 };
 
@@ -81,6 +82,42 @@ function weekKeyStr(d){
 function rolloverWeekBest(){   // ถ้าข้ามสัปดาห์แล้ว → ล้างสถิติสัปดาห์ เริ่มนับใหม่
   const wk = weekKeyStr();
   if(state.weekKey !== wk){ state.weekKey = wk; state.weekBestCoins = 0; }
+}
+
+/* 🚪 ออกจากเกม (ปุ่ม ⬅ กลับ) — ถ้ารอบเล่นนี้ทำสถิติใหม่ เด้งการ์ดสรุปฉลองก่อนแล้วค่อยออก */
+function exitGame(){
+  clearInterval(game.timerId);
+  const earned = game.sessionCoins;
+  const madeRecord = earned > 0 && earned > game.prevBest;   // เก็บเกินสถิติสัปดาห์เดิม = สถิติใหม่
+  const doExit = ()=>{ renderDashboard(); showScreen('screen-dashboard'); };
+  if(madeRecord){
+    const allTime = earned > game.prevAllBest;               // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
+    showSessionSummary(earned, allTime, doExit);
+  }else{
+    doExit();
+  }
+}
+
+/* 🎉 การ์ดสรุปตอนจบการเล่น (เมื่อทำสถิติใหม่) */
+function showSessionSummary(earned, allTime, onClose){
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay summary-overlay';
+  overlay.innerHTML = `<div class="levelup-box summary-box">
+    <div class="sm-burst">🎉</div>
+    <h2 class="sm-title">เก่งมากเลย!</h2>
+    <p class="sm-line">รอบเล่นนี้หนูเก็บได้</p>
+    <div class="sm-coin">${fmtNum(earned)} 🪙</div>
+    <div class="sm-badge">🏆 ทำสถิติสัปดาห์ใหม่!</div>
+    ${allTime ? `<div class="sm-badge sm-badge-all">⭐ และเป็นสถิติสูงสุดตลอดกาลด้วย!</div>` : ''}
+    <p class="sm-cheer">พักได้เลย เดี๋ยวมาทำลายสถิติใหม่กันอีกนะ 💪</p>
+    <button class="cf-ok summary-ok">ออกไปพัก 😊</button>
+  </div>`;
+  const close = ()=>{ overlay.remove(); if(onClose) onClose(); };
+  overlay.querySelector('.summary-ok').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });   // แตะพื้นหลัง = ออกเหมือนกัน
+  document.body.appendChild(overlay);
+  if(typeof sfx !== 'undefined') sfx.rankup();
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,50,40,50,90]);
 }
 
 /* 📊 รายงานความก้าวหน้าของเด็ก (แยกต่างหาก) — รวมพัฒนาการตั้งแต่เริ่มเล่นทั้งหมด
@@ -230,6 +267,7 @@ function startGame(cat){
   game.beatBestShown = false;
   rolloverWeekBest();                            // ข้ามสัปดาห์ (จันทร์) → ล้างสถิติสัปดาห์ก่อน
   game.prevBest = state.weekBestCoins || 0;       // เป้าในเกม = สถิติ "สัปดาห์นี้" (ทำลายใหม่ได้เรื่อยๆ)
+  game.prevAllBest = state.bestSessionCoins || 0; // จำสถิติตลอดกาลเดิม ไว้เช็กตอนออกเกม
   updateComboPill();
   const sc = document.getElementById('game-session-coins');
   if(sc) sc.classList.remove('t1','t2','t3');   // ป้ายเริ่มที่สีเทา (tier 0) ทุกครั้งที่เข้าเกม

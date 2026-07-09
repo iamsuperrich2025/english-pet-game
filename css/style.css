@@ -900,6 +900,26 @@ html.no-anim body.quake{animation:none;}
 }
 .report-ok{display:block;margin:12px auto 0;}
 
+/* 🎉 การ์ดสรุปตอนจบการเล่น (เด้งเมื่อทำสถิติใหม่ ก่อนออกจากเกม) */
+.summary-box{max-width:340px;text-align:center;}
+.sm-burst{font-size:54px;line-height:1;animation:smPop .5s cubic-bezier(.2,1.7,.4,1);}
+@keyframes smPop{from{transform:scale(0) rotate(-20deg);}to{transform:scale(1) rotate(0);}}
+.sm-title{margin:4px 0 2px;font-size:24px;color:#5a3fb0;}
+.sm-line{margin:8px 0 0;color:#8a76a8;font-size:15px;}
+.sm-coin{
+  font-size:38px;font-weight:900;margin:2px 0 10px;
+  background:linear-gradient(90deg,#ff9d2e,#ffcf40,#ff9d2e);background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  animation:sessRainbow 3s linear infinite;
+}
+.sm-badge{
+  display:inline-block;background:#fff6df;border:2px solid #f2d98a;border-radius:999px;
+  padding:6px 16px;font-size:15px;font-weight:800;color:#a5750f;margin:3px 0;
+}
+.sm-badge-all{background:#efeaff;border-color:#c9b8f7;color:#6d55e0;}
+.sm-cheer{margin:12px 0 0;color:#6a5a78;font-size:13.5px;line-height:1.6;}
+.summary-ok{display:block;margin:16px auto 0;}
+
 /* floating effects */
 .float-fx{
   position:fixed;left:50%;top:40%;transform:translateX(-50%);
