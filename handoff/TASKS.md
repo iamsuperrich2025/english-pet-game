@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 87 (9 ก.ค.) — โลกผีตายยากขึ้น: ระบบหัวใจ 3 ดวง ❤️ (version .92)
+- **อาการผู้ใช้:** "ด่านผีตายง่ายไป กำลังเล่นสนุกๆ ตายอีกแล้ว" · **ต้นตอ:** โดนผีแตะ (`d<1.25`) = `caught()` **ตายทีเดียวจบ** ไม่มีโอกาสแก้ตัว + ผีเร็ว 5.0 (ผู้เล่น 6) หนีเฉียดฉิว
+- **แก้ (js/adventure3d.js):** เพิ่ม `HAUNT_LIVES=3`/`HAUNT_IFRAME=1500` + ตัวแปร `hauntLives`/`hurtUntil` · จุดโดนแตะเรียก `ghostHit(g)` แทน `caught()`: เสีย 1 หัวใจ + กระเด็นหนี (`movePlayer` ออก 3.4m ผีถอย 2.2m + เลิกไล่ 1.4s) + เกราะกันโดนซ้ำ 1.5s + `showBanner('💔 เหลือ N หัวใจ')` · หัวใจหมด (`<=0`) ค่อย `caught()` jump scare จริง · HUD `#adv-hearts` ❤️/🖤 มุมซ้ายบน (top:42 left:10) · `renderHearts()` (clamp กันติดลบ) เรียกใน start()+ทุกครั้งที่โดน · reset ใน start()
+- **สมดุลผีปรับให้หนีทัน:** `ghostSpeed 5.0→4.3` · `huntR 18→14` (เกิดใกล้แล้วไล่ทันทีน้อยลง) · `seeR 11→9` · `ghostMax 8→7` · intro/hint อัปเดตบอกระบบหัวใจ
+- **ยืนยัน preview:** parse OK ไม่มี error · ผี 7 ตัว · HUD ❤️❤️❤️ โชว์ (rect top42/left10/24px onScreen) · หัวใจลดจริงเมื่อผีแตะ (AFK→🖤) · clamp กันติดลบ · **หมายเหตุ:** i-frame กันเสียซ้ำในเฟรมเดียวเทสต์ตรงๆ ไม่ได้เพราะ RAF throttle ตอน preview background — ตรรกะตรงไปตรงมา (guard `now<hurtUntil`)
+
 ### ✅ รอบ 86 (9 ก.ค. commit e188b46) — push ภาพผี 5 ตัวขึ้นเว็บ 👻
 - **อาการ:** ผู้ใช้เจนภาพผีวาง `img/ghosts/` แล้ว แต่มือถือยังเห็นแต่ emoji · **ต้นตอ:** `img/ghosts/ghost_1..5.png` ไม่เคยถูก track ใน git → live Pages ตอบ **404** → โค้ด fallback emoji (ในเครื่อง preview เห็นเพราะมีไฟล์จริง)
 - **แก้:** `git add` เฉพาะ 5 ไฟล์จริง (ไม่แตะ `img/ghosts_recovered/` = โฟลเดอร์สำรอง) + บัมพ์ version .90→.91 → push · ยืนยัน live ครบทั้ง 5 = HTTP 200

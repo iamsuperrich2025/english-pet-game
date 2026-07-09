@@ -21,6 +21,8 @@ const GUIDE_WORDS  = 10;        // จำนวนคำ guideline บนจอ 
 const RELOCATE_MS  = 75000;     // ตัวอักษรค้างครบเวลานี้ → สุ่มย้ายที่ (8.2)
 const HALF         = 60;        // ครึ่งความกว้างแผนที่ (โลก 120×120)
 const PLAYER_SPEED = 6;         // m/s
+const HAUNT_LIVES  = 3;         // 👻 หัวใจโลกผี: โดนแตะเสีย 1 ดวง หมดเมื่อไรจบ (กันตายทีเดียว)
+const HAUNT_IFRAME = 1500;      // กันโดนซ้ำหลังโดนแตะ (ms)
 const PICK_DIST    = 1.6;       // ระยะเดินเก็บตัวอักษร
 const EYE_H        = 1.6;
 const NET_SEND_MS  = 180;       // ส่งตำแหน่งขึ้น DB ถี่สุดเท่านี้ (~5.5Hz)
@@ -40,10 +42,10 @@ const MODES = {
     label:'โลกผีสิง', emoji:'👻', reward:25, doneKey:'hauntDone',
     shoot:false, ghost:true,
     sky:0x090916, fogN:9, fogF:46, ground:0x18251d,
-    ghostMax:8, ghostLife:20000, ghostSpeed:5.0, huntR:18, seeR:11,
+    ghostMax:7, ghostLife:20000, ghostSpeed:4.3, huntR:14, seeR:9,
     ghostEmoji:['👻','👻','👻','💀','🧟'],
-    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>โดนจับ = จบเกมทันที</small>',
-    hint:'คลิกจอ=ล็อกเมาส์ · WASD วิ่งหนี · สู้ไม่ได้!! · Esc ปลดเมาส์แล้วค่อยกดออก',
+    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>มีหัวใจ ❤️❤️❤️ 3 ดวง โดนผีแตะเสีย 1 ดวง (กระเด็นหนีได้) หมดเมื่อไรจบเกม</small>',
+    hint:'คลิกจอ=ล็อกเมาส์ · WASD วิ่งหนี · สู้ไม่ได้!! · โดนแตะเสียหัวใจ · Esc ปลดเมาส์แล้วค่อยกดออก',
     koTitle:'💫 พลังหมดแล้ว!',
   },
   heli: {
@@ -214,6 +216,7 @@ const ATC={
 };
 let yaw=0, pitch=0;
 let hp=100, sessionCoins=0, sessionWords=0;
+let hauntLives=HAUNT_LIVES, hurtUntil=0;   // 👻 ระบบหัวใจโลกผี + ช่วงกันโดนซ้ำ
 let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
 let words=[];                     // guideline [{en,th}]
@@ -221,7 +224,7 @@ let letters=[];                   // ตัวอักษรในโลก [{c
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -1040,7 +1043,7 @@ function tickGhosts(dt,now){
       if(dd>.3){ mp.x+=(g.tgt.x-mp.x)/dd*.8*dt; mp.z+=(g.tgt.z-mp.z)/dd*.8*dt; }
     }
     mp.y=(g.baseY||1.35)+Math.sin(now/260+mp.x)*.22;
-    if(d<1.25 && g.spr.material.opacity>.5) caught();      // โดนจับ = จบทันที
+    if(d<1.25 && g.spr.material.opacity>.5) ghostHit(g);   // โดนแตะ = เสียหัวใจ (หมดค่อยจบ)
   });
   // HUD นับถอยหลังหนี + เสียงหัวใจเต้นตามความใกล้
   if(hunted && running){
@@ -1060,6 +1063,33 @@ function sessionRecapHtml(){
   if(!sessionWordLog.length) return '';
   const chips=sessionWordLog.map(x=>`<span class="adv-recap-w">${escapeHTML(x.en.toUpperCase())}<small>${escapeHTML(x.th)}</small></span>`).join('');
   return `<div class="adv-recap"><div class="adv-recap-h">📖 คำที่หนูประกอบได้รอบนี้ (${sessionWordLog.length} คำ)</div><div class="adv-recap-list">${chips}</div></div>`;
+}
+
+/* ---------- โดนผีแตะ = เสียหัวใจ 1 ดวง (ไม่ตายทีเดียว) ---------- */
+function renderHearts(){
+  if(!hudHeartEl) return;
+  if(mode!=='haunt'){ hudHeartEl.style.display='none'; return; }
+  hudHeartEl.style.display='block';
+  const live=Math.max(0,Math.min(HAUNT_LIVES,hauntLives));
+  hudHeartEl.textContent='❤️'.repeat(live)+'🖤'.repeat(HAUNT_LIVES-live);
+}
+function ghostHit(g){
+  if(!running) return;
+  const now=performance.now();
+  if(now<hurtUntil) return;                      // อยู่ในช่วงกันโดนซ้ำ — ยังไม่เสียหัวใจ
+  hauntLives--;
+  renderHearts();
+  if(hauntLives<=0){ caught(); return; }         // หัวใจหมด → jump scare + จบเกมจริง
+  hurtUntil=now+HAUNT_IFRAME;
+  // กระเด็นผู้เล่นออกจากผี + ผีถอย + เลิกไล่ชั่วครู่ (ให้ตั้งตัวหนีต่อ)
+  const mp=g.spr.position, dx=camera.position.x-mp.x, dz=camera.position.z-mp.z, dd=Math.hypot(dx,dz)||1;
+  movePlayer(dx/dd*3.4, dz/dd*3.4);
+  mp.x-=dx/dd*2.2; mp.z-=dz/dd*2.2;
+  g.hunting=false; g.wanderAt=now+1400; g.tgt=randPos(0);
+  dmgFlashEl.classList.remove('on'); void dmgFlashEl.offsetWidth; dmgFlashEl.classList.add('on');
+  HSound.whoosh();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([200,60,120]);
+  showBanner(`💔 <b>โดนผีแตะ! เหลือ ${hauntLives} หัวใจ</b><br><small>รีบวิ่งหนีต่อ! หัวใจหมดเมื่อไรจบเกมนะ</small>`);
 }
 
 /* ---------- Jump scare + game over (ผู้ใช้เคาะ: เต็มที่) ---------- */
@@ -1827,6 +1857,8 @@ function buildDom(){
     color:#fff;background:rgba(255,255,255,.15);border-radius:9px;padding:3px 8px;text-shadow:0 2px 4px #000;transition:background .2s,box-shadow .2s}
   .adv-fch.got{background:#66bb6a;box-shadow:0 0 13px #66bb6a}
   .adv-fth{color:#ffe082;font-size:clamp(13px,3.4vw,18px);font-weight:700;margin-top:4px;text-shadow:0 1px 3px #000}
+  #adv-hearts{display:none;left:10px;top:42px;font-size:24px;letter-spacing:3px;pointer-events:none;
+    filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
   #adv-map{top:8px;right:8px}
   #adv-exit{top:118px;right:8px;pointer-events:auto;background:rgba(211,47,47,.92);color:#fff;border:2px solid #fff;
     border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
@@ -2064,6 +2096,7 @@ function buildDom(){
     <button class="adv-hud" id="adv-exit">🚪 ออก</button>
     <button class="adv-hud" id="adv-help">❓</button>
     <div class="adv-hud" id="adv-hunt"></div>
+    <div class="adv-hud" id="adv-hearts"></div>
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div id="adv-cockpit"></div>
@@ -2111,6 +2144,7 @@ function buildDom(){
   hudHpEl=overlayEl.querySelector('#adv-hp');
   hudCoinEl=overlayEl.querySelector('#adv-coin');
   hudHuntEl=overlayEl.querySelector('#adv-hunt');
+  hudHeartEl=overlayEl.querySelector('#adv-hearts');
   banEl=overlayEl.querySelector('#adv-banner');
   scareEl=overlayEl.querySelector('#adv-scare');
   hintEl=overlayEl.querySelector('#adv-hint');
@@ -3118,6 +3152,7 @@ function start(md){
   solids=worlds[mode].solids||[];
 
   hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;
+  hauntLives=HAUNT_LIVES; hurtUntil=0;                                 // 👻 รีเซ็ตหัวใจโลกผี
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
@@ -3161,7 +3196,7 @@ function start(md){
   overlayEl.classList.add('on');
   renderer.setSize(window.innerWidth,window.innerHeight);
   camera.aspect=window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
-  renderHudTop(); renderHudWords(); renderHudInv(); renderBoard();
+  renderHudTop(); renderHudWords(); renderHudInv(); renderBoard(); renderHearts();
   lastSpawn=performance.now(); lastEnsure=performance.now();
   netJoin();
   if(mode==='haunt') HSound.startAmbient();
