@@ -19,11 +19,15 @@ body{
   font-family:'Kanit','Itim',sans-serif;
   color:var(--ink2);
   background-color:var(--navy);
+  /* ฉาก lobby 3D สไตล์ COD (รอบ 86): ตึกสมัยใหม่ + ลานยืนหน้า
+     ลำดับชั้น: gradient คุมคอนทราสต์ (บน) → theme_city_cod.png (ภาพใหม่)
+     → theme_bg_wide.png (fallback ถ้ายังไม่เจนภาพใหม่ ภาพเก่าจะโผล่แทน) */
   background-image:
-    linear-gradient(180deg, rgba(5,22,48,.62) 0%, rgba(5,22,48,.18) 26%, rgba(5,22,48,.16) 68%, rgba(5,22,48,.66) 100%),
+    linear-gradient(180deg, rgba(5,22,48,.58) 0%, rgba(5,22,48,.14) 30%, rgba(5,22,48,.20) 62%, rgba(5,22,48,.72) 100%),
+    url('../img/theme/theme_city_cod.png'),
     url('../img/theme/theme_bg_wide.png');
-  background-size:100% 100%, cover;
-  background-position:center;
+  background-size:100% 100%, cover, cover;
+  background-position:center, center bottom, center;
   background-repeat:no-repeat;
   background-attachment:fixed;
 }
@@ -460,12 +464,32 @@ h1{color:var(--sky-d);text-shadow:none;}
   box-shadow:0 14px 36px rgba(3,15,35,.4);padding:12px 16px 16px;
   display:block;
 }
-.stage-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:30px;}
-.stage-hero .pet-stage{
-  transform:scale(var(--pet-zoom,1.4));transform-origin:center bottom;
+.stage-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px;}
+/* ฉาก 3D: ผู้เลี้ยง + น้อง ยืนคู่กันกลางจอ บนลานเรืองแสง (สไตล์ COD) */
+.hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;
+  gap:clamp(-48px,-2.6vw,-18px);}   /* ซ้อนตัวผู้เลี้ยงกับน้องให้เป็นกลุ่มเดียวกลางจอ (น้องอยู่หน้า) */
+.hero-scene .pet-stage{
+  transform:scale(var(--pet-zoom,1.3));transform-origin:center bottom;
   filter:drop-shadow(0 14px 22px rgba(3,15,35,.55));
+  margin-bottom:2px;z-index:2;   /* น้องอยู่ด้านหน้าผู้เลี้ยงเล็กน้อย */
 }
-@media (min-height:480px){ :root{--pet-zoom:1.9;} }
+@media (min-height:480px){ :root{--pet-zoom:1.5;} }
+/* ตัวละครผู้เลี้ยงยืนเต็มตัว (อยู่หลังน้องนิดหน่อย) */
+.caretaker-fig{position:relative;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;z-index:1;animation:heroSway 4.5s ease-in-out infinite;}
+.caretaker-img{height:clamp(170px,42vh,308px);width:auto;object-fit:contain;display:block;
+  filter:drop-shadow(0 16px 20px rgba(3,15,35,.6));}
+.caretaker-emoji{font-size:clamp(90px,24vh,188px);line-height:1;filter:drop-shadow(0 14px 18px rgba(3,15,35,.55));}
+@keyframes heroSway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* ลานยืน: เงา + วงเรืองแสงใต้เท้า ให้ดูตั้งอยู่บนพื้นจริง */
+.hero-ground{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
+  width:min(78%,520px);height:70px;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(ellipse 50% 50% at 50% 60%, rgba(90,180,255,.28) 0%, rgba(90,180,255,.10) 42%, transparent 72%),
+    radial-gradient(ellipse 42% 60% at 50% 72%, rgba(3,12,30,.55) 0%, rgba(3,12,30,.28) 45%, transparent 75%);
+}
+.hero-ground::before{content:'';position:absolute;left:50%;bottom:20px;transform:translateX(-50%);
+  width:96%;height:2px;border-radius:50%;
+  background:linear-gradient(90deg,transparent,rgba(120,210,255,.55),transparent);}
 @media (min-height:620px){ :root{--pet-zoom:2.5;} }
 
 /* แผงสถานะใส 2 ฝั่งสไตล์ sci-fi HUD ขนาบตัวน้อง (ผู้ใช้สั่ง 8 ก.ค.: ห้ามทับตัวสัตว์ ไม่ต้อง scroll)

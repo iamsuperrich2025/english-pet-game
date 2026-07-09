@@ -47,6 +47,16 @@ function petVisualHTML(p){
   return `<div class="pet-stage">${auraHTML}<div class="pet-wrap" id="pet-tap">${core}${overlays}</div></div>`;
 }
 
+/* ตัวละครผู้เลี้ยงยืนเต็มตัวข้างน้อง (ฉาก lobby 3D สไตล์ COD — รอบ 86)
+   มีภาพ player_male/female.png ใช้ภาพเต็มตัว · ยังไม่เลือก/ไม่มีภาพ = อีโมจิตัวโต */
+function caretakerFigureHTML(){
+  const av = state.playerAvatar;
+  const img = av && IMG_FILES[`player_${av}`];
+  if(img) return `<div class="caretaker-fig"><img class="caretaker-img" src="${img}" alt="ผู้เลี้ยง"></div>`;
+  const emoji = (av && AVATAR_UI[av]) ? AVATAR_UI[av].emoji : '🧑';
+  return `<div class="caretaker-fig caretaker-emoji">${emoji}</div>`;
+}
+
 /* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อเย็นวันละครั้ง 18:00 — ข้อ 2) ---------- */
 function mealLabel(ts){
   const d = new Date(ts), today = new Date();
@@ -1232,7 +1242,7 @@ function renderDashboard(){
   /* โฉมใหม่ 2 (ผู้ใช้สั่ง 8 ก.ค.): น้องตัวใหญ่กลางเวที ห้ามมีแผงทับตัว
      สถานะแยก 2 แผงใส sci-fi ขนาบข้าง — ซ้าย=ข้อมูลน้อง · ขวา=การดูแล (ร่างไข่ไม่มีแผงขวา) */
   card.innerHTML = `
-    <div class="stage-hero">${petVisualHTML(p)}</div>
+    <div class="stage-hero"><div class="hero-scene"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
     <div class="stage-plate plate-left">
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       <div class="plate-head">
