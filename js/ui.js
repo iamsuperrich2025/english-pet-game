@@ -278,9 +278,10 @@ function renderOnlineCard(){
   const meName = state.profileName || (state.student ? state.student.first : '') || selfTag();
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
+  const meBadges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มของเราต่อท้ายชื่อ (โชว์ทันทีจาก state)
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
-      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)} (${selfTag()})</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
       <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 

@@ -84,8 +84,9 @@ function onlineKey(){
 /* ---------- ส่งสถานะตัวเองขึ้น DB (เรียกซ้ำได้ ปลอดภัย) ---------- */
 function onlinePushPresence(){
   if(!Online.ready || !state.student) return;
+  const bs = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อ ให้เพื่อนเห็นในการ์ดหน้าเมือง
   Online.db.ref('presence/' + onlineKey()).set({
-    n: onlineDisplayName(),
+    n: onlineDisplayName() + bs,
     g: state.student.grade,
     act: onlineActivity(),
     at: firebase.database.ServerValue.TIMESTAMP,
@@ -96,10 +97,11 @@ function onlinePushScore(){
   const coins = Math.round(state.coins);
   const av    = Math.round(assetValue());   // มูลค่าทรัพย์สินรวม (โชว์ในการ์ดผู้เล่น)
   const ni    = assetCount();               // จำนวนชิ้นทรัพย์สิน
-  const sig   = coins + '|' + av + '|' + ni;
-  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สินไม่ขยับ ไม่ต้องเขียนซ้ำ
+  const bs    = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อบนกระดาน
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs;   // เข็มเปลี่ยน = re-push (เพื่อนเห็นเข็มใหม่บนกระดาน)
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็มไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
-  const base = { n: onlineDisplayName(), g: state.student.grade, coins,
+  const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni}, base)).catch(()=>{
     // เผื่อ rules ยังไม่รองรับ av/ni (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง

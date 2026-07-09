@@ -866,8 +866,8 @@ function completeWord(i){
     if(tier && tier[1]>state.pilotBadge){
       state.pilotBadge=tier[1];
       setTimeout(()=>{
-        showBanner(`🎖️ <b>ได้เข็มนักบิน${tier[3]} ${tier[2]}</b><br><small>บิน ${tier[0]} คำติดโดยไม่ชนเลย — สุดยอดกัปตัน!<br>เข็มติดท้ายชื่อให้เพื่อนเห็นใน map แล้ว</small>`);
-        sfx.rankup();
+        celebrateBadge(tier[2], `ได้เข็มนักบิน${tier[3]}!`,
+          `บิน ${tier[0]} คำติดโดยไม่ชนเลย — สุดยอดกัปตัน! เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
         if(myRef) sendPos(true);            // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
       },2600);                              // รอ banner ฉลองคำจบก่อน
     }
@@ -2457,8 +2457,8 @@ function awardDaredevil(){
     renderBoard();                                          // อัปเดตเข็มท้ายชื่อในกระดานคะแนนทันที
     setTimeout(()=>{
       if(!running) return;
-      showBanner(`${daredevilEmoji(tier[1])} <b>ได้${DAREDEVIL_TIER_UI[tier[1]]}!</b><br><small>บินเฉียดสุดๆ ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นในทุกโลกแล้ว!</small>`);
-      sfx.rankup();
+      celebrateBadge(daredevilEmoji(tier[1]), `ได้${DAREDEVIL_TIER_UI[tier[1]]}!`,
+        `บินเฉียดสุดๆ ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
       if(myRef) sendPos(true);                              // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
     }, 1400);
   }

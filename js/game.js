@@ -337,6 +337,16 @@ function daredevilEmoji(b){ return ['','🎯','🌀','🔥'][b||0] || ''; }
 const DILIGENT_TIERS = [[20,1],[50,2],[100,3]];
 const DILIGENT_TIER_UI = ['', '🏅 เข็มนักเล่นขยัน', '🎖️ เข็มนักเล่นตัวยง', '🏆 เข็มยอดนักสู้คำศัพท์'];
 function diligentEmoji(b){ return ['','🏅','🎖️','🏆'][b||0] || ''; }
+
+/* 🎖️ เข็มทั้งหมดต่อท้ายชื่อ (นักบิน🥉+สายฟ้า⚡+ผาดโผน🎯+นักเล่นขยัน🏅) — ใช้โชว์ในการ์ดเพื่อน/
+   กระดานหน้าเมือง (บันทึกลง presence.n/leaderboard.n ให้เพื่อนเห็นด้วย) · pilotEmoji เป็น local
+   ของ adventure3d จึง inline อาร์เรย์นักบินที่นี่ให้เป็นฟังก์ชัน global */
+function badgeSuffix(){
+  return (['','🥉','🥈','🥇'][state.pilotBadge||0]||'')
+    + thunderEmoji(state.thunderBadge)
+    + daredevilEmoji(state.daredevilBadge)
+    + diligentEmoji(state.diligentBadge);
+}
 function addDiligent(){                                 // เรียกทุกครั้งที่กด "เล่นต่ออีกรอบ"
   state.diligentCount = (state.diligentCount||0) + 1;
   const tier = DILIGENT_TIERS.filter(t=>state.diligentCount >= t[0]).pop();
@@ -371,9 +381,9 @@ function addThunder(){
   const tier = THUNDER_TIERS.filter(t=>state.thunderCount >= t[0]).pop();
   if(tier && tier[1] > (state.thunderBadge||0)){
     state.thunderBadge = tier[1];
-    setTimeout(()=>{   // รอเอฟเฟกต์ฟ้าผ่า (~1.8 วิ) จบก่อนค่อยประกาศเข็ม
-      sfx.rankup();
-      toast(`🎉 ได้${THUNDER_TIER_UI[tier[1]]}! ทำสายฟ้าแลบครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นใน map เลยนะ`, 4000);
+    setTimeout(()=>{   // รอเอฟเฟกต์ฟ้าผ่า (~1.8 วิ) จบก่อนค่อยฉลองเข็ม
+      celebrateBadge(thunderEmoji(tier[1]), `ได้${THUNDER_TIER_UI[tier[1]]}!`,
+        `ทำสายฟ้าแลบครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกเลยนะ 🎉`);
     }, 1900);
   }
   saveState();
