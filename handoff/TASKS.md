@@ -29,6 +29,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 95 (9 ก.ค. · Opus): เกมจับคู่ — สถิติเหรียญรายสัปดาห์ (รีเซ็ตจันทร์) + หน้ารายงานความก้าวหน้า 🗓️📊 — version .74** (commit e41022d) — ต่อยอดสถิติ (รอบ 91/94) · ผู้ใช้สั่งทำ
+- **รายสัปดาห์:** เป้าในเกม (`game.prevBest`) เปลี่ยนจาก all-time → `state.weekBestCoins` · `weekKeyStr()`=วันจันทร์ของสัปดาห์ (Mon=0) · `rolloverWeekBest()` ใน startGame ล้างเมื่อข้ามสัปดาห์ → เด็กทำลายสถิติใหม่ได้เรื่อยๆ ไม่ตัน · ยังอัปเดต `bestSessionCoins` (all-time) เงียบๆ ไว้โชว์รายงาน · toast/updateBestTarget เปลี่ยนคำเป็น "สถิติสัปดาห์นี้"
+- **รายงาน:** ปุ่ม `#btn-report` ในเกม (`.onclick=showProgressReport` กันซ้อน) → overlay (`.levelup-overlay`+`.report-box`): ระดับนักคำศัพท์ (50 คำ/ระดับ · VOCAB_RANK_NAMES 5 ชื่อ)+แถบ%, การ์ดเด่น 4 (คำ/lifetimeCoins/สถิติดีสุด/สัปดาห์นี้), แบบทดสอบ (ผ่านกี่หมวด/สอบ/เฉลี่ย%), คำพิชิตโลก 3D รายโลก (โชว์เฉพาะมีตั๋วหรือ>0), เข็มรางวัล (thunder/daredevil/pilot), สัตว์เลี้ยง, คำชมตามระดับ · ปิดด้วย ✕/ปุ่ม/คลิกพื้นหลัง
+- **state.js:** `weekBestCoins/weekKey/lifetimeCoins` (lifetimeCoins สะสมใน `addCoins` — เริ่มนับรอบนี้) · เก่า migrate ผ่าน defaults
+- ✅ ยืนยัน preview: weekKeyStr(วันนี้พฤ 9→จ 6)/rolloverข้ามสัปดาห์ล้าง weekBest=0 · รายงานเลข 237คำ→ระดับ5 บาร์74% · quiz 87% · โลก 5/2/1 (drone ซ่อน) · badge 3 · pet 2ตัว Lv รวม5 · empty state (มือใหม่) โชว์ข้อความชวนเล่น · close ทำงาน · ไม่มี error · **screenshot ค้างทั้ง session → ยืนยันด้วย inspect/computed**
+- ⚠️ commit เฉพาะ index/style/game.js/state.js/version (ไม่แตะ ui.js/lobby.css/adventure3d ของ session คู่ขนาน)
+
 **✅ รอบ 94 (9 ก.ค. · Opus): เกมจับคู่ — ป้ายเหรียญไต่สีตามหลัก + เป้าสถิติเดิมในการ์ด 🌈🏆 — version .72** (commit 12f3bb4) — ต่อยอดฉลอง/สถิติ (รอบ 91) · ผู้ใช้เห็นชอบ
 - **ไต่สี:** ใน `addSessionCoins` คำนวณเทียร์ตาม sessionCoins → set class `t1/t2/t3` · CSS `.sess-coin` เทา<100 → `.t1` เขียว≥100 → `.t2` ทอง≥500 → `.t3` รุ้ง (gradient+background-clip:text+`@keyframes sessRainbow`) ≥2000 · reset t-class ใน startGame · **ตัด color ออกจาก `sessCoinBump` เหลือ scale** (กันทับสีเทียร์)
 - **เป้าสถิติ:** `index.html` เพิ่ม `<span id="game-best-target">` ในป้าย · `updateBestTarget()` (game.js): prevBest>0 → "🏆 สถิติดีที่สุดของหนู: X 🪙 — เก็บให้เกินสิ!" · beatBestShown → "🏆 สถิติใหม่แล้ว!" · prevBest=0 (เล่นครั้งแรก) → ซ่อน · เรียกใน startGame + ตอนทำลายสถิติ
