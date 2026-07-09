@@ -25,6 +25,10 @@ function addSessionCoins(n){
   const el = document.getElementById('game-session-coins');
   if(el){
     el.textContent = fmtNum(game.sessionCoins) + ' 🪙';
+    // สีป้ายไต่ระดับตามจำนวนเหรียญครั้งนี้ (เทา→เขียว→ทอง→รุ้ง) ให้รู้สึก "เลเวลอัป" การสะสม
+    const tier = game.sessionCoins>=2000 ? 3 : game.sessionCoins>=500 ? 2 : game.sessionCoins>=100 ? 1 : 0;
+    el.classList.remove('t1','t2','t3');
+    if(tier) el.classList.add('t'+tier);
     el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
   }
   if(n <= 0) return;   // รีเซ็ต/โหลดป้าย ไม่ต้องฉลอง
@@ -42,6 +46,7 @@ function addSessionCoins(n){
   // 🏆 ทำลายสถิติเหรียญ/ครั้งของตัวเอง (เฉพาะคนที่เคยมีสถิติ > 0 · เด้งครั้งเดียว/ครั้งเล่น)
   if(!game.beatBestShown && game.prevBest > 0 && game.sessionCoins > game.prevBest){
     game.beatBestShown = true;
+    updateBestTarget();   // เปลี่ยนป้ายเป้าเป็น "สถิติใหม่แล้ว!"
     setTimeout(()=>{
       sfx.rankup();
       toast(`🏆 ทำลายสถิติตัวเอง! ครั้งนี้เก็บเกิน ${fmtNum(game.prevBest)} 🪙 ที่เคยทำได้แล้ว เก่งขึ้นทุกวันเลย!`, 3200);
@@ -51,6 +56,19 @@ function addSessionCoins(n){
   // อัปเดตสถิติสูงสุด (เซฟจะถูกบันทึกโดย saveState ที่ตามมาใน checkMatch)
   if(game.sessionCoins > (state.bestSessionCoins||0)) state.bestSessionCoins = game.sessionCoins;
 }
+
+/* 🏆 ป้ายบอกเป้าสถิติในการ์ดล่าง — มีสถิติเดิม=ตั้งเป้าให้ทำลาย · ทำลายแล้ว=ฉลองสถิติใหม่ · ยังไม่มี=ซ่อน */
+function updateBestTarget(){
+  const el = document.getElementById('game-best-target');
+  if(!el) return;
+  if(game.beatBestShown){
+    el.innerHTML = `<br>🏆 <b>สถิติใหม่แล้ว!</b> เก่งกว่าตัวเองเมื่อก่อนสุดๆ 🎉`;
+  }else if(game.prevBest > 0){
+    el.innerHTML = `<br>🏆 สถิติดีที่สุดของหนู: <b>${fmtNum(game.prevBest)} 🪙</b> — ครั้งนี้เก็บให้เกินสิ!`;
+  }else{
+    el.innerHTML = '';   // ยังไม่เคยมีสถิติ (เล่นครั้งแรก) — ไม่ต้องโชว์เป้า
+  }
+}
 const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
 /* ⚡ รอบ 70: สถิติสายฟ้าแลบสะสม + เข็มสายฟ้า (สไตล์เดียวกับเข็มนักบิน รอบ 62)
@@ -58,6 +76,12 @@ const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้�
 const THUNDER_TIERS = [[5,1],[15,2],[30,3]];
 const THUNDER_TIER_UI = ['', '⚡ เข็มสายฟ้า', '🌩️ เข็มพายุฟ้าคะนอง', '⛈️ เข็มมหาพายุ'];
 function thunderEmoji(b){ return ['','⚡','🌩️','⛈️'][b||0] || ''; }
+
+/* 🎯 รอบ 87: เข็มนักบินผาดโผน (สไตล์เดียวกับเข็มสายฟ้า) — สะสมจาก "บินเฉียดสุดๆ" ในโลก heli/drone
+   ครบ 10=🎯 · 30=🌀 · 60=🔥 — ได้แล้วไม่หาย ติดท้ายชื่อใน map/กระดานให้เพื่อนเห็น (นับ+ประกาศใน adventure3d.js) */
+const DAREDEVIL_TIERS = [[10,1],[30,2],[60,3]];
+const DAREDEVIL_TIER_UI = ['', '🎯 เข็มเฉียดเฉี่ยว', '🌀 เข็มนักบินผาดโผน', '🔥 เข็มเจ้าเวหา'];
+function daredevilEmoji(b){ return ['','🎯','🌀','🔥'][b||0] || ''; }
 function addThunder(){
   state.thunderCount = (state.thunderCount||0) + 1;
   const tier = THUNDER_TIERS.filter(t=>state.thunderCount >= t[0]).pop();
@@ -82,7 +106,10 @@ function startGame(cat){
   game.beatBestShown = false;
   game.prevBest = state.bestSessionCoins || 0;   // จำสถิติเดิมไว้เทียบ (ก่อนครั้งนี้จะไปทับ)
   updateComboPill();
+  const sc = document.getElementById('game-session-coins');
+  if(sc) sc.classList.remove('t1','t2','t3');   // ป้ายเริ่มที่สีเทา (tier 0) ทุกครั้งที่เข้าเกม
   addSessionCoins(0);      // รีเซ็ตป้ายเป็น 0 🪙
+  updateBestTarget();      // โชว์เป้าสถิติเดิม (ถ้ามี)
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
   // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — ยังไม่เลือกตัวละคร = ซ่อนไว้
   const gav = document.getElementById('game-avatar');

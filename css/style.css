@@ -704,8 +704,15 @@ html.no-anim body.quake{animation:none;}
   margin:2px 0;
 }
 .lb-rank{width:34px;text-align:center;font-weight:bold;color:#7d5fc0;flex-shrink:0;}
-.lb-name{font-weight:bold;color:#5a4a6a;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.lb-name small{color:#9a8aac;font-weight:normal;font-size:11px;}
+/* 2 บรรทัด: ชื่อบน · ชั้นล่าง (จาง) — สไตล์เดียวกับการ์ดเพื่อนออนไลน์ */
+.lb-name{
+  font-weight:bold;color:#5a4a6a;flex:1;min-width:0;overflow:hidden;white-space:nowrap;
+  display:flex;flex-direction:column;line-height:1.25;
+}
+.lb-name small{
+  display:block;color:#9a8aac;font-weight:normal;font-size:11px;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;
+}
 .lb-coins{color:#b8860b;font-weight:bold;white-space:nowrap;}
 .big-btn.purple{background:linear-gradient(180deg,#c39df0,#9a6fdc);box-shadow:0 6px 0 #7d5fc0;font-size:19px;padding:13px;}
 .big-btn.purple:active{box-shadow:0 2px 0 #7d5fc0;}
@@ -814,17 +821,30 @@ html.no-anim body.quake{animation:none;}
   border:2px dashed #d6c7ec;border-radius:16px;padding:11px 16px;
 }
 .game-endless-note b{color:#5b8def;}
-/* 🪙 ตัวเลขเหรียญสะสม "ครั้งนี้" — เด่นเป็นทอง เด้งเล็กๆ ตอนเพิ่ม ให้เด็กมีกำลังใจ */
+/* 🪙 ตัวเลขเหรียญสะสม "ครั้งนี้" — เด้งเล็กๆ ตอนเพิ่ม + สีไต่ระดับตามจำนวน (เทา→เขียว→ทอง→รุ้ง) */
 .game-endless-note .sess-coin{
-  display:inline-block;color:#e6a417;font-size:17px;font-weight:800;
-  padding:0 2px;transform-origin:center;
+  display:inline-block;color:#8a76a8;font-size:17px;font-weight:800;
+  padding:0 2px;transform-origin:center;transition:color .3s;
 }
+.game-endless-note .sess-coin.t1{color:#2fa84f;}   /* ≥100 เขียว */
+.game-endless-note .sess-coin.t2{color:#e6a417;}   /* ≥500 ทอง */
+.game-endless-note .sess-coin.t3{                  /* ≥2000 รุ้งวิบวับ */
+  background:linear-gradient(90deg,#ff5f6d,#ffb521,#2fd06e,#3fa9ff,#a06bff,#ff5f6d);
+  background-size:200% auto;-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent;
+  animation:sessRainbow 3s linear infinite;
+}
+@keyframes sessRainbow{to{background-position:200% center;}}
 .game-endless-note .sess-coin.bump{animation:sessCoinBump .4s ease;}
-@keyframes sessCoinBump{
+.game-endless-note .sess-coin.t3.bump{animation:sessCoinBump .4s ease, sessRainbow 3s linear infinite;}
+@keyframes sessCoinBump{         /* scale เท่านั้น ไม่แตะ color (กันทับสีแต่ละเทียร์/รุ้ง) */
   0%{transform:scale(1);}
-  40%{transform:scale(1.35);color:#ff9d2e;}
+  40%{transform:scale(1.4);}
   100%{transform:scale(1);}
 }
+/* 🏆 บรรทัดเป้าสถิติในการ์ดล่าง */
+.game-endless-note .best-target{color:#8a6df0;font-size:13px;}
+.game-endless-note .best-target b{color:#e6a417;}
 
 /* floating effects */
 .float-fx{
