@@ -1009,6 +1009,7 @@ function renderDashboard(){
   }
   applyNoAnim();
   updateBillBadges();
+  renderRailWorlds();
   const now = Date.now();
 
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
@@ -2615,6 +2616,66 @@ async function enterDrone3D(){
     advLoading = false;
   }
   Adventure3D.start('drone');
+}
+
+/* ============================================================
+   🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+   ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
+   แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
+   แล้วปุ่มจะโผล่ในรางเอง · มีตั๋ว = กดเข้าโลกเลย · ยังไม่มีตั๋ว = 🔒 พาไปการ์ดซื้อในร้านค้า
+   ============================================================ */
+const WORLD3D = [
+  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   card:'ticket-card', enter:enterAdventure3D },
+  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', card:'haunt-card',  enter:enterHaunted3D },
+  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  card:'heli-card',   enter:enterHeli3D },
+  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', card:'drone-card',  enter:enterDrone3D },
+];
+
+function scrollShopCardIntoView(id){
+  setTimeout(()=>{ const c = document.getElementById(id); if(c) c.scrollIntoView({behavior:'smooth', block:'center'}); }, 120);
+}
+function railWorldClick(w){
+  if(state.advHurt){                                        // บาดเจ็บ → รักษาก่อน (การ์ดร้านมีปุ่มรักษา)
+    sfx.wrong(); toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D');
+    if(typeof openPanel === 'function') openPanel('panel-shop');
+    scrollShopCardIntoView(w.card); return;
+  }
+  if(!state[w.ticketKey]){                                  // ยังไม่มีตั๋ว → พาไปการ์ดซื้อในร้านค้า
+    sfx.select(); toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในร้านค้าก่อนนะ`);
+    if(typeof openPanel === 'function') openPanel('panel-shop');
+    scrollShopCardIntoView(w.card); return;
+  }
+  w.enter();                                                // มีตั๋ว + ไม่บาดเจ็บ → เข้าโลกเลย
+}
+
+/* สร้างปุ่มโลก 3D ในรางครั้งแรก แล้วอัปเดตสถานะล็อก/ปลดล็อกทุกครั้งที่ render */
+function renderRailWorlds(){
+  const rail = document.querySelector('.lobby-rail');
+  if(!rail) return;
+  let box = document.getElementById('rail-worlds');
+  if(!box){                                                 // สร้างครั้งเดียว
+    box = document.createElement('div');
+    box.id = 'rail-worlds';
+    box.className = 'rail-worlds';
+    box.innerHTML = '<div class="rail-div">โลก 3D</div>';
+    WORLD3D.forEach(w=>{
+      const b = document.createElement('button');
+      b.className = 'rail-btn rail-world';
+      b.id = 'btn-world-' + w.mode;
+      b.innerHTML = `<span class="rail-ico">${w.ico}</span>${w.label}<span class="rail-lock" style="display:none">🔒</span>`;
+      b.addEventListener('click', ()=>railWorldClick(w));
+      box.appendChild(b);
+    });
+    rail.appendChild(box);
+  }
+  WORLD3D.forEach(w=>{                                       // ล็อก(ยังไม่มีตั๋ว) จาง+🔒 · ปลดล็อกแล้วสว่างปกติ
+    const b = document.getElementById('btn-world-' + w.mode);
+    if(!b) return;
+    const locked = !state[w.ticketKey];
+    b.classList.toggle('locked', locked);
+    const lk = b.querySelector('.rail-lock');
+    if(lk) lk.style.display = locked ? '' : 'none';
+  });
 }
 
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */

@@ -50,7 +50,7 @@ const MODES = {
     label:'โลกเฮลิคอปเตอร์', emoji:'🚁', reward:30, doneKey:'heliDone',
     shoot:false, ghost:false, heli:true,
     sky:0x9fd9f7, fogN:45, fogF:150, ground:0x8a8f96,
-    intro:'🚁 <b>โลกเฮลิคอปเตอร์ Bell!</b><br><small>ตัวอักษรอยู่บนยอดตึก — บินลอดระหว่างตึก<br>แล้ว<b>ลงจอดบนดาดฟ้า</b>เพื่อเก็บ · ระวังชนตึก!</small>',
+    intro:'🚁 <b>โลกเฮลิคอปเตอร์ Bell!</b><br><small>ตัวอักษรอยู่บนยอดตึก — บินลอดระหว่างตึก<br>แล้ว<b>ลงจอดบนดาดฟ้า</b>เพื่อเก็บ · ระวังชนตึก!<br>💨 บินเฉียดตึกแบบไม่ชน = ได้เหรียญโบนัสค่าความกล้า!</small>',
     hint:'W/S เอียงหน้า-หลัง · A/D สไลด์ · Q/E หันหัว · Space ขึ้น · Shift ลง · จอดเบาๆ บนดาดฟ้าเพื่อเก็บตัวอักษร',
     koTitle:'🚁💥 เฮลิคอปเตอร์พังแล้ว!',
   },
@@ -58,7 +58,7 @@ const MODES = {
     label:'โลกโดรน FPV', emoji:'🛸', reward:35, doneKey:'droneDone',
     shoot:false, ghost:false, drone:true,
     sky:0x9aa6b2, fogN:32, fogF:135, ground:0x45484d,
-    intro:'🛸 <b>โลกโดรน FPV Racing!</b><br><small>บินเร็วสุดๆ ลอด<b>หน้าต่างตึกร้าง</b>เข้าไปในห้องต่างๆ<br>บินเฉียดตัวอักษรเพื่อเก็บ (ไม่ต้องจอด!) · ระวังชนกำแพง</small>',
+    intro:'🛸 <b>โลกโดรน FPV Racing!</b><br><small>บินเร็วสุดๆ ลอด<b>หน้าต่างตึกร้าง</b>เข้าไปในห้องต่างๆ<br>บินเฉียดตัวอักษรเพื่อเก็บ (ไม่ต้องจอด!) · ระวังชนกำแพง<br>💨 เฉียดกำแพงหวุดหวิดแบบไม่ชน = เหรียญโบนัส (ยิ่งเฉียด+คอมโบ ยิ่งได้)!</small>',
     hint:'W/S เดินหน้า-ถอย · A/D เอียงข้าง · Q/E หันหัว · Space ขึ้น · Shift ลง · บินเฉียดตัวอักษรเก็บได้เลย',
     koTitle:'🛸💥 โดรนพังแล้ว!',
   },
@@ -78,6 +78,8 @@ let renderer, camera, clock;
 let worlds={};                    // ฉาก static ต่อโหมด {scene,trees,buildings} สร้างครั้งเดียว
 let scene=null, trees=[], buildings=[];
 let solids=[];                    // 🛸 กล่องกันชนของตึกร้าง (โหมด drone) — {x,y,z,hx,hy,hz}
+/* 💨 โบนัสบินเฉียด (near-miss · รอบ 86) — ใช้ทั้ง heli/drone: เข้าใกล้กำแพงแล้วถอยรอดโดยไม่ชน = ได้เหรียญ */
+let nmActive=false, nmMin=99, nmCrashed=false, nmCombo=0, nmLastAt=0, nmPopEl=null;
 /* ---------- โดรน FPV (โหมด drone) — เร็วและคล่องกว่าเฮลิฯ บินเข้าตึกได้ ---------- */
 const DRONE_R     = 0.6;          // รัศมีตัวโดรน (กันชนกับกำแพง)
 const DRONE_ACCEL = 30;           // แรงเร่งเดินหน้า/สไลด์ (เฮลิฯ = 13 → โดรนแรงกว่ามาก)
@@ -1868,6 +1870,17 @@ function buildDom(){
     border-radius:0;box-shadow:0 0 5px rgba(0,0,0,.85)}
   #adv-overlay.adv-drone:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
     box-shadow:inset 0 0 130px 34px rgba(0,0,0,.5)}
+  /* 💨 ป๊อปโบนัสบินเฉียด (heli/drone) — เด้งขึ้นจางหายเหนือ crosshair */
+  #adv-nearmiss{top:43%;left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;z-index:6;
+    color:#fff;font-weight:900;font-size:clamp(15px,3.6vw,21px);text-shadow:0 2px 6px #000;white-space:nowrap;
+    background:rgba(0,0,0,.42);border-radius:12px;padding:4px 15px}
+  #adv-nearmiss .nm-coin{color:#ffd54f}
+  #adv-nearmiss.show{animation:advNm 1.15s ease-out}
+  @keyframes advNm{0%{opacity:0;transform:translate(-50%,8px) scale(.8)}
+    15%{opacity:1;transform:translate(-50%,-4px) scale(1.1)}
+    30%{transform:translate(-50%,-10px) scale(1)}
+    78%{opacity:1;transform:translate(-50%,-24px)}
+    100%{opacity:0;transform:translate(-50%,-38px)}}
   #adv-inst{top:34px;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:13px;
     text-shadow:0 1px 3px #000;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 12px;display:none;white-space:nowrap}
   .adv-heli #adv-inst{display:block}
@@ -1981,6 +1994,7 @@ function buildDom(){
       </div>
     </div>
     <div class="adv-hud" id="adv-inv"></div>
+    <div class="adv-hud" id="adv-nearmiss"></div>
     <div class="adv-hud" id="adv-cross"></div>
     <div id="adv-dmg"></div>
     <div id="adv-banner"></div>
@@ -2022,6 +2036,7 @@ function buildDom(){
   selfMsgEl=overlayEl.querySelector('#adv-selfmsg');
   hudInstEl=overlayEl.querySelector('#adv-inst');
   hudWarnEl=overlayEl.querySelector('#adv-warn');
+  nmPopEl=overlayEl.querySelector('#adv-nearmiss');
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
   gaugeCtx=overlayEl.querySelector('#adv-gauges').getContext('2d');
   ATC.el=overlayEl.querySelector('#adv-radio');
@@ -2263,7 +2278,7 @@ function tickDrone(dt,now){
   p.y=Math.min(62,p.y);
   if(p.y<DRONE_R){ p.y=DRONE_R; if(hVel.y<0) hVel.y*=-.2; }         // แตะพื้น = เด้งเบา
   const crashSpd=collideDrone(p);
-  if(crashSpd>9 && now-hHitAt>900){ hHitAt=now; damagePlayer(14); DroneSound.thud(); }
+  if(crashSpd>9 && now-hHitAt>900){ hHitAt=now; damagePlayer(14); DroneSound.thud(); nmCrashed=true; nmCombo=0; }
   camera.position.set(p.x,p.y,p.z);
 
   // เอียงตัวแบบ FPV (แรงเฉื่อย) — ก้ม/เงยตามเดินหน้า + banking ตอนสไลด์
@@ -2297,6 +2312,7 @@ function tickDrone(dt,now){
   if(near<1.2){ hWarnLvl=3; warnMsg='🚨 ใกล้กำแพงมาก!'; }
   else if(near<2.4){ hWarnLvl=2; warnMsg='⚠️ ระวังชน!'; }
   else if(near<4){ hWarnLvl=1; warnMsg='⚠️ มีกำแพงใกล้ๆ'; }
+  nearMissTick(near, now, 1.9, 4, 1.0);                // 💨 บินเฉียดกำแพงแล้วรอด = โบนัส
   if(hudWarnEl){
     if(hWarnLvl>0){ hudWarnEl.style.display='block'; hudWarnEl.textContent=warnMsg; hudWarnEl.className='adv-hud warn'+hWarnLvl; }
     else hudWarnEl.style.display='none';
@@ -2310,6 +2326,32 @@ function tickDrone(dt,now){
   DroneSound.update(col,Math.hypot(hVel.x,hVel.z),dt);
 }
 
+/* 💨 โบนัสบินเฉียด — เรียกทุกเฟรมด้วยระยะห่างกำแพงที่ใกล้สุด (d)
+   เข้าเขตเสี่ยง (d<enterR) แล้วถอยออกพ้น (d>exitR) โดยไม่ชนระหว่างนั้น = ได้เหรียญค่าความเสี่ยง
+   ยิ่งเฉียดใกล้ (d<superR) + คอมโบต่อเนื่อง = ยิ่งได้เยอะ · ชน = ริบโบนัส+รีเซ็ตคอมโบ */
+function nearMissTick(d, now, enterR, exitR, superR){
+  if(d<enterR){
+    nmActive=true;
+    if(d<nmMin) nmMin=d;
+  }else if(nmActive && d>exitR){
+    if(!nmCrashed && now-nmLastAt>700){
+      nmLastAt=now; nmCombo++;
+      const superClose=nmMin<superR;
+      const bonus=(superClose?4:2)+Math.min(4,nmCombo-1);   // คอมโบเพิ่มสูงสุด +4
+      addCoins(bonus); sessionCoins+=bonus; sfx.coin();
+      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(25);
+      showNearMiss(superClose,bonus,nmCombo);
+      renderHudTop();
+    }
+    nmActive=false; nmMin=99; nmCrashed=false;
+  }
+}
+function showNearMiss(superClose,bonus,combo){
+  if(!nmPopEl) return;
+  const cmb=combo>1?` <b>×${combo}</b>`:'';
+  nmPopEl.innerHTML=`💨 ${superClose?'เฉียดสุดๆ!':'เฉียดหวุดหวิด!'}${cmb} <span class="nm-coin">+${bonus}🪙</span>`;
+  nmPopEl.classList.remove('show'); void nmPopEl.offsetWidth; nmPopEl.classList.add('show');
+}
 function heliFloorAt(x,z){
   let f=0;
   for(const b of buildings){
@@ -2362,7 +2404,7 @@ function tickHeli(dt,now){
       const pushZ=(nz>b.z?1:-1)*((b.d/2+1)-Math.abs(nz-b.z));
       if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
       hVel.x*=-.25; hVel.z*=-.25;
-      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); }
+      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); nmCrashed=true; nmCombo=0; }
       break;
     }
   }
@@ -2425,7 +2467,8 @@ function tickHeli(dt,now){
     if(hVel.y<-6 && ny-floor<9){                       // ดิ่งเร็วใกล้พื้น/ดาดฟ้า → PULL UP
       if(hWarnLvl<2){ hWarnLvl=2; warnMsg='⬇️ ลดระดับเร็วเกิน! ดึงขึ้น!'; }
     }
-  }
+    nearMissTick(wallDist, now, 3.2, 7, 1.7);          // 💨 เฉียดตึกแล้วรอด = โบนัส
+  }else{ nmActive=false; nmMin=99; }                   // จอด/ยังไม่พร้อม = ยกเลิกจังหวะเฉียด
   if(hudWarnEl){
     if(hWarnLvl>0){
       hudWarnEl.style.display='block';
@@ -2860,6 +2903,7 @@ function start(md){
   solids=worlds[mode].solids||[];
 
   hp=100; sessionCoins=0; sessionWords=0; inv={}; keys={}; yaw=0; pitch=0;
+  nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
     hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
