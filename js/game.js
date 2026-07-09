@@ -43,31 +43,155 @@ function addSessionCoins(n){
     }, 620);
   }
 
-  // 🏆 ทำลายสถิติเหรียญ/ครั้งของตัวเอง (เฉพาะคนที่เคยมีสถิติ > 0 · เด้งครั้งเดียว/ครั้งเล่น)
+  // 🏆 ทำลายสถิติ "สัปดาห์นี้" (รีเซ็ตทุกจันทร์ → เด็กมีโอกาสทำลายใหม่เรื่อยๆ ไม่ตัน) · เด้งครั้งเดียว/ครั้งเล่น
   if(!game.beatBestShown && game.prevBest > 0 && game.sessionCoins > game.prevBest){
     game.beatBestShown = true;
-    updateBestTarget();   // เปลี่ยนป้ายเป้าเป็น "สถิติใหม่แล้ว!"
+    updateBestTarget();   // เปลี่ยนป้ายเป้าเป็น "สถิติสัปดาห์ใหม่แล้ว!"
     setTimeout(()=>{
       sfx.rankup();
-      toast(`🏆 ทำลายสถิติตัวเอง! ครั้งนี้เก็บเกิน ${fmtNum(game.prevBest)} 🪙 ที่เคยทำได้แล้ว เก่งขึ้นทุกวันเลย!`, 3200);
+      toast(`🏆 ทำลายสถิติสัปดาห์นี้! ครั้งนี้เก็บเกิน ${fmtNum(game.prevBest)} 🪙 ที่เคยทำได้แล้ว เก่งขึ้นทุกวันเลย!`, 3200);
     }, passed ? 1500 : 700);   // ถ้าเพิ่งเด้งหลักเหรียญ ให้เหลื่อมกันไม่ให้ทับ
   }
 
-  // อัปเดตสถิติสูงสุด (เซฟจะถูกบันทึกโดย saveState ที่ตามมาใน checkMatch)
+  // อัปเดตสถิติสูงสุด — ทั้งสัปดาห์นี้และตลอดกาล (เซฟจะถูกบันทึกโดย saveState ที่ตามมาใน checkMatch)
+  if(game.sessionCoins > (state.weekBestCoins||0)) state.weekBestCoins = game.sessionCoins;
   if(game.sessionCoins > (state.bestSessionCoins||0)) state.bestSessionCoins = game.sessionCoins;
 }
 
-/* 🏆 ป้ายบอกเป้าสถิติในการ์ดล่าง — มีสถิติเดิม=ตั้งเป้าให้ทำลาย · ทำลายแล้ว=ฉลองสถิติใหม่ · ยังไม่มี=ซ่อน */
+/* 🏆 ป้ายบอกเป้าสถิติสัปดาห์ในการ์ดล่าง — มีสถิติสัปดาห์นี้=ตั้งเป้าให้ทำลาย · ทำลายแล้ว=ฉลอง · ยังไม่มี=ซ่อน */
 function updateBestTarget(){
   const el = document.getElementById('game-best-target');
   if(!el) return;
   if(game.beatBestShown){
-    el.innerHTML = `<br>🏆 <b>สถิติใหม่แล้ว!</b> เก่งกว่าตัวเองเมื่อก่อนสุดๆ 🎉`;
+    el.innerHTML = `<br>🏆 <b>สถิติสัปดาห์ใหม่แล้ว!</b> เก่งกว่าตัวเองสุดๆ 🎉`;
   }else if(game.prevBest > 0){
-    el.innerHTML = `<br>🏆 สถิติดีที่สุดของหนู: <b>${fmtNum(game.prevBest)} 🪙</b> — ครั้งนี้เก็บให้เกินสิ!`;
+    el.innerHTML = `<br>🏆 สถิติสัปดาห์นี้: <b>${fmtNum(game.prevBest)} 🪙</b> — ครั้งนี้เก็บให้เกินสิ!`;
   }else{
-    el.innerHTML = '';   // ยังไม่เคยมีสถิติ (เล่นครั้งแรก) — ไม่ต้องโชว์เป้า
+    el.innerHTML = '';   // สัปดาห์นี้ยังไม่มีสถิติ — ไม่ต้องโชว์เป้า
   }
+}
+
+/* 🗓️ คีย์สัปดาห์ = วันจันทร์ของสัปดาห์นั้น (YYYY-MM-DD) — ใช้ตัดสินว่าถึงเวลารีเซ็ตสถิติรายสัปดาห์ */
+function weekKeyStr(d){
+  d = d ? new Date(d) : new Date();
+  const mon = (d.getDay() + 6) % 7;           // จันทร์=0 ... อาทิตย์=6
+  d.setDate(d.getDate() - mon); d.setHours(0,0,0,0);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function rolloverWeekBest(){   // ถ้าข้ามสัปดาห์แล้ว → ล้างสถิติสัปดาห์ เริ่มนับใหม่
+  const wk = weekKeyStr();
+  if(state.weekKey !== wk){ state.weekKey = wk; state.weekBestCoins = 0; }
+}
+
+/* 📊 รายงานความก้าวหน้าของเด็ก (แยกต่างหาก) — รวมพัฒนาการตั้งแต่เริ่มเล่นทั้งหมด
+   ออกแบบให้ "มีคุณค่า+ให้กำลังใจ" ไม่ใช่ตารางตัวเลขแห้งๆ: ระดับนักคำศัพท์+แถบความคืบหน้า,
+   การ์ดสถิติเด่น, แบบทดสอบ, โลก 3D, เข็มรางวัล, สัตว์เลี้ยง + คำชมตามระดับ */
+const VOCAB_PER_LEVEL = 50;                    // จับคู่ถูกครบ 50 คำ = ขึ้น 1 ระดับนักคำศัพท์
+const VOCAB_RANK_NAMES = ['นักคำศัพท์น้อย','นักสำรวจคำ','นักผจญคำ','จอมคำศัพท์','ปรมาจารย์คำศัพท์'];
+function vocabRankName(lvl){ return VOCAB_RANK_NAMES[Math.min(lvl-1, VOCAB_RANK_NAMES.length-1)] || VOCAB_RANK_NAMES[0]; }
+
+function showProgressReport(){
+  const s = state.student || {};
+  const name = escapeHTML(state.profileName || s.first || 'หนู');
+  const matches = state.totalMatches || 0;
+  const lvl = Math.floor(matches / VOCAB_PER_LEVEL) + 1;
+  const inLvl = matches % VOCAB_PER_LEVEL;
+  const pct = Math.round(inLvl / VOCAB_PER_LEVEL * 100);
+  const toNext = VOCAB_PER_LEVEL - inLvl;
+
+  // แบบทดสอบ: ผ่านกี่หมวด / สอบกี่ครั้ง / เฉลี่ยถูกกี่ %
+  const qCount = state.quizLog.length;
+  const qPass = (typeof catsForStudent === 'function')
+    ? catsForStudent().filter(c=>state.quizPassed.includes(c.id)).length
+    : (state.quizPassed||[]).length;
+  const qTotalCats = (typeof catsForStudent === 'function') ? catsForStudent().length : 0;
+  const qAvg = qCount ? Math.round(state.quizLog.reduce((a,l)=>a + (l.total? l.score/l.total : 0), 0) / qCount * 100) : 0;
+
+  // โลกผจญภัย 3D: คำที่พิชิตต่อโลก (โชว์เฉพาะโลกที่มีตั๋วหรือเคยพิชิต)
+  const worlds = [
+    {ic:'🌍', nm:'โลกผจญภัย',   n:(state.advDone||[]).length,   own:state.advTicket},
+    {ic:'👻', nm:'โลกผีสิง',     n:(state.hauntDone||[]).length, own:state.hauntTicket},
+    {ic:'🚁', nm:'โลกเฮลิคอปเตอร์', n:(state.heliDone||[]).length, own:state.heliTicket},
+    {ic:'🛸', nm:'โลกโดรน FPV',  n:(state.droneDone||[]).length, own:state.droneTicket},
+  ];
+  const world3dTotal = worlds.reduce((a,w)=>a+w.n, 0);
+  const worldRows = worlds.filter(w=>w.own || w.n>0).map(w=>
+    `<div class="rp-row"><span>${w.ic} ${w.nm}</span><span><b>${fmtNum(w.n)}</b> คำ</span></div>`).join('')
+    || `<div class="rp-empty">ยังไม่ได้เข้าโลก 3D — มีตั๋วเมื่อไหร่ลองผจญภัยดูนะ! 🚀</div>`;
+
+  // เข็มรางวัลที่สะสมได้
+  const badges = [];
+  if(state.thunderBadge)   badges.push(THUNDER_TIER_UI[state.thunderBadge]);
+  if(state.daredevilBadge) badges.push(DAREDEVIL_TIER_UI[state.daredevilBadge]);
+  if(state.pilotBadge)     badges.push(['','🥉 ใบอนุญาตนักบิน','🥈 นักบินฝีมือดี','🥇 กัปตันมือทอง'][state.pilotBadge]);
+  const badgeHtml = badges.length
+    ? `<div class="rp-badges">${badges.map(b=>`<span class="rp-badge">${b}</span>`).join('')}</div>`
+    : `<div class="rp-empty">ยังไม่มีเข็ม — เล่นเก่งๆ เดี๋ยวได้เข็มติดชื่อให้เพื่อนเห็น! 🎖️</div>`;
+
+  // สัตว์เลี้ยง
+  const petCount = state.pets.length;
+  const petLv = state.pets.reduce((a,p)=>a + (p.level||1), 0);
+
+  // คำชมตามจำนวนคำที่ทำได้ (ให้กำลังใจไล่ระดับ)
+  const cheer = matches >= 500 ? 'สุดยอดไปเลย! หนูคือนักคำศัพท์ตัวจริง เก่งมากๆ 🌟'
+    : matches >= 200 ? 'เก่งขึ้นเยอะเลย! สะสมคำศัพท์ได้เยอะมาก สู้ต่อไปนะ 💪'
+    : matches >= 50  ? 'เริ่มเก่งแล้วนะ! เล่นอีกนิดก็ขึ้นระดับใหม่แล้ว ลุยเลย! ✨'
+    : 'เพิ่งเริ่มต้น — ทุกคำที่หนูจับคู่ถูกคือความเก่งที่เพิ่มขึ้น มาลุยกัน! 🚀';
+
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay report-overlay';
+  overlay.innerHTML = `<div class="levelup-box report-box">
+    <button class="report-close" aria-label="ปิด">✕</button>
+    <div class="rp-head">
+      <div class="rp-avatar">${playerAvatarHTML('👧')}</div>
+      <h2 class="rp-title">📊 ความก้าวหน้าของ${name}</h2>
+      <p class="rp-sub">${s.grade ? 'ชั้น ' + escapeHTML(s.grade) + ' · ' : ''}สรุปตั้งแต่เริ่มเล่นมาทั้งหมด</p>
+    </div>
+
+    <div class="rp-levelcard">
+      <div class="rp-level-top"><span>🎓 ${vocabRankName(lvl)} · ระดับ ${lvl}</span><span>${fmtNum(matches)} คำ</span></div>
+      <div class="rp-bar"><div class="rp-bar-fill" style="width:${pct}%"></div></div>
+      <div class="rp-level-note">อีก <b>${toNext}</b> คำ ขึ้นระดับ ${lvl+1}!</div>
+    </div>
+
+    <div class="rp-grid">
+      <div class="rp-stat"><div class="rp-ic">🔤</div><div class="rp-num">${fmtNum(matches)}</div><div class="rp-lbl">คำที่จับคู่ถูก</div></div>
+      <div class="rp-stat"><div class="rp-ic">🪙</div><div class="rp-num">${fmtNum(state.lifetimeCoins||0)}</div><div class="rp-lbl">เหรียญที่หามาได้</div></div>
+      <div class="rp-stat"><div class="rp-ic">🏆</div><div class="rp-num">${fmtNum(state.bestSessionCoins||0)}</div><div class="rp-lbl">สถิติ/ครั้ง ดีที่สุด</div></div>
+      <div class="rp-stat"><div class="rp-ic">🗓️</div><div class="rp-num">${fmtNum(state.weekBestCoins||0)}</div><div class="rp-lbl">สถิติสัปดาห์นี้</div></div>
+    </div>
+
+    <div class="rp-section">
+      <h3 class="rp-h3">📝 แบบทดสอบคำศัพท์</h3>
+      <div class="rp-row"><span>สอบผ่านแล้ว</span><span><b>${qPass}</b>${qTotalCats ? ' / ' + qTotalCats : ''} หมวด</span></div>
+      <div class="rp-row"><span>สอบไปทั้งหมด</span><span><b>${fmtNum(qCount)}</b> ครั้ง</span></div>
+      ${qCount ? `<div class="rp-row"><span>คะแนนเฉลี่ย</span><span><b>${qAvg}%</b> ถูก</span></div>` : ''}
+    </div>
+
+    <div class="rp-section">
+      <h3 class="rp-h3">🌍 คำที่พิชิตในโลก 3D <span class="rp-badge-mini">รวม ${fmtNum(world3dTotal)} คำ</span></h3>
+      ${worldRows}
+    </div>
+
+    <div class="rp-section">
+      <h3 class="rp-h3">🎖️ เข็มรางวัล</h3>
+      ${badgeHtml}
+    </div>
+
+    <div class="rp-section">
+      <h3 class="rp-h3">🐾 ครอบครัวสัตว์เลี้ยง</h3>
+      <div class="rp-row"><span>เลี้ยงอยู่</span><span><b>${petCount}</b> ตัว · เลเวลรวม <b>${petLv}</b></span></div>
+    </div>
+
+    <p class="rp-cheer">${cheer}</p>
+    <button class="cf-ok report-ok">เยี่ยมเลย! 🎉</button>
+  </div>`;
+  const close = ()=>overlay.remove();
+  overlay.querySelector('.report-close').addEventListener('click', close);
+  overlay.querySelector('.report-ok').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  document.body.appendChild(overlay);
+  if(typeof sfx !== 'undefined') sfx.levelup();
 }
 const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
@@ -104,12 +228,15 @@ function startGame(cat){
   game.sessionCoins = 0;   // เริ่มนับเหรียญ "ครั้งนี้" ใหม่ทุกครั้งที่เข้าเกม
   game.sessMilestone = 0;
   game.beatBestShown = false;
-  game.prevBest = state.bestSessionCoins || 0;   // จำสถิติเดิมไว้เทียบ (ก่อนครั้งนี้จะไปทับ)
+  rolloverWeekBest();                            // ข้ามสัปดาห์ (จันทร์) → ล้างสถิติสัปดาห์ก่อน
+  game.prevBest = state.weekBestCoins || 0;       // เป้าในเกม = สถิติ "สัปดาห์นี้" (ทำลายใหม่ได้เรื่อยๆ)
   updateComboPill();
   const sc = document.getElementById('game-session-coins');
   if(sc) sc.classList.remove('t1','t2','t3');   // ป้ายเริ่มที่สีเทา (tier 0) ทุกครั้งที่เข้าเกม
   addSessionCoins(0);      // รีเซ็ตป้ายเป็น 0 🪙
-  updateBestTarget();      // โชว์เป้าสถิติเดิม (ถ้ามี)
+  updateBestTarget();      // โชว์เป้าสถิติสัปดาห์ (ถ้ามี)
+  const rb = document.getElementById('btn-report');
+  if(rb) rb.onclick = showProgressReport;   // .onclick กัน handler ซ้อนเวลาเข้าเกมหลายรอบ
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
   // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — ยังไม่เลือกตัวละคร = ซ่อนไว้
   const gav = document.getElementById('game-avatar');

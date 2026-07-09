@@ -58,7 +58,10 @@ const DEFAULT_STATE = {
   coins:0,
   daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
   sound:true, haptic:true, noAnim:false, totalMatches:0,
-  bestSessionCoins:0,                 // 🏆 สถิติเหรียญที่เก็บได้มากสุดในการเล่นเกมจับคู่ "ครั้งเดียว" (ไว้ให้เด็กพยายามทำลายสถิติตัวเอง)
+  bestSessionCoins:0,                 // 🏆 สถิติเหรียญที่เก็บได้มากสุดในการเล่นเกมจับคู่ "ครั้งเดียว" ตลอดกาล (โชว์ในรายงาน)
+  weekBestCoins:0,                    // 🗓️ สถิติเหรียญ/ครั้ง เฉพาะ "สัปดาห์นี้" (รีเซ็ตทุกวันจันทร์) — เป้าในเกมให้ทำลายใหม่ได้เรื่อยๆ ไม่ตัน
+  weekKey:'',                         // คีย์สัปดาห์ (วันจันทร์ YYYY-MM-DD) ที่ weekBestCoins กำลังนับอยู่
+  lifetimeCoins:0,                    // 🪙 เหรียญที่ "หาได้" สะสมตลอดการเล่น (ไม่หักตอนจ่าย) — เริ่มนับตั้งแต่รอบ 95 · ไว้โชว์รายงานความก้าวหน้า
   owned:[],                           // ไอเทมที่ซื้อแล้ว (ตู้เสื้อผ้ารวม ใช้ได้ทุกตัว)
   pets:[],                            // สัตว์ที่เลี้ยงอยู่ทั้งหมด (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
   active:0,                           // ตัวที่กำลังดูแลอยู่
@@ -317,6 +320,7 @@ function addCoins(n){        // ใช้ตอน "ได้" เหรีย�
   const before = state.coins;
   state.coins += n;
   state.daily.coins += n;
+  state.lifetimeCoins = (state.lifetimeCoins||0) + n;   // เหรียญสะสมตลอดการเล่น (ไว้โชว์รายงานความก้าวหน้า)
   // เหรียญเพิ่งข้ามเส้นราคาน้องที่ยังไม่มี → แจ้งทันที ไม่ต้องกลับไปเช็กที่ร้าน (เด้งเฉพาะจังหวะข้ามเส้น)
   if(typeof PETS !== 'undefined' && typeof toast === 'function'){
     const got = Object.keys(PETS).filter(k => before < PETS[k].price && state.coins >= PETS[k].price && !hasPetType(k));
