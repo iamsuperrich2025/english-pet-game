@@ -10,11 +10,9 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-### 🔥 ทำก่อน (ผู้ใช้สั่ง 9 ก.ค. — ต่อยอด "สตรีคเล่นต่อ" รอบ 101 · ทำ A ก่อน แล้ว B)
-> ทั้งคู่อยู่ในเกมจับคู่ 2D · โค้ดหลัก `js/game.js` (ฟังก์ชัน `exitGame`/`showSessionSummary` + const `REPLAY_BONUS_EVERY=3`/`REPLAY_BONUS_COINS=50` · field `game.replayStreak`) · **A ทำใน game.js ล้วน (ปลอดภัย ไม่ชน session คู่ขนาน)** · B ต้องแตะ state.js + จุดโชว์เข็มใน map/leaderboard (ui.js/adventure3d — **session คู่ขนานแตะบ่อย ระวังชน · commit เฉพาะ hunk ตัวเอง**)
-
-- **A) สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ)** — เดิมโบนัสคงที่ +50 ทุก 3 รอบติด → เปลี่ยนเป็น 3 รอบ +50 · 6 รอบ +100 · 9 รอบ +200 (แล้วคงที่ 200 หรือไล่ต่อ) · แก้ที่ closure `replay` ใน `exitGame` (game.js ~บรรทัดที่คำนวณ `streak % REPLAY_BONUS_EVERY`) → ทำเป็นตาราง tier `[[3,50],[6,100],[9,200]]` เลือก payout ตาม streak · อัปเดตข้อความ floatFx/toast + บรรทัด `.sm-streak` บนการ์ดให้บอกโบนัสรอบถัดไปตาม tier · เทสต์: streak 3→+50, 6→+100, 9→+200
-- **B) เข็ม "นักเล่นขยัน" 🏅** — สะสม **จำนวนรอบเล่นต่อทั้งหมด (สะสมถาวร)** ครบ 20/50/100 = เข็ม 3 ระดับ ติดท้ายชื่อใน map ให้เพื่อนเห็น · **ทำตามแพตเทิร์นเข็มสายฟ้า/นักบินเป๊ะ:** (1) state.js เพิ่ม `diligentCount:0, diligentBadge:0` ใน DEFAULT_STATE (2) game.js เพิ่ม `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]` + `DILIGENT_TIER_UI` + ฟังก์ชัน `addDiligent()` (สไตล์ `addThunder()` บรรทัด ~263) เรียกในทุกครั้งที่กดเล่นต่อ (closure replay) (3) จุดต่อเข็มท้ายชื่อใน map/leaderboard — หา `thunderEmoji`/`pilotBadge` ที่ถูกใช้ประกอบชื่อ (grep `thunderEmoji(` / `daredevilEmoji(`) แล้วเสียบ `diligentEmoji()` ต่อท้ายแบบเดียวกัน (ระวังไฟล์นี้ session คู่ขนานแตะ — เช็ก `git fetch`+commit เฉพาะ hunk) (4) โชว์ในหน้าสถิติ + รายงานความก้าวหน้า (`showProgressReport` game.js — เพิ่มแถวเข็ม/ตัวเลข)
+### ✅ เสร็จแล้ว (9 ก.ค. รอบ 105/105B) — A+B "สตรีคเล่นต่อ" ต่อยอดรอบ 101
+- **A) โบนัสสตรีคเล่นต่อไล่ระดับ ✅** (รอบ 105 · commit 749cce9) — `REPLAY_BONUS_TIERS=[[9,200],[6,100],[3,50]]` + `replayBonusFor(streak)` · closure replay จ่ายตาม tier (3→50,6→100,9+→200 คงที่) · `.sm-streak` โชว์โบนัสเป้าถัดไป · ยืนยัน preview
+- **B) เข็มนักเล่นขยัน 🏅 ✅** (รอบ 105B) — `diligentCount/diligentBadge` (state.js) · `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]`+`diligentEmoji()`+`addDiligent()` (game.js) เรียกใน closure replay · ต่อท้ายชื่อใน map peer+กระดาน (adventure3d.js 1285/1722) · แถวสถิติ (ui.js) + รายงานฯ · ยืนยัน preview (เข็มขึ้น 20/50/100)
 
 **โลก 3D ครบ 4 โลกแล้ว (🌍 กลางวัน · 👻 ผีสิง · 🚁 เฮลิฯ · 🛸 โดรน FPV รอบ 85) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
 - 🛸 **รอบ 85 ค้างฝั่งผู้ใช้:** (1) **publish rules โซน drone** (Artifact ปุ่มคัดลอกส่งแล้ว · ก้อนเต็มใน `handoff/RULES.md`) — ยังไม่ publish = เล่นคนเดียวได้ แต่ multiplayer/voice/ครูคุมห้องของโลกโดรนยังไม่ทำงาน (2) เจนเสียง `sound/drone_loop.mp3` จาก Suno (`PROMPTS_DRONE.md`) (3) ทดสอบจริงบนมือถือ (จอยซ้าย+ลากขวา=หันหัว/คันเร่ง · บินลอดหน้าต่าง)
@@ -34,6 +32,19 @@
 2. (ถ้าต้องการ) เจนเสียงหลอนจาก Suno ตาม `PROMPTS_SOUND.md` → วาง `sound/haunt_ambient.mp3 / haunt_chase.mp3 / haunt_scare.mp3`
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
+
+**✅ รอบ 105B (9 ก.ค. · Opus): เข็มนักเล่นขยัน 🏅 — สะสม "เล่นต่ออีกรอบ" ถาวร 20/50/100 — version .85** — ต่อจากรอบ 105 · ผู้ใช้สั่ง (งาน B ที่ pin ไว้)
+- แพตเทิร์นเดียวกับเข็มสายฟ้า/นักบิน: `state.diligentCount/diligentBadge` (state.js + migration) · game.js `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]` + `DILIGENT_TIER_UI`(🏅เข็มนักเล่นขยัน/🎖️นักเล่นตัวยง/🏆ยอดนักสู้คำศัพท์) + `diligentEmoji()` + `addDiligent()` (เรียกใน closure replay ของ exitGame ทุกครั้งที่กดเล่นต่อ · toast ประกาศเข็มหน่วง 1.2s)
+- ต่อ `diligentEmoji(state.diligentBadge)` ท้ายชื่อใน adventure3d.js **map peer publish (1285)** + **กระดานคะแนน renderBoard (1722)** ต่อจาก pilot/thunder/daredevil (เพื่อนเห็นทุกโลก) · ⚠️ `pilotEmoji` เป็น local ของ adventure3d แต่ `diligentEmoji` เป็น global game.js (เข้าถึงได้)
+- โชว์ในหน้าสถิติ (ui.js 3559 แถว "เล่นต่ออีกรอบสะสม") + รายงานความก้าวหน้า (`showProgressReport`: เพิ่มเข็มใน badges + แถว `diligentLine` โชว์เลข+เป้าถัดไป)
+- ✅ ยืนยัน preview: `addDiligent` วน 1→100 ได้เข็มที่ 20/50/100 เป๊ะ · รายงานฯ render จริง badge "🏅 เข็มนักเล่นขยัน" + แถว "35 รอบ (อีก 15 ได้🎖️)" · ครบ 120=ครบทุกเข็ม · ไม่มี console error
+- ⚠️ commit เฉพาะ state.js/game.js/ui.js/adventure3d.js/version (pin pathspec · ไม่แตะ .claude/img ghosts/vocab)
+
+**✅ รอบ 105 (9 ก.ค. · Opus): โบนัสสตรีคเล่นต่อไล่ระดับ 🔥 — version .84** (commit 749cce9) — ต่อยอดสตรีคเล่นต่อ (รอบ 101) · ผู้ใช้สั่ง (งาน A ที่ pin ไว้)
+- เดิมโบนัสคงที่ +50 ทุก 3 รอบติด → ตาราง tier `REPLAY_BONUS_TIERS=[[9,200],[6,100],[3,50]]` + helper `replayBonusFor(streak)` · closure `replay` ใน `exitGame` จ่ายโบนัสตาม tier เมื่อ `streak%3===0` (streak 3→50, 6→100, 9 ขึ้นไป→200 คงที่) · floatFx/toast ใช้ยอดจริง · ลบ const `REPLAY_BONUS_COINS`
+- บรรทัด `.sm-streak` บนการ์ดสรุป: `replayBonusFor(streak+remain)` = โชว์โบนัสของเป้าถัดไป (50→100→200 ตามช่วง)
+- ✅ ยืนยัน preview: จ่ายจริง streak 3→+50, 6→+100, 9/12/15→+200 · บรรทัดเป้าถัดไปถูกทุกช่วง (streak 0/1/2→+50, 3-5→+100, 6+→+200)
+- ⚠️ commit เฉพาะ game.js/version (ปลอดภัย · ไม่แตะไฟล์อื่น)
 
 **✅ รอบ 104 (9 ก.ค. · Opus): ตัวละคร Lobby เป็นโมเดล 3D จริง (idle + ปัดหมุน 360°) 🧊 — version .83** (commit c31e545) — ผู้ใช้สั่ง "ตัวละครต้องเป็น 3D ขยับ idle แบบ COD lobby + ปัดซ้ายขวาหมุนดูรอบตัว" · ผู้ใช้เลือกแนวทาง **โมเดล GLB จริง** (จาก AskUserQuestion)
 - **`js/lobby3d.js`** (โมดูล `Lobby3D`): viewer Three.js วางทับ `.stage-hero` (canvas โปร่งใส z1 · แผง z2 อยู่บน) · โหลด `img/models/caretaker_{male|female}.glb` + `pet_{dog|cat|dragon}.glb` · fit โมเดล (สูงตามระดับร่างยักษ์ `PET_H/OWNER_H`) เท้าแตะพื้น · **idle procedural** (sway.position.y/rotation.z sin) + เล่น AnimationMixer คลิปชื่อ idle/breath/stand ถ้ามี · **ปัด/ลาก pointer = หมุน spin.rotation.y 360°** + โมเมนตัม (spinVel decay) · หยุด RAF เมื่อออกจาก dashboard
