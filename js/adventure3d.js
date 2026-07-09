@@ -220,7 +220,7 @@ let letters=[];                   // ตัวอักษรในโลก [{c
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -1705,7 +1705,9 @@ function renderHudInv(){
     ? ks.map(ch=>`<span class="adv-inv-ch">${ch.toUpperCase()}${inv[ch]>1?'×'+inv[ch]:''}</span>`).join('')
     : '<span class="adv-inv-empty">เดินชนตัวอักษรเพื่อเก็บ ✨</span>';
 }
-/* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ (me + เพื่อนใน map) */
+/* ระดับเข็มนักผาดโผนจาก "ชื่อที่ sync มาแล้ว" (เข็มติดท้ายชื่อ) — ไม่ต้องเพิ่ม field/rules ใหม่ */
+function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.indexOf('🌀')>=0) return 2; if(n.indexOf('🎯')>=0) return 1; return 0; }
+/* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ + ท็อปนักผาดโผนในสนาม (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
   const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge), w:sessionWords, me:true}];
@@ -1716,6 +1718,15 @@ function renderBoard(){
     <span class="adv-b-nm">${i===0&&r.w>0?'👑':(i+1)+'.'} ${escapeHTML(r.n)}</span><b>${r.w}</b></div>`;
   let html=rows.slice(0,4).map(row).join('');
   if(meIdx>=4) html+=`<div class="adv-b-more">⋯</div>`+row(rows[meIdx],meIdx);   // เราหลุด top 4 → โชว์แถวตัวเองต่อท้าย
+  // 🎯 ท็อปนักผาดโผนในสนาม (เฉพาะโลกบิน heli/drone · จัดอันดับตามระดับเข็มในชื่อที่ sync แล้ว)
+  if(M.heli||M.drone){
+    const ace=rows.map(r=>({n:r.n, me:r.me, tier:ddTierFromName(r.n)})).filter(r=>r.tier>0).sort((a,b)=>b.tier-a.tier);
+    if(ace.length){
+      const aceHtml=ace.slice(0,3).map((r,i)=>
+        `<div class="adv-b-row${r.me?' me':''}"><span class="adv-b-nm">${['🥇','🥈','🥉'][i]||'•'} ${escapeHTML(r.n)}</span></div>`).join('');
+      html+=`<div class="adv-b-title" style="margin-top:6px">🎯 ท็อปนักผาดโผน</div>`+aceHtml;
+    }
+  }
   hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html;
 }
 function drawMinimap(){
@@ -1875,6 +1886,7 @@ function buildDom(){
     color:#fff;font-weight:900;font-size:clamp(15px,3.6vw,21px);text-shadow:0 2px 6px #000;white-space:nowrap;
     background:rgba(0,0,0,.42);border-radius:12px;padding:4px 15px}
   #adv-nearmiss .nm-coin{color:#ffd54f}
+  #adv-nearmiss .nm-rec{color:#8ef7a5;font-size:.82em;text-shadow:0 0 8px rgba(142,247,165,.8)}
   #adv-nearmiss.show{animation:advNm 1.15s ease-out}
   @keyframes advNm{0%{opacity:0;transform:translate(-50%,8px) scale(.8)}
     15%{opacity:1;transform:translate(-50%,-4px) scale(1.1)}
@@ -1982,7 +1994,39 @@ function buildDom(){
   #adv-selfmsg.on{display:block}
   .adv-haunt #adv-selfmsg{background:rgba(8,8,20,.92);color:#7cffb0;border:1px solid rgba(124,255,176,.6);
     text-shadow:0 0 8px rgba(124,255,176,.8)}
-  .adv-haunt .adv-qc{background:rgba(20,20,38,.95);color:#7cffb0;border:1px solid rgba(124,255,176,.4)}`;
+  .adv-haunt .adv-qc{background:rgba(20,20,38,.95);color:#7cffb0;border:1px solid rgba(124,255,176,.4)}
+  /* ❓ ปุ่มวิธีเล่น (ซ้ายมินิแมป) + การ์ดวิธีเล่นตอนเข้าโลกครั้งแรก — โชว์คอนโทรลจอสัมผัสที่เดิมมือถือไม่มีบอกเลย */
+  #adv-help{top:8px;right:132px;pointer-events:auto;background:rgba(0,0,0,.5);color:#fff;
+    border:2px solid rgba(255,255,255,.82);border-radius:50%;width:36px;height:36px;
+    font-size:17px;font-weight:900;font-family:inherit;line-height:1;padding:0}
+  #adv-help:active{background:rgba(255,255,255,.25)}
+  #adv-intro{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;
+    background:rgba(4,8,16,.82);pointer-events:auto;padding:12px;overflow:auto}
+  #adv-intro.on{display:flex;animation:advIntroIn .28s ease-out}
+  @keyframes advIntroIn{0%{opacity:0}100%{opacity:1}}
+  .adv-intro-card{background:linear-gradient(180deg,rgba(24,32,48,.98),rgba(12,16,28,.98));
+    border:2px solid rgba(120,200,255,.55);border-radius:20px;padding:16px 20px;max-width:min(500px,92vw);
+    box-shadow:0 8px 40px rgba(0,0,0,.6),0 0 30px rgba(80,160,255,.25);text-align:center;max-height:94vh;overflow:auto}
+  .adv-intro-emoji{font-size:38px;line-height:1;margin-bottom:2px}
+  .adv-intro-card h2{color:#fff;font-size:19px;font-weight:900;margin:2px 0 8px;text-shadow:0 2px 6px #000}
+  .adv-intro-goal{color:#dbe8ff;font-size:14px;line-height:1.45;margin:0 0 12px;
+    background:rgba(80,140,255,.14);border-radius:12px;padding:8px 12px}
+  .adv-intro-goal b{color:#ffe082}
+  .adv-intro-ctrl-h{color:#8fd4ff;font-size:12.5px;font-weight:800;letter-spacing:.3px;text-align:left;margin:0 2px 6px}
+  .adv-intro-list{list-style:none;margin:0 0 12px;padding:0;text-align:left;display:flex;flex-direction:column;gap:7px}
+  .adv-intro-list li{display:flex;align-items:center;gap:10px;color:#eef4ff;font-size:13.5px;line-height:1.35}
+  .adv-intro-list .ic{flex:0 0 34px;height:34px;display:flex;align-items:center;justify-content:center;
+    font-size:18px;background:rgba(255,255,255,.08);border-radius:10px}
+  .adv-intro-list b{color:#ffe082}
+  .adv-intro-tip{color:#bcd0e8;font-size:12.5px;line-height:1.4;margin:0 0 14px}
+  .adv-intro-tip b{color:#ffe082}
+  #adv-intro-go{background:linear-gradient(180deg,#5eb7ff,#2f7fe0);color:#fff;border:none;border-radius:14px;
+    font-family:inherit;font-weight:900;font-size:17px;padding:11px 30px;box-shadow:0 4px 14px rgba(47,127,224,.55)}
+  #adv-intro-go:active{transform:scale(.96)}
+  .adv-haunt .adv-intro-card{border-color:rgba(124,255,176,.5);box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 30px rgba(60,255,140,.2)}
+  .adv-haunt .adv-intro-goal{background:rgba(40,255,140,.1)}
+  .adv-haunt .adv-intro-ctrl-h{color:#7cffb0}
+  .adv-haunt #adv-intro-go{background:linear-gradient(180deg,#3ddc84,#1f9e5a)}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -1994,6 +2038,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-words"></div>
     <canvas class="adv-hud" id="adv-map" width="120" height="120"></canvas>
     <button class="adv-hud" id="adv-exit">🚪 ออก</button>
+    <button class="adv-hud" id="adv-help">❓</button>
     <div class="adv-hud" id="adv-hunt"></div>
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
@@ -2030,7 +2075,8 @@ function buildDom(){
       </div>
     </div>
     <div id="adv-selfmsg"></div>
-    <div class="adv-hud" id="adv-hint"></div>`;
+    <div class="adv-hud" id="adv-hint"></div>
+    <div id="adv-intro"></div>`;
   document.body.appendChild(overlayEl);
 
   canvasEl=overlayEl.querySelector('#adv-canvas');
@@ -2044,6 +2090,7 @@ function buildDom(){
   banEl=overlayEl.querySelector('#adv-banner');
   scareEl=overlayEl.querySelector('#adv-scare');
   hintEl=overlayEl.querySelector('#adv-hint');
+  introEl=overlayEl.querySelector('#adv-intro');
   mapCv=overlayEl.querySelector('#adv-map'); mapCtx=mapCv.getContext('2d');
   chatBoxEl=overlayEl.querySelector('#adv-chat-box');
   chatInputEl=overlayEl.querySelector('#adv-chat-input');
@@ -2067,6 +2114,7 @@ function buildDom(){
   cpImg.src='img/heli_cockpit.png';
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
+  overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
   const shootBtn=overlayEl.querySelector('#adv-shoot');
   shootBtn.addEventListener('touchstart',e=>{ e.preventDefault(); shoot(); },{passive:false});
   shootBtn.addEventListener('click',e=>{ e.preventDefault(); shoot(); });
@@ -2144,7 +2192,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
+        if(t.target.closest('#adv-shoot,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -2351,13 +2399,15 @@ function nearMissTick(d, now, enterR, exitR, superR){
   }else if(nmActive && d>exitR){
     if(!nmCrashed && now-nmLastAt>700){
       nmLastAt=now; nmCombo++;
+      const record=nmCombo>(state.bestCombo||0);             // 🏆 คอมโบเฉียดสูงสุดตลอดกาล
+      if(record){ state.bestCombo=nmCombo; saveState(); }
       const superClose=nmMin<superR;
       const hot=nmCombo>=3;                                 // 🔥 คอมโบไฟลุก (≥3): โบนัสพิเศษ+เอฟเฟกต์+เสียงเชียร์
       let bonus=(superClose?4:2)+Math.min(4,nmCombo-1);     // คอมโบเพิ่มสูงสุด +4
       if(hot) bonus+=2;                                     // โบนัสไฟลุก
       addCoins(bonus); sessionCoins+=bonus;
       if(state.haptic!==false && navigator.vibrate) navigator.vibrate(hot?[20,30,20]:25);
-      showNearMiss(superClose,bonus,nmCombo,hot);
+      showNearMiss(superClose,bonus,nmCombo,hot,record&&nmCombo>=3);
       if(hot){ comboCheer(nmCombo); comboFlash(nmCombo>=5?2:1); } else sfx.coin();
       if(superClose) awardDaredevil();                      // 🎯 นับสถิติผาดโผน → เข็มนักบินผาดโผน
       renderHudTop();
@@ -2365,12 +2415,13 @@ function nearMissTick(d, now, enterR, exitR, superR){
     nmActive=false; nmMin=99; nmCrashed=false;
   }
 }
-function showNearMiss(superClose,bonus,combo,hot){
+function showNearMiss(superClose,bonus,combo,hot,record){
   if(!nmPopEl) return;
   const cmb=combo>1?` <b>×${combo}</b>`:'';
   const flame=combo>=5?'🔥🔥 ':(hot?'🔥 ':'');
   const label=superClose?'เฉียดสุดๆ!':'เฉียดหวุดหวิด!';
-  nmPopEl.innerHTML=`${flame}💨 ${label}${cmb} <span class="nm-coin">+${bonus}🪙</span>`;
+  const rec=record?` <span class="nm-rec">🏆 สถิติใหม่!</span>`:'';
+  nmPopEl.innerHTML=`${flame}💨 ${label}${cmb} <span class="nm-coin">+${bonus}🪙</span>${rec}`;
   nmPopEl.className='adv-hud'+(combo>=5?' combo-fire':(hot?' combo-hot':''));
   void nmPopEl.offsetWidth; nmPopEl.classList.add('show');
 }
@@ -2940,6 +2991,79 @@ function clearEntities(){
   monsters.forEach(m=>{ scene.remove(m.spr); m.spr.material.dispose(); }); monsters=[];
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
 }
+/* ============================================================
+   ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+   เดิมมือถือไม่มีบอกวิธีบังคับเลย (#adv-hint ซ่อนบนจอสัมผัส) → เด็กงงคอนโทรล
+   ============================================================ */
+const INTRO_KEY='pvadv_intro_v1';
+function introSeenObj(){ try{ return JSON.parse(localStorage.getItem(INTRO_KEY))||{}; }catch(e){ return {}; } }
+function introSeen(md){ return !!introSeenObj()[md]; }
+function markIntroSeen(md){ const o=introSeenObj(); o[md]=1; try{ localStorage.setItem(INTRO_KEY,JSON.stringify(o)); }catch(e){} }
+const INTRO={
+  adv:{
+    goal:'เดินเก็บ <b>ตัวอักษร</b> ที่ลอยอยู่ มาต่อเป็นคำที่โชว์กลางจอด้านบน · เจอมอนสเตอร์ 👾 <b>ยิงสู้ได้</b>!',
+    touch:[['🕹️','ลากนิ้วครึ่งจอ <b>ซ้าย</b> = เดินไปทุกทิศ'],
+           ['👀','ลากนิ้วครึ่งจอ <b>ขวา</b> = หันกล้องมองรอบ'],
+           ['🔥','แตะปุ่มไฟมุมขวาล่าง = ยิงมอนสเตอร์']],
+    keys:[['🖱️','คลิกจอ 1 ครั้ง = ล็อกเมาส์ แล้วขยับเมาส์เพื่อมอง'],
+          ['⌨️','<b>WASD</b> หรือลูกศร = เดิน'],
+          ['🔥','คลิกเมาส์ = ยิง · <b>Esc</b> = ปลดล็อกเมาส์']],
+  },
+  haunt:{
+    goal:'เก็บตัวอักษรต่อคำเหมือนโลกอื่น แต่ <b>สู้ผีไม่ได้</b>! ผีเข้าใกล้เมื่อไร <b>ต้องวิ่งหนี</b> — โดนจับ = จบเกมทันที',
+    touch:[['🕹️','ลากนิ้วครึ่งจอ <b>ซ้าย</b> = วิ่ง'],
+           ['👀','ลากนิ้วครึ่งจอ <b>ขวา</b> = หันมองรอบ'],
+           ['🏃','เห็นผีใกล้ = รีบวิ่งหนีไปทางตรงข้าม!']],
+    keys:[['🖱️','คลิกจอ 1 ครั้ง = ล็อกเมาส์'],
+          ['⌨️','<b>WASD</b> หรือลูกศร = วิ่งหนี'],
+          ['🏃','สู้ไม่ได้! เจอผีใกล้ให้วิ่งหนีอย่างเดียว']],
+  },
+  heli:{
+    goal:'ตัวอักษรอยู่ <b>บนยอดตึก</b> — บินไป <b>ลงจอดเบาๆ บนดาดฟ้า</b> เพื่อเก็บ · บินเฉียดตึกแบบไม่ชน = ได้เหรียญโบนัส 💨',
+    touch:[['🕹️','จอย <b>ซ้าย</b> = เอียงบินหน้า-หลัง + สไลด์ซ้าย-ขวา'],
+           ['↕️','ลากครึ่งจอ<b>ขวา ขึ้น-ลง</b> = ไต่ขึ้น / ลดระดับ'],
+           ['🔄','ลากครึ่งจอ<b>ขวา ซ้าย-ขวา</b> = หันหัวเฮลิฯ']],
+    keys:[['⌨️','<b>W/S</b> เอียงหน้า-หลัง · <b>A/D</b> สไลด์ข้าง'],
+          ['↕️','<b>Space</b> = ขึ้น · <b>Shift</b> = ลง'],
+          ['🔄','<b>Q/E</b> = หันหัว · จอดเบาๆ บนดาดฟ้าเพื่อเก็บ']],
+  },
+  drone:{
+    goal:'บินเร็วสุดๆ ลอด <b>หน้าต่างตึกร้าง</b> เข้าไปในห้อง · <b>บินเฉียดตัวอักษรเก็บได้เลย ไม่ต้องจอด!</b> · เฉียดกำแพงไม่ชน = โบนัส 💨',
+    touch:[['🕹️','จอย <b>ซ้าย</b> = พุ่งหน้า-ถอย + สไลด์ข้าง'],
+           ['↕️','ลากครึ่งจอ<b>ขวา ขึ้น-ลง</b> = ไต่ / ดิ่ง'],
+           ['🔄','ลากครึ่งจอ<b>ขวา ซ้าย-ขวา</b> = หันหัวโดรน']],
+    keys:[['⌨️','<b>W/S</b> หน้า-ถอย · <b>A/D</b> เอียงข้าง'],
+          ['↕️','<b>Space</b> = ขึ้น · <b>Shift</b> = ดิ่ง'],
+          ['🔄','<b>Q/E</b> = หันหัว · บินเฉียดตัวอักษรเก็บเลย']],
+  },
+};
+function showIntro(md,reopen){
+  if(!introEl) return;
+  running=false;                                   // พักเกมระหว่างอ่าน (loop จะหยุดเฟรมถัดไป)
+  const m=MODES[md]||MODES.adv, info=INTRO[md]||INTRO.adv;
+  const rows=IS_TOUCH?info.touch:info.keys;
+  introEl.innerHTML=`
+    <div class="adv-intro-card">
+      <div class="adv-intro-emoji">${m.emoji}</div>
+      <h2>วิธีเล่น${m.label}</h2>
+      <p class="adv-intro-goal">🎯 ${info.goal}</p>
+      <div class="adv-intro-ctrl-h">${IS_TOUCH?'📱 การบังคับ (แตะจอ)':'⌨️ การบังคับ (คีย์บอร์ด + เมาส์)'}</div>
+      <ul class="adv-intro-list">
+        ${rows.map(r=>`<li><span class="ic">${r[0]}</span><span>${r[1]}</span></li>`).join('')}
+      </ul>
+      <p class="adv-intro-tip">💡 ต่อครบ 1 คำ = <b>+${m.reward}🪙</b> · กดปุ่ม 🚪 มุมขวาบนออกได้ทุกเมื่อ</p>
+      <button id="adv-intro-go">${reopen?'เล่นต่อ ▶':'เริ่มเล่นเลย! 🚀'}</button>`+`</div>`;
+  introEl.classList.add('on');
+  introEl.querySelector('#adv-intro-go').addEventListener('click',()=>closeIntro(md));
+}
+function closeIntro(md){
+  markIntroSeen(md);
+  introEl.classList.remove('on');
+  beginPlay();
+  showBanner(M.intro);
+}
+function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
+
 function start(md){
   mode=(md==='haunt'||md==='heli'||md==='drone')?md:'adv';
   M=MODES[mode];
@@ -3010,10 +3134,13 @@ function start(md){
   lastSpawn=performance.now(); lastEnsure=performance.now();
   netJoin();
   if(mode==='haunt') HSound.startAmbient();
-  clock.getDelta();
-  running=true;
-  loop();
-  showBanner(M.intro);
+  if(introSeen(mode)){
+    beginPlay();
+    showBanner(M.intro);
+  }else{
+    renderer.render(scene,camera);      // แสดงฉากไว้ข้างหลังการ์ด (ยังไม่เดินลูป/พักเกม)
+    showIntro(mode,false);              // การ์ดวิธีเล่นครั้งแรก — กด "เริ่มเล่น" แล้วค่อย beginPlay
+  }
 }
 
 function exitWorld(){
@@ -3029,6 +3156,7 @@ function exitWorld(){
   selfMsgEl.classList.remove('on');
   myChat=null;
   overlayEl.classList.remove('on','adv-hunted','adv-shake');
+  if(introEl) introEl.classList.remove('on');
   scareEl.classList.remove('on');
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   saveState();
