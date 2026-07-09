@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 86 (9 ก.ค. · Opus): ป้ายบอก "เล่นได้เรื่อยๆ ด่านไม่ตัน + กดกลับพักได้" ใต้กระดานจับคู่ ♾️ — version .64** (commit 8b4b1ab)
+- ผู้ใช้ส่ง screenshot เกมจับคู่ (screen-game) ชี้พื้นที่ว่างล่างกระดาน อยากให้บอกผู้เล่นว่าเล่นวนได้ไม่มีจบ + เพลียแล้วกดปุ่ม ⬅ กลับ มุมซ้ายบนออกได้เสมอ (เด็กไม่รู้ว่าหยุดตอนไหน)
+- `index.html` line ~237: `<p class="game-endless-note">` ใต้ `#hint-btn` (hint-btn ปกติซ่อน เว้นเลี้ยงแมว → เป็นพื้นที่ว่างพอดี) · **หมายเหตุ:** ตัว index.html โดน commit รอบ 85 (โดรน) ของ session คู่ขนาน sweep ไปก่อน (`git add -A`) — รอบนี้ commit เฉพาะ `css/style.css`+`version.json`
+- `css/style.css`: `.game-endless-note` การ์ดเส้นประอ่อน กลางจอ max-width 520 pointer ไม่บัง
+- ✅ ยืนยัน preview (820×400 landscape · mock login+register+`startGame()`): note อยู่ใต้ th-grid จริง (grid bottom 284 / note top 304) สี/เส้นประ/จัดกลาง ถูก · ไม่มี console error
+
 **✅ รอบ 74 (8 ก.ค. · Opus): เปรตตัวสูงพิเศษ + prompt ผีสไตล์ Ju-on 👻 (ผู้ใช้สั่ง หลังทำภาพเสร็จ) — version .50** (commit 74b312b)
 - **เปรตตัวสูง (adventure3d.js):** `ghost_2.png`=เปรต · `probeGhostImages` เก็บ `t.userData={gi:i}` (เลขไฟล์) ไว้กับ texture · `applyGhostSize(g)` ตรวจ `map.userData.gi===GHOST_TALL_INDEX(2)` → `scale.set(2.7,6.4,1)`+`baseY=3.15` (สูง ~2.5 เท่า เท้าอยู่พื้น) · ตัวอื่น `2.6×2.6`+`baseY=1.35` · เรียกใน `respawnGhost` ทุกครั้งที่สลับภาพ · bobbing บรรทัด ~849 ใช้ `g.baseY` ต่อตัว (เดิม 1.35 คงที่ เปรตจะจมพื้น) · `caught()` วัดระยะแนวราบ x,z ไม่กระทบ
 - **`PROMPTS_GHOSTS.md` เขียนใหม่ทั้ง 5:** เดิม 1-4 ออกมาการ์ตูน (เพราะสั่ง "stylized") · ผู้ใช้บอกภาพ 5 (ผีผ้าขาว) หลอนพอ อยากได้สไตล์นั้น+หนัง Ju-on → ทุกตัวยึด **ตาโบ๋ดำ+ผิวซีดเทา+โทน Ju-on หม่นเงาจัด photorealistic** · ยังผีไทย+no blood/gore · มีเคล็ดลับปรับจูน (หลอนขึ้น/ลด/เลี่ยง safety filter/ลุคเข้าชุด)
