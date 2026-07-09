@@ -7,8 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
-- ⚠️ **รอบ 82 (คำเดียวกันในปาร์ตี้) แก้ rules — รอผู้ใช้ publish:** เพิ่ม field `cw` (คำเป้าหมายปัจจุบัน string "en|th" ≤60) ใน `/world/$map/$uid` · **ไม่ publish = ระบบ "คนที่ invite กันเห็นคำเดียวกัน" ไม่ทำงาน** (set /world ที่มี cw จะโดน reject เพราะ $other:false → ตำแหน่งเพื่อนอาจไม่อัปเดตด้วย) · โลกเล่นได้ปกติถ้าไม่มีเพื่อนในปาร์ตี้
-- ⚠️ **รอบ 52 (โลกเฮลิคอปเตอร์) แก้ rules อีกครั้ง — รอผู้ใช้ publish:** เพิ่ม map `heli` ในทุก enum (/world /rtc /class /tinv) + field `y` (ความสูงบิน) ใน /world · **ไม่ publish = โลกเฮลิฯ เล่นได้แต่ระบบ online ทั้งหมดใน map นั้นถูก reject** (โลกเก่า 2 โลกไม่กระทบ)
+- ✅ **รอบ 82 (คำเดียวกันในปาร์ตี้) publish แล้ว 9 ก.ค. 2026:** field `cw` (คำเป้าหมาย string "en|th" ≤60) ใน `/world/$map/$uid` เข้าแล้ว · ยืนยัน logic ฝั่ง client ด้วยการจำลอง peer 8 เคสผ่านหมด (leader election / ลูกทีมตามคำหัวหน้า / guard `lastSharedDone` / คนทั่วไปไม่ส่ง cw ไม่ผูก rules / คำมีอยู่แล้วดันขึ้นหน้าไม่ซ้ำ)
+- ✅ **รอบ 52 (โลกเฮลิคอปเตอร์) publish แล้วพร้อมกัน 9 ก.ค. 2026:** map `heli` ในทุก enum (/world /rtc /class /tinv) + field `y` (ความสูงบิน) ใน /world เข้าแล้ว (มาในก้อนเต็มเดียวกัน)
+- ⏳ เหลือ**ทดสอบจริง 2 บัญชี/2 เครื่องบน Pages** (เห็นคำเดียวกันตอน invite กันเข้าโลกเฮลิฯ + online เฮลิฯ ทั้งหมด)
 - ✅ ชุดก่อนหน้า publish แล้ว 8 ก.ค. 2026 (ครบถึงรอบ 49): `/presence` `/leaderboard` `/users` `/friendCodes` `/friendReq` `/friends` `/chats` `/gifts` `/world` (รวม c/ct/m/w) `/tinv` `/rtc` `/class` (muteAll+podium)
 - ✅ ตรวจจากภายนอกแล้ว (curl REST): /presence อ่านได้ 200 · /world และ /class อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้อง
 - ⏳ เหลือ**ทดสอบจริง 2 บัญชี/2 เครื่องบน Pages** (ดู checklist ใน TASKS.md)
