@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### 🔥 ทำก่อน (ผู้ใช้สั่ง 9 ก.ค. — ต่อยอด "สตรีคเล่นต่อ" รอบ 101 · ทำ A ก่อน แล้ว B)
+> ทั้งคู่อยู่ในเกมจับคู่ 2D · โค้ดหลัก `js/game.js` (ฟังก์ชัน `exitGame`/`showSessionSummary` + const `REPLAY_BONUS_EVERY=3`/`REPLAY_BONUS_COINS=50` · field `game.replayStreak`) · **A ทำใน game.js ล้วน (ปลอดภัย ไม่ชน session คู่ขนาน)** · B ต้องแตะ state.js + จุดโชว์เข็มใน map/leaderboard (ui.js/adventure3d — **session คู่ขนานแตะบ่อย ระวังชน · commit เฉพาะ hunk ตัวเอง**)
+
+- **A) สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ)** — เดิมโบนัสคงที่ +50 ทุก 3 รอบติด → เปลี่ยนเป็น 3 รอบ +50 · 6 รอบ +100 · 9 รอบ +200 (แล้วคงที่ 200 หรือไล่ต่อ) · แก้ที่ closure `replay` ใน `exitGame` (game.js ~บรรทัดที่คำนวณ `streak % REPLAY_BONUS_EVERY`) → ทำเป็นตาราง tier `[[3,50],[6,100],[9,200]]` เลือก payout ตาม streak · อัปเดตข้อความ floatFx/toast + บรรทัด `.sm-streak` บนการ์ดให้บอกโบนัสรอบถัดไปตาม tier · เทสต์: streak 3→+50, 6→+100, 9→+200
+- **B) เข็ม "นักเล่นขยัน" 🏅** — สะสม **จำนวนรอบเล่นต่อทั้งหมด (สะสมถาวร)** ครบ 20/50/100 = เข็ม 3 ระดับ ติดท้ายชื่อใน map ให้เพื่อนเห็น · **ทำตามแพตเทิร์นเข็มสายฟ้า/นักบินเป๊ะ:** (1) state.js เพิ่ม `diligentCount:0, diligentBadge:0` ใน DEFAULT_STATE (2) game.js เพิ่ม `DILIGENT_TIERS=[[20,1],[50,2],[100,3]]` + `DILIGENT_TIER_UI` + ฟังก์ชัน `addDiligent()` (สไตล์ `addThunder()` บรรทัด ~263) เรียกในทุกครั้งที่กดเล่นต่อ (closure replay) (3) จุดต่อเข็มท้ายชื่อใน map/leaderboard — หา `thunderEmoji`/`pilotBadge` ที่ถูกใช้ประกอบชื่อ (grep `thunderEmoji(` / `daredevilEmoji(`) แล้วเสียบ `diligentEmoji()` ต่อท้ายแบบเดียวกัน (ระวังไฟล์นี้ session คู่ขนานแตะ — เช็ก `git fetch`+commit เฉพาะ hunk) (4) โชว์ในหน้าสถิติ + รายงานความก้าวหน้า (`showProgressReport` game.js — เพิ่มแถวเข็ม/ตัวเลข)
+
 **โลก 3D ครบ 4 โลกแล้ว (🌍 กลางวัน · 👻 ผีสิง · 🚁 เฮลิฯ · 🛸 โดรน FPV รอบ 85) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
 - 🛸 **รอบ 85 ค้างฝั่งผู้ใช้:** (1) **publish rules โซน drone** (Artifact ปุ่มคัดลอกส่งแล้ว · ก้อนเต็มใน `handoff/RULES.md`) — ยังไม่ publish = เล่นคนเดียวได้ แต่ multiplayer/voice/ครูคุมห้องของโลกโดรนยังไม่ทำงาน (2) เจนเสียง `sound/drone_loop.mp3` จาก Suno (`PROMPTS_DRONE.md`) (3) ทดสอบจริงบนมือถือ (จอยซ้าย+ลากขวา=หันหัว/คันเร่ง · บินลอดหน้าต่าง)
 - ✅ **rules ชุดเต็ม publish แล้ว 8 ก.ค.** (ครบถึงรอบ 49 — ตรวจ REST จากภายนอกแล้ว ดู RULES.md) → ระบบ online โลก 3D พร้อมใช้ทั้งหมด
