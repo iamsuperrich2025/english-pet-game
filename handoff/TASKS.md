@@ -33,6 +33,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 107 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — ปุ่มลัดตู้เข็ม + ฉลองทุกเข็มเหมือนกัน + เข็มโชว์ให้เพื่อนหน้าเมือง 🏆 — version .87** (commit 7450ddd) — ผู้ใช้สั่ง "ลุยทั้ง 3 ข้อ" (ต่อจากรอบ 106)
+- **① 🏆 ปุ่มลัดตู้เข็มในราง lobby** — index.html `#btn-rail-trophy` (ต่อจาก 📊 สถิติ) · main.js ผูก `showProgressReport` → เปิดรายงานความก้าวหน้า/ตู้เข็มจากหน้าเมืองได้เลย ไม่ต้องเข้าเกม
+- **② 🎊 celebrateBadge ใช้กับทุกเข็ม (สวยเท่ากัน)** — thunder (game.js `addThunder`) เปลี่ยน toast→celebrateBadge · pilot (adventure3d ~869) + daredevil (~2460) เปลี่ยน `showBanner`→`celebrateBadge` (แบนเนอร์เด้ง+โปรยเหรียญ) · ตัด `sfx.rankup` ซ้ำ (celebrateBadge เล่นเอง) · celebrateBadge เป็น global game.js เรียกจาก adventure3d ได้
+- **③ 🔗 เข็มโชว์ให้เพื่อนเห็นในการ์ดหน้าเมือง** — `badgeSuffix()` (game.js global · pilot inline array เพราะ `pilotEmoji` เป็น local ของ adventure3d) = 🥉⚡🎯🏅 · online.js ต่อ `badgeSuffix()` ท้าย `presence.n` + `leaderboard.n` (**rules-safe: ต่อ string field เดิม ไม่เพิ่ม field ใหม่** → ไม่ต้อง publish rules) + ใส่เข็มใน `lastScoreSig` ให้ re-push เมื่อได้เข็มใหม่ · ui.js me-row การ์ดออนไลน์ต่อ badgeSuffix โชว์เข็มตัวเอง (คนอื่นมาจาก n ที่ baked) · ⚠️ `Online` เป็น const module-scope (ไม่ใช่ window.Online — เวลาเทสต์ต้อง mutate property ตรงๆ)
+- ✅ ยืนยัน preview: badgeSuffix=🥉🌩️🔥🏅 ( order นักบิน/สายฟ้า/ผาดโผน/ขยัน) · ปุ่มราง click→เปิดตู้เข็ม 3 แถว · thunder ครบ 15→celebrateBadge(🌩️ tier2) · spy presence.n/leaderboard.n=`มะปราง🥈⚡🏆` · me-row=`⭐ มะปราง🥈🏆` · ไม่มี console error
+- ⚠️ commit เฉพาะ index.html/game.js/adventure3d.js/main.js/online.js/ui.js/version (pin pathspec · ไม่แตะ style.css รอบนี้ · CSS celebrate อยู่รอบ 106 แล้ว)
+
 **✅ รอบ 106 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — ฉลองเข็มขยันอลัง + ตู้เข็มสะสม + tier 15 รอบ 🏆 — version .86** (commit 37f1928) — ผู้ใช้สั่ง "ทำทั้ง 3 ข้อ" (ไอเดียต่อยอดจากรอบ 105/105B)
 - **① 🎊 ฉลองได้เข็มนักเล่นขยันอลัง** — `celebrateBadge(emoji,title,sub)` (game.js): แบนเนอร์เด้งกลางจอ (bcPop/bcSpin) + โปรยเหรียญ (reuse `sprinkleConfetti`) + `sfx.rankup`+haptic แทน toast เดิม · overlay `position:fixed pointer-events:none z60` = ไม่บังการเล่น หายเอง ~3s (bc-out fade) · `addDiligent` เรียก celebrateBadge แทน toast · CSS `.badge-celebrate*` ใน style.css
 - **② 🏆 ตู้เข็มสะสม** ในรายงานความก้าวหน้า (`showProgressReport`) — แทนชิปเข็มเดิม · 3 สายที่นับจำนวนถาวร (⚡สายฟ้า/🎯ผาดโผน/🏅ขยัน): แต่ละสายมีแถบ % ไปเข็มถัดไป (คิดจากช่วง prevTier→nextTier) + อีโมจิเรียง 3 ระดับ (ได้=สว่าง `.rp-em.earned` · ยังไม่ได้=จาง grayscale) + note "อีก N = <เข็มถัดไป>" · ✈️ นักบิน = แถวสถานะ (อิงสตรีค ไม่มีแถบ) · CSS `.rp-tline/.rp-tl-*/.rp-em`
