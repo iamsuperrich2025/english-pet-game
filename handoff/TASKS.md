@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 97 (9 ก.ค. · Opus): การ์ด "วิธีเล่น" ตอนเข้าโลก 3D ครั้งแรก ❓📱 — version .77** (งานเดี่ยว ไม่แตะไฟล์ session คู่ขนาน) — ผู้ใช้มอบอำนาจทำงานต่อเนื่องช่วงไม่อยู่ (อนุมัติทุกงานที่ทำให้เกมดีขึ้น)
+- **โจทย์:** เดิม `#adv-hint` (คอนโทรล) เป็นข้อความจิ๋วมุมขวาล่าง + **ซ่อนสนิทบนจอสัมผัส** (`.adv-touch #adv-hint{display:none}`) → เด็กบนมือถือเข้าโลก 3D ครั้งแรกไม่มีบอกวิธีบังคับเลย
+- **ทำ (ทั้งหมดอยู่ใน `js/adventure3d.js` ไฟล์เดียว — JS + CSS ที่ inject เอง ไม่แตะ state.js/game.js/index.html/style.css ที่ session คู่ขนานแก้ค้าง):** การ์ด `#adv-intro` เต็มจอโผล่ตอน `start(mode)` **ครั้งแรกของแต่ละโลก** (จำแยกต่อโลกใน `localStorage['pvadv_intro_v1']` — ไม่ยุ่ง state เกม) · เนื้อหา: 🎯 เป้าหมาย + คอนโทรลตามอุปกรณ์ (`IS_TOUCH` → แสดงชุดจอสัมผัส/คีย์บอร์ด) ต่อโลก (adv/haunt/heli/drone แยกกัน ตรงตามโค้ด input จริง) + tip `+{reward}🪙/คำ` · ปุ่ม "เริ่มเล่นเลย! 🚀" · **พักเกมระหว่างอ่าน** (running=false, `renderer.render` โชว์ฉากข้างหลัง) กด→`beginPlay()` (clock.getDelta ทิ้ง dt ค้าง แล้ว loop) · ปุ่ม **❓ ซ้ายมินิแมป** เปิดวิธีเล่นซ้ำได้ทุกเมื่อ (พัก→"เล่นต่อ ▶") · ธีมการ์ดโลกผีเป็นโทนเขียวหลอน · เพิ่ม `#adv-help,#adv-intro` ใน touch-exclude list กันนิ้วแตะการ์ดไปโดนจอย/คันมอง
+- ✅ ยืนยัน preview (1280×720 · getBoundingClientRect+computed style · screenshot infra ค้างเลยวัด DOM แทน): การ์ดกลางจอเป๊ะ (640,360) 500×411 z12 เต็มจอ · ครั้งแรก running=false introOn=true · กดเริ่ม→running=true seen=true · เข้าใหม่ไม่โผล่ซ้ำ · ❓→พัก+ปุ่ม "เล่นต่อ ▶"→เล่นต่อ running=true · haunt=ธีมเขียว(ปุ่ม rgb(61,220,132))+class adv-haunt · heli tip=+30🪙 คอนโทรลถูก · ไม่มี console error
+- ⚠️ commit เฉพาะ `js/adventure3d.js version.json handoff/TASKS.md` (pin pathspec — css/style.css·index.html·js/game.js·js/state.js เป็นงาน weekly-best/รายงานของ session คู่ขนานที่ยังไม่ commit ห้ามแตะ)
+
 **✅ รอบ 96 (9 ก.ค. · Opus): เกมจับคู่ — กดปุ่มกลับแล้วถ้าทำสถิติใหม่ เด้งการ์ดสรุปฉลองก่อนออก 🎉🚪 — version .76** (commit a9755f3) — ต่อยอดสถิติ (รอบ 95) · ผู้ใช้สั่งทำ
 - **`exitGame()` (game.js):** ปุ่ม ⬅ กลับ (main.js `btn-back`→`exitGame`) · ถ้า `sessionCoins > game.prevBest` (เกินสถิติสัปดาห์เดิม) → `showSessionSummary(earned, allTime, doExit)` เด้งการ์ด "รอบเล่นนี้หนูเก็บได้ X 🪙 · 🏆 ทำสถิติสัปดาห์ใหม่!" ก่อน แล้วปิด(ปุ่ม/พื้นหลัง)ค่อย renderDashboard+showScreen · ถ้าเกิน `game.prevAllBest` (สถิติตลอดกาลเดิม เก็บตอน startGame) เพิ่มป้าย "⭐ สถิติสูงสุดตลอดกาล" · ไม่ทำสถิติ/เก็บ 0 → ออกทันที
 - `css/style.css`: `.summary-box` `.sm-coin` (ทองไล่เฉด reuse sessRainbow) `.sm-badge`/`.sm-badge-all`

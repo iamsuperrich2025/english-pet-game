@@ -3173,6 +3173,7 @@ window.Adventure3D={
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
+    showIntro, introSeen, get introEl(){return introEl},
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
