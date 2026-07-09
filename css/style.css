@@ -894,6 +894,16 @@ html.no-anim body.quake{animation:none;}
 .rp-badges{display:flex;flex-wrap:wrap;gap:7px;}
 .rp-badge{background:#fff6df;border:1.5px solid #f2d98a;border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700;color:#a5750f;}
 
+/* 🏆 ตู้เข็มสะสม (แถบ % ไปเข็มถัดไป + อีโมจิเรียงระดับ ได้แล้ว=สว่าง ยังไม่ได้=จาง) */
+.rp-tline{background:#fff;border:2px solid #eee3fb;border-radius:14px;padding:9px 11px;margin-bottom:8px;}
+.rp-tl-head{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13.5px;font-weight:700;color:#5a3fb0;margin-bottom:6px;}
+.rp-tl-head small{font-weight:600;color:#9a8aac;}
+.rp-tl-ems{flex:0 0 auto;letter-spacing:1px;}
+.rp-em{font-size:16px;filter:grayscale(1);opacity:.32;}
+.rp-em.earned{filter:none;opacity:1;}
+.rp-tl-note{margin-top:5px;font-size:12px;color:#8a76a8;text-align:right;}
+.rp-tl-note b{color:#6d55e0;}
+
 .rp-cheer{
   margin:16px 0 4px;text-align:center;font-size:14px;font-weight:700;color:#5a3fb0;
   background:#f3efff;border-radius:14px;padding:11px 14px;line-height:1.6;
@@ -927,6 +937,25 @@ html.no-anim body.quake{animation:none;}
   padding:6px 16px;font-size:15px;font-weight:800;color:#a5750f;margin:3px 0;
 }
 .sm-badge-all{background:#efeaff;border-color:#c9b8f7;color:#6d55e0;}
+
+/* 🎊 ฉลอง "ได้เข็มใหม่" กลางจอ (แบนเนอร์เด้ง + โปรยเหรียญ · ไม่บังการเล่น หายเอง) */
+.badge-celebrate-overlay{
+  position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+}
+.badge-celebrate{
+  text-align:center;background:linear-gradient(135deg,#fff9e8,#fff2cf);
+  border:3px solid #f2c14e;border-radius:22px;padding:20px 30px;max-width:82vw;
+  box-shadow:0 14px 44px rgba(180,120,10,.34),0 0 0 6px rgba(255,255,255,.55);
+  animation:bcPop .55s cubic-bezier(.2,1.7,.4,1);position:relative;z-index:2;
+}
+.bc-emoji{font-size:64px;line-height:1;filter:drop-shadow(0 4px 10px rgba(180,120,10,.4));animation:bcSpin 2.4s ease-in-out;}
+.bc-title{margin-top:6px;font-size:24px;font-weight:900;color:#a5750f;}
+.bc-sub{margin-top:5px;font-size:14.5px;font-weight:700;color:#7a6220;line-height:1.55;}
+.badge-celebrate-overlay.bc-out{animation:bcFade .4s ease forwards;}
+@keyframes bcPop{from{transform:scale(0) rotate(-14deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes bcSpin{0%{transform:rotate(-18deg) scale(.7);}55%{transform:rotate(12deg) scale(1.15);}100%{transform:rotate(0) scale(1);}}
+@keyframes bcFade{to{opacity:0;transform:scale(.92);}}
 .sm-cheer{margin:12px 0 0;color:#6a5a78;font-size:13.5px;line-height:1.6;}
 .sm-streak{margin:10px 0 0;font-size:13px;color:#c2641a;background:#fff2e2;border-radius:12px;padding:7px 12px;}
 .sm-streak b{color:#e6741a;}

@@ -21,8 +21,8 @@ const game = {
   _viaReplay:false,             // ธง: startGame รอบนี้มาจากปุ่มเล่นต่อ (ไม่รีเซ็ตสตรีค)
 };
 const REPLAY_BONUS_EVERY = 3;   // เล่นต่อครบทุกกี่รอบติด = จ่ายโบนัส (3,6,9,...)
-// 🔥 สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ): ครบ 3 รอบ +50 · 6 รอบ +100 · 9 รอบขึ้นไป +200 (คงที่)
-const REPLAY_BONUS_TIERS = [[9,200],[6,100],[3,50]];   // [ครบกี่รอบติด, โบนัส] — เลือกจากมากไปน้อย
+// 🔥 สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ): 3 รอบ +50 · 6 รอบ +100 · 9 รอบ +200 · 15 รอบขึ้นไป +300 (คงที่)
+const REPLAY_BONUS_TIERS = [[15,300],[9,200],[6,100],[3,50]];   // [ครบกี่รอบติด, โบนัส] — เลือกจากมากไปน้อย
 function replayBonusFor(streak){                        // โบนัสที่จะได้เมื่อสตรีคถึงค่านี้ (0=ยังไม่ถึงเกณฑ์)
   const t = REPLAY_BONUS_TIERS.find(x => streak >= x[0]);
   return t ? t[1] : 0;
@@ -227,19 +227,30 @@ function showProgressReport(){
     `<div class="rp-row"><span>${w.ic} ${w.nm}</span><span><b>${fmtNum(w.n)}</b> คำ</span></div>`).join('')
     || `<div class="rp-empty">ยังไม่ได้เข้าโลก 3D — มีตั๋วเมื่อไหร่ลองผจญภัยดูนะ! 🚀</div>`;
 
-  // เข็มรางวัลที่สะสมได้
-  const badges = [];
-  if(state.thunderBadge)   badges.push(THUNDER_TIER_UI[state.thunderBadge]);
-  if(state.daredevilBadge) badges.push(DAREDEVIL_TIER_UI[state.daredevilBadge]);
-  if(state.pilotBadge)     badges.push(['','🥉 ใบอนุญาตนักบิน','🥈 นักบินฝีมือดี','🥇 กัปตันมือทอง'][state.pilotBadge]);
-  if(state.diligentBadge)  badges.push(DILIGENT_TIER_UI[state.diligentBadge]);
-  const badgeHtml = badges.length
-    ? `<div class="rp-badges">${badges.map(b=>`<span class="rp-badge">${b}</span>`).join('')}</div>`
-    : `<div class="rp-empty">ยังไม่มีเข็ม — เล่นเก่งๆ เดี๋ยวได้เข็มติดชื่อให้เพื่อนเห็น! 🎖️</div>`;
-  // 🏅 ความก้าวหน้าเข็มนักเล่นขยัน (รอบเล่นต่อสะสม → เป้าถัดไป 20/50/100)
-  const dCount = state.diligentCount||0;
-  const dNext = DILIGENT_TIERS.find(t=>dCount < t[0]);
-  const diligentLine = `<div class="rp-row"><span>🏅 เล่นต่ออีกรอบสะสม</span><span><b>${fmtNum(dCount)}</b> รอบ${dNext ? ` <small>(อีก ${dNext[0]-dCount} รอบ ได้${diligentEmoji(dNext[1])})</small>` : ' <small>(ครบทุกเข็มแล้ว! 🏆)</small>'}</span></div>`;
+  // 🏆 ตู้เข็มสะสม — เข็มสายที่สะสมจากจำนวนถาวร (สายฟ้า/ผาดโผน/นักเล่นขยัน): แถบ % ไปเข็มถัดไป + อีโมจิเรียงระดับ
+  const trophyDefs = [
+    {ic:'⚡', label:'สายฟ้าแลบ',   unit:'ครั้ง', count:state.thunderCount||0,   tiers:THUNDER_TIERS,   ui:THUNDER_TIER_UI,   ef:thunderEmoji},
+    {ic:'🎯', label:'บินเฉียดสุดๆ', unit:'ครั้ง', count:state.daredevilCount||0, tiers:DAREDEVIL_TIERS, ui:DAREDEVIL_TIER_UI, ef:daredevilEmoji},
+    {ic:'🏅', label:'เล่นต่ออีกรอบ', unit:'รอบ',  count:state.diligentCount||0,  tiers:DILIGENT_TIERS,  ui:DILIGENT_TIER_UI,  ef:diligentEmoji},
+  ];
+  const trophyHtml = trophyDefs.map(d=>{
+    const reached = d.tiers.filter(t=>d.count>=t[0]).pop();       // เข็มสูงสุดที่ถึงแล้ว
+    const next    = d.tiers.find(t=>d.count<t[0]);                // เข็มถัดไป (undefined=ครบหมด)
+    const prevT   = reached ? reached[0] : 0;                     // ฐานช่วงปัจจุบัน
+    const pct     = next ? Math.round((d.count-prevT)/(next[0]-prevT)*100) : 100;
+    const ems     = d.tiers.map(t=>`<span class="rp-em${d.count>=t[0]?' earned':''}">${d.ef(t[1])}</span>`).join('');
+    const note    = next ? `อีก <b>${next[0]-d.count}</b> ${d.unit} = ${d.ui[next[1]]}` : `ครบทุกเข็มแล้ว! 🏆`;
+    return `<div class="rp-tline">
+      <div class="rp-tl-head"><span>${d.ic} ${d.label} <small>(${fmtNum(d.count)} ${d.unit})</small></span><span class="rp-tl-ems">${ems}</span></div>
+      <div class="rp-bar"><div class="rp-bar-fill" style="width:${pct}%"></div></div>
+      <div class="rp-tl-note">${note}</div>
+    </div>`;
+  }).join('');
+  // ✈️ ใบอนุญาตนักบิน = อิงสตรีค (ไม่ใช่จำนวนสะสม) → โชว์เป็นแถวสถานะเข็มที่ได้ ไม่มีแถบ %
+  const pilotNames = ['','🥉 ใบอนุญาตนักบิน','🥈 นักบินฝีมือดี','🥇 กัปตันมือทอง'];
+  const pilotHtml = state.pilotBadge
+    ? `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span><b>${pilotNames[state.pilotBadge]}</b></span></div>`
+    : `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span style="color:#9a8aac">ยังไม่ได้ — บินเก็บ 5 คำติดไม่ชน 🥉</span></div>`;
 
   // สัตว์เลี้ยง
   const petCount = state.pets.length;
@@ -287,9 +298,9 @@ function showProgressReport(){
     </div>
 
     <div class="rp-section">
-      <h3 class="rp-h3">🎖️ เข็มรางวัล</h3>
-      ${badgeHtml}
-      ${diligentLine}
+      <h3 class="rp-h3">🏆 ตู้เข็มสะสมของ${name}</h3>
+      ${trophyHtml}
+      ${pilotHtml}
     </div>
 
     <div class="rp-section">
@@ -331,12 +342,29 @@ function addDiligent(){                                 // เรียกทุ
   const tier = DILIGENT_TIERS.filter(t=>state.diligentCount >= t[0]).pop();
   if(tier && tier[1] > (state.diligentBadge||0)){
     state.diligentBadge = tier[1];
-    setTimeout(()=>{   // หน่วงให้พ้นการ์ดสรุป/โบนัสสตรีคก่อนค่อยประกาศเข็ม
-      sfx.rankup();
-      toast(`🎉 ได้${DILIGENT_TIER_UI[tier[1]]}! เล่นต่อรวม ${tier[0]} รอบแล้ว — เข็มติดท้ายชื่อให้เพื่อนเห็นใน map เลยนะ`, 4000);
+    setTimeout(()=>{   // หน่วงให้พ้นการ์ดสรุป/โบนัสสตรีคก่อนค่อยฉลองเข็ม
+      celebrateBadge(diligentEmoji(tier[1]), `ได้${DILIGENT_TIER_UI[tier[1]]}!`,
+        `เล่นต่อรวม ${tier[0]} รอบแล้ว — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกเลยนะ 🎉`);
     }, 1200);
   }
   saveState();
+}
+
+/* 🎊 ฉลอง "ได้เข็มใหม่" อลังกลางจอ — แบนเนอร์เด้ง + โปรยเหรียญ + เสียง (reuse sprinkleConfetti)
+   ใช้กับเข็มนักเล่นขยัน (ต่อยอดได้กับเข็มอื่น) · pointer-events:none = ไม่บังการเล่น หายเองใน ~3 วิ */
+function celebrateBadge(emoji, title, sub){
+  if(typeof sfx !== 'undefined') sfx.rankup();
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,50,40,50,90]);
+  const overlay = document.createElement('div');
+  overlay.className = 'badge-celebrate-overlay';
+  overlay.innerHTML = `<div class="badge-celebrate">
+    <div class="bc-emoji">${emoji}</div>
+    <div class="bc-title">🎉 ${escapeHTML(title)}</div>
+    <div class="bc-sub">${escapeHTML(sub)}</div>
+  </div>`;
+  document.body.appendChild(overlay);
+  sprinkleConfetti(overlay);                           // โปรยเหรียญ/ดาวบนแบนเนอร์
+  setTimeout(()=>{ overlay.classList.add('bc-out'); setTimeout(()=>overlay.remove(), 400); }, 2600);
 }
 function addThunder(){
   state.thunderCount = (state.thunderCount||0) + 1;
