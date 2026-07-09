@@ -93,11 +93,13 @@ function exitGame(){
   if(earned <= 0){ doExit(); return; }   // ยังไม่ได้เก็บเหรียญเลย (แค่แวะเข้ามา) → ออกเลย ไม่ต้องมีการ์ด
   const isRecord = earned > game.prevBest;             // เกินสถิติสัปดาห์เดิม = สถิติใหม่
   const allTime  = isRecord && earned > game.prevAllBest;   // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
-  showSessionSummary(earned, game.sessionMatches, isRecord, allTime, doExit);
+  const replay = ()=>startGame(game.lastCat);          // เล่นต่ออีกรอบโหมดเดิม (ไม่กลับหน้าเมือง)
+  showSessionSummary(earned, game.sessionMatches, isRecord, allTime, doExit, replay);
 }
 
-/* 🎉 การ์ดสรุปตอนจบการเล่น — โชว์เหรียญ+จำนวนคำที่ทำได้ทุกครั้ง · ทำสถิติใหม่=ฉลอง+โปรยเหรียญ */
-function showSessionSummary(earned, matches, isRecord, allTime, onClose){
+/* 🎉 การ์ดสรุปตอนจบการเล่น — โชว์เหรียญ+จำนวนคำที่ทำได้ทุกครั้ง · ทำสถิติใหม่=ฉลอง+โปรยเหรียญ+เสียงเหรียญ
+   ปุ่ม 2 ตัว: "เล่นต่ออีกรอบ" (เริ่มโหมดเดิมทันที) · "ออกไปพัก" (กลับหน้าเมือง) */
+function showSessionSummary(earned, matches, isRecord, allTime, onClose, onReplay){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay summary-overlay';
   overlay.innerHTML = `<div class="levelup-box summary-box">
@@ -109,13 +111,20 @@ function showSessionSummary(earned, matches, isRecord, allTime, onClose){
     ${isRecord ? `<div class="sm-badge">🏆 ทำสถิติสัปดาห์ใหม่!</div>` : ''}
     ${allTime ? `<div class="sm-badge sm-badge-all">⭐ และเป็นสถิติสูงสุดตลอดกาลด้วย!</div>` : ''}
     <p class="sm-cheer">${isRecord ? 'พักได้เลย เดี๋ยวมาทำลายสถิติใหม่กันอีกนะ 💪' : 'เก็บเพิ่มได้อีกเรื่อยๆ นะ เยี่ยมมาก! 😊'}</p>
-    <button class="cf-ok summary-ok">ออกไปพัก 😊</button>
+    <div class="sm-btns">
+      <button class="cf-ok summary-replay">🔄 เล่นต่ออีกรอบ!</button>
+      <button class="cf-ok summary-ok summary-exit">ออกไปพัก 😊</button>
+    </div>
   </div>`;
-  const close = ()=>{ overlay.remove(); if(onClose) onClose(); };
-  overlay.querySelector('.summary-ok').addEventListener('click', close);
-  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });   // แตะพื้นหลัง = ออกเหมือนกัน
+  const done = (cb)=>{ overlay.remove(); if(cb) cb(); };
+  overlay.querySelector('.summary-replay').addEventListener('click', ()=>done(onReplay));
+  overlay.querySelector('.summary-exit').addEventListener('click', ()=>done(onClose));
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) done(onClose); });   // แตะพื้นหลัง = ออกไปพัก
   document.body.appendChild(overlay);
-  if(isRecord) sprinkleConfetti(overlay);   // ทำสถิติใหม่ → โปรยเหรียญ/ดาวฉลอง
+  if(isRecord){
+    sprinkleConfetti(overlay);                       // โปรยเหรียญ/ดาวฉลอง
+    for(let i=0;i<4;i++) setTimeout(()=>sfx.coin&&sfx.coin(), 260 + i*150);   // เสียงเหรียญกรุ๊งกริ๊งไล่กัน
+  }
   if(typeof sfx !== 'undefined') sfx[isRecord ? 'rankup' : 'levelup']();
   if(state.haptic !== false && navigator.vibrate) navigator.vibrate(isRecord ? [40,50,40,50,90] : [30,40,30]);
 }
@@ -275,6 +284,7 @@ function addThunder(){
 
 function startGame(cat){
   careTick();
+  game.lastCat = cat || null;                        // จำหมวดไว้ ให้ปุ่ม "เล่นต่ออีกรอบ" เริ่มโหมดเดิม
   game.pool = cat ? cat.words : vocabForStudent();   // เล่นเฉพาะหมวด หรือคละตามระดับชั้น
   document.querySelector('#screen-game .board-label').textContent =
     `🇬🇧 คำศัพท์ภาษาอังกฤษ${cat ? ` · หมวด${cat.name}` : ''}`;

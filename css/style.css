@@ -928,7 +928,16 @@ html.no-anim body.quake{animation:none;}
 }
 .sm-badge-all{background:#efeaff;border-color:#c9b8f7;color:#6d55e0;}
 .sm-cheer{margin:12px 0 0;color:#6a5a78;font-size:13.5px;line-height:1.6;}
-.summary-ok{display:block;margin:16px auto 0;}
+.sm-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px;}
+/* .summary-box นำหน้าเพื่อชนะ .levelup-box button (0,1,1) ที่ตั้ง background/padding ปุ่ม default */
+.summary-box .summary-replay,.summary-box .summary-exit{
+  margin-top:0;border:none;border-radius:999px;padding:11px 20px;font-family:inherit;font-size:16px;
+  font-weight:800;cursor:pointer;color:#fff;
+}
+.summary-box .summary-replay{background:linear-gradient(135deg,#4fc46a,#37a552);box-shadow:0 4px 0 #2e8a45;}
+.summary-box .summary-exit{background:linear-gradient(135deg,#b0a0d8,#8f7bc0);box-shadow:0 4px 0 #6f5ca3;}
+.summary-box .summary-replay:active{transform:translateY(2px);box-shadow:0 2px 0 #2e8a45;}
+.summary-box .summary-exit:active{transform:translateY(2px);box-shadow:0 2px 0 #6f5ca3;}
 
 /* floating effects */
 .float-fx{
