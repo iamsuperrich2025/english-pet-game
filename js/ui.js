@@ -1021,7 +1021,7 @@ function renderDashboard(){
     chip.innerHTML = `${playerAvatarHTML()} <b>${escapeHTML(state.profileName || state.student.first)}</b>`
       + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
       + ` · 🎓 ${escapeHTML(state.student.first)} ${escapeHTML(state.student.last)}`
-      + ` · ชั้น ${state.student.grade} (ศัพท์${gradeBand(state.student.grade).label})`;
+      + ` · ชั้น ${state.student.grade}`;   // ระดับคำศัพท์ (ศัพท์...) ย้ายไปโชว์หน้าสถิติแทน — แถบบนสั้นสะอาด อ่าน "ชั้น" ง่าย
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
   }else chip.textContent = '';
 
