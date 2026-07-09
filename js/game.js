@@ -16,7 +16,12 @@ const game = {
   prevBest:0,                   // สถิติเหรียญ/ครั้ง "สัปดาห์นี้" เดิม (ตอนเข้าเกม) — ไว้เทียบว่าทำลายสถิติหรือยัง
   prevAllBest:0,                // สถิติเหรียญ/ครั้ง "ตลอดกาล" เดิม (ตอนเข้าเกม) — ไว้เช็กว่าเป็นสถิติสูงสุดตลอดกาลด้วยไหม
   beatBestShown:false,          // เด้ง "ทำลายสถิติ!" ไปแล้วในครั้งนี้ (โชว์ครั้งเดียวพอ)
+  lastCat:null,                 // หมวดล่าสุด (ให้ปุ่ม "เล่นต่ออีกรอบ" เริ่มโหมดเดิม)
+  replayStreak:0,               // 🔥 กด "เล่นต่ออีกรอบ" ติดกันกี่รอบ (ครบ 3 รอบติด = โบนัส) · รีเซ็ตเมื่อเข้าเกมใหม่จากเมนู
+  _viaReplay:false,             // ธง: startGame รอบนี้มาจากปุ่มเล่นต่อ (ไม่รีเซ็ตสตรีค)
 };
+const REPLAY_BONUS_EVERY = 3;   // เล่นต่อครบทุกกี่รอบติด = โบนัส
+const REPLAY_BONUS_COINS = 50;  // โบนัสสตรีคเล่นต่อ
 
 /* 🎉 หลักเหรียญที่จะเด้งฉลอง "ว้าว! ครั้งนี้ X 🪙 แล้ว!" (ฐาน 10🪙/คู่ · 60/รอบ) */
 const SESSION_MILESTONES = [100, 250, 500, 1000, 2000, 3000, 5000, 8000, 10000];
@@ -93,13 +98,43 @@ function exitGame(){
   if(earned <= 0){ doExit(); return; }   // ยังไม่ได้เก็บเหรียญเลย (แค่แวะเข้ามา) → ออกเลย ไม่ต้องมีการ์ด
   const isRecord = earned > game.prevBest;             // เกินสถิติสัปดาห์เดิม = สถิติใหม่
   const allTime  = isRecord && earned > game.prevAllBest;   // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
-  const replay = ()=>startGame(game.lastCat);          // เล่นต่ออีกรอบโหมดเดิม (ไม่กลับหน้าเมือง)
+  const replay = ()=>{                                  // เล่นต่ออีกรอบโหมดเดิม (ไม่กลับหน้าเมือง) + นับสตรีค
+    game._viaReplay = true;
+    const streak = (game.replayStreak || 0) + 1;
+    game.replayStreak = streak;
+    startGame(game.lastCat);
+    if(streak % REPLAY_BONUS_EVERY === 0){             // เล่นต่อครบ 3 รอบติด → โบนัสเล็กๆ กระตุ้นให้เล่นยาวแบบมีเป้า
+      addCoins(REPLAY_BONUS_COINS);
+      addSessionCoins(REPLAY_BONUS_COINS);
+      const cc = document.getElementById('game-coin-count');
+      if(cc) cc.textContent = fmtNum(state.coins);
+      saveState();
+      setTimeout(()=>{
+        if(typeof sfx !== 'undefined') sfx.levelup();
+        floatFx(`🔥 เล่นต่อ ${streak} รอบติด! +${REPLAY_BONUS_COINS} 🪙`, '#ff8c42');
+        toast(`เก่งมาก! ขยันเล่นต่อเนื่อง รับโบนัส +${REPLAY_BONUS_COINS} 🪙 ไปเลย 🎉`, 2600);
+      }, 600);
+    }
+  };
   showSessionSummary(earned, game.sessionMatches, isRecord, allTime, doExit, replay);
 }
 
 /* 🎉 การ์ดสรุปตอนจบการเล่น — โชว์เหรียญ+จำนวนคำที่ทำได้ทุกครั้ง · ทำสถิติใหม่=ฉลอง+โปรยเหรียญ+เสียงเหรียญ
    ปุ่ม 2 ตัว: "เล่นต่ออีกรอบ" (เริ่มโหมดเดิมทันที) · "ออกไปพัก" (กลับหน้าเมือง) */
 function showSessionSummary(earned, matches, isRecord, allTime, onClose, onReplay){
+  const p = activePet();
+  const petSick = !!(p && p.sick);
+  // น้องป่วย → ปุ่มหลักเตือนอย่างอ่อนโยนให้ไปดูแลก่อน (ยังกดเล่นต่อได้) · ปกติ → ปุ่มหลัก = เล่นต่อ
+  const primary   = petSick ? {txt:'🩺 ไปดูแลน้องก่อน', cb:onClose}  : {txt:'🔄 เล่นต่ออีกรอบ!', cb:onReplay};
+  const secondary = petSick ? {txt:'🔄 เล่นต่อก่อน',    cb:onReplay} : {txt:'ออกไปพัก 😊',      cb:onClose};
+
+  // 🔥 สตรีคเล่นต่อ: โชว์ความคืบหน้าไปโบนัสถัดไป (ให้เป้าหมายเล่นยาว)
+  const streak = game.replayStreak || 0;
+  const remain = REPLAY_BONUS_EVERY - (streak % REPLAY_BONUS_EVERY);
+  const streakLine = streak > 0
+    ? `<p class="sm-streak">🔥 เล่นต่อเนื่อง <b>${streak}</b> รอบ — อีก <b>${remain}</b> รอบ ได้โบนัส +${REPLAY_BONUS_COINS} 🪙!</p>`
+    : '';
+
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay summary-overlay';
   overlay.innerHTML = `<div class="levelup-box summary-box">
@@ -110,15 +145,17 @@ function showSessionSummary(earned, matches, isRecord, allTime, onClose, onRepla
     <p class="sm-matches">🔤 จับคู่ถูก <b>${fmtNum(matches)}</b> คำ</p>
     ${isRecord ? `<div class="sm-badge">🏆 ทำสถิติสัปดาห์ใหม่!</div>` : ''}
     ${allTime ? `<div class="sm-badge sm-badge-all">⭐ และเป็นสถิติสูงสุดตลอดกาลด้วย!</div>` : ''}
+    ${streakLine}
+    ${petSick ? `<p class="sm-sick">🤒 น้อง${escapeHTML(p.name)}ยังป่วยอยู่ ไปรักษาให้หายก่อนดีไหม?</p>` : ''}
     <p class="sm-cheer">${isRecord ? 'พักได้เลย เดี๋ยวมาทำลายสถิติใหม่กันอีกนะ 💪' : 'เก็บเพิ่มได้อีกเรื่อยๆ นะ เยี่ยมมาก! 😊'}</p>
     <div class="sm-btns">
-      <button class="cf-ok summary-replay">🔄 เล่นต่ออีกรอบ!</button>
-      <button class="cf-ok summary-ok summary-exit">ออกไปพัก 😊</button>
+      <button class="sm-primary">${primary.txt}</button>
+      <button class="sm-secondary">${secondary.txt}</button>
     </div>
   </div>`;
   const done = (cb)=>{ overlay.remove(); if(cb) cb(); };
-  overlay.querySelector('.summary-replay').addEventListener('click', ()=>done(onReplay));
-  overlay.querySelector('.summary-exit').addEventListener('click', ()=>done(onClose));
+  overlay.querySelector('.sm-primary').addEventListener('click', ()=>done(primary.cb));
+  overlay.querySelector('.sm-secondary').addEventListener('click', ()=>done(secondary.cb));
   overlay.addEventListener('click', e=>{ if(e.target===overlay) done(onClose); });   // แตะพื้นหลัง = ออกไปพัก
   document.body.appendChild(overlay);
   if(isRecord){
@@ -284,6 +321,8 @@ function addThunder(){
 
 function startGame(cat){
   careTick();
+  if(!game._viaReplay) game.replayStreak = 0;        // เข้าเกมใหม่จากเมนู = เริ่มนับสตรีคเล่นต่อใหม่
+  game._viaReplay = false;
   game.lastCat = cat || null;                        // จำหมวดไว้ ให้ปุ่ม "เล่นต่ออีกรอบ" เริ่มโหมดเดิม
   game.pool = cat ? cat.words : vocabForStudent();   // เล่นเฉพาะหมวด หรือคละตามระดับชั้น
   document.querySelector('#screen-game .board-label').textContent =
