@@ -20,8 +20,13 @@ const game = {
   replayStreak:0,               // 🔥 กด "เล่นต่ออีกรอบ" ติดกันกี่รอบ (ครบ 3 รอบติด = โบนัส) · รีเซ็ตเมื่อเข้าเกมใหม่จากเมนู
   _viaReplay:false,             // ธง: startGame รอบนี้มาจากปุ่มเล่นต่อ (ไม่รีเซ็ตสตรีค)
 };
-const REPLAY_BONUS_EVERY = 3;   // เล่นต่อครบทุกกี่รอบติด = โบนัส
-const REPLAY_BONUS_COINS = 50;  // โบนัสสตรีคเล่นต่อ
+const REPLAY_BONUS_EVERY = 3;   // เล่นต่อครบทุกกี่รอบติด = จ่ายโบนัส (3,6,9,...)
+// 🔥 สตรีคยิ่งยาว โบนัสยิ่งเยอะ (ไล่ระดับ): ครบ 3 รอบ +50 · 6 รอบ +100 · 9 รอบขึ้นไป +200 (คงที่)
+const REPLAY_BONUS_TIERS = [[9,200],[6,100],[3,50]];   // [ครบกี่รอบติด, โบนัส] — เลือกจากมากไปน้อย
+function replayBonusFor(streak){                        // โบนัสที่จะได้เมื่อสตรีคถึงค่านี้ (0=ยังไม่ถึงเกณฑ์)
+  const t = REPLAY_BONUS_TIERS.find(x => streak >= x[0]);
+  return t ? t[1] : 0;
+}
 
 /* 🎉 หลักเหรียญที่จะเด้งฉลอง "ว้าว! ครั้งนี้ X 🪙 แล้ว!" (ฐาน 10🪙/คู่ · 60/รอบ) */
 const SESSION_MILESTONES = [100, 250, 500, 1000, 2000, 3000, 5000, 8000, 10000];
@@ -103,16 +108,17 @@ function exitGame(){
     const streak = (game.replayStreak || 0) + 1;
     game.replayStreak = streak;
     startGame(game.lastCat);
-    if(streak % REPLAY_BONUS_EVERY === 0){             // เล่นต่อครบ 3 รอบติด → โบนัสเล็กๆ กระตุ้นให้เล่นยาวแบบมีเป้า
-      addCoins(REPLAY_BONUS_COINS);
-      addSessionCoins(REPLAY_BONUS_COINS);
+    const bonus = (streak % REPLAY_BONUS_EVERY === 0) ? replayBonusFor(streak) : 0;
+    if(bonus > 0){                                     // เล่นต่อครบทุก 3 รอบติด → โบนัสไล่ระดับ (ยิ่งยาวยิ่งเยอะ)
+      addCoins(bonus);
+      addSessionCoins(bonus);
       const cc = document.getElementById('game-coin-count');
       if(cc) cc.textContent = fmtNum(state.coins);
       saveState();
       setTimeout(()=>{
         if(typeof sfx !== 'undefined') sfx.levelup();
-        floatFx(`🔥 เล่นต่อ ${streak} รอบติด! +${REPLAY_BONUS_COINS} 🪙`, '#ff8c42');
-        toast(`เก่งมาก! ขยันเล่นต่อเนื่อง รับโบนัส +${REPLAY_BONUS_COINS} 🪙 ไปเลย 🎉`, 2600);
+        floatFx(`🔥 เล่นต่อ ${streak} รอบติด! +${bonus} 🪙`, '#ff8c42');
+        toast(`เก่งมาก! ขยันเล่นต่อเนื่อง รับโบนัส +${bonus} 🪙 ไปเลย 🎉`, 2600);
       }, 600);
     }
   };
@@ -128,11 +134,12 @@ function showSessionSummary(earned, matches, isRecord, allTime, onClose, onRepla
   const primary   = petSick ? {txt:'🩺 ไปดูแลน้องก่อน', cb:onClose}  : {txt:'🔄 เล่นต่ออีกรอบ!', cb:onReplay};
   const secondary = petSick ? {txt:'🔄 เล่นต่อก่อน',    cb:onReplay} : {txt:'ออกไปพัก 😊',      cb:onClose};
 
-  // 🔥 สตรีคเล่นต่อ: โชว์ความคืบหน้าไปโบนัสถัดไป (ให้เป้าหมายเล่นยาว)
+  // 🔥 สตรีคเล่นต่อ: โชว์ความคืบหน้าไปโบนัสถัดไป (โบนัสไล่ระดับ — บอกยอดของรอบเป้าถัดไป)
   const streak = game.replayStreak || 0;
   const remain = REPLAY_BONUS_EVERY - (streak % REPLAY_BONUS_EVERY);
+  const nextBonus = replayBonusFor(streak + remain);   // โบนัสที่จะได้เมื่อครบเป้าถัดไป (50→100→200)
   const streakLine = streak > 0
-    ? `<p class="sm-streak">🔥 เล่นต่อเนื่อง <b>${streak}</b> รอบ — อีก <b>${remain}</b> รอบ ได้โบนัส +${REPLAY_BONUS_COINS} 🪙!</p>`
+    ? `<p class="sm-streak">🔥 เล่นต่อเนื่อง <b>${streak}</b> รอบ — อีก <b>${remain}</b> รอบ ได้โบนัส +${nextBonus} 🪙!</p>`
     : '';
 
   const overlay = document.createElement('div');
