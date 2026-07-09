@@ -29,6 +29,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 101 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปเตือนน้องป่วยอ่อนโยน + โบนัสสตรีคเล่นต่อ 🩺🔥 — version .80** (commit 3c5f7ad) — ต่อยอดปุ่มเล่นต่อ (รอบ 99) · ผู้ใช้สั่งทำ
+- **เตือนน้องป่วย:** `showSessionSummary` เช็ก `activePet().sick` → ปุ่มหลักสลับเป็น "🩺 ไปดูแลน้องก่อน" (→dashboard) · ยังกด "🔄 เล่นต่อก่อน" ได้ (ไม่บล็อก) + บรรทัด "🤒 น้อง<ชื่อ>ยังป่วยอยู่..." · ปกติ = ปุ่มหลัก "🔄 เล่นต่ออีกรอบ!"
+- **สตรีคเล่นต่อ:** `game.replayStreak` นับกดเล่นต่อติดกัน (closure replay ใน exitGame · `_viaReplay` flag กัน startGame รีเซ็ต) · ครบ 3 รอบติด (`REPLAY_BONUS_EVERY`) → `addCoins/addSessionCoins(50)` (`REPLAY_BONUS_COINS`) + floatFx/toast · เข้าเกมจากเมนู=รีเซ็ต 0 · การ์ดโชว์ "🔥 เล่นต่อเนื่อง N รอบ — อีก M รอบได้โบนัส"
+- ปุ่มเปลี่ยนคลาส `.sm-primary/.sm-secondary` (จาก summary-replay/exit) · style `.sm-streak`/`.sm-sick`
+- ✅ ยืนยัน preview: ปกติ=ปุ่มเล่นต่อ(เขียว)/ออกไปพัก ไม่มีบรรทัดป่วย · ป่วย=🩺ไปดูแล/🔄เล่นต่อก่อน+บรรทัดป่วย(ชื่อน้อง) · สตรีค replay 1→2→3 บวก +50 เฉพาะรอบ 3 (floatFx+toast จริง) · เมนูรีเซ็ต 0 · ไม่มี error · **screenshot ค้าง→inspect**
+- ⚠️ commit game.js/style.css/version (ไม่แตะ adventure3d ของ session คู่ขนาน)
+
 **✅ รอบ 100 (9 ก.ค. · Opus): "สมุดคำศัพท์รอบนี้" ตอนออก/จบเกมโลก 3D 📖** (commit เฉพาะ `js/adventure3d.js` — ไม่ bump version, ปล่อยให้ session คู่ขนาน carry) — งานเดี่ยว 3D ต่อจากรอบ 97/97b · ผู้ใช้สั่ง "ทำได้เลย"
 - **โจทย์:** เดิมออกจากโลก 3D บอกแค่ "เก็บได้ X คำ" (ตัวเลข) → เพิ่มคุณค่าเรียนรู้: โชว์**คำที่ประกอบสำเร็จจริง + คำแปลไทย** เป็นสมุดทบทวน (ครู/ผู้ปกครองเห็นผล)
 - **ทำ (ทั้งหมดใน `js/adventure3d.js`):** `sessionWordLog=[]` (module var) · `completeWord` push `{en,th}` แบบไม่ซ้ำ · reset ที่ start()+showPodium(endRound) · helper `sessionRecapHtml()` คืนชิป `EN\nไทย` (ว่าง=คืน '' ไม่โชว์) · แทรกเข้า **3 จุดออก**: `confirmExit` (askConfirm), `caught` (KO ผี), `knockedOut` (KO adv/heli/drone) · CSS `.adv-recap*` (ชิป wrap max-height 96px scroll · ธีมเขียวโลกผี) · เพิ่ม `_t.wordLog/knockedOut` hooks
