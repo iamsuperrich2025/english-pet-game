@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 100 (9 ก.ค. · Opus): "สมุดคำศัพท์รอบนี้" ตอนออก/จบเกมโลก 3D 📖** (commit เฉพาะ `js/adventure3d.js` — ไม่ bump version, ปล่อยให้ session คู่ขนาน carry) — งานเดี่ยว 3D ต่อจากรอบ 97/97b · ผู้ใช้สั่ง "ทำได้เลย"
+- **โจทย์:** เดิมออกจากโลก 3D บอกแค่ "เก็บได้ X คำ" (ตัวเลข) → เพิ่มคุณค่าเรียนรู้: โชว์**คำที่ประกอบสำเร็จจริง + คำแปลไทย** เป็นสมุดทบทวน (ครู/ผู้ปกครองเห็นผล)
+- **ทำ (ทั้งหมดใน `js/adventure3d.js`):** `sessionWordLog=[]` (module var) · `completeWord` push `{en,th}` แบบไม่ซ้ำ · reset ที่ start()+showPodium(endRound) · helper `sessionRecapHtml()` คืนชิป `EN\nไทย` (ว่าง=คืน '' ไม่โชว์) · แทรกเข้า **3 จุดออก**: `confirmExit` (askConfirm), `caught` (KO ผี), `knockedOut` (KO adv/heli/drone) · CSS `.adv-recap*` (ชิป wrap max-height 96px scroll · ธีมเขียวโลกผี) · เพิ่ม `_t.wordLog/knockedOut` hooks
+- ✅ ยืนยัน preview (mock · give letters ประกอบคำ): ประกอบ 3 คำ→log `[shy=อาย, market=ตลาด, pillow=หมอน]` · confirmExit dialog โชว์ recap หัว "(3 คำ)" ชิป EN ตัวใหญ่+ไทย ในจอ · KO 8 คำ→recap "(8 คำ)" 8 ชิป · **รอบใหม่ start→log reset 0** · ประกอบ 0 คำ→ไม่มี recap แต่ยังโชว์ "เก็บได้ 0 คำ" ปกติ · ไม่มี console error
+- ⚠️ **สำคัญ (พบวันนี้):** session คู่ขนานกับผม**ใช้ working tree + main เดียวกัน** (ไม่ใช่ clone แยก) → `git add -A` ของอีก session กวาดไฟล์ที่ผมแก้ค้างได้ · กติกา: แก้ไฟล์ 3D → commit เร็วแบบ pin pathspec เฉพาะ `js/adventure3d.js` ทันที ลดช่วงถูกกวาด · ห้ามแตะ version.json/game.js/style.css/state.js/index.html ที่อีก session ปั่นถี่
+
 **✅ รอบ 99 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปมีปุ่ม "เล่นต่ออีกรอบ" + เสียงเหรียญตอนทำสถิติใหม่ 🔄🔊 — version .79** (commit ad84077) — ต่อยอดการ์ดสรุป (รอบ 98) · ผู้ใช้สั่งทำ
 - **เล่นต่ออีกรอบ:** การ์ดสรุปมี 2 ปุ่ม — 🔄 เล่นต่ออีกรอบ (เขียว) → `startGame(game.lastCat)` เริ่มโหมด/หมวดเดิมทันที (session รีเซ็ต coins/matches=0) ไม่กลับหน้าเมือง · ออกไปพัก (ม่วง) → doExit · `game.lastCat` จำหมวดใน startGame · `showSessionSummary` เพิ่ม param `onReplay`
 - **เสียงเหรียญ:** ทำสถิติใหม่ → `sfx.coin` 4 ครั้งไล่กัน (260+i*150ms) ซ้อน confetti+rankup

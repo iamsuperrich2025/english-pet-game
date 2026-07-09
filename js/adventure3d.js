@@ -214,6 +214,7 @@ const ATC={
 };
 let yaw=0, pitch=0;
 let hp=100, sessionCoins=0, sessionWords=0;
+let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
 let words=[];                     // guideline [{en,th}]
 let letters=[];                   // ตัวอักษรในโลก [{ch,spr,born}]
@@ -844,6 +845,7 @@ function completeWord(i){
   doneList().push(w.en);
   addCoins(M.reward);
   sessionCoins+=M.reward; sessionWords++;
+  if(!sessionWordLog.some(x=>x.en===w.en)) sessionWordLog.push({en:w.en,th:w.th});   // 📖 เก็บเข้าสมุดคำศัพท์รอบนี้ (ไม่ซ้ำ)
   sfx.levelup();
   setTimeout(()=>speakWord(w.en), 700);     // 🔊 อ่านคำที่ผสมสำเร็จ (รอแตรฉลองจบก่อน)
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(60);
@@ -1052,6 +1054,13 @@ function tickGhosts(dt,now){
   }
 }
 
+/* 📖 สมุดคำศัพท์รอบนี้ — โชว์คำที่ประกอบสำเร็จ + คำแปลไทย ตอนออก/จบเกม (ทบทวนคำ · ครู/ผู้ปกครองเห็นผลเรียนรู้) */
+function sessionRecapHtml(){
+  if(!sessionWordLog.length) return '';
+  const chips=sessionWordLog.map(x=>`<span class="adv-recap-w">${escapeHTML(x.en.toUpperCase())}<small>${escapeHTML(x.th)}</small></span>`).join('');
+  return `<div class="adv-recap"><div class="adv-recap-h">📖 คำที่หนูประกอบได้รอบนี้ (${sessionWordLog.length} คำ)</div><div class="adv-recap-list">${chips}</div></div>`;
+}
+
 /* ---------- Jump scare + game over (ผู้ใช้เคาะ: เต็มที่) ---------- */
 function caught(){
   if(!running) return;
@@ -1070,7 +1079,7 @@ function caught(){
     overlayEl.classList.remove('adv-shake');
     banEl.innerHTML=`<div class="adv-ko">👻 โดนผีจับแล้ว!!<br>
       <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
-      รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small><br>
+      รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${sessionRecapHtml()}<br>
       <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
     banEl.classList.add('show','stay');
     document.getElementById('adv-ko-exit').addEventListener('click',()=>exitWorld());
@@ -1084,7 +1093,7 @@ function knockedOut(){
   if(M.heli) HeliSound.stop();
   banEl.innerHTML=`<div class="adv-ko">${M.koTitle||'💫 พลังหมดแล้ว!'}<br>
     <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
-    รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small><br>
+    รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${sessionRecapHtml()}<br>
     <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
   banEl.classList.add('show','stay');
   document.getElementById('adv-ko-exit').addEventListener('click',()=>exitWorld());
@@ -1624,7 +1633,7 @@ function showPodium(v){
   let myBonus=0;
   top.forEach((r,i)=>{ if(r && me && r.u===me) myBonus=PODIUM_BONUS[i]||0; });
   if(myBonus){ addCoins(myBonus); saveState(); sessionCoins+=myBonus; }
-  sessionWords=0;                                    // เริ่มรอบแข่งใหม่ทุกคน
+  sessionWords=0; sessionWordLog=[];                 // เริ่มรอบแข่งใหม่ทุกคน
   if(myRef) sendPos(true);
   renderBoard(); renderHudTop();
   const wasRunning=running;
@@ -2030,7 +2039,17 @@ function buildDom(){
   .adv-haunt .adv-intro-card{border-color:rgba(124,255,176,.5);box-shadow:0 8px 40px rgba(0,0,0,.7),0 0 30px rgba(60,255,140,.2)}
   .adv-haunt .adv-intro-goal{background:rgba(40,255,140,.1)}
   .adv-haunt .adv-intro-ctrl-h{color:#7cffb0}
-  .adv-haunt #adv-intro-go{background:linear-gradient(180deg,#3ddc84,#1f9e5a)}`;
+  .adv-haunt #adv-intro-go{background:linear-gradient(180deg,#3ddc84,#1f9e5a)}
+  /* 📖 สมุดคำศัพท์รอบนี้ (ตอนออก/จบเกม) — ทบทวนคำที่ประกอบสำเร็จ */
+  .adv-recap{margin:9px auto 2px;max-width:340px}
+  .adv-recap-h{color:#ffe082;font-size:12.5px;font-weight:800;margin-bottom:5px;text-shadow:0 1px 3px #000}
+  .adv-recap-list{display:flex;flex-wrap:wrap;gap:5px;justify-content:center;max-height:96px;overflow-y:auto}
+  .adv-recap-w{display:flex;flex-direction:column;align-items:center;line-height:1.15;
+    background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:9px;padding:3px 9px;
+    color:#fff;font-weight:800;font-size:12.5px}
+  .adv-recap-w small{color:#bcd0e8;font-weight:600;font-size:10.5px}
+  .adv-haunt .adv-recap-w{background:rgba(40,255,140,.1);border-color:rgba(124,255,176,.3)}
+  .adv-haunt .adv-recap-w small{color:#9fe8bf}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -2156,7 +2175,7 @@ function confirmExit(){
   running=false;                                   // พักเกมระหว่างถาม
   askConfirm(`<h2>🚪 ออกจาก${M.label}</h2>
     <p style="font-size:15px;margin:6px 0">รอบนี้เก็บได้ <b>${sessionWords}</b> คำ · <b>+${fmtNum(sessionCoins)}</b> 🪙<br>
-    <small>กลับมาเล่นต่อเมื่อไหร่ก็ได้ ตั๋วใช้ได้ตลอด</small></p>`,
+    <small>กลับมาเล่นต่อเมื่อไหร่ก็ได้ ตั๋วใช้ได้ตลอด</small></p>${sessionRecapHtml()}`,
     'ออกเลย', ()=>exitWorld());
   // askConfirm ไม่มี callback ตอนยกเลิก → เฝ้า overlay หาย แล้วเล่นต่อ
   const watch=setInterval(()=>{
@@ -3096,7 +3115,7 @@ function start(md){
   scene=worlds[mode].scene; trees=worlds[mode].trees||[]; buildings=worlds[mode].buildings||[];
   solids=worlds[mode].solids||[];
 
-  hp=100; sessionCoins=0; sessionWords=0; inv={}; keys={}; yaw=0; pitch=0;
+  hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
@@ -3183,7 +3202,7 @@ window.Adventure3D={
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
-    showIntro, introSeen, get introEl(){return introEl},
+    showIntro, introSeen, get introEl(){return introEl}, get wordLog(){return sessionWordLog}, knockedOut,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
