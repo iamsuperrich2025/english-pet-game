@@ -33,6 +33,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 110 (9 ก.ค. · Opus): โมเดล 3D ตัวละครหญิง + สัตว์หมา เข้าหน้า Lobby — version .90** — ผู้ใช้ทำโมเดลบน Tripo (A-pose สูตรเดิม [[tripo-caretaker-regen-state]]) แล้ววาง `img/models/`
+- **commit ไฟล์ GLB 3 ตัวเข้า git ครั้งแรก** (`caretaker_male.glb`/`caretaker_female.glb`/`pet_dog.glb`) — เดิม **untracked ทั้งหมด → 3D ไม่เคยขึ้น live** (ผู้เล่นเห็น PNG fallback) · `lobby3d.js` เป็น generic อยู่แล้ว (`caretaker_${avatar}` + `pet_${petType}` ที่ ui.js:1388) **ไม่ต้องแก้โค้ด**
+- ✅ **ยืนยัน preview จริง:** เซ็ต avatar=female + newPet('dog') → dashboard → Lobby3D โหลดครบ (`curKey=female|dog`, ownerLoaded+petLoaded=true, 287,016 tris = 141,516+145,500 ผลรวมเมชสองตัวพอดี) · screenshot เห็นหมา+หญิง (ผมหางม้า เสื้อมิ้นท์) เรนเดอร์จริง
+- ⚠️ **ข้อสังเกต (ไม่ใช่บั๊กใหม่ — ตัวชายเดิมก็เป็น):** (1) ท่า default **หันหลัง** ให้กล้อง (ปัดหมุน 360° ดูหน้าได้ = ฟีเจอร์เดิม) — ลองแก้ `wrap.rotation.y=Math.PI` ใน fitInto แต่กระทบเฟรม/สเกล skinned-mesh + verify ด้วยตาไม่ได้ชัดใน preview (ติด browser/SW cache `pet-vocab-v3` + skinned render) → **ถอนออก ยังไม่ชิป** (2) animation clip ชื่อ `NlaTrack`/`NlaTrack.001` ไม่ตรง regex `idle|breath|stand|rest` (lobby3d.js:110) → ใช้ท่าโยก procedural แทน อนิเมชัน Tripo ไม่เล่น (3) โพลี ~145k tris/ตัว (ไฟล์ HD ดิบ ไม่ใช่ retopo 15k)
+- 🔜 **งานต่อยอด (รอผู้ใช้):** `pet_cat.glb`/`pet_dragon.glb` (ยัง 404 — ทำต่อด้วยสูตรเดิม) · แก้ default หันหน้า/เล่น idle clip แบบ verify ได้จริง · retopo ลดโพลีให้เบาบนมือถือ
+- ⚠️ commit เฉพาะ `img/models/*.glb` + `version.json` + `handoff/TASKS.md` (pin pathspec · ไม่แตะ vocab/ghosts/.claude)
+
 **✅ รอบ 109 (9 ก.ค. · Opus): ต่อยอดเข็ม 3 ข้อ — กระดานแท็บเดียว + เข็มลับ 👑 + กราฟเข็มรายสัปดาห์ 🏅 — version .89** (commit 905f851) — ผู้ใช้สั่ง "ทำ 3 อย่างเลย" (ต่อจากรอบ 108)
 - **① 🎖️ กระดานแท็บเดียว (ประหยัดจอ)** — รวม leaderboard เหรียญ+เข็มเป็นการ์ดเดียว `#leaderboard-card` มีแท็บ 🪙 เหรียญ / 🏅 เข็ม (ui.js: `lbTab` + `bindLbTabs` delegated + `lbCoinHtml()`/`lbBadgeHtml()`) · แถวเข็มคลิกดูการ์ดผู้เล่นได้ (pl-click) · **ลบการ์ด `#badge-leaderboard-card` แยก** (index.html) + call ใน onlineRerender · CSS `.lb-tabs/.lb-tab.active`
 - **② 👑 เข็มลับ "นักสะสมเข็ม"** — ได้เมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน อย่างละ ≥1) · `state.crownBadge` + `checkCrown()` (game.js) เรียกท้าย `addThunder`/`addDiligent`/pilot/daredevil (adventure3d) + ตอนเข้าเมือง (renderDashboard — ครอบผู้เล่นเดิม) · `badgeSuffix` นำหน้าด้วย 👑 · `BADGE_META['👑']={p:5}` (ดันขึ้นต้นกระดานเข็ม) · `celebrateBadge` ฉลอง (หน่วง 3.6s พ้นเข็มสายที่ 4) · regex `NAME_BADGE_RE`/`badgeEmojis` รวม 👑 · state migration
