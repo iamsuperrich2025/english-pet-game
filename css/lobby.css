@@ -152,7 +152,7 @@ h1{color:var(--sky-d);text-shadow:none;}
 .top-flex{flex:1;}
 .profile-plate{
   background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
-  padding:5px 14px;line-height:1.3;min-width:0;max-width:34vw;
+  padding:5px 14px;line-height:1.3;min-width:0;max-width:min(60vw,600px);
 }
 .profile-plate .student-chip{
   font-size:13.5px;font-weight:500;color:#fff;background:none;border:none;box-shadow:none;
