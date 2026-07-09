@@ -136,8 +136,27 @@ function onlineRerender(){
   if(!dash || !dash.classList.contains('active')) return;
   if(typeof renderOnlineCard === 'function') renderOnlineCard();
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
+  if(typeof renderBadgeLeaderboardCard === 'function') renderBadgeLeaderboardCard();
   if(typeof renderFriendPanel === 'function') renderFriendPanel();
   if(typeof renderGiftPanel === 'function') renderGiftPanel();
+}
+
+/* 🔔 ตรวจว่าเพื่อน (ในรายชื่อเรา) ที่ออนไลน์อยู่ เพิ่งได้เข็มใหม่ไหม → เด้ง toast ให้กำลังใจ
+   เข็ม baked อยู่ท้ายชื่อ presence.n อยู่แล้ว · เทียบแต้มเข็มกับที่จำไว้ · ครั้งแรกที่เห็น=ตั้ง baseline เงียบๆ */
+function notifyFriendBadges(list){
+  if(typeof splitNameBadges !== 'function' || typeof badgeScore !== 'function') return;
+  const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  Online.seenBadges = Online.seenBadges || {};
+  list.forEach(p=>{
+    const cur = splitNameBadges(p.n).badges;
+    const prev = Online.seenBadges[p.id];
+    if(fset.has(p.id) && prev !== undefined && badgeScore(cur) > badgeScore(prev)){
+      const nm = splitNameBadges(p.n).name || 'เพื่อน';
+      if(typeof toast === 'function') toast(`🎉 เพื่อน ${nm} เพิ่งได้เข็มใหม่! ${cur} — เก่งจัง ไปสะสมแข่งกันเลย!`, 3800);
+      if(typeof sfx !== 'undefined' && sfx.levelup) sfx.levelup();
+    }
+    Online.seenBadges[p.id] = cur;
+  });
 }
 
 /* ============================================================
@@ -586,6 +605,7 @@ function onlineStart(){
     });
     Online.friends = out;
     Online.presenceMap = pmap;
+    notifyFriendBadges(out);          // 🔔 เพื่อนเพิ่งได้เข็มใหม่ → เด้ง toast ให้กำลังใจแข่งสะสม
     onlineRerender();
   });
 

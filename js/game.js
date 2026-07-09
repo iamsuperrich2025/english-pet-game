@@ -347,6 +347,30 @@ function badgeSuffix(){
     + daredevilEmoji(state.daredevilBadge)
     + diligentEmoji(state.diligentBadge);
 }
+
+/* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน presence/leaderboard
+   (โชว์แถวเข็มในการ์ดผู้เล่น + คิดคะแนนกระดานเข็ม + ตรวจเพื่อนได้เข็มใหม่) */
+const BADGE_META = {
+  '🥉':{n:'ใบอนุญาตนักบิน',p:1}, '🥈':{n:'นักบินฝีมือดี',p:2}, '🥇':{n:'กัปตันมือทอง',p:3},
+  '⚡':{n:'เข็มสายฟ้า',p:1}, '🌩️':{n:'เข็มพายุฟ้าคะนอง',p:2}, '⛈️':{n:'เข็มมหาพายุ',p:3},
+  '🎯':{n:'เข็มเฉียดเฉี่ยว',p:1}, '🌀':{n:'เข็มนักบินผาดโผน',p:2}, '🔥':{n:'เข็มเจ้าเวหา',p:3},
+  '🏅':{n:'เข็มนักเล่นขยัน',p:1}, '🎖️':{n:'เข็มนักเล่นตัวยง',p:2}, '🏆':{n:'เข็มยอดนักสู้คำศัพท์',p:3},
+};
+const NAME_BADGE_RE = /(?:🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆)+$/u;
+function splitNameBadges(full){                        // แยก "ชื่อสะอาด" กับ "เข็มท้ายชื่อ"
+  full = String(full || '');
+  const m = full.match(NAME_BADGE_RE);
+  const badges = m ? m[0] : '';
+  return { name: badges ? full.slice(0, full.length - badges.length).trim() : full, badges };
+}
+function badgeEmojis(str){                              // แตกอิโมจิเข็มเป็นอาร์เรย์ตามลำดับที่พบ
+  const arr = [], re = /🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆/gu; let x;
+  while((x = re.exec(String(str || '')))) arr.push(x[0]);
+  return arr;
+}
+function badgeScore(str){                               // คะแนนรวม (ผลรวมระดับเข็ม) — ใช้จัดอันดับกระดานเข็ม
+  return badgeEmojis(str).reduce((a,e)=>a + ((BADGE_META[e] && BADGE_META[e].p) || 0), 0);
+}
 function addDiligent(){                                 // เรียกทุกครั้งที่กด "เล่นต่ออีกรอบ"
   state.diligentCount = (state.diligentCount||0) + 1;
   const tier = DILIGENT_TIERS.filter(t=>state.diligentCount >= t[0]).pop();

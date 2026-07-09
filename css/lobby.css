@@ -353,6 +353,13 @@ h1{color:var(--sky-d);text-shadow:none;}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .pl-grade{background:var(--sky-d);color:#dcecff;padding:0 18px 12px;font-size:13.5px;}
+/* 🎖️ แถวเข็มในการ์ดผู้เล่น (ต่อจากแถบชั้น สีฟ้าเดียวกัน) */
+.pl-badges{background:var(--sky-d);padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px;}
+.pl-badge-chip{
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);border-radius:999px;
+  padding:3px 10px;font-size:12px;color:#eaf3ff;font-weight:600;display:inline-flex;align-items:center;gap:4px;
+}
+.pl-badge-chip b{font-size:14.5px;line-height:1;}
 .pl-body{padding:16px 16px 18px;}
 .pl-loading,.pl-none{text-align:center;color:#5a6b82;font-size:14.5px;padding:14px 6px;line-height:1.6;}
 .pl-none small{color:#8496ac;font-size:12.5px;}

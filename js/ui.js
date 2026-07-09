@@ -281,7 +281,7 @@ function renderOnlineCard(){
   const meBadges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มของเราต่อท้ายชื่อ (โชว์ทันทีจาก state)
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
-      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
       <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
@@ -355,6 +355,46 @@ function renderLeaderboardCard(){
 }
 
 /* ============================================================
+   การ์ดกระดานเข็มสะสม 🏅 — จัดอันดับใครสะสมเข็มได้ "แต้มรวม" มากสุด (แยกจากกระดานเหรียญ)
+   ข้อมูลเข็มถูก baked ในชื่อ (presence/leaderboard.n) อยู่แล้ว → แตกด้วย badgeScore
+   ============================================================ */
+function renderBadgeLeaderboardCard(){
+  const el = document.getElementById('badge-leaderboard-card');
+  if(!el) return;
+  const title = `<h3 class="shop-title">🏅 กระดานเข็มสะสม <span class="lb-hint">แต้มรวมจากทุกเข็ม</span></h3>`;
+  if(typeof Online === 'undefined' || !Online.ready || typeof badgeScore !== 'function'){
+    el.innerHTML = title + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับเข็มของเพื่อนๆ นะ!</div>`;
+    return;
+  }
+  const myId = onlineKey();
+  const meName = state.profileName || (state.student ? state.student.first : '') || 'หนู';
+  const meBadges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
+  // รวมผู้เล่นจากกระดานเหรียญ (ชื่อมีเข็ม baked) + แทนที่ตัวเราด้วยเข็มสดจาก state
+  const map = {};
+  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
+  map[myId] = {id:myId, n: meName + meBadges, g: (state.student ? state.student.grade : '')};
+  let rows = Object.values(map).map(r=>{
+    const sp = splitNameBadges(r.n);
+    return {id:r.id, name:sp.name, badges:sp.badges, score:badgeScore(r.n), me:r.id===myId};
+  }).filter(r=>r.score > 0);
+  rows.sort((a,b)=> b.score - a.score || badgeEmojis(b.badges).length - badgeEmojis(a.badges).length);
+  if(!rows.length){
+    el.innerHTML = title + `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
+    return;
+  }
+  const myIdx = rows.findIndex(r=>r.me);
+  const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+  const list = rows.slice(0, LEADERBOARD_SIZE).map((r,i)=>`
+    <div class="lb-row${r.me ? ' lb-me' : ''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม</small></span>
+    </div>`).join('');
+  el.innerHTML = title + `
+    <div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับเข็มที่ ${myIdx + 1} จาก ${rows.length} คน 🏅` : `ยังไม่มีเข็ม — เก็บเข็มแล้วมาไต่กระดานนะ 💪`}</div>
+    <div class="lb-list">${list}</div>`;
+}
+
+/* ============================================================
    การ์ดข้อมูลผู้เล่น 👤 — คลิกชื่อในการ์ดเพื่อน/กระดาน แล้วโชว์
    เงินรวม · จำนวนทรัพย์สิน · มูลค่าทรัพย์สินรวม (แยกกัน ไม่รวมยอด)
    เพื่อเป็นแรงบันดาลใจให้ผู้เล่นอื่นตั้งใจเล่น
@@ -370,12 +410,19 @@ function bindPlayerClicks(){
 }
 
 function showPlayerCard(uid, name, grade){
+  // แยกเข็มออกจากชื่อ (เข็ม baked มากับชื่อจาก presence/leaderboard) → โชว์เป็นแถวเข็มสวยๆ
+  const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
+  const arr = (typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : [];
+  const badgeRow = arr.length
+    ? `<div class="pl-badges">${arr.map(e=>`<span class="pl-badge-chip"><b>${e}</b> ${escapeHTML((BADGE_META[e]||{}).n||'')}</span>`).join('')}</div>`
+    : '';
   const ov = document.createElement('div');
   ov.className = 'pl-overlay';
   ov.innerHTML = `<div class="pl-card">
       <button class="pl-close">✕</button>
-      <div class="pl-head">👤 <span>${escapeHTML(name)}</span></div>
+      <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span></div>
       <div class="pl-grade">ชั้น ${escapeHTML(grade)}</div>
+      ${badgeRow}
       <div class="pl-body"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
     </div>`;
   document.body.appendChild(ov);
@@ -1088,6 +1135,7 @@ function renderDashboard(){
   renderRankCard();
   renderOnlineCard();
   renderLeaderboardCard();
+  renderBadgeLeaderboardCard();
   renderFriendPanel();
   renderGiftPanel();
 
