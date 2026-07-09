@@ -141,6 +141,7 @@ function newPet(type, name){
           sleepSickDay:null,// ข้อ 1: nightKey คืนที่ป่วยเพราะไม่นอนไปแล้ว (กันป่วยซ้ำคืนเดียวกัน)
           heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
           thirstFrom:null,  // เริ่มนับขาดน้ำสะสมตั้งแต่เมื่อไหร่ (null = น้ำปกติ)
+          giant:0,          // ร่างยักษ์ (รอบ 102): ระดับขยายร่างในหน้า lobby 0=ปกติ .. GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่า)
           rainSickDay:null};// วันที่ป่วยเพราะฝนล่าสุด (กันป่วยซ้ำในฝนรอบเดียวกัน)
 }
 
@@ -210,6 +211,7 @@ function loadState(){
         if(p.sleepSickDay === undefined) p.sleepSickDay = null;
         if(p.heatFrom === undefined) p.heatFrom = null;
         if(p.thirstFrom === undefined) p.thirstFrom = null;
+        if(typeof p.giant !== 'number') p.giant = 0;   // รอบ 102: เซฟเก่าเริ่มร่างปกติ
         if(p.rainSickDay === undefined) p.rainSickDay = null;
         if(p.sickCause === undefined) p.sickCause = p.sick ? 'hunger' : null;
       }

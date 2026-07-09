@@ -57,6 +57,45 @@ function caretakerFigureHTML(){
   return `<div class="caretaker-fig caretaker-emoji">${emoji}</div>`;
 }
 
+/* ร่างยักษ์ (รอบ 102): อัพเกรดขยายน้องในหน้า lobby ด้วยเหรียญ
+   ระดับ 0=ปกติ (น้องเล็กกว่าผู้เลี้ยง) → GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่าของน้อง)
+   คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
+const GIANT_MAX = 4;
+const GIANT_COST     = [0, 2000, 4000, 8000, 16000];   // เหรียญที่จ่ายเพื่อ "ขึ้น" ไปแต่ละระดับ
+const GIANT_PET_VH   = [29, 42, 54, 64, 74];           // ความสูงน้อง (vh)
+const GIANT_OWNER_VH = [34, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g4: 22/74 ≈ 0.30 (ระดับเข่า)
+const GIANT_OWNER_X  = ['-66px','-54px','-42px','-27px','-14px']; // เยื้องผู้เลี้ยงจากกลางเวที (ลบ=ซ้าย): ปกติเยื้องซ้ายให้เห็นหน้าน้องด้านขวา · ยักษ์ยืนหน้าขาน้อง (หน้าน้องอยู่สูงเห็นอยู่แล้ว)
+const GIANT_NAMES    = ['ปกติ','ตัวโต','ยักษ์เล็ก','ยักษ์ใหญ่','ยักษ์อลังการ'];
+function giantLevel(p){ return Math.max(0, Math.min(GIANT_MAX, (p && p.giant) || 0)); }
+
+function upgradeGiant(p){
+  p = p || activePet();
+  if(!p) return;
+  const g = giantLevel(p);
+  if(g >= GIANT_MAX){ toast('น้องตัวใหญ่สุดแล้ว 🎉'); return; }
+  const cost = GIANT_COST[g+1];
+  if(state.coins < cost){
+    toast(`🪙 เหรียญไม่พอ — ขยายร่างระดับถัดไปต้องใช้ ${fmtNum(cost)} (ขาดอีก ${fmtNum(cost - state.coins)})`);
+    return;
+  }
+  state.coins -= cost;              // จ่ายเหรียญ (แนวเดียวกับซื้อของอื่นในเกม)
+  p.giant = g + 1;
+  saveState();
+  sfx.select();
+  floatFx(`🦣 ตัวใหญ่ขึ้น! -🪙${fmtNum(cost)}`);
+  toast(`🦣 ${escapeHTML(p.name)} ร่าง${GIANT_NAMES[p.giant]}แล้ว!`);
+  renderDashboard();
+}
+function resetGiant(p){
+  p = p || activePet();
+  if(!p || giantLevel(p) === 0) return;
+  p.giant = 0;
+  saveState();
+  sfx.select();
+  toast(`↩️ ${escapeHTML(p.name)} กลับมาตัวปกติแล้ว (ไม่คืนเหรียญ)`);
+  renderDashboard();
+}
+
 /* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อเย็นวันละครั้ง 18:00 — ข้อ 2) ---------- */
 function mealLabel(ts){
   const d = new Date(ts), today = new Date();
@@ -1237,12 +1276,14 @@ function renderDashboard(){
   }
 
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
+  const g = giantLevel(p);   // รอบ 102: ระดับร่างยักษ์ → คุมความสูงน้อง/ผู้เลี้ยง
+  const heroVars = `--pet-vh:${GIANT_PET_VH[g]};--owner-vh:${GIANT_OWNER_VH[g]};--owner-x:${GIANT_OWNER_X[g]}`;
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
   /* โฉมใหม่ 2 (ผู้ใช้สั่ง 8 ก.ค.): น้องตัวใหญ่กลางเวที ห้ามมีแผงทับตัว
      สถานะแยก 2 แผงใส sci-fi ขนาบข้าง — ซ้าย=ข้อมูลน้อง · ขวา=การดูแล (ร่างไข่ไม่มีแผงขวา) */
   card.innerHTML = `
-    <div class="stage-hero"><div class="hero-scene"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
+    <div class="stage-hero"><div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
     <div class="stage-plate plate-left">
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       <div class="plate-head">
@@ -1259,6 +1300,17 @@ function renderDashboard(){
             ? `🤒 ป่วยอยู่ ใช้ความสามารถพิเศษไม่ได้<br><small>${conf.ability}</small>`
             : `<b>ความสามารถพิเศษ:</b> ${conf.ability}`}
       </div>
+      ${stage !== 'egg' ? `
+      <div class="giant-box">
+        <div class="giant-line">🦣 ร่างยักษ์: <b>${GIANT_NAMES[g]}</b><span class="giant-lvl">${g}/${GIANT_MAX}</span></div>
+        <div class="giant-dots">${[1,2,3,4].map(i=>`<span class="${i<=g?'on':''}"></span>`).join('')}</div>
+        <div class="giant-btns">
+          ${g < GIANT_MAX
+            ? `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>🪙${fmtNum(GIANT_COST[g+1])}</b></button>`
+            : `<div class="giant-max">🎉 ยักษ์เต็มขั้นแล้ว!</div>`}
+          ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
+        </div>
+      </div>` : ''}
     </div>
     ${hungerUI ? `
     <div class="stage-plate plate-right">
@@ -1270,6 +1322,10 @@ function renderDashboard(){
   if(feedBtn) feedBtn.addEventListener('click', feedPet);
   const cureBtn = document.getElementById('btn-cure');
   if(cureBtn) cureBtn.addEventListener('click', curePet);
+  const giantUpBtn = document.getElementById('btn-giant-up');
+  if(giantUpBtn) giantUpBtn.addEventListener('click', ()=>upgradeGiant(p));
+  const giantResetBtn = document.getElementById('btn-giant-reset');
+  if(giantResetBtn) giantResetBtn.addEventListener('click', ()=>resetGiant(p));
   const sleepBtn = document.getElementById('btn-sleep');
   if(sleepBtn) sleepBtn.addEventListener('click', sleepAllPets);
   const wakeBtn = document.getElementById('btn-wake');

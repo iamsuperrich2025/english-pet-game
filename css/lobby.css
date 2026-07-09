@@ -466,23 +466,32 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 .stage-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px;}
 /* ฉาก 3D: ผู้เลี้ยง + น้อง ยืนคู่กันกลางจอ บนลานเรืองแสง (สไตล์ COD) */
-.hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;
-  gap:clamp(-48px,-2.6vw,-18px);}   /* ซ้อนตัวผู้เลี้ยงกับน้องให้เป็นกลุ่มเดียวกลางจอ (น้องอยู่หน้า) */
+/* ขนาดน้อง/ผู้เลี้ยง คุมด้วยความสูง (vh) ที่ JS ตั้งตามระดับร่างยักษ์ (--pet-vh/--owner-vh/--hero-gap)
+   ปกติ: น้องเตี้ยกว่าผู้เลี้ยง · ยักษ์สุด: ผู้เลี้ยงสูงแค่เข่าน้อง */
+.hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;}
 .hero-scene .pet-stage{
-  transform:scale(var(--pet-zoom,1.3));transform-origin:center bottom;
+  width:auto;height:clamp(140px, calc(var(--pet-vh,29) * 1vh), 760px);
+  align-items:flex-end;
+  transform:none;transform-origin:center bottom;
   filter:drop-shadow(0 14px 22px rgba(3,15,35,.55));
-  margin-bottom:2px;z-index:2;   /* น้องอยู่ด้านหน้าผู้เลี้ยงเล็กน้อย */
+  margin-bottom:2px;z-index:1;
 }
-@media (min-height:480px){ :root{--pet-zoom:1.5;} }
-/* ตัวละครผู้เลี้ยงยืนเต็มตัว (อยู่หลังน้องนิดหน่อย) */
-.caretaker-fig{position:relative;display:flex;align-items:flex-end;justify-content:center;flex-shrink:0;z-index:1;animation:heroSway 4.5s ease-in-out infinite;}
-.caretaker-img{height:clamp(170px,42vh,308px);width:auto;object-fit:contain;display:block;
-  filter:drop-shadow(0 16px 20px rgba(3,15,35,.6));}
-.caretaker-emoji{font-size:clamp(90px,24vh,188px);line-height:1;filter:drop-shadow(0 14px 18px rgba(3,15,35,.55));}
+.hero-scene .pet-stage .pet-wrap{height:100%;display:flex;align-items:flex-end;justify-content:center;}
+.hero-scene .pet-stage .pet-img{width:auto;height:100%;}
+.hero-scene .pet-stage .pet-emoji{font-size:calc(var(--pet-vh,29) * 0.62vh);}
+/* ตัวละครผู้เลี้ยง: วางแบบ absolute ให้ยืนกลางโซนโล่งหน้าน้องเสมอ (ไม่ถูกน้องยักษ์ดันหลุดหลังแผง)
+   เท้าเสมอพื้นเดียวกับน้อง · เยื้องซ้าย --owner-x ตามระดับยักษ์ · z สูงกว่าน้อง = ยืนหน้าน้อง */
+.caretaker-fig{position:absolute;bottom:2px;left:50%;z-index:2;pointer-events:none;
+  transform:translateX(calc(-50% + var(--owner-x,-148px)));
+  display:flex;align-items:flex-end;justify-content:center;}
+.caretaker-img{height:clamp(84px, calc(var(--owner-vh,34) * 1vh), 320px);width:auto;object-fit:contain;display:block;
+  filter:drop-shadow(0 16px 20px rgba(3,15,35,.6));animation:heroSway 4.5s ease-in-out infinite;}
+.caretaker-emoji{font-size:calc(var(--owner-vh,34) * 0.66vh);line-height:1;
+  filter:drop-shadow(0 14px 18px rgba(3,15,35,.55));animation:heroSway 4.5s ease-in-out infinite;}
 @keyframes heroSway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 /* ลานยืน: เงา + วงเรืองแสงใต้เท้า ให้ดูตั้งอยู่บนพื้นจริง */
 .hero-ground{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
-  width:min(78%,520px);height:70px;pointer-events:none;z-index:-1;
+  width:min(118%,660px);height:70px;pointer-events:none;z-index:-1;
   background:
     radial-gradient(ellipse 50% 50% at 50% 60%, rgba(90,180,255,.28) 0%, rgba(90,180,255,.10) 42%, transparent 72%),
     radial-gradient(ellipse 42% 60% at 50% 72%, rgba(3,12,30,.55) 0%, rgba(3,12,30,.28) 45%, transparent 75%);
@@ -538,6 +547,21 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 .stage-plate .ability-box.locked{background:rgba(255,255,255,.05);border-color:rgba(140,190,240,.2);color:#8fa9c6;}
 .stage-plate .ability-box small{color:#8fb3d8;}
+
+/* ร่างยักษ์ (รอบ 102) — อัพเกรดขยายน้องด้วยเหรียญ */
+.stage-plate .giant-box{margin-top:8px;padding:7px 9px;border-radius:10px;
+  background:rgba(126,92,224,.16);border:1px solid rgba(158,126,244,.42);}
+.stage-plate .giant-line{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#e8dfff;}
+.stage-plate .giant-line b{color:#fff;font-weight:600;}
+.stage-plate .giant-lvl{margin-left:auto;font-size:10.5px;color:#bcaaf0;}
+.stage-plate .giant-dots{display:flex;gap:4px;margin:5px 0 7px;}
+.stage-plate .giant-dots span{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.16);}
+.stage-plate .giant-dots span.on{background:linear-gradient(90deg,#ab8dff,#7d5cff);box-shadow:0 0 6px rgba(140,110,255,.6);}
+.stage-plate .giant-btns{display:flex;flex-direction:column;gap:5px;}
+.stage-plate .giant-up{background:linear-gradient(180deg,#9a7bf0,#6f4fd8);color:#fff;box-shadow:0 3px 0 #4d36a6;}
+.stage-plate .giant-up b{font-weight:700;}
+.stage-plate .giant-reset{background:rgba(255,255,255,.12);color:#d9ccf7;font-size:11.5px;box-shadow:none;}
+.stage-plate .giant-max{font-size:11.5px;color:#cbbcf7;text-align:center;padding:3px 0;}
 
 .lobby-side{width:238px;flex-shrink:0;display:flex;flex-direction:column;gap:8px;min-height:0;}
 .lobby-side .side-card{
