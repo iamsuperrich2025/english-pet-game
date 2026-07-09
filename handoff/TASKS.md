@@ -29,6 +29,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 99 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปมีปุ่ม "เล่นต่ออีกรอบ" + เสียงเหรียญตอนทำสถิติใหม่ 🔄🔊 — version .79** (commit ad84077) — ต่อยอดการ์ดสรุป (รอบ 98) · ผู้ใช้สั่งทำ
+- **เล่นต่ออีกรอบ:** การ์ดสรุปมี 2 ปุ่ม — 🔄 เล่นต่ออีกรอบ (เขียว) → `startGame(game.lastCat)` เริ่มโหมด/หมวดเดิมทันที (session รีเซ็ต coins/matches=0) ไม่กลับหน้าเมือง · ออกไปพัก (ม่วง) → doExit · `game.lastCat` จำหมวดใน startGame · `showSessionSummary` เพิ่ม param `onReplay`
+- **เสียงเหรียญ:** ทำสถิติใหม่ → `sfx.coin` 4 ครั้งไล่กัน (260+i*150ms) ซ้อน confetti+rankup
+- **⚠️ fix specificity:** ปุ่ม (`.summary-replay/.summary-exit`) เดิมโดน `.levelup-box button`(0,1,1) ทับเป็นม่วง default ทั้งคู่ → prefix `.summary-box ` (0,2,0) ให้ชนะ · ยืนยัน computed: replay bg เขียว(79,196,106) exit ม่วง-เทา padding 11/20
+- ✅ ยืนยัน preview: 2 ปุ่มมีจริง · replay→overlay หาย+screen-game+sessionCoins/Matches=0+prevBest=สถิติใหม่ · สี/gradient ถูก · ไม่มี error · **screenshot ค้าง→inspect**
+- ⚠️ commit game.js/style.css/version (ไม่แตะไฟล์ session คู่ขนาน)
+
 **✅ รอบ 98 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปผลงานทุกครั้งที่ออก + โปรยเหรียญตอนทำสถิติใหม่ 🎊 — version .78** (commit e1da45b) — ต่อยอดการ์ดสรุป (รอบ 96) · ผู้ใช้สั่งทำ
 - **การ์ดทุกครั้ง:** `exitGame` เก็บเหรียญได้ (>0) เด้งการ์ดสรุปเสมอ โชว์ "เก็บได้ X 🪙 · 🔤 จับคู่ถูก Y คำ" (`game.sessionMatches` reset ใน startGame · ++ ใน checkMatch คู่กับ totalMatches) · เก็บ 0 = ออกเลย
 - **ทำสถิติใหม่ = ฉลองพิเศษ:** burst 🎉 + ป้ายสถิติ + `sprinkleConfetti(overlay)` โปรยเหรียญ/ดาว 20 ชิ้น (absolute z-1 หลังการ์ด z-2 · `@keyframes confFall` ตกจากบน · auto-remove 3.6s) · ไม่ทำสถิติ = การ์ดปกติ burst 👏 ไม่มีโปรย · `sprinkleConfetti` ข้ามเมื่อ `state.noAnim`
