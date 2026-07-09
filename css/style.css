@@ -806,6 +806,17 @@ html.no-anim body.quake{animation:none;}
   border:2px dashed #d6c7ec;border-radius:16px;padding:11px 16px;
 }
 .game-endless-note b{color:#5b8def;}
+/* 🪙 ตัวเลขเหรียญสะสม "ครั้งนี้" — เด่นเป็นทอง เด้งเล็กๆ ตอนเพิ่ม ให้เด็กมีกำลังใจ */
+.game-endless-note .sess-coin{
+  display:inline-block;color:#e6a417;font-size:17px;font-weight:800;
+  padding:0 2px;transform-origin:center;
+}
+.game-endless-note .sess-coin.bump{animation:sessCoinBump .4s ease;}
+@keyframes sessCoinBump{
+  0%{transform:scale(1);}
+  40%{transform:scale(1.35);color:#ff9d2e;}
+  100%{transform:scale(1);}
+}
 
 /* floating effects */
 .float-fx{

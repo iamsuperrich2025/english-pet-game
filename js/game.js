@@ -10,7 +10,17 @@ const game = {
   timerId:null, timeLeft:0, totalTime:60, checking:false,
   pool:null,
   roundAt:0, roundClean:true,   // ⚡ จับเวลารอบ+ไม่พลาดเลย → เอฟเฟกต์สายฟ้า
+  sessionCoins:0,               // 🪙 เหรียญที่เก็บได้ "ครั้งนี้" (เริ่มนับใหม่ทุกครั้งที่เข้าเกม) — โชว์เป็นกำลังใจ
 };
+
+/* 🪙 อัปเดตตัวเลข "เล่นครั้งนี้เก็บไปแล้ว X" ในป้ายล่าง + เด้งเล็กๆ ให้เห็นว่าเพิ่ม */
+function addSessionCoins(n){
+  game.sessionCoins += n;
+  const el = document.getElementById('game-session-coins');
+  if(!el) return;
+  el.textContent = fmtNum(game.sessionCoins) + ' 🪙';
+  el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
 const THUNDER_MS = 5000;        // เพดานเวลา "สายฟ้าแลบ" (ทั้งเคลียร์รอบจับคู่ และตอบต่อข้อในควิซ)
 
 /* ⚡ รอบ 70: สถิติสายฟ้าแลบสะสม + เข็มสายฟ้า (สไตล์เดียวกับเข็มนักบิน รอบ 62)
@@ -37,7 +47,9 @@ function startGame(cat){
   document.querySelector('#screen-game .board-label').textContent =
     `🇬🇧 คำศัพท์ภาษาอังกฤษ${cat ? ` · หมวด${cat.name}` : ''}`;
   game.combo = 0;
+  game.sessionCoins = 0;   // เริ่มนับเหรียญ "ครั้งนี้" ใหม่ทุกครั้งที่เข้าเกม
   updateComboPill();
+  addSessionCoins(0);      // รีเซ็ตป้ายเป็น 0 🪙
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
   // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — ยังไม่เลือกตัวละคร = ซ่อนไว้
   const gav = document.getElementById('game-avatar');
@@ -130,6 +142,7 @@ function checkMatch(){
     else if(p.sick){ exp = 0; notes.push('🤒 ป่วยอยู่ ไม่ได้ EXP'); }
     else if(p.shape === 'strong'){ exp += SHAPE_EXP_BONUS; notes.push(`💪 ล่ำกำยำ +${SHAPE_EXP_BONUS} EXP`); }   // ข้อ 5.2: กินดีร่างล่ำ = โตไวขึ้น
     addCoins(coins);
+    addSessionCoins(coins);   // 🪙 สะสมเข้าตัวนับ "ครั้งนี้"
     addRP(rp);
 
     // แต้มผลิตโรงงาน (ตอบถูก 1 คำ = 1 แต้ม) — ครบแล้วเปิดฉากผลิตสำเร็จ
@@ -164,6 +177,7 @@ function checkMatch(){
     if(game.matched === 4){
       clearInterval(game.timerId);
       addCoins(20);   // โบนัสเคลียร์รอบ
+      addSessionCoins(20);
       addRP(5);
       saveState();
       document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
