@@ -465,6 +465,9 @@ h1{color:var(--sky-d);text-shadow:none;}
   display:block;
 }
 .stage-hero{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;padding-bottom:22px;}
+/* canvas โมเดล 3D (รอบ 104) — วางทับโซนตัวละคร โปร่งใสให้เห็นฉากหลัง · ปัดเพื่อหมุน */
+#lobby3d-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;cursor:grab;}
+#lobby3d-canvas:active{cursor:grabbing;}
 /* ฉาก 3D: ผู้เลี้ยง + น้อง ยืนคู่กันกลางจอ บนลานเรืองแสง (สไตล์ COD) */
 /* ขนาดน้อง/ผู้เลี้ยง คุมด้วยความสูง (vh) ที่ JS ตั้งตามระดับร่างยักษ์ (--pet-vh/--owner-vh/--hero-gap)
    ปกติ: น้องเตี้ยกว่าผู้เลี้ยง · ยักษ์สุด: ผู้เลี้ยงสูงแค่เข่าน้อง */

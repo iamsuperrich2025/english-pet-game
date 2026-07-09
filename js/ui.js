@@ -1326,6 +1326,13 @@ function renderDashboard(){
   if(giantUpBtn) giantUpBtn.addEventListener('click', ()=>upgradeGiant(p));
   const giantResetBtn = document.getElementById('btn-giant-reset');
   if(giantResetBtn) giantResetBtn.addEventListener('click', ()=>resetGiant(p));
+
+  // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
+  // ไม่มี/โหลดพลาด/เปิดแบบ file:// → ใช้ภาพ PNG เดิม (fallback อัตโนมัติใน Lobby3D)
+  if(typeof Lobby3D !== 'undefined' && stage !== 'egg'){
+    const hero = card.querySelector('.stage-hero');
+    if(hero) Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:g});
+  }
   const sleepBtn = document.getElementById('btn-sleep');
   if(sleepBtn) sleepBtn.addEventListener('click', sleepAllPets);
   const wakeBtn = document.getElementById('btn-wake');
