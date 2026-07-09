@@ -29,6 +29,13 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 86 (9 ก.ค. · Opus): ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย 🌍👻🚁🛸 — version .63** (อยู่ใน commit c9ba3f0)
+- ผู้ใช้ส่ง screenshot รางเมนูซ้าย (โรงงาน/ตลาด/เพื่อน/ของขวัญ/สถิติ) สั่งเพิ่มปุ่มต่อโลก 3D แต่ละโลก + ให้รองรับโลกใหม่ในอนาคต
+- `js/ui.js`: `const WORLD3D=[...]` (adv/haunt/heli/drone) + `renderRailWorlds()` (สร้างปุ่มครั้งเดียว→เรียกใน renderDashboard อัปเดตล็อก) + `railWorldClick(w)` (มีตั๋ว→`w.enter()` · ไม่มี→openPanel('panel-shop')+scroll การ์ด · บาดเจ็บ→toast) + `scrollShopCardIntoView()` · **โลก 3D ใหม่ในอนาคต = เพิ่ม 1 บรรทัดใน WORLD3D ปุ่มโผล่เอง**
+- `css/lobby.css`: `.rail-worlds` (คั่นเส้นบน) `.rail-div` ป้าย "โลก 3D" `.rail-world.locked` จาง+🔒 มุมขวาบน
+- ปุ่มสร้างจาก JS ต่อท้าย `.lobby-rail` → **ไม่แตะ index.html**
+- ✅ ยืนยัน preview (1280×720 · mock login+register): 4 ปุ่มอยู่ในราง · adv+heli(มีตั๋ว)=start('adv'/'heli') · haunt+drone(ไม่มีตั๋ว)=เปิด panel-shop ไม่เข้าโลก · locked toggle 🔒 ถูก · **หมายเหตุ:** commit ถูก session คู่ขนาน (near-miss heli/drone) sweep เข้า commit c9ba3f0 "รอบ 86 โบนัสบินเฉียด" + push แล้ว (โค้ดครบ ชื่อ commit ไม่ตรงงานนี้)
+
 **✅ รอบ 86 (9 ก.ค. · Opus): ป้ายบอก "เล่นได้เรื่อยๆ ด่านไม่ตัน + กดกลับพักได้" ใต้กระดานจับคู่ ♾️ — version .64** (commit 8b4b1ab)
 - ผู้ใช้ส่ง screenshot เกมจับคู่ (screen-game) ชี้พื้นที่ว่างล่างกระดาน อยากให้บอกผู้เล่นว่าเล่นวนได้ไม่มีจบ + เพลียแล้วกดปุ่ม ⬅ กลับ มุมซ้ายบนออกได้เสมอ (เด็กไม่รู้ว่าหยุดตอนไหน)
 - `index.html` line ~237: `<p class="game-endless-note">` ใต้ `#hint-btn` (hint-btn ปกติซ่อน เว้นเลี้ยงแมว → เป็นพื้นที่ว่างพอดี) · **หมายเหตุ:** ตัว index.html โดน commit รอบ 85 (โดรน) ของ session คู่ขนาน sweep ไปก่อน (`git add -A`) — รอบนี้ commit เฉพาะ `css/style.css`+`version.json`
