@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 87 (9 ก.ค. · Opus): ป้ายล่างเกมจับคู่โชว์เหรียญที่เก็บได้ "ครั้งนี้" สดๆ 🪙 — version .65** (commit 20e1314) — ต่อจากป้าย "เล่นได้เรื่อยๆ" รอบก่อน
+- **ผู้ใช้สั่ง:** อย่าโชว์ "ทำไปกี่คำ" (เด็กจะท้อ/เหนื่อย) → ให้โชว์ **เหรียญที่สะสมได้เฉพาะการเล่นครั้งนี้** เป็นกำลังใจสะสมเหรียญแทน
+- `game.sessionCoins` (game.js) รีเซ็ต 0 ทุกครั้งใน `startGame` · `addSessionCoins(n)` บวก+อัปเดต `#game-session-coins` (ในป้าย .game-endless-note) + เด้ง class `bump` · เรียกที่ addCoins ต่อคู่ (10+โบนัส) และโบนัสเคลียร์รอบ +20 · เลข mirror เหรียญจริง (รวมโบนัสมือถือ/มังกร x2)
+- `css/style.css`: `.sess-coin` ทองหนา 17px + `@keyframes sessCoinBump` (scale 1.35)
+- ✅ ยืนยัน preview (mock login+`startGame()`): เริ่ม 0 🪙 → จับคู่ถูกผ่าน `pickCard` จริง 0→10→20 · bump class ติด · สีทอง #e6a417 · รีเซ็ตเป็น 0 ตอนเข้าเกมใหม่
+
 **✅ รอบ 86 (9 ก.ค. · Opus): ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย 🌍👻🚁🛸 — version .63** (อยู่ใน commit c9ba3f0)
 - ผู้ใช้ส่ง screenshot รางเมนูซ้าย (โรงงาน/ตลาด/เพื่อน/ของขวัญ/สถิติ) สั่งเพิ่มปุ่มต่อโลก 3D แต่ละโลก + ให้รองรับโลกใหม่ในอนาคต
 - `js/ui.js`: `const WORLD3D=[...]` (adv/haunt/heli/drone) + `renderRailWorlds()` (สร้างปุ่มครั้งเดียว→เรียกใน renderDashboard อัปเดตล็อก) + `railWorldClick(w)` (มีตั๋ว→`w.enter()` · ไม่มี→openPanel('panel-shop')+scroll การ์ด · บาดเจ็บ→toast) + `scrollShopCardIntoView()` · **โลก 3D ใหม่ในอนาคต = เพิ่ม 1 บรรทัดใน WORLD3D ปุ่มโผล่เอง**
