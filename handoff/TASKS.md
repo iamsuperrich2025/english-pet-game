@@ -35,6 +35,16 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 102 (9 ก.ค. · Opus): หน้า lobby ฉาก 3D สไตล์ COD — ผู้เลี้ยง+น้องยืนคู่กลางจอ 🏙️🧑‍🦱🐶 — version .81** (commit c2f1f38 · หมายเหตุ: ข้อความ commit เผลอพิมพ์ "รอบ 86" — งานเดียวกัน) — ผู้ใช้สั่งทำ (เปลี่ยน lobby เป็นโลก 3D สไตล์ Call of Duty)
+- **ตัวละครกลางจอ:** `caretakerFigureHTML()` (ui.js หลัง `petVisualHTML`) วาดผู้เลี้ยง `player_${av}.png` ยืนเต็มตัว · ใน `.stage-hero` เปลี่ยนเป็น `.hero-scene` = ผู้เลี้ยง+น้องซ้อนเป็นกลุ่มเดียว (น้อง z-index สูงกว่าอยู่หน้า · gap ลบให้ซ้อน) · ยังไม่เลือก/ไม่มีภาพ = อีโมจิตัวโต
+- **ลานยืน 3D:** `.hero-ground` เงา+วงเรืองแสงใต้เท้า (lobby.css) ให้ดูตั้งบนพื้น · `--pet-zoom` ลด 1.9→1.5 เผื่อที่ให้ผู้เลี้ยง
+- **พื้นหลัง:** `body` background ซ้อน `img/theme/theme_city_cod.png` (ตึกสมัยใหม่ ผู้ใช้เจน) ทับ fallback `theme_bg_wide.png` เดิม — ยังไม่วางไฟล์ใหม่ = ภาพเก่าโผล่แทน **ไม่พัง**
+- **คงเดิมทั้งหมด:** rail ซ้าย · topbar · plate-left/right · การ์ดขวา (online/leaderboard) — แตะแค่ `.stage-hero`
+- **prompt:** `PROMPTS_LOBBY_COD.md` 3 แบบ (หลัก★/เช้า/พลบค่ำ) + ส่ง Artifact ปุ่มคัดลอกให้ผู้ใช้แล้ว
+- ✅ ยืนยัน preview (landscape 1280×720, getBoundingClientRect + screenshot 1 เฟรม): ผู้เลี้ยง(player_male)+น้องหมายืนคู่กลางจอ เงาใต้เท้า · plate/rail/การ์ดครบ · fallback bg ทำงาน · ไม่มี error
+- ⚠️ **ค้างฝั่งผู้ใช้:** เจนภาพ `theme_city_cod.png` วาง `img/theme/` (ดู Artifact/PROMPTS_LOBBY_COD.md) · ไม่ได้แตะ no-pet branch (โชว์ผู้เลี้ยงเฉพาะตอนมีน้อง)
+- ⚠️ commit เฉพาะ ui.js/lobby.css/version/PROMPTS_LOBBY_COD.md (pin pathspec · ไม่แตะ img/ghosts, js/data/vocab, .claude ของ session อื่น)
+
 **✅ รอบ 101 (9 ก.ค. · Opus): เกมจับคู่ — การ์ดสรุปเตือนน้องป่วยอ่อนโยน + โบนัสสตรีคเล่นต่อ 🩺🔥 — version .80** (commit 3c5f7ad) — ต่อยอดปุ่มเล่นต่อ (รอบ 99) · ผู้ใช้สั่งทำ
 - **เตือนน้องป่วย:** `showSessionSummary` เช็ก `activePet().sick` → ปุ่มหลักสลับเป็น "🩺 ไปดูแลน้องก่อน" (→dashboard) · ยังกด "🔄 เล่นต่อก่อน" ได้ (ไม่บล็อก) + บรรทัด "🤒 น้อง<ชื่อ>ยังป่วยอยู่..." · ปกติ = ปุ่มหลัก "🔄 เล่นต่ออีกรอบ!"
 - **สตรีคเล่นต่อ:** `game.replayStreak` นับกดเล่นต่อติดกัน (closure replay ใน exitGame · `_viaReplay` flag กัน startGame รีเซ็ต) · ครบ 3 รอบติด (`REPLAY_BONUS_EVERY`) → `addCoins/addSessionCoins(50)` (`REPLAY_BONUS_COINS`) + floatFx/toast · เข้าเกมจากเมนู=รีเซ็ต 0 · การ์ดโชว์ "🔥 เล่นต่อเนื่อง N รอบ — อีก M รอบได้โบนัส"
