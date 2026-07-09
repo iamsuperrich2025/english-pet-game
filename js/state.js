@@ -48,6 +48,8 @@ const DEFAULT_STATE = {
   daredevilBadge:0,                   // รอบ 87: เข็มนักบินผาดโผนสูงสุดที่เคยได้ 0=ไม่มี 1=🎯(10) 2=🌀(30) 3=🔥(60) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
   thunderBadge:0,                     // รอบ 70: เข็มสายฟ้าสูงสุดที่เคยได้ 0=ไม่มี 1=⚡(5 ครั้ง) 2=🌩️(15) 3=⛈️(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
+  diligentCount:0,                    // รอบ 105: จำนวน "รอบเล่นต่อ" สะสมถาวร (กดเล่นต่ออีกรอบในเกมจับคู่) — สู่เข็มนักเล่นขยัน
+  diligentBadge:0,                    // รอบ 105: เข็มนักเล่นขยันสูงสุดที่เคยได้ 0=ไม่มี 1=🏅(20 รอบ) 2=🎖️(50) 3=🏆(100) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
@@ -240,6 +242,8 @@ function loadState(){
       if(typeof s.daredevilBadge !== 'number') s.daredevilBadge = 0;
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70
       if(typeof s.thunderBadge !== 'number') s.thunderBadge = 0;
+      if(typeof s.diligentCount !== 'number') s.diligentCount = 0;                         // รอบ 105
+      if(typeof s.diligentBadge !== 'number') s.diligentBadge = 0;
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;

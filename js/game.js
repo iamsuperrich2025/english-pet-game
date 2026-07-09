@@ -107,6 +107,7 @@ function exitGame(){
     game._viaReplay = true;
     const streak = (game.replayStreak || 0) + 1;
     game.replayStreak = streak;
+    addDiligent();                                     // 🏅 นับรอบเล่นต่อสะสมถาวร → เข็มนักเล่นขยัน (20/50/100)
     startGame(game.lastCat);
     const bonus = (streak % REPLAY_BONUS_EVERY === 0) ? replayBonusFor(streak) : 0;
     if(bonus > 0){                                     // เล่นต่อครบทุก 3 รอบติด → โบนัสไล่ระดับ (ยิ่งยาวยิ่งเยอะ)
@@ -231,9 +232,14 @@ function showProgressReport(){
   if(state.thunderBadge)   badges.push(THUNDER_TIER_UI[state.thunderBadge]);
   if(state.daredevilBadge) badges.push(DAREDEVIL_TIER_UI[state.daredevilBadge]);
   if(state.pilotBadge)     badges.push(['','🥉 ใบอนุญาตนักบิน','🥈 นักบินฝีมือดี','🥇 กัปตันมือทอง'][state.pilotBadge]);
+  if(state.diligentBadge)  badges.push(DILIGENT_TIER_UI[state.diligentBadge]);
   const badgeHtml = badges.length
     ? `<div class="rp-badges">${badges.map(b=>`<span class="rp-badge">${b}</span>`).join('')}</div>`
     : `<div class="rp-empty">ยังไม่มีเข็ม — เล่นเก่งๆ เดี๋ยวได้เข็มติดชื่อให้เพื่อนเห็น! 🎖️</div>`;
+  // 🏅 ความก้าวหน้าเข็มนักเล่นขยัน (รอบเล่นต่อสะสม → เป้าถัดไป 20/50/100)
+  const dCount = state.diligentCount||0;
+  const dNext = DILIGENT_TIERS.find(t=>dCount < t[0]);
+  const diligentLine = `<div class="rp-row"><span>🏅 เล่นต่ออีกรอบสะสม</span><span><b>${fmtNum(dCount)}</b> รอบ${dNext ? ` <small>(อีก ${dNext[0]-dCount} รอบ ได้${diligentEmoji(dNext[1])})</small>` : ' <small>(ครบทุกเข็มแล้ว! 🏆)</small>'}</span></div>`;
 
   // สัตว์เลี้ยง
   const petCount = state.pets.length;
@@ -283,6 +289,7 @@ function showProgressReport(){
     <div class="rp-section">
       <h3 class="rp-h3">🎖️ เข็มรางวัล</h3>
       ${badgeHtml}
+      ${diligentLine}
     </div>
 
     <div class="rp-section">
@@ -313,6 +320,24 @@ function thunderEmoji(b){ return ['','⚡','🌩️','⛈️'][b||0] || ''; }
 const DAREDEVIL_TIERS = [[10,1],[30,2],[60,3]];
 const DAREDEVIL_TIER_UI = ['', '🎯 เข็มเฉียดเฉี่ยว', '🌀 เข็มนักบินผาดโผน', '🔥 เข็มเจ้าเวหา'];
 function daredevilEmoji(b){ return ['','🎯','🌀','🔥'][b||0] || ''; }
+
+/* 🏅 รอบ 105: เข็มนักเล่นขยัน (สไตล์เดียวกับเข็มสายฟ้า) — สะสมจากจำนวน "รอบเล่นต่อ" ทั้งหมด (ถาวร)
+   ครบ 20=🏅 · 50=🎖️ · 100=🏆 — ได้แล้วไม่หาย ติดท้ายชื่อใน map/กระดานให้เพื่อนเห็น */
+const DILIGENT_TIERS = [[20,1],[50,2],[100,3]];
+const DILIGENT_TIER_UI = ['', '🏅 เข็มนักเล่นขยัน', '🎖️ เข็มนักเล่นตัวยง', '🏆 เข็มยอดนักสู้คำศัพท์'];
+function diligentEmoji(b){ return ['','🏅','🎖️','🏆'][b||0] || ''; }
+function addDiligent(){                                 // เรียกทุกครั้งที่กด "เล่นต่ออีกรอบ"
+  state.diligentCount = (state.diligentCount||0) + 1;
+  const tier = DILIGENT_TIERS.filter(t=>state.diligentCount >= t[0]).pop();
+  if(tier && tier[1] > (state.diligentBadge||0)){
+    state.diligentBadge = tier[1];
+    setTimeout(()=>{   // หน่วงให้พ้นการ์ดสรุป/โบนัสสตรีคก่อนค่อยประกาศเข็ม
+      sfx.rankup();
+      toast(`🎉 ได้${DILIGENT_TIER_UI[tier[1]]}! เล่นต่อรวม ${tier[0]} รอบแล้ว — เข็มติดท้ายชื่อให้เพื่อนเห็นใน map เลยนะ`, 4000);
+    }, 1200);
+  }
+  saveState();
+}
 function addThunder(){
   state.thunderCount = (state.thunderCount||0) + 1;
   const tier = THUNDER_TIERS.filter(t=>state.thunderCount >= t[0]).pop();
