@@ -29,6 +29,12 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 91 (9 ก.ค. · Opus): เกมจับคู่ — ฉลองหลักเหรียญครั้งนี้ + ทำลายสถิติเหรียญตัวเอง 🎉🏆 — version .69** (commit 6b80700) — ต่อยอดตัวนับเหรียญ "ครั้งนี้" (รอบ 87) · ผู้ใช้เห็นชอบไอเดีย
+- **หลักเหรียญ:** `SESSION_MILESTONES=[100,250,500,1000,2000,3000,5000,8000,10000]` (game.js) · ใน `addSessionCoins` ข้ามหลักใหม่ (หลักสูงสุดที่เพิ่งข้าม กันเด้งรัว) → `floatFx('🎉 ว้าว! ครั้งนี้ X 🪙 แล้ว!')`+`sfx.levelup` หน่วง 620ms · `game.sessMilestone` กันซ้ำ · reset ใน startGame
+- **ทำลายสถิติ:** `state.bestSessionCoins` (field ใหม่ state.js — migrate เองผ่าน Object.assign defaults) · startGame จำ `game.prevBest` · เก็บเกิน prevBest ครั้งแรก → `toast('🏆 ทำลายสถิติตัวเอง! เกิน X')`+`sfx.rankup` (flag `beatBestShown` เด้งครั้งเดียว · **prevBest=0 ครั้งแรกไม่เด้ง**) · best อัปเดตสด เซฟผ่าน saveState เดิม
+- ✅ ยืนยัน preview (spy floatFx/toast): (1) best=0 เก็บ 120 → เด้งแค่ '100 🪙' ไม่มี toast สถิติ · (2) prevBest=120 เก็บ 130 → เด้ง '100' + toast 'เกิน 120' best→130 · flag กันเด้งซ้ำโอเค
+- ⚠️ commit เฉพาะ `js/game.js js/state.js version.json` (css/lobby+ui ที่ modified เป็นของ session คู่ขนาน — ไม่แตะ)
+
 **✅ รอบ 90 (9 ก.ค. · Opus): การ์ด "คนกำลังทำการบ้าน" เป็น list-item 2 บรรทัดแบบแอปแชต 🧑‍🤝‍🧑 — version .68**
 - **ผู้ใช้สั่ง (มี screenshot):** กรอบเพื่อนออนไลน์ดูไม่ professional — สถานะ "ชั้น ปริญญาเอก · กำลังเล่นอยู่ตอนนี้" โดนบีบตัดบรรทัดมั่ว 4 บรรทัดในคอลัมน์ขวาแคบ
 - ต้นตอ: `.online-name{white-space:nowrap}` กินที่ + `.online-act{flex:1;text-align:right}` เหลือที่แคบ → คำยาว wrap มั่ว (`style.css`)
