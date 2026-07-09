@@ -1090,6 +1090,7 @@ function renderDashboard(){
     renderTicketCard();
     renderHauntCard();
     renderHeliCard();
+    renderDroneCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -1292,6 +1293,7 @@ function renderDashboard(){
   renderTicketCard();
   renderHauntCard();
   renderHeliCard();
+  renderDroneCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -2516,6 +2518,105 @@ async function enterHeli3D(){
   Adventure3D.start('heli');
 }
 
+/* ============================================================
+   🛸 การ์ดตั๋วโลกโดรน FPV Racing (รอบ 85) — ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์
+   บินโดรนเร็วมาก ลอดหน้าต่างเข้าไปในตึกร้างตามห้องต่างๆ เก็บตัวอักษร คำละ 🪙35
+   ============================================================ */
+function renderDroneCard(){
+  const el = document.getElementById('drone-card');
+  if(!el) return;
+  let body;
+  if(state.droneTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับขึ้นบินโดรนได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-drone-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.droneTicket){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🛸🏚️</div>
+        <b>นักบินโดรนพร้อมลุย!</b><br>
+        <small>มุมมอง FPV โดรนแข่ง เร็วสุดๆ · ตัวอักษรซ่อนอยู่<b>ในตึกร้าง</b> คำละ 🪙35<br>
+        บินลอดหน้าต่าง เข้าไปในห้องต่างๆ แล้วบินเฉียดเก็บ (ไม่ต้องจอด) · ระวังชนกำแพง!<br>
+        🧑‍🤝‍🧑 เห็นเพื่อนบินโดรน 🛸 ในเมืองร้างเดียวกันแบบสด</small>
+      </div>
+      ${tinvNoticeHTML('drone')}
+      <button class="big-btn green home-btn" id="btn-enter-drone">🛸 บินโดรน!</button>
+      ${state.tinvClaimed.drone ? '' :
+        `<button class="big-btn blue home-btn" id="btn-inv-drone">📨 ชวนเพื่อนบินด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
+  }else if(!state.heliTicket){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกเฮลิคอปเตอร์ 🚁</b>ก่อน (ผ่านการฝึกบินก่อน ถึงจะบินโดรนความเร็วสูงได้)</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
+      <div class="home-desc">
+        <div style="font-size:44px">🛸</div>
+        <div><b>ตั๋วโลกโดรน FPV Racing 3D</b><br>
+        <small>บินโดรน FPV มุมมองบุคคลที่หนึ่ง เร็วและคล่องกว่าเฮลิคอปเตอร์มาก! รางวัล <b>คำละ 🪙35</b><br>
+        เมืองตึกร้าง — ต้องบินลอดหน้าต่างเข้าไปในตึก เก็บตัวอักษรตามห้องต่างๆ 🏚️<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      </div>
+      ${tinvNoticeHTML('drone')}
+      <button class="big-btn blue home-btn" id="btn-buy-drone">🛸 ซื้อตั๋ว 🪙${fmtNum(DRONE_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-drone');
+  if(buy) buy.addEventListener('click', buyDroneTicket);
+  const enter = document.getElementById('btn-enter-drone');
+  if(enter) enter.addEventListener('click', enterDrone3D);
+  const heal = document.getElementById('btn-drone-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+  const inv = document.getElementById('btn-inv-drone');
+  if(inv) inv.addEventListener('click', ()=>openTinvPicker('drone'));
+}
+
+function buyDroneTicket(){
+  if(state.droneTicket) return;
+  if(!state.heliTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนถึงจะซื้อตั๋วโดรน FPV ได้นะ'); return; }
+  if(state.coins < DRONE_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกโดรน FPV 🪙${fmtNum(DRONE_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🛸 ซื้อตั๋วโลกโดรน FPV</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(DRONE_PRICE)}</b><br>
+    บินโดรน FPV เร็วสุดๆ เก็บตัวอักษรในตึกร้าง — คำละ 🪙35<br>
+    <small>🏚️ ต้องบินลอดหน้าต่างเข้าไปในตึก เก็บตามห้องต่างๆ · ชนกำแพงโดรนพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! 🛸', ()=>{
+      state.coins -= DRONE_PRICE;
+      state.droneTicket = true;
+      sfx.buy();
+      toast('🛸 ได้ตั๋วโลกโดรน FPV แล้ว! กดปุ่มเขียว "บินโดรน" ได้เลย 🏙️');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
+async function enterDrone3D(){
+  if(!state.droneTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('🛸 กำลังอาร์มโดรน...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกโดรนไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('drone');
+}
+
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
 function tinvNoticeHTML(map){
   if(state.tinvClaimed && state.tinvClaimed[map]) return '';
@@ -2529,7 +2630,7 @@ function openTinvPicker(map){
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
   const friends = (Online.myFriends || []);
   if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
-  const w = map==='haunt' ? 'โลกผีสิง 👻' : map==='heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : 'โลกผจญภัย 🌍';
+  const w = map==='haunt' ? 'โลกผีสิง 👻' : map==='heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : map==='drone' ? 'โลกโดรน FPV 🛸' : 'โลกผจญภัย 🌍';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">

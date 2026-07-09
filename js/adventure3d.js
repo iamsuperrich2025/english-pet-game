@@ -3,6 +3,9 @@
    🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้
    👻 haunt = โลกผีสิงกลางคืน: 25🪙/คำ · ผี 8 ตัว โผล่ 20 วิแล้วย้ายที่
               สู้ไม่ได้ต้องหนี · โดนจับ = game over ทันที + jump scare
+   🚁 heli  = โลกเฮลิคอปเตอร์ (รอบ 52): 30🪙/คำ · ลงจอดดาดฟ้าเก็บตัวอักษร
+   🛸 drone = โลกโดรน FPV Racing (รอบ 85): 35🪙/คำ · เร็ว/คล่องกว่าเฮลิฯ
+              บินลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้อง (บินเฉียด ไม่ต้องจอด)
    ทั้ง 2 โลก multiplayer สไตล์ Roblox: ผู้เล่นอื่นโผล่ใน map ผ่าน Firebase
    (/world/<map>/<uid> = ตำแหน่ง) · เจอเพื่อนที่ชวน/ถูกชวน (tinv) ครั้งแรก
    ของ map → เงินคืนคนละ TINV_CASHBACK
@@ -51,6 +54,14 @@ const MODES = {
     hint:'W/S เอียงหน้า-หลัง · A/D สไลด์ · Q/E หันหัว · Space ขึ้น · Shift ลง · จอดเบาๆ บนดาดฟ้าเพื่อเก็บตัวอักษร',
     koTitle:'🚁💥 เฮลิคอปเตอร์พังแล้ว!',
   },
+  drone: {
+    label:'โลกโดรน FPV', emoji:'🛸', reward:35, doneKey:'droneDone',
+    shoot:false, ghost:false, drone:true,
+    sky:0x9aa6b2, fogN:32, fogF:135, ground:0x45484d,
+    intro:'🛸 <b>โลกโดรน FPV Racing!</b><br><small>บินเร็วสุดๆ ลอด<b>หน้าต่างตึกร้าง</b>เข้าไปในห้องต่างๆ<br>บินเฉียดตัวอักษรเพื่อเก็บ (ไม่ต้องจอด!) · ระวังชนกำแพง</small>',
+    hint:'W/S เดินหน้า-ถอย · A/D เอียงข้าง · Q/E หันหัว · Space ขึ้น · Shift ลง · บินเฉียดตัวอักษรเก็บได้เลย',
+    koTitle:'🛸💥 โดรนพังแล้ว!',
+  },
 };
 MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
@@ -66,6 +77,14 @@ let built=false, running=false, rafId=0;
 let renderer, camera, clock;
 let worlds={};                    // ฉาก static ต่อโหมด {scene,trees,buildings} สร้างครั้งเดียว
 let scene=null, trees=[], buildings=[];
+let solids=[];                    // 🛸 กล่องกันชนของตึกร้าง (โหมด drone) — {x,y,z,hx,hy,hz}
+/* ---------- โดรน FPV (โหมด drone) — เร็วและคล่องกว่าเฮลิฯ บินเข้าตึกได้ ---------- */
+const DRONE_R     = 0.6;          // รัศมีตัวโดรน (กันชนกับกำแพง)
+const DRONE_ACCEL = 30;           // แรงเร่งเดินหน้า/สไลด์ (เฮลิฯ = 13 → โดรนแรงกว่ามาก)
+const DRONE_VMAX  = 30;           // ความเร็วแนวราบสูงสุด m/s (เฮลิฯ = 17)
+const DRONE_CLIMB = 17;           // แรงไต่/ดิ่ง
+const DRONE_YAWSP = 2.3;          // ความเร็วหันหัว (เฮลิฯ = 1.5)
+const DRONE_GRAV  = 2.6;          // แรงโน้มถ่วงเบาๆ (ปล่อยคันเร่ง = ค่อยๆ ร่วงลง)
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
@@ -384,7 +403,7 @@ function buildingFacadeTexture(n){
 function makePeerSprite(name, av){
   const cv=document.createElement('canvas'); cv.width=128; cv.height=170;
   const tex=new THREE.CanvasTexture(cv);
-  const heliMode=M.heli;
+  const flyMode=M.heli||M.drone;
   const draw=(img)=>{
     const c=cv.getContext('2d');
     c.clearRect(0,0,128,170);
@@ -393,19 +412,19 @@ function makePeerSprite(name, av){
     c.fillStyle='#fff'; c.font='bold 19px Arial'; c.textAlign='center'; c.textBaseline='middle';
     let nm=(name||'เพื่อน'); if(nm.length>9) nm=nm.slice(0,8)+'…';
     c.fillText(nm,64,18);
-    if(heliMode){ c.font='96px serif'; c.fillText('🚁',64,105); }
+    if(flyMode){ c.font='96px serif'; c.fillText(M.drone?'🛸':'🚁',64,105); }
     else if(img){ c.drawImage(img,14,36,100,130); }
     else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,105); }
     tex.needsUpdate=true;
   };
   draw(null);
-  if(!heliMode && (av==='male' || av==='female')){
+  if(!flyMode && (av==='male' || av==='female')){
     const img=new Image();
     img.onload=()=>draw(img);
     img.src='img/player_'+av+'.png';
   }
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
-  spr.scale.set(heliMode?2.6:1.7,heliMode?3.45:2.26,1);
+  spr.scale.set(flyMode?2.4:1.7,flyMode?2.4:2.26,1);
   return spr;
 }
 
@@ -454,6 +473,70 @@ function removePeerBubble(p){
 /* ============================================================
    สร้างฉาก static ครั้งเดียวต่อโหมด
    ============================================================ */
+/* ---------- 🛸 ตึกร้างกลวง (โหมด drone): เปลือกคอนกรีตมีหน้าต่างเปิดให้บินลอดเข้าไปในห้องต่างๆ ---------- */
+function concreteTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#8b8c88'; c.fillRect(0,0,128,128);
+  for(let i=0;i<90;i++){                       // คราบน้ำ/รอยเปื้อนแนวดิ่ง
+    c.fillStyle=`rgba(${60+(Math.random()*40|0)},${60+(Math.random()*40|0)},${58+(Math.random()*38|0)},${(.06+Math.random()*.12).toFixed(3)})`;
+    c.fillRect(Math.random()*128,Math.random()*128,1+Math.random()*3,1+Math.random()*22);
+  }
+  c.strokeStyle='rgba(40,40,42,.4)'; c.lineWidth=1;
+  for(let i=0;i<6;i++){                         // รอยแตกร้าว
+    c.beginPath(); let x=Math.random()*128,y=Math.random()*128; c.moveTo(x,y);
+    for(let j=0;j<4;j++){ x+=(Math.random()*2-1)*22; y+=(Math.random()*2-1)*22; c.lineTo(x,y); } c.stroke();
+  }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; return t;
+}
+function dAddBox(sc,mat,solids,cx,cy,cz,sx,sy,sz){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
+  m.position.set(cx,cy,cz); sc.add(m);
+  solids.push({x:cx,y:cy,z:cz,hx:sx/2,hy:sy/2,hz:sz/2});
+}
+/* ตึกร้าง 1 หลัง: เสา 4 มุม + มุลเลียนแบ่งหน้าต่าง (เว้นช่องบินลอด) + พื้นแต่ละชั้นมีปล่องกลาง + ผนังกั้นห้อง
+   คืน {x,z,w,d,h,solids,rooms} — rooms = จุดวางตัวอักษรในห้องต่างๆ */
+function buildAbandoned(sc,mat,cx,cz,w,d,rnd){
+  const solids=[], rooms=[];
+  const levels=2+(rnd()<.5?1:0);               // 2–3 ชั้น
+  const fH=5, h=levels*fH, t=0.4, pw=0.7;
+  const doorSide=Math.floor(rnd()*2);          // 0/1 = ด้านหน้าซ้าย/ขวา มีประตูใหญ่ชั้นล่าง
+  [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(([sx,sz])=>{   // เสา 4 มุมสูงเต็มตึก
+    dAddBox(sc,mat,solids,cx+sx*(w/2-pw/2),h/2,cz+sz*(d/2-pw/2),pw,h,pw);
+  });
+  for(let li=0;li<levels;li++){
+    const y0=li*fH, yMid=y0+fH/2, wallH=fH-1;
+    if(li>0){                                   // พื้นชั้นบน: วงขอบ เว้นปล่องกลาง ~8×8 ให้บินขึ้น/ลง
+      const bw=(w-8)/2, bd=(d-8)/2;
+      dAddBox(sc,mat,solids,cx,y0,cz-(d/2-bd/2), w, t, bd);
+      dAddBox(sc,mat,solids,cx,y0,cz+(d/2-bd/2), w, t, bd);
+      dAddBox(sc,mat,solids,cx-(w/2-bw/2),y0,cz, bw, t, d-2*bd);
+      dAddBox(sc,mat,solids,cx+(w/2-bw/2),y0,cz, bw, t, d-2*bd);
+      rooms.push({x:cx+(rnd()*2-1)*(w/2-3), y:y0+1.5, z:cz+(rnd()*2-1)*(d/2-3)});
+    }
+    [-1,1].forEach(s=>{                          // มุลเลียนหน้า/หลัง (เว้นด้านประตูชั้นล่าง)
+      const skip=(li===0 && doorSide===(s<0?0:1));
+      if(!skip){ dAddBox(sc,mat,solids,cx+s*w/4,yMid,cz-d/2+pw/2,pw,wallH,pw);
+                 dAddBox(sc,mat,solids,cx+s*w/4,yMid,cz+d/2-pw/2,pw,wallH,pw); }
+    });
+    [-1,1].forEach(s=>{                          // มุลเลียนซ้าย/ขวา
+      dAddBox(sc,mat,solids,cx-w/2+pw/2,yMid,cz+s*d/4,pw,wallH,pw);
+      dAddBox(sc,mat,solids,cx+w/2-pw/2,yMid,cz+s*d/4,pw,wallH,pw);
+    });
+    dAddBox(sc,mat,solids,cx,y0+fH-0.3,cz-d/2+pw/2, w,0.5,pw);   // คานบน (ทับหลัง) รอบตึก
+    dAddBox(sc,mat,solids,cx,y0+fH-0.3,cz+d/2-pw/2, w,0.5,pw);
+    dAddBox(sc,mat,solids,cx-w/2+pw/2,y0+fH-0.3,cz, pw,0.5,d);
+    dAddBox(sc,mat,solids,cx+w/2-pw/2,y0+fH-0.3,cz, pw,0.5,d);
+  }
+  const half=(w/2-2)/2;                          // ผนังกั้นห้องชั้นล่าง (ช่องประตูกลาง ±2)
+  dAddBox(sc,mat,solids,cx-(2+half),fH/2,cz,(w/2-2),fH-1,pw);
+  dAddBox(sc,mat,solids,cx+(2+half),fH/2,cz,(w/2-2),fH-1,pw);
+  rooms.push({x:cx-w/4, y:1.6, z:cz-d/4});
+  rooms.push({x:cx+w/4, y:1.6, z:cz+d/4});
+  rooms.push({x:cx, y:h+1.5, z:cz});             // ดาดฟ้าเปิด — ดิ่งลงมาจากด้านบนได้
+  return {x:cx,z:cz,w,d,h,solids,rooms};
+}
+
 function buildScene(md){
   const cfg=MODES[md];
   const sc=new THREE.Scene();
@@ -592,6 +675,39 @@ function buildScene(md){
     baseH.rotation.x=-Math.PI/2; baseH.position.set(0,.06,0); sc.add(baseH);
     worlds[md]={scene:sc, trees:tr, buildings:list, ads};
     return;
+  }else if(md==='drone'){
+    // 🛸 เมืองตึกร้าง: ตึกกลวงมีหน้าต่าง บินลอดเข้าไปเก็บตัวอักษรในห้องต่างๆ
+    sc.add(new THREE.HemisphereLight(0xcfd6dd,0x3a3d42,.95));
+    const sun=new THREE.DirectionalLight(0xd8dde4,.5); sun.position.set(-30,70,40); sc.add(sun);
+    const roadM=new THREE.MeshLambertMaterial({color:0x3c3f44});
+    for(let i=-2;i<=2;i++){
+      const r1=new THREE.Mesh(new THREE.PlaneGeometry(HALF*2+20,7),roadM); r1.rotation.x=-Math.PI/2; r1.position.set(0,.02,i*26); sc.add(r1);
+      const r2=new THREE.Mesh(new THREE.PlaneGeometry(7,HALF*2+20),roadM); r2.rotation.x=-Math.PI/2; r2.position.set(i*26,.02,0); sc.add(r2);
+    }
+    const cMat=new THREE.MeshLambertMaterial({map:concreteTexture()});
+    const rnd=seededRand(41987);
+    const list=[];
+    for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
+      if(gx===0 && gz===0) continue;                    // ลานกลาง = จุดเกิด
+      if(rnd()<.18) continue;                            // เว้นช่องให้เมืองโปร่ง บินได้สะดวก
+      const x=gx*26+(rnd()*4-2), z=gz*26+(rnd()*4-2);
+      const w=16+rnd()*6, d=16+rnd()*6;
+      list.push(buildAbandoned(sc,cMat,x,z,w,d,rnd));
+    }
+    // ห่วงเรืองแสง (เกตแข่ง FPV) — ตกแต่งให้ได้ฟีล racing ไม่มีผลกับการเล่น
+    const gateCol=[0xff3b6b,0x28e0ff,0xffd54f,0x6cff8a,0xb388ff];
+    for(let i=0;i<6;i++){
+      const g=new THREE.Mesh(new THREE.TorusGeometry(2.6,.28,8,24),
+        new THREE.MeshBasicMaterial({color:gateCol[i%gateCol.length]}));
+      const a=i/6*Math.PI*2, rr=20+rnd()*18;
+      g.position.set(Math.cos(a)*rr, 5+rnd()*10, Math.sin(a)*rr);
+      g.rotation.y=a+Math.PI/2; sc.add(g);
+    }
+    const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),new THREE.MeshLambertMaterial({color:0x2f3236}));
+    basePad.rotation.x=-Math.PI/2; basePad.position.set(0,.03,0); sc.add(basePad);
+    const all=[]; list.forEach(b=>b.solids.forEach(s=>all.push(s)));
+    worlds[md]={scene:sc, trees:tr, buildings:list, solids:all};
+    return;
   }else{
     // ต้นไม้ตายกิ่งโกร๋น + ป้ายหลุมศพ + ฟักทอง + ดวงไฟวิญญาณ
     const trunkM=new THREE.MeshLambertMaterial({color:0x2e2019});
@@ -643,7 +759,13 @@ function randPos(minFromPlayer){
 }
 function spawnLetter(ch){
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-  if(M.heli && buildings.length){
+  if(M.drone && buildings.length){
+    // โหมดโดรน: ตัวอักษรซ่อนอยู่ในห้องต่างๆ ของตึกร้าง — บินลอดหน้าต่างเข้าไปเก็บ
+    const b=buildings[Math.floor(Math.random()*buildings.length)];
+    const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
+    spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
+    spr.scale.set(1.8,1.8,1);
+  }else if(M.heli && buildings.length){
     // โหมดเฮลิคอปเตอร์: ตัวอักษรอยู่บนยอดตึก (สุ่มตึก) — ต้องลงจอดเก็บ
     const b=buildings[Math.floor(Math.random()*buildings.length)];
     spr.position.set(b.x,b.h+1.3,b.z);
@@ -674,7 +796,11 @@ function ensureCoverage(){
 function relocateLetters(now){
   letters.forEach(l=>{
     if(now-l.born>=RELOCATE_MS){
-      if(M.heli && buildings.length){
+      if(M.drone && buildings.length){
+        const b=buildings[Math.floor(Math.random()*buildings.length)];
+        const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
+        l.spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
+      }else if(M.heli && buildings.length){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
         l.spr.position.set(b.x,b.h+1.3,b.z);
       }else{
@@ -1149,7 +1275,7 @@ function sendPos(force){
     av:state.playerAvatar||'',
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
-  if(M.heli) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิคอปเตอร์)
+  if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
   // 🤝 คำเป้าหมายปัจจุบัน — ส่งเฉพาะตอนมีเพื่อนปาร์ตี้(invite กัน)อยู่ในโลกจริง
   // (คนเล่นทั่วไปไม่ส่ง → ไม่ผูกกับ rules ใหม่ ไม่มีทางทำ /world พังถ้ายังไม่ publish)
   if(words[0] && Object.keys(peers).some(uid=>tinvLinked(uid))) payload.cw=words[0].en+'|'+words[0].th;
@@ -1242,7 +1368,7 @@ function tickPeers(dt,now){
     p.cur.x+=(p.tgt.x-p.cur.x)*k;
     p.cur.z+=(p.tgt.z-p.cur.z)*k;
     p.cur.y+=((p.tgt.y||1.5)-(p.cur.y||1.5))*k;
-    const baseY=M.heli?(p.cur.y||1.5):1.5;        // เฮลิคอปเตอร์เพื่อนบินตามความสูงจริง
+    const baseY=(M.heli||M.drone)?(p.cur.y||1.5):1.5;   // เฮลิฯ/โดรน: เพื่อนบินตามความสูงจริง
     p.spr.position.set(p.cur.x,baseY+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
     if(p.bubble){
       if(now>p.bubble.until) removePeerBubble(p);
@@ -1732,7 +1858,16 @@ function buildDom(){
   .adv-touch #adv-shoot{display:block}
   .adv-touch.adv-haunt #adv-shoot{display:none}
   .adv-touch.adv-heli #adv-shoot{display:none}
+  .adv-touch.adv-drone #adv-shoot{display:none}
   .adv-heli #adv-cross{display:none}
+  /* 🛸 โหมดโดรน FPV: OSD สีเขียวเรือง + เรติเคิลกรอบ + ขอบจอมืด (ฟีลกล้อง FPV) */
+  .adv-drone #adv-inst{display:block;color:#7cff9d;font-family:'Courier New',monospace;letter-spacing:.5px;
+    background:rgba(0,22,8,.4);border:1px solid rgba(124,255,157,.4);text-shadow:0 0 6px rgba(124,255,157,.75)}
+  .adv-drone #adv-gauges,.adv-drone #adv-cockpit{display:none}
+  .adv-drone #adv-cross{width:22px;height:22px;background:none;border:2px solid rgba(124,255,157,.85);
+    border-radius:0;box-shadow:0 0 5px rgba(0,0,0,.85)}
+  #adv-overlay.adv-drone:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+    box-shadow:inset 0 0 130px 34px rgba(0,0,0,.5)}
   #adv-inst{top:34px;left:50%;transform:translateX(-50%);color:#fff;font-weight:800;font-size:13px;
     text-shadow:0 1px 3px #000;background:rgba(0,0,0,.4);border-radius:10px;padding:2px 12px;display:none;white-space:nowrap}
   .adv-heli #adv-inst{display:block}
@@ -1997,9 +2132,9 @@ function bindInput(){
           joy.dx=dx*cl/max; joy.dy=dy*cl/max;
           dotEl.style.transform=`translate(calc(-50% + ${dx*cl}px),calc(-50% + ${dy*cl}px))`;
         }else if(lookTouch && t.identifier===lookTouch.id){
-          if(M.heli){
-            // โหมดเฮลิคอปเตอร์: ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (collective)
-            yaw-=(t.clientX-lookTouch.x)*.004;
+          if(M.heli||M.drone){
+            // โหมดบิน: ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (throttle/collective)
+            yaw-=(t.clientX-lookTouch.x)*(M.drone?.005:.004);
             hCol=Math.max(-1,Math.min(1,hCol-(t.clientY-lookTouch.y)*.012));
           }else{
             yaw-=(t.clientX-lookTouch.x)*.005;
@@ -2078,6 +2213,103 @@ function tickPlayer(dt,now){
    จอยซ้าย/WASD = เอียงตัว (cyclic) · ลากขวาแนวตั้ง/Space-Shift = ขึ้นลง (collective)
    ลากขวาแนวนอน/Q-E = หันหัว (yaw) · ลงจอดเบาๆ บนดาดฟ้าใกล้ตัวอักษร = เก็บ
    ============================================================ */
+/* ============================================================
+   🛸 โดรน FPV (โหมด drone) — บินเร็ว/คล่อง ลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้อง
+   ============================================================ */
+function collideDrone(p){
+  let hit=false;
+  const spd=Math.hypot(hVel.x,hVel.y,hVel.z);
+  for(const b of buildings){
+    if(Math.abs(p.x-b.x)>b.w/2+4 || Math.abs(p.z-b.z)>b.d/2+4 || p.y>b.h+4) continue;   // broad-phase
+    for(const s of b.solids){
+      const dx=p.x-s.x, dy=p.y-s.y, dz=p.z-s.z;
+      const ox=s.hx+DRONE_R-Math.abs(dx), oy=s.hy+DRONE_R-Math.abs(dy), oz=s.hz+DRONE_R-Math.abs(dz);
+      if(ox>0 && oy>0 && oz>0){                    // ทะลุกล่อง → ดันออกตามแกนที่ทะลุน้อยสุด + เด้ง
+        if(ox<=oy && ox<=oz){ p.x+=dx>=0?ox:-ox; hVel.x*=-.28; }
+        else if(oy<=ox && oy<=oz){ p.y+=dy>=0?oy:-oy; hVel.y*=-.28; }
+        else { p.z+=dz>=0?oz:-oz; hVel.z*=-.28; }
+        hit=true;
+      }
+    }
+  }
+  return hit?spd:0;
+}
+function tickDrone(dt,now){
+  let fw=0,sd=0,yawIn=0,col=0;
+  if(keys.KeyW||keys.ArrowUp) fw+=1;
+  if(keys.KeyS||keys.ArrowDown) fw-=1;
+  if(keys.KeyA||keys.ArrowLeft) sd-=1;
+  if(keys.KeyD||keys.ArrowRight) sd+=1;
+  if(keys.KeyQ) yawIn+=1;
+  if(keys.KeyE) yawIn-=1;
+  if(keys.Space) col+=1;
+  if(keys.ShiftLeft||keys.ShiftRight||keys.KeyC) col-=1;
+  if(joy.on){ fw=-joy.dy; sd=joy.dx; }
+  col+=hCol; col=Math.max(-1,Math.min(1,col));
+  yaw+=yawIn*DRONE_YAWSP*dt;
+
+  const sin=Math.sin(yaw),cos=Math.cos(yaw);
+  hVel.x+=(-sin*fw+cos*sd)*DRONE_ACCEL*dt;
+  hVel.z+=(-cos*fw-sin*sd)*DRONE_ACCEL*dt;
+  hVel.y+=(col*DRONE_CLIMB - DRONE_GRAV)*dt;
+  hVel.y*=Math.max(0,1-1.1*dt);
+  const drag=Math.max(0,1-1.15*dt); hVel.x*=drag; hVel.z*=drag;
+  const hs=Math.hypot(hVel.x,hVel.z);
+  if(hs>DRONE_VMAX){ hVel.x*=DRONE_VMAX/hs; hVel.z*=DRONE_VMAX/hs; }
+
+  const p={x:camera.position.x+hVel.x*dt, y:camera.position.y+hVel.y*dt, z:camera.position.z+hVel.z*dt};
+  p.x=Math.max(-HALF+1.5,Math.min(HALF-1.5,p.x));
+  p.z=Math.max(-HALF+1.5,Math.min(HALF-1.5,p.z));
+  p.y=Math.min(62,p.y);
+  if(p.y<DRONE_R){ p.y=DRONE_R; if(hVel.y<0) hVel.y*=-.2; }         // แตะพื้น = เด้งเบา
+  const crashSpd=collideDrone(p);
+  if(crashSpd>9 && now-hHitAt>900){ hHitAt=now; damagePlayer(14); DroneSound.thud(); }
+  camera.position.set(p.x,p.y,p.z);
+
+  // เอียงตัวแบบ FPV (แรงเฉื่อย) — ก้ม/เงยตามเดินหน้า + banking ตอนสไลด์
+  hTiltF+=(fw-hTiltF)*Math.min(1,dt*6);
+  hTiltS+=(sd-hTiltS)*Math.min(1,dt*6);
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw);
+  camera.rotateX(-hTiltF*.22);
+  camera.rotateZ(-hTiltS*.28);
+
+  // เก็บตัวอักษร: บินเฉียด (ไม่ต้องจอด)
+  for(let i=letters.length-1;i>=0;i--){
+    const lp=letters[i].spr.position;
+    if(Math.hypot(lp.x-p.x,lp.y-p.y,lp.z-p.z)<2.4){
+      const ch=letters[i].ch;
+      inv[ch]=(inv[ch]||0)+1; removeLetter(i); sfx.coin(); speakLetter(ch);
+      renderHudInv(); renderHudWords(); tryCompleteWords();
+    }
+  }
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.5)+Math.sin(now/380+l.spr.position.x*2)*.12; });
+
+  // เตือนใกล้ชนกำแพง (บี๊บถี่ขึ้นตามระยะ + ไฟแดง)
+  hWarnLvl=0; let warnMsg='', near=99;
+  for(const b of buildings){
+    if(Math.abs(p.x-b.x)>b.w/2+9 || Math.abs(p.z-b.z)>b.d/2+9 || p.y>b.h+3) continue;
+    for(const s of b.solids){
+      const dd=Math.hypot(Math.max(0,Math.abs(p.x-s.x)-s.hx),Math.max(0,Math.abs(p.y-s.y)-s.hy),Math.max(0,Math.abs(p.z-s.z)-s.hz));
+      if(dd<near) near=dd;
+    }
+  }
+  if(near<1.2){ hWarnLvl=3; warnMsg='🚨 ใกล้กำแพงมาก!'; }
+  else if(near<2.4){ hWarnLvl=2; warnMsg='⚠️ ระวังชน!'; }
+  else if(near<4){ hWarnLvl=1; warnMsg='⚠️ มีกำแพงใกล้ๆ'; }
+  if(hudWarnEl){
+    if(hWarnLvl>0){ hudWarnEl.style.display='block'; hudWarnEl.textContent=warnMsg; hudWarnEl.className='adv-hud warn'+hWarnLvl; }
+    else hudWarnEl.style.display='none';
+  }
+  DroneSound.proximity(hWarnLvl);
+
+  if(hudInstEl){
+    const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
+    hudInstEl.textContent=`🔴 REC · ▲ ${Math.max(0,p.y-DRONE_R).toFixed(0)}m · 🚀 ${spd} กม./ชม.`;
+  }
+  DroneSound.update(col,Math.hypot(hVel.x,hVel.z),dt);
+}
+
 function heliFloorAt(x,z){
   let f=0;
   for(const b of buildings){
@@ -2482,6 +2714,95 @@ const HeliSound={
   },
 };
 
+/* ---------- เสียงโดรน FPV — สังเคราะห์ (ปลอดลิขสิทธิ์) · มีไฟล์ sound/drone_loop.mp3 ใช้แทนอัตโนมัติ ----------
+   ต่างจากเฮลิฯ: เสียงบัซซ์แหลมของมอเตอร์ 4 ตัว ตอบสนองไว เร่งปุ๊บพุ่งขึ้นทันที (แรงเฉื่อยต่ำ) */
+const DroneSound={
+  ctx:null,master:null,motors:[],motorG:null,buzz:null,buzzG:null,noiseG:null,det:[-6,-2,3,7],nodes:[],
+  files:{loop:null},probed:false,on:false,ready:false,rpm:0,
+  probe(){
+    if(this.probed) return; this.probed=true;
+    const a=new Audio(); a.addEventListener('canplaythrough',()=>{ this.files.loop=a; },{once:true});
+    a.preload='auto'; a.src='sound/drone_loop.mp3';    // อัปเกรดจาก Suno (PROMPTS_DRONE.md)
+  },
+  ensureCtx(){
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!this.ctx){ this.ctx=new AC(); this.master=this.ctx.createGain(); this.master.connect(this.ctx.destination); }
+    if(this.ctx.state==='suspended') this.ctx.resume().catch(()=>{});
+  },
+  buildNodes(){
+    this.ensureCtx();
+    this.motorG=this.ctx.createGain(); this.motorG.gain.value=.13; this.motorG.connect(this.master);
+    this.motors=this.det.map(d=>{
+      const o=this.ctx.createOscillator(); o.type='sawtooth'; o.frequency.value=150+d; o.start(); o.connect(this.motorG); return o;
+    });
+    this.buzz=this.ctx.createOscillator(); this.buzz.type='square'; this.buzz.frequency.value=280;
+    this.buzzG=this.ctx.createGain(); this.buzzG.gain.value=.03; this.buzz.connect(this.buzzG); this.buzzG.connect(this.master); this.buzz.start();
+    const len=this.ctx.sampleRate*2, buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate);
+    const nd=buf.getChannelData(0); for(let i=0;i<len;i++) nd[i]=Math.random()*2-1;
+    const noi=this.ctx.createBufferSource(); noi.buffer=buf; noi.loop=true;
+    const hp=this.ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
+    this.noiseG=this.ctx.createGain(); this.noiseG.gain.value=.01;
+    noi.connect(hp); hp.connect(this.noiseG); this.noiseG.connect(this.master); noi.start();
+    this.nodes=[...this.motors,this.buzz,noi];
+  },
+  start(){
+    if(this.on) return;
+    this.on=true; this.ready=false; this.rpm=.35;
+    this.probe();
+    if(!state.sound){ this.ready=true; return; }
+    if(this.files.loop){
+      this.files.loop.loop=true; this.files.loop.volume=.5;
+      this.files.loop.play().catch(()=>{}); this.ready=true; return;
+    }
+    this.buildNodes();
+    const t=this.ctx.currentTime;
+    this.master.gain.setValueAtTime(.001,t);
+    this.master.gain.linearRampToValueAtTime(.4,t+.5);   // อาร์มเร็ว (โดรนพร้อมบินทันที)
+    setTimeout(()=>{ this.ready=true; },500);
+  },
+  update(col,speed,dt){
+    if(!this.on) return;
+    if(!state.sound){ this.stop(); this.on=true; this.ready=true; return; }
+    const target=.5+Math.max(0,col)*.5 + Math.min(.5,speed/DRONE_VMAX*.5);   // RPM ตามคันเร่ง+ความเร็ว
+    this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*4);                     // ตอบสนองไว (แรงเฉื่อยต่ำ)
+    const r=this.rpm;
+    if(this.files.loop){ this.files.loop.playbackRate=.75+r*.9; this.files.loop.volume=.35+r*.3; return; }
+    if(this.motors.length) this.motors.forEach((o,i)=>{ o.frequency.value=(150+this.det[i])*(1+r*2.2); });
+    if(this.buzz) this.buzz.frequency.value=240+r*520;
+    if(this.buzzG) this.buzzG.gain.value=.02+r*.05;
+    if(this.noiseG) this.noiseG.gain.value=.006+Math.min(1,speed/DRONE_VMAX)*.05;
+    if(this.master) this.master.gain.value=.18+r*.3;
+  },
+  _proxLvl:0,_proxTm:0,
+  proximity(level){
+    if(level===this._proxLvl) return; this._proxLvl=level;
+    if(this._proxTm){ clearInterval(this._proxTm); this._proxTm=0; }
+    if(!level) return;
+    const gap=[0,600,300,140][level], vol=[0,.08,.12,.17][level], freq=level===3?1320:1050;
+    const blip=()=>{
+      if(!state.sound||!this.ctx) return;
+      const t=this.ctx.currentTime;
+      const o=this.ctx.createOscillator(); o.type='square'; o.frequency.value=freq;
+      const g=this.ctx.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+.06);
+      o.connect(g); g.connect(this.master||this.ctx.destination); o.start(t); o.stop(t+.07);
+    };
+    this.ensureCtx(); blip(); this._proxTm=setInterval(blip,gap);
+  },
+  thud(){
+    if(!state.sound||!this.ctx){ sfx.wrong(); return; }
+    const t=this.ctx.currentTime;
+    const o=this.ctx.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(90,t); o.frequency.exponentialRampToValueAtTime(40,t+.2);
+    const g=this.ctx.createGain(); g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.25);
+    o.connect(g); g.connect(this.master||this.ctx.destination); o.start(t); o.stop(t+.27);
+  },
+  stop(){
+    this.on=false; this.ready=false; this.rpm=0; this.proximity(0);
+    if(this.files.loop) this.files.loop.pause();
+    this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} }); this.nodes=[]; this.motors=[]; this.buzz=null;
+    if(this.master) this.master.gain.value=0;
+  },
+};
+
 /* ============================================================
    Loop หลัก
    ============================================================ */
@@ -2490,6 +2811,7 @@ function loop(){
   rafId=requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),.1), now=performance.now();
   if(M.heli){ tickHeli(dt,now); }
+  else if(M.drone){ tickDrone(dt,now); }
   else{
     tickPlayer(dt,now);
     if(M.ghost){ tickGhosts(dt,now); }
@@ -2516,11 +2838,12 @@ function clearEntities(){
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
 }
 function start(md){
-  mode=(md==='haunt'||md==='heli')?md:'adv';
+  mode=(md==='haunt'||md==='heli'||md==='drone')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
   if(mode==='heli' && !state.heliTicket){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
+  if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
 
   if(!built){
@@ -2534,12 +2857,17 @@ function start(md){
   if(scene) clearEntities();                       // ล้างของโหมดก่อนหน้า (ถ้าเคยเข้า)
   if(!worlds[mode]) buildScene(mode);
   scene=worlds[mode].scene; trees=worlds[mode].trees||[]; buildings=worlds[mode].buildings||[];
+  solids=worlds[mode].solids||[];
 
   hp=100; sessionCoins=0; sessionWords=0; inv={}; keys={}; yaw=0; pitch=0;
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
     hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
     hAtcCleared=false; ATC.reset();
+    if(hudWarnEl) hudWarnEl.style.display='none';
+  }else if(M.drone){
+    camera.position.set(0,10,0);                   // เริ่มลอยเหนือลานกลาง (ลานว่าง gx=gz=0) รอบตัวเป็นตึกร้าง
+    hVel={x:0,y:0,z:0}; hCol=0; hHitAt=0; hWarnLvl=0; hTiltF=0; hTiltS=0;
     if(hudWarnEl) hudWarnEl.style.display='none';
   }else{
     camera.position.set(0,EYE_H,0);
@@ -2556,12 +2884,14 @@ function start(md){
     whenGhostsReady(spawnAll);
     setTimeout(spawnAll, 9000);                     // กันเหนียว: ภาพค้างเกิน 9 วิ (เน็ตแย่/หาย) → ปล่อยไปก่อน (ด่านต้องมีผีเสมอ)
   }
-  else if(!M.heli) spawnMonster();
+  else if(!M.heli && !M.drone) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
   overlayEl.classList.toggle('adv-heli',mode==='heli');
+  overlayEl.classList.toggle('adv-drone',mode==='drone');
   if(mode==='heli') HeliSound.start();
+  else if(mode==='drone') DroneSound.start();
   hintEl.textContent=M.hint;
   hudHuntEl.style.display='none';
   Voice.spk=state.voiceSpk!==false;                        // สะท้อนค่าที่จำไว้แม้ยังออฟไลน์ (join ทับอีกทีตอนต่อเน็ต)
@@ -2589,6 +2919,7 @@ function exitWorld(){
   netLeave();
   HSound.stopAll();
   HeliSound.stop();
+  DroneSound.stop();
   ATC.reset();
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
@@ -2614,11 +2945,15 @@ window.Adventure3D={
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
                         ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC}; },
+    get drone(){ return {vel:hVel, col:hCol, buildings, solids, warn:hWarnLvl,
+                         rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone}; },
+    set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
       if(M.heli){ tickHeli(dt,now); }
+      else if(M.drone){ tickDrone(dt,now); }
       else{
         tickPlayer(dt,now);
         if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }

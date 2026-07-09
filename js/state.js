@@ -42,6 +42,8 @@ const DEFAULT_STATE = {
   heliDone:[],                        // คำที่ประกอบสำเร็จแล้วในโลกเฮลิคอปเตอร์ (แยกคลังต่อโลก)
   heliStreak:0,                       // รอบ 62: สตรีคประกอบคำในโลกเฮลิฯ โดยไม่ชนเลย (สะสมข้ามรอบ · ชน/กระแทกแรง = รีเซ็ต)
   pilotBadge:0,                       // รอบ 62: เข็มนักบินสูงสุดที่เคยได้ 0=ยังไม่มี 1=🥉(สตรีค 5) 2=🥈(15) 3=🥇(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
+  droneTicket:false,                  // รอบ 85: ตั๋วโลกโดรน FPV Racing (ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์)
+  droneDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกโดรน (แยกคลังต่อโลก)
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
   thunderBadge:0,                     // รอบ 70: เข็มสายฟ้าสูงสุดที่เคยได้ 0=ไม่มี 1=⚡(5 ครั้ง) 2=🌩️(15) 3=⛈️(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
@@ -224,6 +226,8 @@ function loadState(){
       if(!Array.isArray(s.heliDone)) s.heliDone = [];
       if(typeof s.heliStreak !== 'number') s.heliStreak = 0;                               // รอบ 62
       if(typeof s.pilotBadge !== 'number') s.pilotBadge = 0;
+      if(typeof s.droneTicket !== 'boolean') s.droneTicket = false;                         // รอบ 85: โลกโดรน FPV
+      if(!Array.isArray(s.droneDone)) s.droneDone = [];
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70
       if(typeof s.thunderBadge !== 'number') s.thunderBadge = 0;
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
@@ -334,6 +338,7 @@ function assetValue(){
   if(state.advTicket) v += TICKET_PRICE;                                                   // การ์ดตั๋วโลกผจญภัย (ข้อ 7)
   if(state.hauntTicket) v += HAUNT_PRICE;                                                  // ตั๋วโลกผีสิงกลางคืน
   if(state.heliTicket) v += HELI_PRICE;                                                    // ตั๋วโลกเฮลิคอปเตอร์
+  if(state.droneTicket) v += DRONE_PRICE;                                                  // ตั๋วโลกโดรน FPV (รอบ 85)
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
   for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)

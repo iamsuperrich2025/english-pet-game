@@ -10,7 +10,8 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-**โลก 3D ครบ 2 โลกแล้ว (รอบ 40 กลางวัน + รอบ 41 ผีสิง/multiplayer/ชวนเพื่อน) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
+**โลก 3D ครบ 4 โลกแล้ว (🌍 กลางวัน · 👻 ผีสิง · 🚁 เฮลิฯ · 🛸 โดรน FPV รอบ 85) — งานถัดไปรอผู้ใช้เคาะ** จาก backlog ด้านล่าง หรือแก้ feedback หลังผู้ใช้ทดสอบจริง
+- 🛸 **รอบ 85 ค้างฝั่งผู้ใช้:** (1) **publish rules โซน drone** (Artifact ปุ่มคัดลอกส่งแล้ว · ก้อนเต็มใน `handoff/RULES.md`) — ยังไม่ publish = เล่นคนเดียวได้ แต่ multiplayer/voice/ครูคุมห้องของโลกโดรนยังไม่ทำงาน (2) เจนเสียง `sound/drone_loop.mp3` จาก Suno (`PROMPTS_DRONE.md`) (3) ทดสอบจริงบนมือถือ (จอยซ้าย+ลากขวา=หันหัว/คันเร่ง · บินลอดหน้าต่าง)
 - ✅ **rules ชุดเต็ม publish แล้ว 8 ก.ค.** (ครบถึงรอบ 49 — ตรวจ REST จากภายนอกแล้ว ดู RULES.md) → ระบบ online โลก 3D พร้อมใช้ทั้งหมด
 - ⏳ **รอผู้ใช้ทดสอบจริงบน Pages (2 เครื่อง/2 บัญชี):** เห็นตัวกันใน map · แชทลอยหัว · คำชวน+เงินคืน 2,000 · voice (ไมค์/ลำโพง/โหมดเพื่อน) · ครูปิดเสียงห้อง · พิธีแชมป์ 🏁 · และ touch มือถือ (จอยซ้าย+ลากมอง+ปุ่มยิง 🔥 โลกกลางวัน) + งานค้าง .12–.17 เดิม · ถ้าจะอัปเกรดเสียงผี → Suno ตาม `PROMPTS_SOUND.md` (ไม่วางก็เล่นได้)
 - 🧪 **testkit โลก 3D:** `Adventure3D._t` มี getter camera()/letters/monsters(=ผีในโหมด haunt)/words/inv/peers/hp/mode/running + `damagePlayer(n)/caught()/give(ch,n)(ยัดตัวอักษร→ประกอบคำอัตโนมัติ)/onPeerData(fakeSnap)(จำลองเพื่อนโผล่)/tinvCheck(uid)/exitWorld()` · เข้าเกม: `Adventure3D.start('adv'|'haunt')` ผ่านปุ่มการ์ดตั๋ว · ระวัง: careTick เด้ง alertBox คนป่วยซ้อนหลายชั้นตอน fake state — ตั้ง `playerFedDay=playerSickDay=mealDayKey(Date.now())` ก่อน
