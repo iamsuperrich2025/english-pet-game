@@ -29,6 +29,19 @@
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
+**✅ รอบ 94 (9 ก.ค. · Opus): เกมจับคู่ — ป้ายเหรียญไต่สีตามหลัก + เป้าสถิติเดิมในการ์ด 🌈🏆 — version .72** (commit 12f3bb4) — ต่อยอดฉลอง/สถิติ (รอบ 91) · ผู้ใช้เห็นชอบ
+- **ไต่สี:** ใน `addSessionCoins` คำนวณเทียร์ตาม sessionCoins → set class `t1/t2/t3` · CSS `.sess-coin` เทา<100 → `.t1` เขียว≥100 → `.t2` ทอง≥500 → `.t3` รุ้ง (gradient+background-clip:text+`@keyframes sessRainbow`) ≥2000 · reset t-class ใน startGame · **ตัด color ออกจาก `sessCoinBump` เหลือ scale** (กันทับสีเทียร์)
+- **เป้าสถิติ:** `index.html` เพิ่ม `<span id="game-best-target">` ในป้าย · `updateBestTarget()` (game.js): prevBest>0 → "🏆 สถิติดีที่สุดของหนู: X 🪙 — เก็บให้เกินสิ!" · beatBestShown → "🏆 สถิติใหม่แล้ว!" · prevBest=0 (เล่นครั้งแรก) → ซ่อน · เรียกใน startGame + ตอนทำลายสถิติ
+- ✅ ยืนยัน preview (computed style + innerHTML): เทียร์ 0→90 ไม่มี t · 110=t1 · 510=t2 · 2110=t3 (gradient จริง text-fill transparent) · เป้า: ครั้งแรกว่าง · ครั้งสอง prevBest 2110 โชว์เป้า → เก็บเกิน→ "สถิติใหม่แล้ว!" · ไม่มี console error · **screenshot ค้าง (แอนิเมชันหมุน) → ยืนยันด้วย inspect แทน**
+- ⚠️ commit เฉพาะ index.html/style.css/game.js/version (ไม่แตะ ui.js/lobby.css ของ session คู่ขนาน)
+
+**✅ รอบ 93 (9 ก.ค. · Opus): การ์ดสังคมสไตล์เดียวกัน (2 บรรทัด) + คำเรียกตัวเองตามวัย 🧑‍🤝‍🧑🎓 — version .71**
+- ผู้ใช้เห็นชอบไอเดียต่อยอดจากรอบ 90: ทำ **Leaderboard 🏆 + แผงเพื่อน 👥** ให้เป็น list-item 2 บรรทัด (ชื่อบน · ชั้นล่างจาง) เหมือนการ์ดเพื่อนออนไลน์ · **และ** คำ "หนูเอง" ใช้เฉพาะ ป.1-ป.6 · ม.1 ขึ้นไป = "คุณเอง"
+- `js/ui.js`: เพิ่ม `selfPronoun()` (ป.1-ป.6/อนุบาล="หนู" · ม.1+รวมปริญญา="คุณ") + `selfTag()`="หนูเอง"/"คุณเอง" → ใช้แทน 4 จุด (online tag, `นี่คือ...`, `รหัสของ...นะ`, ชื่อ fallback) + leaderboard `หนู→คุณอยู่อันดับ`
+- `css/style.css` `.lb-name` + `css/lobby.css` `.fr-row-name`: `<small> ชั้น X</small>` → `display:block` flex-column = ตกบรรทัดล่าง จาง เยื้อง (ชั้นยาวเช่น "ปริญญาเอก" ไม่ถูกบีบตัด)
+- ✅ ยืนยัน preview (getBoundingClientRect+computed style · screenshot infra ค้าง): selfTag ป.5=หนูเอง · ม.1/ตรี/เอก=คุณเอง · online/leaderboard/friends rows small=block ไม่ clip · lbCount="คุณอยู่อันดับที่ 2..."
+- ⚠️ **หลายไฟล์ชนกับ session คู่ขนาน:** ui.js+lobby.css ส่วนของเราถูกกวาดเข้า commit fa2a89b (รอบ 92) แล้ว · เหลือ commit เฉพาะ **hunk `.lb-name` ใน style.css** (git apply --cached ทีละ hunk กัน sess-coin ของอีก session โดนกวาด) + version + TASKS
+
 **✅ รอบ 92 (9 ก.ค. · Opus): ปุ่มโลก 3D ในราง — badge จำนวนคำที่พิชิต + ราคาตั๋วโลกที่ล็อก 🏅🪙 — version .70** (commit fa2a89b) — ต่อยอดปุ่มลัดโลก 3D (คอมมิตก่อนหน้า c9ba3f0) ตามไอเดียที่เสนอ · ผู้ใช้สั่งทำ
 - `js/ui.js` WORLD3D เพิ่ม `doneKey`+`price` (โลกใหม่ยังเพิ่มบรรทัดเดียว) · `renderRailWorlds()` ต่อ: ปลดล็อกแล้ว→`.rail-count` badge ทองมุมขวาบน = `state[doneKey].length` (โชว์เฉพาะ >0) · ยังล็อก→`.rail-price` ใต้ชื่อ `🪙price` (coins>=price = เขียวเรือง `.afford`, ไม่พอ = เหลืองทอง) + 🔒 คงเดิม
 - `css/lobby.css`: `.rail-world .rail-count` (ทอง #f5c542 ต่างจาก badge แดง=เตือน) · `.rail-price` + `.rail-price.afford` (เขียวเรือง) · locked opacity .62
