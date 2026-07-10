@@ -687,24 +687,44 @@ function buildDriveCity(sc){
     }
   });
 
-  /* ---------- ตึกแถวริมถนนจริง (InstancedMesh ก้อนเดียว — ผัง bake seed คงที่) ---------- */
+  /* ---------- ตึกแถวริมถนนจริง (InstancedMesh แยกตามจำนวนชั้น — ผัง bake seed คงที่)
+     รอรับภาพ facade จริง img/city/*.png (PROMPTS_BUILDINGS_KPP.md): มีไฟล์ = ผนังเป็นภาพจริงทันที
+     ไม่มี = สีล้วนตามเดิม · ภาพ 1 ไฟล์ = หน้าตึกเต็มความสูง (ชั้นล่างประตูม้วน) tile ซ้ำแนวนอน ~2.5 คูหา ---------- */
   const lots=C.p;
-  const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),
-    new THREE.MeshLambertMaterial({color:0xffffff}),lots.length);
   const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), eu=new THREE.Euler(),
         vv=new THREE.Vector3(), sv=new THREE.Vector3();
   const pal=[0xd9cfc0,0xcdd5dd,0xd8c8b4,0xc8d2c2,0xd5cbd0,0xbfc8ce,0xe0d6c4,0xccc4b6].map(c=>new THREE.Color(c));
-  for(let i=0;i<lots.length;i++){
-    const L=lots[i];                                          // [x,z,rot,w,d,h]
-    eu.set(0,L[2],0); q.setFromEuler(eu);
-    vv.set(L[0],L[5]/2,L[1]); sv.set(L[3],L[5],L[4]);
-    m4.compose(vv,q,sv); im.setMatrixAt(i,m4);
-    im.setColorAt(i,pal[i%pal.length]);
+  const FACADE_FILES={1:'house_1fl',2:'shop_2fl',3:'shop_3fl',4:'shop_4fl'};
+  const grp={1:[],2:[],3:[],4:[]};
+  lots.forEach(L=>{                                           // L = [x,z,rot,w,d,h]
+    grp[Math.max(1,Math.min(4,Math.round(L[5]/3.3)))].push(L);
     sAdd(L[0],L[1],Math.hypot(L[3],L[4])/2+2,{t:0,x:L[0],z:L[1],rot:L[2],hx:L[3]/2,hz:L[4]/2});
-  }
-  im.instanceMatrix.needsUpdate=true;
-  if(im.instanceColor) im.instanceColor.needsUpdate=true;
-  sc.add(im);
+  });
+  Object.keys(grp).forEach(fl=>{
+    const list=grp[fl]; if(!list.length) return;
+    const g=new THREE.BoxGeometry(1,1,1);
+    const uv=g.attributes.uv;
+    for(let i=0;i<uv.count;i++) uv.setX(i, uv.getX(i)*2.5);   // ~2.5 คูหา/หลัง (ภาพ seamless แนวนอน)
+    const mat=new THREE.MeshLambertMaterial({color:0xffffff});
+    const im=new THREE.InstancedMesh(g,mat,list.length);
+    for(let i=0;i<list.length;i++){
+      const L=list[i];
+      eu.set(0,L[2],0); q.setFromEuler(eu);
+      vv.set(L[0],L[5]/2,L[1]); sv.set(L[3],L[5],L[4]);
+      m4.compose(vv,q,sv); im.setMatrixAt(i,m4);
+      im.setColorAt(i,pal[i%pal.length]);                     // tint พาสเทลคูณกับภาพ → ตึกแถวสีต่างกัน
+    }
+    im.instanceMatrix.needsUpdate=true;
+    if(im.instanceColor) im.instanceColor.needsUpdate=true;
+    sc.add(im);
+    const fimg=new Image();                                   // probe ภาพจริง — โหลดได้ค่อย swap เข้า material
+    fimg.onload=()=>{
+      const tx=new THREE.Texture(fimg);
+      tx.wrapS=tx.wrapT=THREE.RepeatWrapping; tx.needsUpdate=true;
+      mat.map=tx; mat.needsUpdate=true;
+    };
+    fimg.src='img/city/'+FACADE_FILES[fl]+'.png';
+  });
 
   /* ---------- หอนาฬิกาวงเวียนต้นโพธิ์ (แลนด์มาร์กจุดเกิด 0,0) ---------- */
   const brick=new THREE.MeshLambertMaterial({color:0xa8542f});
