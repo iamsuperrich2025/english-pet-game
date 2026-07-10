@@ -1,5 +1,5 @@
 /* ============================================================
-   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 104)
+   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 105)
    • โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb)
    • idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip ถ้ามีในไฟล์
    • ปัด/ลากซ้าย-ขวา = หมุนตัวละคร 360° ดูรอบตัว
@@ -11,6 +11,9 @@ const Lobby3D = (function(){
   // ความสูงโมเดล (หน่วยโลก) ตามระดับร่างยักษ์ 0..4 — ล้อกับ 2D: ปกติผู้เลี้ยงสูงกว่า · ยักษ์สุดผู้เลี้ยงแค่เข่า
   const PET_H   = [1.30, 1.85, 2.45, 3.00, 3.50];
   const OWNER_H = [1.55, 1.50, 1.35, 1.15, 1.00];
+  // โมเดล Tripo หันด้านข้าง (หน้าชี้ -X) โดยดีฟอลต์ → หมุนฐาน -90° ให้ยืน standby หันหน้าเข้าหาผู้เล่น
+  // ✅ ทำงานถูกแล้วหลังแก้ cloneSkinned (รอบ 105) — ก่อนหน้านี้เห็นหลัง/เล็ก เพราะ skeleton ไม่ rebind (ดู cloneSkinned)
+  const FACE_CAMERA = -Math.PI/2;
 
   let three=null, renderer=null, scene=null, camera=null, clock=null;
   let rootTilt=null, spin=null, sway=null;        // rootTilt→spin(หมุนผู้เล่น)→sway(idle)
@@ -114,6 +117,27 @@ const Lobby3D = (function(){
     mixers.push(mixer);
   }
 
+  // clone ที่ rebind skeleton ให้ถูก (โมเดล Tripo เป็น SkinnedMesh)
+  // ⚠️ .clone(true) ธรรมดา ไม่ผูก bone ใหม่ → GPU skinning ยึด bone ต้นฉบับ
+  //    ทำให้ scale/ตำแหน่ง/การหมุนที่ตั้งบน node ไม่มีผลกับ vertex (โมเดลเล็ก+หันหลัง+หมุนไม่ติด)
+  // ใช้อัลกอริทึม SkeletonUtils.clone ของ three.js (self-contained)
+  function cloneSkinned(source){
+    const srcLookup = new Map(), cloneLookup = new Map();
+    const clone = source.clone(true);
+    (function walk(a,b){ srcLookup.set(b,a); cloneLookup.set(a,b);
+      for(let i=0;i<a.children.length;i++) walk(a.children[i], b.children[i]); })(source, clone);
+    clone.traverse(node=>{
+      if(!node.isSkinnedMesh) return;
+      const srcMesh = srcLookup.get(node);
+      const srcBones = srcMesh.skeleton.bones;
+      node.skeleton = srcMesh.skeleton.clone();
+      node.bindMatrix.copy(srcMesh.bindMatrix);
+      node.skeleton.bones = srcBones.map(b=>cloneLookup.get(b));
+      node.bind(node.skeleton, node.bindMatrix);
+    });
+    return clone;
+  }
+
   function loadGLB(url){
     if(gltfCache[url]) return Promise.resolve(gltfCache[url]);
     return new Promise((res,rej)=>{
@@ -135,12 +159,13 @@ const Lobby3D = (function(){
     const g = Math.max(0, Math.min(4, giant||0));
     const og = ownerRoot.userData.gltf, pg = petRoot.userData.gltf;
     if(!og || !pg) return;
-    const pm = fitInto(petRoot,   pg.scene.clone(true), PET_H[g]);
-    const om = fitInto(ownerRoot, og.scene.clone(true), OWNER_H[g]);
+    const pm = fitInto(petRoot,   cloneSkinned(pg.scene), PET_H[g]);
+    const om = fitInto(ownerRoot, cloneSkinned(og.scene), OWNER_H[g]);
     setupClips(pg, petRoot); setupClips(og, ownerRoot);
     // จัดตำแหน่ง: น้องกลาง (x=0) · ผู้เลี้ยงยืนหน้า-เยื้องซ้ายเล็กน้อย
     petRoot.position.set(0, 0, 0);
     ownerRoot.position.set(-(pm.halfW*0.35 + om.halfW*0.5), 0, pm.halfD*0.6 + 0.15);
+    petRoot.rotation.y = FACE_CAMERA; ownerRoot.rotation.y = FACE_CAMERA;   // หันหน้าเข้าหาผู้เล่น
     frameCamera(g);
     curGiant = g;
   }
