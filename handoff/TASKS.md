@@ -10,6 +10,13 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 115 (10 ก.ค.) — นโยบายโมเดล 3D ตัวเปล่า + เอฟเฟกต์เปลี่ยนร่างเหรียญแรงค์ตอนเลื่อนแรงค์ ✨ (version .106)
+- **① นโยบายผู้ใช้ (บันทึกใน `handoff/NOTES.md` กติกาดีไซน์):** โมเดล 3D สัตว์ = **ตัวเปล่าเสมอ ไม่ใส่เครื่องประดับ** — ไม่เจนโมเดลแยกตามชุด เอาแรงไปเพิ่มชนิดสัตว์ (เช่น ควาย ในอนาคต) · **ฟังก์ชันแต่งตัว 2D คงไว้ ห้ามตัด** แค่ไม่โชว์บน 3D · โค้ดปัจจุบันถูกแล้ว (lobby3d โหลด `pet_<key>.glb` ไม่สนใจ item) **ไม่ต้องแก้อะไร**
+- **② เอฟเฟกต์เลื่อนแรงค์ (ไอเดียต่อยอดรอบ 114 ผู้ใช้สั่งทำ):** `heroRankShownId` (ui.js module var) จำแรงค์ที่โชว์ล่าสุด → render รอบที่แรงค์**เปลี่ยน** เติม class `rank-fx` ให้ `.hero-rank-bg` · CSS (lobby.css): `rankSwapIn` เหรียญใหม่หมุน coin-flip 720° + สว่างวาบเข้ามา 1.6s + `rankFlash` แฟลชขาวกลางเวที 1.1s + `rankGlowPulse` วงเรืองแสงกะพริบ · เข้าเกมครั้งแรกไม่เล่น (id ยัง null) · `state.noAnim` = ข้าม fx (เหรียญเปลี่ยนเงียบๆ)
+- ✅ **ยืนยัน preview:** bronze baseline ไม่มี fx → addCoins ข้าม 10k → class `rank-fx` + `rank_silver.png` + animationName `rankSwapIn` 1.6s จริง → re-render ซ้ำไม่เล่นซ้ำ → noAnim=true ข้ามเส้น gold → ไม่มี fx เหรียญเปลี่ยนเป็น `rank_gold.png` ถูก
+- 💡 **บทเรียน preview รอบนี้:** เจอ `ReferenceError WORLD3D` ตอน renderDashboard — **ไม่ใช่บั๊กจริง** เป็น SW cache (`pet-vocab-v6`) เสิร์ฟไฟล์ปนเวอร์ชัน (ui.js ใหม่ + items.js เก่า) · แก้: ล้าง `caches` + unregister SW + reload แล้วหาย — เจอ error แปลกใน preview หลัง session คู่ขนาน push → ล้าง SW ก่อนสรุปว่าบั๊ก
+- ⚠️ commit เฉพาะ js/ui.js css/lobby.css handoff/NOTES.md handoff/TASKS.md HANDOFF.md version.json (เช็ก `git status` ก่อน — adventure3d.js ของ session คู่ขนานห้ามแตะ)
+
 ### ✅ รอบ 113 (10 ก.ค.) — โลกที่ 5: ขับรถเมืองกำแพงเพชรจริง 🚗🕰️ (version .105)
 - **ผู้ใช้สั่ง:** เกมขับรถ 3D first-person ในตัวเมือง จ.กำแพงเพชร เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ ตึก/ถนนตรงตำแหน่งจริง + ขอ prompt ภาพหน้าปัด(รวม hood) + พวงมาลัยแยก (หมุนตอนเลี้ยว)
 - **ข้อมูลเมืองจริง:** Google Maps ดึงข้อมูลตรงๆ ไม่ได้ (ToS) → ใช้ **OpenStreetMap** (ตำแหน่งเดียวกัน ถูกลิขสิทธิ์ ODbL) ผ่าน Overpass API รัศมี 2.2 กม. รอบหอนาฬิกา (16.4824495,99.5198242) — 40 กม. ที่ขอ = ~5,000 ตร.กม. เว็บโหลดไม่ไหว จึงทำตัวเมืองเต็มก่อน ขยายทีหลังได้ (แก้ RAD ใน scratchpad `bake_city.py` + รัน + วางทับ)

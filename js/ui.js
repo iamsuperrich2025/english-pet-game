@@ -58,12 +58,17 @@ function caretakerFigureHTML(){
 }
 
 /* รอบ 114: เหรียญตราแรงค์ใหญ่เป็นฉากหลังกลางเวที lobby (อยู่หลังตัวละคร/canvas 3D)
-   ใช้แรงค์ปัจจุบันจาก net worth · ไม่มีไฟล์ภาพ = ไม่โชว์ (ไม่ใช้อีโมจิ กันรก) */
+   ใช้แรงค์ปัจจุบันจาก net worth · ไม่มีไฟล์ภาพ = ไม่โชว์ (ไม่ใช้อีโมจิ กันรก)
+   รอบ 115: แรงค์เปลี่ยนระหว่าง session → เล่นเอฟเฟกต์เปลี่ยนร่าง (แฟลช+เหรียญหมุนสลับ)
+   จำแรงค์ที่โชว์ล่าสุดไว้เทียบ — เข้าเกมครั้งแรก/เปลี่ยนหน้าไปมา ไม่เล่นซ้ำ */
+let heroRankShownId = null;
 function heroRankBgHTML(){
   const info = rankInfo(netWorth());
   const img = IMG_FILES[`rank_${info.rank.id}`];
+  const fx = heroRankShownId !== null && heroRankShownId !== info.rank.id && !state.noAnim;
+  heroRankShownId = info.rank.id;
   if(!img) return '';
-  return `<div class="hero-rank-bg" style="--rank-c:${info.rank.color}"><img src="${img}" alt=""></div>`;
+  return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color}"><img src="${img}" alt=""></div>`;
 }
 
 /* ร่างยักษ์ (รอบ 102): อัพเกรดขยายน้องในหน้า lobby ด้วยเหรียญ
