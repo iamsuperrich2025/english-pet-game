@@ -221,6 +221,7 @@ function showProgressReport(){
     {ic:'👻', nm:'โลกผีสิง',     n:(state.hauntDone||[]).length, own:state.hauntTicket},
     {ic:'🚁', nm:'โลกเฮลิคอปเตอร์', n:(state.heliDone||[]).length, own:state.heliTicket},
     {ic:'🛸', nm:'โลกโดรน FPV',  n:(state.droneDone||[]).length, own:state.droneTicket},
+    {ic:'🚗', nm:'โลกขับรถกำแพงเพชร', n:(state.driveDone||[]).length, own:state.driveTicket},
   ];
   const world3dTotal = worlds.reduce((a,w)=>a+w.n, 0);
   const worldRows = worlds.filter(w=>w.own || w.n>0).map(w=>

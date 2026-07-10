@@ -44,6 +44,8 @@ const DEFAULT_STATE = {
   pilotBadge:0,                       // รอบ 62: เข็มนักบินสูงสุดที่เคยได้ 0=ยังไม่มี 1=🥉(สตรีค 5) 2=🥈(15) 3=🥇(30) — ได้แล้วไม่หาย โชว์ท้ายชื่อใน map
   droneTicket:false,                  // รอบ 85: ตั๋วโลกโดรน FPV Racing (ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์)
   droneDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกโดรน (แยกคลังต่อโลก)
+  driveTicket:false,                  // รอบ 113: ตั๋วโลกขับรถกำแพงเพชร (ซื้อได้เมื่อมีตั๋วโดรน)
+  driveDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกขับรถ (แยกคลังต่อโลก)
   daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
   daredevilBadge:0,                   // รอบ 87: เข็มนักบินผาดโผนสูงสุดที่เคยได้ 0=ไม่มี 1=🎯(10) 2=🌀(30) 3=🔥(60) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
@@ -242,6 +244,8 @@ function loadState(){
       if(typeof s.pilotBadge !== 'number') s.pilotBadge = 0;
       if(typeof s.droneTicket !== 'boolean') s.droneTicket = false;                         // รอบ 85: โลกโดรน FPV
       if(!Array.isArray(s.droneDone)) s.droneDone = [];
+      if(typeof s.driveTicket !== 'boolean') s.driveTicket = false;                         // รอบ 113: โลกขับรถกำแพงเพชร
+      if(!Array.isArray(s.driveDone)) s.driveDone = [];
       if(typeof s.daredevilCount !== 'number') s.daredevilCount = 0;                        // รอบ 87
       if(typeof s.daredevilBadge !== 'number') s.daredevilBadge = 0;
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70
@@ -362,6 +366,7 @@ function assetValue(){
   if(state.hauntTicket) v += HAUNT_PRICE;                                                  // ตั๋วโลกผีสิงกลางคืน
   if(state.heliTicket) v += HELI_PRICE;                                                    // ตั๋วโลกเฮลิคอปเตอร์
   if(state.droneTicket) v += DRONE_PRICE;                                                  // ตั๋วโลกโดรน FPV (รอบ 85)
+  if(state.driveTicket) v += DRIVE_PRICE;                                                  // ตั๋วโลกขับรถกำแพงเพชร (รอบ 113)
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
   for(const l of state.listings){ const c = collectInfo(l.id); if(c) v += c.price; }       // ของที่ลงขายอยู่ (ยังเป็นของเรา)

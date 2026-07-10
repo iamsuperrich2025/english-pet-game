@@ -1212,6 +1212,7 @@ function renderDashboard(){
     renderHauntCard();
     renderHeliCard();
     renderDroneCard();
+    renderDriveCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -1439,6 +1440,7 @@ function renderDashboard(){
   renderHauntCard();
   renderHeliCard();
   renderDroneCard();
+  renderDriveCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -2763,6 +2765,108 @@ async function enterDrone3D(){
 }
 
 /* ============================================================
+   🚗 การ์ดตั๋วโลกขับรถกำแพงเพชร (รอบ 113) — ซื้อได้เมื่อมีตั๋วโดรน FPV
+   ขับรถ first-person ในเมืองกำแพงเพชรจริง (ถนน/ตึก/แม่น้ำปิงจาก OpenStreetMap
+   เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์) ขับชนตัวอักษรบนถนน คำละ 🪙40
+   ============================================================ */
+function renderDriveCard(){
+  const el = document.getElementById('drive-card');
+  if(!el) return;
+  let body;
+  if(state.driveTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับไปขับรถได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-drive-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.driveTicket){
+    body = `
+      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🚗🏙️</div>
+        <b>คนขับพร้อมออกรถ!</b><br>
+        <small>ขับรถเที่ยว<b>เมืองกำแพงเพชรของจริง</b> — ถนนทุกสายตรงตามแผนที่จริง<br>
+        เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · ขับชนตัวอักษรบนถนนเก็บมาประกอบคำ คำละ 🪙40<br>
+        ออกนอกถนนรถช้าลง · ชนตึกแรงๆ รถพัง ระวังด้วยนะ!<br>
+        🧑‍🤝‍🧑 เห็นเพื่อนขับรถในเมืองเดียวกันแบบสด</small>
+      </div>
+      ${tinvNoticeHTML('drive')}
+      <button class="big-btn green home-btn" id="btn-enter-drive">🚗 ออกรถ!</button>
+      ${state.tinvClaimed.drive ? '' :
+        `<button class="big-btn blue home-btn" id="btn-inv-drive">📨 ชวนเพื่อนขับด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
+  }else if(!state.droneTicket){
+    body = `
+      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกโดรน FPV 🛸</b>ก่อน (ไต่ระดับโลก 3D ทีละใบ)</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
+      <div class="ticket-desc">
+        <div style="font-size:44px">🚗🕰️</div>
+        <b>ขับรถเที่ยวเมืองกำแพงเพชรของจริง!</b><br>
+        <small>เมืองจริงจากแผนที่จริง — ถนนทุกสาย ตึก แม่น้ำปิง ตรงตำแหน่งจริง<br>
+        ออกรถที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b> · ขับชนตัวอักษรบนถนน คำละ 🪙40<br>
+        ชนตึกแรงๆ รถพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      ${tinvNoticeHTML('drive')}
+      <button class="big-btn blue home-btn" id="btn-buy-drive">🚗 ซื้อตั๋ว 🪙${fmtNum(DRIVE_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-drive');
+  if(buy) buy.addEventListener('click', buyDriveTicket);
+  const enter = document.getElementById('btn-enter-drive');
+  if(enter) enter.addEventListener('click', enterDrive3D);
+  const heal = document.getElementById('btn-drive-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+  const inv = document.getElementById('btn-inv-drive');
+  if(inv) inv.addEventListener('click', ()=>openTinvPicker('drive'));
+}
+
+function buyDriveTicket(){
+  if(state.driveTicket) return;
+  if(!state.droneTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกโดรน FPV ก่อนถึงจะซื้อตั๋วขับรถได้นะ'); return; }
+  if(state.coins < DRIVE_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกขับรถกำแพงเพชร 🪙${fmtNum(DRIVE_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🚗 ซื้อตั๋วโลกขับรถกำแพงเพชร</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(DRIVE_PRICE)}</b><br>
+    ขับรถเที่ยวเมืองกำแพงเพชรจริง เก็บตัวอักษรบนถนน — คำละ 🪙40<br>
+    <small>🕰️ ถนน/ตึก/แม่น้ำตรงตามแผนที่จริง เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · ชนตึกแรงๆ รถพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! 🚗', ()=>{
+      state.coins -= DRIVE_PRICE;
+      state.driveTicket = true;
+      sfx.buy();
+      toast('🚗 ได้ตั๋วโลกขับรถกำแพงเพชรแล้ว! กดปุ่มเขียว "ออกรถ" ได้เลย 🕰️');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
+async function enterDrive3D(){
+  if(!state.driveTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D || !window.KPP_CITY){
+    advLoading = true;
+    toast('🚗 กำลังสตาร์ทรถ + โหลดแผนที่เมืองกำแพงเพชร...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/data/city_kpp.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกขับรถไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('drive');
+}
+
+/* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
    แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
@@ -2773,6 +2877,7 @@ const WORLD3D = [
   { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', price:HAUNT_PRICE,  card:'haunt-card',  enter:enterHaunted3D },
   { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  price:HELI_PRICE,   card:'heli-card',   enter:enterHeli3D },
   { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
+  { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
 ];
 
 function scrollShopCardIntoView(id){

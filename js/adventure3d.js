@@ -64,6 +64,14 @@ const MODES = {
     hint:'W/S เดินหน้า-ถอย · A/D เอียงข้าง · Q/E หันหัว · Space ขึ้น · Shift ลง · บินเฉียดตัวอักษรเก็บได้เลย',
     koTitle:'🛸💥 โดรนพังแล้ว!',
   },
+  drive: {
+    label:'โลกขับรถกำแพงเพชร', emoji:'🚗', reward:40, doneKey:'driveDone',
+    shoot:false, ghost:false, drive:true,
+    sky:0xaee0f7, fogN:120, fogF:650, ground:0x9cb968,
+    intro:'🚗 <b>ขับรถเที่ยวเมืองกำแพงเพชร!</b><br><small>ถนนจริงทั้งเมืองจากแผนที่จริง — เริ่มที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b><br>ขับชนตัวอักษรบนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง · ระวังชนตึก!</small>',
+    hint:'W/S คันเร่ง-เบรก/ถอย · A/D เลี้ยวซ้าย-ขวา · H บีบแตร · ขับชนตัวอักษรเก็บได้เลย',
+    koTitle:'🚗💥 รถพังแล้ว!',
+  },
 };
 MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
@@ -89,6 +97,20 @@ const DRONE_VMAX  = 30;           // ความเร็วแนวราบ�
 const DRONE_CLIMB = 17;           // แรงไต่/ดิ่ง
 const DRONE_YAWSP = 2.3;          // ความเร็วหันหัว (เฮลิฯ = 1.5)
 const DRONE_GRAV  = 2.6;          // แรงโน้มถ่วงเบาๆ (ปล่อยคันเร่ง = ค่อยๆ ร่วงลง)
+
+/* 🚗 โหมดขับรถเมืองกำแพงเพชร (โหมด drive) — เมืองจริงจาก OSM (js/data/city_kpp.js)
+   จุด (0,0) = หอนาฬิกาวงเวียนต้นโพธิ์ · หน่วยเมตร · เหนือ = -z */
+const CAR_EYE    = 1.32;          // ความสูงตาคนขับ
+const CAR_ACCEL  = 8.5;           // m/s²
+const CAR_BRAKE  = 15;
+const CAR_VMAX   = 25;            // ~90 กม./ชม. บนถนน
+const CAR_VMAX_OFF = 7;           // ออกนอกถนน (ดิน/หญ้า) ช้าลงมาก
+const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
+const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
+const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
+let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
+let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
+let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
@@ -543,7 +565,214 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd){
   return {x:cx,z:cz,w,d,h,solids,rooms};
 }
 
+/* ============================================================
+   🚗 เมืองกำแพงเพชรจริง (โหมด drive) — ข้อมูล OpenStreetMap ใน js/data/city_kpp.js
+   ถนน 705 สาย + ตึกจริง 79 หลัง (36 หลังมีชื่อจริง) + แม่น้ำปิง ตำแหน่งตรงพิกัดจริง
+   ตึกแถวเพิ่มเติมวางเรียงตามแนวถนนจริงแบบ seed คงที่ (bake มาแล้ว) → ทุกเครื่องเห็นเมืองเดียวกัน
+   ============================================================ */
+function makeNameSprite(name){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=104;
+  const c=cv.getContext('2d');
+  c.font='700 40px sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+  c.shadowColor='rgba(0,0,0,.9)'; c.shadowBlur=10;
+  c.lineWidth=7; c.strokeStyle='rgba(0,0,0,.85)'; c.strokeText(name,256,52,492);
+  c.fillStyle='#fff'; c.fillText(name,256,52,492);
+  const t=new THREE.CanvasTexture(cv);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true}));
+  spr.scale.set(30,6.1,1);
+  return spr;
+}
+/* geometry แบนราบจากลิสต์สามเหลี่ยม [x,z,...] (normal ชี้ขึ้น) */
+function flatGeom(arr,y){
+  const n=arr.length/2, pos=new Float32Array(n*3), nor=new Float32Array(n*3);
+  for(let i=0;i<n;i++){ pos[i*3]=arr[i*2]; pos[i*3+1]=y; pos[i*3+2]=arr[i*2+1]; nor[i*3+1]=1; }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  return g;
+}
+function buildDriveCity(sc){
+  const C=window.KPP_CITY;
+  sc.add(new THREE.HemisphereLight(0xffffff,0x93a072,1.02));
+  const sun=new THREE.DirectionalLight(0xfff2cc,.8); sun.position.set(160,320,110); sc.add(sun);
+  const R=C.rad;
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(R*2+500,R*2+500),
+    new THREE.MeshLambertMaterial({color:MODES.drive.ground}));
+  ground.rotation.x=-Math.PI/2; ground.position.y=-.06; sc.add(ground);
+
+  /* ---------- แม่น้ำปิง (ribbon กว้าง 120m ตามแนวจริง) ---------- */
+  const rivTris=[];
+  const rivSegs=[];
+  C.v.forEach(p=>{
+    for(let i=0;i<p.length-2;i+=2){
+      const x1=p[i],z1=p[i+1],x2=p[i+2],z2=p[i+3];
+      const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz)||1e-6,ux=dx/L,uz=dz/L;
+      const w=120, ex=ux*w*.5, ez=uz*w*.5;
+      const ax=x1-ex,az=z1-ez,bx=x2+ex,bz=z2+ez, nx=-uz*w/2,nz=ux*w/2;
+      rivTris.push(ax+nx,az+nz,bx+nx,bz+nz,bx-nx,bz-nz, ax+nx,az+nz,bx-nx,bz-nz,ax-nx,az-nz);
+      rivSegs.push([x1,z1,x2,z2]);
+    }
+  });
+  sc.add(new THREE.Mesh(flatGeom(rivTris,-.03),new THREE.MeshLambertMaterial({color:0x5b93c4})));
+
+  /* ---------- ถนนทุกสาย (mesh รวมก้อนเดียว) + เส้นแบ่งเลนถนนใหญ่ ---------- */
+  const roadTris=[], dashTris=[], nameSegs=[], roadPts=[];
+  const GS=6, GW=Math.ceil((R*2+80)/GS), GOFF=(R+40);       // road grid: 0=นอกถนน 1=ถนน 2=น้ำ
+  const grid=new Uint8Array(GW*GW);
+  const gset=(x,z,v)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+    if(gx>=0&&gz>=0&&gx<GW&&gz<GW){ const k=gz*GW+gx; if(v===1||!grid[k]) grid[k]=v; } };
+  rivSegs.forEach(s=>{                                       // ทาสีน้ำลง grid ก่อน (ถนน=สะพาน ทาทับทีหลัง)
+    const L=Math.hypot(s[2]-s[0],s[3]-s[1]), st=Math.max(1,Math.floor(L/GS*2));
+    for(let i=0;i<=st;i++){
+      const x=s[0]+(s[2]-s[0])*i/st, z=s[1]+(s[3]-s[1])*i/st;
+      for(let ox=-10;ox<=10;ox++) for(let oz=-10;oz<=10;oz++)
+        if(Math.hypot(ox*GS,oz*GS)<=62) gset(x+ox*GS,z+oz*GS,2);
+    }
+  });
+  C.r.forEach(rd=>{
+    const w=rd[0], major=rd[1], nm=rd[2], p=rd[3];
+    for(let i=0;i<p.length-2;i+=2){
+      const x1=p[i],z1=p[i+1],x2=p[i+2],z2=p[i+3];
+      const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz)||1e-6,ux=dx/L,uz=dz/L;
+      const ex=ux*w*.5,ez=uz*w*.5;                           // ยืดปลายท่อนกันรอยโหว่ตรงโค้ง
+      const ax=x1-ex,az=z1-ez,bx=x2+ex,bz=z2+ez, nx=-uz*w/2,nz=ux*w/2;
+      roadTris.push(ax+nx,az+nz,bx+nx,bz+nz,bx-nx,bz-nz, ax+nx,az+nz,bx-nx,bz-nz,ax-nx,az-nz);
+      if(major){
+        if(nm) nameSegs.push([x1,z1,x2,z2,nm,w]);
+        for(let t=5;t<L-2;t+=9){                             // เส้นประกลางถนน
+          const cx=x1+ux*t, cz=z1+uz*t, hx=ux*1.3, hz=uz*1.3, mx=-uz*.18, mz=ux*.18;
+          dashTris.push(cx-hx+mx,cz-hz+mz,cx+hx+mx,cz+hz+mz,cx+hx-mx,cz+hz-mz,
+                        cx-hx+mx,cz-hz+mz,cx+hx-mx,cz+hz-mz,cx-hx-mx,cz-hz-mz);
+        }
+      }
+      const rr=Math.ceil((w/2+1.5)/GS), st=Math.max(1,Math.floor(L/GS*2));
+      for(let s2=0;s2<=st;s2++){
+        const x=x1+dx*s2/st, z=z1+dz*s2/st;
+        for(let ox=-rr;ox<=rr;ox++) for(let oz=-rr;oz<=rr;oz++) gset(x+ox*GS,z+oz*GS,1);
+      }
+      if(w>=5) for(let t=0;t<L;t+=15) roadPts.push(x1+ux*t,z1+uz*t);  // จุด spawn ตัวอักษรบนถนน
+    }
+  });
+  sc.add(new THREE.Mesh(flatGeom(roadTris,.02),new THREE.MeshLambertMaterial({color:0x41454c})));
+  sc.add(new THREE.Mesh(flatGeom(dashTris,.05),new THREE.MeshBasicMaterial({color:0xd8d8d2})));
+
+  /* ---------- กำแพงกันชน (ตึกจริง=ขอบ polygon · ตึกแถว=กล่องหมุน) ใน spatial hash ---------- */
+  const SCELL=42, solidGrid={};
+  const sAdd=(cx,cz,r,o)=>{
+    const x0=Math.floor((cx-r)/SCELL),x1=Math.floor((cx+r)/SCELL),z0=Math.floor((cz-r)/SCELL),z1=Math.floor((cz+r)/SCELL);
+    for(let gx=x0;gx<=x1;gx++) for(let gz=z0;gz<=z1;gz++){
+      const k=gx+','+gz; (solidGrid[k]=solidGrid[k]||[]).push(o);
+    }
+  };
+
+  /* ---------- ตึกจริง 79 หลัง (ผัง footprint ตรงพิกัดจริง) + ป้ายชื่อสถานที่ ---------- */
+  const tints=[0xcfc7b8,0xd8cfc0,0xbfc4cc,0xd9d2c2,0xc4cdc0,0xd6c9c9];
+  C.b.forEach((b,bi)=>{
+    const h=b[0], name=b[1], p=b[2];
+    const shape=new THREE.Shape();
+    shape.moveTo(p[0],-p[1]);
+    for(let i=2;i<p.length;i+=2) shape.lineTo(p[i],-p[i+1]);
+    const g=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});
+    g.rotateX(-Math.PI/2);                                   // extrude → แกน y · shape.y=-z → z โลกตรงพิกัดจริง
+    sc.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:tints[bi%tints.length],side:THREE.DoubleSide})));
+    let cx=0,cz=0; const n=p.length/2;
+    for(let i=0;i<p.length;i+=2){ cx+=p[i]/n; cz+=p[i+1]/n; }
+    for(let i=0;i<p.length;i+=2){                            // ขอบ polygon = กำแพง
+      const x1=p[i],z1=p[i+1],x2=p[(i+2)%p.length],z2=p[(i+3)%p.length];
+      sAdd((x1+x2)/2,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)/2+3,{t:1,x1,z1,x2,z2});
+    }
+    if(name && name.length<=42){
+      const spr=makeNameSprite(name); spr.position.set(cx,h+5,cz); sc.add(spr);
+    }
+  });
+
+  /* ---------- ตึกแถวริมถนนจริง (InstancedMesh ก้อนเดียว — ผัง bake seed คงที่) ---------- */
+  const lots=C.p;
+  const im=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),
+    new THREE.MeshLambertMaterial({color:0xffffff}),lots.length);
+  const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), eu=new THREE.Euler(),
+        vv=new THREE.Vector3(), sv=new THREE.Vector3();
+  const pal=[0xd9cfc0,0xcdd5dd,0xd8c8b4,0xc8d2c2,0xd5cbd0,0xbfc8ce,0xe0d6c4,0xccc4b6].map(c=>new THREE.Color(c));
+  for(let i=0;i<lots.length;i++){
+    const L=lots[i];                                          // [x,z,rot,w,d,h]
+    eu.set(0,L[2],0); q.setFromEuler(eu);
+    vv.set(L[0],L[5]/2,L[1]); sv.set(L[3],L[5],L[4]);
+    m4.compose(vv,q,sv); im.setMatrixAt(i,m4);
+    im.setColorAt(i,pal[i%pal.length]);
+    sAdd(L[0],L[1],Math.hypot(L[3],L[4])/2+2,{t:0,x:L[0],z:L[1],rot:L[2],hx:L[3]/2,hz:L[4]/2});
+  }
+  im.instanceMatrix.needsUpdate=true;
+  if(im.instanceColor) im.instanceColor.needsUpdate=true;
+  sc.add(im);
+
+  /* ---------- หอนาฬิกาวงเวียนต้นโพธิ์ (แลนด์มาร์กจุดเกิด 0,0) ---------- */
+  const brick=new THREE.MeshLambertMaterial({color:0xa8542f});
+  const brickD=new THREE.MeshLambertMaterial({color:0x8c3f22});
+  const island=new THREE.Mesh(new THREE.CircleGeometry(13,30),new THREE.MeshLambertMaterial({color:0x6aa84f}));
+  island.rotation.x=-Math.PI/2; island.position.y=.08; sc.add(island);
+  const hedge=new THREE.Mesh(new THREE.TorusGeometry(12.4,.6,6,30),new THREE.MeshLambertMaterial({color:0x3f7a33}));
+  hedge.rotation.x=Math.PI/2; hedge.position.y=.5; sc.add(hedge);
+  const twBase=new THREE.Mesh(new THREE.BoxGeometry(7,2.2,7),brickD); twBase.position.y=1.1; sc.add(twBase);
+  const twShaft=new THREE.Mesh(new THREE.BoxGeometry(4.6,12,4.6),brick); twShaft.position.y=8.2; sc.add(twShaft);
+  const twClock=new THREE.Mesh(new THREE.BoxGeometry(5.4,3.4,5.4),brickD); twClock.position.y=15.9; sc.add(twClock);
+  const faceG=new THREE.CircleGeometry(1.35,20), faceM=new THREE.MeshBasicMaterial({color:0xf6f1df});
+  [[0,2.71,0],[0,-2.71,Math.PI],[2.71,0,Math.PI/2],[-2.71,0,-Math.PI/2]].forEach(f=>{
+    const fc=new THREE.Mesh(faceG,faceM);
+    fc.position.set(f[0],15.9,f[1]); fc.rotation.y=f[2];
+    fc.translateZ(.04); sc.add(fc);                          // ดันหน้าปัดพ้นผิวอิฐเล็กน้อย
+  });
+  let tw=6.2;
+  [18.2,19.6,20.8].forEach(y=>{
+    const tier=new THREE.Mesh(new THREE.BoxGeometry(tw,1.1,tw),brickD); tier.position.y=y; sc.add(tier); tw*=.62;
+  });
+  const spire=new THREE.Mesh(new THREE.ConeGeometry(1.1,3.6,8),new THREE.MeshLambertMaterial({color:0xd9b44a}));
+  spire.position.y=23.2; sc.add(spire);
+  sAdd(0,0,15,{t:2,x:0,z:0,r:13.2});                          // เกาะกลางวงเวียน = วงกลมชนไม่ได้ (ตามเกาะจริง)
+
+  /* ---------- จุดเกิด: บนถนนวงแหวนรอบวงเวียนหอนาฬิกา (จุดถนนที่ใกล้หอสุด นอกเกาะกลาง r14) ---------- */
+  let spawn={x:0,z:34,yaw:0}, bestD=1e9;
+  C.r.forEach(rd=>{
+    if(rd[0]<6) return;                                      // ข้าม service road
+    const p=rd[3];
+    for(let i=0;i<p.length-2;i+=2){
+      const dx=p[i+2]-p[i], dz=p[i+3]-p[i+1], L2=dx*dx+dz*dz||1e-9;
+      let t=((0-p[i])*dx+(0-p[i+1])*dz)/L2; t=t<0?0:(t>1?1:t);
+      const px=p[i]+dx*t, pz=p[i+1]+dz*t, d=Math.hypot(px,pz);
+      if(d>=16 && d<bestD){ bestD=d; spawn={x:px,z:pz,yaw:Math.atan2(-dx,-dz)}; }
+    }
+  });
+
+  /* ---------- แผนที่เมืองสำหรับเรดาร์ (วาดครั้งเดียว 0.25px/m) ---------- */
+  const MPX=.25, MSZ=Math.ceil(R*2*MPX)+40;
+  cityMapCv=document.createElement('canvas'); cityMapCv.width=cityMapCv.height=MSZ;
+  const mc=cityMapCv.getContext('2d');
+  mc.fillStyle='rgba(16,26,20,.9)'; mc.fillRect(0,0,MSZ,MSZ);
+  const M0=MSZ/2;
+  mc.strokeStyle='rgba(70,120,175,.95)'; mc.lineWidth=120*MPX; mc.lineCap='round';
+  C.v.forEach(p=>{ mc.beginPath(); mc.moveTo(M0+p[0]*MPX,M0+p[1]*MPX);
+    for(let i=2;i<p.length;i+=2) mc.lineTo(M0+p[i]*MPX,M0+p[i+1]*MPX); mc.stroke(); });
+  C.r.forEach(rd=>{
+    const p=rd[3];
+    mc.strokeStyle=rd[1]?'rgba(255,255,255,.85)':'rgba(255,255,255,.4)';
+    mc.lineWidth=Math.max(1,rd[0]*MPX); mc.lineCap='round';
+    mc.beginPath(); mc.moveTo(M0+p[0]*MPX,M0+p[1]*MPX);
+    for(let i=2;i<p.length;i+=2) mc.lineTo(M0+p[i]*MPX,M0+p[i+1]*MPX);
+    mc.stroke();
+  });
+  mc.fillStyle='#ffab40'; mc.beginPath(); mc.arc(M0,M0,3,0,7); mc.fill();   // หอนาฬิกา
+
+  worlds.drive={scene:sc, trees:[], buildings:[],
+    d:{grid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:R}};
+}
+
 function buildScene(md){
+  if(md==='drive'){
+    const sc=new THREE.Scene();
+    sc.background=new THREE.Color(MODES.drive.sky);
+    sc.fog=new THREE.Fog(MODES.drive.sky, MODES.drive.fogN, MODES.drive.fogF);
+    buildDriveCity(sc);
+    return;
+  }
   const cfg=MODES[md];
   const sc=new THREE.Scene();
   const tr=[];
@@ -763,9 +992,27 @@ function randPos(minFromPlayer){
   }
   return {x:0,z:0};
 }
+/* 🚗 สุ่มจุดบนถนนจริง ระยะ min–max จากผู้เล่น (โหมด drive) */
+function randRoadPos(minD,maxD){
+  const D=worlds.drive&&worlds.drive.d;
+  if(!D) return randPos(minD);
+  const pts=D.roadPts, n=pts.length/2;
+  for(let i=0;i<40;i++){
+    const j=Math.floor(Math.random()*n);
+    const x=pts[j*2], z=pts[j*2+1];
+    const d=Math.hypot(x-camera.position.x,z-camera.position.z);
+    if(d>=minD && d<=maxD) return {x,z};
+  }
+  return {x:camera.position.x,z:camera.position.z+80};
+}
 function spawnLetter(ch){
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-  if(M.drone && buildings.length){
+  if(M.drive){
+    // โหมดขับรถ: ตัวอักษรลอยบนถนนจริง — ขับชนเพื่อเก็บ (ไม่ต้องจอด)
+    const p=randRoadPos(60,450);
+    spr.position.set(p.x,1.7,p.z);
+    spr.scale.set(3.4,3.4,1);                    // ใหญ่ มองเห็นแต่ไกลตอนขับ
+  }else if(M.drone && buildings.length){
     // โหมดโดรน: ตัวอักษรซ่อนอยู่ในห้องต่างๆ ของตึกร้าง — บินลอดหน้าต่างเข้าไปเก็บ
     const b=buildings[Math.floor(Math.random()*buildings.length)];
     const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
@@ -802,7 +1049,10 @@ function ensureCoverage(){
 function relocateLetters(now){
   letters.forEach(l=>{
     if(now-l.born>=RELOCATE_MS){
-      if(M.drone && buildings.length){
+      if(M.drive){
+        const p=randRoadPos(60,450);
+        l.spr.position.set(p.x,1.7,p.z);
+      }else if(M.drone && buildings.length){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
         const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
         l.spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
@@ -1123,6 +1373,7 @@ function knockedOut(){
   running=false;
   state.advHurt=true; saveState();
   if(M.heli) HeliSound.stop();
+  if(M.drive) CarSound.stop();
   banEl.innerHTML=`<div class="adv-ko">${M.koTitle||'💫 พลังหมดแล้ว!'}<br>
     <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
     รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${sessionRecapHtml()}<br>
@@ -1771,10 +2022,21 @@ function renderBoard(){
   hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html;
 }
 function drawMinimap(){
-  const S=mapCv.width, sc=S/(HALF*2+8);
+  const S=mapCv.width, sc=M.drive? S/620 : S/(HALF*2+8);   // 🚗 เมืองจริงใหญ่ → ซูมเรดาร์ออก (~310m)
   mapCtx.clearRect(0,0,S,S);
   mapCtx.fillStyle=mode==='haunt'?'rgba(18,14,34,.78)':'rgba(20,40,20,.72)';
   mapCtx.beginPath(); mapCtx.arc(S/2,S/2,S/2,0,7); mapCtx.fill();
+  if(M.drive && cityMapCv){
+    // วาดแผนที่ถนนจริง (bitmap เมืองวาดครั้งเดียว) หมุนแบบ heading-up ใต้จุดต่างๆ
+    const MPX=.25, k=sc/MPX;
+    mapCtx.save();
+    mapCtx.beginPath(); mapCtx.arc(S/2,S/2,S/2,0,7); mapCtx.clip();
+    mapCtx.translate(S/2,S/2); mapCtx.rotate(yaw); mapCtx.scale(k,k);
+    mapCtx.drawImage(cityMapCv,
+      -(cityMapCv.width/2+camera.position.x*MPX),
+      -(cityMapCv.height/2+camera.position.z*MPX));
+    mapCtx.restore();
+  }
   // ตัวอักษรที่ "ยังต้องเก็บ" ของคำปัจจุบัน (words[0]) — หักที่มีในมือแล้ว → ไฮไลต์คนละสี
   const need={};
   if(words[0]) words[0].en.split('').forEach(c=>need[c]=(need[c]||0)+1);
@@ -1924,6 +2186,29 @@ function buildDom(){
     border-radius:0;box-shadow:0 0 5px rgba(0,0,0,.85)}
   #adv-overlay.adv-drone:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
     box-shadow:inset 0 0 130px 34px rgba(0,0,0,.5)}
+  /* 🚗 โหมดขับรถกำแพงเพชร: แผงหน้าปัด+ฝากระโปรง (img/car/dash.png) + พวงมาลัยขวาหมุนจริง (img/car/wheel.png)
+     รถพวงมาลัยขวาแบบเมืองไทย · ไม่มีภาพ → CSS จำลองทั้งคู่ (พวงมาลัยยังหมุนได้) */
+  .adv-drive #adv-inst{display:block}
+  .adv-drive #adv-cross{display:none}
+  .adv-drive #adv-gauges,.adv-drive #adv-cockpit{display:none}
+  #adv-cardash{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
+  .adv-drive #adv-cardash{display:block}
+  #adv-cardash img{width:100%;display:block;max-height:42vh;object-fit:cover;object-position:top}
+  #adv-cardash .cd-css{height:16vh;background:linear-gradient(180deg,#262a31,#101216);
+    border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
+  #adv-carwheel{position:absolute;left:66%;bottom:-7vh;transform:translateX(-50%);
+    width:min(36vh,46vw);aspect-ratio:1;pointer-events:none;display:none;z-index:4;will-change:transform}
+  .adv-drive #adv-carwheel{display:block}
+  #adv-carwheel img{width:100%;height:100%;display:block}
+  #adv-carwheel .cw-css{width:100%;height:100%;border-radius:50%;border:2.6vh solid #23262c;
+    box-shadow:0 0 0 5px #14161a inset,0 5px 16px rgba(0,0,0,.55);position:relative;background:transparent}
+  #adv-carwheel .cw-css:before{content:'';position:absolute;left:50%;top:50%;width:80%;height:11%;
+    background:#23262c;transform:translate(-50%,-50%);border-radius:8px}
+  #adv-carwheel .cw-css:after{content:'';position:absolute;left:50%;top:50%;width:11%;height:46%;
+    background:#23262c;transform:translateX(-50%);border-radius:8px}
+  #adv-horn{position:absolute;bottom:26px;right:22px;width:76px;height:76px;border-radius:50%;pointer-events:auto;
+    background:rgba(66,165,245,.9);border:3px solid #fff;font-size:30px;display:none}
+  .adv-touch.adv-drive #adv-horn{display:block}
   /* 💨 ป๊อปโบนัสบินเฉียด (heli/drone) — เด้งขึ้นจางหายเหนือ crosshair */
   #adv-nearmiss{top:43%;left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;z-index:6;
     color:#fff;font-weight:900;font-size:clamp(15px,3.6vw,21px);text-shadow:0 2px 6px #000;white-space:nowrap;
@@ -2101,6 +2386,9 @@ function buildDom(){
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div id="adv-cockpit"></div>
+    <div id="adv-carwheel"></div>
+    <div id="adv-cardash"></div>
+    <button id="adv-horn">📯</button>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
     <div id="adv-radio"></div>
     <div id="adv-reply">
@@ -2171,6 +2459,20 @@ function buildDom(){
   cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); };
   cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; };
   cpImg.src='img/heli_cockpit.png';
+  // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
+  carDashEl=overlayEl.querySelector('#adv-cardash');
+  carWheelEl=overlayEl.querySelector('#adv-carwheel');
+  const cdImg=new Image();
+  cdImg.onload=()=>{ carDashEl.innerHTML=''; carDashEl.appendChild(cdImg); };
+  cdImg.onerror=()=>{ carDashEl.innerHTML=`<div class="cd-css"></div>`; };
+  cdImg.src='img/car/dash.png';
+  const cwImg=new Image();
+  cwImg.onload=()=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(cwImg); };
+  cwImg.onerror=()=>{ carWheelEl.innerHTML=`<div class="cw-css"></div>`; };
+  cwImg.src='img/car/wheel.png';
+  const hornBtn=overlayEl.querySelector('#adv-horn');
+  hornBtn.addEventListener('touchstart',e=>{ e.preventDefault(); CarSound.horn(); },{passive:false});
+  hornBtn.addEventListener('click',e=>{ e.preventDefault(); CarSound.horn(); });
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -2242,6 +2544,7 @@ function bindInput(){
     });
     document.addEventListener('mousemove',e=>{
       if(document.pointerLockElement!==canvasEl) return;
+      if(M.drive){ dLook=Math.max(-1.35,Math.min(1.35,dLook-e.movementX*.003)); return; }  // 🚗 เมาส์=ชะโงกมอง รถเลี้ยวด้วย A/D
       yaw-=e.movementX*.0024;
       pitch=Math.max(-1.25,Math.min(1.25,pitch-e.movementY*.0024));
     });
@@ -2251,7 +2554,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -2269,7 +2572,10 @@ function bindInput(){
           joy.dx=dx*cl/max; joy.dy=dy*cl/max;
           dotEl.style.transform=`translate(calc(-50% + ${dx*cl}px),calc(-50% + ${dy*cl}px))`;
         }else if(lookTouch && t.identifier===lookTouch.id){
-          if(M.heli||M.drone){
+          if(M.drive){
+            // โหมดขับรถ: ลากขวา = ชะโงกมองซ้าย-ขวาชั่วคราว (ปล่อยแล้วเด้งกลับมองหน้า)
+            dLook=Math.max(-1.35,Math.min(1.35,dLook-(t.clientX-lookTouch.x)*.006));
+          }else if(M.heli||M.drone){
             // โหมดบิน: ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (throttle/collective)
             yaw-=(t.clientX-lookTouch.x)*(M.drone?.005:.004);
             hCol=Math.max(-1,Math.min(1,hCol-(t.clientY-lookTouch.y)*.012));
@@ -2523,6 +2829,177 @@ function comboFlash(level){
   comboFxEl.className=''; void comboFxEl.offsetWidth;
   comboFxEl.classList.add('on','lv'+level);
 }
+/* ============================================================
+   🚗 โหมดขับรถเมืองกำแพงเพชร — ฟิสิกส์รถอาร์เคด (bicycle model)
+   จอยซ้าย/WASD = คันเร่ง-เบรก + เลี้ยว · H/ปุ่ม 📯 = แตร · ขับชนตัวอักษรเก็บ
+   ============================================================ */
+function driveCell(x,z){                 // 0=นอกถนน 1=ถนน 2=แม่น้ำ
+  const D=worlds.drive.d;
+  const gx=Math.floor((x+D.GOFF)/D.GS), gz=Math.floor((z+D.GOFF)/D.GS);
+  if(gx<0||gz<0||gx>=D.GW||gz>=D.GW) return 0;
+  return D.grid[gz*D.GW+gx];
+}
+function nearestStreet(x,z){             // ชื่อถนนจริงที่กำลังวิ่งอยู่ (โชว์บน OSD)
+  const D=worlds.drive.d; let best=26, nm='';
+  for(const s of D.nameSegs){
+    const dx=s[2]-s[0], dz=s[3]-s[1], L2=dx*dx+dz*dz||1e-9;
+    let t=((x-s[0])*dx+(z-s[1])*dz)/L2; t=t<0?0:(t>1?1:t);
+    const d=Math.hypot(x-s[0]-dx*t, z-s[1]-dz*t);
+    if(d<best){ best=d; nm=s[4]; }
+  }
+  return nm;
+}
+function collideCar(p){
+  const D=worlds.drive.d, CR=1.15;       // รัศมีตัวรถ
+  let hit=false;
+  const list=D.solidGrid[Math.floor(p.x/D.SCELL)+','+Math.floor(p.z/D.SCELL)]||[];
+  for(const s of list){
+    if(s.t===2){                          // วงกลม (เกาะกลางวงเวียน) = ดันออกตามรัศมี
+      const ex=p.x-s.x, ez=p.z-s.z, d=Math.hypot(ex,ez), min=s.r+CR;
+      if(d<min){ const push=(min-d)/(d||1e-6); p.x+=ex*push; p.z+=ez*push; hit=true; }
+    }else if(s.t===0){                    // ตึกแถว = กล่องหมุนรอบแกน y
+      const c=Math.cos(s.rot), si=Math.sin(s.rot);
+      const dx=p.x-s.x, dz=p.z-s.z;
+      const lx=dx*c-dz*si, lz=dx*si+dz*c;                    // โลก→เฟรมตึก (Ry(-rot))
+      const ox=s.hx+CR-Math.abs(lx), oz=s.hz+CR-Math.abs(lz);
+      if(ox>0 && oz>0){
+        let px=0,pz=0;
+        if(ox<oz) px=lx>=0?ox:-ox; else pz=lz>=0?oz:-oz;     // ดันออกแกนที่ทะลุน้อยสุด
+        p.x+=px*c+pz*si; p.z+=-px*si+pz*c;                   // เฟรมตึก→โลก
+        hit=true;
+      }
+    }else{                                // ตึกจริง = กำแพงตามขอบ polygon จริง
+      const dx=s.x2-s.x1, dz=s.z2-s.z1, L2=dx*dx+dz*dz||1e-9;
+      let t=((p.x-s.x1)*dx+(p.z-s.z1)*dz)/L2; t=t<0?0:(t>1?1:t);
+      const qx=s.x1+dx*t, qz=s.z1+dz*t;
+      const ex=p.x-qx, ez=p.z-qz, d=Math.hypot(ex,ez);
+      if(d<CR){ const push=(CR-d)/(d||1e-6); p.x+=ex*push; p.z+=ez*push; hit=true; }
+    }
+  }
+  return hit;
+}
+function tickDrive(dt,now){
+  const D=worlds.drive.d;
+  let th=0, sd=0;
+  if(keys.KeyW||keys.ArrowUp) th+=1;
+  if(keys.KeyS||keys.ArrowDown) th-=1;
+  if(keys.KeyA||keys.ArrowLeft) sd-=1;
+  if(keys.KeyD||keys.ArrowRight) sd+=1;
+  if(joy.on){ th=-joy.dy; sd=joy.dx; }
+  if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
+
+  const onRoad=driveCell(camera.position.x,camera.position.z);
+  const vmax=onRoad===1?CAR_VMAX:CAR_VMAX_OFF;
+  if(th>0) dSpeed+=CAR_ACCEL*(onRoad===1?1:.55)*th*dt;
+  else if(th<0){
+    if(dSpeed>.3) dSpeed=Math.max(0,dSpeed-CAR_BRAKE*dt);          // เบรกก่อน
+    else dSpeed=Math.max(-CAR_VREV,dSpeed+CAR_ACCEL*.7*th*dt);     // จอดแล้วกดค้าง = ถอยหลัง
+  }
+  dSpeed*=Math.max(0,1-(onRoad===1?.22:1.15)*dt);                  // แรงต้าน (นอกถนนหนืดมาก)
+  if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
+
+  // พวงมาลัย: ยิ่งเร็วยิ่งเลี้ยวได้น้อย (กันหมุนติ้ว) — dSteer ใช้หมุนภาพพวงมาลัยด้วย
+  const tgt=sd*CAR_STEER_MAX/(1+Math.abs(dSpeed)*.062);
+  dSteer+=(tgt-dSteer)*Math.min(1,dt*7);
+  yaw-=(dSpeed/CAR_WB)*Math.tan(dSteer)*dt;
+
+  const sin=Math.sin(yaw), cos=Math.cos(yaw);
+  const p={x:camera.position.x-sin*dSpeed*dt, z:camera.position.z-cos*dSpeed*dt};
+  const dc=Math.hypot(p.x,p.z);
+  if(dc>D.rad-25){ const f=(D.rad-25)/dc; p.x*=f; p.z*=f; dSpeed*=.5; }      // สุดขอบเมือง
+  if(driveCell(p.x,p.z)===2){ p.x=camera.position.x; p.z=camera.position.z; dSpeed*=-.3; }  // ริมแม่น้ำ (ข้ามได้เฉพาะสะพาน)
+  const hitSpd=Math.abs(dSpeed);
+  if(collideCar(p)){
+    if(hitSpd>7 && now-hHitAt>900){ hHitAt=now; damagePlayer(Math.min(30,Math.round(hitSpd*1.3))); CarSound.thud(); }
+    else if(hitSpd>2.5) CarSound.thud();
+    dSpeed*=.12;
+  }
+  camera.position.set(p.x, CAR_EYE+Math.sin(now/95)*Math.min(.045,Math.abs(dSpeed)*.002), p.z);
+
+  dLook*=Math.max(0,1-dt*2.6);                                     // หันมองข้างแล้วค่อยๆ เด้งกลับ
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw+dLook);
+  camera.rotateX(-.02);                                            // ก้มนิดเดียว เห็นฝากระโปรง
+  camera.rotateZ(-dSteer*.05*Math.min(1,Math.abs(dSpeed)/8));      // เอียงตัวเข้าโค้ง
+
+  // เก็บตัวอักษร: ขับชน (ไม่ต้องจอด)
+  for(let i=letters.length-1;i>=0;i--){
+    const lp=letters[i].spr.position;
+    if(Math.hypot(lp.x-p.x,lp.z-p.z)<3.4){
+      const ch=letters[i].ch;
+      inv[ch]=(inv[ch]||0)+1; removeLetter(i); sfx.coin(); speakLetter(ch);
+      renderHudInv(); renderHudWords(); tryCompleteWords();
+    }
+  }
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.7)+Math.sin(now/380+l.spr.position.x*2)*.14; });
+
+  // พวงมาลัยหมุนตามจริง (ภาพ img/car/wheel.png หรือวง CSS)
+  if(carWheelEl) carWheelEl.style.transform='translateX(-50%) rotate('+(dSteer*440).toFixed(1)+'deg)';
+
+  // OSD: ความเร็ว + ชื่อถนนจริงที่กำลังวิ่ง
+  if(now-carNameAt>600){ carNameAt=now; carStreet=nearestStreet(p.x,p.z); }
+  if(hudInstEl){
+    const kmh=Math.round(Math.abs(dSpeed)*3.6);
+    hudInstEl.textContent='🚗 '+kmh+' กม./ชม.'+(onRoad===1?'':' · 🌿 นอกถนน')+(carStreet?' · 🛣️ '+carStreet:'');
+  }
+  CarSound.update(th,Math.abs(dSpeed),dt);
+}
+/* เสียงเครื่องยนต์สังเคราะห์ Web Audio (สไตล์เดียวกับ DroneSound — ปลอดลิขสิทธิ์) */
+const CarSound={
+  ctx:null, osc:null, osc2:null, gain:null, lp:null, on:false, rpm:0,
+  start(){
+    if(this.on) return;
+    try{
+      this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();
+      const c=this.ctx; if(c.state==='suspended') c.resume();
+      this.gain=c.createGain(); this.gain.gain.value=0;
+      this.lp=c.createBiquadFilter(); this.lp.type='lowpass'; this.lp.frequency.value=520;
+      this.osc=c.createOscillator(); this.osc.type='sawtooth'; this.osc.frequency.value=55;
+      this.osc2=c.createOscillator(); this.osc2.type='square'; this.osc2.frequency.value=28;
+      const g2=c.createGain(); g2.gain.value=.5;
+      this.osc.connect(this.lp); this.osc2.connect(g2); g2.connect(this.lp);
+      this.lp.connect(this.gain); this.gain.connect(c.destination);
+      this.osc.start(); this.osc2.start(); this.on=true; this.rpm=0;
+    }catch(e){}
+  },
+  update(th,spd,dt){
+    if(!this.on) return;
+    const tgt=.18+Math.min(1,spd/CAR_VMAX)*.72+(th>0?.14:0);
+    this.rpm+=(tgt-this.rpm)*Math.min(1,dt*3);
+    this.osc.frequency.value=48+this.rpm*175;
+    this.osc2.frequency.value=24+this.rpm*88;
+    this.lp.frequency.value=360+this.rpm*950;
+    this.gain.gain.value=.03+this.rpm*.05;
+  },
+  horn(){
+    if(!this.ctx) return;
+    try{
+      const c=this.ctx, t=c.currentTime;
+      [440,554].forEach(f=>{
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='square'; o.frequency.value=f;
+        g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.42);
+        o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.45);
+      });
+    }catch(e){}
+  },
+  thud(){
+    if(!this.ctx) return;
+    try{
+      const c=this.ctx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(38,t+.22);
+      g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.3);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.32);
+    }catch(e){}
+  },
+  stop(){
+    if(!this.on) return;
+    try{ this.osc.stop(); this.osc2.stop(); }catch(e){}
+    this.osc=this.osc2=null; this.on=false;
+  },
+};
+
 function heliFloorAt(x,z){
   let f=0;
   for(const b of buildings){
@@ -3026,6 +3503,7 @@ function loop(){
   const dt=Math.min(clock.getDelta(),.1), now=performance.now();
   if(M.heli){ tickHeli(dt,now); }
   else if(M.drone){ tickDrone(dt,now); }
+  else if(M.drive){ tickDrive(dt,now); }
   else{
     tickPlayer(dt,now);
     if(M.ghost){ tickGhosts(dt,now); }
@@ -3096,6 +3574,15 @@ const INTRO={
           ['↕️','<b>Space</b> = ขึ้น · <b>Shift</b> = ดิ่ง'],
           ['🔄','<b>Q/E</b> = หันหัว · บินเฉียดตัวอักษรเก็บเลย']],
   },
+  drive:{
+    goal:'ขับรถบน<b>ถนนจริงของเมืองกำแพงเพชร</b> (แผนที่จริงทั้งเมือง!) เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · <b>ขับชนตัวอักษร</b>บนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง ระวังชนตึก!',
+    touch:[['🕹️','จอย <b>ซ้าย</b>: ดันขึ้น = คันเร่ง · ดึงลง = เบรก/ถอย · ซ้าย-ขวา = เลี้ยว'],
+           ['👀','ลากครึ่งจอ <b>ขวา</b> = ชะโงกมองข้างทาง (ปล่อยแล้วเด้งกลับ)'],
+           ['📯','แตะปุ่มฟ้า มุมขวาล่าง = บีบแตร']],
+    keys:[['⌨️','<b>W</b> = คันเร่ง · <b>S</b> = เบรก/ถอยหลัง'],
+          ['🔄','<b>A/D</b> = หมุนพวงมาลัยซ้าย-ขวา'],
+          ['📯','<b>H</b> = บีบแตร · เมาส์ = ชะโงกมองข้างทาง']],
+  },
 };
 function showIntro(md,reopen){
   if(!introEl) return;
@@ -3131,12 +3618,14 @@ function closeIntro(md){
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
 function start(md){
-  mode=(md==='haunt'||md==='heli'||md==='drone')?md:'adv';
+  mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
   if(mode==='heli' && !state.heliTicket){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
   if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
+  if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
+  if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
 
   if(!built){
@@ -3164,9 +3653,14 @@ function start(md){
     camera.position.set(0,10,0);                   // เริ่มลอยเหนือลานกลาง (ลานว่าง gx=gz=0) รอบตัวเป็นตึกร้าง
     hVel={x:0,y:0,z:0}; hCol=0; hHitAt=0; hWarnLvl=0; hTiltF=0; hTiltS=0;
     if(hudWarnEl) hudWarnEl.style.display='none';
+  }else if(M.drive){
+    const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
+    camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
+    dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
   }else{
     camera.position.set(0,EYE_H,0);
   }
+  camera.far=M.drive?800:220; camera.updateProjectionMatrix();   // เมืองจริงต้องมองไกล
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   words.forEach(spawnLettersForWord);
@@ -3179,14 +3673,16 @@ function start(md){
     whenGhostsReady(spawnAll);
     setTimeout(spawnAll, 9000);                     // กันเหนียว: ภาพค้างเกิน 9 วิ (เน็ตแย่/หาย) → ปล่อยไปก่อน (ด่านต้องมีผีเสมอ)
   }
-  else if(!M.heli && !M.drone) spawnMonster();
+  else if(!M.heli && !M.drone && !M.drive) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
   overlayEl.classList.toggle('adv-heli',mode==='heli');
   overlayEl.classList.toggle('adv-drone',mode==='drone');
+  overlayEl.classList.toggle('adv-drive',mode==='drive');
   if(mode==='heli') HeliSound.start();
   else if(mode==='drone') DroneSound.start();
+  else if(mode==='drive') CarSound.start();
   hintEl.textContent=M.hint;
   hudHuntEl.style.display='none';
   Voice.spk=state.voiceSpk!==false;                        // สะท้อนค่าที่จำไว้แม้ยังออฟไลน์ (join ทับอีกทีตอนต่อเน็ต)
@@ -3218,6 +3714,7 @@ function exitWorld(){
   HSound.stopAll();
   HeliSound.stop();
   DroneSound.stop();
+  CarSound.stop();
   ATC.reset();
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
@@ -3247,6 +3744,9 @@ window.Adventure3D={
                         ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC}; },
     get drone(){ return {vel:hVel, col:hCol, buildings, solids, warn:hWarnLvl,
                          rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone}; },
+    get drive(){ return {get speed(){return dSpeed}, get steer(){return dSteer}, get street(){return carStreet},
+                         d:worlds.drive&&worlds.drive.d, cell:driveCell, collide:collideCar,
+                         sound:CarSound, wheelEl:carWheelEl, dashEl:carDashEl}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
@@ -3254,6 +3754,7 @@ window.Adventure3D={
       const now=performance.now(); dt=dt||.016;
       if(M.heli){ tickHeli(dt,now); }
       else if(M.drone){ tickDrone(dt,now); }
+      else if(M.drive){ tickDrive(dt,now); }
       else{
         tickPlayer(dt,now);
         if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }

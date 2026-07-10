@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 113 (โลกขับรถกำแพงเพชร 🚗) — ยังรอผู้ใช้ publish:** เพิ่ม map `drive` ใน enum 4 จุดเดียวกับโดรน (/world $map · /tinv map · /rtc · /class $map) — ก้อนเต็มด้านล่างอัปเดตแล้ว (รวมของรอบ 85 ที่ยังค้างด้วย — publish ก้อนเดียวได้ทั้งคู่) · ยังไม่ publish = ขับรถเล่นคนเดียวได้ปกติ แต่ multiplayer/voice/ครูคุมห้องของโลกขับรถยังไม่ทำงาน
 - ⏳ **รอบ 85 (โลกโดรน FPV) — ยังรอผู้ใช้ publish:** เพิ่ม map `drone` ใน enum 4 จุด (/world $map · /tinv map · /rtc · /class $map) — ก้อนเต็มด้านล่างอัปเดตแล้ว · **ยังไม่ publish = โดรนเล่นคนเดียวได้ปกติ แต่ multiplayer/voice/ครูคุมห้องของโลกโดรนจะยังไม่ทำงาน** (เขียน /world/drone โดน deny เงียบๆ ไม่พังเกม) · โครงเหมือนโลกเฮลิฯเป๊ะ ไม่หย่อน security
 - ✅ **รอบ 82 (คำเดียวกันในปาร์ตี้) publish แล้ว 9 ก.ค. 2026:** field `cw` (คำเป้าหมาย string "en|th" ≤60) ใน `/world/$map/$uid` เข้าแล้ว · ยืนยัน logic ฝั่ง client ด้วยการจำลอง peer 8 เคสผ่านหมด (leader election / ลูกทีมตามคำหัวหน้า / guard `lastSharedDone` / คนทั่วไปไม่ส่ง cw ไม่ผูก rules / คำมีอยู่แล้วดันขึ้นหน้าไม่ซ้ำ)
 - ✅ **รอบ 52 (โลกเฮลิคอปเตอร์) publish แล้วพร้อมกัน 9 ก.ค. 2026:** map `heli` ในทุก enum (/world /rtc /class /tinv) + field `y` (ความสูงบิน) ใน /world เข้าแล้ว (มาในก้อนเต็มเดียวกัน)
@@ -128,7 +129,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "world": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive'",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
@@ -154,7 +155,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$fromUid": {
           ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
           ".validate": "newData.hasChildren(['map','n','ts'])",
-          "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'haunt' || newData.val() === 'heli' || newData.val() === 'drone')" },
+          "map": { ".validate": "newData.isString() && (newData.val() === 'adv' || newData.val() === 'haunt' || newData.val() === 'heli' || newData.val() === 'drone' || newData.val() === 'drive')" },
           "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "ts":  { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
@@ -168,7 +169,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && auth.uid === $toUid",
           "$msgId": {
             ".write": "auth != null && newData.child('f').val() === auth.uid",
-            ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone') && newData.hasChildren(['f','t','d','ts'])",
+            ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive') && newData.hasChildren(['f','t','d','ts'])",
             "f":  { ".validate": "newData.isString() && newData.val().length <= 128" },
             "t":  { ".validate": "newData.isString() && (newData.val() === 'offer' || newData.val() === 'answer' || newData.val() === 'ice')" },
             "d":  { ".validate": "newData.isString() && newData.val().length <= 8000" },
@@ -181,7 +182,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "class": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive'",
         "muteAll": {
           ".write": "auth != null",
           ".validate": "newData.hasChildren(['on','by','ts'])",
