@@ -1088,7 +1088,8 @@ function ghostHit(g){
   g.hunting=false; g.wanderAt=now+1400; g.tgt=randPos(0);
   dmgFlashEl.classList.remove('on'); void dmgFlashEl.offsetWidth; dmgFlashEl.classList.add('on');
   HSound.whoosh();
-  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([200,60,120]);
+  // 📳 สั่นแรงชัด "โดนผีทำร้าย" — กระแทก 2 ที (iOS ไม่รองรับ Vibration API สั่นไม่ได้)
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([350,90,180,90,350]);
   showBanner(`💔 <b>โดนผีแตะ! เหลือ ${hauntLives} หัวใจ</b><br><small>รีบวิ่งหนีต่อ! หัวใจหมดเมื่อไรจบเกมนะ</small>`);
 }
 

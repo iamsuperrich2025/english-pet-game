@@ -15,6 +15,7 @@
 - **แก้ (js/adventure3d.js):** เพิ่ม `HAUNT_LIVES=3`/`HAUNT_IFRAME=1500` + ตัวแปร `hauntLives`/`hurtUntil` · จุดโดนแตะเรียก `ghostHit(g)` แทน `caught()`: เสีย 1 หัวใจ + กระเด็นหนี (`movePlayer` ออก 3.4m ผีถอย 2.2m + เลิกไล่ 1.4s) + เกราะกันโดนซ้ำ 1.5s + `showBanner('💔 เหลือ N หัวใจ')` · หัวใจหมด (`<=0`) ค่อย `caught()` jump scare จริง · HUD `#adv-hearts` ❤️/🖤 มุมซ้ายบน (top:42 left:10) · `renderHearts()` (clamp กันติดลบ) เรียกใน start()+ทุกครั้งที่โดน · reset ใน start()
 - **สมดุลผีปรับให้หนีทัน:** `ghostSpeed 5.0→4.3` · `huntR 18→14` (เกิดใกล้แล้วไล่ทันทีน้อยลง) · `seeR 11→9` · `ghostMax 8→7` · intro/hint อัปเดตบอกระบบหัวใจ
 - **ยืนยัน preview:** parse OK ไม่มี error · ผี 7 ตัว · HUD ❤️❤️❤️ โชว์ (rect top42/left10/24px onScreen) · หัวใจลดจริงเมื่อผีแตะ (AFK→🖤) · clamp กันติดลบ · **หมายเหตุ:** i-frame กันเสียซ้ำในเฟรมเดียวเทสต์ตรงๆ ไม่ได้เพราะ RAF throttle ตอน preview background — ตรรกะตรงไปตรงมา (guard `now<hurtUntil`)
+- **รอบ 89 (10 ก.ค. version .94):** ผู้ใช้ขอสั่นตอนโดนผี → เดิม ghostHit สั่นเบา `[200,60,120]` (เบากว่าตอนตาย) เพิ่มเป็นกระแทก 2 ที `[350,90,180,90,350]` ชัดขึ้น · ⚠️ **iOS ไม่รองรับ `navigator.vibrate` สั่นผ่านเว็บไม่ได้ทุกกรณี** — ถ้าผู้ใช้บอก "ไม่สั่น" ให้ถามว่า iPhone ไหม (Android เท่านั้นที่สั่นได้) + เช็กปุ่ม haptic ในตั้งค่า
 
 ### ✅ รอบ 86 (9 ก.ค. commit e188b46) — push ภาพผี 5 ตัวขึ้นเว็บ 👻
 - **อาการ:** ผู้ใช้เจนภาพผีวาง `img/ghosts/` แล้ว แต่มือถือยังเห็นแต่ emoji · **ต้นตอ:** `img/ghosts/ghost_1..5.png` ไม่เคยถูก track ใน git → live Pages ตอบ **404** → โค้ด fallback emoji (ในเครื่อง preview เห็นเพราะมีไฟล์จริง)
