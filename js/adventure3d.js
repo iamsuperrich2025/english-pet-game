@@ -110,6 +110,7 @@ const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle mod
 const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
+let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
@@ -2193,11 +2194,15 @@ function buildDom(){
   .adv-drive #adv-gauges,.adv-drive #adv-cockpit{display:none}
   #adv-cardash{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cardash{display:block}
-  #adv-cardash img{width:100%;display:block;max-height:42vh;object-fit:cover;object-position:top}
+  #adv-cardash img{width:100%;display:block;max-height:42vh;object-fit:cover;object-position:50% 66%}
+  /* เข็มหน้าปัดวิ่งจริง — canvas ทับตำแหน่งวงเกจของภาพ dash.png (อยู่เหนือแผง ใต้พวงมาลัย) */
+  #adv-cargauges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:3}
+  .adv-drive #adv-cargauges{display:block}
   #adv-cardash .cd-css{height:16vh;background:linear-gradient(180deg,#262a31,#101216);
     border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
-  #adv-carwheel{position:absolute;left:66%;bottom:-7vh;transform:translateX(-50%);
-    width:min(36vh,46vw);aspect-ratio:1;pointer-events:none;display:none;z-index:4;will-change:transform}
+  /* พวงมาลัยขวาแบบไทย · จัดให้ "ช่องเปิดบนของพวงมาลัย" ตรงกับวงเกจ → มองเข็มลอดพวงมาลัยแบบรถจริง */
+  #adv-carwheel{position:absolute;left:76.5%;bottom:-15vh;transform:translateX(-50%);
+    width:min(44vh,50vw);aspect-ratio:1;pointer-events:none;display:none;z-index:4;will-change:transform}
   .adv-drive #adv-carwheel{display:block}
   #adv-carwheel img{width:100%;height:100%;display:block}
   #adv-carwheel .cw-css{width:100%;height:100%;border-radius:50%;border:2.6vh solid #23262c;
@@ -2386,8 +2391,9 @@ function buildDom(){
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div id="adv-cockpit"></div>
-    <div id="adv-carwheel"></div>
     <div id="adv-cardash"></div>
+    <canvas id="adv-cargauges"></canvas>
+    <div id="adv-carwheel"></div>
     <button id="adv-horn">📯</button>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
     <div id="adv-radio"></div>
@@ -2463,9 +2469,11 @@ function buildDom(){
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
   const cdImg=new Image();
-  cdImg.onload=()=>{ carDashEl.innerHTML=''; carDashEl.appendChild(cdImg); };
+  cdImg.onload=()=>{ carDashEl.innerHTML=''; carDashEl.appendChild(cdImg); carDashImg=cdImg; };
   cdImg.onerror=()=>{ carDashEl.innerHTML=`<div class="cd-css"></div>`; };
   cdImg.src='img/car/dash.png';
+  carGaugeCv=overlayEl.querySelector('#adv-cargauges');
+  carGaugeCtx=carGaugeCv.getContext('2d');
   const cwImg=new Image();
   cwImg.onload=()=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(cwImg); };
   cwImg.onerror=()=>{ carWheelEl.innerHTML=`<div class="cw-css"></div>`; };
@@ -2943,6 +2951,59 @@ function tickDrive(dt,now){
     hudInstEl.textContent='🚗 '+kmh+' กม./ชม.'+(onRoad===1?'':' · 🌿 นอกถนน')+(carStreet?' · 🛣️ '+carStreet:'');
   }
   CarSound.update(th,Math.abs(dSpeed),dt);
+  drawCarGauges();
+}
+/* ============================================================
+   🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-180 + วัดรอบ 0-8×1000) — วาดทับวงเกจของภาพ dash.png
+   ตำแหน่งวงเกจวัดจากภาพจริง: ซ้าย (1096,662) r80 · ขวา (1258.5,662) r78 (ภาพ 1536×1024)
+   ภาพโดน crop ด้วย object-fit:cover + object-position 50% 66% → คำนวณ scale/offset เองทุกเฟรม
+   (เชื่อ getBoundingClientRect — กฎทองข้อ 3) · ไม่มีภาพ dash = ไม่วาด (แผง CSS ไม่มีวงเกจ)
+   ============================================================ */
+function drawCarDial(c,cx,cy,r,frac,max,step,redFrom){
+  const a0=Math.PI*.75, sweep=Math.PI*1.5;                  // กวาด 270° แบบเกจรถจริง
+  c.save(); c.translate(cx,cy);
+  c.strokeStyle='rgba(228,233,240,.9)'; c.fillStyle='rgba(222,228,236,.92)';
+  c.font='700 '+Math.max(7,r*.17)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+  const n=Math.round(max/step);
+  for(let i=0;i<=n;i++){
+    const a=a0+sweep*i/n, co=Math.cos(a), si=Math.sin(a);
+    c.lineWidth=Math.max(1,r*.028);
+    c.beginPath(); c.moveTo(co*r*.88,si*r*.88); c.lineTo(co*r*.74,si*r*.74); c.stroke();
+    c.fillText(String(i*step), co*r*.56, si*r*.56);
+  }
+  if(redFrom!=null){                                        // โซนแดงวัดรอบ
+    c.strokeStyle='rgba(255,64,58,.85)'; c.lineWidth=Math.max(2,r*.055);
+    c.beginPath(); c.arc(0,0,r*.81, a0+sweep*(redFrom/max), a0+sweep); c.stroke();
+  }
+  const a=a0+sweep*Math.max(0,Math.min(1,frac));
+  c.rotate(a);
+  c.shadowColor='rgba(0,0,0,.65)'; c.shadowBlur=r*.07;      // เข็มแดงเรียว + เงา
+  c.fillStyle='#ff4433';
+  c.beginPath(); c.moveTo(-r*.17,0); c.lineTo(0,-r*.04); c.lineTo(r*.8,0); c.lineTo(0,r*.04);
+  c.closePath(); c.fill();
+  c.shadowBlur=0; c.rotate(-a);
+  c.fillStyle='#14171c'; c.beginPath(); c.arc(0,0,r*.12,0,7); c.fill();
+  c.strokeStyle='#454c56'; c.lineWidth=Math.max(1,r*.03); c.stroke();
+  c.restore();
+}
+function drawCarGauges(){
+  if(!carGaugeCtx) return;
+  const vw=window.innerWidth, vh=window.innerHeight, dpr=Math.min(window.devicePixelRatio||1,2);
+  const c=carGaugeCtx;
+  if(carGaugeCv.width!==Math.round(vw*dpr)||carGaugeCv.height!==Math.round(vh*dpr)){
+    carGaugeCv.width=Math.round(vw*dpr); carGaugeCv.height=Math.round(vh*dpr);
+  }
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,vw,vh);
+  if(!carDashImg||!carDashImg.parentNode) return;           // ยังไม่มีภาพจริง → แผง CSS ไม่มีวงเกจ ไม่วาด
+  const box=carDashImg.getBoundingClientRect();
+  if(!box.width) return;
+  const s=box.width/1536;                                   // cover แนวกว้างชนะเสมอ (landscape)
+  const offY=Math.max(0,1024*s-box.height)*.66;             // object-position 50% 66%
+  const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
+  const kmh=Math.abs(dSpeed)*3.6;
+  drawCarDial(c, gx(1096),  gy(662), 80*s, kmh/180, 180, 20, null);           // สปีด
+  drawCarDial(c, gx(1258.5),gy(662), 78*s, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
 }
 /* เสียงเครื่องยนต์สังเคราะห์ Web Audio (สไตล์เดียวกับ DroneSound — ปลอดลิขสิทธิ์) */
 const CarSound={
