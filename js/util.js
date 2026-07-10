@@ -427,18 +427,22 @@ function openSettings(){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay settings-overlay';
   overlay.innerHTML = `<div class="levelup-box settings-box">
-    <h2 style="margin:0 0 6px">⚙️ ตั้งค่า</h2>
+    <h2 style="margin:0 0 4px">⚙️ ตั้งค่า</h2>
+    <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">เขียว = เปิดอยู่</b> · <b class="set-hint-off">เทา = ปิดอยู่</b></p>
     <div class="set-row" id="set-sound">
-      <span class="set-label">🔊 เสียงในเกม</span>
-      <button class="set-switch"></button>
+      <span class="set-lwrap"><span class="set-label">🔊 เสียงในเกม</span>
+        <span class="set-desc">เสียงเอฟเฟกต์ ปุ่มกด และอ่านออกเสียงคำศัพท์</span></span>
+      <button class="set-switch" aria-label="สลับเสียงในเกม"></button>
     </div>
     ${hapticSupported ? `<div class="set-row" id="set-haptic">
-      <span class="set-label">📳 สั่นเตือน</span>
-      <button class="set-switch"></button>
+      <span class="set-lwrap"><span class="set-label">📳 สั่นเตือน</span>
+        <span class="set-desc">มือถือสั่นตอนโดนผีทำร้าย/ตอบถูก</span></span>
+      <button class="set-switch" aria-label="สลับสั่นเตือน"></button>
     </div>` : ''}
     <div class="set-row" id="set-anim">
-      <span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
-      <button class="set-switch"></button>
+      <span class="set-lwrap"><span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
+        <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
+      <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
     </div>
     <div class="set-row" id="set-avatar">
       <span class="set-label">🦸 ตัวละครของหนู</span>
@@ -452,16 +456,15 @@ function openSettings(){
       `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
     <div style="margin-top:16px"><button class="set-close">เสร็จแล้ว</button></div>
   </div>`;
+  const setSwitch = (el, on)=>{   // แสดงสวิตช์เลื่อน: ลูกกลม + คำว่า เปิด/ปิด
+    if(!el) return;
+    el.className = 'set-switch ' + (on ? 'on' : 'off');
+    el.innerHTML = `<span class="set-sw-txt">${on ? 'เปิด' : 'ปิด'}</span><span class="set-sw-knob"></span>`;
+  };
   const paint = ()=>{
-    const s = overlay.querySelector('#set-sound .set-switch');
-    s.textContent = state.sound ? 'เปิด' : 'ปิด';
-    s.className = 'set-switch ' + (state.sound ? 'on' : 'off');
-    const h = overlay.querySelector('#set-haptic .set-switch');
-    if(h){ const on = state.haptic !== false; h.textContent = on ? 'เปิด' : 'ปิด'; h.className = 'set-switch ' + (on ? 'on' : 'off'); }
-    const a = overlay.querySelector('#set-anim .set-switch');
-    const animOn = !state.noAnim;   // สวิตช์ "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
-    a.textContent = animOn ? 'เปิด' : 'ปิด';
-    a.className = 'set-switch ' + (animOn ? 'on' : 'off');
+    setSwitch(overlay.querySelector('#set-sound .set-switch'), state.sound);
+    setSwitch(overlay.querySelector('#set-haptic .set-switch'), state.haptic !== false);
+    setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     // ข้อ 4: ไฮไลต์ตัวละครที่เลือกอยู่ (ผู้เล่นเดิมยังไม่เลือก = ไม่ไฮไลต์)
     overlay.querySelectorAll('.avatar-mini').forEach(b=>b.classList.toggle('sel', state.playerAvatar === b.dataset.av));
   };
