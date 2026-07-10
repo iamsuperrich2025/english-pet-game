@@ -10,6 +10,15 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 111 (10 ก.ค.) — Lobby 3D: turntable หมุนโชว์ + เล่น animation clip จริงจาก Tripo 🔄 (version .102)
+- **งานตาม HANDOFF (ผู้ใช้เลือก 10 ก.ค.):** (1) turntable auto-spin (2) เช็ก animation clips ใน GLB — ทำครบทั้งคู่ใน `js/lobby3d.js` ไฟล์เดียว
+- **เช็ก clips (สคริปต์ Python อ่าน GLB โดยตรง):** caretaker_male/female มี 2 clips (`NlaTrack` + `NlaTrack.001` ~15.4/15.6s = idle+look_around ที่เลือกตอน animate) · pet_dog มี 1 clip (`NlaTrack` 2.54s) — **ชื่อไม่ตรง regex `idle|breath|stand|rest` → เกมไม่เคยเล่น** (ตามข้อสังเกตรอบ 110)
+- **แก้ setupClips:** ไม่เจอชื่อ idle → fallback `gltf.animations[0]` (clip แรก) · mixer ผูกกับ root ที่ cloneSkinned แล้ว (ถูกอยู่เดิม) → **mixers=2 เล่นจริงทั้งคน+หมา**
+- **turntable:** `AUTO_SPIN_SPEED=0.12` rad/s (~52 วิ/รอบ) หมุนใน tick เมื่อ `!dragging && เว้นจากแตะล่าสุด > AUTO_RESUME_MS(3500)` · bindDrag เซ็ต `dragging/lastTouchT` · เริ่มหมุนทันทีตอนเข้าหน้า (lastTouchT=0)
+- ✅ **ยืนยัน preview จริง (mock login → รับน้องหมา → set level 3 → dashboard):** clipTime เดิน 14.55→17.55 (3 วิ = เล่นจริง+loop) · rotY +0.36 rad/3 วิ (=0.12 rad/s เป๊ะ) · กดค้าง→หยุด (delta 0.01) · ปล่อย 2 วิแรก→ยังนิ่ง (0) · เลย 3.5 วิ→หมุนต่อ (+0.113) · ลากหมุนเองยังทำงาน (targetRot +1.9) · screenshot เห็นคน+หมากำลังหมุน · `_debug()` เพิ่ม dragging/mixers/clipTime
+- 🔜 **ต่อยอดที่เหลือจากรอบ 110:** default หันหลัง (ตอนนี้ turntable หมุนให้เห็นหน้าเองทุก ~26 วิ ปัญหาเบาลง) · retopo ลดโพลี ~145k→15k ให้เบาบนมือถือ · pet_cat/pet_dragon (ฝั่งผู้ใช้ทำบน Tripo)
+- ⚠️ commit เฉพาะ js/lobby3d.js + version.json + handoff/TASKS.md + HANDOFF.md (pin pathspec)
+
 ### ✅ รอบ 87 (9 ก.ค.) — โลกผีตายยากขึ้น: ระบบหัวใจ 3 ดวง ❤️ (version .92)
 - **อาการผู้ใช้:** "ด่านผีตายง่ายไป กำลังเล่นสนุกๆ ตายอีกแล้ว" · **ต้นตอ:** โดนผีแตะ (`d<1.25`) = `caught()` **ตายทีเดียวจบ** ไม่มีโอกาสแก้ตัว + ผีเร็ว 5.0 (ผู้เล่น 6) หนีเฉียดฉิว
 - **แก้ (js/adventure3d.js):** เพิ่ม `HAUNT_LIVES=3`/`HAUNT_IFRAME=1500` + ตัวแปร `hauntLives`/`hurtUntil` · จุดโดนแตะเรียก `ghostHit(g)` แทน `caught()`: เสีย 1 หัวใจ + กระเด็นหนี (`movePlayer` ออก 3.4m ผีถอย 2.2m + เลิกไล่ 1.4s) + เกราะกันโดนซ้ำ 1.5s + `showBanner('💔 เหลือ N หัวใจ')` · หัวใจหมด (`<=0`) ค่อย `caught()` jump scare จริง · HUD `#adv-hearts` ❤️/🖤 มุมซ้ายบน (top:42 left:10) · `renderHearts()` (clamp กันติดลบ) เรียกใน start()+ทุกครั้งที่โดน · reset ใน start()

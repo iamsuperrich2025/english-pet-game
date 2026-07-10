@@ -1,8 +1,9 @@
 /* ============================================================
-   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 105)
+   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 111)
    • โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb)
-   • idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip ถ้ามีในไฟล์
+   • idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
    • ปัด/ลากซ้าย-ขวา = หมุนตัวละคร 360° ดูรอบตัว
+   • turntable: ไม่แตะสักพัก → หมุนโชว์ช้าๆ อัตโนมัติ (แตะ=หยุด ปล่อย 3.5 วิ=หมุนต่อ)
    • ไม่มีไฟล์ .glb / โหลดไม่ได้ / เปิดแบบ file:// → ซ่อน canvas ใช้ภาพ PNG เดิม (fallback)
    โหลด dynamic: ต้องมี global THREE (js/vendor/three.min.js) + THREE.GLTFLoader (js/vendor/GLTFLoader.js)
    ============================================================ */
@@ -25,6 +26,9 @@ const Lobby3D = (function(){
   let curGiant=-1;
   const existCache={};                             // "avatar|petType" -> true/false (มีไฟล์ glb ครบไหม)
   let dragRot=0, targetRot=0, spinVel=0;           // มุมหมุนจากการปัด
+  let dragging=false, lastTouchT=0;                // สถานะนิ้ว (คุม turntable auto-spin)
+  const AUTO_SPIN_SPEED = 0.12;                    // rad/s (~52 วิ/รอบ) หมุนโชว์ตอน idle
+  const AUTO_RESUME_MS  = 3500;                    // ปล่อยนิ้วแล้วรอเท่านี้ค่อยหมุนต่อ
   const gltfCache={};                              // url -> gltf.scene (ต้นฉบับ clone ได้)
 
   function isFileProto(){ return location.protocol === 'file:'; }
@@ -107,11 +111,11 @@ const Lobby3D = (function(){
 
   function clearMixers(){ mixers.forEach(m=>m.stopAllAction&&m.stopAllAction()); mixers=[]; }
 
-  // เล่น idle clip ถ้ามีชื่อ idle/breath/stand ไม่งั้นใช้ procedural sway อย่างเดียว
+  // เล่น idle clip: หาชื่อ idle/breath/stand ก่อน · Tripo export ชื่อ clip เป็น NlaTrack/NlaTrack.001
+  // (ท่าที่เลือกตอน animate คือ idle/look_around ทั้งคู่ ปลอดภัยในล็อบบี้) → ไม่เจอชื่อ ใช้ clip แรกแทน
   function setupClips(gltf, root){
     if(!gltf.animations || !gltf.animations.length) return;
-    const idle = gltf.animations.find(a=>/idle|breath|stand|rest/i.test(a.name)) || null;
-    if(!idle) return;                    // ไม่มี idle จริง → ปล่อยให้ procedural ทำ (เดิน/วิ่งไม่เล่นในล็อบบี้)
+    const idle = gltf.animations.find(a=>/idle|breath|stand|rest/i.test(a.name)) || gltf.animations[0];
     const mixer = new three.AnimationMixer(root);
     mixer.clipAction(idle).play();
     mixers.push(mixer);
@@ -192,11 +196,11 @@ const Lobby3D = (function(){
   // ---- ปัด/ลาก หมุนตัวละคร ----
   function bindDrag(){
     let down=false, lastX=0, lastT=0;
-    const start=(x)=>{ down=true; lastX=x; lastT=performance.now(); spinVel=0; };
+    const start=(x)=>{ down=true; dragging=true; lastX=x; lastT=performance.now(); lastTouchT=lastT; spinVel=0; };
     const move=(x)=>{ if(!down) return; const dx=x-lastX; lastX=x;
-      const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now;
+      const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now; lastTouchT=now;
       targetRot += dx*0.012; spinVel = (dx*0.012)/(dt/16.7); };
-    const end=()=>{ down=false; };
+    const end=()=>{ down=false; dragging=false; lastTouchT=performance.now(); };
     canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); start(e.clientX); });
     canvas.addEventListener('pointermove', e=>move(e.clientX));
     window.addEventListener('pointerup', end);
@@ -211,6 +215,8 @@ const Lobby3D = (function(){
     const dash = document.getElementById('screen-dashboard');
     if(!dash || !dash.classList.contains('active')){ stop(); return; }
     const dt = clock.getDelta();
+    // turntable: หมุนโชว์ช้าๆ ตอนไม่มีใครแตะ (ปล่อยนิ้วแล้วพักครู่ค่อยหมุนต่อ)
+    if(!dragging && performance.now()-lastTouchT > AUTO_RESUME_MS) targetRot += AUTO_SPIN_SPEED*dt;
     // โมเมนตัมหลังปล่อยนิ้ว
     if(Math.abs(spinVel) > 0.0001){ targetRot += spinVel; spinVel *= 0.92; if(Math.abs(spinVel)<0.0004) spinVel=0; }
     dragRot += (targetRot - dragRot) * 0.18;
@@ -278,5 +284,7 @@ const Lobby3D = (function(){
     _debug:()=>({running, disabled, curKey, curGiant,
       ownerLoaded:!!(ownerRoot&&ownerRoot.userData.gltf), petLoaded:!!(petRoot&&petRoot.userData.gltf),
       triangles: renderer?renderer.info.render.triangles:0,
-      rotY: spin?+spin.rotation.y.toFixed(3):null, targetRot:+targetRot.toFixed(3)}) };
+      rotY: spin?+spin.rotation.y.toFixed(3):null, targetRot:+targetRot.toFixed(3),
+      dragging, mixers:mixers.length,
+      clipTime:mixers[0]?+mixers[0].time.toFixed(2):null}) };
 })();
