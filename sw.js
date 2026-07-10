@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v3';   // v3: เพิ่มโลกผจญภัย 3D (three.js vendor + adventure3d.js)
+const CACHE_VERSION = 'pet-vocab-v4';   // v4: อัปเดตภาพผีชุดใหม่ 5 ตัว (ล้างแคชเก่าให้ผู้เล่นเก่าเห็นภาพใหม่)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
