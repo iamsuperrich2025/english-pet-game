@@ -1066,7 +1066,7 @@ function renderRankCard(){
   el.innerHTML = `
     <div class="rank-badge-wrap">${rankBadgeHTML(r.id, r.emoji, 'rank-badge-img')}</div>
     <div class="rank-body">
-      <div class="rank-name" style="color:${r.color}">${r.emoji} ${info.label} <small>${r.en}${info.tier ? ' ' + info.tier : ''}</small></div>
+      <div class="rank-name" style="color:${r.color}">${r.emoji} ${info.label}</div>
       <div class="rank-bar"><div class="rank-fill" style="width:${Math.round(info.prog*100)}%;background:${r.color}"></div></div>
       <div class="rank-text">${nextText}</div>
     </div>`;
@@ -1091,7 +1091,6 @@ function showRankUp(before, after){
         ${rankBadgeHTML(r.id, r.emoji, 'rankup-badge-img')}
       </div>
       <div class="rankup-name" style="color:${r.color}">${r.name}${after.tier ? ' ' + after.tier : ''}</div>
-      <div class="rankup-en">${r.en}${after.tier ? ' ' + after.tier : ''}</div>
       <p class="rankup-sub">เลื่อนจาก ${before.rank.emoji} ${before.label} — เก่งมาก สู้ต่อไป!</p>
       <button class="rankup-btn">รับตำแหน่ง 🎉</button>
     </div>`;
@@ -1337,7 +1336,6 @@ function renderDashboard(){
   /* โฉมใหม่ 2 (ผู้ใช้สั่ง 8 ก.ค.): น้องตัวใหญ่กลางเวที ห้ามมีแผงทับตัว
      สถานะแยก 2 แผงใส sci-fi ขนาบข้าง — ซ้าย=ข้อมูลน้อง · ขวา=การดูแล (ร่างไข่ไม่มีแผงขวา) */
   card.innerHTML = `
-    <div class="stage-hero"><div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
     <div class="stage-plate plate-left">
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       <div class="plate-head">
@@ -1366,6 +1364,7 @@ function renderDashboard(){
         </div>
       </div>` : ''}
     </div>
+    <div class="stage-hero"><div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
     ${hungerUI ? `
     <div class="stage-plate plate-right">
       <div class="plate-title">⬢ การดูแล</div>

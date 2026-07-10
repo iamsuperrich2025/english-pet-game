@@ -15,13 +15,13 @@
    เกมตรวจเจอเอง ไม่มีภาพจะใช้อีโมจิแทน                          */
 
 const RANKS = [
-  {id:'bronze',   name:'Novice Lexicon',    en:'NOVICE LEXICON',    emoji:'🥉', color:'#b07a4a', min:0},          // 0 – 9,999
-  {id:'silver',   name:'Fluent Tracker',    en:'FLUENT TRACKER',    emoji:'🥈', color:'#9aa5b5', min:10000},      // 10,000 – 199,999
-  {id:'gold',     name:'Silver Scholar',    en:'SILVER SCHOLAR',    emoji:'🥇', color:'#e0a92e', min:200000},     // 200,000 – 999,999
-  {id:'platinum', name:'Golden Explorer',   en:'GOLDEN EXPLORER',   emoji:'💠', color:'#5bc0de', min:1000000},    // 1,000,000 – 1,999,999
-  {id:'diamond',  name:'Platinum Linguist', en:'PLATINUM LINGUIST', emoji:'💎', color:'#7d5fc0', min:2000000},    // 2,000,000 – 3,999,999
-  {id:'master',   name:'Emerald Archivist', en:'EMERALD ARCHIVIST', emoji:'🔱', color:'#e05b3a', min:4000000},    // 4,000,000 – 19,999,999
-  {id:'marshal',  name:'Apex Wordmaster',   en:'APEX WORDMASTER',   emoji:'⭐', color:'#d4386f', min:20000000},   // ≥ 20,000,000
+  {id:'bronze',   name:'Novice Lexicon',    en:'NOVICE LEXICON',    emoji:'📘', color:'#3a76d8', min:0},          // 0 – 9,999
+  {id:'silver',   name:'Fluent Tracker',    en:'FLUENT TRACKER',    emoji:'🐾', color:'#43b04a', min:10000},      // 10,000 – 199,999
+  {id:'gold',     name:'Silver Scholar',    en:'SILVER SCHOLAR',    emoji:'🎓', color:'#6f97bd', min:200000},     // 200,000 – 999,999
+  {id:'platinum', name:'Golden Explorer',   en:'GOLDEN EXPLORER',   emoji:'🧭', color:'#e0a92e', min:1000000},    // 1,000,000 – 1,999,999
+  {id:'diamond',  name:'Platinum Linguist', en:'PLATINUM LINGUIST', emoji:'🔮', color:'#8a63d2', min:2000000},    // 2,000,000 – 3,999,999
+  {id:'master',   name:'Emerald Archivist', en:'EMERALD ARCHIVIST', emoji:'📗', color:'#17a877', min:4000000},    // 4,000,000 – 19,999,999
+  {id:'marshal',  name:'Apex Wordmaster',   en:'APEX WORDMASTER',   emoji:'👑', color:'#e23b4e', min:20000000},   // ≥ 20,000,000
 ];
 const RANK_TIERS = ['III','II','I'];   // นับถอยหลัง: III ต่ำสุด → I สูงสุด
 
