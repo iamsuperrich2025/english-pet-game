@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v5';   // v5: อัปเดตภาพตราแรงค์ใหม่ทั้ง 7 (ล้างแคชเก่าให้ผู้เล่นเก่าเห็นตราใหม่)
+const CACHE_VERSION = 'pet-vocab-v6';   // v6: แก้ตราแรงค์ 7 เป็น Apex Wordmaster (เดิมภาพเขียน Diamond Overlord)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
