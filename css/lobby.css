@@ -489,6 +489,16 @@ h1{color:var(--sky-d);text-shadow:none;}
   width:78%;height:2px;border-radius:50%;pointer-events:none;z-index:0;
   background:linear-gradient(90deg,transparent,rgba(120,210,255,.6),transparent);
   box-shadow:0 0 22px 6px rgba(90,180,255,.28);}
+/* เหรียญตราแรงค์ใหญ่ฉากหลังเวที (รอบ 114) — z0 อยู่หลังตัวละคร PNG และ canvas 3D (z1) */
+.hero-rank-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:0;pointer-events:none;}
+.hero-rank-bg::before{content:'';position:absolute;width:min(50vh,460px);height:min(50vh,460px);
+  border-radius:50%;background:radial-gradient(circle, var(--rank-c,#3a76d8), transparent 68%);
+  opacity:.22;filter:blur(4px);}
+.hero-rank-bg img{height:min(52vh,470px);max-width:80%;object-fit:contain;
+  transform:translateY(-4%);opacity:.6;
+  filter:drop-shadow(0 0 30px var(--rank-c,#3a76d8)) saturate(.92);}
+
 /* canvas โมเดล 3D (รอบ 104) — วางทับโซนตัวละคร โปร่งใสให้เห็นฉากหลัง · ปัดเพื่อหมุน */
 #lobby3d-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;cursor:grab;}
 #lobby3d-canvas:active{cursor:grabbing;}

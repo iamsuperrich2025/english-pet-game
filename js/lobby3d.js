@@ -1,9 +1,8 @@
 /* ============================================================
-   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 111)
+   lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114)
    • โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb)
    • idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
-   • ปัด/ลากซ้าย-ขวา = หมุนตัวละคร 360° ดูรอบตัว
-   • turntable: ไม่แตะสักพัก → หมุนโชว์ช้าๆ อัตโนมัติ (แตะ=หยุด ปล่อย 3.5 วิ=หมุนต่อ)
+   • ปัด/ลากซ้าย-ขวา = หมุนตัวละคร 360° ดูรอบตัว (ตอน idle ยืนหันหน้าตรง ไม่หมุนเอง — ผู้ใช้สั่งรอบ 114)
    • ไม่มีไฟล์ .glb / โหลดไม่ได้ / เปิดแบบ file:// → ซ่อน canvas ใช้ภาพ PNG เดิม (fallback)
    โหลด dynamic: ต้องมี global THREE (js/vendor/three.min.js) + THREE.GLTFLoader (js/vendor/GLTFLoader.js)
    ============================================================ */
@@ -26,9 +25,6 @@ const Lobby3D = (function(){
   let curGiant=-1;
   const existCache={};                             // "avatar|petType" -> true/false (มีไฟล์ glb ครบไหม)
   let dragRot=0, targetRot=0, spinVel=0;           // มุมหมุนจากการปัด
-  let dragging=false, lastTouchT=0;                // สถานะนิ้ว (คุม turntable auto-spin)
-  const AUTO_SPIN_SPEED = 0.12;                    // rad/s (~52 วิ/รอบ) หมุนโชว์ตอน idle
-  const AUTO_RESUME_MS  = 3500;                    // ปล่อยนิ้วแล้วรอเท่านี้ค่อยหมุนต่อ
   const gltfCache={};                              // url -> gltf.scene (ต้นฉบับ clone ได้)
 
   function isFileProto(){ return location.protocol === 'file:'; }
@@ -176,9 +172,10 @@ const Lobby3D = (function(){
 
   function frameCamera(g){
     // ให้กล้องกรอบพอดีความสูงรวม (เน้นน้องเป็นหลัก) + เผื่อขอบ
+    // รอบ 114: เผื่อขอบมากขึ้น (1.16→1.55) = ตัวละครเล็กลง ~25% เปิดที่ให้เห็นเหรียญแรงค์ฉากหลัง
     const topH = Math.max(PET_H[g], OWNER_H[g]);
     const centerY = topH * 0.52;
-    const fitH = topH * 1.16;
+    const fitH = topH * 1.55;
     const dist = (fitH/2) / Math.tan((camera.fov*Math.PI/180)/2);
     camera.position.set(0, centerY, dist + 0.4);
     camera.lookAt(0, centerY, 0);
@@ -196,11 +193,11 @@ const Lobby3D = (function(){
   // ---- ปัด/ลาก หมุนตัวละคร ----
   function bindDrag(){
     let down=false, lastX=0, lastT=0;
-    const start=(x)=>{ down=true; dragging=true; lastX=x; lastT=performance.now(); lastTouchT=lastT; spinVel=0; };
+    const start=(x)=>{ down=true; lastX=x; lastT=performance.now(); spinVel=0; };
     const move=(x)=>{ if(!down) return; const dx=x-lastX; lastX=x;
-      const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now; lastTouchT=now;
+      const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now;
       targetRot += dx*0.012; spinVel = (dx*0.012)/(dt/16.7); };
-    const end=()=>{ down=false; dragging=false; lastTouchT=performance.now(); };
+    const end=()=>{ down=false; };
     canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); start(e.clientX); });
     canvas.addEventListener('pointermove', e=>move(e.clientX));
     window.addEventListener('pointerup', end);
@@ -215,8 +212,6 @@ const Lobby3D = (function(){
     const dash = document.getElementById('screen-dashboard');
     if(!dash || !dash.classList.contains('active')){ stop(); return; }
     const dt = clock.getDelta();
-    // turntable: หมุนโชว์ช้าๆ ตอนไม่มีใครแตะ (ปล่อยนิ้วแล้วพักครู่ค่อยหมุนต่อ)
-    if(!dragging && performance.now()-lastTouchT > AUTO_RESUME_MS) targetRot += AUTO_SPIN_SPEED*dt;
     // โมเมนตัมหลังปล่อยนิ้ว
     if(Math.abs(spinVel) > 0.0001){ targetRot += spinVel; spinVel *= 0.92; if(Math.abs(spinVel)<0.0004) spinVel=0; }
     dragRot += (targetRot - dragRot) * 0.18;
@@ -230,6 +225,13 @@ const Lobby3D = (function(){
   function start(){ if(running) return; running=true; clock.start(); raf=requestAnimationFrame(tick); }
   function stop(){ running=false; if(raf) cancelAnimationFrame(raf); raf=0; }
 
+  // ซ่อนภาพ PNG ทันทีที่รู้ว่ามีโมเดล 3D (กันภาพเก่าวูบขึ้นก่อนโมเดลโหลดเสร็จ — ผู้ใช้สั่งรอบ 114)
+  // โหลดพลาดจริงค่อยคืน PNG ผ่าน showCanvas(false)
+  function hidePng(){
+    const png = heroEl && heroEl.querySelector('.hero-scene');
+    if(png) png.style.visibility='hidden';
+  }
+
   function showCanvas(on){
     if(!heroEl) return;
     const png = heroEl.querySelector('.hero-scene');
@@ -237,7 +239,8 @@ const Lobby3D = (function(){
       if(canvas.parentElement !== heroEl) heroEl.appendChild(canvas);
       canvas.style.display=''; if(png) png.style.visibility='hidden';
     }else{
-      canvas.style.display='none'; if(png) png.style.visibility='';
+      if(canvas) canvas.style.display='none';
+      if(png) png.style.visibility='';
     }
   }
 
@@ -247,6 +250,9 @@ const Lobby3D = (function(){
     heroEl = hero;
     if(!heroEl) return;
     const key = `${opts.avatar||'male'}|${opts.petType}|${opts.stage}`;
+    // ซ่อน PNG ตั้งแต่เฟรมแรกกันภาพวูบก่อนโมเดลโหลด — ถ้าเช็กแล้วไม่มีโมเดล
+    // showCanvas(false) คืน PNG ให้ (เคสมี cache คืนใน microtask เดียว ไม่ทันเห็น)
+    hidePng();
     // ถ้าพร้อมแล้วและ key เดิม → แค่แนบ canvas + อัปเดตขนาดร่างยักษ์
     if(renderer && curKey === key && ownerRoot.userData.gltf && petRoot.userData.gltf){
       if(curGiant !== (opts.giant||0)) applyLayout(opts.giant||0);
@@ -258,8 +264,9 @@ const Lobby3D = (function(){
     try{
       const exists = await modelsExist(opts.avatar, opts.petType);
       if(!exists){ showCanvas(false); booting=false; return; }   // ไม่มีไฟล์ → PNG (ไม่โหลด three)
+      hidePng();                                   // มีโมเดลแน่ → ไม่ให้ PNG โผล่ระหว่างโหลด
       const ok = await ensureLibs();
-      if(!ok){ disabled=true; booting=false; return; }
+      if(!ok){ disabled=true; showCanvas(false); booting=false; return; }   // คืน PNG (ถูก hidePng ไว้)
       if(!renderer) initRenderer();
       await loadModels(opts.avatar, opts.petType);   // throw ถ้าไฟล์ไม่มี → fallback
       curKey = key;
@@ -285,6 +292,6 @@ const Lobby3D = (function(){
       ownerLoaded:!!(ownerRoot&&ownerRoot.userData.gltf), petLoaded:!!(petRoot&&petRoot.userData.gltf),
       triangles: renderer?renderer.info.render.triangles:0,
       rotY: spin?+spin.rotation.y.toFixed(3):null, targetRot:+targetRot.toFixed(3),
-      dragging, mixers:mixers.length,
+      mixers:mixers.length,
       clipTime:mixers[0]?+mixers[0].time.toFixed(2):null}) };
 })();

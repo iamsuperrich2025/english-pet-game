@@ -10,6 +10,14 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 114 (10 ก.ค.) — Lobby 3D ตาม feedback ผู้ใช้ 3 ข้อ: เลิกหมุนเอง + ซ่อน PNG ตอนโหลด + ย่อโมเดล/ฉากหลังแรงค์ 🏅 (version .104)
+- **feedback ผู้ใช้ (พร้อม screenshot):** (1) ไม่เอา turntable หมุนเอง (รอบ 111) ให้ยืนหันหน้าตรง แต่คงปัดหมุนไว้ (2) ภาพ PNG (หมาป่วย+อีโมจิคน) วูบขึ้นก่อนโมเดล 3D โหลดเสร็จ — ไม่ควรเห็น (3) ย่อคน+สัตว์ลง ใส่ภาพแรงค์ใหญ่เป็นฉากหลัง
+- **(1) js/lobby3d.js:** ถอน AUTO_SPIN_SPEED/AUTO_RESUME_MS/dragging/lastTouchT + บรรทัด auto-spin ใน tick ออกหมด — targetRot ขยับได้จาก pointer event เท่านั้น (ยืนยัน: idle 3.5 วิ rotY=0 · ปัดแล้ว targetRot +0.72)
+- **(2) js/lobby3d.js:** `hidePng()` ซ่อน `.hero-scene` ตั้งแต่บรรทัดแรกของ attach (ก่อน HEAD check) · เช็กแล้วไม่มีไฟล์ → `showCanvas(false)` คืน PNG (เคส cache คืนใน microtask ไม่กะพริบ) · กันตาย 2 จุด: ensureLibs พลาด→คืน PNG · showCanvas guard `canvas` null · **ยืนยัน: sample ทุก 100ms ตลอดช่วงโหลด PNG ไม่โผล่เลย · เคสแมว (ไม่มี glb) PNG กลับมาโชว์ปกติ**
+- **(3) frameCamera fitH 1.16→1.55** = โมเดลเล็กลง ~25% · **ui.js `heroRankBgHTML()`** (หลัง caretakerFigureHTML) แทรกใน `.stage-hero` ก่อน `.hero-scene` — ภาพ `img/rank/rank_<id>.png` ตามแรงค์จริง (`rankInfo(netWorth())`) + `--rank-c` สีแรงค์ · **lobby.css `.hero-rank-bg`** z0 กลางเวที (img ~52vh + วงเรืองแสง ::before + drop-shadow สีแรงค์ opacity .6) อยู่หลัง PNG/canvas(z1) · probe รูปแล้ว re-render dashboard อยู่แล้ว (main.js:84) ไม่ต้องแก้ timing · ยืนยัน: `.hero-rank-bg img` = rank_bronze 358×374 ใน hero 450×510
+- ⚠️ **RAF throttle หนักรอบนี้ (Browser pane hidden ทั้ง session):** วัดอนิเมชัน/screenshot ไม่ได้เลย — ยืนยันด้วย DOM/event/getBoundingClientRect แทนทั้งหมด (mixers=2 ยังอยู่ · clip เล่นยืนยันไปแล้วรอบ 111 โค้ดส่วนนั้นไม่ได้แตะ)
+- 🔴 **สำคัญ — commit รอบนี้ต้อง stage บาง hunk:** session คู่ขนาน (โลกขับรถ รอบ 113) แก้ `ui.js` ค้างอยู่ (+~104 บรรทัด renderDriveCard ฯลฯ) → ห้าม `git commit -- js/ui.js` ตรงๆ ใช้ `git apply --cached` เฉพาะ 2 hunk ของงานนี้ (heroRankBgHTML + บรรทัด stage-hero) แล้ว commit จาก index
+
 ### ✅ รอบ 112 (10 ก.ค.) — push เสียง Suno 4 ไฟล์ขึ้นเว็บ 🔊 (version .103 · commit f394661)
 - ผู้ใช้เจนเสียงจาก Suno วาง `sound/` แล้ว 4 ไฟล์: `haunt_ambient.mp3` (3.7MB) / `haunt_chase.mp3` / `haunt_scare.mp3` / `spark.mp3` — เดิม untracked = live 404 (บทเรียนเดียวกับรอบ 86 ภาพผี)
 - ตรวจแล้วชื่อไฟล์ตรงกับที่โค้ดรอรับพอดี (`adventure3d.js:1145` HSound 3 ไฟล์ผี · `util.js:161` spark) → **ไม่ต้องแก้โค้ด** แค่ `git add` เจาะจง 4 ไฟล์ + บัมพ์ version → push

@@ -57,6 +57,15 @@ function caretakerFigureHTML(){
   return `<div class="caretaker-fig caretaker-emoji">${emoji}</div>`;
 }
 
+/* รอบ 114: เหรียญตราแรงค์ใหญ่เป็นฉากหลังกลางเวที lobby (อยู่หลังตัวละคร/canvas 3D)
+   ใช้แรงค์ปัจจุบันจาก net worth · ไม่มีไฟล์ภาพ = ไม่โชว์ (ไม่ใช้อีโมจิ กันรก) */
+function heroRankBgHTML(){
+  const info = rankInfo(netWorth());
+  const img = IMG_FILES[`rank_${info.rank.id}`];
+  if(!img) return '';
+  return `<div class="hero-rank-bg" style="--rank-c:${info.rank.color}"><img src="${img}" alt=""></div>`;
+}
+
 /* ร่างยักษ์ (รอบ 102): อัพเกรดขยายน้องในหน้า lobby ด้วยเหรียญ
    ระดับ 0=ปกติ (น้องเล็กกว่าผู้เลี้ยง) → GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่าของน้อง)
    คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
@@ -1364,7 +1373,7 @@ function renderDashboard(){
         </div>
       </div>` : ''}
     </div>
-    <div class="stage-hero"><div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
+    <div class="stage-hero">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
     ${hungerUI ? `
     <div class="stage-plate plate-right">
       <div class="plate-title">⬢ การดูแล</div>
