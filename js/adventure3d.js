@@ -109,6 +109,7 @@ const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
 const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
+let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
@@ -2926,29 +2927,37 @@ function tickDrive(dt,now){
   dSpeed*=Math.max(0,1-(onRoad===1?.22:1.15)*dt);                  // แรงต้าน (นอกถนนหนืดมาก)
   if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
 
-  // พวงมาลัย: ยิ่งเร็วยิ่งเลี้ยวได้น้อย (กันหมุนติ้ว) — dSteer ใช้หมุนภาพพวงมาลัยด้วย
-  const tgt=sd*CAR_STEER_MAX/(1+Math.abs(dSpeed)*.062);
-  dSteer+=(tgt-dSteer)*Math.min(1,dt*7);
-  yaw-=(dSpeed/CAR_WB)*Math.tan(dSteer)*dt;
+  /* 🏁 พวงมาลัยฟีล R4: ไต่เข้าโค้งนุ่ม (attack ช้ากว่า release) + ลดองศาตามความเร็วพอประมาณ */
+  const tgt=sd*CAR_STEER_MAX/(1+Math.abs(dSpeed)*.045);
+  const ramp=Math.abs(tgt)>Math.abs(dSteer)?3.8:6.0;               // กดเลี้ยว=ค่อยๆ หัก · ปล่อย=คืนไวกว่า
+  dSteer+=(tgt-dSteer)*Math.min(1,dt*ramp);
+  let yawRate=(dSpeed/CAR_WB)*Math.tan(dSteer);
+  const maxYaw=1.9/(1+Math.abs(dSpeed)*.06);                       // จำกัดอัตราหมุนหัวรถ ยิ่งเร็วยิ่งวงกว้าง
+  yaw-=Math.max(-maxYaw,Math.min(maxYaw,yawRate))*dt;
 
+  /* ทิศวิ่งจริงไถลตามหัวรถแบบ Ridge Racer — grip ลดเมื่อเลี้ยวแรงตอนเร็ว = สไลด์เข้าโค้งลื่นๆ */
   const sin=Math.sin(yaw), cos=Math.cos(yaw);
-  const p={x:camera.position.x-sin*dSpeed*dt, z:camera.position.z-cos*dSpeed*dt};
+  const grip=Math.min(1, dt*(6.5-Math.min(3.8,Math.abs(dSteer)*Math.abs(dSpeed)*.38)));
+  dVelX+=(-sin*dSpeed-dVelX)*grip;
+  dVelZ+=(-cos*dSpeed-dVelZ)*grip;
+  const p={x:camera.position.x+dVelX*dt, z:camera.position.z+dVelZ*dt};
   const dc=Math.hypot(p.x,p.z);
-  if(dc>D.rad-25){ const f=(D.rad-25)/dc; p.x*=f; p.z*=f; dSpeed*=.5; }      // สุดขอบเมือง
-  if(driveCell(p.x,p.z)===2){ p.x=camera.position.x; p.z=camera.position.z; dSpeed*=-.3; }  // ริมแม่น้ำ (ข้ามได้เฉพาะสะพาน)
-  const hitSpd=Math.abs(dSpeed);
+  if(dc>D.rad-25){ const f=(D.rad-25)/dc; p.x*=f; p.z*=f; dSpeed*=.5; dVelX*=.5; dVelZ*=.5; }  // สุดขอบเมือง
+  if(driveCell(p.x,p.z)===2){ p.x=camera.position.x; p.z=camera.position.z; dSpeed*=-.3; dVelX*=-.3; dVelZ*=-.3; }  // ริมแม่น้ำ (ข้ามได้เฉพาะสะพาน)
+  const hitSpd=Math.hypot(dVelX,dVelZ);
   if(collideCar(p)){
     if(hitSpd>7 && now-hHitAt>900){ hHitAt=now; damagePlayer(Math.min(30,Math.round(hitSpd*1.3))); CarSound.thud(); }
     else if(hitSpd>2.5) CarSound.thud();
-    dSpeed*=.12;
+    dSpeed*=.12; dVelX*=.12; dVelZ*=.12;
   }
   camera.position.set(p.x, CAR_EYE+Math.sin(now/95)*Math.min(.045,Math.abs(dSpeed)*.002), p.z);
 
   dLook*=Math.max(0,1-dt*2.6);                                     // หันมองข้างแล้วค่อยๆ เด้งกลับ
+  dCamYaw+=(yaw-dCamYaw)*Math.min(1,dt*6.5);                       // กล้องหันตามหัวรถแบบหน่วง ไม่สะบัด
   camera.rotation.set(0,0,0);
-  camera.rotateY(yaw+dLook);
+  camera.rotateY(dCamYaw+dLook-dSteer*.10*Math.min(1,Math.abs(dSpeed)/10));  // ชายตามองเข้าโค้งนิดๆ แบบ R4
   camera.rotateX(-.02);                                            // ก้มนิดเดียว เห็นฝากระโปรง
-  camera.rotateZ(-dSteer*.05*Math.min(1,Math.abs(dSpeed)/8));      // เอียงตัวเข้าโค้ง
+  camera.rotateZ(-dSteer*.06*Math.min(1,Math.abs(dSpeed)/8));      // เอียงตัวเข้าโค้ง
 
   // เก็บตัวอักษร: ขับชน (ไม่ต้องจอด)
   for(let i=letters.length-1;i>=0;i--){
@@ -3738,6 +3747,7 @@ function start(md){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
+    dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
   }else{
     camera.position.set(0,EYE_H,0);
   }
