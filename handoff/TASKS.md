@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 112 (10 ก.ค.) — push เสียง Suno 4 ไฟล์ขึ้นเว็บ 🔊 (version .103 · commit f394661)
+- ผู้ใช้เจนเสียงจาก Suno วาง `sound/` แล้ว 4 ไฟล์: `haunt_ambient.mp3` (3.7MB) / `haunt_chase.mp3` / `haunt_scare.mp3` / `spark.mp3` — เดิม untracked = live 404 (บทเรียนเดียวกับรอบ 86 ภาพผี)
+- ตรวจแล้วชื่อไฟล์ตรงกับที่โค้ดรอรับพอดี (`adventure3d.js:1145` HSound 3 ไฟล์ผี · `util.js:161` spark) → **ไม่ต้องแก้โค้ด** แค่ `git add` เจาะจง 4 ไฟล์ + บัมพ์ version → push
+- ✅ ยืนยัน live: version.json = .103 + curl ทั้ง 4 ไฟล์ HTTP 200 ขนาดตรงต้นฉบับ → โลกผีได้เสียงบรรยากาศ/ไล่ล่า/scare จริง + สายฟ้า ⚡ ได้เสียง spark จริงแทนสังเคราะห์
+- ⚠️ ค้างฝั่งผู้ใช้: ฟังจริงบนมือถือ (ambient เข้าโลกผี · chase ตอนผีไล่ · scare ตอนโดนจับ · spark ตอนเล่นไวใน 5 วิ) · เสียงที่ยังไม่มี: `drone_loop.mp3` (โลกโดรน) + เสียงเฮลิฯ 3 ไฟล์ (`PROMPTS_HELI.md`)
+
 ### ✅ รอบ 111 (10 ก.ค.) — Lobby 3D: turntable หมุนโชว์ + เล่น animation clip จริงจาก Tripo 🔄 (version .102)
 - **งานตาม HANDOFF (ผู้ใช้เลือก 10 ก.ค.):** (1) turntable auto-spin (2) เช็ก animation clips ใน GLB — ทำครบทั้งคู่ใน `js/lobby3d.js` ไฟล์เดียว
 - **เช็ก clips (สคริปต์ Python อ่าน GLB โดยตรง):** caretaker_male/female มี 2 clips (`NlaTrack` + `NlaTrack.001` ~15.4/15.6s = idle+look_around ที่เลือกตอน animate) · pet_dog มี 1 clip (`NlaTrack` 2.54s) — **ชื่อไม่ตรง regex `idle|breath|stand|rest` → เกมไม่เคยเล่น** (ตามข้อสังเกตรอบ 110)
@@ -50,7 +56,7 @@
 
 ## ⚠️ ค้างฝั่งผู้ใช้ (ทดสอบจริง — rules publish ครบแล้ว 8 ก.ค. ✅)
 1. **ทดสอบจริง 2 บัญชี/2 เครื่องบน Pages:** ส่ง-รับของขวัญเต็มวง (ค้างตั้งแต่รอบ 28) + แชท + self-heal เพื่อน · **โลก 3D:** เห็นตัวกันใน map · แชทลอยหัว+quick chat · คำชวน+เงินคืน 2,000 · voice จริง (ไมค์-ลำโพง-โหมดเพื่อน-ระยะเสียง) · ครูปิดเสียงห้อง (บัญชีครู freddommun@gmail.com) · พิธีแชมป์ 🏁 โบนัสเข้า 2 ฝั่ง
-2. (ถ้าต้องการ) เจนเสียงหลอนจาก Suno ตาม `PROMPTS_SOUND.md` → วาง `sound/haunt_ambient.mp3 / haunt_chase.mp3 / haunt_scare.mp3`
+2. ~~เจนเสียงหลอนจาก Suno~~ ✅ **เสร็จรอบ 112 (10 ก.ค.)** — haunt 3 ไฟล์ + spark ขึ้น live แล้ว (version .103) · เหลือเสียงที่ยังไม่เจน (ถ้าต้องการ): `drone_loop.mp3` + เฮลิฯ 3 ไฟล์
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
 
