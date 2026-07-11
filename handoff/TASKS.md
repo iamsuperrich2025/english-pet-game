@@ -10,6 +10,15 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 139 (12 ก.ค.) — car_10 + ไอคอน Vocab World + ปุ่มเบรค/เกียร์ R + pet_cat/pet_dragon 🌍🐱🐉 (version .130)
+- **ภาพรถครบ 10/10:** ผู้ใช้เจน `img/cars/car_10.png` → commit (งานค้างข้อ 2 ปิดจบ)
+- **ไอคอนแอพใหม่ธีม Vocab World:** โลก 3D + ทวีปเขียว + วงโคจรบล็อก A/B/C + คอนเฟตตีพาสเทล บนเกรเดียนต์น้ำเงินแบรนด์ — วาดด้วย Pillow (supersample 4×) สคริปต์อยู่ scratchpad `make_icon.py` (เจนซ้ำ/แก้ได้) · แทนครบ `img/icons/`: icon-192/512, maskable (content 80% ในเซฟโซน), apple-touch-icon 180 · manifest ชี้ path เดิมไม่ต้องแก้ · ⚠️ ไอคอน root เก่า (นอก git) ไม่แตะตามกฎ asset
+- **ปุ่มเบรค `#adv-brakepad`:** วงกลมแดง "■ เบรค" ซ้ายคันเร่ง (right:124 ช่องว่าง 10px) กดค้าง = `padBr` → th=0 + หน่วง `CAR_BRAKE*1.2` เข้าหา 0 **ทั้งเดินหน้า/ถอยหลัง ไม่ไหลไปถอยเหมือนกด S ค้าง**
+- **ปุ่มเกียร์ `#adv-gearbtn`:** D/R เหนือคันเร่ง (right:20 bottom +106px) แตะสลับ · R = ปุ่มกะพริบเหลือง + คันเร่งเปลี่ยนป้าย "▼ ถอย" พื้นส้ม + `padTh` ให้ th=-1 (เบรกก่อนแล้วถอย เพดาน CAR_VREV 6.5) · `gearSyncFn` เก็บ global ให้ reset ตอนเข้าโลก (padBr=false, gearR=false, ป้ายกลับ D) · ก้านไฟเลี้ยว `#adv-tlpad` ขยับ right 132→224 หลบเบรค · intro touch อัปเดตเป็นชุดปุ่มใหม่
+- **โมเดล pet_cat.glb (10k tris ผ่าน retopo) + pet_dragon.glb (20.9k tris):** ผู้ใช้เจนจาก Tripo วาง `img/models/` → commit · lobby3d generic (`pet_${petType}`) รับเองไม่แก้โค้ด · clip `NlaTrack` เล่นผ่าน fallback รอบ 111
+- ✅ **ยืนยัน preview (1000×640 force adv-touch · pane hidden ใช้ `_t.step` แทน rAF):** layout 5 ปุ่มไม่ทับกัน · เร่ง D=+18.2 · เบรค→0 ค้าง 0 · R: ป้ายสลับ+ถอย -6.48 (เพดานถูก) · เบรคขณะถอย→0 · กลับ D ป้ายคืน · ออก-เข้าโลกใหม่เกียร์รีเซ็ต D · GLTFLoader โหลด cat/dragon ผ่าน (curKey `male|cat|adult`→`male|dragon|adult` petLoaded ทั้งคู่ · triangles=0 เพราะ pane hidden rAF ไม่เดิน — loader-level ยืนยันแทน) · deploy live .130 + asset ใหม่ 200 ครบ
+- **⚠️ ค้างผู้ใช้:** (1) ลองฟีลปุ่มเบรค/เกียร์จริงบนมือถือ (จูนต่อได้: แรงเบรค 1.2 / ตำแหน่ง right:124) (2) ดูโมเดลแมว+มังกรบนมือถือ (3) ไอคอนใหม่ต้องลบ PWA เก่าแล้วติดตั้งใหม่ถึงเห็น (บางเครื่อง cache ไอคอนแรง)
+
 ### ✅ รอบ 136–138 (12 ก.ค.) — มหากาพย์ authDomain: จบที่ login โดเมนเดียว vocabworld.web.app 🔐 (version .127→.129)
 - **ลำดับเหตุการณ์ (บทเรียนสำคัญ):** (136/.127) เปลี่ยน authDomain เป็น vocabworld.web.app → มือถือผู้ใช้เจอ **`redirect_uri_mismatch`** เพราะโดเมนใหม่**ยังไม่ถูกเพิ่มใน OAuth client** (Firebase Hosting เสิร์ฟ /__/auth/* ให้ก็จริง แต่ Google ต้องรู้จัก redirect URI ด้วย!) → (137/.128) **rollback ทันที**กลับ firebaseapp.com ให้ login ใช้ได้ → ผู้ใช้เพิ่มใน Google Cloud Console → Clients: **JS origins `https://vocabworld.web.app` + Redirect URI `https://vocabworld.web.app/__/auth/handler`** → (138/.129) สลับกลับ + **ทดสอบกดปุ่ม login จริงผ่าน Browser ผ่าน 2 รอบ** ("to continue to vocabworld.web.app")
 - ⚠️ ค่า OAuth ที่แก้ใหม่ **กระจายไม่พร้อมกัน 5 นาที–ชม.** — desktop ผ่านแต่มือถือ (LTE) ยังเจอ mismatch ชั่วคราว = ปกติ รอ/ลองซ้ำ
@@ -44,7 +53,7 @@
 
 ### ⏳ ค้างฝั่งผู้ใช้ (หลังรอบ 132)
 1. **publish rules field `tl`** — Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/59c3da79-b3cc-4053-b5f3-5283b4729b7a (ก้อนเต็มใน RULES.md) · ยังไม่ publish = เกมปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวกัน (client fallback ตัด tl เอง)
-2. เจนภาพรถที่เหลือ 8 ไฟล์ (car_03..10 — car_01/02 เข้า git แล้ว) วาง `img/cars/` แล้วบอก Claude commit
+2. ~~เจนภาพรถที่เหลือ~~ ✅ **ครบ 10/10 แล้ว** (car_03..09 รอบ 134 · car_10 รอบ 139)
 3. ทดสอบจริงมือถือ: ซื้อรถ/ผ่อน/ประกัน + ปุ่มไฟเลี้ยว + 2 เครื่องเห็นไฟเลี้ยวกัน + ชนรถกัน
 
 ### ✅ รอบ 132 (11 ก.ค.) — ชนรถเพื่อน + ปุ่มไฟเลี้ยว + ตรวจแยก ม.36 + เพื่อนเห็นไฟเลี้ยว 🚦 (version .123 · ข้อ 6–9 ปิดชุด 9 ข้อ)
