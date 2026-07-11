@@ -582,6 +582,14 @@ function makeBlockCar(id){
     m.position.set(x,.86,2.06); m.visible=false;
     g.add(m); g.userData.revs.push(m);
   });
+  // 🔴 รอบ 141: ไฟเบรคแดง 2 ดวงท้ายรถ (ริมนอก ใต้ไฟเลี้ยว) — เครื่องเพื่อนคำนวณจากอัตราชะลอ ไม่มี field ใหม่
+  const brkM=blkMat(0xd50000);
+  g.userData.brks=[];
+  [-.82,.82].forEach(x=>{
+    const m=new THREE.Mesh(blkGeo(.24,.18,.07),brkM);
+    m.position.set(x,.86,2.06); m.visible=false;
+    g.add(m); g.userData.brks.push(m);
+  });
   g.userData.wheels=[];
   [[-1,-1.35],[1,-1.35],[-1,1.35],[1,1.35]].forEach(([sx,z])=>{
     const hold=new THREE.Group(); hold.position.set(sx*.97,.5,z);
@@ -614,6 +622,7 @@ function makeBlockPeer(name, av, uid){
   g.userData.blinkL=g.children[0].userData.blinkL;   // 🚦 ให้ tickPeers สั่งไฟเลี้ยวกะพริบได้ตรงๆ
   g.userData.blinkR=g.children[0].userData.blinkR;
   g.userData.revs=g.children[0].userData.revs;       // ⬜ รอบ 140: ไฟถอยหลังขาว
+  g.userData.brks=g.children[0].userData.brks;       // 🔴 รอบ 141: ไฟเบรคแดง
   return g;
 }
 /* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
@@ -1904,6 +1913,36 @@ function onPeerData(snap){
   }
   p.tgt={x:d.x,z:d.z,y:py};
   if(typeof d.yaw==='number') p.yawTgt=d.yaw;
+  // 🔴 รอบ 141: ตรวจ "เบรคจริง" จากอัตราชะลอระหว่างแพ็กเก็ต (~180ms/แพ็กเก็ต) — ไม่มี field ใหม่ ไม่ต้องแก้ rules
+  // เกณฑ์ dec > drag(0.16×v)+4 → CAR_BRAKE 15 ทะลุสบาย ถอนคันเร่ง coast ไม่ติด · ต้องเข้าเกณฑ์ 2 แพ็กเก็ตติด
+  // (ตำแหน่งปัด 0.1m → noise ความเร็ว ±0.55 m/s ระดับแพ็กเก็ตเดียว) · tickPeers เป็นคนนับถอยหลัง p.brkT+โชว์ไฟ
+  if(p.blk){
+    const tn=(typeof d.ts==='number')?d.ts:performance.now();   // ts จากเซิร์ฟเวอร์ = ระยะห่างแพ็กเก็ตแม่นกว่าเวลาฝั่งรับ (ตัด jitter เน็ต)
+    if(p.pkAt!==undefined){
+      const pdt=(tn-p.pkAt)/1000;
+      if(pdt>.05){
+        const pv=Math.hypot(d.x-p.pkX,d.z-p.pkZ)/pdt;
+        if(pv>80) p.pvH=[];                                       // teleport/respawn — ทิ้งประวัติ
+        else{
+          // ประวัติ 5 แพ็กเก็ต (~0.72 วิ) เทียบความเร็วเฉลี่ยครึ่งแรก vs ครึ่งหลัง — baseline ยาว noise (ปัด 0.1m + jitter ts) เหลือจิ๋ว
+          // เบรคจริง 15: vA-vB ~5.4 · coast หนักสุด (ท็อปสปีด 45): ~2.4+noise — เกณฑ์ drop สเกลตามความเร็วแยกขาด
+          (p.pvH=p.pvH||[]).push({t:tn/1000, x:d.x, z:d.z}); if(p.pvH.length>5) p.pvH.shift();
+          if(p.pvH.length===5){
+            const A=p.pvH[0], Mm=p.pvH[2], B=p.pvH[4];
+            const tA=Mm.t-A.t, tB=B.t-Mm.t;
+            if(tA>.15 && tA<1.2 && tB>.15 && tB<1.2){
+              const vA=Math.hypot(Mm.x-A.x,Mm.z-A.z)/tA, vB=Math.hypot(B.x-Mm.x,B.z-Mm.z)/tB;
+              const drop=vA-vB, dec=drop/((tA+tB)/2);
+              const braking=(drop>3+.08*vA && dec>.16*vA+2.5)         // เบรคแรงตอนวิ่ง (margin สเกลตาม v กัน coast ท็อปสปีด+noise)
+                          ||(vA>1.2 && vB<.3 && dec>2);               // หยุดสนิทเร็วผิดธรรมชาติ = เหยียบเบรคจนจอด
+              if(braking) p.brkT=Math.max(p.brkT||0,.45);
+            }
+          }
+        }
+        p.pkAt=tn; p.pkX=d.x; p.pkZ=d.z;
+      }
+    }else{ p.pkAt=tn; p.pkX=d.x; p.pkZ=d.z; }
+  }
   // 🏆 กระดานคะแนน: จำนวนคำที่เพื่อนประกอบได้รอบนี้ (field w) — เปลี่ยนเมื่อไหร่วาดใหม่
   const w=typeof d.w==='number'?d.w:0;
   if(p.w!==w){ p.w=w; renderBoard(); }
@@ -1968,6 +2007,9 @@ function tickPeers(dt,now){
       const backing=rvm>.12 && (rvx*-Math.sin(p.yawCur)+rvz*-Math.cos(p.yawCur))/rvm<-.5;
       p.revT=backing?Math.min(.6,(p.revT||0)+dt):Math.max(0,(p.revT||0)-dt*2);
       (p.spr.userData.revs||[]).forEach(m=>{ m.visible=p.revT>.25; });
+      // 🔴 รอบ 141: ไฟเบรคแดง — ตรวจจับใน onPeerData (วัดจากแพ็กเก็ตตรงๆ สะอาดกว่า lerp รายเฟรม) · ที่นี่แค่นับถอยหลัง+โชว์
+      p.brkT=Math.max(0,(p.brkT||0)-dt);
+      (p.spr.userData.brks||[]).forEach(m=>{ m.visible=p.brkT>0; });
     }else if(p.walk){
       // 🧱 หุ่นบล็อกเดิน: หันตาม yaw (lerp ทางสั้น) + แกว่งแขน-ขาตามระยะที่เดินจริง · หยุด=ลู่คืนท่ายืน
       const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
