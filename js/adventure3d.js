@@ -122,7 +122,7 @@ let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่�
 let carEngineOn=false, carBelted=false, carStartOpen=false;   // สวิตช์ + แผงเตรียมออกรถยังเปิดอยู่
 let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // ใบสั่งสะสม/สถานะเตือน
 // 🚦 รอบ 132: ไฟเลี้ยว (0=ปิด 1=ซ้าย 2=ขวา) + ตรวจทางแยก ม.36 + ชนรถเพื่อน
-let tlSig=0, tlSigAt=0, tlYawOn=0;                    // สถานะไฟเลี้ยว + มุมตอนเปิด (ไว้ดับเองหลังเลี้ยวเสร็จ)
+let tlSig=0, tlSigAt=0, tlYawOn=0, tlRetAt=0;         // สถานะไฟเลี้ยว + มุมตอนเปิด + เวลานัดเด้งกลับหลังเลี้ยวเสร็จ (รอบ 135)
 let tlInJunc=false, tlYawEnter=0, tlSigSeen=false;    // กำลังอยู่ในโซนทางแยก + มุมตอนเข้า + เคยเปิดไฟระหว่างผ่านแยกไหม
 let tlChkAt=0, tlCoolAt=0;                            // จังหวะเช็กทางแยก (ทุก 300ms) + cooldown หลังออกจากแยก
 let carPeerHitAt=0;                                   // cooldown ชนรถเพื่อน (กันโดนรัวติดๆ)
@@ -2522,27 +2522,40 @@ function buildDom(){
   #adv-steerpad.on,#adv-gaspad.on{opacity:.68}
   .adv-touch.adv-drive #adv-steerpad{display:flex}
   .adv-touch.adv-drive #adv-gaspad{display:flex}
-  #adv-steerpad{left:2.5%;bottom:40vh;width:min(42vw,290px);height:64px;border-radius:999px;
+  #adv-steerpad{left:2.5%;bottom:max(20vh,104px);width:min(42vw,290px);height:64px;border-radius:999px;
     background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
     align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:24px}
   #adv-steerdot{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
     transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
     pointer-events:none}
-  #adv-gaspad{right:20px;bottom:40vh;width:94px;height:94px;border-radius:50%;flex-direction:column;
+  #adv-gaspad{right:20px;bottom:max(20vh,104px);width:94px;height:94px;border-radius:50%;flex-direction:column;
     background:rgba(40,165,88,.55);border:2px solid rgba(255,255,255,.6);
     align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;line-height:1.05}
   #adv-gaspad small{font-size:12.5px;font-weight:700}
-  /* รอบ 129: ปุ่มเร่ง/เลี้ยวยกขึ้นระดับกลางจอ (ผู้ใช้ขอ — กดถนัดกว่า) → แตรกลับมุมล่างขวาเดิมได้ */
+  /* รอบ 129→135: ปุ่มเร่ง/เลี้ยวลดลงมาระดับล่าง (20vh — ผู้ใช้ลองจริงแล้ว 40vh สูงไป) · แตรมุมล่างขวาเดิม */
   .adv-touch.adv-drive #adv-horn{bottom:26px;right:22px;width:64px;height:64px;font-size:26px;opacity:.8}
-  /* 🚦 รอบ 132: ปุ่มไฟเลี้ยว ⬅️➡️ — จางๆ สไตล์เดียวกับปุ่มรอบ 127 วางเหนือแถบพวงมาลัย · เปิด=กะพริบส้ม */
-  .adv-tl{display:none;position:absolute;bottom:calc(40vh + 76px);width:58px;height:44px;border-radius:12px;
-    pointer-events:auto;z-index:6;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
-    font-size:21px;line-height:1;opacity:.34;transition:opacity .15s;font-family:inherit;padding:0;
+  /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้งฝั่งขวา (แทนปุ่ม ⬅️➡️ รอบ 132) — ดันขึ้น=ไฟซ้าย ดันลง=ไฟขวา
+     knob ค้างตำแหน่งจนรถเลี้ยวเสร็จแล้วเด้งกลับเองเหมือนก้านไฟรถจริง (tlTick หน่วง ~0.9 วิ) */
+  #adv-tlpad{display:none;position:absolute;pointer-events:auto;z-index:6;right:132px;bottom:max(20vh,104px);
+    width:60px;height:150px;border-radius:999px;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
+    box-sizing:border-box;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;
+    font-size:17px;line-height:1;opacity:.34;transition:opacity .15s;
     -webkit-user-select:none;user-select:none;touch-action:none}
-  .adv-drive #adv-tl-l{display:block;left:2.5%}
-  .adv-drive #adv-tl-r{display:block;left:calc(2.5% + 66px)}
-  .adv-tl.on{opacity:1;background:rgba(255,152,0,.55);border-color:#ffb300;animation:tlBlink .8s steps(1) infinite}
+  .adv-drive #adv-tlpad{display:flex}
+  #adv-tlpad.on{opacity:.85}
+  #adv-tlpad.sig{opacity:1;border-color:#ffb300;animation:tlBlink .8s steps(1) infinite}
+  #adv-tldot{position:absolute;left:50%;top:50%;width:40px;height:40px;border-radius:50%;
+    transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
+    pointer-events:none;transition:top .18s}
+  #adv-tlpad.sig #adv-tldot{background:rgba(255,179,0,.95)}
   @keyframes tlBlink{0%,49%{filter:brightness(1.5)}50%,100%{filter:brightness(.55);opacity:.5}}
+  /* 🚦 รอบ 135: โหมดขับรถ — ไอคอนแชท/เสียงย้ายขึ้นแถวบนขวา (เดิม top 160-400 ทับโซนปุ่มเร่ง/ก้านไฟเลี้ยว) */
+  .adv-drive #adv-chat-btn{top:8px;right:140px}
+  .adv-drive #adv-mic{top:8px;right:238px}
+  .adv-drive #adv-spk{top:8px;right:336px}
+  .adv-drive #adv-vmode{top:8px;right:434px}
+  .adv-drive #adv-tmute{top:46px;right:140px}
+  .adv-drive #adv-podbtn{top:46px;right:238px}
   /* 🚔 รอบ 128: ป้ายเตือนขับเร็วผิดกฎหมาย — แดงกะพริบกลางบน */
   #adv-lawwarn{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:none;z-index:7;
     background:rgba(160,20,20,.88);border:2px solid #ff6b5e;border-radius:14px;color:#fff;
@@ -2785,8 +2798,7 @@ function buildDom(){
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <div id="adv-steerpad"><span>◀</span><i id="adv-steerdot"></i><span>▶</span></div>
     <div id="adv-gaspad">▲<small>เร่ง</small></div>
-    <button class="adv-tl" id="adv-tl-l">⬅️</button>
-    <button class="adv-tl" id="adv-tl-r">➡️</button>
+    <div id="adv-tlpad"><span>⬅️</span><i id="adv-tldot"></i><span>➡️</span></div>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
       <h3>🚗 เตรียมออกรถ</h3>
@@ -2910,13 +2922,44 @@ function buildDom(){
     for(const t of e.changedTouches) if(t.identifier===gasTid){ gasTid=null; padTh=false; gasPad.classList.remove('on'); }
   }));
 
-  /* 🚦 รอบ 132: ปุ่มไฟเลี้ยว ⬅️➡️ — แตะสลับเปิด/ปิด (เปิดข้างใหม่=ข้างเก่าดับ) · ดับเองหลังเลี้ยวเสร็จ/12 วิ (tlTick)
-     preventDefault ใน touchstart กัน click สังเคราะห์ยิงซ้ำ (แพตเทิร์นเดียวกับปุ่มแตร) */
-  const tlToggle=side=>{ tlSet(tlSig===side?0:side); if(typeof sfx!=='undefined') sfx.select(); };
-  [['#adv-tl-l',1],['#adv-tl-r',2]].forEach(([sel,side])=>{
-    const btn=overlayEl.querySelector(sel);
-    btn.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); tlToggle(side); },{passive:false});
-    btn.addEventListener('click',e=>{ e.preventDefault(); tlToggle(side); });
+  /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้ง — ลากขึ้นเกินครึ่ง=ไฟซ้าย ลากลง=ไฟขวา ปล่อยกลาง=ปิด
+     knob ค้างตามสถานะไฟ (tlSet ขยับให้) แล้วเด้งกลับเองเมื่อ tlTick ดับไฟหลังเลี้ยวเสร็จ
+     preventDefault ใน touchstart กัน click สังเคราะห์ยิงซ้ำ · เดสก์ท็อป: คลิกครึ่งบน/ล่าง/กลาง */
+  const tlPad=overlayEl.querySelector('#adv-tlpad');
+  let tlTid=null;
+  const tlFrom=t=>{
+    const r=tlPad.getBoundingClientRect();
+    const v=Math.max(-1,Math.min(1,(((t.clientY-r.top)/r.height)*2-1)*1.25));
+    tlDotY(v);
+    return v;
+  };
+  tlPad.addEventListener('touchstart',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(tlTid!==null) return;
+    const t=e.changedTouches[0];
+    tlTid=t.identifier; tlPad.classList.add('on'); tlFrom(t);
+  },{passive:false});
+  tlPad.addEventListener('touchmove',e=>{
+    e.preventDefault(); e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===tlTid) tlFrom(t);
+  },{passive:false});
+  ['touchend','touchcancel'].forEach(ev=>tlPad.addEventListener(ev,e=>{
+    e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===tlTid){
+      tlTid=null; tlPad.classList.remove('on');
+      const v=tlFrom(t);
+      tlSet(v<-.35?1:v>.35?2:0);
+      if(typeof sfx!=='undefined') sfx.select();
+    }
+  }));
+  tlPad.addEventListener('click',e=>{
+    e.preventDefault();
+    const r=tlPad.getBoundingClientRect();
+    const v=((e.clientY-r.top)/r.height)*2-1;
+    if(v<-.33) tlSet(tlSig===1?0:1);
+    else if(v>.33) tlSet(tlSig===2?0:2);
+    else tlSet(0);
+    if(typeof sfx!=='undefined') sfx.select();
   });
 
   /* 🚔 รอบ 128: แผงเตรียมออกรถ — สวิตช์สตาร์ทเครื่อง (เสียงไดสตาร์ท) + เข็มขัด (เสียงคลิก) + ปุ่มออกรถ */
@@ -3347,12 +3390,17 @@ function collideCar(p){
   }
   return hit;
 }
-/* 🚦 รอบ 132: เปิด/ปิดไฟเลี้ยว — จำมุมตอนเปิดไว้ให้ดับเองหลังเลี้ยวเสร็จ + ประกาศให้เพื่อนเห็นทันที (field tl) */
+/* 🚦 รอบ 132→135: เปิด/ปิดไฟเลี้ยว — จำมุมตอนเปิดไว้ให้ดับเองหลังเลี้ยวเสร็จ + ประกาศให้เพื่อนเห็นทันที (field tl)
+   knob บนก้านโยกขยับตามสถานะ: บน=ไฟซ้าย ล่าง=ไฟขวา กลาง=ปิด (เด้งกลับตอน tlTick สั่ง tlSet(0)) */
+function tlDotY(v){
+  const d=document.getElementById('adv-tldot');
+  if(d) d.style.top=(50+v*33)+'%';
+}
 function tlSet(v){
-  tlSig=v; tlSigAt=performance.now(); tlYawOn=yaw;
-  const l=document.getElementById('adv-tl-l'), r=document.getElementById('adv-tl-r');
-  if(l) l.classList.toggle('on',v===1);
-  if(r) r.classList.toggle('on',v===2);
+  tlSig=v; tlSigAt=performance.now(); tlYawOn=yaw; tlRetAt=0;
+  const pad=document.getElementById('adv-tlpad');
+  if(pad) pad.classList.toggle('sig',v!==0);
+  tlDotY(v===1?-1:v===2?1:0);
   if(myRef) sendPos(true);
 }
 /* นับ "แขนถนน" รอบจุด — sample วงกลมรัศมี 12m 16 ทิศจาก road grid นับกลุ่มถนนที่ติดกัน
@@ -3372,7 +3420,9 @@ function driveArms(x,z){
 function tlTick(px,pz,now){
   if(tlSig){
     let dy=yaw-tlYawOn; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
-    if((Math.abs(dy)>.87 && Math.abs(dSteer)<.07) || now-tlSigAt>12000) tlSet(0);  // เลี้ยวเสร็จ (เกิน ~50°+คืนพวง) หรือเปิดค้างนาน
+    // รอบ 135: เลี้ยวเสร็จ (เกิน ~50°+คืนพวง) → หน่วง ~0.9 วิ แล้วก้านเด้งกลับเองแบบรถจริง · เปิดค้างนานเกิน 20 วิ = ดับ
+    if(Math.abs(dy)>.87 && Math.abs(dSteer)<.07 && !tlRetAt) tlRetAt=now+900;
+    if((tlRetAt && now>tlRetAt) || now-tlSigAt>20000) tlSet(0);
   }
   if(now-tlChkAt<300) return;                        // เช็กทางแยกทุก 300ms พอ (sample 16 จุด/ครั้ง)
   tlChkAt=now;
