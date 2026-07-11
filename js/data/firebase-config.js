@@ -9,7 +9,9 @@
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDqLbog7HOCZI25y8D4lYC8M8t9Y9zviFk",
-  authDomain: "english-pet-game.firebaseapp.com",
+  // รอบ 136: ใช้โดเมนเกมเองเป็นหน้า login (Firebase Hosting เสิร์ฟ /__/auth/* ให้ทุก site ในโปรเจกต์)
+  // → login จบในโดเมนเดียว ไม่กระโดดไป firebaseapp.com + กันปัญหา third-party cookies บนมือถือ
+  authDomain: "vocabworld.web.app",
   databaseURL: "https://english-pet-game-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "english-pet-game",
   storageBucket: "english-pet-game.firebasestorage.app",

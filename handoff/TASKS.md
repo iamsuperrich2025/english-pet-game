@@ -10,6 +10,11 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 136 (12 ก.ค.) — login จบในโดเมนเดียว: authDomain → vocabworld.web.app 🔐 (version .127)
+- **ผู้ใช้สังเกต:** กด login จาก vocabworld.web.app แล้วเด้งไป english-pet-game.firebaseapp.com — เป็นพฤติกรรมปกติ (authDomain เดิม) แต่ปรับให้ดีกว่า: **Firebase Hosting เสิร์ฟ `/__/auth/*` ให้ทุก site ในโปรเจกต์อยู่แล้ว** (ตรวจ curl 200) → เปลี่ยน `FIREBASE_CONFIG.authDomain` เป็น `vocabworld.web.app` (firebase-config.js บรรทัดเดียว)
+- ผล: login ไม่กระโดดข้ามโดเมน + กันปัญหา third-party cookies/storage partitioning บนมือถือ (จุดตายคลาสสิกของ signInWithRedirect ข้ามโดเมน) · โดเมนต้องอยู่ใน Authorized domains (มีแล้วจากรอบ 134)
+- ⚠️ ถ้า GitHub Pages ฟื้นในอนาคต: client จาก github.io จะใช้หน้า auth ของ vocabworld.web.app (ข้ามโดเมนเหมือนที่เคยข้ามไป firebaseapp.com) — ใช้ได้ปกติ ไม่ต้องแก้อะไร
+
 ### ✅ รอบ 135 (11 ก.ค.) — ลดปุ่มขับรถลง + ก้านไฟเลี้ยวแบบรถจริง + ย้ายไอคอนแชทขึ้นบน 🎛️ (version .126)
 - **feedback ผู้ใช้ (ลองจริงบนมือถือ):** ปุ่มเลี้ยว/เร่งที่ 40vh (รอบ 129) สูงเกิน → ลดลงครึ่ง `bottom:max(20vh,104px)` (max กันชนปุ่มแตรบนจอเตี้ย) ทั้ง `#adv-steerpad/#adv-gaspad`
 - **ก้านไฟเลี้ยวแนวตั้ง `#adv-tlpad` (แทนปุ่ม ⬅️➡️ รอบ 132):** ฝั่งขวาข้างคันเร่ง (right:132) — **ดันขึ้น=ไฟซ้าย ดันลง=ไฟขวา** (สเปกผู้ใช้) ปล่อยกลาง=ปิด · knob (`#adv-tldot`) **ค้างตำแหน่งบน/ล่างตามสถานะไฟ** + pad กะพริบส้ม · **เด้งกลับเองหลังรถเลี้ยวเสร็จ ~0.9 วิเหมือนก้านจริง** (`tlRetAt` ใน tlTick — เลี้ยวเกิน ~50°+คืนพวง → นัดดับ +900ms) · เปิดค้างเกิน 20 วิ = ดับเอง · เดสก์ท็อปคลิกครึ่งบน/ล่าง/กลางได้ · tlSet เป็นคนขยับ knob (`tlDotY`) — logic ไฟ/sync เพื่อน/ม.36 เดิมไม่แตะ
