@@ -90,6 +90,8 @@ const DEFAULT_STATE = {
   compSince:null,                     // timestamp ที่ตกเหรียญรายได้คอมครั้งล่าสุด (เศษวินาทีสะสมต่อจากนี้)
   compEarned:0,                       // เหรียญที่คอมทำให้ทั้งหมด (ไว้โชว์)
   dataCut:false,                      // ถูกตัดบริการข้อมูล (ค้างข้ามเดือน) — รายได้คอมหยุดนิ่ง
+  onlineSince:null,                   // item 8: timestamp เริ่มนับรายได้ออนไลน์ช่วงปัจจุบัน (รีเซ็ต null ทุกครั้งที่โหลดเกม — นับเฉพาะเวลาเปิดเกมจริง)
+  onlineEarned:0,                     // item 8: เหรียญโบนัสออนไลน์สะสมทั้งหมด (ไว้โชว์ตัวเลขวิ่ง+สถิติ)
   collection:[],                      // สินค้าที่ถือครอง (array of id — มีชิ้นซ้ำได้)
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
@@ -277,6 +279,9 @@ function loadState(){
       if(s.computer && s.compSince == null) s.compSince = Date.now();
       if(!s.computer){ s.dataCut = false; s.compSince = null; delete s.bills.data; }
       if(typeof s.compEarned !== 'number') s.compEarned = 0;
+      // รายได้ออนไลน์ (item 8): นับเฉพาะเวลาที่เปิดเกมออนไลน์อยู่จริง — เริ่มนับใหม่ทุกการเปิดเกม
+      if(typeof s.onlineEarned !== 'number') s.onlineEarned = 0;
+      s.onlineSince = null;
       // สวนผลไม้ (ข้อ 12): เซฟเก่าไม่มีสวน → เริ่มว่าง / คัดต้นที่ข้อมูลเสียทิ้ง
       if(!Array.isArray(s.farm)) s.farm = [];
       s.farm = s.farm.filter(t=>t && fruitInfo(t.id) && typeof t.plantedAt === 'number');
@@ -539,6 +544,33 @@ function compTick(now){
   }
 }
 
+/* ---------- รายได้ออนไลน์ (item 8): แค่เปิดเกมออนไลน์อยู่ก็ได้เหรียญ +0.01/วิ ฟรีทุกคน
+   นิยาม "ออนไลน์" = login แล้ว (Online.ready) + แท็บเกมมองเห็นอยู่ (visibilityState 'visible')
+   ต่างจากรายได้คอม: ไม่นับเวลาตอนปิดเกม (onlineSince รีเซ็ต null ทุกการโหลด + ตอนแท็บถูกซ่อน) ---------- */
+const ONLINE_RATE = 0.01;   // เหรียญต่อวินาที (เท่ารายได้คอม แต่อันนี้ฟรี ไม่ต้องซื้ออะไร)
+function onlineEarnActive(){
+  return typeof Online !== 'undefined' && Online.ready &&
+         typeof document !== 'undefined' && document.visibilityState === 'visible';
+}
+function onlineEarnTick(now){          // คืนจำนวนเหรียญเต็มที่เพิ่งตก (ให้ UI รู้ว่าต้อง save/refresh)
+  if(!onlineEarnActive()){ state.onlineSince = null; return 0; }
+  if(state.onlineSince == null){ state.onlineSince = now; return 0; }
+  const whole = Math.floor((now - state.onlineSince)/1000 * ONLINE_RATE);
+  if(whole > 0){
+    addCoins(whole);
+    state.onlineEarned += whole;
+    state.onlineSince += whole/ONLINE_RATE * 1000;   // เก็บเศษวินาทีไว้รอบถัดไป (แบบ compTick)
+  }
+  return whole;
+}
+function onlineEarnFlush(now){         // แท็บกำลังถูกซ่อน/ปิด → ตกเหรียญเต็มที่ค้าง แล้วหยุดนับ
+  if(state.onlineSince == null) return;
+  const whole = Math.floor((now - state.onlineSince)/1000 * ONLINE_RATE);
+  if(whole > 0){ addCoins(whole); state.onlineEarned += whole; }
+  state.onlineSince = null;
+  saveState();
+}
+
 /* ---------- ตลาดขายต่อสินค้าสะสม (ข้อใหม่): ลูกค้าจำลองมาซื้อของที่เราลงขาย
    ตามเวลาที่ราคาเหมาะสม (ตั้งถูก = ขายไว) — จ่ายเงินเข้ากระเป๋าแล้วรอผู้เล่นรับทราบ ---------- */
 function marketTick(now){
@@ -609,6 +641,7 @@ function careTick(){
   const now = Date.now();
   const sickBefore = state.pets.filter(pp=>pp.sick).length;   // 🚨 ไว้เทียบท้ายฟังก์ชัน (หวอตอนเพิ่งล้มป่วย)
   compTick(now);          // ตกรายได้ค้างก่อน แล้วค่อยเช็กบิล/ตัดบริการ
+  onlineEarnTick(now);    // โบนัสออนไลน์ (item 8) — เดินเฉพาะตอนเปิดเกมออนไลน์อยู่จริง
   billTick(now);
   marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
   orderTick(now);         // ออเดอร์พิเศษหมดเวลา/เข้าใหม่

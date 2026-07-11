@@ -137,6 +137,7 @@ function renderClock(){
   renderRainBar();                                   // แถบนับถอยหลังฝนเดินไปพร้อมนาฬิกา
   const compLive = document.getElementById('comp-live');
   if(compLive) compLive.textContent = compLiveTotal().toFixed(2);   // ตัวเลขรายได้คอมวิ่งทุกวินาที
+  renderOnlineEarnPill();                            // item 8: ตัวเลขโบนัสออนไลน์วิ่งทุกวินาที
   renderFarmClock();                                 // นาฬิกานับถอยหลังต้นไม้เดินพร้อมนาฬิกา
   renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
   renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา
@@ -2255,6 +2256,36 @@ function compLiveTotal(){   // รายได้สะสมจากคอม 
   return v;
 }
 
+/* ============================================================
+   item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
+   pill 🌐 ใน header วิ่งสดทุกวินาที (renderClock) · ตกเหรียญเต็มทุก 100 วิ
+   ============================================================ */
+function onlineLiveTotal(){   // โบนัสออนไลน์สะสม รวมเศษที่ยังไม่ตกเป็นเหรียญเต็ม
+  let v = state.onlineEarned || 0;
+  if(state.onlineSince != null) v += (Date.now() - state.onlineSince)/1000 * ONLINE_RATE;
+  return v;
+}
+function renderOnlineEarnPill(){
+  const pill = document.getElementById('net-pill');
+  if(!pill || typeof state === 'undefined' || !state.student) return;
+  // เดินเข็มถี่ทุกวินาที (careTick หลักเดินทุก 1 นาที — เรียกตรงนี้ด้วยให้เหรียญตกตรงเวลา 100 วิ)
+  const dropped = typeof onlineEarnTick === 'function' ? onlineEarnTick(Date.now()) : 0;
+  if(dropped > 0){
+    saveState();
+    const c = document.getElementById('coin-count'), t = document.getElementById('coin-today');
+    if(c) c.textContent = fmtNum(state.coins);       // อัปยอดใน header ทันที ไม่รอ render รอบหน้า
+    if(t) t.textContent = fmtNum(state.daily.coins);
+  }
+  const on = typeof onlineEarnActive === 'function' && onlineEarnActive();
+  if(!on && !(state.onlineEarned > 0)){ pill.style.display = 'none'; return; }
+  pill.style.display = '';
+  pill.classList.toggle('off', !on);
+  pill.title = on ? 'โบนัสออนไลน์: เปิดเกมออนไลน์อยู่ = เหรียญเพิ่มเอง +0.01/วินาที!'
+                  : 'โบนัสออนไลน์หยุดพัก (ต้อง login ออนไลน์ถึงจะเดิน)';
+  const live = document.getElementById('net-live');
+  if(live) live.textContent = onlineLiveTotal().toFixed(2);
+}
+
 function renderComputerCard(){
   const el = document.getElementById('computer-card');
   if(!el) return;
@@ -3737,6 +3768,7 @@ function renderStats(){
       <div class="stats-row"><span>🏆 คอมโบเฉียดสูงสุด (เฉียดต่อเนื่องไม่ชน)</span>
         <span><b>${fmtNum(state.bestCombo||0)}</b> ครั้งติด</span></div>
       <div class="stats-row"><span>🏭 สินค้าที่ผลิตสำเร็จ</span><span><b>${fmtNum(state.producedCount)}</b> ชิ้น</span></div>
+      <div class="stats-row"><span>🌐 โบนัสออนไลน์สะสม (เปิดเกมออนไลน์ = +${ONLINE_RATE}/วิ)</span><span><b>${fmtNum(state.onlineEarned||0)}</b> เหรียญ</span></div>
     </div>
     <div class="stats-card"><h3 class="stats-title">🐾 สัตว์เลี้ยงของหนู</h3>${petRows}</div>
     <div class="stats-card"><h3 class="stats-title">📚 คะแนนสูงสุดรายหมวด (${gradeBand(s.grade).label})</h3>${catRows}</div>

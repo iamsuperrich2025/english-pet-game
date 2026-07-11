@@ -128,3 +128,9 @@ setInterval(()=>{ if(Auth.booted) rainFxTick(); }, 5000);
 setInterval(()=>{
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderClock();
 }, 1000);
+
+// item 8: แท็บถูกซ่อน/สลับแอพ → ตกเหรียญโบนัสออนไลน์ที่ค้างแล้วหยุดนับ (กลับมาแล้ว careTick/renderClock เริ่มนับใหม่เอง)
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'hidden' && Auth.booted && typeof onlineEarnFlush === 'function')
+    onlineEarnFlush(Date.now());
+});

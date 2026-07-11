@@ -119,6 +119,18 @@ h1{font-size:26px;text-align:center;margin:8px 0 2px;color:#7a5ca8;text-shadow:0
 .coin-pill.today{
   font-size:14px;padding:2px 12px;border-color:var(--green-d);color:#2e7d44;
 }
+/* item 8: pill โบนัสออนไลน์ 🌐 — ตัวเลขวิ่งสด เรืองแสงดึงสายตาว่ากำลังได้เงินอยู่ */
+.coin-pill.net{
+  font-size:13px;padding:2px 12px;border-color:#3fbf8f;color:#0e8f63;
+  background:linear-gradient(135deg,#eafff6,#d8f7ec);
+  animation:netGlow 2.2s ease-in-out infinite;
+}
+.coin-pill.net.off{animation:none;opacity:.55;filter:grayscale(.6);}
+html.no-anim .coin-pill.net{animation:none;}
+@keyframes netGlow{
+  0%,100%{box-shadow:0 0 4px rgba(30,190,130,.25);}
+  50%{box-shadow:0 0 14px rgba(30,190,130,.75);}
+}
 .icon-btn{
   position:relative;
   background:#fff;border:3px solid #e6d9f5;border-radius:999px;padding:4px 12px;
