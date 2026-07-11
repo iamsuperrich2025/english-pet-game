@@ -451,6 +451,32 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 .lobby-stage .weather-banner b{color:#ffe9a8;}
 .lobby-stage .pet-tabs{margin:0;justify-content:center;flex-shrink:0;flex-wrap:nowrap;max-width:100%;overflow-x:auto;}
+/* 🆕 New Word (รอบ 116): แถบคำศัพท์ใหม่ใต้แถบอากาศ — คำใหญ่กลาง คลิกทั้งแถบ */
+.newword-banner{
+  display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0;
+  max-width:96%;padding:4px 16px;border-radius:999px;cursor:pointer;
+  background:var(--glass);border:1px solid var(--glass-line);
+  box-shadow:0 0 14px rgba(90,180,255,.15);position:relative;z-index:3;
+  transition:box-shadow .2s, border-color .2s;
+}
+.newword-banner:hover{border-color:var(--gold);box-shadow:0 0 18px rgba(255,214,90,.35);}
+.nw-tag{background:linear-gradient(135deg,#ff5a7a,#ffb84f);color:#fff;font-weight:700;
+  font-size:11.5px;padding:2px 9px;border-radius:999px;white-space:nowrap;
+  animation:nwPulse 1.8s ease-in-out infinite;}
+html.no-anim .nw-tag{animation:none;}
+@keyframes nwPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.09);}}
+.nw-word{font-size:clamp(19px,3.4vh,30px);font-weight:700;color:var(--gold);
+  letter-spacing:.5px;line-height:1.15;text-shadow:0 0 14px rgba(255,214,90,.4);}
+.nw-hint{font-size:11.5px;color:#9fc3ea;white-space:nowrap;}
+.nw-hint b{color:#ffe9a8;}
+/* ป๊อปอัปรายละเอียดคำ (format พจนานุกรม) */
+.nw-box{width:min(440px,92vw);box-sizing:border-box;}
+.nw-pop-word{font-size:clamp(30px,6vw,42px);font-weight:800;color:#3a76d8;line-height:1.1;}
+.nw-speak{background:none;border:none;font-size:24px;cursor:pointer;vertical-align:middle;padding:2px;}
+.nw-pop-phon{margin-top:6px;font-size:16px;color:#5a6b80;}
+.nw-ipa{font-style:normal;color:#8a63d2;}
+.nw-pop-sent{margin-top:10px;font-size:16.5px;font-style:italic;color:#3d4f63;line-height:1.45;}
+.nw-pop-mean{margin-top:8px;font-size:22px;font-weight:700;color:#17a877;}
 .pet-tab{background:rgba(7,25,52,.7);border:2px solid var(--glass-line);color:#cfe4fa;}
 .pet-tab.on{background:#fff;border-color:var(--gold);color:var(--ink2);font-weight:500;}
 .pet-tab.add{border-style:dashed;color:#8fb8e8;background:rgba(7,25,52,.45);}
@@ -711,6 +737,66 @@ h1{color:var(--sky-d);text-shadow:none;}
 .hq-price:hover{filter:brightness(1.05);}
 .hq-price:active{filter:brightness(.95);}
 .hq-card.hq-cur .hq-price{background:#e9e4f6;border-top-color:#cabfe8;color:#6b5b95;cursor:default;}
+
+/* ============================================================
+   🚗 รอบ 131: หมวดยานพาหนะ — แคตตาล็อกรถ 5 ช่อง/แถว + กล่องรถของฉัน + กล่องซื้อรถ
+   ============================================================ */
+.car-grid{grid-template-columns:repeat(5,1fr);}
+@media (max-width:760px){.car-grid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));}}
+.car-grid .hq-pic{height:78px;}
+.car-grid .hq-pic img{width:88px;height:66px;}
+.car-emoji{
+  font-size:34px;line-height:1;width:62px;height:54px;display:flex;align-items:center;justify-content:center;
+  border-radius:12px;border:2px dashed transparent;
+}
+.hq-price.car-cur{background:#e9e4f6;border-top-color:#cabfe8;color:#6b5b95;cursor:default;}
+.hq-price.cant-afford{opacity:.55;}
+.car-mine{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:linear-gradient(180deg,#fffdf2,#fdf3d8);
+  border:2px solid #e8c86a;border-radius:14px;padding:10px 14px;margin-bottom:10px;
+  box-shadow:0 4px 12px rgba(150,110,20,.18);
+}
+.car-mine-pic img{width:84px;height:64px;object-fit:contain;}
+.car-mine-info{flex:1;min-width:200px;font-size:13.5px;line-height:1.5;color:#4a3d18;}
+.car-loan{margin-top:4px;font-size:12.5px;background:#fff;border:1px solid #ecd9a0;border-radius:10px;padding:5px 10px;display:inline-block;}
+.car-loan.od{border-color:#e57368;background:#fdecea;color:#9d2f24;}
+.car-mine-btns{display:flex;flex-direction:column;gap:6px;}
+.car-mine-btns .hq-price{border:2px solid #f0d68a;border-radius:10px;padding:7px 12px;}
+.car-mine-btns .car-od-btn{background:#fdecea;border-color:#e57368;color:#9d2f24;animation:lawPulse 1.2s ease-in-out infinite;}
+@keyframes lawPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+.car-locked small{line-height:1.55;}
+/* กล่องซื้อรถ (levelup-overlay กลางจอ) — 3 รายการ: รถ/พ.ร.บ./ประกัน + เลือกจ่ายสด-ผ่อน */
+.car-buy-box{max-width:min(440px,94vw);text-align:center;}
+.cb-pic{display:flex;justify-content:center;margin:4px 0 8px;}
+.cb-pic img{width:130px;height:96px;object-fit:contain;}
+.cb-pic .car-emoji{width:96px;height:76px;font-size:48px;}
+.cb-lines{text-align:left;margin:4px 0 8px;}
+.cb-li{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;
+  padding:7px 10px;border-bottom:1px dashed #d8e4f2;
+}
+.cb-li small{display:block;font-size:11px;color:#7b8aa0;}
+.cb-li b{white-space:nowrap;}
+.cb-ins button{
+  border:2px solid #9fc4ea;background:#eef6ff;border-radius:999px;font-family:inherit;font-size:12px;
+  font-weight:700;color:#2a76c0;padding:4px 10px;cursor:pointer;white-space:nowrap;
+}
+.cb-ins.on{background:#e9f9ec;border-radius:10px;}
+.cb-ins.on button{background:#43a047;border-color:#43a047;color:#fff;}
+.cb-plan{display:flex;gap:8px;margin:8px 0;}
+.cb-pl{
+  flex:1;border:2px solid #cfd8e6;background:#f6f9fd;border-radius:12px;font-family:inherit;
+  font-size:13.5px;font-weight:700;color:#54657e;padding:8px 6px;cursor:pointer;line-height:1.3;
+}
+.cb-pl small{display:block;font-size:10.5px;font-weight:500;margin-top:2px;}
+.cb-pl.sel{border-color:#43a047;background:#e9f9ec;color:#1d6b22;}
+.cb-total{background:#fff8e6;border:1px solid #ecd9a0;border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.5;}
+.cb-btns{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+.cb-x{
+  border:none;background:#eceff1;color:#546e7a;border-radius:14px;font-family:inherit;
+  font-weight:700;font-size:15px;padding:10px 18px;cursor:pointer;
+}
+.cb-btns .cf-ok.cant-afford{opacity:.55;}
 
 /* ร้านแต่งตัว: จัดทรงการ์ดสินค้าแบบเดียวกัน (CSS ล้วน — markup เดิม) */
 .shop-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;}

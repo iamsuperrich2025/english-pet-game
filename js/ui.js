@@ -71,6 +71,51 @@ function heroRankBgHTML(){
   return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color}"><img src="${img}" alt=""></div>`;
 }
 
+/* ============================================================
+   🆕 New Word (รอบ 116): คำศัพท์ใหม่ 1 คำ/การ login ตามระดับชั้น
+   สุ่มครั้งเดียวต่อการเปิดเกม (module var — login ใหม่/รีเฟรช = คำใหม่)
+   คลิกแบนเนอร์ = ป๊อปอัปรายละเอียดตาม format พจนานุกรม + อ่านออกเสียง
+   ============================================================ */
+let newWordPick = null;
+function renderNewWord(){
+  const el = document.getElementById('newword-banner');
+  if(!el) return;
+  if(typeof NEW_WORDS === 'undefined' || !state.student){ el.style.display='none'; return; }
+  if(!newWordPick){
+    const pool = newWordPool();
+    newWordPick = pool[Math.floor(Math.random()*pool.length)];
+  }
+  const [en] = newWordPick;
+  el.style.display='';
+  el.innerHTML = `
+    <span class="nw-tag">🆕 New!</span>
+    <span class="nw-word">${en}</span>
+    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>`;
+  el.onclick = showNewWordPopup;
+}
+
+/* ป๊อปอัปรายละเอียดคำ — format ตามสเปกพจนานุกรม (TASK_DICTIONARY_SONNET.md):
+   คำ / (pos) /IPA/ เสียงอ่านไทย / ประโยคอังกฤษอธิบายความหมาย / ความหมายไทย */
+function showNewWordPopup(){
+  if(!newWordPick) return;
+  const [en, pos, ipa, thRead, sentence, thMean] = newWordPick;
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box nw-box">
+    <div class="nw-pop-word">${en} <button class="nw-speak" title="ฟังเสียงอ่าน">🔊</button></div>
+    <div class="nw-pop-phon">(${pos}) <span class="nw-ipa">${ipa}</span> ${thRead}</div>
+    <div class="nw-pop-sent">${sentence}</div>
+    <div class="nw-pop-mean">${thMean}</div>
+    <div style="margin-top:14px"><button class="cf-ok">เข้าใจแล้ว! ✨</button></div>
+  </div>`;
+  const close = ()=>overlay.remove();
+  overlay.querySelector('.cf-ok').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.querySelector('.nw-speak').addEventListener('click', ()=>speakWord(en));
+  document.body.appendChild(overlay);
+  speakWord(en);   // เปิดมาอ่านให้ฟังเลย (มีปุ่ม 🔊 ฟังซ้ำ)
+}
+
 /* ร่างยักษ์ (รอบ 102): อัพเกรดขยายน้องในหน้า lobby ด้วยเหรียญ
    ระดับ 0=ปกติ (น้องเล็กกว่าผู้เลี้ยง) → GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่าของน้อง)
    คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
@@ -1195,6 +1240,8 @@ function renderDashboard(){
   }
   document.getElementById('weather-banner').innerHTML =
     `${w.emoji} อากาศตอนนี้: <b>${w.name}</b>${wMsg}`;
+
+  renderNewWord();   // 🆕 คำศัพท์ใหม่ 1 คำ/การ login (รอบ 116)
 
   /* ---- แท็บสลับสัตว์ (หลายตัว) ---- */
   const tabs = document.getElementById('pet-tabs');
@@ -2853,6 +2900,21 @@ function renderDriveCard(){
         <small>ต้องรักษาตัวก่อนถึงจะกลับไปขับรถได้</small>
       </div>
       <button class="big-btn red home-btn" id="btn-drive-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.driveTicket && carDriveBlock()){
+    // 🔐 รอบ 131: มีตั๋วแต่ยังไม่มีรถ / ค้างค่างวด — ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ ต้องซื้อแยก
+    const why = carDriveBlock();
+    body = `
+      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
+      <div class="ticket-owned car-locked">
+        <div style="font-size:44px">🔐</div>
+        ${why==='nocar'
+          ? `<b>ต้องซื้อรถก่อน จึงจะขับรถได้</b><br>
+             <small>ตั๋ว = สิทธิ์เข้าเมืองกำแพงเพชร · <b>รถ = พาหนะ</b> ต้องมีก่อนออกถนน<br>
+             ไปเลือกรถคันแรกที่หมวด 🚗 ยานพาหนะ ในตลาดกันเลย!</small>`
+          : `<b>ค้างค่างวดรถ — ขับไม่ได้ชั่วคราว</b><br>
+             <small>จ่ายงวดที่ค้าง <b>🪙${fmtNum(carLoanOverdue())}</b> ที่หมวดยานพาหนะ แล้วกลับมาขับได้ทันที</small>`}
+      </div>
+      <button class="big-btn blue home-btn" id="btn-drive-tocar">🏪 ไปหมวดยานพาหนะ</button>`;
   }else if(state.driveTicket){
     body = `
       <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
@@ -2894,6 +2956,8 @@ function renderDriveCard(){
   if(heal) heal.addEventListener('click', advHealClick);
   const inv = document.getElementById('btn-inv-drive');
   if(inv) inv.addEventListener('click', ()=>openTinvPicker('drive'));
+  const tocar = document.getElementById('btn-drive-tocar');
+  if(tocar) tocar.addEventListener('click', gotoVehicleShop);
 }
 
 function buyDriveTicket(){
@@ -2920,6 +2984,8 @@ function buyDriveTicket(){
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
   if(!state.driveTicket || state.advHurt || advLoading) return;
+  // 🔐 รอบ 131: ยังไม่มีรถ / ค้างค่างวด — ขับไม่ได้ พาไปหมวดยานพาหนะ
+  if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
   if(!window.Adventure3D || !window.KPP_CITY){
     advLoading = true;
     toast('🚗 กำลังสตาร์ทรถ + โหลดแผนที่เมืองกำแพงเพชร...');
@@ -2968,6 +3034,9 @@ function railWorldClick(w){
     if(typeof openPanel === 'function') openPanel('panel-shop');
     scrollShopCardIntoView(w.card); return;
   }
+  if(w.mode === 'drive' && carDriveBlock()){                // 🔐 รอบ 131: มีตั๋วแต่ไม่มีรถ/ค้างงวด → กล่องพาไปหมวดยานพาหนะ
+    sfx.wrong(); showNeedCarDialog(carDriveBlock()); return;
+  }
   w.enter();                                                // มีตั๋ว + ไม่บาดเจ็บ → เข้าโลกเลย
 }
 
@@ -3005,7 +3074,7 @@ function renderRailWorlds(){
     const cnt = b.querySelector('.rail-count');
     const pr  = b.querySelector('.rail-price');
     if(locked){                                               // ยังไม่มีตั๋ว → 🔒 + ราคาตั๋ว (พอซื้อ=เขียว "พร้อม!")
-      if(lk) lk.style.display = '';
+      if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
       if(cnt) cnt.style.display = 'none';
       if(pr){
         pr.style.display = '';
@@ -3014,10 +3083,15 @@ function renderRailWorlds(){
         pr.title = afford ? 'เหรียญพอซื้อตั๋วแล้ว!' : '';
       }
     }else{                                                    // ปลดล็อกแล้ว → ซ่อนราคา · โชว์จำนวนคำที่พิชิต (ถ้ามี)
-      if(lk) lk.style.display = 'none';
+      // 🔐 รอบ 131: โลกขับรถมีตั๋วแต่ยังไม่มีรถ/ค้างค่างวด → กุญแจเหลืองล็อกทับ (ซื้อรถแล้วหายถาวร)
+      const carBlock = w.mode === 'drive' ? carDriveBlock() : '';
+      if(lk){
+        lk.style.display = carBlock ? '' : 'none';
+        if(carBlock){ lk.textContent = '🔐'; lk.title = carBlock==='nocar' ? 'ต้องซื้อรถก่อน จึงจะขับรถได้' : 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
+      }
       if(pr) pr.style.display = 'none';
       if(cnt){
-        cnt.style.display = done > 0 ? '' : 'none';
+        cnt.style.display = (done > 0 && !carBlock) ? '' : 'none';
         cnt.textContent = fmtNum(done);
         cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ';
       }
@@ -3305,6 +3379,7 @@ function renderMarketCard(){
     ${soldUI}
     ${renderOrdersUI()}
     ${renderMarketBrowse()}
+    ${renderVehicleShop()}
     <div class="mkt-listhead">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
     ${renderCollectMine()}`;
 
@@ -3314,6 +3389,13 @@ function renderMarketCard(){
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
+  el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
+  const insBtn = document.getElementById('car-buy-ins');
+  if(insBtn) insBtn.addEventListener('click', buyCarInsurance);
+  const payBtn = document.getElementById('car-pay-loan');
+  if(payBtn) payBtn.addEventListener('click', payCarLoanMonthly);
+  const clsBtn = document.getElementById('car-close-loan');
+  if(clsBtn) clsBtn.addEventListener('click', payCarLoanFull);
   const wl = document.getElementById('btn-wishlist');
   if(wl) wl.addEventListener('click', openWishlistDialog);
   updateWishBadge();
@@ -3389,6 +3471,189 @@ function renderMarketBrowse(){
       }).join('') + `</div>`
     : `<div class="mkt-empty">ยังไม่มีเพื่อนลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
   return `<div class="mkt-listhead">🌏 ตลาดเพื่อนออนไลน์ — ของที่เพื่อนผลิตเอง${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
+}
+
+/* ============================================================
+   🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+   ตั๋วขับรถ = สิทธิ์เข้าเมือง · รถ = พาหนะ ต้องซื้อแยก (ผู้ใช้เคาะ 11 ก.ค. 2026)
+   ภาพ img/cars/<id>.png probe อัตโนมัติ — ไม่มีภาพใช้ 🚗 บนพื้นสีประจำคัน เกมไม่พัง
+   ============================================================ */
+let carsProbed = false;
+function carImg(id){ return IMG_FILES[id] || null; }
+function renderVehicleShop(){
+  if(!carsProbed){
+    carsProbed = true;
+    probeImages(CARS.map(c=>c.id), 'img/cars').then(()=>{ if(document.getElementById('mkt-vehicles')) renderMarketCard(); });
+  }
+  /* กล่อง "รถของหนู" — สถานะ พ.ร.บ./ประกัน + งวดผ่อน (จ่ายงวด/โปะปิดยอด) */
+  let mine = '';
+  if(state.car){
+    const my = carInfo(state.car.id), img = carImg(my.id);
+    const L = state.car.loan, overdue = carLoanOverdue(), payable = carLoanPayable();
+    mine = `<div class="car-mine" style="border-color:${my.c}">
+      <div class="car-mine-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${my.c}33;border-color:${my.c}">🚗</span>`}</div>
+      <div class="car-mine-info">
+        <b>🚘 รถของหนู: ${my.name}</b><br>
+        <small>📋 พ.ร.บ. ✅ · 🛡️ ประกันภัย ${state.car.insured
+          ? '✅ คุ้มครองชนรถผู้เล่นอื่น'
+          : `❌ ยังไม่มี (ชนรถเพื่อน = จ่ายเอง 🪙${fmtNum(CAR_HITCAR_FEE)}/ครั้ง)`}</small>
+        ${L?`<div class="car-loan ${overdue?'od':''}">📅 ผ่อนเหลือ <b>🪙${fmtNum(L.remain)}</b> · เดือนละ 🪙${fmtNum(L.perMonth)}${
+          overdue?`<br>⚠️ <b>ค้างงวด 🪙${fmtNum(overdue)} — ขับรถไม่ได้จนกว่าจะจ่าย!</b>`
+          :(carLoanDue()-L.paid>0?`<br>งวดเดือนนี้เหลือ 🪙${fmtNum(carLoanDue()-L.paid)}`:'<br>งวดเดือนนี้จ่ายแล้ว ✅')}</div>`
+        :'<div class="car-loan">💵 จ่ายครบแล้ว — รถเป็นของหนูเต็มตัว!</div>'}
+      </div>
+      <div class="car-mine-btns">
+        ${!state.car.insured?`<button class="hq-price" id="car-buy-ins">🛡️ ซื้อประกัน 🪙${fmtNum(CAR_INSURANCE)}</button>`:''}
+        ${L&&payable>0?`<button class="hq-price ${overdue?'car-od-btn':''}" id="car-pay-loan">📅 จ่ายงวด 🪙${fmtNum(payable)}</button>`:''}
+        ${L?`<button class="hq-price" id="car-close-loan">💰 โปะปิดยอด 🪙${fmtNum(L.remain)}</button>`:''}
+      </div>
+    </div>`;
+  }
+  const grid = CARS.map(c=>{
+    const img = carImg(c.id);
+    const isMine = state.car && state.car.id === c.id;
+    const minToday = Math.ceil(c.price*CAR_DOWN_RATE) + CAR_PRB;   // ถูกสุดที่ต้องมีวันนี้ = ดาวน์+พ.ร.บ.
+    const btn = isMine ? `<button class="hq-price car-cur">🚘 รถของหนู</button>`
+      : state.car ? `<button class="hq-price car-cur">มีรถอยู่แล้ว</button>`
+      : `<button class="hq-price car-buy ${state.coins>=minToday?'':'cant-afford'}" data-id="${c.id}">🪙${fmtNum(c.price)} · ดูรายละเอียด</button>`;
+    return `<div class="hq-card ${isMine?'hq-cur':''}" style="border-color:${c.c}">
+      <div class="hq-head">${c.name}</div>
+      <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
+      ${btn}
+    </div>`;
+  }).join('');
+  return `<div class="mkt-listhead" id="mkt-vehicles">🚗 ยานพาหนะ — โชว์รูมรถ</div>
+    <div class="gp-note">มีตั๋วโลกขับรถแล้วต้องมี<b>รถ</b>ถึงจะออกถนนได้ · ซื้อรถต้องมี <b>พ.ร.บ.</b> (บังคับ 🪙${fmtNum(CAR_PRB)})
+    · <b>ประกันภัย</b>เลือกได้ (🪙${fmtNum(CAR_INSURANCE)} — คุ้มครองชนรถผู้เล่นอื่น)
+    · จ่ายสด หรือผ่อน ${CAR_LOAN_MONTHS} เดือน (ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}%) โปะปิดยอดได้ทุกเมื่อ</div>
+    ${mine}
+    <div class="hq-grid car-grid">${grid}</div>`;
+}
+
+/* กล่องซื้อรถ — แจ้งชัด 3 รายการ: ราคารถ · พ.ร.บ. (บังคับ) · ประกัน (ทางเลือก) + เลือกจ่ายสด/ผ่อน */
+function openCarBuyDialog(id){
+  const c = carInfo(id);
+  if(!c || state.car) return;
+  sfx.select();
+  let ins = false, plan = 'cash';
+  const down = Math.ceil(c.price*CAR_DOWN_RATE);
+  const perMonth = Math.ceil((c.price-down)/CAR_LOAN_MONTHS);
+  const img = carImg(id);
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box car-buy-box">
+    <h2>🚗 ซื้อรถ ${c.name}</h2>
+    <div class="cb-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
+    <div class="cb-lines">
+      <div class="cb-li"><span>🚗 ราคารถ</span><b>🪙${fmtNum(c.price)}</b></div>
+      <div class="cb-li"><span>📋 พ.ร.บ. <small>(บังคับตามกฎหมาย)</small></span><b>🪙${fmtNum(CAR_PRB)}</b></div>
+      <div class="cb-li cb-ins" id="cb-ins"><span>🛡️ ประกันภัย <small>(ทางเลือก — ชนรถผู้เล่นอื่น ประกันจ่ายให้)</small></span>
+        <b>🪙${fmtNum(CAR_INSURANCE)}</b><button id="cb-ins-tg">➕ เอาด้วย</button></div>
+    </div>
+    <div class="cb-plan">
+      <button class="cb-pl sel" data-p="cash">💵 จ่ายสด</button>
+      <button class="cb-pl" data-p="loan">📅 ผ่อน ${CAR_LOAN_MONTHS} เดือน<small>ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}% · ค้างงวด=ขับไม่ได้ชั่วคราว</small></button>
+    </div>
+    <div class="cb-total" id="cb-total"></div>
+    <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="cb-buy">ซื้อเลย! 🚗</button></div>
+  </div>`;
+  const todayCost = ()=>(plan==='cash'?c.price:down) + CAR_PRB + (ins?CAR_INSURANCE:0);
+  const refresh = ()=>{
+    const t = todayCost();
+    overlay.querySelector('#cb-ins-tg').textContent = ins ? '✅ เอาด้วย' : '➕ เอาด้วย';
+    overlay.querySelector('#cb-ins').classList.toggle('on', ins);
+    overlay.querySelectorAll('.cb-pl').forEach(b=>b.classList.toggle('sel', b.dataset.p===plan));
+    overlay.querySelector('#cb-total').innerHTML = plan==='cash'
+      ? `จ่ายวันนี้ทั้งหมด <b>🪙${fmtNum(t)}</b>`
+      : `จ่ายวันนี้ (ดาวน์+พ.ร.บ.${ins?'+ประกัน':''}) <b>🪙${fmtNum(t)}</b><br><small>แล้วผ่อนเดือนละ <b>🪙${fmtNum(perMonth)}</b> × ${CAR_LOAN_MONTHS} เดือน — มีเงินเมื่อไหร่กด "โปะปิดยอด" ได้ทุกเมื่อ</small>`;
+    overlay.querySelector('#cb-buy').classList.toggle('cant-afford', state.coins < t);
+  };
+  overlay.querySelector('#cb-ins-tg').addEventListener('click', ()=>{ ins = !ins; sfx.select(); refresh(); });
+  overlay.querySelectorAll('.cb-pl').forEach(b=>b.addEventListener('click', ()=>{ plan = b.dataset.p; sfx.select(); refresh(); }));
+  overlay.querySelector('.cb-x').addEventListener('click', ()=>{ overlay.remove(); });
+  overlay.querySelector('#cb-buy').addEventListener('click', ()=>{
+    const t = todayCost();
+    if(state.coins < t){ sfx.wrong(); toast(`เหรียญยังไม่พอ — วันนี้ต้องจ่าย 🪙${fmtNum(t)} สู้ๆ!`); return; }
+    state.coins -= t;
+    state.car = {id, insured:ins,
+      loan: plan==='cash' ? null : {remain:c.price-down, perMonth, month:ymStr(Date.now()), paid:0, carry:0}};
+    sfx.buy();
+    toast(plan==='cash'
+      ? `🚗 ได้รถ ${c.name} แล้ว! กดปุ่มขับรถออกเมืองได้เลย 🕰️`
+      : `🚗 ออกรถ ${c.name} แบบผ่อนแล้ว! จ่ายงวดทุกเดือนที่หมวดยานพาหนะนะ 📅`);
+    saveState();
+    overlay.remove();
+    renderDashboard();
+  });
+  refresh();
+  document.body.appendChild(overlay);
+}
+
+function buyCarInsurance(){
+  if(!state.car || state.car.insured) return;
+  if(state.coins < CAR_INSURANCE){ sfx.wrong(); toast(`ประกันภัยรถ 🪙${fmtNum(CAR_INSURANCE)} — เหรียญยังไม่พอ สู้ๆ!`); return; }
+  askConfirm(`<h2>🛡️ ซื้อประกันภัยรถ</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(CAR_INSURANCE)}</b> (จ่ายครั้งเดียว)<br>
+    ชนรถผู้เล่นอื่นเมื่อไหร่ ประกันจ่ายค่าเสียหาย 🪙${fmtNum(CAR_HITCAR_FEE)} ให้ทุกครั้ง<br>
+    <small>ไม่มีประกัน = จ่ายเองเต็มๆ ตอนออกจากโลกขับรถ</small></p>`,
+    'ซื้อเลย! 🛡️', ()=>{
+      state.coins -= CAR_INSURANCE;
+      state.car.insured = true;
+      sfx.buy();
+      toast('🛡️ มีประกันแล้ว! ชนรถเพื่อนเมื่อไหร่ประกันจ่ายให้');
+      saveState();
+      renderDashboard();
+    });
+}
+
+function payCarLoanMonthly(){
+  const amt = carLoanPayable();
+  if(!amt) return;
+  if(state.coins < amt){ sfx.wrong(); toast(`งวดนี้ต้องจ่าย 🪙${fmtNum(amt)} — เหรียญยังไม่พอ สู้ๆ!`); return; }
+  state.coins -= amt;
+  const done = carLoanPay(amt);
+  sfx.buy();
+  toast(done ? '🎉 ผ่อนครบแล้ว! รถเป็นของหนูเต็มตัว' : '📅 จ่ายงวดเรียบร้อย — ขับรถได้ตามปกติ');
+  saveState();
+  renderDashboard();
+}
+
+function payCarLoanFull(){
+  const L = state.car && state.car.loan;
+  if(!L) return;
+  if(state.coins < L.remain){ sfx.wrong(); toast(`โปะปิดยอดต้องใช้ 🪙${fmtNum(L.remain)} — เหรียญยังไม่พอ`); return; }
+  askConfirm(`<h2>💰 โปะปิดยอดผ่อนรถ</h2>
+    <p style="font-size:15px;margin:6px 0">จ่ายยอดที่เหลือทั้งหมด <b>🪙${fmtNum(L.remain)}</b> ครั้งเดียวจบ<br>
+    <small>ปิดยอดแล้วไม่มีงวดรายเดือนอีก — รถเป็นของหนูเต็มตัว!</small></p>`,
+    'โปะเลย! 💰', ()=>{
+      state.coins -= L.remain;
+      carLoanPay(L.remain);
+      sfx.buy();
+      toast('🎉 ปิดยอดแล้ว! รถเป็นของหนูเต็มตัว');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* 🔐 ด่านกันขับ: มีตั๋วแต่ยังไม่มีรถ / ค้างค่างวด — คืน '' เมื่อขับได้ */
+function carDriveBlock(){
+  if(!state.car) return 'nocar';
+  if(carLoanOverdue() > 0) return 'overdue';
+  return '';
+}
+function gotoVehicleShop(){
+  if(typeof openPanel === 'function') openPanel('panel-market');
+  setTimeout(()=>{ const s = document.getElementById('mkt-vehicles'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+}
+function showNeedCarDialog(why){
+  askConfirm(why==='overdue'
+    ? `<div style="font-size:56px;line-height:1">🔐</div>
+       <h2>ค้างค่างวดรถ</h2>
+       <p style="font-size:15px;margin:6px 0">ขับรถไม่ได้ชั่วคราว — จ่ายงวดที่ค้าง <b>🪙${fmtNum(carLoanOverdue())}</b> ที่หมวดยานพาหนะ แล้วกลับมาขับได้ทันที</p>`
+    : `<div style="font-size:56px;line-height:1">🔐</div>
+       <h2>ต้องซื้อรถก่อน จึงจะขับรถได้</h2>
+       <p style="font-size:15px;margin:6px 0">ตั๋ว = สิทธิ์เข้าเมืองกำแพงเพชร · <b>รถ = พาหนะ</b> ต้องมีก่อนออกถนน<br>ไปเลือกรถคันแรกที่หมวดยานพาหนะในตลาดกันเลย!</p>`,
+    '🏪 ไปหมวดยานพาหนะ', gotoVehicleShop);
 }
 
 /* ---- มุมมอง "โรงงานผลิต": งานที่กำลังผลิต + แคตตาล็อกเลือกสินค้า ---- */
