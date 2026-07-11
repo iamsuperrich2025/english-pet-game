@@ -9,9 +9,11 @@
 
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDqLbog7HOCZI25y8D4lYC8M8t9Y9zviFk",
-  // รอบ 136: ใช้โดเมนเกมเองเป็นหน้า login (Firebase Hosting เสิร์ฟ /__/auth/* ให้ทุก site ในโปรเจกต์)
-  // → login จบในโดเมนเดียว ไม่กระโดดไป firebaseapp.com + กันปัญหา third-party cookies บนมือถือ
-  authDomain: "vocabworld.web.app",
+  // รอบ 137: กลับมาใช้โดเมนกลางของโปรเจกต์ไปก่อน — รอบ 136 ลองใช้ vocabworld.web.app แล้วเจอ
+  // redirect_uri_mismatch (โดเมนใหม่ต้องถูกเพิ่มใน OAuth client: Authorized redirect URIs ก่อน)
+  // ⚠️ จะสลับเป็น vocabworld.web.app ได้เมื่อผู้ใช้เพิ่มใน Google Cloud Console → Clients แล้วเท่านั้น:
+  //    JavaScript origins: https://vocabworld.web.app · Redirect URIs: https://vocabworld.web.app/__/auth/handler
+  authDomain: "english-pet-game.firebaseapp.com",
   databaseURL: "https://english-pet-game-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "english-pet-game",
   storageBucket: "english-pet-game.firebasestorage.app",
