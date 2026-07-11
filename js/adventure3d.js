@@ -499,14 +499,26 @@ function makeBlockFigure(id, seated){
   const g=new THREE.Group();
   const skin=blkMat(a.skin), shirt=blkMat(a.shirt), pants=blkMat(a.pants), hairM=blkMat(a.hair);
   const hipY=seated?0:.5;
-  if(!seated) [-0.15,0.15].forEach(x=>{ const leg=new THREE.Mesh(blkGeo(.24,.5,.28),pants); leg.position.set(x,.25,0); g.add(leg); });
+  // ท่ายืน: แขน-ขาห้อยจาก pivot ที่สะโพก/หัวไหล่ (ท่าพักหน้าตาเท่าเดิม แต่หมุน rotation.x แกว่งเดินได้)
+  g.userData.limbs=[];                       // [ขาซ้าย, ขาขวา, แขนซ้าย, แขนขวา] — เฉพาะท่ายืน
+  if(!seated) [-0.15,0.15].forEach(x=>{
+    const piv=new THREE.Group(); piv.position.set(x,.5,0);
+    const leg=new THREE.Mesh(blkGeo(.24,.5,.28),pants); leg.position.y=-.25; piv.add(leg);
+    g.add(piv); g.userData.limbs.push(piv);
+  });
   const torso=new THREE.Mesh(blkGeo(.6,.6,.36),shirt); torso.position.y=hipY+.3; g.add(torso);
   [-1,1].forEach(s=>{
-    const arm=new THREE.Mesh(blkGeo(.17,.46,.22),shirt);
-    arm.position.set(s*.41,hipY+.34,0); arm.rotation.z=s*-.12;
-    if(seated){ arm.rotation.x=-1.0; arm.position.z=-.12; }
-    const hand=new THREE.Mesh(blkGeo(.16,.14,.18),skin); hand.position.y=-.3; arm.add(hand);
-    g.add(arm);
+    if(seated){
+      const arm=new THREE.Mesh(blkGeo(.17,.46,.22),shirt);
+      arm.position.set(s*.41,hipY+.34,-.12); arm.rotation.z=s*-.12; arm.rotation.x=-1.0;
+      const hand=new THREE.Mesh(blkGeo(.16,.14,.18),skin); hand.position.y=-.3; arm.add(hand);
+      g.add(arm);
+    }else{
+      const piv=new THREE.Group(); piv.position.set(s*.41,hipY+.57,0);
+      const arm=new THREE.Mesh(blkGeo(.17,.46,.22),shirt); arm.position.y=-.23; arm.rotation.z=s*-.12;
+      const hand=new THREE.Mesh(blkGeo(.16,.14,.18),skin); hand.position.y=-.3; arm.add(hand);
+      piv.add(arm); g.add(piv); g.userData.limbs.push(piv);
+    }
   });
   const head=new THREE.Mesh(blkGeo(.5,.46,.46),[skin,skin,skin,skin,skin,blkFaceMat(id)]);
   head.position.y=hipY+.86; g.add(head);
@@ -560,6 +572,15 @@ function makeBlockPeer(name, av, uid){
   const fig=makeBlockFigure(bid,true); fig.position.set(.35,1.02,.3); g.add(fig);
   const label=blkNameSprite(name); label.position.set(0,2.85,0); g.add(label);
   g.userData.wheels=g.children[0].userData.wheels;
+  return g;
+}
+/* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
+function makeBlockWalkPeer(name, av, uid){
+  const bid=BLOCK_AVATARS[av]?av:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
+  const g=new THREE.Group();
+  const fig=makeBlockFigure(bid,false); g.add(fig);
+  const label=blkNameSprite(name); label.position.set(0,2.25,0); g.add(label);
+  g.userData.limbs=fig.userData.limbs;      // ให้ tickPeers หมุนแกว่งได้ตรงๆ
   return g;
 }
 function disposeBlockPeer(g){
@@ -623,9 +644,10 @@ function blkBuildPicker(){
     const r=blkPickRes; blkPickRes=null; if(r) r(false);
   });
 }
-function pickBlockAvatar(){
+function pickBlockAvatar(goLabel){
   return new Promise(res=>{
     blkBuildThumbs(); blkBuildPicker();
+    blkPickEl.querySelector('.blk-go').textContent=goLabel||'🚗 ออกรถ!';   // ปุ่มยืนยันตามโลกที่จะเข้า
     blkPickSel=BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1';
     const grid=blkPickEl.querySelector('.blk-grid');
     grid.innerHTML=Object.keys(BLOCK_AVATARS).map(id=>
@@ -1771,7 +1793,7 @@ function sendPos(force){
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
     n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
-    av:(M.drive&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
+    av:((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
@@ -1814,21 +1836,22 @@ function onPeerData(snap){
   if(typeof d.x!=='number' || typeof d.z!=='number') return;
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
+  const walkBlk=(mode==='adv'||mode==='haunt');   // 🧱 โลกเดิน: เพื่อน = หุ่นบล็อกเดินได้ (แทน sprite แบน)
   if(!p){
-    // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกอื่นคง sprite เดิม
-    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid):makePeerSprite(d.n,d.av),
+    // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกเดิน = หุ่นบล็อกเดิน · เฮลิฯ/โดรนคง sprite เดิม
+    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid):walkBlk?makeBlockWalkPeer(d.n,d.av,uid):makePeerSprite(d.n,d.av),
                   cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน',
-                  blk:!!M.drive, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0};
-    p.spr.position.set(d.x,p.blk?0:py,d.z);
-    if(p.blk) p.spr.rotation.y=p.yawCur;
+                  blk:!!M.drive, walk:walkBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
+    p.spr.position.set(d.x,(p.blk||p.walk)?0:py,d.z);
+    if(p.blk||p.walk) p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
     tinvCheck(uid);
     Voice.onPeer(uid);
-  }else if(p.blk && d.av!==p.av){
-    // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างรถใหม่ตามตัวที่เลือก
+  }else if((p.blk||p.walk) && d.av!==p.av){
+    // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
     scene.remove(p.spr); disposeBlockPeer(p.spr);
-    p.av=d.av; p.spr=makeBlockPeer(d.n,d.av,uid);
+    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid):makeBlockWalkPeer(d.n,d.av,uid);
     p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
   }
@@ -1860,7 +1883,7 @@ function removePeer(uid){
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
   scene.remove(p.spr);
-  if(p.blk) disposeBlockPeer(p.spr);                              // 🧱 geometry/material แชร์ — dispose เฉพาะป้ายชื่อ
+  if(p.blk||p.walk) disposeBlockPeer(p.spr);                      // 🧱 geometry/material แชร์ — dispose เฉพาะป้ายชื่อ
   else{ p.spr.material.map.dispose(); p.spr.material.dispose(); }
   delete peers[uid];
   renderBoard();
@@ -1888,14 +1911,26 @@ function tickPeers(dt,now){
       let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
       p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
       (p.spr.userData.wheels||[]).forEach(w=>{ w.rotation.x-=moved/.5; });
+    }else if(p.walk){
+      // 🧱 หุ่นบล็อกเดิน: หันตาม yaw (lerp ทางสั้น) + แกว่งแขน-ขาตามระยะที่เดินจริง · หยุด=ลู่คืนท่ายืน
+      const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
+      p.stride=(p.stride||0)+moved;
+      const speedN=Math.min(1,(moved/Math.max(dt,.001))/3);        // 0..1 ตามความเร็วจริง (เต็มที่ ~3 m/s)
+      p.swing=(p.swing||0)+(speedN-(p.swing||0))*Math.min(1,dt*8);
+      const a=Math.sin(p.stride*3.4)*.6*p.swing;
+      const L=p.spr.userData.limbs||[];
+      if(L.length===4){ L[0].rotation.x=a; L[1].rotation.x=-a; L[2].rotation.x=-a*.8; L[3].rotation.x=a*.8; }
+      p.spr.position.set(p.cur.x,Math.abs(Math.sin(p.stride*3.4))*.045*p.swing,p.cur.z);   // เด้งก้าวเล็กๆ
+      let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+      p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
     }else{
       p.spr.position.set(p.cur.x,baseY+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
     }
     if(p.bubble){
       if(now>p.bubble.until) removePeerBubble(p);
-      else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก: พ้นป้ายชื่อ)
+      else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:p.walk?2.8:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก: พ้นป้ายชื่อ)
     }
-    if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
+    if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:p.walk?2.55:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
     if(en && en.audio && !en.audio.muted){

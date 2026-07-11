@@ -2483,6 +2483,9 @@ async function enterAdventure3D(){
     }
     advLoading = false;
   }
+  // 🧱 เลือกตัวละครบล็อกก่อนเข้า (เพื่อนใน map เห็นเราเป็นหุ่นบล็อกเดินได้) — ยกเลิก = ไม่เข้าโลก
+  const go = await Adventure3D.pickBlockAvatar('🌍 ลุยเลย!');
+  if(!go) return;
   Adventure3D.start('adv');
 }
 
@@ -2502,6 +2505,9 @@ async function enterHaunted3D(){
     }
     advLoading = false;
   }
+  // 🧱 เลือกตัวละครบล็อกก่อนเข้า (เหมือนโลกผจญภัย/ขับรถ) — ยกเลิก = ไม่เข้าโลก
+  const go = await Adventure3D.pickBlockAvatar('👻 กล้าเข้าไป!');
+  if(!go) return;
   Adventure3D.start('haunt');
 }
 
