@@ -116,6 +116,7 @@ const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
 const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
+let dRoll=0, dRollV=0;            // 🏎️ รอบ 142: มุมโคลงตัวถัง + ความเร็วเชิงมุม (สปริงช่วงล่างหน่วงต่ำ — โยกซ้ายขวาแบบรถจริง)
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
 let padBr=false, gearR=false, gearSyncFn=null;  // 🦶 รอบ 139: ปุ่มเบรค (กดค้าง) + เกียร์ถอยหลัง R (toggle) — gearSyncFn อัปเดตหน้าปุ่มตอน reset
@@ -1997,6 +1998,12 @@ function tickPeers(dt,now){
       p.spr.position.set(p.cur.x,0,p.cur.z);
       let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
       p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
+      // 🏎️ รอบ 142: ตัวถังรถเพื่อนโคลงออกนอกโค้งตามแรง G เหมือนรถเรา (order YZX = roll รอบแกนตัวรถหลัง yaw)
+      if(p.spr.rotation.order!=='YZX') p.spr.rotation.order='YZX';
+      const pLatA=-(dy*k/Math.max(dt,.001))*(moved/Math.max(dt,.001));   // ลบเพราะ yaw เกมลดลงตอนเลี้ยวขวา (convention เดียวกับ latA รถเรา)
+      const pRollTgt=Math.max(-.1,Math.min(.1, pLatA*.008));
+      p.roll=(p.roll||0)+(pRollTgt-(p.roll||0))*Math.min(1,dt*6);
+      p.spr.rotation.z=p.roll;
       (p.spr.userData.wheels||[]).forEach(w=>{ w.rotation.x-=moved/.5; });
       // 🚦 รอบ 132: ไฟเลี้ยวเพื่อนกะพริบตาม field tl (จังหวะ 400ms เหมือนไฟเลี้ยวจริง)
       const ph=Math.floor(now/400)%2===0;
@@ -3666,7 +3673,8 @@ function tickDrive(dt,now){
   dSteer+=(tgt-dSteer)*Math.min(1,dt*ramp);
   let yawRate=(dSpeed/CAR_WB)*Math.tan(dSteer);
   const maxYaw=1.9/(1+Math.abs(dSpeed)*.06);                       // จำกัดอัตราหมุนหัวรถ ยิ่งเร็วยิ่งวงกว้าง
-  yaw-=Math.max(-maxYaw,Math.min(maxYaw,yawRate))*dt;
+  const yrApplied=Math.max(-maxYaw,Math.min(maxYaw,yawRate));      // 🏎️ รอบ 142: เก็บอัตราหมุนจริงไว้คิดแรง G ด้านข้าง
+  yaw-=yrApplied*dt;
 
   /* ทิศวิ่งจริงไถลตามหัวรถแบบ Ridge Racer — grip ลดเมื่อเลี้ยวแรงตอนเร็ว = สไลด์เข้าโค้งลื่นๆ */
   const sin=Math.sin(yaw), cos=Math.cos(yaw);
@@ -3729,7 +3737,14 @@ function tickDrive(dt,now){
   camera.rotation.set(0,0,0);
   camera.rotateY(dCamYaw+dLook-dSteer*.10*Math.min(1,Math.abs(dSpeed)/10));  // ชายตามองเข้าโค้งนิดๆ แบบ R4
   camera.rotateX(-.02);                                            // ก้มนิดเดียว เห็นฝากระโปรง
-  camera.rotateZ(-dSteer*.06*Math.min(1,Math.abs(dSpeed)/8));      // เอียงตัวเข้าโค้ง
+  /* 🏎️ รอบ 142: ตัวถังโคลงตามแรง G ด้านข้างแบบรถจริง (แทนเอียงเข้าโค้งตาม dSteer แบบ arcade เดิม)
+     เลนส์ออก "นอกโค้ง" ตามแรงเหวี่ยง · สปริงหน่วงต่ำ (ζ~0.58) → มีโยกตัวซ้าย-ขวาค้างนิดๆ ตอนหักพวง/คืนพวง */
+  const latA=yrApplied*dSpeed;                                     // แรง G ด้านข้าง (rad/s × m/s ≈ m/s²)
+  const rollTgt=Math.max(-.12,Math.min(.12, latA*.008));
+  const sdt=Math.min(dt,.05);                                      // กันสปริงเด้งหลุดตอนเฟรมกระตุก
+  dRollV+=((rollTgt-dRoll)*60 - dRollV*9)*sdt;
+  dRoll+=dRollV*sdt;
+  camera.rotateZ(dRoll);
 
   // เก็บตัวอักษร: ขับชน (ไม่ต้องจอด)
   for(let i=letters.length-1;i>=0;i--){
@@ -4687,6 +4702,7 @@ function start(md){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
+    dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
     padBr=false; gearR=false; if(gearSyncFn) gearSyncFn();  // 🦶⚙️ รอบ 139: ล้างเบรค + เกียร์กลับ D ทุกครั้งที่เข้าโลก
