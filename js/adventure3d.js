@@ -108,6 +108,7 @@ const CAR_LEGAL_KMH = 90;         // ลิมิตตามกฎหมาย�
 const CAR_FINE_SPEED = 200;       // 🪙 ค่าปรับขับเร็ว/ครั้ง (หักตอนออกจากโลก · สูงสุด 5 ครั้ง/รอบ)
 const CAR_FINE_BELT  = 300;       // 🪙 ค่าปรับไม่คาดเข็มขัด (หักทันที ครั้งเดียว/รอบ)
 const CAR_REPAIR_FEE = 1000;      // 🪙 ค่าซ่อมรถเมื่อชนสิ่งของแรง (รอบ 130 · หักตอนออก · สูงสุด 3 ครั้ง/รอบ)
+const CAR_FINE_SIGNAL = 100;      // 🪙 ค่าปรับเลี้ยวที่ทางแยกไม่เปิดไฟเลี้ยว ม.36 (รอบ 132 · หักตอนออก · สูงสุด 5 ใบ/รอบ)
 const CAR_VMAX_OFF = 7;           // ออกนอกถนน (ดิน/หญ้า) ช้าลงมาก
 const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
@@ -118,6 +119,12 @@ let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่�
 /* 🚔 รอบ 128: สตาร์ทเครื่อง/เข็มขัด + ระบบใบสั่งจราจร */
 let carEngineOn=false, carBelted=false, carStartOpen=false;   // สวิตช์ + แผงเตรียมออกรถยังเปิดอยู่
 let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // ใบสั่งสะสม/สถานะเตือน
+// 🚦 รอบ 132: ไฟเลี้ยว (0=ปิด 1=ซ้าย 2=ขวา) + ตรวจทางแยก ม.36 + ชนรถเพื่อน
+let tlSig=0, tlSigAt=0, tlYawOn=0;                    // สถานะไฟเลี้ยว + มุมตอนเปิด (ไว้ดับเองหลังเลี้ยวเสร็จ)
+let tlInJunc=false, tlYawEnter=0, tlSigSeen=false;    // กำลังอยู่ในโซนทางแยก + มุมตอนเข้า + เคยเปิดไฟระหว่างผ่านแยกไหม
+let tlChkAt=0, tlCoolAt=0;                            // จังหวะเช็กทางแยก (ทุก 300ms) + cooldown หลังออกจากแยก
+let carPeerHitAt=0;                                   // cooldown ชนรถเพื่อน (กันโดนรัวติดๆ)
+let netTlOk=true;                                     // rules /world ยังไม่รับ field tl → ตัด tl ส่งซ้ำ ไม่พัง multiplayer
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
@@ -551,6 +558,16 @@ function makeBlockCar(id){
   const seatback=new THREE.Mesh(blkGeo(1.7,.55,.26),body); seatback.position.set(0,1.28,1.15); g.add(seatback);
   [-.45,.45].forEach(x=>{ const stud=new THREE.Mesh(blkCyl(.17,.09),body); stud.position.set(x,1.09,-1.45); g.add(stud); });
   [-.6,.6].forEach(x=>{ const hl=new THREE.Mesh(blkGeo(.24,.18,.07),lamp); hl.position.set(x,.86,-2.06); g.add(hl); });
+  // 🚦 รอบ 132: ไฟเลี้ยวส้ม 4 มุม (หน้า-ท้าย ซ้าย/ขวา) — ซ่อนไว้ tickPeers สั่งกะพริบตาม field tl
+  const blink=blkMat(0xff9800);
+  g.userData.blinkL=[]; g.userData.blinkR=[];
+  [[-1,'blinkL'],[1,'blinkR']].forEach(([sx,key])=>{
+    [-2.06,2.06].forEach(z=>{
+      const b=new THREE.Mesh(blkGeo(.16,.15,.07),blink);
+      b.position.set(sx*.82,1.0,z); b.visible=false;
+      g.add(b); g.userData[key].push(b);
+    });
+  });
   g.userData.wheels=[];
   [[-1,-1.35],[1,-1.35],[-1,1.35],[1,1.35]].forEach(([sx,z])=>{
     const hold=new THREE.Group(); hold.position.set(sx*.97,.5,z);
@@ -580,6 +597,8 @@ function makeBlockPeer(name, av, uid){
   const fig=makeBlockFigure(bid,true); fig.position.set(.35,1.02,.3); g.add(fig);
   const label=blkNameSprite(name); label.position.set(0,2.85,0); g.add(label);
   g.userData.wheels=g.children[0].userData.wheels;
+  g.userData.blinkL=g.children[0].userData.blinkL;   // 🚦 ให้ tickPeers สั่งไฟเลี้ยวกะพริบได้ตรงๆ
+  g.userData.blinkR=g.children[0].userData.blinkR;
   return g;
 }
 /* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
@@ -1805,12 +1824,17 @@ function sendPos(force){
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
+  // 🚦 รอบ 132: ไฟเลี้ยว (1=ซ้าย 2=ขวา) — ปิดไม่ส่ง field หายไปเอง (set ทับทั้ง node) · rules ต้องรับ tl ก่อน (RULES.md)
+  if(M.drive && netTlOk && tlSig) payload.tl=tlSig;
   // 🤝 คำเป้าหมายปัจจุบัน — ส่งเฉพาะตอนมีเพื่อนปาร์ตี้(invite กัน)อยู่ในโลกจริง
   // (คนเล่นทั่วไปไม่ส่ง → ไม่ผูกกับ rules ใหม่ ไม่มีทางทำ /world พังถ้ายังไม่ publish)
   if(words[0] && Object.keys(peers).some(uid=>tinvLinked(uid))) payload.cw=words[0].en+'|'+words[0].th;
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
-  myRef.set(payload).catch(()=>{});
+  myRef.set(payload).catch(()=>{
+    // 🚦 rules ยังไม่รับ field tl (ยังไม่ publish) → ตัด tl แล้วส่งซ้ำทันที กัน multiplayer พังทั้งก้อน
+    if(payload.tl!==undefined){ netTlOk=false; delete payload.tl; myRef.set(payload).catch(()=>{}); }
+  });
 }
 /* ส่งแชทลอยหัว: กรองคำหยาบ + echo ของตัวเองมุมล่าง */
 function sendChat(text){
@@ -1869,6 +1893,7 @@ function onPeerData(snap){
   const w=typeof d.w==='number'?d.w:0;
   if(p.w!==w){ p.w=w; renderBoard(); }
   p.cw=(typeof d.cw==='string')?d.cw:null;             // 🤝 คำเป้าหมายของเพื่อน (ใช้ตอนเราเป็นลูกทีมตามหัวหน้า)
+  p.tl=(d.tl===1||d.tl===2)?d.tl:0;                    // 🚦 ไฟเลี้ยวของเพื่อน (รอบ 132 — tickPeers สั่งกะพริบ)
   // ไอคอน 🎤 เหนือหัวคนที่เปิดไมค์ (เด็กเห็นชัดว่าเดินเข้าใกล้ใครแล้วคุยได้)
   if(d.m===1 && !p.micSpr){
     p.micSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture('🎤'),transparent:true}));
@@ -1919,6 +1944,10 @@ function tickPeers(dt,now){
       let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
       p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
       (p.spr.userData.wheels||[]).forEach(w=>{ w.rotation.x-=moved/.5; });
+      // 🚦 รอบ 132: ไฟเลี้ยวเพื่อนกะพริบตาม field tl (จังหวะ 400ms เหมือนไฟเลี้ยวจริง)
+      const ph=Math.floor(now/400)%2===0;
+      (p.spr.userData.blinkL||[]).forEach(m=>{ m.visible=p.tl===1&&ph; });
+      (p.spr.userData.blinkR||[]).forEach(m=>{ m.visible=p.tl===2&&ph; });
     }else if(p.walk){
       // 🧱 หุ่นบล็อกเดิน: หันตาม yaw (lerp ทางสั้น) + แกว่งแขน-ขาตามระยะที่เดินจริง · หยุด=ลู่คืนท่ายืน
       const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
@@ -2501,6 +2530,15 @@ function buildDom(){
   #adv-gaspad small{font-size:12.5px;font-weight:700}
   /* รอบ 129: ปุ่มเร่ง/เลี้ยวยกขึ้นระดับกลางจอ (ผู้ใช้ขอ — กดถนัดกว่า) → แตรกลับมุมล่างขวาเดิมได้ */
   .adv-touch.adv-drive #adv-horn{bottom:26px;right:22px;width:64px;height:64px;font-size:26px;opacity:.8}
+  /* 🚦 รอบ 132: ปุ่มไฟเลี้ยว ⬅️➡️ — จางๆ สไตล์เดียวกับปุ่มรอบ 127 วางเหนือแถบพวงมาลัย · เปิด=กะพริบส้ม */
+  .adv-tl{display:none;position:absolute;bottom:calc(40vh + 76px);width:58px;height:44px;border-radius:12px;
+    pointer-events:auto;z-index:6;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
+    font-size:21px;line-height:1;opacity:.34;transition:opacity .15s;font-family:inherit;padding:0;
+    -webkit-user-select:none;user-select:none;touch-action:none}
+  .adv-drive #adv-tl-l{display:block;left:2.5%}
+  .adv-drive #adv-tl-r{display:block;left:calc(2.5% + 66px)}
+  .adv-tl.on{opacity:1;background:rgba(255,152,0,.55);border-color:#ffb300;animation:tlBlink .8s steps(1) infinite}
+  @keyframes tlBlink{0%,49%{filter:brightness(1.5)}50%,100%{filter:brightness(.55);opacity:.5}}
   /* 🚔 รอบ 128: ป้ายเตือนขับเร็วผิดกฎหมาย — แดงกะพริบกลางบน */
   #adv-lawwarn{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:none;z-index:7;
     background:rgba(160,20,20,.88);border:2px solid #ff6b5e;border-radius:14px;color:#fff;
@@ -2743,6 +2781,8 @@ function buildDom(){
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <div id="adv-steerpad"><span>◀</span><i id="adv-steerdot"></i><span>▶</span></div>
     <div id="adv-gaspad">▲<small>เร่ง</small></div>
+    <button class="adv-tl" id="adv-tl-l">⬅️</button>
+    <button class="adv-tl" id="adv-tl-r">➡️</button>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
       <h3>🚗 เตรียมออกรถ</h3>
@@ -2865,6 +2905,15 @@ function buildDom(){
     e.stopPropagation();
     for(const t of e.changedTouches) if(t.identifier===gasTid){ gasTid=null; padTh=false; gasPad.classList.remove('on'); }
   }));
+
+  /* 🚦 รอบ 132: ปุ่มไฟเลี้ยว ⬅️➡️ — แตะสลับเปิด/ปิด (เปิดข้างใหม่=ข้างเก่าดับ) · ดับเองหลังเลี้ยวเสร็จ/12 วิ (tlTick)
+     preventDefault ใน touchstart กัน click สังเคราะห์ยิงซ้ำ (แพตเทิร์นเดียวกับปุ่มแตร) */
+  const tlToggle=side=>{ tlSet(tlSig===side?0:side); if(typeof sfx!=='undefined') sfx.select(); };
+  [['#adv-tl-l',1],['#adv-tl-r',2]].forEach(([sel,side])=>{
+    const btn=overlayEl.querySelector(sel);
+    btn.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); tlToggle(side); },{passive:false});
+    btn.addEventListener('click',e=>{ e.preventDefault(); tlToggle(side); });
+  });
 
   /* 🚔 รอบ 128: แผงเตรียมออกรถ — สวิตช์สตาร์ทเครื่อง (เสียงไดสตาร์ท) + เข็มขัด (เสียงคลิก) + ปุ่มออกรถ */
   const csEngine=overlayEl.querySelector('#cs-engine');
@@ -3294,6 +3343,53 @@ function collideCar(p){
   }
   return hit;
 }
+/* 🚦 รอบ 132: เปิด/ปิดไฟเลี้ยว — จำมุมตอนเปิดไว้ให้ดับเองหลังเลี้ยวเสร็จ + ประกาศให้เพื่อนเห็นทันที (field tl) */
+function tlSet(v){
+  tlSig=v; tlSigAt=performance.now(); tlYawOn=yaw;
+  const l=document.getElementById('adv-tl-l'), r=document.getElementById('adv-tl-r');
+  if(l) l.classList.toggle('on',v===1);
+  if(r) r.classList.toggle('on',v===2);
+  if(myRef) sendPos(true);
+}
+/* นับ "แขนถนน" รอบจุด — sample วงกลมรัศมี 12m 16 ทิศจาก road grid นับกลุ่มถนนที่ติดกัน
+   ทางตรง/โค้ง = 2 แขน · สามแยกขึ้นไป >= 3 = ทางแยกที่ต้องให้สัญญาณไฟเลี้ยว */
+function driveArms(x,z){
+  const on=[];
+  for(let i=0;i<16;i++){
+    const a=i/16*Math.PI*2;
+    on.push(driveCell(x+Math.cos(a)*12, z+Math.sin(a)*12)===1);
+  }
+  let arms=0;
+  for(let i=0;i<16;i++) if(on[i] && !on[(i+15)%16]) arms++;   // นับขอบขึ้นแบบวงกลม (ต้น-ปลายวงต่อกันไม่นับซ้ำ)
+  return arms;
+}
+/* ไฟเลี้ยวดับเอง + ตรวจ "เลี้ยวที่ทางแยกโดยไม่เปิดไฟเลี้ยว" (ม.36 — ใบละ CAR_FINE_SIGNAL หักตอนออก)
+   เข้าโซนแยก (แขนถนน>=3) จำมุมไว้ → ออกจากโซนแล้ว yaw เปลี่ยนเกิน ~45° = เลี้ยวจริง · ระหว่างนั้นไม่เคยเปิดไฟ = ใบสั่ง */
+function tlTick(px,pz,now){
+  if(tlSig){
+    let dy=yaw-tlYawOn; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+    if((Math.abs(dy)>.87 && Math.abs(dSteer)<.07) || now-tlSigAt>12000) tlSet(0);  // เลี้ยวเสร็จ (เกิน ~50°+คืนพวง) หรือเปิดค้างนาน
+  }
+  if(now-tlChkAt<300) return;                        // เช็กทางแยกทุก 300ms พอ (sample 16 จุด/ครั้ง)
+  tlChkAt=now;
+  const inJ=Math.abs(dSpeed)>1.5 && driveCell(px,pz)===1 && driveArms(px,pz)>=3;
+  if(inJ && !tlInJunc){
+    if(now<tlCoolAt) return;                         // เพิ่งออกจากแยกก่อนหน้า — เว้นระยะกันนับซ้อน
+    tlInJunc=true; tlYawEnter=yaw; tlSigSeen=tlSig!==0;
+  }else if(tlInJunc){
+    if(tlSig) tlSigSeen=true;
+    if(!inJ){
+      tlInJunc=false; tlCoolAt=now+3000;
+      let dy=yaw-tlYawEnter; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+      if(Math.abs(dy)>.79 && !tlSigSeen && carFines.filter(f=>f.t==='signal').length<5){
+        carFines.push({t:'signal', fine:CAR_FINE_SIGNAL});
+        sfx.wrong();
+        showBanner(`🚨 เลี้ยวไม่ให้สัญญาณไฟเลี้ยว! ผิด พ.ร.บ.จราจรทางบก <b>มาตรา 36</b><br>
+          <small>(กฎหมายจริง: ปรับไม่เกิน 1,000 บาท) ใบสั่ง 🪙${CAR_FINE_SIGNAL} หักตอนออกจากเกม · โดนแล้ว ${carFines.filter(f=>f.t==='signal').length} ใบ<br>คราวหน้ากดปุ่ม ⬅️ ➡️ ก่อนเลี้ยวนะ</small>`);
+      }
+    }
+  }
+}
 function tickDrive(dt,now){
   const D=worlds.drive.d;
   let th=0, sd=0;
@@ -3346,6 +3442,28 @@ function tickDrive(dt,now){
     }
     else if(hitSpd>2.5) CarSound.thud();
     dSpeed*=.12; dVelX*=.12; dVelZ*=.12;
+  }
+  /* 🚗💥 รอบ 132: ชนรถผู้เล่นอื่น (peer = รถบล็อก ระยะ ~2.5m + cooldown 4 วิกันรัว)
+     มีประกัน = ประกันจ่ายให้ · ไม่มี = ค่าเสียหาย CAR_HITCAR_FEE หักตอนออก (เพดาน 3 ครั้ง/รอบ กันหมดตัว) */
+  if(hitSpd>2 && now-carPeerHitAt>4000){
+    for(const uid in peers){
+      const pr=peers[uid];
+      if(!pr.blk) continue;
+      if(Math.hypot(pr.cur.x-p.x, pr.cur.z-p.z)<2.5){
+        carPeerHitAt=now; CarSound.thud();
+        dSpeed*=.15; dVelX*=.15; dVelZ*=.15;
+        if(state.car && state.car.insured){
+          showBanner(`🚗💥 ชนรถของ <b>${escapeHTML(pr.n)}</b>!<br><small>🛡️ ประกันเป็นผู้จ่ายให้แล้ว — ขับระวังขึ้นอีกนิดนะ</small>`);
+        }else if(carFines.filter(f=>f.t==='hitcar').length<3){
+          carFines.push({t:'hitcar', fine:CAR_HITCAR_FEE});
+          sfx.wrong();
+          showBanner(`🚗💥 ชนรถของ <b>${escapeHTML(pr.n)}</b>! ไม่มีประกัน = ค่าเสียหาย <b>🪙${fmtNum(CAR_HITCAR_FEE)}</b><br><small>จ่ายตอนออกจากเกม · มีประกัน (หมวดยานพาหนะ) ครั้งหน้าประกันจ่ายให้</small>`);
+        }else{
+          showBanner(`🚗💥 ชนรถของ <b>${escapeHTML(pr.n)}</b>!<br><small>ครบเพดานค่าเสียหายรอบนี้แล้ว — ขับระวังนะ</small>`);
+        }
+        break;
+      }
+    }
   }
   camera.position.set(p.x, CAR_EYE+Math.sin(now/95)*Math.min(.045,Math.abs(dSpeed)*.002), p.z);
 
@@ -3406,6 +3524,7 @@ function tickDrive(dt,now){
       ถูกหักค่าปรับ <b style="color:#c8901a">🪙${fmtNum(CAR_FINE_BELT)}</b> จากเหรียญของหนูแล้ว<br>
       <small>คราวหน้าเลื่อนสวิตช์คาดเข็มขัดก่อนออกรถนะ 🙏</small>`);
   }
+  tlTick(p.x,p.z,now);                                       // 🚦 รอบ 132: ไฟเลี้ยวดับเอง + ตรวจแยก ม.36
   CarSound.update(th,Math.abs(dSpeed),dt);
   drawCarGauges();
 }
@@ -3507,15 +3626,21 @@ function lawNotice(html){
 function driveFineSettle(){
   const speedFines=carFines.filter(f=>f.t==='speed');
   const crashFines=carFines.filter(f=>f.t==='crash');
+  const signalFines=carFines.filter(f=>f.t==='signal');   // 🚦 รอบ 132: ไม่ให้สัญญาณไฟเลี้ยว ม.36
+  const hitFines=carFines.filter(f=>f.t==='hitcar');      // 🚗💥 รอบ 132: ชนรถผู้เล่นอื่นแบบไม่มีประกัน
   const beltFine=carFines.find(f=>f.t==='belt');
-  if(!speedFines.length && !crashFines.length && !beltFine){ carFines=[]; return; }
+  if(!speedFines.length && !crashFines.length && !signalFines.length && !hitFines.length && !beltFine){ carFines=[]; return; }
   const speedTotal=speedFines.reduce((s,f)=>s+f.fine,0);
   const crashTotal=crashFines.reduce((s,f)=>s+f.fine,0);
-  const dueTotal=speedTotal+crashTotal;
+  const signalTotal=signalFines.reduce((s,f)=>s+f.fine,0);
+  const hitTotal=hitFines.reduce((s,f)=>s+f.fine,0);
+  const dueTotal=speedTotal+crashTotal+signalTotal+hitTotal;
   if(dueTotal>0){ state.coins=Math.max(0,state.coins-dueTotal); saveState(); }
   const html=`<b>🚔 สรุปใบสั่ง + ค่าซ่อมรอบนี้</b><br><br>
     ${speedFines.length?`🚨 ขับเร็วเกิน ${CAR_LEGAL_KMH} กม./ชม. (ม.67) × ${speedFines.length} ครั้ง = <b>🪙${fmtNum(speedTotal)}</b><br>`:''}
+    ${signalFines.length?`🚦 ไม่ให้สัญญาณไฟเลี้ยวที่ทางแยก (ม.36) × ${signalFines.length} ครั้ง = <b>🪙${fmtNum(signalTotal)}</b><br>`:''}
     ${crashFines.length?`🔧 ค่าซ่อมรถ ชนสิ่งของ × ${crashFines.length} ครั้ง = <b>🪙${fmtNum(crashTotal)}</b><br>`:''}
+    ${hitFines.length?`🚗💥 ค่าเสียหายชนรถผู้เล่นอื่น (ไม่มีประกัน) × ${hitFines.length} ครั้ง = <b>🪙${fmtNum(hitTotal)}</b><br>`:''}
     ${beltFine?`🔒 ไม่คาดเข็มขัดนิรภัย (ม.123) = 🪙${fmtNum(beltFine.fine)} <small>(หักไปแล้วระหว่างขับ)</small><br>`:''}
     <br>${dueTotal?`หักเพิ่มจากเหรียญ <b>🪙${fmtNum(dueTotal)}</b> · `:''}คงเหลือ 🪙${fmtNum(state.coins)}<br>
     <small>⚖️ โทษจำคุก (ถ้ามี) ศาลเมตตาให้ "รอลงอาญา" — คราวหน้าขับตามกฎนะ 😌</small>`;
@@ -4276,6 +4401,8 @@ function start(md){
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
     // 🚔 รอบ 128: รีเซ็ตกฎจราจร + เด้งแผงสตาร์ทเครื่อง/คาดเข็มขัดก่อนออกรถ
     carEngineOn=false; carBelted=false; carFines=[]; carOverSpeed=false; carBeltFined=false; carLawSeen=false;
+    // 🚦 รอบ 132: รีเซ็ตไฟเลี้ยว + ตัวตรวจทางแยก + ชนรถเพื่อน (netTlOk คืน true เผื่อผู้ใช้เพิ่ง publish rules)
+    tlSet(0); tlInJunc=false; tlChkAt=0; tlCoolAt=0; carPeerHitAt=0; netTlOk=true;
     carStartShow();
   }else{
     camera.position.set(0,EYE_H,0);
@@ -4373,7 +4500,11 @@ window.Adventure3D={
                          rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone}; },
     get drive(){ return {get speed(){return dSpeed}, get steer(){return dSteer}, get street(){return carStreet},
                          d:worlds.drive&&worlds.drive.d, cell:driveCell, collide:collideCar,
-                         sound:CarSound, wheelEl:carWheelEl, dashEl:carDashEl}; },
+                         sound:CarSound, wheelEl:carWheelEl, dashEl:carDashEl,
+                         // 🚦 รอบ 132: testkit ไฟเลี้ยว/ทางแยก/ใบสั่ง
+                         get tl(){return tlSig}, setTl:tlSet, arms:driveArms,
+                         get fines(){return carFines}, get inJunc(){return tlInJunc},
+                         get yaw(){return yaw}, set yaw(v){yaw=v;}}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
