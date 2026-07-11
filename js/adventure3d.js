@@ -458,6 +458,188 @@ function makePeerSprite(name, av){
   return spr;
 }
 
+/* ============================================================
+   🧱 ตัวละครบล็อก (โลกขับรถ) — เลือกก่อนออกรถ · เพื่อนใน map เห็นเป็นหุ่นบล็อกขับรถบล็อก
+   สไตล์ของเล่นบล็อกทั่วไป ออกแบบเอง (ห้ามก๊อปทรงมินิฟิกเกอร์การค้า — เครื่องหมายการค้า)
+   ส่งรหัสผ่าน field av เดิมใน /world ('blk1'..'blk8' ≤8 ตัวอักษร ผ่าน rules เดิม ไม่ต้อง publish ใหม่)
+   geometry/material แชร์ร่วมกันทุกตัว (cache ไม่ dispose) — ต่อ peer มีของตัวเองแค่ป้ายชื่อ
+   ============================================================ */
+const BLOCK_AVATARS={
+  blk1:{name:'เรซเซอร์แดง',  skin:0xffcf9e, shirt:0xe53935, pants:0x1e58c8, hair:0x2b2320, style:'flat', car:0xd32f2f},
+  blk2:{name:'กัปตันฟ้า',    skin:0xffd9ae, shirt:0x29b6f6, pants:0x274a8f, hair:0x6d4c2f, style:'tall', car:0x0288d1},
+  blk3:{name:'ชาเขียว',      skin:0xf2b98a, shirt:0x43a047, pants:0x7a6a4f, hair:0xef6c00, style:'cap',  car:0x2e7d32},
+  blk4:{name:'ซันนี่ส้ม',    skin:0xffcf9e, shirt:0xfb8c00, pants:0x5d4037, hair:0x232323, style:'pony', car:0xef6c00, blush:true},
+  blk5:{name:'วิซาร์ดม่วง',  skin:0xffd9ae, shirt:0x8e24aa, pants:0x4e5a63, hair:0xffca28, style:'flat', car:0x6a1b9a},
+  blk6:{name:'พิ้งกี้',      skin:0xffe0bd, shirt:0xf06292, pants:0xfafafa, hair:0x8d5a3b, style:'pony', car:0xec407a, blush:true},
+  blk7:{name:'เลม่อน',       skin:0xf2b98a, shirt:0xfdd835, pants:0x33691e, hair:0x232323, style:'cap',  car:0xf9a825},
+  blk8:{name:'มิ้นตี้',      skin:0xffd9ae, shirt:0x4db6ac, pants:0x37474f, hair:0xf5f5f5, style:'tall', car:0x00897b, blush:true},
+};
+const _blkGeo={}, _blkMat={}, _blkFace={}, _blkThumbs={};
+function blkGeo(w,h,d){ const k=w+'_'+h+'_'+d; return _blkGeo[k]||(_blkGeo[k]=new THREE.BoxGeometry(w,h,d)); }
+function blkMat(color){ return _blkMat[color]||(_blkMat[color]=new THREE.MeshLambertMaterial({color})); }
+function blkCyl(r,h){ const k='c'+r+'_'+h; return _blkGeo[k]||(_blkGeo[k]=new THREE.CylinderGeometry(r,r,h,14)); }
+/* หน้ายิ้มตาโต วาดลง texture ด้าน -Z ของหัว (ทิศหน้ารถ) */
+function blkFaceMat(id){
+  if(_blkFace[id]) return _blkFace[id];
+  const a=BLOCK_AVATARS[id], cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#'+('000000'+a.skin.toString(16)).slice(-6); c.fillRect(0,0,128,128);
+  [[42,56],[86,56]].forEach(([x,y])=>{
+    c.fillStyle='#1c1c1c'; c.beginPath(); c.arc(x,y,12,0,7); c.fill();
+    c.fillStyle='#fff'; c.beginPath(); c.arc(x+4,y-4,4.5,0,7); c.fill();
+  });
+  if(a.blush){ c.fillStyle='rgba(255,120,130,.45)'; [[24,82],[104,82]].forEach(([x,y])=>{ c.beginPath(); c.arc(x,y,10,0,7); c.fill(); }); }
+  c.strokeStyle='#8d4a35'; c.lineWidth=6; c.lineCap='round';
+  c.beginPath(); c.arc(64,72,20,Math.PI*.22,Math.PI*.78); c.stroke();
+  return _blkFace[id]=new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
+}
+/* หุ่นบล็อกยืน/นั่ง สูง ~1.7 หน่วย หันหน้า -Z (seated=ไม่มีขา แขนเอื้อมจับพวงมาลัย) */
+function makeBlockFigure(id, seated){
+  const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1;
+  const g=new THREE.Group();
+  const skin=blkMat(a.skin), shirt=blkMat(a.shirt), pants=blkMat(a.pants), hairM=blkMat(a.hair);
+  const hipY=seated?0:.5;
+  if(!seated) [-0.15,0.15].forEach(x=>{ const leg=new THREE.Mesh(blkGeo(.24,.5,.28),pants); leg.position.set(x,.25,0); g.add(leg); });
+  const torso=new THREE.Mesh(blkGeo(.6,.6,.36),shirt); torso.position.y=hipY+.3; g.add(torso);
+  [-1,1].forEach(s=>{
+    const arm=new THREE.Mesh(blkGeo(.17,.46,.22),shirt);
+    arm.position.set(s*.41,hipY+.34,0); arm.rotation.z=s*-.12;
+    if(seated){ arm.rotation.x=-1.0; arm.position.z=-.12; }
+    const hand=new THREE.Mesh(blkGeo(.16,.14,.18),skin); hand.position.y=-.3; arm.add(hand);
+    g.add(arm);
+  });
+  const head=new THREE.Mesh(blkGeo(.5,.46,.46),[skin,skin,skin,skin,skin,blkFaceMat(id)]);
+  head.position.y=hipY+.86; g.add(head);
+  const topY=hipY+1.09;
+  if(a.style==='cap'){
+    const cap=new THREE.Mesh(blkGeo(.56,.16,.52),hairM); cap.position.y=topY+.05; g.add(cap);
+    const brim=new THREE.Mesh(blkGeo(.56,.07,.3),hairM); brim.position.set(0,topY,-.38); g.add(brim);
+  }else{
+    const hair=new THREE.Mesh(blkGeo(.54,a.style==='tall'?.3:.14,.5),hairM);
+    hair.position.y=topY+(a.style==='tall'?.13:.05); g.add(hair);
+    if(a.style==='pony'){ const tail=new THREE.Mesh(blkGeo(.18,.34,.16),hairM); tail.position.set(0,hipY+.92,.3); g.add(tail); }
+  }
+  return g;
+}
+/* รถบล็อกเปิดประทุน หัวรถ -Z พวงมาลัยขวาแบบไทย · ล้อเก็บใน userData.wheels ให้หมุนตอนวิ่ง */
+function makeBlockCar(id){
+  const a=BLOCK_AVATARS[id]||BLOCK_AVATARS.blk1;
+  const g=new THREE.Group();
+  const body=blkMat(a.car), dark=blkMat(0x2b3136), glass=blkMat(0xbfe3ff), lamp=blkMat(0xfff59d);
+  const base=new THREE.Mesh(blkGeo(1.9,.6,4.1),body); base.position.y=.75; g.add(base);
+  const shield=new THREE.Mesh(blkGeo(1.7,.5,.09),glass); shield.position.set(0,1.28,-.62); shield.rotation.x=-.2; g.add(shield);
+  const seatback=new THREE.Mesh(blkGeo(1.7,.55,.26),body); seatback.position.set(0,1.28,1.15); g.add(seatback);
+  [-.45,.45].forEach(x=>{ const stud=new THREE.Mesh(blkCyl(.17,.09),body); stud.position.set(x,1.09,-1.45); g.add(stud); });
+  [-.6,.6].forEach(x=>{ const hl=new THREE.Mesh(blkGeo(.24,.18,.07),lamp); hl.position.set(x,.86,-2.06); g.add(hl); });
+  g.userData.wheels=[];
+  [[-1,-1.35],[1,-1.35],[-1,1.35],[1,1.35]].forEach(([sx,z])=>{
+    const hold=new THREE.Group(); hold.position.set(sx*.97,.5,z);
+    const wh=new THREE.Mesh(blkCyl(.5,.32),dark); wh.rotation.z=Math.PI/2; hold.add(wh);
+    const hub=new THREE.Mesh(blkCyl(.2,.34),blkMat(0xcfd8dc)); hub.rotation.z=Math.PI/2; hold.add(hub);
+    g.add(hold); g.userData.wheels.push(hold);
+  });
+  return g;
+}
+/* ป้ายชื่อลอยหัว (ของเฉพาะ peer — dispose ตอนออก) */
+function blkNameSprite(name){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+  const c=cv.getContext('2d');
+  c.fillStyle='rgba(0,0,0,.55)'; c.beginPath(); c.roundRect(8,6,240,52,20); c.fill();
+  c.fillStyle='#fff'; c.font='bold 28px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  let nm=name||'เพื่อน'; if(nm.length>14) nm=nm.slice(0,13)+'…';
+  c.fillText(nm,128,32);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
+  spr.scale.set(2.7,.68,1); spr.userData.own=true;
+  return spr;
+}
+/* เพื่อนในโลกขับรถ = รถบล็อก + หุ่นบล็อกนั่งขับ + ป้ายชื่อ · av ไม่ใช่ blk (client เก่า) → สุ่มคงที่จาก uid */
+function makeBlockPeer(name, av, uid){
+  const bid=BLOCK_AVATARS[av]?av:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
+  const g=new THREE.Group();
+  g.add(makeBlockCar(bid));
+  const fig=makeBlockFigure(bid,true); fig.position.set(.35,1.02,.3); g.add(fig);
+  const label=blkNameSprite(name); label.position.set(0,2.85,0); g.add(label);
+  g.userData.wheels=g.children[0].userData.wheels;
+  return g;
+}
+function disposeBlockPeer(g){
+  g.traverse(o=>{ if(o.userData&&o.userData.own){ if(o.material.map)o.material.map.dispose(); o.material.dispose(); } });
+}
+
+/* ---------- 🧱 หน้าต่างเลือกตัวละครบล็อกก่อนออกรถ (เรียกจาก ui.js ก่อน start('drive')) ---------- */
+function blkBuildThumbs(){
+  if(_blkThumbs.blk1) return;
+  const rend=new THREE.WebGLRenderer({alpha:true,antialias:true});
+  rend.setSize(150,190);
+  const sc=new THREE.Scene();
+  sc.add(new THREE.HemisphereLight(0xffffff,0x999999,1.1));
+  const sun=new THREE.DirectionalLight(0xfff2cc,.75); sun.position.set(-2,4,-3); sc.add(sun);
+  const cam=new THREE.PerspectiveCamera(34,150/190,.1,10);
+  cam.position.set(.75,1.25,-2.9); cam.lookAt(0,.82,0);
+  Object.keys(BLOCK_AVATARS).forEach(id=>{
+    const fig=makeBlockFigure(id,false); fig.rotation.y=-.35; sc.add(fig);
+    rend.render(sc,cam);
+    _blkThumbs[id]=rend.domElement.toDataURL();
+    sc.remove(fig);
+  });
+  rend.dispose();
+}
+let blkPickEl=null, blkPickSel=null, blkPickRes=null;
+function blkBuildPicker(){
+  if(blkPickEl) return;
+  const st=document.createElement('style');
+  st.textContent=`
+  #blk-pick{position:fixed;inset:0;z-index:120;background:rgba(10,14,24,.72);display:none;
+    align-items:center;justify-content:center;font-family:inherit}
+  #blk-pick.on{display:flex}
+  .blk-card{background:#fff;border-radius:22px;padding:14px 16px;max-width:min(560px,94vw);max-height:92vh;
+    overflow:auto;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+  .blk-card h2{margin:2px 0 8px;font-size:clamp(17px,4.5vw,22px);color:#3949ab}
+  .blk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .blk-it{border:3px solid #e0e0e0;border-radius:14px;padding:4px 2px 5px;cursor:pointer;background:#f7f9ff;
+    transition:transform .12s,border-color .12s}
+  .blk-it img{width:100%;aspect-ratio:150/190;display:block}
+  .blk-it .bn{font-size:11px;font-weight:800;color:#37474f;line-height:1.2}
+  .blk-it.sel{border-color:#43a047;background:#e9f9ec;transform:scale(1.05);box-shadow:0 4px 14px rgba(67,160,71,.35)}
+  .blk-btns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+  .blk-go{background:#43a047;color:#fff;border:0;border-radius:14px;font-weight:800;font-size:17px;
+    padding:10px 26px;font-family:inherit;cursor:pointer}
+  .blk-x{background:#eceff1;color:#546e7a;border:0;border-radius:14px;font-weight:700;font-size:15px;
+    padding:10px 16px;font-family:inherit;cursor:pointer}`;
+  document.head.appendChild(st);
+  blkPickEl=document.createElement('div');
+  blkPickEl.id='blk-pick';
+  blkPickEl.innerHTML=`<div class="blk-card"><h2>🧱 เลือกตัวละครบล็อกของหนู</h2>
+    <div class="blk-grid"></div>
+    <div class="blk-btns"><button class="blk-x">✖ ยกเลิก</button><button class="blk-go">🚗 ออกรถ!</button></div></div>`;
+  document.body.appendChild(blkPickEl);
+  blkPickEl.querySelector('.blk-go').addEventListener('click',()=>{
+    state.blockAv=blkPickSel; saveState(); sfx.select();
+    blkPickEl.classList.remove('on');
+    const r=blkPickRes; blkPickRes=null; if(r) r(true);
+  });
+  blkPickEl.querySelector('.blk-x').addEventListener('click',()=>{
+    blkPickEl.classList.remove('on');
+    const r=blkPickRes; blkPickRes=null; if(r) r(false);
+  });
+}
+function pickBlockAvatar(){
+  return new Promise(res=>{
+    blkBuildThumbs(); blkBuildPicker();
+    blkPickSel=BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1';
+    const grid=blkPickEl.querySelector('.blk-grid');
+    grid.innerHTML=Object.keys(BLOCK_AVATARS).map(id=>
+      `<div class="blk-it${id===blkPickSel?' sel':''}" data-id="${id}">
+         <img src="${_blkThumbs[id]}" alt=""><div class="bn">${BLOCK_AVATARS[id].name}</div></div>`).join('');
+    grid.querySelectorAll('.blk-it').forEach(el=>el.addEventListener('click',()=>{
+      blkPickSel=el.dataset.id; sfx.select();
+      grid.querySelectorAll('.blk-it').forEach(e2=>e2.classList.toggle('sel',e2===el));
+    }));
+    blkPickRes=res;
+    blkPickEl.classList.add('on');
+  });
+}
+
 /* ---------- แชทลอยหัว (Roblox-style) ---------- */
 function bubbleSprite(text){
   const cv=document.createElement('canvas'); cv.width=360; cv.height=120;
@@ -1588,7 +1770,7 @@ function sendPos(force){
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
     n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
-    av:state.playerAvatar||'',
+    av:(M.drive&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
@@ -1632,14 +1814,25 @@ function onPeerData(snap){
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
   if(!p){
-    p=peers[uid]={spr:makePeerSprite(d.n,d.av), cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน'};
-    p.spr.position.set(d.x,py,d.z);
+    // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกอื่นคง sprite เดิม
+    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid):makePeerSprite(d.n,d.av),
+                  cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน',
+                  blk:!!M.drive, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0};
+    p.spr.position.set(d.x,p.blk?0:py,d.z);
+    if(p.blk) p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
     tinvCheck(uid);
     Voice.onPeer(uid);
+  }else if(p.blk && d.av!==p.av){
+    // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างรถใหม่ตามตัวที่เลือก
+    scene.remove(p.spr); disposeBlockPeer(p.spr);
+    p.av=d.av; p.spr=makeBlockPeer(d.n,d.av,uid);
+    p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
+    scene.add(p.spr);
   }
   p.tgt={x:d.x,z:d.z,y:py};
+  if(typeof d.yaw==='number') p.yawTgt=d.yaw;
   // 🏆 กระดานคะแนน: จำนวนคำที่เพื่อนประกอบได้รอบนี้ (field w) — เปลี่ยนเมื่อไหร่วาดใหม่
   const w=typeof d.w==='number'?d.w:0;
   if(p.w!==w){ p.w=w; renderBoard(); }
@@ -1665,7 +1858,9 @@ function removePeer(uid){
   removePeerBubble(p);
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
-  scene.remove(p.spr); p.spr.material.map.dispose(); p.spr.material.dispose();
+  scene.remove(p.spr);
+  if(p.blk) disposeBlockPeer(p.spr);                              // 🧱 geometry/material แชร์ — dispose เฉพาะป้ายชื่อ
+  else{ p.spr.material.map.dispose(); p.spr.material.dispose(); }
   delete peers[uid];
   renderBoard();
 }
@@ -1685,12 +1880,21 @@ function tickPeers(dt,now){
     p.cur.z+=(p.tgt.z-p.cur.z)*k;
     p.cur.y+=((p.tgt.y||1.5)-(p.cur.y||1.5))*k;
     const baseY=(M.heli||M.drone)?(p.cur.y||1.5):1.5;   // เฮลิฯ/โดรน: เพื่อนบินตามความสูงจริง
-    p.spr.position.set(p.cur.x,baseY+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
+    if(p.blk){
+      // 🧱 รถบล็อกวิ่งบนพื้น หมุนหัวรถตาม yaw (lerp ทางสั้น กันสะบัดตอนข้าม ±π) + ล้อหมุนตามระยะจริง
+      const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
+      p.spr.position.set(p.cur.x,0,p.cur.z);
+      let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+      p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
+      (p.spr.userData.wheels||[]).forEach(w=>{ w.rotation.x-=moved/.5; });
+    }else{
+      p.spr.position.set(p.cur.x,baseY+Math.sin(now/280+p.cur.x)*.05,p.cur.z);
+    }
     if(p.bubble){
       if(now>p.bubble.until) removePeerBubble(p);
-      else p.bubble.spr.position.set(p.cur.x,baseY+1.6,p.cur.z);   // ลอยตามหัว
+      else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก: พ้นป้ายชื่อ)
     }
-    if(p.micSpr) p.micSpr.position.set(p.cur.x,baseY+1.22+Math.sin(now/300)*.06,p.cur.z);
+    if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
     if(en && en.audio && !en.audio.muted){
@@ -3822,6 +4026,7 @@ function exitWorld(){
 
 window.Adventure3D={
   start,
+  pickBlockAvatar,                     // 🧱 หน้าต่างเลือกตัวละครบล็อก (ui.js เรียกก่อน start('drive'))
   /* test hooks — ใช้เฉพาะตอนเทสต์ preview */
   _t:{
     get letters(){return letters}, get monsters(){return monsters}, get words(){return words},

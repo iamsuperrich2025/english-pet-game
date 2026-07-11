@@ -10,6 +10,15 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 119 (11 ก.ค.) — ตัวละครบล็อกเลือกได้ในโลกขับรถ 🧱🚗 (version .110)
+- **ผู้ใช้สั่ง (จากการวิเคราะห์สไตล์ LEGO video):** Lobby คง Tripo เดิม · ก่อนเข้าโลก 3D ให้เลือกตัวละครบล็อก · เพื่อนใน map เห็นเป็นตัวบล็อกที่แต่ละคนเลือก · เริ่มโลกขับรถก่อน
+- **BLOCK_AVATARS 8 ตัว (adventure3d.js):** หุ่นบล็อกสไตล์ของเล่นทั่วไปออกแบบเอง (หน้ายิ้มตาโต canvas texture ด้าน -Z ของหัว · ทรงผม flat/tall/cap/pony · บางตัวแก้มแดง) — **⚠️ ห้ามก๊อปทรงมินิฟิกเกอร์การค้า + ชื่อ generic เท่านั้น** (QA session ให้แก้ "เรนเจอร์เขียว"→"ชาเขียว" · "บัมเบิลบี"→"เลม่อน" กันชนเครื่องหมายการค้า)
+- **ส่งผ่าน field `av` เดิมใน /world** ('blk1'..'blk8' string ≤8 ผ่าน validate เดิม) → **ไม่ต้อง publish rules ใหม่** · client เก่า (av=male/female) → fallback สุ่มคงที่จาก uid hash
+- **เพื่อนโหมด drive = Group 3D:** รถบล็อกเปิดประทุน (สีตามตัวละคร หัวรถ -Z พวงมาลัยขวา + หมุดกลมบนฝากระโปรง + ไฟหน้า) + หุ่นนั่งขับเอื้อมจับพวงมาลัย + ป้ายชื่อ sprite y2.85 · `tickPeers`: rotation.y lerp ทางสั้น (กันสะบัดข้าม ±π) + ล้อหมุนตามระยะจริง (4 wheel holder ใน userData.wheels) · bubble/mic ยกสูง 3.65/3.35 พ้นป้ายชื่อ · **geometry/material แชร์ cache ไม่ dispose — ต่อ peer dispose เฉพาะป้ายชื่อ** (`disposeBlockPeer` เช็ก userData.own)
+- **Picker (`Adventure3D.pickBlockAvatar()` คืน Promise<bool>):** thumbnail เรนเดอร์จริงจากโมเดล (WebGLRenderer ชั่วคราว 150×190 → dataURL cache) · จำตัวล่าสุด `state.blockAv` (state.js + sanitize `/^blk[1-8]$/`) · ยกเลิก=ไม่เข้าโลก · ui.js `enterDrive3D` await ก่อน `start('drive')`
+- ✅ **ยืนยัน preview:** picker 8 ตัว thumbs data:image ครบ+จำ blk6 · เพื่อนจำลอง 3 คน (blk6/blk3/male-fallback) = Group จริง y0 หมุนคนละทิศตรง yaw เป้าหมาย · ภาพเรนเดอร์จากกล้องเห็นรถบล็อก 3 คัน+คนขับ+ป้ายชื่อบนถนนเมืองจริง · exitWorld ล้าง peers เกลี้ยง · ยกเลิกคืน false · ไม่มี console error · (screenshot pane timeout — ใช้เรนเดอร์ preserveDrawingBuffer แยก decode ดูแทน ตามบทเรียนรอบ 116)
+- ⚠️ **ค้าง: ผู้ใช้ทดสอบจริงมือถือ + 2 เครื่อง (เห็นรถบล็อกของกันและกัน)** · 🔜 ต่อยอด: ใช้ picker เดียวกันกับโลกเดิน (adv/haunt — หุ่นบล็อกเดินแกว่งแขนแทน sprite แบน) · ฉากพาสเทล+toon (session คู่ขนานทำอยู่)
+
 ### ✅ รอบ 118 (10 ก.ค.) — บังคับรถ smooth ฟีล R4: Ridge Racer Type 4 🏁 (version .109)
 - **feedback ผู้ใช้:** "การบังคับทิศทางรถไม่ smooth เลย ให้เหมือน R4" — เดิมกด A/D หัวรถหักทันที กล้องสะบัดตาม
 - **แก้ใน `tickDrive` 4 จุด:** (1) พวงมาลัย ramp เข้าโค้งช้ากว่าคืนพวงมาลัย (attack 3.8/s · release 6.0/s) + ลดองศาตามความเร็ว .045 (2) จำกัดอัตราหมุนหัวรถ `maxYaw=1.9/(1+|v|*.06)` ยิ่งเร็ววงยิ่งกว้าง (3) **ทิศวิ่งจริงแยกจากหัวรถ** (`dVelX/dVelZ` grip blend 6.5/s ลดถึง 2.7 ตอนเลี้ยวแรง+เร็ว = สไลด์เข้าโค้งลื่นแบบ Ridge Racer) — ชนตึก/แม่น้ำ/ขอบเมือง damp ทั้ง dSpeed และ dVel (4) **กล้องหันตามหัวรถแบบหน่วง** (`dCamYaw` 6.5/s) + ชายตามองเข้าโค้ง `-dSteer*.10` + เอียงตัว `.06` · รีเซ็ตทุกตัวใน start()

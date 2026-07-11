@@ -2868,6 +2868,9 @@ async function enterDrive3D(){
     }
     advLoading = false;
   }
+  // 🧱 เลือกตัวละครบล็อกก่อนออกรถ (จำตัวล่าสุดไว้ · เพื่อนใน map เห็นเป็นตัวที่เลือก) — กดยกเลิก = ไม่เข้าโลก
+  const go = await Adventure3D.pickBlockAvatar();
+  if(!go) return;
   Adventure3D.start('drive');
 }
 

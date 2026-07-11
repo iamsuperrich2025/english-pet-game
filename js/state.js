@@ -33,6 +33,7 @@ const DEFAULT_STATE = {
   student:null,                       // {first, last, grade}
   profileName:null,                   // ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว โชว์ใน presence/leaderboard)
   playerAvatar:null,                  // ข้อ 4: ตัวละครผู้เลี้ยง 'male'/'female' (เลือกตอนลงทะเบียน · เปลี่ยนได้ในตั้งค่า · โชว์เฉพาะในเครื่อง)
+  blockAv:null,                       // 🧱 ตัวละครบล็อกในโลก 3D 'blk1'..'blk8' (เลือกก่อนเข้าโลกขับรถ · เพื่อนใน map เห็นตัวนี้)
   advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
   advDone:[],                         // ข้อ 8: คำที่ประกอบสำเร็จแล้วในโลกผจญภัย 3D (ไม่สุ่มซ้ำ · ครบทุกคำของระดับชั้นแล้วล้างเริ่มรอบใหม่)
   advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
@@ -233,6 +234,7 @@ function loadState(){
       if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
       if(typeof s.foodQuizDay !== 'string') s.foodQuizDay = '';
       if(s.playerAvatar !== 'male' && s.playerAvatar !== 'female') s.playerAvatar = null;  // ข้อ 4: ผู้เล่นเดิมค่อยเลือกในตั้งค่า
+      if(!/^blk[1-8]$/.test(s.blockAv||'')) s.blockAv = null;                              // 🧱 ตัวละครบล็อกโลก 3D
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
       if(typeof s.advHurt !== 'boolean') s.advHurt = false;                                // ข้อ 8
