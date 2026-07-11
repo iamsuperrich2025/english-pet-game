@@ -3303,6 +3303,7 @@ function renderMarketCard(){
     <p class="collect-sub">เอาสินค้าที่ผลิตจากโรงงานมาตั้งราคาขาย หรือส่งมอบออเดอร์พิเศษให้ลูกค้าทำกำไร 🌍</p>
     ${soldUI}
     ${renderOrdersUI()}
+    ${renderMarketBrowse()}
     <div class="mkt-listhead">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
     ${renderCollectMine()}`;
 
@@ -3311,6 +3312,30 @@ function renderMarketCard(){
   el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
+  el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
+}
+
+/* 🏪 item 2: ชั้นวางของจากเพื่อนทั้งเซิร์ฟเวอร์ — โชว์เมื่อตลาดจริงเปิดแล้ว (rules /market publish) */
+function renderMarketBrowse(){
+  if(typeof Online === 'undefined' || !Online.marketOk) return '';
+  const me = (typeof onlineKey === 'function') ? onlineKey() : '';
+  const items = (Online.market || []).filter(m=>m.sid !== me);
+  const inner = items.length
+    ? `<div class="hq-grid">` + items.map(m=>{
+        const c = collectInfo(m.id), tier = COLLECT_TIERS[c.tier], img = collectImg(m.id);
+        const afford = state.coins >= m.p;
+        return `<div class="hq-card" style="border-color:${tier.color}">
+          <div class="hq-head">${c.name}</div>
+          <div class="hq-pic">
+            ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
+            <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
+          </div>
+          <div class="mb-seller">🧑‍🤝‍🧑 ร้านของ ${escapeHTML(m.sn)}</div>
+          <button class="hq-price mb-buy ${afford?'':'cant-afford'}" data-key="${m.key}">🪙${fmtNum(m.p)} · ซื้อเลย</button>
+        </div>`;
+      }).join('') + `</div>`
+    : `<div class="mkt-empty">ยังไม่มีเพื่อนลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
+  return `<div class="mkt-listhead">🌏 ตลาดเพื่อนออนไลน์ — ของที่เพื่อนผลิตเอง${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
 }
 
 /* ---- มุมมอง "โรงงานผลิต": งานที่กำลังผลิต + แคตตาล็อกเลือกสินค้า ---- */
@@ -3482,7 +3507,9 @@ function renderCollectMine(){
     listUI = `<div class="mkt-listhead">🏷️ กำลังลงขายอยู่ (${state.listings.length} ชิ้น)</div>` +
       state.listings.map((l,i)=>{
         const c = collectInfo(l.id), img = collectImg(l.id);
-        const st = listingStatus(l.price / c.price);
+        const st = l.netKey
+          ? {t:'🌏 แขวนอยู่ในตลาดเพื่อนออนไลน์ — เพื่อนซื้อเมื่อไหร่เงินเข้าทันที', c:'#1f6fbf'}
+          : listingStatus(l.price / c.price);
         return `<div class="mkt-listing">
           <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
           <div class="mkt-info"><b>${c.name}</b> · ตั้งขาย 🪙${fmtNum(l.price)}<br>
@@ -3530,12 +3557,20 @@ function openListDialog(id){
     const idx = state.collection.indexOf(id);
     if(idx < 0){ overlay.remove(); return; }
     state.collection.splice(idx, 1);
-    state.listings.push({id, price, listedAt: Date.now()});
     overlay.remove();
-    sfx.buy();
-    toast(`🏷️ ลงขาย${c.name} 🪙${fmtNum(price)} แล้ว! รอลูกค้ามาซื้อได้เลย`);
-    saveState();
-    renderDashboard();
+    // 🏪 item 2: พยายามแขวนขึ้นตลาดออนไลน์จริงก่อน — ไม่ได้ (ออฟไลน์/rules ยังไม่เปิด) fallback ตลาดจำลองเดิม
+    const fin = (netKey)=>{
+      const l = {id, price, listedAt: Date.now()};
+      if(netKey) l.netKey = netKey;
+      state.listings.push(l);
+      sfx.buy();
+      toast(netKey ? `🌏 ลงขาย${c.name} 🪙${fmtNum(price)} ในตลาดเพื่อนออนไลน์แล้ว!`
+                   : `🏷️ ลงขาย${c.name} 🪙${fmtNum(price)} แล้ว! รอลูกค้ามาซื้อได้เลย`);
+      saveState();
+      renderDashboard();
+    };
+    if(typeof marketList === 'function') marketList(id, price).then(fin);
+    else fin(null);
   });
   document.body.appendChild(overlay);
 }
@@ -3544,12 +3579,44 @@ function cancelListing(i){
   const l = state.listings[i];
   if(!l) return;
   const c = collectInfo(l.id);
-  state.listings.splice(i, 1);
-  state.collection.push(l.id);
-  sfx.select();
-  toast(`เก็บ${c ? c.name : 'สินค้า'}กลับเข้าคลังแล้ว`);
-  saveState();
-  renderDashboard();
+  const finish = ()=>{
+    state.listings.splice(i, 1);
+    state.collection.push(l.id);
+    sfx.select();
+    toast(`เก็บ${c ? c.name : 'สินค้า'}กลับเข้าคลังแล้ว`);
+    saveState();
+    renderDashboard();
+  };
+  if(!l.netKey || typeof marketUnlist !== 'function'){ finish(); return; }
+  // 🏪 ประกาศจริง: ต้องถอนออกจาก DB ให้สำเร็จก่อนคืนของ (กันคนกำลังกดซื้อพอดี)
+  marketUnlist(l.netKey).then(r=>{
+    if(r === 'removed') finish();
+    else if(r === 'gone') toast('🌏 มีเพื่อนซื้อชิ้นนี้ไปแล้ว — เดี๋ยวเงินเข้ากระเป๋าเองนะ');
+    else { sfx.wrong(); toast('📡 ถอนไม่สำเร็จ ลองใหม่อีกครั้งนะ'); }
+  });
+}
+
+/* 🏪 item 2: ซื้อของจากตลาดเพื่อนออนไลน์ (transaction คนแรกได้ · จ่ายเหรียญ + ของเข้าคลัง) */
+let mktBuying = false;                       // กันกดรัว/ซื้อซ้อนระหว่างรอ DB
+function buyMarketItem(key){
+  if(mktBuying) return;
+  const item = (Online.market || []).find(m=>m.key === key);
+  if(!item || typeof marketBuy !== 'function') return;
+  const c = collectInfo(item.id);
+  if(!c) return;
+  if(item.sid === (typeof onlineKey === 'function' ? onlineKey() : '')) return;   // ของตัวเอง
+  if(state.coins < item.p){ sfx.wrong(); toast(`เหรียญไม่พอ (ต้องมี 🪙${fmtNum(item.p)}) สู้ๆ!`); return; }
+  mktBuying = true;
+  marketBuy(item).then(ok=>{
+    mktBuying = false;
+    if(!ok){ sfx.wrong(); toast('😅 ช้าไปนิดเดียว — มีคนซื้อตัดหน้าไปแล้ว'); renderMarketCard(); return; }
+    state.coins -= item.p;
+    state.collection.push(item.id);
+    saveState();
+    showCollectReveal(item.id, item.p);
+    toast(`🌏 ซื้อ${c.name}จาก ${item.sn} สำเร็จ!`);
+    renderDashboard();
+  });
 }
 
 /* ฉากเปิดภาพใหญ่ตอนได้สินค้าใหม่ (สไตล์เดียวกับฉากอัปแรงค์ ใช้สีตามระดับ)

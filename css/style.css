@@ -178,6 +178,10 @@ html.no-anim .coin-pill.net{animation:none;}
   background:#fff;border:2px solid #b9c8dc;border-radius:999px;padding:6px 26px;
   font-family:inherit;font-size:15px;cursor:pointer;color:#41546e;
 }
+
+/* ---------- item 2: ตลาดเพื่อนออนไลน์ ---------- */
+.mb-seller{font-size:11px;color:#5a7ba6;margin:2px 4px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mb-buy.cant-afford{opacity:.55;filter:grayscale(.4);}
 .icon-btn{
   position:relative;
   background:#fff;border:3px solid #e6d9f5;border-radius:999px;padding:4px 12px;

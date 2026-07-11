@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 124 (ตลาดออนไลน์จริง — item 2) รอผู้ใช้ publish:** โซนใหม่ `/market` + `/msold` (ก้อนเต็มด้านล่างอัปเดตแล้ว + Artifact ปุ่มคัดลอกส่งแล้ว) · **ยังไม่ publish = ตลาดจริงปิดตัวเองอัตโนมัติ** (อ่าน /market โดน deny → เกม fallback ตลาดจำลองเดิม ไม่มีอะไรพัง) · ความเสี่ยงที่ยอมรับ: ซื้อ=ลบ node ของคนอื่นได้ (จำเป็นต่อกลไกซื้อ) + ใบเสร็จเขียนได้ทุก auth แต่ฝั่งคนขายจ่ายเฉพาะใบเสร็จที่ (1) ตรง netKey ของประกาศตัวเอง (2) ของหลุดจากตลาดแล้วจริง — ระดับเดียวกับ coins ฝั่ง client
 - ✅ **รอบ 113 (โลกขับรถ drive + โดรน drone) — ผู้ใช้ publish แล้ว 10 ก.ค. 2026** (ผู้ใช้ยืนยันเองหลังได้ Artifact ปุ่มคัดลอก): map `drive`+`drone` เข้า enum ครบ 4 จุด (/world $map · /tinv map · /rtc · /class $map) → multiplayer/voice/ครูคุมห้องใช้ได้ทั้งโลกขับรถและโดรน · เหลือทดสอบจริง 2 เครื่อง
 - ~~⏳ รอบ 85 (โลกโดรน FPV) — publish รวมไปกับรอบ 113 แล้ว~~ **รอบ 85 (โลกโดรน FPV) — เดิมค้าง publish:** เพิ่ม map `drone` ใน enum 4 จุด (/world $map · /tinv map · /rtc · /class $map) — ก้อนเต็มด้านล่างอัปเดตแล้ว · **ยังไม่ publish = โดรนเล่นคนเดียวได้ปกติ แต่ multiplayer/voice/ครูคุมห้องของโลกโดรนจะยังไม่ทำงาน** (เขียน /world/drone โดน deny เงียบๆ ไม่พังเกม) · โครงเหมือนโลกเฮลิฯเป๊ะ ไม่หย่อน security
 - ✅ **รอบ 82 (คำเดียวกันในปาร์ตี้) publish แล้ว 9 ก.ค. 2026:** field `cw` (คำเป้าหมาย string "en|th" ≤60) ใน `/world/$map/$uid` เข้าแล้ว · ยืนยัน logic ฝั่ง client ด้วยการจำลอง peer 8 เคสผ่านหมด (leader election / ลูกทีมตามคำหัวหน้า / guard `lastSharedDone` / คนทั่วไปไม่ส่ง cw ไม่ผูก rules / คำมีอยู่แล้วดันขึ้นหน้าไม่ซ้ำ)
@@ -179,6 +180,33 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         }
       }
     },
+    "market": {
+      ".read": "auth != null",
+      "$key": {
+        ".write": "auth != null && ((!data.exists() && newData.child('sid').val() === auth.uid) || (data.exists() && !newData.exists()))",
+        ".validate": "newData.hasChildren(['sid','sn','id','p','ts'])",
+        "sid": { ".validate": "newData.isString() && newData.val().length <= 128" },
+        "sn":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "id":  { ".validate": "newData.isString() && newData.val().length <= 40" },
+        "p":   { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 1000000" },
+        "ts":  { ".validate": "newData.isNumber()" },
+        "$other": { ".validate": false }
+      }
+    },
+    "msold": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "$key": {
+          ".write": "auth != null && ((!data.exists() && newData.exists()) || (auth.uid === $uid && !newData.exists()))",
+          ".validate": "newData.hasChildren(['id','p','bn','ts'])",
+          "id": { ".validate": "newData.isString() && newData.val().length <= 40" },
+          "p":  { ".validate": "newData.isNumber() && newData.val() >= 1" },
+          "bn": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "class": {
       "$map": {
         ".read": "auth != null",
@@ -228,6 +256,11 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - `/rtc/<map>/<toUid>/<msgId> = {f:ผู้ส่ง, t:'offer'|'answer'|'ice', d:JSON(SDP/ICE ≤8000), ts}` — **signaling เท่านั้น เสียงจริงวิ่ง P2P (WebRTC) ไม่ผ่าน Firebase**
 - ผู้รับอ่าน+ลบกล่องตัวเอง (ประมวลผลแล้วลบทันที + ล้างตอน join) · คนอื่น push ได้เฉพาะข้อความที่ `f` = uid ตัวเอง
 - ฝั่งเกม: `Voice` ใน adventure3d.js — mesh ต่อสายเมื่อเจอกันใน map (uid น้อยกว่าเป็นผู้ offer) · STUN ของ Google ฟรี ไม่มี TURN (เน็ตมือถือบางเจ้าอาจต่อไม่ติด — ข้อจำกัดที่ยอมรับ) · ไมค์ default ปิดทุกครั้งที่เข้า
+
+## หมายเหตุโครง /market + /msold (ตลาดออนไลน์จริง — รอบ 124 · item 2)
+- `/market/<key> = {sid:uid คนขาย, sn:ชื่อคนขาย, id:collectible, p:ราคา, ts}` — ลงขาย: push node ตัวเอง (sid ต้อง = auth.uid) · **ซื้อ/ถอน = ลบ node** (transaction คนแรกได้ · ลบ node คนอื่นได้ = กลไกซื้อ) · แก้ไข node ไม่ได้ (อยากเปลี่ยนราคา = ถอนแล้วลงใหม่)
+- `/msold/<sellerUid>/<key> = {id, p, bn:ชื่อผู้ซื้อ, ts}` — ใบเสร็จจากผู้ซื้อ · คนขายอ่าน-ลบกล่องตัวเอง · ใครก็เขียนได้ (สร้างใหม่เท่านั้น) → **ฝั่งคนขายกันใบเสร็จปลอม 2 ชั้น:** จ่ายเฉพาะที่ตรง `netKey` ใน state.listings ตัวเอง + เช็กว่า `/market/<key>` หายไปแล้วจริง
+- ฝั่งเกม: `marketWatch/marketList/marketUnlist/marketBuy/marketSoldWatch` (online.js) · ประกาศจริงมี `netKey` ใน state.listings — `marketTick` จำลองจะไม่แตะ · rules ยังไม่ publish → `Online.marketOk=false` เกมใช้ตลาดจำลองเดิมอัตโนมัติ
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

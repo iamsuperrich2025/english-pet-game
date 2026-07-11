@@ -35,6 +35,9 @@ const Online = {
   /* ---- คำเชิญเล่นโลก 3D ด้วยกัน (ส่วนลดคนละ 2,000 เมื่อเจอกันใน map) ---- */
   tinv:{},          // คำเชิญที่ส่งมาหาเรา: {fromUid:{map:'adv'|'haunt', n:ชื่อผู้ชวน, ts}}
   tinvSeen:{},      // fromUid ที่เด้ง toast ไปแล้วในเซสชันนี้ (กันเด้งซ้ำ)
+  /* ---- ตลาดออนไลน์จริง (item 2) ---- */
+  market:[],        // ประกาศขายทั้งเซิร์ฟเวอร์ (รวมของเรา): [{key,sid,sn,id,p,ts}]
+  marketOk:false,   // true = อ่าน /market ได้ (rules โซน market publish แล้ว) → เปิดตลาดจริง
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -532,6 +535,81 @@ function giftOutRebuild(){
   });
 }
 
+/* ============================================================
+   🏪 ตลาดออนไลน์จริง (item 2 backlog): ซื้อ-ขายสินค้าที่เพื่อน "ผลิตเอง" ข้ามผู้เล่น
+   /market/<key> = {sid, sn, id, p, ts} — ลงขาย: สร้าง node ตัวเอง · ซื้อ/ถอน: ลบ node (transaction คนแรกได้)
+   /msold/<sellerUid>/<key> = {id, p, bn, ts} — ใบเสร็จจากผู้ซื้อ ให้ฝั่งคนขายมารับเงิน (อ่านแล้วลบ)
+   rules ยังไม่ publish → อ่าน/เขียนโดน deny เงียบๆ → เกม fallback ตลาดจำลองเดิมอัตโนมัติ
+   ============================================================ */
+function marketWatch(){
+  if(!Online.db) return;
+  Online.db.ref('market').limitToLast(120).on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(!v || typeof v.p !== 'number' || v.p <= 0 || !v.sid) return;
+      if(typeof collectInfo !== 'function' || !collectInfo(v.id)) return;
+      out.push({key: ch.key, sid: v.sid, sn: v.sn || 'เพื่อน', id: v.id, p: v.p, ts: v.ts || 0});
+    });
+    out.sort((a,b)=>b.ts - a.ts);
+    Online.market = out;
+    Online.marketOk = true;
+    if(typeof renderMarketCard === 'function') renderMarketCard();
+  }, ()=>{ Online.marketOk = false; });   // permission denied = rules โซน market ยังไม่ publish
+}
+/* ลงขายจริง: คืน Promise<key|null> — null = ตลาดจริงยังใช้ไม่ได้ (ผู้เรียก fallback ตลาดจำลอง) */
+function marketList(id, price){
+  if(!Online.ready || !Online.db || !Online.marketOk || !state.student) return Promise.resolve(null);
+  const ref = Online.db.ref('market').push();
+  return ref.set({sid: onlineKey(), sn: onlineDisplayName() || 'เพื่อน', id, p: price,
+                  ts: firebase.database.ServerValue.TIMESTAMP})
+            .then(()=>ref.key).catch(()=>null);
+}
+/* ถอนประกาศตัวเอง: 'removed' = ถอนสำเร็จ · 'gone' = มีคนซื้อตัดหน้าไปแล้ว (รอใบเสร็จ) · 'error' */
+function marketUnlist(key){
+  if(!Online.ready || !Online.db) return Promise.resolve('error');
+  return Online.db.ref('market/' + key)
+    .transaction(cur=>cur === null ? undefined : null)
+    .then(r=>r.committed ? 'removed' : 'gone')
+    .catch(()=>'error');
+}
+/* ซื้อของเพื่อน: ลบ node ด้วย transaction (คนแรกได้ คนช้าเจอ false) แล้วเขียนใบเสร็จให้คนขาย
+   (cache อุ่นเสมอเพราะ marketWatch เปิด on('value') ค้างไว้ — transaction ไม่เจอ null หลอก) */
+function marketBuy(item){
+  if(!Online.ready || !Online.db) return Promise.resolve(false);
+  return Online.db.ref('market/' + item.key)
+    .transaction(cur=>cur === null ? undefined : null)
+    .then(r=>{
+      if(!r.committed) return false;
+      Online.db.ref('msold/' + item.sid + '/' + item.key)
+        .set({id: item.id, p: item.p, bn: onlineDisplayName() || 'เพื่อน',
+              ts: firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});
+      return true;
+    }).catch(()=>false);
+}
+/* ฝั่งคนขาย: เฝ้าใบเสร็จ — จับคู่ประกาศของเรา (netKey) + เช็กว่าของหลุดจากตลาดแล้วจริง (กันใบเสร็จปลอม) */
+function marketSoldWatch(){
+  if(!Online.db) return;
+  Online.db.ref('msold/' + onlineKey()).on('child_added', (snap)=>{
+    const v = snap.val() || {}, key = snap.key;
+    const done = ()=>Online.db.ref('msold/' + onlineKey() + '/' + key).remove().catch(()=>{});
+    const i = (state.listings || []).findIndex(l=>l.netKey === key);
+    if(i < 0){ done(); return; }                       // ใบเสร็จที่ไม่รู้จัก → ทิ้ง
+    Online.db.ref('market/' + key).once('value').then(ms=>{
+      if(ms.exists()) return;                          // ของยังแขวนอยู่ = ใบเสร็จปลอม ไม่จ่าย
+      const l = state.listings.splice(i, 1)[0];
+      addCoins(l.price);
+      state.tradeSold.push({id: l.id, price: l.price, ts: Date.now(), buyer: v.bn || 'เพื่อน'});
+      if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
+      saveState();
+      if(typeof sfx !== 'undefined' && sfx.buy) sfx.buy();
+      if(typeof toast === 'function') toast(`🏪 ${v.bn || 'เพื่อน'} ซื้อของที่หนูลงขาย! +🪙${fmtNum(l.price)} เข้ากระเป๋าแล้ว`);
+      if(typeof renderMarketCard === 'function') renderMarketCard();
+      done();
+    }).catch(()=>{});
+  });
+}
+
 /* ---------- เริ่มระบบหลัง login สำเร็จ (เรียกจาก authEnterGame ใน auth.js —
    initializeApp ทำแล้วใน authStart) ---------- */
 /* ============================================================
@@ -655,6 +733,10 @@ function onlineStart(){
 
   // ฟังคำเชิญเล่นโลก 3D ด้วยกัน (path คงที่ ตั้งครั้งเดียว)
   tinvWatch();
+
+  // 🏪 ตลาดออนไลน์จริง (item 2): ฟังประกาศขายทั้งเซิร์ฟเวอร์ + ใบเสร็จของที่เราขายได้
+  marketWatch();
+  marketSoldWatch();
 
   // ส่งสถานะ + คะแนนเป็นระยะ (เหรียญไม่ขยับจะไม่เขียน leaderboard ซ้ำ)
   setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);

@@ -635,6 +635,7 @@ function marketTick(now){
   for(const l of state.listings){
     const c = collectInfo(l.id);
     if(!c) continue;                                   // ของเสีย ทิ้ง
+    if(l.netKey){ remain.push(l); continue; }          // 🏪 ประกาศจริงในตลาดออนไลน์ — รอคนจริงซื้อเท่านั้น (item 2)
     const dur = listingSellMs(l.price / c.price);
     if(dur !== Infinity && (now - l.listedAt) >= dur){
       addCoins(l.price);                               // มีลูกค้ามาซื้อ! เงินเข้ากระเป๋า
