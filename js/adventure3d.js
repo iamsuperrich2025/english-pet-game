@@ -118,6 +118,7 @@ const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุ�
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
+let padBr=false, gearR=false, gearSyncFn=null;  // 🦶 รอบ 139: ปุ่มเบรค (กดค้าง) + เกียร์ถอยหลัง R (toggle) — gearSyncFn อัปเดตหน้าปุ่มตอน reset
 /* 🚔 รอบ 128: สตาร์ทเครื่อง/เข็มขัด + ระบบใบสั่งจราจร */
 let carEngineOn=false, carBelted=false, carStartOpen=false;   // สวิตช์ + แผงเตรียมออกรถยังเปิดอยู่
 let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // ใบสั่งสะสม/สถานะเตือน
@@ -2517,11 +2518,13 @@ function buildDom(){
     background:rgba(66,165,245,.9);border:3px solid #fff;font-size:30px;display:none}
   .adv-touch.adv-drive #adv-horn{display:block}
   /* 🎛️ รอบ 127: ปุ่มจางๆ บนคอนโซลโหมดขับรถ (มือถือ) — ซ้าย=บังคับซ้าย-ขวา · ขวา=คันเร่งกดค้าง ปล่อยแล้วรถชลอเอง */
-  #adv-steerpad,#adv-gaspad{display:none;position:absolute;pointer-events:auto;z-index:6;
+  #adv-steerpad,#adv-gaspad,#adv-brakepad,#adv-gearbtn{display:none;position:absolute;pointer-events:auto;z-index:6;
     -webkit-user-select:none;user-select:none;touch-action:none;opacity:.34;transition:opacity .15s}
-  #adv-steerpad.on,#adv-gaspad.on{opacity:.68}
+  #adv-steerpad.on,#adv-gaspad.on,#adv-brakepad.on{opacity:.68}
   .adv-touch.adv-drive #adv-steerpad{display:flex}
   .adv-touch.adv-drive #adv-gaspad{display:flex}
+  .adv-touch.adv-drive #adv-brakepad{display:flex}
+  .adv-touch.adv-drive #adv-gearbtn{display:flex}
   #adv-steerpad{left:2.5%;bottom:max(20vh,104px);width:min(42vw,290px);height:64px;border-radius:999px;
     background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
     align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:24px}
@@ -2532,11 +2535,24 @@ function buildDom(){
     background:rgba(40,165,88,.55);border:2px solid rgba(255,255,255,.6);
     align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;line-height:1.05}
   #adv-gaspad small{font-size:12.5px;font-weight:700}
+  /* 🦶 รอบ 139: ปุ่มเบรคแดง ซ้ายคันเร่งแบบแป้นรถจริง (กดค้าง=เบรคอย่างเดียว ไม่ถอย) */
+  #adv-brakepad{right:124px;bottom:max(20vh,104px);width:84px;height:84px;border-radius:50%;flex-direction:column;
+    background:rgba(198,45,45,.5);border:2px solid rgba(255,255,255,.6);
+    align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:23px;line-height:1.05}
+  #adv-brakepad small{font-size:12px;font-weight:700}
+  /* ⚙️ รอบ 139: ปุ่มเกียร์ D/R เหนือคันเร่ง — แตะสลับ · R=เหลืองกะพริบ + คันเร่งเปลี่ยนเป็น "ถอย" ส้ม */
+  #adv-gearbtn{right:20px;bottom:calc(max(20vh,104px) + 106px);width:64px;height:52px;border-radius:14px;
+    background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;flex-direction:column;
+    align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;line-height:1}
+  #adv-gearbtn small{font-size:10.5px;font-weight:700;margin-top:2px}
+  #adv-gearbtn.rev{opacity:1;background:rgba(120,70,0,.72);border-color:#ffb300;color:#ffd54f;
+    animation:tlBlink .8s steps(1) infinite}
+  #adv-gaspad.rev{background:rgba(230,126,20,.6)}
   /* รอบ 129→135: ปุ่มเร่ง/เลี้ยวลดลงมาระดับล่าง (20vh — ผู้ใช้ลองจริงแล้ว 40vh สูงไป) · แตรมุมล่างขวาเดิม */
   .adv-touch.adv-drive #adv-horn{bottom:26px;right:22px;width:64px;height:64px;font-size:26px;opacity:.8}
   /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้งฝั่งขวา (แทนปุ่ม ⬅️➡️ รอบ 132) — ดันขึ้น=ไฟซ้าย ดันลง=ไฟขวา
      knob ค้างตำแหน่งจนรถเลี้ยวเสร็จแล้วเด้งกลับเองเหมือนก้านไฟรถจริง (tlTick หน่วง ~0.9 วิ) */
-  #adv-tlpad{display:none;position:absolute;pointer-events:auto;z-index:6;right:132px;bottom:max(20vh,104px);
+  #adv-tlpad{display:none;position:absolute;pointer-events:auto;z-index:6;right:224px;bottom:max(20vh,104px);  /* รอบ 139: ขยับซ้ายหลบปุ่มเบรคใหม่ (เดิม 132px) */
     width:60px;height:150px;border-radius:999px;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
     box-sizing:border-box;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;
     font-size:17px;line-height:1;opacity:.34;transition:opacity .15s;
@@ -2798,6 +2814,8 @@ function buildDom(){
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <div id="adv-steerpad"><span>◀</span><i id="adv-steerdot"></i><span>▶</span></div>
     <div id="adv-gaspad">▲<small>เร่ง</small></div>
+    <div id="adv-brakepad">■<small>เบรค</small></div>
+    <div id="adv-gearbtn">D<small>เดินหน้า</small></div>
     <div id="adv-tlpad"><span>⬅️</span><i id="adv-tldot"></i><span>➡️</span></div>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
@@ -2921,6 +2939,31 @@ function buildDom(){
     e.stopPropagation();
     for(const t of e.changedTouches) if(t.identifier===gasTid){ gasTid=null; padTh=false; gasPad.classList.remove('on'); }
   }));
+
+  /* 🦶 รอบ 139: ปุ่มเบรค — กดค้าง=เบรคอย่างเดียว (ไม่ไหลไปถอยหลังเหมือนกด S ค้าง) */
+  const brakePad=overlayEl.querySelector('#adv-brakepad');
+  let brakeTid=null;
+  brakePad.addEventListener('touchstart',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(brakeTid!==null) return;
+    brakeTid=e.changedTouches[0].identifier; padBr=true; brakePad.classList.add('on');
+  },{passive:false});
+  ['touchend','touchcancel'].forEach(ev=>brakePad.addEventListener(ev,e=>{
+    e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===brakeTid){ brakeTid=null; padBr=false; brakePad.classList.remove('on'); }
+  }));
+
+  /* ⚙️ รอบ 139: เกียร์ D/R — แตะสลับ · R แล้วคันเร่งกลายเป็นถอยหลัง (ปุ่มเร่งเปลี่ยนป้ายเป็น "ถอย" ส้ม) */
+  const gearBtn=overlayEl.querySelector('#adv-gearbtn');
+  gearSyncFn=()=>{
+    gearBtn.classList.toggle('rev',gearR);
+    gearBtn.innerHTML=gearR?'R<small>ถอยหลัง</small>':'D<small>เดินหน้า</small>';
+    gasPad.classList.toggle('rev',gearR);
+    gasPad.innerHTML=gearR?'▼<small>ถอย</small>':'▲<small>เร่ง</small>';
+  };
+  const gearToggle=()=>{ gearR=!gearR; gearSyncFn(); sfx.select&&sfx.select(); };
+  gearBtn.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); gearToggle(); },{passive:false});
+  gearBtn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); gearToggle(); });
 
   /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้ง — ลากขึ้นเกินครึ่ง=ไฟซ้าย ลากลง=ไฟขวา ปล่อยกลาง=ปิด
      knob ค้างตามสถานะไฟ (tlSet ขยับให้) แล้วเด้งกลับเองเมื่อ tlTick ดับไฟหลังเลี้ยวเสร็จ
@@ -3535,7 +3578,8 @@ function tickDrive(dt,now){
   if(keys.KeyD||keys.ArrowRight) sd+=1;
   if(joy.on){ th=-joy.dy; sd=joy.dx; }
   if(padSt) sd=padSteer;                     // 🎛️ ปุ่มคอนโซล (รอบ 127) — ชนะ joystick เฉพาะแกนของตัวเอง
-  if(padTh) th=1;                            // คันเร่งกดค้าง · ปล่อย = แรงต้านด้านล่างชลอจนหยุดเอง
+  if(padTh) th=gearR?-1:1;                   // คันเร่งกดค้าง · เกียร์ R = ถอยหลัง (รอบ 139) · ปล่อย = แรงต้านชลอจนหยุดเอง
+  if(padBr) th=0;                            // 🦶 รอบ 139: เบรคชนะคันเร่ง (เบรคอย่างเดียว ไม่สลับไปถอย)
   if(!carEngineOn || carStartOpen) th=0;     // 🚔 รอบ 128: เครื่องยังไม่ติด/ยังไม่กดออกรถ → คันเร่งไม่ทำงาน
   if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
 
@@ -3546,6 +3590,8 @@ function tickDrive(dt,now){
     if(dSpeed>.3) dSpeed=Math.max(0,dSpeed-CAR_BRAKE*dt);          // เบรกก่อน
     else dSpeed=Math.max(-CAR_VREV,dSpeed+CAR_ACCEL*.7*th*dt);     // จอดแล้วกดค้าง = ถอยหลัง
   }
+  if(padBr) dSpeed=dSpeed>0?Math.max(0,dSpeed-CAR_BRAKE*1.2*dt)    // 🦶 รอบ 139: ปุ่มเบรค — หน่วงเข้าหา 0 ทั้งเดินหน้า/ถอยหลัง
+                           :Math.min(0,dSpeed+CAR_BRAKE*1.2*dt);
   dSpeed*=Math.max(0,1-(onRoad===1?.16:1.15)*dt);                  // แรงต้าน (รอบ 128: ลดลงให้ไต่ถึง 200 กม./ชม. ได้)
   if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
 
@@ -4468,9 +4514,9 @@ const INTRO={
   },
   drive:{
     goal:'ขับรถบน<b>ถนนจริงของเมืองกำแพงเพชร</b> (แผนที่จริงทั้งเมือง!) เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · <b>ขับชนตัวอักษร</b>บนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง ระวังชนตึก!',
-    touch:[['🕹️','จอย <b>ซ้าย</b>: ดันขึ้น = คันเร่ง · ดึงลง = เบรก/ถอย · ซ้าย-ขวา = เลี้ยว'],
-           ['👀','ลากครึ่งจอ <b>ขวา</b> = ชะโงกมองข้างทาง (ปล่อยแล้วเด้งกลับ)'],
-           ['📯','แตะปุ่มฟ้า มุมขวาล่าง = บีบแตร']],
+    touch:[['🎛️','แถบ<b>พวงมาลัย</b>ล่างซ้าย = เลี้ยว · ปุ่มเขียว <b>▲ เร่ง</b> กดค้าง · ปุ่มแดง <b>■ เบรค</b> กดค้าง'],
+           ['⚙️','ปุ่ม <b>D/R</b> เหนือคันเร่ง = สลับเกียร์เดินหน้า/ถอยหลัง (R แล้วปุ่มเร่งกลายเป็นถอย)'],
+           ['📯','แตะปุ่มฟ้า มุมขวาล่าง = บีบแตร · ก้านขวา = ไฟเลี้ยว']],
     keys:[['⌨️','<b>W</b> = คันเร่ง · <b>S</b> = เบรก/ถอยหลัง'],
           ['🔄','<b>A/D</b> = หมุนพวงมาลัยซ้าย-ขวา'],
           ['📯','<b>H</b> = บีบแตร · เมาส์ = ชะโงกมองข้างทาง']],
@@ -4551,6 +4597,7 @@ function start(md){
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
+    padBr=false; gearR=false; if(gearSyncFn) gearSyncFn();  // 🦶⚙️ รอบ 139: ล้างเบรค + เกียร์กลับ D ทุกครั้งที่เข้าโลก
     // 🚔 รอบ 128: รีเซ็ตกฎจราจร + เด้งแผงสตาร์ทเครื่อง/คาดเข็มขัดก่อนออกรถ
     carEngineOn=false; carBelted=false; carFines=[]; carOverSpeed=false; carBeltFined=false; carLawSeen=false;
     // 🚦 รอบ 132: รีเซ็ตไฟเลี้ยว + ตัวตรวจทางแยก + ชนรถเพื่อน (netTlOk คืน true เผื่อผู้ใช้เพิ่ง publish rules)
