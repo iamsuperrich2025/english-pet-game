@@ -110,6 +110,7 @@ const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle mod
 const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
+let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
@@ -2475,6 +2476,24 @@ function buildDom(){
   #adv-horn{position:absolute;bottom:26px;right:22px;width:76px;height:76px;border-radius:50%;pointer-events:auto;
     background:rgba(66,165,245,.9);border:3px solid #fff;font-size:30px;display:none}
   .adv-touch.adv-drive #adv-horn{display:block}
+  /* 🎛️ รอบ 127: ปุ่มจางๆ บนคอนโซลโหมดขับรถ (มือถือ) — ซ้าย=บังคับซ้าย-ขวา · ขวา=คันเร่งกดค้าง ปล่อยแล้วรถชลอเอง */
+  #adv-steerpad,#adv-gaspad{display:none;position:absolute;pointer-events:auto;z-index:6;
+    -webkit-user-select:none;user-select:none;touch-action:none;opacity:.34;transition:opacity .15s}
+  #adv-steerpad.on,#adv-gaspad.on{opacity:.68}
+  .adv-touch.adv-drive #adv-steerpad{display:flex}
+  .adv-touch.adv-drive #adv-gaspad{display:flex}
+  #adv-steerpad{left:2.5%;bottom:2.4vh;width:min(42vw,290px);height:64px;border-radius:999px;
+    background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
+    align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:24px}
+  #adv-steerdot{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
+    transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
+    pointer-events:none}
+  #adv-gaspad{right:20px;bottom:2.4vh;width:94px;height:94px;border-radius:50%;flex-direction:column;
+    background:rgba(40,165,88,.55);border:2px solid rgba(255,255,255,.6);
+    align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;line-height:1.05}
+  #adv-gaspad small{font-size:12.5px;font-weight:700}
+  /* แตรขยับขึ้นพ้นคันเร่ง (เฉพาะโหมดขับรถ) */
+  .adv-touch.adv-drive #adv-horn{bottom:18vh;right:26px;width:58px;height:58px;font-size:24px;opacity:.8}
   /* 💨 ป๊อปโบนัสบินเฉียด (heli/drone) — เด้งขึ้นจางหายเหนือ crosshair */
   #adv-nearmiss{top:43%;left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;z-index:6;
     color:#fff;font-weight:900;font-size:clamp(15px,3.6vw,21px);text-shadow:0 2px 6px #000;white-space:nowrap;
@@ -2672,6 +2691,8 @@ function buildDom(){
     <div id="adv-banner"></div>
     <div id="adv-scare"><img id="adv-scare-img" alt=""><span>👻</span></div>
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
+    <div id="adv-steerpad"><span>◀</span><i id="adv-steerdot"></i><span>▶</span></div>
+    <div id="adv-gaspad">▲<small>เร่ง</small></div>
     <button id="adv-shoot">🔥</button>
     <button id="adv-chat-btn">💬 แชท</button>
     <button class="adv-vbtn v-off" id="adv-mic">🎤 ปิด</button>
@@ -2742,6 +2763,44 @@ function buildDom(){
   const hornBtn=overlayEl.querySelector('#adv-horn');
   hornBtn.addEventListener('touchstart',e=>{ e.preventDefault(); CarSound.horn(); },{passive:false});
   hornBtn.addEventListener('click',e=>{ e.preventDefault(); CarSound.horn(); });
+
+  /* 🎛️ รอบ 127: ปุ่มคอนโซลโหมดขับรถ — ซ้าย=พวงมาลัย (แตะ/ลากในแถบ = องศาตามตำแหน่งนิ้ว)
+     ขวา=คันเร่งกดค้าง ปล่อยแล้วรถชลอจนหยุดเอง (แรงต้านใน tickDrive)
+     stopPropagation กันไปโดน handler ของ overlay ที่จะเสกจอยสติ๊กซ้อน · จับ touch แยกนิ้วด้วย identifier */
+  const steerPad=overlayEl.querySelector('#adv-steerpad');
+  const steerDot=overlayEl.querySelector('#adv-steerdot');
+  const gasPad=overlayEl.querySelector('#adv-gaspad');
+  let steerTid=null, gasTid=null;
+  const steerFrom=(t)=>{
+    const r=steerPad.getBoundingClientRect();
+    const v=(((t.clientX-r.left)/r.width)*2-1)*1.25;      // ขยับถึงขอบ = เลี้ยวเต็ม (ไม่ต้องเป๊ะสุดขอบ)
+    padSteer=Math.max(-1,Math.min(1,v));
+    steerDot.style.left=(50+padSteer*36)+'%';
+  };
+  const steerOff=()=>{ steerTid=null; padSt=false; padSteer=0; steerDot.style.left='50%'; steerPad.classList.remove('on'); };
+  steerPad.addEventListener('touchstart',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(steerTid!==null) return;
+    const t=e.changedTouches[0];
+    steerTid=t.identifier; padSt=true; steerPad.classList.add('on'); steerFrom(t);
+  },{passive:false});
+  steerPad.addEventListener('touchmove',e=>{
+    e.preventDefault(); e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===steerTid) steerFrom(t);
+  },{passive:false});
+  ['touchend','touchcancel'].forEach(ev=>steerPad.addEventListener(ev,e=>{
+    e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===steerTid) steerOff();
+  }));
+  gasPad.addEventListener('touchstart',e=>{
+    e.preventDefault(); e.stopPropagation();
+    if(gasTid!==null) return;
+    gasTid=e.changedTouches[0].identifier; padTh=true; gasPad.classList.add('on');
+  },{passive:false});
+  ['touchend','touchcancel'].forEach(ev=>gasPad.addEventListener(ev,e=>{
+    e.stopPropagation();
+    for(const t of e.changedTouches) if(t.identifier===gasTid){ gasTid=null; padTh=false; gasPad.classList.remove('on'); }
+  }));
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -3155,6 +3214,8 @@ function tickDrive(dt,now){
   if(keys.KeyA||keys.ArrowLeft) sd-=1;
   if(keys.KeyD||keys.ArrowRight) sd+=1;
   if(joy.on){ th=-joy.dy; sd=joy.dx; }
+  if(padSt) sd=padSteer;                     // 🎛️ ปุ่มคอนโซล (รอบ 127) — ชนะ joystick เฉพาะแกนของตัวเอง
+  if(padTh) th=1;                            // คันเร่งกดค้าง · ปล่อย = แรงต้านด้านล่างชลอจนหยุดเอง
   if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
 
   const onRoad=driveCell(camera.position.x,camera.position.z);
@@ -3988,6 +4049,7 @@ function start(md){
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
+    padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
   }else{
     camera.position.set(0,EYE_H,0);
   }
