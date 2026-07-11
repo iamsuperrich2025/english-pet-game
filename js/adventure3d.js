@@ -119,6 +119,7 @@ let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
 let padBr=false, gearR=false, gearSyncFn=null;  // 🦶 รอบ 139: ปุ่มเบรค (กดค้าง) + เกียร์ถอยหลัง R (toggle) — gearSyncFn อัปเดตหน้าปุ่มตอน reset
+let carRevBeepAt=0, tlClickPh=-1;               // 🔊 รอบ 140: จังหวะเสียงติ๊ดถอยหลัง + เฟสเสียงติ๊ก-ต่อกไฟเลี้ยว (-1=เพิ่งเปิด ดังทันที)
 /* 🚔 รอบ 128: สตาร์ทเครื่อง/เข็มขัด + ระบบใบสั่งจราจร */
 let carEngineOn=false, carBelted=false, carStartOpen=false;   // สวิตช์ + แผงเตรียมออกรถยังเปิดอยู่
 let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // ใบสั่งสะสม/สถานะเตือน
@@ -573,6 +574,14 @@ function makeBlockCar(id){
       g.add(b); g.userData[key].push(b);
     });
   });
+  // ⬜ รอบ 140: ไฟถอยหลังขาว 2 ดวงท้ายรถ (+Z) — เครื่องเพื่อนคำนวณเองจากทิศวิ่งสวนหัวรถ ไม่มี field ใหม่ (rules tl ล็อก 0-2)
+  const revM=blkMat(0xffffff);
+  g.userData.revs=[];
+  [-.45,.45].forEach(x=>{
+    const m=new THREE.Mesh(blkGeo(.2,.15,.07),revM);
+    m.position.set(x,.86,2.06); m.visible=false;
+    g.add(m); g.userData.revs.push(m);
+  });
   g.userData.wheels=[];
   [[-1,-1.35],[1,-1.35],[-1,1.35],[1,1.35]].forEach(([sx,z])=>{
     const hold=new THREE.Group(); hold.position.set(sx*.97,.5,z);
@@ -604,6 +613,7 @@ function makeBlockPeer(name, av, uid){
   g.userData.wheels=g.children[0].userData.wheels;
   g.userData.blinkL=g.children[0].userData.blinkL;   // 🚦 ให้ tickPeers สั่งไฟเลี้ยวกะพริบได้ตรงๆ
   g.userData.blinkR=g.children[0].userData.blinkR;
+  g.userData.revs=g.children[0].userData.revs;       // ⬜ รอบ 140: ไฟถอยหลังขาว
   return g;
 }
 /* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
@@ -1953,6 +1963,11 @@ function tickPeers(dt,now){
       const ph=Math.floor(now/400)%2===0;
       (p.spr.userData.blinkL||[]).forEach(m=>{ m.visible=p.tl===1&&ph; });
       (p.spr.userData.blinkR||[]).forEach(m=>{ m.visible=p.tl===2&&ph; });
+      // ⬜ รอบ 140: ไฟถอยหลังขาว — วิ่งสวนทิศหัวรถ (dot<-.5) ค้าง ~0.25 วิถึงติด (hysteresis กันวูบตอนเด้งชน/แพ็กเก็ตกระตุก)
+      const rvx=p.tgt.x-p.cur.x, rvz=p.tgt.z-p.cur.z, rvm=Math.hypot(rvx,rvz);
+      const backing=rvm>.12 && (rvx*-Math.sin(p.yawCur)+rvz*-Math.cos(p.yawCur))/rvm<-.5;
+      p.revT=backing?Math.min(.6,(p.revT||0)+dt):Math.max(0,(p.revT||0)-dt*2);
+      (p.spr.userData.revs||[]).forEach(m=>{ m.visible=p.revT>.25; });
     }else if(p.walk){
       // 🧱 หุ่นบล็อกเดิน: หันตาม yaw (lerp ทางสั้น) + แกว่งแขน-ขาตามระยะที่เดินจริง · หยุด=ลู่คืนท่ายืน
       const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
@@ -3441,6 +3456,7 @@ function tlDotY(v){
 }
 function tlSet(v){
   tlSig=v; tlSigAt=performance.now(); tlYawOn=yaw; tlRetAt=0;
+  tlClickPh=-1;                                      // 🔊 รอบ 140: เปิดปุ๊บ "ติ๊ก" ดังทันทีเฟรมแรก (เหมือนรีเลย์จริง)
   const pad=document.getElementById('adv-tlpad');
   if(pad) pad.classList.toggle('sig',v!==0);
   tlDotY(v===1?-1:v===2?1:0);
@@ -3462,6 +3478,9 @@ function driveArms(x,z){
    เข้าโซนแยก (แขนถนน>=3) จำมุมไว้ → ออกจากโซนแล้ว yaw เปลี่ยนเกิน ~45° = เลี้ยวจริง · ระหว่างนั้นไม่เคยเปิดไฟ = ใบสั่ง */
 function tlTick(px,pz,now){
   if(tlSig){
+    // 🔊 รอบ 140: เสียงรีเลย์ "ติ๊ก-ต่อก" ตามเฟสกะพริบ 400ms เดียวกับไฟเพื่อน (tlClickPh=-1 ตอนเพิ่งเปิด = ดังทันที)
+    const cph=Math.floor(now/400)%2;
+    if(cph!==tlClickPh){ tlClickPh=cph; CarSound.tlClick(cph===0); }
     let dy=yaw-tlYawOn; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
     // รอบ 135: เลี้ยวเสร็จ (เกิน ~50°+คืนพวง) → หน่วง ~0.9 วิ แล้วก้านเด้งกลับเองแบบรถจริง · เปิดค้างนานเกิน 20 วิ = ดับ
     if(Math.abs(dy)>.87 && Math.abs(dSteer)<.07 && !tlRetAt) tlRetAt=now+900;
@@ -3582,6 +3601,10 @@ function tickDrive(dt,now){
   if(padBr) th=0;                            // 🦶 รอบ 139: เบรคชนะคันเร่ง (เบรคอย่างเดียว ไม่สลับไปถอย)
   if(!carEngineOn || carStartOpen) th=0;     // 🚔 รอบ 128: เครื่องยังไม่ติด/ยังไม่กดออกรถ → คันเร่งไม่ทำงาน
   if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
+  // 🔊 รอบ 140: "ติ๊ด ติ๊ด" ถอยหลัง — เกียร์ R (มือถือ) หรือกำลังวิ่งถอยจริง (คีย์บอร์ด S) · ทุก 600ms
+  if(carEngineOn && !carStartOpen && (gearR || dSpeed<-.5) && now-carRevBeepAt>600){
+    carRevBeepAt=now; CarSound.revBeep();
+  }
 
   const onRoad=driveCell(camera.position.x,camera.position.z);
   const vmax=onRoad===1?CAR_VMAX:CAR_VMAX_OFF;
@@ -3907,6 +3930,33 @@ const CarSound={
         g.gain.setValueAtTime(.14,t+dt0); g.gain.exponentialRampToValueAtTime(.001,t+dt0+.05);
         o.connect(g); g.connect(c.destination); o.start(t+dt0); o.stop(t+dt0+.07);
       });
+    }catch(e){}
+  },
+  /* 🔊 รอบ 140: "ติ๊ด" ถอยหลังแบบรถจริง — โทนเดี่ยว ~1kHz สั้นๆ (เรียกซ้ำทุก 600ms ใน tickDrive ตอนเกียร์ R/วิ่งถอย) */
+  revBeep(){
+    if(!this.ctx) return;
+    try{
+      const c=this.ctx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='square'; o.frequency.value=1000;
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2600;   // ตัดขอบ square ให้เป็น "ติ๊ด" ไม่แสบหู
+      g.gain.setValueAtTime(.055,t); g.gain.setValueAtTime(.055,t+.16); g.gain.exponentialRampToValueAtTime(.001,t+.2);
+      o.connect(lp); lp.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.22);
+    }catch(e){}
+  },
+  /* 🔊 รอบ 140: รีเลย์ไฟเลี้ยว "ติ๊ก-ต่อก" — คลิกสั้นมากสลับสูง/ต่ำตามเฟสกะพริบ 400ms */
+  tlClick(hi){
+    if(!this.ctx) return;
+    try{
+      const c=this.ctx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='square'; o.frequency.value=hi?1480:960;
+      g.gain.setValueAtTime(.07,t); g.gain.exponentialRampToValueAtTime(.001,t+.035);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.05);
+      const th=c.createOscillator(), tg=c.createGain();                 // ตัวถังไม้ "ต่อก" เบาๆ ใต้คลิก
+      th.type='sine'; th.frequency.setValueAtTime(hi?420:300,t); th.frequency.exponentialRampToValueAtTime(140,t+.05);
+      tg.gain.setValueAtTime(.05,t); tg.gain.exponentialRampToValueAtTime(.001,t+.06);
+      th.connect(tg); tg.connect(c.destination); th.start(t); th.stop(t+.07);
     }catch(e){}
   },
   horn(){
