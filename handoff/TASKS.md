@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 146 (12 ก.ค.) — แผงกฎหมายกว้างเต็ม ไม่มี scrollbar 🛡️ (version .137)
+- **สเปกผู้ใช้ (screenshot: แผงแคบ 500px ต้องเลื่อนถึงเห็นปุ่มรับทราบ):** ยืดกว้างซ้าย-ขวาจนใส่ปุ่มได้ไม่ต้อง scroll
+- **วิธี (showLawInfo ~line 4001 + CSS ~2767):** width→`min(94vw,920px)` · เพิ่ม `.li-grid{display:grid;grid-template-columns:repeat(3,1fr)}` ห่อ 3 ก้อนกฎหมาย (เข็มขัด ม.123 / ขับเร็ว ม.67 / โทษจำคุก) · ฟอนต์ 14.5→13.5 padding ลด · แบนเนอร์เตือน withWarn อยู่นอกกริด เต็มแถวบนเหมือนเดิม · max-height 92vh + overflow:auto คงไว้เป็น fallback จอจิ๋ว (<700px กว้าง อาจล้นนิด — ยอมรับ)
+- ✅ **ยืนยัน 812×375 เคสสูงสุด (เด้งพร้อมแบนเนอร์เตือนเข็มขัด):** แผง 763×308 กลางจอ · `scrollHeight==clientHeight` (304) ไม่มี scroll · กริด 3 คอลัมน์จริง · ปุ่ม "🫡 รับทราบ" y281 เห็นเต็ม กดแล้วแผงปิด · ไม่มี console error · deploy live .137
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (แผงเด้งตอนกดออกรถครั้งแรก/ยังไม่คาดเข็มขัด)
+
 ### ✅ รอบ 145 (12 ก.ค.) — แผงเลือกตัวละครบล็อกเต็มจอ ไม่มี scroll + ปุ่มขวา 🧱 (version .136)
 - **สเปกผู้ใช้ (screenshot จริง — แผงเดิม 560px มี scrollbar ปุ่มจมล่าง):** แผงเกือบเต็มจอ · ปุ่มยกเลิก+ออกรถไปฝั่งขวา · สเกลทั้งหมดพอดีไม่ใช้ scroll
 - **วิธีทำ (blkBuildPicker ~line 660):** `.blk-card` → `width:min(96vw,900px);height:min(94vh,560px);display:flex;flex-direction:column;overflow:hidden` · เพิ่ม `.blk-body{display:flex}` หุ้มกริด+ปุ่ม · กริด `grid-template-rows:repeat(2,1fr)` + item เป็น flex column + `img{flex:1 1 0;min-height:0;object-fit:contain}` — **ภาพยืดหดตามช่องจริง ไม่ fix aspect-ratio** · `.blk-btns` เป็น `flex-direction:column;justify-content:center` ฝั่งขวา (ออกรถเขียวใหญ่บน · ยกเลิกล่าง) · ฟอนต์ clamp ตาม vw/vh
