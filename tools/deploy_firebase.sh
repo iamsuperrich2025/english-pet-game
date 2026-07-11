@@ -8,8 +8,9 @@
 # ============================================================
 set -e
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-STAGE="${TEMP:-/tmp}/vocabworld_deploy"
-FB="/c/Users/rober/bin/firebase.exe"     # standalone CLI (ไม่ใช้ Node — เครื่องนี้ไม่มี)
+STAGE="$(cygpath -u "${TEMP:-/tmp}" 2>/dev/null || echo /tmp)/vocabworld_deploy"   # tar ต้องการ POSIX path
+export PATH="/c/Users/rober/bin/node:$PATH"   # Node พกพา + firebase-tools (npm -g) — ตัว standalone .exe ใช้ไม่ได้ (firepit crash)
+FB="firebase"
 SITE="vocabworld"                        # → https://vocabworld.web.app (แก้ตรงนี้ถ้าชื่อโดนจอง)
 PROJECT="english-pet-game"               # Firebase project เดิม (Auth/RTDB ไม่ต้องย้าย)
 
