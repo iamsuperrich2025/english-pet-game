@@ -665,26 +665,33 @@ function blkBuildPicker(){
   #blk-pick{position:fixed;inset:0;z-index:120;background:rgba(10,14,24,.72);display:none;
     align-items:center;justify-content:center;font-family:inherit}
   #blk-pick.on{display:flex}
-  .blk-card{background:#fff;border-radius:22px;padding:14px 16px;max-width:min(560px,94vw);max-height:92vh;
-    overflow:auto;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.45)}
-  .blk-card h2{margin:2px 0 8px;font-size:clamp(17px,4.5vw,22px);color:#3949ab}
-  .blk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  /* รอบ 145 (สเปกผู้ใช้): แผงเกือบเต็มจอ · กริด 4×2 สเกลตามความสูงจริงไม่มี scroll · ปุ่มคอลัมน์ขวา */
+  .blk-card{background:#fff;border-radius:22px;padding:10px 16px 12px;width:min(96vw,900px);height:min(94vh,560px);
+    box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;text-align:center;
+    box-shadow:0 12px 40px rgba(0,0,0,.45)}
+  .blk-card h2{margin:2px 0 8px;font-size:clamp(16px,4vw,22px);color:#3949ab;flex:0 0 auto}
+  .blk-body{display:flex;gap:14px;flex:1;min-height:0;align-items:stretch}
+  .blk-grid{flex:1;min-width:0;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);
+    grid-template-rows:repeat(2,1fr);gap:8px}
   .blk-it{border:3px solid #e0e0e0;border-radius:14px;padding:4px 2px 5px;cursor:pointer;background:#f7f9ff;
-    transition:transform .12s,border-color .12s}
-  .blk-it img{width:100%;aspect-ratio:150/190;display:block}
-  .blk-it .bn{font-size:11px;font-weight:800;color:#37474f;line-height:1.2}
-  .blk-it.sel{border-color:#43a047;background:#e9f9ec;transform:scale(1.05);box-shadow:0 4px 14px rgba(67,160,71,.35)}
-  .blk-btns{display:flex;gap:10px;justify-content:center;margin-top:12px}
-  .blk-go{background:#43a047;color:#fff;border:0;border-radius:14px;font-weight:800;font-size:17px;
-    padding:10px 26px;font-family:inherit;cursor:pointer}
-  .blk-x{background:#eceff1;color:#546e7a;border:0;border-radius:14px;font-weight:700;font-size:15px;
-    padding:10px 16px;font-family:inherit;cursor:pointer}`;
+    transition:transform .12s,border-color .12s;display:flex;flex-direction:column;align-items:center;
+    justify-content:space-between;min-height:0;box-sizing:border-box}
+  .blk-it img{flex:1 1 0;min-height:0;width:100%;object-fit:contain;display:block}
+  .blk-it .bn{flex:0 0 auto;font-size:clamp(10px,1.8vh,13px);font-weight:800;color:#37474f;line-height:1.2}
+  .blk-it.sel{border-color:#43a047;background:#e9f9ec;transform:scale(1.04);box-shadow:0 4px 14px rgba(67,160,71,.35)}
+  .blk-btns{flex:0 0 auto;display:flex;flex-direction:column;gap:14px;justify-content:center;margin:0}
+  .blk-go{background:#43a047;color:#fff;border:0;border-radius:14px;font-weight:800;font-size:clamp(15px,2.4vw,18px);
+    padding:14px 22px;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .blk-x{background:#eceff1;color:#546e7a;border:0;border-radius:14px;font-weight:700;font-size:clamp(13px,2vw,15px);
+    padding:12px 18px;font-family:inherit;cursor:pointer;white-space:nowrap}`;
   document.head.appendChild(st);
   blkPickEl=document.createElement('div');
   blkPickEl.id='blk-pick';
   blkPickEl.innerHTML=`<div class="blk-card"><h2>🧱 เลือกตัวละครบล็อกของหนู</h2>
-    <div class="blk-grid"></div>
-    <div class="blk-btns"><button class="blk-x">✖ ยกเลิก</button><button class="blk-go">🚗 ออกรถ!</button></div></div>`;
+    <div class="blk-body">
+      <div class="blk-grid"></div>
+      <div class="blk-btns"><button class="blk-go">🚗 ออกรถ!</button><button class="blk-x">✖ ยกเลิก</button></div>
+    </div></div>`;
   document.body.appendChild(blkPickEl);
   blkPickEl.querySelector('.blk-go').addEventListener('click',()=>{
     state.blockAv=blkPickSel; saveState(); sfx.select();
