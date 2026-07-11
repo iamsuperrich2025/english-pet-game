@@ -2488,18 +2488,18 @@ function buildDom(){
   #adv-steerpad.on,#adv-gaspad.on{opacity:.68}
   .adv-touch.adv-drive #adv-steerpad{display:flex}
   .adv-touch.adv-drive #adv-gaspad{display:flex}
-  #adv-steerpad{left:2.5%;bottom:2.4vh;width:min(42vw,290px);height:64px;border-radius:999px;
+  #adv-steerpad{left:2.5%;bottom:40vh;width:min(42vw,290px);height:64px;border-radius:999px;
     background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
     align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:24px}
   #adv-steerdot{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
     transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
     pointer-events:none}
-  #adv-gaspad{right:20px;bottom:2.4vh;width:94px;height:94px;border-radius:50%;flex-direction:column;
+  #adv-gaspad{right:20px;bottom:40vh;width:94px;height:94px;border-radius:50%;flex-direction:column;
     background:rgba(40,165,88,.55);border:2px solid rgba(255,255,255,.6);
     align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:26px;line-height:1.05}
   #adv-gaspad small{font-size:12.5px;font-weight:700}
-  /* แตรขยับขึ้นพ้นคันเร่ง (เฉพาะโหมดขับรถ) */
-  .adv-touch.adv-drive #adv-horn{bottom:18vh;right:26px;width:58px;height:58px;font-size:24px;opacity:.8}
+  /* รอบ 129: ปุ่มเร่ง/เลี้ยวยกขึ้นระดับกลางจอ (ผู้ใช้ขอ — กดถนัดกว่า) → แตรกลับมุมล่างขวาเดิมได้ */
+  .adv-touch.adv-drive #adv-horn{bottom:26px;right:22px;width:64px;height:64px;font-size:26px;opacity:.8}
   /* 🚔 รอบ 128: ป้ายเตือนขับเร็วผิดกฎหมาย — แดงกะพริบกลางบน */
   #adv-lawwarn{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:none;z-index:7;
     background:rgba(160,20,20,.88);border:2px solid #ff6b5e;border-radius:14px;color:#fff;
