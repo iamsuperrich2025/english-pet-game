@@ -2389,6 +2389,77 @@ function renderBoard(){
   }
   hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html;
 }
+/* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ (แตะ minimap เปิด) — north-up ครอบตัวอักษรทุกตัว+ผู้เล่น
+   โลกขับรถวาดถนน/แม่น้ำจาก driveCell · ตัวอักษรที่ต้องเก็บของคำปัจจุบัน = เหลืองใหญ่ ตัวอื่นเทาเล็ก */
+let bigMapTimer=0;
+function drawBigMap(){
+  const cv=overlayEl && overlayEl.querySelector('#adv-bigmap-cv');
+  if(!cv) return;
+  const w=cv.clientWidth, h=cv.clientHeight;
+  if(!w || !h) return;
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  if(cv.width!==Math.round(w*dpr)){ cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); }
+  const c=cv.getContext('2d');
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.fillStyle='#0a1626'; c.fillRect(0,0,w,h);
+  // ขอบเขต: ตัวอักษรทุกตัว + ผู้เล่น + ขอบ 8%
+  const px=camera.position.x, pz=camera.position.z;
+  let minX=px,maxX=px,minZ=pz,maxZ=pz;
+  letters.forEach(l=>{ const q=l.spr.position;
+    if(q.x<minX)minX=q.x; if(q.x>maxX)maxX=q.x; if(q.z<minZ)minZ=q.z; if(q.z>maxZ)maxZ=q.z; });
+  const pad=Math.max(maxX-minX,maxZ-minZ)*.08+25;
+  minX-=pad; maxX+=pad; minZ-=pad; maxZ+=pad;
+  const sc=Math.min(w/(maxX-minX), h/(maxZ-minZ));
+  const ox=(w-(maxX-minX)*sc)/2, oz=(h-(maxZ-minZ)*sc)/2;
+  const X=x=>ox+(x-minX)*sc, Z=z=>oz+(z-minZ)*sc;
+  // พื้นหลังถนนจริง (เฉพาะโลกขับรถ — sample driveCell ทีละ 4px)
+  if(M.drive){
+    const st=4;
+    for(let sy=0;sy<h;sy+=st){
+      const wz=minZ+(sy-oz)/sc;
+      for(let sx=0;sx<w;sx+=st){
+        const cell=driveCell(minX+(sx-ox)/sc, wz);
+        if(cell===1){ c.fillStyle='rgba(150,170,195,.5)'; c.fillRect(sx,sy,st,st); }
+        else if(cell===2){ c.fillStyle='rgba(45,95,170,.45)'; c.fillRect(sx,sy,st,st); }
+      }
+    }
+  }
+  // ตัวอักษรที่ยังต้องเก็บของคำปัจจุบัน (logic เดียวกับ minimap)
+  const need={};
+  if(words[0]) words[0].en.split('').forEach(ch=>need[ch]=(need[ch]||0)+1);
+  for(const ch in need) need[ch]=Math.max(0,need[ch]-(inv[ch]||0));
+  c.textAlign='center'; c.textBaseline='middle';
+  letters.forEach(l=>{
+    const x=X(l.spr.position.x), y=Z(l.spr.position.z), hot=need[l.ch]>0;
+    c.beginPath(); c.arc(x,y,hot?13:8,0,Math.PI*2);
+    c.fillStyle=hot?'#ffd54f':'rgba(255,255,255,.25)'; c.fill();
+    if(hot){ c.lineWidth=2; c.strokeStyle='#fff'; c.stroke(); }
+    c.fillStyle=hot?'#1c2330':'#dfe7f2';
+    c.font=`bold ${hot?15:10}px system-ui,sans-serif`;
+    c.fillText(l.ch.toUpperCase(),x,y+.5);
+  });
+  // ผู้เล่น: ลูกศรแดงชี้ตามทิศหัวรถ
+  c.save(); c.translate(X(px),Z(pz)); c.rotate(Math.atan2(-Math.cos(yaw),-Math.sin(yaw)));
+  c.beginPath(); c.moveTo(15,0); c.lineTo(-9,9); c.lineTo(-4,0); c.lineTo(-9,-9); c.closePath();
+  c.fillStyle='#ff5252'; c.fill(); c.lineWidth=2.5; c.strokeStyle='#fff'; c.stroke();
+  c.restore();
+  // หัวข้อ: คำที่กำลังตามหา
+  const tt=overlayEl.querySelector('#adv-bigmap-title');
+  if(tt) tt.innerHTML='🗺️ แผนที่ตัวอักษร'+(words[0]?` — ตามหา: <b>${words[0].en.toUpperCase()}</b> (${escapeHTML(words[0].th)})`:'');
+}
+function openBigMap(){
+  const el=overlayEl && overlayEl.querySelector('#adv-bigmap');
+  if(!el) return;
+  el.classList.add('on');
+  drawBigMap();
+  clearInterval(bigMapTimer);
+  bigMapTimer=setInterval(drawBigMap,600);            // อัปเดตสด (ตัวอักษรโดนเก็บ/รถวิ่ง)
+}
+function closeBigMap(){
+  const el=overlayEl && overlayEl.querySelector('#adv-bigmap');
+  if(el) el.classList.remove('on');
+  clearInterval(bigMapTimer); bigMapTimer=0;
+}
 function drawMinimap(){
   const S=mapCv.width, sc=M.drive? S/620 : S/(HALF*2+8);   // 🚗 เมืองจริงใหญ่ → ซูมเรดาร์ออก (~310m)
   mapCtx.clearRect(0,0,S,S);
@@ -2490,7 +2561,7 @@ function buildDom(){
   .adv-fth{color:#ffe082;font-size:clamp(13px,3.4vw,18px);font-weight:700;margin-top:4px;text-shadow:0 1px 3px #000}
   #adv-hearts{display:none;left:10px;top:42px;font-size:24px;letter-spacing:3px;pointer-events:none;
     filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
-  #adv-map{top:8px;right:8px}
+  #adv-map{top:8px;right:8px;pointer-events:auto;cursor:pointer}  /* รอบ 144: แตะ = เปิดแผนที่ขยาย */
   #adv-exit{top:118px;right:8px;pointer-events:auto;background:rgba(211,47,47,.92);color:#fff;border:2px solid #fff;
     border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
   #adv-hunt{top:52px;left:50%;transform:translateX(-50%);color:#ff5252;font-weight:900;font-size:18px;
@@ -2582,13 +2653,14 @@ function buildDom(){
     background:rgba(66,165,245,.9);border:3px solid #fff;font-size:30px;display:none}
   .adv-touch.adv-drive #adv-horn{display:block}
   /* 🎛️ รอบ 127: ปุ่มจางๆ บนคอนโซลโหมดขับรถ (มือถือ) — ซ้าย=บังคับซ้าย-ขวา · ขวา=คันเร่งกดค้าง ปล่อยแล้วรถชลอเอง */
-  #adv-steerpad,#adv-gaspad,#adv-brakepad,#adv-gearbtn{display:none;position:absolute;pointer-events:auto;z-index:6;
+  #adv-steerpad,#adv-gaspad,#adv-brakepad,#adv-gearbtn,#adv-gearrev{display:none;position:absolute;pointer-events:auto;z-index:6;
     -webkit-user-select:none;user-select:none;touch-action:none;opacity:.34;transition:opacity .15s}
   #adv-steerpad.on,#adv-gaspad.on,#adv-brakepad.on{opacity:.68}
   .adv-touch.adv-drive #adv-steerpad{display:flex}
   .adv-touch.adv-drive #adv-gaspad{display:flex}
   .adv-touch.adv-drive #adv-brakepad{display:flex}
   .adv-touch.adv-drive #adv-gearbtn{display:flex}
+  .adv-touch.adv-drive #adv-gearrev{display:flex}
   /* รอบ 143: ยืดแถบพวงมาลัยขึ้นบน+ลงล่างอย่างละ 1 ช่วง (64→192px สูง 3 เท่า จุดกึ่งกลางเดิม) — นิ้วลอยขึ้นลงไม่หลุดปุ่ม */
   #adv-steerpad{left:2.5%;bottom:calc(max(20vh,104px) - 64px);width:min(42vw,290px);height:192px;border-radius:34px;
     background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
@@ -2608,20 +2680,24 @@ function buildDom(){
     background:rgba(198,45,45,.5);border:2px solid rgba(255,255,255,.6);
     align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:23px;line-height:1.05}
   #adv-brakepad small{font-size:12px;font-weight:700}
-  /* ⚙️ รอบ 139: ปุ่มเกียร์ D/R เหนือคันเร่ง — แตะสลับ · R=เหลืองกะพริบ + คันเร่งเปลี่ยนเป็น "ถอย" ส้ม */
-  #adv-gearbtn{right:20px;bottom:calc(max(20vh,104px) + 106px);width:64px;height:52px;border-radius:14px;
-    background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;flex-direction:column;
+  /* ⚙️ รอบ 144 (สเปกผู้ใช้): แยกเกียร์เป็น 2 ปุ่ม — D เหนือปุ่มเบรค · R ตำแหน่งก้านไฟเลี้ยวเดิม (right:224 แถวล่าง)
+     แตะปุ่มไหน = เข้าเกียร์นั้น (radio) · D ติด=เขียว · R ติด=เหลืองกะพริบ + คันเร่งเปลี่ยนเป็น "ถอย" ส้ม */
+  #adv-gearbtn,#adv-gearrev{box-sizing:border-box;flex-direction:column;border-radius:14px;
+    background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
     align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:19px;line-height:1}
-  #adv-gearbtn small{font-size:10.5px;font-weight:700;margin-top:2px}
-  #adv-gearbtn.rev{opacity:1;background:rgba(120,70,0,.72);border-color:#ffb300;color:#ffd54f;
+  #adv-gearbtn{right:124px;bottom:calc(max(20vh,104px) + 96px);width:84px;height:52px}
+  #adv-gearrev{right:224px;bottom:max(20vh,104px);width:64px;height:84px}
+  #adv-gearbtn small,#adv-gearrev small{font-size:10.5px;font-weight:700;margin-top:2px}
+  #adv-gearbtn.on{opacity:1;background:rgba(20,90,45,.75);border-color:#7dffb0;color:#c4ffd9}
+  #adv-gearrev.on{opacity:1;background:rgba(120,70,0,.75);border-color:#ffb300;color:#ffd54f;
     animation:tlBlink .8s steps(1) infinite}
   #adv-gaspad.rev{background:rgba(230,126,20,.6)}
   /* รอบ 129→135: ปุ่มเร่ง/เลี้ยวลดลงมาระดับล่าง (20vh — ผู้ใช้ลองจริงแล้ว 40vh สูงไป) · แตรมุมล่างขวาเดิม */
   .adv-touch.adv-drive #adv-horn{bottom:26px;right:22px;width:64px;height:64px;font-size:26px;opacity:.8}
   /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้งฝั่งขวา (แทนปุ่ม ⬅️➡️ รอบ 132) — ดันขึ้น=ไฟซ้าย ดันลง=ไฟขวา
      knob ค้างตำแหน่งจนรถเลี้ยวเสร็จแล้วเด้งกลับเองเหมือนก้านไฟรถจริง (tlTick หน่วง ~0.9 วิ) */
-  #adv-tlpad{display:none;position:absolute;pointer-events:auto;z-index:6;right:224px;bottom:max(20vh,104px);  /* รอบ 139: ขยับซ้ายหลบปุ่มเบรคใหม่ (เดิม 132px) */
-    width:60px;height:150px;border-radius:999px;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
+  #adv-tlpad{display:none;position:absolute;pointer-events:auto;z-index:6;right:20px;bottom:calc(max(20vh,104px) + 100px);  /* รอบ 144: ย้ายไปเหนือคันเร่ง (สเปกผู้ใช้) · เตี้ยลง 150→110 กันชนแถวปุ่มบนจอเตี้ย */
+    width:60px;height:110px;border-radius:999px;background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);
     box-sizing:border-box;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;
     font-size:17px;line-height:1;opacity:.34;transition:opacity .15s;
     -webkit-user-select:none;user-select:none;touch-action:none}
@@ -2633,13 +2709,34 @@ function buildDom(){
     pointer-events:none;transition:top .18s}
   #adv-tlpad.sig #adv-tldot{background:rgba(255,179,0,.95)}
   @keyframes tlBlink{0%,49%{filter:brightness(1.5)}50%,100%{filter:brightness(.55);opacity:.5}}
-  /* 🚦 รอบ 135: โหมดขับรถ — ไอคอนแชท/เสียงย้ายขึ้นแถวบนขวา (เดิม top 160-400 ทับโซนปุ่มเร่ง/ก้านไฟเลี้ยว) */
-  .adv-drive #adv-chat-btn{top:8px;right:140px}
-  .adv-drive #adv-mic{top:8px;right:238px}
-  .adv-drive #adv-spk{top:8px;right:336px}
-  .adv-drive #adv-vmode{top:8px;right:434px}
-  .adv-drive #adv-tmute{top:46px;right:140px}
-  .adv-drive #adv-podbtn{top:46px;right:238px}
+  /* 🗺️ รอบ 144 (สเปกผู้ใช้จาก screenshot จริง): minimap ไปบนซ้ายสุด · กระดานคะแนนขยับขวาต่อจาก map ·
+     ปุ่มออกแทนที่ปุ่มแชทเดิม (top:8 right:140) · ปุ่มบนขวาจัดกริด 2 คอลัมน์แถวละ 50px เป็นระเบียบ · ? ไปมุมขวาสุด */
+  .adv-drive #adv-map{left:8px;right:auto}
+  .adv-drive #adv-board{left:136px;max-width:120px}
+  .adv-drive #adv-topbar{left:276px;transform:none}  /* ตรึงลงช่องว่างระหว่างกระดาน (จบ 268) กับปุ่มแชท (เริ่ม ~489) */
+  .adv-drive .adv-hp{width:96px}
+  .adv-drive #adv-exit{top:8px;right:140px}
+  .adv-drive #adv-help{top:8px;right:8px}
+  .adv-drive #adv-chat-btn{top:8px;right:244px}
+  .adv-drive #adv-mic{top:58px;right:140px}
+  .adv-drive #adv-spk{top:58px;right:244px}
+  .adv-drive #adv-vmode{top:108px;right:244px}   /* คอลัมน์นอก (right:140) แถว 3 ชนปุ่มเกียร์ D เหนือเบรค — เลี่ยงเข้าคอลัมน์ใน */
+  .adv-drive #adv-tmute{top:108px;right:348px}
+  .adv-drive #adv-podbtn{top:158px;right:348px}
+  /* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ — แตะ minimap เปิด · โชว์ตำแหน่งตัวอักษรชัดเจน + ปุ่มปิดใหญ่ */
+  #adv-bigmap{position:absolute;inset:10px;z-index:60;display:none;flex-direction:column;pointer-events:auto;
+    background:rgba(6,12,24,.96);border:2px solid #4fc3f7;border-radius:16px;
+    box-shadow:0 0 34px rgba(0,0,0,.65);overflow:hidden}
+  #adv-bigmap.on{display:flex}
+  #adv-bigmap-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 12px;flex:0 0 auto}
+  #adv-bigmap-title{color:#8fd6ff;font-weight:800;font-size:clamp(14px,2.6vw,17px);text-shadow:0 1px 3px #000;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #adv-bigmap-title b{color:#ffd54f}
+  #adv-bigmap-x{background:#e53935;color:#fff;border:2px solid #fff;border-radius:12px;font-family:inherit;
+    font-weight:800;font-size:15px;padding:8px 18px;cursor:pointer;flex:0 0 auto}
+  #adv-bigmap-x:active{background:#b71c1c}
+  #adv-bigmap-cv{flex:1;width:100%;min-height:0}
   /* 🚔 รอบ 128: ป้ายเตือนขับเร็วผิดกฎหมาย — แดงกะพริบกลางบน */
   #adv-lawwarn{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:none;z-index:7;
     background:rgba(160,20,20,.88);border:2px solid #ff6b5e;border-radius:14px;color:#fff;
@@ -2884,6 +2981,14 @@ function buildDom(){
     <div id="adv-gaspad">▲<small>เร่ง</small></div>
     <div id="adv-brakepad">■<small>เบรค</small></div>
     <div id="adv-gearbtn">D<small>เดินหน้า</small></div>
+    <div id="adv-gearrev">R<small>ถอยหลัง</small></div>
+    <div id="adv-bigmap">
+      <div id="adv-bigmap-head">
+        <span id="adv-bigmap-title">🗺️ แผนที่ตัวอักษร</span>
+        <button id="adv-bigmap-x">✖ ปิดแผนที่</button>
+      </div>
+      <canvas id="adv-bigmap-cv"></canvas>
+    </div>
     <div id="adv-tlpad"><span>⬅️</span><i id="adv-tldot"></i><span>➡️</span></div>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
@@ -3021,17 +3126,31 @@ function buildDom(){
     for(const t of e.changedTouches) if(t.identifier===brakeTid){ brakeTid=null; padBr=false; brakePad.classList.remove('on'); }
   }));
 
-  /* ⚙️ รอบ 139: เกียร์ D/R — แตะสลับ · R แล้วคันเร่งกลายเป็นถอยหลัง (ปุ่มเร่งเปลี่ยนป้ายเป็น "ถอย" ส้ม) */
+  /* ⚙️ รอบ 144: เกียร์ 2 ปุ่มแยก D/R (radio — แตะปุ่มไหนเข้าเกียร์นั้น) · R แล้วคันเร่งกลายเป็นถอยหลัง ป้ายส้ม */
   const gearBtn=overlayEl.querySelector('#adv-gearbtn');
+  const gearRev=overlayEl.querySelector('#adv-gearrev');
   gearSyncFn=()=>{
-    gearBtn.classList.toggle('rev',gearR);
-    gearBtn.innerHTML=gearR?'R<small>ถอยหลัง</small>':'D<small>เดินหน้า</small>';
+    gearBtn.classList.toggle('on',!gearR);
+    gearRev.classList.toggle('on',gearR);
     gasPad.classList.toggle('rev',gearR);
     gasPad.innerHTML=gearR?'▼<small>ถอย</small>':'▲<small>เร่ง</small>';
   };
-  const gearToggle=()=>{ gearR=!gearR; gearSyncFn(); sfx.select&&sfx.select(); };
-  gearBtn.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); gearToggle(); },{passive:false});
-  gearBtn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); gearToggle(); });
+  const gearSet=v=>{ if(gearR===v) return; gearR=v; gearSyncFn(); sfx.select&&sfx.select(); };
+  gearBtn.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); gearSet(false); },{passive:false});
+  gearBtn.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); gearSet(false); });
+  gearRev.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); gearSet(true); },{passive:false});
+  gearRev.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); gearSet(true); });
+  gearSyncFn();                                        // เริ่มต้นไฮไลต์ D
+
+  /* 🗺️ รอบ 144: แตะ minimap = เปิดแผนที่ขยาย · ปุ่มแดงปิด · กันนิ้วทะลุไปโดนจอย/กล้อง */
+  mapCv.addEventListener('click',e=>{ e.preventDefault(); openBigMap(); });
+  mapCv.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); openBigMap(); },{passive:false});
+  const bigMapEl=overlayEl.querySelector('#adv-bigmap');
+  bigMapEl.addEventListener('touchstart',e=>e.stopPropagation(),{passive:true});
+  bigMapEl.addEventListener('touchmove',e=>e.stopPropagation(),{passive:true});
+  const bigX=overlayEl.querySelector('#adv-bigmap-x');
+  bigX.addEventListener('click',e=>{ e.preventDefault(); closeBigMap(); });
+  bigX.addEventListener('touchstart',e=>{ e.preventDefault(); e.stopPropagation(); closeBigMap(); },{passive:false});
 
   /* 🚦 รอบ 135: ก้านไฟเลี้ยวแนวตั้ง — ลากขึ้นเกินครึ่ง=ไฟซ้าย ลากลง=ไฟขวา ปล่อยกลาง=ปิด
      knob ค้างตามสถานะไฟ (tlSet ขยับให้) แล้วเด้งกลับเองเมื่อ tlTick ดับไฟหลังเลี้ยวเสร็จ
@@ -3177,7 +3296,7 @@ function bindInput(){
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap */
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -4772,6 +4891,7 @@ function start(md){
 function exitWorld(){
   running=false;
   cancelAnimationFrame(rafId);
+  closeBigMap();                                   // 🗺️ รอบ 144: ปิดแผนที่ขยาย + หยุด interval วาด
   if(document.pointerLockElement) document.exitPointerLock();
   // 🚔 รอบ 128: หักค่าปรับใบสั่งที่ค้าง + แจ้งสรุป แล้วซ่อนแผงโหมดขับรถ
   if(M && M.drive) driveFineSettle();
