@@ -10,6 +10,19 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### 🔜 งานถัดไปที่จองไว้: รอบ 133 (ผู้ใช้สั่ง 11 ก.ค. — ยังไม่ได้เริ่ม เพราะแทรกด้วยเหตุ GitHub ล่ม)
+1. **เจตนาชนรถผู้เล่นอื่นครบ 3 ครั้ง/รอบ = ค่าซ่อมรถ 🪙10,000** (คนถูกชนไม่เสีย — ฝั่งที่วิ่งเข้าใส่เท่านั้นที่โดน · แนวคิด: ประกันไม่คุ้มครองการเจตนาชน + เตือนตอนครั้งที่ 2) — เกณฑ์ "เจตนา" ปัจจุบันมีอยู่แล้ว (hitSpd>2 = เราเป็นฝ่ายวิ่ง) เสริมเช็กทิศพุ่งเข้าหา peer ได้
+2. **ไฟจราจรจริงที่ทางแยก + ฝ่าไฟแดงโดนปรับ** — วางเสาไฟที่แยกใหญ่ (ใช้ driveArms>=3 หาแยก · เฟสไฟคำนวณจาก Date.now ทุกเครื่องเห็นตรงกันไม่ต้อง sync) · ฝ่าไฟแดง = ใบสั่ง ม.22 (ตัวเลขค่าปรับในเกมยังไม่เคาะ — เสนอ 🪙300) · หมายเหตุ: เริ่มไว้แล้วแค่สำรวจ (grep buildDriveCity) ยังไม่ได้เขียนโค้ด
+
+### ✅ รอบ 134 (11 ก.ค.) — เปลี่ยนชื่อ "Vocab World" 🌍 + ย้ายขึ้น Firebase Hosting (version .124)
+- **เหตุ:** บัญชี GitHub `iamsuperrich2025` โดน flag อัตโนมัติ → โปรไฟล์/repo/Pages เป็น 404 สาธารณะทั้งหมด (git ด้วย credential ยังใช้ได้ — ตรวจครบ: githubstatus ปกติ · user API 404 · ls-remote ผ่าน) · ผู้ใช้ต้องยื่นอุทธรณ์เอง (support.github.com)
+- **ชื่อใหม่:** ผู้ใช้เลือก "Vocab World" (เกมโตเกินชื่อเลี้ยงสัตว์ — หลายโลก 3D/วางแผนการเงิน/ค้าขาย) · เปลี่ยน title/manifest/apple-title/หน้า login+ลงทะเบียน/rotate overlay/การ์ดครู/วิธีเล่น · **STORAGE_KEY `petVocabAdventure_v1` คงเดิม** เซฟผู้เล่นไม่กระทบ · sw.js คอมเมนต์ไม่แตะ (กันบังคับอัปเดต SW เปล่าๆ)
+- **Hosting:** Firebase Hosting site ใหม่ `vocabworld` ในโปรเจกต์เดิม → **https://vocabworld.web.app** · เครื่องมือ: Node พกพา `C:\Users\rober\bin\node` (zip ทางการ ไม่ติดตั้งลงระบบ) + `npm i -g firebase-tools` (15.23.0) — ตัว standalone firepit ใช้ไม่ได้ (welcome crash ซ้ำ) · ผู้ใช้ login CLI ผ่านหน้าต่าง cmd ที่เปิดให้ (บัญชี freddommun@gmail.com — token ค้างในเครื่อง ครั้งหน้า deploy ได้เลย)
+- **`tools/deploy_firebase.sh`:** staging จาก `git archive HEAD` (WIP/untracked ของ session คู่ขนานไม่หลุดขึ้นเว็บ) + ตัด handoff/tools/*.md + headers no-cache ให้ version.json/sw.js → `firebase deploy --only hosting:vocabworld`
+- ✅ **ยืนยัน live:** 697 ไฟล์ · version .124 · title ใหม่ · หน้า login h1 "🌍 Vocab World" + ปุ่ม Google โชว์ · img/cars 200 · /handoff 404 (ตัดสำเร็จ)
+- ⚠️ **ค้างผู้ใช้:** เพิ่ม `vocabworld.web.app` ใน **Auth → Settings → Authorized domains** (ตรวจผ่าน getProjectConfig แล้วว่ายังไม่มี — ไม่เพิ่ม = login เด้ง unauthorized-domain) · commit นี้รวมภาพรถชุด 2 (car_03..09 — เหลือ car_10)
+- 💡 บทเรียน: commit `index.html` ต้องคัด hunk (session คู่ขนาน New Word ค้างอยู่) — ใช้ python กรอง patch แล้ว `git apply --cached` · Firebase Hosting ฟรี 360MB/วัน — ใช้ทั้งห้องเรียนวันแรกอาจชน ค่อยอัปเกรด Blaze/ย้าย Cloudflare
+
 ### ⏳ ค้างฝั่งผู้ใช้ (หลังรอบ 132)
 1. **publish rules field `tl`** — Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/59c3da79-b3cc-4053-b5f3-5283b4729b7a (ก้อนเต็มใน RULES.md) · ยังไม่ publish = เกมปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวกัน (client fallback ตัด tl เอง)
 2. เจนภาพรถที่เหลือ 8 ไฟล์ (car_03..10 — car_01/02 เข้า git แล้ว) วาง `img/cars/` แล้วบอก Claude commit
