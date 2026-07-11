@@ -28,8 +28,9 @@ cat > "$STAGE/firebase.json" <<'EOF'
     "public": "public",
     "ignore": ["firebase.json"],
     "headers": [
-      { "source": "/version.json", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
-      { "source": "/sw.js",        "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] }
+      { "source": "**/*.@(js|css|html|json)", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
+      { "source": "/", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
+      { "source": "**/*.@(png|jpg|jpeg|webp|glb|mp3|ico)", "headers": [ { "key": "Cache-Control", "value": "public, max-age=604800" } ] }
     ]
   }
 }
