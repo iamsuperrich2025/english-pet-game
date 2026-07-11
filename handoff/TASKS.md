@@ -10,7 +10,11 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-### ✅ รอบ 136 (12 ก.ค.) — login จบในโดเมนเดียว: authDomain → vocabworld.web.app 🔐 (version .127)
+### ✅ รอบ 136–138 (12 ก.ค.) — มหากาพย์ authDomain: จบที่ login โดเมนเดียว vocabworld.web.app 🔐 (version .127→.129)
+- **ลำดับเหตุการณ์ (บทเรียนสำคัญ):** (136/.127) เปลี่ยน authDomain เป็น vocabworld.web.app → มือถือผู้ใช้เจอ **`redirect_uri_mismatch`** เพราะโดเมนใหม่**ยังไม่ถูกเพิ่มใน OAuth client** (Firebase Hosting เสิร์ฟ /__/auth/* ให้ก็จริง แต่ Google ต้องรู้จัก redirect URI ด้วย!) → (137/.128) **rollback ทันที**กลับ firebaseapp.com ให้ login ใช้ได้ → ผู้ใช้เพิ่มใน Google Cloud Console → Clients: **JS origins `https://vocabworld.web.app` + Redirect URI `https://vocabworld.web.app/__/auth/handler`** → (138/.129) สลับกลับ + **ทดสอบกดปุ่ม login จริงผ่าน Browser ผ่าน 2 รอบ** ("to continue to vocabworld.web.app")
+- ⚠️ ค่า OAuth ที่แก้ใหม่ **กระจายไม่พร้อมกัน 5 นาที–ชม.** — desktop ผ่านแต่มือถือ (LTE) ยังเจอ mismatch ชั่วคราว = ปกติ รอ/ลองซ้ำ
+- **แถม:** ผู้ใช้ตั้ง OAuth Branding App name = "Vocab World" (หน้า Google โชว์ชื่อสวย) + fix hosting headers: **โค้ดเกม no-cache / asset หนัก cache 7 วัน** (ต้นตอมือถือเห็นของเก่า: default max-age 3600) — อัปเดตต่อไปนี้ถึงเครื่องผู้เล่นทันทีที่เปิดใหม่
+- ⏳ **ค้าง: ผู้ใช้ยืนยัน login มือถือผ่าน** (ฝั่ง Claude ผ่านเสถียรแล้ว)
 - **ผู้ใช้สังเกต:** กด login จาก vocabworld.web.app แล้วเด้งไป english-pet-game.firebaseapp.com — เป็นพฤติกรรมปกติ (authDomain เดิม) แต่ปรับให้ดีกว่า: **Firebase Hosting เสิร์ฟ `/__/auth/*` ให้ทุก site ในโปรเจกต์อยู่แล้ว** (ตรวจ curl 200) → เปลี่ยน `FIREBASE_CONFIG.authDomain` เป็น `vocabworld.web.app` (firebase-config.js บรรทัดเดียว)
 - ผล: login ไม่กระโดดข้ามโดเมน + กันปัญหา third-party cookies/storage partitioning บนมือถือ (จุดตายคลาสสิกของ signInWithRedirect ข้ามโดเมน) · โดเมนต้องอยู่ใน Authorized domains (มีแล้วจากรอบ 134)
 - ⚠️ ถ้า GitHub Pages ฟื้นในอนาคต: client จาก github.io จะใช้หน้า auth ของ vocabworld.web.app (ข้ามโดเมนเหมือนที่เคยข้ามไป firebaseapp.com) — ใช้ได้ปกติ ไม่ต้องแก้อะไร
