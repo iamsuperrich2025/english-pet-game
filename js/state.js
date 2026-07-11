@@ -92,6 +92,7 @@ const DEFAULT_STATE = {
   dataCut:false,                      // ถูกตัดบริการข้อมูล (ค้างข้ามเดือน) — รายได้คอมหยุดนิ่ง
   onlineSince:null,                   // item 8: timestamp เริ่มนับรายได้ออนไลน์ช่วงปัจจุบัน (รีเซ็ต null ทุกครั้งที่โหลดเกม — นับเฉพาะเวลาเปิดเกมจริง)
   onlineEarned:0,                     // item 8: เหรียญโบนัสออนไลน์สะสมทั้งหมด (ไว้โชว์ตัวเลขวิ่ง+สถิติ)
+  quests:null,                        // item 3: ภารกิจรายวัน {date, prog:{id:n}, done:[id], allDone} — questTick สร้างให้เอง
   collection:[],                      // สินค้าที่ถือครอง (array of id — มีชิ้นซ้ำได้)
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
@@ -282,6 +283,8 @@ function loadState(){
       // รายได้ออนไลน์ (item 8): นับเฉพาะเวลาที่เปิดเกมออนไลน์อยู่จริง — เริ่มนับใหม่ทุกการเปิดเกม
       if(typeof s.onlineEarned !== 'number') s.onlineEarned = 0;
       s.onlineSince = null;
+      // Daily Quest (item 3): เซฟเก่า/ข้อมูลเสีย → เริ่มว่าง questTick สร้างชุดวันนี้เอง
+      if(!s.quests || typeof s.quests !== 'object' || !Array.isArray(s.quests.done)) s.quests = null;
       // สวนผลไม้ (ข้อ 12): เซฟเก่าไม่มีสวน → เริ่มว่าง / คัดต้นที่ข้อมูลเสียทิ้ง
       if(!Array.isArray(s.farm)) s.farm = [];
       s.farm = s.farm.filter(t=>t && fruitInfo(t.id) && typeof t.plantedAt === 'number');
@@ -353,6 +356,59 @@ function addCoins(n){        // ใช้ตอน "ได้" เหรีย�
   }
   // การเลื่อน/ลดแรงค์ตรวจรวมที่ refreshRank() (เรียกใน careTick) เพราะ net worth
   // เปลี่ยนได้จากหลายทาง (ได้เหรียญ/ซื้อ-ขายทรัพย์สิน/จ่ายบิล) — ตรวจที่จุดนิ่งจุดเดียวกันเที่ยงตรงกว่า
+}
+
+/* ============================================================
+   Daily Quest (item 3 backlog): ภารกิจรายวัน 3 อย่าง สุ่มตามวันที่
+   ทุกคนได้ชุดเดียวกันทั้งเซิร์ฟเวอร์ (seed จากวันที่ — ครูจัดกิจกรรมในห้องได้)
+   ทำครบเป้า → รางวัลเข้ากระเป๋าทันที · เคลียร์ครบ 3 → โบนัสพิเศษเพิ่มอีก
+   ============================================================ */
+const QUEST_POOL = [
+  {id:'match20',  ev:'match',   target:20, reward:100, emoji:'🃏', name:'จับคู่คำศัพท์ถูก 20 คำ'},
+  {id:'quiz1',    ev:'quiz',    target:1,  reward:150, emoji:'📝', name:'สอบผ่าน 1 หมวด (ถูก 8 ข้อขึ้นไป)'},
+  {id:'word3d3',  ev:'word3d',  target:3,  reward:150, emoji:'🌍', name:'ประกอบคำในโลก 3D 3 คำ'},
+  {id:'feed1',    ev:'feed',    target:1,  reward:80,  emoji:'🍽️', name:'ป้อนอาหารน้องจนอิ่มเต็มหลอด 1 มื้อ'},
+  {id:'produce1', ev:'produce', target:1,  reward:120, emoji:'🏭', name:'ผลิตสินค้าในโรงงานสำเร็จ 1 ชิ้น'},
+  {id:'replay2',  ev:'replay',  target:2,  reward:80,  emoji:'🔁', name:'กด "เล่นต่ออีกรอบ" 2 ครั้ง'},
+];
+const QUEST_PER_DAY = 3, QUEST_ALL_BONUS = 150;
+function questsToday(){               // เลือก 3 ภารกิจของวันนี้ (deterministic จากวันที่)
+  let seed = 0; const d = todayStr();
+  for(let i = 0; i < d.length; i++) seed = (seed*31 + d.charCodeAt(i)) >>> 0;
+  const rnd = seededRand(seed), pool = QUEST_POOL.slice();
+  for(let i = pool.length-1; i > 0; i--){ const j = Math.floor(rnd()*(i+1)); [pool[i],pool[j]] = [pool[j],pool[i]]; }
+  return pool.slice(0, QUEST_PER_DAY);
+}
+function questTick(){                 // ขึ้นวันใหม่ → ล้างความคืบหน้า เริ่มชุดใหม่
+  if(!state.quests || state.quests.date !== todayStr())
+    state.quests = {date: todayStr(), prog:{}, done:[], allDone:false};
+}
+function questEvent(ev, n){           // จุดรับแต้มกลาง — เกมส่วนไหนเกิดเหตุการณ์ก็ยิงมาที่นี่
+  if(!state.student) return;
+  questTick();
+  n = n || 1;
+  let changed = false;
+  for(const q of questsToday()){
+    if(q.ev !== ev || state.quests.done.includes(q.id)) continue;
+    state.quests.prog[q.id] = (state.quests.prog[q.id]||0) + n;
+    changed = true;
+    if(state.quests.prog[q.id] >= q.target){
+      state.quests.done.push(q.id);
+      addCoins(q.reward);
+      if(typeof sfx !== 'undefined') sfx.levelup();
+      if(typeof toast === 'function') toast(`🎯 ภารกิจสำเร็จ! ${q.emoji} ${q.name} — รับ +${q.reward} 🪙`);
+      if(!state.quests.allDone && state.quests.done.length >= QUEST_PER_DAY){
+        state.quests.allDone = true;
+        addCoins(QUEST_ALL_BONUS);
+        if(typeof toast === 'function')
+          setTimeout(()=>toast(`🏆 สุดยอด! เคลียร์ภารกิจครบทั้ง ${QUEST_PER_DAY} วันนี้ — โบนัสพิเศษ +${QUEST_ALL_BONUS} 🪙`), 1400);
+      }
+    }
+  }
+  if(changed){
+    saveState();
+    if(typeof renderQuestCard === 'function') renderQuestCard();
+  }
 }
 
 /* ============================================================
@@ -605,6 +661,7 @@ function addCraft(n){
   state.collection.push(c.id);       // ผลิตสำเร็จ! (แต้มเกินไม่ทบไปชิ้นถัดไป — เริ่มงานใหม่นับใหม่)
   state.producedCount++;
   state.producing = null;
+  questEvent('produce');             // 🎯 Daily Quest: ผลิตสินค้าสำเร็จ
   return c.id;
 }
 

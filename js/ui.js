@@ -287,6 +287,33 @@ function selfPronoun(){
 }
 function selfTag(){ return selfPronoun() + 'เอง'; }   // "หนูเอง" / "คุณเอง"
 
+/* ============================================================
+   Daily Quest (item 3): การ์ดภารกิจวันนี้ใน aside ขวา
+   ทุกคนได้ชุดเดียวกัน (seed จากวันที่) · questEvent ใน state.js เรียก re-render ให้เอง
+   ============================================================ */
+function renderQuestCard(){
+  const el = document.getElementById('quest-card');
+  if(!el || typeof state === 'undefined' || !state.student) return;
+  questTick();
+  const rows = questsToday().map(q=>{
+    const done = state.quests.done.includes(q.id);
+    const prog = Math.min(q.target, state.quests.prog[q.id]||0);
+    const pct = done ? 100 : Math.round(prog/q.target*100);
+    return `<div class="q-row ${done ? 'done' : ''}">
+      <span class="q-emoji">${q.emoji}</span>
+      <div class="q-mid">
+        <div class="q-name">${q.name}</div>
+        <div class="q-bar"><i style="width:${pct}%"></i></div>
+      </div>
+      <span class="q-right">${done ? '✅' : `<b>${prog}/${q.target}</b>`}<small>+${q.reward}🪙</small></span>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<h3 class="shop-title">🎯 ภารกิจวันนี้</h3>${rows}
+    <div class="q-foot ${state.quests.allDone ? 'done' : ''}">${state.quests.allDone
+      ? `🏆 เคลียร์ครบทั้ง ${QUEST_PER_DAY} ภารกิจ รับโบนัสแล้ว +${QUEST_ALL_BONUS} 🪙 — พรุ่งนี้มีชุดใหม่นะ!`
+      : `ทำครบทั้ง ${QUEST_PER_DAY} ภารกิจวันนี้ รับโบนัสเพิ่ม <b>+${QUEST_ALL_BONUS} 🪙</b>`}</div>`;
+}
+
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
@@ -1153,6 +1180,7 @@ function renderDashboard(){
   renderRankCard();
   if(typeof checkCrown === 'function') checkCrown();          // 👑 เข็มลับ (ครอบผู้เล่นเดิมที่ครบ 4 สายอยู่แล้ว)
   if(typeof rolloverBadgeWeek === 'function') rolloverBadgeWeek();   // 📈 สแนปแต้มเข็มต้นสัปดาห์
+  renderQuestCard();      // 🎯 Daily Quest (item 3)
   renderOnlineCard();
   renderLeaderboardCard();
   renderFriendPanel();
@@ -1604,6 +1632,7 @@ function feedWith(p, food){
   }
   /* ข้อ 5.2: กินจนเต็มหลอด = จบมื้อ → นับมื้อสะอาด/มื้อโทษ อัปเดตรูปร่าง */
   const shapeChange = p.fullness >= MEAL_FULL ? shapeMealDone(p, now) : null;
+  if(p.fullness >= MEAL_FULL) questEvent('feed');   // 🎯 Daily Quest: ป้อนน้องจนอิ่มเต็มหลอด
   sfx.buy();
   if(food.exp) addExp(food.exp, p);   // เมนูโปรด: ได้ EXP แถม (อาจเลเวลอัพได้เลย)
   saveState();

@@ -108,6 +108,7 @@ function exitGame(){
     const streak = (game.replayStreak || 0) + 1;
     game.replayStreak = streak;
     addDiligent();                                     // 🏅 นับรอบเล่นต่อสะสมถาวร → เข็มนักเล่นขยัน (20/50/100)
+    questEvent('replay');                              // 🎯 Daily Quest: เล่นต่ออีกรอบ
     startGame(game.lastCat);
     const bonus = (streak % REPLAY_BONUS_EVERY === 0) ? replayBonusFor(streak) : 0;
     if(bonus > 0){                                     // เล่นต่อครบทุก 3 รอบติด → โบนัสไล่ระดับ (ยิ่งยาวยิ่งเยอะ)
@@ -583,6 +584,7 @@ function checkMatch(){
     game.matched++;
     game.sessionMatches++;
     state.totalMatches++;
+    questEvent('match');                              // 🎯 Daily Quest: จับคู่ถูก
 
     // ---- คำนวณรางวัล + ความสามารถพิเศษ ----
     const p = activePet();
@@ -775,6 +777,7 @@ function finishQuiz(){
     rp    = firstPass ? 100 : 30;
     if(firstPass) state.quizPassed.push(cat.id);
     addCoins(coins);
+    questEvent('quiz');                               // 🎯 Daily Quest: สอบผ่าน
   }
   addRP(rp);
   // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)

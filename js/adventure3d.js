@@ -1302,6 +1302,7 @@ function completeWord(i){
   doneList().push(w.en);
   addCoins(M.reward);
   sessionCoins+=M.reward; sessionWords++;
+  questEvent('word3d');                     // 🎯 Daily Quest: ประกอบคำในโลก 3D
   if(!sessionWordLog.some(x=>x.en===w.en)) sessionWordLog.push({en:w.en,th:w.th});   // 📖 เก็บเข้าสมุดคำศัพท์รอบนี้ (ไม่ซ้ำ)
   sfx.levelup();
   setTimeout(()=>speakWord(w.en), 700);     // 🔊 อ่านคำที่ผสมสำเร็จ (รอแตรฉลองจบก่อน)
