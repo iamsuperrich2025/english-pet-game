@@ -68,8 +68,8 @@ const MODES = {
     label:'โลกขับรถกำแพงเพชร', emoji:'🚗', reward:40, doneKey:'driveDone',
     shoot:false, ghost:false, drive:true,
     sky:0xaee0f7, fogN:120, fogF:650, ground:0x9cb968,
-    intro:'🚗 <b>ขับรถเที่ยวเมืองกำแพงเพชร!</b><br><small>ถนนจริงทั้งเมืองจากแผนที่จริง — เริ่มที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b><br>ขับชนตัวอักษรบนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง · ระวังชนตึก!</small>',
-    hint:'W/S คันเร่ง-เบรก/ถอย · A/D เลี้ยวซ้าย-ขวา · H บีบแตร · ขับชนตัวอักษรเก็บได้เลย',
+    intro:'🚗 <b>ขับรถเที่ยวเมืองกำแพงเพชร!</b><br><small>ถนนจริงทั้งเมืองจากแผนที่จริง — เริ่มที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b><br>ขับชนตัวอักษรบนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง · ระวังชนตึก!<br>🚔 <b>ขับเกิน 90 กม./ชม. = โดนใบสั่ง หักเหรียญจริง!</b></small>',
+    hint:'W/S คันเร่ง-เบรก/ถอย · A/D เลี้ยวซ้าย-ขวา · H บีบแตร · เกิน 90 กม./ชม. โดนใบสั่ง!',
     koTitle:'🚗💥 รถพังแล้ว!',
   },
 };
@@ -101,9 +101,12 @@ const DRONE_GRAV  = 2.6;          // แรงโน้มถ่วงเบา�
 /* 🚗 โหมดขับรถเมืองกำแพงเพชร (โหมด drive) — เมืองจริงจาก OSM (js/data/city_kpp.js)
    จุด (0,0) = หอนาฬิกาวงเวียนต้นโพธิ์ · หน่วยเมตร · เหนือ = -z */
 const CAR_EYE    = 1.32;          // ความสูงตาคนขับ
-const CAR_ACCEL  = 8.5;           // m/s²
+const CAR_ACCEL  = 11;            // m/s² (รอบ 128: เพิ่มให้ไต่ถึงท็อปสปีดใหม่ไหว)
 const CAR_BRAKE  = 15;
-const CAR_VMAX   = 25;            // ~90 กม./ชม. บนถนน
+const CAR_VMAX   = 55.6;          // ~200 กม./ชม. บนถนน (รอบ 128 · เกิน 90 = ผิดกฎหมาย โดนใบสั่ง)
+const CAR_LEGAL_KMH = 90;         // ลิมิตตามกฎหมายในเกม — เกินแล้วโดนใบสั่ง ม.67
+const CAR_FINE_SPEED = 200;       // 🪙 ค่าปรับขับเร็ว/ครั้ง (หักตอนออกจากโลก · สูงสุด 5 ครั้ง/รอบ)
+const CAR_FINE_BELT  = 300;       // 🪙 ค่าปรับไม่คาดเข็มขัด (หักทันที ครั้งเดียว/รอบ)
 const CAR_VMAX_OFF = 7;           // ออกนอกถนน (ดิน/หญ้า) ช้าลงมาก
 const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
@@ -111,6 +114,9 @@ const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุ�
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
+/* 🚔 รอบ 128: สตาร์ทเครื่อง/เข็มขัด + ระบบใบสั่งจราจร */
+let carEngineOn=false, carBelted=false, carStartOpen=false;   // สวิตช์ + แผงเตรียมออกรถยังเปิดอยู่
+let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // ใบสั่งสะสม/สถานะเตือน
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
@@ -2494,6 +2500,49 @@ function buildDom(){
   #adv-gaspad small{font-size:12.5px;font-weight:700}
   /* แตรขยับขึ้นพ้นคันเร่ง (เฉพาะโหมดขับรถ) */
   .adv-touch.adv-drive #adv-horn{bottom:18vh;right:26px;width:58px;height:58px;font-size:24px;opacity:.8}
+  /* 🚔 รอบ 128: ป้ายเตือนขับเร็วผิดกฎหมาย — แดงกะพริบกลางบน */
+  #adv-lawwarn{position:absolute;top:120px;left:50%;transform:translateX(-50%);display:none;z-index:7;
+    background:rgba(160,20,20,.88);border:2px solid #ff6b5e;border-radius:14px;color:#fff;
+    font-size:clamp(12px,2.6vw,15px);line-height:1.45;text-align:center;padding:8px 18px;max-width:92vw;
+    box-shadow:0 0 18px rgba(255,60,40,.65);animation:lawBlink 1s ease-in-out infinite;pointer-events:none}
+  @keyframes lawBlink{0%,100%{opacity:1}50%{opacity:.55}}
+  /* 🚔 แผงเตรียมออกรถ — สวิตช์สไตล์เดียวกับหน้า setting (reuse .set-switch จาก style.css) */
+  #adv-carstart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:8;
+    width:min(420px,92vw);box-sizing:border-box;background:rgba(10,22,42,.93);border:2px solid #4fc3f7;
+    border-radius:20px;padding:16px 20px 18px;color:#e6f3ff;pointer-events:auto;
+    box-shadow:0 0 30px rgba(79,195,247,.4)}
+  #adv-carstart h3{margin:0 0 10px;text-align:center;font-size:20px;color:#8fd6ff}
+  #adv-carstart .cs-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:10px 2px;border-bottom:1px dashed rgba(120,180,230,.35)}
+  #adv-carstart .cs-lab{font-size:15.5px;font-weight:700}
+  #adv-carstart .cs-lab small{display:block;font-size:11.5px;font-weight:400;color:#9ec8e8;margin-top:2px}
+  #cs-go{display:block;margin:14px auto 0;background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;
+    border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:18px;padding:11px 34px;cursor:pointer}
+  #cs-go:disabled{background:#4a5a6a;opacity:.6;cursor:default}
+  /* 🚔 แผงกฎหมายพื้นฟ้า sci-fi (สไตล์กระจกเรือง + scanline แบบแผงสถานะรอบ 63) */
+  #adv-lawinfo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:9;
+    width:min(500px,94vw);max-height:88vh;overflow-y:auto;box-sizing:border-box;pointer-events:auto;
+    background:linear-gradient(160deg,rgba(14,52,96,.96),rgba(8,30,60,.96));
+    border:2px solid #56c8ff;border-radius:18px;padding:16px 20px;color:#dff2ff;
+    box-shadow:0 0 34px rgba(86,200,255,.5),inset 0 0 60px rgba(86,200,255,.08);
+    font-size:14.5px;line-height:1.65}
+  #adv-lawinfo:before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(140,220,255,.05) 0 2px,transparent 2px 5px)}
+  #adv-lawinfo h3{margin:0 0 8px;color:#7fe0ff;font-size:17.5px;text-align:center;
+    text-shadow:0 0 12px rgba(127,224,255,.7)}
+  #adv-lawinfo .li-sec{margin:8px 0;padding:8px 12px;border-left:3px solid #56c8ff;
+    background:rgba(86,200,255,.08);border-radius:0 10px 10px 0}
+  #adv-lawinfo .li-ok{display:block;margin:14px auto 2px;background:linear-gradient(135deg,#29b6f6,#0288d1);
+    color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:800;font-size:16px;
+    padding:10px 30px;cursor:pointer}
+  /* กล่องแจ้งโดนปรับ (ใช้ทั้งเข็มขัด + สรุปใบสั่งตอนออก) */
+  .adv-lawnotice{position:fixed;inset:0;z-index:130;background:rgba(8,10,18,.72);
+    display:flex;align-items:center;justify-content:center;font-family:inherit}
+  .adv-lawnotice .ln-box{width:min(400px,92vw);box-sizing:border-box;background:#fff;border-radius:18px;
+    border:3px solid #e53935;padding:18px 20px;text-align:center;color:#39414d;font-size:15.5px;line-height:1.6}
+  .adv-lawnotice .ln-box b{color:#c62828}
+  .adv-lawnotice button{margin-top:14px;background:#e53935;color:#fff;border:0;border-radius:12px;
+    font-family:inherit;font-weight:800;font-size:16px;padding:10px 30px;cursor:pointer}
   /* 💨 ป๊อปโบนัสบินเฉียด (heli/drone) — เด้งขึ้นจางหายเหนือ crosshair */
   #adv-nearmiss{top:43%;left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;z-index:6;
     color:#fff;font-weight:900;font-size:clamp(15px,3.6vw,21px);text-shadow:0 2px 6px #000;white-space:nowrap;
@@ -2693,6 +2742,20 @@ function buildDom(){
     <div id="adv-joy"><div id="adv-joy-dot"></div></div>
     <div id="adv-steerpad"><span>◀</span><i id="adv-steerdot"></i><span>▶</span></div>
     <div id="adv-gaspad">▲<small>เร่ง</small></div>
+    <div id="adv-lawwarn"></div>
+    <div id="adv-carstart">
+      <h3>🚗 เตรียมออกรถ</h3>
+      <div class="cs-row">
+        <div class="cs-lab">🔑 สตาร์ทเครื่องยนต์<small>เครื่องไม่ติด รถออกไม่ได้นะ</small></div>
+        <button class="set-switch off" id="cs-engine"><span class="set-sw-knob"></span><span class="set-sw-txt">ปิด</span></button>
+      </div>
+      <div class="cs-row">
+        <div class="cs-lab">🔒 คาดเข็มขัดนิรภัย<small>ปลอดภัย + ไม่โดนใบสั่ง ม.123</small></div>
+        <button class="set-switch off" id="cs-belt"><span class="set-sw-knob"></span><span class="set-sw-txt">ปิด</span></button>
+      </div>
+      <button id="cs-go" disabled>🚗 ออกรถ!</button>
+    </div>
+    <div id="adv-lawinfo"></div>
     <button id="adv-shoot">🔥</button>
     <button id="adv-chat-btn">💬 แชท</button>
     <button class="adv-vbtn v-off" id="adv-mic">🎤 ปิด</button>
@@ -2801,6 +2864,30 @@ function buildDom(){
     e.stopPropagation();
     for(const t of e.changedTouches) if(t.identifier===gasTid){ gasTid=null; padTh=false; gasPad.classList.remove('on'); }
   }));
+
+  /* 🚔 รอบ 128: แผงเตรียมออกรถ — สวิตช์สตาร์ทเครื่อง (เสียงไดสตาร์ท) + เข็มขัด (เสียงคลิก) + ปุ่มออกรถ */
+  const csEngine=overlayEl.querySelector('#cs-engine');
+  const csBelt=overlayEl.querySelector('#cs-belt');
+  const csGo=overlayEl.querySelector('#cs-go');
+  const setSw=(btn,on)=>{ btn.classList.toggle('on',on); btn.classList.toggle('off',!on);
+    btn.querySelector('.set-sw-txt').textContent=on?'เปิด':'ปิด'; };
+  csEngine.addEventListener('click',()=>{
+    carEngineOn=!carEngineOn;
+    setSw(csEngine,carEngineOn);
+    if(carEngineOn) CarSound.ignite(); else CarSound.stop();
+    csGo.disabled=!carEngineOn;
+  });
+  csBelt.addEventListener('click',()=>{
+    carBelted=!carBelted;
+    setSw(csBelt,carBelted);
+    if(carBelted){ CarSound.beltClick(); if(!carLawSeen) setTimeout(()=>showLawInfo(false),650); }
+  });
+  csGo.addEventListener('click',()=>{
+    if(!carEngineOn) return;
+    const closePanel=()=>{ carStartOpen=false; overlayEl.querySelector('#adv-carstart').style.display='none'; sfx.select(); };
+    if(!carBelted) showLawInfo(true, closePanel);   // ยังไม่คาด → เตือนข้อกฎหมายก่อน (ยืนยันแล้วออกได้ แต่จะโดนปรับ)
+    else closePanel();
+  });
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -3216,6 +3303,7 @@ function tickDrive(dt,now){
   if(joy.on){ th=-joy.dy; sd=joy.dx; }
   if(padSt) sd=padSteer;                     // 🎛️ ปุ่มคอนโซล (รอบ 127) — ชนะ joystick เฉพาะแกนของตัวเอง
   if(padTh) th=1;                            // คันเร่งกดค้าง · ปล่อย = แรงต้านด้านล่างชลอจนหยุดเอง
+  if(!carEngineOn || carStartOpen) th=0;     // 🚔 รอบ 128: เครื่องยังไม่ติด/ยังไม่กดออกรถ → คันเร่งไม่ทำงาน
   if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
 
   const onRoad=driveCell(camera.position.x,camera.position.z);
@@ -3225,7 +3313,7 @@ function tickDrive(dt,now){
     if(dSpeed>.3) dSpeed=Math.max(0,dSpeed-CAR_BRAKE*dt);          // เบรกก่อน
     else dSpeed=Math.max(-CAR_VREV,dSpeed+CAR_ACCEL*.7*th*dt);     // จอดแล้วกดค้าง = ถอยหลัง
   }
-  dSpeed*=Math.max(0,1-(onRoad===1?.22:1.15)*dt);                  // แรงต้าน (นอกถนนหนืดมาก)
+  dSpeed*=Math.max(0,1-(onRoad===1?.16:1.15)*dt);                  // แรงต้าน (รอบ 128: ลดลงให้ไต่ถึง 200 กม./ชม. ได้)
   if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
 
   /* 🏁 พวงมาลัยฟีล R4: ไต่เข้าโค้งนุ่ม (attack ช้ากว่า release) + ลดองศาตามความเร็วพอประมาณ */
@@ -3280,6 +3368,36 @@ function tickDrive(dt,now){
     const kmh=Math.round(Math.abs(dSpeed)*3.6);
     hudInstEl.textContent='🚗 '+kmh+' กม./ชม.'+(onRoad===1?'':' · 🌿 นอกถนน')+(carStreet?' · 🛣️ '+carStreet:'');
   }
+  /* 🚔 รอบ 128: ตรวจกฎจราจร — เร็วเกิน 90 = ใบสั่ง ม.67 (สะสม หักตอนออก) · ไม่คาดเข็มขัดแล้วขับ = ปรับ ม.123 ทันที */
+  const kmhLaw=Math.abs(dSpeed)*3.6;
+  const warnEl=document.getElementById('adv-lawwarn');
+  if(kmhLaw>CAR_LEGAL_KMH){
+    if(!carOverSpeed){
+      carOverSpeed=true;
+      if(carFines.filter(f=>f.t==='speed').length<5){       // เพดาน 5 ใบ/รอบ กันหมดตัว
+        carFines.push({t:'speed', fine:CAR_FINE_SPEED});
+        sfx.wrong();
+      }
+    }
+    if(warnEl){
+      warnEl.style.display='block';
+      warnEl.innerHTML=`🚨 เร็วเกิน ${CAR_LEGAL_KMH} กม./ชม. — ผิด พ.ร.บ.จราจรทางบก <b>มาตรา 67</b> (ปรับไม่เกิน 4,000 บาท)<br>โดนใบสั่งแล้ว ${carFines.filter(f=>f.t==='speed').length} ใบ · ใบละ 🪙${CAR_FINE_SPEED} หักตอนออกจากเกม`;
+    }
+  }else if(kmhLaw<CAR_LEGAL_KMH-5){
+    carOverSpeed=false;
+    if(warnEl) warnEl.style.display='none';
+  }
+  if(!carBelted && !carBeltFined && kmhLaw>10 && carEngineOn && !carStartOpen){
+    carBeltFined=true;
+    carFines.push({t:'belt', fine:CAR_FINE_BELT});
+    state.coins=Math.max(0,state.coins-CAR_FINE_BELT);       // ม.123: หักทันที (กล่องแจ้งเด้งเลย)
+    saveState();
+    lawNotice(`<b>🚔 ใบสั่ง! ไม่คาดเข็มขัดนิรภัย</b><br><br>
+      ผิด พ.ร.บ.จราจรทางบก พ.ศ. 2522 <b>มาตรา 123</b><br>
+      (กฎหมายจริง: ปรับไม่เกิน 2,000 บาท)<br><br>
+      ถูกหักค่าปรับ <b style="color:#c8901a">🪙${fmtNum(CAR_FINE_BELT)}</b> จากเหรียญของหนูแล้ว<br>
+      <small>คราวหน้าเลื่อนสวิตช์คาดเข็มขัดก่อนออกรถนะ 🙏</small>`);
+  }
   CarSound.update(th,Math.abs(dSpeed),dt);
   drawCarGauges();
 }
@@ -3332,9 +3450,67 @@ function drawCarGauges(){
   const offY=Math.max(0,1024*s-box.height)*.66;             // object-position 50% 66%
   const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
   const kmh=Math.abs(dSpeed)*3.6;
-  drawCarDial(c, gx(1096),  gy(662), 80*s, kmh/180, 180, 20, null);           // สปีด
+  drawCarDial(c, gx(1096),  gy(662), 80*s, kmh/240, 240, 40, CAR_LEGAL_KMH);  // สปีด 0-240 (รอบ 128 · โซนแดง = เกิน 90 ผิดกฎหมาย)
   drawCarDial(c, gx(1258.5),gy(662), 78*s, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
 }
+/* ============================================================
+   🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
+   ============================================================ */
+function carStartShow(){                       // เด้งทุกครั้งที่เข้าโลกขับรถ — เครื่องดับ/ยังไม่คาดเข็มขัด
+  const p=document.getElementById('adv-carstart');
+  if(!p) return;
+  carStartOpen=true;
+  p.style.display='block';
+  const eng=p.querySelector('#cs-engine'), blt=p.querySelector('#cs-belt'), go=p.querySelector('#cs-go');
+  [eng,blt].forEach(b=>{ b.classList.remove('on'); b.classList.add('off'); b.querySelector('.set-sw-txt').textContent='ปิด'; });
+  go.disabled=true;
+}
+/* แผงกฎหมายพื้นฟ้า sci-fi — ความรู้กฎหมายจริง + กติกาในเกม (withWarn=เด้งตอนกดออกรถทั้งที่ยังไม่คาดเข็มขัด) */
+function showLawInfo(withWarn, cb){
+  const el=document.getElementById('adv-lawinfo');
+  if(!el){ if(cb) cb(); return; }
+  if(document.pointerLockElement) document.exitPointerLock();
+  carLawSeen=true;
+  el.innerHTML=`<h3>🛡️ SAFETY BRIEFING — กฎหมายจราจรที่หนูควรรู้</h3>
+    ${withWarn?`<div class="li-sec" style="border-color:#ffb74d;background:rgba(255,183,77,.14)">⚠️ <b>หนูยังไม่คาดเข็มขัด!</b> ถ้าออกรถตอนนี้จะโดนใบสั่งทันที — กลับไปเลื่อนสวิตช์ก่อนก็ยังทันนะ</div>`:''}
+    <div class="li-sec">🔒 <b>เข็มขัดนิรภัย — พ.ร.บ.จราจรทางบก พ.ศ. 2522 มาตรา 123</b><br>
+      ผู้ขับขี่และผู้โดยสารต้องคาดเข็มขัดนิรภัยขณะรถวิ่ง · ฝ่าฝืนมีโทษ<b>ปรับไม่เกิน 2,000 บาท</b><br>
+      <small>ในเกม: ขับโดยไม่คาด = หักทันที 🪙${fmtNum(CAR_FINE_BELT)}</small></div>
+    <div class="li-sec">🚨 <b>ขับรถเร็วเกินกำหนด — มาตรา 67</b><br>
+      ขับเกินความเร็วที่กฎหมายกำหนดมีโทษ<b>ปรับไม่เกิน 4,000 บาท</b><br>
+      <small>ในเกม: เกิน ${CAR_LEGAL_KMH} กม./ชม. = ใบสั่งครั้งละ 🪙${fmtNum(CAR_FINE_SPEED)} (หักตอนออกจากเกม)</small></div>
+    <div class="li-sec">⚖️ <b>โทษจำคุก</b> (ความผิดร้ายแรง เช่น ขับประมาทจนคนอื่นบาดเจ็บ)<br>
+      ศาลในเกมนี้เมตตาให้ <b>"รอลงอาญา"</b> ไว้ก่อน — แต่ค่าปรับหักจากเหรียญจริงนะ 😌</div>
+    <button class="li-ok">🫡 รับทราบ ขับขี่ปลอดภัย!</button>`;
+  el.style.display='block';
+  el.querySelector('.li-ok').addEventListener('click',()=>{ el.style.display='none'; sfx.select(); if(cb) cb(); });
+}
+/* กล่องแจ้งโดนปรับ (แดง-ขาว อ่านง่าย) — ใช้ทั้งใบสั่งเข็มขัดคาเกม + สรุปใบสั่งตอนออก */
+function lawNotice(html){
+  if(document.pointerLockElement) document.exitPointerLock();
+  const ov=document.createElement('div');
+  ov.className='adv-lawnotice';
+  ov.innerHTML=`<div class="ln-box">${html}<br><button>รับทราบ 🫡</button></div>`;
+  ov.querySelector('button').addEventListener('click',()=>ov.remove());
+  document.body.appendChild(ov);
+  if(typeof sfx!=='undefined') sfx.wrong();
+}
+/* สรุปใบสั่งตอนออกจากโลกขับรถ — หักค่าปรับขับเร็วที่ค้าง + แจ้งยอดรวม */
+function driveFineSettle(){
+  const speedFines=carFines.filter(f=>f.t==='speed');
+  const beltFine=carFines.find(f=>f.t==='belt');
+  if(!speedFines.length && !beltFine){ carFines=[]; return; }
+  const speedTotal=speedFines.reduce((s,f)=>s+f.fine,0);
+  if(speedTotal>0){ state.coins=Math.max(0,state.coins-speedTotal); saveState(); }
+  const html=`<b>🚔 สรุปใบสั่งจราจรรอบนี้</b><br><br>
+    ${speedFines.length?`🚨 ขับเร็วเกิน ${CAR_LEGAL_KMH} กม./ชม. (ม.67) × ${speedFines.length} ครั้ง = <b>🪙${fmtNum(speedTotal)}</b><br>`:''}
+    ${beltFine?`🔒 ไม่คาดเข็มขัดนิรภัย (ม.123) = 🪙${fmtNum(beltFine.fine)} <small>(หักไปแล้วระหว่างขับ)</small><br>`:''}
+    <br>${speedTotal?`หักเพิ่มจากเหรียญ <b>🪙${fmtNum(speedTotal)}</b> · `:''}คงเหลือ 🪙${fmtNum(state.coins)}<br>
+    <small>⚖️ โทษจำคุก (ถ้ามี) ศาลเมตตาให้ "รอลงอาญา" — คราวหน้าขับตามกฎนะ 😌</small>`;
+  carFines=[];
+  setTimeout(()=>lawNotice(html), 450);
+}
+
 /* เสียงเครื่องยนต์สังเคราะห์ Web Audio (สไตล์เดียวกับ DroneSound — ปลอดลิขสิทธิ์) */
 const CarSound={
   ctx:null, osc:null, osc2:null, gain:null, lp:null, on:false, rpm:0,
@@ -3361,6 +3537,42 @@ const CarSound={
     this.osc2.frequency.value=24+this.rpm*88;
     this.lp.frequency.value=360+this.rpm*950;
     this.gain.gain.value=.03+this.rpm*.05;
+  },
+  /* 🚔 รอบ 128: เสียงไดสตาร์ท "วี้ดๆๆ" ~0.7 วิ แล้วเครื่องติด + เร่งรอบวูบ (เรียกตอนเลื่อนสวิตช์สตาร์ท) */
+  ignite(){
+    try{
+      this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();
+      const c=this.ctx; if(c.state==='suspended') c.resume();
+      const t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(72,t);
+      const lfo=c.createOscillator(); lfo.frequency.value=11;      // รอบไดสตาร์ทหมุนติ๊กๆ
+      const lg=c.createGain(); lg.gain.value=26; lfo.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(.07,t); g.gain.setValueAtTime(.07,t+.62); g.gain.exponentialRampToValueAtTime(.001,t+.8);
+      o.connect(g); g.connect(c.destination);
+      o.start(t); o.stop(t+.85); lfo.start(t); lfo.stop(t+.85);
+      setTimeout(()=>{ this.start(); if(this.on) this.rpm=.95; },680);   // เครื่องติด! รอบพุ่งแล้วค่อยลดลง idle
+    }catch(e){}
+  },
+  /* เสียงคาดเข็มขัด: ดึงสาย "ฟืด" + ล็อกหัวเข็มขัด "คลิก-แคล็ก" */
+  beltClick(){
+    try{
+      this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)();
+      const c=this.ctx; if(c.state==='suspended') c.resume();
+      const t=c.currentTime;
+      const n=c.createBufferSource(), nb=c.createBuffer(1,c.sampleRate*.22,c.sampleRate);
+      const d=nb.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+      n.buffer=nb;
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600;
+      const ng=c.createGain(); ng.gain.value=.06;
+      n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t);   // ฟืด (ดึงสาย)
+      [[.24,2000],[.32,1150]].forEach(([dt0,f])=>{                            // คลิก-แคล็ก
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='square'; o.frequency.value=f;
+        g.gain.setValueAtTime(.14,t+dt0); g.gain.exponentialRampToValueAtTime(.001,t+dt0+.05);
+        o.connect(g); g.connect(c.destination); o.start(t+dt0); o.stop(t+dt0+.07);
+      });
+    }catch(e){}
   },
   horn(){
     if(!this.ctx) return;
@@ -4050,6 +4262,9 @@ function start(md){
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
+    // 🚔 รอบ 128: รีเซ็ตกฎจราจร + เด้งแผงสตาร์ทเครื่อง/คาดเข็มขัดก่อนออกรถ
+    carEngineOn=false; carBelted=false; carFines=[]; carOverSpeed=false; carBeltFined=false; carLawSeen=false;
+    carStartShow();
   }else{
     camera.position.set(0,EYE_H,0);
   }
@@ -4075,7 +4290,7 @@ function start(md){
   overlayEl.classList.toggle('adv-drive',mode==='drive');
   if(mode==='heli') HeliSound.start();
   else if(mode==='drone') DroneSound.start();
-  else if(mode==='drive') CarSound.start();
+  // โหมด drive ไม่สตาร์ทเสียงเครื่องอัตโนมัติแล้ว (รอบ 128) — ผู้เล่นเลื่อนสวิตช์สตาร์ทเองในแผงเตรียมออกรถ
   hintEl.textContent=M.hint;
   hudHuntEl.style.display='none';
   Voice.spk=state.voiceSpk!==false;                        // สะท้อนค่าที่จำไว้แม้ยังออฟไลน์ (join ทับอีกทีตอนต่อเน็ต)
@@ -4103,6 +4318,12 @@ function exitWorld(){
   running=false;
   cancelAnimationFrame(rafId);
   if(document.pointerLockElement) document.exitPointerLock();
+  // 🚔 รอบ 128: หักค่าปรับใบสั่งที่ค้าง + แจ้งสรุป แล้วซ่อนแผงโหมดขับรถ
+  if(M && M.drive) driveFineSettle();
+  ['adv-carstart','adv-lawinfo','adv-lawwarn'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
+  carStartOpen=false;
   netLeave();
   HSound.stopAll();
   HeliSound.stop();
@@ -4144,6 +4365,7 @@ window.Adventure3D={
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
+    setDriveSpeed(v){ dSpeed=v; },   // 🚔 รอบ 128: testkit — inject ความเร็วตรงๆ (เทสต์ใบสั่ง/เกจ ไม่ต้องขับตามถนนจริง)
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
       if(M.heli){ tickHeli(dt,now); }
