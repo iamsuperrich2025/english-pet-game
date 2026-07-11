@@ -2589,9 +2589,13 @@ function buildDom(){
   .adv-touch.adv-drive #adv-gaspad{display:flex}
   .adv-touch.adv-drive #adv-brakepad{display:flex}
   .adv-touch.adv-drive #adv-gearbtn{display:flex}
-  #adv-steerpad{left:2.5%;bottom:max(20vh,104px);width:min(42vw,290px);height:64px;border-radius:999px;
+  /* รอบ 143: ยืดแถบพวงมาลัยขึ้นบน+ลงล่างอย่างละ 1 ช่วง (64→192px สูง 3 เท่า จุดกึ่งกลางเดิม) — นิ้วลอยขึ้นลงไม่หลุดปุ่ม */
+  #adv-steerpad{left:2.5%;bottom:calc(max(20vh,104px) - 64px);width:min(42vw,290px);height:192px;border-radius:34px;
     background:rgba(18,22,30,.6);border:2px solid rgba(255,255,255,.55);box-sizing:border-box;
     align-items:center;justify-content:space-between;padding:0 16px;color:#fff;font-size:24px}
+  /* วงจอยสำรองมุมล่างซ้ายโดนแถบพวงมาลัยสูงขึ้นทับ → โหมดขับรถซ่อนตอนพัก โชว์เฉพาะตอนลากใช้งานจริง (.live) */
+  .adv-touch.adv-drive #adv-joy{display:none}
+  .adv-touch.adv-drive #adv-joy.live{display:block}
   #adv-steerdot{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
     transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
     pointer-events:none}
@@ -3177,6 +3181,7 @@ function bindInput(){
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
+          joyEl.classList.add('live');                 // รอบ 143: โหมดขับรถซ่อนวงจอยตอนพัก — โชว์เฉพาะตอนใช้จริง
           joy.on=true; joy.dx=0; joy.dy=0;
         }else if(lookTouch===null){
           lookTouch={id:t.identifier,x:t.clientX,y:t.clientY};
@@ -3210,6 +3215,7 @@ function bindInput(){
       for(const t of e.changedTouches){
         if(t.identifier===joyId){ joyId=null; joy.on=false; joy.dx=joy.dy=0;
           dotEl.style.transform='translate(-50%,-50%)';
+          joyEl.classList.remove('live');
           joyEl.style.left='18px'; joyEl.style.top='auto'; joyEl.style.bottom='18px'; }
         if(lookTouch && t.identifier===lookTouch.id){ lookTouch=null; hCol=0; }   // ปล่อยนิ้ว = hover
       }
