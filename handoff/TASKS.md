@@ -11,7 +11,7 @@
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
 ### ⏳ ค้างฝั่งผู้ใช้ (หลังรอบ 132)
-1. **publish rules field `tl`** — Artifact ปุ่มคัดลอกส่งแล้ว (ก้อนเต็มใน RULES.md) · ยังไม่ publish = เกมปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวกัน (client fallback ตัด tl เอง)
+1. **publish rules field `tl`** — Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/59c3da79-b3cc-4053-b5f3-5283b4729b7a (ก้อนเต็มใน RULES.md) · ยังไม่ publish = เกมปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวกัน (client fallback ตัด tl เอง)
 2. เจนภาพรถที่เหลือ 8 ไฟล์ (car_03..10 — car_01/02 เข้า git แล้ว) วาง `img/cars/` แล้วบอก Claude commit
 3. ทดสอบจริงมือถือ: ซื้อรถ/ผ่อน/ประกัน + ปุ่มไฟเลี้ยว + 2 เครื่องเห็นไฟเลี้ยวกัน + ชนรถกัน
 
