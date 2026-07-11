@@ -3804,4 +3804,49 @@ function renderStats(){
     <div class="stats-card"><h3 class="stats-title">🕐 ประวัติการสอบล่าสุด</h3>
       ${logs || '<div class="cat-info">ยังไม่มีประวัติการสอบ — ไปลองสอบหมวดแรกกันเถอะ!</div>'}
     </div>`;
+  // item 4: ปุ่มการ์ดสรุปส่งครู — แทรกบนสุดของหน้าสถิติ
+  const tcBtn = document.createElement('button');
+  tcBtn.className = 'big-btn tc-open';
+  tcBtn.id = 'btn-teacher-card';
+  tcBtn.innerHTML = '📇 การ์ดสรุปส่งครู <small>(แคปหน้าจอส่งไลน์ครูได้เลย)</small>';
+  tcBtn.addEventListener('click', showTeacherCard);
+  document.getElementById('stats-body').prepend(tcBtn);
+}
+
+/* ============================================================
+   item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+   เด็กแคปหน้าจอส่งไลน์ครู · ปุ่มปิดอยู่นอกตัวการ์ด แคปแล้วภาพสะอาด
+   ============================================================ */
+function showTeacherCard(){
+  dailyTick();
+  const s = state.student || {first:'-', last:'', grade:'-'};
+  const info = rankInfo(netWorth());
+  const last = state.quizLog.length ? state.quizLog[state.quizLog.length-1] : null;
+  const lastCat = last ? findCat(last.cat) : null;
+  const now = new Date();
+  const dateTxt = now.toLocaleDateString('th-TH', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const timeTxt = now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+  const badges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="tc-wrap">
+    <div class="tc-card">
+      <div class="tc-head">🐾 Pet Vocab Adventure<div class="tc-sub">การ์ดรายงานผลการเรียนรู้</div></div>
+      <div class="tc-name">${playerAvatarHTML('🧒')} <b>${escapeHTML(s.first)} ${escapeHTML(s.last)}</b> · ชั้น ${s.grade}${badges ? ` <span class="tc-badges">${badges}</span>` : ''}</div>
+      <div class="tc-when">🗓️ ${dateTxt} · ⏰ ${timeTxt} น.</div>
+      <div class="tc-row"><span>🪙 เหรียญที่หาได้วันนี้</span><b>+${fmtNum(state.daily.coins)}</b></div>
+      <div class="tc-row"><span>🎖️ แรงค์ปัจจุบัน</span><b style="color:${info.rank.color}">${info.rank.emoji} ${info.label}</b></div>
+      <div class="tc-row"><span>📝 คะแนนสอบล่าสุด</span><b>${last
+        ? `${lastCat ? lastCat.emoji + ' ' + lastCat.name : last.cat} <span class="${last.passed ? 'tc-pass' : 'tc-try'}">${last.score}/${last.total} ${last.passed ? '✅ ผ่าน' : '💪 กำลังพยายาม'}</span>`
+        : 'ยังไม่เคยสอบ'}</b></div>
+      <div class="tc-row"><span>🃏 จับคู่คำศัพท์ถูกสะสม</span><b>${fmtNum(state.totalMatches)} คำ</b></div>
+      <div class="tc-sign">✔️ ออกให้โดยเกมอัตโนมัติ · ${escapeHTML(location.hostname || 'Pet Vocab Adventure')}</div>
+    </div>
+    <div class="tc-hint">📸 แคปหน้าจอนี้ แล้วส่งให้คุณครูทางไลน์ได้เลย</div>
+    <button class="tc-close">ปิด</button>
+  </div>`;
+  overlay.querySelector('.tc-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+  sfx.select();
 }
