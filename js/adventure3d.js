@@ -107,6 +107,7 @@ const CAR_VMAX   = 55.6;          // ~200 กม./ชม. บนถนน (ร�
 const CAR_LEGAL_KMH = 90;         // ลิมิตตามกฎหมายในเกม — เกินแล้วโดนใบสั่ง ม.67
 const CAR_FINE_SPEED = 200;       // 🪙 ค่าปรับขับเร็ว/ครั้ง (หักตอนออกจากโลก · สูงสุด 5 ครั้ง/รอบ)
 const CAR_FINE_BELT  = 300;       // 🪙 ค่าปรับไม่คาดเข็มขัด (หักทันที ครั้งเดียว/รอบ)
+const CAR_REPAIR_FEE = 1000;      // 🪙 ค่าซ่อมรถเมื่อชนสิ่งของแรง (รอบ 130 · หักตอนออก · สูงสุด 3 ครั้ง/รอบ)
 const CAR_VMAX_OFF = 7;           // ออกนอกถนน (ดิน/หญ้า) ช้าลงมาก
 const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
@@ -3335,7 +3336,14 @@ function tickDrive(dt,now){
   if(driveCell(p.x,p.z)===2){ p.x=camera.position.x; p.z=camera.position.z; dSpeed*=-.3; dVelX*=-.3; dVelZ*=-.3; }  // ริมแม่น้ำ (ข้ามได้เฉพาะสะพาน)
   const hitSpd=Math.hypot(dVelX,dVelZ);
   if(collideCar(p)){
-    if(hitSpd>7 && now-hHitAt>900){ hHitAt=now; damagePlayer(Math.min(30,Math.round(hitSpd*1.3))); CarSound.thud(); }
+    if(hitSpd>7 && now-hHitAt>900){
+      hHitAt=now; damagePlayer(Math.min(30,Math.round(hitSpd*1.3))); CarSound.thud();
+      // 🔧 รอบ 130: ชนสิ่งของแรง = ค่าซ่อมรถ 🪙1,000 (สะสม หักตอนออกพร้อมใบสั่ง · เพดาน 3 ครั้ง/รอบ)
+      if(carFines.filter(f=>f.t==='crash').length<3){
+        carFines.push({t:'crash', fine:CAR_REPAIR_FEE});
+        showBanner(`🔧 รถชนแรง! ค่าซ่อม <b>🪙${fmtNum(CAR_REPAIR_FEE)}</b><br><small>จ่ายตอนออกจากเกม · ชนแล้ว ${carFines.filter(f=>f.t==='crash').length} ครั้ง</small>`);
+      }
+    }
     else if(hitSpd>2.5) CarSound.thud();
     dSpeed*=.12; dVelX*=.12; dVelZ*=.12;
   }
@@ -3495,17 +3503,21 @@ function lawNotice(html){
   document.body.appendChild(ov);
   if(typeof sfx!=='undefined') sfx.wrong();
 }
-/* สรุปใบสั่งตอนออกจากโลกขับรถ — หักค่าปรับขับเร็วที่ค้าง + แจ้งยอดรวม */
+/* สรุปใบสั่ง+ค่าซ่อมตอนออกจากโลกขับรถ — หักค่าปรับขับเร็ว/ค่าซ่อมที่ค้าง + แจ้งยอดรวม */
 function driveFineSettle(){
   const speedFines=carFines.filter(f=>f.t==='speed');
+  const crashFines=carFines.filter(f=>f.t==='crash');
   const beltFine=carFines.find(f=>f.t==='belt');
-  if(!speedFines.length && !beltFine){ carFines=[]; return; }
+  if(!speedFines.length && !crashFines.length && !beltFine){ carFines=[]; return; }
   const speedTotal=speedFines.reduce((s,f)=>s+f.fine,0);
-  if(speedTotal>0){ state.coins=Math.max(0,state.coins-speedTotal); saveState(); }
-  const html=`<b>🚔 สรุปใบสั่งจราจรรอบนี้</b><br><br>
+  const crashTotal=crashFines.reduce((s,f)=>s+f.fine,0);
+  const dueTotal=speedTotal+crashTotal;
+  if(dueTotal>0){ state.coins=Math.max(0,state.coins-dueTotal); saveState(); }
+  const html=`<b>🚔 สรุปใบสั่ง + ค่าซ่อมรอบนี้</b><br><br>
     ${speedFines.length?`🚨 ขับเร็วเกิน ${CAR_LEGAL_KMH} กม./ชม. (ม.67) × ${speedFines.length} ครั้ง = <b>🪙${fmtNum(speedTotal)}</b><br>`:''}
+    ${crashFines.length?`🔧 ค่าซ่อมรถ ชนสิ่งของ × ${crashFines.length} ครั้ง = <b>🪙${fmtNum(crashTotal)}</b><br>`:''}
     ${beltFine?`🔒 ไม่คาดเข็มขัดนิรภัย (ม.123) = 🪙${fmtNum(beltFine.fine)} <small>(หักไปแล้วระหว่างขับ)</small><br>`:''}
-    <br>${speedTotal?`หักเพิ่มจากเหรียญ <b>🪙${fmtNum(speedTotal)}</b> · `:''}คงเหลือ 🪙${fmtNum(state.coins)}<br>
+    <br>${dueTotal?`หักเพิ่มจากเหรียญ <b>🪙${fmtNum(dueTotal)}</b> · `:''}คงเหลือ 🪙${fmtNum(state.coins)}<br>
     <small>⚖️ โทษจำคุก (ถ้ามี) ศาลเมตตาให้ "รอลงอาญา" — คราวหน้าขับตามกฎนะ 😌</small>`;
   carFines=[];
   setTimeout(()=>lawNotice(html), 450);
