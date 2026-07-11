@@ -1,7 +1,7 @@
 {
-  "name": "Pet Vocab Adventure",
-  "short_name": "Pet Vocab",
-  "description": "เกมคำศัพท์ภาษาอังกฤษเลี้ยงสัตว์ สำหรับนักเรียน ป.1–ม.6",
+  "name": "Vocab World",
+  "short_name": "Vocab World",
+  "description": "เกมคำศัพท์ภาษาอังกฤษโลกกว้าง — เลี้ยงสัตว์ สร้างตัว ค้าขาย ขับรถ บินสำรวจโลก 3D สำหรับนักเรียน ป.1–ม.6",
   "lang": "th",
   "start_url": "./index.html",
   "scope": "./",

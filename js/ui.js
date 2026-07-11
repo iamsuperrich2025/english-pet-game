@@ -4225,7 +4225,7 @@ function showTeacherCard(){
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="tc-wrap">
     <div class="tc-card">
-      <div class="tc-head">🐾 Pet Vocab Adventure<div class="tc-sub">การ์ดรายงานผลการเรียนรู้</div></div>
+      <div class="tc-head">🌍 Vocab World<div class="tc-sub">การ์ดรายงานผลการเรียนรู้</div></div>
       <div class="tc-name">${playerAvatarHTML('🧒')} <b>${escapeHTML(s.first)} ${escapeHTML(s.last)}</b> · ชั้น ${s.grade}${badges ? ` <span class="tc-badges">${badges}</span>` : ''}</div>
       <div class="tc-when">🗓️ ${dateTxt} · ⏰ ${timeTxt} น.</div>
       <div class="tc-row"><span>🪙 เหรียญที่หาได้วันนี้</span><b>+${fmtNum(state.daily.coins)}</b></div>
@@ -4234,7 +4234,7 @@ function showTeacherCard(){
         ? `${lastCat ? lastCat.emoji + ' ' + lastCat.name : last.cat} <span class="${last.passed ? 'tc-pass' : 'tc-try'}">${last.score}/${last.total} ${last.passed ? '✅ ผ่าน' : '💪 กำลังพยายาม'}</span>`
         : 'ยังไม่เคยสอบ'}</b></div>
       <div class="tc-row"><span>🃏 จับคู่คำศัพท์ถูกสะสม</span><b>${fmtNum(state.totalMatches)} คำ</b></div>
-      <div class="tc-sign">✔️ ออกให้โดยเกมอัตโนมัติ · ${escapeHTML(location.hostname || 'Pet Vocab Adventure')}</div>
+      <div class="tc-sign">✔️ ออกให้โดยเกมอัตโนมัติ · ${escapeHTML(location.hostname || 'Vocab World')}</div>
     </div>
     <div class="tc-hint">📸 แคปหน้าจอนี้ แล้วส่งให้คุณครูทางไลน์ได้เลย</div>
     <button class="tc-close">ปิด</button>

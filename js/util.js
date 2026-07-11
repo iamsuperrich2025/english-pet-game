@@ -498,7 +498,7 @@ function openHelp(){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay help-overlay';
   overlay.innerHTML = `<div class="levelup-box help-box">
-    <h2 style="margin:0 0 8px">📖 วิธีเล่น Pet Vocab Adventure</h2>
+    <h2 style="margin:0 0 8px">📖 วิธีเล่น Vocab World</h2>
     <div class="help-body">
       <div class="help-item"><b>🎮 เล่นเกมจับคู่คำศัพท์</b><br>กดปุ่ม "เล่นเกมจับคู่คำศัพท์!" ตอบให้ถูกเพื่อรับ 🪙 เหรียญ ยิ่งเก่งยิ่งได้เยอะ</div>
       <div class="help-item"><b>🐾 เลี้ยงน้อง</b><br>น้องหิวข้าวเย็นทุกวันตอน <b>18:00 น.</b> ให้กินหลายอย่างจนหลอดอิ่มเต็ม 100 ก่อน 20:00 · พาเข้านอนก่อน <b>23:00 น.</b> (เข้านอนได้ตั้งแต่ 2 ทุ่ม ตื่นเอง 6 โมงเช้า) · อย่าให้ร้อนเกินไป — พลาดข้อไหนน้องจะป่วย 🤒 (ต้องจ่ายค่ารักษา)</div>
