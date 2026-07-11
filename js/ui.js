@@ -3301,6 +3301,7 @@ function renderMarketCard(){
 
   el.innerHTML = `<h3 class="shop-title">🏪 ตลาดขายสินค้า</h3>
     <p class="collect-sub">เอาสินค้าที่ผลิตจากโรงงานมาตั้งราคาขาย หรือส่งมอบออเดอร์พิเศษให้ลูกค้าทำกำไร 🌍</p>
+    <button class="wl-open" id="btn-wishlist">💖 ของที่หนูเล็งไว้${state.wishlist && state.wishlist.length ? ` (${state.wishlist.length})` : ''} <small>มีคนลงขาย = แจ้งเตือนทันที</small></button>
     ${soldUI}
     ${renderOrdersUI()}
     ${renderMarketBrowse()}
@@ -3313,6 +3314,57 @@ function renderMarketCard(){
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
+  const wl = document.getElementById('btn-wishlist');
+  if(wl) wl.addEventListener('click', openWishlistDialog);
+  updateWishBadge();
+}
+
+/* 💖 รอบ 126: badge ที่ปุ่มราง 🏪 ตลาด = จำนวนของที่เล็งไว้ซึ่งมีคนลงขายอยู่ตอนนี้ */
+function updateWishBadge(){
+  const b = document.getElementById('mkt-wish-badge');
+  if(!b || typeof state === 'undefined') return;
+  const me = (typeof onlineKey === 'function') ? onlineKey() : '';
+  const n = (typeof Online !== 'undefined' && Online.marketOk)
+    ? (Online.market || []).filter(m=>m.sid !== me && (state.wishlist || []).includes(m.id)).length : 0;
+  b.style.display = n ? '' : 'none';
+  b.textContent = n;
+}
+
+/* 💖 รอบ 126: กล่องเลือก "ของที่หนูเล็งไว้" — แตะสลับเล็ง/เลิกเล็งได้ทั้งแคตตาล็อก 50 ชิ้น */
+function openWishlistDialog(){
+  sfx.select();
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  const grid = ()=>COLLECTIBLES.map(c=>{
+    const on = (state.wishlist || []).includes(c.id);
+    const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
+    return `<div class="wl-it ${on ? 'on' : ''}" data-id="${c.id}" style="border-color:${on ? '#e0447a' : tier.color}">
+      ${img ? `<img src="${img}" alt="">` : `<span class="wl-emoji">${c.emoji}</span>`}
+      <div class="wl-name">${c.name}</div>
+      <div class="wl-h">${on ? '💖 เล็งอยู่' : '🤍 แตะเพื่อเล็ง'}</div>
+    </div>`;
+  }).join('');
+  overlay.innerHTML = `<div class="levelup-box wl-box">
+    <h2>💖 ของที่หนูเล็งไว้</h2>
+    <p class="ld-note">แตะเลือกของที่อยากได้ — พอมีเพื่อนลงขายในตลาด เกมจะแจ้งเตือนหนูทันที!</p>
+    <div class="wl-grid">${grid()}</div>
+    <button class="cf-ok" style="margin-top:12px">เสร็จแล้ว ✅</button>
+  </div>`;
+  const wrap = overlay.querySelector('.wl-grid');
+  wrap.addEventListener('click', e=>{
+    const it = e.target.closest('.wl-it');
+    if(!it) return;
+    const id = it.dataset.id;
+    if(!Array.isArray(state.wishlist)) state.wishlist = [];
+    const i = state.wishlist.indexOf(id);
+    if(i >= 0) state.wishlist.splice(i, 1); else state.wishlist.push(id);
+    sfx.select();
+    saveState();
+    wrap.innerHTML = grid();
+    updateWishBadge();
+  });
+  overlay.querySelector('.cf-ok').addEventListener('click', ()=>{ overlay.remove(); renderMarketCard(); });
+  document.body.appendChild(overlay);
 }
 
 /* 🏪 item 2: ชั้นวางของจากเพื่อนทั้งเซิร์ฟเวอร์ — โชว์เมื่อตลาดจริงเปิดแล้ว (rules /market publish) */
@@ -3324,8 +3376,9 @@ function renderMarketBrowse(){
     ? `<div class="hq-grid">` + items.map(m=>{
         const c = collectInfo(m.id), tier = COLLECT_TIERS[c.tier], img = collectImg(m.id);
         const afford = state.coins >= m.p;
-        return `<div class="hq-card" style="border-color:${tier.color}">
-          <div class="hq-head">${c.name}</div>
+        const wished = (state.wishlist || []).includes(m.id);   // 💖 ของที่เล็งไว้ — ขับให้เด่น
+        return `<div class="hq-card ${wished ? 'mb-wish' : ''}" style="border-color:${wished ? '#e0447a' : tier.color}">
+          <div class="hq-head">${wished ? '💖 ' : ''}${c.name}</div>
           <div class="hq-pic">
             ${img?`<img src="${img}" alt="">`:`<span class="hq-emoji">${c.emoji}</span>`}
             <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
@@ -3612,6 +3665,9 @@ function buyMarketItem(key){
     if(!ok){ sfx.wrong(); toast('😅 ช้าไปนิดเดียว — มีคนซื้อตัดหน้าไปแล้ว'); renderMarketCard(); return; }
     state.coins -= item.p;
     state.collection.push(item.id);
+    // 💖 ได้ของที่เล็งไว้แล้ว → ถอนออกจากลิสต์อัตโนมัติ (รอบ 126)
+    const wi = (state.wishlist || []).indexOf(item.id);
+    if(wi >= 0) state.wishlist.splice(wi, 1);
     saveState();
     showCollectReveal(item.id, item.p);
     toast(`🌏 ซื้อ${c.name}จาก ${item.sn} สำเร็จ!`);

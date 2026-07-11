@@ -93,6 +93,7 @@ const DEFAULT_STATE = {
   onlineSince:null,                   // item 8: timestamp เริ่มนับรายได้ออนไลน์ช่วงปัจจุบัน (รีเซ็ต null ทุกครั้งที่โหลดเกม — นับเฉพาะเวลาเปิดเกมจริง)
   onlineEarned:0,                     // item 8: เหรียญโบนัสออนไลน์สะสมทั้งหมด (ไว้โชว์ตัวเลขวิ่ง+สถิติ)
   quests:null,                        // item 3: ภารกิจรายวัน {date, prog:{id:n}, done:[id], allDone} — questTick สร้างให้เอง
+  wishlist:[],                        // รอบ 126: id สินค้าสะสมที่เล็งไว้ — มีคนลงขายในตลาดจริง → แจ้งเตือน
   collection:[],                      // สินค้าที่ถือครอง (array of id — มีชิ้นซ้ำได้)
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
@@ -285,6 +286,9 @@ function loadState(){
       s.onlineSince = null;
       // Daily Quest (item 3): เซฟเก่า/ข้อมูลเสีย → เริ่มว่าง questTick สร้างชุดวันนี้เอง
       if(!s.quests || typeof s.quests !== 'object' || !Array.isArray(s.quests.done)) s.quests = null;
+      // ของที่เล็งไว้ (รอบ 126): เซฟเก่าไม่มี → เริ่มว่าง / คัด id ที่ไม่รู้จักทิ้ง
+      if(!Array.isArray(s.wishlist)) s.wishlist = [];
+      s.wishlist = s.wishlist.filter(id=>collectInfo(id));
       // สวนผลไม้ (ข้อ 12): เซฟเก่าไม่มีสวน → เริ่มว่าง / คัดต้นที่ข้อมูลเสียทิ้ง
       if(!Array.isArray(s.farm)) s.farm = [];
       s.farm = s.farm.filter(t=>t && fruitInfo(t.id) && typeof t.plantedAt === 'number');

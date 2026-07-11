@@ -541,6 +541,8 @@ function giftOutRebuild(){
    /msold/<sellerUid>/<key> = {id, p, bn, ts} — ใบเสร็จจากผู้ซื้อ ให้ฝั่งคนขายมารับเงิน (อ่านแล้วลบ)
    rules ยังไม่ publish → อ่าน/เขียนโดน deny เงียบๆ → เกม fallback ตลาดจำลองเดิมอัตโนมัติ
    ============================================================ */
+let marketPrimed = false;                 // snapshot แรก = ของเก่าที่ค้างอยู่ (badge เงียบๆ ไม่เด้ง toast)
+const marketSeen = {};                    // key ประกาศที่เคยเห็นแล้วในเซสชันนี้
 function marketWatch(){
   if(!Online.db) return;
   Online.db.ref('market').limitToLast(120).on('value', (snap)=>{
@@ -554,7 +556,23 @@ function marketWatch(){
     out.sort((a,b)=>b.ts - a.ts);
     Online.market = out;
     Online.marketOk = true;
+    // 💖 รอบ 126: ประกาศใหม่ (ไม่ใช่ของเรา) ตรงกับของที่เล็งไว้ → แจ้งเตือน (เด้งตัวแรกพอ กันรัว)
+    const me = (typeof onlineKey === 'function') ? onlineKey() : '';
+    let alerted = false;
+    out.forEach(m=>{
+      const isNew = !marketSeen[m.key];
+      marketSeen[m.key] = true;
+      if(!marketPrimed || !isNew || alerted || m.sid === me) return;
+      if(!Array.isArray(state.wishlist) || !state.wishlist.includes(m.id)) return;
+      const c = collectInfo(m.id);
+      alerted = true;
+      if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+      if(typeof toast === 'function')
+        toast(`💖 ของที่หนูเล็งไว้มีคนลงขายแล้ว! ${c.emoji} ${c.name} 🪙${fmtNum(m.p)} จากร้าน ${m.sn} — รีบไปดูที่ 🏪 ตลาด`);
+    });
+    marketPrimed = true;
     if(typeof renderMarketCard === 'function') renderMarketCard();
+    if(typeof updateWishBadge === 'function') updateWishBadge();
   }, ()=>{ Online.marketOk = false; });   // permission denied = rules โซน market ยังไม่ publish
 }
 /* ลงขายจริง: คืน Promise<key|null> — null = ตลาดจริงยังใช้ไม่ได้ (ผู้เรียก fallback ตลาดจำลอง) */
