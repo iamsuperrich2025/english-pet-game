@@ -2764,19 +2764,22 @@ function buildDom(){
     border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:18px;padding:11px 34px;cursor:pointer}
   #cs-go:disabled{background:#4a5a6a;opacity:.6;cursor:default}
   /* 🚔 แผงกฎหมายพื้นฟ้า sci-fi (สไตล์กระจกเรือง + scanline แบบแผงสถานะรอบ 63) */
+  /* รอบ 146: ยืดกว้าง 94vw + กฎหมาย 3 ก้อนเรียง 3 คอลัมน์ → เตี้ยพอใส่ปุ่มรับทราบไม่มี scrollbar */
   #adv-lawinfo{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:9;
-    width:min(500px,94vw);max-height:88vh;overflow-y:auto;box-sizing:border-box;pointer-events:auto;
+    width:min(94vw,920px);max-height:92vh;overflow-y:auto;box-sizing:border-box;pointer-events:auto;
     background:linear-gradient(160deg,rgba(14,52,96,.96),rgba(8,30,60,.96));
-    border:2px solid #56c8ff;border-radius:18px;padding:16px 20px;color:#dff2ff;
+    border:2px solid #56c8ff;border-radius:18px;padding:12px 18px 14px;color:#dff2ff;
     box-shadow:0 0 34px rgba(86,200,255,.5),inset 0 0 60px rgba(86,200,255,.08);
-    font-size:14.5px;line-height:1.65}
+    font-size:13.5px;line-height:1.55}
+  #adv-lawinfo .li-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:stretch}
   #adv-lawinfo:before{content:'';position:absolute;inset:0;border-radius:16px;pointer-events:none;
     background:repeating-linear-gradient(0deg,rgba(140,220,255,.05) 0 2px,transparent 2px 5px)}
   #adv-lawinfo h3{margin:0 0 8px;color:#7fe0ff;font-size:17.5px;text-align:center;
     text-shadow:0 0 12px rgba(127,224,255,.7)}
-  #adv-lawinfo .li-sec{margin:8px 0;padding:8px 12px;border-left:3px solid #56c8ff;
+  #adv-lawinfo .li-sec{margin:8px 0;padding:8px 11px;border-left:3px solid #56c8ff;
     background:rgba(86,200,255,.08);border-radius:0 10px 10px 0}
-  #adv-lawinfo .li-ok{display:block;margin:14px auto 2px;background:linear-gradient(135deg,#29b6f6,#0288d1);
+  #adv-lawinfo .li-grid .li-sec{margin:0}
+  #adv-lawinfo .li-ok{display:block;margin:12px auto 0;background:linear-gradient(135deg,#29b6f6,#0288d1);
     color:#fff;border:0;border-radius:12px;font-family:inherit;font-weight:800;font-size:16px;
     padding:10px 30px;cursor:pointer}
   /* กล่องแจ้งโดนปรับ (ใช้ทั้งเข็มขัด + สรุปใบสั่งตอนออก) */
@@ -4005,14 +4008,16 @@ function showLawInfo(withWarn, cb){
   carLawSeen=true;
   el.innerHTML=`<h3>🛡️ SAFETY BRIEFING — กฎหมายจราจรที่หนูควรรู้</h3>
     ${withWarn?`<div class="li-sec" style="border-color:#ffb74d;background:rgba(255,183,77,.14)">⚠️ <b>หนูยังไม่คาดเข็มขัด!</b> ถ้าออกรถตอนนี้จะโดนใบสั่งทันที — กลับไปเลื่อนสวิตช์ก่อนก็ยังทันนะ</div>`:''}
-    <div class="li-sec">🔒 <b>เข็มขัดนิรภัย — พ.ร.บ.จราจรทางบก พ.ศ. 2522 มาตรา 123</b><br>
-      ผู้ขับขี่และผู้โดยสารต้องคาดเข็มขัดนิรภัยขณะรถวิ่ง · ฝ่าฝืนมีโทษ<b>ปรับไม่เกิน 2,000 บาท</b><br>
-      <small>ในเกม: ขับโดยไม่คาด = หักทันที 🪙${fmtNum(CAR_FINE_BELT)}</small></div>
-    <div class="li-sec">🚨 <b>ขับรถเร็วเกินกำหนด — มาตรา 67</b><br>
-      ขับเกินความเร็วที่กฎหมายกำหนดมีโทษ<b>ปรับไม่เกิน 4,000 บาท</b><br>
-      <small>ในเกม: เกิน ${CAR_LEGAL_KMH} กม./ชม. = ใบสั่งครั้งละ 🪙${fmtNum(CAR_FINE_SPEED)} (หักตอนออกจากเกม)</small></div>
-    <div class="li-sec">⚖️ <b>โทษจำคุก</b> (ความผิดร้ายแรง เช่น ขับประมาทจนคนอื่นบาดเจ็บ)<br>
-      ศาลในเกมนี้เมตตาให้ <b>"รอลงอาญา"</b> ไว้ก่อน — แต่ค่าปรับหักจากเหรียญจริงนะ 😌</div>
+    <div class="li-grid">
+      <div class="li-sec">🔒 <b>เข็มขัดนิรภัย — พ.ร.บ.จราจรทางบก พ.ศ. 2522 มาตรา 123</b><br>
+        ผู้ขับขี่และผู้โดยสารต้องคาดเข็มขัดนิรภัยขณะรถวิ่ง · ฝ่าฝืนมีโทษ<b>ปรับไม่เกิน 2,000 บาท</b><br>
+        <small>ในเกม: ขับโดยไม่คาด = หักทันที 🪙${fmtNum(CAR_FINE_BELT)}</small></div>
+      <div class="li-sec">🚨 <b>ขับรถเร็วเกินกำหนด — มาตรา 67</b><br>
+        ขับเกินความเร็วที่กฎหมายกำหนดมีโทษ<b>ปรับไม่เกิน 4,000 บาท</b><br>
+        <small>ในเกม: เกิน ${CAR_LEGAL_KMH} กม./ชม. = ใบสั่งครั้งละ 🪙${fmtNum(CAR_FINE_SPEED)} (หักตอนออกจากเกม)</small></div>
+      <div class="li-sec">⚖️ <b>โทษจำคุก</b> (ความผิดร้ายแรง เช่น ขับประมาทจนคนอื่นบาดเจ็บ)<br>
+        ศาลในเกมนี้เมตตาให้ <b>"รอลงอาญา"</b> ไว้ก่อน — แต่ค่าปรับหักจากเหรียญจริงนะ 😌</div>
+    </div>
     <button class="li-ok">🫡 รับทราบ ขับขี่ปลอดภัย!</button>`;
   el.style.display='block';
   el.querySelector('.li-ok').addEventListener('click',()=>{ el.style.display='none'; sfx.select(); if(cb) cb(); });
