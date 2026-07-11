@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 145 (12 ก.ค.) — แผงเลือกตัวละครบล็อกเต็มจอ ไม่มี scroll + ปุ่มขวา 🧱 (version .136)
+- **สเปกผู้ใช้ (screenshot จริง — แผงเดิม 560px มี scrollbar ปุ่มจมล่าง):** แผงเกือบเต็มจอ · ปุ่มยกเลิก+ออกรถไปฝั่งขวา · สเกลทั้งหมดพอดีไม่ใช้ scroll
+- **วิธีทำ (blkBuildPicker ~line 660):** `.blk-card` → `width:min(96vw,900px);height:min(94vh,560px);display:flex;flex-direction:column;overflow:hidden` · เพิ่ม `.blk-body{display:flex}` หุ้มกริด+ปุ่ม · กริด `grid-template-rows:repeat(2,1fr)` + item เป็น flex column + `img{flex:1 1 0;min-height:0;object-fit:contain}` — **ภาพยืดหดตามช่องจริง ไม่ fix aspect-ratio** · `.blk-btns` เป็น `flex-direction:column;justify-content:center` ฝั่งขวา (ออกรถเขียวใหญ่บน · ยกเลิกล่าง) · ฟอนต์ clamp ตาม vw/vh
+- ✅ **ยืนยัน 812×375:** card 780×353 (96vw×94vh) · `scrollHeight<=clientHeight` ทั้ง card/grid · ปุ่มอยู่ขวาของกริดจริง (x650 ≥ grid.right 635) กลางแนวตั้ง · เห็นครบ 8 ตัว (ช่องสูง ~143 ภาพ 140×117) · เลือกตัว 3+ออกรถ → state.blockAv='blk3' / เปิดใหม่กดยกเลิก → resolve false ค่าไม่เปลี่ยน · ไม่มี console error · deploy live .136
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (แผงนี้ใช้ตอนกดเข้าโลกขับรถ/โลกเดิน)
+
 ### ✅ รอบ 144 (12 ก.ค.) — จัดผัง UI โหมดขับรถใหม่ + แผนที่ขยายแตะ minimap 🗺️ (version .135)
 - **สเปกผู้ใช้ (จาก screenshot มือถือจริง):** minimap ไปบนซ้ายสุด · ปุ่มออกแดงแทนที่ปุ่มแชท · ปุ่มบนที่ทับกันจัดระเบียบ · เกียร์ D/R แยกปุ่ม (D เหนือเบรค · R ที่ตำแหน่งก้านไฟเลี้ยวเดิม) · ก้านไฟเลี้ยวไปเหนือคันเร่ง · แตะ minimap เปิดแผนที่ใหญ่เห็นตำแหน่งตัวอักษรชัด + ปุ่มปิดชัด
 - **ผังใหม่ (CSS scope `.adv-drive` ทั้งหมด — โลกอื่นไม่กระทบ):** map left:8 (pointer-events:auto ทุกโลก) · board left:136 max-w 120 · topbar left:276 transform:none + `.adv-hp` 96px · exit (8,140) · help (8,right:8) · chat (8,244) · mic (58,140) · spk (58,244) · vmode (108,244) · tmute (108,348) · podbtn (158,348) — **แถว 108 คอลัมน์ right:140 ใช้ไม่ได้ ชนเกียร์ D (y123-175)**
