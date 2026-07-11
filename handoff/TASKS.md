@@ -10,6 +10,11 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 125 (11 ก.ค.) — ภาพตึกกำแพงเพชร 4 ไฟล์ขึ้น live + rules ตลาดจริง publish แล้ว 🏢🏪 (version .116)
+- ผู้ใช้เจนภาพจาก `PROMPTS_BUILDINGS_KPP.md` วาง `img/city/` ครบ 4 ไฟล์ (1024² ตรงสเปก) → commit เจาะจง 4 ไฟล์ + ยืนยัน live HTTP 200 ขนาดตรงต้นฉบับ · **ยืนยันในเกมจริง:** โลกขับรถ InstancedMesh 4 กลุ่ม (1,940/1,908/695/117 หลัง) `material.map` = ภาพจริงครบทุกกลุ่ม ไม่ต้องแก้โค้ด (probe รอบ 117 รับเอง)
+- **✅ ผู้ใช้ publish rules โซน market+msold แล้ว 11 ก.ค.** — ตรวจ REST: /presence 200 (ก้อน rules ไม่พัง) · /market ไม่ login = 401 ถูกต้อง → **ตลาดออนไลน์จริง (รอบ 124) เปิดใช้งานแล้ว**
+- ⚠️ ค้างฝั่งผู้ใช้: ทดสอบจริงมือถือ (เห็นผนังตึกภาพจริงตอนขับรถ) + ซื้อ-ขายตลาดจริง 2 บัญชี/2 เครื่อง
+
 ### ✅ รอบ 120–124 (11 ก.ค.) — เคลียร์ backlog 5 ก้อนรวด (version .111–.115)
 - **รอบ 120 · 🌐 โบนัสออนไลน์ +0.01/วิ (item 8):** `ONLINE_RATE/onlineEarnTick/onlineEarnFlush` (state.js แบบ compTick แต่ **ไม่นับเวลาปิดเกม** — onlineSince รีเซ็ตทุกโหลด + flush ตอน visibilitychange hidden ใน main.js) · เงื่อนไข = `Online.ready` + แท็บ visible · pill 🌐 ใน header ตัวเลขวิ่งทุกวินาที (renderClock เรียก tick ด้วย → เหรียญตกตรง 100 วิ + อัป coin-count ทันที) · แถวสถิติ · ยืนยัน: สะสม/ตกเหรียญ/flush/offline หรี่ ครบ
 - **รอบ 121 · 🎯 Daily Quest (item 3):** `QUEST_POOL` 6 แบบ (state.js) เลือก 3/วัน **seed จากวันที่ — ทุกคนได้ชุดเดียวกัน** (ครูจัดกิจกรรมได้) · `questEvent(ev)` จุดรับแต้มกลาง hook 6 จุด: match/quiz/replay (game.js) · word3d (adventure3d completeWord) · produce (addCraft) · feed เต็มหลอด (feedWith) · รางวัลอัตโนมัติ + ครบ 3 โบนัส +150 · การ์ด `#quest-card` บนสุด aside ขวา · ยืนยัน: บาร์/รางวัล 480 ครบชุด/ไม่นับซ้ำ/วันใหม่รีเซ็ต
