@@ -13,6 +13,13 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 157 (12 ก.ค.) — กล่องข้อความกลางจอขยายด้านข้าง ไม่มี scrollbar 📐 (version .148)
+- **สเปกผู้ใช้ (screenshot pillinfo มี scrollbar):** กล่องข้อความลักษณะนี้ทุกกล่อง ขยายพื้นที่ด้านข้างจนไม่ต้องมี scrollbar — scrollbar ดูไม่ professional
+- **ทำ (lobby.css ท้ายไฟล์ ต่อจากโซนรอบ 156):** ซ่อน scrollbar ทั้งตระกูล `.levelup-box` (scrollbar-width:none + webkit — ยังเลื่อนนิ้วได้ เป็น fallback จอจิ๋ว) · กล่องข้อความ: pillinfo 620 / alert 560 (`!important` ทับ 320 เดิม) / attn 620 / nw 620 · **ตั้งค่า: grid 3 คอลัมน์** (h2/hint/หัวข้อ feed/ปุ่มช่วยเหลือ/ปุ่มปิด span เต็มแถว) + แถว padding 8 + label 14.5/desc 11 + **สวิตช์ย่อ 84×34 (knob 26 · on left 54)** + กล่อง padding 14 22 12 → พอดีจอไม่เลื่อน · **วิธีเล่น/คู่มือครู (.help-box ร่วม): help-body grid 3 คอลัมน์** font 12.5 (เนื้อหา 10 หัวข้อยาวเกินจอเตี้ย — ยังเลื่อนได้แต่ไร้แถบ) · media ≤920px = 2 คอลัมน์ · ≤680px = คอลัมน์เดียว
+- ✅ **ยืนยัน preview 1000×640:** settings `scrollHeight==clientHeight` (574==574) ไม่เลื่อน · default ปิดทุกสวิตช์ + toggle เปิด/ปิดยังทำงานหลังย่อสวิตช์ · pillinfo/alert noScroll · help สลับ 3 คอลัมน์ scrollbar ซ่อน · ไม่มี console error · deploy live .148
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือจอเตี้ย — เปิดตั้งค่า ⚙️ / วิธีเล่น 📖 / แตะ pill ดูว่าไม่มีแถบเลื่อนโผล่
+- **หมายเหตุ:** state.feedShare ในเครื่อง preview ถูกล้างกลับ default (เทสต์รอบก่อนเผลอเซฟ quiz:true ไว้)
+
 ### ✅ รอบ 156 (12 ก.ค.) — แตะ pill ตัวเลขบน header Lobby = หน้าต่างอธิบาย 💡 (version .147)
 - **สเปกผู้ใช้ (screenshot):** pill 3 ก้อนบน header (🪙 60,010 · 📅 +4,003 · 🌐 +212.07) แตะแล้วให้ขึ้นหน้าต่างอธิบายว่าเป็นตัวเลขของอะไร
 - **ทำ:** `openPillInfo(kind)` (ui.js ก่อน renderComputerCard) — กล่อง `.pillinfo-box`: emoji ใหญ่ + ชื่อ + เลขสด (`.pillinfo-val` ชิปทอง tabular-nums) + คำอธิบายเด็กอ่านง่าย · coins=มีอยู่ตอนนี้+แหล่งหาเพิ่ม · today=นับเฉพาะที่หาได้วันนี้ ใช้จ่ายไม่ลด รีเซ็ตเที่ยงคืน แคปส่งครูได้ · net=+ONLINE_RATE/วิ ตกเหรียญเต็มทุก 100 วิ ตัวเลข=สะสมทั้งหมด + สถานะ 🟢 กำลังเดิน/⚪ หยุดพัก (จาก onlineEarnActive) · ผูก click ใน main.js (`closest('.coin-pill')` ของ #coin-count/#coin-today + #net-pill) · CSS: pill cursor:pointer+active ยุบ (lobby.css ท้ายไฟล์)
