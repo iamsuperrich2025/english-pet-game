@@ -1345,3 +1345,14 @@ html.no-anim .q-bigcard{animation:none;}
 .sp-coin{color:#ffe082;font-size:clamp(13px,3.6vh,18px);font-weight:900;margin-top:4px;}
 @keyframes spPop{0%{transform:translate(-50%,-50%) scale(.5);opacity:0;}100%{transform:translate(-50%,-50%) scale(1);opacity:1;}}
 html.no-anim .sp-banner{animation:none;}
+
+/* 🎀 ริบบิ้นฉลองจบคำ Spin-to-Spell (รอบ 173) — overlay ทั้งจอชั่วคราว แพทเทิร์นเดียวกับ #rain-fx */
+#spell-confetti{position:fixed;inset:0;pointer-events:none;z-index:9000;overflow:hidden;}
+.sp-rb{position:absolute;top:-6vh;border-radius:2px;opacity:0;
+  animation:spRibbon linear forwards;will-change:transform,opacity;}
+@keyframes spRibbon{
+  0%{opacity:1;transform:translate3d(0,0,0) rotateZ(0deg) rotateX(0deg);}
+  60%{opacity:1;}
+  100%{opacity:0;transform:translate3d(var(--dx),114vh,0) rotateZ(var(--rz)) rotateX(var(--rx));}
+}
+html.no-anim #spell-confetti{display:none;}

@@ -41,7 +41,7 @@ const Lobby3D = (function(){
   let spellRot=0, spellTarget=0, spellVel=0, spellSlotHalf=0.26, spellHintAt=0;
   let spellSlotAng=Math.PI/6, spellTickK=0, spellTickAt=0;   // ตรวจตัวอักษรผ่านช่อง → เสียงติ๊กแบบวงล้อเกมโชว์
   const SP_R=1.05, SP_Y=0.55, SP_LS=0.34, SP_MS=0.62;   // รัศมีวง/ความสูง/ขนาดตัวอักษร/ขนาด marker (หน่วยโลก — จูนได้)
-  const SPELL_COIN=15;                                   // เหรียญต่อคำ (สเปก ~15-20)
+  const SPELL_COIN=1000;                                 // เหรียญต่อคำ (ผู้ใช้เคาะ 1,000 รอบ 173 — "เพราะยาก" เดิม 15)
   // 🎡 ฟีลวงล้อ (feedback ผู้ใช้รอบ 172: "ลากประคอง" วางตัวอักษรตรงช่องได้เลย = โกงข้ามการปัด + ของเดิมฝืดไป)
   // → ระหว่างนิ้วแตะวงไม่ขยับ (จับ=หยุดวง) ปล่อยนิ้วค่อยเหวี่ยงตามความเร็วปัด · แรงเสียดทานต่ำ หมุนลื่นหลายรอบ
   const SPELL_SENS=0.016;      // ความไวปัด (rad ต่อ px ของความเร็ว) — เดิม 0.012 ฝืด
@@ -392,6 +392,46 @@ const Lobby3D = (function(){
     else if(name==='wrong') beep(180,.25,0,'sawtooth',.08);                              // เก็บผิด (= sfx.wrong)
     else if(name==='win'){ beep(523,.14); beep(659,.14,.12); beep(784,.16,.24); beep(1047,.34,.36,'sine',.2); }  // แฟนแฟร์จบคำ
     else if(name==='start'){ beep(440,.1); beep(660,.14,.09); }                          // เปิดวงแหวน
+    else if(name==='firework') spellFireworkSynth();                                     // พลุฉลอง (รอบ 173)
+  }
+  // เสียงพลุสังเคราะห์: ตูม 3 ลูกไล่กัน (white noise ลด gain แบบพลุจริง) + ประกายแตกวิ้งๆ
+  // ใช้ audioCtx ตัวเดียวกับ beep (util.js — let global) ตามนโยบายเสียงปลอดลิขสิทธิ์
+  function spellFireworkSynth(){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const pop=(t0,vol,dur)=>{
+        const n=Math.floor(audioCtx.sampleRate*dur), buf=audioCtx.createBuffer(1,n,audioCtx.sampleRate), d=buf.getChannelData(0);
+        for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.2);
+        const src=audioCtx.createBufferSource(); src.buffer=buf;
+        const f=audioCtx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=2400;
+        const g=audioCtx.createGain(); g.gain.value=vol;
+        src.connect(f); f.connect(g); g.connect(audioCtx.destination);
+        src.start(audioCtx.currentTime+t0);
+      };
+      pop(0,.30,.55); pop(.30,.20,.45); pop(.58,.25,.6);
+      if(typeof beep==='function'){ beep(1568,.09,.12,'triangle',.05); beep(1976,.09,.42,'triangle',.05); beep(1760,.1,.7,'triangle',.045); }
+    }catch(e){}
+  }
+
+  // 🎀 ริบบิ้นโปรยทั่วจอชั่วคราว (แพทเทิร์นเดียวกับ overlay ฝน #rain-fx: fixed inset:0 z-9000 บน body)
+  function spellConfetti(){
+    if(document.documentElement.classList.contains('no-anim')) return;   // ผู้ใช้ปิดอนิเมชัน = ไม่โปรย
+    const old=document.getElementById('spell-confetti'); if(old) old.remove();
+    const fx=document.createElement('div'); fx.id='spell-confetti';
+    const COLORS=['#ff5f6e','#ffd54f','#4fc3f7','#7ee2a0','#ba68c8','#ff8a65','#fff176','#4dd0e1'];
+    const n=Math.min(120, Math.max(70, Math.round(window.innerWidth/11)));
+    let html='';
+    for(let i=0;i<n;i++){
+      html+=`<span class="sp-rb" style="left:${(Math.random()*100).toFixed(1)}%;`+
+        `width:${(5+Math.random()*6).toFixed(1)}px;height:${(12+Math.random()*12).toFixed(1)}px;`+
+        `background:${COLORS[i%COLORS.length]};`+
+        `--dx:${(Math.random()*160-80).toFixed(0)}px;--rz:${(Math.random()*720-360).toFixed(0)}deg;`+
+        `--rx:${(540+Math.random()*720).toFixed(0)}deg;`+
+        `animation-duration:${(2.4+Math.random()*1.6).toFixed(2)}s;animation-delay:${(Math.random()*0.7).toFixed(2)}s"></span>`;
+    }
+    fx.innerHTML=html;
+    document.body.appendChild(fx);
+    setTimeout(()=>fx.remove(), 5200);   // ตัวสุดท้าย delay .7 + ยาวสุด 4.0 วิ = จบก่อนถอด
   }
 
   const spellTexCache={};
@@ -545,16 +585,19 @@ const Lobby3D = (function(){
     const w=spellWord;
     spellDone.push(w.en);
     spellSfx('win');
+    spellSfx('firework');                                      // พลุตูมพร้อมแฟนแฟร์ (รอบ 173)
+    spellConfetti();                                           // ริบบิ้นโปรยทั่วจอ
     let coinTxt='';
     if(typeof addCoins==='function'){
       addCoins(SPELL_COIN);
       if(typeof saveState==='function') saveState();
-      coinTxt=`<div class="sp-coin">+🪙${SPELL_COIN}</div>`;
+      const ctxt=(typeof fmtNum==='function')?fmtNum(SPELL_COIN):SPELL_COIN;
+      coinTxt=`<div class="sp-coin">+🪙${ctxt}</div>`;
     }
-    spellBanner(`<div class="sp-big">🎉 ${w.en.toUpperCase()}</div><div class="sp-thb">${w.th||''}</div>${coinTxt}`, 2100);
+    spellBanner(`<div class="sp-big">🎉 ${w.en.toUpperCase()}</div><div class="sp-thb">${w.th||''}</div>${coinTxt}`, 2600);
     setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); }, 700);   // อ่านทั้งคำ (ตัดเสียงตัวอักษรเอง)
     spellLetters.forEach(s=>{ s.userData.dying=true; });       // ตัวที่เหลือลอยหายพร้อมกัน
-    setTimeout(()=>{ if(spellActive) spellNextWord(); }, 2100);
+    setTimeout(()=>{ if(spellActive) spellNextWord(); }, 2600);
   }
 
   // ---- HUD (HTML ทับเวที — pointer-events:none ยกเว้นปุ่ม ให้ปัดหมุนทะลุถึง canvas) ----

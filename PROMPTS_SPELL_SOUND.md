@@ -1,4 +1,4 @@
-# PROMPTS_SPELL_SOUND.md — เสียงเกมวงแหวนสะกดคำ Spin-to-Spell 🌀 (5 ไฟล์)
+# PROMPTS_SPELL_SOUND.md — เสียงเกมวงแหวนสะกดคำ Spin-to-Spell 🌀 (6 ไฟล์)
 
 > **ตอนนี้เกมมีเสียงสังเคราะห์ในตัวแล้ว (Web Audio — ปลอดลิขสิทธิ์ 100%) เล่นได้เลยไม่ต้องรอไฟล์**
 > ไฟล์เสียงจริงเป็น "ตัวอัปเกรด" — วางปุ๊บเกมสลับไปใช้ไฟล์จริงเองอัตโนมัติ (ระบบเดียวกับเสียงโลกผี)
@@ -51,6 +51,15 @@ no vocals, fast and joyful
 magical shimmering whoosh swirl going upward, sparkling ring of chimes
 appearing, fantasy summon effect, airy and bright, playful magic circle
 activation, no music, kids game UI sound effect
+```
+
+## 6) `sound/spell/firework.mp3` — พลุฉลองจบคำ 🎆 (ดังคู่กับแฟนแฟร์ win)
+**Duration: 2 วินาที**
+```
+celebration fireworks display, three firework rockets bursting in quick
+succession, deep satisfying boom pops with bright crackling sparkle
+trails falling, festive party finale feeling, no music, no vocals,
+clean fireworks sound effect for kids game
 ```
 
 ---
