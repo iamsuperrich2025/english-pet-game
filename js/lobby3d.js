@@ -8,6 +8,10 @@
    ============================================================ */
 const Lobby3D = (function(){
   const MODEL_DIR = 'img/models/';
+  // 🔄 รอบ 165: header Hosting ให้ .glb cache 7 วัน (ประหยัดโควตา/โหลดไว) → เครื่องผู้เล่นจะเห็นโมเดลเก่า
+  // จนกว่า cache หมดอายุ · **เปลี่ยนไฟล์ .glb เมื่อไหร่ ต้องบัมพ์เลขนี้** (URL เปลี่ยน = HTTP cache
+  // + sw cache miss ทุกเครื่องทันที ดาวน์โหลดตัวใหม่รอบเดียวแล้ว cache ต่อตามปกติ)
+  const MODEL_VER = '163';                         // ล่าสุด: หมา/แมวเวอร์ชันย่อไฟล์ (รอบ 163)
   // ความสูงโมเดล (หน่วยโลก) ตามระดับร่างยักษ์ 0..4 — ล้อกับ 2D: ปกติผู้เลี้ยงสูงกว่า · ยักษ์สุดผู้เลี้ยงแค่เข่า
   const PET_H   = [0.80, 1.85, 2.45, 3.00, 3.50];   // รอบ 161: g0 1.30→0.80 — น้องร่างปกติสูงไม่เกินเอวคน (0.80/1.55 ≈ 52%)
   const OWNER_H = [1.55, 1.50, 1.35, 1.15, 1.00];
@@ -35,7 +39,7 @@ const Lobby3D = (function(){
     const k = `${avatar||'male'}|${petType}`;
     if(k in existCache) return existCache[k];
     try{
-      const urls=[`${MODEL_DIR}caretaker_${avatar||'male'}.glb`, `${MODEL_DIR}pet_${petType}.glb`];
+      const urls=[`${MODEL_DIR}caretaker_${avatar||'male'}.glb?v=${MODEL_VER}`, `${MODEL_DIR}pet_${petType}.glb?v=${MODEL_VER}`];
       const res = await Promise.all(urls.map(u=>fetch(u,{method:'HEAD'}).then(r=>r.ok).catch(()=>false)));
       const ok = res.every(Boolean);
       existCache[k]=ok; return ok;
@@ -148,8 +152,8 @@ const Lobby3D = (function(){
 
   async function loadModels(avatar, petType){
     clearMixers();
-    const ownerUrl = `${MODEL_DIR}caretaker_${avatar||'male'}.glb`;
-    const petUrl   = `${MODEL_DIR}pet_${petType}.glb`;
+    const ownerUrl = `${MODEL_DIR}caretaker_${avatar||'male'}.glb?v=${MODEL_VER}`;
+    const petUrl   = `${MODEL_DIR}pet_${petType}.glb?v=${MODEL_VER}`;
     // ต้องได้ครบทั้งคู่ ไม่งั้นถือว่า 3D ใช้ไม่ได้ → fallback PNG
     const [og, pg] = await Promise.all([loadGLB(ownerUrl), loadGLB(petUrl)]);
     ownerRoot.userData.gltf = og; petRoot.userData.gltf = pg;
