@@ -2,6 +2,8 @@
 /* ============================================================
    ปุ่มหลัก + INIT
    ============================================================ */
+if(typeof Music !== 'undefined') Music.init();   // 🎵 รอบ 181: probe เพลง + เริ่ม bg หลัง gesture แรก
+
 /* ข้อ 4: เลือกตัวละครผู้เลี้ยง (ชาย/หญิง) ตอนลงทะเบียน — ไฮไลต์ตัวที่เลือก */
 let regAvatar = null;
 document.querySelectorAll('#reg-avatar .avatar-opt').forEach(btn=>{

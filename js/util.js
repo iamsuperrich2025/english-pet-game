@@ -486,6 +486,7 @@ function openSettings(){
   }));
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
+    if(typeof Music !== 'undefined') Music.onSound();          // รอบ 181: หยุด/เล่นเพลงตามสวิตช์เสียง
   });
   const hSwitch = overlay.querySelector('#set-haptic .set-switch');
   if(hSwitch) hSwitch.addEventListener('click', ()=>{

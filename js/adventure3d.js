@@ -134,6 +134,8 @@ let carPeerHits=0;                                    // 🛠️ รอบ 133: 
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
+let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
+let radioBars=new Float32Array(32);                       // ระดับแท่ง visualizer (หน่วงนุ่ม)
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
@@ -2650,6 +2652,46 @@ function buildDom(){
   .adv-drive #adv-cargauges{display:block}
   #adv-cardash .cd-css{height:16vh;background:linear-gradient(180deg,#262a31,#101216);
     border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
+  /* 🎵 รอบ 181: จอวิทยุ head-unit — วางทับจอดำกลางคอนโซล (JS ตั้ง left/top/size ตามภาพ dash) */
+  #adv-radio-screen{position:absolute;display:none;z-index:5;cursor:pointer;overflow:hidden;
+    border-radius:3px;box-shadow:0 0 0 1px rgba(90,190,255,.25) inset,0 0 12px rgba(70,160,255,.22)}
+  #adv-radio-viz{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #adv-radio-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:2px;text-align:center;pointer-events:none;line-height:1.1}
+  #adv-radio-hint b{color:#8fe0ff;font-size:clamp(9px,1.5vw,13px);letter-spacing:1px;
+    text-shadow:0 0 8px rgba(80,180,255,.8);animation:radioPulse 1.8s ease-in-out infinite}
+  #adv-radio-hint span{color:#bcd7f0;font-size:clamp(7px,1.1vw,10px)}
+  @keyframes radioPulse{0%,100%{opacity:.55}50%{opacity:1}}
+  #adv-radio-screen.playing{box-shadow:0 0 0 1px rgba(120,220,255,.5) inset,0 0 18px rgba(80,190,255,.4)}
+  /* แผงเลือกเพลง sci-fi — วางเหนือจอ (JS ตั้ง left/width/bottom) */
+  #adv-radio-list{position:absolute;z-index:9;display:none;padding:9px 10px;
+    background:linear-gradient(165deg,rgba(18,44,80,.97),rgba(6,18,40,.98));
+    border:1px solid rgba(95,200,255,.5);border-radius:12px;color:#dcebfb;
+    box-shadow:0 10px 30px rgba(2,10,28,.7),inset 0 0 22px rgba(80,180,255,.08);backdrop-filter:blur(3px)}
+  #adv-radio-list .rl-head{display:flex;align-items:center;justify-content:space-between;
+    font-size:12px;font-weight:800;color:#eaf7ff;margin-bottom:7px;letter-spacing:.5px}
+  #adv-radio-list .rl-x{border:none;background:rgba(255,255,255,.1);color:#cfe4fa;border-radius:7px;
+    width:22px;height:22px;cursor:pointer;font-size:12px}
+  #adv-radio-list .rl-tracks{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;max-height:26vh;overflow-y:auto;scrollbar-width:none}
+  #adv-radio-list .rl-tracks::-webkit-scrollbar{display:none}
+  #adv-radio-list .rl-track{display:flex;align-items:center;gap:5px;cursor:pointer;
+    padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;
+    background:rgba(11,31,66,.6);color:#bdd8f2;border:1px solid rgba(95,200,255,.28)}
+  #adv-radio-list .rl-track .rl-eq{font-size:10px;color:#7fd0ff}
+  #adv-radio-list .rl-track.on{background:linear-gradient(180deg,#2a7fd0,#1a5296);color:#fff;
+    border-color:rgba(150,225,255,.8);box-shadow:0 0 10px rgba(80,180,255,.5)}
+  #adv-radio-list .rl-modes{display:flex;gap:6px;margin-bottom:8px}
+  #adv-radio-list .rl-mode{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;
+    padding:6px 4px;border-radius:9px;font-size:11px;font-weight:800;font-family:inherit;line-height:1.1;
+    background:rgba(11,31,66,.55);color:#a9c8e8;border:1px solid rgba(95,200,255,.3)}
+  #adv-radio-list .rl-mode small{font-size:9px;font-weight:600;color:#8fb3d8}
+  #adv-radio-list .rl-mode.on{background:linear-gradient(180deg,#37b6ff,#2160c8);color:#fff;
+    border-color:rgba(150,225,255,.85);box-shadow:0 0 12px rgba(80,180,255,.55)}
+  #adv-radio-list .rl-mode.on small{color:#dcefff}
+  #adv-radio-list .rl-power{width:100%;cursor:pointer;padding:6px;border-radius:9px;
+    font-size:11.5px;font-weight:800;font-family:inherit;
+    background:rgba(70,20,32,.7);color:#ffc9cf;border:1px solid rgba(255,140,150,.5)}
+  #adv-radio-list .rl-power:active,#adv-radio-list .rl-mode:active,#adv-radio-list .rl-track:active{transform:scale(.96)}
   /* พวงมาลัยขวาแบบไทย · จัดให้ "ช่องเปิดบนของพวงมาลัย" ตรงกับวงเกจ → มองเข็มลอดพวงมาลัยแบบรถจริง */
   #adv-carwheel{position:absolute;left:76.5%;bottom:-15vh;transform:translateX(-50%);
     width:min(44vh,50vw);aspect-ratio:1;pointer-events:none;display:none;z-index:4;will-change:transform}
@@ -2979,6 +3021,9 @@ function buildDom(){
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <canvas id="adv-cargauges"></canvas>
+    <!-- 🎵 รอบ 181: วิทยุในรถ — จอ head-unit กลางคอนโซล (visualizer) + แผงเลือกเพลง sci-fi -->
+    <div id="adv-radio-screen"><canvas id="adv-radio-viz"></canvas><div id="adv-radio-hint"></div></div>
+    <div id="adv-radio-list" style="display:none"></div>
     <div id="adv-carwheel"></div>
     <button id="adv-horn">📯</button>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
@@ -3092,6 +3137,27 @@ function buildDom(){
   cwImg.onload=()=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(cwImg); };
   cwImg.onerror=()=>{ carWheelEl.innerHTML=`<div class="cw-css"></div>`; };
   cwImg.src='img/car/wheel.png';
+  // 🎵 รอบ 181: วิทยุในรถ — จอ head-unit
+  radioScreenEl=overlayEl.querySelector('#adv-radio-screen');
+  radioVizCv=overlayEl.querySelector('#adv-radio-viz');
+  radioVizCtx=radioVizCv?radioVizCv.getContext('2d'):null;
+  radioHintEl=overlayEl.querySelector('#adv-radio-hint');
+  radioListEl=overlayEl.querySelector('#adv-radio-list');
+  if(radioScreenEl){
+    radioScreenEl.addEventListener('click', ()=>{
+      if(typeof Music==='undefined' || !Music.ready()){ toast('🎵 ยังไม่มีไฟล์เพลงในรถ (วางใน sound/SongsInCar/)'); return; }
+      if(!Music.isCarOn()){ Music.carRadio(true); radioSetHint(); }   // ปิดอยู่ → เปิดวิทยุ
+      else radioToggleList();                                          // เปิดอยู่ → เปิด/ปิดรายการเพลง
+    });
+  }
+  if(radioListEl){
+    radioListEl.addEventListener('click', e=>{
+      const tr=e.target.closest('.rl-track'); if(tr){ Music.playCar(+tr.dataset.i); renderRadioList(); return; }
+      const md=e.target.closest('.rl-mode'); if(md){ Music.setMode(md.dataset.m); renderRadioList(); return; }
+      if(e.target.closest('.rl-power')){ Music.carRadio(false); radioListEl.style.display='none'; radioSetHint(); return; }
+      if(e.target.closest('.rl-x')){ radioListEl.style.display='none'; }
+    });
+  }
   const hornBtn=overlayEl.querySelector('#adv-horn');
   hornBtn.addEventListener('touchstart',e=>{ e.preventDefault(); CarSound.horn(); },{passive:false});
   hornBtn.addEventListener('click',e=>{ e.preventDefault(); CarSound.horn(); });
@@ -3951,6 +4017,7 @@ function tickDrive(dt,now){
   rlTick(p.x,p.z,now);                                       // 🚦 รอบ 133: อัปเดตสีไฟจราจร + ตรวจฝ่าไฟแดง ม.22
   CarSound.update(th,Math.abs(dSpeed),dt);
   drawCarGauges();
+  radioTick();                                              // 🎵 รอบ 181: จอวิทยุ + visualizer
 }
 /* ============================================================
    🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-180 + วัดรอบ 0-8×1000) — วาดทับวงเกจของภาพ dash.png
@@ -4003,6 +4070,84 @@ function drawCarGauges(){
   const kmh=Math.abs(dSpeed)*3.6;
   drawCarDial(c, gx(1096),  gy(662), 80*s, kmh/240, 240, 40, CAR_LEGAL_KMH);  // สปีด 0-240 (รอบ 128 · โซนแดง = เกิน 90 ผิดกฎหมาย)
   drawCarDial(c, gx(1258.5),gy(662), 78*s, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
+}
+
+/* ============================================================
+   🎵 รอบ 181: วิทยุในรถ — จอ head-unit กลางคอนโซล (visualizer + เลือกเพลง 3 โหมด)
+   จอวางทับ "หน้าจอดำระหว่างลูกบิด 2 ปุ่ม" บนภาพ dash.png (พิกัดภาพ RADIO_RECT)
+   map พิกัดภาพ→จอ สูตรเดียวกับเข็มเกจ (object-fit cover + object-position 50% 66%)
+   ============================================================ */
+const RADIO_RECT=[622,682,806,780];                         // จอ head-unit (พิกัดภาพ dash.png 1536×1024)
+let _radioVW=0,_radioVH=0;
+function radioLayout(){
+  if(!radioScreenEl) return;
+  if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ radioScreenEl.style.display='none'; return; }
+  const box=carDashImg.getBoundingClientRect();
+  if(!box.width){ radioScreenEl.style.display='none'; return; }
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.66;
+  const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
+  const [X0,Y0,X1,Y1]=RADIO_RECT;
+  const L=gx(X0), T=gy(Y0), W=(X1-X0)*s, H=(Y1-Y0)*s;
+  radioScreenEl.style.display='block';
+  radioScreenEl.style.left=L+'px'; radioScreenEl.style.top=T+'px';
+  radioScreenEl.style.width=W+'px'; radioScreenEl.style.height=H+'px';
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  radioVizCv.width=Math.round(W*dpr); radioVizCv.height=Math.round(H*dpr);
+  radioVizCv.style.width=W+'px'; radioVizCv.style.height=H+'px';
+  if(radioListEl){                                          // แผงรายการวางเหนือจอ (กว้างกว่าจอ ~2.6 เท่า)
+    const lw=Math.max(W*2.6, 300);
+    let ll=L+W/2-lw/2; ll=Math.max(6, Math.min(ll, window.innerWidth-lw-6));
+    radioListEl.style.left=ll+'px'; radioListEl.style.width=lw+'px';
+    radioListEl.style.bottom=(window.innerHeight-T+8)+'px';
+  }
+  radioSetHint();
+}
+function radioSetHint(){
+  if(!radioHintEl||!radioScreenEl) return;
+  const on=typeof Music!=='undefined' && Music.isCarOn();
+  radioScreenEl.classList.toggle('playing', on);
+  radioHintEl.innerHTML = on ? '' : '<b>♪ MUSIC</b><span>แตะเพื่อเปิดเพลงในรถ</span>';
+}
+function renderRadioList(){
+  if(!radioListEl || typeof Music==='undefined') return;
+  const tracks=Music.carTracks(), cur=Music.curCar(), m=Music.mode();
+  const LBL={all:['REPEAT ALL','เล่นซ้ำทั้งหมด'],one:['REPEAT ONE','เล่นซ้ำเพลง'],shuffle:['SHUFFLE','สุ่มเล่น']};
+  radioListEl.innerHTML=`
+    <div class="rl-head"><span>🎵 CAR RADIO · เพลงในรถ</span><button class="rl-x" type="button">✕</button></div>
+    <div class="rl-tracks">${tracks.map((t,i)=>`<button class="rl-track${i===cur?' on':''}" data-i="${i}" type="button"><span class="rl-eq">${i===cur?'▶':'♪'}</span>Track ${i+1}</button>`).join('')}</div>
+    <div class="rl-modes">${['all','one','shuffle'].map(k=>`<button class="rl-mode${m===k?' on':''}" data-m="${k}" type="button">${LBL[k][0]}<small>${LBL[k][1]}</small></button>`).join('')}</div>
+    <button class="rl-power" type="button">⏻ TURN OFF · ปิดเพลง</button>`;
+}
+function radioToggleList(){
+  if(!radioListEl) return;
+  if(radioListEl.style.display==='block'){ radioListEl.style.display='none'; return; }
+  renderRadioList(); radioLayout(); radioListEl.style.display='block';
+}
+function drawRadioViz(){
+  if(!radioVizCtx||!radioScreenEl||radioScreenEl.style.display==='none') return;
+  const cv=radioVizCv, c=radioVizCtx, W=cv.width, H=cv.height;
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,28,52,.94)'); g.addColorStop(1,'rgba(3,10,24,.97)');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  const on=typeof Music!=='undefined' && Music.isCarOn();
+  if(!on) return;                                           // ปิด → จอมืด (ข้อความ hint HTML ทับ)
+  const data=Music.vizData(), n=radioBars.length, bw=W/n;
+  for(let i=0;i<n;i++){
+    const v=data?data[i]/255:0;
+    radioBars[i]= v>radioBars[i] ? v : radioBars[i]*0.85+v*0.15;   // ขึ้นเร็ว ตกช้า (นุ่มตา)
+    const bh=Math.max(H*0.05, radioBars[i]*H*0.92), x=i*bw, y=H-bh;
+    const bg=c.createLinearGradient(0,H,0,y);
+    bg.addColorStop(0,'#1668b8'); bg.addColorStop(.6,'#4fc3f7'); bg.addColorStop(1,'#b6f2ff');
+    c.fillStyle=bg; c.fillRect(x+bw*0.16, y, bw*0.68, bh);
+    c.fillStyle='rgba(190,242,255,.95)'; c.fillRect(x+bw*0.16, y, bw*0.68, Math.max(1,H*0.03));
+  }
+}
+function radioTick(){
+  if(!radioScreenEl) return;
+  if(mode!=='drive'){ if(radioScreenEl.style.display!=='none'){ radioScreenEl.style.display='none'; if(radioListEl) radioListEl.style.display='none'; } return; }
+  if(radioScreenEl.style.display==='none' || window.innerWidth!==_radioVW || window.innerHeight!==_radioVH){
+    _radioVW=window.innerWidth; _radioVH=window.innerHeight; radioLayout();
+  }
+  drawRadioViz();
 }
 /* ============================================================
    🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
@@ -4832,6 +4977,7 @@ function start(md){
   if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
+  if(typeof Music!=='undefined') Music.suspendBg();   // 🎵 รอบ 181: พักเพลงพื้นหลัง (โลก 3D มี soundscape เอง)
 
   if(!built){
     buildDom();
@@ -4947,6 +5093,8 @@ function exitWorld(){
   if(introEl) introEl.classList.remove('on');
   scareEl.classList.remove('on');
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
+  if(typeof Music!=='undefined') Music.resumeBg();   // 🎵 รอบ 181: ปิดวิทยุรถ + เล่นเพลงพื้นหลังต่อ
+  const rl=document.getElementById('adv-radio-list'); if(rl) rl.style.display='none';
   saveState();
   renderDashboard();
   if(sessionWords>0 || sessionCoins>0)
