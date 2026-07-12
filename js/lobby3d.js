@@ -32,6 +32,16 @@ const Lobby3D = (function(){
   let dragRot=0, targetRot=0, spinVel=0;           // มุมหมุนจากการปัด
   const gltfCache={};                              // url -> gltf.scene (ต้นฉบับ clone ได้)
 
+  // 🌀 Spin-to-Spell (รอบ 171) — วงแหวนตัวอักษรรอบน้อง ปัดหมุนให้ตัวที่ต้องการมาตรงช่องหน้า ▼ แล้วแตะเก็บ
+  // เล่นได้เฉพาะร่างปกติ (g0) + มีโมเดล 3D จริง · ระหว่างเล่น: น้องย้ายมากลางเวที ผู้เลี้ยงซ่อน
+  // drag บน canvas เปลี่ยนไปหมุนวงแหวน (spellTarget/spellVel — โมเมนตัมสูตรเดียวกับ spin ตัวละคร)
+  let spellActive=false, spellLock=false, spellDown=false;
+  let spellGroup=null, spellMarker=null, spellRay=null;
+  let spellLetters=[], spellWord=null, spellIdx=0, spellDone=[];
+  let spellRot=0, spellTarget=0, spellVel=0, spellSlotHalf=0.26, spellHintAt=0;
+  const SP_R=1.05, SP_Y=0.55, SP_LS=0.34, SP_MS=0.62;   // รัศมีวง/ความสูง/ขนาดตัวอักษร/ขนาด marker (หน่วยโลก — จูนได้)
+  const SPELL_COIN=15;                                   // เหรียญต่อคำ (สเปก ~15-20)
+
   function isFileProto(){ return location.protocol === 'file:'; }
 
   // เช็กว่ามีไฟล์ .glb ครบทั้งผู้เลี้ยง+น้องไหม (ก่อนโหลด three 700KB) — cache ต่อคู่ avatar|pet
@@ -164,6 +174,7 @@ const Lobby3D = (function(){
     const g = Math.max(0, Math.min(4, giant||0));
     const og = ownerRoot.userData.gltf, pg = petRoot.userData.gltf;
     if(!og || !pg) return;
+    spellAbort();                         // เปลี่ยนน้อง/ร่างยักษ์กลางเกมสะกดคำ → เคลียร์เกมก่อนจัด layout ใหม่
     const pm = fitInto(petRoot,   cloneSkinned(pg.scene), PET_H[g]);
     const om = fitInto(ownerRoot, cloneSkinned(og.scene), OWNER_H[g]);
     setupClips(pg, petRoot); setupClips(og, ownerRoot);
@@ -189,7 +200,7 @@ const Lobby3D = (function(){
     const viewW = (OWNER_H[0] * 1.55) * camera.aspect;   // fitH ของ g0 × aspect
     const x = Math.max(0.85, (viewW / 2) * 0.74);
     ownerRoot.position.x = -x;
-    petRoot.position.x = x;
+    petRoot.position.x = spellActive ? 0 : x;            // ระหว่างเกมสะกดคำ น้องยืนกลางเวที (resize ห้ามดันกลับข้าง)
   }
 
   // เป้าเท้าตัวหน้าสุดห่างขอบล่างเวที (px) — เส้นพื้นเรืองแสง .stage-hero::after อยู่ bottom:30px
@@ -234,14 +245,22 @@ const Lobby3D = (function(){
 
   // ---- ปัด/ลาก หมุนตัวละคร ----
   function bindDrag(){
-    let down=false, lastX=0, lastT=0;
-    const start=(x)=>{ down=true; lastX=x; lastT=performance.now(); spinVel=0; };
-    const move=(x)=>{ if(!down) return; const dx=x-lastX; lastX=x;
+    let down=false, lastX=0, lastT=0, dnX=0, dnY=0, dnT=0, moved=0;
+    const start=(x,y)=>{ down=true; spellDown=spellActive; lastX=x; lastT=performance.now();
+      dnX=x; dnY=y; dnT=lastT; moved=0;
+      if(spellActive) spellVel=0; else spinVel=0; };
+    const move=(x,y)=>{ if(!down) return; const dx=x-lastX; lastX=x;
+      moved=Math.max(moved, Math.abs(x-dnX), Math.abs(y-dnY));
       const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now;
-      targetRot += dx*0.012; spinVel = (dx*0.012)/(dt/16.7); };
-    const end=()=>{ down=false; };
-    canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); start(e.clientX); });
-    canvas.addEventListener('pointermove', e=>move(e.clientX));
+      if(spellActive){ spellTarget += dx*0.012; spellVel = (dx*0.012)/(dt/16.7); }
+      else{ targetRot += dx*0.012; spinVel = (dx*0.012)/(dt/16.7); } };
+    const end=(e)=>{ if(!down) return; down=false; spellDown=false;
+      // นิ้วนิ่งค้างก่อนปล่อย = ตั้งใจหยุด → ล้างความเร็วเก่า กันวงแหวนดีดต่อเอง (สำคัญกับเกมเล็งช่อง)
+      if(spellActive && performance.now()-lastT>120) spellVel=0;
+      // แตะ (ไม่ใช่ลาก) ระหว่างเกมสะกดคำ = ลองเก็บตัวอักษร
+      if(spellActive && moved<8 && performance.now()-dnT<600 && e && e.clientX!=null) spellTap(e.clientX, e.clientY); };
+    canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); start(e.clientX, e.clientY); });
+    canvas.addEventListener('pointermove', e=>move(e.clientX, e.clientY));
     window.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
     canvas.style.touchAction='none';
@@ -262,6 +281,7 @@ const Lobby3D = (function(){
     const t = clock.elapsedTime;
     if(sway){ sway.position.y = Math.sin(t*1.6)*0.012; sway.rotation.z = Math.sin(t*0.9)*0.010; }
     mixers.forEach(m=>m.update(dt));
+    if(spellActive) spellTick(dt, t);
     renderer.render(scene, camera);
   }
   function start(){ if(running) return; running=true; clock.start(); raf=requestAnimationFrame(tick); }
@@ -284,6 +304,7 @@ const Lobby3D = (function(){
       if(canvas) canvas.style.display='none';
       if(png) png.style.visibility='';
     }
+    spellBtnSync();                       // ปุ่ม 🌀 สะกดคำ โผล่เฉพาะตอน 3D โชว์จริง (g0)
   }
 
   // ---- entry: เรียกทุกครั้งที่ render dashboard ----
@@ -299,6 +320,7 @@ const Lobby3D = (function(){
     if(renderer && curKey === key && ownerRoot.userData.gltf && petRoot.userData.gltf){
       if(curGiant !== (opts.giant||0)) applyLayout(opts.giant||0);
       showCanvas(true); resize(); start();
+      if(spellActive){ spellHud(); spellHudWord(); }   // renderDashboard กลางเกม (เช่นได้เหรียญ) ล้าง DOM เวที → คืน HUD
       return;
     }
     if(booting) return;                          // กันโหลดซ้อน
@@ -324,16 +346,265 @@ const Lobby3D = (function(){
     }
   }
 
+  /* ============================================================
+     🌀 Spin-to-Spell (รอบ 171)
+     วงแหวนตัวอักษร 12–16 ตัวรอบน้อง · ปัดหมุน (โมเมนตัม+snap เข้าช่อง)
+     ตัวอักษรตรงช่องหน้า ▼ ขยายใหญ่ · แตะเก็บเรียงตามคำ · ครบคำ = อ่านคำ+เหรียญ
+     คำจาก vocabForStudent() (ตามระดับชั้น เหมือนโลก 3D) · ไม่ซ้ำใน session
+     ============================================================ */
+  function angNorm(a){ a=(a+Math.PI)%(2*Math.PI); if(a<0) a+=2*Math.PI; return a-Math.PI; }
+
+  const spellTexCache={};
+  const SP_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
+  function spellLetterTex(ch){
+    if(spellTexCache[ch]) return spellTexCache[ch];
+    const cv=document.createElement('canvas'); cv.width=cv.height=128;
+    const c=cv.getContext('2d');
+    c.beginPath();
+    if(c.roundRect) c.roundRect(10,10,108,108,26); else c.rect(10,10,108,108);
+    c.fillStyle=SP_COLORS[(ch.charCodeAt(0)-97+26)%SP_COLORS.length]; c.fill();
+    c.lineWidth=7; c.strokeStyle='rgba(255,255,255,.92)'; c.stroke();
+    c.fillStyle='#fff'; c.font='900 78px Arial'; c.textAlign='center'; c.textBaseline='middle';
+    c.fillText(ch.toUpperCase(), 64, 70);
+    const tx=new three.CanvasTexture(cv);
+    if('colorSpace' in tx && three.SRGBColorSpace) tx.colorSpace=three.SRGBColorSpace;
+    spellTexCache[ch]=tx; return tx;
+  }
+  function spellMarkerTex(){
+    const cv=document.createElement('canvas'); cv.width=cv.height=128;
+    const c=cv.getContext('2d');
+    c.fillStyle='rgba(160,230,255,.95)';                                   // ▼ ชี้ลงจุดเก็บ
+    c.beginPath(); c.moveTo(46,14); c.lineTo(82,14); c.lineTo(64,44); c.closePath(); c.fill();
+    const g=c.createRadialGradient(64,86,4,64,86,46);                      // ลานเรืองแสงใต้ตัวอักษร
+    g.addColorStop(0,'rgba(130,225,255,.95)'); g.addColorStop(.55,'rgba(80,180,255,.42)'); g.addColorStop(1,'rgba(80,180,255,0)');
+    c.fillStyle=g; c.beginPath(); c.ellipse(64,86,46,24,0,0,2*Math.PI); c.fill();
+    return new three.CanvasTexture(cv);
+  }
+
+  function spellEnsure(){
+    if(!spellGroup){
+      spellGroup=new three.Group(); rootTilt.add(spellGroup);   // หมุนแยกจาก spin ของตัวละคร
+      spellMarker=new three.Sprite(new three.SpriteMaterial({map:spellMarkerTex(), transparent:true, depthTest:false}));
+      spellMarker.position.set(0, SP_Y-0.30, SP_R+0.06);
+      spellMarker.scale.set(SP_MS, SP_MS, 1);
+      rootTilt.add(spellMarker);
+      spellRay=new three.Raycaster();
+    }
+    spellMarker.visible=true;
+  }
+
+  function spellPickWord(second){
+    let pool=[];
+    try{
+      pool=(typeof vocabForStudent==='function'?vocabForStudent():[])
+        .filter(([en])=>/^[a-z]{3,8}$/i.test(en))
+        .filter(([en])=>!spellDone.includes(en.toLowerCase()));
+    }catch(e){}
+    if(!pool.length && second!==true){ spellDone=[]; return spellPickWord(true); }   // เล่นครบคลัง → วนใหม่
+    if(!pool.length) pool=[['cat','แมว'],['dog','สุนัข'],['book','หนังสือ']];        // กันเหนียว vocab ไม่โหลด
+    const [en,th]=pool[Math.floor(Math.random()*pool.length)];
+    return {en:en.toLowerCase(), th};
+  }
+
+  function spellBuildRing(){
+    while(spellGroup.children.length){ const o=spellGroup.children[0]; spellGroup.remove(o); if(o.material) o.material.dispose(); }
+    spellLetters=[];
+    const chars=spellWord.en.split('');
+    const N=chars.length<=5 ? 12 : (chars.length<=7 ? 14 : 16);   // 12–16 ตามสเปก
+    spellSlotHalf=Math.min(0.30, (Math.PI/N)*0.85);
+    const fill=[];
+    while(chars.length+fill.length < N) fill.push(String.fromCharCode(97+Math.floor(Math.random()*26)));
+    const ring=(typeof shuffle==='function') ? shuffle(chars.concat(fill))
+      : chars.concat(fill).sort(()=>Math.random()-0.5);
+    ring.forEach((ch,i)=>{
+      const ang=i*2*Math.PI/N;
+      const spr=new three.Sprite(new three.SpriteMaterial({map:spellLetterTex(ch), transparent:true}));
+      spr.position.set(Math.sin(ang)*SP_R, SP_Y, Math.cos(ang)*SP_R);
+      spr.scale.set(SP_LS, SP_LS, 1);
+      spr.userData={ch, ang, baseY:SP_Y, i, scl:SP_LS, dying:false, k:1, flash:0};
+      spellGroup.add(spr); spellLetters.push(spr);
+    });
+    spellRot=0; spellTarget=0; spellVel=0; spellGroup.rotation.y=0;
+  }
+
+  function spellNextWord(){
+    spellLock=false; spellIdx=0;
+    spellWord=spellPickWord();
+    spellBuildRing();
+    spellHud(); spellHudWord();
+  }
+
+  function spellTick(dt, t){
+    // โมเมนตัมหลังปล่อยนิ้ว (สูตรเดียวกับ spin ตัวละคร)
+    if(!spellDown && Math.abs(spellVel)>0.0001){ spellTarget+=spellVel; spellVel*=0.92; if(Math.abs(spellVel)<0.0004) spellVel=0; }
+    // snap เบาๆ: หมดโมเมนตัมแล้วดึงตัวอักษรที่ใกล้ช่องสุดเข้ากลางช่อง (เด็กเล็งง่าย ไม่ต้องเป๊ะเอง)
+    if(!spellDown && spellVel===0 && !spellLock && spellLetters.length){
+      let best=null, bd=1e9;
+      for(const s of spellLetters){
+        if(s.userData.dying) continue;
+        const d=angNorm(-s.userData.ang - spellTarget);
+        if(Math.abs(d)<bd){ bd=Math.abs(d); best=d; }
+      }
+      if(best!==null && bd>0.002) spellTarget += best*0.10;
+    }
+    spellRot += (spellTarget-spellRot)*0.18;
+    spellGroup.rotation.y=spellRot;
+    if(spellMarker && spellMarker.visible){ const p=1+Math.sin(t*3.2)*0.07; spellMarker.scale.set(SP_MS*p, SP_MS*p, 1); }
+    for(let i=spellLetters.length-1;i>=0;i--){
+      const s=spellLetters[i], u=s.userData;
+      if(u.dying){                                           // เก็บแล้ว/จบคำ → ลอยขึ้น หด จาง แล้วถอดทิ้ง
+        u.k*=Math.pow(0.001, dt);
+        s.position.y += dt*1.6;
+        s.material.opacity=Math.max(0, u.k);
+        s.scale.set(SP_LS*1.5*u.k, SP_LS*1.5*u.k, 1);
+        if(u.k<0.05){ spellGroup.remove(s); s.material.dispose(); spellLetters.splice(i,1); }
+        continue;
+      }
+      const front=Math.abs(angNorm(u.ang+spellRot))<spellSlotHalf;
+      u.scl += ((front?1.45:1)*SP_LS - u.scl)*0.22;          // ตัวตรงช่องขยายใหญ่
+      s.scale.set(u.scl, u.scl, 1);
+      s.position.y = u.baseY + Math.sin(t*2+u.i*1.7)*0.022 + (front?0.04:0);
+      if(u.flash>0){ u.flash-=dt; if(u.flash<=0){ s.material.color.setHex(0xffffff); u.flash=0; } }
+    }
+  }
+
+  function spellTap(cx, cy){
+    if(spellLock || !spellWord || !spellLetters.length) return;
+    const r=canvas.getBoundingClientRect();
+    if(!r.width || !r.height) return;
+    spellRay.setFromCamera(new three.Vector2(((cx-r.left)/r.width)*2-1, -((cy-r.top)/r.height)*2+1), camera);
+    const hits=spellRay.intersectObjects(spellLetters.filter(s=>!s.userData.dying), false);
+    if(!hits.length) return;
+    const s=hits[0].object, u=s.userData;
+    if(Math.abs(angNorm(u.ang+spellRot))>spellSlotHalf*1.4){   // ยังไม่ตรงช่อง — บอกวิธีเล่น (ไม่สแปม)
+      const now=performance.now();
+      if(now-spellHintAt>3500){ spellHintAt=now; if(typeof toast==='function') toast('🌀 ปัดหมุนวงแหวนให้ตัวอักษรมาตรงช่อง ▼ ก่อนแตะนะ'); }
+      return;
+    }
+    if(u.ch===spellWord.en[spellIdx]){
+      u.dying=true; u.k=1;
+      spellIdx++;
+      if(typeof sfx!=='undefined') sfx.correct();
+      if(typeof speakLetter==='function') speakLetter(u.ch);   // "เอ บี ซี" เหมือนเก็บในโลก 3D
+      spellHudWord();
+      if(spellIdx>=spellWord.en.length) spellComplete();
+    }else{
+      u.flash=0.4; s.material.color.setHex(0xff5f6e);
+      if(typeof sfx!=='undefined') sfx.wrong();
+    }
+  }
+
+  function spellComplete(){
+    spellLock=true;
+    const w=spellWord;
+    spellDone.push(w.en);
+    let coinTxt='';
+    if(typeof addCoins==='function'){
+      addCoins(SPELL_COIN);
+      if(typeof saveState==='function') saveState();
+      coinTxt=`<div class="sp-coin">+🪙${SPELL_COIN}</div>`;
+    }
+    spellBanner(`<div class="sp-big">🎉 ${w.en.toUpperCase()}</div><div class="sp-thb">${w.th||''}</div>${coinTxt}`, 2100);
+    setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); }, 700);   // อ่านทั้งคำ (ตัดเสียงตัวอักษรเอง)
+    spellLetters.forEach(s=>{ s.userData.dying=true; });       // ตัวที่เหลือลอยหายพร้อมกัน
+    setTimeout(()=>{ if(spellActive) spellNextWord(); }, 2100);
+  }
+
+  // ---- HUD (HTML ทับเวที — pointer-events:none ยกเว้นปุ่ม ให้ปัดหมุนทะลุถึง canvas) ----
+  function spellHud(){
+    if(!heroEl) return null;
+    let h=heroEl.querySelector('.sp-hud');
+    if(!h){
+      h=document.createElement('div'); h.className='sp-hud';
+      h.innerHTML='<div class="sp-word"></div><div class="sp-th"></div>'+
+        '<div class="sp-hint">🌀 ปัดหมุนวงแหวน · ตัวอักษรตรงช่อง ▼ แตะเก็บ</div>';
+      heroEl.appendChild(h);
+      const x=document.createElement('button');
+      x.className='sp-exit'; x.textContent='✖ เลิกเล่น';
+      x.addEventListener('click', spellEnd);
+      heroEl.appendChild(x);
+    }
+    return h;
+  }
+  function spellHudWord(){
+    const h=spellHud();
+    if(!h || !spellWord) return;
+    h.querySelector('.sp-word').innerHTML=spellWord.en.split('')
+      .map((c,i)=>`<span class="sp-ch${i<spellIdx?' got':''}">${c.toUpperCase()}</span>`).join('');
+    h.querySelector('.sp-th').textContent=spellWord.th||'';
+  }
+  function spellBanner(html, ms){
+    if(!heroEl) return;
+    const b=document.createElement('div'); b.className='sp-banner'; b.innerHTML=html;
+    heroEl.appendChild(b);
+    setTimeout(()=>b.remove(), ms||1800);
+  }
+  function spellBtnSync(){
+    if(!heroEl) return;
+    const b=heroEl.querySelector('.spell-btn');
+    const want=!spellActive && curGiant===0 && !!(petRoot && petRoot.userData.gltf) &&
+      canvas && canvas.style.display!=='none' && canvas.parentElement===heroEl;
+    if(want && !b){
+      const btn=document.createElement('button');
+      btn.className='spell-btn'; btn.innerHTML='🌀 สะกดคำ';
+      btn.addEventListener('click', spellStart);
+      heroEl.appendChild(btn);
+    }else if(!want && b) b.remove();
+  }
+
+  // ---- เริ่ม/จบเกม ----
+  function spellStart(){
+    if(spellActive || !renderer || curGiant!==0 || !petRoot.userData.gltf) return;
+    spellActive=true; spellDone=[];
+    ownerRoot.visible=false;                 // เวทีโล่งให้วงแหวนเด่น
+    petRoot.position.x=0;                    // น้องเข้ากลางเวที (คืนที่เดิมตอนจบผ่าน sideLayout)
+    targetRot=0; spinVel=0;                  // น้องหันหน้าตรง
+    spellEnsure();
+    spellNextWord();
+    spellBtnSync();
+    start();
+  }
+  function spellAbort(){                     // เคลียร์เงียบๆ (layout เปลี่ยน/ออกเกม) — ไม่เรียก render ภายนอก
+    if(!spellActive) return;
+    spellActive=false; spellLock=false; spellWord=null; spellLetters=[];
+    if(spellGroup) while(spellGroup.children.length){ const o=spellGroup.children[0]; spellGroup.remove(o); if(o.material) o.material.dispose(); }
+    if(spellMarker) spellMarker.visible=false;
+    ownerRoot.visible=true;
+    if(heroEl) heroEl.querySelectorAll('.sp-hud,.sp-exit,.sp-banner').forEach(n=>n.remove());
+  }
+  function spellEnd(){
+    if(!spellActive) return;
+    spellAbort();
+    if(curGiant===0) sideLayout();           // น้องกลับข้างขวาคู่ผู้เลี้ยง
+    spellBtnSync();
+    const dash=document.getElementById('screen-dashboard');
+    if(typeof renderDashboard==='function' && dash && dash.classList.contains('active')) renderDashboard();
+  }
+
   // ปิดชั่วคราวเมื่อออกจากหน้า (main.js/showScreen wrapper เรียกได้ถ้าต้องการ)
   function pause(){ stop(); }
 
   window.addEventListener('resize', ()=>{ if(running) resize(); });
 
-  return { attach, pause, _stop:stop,
+  // ตำแหน่งตัวอักษรบนจอ (client px) — ไว้เทสต์อัตโนมัติ/จูน (ไม่ใช้ใน logic เกม)
+  function _spellLetters(){
+    if(!spellActive || !canvas) return [];
+    const r=canvas.getBoundingClientRect(), v=new three.Vector3();
+    return spellLetters.filter(s=>!s.userData.dying).map(s=>{
+      s.getWorldPosition(v); v.project(camera);
+      return {ch:s.userData.ch, ang:+s.userData.ang.toFixed(3),
+        d:+angNorm(s.userData.ang+spellRot).toFixed(3),
+        x:Math.round(r.left+(v.x+1)/2*r.width), y:Math.round(r.top+(1-v.y)/2*r.height)};
+    });
+  }
+
+  return { attach, pause, _stop:stop, spellStart, spellEnd, _spellLetters,
     _debug:()=>({running, disabled, curKey, curGiant,
       ownerLoaded:!!(ownerRoot&&ownerRoot.userData.gltf), petLoaded:!!(petRoot&&petRoot.userData.gltf),
       triangles: renderer?renderer.info.render.triangles:0,
       rotY: spin?+spin.rotation.y.toFixed(3):null, targetRot:+targetRot.toFixed(3),
       mixers:mixers.length,
-      clipTime:mixers[0]?+mixers[0].time.toFixed(2):null}) };
+      clipTime:mixers[0]?+mixers[0].time.toFixed(2):null,
+      spell:{active:spellActive, word:spellWord?spellWord.en:null, idx:spellIdx,
+        letters:spellLetters.length, rot:+spellRot.toFixed(3), lock:spellLock}}) };
 })();
