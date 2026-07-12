@@ -477,12 +477,15 @@ function renderOnlineCard(){
 
   /* ---- โหมดออนไลน์จริง ---- */
   if(typeof Online !== 'undefined' && Online.ready){
-    const rows = Online.friends.map(f=>`<div class="online-row" data-fid="${escapeHTML(String(f.id||''))}">
+    /* รอบ 153: แถวเพื่อน = เมนูลัดทั้งแถว (ชวน/ของขวัญ/ทักทาย/ดูข้อมูล) — เลิกใช้ pl-click ที่ชื่อ
+       (ดูข้อมูลย้ายไปเป็นปุ่มในเมนูแทน กันสองอย่างเด้งซ้อนกัน) · แถวเราเองยังเป็น pl-click เดิม */
+    const rows = Online.friends.map(f=>`<div class="online-row" data-fid="${escapeHTML(String(f.id||''))}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
       <span class="online-dot"></span>
-      <span class="online-name pl-click" data-uid="${escapeHTML(f.id||'')}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">${escapeHTML(f.n)}</span>
+      <span class="online-name">${escapeHTML(f.n)}</span>
       <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
     </div>`).join('');
     bindPlayerClicks();
+    bindFriendQuickMenu();
     el.innerHTML = `
       <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
       ${meRow}${rows}
@@ -533,6 +536,77 @@ function renderOnlineCard(){
     ${meRow}${rows}`;
   bindPlayerClicks();
   initSideScroll(el);
+}
+
+/* ============================================================
+   รอบ 153: เมนูลัดแตะแถวเพื่อนออนไลน์ในกล่อง aside
+   🤝 ชวนเล่นโลก 3D (tinv — เจอกันรับเงินคืน) · 🎁 ของขวัญ · 💬 ทักทาย (เฉพาะเพื่อนกันแล้ว)
+   ยังไม่เป็นเพื่อน = ➕ ส่งคำขอเป็นเพื่อน · 👤 ดูข้อมูล (แทน pl-click ที่ชื่อแบบเดิม)
+   ============================================================ */
+function bindFriendQuickMenu(){
+  if(window.__fqBound) return;               // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
+  window.__fqBound = true;
+  document.addEventListener('click', (e)=>{
+    const row = e.target.closest('#online-card .online-row[data-fid]');
+    if(!row) return;
+    openFriendQuickMenu(row.dataset.fid, row.dataset.n || 'เพื่อน', row.dataset.g || '');
+  });
+}
+
+function openFriendQuickMenu(uid, name, grade){
+  if(!uid || typeof Online === 'undefined' || !Online.ready) return;
+  sfx.select();
+  document.querySelectorAll('.fq-overlay').forEach(o=>o.remove());   // เปิดซ้ำ = แทนที่อันเก่า
+  const isFriend = (Online.myFriends || []).some(f=>f.uid === uid);
+  const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
+  const sent = state.tinvSent || {};
+  const wbtn = (map, emo, lab)=>{
+    const s = sent[uid] && sent[uid].map === map;                    // ชวนโลกนี้ไปแล้ว = ติ๊กถูก กดซ้ำไม่ได้
+    return `<button class="fq-world" data-map="${map}" ${s ? 'disabled' : ''} type="button">${emo} ${lab}${s ? ' ✓' : ''}</button>`;
+  };
+  const overlay = document.createElement('div');
+  overlay.className = 'fq-overlay';
+  overlay.innerHTML = `<div class="fq-box">
+    <div class="fq-head">
+      <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>ชั้น ${escapeHTML(grade)}</small></span>
+      <button class="fq-close" type="button">✕</button>
+    </div>
+    <div class="fq-sec">🤝 ชวนเล่นด้วยกัน — เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}</div>
+    <div class="fq-worlds">${wbtn('adv','🌍','ผจญภัย')}${wbtn('haunt','👻','ผีสิง')}${wbtn('heli','🚁','เฮลิฯ')}</div>
+    <div class="fq-acts">
+      ${isFriend
+        ? `<button class="fq-act" data-act="gift" type="button">🎁 ส่งของขวัญ</button>
+           <button class="fq-act" data-act="chat" type="button">💬 ทักทาย</button>`
+        : `<button class="fq-act" data-act="addfr" type="button">➕ ส่งคำขอเป็นเพื่อน</button>`}
+      <button class="fq-act" data-act="info" type="button">👤 ดูข้อมูล</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close = ()=>overlay.remove();
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+  overlay.querySelector('.fq-close').addEventListener('click', close);
+  overlay.querySelectorAll('.fq-world').forEach(b=>b.addEventListener('click', ()=>{
+    b.disabled = true;
+    tinvSend(uid, b.dataset.map).then(()=>{
+      state.tinvSent[uid] = {map: b.dataset.map, ts: Date.now()};
+      saveState();
+      sfx.buy();
+      toast(`📨 ส่งคำชวนถึง ${sp.name} แล้ว! เข้าโลกรอเจอกันได้เลย`);
+      close();
+    }).catch(()=>{ b.disabled = false; toast('ส่งคำชวนไม่สำเร็จ ลองใหม่นะ'); });
+  }));
+  overlay.querySelectorAll('.fq-act').forEach(b=>b.addEventListener('click', ()=>{
+    const act = b.dataset.act;
+    close();
+    if(act === 'gift') openGiftPicker({uid, n: sp.name, g: grade});
+    else if(act === 'chat') openChat({uid, n: sp.name, g: grade});
+    else if(act === 'addfr'){
+      friendRequest(uid)
+        .then(()=>{ sfx.buy(); toast(`📨 ส่งคำขอเป็นเพื่อนถึง ${sp.name} แล้ว! รอเพื่อนกดรับนะ 😊`); })
+        .catch(()=>toast('ส่งคำขอไม่สำเร็จ ลองใหม่นะ'));
+    }
+    else if(act === 'info') showPlayerCard(uid, name, grade);
+  }));
 }
 
 /* ============================================================

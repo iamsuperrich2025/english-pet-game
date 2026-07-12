@@ -10,6 +10,13 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 153 (12 ก.ค.) — เมนูลัดแตะแถวเพื่อนออนไลน์ 🤝🎁💬 (version .144)
+- **ไอเดียต่อยอดจากรอบ 152 (ผู้ใช้เคาะ):** แตะแถวเพื่อนในกล่องออนไลน์ → เมนูลัด ชวนเล่น/ส่งของขวัญ/ทักทาย ในแตะเดียว
+- **ทำ (ui.js):** แถวเพื่อนโหมดออนไลน์จริง เพิ่ม `data-fid/n/g` ทั้งแถวคลิกได้ · **เลิกใช้ pl-click ที่ชื่อ (ดูข้อมูลย้ายเป็นปุ่มในเมนู กันเด้งซ้อน — แถวเราเอง me-row ยังเป็น pl-click เดิม)** · `openFriendQuickMenu(uid,n,g)`: แผงกลางจอโทนกระจกฟ้า — หัวชื่อ+เข็ม+ชั้น · แถบชวนเล่น 3 โลก (`tinvSend` adv/haunt/heli + จำใน `state.tinvSent` → ชวนแล้วปุ่มติ๊ก ✓ disabled + toast เดิม "📨 ส่งคำชวนถึง...") · เป็นเพื่อนกันแล้ว (เช็ค `Online.myFriends`) = 🎁 `openGiftPicker` + 💬 `openChat` · ยังไม่เป็น = ➕ `friendRequest` · 👤 `showPlayerCard` ทุกคน · ปิดด้วย ✕/คลิกฉากหลัง · `bindFriendQuickMenu` delegation ครั้งเดียว
+- **CSS (lobby.css):** `.fq-overlay/.fq-box` แผง min(92vw,420px) กระจกฟ้าเดียวกับกล่อง aside · ปุ่มของขวัญชมพู/ดูข้อมูลจาง
+- ✅ **ยืนยัน preview 812×375:** เมนูเพื่อนจริง = worlds 3 + gift/chat/info · คนแปลกหน้า = addfr/info · กล่อง 340×199 ไม่ล้นจอ · ชวน haunt → tinvSend(uid,map) ถูก + tinvSent เซฟ + toast + เปิดใหม่ปุ่มติ๊ก ✓ disabled · gift เปิด picker จริงหัว "ส่งของขวัญให้ น้องเอ" · chat/info/addfr เรียกด้วย args ถูก (stub ตรวจ) · ปิด ✕/ฉากหลังได้ · ไม่มี console error · deploy live .144
+- **⚠️ ค้างผู้ใช้:** ทดสอบจริง 2 เครื่อง — แตะแถวเพื่อน กดชวน/ของขวัญ/แชทจริง (rules /tinv /gifts /chat publish ครบแล้วรอบก่อนๆ)
+
 ### ✅ รอบ 152 (12 ก.ค.) — เพื่อนใหม่ออนไลน์ = toast + แถวแฟลชฟ้า + กล่องเด้งไปโชว์ 🎉💙 (version .143)
 - **ไอเดียต่อยอดจากรอบ 150 (ผู้ใช้เคาะ "ทำได้เลย"):** เพื่อนใหม่เพิ่ง login → toast "🎉 <ชื่อ> มาออนไลน์แล้ว!" + แถวเพื่อนแฟลชฟ้า + กล่องเด้งเลื่อนไปโชว์ก่อนวนต่อ (เฉพาะโหมดออนไลน์จริง — เพื่อนจำลองไม่นับ)
 - **ทำ (ui.js):** refactor questFlashRow → helper ร่วม `sideFlashRows(el,sel,cls)` (แฟลช+เด้ง scroll+ค้าง 5 วิ ใช้ได้ทุกกล่อง) · `.online-row` เพิ่ม `data-fid` · renderOnlineCard โหมดออนไลน์เทียบ friend ids กับรอบก่อน (`__onSeen`) → id ใหม่ = `__onFlashPend` + toast (หลายคนพร้อมกัน = "เพื่อน N คนมาออนไลน์แล้ว!") + sfx.select · **กันสแปม 2 ชั้น:** (1) `FRIEND_FLASH_GRACE` 8 วิแรกหลังต่อสำเร็จไม่นับ (presence sync ชุดแรกทยอยเข้า) (2) หลุดออนไลน์ → `__onSeen=null` ต่อกลับตั้ง baseline ใหม่เงียบๆ (เน็ตกระพริบไม่ toast รัว) · จอซ่อน = pend ไว้แฟลชตอนกลับ lobby (`onlineRerender` วาดเฉพาะตอน dashboard active อยู่แล้ว)

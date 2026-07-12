@@ -691,6 +691,30 @@ html.no-anim .nw-tag{animation:none;}
   0%,100%{background:transparent;box-shadow:none;}
   50%{background:rgba(80,180,255,.30);box-shadow:0 0 12px rgba(80,180,255,.6);}
 }
+/* รอบ 153: เมนูลัดแตะแถวเพื่อนออนไลน์ — ชวนเล่น/ของขวัญ/ทักทาย/ดูข้อมูล (โทนกระจกฟ้าเดียวกับกล่อง) */
+#online-card .online-row[data-fid]{cursor:pointer;}
+.fq-overlay{position:fixed;inset:0;background:rgba(5,15,35,.55);z-index:9500;
+  display:flex;align-items:center;justify-content:center;}
+.fq-box{width:min(92vw,420px);max-height:92vh;overflow-y:auto;
+  background:linear-gradient(165deg,#143c6e 0%,#0b1f42 100%);color:#dcebfb;
+  border:1px solid rgba(95,200,255,.5);border-radius:16px;padding:12px 14px;
+  box-shadow:0 14px 40px rgba(0,0,0,.5), inset 0 0 26px rgba(80,180,255,.07);}
+.fq-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-weight:700;color:#fff;font-size:15px;margin-bottom:8px;}
+.fq-head small{color:#9fc3ea;font-weight:400;font-size:11.5px;}
+.fq-close{border:none;background:rgba(255,255,255,.14);color:#dcebfb;border-radius:8px;
+  font-size:14px;padding:2px 9px;cursor:pointer;font-family:inherit;flex-shrink:0;}
+.fq-sec{font-size:11.5px;color:#8fb3d8;margin-bottom:6px;}
+.fq-worlds{display:flex;gap:6px;margin-bottom:10px;}
+.fq-world{flex:1;border:1px solid rgba(95,200,255,.4);background:rgba(255,255,255,.10);
+  color:#eaf4ff;border-radius:10px;padding:7px 4px;font-size:12.5px;cursor:pointer;font-family:inherit;}
+.fq-world:disabled{opacity:.55;cursor:default;}
+.fq-acts{display:flex;gap:6px;flex-wrap:wrap;}
+.fq-act{flex:1 1 40%;border:none;border-radius:10px;padding:8px 6px;font-size:13px;font-weight:600;
+  cursor:pointer;font-family:inherit;background:linear-gradient(180deg,#59b6f0,#2f7fd0);
+  color:#fff;box-shadow:0 3px 0 #1c5da0;}
+.fq-act[data-act="gift"]{background:linear-gradient(180deg,#f08bbb,#d8538f);box-shadow:0 3px 0 #a83a6c;}
+.fq-act[data-act="info"]{background:rgba(255,255,255,.13);color:#cfe4f7;box-shadow:none;}
 .lobby-side .q-name{color:#eaf4ff;}
 .lobby-side .q-bar{background:rgba(255,255,255,.16);}
 .lobby-side .q-right{color:#dcebfb;}
