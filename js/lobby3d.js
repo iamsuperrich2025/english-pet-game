@@ -41,7 +41,22 @@ const Lobby3D = (function(){
   let spellRot=0, spellTarget=0, spellVel=0, spellSlotHalf=0.26, spellHintAt=0;
   let spellSlotAng=Math.PI/6, spellTickK=0, spellTickAt=0;   // ตรวจตัวอักษรผ่านช่อง → เสียงติ๊กแบบวงล้อเกมโชว์
   const SP_R=1.05, SP_Y=0.55, SP_LS=0.34, SP_MS=0.62;   // รัศมีวง/ความสูง/ขนาดตัวอักษร/ขนาด marker (หน่วยโลก — จูนได้)
-  const SPELL_COIN=1000;                                 // เหรียญต่อคำ (ผู้ใช้เคาะ 1,000 รอบ 173 — "เพราะยาก" เดิม 15)
+  const SPELL_COIN=1000;                                 // รางวัลเต็มต่อคำ (ผู้ใช้เคาะ 1,000 รอบ 173 — "เพราะยาก")
+  // รอบ 174 (ผู้ใช้เคาะ 3 ข้อ): จำกัดรางวัลเต็ม 5 คำแรก/วัน กันเหรียญเฟ้อ · เพอร์เฟกต์ (ไม่แตะผิดเลย) ×1.5 · ริบบิ้นสีตามหมวดคำ
+  const SPELL_FULL_PER_DAY=5;                            // จำนวนคำ/วันที่ได้รางวัลเต็ม (นับใน state.spellDay/spellWords)
+  const SPELL_COIN_LATE=100;                             // คำที่ 6+ ของวัน
+  const SPELL_PERFECT_X=1.5;                             // โบนัสสะกดครบโดยไม่แตะผิดเลยทั้งคำ
+  let spellMiss=0;                                       // นับแตะผิดในคำปัจจุบัน (0 ตอนจบ = เพอร์เฟกต์)
+  // ริบบิ้นตามหมวดคำ (เทียบ regex กับ cat id ใน vocab.js) — ไม่เข้าเงื่อนไขใช้ชุดสีรวม 8 สีเดิม
+  const SPELL_PALETTES=[
+    [/animal/,                        ['#7ee2a0','#4caf50','#aed581','#2e7d32','#c5e1a5','#66bb6a']],  // สัตว์ = เขียวธรรมชาติ
+    [/food|fruit/,                    ['#ff8a65','#ffb74d','#ff5f6e','#ffd54f','#e65100','#ffcc80']],  // อาหาร/ผลไม้ = ส้มแดงเหลือง
+    [/body|health|sport/,             ['#f48fb1','#ff5f6e','#f06292','#ffcdd2','#ec407a','#ff8a80']],  // ร่างกาย/สุขภาพ/กีฬา = ชมพูแดง
+    [/nature|weather|environment/,    ['#4dd0e1','#7ee2a0','#4fc3f7','#80cbc4','#26a69a','#b2ebf2']],  // ธรรมชาติ/อากาศ = เขียวฟ้า
+    [/school|academic|numbers|days/,  ['#4fc3f7','#5c9dff','#90caf9','#7986cb','#81d4fa','#3f51b5']],  // โรงเรียน/เลข/วัน = ฟ้าน้ำเงิน
+    [/tech|science|media/,            ['#4dd0e1','#00e5ff','#82b1ff','#b388ff','#18ffff','#8c9eff']],  // เทคโนโลยี/วิทย์ = ฟ้าไฟฟ้าม่วง
+    [/family|feeling|character|clothes/, ['#ba68c8','#f48fb1','#ce93d8','#ff80ab','#9575cd','#f8bbd0']], // คน/ความรู้สึก/เสื้อผ้า = ม่วงชมพู
+  ];
   // 🎡 ฟีลวงล้อ (feedback ผู้ใช้รอบ 172: "ลากประคอง" วางตัวอักษรตรงช่องได้เลย = โกงข้ามการปัด + ของเดิมฝืดไป)
   // → ระหว่างนิ้วแตะวงไม่ขยับ (จับ=หยุดวง) ปล่อยนิ้วค่อยเหวี่ยงตามความเร็วปัด · แรงเสียดทานต่ำ หมุนลื่นหลายรอบ
   const SPELL_SENS=0.016;      // ความไวปัด (rad ต่อ px ของความเร็ว) — เดิม 0.012 ฝืด
@@ -414,12 +429,15 @@ const Lobby3D = (function(){
   }
 
   // 🎀 ริบบิ้นโปรยทั่วจอชั่วคราว (แพทเทิร์นเดียวกับ overlay ฝน #rain-fx: fixed inset:0 z-9000 บน body)
-  function spellConfetti(){
+  // mult: ตัวคูณจำนวนริบบิ้น (เพอร์เฟกต์ 1.7) · สีเลือกตามหมวดของ spellWord.cat (SPELL_PALETTES)
+  function spellConfetti(mult){
     if(document.documentElement.classList.contains('no-anim')) return;   // ผู้ใช้ปิดอนิเมชัน = ไม่โปรย
     const old=document.getElementById('spell-confetti'); if(old) old.remove();
     const fx=document.createElement('div'); fx.id='spell-confetti';
-    const COLORS=['#ff5f6e','#ffd54f','#4fc3f7','#7ee2a0','#ba68c8','#ff8a65','#fff176','#4dd0e1'];
-    const n=Math.min(120, Math.max(70, Math.round(window.innerWidth/11)));
+    let COLORS=['#ff5f6e','#ffd54f','#4fc3f7','#7ee2a0','#ba68c8','#ff8a65','#fff176','#4dd0e1'];
+    const cat=(spellWord&&spellWord.cat)||'';
+    for(const [re,pal] of SPELL_PALETTES){ if(re.test(cat)){ COLORS=pal; break; } }
+    const n=Math.round(Math.min(120, Math.max(70, Math.round(window.innerWidth/11))) * (mult||1));
     let html='';
     for(let i=0;i<n;i++){
       html+=`<span class="sp-rb" style="left:${(Math.random()*100).toFixed(1)}%;`+
@@ -476,14 +494,25 @@ const Lobby3D = (function(){
   function spellPickWord(second){
     let pool=[];
     try{
-      pool=(typeof vocabForStudent==='function'?vocabForStudent():[])
-        .filter(([en])=>/^[a-z]{3,8}$/i.test(en))
-        .filter(([en])=>!spellDone.includes(en.toLowerCase()));
+      // เก็บ cat id ติดมาด้วย (รอบ 174: ริบบิ้นฉลองสีตามหมวดคำ)
+      (typeof catsForStudent==='function'?catsForStudent():[]).forEach(c=>{
+        (c.words||[]).forEach(([en,th])=>{
+          if(/^[a-z]{3,8}$/i.test(en) && !spellDone.includes(en.toLowerCase()))
+            pool.push({en:en.toLowerCase(), th, cat:c.id||''});
+        });
+      });
     }catch(e){}
     if(!pool.length && second!==true){ spellDone=[]; return spellPickWord(true); }   // เล่นครบคลัง → วนใหม่
-    if(!pool.length) pool=[['cat','แมว'],['dog','สุนัข'],['book','หนังสือ']];        // กันเหนียว vocab ไม่โหลด
-    const [en,th]=pool[Math.floor(Math.random()*pool.length)];
-    return {en:en.toLowerCase(), th};
+    if(!pool.length) pool=[{en:'cat',th:'แมว',cat:'animals'},{en:'dog',th:'สุนัข',cat:'animals'},{en:'book',th:'หนังสือ',cat:''}];
+    return pool[Math.floor(Math.random()*pool.length)];
+  }
+
+  // นับโควตารางวัลเต็มรายวัน (แพทเทิร์น toDateString แบบ foodQuizDay/testerCoinDay) — คืนจำนวนคำเต็มที่เหลือวันนี้
+  function spellDayLeft(){
+    if(typeof state==='undefined') return SPELL_FULL_PER_DAY;
+    const day=new Date().toDateString();
+    if(state.spellDay!==day){ state.spellDay=day; state.spellWords=0; }
+    return Math.max(0, SPELL_FULL_PER_DAY-(state.spellWords||0));
   }
 
   function spellBuildRing(){
@@ -509,7 +538,7 @@ const Lobby3D = (function(){
   }
 
   function spellNextWord(){
-    spellLock=false; spellIdx=0;
+    spellLock=false; spellIdx=0; spellMiss=0;
     spellWord=spellPickWord();
     spellBuildRing();
     spellHud(); spellHudWord();
@@ -576,6 +605,7 @@ const Lobby3D = (function(){
       if(spellIdx>=spellWord.en.length) spellComplete();
     }else{
       u.flash=0.4; s.material.color.setHex(0xff5f6e);
+      spellMiss++;                                             // พลาดแล้ว — คำนี้ไม่เพอร์เฟกต์
       spellSfx('wrong');
     }
   }
@@ -584,15 +614,23 @@ const Lobby3D = (function(){
     spellLock=true;
     const w=spellWord;
     spellDone.push(w.en);
+    const perfect=spellMiss===0;                               // ไม่แตะผิดเลยทั้งคำ = เพอร์เฟกต์ ×1.5
+    const fullLeft=spellDayLeft();                             // โควตารางวัลเต็มวันนี้ (เช็กก่อนนับคำนี้)
     spellSfx('win');
     spellSfx('firework');                                      // พลุตูมพร้อมแฟนแฟร์ (รอบ 173)
-    spellConfetti();                                           // ริบบิ้นโปรยทั่วจอ
+    if(perfect) setTimeout(()=>spellSfx('firework'), 450);     // เพอร์เฟกต์ = พลุชุดใหญ่ 2 ระลอก
+    spellConfetti(perfect?1.7:1);                              // ริบบิ้นโปรยทั่วจอ (สีตามหมวดคำ · เพอร์เฟกต์เพิ่ม ~70%)
     let coinTxt='';
-    if(typeof addCoins==='function'){
-      addCoins(SPELL_COIN);
+    if(typeof addCoins==='function' && typeof state!=='undefined'){
+      let reward=fullLeft>0 ? SPELL_COIN : SPELL_COIN_LATE;
+      if(perfect) reward=Math.round(reward*SPELL_PERFECT_X);
+      state.spellWords=(state.spellWords||0)+1;
+      addCoins(reward);
       if(typeof saveState==='function') saveState();
-      const ctxt=(typeof fmtNum==='function')?fmtNum(SPELL_COIN):SPELL_COIN;
-      coinTxt=`<div class="sp-coin">+🪙${ctxt}</div>`;
+      const fmt=n=>(typeof fmtNum==='function')?fmtNum(n):n;
+      coinTxt=`<div class="sp-coin">+🪙${fmt(reward)}</div>`
+        +(perfect?`<div class="sp-perfect">🌟 เพอร์เฟกต์! ไม่พลาดเลย ×${SPELL_PERFECT_X}</div>`:'')
+        +(fullLeft<=0?`<div class="sp-late">รางวัลเต็ม ${SPELL_FULL_PER_DAY} คำ/วันครบแล้ว — คำละ 🪙${SPELL_COIN_LATE}</div>`:'');
     }
     spellBanner(`<div class="sp-big">🎉 ${w.en.toUpperCase()}</div><div class="sp-thb">${w.th||''}</div>${coinTxt}`, 2600);
     setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); }, 700);   // อ่านทั้งคำ (ตัดเสียงตัวอักษรเอง)
@@ -606,7 +644,7 @@ const Lobby3D = (function(){
     let h=heroEl.querySelector('.sp-hud');
     if(!h){
       h=document.createElement('div'); h.className='sp-hud';
-      h.innerHTML='<div class="sp-word"></div><div class="sp-th"></div>'+
+      h.innerHTML='<div class="sp-word"></div><div class="sp-th"></div><div class="sp-day"></div>'+
         '<div class="sp-hint">🌀 ปัดเหวี่ยงให้วงหมุน · แตะวง=หยุด · ตัวตรงช่อง ▼ แตะเก็บ</div>';
       heroEl.appendChild(h);
       const x=document.createElement('button');
@@ -622,6 +660,10 @@ const Lobby3D = (function(){
     h.querySelector('.sp-word').innerHTML=spellWord.en.split('')
       .map((c,i)=>`<span class="sp-ch${i<spellIdx?' got':''}">${c.toUpperCase()}</span>`).join('');
     h.querySelector('.sp-th').textContent=spellWord.th||'';
+    const left=spellDayLeft(), fmt=n=>(typeof fmtNum==='function')?fmtNum(n):n;
+    h.querySelector('.sp-day').textContent = left>0
+      ? `⭐ รางวัลเต็ม 🪙${fmt(SPELL_COIN)} เหลือ ${left} คำวันนี้`
+      : `วันนี้รับเต็มครบ ${SPELL_FULL_PER_DAY} คำแล้ว — คำละ 🪙${SPELL_COIN_LATE}`;
   }
   function spellBanner(html, ms){
     if(!heroEl) return;
@@ -697,5 +739,7 @@ const Lobby3D = (function(){
       mixers:mixers.length,
       clipTime:mixers[0]?+mixers[0].time.toFixed(2):null,
       spell:{active:spellActive, word:spellWord?spellWord.en:null, idx:spellIdx,
-        letters:spellLetters.length, rot:+spellRot.toFixed(3), lock:spellLock}}) };
+        letters:spellLetters.length, rot:+spellRot.toFixed(3), lock:spellLock,
+        miss:spellMiss, cat:spellWord?spellWord.cat:null,
+        wordsToday:(typeof state!=='undefined')?(state.spellWords||0):null}}) };
 })();
