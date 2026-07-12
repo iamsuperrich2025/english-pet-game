@@ -709,9 +709,13 @@ function pickBlockAvatar(goLabel){
     blkPickEl.querySelector('.blk-go').textContent=goLabel||'🚗 ออกรถ!';   // ปุ่มยืนยันตามโลกที่จะเข้า
     blkPickSel=BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1';
     const grid=blkPickEl.querySelector('.blk-grid');
+    // รอบ 147: ภาพตัวละครจริงของผู้ใช้ img/blocks/blk<n>.png มาก่อน · ไม่มีไฟล์/โหลดพลาด → fallback ภาพเรนเดอร์จากโมเดล
     grid.innerHTML=Object.keys(BLOCK_AVATARS).map(id=>
       `<div class="blk-it${id===blkPickSel?' sel':''}" data-id="${id}">
-         <img src="${_blkThumbs[id]}" alt=""><div class="bn">${BLOCK_AVATARS[id].name}</div></div>`).join('');
+         <img src="img/blocks/${id}.png" alt=""><div class="bn">${BLOCK_AVATARS[id].name}</div></div>`).join('');
+    grid.querySelectorAll('.blk-it img').forEach(im=>{
+      im.addEventListener('error',()=>{ im.src=_blkThumbs[im.closest('.blk-it').dataset.id]; },{once:true});
+    });
     grid.querySelectorAll('.blk-it').forEach(el=>el.addEventListener('click',()=>{
       blkPickSel=el.dataset.id; sfx.select();
       grid.querySelectorAll('.blk-it').forEach(e2=>e2.classList.toggle('sel',e2===el));
@@ -2721,15 +2725,18 @@ function buildDom(){
   .adv-drive #adv-map{left:8px;right:auto}
   .adv-drive #adv-board{left:136px;max-width:120px}
   .adv-drive #adv-topbar{left:276px;transform:none}  /* ตรึงลงช่องว่างระหว่างกระดาน (จบ 268) กับปุ่มแชท (เริ่ม ~489) */
-  .adv-drive .adv-hp{width:96px}
-  .adv-drive #adv-exit{top:8px;right:140px}
-  .adv-drive #adv-help{top:8px;right:8px}
-  .adv-drive #adv-chat-btn{top:8px;right:244px}
-  .adv-drive #adv-mic{top:58px;right:140px}
-  .adv-drive #adv-spk{top:58px;right:244px}
-  .adv-drive #adv-vmode{top:108px;right:244px}   /* คอลัมน์นอก (right:140) แถว 3 ชนปุ่มเกียร์ D เหนือเบรค — เลี่ยงเข้าคอลัมน์ใน */
-  .adv-drive #adv-tmute{top:108px;right:348px}
-  .adv-drive #adv-podbtn{top:158px;right:348px}
+  .adv-drive .adv-hp{width:80px}   /* รอบ 147: ย่ออีกขั้น เปิดทางแถวปุ่มเดียวด้านขวา */
+  /* รอบ 147 (สเปกผู้ใช้): ปุ่มขวาบนแถวเดียวทั้งหมด ย่อขนาดให้พอดี — ซ้าย→ขวา: ทุกคน·ปิด·ปิด·แชท·?·ออก(ริมขวาสุด)
+     ต้อง min-width:0 ทับ .adv-vbtn (base fix 86px) ไม่งั้นชนกันเอง · speed pill เลื่อนลง top:52 หลบแถวปุ่ม */
+  .adv-drive #adv-exit{top:8px;right:8px;font-size:12.5px;padding:5px 9px}
+  .adv-drive #adv-help{top:8px;right:74px;width:30px;height:30px;font-size:14px}
+  .adv-drive #adv-chat-btn{top:8px;right:108px;font-size:12px;padding:5px 8px}
+  .adv-drive #adv-mic{top:8px;right:172px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-drive #adv-spk{top:8px;right:224px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-drive #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-drive #adv-inst{top:52px}
+  .adv-drive #adv-tmute{top:52px;right:108px;font-size:11px;padding:4px 6px;min-width:0}   /* ปุ่มครู แถวสอง (เลี่ยงก้านไฟเลี้ยว right:20) */
+  .adv-drive #adv-podbtn{top:52px;right:200px;font-size:11px;padding:4px 6px;min-width:0}
   /* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ — แตะ minimap เปิด · โชว์ตำแหน่งตัวอักษรชัดเจน + ปุ่มปิดใหญ่ */
   #adv-bigmap{position:absolute;inset:10px;z-index:60;display:none;flex-direction:column;pointer-events:auto;
     background:rgba(6,12,24,.96);border:2px solid #4fc3f7;border-radius:16px;
