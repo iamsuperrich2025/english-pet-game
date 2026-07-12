@@ -13,6 +13,12 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 160 (12 ก.ค.) — จัดผังโซนกลาง Lobby: rank เด่นสง่าเป็นฉากหลัง 🎖️ (version .151)
+- **สเปกผู้ใช้ (screenshot):** ย้าย "อากาศตอนนี้" ลงล่างก่อนปุ่มควิซอาหาร · ดันแท็บสัตว์ (ขาว+➕) ขึ้นไปแทน โดย**ขอบซ้ายของแท็บต้องตรงแนวขอบ rank chip** · ขยายกรอบคน+สัตว์ให้กว้าง เหรียญ rank ใหญ่เด่น · คน+สัตว์สูงไม่ถึงครึ่งของเหรียญ
+- **ทำ:** index.html ย้าย `#weather-banner` เข้า `.lobby-bottom` เป็นตัวแรก (id เดิม renderDashboard ไม่ต้องแก้) · CSS `.lobby-bottom .weather-banner{margin:0 auto 0 0}` ชิดซ้ายดันปุ่มไปขวา · `.lobby-stage .pet-tabs{align-self:flex-start;margin-left:var(--tabs-left)}` + **`alignPetTabs()`** (ui.js ก่อน renderDashboard): rect ของ rank-mini เทียบ lobby-stage ÷ scale (กันเพจโดนย่อ) → set `--tabs-left` · เรียกท้าย renderDashboard (หลัง render แท็บ) + `window resize` · `.stage-left` 34%→28% (เวทีกว้างขึ้น) · `.hero-rank-bg img{height:96%;max-width:94%;opacity:.66}` (เดิม 52vh/80%/.6) + glow ::before 50vh→72vh · `GIANT_PET_VH[0]` 29→25 · `GIANT_OWNER_VH[0]` 34→28 · `GIANT_OWNER_X[0]` -66→-56 (ตัวเล็กลง เยื้องน้อยลง · ร่างยักษ์ g1-4 ไม่แตะ)
+- ✅ **ยืนยัน preview 1000×640 (rect):** weather อยู่ footer ซ้ายของปุ่มควิซ แถวเดียวกัน · แท็บ t=72 บนสุดเวที **ขอบซ้ายตรง rank chip เป๊ะ (diff 0)** · hero กว้างขึ้น (287→738) · เหรียญ rank สูง 96% ของเวที · **pet 42% / owner 31% ของเหรียญ — ไม่ถึงครึ่ง** · ไม่มี console error · deploy live .151
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ — ดูตำแหน่งป้ายอากาศ/แท็บ/ความเด่นเหรียญ rank (จูนต่อได้: ขนาดเหรียญที่ `.hero-rank-bg img` · ขนาดตัวละครที่ `GIANT_*[0]` ใน ui.js)
+
 ### ✅ รอบ 159 (12 ก.ค.) — กันแถบดำ Touch to Search ของ Chrome 📵 (version .150)
 - **สเปกผู้ใช้ (screenshot มือถือจริง):** แตะข้อความบนปุ่มใดๆ → แถบดำ Google "อันดับ — Tap to see search results" เด้งจากขอบล่างบังเกม (ฟีเจอร์ Touch to Search ของ Chrome Android — จับคำที่แตะไปค้น Google)
 - **ทำ (style.css ใต้ `*` reset — ครอบทุกหน้าจอรวมโลก 3D):** `html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}` — ข้อความเลือกไม่ได้ = Chrome ไม่มีคำให้จับ แถบไม่เด้ง · ยกเว้น `input, textarea, [contenteditable="true"]` ยังเลือก/พิมพ์/วางได้ (ช่องชื่อ/แชท/ค้นเพื่อน/ราคา ฯลฯ)
