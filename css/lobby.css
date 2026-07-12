@@ -1380,3 +1380,56 @@ html.no-anim #spell-confetti{display:none;}
   100%{transform:translate(-50%,-130%) scale(1);opacity:0;}
 }
 html.no-anim #spell-coinpop{display:none;}
+
+/* ============================================================
+   ✨ รอบ 176: เหรียญ rank กลาง Lobby มีแสงมีชีวิต (ทุก rank — สีตาม --rank-c ของแรงค์)
+   3 ชั้น: img เรืองแสง "หายใจ" · .rank-beam ลำแสงกวาดทั้งเหรียญ (mask ตามรูปทรงภาพจริง)
+   · .rank-edge แถบแสงวิ่งไล่เฉพาะขอบเหลี่ยม (mask ภาพ 2 ชั้น xor/exclude เหลือวงขอบ —
+   เบราว์เซอร์ไม่รองรับ composite จะ degrade เป็นแสงกวาดทั้งใบ ไม่พัง)
+   ============================================================ */
+.hero-rank-bg img{animation:rankBreath 3.6s ease-in-out infinite;}
+@keyframes rankBreath{
+  0%,100%{filter:drop-shadow(0 0 26px var(--rank-c,#3a76d8)) saturate(.92) brightness(1);opacity:.62;}
+  50%{filter:drop-shadow(0 0 54px var(--rank-c,#3a76d8)) drop-shadow(0 0 120px var(--rank-c,#3a76d8)) saturate(1.06) brightness(1.14);opacity:.78;}
+}
+.hero-rank-bg::before{animation:rankGlowBreath 3.6s ease-in-out infinite;}
+@keyframes rankGlowBreath{0%,100%{opacity:.20;transform:scale(1);}50%{opacity:.36;transform:scale(1.07);}}
+/* กล่องชั้นแสง: ขนาด/ตำแหน่งเดียวกับ img (flex center + height 96%) mask ตามภาพ rank จริง */
+.hero-rank-bg .rank-beam,.hero-rank-bg .rank-edge{
+  position:absolute;height:96%;aspect-ratio:1/1;max-width:94%;transform:translateY(-1%);
+  pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+  -webkit-mask-image:var(--rank-img);mask-image:var(--rank-img);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain;}
+/* ลำแสงหมุน (ก้อนไส้ใน inset ลบ ให้ครอบตอนหมุน): ลิ่มสว่างขาว+สีแรงค์ 1 ลำใหญ่ + ลำรองฝั่งตรงข้าม */
+.hero-rank-bg .rank-beam i,.hero-rank-bg .rank-edge i{
+  content:'';position:absolute;inset:-55%;display:block;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    transparent 0deg 8deg,
+    var(--rank-c,#3a76d8) 17deg,
+    rgba(255,255,255,.96) 22deg,
+    var(--rank-c,#3a76d8) 27deg,
+    transparent 36deg 176deg,
+    rgba(255,255,255,.40) 184deg,
+    transparent 192deg 360deg);
+  animation:rankBeamSpin 5.5s linear infinite;}
+@keyframes rankBeamSpin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+/* แสงกวาดทั้งใบ — เบา เป็นประกายพื้น */
+.hero-rank-bg .rank-beam{opacity:.30;}
+/* แถบขอบ: mask ซ้ำ 2 ชั้น ชั้นในย่อ 88% แล้ว xor → เหลือเฉพาะวงขอบตามเหลี่ยมภาพ · สว่างกว่า+หมุนเร็วกว่า */
+.hero-rank-bg .rank-edge{
+  opacity:.95;
+  -webkit-mask-image:var(--rank-img),var(--rank-img);
+  mask-image:var(--rank-img),var(--rank-img);
+  -webkit-mask-size:contain,80%;mask-size:contain,80%;
+  -webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;
+  -webkit-mask-position:center,center;mask-position:center,center;
+  -webkit-mask-composite:xor;mask-composite:exclude;}
+.hero-rank-bg .rank-edge i{animation-duration:3.2s;filter:blur(1px);}
+/* ปิดอนิเมชัน = กลับไปนิ่งแบบเดิม (เหลือ glow คงที่) */
+html.no-anim .hero-rank-bg img,html.no-anim .hero-rank-bg::before{animation:none;}
+html.no-anim .hero-rank-bg .rank-beam,html.no-anim .hero-rank-bg .rank-edge{display:none;}
+/* ตอนเลื่อนแรงค์ (rank-fx รอบ 115) เล่น swap ก่อนแล้วค่อยหายใจต่อ — ไม่งั้น animation ทับกันแล้วค้างนิ่ง */
+.hero-rank-bg.rank-fx img{animation:rankSwapIn 1.6s cubic-bezier(.22,1,.36,1) both, rankBreath 3.6s ease-in-out 1.6s infinite;}
+.hero-rank-bg.rank-fx::before{animation:rankGlowPulse 1.6s ease-out both, rankGlowBreath 3.6s ease-in-out 1.6s infinite;}

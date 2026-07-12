@@ -68,7 +68,14 @@ function heroRankBgHTML(){
   const fx = heroRankShownId !== null && heroRankShownId !== info.rank.id && !state.noAnim;
   heroRankShownId = info.rank.id;
   if(!img) return '';
-  return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color}"><img src="${img}" alt=""></div>`;
+  // รอบ 176: ชั้นแสงมีชีวิต — .rank-edge = แถบแสงวิ่งไล่ตามขอบเหลี่ยมของเหรียญ (mask ภาพจริง 2 ชั้น xor เหลือแต่ขอบ)
+  // .rank-beam = ลำแสงกวาดทั้งเหรียญ (mask ภาพจริงชั้นเดียว) · img เรืองแสงหายใจสีตามแรงค์ (CSS rankBreath)
+  const imgAbs = new URL(img, document.baseURI).href;   // ⚠️ url() ใน var() Chrome resolve เทียบไฟล์ CSS — ต้องส่ง absolute
+  return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color};--rank-img:url('${imgAbs}')">
+    <img src="${img}" alt="">
+    <div class="rank-beam"><i></i></div>
+    <div class="rank-edge"><i></i></div>
+  </div>`;
 }
 
 /* ============================================================
