@@ -13,6 +13,12 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 159 (12 ก.ค.) — กันแถบดำ Touch to Search ของ Chrome 📵 (version .150)
+- **สเปกผู้ใช้ (screenshot มือถือจริง):** แตะข้อความบนปุ่มใดๆ → แถบดำ Google "อันดับ — Tap to see search results" เด้งจากขอบล่างบังเกม (ฟีเจอร์ Touch to Search ของ Chrome Android — จับคำที่แตะไปค้น Google)
+- **ทำ (style.css ใต้ `*` reset — ครอบทุกหน้าจอรวมโลก 3D):** `html,body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}` — ข้อความเลือกไม่ได้ = Chrome ไม่มีคำให้จับ แถบไม่เด้ง · ยกเว้น `input, textarea, [contenteditable="true"]` ยังเลือก/พิมพ์/วางได้ (ช่องชื่อ/แชท/ค้นเพื่อน/ราคา ฯลฯ)
+- ✅ **ยืนยัน preview:** `getComputedStyle(body).userSelect==='none'` · input ยัง `text` · ลอง Range select ข้อความปุ่มจริงได้ 0 ตัวอักษร · ไม่มี console error · deploy live .150 · **cleanup hosting อัตโนมัติ (รอบ 158) ทำงานจริงท้าย deploy — ลบ version เก่า 1 คงไว้ 5**
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ — แตะปุ่ม/ข้อความทั่วเกม แถบ Google ต้องไม่เด้งอีก (ถ้า Chrome จำ state เก่า ปิด-เปิดแท็บใหม่ก่อน)
+
 ### ✅ รอบ 158 (12 ก.ค.) — กล่อง dialog ทุกใบโทนเดียวกัน + fix โควตา Hosting 📐🧹 (version .149)
 - **ผู้ใช้เคาะ "อยากให้เป็นโทนเดียวกันหมด ทำได้เลย"** — ขยายกล่องที่เหลือทั้งตระกูล levelup-box (lobby.css ท้ายไฟล์ โซนรอบ 158)
 - **หลักที่ใช้:** กล่องเป็น flex item ใน `.levelup-overlay` → `width:auto` หดตามเนื้อหา — **เพิ่ม max-width ไม่ทำให้กล่องสั้นบาน** (พิสูจน์: กล่องยืนยันสั้น 110px · กล่องข้อความยาวยืดถึง 600) · base 340→min(92vw,600) ครอบผลสอบ/ยืนยัน/เลเวลอัป · summary 560 · report 640 · food 640 · fq `width` 560 (เดิมใช้ width ไม่ใช่ max-width — ต้องทับด้วย width) · home-shop 640 · car-buy 560 · ซ่อนแถบใน `.wl-grid/.lb-list/.tc-wrap/.install-guide`
