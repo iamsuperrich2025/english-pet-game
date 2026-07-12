@@ -114,6 +114,18 @@ const DEFAULT_STATE = {
   playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
   playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
   playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว
+  feedShare:{coin:false, quiz:false, goods:false, other:false, assets:false},
+                                      // 📰 รอบ 155: หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed (default ปิดทุกหมวด — คนอื่นไม่เห็นจนกว่าจะเปิดเอง)
+  follows:{},                         // 📰 รอบ 155: คนที่เรา follow {uid:{n:ชื่อ, g:ชั้น, ts}} — feed หน้า lobby รวมกิจกรรมของคนกลุ่มนี้
+};
+
+/* 📰 รอบ 155: หมวดกิจกรรมที่รายงานได้ (ใช้ร่วม settings/profile/feed) */
+const FEED_CATS = {
+  coin:  {e:'🪙', n:'ได้เหรียญพิเศษ',      d:'รางวัลภารกิจ/โบนัสก้อนพิเศษ'},
+  quiz:  {e:'📝', n:'ผ่านการทดสอบ',        d:'สอบหมวดคำศัพท์ผ่าน'},
+  goods: {e:'📦', n:'ได้สินค้าเพิ่ม',       d:'ผลิตสำเร็จ/ซื้อของ/ได้ของขวัญ'},
+  other: {e:'✨', n:'ความเคลื่อนไหวอื่นๆ', d:'เลื่อนแรงค์/รับน้องใหม่'},
+  assets:{e:'🏆', n:'เปิดเผยทรัพย์สิน',    d:'โชว์คลังสินค้าสะสมเป็นตารางในโปรไฟล์'},
 };
 
 /* ---------- มื้ออาหาร (ข้อ 2): หิวมื้อเย็นวันละครั้ง เวลา 18:00
@@ -332,6 +344,12 @@ function loadState(){
       if(!Array.isArray(s.giftBox)) s.giftBox = [];
       s.giftBox = s.giftBox.filter(x=>x && (x.k === 'shop' || x.k === 'collect') &&
         (x.k === 'shop' ? giftInfo(x.id) : collectInfo(x.id)));
+      // 📰 Follow + Feed (รอบ 155): เซฟเก่าไม่มี → default ปิดทุกหมวด / ไม่ follow ใคร
+      if(!s.feedShare || typeof s.feedShare !== 'object' || Array.isArray(s.feedShare))
+        s.feedShare = structuredClone(DEFAULT_STATE.feedShare);
+      for(const k of Object.keys(DEFAULT_STATE.feedShare))
+        if(typeof s.feedShare[k] !== 'boolean') s.feedShare[k] = false;
+      if(!s.follows || typeof s.follows !== 'object' || Array.isArray(s.follows)) s.follows = {};
       return s;
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }
@@ -414,11 +432,13 @@ function questEvent(ev, n){           // จุดรับแต้มกลา
     if(state.quests.prog[q.id] >= q.target){
       state.quests.done.push(q.id);
       addCoins(q.reward);
+      if(typeof feedEvent === 'function') feedEvent('coin', `ได้เหรียญพิเศษ +${q.reward} 🪙 จากภารกิจ ${q.emoji} ${q.name}`);
       if(typeof sfx !== 'undefined') sfx.levelup();
       if(typeof toast === 'function') toast(`🎯 ภารกิจสำเร็จ! ${q.emoji} ${q.name} — รับ +${q.reward} 🪙`);
       if(!state.quests.allDone && state.quests.done.length >= QUEST_PER_DAY){
         state.quests.allDone = true;
         addCoins(QUEST_ALL_BONUS);
+        if(typeof feedEvent === 'function') feedEvent('coin', `เคลียร์ภารกิจครบ ${QUEST_PER_DAY} วันนี้ รับโบนัสพิเศษ +${QUEST_ALL_BONUS} 🪙 🏆`);
         if(typeof toast === 'function')
           setTimeout(()=>toast(`🏆 สุดยอด! เคลียร์ภารกิจครบทั้ง ${QUEST_PER_DAY} วันนี้ — โบนัสพิเศษ +${QUEST_ALL_BONUS} 🪙`), 1400);
       }
@@ -488,6 +508,7 @@ function refreshRank(){
     }else{
       setTimeout(()=>{ sfx.levelup(); toast(`🎖️ เลื่อนขั้นเป็น ${after.rank.emoji} ${after.label}!`, 2400); }, 700);
     }
+    if(typeof feedEvent === 'function') feedEvent('other', `เลื่อนแรงค์เป็น ${after.rank.emoji} ${after.label} 🎖️`);
   }
   state.rankKey = after.key;   // อัปเดตทั้งเลื่อนขึ้น (ฉลองแล้ว) และลดลง (เงียบๆ)
 }
@@ -732,6 +753,7 @@ function addCraft(n){
   state.producedCount++;
   state.producing = null;
   questEvent('produce');             // 🎯 Daily Quest: ผลิตสินค้าสำเร็จ
+  if(typeof feedEvent === 'function') feedEvent('goods', `ผลิต ${c.emoji||''} ${c.name} สำเร็จจากโรงงาน 🏭`);
   return c.id;
 }
 

@@ -778,6 +778,7 @@ function finishQuiz(){
     if(firstPass) state.quizPassed.push(cat.id);
     addCoins(coins);
     questEvent('quiz');                               // 🎯 Daily Quest: สอบผ่าน
+    if(typeof feedEvent === 'function') feedEvent('quiz', `สอบผ่านหมวด${cat.name} ${quiz.correct}/${quiz.questions.length} ข้อ 📝`);
   }
   addRP(rp);
   // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)

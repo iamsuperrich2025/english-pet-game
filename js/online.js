@@ -38,6 +38,11 @@ const Online = {
   /* ---- ตลาดออนไลน์จริง (item 2) ---- */
   market:[],        // ประกาศขายทั้งเซิร์ฟเวอร์ (รวมของเรา): [{key,sid,sn,id,p,ts}]
   marketOk:false,   // true = อ่าน /market ได้ (rules โซน market publish แล้ว) → เปิดตลาดจริง
+  /* ---- Follow + Feed กิจกรรม (รอบ 155) ---- */
+  feed:[],          // feed รวมของคนที่เรา follow เรียงใหม่→เก่า: [{uid,n,g,c,tx,ts}]
+  feedBy:{},        // uid → โพสต์ล่าสุดของคนนั้น (จาก watcher)
+  feedRefs:{},      // uid → query ที่ .on ค้างอยู่ (ไว้ .off ตอนเลิก follow)
+  lastAssetsSig:null, // JSON ทรัพย์สินล่าสุดที่ส่งขึ้น /feed/<me>/a (กันเขียนซ้ำ)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -110,6 +115,7 @@ function onlinePushScore(){
     // เผื่อ rules ยังไม่รองรับ av/ni (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง
     Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
   });
+  if(typeof feedPushAssets === 'function') feedPushAssets();   // 📰 ทรัพย์สินเปลี่ยน → อัปเดตคลังที่เปิดเผย (มี sig กันเขียนซ้ำ)
 }
 
 /* ดึงข้อมูลการเงินของผู้เล่นคนหนึ่งมาโชว์ในการ์ด (คลิกชื่อ)
@@ -141,6 +147,7 @@ function onlineRerender(){
   if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
   if(typeof renderFriendPanel === 'function') renderFriendPanel();
   if(typeof renderGiftPanel === 'function') renderGiftPanel();
+  if(typeof renderFeedCard === 'function') renderFeedCard();   // 📰 รอบ 155
 }
 
 /* 🔔 ตรวจว่าเพื่อน (ในรายชื่อเรา) ที่ออนไลน์อยู่ เพิ่งได้เข็มใหม่ไหม → เด้ง toast ให้กำลังใจ
@@ -668,6 +675,164 @@ function tinvWatch(){
   });
 }
 
+/* ============================================================
+   📰 Follow + Feed กิจกรรม (รอบ 155)
+   /feed/<uid>/p/<pushKey> = {c:หมวด, tx:ข้อความ ≤120, ts} — เจ้าของเขียนเอง เก็บ 30 ล่าสุด
+   /feed/<uid>/a           = JSON string {collectId:จำนวน} — คลังทรัพย์สิน (เฉพาะตอนเปิดเผย)
+   /follow/<targetUid>/<followerUid> = {n:ชื่อผู้ติดตาม, ts} — follow ทางเดียวแบบ TikTok
+   ยึดหลักเดิม "มีก็ใช้ ไม่มีก็ไม่พัง": rules ยังไม่ publish = เขียนโดน deny เงียบๆ เกมปกติ
+   ============================================================ */
+const FEED_MAX = 30;   // เก็บย้อนหลังต่อคน (ผู้ใช้เคาะ 12 ก.ค. — ประหยัดโควตา DB ฟรี)
+
+/* จุดรับเหตุการณ์กลาง — ระบบเกมยิงมาที่นี่ (เขียนเฉพาะหมวดที่ผู้เล่นเปิดเผยเอง · default ปิดหมด) */
+function feedEvent(cat, tx){
+  try{
+    if(!Online.ready || !state.student) return;
+    if(!state.feedShare || !state.feedShare[cat]) return;
+    const ref = Online.db.ref('feed/' + onlineKey() + '/p');
+    ref.push({c:String(cat).slice(0,12), tx:String(tx).slice(0,120),
+              ts:firebase.database.ServerValue.TIMESTAMP})
+       .then(()=>feedPrune(ref)).catch(()=>{});
+  }catch(e){ /* feed ล่มห้ามพังเกม */ }
+}
+/* ตัดโพสต์เก่าเกิน FEED_MAX (push key เรียงตามเวลาอยู่แล้ว) */
+function feedPrune(ref){
+  ref.once('value').then(snap=>{
+    const keys = [];
+    snap.forEach(ch=>{ keys.push(ch.key); });
+    if(keys.length <= FEED_MAX) return;
+    const del = {};
+    keys.slice(0, keys.length - FEED_MAX).forEach(k=>{ del[k] = null; });
+    ref.update(del).catch(()=>{});
+  }).catch(()=>{});
+}
+/* ผู้เล่นปิดหมวดในตั้งค่า → ลบโพสต์หมวดนั้นของเราออกจาก DB (ปิดแล้วคนอื่นไม่เห็นของเก่าด้วย) */
+function feedPurgeCat(cat){
+  if(!Online.ready) return;
+  const ref = Online.db.ref('feed/' + onlineKey() + '/p');
+  ref.once('value').then(snap=>{
+    const del = {};
+    snap.forEach(ch=>{ const v = ch.val(); if(v && v.c === cat) del[ch.key] = null; });
+    if(Object.keys(del).length) ref.update(del).catch(()=>{});
+  }).catch(()=>{});
+}
+/* คลังทรัพย์สิน (สินค้าสะสม+ของที่ลงขายอยู่) ขึ้น /feed/<me>/a — เรียกจาก onlinePushScore/ตั้งค่า
+   เปิดเผย = JSON {id:จำนวน} · ปิด = ลบทิ้ง · เขียนเฉพาะตอนค่าเปลี่ยน (lastAssetsSig) */
+function feedPushAssets(){
+  if(!Online.ready || !state.student) return;
+  let sig, val = null;
+  if(state.feedShare && state.feedShare.assets){
+    const counts = {};
+    for(const id of state.collection) counts[id] = (counts[id]||0) + 1;
+    for(const l of state.listings) counts[l.id] = (counts[l.id]||0) + 1;   // ของลงขายยังเป็นของเรา
+    val = JSON.stringify(counts);
+    if(val.length > 3900) return;   // กันชน validate ≤4000 (ปกติ 50 ชนิดไม่มีทางถึง)
+    sig = val;
+  }else sig = 'off';
+  if(Online.lastAssetsSig === sig) return;
+  Online.lastAssetsSig = sig;
+  const ref = Online.db.ref('feed/' + onlineKey() + '/a');
+  (val === null ? ref.remove() : ref.set(val)).catch(()=>{ Online.lastAssetsSig = null; });
+}
+/* กด follow — ทางเดียวไม่ต้องอนุมัติ · จำชื่อ/ชั้นเป้าหมายใน state (ไว้โชว์ใน feed) */
+function followSet(uid, n, g){
+  if(!uid || uid === onlineKey()) return Promise.resolve(false);
+  state.follows[uid] = {n: n || 'เพื่อน', g: g || '', ts: Date.now()};
+  saveState();
+  feedWatchSync();
+  if(!Online.ready || !Online.db) return Promise.resolve(true);
+  return Online.db.ref('follow/' + uid + '/' + onlineKey()).set({
+    n: (onlineDisplayName() || 'เพื่อน').slice(0,40),
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  }).then(()=>true).catch(()=>true);
+}
+function followUnset(uid){
+  delete state.follows[uid];
+  saveState();
+  feedWatchSync();
+  if(Online.db) Online.db.ref('follow/' + uid + '/' + onlineKey()).remove().catch(()=>{});
+}
+/* รวม feed ทุกคนที่ follow → เรียงใหม่→เก่า แล้ววาดการ์ด */
+function feedRebuild(){
+  const all = [];
+  for(const uid in Online.feedBy){
+    const f = (state.follows && state.follows[uid]) || {};
+    for(const it of Online.feedBy[uid])
+      all.push({uid, n: f.n || 'เพื่อน', g: f.g || '', c: it.c, tx: it.tx, ts: it.ts});
+  }
+  all.sort((a,b)=>b.ts - a.ts);
+  Online.feed = all.slice(0, 60);
+  if(typeof renderFeedCard === 'function') renderFeedCard();
+}
+/* ปรับ watcher ให้ตรงกับรายชื่อที่ follow อยู่ (แนวเดียวกับ chatWatchSync) */
+function feedWatchSync(){
+  if(!Online.db) return;
+  const want = state.follows || {};
+  for(const uid in Online.feedRefs){
+    if(want[uid]) continue;
+    Online.feedRefs[uid].off();
+    delete Online.feedRefs[uid];
+    delete Online.feedBy[uid];
+  }
+  for(const uid in want){
+    if(Online.feedRefs[uid]) continue;
+    const q = Online.db.ref('feed/' + uid + '/p').orderByKey().limitToLast(FEED_MAX);
+    Online.feedRefs[uid] = q;
+    q.on('value', (snap)=>{
+      const out = [];
+      snap.forEach(ch=>{
+        const v = ch.val();
+        if(v && typeof v.tx === 'string' && typeof v.ts === 'number')
+          out.push({c: typeof v.c === 'string' ? v.c : 'other', tx: v.tx, ts: v.ts});
+      });
+      Online.feedBy[uid] = out;
+      feedRebuild();
+    }, ()=>{ /* อ่านโดน deny (rules ยังไม่ publish) — เงียบไว้ เกมปกติ */ });
+  }
+  feedRebuild();
+}
+/* อ่านกิจกรรมล่าสุดของผู้เล่นคนหนึ่ง (เปิดหน้า profile ใครก็เห็น — ตามหมวดที่เจ้าตัวเปิด) */
+function fetchPlayerFeed(uid){
+  if(!Online.ready || !uid) return Promise.resolve([]);
+  return Online.db.ref('feed/' + uid + '/p').orderByKey().limitToLast(FEED_MAX).get().then(s=>{
+    const out = [];
+    s.forEach(ch=>{
+      const v = ch.val();
+      if(v && typeof v.tx === 'string') out.push({c: v.c || 'other', tx: v.tx, ts: v.ts || 0});
+    });
+    out.sort((a,b)=>b.ts - a.ts);
+    return out;
+  }).catch(()=>[]);
+}
+/* อ่านคลังทรัพย์สินที่ผู้เล่นเปิดเผย → {collectId:จำนวน} หรือ null (ตัวเอง=สดจาก state) */
+function fetchPlayerAssets(uid){
+  if(!uid) return Promise.resolve(null);
+  if(uid === onlineKey()){
+    if(!state.feedShare || !state.feedShare.assets) return Promise.resolve(null);
+    const counts = {};
+    for(const id of state.collection) counts[id] = (counts[id]||0) + 1;
+    for(const l of state.listings) counts[l.id] = (counts[l.id]||0) + 1;
+    return Promise.resolve(counts);
+  }
+  if(!Online.ready) return Promise.resolve(null);
+  return Online.db.ref('feed/' + uid + '/a').get().then(s=>{
+    try{
+      const v = s && s.val();
+      const obj = (typeof v === 'string') ? JSON.parse(v) : null;
+      return (obj && typeof obj === 'object' && !Array.isArray(obj)) ? obj : null;
+    }catch(e){ return null; }
+  }).catch(()=>null);
+}
+/* นับผู้ติดตามของผู้เล่นคนหนึ่ง (โชว์ในหน้า profile) — null = อ่านไม่ได้ */
+function fetchFollowers(uid){
+  if(!Online.ready || !uid) return Promise.resolve(null);
+  return Online.db.ref('follow/' + uid).get().then(s=>{
+    let n = 0;
+    s.forEach(()=>{ n++; });
+    return n;
+  }).catch(()=>null);
+}
+
 function onlineStart(){
   Online.db = firebase.database();
   const id = onlineKey();
@@ -685,6 +850,8 @@ function onlineStart(){
       // เผยแพร่รหัสเพื่อนของเรา (แผนที่ code→uid ให้คนอื่นค้นหาได้ — ข้อ 0.3)
       Online.myCode = friendCode(id);
       Online.db.ref('friendCodes/' + Online.myCode).set(id).catch(()=>{});
+      feedWatchSync();               // 📰 รอบ 155: เริ่มฟัง feed ของคนที่เรา follow
+      feedPushAssets();              // 📰 คลังทรัพย์สินที่เปิดเผย (เขียนเฉพาะตอนค่าเปลี่ยน)
     }
     onlineRerender();
   });

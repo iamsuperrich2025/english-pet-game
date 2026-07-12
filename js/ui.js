@@ -751,23 +751,74 @@ function showPlayerCard(uid, name, grade){
   const badgeRow = arr.length
     ? `<div class="pl-badges">${arr.map(e=>`<span class="pl-badge-chip"><b>${e}</b> ${escapeHTML((BADGE_META[e]||{}).n||'')}</span>`).join('')}</div>`
     : '';
+  // 📰 รอบ 155: การ์ดยืดกว้างเกือบเต็มจอ + ปุ่ม Follow + กิจกรรมล่าสุด + กริดทรัพย์สินที่เปิดเผย
+  const me = (typeof onlineKey === 'function') && uid === onlineKey();
+  const canFollow = !!uid && !me && typeof followSet === 'function'
+                    && typeof Online !== 'undefined' && Online.ready;
   const ov = document.createElement('div');
   ov.className = 'pl-overlay';
-  ov.innerHTML = `<div class="pl-card">
+  ov.innerHTML = `<div class="pl-card pl-wide">
       <button class="pl-close">✕</button>
-      <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span></div>
-      <div class="pl-grade">ชั้น ${escapeHTML(grade)}</div>
+      <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
+        ${canFollow ? `<button class="pl-follow"></button>` : ''}
+      </div>
+      <div class="pl-grade">${grade ? `ชั้น ${escapeHTML(grade)}` : 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
       ${badgeRow}
-      <div class="pl-body"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
+      <div class="pl-body">
+        <div class="pl-cols">
+          <div class="pl-col pl-stats-col"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
+          <div class="pl-col">
+            <div class="pl-sec-title">📰 กิจกรรมล่าสุด</div>
+            <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div>
+          </div>
+        </div>
+        <div class="pl-assets-wrap" style="display:none">
+          <div class="pl-sec-title">🏆 ทรัพย์สินที่เปิดเผย</div>
+          <div class="pl-assets"></div>
+        </div>
+      </div>
     </div>`;
   document.body.appendChild(ov);
   const close = ()=>ov.remove();
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
   ov.querySelector('.pl-close').addEventListener('click', close);
 
+  /* ---- ปุ่ม Follow (ทางเดียวแบบ TikTok ไม่ต้องอนุมัติ) + จำนวนผู้ติดตาม ---- */
+  const loadFollowers = ()=>{
+    if(typeof fetchFollowers !== 'function') return;
+    fetchFollowers(uid).then(n=>{
+      const el = ov.querySelector('.pl-followers');
+      if(el && n != null) el.textContent = ` · 👥 ผู้ติดตาม ${fmtNum(n)} คน`;
+    });
+  };
+  const fBtn = ov.querySelector('.pl-follow');
+  if(fBtn){
+    const paintFollow = ()=>{
+      const onF = !!(state.follows && state.follows[uid]);
+      fBtn.textContent = onF ? '✓ ติดตามแล้ว' : '➕ ติดตาม';
+      fBtn.classList.toggle('on', onF);
+    };
+    paintFollow();
+    fBtn.addEventListener('click', ()=>{
+      if(state.follows && state.follows[uid]){
+        followUnset(uid);
+        toast(`เลิกติดตาม ${sp.name} แล้ว`);
+      }else{
+        followSet(uid, sp.name, grade || '');
+        sfx.select();
+        toast(`📰 ติดตาม ${sp.name} แล้ว! กิจกรรมของเขาจะมาโชว์ในฟีดหน้าหลัก`);
+      }
+      paintFollow();
+      setTimeout(loadFollowers, 600);   // รอ DB รับค่าก่อนนับใหม่
+      if(typeof renderFeedCard === 'function') renderFeedCard();
+    });
+  }
+  loadFollowers();
+
+  /* ---- คอลัมน์ซ้าย: สถิติการเงิน (เดิม) ---- */
   const statsFn = (typeof fetchPlayerStats === 'function') ? fetchPlayerStats(uid) : Promise.resolve(null);
   statsFn.then(d=>{
-    const body = ov.querySelector('.pl-body');
+    const body = ov.querySelector('.pl-stats-col');
     if(!body) return;
     if(!d){
       body.innerHTML = `<div class="pl-none">ยังไม่มีข้อมูลของผู้เล่นคนนี้ 😅<br>
@@ -791,6 +842,46 @@ function showPlayerCard(uid, name, grade){
         <span class="pl-val pl-gold">${av}</span>
       </div>
       <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
+  });
+
+  /* ---- คอลัมน์ขวา: กิจกรรมล่าสุด (เห็นตามหมวดที่เจ้าตัวเปิดเผย — ไม่ต้อง follow ก็เห็น) ---- */
+  const feedFn = (typeof fetchPlayerFeed === 'function') ? fetchPlayerFeed(uid) : Promise.resolve([]);
+  feedFn.then(list=>{
+    const el = ov.querySelector('.pl-feed');
+    if(!el) return;
+    if(!list.length){
+      el.innerHTML = `<div class="pl-none">ยังไม่มีกิจกรรมที่เปิดเผย 🔒<br>
+        <small>${me ? 'เปิดเผยกิจกรรมของหนูได้ในตั้งค่า ⚙️ (default ปิดทุกหมวด)' : 'ผู้เล่นเลือกเองได้ว่าจะเปิดเผยอะไรในตั้งค่า ⚙️'}</small></div>`;
+      return;
+    }
+    el.innerHTML = list.map(it=>{
+      const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
+      return `<div class="pl-feed-row"><span class="feed-ico">${fc.e}</span>
+        <span class="feed-txt">${escapeHTML(it.tx)} <small class="feed-ago">· ${feedAgo(it.ts)}</small></span></div>`;
+    }).join('');
+  });
+
+  /* ---- แถวล่าง: กริดทรัพย์สินที่เปิดเผย (ตารางแบบหน้าโรงงาน · ชิ้นซ้ำใส่เลขจำนวนซ้อนมุม) ---- */
+  const assetsFn = (typeof fetchPlayerAssets === 'function') ? fetchPlayerAssets(uid) : Promise.resolve(null);
+  assetsFn.then(counts=>{
+    if(!counts) return;
+    const ids = Object.keys(counts).filter(id=>collectInfo(id));
+    if(!ids.length) return;
+    const wrap = ov.querySelector('.pl-assets-wrap');
+    const gridEl = ov.querySelector('.pl-assets');
+    if(!wrap || !gridEl) return;
+    // เรียงตามมูลค่าแพง→ถูก ให้ของเด่นขึ้นก่อน
+    ids.sort((a,b)=>collectInfo(b).price - collectInfo(a).price);
+    gridEl.innerHTML = ids.map(id=>{
+      const c = collectInfo(id);
+      const img = collectImg(id);
+      const n = Math.max(1, Math.min(999, Math.round(counts[id])));
+      return `<div class="pl-asset" title="${escapeHTML(c.name)}">
+        ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${c.emoji}</span>`}
+        ${n > 1 ? `<span class="pl-asset-n">×${n}</span>` : ''}
+      </div>`;
+    }).join('');
+    wrap.style.display = '';
   });
 }
 
@@ -1221,6 +1312,7 @@ function acceptGift(it){
   return giftAccept(it).then(()=>{
     state.giftBox.push({k: it.k, id: it.id, from: it.from, fn: it.fn, ts: it.ts || Date.now()});
     saveState();
+    if(typeof feedEvent === 'function') feedEvent('goods', `ได้รับของขวัญ ${giftItemName(it.k, it.id)} จาก ${it.fn || 'เพื่อน'} 🎁`);
     Online.giftIn = (Online.giftIn || []).filter(g=>!(g.from === it.from && g.key === it.key));
     showGiftReveal(it);
     renderDashboard();
@@ -1435,6 +1527,112 @@ function showRankUp(before, after){
 /* ============================================================
    PET DASHBOARD
    ============================================================ */
+/* ============================================================
+   📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
+   - แผง "ข้อมูลน้อง"+"การดูแล" เดิม (ข้างเวที) ย้ายมาเป็น overlay ใหญ่
+     เนื้อหาเก็บใน __petPlates (renderDashboard สร้างใหม่ทุกรอบ — overlay refresh ตาม)
+   - ฟีด = กิจกรรมของคนที่เรา follow (Online.feed จาก feedWatchSync ใน online.js)
+   ============================================================ */
+let __petPlates = null;   // {info, care} — HTML แผงล่าสุด (สดจาก renderDashboard)
+
+/* ผูกปุ่มในแผงข้อมูลน้อง/การดูแล (scope ด้วย root — ใช้เฉพาะใน overlay) */
+function bindPetPlateButtons(root){
+  const p = activePet();
+  if(!p) return;
+  const conf = PETS[p.type];
+  const on = (id, fn)=>{ const b = root.querySelector('#' + id); if(b) b.addEventListener('click', fn); };
+  on('btn-feed', feedPet);
+  on('btn-cure', curePet);
+  on('btn-giant-up', ()=>upgradeGiant(p));
+  on('btn-giant-reset', ()=>resetGiant(p));
+  on('btn-sleep', sleepAllPets);
+  on('btn-wake', wakeAllPets);
+  on('btn-detox', ()=>detoxPet(p));
+  on('btn-pet-rename', ()=>{
+    askNameDialog({
+      emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
+      desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
+      placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
+      okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
+      onOk:(name)=>{
+        p.name = name;
+        saveState();
+        sfx.select();
+        toast(`🏷️ เปลี่ยนชื่อน้องเป็น "${name}" แล้ว!`);
+        renderDashboard();
+      },
+    });
+  });
+}
+
+/* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว) ไม่มี scrollbar
+   เปิดจากปุ่มเหนือฟีด · กดปุ่มดูแลแล้ว renderDashboard จะ refresh เนื้อหาให้เอง */
+function openPetInfoOverlay(){
+  if(!__petPlates) return;
+  const ov = document.createElement('div');
+  ov.className = 'pi-overlay';
+  const close = ()=>{ window.__piOverlay = null; ov.remove(); };
+  const fill = ()=>{
+    if(!__petPlates || !activePet()){ close(); return; }
+    ov.innerHTML = `<div class="pi-box${__petPlates.care ? '' : ' one-col'}">
+      <button class="pl-close pi-close">✕</button>
+      <div class="stage-plate pi-plate">${__petPlates.info}</div>
+      ${__petPlates.care ? `<div class="stage-plate pi-plate">${__petPlates.care}</div>` : ''}
+    </div>`;
+    bindPetPlateButtons(ov);
+    ov.querySelector('.pi-close').addEventListener('click', close);
+  };
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
+  window.__piOverlay = {refresh: fill};
+  fill();
+  document.body.appendChild(ov);
+  sfx.select();
+}
+
+/* เวลาแบบอ่านง่ายในแถวฟีด */
+function feedAgo(ts){
+  const d = Date.now() - (ts || 0);
+  if(d < 90*1000) return 'เมื่อกี้';
+  if(d < 60*60*1000) return Math.floor(d/60000) + ' นาทีก่อน';
+  if(d < 24*60*60*1000) return Math.floor(d/3600000) + ' ชม.ก่อน';
+  return Math.floor(d/86400000) + ' วันก่อน';
+}
+
+/* วาดฟีดเพื่อน (แผงซ้าย lobby) — เลื่อนอ่านเองได้ ไม่มี scrollbar (ซ่อนใน CSS) */
+function renderFeedCard(){
+  const el = document.getElementById('feed-list');
+  if(!el) return;
+  const nFollow = Object.keys(state.follows || {}).length;
+  const feed = (typeof Online !== 'undefined' && Online.feed) ? Online.feed : [];
+  if(!nFollow){
+    el.innerHTML = `<div class="feed-empty">ยังไม่ได้ติดตามใครเลย 📰<br>
+      <small>แตะชื่อเพื่อนในกล่องขวาหรือกระดานอันดับ แล้วกด ➕ ติดตาม<br>กิจกรรมของเขาจะมาโชว์ที่นี่</small></div>`;
+    return;
+  }
+  if(!feed.length){
+    el.innerHTML = `<div class="feed-empty">ติดตามอยู่ ${nFollow} คน แต่ยังไม่มีกิจกรรมให้อ่าน 😴<br>
+      <small>เพื่อนต้องเปิดเผยกิจกรรมในตั้งค่า ⚙️ ของเขาก่อนนะ</small></div>`;
+    return;
+  }
+  el.innerHTML = feed.map(it=>{
+    const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
+    return `<div class="feed-row" data-fid="${escapeHTML(it.uid)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
+      <span class="feed-ico">${fc.e}</span>
+      <span class="feed-txt"><b class="feed-name">${escapeHTML(it.n)}</b> ${escapeHTML(it.tx)}
+        <small class="feed-ago">· ${feedAgo(it.ts)}</small></span>
+    </div>`;
+  }).join('');
+  if(!el.dataset.bound){   // delegation ครั้งเดียวต่อ element (สร้างใหม่ทุก renderDashboard)
+    el.dataset.bound = '1';
+    el.addEventListener('click', (e)=>{
+      const row = e.target.closest('.feed-row');
+      if(!row) return;
+      sfx.select();
+      showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
+    });
+  }
+}
+
 function renderDashboard(){
   careTick();
   dailyTick();
@@ -1668,10 +1866,11 @@ function renderDashboard(){
   const heroVars = `--pet-vh:${GIANT_PET_VH[g]};--owner-vh:${GIANT_OWNER_VH[g]};--owner-x:${GIANT_OWNER_X[g]}`;
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
-  /* โฉมใหม่ 2 (ผู้ใช้สั่ง 8 ก.ค.): น้องตัวใหญ่กลางเวที ห้ามมีแผงทับตัว
-     สถานะแยก 2 แผงใส sci-fi ขนาบข้าง — ซ้าย=ข้อมูลน้อง · ขวา=การดูแล (ร่างไข่ไม่มีแผงขวา) */
-  card.innerHTML = `
-    <div class="stage-plate plate-left">
+  /* 📰 รอบ 155 (สเปกผู้ใช้): กล่อง "ข้อมูลน้อง"+"การดูแล" ย้ายไป overlay ใหญ่ (openPetInfoOverlay)
+     ซ้าย = ปุ่มเปิด overlay (เหนือตำแหน่งกล่องข้อมูลน้องเดิม) + ฟีดเพื่อน 📰 กว้างขึ้น
+     เวทีน้อง (hero) ขยับไปฝั่งขวา แทนที่กล่องการดูแลเดิม */
+  __petPlates = {
+    info: `
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       <div class="plate-head">
         <span class="pet-name">${escapeHTML(p.name)} <button class="chip-edit" id="btn-pet-rename" title="เปลี่ยนชื่อน้อง">✏️</button></span>
@@ -1697,23 +1896,23 @@ function renderDashboard(){
             : `<div class="giant-max">🎉 ยักษ์เต็มขั้นแล้ว!</div>`}
           ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
         </div>
-      </div>` : ''}
+      </div>` : ''}`,
+    care: hungerUI ? `<div class="plate-title">⬢ การดูแล</div>${hungerUI}` : '',
+  };
+  const petAlert = p.sick ? ' <span class="pib-alert">🤒</span>' : (petHungry(p) ? ' <span class="pib-alert">😫</span>' : '');
+  card.innerHTML = `
+    <div class="stage-left">
+      <button class="pet-info-btn" id="btn-pet-info">🐾 ข้อมูลน้อง &amp; การดูแล${petAlert}</button>
+      <div class="stage-plate feed-plate">
+        <div class="plate-title">⬢ ฟีดเพื่อน 📰</div>
+        <div class="feed-list" id="feed-list"></div>
+      </div>
     </div>
-    <div class="stage-hero">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>
-    ${hungerUI ? `
-    <div class="stage-plate plate-right">
-      <div class="plate-title">⬢ การดูแล</div>
-      ${hungerUI}
-    </div>` : ''}`;
+    <div class="stage-hero">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
 
-  const feedBtn = document.getElementById('btn-feed');
-  if(feedBtn) feedBtn.addEventListener('click', feedPet);
-  const cureBtn = document.getElementById('btn-cure');
-  if(cureBtn) cureBtn.addEventListener('click', curePet);
-  const giantUpBtn = document.getElementById('btn-giant-up');
-  if(giantUpBtn) giantUpBtn.addEventListener('click', ()=>upgradeGiant(p));
-  const giantResetBtn = document.getElementById('btn-giant-reset');
-  if(giantResetBtn) giantResetBtn.addEventListener('click', ()=>resetGiant(p));
+  document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
+  renderFeedCard();
+  if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
   // ไม่มี/โหลดพลาด/เปิดแบบ file:// → ใช้ภาพ PNG เดิม (fallback อัตโนมัติใน Lobby3D)
@@ -1721,29 +1920,8 @@ function renderDashboard(){
     const hero = card.querySelector('.stage-hero');
     if(hero) Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:g});
   }
-  const sleepBtn = document.getElementById('btn-sleep');
-  if(sleepBtn) sleepBtn.addEventListener('click', sleepAllPets);
-  const wakeBtn = document.getElementById('btn-wake');
-  if(wakeBtn) wakeBtn.addEventListener('click', wakeAllPets);
-  const detoxBtn = document.getElementById('btn-detox');
-  if(detoxBtn) detoxBtn.addEventListener('click', ()=>detoxPet(p));
-
-  // ปุ่ม ✏️ เปลี่ยนชื่อน้อง (ข้อ 7 — ตรวจชื่อชุดเดียวกับชื่อผู้เล่น แค่ 1–15 ตัว)
-  document.getElementById('btn-pet-rename').addEventListener('click', ()=>{
-    askNameDialog({
-      emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
-      desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
-      placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
-      okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
-      onOk:(name)=>{
-        p.name = name;
-        saveState();
-        sfx.select();
-        toast(`🏷️ เปลี่ยนชื่อน้องเป็น "${name}" แล้ว!`);
-        renderDashboard();
-      },
-    });
-  });
+  // ปุ่มดูแล (ให้อาหาร/รักษา/นอน/ขับพิษ/ยักษ์/เปลี่ยนชื่อ) ย้ายไปอยู่ใน overlay
+  // ข้อมูลน้อง — ผูกใน bindPetPlateButtons ตอน openPetInfoOverlay (รอบ 155)
 
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
@@ -4178,6 +4356,7 @@ function buyMarketItem(key){
     const wi = (state.wishlist || []).indexOf(item.id);
     if(wi >= 0) state.wishlist.splice(wi, 1);
     saveState();
+    if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji} ${c.name} จากตลาดเพื่อน 🏪`);
     showCollectReveal(item.id, item.p);
     toast(`🌏 ซื้อ${c.name}จาก ${item.sn} สำเร็จ!`);
     renderDashboard();
@@ -4329,6 +4508,7 @@ function renderPetShop(){
               state.pets.push(newPet(key, name));
               state.active = state.pets.length - 1;
               saveState();
+              if(typeof feedEvent === 'function') feedEvent('other', `รับน้องใหม่ ${conf.emoji||'🐾'} "${name}" มาเลี้ยงแล้ว 🥰`);
               if(typeof testerBoost === 'function') testerBoost();  // 🧪 ผู้ทดสอบ: น้องโตเต็มวัยทันที ไม่ต้อง login ใหม่
               sfx.levelup();
               toast(conf.startKey === 'egg'

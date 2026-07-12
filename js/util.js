@@ -451,6 +451,14 @@ function openSettings(){
         <button class="avatar-mini" data-av="female">🦸‍♀️ หญิง</button>
       </span>
     </div>
+    <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
+      <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดปิดมาตั้งแต่แรก ไม่มีใครเห็นจนกว่าหนูจะเปิด</span></div>
+    ${Object.keys(FEED_CATS).map(k=>`
+    <div class="set-row set-feed-row" data-cat="${k}">
+      <span class="set-lwrap"><span class="set-label">${FEED_CATS[k].e} ${FEED_CATS[k].n}</span>
+        <span class="set-desc">${FEED_CATS[k].d}</span></span>
+      <button class="set-switch" aria-label="สลับการเปิดเผย ${FEED_CATS[k].n}"></button>
+    </div>`).join('')}
     <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
     ${(typeof isTeacher==='function' && isTeacher()) ?
       `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
@@ -467,6 +475,9 @@ function openSettings(){
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     // ข้อ 4: ไฮไลต์ตัวละครที่เลือกอยู่ (ผู้เล่นเดิมยังไม่เลือก = ไม่ไฮไลต์)
     overlay.querySelectorAll('.avatar-mini').forEach(b=>b.classList.toggle('sel', state.playerAvatar === b.dataset.av));
+    // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default ปิดทุกหมวด)
+    overlay.querySelectorAll('.set-feed-row').forEach(r=>
+      setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
   };
   overlay.querySelectorAll('.avatar-mini').forEach(b=>b.addEventListener('click', ()=>{
     state.playerAvatar = b.dataset.av;
@@ -483,6 +494,26 @@ function openSettings(){
   });
   overlay.querySelector('#set-anim .set-switch').addEventListener('click', ()=>{
     state.noAnim = !state.noAnim; saveState(); applyNoAnim(); paint();
+  });
+  // 📰 รอบ 155: สลับการเปิดเผยกิจกรรมรายหมวด
+  // เปิด = เริ่มรายงานหมวดนั้น · ปิด = หยุด + ลบโพสต์เก่าหมวดนั้นออกจาก DB (คนอื่นไม่เห็นของเก่าด้วย)
+  overlay.querySelectorAll('.set-feed-row').forEach(r=>{
+    r.querySelector('.set-switch').addEventListener('click', ()=>{
+      const cat = r.dataset.cat;
+      if(!state.feedShare) state.feedShare = {};
+      state.feedShare[cat] = !state.feedShare[cat];
+      saveState(); paint();
+      if(state.feedShare[cat]){
+        sfx.select();
+        toast(cat === 'assets'
+          ? `${FEED_CATS[cat].e} เปิดเผยคลังทรัพย์สินในโปรไฟล์แล้ว`
+          : `${FEED_CATS[cat].e} เปิดรายงาน "${FEED_CATS[cat].n}" แล้ว — เพื่อนจะเห็นในโปรไฟล์/ฟีด`);
+      }else{
+        toast(`🔒 ปิด "${FEED_CATS[cat].n}" แล้ว — ลบรายการเก่าให้ด้วย`);
+        if(cat !== 'assets' && typeof feedPurgeCat === 'function') feedPurgeCat(cat);
+      }
+      if(cat === 'assets' && typeof feedPushAssets === 'function') feedPushAssets();
+    });
   });
   overlay.querySelector('#set-help').addEventListener('click', openHelp);
   const tg = overlay.querySelector('#set-teacher');
