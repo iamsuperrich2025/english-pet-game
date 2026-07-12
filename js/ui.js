@@ -486,7 +486,22 @@ function renderOnlineCard(){
     </div>`).join('');
     bindPlayerClicks();
     bindFriendQuickMenu();
-    el.innerHTML = `
+    /* รอบ 154: การ์ดคำชวนค้างบนสุดของกล่อง — 🚀 ไปเลย! เข้าโลกทันที (logic เดียวกับปุ่มราง:
+       บาดเจ็บ/ไม่มีตั๋ว → พาไปการ์ดร้านค้า) · "ไว้ก่อน" = ซ่อนเฉพาะเซสชันนี้ (คำชวน+เงินคืนไม่หาย) */
+    if(!Online.tinvHidden) Online.tinvHidden = {};
+    const TINV_W = {adv:{ico:'🌍',label:'ผจญภัย'}, haunt:{ico:'👻',label:'ผีสิง'}, heli:{ico:'🚁',label:'เฮลิคอปเตอร์'}};
+    const invs = Object.entries(Online.tinv || {}).filter(([fid])=>!Online.tinvHidden[fid]).map(([fid,v])=>{
+      const w = TINV_W[v.map] || {ico:'🌍', label:'3D'};
+      return `<div class="inv-card" data-fid="${escapeHTML(fid)}">
+        <div class="inv-txt">📨 <b>${escapeHTML(v.n)}</b> ชวนไปเล่น<b>โลก${w.label} ${w.ico}</b><br>เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}!</div>
+        <div class="inv-btns">
+          <button class="inv-go" data-map="${escapeHTML(v.map)}" type="button">🚀 ไปเลย!</button>
+          <button class="inv-x" data-fid="${escapeHTML(fid)}" type="button">ไว้ก่อน</button>
+        </div>
+      </div>`;
+    }).join('');
+    bindInviteCards();
+    el.innerHTML = `${invs}
       <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
       ${meRow}${rows}
       ${Online.friends.length ? '' : '<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>'}`;
@@ -511,6 +526,11 @@ function renderOnlineCard(){
     if(__onFlashPend && el.clientHeight){    // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอตอนกลับ lobby)
       sideFlashRows(el, `.online-row[data-fid="${CSS.escape(__onFlashPend)}"]`, 'on-flash');
       __onFlashPend = null;
+    }
+    /* รอบ 154: คำชวนเพิ่งเข้า (tinvWatch ตั้ง pend ไว้) → เด้งไปโชว์การ์ดชวน + แฟลชฟ้า */
+    if(window.__invFlashPend && el.clientHeight){
+      sideFlashRows(el, `.inv-card[data-fid="${CSS.escape(window.__invFlashPend)}"]`, 'on-flash');
+      window.__invFlashPend = null;
     }
     return;
   }
@@ -543,6 +563,28 @@ function renderOnlineCard(){
    🤝 ชวนเล่นโลก 3D (tinv — เจอกันรับเงินคืน) · 🎁 ของขวัญ · 💬 ทักทาย (เฉพาะเพื่อนกันแล้ว)
    ยังไม่เป็นเพื่อน = ➕ ส่งคำขอเป็นเพื่อน · 👤 ดูข้อมูล (แทน pl-click ที่ชื่อแบบเดิม)
    ============================================================ */
+/* รอบ 154: ปุ่มบนการ์ดคำชวนในกล่องเพื่อนออนไลน์ — 🚀 ไปเลย! / ไว้ก่อน (ผูกครั้งเดียว)
+   🚀 ใช้ railWorldClick ของปุ่มรางโลก 3D: บาดเจ็บ→ชวนไปรักษา · ไม่มีตั๋ว→พาไปการ์ดซื้อในร้าน · มีตั๋ว→เข้าโลกเลย */
+function bindInviteCards(){
+  if(window.__invBound) return;
+  window.__invBound = true;
+  document.addEventListener('click', (e)=>{
+    const go = e.target.closest('#online-card .inv-go');
+    if(go){
+      const w = (typeof WORLD3D !== 'undefined') ? WORLD3D.find(x=>x.mode === go.dataset.map) : null;
+      if(w) railWorldClick(w);
+      return;
+    }
+    const x = e.target.closest('#online-card .inv-x');
+    if(x){
+      if(!Online.tinvHidden) Online.tinvHidden = {};
+      Online.tinvHidden[x.dataset.fid] = true;   // ซ่อนเฉพาะเซสชัน — คำชวนใน DB ยังอยู่ เข้าเกมใหม่เห็นอีก
+      sfx.select();
+      renderOnlineCard();
+    }
+  });
+}
+
 function bindFriendQuickMenu(){
   if(window.__fqBound) return;               // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
   window.__fqBound = true;

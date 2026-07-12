@@ -659,10 +659,12 @@ function tinvWatch(){
       Online.tinvSeen[uid] = true;
       const w = out[uid].map === 'haunt' ? 'โลกผีสิง 👻' : out[uid].map === 'heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : 'โลกผจญภัย 🌍';
       toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${w}ด้วยกัน! เจอกันใน map รับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
+      window.__invFlashPend = uid;    // รอบ 154: การ์ดคำชวนในกล่องเพื่อน แฟลช+เด้งไปโชว์ (renderOnlineCard จัดการ)
     });
     if(typeof renderTicketCard === 'function') renderTicketCard();
     if(typeof renderHauntCard === 'function') renderHauntCard();
     if(typeof renderHeliCard === 'function') renderHeliCard();
+    if(typeof onlineRerender === 'function') onlineRerender();   // การ์ดคำชวนในกล่องเพื่อนโผล่/หายทันที
   });
 }
 

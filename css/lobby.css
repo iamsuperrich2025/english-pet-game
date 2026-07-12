@@ -685,12 +685,26 @@ html.no-anim .nw-tag{animation:none;}
   0%,100%{background:transparent;box-shadow:none;}
   50%{background:rgba(46,220,140,.32);box-shadow:0 0 12px rgba(46,220,140,.55);}
 }
-/* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → แถวแฟลชฟ้า 3 จังหวะ (กล่องเด้งไปโชว์เหมือนภารกิจ) */
-.lobby-side .online-row.on-flash{animation:onFlash 1.2s ease-in-out 3;border-radius:8px;}
+/* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → แถวแฟลชฟ้า 3 จังหวะ (กล่องเด้งไปโชว์เหมือนภารกิจ)
+   รอบ 154: ครอบการ์ดคำชวน .inv-card ด้วย */
+.lobby-side .online-row.on-flash,
+.lobby-side .inv-card.on-flash{animation:onFlash 1.2s ease-in-out 3;border-radius:8px;}
 @keyframes onFlash{
   0%,100%{background:transparent;box-shadow:none;}
   50%{background:rgba(80,180,255,.30);box-shadow:0 0 12px rgba(80,180,255,.6);}
 }
+/* รอบ 154: การ์ดคำชวนค้างบนสุดกล่องเพื่อนออนไลน์ — 🚀 ไปเลย! / ไว้ก่อน */
+.inv-card{background:rgba(80,180,255,.12);border:1px solid rgba(120,210,255,.45);border-radius:10px;
+  padding:6px 8px;margin-bottom:6px;}
+.inv-card .inv-txt{font-size:11px;line-height:1.35;color:#dcebfb;margin-bottom:5px;}
+.inv-card .inv-txt b{color:#fff;}
+.inv-btns{display:flex;gap:5px;}
+.inv-go{flex:1;border:none;border-radius:8px;padding:5px 6px;font-size:12px;font-weight:700;cursor:pointer;
+  font-family:inherit;background:linear-gradient(180deg,#7ed49a,#4cb56d);color:#fff;box-shadow:0 2px 0 #368a50;}
+.inv-go:active{box-shadow:0 0 0 #368a50;transform:translateY(1px);}
+.inv-x{border:none;border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;font-family:inherit;
+  background:rgba(255,255,255,.12);color:#b9d4ef;}
+
 /* รอบ 153: เมนูลัดแตะแถวเพื่อนออนไลน์ — ชวนเล่น/ของขวัญ/ทักทาย/ดูข้อมูล (โทนกระจกฟ้าเดียวกับกล่อง) */
 #online-card .online-row[data-fid]{cursor:pointer;}
 .fq-overlay{position:fixed;inset:0;background:rgba(5,15,35,.55);z-index:9500;
