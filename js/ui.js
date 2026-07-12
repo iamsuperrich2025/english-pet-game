@@ -434,7 +434,7 @@ function questGo(qid){                 // ปุ่ม 🚀 พาไปที�
 function qDeckDraw(el, flashId){
   const qs = questsToday();
   if(__qDeckIdx >= qs.length) __qDeckIdx = 0;
-  if(el.clientHeight) el.classList.toggle('q-mini', el.clientHeight < 64);   // กล่องเตี้ยมาก (จอ 375) → โหมดกะทัดรัด
+  el.classList.add('q-fit');   // รอบ 178 (สเปกผู้ใช้): กล่องหดพอดี 2 บรรทัด (ชื่อ+แถวรางวัล) — ซ่อนแถบ/จุดใน CSS ฟอนต์ขนาดปกติ
   const q = qs[__qDeckIdx];
   const done = state.quests.done.includes(q.id);
   const prog = Math.min(q.target, state.quests.prog[q.id]||0);
@@ -529,11 +529,74 @@ let __onSeen = null;                  // friend ids ที่เห็นรอ�
 let __onFirstTs = 0;                  // เวลาเรนเดอร์โหมดออนไลน์ครั้งแรก
 let __onFlashPend = null;             // เพื่อนรอแฟลช (โผล่ตอนกล่องถูกซ่อน เช่น อยู่หน้าเกม)
 
+/* รอบ 178 (สเปกผู้ใช้): กล่องเพื่อนออนไลน์ = พลิกหน้าทีละคน (1 แถว = 2 บรรทัด: ชื่อ+กิจกรรม)
+   พลิก 180° (ครึ่งออก+ครึ่งเข้า rotateX แบบเด็คภารกิจ) วนอัตโนมัติ · แตะ = หยุด ·
+   ลากขึ้น/ลง = พลิกทีละหน้าตามจังหวะนิ้ว · ปล่อยนิ้วเกิน 5 วิ = พลิกวนต่อเอง ไม่มีวันหยุด */
+const ONLINE_FLIP_MS = 5000;          // จังหวะพลิกอัตโนมัติ
+const ONLINE_FLIP_RESUME = 5000;      // ms หลังปล่อยนิ้วค่อยพลิกต่อ (ตามสเปก 5 วิ)
+const ONLINE_SWIPE_STEP = 34;         // ลากกี่ px = พลิก 1 หน้า
+let __onPages = [], __onPage = 0, __onHold = 0;
+let __onDownY = null, __onAcc = 0, __onSwiped = false;
+
+function onPageDraw(cls){
+  const el = document.getElementById('online-card');
+  if(!el) return;
+  if(!__onPages.length){ el.innerHTML = ''; return; }
+  if(__onPage >= __onPages.length) __onPage = 0;
+  el.innerHTML = `<div class="on-page${cls ? ' ' + cls : ''}">${__onPages[__onPage]}</div>`;
+  if(cls) setTimeout(()=>{ const p = el.querySelector('.on-page'); if(p) p.classList.remove(cls); }, 320);
+}
+function onPageFlip(dir){
+  const el = document.getElementById('online-card');
+  if(!el || __onPages.length < 2) return;
+  const noAnim = document.documentElement.classList.contains('no-anim');
+  const go = ()=>{ __onPage = (__onPage + dir + __onPages.length) % __onPages.length;
+    onPageDraw(noAnim ? '' : (dir > 0 ? 'flip-in-up' : 'flip-in-down')); };
+  const p = el.querySelector('.on-page');
+  if(noAnim || !p){ go(); return; }
+  p.classList.add(dir > 0 ? 'flip-out-up' : 'flip-out-down');
+  setTimeout(go, 160);
+}
+function bindOnlinePager(el){
+  if(el.dataset.pager) return;         // element ใหม่ทุก renderDashboard → ผูกใหม่ได้เสมอ
+  el.dataset.pager = '1';
+  el.addEventListener('pointerdown', e=>{ __onDownY = e.clientY; __onAcc = 0; __onSwiped = false;
+    __onHold = Date.now() + 9e9; });   // นิ้วแตะค้าง = หยุดพลิกไปก่อน (ตั้งเวลาจริงตอนปล่อย)
+  el.addEventListener('pointermove', e=>{
+    if(__onDownY === null) return;
+    const dy = e.clientY - __onDownY;
+    if(Math.abs(dy - __onAcc) >= ONLINE_SWIPE_STEP){       // ทุกๆ ระยะลาก = พลิก 1 หน้า ตามจังหวะนิ้ว
+      const dir = (dy - __onAcc) < 0 ? 1 : -1;             // ลากขึ้น = หน้าถัดไป (เหมือนเลื่อนอ่านต่อ)
+      __onAcc = dy; __onSwiped = true;
+      onPageFlip(dir);
+    }
+  });
+  // ลากแล้วปล่อยบนแถว — กันเด้งเมนูเพื่อน (click delegation ที่ document) · จับที่ capture ก่อนถึงมัน
+  el.addEventListener('click', e=>{ if(__onSwiped){ e.stopPropagation(); e.preventDefault(); __onSwiped = false; } }, true);
+  el.addEventListener('wheel', ()=>{ __onHold = Date.now() + ONLINE_FLIP_RESUME; }, {passive:true});
+  el.addEventListener('wheel', e=>{ onPageFlip(e.deltaY > 0 ? 1 : -1); }, {passive:true});
+  if(!window.__onGestUp){               // ปล่อยนิ้วที่ไหนก็ได้ = เริ่มนับ 5 วิ (ผูกครั้งเดียวระดับ window)
+    window.__onGestUp = true;
+    const up = ()=>{ if(__onDownY === null) return; __onDownY = null;
+      __onHold = Date.now() + ONLINE_FLIP_RESUME; };
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
+  if(!window.__onFlipTimer) window.__onFlipTimer = setInterval(()=>{
+    const box = document.getElementById('online-card');
+    if(!box || !box.clientHeight) return;                  // จอถูกซ่อน
+    if(Date.now() < __onHold) return;                      // ผู้ใช้กำลังแตะ/เพิ่งปล่อย
+    onPageFlip(1);
+  }, ONLINE_FLIP_MS);
+}
+
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
+  delete sideScrollSt[el.id];            // รอบ 178: เลิกเลื่อนวน — กัน ticker รอบ 149 มาห่อ ss-chunk
   const lab = document.getElementById('online-label');  // หัวข้อนอกกล่อง (รอบ 149) — ติดป้าย "ออนไลน์จริง" เมื่อต่อ Firebase สำเร็จ
   if(lab) lab.innerHTML = `🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา${(typeof Online !== 'undefined' && Online.ready) ? ' <span class="online-live">🌏 ออนไลน์จริง</span>' : ''}`;
+  const sub = document.getElementById('online-sub');     // บรรทัดจำนวนเพื่อน — ย้ายออกนอกกล่อง ใต้หัวข้อ (สเปกผู้ใช้)
   const meName = state.profileName || (state.student ? state.student.first : '') || selfTag();
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
@@ -546,36 +609,8 @@ function renderOnlineCard(){
 
   /* ---- โหมดออนไลน์จริง ---- */
   if(typeof Online !== 'undefined' && Online.ready){
-    /* รอบ 153: แถวเพื่อน = เมนูลัดทั้งแถว (ชวน/ของขวัญ/ทักทาย/ดูข้อมูล) — เลิกใช้ pl-click ที่ชื่อ
-       (ดูข้อมูลย้ายไปเป็นปุ่มในเมนูแทน กันสองอย่างเด้งซ้อนกัน) · แถวเราเองยังเป็น pl-click เดิม */
-    const rows = Online.friends.map(f=>`<div class="online-row" data-fid="${escapeHTML(String(f.id||''))}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
-      <span class="online-dot"></span>
-      <span class="online-name">${escapeHTML(f.n)}</span>
-      <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
-    </div>`).join('');
-    bindPlayerClicks();
-    bindFriendQuickMenu();
-    /* รอบ 154: การ์ดคำชวนค้างบนสุดของกล่อง — 🚀 ไปเลย! เข้าโลกทันที (logic เดียวกับปุ่มราง:
-       บาดเจ็บ/ไม่มีตั๋ว → พาไปการ์ดร้านค้า) · "ไว้ก่อน" = ซ่อนเฉพาะเซสชันนี้ (คำชวน+เงินคืนไม่หาย) */
-    if(!Online.tinvHidden) Online.tinvHidden = {};
-    const TINV_W = {adv:{ico:'🌍',label:'ผจญภัย'}, haunt:{ico:'👻',label:'ผีสิง'}, heli:{ico:'🚁',label:'เฮลิคอปเตอร์'}};
-    const invs = Object.entries(Online.tinv || {}).filter(([fid])=>!Online.tinvHidden[fid]).map(([fid,v])=>{
-      const w = TINV_W[v.map] || {ico:'🌍', label:'3D'};
-      return `<div class="inv-card" data-fid="${escapeHTML(fid)}">
-        <div class="inv-txt">📨 <b>${escapeHTML(v.n)}</b> ชวนไปเล่น<b>โลก${w.label} ${w.ico}</b><br>เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}!</div>
-        <div class="inv-btns">
-          <button class="inv-go" data-map="${escapeHTML(v.map)}" type="button">🚀 ไปเลย!</button>
-          <button class="inv-x" data-fid="${escapeHTML(fid)}" type="button">ไว้ก่อน</button>
-        </div>
-      </div>`;
-    }).join('');
-    bindInviteCards();
-    el.innerHTML = `${invs}
-      <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
-      ${meRow}${rows}
-      ${Online.friends.length ? '' : '<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>'}`;
-    /* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → toast + แถวแฟลชฟ้า + กล่องเด้งไปโชว์
-       ชุดแรกตอนต่อสำเร็จ (presence sync ทยอยเข้า) ไม่นับ — กันสแปมตอน login */
+    if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚`;
+    /* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → toast + หน้าแฟลชฟ้า (ชุดแรกตอนต่อสำเร็จไม่นับ กันสแปม) */
     const ids = Online.friends.map(f=>String(f.id||'')).filter(Boolean);
     if(__onSeen === null){
       __onSeen = ids; __onFirstTs = Date.now();
@@ -591,16 +626,49 @@ function renderOnlineCard(){
         if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
       }
     }
-    initSideScroll(el);
-    if(__onFlashPend && el.clientHeight){    // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอตอนกลับ lobby)
-      sideFlashRows(el, `.online-row[data-fid="${CSS.escape(__onFlashPend)}"]`, 'on-flash');
-      __onFlashPend = null;
+    let flashFid = null, flashInv = null;    // กล่องมองเห็นอยู่ค่อยใช้ (ซ่อนอยู่ = pend รอตอนกลับ lobby)
+    if(el.clientHeight){
+      if(__onFlashPend){ flashFid = __onFlashPend; __onFlashPend = null; }
+      if(window.__invFlashPend){ flashInv = window.__invFlashPend; window.__invFlashPend = null; }
     }
-    /* รอบ 154: คำชวนเพิ่งเข้า (tinvWatch ตั้ง pend ไว้) → เด้งไปโชว์การ์ดชวน + แฟลชฟ้า */
-    if(window.__invFlashPend && el.clientHeight){
-      sideFlashRows(el, `.inv-card[data-fid="${CSS.escape(window.__invFlashPend)}"]`, 'on-flash');
-      window.__invFlashPend = null;
+    /* รอบ 153: แถวเพื่อน = เมนูลัดทั้งแถว · รอบ 178: 1 แถว (2 บรรทัด) = 1 หน้าพลิก */
+    const rows = Online.friends.map(f=>{
+      const fid = String(f.id||'');
+      return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
+      <span class="online-dot"></span>
+      <span class="online-name">${escapeHTML(f.n)}</span>
+      <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
+    </div>`;
+    });
+    bindPlayerClicks();
+    bindFriendQuickMenu();
+    /* รอบ 154: การ์ดคำชวน — หน้าของตัวเอง (สำคัญ มีปุ่ม) · "ไว้ก่อน" = ซ่อนเฉพาะเซสชัน */
+    if(!Online.tinvHidden) Online.tinvHidden = {};
+    const TINV_W = {adv:{ico:'🌍',label:'ผจญภัย'}, haunt:{ico:'👻',label:'ผีสิง'}, heli:{ico:'🚁',label:'เฮลิคอปเตอร์'}};
+    const invEntries = Object.entries(Online.tinv || {}).filter(([fid])=>!Online.tinvHidden[fid]);
+    const invs = invEntries.map(([fid,v])=>{
+      const w = TINV_W[v.map] || {ico:'🌍', label:'3D'};
+      return `<div class="inv-card${flashInv === fid ? ' on-flash' : ''}" data-fid="${escapeHTML(fid)}">
+        <div class="inv-txt">📨 <b>${escapeHTML(v.n)}</b> ชวนไปเล่น<b>โลก${w.label} ${w.ico}</b><br>เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}!</div>
+        <div class="inv-btns">
+          <button class="inv-go" data-map="${escapeHTML(v.map)}" type="button">🚀 ไปเลย!</button>
+          <button class="inv-x" data-fid="${escapeHTML(fid)}" type="button">ไว้ก่อน</button>
+        </div>
+      </div>`;
+    });
+    bindInviteCards();
+    __onPages = [...invs, meRow, ...rows];
+    if(!rows.length) __onPages.push('<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>');
+    /* เพื่อนใหม่/คำชวนใหม่ → พลิกไปหน้านั้นเลย + ค้าง 5 วิ (แถวติด on-flash มาแล้ว) */
+    if(flashInv !== null){
+      const i = invEntries.findIndex(([fid])=>fid === flashInv);
+      if(i >= 0){ __onPage = i; __onHold = Date.now() + QUEST_FLASH_HOLD; }
+    }else if(flashFid !== null){
+      const i = Online.friends.findIndex(f=>String(f.id||'') === flashFid);
+      if(i >= 0){ __onPage = invs.length + 1 + i; __onHold = Date.now() + QUEST_FLASH_HOLD; }
     }
+    onPageDraw('');
+    bindOnlinePager(el);
     return;
   }
   __onSeen = null;                           // หลุดออนไลน์ → เริ่มนับใหม่ตอนต่อกลับ (กันเน็ตกระพริบสแปม toast)
@@ -619,12 +687,12 @@ function renderOnlineCard(){
       <span class="online-dot"></span>
       <span class="online-name">${f.n}</span>
       <span class="online-act">ชั้น ${f.g} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
-    </div>`).join('');
-  el.innerHTML = `
-    <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚</div>
-    ${meRow}${rows}`;
+    </div>`);
+  if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚`;
+  __onPages = [meRow, ...rows];
+  onPageDraw('');
   bindPlayerClicks();
-  initSideScroll(el);
+  bindOnlinePager(el);
 }
 
 /* ============================================================

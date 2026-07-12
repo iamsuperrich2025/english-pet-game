@@ -1469,3 +1469,33 @@ html.no-anim .hero-rank-bg .rank-beam,html.no-anim .hero-rank-bg .rank-edge{disp
 .hero-rank-bg.rank-fx::before{animation-duration:1.6s,var(--rank-pulse,3.6s);}
 html.no-anim .hero-rank-bg .rank-sparks{display:none;}
 html.no-anim .hero-rank-bg .rank-floor{animation:none;}
+
+/* ============================================================
+   📚 รอบ 178: กล่องภารกิจ+เพื่อนออนไลน์หด 2 บรรทัด + กล่องเพื่อนพลิกหน้า (สเปกผู้ใช้)
+   ============================================================ */
+/* หัวข้อรอง (จำนวนเพื่อนออนไลน์) — อยู่นอกกล่อง ใต้หัวข้อหลัก */
+.side-sub{flex-shrink:0;font-size:10px;font-weight:700;color:#8ef0bd;margin:-1px 2px 3px 8px;
+  text-shadow:0 1px 3px rgba(8,30,60,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.side-sub:empty{display:none;}
+/* 2 กล่องบนหดพอดีเนื้อหา — กล่องอันดับ (flex:1 เดิม) กินที่ที่เหลือ */
+.side-sec.sec-quest,.side-sec.sec-online{flex:0 0 auto;}
+.sec-quest .side-glass,.sec-online .side-glass{flex:0 0 auto;}
+#quest-card{height:auto;}
+.q-bigcard{height:auto;}
+/* q-fit: เหลือ 2 บรรทัด (ชื่อภารกิจ + แถวความคืบหน้า/รางวัล/ปุ่ม) ฟอนต์ขนาดปกติ */
+#quest-card.q-fit .qb-bar,#quest-card.q-fit .q-dots{display:none;}
+#quest-card.q-fit .q-bigcard{gap:3px;padding:2px;}
+/* กล่องเพื่อน: โชว์ทีละหน้า (1 แถว = 2 บรรทัด) พลิก 180° แนวตั้ง */
+#online-card{height:auto;overflow:hidden;perspective:420px;touch-action:none;}
+#online-card .on-page .online-row{border-bottom:none;padding:2px 2px;margin-bottom:0;}
+#online-card .on-page .inv-card{margin:0;}
+#online-card .on-page .online-note{padding:2px;}
+.on-page.flip-out-up{animation:onFlipOutUp .18s ease-in forwards;}
+.on-page.flip-in-up{animation:onFlipInUp .26s ease-out;}
+.on-page.flip-out-down{animation:onFlipOutDown .18s ease-in forwards;}
+.on-page.flip-in-down{animation:onFlipInDown .26s ease-out;}
+@keyframes onFlipOutUp{to{transform:rotateX(86deg);opacity:.15;}}
+@keyframes onFlipInUp{from{transform:rotateX(-86deg);opacity:.15;}to{transform:rotateX(0);opacity:1;}}
+@keyframes onFlipOutDown{to{transform:rotateX(-86deg);opacity:.15;}}
+@keyframes onFlipInDown{from{transform:rotateX(86deg);opacity:.15;}to{transform:rotateX(0);opacity:1;}}
+html.no-anim .on-page{animation:none !important;}

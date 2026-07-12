@@ -150,7 +150,9 @@
       <aside class="lobby-side">
         <!-- รอบ 149: หัวข้อเล็กอยู่นอกกล่อง · กล่อง = กระจกฟ้า sci-fi เลื่อนวนอัตโนมัติ -->
         <!-- item 3: ภารกิจรายวัน — ชุดเดียวกันทุกคน (seed จากวันที่) filled by renderQuestCard -->
-        <div class="side-sec">
+        <!-- รอบ 178: กล่องภารกิจ+เพื่อนออนไลน์หดพอดีเนื้อหา 2 บรรทัด (sec ไม่ยืด) · บรรทัดจำนวนเพื่อน
+             ย้ายออกนอกกล่อง (#online-sub ใต้หัวข้อ) · กล่องเพื่อน = พลิกหน้าทีละคน (ui.js onPageFlip) -->
+        <div class="side-sec sec-quest">
           <div class="side-label" id="quest-label">🎯 ภารกิจวันนี้</div>
           <div class="side-glass">
             <div class="shop-card side-card" id="quest-card">
@@ -158,8 +160,9 @@
             </div>
           </div>
         </div>
-        <div class="side-sec">
+        <div class="side-sec sec-online">
           <div class="side-label" id="online-label">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</div>
+          <div class="side-sub" id="online-sub"></div>
           <div class="side-glass">
             <div class="shop-card side-card" id="online-card">
               <!-- filled by JS -->
