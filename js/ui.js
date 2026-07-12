@@ -2828,12 +2828,14 @@ function openPillInfo(kind){
   sfx.select();
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay pillinfo-overlay';
+  // รอบ 167: หัวกล่องแนวนอน (ไอคอน | ชื่อ+ป้ายเหรียญ) แทนกองแนวตั้ง — จอเตี้ยเห็นครบทั้งใบไม่ต้องเลื่อน
   overlay.innerHTML = `<div class="levelup-box pillinfo-box">
-    <div style="font-size:52px;line-height:1">${inf.emoji}</div>
-    <h2 style="margin:8px 0 2px;font-size:21px">${inf.title}</h2>
-    <div class="pillinfo-val">${inf.val}</div>
+    <div class="plf-head">
+      <span class="plf-emoji">${inf.emoji}</span>
+      <div class="plf-ht"><h2>${inf.title}</h2><div class="pillinfo-val">${inf.val}</div></div>
+    </div>
     <p class="pillinfo-desc">${inf.desc}</p>
-    <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
+    <div class="plf-foot"><button class="set-close">เข้าใจแล้ว!</button></div>
   </div>`;
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });

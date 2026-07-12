@@ -1189,7 +1189,20 @@ html.no-anim .nw-tag{animation:none;}
 .levelup-box{scrollbar-width:none;-ms-overflow-style:none;}
 .levelup-box::-webkit-scrollbar{display:none;width:0;}
 /* กล่องข้อความอธิบาย/แจ้งเตือน: กว้างขึ้น ข้อความห่อน้อยลง เตี้ยพอดีจอแนวนอน */
-.pillinfo-box{max-width:min(92vw,620px);}
+.pillinfo-box{max-width:min(94vw,700px);}
+/* รอบ 167 (กฎถาวรผู้ใช้: ทุก dialog ต้องเห็นครบทั้งใบ ไม่มี scrollbar ไม่ต้องเลื่อน)
+   หัวกล่องแนวนอน + ฟอนต์ clamp ตามความสูงจอ — จอเตี้ยกล่องหดเองจนพอดี */
+.plf-head{display:flex;align-items:center;gap:14px;text-align:left;}
+.plf-emoji{font-size:clamp(30px,9vh,48px);line-height:1;flex-shrink:0;}
+.plf-ht{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;}
+.plf-ht h2{margin:0;font-size:clamp(16px,4.2vh,21px);}
+.plf-ht .pillinfo-val{margin-top:0;font-size:clamp(15px,4.4vh,22px);padding:2px 16px;}
+.pillinfo-desc{font-size:clamp(12px,3.4vh,14.5px);}
+.plf-foot{margin-top:clamp(8px,2.6vh,14px);}
+@media (max-height:520px){
+  .pillinfo-box{padding:14px 20px;}
+  .pillinfo-desc{margin-top:8px;line-height:1.5;}
+}
 .alert-box{max-width:min(92vw,560px) !important;}   /* ทับ 320px เดิม (เดิมมี !important ที่ border) */
 .attn-box{max-width:min(92vw,620px);}
 .nw-box{width:min(92vw,620px);}
