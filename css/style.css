@@ -13,6 +13,18 @@
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;}
+/* 📵 รอบ 159: กันแถบดำ "Tap to see search results" (Touch to Search ของ Chrome Android)
+   — แตะข้อความบนปุ่ม/การ์ดแล้ว Chrome จับคำไปค้น Google เด้งแถบมาบังเกม
+   แก้: ข้อความ UI เกมเลือกไม่ได้ทั้งหน้า (เกมไม่มีเนื้อหาให้ copy อยู่แล้ว)
+   ยกเว้นช่องพิมพ์ทุกชนิด ยังพิมพ์/เลือก/วางได้ปกติ */
+html, body{
+  -webkit-user-select:none; -moz-user-select:none; user-select:none;
+  -webkit-touch-callout:none;   /* กันเมนูค้างแตะ (iOS) อีกชั้น */
+}
+input, textarea, [contenteditable="true"]{
+  -webkit-user-select:text; -moz-user-select:text; user-select:text;
+  -webkit-touch-callout:default;
+}
 body{
   font-family:'Itim',cursive,sans-serif;
   color:var(--ink);
