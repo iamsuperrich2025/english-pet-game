@@ -13,6 +13,13 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 158 (12 ก.ค.) — กล่อง dialog ทุกใบโทนเดียวกัน + fix โควตา Hosting 📐🧹 (version .149)
+- **ผู้ใช้เคาะ "อยากให้เป็นโทนเดียวกันหมด ทำได้เลย"** — ขยายกล่องที่เหลือทั้งตระกูล levelup-box (lobby.css ท้ายไฟล์ โซนรอบ 158)
+- **หลักที่ใช้:** กล่องเป็น flex item ใน `.levelup-overlay` → `width:auto` หดตามเนื้อหา — **เพิ่ม max-width ไม่ทำให้กล่องสั้นบาน** (พิสูจน์: กล่องยืนยันสั้น 110px · กล่องข้อความยาวยืดถึง 600) · base 340→min(92vw,600) ครอบผลสอบ/ยืนยัน/เลเวลอัป · summary 560 · report 640 · food 640 · fq `width` 560 (เดิมใช้ width ไม่ใช่ max-width — ต้องทับด้วย width) · home-shop 640 · car-buy 560 · ซ่อนแถบใน `.wl-grid/.lb-list/.tc-wrap/.install-guide`
+- **🧹 Deploy เจอ HTTP 429 — โควตา Hosting storage เต็ม (Spark ฟรี):** release history 26 ชุด × 704 ไฟล์ · CLI ไม่มีคำสั่งลบ → เขียน **`tools/cleanup_hosting_versions.mjs`** เรียก REST `firebasehosting.googleapis.com/v1beta1` ด้วย refresh token ของ firebase CLI ในเครื่อง (client id/secret เป็นค่า public ฝังใน firebase-tools) · เก็บ version ของ 5 release ล่าสุด + ใหม่สุด 2 · filter เฉพาะ status FINALIZED · **ผูกท้าย `tools/deploy_firebase.sh` รันอัตโนมัติทุก deploy** (ล้มไม่กระทบ deploy — `|| echo`) · รอบแรกลบ 21 ชุดแล้ว deploy ผ่านทันที
+- ✅ **ยืนยัน preview:** short box หดตามเนื้อหา · long box กว้าง 600 ไร้ scroll · summary/report/food/fq/car/home max-width ใหม่+scrollbar ซ่อนครบ (probe computed style) · toggle settings ยังปกติ · ไม่มี console error · live .149
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ — เปิดกล่องผลสอบ/สรุปเกม/เมนูอาหาร ดูว่าโปร่งขึ้นและไม่มีแถบเลื่อน
+
 ### ✅ รอบ 157 (12 ก.ค.) — กล่องข้อความกลางจอขยายด้านข้าง ไม่มี scrollbar 📐 (version .148)
 - **สเปกผู้ใช้ (screenshot pillinfo มี scrollbar):** กล่องข้อความลักษณะนี้ทุกกล่อง ขยายพื้นที่ด้านข้างจนไม่ต้องมี scrollbar — scrollbar ดูไม่ professional
 - **ทำ (lobby.css ท้ายไฟล์ ต่อจากโซนรอบ 156):** ซ่อน scrollbar ทั้งตระกูล `.levelup-box` (scrollbar-width:none + webkit — ยังเลื่อนนิ้วได้ เป็น fallback จอจิ๋ว) · กล่องข้อความ: pillinfo 620 / alert 560 (`!important` ทับ 320 เดิม) / attn 620 / nw 620 · **ตั้งค่า: grid 3 คอลัมน์** (h2/hint/หัวข้อ feed/ปุ่มช่วยเหลือ/ปุ่มปิด span เต็มแถว) + แถว padding 8 + label 14.5/desc 11 + **สวิตช์ย่อ 84×34 (knob 26 · on left 54)** + กล่อง padding 14 22 12 → พอดีจอไม่เลื่อน · **วิธีเล่น/คู่มือครู (.help-box ร่วม): help-body grid 3 คอลัมน์** font 12.5 (เนื้อหา 10 หัวข้อยาวเกินจอเตี้ย — ยังเลื่อนได้แต่ไร้แถบ) · media ≤920px = 2 คอลัมน์ · ≤680px = คอลัมน์เดียว
