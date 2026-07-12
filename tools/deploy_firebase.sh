@@ -42,3 +42,7 @@ EOF
 echo "🚀 deploy → https://$SITE.web.app"
 cd "$STAGE"
 "$FB" deploy --only "hosting:$SITE" --project "$PROJECT"
+
+# 🧹 ล้าง Hosting versions เก่า (รอบ 158) — กันชนโควตา storage แผนฟรี (429)
+# พลาดไม่เป็นไร deploy สำเร็จไปแล้ว (|| true)
+node "$REPO/tools/cleanup_hosting_versions.mjs" || echo "⚠️ cleanup ข้ามไป (ไม่กระทบ deploy)"
