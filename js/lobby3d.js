@@ -428,6 +428,16 @@ const Lobby3D = (function(){
     }catch(e){}
   }
 
+  // 💰 ป้ายเงินรางวัลเด้งกลางจอ (รอบ 175 — ผู้ใช้สั่ง: +1,000 ตัวหนังสือเหลืองตัวใหญ่ ขยายจากเล็ก→ใหญ่
+  //    ให้ตื่นเต้น เฉพาะคำรางวัลเต็ม 5 คำแรก/วัน) · โผล่กลางจอเหนือแบนเนอร์ เด้ง overshoot แล้วลอยขึ้นจางหาย
+  function spellCoinPop(txt){
+    if(document.documentElement.classList.contains('no-anim')) return;
+    const old=document.getElementById('spell-coinpop'); if(old) old.remove();
+    const el=document.createElement('div'); el.id='spell-coinpop'; el.textContent=txt;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2300);   // ตรงกับความยาว animation spCoinPop
+  }
+
   // 🎀 ริบบิ้นโปรยทั่วจอชั่วคราว (แพทเทิร์นเดียวกับ overlay ฝน #rain-fx: fixed inset:0 z-9000 บน body)
   // mult: ตัวคูณจำนวนริบบิ้น (เพอร์เฟกต์ 1.7) · สีเลือกตามหมวดของ spellWord.cat (SPELL_PALETTES)
   function spellConfetti(mult){
@@ -628,6 +638,7 @@ const Lobby3D = (function(){
       addCoins(reward);
       if(typeof saveState==='function') saveState();
       const fmt=n=>(typeof fmtNum==='function')?fmtNum(n):n;
+      if(fullLeft>0) spellCoinPop(`+🪙${fmt(reward)}`);   // ป้ายใหญ่เด้งกลางจอ เฉพาะ 5 คำรางวัลเต็ม/วัน (รอบ 175)
       coinTxt=`<div class="sp-coin">+🪙${fmt(reward)}</div>`
         +(perfect?`<div class="sp-perfect">🌟 เพอร์เฟกต์! ไม่พลาดเลย ×${SPELL_PERFECT_X}</div>`:'')
         +(fullLeft<=0?`<div class="sp-late">รางวัลเต็ม ${SPELL_FULL_PER_DAY} คำ/วันครบแล้ว — คำละ 🪙${SPELL_COIN_LATE}</div>`:'');

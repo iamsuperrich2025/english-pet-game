@@ -1363,3 +1363,20 @@ html.no-anim #spell-confetti{display:none;}
 .sp-perfect{color:#ffe082;font-size:clamp(11px,3vh,15px);font-weight:900;margin-top:4px;
   text-shadow:0 0 12px rgba(255,215,90,.7);}
 .sp-late{color:rgba(220,235,251,.75);font-size:clamp(9.5px,2.4vh,12px);font-weight:600;margin-top:3px;}
+
+/* 💰 รอบ 175: ป้าย +🪙1,000 เด้งกลางจอ — เหลืองทองตัวใหญ่ ขยายจากจิ๋ว overshoot แล้วลอยขึ้นจางหาย */
+#spell-coinpop{position:fixed;left:50%;top:34%;z-index:9001;pointer-events:none;white-space:nowrap;
+  font-weight:900;font-size:clamp(44px,13vh,100px);letter-spacing:2px;color:#ffe082;
+  text-shadow:0 0 18px rgba(255,200,60,.85), 0 0 46px rgba(255,180,40,.55), 0 3px 6px rgba(60,30,0,.65);
+  transform:translate(-50%,-50%) scale(.12);opacity:0;
+  animation:spCoinPop 2.25s ease-out forwards;}
+@keyframes spCoinPop{
+  0%{transform:translate(-50%,-50%) scale(.12);opacity:0;}
+  14%{opacity:1;}
+  38%{transform:translate(-50%,-50%) scale(1.32);}
+  52%{transform:translate(-50%,-50%) scale(.96);}
+  64%{transform:translate(-50%,-50%) scale(1.08);}
+  74%{transform:translate(-50%,-50%) scale(1);opacity:1;}
+  100%{transform:translate(-50%,-130%) scale(1);opacity:0;}
+}
+html.no-anim #spell-coinpop{display:none;}
