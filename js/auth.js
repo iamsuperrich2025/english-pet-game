@@ -37,8 +37,10 @@ function isTeacher(){
    (2) สัตว์เลี้ยงทุกตัวโตเต็มวัย (Lv.3) ทันที — ตั๋ว 3D ปลดล็อกเมื่อมีตัวเต็มวัย
    เรียกตอน login (authEnterGame) + หลังซื้อสัตว์ (ui.js) — ซื้อปุ๊บโตปั๊บไม่ต้อง login ใหม่
    เพิ่มผู้ทดสอบ: เติมอีเมลต่อท้าย array (ตัวพิมพ์เล็ก) */
-const TESTER_EMAILS = ['sumpajitshami@gmail.com'];
-const TESTER_COINS  = 60000;
+/* 🧪 รอบ 163 (ผู้ใช้สั่ง 12 ก.ค. 2026): เติมเหรียญเป็น 500,000 วันละครั้ง ทั้ง 2 บัญชี
+   เพื่อความคล่องตัวในการทดสอบระบบ — มีผลจนกว่าผู้ใช้จะสั่งยกเลิก (เดิม 60,000 ต่อ login) */
+const TESTER_EMAILS = ['sumpajitshami@gmail.com', 'freddommun@gmail.com'];
+const TESTER_COINS  = 500000;
 function isTester(){
   return !!(Auth.user && Auth.user.email
     && TESTER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
@@ -46,9 +48,12 @@ function isTester(){
 function testerBoost(){
   if(!isTester()) return;
   const got = [];
-  if(state.coins < TESTER_COINS){
+  // เติมเหรียญวันละครั้ง (toDateString แบบเดียวกับ foodQuizDay) — วันใหม่ + เหรียญต่ำกว่าเพดาน = เติมเต็ม
+  const day = new Date().toDateString();
+  if(state.coins < TESTER_COINS && state.testerCoinDay !== day){
+    state.testerCoinDay = day;
     addCoins(TESTER_COINS - state.coins);
-    got.push(`เติมเหรียญเป็น ${fmtNum(TESTER_COINS)} 🪙`);
+    got.push(`เติมเหรียญเป็น ${fmtNum(TESTER_COINS)} 🪙 (รอบวันนี้)`);
   }
   (state.pets || []).forEach(p=>{
     if(p.level >= 3) return;

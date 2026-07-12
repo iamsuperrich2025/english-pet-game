@@ -111,6 +111,7 @@ const DEFAULT_STATE = {
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
   foodQuizDay:'',                     // ควิซอาหารปลอดภัย: วัน (toDateString) ที่รับรางวัลรอบแรกไปแล้ว (เล่นซ้ำได้แต่ไม่ได้เหรียญ)
+  testerCoinDay:'',                   // 🧪 รอบ 163: วัน (toDateString) ที่เติมเหรียญผู้ทดสอบรอบวันนี้ไปแล้ว (เติมวันละครั้ง — ดู testerBoost ใน auth.js)
   playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
   playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
   playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว

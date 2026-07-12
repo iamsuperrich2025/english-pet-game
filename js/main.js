@@ -120,6 +120,7 @@ showScreen('screen-login');
 setInterval(()=>{
   if(!Auth.booted) return;             // ยังไม่เข้าเกม — ห้ามเดิน careTick (จะไปบัมพ์ savedAt)
   careTick();
+  testerBoost();                       // 🧪 รอบ 163: เปิดเกมค้างข้ามวัน → เติมเหรียญผู้ทดสอบรอบวันใหม่เอง (มี guard วันละครั้งในตัว)
   if(document.getElementById('screen-dashboard').classList.contains('active')){
     renderDashboard();
   }
