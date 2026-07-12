@@ -645,6 +645,18 @@ html.no-anim .nw-tag{animation:none;}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .side-label .online-live{font-size:9.5px;padding:0 7px;}
+/* รอบ 151: แถวหัวข้อกระดานอันดับ = ข้อความ + แท็บ 🪙/🏅 นอกกล่อง (คลิกได้ ไม่วนกับเนื้อหา) */
+.side-label-row{display:flex;align-items:center;gap:6px;overflow:visible;}
+.side-label-row .lab-txt{flex-shrink:0;}
+.lb-tabs-out{display:flex;gap:4px;flex:1;min-width:0;}
+.lb-tabs-out .lb-tab{
+  flex:0 0 auto;padding:2px 9px;font-size:10.5px;border-radius:8px;
+  background:rgba(11,31,66,.55);color:#b9d4ef;border:1px solid rgba(95,200,255,.35);
+}
+.lb-tabs-out .lb-tab.active{
+  background:linear-gradient(180deg,#59b6f0,#2f7fd0);color:#fff;
+  border-color:rgba(140,220,255,.7);box-shadow:0 0 8px rgba(80,180,255,.45);
+}
 .side-glass{
   position:relative;flex:1;min-height:0;display:flex;border-radius:14px;padding:8px 9px;
   background:linear-gradient(165deg,#143c6e 0%,#0b1f42 100%);
@@ -700,9 +712,6 @@ html.no-anim .nw-tag{animation:none;}
 .lobby-side .lb-coins{color:#ffd76e;}
 .lobby-side .lb-badgeline{color:#9fc3ea !important;}
 .lobby-side .lb-empty{color:#8fb3d8;font-size:12.5px;}
-.lobby-side .lb-tabs{margin-bottom:6px;}
-.lobby-side .lb-tab{padding:5px 4px;font-size:12px;background:rgba(255,255,255,.12);color:#b9d4ef;}
-.lobby-side .lb-tab.active{background:linear-gradient(180deg,#59b6f0,#2f7fd0);box-shadow:0 3px 0 #1c5da0;color:#fff;}
 
 /* ---------- แถบล่าง: ปุ่มเล่นเกม ---------- */
 .lobby-bottom{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}

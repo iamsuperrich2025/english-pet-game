@@ -522,16 +522,17 @@ function renderLeaderboardCard(){
   const el = document.getElementById('leaderboard-card');
   if(!el) return;
   bindLbTabs();
-  const tabs = `<div class="lb-tabs">
+  // รอบ 151: แท็บอยู่นอกกล่อง (แถวหัวข้อ #lb-tabs-out) — ไม่วนไปกับเนื้อหา
+  const out = document.getElementById('lb-tabs-out');
+  if(out) out.innerHTML = `
     <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
-    <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
-  </div>`;
+    <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>`;
   if(typeof Online === 'undefined' || !Online.ready){
-    el.innerHTML = tabs + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
+    el.innerHTML = `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
     initSideScroll(el);
     return;
   }
-  el.innerHTML = tabs + (lbTab === 'badges' ? lbBadgeHtml() : lbCoinHtml());
+  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbCoinHtml());
   bindPlayerClicks();
   initSideScroll(el);
 }

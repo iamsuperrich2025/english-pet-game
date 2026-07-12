@@ -10,6 +10,12 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 151 (12 ก.ค.) — แท็บ 🪙 เหรียญ/🏅 เข็ม ย้ายออกนอกกล่อง ไม่วนกับเนื้อหา (version .142)
+- **สเปกผู้ใช้:** ปุ่มเหรียญ/เข็มของกล่องกระดานอันดับไปอยู่นอกกล่องเหมือนหัวข้อ ไม่หมุนไปกับเนื้อหา
+- **ทำ:** index.html หัวข้อกล่อง 3 เป็นแถว flex `.side-label-row` = `.lab-txt` "🏆 อันดับ" (ย่อจาก "กระดานอันดับ" ให้พอดีแถวกับแท็บที่ 205px) + ช่อง `#lb-tabs-out` · renderLeaderboardCard เรนเดอร์ปุ่ม 2 แท็บลง `#lb-tabs-out` แทน (เนื้อหาในการ์ดเหลือแต่ลิสต์/lb-empty) · คลิกยังใช้ delegation `.lb-tab` เดิม (bindLbTabs) · CSS `.lb-tabs-out .lb-tab` ชิปเล็ก 10.5px โทนกระจกฟ้า + **ลบกฎเก่า `.lobby-side .lb-tabs/.lb-tab` ที่อยู่ท้ายไฟล์กว่า (จะทับสไตล์ใหม่เพราะ specificity เท่ากัน)**
+- ✅ **ยืนยัน preview 812×375:** แท็บ 2 ปุ่มอยู่แถวหัวข้อเหนือกล่องจริง (bottom ≤ glass.top) ไม่ล้นขวา · คลิกสลับ coins↔badges active ถูก · จำลองออนไลน์ 8 แถว (**testkit: ต้อง `Object.assign(Online,{...})` — `window.Online=` ทับ binding ไม่ได้**) → การ์ดมี lb-row 16 (2 สำเนา) แท็บในการ์ด 0 วนเลื่อน 14px/วิ ปกติ · ไม่มี console error · deploy live .142
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือพร้อมรอบ 149-150
+
 ### ✅ รอบ 150 (12 ก.ค.) — ภารกิจสำเร็จ = แถวแฟลชเขียว + กล่องเด้งไปโชว์ก่อนวนต่อ ✅💚 (version .141)
 - **ไอเดียต่อยอดจากรอบ 149 (ผู้ใช้เคาะ "ทำได้เลย"):** ภารกิจใดสำเร็จ → กล่องภารกิจเด้งเลื่อนไปโชว์แถวนั้น + แฟลชเขียว 3 จังหวะ ค้าง 5 วิ แล้วค่อยกลับไปเลื่อนวนต่อ
 - **ทำ (ui.js):** `.q-row` เพิ่ม `data-qid` · renderQuestCard เทียบ `state.quests.done` กับรอบก่อน (`__qDoneSeen` — null ตอน login = ไม่นับของเก่า) → id ใหม่เก็บ `__qFlashPend` · กล่องมองเห็นอยู่ค่อย `questFlashRow()`: ติด class `q-flash` ทั้ง 2 สำเนา ss-chunk + เซ็ต `st.pos/scrollTop` ไปหัวแถว (เทียบ offsetTop กับสำเนาแรก clamp ใน [0,ssH)) + `st.until=now+QUEST_FLASH_HOLD(5000)` · **สำเร็จตอนอยู่หน้าเกม (lobby ซ่อน clientHeight=0) = pend ค้างไว้ กลับเข้า lobby (renderDashboard→renderQuestCard) ค่อยแฟลช**
