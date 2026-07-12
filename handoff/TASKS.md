@@ -10,6 +10,13 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 150 (12 ก.ค.) — ภารกิจสำเร็จ = แถวแฟลชเขียว + กล่องเด้งไปโชว์ก่อนวนต่อ ✅💚 (version .141)
+- **ไอเดียต่อยอดจากรอบ 149 (ผู้ใช้เคาะ "ทำได้เลย"):** ภารกิจใดสำเร็จ → กล่องภารกิจเด้งเลื่อนไปโชว์แถวนั้น + แฟลชเขียว 3 จังหวะ ค้าง 5 วิ แล้วค่อยกลับไปเลื่อนวนต่อ
+- **ทำ (ui.js):** `.q-row` เพิ่ม `data-qid` · renderQuestCard เทียบ `state.quests.done` กับรอบก่อน (`__qDoneSeen` — null ตอน login = ไม่นับของเก่า) → id ใหม่เก็บ `__qFlashPend` · กล่องมองเห็นอยู่ค่อย `questFlashRow()`: ติด class `q-flash` ทั้ง 2 สำเนา ss-chunk + เซ็ต `st.pos/scrollTop` ไปหัวแถว (เทียบ offsetTop กับสำเนาแรก clamp ใน [0,ssH)) + `st.until=now+QUEST_FLASH_HOLD(5000)` · **สำเร็จตอนอยู่หน้าเกม (lobby ซ่อน clientHeight=0) = pend ค้างไว้ กลับเข้า lobby (renderDashboard→renderQuestCard) ค่อยแฟลช**
+- **CSS (lobby.css):** `.lobby-side .q-row.q-flash{animation:qFlash 1.2s ease-in-out 3}` เขียวเรือง · เคารพสวิตช์ปิดเอฟเฟกต์อัตโนมัติ (`html.no-anim` มี `animation:none!important` ครอบอยู่แล้ว — จอยังเด้งเลื่อนไปโชว์แถว แค่ไม่กะพริบ)
+- ✅ **ยืนยัน preview 812×375:** questEvent จบภารกิจแถวล่างสุด → flash 2 สำเนา + scrollTop 107.2 แถวชิดบนกล่อง (3px) + hold 5000ms + animationName qFlash · ครบ 5 วิเลื่อนต่อ 14px/วิ · เคสซ่อนจอ: pend ไว้ ไม่แฟลชตอนซ่อน กลับ lobby แฟลช+เด้งถูกแถว pend เคลียร์ · no-anim → animationName none · ไม่มี console error · deploy live .141
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ — ทำภารกิจสำเร็จ (เช่น สอบผ่าน 1 หมวด) แล้วดูกล่องเด้ง+แฟลชตอนกลับ lobby
+
 ### ✅ รอบ 149 (12 ก.ค.) — 3 กล่อง aside ขวา Lobby เป็นกระจกฟ้า sci-fi + เลื่อนวนอัตโนมัติ 🛸📜 (version .140)
 - **สเปกผู้ใช้:** หัวข้อกล่องเล็กลง ย้ายไปนอกกล่อง (เหนือกล่อง) · ในกล่องเหลือแต่รายละเอียด · พื้นขาว→กระจกฟ้า sci-fi (โทน `.stage-plate`) ทั้ง 3 กล่อง · เนื้อหาเลื่อนวนล่าง→บนอัตโนมัติ ไม่มี scrollbar · แตะ=หยุดเลื่อนอ่านเอง · ปล่อยเกิน 5 วิ=เลื่อนต่อ
 - **ทำ:** index.html ห่อการ์ดเป็น `.side-sec > .side-label + .side-glass > .side-card` · ui.js ตัด `<h3 class=shop-title>` ออกจาก renderQuestCard/renderOnlineCard (ป้าย "🌏 ออนไลน์จริง" ย้ายขึ้น `#online-label` อัปเดตใน renderOnlineCard) · เพิ่ม `initSideScroll(el)`+`sideScrollTick` (rAF กลาง 1 ตัว): เนื้อหาล้นกล่อง→ห่อ 2 สำเนา `.ss-chunk` วนไร้รอยต่อ (ssH=offsetTop สำเนา2) เลื่อน 14px/วิ · pointerdown/touchstart=hold · ปล่อย (บน window)=รอ 5 วิ · wheel ก็รีเซ็ตเวลารอ · สถานะเก็บใน `sideScrollSt[id]` อยู่ข้าม re-render · lobby.css: `.side-glass` gradient ฟ้าเข้ม+scanline บนกรอบ (ไม่เลื่อนตามเนื้อหา) + override สีเนื้อหาโซน `.lobby-side` ทั้ง q-*/online-*/lb-* เป็นโทนสว่าง + ซ่อน scrollbar (`scrollbar-width:none`+webkit)

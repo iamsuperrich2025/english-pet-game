@@ -390,7 +390,13 @@ function sideScrollTick(ts){
 /* ============================================================
    Daily Quest (item 3): การ์ดภารกิจวันนี้ใน aside ขวา
    ทุกคนได้ชุดเดียวกัน (seed จากวันที่) · questEvent ใน state.js เรียก re-render ให้เอง
+   รอบ 150: ภารกิจเพิ่งสำเร็จ → เด้งเลื่อนกล่องไปโชว์แถวนั้น + แฟลชเขียว ค่อยวนต่อ
+   (สำเร็จตอนอยู่หน้าเกม = จำค้างไว้ กลับเข้า lobby ค่อยแฟลชให้เห็น)
    ============================================================ */
+const QUEST_FLASH_HOLD = 5000;        // ms ค้างโชว์แถวที่เพิ่งสำเร็จ ก่อนกลับไปเลื่อนวนต่อ
+let __qDoneSeen = null;               // done ids ที่เห็นรอบก่อน (null = ยังไม่เคยเรนเดอร์ ไม่นับของเก่าตอน login)
+let __qFlashPend = null;              // ภารกิจรอแฟลช (สำเร็จตอนกล่องถูกซ่อน เช่น อยู่หน้าเกมจับคู่)
+
 function renderQuestCard(){
   const el = document.getElementById('quest-card');
   if(!el || typeof state === 'undefined' || !state.student) return;
@@ -399,7 +405,7 @@ function renderQuestCard(){
     const done = state.quests.done.includes(q.id);
     const prog = Math.min(q.target, state.quests.prog[q.id]||0);
     const pct = done ? 100 : Math.round(prog/q.target*100);
-    return `<div class="q-row ${done ? 'done' : ''}">
+    return `<div class="q-row ${done ? 'done' : ''}" data-qid="${q.id}">
       <span class="q-emoji">${q.emoji}</span>
       <div class="q-mid">
         <div class="q-name">${q.name}</div>
@@ -412,7 +418,34 @@ function renderQuestCard(){
     <div class="q-foot ${state.quests.allDone ? 'done' : ''}">${state.quests.allDone
       ? `🏆 เคลียร์ครบทั้ง ${QUEST_PER_DAY} ภารกิจ รับโบนัสแล้ว +${QUEST_ALL_BONUS} 🪙 — พรุ่งนี้มีชุดใหม่นะ!`
       : `ทำครบทั้ง ${QUEST_PER_DAY} ภารกิจวันนี้ รับโบนัสเพิ่ม <b>+${QUEST_ALL_BONUS} 🪙</b>`}</div>`;
+  // ภารกิจที่เพิ่งสำเร็จ (ไม่นับชุดที่ done อยู่แล้วตอนเปิดเกม)
+  const doneNow = state.quests.done.slice();
+  if(__qDoneSeen !== null){
+    const fresh = doneNow.filter(id=>!__qDoneSeen.includes(id));
+    if(fresh.length) __qFlashPend = fresh[fresh.length-1];
+  }
+  __qDoneSeen = doneNow;
   initSideScroll(el);
+  if(__qFlashPend && el.clientHeight){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอรอบเรนเดอร์ตอนกลับ lobby)
+    questFlashRow(el, __qFlashPend);
+    __qFlashPend = null;
+  }
+}
+
+/* เลื่อนกล่องภารกิจไปโชว์แถว qid + แฟลชเขียว แล้วค้างไว้ QUEST_FLASH_HOLD ก่อนวนต่อ */
+function questFlashRow(el, qid){
+  const st = sideScrollSt[el.id];
+  const rows = el.querySelectorAll(`.q-row[data-qid="${qid}"]`);   // มีทั้งในสำเนา 1+2 ตอนวนลูป
+  if(!st || !rows.length) return;
+  rows.forEach(r=>r.classList.add('q-flash'));
+  const base = el.querySelector(':scope > .ss-chunk') || el;       // เทียบตำแหน่งจากสำเนาแรก
+  let top = rows[0].offsetTop - base.offsetTop - 4;
+  const max = el.__ssLoop ? el.__ssH - 1 : Math.max(0, el.scrollHeight - el.clientHeight);
+  top = Math.max(0, Math.min(top, max));
+  st.pos = top;
+  el.scrollTop = top;
+  st.hold = false;
+  st.until = Date.now() + QUEST_FLASH_HOLD;
 }
 
 function renderOnlineCard(){
