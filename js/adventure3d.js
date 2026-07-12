@@ -898,8 +898,9 @@ function buildDriveCity(sc){
         if(Math.hypot(ox*GS,oz*GS)<=62) gset(x+ox*GS,z+oz*GS,2);
     }
   });
+  const ROAD_WIDEN=1.4;                                     // รอบ 180 (สเปกผู้ใช้): ขยายเลนถนนกว้างขึ้น ~40% (ของเดิมแคบไป)
   C.r.forEach(rd=>{
-    const w=rd[0], major=rd[1], nm=rd[2], p=rd[3];
+    const w=rd[0]*ROAD_WIDEN, major=rd[1], nm=rd[2], p=rd[3];
     for(let i=0;i<p.length-2;i+=2){
       const x1=p[i],z1=p[i+1],x2=p[i+2],z2=p[i+3];
       const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz)||1e-6,ux=dx/L,uz=dz/L;
