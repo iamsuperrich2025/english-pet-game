@@ -121,9 +121,9 @@ function showNewWordPopup(){
    คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
 const GIANT_MAX = 4;
 const GIANT_COST     = [0, 2000, 4000, 8000, 16000];   // เหรียญที่จ่ายเพื่อ "ขึ้น" ไปแต่ละระดับ
-const GIANT_PET_VH   = [29, 42, 54, 64, 74];           // ความสูงน้อง (vh)
-const GIANT_OWNER_VH = [34, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g4: 22/74 ≈ 0.30 (ระดับเข่า)
-const GIANT_OWNER_X  = ['-66px','-54px','-42px','-27px','-14px']; // เยื้องผู้เลี้ยงจากกลางเวที (ลบ=ซ้าย): ปกติเยื้องซ้ายให้เห็นหน้าน้องด้านขวา · ยักษ์ยืนหน้าขาน้อง (หน้าน้องอยู่สูงเห็นอยู่แล้ว)
+const GIANT_PET_VH   = [25, 42, 54, 64, 74];           // ความสูงน้อง (vh) — g0 ลด 29→25 (รอบ 160: ตัวละครไม่ถึงครึ่งเหรียญ rank ให้ rank เด่นเป็นฉากหลัง)
+const GIANT_OWNER_VH = [28, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g0 ลด 34→28 · g4: 22/74 ≈ 0.30 (ระดับเข่า)
+const GIANT_OWNER_X  = ['-56px','-54px','-42px','-27px','-14px']; // เยื้องผู้เลี้ยงจากกลางเวที (ลบ=ซ้าย): ปกติเยื้องซ้ายให้เห็นหน้าน้องด้านขวา · ยักษ์ยืนหน้าขาน้อง (หน้าน้องอยู่สูงเห็นอยู่แล้ว)
 const GIANT_NAMES    = ['ปกติ','ตัวโต','ยักษ์เล็ก','ยักษ์ใหญ่','ยักษ์อลังการ'];
 function giantLevel(p){ return Math.max(0, Math.min(GIANT_MAX, (p && p.giant) || 0)); }
 
@@ -1633,6 +1633,21 @@ function renderFeedCard(){
   }
 }
 
+/* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header
+   (แท็บกับ chip อยู่คนละ container — คำนวณจาก rect จริง หารด้วย scale เผื่อเพจถูกย่อ)
+   เรียกท้าย renderDashboard + ตอน resize */
+function alignPetTabs(){
+  const tabs = document.getElementById('pet-tabs');
+  const rm = document.getElementById('rank-mini');
+  const stage = document.querySelector('.lobby-stage');
+  if(!tabs || !rm || !stage || tabs.style.display === 'none') return;
+  const s = stage.getBoundingClientRect(), r = rm.getBoundingClientRect();
+  if(!s.width || !stage.offsetWidth) return;
+  const scale = s.width / stage.offsetWidth;   // เพจโดนย่อ (transform) → แปลงกลับเป็น layout px
+  tabs.style.setProperty('--tabs-left', Math.max(0, (r.left - s.left) / scale) + 'px');
+}
+window.addEventListener('resize', ()=>{ if(typeof alignPetTabs === 'function') alignPetTabs(); });
+
 function renderDashboard(){
   careTick();
   dailyTick();
@@ -1702,6 +1717,7 @@ function renderDashboard(){
   }else{
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
+  alignPetTabs();   // รอบ 160: ขอบซ้ายแท็บตรงแนว rank chip
 
   /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย + badge เลขบอกป่วยกี่ตัว ---- */
   const railCure = document.getElementById('btn-rail-cure');

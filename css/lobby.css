@@ -444,13 +444,19 @@ h1{color:var(--sky-d);text-shadow:none;}
 @keyframes cureBlink{0%,100%{box-shadow:0 0 0 0 rgba(255,90,90,0);}50%{box-shadow:0 0 14px 3px rgba(255,90,90,.6);}}
 
 .lobby-stage{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;overflow:hidden;}
-.lobby-stage .weather-banner{
-  margin:0;padding:3px 16px;font-size:12.5px;flex-shrink:0;
+/* รอบ 160: ป้ายอากาศย้ายลง footer — ชิปแก้วเดิม อยู่ซ้ายก่อนปุ่มควิซ (margin-right:auto ดันปุ่มไปขวา) */
+.lobby-bottom .weather-banner{
+  margin:0 auto 0 0;padding:3px 16px;font-size:12.5px;flex-shrink:1;min-width:0;
   background:var(--glass);border:1px solid var(--glass-line);color:#cfe4fa;
-  border-radius:999px;box-shadow:none;max-width:96%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  border-radius:999px;box-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.lobby-stage .weather-banner b{color:#ffe9a8;}
-.lobby-stage .pet-tabs{margin:0;justify-content:center;flex-shrink:0;flex-wrap:nowrap;max-width:100%;overflow-x:auto;}
+.lobby-bottom .weather-banner b{color:#ffe9a8;}
+/* รอบ 160: แท็บสัตว์ขึ้นบนสุดของเวที ชิดซ้ายตรงแนวขอบ rank chip (--tabs-left จาก alignPetTabs) */
+.lobby-stage .pet-tabs{
+  margin:0;justify-content:flex-start;align-self:flex-start;
+  margin-left:var(--tabs-left,0px);
+  flex-shrink:0;flex-wrap:nowrap;max-width:100%;overflow-x:auto;
+}
 /* 🆕 New Word (รอบ 116): แถบคำศัพท์ใหม่ใต้แถบอากาศ — คำใหญ่กลาง คลิกทั้งแถบ */
 .newword-banner{
   display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0;
@@ -518,12 +524,13 @@ html.no-anim .nw-tag{animation:none;}
 /* เหรียญตราแรงค์ใหญ่ฉากหลังเวที (รอบ 114) — z0 อยู่หลังตัวละคร PNG และ canvas 3D (z1) */
 .hero-rank-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   z-index:0;pointer-events:none;}
-.hero-rank-bg::before{content:'';position:absolute;width:min(50vh,460px);height:min(50vh,460px);
+/* รอบ 160: เหรียญ rank ขยายเกือบเต็มเวที (สูง 96% ของกรอบ) — ตัวละครเล็กกว่าครึ่ง = rank เด่นสง่าเป็นฉากหลัง */
+.hero-rank-bg::before{content:'';position:absolute;width:min(72vh,660px);height:min(72vh,660px);
   border-radius:50%;background:radial-gradient(circle, var(--rank-c,#3a76d8), transparent 68%);
   opacity:.22;filter:blur(4px);}
-.hero-rank-bg img{height:min(52vh,470px);max-width:80%;object-fit:contain;
-  transform:translateY(-4%);opacity:.6;
-  filter:drop-shadow(0 0 30px var(--rank-c,#3a76d8)) saturate(.92);}
+.hero-rank-bg img{height:96%;max-width:94%;object-fit:contain;
+  transform:translateY(-1%);opacity:.66;
+  filter:drop-shadow(0 0 34px var(--rank-c,#3a76d8)) saturate(.92);}
 /* รอบ 115: เอฟเฟกต์เปลี่ยนร่างตอนเลื่อนแรงค์ — เหรียญใหม่หมุนเข้า (coin flip) + แฟลชสว่าง + วงเรืองแสงกะพริบ */
 .hero-rank-bg.rank-fx img{animation:rankSwapIn 1.6s cubic-bezier(.22,1,.36,1) both;}
 .hero-rank-bg.rank-fx::before{animation:rankGlowPulse 1.6s ease-out both;}
@@ -1042,10 +1049,10 @@ html.no-anim .nw-tag{animation:none;}
    ซ้าย = ปุ่มเปิดแผงข้อมูลน้อง + ฟีดเพื่อน (แทนกล่องข้อมูลน้องเดิม กว้างขึ้น)
    เวทีน้องย้ายขวา · ข้อมูลน้อง+การดูแล = overlay ใหญ่ (.pi-overlay)
    ============================================================ */
-/* ---- คอลัมน์ซ้ายของ pet-card ---- */
+/* ---- คอลัมน์ซ้ายของ pet-card (รอบ 160: หดลงให้เวที hero กว้างขึ้น เหรียญ rank เด่น) ---- */
 .stage-left{
   display:flex;flex-direction:column;gap:8px;z-index:2;
-  width:min(300px,34%);flex-shrink:0;align-self:stretch;min-height:0;
+  width:min(280px,28%);flex-shrink:0;align-self:stretch;min-height:0;
 }
 .pet-info-btn{
   flex-shrink:0;border:1px solid rgba(95,200,255,.5);border-radius:14px;cursor:pointer;

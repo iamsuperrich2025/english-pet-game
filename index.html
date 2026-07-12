@@ -138,10 +138,10 @@
       </nav>
 
       <main class="lobby-stage">
-        <div class="weather-banner" id="weather-banner"></div>
+        <!-- รอบ 160: ป้ายอากาศย้ายลง footer (หน้าปุ่มควิซอาหาร) · แท็บสัตว์ขึ้นบนสุด ชิดแนวขอบซ้าย rank chip (alignPetTabs ใน ui.js) -->
+        <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
         <!-- 🆕 New Word: คำศัพท์ใหม่ 1 คำ/การ login ตามระดับชั้น · คลิก=เปิดรายละเอียด (รอบ 116) -->
         <div class="newword-banner" id="newword-banner" style="display:none"></div>
-        <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
         <div class="pet-card" id="pet-card">
           <!-- filled by JS -->
         </div>
@@ -182,6 +182,8 @@
     </div>
 
     <footer class="lobby-bottom">
+      <!-- รอบ 160: ป้ายอากาศมาอยู่แถวล่าง ก่อนถึงปุ่มควิซอาหารปลอดภัย -->
+      <div class="weather-banner" id="weather-banner"></div>
       <button class="big-btn lobby-quiz-btn lobby-foodquiz-btn" id="btn-foodquiz">🛡️ ควิซอาหารปลอดภัย</button>
       <button class="big-btn purple lobby-quiz-btn" id="btn-cats">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</button>
       <button class="big-btn lobby-play-btn" id="btn-play">🎮 เล่นเกมจับคู่คำศัพท์!</button>
