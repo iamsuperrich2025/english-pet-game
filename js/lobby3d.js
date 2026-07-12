@@ -21,6 +21,7 @@ const Lobby3D = (function(){
   let mixers=[];                                   // AnimationMixer ต่อโมเดล
   let raf=0, running=false, disabled=false, booting=false;
   let heroEl=null, canvas=null;
+  let viewH=0;                                     // ความสูง canvas (CSS px) ล่าสุด — ใช้เล็งเท้าลงเส้นพื้น
   let curKey='';                                   // avatar|petType|stage ที่โหลดอยู่
   let curGiant=-1;
   const existCache={};                             // "avatar|petType" -> true/false (มีไฟล์ glb ครบไหม)
@@ -187,14 +188,29 @@ const Lobby3D = (function(){
     petRoot.position.x = x;
   }
 
+  // เป้าเท้าตัวหน้าสุดห่างขอบล่างเวที (px) — เส้นพื้นเรืองแสง .stage-hero::after อยู่ bottom:30px
+  // วัดจริง (readPixels): ค่า 13 → เท้าคน ~17px / อุ้งเท้าหมา ~25px = ต่ำกว่าเส้นทั้งคู่ ไม่ดูลอย
+  const GROUND_PX = 13;
+
   function frameCamera(g){
     // ให้กล้องกรอบพอดีความสูงรวม (เน้นน้องเป็นหลัก) + เผื่อขอบ
     // รอบ 114: เผื่อขอบมากขึ้น (1.16→1.55) = ตัวละครเล็กลง ~25% เปิดที่ให้เห็นเหรียญแรงค์ฉากหลัง
     const topH = Math.max(PET_H[g], OWNER_H[g]);
-    const centerY = topH * 0.52;
     const fitH = topH * 1.55;
-    const dist = (fitH/2) / Math.tan((camera.fov*Math.PI/180)/2);
-    camera.position.set(0, centerY, dist + 0.4);
+    const tanH = Math.tan((camera.fov*Math.PI/180)/2);
+    const dist = (fitH/2) / tanH;
+    const D = dist + 0.4;                       // ระยะกล้องถึงระนาบ z=0
+    // รอบ 162: เดิม centerY=topH*.52 → เท้าลอย ~16% ของความสูงเวที เหนือเส้นพื้น (bottom:30px) ดูลอย
+    // ใหม่: เล็งให้เท้า "ตัวที่ยืนใกล้กล้องสุด" (z0 — ร่างยักษ์ผู้เลี้ยงยืนหน้าน้อง perspective กดเท้าต่ำสุด)
+    // ฉายลงที่ GROUND_PX จากขอบล่าง canvas (viewH มาจาก resize — จอเปลี่ยนคำนวณใหม่)
+    // · poseDrop: ท่า idle โมเดล Tripo ยื่นต่ำกว่า bbox (y=0) ~5% ของความสูงตัว (คาลิเบรตจากวัด readPixels g0)
+    // · cap 0.165 = สัดส่วนเดิม กันตัวหลุดเฟรมบนเวทีเตี้ยมาก
+    const pxFrac = viewH ? Math.min(GROUND_PX / viewH, 0.165) : 0.04;
+    const z0 = Math.max(ownerRoot.position.z, petRoot.position.z, 0);
+    const V = (D - z0) * tanH;                  // ครึ่งความสูงโลกที่กล้องเห็น ณ ระนาบตัวหน้าสุด
+    const poseDrop = 0.05 * OWNER_H[g];
+    const centerY = V - poseDrop - 2*V*pxFrac;
+    camera.position.set(0, centerY, D);
     camera.lookAt(0, centerY, 0);
     rootTilt.rotation.x = 0.02;
   }
@@ -203,9 +219,13 @@ const Lobby3D = (function(){
     if(!heroEl || !renderer) return;
     const r = heroEl.getBoundingClientRect();
     const w = Math.max(2, r.width), h = Math.max(2, r.height);
+    viewH = h;
     renderer.setSize(w, h, false);
     camera.aspect = w/h; camera.updateProjectionMatrix();
-    if(curGiant === 0 && ownerRoot.userData.gltf) sideLayout();   // รอบ 161: aspect เปลี่ยน → ระยะแยกสองข้างเปลี่ยนตาม
+    if(curGiant >= 0 && ownerRoot.userData.gltf){
+      frameCamera(curGiant);                       // รอบ 162: ความสูงจอเปลี่ยน → เล็งเท้าลงเส้นพื้นใหม่
+      if(curGiant === 0) sideLayout();             // รอบ 161: aspect เปลี่ยน → ระยะแยกสองข้างเปลี่ยนตาม
+    }
   }
 
   // ---- ปัด/ลาก หมุนตัวละคร ----
