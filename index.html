@@ -112,8 +112,9 @@
       <div class="coin-pill today">📅 +<span id="coin-today">0</span></div>
       <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
       <div class="coin-pill net" id="net-pill" style="display:none">🌐 +<span id="net-live">0.00</span></div>
-      <!-- ข้าวเย็นผู้เล่น (คิว 7725691507 ข้อ 6) — โผล่ช่วง 18:00 ถึงตี 6 จนกว่าจะกิน · ป่วยเป็น 🤒 -->
-      <button class="icon-btn dinner-btn" id="btn-dinner" title="กินข้าวเย็น" style="display:none">🍚</button>
+      <!-- รอบ 179: ปุ่มแชท (หน้ารวมข้อความแบบ Messenger ธีมฟ้า) แทนที่ปุ่มข้าวเย็นเดิม
+           ปุ่มข้าวเย็น #btn-dinner ย้ายไปอยู่ข้างปุ่ม ➕ ในแถวแท็บสัตว์ (สร้างใน renderDashboard) -->
+      <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
       <button class="icon-btn" id="btn-settings" title="ตั้งค่า (เสียง/สั่น)">⚙️<span class="rail-badge" id="settings-badge" style="display:none"></span></button>
       <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
       <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>

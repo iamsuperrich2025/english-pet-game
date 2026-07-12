@@ -204,7 +204,8 @@ function renderClock(){
   renderOnlineEarnPill();                            // item 8: ตัวเลขโบนัสออนไลน์วิ่งทุกวินาที
   renderFarmClock();                                 // นาฬิกานับถอยหลังต้นไม้เดินพร้อมนาฬิกา
   renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
-  renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา
+  renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา (อยู่แถวแท็บสัตว์ตั้งแต่รอบ 179)
+  chatBadgeSync();                                   // รอบ 179: badge เลขข้อความใหม่บนปุ่มแชท header
 }
 
 /* ============================================================
@@ -1269,6 +1270,65 @@ const CHAT_EMOJI_CATS = [
 ];
 let chatUnsub = null;   // ฟังก์ชันเลิกฟังแชทที่เปิดอยู่ (มีได้ทีละกล่อง)
 
+/* ============================================================
+   รอบ 179: หน้ารวมข้อความ (inbox แบบ Messenger — ธีมกระจกฟ้า sci-fi ของเกม)
+   ปุ่ม 💬 บน header → ลิสต์เพื่อน (Online.myFriends) + ข้อความล่าสุด/เวลา +
+   จุดฟ้า=ยังไม่อ่าน + จุดเขียว=ออนไลน์อยู่ · แตะแถว = เปิดกล่องแชทเดิม (openChat)
+   ============================================================ */
+function chatBadgeSync(){
+  const b = document.getElementById('chat-badge');
+  if(!b) return;
+  const n = (typeof Online !== 'undefined' && Online.ready && typeof chatUnreadCount === 'function')
+    ? chatUnreadCount() : 0;
+  b.style.display = n ? '' : 'none';
+  if(n) b.textContent = n;
+}
+function ibTimeStr(ts){
+  const d = new Date(ts), now = new Date();
+  if(d.toDateString() === now.toDateString())
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  if(now - ts < 7*86400e3) return ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][d.getDay()];
+  return `${d.getDate()}/${d.getMonth()+1}`;
+}
+function openChatInbox(){
+  sfx.select();
+  if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะดูข้อความได้นะ 📡'); return; }
+  const friends = (Online.myFriends || []).slice();
+  const onlineIds = new Set((Online.friends || []).map(f=>String(f.id||'')));
+  const overlay = document.createElement('div');
+  overlay.className = 'inbox-overlay';
+  const rows = friends.map((f,i)=>{
+    const unread = Online.chatUnread && Online.chatUnread[f.uid];
+    return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
+      <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
+      <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last" id="ib-last-${i}">…</small></span>
+      <span class="ib-meta"><small class="ib-time" id="ib-time-${i}"></small>${unread ? '<span class="ib-dot"></span>' : ''}</span>
+    </div>`;
+  }).join('');
+  overlay.innerHTML = `<div class="ib-box">
+    <div class="ib-head"><span>💬 ข้อความ</span><button class="ib-close" type="button">✕</button></div>
+    <div class="ib-list">${rows || `<div class="ib-empty">ยังไม่มีเพื่อนเลย 🤝<br>ไปกด ➕ เป็นเพื่อนจากรายชื่อคนออนไลน์ก่อน<br>เป็นเพื่อนกันแล้วส่งข้อความหากันได้เลย!</div>`}</div>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
+  overlay.querySelector('.ib-close').addEventListener('click', ()=>{ sfx.select(); overlay.remove(); });
+  overlay.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
+    sfx.select(); overlay.remove(); openChat(friends[+r.dataset.i]);
+  }));
+  // เติมข้อความล่าสุด + เวลา รายคน (limitToLast 1 — เบา ครั้งเดียวตอนเปิด)
+  friends.forEach((f,i)=>{
+    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(1).once('value').then(snap=>{
+      let last = null; snap.forEach(ch=>{ last = ch.val(); });
+      const le = document.getElementById('ib-last-'+i), te = document.getElementById('ib-time-'+i);
+      if(!le) return;                                  // ผู้ใช้ปิดกล่องไปแล้ว
+      if(last && typeof last.t === 'string'){
+        le.textContent = (last.f === onlineKey() ? selfPronoun() + ': ' : '') + last.t;
+        if(te && last.ts) te.textContent = ibTimeStr(last.ts);
+      }else le.textContent = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
+    }).catch(()=>{ const le = document.getElementById('ib-last-'+i); if(le) le.textContent = ''; });
+  });
+}
+
 function openChat(friend){
   if(!friend) return;
   if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะแชทได้นะ 📡'); return; }
@@ -1857,20 +1917,27 @@ function renderDashboard(){
 
   renderNewWord();   // 🆕 คำศัพท์ใหม่ 1 คำ/การ login (รอบ 116)
 
-  /* ---- แท็บสลับสัตว์ (หลายตัว) ---- */
+  /* ---- แท็บสลับสัตว์ (หลายตัว) ----
+     รอบ 179: ปุ่มข้าวเย็น #btn-dinner ย้ายจาก header มาต่อท้ายปุ่ม ➕ (สเปกผู้ใช้ — header ใส่ปุ่มแชทแทน)
+     element สร้างใหม่ทุก render → ผูก click ตรงนี้ · โชว์/ซ่อน+หน้า emoji คุมโดย renderDinnerChip เดิม */
   const tabs = document.getElementById('pet-tabs');
-  if(state.pets.length){
+  if(state.pets.length || state.playerSick || dinnerDue()){
     tabs.style.display = 'flex';
     tabs.innerHTML = state.pets.map((p,i)=>{
       const stage = petStage(p);
       const face = stage === 'egg' ? (PETS[p.type].startKey==='egg'?'🥚':'🧺') : PETS[p.type][stage];
       const alert = p.sick ? ' 🤒' : (petHungry(p) ? ' 😫' : '');
       return `<button class="pet-tab ${i===state.active?'on':''}" data-i="${i}">${face} ${escapeHTML(p.name)}${alert}</button>`;
-    }).join('') + `<button class="pet-tab add" id="tab-addpet">➕</button>`;
+    }).join('')
+      + (state.pets.length ? `<button class="pet-tab add" id="tab-addpet">➕</button>` : '')
+      + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`;
     tabs.querySelectorAll('.pet-tab[data-i]').forEach(b=>b.addEventListener('click', ()=>{
       state.active = +b.dataset.i; saveState(); sfx.select(); renderDashboard();
     }));
-    document.getElementById('tab-addpet').addEventListener('click', ()=>{ renderPetShop(); showScreen('screen-select'); });
+    const addBtn = document.getElementById('tab-addpet');
+    if(addBtn) addBtn.addEventListener('click', ()=>{ renderPetShop(); showScreen('screen-select'); });
+    document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
+    renderDinnerChip();
   }else{
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }

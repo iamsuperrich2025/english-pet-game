@@ -72,8 +72,8 @@ document.getElementById('btn-settings').addEventListener('click', openSettings);
 document.getElementById('coin-count').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('coins'));
 document.getElementById('coin-today').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('today'));
 document.getElementById('net-pill').addEventListener('click', ()=>openPillInfo('net'));
-// ข้าวเย็นผู้เล่น (คิว 7725691507 ข้อ 6) — กิน 200 / ป่วยรักษา 1,000
-document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
+// รอบ 179: ปุ่มแชท header → หน้ารวมข้อความ (ปุ่มข้าวเย็นย้ายไปแถวแท็บสัตว์ ผูก click ใน renderDashboard)
+document.getElementById('btn-chat').addEventListener('click', openChatInbox);
 // แตะ badge เลขรวมบนปุ่ม ⚙️ → เมนูสรุปสิ่งที่ค้าง (ไม่เปิดหน้าตั้งค่า)
 document.getElementById('settings-badge').addEventListener('click', (e)=>{ e.stopPropagation(); openAttentionSummary(); });
 /* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป
