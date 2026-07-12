@@ -39,8 +39,15 @@ const Lobby3D = (function(){
   let spellGroup=null, spellMarker=null, spellRay=null;
   let spellLetters=[], spellWord=null, spellIdx=0, spellDone=[];
   let spellRot=0, spellTarget=0, spellVel=0, spellSlotHalf=0.26, spellHintAt=0;
+  let spellSlotAng=Math.PI/6, spellTickK=0, spellTickAt=0;   // ตรวจตัวอักษรผ่านช่อง → เสียงติ๊กแบบวงล้อเกมโชว์
   const SP_R=1.05, SP_Y=0.55, SP_LS=0.34, SP_MS=0.62;   // รัศมีวง/ความสูง/ขนาดตัวอักษร/ขนาด marker (หน่วยโลก — จูนได้)
   const SPELL_COIN=15;                                   // เหรียญต่อคำ (สเปก ~15-20)
+  // 🎡 ฟีลวงล้อ (feedback ผู้ใช้รอบ 172: "ลากประคอง" วางตัวอักษรตรงช่องได้เลย = โกงข้ามการปัด + ของเดิมฝืดไป)
+  // → ระหว่างนิ้วแตะวงไม่ขยับ (จับ=หยุดวง) ปล่อยนิ้วค่อยเหวี่ยงตามความเร็วปัด · แรงเสียดทานต่ำ หมุนลื่นหลายรอบ
+  const SPELL_SENS=0.016;      // ความไวปัด (rad ต่อ px ของความเร็ว) — เดิม 0.012 ฝืด
+  const SPELL_FRICTION=0.975;  // ตัวคูณหน่วงต่อเฟรม — เดิม 0.92 หยุดไวเกิน (ระยะเหวี่ยง ≈ v×40 เฟรม)
+  const SPELL_VMAX=0.6;        // เพดานความเร็ว (rad/เฟรม) กันปัดแรงจนภาพเบลอ
+  const SPELL_VMIN=0.015;      // ปัดเบากว่านี้ = ไม่เหวี่ยง (ให้ snap จัดการ)
 
   function isFileProto(){ return location.protocol === 'file:'; }
 
@@ -248,15 +255,24 @@ const Lobby3D = (function(){
     let down=false, lastX=0, lastT=0, dnX=0, dnY=0, dnT=0, moved=0;
     const start=(x,y)=>{ down=true; spellDown=spellActive; lastX=x; lastT=performance.now();
       dnX=x; dnY=y; dnT=lastT; moved=0;
-      if(spellActive) spellVel=0; else spinVel=0; };
+      if(spellActive){ spellVel=0; spellTarget=spellRot; }   // จับวง = หยุดสนิททันที (ตัดระยะไหลที่ target นำอยู่)
+      else spinVel=0; };
     const move=(x,y)=>{ if(!down) return; const dx=x-lastX; lastX=x;
       moved=Math.max(moved, Math.abs(x-dnX), Math.abs(y-dnY));
       const now=performance.now(); const dt=Math.max(1, now-lastT); lastT=now;
-      if(spellActive){ spellTarget += dx*0.012; spellVel = (dx*0.012)/(dt/16.7); }
+      if(spellActive){
+        // 🎡 flick-only: ระหว่างนิ้วแตะ วง "ไม่" หมุนตามนิ้ว (กันลากประคองวางตัวอักษรตรงช่อง = ข้ามการปัด)
+        // เก็บความเร็วปัดไว้เฉยๆ (blend กัน jitter) — ปล่อยนิ้วค่อยเหวี่ยงใน end()
+        const inst=(dx*SPELL_SENS)/(dt/16.7);
+        spellVel = spellVel*0.5 + inst*0.5;
+      }
       else{ targetRot += dx*0.012; spinVel = (dx*0.012)/(dt/16.7); } };
     const end=(e)=>{ if(!down) return; down=false; spellDown=false;
-      // นิ้วนิ่งค้างก่อนปล่อย = ตั้งใจหยุด → ล้างความเร็วเก่า กันวงแหวนดีดต่อเอง (สำคัญกับเกมเล็งช่อง)
-      if(spellActive && performance.now()-lastT>120) spellVel=0;
+      if(spellActive){
+        // นิ้วนิ่งค้างก่อนปล่อย = ตั้งใจหยุด/แตะ · ปัดเบาเกิน = ไม่เหวี่ยง · ที่เหลือ = เหวี่ยงตามแรงปัด (มีเพดาน)
+        if(performance.now()-lastT>120 || Math.abs(spellVel)<SPELL_VMIN) spellVel=0;
+        else spellVel=Math.max(-SPELL_VMAX, Math.min(SPELL_VMAX, spellVel));
+      }
       // แตะ (ไม่ใช่ลาก) ระหว่างเกมสะกดคำ = ลองเก็บตัวอักษร
       if(spellActive && moved<8 && performance.now()-dnT<600 && e && e.clientX!=null) spellTap(e.clientX, e.clientY); };
     canvas.addEventListener('pointerdown', e=>{ canvas.setPointerCapture&&canvas.setPointerCapture(e.pointerId); start(e.clientX, e.clientY); });
@@ -354,6 +370,30 @@ const Lobby3D = (function(){
      ============================================================ */
   function angNorm(a){ a=(a+Math.PI)%(2*Math.PI); if(a<0) a+=2*Math.PI; return a-Math.PI; }
 
+  // ---- เสียงเกม (รอบ 172): ไฟล์ sound/spell/<name>.mp3 มาก่อน (prompt ใน PROMPTS_SPELL_SOUND.md)
+  //      ไม่มีไฟล์/โหลดพลาด → เสียงสังเคราะห์ beep (util.js) อัตโนมัติ — เกมเล่นได้เลยไม่ต้องรอไฟล์ ----
+  const spellSndCache={};
+  function spellSfx(name){
+    if(typeof state!=='undefined' && !state.sound) return;
+    if(spellSndCache[name]==='miss') return spellSynth(name);
+    try{
+      const a=spellSndCache[name] || new Audio(`sound/spell/${name}.mp3`);
+      spellSndCache[name]=a;
+      a.onerror=()=>{ if(spellSndCache[name]!=='miss'){ spellSndCache[name]='miss'; spellSynth(name); } };
+      a.currentTime=0;
+      const p=a.play();
+      if(p && p.catch) p.catch(()=>{ if(spellSndCache[name]!=='miss'){ spellSndCache[name]='miss'; spellSynth(name); } });
+    }catch(e){ spellSynth(name); }
+  }
+  function spellSynth(name){
+    if(typeof beep!=='function') return;
+    if(name==='tick') beep(1900,.035,0,'square',.05);                                    // แกร็กวงล้อ
+    else if(name==='collect'){ beep(660,.12); beep(880,.18,.1); }                        // เก็บถูก (= sfx.correct)
+    else if(name==='wrong') beep(180,.25,0,'sawtooth',.08);                              // เก็บผิด (= sfx.wrong)
+    else if(name==='win'){ beep(523,.14); beep(659,.14,.12); beep(784,.16,.24); beep(1047,.34,.36,'sine',.2); }  // แฟนแฟร์จบคำ
+    else if(name==='start'){ beep(440,.1); beep(660,.14,.09); }                          // เปิดวงแหวน
+  }
+
   const spellTexCache={};
   const SP_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
   function spellLetterTex(ch){
@@ -412,6 +452,7 @@ const Lobby3D = (function(){
     const chars=spellWord.en.split('');
     const N=chars.length<=5 ? 12 : (chars.length<=7 ? 14 : 16);   // 12–16 ตามสเปก
     spellSlotHalf=Math.min(0.30, (Math.PI/N)*0.85);
+    spellSlotAng=2*Math.PI/N; spellTickK=0;                       // ฐานนับเสียงติ๊กผ่านช่อง
     const fill=[];
     while(chars.length+fill.length < N) fill.push(String.fromCharCode(97+Math.floor(Math.random()*26)));
     const ring=(typeof shuffle==='function') ? shuffle(chars.concat(fill))
@@ -435,8 +476,8 @@ const Lobby3D = (function(){
   }
 
   function spellTick(dt, t){
-    // โมเมนตัมหลังปล่อยนิ้ว (สูตรเดียวกับ spin ตัวละคร)
-    if(!spellDown && Math.abs(spellVel)>0.0001){ spellTarget+=spellVel; spellVel*=0.92; if(Math.abs(spellVel)<0.0004) spellVel=0; }
+    // เหวี่ยงหลังปล่อยนิ้ว — แรงเสียดทานต่ำ หมุนลื่นแบบวงล้อ (SPELL_FRICTION) · ช้าพอค่อยส่งต่อให้ snap
+    if(!spellDown && Math.abs(spellVel)>0.0001){ spellTarget+=spellVel; spellVel*=SPELL_FRICTION; if(Math.abs(spellVel)<0.003) spellVel=0; }
     // snap เบาๆ: หมดโมเมนตัมแล้วดึงตัวอักษรที่ใกล้ช่องสุดเข้ากลางช่อง (เด็กเล็งง่าย ไม่ต้องเป๊ะเอง)
     if(!spellDown && spellVel===0 && !spellLock && spellLetters.length){
       let best=null, bd=1e9;
@@ -449,6 +490,11 @@ const Lobby3D = (function(){
     }
     spellRot += (spellTarget-spellRot)*0.18;
     spellGroup.rotation.y=spellRot;
+    // เสียงติ๊กทุกครั้งที่ตัวอักษรเคลื่อนผ่านช่อง (ฟีลวงล้อเกมโชว์) — throttle กันรัวตอนปัดแรง
+    const k=Math.round(spellRot/spellSlotAng);
+    if(k!==spellTickK){ spellTickK=k;
+      const now=performance.now();
+      if(now-spellTickAt>50){ spellTickAt=now; spellSfx('tick'); } }
     if(spellMarker && spellMarker.visible){ const p=1+Math.sin(t*3.2)*0.07; spellMarker.scale.set(SP_MS*p, SP_MS*p, 1); }
     for(let i=spellLetters.length-1;i>=0;i--){
       const s=spellLetters[i], u=s.userData;
@@ -478,19 +524,19 @@ const Lobby3D = (function(){
     const s=hits[0].object, u=s.userData;
     if(Math.abs(angNorm(u.ang+spellRot))>spellSlotHalf*1.4){   // ยังไม่ตรงช่อง — บอกวิธีเล่น (ไม่สแปม)
       const now=performance.now();
-      if(now-spellHintAt>3500){ spellHintAt=now; if(typeof toast==='function') toast('🌀 ปัดหมุนวงแหวนให้ตัวอักษรมาตรงช่อง ▼ ก่อนแตะนะ'); }
+      if(now-spellHintAt>3500){ spellHintAt=now; if(typeof toast==='function') toast('🌀 ปัดเหวี่ยงวงแหวนให้ตัวอักษรมาตรงช่อง ▼ ก่อนแตะนะ'); }
       return;
     }
     if(u.ch===spellWord.en[spellIdx]){
       u.dying=true; u.k=1;
       spellIdx++;
-      if(typeof sfx!=='undefined') sfx.correct();
+      spellSfx('collect');
       if(typeof speakLetter==='function') speakLetter(u.ch);   // "เอ บี ซี" เหมือนเก็บในโลก 3D
       spellHudWord();
       if(spellIdx>=spellWord.en.length) spellComplete();
     }else{
       u.flash=0.4; s.material.color.setHex(0xff5f6e);
-      if(typeof sfx!=='undefined') sfx.wrong();
+      spellSfx('wrong');
     }
   }
 
@@ -498,6 +544,7 @@ const Lobby3D = (function(){
     spellLock=true;
     const w=spellWord;
     spellDone.push(w.en);
+    spellSfx('win');
     let coinTxt='';
     if(typeof addCoins==='function'){
       addCoins(SPELL_COIN);
@@ -517,7 +564,7 @@ const Lobby3D = (function(){
     if(!h){
       h=document.createElement('div'); h.className='sp-hud';
       h.innerHTML='<div class="sp-word"></div><div class="sp-th"></div>'+
-        '<div class="sp-hint">🌀 ปัดหมุนวงแหวน · ตัวอักษรตรงช่อง ▼ แตะเก็บ</div>';
+        '<div class="sp-hint">🌀 ปัดเหวี่ยงให้วงหมุน · แตะวง=หยุด · ตัวตรงช่อง ▼ แตะเก็บ</div>';
       heroEl.appendChild(h);
       const x=document.createElement('button');
       x.className='sp-exit'; x.textContent='✖ เลิกเล่น';
@@ -560,6 +607,7 @@ const Lobby3D = (function(){
     petRoot.position.x=0;                    // น้องเข้ากลางเวที (คืนที่เดิมตอนจบผ่าน sideLayout)
     targetRot=0; spinVel=0;                  // น้องหันหน้าตรง
     spellEnsure();
+    spellSfx('start');
     spellNextWord();
     spellBtnSync();
     start();
