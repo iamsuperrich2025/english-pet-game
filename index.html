@@ -139,6 +139,8 @@
 
       <main class="lobby-stage">
         <div class="weather-banner" id="weather-banner"></div>
+        <!-- 🆕 New Word: คำศัพท์ใหม่ 1 คำ/การ login ตามระดับชั้น · คลิก=เปิดรายละเอียด (รอบ 116) -->
+        <div class="newword-banner" id="newword-banner" style="display:none"></div>
         <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
         <div class="pet-card" id="pet-card">
           <!-- filled by JS -->
@@ -146,15 +148,31 @@
       </main>
 
       <aside class="lobby-side">
+        <!-- รอบ 149: หัวข้อเล็กอยู่นอกกล่อง · กล่อง = กระจกฟ้า sci-fi เลื่อนวนอัตโนมัติ -->
         <!-- item 3: ภารกิจรายวัน — ชุดเดียวกันทุกคน (seed จากวันที่) filled by renderQuestCard -->
-        <div class="shop-card side-card" id="quest-card">
-          <!-- filled by JS -->
+        <div class="side-sec">
+          <div class="side-label" id="quest-label">🎯 ภารกิจวันนี้</div>
+          <div class="side-glass">
+            <div class="shop-card side-card" id="quest-card">
+              <!-- filled by JS -->
+            </div>
+          </div>
         </div>
-        <div class="shop-card side-card" id="online-card">
-          <!-- filled by JS -->
+        <div class="side-sec">
+          <div class="side-label" id="online-label">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</div>
+          <div class="side-glass">
+            <div class="shop-card side-card" id="online-card">
+              <!-- filled by JS -->
+            </div>
+          </div>
         </div>
-        <div class="shop-card side-card" id="leaderboard-card">
-          <!-- filled by JS · มีแท็บ 🪙 เหรียญ / 🏅 เข็ม -->
+        <div class="side-sec">
+          <div class="side-label" id="lb-label">🏆 กระดานอันดับ</div>
+          <div class="side-glass">
+            <div class="shop-card side-card" id="leaderboard-card">
+              <!-- filled by JS · มีแท็บ 🪙 เหรียญ / 🏅 เข็ม -->
+            </div>
+          </div>
         </div>
       </aside>
     </div>
@@ -285,6 +303,7 @@
 <!-- ⚠️ ห้ามชี้ไป js/data/vocab/band1-5.js จนกว่างานแยกไฟล์คำศัพท์ (TASK_VOCAB_SONNET.md)
      จะเสร็จครบทุกไฟล์และ commit พร้อมกัน — เคยหลุดขึ้น production แล้วเกมเปิดไม่ได้ทั้งเว็บ (5 ก.ค. 2026) -->
 <script src="js/data/vocab.js"></script>
+<script src="js/data/word_new.js"></script>  <!-- 🆕 New Word หน้า Lobby (รอบ 116) — format ตรงสเปกพจนานุกรม -->
 <script src="js/data/ranks.js"></script>
 <script src="js/data/homes.js"></script>
 <script src="js/data/fruits.js"></script>

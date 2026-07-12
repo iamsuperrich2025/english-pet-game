@@ -333,6 +333,61 @@ function selfPronoun(){
 function selfTag(){ return selfPronoun() + 'เอง'; }   // "หนูเอง" / "คุณเอง"
 
 /* ============================================================
+   รอบ 149: กล่อง aside ขวาเลื่อนวนอัตโนมัติ (ล่าง→บน) ไม่มี scrollbar
+   แตะกล่อง = หยุดให้เลื่อนอ่านเองได้ · ปล่อยนิ้วเกิน 5 วิ = เลื่อนต่อ
+   เนื้อหายาวเกินกล่องค่อยวน (ทำสำเนาต่อท้ายให้ลูปไร้รอยต่อ) · สั้นพอดีกล่อง = อยู่นิ่ง
+   ============================================================ */
+const SIDE_SCROLL_SPEED  = 14;      // px/วินาที
+const SIDE_SCROLL_RESUME = 5000;    // ms หลังปล่อยนิ้วค่อยเลื่อนต่อ
+const sideScrollSt = {};            // สถานะต่อกล่อง (id) — คงอยู่ข้าม re-render
+
+function initSideScroll(el){
+  if(!el) return;
+  const st = sideScrollSt[el.id] || (sideScrollSt[el.id] = {hold:false, until:Date.now()+1500, pos:0});
+  if(!el.__ssBound){
+    el.__ssBound = true;
+    const grab = ()=>{ st.hold = true; };
+    const drop = ()=>{ if(st.hold){ st.hold = false; st.until = Date.now() + SIDE_SCROLL_RESUME; } };
+    el.addEventListener('pointerdown', grab);
+    el.addEventListener('touchstart', grab, {passive:true});
+    window.addEventListener('pointerup', drop);
+    window.addEventListener('pointercancel', drop);
+    window.addEventListener('touchend', drop);
+    window.addEventListener('touchcancel', drop);
+    el.addEventListener('wheel', ()=>{ st.until = Date.now() + SIDE_SCROLL_RESUME; }, {passive:true});
+  }
+  el.__ssLoop = false;
+  if(el.scrollHeight - el.clientHeight > 8){          // ยาวเกินกล่องค่อยวน
+    const html = el.innerHTML;
+    el.innerHTML = `<div class="ss-chunk">${html}</div><div class="ss-chunk">${html}</div>`;
+    const c = el.querySelectorAll(':scope > .ss-chunk');
+    el.__ssH = Math.max(1, c[1].offsetTop - c[0].offsetTop);
+    el.__ssLoop = true;
+    if(st.pos > el.__ssH) st.pos = 0;                 // เนื้อหาเปลี่ยน สั้นลง → เริ่มหัวลิสต์
+    el.scrollTop = st.pos;
+  }
+  if(!window.__ssRafOn){ window.__ssRafOn = true; requestAnimationFrame(sideScrollTick); }
+}
+let __ssLastTs = 0;
+function sideScrollTick(ts){
+  requestAnimationFrame(sideScrollTick);
+  const dt = Math.min(0.06, (ts - __ssLastTs)/1000 || 0);
+  __ssLastTs = ts;
+  for(const id in sideScrollSt){
+    const el = document.getElementById(id), st = sideScrollSt[id];
+    if(!el || !el.clientHeight) continue;                      // จอนี้ถูกซ่อนอยู่
+    if(!el.__ssLoop){                                          // เรนเดอร์ตอนจอซ่อน (วัด overflow ไม่ได้) → เช็กซ้ำตอนโผล่
+      if(el.scrollHeight - el.clientHeight > 8) initSideScroll(el);
+      continue;
+    }
+    if(st.hold || Date.now() < st.until){ st.pos = el.scrollTop; continue; }  // ผู้ใช้ถืออยู่/เพิ่งปล่อย
+    st.pos += SIDE_SCROLL_SPEED * dt;
+    if(st.pos >= el.__ssH) st.pos -= el.__ssH;
+    el.scrollTop = st.pos;
+  }
+}
+
+/* ============================================================
    Daily Quest (item 3): การ์ดภารกิจวันนี้ใน aside ขวา
    ทุกคนได้ชุดเดียวกัน (seed จากวันที่) · questEvent ใน state.js เรียก re-render ให้เอง
    ============================================================ */
@@ -353,15 +408,18 @@ function renderQuestCard(){
       <span class="q-right">${done ? '✅' : `<b>${prog}/${q.target}</b>`}<small>+${q.reward}🪙</small></span>
     </div>`;
   }).join('');
-  el.innerHTML = `<h3 class="shop-title">🎯 ภารกิจวันนี้</h3>${rows}
+  el.innerHTML = `${rows}
     <div class="q-foot ${state.quests.allDone ? 'done' : ''}">${state.quests.allDone
       ? `🏆 เคลียร์ครบทั้ง ${QUEST_PER_DAY} ภารกิจ รับโบนัสแล้ว +${QUEST_ALL_BONUS} 🪙 — พรุ่งนี้มีชุดใหม่นะ!`
       : `ทำครบทั้ง ${QUEST_PER_DAY} ภารกิจวันนี้ รับโบนัสเพิ่ม <b>+${QUEST_ALL_BONUS} 🪙</b>`}</div>`;
+  initSideScroll(el);
 }
 
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
+  const lab = document.getElementById('online-label');  // หัวข้อนอกกล่อง (รอบ 149) — ติดป้าย "ออนไลน์จริง" เมื่อต่อ Firebase สำเร็จ
+  if(lab) lab.innerHTML = `🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา${(typeof Online !== 'undefined' && Online.ready) ? ' <span class="online-live">🌏 ออนไลน์จริง</span>' : ''}`;
   const meName = state.profileName || (state.student ? state.student.first : '') || selfTag();
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
@@ -381,10 +439,10 @@ function renderOnlineCard(){
     </div>`).join('');
     bindPlayerClicks();
     el.innerHTML = `
-      <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา <span class="online-live">🌏 ออนไลน์จริง</span></h3>
       <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
       ${meRow}${rows}
       ${Online.friends.length ? '' : '<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>'}`;
+    initSideScroll(el);
     return;
   }
 
@@ -404,10 +462,10 @@ function renderOnlineCard(){
       <span class="online-act">ชั้น ${f.g} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
     </div>`).join('');
   el.innerHTML = `
-    <h3 class="shop-title">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</h3>
     <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚</div>
     ${meRow}${rows}`;
   bindPlayerClicks();
+  initSideScroll(el);
 }
 
 /* ============================================================
@@ -437,10 +495,12 @@ function renderLeaderboardCard(){
   </div>`;
   if(typeof Online === 'undefined' || !Online.ready){
     el.innerHTML = tabs + `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
+    initSideScroll(el);
     return;
   }
   el.innerHTML = tabs + (lbTab === 'badges' ? lbBadgeHtml() : lbCoinHtml());
   bindPlayerClicks();
+  initSideScroll(el);
 }
 
 /* 🪙 เนื้อหาแท็บเหรียญ */

@@ -10,6 +10,13 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 149 (12 ก.ค.) — 3 กล่อง aside ขวา Lobby เป็นกระจกฟ้า sci-fi + เลื่อนวนอัตโนมัติ 🛸📜 (version .140)
+- **สเปกผู้ใช้:** หัวข้อกล่องเล็กลง ย้ายไปนอกกล่อง (เหนือกล่อง) · ในกล่องเหลือแต่รายละเอียด · พื้นขาว→กระจกฟ้า sci-fi (โทน `.stage-plate`) ทั้ง 3 กล่อง · เนื้อหาเลื่อนวนล่าง→บนอัตโนมัติ ไม่มี scrollbar · แตะ=หยุดเลื่อนอ่านเอง · ปล่อยเกิน 5 วิ=เลื่อนต่อ
+- **ทำ:** index.html ห่อการ์ดเป็น `.side-sec > .side-label + .side-glass > .side-card` · ui.js ตัด `<h3 class=shop-title>` ออกจาก renderQuestCard/renderOnlineCard (ป้าย "🌏 ออนไลน์จริง" ย้ายขึ้น `#online-label` อัปเดตใน renderOnlineCard) · เพิ่ม `initSideScroll(el)`+`sideScrollTick` (rAF กลาง 1 ตัว): เนื้อหาล้นกล่อง→ห่อ 2 สำเนา `.ss-chunk` วนไร้รอยต่อ (ssH=offsetTop สำเนา2) เลื่อน 14px/วิ · pointerdown/touchstart=hold · ปล่อย (บน window)=รอ 5 วิ · wheel ก็รีเซ็ตเวลารอ · สถานะเก็บใน `sideScrollSt[id]` อยู่ข้าม re-render · lobby.css: `.side-glass` gradient ฟ้าเข้ม+scanline บนกรอบ (ไม่เลื่อนตามเนื้อหา) + override สีเนื้อหาโซน `.lobby-side` ทั้ง q-*/online-*/lb-* เป็นโทนสว่าง + ซ่อน scrollbar (`scrollbar-width:none`+webkit)
+- **กับดักที่เจอ:** (1) การ์ดถูกเรนเดอร์ตอน screen ยังซ่อน → clientHeight=0 วัด overflow ไม่ได้ → ticker เช็กซ้ำเองตอนกล่องโผล่แล้วล้นจริง (2) preview pane รายงาน `document.hidden=true` → rAF ถูกพักทั้ง pane + screenshot timeout — **ไม่ใช่บั๊กโค้ด** พิสูจน์ด้วยการยิงเฟรมจำลองเข้า `sideScrollTick` แทน
+- ✅ **ยืนยัน 812×375 (getBoundingClientRect + จำลองเฟรม):** หัวข้อ 11px อยู่เหนือกล่องจริงทั้ง 3 · กล่องกระจกฟ้า 205×65 ไม่ทับกัน ไม่ล้นจอ · scrollbar กว้าง 0 · เลื่อน 14px/วิ · แตะค้างหยุดจริง · ช่วงรอ 5 วินิ่ง · ครบแล้วไปต่อ · วนลูป wrap ไร้รอยต่อ (214→2.4) · pointerdown/up จริงตั้ง hold/until ถูก
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (ดูความเร็วเลื่อน 14px/วิ + จังหวะหยุด 5 วิ — จูนได้ที่ `SIDE_SCROLL_SPEED`/`SIDE_SCROLL_RESUME` ใน ui.js)
+
 ### ✅ รอบ 148 (12 ก.ค.) — ภาพตัวละครนั่งรถในแผงเตรียมออกรถ 🧱🚗 (version .139)
 - **สเปกผู้ใช้ (ต่อยอดจากรอบ 147):** ภาพตัวละครนั่งในรถ ต้องแมทกับตัวที่ผู้เล่นเลือก · ภาพผู้ใช้จะเจนมาวางทีหลัง
 - **ทำ:** `#adv-carstart` เพิ่ม `<img id=cs-avatar>` ใต้ h3 · `carStartShow()` ตั้ง `src=img/blocks/car_${state.blockAv}.png` ทุกครั้งที่แผงเด้ง (fallback blk1 ถ้า key เพี้ยน) · listener load→โชว์ / error→ซ่อน (ผูกครั้งเดียวใน buildDom) · **กับดัก cache: src เดิมเคยโหลดแล้ว event load ไม่ยิงซ้ำ → เช็ค `complete&&naturalWidth>0` หลังตั้ง src** · CSS `max-height:min(100px,18vh)` แผงไม่ล้นจอเตี้ย
