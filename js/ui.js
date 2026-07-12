@@ -1598,7 +1598,11 @@ function feedAgo(ts){
   return Math.floor(d/86400000) + ' วันก่อน';
 }
 
-/* วาดฟีดเพื่อน (แผงซ้าย lobby) — เลื่อนอ่านเองได้ ไม่มี scrollbar (ซ่อนใน CSS) */
+/* วาดฟีดเพื่อน (แผงซ้าย lobby) — เลื่อนอ่านเองได้ ไม่มี scrollbar (ซ่อนใน CSS)
+   รอบ 169: รายการใหม่เข้าสด → แถวแฟลชฟ้า + เด้งกล่องไปโชว์ (แพทเทิร์นเดียวกับภารกิจรอบ 150/เพื่อนออนไลน์รอบ 152) */
+let __feedSeen = null;        // ts ใหม่สุดที่เห็นรอบก่อน (null = ยังไม่เคยเห็นฟีดจริง — ชุดแรกตอน login ไม่แฟลช)
+let __feedFlashPend = null;   // ts ของแถวที่รอแฟลช (มาใหม่ตอนกล่องถูกซ่อน เช่น อยู่หน้าเกม → กลับ lobby ค่อยแฟลช)
+
 function renderFeedCard(){
   const el = document.getElementById('feed-list');
   if(!el) return;
@@ -1618,7 +1622,7 @@ function renderFeedCard(){
   }
   el.innerHTML = feed.map(it=>{
     const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
-    return `<div class="feed-row" data-fid="${escapeHTML(it.uid)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
+    return `<div class="feed-row" data-fid="${escapeHTML(it.uid)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}" data-ts="${+it.ts || 0}">
       <span class="feed-ico">${fc.e}</span>
       <span class="feed-txt"><b class="feed-name">${escapeHTML(it.n)}</b> ${escapeHTML(it.tx)}
         <small class="feed-ago">· ${feedAgo(it.ts)}</small></span>
@@ -1633,7 +1637,20 @@ function renderFeedCard(){
       showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
     });
   }
+  // รอบ 169: หารายการที่ใหม่กว่ารอบก่อน (baseline null = ชุดแรกหลัง login ไม่นับ)
+  const maxTs = feed.reduce((m,it)=>Math.max(m, +it.ts || 0), 0);
+  if(__feedSeen !== null){
+    const fresh = feed.filter(it=>(+it.ts || 0) > __feedSeen).map(it=>+it.ts);
+    if(fresh.length) __feedFlashPend = fresh;
+  }
+  if(maxTs > (__feedSeen || 0)) __feedSeen = maxTs;
+  else if(__feedSeen === null) __feedSeen = 0;
   initSideScroll(el);      // รอบ 168: ฟีดยาวเกินกล่อง → เลื่อนวนอัตโนมัติเหมือน 3 กล่อง aside ขวา (แตะ=หยุด)
+  if(__feedFlashPend && el.clientHeight){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = ค้างไว้รอกลับ lobby)
+    const sel = __feedFlashPend.map(t=>`.feed-row[data-ts="${t}"]`).join(',');
+    sideFlashRows(el, sel, 'feed-flash');
+    __feedFlashPend = null;
+  }
 }
 
 /* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header

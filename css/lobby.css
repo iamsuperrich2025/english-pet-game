@@ -708,6 +708,8 @@ html.no-anim .nw-tag{animation:none;}
   0%,100%{background:transparent;box-shadow:none;}
   50%{background:rgba(80,180,255,.30);box-shadow:0 0 12px rgba(80,180,255,.6);}
 }
+/* รอบ 169: ฟีดเพื่อน (แผงซ้าย) รายการใหม่เข้าสด → แถวแฟลชฟ้า + กล่องเด้งไปโชว์ก่อนวนต่อ */
+.feed-row.feed-flash{animation:onFlash 1.2s ease-in-out 3;}
 /* รอบ 154: การ์ดคำชวนค้างบนสุดกล่องเพื่อนออนไลน์ — 🚀 ไปเลย! / ไว้ก่อน */
 .inv-card{background:rgba(80,180,255,.12);border:1px solid rgba(120,210,255,.45);border-radius:10px;
   padding:6px 8px;margin-bottom:6px;}
