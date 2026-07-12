@@ -397,39 +397,92 @@ const QUEST_FLASH_HOLD = 5000;        // ms ค้างโชว์แถวท
 let __qDoneSeen = null;               // done ids ที่เห็นรอบก่อน (null = ยังไม่เคยเรนเดอร์ ไม่นับของเก่าตอน login)
 let __qFlashPend = null;              // ภารกิจรอแฟลช (สำเร็จตอนกล่องถูกซ่อน เช่น อยู่หน้าเกมจับคู่)
 
+/* รอบ 170 (สเปกผู้ใช้ "เลื่อนขึ้นเฉยๆ ไม่น่าสนใจ"): เลิกลิสต์เลื่อนวน →
+   การ์ดใหญ่ทีละใบ พลิก 3D สลับทุก 6 วิ + ปุ่ม 🚀 ไปทำเลย (deep-link) + จุดบอกตำแหน่ง 3 ใบ
+   แตะการ์ด = พลิกใบถัดไปทันที (พัก auto 8 วิ) · ภารกิจเพิ่งสำเร็จ = เด้งไปใบนั้น แฟลชเขียว ค้าง 5 วิ */
+const QUEST_DECK_FLIP_MS = 6000;
+let __qDeckIdx = 0, __qDeckHold = 0;   // ใบที่โชว์ · เวลาห้าม auto-flip ถึง (แตะเอง/เพิ่งสำเร็จ)
+
+function questGo(qid){                 // ปุ่ม 🚀 พาไปที่ที่ต้องทำ — คลิกปุ่ม/เรียก handler เดิม (guard ครบในตัว)
+  sfx.select();
+  if(qid === 'match20' || qid === 'replay2'){ const b = document.getElementById('btn-play'); if(b) b.click(); }
+  else if(qid === 'quiz1'){ const b = document.getElementById('btn-cats'); if(b) b.click(); }
+  else if(qid === 'word3d3'){ if(typeof railWorldClick === 'function') railWorldClick('adv'); }
+  else if(qid === 'feed1'){ if(typeof openPetInfoOverlay === 'function') openPetInfoOverlay(); }
+  else if(qid === 'produce1'){ const b = document.querySelector('.lobby-rail [data-panel="panel-factory"]'); if(b) b.click(); }
+}
+
+function qDeckDraw(el, flashId){
+  const qs = questsToday();
+  if(__qDeckIdx >= qs.length) __qDeckIdx = 0;
+  if(el.clientHeight) el.classList.toggle('q-mini', el.clientHeight < 64);   // กล่องเตี้ยมาก (จอ 375) → โหมดกะทัดรัด
+  const q = qs[__qDeckIdx];
+  const done = state.quests.done.includes(q.id);
+  const prog = Math.min(q.target, state.quests.prog[q.id]||0);
+  const pct = done ? 100 : Math.round(prog/q.target*100);
+  const dots = qs.map((x,i)=>`<span class="q-dot ${i===__qDeckIdx?'on':''} ${state.quests.done.includes(x.id)?'ok':''}"></span>`).join('');
+  el.innerHTML = `<div class="q-bigcard ${done?'done':''} ${flashId===q.id?'q-flash':''}" data-qid="${q.id}">
+      <div class="qb-top"><span class="qb-emoji">${q.emoji}</span><div class="qb-name">${q.name}</div></div>
+      <div class="qb-bar"><i style="width:${pct}%"></i></div>
+      <div class="qb-row">
+        <span class="qb-prog">${done ? '✅ สำเร็จแล้ว' : `<b>${prog}</b>/${q.target}`}</span>
+        <span class="qb-reward">+${q.reward}🪙</span>
+        ${done ? '' : `<button class="qb-go" data-qid="${q.id}">🚀 ไปทำเลย</button>`}
+      </div>
+      <div class="q-dots">${dots}<span class="q-bonus">${state.quests.allDone
+        ? `🏆 รับโบนัสครบ ${QUEST_PER_DAY} แล้ว +${QUEST_ALL_BONUS}🪙`
+        : `ครบ ${QUEST_PER_DAY} ภารกิจ โบนัส +${QUEST_ALL_BONUS}🪙`}</span></div>
+    </div>`;
+}
+
+function qDeckNext(animate){
+  const el = document.getElementById('quest-card');
+  if(!el) return;
+  __qDeckIdx = (__qDeckIdx + 1) % QUEST_PER_DAY;
+  const card = el.querySelector('.q-bigcard');
+  if(!animate || !card || document.documentElement.classList.contains('no-anim')){ qDeckDraw(el, null); return; }
+  card.classList.add('qflip-out');                       // พลิกครึ่งแรก → สลับเนื้อหา → พลิกเข้า
+  setTimeout(()=>{
+    qDeckDraw(el, null);
+    const c2 = el.querySelector('.q-bigcard');
+    if(c2){ c2.classList.add('qflip-in'); setTimeout(()=>c2.classList.remove('qflip-in'), 300); }
+  }, 170);
+}
+
 function renderQuestCard(){
   const el = document.getElementById('quest-card');
   if(!el || typeof state === 'undefined' || !state.student) return;
   questTick();
-  const rows = questsToday().map(q=>{
-    const done = state.quests.done.includes(q.id);
-    const prog = Math.min(q.target, state.quests.prog[q.id]||0);
-    const pct = done ? 100 : Math.round(prog/q.target*100);
-    return `<div class="q-row ${done ? 'done' : ''}" data-qid="${q.id}">
-      <span class="q-emoji">${q.emoji}</span>
-      <div class="q-mid">
-        <div class="q-name">${q.name}</div>
-        <div class="q-bar"><i style="width:${pct}%"></i></div>
-      </div>
-      <span class="q-right">${done ? '✅' : `<b>${prog}/${q.target}</b>`}<small>+${q.reward}🪙</small></span>
-    </div>`;
-  }).join('');
-  el.innerHTML = `${rows}
-    <div class="q-foot ${state.quests.allDone ? 'done' : ''}">${state.quests.allDone
-      ? `🏆 เคลียร์ครบทั้ง ${QUEST_PER_DAY} ภารกิจ รับโบนัสแล้ว +${QUEST_ALL_BONUS} 🪙 — พรุ่งนี้มีชุดใหม่นะ!`
-      : `ทำครบทั้ง ${QUEST_PER_DAY} ภารกิจวันนี้ รับโบนัสเพิ่ม <b>+${QUEST_ALL_BONUS} 🪙</b>`}</div>`;
-  // ภารกิจที่เพิ่งสำเร็จ (ไม่นับชุดที่ done อยู่แล้วตอนเปิดเกม)
+  delete sideScrollSt[el.id];            // เด็คใบเดียวพอดีกล่อง — กัน ticker รอบ 149 มาห่อ ss-chunk ซ้อน
+  const qs = questsToday();
+  // ภารกิจที่เพิ่งสำเร็จ (ไม่นับชุดที่ done อยู่แล้วตอนเปิดเกม) → เด้งไปใบนั้น
   const doneNow = state.quests.done.slice();
   if(__qDoneSeen !== null){
     const fresh = doneNow.filter(id=>!__qDoneSeen.includes(id));
     if(fresh.length) __qFlashPend = fresh[fresh.length-1];
   }
   __qDoneSeen = doneNow;
-  initSideScroll(el);
+  let flashId = null;
   if(__qFlashPend && el.clientHeight){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอรอบเรนเดอร์ตอนกลับ lobby)
-    questFlashRow(el, __qFlashPend);
+    const i = qs.findIndex(q=>q.id === __qFlashPend);
+    if(i >= 0){ __qDeckIdx = i; __qDeckHold = Date.now() + QUEST_FLASH_HOLD; flashId = __qFlashPend; }
     __qFlashPend = null;
   }
+  qDeckDraw(el, flashId);
+  if(!el.dataset.bound){                 // element สร้างใหม่ทุก renderDashboard → ผูกใหม่ได้เสมอ
+    el.dataset.bound = '1';
+    el.addEventListener('click', (e)=>{
+      const go = e.target.closest('.qb-go');
+      if(go){ questGo(go.dataset.qid); return; }
+      if(e.target.closest('.q-bigcard')){ sfx.select(); __qDeckHold = Date.now() + 8000; qDeckNext(true); }
+    });
+  }
+  if(!window.__qDeckTimer) window.__qDeckTimer = setInterval(()=>{
+    const box = document.getElementById('quest-card');
+    if(!box || !box.clientHeight) return;                // จอถูกซ่อน/ยังไม่เข้าเกม
+    if(Date.now() < __qDeckHold) return;                 // ผู้ใช้เพิ่งแตะ/เพิ่งแฟลช
+    qDeckNext(true);
+  }, QUEST_DECK_FLIP_MS);
 }
 
 /* helper ร่วม (รอบ 150/152): เลื่อนกล่อง aside ไปโชว์แถวที่ match sel + ติด class แฟลช
@@ -449,10 +502,7 @@ function sideFlashRows(el, sel, cls){
   st.until = Date.now() + QUEST_FLASH_HOLD;
 }
 
-/* เลื่อนกล่องภารกิจไปโชว์แถว qid + แฟลชเขียว */
-function questFlashRow(el, qid){
-  sideFlashRows(el, `.q-row[data-qid="${qid}"]`, 'q-flash');
-}
+/* questFlashRow (รอบ 150) ถูกแทนด้วยเด็คการ์ดรอบ 170 — แฟลชผ่าน flashId ใน qDeckDraw แทน */
 
 /* รอบ 152: ตรวจเพื่อนใหม่เพิ่งออนไลน์ (เฉพาะโหมดออนไลน์จริง — เพื่อนจำลองไม่นับ) */
 const FRIEND_FLASH_GRACE = 8000;      // ms หลังต่อออนไลน์สำเร็จ ค่อยเริ่มนับเพื่อนใหม่ (กัน sync ชุดแรกสแปม)
