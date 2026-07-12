@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 155 (Follow + Feed กิจกรรม) — รอผู้ใช้ publish:** โซนใหม่ `/feed` (โพสต์กิจกรรมที่เจ้าของเปิดเผย + คลังทรัพย์สิน) + `/follow` (ใคร follow ใคร แบบ TikTok) — ก้อนเต็มด้านล่างอัปเดตแล้ว + Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/eca6d019-24c3-4ecf-8d18-43078202ef5c · **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny เงียบๆ (catch ครบ) ฟีดขึ้นข้อความว่าง follow จำในเซฟฝั่งเราได้ แต่ยอดผู้ติดตาม/กิจกรรมเพื่อนยังไม่ขึ้นจนกว่าจะ publish
 - ⏳ **รอบ 132 (ไฟเลี้ยวโลกขับรถ) — รอผู้ใช้ publish:** เพิ่ม field `tl` (ไฟเลี้ยว 0=ปิด 1=ซ้าย 2=ขวา · number 0-2) ใน `/world/$map/$uid` — ก้อนเต็มด้านล่างอัปเดตแล้ว + Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/59c3da79-b3cc-4053-b5f3-5283b4729b7a · **ยังไม่ publish = เกมไม่พัง:** client ส่ง tl เฉพาะตอนเปิดไฟ ถ้าเขียนโดน deny จะตัด tl ส่งซ้ำทันที (`netTlOk` ใน sendPos adventure3d.js) — multiplayer เดินต่อปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวจนกว่าจะ publish
 - ✅ **รอบ 124 (ตลาดออนไลน์จริง — item 2) ผู้ใช้ publish แล้ว 11 ก.ค. 2026:** โซนใหม่ `/market` + `/msold` เข้าแล้ว · **ตรวจ REST จากภายนอกแล้ว:** /presence อ่านได้ 200 (rules ทั้งก้อนไม่พัง) · /market อ่านโดยไม่ login โดน 401 Permission denied ถูกต้อง · เหลือทดสอบซื้อ-ขายจริง 2 บัญชี/2 เครื่อง · ความเสี่ยงที่ยอมรับ: ซื้อ=ลบ node ของคนอื่นได้ (จำเป็นต่อกลไกซื้อ) + ใบเสร็จเขียนได้ทุก auth แต่ฝั่งคนขายจ่ายเฉพาะใบเสร็จที่ (1) ตรง netKey ของประกาศตัวเอง (2) ของหลุดจากตลาดแล้วจริง — ระดับเดียวกับ coins ฝั่ง client
 - ✅ **รอบ 113 (โลกขับรถ drive + โดรน drone) — ผู้ใช้ publish แล้ว 10 ก.ค. 2026** (ผู้ใช้ยืนยันเองหลังได้ Artifact ปุ่มคัดลอก): map `drive`+`drone` เข้า enum ครบ 4 จุด (/world $map · /tinv map · /rtc · /class $map) → multiplayer/voice/ครูคุมห้องใช้ได้ทั้งโลกขับรถและโดรน · เหลือทดสอบจริง 2 เครื่อง
@@ -209,6 +210,35 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         }
       }
     },
+    "feed": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        "p": {
+          "$postId": {
+            ".validate": "newData.hasChildren(['c','tx','ts'])",
+            "c":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12" },
+            "tx": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 120" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "a": { ".validate": "newData.isString() && newData.val().length <= 4000" },
+        "$other": { ".validate": false }
+      }
+    },
+    "follow": {
+      "$uid": {
+        ".read": "auth != null",
+        "$followerUid": {
+          ".write": "auth != null && auth.uid === $followerUid",
+          ".validate": "newData.hasChildren(['n','ts'])",
+          "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "class": {
       "$map": {
         ".read": "auth != null",
@@ -263,6 +293,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - `/market/<key> = {sid:uid คนขาย, sn:ชื่อคนขาย, id:collectible, p:ราคา, ts}` — ลงขาย: push node ตัวเอง (sid ต้อง = auth.uid) · **ซื้อ/ถอน = ลบ node** (transaction คนแรกได้ · ลบ node คนอื่นได้ = กลไกซื้อ) · แก้ไข node ไม่ได้ (อยากเปลี่ยนราคา = ถอนแล้วลงใหม่)
 - `/msold/<sellerUid>/<key> = {id, p, bn:ชื่อผู้ซื้อ, ts}` — ใบเสร็จจากผู้ซื้อ · คนขายอ่าน-ลบกล่องตัวเอง · ใครก็เขียนได้ (สร้างใหม่เท่านั้น) → **ฝั่งคนขายกันใบเสร็จปลอม 2 ชั้น:** จ่ายเฉพาะที่ตรง `netKey` ใน state.listings ตัวเอง + เช็กว่า `/market/<key>` หายไปแล้วจริง
 - ฝั่งเกม: `marketWatch/marketList/marketUnlist/marketBuy/marketSoldWatch` (online.js) · ประกาศจริงมี `netKey` ใน state.listings — `marketTick` จำลองจะไม่แตะ · rules ยังไม่ publish → `Online.marketOk=false` เกมใช้ตลาดจำลองเดิมอัตโนมัติ
+
+## หมายเหตุโครง /feed + /follow (Follow + Feed กิจกรรม — รอบ 155)
+- `/feed/<uid>/p/<pushKey> = {c:หมวด ≤12, tx:ข้อความไทย ≤120, ts}` — โพสต์กิจกรรมที่**เจ้าของเขียนเองเท่านั้น** (เขียนเฉพาะหมวดที่เปิดใน `state.feedShare` — default ปิดทุกหมวด) · เก็บ 30 ล่าสุด (client prune เองหลัง push) · login แล้วอ่านได้ทุกคน (เปิดหน้า profile ใครก็เห็น — ผู้ใช้เคาะ 12 ก.ค.)
+- `/feed/<uid>/a = JSON string {collectId:จำนวน} ≤4000` — คลังทรัพย์สินที่เปิดเผย (สวิตช์ "เปิดเผยทรัพย์สิน") · ปิดสวิตช์ = client ลบทิ้ง · หมวด c ที่ใช้ตอนนี้: coin/quiz/goods/other (ดู FEED_CATS ใน state.js — เผื่อ ≤12 ไว้ให้หมวดใหม่)
+- `/follow/<targetUid>/<followerUid> = {n:ชื่อผู้ติดตาม ≤40, ts}` — follow ทางเดียวแบบ TikTok ไม่ต้องอนุมัติ · ผู้ติดตามเขียน/ลบ node ตัวเองเท่านั้น · อ่านได้ทุกคนที่ login (ไว้นับยอดผู้ติดตามในหน้า profile)
+- ฝั่งเกม: `feedEvent/feedPrune/feedPurgeCat/feedPushAssets/followSet/followUnset/feedWatchSync/fetchPlayerFeed/fetchPlayerAssets/fetchFollowers` (online.js) · รายชื่อที่เรา follow เก็บใน `state.follows` (เซฟ cloud — DB ฝั่ง /follow ไว้โชว์ยอด/ให้เป้าหมายรู้) · ปิดหมวดในตั้งค่า = `feedPurgeCat` ลบโพสต์เก่าหมวดนั้นออกจาก DB ด้วย
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

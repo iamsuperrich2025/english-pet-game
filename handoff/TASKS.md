@@ -9,24 +9,20 @@
 บั๊ก "ของขวัญโดนบัง" ปิดจบรอบ 31 · **ผู้ใช้ทดสอบจริงยืนยันแล้ว 7 ก.ค.** (กล่องยืนยันเด้งหน้าแผง picker ถูกต้อง ไม่บวม)
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
+- **รอผู้ใช้ 2 อย่างจากรอบ 155:** (1) publish rules โซน `/feed`+`/follow` — Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/eca6d019-24c3-4ecf-8d18-43078202ef5c (2) ทดสอบจริง 2 เครื่อง: เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่
+- หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
-### 📋 งานจองรอบ 155: ระบบ Follow + Feed กิจกรรม + จัดผัง Lobby ใหม่ 📰 (สเปกผู้ใช้ 12 ก.ค. — ยังไม่เริ่ม ทำใน session ใหม่)
-**สเปกเต็มจากผู้ใช้ (บันทึกคำต่อคำเชิงโครงสร้าง):**
-1. **แผง profile ผู้เล่น (showPlayerCard ที่คลิกจากเมนูลัด/กระดาน) ยืดกว้างซ้าย-ขวาจนเกือบเต็มจอ**
-2. **ปุ่ม Follow ในหน้า profile ของผู้เล่นแต่ละคน** — กด follow ใคร → เห็นกิจกรรมล่าสุดของคนนั้นใน **หน้า feed ของเรา**
-3. **feed แสดงแทนที่กล่อง "ข้อมูลน้อง" (แผงซ้าย stage-plate) และกว้างขึ้น** เพื่อพื้นที่ feed มากขึ้น:
-   - กล่อง "ข้อมูลน้อง"+"การดูแล" เดิม → ย้ายไปเป็น **layer/overlay ขนาดใหญ่พอแสดงครบไม่มี scrollbar** เปิดผ่าน**ปุ่มที่วางเหนือตำแหน่งกล่องข้อมูลน้องเดิม**
-   - **กล่องกลาง (คน+สัตว์ hero stage) ขยับไปแทนที่กล่อง "การดูแล" เดิม (ฝั่งขวา)**
-4. **Privacy settings ต่อผู้เล่น:** ติ๊กเลือกว่า profile ตัวเองจะรายงานอะไรบ้าง — ตัวอย่างหมวด: ได้เหรียญพิเศษ / ผ่านการทดสอบ / ได้สินค้าเพิ่ม / ความเคลื่อนไหวอื่นๆ · **default = ปิดทุกหมวด** (คนอื่นไม่เห็นจนกว่าจะเปิด) · เปิด/ปิดได้ตลอด
-5. **ถ้าเปิดเผยทรัพย์สิน:** โชว์ภาพทรัพย์สินเป็น**ตารางกริดเหมือนหน้าโรงงาน** ชนิดซ้ำ >1 ชิ้นใส่เลขจำนวนซ้อนมุม
-6. **ฟีล feed แบบ TikTok/Facebook เลื่อนอ่านได้ไม่มี scrollbar** (มี infra ซ่อน scrollbar + เลื่อนวนจากรอบ 149 `initSideScroll`/`sideScrollSt` ใน ui.js ปรับใช้ได้)
-**ผลกระทบเชิงเทคนิค (ประเมินไว้ก่อน):**
-- ต้องมีโซน DB ใหม่ ~`/feed/<uid>` (กิจกรรมที่เจ้าของเปิดเผย เขียนโดยเจ้าของเท่านั้น) + `/follow` (ใคร follow ใคร) + privacy toggles ใน state → **ต้องแก้ Firebase rules → ส่งเต็มหน้า + Artifact ปุ่มคัดลอกให้ผู้ใช้ publish** (กฎ RULES.md)
-- จุด hook เขียน feed: addCoins ก้อนพิเศษ / สอบผ่าน (game.js quiz) / โรงงานผลิตเสร็จ / ซื้อ-ได้ item / ได้เข็ม / เลื่อนแรงค์ — เขียนเฉพาะหมวดที่ผู้เล่นเปิด
-- ทรัพย์สินกริด: ดูโครงหน้าโรงงาน (factory-card) + assetValue/assetCount ใน state.js
-**คำถามเปิด (ถามผู้ใช้ก่อนลงมือใน session ใหม่):**
-- follow ทางเดียวแบบ TikTok (ไม่ต้องอนุมัติ) ใช่ไหม? · เก็บ feed ย้อนหลังกี่รายการ/คน (เสนอ 30 ล่าสุด ประหยัดโควตา DB)? · feed ของคนที่เราไม่ได้ follow: เปิดหน้า profile เขาแล้วเห็นด้วยไหม (ตามหมวดที่เขาเปิด) หรือเห็นเฉพาะที่ follow?
-**แตะไฟล์หลัก:** ui.js (showPlayerCard/แผง lobby) · lobby.css · state.js (settings+migration) · online.js (follow/feed watch) · game.js+state.js (hook) · handoff/RULES.md
+### ✅ รอบ 155 (12 ก.ค.) — ระบบ Follow + Feed กิจกรรม + จัดผัง Lobby ใหม่ 📰 (version .146)
+- **ผู้ใช้เคาะคำถามเปิด 3 ข้อ:** follow ทางเดียวแบบ TikTok ไม่ต้องอนุมัติ · เก็บ 30 รายการล่าสุด/คน · เปิด profile ใครก็เห็นกิจกรรมตามหมวดที่เจ้าตัวเปิด (follow = ดึงมารวมฟีดหน้า lobby)
+- **DB ใหม่ (rules รอ publish — RULES.md อัปเดตครบ):** `/feed/<uid>/p/<key>={c,tx,ts}` เจ้าของเขียนเองเท่านั้น เก็บ 30 (client prune หลัง push) · `/feed/<uid>/a` = JSON คลังทรัพย์สิน (เฉพาะตอนเปิดเผย) · `/follow/<target>/<follower>={n,ts}` follower เขียน/ลบ node ตัวเอง อ่านได้ทุกคน login
+- **online.js:** feedEvent (เขียนเฉพาะหมวดที่เปิดใน state.feedShare) / feedPrune / feedPurgeCat (ปิดหมวด=ลบโพสต์เก่า) / feedPushAssets (sig กันเขียนซ้ำ · hook ใน onlinePushScore+ตั้งค่า) / followSet/followUnset (จำใน `state.follows` เซฟ cloud) / feedWatchSync (watcher ต่อคน แนวเดียว chatWatchSync) → feedRebuild → `Online.feed` / fetchPlayerFeed/fetchPlayerAssets/fetchFollowers · เริ่มตอน connected ใน onlineStart · ทุกจุด catch เงียบ — **rules ยังไม่ publish = เกมปกติ ฟีดแค่ว่าง**
+- **state.js:** `feedShare` 5 หมวด (FEED_CATS) default ปิดหมด + `follows{}` + migration · hooks: questEvent (รางวัล+โบนัสครบ 3) · refreshRank · addCraft · game.js: finishQuiz · ui.js: acceptGift / buyMarketItem / รับน้องใหม่
+- **ผัง lobby (renderDashboard):** HTML ข้อมูลน้อง+การดูแลเก็บใน `__petPlates` → overlay `.pi-overlay` 2 คอลัมน์ (ร่างไข่=one-col) ไม่มี scrollbar เปิดจากปุ่ม 🐾 เหนือฟีด (แถม 🤒/😫 กะพริบตอนน้องป่วย/หิว) · **ปุ่มดูแลทั้งหมด (feed/cure/giant/sleep/detox/rename) ย้ายไปผูกใน `bindPetPlateButtons(root)` — ห้ามผูกใน renderDashboard อีก** · overlay เปิดค้าง → renderDashboard เรียก `__piOverlay.refresh()` เนื้อหาสดเสมอ · ซ้าย `.stage-left` = ปุ่ม+`.feed-plate` (แทนกล่องข้อมูลน้องเดิม) · hero ย้ายขวาแทนกล่องการดูแล · `renderFeedCard` ฟีดเลื่อนอ่านได้ scrollbar ซ่อน + empty 2 แบบ · คลิกแถว → showPlayerCard
+- **profile (showPlayerCard):** `.pl-wide` min(94vw,860px) — คอลัมน์สถิติ | กิจกรรมล่าสุด + แถวล่างกริดทรัพย์สิน `.pl-assets` (เรียงแพง→ถูก · ×N ซ้อนมุม · โชว์เฉพาะคนที่เปิดเผย) + ปุ่ม ➕ ติดตาม/✓ ติดตามแล้ว + 👥 ผู้ติดตาม N คน (ปุ่มโผล่เฉพาะ Online.ready และไม่ใช่ตัวเอง)
+- **ตั้งค่า (util.js openSettings):** ส่วน "📰 การเปิดเผยกิจกรรมในโปรไฟล์" 5 สวิตช์ · เปิด=toast บอกผล · ปิด=feedPurgeCat ลบของเก่า · assets → feedPushAssets ทันที · settings-box สูงขึ้น → max-height 92vh เลื่อนได้ scrollbar ซ่อน
+- ✅ **ยืนยัน preview 1000×640 (getBoundingClientRect):** ผังใหม่ถูก (ปุ่มเหนือฟีดซ้าย · hero ขวา · แผงเก่าหาย) · overlay 2 plates `scrollHeight==clientHeight` ไม่มี scroll ปุ่มครบ refresh สดตอน renderDashboard ปิดได้ทั้ง ✕/ฉากหลัง · ไข่ one-col · ฟีดจำลอง 4 แถว scrollbar กว้าง 0 คลิกเปิด profile ถูกคน · follow/unfollow toggle ปุ่ม+state+watcher ครบ · settings default ปิดหมด toggle/purge/pushAssets ยิงถูก · engine จำลอง fake db: หมวดปิดไม่เขียน / เปิดเขียน `feed/test1/p` / prune 35→30 ลบเก่าสุด / purge เฉพาะหมวด / assets set→dup-block→remove / watch on-off ตาม follow · questEvent→feedEvent('coin') · ไม่มี console error · deploy live .146 ยืนยัน version.json แล้ว
+- **บั๊กที่เจอระหว่างทำ:** followSet เช็คแค่ `Online.ready` ไม่เช็ค `Online.db` → throw ตอน db ยังไม่พร้อม (แก้ guard แล้ว) · screenshot preview timeout = อาการ pane เดิม (รอบ 149) ไม่ใช่บั๊กโค้ด
+- **⚠️ ค้างผู้ใช้:** (1) publish rules — ก้อนเต็มรวม field `tl` รอบ 132 ที่ค้างอยู่ด้วย จบในก้อนเดียว (2) ทดสอบจริง 2 เครื่อง · หมายเหตุ: ผู้เล่น no-pet ยังใช้การ์ดเดิมไม่มีฟีด (เคสหายาก — อยากให้มีค่อยต่อยอด)
 
 ### ✅ รอบ 154 (12 ก.ค.) — การ์ดคำชวนค้างในกล่องเพื่อน + ปุ่ม 🚀 ไปเลย! 📨 (version .145)
 - **ไอเดียต่อยอดจากรอบ 153 (ผู้ใช้เคาะ):** ฝั่งคนถูกชวน เดิมได้แค่ toast ผ่านไป → การ์ดคำชวนค้างบนสุดของกล่องเพื่อนออนไลน์ กด 🚀 พาเข้าโลกนั้นทันที
