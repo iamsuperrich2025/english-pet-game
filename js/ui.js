@@ -1607,11 +1607,13 @@ function renderFeedCard(){
   if(!nFollow){
     el.innerHTML = `<div class="feed-empty">ยังไม่ได้ติดตามใครเลย 📰<br>
       <small>แตะชื่อเพื่อนในกล่องขวาหรือกระดานอันดับ แล้วกด ➕ ติดตาม<br>กิจกรรมของเขาจะมาโชว์ที่นี่</small></div>`;
+    initSideScroll(el);    // เนื้อหาสั้น = รีเซ็ต __ssLoop กันสถานะวนค้างจากรอบก่อน
     return;
   }
   if(!feed.length){
     el.innerHTML = `<div class="feed-empty">ติดตามอยู่ ${nFollow} คน แต่ยังไม่มีกิจกรรมให้อ่าน 😴<br>
       <small>เพื่อนต้องเปิดเผยกิจกรรมในตั้งค่า ⚙️ ของเขาก่อนนะ</small></div>`;
+    initSideScroll(el);
     return;
   }
   el.innerHTML = feed.map(it=>{
@@ -1631,6 +1633,7 @@ function renderFeedCard(){
       showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
     });
   }
+  initSideScroll(el);      // รอบ 168: ฟีดยาวเกินกล่อง → เลื่อนวนอัตโนมัติเหมือน 3 กล่อง aside ขวา (แตะ=หยุด)
 }
 
 /* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header
