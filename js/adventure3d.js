@@ -2763,6 +2763,8 @@ function buildDom(){
     border-radius:20px;padding:16px 20px 18px;color:#e6f3ff;pointer-events:auto;
     box-shadow:0 0 30px rgba(79,195,247,.4)}
   #adv-carstart h3{margin:0 0 10px;text-align:center;font-size:20px;color:#8fd6ff}
+  /* รอบ 148: ภาพตัวละครที่เลือกนั่งในรถ — โชว์เฉพาะมีไฟล์จริง (โหลดสำเร็จ) */
+  #cs-avatar{display:none;margin:0 auto 8px;max-height:min(100px,18vh);max-width:82%;border-radius:12px}
   #adv-carstart .cs-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
     padding:10px 2px;border-bottom:1px dashed rgba(120,180,230,.35)}
   #adv-carstart .cs-lab{font-size:15.5px;font-weight:700}
@@ -3010,6 +3012,7 @@ function buildDom(){
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
       <h3>🚗 เตรียมออกรถ</h3>
+      <img id="cs-avatar" alt="">  <!-- รอบ 148: ภาพตัวละครที่เลือกนั่งในรถ (img/blocks/car_blk<n>.png · ไม่มีไฟล์=ซ่อน) -->
       <div class="cs-row">
         <div class="cs-lab">🔑 สตาร์ทเครื่องยนต์<small>เครื่องไม่ติด รถออกไม่ได้นะ</small></div>
         <button class="set-switch off" id="cs-engine"><span class="set-sw-knob"></span><span class="set-sw-txt">ปิด</span></button>
@@ -3210,6 +3213,11 @@ function buildDom(){
   });
 
   /* 🚔 รอบ 128: แผงเตรียมออกรถ — สวิตช์สตาร์ทเครื่อง (เสียงไดสตาร์ท) + เข็มขัด (เสียงคลิก) + ปุ่มออกรถ */
+  // 🧱🚗 รอบ 148: ภาพตัวละครนั่งรถในแผงเตรียมออกรถ — โหลดสำเร็จค่อยโชว์ / 404 ซ่อน (carStartShow เป็นคนตั้ง src)
+  const csAvatar=overlayEl.querySelector('#cs-avatar');
+  csAvatar.addEventListener('load',()=>{ csAvatar.style.display='block'; });
+  csAvatar.addEventListener('error',()=>{ csAvatar.style.display='none'; });
+
   const csEngine=overlayEl.querySelector('#cs-engine');
   const csBelt=overlayEl.querySelector('#cs-belt');
   const csGo=overlayEl.querySelector('#cs-go');
@@ -4003,6 +4011,13 @@ function carStartShow(){                       // เด้งทุกครั
   if(!p) return;
   carStartOpen=true;
   p.style.display='block';
+  // 🧱🚗 รอบ 148: ภาพตัวละครที่เลือกนั่งในรถ (แมทกับ state.blockAv) — มีไฟล์ค่อยโชว์ ไม่มี=แผงหน้าตาเดิม
+  const av=p.querySelector('#cs-avatar');
+  if(av){
+    av.style.display='none';
+    av.src=`img/blocks/car_${BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1'}.png`;
+    if(av.complete && av.naturalWidth>0) av.style.display='block';   // src เดิมถูก cache แล้ว load ไม่ยิงซ้ำ
+  }
   const eng=p.querySelector('#cs-engine'), blt=p.querySelector('#cs-belt'), go=p.querySelector('#cs-go');
   [eng,blt].forEach(b=>{ b.classList.remove('on'); b.classList.add('off'); b.querySelector('.set-sw-txt').textContent='ปิด'; });
   go.disabled=true;
