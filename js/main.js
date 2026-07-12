@@ -68,6 +68,10 @@ document.getElementById('btn-petshop-play').addEventListener('click', ()=>startG
 document.getElementById('btn-back').addEventListener('click', exitGame);   // ออกจากเกม + เด้งการ์ดสรุปถ้าทำสถิติใหม่ (exitGame ใน game.js)
 // หน้าตั้งค่า (รวมสวิตช์เสียง/สั่นไว้ที่เดียว — openSettings อยู่ใน util.js)
 document.getElementById('btn-settings').addEventListener('click', openSettings);
+// 💡 รอบ 156: แตะ pill ตัวเลขบน header Lobby → หน้าต่างอธิบายว่าเลขนี้คืออะไร (openPillInfo ใน ui.js)
+document.getElementById('coin-count').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('coins'));
+document.getElementById('coin-today').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('today'));
+document.getElementById('net-pill').addEventListener('click', ()=>openPillInfo('net'));
 // ข้าวเย็นผู้เล่น (คิว 7725691507 ข้อ 6) — กิน 200 / ป่วยรักษา 1,000
 document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
 // แตะ badge เลขรวมบนปุ่ม ⚙️ → เมนูสรุปสิ่งที่ค้าง (ไม่เปิดหน้าตั้งค่า)

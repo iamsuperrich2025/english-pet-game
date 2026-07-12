@@ -1154,3 +1154,14 @@ html.no-anim .nw-tag{animation:none;}
 }
 .set-feed-sub{font-size:11px;color:#8a7a9a;font-weight:600;line-height:1.4;}
 .set-feed-row{margin-top:8px;}
+
+/* ---- 💡 รอบ 156: pill ตัวเลขบน header แตะได้ → หน้าต่างอธิบาย ---- */
+.lobby-top .coin-pill{cursor:pointer;transition:transform .12s;}
+.lobby-top .coin-pill:active{transform:scale(.94);}
+.pillinfo-box{max-width:340px;}
+.pillinfo-val{
+  display:inline-block;font-size:24px;font-weight:800;color:var(--gold-d,#c8871a);
+  background:rgba(245,197,66,.14);border:1px solid rgba(245,197,66,.5);
+  border-radius:999px;padding:4px 20px;margin-top:6px;font-variant-numeric:tabular-nums;
+}
+.pillinfo-desc{font-size:14px;line-height:1.65;color:#5a4a6a;margin:12px 0 0;text-align:left;}

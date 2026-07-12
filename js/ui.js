@@ -2784,6 +2784,46 @@ function renderOnlineEarnPill(){
   if(live) live.textContent = onlineLiveTotal().toFixed(2);
 }
 
+/* 💡 รอบ 156: แตะ pill ตัวเลขบน header Lobby → หน้าต่างอธิบายว่าเลขนี้คือเลขอะไร
+   (ผู้ใช้สั่ง 12 ก.ค.: เด็กเห็นเลข 3 ก้อนแล้วงง — แตะแล้วต้องมีคำอธิบาย) */
+function openPillInfo(kind){
+  const rate = (typeof ONLINE_RATE !== 'undefined') ? ONLINE_RATE : 0.01;
+  const netOn = (typeof onlineEarnActive === 'function') && onlineEarnActive();
+  const infos = {
+    coins: {
+      emoji:'🪙', title:'เหรียญสะสมทั้งหมด', val:`${fmtNum(state.coins)} เหรียญ`,
+      desc:`เหรียญทั้งหมดที่หนูมีอยู่<b>ตอนนี้</b> — ใช้ซื้อของทุกอย่างในเกม เช่น อาหารน้อง บ้าน เสื้อผ้า ตั๋วโลก 3D และจ่ายบิลรายเดือน<br><br>
+        หาเพิ่มได้จาก: เกมจับคู่คำศัพท์ 🎮 · สอบผ่าน 📝 · ภารกิจรายวัน 🎯 · โรงงาน 🏭 · ฟาร์ม 🌳 · ขายของในตลาด 🏪`,
+    },
+    today: {
+      emoji:'📅', title:'เหรียญที่หาได้วันนี้', val:`+${fmtNum(state.daily.coins)} เหรียญ`,
+      desc:`นับเฉพาะเหรียญที่<b>หามาได้วันนี้</b> (ตอนใช้จ่ายเลขนี้ไม่ลด) — ขึ้นวันใหม่รีเซ็ตเป็น 0 เริ่มนับใหม่<br><br>
+        ไว้ดูว่าวันนี้ขยันแค่ไหน แคปหน้าจอส่งคุณครู/คุณพ่อคุณแม่ได้เลย 📸`,
+    },
+    net: {
+      emoji:'🌐', title:'โบนัสออนไลน์', val:`+${onlineLiveTotal().toFixed(2)} เหรียญ`,
+      desc:`ของขวัญฟรี! แค่<b>เปิดเกมแบบออนไลน์</b>อยู่ เหรียญก็เพิ่มเอง <b>+${rate} เหรียญ/วินาที</b> (สะสมครบแล้วตกเป็นเหรียญเต็มเข้ากระเป๋าเองทุก 100 วินาที)<br><br>
+        ตัวเลขนี้ = โบนัสออนไลน์ที่สะสมมา<b>ทั้งหมด</b>ตั้งแต่เริ่มเล่น<br>
+        ${netOn ? '🟢 ตอนนี้กำลังเดินอยู่ — เล่นต่อไปเลย!' : '⚪ ตอนนี้หยุดพัก (ต้องต่อเน็ต + login ถึงจะเดิน)'}`,
+    },
+  };
+  const inf = infos[kind];
+  if(!inf) return;
+  sfx.select();
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay pillinfo-overlay';
+  overlay.innerHTML = `<div class="levelup-box pillinfo-box">
+    <div style="font-size:52px;line-height:1">${inf.emoji}</div>
+    <h2 style="margin:8px 0 2px;font-size:21px">${inf.title}</h2>
+    <div class="pillinfo-val">${inf.val}</div>
+    <p class="pillinfo-desc">${inf.desc}</p>
+    <div style="margin-top:14px"><button class="set-close">เข้าใจแล้ว!</button></div>
+  </div>`;
+  overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
+}
+
 function renderComputerCard(){
   const el = document.getElementById('computer-card');
   if(!el) return;
