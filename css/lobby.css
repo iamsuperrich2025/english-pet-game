@@ -1433,3 +1433,39 @@ html.no-anim .hero-rank-bg .rank-beam,html.no-anim .hero-rank-bg .rank-edge{disp
 /* ตอนเลื่อนแรงค์ (rank-fx รอบ 115) เล่น swap ก่อนแล้วค่อยหายใจต่อ — ไม่งั้น animation ทับกันแล้วค้างนิ่ง */
 .hero-rank-bg.rank-fx img{animation:rankSwapIn 1.6s cubic-bezier(.22,1,.36,1) both, rankBreath 3.6s ease-in-out 1.6s infinite;}
 .hero-rank-bg.rank-fx::before{animation:rankGlowPulse 1.6s ease-out both, rankGlowBreath 3.6s ease-in-out 1.6s infinite;}
+
+/* ============================================================
+   ✦ รอบ 177: ต่อยอดแสงเหรียญ rank 3 ข้อ (ผู้ใช้เคาะ)
+   1) ประกายเพชรวิบวับตามเหลี่ยม 2) แสงถี่ขึ้นตามความใกล้เลื่อนแรงค์ (--rank-pulse)
+   3) เงาสะท้อนสีแรงค์บนพื้นเวที
+   ============================================================ */
+/* ชั้นประกาย ✦ — mask ตามรูปทรงภาพ rank (จุดที่หลุดเงาเหรียญไม่โชว์) กล่องเดียวกับ img */
+.hero-rank-bg .rank-sparks{
+  position:absolute;height:96%;aspect-ratio:1/1;max-width:94%;transform:translateY(-1%);
+  pointer-events:none;
+  -webkit-mask-image:var(--rank-img);mask-image:var(--rank-img);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  -webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain;}
+.hero-rank-bg .rank-sparks span{
+  position:absolute;transform:translate(-50%,-50%) scale(0);opacity:0;color:#fff;line-height:1;
+  text-shadow:0 0 6px #fff, 0 0 16px var(--rank-c,#3a76d8);
+  animation:rankTwinkle 2.4s ease-in-out infinite;}
+@keyframes rankTwinkle{
+  0%,100%{transform:translate(-50%,-50%) scale(0) rotate(0deg);opacity:0;}
+  50%{transform:translate(-50%,-50%) scale(1) rotate(90deg);opacity:.95;}}
+/* เงาสะท้อนสีแรงค์บนพื้น — วงรีเบลอใต้เส้นพื้นเรืองแสง หายใจจังหวะเดียวกับเหรียญ */
+.hero-rank-bg .rank-floor{
+  position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+  width:74%;height:54px;border-radius:50%;pointer-events:none;
+  background:radial-gradient(ellipse at center, var(--rank-c,#3a76d8), transparent 70%);
+  filter:blur(11px);opacity:.26;
+  animation:rankFloorBreath var(--rank-pulse,3.6s) ease-in-out infinite;}
+@keyframes rankFloorBreath{0%,100%{opacity:.18;}50%{opacity:.40;}}
+/* จังหวะหายใจผูก --rank-pulse (ตั้งจาก JS ตาม prog: 3.6s ไกล → 2.0s ใกล้เลื่อนแรงค์) */
+.hero-rank-bg img{animation-duration:var(--rank-pulse,3.6s);}
+.hero-rank-bg::before{animation-duration:var(--rank-pulse,3.6s);}
+.hero-rank-bg.rank-fx img{animation-duration:1.6s,var(--rank-pulse,3.6s);}
+.hero-rank-bg.rank-fx::before{animation-duration:1.6s,var(--rank-pulse,3.6s);}
+html.no-anim .hero-rank-bg .rank-sparks{display:none;}
+html.no-anim .hero-rank-bg .rank-floor{animation:none;}

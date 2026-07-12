@@ -71,10 +71,22 @@ function heroRankBgHTML(){
   // รอบ 176: ชั้นแสงมีชีวิต — .rank-edge = แถบแสงวิ่งไล่ตามขอบเหลี่ยมของเหรียญ (mask ภาพจริง 2 ชั้น xor เหลือแต่ขอบ)
   // .rank-beam = ลำแสงกวาดทั้งเหรียญ (mask ภาพจริงชั้นเดียว) · img เรืองแสงหายใจสีตามแรงค์ (CSS rankBreath)
   const imgAbs = new URL(img, document.baseURI).href;   // ⚠️ url() ใน var() Chrome resolve เทียบไฟล์ CSS — ต้องส่ง absolute
-  return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color};--rank-img:url('${imgAbs}')">
+  // รอบ 177: ยิ่งใกล้เลื่อนแรงค์ แสงยิ่งหายใจถี่ (3.6s → 2.0s ตาม prog) — เด็กรู้สึก "ใกล้แล้ว!"
+  const pulse = (3.6 - 1.6*Math.min(1, info.prog || 0)).toFixed(2);
+  // ประกายเพชร ✦ 8 จุด — ตำแหน่ง deterministic ต่อแรงค์ (seed จาก idx) กัน render ซ้ำแล้วจุดย้ายวูบวาบ
+  let sparks = '', s = info.idx*7 + 3;
+  const rnd = ()=>{ s = (s*16807) % 2147483647; return s/2147483647; };
+  for(let i=0;i<8;i++){
+    sparks += `<span style="left:${(18+rnd()*64).toFixed(1)}%;top:${(12+rnd()*70).toFixed(1)}%;`+
+      `font-size:${(10+rnd()*16).toFixed(0)}px;animation-delay:${(rnd()*3).toFixed(2)}s;`+
+      `animation-duration:${(1.6+rnd()*2).toFixed(2)}s">✦</span>`;
+  }
+  return `<div class="hero-rank-bg${fx ? ' rank-fx' : ''}" style="--rank-c:${info.rank.color};--rank-img:url('${imgAbs}');--rank-pulse:${pulse}s">
     <img src="${img}" alt="">
     <div class="rank-beam"><i></i></div>
     <div class="rank-edge"><i></i></div>
+    <div class="rank-sparks">${sparks}</div>
+    <div class="rank-floor"></div>
   </div>`;
 }
 
