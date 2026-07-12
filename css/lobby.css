@@ -1216,3 +1216,21 @@ html.no-anim .nw-tag{animation:none;}
   .help-box .help-body{display:block;}
   .help-box .help-item{margin-top:10px;}
 }
+
+/* ============================================================
+   📐 รอบ 158 (ต่อจากรอบ 157 — ผู้ใช้สั่ง "โทนเดียวกันหมด"):
+   กล่อง dialog ที่เหลือทุกใบ กว้างขึ้น-โปร่ง-ไร้แถบเลื่อน
+   หมายเหตุ: กล่องเป็น flex item (width:auto = หดตามเนื้อหา) —
+   การเพิ่ม max-width ไม่ทำให้กล่องข้อความสั้นบานเกินจำเป็น
+   ============================================================ */
+.levelup-box{max-width:min(92vw,600px);}          /* base เดิม 340 — ครอบกล่องผลสอบ/ยืนยัน/เลเวลอัป ฯลฯ */
+.food-box{max-width:min(92vw,640px);}             /* เมนูป้อนอาหาร — กริดอาหารได้คอลัมน์เพิ่ม เตี้ยลง */
+.fq-box{width:min(92vw,560px);}                   /* ควิซอาหารปลอดภัย (เดิม width 420 ใน lobby.css) */
+.home-shop-box{max-width:min(92vw,640px);}        /* ร้านที่พัก/แอร์ */
+.summary-box{max-width:min(92vw,560px);}          /* สรุปตอนออกจากเกมจับคู่ */
+.report-box{max-width:min(92vw,640px);}           /* การ์ดสรุปส่งครู */
+.car-buy-box{max-width:min(92vw,560px);}          /* กล่องซื้อรถ */
+/* พื้นที่เลื่อนภายในกล่อง/overlay อื่นๆ — เลื่อนได้เหมือนเดิมแต่ไม่มีแถบโผล่ */
+.wl-grid,.lb-list,.tc-wrap,.install-guide{scrollbar-width:none;-ms-overflow-style:none;}
+.wl-grid::-webkit-scrollbar,.lb-list::-webkit-scrollbar,
+.tc-wrap::-webkit-scrollbar,.install-guide::-webkit-scrollbar{display:none;width:0;}
