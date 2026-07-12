@@ -121,8 +121,8 @@ function showNewWordPopup(){
    คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
 const GIANT_MAX = 4;
 const GIANT_COST     = [0, 2000, 4000, 8000, 16000];   // เหรียญที่จ่ายเพื่อ "ขึ้น" ไปแต่ละระดับ
-const GIANT_PET_VH   = [25, 42, 54, 64, 74];           // ความสูงน้อง (vh) — g0 ลด 29→25 (รอบ 160: ตัวละครไม่ถึงครึ่งเหรียญ rank ให้ rank เด่นเป็นฉากหลัง)
-const GIANT_OWNER_VH = [28, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g0 ลด 34→28 · g4: 22/74 ≈ 0.30 (ระดับเข่า)
+const GIANT_PET_VH   = [15, 42, 54, 64, 74];           // ความสูงน้อง (vh) — g0 = 15 (รอบ 161: ไม่เกินเอวคน ≈ 54% ของ 28vh)
+const GIANT_OWNER_VH = [28, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g0 = 28 (คงเดิมรอบ 161) · g4: 22/74 ≈ 0.30 (ระดับเข่า)
 const GIANT_OWNER_X  = ['-56px','-54px','-42px','-27px','-14px']; // เยื้องผู้เลี้ยงจากกลางเวที (ลบ=ซ้าย): ปกติเยื้องซ้ายให้เห็นหน้าน้องด้านขวา · ยักษ์ยืนหน้าขาน้อง (หน้าน้องอยู่สูงเห็นอยู่แล้ว)
 const GIANT_NAMES    = ['ปกติ','ตัวโต','ยักษ์เล็ก','ยักษ์ใหญ่','ยักษ์อลังการ'];
 function giantLevel(p){ return Math.max(0, Math.min(GIANT_MAX, (p && p.giant) || 0)); }
@@ -1924,7 +1924,7 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
+    <div class="stage-hero${g === 0 ? ' hero-side' : ''}">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();

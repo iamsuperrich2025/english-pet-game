@@ -9,7 +9,7 @@
 const Lobby3D = (function(){
   const MODEL_DIR = 'img/models/';
   // ความสูงโมเดล (หน่วยโลก) ตามระดับร่างยักษ์ 0..4 — ล้อกับ 2D: ปกติผู้เลี้ยงสูงกว่า · ยักษ์สุดผู้เลี้ยงแค่เข่า
-  const PET_H   = [1.30, 1.85, 2.45, 3.00, 3.50];
+  const PET_H   = [0.80, 1.85, 2.45, 3.00, 3.50];   // รอบ 161: g0 1.30→0.80 — น้องร่างปกติสูงไม่เกินเอวคน (0.80/1.55 ≈ 52%)
   const OWNER_H = [1.55, 1.50, 1.35, 1.15, 1.00];
   // โมเดล Tripo หันด้านข้าง (หน้าชี้ -X) โดยดีฟอลต์ → หมุนฐาน -90° ให้ยืน standby หันหน้าเข้าหาผู้เล่น
   // ✅ ทำงานถูกแล้วหลังแก้ cloneSkinned (รอบ 105) — ก่อนหน้านี้เห็นหลัง/เล็ก เพราะ skeleton ไม่ rebind (ดู cloneSkinned)
@@ -162,12 +162,29 @@ const Lobby3D = (function(){
     const pm = fitInto(petRoot,   cloneSkinned(pg.scene), PET_H[g]);
     const om = fitInto(ownerRoot, cloneSkinned(og.scene), OWNER_H[g]);
     setupClips(pg, petRoot); setupClips(og, ownerRoot);
-    // จัดตำแหน่ง: น้องกลาง (x=0) · ผู้เลี้ยงยืนหน้า-เยื้องซ้ายเล็กน้อย
-    petRoot.position.set(0, 0, 0);
-    ownerRoot.position.set(-(pm.halfW*0.35 + om.halfW*0.5), 0, pm.halfD*0.6 + 0.15);
+    if(g === 0){
+      // รอบ 161: ร่างปกติ — คนซ้ายสุด น้องขวาสุด เปิดกลางเวทีให้เหรียญ rank เด่นเต็มตา
+      petRoot.position.set(0, 0, 0.1);
+      ownerRoot.position.set(0, 0, 0.1);
+      sideLayout();                       // ระยะแยกคิดจากความกว้างมุมกล้องจริง (คำนวณซ้ำตอน resize)
+    }else{
+      // ร่างยักษ์ (g1-4): จัดกลางแบบเดิม — น้องกลาง (x=0) · ผู้เลี้ยงยืนหน้า-เยื้องซ้ายเล็กน้อย
+      petRoot.position.set(0, 0, 0);
+      ownerRoot.position.set(-(pm.halfW*0.35 + om.halfW*0.5), 0, pm.halfD*0.6 + 0.15);
+    }
     petRoot.rotation.y = FACE_CAMERA; ownerRoot.rotation.y = FACE_CAMERA;   // หันหน้าเข้าหาผู้เล่น
     frameCamera(g);
     curGiant = g;
+  }
+
+  // รอบ 161: ตำแหน่งแยกสองข้าง (เฉพาะร่างปกติ g0) — x = ~74% ของครึ่งความกว้างที่กล้องเห็น
+  // จอกว้าง=แยกไกล จอแคบ=ยังอยู่ในเฟรม (ขั้นต่ำ 0.85 กันจมกลางเหรียญบนจอแคบมาก)
+  function sideLayout(){
+    if(!camera) return;
+    const viewW = (OWNER_H[0] * 1.55) * camera.aspect;   // fitH ของ g0 × aspect
+    const x = Math.max(0.85, (viewW / 2) * 0.74);
+    ownerRoot.position.x = -x;
+    petRoot.position.x = x;
   }
 
   function frameCamera(g){
@@ -188,6 +205,7 @@ const Lobby3D = (function(){
     const w = Math.max(2, r.width), h = Math.max(2, r.height);
     renderer.setSize(w, h, false);
     camera.aspect = w/h; camera.updateProjectionMatrix();
+    if(curGiant === 0 && ownerRoot.userData.gltf) sideLayout();   // รอบ 161: aspect เปลี่ยน → ระยะแยกสองข้างเปลี่ยนตาม
   }
 
   // ---- ปัด/ลาก หมุนตัวละคร ----

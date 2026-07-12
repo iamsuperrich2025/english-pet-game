@@ -552,7 +552,7 @@ html.no-anim .nw-tag{animation:none;}
    ปกติ: น้องเตี้ยกว่าผู้เลี้ยง · ยักษ์สุด: ผู้เลี้ยงสูงแค่เข่าน้อง */
 .hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;}
 .hero-scene .pet-stage{
-  width:auto;height:clamp(140px, calc(var(--pet-vh,29) * 1vh), 760px);
+  width:auto;height:clamp(64px, calc(var(--pet-vh,29) * 1vh), 760px);   /* รอบ 161: ขั้นต่ำ 140→64 ให้ร่างปกติเล็กระดับเอวได้จริงบนจอเตี้ย */
   align-items:flex-end;
   transform:none;transform-origin:center bottom;
   filter:drop-shadow(0 14px 22px rgba(3,15,35,.55));
@@ -570,7 +570,10 @@ html.no-anim .nw-tag{animation:none;}
   filter:drop-shadow(0 16px 20px rgba(3,15,35,.6));animation:heroSway 4.5s ease-in-out infinite;}
 .caretaker-emoji{font-size:calc(var(--owner-vh,34) * 0.66vh);line-height:1;
   filter:drop-shadow(0 14px 18px rgba(3,15,35,.55));animation:heroSway 4.5s ease-in-out infinite;}
-@keyframes heroSway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+/* รอบ 161: เปลี่ยน keyframes จาก transform → translate (individual property)
+   เพราะเคส emoji fallback (.caretaker-fig.caretaker-emoji เป็น element เดียว)
+   animation ที่เขียน transform จะทับ translateX ตำแหน่งยืนทุกเฟรม — ตำแหน่งไม่ขยับเลย */
+@keyframes heroSway{0%,100%{translate:0 0}50%{translate:0 -6px}}
 /* ลานยืน: เงา + วงเรืองแสงใต้เท้า ให้ดูตั้งอยู่บนพื้นจริง */
 .hero-ground{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
   width:min(118%,660px);height:70px;pointer-events:none;z-index:-1;
@@ -581,6 +584,11 @@ html.no-anim .nw-tag{animation:none;}
 .hero-ground::before{content:'';position:absolute;left:50%;bottom:20px;transform:translateX(-50%);
   width:96%;height:2px;border-radius:50%;
   background:linear-gradient(90deg,transparent,rgba(120,210,255,.55),transparent);}
+/* รอบ 161: ร่างปกติ (g0) — PNG fallback แยกคนซ้ายสุด/น้องขวาสุด เปิดกลางให้เหรียญ rank
+   (โมเดล 3D จัดเองใน lobby3d.js sideLayout — CSS ชุดนี้คุมเฉพาะตอนไม่มีโมเดล) */
+.stage-hero.hero-side .hero-scene{width:100%;height:100%;justify-content:flex-end;}
+.stage-hero.hero-side .hero-scene .pet-stage{margin-right:7%;}
+.stage-hero.hero-side .caretaker-fig{left:18%;transform:translateX(-50%);}
 @media (min-height:620px){ :root{--pet-zoom:2.5;} }
 
 /* แผงสถานะใส 2 ฝั่งสไตล์ sci-fi HUD ขนาบตัวน้อง (ผู้ใช้สั่ง 8 ก.ค.: ห้ามทับตัวสัตว์ ไม่ต้อง scroll)
