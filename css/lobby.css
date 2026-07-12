@@ -1158,10 +1158,61 @@ html.no-anim .nw-tag{animation:none;}
 /* ---- 💡 รอบ 156: pill ตัวเลขบน header แตะได้ → หน้าต่างอธิบาย ---- */
 .lobby-top .coin-pill{cursor:pointer;transition:transform .12s;}
 .lobby-top .coin-pill:active{transform:scale(.94);}
-.pillinfo-box{max-width:340px;}
 .pillinfo-val{
   display:inline-block;font-size:24px;font-weight:800;color:var(--gold-d,#c8871a);
   background:rgba(245,197,66,.14);border:1px solid rgba(245,197,66,.5);
   border-radius:999px;padding:4px 20px;margin-top:6px;font-variant-numeric:tabular-nums;
 }
 .pillinfo-desc{font-size:14px;line-height:1.65;color:#5a4a6a;margin:12px 0 0;text-align:left;}
+
+/* ============================================================
+   📐 รอบ 157 (สเปกผู้ใช้): กล่องข้อความกลางจอ — ขยายด้านข้างจนพอดี
+   ไม่ต้องมี scrollbar (scrollbar ดูไม่ professional)
+   - ซ่อน scrollbar ทั้งตระกูล .levelup-box (เลื่อนนิ้วได้อยู่ เป็น fallback จอจิ๋วมาก)
+   - กล่องข้อความยาว → ยืดกว้าง · กล่องลิสต์ยาว (ตั้งค่า/วิธีเล่น) → จัด 2 คอลัมน์ให้เตี้ยลง
+   ============================================================ */
+.levelup-box{scrollbar-width:none;-ms-overflow-style:none;}
+.levelup-box::-webkit-scrollbar{display:none;width:0;}
+/* กล่องข้อความอธิบาย/แจ้งเตือน: กว้างขึ้น ข้อความห่อน้อยลง เตี้ยพอดีจอแนวนอน */
+.pillinfo-box{max-width:min(92vw,620px);}
+.alert-box{max-width:min(92vw,560px) !important;}   /* ทับ 320px เดิม (เดิมมี !important ที่ border) */
+.attn-box{max-width:min(92vw,620px);}
+.nw-box{width:min(92vw,620px);}
+/* หน้าตั้งค่า: แถวสวิตช์เรียง 3 คอลัมน์ + แถวหนาแน่นขึ้น (หัวข้อ/ปุ่มยาวเต็มแถว) — เตี้ยลงมาก */
+.settings-box{
+  max-width:min(96vw,940px);display:grid;grid-template-columns:repeat(3,1fr);
+  gap:6px 12px;align-items:stretch;padding:14px 22px 12px;
+}
+.settings-box h2,.settings-box .set-hint,.settings-box .set-feed-head,
+.settings-box .set-help,.settings-box > div:last-child{grid-column:1/-1;}
+.settings-box h2{margin:0;font-size:19px;}
+.settings-box .set-hint{margin:0;font-size:11.5px;}
+.settings-box .set-switch{width:84px;height:34px;}
+.settings-box .set-sw-knob{width:26px;height:26px;top:4px;}
+.settings-box .set-switch.on .set-sw-knob{left:54px;}
+.settings-box .set-switch:active .set-sw-knob{width:30px;}
+.settings-box .set-sw-txt{height:34px;font-size:12.5px;}
+.settings-box .set-switch.on .set-sw-txt{left:12px;}
+.settings-box .set-switch.off .set-sw-txt{right:12px;}
+.settings-box .set-row,.settings-box .set-feed-row{margin-top:0;padding:8px 12px;}
+.settings-box .set-label{font-size:14.5px;}
+.settings-box .set-desc{font-size:11px;}
+.settings-box .set-feed-head{margin-top:6px;}
+.settings-box .set-help{margin-top:2px;padding:9px;}
+.settings-box > div:last-child{margin-top:0 !important;}
+/* วิธีเล่น + คู่มือครู (ใช้ .help-box ร่วม): การ์ดหัวข้อเรียง 3 คอลัมน์ */
+.help-box{max-width:min(96vw,980px);padding:16px 22px;}
+.help-box .help-body{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;}
+.help-box .help-item{margin-top:0;font-size:12.5px;line-height:1.45;padding:8px 10px;}
+/* จอแคบปานกลาง → 2 คอลัมน์ */
+@media (max-width:920px){
+  .settings-box{grid-template-columns:1fr 1fr;}
+  .help-box .help-body{grid-template-columns:1fr 1fr;}
+}
+/* จอแคบมาก (portrait/มือถือจิ๋ว) → คอลัมน์เดียว อ่านง่ายกว่า */
+@media (max-width:680px){
+  .settings-box{display:block;}
+  .settings-box .set-row,.settings-box .set-feed-row{margin-top:12px;}
+  .help-box .help-body{display:block;}
+  .help-box .help-item{margin-top:10px;}
+}
