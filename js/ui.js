@@ -432,12 +432,13 @@ function renderQuestCard(){
   }
 }
 
-/* เลื่อนกล่องภารกิจไปโชว์แถว qid + แฟลชเขียว แล้วค้างไว้ QUEST_FLASH_HOLD ก่อนวนต่อ */
-function questFlashRow(el, qid){
+/* helper ร่วม (รอบ 150/152): เลื่อนกล่อง aside ไปโชว์แถวที่ match sel + ติด class แฟลช
+   แล้วค้างไว้ QUEST_FLASH_HOLD ก่อนกลับไปเลื่อนวนต่อ */
+function sideFlashRows(el, sel, cls){
   const st = sideScrollSt[el.id];
-  const rows = el.querySelectorAll(`.q-row[data-qid="${qid}"]`);   // มีทั้งในสำเนา 1+2 ตอนวนลูป
+  const rows = el.querySelectorAll(sel);                           // มีทั้งในสำเนา 1+2 ตอนวนลูป
   if(!st || !rows.length) return;
-  rows.forEach(r=>r.classList.add('q-flash'));
+  rows.forEach(r=>r.classList.add(cls));
   const base = el.querySelector(':scope > .ss-chunk') || el;       // เทียบตำแหน่งจากสำเนาแรก
   let top = rows[0].offsetTop - base.offsetTop - 4;
   const max = el.__ssLoop ? el.__ssH - 1 : Math.max(0, el.scrollHeight - el.clientHeight);
@@ -447,6 +448,17 @@ function questFlashRow(el, qid){
   st.hold = false;
   st.until = Date.now() + QUEST_FLASH_HOLD;
 }
+
+/* เลื่อนกล่องภารกิจไปโชว์แถว qid + แฟลชเขียว */
+function questFlashRow(el, qid){
+  sideFlashRows(el, `.q-row[data-qid="${qid}"]`, 'q-flash');
+}
+
+/* รอบ 152: ตรวจเพื่อนใหม่เพิ่งออนไลน์ (เฉพาะโหมดออนไลน์จริง — เพื่อนจำลองไม่นับ) */
+const FRIEND_FLASH_GRACE = 8000;      // ms หลังต่อออนไลน์สำเร็จ ค่อยเริ่มนับเพื่อนใหม่ (กัน sync ชุดแรกสแปม)
+let __onSeen = null;                  // friend ids ที่เห็นรอบก่อน (null = ยังไม่เคยเรนเดอร์โหมดออนไลน์)
+let __onFirstTs = 0;                  // เวลาเรนเดอร์โหมดออนไลน์ครั้งแรก
+let __onFlashPend = null;             // เพื่อนรอแฟลช (โผล่ตอนกล่องถูกซ่อน เช่น อยู่หน้าเกม)
 
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
@@ -465,7 +477,7 @@ function renderOnlineCard(){
 
   /* ---- โหมดออนไลน์จริง ---- */
   if(typeof Online !== 'undefined' && Online.ready){
-    const rows = Online.friends.map(f=>`<div class="online-row">
+    const rows = Online.friends.map(f=>`<div class="online-row" data-fid="${escapeHTML(String(f.id||''))}">
       <span class="online-dot"></span>
       <span class="online-name pl-click" data-uid="${escapeHTML(f.id||'')}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">${escapeHTML(f.n)}</span>
       <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
@@ -475,9 +487,31 @@ function renderOnlineCard(){
       <div class="online-count">ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚</div>
       ${meRow}${rows}
       ${Online.friends.length ? '' : '<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>'}`;
+    /* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → toast + แถวแฟลชฟ้า + กล่องเด้งไปโชว์
+       ชุดแรกตอนต่อสำเร็จ (presence sync ทยอยเข้า) ไม่นับ — กันสแปมตอน login */
+    const ids = Online.friends.map(f=>String(f.id||'')).filter(Boolean);
+    if(__onSeen === null){
+      __onSeen = ids; __onFirstTs = Date.now();
+    }else{
+      const fresh = ids.filter(id=>!__onSeen.includes(id));
+      __onSeen = ids;
+      if(fresh.length && Date.now() - __onFirstTs > FRIEND_FLASH_GRACE){
+        __onFlashPend = fresh[0];
+        const f = Online.friends.find(x=>String(x.id) === __onFlashPend);
+        if(typeof toast === 'function')
+          toast(fresh.length > 1 ? `🎉 เพื่อน ${fresh.length} คนมาออนไลน์แล้ว!`
+                                 : `🎉 ${f ? f.n : 'เพื่อน'} มาออนไลน์แล้ว!`);
+        if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+      }
+    }
     initSideScroll(el);
+    if(__onFlashPend && el.clientHeight){    // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอตอนกลับ lobby)
+      sideFlashRows(el, `.online-row[data-fid="${CSS.escape(__onFlashPend)}"]`, 'on-flash');
+      __onFlashPend = null;
+    }
     return;
   }
+  __onSeen = null;                           // หลุดออนไลน์ → เริ่มนับใหม่ตอนต่อกลับ (กันเน็ตกระพริบสแปม toast)
 
   /* ---- โหมดออฟไลน์: เพื่อนจำลองเดิม ---- */
   const seed = Math.floor(Date.now()/(5*60*1000));      // ชุดรายชื่อเปลี่ยนทุก 5 นาที
