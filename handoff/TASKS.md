@@ -10,6 +10,13 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
+### ✅ รอบ 148 (12 ก.ค.) — ภาพตัวละครนั่งรถในแผงเตรียมออกรถ 🧱🚗 (version .139)
+- **สเปกผู้ใช้ (ต่อยอดจากรอบ 147):** ภาพตัวละครนั่งในรถ ต้องแมทกับตัวที่ผู้เล่นเลือก · ภาพผู้ใช้จะเจนมาวางทีหลัง
+- **ทำ:** `#adv-carstart` เพิ่ม `<img id=cs-avatar>` ใต้ h3 · `carStartShow()` ตั้ง `src=img/blocks/car_${state.blockAv}.png` ทุกครั้งที่แผงเด้ง (fallback blk1 ถ้า key เพี้ยน) · listener load→โชว์ / error→ซ่อน (ผูกครั้งเดียวใน buildDom) · **กับดัก cache: src เดิมเคยโหลดแล้ว event load ไม่ยิงซ้ำ → เช็ค `complete&&naturalWidth>0` หลังตั้ง src** · CSS `max-height:min(100px,18vh)` แผงไม่ล้นจอเตี้ย
+- **ชื่อไฟล์รอผู้ใช้ (โฟลเดอร์ `img/blocks/` เดียวกับภาพยืน):** `car_blk1.png`…`car_blk8.png` — ลำดับเดียวกับ blk1 เรซเซอร์แดง…blk8 มิ้นตี้ · PNG โปร่งใส สัดส่วนอิสระ
+- ✅ **ยืนยัน preview 812×375:** เลือก blk4 → src `car_blk4.png` + ซ่อน (ไฟล์ยังไม่มี) · จำลองไฟล์จริง (car_01.png) → โชว์สูง 68px แผง fits จอ · exit→เข้าใหม่ blk7 → src `car_blk7.png` เปลี่ยนตาม+ซ่อนกลับ · ไม่มี console error · deploy live .139
+- **⚠️ ค้างผู้ใช้:** เจนภาพ 2 ชุดวาง `img/blocks/` แล้วบอก Claude commit: (1) ภาพยืน `blk1..8.png` (picker รอบ 147) (2) ภาพนั่งรถ `car_blk1..8.png` (แผงออกรถรอบนี้) + ลองจริงมือถือ
+
 ### ✅ รอบ 147 (12 ก.ค.) — ปุ่มขวาบนแถวเดียว + picker รับภาพตัวละครจริง 🧱🖼️ (version .138)
 - **สเปกผู้ใช้ 1 (screenshot):** ปิด×2+ทุกคน ขึ้นแถวเดียวกับแชท · ออกไปริมขวาสุด · ? ก่อนปุ่มแดง · ไม่พอที่ให้ย่อ → แถวเดียว: vmode(276)·spk(224)·mic(172)·chat(108)·help(74)·exit(8) font 11-12.5 · **กับดัก: `.adv-vbtn` base มี `min-width:86px` ต้อง override เป็น 0** · HP ย่อ 96→80 (topbar จบ 464 vs แถวเริ่ม 473) · `#adv-inst` (pill ความเร็ว) ลง top:52 หลบแถว · tmute/podbtn (ครู) แถวสอง top:52 right:108/200 · ตรวจชนทุกคู่=0
 - **สเปกผู้ใช้ 2: ภาพตัวละคร 8 ตัวเจนเอง (สไตล์ Lego toy) แทนภาพเรนเดอร์ picker** — pickBlockAvatar ชี้ `img/blocks/blk<n>.png` ก่อน + listener error → fallback `_blkThumbs` (เรนเดอร์จากโมเดล) · **ชื่อไฟล์ตามลำดับ BLOCK_AVATARS: blk1 เรซเซอร์แดง · blk2 กัปตันฟ้า · blk3 ชาเขียว · blk4 ซันนี่ส้ม · blk5 วิซาร์ดม่วง · blk6 พิ้งกี้ · blk7 เลม่อน · blk8 มิ้นตี้** · โฟลเดอร์ img/blocks/ ยังไม่มี — ผู้ใช้สร้างตอนวางไฟล์ · ภาพสัดส่วนไหนก็ได้ (object-fit:contain รอบ 145)
