@@ -1009,8 +1009,10 @@ function buildDriveCity(sc){
       if(w>=5) for(let t=0;t<L;t+=15) roadPts.push(x1+ux*t,z1+uz*t);  // จุด spawn ตัวอักษรบนถนน
     }
   });
-  sc.add(new THREE.Mesh(flatGeom(roadTris,.02),new THREE.MeshLambertMaterial({color:0x41454c})));
-  sc.add(new THREE.Mesh(flatGeom(dashTris,.05),new THREE.MeshBasicMaterial({color:0xd8d8d2})));
+  /* 🛣️ รอบ 202: ผิวถนนวางสูงกว่าเลนจักรยาน/ทางเท้า (y มากกว่า = depth ชนะตอนซ้อน) →
+     ตรงทางแยกที่ถนนตัดกัน ผิวถนนทับเลนฟ้า/ทางเท้าของถนนที่ตัดผ่าน (เดิมเลนฟ้าลอยทับถนนดูรก) */
+  sc.add(new THREE.Mesh(flatGeom(roadTris,.06),new THREE.MeshLambertMaterial({color:0x41454c})));   // ผิวถนน (บนสุดของกลุ่ม decal)
+  sc.add(new THREE.Mesh(flatGeom(dashTris,.075),new THREE.MeshBasicMaterial({color:0xd8d8d2})));     // เส้นประกลางถนน (เหนือผิวถนน)
 
   /* ---------- 🚲 รอบ 182: เลนจักรยาน (ฟ้าขอบขาว) + ทางเท้า ขนาบถนนทุกเส้นที่ขับได้ ----------
      ถัดจากขอบถนน: เลนจักรยานฟ้า (เส้นขาว 2 ขอบ) → ทางเท้าปูลาย (img/city/sidewalk.png ถ้ามี)
@@ -6462,6 +6464,7 @@ window.Adventure3D={
       }
       tickPeers(dt,now); drawMinimap(); renderer.render(scene,camera);
     },
+    renderNow(){ camera.updateMatrixWorld(); renderer.render(scene,camera); },   // เทสต์: เรนเดอร์เฟรมเดียวโดยไม่ขยับกล้อง
   },
 };
 })();
