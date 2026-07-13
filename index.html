@@ -380,6 +380,70 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   window.addEventListener('online', check);            // กลับมาออนไลน์ → เช็กทันที
 })();
 </script>
+<!-- 📜 รอบ 209: หน้ายอมรับข้อตกลง/กฎหมาย ก่อนเริ่มเล่น (EN + ไทย · ต้องกด "ยอมรับ") -->
+<script>
+(function(){
+  var KEY='pvad_terms_v1';
+  try{ if(localStorage.getItem(KEY)) return; }catch(e){}
+  var css=''
+   +'#consent-gate{position:fixed;inset:0;z-index:100000;background:rgba(6,12,24,.92);backdrop-filter:blur(4px);'
+   +'display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui,"Segoe UI",Roboto,sans-serif}'
+   +'#consent-gate .cg-box{width:min(560px,96vw);max-height:92vh;display:flex;flex-direction:column;'
+   +'background:linear-gradient(180deg,#122036,#0c1626);border:2px solid #3a5b86;border-radius:20px;'
+   +'box-shadow:0 24px 60px rgba(0,0,0,.6);color:#e6eefb;overflow:hidden}'
+   +'#consent-gate .cg-head{padding:16px 20px 10px;flex:0 0 auto}'
+   +'#consent-gate .cg-head h2{margin:0;font-size:20px;color:#8fd6ff}'
+   +'#consent-gate .cg-head p{margin:4px 0 0;font-size:12.5px;color:#9ec2e8}'
+   +'#consent-gate .cg-body{flex:1 1 auto;overflow-y:auto;padding:6px 20px 8px;font-size:13.5px;line-height:1.55}'
+   +'#consent-gate .cg-body h3{font-size:13px;color:#ffd76a;margin:14px 0 4px;letter-spacing:.02em}'
+   +'#consent-gate .cg-body ol{margin:4px 0 0;padding-left:20px}'
+   +'#consent-gate .cg-body li{margin:5px 0;color:#d6e4f6}'
+   +'#consent-gate .cg-body .cg-en li{color:#b9cbe2}'
+   +'#consent-gate .cg-foot{flex:0 0 auto;padding:12px 20px 16px;border-top:1px solid #23374f;background:rgba(8,16,30,.6)}'
+   +'#consent-gate .cg-accept{display:block;width:100%;background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;'
+   +'border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:17px;padding:13px;cursor:pointer}'
+   +'#consent-gate .cg-accept:active{transform:scale(.98)}'
+   +'#consent-gate .cg-note{margin:8px 0 0;text-align:center;font-size:11.5px;color:#8ea6c4}';
+  var s=document.createElement('style'); s.textContent=css; document.head.appendChild(s);
+
+  var o=document.createElement('div'); o.id='consent-gate';
+  o.innerHTML=''
+   +'<div class="cg-box">'
+   +'<div class="cg-head"><h2>📜 ข้อตกลงการใช้งาน · Terms of Use</h2>'
+   +'<p>Vocab World — เกมเรียนคำศัพท์สำหรับเด็ก · โปรดอ่านและยอมรับก่อนเริ่มเล่น</p></div>'
+   +'<div class="cg-body">'
+   +'<h3>🇹🇭 ภาษาไทย</h3>'
+   +'<ol>'
+   +'<li>🎓 <b>เกมเพื่อการศึกษา:</b> ช่วยเด็กเรียนคำศัพท์ผ่านการเล่น · แนะนำให้ผู้ปกครองดูแลการเล่นของเด็ก</li>'
+   +'<li>🔐 <b>ข้อมูลส่วนตัว:</b> เกมเก็บความคืบหน้าไว้ในเครื่องและบัญชี Google ของคุณ (ผ่าน Firebase) · ใช้อีเมลเพื่อเข้าสู่ระบบและบันทึกข้อมูลเท่านั้น · เราไม่ขายข้อมูล · ไม่เก็บชื่อจริงของเด็ก (ใช้ชื่อเล่น)</li>'
+   +'<li>💬 <b>ฟีเจอร์ออนไลน์:</b> พบเพื่อนผู้เล่นและแชทได้ (มีตัวกรองคำหยาบ) · โปรดใช้ถ้อยคำสุภาพ และไม่เปิดเผยข้อมูลส่วนตัว</li>'
+   +'<li>🪙 <b>เหรียญในเกม:</b> เหรียญและสินค้าทั้งหมดเป็นของในเกม ไม่มีมูลค่าเป็นเงินจริง · ไม่มีการซื้อขายด้วยเงินจริง</li>'
+   +'<li>⚠️ <b>ให้บริการ "ตามสภาพ":</b> พัฒนาอย่างตั้งใจแต่ไม่รับประกันว่าไร้ข้อผิดพลาด · ข้อมูลอาจสูญหายได้ แนะนำให้สำรองข้อมูลเป็นระยะ</li>'
+   +'<li>✅ การกด "ยอมรับ" ถือว่าคุณหรือผู้ปกครองยอมรับเงื่อนไขและนโยบายความเป็นส่วนตัวนี้</li>'
+   +'</ol>'
+   +'<h3>🇬🇧 English</h3>'
+   +'<ol class="cg-en">'
+   +'<li>🎓 <b>Educational game:</b> helps children learn vocabulary through play. Parental guidance is recommended.</li>'
+   +'<li>🔐 <b>Privacy:</b> progress is stored on this device and in your Google account (via Firebase). Your email is used only for sign-in and saving data. We do not sell your data, and we do not collect children’s real names (nicknames only).</li>'
+   +'<li>💬 <b>Online features:</b> you may meet other players and chat (with a profanity filter). Please be polite and never share personal information.</li>'
+   +'<li>🪙 <b>In-game coins:</b> all coins and items are virtual, with no real-world monetary value. No real-money purchases.</li>'
+   +'<li>⚠️ <b>Provided “as is”:</b> built with care but not guaranteed error-free. Data may be lost — please back up periodically.</li>'
+   +'<li>✅ By tapping “Accept”, you (or a parent/guardian) agree to these Terms and this Privacy notice.</li>'
+   +'</ol>'
+   +'</div>'
+   +'<div class="cg-foot">'
+   +'<button class="cg-accept" type="button">✅ ยอมรับและเริ่มเล่น · Accept &amp; Play</button>'
+   +'<p class="cg-note">ต้องยอมรับก่อนจึงจะเริ่มเล่นได้ · You must accept to continue</p>'
+   +'</div></div>';
+  function put(){ (document.body||document.documentElement).appendChild(o); }
+  if(document.body) put(); else document.addEventListener('DOMContentLoaded', put);
+  o.querySelector('.cg-accept').addEventListener('click', function(){
+    try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){}
+    o.remove();
+  });
+})();
+</script>
+
 <!-- ปุ่มติดตั้งเป็นแอพ (PWA install) — Android ใช้ beforeinstallprompt · iOS โชว์วิธี manual -->
 <script>
 (function(){
