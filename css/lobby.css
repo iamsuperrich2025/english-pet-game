@@ -1034,6 +1034,57 @@ html.no-anim .q-bigcard{animation:none;}
   background:rgba(120,200,255,.09);border-radius:8px;padding:3px 8px;letter-spacing:.02em}
 .sold-badge.has{color:#ffd76a;background:rgba(255,205,80,.13)}
 .sold-badge b{color:inherit;font-weight:900}
+/* 🤖 รอบ 210: โชว์รูมหุ่นยนต์ — thumb ซ้าย (ราคา+ยอดขาย) · จอใหญ่ขวา (ไฟฟ้าไล่ตัว + แสงตามซอก premium) */
+.rs-showroom{display:flex;gap:14px;margin-top:8px}
+.rs-list{flex:0 0 38%;max-width:38%;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+  align-content:start;max-height:66vh;overflow-y:auto;scrollbar-width:none;padding-right:2px}
+.rs-list::-webkit-scrollbar{display:none}
+.rs-thumb{background:rgba(14,30,54,.6);border:2px solid rgba(95,200,255,.22);border-radius:14px;
+  padding:8px 8px 9px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.15s}
+.rs-thumb:hover{border-color:rgba(120,220,255,.6)}
+.rs-thumb.active{border-color:#7fe0ff;box-shadow:0 0 14px rgba(80,200,255,.55)}
+.rs-thumb.owned-r{opacity:.72}
+.rs-thumb-pic{width:100%;height:74px;display:flex;align-items:center;justify-content:center}
+.rs-thumb-pic img{max-height:74px;max-width:96%;object-fit:contain}
+.rs-thumb-price{font-size:13px;font-weight:900;color:#ffd76a}
+.rs-thumb .sold-badge{margin-top:2px;width:100%;padding:2px 4px;font-size:10px}
+.rs-stage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+  background:radial-gradient(120% 90% at 50% 28%,rgba(40,90,150,.30),rgba(6,14,28,.62) 72%);
+  border:2px solid rgba(95,200,255,.25);border-radius:16px;overflow:hidden}
+.rs-big{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:250px;padding:12px}
+.rs-big-img{max-height:46vh;max-width:92%;object-fit:contain;position:relative;z-index:1;
+  animation:rsBreath 3.4s ease-in-out infinite;filter:drop-shadow(0 0 22px rgba(80,180,255,.55))}
+@keyframes rsBreath{0%,100%{filter:drop-shadow(0 0 18px rgba(70,160,255,.45)) brightness(1)}
+  50%{filter:drop-shadow(0 0 42px rgba(90,200,255,.9)) drop-shadow(0 0 90px rgba(70,160,255,.4)) brightness(1.1)}}
+.rs-elec,.rs-edge{position:absolute;inset:12px;z-index:2;pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+  -webkit-mask-image:var(--rs-img);mask-image:var(--rs-img);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain}
+.rs-elec i,.rs-edge i{content:'';position:absolute;inset:-55%;display:block;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 10deg,#39e6ff 18deg,#eafcff 24deg,#39e6ff 30deg,
+    transparent 40deg 168deg,rgba(180,240,255,.5) 182deg,transparent 196deg 360deg);
+  animation:rsBeamSpin 4.5s linear infinite}
+@keyframes rsBeamSpin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.rs-elec{opacity:.5}
+.rs-edge{opacity:.95;
+  -webkit-mask-image:var(--rs-img),var(--rs-img);mask-image:var(--rs-img),var(--rs-img);
+  -webkit-mask-size:contain,86%;mask-size:contain,86%;
+  -webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;
+  -webkit-mask-position:center,center;mask-position:center,center;
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.rs-edge i{animation-duration:3s;filter:blur(.6px)}
+html.no-anim .rs-elec,html.no-anim .rs-edge{display:none}
+html.no-anim .rs-big-img{animation:none}
+.rs-info{flex:0 0 auto;padding:11px 14px 13px;border-top:1px solid rgba(95,200,255,.2);background:rgba(8,18,34,.55);text-align:center}
+.rs-info .rs-name{font-size:17px;font-weight:900;color:#fff}
+.rs-info .rs-weap{font-size:12.5px;font-weight:700;margin:2px 0 5px}
+.rs-info .rs-meta{display:flex;gap:12px;justify-content:center;align-items:center;font-size:13px;margin-bottom:9px;flex-wrap:wrap}
+.rs-info .rs-price{color:#ffd76a;font-weight:900;font-size:15px}
+.rs-buy{background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;border:0;border-radius:12px;
+  font-family:inherit;font-weight:800;font-size:15px;padding:9px 26px;cursor:pointer}
+.rs-buy:active{transform:scale(.96)}
+.rs-buy.own{background:#4a5a6a;cursor:default}
+@media(max-width:640px){.rs-showroom{flex-direction:column}.rs-list{flex-basis:auto;max-width:100%;max-height:none;grid-template-columns:repeat(3,1fr)}.rs-big-img{max-height:34vh}}
 .car-emoji{
   font-size:34px;line-height:1;width:62px;height:54px;display:flex;align-items:center;justify-content:center;
   border-radius:12px;border:2px dashed transparent;

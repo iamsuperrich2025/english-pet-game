@@ -4453,7 +4453,7 @@ function renderMarketCard(){
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
   el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
-  el.querySelectorAll('.robot-buy').forEach(b=>b.addEventListener('click', ()=>buyRobot(b.dataset.id)));   // 🤖 หุ่นยนต์
+  if(typeof rsInit==='function') rsInit();   // 🤖 โชว์รูมหุ่นยนต์ (thumb+จอใหญ่วนโชว์)
   const insBtn = document.getElementById('car-buy-ins');
   if(insBtn) insBtn.addEventListener('click', buyCarInsurance);
   const payBtn = document.getElementById('car-pay-loan');
@@ -4596,8 +4596,10 @@ function renderVehicleShop(){
     ${renderRobotShop()}`;
 }
 
-/* 🤖 หุ่นยนต์นักรบ (หมวดยานพาหนะ) — ซื้อกี่ตัวก็ได้ · มี ≥1 ตัว = เข้าโลกหุ่นยนต์ได้ */
-let robotsProbed = false;
+/* 🤖 หุ่นยนต์นักรบ (หมวดยานพาหนะ) — โชว์รูม: thumb ซ้าย (ราคา+ยอดขาย) · จอใหญ่ขวา (ไฟฟ้าไล่ตัว premium)
+   ไม่แตะ = วนโชว์ทีละตัวทุก 3.5 วิ · แตะ = ค้างดูตัวนั้น + หยุดวน 2 นาที (บางคนหยุดดูจริง) แล้ววนต่อ */
+let robotsProbed = false, rsIdx = 0, rsPausedUntil = 0, rsTimer = null;
+const RS_CYCLE_MS = 3500, RS_PAUSE_MS = 120000;   // วนทุก 3.5 วิ · หยุดวน 2 นาทีหลังแตะ
 function robotImg(id){ return IMG_FILES[id] || null; }
 function renderRobotShop(){
   if(!robotsProbed){
@@ -4605,23 +4607,61 @@ function renderRobotShop(){
     probeImages(ROBOTS.map(r=>r.id), 'img/robots').then(()=>{ if(document.getElementById('mkt-robots')) renderMarketCard(); });
   }
   const owned = state.robots || [];
-  const grid = ROBOTS.map(r=>{
+  const thumbs = ROBOTS.map((r,i)=>{
     const img = robotImg(r.id);
-    const have = owned.includes(r.id);
-    const btn = have ? `<button class="hq-price car-cur">🤖 มีแล้ว</button>`
-      : `<button class="hq-price robot-buy ${state.coins>=r.price?'':'cant-afford'}" data-id="${r.id}">🪙${fmtNum(r.price)} · ซื้อ</button>`;
-    return `<div class="hq-card ${have?'hq-cur':''}" style="border-color:${r.c}">
-      <div class="hq-head">${r.name}</div>
-      <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
-      <div class="robot-weap" style="color:${r.c}">🔫 ${r.weapon}</div>
-      ${btn}
+    return `<button class="rs-thumb${owned.includes(r.id)?' owned-r':''}" data-i="${i}" data-id="${r.id}" style="--rc:${r.c}">
+      <div class="rs-thumb-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
+      <div class="rs-thumb-price">🪙${fmtNum(r.price)}</div>
       ${soldBadge(r.id)}
-    </div>`;
+    </button>`;
   }).join('');
   return `<div class="mkt-listhead" id="mkt-robots">🤖 หุ่นยนต์นักรบ — โชว์รูมหุ่นรบ</div>
-    <div class="gp-note">หุ่นยนต์ยักษ์บังคับเดินหน้า-ถอยเหมือนกันทุกตัว · ต่างกันที่ <b>อาวุธ</b> · <b>ซื้อกี่ตัวก็ได้</b>
-    · มีหุ่นอย่างน้อย 1 ตัว = เข้า<b>โลกหุ่นยนต์นักรบ</b> ยิงเอเลี่ยนตัวอักษรได้ (พิชิตคำ 🪙35/คำ)</div>
-    <div class="hq-grid car-grid">${grid}</div>`;
+    <div class="gp-note">แตะหุ่นเพื่อดูตัวใหญ่ · ไม่แตะ = โชว์วนทีละตัว · <b>ซื้อกี่ตัวก็ได้</b> สะสมเป็นทรัพย์สินในแรงค์ · มี ≥1 ตัว = เข้า<b>โลกหุ่นยนต์นักรบ</b> ยิงเอเลี่ยน คำละ 🪙35</div>
+    <div class="rs-showroom">
+      <div class="rs-list">${thumbs}</div>
+      <div class="rs-stage"><div class="rs-big" id="rs-big"></div><div class="rs-info" id="rs-info"></div></div>
+    </div>`;
+}
+/* แสดงหุ่นตัวที่ i บนจอใหญ่ + ไฟฟ้าไล่ตัว (mask ตามรูปหุ่น) + ป้ายข้อมูล/ปุ่มซื้อ */
+function rsShowBig(i){
+  const r = ROBOTS[i]; if(!r) return;
+  const big = document.getElementById('rs-big'), info = document.getElementById('rs-info');
+  if(!big || !info) return;
+  const img = robotImg(r.id), have = (state.robots||[]).includes(r.id);
+  if(img){
+    big.style.setProperty('--rs-img', `url("${img}")`);
+    big.innerHTML = `<img class="rs-big-img" src="${img}" alt="${escapeHTML(r.name)}"><div class="rs-elec"><i></i></div><div class="rs-edge"><i></i></div>`;
+  }else{
+    big.style.removeProperty('--rs-img');
+    big.innerHTML = `<div style="font-size:120px;filter:drop-shadow(0 0 30px ${r.c})">🤖</div>`;
+  }
+  info.innerHTML = `<div class="rs-name">${escapeHTML(r.name)}</div>
+    <div class="rs-weap" style="color:${r.c}">🔫 ${escapeHTML(r.weapon)}</div>
+    <div class="rs-meta"><span class="rs-price">🪙${fmtNum(r.price)}</span>${soldBadge(r.id)}</div>
+    ${have?`<button class="rs-buy own" disabled>🤖 มีหุ่นนี้แล้ว</button>`:`<button class="rs-buy" data-id="${r.id}">🛒 ซื้อหุ่นนี้</button>`}`;
+  const buy = info.querySelector('.rs-buy:not(.own)');
+  if(buy) buy.addEventListener('click', ()=>buyRobot(buy.dataset.id));
+  document.querySelectorAll('.rs-thumb').forEach(t=>t.classList.toggle('active', +t.dataset.i===i));
+}
+/* เรียกหลัง render market — ผูกคลิก thumb + เริ่มวนโชว์ */
+function rsInit(){
+  const room = document.querySelector('.rs-showroom'); if(!room) return;
+  if(rsIdx >= ROBOTS.length) rsIdx = 0;
+  rsShowBig(rsIdx);
+  room.querySelectorAll('.rs-thumb').forEach(b=>b.addEventListener('click', ()=>{
+    rsIdx = +b.dataset.i; rsPausedUntil = Date.now() + RS_PAUSE_MS;
+    if(typeof sfx!=='undefined' && sfx.select) sfx.select();
+    rsShowBig(rsIdx);
+  }));
+  clearInterval(rsTimer);
+  rsTimer = setInterval(()=>{
+    const big = document.getElementById('rs-big');
+    if(!big){ clearInterval(rsTimer); rsTimer = null; return; }   // ตลาด re-render/ปิด → หยุด
+    if(!big.offsetParent) return;                                  // จอซ่อนอยู่ = ไม่วน
+    if(Date.now() < rsPausedUntil) return;                         // เพิ่งแตะดู (ภายใน 2 นาที)
+    rsIdx = (rsIdx + 1) % ROBOTS.length;
+    rsShowBig(rsIdx);
+  }, RS_CYCLE_MS);
 }
 function buyRobot(id){
   const r = ROBOTS.find(x=>x.id===id);
