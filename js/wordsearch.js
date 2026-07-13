@@ -109,7 +109,7 @@
     if(!wsGame) return;
     gridEl.style.setProperty('--ws-n', wsGame.size);
     gridEl.innerHTML=wsGame.grid.map((row,r)=>row.map((cell,c)=>
-      `<div class="ws-cell${cell.found?' found':''}" data-r="${r}" data-c="${c}">${cell.ch}</div>`).join('')).join('');
+      `<div class="ws-cell${cell.found?' found':''}" data-r="${r}" data-c="${c}"${cell.found?` style="--zi:${cell.zi||0}"`:''}>${cell.ch}</div>`).join('')).join('');
     wordsEl.innerHTML=wsGame.words.map((w,i)=>
       `<span class="ws-word${w.found?' got':''}" data-i="${i}">${w.w}<small>${(typeof escapeHTML==='function')?escapeHTML(w.th):w.th}</small></span>`).join('');
     updateProg();
@@ -153,11 +153,33 @@
     const hit=wsGame.words.find(w=>!w.found && (w.w===str || w.w===rev));
     if(!hit){ if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong(); flashWrong(cells); return; }
     hit.found=true;
-    hit.cells.forEach(([r,c])=>{ wsGame.grid[r][c].found=true; });
-    if(typeof sfx!=='undefined'&&sfx.coin)sfx.coin();
+    hit.cells.forEach(([r,c],i)=>{ wsGame.grid[r][c].found=true; wsGame.grid[r][c].zi=i; });   // zi = ลำดับตัวอักษร (คลื่นไฟฟ้าไล่)
+    const reward=hit.w.length*2;                                    // 🪙 รางวัลตามความยาวคำ (3 ตัว=6 … 10 ตัว=20)
+    if(typeof addCoins==='function') addCoins(reward);
+    if(typeof sfx!=='undefined'){ if(sfx.spark)sfx.spark(); else if(sfx.coin)sfx.coin(); }   // ⚡ ฟ้าร้อง+ไฟช็อต
     if(typeof speakWord==='function') speakWord(hit.w.toLowerCase());
     render(); saveTemp();
+    wsFlash();                                                      // ⚡ แฟลชฟ้าผ่าบนกระดาน
+    wsCoinPop(reward, hit.cells);                                   // 🪙 ป๊อปเหรียญตื่นเต้น
     if(wsGame.words.every(w=>w.found)) win();
+  }
+  /* ⚡ แฟลชฟ้าผ่า + 🪙 ป๊อปเหรียญ (สไตล์เกมจับคู่คำศัพท์) */
+  function wsFlash(){
+    if(!boardEl || document.documentElement.classList.contains('no-anim')) return;
+    let f=boardEl.querySelector('.ws-flash');
+    if(!f){ f=document.createElement('div'); f.className='ws-flash'; boardEl.appendChild(f); }
+    f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+  }
+  function wsCoinPop(reward, cells){
+    if(!gridEl || document.documentElement.classList.contains('no-anim')) return;
+    const mid=cells[Math.floor(cells.length/2)];
+    const el=gridEl.querySelector(`.ws-cell[data-r="${mid[0]}"][data-c="${mid[1]}"]`);
+    const pop=document.createElement('div'); pop.className='ws-coinpop'; pop.textContent=`+${reward} 🪙`;
+    if(el){ const br=boardEl.getBoundingClientRect(), cr=el.getBoundingClientRect();
+      pop.style.left=(cr.left-br.left+cr.width/2)+'px'; pop.style.top=(cr.top-br.top+cr.height/2)+'px'; }
+    else { pop.style.left='40%'; pop.style.top='40%'; }
+    boardEl.appendChild(pop);
+    setTimeout(()=>pop.remove(), 1550);
   }
   function flashWrong(cells){
     cells.forEach(([r,c])=>{ const el=gridEl.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`);
@@ -186,7 +208,8 @@
   }
   function slideAway(after){
     boardEl.classList.remove('open');
-    setTimeout(()=>{ overlay.style.display='none'; if(after)after(); }, 520);
+    setTimeout(()=>{ overlay.style.display='none'; if(after)after();
+      if(typeof renderDashboard==='function') renderDashboard(); }, 520);   // รีเฟรชเหรียญบนหน้า Lobby
   }
   function stash(){ if(typeof sfx!=='undefined'&&sfx.select)sfx.select(); saveTemp(); slideAway(); }   // เลื่อนซ้าย เก็บข้อมูลไว้
   function clearExit(){
