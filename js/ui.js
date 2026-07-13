@@ -146,23 +146,48 @@ const GIANT_OWNER_X  = ['-56px','-54px','-42px','-27px','-14px']; // เยื�
 const GIANT_NAMES    = ['ปกติ','ตัวโต','ยักษ์เล็ก','ยักษ์ใหญ่','ยักษ์อลังการ'];
 function giantLevel(p){ return Math.max(0, Math.min(GIANT_MAX, (p && p.giant) || 0)); }
 
+/* รอบ 189: ระดับร่างยักษ์สูงสุดที่ "เคยจ่ายปลดล็อกแล้ว" — ขยายถึงระดับนี้ซ้ำได้ฟรี
+   (รวม migration: ระดับปัจจุบันถือว่าจ่ายมาแล้วแน่นอน) */
+function giantUnlocked(p){ return Math.max((p && p.giantMax) || 0, (p && p.giant) || 0); }
+
 function upgradeGiant(p){
   p = p || activePet();
   if(!p) return;
   const g = giantLevel(p);
   if(g >= GIANT_MAX){ toast('น้องตัวใหญ่สุดแล้ว 🎉'); return; }
-  const cost = GIANT_COST[g+1];
-  if(state.coins < cost){
+  p.giantMax = giantUnlocked(p);                 // จำระดับที่ปลดล็อกแล้ว (รวมระดับปัจจุบัน)
+  const paid = p.giantMax >= g + 1;              // เคยจ่ายขึ้นระดับนี้แล้ว → ขยายฟรี
+  const cost = paid ? 0 : GIANT_COST[g+1];
+  if(cost > 0 && state.coins < cost){
     toast(`🪙 เหรียญไม่พอ — ขยายร่างระดับถัดไปต้องใช้ ${fmtNum(cost)} (ขาดอีก ${fmtNum(cost - state.coins)})`);
     return;
   }
-  state.coins -= cost;              // จ่ายเหรียญ (แนวเดียวกับซื้อของอื่นในเกม)
+  if(cost > 0) state.coins -= cost;              // จ่ายเฉพาะครั้งแรกของแต่ละระดับ
   p.giant = g + 1;
+  if(p.giantMax < p.giant) p.giantMax = p.giant;
   saveState();
   sfx.select();
-  floatFx(`🦣 ตัวใหญ่ขึ้น! -🪙${fmtNum(cost)}`);
+  floatFx(cost > 0 ? `🦣 ตัวใหญ่ขึ้น! -🪙${fmtNum(cost)}` : `🦣 ตัวใหญ่ขึ้น! ฟรี 🆓`);
   toast(`🦣 ${escapeHTML(p.name)} ร่าง${GIANT_NAMES[p.giant]}แล้ว!`);
   renderDashboard();
+}
+
+/* เปลี่ยนชื่อน้อง (ใช้ทั้งปุ่ม ✏️ และคลิกซ้ำแท็บน้องที่กำลังแสดงอยู่ — รอบ 189) */
+function renamePet(p){
+  p = p || activePet();
+  if(!p) return;
+  const conf = PETS[p.type];
+  askNameDialog({
+    emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
+    desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
+    placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
+    okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
+    onOk:(name)=>{
+      p.name = name; saveState(); sfx.select();
+      toast(`🏷️ เปลี่ยนชื่อน้องเป็น "${name}" แล้ว!`);
+      renderDashboard();
+    },
+  });
 }
 function resetGiant(p){
   p = p || activePet();
@@ -1816,21 +1841,7 @@ function bindPetPlateButtons(root){
   on('btn-sleep', sleepAllPets);
   on('btn-wake', wakeAllPets);
   on('btn-detox', ()=>detoxPet(p));
-  on('btn-pet-rename', ()=>{
-    askNameDialog({
-      emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
-      desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
-      placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
-      okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
-      onOk:(name)=>{
-        p.name = name;
-        saveState();
-        sfx.select();
-        toast(`🏷️ เปลี่ยนชื่อน้องเป็น "${name}" แล้ว!`);
-        renderDashboard();
-      },
-    });
-  });
+  on('btn-pet-rename', ()=>renamePet(p));
 }
 
 /* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว) ไม่มี scrollbar
@@ -2003,7 +2014,10 @@ function renderDashboard(){
       + (state.pets.length ? `<button class="pet-tab add" id="tab-addpet">➕</button>` : '')
       + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`;
     tabs.querySelectorAll('.pet-tab[data-i]').forEach(b=>b.addEventListener('click', ()=>{
-      state.active = +b.dataset.i; saveState(); sfx.select(); renderDashboard();
+      const i = +b.dataset.i;
+      // รอบ 189: คลิกแท็บน้องที่กำลังแสดงอยู่แล้ว = เปิดกล่องเปลี่ยนชื่อ · คลิกตัวอื่น = สลับไปแสดงตัวนั้น
+      if(i === state.active){ sfx.select(); renamePet(state.pets[i]); return; }
+      state.active = i; saveState(); sfx.select(); renderDashboard();
     }));
     const addBtn = document.getElementById('tab-addpet');
     if(addBtn) addBtn.addEventListener('click', ()=>{ renderPetShop(); showScreen('screen-select'); });
@@ -2203,7 +2217,9 @@ function renderDashboard(){
         <div class="giant-dots">${[1,2,3,4].map(i=>`<span class="${i<=g?'on':''}"></span>`).join('')}</div>
         <div class="giant-btns">
           ${g < GIANT_MAX
-            ? `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>🪙${fmtNum(GIANT_COST[g+1])}</b></button>`
+            ? (giantUnlocked(p) >= g+1
+                ? `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>ฟรี 🆓</b></button>`
+                : `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>🪙${fmtNum(GIANT_COST[g+1])}</b></button>`)
             : `<div class="giant-max">🎉 ยักษ์เต็มขั้นแล้ว!</div>`}
           ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
         </div>
