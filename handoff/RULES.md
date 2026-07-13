@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 208 (โซนใหม่ `sales` = ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์) — รอ publish:** `/sales/$id` = number · `.read:true` (ทุกคนเห็นยอดขาย) · `.write` เฉพาะ auth + **เพิ่มได้ทีละ 1 เท่านั้น** (`newData === data+1` หรือสร้างใหม่ = 1) กันปั่นยอด · client `sellInc(id)` = transaction +1 ตอนซื้อ (robots/cars/tickets/pets/home/phone/computer/ac/items) · **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่าน /sales โดน deny เงียบ → `Online.salesOk=false` · ป้ายโชว์ "ขายไปแล้ว 0 ชิ้น" (+นับ local ของตัวเองในเซสชัน) จนกว่าจะ publish · Artifact ปุ่มคัดลอกก้อนเต็ม (ก้อนเต็มด้านล่างอัปเดตแล้ว)
 - ⏳ **รอบ 187 (โซนใหม่ `typing` = "กำลังพิมพ์…") — รวมมาในก้อน/Artifact เดียวกับรอบ 186 · รอ publish 13 ก.ค. 2026:** `/typing/$pairId/$uid` = timestamp (number) · read/write เฉพาะคู่สนทนา (`$pairId.contains(auth.uid)` + เขียนได้เฉพาะ node ตัวเอง) · **ยังไม่ publish = แชทปกติไม่กระทบ แค่ไม่เห็นสถานะพิมพ์** (client เขียนโดน deny เงียบๆ) · Artifact เดียวกับรอบ 186 (อัปเดตแล้ว): https://claude.ai/code/artifact/fdfc973b-559a-4a05-b181-f21416cd8cd6
 - ⏳ **รอบ 186 (แก้บั๊ก "รับเพื่อนไม่ได้") — รอผู้ใช้ publish 13 ก.ค. 2026:** ต้นตอ = ทุกโซนที่มี field `g` (ชั้นเรียน) validate ไว้ `length <= 8` แต่ตัวเลือกชั้นเรียนมี "ปริญญาตรี" (9) · "สูงกว่าปริญญาตรี" (15) · "ต่ำกว่าประถมศึกษา" (17) → บัญชีที่เลือกชั้นยาว เขียน `friends`/`presence`/`leaderboard`/`friendReq` **ไม่ผ่าน validate** = รับเพื่อน/ขึ้นออนไลน์/กระดานไม่ได้เงียบๆ · **แก้: `g` ทั้ง 4 โซน (presence/leaderboard/friendReq/friends) `<= 8` → `<= 20`** (av คงเดิม ≤8) · **ยังไม่ publish = บัญชีชั้นยาวยังรับเพื่อนไม่ได้** · Artifact ปุ่มคัดลอกก้อนเต็ม: https://claude.ai/code/artifact/fdfc973b-559a-4a05-b181-f21416cd8cd6
 - ✅ **รอบ 155 (Follow + Feed กิจกรรม) — ผู้ใช้ publish แล้ว 12 ก.ค. 2026:** โซนใหม่ `/feed` (โพสต์กิจกรรมที่เจ้าของเปิดเผย + คลังทรัพย์สิน) + `/follow` (ใคร follow ใคร แบบ TikTok) เข้าแล้ว · **ตรวจ REST จากภายนอกแล้ว:** /presence อ่านได้ 200 (ก้อนรวมไม่พัง) · /feed + /follow อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้องครบ 4 เคส · เหลือทดสอบจริง 2 เครื่อง (เปิดเผยกิจกรรม → เพื่อนเห็น + follow + ฟีดขึ้น)
@@ -249,6 +250,13 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "ts": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }
+      }
+    },
+    "sales": {
+      ".read": true,
+      "$id": {
+        ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
+        ".validate": "newData.isNumber() && newData.val() >= 0"
       }
     },
     "class": {

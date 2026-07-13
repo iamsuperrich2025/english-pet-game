@@ -44,6 +44,9 @@ const Online = {
   feedRefs:{},      // uid → query ที่ .on ค้างอยู่ (ไว้ .off ตอนเลิก follow)
   lastAssetsSig:null, // JSON ทรัพย์สินล่าสุดที่ส่งขึ้น /feed/<me>/a (กันเขียนซ้ำ)
   lastPetsSig:null,   // JSON สัตว์เลี้ยง (สูงสุด 3 ตัว) ล่าสุดที่ส่งขึ้น /feed/<me>/pt (รอบ 195)
+  /* ---- ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น" ทุกสินค้า ---- */
+  sales:{},           // productId → จำนวนที่ขายไปแล้วทั้งเซิร์ฟเวอร์ (จาก /sales)
+  salesOk:false,      // true = อ่าน/เขียน /sales ได้ (rules publish แล้ว)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -596,6 +599,28 @@ function giftOutRebuild(){
    ============================================================ */
 let marketPrimed = false;                 // snapshot แรก = ของเก่าที่ค้างอยู่ (badge เงียบๆ ไม่เด้ง toast)
 const marketSeen = {};                    // key ประกาศที่เคยเห็นแล้วในเซสชันนี้
+/* 🛒 รอบ 208: ยอดขายรวมทั้งเซิร์ฟเวอร์ — ฟัง /sales (id→จำนวน) แล้วรีเฟรชการ์ดสินค้า
+   sellInc(id): ตอนซื้อ → transaction +1 (rules ยอมให้เพิ่มทีละ 1) · เพิ่ม local ทันทีให้เห็นเลย */
+function salesWatch(){
+  if(!Online.db) return;
+  Online.db.ref('sales').on('value', (snap)=>{
+    Online.sales = snap.val() || {};
+    Online.salesOk = true;
+    salesRerender();
+  }, ()=>{ Online.salesOk = false; });   // permission denied = โซน sales ยังไม่ publish
+}
+function salesRerender(){
+  if(document.querySelector('.levelup-overlay')) return;      // มี dialog เปิดอยู่ อย่าเพิ่งรีเฟรช
+  if(typeof renderDashboard === 'function') renderDashboard();
+}
+function sellInc(id){
+  if(!id) return;
+  Online.sales[id] = (Online.sales[id] || 0) + 1;            // เพิ่ม local ทันที (โชว์แม้ rules ยังไม่ publish)
+  if(!Online.ready || !Online.db) return;
+  Online.db.ref('sales/' + id)
+    .transaction(cur => (typeof cur === 'number' ? cur : 0) + 1)
+    .catch(()=>{});
+}
 function marketWatch(){
   if(!Online.db) return;
   Online.db.ref('market').limitToLast(120).on('value', (snap)=>{
@@ -1007,6 +1032,9 @@ function onlineStart(){
   // 🏪 ตลาดออนไลน์จริง (item 2): ฟังประกาศขายทั้งเซิร์ฟเวอร์ + ใบเสร็จของที่เราขายได้
   marketWatch();
   marketSoldWatch();
+
+  // 🛒 ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น"
+  salesWatch();
 
   // ส่งสถานะ + คะแนนเป็นระยะ (เหรียญไม่ขยับจะไม่เขียน leaderboard ซ้ำ)
   setInterval(()=>{ onlinePushPresence(); onlinePushScore(); }, ONLINE_BEAT_MS);

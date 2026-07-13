@@ -2804,6 +2804,7 @@ function renderShop(){
     return `<div class="${cls}" data-item="${item.id}">
       <span class="it-emoji">${item.emoji}</span>
       <span class="it-name">${item.name}</span>${tag}
+      ${soldBadge('item_'+item.id)}
     </div>`;
   }).join('');
 
@@ -2819,6 +2820,7 @@ function renderShop(){
         }
         state.coins -= item.price;
         state.owned.push(item.id);
+        if(typeof sellInc==='function') sellInc('item_'+item.id);   // 🛒 นับยอดขายเครื่องแต่งตัว
         p.equipped = {head:null, face:null, neck:null};   // ใส่ได้ทีละ 1 ชิ้น
         p.equipped[item.slot] = item.id;                  // ซื้อแล้วใส่ให้ทันที
         sfx.buy();
@@ -2957,7 +2959,7 @@ function renderHomeCard(){
           ${billUI}
           ${utilUI}
           ${trashUI}
-          ${h.canAC && !state.ac ? `<button class="big-btn blue home-btn" id="btn-buy-ac">❄️ ซื้อ+ติดตั้งแอร์ (🪙${fmtNum(AC_PRICE)} + ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)})</button>` : ''}
+          ${h.canAC && !state.ac ? `<button class="big-btn blue home-btn" id="btn-buy-ac">❄️ ซื้อ+ติดตั้งแอร์ (🪙${fmtNum(AC_PRICE)} + ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)})</button>${soldBadge('ac')}` : ''}
           ${state.home !== 'castle' ? `<button class="big-btn purple home-btn" id="btn-home-shop">🏠 อัปเกรดที่พัก</button>` : ''}
         </div>
       </div>`;
@@ -3159,7 +3161,7 @@ function renderPhoneCard(){
           ค่าเน็ต 🪙${fmtNum(NET_FEE)}/เดือน (จ่ายทุกวันที่ 1 · เดือนแรกฟรี) · ขายคืนได้ 🪙${fmtNum(PHONE_SELL)}</small>
         </div>
       </div>
-      <button class="big-btn blue home-btn" id="btn-buy-phone">📱 ซื้อมือถือ 🪙${fmtNum(PHONE_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-phone">📱 ซื้อมือถือ 🪙${fmtNum(PHONE_PRICE)}</button>${soldBadge('phone')}`;
   }else{
     const nowD = new Date(Date.now());
     const lastDay = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
@@ -3197,6 +3199,7 @@ function buyPhone(){
     'ซื้อเลย!', ()=>{
       state.coins -= PHONE_PRICE;
       state.phone = true;
+      if(typeof sellInc==='function') sellInc('phone');
       state.netCut = false;
       state.bills.net = {month: ymStr(Date.now()), due: 0, paid: 0};   // เดือนแรกฟรี
       sfx.buy();
@@ -3320,7 +3323,7 @@ function renderComputerCard(){
           📡 ค่าบริการข้อมูล 🪙${fmtNum(DATA_FEE)}/เดือน (จ่ายทุกวันที่ 1 · เดือนแรกฟรี) · ขายคืนได้ 🪙${fmtNum(COMP_SELL)}</small>
         </div>
       </div>
-      <button class="big-btn blue home-btn" id="btn-buy-comp">💻 ซื้อคอมพิวเตอร์ 🪙${fmtNum(COMP_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-comp">💻 ซื้อคอมพิวเตอร์ 🪙${fmtNum(COMP_PRICE)}</button>${soldBadge('computer')}`;
   }else{
     const nowD = new Date(Date.now());
     const lastDay = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
@@ -3353,6 +3356,7 @@ function buyComputer(){
     'ซื้อเลย!', ()=>{
       state.coins -= COMP_PRICE;
       state.computer = true;
+      if(typeof sellInc==='function') sellInc('computer');
       state.compSince = Date.now();
       state.dataCut = false;
       state.bills.data = {month: ymStr(Date.now()), due: 0, paid: 0};   // เดือนแรกฟรี
@@ -3387,6 +3391,14 @@ function sellComputer(){
    ซื้อได้เมื่อมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัว — ยังไม่โต = ล็อก
    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · โลกผจญภัย 3D (ข้อ 8) กำลังก่อสร้าง
    ============================================================ */
+/* 🛒 รอบ 208: ป้าย "ขายไปแล้ว N ชิ้น" — โชว์ยอดขายจริงทั้งเซิร์ฟเวอร์ (จาก Online.sales) ใต้สินค้าทุกชิ้น
+   ให้เห็นว่ามีคนซื้อจริง + ดูความนิยมได้ · ไม่ต่อเน็ต/ยังไม่มียอด = "ขายแล้ว 0 ชิ้น" */
+function soldCount(id){ return (typeof Online !== 'undefined' && Online.sales && Online.sales[id]) ? Online.sales[id] : 0; }
+function soldBadge(id){
+  const n = soldCount(id);
+  return `<div class="sold-badge${n>0?' has':''}">🛒 ขายไปแล้ว <b>${fmtNum(n)}</b> ชิ้น</div>`;
+}
+
 function renderTicketCard(){
   const el = document.getElementById('ticket-card');
   if(!el) return;
@@ -3429,7 +3441,7 @@ function renderTicketCard(){
         ✅ ประตูเปิดแล้ว ซื้อตั๋วเข้าไปเล่นได้เลย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้</small></div>
       </div>
       ${tinvNoticeHTML('adv')}
-      <button class="big-btn blue home-btn" id="btn-buy-ticket">🎫 ซื้อตั๋ว 🪙${fmtNum(TICKET_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-ticket">🎫 ซื้อตั๋ว 🪙${fmtNum(TICKET_PRICE)}</button>${soldBadge('tk_adv')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-ticket');
@@ -3536,6 +3548,7 @@ function buyTicket(){
     'ซื้อเลย!', ()=>{
       state.coins -= TICKET_PRICE;
       state.advTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_adv');
       sfx.buy();
       toast('🎫 ได้ตั๋วโลกผจญภัยแล้ว! กดปุ่มเขียวเข้าโลก 3D ได้เลย 🌍✨');
       saveState();
@@ -3590,7 +3603,7 @@ function renderHauntCard(){
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
       </div>
       ${tinvNoticeHTML('haunt')}
-      <button class="big-btn blue home-btn" id="btn-buy-haunt">🎃 ซื้อตั๋ว 🪙${fmtNum(HAUNT_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-haunt">🎃 ซื้อตั๋ว 🪙${fmtNum(HAUNT_PRICE)}</button>${soldBadge('tk_haunt')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-haunt');
@@ -3617,6 +3630,7 @@ function buyHauntTicket(){
     'กล้าซื้อ! 👻', ()=>{
       state.coins -= HAUNT_PRICE;
       state.hauntTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_haunt');
       sfx.buy();
       toast('🎃 ได้ตั๋วโลกผีสิงแล้ว! กดปุ่มม่วงเข้าโลกกลางคืน... ถ้ากล้า 👻');
       saveState();
@@ -3674,7 +3688,7 @@ function renderHeliCard(){
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
       </div>
       ${tinvNoticeHTML('heli')}
-      <button class="big-btn blue home-btn" id="btn-buy-heli">🚁 ซื้อตั๋ว 🪙${fmtNum(HELI_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-heli">🚁 ซื้อตั๋ว 🪙${fmtNum(HELI_PRICE)}</button>${soldBadge('tk_heli')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-heli');
@@ -3701,6 +3715,7 @@ function buyHeliTicket(){
     'ซื้อเลย กัปตัน! 🚁', ()=>{
       state.coins -= HELI_PRICE;
       state.heliTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_heli');
       sfx.buy();
       toast('🚁 ได้ตั๋วโลกเฮลิคอปเตอร์แล้ว! กดปุ่มเขียว "ขึ้นบิน" ได้เลย กัปตัน ✈️');
       saveState();
@@ -3773,7 +3788,7 @@ function renderDroneCard(){
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
       </div>
       ${tinvNoticeHTML('drone')}
-      <button class="big-btn blue home-btn" id="btn-buy-drone">🛸 ซื้อตั๋ว 🪙${fmtNum(DRONE_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-drone">🛸 ซื้อตั๋ว 🪙${fmtNum(DRONE_PRICE)}</button>${soldBadge('tk_drone')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-drone');
@@ -3800,6 +3815,7 @@ function buyDroneTicket(){
     'ซื้อเลย! 🛸', ()=>{
       state.coins -= DRONE_PRICE;
       state.droneTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_drone');
       sfx.buy();
       toast('🛸 ได้ตั๋วโลกโดรน FPV แล้ว! กดปุ่มเขียว "บินโดรน" ได้เลย 🏙️');
       saveState();
@@ -3889,7 +3905,7 @@ function renderDriveCard(){
         ชนตึกแรงๆ รถพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
       ${tinvNoticeHTML('drive')}
-      <button class="big-btn blue home-btn" id="btn-buy-drive">🚗 ซื้อตั๋ว 🪙${fmtNum(DRIVE_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-drive">🚗 ซื้อตั๋ว 🪙${fmtNum(DRIVE_PRICE)}</button>${soldBadge('tk_drive')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-drive');
@@ -3918,6 +3934,7 @@ function buyDriveTicket(){
     'ซื้อเลย! 🚗', ()=>{
       state.coins -= DRIVE_PRICE;
       state.driveTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_drive');
       sfx.buy();
       toast('🚗 ได้ตั๋วโลกขับรถกำแพงเพชรแล้ว! กดปุ่มเขียว "ออกรถ" ได้เลย 🕰️');
       saveState();
@@ -3991,7 +4008,7 @@ function renderSoccerCard(){
         <small>เล็งแล้วเตะบอลใส่ป้ายตัวอักษรที่ลอยนิ่งหน้าประตู ให้ครบเป็นคำ — คำละ 🪙20<br>
         กดปุ่มเตะค้างเพื่อเพิ่มพลัง · เลือกสีเสื้อ + เบอร์หลังเสื้อ · มุมมองบุคคลที่ 1/3<br>
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      <button class="big-btn blue home-btn" id="btn-buy-soccer">⚽ ซื้อตั๋ว 🪙${fmtNum(SOCCER_PRICE)}</button>`;
+      <button class="big-btn blue home-btn" id="btn-buy-soccer">⚽ ซื้อตั๋ว 🪙${fmtNum(SOCCER_PRICE)}</button>${soldBadge('tk_soccer')}`;
   }
   el.innerHTML = body;
   const buy = document.getElementById('btn-buy-soccer');
@@ -4016,6 +4033,7 @@ function buySoccerTicket(){
     'ซื้อเลย! ⚽', ()=>{
       state.coins -= SOCCER_PRICE;
       state.soccerTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_soccer');
       sfx.buy();
       toast('⚽ ได้ตั๋วโลกสนามฟุตบอลแล้ว! กดปุ่มเขียว "ลงสนาม" ได้เลย 🥅');
       saveState();
@@ -4566,6 +4584,7 @@ function renderVehicleShop(){
       <div class="hq-head">${c.name}</div>
       <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
       ${btn}
+      ${soldBadge(c.id)}
     </div>`;
   }).join('');
   return `<div class="mkt-listhead" id="mkt-vehicles">🚗 ยานพาหนะ — โชว์รูมรถ</div>
@@ -4596,6 +4615,7 @@ function renderRobotShop(){
       <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
       <div class="robot-weap" style="color:${r.c}">🔫 ${r.weapon}</div>
       ${btn}
+      ${soldBadge(r.id)}
     </div>`;
   }).join('');
   return `<div class="mkt-listhead" id="mkt-robots">🤖 หุ่นยนต์นักรบ — โชว์รูมหุ่นรบ</div>
@@ -4616,6 +4636,7 @@ function buyRobot(id){
       state.robots = state.robots || [];
       state.robots.push(id);
       if(!state.mechaRobot) state.mechaRobot = id;
+      if(typeof sellInc==='function') sellInc(r.id);      // 🛒 นับยอดขาย
       sfx.buy();
       toast(`🤖 ได้หุ่น ${r.name} แล้ว! เข้าโลกหุ่นยนต์นักรบได้เลย 💥`);
       saveState();
@@ -4720,6 +4741,7 @@ function openCarBuyDialog(id){
     state.coins -= t;
     state.car = {id, insured:ins,
       loan: plan==='cash' ? null : {remain:c.price-down, perMonth, month:ymStr(Date.now()), paid:0, carry:0}};
+    if(typeof sellInc==='function') sellInc(id);          // 🛒 นับยอดขายรถ
     sfx.buy();
     toast(plan==='cash'
       ? `🚗 ได้รถ ${c.name} แล้ว! กดปุ่มขับรถออกเมืองได้เลย 🕰️`
@@ -5124,6 +5146,7 @@ function buyAC(){
     'ติดเลย!', ()=>{
       state.coins -= total;
       state.ac = true;
+      if(typeof sellInc==='function') sellInc('ac');
       for(const p of state.pets) if(p.type !== 'dragon') p.heatFrom = null;
       sfx.buy();
       toast('❄️ ติดแอร์เรียบร้อย! บ้านเย็นฉ่ำ น้องสบายตัวสุดๆ 🎉');
@@ -5148,6 +5171,7 @@ function openHomeShop(){
             <b>${h.emoji} ${h.name}</b>
             <small>${h.desc}<br>${h.acNote}<br>🧾 ค่าบำรุง 🪙${fmtNum(maintCost(h.id))} + ⚡ ค่าไฟ 🪙${fmtNum(elecCost(h.id))} + 🚰 ค่าน้ำ 🪙${fmtNum(waterCost(h.id))} + 🗑️ ค่าขยะ 🪙${fmtNum(trashCost(h.id))}/เดือน (จ่ายทุกวันที่ 1)${h.quizBonus > 0 ? `<br>🎁 ทำแบบทดสอบครบ 10 ข้อ รับโบนัส +${h.quizBonus} 🪙 ทุกครั้ง` : ''}</small>
             ${current ? '<span class="it-tag tag-on">อยู่ปัจจุบัน</span>' : `<span class="home-price">🪙${fmtNum(h.price)}</span>`}
+            ${soldBadge('home_'+h.id)}
           </div>
         </div>`;}).join('')}
     </div>
@@ -5168,6 +5192,7 @@ function openHomeShop(){
         'ซื้อเลย!', ()=>{
           state.coins -= h.price;
           state.home = h.id;
+          if(typeof sellInc==='function') sellInc('home_'+h.id);   // 🛒 นับยอดขายที่พัก
           state.ac = false;                       // แอร์ติดกับบ้านหลังเดิม ย้ายบ้านต้องซื้อใหม่
           state.bills.maint = {month: ymStr(Date.now()), due: 0, paid: 0};   // เดือนแรกฟรี บิลจริงออกวันที่ 1
           state.bills.elec  = {month: ymStr(Date.now()), due: 0, paid: 0};   // ค่าไฟ/ค่าน้ำบ้านใหม่ก็ฟรีเดือนแรก
@@ -5203,6 +5228,7 @@ function renderPetShop(){
       <div class="egg-desc">${p.eggDesc}</div>
       ${owned ? '<div class="pet-price owned">✅ เลี้ยงอยู่แล้ว</div>' : `<div class="pet-price">🪙${fmtNum(p.price)}</div>`}
       ${!owned && !afford ? `<div class="egg-need">ขาดอีก 🪙${fmtNum(p.price - state.coins)} ≈ เล่นอีก ${fmtNum(Math.ceil((p.price - state.coins)/10))} คำ</div>` : ''}
+      ${soldBadge('pet_'+key)}
     </div>`;
   }).join('');
   grid.querySelectorAll('.egg-card').forEach(card=>{
@@ -5228,6 +5254,7 @@ function renderPetShop(){
               state.coins -= conf.price;
               state.pets.push(newPet(key, name));
               state.active = state.pets.length - 1;
+              if(typeof sellInc==='function') sellInc('pet_'+key);   // 🛒 นับยอดขายสัตว์เลี้ยง
               saveState();
               if(typeof feedEvent === 'function') feedEvent('other', `รับน้องใหม่ ${conf.emoji||'🐾'} "${name}" มาเลี้ยงแล้ว 🥰`);
               if(typeof testerBoost === 'function') testerBoost();  // 🧪 ผู้ทดสอบ: น้องโตเต็มวัยทันที ไม่ต้อง login ใหม่
