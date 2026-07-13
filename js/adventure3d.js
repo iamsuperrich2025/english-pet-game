@@ -77,6 +77,10 @@ MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
 const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อยิง monster แตก (โหมด adv)
 const AD_COUNT = 10;            // ป้ายโฆษณาบนยอดตึกในเมืองเฮลิฯ (เลขป้ายคงที่ — เมือง seed แล้ว)
+/* 📢 รอบ 183: ชื่อร้านบนตึกในโลกขับรถ — เอาชื่อจริงจาก OSM ออก (กันปัญหาลิขสิทธิ์)
+   โชว์เฉพาะ "ผู้ลงโฆษณากับเรา" เท่านั้น → เพิ่มชื่อที่นี่ (เรียงขึ้นตึกอัตโนมัติ) · ว่าง = ตึกไม่มีชื่อ
+   ตึกที่ไม่มีผู้ลงโฆษณา จะขึ้นป้ายเชิญ "ลงโฆษณาที่นี่" ห่างๆ (ทุก ~16 หลัง) */
+const SHOP_ADS = [];           // เช่น ['ร้านก๋วยเตี๋ยวเรือป้านิด','คลินิกทันตกรรมยิ้มสวย'] — ผู้ใช้เติมเมื่อมีลูกค้า
 /* 🎖️ ใบอนุญาตนักบิน (รอบ 62): สตรีคประกอบคำโดยไม่ชนเลย → เข็มติดท้ายชื่อ (ได้แล้วไม่หาย) */
 const PILOT_TIERS=[[5,1,'🥉','ทองแดง'],[15,2,'🥈','เงิน'],[30,3,'🥇','ทอง']];
 function pilotEmoji(b){ return ['','🥉','🥈','🥇'][b||0]||''; }
@@ -983,7 +987,7 @@ function buildDriveCity(sc){
   /* ---------- ตึกจริง 79 หลัง (ผัง footprint ตรงพิกัดจริง) + ป้ายชื่อสถานที่ ---------- */
   const tints=[0xcfc7b8,0xd8cfc0,0xbfc4cc,0xd9d2c2,0xc4cdc0,0xd6c9c9];
   C.b.forEach((b,bi)=>{
-    const h=b[0], name=b[1], p=b[2];
+    const h=b[0], p=b[2];   // รอบ 183: เลิกใช้ชื่อ OSM (b[1]) — โชว์เฉพาะผู้ลงโฆษณา (SHOP_ADS)
     const shape=new THREE.Shape();
     shape.moveTo(p[0],-p[1]);
     for(let i=2;i<p.length;i+=2) shape.lineTo(p[i],-p[i+1]);
@@ -996,9 +1000,11 @@ function buildDriveCity(sc){
       const x1=p[i],z1=p[i+1],x2=p[(i+2)%p.length],z2=p[(i+3)%p.length];
       sAdd((x1+x2)/2,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)/2+3,{t:1,x1,z1,x2,z2});
     }
-    if(name && name.length<=42){
-      const spr=makeNameSprite(name); spr.position.set(cx,h+5,cz); sc.add(spr);
-    }
+    // ชื่อบนตึก: ผู้ลงโฆษณาก่อน (เรียงลงตึกเว้นระยะ) · ไม่มี = ป้ายเชิญลงโฆษณาห่างๆ · ไม่โชว์ชื่อจริง OSM
+    let adName=null;
+    if(SHOP_ADS.length && bi%4===0) adName=SHOP_ADS[((bi/4)|0)%SHOP_ADS.length];
+    if(!adName && bi%16===0) adName='📢 ลงโฆษณาที่นี่ ☎ 064-357 6645';
+    if(adName){ const spr=makeNameSprite(adName); spr.position.set(cx,h+5,cz); sc.add(spr); }
   });
 
   /* ---------- ตึกแถวริมถนนจริง (InstancedMesh แยกตามจำนวนชั้น — ผัง bake seed คงที่)
@@ -3848,10 +3854,13 @@ function tlTick(px,pz,now){
    เฟสไฟคำนวณจากนาฬิกาเครื่อง (Date.now) — ทุกเครื่องเห็นสีเดียวกันโดยไม่ต้อง sync ผ่าน DB
    เขียว 10 วิ → เหลือง 3 วิ → แดง 11 วิ (รอบ 24 วิ · seed ต่อแยก ไฟไม่เปลี่ยนพร้อมกันทั้งเมือง)
    ============================================================ */
-const TL_CYCLE=24, TL_GREEN=10, TL_YELLOW=3;
-function tlightPhase(seed,nowMs){
+const TL_GREEN=10, TL_YELLOW=3;
+// รอบ 183 (ผู้ใช้เคาะ): ไฟแดงโชว์ ~10 วิ · ถ้าคนเล่นมาก (peer ในโลกขับรถ >=3) ~15 วิ
+function tlRedDur(){ return (Object.keys(peers).length>=3) ? 15 : 10; }
+function tlightPhase(seed,nowMs,redDur){
   if(rlForce!=null) return rlForce;                        // testkit บังคับเฟส (0=เขียว 1=เหลือง 2=แดง)
-  const t=((nowMs||Date.now())/1000+seed*5.31)%TL_CYCLE;
+  const red=redDur||10, cycle=TL_GREEN+TL_YELLOW+red;
+  const t=((nowMs||Date.now())/1000+seed*5.31)%cycle;
   return t<TL_GREEN?0:(t<TL_GREEN+TL_YELLOW?1:2);
 }
 let tlMats=null;
@@ -3873,15 +3882,18 @@ function buildTrafficLights(){
   }
   if(!tlMats){
     const B=c=>new THREE.MeshBasicMaterial({color:c});
-    tlMats={pole:new THREE.MeshLambertMaterial({color:0x37474f}),
-      head:new THREE.MeshLambertMaterial({color:0x1d262c}),
+    tlMats={pole:new THREE.MeshLambertMaterial({color:0x2b363c}),
+      head:new THREE.MeshLambertMaterial({color:0x11181d}),
       on: [B(0x35d94f),B(0xffc107),B(0xff2f26)],           // ติด: เขียว/เหลือง/แดง (index = เฟส)
-      off:[B(0x0e3a19),B(0x4a3a08),B(0x3a0e0b)]};          // ดับ: สีหม่นของดวงเดียวกัน
+      off:[B(0x0c3016),B(0x40330a),B(0x33100d)],           // ดับ: สีหม่นของดวงเดียวกัน
+      halo:[0x35d94f,0xffc107,0xff2f26]};                  // สี glow รอบดวงที่ติด (รอบ 183)
   }
-  const poleG=new THREE.CylinderGeometry(.09,.13,5.2,6);
-  const headG=new THREE.BoxGeometry(.6,1.75,.45);
-  const lampG=new THREE.SphereGeometry(.22,10,8);
-  const LAMP_Y=[4.95,5.5,6.05];                            // เขียวล่าง-เหลืองกลาง-แดงบน (แบบไฟจริง)
+  // รอบ 183: เสา/หัว/ดวงใหญ่ขึ้นให้เห็นเด่นแต่ไกล + ดวงที่ติดมี glow ล้อมรอบ
+  const poleG=new THREE.CylinderGeometry(.12,.17,6.4,8);
+  const headG=new THREE.BoxGeometry(.92,2.55,.6);
+  const lampG=new THREE.SphereGeometry(.34,12,10);
+  const haloG=new THREE.SphereGeometry(.72,12,10);
+  const LAMP_Y=[5.55,6.35,7.15];                           // เขียวล่าง-เหลืองกลาง-แดงบน (แบบไฟจริง · ยกสูงตามหัวใหญ่)
   D.tlights=spots.map((s,i)=>{
     let px=s.x+8, pz=s.z+8;                                // เสาตั้งริมถนน — หาช่องนอกถนนรอบแยก
     for(let a=0;a<8;a++){
@@ -3889,15 +3901,18 @@ function buildTrafficLights(){
       if(driveCell(qx,qz)===0){ px=qx; pz=qz; break; }
     }
     const g=new THREE.Group();
-    const pole=new THREE.Mesh(poleG,tlMats.pole); pole.position.y=2.6; g.add(pole);
-    const head=new THREE.Mesh(headG,tlMats.head); head.position.y=5.5; g.add(head);
+    const pole=new THREE.Mesh(poleG,tlMats.pole); pole.position.y=3.2; g.add(pole);
+    const head=new THREE.Mesh(headG,tlMats.head); head.position.y=6.35; g.add(head);
     const lamps=[0,1,2].map(k=>{
       const m=new THREE.Mesh(lampG,tlMats.off[k]);
-      m.position.set(0,LAMP_Y[k],0); g.add(m); return m;   // ทรงกลม — เห็นสีได้จากทุกทิศของแยก
+      m.position.set(0,LAMP_Y[k],.28); g.add(m); return m; // ดันดวงพ้นหน้าหัว · ทรงกลมเห็นได้ทุกทิศ
     });
+    const halo=new THREE.Mesh(haloG,new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.32,
+      blending:THREE.AdditiveBlending,depthWrite:false}));
+    halo.position.set(0,LAMP_Y[2],.28); halo.visible=false; g.add(halo);   // glow ย้ายไปดวงที่ติด
     g.position.set(px,0,pz);
     scene.add(g);
-    return {x:s.x, z:s.z, seed:i, lamps, st:-1};
+    return {x:s.x, z:s.z, seed:i, lamps, halo, st:-1};
   });
 }
 /* อัปเดตสีไฟ (ทุก ~250ms สลับ material ที่แชร์กัน) + ตรวจฝ่าไฟแดง: อยู่ในโซนแยกไฟแดง + ยังวิ่ง >10 กม./ชม. */
@@ -3906,10 +3921,13 @@ function rlTick(px,pz,now){
   if(!D.tlights || !D.tlights.length) return;
   if(now-rlChkAt<250) return;
   rlChkAt=now;
-  const nowMs=Date.now();
+  const nowMs=Date.now(), redDur=tlRedDur();
   for(const L of D.tlights){
-    const ph=tlightPhase(L.seed,nowMs);
-    if(L.st!==ph){ L.st=ph; L.lamps.forEach((m,k)=>{ m.material=k===ph?tlMats.on[k]:tlMats.off[k]; }); }
+    const ph=tlightPhase(L.seed,nowMs,redDur);
+    if(L.st!==ph){ L.st=ph;
+      L.lamps.forEach((m,k)=>{ m.material=k===ph?tlMats.on[k]:tlMats.off[k]; });
+      if(L.halo){ L.halo.position.y=[5.55,6.35,7.15][ph]; L.halo.material.color.setHex(tlMats.halo[ph]); L.halo.visible=true; }
+    }
   }
   if(now<rlCoolAt) return;
   if(Math.abs(dSpeed)*3.6<=10) return;                     // ชะลอจนเกือบหยุด = ไม่นับฝ่า (เด็กหยุดรอไฟได้)
@@ -4087,6 +4105,11 @@ function tickDrive(dt,now){
   tlTick(p.x,p.z,now);                                       // 🚦 รอบ 132: ไฟเลี้ยวดับเอง + ตรวจแยก ม.36
   rlTick(p.x,p.z,now);                                       // 🚦 รอบ 133: อัปเดตสีไฟจราจร + ตรวจฝ่าไฟแดง ม.22
   CarSound.update(th,Math.abs(dSpeed),dt);
+  // 🛞 รอบ 183: เสียงยางเสียดสี — วัดความเร็ว "ด้านข้าง" ที่ไถล (velocity ตั้งฉากกับหัวรถ)
+  // sin/cos = ทิศหัวรถ (คำนวณข้างบน) · cross กับ (dVelX,dVelZ) = องค์ประกอบด้านข้าง
+  const _vlen=Math.hypot(dVelX,dVelZ);
+  const slipPerp=(_vlen>0.6 && onRoad===1)?Math.abs(dVelX*(-cos)-dVelZ*(-sin)):0;
+  CarSound.setSkid(Math.max(0,Math.min(1,(slipPerp-1.6)/6)));
   drawCarGauges();
   radioTick();                                              // 🎵 รอบ 181: จอวิทยุ + visualizer
 }
@@ -4329,6 +4352,32 @@ const CarSound={
     this.lp.frequency.value=360+this.rpm*950;
     this.gain.gain.value=.03+this.rpm*.05;
   },
+  /* 🛞 รอบ 183: เสียงยางเสียดสีผิวถนน (เลี้ยวโค้งแรง/เหวี่ยง) — noise วนต่อเนื่อง ผ่าน bandpass
+     ramp ดังตามความแรงการไถล (setSkid ต่อเฟรม · 0=เงียบ 1=เอี๊ยดสุด) */
+  skidStart(){
+    if(this.skidGain||!this.ctx) return;
+    try{
+      const c=this.ctx;
+      const nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+      const src=c.createBufferSource(); src.buffer=nb; src.loop=true;
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1650; bp.Q.value=5.5;
+      const g=c.createGain(); g.gain.value=0;
+      src.connect(bp); bp.connect(g); g.connect(c.destination); src.start();
+      this.skidGain=g; this.skidBp=bp;
+    }catch(e){}
+  },
+  setSkid(amt){
+    if(typeof state!=='undefined' && !state.sound){ if(this.skidGain) this.skidGain.gain.value=0; return; }
+    if(!this.ctx) return;
+    if(!this.skidGain) this.skidStart();
+    if(!this.skidGain) return;
+    const a=Math.max(0,Math.min(1,amt));
+    const tgt=a*a*0.13;                                     // ยกกำลังสอง — เงียบตอนเลี้ยวเบา ดังชัดตอนไถลแรง
+    const g=this.skidGain.gain;
+    g.value += (tgt-g.value)*0.35;                          // ramp นุ่ม (ไม่ป๊อป)
+    if(this.skidBp) this.skidBp.frequency.value=1350+a*900; // ไถลแรง = แหลมขึ้น
+  },
   /* 🚔 รอบ 128: เสียงไดสตาร์ท "วี้ดๆๆ" ~0.7 วิ แล้วเครื่องติด + เร่งรอบวูบ (เรียกตอนเลื่อนสวิตช์สตาร์ท) */
   ignite(){
     try{
@@ -4415,6 +4464,7 @@ const CarSound={
     }catch(e){}
   },
   stop(){
+    if(this.skidGain) this.skidGain.gain.value=0;           // 🛞 รอบ 183: ตัดเสียงยางตอนดับเครื่อง/ออกจากโลก
     if(!this.on) return;
     try{ this.osc.stop(); this.osc2.stop(); }catch(e){}
     this.osc=this.osc2=null; this.on=false;
