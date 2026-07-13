@@ -52,6 +52,21 @@ function equippedItem(p){
   return ITEMS.find(i=>i.id === id) || null;
 }
 
+/* รอบ 186: ภาพสถานะที่ควร "แทนโมเดล 3D" บนเวที Lobby — ป่วย / หิว / ใส่เครื่องแต่งตัว
+   คืน URL เฉพาะเมื่อมีภาพตรงสถานะจริงเท่านั้น (ไม่นับภาพ normal) → ผูกความรู้สึกกับสถานะน้อง
+   ไม่มีภาพตรงสถานะ = null → เวทีใช้โมเดล 3D ปกติเหมือนเดิม (ไม่มีทางจอโล่ง) */
+function petStateImg(p){
+  p = p || activePet();
+  if(!p) return null;
+  const pet = p.type, stage = petStage(p);
+  if(stage === 'egg') return null;
+  if(p.sick)       return IMG_FILES[`${pet}_${stage}_sick`]   || null;
+  if(petHungry(p)) return IMG_FILES[`${pet}_${stage}_hungry`] || null;
+  const worn = equippedItem(p);
+  if(worn)         return IMG_FILES[`${pet}_${stage}_${worn.id}`] || null;
+  return null;
+}
+
 /* สถานะดีใจชั่วคราว (ตอนลูบตัว/หลังกินข้าว) */
 let happyUntil = 0;
 function happyNow(){ return Date.now() < happyUntil; }

@@ -83,6 +83,7 @@ function syncMusicBtn(){
   const on = (typeof Music === 'undefined') || Music.isMusicOn();
   b.textContent = on ? '🎵' : '🔇';
   b.classList.toggle('off', !on);
+  b.classList.toggle('playing', on);   // 🎵 รอบ 186: เพลงเปิด = แสงเขียววิ่งวนขอบปุ่ม
   b.title = on ? 'ปิดเพลงพื้นหลัง' : 'เปิดเพลงพื้นหลัง';
 }
 document.getElementById('btn-music').addEventListener('click', ()=>{

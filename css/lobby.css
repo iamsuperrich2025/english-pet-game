@@ -1560,3 +1560,17 @@ html.no-anim .on-page{animation:none !important;}
 
 /* 🎵 รอบ 184: ปุ่มเพลง Lobby ตอนปิด = จางลง (ไอคอน 🔇) */
 #btn-music.off{opacity:.55;}
+/* 🎵 รอบ 186: เพลงเปิดอยู่ = แสงสีเขียววิ่งวนตามขอบปุ่ม (บอกว่าเสียงมาจากปุ่มนี้)
+   ::before = วงโคจร conic-gradient มีลิ่มแสงเขียวสว่างจุดเดียว หมุนรอบ · ปุ่มพื้นขาวทับกลาง เหลือแค่ขอบ */
+#btn-music{overflow:visible;}
+#btn-music.playing::before{
+  content:"";position:absolute;inset:-4px;border-radius:999px;z-index:-1;
+  background:conic-gradient(from 0deg,
+    rgba(45,230,140,0) 0deg, rgba(45,230,140,0) 205deg,
+    #39e58c 285deg, #d6ffe9 330deg, #39e58c 350deg, rgba(45,230,140,0) 360deg);
+  animation:musicRing 1.35s linear infinite;
+  filter:drop-shadow(0 0 5px rgba(57,229,140,.9)) drop-shadow(0 0 9px rgba(57,229,140,.45));
+}
+@keyframes musicRing{to{transform:rotate(360deg);}}
+html.no-anim #btn-music.playing::before{animation:none;background:none;
+  box-shadow:0 0 0 2px rgba(57,229,140,.85), 0 0 10px rgba(57,229,140,.5);}

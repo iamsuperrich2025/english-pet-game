@@ -2191,9 +2191,12 @@ function renderDashboard(){
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
   // ไม่มี/โหลดพลาด/เปิดแบบ file:// → ใช้ภาพ PNG เดิม (fallback อัตโนมัติใน Lobby3D)
+  // รอบ 186: ป่วย/หิว/ใส่เครื่องแต่งตัว + มีภาพตรงสถานะ → ใช้ภาพ 2D แทนโมเดล (forcePng)
+  //          เพื่อสื่อสถานะน้องชัดเจน · ไม่มีภาพหรือปกติ = โมเดล 3D เหมือนเดิม
   if(typeof Lobby3D !== 'undefined' && stage !== 'egg'){
     const hero = card.querySelector('.stage-hero');
-    if(hero) Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:g});
+    const forcePng = (typeof petStateImg === 'function') && !!petStateImg(p);
+    if(hero) Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:g, forcePng});
   }
   // ปุ่มดูแล (ให้อาหาร/รักษา/นอน/ขับพิษ/ยักษ์/เปลี่ยนชื่อ) ย้ายไปอยู่ใน overlay
   // ข้อมูลน้อง — ผูกใน bindPetPlateButtons ตอน openPetInfoOverlay (รอบ 155)

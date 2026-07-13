@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 186 (แก้บั๊ก "รับเพื่อนไม่ได้") — รอผู้ใช้ publish 13 ก.ค. 2026:** ต้นตอ = ทุกโซนที่มี field `g` (ชั้นเรียน) validate ไว้ `length <= 8` แต่ตัวเลือกชั้นเรียนมี "ปริญญาตรี" (9) · "สูงกว่าปริญญาตรี" (15) · "ต่ำกว่าประถมศึกษา" (17) → บัญชีที่เลือกชั้นยาว เขียน `friends`/`presence`/`leaderboard`/`friendReq` **ไม่ผ่าน validate** = รับเพื่อน/ขึ้นออนไลน์/กระดานไม่ได้เงียบๆ · **แก้: `g` ทั้ง 4 โซน (presence/leaderboard/friendReq/friends) `<= 8` → `<= 20`** (av คงเดิม ≤8) · **ยังไม่ publish = บัญชีชั้นยาวยังรับเพื่อนไม่ได้** · Artifact ปุ่มคัดลอกก้อนเต็ม: https://claude.ai/code/artifact/fdfc973b-559a-4a05-b181-f21416cd8cd6
 - ✅ **รอบ 155 (Follow + Feed กิจกรรม) — ผู้ใช้ publish แล้ว 12 ก.ค. 2026:** โซนใหม่ `/feed` (โพสต์กิจกรรมที่เจ้าของเปิดเผย + คลังทรัพย์สิน) + `/follow` (ใคร follow ใคร แบบ TikTok) เข้าแล้ว · **ตรวจ REST จากภายนอกแล้ว:** /presence อ่านได้ 200 (ก้อนรวมไม่พัง) · /feed + /follow อ่าน/เขียนโดยไม่ login โดน 401 Permission denied ถูกต้องครบ 4 เคส · เหลือทดสอบจริง 2 เครื่อง (เปิดเผยกิจกรรม → เพื่อนเห็น + follow + ฟีดขึ้น)
 - ✅ **รอบ 132 (ไฟเลี้ยวโลกขับรถ) — publish รวมมากับก้อนรอบ 155 แล้ว 12 ก.ค. 2026** (field `tl` อยู่ในก้อนเดียวกัน) · เดิม: เพิ่ม field `tl` (ไฟเลี้ยว 0=ปิด 1=ซ้าย 2=ขวา · number 0-2) ใน `/world/$map/$uid` — ก้อนเต็มด้านล่างอัปเดตแล้ว + Artifact ปุ่มคัดลอก: https://claude.ai/code/artifact/59c3da79-b3cc-4053-b5f3-5283b4729b7a · **ยังไม่ publish = เกมไม่พัง:** client ส่ง tl เฉพาะตอนเปิดไฟ ถ้าเขียนโดน deny จะตัด tl ส่งซ้ำทันที (`netTlOk` ใน sendPos adventure3d.js) — multiplayer เดินต่อปกติ แค่เพื่อนไม่เห็นไฟเลี้ยวจนกว่าจะ publish
 - ✅ **รอบ 124 (ตลาดออนไลน์จริง — item 2) ผู้ใช้ publish แล้ว 11 ก.ค. 2026:** โซนใหม่ `/market` + `/msold` เข้าแล้ว · **ตรวจ REST จากภายนอกแล้ว:** /presence อ่านได้ 200 (rules ทั้งก้อนไม่พัง) · /market อ่านโดยไม่ login โดน 401 Permission denied ถูกต้อง · เหลือทดสอบซื้อ-ขายจริง 2 บัญชี/2 เครื่อง · ความเสี่ยงที่ยอมรับ: ซื้อ=ลบ node ของคนอื่นได้ (จำเป็นต่อกลไกซื้อ) + ใบเสร็จเขียนได้ทุก auth แต่ฝั่งคนขายจ่ายเฉพาะใบเสร็จที่ (1) ตรง netKey ของประกาศตัวเอง (2) ของหลุดจากตลาดแล้วจริง — ระดับเดียวกับ coins ฝั่ง client
@@ -31,7 +32,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['n','g','act','at'])",
         "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
-        "g":   { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "g":   { ".validate": "newData.isString() && newData.val().length <= 20" },
         "act": { ".validate": "newData.isString() && newData.val().length <= 60" },
         "at":  { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
@@ -44,7 +45,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['n','g','coins','at'])",
         "n":     { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
-        "g":     { ".validate": "newData.isString() && newData.val().length <= 8" },
+        "g":     { ".validate": "newData.isString() && newData.val().length <= 20" },
         "coins": { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "av":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "ni":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
@@ -66,7 +67,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
           ".validate": "newData.hasChildren(['n','g','ts'])",
           "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 20" },
           "ts": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }
@@ -79,7 +80,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && (auth.uid === $uid || auth.uid === $friendUid)",
           ".validate": "newData.hasChildren(['n','g','ts'])",
           "n":  { ".validate": "newData.isString() && newData.val().length <= 40" },
-          "g":  { ".validate": "newData.isString() && newData.val().length <= 8" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 20" },
           "ts": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }

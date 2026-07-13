@@ -343,6 +343,8 @@ const Lobby3D = (function(){
     if(disabled || isFileProto()) return;      // file:// โหลด glb ไม่ได้ → PNG
     heroEl = hero;
     if(!heroEl) return;
+    // รอบ 186: ป่วย/หิว/ใส่ชุด + มีภาพตรงสถานะ → โชว์ภาพ 2D แทนโมเดล (ซ่อน canvas ถ้าโหลดค้างอยู่)
+    if(opts.forcePng){ showCanvas(false); return; }
     const key = `${opts.avatar||'male'}|${opts.petType}|${opts.stage}`;
     // ซ่อน PNG ตั้งแต่เฟรมแรกกันภาพวูบก่อนโมเดลโหลด — ถ้าเช็กแล้วไม่มีโมเดล
     // showCanvas(false) คืน PNG ให้ (เคสมี cache คืนใน microtask เดียว ไม่ทันเห็น)
