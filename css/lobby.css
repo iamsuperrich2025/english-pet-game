@@ -1776,13 +1776,18 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
 .ws-cell.bad{background:#ff5d6c;color:#fff;}
 .ws-cell.gone{opacity:0;transform:scale(.15) rotate(35deg);}
 html.no-anim .ws-cell{transition:none;}
-.ws-side{flex:0 0 clamp(120px,26%,220px);display:flex;flex-direction:column;min-height:0;}
+/* รอบ 196: กว้างพอทำ 2 คอลัมน์ — เห็นคำครบทุกคำไม่ต้องเลื่อน */
+.ws-side{flex:0 0 clamp(210px,40%,400px);display:flex;flex-direction:column;min-height:0;}
 .ws-find{font-size:13px;font-weight:800;color:#8fd6ff;margin-bottom:6px;flex-shrink:0;}
-#ws-words{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:5px;scrollbar-width:none;}
+/* 2 คอลัมน์ · align-content:start ให้เรียงจากบน · overflow-y auto เป็น fallback เผื่อคำเยอะจริงๆ */
+#ws-words{flex:1 1 auto;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;align-content:start;scrollbar-width:none;}
 #ws-words::-webkit-scrollbar{display:none;}
 .ws-word{background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:9px;
-  padding:5px 9px;font-size:14px;font-weight:800;letter-spacing:.5px;color:#eaf6ff;line-height:1.15;}
-.ws-word small{display:block;font-size:10.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:1px;}
+  padding:5px 8px;font-size:13.5px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.15;
+  min-width:0;overflow:hidden;}
+.ws-word small{display:block;font-size:10px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
 #ws-prog{flex-shrink:0;margin-top:7px;font-size:12.5px;font-weight:700;color:#ffe08a;text-align:center;}
 .ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;z-index:1;}
