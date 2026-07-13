@@ -76,6 +76,21 @@ document.getElementById('coin-today').closest('.coin-pill').addEventListener('cl
 document.getElementById('net-pill').addEventListener('click', ()=>openPillInfo('net'));
 // รอบ 179: ปุ่มแชท header → หน้ารวมข้อความ (ปุ่มข้าวเย็นย้ายไปแถวแท็บสัตว์ ผูก click ใน renderDashboard)
 document.getElementById('btn-chat').addEventListener('click', openChatInbox);
+// 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง)
+function syncMusicBtn(){
+  const b = document.getElementById('btn-music');
+  if(!b) return;
+  const on = (typeof Music === 'undefined') || Music.isMusicOn();
+  b.textContent = on ? '🎵' : '🔇';
+  b.classList.toggle('off', !on);
+  b.title = on ? 'ปิดเพลงพื้นหลัง' : 'เปิดเพลงพื้นหลัง';
+}
+document.getElementById('btn-music').addEventListener('click', ()=>{
+  if(typeof Music !== 'undefined') Music.toggleMusic();
+  if(typeof sfx !== 'undefined') sfx.select();
+  syncMusicBtn();
+});
+syncMusicBtn();
 // แตะ badge เลขรวมบนปุ่ม ⚙️ → เมนูสรุปสิ่งที่ค้าง (ไม่เปิดหน้าตั้งค่า)
 document.getElementById('settings-badge').addEventListener('click', (e)=>{ e.stopPropagation(); openAttentionSummary(); });
 /* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป

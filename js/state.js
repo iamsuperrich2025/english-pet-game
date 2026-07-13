@@ -115,6 +115,7 @@ const DEFAULT_STATE = {
   spellDay:'',                        // 🌀 รอบ 174: วัน (toDateString) ของตัวนับเกมสะกดคำรายวัน
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
   musicMode:'all',                    // 🎵 รอบ 181: โหมดวิทยุในรถ 'all'|'one'|'shuffle' (music.js)
+  musicOff:false,                     // 🎵 รอบ 184: ปิดเพลงพื้นหลัง (ปุ่ม 🎵 ใน Lobby · แยกจากสวิตช์เสียง)
   playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
   playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
   playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว

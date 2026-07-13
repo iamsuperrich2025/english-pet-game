@@ -206,6 +206,7 @@ function renderClock(){
   renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
   renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา (อยู่แถวแท็บสัตว์ตั้งแต่รอบ 179)
   chatBadgeSync();                                   // รอบ 179: badge เลขข้อความใหม่บนปุ่มแชท header
+  if(typeof syncMusicBtn === 'function') syncMusicBtn();   // 🎵 รอบ 184: ไอคอนปุ่มเพลงตาม state.musicOff
 }
 
 /* ============================================================

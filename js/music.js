@@ -22,6 +22,8 @@ const Music = (function(){
   let audioCtx = null, analyser = null, srcNode = null, freq = null;
 
   function soundOn(){ return typeof state === 'undefined' || state.sound; }
+  function musicOn(){ return !(typeof state !== 'undefined' && state.musicOff); }   // 🎵 รอบ 184: ปุ่มปิดเพลงแยก
+  function bgAllowed(){ return soundOn() && musicOn() && !carOn && !bgSuspended; }
   function mode(){ return (typeof state !== 'undefined' && MODES.includes(state.musicMode)) ? state.musicMode : 'all'; }
   function setMode(m){ if(MODES.includes(m) && typeof state !== 'undefined'){ state.musicMode = m; if(typeof saveState === 'function') saveState(); } }
 
@@ -43,13 +45,20 @@ const Music = (function(){
     bgIdx = (i % bgTracks.length + bgTracks.length) % bgTracks.length;
     if(!bg){ bg = new Audio(); bg.volume = BG_VOL; bg.addEventListener('ended', ()=>bgPlay(bgIdx+1)); }
     bg.src = bgTracks[bgIdx].url;
-    if(soundOn() && !carOn && !bgSuspended) bg.play().catch(()=>{});
+    if(bgAllowed()) bg.play().catch(()=>{});
   }
   function startBg(){
-    if(bgStarted || !bgTracks.length) return;
+    if(bgStarted || !bgTracks.length || !musicOn()) return;   // ปิดเพลงไว้ = ยังไม่เริ่ม
     bgStarted = true;
     bgPlay(Math.floor(Math.random()*bgTracks.length));   // เริ่มสุ่มเพลง ไม่ซ้ำจำเจ
   }
+  // 🎵 รอบ 184: เปิด/ปิดเพลงพื้นหลัง (ปุ่ม 🎵) — เก็บใน state.musicOff · ไม่กระทบเสียงเอฟเฟกต์/วิทยุรถ
+  function setMusic(on){
+    if(typeof state !== 'undefined'){ state.musicOff = !on; if(typeof saveState === 'function') saveState(); }
+    if(!on){ if(bg) bg.pause(); }
+    else if(!carOn && !bgSuspended && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+  }
+  function isMusicOn(){ return musicOn(); }
 
   // ---------- car radio ----------
   function ensureCtx(){
@@ -88,14 +97,14 @@ const Music = (function(){
   function suspendBg(){ bgSuspended = true; if(bg) bg.pause(); }
   function resumeBg(){
     bgSuspended = false; carOn = false; if(car) car.pause();
-    if(soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+    if(soundOn() && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
   }
 
   // ---------- สลับเสียงในตั้งค่า ----------
   function onSound(){
     if(!soundOn()){ if(bg) bg.pause(); if(car) car.pause(); return; }
     if(carOn){ if(car) car.play().catch(()=>{}); }
-    else if(!bgSuspended){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+    else if(!bgSuspended && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
   }
 
   // ---------- visualizer feed ----------
@@ -122,5 +131,6 @@ const Music = (function(){
     carRadio, isCarOn:()=>carOn, toggleCar:()=>carRadio(!carOn),
     carTracks:()=>carTracks, curCar:()=>carIdx, playCar:carPlay,
     mode, setMode, vizData, ready:()=>carTracks.length>0,
+    setMusic, isMusicOn, toggleMusic:()=>setMusic(!musicOn()),   // 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลง Lobby
   };
 })();
