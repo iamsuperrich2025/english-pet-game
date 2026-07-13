@@ -664,6 +664,27 @@ html.no-anim body.quake{animation:none;}
 .home-img{width:64px;height:64px;object-fit:contain;flex-shrink:0;}
 .home-emoji{font-size:44px;flex-shrink:0;}
 .home-btn{font-size:15px!important;padding:10px!important;margin-bottom:8px!important;}
+/* 🏠 รอบ 187: ผังการ์ดบ้านใหม่ — ภาพบ้านใหญ่เต็มฝั่งซ้าย · ข้อมูล+บิลจัดระเบียบฝั่งขวา อ่านง่าย */
+.home-layout{display:flex;gap:14px;align-items:stretch;text-align:left;}
+.home-pic-col{flex:0 0 44%;max-width:330px;min-height:180px;border-radius:18px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;padding:10px;
+  background:linear-gradient(165deg,#eaf5ff 0%,#c7e3fb 58%,#aed4f6 100%);
+  border:2px solid #bcdcf7;box-shadow:inset 0 2px 16px rgba(30,90,160,.12);}
+.home-img-big{width:100%;height:100%;max-height:46vh;object-fit:contain;
+  filter:drop-shadow(0 10px 16px rgba(20,60,110,.32));}
+.home-pic-col .home-emoji{font-size:96px;}
+.home-info-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;
+  max-height:56vh;overflow-y:auto;scrollbar-width:none;}
+.home-info-col::-webkit-scrollbar{display:none;}
+.home-name-row{font-size:16px;font-weight:800;color:#4a3a6a;line-height:1.3;}
+.home-desc-row small,.home-ac-row small{color:#7a6a92;font-size:12.5px;line-height:1.45;}
+.home-info-col .bill-box{margin-top:0;}
+.home-info-col .home-btn{margin-bottom:2px!important;margin-top:2px;}
+@media (max-width:600px){
+  .home-layout{flex-direction:column;}
+  .home-pic-col{flex:none;min-height:120px;max-height:26vh;}
+  .home-info-col{max-height:none;overflow:visible;}
+}
 .home-btn:last-child{margin-bottom:0!important;}
 
 .home-shop-box{border-color:var(--blue-d);max-width:360px;}
@@ -1404,6 +1425,25 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 .craft-text{font-size:12.5px;color:#7a5ca8;margin-top:4px;font-weight:bold;font-variant-numeric:tabular-nums;}
 .craft-btn-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
 .craft-btn-row .big-btn{flex:1;margin-bottom:0!important;}
+/* 🏭 รอบ 187: ปุ่ม "ไปเล่นเกมเก็บแต้มผลิต" — เขียวไล่โทนมีไฟในปุ่ม + เด้งขึ้นลงชวนกด (ปุ่มนำทาง) */
+.craft-go-btn{
+  position:relative;overflow:hidden;border:none!important;color:#053a1c!important;font-weight:900!important;
+  background:linear-gradient(180deg,#6bf294 0%,#28cb62 52%,#12a24a 100%)!important;
+  box-shadow:0 6px 0 #0b7a37, 0 11px 20px rgba(18,162,74,.45), inset 0 2px 9px rgba(255,255,255,.55)!important;
+  animation:craftBob 1.15s ease-in-out infinite;
+}
+.craft-go-btn .cg-ic{display:inline-block;animation:craftIcon 1.15s ease-in-out infinite;}
+.craft-go-btn::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(100deg,transparent 32%,rgba(255,255,255,.6) 50%,transparent 68%);
+  transform:translateX(-130%);animation:craftShine 2.3s ease-in-out infinite;}
+.craft-go-btn:active{transform:translateY(5px);animation:none;
+  box-shadow:0 1px 0 #0b7a37, 0 3px 8px rgba(18,162,74,.4), inset 0 2px 9px rgba(255,255,255,.55)!important;}
+@keyframes craftBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes craftIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.18) rotate(-6deg)}}
+@keyframes craftShine{0%{transform:translateX(-130%)}55%,100%{transform:translateX(130%)}}
+html.no-anim .craft-go-btn{animation:none;}
+html.no-anim .craft-go-btn .cg-ic{animation:none;}
+html.no-anim .craft-go-btn::after{display:none;}
 .craft-cancel{
   background:#b8a8cc;color:#fff;border:none;border-radius:999px;padding:9px 14px;
   font-family:inherit;font-size:13px;cursor:pointer;box-shadow:0 3px 0 #96859f;flex-shrink:0;
@@ -1429,9 +1469,15 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 .pg-dot.on{background:var(--purple-d);}
 .order-head{font-weight:bold;font-size:14px;color:#a8791a;margin:4px 0 8px;}
 .order-row{
-  display:flex;gap:10px;align-items:center;background:#fff9e8;border:2px solid #f0d68a;
-  border-radius:16px;padding:8px 10px;margin-bottom:8px;text-align:left;
+  display:flex;gap:12px;align-items:center;background:#fff9e8;border:2px solid #f0d68a;
+  border-radius:16px;padding:10px 12px;margin-bottom:8px;text-align:left;
 }
+/* 🏪 รอบ 187: ภาพสินค้าในออเดอร์ใหญ่ขึ้น เห็นชัด น่าส่งมอบ */
+.order-row .mkt-emoji{width:78px;height:78px;font-size:52px;border-radius:14px;flex-shrink:0;
+  background:radial-gradient(ellipse 72% 66% at 50% 46%, rgba(255,255,255,.9), rgba(255,255,255,0) 74%);}
+.order-row .mkt-emoji img{width:auto;height:100%;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 5px 8px rgba(120,90,10,.28));}
+.order-row .mkt-info{flex:1;min-width:0;}
 .order-deliver{
   background:linear-gradient(180deg,#7dd87d,#4caf50);color:#fff;border:none;border-radius:14px;
   padding:8px 12px;font-family:inherit;font-size:13.5px;font-weight:bold;cursor:pointer;

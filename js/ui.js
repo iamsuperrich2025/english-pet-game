@@ -1984,7 +1984,7 @@ function renderDashboard(){
     else if(w.id === 'hot' || w.id === 'sunny') wMsg = ' — น้องตากแดดอยู่ หาที่พักให้น้องหน่อยนะ';
   }
   document.getElementById('weather-banner').innerHTML =
-    `${w.emoji} อากาศตอนนี้: <b>${w.name}</b>${wMsg}`;
+    `${w.emoji} อากาศในเกมตอนนี้: <b>${w.name}</b>${wMsg}`;
 
   renderNewWord();   // 🆕 คำศัพท์ใหม่ 1 คำ/การ login (รอบ 116)
 
@@ -2781,20 +2781,23 @@ function renderHomeCard(){
       .map(id=>` <span class="it-tag tag-off">${UTILITY_UI[id].cutName}</span>`).join('')
       + (trashFine > 0 ? ' <span class="it-tag tag-off">ค้างค่าขยะ</span>' : '');
 
+    // รอบ 187: ผังใหม่ — ภาพบ้านใหญ่เต็มฝั่งซ้าย · ข้อมูล+บิลจัดเป็นระเบียบฝั่งขวา
     body = `
-      <div class="home-current">
-        ${homeVisualHTML(h, 'home-img', decayed, state.powerCut, state.waterCut)}
-        <div>
-          <b>${h.emoji} ${h.name}</b>${decayed ? ' <span class="it-tag tag-off">ทรุดโทรม</span>' : ''}${cutTags}<br>
-          <small>${h.desc}</small><br>
-          <small>${acState}</small>
+      <div class="home-layout">
+        <div class="home-pic-col">
+          ${homeVisualHTML(h, 'home-img-big', decayed, state.powerCut, state.waterCut)}
         </div>
-      </div>
-      ${billUI}
-      ${utilUI}
-      ${trashUI}
-      ${h.canAC && !state.ac ? `<button class="big-btn blue home-btn" id="btn-buy-ac">❄️ ซื้อ+ติดตั้งแอร์ (🪙${fmtNum(AC_PRICE)} + ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)})</button>` : ''}
-      ${state.home !== 'castle' ? `<button class="big-btn purple home-btn" id="btn-home-shop">🏠 อัปเกรดที่พัก</button>` : ''}`;
+        <div class="home-info-col">
+          <div class="home-name-row"><b>${h.emoji} ${h.name}</b>${decayed ? ' <span class="it-tag tag-off">ทรุดโทรม</span>' : ''}${cutTags}</div>
+          <div class="home-desc-row"><small>${h.desc}</small></div>
+          <div class="home-ac-row"><small>${acState}</small></div>
+          ${billUI}
+          ${utilUI}
+          ${trashUI}
+          ${h.canAC && !state.ac ? `<button class="big-btn blue home-btn" id="btn-buy-ac">❄️ ซื้อ+ติดตั้งแอร์ (🪙${fmtNum(AC_PRICE)} + ค่าติดตั้ง 🪙${fmtNum(AC_INSTALL)})</button>` : ''}
+          ${state.home !== 'castle' ? `<button class="big-btn purple home-btn" id="btn-home-shop">🏠 อัปเกรดที่พัก</button>` : ''}
+        </div>
+      </div>`;
   }
   el.innerHTML = `<h3 class="shop-title">🏠 ที่พักหลบแดดหลบฝน</h3>${body}`;
   const shopBtn = document.getElementById('btn-home-shop');
@@ -4449,7 +4452,7 @@ function renderFactory(){
       <div class="craft-bar"><div class="craft-fill" style="width:${pct}%;background:${tier.color}"></div></div>
       <div class="craft-text">🔤 แต้มผลิต ${fmtNum(state.producing.progress)}/${fmtNum(c.words)} (${Math.floor(pct)}%)</div>
       <div class="craft-btn-row">
-        <button class="big-btn home-btn" id="craft-go">🎮 ไปเล่นเกมเก็บแต้มผลิต</button>
+        <button class="big-btn craft-go-btn" id="craft-go"><span class="cg-ic">🎮</span> ไปเล่นเกมเก็บแต้มผลิต</button>
         <button class="craft-cancel" id="craft-cancel">ยกเลิก</button>
       </div>
     </div>`;
@@ -4503,7 +4506,7 @@ function renderOrdersUI(){
     return `<div class="order-row">
       <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
       <div class="mkt-info"><b>${c.name}</b> <span class="mkt-price-lo">+${bonus}% 💰</span><br>
-        <small>👤 ${o.buyer} · ชั้น ${o.grade} สั่งผลิต · ⏳ เหลือ <span id="order-left-${i}">${fmtMins(Math.max(0, o.expireAt - now))}</span></small></div>
+        <small>👤 ${o.buyer} สั่งผลิต · ⏳ เหลือ <span id="order-left-${i}">${fmtMins(Math.max(0, o.expireAt - now))}</span></small></div>
       ${have
         ? `<button class="order-deliver" data-i="${i}">📦 ส่งมอบ<br>🪙${fmtNum(o.payout)}</button>`
         : `<span class="order-need">🪙${fmtNum(o.payout)}<br><small>ยังไม่มีของ</small></span>`}

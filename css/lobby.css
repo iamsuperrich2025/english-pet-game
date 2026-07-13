@@ -599,6 +599,11 @@ html.no-anim .nw-tag{animation:none;}
 .stage-hero.hero-side .hero-scene{width:100%;height:100%;justify-content:flex-end;}
 .stage-hero.hero-side .hero-scene .pet-stage{margin-right:7%;}
 .stage-hero.hero-side .caretaker-fig{left:18%;transform:translateX(-50%);}
+/* 🐾 รอบ 187: โหมด "เฉพาะน้องเป็น 2D" (ป่วย/หิว/ใส่ชุด) — คนยังเป็นโมเดล 3D บน canvas โปร่งใส
+   จึงซ่อนรูปคน 2D + ลานเงาในเลเยอร์นี้ · โชว์เฉพาะน้อง 2D ให้ใหญ่ชัด (เห็นอาการ/ชุด) */
+.hero-scene.pet-only .caretaker-fig,
+.hero-scene.pet-only .hero-ground{display:none;}
+.hero-scene.pet-only .pet-stage{height:clamp(150px, 32vh, 400px);}
 @media (min-height:620px){ :root{--pet-zoom:2.5;} }
 
 /* แผงสถานะใส 2 ฝั่งสไตล์ sci-fi HUD ขนาบตัวน้อง (ผู้ใช้สั่ง 8 ก.ค.: ห้ามทับตัวสัตว์ ไม่ต้อง scroll)
@@ -881,7 +886,7 @@ html.no-anim .q-bigcard{animation:none;}
    หัวการ์ดน้ำเงินชื่อสินค้า · ภาพใหญ่กลางการ์ด · badge มุมขวาบน
    · แถบราคาพื้นทอง = ปุ่มกดสั่งงาน
    ============================================================ */
-.hq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(136px,1fr));gap:10px;margin-bottom:6px;}
+.hq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px;margin-bottom:6px;}
 .hq-card{
   background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;border-radius:14px;overflow:hidden;
   display:flex;flex-direction:column;text-align:center;
@@ -889,13 +894,16 @@ html.no-anim .q-bigcard{animation:none;}
 }
 .hq-card:hover{transform:translateY(-2px);}
 .hq-head{
-  background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;font-size:13px;font-weight:500;
-  padding:5px 6px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;font-size:14.5px;font-weight:600;
+  padding:7px 8px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   text-shadow:0 1px 2px rgba(10,40,80,.4);
 }
-.hq-pic{position:relative;height:98px;display:flex;align-items:center;justify-content:center;padding:6px;}
-.hq-pic img{width:76px;height:76px;object-fit:contain;}
-.hq-emoji{font-size:50px;line-height:1;}
+/* 🏪 รอบ 187: ภาพสินค้าใหญ่ขึ้น เห็นชัด น่าซื้อ (พื้นหลังนุ่มเน้นตัวสินค้า) */
+.hq-pic{position:relative;height:150px;display:flex;align-items:center;justify-content:center;padding:8px;
+  background:radial-gradient(ellipse 70% 60% at 50% 44%, rgba(255,255,255,.85), rgba(255,255,255,0) 72%);}
+.hq-pic img{width:auto;height:100%;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 6px 10px rgba(20,60,110,.28));}
+.hq-emoji{font-size:84px;line-height:1;}
 .hq-badge{
   position:absolute;top:5px;right:6px;background:var(--panel-bg);border:1px solid #b5d4f4;
   border-radius:999px;font-size:11px;padding:0 8px;color:var(--sky-d);font-weight:500;

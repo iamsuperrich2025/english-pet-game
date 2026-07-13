@@ -338,13 +338,26 @@ const Lobby3D = (function(){
     spellBtnSync();                       // ปุ่ม 🌀 สะกดคำ โผล่เฉพาะตอน 3D โชว์จริง (g0)
   }
 
+  // รอบ 187: ป่วย/หิว/ใส่ชุด + มีภาพตรงสถานะ → โชว์ "เฉพาะน้อง" เป็นภาพ 2D · คนยังเป็นโมเดล 3D เหมือนเดิม
+  // วิธี: ซ่อน mesh น้องใน 3D (petRoot.visible=false) เหลือคนบน canvas โปร่งใส + โชว์ .hero-scene แบบ pet-only
+  //       (ซ่อนรูปคน 2D ในนั้น) → น้อง 2D โผล่ผ่านโซนโปร่งของ canvas ตรงตำแหน่งเดิม
+  function applyPetPng(on){
+    if(!heroEl) return;
+    const png = heroEl.querySelector('.hero-scene');
+    if(petRoot) petRoot.visible = !on;
+    if(png){
+      png.classList.toggle('pet-only', on);
+      if(on) png.style.visibility = '';    // ปิด = ปล่อยให้ showCanvas คุม (hidden)
+    }
+    spellBtnSync();                          // น้อง 2D = ซ่อนปุ่มสะกดคำ (petRoot.visible=false)
+  }
+
   // ---- entry: เรียกทุกครั้งที่ render dashboard ----
   async function attach(hero, opts){
     if(disabled || isFileProto()) return;      // file:// โหลด glb ไม่ได้ → PNG
     heroEl = hero;
     if(!heroEl) return;
-    // รอบ 186: ป่วย/หิว/ใส่ชุด + มีภาพตรงสถานะ → โชว์ภาพ 2D แทนโมเดล (ซ่อน canvas ถ้าโหลดค้างอยู่)
-    if(opts.forcePng){ showCanvas(false); return; }
+    const forcePng = !!opts.forcePng;          // รอบ 187: น้องป่วย/หิว/ใส่ชุด → น้อง 2D (คนยัง 3D)
     const key = `${opts.avatar||'male'}|${opts.petType}|${opts.stage}`;
     // ซ่อน PNG ตั้งแต่เฟรมแรกกันภาพวูบก่อนโมเดลโหลด — ถ้าเช็กแล้วไม่มีโมเดล
     // showCanvas(false) คืน PNG ให้ (เคสมี cache คืนใน microtask เดียว ไม่ทันเห็น)
@@ -352,7 +365,7 @@ const Lobby3D = (function(){
     // ถ้าพร้อมแล้วและ key เดิม → แค่แนบ canvas + อัปเดตขนาดร่างยักษ์
     if(renderer && curKey === key && ownerRoot.userData.gltf && petRoot.userData.gltf){
       if(curGiant !== (opts.giant||0)) applyLayout(opts.giant||0);
-      showCanvas(true); resize(); start();
+      showCanvas(true); applyPetPng(forcePng); resize(); start();
       if(spellActive){ spellHud(); spellHudWord(); }   // renderDashboard กลางเกม (เช่นได้เหรียญ) ล้าง DOM เวที → คืน HUD
       return;
     }
@@ -370,7 +383,7 @@ const Lobby3D = (function(){
       applyLayout(opts.giant||0);
       // มุมเริ่ม: หันหน้าตรง
       targetRot = 0; dragRot = 0; if(spin) spin.rotation.y = 0;
-      showCanvas(true); resize(); start();
+      showCanvas(true); applyPetPng(forcePng); resize(); start();
     }catch(e){
       // ไม่มีโมเดล/โหลดพลาด → ใช้ PNG เดิม (ไม่ถือเป็นบั๊ก)
       showCanvas(false);
@@ -687,7 +700,7 @@ const Lobby3D = (function(){
   function spellBtnSync(){
     if(!heroEl) return;
     const b=heroEl.querySelector('.spell-btn');
-    const want=!spellActive && curGiant===0 && !!(petRoot && petRoot.userData.gltf) &&
+    const want=!spellActive && curGiant===0 && !!(petRoot && petRoot.userData.gltf) && petRoot.visible &&
       canvas && canvas.style.display!=='none' && canvas.parentElement===heroEl;
     if(want && !b){
       const btn=document.createElement('button');
