@@ -290,6 +290,16 @@ h1{color:var(--sky-d);text-shadow:none;}
   flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:7px;
 }
 .chat-empty{margin:auto;color:#5a6b82;font-size:13.5px;text-align:center;padding:0 20px;}
+/* 💬 รอบ 187 (A2): แถว "กำลังพิมพ์…" ใต้ข้อความ */
+.chat-typing{flex-shrink:0;padding:3px 14px 7px;font-size:12.5px;color:#7f9cc0;
+  display:flex;align-items:center;gap:7px;}
+.ct-dots{display:inline-flex;gap:3px;}
+.ct-dots i{width:6px;height:6px;border-radius:50%;background:#4fc3f7;display:inline-block;
+  animation:ctBlink 1.1s infinite;}
+.ct-dots i:nth-child(2){animation-delay:.18s;}
+.ct-dots i:nth-child(3){animation-delay:.36s;}
+@keyframes ctBlink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
+html.no-anim .ct-dots i{animation:none;opacity:.7;}
 .chat-bubble{
   max-width:78%;align-self:flex-start;background:#fff;color:#22344d;
   padding:8px 12px;border-radius:14px 14px 14px 4px;font-size:15px;line-height:1.4;
@@ -1533,7 +1543,14 @@ html.no-anim .on-page{animation:none !important;}
 .ib-last{font-size:11px;color:#8fb3d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ib-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
 .ib-time{font-size:10px;color:#7f9cc0;}
-.ib-dot{width:9px;height:9px;border-radius:50%;background:#4fc3f7;box-shadow:0 0 8px rgba(79,195,247,.8);}
+/* 💬 รอบ 187 (A1): badge เลขข้อความใหม่ (แถว inbox + วงกลม story) */
+.ib-dot{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:#ff4d6d;color:#fff;
+  font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 8px rgba(255,77,109,.6);font-variant-numeric:tabular-nums;}
+.ib-story-badge{position:absolute;top:-4px;right:-5px;min-width:18px;height:18px;padding:0 5px;
+  border-radius:9px;background:#ff4d6d;color:#fff;font-size:11px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;border:2px solid #0b1f42;
+  font-variant-numeric:tabular-nums;box-shadow:0 0 8px rgba(255,77,109,.55);}
 .ib-empty{padding:22px 14px;text-align:center;color:#8fb3d8;font-size:13px;line-height:1.7;}
 /* 💬 รอบ 185: แถบเพื่อนกำลังออนไลน์ (story row) บนสุดของ inbox — เลื่อนข้างได้ ไร้ scrollbar */
 .ib-story{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;

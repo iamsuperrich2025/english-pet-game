@@ -740,6 +740,11 @@ html.no-anim body.quake{animation:none;}
   padding:20px 18px;box-shadow:var(--card-shadow);
 }
 .register-card label{display:block;font-size:16px;color:#7a5ca8;margin-bottom:14px;}
+/* 🛡️ รอบ 187: คำเตือนคุ้มครองเด็ก — ห้ามใส่ชื่อจริง (โทนส้มอุ่นให้สะดุดตา) */
+.reg-safety{background:#fff4e2;border:2px solid #ffcf8a;border-radius:14px;padding:10px 13px;
+  margin-bottom:16px;font-size:13.5px;line-height:1.55;color:#8a5a1a;}
+.reg-safety b{color:#b5620d;}
+.reg-safety u{text-decoration-color:#e08a2a;text-underline-offset:2px;}
 .register-card input,.register-card select{
   display:block;width:100%;margin-top:4px;padding:10px 14px;font-family:inherit;font-size:17px;
   border:2px solid #e6d9f5;border-radius:14px;background:#fff;color:var(--ink);box-sizing:border-box;

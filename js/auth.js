@@ -245,7 +245,7 @@ function authAskLink(uid){
       <div class="lv-emoji">💾</div>
       <h2>พบเซฟเดิมในเครื่องนี้</h2>
       <p style="font-size:15.5px;margin:6px 0">
-        ${state.student.first} · 🪙 ${fmtNum(Math.round(state.coins))} · สัตว์เลี้ยง ${state.pets.length} ตัว
+        ${escapeHTML(state.profileName || (state.student && state.student.first) || 'ผู้เล่น')} · 🪙 ${fmtNum(Math.round(state.coins))} · สัตว์เลี้ยง ${state.pets.length} ตัว
       </p>
       <p style="font-size:14px;color:#8a7aa0;margin:0 0 4px">
         ผูกเซฟนี้เข้าบัญชี Google ของหนูไหม?<br>ผูกแล้วเปิดเครื่องไหนก็เล่นต่อได้ ☁️
@@ -269,7 +269,7 @@ function authAskLink(uid){
     overlay.innerHTML = `<div class="levelup-box">
       <div class="lv-emoji">🗑️</div>
       <h2>แน่ใจนะ?</h2>
-      <p style="font-size:15px">เซฟเดิม (${state.student.first} · 🪙 ${fmtNum(Math.round(state.coins))})<br>จะถูกลบ<b>ถาวร</b> เอากลับมาไม่ได้แล้วนะ</p>
+      <p style="font-size:15px">เซฟเดิม (${escapeHTML(state.profileName || (state.student && state.student.first) || 'ผู้เล่น')} · 🪙 ${fmtNum(Math.round(state.coins))})<br>จะถูกลบ<b>ถาวร</b> เอากลับมาไม่ได้แล้วนะ</p>
       <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap">
         <button class="cf-ok">กลับไปผูกเซฟ</button>
         <button class="cf-no" style="background:#e57373;box-shadow:0 4px 0 #b23b3b">ลบแล้วเริ่มใหม่</button>

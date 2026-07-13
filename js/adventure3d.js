@@ -2950,6 +2950,12 @@ function buildDom(){
   #adv-tlglow-r{right:0;background:radial-gradient(120% 88% at 100% 20%,rgba(255,160,30,.9),rgba(255,120,0,.34) 40%,transparent 72%)}
   .adv-tlglow.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
   @keyframes tlGlowBlink{0%{opacity:.95}50%{opacity:0}100%{opacity:.95}}
+  /* 🚦 รอบ 187 (A3): แสงสะท้อนบนกระจก/ฝากระโปรง — แถบส้มด้านล่าง blend screen ให้เหมือนแสงสะท้อน */
+  .adv-tlreflect{position:absolute;bottom:0;width:54vw;max-width:440px;height:36vh;pointer-events:none;
+    display:none;opacity:0;z-index:4;mix-blend-mode:screen}
+  #adv-tlreflect-l{left:0;background:radial-gradient(88% 72% at 10% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
+  #adv-tlreflect-r{right:0;background:radial-gradient(88% 72% at 90% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
+  .adv-tlreflect.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
   #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
   #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
@@ -3132,6 +3138,9 @@ function buildDom(){
     <!-- 🚦 รอบ 185: แสงไฟเลี้ยวสีส้มกระพริบมุมซ้าย/ขวา (ตรงตำแหน่งลูกศรบนแดชบอร์ด) -->
     <div id="adv-tlglow-l" class="adv-tlglow"></div>
     <div id="adv-tlglow-r" class="adv-tlglow"></div>
+    <!-- 🚦 รอบ 187 (A3): แสงไฟเลี้ยวสะท้อนบนกระจก/ฝากระโปรง (ล่าง — blend screen ให้ดูเป็นแสงสะท้อน) -->
+    <div id="adv-tlreflect-l" class="adv-tlreflect"></div>
+    <div id="adv-tlreflect-r" class="adv-tlreflect"></div>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
       <h3>🚗 เตรียมออกรถ</h3>
@@ -3803,10 +3812,13 @@ function tlSet(v){
   tlClickPh=-1;                                      // 🔊 รอบ 140: เปิดปุ๊บ "ติ๊ก" ดังทันทีเฟรมแรก (เหมือนรีเลย์จริง)
   const pad=document.getElementById('adv-tlpad');
   if(pad) pad.classList.toggle('sig',v!==0);
-  // 🚦 รอบ 185: แสงส้มกระพริบมุมซ้าย(v=1)/ขวา(v=2) ตรงตำแหน่งลูกศร
+  // 🚦 รอบ 185: แสงส้มกระพริบมุมซ้าย(v=1)/ขวา(v=2) ตรงตำแหน่งลูกศร · รอบ 187: + สะท้อนบนกระจก/ฝากระโปรง
   const gl=document.getElementById('adv-tlglow-l'), gr=document.getElementById('adv-tlglow-r');
+  const rl=document.getElementById('adv-tlreflect-l'), rr=document.getElementById('adv-tlreflect-r');
   if(gl) gl.classList.toggle('on',v===1);
   if(gr) gr.classList.toggle('on',v===2);
+  if(rl) rl.classList.toggle('on',v===1);
+  if(rr) rr.classList.toggle('on',v===2);
   tlDotY(v===1?-1:v===2?1:0);
   if(myRef) sendPos(true);
 }

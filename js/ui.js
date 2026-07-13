@@ -353,6 +353,13 @@ function selfPronoun(){
 }
 function selfTag(){ return selfPronoun() + 'เอง'; }   // "หนูเอง" / "คุณเอง"
 
+/* 🆔 รอบ 187: รหัสประจำตัวผู้เล่น (6 ตัวจาก uid — คงที่แม้เปลี่ยนชื่อ) โชว์แทน "ชั้น" ในเกม
+   มาตรการคุ้มครองเด็ก: ชั้นเรียนใช้เลือกความยากคำศัพท์เท่านั้น ไม่โชว์ · Lobby/กระดานเห็นแค่ 🆔 + ชื่อเล่น */
+function idTag(uid){
+  if(!uid || typeof friendCode !== 'function') return '';
+  return '🆔 ' + friendCode(String(uid));
+}
+
 /* ============================================================
    รอบ 149: กล่อง aside ขวาเลื่อนวนอัตโนมัติ (ล่าง→บน) ไม่มี scrollbar
    แตะกล่อง = หยุดให้เลื่อนอ่านเองได้ · ปล่อยนิ้วเกิน 5 วิ = เลื่อนต่อ
@@ -606,7 +613,7 @@ function renderOnlineCard(){
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
       <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
-      <span class="online-act">ชั้น ${meGrade} · กำลังเล่นอยู่ตอนนี้</span>
+      <span class="online-act">${idTag(meUid)} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
   /* ---- โหมดออนไลน์จริง ---- */
@@ -639,7 +646,7 @@ function renderOnlineCard(){
       return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
       <span class="online-dot"></span>
       <span class="online-name">${escapeHTML(f.n)}</span>
-      <span class="online-act">ชั้น ${escapeHTML(f.g)} · ${escapeHTML(f.act)}</span>
+      <span class="online-act">${idTag(fid)} · ${escapeHTML(f.act)}</span>
     </div>`;
     });
     bindPlayerClicks();
@@ -688,7 +695,7 @@ function renderOnlineCard(){
   const rows = friends.map(f=>`<div class="online-row">
       <span class="online-dot"></span>
       <span class="online-name">${f.n}</span>
-      <span class="online-act">ชั้น ${f.g} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
+      <span class="online-act">${idTag(f.n)} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
     </div>`);
   if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚`;
   __onPages = [meRow, ...rows];
@@ -749,7 +756,7 @@ function openFriendQuickMenu(uid, name, grade){
   overlay.className = 'fq-overlay';
   overlay.innerHTML = `<div class="fq-box">
     <div class="fq-head">
-      <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>ชั้น ${escapeHTML(grade)}</small></span>
+      <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>${idTag(uid)}</small></span>
       <button class="fq-close" type="button">✕</button>
     </div>
     <div class="fq-sec">🤝 ชวนเล่นด้วยกัน — เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}</div>
@@ -835,7 +842,7 @@ function lbCoinHtml(){
   const rows = Online.board.map((r,i)=>`
     <div class="lb-row${r.id === myId ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ${idTag(r.id)}</small></span>
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
   return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
@@ -901,7 +908,7 @@ function showPlayerCard(uid, name, grade){
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
         ${canFollow ? `<button class="pl-follow"></button>` : ''}
       </div>
-      <div class="pl-grade">${grade ? `ชั้น ${escapeHTML(grade)}` : 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
+      <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
       ${badgeRow}
       <div class="pl-body">
         <div class="pl-cols">
@@ -1182,7 +1189,7 @@ function friendDoSearch(){
   friendSearch(code).then(r=>{
     if(!r){ out.innerHTML = `<div class="fr-hint">😕 ไม่พบรหัสนี้ ลองเช็กอีกครั้งนะ</div>`; return; }
     if(r.self){ out.innerHTML = `<div class="fr-hint">😄 นี่คือรหัสของ${selfTag()}นะ!</div>`; return; }
-    const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>`;
+    const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}</small></span>`;
     if(r.already){ out.innerHTML = `<div class="fr-found">${nameHTML}<span class="fr-hint">✅ เป็นเพื่อนกันแล้ว</span></div>`; return; }
     out.innerHTML = `<div class="fr-found">${nameHTML}<button class="fr-add-btn" id="fr-send-req">➕ ส่งคำขอเป็นเพื่อน</button></div>`;
     document.getElementById('fr-send-req').addEventListener('click', ()=>{
@@ -1203,7 +1210,7 @@ function refreshFriendData(){
     if(Online.reqs.length){
       reqEl.innerHTML = `<div class="fr-list-title">📨 คำขอเป็นเพื่อน (${Online.reqs.length})</div>` +
         Online.reqs.map(r=>`<div class="fr-row fr-req">
-          <span class="fr-row-name">${escapeHTML(r.n)}<small> ชั้น ${escapeHTML(r.g)}</small></span>
+          <span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}</small></span>
           <span class="fr-req-btns">
             <button class="fr-accept" data-uid="${escapeHTML(r.uid)}">✅ รับ</button>
             <button class="fr-decline" data-uid="${escapeHTML(r.uid)}">✕</button>
@@ -1228,7 +1235,7 @@ function refreshFriendData(){
         const unread = Online.chatUnread && Online.chatUnread[f.uid];
         return `<div class="fr-row">
           <span class="online-dot${on ? '' : ' off'}"></span>
-          <span class="fr-row-name">${escapeHTML(f.n)}<small> ชั้น ${escapeHTML(f.g)}</small></span>
+          <span class="fr-row-name">${escapeHTML(f.n)}<small> ${idTag(f.uid)}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
           <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
           <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
@@ -1309,12 +1316,13 @@ function openChatInbox(){
   overlay.querySelector('.ib-close').addEventListener('click', ()=>{ sfx.select(); close(); });
 
   // รอบ 185 (idea 2): แถบ "กำลังออนไลน์" แนวนอนบนสุด — วงกลมเพื่อนที่ออนไลน์ เลื่อนข้างได้ แบบ story row
+  // รอบ 187 (A1): เติม badge เลขข้อความใหม่บนวงกลม (เติมหลังโหลดนับ unread)
   const storyEl = overlay.querySelector('#ib-story');
   const onlineFriends = friends.map((f,i)=>({f,i})).filter(x=>onlineIds.has(String(x.f.uid)));
   if(onlineFriends.length){
     storyEl.innerHTML = onlineFriends.map(({f,i})=>
       `<button class="ib-story-item" data-i="${i}" type="button">
-        <span class="ib-story-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}<i class="ib-story-on"></i></span>
+        <span class="ib-story-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}<i class="ib-story-on"></i><span class="ib-story-badge" data-uid="${escapeHTML(f.uid)}" style="display:none"></span></span>
         <small>${escapeHTML((f.n||'').trim().split(' ')[0])}</small>
       </button>`).join('');
     storyEl.querySelectorAll('.ib-story-item').forEach(b=>b.addEventListener('click', ()=>{
@@ -1328,27 +1336,40 @@ function openChatInbox(){
     listEl.innerHTML = `<div class="ib-empty">ยังไม่มีเพื่อนเลย 🤝<br>ไปกด ➕ เป็นเพื่อนจากรายชื่อคนออนไลน์ก่อน<br>เป็นเพื่อนกันแล้วส่งข้อความหากันได้เลย!</div>`;
     return;
   }
-  // รอบ 185 (idea 1): ดึงข้อความล่าสุดของทุกคนก่อน (limitToLast 1) แล้วเรียงคนเพิ่งคุยขึ้นบนสุด แบบ Messenger
+  const meKey = onlineKey();
+  const badgeTxt = n => n > 20 ? '20+' : String(n);
+  // รอบ 185 (idea 1) + 187 (A1): ดึงข้อความล่าสุด (limitToLast 20) → เรียงคนเพิ่งคุยขึ้นบน + นับข้อความใหม่ต่อคน
   Promise.all(friends.map(f=>
-    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(1).once('value')
-      .then(snap=>{ let last = null; snap.forEach(ch=>{ last = ch.val(); }); return {f, last}; })
-      .catch(()=>({f, last:null}))
+    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(20).once('value')
+      .then(snap=>{
+        let last = null, unread = 0;
+        const seen = (typeof chatSeenTs === 'function') ? chatSeenTs(f.uid) : 0;
+        snap.forEach(ch=>{ const m = ch.val(); last = m;
+          if(m && m.f === f.uid && typeof m.ts === 'number' && m.ts > seen) unread++; });
+        return {f, last, unread};
+      })
+      .catch(()=>({f, last:null, unread:0}))
   )).then(items=>{
     if(!document.body.contains(overlay)) return;       // ผู้ใช้ปิดกล่องไปแล้ว
     // เรียง ts มากสุดบน · ไม่เคยคุย (ts 0) ตกลงล่างตามลำดับเพื่อนเดิม (sort เสถียร)
     items.sort((a,b)=>((b.last&&b.last.ts)||0)-((a.last&&a.last.ts)||0));
     const sorted = items.map(x=>x.f);
-    listEl.innerHTML = items.map(({f,last},i)=>{
-      const unread = Online.chatUnread && Online.chatUnread[f.uid];
+    // เติม badge เลขบนวงกลม story
+    const unreadByUid = {}; items.forEach(({f,unread})=>{ unreadByUid[f.uid] = unread; });
+    storyEl.querySelectorAll('.ib-story-badge').forEach(b=>{
+      const n = unreadByUid[b.dataset.uid] || 0;
+      if(n > 0){ b.textContent = badgeTxt(n); b.style.display = ''; }
+    });
+    listEl.innerHTML = items.map(({f,last,unread},i)=>{
       let lastTxt, timeTxt = '';
       if(last && typeof last.t === 'string'){
-        lastTxt = (last.f === onlineKey() ? selfPronoun() + ': ' : '') + last.t;
+        lastTxt = (last.f === meKey ? selfPronoun() + ': ' : '') + last.t;
         if(last.ts) timeTxt = ibTimeStr(last.ts);
       }else lastTxt = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
       return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
         <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
         <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
-        <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? '<span class="ib-dot"></span>' : ''}</span>
+        <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? `<span class="ib-dot">${badgeTxt(unread)}</span>` : ''}</span>
         <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
       </div>`;
     }).join('');
@@ -1372,10 +1393,11 @@ function openChat(friend){
   overlay.className = 'chat-overlay';
   overlay.innerHTML = `<div class="chat-box">
     <div class="chat-head">
-      <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ชั้น ${escapeHTML(friend.g)}</small></span>
+      <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
       <button class="chat-close" id="chat-close" type="button">✕</button>
     </div>
     <div class="chat-msgs" id="chat-msgs"><div class="chat-empty">กำลังโหลดข้อความ... 💬</div></div>
+    <div class="chat-typing" id="chat-typing" style="display:none"><span class="ct-dots"><i></i><i></i><i></i></span> ${escapeHTML(friend.n)} กำลังพิมพ์…</div>
     <div class="chat-emoji-wrap" id="chat-emoji" style="display:none">
       <div class="chat-emoji-cats" id="chat-emoji-cats">
         ${CHAT_EMOJI_CATS.map((c,i)=>`<button class="chat-emoji-cat${i === 0 ? ' on' : ''}" data-ci="${i}" type="button">${c.icon}</button>`).join('')}
@@ -1413,10 +1435,22 @@ function openChat(friend){
   }));
   renderEmojiGrid(0);
 
+  // 💬 รอบ 187 (A2): แจ้ง "กำลังพิมพ์" ให้อีกฝ่าย + โชว์แถวเมื่ออีกฝ่ายพิมพ์ (ต้อง publish rules /typing)
+  input.addEventListener('input', ()=>{ if(typeof chatSetTyping === 'function') chatSetTyping(friend.uid); });
+  const typingEl = overlay.querySelector('#chat-typing');
+  const stopTyping = (typeof chatWatchTyping === 'function')
+    ? chatWatchTyping(friend.uid, active=>{
+        if(!document.body.contains(overlay)) return;
+        typingEl.style.display = active ? '' : 'none';
+        if(active) msgsEl.scrollTop = msgsEl.scrollHeight;   // เห็นแถวพิมพ์
+      })
+    : ()=>{};
+
   const send = ()=>{
     if(!input.value.trim()) return;
     const btn = overlay.querySelector('#chat-send');
     btn.disabled = true;
+    if(typeof chatClearTyping === 'function') chatClearTyping(friend.uid);   // ส่งแล้ว = เลิกพิมพ์
     chatSend(friend.uid, input.value)
       .then(()=>{ input.value = ''; sfx.select(); })
       .catch(msg=>{ sfx.wrong(); toast(typeof msg === 'string' ? msg : 'ส่งไม่สำเร็จ ลองใหม่นะ'); })
@@ -1427,6 +1461,8 @@ function openChat(friend){
 
   const close = ()=>{
     if(chatUnsub){ chatUnsub(); chatUnsub = null; }
+    stopTyping();
+    if(typeof chatClearTyping === 'function') chatClearTyping(friend.uid);
     overlay.remove();
   };
   overlay.querySelector('#chat-close').addEventListener('click', close);
@@ -1920,13 +1956,13 @@ function renderDashboard(){
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
   document.getElementById('coin-count').textContent = fmtNum(state.coins);
   document.getElementById('coin-today').textContent = fmtNum(state.daily.coins);
-  /* แถบโปรไฟล์: ตัวละคร (ข้อ 4) + ชื่อในเกมเด่นก่อน (ข้อ 0.2) + ✏️ แก้ชื่อ + ชื่อจริง/ชั้นต่อท้าย */
+  /* แถบโปรไฟล์ (รอบ 187 คุ้มครองเด็ก): ตัวละคร + ชื่อเล่น + ✏️ แก้ชื่อ + 🆔 รหัสประจำตัว (ไม่โชว์ชื่อจริง/ชั้นแล้ว) */
   const chip = document.getElementById('student-chip');
   if(state.student){
-    chip.innerHTML = `${playerAvatarHTML()} <b>${escapeHTML(state.profileName || state.student.first)}</b>`
+    const myUid = (typeof onlineKey === 'function') ? onlineKey() : '';
+    chip.innerHTML = `${playerAvatarHTML()} <b>${escapeHTML(state.profileName || 'ผู้เล่น')}</b>`
       + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
-      + ` · 🎓 ${escapeHTML(state.student.first)} ${escapeHTML(state.student.last)}`
-      + ` · ชั้น ${state.student.grade}`;   // ระดับคำศัพท์ (ศัพท์...) ย้ายไปโชว์หน้าสถิติแทน — แถบบนสั้นสะอาด อ่าน "ชั้น" ง่าย
+      + ` · ${idTag(myUid)}`;
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
   }else chip.textContent = '';
 
@@ -4915,7 +4951,7 @@ function renderStats(){
     : '<div class="cat-info">ยังไม่มีสัตว์เลี้ยง</div>';
   document.getElementById('stats-body').innerHTML = `
     <div class="stats-card">
-      <h3 class="stats-title">${playerAvatarHTML('👧')} ${escapeHTML(s.first)} ${escapeHTML(s.last)} · ชั้น ${s.grade}${state.profileName ? ` <small class="stats-nick">(${escapeHTML(state.profileName)})</small>` : ''}</h3>
+      <h3 class="stats-title">${playerAvatarHTML('👧')} ${escapeHTML(state.profileName || s.first || 'ผู้เล่น')} · ชั้น ${escapeHTML(s.grade||'-')} <small class="stats-nick">${idTag((typeof onlineKey==='function')?onlineKey():'')}</small></h3>
       <div class="stats-row"><span>🎖️ แรงค์ปัจจุบัน (ตามมูลค่าทรัพย์สินสุทธิ)</span>
         <span style="color:${info.rank.color};font-weight:bold">${info.rank.emoji} ${info.label}</span></div>
       <div class="stats-row"><span>💪 แต้มความพยายามสะสม</span><span><b>${fmtNum(state.rp)}</b> RP</span></div>
@@ -4970,7 +5006,7 @@ function showTeacherCard(){
   overlay.innerHTML = `<div class="tc-wrap">
     <div class="tc-card">
       <div class="tc-head">🌍 Vocab World<div class="tc-sub">การ์ดรายงานผลการเรียนรู้</div></div>
-      <div class="tc-name">${playerAvatarHTML('🧒')} <b>${escapeHTML(s.first)} ${escapeHTML(s.last)}</b> · ชั้น ${s.grade}${badges ? ` <span class="tc-badges">${badges}</span>` : ''}</div>
+      <div class="tc-name">${playerAvatarHTML('🧒')} <b>${escapeHTML(state.profileName || s.first || 'ผู้เล่น')}</b> · ชั้น ${escapeHTML(s.grade||'-')} · ${idTag((typeof onlineKey==='function')?onlineKey():'')}${badges ? ` <span class="tc-badges">${badges}</span>` : ''}</div>
       <div class="tc-when">🗓️ ${dateTxt} · ⏰ ${timeTxt} น.</div>
       <div class="tc-row"><span>🪙 เหรียญที่หาได้วันนี้</span><b>+${fmtNum(state.daily.coins)}</b></div>
       <div class="tc-row"><span>🎖️ แรงค์ปัจจุบัน</span><b style="color:${info.rank.color}">${info.rank.emoji} ${info.label}</b></div>

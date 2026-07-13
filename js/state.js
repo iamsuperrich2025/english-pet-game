@@ -30,7 +30,7 @@ const HEAT_SICK_MS   = 6*60*60*1000;       // ร้อนสะสมครบ 
 const THIRST_SICK_MS = 6*60*60*1000;       // ถูกตัดน้ำ: ขาดน้ำสะสมครบ 6 ชม. → ป่วย (โดนทุกชนิด)
 
 const DEFAULT_STATE = {
-  student:null,                       // {first, last, grade}
+  student:null,                       // {grade} (รอบ 187 คุ้มครองเด็ก: เลิกเก็บ first/last · เหลือ grade ไว้เลือกความยากคำศัพท์)
   profileName:null,                   // ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว โชว์ใน presence/leaderboard)
   playerAvatar:null,                  // ข้อ 4: ตัวละครผู้เลี้ยง 'male'/'female' (เลือกตอนลงทะเบียน · เปลี่ยนได้ในตั้งค่า · โชว์เฉพาะในเครื่อง)
   blockAv:null,                       // 🧱 ตัวละครบล็อกในโลก 3D 'blk1'..'blk8' (เลือกก่อนเข้าโลกขับรถ · เพื่อนใน map เห็นตัวนี้)

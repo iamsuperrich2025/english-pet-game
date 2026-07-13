@@ -55,7 +55,7 @@ function onlineDisplayName(){
   if(state.profileName) return state.profileName;
   if(!state.student) return null;
   const last = (state.student.last || '').trim();
-  return state.student.first + (last ? ' ' + last[0] + '.' : '');
+  return (state.student.first || 'ผู้เล่น') + (last ? ' ' + last[0] + '.' : '');   // legacy fallback (ผู้ใช้ใหม่ไม่มี first แล้ว — ใช้ profileName)
 }
 
 /* ผู้เล่นกำลังทำอะไรอยู่ (ดูจากหน้าจอที่เปิด) — โชว์ในการ์ดเพื่อน */
@@ -310,6 +310,44 @@ function chatSend(otherUid, rawText){
     t:  text,
     ts: firebase.database.ServerValue.TIMESTAMP,
   }).then(()=>chatPrune(base));
+}
+
+/* 💬 รอบ 187 (A2): สัญญาณ "กำลังพิมพ์" — /typing/<pairId>/<me> = timestamp
+   เขียนตอนพิมพ์ (throttle 2 วิ) · ลบตอนส่ง/ปิดกล่อง/หลุดเน็ต · ต้อง publish rules /typing ก่อนใช้จริง
+   ยังไม่ publish = เขียนโดน deny เงียบๆ (แชทปกติไม่กระทบ) */
+const TYPING_TTL = 6000;
+let _typingLastSet = 0, _typingRef = null;
+function typingRef(otherUid){ return Online.db.ref('typing/' + chatPairId(otherUid) + '/' + onlineKey()); }
+function chatSetTyping(otherUid){
+  if(!Online.ready || !Online.db) return;
+  const now = Date.now();
+  if(now - _typingLastSet < 2000) return;             // throttle: เขียนทุก 2 วิพอ
+  _typingLastSet = now;
+  const ref = typingRef(otherUid);
+  _typingRef = ref;
+  ref.set(now).catch(()=>{});
+  ref.onDisconnect().remove();                         // หลุดเน็ต = ลบให้เอง
+}
+function chatClearTyping(otherUid){
+  _typingLastSet = 0;
+  if(!Online.ready || !Online.db) return;
+  const ref = otherUid ? typingRef(otherUid) : _typingRef;
+  if(ref){ try{ ref.onDisconnect().cancel(); }catch(e){} ref.remove().catch(()=>{}); }
+  _typingRef = null;
+}
+/* ฝั่งรับ: เฝ้าสถานะพิมพ์ของอีกฝ่าย → cb(true/false) · คืนฟังก์ชันเลิกฟัง */
+function chatWatchTyping(otherUid, cb){
+  if(!Online.ready || !Online.db) return ()=>{};
+  const ref = Online.db.ref('typing/' + chatPairId(otherUid) + '/' + otherUid);
+  let timer = null;
+  const handler = ref.on('value', s=>{
+    const v = s.val();
+    const active = typeof v === 'number' && (Date.now() - v) < TYPING_TTL;
+    cb(active);
+    if(timer){ clearTimeout(timer); timer = null; }
+    if(active) timer = setTimeout(()=>cb(false), TYPING_TTL);   // คนพิมพ์หายไปเฉยๆ → หมดอายุเอง
+  });
+  return ()=>{ if(timer) clearTimeout(timer); ref.off('value', handler); };
 }
 
 /* ตัดข้อความเก่าให้เหลือ 100 ล่าสุด (best-effort — ล้มเหลวไม่กระทบการส่ง) */

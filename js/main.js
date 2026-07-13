@@ -15,19 +15,12 @@ document.querySelectorAll('#reg-avatar .avatar-opt').forEach(btn=>{
 });
 
 document.getElementById('btn-register').addEventListener('click', ()=>{
-  const first = document.getElementById('reg-first').value.trim();
-  const last  = document.getElementById('reg-last').value.trim();
   const grade = document.getElementById('reg-grade').value;
-  if(!first || !last){
-    sfx.wrong();
-    toast('กรอกชื่อและนามสกุลให้ครบก่อนนะ 😊');
-    return;
-  }
-  // ชื่อในเกม (ข้อ 0.2): ตรวจ regex ไทย/อังกฤษ/เลข/เว้นวรรค + คำหยาบ (badwords.js)
+  // 🛡️ รอบ 187: มาตรการคุ้มครองเด็ก — ไม่เก็บชื่อจริง/นามสกุล เหลือแค่ชื่อเล่น + ชั้น (ชั้นใช้เลือกความยากคำศัพท์ ไม่โชว์ในเกม)
   const nick = checkName(document.getElementById('reg-nick').value, 2, 20);
   if(!nick.ok){
     sfx.wrong();
-    toast('ชื่อในเกม: ' + nick.msg, 2400);
+    toast('ชื่อเล่น: ' + nick.msg, 2400);
     return;
   }
   if(!regAvatar){
@@ -35,7 +28,7 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
     toast('เลือกตัวละครของหนูก่อนนะ 🦸');
     return;
   }
-  state.student = {first, last, grade};
+  state.student = {grade};
   state.profileName = nick.name;
   state.playerAvatar = regAvatar;      // ข้อ 4: ตัวละครผู้เลี้ยง
   state.playerFedDay = mealDayKey(Date.now());   // ข้อ 6: ผู้เล่นใหม่ถือว่าอิ่มมื้อล่าสุด (เริ่มนับมื้อหน้า กันป่วยตั้งแต่วันแรก)
