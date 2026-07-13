@@ -22,6 +22,19 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 194 (14 ก.ค.) — เกมค้นหาคำ Word Search (ปุ่ม rail ที่ 5 + แผงฟ้าเลื่อนจากซ้าย) 🔎 (version .185)
+- **สเปกผู้ใช้:** เพิ่มปุ่มในคอลัมน์ซ้าย → แผงฟ้าล้ำยุคยืดจากซ้ายไปขวาเกือบเต็มจอ เล่น Word Search สุ่มคำไม่ซ้ำ/เกม · ปุ่ม สุ่มเกมใหม่ / เก็บกระดานชั่วคราว (เลื่อนซ้าย ข้อมูลอยู่) / ล้างกระดาน-ออกจากเกม (ตัวหนังสือลบมีสไตล์ แล้วเลื่อนเก็บ) · **🔒 กฎเหล็ก: คำตามระดับชั้นผู้เล่นเท่านั้น**
+- **ทำ (ไฟล์ใหม่ `js/wordsearch.js` + index.html ปุ่ม/script + css/lobby.css):**
+  - ปุ่ม `#btn-rail-wordsearch` (🔎 ค้นหาคำ) หลังปุ่มโรงงาน · handler เปิด `WordSearch.open()`
+  - แผง `#ws-overlay>#ws-board` fixed left · slide `transform:translateX(-106%↔0)` transition .5s · ธีมฟ้า gradient+scanline sci-fi
+  - **กริด 10×10:** `generate()` วางคำสุ่ม 8 ทิศ (`place` เลี่ยงชน) + เติม A-Z · คำจาก `pool()` = `vocabForStudent()` กรอง `[^A-Z]` ยาว 3-10 ไม่ซ้ำ · คิว `takeWords` สับใหม่เมื่อหมด/เปลี่ยนชั้น = ไม่ซ้ำข้ามเกม
+  - **ลากเลือก:** mouse+touch → `cellAt`(elementFromPoint+closest) · `lineCells` ตรวจแนวตรง/ทแยง · `commit` เทียบคำ (ปกติ+reverse) เจอ=mark `.found`+`sfx.coin`+`speakWord` · ผิด=`.bad` แฟลช
+  - **ปุ่ม 3:** `newGame` (สุ่มใหม่) · `stash` (saveTemp→slideAway · เปิดใหม่ restore `state.wordSearch`) · `clearExit` (เซลล์ `.gone` กระจายหาย 650ms → slideAway + ลบ state)
+  - win เมื่อครบทุกคำ (แบนเนอร์ · ไม่ให้เหรียญ กันเงินเฟ้อ)
+- ✅ **ยืนยัน preview:** ป.1-6 คำตรงชั้น+distinct+placement valid+กริดเต็ม A-Z · drag จริงเจอคำ WEDNESDAY mark+efpHitsCell · wrong ไม่นับ · win แสดง · stash คืนกระดาน+progress · new ต่าง+progress ใหม่ · clear ลบ state+ซ่อน · fit 812×375 (board 780×375 · กริด 275 square) · ไม่มี console error
+- **🐞 gotcha สำคัญ (บันทึกไว้):** preview tab พื้นหลัง = **CSS transition ถูกพัก** → board ค้างที่ translateX(-106%) แม้ใส่ `.open` แล้ว (rule ถูก ยืนยันด้วย styleSheets) · ปิด `transition:none` → snap ไป translateX(0) ทันที = ของจริง (visible) เลื่อนปกติ · **อย่าเข้าใจผิดว่า slide พัง**
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (ลากนิ้วหาคำ + สไลด์เข้า-ออก) · ปรับได้: `SIZE`(10) `WANT`(7 คำ) `MAXLEN`(10) ใน wordsearch.js
+
 ### ✅ รอบ 193 (14 ก.ค.) — ตุ๊กตาหน้ารถ 3 ต่อยอด: ก้ม-เงย + แตะสะกิด + สกินซื้อด้วยเหรียญ 🪆🎯👆 (version .184)
 - **ผู้ใช้สั่ง "ทำทั้งหมดที่เสนอเลย"** (3 ไอเดียต่อยอดตุ๊กตาหน้ารถรอบ 191) — ทำใน adventure3d.js ไฟล์เดียว:
   1. 🎯 **ก้ม-เงยตอนเบรก/ออกตัว:** สปริงชุด 2 (`bobPitch/bobPitchV`) ขับด้วย accel=`(speed-_bobPrevSpd)/dt` · apply `rotateX(pitch) rotate(sway)` บน img + `perspective:560px` บน `#adv-bobble` (transform-origin เท้า) · `BOB_PITCH_FORCE=0.9 BOB_PITCH_MAXDEG=16`

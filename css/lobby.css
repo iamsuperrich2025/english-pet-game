@@ -1702,3 +1702,69 @@ html.no-anim .on-page{animation:none !important;}
 @keyframes musicRing{to{transform:rotate(360deg);}}
 html.no-anim #btn-music.playing::before{animation:none;background:none;
   box-shadow:0 0 0 2px rgba(57,229,140,.85), 0 0 10px rgba(57,229,140,.5);}
+
+/* ============================================================
+   🔎 รอบ 194: เกมค้นหาคำ (Word Search) — แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย
+   ============================================================ */
+#ws-overlay{position:fixed;inset:0;z-index:92;display:none;align-items:stretch;
+  background:rgba(3,10,26,.5);}
+#ws-board{position:relative;width:min(96vw,1000px);height:100%;box-sizing:border-box;
+  display:flex;flex-direction:column;gap:8px;padding:12px 14px 14px;color:#eaf6ff;
+  background:linear-gradient(135deg,#0a2550 0%,#0d3a7a 45%,#0a2c66 100%);
+  border-right:3px solid #4fd0ff;border-radius:0 22px 22px 0;
+  box-shadow:8px 0 40px rgba(0,0,0,.55),0 0 40px rgba(79,208,255,.25) inset;
+  transform:translateX(-106%);transition:transform .5s cubic-bezier(.22,1,.36,1);overflow:hidden;}
+#ws-board.open{transform:translateX(0);}
+/* เส้นสแกนแนวนอนจางๆ ให้ฟีล sci-fi */
+#ws-board::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:0 22px 22px 0;
+  background:repeating-linear-gradient(0deg,rgba(120,210,255,.05) 0 2px,transparent 2px 5px);}
+.ws-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;z-index:1;}
+.ws-title{font-size:clamp(15px,2.4vw,20px);font-weight:800;color:#bfeaff;
+  text-shadow:0 0 12px rgba(80,200,255,.7);}
+.ws-grade{font-size:12.5px;font-weight:700;color:#0a2c66;background:#7fe0ff;
+  padding:3px 11px;border-radius:20px;white-space:nowrap;}
+.ws-body{flex:1 1 auto;min-height:0;display:flex;gap:12px;z-index:1;}
+.ws-gridwrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;}
+#ws-grid{display:grid;grid-template-columns:repeat(var(--ws-n,10),1fr);gap:clamp(2px,.5vw,5px);
+  height:100%;width:auto;aspect-ratio:1;max-width:100%;max-height:100%;
+  padding:clamp(4px,1vw,10px);background:rgba(4,18,44,.55);border:1.5px solid rgba(95,200,255,.4);
+  border-radius:14px;box-shadow:0 0 22px rgba(80,180,255,.18) inset;touch-action:none;}
+.ws-cell{display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;
+  font-size:clamp(11px,2.3vw,21px);font-weight:800;color:#dcefff;border-radius:6px;
+  background:rgba(20,52,96,.7);border:1px solid rgba(95,200,255,.18);line-height:1;
+  transition:opacity .35s ease,transform .35s ease,background .18s,color .18s,box-shadow .18s;}
+.ws-cell.sel{background:#4fd0ff;color:#062247;box-shadow:0 0 10px rgba(120,225,255,.8);}
+.ws-cell.found{background:linear-gradient(160deg,#28e08a,#12b06a);color:#fff;
+  border-color:#7bffbe;box-shadow:0 0 8px rgba(40,224,138,.6);}
+.ws-cell.bad{background:#ff5d6c;color:#fff;}
+.ws-cell.gone{opacity:0;transform:scale(.15) rotate(35deg);}
+html.no-anim .ws-cell{transition:none;}
+.ws-side{flex:0 0 clamp(120px,26%,220px);display:flex;flex-direction:column;min-height:0;}
+.ws-find{font-size:13px;font-weight:800;color:#8fd6ff;margin-bottom:6px;flex-shrink:0;}
+#ws-words{flex:1 1 auto;overflow-y:auto;display:flex;flex-direction:column;gap:5px;scrollbar-width:none;}
+#ws-words::-webkit-scrollbar{display:none;}
+.ws-word{background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:9px;
+  padding:5px 9px;font-size:14px;font-weight:800;letter-spacing:.5px;color:#eaf6ff;line-height:1.15;}
+.ws-word small{display:block;font-size:10.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:1px;}
+.ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
+#ws-prog{flex-shrink:0;margin-top:7px;font-size:12.5px;font-weight:700;color:#ffe08a;text-align:center;}
+.ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;z-index:1;}
+.ws-actions button{border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;
+  padding:9px 15px;cursor:pointer;transition:transform .1s;}
+.ws-actions button:active{transform:scale(.95);}
+#ws-new{background:linear-gradient(135deg,#37b6ff,#1668c8);color:#fff;box-shadow:0 3px 0 #0e4c9a;}
+#ws-stash{background:linear-gradient(135deg,#ffce54,#f0a935);color:#5a3d00;box-shadow:0 3px 0 #c88512;}
+#ws-clear{background:linear-gradient(135deg,#ff6b7d,#e03b52);color:#fff;box-shadow:0 3px 0 #b02333;}
+#ws-win{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:5;
+  background:rgba(4,14,34,.5);pointer-events:none;border-radius:0 22px 22px 0;}
+#ws-win.on{display:flex;}
+.ws-win-in{background:linear-gradient(160deg,#0e3a78,#0a2550);border:2px solid #4fd0ff;border-radius:18px;
+  padding:18px 26px;text-align:center;font-size:19px;font-weight:800;color:#bfeaff;
+  box-shadow:0 0 30px rgba(80,200,255,.5);animation:popIn .4s cubic-bezier(.2,1.5,.4,1);}
+.ws-win-in small{font-size:13px;font-weight:400;color:#a9c8e8;}
+/* จอสูงน้อย (มือถือแนวนอนเตี้ย) — ย่อ action + คำ */
+@media (max-height:430px){
+  .ws-actions button{font-size:12.5px;padding:7px 11px;}
+  .ws-word{font-size:12.5px;padding:4px 7px;}
+  .ws-title{font-size:15px;}
+}
