@@ -22,6 +22,17 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 195 (14 ก.ค.) — โปรไฟล์โชว์สัตว์เลี้ยง 3 ตัว + แตะภาพเล็ก→Layer ภาพใหญ่ 🐾🖼️ (version .186)
+- **สเปกผู้ใช้:** (ไอเดียต่อยอด ข้อ 1) ใครมีสัตว์เลี้ยง 3 ตัว โชว์ 3 ตัวได้ · แตะภาพเล็ก → Layer ภาพใหญ่เกือบเต็มจอ **ไม่มี scrollbar** ให้อินกับบรรยากาศ
+- **ทำ:**
+  - **online.js:** `petDescriptor(p)`={t,s,sh,e,nm} · `feedPushPets()` ดัน `feed/<me>/pt`=JSON สูงสุด 3 ตัว (gate `feedShare.assets` · sig `Online.lastPetsSig` · เรียกท้าย `feedPushAssets`) · `fetchPlayerPets(uid)` ตัวเอง=`state.pets` · คนอื่น=parse `feed/<uid>/pt`
+  - **ui.js `showPlayerCard`:** โซน `.pl-pets-wrap` (สูงสุด 3) · `petDescImg(d)` คำนวณ key ภาพ (egg/shape/item/normal) จาก `IMG_FILES` ชุดเดิม (ไฟล์ภาพ pet แชร์ทุกเครื่อง) fallback emoji · delegated click `.pl-pet/.pl-asset` → `openImgLightbox`
+  - **`openImgLightbox(src,cap)`:** overlay z-200 · img max 92vw/88vh object-fit contain (ไม่มี scroll) · popIn · แตะที่ไหนก็ปิด
+  - **css/lobby.css:** `.pl-pets/.pl-pet` (การ์ด 92px ภาพ 76px+ชื่อ) · `.img-lightbox` (blur bg + ปุ่ม ✕)
+  - **rules:** เพิ่ม `feed/$uid/pt`={string ≤2000} ข้าง `a` (RULES.md อัปเดตแล้ว)
+- ✅ **ยืนยัน preview:** โปรไฟล์โชว์ 3 ตัว (เหมียว/ตูบ/มะนาว) ชื่อ+ภาพถูก · แตะ pet→lightbox src+cap "เหมียว" ไม่ล้นจอ · แตะ asset (cupcake)→lightbox ถูก · ปิดได้ · online.js feedPushPets/fetchPlayerPets/petDescriptor เป็น function · ไม่มี console error
+- **⚠️ ค้างผู้ใช้:** (1) **publish rules โหนด `feed/$uid/pt`** — Artifact ปุ่มคัดลอก (ไม่ publish = สัตว์คนอื่นไม่โชว์ · ของตัวเอง+lightbox ทำงานปกติ) (2) ทดสอบจริง 2 เครื่อง (เปิดเผยทรัพย์สินในตั้งค่า → อีกเครื่องเปิดโปรไฟล์เห็นสัตว์) · หมายเหตุ: สัตว์เปิดเผยพ่วงสวิตช์ "ทรัพย์สิน" (feedShare.assets) เดียวกัน
+
 ### ✅ รอบ 194 (14 ก.ค.) — เกมค้นหาคำ Word Search (ปุ่ม rail ที่ 5 + แผงฟ้าเลื่อนจากซ้าย) 🔎 (version .185)
 - **สเปกผู้ใช้:** เพิ่มปุ่มในคอลัมน์ซ้าย → แผงฟ้าล้ำยุคยืดจากซ้ายไปขวาเกือบเต็มจอ เล่น Word Search สุ่มคำไม่ซ้ำ/เกม · ปุ่ม สุ่มเกมใหม่ / เก็บกระดานชั่วคราว (เลื่อนซ้าย ข้อมูลอยู่) / ล้างกระดาน-ออกจากเกม (ตัวหนังสือลบมีสไตล์ แล้วเลื่อนเก็บ) · **🔒 กฎเหล็ก: คำตามระดับชั้นผู้เล่นเท่านั้น**
 - **ทำ (ไฟล์ใหม่ `js/wordsearch.js` + index.html ปุ่ม/script + css/lobby.css):**

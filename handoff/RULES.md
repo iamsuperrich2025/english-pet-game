@@ -235,6 +235,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           }
         },
         "a": { ".validate": "newData.isString() && newData.val().length <= 4000" },
+        "pt": { ".validate": "newData.isString() && newData.val().length <= 2000" },
         "$other": { ".validate": false }
       }
     },

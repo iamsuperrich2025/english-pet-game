@@ -943,6 +943,10 @@ function showPlayerCard(uid, name, grade){
             <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div>
           </div>
         </div>
+        <div class="pl-pets-wrap" style="display:none">
+          <div class="pl-sec-title">🐾 สัตว์เลี้ยง</div>
+          <div class="pl-pets"></div>
+        </div>
         <div class="pl-assets-wrap" style="display:none">
           <div class="pl-sec-title">🏆 ทรัพย์สินที่เปิดเผย</div>
           <div class="pl-assets"></div>
@@ -1054,6 +1058,63 @@ function showPlayerCard(uid, name, grade){
     }).join('');
     wrap.style.display = '';
   });
+
+  /* ---- 🐾 รอบ 195: สัตว์เลี้ยง (สูงสุด 3 ตัว) — ของตัวเองจาก state · คนอื่นจาก DB ถ้าเปิดเผย ---- */
+  const petsFn = (typeof fetchPlayerPets === 'function') ? fetchPlayerPets(uid) : Promise.resolve(null);
+  petsFn.then(list=>{
+    if(!list || !list.length) return;
+    const wrap = ov.querySelector('.pl-pets-wrap');
+    const gridEl = ov.querySelector('.pl-pets');
+    if(!wrap || !gridEl) return;
+    gridEl.innerHTML = list.map(d=>{
+      const img = petDescImg(d);
+      const nm = d.nm || ((PETS[d.t] || {}).name) || 'สัตว์เลี้ยง';
+      return `<div class="pl-pet" title="${escapeHTML(nm)}" data-name="${escapeHTML(nm)}">
+        ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${(PETS[d.t] || {}).emoji || '🐾'}</span>`}
+        <span class="pl-pet-nm">${escapeHTML(nm)}</span>
+      </div>`;
+    }).join('');
+    wrap.style.display = '';
+  });
+
+  /* ---- 🖼️ รอบ 195: แตะภาพเล็ก (สัตว์เลี้ยง/ทรัพย์สิน) → เปิดภาพใหญ่เกือบเต็มจอ (ไม่มี scroll) ---- */
+  ov.addEventListener('click', (e)=>{
+    const cell = e.target.closest('.pl-pet, .pl-asset');
+    if(!cell) return;
+    const img = cell.querySelector('img');
+    const src = img && img.getAttribute('src');
+    if(src) openImgLightbox(src, cell.dataset.name || cell.getAttribute('title') || '');
+  });
+}
+
+/* ภาพสัตว์เลี้ยงจากตัวย่อ {t,s,sh,e} — ใช้ไฟล์ภาพชุดเดียวกับในเกม (probe แล้วใน IMG_FILES) */
+function petDescImg(d){
+  if(!d || !d.t) return null;
+  const P = (typeof PETS !== 'undefined') ? PETS[d.t] : null;
+  if(d.s === 'egg') return (P && IMG_FILES[`${d.t}_${P.startKey}`]) || null;
+  const cands = [];
+  if(d.s === 'adult' && d.sh && d.sh !== 'normal') cands.push(`${d.t}_adult_${d.sh}`);
+  if(d.e) cands.push(`${d.t}_${d.s}_${d.e}`);
+  cands.push(`${d.t}_${d.s}_normal`);
+  for(const k of cands){ if(IMG_FILES[k]) return IMG_FILES[k]; }
+  return null;
+}
+
+/* 🖼️ รอบ 195: Layer ภาพใหญ่ (lightbox) — เกือบเต็มจอ · object-fit:contain ไม่มี scrollbar · แตะที่ไหนก็ปิด */
+function openImgLightbox(src, caption){
+  if(!src) return;
+  const lb = document.createElement('div');
+  lb.className = 'img-lightbox';
+  lb.innerHTML = `<div class="ilb-inner">
+      <img src="${src}" alt="">
+      ${caption ? `<div class="ilb-cap">${escapeHTML(caption)}</div>` : ''}
+      <button class="ilb-x" type="button" aria-label="ปิด">✕</button>
+    </div>`;
+  document.body.appendChild(lb);
+  requestAnimationFrame(()=>lb.classList.add('on'));
+  const close = ()=>{ lb.classList.remove('on'); setTimeout(()=>lb.remove(), 220); };
+  lb.addEventListener('click', close);
+  if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
 }
 
 /* ============================================================

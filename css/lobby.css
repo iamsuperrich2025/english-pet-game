@@ -1322,6 +1322,43 @@ html.no-anim .q-bigcard{animation:none;}
   font-size:9.5px;font-weight:700;border-radius:999px;padding:1px 5px;line-height:1.3;
   box-shadow:0 1px 3px rgba(0,0,0,.3);
 }
+.pl-asset{cursor:zoom-in;}
+/* 🐾 รอบ 195: สัตว์เลี้ยงในโปรไฟล์ (สูงสุด 3 ตัว) */
+.pl-pets-wrap{margin-top:12px;}
+.pl-pets{display:flex;flex-wrap:wrap;gap:10px;}
+.pl-pet{
+  position:relative;width:92px;background:linear-gradient(180deg,#eaf5ff,#d7ebff);
+  border:1px solid #b9d6f2;border-radius:14px;padding:7px 6px 6px;cursor:zoom-in;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.pl-pet img{width:76px;height:76px;object-fit:contain;display:block;
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.18));}
+.pl-pet .pl-asset-emoji{font-size:46px;height:76px;display:flex;align-items:center;}
+.pl-pet-nm{font-size:11.5px;font-weight:700;color:#2a4a72;max-width:100%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 🖼️ รอบ 195: Layer ภาพใหญ่ (lightbox) — เกือบเต็มจอ ไม่มี scrollbar */
+.img-lightbox{
+  position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,12,28,.86);opacity:0;transition:opacity .22s;padding:2vh 2vw;cursor:zoom-out;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+}
+.img-lightbox.on{opacity:1;}
+.img-lightbox .ilb-inner{
+  position:relative;max-width:96vw;max-height:96vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;transform:scale(.92);transition:transform .25s cubic-bezier(.2,1.3,.4,1);
+}
+.img-lightbox.on .ilb-inner{transform:scale(1);}
+.img-lightbox img{max-width:92vw;max-height:88vh;width:auto;height:auto;object-fit:contain;
+  display:block;border-radius:16px;box-shadow:0 12px 50px rgba(0,0,0,.6);
+  filter:drop-shadow(0 0 26px rgba(90,180,255,.25));}
+.img-lightbox .ilb-cap{margin-top:12px;color:#eaf6ff;font-size:clamp(15px,2.6vw,22px);
+  font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.6);text-align:center;}
+.img-lightbox .ilb-x{
+  position:absolute;top:-6px;right:-6px;width:38px;height:38px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.92);color:#123a6b;font-size:18px;font-weight:800;cursor:pointer;
+  box-shadow:0 3px 12px rgba(0,0,0,.4);
+}
+html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none;}
 /* ---- หัวข้อโซน privacy ในหน้าตั้งค่า + กล่องตั้งค่าเลื่อนได้ (แถวเยอะขึ้น) ---- */
 .settings-box{max-height:92vh;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
 .settings-box::-webkit-scrollbar{display:none;width:0;}

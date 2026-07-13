@@ -43,6 +43,7 @@ const Online = {
   feedBy:{},        // uid → โพสต์ล่าสุดของคนนั้น (จาก watcher)
   feedRefs:{},      // uid → query ที่ .on ค้างอยู่ (ไว้ .off ตอนเลิก follow)
   lastAssetsSig:null, // JSON ทรัพย์สินล่าสุดที่ส่งขึ้น /feed/<me>/a (กันเขียนซ้ำ)
+  lastPetsSig:null,   // JSON สัตว์เลี้ยง (สูงสุด 3 ตัว) ล่าสุดที่ส่งขึ้น /feed/<me>/pt (รอบ 195)
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -778,6 +779,43 @@ function feedPushAssets(){
   Online.lastAssetsSig = sig;
   const ref = Online.db.ref('feed/' + onlineKey() + '/a');
   (val === null ? ref.remove() : ref.set(val)).catch(()=>{ Online.lastAssetsSig = null; });
+  feedPushPets();                     // 🐾 รอบ 195: ดันสัตว์เลี้ยง (สูงสุด 3) พร้อมกัน
+}
+/* 🐾 รอบ 195: ตัวย่อสัตว์เลี้ยง 1 ตัวสำหรับโชว์ในโปรไฟล์ (คำนวณภาพจาก type/stage/shape/item ฝั่งผู้ดู) */
+function petDescriptor(p){
+  return { t:p.type, s:(typeof petStage==='function')?petStage(p):'adult', sh:p.shape||'normal',
+           e:((typeof equippedItem==='function' && equippedItem(p))||{}).id || '',
+           nm:String(p.name||'').slice(0,20) };
+}
+/* ดันสัตว์เลี้ยงขึ้น /feed/<me>/pt (JSON สูงสุด 3 ตัว) — เปิดเผยพร้อมทรัพย์สิน (feedShare.assets) · กันเขียนซ้ำด้วย sig */
+function feedPushPets(){
+  if(!Online.ready || !state.student) return;
+  let sig, val = null;
+  if(state.feedShare && state.feedShare.assets && Array.isArray(state.pets) && state.pets.length){
+    val = JSON.stringify(state.pets.slice(0,3).map(petDescriptor));
+    if(val.length > 1800) return;
+    sig = val;
+  }else sig = 'off';
+  if(Online.lastPetsSig === sig) return;
+  Online.lastPetsSig = sig;
+  const ref = Online.db.ref('feed/' + onlineKey() + '/pt');
+  (val === null ? ref.remove() : ref.set(val)).catch(()=>{ Online.lastPetsSig = null; });
+}
+/* อ่านสัตว์เลี้ยงของผู้เล่น (โปรไฟล์ตัวเอง = จาก state เสมอ · คนอื่น = จาก DB ถ้าเปิดเผย) → [{t,s,sh,e,nm},...] | null */
+function fetchPlayerPets(uid){
+  if(!uid) return Promise.resolve(null);
+  if(uid === onlineKey()){
+    if(!Array.isArray(state.pets) || !state.pets.length) return Promise.resolve(null);
+    return Promise.resolve(state.pets.slice(0,3).map(petDescriptor));
+  }
+  if(!Online.ready) return Promise.resolve(null);
+  return Online.db.ref('feed/' + uid + '/pt').get().then(s=>{
+    try{
+      const v = s && s.val();
+      const arr = (typeof v === 'string') ? JSON.parse(v) : null;
+      return (Array.isArray(arr) && arr.length) ? arr.slice(0,3) : null;
+    }catch(e){ return null; }
+  }).catch(()=>null);
 }
 /* กด follow — ทางเดียวไม่ต้องอนุมัติ · จำชื่อ/ชั้นเป้าหมายใน state (ไว้โชว์ใน feed) */
 function followSet(uid, n, g){
