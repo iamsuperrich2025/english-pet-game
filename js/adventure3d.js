@@ -154,9 +154,10 @@ let netTlOk=true;                                     // rules /world ยัง�
 let carPeerHits=0;                                    // 🛠️ รอบ 133: นับ "เจตนาชน" รถเพื่อนรอบนี้ (ครบ 3 = ค่าซ่อม CAR_RAM_FEE)
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
-/* 🧭 รอบ 200: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง+เสียงอังกฤษเลี้ยวซ้าย/ขวา แบบ Google Maps) */
+/* 🧭 รอบ 200-201: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง+เสียงอังกฤษ · เลี้ยวตามถนนจริง A* แบบ Google Maps) */
 let gpsTarget=null, gpsSpokeAt=0, gpsLastTurn='', gpsMile=0, gpsArrivedFor=null;
 let gpsArrowEl=null, gpsDistEl=null, gpsTurnEl=null, gpsLetEl=null;
+let gpsRoute=null, gpsWpi=0, gpsRouteFor=null, gpsRouteAt=0;   // เส้นทางตามถนน (A*) + waypoint ปัจจุบัน
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
 let carBobbleEl=null, carBobbleImg=null, bobAng=0, bobVel=0, _bobVW=0, _bobVH=0, _bobAv='';       // 🪆 ตุ๊กตาดุ๊กดิ๊ก (รอบ 191)
@@ -4305,8 +4306,62 @@ function rlTick(px,pz,now){
   }
 }
 /* ============================================================
-   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + ลูกศร + ระยะทาง + เสียงอังกฤษเลี้ยวซ้าย/ขวา
+   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) + เสียงอังกฤษเลี้ยว
    ============================================================ */
+/* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
+function cellDrivable(D,gx,gz){ return gx>=0&&gz>=0&&gx<D.GW&&gz<D.GW && D.grid[gz*D.GW+gx]===1; }
+function cellCenter(D,gx,gz){ return {x:gx*D.GS-D.GOFF+D.GS/2, z:gz*D.GS-D.GOFF+D.GS/2}; }
+function nearestDrivableCell(D,x,z){
+  const cx=Math.floor((x+D.GOFF)/D.GS), cz=Math.floor((z+D.GOFF)/D.GS);
+  for(let r=0;r<=12;r++) for(let ox=-r;ox<=r;ox++) for(let oz=-r;oz<=r;oz++){
+    if(r>0 && Math.abs(ox)!==r && Math.abs(oz)!==r) continue;
+    if(cellDrivable(D,cx+ox,cz+oz)) return [cx+ox,cz+oz];
+  }
+  return null;
+}
+/* A* บนกริดถนน คืน array {x,z} (ย่อจุดที่อยู่แนวเดียวกันแล้ว) หรือ null */
+function routeGrid(D,sx,sz,tx,tz){
+  const s=nearestDrivableCell(D,sx,sz), g=nearestDrivableCell(D,tx,tz);
+  if(!s||!g) return null;
+  const GW=D.GW, N=GW*GW, sIdx=s[1]*GW+s[0], gIdx=g[1]*GW+g[0], ggx=g[0], ggz=g[1];
+  if(sIdx===gIdx) return [cellCenter(D,s[0],s[1])];
+  const gsc=new Float64Array(N).fill(Infinity), came=new Int32Array(N).fill(-1), closed=new Uint8Array(N);
+  const heap=[];
+  const push=(i,f)=>{ heap.push({i,f}); let c=heap.length-1;
+    while(c>0){ const p=(c-1)>>1; if(heap[p].f<=heap[c].f) break; const t=heap[p]; heap[p]=heap[c]; heap[c]=t; c=p; } };
+  const pop=()=>{ const top=heap[0], last=heap.pop();
+    if(heap.length){ heap[0]=last; let p=0; for(;;){ let l=2*p+1,r=2*p+2,m=p;
+      if(l<heap.length&&heap[l].f<heap[m].f)m=l; if(r<heap.length&&heap[r].f<heap[m].f)m=r;
+      if(m===p)break; const t=heap[m]; heap[m]=heap[p]; heap[p]=t; p=m; } } return top; };
+  const DIRS=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.4142],[1,-1,1.4142],[-1,1,1.4142],[-1,-1,1.4142]];
+  gsc[sIdx]=0; push(sIdx, Math.hypot(s[0]-ggx,s[1]-ggz));
+  let guard=0;
+  while(heap.length && guard++<400000){
+    const cur=pop().i; if(cur===gIdx) break; if(closed[cur]) continue; closed[cur]=1;
+    const cgx=cur%GW, cgz=(cur/GW)|0;
+    for(const d of DIRS){
+      const nx=cgx+d[0], nz=cgz+d[1]; if(!cellDrivable(D,nx,nz)) continue;
+      if(d[0]&&d[1] && (!cellDrivable(D,cgx+d[0],cgz)||!cellDrivable(D,cgx,cgz+d[1]))) continue;  // กันตัดมุม
+      const ni=nz*GW+nx; if(closed[ni]) continue;
+      const ng=gsc[cur]+d[2];
+      if(ng<gsc[ni]){ gsc[ni]=ng; came[ni]=cur; push(ni, ng+Math.hypot(nx-ggx,nz-ggz)); }
+    }
+  }
+  if(came[gIdx]<0) return null;
+  const cells=[]; let c=gIdx, gd=0;
+  while(c>=0 && gd++<200000){ cells.push(c); if(c===sIdx) break; c=came[c]; }
+  cells.reverse();
+  const pts=cells.map(ci=>cellCenter(D, ci%GW, (ci/GW)|0));
+  // ย่อจุดแนวตรง (เก็บเฉพาะจุดที่ทิศเปลี่ยน)
+  if(pts.length<=2) return pts;
+  const simp=[pts[0]];
+  for(let i=1;i<pts.length-1;i++){
+    const ax=pts[i].x-pts[i-1].x, az=pts[i].z-pts[i-1].z, bx=pts[i+1].x-pts[i].x, bz=pts[i+1].z-pts[i].z;
+    if(Math.abs(ax*bz-az*bx)>0.01) simp.push(pts[i]);   // ไม่ collinear = จุดหักเลี้ยว
+  }
+  simp.push(pts[pts.length-1]);
+  return simp;
+}
 function pickGpsTarget(){
   const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
   Object.keys(inv).forEach(c=>{ if(need[c]) need[c]-=(inv[c]||0); });
@@ -4335,39 +4390,71 @@ function gpsSpeak(text,force){
   }catch(e){}
 }
 function tickGps(now){
-  // เป้าหมายหาย (เก็บได้/ย้าย) → เลือกใหม่ + ประกาศ
+  const D=worlds.drive.d;
+  // เป้าหมายหาย (เก็บได้/ย้าย) → เลือกใหม่ + ประกาศ + ล้างเส้นทางเก่า
   if(!gpsTarget || letters.indexOf(gpsTarget)<0){
-    pickGpsTarget();
+    pickGpsTarget(); gpsRoute=null; gpsRouteFor=null;
     if(gpsTarget) gpsSpeak('Next letter '+gpsTarget.ch.toUpperCase()+'.',true);
   }
-  const gpsBox=gpsArrowEl?gpsArrowEl.parentElement.parentElement:null;
-  if(!gpsTarget){ if(gpsBox) gpsBox.style.display='none'; return; }
-  if(gpsBox) gpsBox.style.display='';
+  const box=gpsArrowEl?gpsArrowEl.parentElement.parentElement:null;
+  if(!gpsTarget){ if(box) box.style.display='none'; return; }
+  if(box) box.style.display='';
   const cx=camera.position.x, cz=camera.position.z;
-  const dx=gpsTarget.spr.position.x-cx, dz=gpsTarget.spr.position.z-cz, dist=Math.hypot(dx,dz);
-  // มุมเป้าเทียบหัวรถ (0=ตรงหน้า · บวก=ขวา)
-  let rel=Math.atan2(dx,-dz)+yaw;
+  const tx=gpsTarget.spr.position.x, tz=gpsTarget.spr.position.z;
+  const finalDist=Math.hypot(tx-cx,tz-cz);
+
+  // (re)route ตามถนนจริง — เปลี่ยนเป้า / ออกนอกเส้นทาง / ครบเวลา
+  const strayed = gpsRoute && gpsWpi<gpsRoute.length &&
+    Math.hypot(gpsRoute[Math.min(gpsWpi,gpsRoute.length-1)].x-cx, gpsRoute[Math.min(gpsWpi,gpsRoute.length-1)].z-cz)>28;
+  if(!gpsRoute || gpsRouteFor!==gpsTarget || (now-gpsRouteAt>1200 && strayed)){
+    gpsRouteAt=now; gpsRouteFor=gpsTarget;
+    let path=routeGrid(D, cx,cz, tx,tz);
+    if(path && path.length){
+      path.push({x:tx,z:tz});                          // ต่อจุดสุดท้ายไปที่ตัวอักษรจริง
+      for(let i=1;i<path.length-1;i++){                // precompute ทิศเลี้ยวแต่ละจุด
+        const a=Math.atan2(path[i].x-path[i-1].x, -(path[i].z-path[i-1].z));
+        const b=Math.atan2(path[i+1].x-path[i].x, -(path[i+1].z-path[i].z));
+        let d=b-a; d=((d+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+        path[i].turn = Math.abs(d)<0.5?'straight':(d>0?'right':'left');
+      }
+      gpsRoute=path; gpsWpi=path.length>1?1:0;
+    } else { gpsRoute=[{x:tx,z:tz}]; gpsWpi=0; }        // fallback เส้นตรง (เชื่อมถนนไม่ถึง)
+  }
+  // ผ่าน waypoint ที่ถึงแล้ว
+  while(gpsWpi<gpsRoute.length-1 && Math.hypot(gpsRoute[gpsWpi].x-cx,gpsRoute[gpsWpi].z-cz)<9) gpsWpi++;
+  const wp=gpsRoute[Math.min(gpsWpi,gpsRoute.length-1)];
+  // ระยะที่เหลือ "ตามถนน"
+  let remain=Math.hypot(wp.x-cx,wp.z-cz);
+  for(let i=gpsWpi;i<gpsRoute.length-1;i++) remain+=Math.hypot(gpsRoute[i+1].x-gpsRoute[i].x,gpsRoute[i+1].z-gpsRoute[i].z);
+  // ลูกศรชี้ waypoint ถัดไป (ตามแนวถนน)
+  let rel=Math.atan2(wp.x-cx,-(wp.z-cz))+yaw;
   rel=((rel+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
   if(gpsArrowEl) gpsArrowEl.style.transform='rotate('+(rel*180/Math.PI).toFixed(0)+'deg)';
-  if(gpsDistEl) gpsDistEl.textContent = dist>=1000?(dist/1000).toFixed(1)+' กม.':Math.round(dist)+' ม.';
+  if(gpsDistEl) gpsDistEl.textContent = remain>=1000?(remain/1000).toFixed(1)+' กม.':Math.round(remain)+' ม.';
   if(gpsLetEl) gpsLetEl.textContent = gpsTarget.ch.toUpperCase();
-  const a=Math.abs(rel);
-  let turn = a<0.44?'straight' : a>2.36?'uturn' : (rel>0?'right':'left');
-  if(gpsTurnEl) gpsTurnEl.textContent = {straight:'ตรงไป',left:'เลี้ยวซ้าย',right:'เลี้ยวขวา',uturn:'กลับรถ'}[turn];
-  // เสียงแบบ Google Maps
-  if(dist<9){
+  // หาเลี้ยวถัดไป + ระยะถึงจุดเลี้ยว (ตามถนน)
+  let turnDir='straight', turnDist=Math.hypot(wp.x-cx,wp.z-cz);
+  for(let i=gpsWpi;i<gpsRoute.length-1;i++){
+    if(gpsRoute[i].turn && gpsRoute[i].turn!=='straight'){ turnDir=gpsRoute[i].turn; break; }
+    turnDist+=Math.hypot(gpsRoute[i+1].x-gpsRoute[i].x,gpsRoute[i+1].z-gpsRoute[i].z);
+  }
+  const showTurn=(turnDir!=='straight' && turnDist<38)?turnDir:'straight';
+  if(gpsTurnEl) gpsTurnEl.textContent = {straight:'ตรงไป',left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[showTurn];
+  // เสียงนำทางแบบ Google Maps
+  if(finalDist<9){
     if(gpsArrivedFor!==gpsTarget){ gpsArrivedFor=gpsTarget; gpsSpeak('You have arrived at letter '+gpsTarget.ch.toUpperCase()+'.',true); }
     return;
   }
-  const mile = dist<25?25 : dist<60?60 : dist<130?130 : 0;
-  if(mile && mile!==gpsMile){
-    gpsMile=mile;
-    if(turn==='straight') gpsSpeak('Continue straight for '+mile+' meters.');
-    else if(turn==='uturn') gpsSpeak('Make a U-turn when possible.');
-    else gpsSpeak('In '+mile+' meters, turn '+turn+'.');
-  }
-  if(dist<45 && turn!=='straight' && turn!=='uturn' && turn!==gpsLastTurn){
-    gpsLastTurn=turn; gpsSpeak('Turn '+turn+' now.');
+  if(turnDir!=='straight'){
+    const mile = turnDist<20?20 : turnDist<45?45 : turnDist<95?95 : 0;
+    if(mile && (mile!==gpsMile || turnDir!==gpsLastTurn)){
+      gpsMile=mile; gpsLastTurn=turnDir;
+      gpsSpeak(mile<=20 ? 'Turn '+turnDir+' now.' : 'In '+mile+' meters, turn '+turnDir+'.');
+    }
+  }else{
+    const mile = remain<45?45 : remain<130?130 : 0;
+    if(mile && (mile!==gpsMile || gpsLastTurn!=='straight')){ gpsMile=mile; gpsLastTurn='straight';
+      gpsSpeak('Continue straight for '+mile+' meters.'); }
   }
 }
 function tickDrive(dt,now){
@@ -6202,7 +6289,7 @@ function start(md){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
-    gpsTarget=null; gpsSpokeAt=0; gpsLastTurn=''; gpsMile=0; gpsArrivedFor=null;   // 🧭 รีเซ็ต GPS
+    gpsTarget=null; gpsSpokeAt=0; gpsLastTurn=''; gpsMile=0; gpsArrivedFor=null; gpsRoute=null; gpsRouteFor=null;   // 🧭 รีเซ็ต GPS
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
     bobPitch=0; bobPitchV=0; _bobPrevSpd=0; _bobSkin=null;  // 🪆 รอบ 193: รีเซ็ตก้ม-เงย + บังคับใส่สกินใหม่
@@ -6346,7 +6433,9 @@ window.Adventure3D={
                          get yaw(){return yaw}, set yaw(v){yaw=v;},
                          // 🚦 รอบ 133: testkit ไฟจราจร/เจตนาชน
                          get lights(){return worlds.drive.d.tlights}, forceLight(v){rlForce=v; rlChkAt=0;},
-                         get peerHits(){return carPeerHits}, phase:tlightPhase}; },
+                         get peerHits(){return carPeerHits}, phase:tlightPhase,
+                         get gpsRoute(){return gpsRoute}, get gpsTarget(){return gpsTarget},
+                         route(sx,sz,tx,tz){return routeGrid(worlds.drive.d,sx,sz,tx,tz);}}; },
     get soccer(){ return {get ball(){return soccerBall}, get vel(){return sbVel}, get live(){return sbLive},
                           get aimYaw(){return aimYaw}, set aimYaw(v){aimYaw=v},
                           get aimPitch(){return aimPitch}, set aimPitch(v){aimPitch=v},
