@@ -76,7 +76,7 @@ const MODES = {
     label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
-    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เล็งแล้ว<b>เตะบอล</b>ใส่ป้ายตัวอักษรที่ลอยหน้าประตู ให้ครบเป็นคำ<br>กดปุ่มเตะ<b>ค้าง</b>เพื่อเพิ่มพลัง แล้วปล่อย · เล็งขึ้น-ลง-ซ้าย-ขวาได้</small>',
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>กดปุ่มเตะ<b>ค้าง</b>เพิ่มพลังแล้วปล่อย · เล็งได้ทุกทิศ · ครบคำ +20🪙</small>',
     hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · V สลับมุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
@@ -171,8 +171,10 @@ const SOCCER_SHIRTS=[
 const BALL_R=0.34, BALL_G=17, PLAYER_Z=8, GOAL_Z=-19;      // รัศมีบอล · แรงโน้มถ่วง · จุดยืน/ประตู (แกน z)
 const GOAL_HW=4, GOAL_H=3;                                 // ครึ่งกว้างประตู · ความสูงคาน
 const KICK_SPD_MIN=9, KICK_SPD_MAX=32, CHARGE_RATE=78;     // ความเร็วเตะต่ำ-สูง (m/s) · พลังชาร์จ/วินาที
-const AIM_YAW_SP=0.9, AIM_PITCH_SP=0.7, SOCCER_COLLECT=1.5;// ความไวเล็ง + ระยะบอลชนป้าย
+const AIM_YAW_SP=0.9, AIM_PITCH_SP=0.7, SOCCER_COLLECT=1.7;// ความไวเล็ง + ระยะบอลชนป้าย
+const SOCCER_TILES=14, SOCCER_LETTER_COIN=5;              // จำนวนป้ายเป้าคงที่ · เหรียญ/ตัวอักษรที่ประกอบคำได้
 let soccerBall=null, soccerPlayer=null, soccerGuide=[];    // ลูกบอล · หุ่นนักเตะ · จุดพรีวิววิถีเตะ
+let _soccerTileGeo=null, coinPopEl=null;                   // geometry ป้าย (แชร์) · เลเยอร์ป๊อปเหรียญ
 let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
 let aimYaw=0, aimPitch=0.34, sChg=0, sCharging=false, sKickHeld=false, sPrevV=false, sLegSwing=0;
 let soccerCam1=false;                                      // true=มุมมองบุคคลที่ 1
@@ -1513,8 +1515,8 @@ function completeWord(i){
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(60);
   showBanner(`🎉 <b>${escapeHTML(w.en.toUpperCase())}</b> = ${escapeHTML(w.th)}<br><span class="adv-ban-coin">+${M.reward} 🪙</span>`);
   const fresh=pickWords(1);                 // เติมคำใหม่ให้ครบ 10 (8.4)
-  fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); });
-  ensureCoverage();
+  if(M.soccer){ fresh.forEach(nw=>words.push(nw)); soccerRetarget(); }   // ⚽ ป้ายคงที่ รีไซเคิลเอง (ไม่ spawn เพิ่ม)
+  else{ fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); }); ensureCoverage(); }
   if(myRef) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
   // 🎖️ สตรีคนักบิน (รอบ 62): ประกอบคำในโลกเฮลิฯ +1 · ข้ามเส้น 5/15/30 → เข็มใหม่ (ไม่มีวันหลุด)
   if(M.heli){
@@ -2023,7 +2025,7 @@ function onPeerData(snap){
   if(typeof d.x!=='number' || typeof d.z!=='number') return;
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
-  const walkBlk=(mode==='adv'||mode==='haunt');   // 🧱 โลกเดิน: เพื่อน = หุ่นบล็อกเดินได้ (แทน sprite แบน)
+  const walkBlk=(mode==='adv'||mode==='haunt'||mode==='soccer');   // 🧱 โลกเดิน/สนามฟุตบอล: เพื่อน = หุ่นบล็อกเดินได้ (มาร่วมเตะในสนามเดียวกัน)
   if(!p){
     // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกเดิน = หุ่นบล็อกเดิน · เฮลิฯ/โดรนคง sprite เดิม
     p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid):walkBlk?makeBlockWalkPeer(d.n,d.av,uid):makePeerSprite(d.n,d.av),
@@ -3234,7 +3236,17 @@ function buildDom(){
   #adv-soccerstart #ss-no{font-size:30px;font-weight:900;color:#fff;min-width:56px;text-align:center}
   #adv-soccerstart #ss-go{display:block;margin:16px auto 0;background:linear-gradient(135deg,#43a047,#2e7d32);
     color:#fff;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:18px;padding:11px 34px;cursor:pointer}
-  #adv-soccerstart #ss-go:active{transform:scale(.96)}`;
+  #adv-soccerstart #ss-go:active{transform:scale(.96)}
+  /* 🪙 ป๊อปเหรียญตอนเตะโดนตัวอักษรที่ประกอบคำได้ — เด้งใหญ่แล้วลอยขึ้นจาง (หวือหวาเหมือนจับคู่คำศัพท์) */
+  #adv-coinpop{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden}
+  #adv-coinpop .sc-pop{position:absolute;transform:translate(-50%,-50%);font-weight:900;
+    font-size:clamp(20px,4.4vw,30px);color:#ffdf4d;white-space:nowrap;
+    text-shadow:0 0 10px rgba(255,190,30,.9),0 2px 5px #000;animation:scPop .9s ease-out forwards}
+  @keyframes scPop{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+    22%{opacity:1;transform:translate(-50%,-58%) scale(1.25)}
+    38%{transform:translate(-50%,-62%) scale(1)}
+    100%{opacity:0;transform:translate(-50%,-150%) scale(1)}}
+  html.no-anim #adv-coinpop .sc-pop{animation:none;opacity:0}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -3336,6 +3348,7 @@ function buildDom(){
     <button id="adv-kick">⚽<small>เตะ</small></button>
     <div id="adv-power"><div id="adv-power-fill"></div></div>
     <button id="adv-scam">👁️ มุมกล้อง</button>
+    <div id="adv-coinpop"></div>
     <div id="adv-soccerstart">
       <h3>⚽ เลือกชุดนักเตะ</h3>
       <div class="ss-lab">สีเสื้อ</div>
@@ -3580,6 +3593,7 @@ function buildDom(){
   // ⚽ โหมดสนามฟุตบอล — ปุ่มเล็ง (กดค้าง) · ปุ่มเตะ (กดค้าง=ชาร์จ) · สลับกล้อง · แผงเลือกชุด
   soccerStartEl=overlayEl.querySelector('#adv-soccerstart');
   powerFillEl=overlayEl.querySelector('#adv-power-fill');
+  coinPopEl=overlayEl.querySelector('#adv-coinpop');
   const holdBtn=(sel,down,up)=>{
     const el=overlayEl.querySelector(sel); if(!el) return;
     const d=e=>{ e.preventDefault(); e.stopPropagation(); down(); };
@@ -5336,6 +5350,85 @@ const DroneSound={
 function soccerLetterPos(){
   return {x:(Math.random()*2-1)*9, y:1.1+Math.random()*4, z:GOAL_Z+3+Math.random()*11};   // ลอยนิ่งหน้าประตู
 }
+/* ตัวอักษรนี้ยัง "ต้องการ" ประกอบคำเป้าหมายอยู่ไหม (need รวมทุกคำ > ที่เก็บใน inv แล้ว) */
+function letterNeeded(ch){
+  let need=0; words.forEach(w=>{ for(const c of w.en) if(c===ch) need++; });
+  return need > (inv[ch]||0);
+}
+/* multiset ตัวอักษรที่ยังต้องการ (เรียงตามลำดับคำ — คำแรกมาก่อน) */
+function soccerNeededSet(){
+  const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
+  Object.keys(inv).forEach(c=>{ if(need[c]) need[c]=Math.max(0,need[c]-(inv[c]||0)); });
+  const arr=[]; words.forEach(w=>{ for(const c of w.en){ if(need[c]>0){ arr.push(c); need[c]--; } } });
+  return arr;
+}
+function soccerTileGeo(){ return _soccerTileGeo||(_soccerTileGeo=new THREE.PlaneGeometry(2.4,2.4)); }
+/* ✨ ป้ายตัวอักษร "หวือหวา" เหมือนเหรียญ — พื้นทองไล่แสง + ประกายดาว + ตัวอักษรขาวขอบเข้ม (ตัวที่ประกอบคำได้) */
+function soccerGoldTexture(ch){
+  const key='SG'+ch; if(texCache[key]) return texCache[key];
+  const cv=document.createElement('canvas'); cv.width=cv.height=128; const c=cv.getContext('2d');
+  const g=c.createRadialGradient(52,44,8,64,64,74);
+  g.addColorStop(0,'#fff6c9'); g.addColorStop(.45,'#ffd23e'); g.addColorStop(1,'#e8952a');
+  c.beginPath(); c.roundRect(8,8,112,112,26); c.fillStyle=g; c.fill();
+  c.lineWidth=7; c.strokeStyle='#fff3b0'; c.stroke();
+  c.fillStyle='rgba(255,255,255,.9)';                       // ประกายดาว
+  [[30,28,7],[98,40,5],[46,104,5],[104,98,6]].forEach(([x,y,r])=>{
+    c.beginPath(); for(let k=0;k<8;k++){ const a=k/8*Math.PI*2, rr=k%2?r*.4:r; const px=x+Math.cos(a)*rr,py=y+Math.sin(a)*rr; k?c.lineTo(px,py):c.moveTo(px,py); } c.closePath(); c.fill();
+  });
+  c.fillStyle='#fff'; c.font='900 82px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  c.lineWidth=7; c.strokeStyle='rgba(140,70,0,.85)';
+  c.strokeText(ch.toUpperCase(),64,72); c.fillText(ch.toUpperCase(),64,72);
+  const t=new THREE.CanvasTexture(cv); texCache[key]=t; return t;
+}
+/* ป้ายฟุตบอล = Plane (หงายหลังได้จริง) · gold=ประกอบคำได้ · ปกติ=ตัวอักษรทั่วไป */
+function makeSoccerTile(ch,p){
+  const gold=letterNeeded(ch);
+  const mat=new THREE.MeshBasicMaterial({map:gold?soccerGoldTexture(ch):letterTexture(ch),transparent:true,side:THREE.DoubleSide});
+  const m=new THREE.Mesh(soccerTileGeo(),mat);
+  m.position.set(p.x,p.y,p.z);
+  scene.add(m);
+  return {ch,spr:m,born:performance.now(),baseY:p.y,home:{x:p.x,y:p.y,z:p.z},flip:0,cool:0,gold};
+}
+/* อัปเดตหน้าตาป้ายให้ตรงสถานะ needed (ทอง/ปกติ) — เรียกหลัง inv เปลี่ยน */
+function soccerRefreshSkins(){
+  letters.forEach(l=>{
+    const g=letterNeeded(l.ch);
+    if(g!==l.gold){ l.gold=g; l.spr.material.map=g?soccerGoldTexture(l.ch):letterTexture(l.ch); l.spr.material.needsUpdate=true; }
+  });
+}
+/* สร้างชุดป้ายเป้าคงที่ (SOCCER_TILES ใบ) — ครอบตัวอักษรที่ต้องการ + เติมสุ่มจากคำเป้าหมาย */
+function soccerBuildTargets(){
+  while(letters.length) removeLetter(0);
+  let chars=soccerNeededSet();
+  const pool=[]; words.forEach(w=>{ for(const c of w.en) pool.push(c); });
+  while(chars.length<SOCCER_TILES && pool.length) chars.push(pool[Math.floor(Math.random()*pool.length)]);
+  chars=chars.slice(0,SOCCER_TILES);
+  shuffle(chars).forEach(ch=>letters.push(makeSoccerTile(ch,soccerLetterPos())));
+}
+/* หลังประกอบคำเสร็จ: รีไซเคิลป้ายที่ไม่ต้องการแล้ว → ตัวอักษรที่ยังขาด (คงจำนวนป้ายเท่าเดิม) */
+function soccerRetarget(){
+  const need={}; soccerNeededSet().forEach(c=>need[c]=(need[c]||0)+1);
+  letters.forEach(l=>{ if(letterNeeded(l.ch)) need[l.ch]=Math.max(0,(need[l.ch]||0)-1); });   // ที่โชว์อยู่แล้ว
+  const want=[]; Object.keys(need).forEach(c=>{ for(let k=0;k<need[c];k++) want.push(c); });
+  letters.forEach(l=>{
+    if(!letterNeeded(l.ch) && want.length){
+      l.ch=want.shift();
+      l.home=soccerLetterPos(); l.spr.position.set(l.home.x,l.home.y,l.home.z); l.baseY=l.home.y;
+    }
+  });
+  soccerRefreshSkins();
+}
+function soccerCoinPop(worldPos){
+  if(!coinPopEl || !camera) return;
+  const v=worldPos.clone().project(camera);
+  if(v.z>1) return;
+  const el=document.createElement('div'); el.className='sc-pop';
+  el.innerHTML=`+${SOCCER_LETTER_COIN}🪙`;
+  el.style.left=((v.x*.5+.5)*window.innerWidth)+'px';
+  el.style.top=((-v.y*.5+.5)*window.innerHeight)+'px';
+  coinPopEl.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
 /* พื้นสนาม: หญ้าลายตัด + เส้นขาว (ขอบ/เส้นกลาง/วงกลมกลาง/กรอบเขตโทษ 2 ฝั่ง) */
 function soccerFieldTexture(){
   const cv=document.createElement('canvas'); cv.width=cv.height=512;
@@ -5503,11 +5596,20 @@ function tickSoccer(dt,now){
       else { sbVel.y=0; sbVel.x*=(1-1.7*dt); sbVel.z*=(1-1.7*dt); }          // กลิ้งบนพื้น (แรงเสียดทานต่อวินาที)
     }
     else { sbVel.x*=(1-.12*dt); sbVel.z*=(1-.12*dt); }                       // แรงต้านอากาศ (เฉพาะตอนลอย)
-    for(let i=letters.length-1;i>=0;i--){
-      const lp=letters[i].spr.position;
+    for(let i=0;i<letters.length;i++){
+      const l=letters[i], lp=l.spr.position;
+      if((l.cool||0)>now) continue;                                    // ยังหงายค้าง ยังไม่นับซ้ำ
       if(Math.hypot(lp.x-b.x,lp.y-b.y,lp.z-b.z)<SOCCER_COLLECT){
-        const ch=letters[i].ch; inv[ch]=(inv[ch]||0)+1; removeLetter(i);
-        sfx.coin(); speakLetter(ch); renderHudInv(); renderHudWords(); tryCompleteWords();
+        l.flip=1; l.cool=now+520;                                      // หงายหลังแล้วเด้งกลับ (1 เตะ 1 ครั้ง)
+        speakLetter(l.ch);
+        if(letterNeeded(l.ch)){                                        // ตัวประกอบคำได้ = +เหรียญ + ป๊อปหวือหวา
+          inv[l.ch]=(inv[l.ch]||0)+1;
+          addCoins(SOCCER_LETTER_COIN); sessionCoins+=SOCCER_LETTER_COIN;
+          soccerCoinPop(l.spr.position); sfx.coin();
+          renderHudInv(); renderHudWords(); renderHudTop();
+          tryCompleteWords();
+          soccerRefreshSkins();
+        } else { sfx.select(); }                                       // ตัวไม่ต้องการ = แค่เด้ง ไม่ได้เหรียญ
       }
     }
     if(!sbGoaled && b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){ sbGoaled=true; soccerCheer(); }
@@ -5519,7 +5621,20 @@ function tickSoccer(dt,now){
     } else sbRestAt=0;
   }
   soccerCamera(dt,dx,dz);
-  letters.forEach(l=>{ l.spr.position.y=(l.baseY||2)+Math.sin(now/500+l.spr.position.x)*.14; });
+  // แอนิเมชันป้าย: โดนเตะ = หงายหลัง+เด้งถอย แล้วสปริงกลับ · ปกติ = ลอยไหวเบาๆ
+  const hm={x:0,y:0,z:0};
+  letters.forEach(l=>{
+    const home=l.home||{x:l.spr.position.x,y:l.baseY||2,z:l.spr.position.z};
+    if(l.flip>0){
+      l.flip=Math.max(0,l.flip-dt*2.6);
+      const t=1-l.flip, s=Math.sin(t*Math.PI);
+      l.spr.rotation.x=-s*1.5;                        // หงายหลัง (ยอดเอนออกจากผู้เตะ)
+      l.spr.position.set(home.x, home.y+s*.35, home.z - s*.9);
+    } else {
+      l.spr.rotation.x=0;
+      l.spr.position.set(home.x, home.y+Math.sin(now/500+home.x)*.14, home.z);
+    }
+  });
 }
 function soccerKitShow(){
   if(!soccerStartEl) return;
@@ -5563,7 +5678,7 @@ function loop(){
       if(now-lastSpawn>M.monSpawnMs){ lastSpawn=now; spawnMonster(); }
     }
   }
-  if(now-lastEnsure>5000){ lastEnsure=now; relocateLetters(now); ensureCoverage(); }
+  if(now-lastEnsure>5000 && !M.soccer){ lastEnsure=now; relocateLetters(now); ensureCoverage(); }
   tickPeers(dt,now);
   sendPos(false);
   drawMinimap();
@@ -5634,7 +5749,7 @@ const INTRO={
           ['📯','<b>H</b> = บีบแตร · เมาส์ = ชะโงกมองข้างทาง']],
   },
   soccer:{
-    goal:'<b>เตะบอล</b>ใส่ป้ายตัวอักษรที่ลอยนิ่งหน้าประตู ให้ครบเป็นคำ = ได้เหรียญ · จุดสีขาวคือ<b>แนววิถีบอล</b>ช่วยเล็ง · เข้าประตูมีเสียงเชียร์!',
+    goal:'<b>เตะบอล</b>ใส่ป้ายตัวอักษร <b>สีทองวิบวับ</b> (ตัวที่ประกอบคำได้) = <b>ได้เหรียญ 🪙</b> · ป้ายจะ<b>หงายหลังแล้วเด้งกลับ</b>ให้เตะได้เรื่อยๆ · ครบคำ +20🪙 · เพื่อนมาร่วมเตะในสนามเดียวกันได้!',
     touch:[['🎯','ปุ่มลูกศร<b>ซ้าย</b> = เล็งขึ้น-ลง-ซ้าย-ขวา'],
            ['⚽','ปุ่ม <b>เตะ</b> ล่างขวา — กด<b>ค้าง</b>เพื่อเพิ่มพลัง (แถบพลังขวาจอ) แล้วปล่อย = เตะ'],
            ['🎥','ปุ่ม 👁️ มุมขวาบน = สลับมุมมองบุคคลที่ 1 / ที่ 3']],
@@ -5745,8 +5860,11 @@ function start(md){
   camera.far=M.drive?800:(M.soccer?400:220); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
-  words.forEach(spawnLettersForWord);
-  for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
+  if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
+  else{
+    words.forEach(spawnLettersForWord);
+    for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
+  }
   if(M.ghost){
     probeGhostImages();
     const gen=ghostGen;                            // ปล่อยผีเฉพาะตอนภาพโหลดเสร็จ (ยังโหลด=ด่านว่างไว้ก่อน ไม่โผล่ emoji)
