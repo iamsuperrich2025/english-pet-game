@@ -2943,6 +2943,13 @@ function buildDom(){
     background:linear-gradient(180deg,#ffe08a,#ffc23d);border:2px solid #fff;border-radius:12px;
     padding:4px 15px;box-shadow:0 3px 12px rgba(120,80,0,.4);animation:juncBlink .9s infinite}
   @keyframes juncBlink{0%,100%{opacity:1}50%{opacity:.55}}
+  /* 🚦 รอบ 185: แสงไฟเลี้ยวส้มกระพริบมุมบนซ้าย/ขวา (ตรงตำแหน่งลูกศร) — โชว์ตอนเปิดไฟเลี้ยวฝั่งนั้น */
+  .adv-tlglow{position:absolute;top:0;width:34vw;max-width:230px;height:46vh;pointer-events:none;
+    display:none;opacity:0;z-index:5}
+  #adv-tlglow-l{left:0;background:radial-gradient(120% 88% at 0% 20%,rgba(255,160,30,.9),rgba(255,120,0,.34) 40%,transparent 72%)}
+  #adv-tlglow-r{right:0;background:radial-gradient(120% 88% at 100% 20%,rgba(255,160,30,.9),rgba(255,120,0,.34) 40%,transparent 72%)}
+  .adv-tlglow.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
+  @keyframes tlGlowBlink{0%{opacity:.95}50%{opacity:0}100%{opacity:.95}}
   #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
   #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
@@ -3122,6 +3129,9 @@ function buildDom(){
       <canvas id="adv-bigmap-cv"></canvas>
     </div>
     <div id="adv-tlpad"><span>⬅️</span><i id="adv-tldot"></i><span>➡️</span></div>
+    <!-- 🚦 รอบ 185: แสงไฟเลี้ยวสีส้มกระพริบมุมซ้าย/ขวา (ตรงตำแหน่งลูกศรบนแดชบอร์ด) -->
+    <div id="adv-tlglow-l" class="adv-tlglow"></div>
+    <div id="adv-tlglow-r" class="adv-tlglow"></div>
     <div id="adv-lawwarn"></div>
     <div id="adv-carstart">
       <h3>🚗 เตรียมออกรถ</h3>
@@ -3793,6 +3803,10 @@ function tlSet(v){
   tlClickPh=-1;                                      // 🔊 รอบ 140: เปิดปุ๊บ "ติ๊ก" ดังทันทีเฟรมแรก (เหมือนรีเลย์จริง)
   const pad=document.getElementById('adv-tlpad');
   if(pad) pad.classList.toggle('sig',v!==0);
+  // 🚦 รอบ 185: แสงส้มกระพริบมุมซ้าย(v=1)/ขวา(v=2) ตรงตำแหน่งลูกศร
+  const gl=document.getElementById('adv-tlglow-l'), gr=document.getElementById('adv-tlglow-r');
+  if(gl) gl.classList.toggle('on',v===1);
+  if(gr) gr.classList.toggle('on',v===2);
   tlDotY(v===1?-1:v===2?1:0);
   if(myRef) sendPos(true);
 }

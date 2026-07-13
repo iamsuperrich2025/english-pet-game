@@ -1298,35 +1298,69 @@ function openChatInbox(){
   const onlineIds = new Set((Online.friends || []).map(f=>String(f.id||'')));
   const overlay = document.createElement('div');
   overlay.className = 'inbox-overlay';
-  const rows = friends.map((f,i)=>{
-    const unread = Online.chatUnread && Online.chatUnread[f.uid];
-    return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
-      <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
-      <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last" id="ib-last-${i}">…</small></span>
-      <span class="ib-meta"><small class="ib-time" id="ib-time-${i}"></small>${unread ? '<span class="ib-dot"></span>' : ''}</span>
-    </div>`;
-  }).join('');
   overlay.innerHTML = `<div class="ib-box">
     <div class="ib-head"><span>💬 ข้อความ</span><button class="ib-close" type="button">✕</button></div>
-    <div class="ib-list">${rows || `<div class="ib-empty">ยังไม่มีเพื่อนเลย 🤝<br>ไปกด ➕ เป็นเพื่อนจากรายชื่อคนออนไลน์ก่อน<br>เป็นเพื่อนกันแล้วส่งข้อความหากันได้เลย!</div>`}</div>
+    <div class="ib-story" id="ib-story"></div>
+    <div class="ib-list" id="ib-list"><div class="ib-empty">กำลังโหลดข้อความ… 💬</div></div>
   </div>`;
   document.body.appendChild(overlay);
-  overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
-  overlay.querySelector('.ib-close').addEventListener('click', ()=>{ sfx.select(); overlay.remove(); });
-  overlay.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
-    sfx.select(); overlay.remove(); openChat(friends[+r.dataset.i]);
-  }));
-  // เติมข้อความล่าสุด + เวลา รายคน (limitToLast 1 — เบา ครั้งเดียวตอนเปิด)
-  friends.forEach((f,i)=>{
-    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(1).once('value').then(snap=>{
-      let last = null; snap.forEach(ch=>{ last = ch.val(); });
-      const le = document.getElementById('ib-last-'+i), te = document.getElementById('ib-time-'+i);
-      if(!le) return;                                  // ผู้ใช้ปิดกล่องไปแล้ว
+  const close = ()=>overlay.remove();
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+  overlay.querySelector('.ib-close').addEventListener('click', ()=>{ sfx.select(); close(); });
+
+  // รอบ 185 (idea 2): แถบ "กำลังออนไลน์" แนวนอนบนสุด — วงกลมเพื่อนที่ออนไลน์ เลื่อนข้างได้ แบบ story row
+  const storyEl = overlay.querySelector('#ib-story');
+  const onlineFriends = friends.map((f,i)=>({f,i})).filter(x=>onlineIds.has(String(x.f.uid)));
+  if(onlineFriends.length){
+    storyEl.innerHTML = onlineFriends.map(({f,i})=>
+      `<button class="ib-story-item" data-i="${i}" type="button">
+        <span class="ib-story-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}<i class="ib-story-on"></i></span>
+        <small>${escapeHTML((f.n||'').trim().split(' ')[0])}</small>
+      </button>`).join('');
+    storyEl.querySelectorAll('.ib-story-item').forEach(b=>b.addEventListener('click', ()=>{
+      const f = friends[+b.dataset.i];
+      if(f){ sfx.select(); close(); openChat(f); }
+    }));
+  } else storyEl.style.display = 'none';
+
+  const listEl = overlay.querySelector('#ib-list');
+  if(!friends.length){
+    listEl.innerHTML = `<div class="ib-empty">ยังไม่มีเพื่อนเลย 🤝<br>ไปกด ➕ เป็นเพื่อนจากรายชื่อคนออนไลน์ก่อน<br>เป็นเพื่อนกันแล้วส่งข้อความหากันได้เลย!</div>`;
+    return;
+  }
+  // รอบ 185 (idea 1): ดึงข้อความล่าสุดของทุกคนก่อน (limitToLast 1) แล้วเรียงคนเพิ่งคุยขึ้นบนสุด แบบ Messenger
+  Promise.all(friends.map(f=>
+    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(1).once('value')
+      .then(snap=>{ let last = null; snap.forEach(ch=>{ last = ch.val(); }); return {f, last}; })
+      .catch(()=>({f, last:null}))
+  )).then(items=>{
+    if(!document.body.contains(overlay)) return;       // ผู้ใช้ปิดกล่องไปแล้ว
+    // เรียง ts มากสุดบน · ไม่เคยคุย (ts 0) ตกลงล่างตามลำดับเพื่อนเดิม (sort เสถียร)
+    items.sort((a,b)=>((b.last&&b.last.ts)||0)-((a.last&&a.last.ts)||0));
+    const sorted = items.map(x=>x.f);
+    listEl.innerHTML = items.map(({f,last},i)=>{
+      const unread = Online.chatUnread && Online.chatUnread[f.uid];
+      let lastTxt, timeTxt = '';
       if(last && typeof last.t === 'string'){
-        le.textContent = (last.f === onlineKey() ? selfPronoun() + ': ' : '') + last.t;
-        if(te && last.ts) te.textContent = ibTimeStr(last.ts);
-      }else le.textContent = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
-    }).catch(()=>{ const le = document.getElementById('ib-last-'+i); if(le) le.textContent = ''; });
+        lastTxt = (last.f === onlineKey() ? selfPronoun() + ': ' : '') + last.t;
+        if(last.ts) timeTxt = ibTimeStr(last.ts);
+      }else lastTxt = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
+      return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
+        <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
+        <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
+        <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? '<span class="ib-dot"></span>' : ''}</span>
+        <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
+      sfx.select(); close(); openChat(sorted[+r.dataset.i]);
+    }));
+    // รอบ 185 (idea 3): ปุ่ม 🌍 ท้ายแถว → เมนูชวนเล่นโลก 3D (tinv) — กันไม่ให้เด้ง openChat
+    listEl.querySelectorAll('.ib-world').forEach(b=>b.addEventListener('click', e=>{
+      e.stopPropagation();
+      const f = sorted[+b.dataset.i];
+      if(f) openFriendQuickMenu(f.uid, f.n, f.g);
+    }));
   });
 }
 
