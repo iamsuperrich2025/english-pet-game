@@ -499,6 +499,27 @@ function adBoardTexture(n){
   img.src='img/ads/ad_'+n+'.png';
   return tex;
 }
+/* 📢 รอบ 204: ป้ายโฆษณาตั้งพื้น (แผ่น 8:3 บนเสา 2 ต้น) — ใช้ adBoardTexture (โชว์ "ติดต่อโฆษณา โทร 064-357 6645"
+   ตราบใดที่ยังไม่มีไฟล์ img/ads/ad_<n>.png) · ติดในโลกที่ยังไม่มีป้าย (adv/haunt/drone/soccer/mecha) */
+let _adSeq=AD_COUNT;                                    // เลขป้ายเริ่มต่อจากเฮลิฯ (กันชน ad_<n>.png)
+function addAdBillboard(sc,n,x,z,angle,groundY){
+  const pw=7, ph=pw*3/8, postH=3;
+  const g=new THREE.Group();
+  const panel=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),
+    new THREE.MeshBasicMaterial({map:adBoardTexture(n),side:THREE.DoubleSide}));
+  panel.position.y=postH+ph/2; g.add(panel);
+  const poleG=new THREE.CylinderGeometry(.13,.13,postH+ph,6), poleM=new THREE.MeshLambertMaterial({color:0x37474f});
+  [-pw/3,pw/3].forEach(off=>{ const p=new THREE.Mesh(poleG,poleM); p.position.set(off,(postH+ph)/2,0); g.add(p); });
+  g.position.set(x,groundY||0,z); g.rotation.y=angle; sc.add(g);
+}
+/* วางป้ายเป็นวงรอบสนาม หันหน้าเข้ากลาง · tr!=null = เพิ่มกันชน (โลกเดิน) */
+function ringAds(sc,count,radius,groundY,tr){
+  for(let i=0;i<count;i++){
+    const a=(i+.5)/count*Math.PI*2, x=Math.cos(a)*radius, z=Math.sin(a)*radius;
+    addAdBillboard(sc,++_adSeq,x,z,Math.atan2(-x,-z),groundY);
+    if(tr) tr.push({x,z,r:1.4});
+  }
+}
 
 /* 🏙️ ผนังตึกโลกเฮลิฯ — default วาดหน้าต่างเรียงชั้น (procedural) ให้ดูมีมิติกว่ากล่องสีล้วน
    วางไฟล์ img/buildings/facade_<n>.png (n=1..6 · ภาพต่อกันได้/seamless จัตุรัส) → ผนังจริงขึ้นแทน tile ขึ้นตึกอัตโนมัติ
@@ -1378,6 +1399,7 @@ function buildScene(md){
     const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),new THREE.MeshLambertMaterial({color:0x2f3236}));
     basePad.rotation.x=-Math.PI/2; basePad.position.set(0,.03,0); sc.add(basePad);
     const all=[]; list.forEach(b=>b.solids.forEach(s=>all.push(s)));
+    ringAds(sc, 4, 14, 0, null);               // 📢 ป้ายโฆษณากลางลานเมืองร้าง (drone)
     worlds[md]={scene:sc, trees:tr, buildings:list, solids:all};
     return;
   }else if(md==='soccer'){
@@ -1395,6 +1417,7 @@ function buildScene(md){
     soccerGuide=[];
     const gm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
     for(let i=0;i<14;i++){ const d=new THREE.Mesh(new THREE.SphereGeometry(.09,7,6),gm); d.visible=false; sc.add(d); soccerGuide.push(d); }
+    ringAds(sc, 6, 26, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer)
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
   }else if(md==='mecha'){
@@ -1420,6 +1443,7 @@ function buildScene(md){
       if(Math.hypot(x,z)<8){ i--; continue; }
       cr.position.set(x,1.4,z); cr.rotation.z=(Math.random()-.5)*.5; sc.add(cr);
     }
+    ringAds(sc, 5, 45, 0, null);               // 📢 ป้ายโฆษณารอบสมรภูมิ (mecha)
     worlds[md]={scene:sc, trees:tr, buildings:[]};
     return;
   }else{
@@ -1458,6 +1482,7 @@ function buildScene(md){
       sc.add(w);
     }
   }
+  ringAds(sc, 6, 44, 0, tr);                 // 📢 ป้าย "ติดต่อโฆษณา" รอบสนาม (adv/haunt)
   worlds[md]={scene:sc, trees:tr};
 }
 
