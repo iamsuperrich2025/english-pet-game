@@ -51,6 +51,9 @@ const DEFAULT_STATE = {
   soccerDone:[],                      // คำที่ประกอบสำเร็จแล้วในโลกฟุตบอล (แยกคลังต่อโลก)
   soccerShirt:0xe53935,               // สีเสื้อนักเตะที่เลือกล่าสุด
   soccerNo:'10',                      // เบอร์หลังเสื้อที่เลือกล่าสุด
+  robots:[],                          // รอบ 199: หุ่นยนต์นักรบที่ครอบครอง (array ของ id · ซื้อกี่ตัวก็ได้)
+  mechaRobot:null,                    // หุ่นที่เลือกใช้ล่าสุดในโลก 3D
+  mechaDone:[],                       // คำที่พิชิตในโลกหุ่นยนต์ (แยกคลังต่อโลก)
   car:null,                           // 🚗 รอบ 131: รถส่วนตัว {id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month:'YYYY-MM',paid,carry}}
                                       //    ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ (ไม่มีรถ=ขับไม่ได้) · loan.carry=ยอดงวดค้างเลยกำหนด (>0 = ล็อกขับ)
   daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
@@ -279,6 +282,8 @@ function loadState(){
       if(!Array.isArray(s.soccerDone)) s.soccerDone = [];
       if(typeof s.soccerShirt !== 'number') s.soccerShirt = 0xe53935;
       if(typeof s.soccerNo !== 'string') s.soccerNo = '10';
+      if(!Array.isArray(s.robots)) s.robots = [];                                            // รอบ 199: หุ่นยนต์นักรบ
+      if(!Array.isArray(s.mechaDone)) s.mechaDone = [];
       // 🚗 รอบ 131: รถส่วนตัว — เซฟเก่า/ข้อมูลเสีย → ไม่มีรถ · loan เสีย → ถือว่าผ่อนหมดแล้ว (ให้ประโยชน์ผู้เล่น ปลอดภัยกว่าล็อกขับผิดๆ)
       if(!s.car || typeof s.car !== 'object' || !carInfo(s.car.id)) s.car = null;
       if(s.car){
@@ -483,6 +488,7 @@ function assetValue(){
   if(state.droneTicket) v += DRONE_PRICE;                                                  // ตั๋วโลกโดรน FPV (รอบ 85)
   if(state.driveTicket) v += DRIVE_PRICE;                                                  // ตั๋วโลกขับรถกำแพงเพชร (รอบ 113)
   if(state.soccerTicket) v += SOCCER_PRICE;                                                // ตั๋วโลกสนามฟุตบอล (รอบ 196)
+  if(Array.isArray(state.robots)) for(const rid of state.robots){ const r=(typeof ROBOTS!=='undefined')&&ROBOTS.find(x=>x.id===rid); if(r) v += r.price; }  // หุ่นยนต์นักรบ (รอบ 199)
   if(state.car){                                                                           // 🚗 รถ+พ.ร.บ.+ประกัน (รอบ 131)
     const c = carInfo(state.car.id);
     // ผ่อนอยู่นับเฉพาะส่วนที่จ่ายแล้ว (ราคาเต็ม - หนี้คงเหลือ) → ซื้อผ่อน net worth เท่าเดิม ไม่ได้แรงค์ฟรี

@@ -4055,7 +4055,12 @@ const WORLD3D = [
   { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
   { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
   { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',price:SOCCER_PRICE, card:'soccer-card', enter:enterSoccer3D },
+  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, card:'mkt-robots', enter:enterMecha3D },
 ];
+function gotoRobotShop(){
+  if(typeof openPanel === 'function') openPanel('panel-market');
+  setTimeout(()=>{ const s = document.getElementById('mkt-robots'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
+}
 
 function scrollShopCardIntoView(id){
   setTimeout(()=>{ const c = document.getElementById(id); if(c) c.scrollIntoView({behavior:'smooth', block:'center'}); }, 120);
@@ -4066,8 +4071,11 @@ function railWorldClick(w){
     if(typeof openPanel === 'function') openPanel('panel-shop');
     scrollShopCardIntoView(w.card); return;
   }
-  if(!state[w.ticketKey]){                                  // ยังไม่มีตั๋ว → พาไปการ์ดซื้อในร้านค้า
-    sfx.select(); toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในร้านค้าก่อนนะ`);
+  const hasAccess = w.owned ? w.owned() : !!state[w.ticketKey];
+  if(!hasAccess){                                           // ยังไม่มีตั๋ว/หุ่น → พาไปซื้อ
+    sfx.select();
+    if(w.mode === 'mecha'){ toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return; }
+    toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในร้านค้าก่อนนะ`);
     if(typeof openPanel === 'function') openPanel('panel-shop');
     scrollShopCardIntoView(w.card); return;
   }
@@ -4103,7 +4111,7 @@ function renderRailWorlds(){
   WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
-    const locked = !state[w.ticketKey];
+    const locked = w.owned ? !w.owned() : !state[w.ticketKey];
     const done   = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
     const afford = state.coins >= w.price;
     b.classList.toggle('locked', locked);
@@ -4427,6 +4435,7 @@ function renderMarketCard(){
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
   el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
+  el.querySelectorAll('.robot-buy').forEach(b=>b.addEventListener('click', ()=>buyRobot(b.dataset.id)));   // 🤖 หุ่นยนต์
   const insBtn = document.getElementById('car-buy-ins');
   if(insBtn) insBtn.addEventListener('click', buyCarInsurance);
   const payBtn = document.getElementById('car-pay-loan');
@@ -4564,7 +4573,104 @@ function renderVehicleShop(){
     · <b>ประกันภัย</b>เลือกได้ (🪙${fmtNum(CAR_INSURANCE)} — คุ้มครองชนรถผู้เล่นอื่น)
     · จ่ายสด หรือผ่อน ${CAR_LOAN_MONTHS} เดือน (ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}%) โปะปิดยอดได้ทุกเมื่อ</div>
     ${mine}
+    <div class="hq-grid car-grid">${grid}</div>
+    ${renderRobotShop()}`;
+}
+
+/* 🤖 หุ่นยนต์นักรบ (หมวดยานพาหนะ) — ซื้อกี่ตัวก็ได้ · มี ≥1 ตัว = เข้าโลกหุ่นยนต์ได้ */
+let robotsProbed = false;
+function robotImg(id){ return IMG_FILES[id] || null; }
+function renderRobotShop(){
+  if(!robotsProbed){
+    robotsProbed = true;
+    probeImages(ROBOTS.map(r=>r.id), 'img/robots').then(()=>{ if(document.getElementById('mkt-robots')) renderMarketCard(); });
+  }
+  const owned = state.robots || [];
+  const grid = ROBOTS.map(r=>{
+    const img = robotImg(r.id);
+    const have = owned.includes(r.id);
+    const btn = have ? `<button class="hq-price car-cur">🤖 มีแล้ว</button>`
+      : `<button class="hq-price robot-buy ${state.coins>=r.price?'':'cant-afford'}" data-id="${r.id}">🪙${fmtNum(r.price)} · ซื้อ</button>`;
+    return `<div class="hq-card ${have?'hq-cur':''}" style="border-color:${r.c}">
+      <div class="hq-head">${r.name}</div>
+      <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
+      <div class="robot-weap" style="color:${r.c}">🔫 ${r.weapon}</div>
+      ${btn}
+    </div>`;
+  }).join('');
+  return `<div class="mkt-listhead" id="mkt-robots">🤖 หุ่นยนต์นักรบ — โชว์รูมหุ่นรบ</div>
+    <div class="gp-note">หุ่นยนต์ยักษ์บังคับเดินหน้า-ถอยเหมือนกันทุกตัว · ต่างกันที่ <b>อาวุธ</b> · <b>ซื้อกี่ตัวก็ได้</b>
+    · มีหุ่นอย่างน้อย 1 ตัว = เข้า<b>โลกหุ่นยนต์นักรบ</b> ยิงเอเลี่ยนตัวอักษรได้ (พิชิตคำ 🪙35/คำ)</div>
     <div class="hq-grid car-grid">${grid}</div>`;
+}
+function buyRobot(id){
+  const r = ROBOTS.find(x=>x.id===id);
+  if(!r || (state.robots||[]).includes(id)) return;
+  if(state.coins < r.price){ sfx.wrong(); toast(`หุ่น ${r.name} 🪙${fmtNum(r.price)} — เหรียญยังไม่พอ สู้ๆ!`); return; }
+  askConfirm(`<h2>🤖 ซื้อหุ่นยนต์ ${r.name}</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(r.price)}</b> · อาวุธ: <b>${r.weapon}</b><br>
+    <small>บังคับเดินหน้า-ถอยเหมือนหุ่นเดิน · เข้าโลกหุ่นยนต์ยิงเอเลี่ยนตัวอักษร คำละ 🪙35<br>
+    ซื้อกี่ตัวก็ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! 🤖', ()=>{
+      state.coins -= r.price;
+      state.robots = state.robots || [];
+      state.robots.push(id);
+      if(!state.mechaRobot) state.mechaRobot = id;
+      sfx.buy();
+      toast(`🤖 ได้หุ่น ${r.name} แล้ว! เข้าโลกหุ่นยนต์นักรบได้เลย 💥`);
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha */
+async function enterMecha3D(){
+  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return;
+  const chosen = await pickMechaRobot();
+  if(!chosen) return;
+  state.mechaRobot = chosen; saveState();
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('🤖 กำลังบูตระบบหุ่นยนต์...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกหุ่นยนต์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('mecha');
+}
+/* หน้าต่างเลือกหุ่น (เฉพาะตัวที่ครอบครอง) — คืน id หรือ null ถ้ายกเลิก */
+function pickMechaRobot(){
+  return new Promise(res=>{
+    const owned = (state.robots||[]).map(id=>ROBOTS.find(r=>r.id===id)).filter(Boolean);
+    if(owned.length<=1){ res(owned[0]?owned[0].id:null); return; }
+    let sel = state.mechaRobot && owned.some(r=>r.id===state.mechaRobot) ? state.mechaRobot : owned[0].id;
+    const ov = document.createElement('div');
+    ov.className = 'levelup-overlay';
+    ov.innerHTML = `<div class="levelup-box" style="max-width:560px">
+      <h2>🤖 เลือกหุ่นออกรบ</h2>
+      <div class="hq-grid car-grid" id="rp-grid">${owned.map(r=>{
+        const img = robotImg(r.id);
+        return `<div class="hq-card rp-it${r.id===sel?' hq-cur':''}" data-id="${r.id}" style="border-color:${r.c};cursor:pointer">
+          <div class="hq-head">${r.name}</div>
+          <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${r.c}33;border-color:${r.c}">🤖</span>`}</div>
+          <div class="robot-weap" style="color:${r.c}">🔫 ${r.weapon}</div></div>`;
+      }).join('')}</div>
+      <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="rp-go">ออกรบ! 💥</button></div>
+    </div>`;
+    ov.querySelectorAll('.rp-it').forEach(el=>el.addEventListener('click',()=>{
+      sel = el.dataset.id; sfx.select();
+      ov.querySelectorAll('.rp-it').forEach(e2=>e2.classList.toggle('hq-cur', e2===el));
+    }));
+    ov.querySelector('.cb-x').addEventListener('click',()=>{ ov.remove(); res(null); });
+    ov.querySelector('#rp-go').addEventListener('click',()=>{ ov.remove(); res(sel); });
+    document.body.appendChild(ov);
+  });
 }
 
 /* กล่องซื้อรถ — แจ้งชัด 3 รายการ: ราคารถ · พ.ร.บ. (บังคับ) · ประกัน (ทางเลือก) + เลือกจ่ายสด/ผ่อน */

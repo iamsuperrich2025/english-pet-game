@@ -80,6 +80,14 @@ const MODES = {
     hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · V สลับมุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
+  mecha: {
+    label:'โลกหุ่นยนต์นักรบ', emoji:'🤖', reward:35, doneKey:'mechaDone',
+    shoot:false, ghost:false, mecha:true,
+    sky:0x232f45, fogN:36, fogF:250, ground:0x4a4a54,
+    intro:'🤖 <b>หุ่นยนต์นักรบ!</b><br><small>มุมมองในหุ่นยักษ์สูง 5 เมตร — เดินบุกยิง<b>เอเลี่ยนตัวอักษร</b><br>ยิงตัวอักษร<b>เรียงตามลำดับในคำ</b> ครบคำ = เอเลี่ยนระเบิด! · เอเลี่ยนเคลื่อนที่ตลอด เล็งดีๆ</small>',
+    hint:'W/S เดินหน้า-ถอย · A/D หันตัว · คลิก/ปุ่มยิง = ยิงตัวอักษร (ต้องเรียงลำดับ!) · เมาส์/ลากขวา = เล็ง',
+    koTitle:'🤖💥 หุ่นยนต์ถูกทำลาย!',
+  },
 };
 MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
@@ -181,6 +189,29 @@ let soccerCam1=false;                                      // true=มุมม�
 let sKitShirt=0xe53935, sKitNo='10';
 let sPadU=false, sPadD=false, sPadL=false, sPadR=false;    // ปุ่มเล็ง (มือถือ)
 let soccerStartEl=null, powerFillEl=null;
+
+/* ============================================================
+   🤖 โหมดหุ่นยนต์นักรบ (โหมด mecha · รอบ 199) — มุมมองในหุ่นสูง 5m เดินยิงเอเลี่ยนตัวอักษร
+   ยิงตัวอักษรเรียงลำดับในคำ → ครบคำ เอเลี่ยนระเบิด · เอเลี่ยนเคลื่อนที่ตลอด · เดินมีเสียงหุ่นย่ำ
+   ============================================================ */
+const MECHA_EYE=5.0, MECHA_ACCEL=9, MECHA_VMAX=11, MECHA_DECEL=7, MECHA_TURN=1.35;
+const ALIEN_COUNT=3, ALIEN_SPEED=2.4, MECHA_LETTER_COIN=3;
+/* อาวุธต่อหุ่น (ผูกกับ robot_id ในตลาด) — ต่างกันที่ สี tracer · จังหวะยิง · ลูกเล่น (twin/spread/beam) */
+const MECHA_WEAPONS={
+  robot_01:{name:'หอกพลาสมา',   color:0xff4d4d, gap:300},
+  robot_02:{name:'พลาสมาคู่',   color:0x37b6ff, gap:210, twin:true},
+  robot_03:{name:'ชุดจรวด',     color:0x6bd07a, gap:360, arc:true},
+  robot_04:{name:'เรลกัน',      color:0xffd24d, gap:340, rail:true},
+  robot_05:{name:'หมัดสายฟ้า',  color:0x8fe6ff, gap:230, bolt:true},
+  robot_06:{name:'พ่นไฟ',       color:0xff8a3a, gap:120, flame:true},
+  robot_07:{name:'จานเลื่อย',   color:0xff6b6b, gap:260, saw:true},
+  robot_08:{name:'เกาส์ช็อตกัน',color:0xffd23a, gap:330, spread:true},
+  robot_09:{name:'ลำแสงไอออน',  color:0x7a6cff, gap:120, beam:true},
+  robot_10:{name:'ปืนเยือกแข็ง',color:0xbfe9ff, gap:280, frost:true},
+};
+let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
+let mFwdBtn=0, mTurnBtn=0, mFireHeld=false;
+let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -1344,6 +1375,31 @@ function buildScene(md){
     const gm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
     for(let i=0;i<14;i++){ const d=new THREE.Mesh(new THREE.SphereGeometry(.09,7,6),gm); d.visible=false; sc.add(d); soccerGuide.push(d); }
     worlds[md]={scene:sc, trees:[], buildings:[]};
+    return;
+  }else if(md==='mecha'){
+    // 🤖 สมรภูมิเอเลี่ยน: พื้นมืด + ก้อนหิน/ซากปรักหักพัง + คริสตัลเรืองแสง + แสงสลัว (เอเลี่ยนสร้างตอน start)
+    sc.add(new THREE.HemisphereLight(0x8090c0,0x2a2a34,.9));
+    const key=new THREE.DirectionalLight(0xbfd0ff,.55); key.position.set(-30,60,20); sc.add(key);
+    const tr=[];
+    const rockM=new THREE.MeshLambertMaterial({color:0x3a3a44});
+    const rockG=new THREE.DodecahedronGeometry(1,0);
+    for(let i=0;i<40;i++){
+      const x=(Math.random()*2-1)*(HALF-6), z=(Math.random()*2-1)*(HALF-6);
+      if(Math.hypot(x,z)<10) continue;
+      const r=new THREE.Mesh(rockG,rockM); const s=1+Math.random()*3.4;
+      r.scale.set(s,s*.8,s); r.position.set(x,s*.4,z); r.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+      sc.add(r); tr.push({x,z,r:s*1.05});
+    }
+    // คริสตัลเรืองแสงสีม่วง/ฟ้า (บรรยากาศต่างดาว)
+    const cCol=[0x7c5cff,0x36e0ff,0xff5aa0,0x66ffcc];
+    for(let i=0;i<26;i++){
+      const cr=new THREE.Mesh(new THREE.ConeGeometry(.5+Math.random()*.7,2+Math.random()*4,5),
+        new THREE.MeshBasicMaterial({color:cCol[i%cCol.length]}));
+      const x=(Math.random()*2-1)*(HALF-4), z=(Math.random()*2-1)*(HALF-4);
+      if(Math.hypot(x,z)<8){ i--; continue; }
+      cr.position.set(x,1.4,z); cr.rotation.z=(Math.random()-.5)*.5; sc.add(cr);
+    }
+    worlds[md]={scene:sc, trees:tr, buildings:[]};
     return;
   }else{
     // ต้นไม้ตายกิ่งโกร๋น + ป้ายหลุมศพ + ฟักทอง + ดวงไฟวิญญาณ
@@ -3246,7 +3302,26 @@ function buildDom(){
     22%{opacity:1;transform:translate(-50%,-58%) scale(1.25)}
     38%{transform:translate(-50%,-62%) scale(1)}
     100%{opacity:0;transform:translate(-50%,-150%) scale(1)}}
-  html.no-anim #adv-coinpop .sc-pop{animation:none;opacity:0}`;
+  html.no-anim #adv-coinpop .sc-pop{animation:none;opacity:0}
+  /* 🤖 โหมดหุ่นยนต์นักรบ — ปุ่มบังคับใสๆ (เดินหน้า/ถอย/หัน/ยิง) + ไฮไลต์ตัวอักษรตัวถัดไปที่ต้องยิง */
+  .adv-mecha #adv-cross{width:26px;height:26px;background:none;border:2px solid rgba(120,230,255,.9);
+    border-radius:50%;box-shadow:0 0 8px rgba(0,0,0,.7),0 0 10px rgba(80,200,255,.5)}
+  .adv-mecha #adv-cross:after{content:'';position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;
+    transform:translate(-50%,-50%);background:rgba(140,240,255,.95)}
+  .adv-mecha .adv-fch.mnext{background:rgba(80,200,255,.4);box-shadow:0 0 12px rgba(80,200,255,.8);
+    outline:2px solid #7fe6ff}
+  .mecha-btn{position:absolute;display:none;z-index:6;pointer-events:auto;-webkit-user-select:none;user-select:none;
+    touch-action:none;background:rgba(120,200,255,.14);border:2px solid rgba(150,220,255,.5);color:#dff2ff;
+    border-radius:16px;align-items:center;justify-content:center;font-size:26px;font-weight:800;backdrop-filter:blur(2px)}
+  .mecha-btn:active{background:rgba(120,200,255,.34)}
+  .adv-touch.adv-mecha .mecha-btn{display:flex}
+  #mecha-fwd{left:22px;bottom:104px;width:76px;height:70px}
+  #mecha-back{left:22px;bottom:24px;width:76px;height:70px}
+  #mecha-left{left:112px;bottom:24px;width:70px;height:70px;border-radius:50%}
+  #mecha-right{left:190px;bottom:24px;width:70px;height:70px;border-radius:50%}
+  #mecha-fire{right:22px;bottom:34px;width:92px;height:92px;border-radius:50%;font-size:34px;
+    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}
+  #mecha-fire:active{background:rgba(255,90,110,.55)}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -3349,6 +3424,12 @@ function buildDom(){
     <div id="adv-power"><div id="adv-power-fill"></div></div>
     <button id="adv-scam">👁️ มุมกล้อง</button>
     <div id="adv-coinpop"></div>
+    <!-- 🤖 โหมดหุ่นยนต์นักรบ -->
+    <div class="mecha-btn" id="mecha-fwd">▲</div>
+    <div class="mecha-btn" id="mecha-back">▼</div>
+    <div class="mecha-btn" id="mecha-left">◀</div>
+    <div class="mecha-btn" id="mecha-right">▶</div>
+    <div class="mecha-btn" id="mecha-fire">🔫</div>
     <div id="adv-soccerstart">
       <h3>⚽ เลือกชุดนักเตะ</h3>
       <div class="ss-lab">สีเสื้อ</div>
@@ -3612,6 +3693,13 @@ function buildDom(){
   overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
 
+  // 🤖 ปุ่มบังคับหุ่นยนต์ (กดค้าง)
+  holdBtn('#mecha-fwd',()=>mFwdBtn=1,()=>mFwdBtn=0);
+  holdBtn('#mecha-back',()=>mFwdBtn=-1,()=>mFwdBtn=0);
+  holdBtn('#mecha-left',()=>mTurnBtn=-1,()=>mTurnBtn=0);
+  holdBtn('#mecha-right',()=>mTurnBtn=1,()=>mTurnBtn=0);
+  holdBtn('#mecha-fire',()=>mFireHeld=true,()=>mFireHeld=false);
+
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
   const shootBtn=overlayEl.querySelector('#adv-shoot');
@@ -3671,7 +3759,7 @@ function bindInput(){
     if(!overlayEl.classList.contains('on')) return;
     if(e.target && e.target.tagName==='INPUT') return;     // กำลังพิมพ์แชท
     if(e.code==='Enter' && running){ toggleChatBox(true); e.preventDefault(); return; }
-    if(M.soccer && (e.code==='Space'||e.code.startsWith('Arrow'))) e.preventDefault();   // ⚽ กันหน้าเลื่อน
+    if((M.soccer||M.mecha) && (e.code==='Space'||e.code.startsWith('Arrow'))) e.preventDefault();   // ⚽🤖 กันหน้าเลื่อน
     keys[e.code]=true;
   });
   document.addEventListener('keyup',e=>{ keys[e.code]=false; });
@@ -3679,7 +3767,7 @@ function bindInput(){
   if(!IS_TOUCH){
     canvasEl.addEventListener('click',()=>{
       if(M.soccer) return;                            // ⚽ ฟุตบอลใช้เมาส์กับปุ่ม HUD ไม่ล็อกเคอร์เซอร์
-      if(document.pointerLockElement===canvasEl) shoot();
+      if(document.pointerLockElement===canvasEl){ if(M.mecha) mechaFire(performance.now()); else shoot(); }
       else canvasEl.requestPointerLock();
     });
     document.addEventListener('mousemove',e=>{
@@ -3695,8 +3783,8 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer */
-        if(t.clientX<window.innerWidth*.45 && joyId===null){
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
           joyEl.classList.add('live');                 // รอบ 143: โหมดขับรถซ่อนวงจอยตอนพัก — โชว์เฉพาะตอนใช้จริง
@@ -5661,6 +5749,180 @@ function soccerKitGo(){
   else showIntro('soccer',false);
 }
 
+/* ============================================================
+   🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+   ============================================================ */
+const MechaAudio={
+  ctx:null,
+  ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return this.ctx; },
+  step(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t); o.frequency.exponentialRampToValueAtTime(38,t+.18);
+    const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.5,t+.012); g.gain.exponentialRampToValueAtTime(.0001,t+.26);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.28);
+    const n=c.createBufferSource(), buf=c.createBuffer(1,1400,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=.8;
+    const ng=c.createGain(); ng.gain.value=.14; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t); },
+  fire(color){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='square'; const f0=520+((color>>8)&0xff);
+    o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(130,t+.14);
+    const g=c.createGain(); g.gain.setValueAtTime(.2,t); g.gain.exponentialRampToValueAtTime(.001,t+.15);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16); },
+  boom(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*.6),c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+    n.buffer=buf; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1800,t); lp.frequency.exponentialRampToValueAtTime(120,t+.5);
+    const g=c.createGain(); g.gain.setValueAtTime(.6,t); g.gain.exponentialRampToValueAtTime(.001,t+.6);
+    n.connect(lp); lp.connect(g); g.connect(c.destination); n.start(t); },
+};
+function makeAlien(){
+  const grp=new THREE.Group();
+  const bodyCol=new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
+  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol}));
+  body.scale.set(1,1.15,1); grp.add(body);
+  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:0xffee55}));
+    e.position.set((i-1)*.8,.5,-1.95); grp.add(e); }
+  const tCol=new THREE.MeshLambertMaterial({color:bodyCol});
+  for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; const leg=new THREE.Mesh(new THREE.CylinderGeometry(.18,.05,2.8,6),tCol);
+    leg.position.set(Math.cos(a)*1.6,-1.7,Math.sin(a)*1.6); leg.rotation.z=Math.cos(a)*.5; leg.rotation.x=Math.sin(a)*.5; grp.add(leg); }
+  const word=(pickWords(1)[0])||{en:'cat',th:'แมว'};
+  const letters=[]; const n=word.en.length;
+  word.en.split('').forEach((ch,i)=>{
+    const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
+    spr.scale.set(1.9,1.9,1);
+    const off={x:(i-(n-1)/2)*2.3, y:3.3, z:0};      // แถวเรียงซ้าย→ขวา ตามลำดับคำ เหนือหัวเอเลี่ยน
+    spr.position.set(off.x,off.y,off.z); grp.add(spr);
+    letters.push({ch,spr,idx:i,off,done:false});
+  });
+  const p=alienSpawnPos();
+  grp.position.set(p.x,4.5,p.z); scene.add(grp);
+  const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now()};
+  aliens.push(al); return al;
+}
+function alienSpawnPos(){
+  for(let i=0;i<24;i++){ const x=(Math.random()*2-1)*(HALF-8), z=(Math.random()*2-1)*(HALF-8);
+    if(!camera || Math.hypot(x-camera.position.x,z-camera.position.z)>22) return {x,z}; }
+  return {x:0,z:-30};
+}
+function removeAlien(a){
+  scene.remove(a.grp);
+  a.grp.traverse(o=>{ if(o.material){ if(o.material.map&&o.material.map!==null&&o.geometry) {} o.material.dispose&&o.material.dispose(); } if(o.geometry) o.geometry.dispose&&o.geometry.dispose(); });
+  const i=aliens.indexOf(a); if(i>=0) aliens.splice(i,1);
+}
+function mechaHudWord(a){
+  if(!hudWordsEl) return;
+  if(!a){ hudWordsEl.innerHTML=''; return; }
+  const chips=a.word.en.split('').map((ch,i)=>
+    `<span class="adv-fch${i<a.nextIdx?' got':''}${i===a.nextIdx?' mnext':''}">${ch.toUpperCase()}</span>`).join('');
+  hudWordsEl.innerHTML=`<div class="adv-fword">${chips}</div><div class="adv-fth">${escapeHTML(a.word.th)}</div>`;
+}
+function mechaTracer(wx,wy,wz,hit){
+  const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
+  const from=camera.position.clone().addScaledVector(dir,1.4); from.y-=.5;
+  const to = hit ? new THREE.Vector3(wx,wy,wz)
+    : camera.position.clone().addScaledVector(dir,60);
+  const geo=new THREE.BufferGeometry().setFromPoints([from,to]);
+  const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:mechaWeapon.color,transparent:true}));
+  scene.add(line); mechaTracers.push({line,until:performance.now()+80});
+}
+function mechaFire(now){
+  mLastFire=now;
+  MechaAudio.fire(mechaWeapon.color);
+  camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  let best=null, bestD=0.1;
+  aliens.forEach(a=>a.letters.forEach(l=>{
+    if(l.done) return;
+    const wx=a.grp.position.x+l.off.x, wy=a.grp.position.y+l.off.y, wz=a.grp.position.z+l.off.z;
+    const v=new THREE.Vector3(wx,wy,wz).project(camera);
+    if(v.z>1) return;
+    const dd=Math.hypot(v.x,v.y);
+    if(dd<bestD){ bestD=dd; best={a,l,wx,wy,wz}; }
+  }));
+  if(best){
+    mechaTracer(best.wx,best.wy,best.wz,true);
+    if(best.l.idx===best.a.nextIdx){                 // ✅ ยิงถูกลำดับ → ตัวอักษรหาย
+      best.l.done=true; best.l.spr.visible=false; best.a.nextIdx++;
+      addCoins(MECHA_LETTER_COIN); sessionCoins+=MECHA_LETTER_COIN;
+      sfx.coin(); speakLetter(best.l.ch); renderHudTop();
+      if(mFocusAlien===best.a) mechaHudWord(best.a);
+      if(best.a.nextIdx>=best.a.word.en.length) explodeAlien(best.a);
+    }else{                                           // ❌ ผิดลำดับ → แฟลชแดง ตัวอักษรไม่หาย
+      const l=best.l; if(l.spr.material){ l.spr.material.color.setHex(0xff3030);
+        setTimeout(()=>{ if(l.spr&&l.spr.material) l.spr.material.color.setHex(0xffffff); },220); }
+      sfx.wrong();
+    }
+  }else mechaTracer(0,0,0,false);
+}
+function explodeAlien(a){
+  MechaAudio.boom();
+  let col=0x88ff88; try{ col=a.grp.children[0].material.color.getHex(); }catch(e){}
+  for(let i=0;i<20;i++){
+    const pc=new THREE.Mesh(new THREE.SphereGeometry(.42,6,5),new THREE.MeshBasicMaterial({color:i%2?0xffaa33:col,transparent:true}));
+    pc.position.copy(a.grp.position); scene.add(pc);
+    const dir=new THREE.Vector3(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1).normalize();
+    mechaTracers.push({line:pc,until:performance.now()+650,vel:dir.multiplyScalar(7+Math.random()*9),particle:true});
+  }
+  addCoins(M.reward); sessionCoins+=M.reward; sessionWords++;
+  if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
+  doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(80);
+  showBanner(`💥 <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${M.reward} 🪙</span>`);
+  setTimeout(()=>speakWord(a.word.en),500);
+  const wasFocus=(mFocusAlien===a);
+  removeAlien(a);
+  if(wasFocus){ mFocusAlien=null; mechaHudWord(null); }
+  makeAlien();
+  saveState(); renderHudTop(); renderBoard();
+  if(myRef) sendPos(true);
+}
+function tickMecha(dt,now){
+  // เดินหน้า-ถอย (โมเมนตัมหนักแบบหุ่น) + หันตัว
+  let fwd=mFwdBtn; if(keys.KeyW||keys.ArrowUp)fwd+=1; if(keys.KeyS||keys.ArrowDown)fwd-=1;
+  let turn=mTurnBtn; if(keys.KeyD||keys.ArrowRight)turn+=1; if(keys.KeyA||keys.ArrowLeft)turn-=1;
+  fwd=Math.max(-1,Math.min(1,fwd));
+  if(fwd) mSpeed+=MECHA_ACCEL*fwd*dt; else mSpeed-=Math.sign(mSpeed)*Math.min(Math.abs(mSpeed),MECHA_DECEL*dt);
+  mSpeed=Math.max(-MECHA_VMAX*.6,Math.min(MECHA_VMAX,mSpeed));
+  yaw-=turn*MECHA_TURN*dt;
+  const sin=Math.sin(yaw),cos=Math.cos(yaw);
+  let nx=camera.position.x - sin*mSpeed*dt, nz=camera.position.z - cos*mSpeed*dt;
+  camera.position.x=Math.max(-HALF+2,Math.min(HALF-2,nx));
+  camera.position.z=Math.max(-HALF+2,Math.min(HALF-2,nz));
+  // เดินย่ำ: bob หนัก + เสียงหุ่นทุกก้าว
+  if(Math.abs(mSpeed)>0.5){
+    mBobPhase+=Math.abs(mSpeed)*dt*0.9;
+    camera.position.y=MECHA_EYE+Math.abs(Math.sin(mBobPhase))*0.35;
+    const down=Math.sin(mBobPhase)<0;
+    if(down && !mStepDn){ mStepDn=true; MechaAudio.step(); if(state.haptic!==false&&navigator.vibrate)navigator.vibrate(16); }
+    if(!down) mStepDn=false;
+  }else camera.position.y+=(MECHA_EYE-camera.position.y)*Math.min(1,dt*4);
+  camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch);
+  camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  // ยิง (กดค้าง = ยิงรัวตามจังหวะอาวุธ)
+  if((mFireHeld||keys.Space) && now-mLastFire>mechaWeapon.gap) mechaFire(now);
+  // เอเลี่ยนเคลื่อนที่ + ไฮไลต์ตัวถัดไปที่ต้องยิง
+  aliens.forEach(a=>{
+    if(now>a.wanderAt){ a.tgt={x:(Math.random()*2-1)*(HALF-12),z:(Math.random()*2-1)*(HALF-12)}; a.wanderAt=now+2600+Math.random()*3200; }
+    const g=a.grp.position, dx=a.tgt.x-g.x, dz=a.tgt.z-g.z, d=Math.hypot(dx,dz)||1;
+    g.x+=dx/d*ALIEN_SPEED*dt; g.z+=dz/d*ALIEN_SPEED*dt; g.y=4.5+Math.sin(now/500+g.x)*.4;
+    a.letters.forEach(l=>{ if(!l.done && l.spr.material){ const nx2=(l.idx===a.nextIdx);
+      l.spr.scale.setScalar(nx2?2.5:1.9); l.spr.material.opacity=nx2?1:.8; } });
+  });
+  // โฟกัสเอเลี่ยนที่เล็งอยู่ → อัปเดต HUD คำ
+  let fa=null, fd=0.55;
+  aliens.forEach(a=>{ const l=a.letters[a.nextIdx]; if(!l||l.done) return;
+    const wx=a.grp.position.x+l.off.x, wy=a.grp.position.y+l.off.y, wz=a.grp.position.z+l.off.z;
+    const v=new THREE.Vector3(wx,wy,wz).project(camera); if(v.z>1) return;
+    const dd=Math.hypot(v.x,v.y); if(dd<fd){ fd=dd; fa=a; } });
+  if(fa!==mFocusAlien){ mFocusAlien=fa; mechaHudWord(fa); }
+  // tracer + particle ระเบิด
+  for(let i=mechaTracers.length-1;i>=0;i--){
+    const tr=mechaTracers[i];
+    if(tr.particle){ tr.line.position.addScaledVector(tr.vel,dt); tr.vel.y-=14*dt;
+      if(tr.line.material) tr.line.material.opacity=Math.max(0,(tr.until-now)/650); }
+    if(now>tr.until){ scene.remove(tr.line); if(tr.line.geometry)tr.line.geometry.dispose(); if(tr.line.material)tr.line.material.dispose(); mechaTracers.splice(i,1); }
+  }
+}
+
 function loop(){
   if(!running) return;
   rafId=requestAnimationFrame(loop);
@@ -5669,6 +5931,7 @@ function loop(){
   else if(M.drone){ tickDrone(dt,now); }
   else if(M.drive){ tickDrive(dt,now); }
   else if(M.soccer){ tickSoccer(dt,now); }
+  else if(M.mecha){ tickMecha(dt,now); }
   else{
     tickPlayer(dt,now);
     if(M.ghost){ tickGhosts(dt,now); }
@@ -5693,6 +5956,8 @@ function clearEntities(){
   while(letters.length) removeLetter(0);
   monsters.forEach(m=>{ scene.remove(m.spr); m.spr.material.dispose(); }); monsters=[];
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
+  aliens.forEach(a=>scene.remove(a.grp)); aliens=[];                          // 🤖 เอเลี่ยน
+  mechaTracers.forEach(t=>{ scene.remove(t.line); }); mechaTracers=[];
 }
 /* ============================================================
    ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
@@ -5757,6 +6022,15 @@ const INTRO={
           ['⚽','<b>เว้นวรรค</b> กดค้าง = ชาร์จพลัง ปล่อย = เตะ'],
           ['🎥','<b>V</b> = สลับมุมกล้อง 1st / 3rd person']],
   },
+  mecha:{
+    goal:'อยู่ในหุ่นยนต์ยักษ์สูง 5 เมตร — เดินบุกยิง<b>เอเลี่ยนตัวอักษร</b> · ตัวอักษรลอยข้างเอเลี่ยนเป็นคำ · <b>ยิงเรียงตามลำดับในคำ</b> (ตัวที่ต้องยิงจะเรืองแสง) ครบคำ = ระเบิด! · เอเลี่ยนเคลื่อนที่ตลอด',
+    touch:[['🕹️','ปุ่มใส <b>▲▼</b> ซ้ายล่าง = เดินหน้า-ถอย · <b>◀▶</b> = หันตัว'],
+           ['🔫','ปุ่ม <b>ยิง</b> ขวาล่าง (กดค้าง = ยิงรัว) · เล็งให้ตรงตัวอักษรตัวที่เรืองแสง'],
+           ['👀','ลากครึ่งจอ<b>ขวา</b> = หันเล็ง']],
+    keys:[['⌨️','<b>W/S</b> เดินหน้า-ถอย · <b>A/D</b> หันตัว'],
+          ['🔫','<b>คลิก</b> หรือ <b>เว้นวรรค</b> = ยิง (เรียงลำดับตัวอักษร!)'],
+          ['👀','<b>เมาส์</b> (คลิกจอล็อก) = หันเล็ง']],
+  },
 };
 function showIntro(md,reopen){
   if(!introEl) return;
@@ -5792,7 +6066,7 @@ function closeIntro(md){
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
 function start(md){
-  mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive'||md==='soccer')?md:'adv';
+  mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive'||md==='soccer'||md==='mecha')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
@@ -5800,6 +6074,7 @@ function start(md){
   if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
   if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
   if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }
+  if(mode==='mecha' && !(state.robots&&state.robots.length)){ toast('🤖 ต้องมีหุ่นยนต์อย่างน้อย 1 ตัวก่อนนะ'); return; }
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
   if(typeof Music!=='undefined') Music.suspendBg();   // 🎵 รอบ 181: พักเพลงพื้นหลัง (โลก 3D มี soundscape เอง)
@@ -5854,13 +6129,21 @@ function start(md){
     soccerCam1=false; sPadU=sPadD=sPadL=sPadR=false;
     soccerResetBall();
     camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
+  }else if(M.mecha){
+    // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
+    mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mTurnBtn=0; mFireHeld=false; mLastFire=0;
+    aliens=[]; mechaTracers=[]; mFocusAlien=null;
+    const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
+    mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
+    camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else{
     camera.position.set(0,EYE_H,0);
   }
-  camera.far=M.drive?800:(M.soccer?400:220); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล
+  camera.far=M.drive?800:(M.soccer?400:(M.mecha?320:220)); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
+  else if(M.mecha){ for(let i=0;i<ALIEN_COUNT;i++) makeAlien(); }   // 🤖 เอเลี่ยนตัวอักษร (แต่ละตัวมีคำของตัวเอง)
   else{
     words.forEach(spawnLettersForWord);
     for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
@@ -5873,7 +6156,7 @@ function start(md){
     whenGhostsReady(spawnAll);
     setTimeout(spawnAll, 9000);                     // กันเหนียว: ภาพค้างเกิน 9 วิ (เน็ตแย่/หาย) → ปล่อยไปก่อน (ด่านต้องมีผีเสมอ)
   }
-  else if(!M.heli && !M.drone && !M.drive && !M.soccer) spawnMonster();
+  else if(!M.heli && !M.drone && !M.drive && !M.soccer && !M.mecha) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
@@ -5881,6 +6164,7 @@ function start(md){
   overlayEl.classList.toggle('adv-drone',mode==='drone');
   overlayEl.classList.toggle('adv-drive',mode==='drive');
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
+  overlayEl.classList.toggle('adv-mecha',mode==='mecha');
   if(mode==='heli') HeliSound.start();
   else if(mode==='drone') DroneSound.start();
   // โหมด drive ไม่สตาร์ทเสียงเครื่องอัตโนมัติแล้ว (รอบ 128) — ผู้เล่นเลื่อนสวิตช์สตาร์ทเองในแผงเตรียมออกรถ
@@ -5974,6 +6258,9 @@ window.Adventure3D={
                           get charge(){return sChg}, kick:soccerKick, reset:soccerResetBall, kitGo:soccerKitGo,
                           get player(){return soccerPlayer}, get guide(){return soccerGuide},
                           get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v}}; },
+    get mecha(){ return {get aliens(){return aliens}, get weapon(){return mechaWeapon}, fire:mechaFire,
+                         spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set turn(v){mTurnBtn=v},
+                         get focus(){return mFocusAlien}, audio:MechaAudio}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
@@ -5984,6 +6271,7 @@ window.Adventure3D={
       else if(M.drone){ tickDrone(dt,now); }
       else if(M.drive){ tickDrive(dt,now); }
       else if(M.soccer){ tickSoccer(dt,now); }
+      else if(M.mecha){ tickMecha(dt,now); }
       else{
         tickPlayer(dt,now);
         if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
