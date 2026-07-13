@@ -1187,6 +1187,21 @@ function buildDriveCity(sc){
   worlds.drive.d.junctions=junctions;
 }
 
+/* ============================================================
+   🌅 ท้องฟ้าภาพจริง (รอบ 203) — ใส่ภาพ panorama 360° (equirectangular 2:1) เป็นฉากหลังท้องฟ้า
+   วางไฟล์ img/sky/<key>.jpg (หรือ .png) → เกน background เป็นภาพจริงทันที · ไม่มีไฟล์ = คงสีพื้นเดิม
+   prompt ภาพใน PROMPTS_SKY.md — 5 แบบใช้ครอบ 7 โลก
+   ============================================================ */
+const SKY_IMG={ adv:'sky_day', haunt:'sky_night', heli:'sky_dawn', drone:'sky_storm', drive:'sky_day', soccer:'sky_day', mecha:'sky_alien' };
+function applySky(sc, mode){
+  const key=SKY_IMG[mode]; if(!key || !sc) return;
+  const set=img=>{ const tex=new THREE.Texture(img); tex.needsUpdate=true;
+    tex.mapping=THREE.EquirectangularReflectionMapping; sc.background=tex; };
+  const jpg=new Image();
+  jpg.onload=()=>set(jpg);
+  jpg.onerror=()=>{ const png=new Image(); png.onload=()=>set(png); png.src='img/sky/'+key+'.png'; };  // ลอง .png ถ้าไม่มี .jpg
+  jpg.src='img/sky/'+key+'.jpg';
+}
 function buildScene(md){
   if(md==='drive'){
     const sc=new THREE.Scene();
@@ -6273,6 +6288,7 @@ function start(md){
   if(scene) clearEntities();                       // ล้างของโหมดก่อนหน้า (ถ้าเคยเข้า)
   if(!worlds[mode]) buildScene(mode);
   scene=worlds[mode].scene; trees=worlds[mode].trees||[]; buildings=worlds[mode].buildings||[];
+  if(!worlds[mode]._sky){ worlds[mode]._sky=1; applySky(scene, mode); }   // 🌅 ท้องฟ้าภาพจริง (ครั้งเดียว/โลก · ไม่มีไฟล์=คงสีพื้น)
   solids=worlds[mode].solids||[];
 
   hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;
