@@ -13,7 +13,8 @@
 
   let wsGame=null;                    // เกมปัจจุบัน (อยู่ในหน่วยความจำ · เก็บชั่วคราวลง state.wordSearch)
   let queue=[], qi=0, qGrade=null;    // คิวคำสุ่ม (ไม่ซ้ำข้ามเกมจนกว่าจะหมดคลัง)
-  let overlay=null, boardEl=null, gridEl=null, wordsEl=null, progEl=null, winEl=null;
+  let overlay=null, boardEl=null, gridEl=null, wordsEl=null, progEl=null, winEl=null, friendsEl=null;
+  let friendTimer=null;              // 👥 รีเฟรชรายชื่อเพื่อนออนไลน์เป็นระยะ
   let sel=null;                       // สถานะลากเลือก {r0,c0,cells}
 
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
@@ -83,6 +84,8 @@
           <div class="ws-find">🔤 หาคำเหล่านี้ให้เจอ</div>
           <div id="ws-words"></div>
           <div id="ws-prog"></div>
+          <div class="ws-friends-head">👥 เพื่อนออนไลน์ · Online Friends</div>
+          <div id="ws-friends"></div>
         </div>
       </div>
       <div class="ws-actions">
@@ -98,6 +101,13 @@
     wordsEl=overlay.querySelector('#ws-words');
     progEl =overlay.querySelector('#ws-prog');
     winEl  =overlay.querySelector('#ws-win');
+    friendsEl=overlay.querySelector('#ws-friends');
+    // 👥 ปุ่มเชิญเพื่อน (delegate — เปิดเมนูเชิญเดียวกับใน Lobby)
+    if(friendsEl) friendsEl.addEventListener('click', e=>{
+      const b=e.target.closest('.ws-fr-inv'); if(!b) return;
+      if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+      if(typeof openFriendQuickMenu==='function') openFriendQuickMenu(b.dataset.uid, b.dataset.n, b.dataset.g||'');
+    });
     overlay.querySelector('#ws-new').addEventListener('click', ()=>{ if(typeof sfx!=='undefined')sfx.select(); newGame(); });
     overlay.querySelector('#ws-stash').addEventListener('click', stash);
     overlay.querySelector('#ws-clear').addEventListener('click', clearExit);
@@ -119,6 +129,30 @@
     if(!wsGame) return;
     const done=wsGame.words.filter(w=>w.found).length;
     progEl.textContent=`เจอแล้ว ${done}/${wsGame.words.length} คำ`;
+  }
+  /* 👥 รายชื่อเพื่อนออนไลน์ + ปุ่มเชิญ · วนรายชื่อแบบซ่อน scrollbar (initSideScroll เหมือนกล่องอันดับ Lobby) */
+  function renderFriends(){
+    if(!friendsEl) return;
+    const head=overlay.querySelector('.ws-friends-head');
+    const esc=(typeof escapeHTML==='function')?escapeHTML:(s=>String(s==null?'':s));
+    const online=(typeof Online!=='undefined' && Online.ready);
+    const friends=online ? (Online.friends||[]) : [];
+    if(head) head.innerHTML=`👥 เพื่อนออนไลน์ · Online Friends${online?` <b>${friends.length}</b>`:''}`;
+    if(!online){
+      friendsEl.innerHTML=`<div class="ws-fr-note">🔌 ออนไลน์แล้วจะเห็นเพื่อนที่กำลังเล่นอยู่ พร้อมปุ่มเชิญ (Invite)</div>`;
+    }else if(!friends.length){
+      friendsEl.innerHTML=`<div class="ws-fr-note">ยังไม่มีเพื่อนออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>`;
+    }else{
+      friendsEl.innerHTML=friends.map(f=>{
+        const fid=esc(String(f.id||''));
+        return `<div class="ws-fr">
+          <span class="ws-fr-dot"></span>
+          <span class="ws-fr-name">${esc(f.n||'เพื่อน')}</span>
+          <button class="ws-fr-inv" type="button" data-uid="${fid}" data-n="${esc(f.n||'เพื่อน')}" data-g="${esc(f.g||'')}">Invite เชิญ</button>
+        </div>`;
+      }).join('');
+    }
+    if(typeof initSideScroll==='function') initSideScroll(friendsEl);   // ยาวเกินกล่อง = วนอัตโนมัติ · สั้น = ไม่วน
   }
 
   /* ---------- ลากเลือกแนวเส้นตรง 8 ทิศ ---------- */
@@ -204,9 +238,12 @@
     overlay.style.display='flex';
     void boardEl.offsetWidth;                 // reflow เพื่อให้ transition เลื่อนเข้าเห็นชัด
     boardEl.classList.add('open');
+    renderFriends();                          // 👥 โชว์เพื่อนออนไลน์ + วนรายชื่อ
+    clearInterval(friendTimer); friendTimer=setInterval(renderFriends, 6000);   // รีเฟรชเพื่อนที่เข้า/ออก
     if(typeof sfx!=='undefined'&&sfx.select)sfx.select();
   }
   function slideAway(after){
+    clearInterval(friendTimer); friendTimer=null;   // 👥 หยุดรีเฟรชตอนออก
     boardEl.classList.remove('open');
     setTimeout(()=>{ overlay.style.display='none'; if(after)after();
       if(typeof renderDashboard==='function') renderDashboard(); }, 520);   // รีเฟรชเหรียญบนหน้า Lobby
