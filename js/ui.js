@@ -1301,6 +1301,17 @@ const CHAT_EMOJI_CATS = [
     '🎉','🎊','✨','⭐','🌟','💫','🔥','🌈','☀️','🌸','🌷','🌹','🎁','🎈','💯','✅',
     '❌','❓','❗','💤','👑','🔔']},
 ];
+/* 🎨 รอบ 190: ธีมกล่องแชท — เน้นเพื่อน/แฟน/น่ารัก (พื้นหลังลายในไฟล์ css .chat-box.ct-<id>) */
+const CHAT_THEMES = [
+  {id:'sky',      emoji:'💙', name:'ฟ้าใส'},
+  {id:'mint',     emoji:'🍃', name:'เพื่อนซี้'},
+  {id:'love',     emoji:'💖', name:'คนพิเศษ'},
+  {id:'peach',    emoji:'🍑', name:'พีชหวาน'},
+  {id:'lavender', emoji:'💜', name:'ลาเวนเดอร์'},
+  {id:'bubble',   emoji:'🫧', name:'ฟองสบู่'},
+  {id:'night',    emoji:'🌙', name:'ราตรีดาว'},
+];
+const CHAT_SECRET_MS = 20000;   // อ่านแล้วข้อความหายใน 20 วินาที (แชทลับ)
 let chatUnsub = null;   // ฟังก์ชันเลิกฟังแชทที่เปิดอยู่ (มีได้ทีละกล่อง)
 
 /* ============================================================
@@ -1414,12 +1425,29 @@ function openChat(friend){
   if(!friend) return;
   if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะแชทได้นะ 📡'); return; }
   const me = onlineKey();
+  const pid = chatPairId(friend.uid);
+  // จำค่าธีม + สถานะแชทลับ แยกตามคู่สนทนา (เพื่อน/แฟนคนละธีมได้)
+  if(!state.chatTheme  || typeof state.chatTheme  !== 'object') state.chatTheme  = {};
+  if(!state.secretChat || typeof state.secretChat !== 'object') state.secretChat = {};
+  let theme = state.chatTheme[pid];
+  if(!CHAT_THEMES.some(t=>t.id === theme)) theme = 'sky';
+  let secretOn = !!state.secretChat[pid];
+
   const overlay = document.createElement('div');
   overlay.className = 'chat-overlay';
-  overlay.innerHTML = `<div class="chat-box">
+  overlay.innerHTML = `<div class="chat-box ct-${theme}" id="chat-box">
     <div class="chat-head">
       <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
+      <button class="chat-theme-btn" id="chat-theme-btn" type="button" title="เลือกธีม">🎨</button>
+      <label class="chat-secret-tg" title="แชทลับ: อ่านแล้วข้อความหายใน 20 วินาที">
+        <span class="cs-ic">🕵️</span>
+        <span class="cs-switch"><input type="checkbox" id="chat-secret"${secretOn ? ' checked' : ''}><span class="cs-slider"></span></span>
+      </label>
       <button class="chat-close" id="chat-close" type="button">✕</button>
+    </div>
+    <div class="chat-secret-note" id="chat-secret-note"${secretOn ? '' : ' style="display:none"'}>🕵️ แชทลับเปิดอยู่ — อ่านแล้วข้อความจะหายไปใน 20 วินาที</div>
+    <div class="chat-theme-strip" id="chat-theme-strip" style="display:none">
+      ${CHAT_THEMES.map(t=>`<button class="chat-theme-sw ct-${t.id}${t.id === theme ? ' on' : ''}" data-th="${t.id}" type="button" title="${t.name}"><span>${t.emoji}</span><small>${t.name}</small></button>`).join('')}
     </div>
     <div class="chat-msgs" id="chat-msgs"><div class="chat-empty">กำลังโหลดข้อความ... 💬</div></div>
     <div class="chat-typing" id="chat-typing" style="display:none"><span class="ct-dots"><i></i><i></i><i></i></span> ${escapeHTML(friend.n)} กำลังพิมพ์…</div>
@@ -1440,6 +1468,58 @@ function openChat(friend){
   const msgsEl = overlay.querySelector('#chat-msgs');
   const input  = overlay.querySelector('#chat-input');
   const emojiPanel = overlay.querySelector('#chat-emoji');
+  const box    = overlay.querySelector('#chat-box');
+
+  // 🎨 เลือกธีม (แถบ swatch เปิด/ปิด · จำแยกตามคู่สนทนา)
+  const themeStrip = overlay.querySelector('#chat-theme-strip');
+  overlay.querySelector('#chat-theme-btn').addEventListener('click', ()=>{
+    themeStrip.style.display = themeStrip.style.display === 'none' ? '' : 'none';
+  });
+  overlay.querySelectorAll('.chat-theme-sw').forEach(b=>b.addEventListener('click', ()=>{
+    theme = b.dataset.th;
+    box.className = 'chat-box ct-' + theme;
+    overlay.querySelectorAll('.chat-theme-sw').forEach(t=>t.classList.toggle('on', t === b));
+    themeStrip.style.display = 'none';
+    state.chatTheme[pid] = theme; saveState();
+    if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+  }));
+
+  // 🕵️ แชทลับ: อ่านแล้วลบข้อความใน 20 วิ (ฝั่งผู้อ่านลบ = อีกฝ่ายก็เห็นหายด้วย)
+  const secretNote = overlay.querySelector('#chat-secret-note');
+  const vanishTimers = new Map();   // msgKey → timeout id
+  const scheduleVanish = (key)=>{
+    if(!secretOn || vanishTimers.has(key)) return;
+    vanishTimers.set(key, setTimeout(()=>{
+      vanishTimers.delete(key);
+      if(typeof chatDeleteMsg === 'function') chatDeleteMsg(friend.uid, key);
+    }, CHAT_SECRET_MS));
+  };
+  const clearVanishTimers = ()=>{ vanishTimers.forEach(id=>clearTimeout(id)); vanishTimers.clear(); };
+  let lastMsgs = [];
+  overlay.querySelector('#chat-secret').addEventListener('change', e=>{
+    secretOn = e.target.checked;
+    state.secretChat[pid] = secretOn; saveState();
+    secretNote.style.display = secretOn ? '' : 'none';
+    if(!secretOn) clearVanishTimers();                       // ปิด = ยกเลิกนับถอยหลังที่ค้าง
+    renderMsgs(lastMsgs);                                    // อัปเดตแอนิเมชันจางบนบับเบิล
+    if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+  });
+
+  // วาดข้อความ (แยกฟังก์ชันเพื่อ re-render ตอนสลับแชทลับ)
+  function renderMsgs(msgs){
+    lastMsgs = msgs;
+    if(!msgs.length){
+      msgsEl.innerHTML = `<div class="chat-empty">ยังไม่มีข้อความ — ทักทายเพื่อนก่อนเลย! 👋</div>`;
+      return;
+    }
+    msgsEl.innerHTML = msgs.map(m=>{
+      const mine = m.f === me;
+      // บับเบิลของอีกฝ่าย + แชทลับเปิด = ค่อยๆ จางบอกว่ากำลังจะหาย
+      const vanish = (secretOn && !mine) ? ' vanish' : '';
+      return `<div class="chat-bubble${mine ? ' mine' : ''}${vanish}">${escapeHTML(m.t)}</div>`;
+    }).join('');
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
 
   overlay.querySelector('#chat-emoji-btn').addEventListener('click', ()=>{
     emojiPanel.style.display = emojiPanel.style.display === 'none' ? '' : 'none';
@@ -1487,6 +1567,7 @@ function openChat(friend){
   const close = ()=>{
     if(chatUnsub){ chatUnsub(); chatUnsub = null; }
     stopTyping();
+    clearVanishTimers();
     if(typeof chatClearTyping === 'function') chatClearTyping(friend.uid);
     overlay.remove();
   };
@@ -1496,14 +1577,17 @@ function openChat(friend){
   if(chatUnsub) chatUnsub();          // ปิดกล่องเก่าถ้ามีค้าง
   chatUnsub = chatListen(friend.uid, (msgs)=>{
     if(!document.body.contains(overlay)){ if(chatUnsub){ chatUnsub(); chatUnsub = null; } return; }
+    renderMsgs(msgs);
     if(!msgs.length){
-      msgsEl.innerHTML = `<div class="chat-empty">ยังไม่มีข้อความ — ทักทายเพื่อนก่อนเลย! 👋</div>`;
       if(typeof chatMarkSeen === 'function') chatMarkSeen(friend.uid);
       return;
     }
-    msgsEl.innerHTML = msgs.map(m=>
-      `<div class="chat-bubble${m.f === me ? ' mine' : ''}">${escapeHTML(m.t)}</div>`).join('');
-    msgsEl.scrollTop = msgsEl.scrollHeight;
+    // 🕵️ แชทลับ: ข้อความของอีกฝ่ายที่กำลังอ่านอยู่ → ตั้งเวลาลบ 20 วิ · ยกเลิกตัวที่หายไปแล้ว
+    if(secretOn){
+      const alive = new Set(msgs.map(m=>m.key));
+      msgs.forEach(m=>{ if(m.f !== me) scheduleVanish(m.key); });
+      vanishTimers.forEach((id,k)=>{ if(!alive.has(k)){ clearTimeout(id); vanishTimers.delete(k); } });
+    }
     // เปิดกล่องอยู่ = อ่านแล้ว: จำ ts ล่าสุด กันเด้งแจ้งเตือนซ้ำ (ข้อ 0.4)
     if(typeof chatMarkSeen === 'function') chatMarkSeen(friend.uid, msgs[msgs.length - 1].ts || Date.now());
   });

@@ -271,15 +271,49 @@ h1{color:var(--sky-d);text-shadow:none;}
   display:flex;align-items:center;justify-content:center;animation:fadeIn .25s;
 }
 .chat-box{
+  /* 🎨 รอบ 190: ตัวแปรธีม (ค่าเริ่มต้น = ฟ้าใส) — ธีมอื่น override ที่ .chat-box.ct-<id> */
+  --c-bg1:#eaf3fd; --c-bg2:#dbe9fa; --c-border:var(--sky-d);
+  --c-head1:var(--sky); --c-head2:var(--sky-d);
+  --c-bub:#fff; --c-bub-tx:#22344d;
+  --c-mine:var(--gold); --c-mine-tx:#5a4300;
+  --c-accent:#dceaff; --c-pat:none;
   width:min(94vw,440px);height:min(88vh,560px);display:flex;flex-direction:column;
-  background:linear-gradient(180deg,#eaf3fd,#dbe9fa);border:3px solid var(--sky-d);
+  background:linear-gradient(180deg,var(--c-bg1),var(--c-bg2));border:3px solid var(--c-border);
   border-radius:20px;overflow:hidden;box-shadow:0 14px 40px rgba(0,0,0,.35);
   animation:popIn .35s cubic-bezier(.2,1.5,.4,1);
 }
 .chat-head{
-  display:flex;align-items:center;gap:8px;padding:11px 14px;
-  background:linear-gradient(180deg,var(--sky),var(--sky-d));color:#fff;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;padding:11px 14px;
+  background:linear-gradient(180deg,var(--c-head1),var(--c-head2));color:#fff;flex-shrink:0;
 }
+/* 🎨 ปุ่มธีม + 🕵️ สวิตช์แชทลับ บนหัวกล่อง */
+.chat-theme-btn{
+  border:none;background:rgba(255,255,255,.22);color:#fff;border-radius:9px;
+  width:30px;height:30px;font-size:15px;cursor:pointer;flex-shrink:0;
+}
+.chat-theme-btn:active{transform:scale(.9);}
+.chat-secret-tg{display:flex;align-items:center;gap:4px;flex-shrink:0;cursor:pointer;}
+.chat-secret-tg .cs-ic{font-size:15px;line-height:1;}
+.cs-switch{position:relative;display:inline-block;width:38px;height:21px;}
+.cs-switch input{position:absolute;opacity:0;width:0;height:0;}
+.cs-slider{position:absolute;inset:0;background:rgba(255,255,255,.3);border-radius:21px;
+  transition:background .18s;}
+.cs-slider::before{content:"";position:absolute;left:2px;top:2px;width:17px;height:17px;
+  background:#fff;border-radius:50%;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+.cs-switch input:checked + .cs-slider{background:#ff5d8f;}
+.cs-switch input:checked + .cs-slider::before{transform:translateX(17px);}
+.chat-secret-note{flex-shrink:0;text-align:center;font-size:11.5px;color:#7a5a00;
+  background:rgba(255,214,102,.35);padding:4px 10px;border-bottom:1px solid rgba(0,0,0,.05);}
+/* 🎨 แถบเลือกธีม (swatch) */
+.chat-theme-strip{flex-shrink:0;display:flex;gap:6px;overflow-x:auto;padding:8px 10px;
+  background:rgba(255,255,255,.7);border-bottom:1px solid var(--glass-line);}
+.chat-theme-sw{flex-shrink:0;border:2px solid rgba(0,0,0,.12);border-radius:12px;cursor:pointer;
+  width:52px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:1px;padding:2px;background:linear-gradient(180deg,var(--c-bg1),var(--c-head2));}
+.chat-theme-sw span{font-size:16px;line-height:1;}
+.chat-theme-sw small{font-size:8.5px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;}
+.chat-theme-sw.on{border-color:#fff;box-shadow:0 0 0 2px var(--sky-d);}
+.chat-theme-sw:active{transform:scale(.93);}
 .chat-head-name{flex:1;font-weight:600;font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .chat-head-name small{opacity:.82;font-weight:400;font-size:12.5px;}
 .chat-close{
@@ -288,6 +322,7 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 .chat-msgs{
   flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:7px;
+  background-image:var(--c-pat);background-attachment:local;
 }
 .chat-empty{margin:auto;color:#5a6b82;font-size:13.5px;text-align:center;padding:0 20px;}
 /* 💬 รอบ 187 (A2): แถว "กำลังพิมพ์…" ใต้ข้อความ */
@@ -301,14 +336,18 @@ h1{color:var(--sky-d);text-shadow:none;}
 @keyframes ctBlink{0%,60%,100%{opacity:.3;transform:translateY(0);}30%{opacity:1;transform:translateY(-3px);}}
 html.no-anim .ct-dots i{animation:none;opacity:.7;}
 .chat-bubble{
-  max-width:78%;align-self:flex-start;background:#fff;color:#22344d;
+  max-width:78%;align-self:flex-start;background:var(--c-bub);color:var(--c-bub-tx);
   padding:8px 12px;border-radius:14px 14px 14px 4px;font-size:15px;line-height:1.4;
   word-break:break-word;box-shadow:0 1px 2px rgba(0,0,0,.08);
 }
 .chat-bubble.mine{
-  align-self:flex-end;background:var(--gold);color:#5a4300;
+  align-self:flex-end;background:var(--c-mine);color:var(--c-mine-tx);
   border-radius:14px 14px 4px 14px;
 }
+/* 🕵️ แชทลับ: บับเบิลของอีกฝ่ายจางลงช่วงท้าย บอกว่ากำลังจะหาย (20 วิ) */
+.chat-bubble.vanish{animation:secretFade 20s linear forwards;}
+@keyframes secretFade{0%,70%{opacity:1;}100%{opacity:.28;filter:blur(.4px);}}
+html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .chat-emoji{
   display:flex;flex-wrap:wrap;gap:2px;padding:8px 10px;max-height:140px;overflow-y:auto;
   background:rgba(255,255,255,.65);border-top:1px solid var(--glass-line);flex-shrink:0;
@@ -323,20 +362,84 @@ html.no-anim .ct-dots i{animation:none;opacity:.7;}
   background:rgba(255,255,255,.9);border-top:1px solid var(--glass-line);
 }
 .chat-emoji-btn{
-  border:none;background:#dceaff;border-radius:10px;width:38px;height:38px;
+  border:none;background:var(--c-accent);border-radius:10px;width:38px;height:38px;
   font-size:20px;cursor:pointer;flex-shrink:0;
 }
 #chat-input{
-  flex:1;min-width:0;padding:9px 13px;border:2px solid #b9d2f0;border-radius:12px;
+  flex:1;min-width:0;padding:9px 13px;border:2px solid var(--c-accent);border-radius:12px;
   font-family:inherit;font-size:15.5px;
 }
 .chat-send{
-  border:none;background:var(--gold);color:#5a4300;box-shadow:0 3px 0 var(--gold-d);
+  border:none;background:var(--c-mine);color:var(--c-mine-tx);box-shadow:0 3px 0 rgba(0,0,0,.18);
   border-radius:12px;padding:9px 16px;font-family:inherit;font-weight:700;font-size:15px;
   cursor:pointer;flex-shrink:0;transition:transform .1s;
 }
 .chat-send:active{transform:scale(.94);}
 .chat-send:disabled{filter:grayscale(.5);opacity:.6;}
+
+/* ---------- 🎨 รอบ 190: ธีมกล่องแชท (เพื่อน/แฟน/น่ารัก) ---------- */
+/* 💙 ฟ้าใส (ค่าเริ่มต้น) — ระบุชัดเพื่อให้ swatch พรีวิวถูกแม้กล่องใช้ธีมอื่น */
+.chat-box.ct-sky,.chat-theme-sw.ct-sky{
+  --c-bg1:#eaf3fd; --c-bg2:#dbe9fa; --c-border:var(--sky-d);
+  --c-head1:var(--sky); --c-head2:var(--sky-d);
+  --c-bub:#fff; --c-bub-tx:#22344d; --c-mine:var(--gold); --c-mine-tx:#5a4300;
+  --c-accent:#dceaff;
+}
+/* 🍃 เพื่อนซี้ — มินต์สดใส จุดโพลก้า */
+.chat-box.ct-mint,.chat-theme-sw.ct-mint{
+  --c-bg1:#e9fbf1; --c-bg2:#d3f5e2; --c-border:#37bd83;
+  --c-head1:#5fd6a2; --c-head2:#25ad72; --c-mine:#a8ebca; --c-mine-tx:#0c5136;
+  --c-accent:#c7f0da;
+  --c-pat:radial-gradient(circle,rgba(55,189,131,.16) 2px,transparent 2.5px);
+  background-size:auto;
+}
+.chat-box.ct-mint .chat-msgs{background-size:18px 18px;}
+/* 💖 คนพิเศษ — ชมพูโรแมนติก หัวใจโปรย */
+.chat-box.ct-love,.chat-theme-sw.ct-love{
+  --c-bg1:#fff0f5; --c-bg2:#ffdde8; --c-border:#ff5d8f;
+  --c-head1:#ff7fa8; --c-head2:#f0407a;
+  --c-bub:#fff; --c-bub-tx:#7a2547; --c-mine:#ff9dc0; --c-mine-tx:#5e1030;
+  --c-accent:#ffcbdd;
+  --c-pat:radial-gradient(circle at 30% 30%,rgba(255,93,143,.14) 3px,transparent 4px);
+}
+.chat-box.ct-love .chat-msgs{background-size:26px 26px;}
+/* 🍑 พีชหวาน — ส้มพีชนุ่ม */
+.chat-box.ct-peach,.chat-theme-sw.ct-peach{
+  --c-bg1:#fff3ea; --c-bg2:#ffe2cf; --c-border:#ff9a5a;
+  --c-head1:#ffb27a; --c-head2:#f5854a; --c-bub:#fff; --c-bub-tx:#7a4326;
+  --c-mine:#ffc49b; --c-mine-tx:#6b3416; --c-accent:#ffd9be;
+  --c-pat:radial-gradient(circle,rgba(255,154,90,.14) 2px,transparent 2.6px);
+}
+.chat-box.ct-peach .chat-msgs{background-size:20px 20px;}
+/* 💜 ลาเวนเดอร์ — ม่วงพาสเทล */
+.chat-box.ct-lavender,.chat-theme-sw.ct-lavender{
+  --c-bg1:#f4eeff; --c-bg2:#e6d9fb; --c-border:#9b6cf0;
+  --c-head1:#b48bf5; --c-head2:#8a5be0; --c-bub:#fff; --c-bub-tx:#4a2c73;
+  --c-mine:#cdb0f8; --c-mine-tx:#3d1f66; --c-accent:#dcc9fa;
+  --c-pat:radial-gradient(circle,rgba(155,108,240,.14) 2px,transparent 2.6px);
+}
+.chat-box.ct-lavender .chat-msgs{background-size:20px 20px;}
+/* 🫧 ฟองสบู่ — ฟ้าอมเขียว ฟองกลม */
+.chat-box.ct-bubble,.chat-theme-sw.ct-bubble{
+  --c-bg1:#e6fbff; --c-bg2:#cdf1fb; --c-border:#2bbfd6;
+  --c-head1:#54d3e6; --c-head2:#20aec6; --c-bub:#fff; --c-bub-tx:#12556b;
+  --c-mine:#a6ecf7; --c-mine-tx:#0a4a5e; --c-accent:#c1eef7;
+  --c-pat:radial-gradient(circle at 70% 40%,rgba(43,191,214,.16) 5px,transparent 6px),
+          radial-gradient(circle at 20% 75%,rgba(43,191,214,.1) 3px,transparent 4px);
+}
+.chat-box.ct-bubble .chat-msgs{background-size:40px 40px,28px 28px;}
+/* 🌙 ราตรีดาว — น้ำเงินเข้ม มีดาวกระจาย */
+.chat-box.ct-night,.chat-theme-sw.ct-night{
+  --c-bg1:#2a3566; --c-bg2:#1b2350; --c-border:#6d7bd6;
+  --c-head1:#4756a8; --c-head2:#2c3877; --c-bub:#3a4680; --c-bub-tx:#eef1ff;
+  --c-mine:#8f7bef; --c-mine-tx:#fff; --c-accent:#3a4680;
+  --c-pat:radial-gradient(1.5px 1.5px at 20% 30%,rgba(255,255,255,.6),transparent),
+          radial-gradient(1.5px 1.5px at 70% 55%,rgba(255,255,255,.5),transparent),
+          radial-gradient(1.5px 1.5px at 45% 80%,rgba(255,255,255,.55),transparent);
+}
+.chat-box.ct-night .chat-msgs{background-size:120px 120px;}
+.chat-box.ct-night .chat-empty{color:#c5cbf0;}
+.chat-box.ct-night #chat-input{background:#eef1ff;}
 
 /* ---------- การ์ดข้อมูลผู้เล่น 👤 (คลิกชื่อในการ์ดเพื่อน/กระดาน) ---------- */
 .pl-click{cursor:pointer;text-decoration:underline dotted rgba(120,170,230,.6);

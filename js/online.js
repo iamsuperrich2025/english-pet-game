@@ -312,6 +312,13 @@ function chatSend(otherUid, rawText){
   }).then(()=>chatPrune(base));
 }
 
+/* 🕵️ รอบ 190: แชทลับ — ลบข้อความออกจาก DB (ทั้งสองฝ่ายเห็นหายทันทีผ่าน chatListen)
+   สิทธิ์: rules /chats ให้ทั้งคู่ใน pairId เขียน/ลบได้อยู่แล้ว (ไม่ต้องแก้ rules) */
+function chatDeleteMsg(otherUid, key){
+  if(!Online.ready || !Online.db || !key) return Promise.resolve();
+  return chatRef(otherUid).child(key).remove().catch(()=>{});
+}
+
 /* 💬 รอบ 187 (A2): สัญญาณ "กำลังพิมพ์" — /typing/<pairId>/<me> = timestamp
    เขียนตอนพิมพ์ (throttle 2 วิ) · ลบตอนส่ง/ปิดกล่อง/หลุดเน็ต · ต้อง publish rules /typing ก่อนใช้จริง
    ยังไม่ publish = เขียนโดน deny เงียบๆ (แชทปกติไม่กระทบ) */
