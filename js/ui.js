@@ -2206,6 +2206,7 @@ function renderDashboard(){
     renderHeliCard();
     renderDroneCard();
     renderDriveCard();
+    renderSoccerCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -2419,6 +2420,7 @@ function renderDashboard(){
   renderHeliCard();
   renderDroneCard();
   renderDriveCard();
+  renderSoccerCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -3949,6 +3951,98 @@ async function enterDrive3D(){
 }
 
 /* ============================================================
+   ⚽ การ์ดตั๋วโลกสนามฟุตบอล (รอบ 196) — ซื้อได้เมื่อมีตั๋วขับรถ
+   เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษรลอยหน้าประตู ประกอบเป็นคำ · คำละ 🪙20
+   ============================================================ */
+function renderSoccerCard(){
+  const el = document.getElementById('soccer-card');
+  if(!el) return;
+  let body;
+  if(state.soccerTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับไปลงสนามได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-soccer-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.soccerTicket){
+    body = `
+      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">⚽🥅</div>
+        <b>นักเตะพร้อมลงสนาม!</b><br>
+        <small>เล็ง + <b>กดค้างเพื่อชาร์จพลัง</b> แล้วเตะบอลใส่ป้ายตัวอักษรที่ลอยหน้าประตู<br>
+        ประกอบเป็นคำ คำละ 🪙20 · เลือก<b>สีเสื้อ + เบอร์หลังเสื้อ</b> · มุมมองบุคคลที่ 1/3<br>
+        🧑‍🤝‍🧑 เห็นเพื่อนในสนามเดียวกันแบบสด</small>
+      </div>
+      <button class="big-btn green home-btn" id="btn-enter-soccer">⚽ ลงสนาม!</button>`;
+  }else if(!state.driveTicket){
+    body = `
+      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกขับรถกำแพงเพชร 🚗</b>ก่อน (ไต่ระดับโลก 3D ทีละใบ)</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
+      <div class="ticket-desc">
+        <div style="font-size:44px">⚽🏟️</div>
+        <b>ลงสนามฟุตบอล 3D!</b><br>
+        <small>เล็งแล้วเตะบอลใส่ป้ายตัวอักษรที่ลอยนิ่งหน้าประตู ให้ครบเป็นคำ — คำละ 🪙20<br>
+        กดปุ่มเตะค้างเพื่อเพิ่มพลัง · เลือกสีเสื้อ + เบอร์หลังเสื้อ · มุมมองบุคคลที่ 1/3<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      <button class="big-btn blue home-btn" id="btn-buy-soccer">⚽ ซื้อตั๋ว 🪙${fmtNum(SOCCER_PRICE)}</button>`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-soccer');
+  if(buy) buy.addEventListener('click', buySoccerTicket);
+  const enter = document.getElementById('btn-enter-soccer');
+  if(enter) enter.addEventListener('click', enterSoccer3D);
+  const heal = document.getElementById('btn-soccer-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+}
+
+function buySoccerTicket(){
+  if(state.soccerTicket) return;
+  if(!state.driveTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนถึงจะซื้อตั๋วสนามฟุตบอลได้นะ'); return; }
+  if(state.coins < SOCCER_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกสนามฟุตบอล 🪙${fmtNum(SOCCER_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>⚽ ซื้อตั๋วโลกสนามฟุตบอล</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(SOCCER_PRICE)}</b><br>
+    เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร ประกอบเป็นคำ — คำละ 🪙20<br>
+    <small>⚽ เลือกสีเสื้อ+เบอร์หลังเสื้อ · มุมมองบุคคลที่ 1/3<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! ⚽', ()=>{
+      state.coins -= SOCCER_PRICE;
+      state.soccerTicket = true;
+      sfx.buy();
+      toast('⚽ ได้ตั๋วโลกสนามฟุตบอลแล้ว! กดปุ่มเขียว "ลงสนาม" ได้เลย 🥅');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
+async function enterSoccer3D(){
+  if(!state.soccerTicket || state.advHurt || advLoading) return;
+  if(!window.Adventure3D){
+    advLoading = true;
+    toast('⚽ กำลังเข้าสนาม...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/adventure3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดสนามฟุตบอลไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  Adventure3D.start('soccer');
+}
+
+/* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
    แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
@@ -3960,6 +4054,7 @@ const WORLD3D = [
   { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  price:HELI_PRICE,   card:'heli-card',   enter:enterHeli3D },
   { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
   { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
+  { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',price:SOCCER_PRICE, card:'soccer-card', enter:enterSoccer3D },
 ];
 
 function scrollShopCardIntoView(id){

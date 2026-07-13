@@ -72,6 +72,14 @@ const MODES = {
     hint:'W/S คันเร่ง-เบรก/ถอย · A/D เลี้ยวซ้าย-ขวา · H บีบแตร · เกิน 90 กม./ชม. โดนใบสั่ง! · 🚦 ไฟแดงต้องหยุด · เลี้ยวที่แยกเปิดไฟเลี้ยวด้วย',
     koTitle:'🚗💥 รถพังแล้ว!',
   },
+  soccer: {
+    label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
+    shoot:false, ghost:false, soccer:true,
+    sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เล็งแล้ว<b>เตะบอล</b>ใส่ป้ายตัวอักษรที่ลอยหน้าประตู ให้ครบเป็นคำ<br>กดปุ่มเตะ<b>ค้าง</b>เพื่อเพิ่มพลัง แล้วปล่อย · เล็งขึ้น-ลง-ซ้าย-ขวาได้</small>',
+    hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · V สลับมุมกล้อง',
+    koTitle:'⚽ หมดเวลา!',
+  },
 };
 MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
@@ -150,6 +158,27 @@ let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=nu
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
+
+/* ============================================================
+   ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
+   ที่ลอยนิ่งหน้าประตู ประกอบเป็นคำ = เหรียญ · เลือกสีเสื้อ+เบอร์ · มุมมอง 1st/3rd
+   ============================================================ */
+const SOCCER_SHIRTS=[
+  {n:'แดง',c:0xe53935},{n:'น้ำเงิน',c:0x1e59d0},{n:'เขียว',c:0x2e9e4a},{n:'เหลือง',c:0xf6c026},
+  {n:'ส้ม',c:0xef6c00},{n:'ม่วง',c:0x8e24aa},{n:'ฟ้า',c:0x29b6f6},{n:'ชมพู',c:0xec407a},
+  {n:'ขาว',c:0xf0f0f0},{n:'ดำ',c:0x2b2f36},
+];
+const BALL_R=0.34, BALL_G=17, PLAYER_Z=8, GOAL_Z=-19;      // รัศมีบอล · แรงโน้มถ่วง · จุดยืน/ประตู (แกน z)
+const GOAL_HW=4, GOAL_H=3;                                 // ครึ่งกว้างประตู · ความสูงคาน
+const KICK_SPD_MIN=9, KICK_SPD_MAX=32, CHARGE_RATE=78;     // ความเร็วเตะต่ำ-สูง (m/s) · พลังชาร์จ/วินาที
+const AIM_YAW_SP=0.9, AIM_PITCH_SP=0.7, SOCCER_COLLECT=1.5;// ความไวเล็ง + ระยะบอลชนป้าย
+let soccerBall=null, soccerPlayer=null, soccerGuide=[];    // ลูกบอล · หุ่นนักเตะ · จุดพรีวิววิถีเตะ
+let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
+let aimYaw=0, aimPitch=0.34, sChg=0, sCharging=false, sKickHeld=false, sPrevV=false, sLegSwing=0;
+let soccerCam1=false;                                      // true=มุมมองบุคคลที่ 1
+let sKitShirt=0xe53935, sKitNo='10';
+let sPadU=false, sPadD=false, sPadL=false, sPadR=false;    // ปุ่มเล็ง (มือถือ)
+let soccerStartEl=null, powerFillEl=null;
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -1297,6 +1326,23 @@ function buildScene(md){
     const all=[]; list.forEach(b=>b.solids.forEach(s=>all.push(s)));
     worlds[md]={scene:sc, trees:tr, buildings:list, solids:all};
     return;
+  }else if(md==='soccer'){
+    // ⚽ สนามฟุตบอล: พื้นหญ้า+เส้นสนาม · ประตู+ตาข่าย · อัฒจันทร์ 4 ด้าน · ลูกบอล · จุดพรีวิววิถี
+    sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,1.12));
+    const sun=new THREE.DirectionalLight(0xfff4d0,.72); sun.position.set(24,55,32); sc.add(sun);
+    const fieldW=44, fieldL=64;
+    const field=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
+      new THREE.MeshLambertMaterial({map:soccerFieldTexture()}));
+    field.rotation.x=-Math.PI/2; field.position.y=.02; sc.add(field);
+    buildSoccerGoal(sc, GOAL_Z, GOAL_HW*2, GOAL_H);
+    buildStands(sc, fieldW, fieldL);
+    soccerBall=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,18,14), soccerBallMat());
+    soccerBall.position.set(0,BALL_R,PLAYER_Z); sc.add(soccerBall);
+    soccerGuide=[];
+    const gm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
+    for(let i=0;i<14;i++){ const d=new THREE.Mesh(new THREE.SphereGeometry(.09,7,6),gm); d.visible=false; sc.add(d); soccerGuide.push(d); }
+    worlds[md]={scene:sc, trees:[], buildings:[]};
+    return;
   }else{
     // ต้นไม้ตายกิ่งโกร๋น + ป้ายหลุมศพ + ฟักทอง + ดวงไฟวิญญาณ
     const trunkM=new THREE.MeshLambertMaterial({color:0x2e2019});
@@ -1377,6 +1423,11 @@ function spawnLetter(ch){
     const b=buildings[Math.floor(Math.random()*buildings.length)];
     spr.position.set(b.x,b.h+1.3,b.z);
     spr.scale.set(2.2,2.2,1);                    // ใหญ่ขึ้น มองเห็นจากไกล
+  }else if(M.soccer){
+    // ⚽ ป้ายลอยนิ่งเป็นเป้าหน้าประตู — เตะบอลชนเพื่อเก็บ
+    const p=soccerLetterPos();
+    spr.position.set(p.x,p.y,p.z);
+    spr.scale.set(2.5,2.5,1);                    // ป้ายใหญ่ เล็งเตะง่าย
   }else{
     const p=randPos(10);
     spr.position.set(p.x,1.15,p.z);
@@ -1413,6 +1464,9 @@ function relocateLetters(now){
       }else if(M.heli && buildings.length){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
         l.spr.position.set(b.x,b.h+1.3,b.z);
+      }else if(M.soccer){
+        const p=soccerLetterPos();
+        l.spr.position.set(p.x,p.y,p.z);
       }else{
         const p=randPos(10);
         l.spr.position.set(p.x,1.15,p.z);
@@ -3134,7 +3188,53 @@ function buildDom(){
     color:#fff;font-weight:800;font-size:12.5px}
   .adv-recap-w small{color:#bcd0e8;font-weight:600;font-size:10.5px}
   .adv-haunt .adv-recap-w{background:rgba(40,255,140,.1);border-color:rgba(124,255,176,.3)}
-  .adv-haunt .adv-recap-w small{color:#9fe8bf}`;
+  .adv-haunt .adv-recap-w small{color:#9fe8bf}
+  /* ⚽ โหมดสนามฟุตบอล — ปุ่มเล็ง (ซ้าย) · ปุ่มเตะกดค้าง (ขวา) · แถบพลัง · ปุ่มสลับกล้อง · แผงเลือกชุด */
+  .adv-soccer #adv-cross,.adv-soccer #adv-gauges,.adv-soccer #adv-cockpit{display:none}
+  #adv-aimpad{position:absolute;display:none;left:16px;bottom:20px;width:150px;height:150px;z-index:6;
+    pointer-events:none;-webkit-user-select:none;user-select:none}
+  .adv-touch.adv-soccer #adv-aimpad{display:block}
+  #adv-aimpad .apb{position:absolute;width:52px;height:52px;border-radius:14px;pointer-events:auto;
+    background:rgba(255,255,255,.16);border:2px solid rgba(255,255,255,.5);color:#fff;font-size:22px;
+    display:flex;align-items:center;justify-content:center;touch-action:none}
+  #adv-aimpad .apb:active{background:rgba(255,255,255,.4)}
+  #adv-aimpad .ap-u{left:49px;top:0}#adv-aimpad .ap-d{left:49px;bottom:0}
+  #adv-aimpad .ap-l{left:0;top:49px}#adv-aimpad .ap-r{right:0;top:49px}
+  #adv-kick{position:absolute;display:none;bottom:26px;right:22px;width:88px;height:88px;border-radius:50%;
+    z-index:6;pointer-events:auto;background:rgba(46,158,74,.92);border:3px solid #fff;color:#fff;
+    font-size:20px;font-weight:900;line-height:1.05;flex-direction:column;align-items:center;justify-content:center;
+    touch-action:none;-webkit-user-select:none;user-select:none}
+  #adv-kick small{font-size:11px;font-weight:700}
+  #adv-kick:active{transform:scale(.94)}
+  .adv-touch.adv-soccer #adv-kick{display:flex}
+  #adv-power{position:absolute;display:none;right:12px;top:50%;transform:translateY(-50%);width:20px;height:180px;
+    z-index:6;background:rgba(0,0,0,.45);border:2px solid #fff;border-radius:12px;overflow:hidden;pointer-events:none}
+  .adv-soccer #adv-power{display:block}
+  #adv-power-fill{position:absolute;left:0;bottom:0;width:100%;height:0%;
+    background:linear-gradient(0deg,#43a047,#ffd54f,#e53935);transition:height .04s linear}
+  #adv-scam{position:absolute;display:none;top:56px;right:8px;z-index:6;pointer-events:auto;
+    background:rgba(0,0,0,.5);color:#fff;border:2px solid #fff;border-radius:12px;
+    font-family:inherit;font-weight:800;font-size:13px;padding:6px 10px}
+  .adv-soccer #adv-scam{display:block}
+  #adv-soccerstart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:8;
+    width:min(420px,92vw);box-sizing:border-box;background:rgba(10,30,20,.95);border:2px solid #43d17a;
+    border-radius:20px;padding:16px 20px 18px;color:#e6fff0;pointer-events:auto;
+    box-shadow:0 0 30px rgba(67,209,122,.4)}
+  #adv-soccerstart.on{display:block}
+  #adv-soccerstart h3{margin:0 0 12px;text-align:center;font-size:20px;color:#8fffc0}
+  #adv-soccerstart .ss-lab{font-size:13.5px;font-weight:700;color:#a9e8c4;margin:8px 0 6px}
+  #adv-soccerstart .ss-shirts{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
+  #adv-soccerstart .ss-shirt{width:40px;height:40px;border-radius:10px;border:3px solid rgba(255,255,255,.35);
+    cursor:pointer;padding:0}
+  #adv-soccerstart .ss-shirt.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.7);transform:scale(1.08)}
+  #adv-soccerstart .ss-num{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px}
+  #adv-soccerstart .ss-num button{width:44px;height:44px;border-radius:12px;border:2px solid #43d17a;
+    background:rgba(67,209,122,.16);color:#c9ffdf;font-size:24px;font-weight:900;font-family:inherit;cursor:pointer}
+  #adv-soccerstart .ss-num button:active{transform:scale(.92)}
+  #adv-soccerstart #ss-no{font-size:30px;font-weight:900;color:#fff;min-width:56px;text-align:center}
+  #adv-soccerstart #ss-go{display:block;margin:16px auto 0;background:linear-gradient(135deg,#43a047,#2e7d32);
+    color:#fff;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:18px;padding:11px 34px;cursor:pointer}
+  #adv-soccerstart #ss-go:active{transform:scale(.96)}`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -3228,6 +3328,22 @@ function buildDom(){
       </div>
     </div>
     <div id="adv-selfmsg"></div>
+    <!-- ⚽ โหมดสนามฟุตบอล -->
+    <div id="adv-aimpad">
+      <div class="apb ap-u">▲</div><div class="apb ap-d">▼</div>
+      <div class="apb ap-l">◀</div><div class="apb ap-r">▶</div>
+    </div>
+    <button id="adv-kick">⚽<small>เตะ</small></button>
+    <div id="adv-power"><div id="adv-power-fill"></div></div>
+    <button id="adv-scam">👁️ มุมกล้อง</button>
+    <div id="adv-soccerstart">
+      <h3>⚽ เลือกชุดนักเตะ</h3>
+      <div class="ss-lab">สีเสื้อ</div>
+      <div class="ss-shirts" id="ss-shirts"></div>
+      <div class="ss-lab">เบอร์หลังเสื้อ</div>
+      <div class="ss-num"><button id="ss-minus" type="button">−</button><span id="ss-no">10</span><button id="ss-plus" type="button">+</button></div>
+      <button id="ss-go" type="button">⚽ เตะเลย!</button>
+    </div>
     <div class="adv-hud" id="adv-hint"></div>
     <div id="adv-intro"></div>`;
   document.body.appendChild(overlayEl);
@@ -3461,6 +3577,27 @@ function buildDom(){
     carBobbleEl.addEventListener('mousedown',poke);
   }
 
+  // ⚽ โหมดสนามฟุตบอล — ปุ่มเล็ง (กดค้าง) · ปุ่มเตะ (กดค้าง=ชาร์จ) · สลับกล้อง · แผงเลือกชุด
+  soccerStartEl=overlayEl.querySelector('#adv-soccerstart');
+  powerFillEl=overlayEl.querySelector('#adv-power-fill');
+  const holdBtn=(sel,down,up)=>{
+    const el=overlayEl.querySelector(sel); if(!el) return;
+    const d=e=>{ e.preventDefault(); e.stopPropagation(); down(); };
+    const u=e=>{ e.preventDefault(); e.stopPropagation(); up(); };
+    el.addEventListener('touchstart',d,{passive:false}); el.addEventListener('touchend',u,{passive:false});
+    el.addEventListener('touchcancel',u,{passive:false});
+    el.addEventListener('mousedown',d); el.addEventListener('mouseup',u); el.addEventListener('mouseleave',u);
+  };
+  holdBtn('#adv-aimpad .ap-u',()=>sPadU=true,()=>sPadU=false);
+  holdBtn('#adv-aimpad .ap-d',()=>sPadD=true,()=>sPadD=false);
+  holdBtn('#adv-aimpad .ap-l',()=>sPadL=true,()=>sPadL=false);
+  holdBtn('#adv-aimpad .ap-r',()=>sPadR=true,()=>sPadR=false);
+  holdBtn('#adv-kick',()=>sKickHeld=true,()=>sKickHeld=false);
+  overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ soccerCam1=!soccerCam1; sfx.select(); });
+  overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
+  overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
+  overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
+
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
   const shootBtn=overlayEl.querySelector('#adv-shoot');
@@ -3520,12 +3657,14 @@ function bindInput(){
     if(!overlayEl.classList.contains('on')) return;
     if(e.target && e.target.tagName==='INPUT') return;     // กำลังพิมพ์แชท
     if(e.code==='Enter' && running){ toggleChatBox(true); e.preventDefault(); return; }
+    if(M.soccer && (e.code==='Space'||e.code.startsWith('Arrow'))) e.preventDefault();   // ⚽ กันหน้าเลื่อน
     keys[e.code]=true;
   });
   document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 
   if(!IS_TOUCH){
     canvasEl.addEventListener('click',()=>{
+      if(M.soccer) return;                            // ⚽ ฟุตบอลใช้เมาส์กับปุ่ม HUD ไม่ล็อกเคอร์เซอร์
       if(document.pointerLockElement===canvasEl) shoot();
       else canvasEl.requestPointerLock();
     });
@@ -3540,8 +3679,9 @@ function bindInput(){
     const joyEl=overlayEl.querySelector('#adv-joy'), dotEl=overlayEl.querySelector('#adv-joy-dot');
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
+      if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer */
         if(t.clientX<window.innerWidth*.45 && joyId===null){
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -5190,6 +5330,222 @@ const DroneSound={
 /* ============================================================
    Loop หลัก
    ============================================================ */
+/* ============================================================
+   ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
+   ============================================================ */
+function soccerLetterPos(){
+  return {x:(Math.random()*2-1)*9, y:1.1+Math.random()*4, z:GOAL_Z+3+Math.random()*11};   // ลอยนิ่งหน้าประตู
+}
+/* พื้นสนาม: หญ้าลายตัด + เส้นขาว (ขอบ/เส้นกลาง/วงกลมกลาง/กรอบเขตโทษ 2 ฝั่ง) */
+function soccerFieldTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=512;
+  const c=cv.getContext('2d');
+  for(let i=0;i<11;i++){ c.fillStyle=i%2?'#3f9d43':'#379139'; c.fillRect(0,i*512/11,512,512/11+1); }
+  c.strokeStyle='rgba(255,255,255,.92)'; c.lineWidth=5;
+  c.strokeRect(26,26,460,460);                                  // ขอบสนาม
+  c.beginPath(); c.moveTo(26,256); c.lineTo(486,256); c.stroke();// เส้นกลาง
+  c.beginPath(); c.arc(256,256,58,0,7); c.stroke();             // วงกลมกลาง
+  [26,486-96].forEach(y0=>{ c.strokeRect(160,y0>256?y0:y0+70,192,96); }); // กรอบเขตโทษหยาบๆ 2 ฝั่ง
+  const t=new THREE.CanvasTexture(cv); return t;
+}
+function soccerNetTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d'); c.clearRect(0,0,128,128);
+  c.strokeStyle='rgba(255,255,255,.85)'; c.lineWidth=2;
+  for(let i=0;i<=128;i+=12){ c.beginPath(); c.moveTo(i,0); c.lineTo(i,128); c.moveTo(0,i); c.lineTo(128,i); c.stroke(); }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(6,3); return t;
+}
+function soccerCrowdTexture(){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+  const c=cv.getContext('2d'); c.fillStyle='#2a3138'; c.fillRect(0,0,256,64);
+  const cols=['#ff5252','#ffd54f','#4fc3f7','#fff','#66bb6a','#ba68c8','#ff8a65'];
+  for(let i=0;i<520;i++){ c.fillStyle=cols[(Math.random()*cols.length)|0];
+    c.beginPath(); c.arc(Math.random()*256,Math.random()*64,1.6+Math.random()*1.4,0,7); c.fill(); }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(8,1); return t;
+}
+function soccerBallMat(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d'); c.fillStyle='#f5f5f5'; c.fillRect(0,0,128,128);
+  c.fillStyle='#1a1a1a';
+  for(let i=0;i<7;i++){ const x=Math.random()*128,y=Math.random()*128,r=8+Math.random()*7;
+    c.beginPath(); for(let k=0;k<5;k++){ const a=k/5*7+i; const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r; k?c.lineTo(px,py):c.moveTo(px,py); } c.closePath(); c.fill(); }
+  return new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
+}
+function buildSoccerGoal(sc,z,w,h){
+  const white=new THREE.MeshLambertMaterial({color:0xffffff});
+  const r=0.12, hw=w/2;
+  [-hw,hw].forEach(x=>{ const p=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10),white); p.position.set(x,h/2,z); sc.add(p); });
+  const bar=new THREE.Mesh(new THREE.CylinderGeometry(r,r,w,10),white); bar.rotation.z=Math.PI/2; bar.position.set(0,h,z); sc.add(bar);
+  const net=new THREE.MeshBasicMaterial({map:soccerNetTexture(),transparent:true,side:THREE.DoubleSide,opacity:.5});
+  const depth=2.4;
+  const back=new THREE.Mesh(new THREE.PlaneGeometry(w,h),net); back.position.set(0,h/2,z-depth); sc.add(back);
+  const top=new THREE.Mesh(new THREE.PlaneGeometry(w,depth),net); top.rotation.x=Math.PI/2; top.position.set(0,h,z-depth/2); sc.add(top);
+  [-hw,hw].forEach(x=>{ const sd=new THREE.Mesh(new THREE.PlaneGeometry(depth,h),net); sd.rotation.y=Math.PI/2; sd.position.set(x,h/2,z-depth/2); sc.add(sd); });
+}
+function buildStands(sc,fw,fl){
+  const crowd=new THREE.MeshLambertMaterial({map:soccerCrowdTexture(),side:THREE.DoubleSide});
+  const hw=fw/2+5, hl=fl/2+5, H=7;
+  const add=(w,px,pz,ry)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,H),crowd);
+    m.position.set(px,H/2,pz); m.rotation.y=ry; m.rotation.x=-.2; sc.add(m); };
+  add(fw+12,0,-hl,0); add(fw+12,0,hl,Math.PI);
+  add(fl+12,-hw,0,Math.PI/2); add(fl+12,hw,0,-Math.PI/2);
+}
+function soccerNumTex(no){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d'); c.clearRect(0,0,128,128);
+  c.font='900 78px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  const s=String(no).slice(0,2)||'10';
+  c.lineWidth=8; c.strokeStyle='rgba(0,0,0,.55)'; c.strokeText(s,64,66);
+  c.fillStyle='#fff'; c.fillText(s,64,66);
+  return new THREE.CanvasTexture(cv);
+}
+/* หุ่นนักเตะบล็อก: เสื้อสีเลือก + เบอร์หลังเสื้อ (หัน +Z = ด้านหลัง เห็นจากกล้องหลังบอล) · ขวา = ขาเตะ */
+function makeSoccerPlayer(shirtColor,no){
+  const g=new THREE.Group();
+  const skin=blkMat(0xffcf9e), shirt=blkMat(shirtColor), shorts=blkMat(0xffffff), hairM=blkMat(0x2b2320), boot=blkMat(0x232323);
+  const legs=[];
+  [-0.15,0.15].forEach(x=>{
+    const piv=new THREE.Group(); piv.position.set(x,.5,0);
+    const thigh=new THREE.Mesh(blkGeo(.22,.34,.24),shorts); thigh.position.y=-.17; piv.add(thigh);
+    const shin=new THREE.Mesh(blkGeo(.2,.3,.22),skin); shin.position.y=-.46; piv.add(shin);
+    const bt=new THREE.Mesh(blkGeo(.22,.14,.34),boot); bt.position.set(0,-.62,.05); piv.add(bt);
+    g.add(piv); legs.push(piv);
+  });
+  const torso=new THREE.Mesh(blkGeo(.58,.62,.34),shirt); torso.position.y=.82; g.add(torso);
+  const num=new THREE.Mesh(new THREE.PlaneGeometry(.4,.4),
+    new THREE.MeshBasicMaterial({map:soccerNumTex(no),transparent:true}));
+  num.position.set(0,.9,.18); g.add(num);                        // ด้าน +Z (หลัง)
+  [-1,1].forEach(s=>{
+    const arm=new THREE.Mesh(blkGeo(.15,.5,.2),shirt); arm.position.set(s*.4,.82,0); arm.rotation.z=s*-.08; g.add(arm);
+    const hand=new THREE.Mesh(blkGeo(.14,.14,.16),skin); hand.position.set(s*.44,.53,0); g.add(hand);
+  });
+  const head=new THREE.Mesh(blkGeo(.44,.44,.44),skin); head.position.y=1.32; g.add(head);
+  const hair=new THREE.Mesh(blkGeo(.48,.16,.48),hairM); hair.position.y=1.5; g.add(hair);
+  g.userData.legs=legs;
+  return g;
+}
+function soccerResetBall(){
+  if(!soccerBall) return;
+  soccerBall.position.set(0,BALL_R,PLAYER_Z);
+  sbVel.x=sbVel.y=sbVel.z=0; sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
+}
+function soccerKick(power){
+  const spd=KICK_SPD_MIN+(Math.max(6,power)/100)*(KICK_SPD_MAX-KICK_SPD_MIN);
+  const dx=Math.sin(aimYaw), dz=-Math.cos(aimYaw), ch=Math.cos(aimPitch), sh=Math.sin(aimPitch);
+  sbVel.x=dx*ch*spd; sbVel.z=dz*ch*spd; sbVel.y=sh*spd;
+  sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
+  sfx.select();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
+}
+function soccerCheer(){ sfx.levelup(); showBanner('⚽ <b>เข้าประตู!</b> เก่งมาก!'); }
+function updateSoccerGuide(ready,dx,dz){
+  if(!ready){ soccerGuide.forEach(d=>d.visible=false); return; }
+  const power=sCharging?sChg:55;
+  const spd=KICK_SPD_MIN+(Math.max(6,power)/100)*(KICK_SPD_MAX-KICK_SPD_MIN);
+  const ch=Math.cos(aimPitch), sh=Math.sin(aimPitch);
+  let vx=dx*ch*spd, vy=sh*spd, vz=dz*ch*spd;
+  let px=0, py=BALL_R, pz=PLAYER_Z;
+  const h=0.055;
+  for(let i=0;i<soccerGuide.length;i++){
+    for(let k=0;k<3;k++){ vy-=BALL_G*h; px+=vx*h; py+=vy*h; pz+=vz*h; }
+    soccerGuide[i].position.set(px,Math.max(BALL_R,py),pz);
+    soccerGuide[i].visible=(py>-.2);
+  }
+}
+function soccerCamera(dt,dx,dz){
+  const b=soccerBall.position;
+  const k=Math.min(1,dt*4);
+  if(soccerCam1){
+    camera.position.set(-dx*.35,1.55,PLAYER_Z-dz*.35);
+    camera.lookAt(dx*12,1.55+Math.sin(aimPitch)*7,PLAYER_Z+dz*12);
+    return;
+  }
+  const foc = sbLive? b : {x:0,y:1.1,z:PLAYER_Z-1.5};
+  const cx=foc.x - dx*8, cz=foc.z - dz*8, cy=(sbLive?b.y:1.4)+3.4;
+  camera.position.x+=(cx-camera.position.x)*k;
+  camera.position.y+=(cy-camera.position.y)*k;
+  camera.position.z+=(cz-camera.position.z)*k;
+  camera.lookAt(foc.x, foc.y+0.6, foc.z);
+}
+function tickSoccer(dt,now){
+  // เล็ง (คีย์บอร์ด + ปุ่มมือถือ) — ปรับได้ตลอด แม้กำลังชาร์จ
+  if(keys.KeyA||keys.ArrowLeft||sPadL) aimYaw-=AIM_YAW_SP*dt;
+  if(keys.KeyD||keys.ArrowRight||sPadR) aimYaw+=AIM_YAW_SP*dt;
+  if(keys.KeyW||keys.ArrowUp||sPadU) aimPitch+=AIM_PITCH_SP*dt;
+  if(keys.KeyS||keys.ArrowDown||sPadD) aimPitch-=AIM_PITCH_SP*dt;
+  aimYaw=Math.max(-.8,Math.min(.8,aimYaw));
+  aimPitch=Math.max(.06,Math.min(.92,aimPitch));
+  if(keys.KeyV && !sPrevV){ soccerCam1=!soccerCam1; sfx.select(); } sPrevV=!!keys.KeyV;
+
+  const ready=!sbLive;
+  const holding=(!!keys.Space||sKickHeld)&&ready;
+  if(holding){ sCharging=true; sChg=Math.min(100,sChg+CHARGE_RATE*dt); }
+  else if(sCharging){ soccerKick(sChg); sCharging=false; }        // ปล่อย = เตะ
+  if(powerFillEl) powerFillEl.style.height=(sCharging?sChg:0)+'%';
+
+  const dx=Math.sin(aimYaw), dz=-Math.cos(aimYaw);
+
+  if(soccerPlayer){
+    soccerPlayer.rotation.y=aimYaw;
+    if(sLegSwing>0){ sLegSwing=Math.max(0,sLegSwing-dt*4);
+      const sw=Math.sin((1-sLegSwing)*Math.PI)*1.25;
+      if(soccerPlayer.userData.legs) soccerPlayer.userData.legs[1].rotation.x=-sw;
+    }
+  }
+  updateSoccerGuide(ready,dx,dz);
+
+  if(sbLive){
+    sbVel.y-=BALL_G*dt;
+    const b=soccerBall.position;
+    b.x+=sbVel.x*dt; b.y+=sbVel.y*dt; b.z+=sbVel.z*dt;
+    if(b.y<=BALL_R){ b.y=BALL_R;
+      if(sbVel.y<-0.6){ sbVel.y=-sbVel.y*.5; sbVel.x*=.82; sbVel.z*=.82; }   // เด้งพื้น (สูญเสียแรงบ้าง)
+      else { sbVel.y=0; sbVel.x*=(1-1.7*dt); sbVel.z*=(1-1.7*dt); }          // กลิ้งบนพื้น (แรงเสียดทานต่อวินาที)
+    }
+    else { sbVel.x*=(1-.12*dt); sbVel.z*=(1-.12*dt); }                       // แรงต้านอากาศ (เฉพาะตอนลอย)
+    for(let i=letters.length-1;i>=0;i--){
+      const lp=letters[i].spr.position;
+      if(Math.hypot(lp.x-b.x,lp.y-b.y,lp.z-b.z)<SOCCER_COLLECT){
+        const ch=letters[i].ch; inv[ch]=(inv[ch]||0)+1; removeLetter(i);
+        sfx.coin(); speakLetter(ch); renderHudInv(); renderHudWords(); tryCompleteWords();
+      }
+    }
+    if(!sbGoaled && b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){ sbGoaled=true; soccerCheer(); }
+    const spd=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
+    const oob=Math.abs(b.x)>30||b.z<GOAL_Z-7||b.z>PLAYER_Z+9||b.y>28;
+    if((b.y<=BALL_R+.02 && spd<1.1) || oob || now-sbKickAt>4500){
+      if(!sbRestAt) sbRestAt=now;
+      if(now-sbRestAt>350 || oob) soccerResetBall();
+    } else sbRestAt=0;
+  }
+  soccerCamera(dt,dx,dz);
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||2)+Math.sin(now/500+l.spr.position.x)*.14; });
+}
+function soccerKitShow(){
+  if(!soccerStartEl) return;
+  running=false;
+  sKitShirt=state.soccerShirt||SOCCER_SHIRTS[0].c;
+  sKitNo=String(state.soccerNo||'10');
+  const grid=soccerStartEl.querySelector('#ss-shirts');
+  grid.innerHTML=SOCCER_SHIRTS.map(s=>
+    `<button class="ss-shirt${s.c===sKitShirt?' sel':''}" data-c="${s.c}" title="${s.n}" style="background:#${('000000'+s.c.toString(16)).slice(-6)}"></button>`).join('');
+  grid.querySelectorAll('.ss-shirt').forEach(b=>b.addEventListener('click',()=>{
+    sKitShirt=+b.dataset.c; sfx.select();
+    grid.querySelectorAll('.ss-shirt').forEach(x=>x.classList.toggle('sel',x===b));
+  }));
+  soccerStartEl.querySelector('#ss-no').textContent=sKitNo;
+  soccerStartEl.classList.add('on');
+}
+function soccerKitGo(){
+  state.soccerShirt=sKitShirt; state.soccerNo=sKitNo; saveState();
+  soccerStartEl.classList.remove('on');
+  if(soccerPlayer && scene) scene.remove(soccerPlayer);
+  soccerPlayer=makeSoccerPlayer(sKitShirt,sKitNo);
+  soccerPlayer.position.set(0,0,PLAYER_Z); scene.add(soccerPlayer);
+  if(introSeen('soccer')){ beginPlay(); showBanner(M.intro); }
+  else showIntro('soccer',false);
+}
+
 function loop(){
   if(!running) return;
   rafId=requestAnimationFrame(loop);
@@ -5197,6 +5553,7 @@ function loop(){
   if(M.heli){ tickHeli(dt,now); }
   else if(M.drone){ tickDrone(dt,now); }
   else if(M.drive){ tickDrive(dt,now); }
+  else if(M.soccer){ tickSoccer(dt,now); }
   else{
     tickPlayer(dt,now);
     if(M.ghost){ tickGhosts(dt,now); }
@@ -5276,6 +5633,15 @@ const INTRO={
           ['🔄','<b>A/D</b> = หมุนพวงมาลัยซ้าย-ขวา'],
           ['📯','<b>H</b> = บีบแตร · เมาส์ = ชะโงกมองข้างทาง']],
   },
+  soccer:{
+    goal:'<b>เตะบอล</b>ใส่ป้ายตัวอักษรที่ลอยนิ่งหน้าประตู ให้ครบเป็นคำ = ได้เหรียญ · จุดสีขาวคือ<b>แนววิถีบอล</b>ช่วยเล็ง · เข้าประตูมีเสียงเชียร์!',
+    touch:[['🎯','ปุ่มลูกศร<b>ซ้าย</b> = เล็งขึ้น-ลง-ซ้าย-ขวา'],
+           ['⚽','ปุ่ม <b>เตะ</b> ล่างขวา — กด<b>ค้าง</b>เพื่อเพิ่มพลัง (แถบพลังขวาจอ) แล้วปล่อย = เตะ'],
+           ['🎥','ปุ่ม 👁️ มุมขวาบน = สลับมุมมองบุคคลที่ 1 / ที่ 3']],
+    keys:[['🎯','<b>A/D</b> เล็งซ้าย-ขวา · <b>W/S</b> เงย-ก้ม'],
+          ['⚽','<b>เว้นวรรค</b> กดค้าง = ชาร์จพลัง ปล่อย = เตะ'],
+          ['🎥','<b>V</b> = สลับมุมกล้อง 1st / 3rd person']],
+  },
 };
 function showIntro(md,reopen){
   if(!introEl) return;
@@ -5311,13 +5677,14 @@ function closeIntro(md){
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
 function start(md){
-  mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive')?md:'adv';
+  mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive'||md==='soccer')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
   if(mode==='heli' && !state.heliTicket){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
   if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
   if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
+  if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
   if(typeof Music!=='undefined') Music.suspendBg();   // 🎵 รอบ 181: พักเพลงพื้นหลัง (โลก 3D มี soundscape เอง)
@@ -5366,10 +5733,16 @@ function start(md){
     carPeerHits=0; rlChkAt=0; rlCoolAt=0; rlForce=null;
     buildTrafficLights();
     carStartShow();
+  }else if(M.soccer){
+    // ⚽ รีเซ็ตเล็ง/ชาร์จ/บอล · กล้องเริ่มหลังบอล (kit picker เด้งก่อนเล่น)
+    aimYaw=0; aimPitch=.34; sChg=0; sCharging=false; sKickHeld=false; sPrevV=false; sLegSwing=0;
+    soccerCam1=false; sPadU=sPadD=sPadL=sPadR=false;
+    soccerResetBall();
+    camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
   }else{
     camera.position.set(0,EYE_H,0);
   }
-  camera.far=M.drive?800:220; camera.updateProjectionMatrix();   // เมืองจริงต้องมองไกล
+  camera.far=M.drive?800:(M.soccer?400:220); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   words.forEach(spawnLettersForWord);
@@ -5382,13 +5755,14 @@ function start(md){
     whenGhostsReady(spawnAll);
     setTimeout(spawnAll, 9000);                     // กันเหนียว: ภาพค้างเกิน 9 วิ (เน็ตแย่/หาย) → ปล่อยไปก่อน (ด่านต้องมีผีเสมอ)
   }
-  else if(!M.heli && !M.drone && !M.drive) spawnMonster();
+  else if(!M.heli && !M.drone && !M.drive && !M.soccer) spawnMonster();
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   scareEl.classList.remove('on');
   overlayEl.classList.toggle('adv-haunt',mode==='haunt');
   overlayEl.classList.toggle('adv-heli',mode==='heli');
   overlayEl.classList.toggle('adv-drone',mode==='drone');
   overlayEl.classList.toggle('adv-drive',mode==='drive');
+  overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   if(mode==='heli') HeliSound.start();
   else if(mode==='drone') DroneSound.start();
   // โหมด drive ไม่สตาร์ทเสียงเครื่องอัตโนมัติแล้ว (รอบ 128) — ผู้เล่นเลื่อนสวิตช์สตาร์ทเองในแผงเตรียมออกรถ
@@ -5406,7 +5780,10 @@ function start(md){
   lastSpawn=performance.now(); lastEnsure=performance.now();
   netJoin();
   if(mode==='haunt') HSound.startAmbient();
-  if(introSeen(mode)){
+  if(mode==='soccer'){
+    renderer.render(scene,camera);      // แสดงสนามไว้ข้างหลัง แล้วเด้งแผงเลือกชุดนักเตะก่อนเล่น
+    soccerKitShow();                    // กด "เตะเลย!" → soccerKitGo() สร้างหุ่น + เข้าเกม/วิธีเล่น
+  }else if(introSeen(mode)){
     beginPlay();
     showBanner(M.intro);
   }else{
@@ -5473,6 +5850,12 @@ window.Adventure3D={
                          // 🚦 รอบ 133: testkit ไฟจราจร/เจตนาชน
                          get lights(){return worlds.drive.d.tlights}, forceLight(v){rlForce=v; rlChkAt=0;},
                          get peerHits(){return carPeerHits}, phase:tlightPhase}; },
+    get soccer(){ return {get ball(){return soccerBall}, get vel(){return sbVel}, get live(){return sbLive},
+                          get aimYaw(){return aimYaw}, set aimYaw(v){aimYaw=v},
+                          get aimPitch(){return aimPitch}, set aimPitch(v){aimPitch=v},
+                          get charge(){return sChg}, kick:soccerKick, reset:soccerResetBall, kitGo:soccerKitGo,
+                          get player(){return soccerPlayer}, get guide(){return soccerGuide},
+                          get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v}}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
@@ -5482,6 +5865,7 @@ window.Adventure3D={
       if(M.heli){ tickHeli(dt,now); }
       else if(M.drone){ tickDrone(dt,now); }
       else if(M.drive){ tickDrive(dt,now); }
+      else if(M.soccer){ tickSoccer(dt,now); }
       else{
         tickPlayer(dt,now);
         if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
