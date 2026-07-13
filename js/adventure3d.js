@@ -154,6 +154,9 @@ let netTlOk=true;                                     // rules /world ยัง�
 let carPeerHits=0;                                    // 🛠️ รอบ 133: นับ "เจตนาชน" รถเพื่อนรอบนี้ (ครบ 3 = ค่าซ่อม CAR_RAM_FEE)
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
+/* 🧭 รอบ 200: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง+เสียงอังกฤษเลี้ยวซ้าย/ขวา แบบ Google Maps) */
+let gpsTarget=null, gpsSpokeAt=0, gpsLastTurn='', gpsMile=0, gpsArrivedFor=null;
+let gpsArrowEl=null, gpsDistEl=null, gpsTurnEl=null, gpsLetEl=null;
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
 let carBobbleEl=null, carBobbleImg=null, bobAng=0, bobVel=0, _bobVW=0, _bobVH=0, _bobAv='';       // 🪆 ตุ๊กตาดุ๊กดิ๊ก (รอบ 191)
@@ -3321,7 +3324,23 @@ function buildDom(){
   #mecha-right{left:190px;bottom:24px;width:70px;height:70px;border-radius:50%}
   #mecha-fire{right:22px;bottom:34px;width:92px;height:92px;border-radius:50%;font-size:34px;
     background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}
-  #mecha-fire:active{background:rgba(255,90,110,.55)}`;
+  #mecha-fire:active{background:rgba(255,90,110,.55)}
+  /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
+  #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
+    background:linear-gradient(160deg,rgba(20,120,86,.95),rgba(10,78,58,.96));
+    border:2px solid #35d17e;border-radius:14px;padding:8px 12px 9px;min-width:130px;color:#eafff4;
+    box-shadow:0 4px 16px rgba(0,0,0,.42)}
+  .adv-drive #adv-gps{display:block}
+  #adv-gps .gps-top{display:flex;align-items:center;gap:9px}
+  #adv-gps .gps-arrow{font-size:26px;line-height:1;display:inline-block;transition:transform .3s ease;
+    color:#8effc4;filter:drop-shadow(0 0 5px rgba(80,255,170,.75))}
+  #adv-gps .gps-turn{font-size:15px;font-weight:800;white-space:nowrap}
+  #adv-gps .gps-bot{display:flex;align-items:baseline;gap:8px;margin-top:4px}
+  #adv-gps .gps-bot b{font-size:22px;color:#ffe082;line-height:1}
+  #adv-gps .gps-lab{font-size:11px;color:#bfe8d4;font-weight:700}
+  #adv-gps .gps-dist{font-size:14px;font-weight:800;color:#dffbee;margin-left:auto}
+  /* จอเตี้ย: ย้าย GPS ลงนิดไม่ให้ชนแถวปุ่มบน */
+  @media (max-height:430px){ #adv-gps{top:138px;padding:6px 10px} #adv-gps .gps-arrow{font-size:22px} }`;
   document.head.appendChild(st);
 
   overlayEl=document.createElement('div');
@@ -3339,6 +3358,10 @@ function buildDom(){
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div class="adv-hud" id="adv-junc">⚠️ ใกล้ทางแยก! เปิดไฟเลี้ยว ⬅️ ➡️ ก่อนเข้าแยก · ไม่งั้นปรับ 🪙5</div>
+    <div id="adv-gps">
+      <div class="gps-top"><span class="gps-arrow" id="gps-arrow">▲</span><span class="gps-turn" id="gps-turn">ตรงไป</span></div>
+      <div class="gps-bot"><span class="gps-lab">🎯 ไป</span><b id="gps-letter">A</b><span class="gps-dist" id="gps-dist">0 ม.</span></div>
+    </div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
@@ -3453,6 +3476,10 @@ function buildDom(){
   hudHeartEl=overlayEl.querySelector('#adv-hearts');
   banEl=overlayEl.querySelector('#adv-banner');
   juncEl=overlayEl.querySelector('#adv-junc');       // 🚦 รอบ 182: ป้ายเตือนใกล้ทางแยก
+  gpsArrowEl=overlayEl.querySelector('#gps-arrow');  // 🧭 รอบ 200: GPS นำทาง
+  gpsTurnEl=overlayEl.querySelector('#gps-turn');
+  gpsDistEl=overlayEl.querySelector('#gps-dist');
+  gpsLetEl=overlayEl.querySelector('#gps-letter');
   scareEl=overlayEl.querySelector('#adv-scare');
   hintEl=overlayEl.querySelector('#adv-hint');
   introEl=overlayEl.querySelector('#adv-intro');
@@ -4277,6 +4304,72 @@ function rlTick(px,pz,now){
     break;
   }
 }
+/* ============================================================
+   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + ลูกศร + ระยะทาง + เสียงอังกฤษเลี้ยวซ้าย/ขวา
+   ============================================================ */
+function pickGpsTarget(){
+  const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
+  Object.keys(inv).forEach(c=>{ if(need[c]) need[c]-=(inv[c]||0); });
+  const cx=camera.position.x, cz=camera.position.z;
+  let best=null,bestD=1e18, bn=null,bnD=1e18;
+  letters.forEach(l=>{
+    const d=Math.hypot(l.spr.position.x-cx,l.spr.position.z-cz);
+    if(d<bestD){ bestD=d; best=l; }
+    if((need[l.ch]||0)>0 && d<bnD){ bnD=d; bn=l; }
+  });
+  gpsTarget = bn||best; gpsMile=0; gpsLastTurn=''; gpsArrivedFor=null;
+}
+function gpsSpeak(text,force){
+  const now=performance.now();
+  if(!force && now-gpsSpokeAt<3200) return;
+  if(!state.sound || !('speechSynthesis' in window)) return;
+  try{
+    if(!force && speechSynthesis.speaking) return;
+    if(force) speechSynthesis.cancel();
+    gpsSpokeAt=now;
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=1.0; u.pitch=1.0; u.volume=.95;
+    let v=null; try{ if(typeof pickSpeakVoice==='function') v=pickSpeakVoice(); }catch(e){}
+    if(v) u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function tickGps(now){
+  // เป้าหมายหาย (เก็บได้/ย้าย) → เลือกใหม่ + ประกาศ
+  if(!gpsTarget || letters.indexOf(gpsTarget)<0){
+    pickGpsTarget();
+    if(gpsTarget) gpsSpeak('Next letter '+gpsTarget.ch.toUpperCase()+'.',true);
+  }
+  const gpsBox=gpsArrowEl?gpsArrowEl.parentElement.parentElement:null;
+  if(!gpsTarget){ if(gpsBox) gpsBox.style.display='none'; return; }
+  if(gpsBox) gpsBox.style.display='';
+  const cx=camera.position.x, cz=camera.position.z;
+  const dx=gpsTarget.spr.position.x-cx, dz=gpsTarget.spr.position.z-cz, dist=Math.hypot(dx,dz);
+  // มุมเป้าเทียบหัวรถ (0=ตรงหน้า · บวก=ขวา)
+  let rel=Math.atan2(dx,-dz)+yaw;
+  rel=((rel+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+  if(gpsArrowEl) gpsArrowEl.style.transform='rotate('+(rel*180/Math.PI).toFixed(0)+'deg)';
+  if(gpsDistEl) gpsDistEl.textContent = dist>=1000?(dist/1000).toFixed(1)+' กม.':Math.round(dist)+' ม.';
+  if(gpsLetEl) gpsLetEl.textContent = gpsTarget.ch.toUpperCase();
+  const a=Math.abs(rel);
+  let turn = a<0.44?'straight' : a>2.36?'uturn' : (rel>0?'right':'left');
+  if(gpsTurnEl) gpsTurnEl.textContent = {straight:'ตรงไป',left:'เลี้ยวซ้าย',right:'เลี้ยวขวา',uturn:'กลับรถ'}[turn];
+  // เสียงแบบ Google Maps
+  if(dist<9){
+    if(gpsArrivedFor!==gpsTarget){ gpsArrivedFor=gpsTarget; gpsSpeak('You have arrived at letter '+gpsTarget.ch.toUpperCase()+'.',true); }
+    return;
+  }
+  const mile = dist<25?25 : dist<60?60 : dist<130?130 : 0;
+  if(mile && mile!==gpsMile){
+    gpsMile=mile;
+    if(turn==='straight') gpsSpeak('Continue straight for '+mile+' meters.');
+    else if(turn==='uturn') gpsSpeak('Make a U-turn when possible.');
+    else gpsSpeak('In '+mile+' meters, turn '+turn+'.');
+  }
+  if(dist<45 && turn!=='straight' && turn!=='uturn' && turn!==gpsLastTurn){
+    gpsLastTurn=turn; gpsSpeak('Turn '+turn+' now.');
+  }
+}
 function tickDrive(dt,now){
   const D=worlds.drive.d;
   let th=0, sd=0;
@@ -4400,6 +4493,7 @@ function tickDrive(dt,now){
   // พวงมาลัยหมุนตามจริง (ภาพ img/car/wheel.png หรือวง CSS)
   if(carWheelEl) carWheelEl.style.transform='translateX(-50%) rotate('+(dSteer*440).toFixed(1)+'deg)';
 
+  tickGps(now);                                                   // 🧭 GPS นำทางไปตัวอักษร
   // OSD: ความเร็ว + ชื่อถนนจริงที่กำลังวิ่ง
   if(now-carNameAt>600){ carNameAt=now; carStreet=nearestStreet(p.x,p.z); }
   if(hudInstEl){
@@ -6108,6 +6202,7 @@ function start(md){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
+    gpsTarget=null; gpsSpokeAt=0; gpsLastTurn=''; gpsMile=0; gpsArrivedFor=null;   // 🧭 รีเซ็ต GPS
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
     bobPitch=0; bobPitchV=0; _bobPrevSpd=0; _bobSkin=null;  // 🪆 รอบ 193: รีเซ็ตก้ม-เงย + บังคับใส่สกินใหม่
