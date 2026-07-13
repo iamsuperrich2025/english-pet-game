@@ -140,6 +140,7 @@ let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
+let carBobbleEl=null, carBobbleImg=null, bobAng=0, bobVel=0, _bobVW=0, _bobVH=0, _bobAv='';       // 🪆 ตุ๊กตาดุ๊กดิ๊ก (รอบ 191)
 let radioBars=new Float32Array(32);                       // ระดับแท่ง visualizer (หน่วงนุ่ม)
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
@@ -2712,6 +2713,18 @@ function buildDom(){
   .adv-drive #adv-cargauges{display:block}
   #adv-cardash .cd-css{height:16vh;background:linear-gradient(180deg,#262a31,#101216);
     border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
+  /* 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่เลือก (blkN.png) ยืนบนแผงหน้าปัด หัวส่ายตามแรงเลี้ยว
+     JS ตั้ง left/top/size ตามพิกัดภาพ dash (BOBBLE_FOOT) · img หมุนรอบฐาน (เท้า) ด้วยสปริงใน bobbleTick */
+  #adv-bobble{position:absolute;display:none;z-index:4;pointer-events:none;will-change:transform}
+  .adv-drive #adv-bobble{display:block}
+  #adv-bobble img{width:100%;height:100%;display:block;object-fit:contain;object-position:50% 100%;
+    transform-origin:50% 96%;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));will-change:transform}
+  #adv-bobble .bob-base{position:absolute;left:50%;bottom:-3px;width:46%;height:9px;transform:translateX(-50%);
+    background:radial-gradient(50% 60% at 50% 50%,rgba(0,0,0,.5),transparent 72%);border-radius:50%;pointer-events:none}
+  /* ขดสปริงเล็กๆ ใต้ตุ๊กตา (โผล่จากใต้เท้า) ให้ดูเหมือนตั้งบนสปริงจริง */
+  #adv-bobble .bob-coil{position:absolute;left:50%;bottom:1px;width:16%;height:12%;transform:translateX(-50%);
+    background:repeating-linear-gradient(180deg,rgba(200,200,210,.85) 0 2px,rgba(90,95,110,.35) 2px 4px);
+    border-radius:0 0 40% 40%;opacity:.7;pointer-events:none}
   /* 🎵 รอบ 181: จอวิทยุ head-unit — วางทับจอดำกลางคอนโซล (JS ตั้ง left/top/size ตามภาพ dash) */
   #adv-radio-screen{position:absolute;display:none;z-index:5;cursor:pointer;overflow:hidden;
     border-radius:3px;box-shadow:0 0 0 1px rgba(90,190,255,.25) inset,0 0 12px rgba(70,160,255,.22)}
@@ -3100,6 +3113,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-junc">⚠️ ใกล้ทางแยก! เปิดไฟเลี้ยว ⬅️ ➡️ ก่อนเข้าแยก · ไม่งั้นปรับ 🪙5</div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
+    <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
     <canvas id="adv-cargauges"></canvas>
     <!-- 🎵 รอบ 181: วิทยุในรถ — จอ head-unit กลางคอนโซล (visualizer) + แผงเลือกเพลง sci-fi -->
     <div id="adv-radio-screen"><canvas id="adv-radio-viz"></canvas><div id="adv-radio-hint"></div></div>
@@ -3224,6 +3238,9 @@ function buildDom(){
   cwImg.onload=()=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(cwImg); };
   cwImg.onerror=()=>{ carWheelEl.innerHTML=`<div class="cw-css"></div>`; };
   cwImg.src='img/car/wheel.png';
+  // 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ
+  carBobbleEl=overlayEl.querySelector('#adv-bobble');
+  carBobbleImg=overlayEl.querySelector('#adv-bobble-img');
   // 🎵 รอบ 181: วิทยุในรถ — จอ head-unit
   radioScreenEl=overlayEl.querySelector('#adv-radio-screen');
   radioVizCv=overlayEl.querySelector('#adv-radio-viz');
@@ -4138,6 +4155,7 @@ function tickDrive(dt,now){
   CarSound.setSkid(Math.max(0,Math.min(1,(slipPerp-1.6)/6)));
   drawCarGauges();
   radioTick();                                              // 🎵 รอบ 181: จอวิทยุ + visualizer
+  bobbleTick(dt, latA, dSpeed, now);                        // 🪆 รอบ 191: ตุ๊กตาหัวส่ายตามแรงเลี้ยว
 }
 /* ============================================================
    🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-180 + วัดรอบ 0-8×1000) — วาดทับวงเกจของภาพ dash.png
@@ -4270,6 +4288,53 @@ function radioTick(){
   drawRadioViz();
 }
 /* ============================================================
+   🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
+   ยืนบนแผงหน้าปัดตรงลูกศร · "หัว" ส่ายซ้าย-ขวาตามแรงเลี้ยว (สปริงหน่วงต่ำ)
+   ตำแหน่งเท้า = พิกัดภาพ dash.png (BOBBLE_FOOT) map สูตรเดียวกับจอวิทยุ/เข็มเกจ
+   ============================================================ */
+const BOBBLE_FOOT=[542,596];   // จุดวางเท้า (พิกัดภาพ dash 1536×1024) — ตรงลูกศร (จูนได้)
+const BOBBLE_H=372;            // ความสูงตุ๊กตา (พิกัดภาพ) · กว้าง = สูง×สัดส่วนภาพ blk (341/512)
+const BOBBLE_ASPECT=341/512;
+/* สปริงหัวส่าย: ζ~0.16 (โยกค้างหลายจังหวะแบบตุ๊กตาสปริงจริง) · หมุนสูงสุด ~22°
+   BOB_FORCE จูนให้เลี้ยวปกติส่ายเห็นชัด (~8-12°) โค้งแรงชนเพดานแล้วสปริงกลับ */
+const BOB_OMEGA=8.4, BOB_ZETA=0.16, BOB_FORCE=0.5, BOB_MAXDEG=22;
+function bobbleSetAvatar(){
+  if(!carBobbleImg) return;
+  const id=BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1';
+  if(_bobAv===id) return;                         // src เดิม cache แล้ว ไม่ยิงซ้ำ
+  _bobAv=id; carBobbleImg.src=`img/blocks/${id}.png`;
+}
+function bobbleLayout(){
+  if(!carBobbleEl) return;
+  if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ carBobbleEl.style.display='none'; return; }
+  const box=carDashImg.getBoundingClientRect();
+  if(!box.width){ carBobbleEl.style.display='none'; return; }
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.66;
+  const footX=box.left+BOBBLE_FOOT[0]*s, footY=box.top+BOBBLE_FOOT[1]*s-offY;
+  const h=BOBBLE_H*s, w=h*BOBBLE_ASPECT;
+  carBobbleEl.style.display='';
+  carBobbleEl.style.height=h+'px'; carBobbleEl.style.width=w+'px';
+  carBobbleEl.style.left=(footX-w/2)+'px'; carBobbleEl.style.top=(footY-h)+'px';
+}
+/* อัปเดตทุกเฟรม: สปริงขับด้วยแรง G ด้านข้าง (latA) → หัวเหวี่ยง "นอกโค้ง" แล้วสปริงกลับ */
+function bobbleTick(dt, latA, speed, now){
+  if(!carBobbleImg || mode!=='drive') return;
+  if(carBobbleEl.style.display==='none' || window.innerWidth!==_bobVW || window.innerHeight!==_bobVH){
+    _bobVW=window.innerWidth; _bobVH=window.innerHeight; bobbleLayout();
+  }
+  const sdt=Math.min(dt,.05);
+  // สมการสปริง: θ'' = -ω²θ - 2ζω·θ' - (แรงข้าง)  · latA บวก/ลบ = เลี้ยวซ้าย/ขวา
+  bobVel += (-BOB_OMEGA*BOB_OMEGA*bobAng - 2*BOB_ZETA*BOB_OMEGA*bobVel - latA*BOB_FORCE) * sdt;
+  bobAng += bobVel*sdt;
+  const maxR=BOB_MAXDEG*Math.PI/180;
+  if(bobAng> maxR){ bobAng= maxR; if(bobVel>0) bobVel*=-.3; }
+  if(bobAng<-maxR){ bobAng=-maxR; if(bobVel<0) bobVel*=-.3; }
+  // สั่นเบาๆ ตอนเครื่องเดิน/วิ่ง ให้ดูมีชีวิต (สเกลตามความเร็ว)
+  const idle=Math.sin(now/85)*0.010*Math.min(1,Math.abs(speed)/7);
+  const deg=(bobAng+idle)*180/Math.PI;
+  carBobbleImg.style.transform=`rotate(${deg.toFixed(2)}deg)`;
+}
+/* ============================================================
    🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
    ============================================================ */
 function carStartShow(){                       // เด้งทุกครั้งที่เข้าโลกขับรถ — เครื่องดับ/ยังไม่คาดเข็มขัด
@@ -4277,6 +4342,7 @@ function carStartShow(){                       // เด้งทุกครั
   if(!p) return;
   carStartOpen=true;
   p.style.display='block';
+  bobbleSetAvatar();                                      // 🪆 รอบ 191: ตั้งรูปตุ๊กตาหน้ารถตามตัวละครที่เลือก
   // 🧱🚗 รอบ 148: ภาพตัวละครที่เลือกนั่งในรถ (แมทกับ state.blockAv) — มีไฟล์ค่อยโชว์ ไม่มี=แผงหน้าตาเดิม
   const av=p.querySelector('#cs-avatar');
   if(av){
@@ -5156,6 +5222,7 @@ function start(md){
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
+    bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
     padBr=false; gearR=false; if(gearSyncFn) gearSyncFn();  // 🦶⚙️ รอบ 139: ล้างเบรค + เกียร์กลับ D ทุกครั้งที่เข้าโลก
