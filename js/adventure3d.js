@@ -108,7 +108,7 @@ const CAR_LEGAL_KMH = 90;         // ลิมิตตามกฎหมาย�
 const CAR_FINE_SPEED = 200;       // 🪙 ค่าปรับขับเร็ว/ครั้ง (หักตอนออกจากโลก · สูงสุด 5 ครั้ง/รอบ)
 const CAR_FINE_BELT  = 300;       // 🪙 ค่าปรับไม่คาดเข็มขัด (หักทันที ครั้งเดียว/รอบ)
 const CAR_REPAIR_FEE = 1000;      // 🪙 ค่าซ่อมรถเมื่อชนสิ่งของแรง (รอบ 130 · หักตอนออก · สูงสุด 3 ครั้ง/รอบ)
-const CAR_FINE_SIGNAL = 100;      // 🪙 ค่าปรับเลี้ยวที่ทางแยกไม่เปิดไฟเลี้ยว ม.36 (รอบ 132 · หักตอนออก · สูงสุด 5 ใบ/รอบ)
+const CAR_FINE_SIGNAL = 5;        // 🪙 ค่าปรับเข้าทางแยกไม่เปิดไฟเลี้ยว (รอบ 182 ผู้ใช้เคาะ 5 เหรียญ · หักตอนออก · เดิม 100)
 const CAR_RAM_FEE     = 10000;    // 🛠️ เจตนาชนรถผู้เล่นอื่นครบ 3 ครั้ง/รอบ = ค่าซ่อมรถ (รอบ 133 · ประกันไม่คุ้มครองเจตนาชน · ครั้งเดียว/รอบ)
 const CAR_FINE_RED    = 300;      // 🚦 ค่าปรับฝ่าไฟแดง ม.22 (รอบ 133 · หักตอนออก · สูงสุด 5 ใบ/รอบ)
 const CAR_VMAX_OFF = 7;           // ออกนอกถนน (ดิน/หญ้า) ช้าลงมาก
@@ -127,6 +127,7 @@ let carFines=[], carOverSpeed=false, carBeltFined=false, carLawSeen=false;   // 
 // 🚦 รอบ 132: ไฟเลี้ยว (0=ปิด 1=ซ้าย 2=ขวา) + ตรวจทางแยก ม.36 + ชนรถเพื่อน
 let tlSig=0, tlSigAt=0, tlYawOn=0, tlRetAt=0;         // สถานะไฟเลี้ยว + มุมตอนเปิด + เวลานัดเด้งกลับหลังเลี้ยวเสร็จ (รอบ 135)
 let tlInJunc=false, tlYawEnter=0, tlSigSeen=false;    // กำลังอยู่ในโซนทางแยก + มุมตอนเข้า + เคยเปิดไฟระหว่างผ่านแยกไหม
+let tlJuncWarnUntil=0, juncEl=null;                   // 🚦 รอบ 182: ป้ายเตือน "ใกล้ทางแยก เปิดไฟเลี้ยว" (โชว์ชั่วคราว)
 let tlChkAt=0, tlCoolAt=0;                            // จังหวะเช็กทางแยก (ทุก 300ms) + cooldown หลังออกจากแยก
 let carPeerHitAt=0;                                   // cooldown ชนรถเพื่อน (กันโดนรัวติดๆ)
 let netTlOk=true;                                     // rules /world ยังไม่รับ field tl → ตัด tl ส่งซ้ำ ไม่พัง multiplayer
@@ -862,6 +863,17 @@ function flatGeom(arr,y){
   g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
   return g;
 }
+/* เหมือน flatGeom แต่มี UV = worldXZ/tile (ปูภาพลายซ้ำทั่วพื้น เช่น ทางเท้า) — รอบ 182 */
+function flatGeomUV(arr,y,tile){
+  const n=arr.length/2, pos=new Float32Array(n*3), nor=new Float32Array(n*3), uv=new Float32Array(n*2);
+  for(let i=0;i<n;i++){ const x=arr[i*2], z=arr[i*2+1];
+    pos[i*3]=x; pos[i*3+1]=y; pos[i*3+2]=z; nor[i*3+1]=1; uv[i*2]=x/tile; uv[i*2+1]=z/tile; }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('normal',new THREE.BufferAttribute(nor,3));
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  return g;
+}
 function buildDriveCity(sc){
   const C=window.KPP_CITY;
   sc.add(new THREE.HemisphereLight(0xffffff,0x93a072,1.02));
@@ -927,6 +939,37 @@ function buildDriveCity(sc){
   });
   sc.add(new THREE.Mesh(flatGeom(roadTris,.02),new THREE.MeshLambertMaterial({color:0x41454c})));
   sc.add(new THREE.Mesh(flatGeom(dashTris,.05),new THREE.MeshBasicMaterial({color:0xd8d8d2})));
+
+  /* ---------- 🚲 รอบ 182: เลนจักรยาน (ฟ้าขอบขาว) + ทางเท้า ขนาบถนนทุกเส้นที่ขับได้ ----------
+     ถัดจากขอบถนน: เลนจักรยานฟ้า (เส้นขาว 2 ขอบ) → ทางเท้าปูลาย (img/city/sidewalk.png ถ้ามี)
+     ทั้งหมดเป็น decal พื้น (y เล็กน้อย) ไม่กระทบ grid ที่ขับได้ (ขับทับ=นอกถนน ช้าลงตามจริง) */
+  const bikeTris=[], bikeEdgeTris=[], walkTris=[];
+  const BIKE_W=1.7, WALK_W=2.6, LINE_W=0.28;
+  C.r.forEach(rd=>{
+    const w=rd[0]*ROAD_WIDEN; if(w<7) return;                // เฉพาะถนนจริง (ข้าม service road เล็ก)
+    const p=rd[3];
+    for(let i=0;i<p.length-2;i+=2){
+      const x1=p[i],z1=p[i+1],x2=p[i+2],z2=p[i+3];
+      const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz)||1e-6,ux=dx/L,uz=dz/L;
+      const ex=ux*w*.5,ez=uz*w*.5, ax=x1-ex,az=z1-ez,bx=x2+ex,bz=z2+ez, pux=-uz,puz=ux;
+      const strip=(arr,d0,d1)=>{ for(const sgn of [1,-1]){ const e0=sgn*d0,e1=sgn*d1;
+        const a0x=ax+pux*e0,a0z=az+puz*e0,b0x=bx+pux*e0,b0z=bz+puz*e0,a1x=ax+pux*e1,a1z=az+puz*e1,b1x=bx+pux*e1,b1z=bz+puz*e1;
+        arr.push(a0x,a0z,b0x,b0z,b1x,b1z, a0x,a0z,b1x,b1z,a1x,a1z); } };
+      const r=w/2;
+      strip(bikeTris,     r, r+BIKE_W);                      // เลนจักรยาน (ฟ้า)
+      strip(bikeEdgeTris, r, r+LINE_W);                      // เส้นขาวขอบใน (ชิดถนน)
+      strip(bikeEdgeTris, r+BIKE_W-LINE_W, r+BIKE_W);        // เส้นขาวขอบนอก (ชิดทางเท้า)
+      strip(walkTris,     r+BIKE_W, r+BIKE_W+WALK_W);        // ทางเท้า
+    }
+  });
+  const walkMat=new THREE.MeshLambertMaterial({color:0x9c9a90});
+  sc.add(new THREE.Mesh(flatGeomUV(walkTris,.028,3.2), walkMat));            // ทางเท้า (ต่ำสุด)
+  sc.add(new THREE.Mesh(flatGeom(bikeTris,.033),new THREE.MeshLambertMaterial({color:0x2f7fd0})));   // เลนฟ้า
+  sc.add(new THREE.Mesh(flatGeom(bikeEdgeTris,.045),new THREE.MeshBasicMaterial({color:0xf2f2f2}))); // ขอบขาว
+  const swImg=new Image();                                                    // probe ภาพลายทางเท้า → ปูแทนสีเรียบ
+  swImg.onload=()=>{ const tx=new THREE.Texture(swImg); tx.wrapS=tx.wrapT=THREE.RepeatWrapping; tx.needsUpdate=true;
+    walkMat.map=tx; walkMat.color.setHex(0xffffff); walkMat.needsUpdate=true; };
+  swImg.src='img/city/sidewalk.png';
 
   /* ---------- กำแพงกันชน (ตึกจริง=ขอบ polygon · ตึกแถว=กล่องหมุน) ใน spatial hash ---------- */
   const SCELL=42, solidGrid={};
@@ -1055,6 +1098,17 @@ function buildDriveCity(sc){
 
   worlds.drive={scene:sc, trees:[], buildings:[],
     d:{grid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:R}};
+  /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
+     (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
+  const junctions=[];
+  for(let i=0;i<roadPts.length;i+=2){
+    const x=roadPts[i], z=roadPts[i+1];
+    if(driveArms(x,z)>=3){
+      const m=junctions.find(j=>Math.hypot(j.x-x,j.z-z)<16);
+      if(m){ m.x=(m.x+x)/2; m.z=(m.z+z)/2; } else junctions.push({x,z});
+    }
+  }
+  worlds.drive.d.junctions=junctions;
 }
 
 function buildScene(md){
@@ -2877,6 +2931,12 @@ function buildDom(){
   #adv-warn.warn2{animation:advWarnBlink .5s infinite}
   #adv-warn.warn3{animation:advWarnBlink .22s infinite;background:rgba(255,23,23,.98);font-size:17px}
   @keyframes advWarnBlink{0%,100%{opacity:1}50%{opacity:.35}}
+  /* 🚦 รอบ 182: ป้ายเตือนใกล้ทางแยก (เปิดไฟเลี้ยว) — แถบเหลืองอำพันบนกลางจอ กะพริบเบาๆ */
+  #adv-junc{top:96px;left:50%;transform:translateX(-50%);display:none;z-index:6;
+    color:#241a00;font-weight:900;font-size:13.5px;white-space:nowrap;
+    background:linear-gradient(180deg,#ffe08a,#ffc23d);border:2px solid #fff;border-radius:12px;
+    padding:4px 15px;box-shadow:0 3px 12px rgba(120,80,0,.4);animation:juncBlink .9s infinite}
+  @keyframes juncBlink{0%,100%{opacity:1}50%{opacity:.55}}
   #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
   #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
@@ -3018,6 +3078,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-hearts"></div>
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
+    <div class="adv-hud" id="adv-junc">⚠️ ใกล้ทางแยก! เปิดไฟเลี้ยว ⬅️ ➡️ ก่อนเข้าแยก · ไม่งั้นปรับ 🪙5</div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <canvas id="adv-cargauges"></canvas>
@@ -3100,6 +3161,7 @@ function buildDom(){
   hudHuntEl=overlayEl.querySelector('#adv-hunt');
   hudHeartEl=overlayEl.querySelector('#adv-hearts');
   banEl=overlayEl.querySelector('#adv-banner');
+  juncEl=overlayEl.querySelector('#adv-junc');       // 🚦 รอบ 182: ป้ายเตือนใกล้ทางแยก
   scareEl=overlayEl.querySelector('#adv-scare');
   hintEl=overlayEl.querySelector('#adv-hint');
   introEl=overlayEl.querySelector('#adv-intro');
@@ -3752,25 +3814,34 @@ function tlTick(px,pz,now){
     if(Math.abs(dy)>.87 && Math.abs(dSteer)<.07 && !tlRetAt) tlRetAt=now+900;
     if((tlRetAt && now>tlRetAt) || now-tlSigAt>20000) tlSet(0);
   }
-  if(now-tlChkAt<300) return;                        // เช็กทางแยกทุก 300ms พอ (sample 16 จุด/ครั้ง)
+  if(now-tlChkAt<200) return;                        // เช็กทางแยกทุก 200ms พอ
   tlChkAt=now;
-  const inJ=Math.abs(dSpeed)>1.5 && driveCell(px,pz)===1 && driveArms(px,pz)>=3;
+  // 🚦 รอบ 182: เตือน+ปรับจาก "รายการทางแยก" ที่ precompute (D.junctions) — เช็กด้วยระยะ robust
+  const jns=(worlds.drive.d.junctions)||[];
+  // เตือนล่วงหน้า: มีแยกอยู่ข้างหน้า (ทิศ yaw) ภายใน ~24m + ยังไม่เปิดไฟ
+  let jAhead=false;
+  if(dSpeed>1.5){
+    const fdx=-Math.sin(yaw), fdz=-Math.cos(yaw);
+    for(const j of jns){ const rx=j.x-px, rz=j.z-pz, dist=Math.hypot(rx,rz);
+      if(dist>2 && dist<24 && (rx*fdx+rz*fdz)/dist>0.55){ jAhead=true; break; } }
+  }
+  if(jAhead && !tlSig){ tlJuncWarnUntil=now+1500; if(juncEl) juncEl.style.display='block'; }
+  else if(juncEl && now>tlJuncWarnUntil) juncEl.style.display='none';
+  // เข้าทางแยก: อยู่ในรัศมี ~7.5m ของจุดแยก + กำลังวิ่ง → เข้าแยกแล้ว
+  let inJ=false;
+  if(Math.abs(dSpeed)>1.5) for(const j of jns){ if(Math.hypot(j.x-px,j.z-pz)<7.5){ inJ=true; break; } }
   if(inJ && !tlInJunc){
     if(now<tlCoolAt) return;                         // เพิ่งออกจากแยกก่อนหน้า — เว้นระยะกันนับซ้อน
-    tlInJunc=true; tlYawEnter=yaw; tlSigSeen=tlSig!==0;
-  }else if(tlInJunc){
-    if(tlSig) tlSigSeen=true;
-    if(!inJ){
-      tlInJunc=false; tlCoolAt=now+3000;
-      let dy=yaw-tlYawEnter; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
-      if(Math.abs(dy)>.79 && !tlSigSeen && carFines.filter(f=>f.t==='signal').length<5){
-        carFines.push({t:'signal', fine:CAR_FINE_SIGNAL});
-        sfx.wrong();
-        showBanner(`🚨 เลี้ยวไม่ให้สัญญาณไฟเลี้ยว! ผิด พ.ร.บ.จราจรทางบก <b>มาตรา 36</b><br>
-          <small>(กฎหมายจริง: ปรับไม่เกิน 1,000 บาท) ใบสั่ง 🪙${CAR_FINE_SIGNAL} หักตอนออกจากเกม · โดนแล้ว ${carFines.filter(f=>f.t==='signal').length} ใบ<br>คราวหน้ากดปุ่ม ⬅️ ➡️ ก่อนเลี้ยวนะ</small>`);
-      }
+    tlInJunc=true; tlYawEnter=yaw;
+    // เข้าทางแยกโดยไม่เปิดไฟเลี้ยว = ปรับ 🪙5 (ผู้ใช้เคาะ) — เพดาน 40 ใบ/รอบ (ใบละ 5 เบา)
+    if(!tlSig && carFines.filter(f=>f.t==='signal').length<40){
+      carFines.push({t:'signal', fine:CAR_FINE_SIGNAL});
+      sfx.wrong();
+      const n=carFines.filter(f=>f.t==='signal').length;
+      showBanner(`🚦 เข้าทางแยกไม่เปิดไฟเลี้ยว! ปรับ 🪙${CAR_FINE_SIGNAL}<br>
+        <small>กดปุ่มไฟเลี้ยว ⬅️ ➡️ ก่อนถึงแยกทุกครั้งนะ · โดนแล้ว ${n} ครั้ง (หักตอนออกจากเกม)</small>`);
     }
-  }
+  }else if(tlInJunc && !inJ){ tlInJunc=false; tlCoolAt=now+2500; }
 }
 /* ============================================================
    🚦 รอบ 133: ไฟจราจรจริงที่ทางแยกใหญ่ + ฝ่าไฟแดงโดนใบสั่ง ม.22
@@ -5016,6 +5087,7 @@ function start(md){
     carEngineOn=false; carBelted=false; carFines=[]; carOverSpeed=false; carBeltFined=false; carLawSeen=false;
     // 🚦 รอบ 132: รีเซ็ตไฟเลี้ยว + ตัวตรวจทางแยก + ชนรถเพื่อน (netTlOk คืน true เผื่อผู้ใช้เพิ่ง publish rules)
     tlSet(0); tlInJunc=false; tlChkAt=0; tlCoolAt=0; carPeerHitAt=0; netTlOk=true;
+    tlJuncWarnUntil=0; if(juncEl) juncEl.style.display='none';   // 🚦 รอบ 182: รีเซ็ตป้ายเตือนแยก
     // 🚦 รอบ 133: รีเซ็ตตัวนับเจตนาชน + ไฟแดง แล้วปักไฟจราจรตามแยกใหญ่ (ครั้งแรกครั้งเดียว)
     carPeerHits=0; rlChkAt=0; rlCoolAt=0; rlForce=null;
     buildTrafficLights();
