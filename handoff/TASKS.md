@@ -22,6 +22,15 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 193 (14 ก.ค.) — ตุ๊กตาหน้ารถ 3 ต่อยอด: ก้ม-เงย + แตะสะกิด + สกินซื้อด้วยเหรียญ 🪆🎯👆 (version .184)
+- **ผู้ใช้สั่ง "ทำทั้งหมดที่เสนอเลย"** (3 ไอเดียต่อยอดตุ๊กตาหน้ารถรอบ 191) — ทำใน adventure3d.js ไฟล์เดียว:
+  1. 🎯 **ก้ม-เงยตอนเบรก/ออกตัว:** สปริงชุด 2 (`bobPitch/bobPitchV`) ขับด้วย accel=`(speed-_bobPrevSpd)/dt` · apply `rotateX(pitch) rotate(sway)` บน img + `perspective:560px` บน `#adv-bobble` (transform-origin เท้า) · `BOB_PITCH_FORCE=0.9 BOB_PITCH_MAXDEG=16`
+  2. 👆 **แตะสะกิด:** `#adv-bobble` pointer-events auto + touchstart/mousedown (preventDefault+stopPropagation กันโดน joystick) → `bobblePoke`: อัด `bobVel±6.5`/`bobPitchV+5` + คลาส `.poke` เด้ง + เสียง "ปิ๊ง" WebAudio (osc sine 720→190→340Hz = ฟีลสปริง · lazy `_bobAC`)
+  3. 🪆 **สกินพิเศษซื้อด้วยเหรียญ:** `BOBBLE_SKINS` 5 แบบ (''/glow2000/gold6000/rainbow12000/ghost20000 · เอฟเฟกต์ `filter` CSS ล้วน ไม่มีไฟล์) · ปุ่ม `#cs-doll` ในแผงเตรียมออกรถ → `openDollPicker` (grid พรีวิวตัวละคร+สกิน · ซื้อ=หักเหรียญ+`state.bobbleOwned[id]` · เลือก=`state.bobbleSkin`) · `bobbleApplySkin` ใส่คลาส `bskin-<id>` บน `#adv-bobble`
+- **🐞 gotcha สำคัญ:** base rule `#adv-bobble img{filter:...}` มี ID → specificity ชนะ `.bskin-X img` · สกินต้องเขียน `#adv-bobble.bskin-X img,.dp-prev.bskin-X img{...}` (พรีวิวใช้ `.dp-prev` ไม่มี ID competitor เลยพอ)
+- ✅ **ยืนยัน preview (โหลด three+city จริง · start drive · step):** เบรกแรง→pitch 16° · แตะ→sway พีค 22° · ซื้อทอง 6000 (30000→24000) filter สดเป็น sepia/gold จริง · เหรียญไม่พอ (1000<12000)→ปฏิเสธไม่หักเหรียญ คงสกินเดิม · picker สูง 245<375 พอดีจอ · ไม่มี console error
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ — จูน `BOB_PITCH_FORCE`/`BOB_PITCH_MAXDEG` (ฟีลก้ม-เงย) + แรงสะกิดใน `bobblePoke` + ราคาสกิน (BOBBLE_SKINS cost) · เสียงปิ๊ง WebAudio เล่นได้เพราะแตะ=user gesture
+
 ### ✅ รอบ 192 (14 ก.ค.) — Spin-to-Spell ลดรางวัลเต็ม 5→1 คำ/วัน 🪙 (version .183)
 - **สเปกผู้ใช้:** รางวัล 1,000 เหรียญ ให้มีวันละ 1 รอบพอ (ไม่เอา 5/3 แล้ว — ถ้าเล่นทุกวันเงินเฟ้อจนไม่เล่นจับคู่คำศัพท์) · ถัดจากรอบ 1,000 = ราคาปกติเดิม (100)
 - **ทำ:** แก้ `SPELL_FULL_PER_DAY` 5→1 ใน lobby3d.js (บรรทัดเดียว · HUD `.sp-day`, ป้าย coinpop, ข้อความ "รางวัลเต็ม N คำ/วัน" อิงค่านี้อัตโนมัติ) · SPELL_COIN 1000 / SPELL_COIN_LATE 100 คงเดิม · perfect ×1.5 คงเดิม (คำแรก perfect = 1,500)

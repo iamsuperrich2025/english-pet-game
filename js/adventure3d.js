@@ -141,6 +141,7 @@ let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
 let carBobbleEl=null, carBobbleImg=null, bobAng=0, bobVel=0, _bobVW=0, _bobVH=0, _bobAv='';       // 🪆 ตุ๊กตาดุ๊กดิ๊ก (รอบ 191)
+let bobPitch=0, bobPitchV=0, _bobPrevSpd=0, _bobSkin=null, _bobAC=null;                           // 🪆 รอบ 193: ก้ม-เงย + สกิน + เสียงสะกิด
 let radioBars=new Float32Array(32);                       // ระดับแท่ง visualizer (หน่วงนุ่ม)
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
@@ -2715,10 +2716,50 @@ function buildDom(){
     border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
   /* 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่เลือก (blkN.png) ยืนบนแผงหน้าปัด หัวส่ายตามแรงเลี้ยว
      JS ตั้ง left/top/size ตามพิกัดภาพ dash (BOBBLE_FOOT) · img หมุนรอบฐาน (เท้า) ด้วยสปริงใน bobbleTick */
-  #adv-bobble{position:absolute;display:none;z-index:4;pointer-events:none;will-change:transform}
+  #adv-bobble{position:absolute;display:none;z-index:4;pointer-events:auto;cursor:pointer;
+    perspective:560px;will-change:transform}
   .adv-drive #adv-bobble{display:block}
   #adv-bobble img{width:100%;height:100%;display:block;object-fit:contain;object-position:50% 100%;
     transform-origin:50% 96%;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55));will-change:transform}
+  /* 👆 รอบ 193: เด้งตอนถูกสะกิด */
+  @keyframes bobPoke{0%{transform:scale(1)}28%{transform:scale(1.13)}62%{transform:scale(.95)}100%{transform:scale(1)}}
+  #adv-bobble.poke{animation:bobPoke .42s ease-out}
+  html.no-anim #adv-bobble.poke{animation:none}
+  /* 🪆 รอบ 193: สกินตุ๊กตาพิเศษ (ใช้ทั้งตัวจริง #adv-bobble + พรีวิว .dp-prev · เอฟเฟกต์ filter ล้วน)
+     ต้องมี #adv-bobble นำหน้าเพื่อชนะ specificity ของ base rule (#adv-bobble img) */
+  #adv-bobble.bskin-glow img,.dp-prev.bskin-glow img{filter:drop-shadow(0 0 5px #7ff) drop-shadow(0 0 11px #12d6ff) brightness(1.06);animation:bskGlow 1.5s ease-in-out infinite}
+  @keyframes bskGlow{0%,100%{filter:drop-shadow(0 0 4px #7ff) drop-shadow(0 0 8px #12d6ff) brightness(1.04)}50%{filter:drop-shadow(0 0 9px #bff) drop-shadow(0 0 18px #29e0ff) brightness(1.14)}}
+  #adv-bobble.bskin-gold img,.dp-prev.bskin-gold img{filter:sepia(1) saturate(3.4) hue-rotate(-16deg) brightness(1.14) drop-shadow(0 0 7px #ffcf4d)}
+  #adv-bobble.bskin-rainbow img,.dp-prev.bskin-rainbow img{animation:bskRainbow 3s linear infinite}
+  @keyframes bskRainbow{0%{filter:hue-rotate(0deg) saturate(1.6) drop-shadow(0 0 6px #f9a)}100%{filter:hue-rotate(360deg) saturate(1.6) drop-shadow(0 0 6px #9af)}}
+  #adv-bobble.bskin-ghost img,.dp-prev.bskin-ghost img{filter:brightness(1.35) grayscale(.25) drop-shadow(0 0 9px #aef);opacity:.5}
+  html.no-anim #adv-bobble.bskin-glow img,html.no-anim #adv-bobble.bskin-rainbow img,html.no-anim .dp-prev.bskin-glow img,html.no-anim .dp-prev.bskin-rainbow img{animation:none}
+  /* 🪆 รอบ 193: หน้าต่างเลือก/ปลดล็อกสกินตุ๊กตา */
+  #adv-dollpick{position:absolute;inset:0;display:none;align-items:center;justify-content:center;z-index:9;
+    background:rgba(4,12,26,.55);pointer-events:auto}
+  #adv-dollpick .dp-box{width:min(540px,94vw);box-sizing:border-box;background:rgba(10,22,42,.97);
+    border:2px solid #4fc3f7;border-radius:18px;padding:13px 16px 15px;color:#e6f3ff;box-shadow:0 0 26px rgba(79,195,247,.45)}
+  #adv-dollpick .dp-head{display:flex;align-items:center;justify-content:space-between;font-size:17px;font-weight:800;color:#8fd6ff}
+  #adv-dollpick .dp-x{border:none;background:rgba(255,255,255,.12);color:#cfe4fa;border-radius:8px;width:28px;height:28px;font-size:14px;cursor:pointer}
+  #adv-dollpick .dp-coin{text-align:center;font-size:13px;color:#ffe08a;margin:5px 0 9px}
+  #adv-dollpick .dp-grid{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+  #adv-dollpick .dp-cell{flex:0 0 auto;width:92px;background:rgba(18,40,72,.6);border:2px solid rgba(95,200,255,.3);
+    border-radius:13px;padding:7px 5px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px}
+  #adv-dollpick .dp-cell.sel{border-color:#ffd54a;box-shadow:0 0 12px rgba(255,213,74,.5)}
+  #adv-dollpick .dp-cell:active{transform:scale(.95)}
+  #adv-dollpick .dp-prev{position:relative;width:100%;height:62px;display:flex;align-items:flex-end;justify-content:center}
+  #adv-dollpick .dp-prev img{height:60px;object-fit:contain}
+  #adv-dollpick .dp-prev b{position:absolute;top:-2px;right:6px;font-size:15px}
+  #adv-dollpick .dp-name{font-size:12px;font-weight:700;color:#dcefff}
+  #adv-dollpick .dp-cell i{font-size:11.5px;font-style:normal;font-weight:800;padding:2px 8px;border-radius:9px}
+  #adv-dollpick .dp-cost{background:rgba(255,205,80,.16);color:#ffd76a}
+  #adv-dollpick .dp-use{background:rgba(90,200,255,.16);color:#8fd6ff}
+  #adv-dollpick .dp-on{background:#ffd54a;color:#5a4300}
+  #adv-dollpick .dp-hint{text-align:center;font-size:11px;color:#9ec8e8;margin-top:10px}
+  /* ปุ่มเปิดหน้าแต่งตุ๊กตา ในแผงเตรียมออกรถ */
+  #cs-doll{display:block;margin:10px auto 0;background:rgba(79,195,247,.16);color:#bfe8ff;border:1.5px solid #4fc3f7;
+    border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;padding:8px 18px;cursor:pointer}
+  #cs-doll:active{transform:scale(.96)}
   #adv-bobble .bob-base{position:absolute;left:50%;bottom:-3px;width:46%;height:9px;transform:translateX(-50%);
     background:radial-gradient(50% 60% at 50% 50%,rgba(0,0,0,.5),transparent 72%);border-radius:50%;pointer-events:none}
   /* ขดสปริงเล็กๆ ใต้ตุ๊กตา (โผล่จากใต้เท้า) ให้ดูเหมือนตั้งบนสปริงจริง */
@@ -3167,6 +3208,7 @@ function buildDom(){
         <div class="cs-lab">🔒 คาดเข็มขัดนิรภัย<small>ปลอดภัย + ไม่โดนใบสั่ง ม.123</small></div>
         <button class="set-switch off" id="cs-belt"><span class="set-sw-knob"></span><span class="set-sw-txt">ปิด</span></button>
       </div>
+      <button id="cs-doll" type="button">🪆 แต่งตุ๊กตาหน้ารถ</button>
       <button id="cs-go" disabled>🚗 ออกรถ!</button>
     </div>
     <div id="adv-lawinfo"></div>
@@ -3411,6 +3453,13 @@ function buildDom(){
     if(!carBelted) showLawInfo(true, closePanel);   // ยังไม่คาด → เตือนข้อกฎหมายก่อน (ยืนยันแล้วออกได้ แต่จะโดนปรับ)
     else closePanel();
   });
+  overlayEl.querySelector('#cs-doll').addEventListener('click',()=>{ sfx.select(); openDollPicker(); });   // 🪆 รอบ 193
+  // 👆 รอบ 193: แตะตุ๊กตาหน้ารถ = สะกิดให้ส่าย + เสียงปิ๊ง (กันไปโดน joystick/กล้อง)
+  if(carBobbleEl){
+    const poke=e=>{ e.preventDefault(); e.stopPropagation(); bobblePoke(); };
+    carBobbleEl.addEventListener('touchstart',poke,{passive:false});
+    carBobbleEl.addEventListener('mousedown',poke);
+  }
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -4298,11 +4347,22 @@ const BOBBLE_ASPECT=341/512;
 /* สปริงหัวส่าย: ζ~0.16 (โยกค้างหลายจังหวะแบบตุ๊กตาสปริงจริง) · หมุนสูงสุด ~22°
    BOB_FORCE จูนให้เลี้ยวปกติส่ายเห็นชัด (~8-12°) โค้งแรงชนเพดานแล้วสปริงกลับ */
 const BOB_OMEGA=8.4, BOB_ZETA=0.16, BOB_FORCE=0.5, BOB_MAXDEG=22;
+/* 🪆 รอบ 193 (ต่อยอด): ก้ม-เงยตามเร่ง/เบรก (แกนหน้า-หลัง) · สปริงชุดเดียวกัน */
+const BOB_PITCH_FORCE=0.9, BOB_PITCH_MAXDEG=16;
+/* สกินตุ๊กตาพิเศษ (ปลดล็อกด้วยเหรียญ · เอฟเฟกต์ CSS ล้วน ไม่มีไฟล์เพิ่ม) */
+const BOBBLE_SKINS=[
+  {id:'',        emoji:'🧍', name:'ปกติ',      cost:0},
+  {id:'glow',    emoji:'✨', name:'เรืองแสง',  cost:2000},
+  {id:'gold',    emoji:'🏅', name:'ทองคำ',     cost:6000},
+  {id:'rainbow', emoji:'🌈', name:'สายรุ้ง',   cost:12000},
+  {id:'ghost',   emoji:'👻', name:'ล่องหน',    cost:20000},
+];
 function bobbleSetAvatar(){
   if(!carBobbleImg) return;
   const id=BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1';
   if(_bobAv===id) return;                         // src เดิม cache แล้ว ไม่ยิงซ้ำ
   _bobAv=id; carBobbleImg.src=`img/blocks/${id}.png`;
+  bobbleApplySkin();
 }
 function bobbleLayout(){
   if(!carBobbleEl) return;
@@ -4323,16 +4383,86 @@ function bobbleTick(dt, latA, speed, now){
     _bobVW=window.innerWidth; _bobVH=window.innerHeight; bobbleLayout();
   }
   const sdt=Math.min(dt,.05);
-  // สมการสปริง: θ'' = -ω²θ - 2ζω·θ' - (แรงข้าง)  · latA บวก/ลบ = เลี้ยวซ้าย/ขวา
+  // สปริงส่ายข้าง (rotateZ): θ'' = -ω²θ - 2ζω·θ' - (แรงข้าง)  · latA บวก/ลบ = เลี้ยวซ้าย/ขวา
   bobVel += (-BOB_OMEGA*BOB_OMEGA*bobAng - 2*BOB_ZETA*BOB_OMEGA*bobVel - latA*BOB_FORCE) * sdt;
   bobAng += bobVel*sdt;
   const maxR=BOB_MAXDEG*Math.PI/180;
   if(bobAng> maxR){ bobAng= maxR; if(bobVel>0) bobVel*=-.3; }
   if(bobAng<-maxR){ bobAng=-maxR; if(bobVel<0) bobVel*=-.3; }
+  // 🪆 รอบ 193: สปริงก้ม-เงย (rotateX) ตามแรงเร่ง/เบรก (แกนหน้า-หลัง) · accel = อัตราเปลี่ยนความเร็ว
+  const accel=(speed-_bobPrevSpd)/sdt; _bobPrevSpd=speed;
+  bobPitchV += (-BOB_OMEGA*BOB_OMEGA*bobPitch - 2*BOB_ZETA*BOB_OMEGA*bobPitchV + accel*BOB_PITCH_FORCE) * sdt;
+  bobPitch += bobPitchV*sdt;
+  const maxP=BOB_PITCH_MAXDEG*Math.PI/180;
+  if(bobPitch> maxP){ bobPitch= maxP; if(bobPitchV>0) bobPitchV*=-.3; }
+  if(bobPitch<-maxP){ bobPitch=-maxP; if(bobPitchV<0) bobPitchV*=-.3; }
   // สั่นเบาๆ ตอนเครื่องเดิน/วิ่ง ให้ดูมีชีวิต (สเกลตามความเร็ว)
   const idle=Math.sin(now/85)*0.010*Math.min(1,Math.abs(speed)/7);
-  const deg=(bobAng+idle)*180/Math.PI;
-  carBobbleImg.style.transform=`rotate(${deg.toFixed(2)}deg)`;
+  const degZ=(bobAng+idle)*180/Math.PI, degX=bobPitch*180/Math.PI;
+  carBobbleImg.style.transform=`rotateX(${degX.toFixed(2)}deg) rotate(${degZ.toFixed(2)}deg)`;
+}
+/* 🪆 รอบ 193: สะกิดตุ๊กตา — อัดแรงเข้าสปริงทั้ง 2 แกน + เสียง "ปิ๊ง" สังเคราะห์ */
+function bobblePoke(){
+  bobVel += (Math.random()<0.5?-1:1)*6.5;   // เหวี่ยงข้างแรงๆ
+  bobPitchV += 5;                            // สะบัดหน้าลงนิด
+  if(carBobbleEl){ carBobbleEl.classList.remove('poke'); void carBobbleEl.offsetWidth; carBobbleEl.classList.add('poke'); }
+  try{
+    _bobAC=_bobAC||new (window.AudioContext||window.webkitAudioContext)();
+    if(_bobAC.state==='suspended') _bobAC.resume();
+    const t=_bobAC.currentTime, o=_bobAC.createOscillator(), g=_bobAC.createGain();
+    o.type='sine';
+    o.frequency.setValueAtTime(720,t); o.frequency.exponentialRampToValueAtTime(190,t+0.16);
+    o.frequency.exponentialRampToValueAtTime(340,t+0.28);   // เด้งกลับขึ้นนิด = ฟีลสปริง
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.2,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.34);
+    o.connect(g).connect(_bobAC.destination); o.start(t); o.stop(t+0.36);
+  }catch(e){}
+}
+/* 🪆 รอบ 193: ใส่สกินให้ตุ๊กตา (คลาส CSS บน #adv-bobble) */
+function bobbleApplySkin(){
+  if(!carBobbleEl) return;
+  const owned=(typeof state!=='undefined' && state.bobbleSkin) ? state.bobbleSkin : '';
+  const id=BOBBLE_SKINS.some(s=>s.id===owned)?owned:'';
+  if(_bobSkin===id) return;
+  BOBBLE_SKINS.forEach(s=>{ if(s.id) carBobbleEl.classList.remove('bskin-'+s.id); });
+  if(id) carBobbleEl.classList.add('bskin-'+id);
+  _bobSkin=id;
+}
+/* 🪆 รอบ 193: หน้าต่างเลือก/ปลดล็อกสกินตุ๊กตา (เปิดจากปุ่มในแผงเตรียมออกรถ) */
+function dollOwned(id){ return !id || (typeof state!=='undefined' && state.bobbleOwned && state.bobbleOwned[id]); }
+function openDollPicker(){
+  if(!overlayEl) return;
+  let el=overlayEl.querySelector('#adv-dollpick');
+  if(!el){ el=document.createElement('div'); el.id='adv-dollpick'; overlayEl.appendChild(el); }
+  const img=`img/blocks/${BLOCK_AVATARS[state.blockAv]?state.blockAv:'blk1'}.png`;
+  const fmt=n=>(typeof fmtNum==='function')?fmtNum(n):n;
+  const render=()=>{
+    const sel=state.bobbleSkin||'';
+    el.innerHTML=`<div class="dp-box">
+      <div class="dp-head"><span>🪆 แต่งตุ๊กตาหน้ารถ</span><button class="dp-x" type="button">✕</button></div>
+      <div class="dp-coin">มีเหรียญ 🪙${fmt(state.coins||0)}</div>
+      <div class="dp-grid">${BOBBLE_SKINS.map(s=>{
+        const owned=dollOwned(s.id), on=sel===s.id;
+        const tag = on?'<i class="dp-on">ใช้อยู่</i>' : owned?'<i class="dp-use">เลือก</i>' : `<i class="dp-cost">🪙${fmt(s.cost)}</i>`;
+        return `<button class="dp-cell${on?' sel':''}" data-id="${s.id}" type="button">
+          <span class="dp-prev bskin-${s.id||'none'}"><img src="${img}" alt=""><b>${s.emoji}</b></span>
+          <span class="dp-name">${s.name}</span>${tag}</button>`;
+      }).join('')}</div>
+      <div class="dp-hint">👆 ตอนขับ แตะตุ๊กตาบนแผงหน้าปัด = สะกิดให้ส่ายเล่นได้</div>
+    </div>`;
+    el.querySelector('.dp-x').addEventListener('click',()=>{ el.style.display='none'; sfx.select(); });
+    el.querySelectorAll('.dp-cell').forEach(b=>b.addEventListener('click',()=>{
+      const id=b.dataset.id, sk=BOBBLE_SKINS.find(s=>s.id===id);
+      if(dollOwned(id)){ state.bobbleSkin=id; if(typeof saveState==='function') saveState(); bobbleApplySkin(); sfx.select(); render(); return; }
+      if((state.coins||0) < sk.cost){ sfx.wrong(); toast(`เหรียญยังไม่พอ — ต้องมี 🪙${fmt(sk.cost)}`); return; }
+      if(typeof addCoins==='function') addCoins(-sk.cost); else state.coins=Math.max(0,(state.coins||0)-sk.cost);
+      if(!state.bobbleOwned) state.bobbleOwned={};
+      state.bobbleOwned[id]=true; state.bobbleSkin=id;
+      if(typeof saveState==='function') saveState();
+      bobbleApplySkin(); sfx.coin(); toast(`ปลดล็อกตุ๊กตา${sk.name} ${sk.emoji} แล้ว!`); render();
+    }));
+  };
+  render(); el.style.display='flex';
 }
 /* ============================================================
    🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
@@ -4342,7 +4472,7 @@ function carStartShow(){                       // เด้งทุกครั
   if(!p) return;
   carStartOpen=true;
   p.style.display='block';
-  bobbleSetAvatar();                                      // 🪆 รอบ 191: ตั้งรูปตุ๊กตาหน้ารถตามตัวละครที่เลือก
+  bobbleSetAvatar(); bobbleApplySkin();                   // 🪆 รอบ 191/193: ตั้งรูปตุ๊กตา + สกินตามที่เลือก
   // 🧱🚗 รอบ 148: ภาพตัวละครที่เลือกนั่งในรถ (แมทกับ state.blockAv) — มีไฟล์ค่อยโชว์ ไม่มี=แผงหน้าตาเดิม
   const av=p.querySelector('#cs-avatar');
   if(av){
@@ -5223,6 +5353,7 @@ function start(md){
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
+    bobPitch=0; bobPitchV=0; _bobPrevSpd=0; _bobSkin=null;  // 🪆 รอบ 193: รีเซ็ตก้ม-เงย + บังคับใส่สกินใหม่
     dVelX=0; dVelZ=0; dCamYaw=sp.yaw;              // 🏁 R4: ทิศไถล+กล้องหน่วง เริ่มตรงหัวรถ
     padSteer=0; padSt=false; padTh=false;          // 🎛️ รอบ 127: ล้างสถานะปุ่มคอนโซลทุกครั้งที่เข้าโลก
     padBr=false; gearR=false; if(gearSyncFn) gearSyncFn();  // 🦶⚙️ รอบ 139: ล้างเบรค + เกียร์กลับ D ทุกครั้งที่เข้าโลก
