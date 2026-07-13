@@ -17,6 +17,31 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 182 (13 ก.ค.) — โลกขับรถ: เลนจักรยานฟ้าขอบขาว + ทางเท้า + เตือน/ปรับไฟเลี้ยวเข้าแยก 🚲🚦 (version .173)
+- **สเปกผู้ใช้ 3 ข้อ:** (1) เลนจักรยานพื้นฟ้าขอบขาวตลอดแนวถนนทุกเส้น (2) เตือนก่อนถึงทางแยกทุกแยกว่าไม่เปิดไฟเลี้ยวก่อนเข้าแยกโดนปรับ 5 เหรียญ (3) ทางเท้าถัดจากเลนจักรยาน (คนเดินได้) + prompt ภาพลายทางเท้า
+- **ทำ (adventure3d.js):**
+  - **เลนจักรยาน+ทางเท้า:** ในลูปสร้างถนน (buildDriveCity) เพิ่ม strips ขนาบถนนทุกเส้น w≥7: เลนจักรยาน (ฟ้า 0x2f7fd0 กว้าง 1.7m) + เส้นขาว 2 ขอบ (0.28m) + ทางเท้า (2.6m ปูลาย) · helper `flatGeomUV` (UV=worldXZ/tile ปูภาพซ้ำ) · ทางเท้า probe `img/city/sidewalk.png` มี=ปูภาพ ไม่มี=สีคอนกรีต · เป็น decal พื้น (y .028-.045) ไม่กระทบ grid ที่ขับได้
+  - **เตือน+ปรับไฟเลี้ยว:** precompute `d.junctions` (cluster จุด arms>=3 จาก roadPts รวมภายใน 16m → 699 แยก) ตอน build · tlTick เช็กด้วย**ระยะจากรายการแยก** (robust — โซน arms>=3 แคบระดับ sub-meter sample สดพลาด) · เตือน `#adv-junc` (แถบเหลืองกะพริบ) เมื่อแยกอยู่หน้ารถ <24m + dot heading >.55 + ยังไม่เปิดไฟ · เข้ารัศมี 7.5m ของแยกโดยไม่เปิดไฟ = ปรับ `CAR_FINE_SIGNAL` 100→**5** ครั้งเดียว/แยก (เพดาน 40/รอบ)
+  - **Prompt:** `PROMPTS_SIDEWALK.md` (seamless tileable top-down ลายบล็อกทางเท้าไทย) + Artifact ปุ่มคัดลอก https://claude.ai/code/artifact/cb0eb339-2f83-4815-a571-6ffb4a572f7f
+- ✅ **ยืนยัน preview (เข้าโลกจริง + step frame + readPixels):** เลนฟ้า 5174px + ขอบขาว 7261px + ทางเท้าเทา 639px render จริง · 699 junctions · ขับเข้าหาแยกไม่เปิดไฟ → ป้ายเตือนโชว์ + เข้ารัศมีโดนปรับ 🪙5 ครั้งเดียว (frame 17) · เปิดไฟเลี้ยว → ไม่เตือน ไม่ปรับ · ไม่มี console error · deploy live .173
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (ดูเลน/ทางเท้า + ทดสอบเตือน/ปรับที่แยก) · เจนภาพ sidewalk.png วาง img/city/ · จูนได้: BIKE_W/WALK_W (ความกว้าง) · ROAD_WIDEN · รัศมีเตือน 24m/ปรับ 7.5m ใน adventure3d.js
+- 💭 หมายเหตุ: "คนเดินได้" = มีพื้นที่ทางเท้าจริง (ยังไม่มี NPC คนเดิน — ต่อยอดได้)
+
+### ✅ รอบ 181 (13 ก.ค.) — ระบบเพลงพื้นหลัง + วิทยุในรถ (visualizer + เลือกเพลง 3 โหมด) 🎵 (version .172)
+- **สเปกผู้ใช้ (แบบ Rise of Nations):** เพลง instrument (ไม่มี vocal) เล่นทั้งเกม จนเข้าโลกขับรถ + ผู้เล่นเปิดเพลงในรถ → ตัด bg ฟังเพลงในรถแทน · จอ head-unit กลางคอนโซล (ระหว่างลูกบิด 2 อัน) = กราฟเสียง sci-fi ตามจังหวะ · แตะจอ/กราฟ → รายการเพลง Track1.. + 3 โหมด (เล่นซ้ำทั้งหมด/เล่นซ้ำเพลง/สุ่มเล่น) ปุ่มอังกฤษ+แปลไทยใต้ปุ่ม · ผู้ใช้เตรียมเพลง `sound/SongsInCar/rock_01..06.mp3`
+- **ทำ:**
+  - **`js/music.js` (ใหม่ — เอนจินเสียงล้วน):** probe `sound/SongsInCar/rock_01..10` + `sound/bgm/bgm_01..08` (ไม่มี bgm เฉพาะ→ใช้เพลงรถเป็น bg ด้วย) · **bg**: Audio element vol .30 เริ่มหลัง gesture แรก (autoplay policy · pointerdown/keydown once) เล่นวนสุ่มเริ่ม · **วิทยุรถ**: Audio vol .62 + Web Audio `AnalyserNode` (fftSize 64 = 32 แท่ง) `createMediaElementSource`→analyser→destination · โหมด all/one/shuffle (`state.musicMode`) · `suspendBg/resumeBg` (เข้า/ออกโลก 3D) · `onSound` (สวิตช์เสียงตั้งค่า) · `vizData()` คืน freq array
+  - **adventure3d.js:** DOM `#adv-radio-screen`(canvas viz)+`#adv-radio-list` · `radioLayout()` วางจอบนพิกัดภาพ `RADIO_RECT=[622,682,806,780]` (dash.png 1536×1024) สูตร map เดียวกับเข็มเกจ · `drawRadioViz()` แท่งไล่เฉดฟ้า หน่วงนุ่ม (ขึ้นเร็วตกช้า) · `radioTick()` ใน tickDrive (relayout เมื่อ size เปลี่ยน) · แตะจอ: ปิด→เปิดวิทยุ / เปิด→เปิดรายการ · รายการ: เลือก track/โหมด/power off · `start()`→suspendBg · `exitWorld()`→resumeBg
+  - index.html โหลด music.js · main.js `Music.init()` · util.js สวิตช์เสียง→`Music.onSound()` · state.js `musicMode:'all'`
+- ✅ **ยืนยัน preview (เข้าโลกขับรถจริง + step frame — pane พัก rAF):** probe เจอ 6 เพลง · bg ไม่เล่นก่อน gesture → gesture แรกเล่น rock_04 · วิทยุ: carRadio(true)→rock_01 เล่น + vizData Uint8Array(32) · เปลี่ยนเพลง/โหมด→state อัปเดต · จอวางบนหน้าปัดตรงเป๊ะ (alignDiff 0,0 · onDash) + viz มีแท่งฟ้า 131px · รายการ Track1-6 + 3 โหมด (REPEAT ALL/เล่นซ้ำทั้งหมด · REPEAT ONE/เล่นซ้ำเพลง · SHUFFLE/สุ่มเล่น) + power "TURN OFF · ปิดเพลง" อยู่ในจอ · เลือก Track4→curCar3 · โหมด one ติด · power off→วิทยุปิด+bg พัก(อยู่ในโลก) · suspend/resume ทำงาน · ไม่มี console error · deploy live .172 (rock_01 บนเว็บ 200)
+- **หมายเหตุ:** เพลงชุด SongsInCar (rock) ใช้ทั้ง bg + วิทยุรถ (มีชุดเดียว) · อยากได้ bg instrument แยก วาง `sound/bgm/bgm_01..mp3` = ใช้เป็น bg แทนอัตโนมัติ
+- **⚠️ ค้างผู้ใช้:** ลองจริงมือถือ (ฟังเสียง bg/วิทยุ + ดู visualizer บนจอหน้าปัด + ทดสอบ 3 โหมด) · จูนได้: BG_VOL .30 / CAR_VOL .62 / RADIO_RECT (ตำแหน่งจอ) ใน music.js/adventure3d.js
+
+### ✅ รอบ 180 (13 ก.ค.) — ขยายเลนถนนโลกขับรถ ~40% 🛣️ (version .171)
+- **สเปกผู้ใช้:** เลนถนนโลกขับรถแคบเกิน ขอกว้างกว่าเดิมหน่อย
+- **ทำ:** `ROAD_WIDEN=1.4` ใน buildScene drive — คูณ `w=rd[0]*ROAD_WIDEN` ตรงจุดวาด (mesh nx/nz + grid ที่ขับได้ rr + เส้นแบ่งเลน) → ถนนกว้างขึ้น ~40% ทั้งภาพและพื้นที่ขับ ไม่แตะไฟล์ city_kpp.js (232KB)
+- ✅ syntax ผ่าน · deploy live .171 · **⚠️ ค้าง: ลองจริงมือถือ (จูน ROAD_WIDEN ใน adventure3d.js ถ้ากว้าง/แคบไป)** · หมายเหตุ: เข้าโลกขับรถใน preview หนัก (ตั๋ว+รถ+city) — เป็นการคูณสัดส่วน mirror กับ mesh เกจที่พิสูจน์แล้ว
+
 ### ✅ รอบ 179 (13 ก.ค.) — ปุ่มแชท header + หน้ารวมข้อความธีมฟ้า sci-fi · ข้าวเย็นย้ายไปข้าง ➕ 💬 (version .170)
 - **สเปกผู้ใช้ (แนบภาพ Messenger เป็นตัวอย่าง):** emoji ป่วย/ข้าวเย็น (#btn-dinner) ย้ายไปถัดจากปุ่ม ➕ แถวแท็บสัตว์ · ตำแหน่งเดิมใน header ใส่ icon แชท · คลิกแล้วเข้าหน้ารวมข้อความแบบ Messenger แต่ธีมฟ้า sci-fi ของเกม
 - **ทำ:**
