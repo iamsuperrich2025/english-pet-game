@@ -216,6 +216,7 @@ const MECHA_WEAPONS={
 let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
 let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
+let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห้องนักบิน (ภาพตามหุ่น + ค่าตัวเลขเรียลไทม์ + ความร้อนปืน)
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -3430,6 +3431,53 @@ function buildDom(){
   #mecha-fire2{left:24px;top:138px;width:84px;height:84px;border-radius:50%;font-size:30px;
     background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 223 (ผู้ใช้): ปุ่มยิงตัวที่ 2 ใต้ minimap ซ้าย (ยิงได้สองมือ) */
   #mecha-fire:active,#mecha-fire2:active{background:rgba(255,90,110,.55)}
+  /* 🤖 รอบ 224: กรอบ HUD ห้องนักบินตามหุ่นแต่ละตัว (img/robots/hud/robotHUD_NN.png) + เอฟเฟกต์ไล่เฉดสี + ค่าตัวเลขเรียลไทม์
+     --mh = สีประจำอาวุธของหุ่น (ตั้งตอนเข้าเกมจาก MECHA_WEAPONS) · กรอบเจาะกลางให้มองทะลุเห็นสนามรบ */
+  #mecha-hud{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;
+    --mh:#7fe6ff;--mh-soft:rgba(127,230,255,.85)}
+  .adv-mecha #mecha-hud{display:block}
+  #mecha-hud .mh-frame{position:absolute;inset:0;background-size:cover;background-position:center;
+    -webkit-mask-image:radial-gradient(ellipse 41% 53% at 50% 47%,transparent 55%,#000 80%);
+            mask-image:radial-gradient(ellipse 41% 53% at 50% 47%,transparent 55%,#000 80%)}
+  #mecha-hud .mh-tint{position:absolute;inset:0;mix-blend-mode:screen;opacity:.32;
+    background:radial-gradient(ellipse 72% 72% at 50% 50%,transparent 40%,var(--mh) 125%)}
+  #mecha-hud .mh-sweep{position:absolute;inset:0;mix-blend-mode:screen;opacity:.5;
+    background:linear-gradient(115deg,transparent 40%,var(--mh-soft) 50%,transparent 60%);
+    background-size:260% 100%;animation:mhSweep 5.5s linear infinite}
+  @keyframes mhSweep{0%{background-position:180% 0}100%{background-position:-90% 0}}
+  #mecha-hud .mh-scan{position:absolute;inset:0;opacity:.12;
+    background:repeating-linear-gradient(0deg,transparent 0 2px,#000 2px 3px)}
+  html.no-anim #mecha-hud .mh-sweep{animation:none;opacity:.28}
+  /* แถบเทเลเมทรีบาง ๆ กลางล่าง (โซนเดียวที่ปลอดปุ่มทุกจอ — ต่ำกว่าปุ่มยิงกลาง เหนือ ◀▶/▲▼ ไม่ชน) */
+  #mecha-hud .mh-tele{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+    display:flex;gap:5px;flex-wrap:nowrap;justify-content:center;max-width:96vw;pointer-events:none}
+  #mecha-hud .mh-chip{display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:14px;
+    background:linear-gradient(160deg,rgba(6,16,26,.74),rgba(4,10,18,.56));border:1px solid var(--mh);
+    box-shadow:0 0 9px rgba(0,0,0,.45),inset 0 0 8px rgba(0,0,0,.35);white-space:nowrap;
+    font-family:'Segoe UI',system-ui,sans-serif;color:#dff5ff;text-shadow:0 0 5px rgba(0,0,0,.7)}
+  #mecha-hud .mh-chip span{opacity:.68;font-size:8.5px;font-weight:700;letter-spacing:1px}
+  #mecha-hud .mh-chip i{opacity:.6;font-size:8.5px;font-style:normal}
+  #mecha-hud .mh-chip b{font-size:12.5px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:var(--mh);text-shadow:0 0 7px var(--mh)}
+  #mecha-hud .mh-id{background:linear-gradient(160deg,rgba(10,22,34,.82),rgba(6,14,24,.66))}
+  #mecha-hud .mh-id b{background:linear-gradient(90deg,var(--mh),#fff,var(--mh));background-size:200% 100%;
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+    letter-spacing:1.5px;animation:mhShine 3.4s linear infinite;text-shadow:none}
+  @keyframes mhShine{0%{background-position:0 0}100%{background-position:200% 0}}
+  html.no-anim #mecha-hud .mh-id b{animation:none;-webkit-text-fill-color:var(--mh);color:var(--mh)}
+  #mecha-hud .mh-bar{width:30px;height:7px;border-radius:4px;background:rgba(255,255,255,.13);
+    overflow:hidden;box-shadow:inset 0 0 3px rgba(0,0,0,.6)}
+  #mecha-hud .mh-bar i{display:block;height:100%;width:0;border-radius:4px;transition:width .18s ease;font-size:0}
+  #mecha-hud .mh-heat i{background:linear-gradient(90deg,#ffd24d,#ff5a3a)}
+  /* ป้าย "ล็อกเป้า" ใต้เป้าเล็ง (โผล่เมื่อเล็งตรงตัวอักษรตัวถัดไป) */
+  #mecha-hud .mh-lock{position:absolute;top:calc(50% + 26px);left:50%;transform:translateX(-50%);
+    display:none;padding:2px 10px;border-radius:12px;font-family:'Segoe UI',system-ui,sans-serif;
+    font-size:11px;font-weight:800;letter-spacing:1.5px;white-space:nowrap;color:#fff;
+    background:rgba(8,16,26,.55);border:1px solid var(--mh);text-shadow:0 0 6px var(--mh);
+    box-shadow:0 0 12px var(--mh)}
+  #mecha-hud.locked .mh-lock{display:block;animation:mhBlink 1s steps(1) infinite}
+  @keyframes mhBlink{50%{opacity:.35}}
+  html.no-anim #mecha-hud.locked .mh-lock{animation:none}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
     background:linear-gradient(160deg,rgba(20,120,86,.95),rgba(10,78,58,.96));
@@ -3553,6 +3601,18 @@ function buildDom(){
     <button id="adv-scam">👁️ มุมกล้อง</button>
     <div id="adv-coinpop"></div>
     <!-- 🤖 โหมดหุ่นยนต์นักรบ -->
+    <div id="mecha-hud" class="adv-hud">
+      <div class="mh-frame"></div>       <!-- กรอบห้องนักบินตามหุ่นแต่ละตัว (เจาะกลางให้เห็นสนามรบ) -->
+      <div class="mh-tint"></div>        <!-- ไล่เฉดสีตามสีอาวุธ -->
+      <div class="mh-sweep"></div>       <!-- ลำแสงกวาดไล่เฉด -->
+      <div class="mh-scan"></div>        <!-- เส้นสแกน -->
+      <div class="mh-tele">
+        <div class="mh-chip"><span>RNG</span><b id="mh-rng">--</b><i>m</i></div>
+        <div class="mh-chip"><span>TGT</span><b id="mh-tgt">0</b></div>
+        <div class="mh-chip mh-heatchip"><span>HEAT</span><div class="mh-bar mh-heat"><i id="mh-heatbar"></i></div></div>
+      </div>
+      <div class="mh-lock" id="mh-lock">◎ TARGET&nbsp;LOCK</div>
+    </div>
     <div class="mecha-btn" id="mecha-fwd">▲</div>
     <div class="mecha-btn" id="mecha-back">▼</div>
     <div class="mecha-btn" id="mecha-left">◀</div>
@@ -3575,6 +3635,9 @@ function buildDom(){
   dmgFlashEl=overlayEl.querySelector('#adv-dmg');
   hudBoardEl=overlayEl.querySelector('#adv-board');
   hudWordsEl=overlayEl.querySelector('#adv-words');
+  mhUI={ root:overlayEl.querySelector('#mecha-hud'), frame:overlayEl.querySelector('#mecha-hud .mh-frame'),
+    rng:overlayEl.querySelector('#mh-rng'), tgt:overlayEl.querySelector('#mh-tgt'),
+    heat:overlayEl.querySelector('#mh-heatbar'), lock:overlayEl.querySelector('#mh-lock') };   // 🤖 รอบ 224: HUD กรอบหุ่น
   hudInvEl=overlayEl.querySelector('#adv-inv');
   hudHpEl=overlayEl.querySelector('#adv-hp');
   hudCoinEl=overlayEl.querySelector('#adv-coin');
@@ -6100,6 +6163,31 @@ function mechaHudWord(a){
     `<span class="adv-fch${i<a.nextIdx?' got':''}${i===a.nextIdx?' mnext':''}">${ch.toUpperCase()}</span>`).join('');
   hudWordsEl.innerHTML=`<div class="adv-fword">${chips}</div><div class="adv-fth">${escapeHTML(a.word.th)}</div>`;
 }
+/* 🤖 รอบ 224: ตั้งภาพกรอบ HUD + สีประจำอาวุธ ตามหุ่นที่เลือกออกรบ */
+function setMechaHudSkin(rid){
+  if(!mhUI||!mhUI.root) return;
+  const n=(String(rid).match(/(\d+)/)||[,'01'])[1].padStart(2,'0');
+  mhUI.frame.style.backgroundImage=`url("img/robots/hud/robotHUD_${n}.png")`;
+  const hex='#'+('000000'+((mechaWeapon.color||0x7fe6ff)>>>0).toString(16)).slice(-6);
+  mhUI.root.style.setProperty('--mh',hex);
+  mhUI.root.style.setProperty('--mh-soft',hex);
+  mHeat=0; if(mhUI.heat) mhUI.heat.style.width='0%';
+  if(mhUI.root) mhUI.root.classList.remove('locked');
+}
+/* อัปเดตค่าตัวเลขบน HUD (ทิศ/ระยะเป้า/จำนวนเป้า/เหรียญ/ความร้อนปืน/ล็อกเป้า) — เรียกถี่จาก tickMecha (throttle) */
+function updateMechaHud(dt,now){
+  mHeat=Math.max(0,mHeat-dt*30);                              // ปืนเย็นลงเรื่อยๆ
+  if(!mhUI||!mhUI.root) return;
+  if(now-mHudAt<110) return; mHudAt=now;                      // ~9fps พอ ประหยัดแรง
+  mhUI.tgt.textContent=aliens.length;
+  mhUI.heat.style.width=Math.round(mHeat)+'%';
+  // ระยะถึงเอเลี่ยนที่กำลังเล็ง (ถ้ามี) + ป้ายล็อกเป้า
+  if(mFocusAlien&&mFocusAlien.grp){
+    const d=camera.position.distanceTo(mFocusAlien.grp.position);
+    mhUI.rng.textContent=Math.round(d);
+    mhUI.root.classList.add('locked');
+  }else{ mhUI.rng.textContent='--'; mhUI.root.classList.remove('locked'); }
+}
 function mechaTracer(wx,wy,wz,hit){
   const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
   const from=camera.position.clone().addScaledVector(dir,1.4); from.y-=.5;
@@ -6111,6 +6199,7 @@ function mechaTracer(wx,wy,wz,hit){
 }
 function mechaFire(now){
   mLastFire=now;
+  mHeat=Math.min(100,mHeat+13);                     // 🤖 รอบ 224: ยิงแล้วปืนร้อนขึ้น (โชว์บนแถบ HEAT)
   MechaAudio.fire(mechaWeapon.color);
   camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
   let best=null, bestD=0.1;
@@ -6199,6 +6288,7 @@ function tickMecha(dt,now){
     const v=new THREE.Vector3(wx,wy,wz).project(camera); if(v.z>1) return;
     const dd=Math.hypot(v.x,v.y); if(dd<fd){ fd=dd; fa=a; } });
   if(fa!==mFocusAlien){ mFocusAlien=fa; mechaHudWord(fa); }
+  updateMechaHud(dt,now);                            // 🤖 รอบ 224: อัปเดตค่าตัวเลข HUD (ทิศ/ระยะ/เป้า/เหรียญ/ความร้อน)
   // tracer + particle ระเบิด
   for(let i=mechaTracers.length-1;i>=0;i--){
     const tr=mechaTracers[i];
@@ -6423,6 +6513,7 @@ function start(md){
     aliens=[]; mechaTracers=[]; mFocusAlien=null;
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
+    setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else{
     camera.position.set(0,EYE_H,0);

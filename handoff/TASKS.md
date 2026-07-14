@@ -27,6 +27,14 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 224 (14 ก.ค.) — 🤖 กรอบ HUD ห้องนักบินตามหุ่นแต่ละตัว + เอฟเฟกต์ไล่เฉดสี + ค่าตัวเลขเรียลไทม์ (version .214 · SW v9)
+ผู้ใช้ทำภาพ HUD ใหม่ 10 ใบ `img/robots/hud/robotHUD_01..10.png` (1536×1024 กรอบห้องนักบิน sci-fi ตรงกลางเป็นวงเรดาร์) → ให้ใส่ตามหุ่นแต่ละตัว + effect ไล่เฉดสี + ตัวเลข/ข้อมูลบน HUD สมจริง
+- **js/adventure3d.js:** เพิ่ม `#mecha-hud` (z5 ใต้ปุ่ม z6) มี 4 เลเยอร์: `.mh-frame` (ภาพกรอบ · **mask radial-gradient เจาะกลางโปร่ง** ให้มองทะลุเห็นสนามรบ) · `.mh-tint` (radial สีอาวุธ blend screen) · `.mh-sweep` (ลำแสงไล่เฉดกวาด `@keyframes mhSweep`) · `.mh-scan` (เส้นสแกน)
+- **สีประจำหุ่น (`--mh`)** ตั้งจาก `MECHA_WEAPONS[rid].color` ใน `setMechaHudSkin(rid)` (เรียกใน start มecha) → ภาพ+สีเปลี่ยนตามหุ่นที่เลือกออกรบ (เช่น robot_04=เหลือง #ffd24d/HUD_04 · robot_09=ม่วง #7a6cff/HUD_09)
+- **ค่าตัวเลขเรียลไทม์ (`updateMechaHud` throttle ~9fps ใน tickMecha):** แถบบางกลางล่าง 3 ชิป **RNG** (ระยะถึงเอเลี่ยนที่เล็ง `camera.distanceTo`) · **TGT** (เอเลี่ยนเหลือ `aliens.length`) · **HEAT** (ความร้อนปืน — `mechaFire` +13 ต่อยิง เย็นลง 30/s) + ป้าย **◎ TARGET LOCK** ใต้เป้าเล็งเมื่อ `mFocusAlien` (กะพริบ)
+- **ยืนยันบนโค้ดจริง (getBoundingClientRect · screenshot 3D ค้างตามปกติ):** 568×320 + 1180×620 → กรอบภาพโหลด (1536×1024) · mask เจาะกลาง · tint/sweep blend screen · accent ตรงสีอาวุธ · แถบ 3 ชิป **OVERLAPS ว่างทุกปุ่ม** (fire/fire2/◀▶/▲▼) · RNG/TGT อัปเดตค่าจริง (56m·3 ตัว) · สลับ robot_04→09 ภาพ+สีเปลี่ยนถูก · ไม่มี error
+- ⚠️ **commit ภาพ HUD 10 ใบ** (`img/robots/hud/` เดิม untracked · ~2.8MB/ใบ) → deploy ขึ้น · โหลด on-demand ตอนเข้าโลกหุ่น (ไม่ precache · SHELL ไม่มี) · deploy live .214
+
 ### ✅ รอบ 223 (14 ก.ค.) — เพิ่มปุ่มยิงตัวที่ 2 ใต้ minimap (ซ้าย) (version .213)
 - **ผู้ใช้:** เพิ่มปุ่มยิงอีก 1 ปุ่ม ไว้ใต้วงกลม minimap ทางซ้าย (ยิงได้สองมือ)
 - **✅ แก้ (js/adventure3d.js):** (1) DOM เพิ่ม `<div class="mecha-btn" id="mecha-fire2">🔫</div>` (ต่อจาก #mecha-fire) (2) CSS `#mecha-fire2{left:24px;top:138px;width:84px;height:84px;...แดงเรือง}` (ใต้ minimap ที่ bottom:128 · เว้น 10px) + รวม `:active` กับ #mecha-fire (3) `holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false)` — โค้ดเดียวกับ #mecha-fire (proven)
