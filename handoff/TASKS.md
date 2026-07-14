@@ -27,6 +27,14 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 222 (14 ก.ค.) — ซ่อนวงกลมจอยขาว + ◀▶ หมุน→สเตรฟ (ขยับข้าง) (version .212)
+- **ผู้ใช้:** (1) ปิดวงกลมสีขาวหลัง ◀▶ ไม่ให้โชว์ (2) ◀▶ ไม่ใช่หมุน/หัน แต่ให้ขยับซ้าย-ขวาแทน
+- **🔍 ส่อง DOM:** วงกลมขาว = **`#adv-joy`** (จอยเบส 110px · `rgba(255,255,255,.14)`) · `.adv-touch #adv-joy{display:block}` ไม่ยกเว้น mecha (แต่ input line 3913 ข้าม mecha อยู่แล้ว = element โชว์เฉยๆ ไม่ทำงาน)
+- **✅ แก้ (js/adventure3d.js):** (1) `.adv-touch.adv-mecha #adv-joy{display:none}` (2) rename `mTurnBtn`→`mStrafeBtn` (decl 217 · bind 3825-6 · reset 6416 · testkit `set strafe`) · **tickMecha:** ลบ `yaw-=turn*MECHA_TURN*dt` → คิด strafe: `strSpd=str*MECHA_VMAX*0.78` · `nx+=cos*strSpd*dt` `nz-=sin*strSpd*dt` (ตั้งฉากทิศหันหน้า · ▶=+x ขวา · ตรงไม่มีโมเมนตัม) · bob/เสียงย่ำเงื่อนไข `+ str!==0`
+- **⚠️ ยังหมุน/เล็งได้:** touchmove line 3939 (`yaw-=(dx)*.005`) + เมาส์ pointerlock (desktop) ไม่แตะ → ลากจอ=หมุน ยังทำงาน · `MECHA_TURN` (201) เลิกใช้แล้ว (คงไว้เฉยๆ)
+- **✅ ยืนยัน `_t.step(1/60)` frame-step (rAF ไม่ fire ใน preview พื้นหลัง):** strafe▶ dx=+4.29/dz=0 · strafe◀ dx=−4.29/dz=0 · **yaw ไม่เปลี่ยน (0)** · #adv-joy display:none
+- **📝 ไฟล์แก้:** `js/adventure3d.js` + `version.json` .211→.212 · **✅ push + deploy_firebase.sh + curl .212**
+
 ### ✅ รอบ 221 (14 ก.ค.) — ปุ่มยิงไปคอลัมน์ "ทุกคน" + ซ่อนปุ่มยิงส้ม 🔥 ที่โผล่ผิด (version .211)
 - **ผู้ใช้:** (1) ย้ายปุ่มยิงไปขวา ให้ตรงคอลัมน์กับปุ่ม "ทุกคน" (2) เอา "ปุ่มสีเหลืองทางขวามือ" ออก
 - **🔍 ส่อง DOM (elementsFromPoint ที่ ▼):** "ปุ่มเหลือง" = **`#adv-shoot`** (🔥 · `background:rgba(255,167,38,.9)` ส้ม) = ปุ่มยิงของโลก adv/haunt/drone · `.adv-touch #adv-shoot{display:block}` ยกเว้นแค่ haunt/heli/drone **ไม่ยกเว้น mecha** → โผล่ที่ `right:22;bottom:26` ทับ ▼ (mecha-back right:22 bottom:24) · โลกหุ่นใช้ `#mecha-fire` (🔫 · bind holdBtn→mechaFire) อยู่แล้ว → adv-shoot เกินมา

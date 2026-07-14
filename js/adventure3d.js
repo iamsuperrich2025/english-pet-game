@@ -214,7 +214,7 @@ const MECHA_WEAPONS={
   robot_10:{name:'ปืนเยือกแข็ง',color:0xbfe9ff, gap:280, frost:true},
 };
 let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
-let mFwdBtn=0, mTurnBtn=0, mFireHeld=false;
+let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 
 /* ============================================================
@@ -3034,6 +3034,7 @@ function buildDom(){
   /* วงจอยสำรองมุมล่างซ้ายโดนแถบพวงมาลัยสูงขึ้นทับ → โหมดขับรถซ่อนตอนพัก โชว์เฉพาะตอนลากใช้งานจริง (.live) */
   .adv-touch.adv-drive #adv-joy{display:none}
   .adv-touch.adv-drive #adv-joy.live{display:block}
+  .adv-touch.adv-mecha #adv-joy{display:none}   /* รอบ 222: โลกหุ่นใช้ปุ่มบังคับเอง ไม่ใช้จอย — ซ่อนวงกลมขาว (จอยเบส) ที่โผล่หลัง ◀▶ */
   #adv-steerdot{position:absolute;left:50%;top:50%;width:42px;height:42px;border-radius:50%;
     transform:translate(-50%,-50%);background:rgba(255,255,255,.78);box-shadow:0 0 10px rgba(0,0,0,.45);
     pointer-events:none}
@@ -3822,8 +3823,8 @@ function buildDom(){
   // 🤖 ปุ่มบังคับหุ่นยนต์ (กดค้าง)
   holdBtn('#mecha-fwd',()=>mFwdBtn=1,()=>mFwdBtn=0);
   holdBtn('#mecha-back',()=>mFwdBtn=-1,()=>mFwdBtn=0);
-  holdBtn('#mecha-left',()=>mTurnBtn=-1,()=>mTurnBtn=0);
-  holdBtn('#mecha-right',()=>mTurnBtn=1,()=>mTurnBtn=0);
+  holdBtn('#mecha-left',()=>mStrafeBtn=-1,()=>mStrafeBtn=0);   /* รอบ 222: ◀▶ = ขยับข้าง (สเตรฟ) ไม่ใช่หมุนตัว · หมุน/เล็ง = ลากจอ */
+  holdBtn('#mecha-right',()=>mStrafeBtn=1,()=>mStrafeBtn=0);
   holdBtn('#mecha-fire',()=>mFireHeld=true,()=>mFireHeld=false);
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
@@ -6155,19 +6156,20 @@ function explodeAlien(a){
   if(myRef) sendPos(true);
 }
 function tickMecha(dt,now){
-  // เดินหน้า-ถอย (โมเมนตัมหนักแบบหุ่น) + หันตัว
+  // เดินหน้า-ถอย (โมเมนตัมหนักแบบหุ่น) + ◀▶ ขยับข้าง (สเตรฟ · รอบ 222 ผู้ใช้: ไม่ใช่หมุนตัว) · หมุน/เล็ง = ลากจอ
   let fwd=mFwdBtn; if(keys.KeyW||keys.ArrowUp)fwd+=1; if(keys.KeyS||keys.ArrowDown)fwd-=1;
-  let turn=mTurnBtn; if(keys.KeyD||keys.ArrowRight)turn+=1; if(keys.KeyA||keys.ArrowLeft)turn-=1;
-  fwd=Math.max(-1,Math.min(1,fwd));
+  let str=mStrafeBtn; if(keys.KeyD||keys.ArrowRight)str+=1; if(keys.KeyA||keys.ArrowLeft)str-=1;
+  fwd=Math.max(-1,Math.min(1,fwd)); str=Math.max(-1,Math.min(1,str));
   if(fwd) mSpeed+=MECHA_ACCEL*fwd*dt; else mSpeed-=Math.sign(mSpeed)*Math.min(Math.abs(mSpeed),MECHA_DECEL*dt);
   mSpeed=Math.max(-MECHA_VMAX*.6,Math.min(MECHA_VMAX,mSpeed));
-  yaw-=turn*MECHA_TURN*dt;
   const sin=Math.sin(yaw),cos=Math.cos(yaw);
-  let nx=camera.position.x - sin*mSpeed*dt, nz=camera.position.z - cos*mSpeed*dt;
+  const strSpd=str*MECHA_VMAX*0.78;                                  // ขยับข้างตั้งฉากทิศหันหน้า (▶=ขวา · ตรง ไม่สะสมโมเมนตัม)
+  let nx=camera.position.x - sin*mSpeed*dt + cos*strSpd*dt;
+  let nz=camera.position.z - cos*mSpeed*dt - sin*strSpd*dt;
   camera.position.x=Math.max(-HALF+2,Math.min(HALF-2,nx));
   camera.position.z=Math.max(-HALF+2,Math.min(HALF-2,nz));
-  // เดินย่ำ: bob หนัก + เสียงหุ่นทุกก้าว
-  if(Math.abs(mSpeed)>0.5){
+  // เดินย่ำ: bob หนัก + เสียงหุ่นทุกก้าว (นับทั้งเดินหน้า-ถอย และสเตรฟ)
+  if(Math.abs(mSpeed)>0.5 || str!==0){
     mBobPhase+=Math.abs(mSpeed)*dt*0.9;
     camera.position.y=MECHA_EYE+Math.abs(Math.sin(mBobPhase))*0.35;
     const down=Math.sin(mBobPhase)<0;
@@ -6413,7 +6415,7 @@ function start(md){
     camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
   }else if(M.mecha){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
-    mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mTurnBtn=0; mFireHeld=false; mLastFire=0;
+    mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
     aliens=[]; mechaTracers=[]; mFocusAlien=null;
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
@@ -6543,7 +6545,7 @@ window.Adventure3D={
                           get player(){return soccerPlayer}, get guide(){return soccerGuide},
                           get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v}}; },
     get mecha(){ return {get aliens(){return aliens}, get weapon(){return mechaWeapon}, fire:mechaFire,
-                         spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set turn(v){mTurnBtn=v},
+                         spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set strafe(v){mStrafeBtn=v},
                          get focus(){return mFocusAlien}, audio:MechaAudio}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
