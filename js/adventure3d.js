@@ -3427,7 +3427,9 @@ function buildDom(){
   #mecha-right{left:100px;bottom:24px;width:70px;height:70px;border-radius:50%}  /* ▶ เลี้ยวขวา (ซ้ายล่าง) */
   #mecha-fire{right:146px;top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
     background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 221 (ผู้ใช้): ย้ายไปขวา ให้อยู่คอลัมน์เดียวกับปุ่ม "ทุกคน"/vmode (right:162+ครึ่ง60 −ครึ่ง92 = right:146) */
-  #mecha-fire:active{background:rgba(255,90,110,.55)}
+  #mecha-fire2{left:24px;top:138px;width:84px;height:84px;border-radius:50%;font-size:30px;
+    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 223 (ผู้ใช้): ปุ่มยิงตัวที่ 2 ใต้ minimap ซ้าย (ยิงได้สองมือ) */
+  #mecha-fire:active,#mecha-fire2:active{background:rgba(255,90,110,.55)}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
     background:linear-gradient(160deg,rgba(20,120,86,.95),rgba(10,78,58,.96));
@@ -3556,6 +3558,7 @@ function buildDom(){
     <div class="mecha-btn" id="mecha-left">◀</div>
     <div class="mecha-btn" id="mecha-right">▶</div>
     <div class="mecha-btn" id="mecha-fire">🔫</div>
+    <div class="mecha-btn" id="mecha-fire2">🔫</div>
     <div id="adv-soccerstart">
       <h3>⚽ เลือกชุดนักเตะ</h3>
       <div class="ss-lab">สีเสื้อ</div>
@@ -3826,6 +3829,7 @@ function buildDom(){
   holdBtn('#mecha-left',()=>mStrafeBtn=-1,()=>mStrafeBtn=0);   /* รอบ 222: ◀▶ = ขยับข้าง (สเตรฟ) ไม่ใช่หมุนตัว · หมุน/เล็ง = ลากจอ */
   holdBtn('#mecha-right',()=>mStrafeBtn=1,()=>mStrafeBtn=0);
   holdBtn('#mecha-fire',()=>mFireHeld=true,()=>mFireHeld=false);
+  holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false);   /* รอบ 223: ปุ่มยิงตัวที่ 2 (ใต้ minimap) ยิงเหมือนกัน */
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));

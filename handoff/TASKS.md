@@ -27,6 +27,12 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 223 (14 ก.ค.) — เพิ่มปุ่มยิงตัวที่ 2 ใต้ minimap (ซ้าย) (version .213)
+- **ผู้ใช้:** เพิ่มปุ่มยิงอีก 1 ปุ่ม ไว้ใต้วงกลม minimap ทางซ้าย (ยิงได้สองมือ)
+- **✅ แก้ (js/adventure3d.js):** (1) DOM เพิ่ม `<div class="mecha-btn" id="mecha-fire2">🔫</div>` (ต่อจาก #mecha-fire) (2) CSS `#mecha-fire2{left:24px;top:138px;width:84px;height:84px;...แดงเรือง}` (ใต้ minimap ที่ bottom:128 · เว้น 10px) + รวม `:active` กับ #mecha-fire (3) `holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false)` — โค้ดเดียวกับ #mecha-fire (proven)
+- **✅ ยืนยัน 844×390:** fire2 disp:flex โชว์ · y138 อยู่ใต้ minimap (bottom 128) · fire2_vs_minimap/left/right/fire1 = ok (ไม่ทับ) · class mecha-btn (โชว์เฉพาะ touch mecha ผ่าน `.adv-touch.adv-mecha .mecha-btn{display:flex}`) · binding = สำเนา mecha-fire → mFireHeld → tickMecha mechaFire
+- **📝 ไฟล์แก้:** `js/adventure3d.js` + `version.json` .212→.213 · **✅ push + deploy_firebase.sh + curl .213**
+
 ### ✅ รอบ 222 (14 ก.ค.) — ซ่อนวงกลมจอยขาว + ◀▶ หมุน→สเตรฟ (ขยับข้าง) (version .212)
 - **ผู้ใช้:** (1) ปิดวงกลมสีขาวหลัง ◀▶ ไม่ให้โชว์ (2) ◀▶ ไม่ใช่หมุน/หัน แต่ให้ขยับซ้าย-ขวาแทน
 - **🔍 ส่อง DOM:** วงกลมขาว = **`#adv-joy`** (จอยเบส 110px · `rgba(255,255,255,.14)`) · `.adv-touch #adv-joy{display:block}` ไม่ยกเว้น mecha (แต่ input line 3913 ข้าม mecha อยู่แล้ว = element โชว์เฉยๆ ไม่ทำงาน)
