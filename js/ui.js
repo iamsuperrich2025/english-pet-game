@@ -3968,8 +3968,8 @@ function buyDriveTicket(){
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
   if(!state.driveTicket || state.advHurt || advLoading) return;
-  // 🔐 รอบ 131: ยังไม่มีรถ / ค้างค่างวด — ขับไม่ได้ พาไปหมวดยานพาหนะ
-  if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
+  // 🔐 รอบ 131: ยังไม่มีรถเลย — ขับไม่ได้ พาไปหมวดยานพาหนะ (ค้างงวดตรวจหลังเลือกคัน)
+  if(!(state.cars && state.cars.length)){ sfx.wrong(); showNeedCarDialog('nocar'); return; }
   if(!window.Adventure3D || !window.KPP_CITY){
     advLoading = true;
     toast('🚗 กำลังสตาร์ทรถ + โหลดแผนที่เมืองกำแพงเพชร...');
@@ -3984,6 +3984,11 @@ async function enterDrive3D(){
     }
     advLoading = false;
   }
+  // 🚗 รอบ 233: เลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — ตั้ง state.carIdx → สมรรถนะ (drivePerf) + ภายในรถ (loadCarDash) ตามคันที่เลือก
+  const gotCar = await pickDriveCar();
+  if(!gotCar) return;
+  // 🔐 คันที่เลือกค้างค่างวด → ขับไม่ได้ (เลือกคันอื่นได้)
+  if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
   // 🧱 เลือกตัวละครบล็อกก่อนออกรถ (จำตัวล่าสุดไว้ · เพื่อนใน map เห็นเป็นตัวที่เลือก) — กดยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar();
   if(!go) return;
@@ -4843,6 +4848,50 @@ function pickMechaRobot(){
     }));
     ov.querySelector('.cb-x').addEventListener('click',()=>{ ov.remove(); res(null); });
     ov.querySelector('#rp-go').addEventListener('click',()=>{ ov.remove(); res(sel); });
+    document.body.appendChild(ov);
+  });
+}
+
+/* 🚗 รอบ 233: หน้าเลือกรถออกขับ (เฉพาะคันที่ครอบครอง) — เหมือน "เลือกหุ่นออกรบ"
+   เลือกคันไหน → ตั้ง state.carIdx = คันนั้น → myCar() คืนคันนั้น → สมรรถนะ (drivePerf) + ภายในรถ (loadCarDash)
+   ตอน start('drive') สอดคล้องกับคันที่เลือกเอง · คืน true เมื่อพร้อมขับ, false ถ้ายกเลิก
+   คันที่ค้างค่างวด (loan.carry>0) โชว์ป้าย "ค้างงวด" เลือกไม่ได้ */
+function pickDriveCar(){
+  return new Promise(res=>{
+    const cars = state.cars || [];
+    if(cars.length <= 1){ res(true); return; }   // มีคันเดียว/ไม่มี = ไม่ต้องเลือก ขับคันเดิม
+    const locked = i => { const L = cars[i] && cars[i].loan; return !!(L && (L.carry||0) > 0); };
+    // ตั้งค่าเริ่มต้น = คันที่ขับล่าสุดถ้าขับได้ ไม่งั้นคันแรกที่ไม่ค้างงวด
+    let sel = (state.carIdx>=0 && state.carIdx<cars.length && !locked(state.carIdx)) ? state.carIdx : cars.findIndex((_,i)=>!locked(i));
+    if(sel < 0) sel = 0;   // ทุกคันค้างงวด — ปล่อยให้ carDriveBlock จัดการทีหลัง
+    const cardHtml = (car, i)=>{
+      const c = carInfo(car.id); if(!c) return '';
+      const img = carImg(c.id), lk = locked(i);
+      return `<div class="dcp-card${i===sel?' sel':''}${lk?' dcp-locked':''}" data-i="${i}" style="--cc:${c.c}">
+        <div class="hq-head">${c.name}</div>
+        <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
+        ${carStatHtml(c)}
+        ${lk?'<div class="dcp-lock">🔐 ค้างงวด</div>':''}
+      </div>`;
+    };
+    const ov = document.createElement('div');
+    ov.className = 'levelup-overlay';
+    ov.innerHTML = `<div class="levelup-box" style="max-width:620px">
+      <h2>🚗 เลือกรถออกขับ</h2>
+      <div class="dcp-grid" id="dcp-grid">${cars.map((car,i)=>cardHtml(car,i)).join('')}</div>
+      <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="dcp-go">ออกขับ! 🚗</button></div>
+    </div>`;
+    ov.querySelectorAll('.dcp-card').forEach(el=>el.addEventListener('click',()=>{
+      const i = +el.dataset.i;
+      if(locked(i)){ sfx.wrong(); toast('🔐 คันนี้ค้างค่างวด ขับไม่ได้ — จ่ายงวดที่หมวดยานพาหนะก่อนนะ'); return; }
+      sel = i; sfx.select();
+      ov.querySelectorAll('.dcp-card').forEach(e2=>e2.classList.toggle('sel', e2===el));
+    }));
+    ov.querySelector('.cb-x').addEventListener('click',()=>{ ov.remove(); res(false); });
+    ov.querySelector('#dcp-go').addEventListener('click',()=>{
+      state.carIdx = sel; saveState();
+      ov.remove(); res(true);
+    });
     document.body.appendChild(ov);
   });
 }

@@ -1029,6 +1029,32 @@ html.no-anim .q-bigcard{animation:none;}
 .car-grid .hq-pic{height:78px;}
 .car-grid .hq-pic img{width:88px;height:66px;}
 .robot-weap{font-size:11.5px;font-weight:800;text-align:center;margin:2px 0 4px;letter-spacing:.02em}
+/* 🚗 รอบ 233: หน้าเลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — การ์ดโชว์ภาพรถ + ป้ายสมรรถนะต่อคัน */
+.dcp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;
+  margin:6px 2px 4px;max-height:60vh;overflow:auto;padding:2px}
+.dcp-card{position:relative;background:linear-gradient(180deg,#f4faff,#d6ebfb);
+  border:2.5px solid var(--cc,#7fb0e0);border-radius:14px;overflow:hidden;cursor:pointer;
+  box-shadow:0 3px 10px rgba(15,60,110,.2);transition:transform .12s,box-shadow .15s}
+.dcp-card:hover{transform:translateY(-2px)}
+.dcp-card.sel{box-shadow:0 0 0 3px #fff,0 0 14px 3px var(--cc,#ffd76a),0 4px 14px rgba(15,60,110,.3)}
+.dcp-card.sel::after{content:"✓";position:absolute;top:6px;right:8px;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  background:var(--cc,#4aa3e8);color:#fff;font-weight:900;font-size:15px;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.dcp-card .hq-pic{height:96px}
+.dcp-card .hq-pic img{width:auto;height:100%;max-width:100%;object-fit:contain;
+  filter:drop-shadow(0 5px 8px rgba(20,60,110,.28))}
+.dcp-card .cs-stats{display:flex;flex-direction:column;gap:4px;padding:7px 10px 9px;margin:0}
+.dcp-card .cs-stat{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  font-size:11px;font-weight:800;color:#3a5872}
+.dcp-card .cs-stat-l{white-space:nowrap}
+.dcp-card .cs-stat-bar{display:flex;gap:2.5px}
+.dcp-card .cs-stat-bar i{width:12px;height:7px;border-radius:2px;background:rgba(40,80,130,.16)}
+.dcp-card .cs-stat-bar i.on{background:var(--cc,#4aa3e8);box-shadow:0 0 4px var(--cc,#4aa3e8)}
+.dcp-card.dcp-locked{opacity:.62;cursor:not-allowed;filter:grayscale(.35)}
+.dcp-card.dcp-locked:hover{transform:none}
+.dcp-lock{position:absolute;top:34px;left:50%;transform:translateX(-50%);
+  background:rgba(40,20,20,.82);color:#ffd76a;font-weight:900;font-size:12px;
+  padding:3px 10px;border-radius:999px;white-space:nowrap}
 /* 🛒 รอบ 208: ป้ายยอดขาย "ขายไปแล้ว N ชิ้น" ใต้สินค้า */
 .sold-badge{font-size:11px;font-weight:700;color:#9ec8e8;margin-top:5px;text-align:center;
   background:rgba(120,200,255,.09);border-radius:8px;padding:3px 8px;letter-spacing:.02em}
