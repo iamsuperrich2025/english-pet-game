@@ -704,13 +704,9 @@ html.no-anim .nw-tag{animation:none;}
   94%  {transform:translateX(calc(-1 * var(--roam))) scaleX(1);}
   100% {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}
 }
-/* prefers-reduced-motion: ตัดแค่ "การเดินข้ามจอ" (roam) ที่เป็นการเคลื่อนที่ไกลๆ ชวนเวียนหัว
-   แต่คงท่าเดินอยู่กับที่ไว้ — น้องคือเนื้อหาหลักของเกมเลี้ยงสัตว์ ถ้าแช่แข็งหมดจะดูเหมือนเกมเสีย
-   (ผู้ที่อยากปิดสนิทจริงๆ ใช้สวิตช์ "เอฟเฟกต์เคลื่อนไหว" ในตั้งค่า → html.no-anim ด้านล่าง) */
-@media (prefers-reduced-motion:reduce){
-  .hero-scene .pet-stage .pet-roam{animation:none;}
-}
-/* สวิตช์ในเกม (state.noAnim) = ผู้ใช้ตั้งใจปิดเอฟเฟกต์ → น้องหยุดนิ่งที่เฟรมแรก สอดคล้องกับทั้งเกม
+/* การคุมเอฟเฟกต์: ใช้สวิตช์ "เอฟเฟกต์เคลื่อนไหว" ในเกม (state.noAnim → html.no-anim) ตัวเดียว
+   สอดคล้องกับทั้งเกม — ที่อื่น (การ์ตูนเด็กเด้ง/ฟ้าผ่า/ประกาย) ก็ยึดสวิตช์นี้ ไม่แยกเคารพ
+   prefers-reduced-motion ของ OS (ไม่งั้นน้องจะหยุดคนเดียวขณะที่ทั้งจอยังวิ่ง ดูเหมือนเกมเสีย)
    ต้อง !important เฉพาะ .pet-anim เพราะ animation ของมันตั้งเป็น inline style (ui.js) กฎธรรมดาสู้ไม่ได้ */
 html.no-anim .hero-scene .pet-stage .pet-roam{animation:none;}
 html.no-anim .hero-scene .pet-stage .pet-anim{animation:none !important;}
