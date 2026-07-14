@@ -27,6 +27,15 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 212 (14 ก.ค.) — ⏰ ตั้งสำรองข้อมูลอัตโนมัติทุกวัน (Windows Task Scheduler)
+- **ผู้ใช้สั่ง:** ตั้ง backup อัตโนมัติทุกวัน · ต่อยอดจากสคริปต์ `tools/backup_db.sh` (รอบ 211)
+- **Task `VocabWorldBackup`** รันทุกวัน **19:00** → `bash tools/backup_daily.sh` (ห่อ backup_db.sh + log ลง `backups/backup_log.txt`)
+- ตั้งด้วย `tools/setup_backup_task.ps1` (Register-ScheduledTask · `-StartWhenAvailable` = ถ้าเครื่องปิดตอน 19:00 จะรันทันทีที่เปิดเครื่องรอบถัดไป · `-MultipleInstances IgnoreNew` · timeout 15 นาที) · **รันเฉพาะตอนล็อกอินผู้ใช้นี้** (ใช้ firebase login ในโปรไฟล์ · ไม่ต้องเก็บรหัสผ่าน)
+- **⚠️ gotcha:** ps1 ต้องเป็น ASCII ล้วน — Windows PowerShell 5.1 อ่าน UTF-8 ไม่มี BOM แล้วภาษาไทยเพี้ยน string terminator พัง (เขียนคอมเมนต์/ข้อความเป็นอังกฤษ)
+- **bash.exe** = `C:\Program Files\Git\bin\bash.exe` · **ยืนยัน:** `schtasks /run` → รันผ่าน Scheduler จริง ได้ db 16KB+auth 1928B + log exit 0 · Next Run 19:00
+- **จัดการ:** ดู `schtasks /query /tn VocabWorldBackup /v` · ยกเลิก `schtasks /delete /tn VocabWorldBackup /f` · แก้เวลา = แก้ `$time` ใน ps1 แล้วรันซ้ำ
+- ไม่ deploy (dev-only) · `backups/` ยัง gitignore (มีข้อมูลเด็ก)
+
 ### ✅ รอบ 212 (14 ก.ค.) — 🚗 โชว์รูมรถใหม่ (ตัวรถ+ภายในห้องโดยสาร จอใหญ่ ไฟฟ้าไล่ตัว premium) (version .203)
 - **ผู้ใช้สั่ง:** ภาพภายในรถ 10 ภาพเสร็จ (`img/car/dash_car_01..10.png` — track+deploy แล้วรอบ 211) → จัดหน้าขายรถใหม่ให้โชว์**ตัวรถ + ภาพภายใน** ภาพใหญ่กว่าเดิม · หรือจัดให้โดดเด่นเหมือนหมวดหุ่นยนต์
 - **เปลี่ยน car-grid (การ์ดเล็กเรียงกริด) → โชว์รูม `.cs-showroom`** (แพตเทิร์นเดียวกับหุ่นยนต์ `.rs-showroom` แต่ธีมทอง/ดำ + สีประจำคัน):
