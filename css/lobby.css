@@ -1040,23 +1040,23 @@ html.no-anim .q-bigcard{animation:none;}
   align-content:start;max-height:66vh;overflow-y:auto;scrollbar-width:none;padding-right:2px}
 .rs-list::-webkit-scrollbar{display:none}
 .rs-thumb{background:rgba(14,30,54,.6);border:2px solid rgba(95,200,255,.22);border-radius:14px;
-  padding:8px 8px 9px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:4px;transition:.15s}
+  padding:8px 8px 9px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:2px;transition:.15s}
 .rs-thumb:hover{border-color:rgba(120,220,255,.6)}
 .rs-thumb.active{border-color:#7fe0ff;box-shadow:0 0 14px rgba(80,200,255,.55)}
 .rs-thumb.owned-r{opacity:.72}
-.rs-thumb-pic{width:100%;height:74px;display:flex;align-items:center;justify-content:center}
-.rs-thumb-pic img{max-height:74px;max-width:96%;object-fit:contain}
+.rs-thumb-pic{width:100%;height:108px;display:flex;align-items:center;justify-content:center}  /* รอบ 213: ภาพหุ่น thumb ใหญ่ขึ้น 74→108 */
+.rs-thumb-pic img{max-height:108px;max-width:98%;object-fit:contain}
 .rs-thumb-price{font-size:13px;font-weight:900;color:#ffd76a}
-.rs-thumb .sold-badge{margin-top:2px;width:100%;padding:2px 4px;font-size:10px}
+.rs-thumb .sold-badge{margin-top:0;width:100%;padding:2px 4px;font-size:10px}  /* ราคาชิดป้ายขายไปแล้ว (เปิดที่ให้ภาพใหญ่) */
 .rs-stage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
   background:radial-gradient(120% 90% at 50% 28%,rgba(40,90,150,.30),rgba(6,14,28,.62) 72%);
   border:2px solid rgba(95,200,255,.25);border-radius:16px;overflow:hidden}
-.rs-big{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:250px;padding:12px}
-.rs-big-img{max-height:46vh;max-width:92%;object-fit:contain;position:relative;z-index:1;
+.rs-big{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:250px;max-height:70vh;padding:34px 14px}  /* รอบ 213: ภาพหุ่นจอใหญ่เต็มจอเกือบแตะขอบ (เว้น ~1ซม.) · cap 70vh กันบวม+ให้ glow แนบตัว */
+.rs-big-img{max-height:100%;max-width:92%;object-fit:contain;position:relative;z-index:1;
   animation:rsBreath 3.4s ease-in-out infinite;filter:drop-shadow(0 0 22px rgba(80,180,255,.55))}
 @keyframes rsBreath{0%,100%{filter:drop-shadow(0 0 18px rgba(70,160,255,.45)) brightness(1)}
   50%{filter:drop-shadow(0 0 42px rgba(90,200,255,.9)) drop-shadow(0 0 90px rgba(70,160,255,.4)) brightness(1.1)}}
-.rs-elec,.rs-edge{position:absolute;inset:12px;z-index:2;pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+.rs-elec,.rs-edge{position:absolute;inset:34px 14px;z-index:2;pointer-events:none;overflow:hidden;mix-blend-mode:screen;  /* inset = padding ของ .rs-big → กล่อง mask แนบภาพหุ่นพอดี */
   -webkit-mask-image:var(--rs-img);mask-image:var(--rs-img);
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
   -webkit-mask-size:contain;mask-size:contain}
@@ -1084,7 +1084,7 @@ html.no-anim .rs-big-img{animation:none}
   font-family:inherit;font-weight:800;font-size:15px;padding:9px 26px;cursor:pointer}
 .rs-buy:active{transform:scale(.96)}
 .rs-buy.own{background:#4a5a6a;cursor:default}
-@media(max-width:640px){.rs-showroom{flex-direction:column}.rs-list{flex-basis:auto;max-width:100%;max-height:none;grid-template-columns:repeat(3,1fr)}.rs-big-img{max-height:34vh}}
+@media(max-width:640px){.rs-showroom{flex-direction:column}.rs-list{flex-basis:auto;max-width:100%;max-height:none;grid-template-columns:repeat(3,1fr)}.rs-big{max-height:52vh}.rs-big-img{max-height:100%}}
 
 /* 🚗 รอบ 212: โชว์รูมรถ — thumb + จอใหญ่ (ตัวรถ + ภายในห้องโดยสาร) ไฟฟ้าไล่ตัวสีประจำคัน */
 .cs-showroom{display:flex;gap:14px;margin-top:8px}
