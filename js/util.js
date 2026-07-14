@@ -451,6 +451,13 @@ function openSettings(){
         <button class="avatar-mini" data-av="female">🦸‍♀️ หญิง</button>
       </span>
     </div>
+    <div class="set-row set-blk-row" id="set-blk">
+      <span class="set-label">🧱 ตัวละครในล็อบบี้<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง</small></span>
+      <div class="blk-grid">
+        ${['blk1','blk2','blk3','blk4','blk5','blk6','blk7','blk8'].map(b=>
+          `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="${b}"></button>`).join('')}
+      </div>
+    </div>
     <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
       <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดปิดมาตั้งแต่แรก ไม่มีใครเห็นจนกว่าหนูจะเปิด</span></div>
     ${Object.keys(FEED_CATS).map(k=>`
@@ -475,6 +482,8 @@ function openSettings(){
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     // ข้อ 4: ไฮไลต์ตัวละครที่เลือกอยู่ (ผู้เล่นเดิมยังไม่เลือก = ไม่ไฮไลต์)
     overlay.querySelectorAll('.avatar-mini').forEach(b=>b.classList.toggle('sel', state.playerAvatar === b.dataset.av));
+    const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238
+    overlay.querySelectorAll('.blk-mini').forEach(b=>b.classList.toggle('sel', curBlk === b.dataset.blk));
     // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default ปิดทุกหมวด)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
@@ -483,6 +492,12 @@ function openSettings(){
     state.playerAvatar = b.dataset.av;
     saveState(); sfx.select(); paint();
     if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ทันที
+  }));
+  // 🧱 รอบ 238: เลือกตัวละครบล็อกในล็อบบี้ (เก็บใน state.blockAv — ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย)
+  overlay.querySelectorAll('.blk-mini').forEach(b=>b.addEventListener('click', ()=>{
+    state.blockAv = b.dataset.blk;
+    saveState(); sfx.select(); paint();
+    if(typeof renderDashboard === 'function') renderDashboard();
   }));
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();

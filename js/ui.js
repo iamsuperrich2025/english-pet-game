@@ -49,12 +49,42 @@ function petVisualHTML(p){
 
 /* ตัวละครผู้เลี้ยงยืนเต็มตัวข้างน้อง (ฉาก lobby 3D สไตล์ COD — รอบ 86)
    มีภาพ player_male/female.png ใช้ภาพเต็มตัว · ยังไม่เลือก/ไม่มีภาพ = อีโมจิตัวโต */
+// 🧱 รอบ 238: ตัวละครในล็อบบี้ = ตัวบล็อก 2D (blk1..8 · ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย · เปลี่ยนได้ในตั้งค่า)
+function lobbyBlk(){
+  if(/^blk[1-8]$/.test(state.blockAv||'')) return state.blockAv;
+  return state.playerAvatar === 'female' ? 'blk6' : 'blk1';   // ค่าเริ่มต้นตามเพศตัวละครที่เลือกตอนสมัคร
+}
 function caretakerFigureHTML(){
-  const av = state.playerAvatar;
-  const img = av && IMG_FILES[`player_${av}`];
-  if(img) return `<div class="caretaker-fig"><img class="caretaker-img" src="${img}" alt="ผู้เลี้ยง"></div>`;
-  const emoji = (av && AVATAR_UI[av]) ? AVATAR_UI[av].emoji : '🧑';
-  return `<div class="caretaker-fig caretaker-emoji">${emoji}</div>`;
+  const blk = lobbyBlk();
+  // rig: origin ที่เท้า → ท่า idle "มีชีวิต" (เอียงตัว/พยักหน้า/ย้ายน้ำหนัก/กระโดดเบา) แทนลอยยุบ · footAlign เล็งเท้าลงเส้นพื้น
+  return `<div class="caretaker-fig"><div class="blk-rig lively">`
+    + `<img class="caretaker-img blk-char" src="img/blocks/${blk}.png" alt="ตัวละครของหนู"></div></div>`;
+}
+
+// 🦶 รอบ 238: เล็งเท้าลง "เส้นฟ้า" — ภาพ blk/สัตว์มีขอบใสด้านล่างไม่เท่ากัน (เท้าไม่อยู่ก้นภาพ)
+// วัดแถวทึบล่างสุดของแต่ละภาพ (cache ต่อ src) แล้วดันภาพลงเท่าขอบใส → เท้าจริงแตะกล่อง = อยู่บนเส้น
+const __footFrac = {};
+function footAlign(scope){
+  const imgs = (scope || document).querySelectorAll('.blk-char, .hero-scene .pet-img');
+  imgs.forEach(img=>{
+    const src = img.getAttribute('src'); if(!src) return;
+    const apply = f => { img.style.transform = `translateY(calc((1 - ${f}) * 100%))`; };
+    if(__footFrac[src] != null){ apply(__footFrac[src]); return; }
+    const probe = new Image();
+    probe.onload = ()=>{
+      try{
+        const w = probe.naturalWidth, h = probe.naturalHeight;
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        const ctx = c.getContext('2d'); ctx.drawImage(probe, 0, 0);
+        const d = ctx.getImageData(0, 0, w, h).data;
+        let low = -1;
+        for(let y = h - 1; y >= 0 && low < 0; y--){ for(let x = 0; x < w; x += 2){ if(d[(y*w+x)*4+3] > 40){ low = y; break; } } }
+        const f = low < 0 ? 1 : (low + 1) / h;
+        __footFrac[src] = f; apply(f);
+      }catch(e){ /* อ่านพิกเซลไม่ได้ (CORS) → ปล่อยตามภาพ */ }
+    };
+    probe.src = src;
+  });
 }
 
 /* รอบ 114: เหรียญตราแรงค์ใหญ่เป็นฉากหลังกลางเวที lobby (อยู่หลังตัวละคร/canvas 3D)
@@ -2404,20 +2434,31 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero${g === 0 ? ' hero-side' : ''}">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
+    <div class="stage-hero hero-side">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
   if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
-  // ไม่มี/โหลดพลาด/เปิดแบบ file:// → ใช้ภาพ PNG เดิม (fallback อัตโนมัติใน Lobby3D)
-  // รอบ 186: ป่วย/หิว/ใส่เครื่องแต่งตัว + มีภาพตรงสถานะ → ใช้ภาพ 2D แทนโมเดล (forcePng)
-  //          เพื่อสื่อสถานะน้องชัดเจน · ไม่มีภาพหรือปกติ = โมเดล 3D เหมือนเดิม
-  if(typeof Lobby3D !== 'undefined' && stage !== 'egg'){
+  // 🧱 รอบ 238: ล็อบบี้เป็น 2D ทั้งหมด (คน blk ขยับมีชีวิต + สัตว์ภาพ 2D) — ไม่โหลดโมเดล glb/three อัตโนมัติแล้ว
+  // 🌀 เกมสะกดคำยังอยู่: กดปุ่มค่อย lazy-load ฉาก 3D มาเล่นชั่วคราว จบแล้วกลับ 2D
+  //    (โผล่เฉพาะร่างปกติ + น้องปกติ ไม่ป่วย/หิว/ใส่ชุด — เงื่อนไขเดิมของเกมสะกดคำ)
+  {
     const hero = card.querySelector('.stage-hero');
-    const forcePng = (typeof petStateImg === 'function') && !!petStateImg(p);
-    if(hero) Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:g, forcePng});
+    if(hero) footAlign(hero);                      // 🦶 เล็งเท้าคน+สัตว์ลงเส้นพื้น
+    // 🌀 ถ้ากำลังเล่นเกมสะกดคำอยู่ (ฉาก 3D ชั่วคราว) แล้ว renderDashboard ถูกเรียกกลางเกม (เช่นได้เหรียญ)
+    //    ต้อง re-attach เพื่อผูก canvas 3D กลับเข้า hero ใหม่ + คืน HUD (ไม่งั้นเวทีหลุด)
+    const spelling = typeof Lobby3D !== 'undefined' && Lobby3D._debug && Lobby3D._debug().spell && Lobby3D._debug().spell.active;
+    if(hero && spelling){ Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:0}); }
+    const scene = hero && hero.querySelector('.hero-scene');
+    const canSpell = !spelling && typeof Lobby3D !== 'undefined' && stage !== 'egg' && g === 0 && !(typeof petStateImg === 'function' && petStateImg(p));
+    if(scene && canSpell && typeof Lobby3D.launchSpell === 'function'){
+      const btn = document.createElement('button');
+      btn.className = 'spell-btn'; btn.innerHTML = '🌀 สะกดคำ';
+      btn.addEventListener('click', ()=>Lobby3D.launchSpell(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:0}));
+      scene.appendChild(btn);
+    }
   }
   // ปุ่มดูแล (ให้อาหาร/รักษา/นอน/ขับพิษ/ยักษ์/เปลี่ยนชื่อ) ย้ายไปอยู่ใน overlay
   // ข้อมูลน้อง — ผูกใน bindPetPlateButtons ตอน openPetInfoOverlay (รอบ 155)

@@ -624,6 +624,9 @@ html.no-anim .nw-tag{animation:none;}
   border-radius:20px;overflow:hidden;
   background:
     radial-gradient(ellipse 52% 62% at 50% 46%, rgba(214,232,255,.22), rgba(120,170,235,.08) 48%, transparent 72%),
+    /* 🟦 รอบ 237 (ผู้ใช้): พื้น (floor) ใต้เส้นฟ้า — ระนาบพื้นไล่เข้มลงล่าง + ขอบหน้าเรืองแสง ให้ "ความเป็นพื้น" ชัด */
+    radial-gradient(ellipse 82% 46px at 50% 100%, rgba(104,178,248,.26), transparent 72%),
+    linear-gradient(180deg, transparent calc(100% - 62px), rgba(72,126,198,.10) calc(100% - 42px), rgba(42,82,146,.24) calc(100% - 18px), rgba(22,50,96,.36) 100%),
     radial-gradient(ellipse 60% 40% at 50% 112%, rgba(96,186,255,.40), transparent 72%),
     linear-gradient(180deg,#12294c 0%,#0d1f3c 52%,#070f22 100%);
   border:1px solid rgba(103,178,255,.38);
@@ -687,6 +690,35 @@ html.no-anim .nw-tag{animation:none;}
    เพราะเคส emoji fallback (.caretaker-fig.caretaker-emoji เป็น element เดียว)
    animation ที่เขียน transform จะทับ translateX ตำแหน่งยืนทุกเฟรม — ตำแหน่งไม่ขยับเลย */
 @keyframes heroSway{0%,100%{translate:0 0}50%{translate:0 -6px}}
+/* 🧱 รอบ 238: ตัวละครบล็อก 2D — idle "มีชีวิต" (origin ที่เท้า → เอียงตัว=แขนสวิงออกสลับข้าง + พยักหน้า/ย้ายน้ำหนัก/กระโดดเบา) */
+.blk-rig{position:relative;display:flex;align-items:flex-end;justify-content:center;transform-origin:50% 100%;}
+.blk-rig .blk-char{animation:none;}                 /* ปิด heroSway (ลอย) — ใช้ท่า lively ที่ rig แทน · transform(เล็งเท้า) ตั้งจาก JS footAlign */
+.blk-rig.lively{animation:blkLively 5.6s ease-in-out infinite;}
+@keyframes blkLively{
+  0%{transform:translateY(0) rotate(0) scaleY(1)}
+  8%{transform:translateY(-2px) rotate(.5deg) scaleY(1.02)}
+  16%{transform:translateY(0) rotate(2.6deg) scaleY(1)}
+  23%{transform:translateY(3px) rotate(1.6deg) scaleY(.965)}
+  30%{transform:translateY(-1px) rotate(1deg) scaleY(1.015)}
+  42%{transform:translateY(0) rotate(-2.6deg) scaleY(1)}
+  50%{transform:translateY(-9px) rotate(-1deg) scaleY(1.035)}
+  57%{transform:translateY(2px) rotate(0) scaleY(.94)}
+  63%{transform:translateY(0) rotate(0) scaleY(1)}
+  75%{transform:translateY(-2px) rotate(2.2deg) scaleY(1.015)}
+  88%{transform:translateY(0) rotate(-1.6deg) scaleY(1)}
+  100%{transform:translateY(0) rotate(0) scaleY(1)}
+}
+/* 🐾 สัตว์ 2D — idle นุ่มกว่าคน (หายใจ+โยกเบา รอบเท้า) ไม่ใช่แค่ลอยยุบ
+   ⚠️ animation อยู่ที่ .pet-wrap (ไม่ใช่ .pet-img) เพราะ .pet-img ต้องรับ transform เล็งเท้าจาก JS footAlign */
+.hero-scene .pet-stage .pet-wrap{transform-origin:50% 100%;animation:petIdle 4.4s ease-in-out infinite;}
+.hero-scene .pet-stage .pet-img{transform-origin:50% 100%;}
+@keyframes petIdle{
+  0%,100%{transform:translateY(0) rotate(0) scaleY(1)}
+  25%{transform:translateY(-2px) rotate(-1.1deg) scaleY(1.02)}
+  50%{transform:translateY(0) rotate(0) scaleY(.99)}
+  75%{transform:translateY(-2px) rotate(1.1deg) scaleY(1.02)}
+}
+html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{animation:none;}
 /* ลานยืน: เงา + วงเรืองแสงใต้เท้า ให้ดูตั้งอยู่บนพื้นจริง */
 .hero-ground{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);
   width:min(118%,660px);height:70px;pointer-events:none;z-index:-1;
@@ -700,8 +732,13 @@ html.no-anim .nw-tag{animation:none;}
 /* รอบ 161: ร่างปกติ (g0) — PNG fallback แยกคนซ้ายสุด/น้องขวาสุด เปิดกลางให้เหรียญ rank
    (โมเดล 3D จัดเองใน lobby3d.js sideLayout — CSS ชุดนี้คุมเฉพาะตอนไม่มีโมเดล) */
 .stage-hero.hero-side .hero-scene{width:100%;height:100%;justify-content:flex-end;}
-.stage-hero.hero-side .hero-scene .pet-stage{margin-right:7%;}
-.stage-hero.hero-side .caretaker-fig{left:18%;transform:translateX(-50%);}
+/* 🧱 รอบ 238: 2D ทั้งคู่ — คนซ้าย/สัตว์ขวา · เท้าอยู่บน "เส้นฟ้า" (stage-hero::after bottom:30px)
+   หมายเหตุ: .hero-scene ถูกร่นด้วย padding-bottom:22px ของ stage-hero → ตั้ง bottom:6px ให้เท้าลงพอดีเส้น (ปรับได้)
+   ⚠️ ร่างยักษ์: --pet-vh เดิมจูนไว้ให้กล้อง 3D เฟรม (ใหญ่มาก) · โหมด 2D ยืนข้างคนต้อง "คุมโซนขวา" ไม่ให้ล้นทับคน */
+.stage-hero.hero-side .hero-scene .pet-stage{margin-right:3%;margin-bottom:6px;max-width:52%;}
+.stage-hero.hero-side .hero-scene .pet-stage .pet-img{width:auto;height:auto;max-width:100%;max-height:100%;}
+.stage-hero.hero-side .caretaker-fig{left:3%;transform:none;bottom:6px;max-width:40%;}
+.stage-hero.hero-side .caretaker-fig .caretaker-img{max-width:100%;}
 /* 🐾 รอบ 187: โหมด "เฉพาะน้องเป็น 2D" (ป่วย/หิว/ใส่ชุด) — คนยังเป็นโมเดล 3D บน canvas โปร่งใส
    จึงซ่อนรูปคน 2D + ลานเงาในเลเยอร์นี้ · โชว์เฉพาะน้อง 2D ให้ใหญ่ชัด (เห็นอาการ/ชุด) */
 .hero-scene.pet-only .caretaker-fig,

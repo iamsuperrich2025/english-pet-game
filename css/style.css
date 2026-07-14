@@ -1311,6 +1311,16 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
   font-family:inherit;font-size:13px;color:#7a5ca8;cursor:pointer;
 }
 .avatar-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:var(--yellow-d);color:#a8791a;font-weight:bold;}
+/* 🧱 รอบ 238: ตัวเลือกตัวละครบล็อกในล็อบบี้ (หน้าตั้งค่า) */
+.set-blk-row{align-items:flex-start;}
+.set-sub2{font-weight:normal;opacity:.7;font-size:11px;}
+.blk-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:230px;margin-left:auto;}
+.blk-mini{border:2px solid #e0d4f0;background:#f6f0ff;border-radius:12px;padding:3px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .1s,border-color .1s;}
+.blk-mini img{width:100%;height:52px;object-fit:contain;display:block;}
+.blk-mini:active{transform:scale(.92);}
+.blk-mini.sel{border-color:var(--yellow-d,#e0a020);background:linear-gradient(180deg,#fff9e0,#ffedb8);
+  box-shadow:0 0 0 2px var(--yellow-d,#e0a020) inset;}
 /* ตัวละครมาเชียร์ในฉากเกม (ข้อ 4 ต่อยอด) */
 .game-avatar{font-size:26px;line-height:1;display:flex;align-items:center;}
 .game-avatar .avatar-chip-img{width:38px;height:38px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.18);}

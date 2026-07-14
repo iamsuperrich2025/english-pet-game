@@ -736,10 +736,17 @@ const Lobby3D = (function(){
   function spellEnd(){
     if(!spellActive) return;
     spellAbort();
-    if(curGiant===0) sideLayout();           // น้องกลับข้างขวาคู่ผู้เลี้ยง
+    stop();                                  // 🧱 รอบ 238: ล็อบบี้เป็น 2D — จบเกมหยุดเรนเดอร์ 3D
+    showCanvas(false);                        // ซ่อน canvas 3D · โชว์ .hero-scene (2D) กลับมา
+    if(curGiant===0) sideLayout();
     spellBtnSync();
     const dash=document.getElementById('screen-dashboard');
     if(typeof renderDashboard==='function' && dash && dash.classList.contains('active')) renderDashboard();
+  }
+  // 🌀 รอบ 238: ล็อบบี้ 2D → กดปุ่มสะกดคำค่อยโหลดฉาก 3D (three+glb) มาเล่นชั่วคราว
+  async function launchSpell(hero, opts){
+    await attach(hero, opts||{});             // lazy: initRenderer + โหลดโมเดล + showCanvas(true)
+    spellStart();                             // ได้โมเดลแล้วเริ่มวงแหวน (ไม่มีโมเดล = spellStart guard คืนเงียบๆ)
   }
 
   // ปิดชั่วคราวเมื่อออกจากหน้า (main.js/showScreen wrapper เรียกได้ถ้าต้องการ)
@@ -759,7 +766,7 @@ const Lobby3D = (function(){
     });
   }
 
-  return { attach, pause, _stop:stop, spellStart, spellEnd, _spellLetters,
+  return { attach, launchSpell, pause, _stop:stop, spellStart, spellEnd, _spellLetters,
     _debug:()=>({running, disabled, curKey, curGiant,
       ownerLoaded:!!(ownerRoot&&ownerRoot.userData.gltf), petLoaded:!!(petRoot&&petRoot.userData.gltf),
       triangles: renderer?renderer.info.render.triangles:0,
