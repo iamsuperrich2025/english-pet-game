@@ -30,7 +30,8 @@ function startHTML(key){
    ⚠️ ไฟล์ img/anim/*.webp ต้อง commit ไม่งั้นไม่ขึ้นเว็บ (deploy ใช้ git archive HEAD) */
 // roam:false = ท่าในไฟล์เป็น "ยืนอยู่กับที่" (ไม่ใช่ท่าเดิน) → ห้ามสั่งให้เลื่อนไปมา ไม่งั้นดูเหมือนไถลข้าง
 const PET_ANIM = {
-  cat:    { file:'img/anim/pet_cat_walk.webp',   frames:24, fw:172, fh:172, fps:14, roam:true  },
+  cat:    { file:'img/anim/pet_cat_walk.webp',    frames:24, fw:172, fh:172, fps:14, roam:true  },
+  dog:    { file:'img/anim/pet_dog_walk.webp',    frames:24, fw:127, fh:165, fps:14, roam:true  },
   dragon: { file:'img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:false },
 };
 function petAnimHTML(p){

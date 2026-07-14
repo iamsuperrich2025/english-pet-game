@@ -19,7 +19,7 @@
 <script>
   // HTML ก้อนเดียวกับที่ ui.js petAnimHTML() สร้าง (ค่าจาก img/anim/pet_cat_walk.json)
   // สลับตัวที่อยากดูได้ที่นี่ (ค่าจาก img/anim/*.json)
-  const a = {file:'../img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:false};
+  const a = {file:'../img/anim/pet_dog_walk.webp', frames:24, fw:127, fh:165, fps:14, roam:true};
   const dur = (a.frames / a.fps).toFixed(2);
   const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
   document.getElementById('scene').innerHTML =
