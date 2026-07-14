@@ -1137,6 +1137,13 @@ html.no-anim .cs-big-img{animation:none}
 .cs-info .cs-name{font-size:17px;font-weight:900}
 .cs-info .cs-meta{display:flex;gap:12px;justify-content:center;align-items:center;font-size:13px;margin-bottom:9px;flex-wrap:wrap}
 .cs-info .cs-price{color:#ffd76a;font-weight:900;font-size:15px}
+/* 🚗 รอบ 232: ป้ายสมรรถนะต่อคัน (ความเร็ว/อัตราเร่ง/เกาะถนน) */
+.cs-info .cs-stats{display:flex;flex-direction:column;gap:5px;margin:0 auto 11px;max-width:236px}
+.cs-info .cs-stat{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;font-weight:800;color:#ecdcb8}
+.cs-info .cs-stat-l{white-space:nowrap}
+.cs-info .cs-stat-bar{display:flex;gap:3px}
+.cs-info .cs-stat-bar i{width:17px;height:8px;border-radius:3px;background:rgba(255,255,255,.15)}
+.cs-info .cs-stat-bar i.on{background:var(--cc,#ffd76a);box-shadow:0 0 5px var(--cc,#ffd76a)}
 .cs-buy{background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;border:0;border-radius:12px;
   font-family:inherit;font-weight:800;font-size:15px;padding:9px 26px;cursor:pointer}
 .cs-buy:active{transform:scale(.96)}

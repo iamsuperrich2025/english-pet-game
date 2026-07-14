@@ -4628,6 +4628,14 @@ function renderVehicleShop(){
 let carsInteriorProbed = false, csIdx = 0, csPausedUntil = 0, csTimer = null;
 const CS_CYCLE_MS = 4200, CS_PAUSE_MS = 120000;
 function carInteriorImg(id){ return IMG_FILES['dash_'+id] || null; }
+/* 🚗 รอบ 232: ป้ายสมรรถนะในโชว์รูม (ความเร็ว/อัตราเร่ง/เกาะถนน · 5 ขีด) — สีตามคัน · ผูกกับการขับจริง */
+function carStatHtml(c){
+  const rows=[['⚡','ความเร็ว',c.spd||3],['🚀','อัตราเร่ง',c.acc||3],['🛞','เกาะถนน',c.grip||3]];
+  return `<div class="cs-stats" style="--cc:${c.c}">${rows.map(([ic,lb,v])=>
+    `<div class="cs-stat"><span class="cs-stat-l">${ic} ${lb}</span>`+
+    `<span class="cs-stat-bar">${[1,2,3,4,5].map(n=>`<i class="${n<=v?'on':''}"></i>`).join('')}</span></div>`
+  ).join('')}</div>`;
+}
 function renderCarShowroom(){
   if(!carsInteriorProbed){
     carsInteriorProbed = true;
@@ -4673,6 +4681,7 @@ function csShowBig(i){
   const minToday = Math.ceil(c.price*CAR_DOWN_RATE) + CAR_PRB;
   info.innerHTML = `<div class="cs-name" style="color:${c.c}">${escapeHTML(c.name)}</div>
     <div class="cs-meta"><span class="cs-price">🪙${fmtNum(c.price)}</span>${soldBadge(c.id)}</div>
+    ${carStatHtml(c)}
     ${have?`<button class="cs-buy own" disabled>🚘 มีคันนี้แล้ว</button>`
       :`<button class="cs-buy ${state.coins>=minToday?'':'cant-afford'}" data-id="${c.id}">🛒 ดูรายละเอียด / ซื้อ</button>`}`;
   const buy = info.querySelector('.cs-buy:not(.own)');

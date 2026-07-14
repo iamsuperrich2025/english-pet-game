@@ -136,6 +136,7 @@ const CAR_VREV   = 6.5;           // ถอยหลังสูงสุด
 const CAR_WB     = 2.6;           // ระยะฐานล้อ (bicycle model)
 const CAR_STEER_MAX = .52;        // มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
 let dSpeed=0, dSteer=0, dLook=0;  // ความเร็ว(ลงชื่อ) · มุมพวงมาลัย(smooth) · หันหัวมองข้างชั่วคราว
+let drivePerf={vmaxMul:1,accMul:1,steerMul:1};   // 🚗 รอบ 232: สมรรถนะคันที่ขับ (ตั้งตอน start จาก stat ใน CARS · ผูกกับป้ายโชว์รูม)
 let dRoll=0, dRollV=0;            // 🏎️ รอบ 142: มุมโคลงตัวถัง + ความเร็วเชิงมุม (สปริงช่วงล่างหน่วงต่ำ — โยกซ้ายขวาแบบรถจริง)
 let dVelX=0, dVelZ=0, dCamYaw=0;  // 🏁 ฟีล R4: ทิศวิ่งจริงไถลตามหัวรถ (drift) + กล้องหันตามแบบหน่วง
 let padSteer=0, padSt=false, padTh=false;  // 🎛️ รอบ 127: ปุ่มคอนโซล (มือถือ) — พวงมาลัยซ้าย + คันเร่งขวา (กดค้าง)
@@ -4765,8 +4766,8 @@ function tickDrive(dt,now){
   }
 
   const onRoad=driveCell(camera.position.x,camera.position.z);
-  const vmax=onRoad===1?CAR_VMAX:CAR_VMAX_OFF;
-  if(th>0) dSpeed+=CAR_ACCEL*(onRoad===1?1:.55)*th*dt;
+  const vmax=onRoad===1?CAR_VMAX*drivePerf.vmaxMul:CAR_VMAX_OFF;   // 🚗 รอบ 232: ท็อปสปีดตามคัน (นอกถนนเท่ากันหมด)
+  if(th>0) dSpeed+=CAR_ACCEL*drivePerf.accMul*(onRoad===1?1:.55)*th*dt;   // อัตราเร่งตามคัน
   else if(th<0){
     if(dSpeed>.3) dSpeed=Math.max(0,dSpeed-CAR_BRAKE*dt);          // เบรกก่อน
     else dSpeed=Math.max(-CAR_VREV,dSpeed+CAR_ACCEL*.7*th*dt);     // จอดแล้วกดค้าง = ถอยหลัง
@@ -4777,7 +4778,7 @@ function tickDrive(dt,now){
   if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
 
   /* 🏁 พวงมาลัยฟีล R4: ไต่เข้าโค้งนุ่ม (attack ช้ากว่า release) + ลดองศาตามความเร็วพอประมาณ */
-  const tgt=sd*CAR_STEER_MAX/(1+Math.abs(dSpeed)*.045);
+  const tgt=sd*CAR_STEER_MAX*drivePerf.steerMul/(1+Math.abs(dSpeed)*.045);   // 🚗 รอบ 232: เกาะถนน/เข้าโค้งตามคัน
   const ramp=Math.abs(tgt)>Math.abs(dSteer)?3.8:6.0;               // กดเลี้ยว=ค่อยๆ หัก · ปล่อย=คืนไวกว่า
   dSteer+=(tgt-dSteer)*Math.min(1,dt*ramp);
   let yawRate=(dSpeed/CAR_WB)*Math.tan(dSteer);
@@ -6812,6 +6813,10 @@ function start(md){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
+    // 🚗 รอบ 232: ผูกสมรรถนะตามคันที่เลือกขับ (ตรงกับป้ายในโชว์รูม · คันแพง/สปอร์ต = เร็ว·เร่ง·เกาะถนนดีกว่าเบาๆ)
+    (function(){ const cp=(typeof myCar==='function'&&myCar())?carInfo(myCar().id):null;
+      const sp=(cp&&cp.spd)||3, ac=(cp&&cp.acc)||3, gr=(cp&&cp.grip)||3;
+      drivePerf={ vmaxMul:0.82+sp*0.045, accMul:0.82+ac*0.045, steerMul:0.90+gr*0.025 }; })();
     gpsTarget=null; gpsSpokeAt=0; gpsLastTurn=''; gpsMile=0; gpsArrivedFor=null; gpsRoute=null; gpsRouteFor=null;   // 🧭 รีเซ็ต GPS
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
@@ -6972,6 +6977,7 @@ window.Adventure3D={
                          get lights(){return worlds.drive.d.tlights}, forceLight(v){rlForce=v; rlChkAt=0;},
                          get peerHits(){return carPeerHits}, phase:tlightPhase,
                          get gpsRoute(){return gpsRoute}, get gpsTarget(){return gpsTarget},
+                         get perf(){return drivePerf},   // 🚗 รอบ 232: สมรรถนะคันที่ขับ (ผูกจาก stat CARS)
                          route(sx,sz,tx,tz){return routeGrid(worlds.drive.d,sx,sz,tx,tz);}}; },
     get soccer(){ return {get ball(){return soccerBall}, get vel(){return sbVel}, get live(){return sbLive},
                           get aimYaw(){return aimYaw}, set aimYaw(v){aimYaw=v},
