@@ -3417,12 +3417,13 @@ function buildDom(){
     border-radius:16px;align-items:center;justify-content:center;font-size:26px;font-weight:800;backdrop-filter:blur(2px)}
   .mecha-btn:active{background:rgba(120,200,255,.34)}
   .adv-touch.adv-mecha .mecha-btn{display:flex}
-  #mecha-fwd{left:22px;bottom:104px;width:76px;height:70px}
-  #mecha-back{left:22px;bottom:24px;width:76px;height:70px}
+  /* รอบ 219 (ผู้ใช้): ▲▼ ย้ายไปมุมขวาล่าง (แทนที่ปุ่มยิงเดิม) · ปุ่มยิงย้ายขึ้นไปใต้คำ (ใต้ตัวท้าย) ค่อนขวา */
+  #mecha-fwd{right:22px;bottom:104px;width:76px;height:70px}
+  #mecha-back{right:22px;bottom:24px;width:76px;height:70px}
   #mecha-left{left:170px;bottom:24px;width:70px;height:70px;border-radius:50%}   /* รอบ 218: ขยับ ◀▶ ไปขวาอีกนิด (ห่าง ▲▼ ให้นิ้วไม่ชนกัน) */
   #mecha-right{left:248px;bottom:24px;width:70px;height:70px;border-radius:50%}
-  #mecha-fire{right:22px;bottom:34px;width:92px;height:92px;border-radius:50%;font-size:34px;
-    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}
+  #mecha-fire{left:calc(50% + 60px);top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
+    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* ใต้คำ ค่อนขวา (ใต้ตัวท้าย) · อิงกลางจอ = ทุกจอไม่ชน ◀▶ ซ้าย/▲▼ ขวา */
   #mecha-fire:active{background:rgba(255,90,110,.55)}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
