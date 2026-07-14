@@ -82,6 +82,8 @@ function lobbyBlk(){
   if(/^blk[1-8]$/.test(state.blockAv||'')) return state.blockAv;
   return state.playerAvatar === 'female' ? 'blk6' : 'blk1';   // ค่าเริ่มต้นตามเพศตัวละครที่เลือกตอนสมัคร
 }
+// ⚠️ รอบ 244: ผู้ใช้เอาตัวละครเด็กออกจากล็อบบี้ชั่วคราว (ท่าเด้งไปมาไม่เข้ากับฉาก) — ยังไม่ลบ ฟังก์ชันเก็บไว้รอหาที่ลงใหม่
+// ปัจจุบันไม่มีที่เรียกแล้ว (เดิมเรียกที่ pet-card hero-scene) · จะกลับมาใช้ต้องเรียก caretakerFigureHTML() อีกครั้ง
 function caretakerFigureHTML(){
   const blk = lobbyBlk();
   // rig: origin ที่เท้า → ท่า idle "มีชีวิต" (เอียงตัว/พยักหน้า/ย้ายน้ำหนัก/กระโดดเบา) แทนลอยยุบ · footAlign เล็งเท้าลงเส้นพื้น
@@ -2462,7 +2464,7 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero hero-side">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${caretakerFigureHTML()}${petVisualHTML(p)}</div></div>`;
+    <div class="stage-hero hero-side">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${petVisualHTML(p)}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
