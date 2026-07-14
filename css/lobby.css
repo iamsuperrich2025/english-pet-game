@@ -676,6 +676,36 @@ html.no-anim .nw-tag{animation:none;}
 }
 .hero-scene .pet-stage .pet-wrap{height:100%;display:flex;align-items:flex-end;justify-content:center;}
 .hero-scene .pet-stage .pet-img{width:auto;height:100%;}
+
+/* 🐾 น้องเดินเล่นซุกซนหน้าป้าย rank (สไปรต์อบจากโมเดล 3D · ui.js petAnimHTML)
+   แยกเป็น 2 ชั้น: .pet-anim = ขาก้าว (เล่นเฟรมในแผ่น) · .pet-roam = เดินไปมา+กลับตัว (ขยับทั้งตัว)
+   แยกกันแบบนี้ปรับความเร็วขา/ระยะเดินได้อิสระ ไม่ต้องกลับไปอบใหม่ */
+.hero-scene .pet-stage .pet-roam{
+  height:100%;display:flex;align-items:flex-end;
+  --roam:clamp(26px, 7vw, 96px);                  /* ระยะเดินไป-กลับจากจุดกลาง */
+  animation:petRoam 13s ease-in-out infinite;
+}
+.hero-scene .pet-stage .pet-anim{
+  height:100%;width:auto;
+  background-repeat:no-repeat;
+  image-rendering:auto;
+  filter:drop-shadow(0 12px 16px rgba(3,15,35,.5));
+}
+/* เฟรมแรก→เฟรมสุดท้าย (--bpx ตั้งจาก JS) · steps() = เปลี่ยนเฟรมเป็นขั้น ไม่ไหลเบลอ */
+@keyframes petWalk{ from{background-position-x:0;} to{background-position-x:var(--bpx,100%);} }
+/* สไปรต์หันซ้ายมาแต่เดิม → scaleX(1)=เดินซ้าย · scaleX(-1)=พลิกหน้าเดินขวา
+   พลิกตอน "ยืนนิ่งปลายทาง" (44→50%) = ดูเหมือนหยุดแล้วค่อยกลับตัว ไม่ใช่บิดกลางคัน */
+@keyframes petRoam{
+  0%   {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}
+  44%  {transform:translateX(var(--roam)) scaleX(-1);}
+  50%  {transform:translateX(var(--roam)) scaleX(1);}
+  94%  {transform:translateX(calc(-1 * var(--roam))) scaleX(1);}
+  100% {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}
+}
+@media (prefers-reduced-motion:reduce){
+  .hero-scene .pet-stage .pet-roam{animation:none;}
+  .hero-scene .pet-stage .pet-anim{animation:none !important;}
+}
 .hero-scene .pet-stage .pet-emoji{font-size:calc(var(--pet-vh,29) * 0.62vh);}
 /* ตัวละครผู้เลี้ยง: วางแบบ absolute ให้ยืนกลางโซนโล่งหน้าน้องเสมอ (ไม่ถูกน้องยักษ์ดันหลุดหลังแผง)
    เท้าเสมอพื้นเดียวกับน้อง · เยื้องซ้าย --owner-x ตามระดับยักษ์ · z สูงกว่าน้อง = ยืนหน้าน้อง */

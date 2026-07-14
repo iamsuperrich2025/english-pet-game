@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ดูสไปรต์น้องเดินในกรอบล็อบบี้ (เครื่องมือพัฒนา)</title>
+<link rel="stylesheet" href="../css/lobby.css">
+<style>
+  body{margin:0;background:linear-gradient(#1a3a6b,#0d1e3d);min-height:100vh;
+       display:flex;align-items:center;justify-content:center;font-family:system-ui}
+  /* จำลองกรอบเวทีป้าย rank ในล็อบบี้ (ขนาดใกล้ของจริง) */
+  .stage-hero{width:620px;height:400px;border-radius:18px;position:relative;overflow:hidden;
+              background:radial-gradient(circle at 50% 40%,#2a5590,#12294c);border:2px solid #3a76d8}
+  .hero-scene{position:absolute;inset:0;align-items:flex-end;justify-content:center;padding-bottom:26px;--pet-vh:29}
+  .ground{position:absolute;left:8%;right:8%;bottom:24px;height:3px;border-radius:9px;
+          background:linear-gradient(90deg,transparent,#7fd0ff88,transparent)}
+</style>
+<div class="stage-hero">
+  <div class="ground"></div>
+  <div class="hero-scene" id="scene" style="--pet-vh:34"></div>
+</div>
+<script>
+  // HTML ก้อนเดียวกับที่ ui.js petAnimHTML() สร้าง (ค่าจาก img/anim/pet_cat_walk.json)
+  const a = {file:'../img/anim/pet_cat_walk.webp', frames:24, fw:172, fh:172, fps:14};
+  const dur = (a.frames / a.fps).toFixed(2);
+  const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
+  document.getElementById('scene').innerHTML =
+    `<div class="pet-stage"><div class="pet-wrap">`
+    + `<div class="pet-roam"><div class="pet-anim" style="aspect-ratio:${a.fw}/${a.fh};`
+    + `background-image:url('${a.file}');background-size:${a.frames*100}% 100%;--bpx:${bpx}%;`
+    + `animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`
+    + `</div></div>`;
+</script>

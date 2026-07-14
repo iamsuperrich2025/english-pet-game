@@ -25,12 +25,35 @@ function startHTML(key){
   </div>`;
 }
 
+/* 🐾 สไปรต์เดินวนลูป (พื้นหลังโปร่ง) — "อบ" จากโมเดล 3D ล่วงหน้าด้วย tools/bake_sprite.html
+   แผ่นเป็นแถวเดียว (frames ช่องเรียงกัน) เล่นด้วย CSS steps() → ไม่ต้องโหลด three.js/glb ในล็อบบี้
+   ⚠️ ไฟล์ img/anim/*.webp ต้อง commit ไม่งั้นไม่ขึ้นเว็บ (deploy ใช้ git archive HEAD) */
+const PET_ANIM = {
+  cat: { file:'img/anim/pet_cat_walk.webp', frames:24, fw:172, fh:172, fps:14 },
+};
+function petAnimHTML(p){
+  const a = PET_ANIM[p.type];
+  // ใช้เฉพาะร่างโตปกติ — ป่วย/หลับมีป้ายบอกสถานะของมันเอง (ยังใช้ภาพนิ่งเดิม) · ไข่/เด็กยังไม่มีสไปรต์
+  if(!a || petStage(p) !== 'adult' || p.sick || p.sleeping) return '';
+  const dur = (a.frames / a.fps).toFixed(2);
+  // --bpx: ตำแหน่งเฟรมสุดท้ายเป็น % — สูตร 100*frames/(frames-1) เพราะ % ของ background-position
+  // วัดจากช่วง (ความกว้างภาพ - ความกว้างกล่อง) ไม่ใช่ความกว้างภาพ · ใส่ผิด = เฟรมเลื่อนเพี้ยนทั้งลูป
+  const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
+  return `<div class="pet-roam"><div class="pet-anim" style="`
+    + `aspect-ratio:${a.fw}/${a.fh};background-image:url('${a.file}');`
+    + `background-size:${a.frames * 100}% 100%;--bpx:${bpx}%;`
+    + `animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`;
+}
+
 function petVisualHTML(p){
   const conf = PETS[p.type];
   const stage = petStage(p);
   const imgUrl = currentPetImg(p);
   let core, overlays = '';
-  if(imgUrl){
+  const anim = petAnimHTML(p);
+  if(anim){
+    core = anim;
+  }else if(imgUrl){
     core = `<img class="pet-img" src="${imgUrl}" alt="${conf.name}">`;
   }else if(stage === 'egg'){
     core = startHTML(p.type);
@@ -2657,7 +2680,11 @@ function playerAvatarHTML(fallback){
   const av = state.playerAvatar;
   if(!av || !AVATAR_UI[av]) return fallback !== undefined ? fallback : '📛';
   const img = IMG_FILES[`player_${av}`];
-  return img ? `<img class="avatar-chip-img" src="${img}" alt="">` : AVATAR_UI[av].emoji;
+  if(img) return `<img class="avatar-chip-img" src="${img}" alt="">`;
+  // ไม่มีไฟล์ player_*.png จริงในเกม → เดิมตกไปเป็นอีโมจิ 🦸 (การ์ดโปรไฟล์เลยไม่ใช่ตัวเรา)
+  // ใช้ "การ์ตูนบล็อกที่เลือกตอนสมัคร" แทน = ตัวเดียวกับที่ยืนอยู่ในล็อบบี้ · ซูมที่หัวด้วย .avatar-chip-blk
+  if(typeof lobbyBlk === 'function') return `<img class="avatar-chip-img avatar-chip-blk" src="img/blocks/${lobbyBlk()}.png" alt="">`;
+  return AVATAR_UI[av].emoji;
 }
 
 /* ข้อความประจำร่าง (ข้อ 5.2) — ใช้ทั้งการ์ดสัตว์ + กล่องกินเสร็จ */

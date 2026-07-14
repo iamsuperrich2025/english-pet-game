@@ -40,15 +40,17 @@ x1 = min(cw, max(b[2] for b in boxes) + a.margin)
 y1 = min(ch, max(b[3] for b in boxes) + a.margin)
 fw, fh = x1 - x0, y1 - y0
 
-out = Image.new('RGBA', (fw * cols, fh * rows), (0, 0, 0, 0))
+# ออกเป็น "แถวเดียว" เสมอ — CSS เล่นสไปรต์แถวเดียวด้วย background-position-x แกนเดียว
+# แม่นกว่าตาราง 2 มิติ (ไม่ต้องซิงก์ 2 animation) และเฟรมไม่เพี้ยน
+out = Image.new('RGBA', (fw * a.frames, fh), (0, 0, 0, 0))
 for i, c in enumerate(cells):
-    out.paste(c.crop((x0, y0, x1, y1)), ((i % cols) * fw, (i // cols) * fh))
+    out.paste(c.crop((x0, y0, x1, y1)), (i * fw, 0))
 
 base = os.path.splitext(a.sheet)[0]
 webp = base + '.webp'
 out.save(webp, 'WEBP', quality=a.quality, method=6)
 
-meta = {'file': os.path.basename(webp), 'frames': a.frames, 'cols': cols, 'rows': rows,
+meta = {'file': os.path.basename(webp), 'frames': a.frames, 'cols': a.frames, 'rows': 1,
         'fw': fw, 'fh': fh, 'fps': a.fps}
 open(base + '.json', 'w').write(json.dumps(meta))
 

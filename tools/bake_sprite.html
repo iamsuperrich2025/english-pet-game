@@ -87,7 +87,9 @@ async function bake(opts){
 
   const dur = clip ? clip.duration : 0;
   for(let i = 0; i < frames; i++){
-    if(mixer) mixer.setTime((i / frames) * dur);   // setTime = ตรงเป๊ะทุกเฟรม (ไม่สะสมความคลาดเคลื่อนแบบ update(dt))
+    // sweep = โหมดหามุม: แช่ท่าไว้เฟรมเดียว แล้วหมุนโมเดลรอบตัว 360° → ดูทีเดียวว่ามุมไหนสวย
+    if(opts.sweep){ root.rotation.y = (i / frames) * Math.PI * 2; if(mixer) mixer.setTime(dur * 0.25); }
+    else if(mixer) mixer.setTime((i / frames) * dur);   // setTime = ตรงเป๊ะทุกเฟรม (ไม่สะสมความคลาดเคลื่อนแบบ update(dt))
     renderer.render(scene, camera);
     ctx.drawImage(live, (i % cols) * cell, Math.floor(i / cols) * cell);
     if(i % 6 === 0) await new Promise(r => setTimeout(r, 0));   // ปล่อยให้จอวาดทัน (ดูความคืบหน้าได้)
