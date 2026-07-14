@@ -201,6 +201,7 @@ let soccerStartEl=null, powerFillEl=null;
    ============================================================ */
 const MECHA_EYE=5.0, MECHA_ACCEL=9, MECHA_VMAX=11, MECHA_DECEL=7, MECHA_TURN=1.35;
 const ALIEN_COUNT=3, ALIEN_SPEED=2.4, MECHA_LETTER_COIN=3;
+const MECHA_MAX_HP=240;                             // 🤖 รอบ 236: พลังหุ่นสูงกว่าโลกอื่น (เดิม 100 โดนไม่กี่ทีตาย น่าเบื่อ)
 const MECHA_ATK_RANGE=8, MECHA_ATK_DMG=8;          // 🤖 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → HUD กะพริบแดง + สัญญาณเตือน
 const ALIEN_SHOT_SPD=15, ALIEN_SHOT_DMG=6, ALIEN_SHOT_GAP=3200;   // 🤖 รอบ 226: เอเลี่ยนยิงกระสุน (หลบได้)
 const POWERUP_GAP=15000, POWERUP_MAX=2, POWERUP_RANGE=3.4, POWERUP_HEAL=30;   // ❄️❤️ ของเก็บลดร้อน/ฟื้นพลัง
@@ -368,7 +369,7 @@ const ATC={
   },
 };
 let yaw=0, pitch=0;
-let hp=100, sessionCoins=0, sessionWords=0;
+let hp=100, maxHp=100, sessionCoins=0, sessionWords=0;   // 🤖 รอบ 236: maxHp ต่อโลก (โลกหุ่น=MECHA_MAX_HP · อื่นๆ=100)
 let hauntLives=HAUNT_LIVES, hurtUntil=0;   // 👻 ระบบหัวใจโลกผี + ช่วงกันโดนซ้ำ
 let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
@@ -2640,8 +2641,8 @@ function showBanner(html){
   banEl.classList.remove('show'); void banEl.offsetWidth; banEl.classList.add('show');
 }
 function renderHudTop(){
-  hudHpEl.style.width=hp+'%';
-  hudHpEl.className='adv-hp-fill'+(hp<=30?' low':'');
+  hudHpEl.style.width=(maxHp?Math.max(0,Math.min(100,hp/maxHp*100)):hp)+'%';   // 🤖 รอบ 236: อิง maxHp ต่อโลก
+  hudHpEl.className='adv-hp-fill'+(hp<=maxHp*0.3?' low':'');
   hudCoinEl.textContent=`🪙 +${fmtNum(sessionCoins)} · 📖 ${sessionWords} คำ`;
 }
 function renderHudWords(){   // โชว์คำเป้าหมายปัจจุบัน (words[0]) เป็นคำใหญ่ทีละคำ · ตัวอักษรที่เก็บแล้วไฮไลต์เขียว
@@ -6459,7 +6460,7 @@ function tickAlienShots(dt,now){
 }
 /* ❄️❤️ รอบ 226: ของเก็บกลางสนาม — คูลแดนต์ (ลดร้อน) / ซ่อมเกราะ (ฟื้น hp) */
 function spawnPowerup(){
-  const type = (hp<=60 && Math.random()<.55)?'repair' : (mHeat>50||mOverheat)?'cool'
+  const type = (hp<=maxHp*0.6 && Math.random()<.55)?'repair' : (mHeat>50||mOverheat)?'cool'
              : ['cool','repair','shield'][Math.floor(Math.random()*3)];
   const grp=new THREE.Group();
   const col=type==='cool'?0x5fd0ff:(type==='repair'?0x4dff9b:0xffd24d);
@@ -6481,7 +6482,7 @@ function collectPowerup(pu){
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
   if(pu.type==='cool'){ mHeat=0; mOverheat=false; showBanner('❄️ <b>ระบายความร้อน!</b> ปืนพร้อมยิงเต็มพิกัด'); }
   else if(pu.type==='shield'){ mShieldUntil=performance.now()+SHIELD_MS; showBanner('🛡️ <b>โล่พลังงาน!</b> กันกระสุน '+(SHIELD_MS/1000)+' วินาที'); }
-  else { hp=Math.min(100,hp+POWERUP_HEAL); renderHudTop(); showBanner(`❤️ <b>ซ่อมเกราะ +${POWERUP_HEAL}</b> พลังงานฟื้นแล้ว`); }
+  else { hp=Math.min(maxHp,hp+POWERUP_HEAL); renderHudTop(); showBanner(`❤️ <b>ซ่อมเกราะ +${POWERUP_HEAL}</b> พลังงานฟื้นแล้ว`); }
 }
 function tickPowerups(dt,now){
   for(let i=powerups.length-1;i>=0;i--){
@@ -6502,7 +6503,7 @@ function updateMechaHud(dt,now){
   mhUI.heat.style.width=Math.round(mHeat)+'%';
   root.classList.toggle('overheat',mOverheat);
   if(mhUI.heatlbl) mhUI.heatlbl.textContent=mOverheat?'OVERHEAT':'HEAT';
-  const low=hp<=30; if(low!==mLowHp){ mLowHp=low; root.classList.toggle('lowhp',low); }
+  const low=hp<=maxHp*0.3; if(low!==mLowHp){ mLowHp=low; root.classList.toggle('lowhp',low); }
   root.classList.toggle('shielded', now<mShieldUntil);      // 🛡️ โล่พลังงาน
   const boss=aliens.find(a=>a.boss);                        // 👾 แถบพลังบอส (เหลือกี่ตัวอักษร)
   root.classList.toggle('bosson',!!boss);
@@ -6835,7 +6836,7 @@ function start(md){
   if(!worlds[mode]._sky){ worlds[mode]._sky=1; applySky(scene, mode); }   // 🌅 ท้องฟ้าภาพจริง (ครั้งเดียว/โลก · ไม่มีไฟล์=คงสีพื้น)
   solids=worlds[mode].solids||[];
 
-  hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;
+  maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง
   hauntLives=HAUNT_LIVES; hurtUntil=0;                                 // 👻 รีเซ็ตหัวใจโลกผี
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
@@ -6880,6 +6881,7 @@ function start(md){
     camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
   }else if(M.mecha){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
+    maxHp=MECHA_MAX_HP; hp=maxHp;                       // 🤖 รอบ 236: หุ่นพลังเยอะกว่าโลกอื่น (ทนขึ้น ไม่ตายง่าย)
     mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
     aliens=[]; mechaTracers=[]; mFocusAlien=null;
     mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
