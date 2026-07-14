@@ -2824,15 +2824,29 @@ function drawMinimap(){
 /* ============================================================
    DOM overlay + CSS (สร้างครั้งเดียว — self-contained ไม่แตะ style.css)
    ============================================================ */
-/* 🚗 รอบ 211: โหลดคอนโซล/หน้าปัดตามคันที่ขับ — dash_<carId>.png (ถ้ามี) → dash.png → CSS จำลอง */
+/* 🚗 รอบ 230: โหลดคอนโซล/หน้าปัดตามคันที่ขับ — ภาพชุดใหม่ (แดชบอร์ดสวยงาม ไม่มีพวงมาลัยในภาพ)
+   img/3d_car/3d_dash_<carId>.png → (fallback เก่า) img/car/dash_<carId>.png → dash.png → CSS จำลอง */
 function loadCarDash(){
   if(!carDashEl) return;
   const cid = (typeof myCar==='function' && myCar()) ? myCar().id : null;
   const put = im=>{ carDashEl.innerHTML=''; carDashEl.appendChild(im); carDashImg=im; };
   const css = ()=>{ carDashEl.innerHTML='<div class="cd-css"></div>'; carDashImg=null; };
   const tryLoad = (src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
-  const base = ()=>tryLoad('img/car/dash.png', css);
-  if(cid) tryLoad('img/car/dash_'+cid+'.png', base); else base();
+  const legacy = ()=> cid ? tryLoad('img/car/dash_'+cid+'.png', ()=>tryLoad('img/car/dash.png',css))
+                          : tryLoad('img/car/dash.png',css);
+  if(cid) tryLoad('img/3d_car/3d_dash_'+cid+'.png', legacy); else legacy();   // ชุดใหม่ก่อน · ไม่มี→ของเดิม
+  loadCarWheel();                                                             // พวงมาลัยต่อคัน (โหลดคู่กับ dash)
+}
+/* 🚗 รอบ 230: พวงมาลัยตามคันที่ขับ (โปร่งใส หมุนได้) — img/3d_car/3d_wheel_<NN>.png → wheel.png → วง CSS */
+function loadCarWheel(){
+  if(!carWheelEl) return;
+  const cid = (typeof myCar==='function' && myCar()) ? myCar().id : null;
+  const num = cid ? cid.replace('car_','') : null;      // 'car_03' → '03'
+  const put = im=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(im); };
+  const css = ()=>{ carWheelEl.innerHTML='<div class="cw-css"></div>'; };
+  const tryLoad = (src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
+  if(num) tryLoad('img/3d_car/3d_wheel_'+num+'.png', ()=>tryLoad('img/car/wheel.png',css));
+  else tryLoad('img/car/wheel.png',css);
 }
 function buildDom(){
   const st=document.createElement('style');
@@ -2937,7 +2951,8 @@ function buildDom(){
   .adv-drive #adv-gauges,.adv-drive #adv-cockpit{display:none}
   #adv-cardash{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cardash{display:block}
-  #adv-cardash img{width:100%;display:block;max-height:42vh;object-fit:cover;object-position:50% 66%}
+  /* 🚗 รอบ 230: แดชบอร์ดชุดใหม่ (สวยงามมืออาชีพ) — เต็มครึ่งล่าง เห็นคานหน้า+จอ+ช่องแอร์ (ตัดกระจกบน=ฉาก 3D) */
+  #adv-cardash img{width:100%;display:block;max-height:54vh;object-fit:cover;object-position:50% 56%}
   /* เข็มหน้าปัดวิ่งจริง — canvas ทับตำแหน่งวงเกจของภาพ dash.png (อยู่เหนือแผง ใต้พวงมาลัย) */
   #adv-cargauges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cargauges{display:block}
@@ -3035,11 +3050,12 @@ function buildDom(){
     font-size:11.5px;font-weight:800;font-family:inherit;
     background:rgba(70,20,32,.7);color:#ffc9cf;border:1px solid rgba(255,140,150,.5)}
   #adv-radio-list .rl-power:active,#adv-radio-list .rl-mode:active,#adv-radio-list .rl-track:active{transform:scale(.96)}
-  /* พวงมาลัยขวาแบบไทย · จัดให้ "ช่องเปิดบนของพวงมาลัย" ตรงกับวงเกจ → มองเข็มลอดพวงมาลัยแบบรถจริง */
-  #adv-carwheel{position:absolute;left:76.5%;bottom:-15vh;transform:translateX(-50%);
-    width:min(44vh,50vw);aspect-ratio:1;pointer-events:none;display:none;z-index:4;will-change:transform}
+  /* 🚗 รอบ 230: พวงมาลัยขวาแบบไทย (ภาพชุดใหม่ ต่อคัน · โปร่งใส) · โผล่จากขอบล่างขวาแบบมองจากที่นั่งคนขับ
+     ภาพ aspect ~1.5 (กว้างกว่าสูง) → คงสัดส่วนไม่บิด · เกจวิ่งจริงลอดช่องบนพวงมาลัย (drawCarGauges อิงตำแหน่งนี้) */
+  #adv-carwheel{position:absolute;left:75%;bottom:-4vh;transform:translateX(-50%);
+    height:min(60vh,60vw);width:auto;aspect-ratio:1.5;pointer-events:none;display:none;z-index:4;will-change:transform}
   .adv-drive #adv-carwheel{display:block}
-  #adv-carwheel img{width:100%;height:100%;display:block}
+  #adv-carwheel img{width:100%;height:100%;display:block;object-fit:contain}
   #adv-carwheel .cw-css{width:100%;height:100%;border-radius:50%;border:2.6vh solid #23262c;
     box-shadow:0 0 0 5px #14161a inset,0 5px 16px rgba(0,0,0,.55);position:relative;background:transparent}
   #adv-carwheel .cw-css:before{content:'';position:absolute;left:50%;top:50%;width:80%;height:11%;
@@ -3786,13 +3802,9 @@ function buildDom(){
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
-  loadCarDash();                                    // 🚗 รอบ 211: คอนโซลตามคันที่ขับ (dash_<id>.png → dash.png → CSS)
+  loadCarDash();                                    // 🚗 รอบ 230: คอนโซล+พวงมาลัยตามคันที่ขับ (loadCarDash เรียก loadCarWheel เอง)
   carGaugeCv=overlayEl.querySelector('#adv-cargauges');
   carGaugeCtx=carGaugeCv.getContext('2d');
-  const cwImg=new Image();
-  cwImg.onload=()=>{ carWheelEl.innerHTML=''; carWheelEl.appendChild(cwImg); };
-  cwImg.onerror=()=>{ carWheelEl.innerHTML=`<div class="cw-css"></div>`; };
-  cwImg.src='img/car/wheel.png';
   // 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ
   carBobbleEl=overlayEl.querySelector('#adv-bobble');
   carBobbleImg=overlayEl.querySelector('#adv-bobble-img');
@@ -4914,6 +4926,9 @@ function tickDrive(dt,now){
 function drawCarDial(c,cx,cy,r,frac,max,step,redFrom){
   const a0=Math.PI*.75, sweep=Math.PI*1.5;                  // กวาด 270° แบบเกจรถจริง
   c.save(); c.translate(cx,cy);
+  // 🚗 รอบ 230: จานเกจ (แดชบอร์ดชุดใหม่ไม่มีวงในภาพ) — จานเข้ม+ขอบเงิน → cluster สมบูรณ์ ลอดพวงมาลัย
+  c.fillStyle='rgba(9,12,17,.84)'; c.beginPath(); c.arc(0,0,r*1.05,0,7); c.fill();
+  c.lineWidth=Math.max(2,r*.06); c.strokeStyle='rgba(132,142,158,.82)'; c.beginPath(); c.arc(0,0,r*1.05,0,7); c.stroke();
   c.strokeStyle='rgba(228,233,240,.9)'; c.fillStyle='rgba(222,228,236,.92)';
   c.font='700 '+Math.max(7,r*.17)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle';
   const n=Math.round(max/step);
@@ -4947,15 +4962,17 @@ function drawCarGauges(){
   }
   c.setTransform(dpr,0,0,dpr,0,0);
   c.clearRect(0,0,vw,vh);
-  if(!carDashImg||!carDashImg.parentNode) return;           // ยังไม่มีภาพจริง → แผง CSS ไม่มีวงเกจ ไม่วาด
-  const box=carDashImg.getBoundingClientRect();
-  if(!box.width) return;
-  const s=box.width/1536;                                   // cover แนวกว้างชนะเสมอ (landscape)
-  const offY=Math.max(0,1024*s-box.height)*.66;             // object-position 50% 66%
-  const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
+  // 🚗 รอบ 230: เกจ 2 วง (สปีด+รอบ) ลอดช่องบนพวงมาลัยแบบรถจริง — อิงตำแหน่ง "นิ่ง" ของพวงมาลัย
+  //   (offsetLeft/Top ไม่รวม transform → พวงมาลัยหมุนแล้วเกจไม่สั่น · พวงมาลัย z:4 > เกจ z:3 = ทับบางส่วนสมจริง)
+  if(mode!=='drive' || !carWheelEl) return;
+  const ww=carWheelEl.offsetWidth, wh=carWheelEl.offsetHeight;
+  if(!ww||!wh) return;
+  const gcx=carWheelEl.offsetLeft;                          // translateX(-50%) → offsetLeft = จุดกึ่งกลางแนวนอน
+  const gcy=carWheelEl.offsetTop + wh*0.285;                // ช่องเปิดเหนือดุมพวงมาลัย
+  const r=wh*0.105;
   const kmh=Math.abs(dSpeed)*3.6;
-  drawCarDial(c, gx(1096),  gy(662), 80*s, kmh/240, 240, 40, CAR_LEGAL_KMH);  // สปีด 0-240 (รอบ 128 · โซนแดง = เกิน 90 ผิดกฎหมาย)
-  drawCarDial(c, gx(1258.5),gy(662), 78*s, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
+  drawCarDial(c, gcx-r*1.30, gcy, r, kmh/240, 240, 40, CAR_LEGAL_KMH);   // สปีด 0-240 · โซนแดง = เกิน 90 ผิดกฎหมาย
+  drawCarDial(c, gcx+r*1.30, gcy, r, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
 }
 
 /* ============================================================
@@ -4963,14 +4980,14 @@ function drawCarGauges(){
    จอวางทับ "หน้าจอดำระหว่างลูกบิด 2 ปุ่ม" บนภาพ dash.png (พิกัดภาพ RADIO_RECT)
    map พิกัดภาพ→จอ สูตรเดียวกับเข็มเกจ (object-fit cover + object-position 50% 66%)
    ============================================================ */
-const RADIO_RECT=[622,682,806,780];                         // จอ head-unit (พิกัดภาพ dash.png 1536×1024)
+const RADIO_RECT=[556,486,838,598];                         // 🚗 รอบ 230: จอ head-unit (พิกัดภาพแดชบอร์ดชุดใหม่ 1536×1024)
 let _radioVW=0,_radioVH=0;
 function radioLayout(){
   if(!radioScreenEl) return;
   if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ radioScreenEl.style.display='none'; return; }
   const box=carDashImg.getBoundingClientRect();
   if(!box.width){ radioScreenEl.style.display='none'; return; }
-  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.66;
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.56;   // 🚗 รอบ 230: ตรงกับ object-position 56% ของแดชบอร์ดชุดใหม่
   const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
   const [X0,Y0,X1,Y1]=RADIO_RECT;
   const L=gx(X0), T=gy(Y0), W=(X1-X0)*s, H=(Y1-Y0)*s;
@@ -5040,7 +5057,7 @@ function radioTick(){
    ยืนบนแผงหน้าปัดตรงลูกศร · "หัว" ส่ายซ้าย-ขวาตามแรงเลี้ยว (สปริงหน่วงต่ำ)
    ตำแหน่งเท้า = พิกัดภาพ dash.png (BOBBLE_FOOT) map สูตรเดียวกับจอวิทยุ/เข็มเกจ
    ============================================================ */
-const BOBBLE_FOOT=[542,596];   // จุดวางเท้า (พิกัดภาพ dash 1536×1024) — ตรงลูกศร (จูนได้)
+const BOBBLE_FOOT=[318,540];   // 🚗 รอบ 230: จุดวางเท้าตุ๊กตา — แผงเรียบฝั่งซ้ายของแดชบอร์ดชุดใหม่ (พิกัดภาพ 1536×1024)
 const BOBBLE_H=372;            // ความสูงตุ๊กตา (พิกัดภาพ) · กว้าง = สูง×สัดส่วนภาพ blk (341/512)
 const BOBBLE_ASPECT=341/512;
 /* สปริงหัวส่าย: ζ~0.16 (โยกค้างหลายจังหวะแบบตุ๊กตาสปริงจริง) · หมุนสูงสุด ~22°
@@ -5068,7 +5085,7 @@ function bobbleLayout(){
   if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ carBobbleEl.style.display='none'; return; }
   const box=carDashImg.getBoundingClientRect();
   if(!box.width){ carBobbleEl.style.display='none'; return; }
-  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.66;
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.56;   // 🚗 รอบ 230: ตรงกับ object-position 56% ของแดชบอร์ดชุดใหม่
   const footX=box.left+BOBBLE_FOOT[0]*s, footY=box.top+BOBBLE_FOOT[1]*s-offY;
   const h=BOBBLE_H*s, w=h*BOBBLE_ASPECT;
   carBobbleEl.style.display='';
