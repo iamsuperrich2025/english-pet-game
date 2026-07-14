@@ -3147,19 +3147,22 @@ function buildDom(){
      ผู้ใช้รอบก่อนสั่งย้ายขึ้นบนเหมือนโลกขับรถ แต่แถวเดียวแบบ drive ยาวเกินจอแคบ → ปุ่มทับปุ่มยิง
      แก้: minimap บนซ้าย · HP+เหรียญ ต่อขวา map · ปุ่มยูทิลิตี้ 2 แถวมุมบนขวา (เหนือปุ่มยิงเสมอ) · ซ่อนกระดานคะแนน (จอแคบไม่พอ)
      ยืนยัน getBoundingClientRect 480–844 กว้าง = ไม่มีปุ่มทับกัน + ไม่ทับปุ่มยิง/ปุ่มเดิน */
-  .adv-mecha #adv-map{top:8px;left:8px;right:auto}
+  /* 🤖 รอบ 237 (ผู้ใช้ screenshot): ปุ่มบนขวาเดิม 3 แถว โดนขอบกรอบห้องนักบิน (mh-frame z:5 ทึบมุมบนขวา) บังจนกดยาก
+     แก้: (1) ปุ่มยูทิลิตี้ "แถวเดียว" ริมบนขวา (เหมือนโลกขับรถ) (2) map+เหรียญ/HP ซ้อนเป็นคอลัมน์ซ้าย (map บน · pill ใต้ map)
+          เปิดที่บนขวาทั้งแถบให้ปุ่มเรียงแถวเดียวไม่ชน (3) ทุกตัว z-index:6 (>กรอบ 5) → ขอบ HUD บังไม่ได้อีก */
+  .adv-mecha #adv-map{top:8px;left:8px;right:auto;z-index:6}
   .adv-mecha #adv-board{display:none}
-  .adv-mecha #adv-topbar{top:8px;left:134px;transform:none}
-  .adv-mecha .adv-hp{width:70px}
-  /* รอบ 218 (ผู้ใช้): เลื่อนกลุ่มปุ่มมุมบนขวา "มาทางซ้าย" ~48px — ออกจากมุมขวาสุด (ติดมุมโค้ง/กล้องมือถือกดยาก) */
-  .adv-mecha #adv-exit{top:8px;right:56px;font-size:12px;padding:5px 9px}
-  .adv-mecha #adv-help{top:8px;right:118px;width:30px;height:30px;font-size:14px}
-  .adv-mecha #adv-chat-btn{top:8px;right:152px;font-size:12px;padding:5px 8px}
-  .adv-mecha #adv-mic{top:46px;right:56px;font-size:11px;padding:4px 6px;min-width:0}
-  .adv-mecha #adv-spk{top:46px;right:108px;font-size:11px;padding:4px 6px;min-width:0}
-  .adv-mecha #adv-vmode{top:46px;right:162px;font-size:11px;padding:4px 6px;min-width:0}
-  .adv-mecha #adv-tmute{top:84px;right:56px;font-size:11px;padding:4px 6px;min-width:0}    /* ปุ่มครู/podium (โชว์เฉพาะบางกรณี) แถวสาม */
-  .adv-mecha #adv-podbtn{top:84px;right:144px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-mecha #adv-topbar{top:134px;left:8px;transform:none;z-index:6}   /* เหรียญ/HP ลงใต้ minimap (คอลัมน์ซ้าย) เปิดที่บนขวาให้ปุ่มแถวเดียว */
+  .adv-mecha .adv-hp{width:80px}
+  /* ปุ่มยูทิลิตี้แถวเดียวบนขวา (ซ้าย→ขวา: ทุกคน·เปิด·ปิด·แชท·?·ออก) — ระยะเดียวกับโลกขับรถที่พิสูจน์แล้วไม่ทับกัน */
+  .adv-mecha #adv-exit{top:8px;right:8px;font-size:12px;padding:5px 9px;z-index:6}
+  .adv-mecha #adv-help{top:8px;right:74px;width:30px;height:30px;font-size:14px;z-index:6}
+  .adv-mecha #adv-chat-btn{top:8px;right:108px;font-size:12px;padding:5px 8px;z-index:6}
+  .adv-mecha #adv-mic{top:8px;right:172px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
+  .adv-mecha #adv-spk{top:8px;right:224px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
+  .adv-mecha #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
+  .adv-mecha #adv-tmute{top:46px;right:8px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}    /* ปุ่มครู/podium (โชว์เฉพาะบางกรณี) แถวสองริมขวา */
+  .adv-mecha #adv-podbtn{top:46px;right:100px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
   /* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ — แตะ minimap เปิด · โชว์ตำแหน่งตัวอักษรชัดเจน + ปุ่มปิดใหญ่ */
   #adv-bigmap{position:absolute;inset:10px;z-index:60;display:none;flex-direction:column;pointer-events:auto;
     background:rgba(6,12,24,.96);border:2px solid #4fc3f7;border-radius:16px;
