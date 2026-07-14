@@ -200,6 +200,7 @@ let soccerStartEl=null, powerFillEl=null;
    ============================================================ */
 const MECHA_EYE=5.0, MECHA_ACCEL=9, MECHA_VMAX=11, MECHA_DECEL=7, MECHA_TURN=1.35;
 const ALIEN_COUNT=3, ALIEN_SPEED=2.4, MECHA_LETTER_COIN=3;
+const MECHA_ATK_RANGE=8, MECHA_ATK_DMG=8;          // 🤖 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → HUD กะพริบแดง + สัญญาณเตือน
 /* อาวุธต่อหุ่น (ผูกกับ robot_id ในตลาด) — ต่างกันที่ สี tracer · จังหวะยิง · ลูกเล่น (twin/spread/beam) */
 const MECHA_WEAPONS={
   robot_01:{name:'หอกพลาสมา',   color:0xff4d4d, gap:300},
@@ -217,6 +218,7 @@ let mSpeed=0, mBobPhase=0, mStepDn=false, mLastFire=0;
 let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห้องนักบิน (ภาพตามหุ่น + ค่าตัวเลขเรียลไทม์ + ความร้อนปืน)
+let mOverheat=false, mHitAt=0, mLowHp=false;   // 🤖 รอบ 225: ปืนโอเวอร์ฮีต + iframe โดนตี + สถานะพลังงานต่ำ
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -3478,6 +3480,36 @@ function buildDom(){
   #mecha-hud.locked .mh-lock{display:block;animation:mhBlink 1s steps(1) infinite}
   @keyframes mhBlink{50%{opacity:.35}}
   html.no-anim #mecha-hud.locked .mh-lock{animation:none}
+  /* 🤖 รอบ 225: เรดาร์เข็มกวาดกลางจอ (ชี้ทิศเอเลี่ยน · เจาะกลางไว้ไม่บังเป้าเล็ง) */
+  #mecha-hud .mh-radar{position:absolute;left:50%;top:50%;width:150px;height:150px;
+    transform:translate(-50%,-50%);pointer-events:none}
+  #mecha-hud .mh-rr{position:absolute;inset:2px;border-radius:50%;border:1px solid var(--mh);opacity:.28}
+  #mecha-hud .mh-rr2{inset:28px;opacity:.2}
+  #mecha-hud .mh-rsweep{position:absolute;inset:0;border-radius:50%;opacity:.5;
+    background:conic-gradient(from 0deg,transparent 0deg 322deg,var(--mh) 356deg,transparent 360deg);
+    -webkit-mask:radial-gradient(circle,transparent 24%,#000 26%);mask:radial-gradient(circle,transparent 24%,#000 26%);
+    animation:mhRadar 3.2s linear infinite}
+  @keyframes mhRadar{to{transform:rotate(360deg)}}
+  html.no-anim #mecha-hud .mh-rsweep{animation:none;opacity:.32}
+  #mecha-hud .mh-blip{position:absolute;left:75px;top:75px;width:7px;height:7px;border-radius:50%;
+    background:var(--mh);box-shadow:0 0 7px var(--mh);transform:translate(-50%,-50%);display:none}
+  #mecha-hud .mh-blip.tgt{width:11px;height:11px;background:#fff;box-shadow:0 0 10px var(--mh),0 0 4px #fff;
+    animation:mhBlip .7s ease-in-out infinite}
+  @keyframes mhBlip{50%{transform:translate(-50%,-50%) scale(1.5)}}
+  html.no-anim #mecha-hud .mh-blip.tgt{animation:none}
+  /* 🔥 โอเวอร์ฮีต — ปืนล็อกชั่วคราวเมื่อ HEAT เต็ม */
+  #mecha-hud.overheat .mh-heatchip{border-color:#ff5a3a;animation:mhBlink .5s steps(1) infinite}
+  #mecha-hud.overheat .mh-heat i{background:#ff3b3b}
+  #mecha-hud.overheat #mh-heatlbl{color:#ff8a6a;opacity:1;letter-spacing:.5px}
+  html.no-anim #mecha-hud.overheat .mh-heatchip{animation:none}
+  /* 🚨 กะพริบแดง + เตือน เมื่อโดนเอเลี่ยนโจมตี / พลังงานต่ำ */
+  #mecha-hud .mh-alarm{position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse 75% 75% at 50% 50%,transparent 42%,rgba(255,40,40,.6) 118%)}
+  #mecha-hud.hit .mh-alarm{animation:mhHit .5s ease-out}
+  @keyframes mhHit{0%{opacity:.95}100%{opacity:0}}
+  #mecha-hud.lowhp .mh-alarm{opacity:.3;animation:mhLow 1.1s ease-in-out infinite}
+  @keyframes mhLow{50%{opacity:.55}}
+  html.no-anim #mecha-hud.hit .mh-alarm,html.no-anim #mecha-hud.lowhp .mh-alarm{animation:none;opacity:0}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
     background:linear-gradient(160deg,rgba(20,120,86,.95),rgba(10,78,58,.96));
@@ -3609,9 +3641,11 @@ function buildDom(){
       <div class="mh-tele">
         <div class="mh-chip"><span>RNG</span><b id="mh-rng">--</b><i>m</i></div>
         <div class="mh-chip"><span>TGT</span><b id="mh-tgt">0</b></div>
-        <div class="mh-chip mh-heatchip"><span>HEAT</span><div class="mh-bar mh-heat"><i id="mh-heatbar"></i></div></div>
+        <div class="mh-chip mh-heatchip"><span id="mh-heatlbl">HEAT</span><div class="mh-bar mh-heat"><i id="mh-heatbar"></i></div></div>
       </div>
+      <div class="mh-radar"><span class="mh-rr"></span><span class="mh-rr mh-rr2"></span><span class="mh-rsweep"></span></div>
       <div class="mh-lock" id="mh-lock">◎ TARGET&nbsp;LOCK</div>
+      <div class="mh-alarm"></div>
     </div>
     <div class="mecha-btn" id="mecha-fwd">▲</div>
     <div class="mecha-btn" id="mecha-back">▼</div>
@@ -3637,7 +3671,10 @@ function buildDom(){
   hudWordsEl=overlayEl.querySelector('#adv-words');
   mhUI={ root:overlayEl.querySelector('#mecha-hud'), frame:overlayEl.querySelector('#mecha-hud .mh-frame'),
     rng:overlayEl.querySelector('#mh-rng'), tgt:overlayEl.querySelector('#mh-tgt'),
-    heat:overlayEl.querySelector('#mh-heatbar'), lock:overlayEl.querySelector('#mh-lock') };   // 🤖 รอบ 224: HUD กรอบหุ่น
+    heat:overlayEl.querySelector('#mh-heatbar'), heatlbl:overlayEl.querySelector('#mh-heatlbl'),
+    lock:overlayEl.querySelector('#mh-lock'), blips:[] };   // 🤖 รอบ 224-225: HUD กรอบหุ่น + เรดาร์
+  var mhRadar=overlayEl.querySelector('#mecha-hud .mh-radar');
+  if(mhRadar){ for(var _b=0;_b<6;_b++){ var _bl=document.createElement('span'); _bl.className='mh-blip'; mhRadar.appendChild(_bl); mhUI.blips.push(_bl); } }
   hudInvEl=overlayEl.querySelector('#adv-inv');
   hudHpEl=overlayEl.querySelector('#adv-hp');
   hudCoinEl=overlayEl.querySelector('#adv-coin');
@@ -6121,6 +6158,12 @@ const MechaAudio={
     n.buffer=buf; const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1800,t); lp.frequency.exponentialRampToValueAtTime(120,t+.5);
     const g=c.createGain(); g.gain.setValueAtTime(.6,t); g.gain.exponentialRampToValueAtTime(.001,t+.6);
     n.connect(lp); lp.connect(g); g.connect(c.destination); n.start(t); },
+  warn(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // 🚨 คลักซอนเตือน (โอเวอร์ฮีต/โดนตี) — สองโทนสั้น
+    [0,.16].forEach((dt,i)=>{ const o=c.createOscillator(); o.type='sawtooth';
+      o.frequency.setValueAtTime(i?520:660,t+dt); o.frequency.linearRampToValueAtTime(i?400:520,t+dt+.12);
+      const g=c.createGain(); g.gain.setValueAtTime(.0001,t+dt); g.gain.exponentialRampToValueAtTime(.16,t+dt+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dt+.13);
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800; bp.Q.value=1.2;
+      o.connect(bp); bp.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.14); }); },
 };
 function makeAlien(){
   const grp=new THREE.Group();
@@ -6172,21 +6215,46 @@ function setMechaHudSkin(rid){
   mhUI.root.style.setProperty('--mh',hex);
   mhUI.root.style.setProperty('--mh-soft',hex);
   mHeat=0; if(mhUI.heat) mhUI.heat.style.width='0%';
-  if(mhUI.root) mhUI.root.classList.remove('locked');
+  if(mhUI.heatlbl) mhUI.heatlbl.textContent='HEAT';
+  if(mhUI.root) mhUI.root.classList.remove('locked','hit','overheat','lowhp');
 }
-/* อัปเดตค่าตัวเลขบน HUD (ทิศ/ระยะเป้า/จำนวนเป้า/เหรียญ/ความร้อนปืน/ล็อกเป้า) — เรียกถี่จาก tickMecha (throttle) */
+/* 🚨 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → เสียหาย + HUD กะพริบแดง + คลักซอนเตือน */
+function mechaHitByAlien(a){
+  damagePlayer(MECHA_ATK_DMG);                                // ลด hp + แฟลช #adv-dmg + สั่น + knockedOut ถ้า hp หมด
+  MechaAudio.warn();
+  if(mhUI&&mhUI.root){ mhUI.root.classList.remove('hit'); void mhUI.root.offsetWidth; mhUI.root.classList.add('hit'); }
+  if(a&&a.grp){ a.grp.scale.setScalar(1.28); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(1); },160); }   // พุ่งเข้าใส่ (เด้งโต)
+}
+/* อัปเดตค่าตัวเลขบน HUD (ระยะเป้า/จำนวนเป้า/ความร้อนปืน/ล็อกเป้า) + เรดาร์ + สถานะโอเวอร์ฮีต/พลังงานต่ำ — เรียกถี่จาก tickMecha (throttle) */
 function updateMechaHud(dt,now){
   mHeat=Math.max(0,mHeat-dt*30);                              // ปืนเย็นลงเรื่อยๆ
+  if(mOverheat && mHeat<=35) mOverheat=false;                 // เย็นพอแล้ว ปลดล็อกปืน
   if(!mhUI||!mhUI.root) return;
   if(now-mHudAt<110) return; mHudAt=now;                      // ~9fps พอ ประหยัดแรง
+  const root=mhUI.root;
   mhUI.tgt.textContent=aliens.length;
   mhUI.heat.style.width=Math.round(mHeat)+'%';
+  root.classList.toggle('overheat',mOverheat);
+  if(mhUI.heatlbl) mhUI.heatlbl.textContent=mOverheat?'OVERHEAT':'HEAT';
+  const low=hp<=30; if(low!==mLowHp){ mLowHp=low; root.classList.toggle('lowhp',low); }
   // ระยะถึงเอเลี่ยนที่กำลังเล็ง (ถ้ามี) + ป้ายล็อกเป้า
   if(mFocusAlien&&mFocusAlien.grp){
-    const d=camera.position.distanceTo(mFocusAlien.grp.position);
-    mhUI.rng.textContent=Math.round(d);
-    mhUI.root.classList.add('locked');
-  }else{ mhUI.rng.textContent='--'; mhUI.root.classList.remove('locked'); }
+    mhUI.rng.textContent=Math.round(camera.position.distanceTo(mFocusAlien.grp.position));
+    root.classList.add('locked');
+  }else{ mhUI.rng.textContent='--'; root.classList.remove('locked'); }
+  // เรดาร์: วางจุดบลิปตามทิศ/ระยะเอเลี่ยน (β=0 ตรงหน้า=บนสุด · +ขวา · ระยะไกล=ขอบวง)
+  if(mhUI.blips){
+    const Fx=-Math.sin(yaw), Fz=-Math.cos(yaw); let bi=0;
+    for(let k=0;k<aliens.length&&bi<mhUI.blips.length;k++){
+      const a=aliens[k], dx=a.grp.position.x-camera.position.x, dz=a.grp.position.z-camera.position.z;
+      const dist=Math.hypot(dx,dz), r=Math.max(9,Math.min(64,dist/80*64));
+      const beta=Math.atan2(Fx*dz-Fz*dx, Fx*dx+Fz*dz);      // มุมสัมพัทธ์จากทิศหันหน้า (บวก=ขวา)
+      const b=mhUI.blips[bi++]; b.style.display='block';
+      b.style.left=(75+Math.sin(beta)*r)+'px'; b.style.top=(75-Math.cos(beta)*r)+'px';
+      b.classList.toggle('tgt',a===mFocusAlien);
+    }
+    for(;bi<mhUI.blips.length;bi++) mhUI.blips[bi].style.display='none';
+  }
 }
 function mechaTracer(wx,wy,wz,hit){
   const dir=new THREE.Vector3(); camera.getWorldDirection(dir);
@@ -6198,8 +6266,10 @@ function mechaTracer(wx,wy,wz,hit){
   scene.add(line); mechaTracers.push({line,until:performance.now()+80});
 }
 function mechaFire(now){
+  if(mOverheat){ if(now-mLastFire>140){ mLastFire=now; sfx.wrong(); } return; }   // 🔥 รอบ 225: ปืนโอเวอร์ฮีต — ยิงไม่ออก (คลิกได้เสียงปฏิเสธ) ต้องรอให้เย็น
   mLastFire=now;
   mHeat=Math.min(100,mHeat+13);                     // 🤖 รอบ 224: ยิงแล้วปืนร้อนขึ้น (โชว์บนแถบ HEAT)
+  if(mHeat>=100){ mOverheat=true; MechaAudio.warn(); }   // 🔥 รอบ 225: ร้อนเต็ม → ล็อกปืนจนเย็นพอ (ปลดใน updateMechaHud)
   MechaAudio.fire(mechaWeapon.color);
   camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
   let best=null, bestD=0.1;
@@ -6278,6 +6348,9 @@ function tickMecha(dt,now){
     if(now>a.wanderAt){ a.tgt={x:(Math.random()*2-1)*(HALF-12),z:(Math.random()*2-1)*(HALF-12)}; a.wanderAt=now+2600+Math.random()*3200; }
     const g=a.grp.position, dx=a.tgt.x-g.x, dz=a.tgt.z-g.z, d=Math.hypot(dx,dz)||1;
     g.x+=dx/d*ALIEN_SPEED*dt; g.z+=dz/d*ALIEN_SPEED*dt; g.y=4.5+Math.sin(now/500+g.x)*.4;
+    // 🚨 รอบ 225: เข้าประชิดหุ่น → โจมตี (iframe 900ms รวม · คูลดาวน์ต่อตัว 2.2s)
+    if(running){ const dc=Math.hypot(g.x-camera.position.x,g.z-camera.position.z);
+      if(dc<MECHA_ATK_RANGE && now>mHitAt && now>(a.atkAt||0)){ a.atkAt=now+2200; mHitAt=now+900; mechaHitByAlien(a); } }
     a.letters.forEach(l=>{ if(!l.done && l.spr.material){ const nx2=(l.idx===a.nextIdx);
       l.spr.scale.setScalar(nx2?2.5:1.9); l.spr.material.opacity=nx2?1:.8; } });
   });
@@ -6511,6 +6584,7 @@ function start(md){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
     mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
     aliens=[]; mechaTracers=[]; mFocusAlien=null;
+    mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
@@ -6641,7 +6715,8 @@ window.Adventure3D={
                           get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v}}; },
     get mecha(){ return {get aliens(){return aliens}, get weapon(){return mechaWeapon}, fire:mechaFire,
                          spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set strafe(v){mStrafeBtn=v},
-                         get focus(){return mFocusAlien}, audio:MechaAudio}; },
+                         get focus(){return mFocusAlien}, audio:MechaAudio,
+                         get heat(){return mHeat}, get overheat(){return mOverheat}, hit:mechaHitByAlien}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
