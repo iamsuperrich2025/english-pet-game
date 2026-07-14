@@ -1085,6 +1085,64 @@ html.no-anim .rs-big-img{animation:none}
 .rs-buy:active{transform:scale(.96)}
 .rs-buy.own{background:#4a5a6a;cursor:default}
 @media(max-width:640px){.rs-showroom{flex-direction:column}.rs-list{flex-basis:auto;max-width:100%;max-height:none;grid-template-columns:repeat(3,1fr)}.rs-big-img{max-height:34vh}}
+
+/* 🚗 รอบ 212: โชว์รูมรถ — thumb + จอใหญ่ (ตัวรถ + ภายในห้องโดยสาร) ไฟฟ้าไล่ตัวสีประจำคัน */
+.cs-showroom{display:flex;gap:14px;margin-top:8px}
+.cs-list{flex:0 0 38%;max-width:38%;display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+  align-content:start;max-height:72vh;overflow-y:auto;scrollbar-width:none;padding-right:2px}
+.cs-list::-webkit-scrollbar{display:none}
+.cs-thumb{background:linear-gradient(180deg,#fffdf5,#fdf3d8);border:2px solid var(--cc,#e8c86a);border-radius:14px;
+  padding:8px 8px 9px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s}
+.cs-thumb:hover{transform:translateY(-2px)}
+.cs-thumb.active{box-shadow:0 0 0 2px var(--cc,#e8c86a),0 4px 16px rgba(150,110,20,.3)}
+.cs-thumb.owned-c{opacity:.78}
+.cs-thumb-pic{width:100%;height:60px;display:flex;align-items:center;justify-content:center}
+.cs-thumb-pic img{max-height:60px;max-width:96%;object-fit:contain}
+.cs-thumb-name{font-size:11.5px;font-weight:800;color:#5a4a1e;text-align:center;line-height:1.1}
+.cs-thumb-price{font-size:12.5px;font-weight:900;color:#c98a12}
+.cs-thumb-own{font-size:10px;font-weight:800;color:#2e7d32}
+.cs-thumb .sold-badge{margin-top:1px;width:100%;padding:2px 4px;font-size:10px}
+.cs-stage{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;
+  background:radial-gradient(120% 90% at 50% 26%,rgba(70,48,12,.22),rgba(18,12,4,.6) 72%);
+  border:2px solid #e8c86a;border-radius:16px;overflow:hidden}
+.cs-big{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:180px;padding:12px}
+.cs-big-img{max-height:34vh;max-width:92%;object-fit:contain;position:relative;z-index:1;
+  animation:csBreath 3.6s ease-in-out infinite;filter:drop-shadow(0 0 20px rgba(255,200,90,.5))}
+@keyframes csBreath{0%,100%{filter:drop-shadow(0 0 16px rgba(255,190,80,.4)) brightness(1)}
+  50%{filter:drop-shadow(0 0 38px rgba(255,215,110,.85)) drop-shadow(0 0 78px rgba(255,180,60,.35)) brightness(1.08)}}
+.cs-elec,.cs-edge{position:absolute;inset:12px;z-index:2;pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+  -webkit-mask-image:var(--cs-img);mask-image:var(--cs-img);
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain}
+.cs-elec i,.cs-edge i{content:'';position:absolute;inset:-55%;display:block;border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 10deg,var(--cc,#ffcf5a) 18deg,#fff8e6 24deg,var(--cc,#ffcf5a) 30deg,
+    transparent 40deg 168deg,rgba(255,240,200,.5) 182deg,transparent 196deg 360deg);
+  animation:rsBeamSpin 4.8s linear infinite}
+.cs-elec{opacity:.48}
+.cs-edge{opacity:.95;
+  -webkit-mask-image:var(--cs-img),var(--cs-img);mask-image:var(--cs-img),var(--cs-img);
+  -webkit-mask-size:contain,86%;mask-size:contain,86%;
+  -webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;
+  -webkit-mask-position:center,center;mask-position:center,center;
+  -webkit-mask-composite:xor;mask-composite:exclude}
+.cs-edge i{animation-duration:3.2s;filter:blur(.6px)}
+html.no-anim .cs-elec,html.no-anim .cs-edge{display:none}
+html.no-anim .cs-big-img{animation:none}
+.cs-interior{flex:0 0 auto;position:relative;padding:6px 12px 10px;text-align:center;border-top:1px solid rgba(255,210,120,.25)}
+.cs-inr-label{font-size:11.5px;font-weight:800;color:#ffe0a0;letter-spacing:.3px;margin-bottom:5px}
+.cs-inr-label.dim{color:#b7a279;opacity:.7}
+.cs-inr-img{max-height:20vh;max-width:96%;object-fit:contain;border-radius:12px;
+  box-shadow:0 4px 16px rgba(0,0,0,.4);border:1px solid rgba(255,215,130,.3)}
+.cs-info{flex:0 0 auto;padding:10px 14px 13px;border-top:1px solid rgba(255,210,120,.25);background:rgba(30,20,6,.5);text-align:center}
+.cs-info .cs-name{font-size:17px;font-weight:900}
+.cs-info .cs-meta{display:flex;gap:12px;justify-content:center;align-items:center;font-size:13px;margin-bottom:9px;flex-wrap:wrap}
+.cs-info .cs-price{color:#ffd76a;font-weight:900;font-size:15px}
+.cs-buy{background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;border:0;border-radius:12px;
+  font-family:inherit;font-weight:800;font-size:15px;padding:9px 26px;cursor:pointer}
+.cs-buy:active{transform:scale(.96)}
+.cs-buy.own{background:#7a6a4a;cursor:default}
+.cs-buy.cant-afford{opacity:.6}
+@media(max-width:640px){.cs-showroom{flex-direction:column}.cs-list{flex-basis:auto;max-width:100%;max-height:none;grid-template-columns:repeat(3,1fr)}.cs-big-img{max-height:26vh}.cs-inr-img{max-height:16vh}}
 .car-emoji{
   font-size:34px;line-height:1;width:62px;height:54px;display:flex;align-items:center;justify-content:center;
   border-radius:12px;border:2px dashed transparent;

@@ -4453,6 +4453,7 @@ function renderMarketCard(){
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
   el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
   el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
+  if(typeof csInit==='function') csInit();   // 🚗 โชว์รูมรถ (thumb+จอใหญ่ ตัวรถ+ภายในห้องโดยสาร วนโชว์)
   if(typeof rsInit==='function') rsInit();   // 🤖 โชว์รูมหุ่นยนต์ (thumb+จอใหญ่วนโชว์)
   const insBtn = document.getElementById('car-buy-ins');
   if(insBtn) insBtn.addEventListener('click', buyCarInsurance);
@@ -4590,27 +4591,90 @@ function renderVehicleShop(){
     mine = `<div class="car-mine-head">🚘 รถของหนู (${state.cars.length} คัน) — แตะเลือกคันที่จะขับ · ทุกคันนับเป็นทรัพย์สินในแรงค์</div>
       <div class="car-pick-list">${pick}</div>${detail}`;
   }
-  const owned = new Set((state.cars||[]).map(c=>c.id));
-  const grid = CARS.map(c=>{
-    const img = carImg(c.id);
-    const isMine = owned.has(c.id);
-    const minToday = Math.ceil(c.price*CAR_DOWN_RATE) + CAR_PRB;   // ถูกสุดที่ต้องมีวันนี้ = ดาวน์+พ.ร.บ.
-    const btn = isMine ? `<button class="hq-price car-cur">🚘 มีคันนี้แล้ว</button>`
-      : `<button class="hq-price car-buy ${state.coins>=minToday?'':'cant-afford'}" data-id="${c.id}">🪙${fmtNum(c.price)} · ดูรายละเอียด</button>`;
-    return `<div class="hq-card ${isMine?'hq-cur':''}" style="border-color:${c.c}">
-      <div class="hq-head">${c.name}</div>
-      <div class="hq-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
-      ${btn}
-      ${soldBadge(c.id)}
-    </div>`;
-  }).join('');
   return `<div class="mkt-listhead" id="mkt-vehicles">🚗 ยานพาหนะ — โชว์รูมรถ</div>
     <div class="gp-note">มีตั๋วโลกขับรถแล้วต้องมี<b>รถ</b>ถึงจะออกถนนได้ · <b>ซื้อสะสมได้หลายคัน</b> (ทุกคันนับเป็นทรัพย์สินในแรงค์ · เลือกคันขับได้) · ซื้อรถต้องมี <b>พ.ร.บ.</b> (บังคับ 🪙${fmtNum(CAR_PRB)})
     · <b>ประกันภัย</b>เลือกได้ (🪙${fmtNum(CAR_INSURANCE)} — คุ้มครองชนรถผู้เล่นอื่น)
     · จ่ายสด หรือผ่อน ${CAR_LOAN_MONTHS} เดือน (ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}%) โปะปิดยอดได้ทุกเมื่อ</div>
     ${mine}
-    <div class="hq-grid car-grid">${grid}</div>
+    ${renderCarShowroom()}
     ${renderRobotShop()}`;
+}
+
+/* 🚗 รอบ 212: โชว์รูมรถ — thumb ซ้าย (ตัวรถ+ราคา+ยอดขาย) · จอใหญ่ขวา (ตัวรถใหญ่ไฟฟ้าไล่ตัวสีประจำคัน + ภาพภายในห้องโดยสาร)
+   ไม่แตะ = วนโชว์ทีละคันทุก 4.2 วิ · แตะ = ค้างดูคันนั้น + หยุดวน 2 นาที แล้ววนต่อ (แพตเทิร์นเดียวกับโชว์รูมหุ่นยนต์) */
+let carsInteriorProbed = false, csIdx = 0, csPausedUntil = 0, csTimer = null;
+const CS_CYCLE_MS = 4200, CS_PAUSE_MS = 120000;
+function carInteriorImg(id){ return IMG_FILES['dash_'+id] || null; }
+function renderCarShowroom(){
+  if(!carsInteriorProbed){
+    carsInteriorProbed = true;
+    probeImages(CARS.map(c=>'dash_'+c.id), 'img/car').then(()=>{ if(document.getElementById('cs-stage')) renderMarketCard(); });
+  }
+  const owned = new Set((state.cars||[]).map(c=>c.id));
+  const thumbs = CARS.map((c,i)=>{
+    const img = carImg(c.id), mineC = owned.has(c.id);
+    return `<button class="cs-thumb${mineC?' owned-c':''}" data-i="${i}" data-id="${c.id}" style="--cc:${c.c}">
+      <div class="cs-thumb-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${c.c}33;border-color:${c.c}">🚗</span>`}</div>
+      <div class="cs-thumb-name">${c.name}</div>
+      <div class="cs-thumb-price">🪙${fmtNum(c.price)}</div>
+      ${mineC?'<div class="cs-thumb-own">🚘 มีแล้ว</div>':''}
+      ${soldBadge(c.id)}
+    </button>`;
+  }).join('');
+  return `<div class="cs-showroom">
+    <div class="cs-list">${thumbs}</div>
+    <div class="cs-stage" id="cs-stage">
+      <div class="cs-big" id="cs-big"></div>
+      <div class="cs-interior" id="cs-interior"></div>
+      <div class="cs-info" id="cs-info"></div>
+    </div>
+  </div>`;
+}
+/* แสดงรถคันที่ i บนจอใหญ่ — ตัวรถ (mask ไฟฟ้าไล่ตัวสีประจำคัน) + ภาพภายในห้องโดยสาร + ป้ายข้อมูล/ปุ่มซื้อ */
+function csShowBig(i){
+  const c = CARS[i]; if(!c) return;
+  const big = document.getElementById('cs-big'), inr = document.getElementById('cs-interior'), info = document.getElementById('cs-info');
+  if(!big || !inr || !info) return;
+  const img = carImg(c.id), inrImg = carInteriorImg(c.id), have = (state.cars||[]).some(x=>x.id===c.id);
+  if(img){
+    big.style.setProperty('--cs-img', `url("${img}")`);
+    big.style.setProperty('--cc', c.c);
+    big.innerHTML = `<img class="cs-big-img" src="${img}" alt="${escapeHTML(c.name)}"><div class="cs-elec"><i></i></div><div class="cs-edge"><i></i></div>`;
+  }else{
+    big.style.removeProperty('--cs-img');
+    big.innerHTML = `<div style="font-size:120px;filter:drop-shadow(0 0 30px ${c.c})">🚗</div>`;
+  }
+  inr.innerHTML = inrImg
+    ? `<div class="cs-inr-label">🪑 ภายในห้องโดยสาร</div><img class="cs-inr-img" src="${inrImg}" alt="ภายใน ${escapeHTML(c.name)}">`
+    : `<div class="cs-inr-label dim">🪑 ภาพภายในกำลังมา…</div>`;
+  const minToday = Math.ceil(c.price*CAR_DOWN_RATE) + CAR_PRB;
+  info.innerHTML = `<div class="cs-name" style="color:${c.c}">${escapeHTML(c.name)}</div>
+    <div class="cs-meta"><span class="cs-price">🪙${fmtNum(c.price)}</span>${soldBadge(c.id)}</div>
+    ${have?`<button class="cs-buy own" disabled>🚘 มีคันนี้แล้ว</button>`
+      :`<button class="cs-buy ${state.coins>=minToday?'':'cant-afford'}" data-id="${c.id}">🛒 ดูรายละเอียด / ซื้อ</button>`}`;
+  const buy = info.querySelector('.cs-buy:not(.own)');
+  if(buy) buy.addEventListener('click', ()=>openCarBuyDialog(buy.dataset.id));
+  document.querySelectorAll('.cs-thumb').forEach(t=>t.classList.toggle('active', +t.dataset.i===i));
+}
+/* เรียกหลัง render market — ผูกคลิก thumb + เริ่มวนโชว์ */
+function csInit(){
+  const room = document.querySelector('.cs-showroom'); if(!room) return;
+  if(csIdx >= CARS.length) csIdx = 0;
+  csShowBig(csIdx);
+  room.querySelectorAll('.cs-thumb').forEach(b=>b.addEventListener('click', ()=>{
+    csIdx = +b.dataset.i; csPausedUntil = Date.now() + CS_PAUSE_MS;
+    if(typeof sfx!=='undefined' && sfx.select) sfx.select();
+    csShowBig(csIdx);
+  }));
+  clearInterval(csTimer);
+  csTimer = setInterval(()=>{
+    const big = document.getElementById('cs-big');
+    if(!big){ clearInterval(csTimer); csTimer = null; return; }   // ตลาด re-render/ปิด → หยุด
+    if(!big.offsetParent) return;                                  // จอซ่อนอยู่ = ไม่วน
+    if(Date.now() < csPausedUntil) return;                         // เพิ่งแตะดู (ภายใน 2 นาที)
+    csIdx = (csIdx + 1) % CARS.length;
+    csShowBig(csIdx);
+  }, CS_CYCLE_MS);
 }
 
 /* 🤖 หุ่นยนต์นักรบ (หมวดยานพาหนะ) — โชว์รูม: thumb ซ้าย (ราคา+ยอดขาย) · จอใหญ่ขวา (ไฟฟ้าไล่ตัว premium)
