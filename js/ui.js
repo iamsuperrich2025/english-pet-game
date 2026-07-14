@@ -834,7 +834,7 @@ function bindLbTabs(){
   document.addEventListener('click', (e)=>{
     const t = e.target.closest('.lb-tab');
     if(!t) return;
-    lbTab = t.dataset.tab === 'badges' ? 'badges' : 'coins';
+    lbTab = (t.dataset.tab === 'badges' || t.dataset.tab === 'boss') ? t.dataset.tab : 'coins';
     if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
     renderLeaderboardCard();
   });
@@ -847,13 +847,14 @@ function renderLeaderboardCard(){
   const out = document.getElementById('lb-tabs-out');
   if(out) out.innerHTML = `
     <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
-    <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>`;
+    <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
+    <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 ล้มบอส</button>`;
   if(typeof Online === 'undefined' || !Online.ready){
     el.innerHTML = `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
     initSideScroll(el);
     return;
   }
-  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbCoinHtml());
+  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml() : lbCoinHtml());
   bindPlayerClicks();
   initSideScroll(el);
 }
@@ -897,6 +898,28 @@ function lbBadgeHtml(){
       <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.name + r.badges)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม</small></span>
     </div>`).join('');
   return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับเข็มที่ ${myIdx + 1} จาก ${rows.length} คน 🏅` : `ยังไม่มีเข็ม — เก็บเข็มแล้วมาไต่กระดานนะ 💪`}</div>
+    <div class="lb-list">${list}</div>`;
+}
+
+/* 🤖 รอบ 228: เนื้อหาแท็บล้มบอส — จัดอันดับด้วยจำนวนบอสที่ล้มในโลกหุ่นยนต์ (leaderboard.bk) */
+function lbBossHtml(){
+  const myId = onlineKey();
+  const map = {};
+  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
+  // แทนที่ตัวเราด้วยค่าสดจาก state (เห็นทันทีแม้ push ยังไม่ถึง)
+  const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู') + ((typeof badgeSuffix==='function')?badgeSuffix():'');
+  map[myId] = {id:myId, n: meName, g:(state.student?state.student.grade:''), bk: Math.round(state.mechaBoss||0)};
+  const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
+  if(!rows.length) return `<div class="lb-empty">ยังไม่มีใครล้มบอสเลย — เข้าโลกหุ่นยนต์ 🤖 ยิงบอสตัวแรกเป็นคนแรกสิ! 👾</div>`;
+  const myIdx = rows.findIndex(r=>r.id===myId);
+  const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const list = rows.slice(0, LEADERBOARD_SIZE).map((r,i)=>`
+    <div class="lb-row${r.id===myId?' lb-me':''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small></span>
+      <span class="lb-coins">👾 ${fmtNum(r.bk)}</span>
+    </div>`).join('');
+  return `<div class="online-count">${myIdx>=0?`${selfPronoun()}ล้มบอสไป ${rows[myIdx].bk} ตัว — อันดับ ${myIdx+1} จาก ${rows.length} คน 🤖`:`เข้าโลกหุ่นล้มบอสเพื่อขึ้นกระดานนะ 👾`}</div>
     <div class="lb-list">${list}</div>`;
 }
 

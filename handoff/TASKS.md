@@ -27,6 +27,15 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 228 (14 ก.ค.) — 🤖 โลกหุ่น ต่อยอด 3 อย่าง: สรุปสถิติจบเกม + ปุ่มยิงเปลี่ยนสี + กระดานล้มบอสออนไลน์ (version .218 · SW v13)
+ผู้ใช้: "เอาตามความเห็นต่อยอด ทำได้หมดเลย" (3 ไอเดียท้ายรอบ 227)
+- **📊 สรุปสถิติจบเกม:** นับ `mComboMax`/`mBossKills`/`mShotsFired`/`mShotsHit` → `mechaRecapLine()` = "⭐ คอมโบสูงสุด ×N · 👾 ล้มบอส N · 🎯 แม่นยำ NN% · 📖 N คำ" · โชว์ใน toast ตอนออก (mecha) + ต่อท้ายแบนเนอร์ knockedOut (`.adv-ko-stat`)
+- **🔫 ปุ่มยิงเปลี่ยนสี (feedback):** `updateMechaHud` ใส่คลาส `#mecha-fire/fire2` — `fs-over`(แดงกะพริบ โอเวอร์ฮีต) > `fs-shield`(ฟ้า มีโล่) > `fs-combo`(ทอง คอมโบ≥3) > `fs-hot`(ส้ม heat>60) > ปกติ(แดงชมพู) · ยืนยัน computed bg ต่างกันครบ 5 สถานะ
+- **🤖 กระดานล้มบอสออนไลน์:** `state.mechaBoss` (สะสมถาวร +migration) · ล้มบอส→+1+`onlinePushScore()` เขียนฟิลด์ `bk` ที่ `/leaderboard/<uid>` · online.js อ่าน `bk` ลง `Online.board` · ui.js **แท็บที่ 3 "🤖 ล้มบอส"** (`lbBossHtml` เรียง bk มาก→น้อย · กรอง bk>0 · แทรกค่าสดตัวเอง) · `bindLbTabs` รับ 'boss'
+- **⚠️ ต้อง publish rules (เพิ่มฟิลด์ `bk` โซน leaderboard):** Artifact ปุ่มคัดลอกก้อนเต็ม → https://claude.ai/code/artifact/fd952de2-1b02-469f-a34a-f037ae5e75f6 · RULES.md อัปเดตแล้ว · **ก่อน publish = เห็นแค่ bk ตัวเอง (ไม่พัง · graceful fallback)**
+- **ยืนยัน (`_t.mecha.stats` + render lbBossHtml offline):** ล้มบอส→comboMax7/bossKills1/แม่น100%/recap ถูก · state.mechaBoss +1 · ปุ่มยิง 5 สีต่างกัน · lbBoss ranking (9>4 บอสเรียงถูก · กรอง bk=0 · โชว์ตัวเองอันดับถูก) · ไม่มี error · deploy live .218
+- ⚠️ **ค้าง: (1) publish rules (Artifact) → (2) ทดสอบ 2 เครื่อง กระดานล้มบอสข้ามเครื่อง** · จูน `COMBO_X2/X3`
+
 ### ✅ รอบ 227 (14 ก.ค.) — 🤖 โลกหุ่น ต่อยอด 3 อย่าง: แถบพลังบอส + คอมโบ×2/×3 + โล่กันกระสุน (version .217 · SW v12)
 ผู้ใช้: "ทำต่อยอดได้เลย" (3 ไอเดียท้ายรอบ 226)
 - **👾 แถบพลังบอส:** `#mh-boss` โผล่ตอนมีบอส (`bosson` class) — ป้าย "👾 BOSS" + แถบสีแดง-ส้ม เหลือ = (len−nextIdx)/len · ยิงตัวอักษรบอส แถบลด · **left-align top:44 left:132** (ชิดขวาแมป · เลี่ยง vmode ที่กินถึง x346) · ยืนยัน 568×320 OVERLAPS ว่างทุกปุ่ม

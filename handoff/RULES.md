@@ -51,6 +51,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "coins": { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "av":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "ni":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "bk":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }

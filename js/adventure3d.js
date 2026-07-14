@@ -225,6 +225,7 @@ let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห�
 let mOverheat=false, mHitAt=0, mLowHp=false;   // 🤖 รอบ 225: ปืนโอเวอร์ฮีต + iframe โดนตี + สถานะพลังงานต่ำ
 let alienShots=[], powerups=[], mNextPowerAt=0;   // 🤖 รอบ 226: กระสุนเอเลี่ยน + ของเก็บ (คูลแดนต์/ซ่อม)
 let mCombo=0, mShieldUntil=0;   // 🔥🛡️ รอบ 227: คอมโบยิงติดกัน + โล่พลังงาน
+let mComboMax=0, mBossKills=0, mShotsFired=0, mShotsHit=0;   // 📊 รอบ 228: สถิติจบเกม (คอมโบสูงสุด/ล้มบอส/ความแม่น)
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -1927,7 +1928,7 @@ function knockedOut(){
   if(M.drive) CarSound.stop();
   banEl.innerHTML=`<div class="adv-ko">${M.koTitle||'💫 พลังหมดแล้ว!'}<br>
     <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
-    รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${sessionRecapHtml()}<br>
+    รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${M.mecha?`<div class="adv-ko-stat">${mechaRecapLine()}</div>`:''}${sessionRecapHtml()}<br>
     <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
   banEl.classList.add('show','stay');
   document.getElementById('adv-ko-exit').addEventListener('click',()=>exitWorld());
@@ -3541,6 +3542,18 @@ function buildDom(){
   #mecha-hud.shielded .mh-shield{opacity:1;animation:mhShield .9s ease-in-out infinite}
   @keyframes mhShield{50%{opacity:.55}}
   html.no-anim #mecha-hud.shielded .mh-shield{animation:none;opacity:.8}
+  /* 🔫 รอบ 228: ปุ่มยิงเปลี่ยนสีตามสถานะ (feedback) — โอเวอร์ฮีต/คอมโบ/ร้อน/โล่ */
+  #mecha-fire.fs-hot,#mecha-fire2.fs-hot{background:rgba(255,150,60,.4);border-color:rgba(255,190,120,.85)}
+  #mecha-fire.fs-over,#mecha-fire2.fs-over{background:rgba(255,60,60,.5);border-color:#ff5a5a;
+    box-shadow:0 0 14px rgba(255,60,60,.7);animation:mhBlink .5s steps(1) infinite}
+  #mecha-fire.fs-combo,#mecha-fire2.fs-combo{background:rgba(255,205,70,.45);border-color:#ffd24d;
+    box-shadow:0 0 16px rgba(255,210,80,.8)}
+  #mecha-fire.fs-shield,#mecha-fire2.fs-shield{background:rgba(120,215,255,.45);border-color:#8fe6ff;
+    box-shadow:0 0 16px rgba(120,215,255,.75)}
+  html.no-anim #mecha-fire.fs-over,html.no-anim #mecha-fire2.fs-over{animation:none}
+  /* 📊 รอบ 228: บรรทัดสถิติในหน้าจบเกม */
+  .adv-ko-stat{margin:6px auto 2px;padding:5px 10px;border-radius:10px;font-size:13px;font-weight:700;
+    color:#ffe9a8;background:rgba(255,180,60,.14);border:1px solid rgba(255,200,90,.4);display:inline-block}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
     background:linear-gradient(160deg,rgba(20,120,86,.95),rgba(10,78,58,.96));
@@ -3707,7 +3720,9 @@ function buildDom(){
     rng:overlayEl.querySelector('#mh-rng'), tgt:overlayEl.querySelector('#mh-tgt'),
     heat:overlayEl.querySelector('#mh-heatbar'), heatlbl:overlayEl.querySelector('#mh-heatlbl'),
     lock:overlayEl.querySelector('#mh-lock'), bossFill:overlayEl.querySelector('#mh-boss-fill'),
-    combo:overlayEl.querySelector('#mh-combo'), blips:[] };   // 🤖 รอบ 224-227: HUD กรอบหุ่น + เรดาร์ + บอส/คอมโบ
+    combo:overlayEl.querySelector('#mh-combo'),
+    fireBtns:[overlayEl.querySelector('#mecha-fire'),overlayEl.querySelector('#mecha-fire2')],
+    blips:[] };   // 🤖 รอบ 224-228: HUD กรอบหุ่น + เรดาร์ + บอส/คอมโบ + ปุ่มยิง feedback
   var mhRadar=overlayEl.querySelector('#mecha-hud .mh-radar');
   if(mhRadar){ for(var _b=0;_b<6;_b++){ var _bl=document.createElement('span'); _bl.className='mh-blip'; mhRadar.appendChild(_bl); mhUI.blips.push(_bl); } }
   hudInvEl=overlayEl.querySelector('#adv-inv');
@@ -6366,6 +6381,11 @@ function updateMechaHud(dt,now){
   const boss=aliens.find(a=>a.boss);                        // 👾 แถบพลังบอส (เหลือกี่ตัวอักษร)
   root.classList.toggle('bosson',!!boss);
   if(boss && mhUI.bossFill){ const len=boss.word.en.length; mhUI.bossFill.style.width=Math.round((len-boss.nextIdx)/len*100)+'%'; }
+  // 🔫 รอบ 228: ปุ่มยิงเปลี่ยนสีตามสถานะ (โอเวอร์ฮีต > โล่ > คอมโบ > ร้อน)
+  if(mhUI.fireBtns){
+    const fs = mOverheat?'fs-over' : (now<mShieldUntil?'fs-shield' : (mCombo>=COMBO_X2?'fs-combo' : (mHeat>60?'fs-hot':'')));
+    mhUI.fireBtns.forEach(b=>{ if(!b) return; b.classList.remove('fs-hot','fs-over','fs-combo','fs-shield'); if(fs) b.classList.add(fs); });
+  }
   // ระยะถึงเอเลี่ยนที่กำลังเล็ง (ถ้ามี) + ป้ายล็อกเป้า
   if(mFocusAlien&&mFocusAlien.grp){
     mhUI.rng.textContent=Math.round(camera.position.distanceTo(mFocusAlien.grp.position));
@@ -6397,6 +6417,7 @@ function mechaTracer(wx,wy,wz,hit){
 function mechaFire(now){
   if(mOverheat){ if(now-mLastFire>140){ mLastFire=now; sfx.wrong(); } return; }   // 🔥 รอบ 225: ปืนโอเวอร์ฮีต — ยิงไม่ออก (คลิกได้เสียงปฏิเสธ) ต้องรอให้เย็น
   mLastFire=now;
+  mShotsFired++;                                     // 📊 รอบ 228: นับนัดยิง (คำนวณความแม่น)
   mHeat=Math.min(100,mHeat+13);                     // 🤖 รอบ 224: ยิงแล้วปืนร้อนขึ้น (โชว์บนแถบ HEAT)
   if(mHeat>=100){ mOverheat=true; MechaAudio.warn(); }   // 🔥 รอบ 225: ร้อนเต็ม → ล็อกปืนจนเย็นพอ (ปลดใน updateMechaHud)
   MechaAudio.fire(mechaWeapon.color);
@@ -6411,10 +6432,11 @@ function mechaFire(now){
     if(dd<bestD){ bestD=dd; best={a,l,wx,wy,wz}; }
   }));
   if(best){
+    mShotsHit++;                                      // 📊 รอบ 228: ยิงโดนตัวอักษร (นับความแม่น)
     mechaTracer(best.wx,best.wy,best.wz,true);
     if(best.l.idx===best.a.nextIdx){                 // ✅ ยิงถูกลำดับ → ตัวอักษรหาย
       best.l.done=true; best.l.spr.visible=false; best.a.nextIdx++;
-      mCombo++;                                       // 🔥 รอบ 227: ยิงถูกติดกัน = คอมโบ (×2 ที่ 3 · ×3 ที่ 6)
+      mCombo++; if(mCombo>mComboMax) mComboMax=mCombo;  // 🔥 รอบ 227: คอมโบ (×2 ที่ 3 · ×3 ที่ 6) · 📊 เก็บคอมโบสูงสุด
       const mult=mCombo>=COMBO_X3?3:(mCombo>=COMBO_X2?2:1), gain=MECHA_LETTER_COIN*mult;
       addCoins(gain); sessionCoins+=gain;
       if(mult>1) mechaComboPop(mult);
@@ -6440,6 +6462,8 @@ function explodeAlien(a){
   }
   const reward=M.reward+(a.boss?BOSS_BONUS:0);       // 👾 บอส = โบนัสเหรียญเพิ่ม
   addCoins(reward); sessionCoins+=reward; sessionWords++;
+  if(a.boss){ mBossKills++; state.mechaBoss=(state.mechaBoss||0)+1;   // 📊 รอบ 228: นับล้มบอส (เซสชัน + สะสมถาวร → กระดานออนไลน์)
+    if(typeof onlinePushScore==='function') onlinePushScore(); }
   if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
   doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(a.boss?[90,60,120]:80);
@@ -6726,6 +6750,7 @@ function start(md){
     mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
     alienShots=[]; powerups=[]; mNextPowerAt=performance.now()+8000;   // 🤖 รอบ 226: รีเซ็ตกระสุน/ของเก็บ (ชิ้นแรก ~8 วิ)
     mCombo=0; mShieldUntil=0;   // 🔥🛡️ รอบ 227: รีเซ็ตคอมโบ + โล่
+    mComboMax=0; mBossKills=0; mShotsFired=0; mShotsHit=0;   // 📊 รอบ 228: รีเซ็ตสถิติรอบ
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
@@ -6816,8 +6841,15 @@ function exitWorld(){
   const rl=document.getElementById('adv-radio-list'); if(rl) rl.style.display='none';
   saveState();
   renderDashboard();
-  if(sessionWords>0 || sessionCoins>0)
+  if(M && M.mecha && (sessionWords>0 || mShotsFired>0))
+    toast(`🤖 จบภารกิจหุ่น! ${mechaRecapLine()}`);
+  else if(sessionWords>0 || sessionCoins>0)
     toast(`${M.emoji} กลับจาก${M.label} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
+}
+/* 📊 รอบ 228: สรุปสถิติรอบโลกหุ่น (คอมโบสูงสุด · ล้มบอส · ความแม่น · จำนวนคำ) */
+function mechaRecapLine(){
+  const acc = mShotsFired ? Math.round(mShotsHit/mShotsFired*100) : 0;
+  return `⭐ คอมโบสูงสุด ×${mComboMax} · 👾 ล้มบอส ${mBossKills} · 🎯 แม่นยำ ${acc}% · 📖 ${sessionWords} คำ`;
 }
 
 window.Adventure3D={
@@ -6860,7 +6892,8 @@ window.Adventure3D={
                          get heat(){return mHeat}, get overheat(){return mOverheat}, hit:mechaHitByAlien,
                          get shots(){return alienShots}, get powerups(){return powerups},
                          spawnBoss:()=>makeAlien(true), enemyShoot:spawnAlienShot, dropPowerup:spawnPowerup, collect:collectPowerup,
-                         get combo(){return mCombo}, get shielded(){return performance.now()<mShieldUntil}}; },
+                         get combo(){return mCombo}, get shielded(){return performance.now()<mShieldUntil},
+                         get stats(){return {comboMax:mComboMax,bossKills:mBossKills,fired:mShotsFired,hit:mShotsHit,recap:mechaRecapLine()}}}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },

@@ -54,6 +54,7 @@ const DEFAULT_STATE = {
   robots:[],                          // รอบ 199: หุ่นยนต์นักรบที่ครอบครอง (array ของ id · ซื้อกี่ตัวก็ได้)
   mechaRobot:null,                    // หุ่นที่เลือกใช้ล่าสุดในโลก 3D
   mechaDone:[],                       // คำที่พิชิตในโลกหุ่นยนต์ (แยกคลังต่อโลก)
+  mechaBoss:0,                        // รอบ 228: จำนวนบอสที่ล้มสะสม (ขึ้นกระดานออนไลน์ 🤖)
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
   carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
   daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
@@ -284,6 +285,7 @@ function loadState(){
       if(typeof s.soccerNo !== 'string') s.soccerNo = '10';
       if(!Array.isArray(s.robots)) s.robots = [];                                            // รอบ 199: หุ่นยนต์นักรบ
       if(!Array.isArray(s.mechaDone)) s.mechaDone = [];
+      if(typeof s.mechaBoss !== 'number') s.mechaBoss = 0;   // รอบ 228: บอสที่ล้มสะสม
       // 🚗 รอบ 211: รถส่วนตัวหลายคัน — ย้ายจากเซฟเก่า s.car (คันเดียว) → s.cars[] · sanitize รายคัน
       if(s.car && typeof s.car === 'object' && !Array.isArray(s.cars)){ s.cars = [s.car]; }   // migrate คันเดียว→array
       delete s.car;

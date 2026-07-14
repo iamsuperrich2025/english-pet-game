@@ -110,13 +110,14 @@ function onlinePushScore(){
   const av    = Math.round(assetValue());   // มูลค่าทรัพย์สินรวม (โชว์ในการ์ดผู้เล่น)
   const ni    = assetCount();               // จำนวนชิ้นทรัพย์สิน
   const bs    = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อบนกระดาน
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs;   // เข็มเปลี่ยน = re-push (เพื่อนเห็นเข็มใหม่บนกระดาน)
-  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็มไม่ขยับ ไม่ต้องเขียนซ้ำ
+  const bk    = Math.round(state.mechaBoss || 0);                          // 🤖 รอบ 228: บอสที่ล้มสะสม (กระดานโลกหุ่น)
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk;   // เข็ม/บอสเปลี่ยน = re-push
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอสไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni}, base)).catch(()=>{
-    // เผื่อ rules ยังไม่รองรับ av/ni (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+    // เผื่อ rules ยังไม่รองรับ av/ni/bk (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง
     Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
   });
   if(typeof feedPushAssets === 'function') feedPushAssets();   // 📰 ทรัพย์สินเปลี่ยน → อัปเดตคลังที่เปิดเผย (มี sig กันเขียนซ้ำ)
@@ -1016,7 +1017,8 @@ function onlineStart(){
       if(!v || typeof v.coins !== 'number' || typeof v.n !== 'string') return;
       out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins,
                 av: typeof v.av === 'number' ? v.av : null,
-                ni: typeof v.ni === 'number' ? v.ni : null});
+                ni: typeof v.ni === 'number' ? v.ni : null,
+                bk: typeof v.bk === 'number' ? v.bk : 0});   // 🤖 รอบ 228: บอสที่ล้ม (กระดานโลกหุ่น)
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;
