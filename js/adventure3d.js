@@ -2951,8 +2951,9 @@ function buildDom(){
   .adv-drive #adv-gauges,.adv-drive #adv-cockpit{display:none}
   #adv-cardash{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cardash{display:block}
-  /* 🚗 รอบ 230: แดชบอร์ดชุดใหม่ (สวยงามมืออาชีพ) — เต็มครึ่งล่าง เห็นคานหน้า+จอ+ช่องแอร์ (ตัดกระจกบน=ฉาก 3D) */
-  #adv-cardash img{width:100%;display:block;max-height:54vh;object-fit:cover;object-position:50% 56%}
+  /* 🚗 รอบ 231: แดชบอร์ดชุดใหม่ — object-position 65% ตัดกระจกหน้า(ถนนวาดในภาพ)ทิ้งให้หมด เหลือเฉพาะแผงหน้าปัด
+     · max-height 46vh (เตี้ยลง ไม่บังทางมองเห็นฉาก 3D จริง) — ยืนยันตัดกระจกครบทุกคัน (กระจกจบ ~40% ของภาพ) */
+  #adv-cardash img{width:100%;display:block;max-height:46vh;object-fit:cover;object-position:50% 65%}
   /* เข็มหน้าปัดวิ่งจริง — canvas ทับตำแหน่งวงเกจของภาพ dash.png (อยู่เหนือแผง ใต้พวงมาลัย) */
   #adv-cargauges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cargauges{display:block}
@@ -3052,8 +3053,8 @@ function buildDom(){
   #adv-radio-list .rl-power:active,#adv-radio-list .rl-mode:active,#adv-radio-list .rl-track:active{transform:scale(.96)}
   /* 🚗 รอบ 230: พวงมาลัยขวาแบบไทย (ภาพชุดใหม่ ต่อคัน · โปร่งใส) · โผล่จากขอบล่างขวาแบบมองจากที่นั่งคนขับ
      ภาพ aspect ~1.5 (กว้างกว่าสูง) → คงสัดส่วนไม่บิด · เกจวิ่งจริงลอดช่องบนพวงมาลัย (drawCarGauges อิงตำแหน่งนี้) */
-  #adv-carwheel{position:absolute;left:75%;bottom:-4vh;transform:translateX(-50%);
-    height:min(60vh,60vw);width:auto;aspect-ratio:1.5;pointer-events:none;display:none;z-index:4;will-change:transform}
+  #adv-carwheel{position:absolute;left:76%;bottom:-1vh;transform:translateX(-50%);
+    height:min(50vh,50vw);width:auto;aspect-ratio:1.5;pointer-events:none;display:none;z-index:4;will-change:transform}
   .adv-drive #adv-carwheel{display:block}
   #adv-carwheel img{width:100%;height:100%;display:block;object-fit:contain}
   #adv-carwheel .cw-css{width:100%;height:100%;border-radius:50%;border:2.6vh solid #23262c;
@@ -4980,14 +4981,14 @@ function drawCarGauges(){
    จอวางทับ "หน้าจอดำระหว่างลูกบิด 2 ปุ่ม" บนภาพ dash.png (พิกัดภาพ RADIO_RECT)
    map พิกัดภาพ→จอ สูตรเดียวกับเข็มเกจ (object-fit cover + object-position 50% 66%)
    ============================================================ */
-const RADIO_RECT=[556,486,838,598];                         // 🚗 รอบ 230: จอ head-unit (พิกัดภาพแดชบอร์ดชุดใหม่ 1536×1024)
+const RADIO_RECT=[560,514,835,606];                         // 🚗 รอบ 231: จอ head-unit (พิกัดภาพแดชบอร์ดชุดใหม่ 1536×1024)
 let _radioVW=0,_radioVH=0;
 function radioLayout(){
   if(!radioScreenEl) return;
   if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ radioScreenEl.style.display='none'; return; }
   const box=carDashImg.getBoundingClientRect();
   if(!box.width){ radioScreenEl.style.display='none'; return; }
-  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.56;   // 🚗 รอบ 230: ตรงกับ object-position 56% ของแดชบอร์ดชุดใหม่
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.65;   // 🚗 รอบ 231: ตรงกับ object-position 65% ของแดชบอร์ดชุดใหม่
   const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
   const [X0,Y0,X1,Y1]=RADIO_RECT;
   const L=gx(X0), T=gy(Y0), W=(X1-X0)*s, H=(Y1-Y0)*s;
@@ -5085,7 +5086,7 @@ function bobbleLayout(){
   if(mode!=='drive' || !carDashImg || !carDashImg.parentNode){ carBobbleEl.style.display='none'; return; }
   const box=carDashImg.getBoundingClientRect();
   if(!box.width){ carBobbleEl.style.display='none'; return; }
-  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.56;   // 🚗 รอบ 230: ตรงกับ object-position 56% ของแดชบอร์ดชุดใหม่
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.65;   // 🚗 รอบ 231: ตรงกับ object-position 65% ของแดชบอร์ดชุดใหม่
   const footX=box.left+BOBBLE_FOOT[0]*s, footY=box.top+BOBBLE_FOOT[1]*s-offY;
   const h=BOBBLE_H*s, w=h*BOBBLE_ASPECT;
   carBobbleEl.style.display='';

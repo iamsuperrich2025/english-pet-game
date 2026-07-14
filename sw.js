@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v15';   // v15: โลกขับรถ — คอนโซล+พวงมาลัยชุดใหม่ (แยก dash/wheel ต่อคัน จัดวางใหม่) (รอบ 230)
+const CACHE_VERSION = 'pet-vocab-v16';   // v16: โลกขับรถ — แก้ dash ตัดกระจก(ถนนวาดในภาพ)ทิ้ง + เตี้ยลงไม่บังทาง (รอบ 231)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
