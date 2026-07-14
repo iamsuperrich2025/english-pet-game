@@ -2889,6 +2889,7 @@ function buildDom(){
   .adv-touch.adv-haunt #adv-shoot{display:none}
   .adv-touch.adv-heli #adv-shoot{display:none}
   .adv-touch.adv-drone #adv-shoot{display:none}
+  .adv-touch.adv-mecha #adv-shoot{display:none}   /* รอบ 221: โลกหุ่นใช้ #mecha-fire (🔫) แทน — ซ่อนปุ่มยิงส้ม 🔥 ที่เผลอโผล่มาทับ ▼ มุมขวาล่าง */
   .adv-heli #adv-cross{display:none}
   /* 🛸 โหมดโดรน FPV: OSD สีเขียวเรือง + เรติเคิลกรอบ + ขอบจอมืด (ฟีลกล้อง FPV) */
   .adv-drone #adv-inst{display:block;color:#7cff9d;font-family:'Courier New',monospace;letter-spacing:.5px;
@@ -3423,8 +3424,8 @@ function buildDom(){
   #mecha-back{right:22px;bottom:24px;width:76px;height:70px}       /* ▼ ถอย (ขวาล่าง) */
   #mecha-left{left:22px;bottom:24px;width:70px;height:70px;border-radius:50%}    /* ◀ เลี้ยวซ้าย (ซ้ายล่าง) */
   #mecha-right{left:100px;bottom:24px;width:70px;height:70px;border-radius:50%}  /* ▶ เลี้ยวขวา (ซ้ายล่าง) */
-  #mecha-fire{left:calc(50% - 46px);top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
-    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* ปุ่มยิง กลางจอใต้คำ (46=ครึ่งปุ่ม → center พอดี) ทุกจอไม่ชน ◀▶/▲▼ */
+  #mecha-fire{right:146px;top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
+    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* รอบ 221 (ผู้ใช้): ย้ายไปขวา ให้อยู่คอลัมน์เดียวกับปุ่ม "ทุกคน"/vmode (right:162+ครึ่ง60 −ครึ่ง92 = right:146) */
   #mecha-fire:active{background:rgba(255,90,110,.55)}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
