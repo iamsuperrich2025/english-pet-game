@@ -70,7 +70,9 @@ function petVisualHTML(p){
   const auraHTML = (stage === 'adult' && !p.sick)
     ? `<div class="aura"><span class="sparkle sp1">✨</span><span class="sparkle sp2">✨</span><span class="sparkle sp3">✨</span></div>`
     : '';
-  return `<div class="pet-stage">${auraHTML}<div class="pet-wrap" id="pet-tap">${core}${overlays}</div></div>`;
+  // pet-stage-anim: สไปรต์อบไม่ได้ผ่าน footAlign (ต่างจาก .pet-img) + กรอบ flex โดน padding เวทีดันขึ้น
+  // → เท้าลอยสูงกว่าตัวละครเด็ก ต้องดึงลงด้วย CSS (--anim-drop) ให้ยืนพื้นเดียวกัน
+  return `<div class="pet-stage${anim ? ' pet-stage-anim' : ''}">${auraHTML}<div class="pet-wrap" id="pet-tap">${core}${overlays}</div></div>`;
 }
 
 /* ตัวละครผู้เลี้ยงยืนเต็มตัวข้างน้อง (ฉาก lobby 3D สไตล์ COD — รอบ 86)

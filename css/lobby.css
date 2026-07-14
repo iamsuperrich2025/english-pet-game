@@ -632,11 +632,31 @@ html.no-anim .nw-tag{animation:none;}
   border:1px solid rgba(103,178,255,.38);
   box-shadow:inset 0 2px 46px rgba(4,12,28,.82), 0 14px 34px rgba(3,15,35,.45);
 }
-/* เส้นพื้นเวทีเรืองแสงใต้ตัวละคร (โลก 3D) — อยู่หลัง canvas เห็นผ่านโซนโปร่งใส */
+/* เส้นพื้นเวทีเรืองแสงใต้ตัวละคร (โลก 3D) — อยู่หลัง canvas เห็นผ่านโซนโปร่งใส
+   = "เส้นฟ้าล่าง" ที่ผู้ใช้ให้เก็บไว้ (เป็นขอบหน้าตะแกรง) */
 .stage-hero::after{content:'';position:absolute;left:50%;bottom:30px;transform:translateX(-50%);
   width:78%;height:2px;border-radius:50%;pointer-events:none;z-index:0;
   background:linear-gradient(90deg,transparent,rgba(120,210,255,.6),transparent);
   box-shadow:0 0 22px 6px rgba(90,180,255,.28);}
+
+/* 🟦 พื้นตะแกรงนีออนทรงลึก (synthwave grid) — ผู้ใช้ขอ รอบ 243 (แทนพื้น gradient เรียบ)
+   เทคนิค: pseudo แบนราบลายเส้น repeating-gradient แล้ว perspective+rotateX ให้เอนลึก
+   · เส้นแนวตั้งลู่เข้าจุดหาย · mask จางที่ขอบฟ้า (บน) · เลื่อนลายวิ่งเข้าหาเราให้รู้สึกมีชีวิต */
+.stage-hero::before{content:'';position:absolute;left:-60%;right:-60%;bottom:0;height:56%;
+  z-index:0;pointer-events:none;transform-origin:50% 100%;
+  transform:perspective(180px) rotateX(74deg);
+  background-image:
+    repeating-linear-gradient(90deg, rgba(96,204,255,.85) 0 2px, transparent 2px 60px),
+    repeating-linear-gradient(0deg,  rgba(96,204,255,.75) 0 2px, transparent 2px 60px);
+  -webkit-mask-image:linear-gradient(to top, #000 4%, rgba(0,0,0,.55) 42%, transparent 84%);
+          mask-image:linear-gradient(to top, #000 4%, rgba(0,0,0,.55) 42%, transparent 84%);
+  filter:drop-shadow(0 0 3px rgba(96,204,255,.55));
+  animation:gridRun 2.6s linear infinite;}
+@keyframes gridRun{ from{background-position:0 0,0 0;} to{background-position:0 0,0 60px;} }
+html.no-anim .stage-hero::before{animation:none;}
+
+/* ลบ "เส้นฟ้าบน" (เส้นเรืองแสงคู่ที่ชิดกัน 4px) ตามที่ผู้ใช้สั่ง — เหลือเส้นล่างเส้นเดียว */
+.hero-ground::before{display:none;}
 /* เหรียญตราแรงค์ใหญ่ฉากหลังเวที (รอบ 114) — z0 อยู่หลังตัวละคร PNG และ canvas 3D (z1) */
 .hero-rank-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   z-index:0;pointer-events:none;}
@@ -770,6 +790,9 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
    หมายเหตุ: .hero-scene ถูกร่นด้วย padding-bottom:22px ของ stage-hero → ตั้ง bottom:6px ให้เท้าลงพอดีเส้น (ปรับได้)
    ⚠️ ร่างยักษ์: --pet-vh เดิมจูนไว้ให้กล้อง 3D เฟรม (ใหญ่มาก) · โหมด 2D ยืนข้างคนต้อง "คุมโซนขวา" ไม่ให้ล้นทับคน */
 .stage-hero.hero-side .hero-scene .pet-stage{margin-right:3%;margin-bottom:6px;max-width:52%;}
+/* สไปรต์อบ: ดึงลงให้เท้าน้องยืนพื้นเดียวกับตัวละครเด็ก (ชดเชย padding เวที + ไม่มี footAlign)
+   ปรับ --anim-drop ได้ตามภาพจริง (ค่าเริ่ม 22px จากที่วัดว่าเท้าลอยสูงกว่าเด็ก ~24px) */
+.stage-hero.hero-side .pet-stage.pet-stage-anim{transform:translateY(var(--anim-drop,22px));}
 .stage-hero.hero-side .hero-scene .pet-stage .pet-img{width:auto;height:auto;max-width:100%;max-height:100%;}
 .stage-hero.hero-side .caretaker-fig{left:3%;transform:none;bottom:6px;max-width:40%;}
 .stage-hero.hero-side .caretaker-fig .caretaker-img{max-width:100%;}

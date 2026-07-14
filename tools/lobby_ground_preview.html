@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ดูพื้นเวที + ตำแหน่งน้อง (เครื่องมือพัฒนา)</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/lobby.css">
+<style>
+  body{margin:0;background:#0a1526;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  /* จำลองคอลัมน์กลางล็อบบี้ (stage-hero เป็น flex:1 ในแถว → ให้ความกว้าง/สูงใกล้ของจริง) */
+  #wrap{width:640px;height:420px;display:flex}
+</style>
+<div id="wrap">
+  <!-- โครงเดียวกับ ui.js:2463 — stage-hero.hero-side > hero-scene > hero-ground + caretaker + pet-stage -->
+  <div class="stage-hero hero-side">
+    <div class="hero-scene" style="--pet-vh:15;--owner-vh:28;--owner-x:-56px" id="scene"></div>
+  </div>
+</div>
+<script>
+  // สไปรต์แมว (ก้อนเดียวกับ petAnimHTML) — ค่าจาก img/anim/pet_cat_walk.json
+  const a = {file:'../img/anim/pet_cat_walk.webp', frames:24, fw:172, fh:172, fps:14, roam:true};
+  const dur = (a.frames/a.fps).toFixed(2), bpx=(100*a.frames/(a.frames-1)).toFixed(3);
+  const petAnim = `<div class="pet-roam${a.roam===false?' no-roam':''}"><div class="pet-anim" style="`
+    + `aspect-ratio:${a.fw}/${a.fh};background-image:url('${a.file}');background-size:${a.frames*100}% 100%;`
+    + `--bpx:${bpx}%;animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`;
+  document.getElementById('scene').innerHTML =
+    `<div class="hero-ground"></div>`
+    + `<div class="caretaker-fig"><div class="blk-rig lively"><img class="caretaker-img blk-char" src="../img/blocks/blk1.png" alt=""></div></div>`
+    + `<div class="pet-stage pet-stage-anim"><div class="pet-wrap">${petAnim}</div></div>`;
+  // freeze สำหรับสกรีนช็อต (สไปรต์วนลูปทำให้ตัวจับภาพค้าง) — เปิด no-anim หยุดทุกอย่าง
+  if(new URLSearchParams(location.search).get('static')!=='0') document.documentElement.classList.add('no-anim');
+</script>
