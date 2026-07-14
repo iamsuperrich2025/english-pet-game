@@ -685,6 +685,8 @@ html.no-anim .nw-tag{animation:none;}
   --roam:clamp(26px, 7vw, 96px);                  /* ระยะเดินไป-กลับจากจุดกลาง */
   animation:petRoam 13s ease-in-out infinite;
 }
+/* ท่าในไฟล์เป็น "ยืนอยู่กับที่" (เช่น มังกร) → ยืนขยับเฉยๆ ไม่ต้องเดินไปมา (ไม่งั้นเหมือนไถลข้าง) */
+.hero-scene .pet-stage .pet-roam.no-roam{animation:none;}
 .hero-scene .pet-stage .pet-anim{
   height:100%;width:auto;
   background-repeat:no-repeat;

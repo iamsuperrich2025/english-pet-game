@@ -28,8 +28,10 @@ function startHTML(key){
 /* 🐾 สไปรต์เดินวนลูป (พื้นหลังโปร่ง) — "อบ" จากโมเดล 3D ล่วงหน้าด้วย tools/bake_sprite.html
    แผ่นเป็นแถวเดียว (frames ช่องเรียงกัน) เล่นด้วย CSS steps() → ไม่ต้องโหลด three.js/glb ในล็อบบี้
    ⚠️ ไฟล์ img/anim/*.webp ต้อง commit ไม่งั้นไม่ขึ้นเว็บ (deploy ใช้ git archive HEAD) */
+// roam:false = ท่าในไฟล์เป็น "ยืนอยู่กับที่" (ไม่ใช่ท่าเดิน) → ห้ามสั่งให้เลื่อนไปมา ไม่งั้นดูเหมือนไถลข้าง
 const PET_ANIM = {
-  cat: { file:'img/anim/pet_cat_walk.webp', frames:24, fw:172, fh:172, fps:14 },
+  cat:    { file:'img/anim/pet_cat_walk.webp',   frames:24, fw:172, fh:172, fps:14, roam:true  },
+  dragon: { file:'img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:false },
 };
 function petAnimHTML(p){
   const a = PET_ANIM[p.type];
@@ -39,7 +41,7 @@ function petAnimHTML(p){
   // --bpx: ตำแหน่งเฟรมสุดท้ายเป็น % — สูตร 100*frames/(frames-1) เพราะ % ของ background-position
   // วัดจากช่วง (ความกว้างภาพ - ความกว้างกล่อง) ไม่ใช่ความกว้างภาพ · ใส่ผิด = เฟรมเลื่อนเพี้ยนทั้งลูป
   const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
-  return `<div class="pet-roam"><div class="pet-anim" style="`
+  return `<div class="pet-roam${a.roam === false ? ' no-roam' : ''}"><div class="pet-anim" style="`
     + `aspect-ratio:${a.fw}/${a.fh};background-image:url('${a.file}');`
     + `background-size:${a.frames * 100}% 100%;--bpx:${bpx}%;`
     + `animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`;
