@@ -4601,6 +4601,17 @@ function rlTick(px,pz,now){
 /* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
 function cellDrivable(D,gx,gz){ return gx>=0&&gz>=0&&gx<D.GW&&gz<D.GW && D.grid[gz*D.GW+gx]===1; }
 function cellCenter(D,gx,gz){ return {x:gx*D.GS-D.GOFF+D.GS/2, z:gz*D.GS-D.GOFF+D.GS/2}; }
+/* 🚗 รอบ 234: มองเห็นตรงๆบนถนนไหม (สุ่มจุดตามเส้นตรง a→b เช็กทุกช่องว่าเป็นถนน) — ใช้ string-pulling ตัด staircase ของกริด */
+function losClear(D,ax,az,bx,bz){
+  const dx=bx-ax, dz=bz-az, dist=Math.hypot(dx,dz);
+  const steps=Math.max(1, Math.ceil(dist/(D.GS*0.5)));
+  for(let i=0;i<=steps;i++){
+    const t=i/steps, x=ax+dx*t, z=az+dz*t;
+    const gx=Math.floor((x+D.GOFF)/D.GS), gz=Math.floor((z+D.GOFF)/D.GS);
+    if(!cellDrivable(D,gx,gz)) return false;
+  }
+  return true;
+}
 function nearestDrivableCell(D,x,z){
   const cx=Math.floor((x+D.GOFF)/D.GS), cz=Math.floor((z+D.GOFF)/D.GS);
   for(let r=0;r<=12;r++) for(let ox=-r;ox<=r;ox++) for(let oz=-r;oz<=r;oz++){
@@ -4642,15 +4653,26 @@ function routeGrid(D,sx,sz,tx,tz){
   while(c>=0 && gd++<200000){ cells.push(c); if(c===sIdx) break; c=came[c]; }
   cells.reverse();
   const pts=cells.map(ci=>cellCenter(D, ci%GW, (ci/GW)|0));
-  // ย่อจุดแนวตรง (เก็บเฉพาะจุดที่ทิศเปลี่ยน)
   if(pts.length<=2) return pts;
+  // ย่อจุดแนวตรง (เก็บเฉพาะจุดที่ทิศเปลี่ยน) — ลดจำนวนจุดก่อนขัดเส้น
   const simp=[pts[0]];
   for(let i=1;i<pts.length-1;i++){
     const ax=pts[i].x-pts[i-1].x, az=pts[i].z-pts[i-1].z, bx=pts[i+1].x-pts[i].x, bz=pts[i+1].z-pts[i].z;
-    if(Math.abs(ax*bz-az*bx)>0.01) simp.push(pts[i]);   // ไม่ collinear = จุดหักเลี้ยว
+    if(Math.abs(ax*bz-az*bx)>0.01) simp.push(pts[i]);   // ไม่ collinear = มุมของกริด
   }
   simp.push(pts[pts.length-1]);
-  return simp;
+  if(simp.length<=2) return simp;
+  // 🚗 รอบ 234: string-pulling — รวมช่วงที่มองเห็นตรงๆบนถนนเป็นเส้นเดียว (ตัด staircase ของกริดบนถนนเฉียง)
+  // → เหลือเฉพาะ "มุมเลี้ยวจริง" ที่แยกถนน · แก้บั๊ก GPS สั่งเลี้ยวผีตอนถนนตรง แล้วเลี้ยวตกถนน
+  const out=[simp[0]]; let anchor=0;
+  while(anchor<simp.length-1){
+    let far=anchor+1;
+    for(let j=simp.length-1;j>anchor+1;j--){
+      if(losClear(D, simp[anchor].x,simp[anchor].z, simp[j].x,simp[j].z)){ far=j; break; }
+    }
+    out.push(simp[far]); anchor=far;
+  }
+  return out;
 }
 function pickGpsTarget(){
   const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
@@ -4702,6 +4724,10 @@ function tickGps(now){
     if(path && path.length){
       path.push({x:tx,z:tz});                          // ต่อจุดสุดท้ายไปที่ตัวอักษรจริง
       for(let i=1;i<path.length-1;i++){                // precompute ทิศเลี้ยวแต่ละจุด
+        // 🚗 รอบ 234: ข้ามช่วงสั้น (<9ม.) — ทิศของช่วงสั้นเป็น noise (โดยเฉพาะช่วงสุดท้ายไปตัวอักษร) → กันจุดเลี้ยวผี
+        const s1=Math.hypot(path[i].x-path[i-1].x, path[i].z-path[i-1].z);
+        const s2=Math.hypot(path[i+1].x-path[i].x, path[i+1].z-path[i].z);
+        if(s1<9 || s2<9){ path[i].turn='straight'; continue; }
         const a=Math.atan2(path[i].x-path[i-1].x, -(path[i].z-path[i-1].z));
         const b=Math.atan2(path[i+1].x-path[i].x, -(path[i+1].z-path[i].z));
         let d=b-a; d=((d+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
@@ -4716,20 +4742,24 @@ function tickGps(now){
   // ระยะที่เหลือ "ตามถนน"
   let remain=Math.hypot(wp.x-cx,wp.z-cz);
   for(let i=gpsWpi;i<gpsRoute.length-1;i++) remain+=Math.hypot(gpsRoute[i+1].x-gpsRoute[i].x,gpsRoute[i+1].z-gpsRoute[i].z);
-  // ลูกศรชี้ waypoint ถัดไป (ตามแนวถนน)
-  let rel=Math.atan2(wp.x-cx,-(wp.z-cz))+yaw;
-  rel=((rel+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
-  if(gpsArrowEl) gpsArrowEl.style.transform='rotate('+(rel*180/Math.PI).toFixed(0)+'deg)';
-  if(gpsDistEl) gpsDistEl.textContent = remain>=1000?(remain/1000).toFixed(1)+' กม.':Math.round(remain)+' ม.';
-  if(gpsLetEl) gpsLetEl.textContent = gpsTarget.ch.toUpperCase();
-  // หาเลี้ยวถัดไป + ระยะถึงจุดเลี้ยว (ตามถนน)
+  // หาเลี้ยวถัดไป + ระยะถึงจุดเลี้ยว (ตามถนน) — คำนวณก่อนโชว์ เพื่อโชว์ระยะถึง "จุดเลี้ยว" ตอนใกล้เลี้ยว
   let turnDir='straight', turnDist=Math.hypot(wp.x-cx,wp.z-cz);
   for(let i=gpsWpi;i<gpsRoute.length-1;i++){
     if(gpsRoute[i].turn && gpsRoute[i].turn!=='straight'){ turnDir=gpsRoute[i].turn; break; }
     turnDist+=Math.hypot(gpsRoute[i+1].x-gpsRoute[i].x,gpsRoute[i+1].z-gpsRoute[i].z);
   }
-  const showTurn=(turnDir!=='straight' && turnDist<38)?turnDir:'straight';
-  if(gpsTurnEl) gpsTurnEl.textContent = {straight:'ตรงไป',left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[showTurn];
+  const turning=(turnDir!=='straight' && turnDist<70);   // มีเลี้ยวใกล้ (<70ม.) = โหมดเตือนเลี้ยว
+  // ลูกศรชี้ waypoint ถัดไป (ตามแนวถนน)
+  let rel=Math.atan2(wp.x-cx,-(wp.z-cz))+yaw;
+  rel=((rel+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+  if(gpsArrowEl) gpsArrowEl.style.transform='rotate('+(rel*180/Math.PI).toFixed(0)+'deg)';
+  // ระยะที่โชว์ = ถึงจุดเลี้ยวถ้ากำลังจะเลี้ยว (แม่นกว่า · ไม่ใช่ระยะถึงตัวอักษร) ไม่งั้น = ระยะที่เหลือ
+  const showDist=turning?turnDist:remain;
+  if(gpsDistEl) gpsDistEl.textContent = showDist>=1000?(showDist/1000).toFixed(1)+' กม.':Math.round(showDist)+' ม.';
+  if(gpsLetEl) gpsLetEl.textContent = gpsTarget.ch.toUpperCase();
+  // ป้ายคำสั่ง: ใกล้มาก (<16ม.) = "เลี้ยว…เลย" · ไกลกว่า = "เลี้ยว…" (เตือนล่วงหน้า) · ไม่มีเลี้ยว = ตรงไป
+  const turnLabel = turning ? (turnDist<16 ? {left:'เลี้ยวซ้ายเลย',right:'เลี้ยวขวาเลย'}[turnDir] : {left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[turnDir]) : 'ตรงไป';
+  if(gpsTurnEl) gpsTurnEl.textContent = turnLabel;
   // เสียงนำทางแบบ Google Maps
   if(finalDist<9){
     if(gpsArrivedFor!==gpsTarget){ gpsArrivedFor=gpsTarget; gpsSpeak('You have arrived at letter '+gpsTarget.ch.toUpperCase()+'.',true); }
