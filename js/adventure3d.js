@@ -972,7 +972,13 @@ function buildDriveCity(sc){
   sc.add(new THREE.HemisphereLight(0xffffff,0x93a072,1.02));
   const sun=new THREE.DirectionalLight(0xfff2cc,.8); sun.position.set(160,320,110); sc.add(sun);
   const R=C.rad;
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(R*2+500,R*2+500),
+  /* 🛣️ รอบ 213: ถนนจริงบางเส้นยื่นพ้นรัศมี rad (สุด ~3.7 กม.) — เดิม grid/พื้น/ขอบเมือง อิง rad=2200
+     ทำให้ถนนนอกรัศมี "ขับไม่ได้" (grid=0 คลานเหมือนนอกถนน) หรือ "ไปไม่ถึง" (รถโดนดึงกลับที่ rad-25)
+     → คำนวณขอบเขตจริงจากถนนทุกเส้น (รัศมีไกลสุด) แล้วขยายทุกอย่างให้คลุมสุดปลายถนน */
+  let RX=R;
+  C.r.forEach(rd=>{ const p=rd[3]; for(let i=0;i<p.length;i+=2){ const r=Math.hypot(p[i],p[i+1]); if(r>RX)RX=r; } });
+  RX=Math.ceil(RX)+80;                                       // เผื่อความกว้างถนน+กันชนขอบ
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(RX*2+500,RX*2+500),
     new THREE.MeshLambertMaterial({color:MODES.drive.ground}));
   ground.rotation.x=-Math.PI/2; ground.position.y=-.06; sc.add(ground);
 
@@ -993,7 +999,7 @@ function buildDriveCity(sc){
 
   /* ---------- ถนนทุกสาย (mesh รวมก้อนเดียว) + เส้นแบ่งเลนถนนใหญ่ ---------- */
   const roadTris=[], dashTris=[], nameSegs=[], roadPts=[];
-  const GS=6, GW=Math.ceil((R*2+80)/GS), GOFF=(R+40);       // road grid: 0=นอกถนน 1=ถนน 2=น้ำ
+  const GS=6, GW=Math.ceil(RX*2/GS), GOFF=RX;               // road grid: 0=นอกถนน 1=ถนน 2=น้ำ (คลุมสุดปลายถนน รอบ 213)
   const grid=new Uint8Array(GW*GW);
   const gset=(x,z,v)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
     if(gx>=0&&gz>=0&&gx<GW&&gz<GW){ const k=gz*GW+gx; if(v===1||!grid[k]) grid[k]=v; } };
@@ -1075,8 +1081,11 @@ function buildDriveCity(sc){
     }
   };
 
+  /* 🎨 รอบ 213: โทนเมือง "น่ารักเข้าชุดรถบล็อกสีสด" — ผนังพาสเทลลูกกวาด + หลังคาสีสดใส (toy town)
+     CUTE_ROOF ใช้ร่วมทั้งตึกจริง (ฝาครอบยอด) และตึกแถว (หลังคาจั่ว) ให้สีหลังคาทั้งเมืองเป็นชุดเดียวกัน */
+  const CUTE_ROOF=[0xff8f87,0x66c2f0,0x7fd8a6,0xffce5c,0xc7a3f2,0xf59ac4,0xffb46b,0x5ad1c4];
   /* ---------- ตึกจริง 79 หลัง (ผัง footprint ตรงพิกัดจริง) + ป้ายชื่อสถานที่ ---------- */
-  const tints=[0xcfc7b8,0xd8cfc0,0xbfc4cc,0xd9d2c2,0xc4cdc0,0xd6c9c9];
+  const tints=[0xffe0dd,0xdcefff,0xd9f5e2,0xfff2ce,0xe9dcff,0xd2f2ee,0xffe8cf,0xf7dcee];  // ผนังพาสเทลลูกกวาด
   C.b.forEach((b,bi)=>{
     const h=b[0], p=b[2];   // รอบ 183: เลิกใช้ชื่อ OSM (b[1]) — โชว์เฉพาะผู้ลงโฆษณา (SHOP_ADS)
     const shape=new THREE.Shape();
@@ -1085,6 +1094,10 @@ function buildDriveCity(sc){
     const g=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});
     g.rotateX(-Math.PI/2);                                   // extrude → แกน y · shape.y=-z → z โลกตรงพิกัดจริง
     sc.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:tints[bi%tints.length],side:THREE.DoubleSide})));
+    // 🏠 ฝาครอบยอดสีสด (roof cap) — ตึกจริงผังไม่สม่ำเสมอ ใช้แผ่นสีตามผังวางบนยอดแทนหลังคาจั่ว
+    const cap=new THREE.ExtrudeGeometry(shape,{depth:1.4,bevelEnabled:false}); cap.rotateX(-Math.PI/2);
+    const capM=new THREE.Mesh(cap,new THREE.MeshLambertMaterial({color:CUTE_ROOF[bi%CUTE_ROOF.length],side:THREE.DoubleSide}));
+    capM.position.y=h; sc.add(capM);
     let cx=0,cz=0; const n=p.length/2;
     for(let i=0;i<p.length;i+=2){ cx+=p[i]/n; cz+=p[i+1]/n; }
     for(let i=0;i<p.length;i+=2){                            // ขอบ polygon = กำแพง
@@ -1104,7 +1117,7 @@ function buildDriveCity(sc){
   const lots=C.p;
   const m4=new THREE.Matrix4(), q=new THREE.Quaternion(), eu=new THREE.Euler(),
         vv=new THREE.Vector3(), sv=new THREE.Vector3();
-  const pal=[0xd9cfc0,0xcdd5dd,0xd8c8b4,0xc8d2c2,0xd5cbd0,0xbfc8ce,0xe0d6c4,0xccc4b6].map(c=>new THREE.Color(c));
+  const pal=[0xffd9d9,0xd9ecff,0xd9f6df,0xfff1c9,0xece0ff,0xd2f4ef,0xffe6cc,0xf7dcee].map(c=>new THREE.Color(c));  // รอบ 213: ผนังตึกแถวพาสเทลลูกกวาด (คูณกับภาพ facade → เมืองสีสดน่ารัก)
   const FACADE_FILES={1:'house_1fl',2:'shop_2fl',3:'shop_3fl',4:'shop_4fl'};
   const grp={1:[],2:[],3:[],4:[]};
   lots.forEach(L=>{                                           // L = [x,z,rot,w,d,h]
@@ -1136,6 +1149,22 @@ function buildDriveCity(sc){
     };
     fimg.src='img/city/'+FACADE_FILES[fl]+'.png';
   });
+
+  /* 🏠 รอบ 213: หลังคาทรงปิรามิดสีลูกกวาด (hip roof) คลุมยอดตึกแถวทุกหลัง — เมืองน่ารักแบบ toy town
+     InstancedMesh ก้อนเดียว (1 draw call) · มุมหลังคาตรงมุมกล่องพอดี (cone 4 ด้าน หมุน 45°) · ชายคายื่นเล็กน้อย */
+  const roofGeo=new THREE.ConeGeometry(Math.SQRT1_2,1,4); roofGeo.rotateY(Math.PI/4);
+  const roof=new THREE.InstancedMesh(roofGeo,new THREE.MeshLambertMaterial({color:0xffffff}),lots.length);
+  const rcol=new THREE.Color();
+  for(let i=0;i<lots.length;i++){
+    const L=lots[i], rh=Math.max(1.4,Math.min(L[3],L[4])*0.5);   // สูงหลังคาตามด้านแคบ (ไม่แหลมเกิน)
+    eu.set(0,L[2],0); q.setFromEuler(eu);
+    vv.set(L[0],L[5]+rh/2,L[1]); sv.set(L[3]*1.12,rh,L[4]*1.12);  // ชายคายื่น 12%
+    m4.compose(vv,q,sv); roof.setMatrixAt(i,m4);
+    roof.setColorAt(i,rcol.set(CUTE_ROOF[i%CUTE_ROOF.length]));
+  }
+  roof.instanceMatrix.needsUpdate=true;
+  if(roof.instanceColor) roof.instanceColor.needsUpdate=true;
+  sc.add(roof);
 
   /* ---------- หอนาฬิกาวงเวียนต้นโพธิ์ (แลนด์มาร์กจุดเกิด 0,0) ---------- */
   const brick=new THREE.MeshLambertMaterial({color:0xa8542f});
@@ -1175,7 +1204,7 @@ function buildDriveCity(sc){
   });
 
   /* ---------- แผนที่เมืองสำหรับเรดาร์ (วาดครั้งเดียว 0.25px/m) ---------- */
-  const MPX=.25, MSZ=Math.ceil(R*2*MPX)+40;
+  const MPX=.25, MSZ=Math.ceil(RX*2*MPX)+40;                 // เรดาร์คลุมถนนนอกรัศมีด้วย (รอบ 213)
   cityMapCv=document.createElement('canvas'); cityMapCv.width=cityMapCv.height=MSZ;
   const mc=cityMapCv.getContext('2d');
   mc.fillStyle='rgba(16,26,20,.9)'; mc.fillRect(0,0,MSZ,MSZ);
@@ -1194,7 +1223,7 @@ function buildDriveCity(sc){
   mc.fillStyle='#ffab40'; mc.beginPath(); mc.arc(M0,M0,3,0,7); mc.fill();   // หอนาฬิกา
 
   worlds.drive={scene:sc, trees:[], buildings:[],
-    d:{grid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:R}};
+    d:{grid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};
   /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
      (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
   const junctions=[];
