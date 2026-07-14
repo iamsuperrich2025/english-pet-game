@@ -4460,6 +4460,13 @@ function renderMarketCard(){
   if(payBtn) payBtn.addEventListener('click', payCarLoanMonthly);
   const clsBtn = document.getElementById('car-close-loan');
   if(clsBtn) clsBtn.addEventListener('click', payCarLoanFull);
+  el.querySelectorAll('.car-pick').forEach(b=>b.addEventListener('click', ()=>{   // 🚗 รอบ 211: เลือกคันที่จะขับ
+    const i = +b.dataset.i;
+    if(i===state.carIdx) return;
+    state.carIdx = i; if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+    const nm = carInfo(state.cars[i].id); if(nm) toast(`🚗 เปลี่ยนไปขับ ${nm.name} แล้ว`);
+    saveState(); renderDashboard();
+  }));
   const wl = document.getElementById('btn-wishlist');
   if(wl) wl.addEventListener('click', openWishlistDialog);
   updateWishBadge();
@@ -4549,36 +4556,46 @@ function renderVehicleShop(){
     carsProbed = true;
     probeImages(CARS.map(c=>c.id), 'img/cars').then(()=>{ if(document.getElementById('mkt-vehicles')) renderMarketCard(); });
   }
-  /* กล่อง "รถของหนู" — สถานะ พ.ร.บ./ประกัน + งวดผ่อน (จ่ายงวด/โปะปิดยอด) */
+  /* 🚗 รอบ 211: รถของหนูหลายคัน — แถบเลือกคันขับ + รายละเอียดคันที่ขับอยู่ (พ.ร.บ./ประกัน/ผ่อน) */
   let mine = '';
-  if(state.car){
-    const my = carInfo(state.car.id), img = carImg(my.id);
-    const L = state.car.loan, overdue = carLoanOverdue(), payable = carLoanPayable();
-    mine = `<div class="car-mine" style="border-color:${my.c}">
+  if(state.cars && state.cars.length){
+    const pick = state.cars.map((car,i)=>{
+      const my = carInfo(car.id), img = carImg(car.id), isA = (i===state.carIdx);
+      return `<button class="car-pick${isA?' active':''}" data-i="${i}" style="border-color:${my.c}" title="${my.name}">
+        <div class="car-pick-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${my.c}33;border-color:${my.c}">🚗</span>`}</div>
+        <div class="car-pick-name">${my.name}${isA?' <b>▶</b>':''}</div>
+        ${car.loan&&car.loan.carry?'<div class="car-pick-od">⚠️ ค้างงวด</div>':''}
+      </button>`;
+    }).join('');
+    const car = myCar(), my = carInfo(car.id), img = carImg(my.id);
+    const L = car.loan, overdue = carLoanOverdue(), payable = carLoanPayable();
+    const detail = `<div class="car-mine" style="border-color:${my.c}">
       <div class="car-mine-pic">${img?`<img src="${img}" alt="">`:`<span class="car-emoji" style="background:${my.c}33;border-color:${my.c}">🚗</span>`}</div>
       <div class="car-mine-info">
-        <b>🚘 รถของหนู: ${my.name}</b><br>
-        <small>📋 พ.ร.บ. ✅ · 🛡️ ประกันภัย ${state.car.insured
+        <b>▶ คันที่ขับอยู่: ${my.name}</b><br>
+        <small>📋 พ.ร.บ. ✅ · 🛡️ ประกันภัย ${car.insured
           ? '✅ คุ้มครองชนรถผู้เล่นอื่น'
           : `❌ ยังไม่มี (ชนรถเพื่อน = จ่ายเอง 🪙${fmtNum(CAR_HITCAR_FEE)}/ครั้ง)`}</small>
         ${L?`<div class="car-loan ${overdue?'od':''}">📅 ผ่อนเหลือ <b>🪙${fmtNum(L.remain)}</b> · เดือนละ 🪙${fmtNum(L.perMonth)}${
-          overdue?`<br>⚠️ <b>ค้างงวด 🪙${fmtNum(overdue)} — ขับรถไม่ได้จนกว่าจะจ่าย!</b>`
+          overdue?`<br>⚠️ <b>ค้างงวด 🪙${fmtNum(overdue)} — ขับคันนี้ไม่ได้จนกว่าจะจ่าย!</b>`
           :(carLoanDue()-L.paid>0?`<br>งวดเดือนนี้เหลือ 🪙${fmtNum(carLoanDue()-L.paid)}`:'<br>งวดเดือนนี้จ่ายแล้ว ✅')}</div>`
         :'<div class="car-loan">💵 จ่ายครบแล้ว — รถเป็นของหนูเต็มตัว!</div>'}
       </div>
       <div class="car-mine-btns">
-        ${!state.car.insured?`<button class="hq-price" id="car-buy-ins">🛡️ ซื้อประกัน 🪙${fmtNum(CAR_INSURANCE)}</button>`:''}
+        ${!car.insured?`<button class="hq-price" id="car-buy-ins">🛡️ ซื้อประกัน 🪙${fmtNum(CAR_INSURANCE)}</button>`:''}
         ${L&&payable>0?`<button class="hq-price ${overdue?'car-od-btn':''}" id="car-pay-loan">📅 จ่ายงวด 🪙${fmtNum(payable)}</button>`:''}
         ${L?`<button class="hq-price" id="car-close-loan">💰 โปะปิดยอด 🪙${fmtNum(L.remain)}</button>`:''}
       </div>
     </div>`;
+    mine = `<div class="car-mine-head">🚘 รถของหนู (${state.cars.length} คัน) — แตะเลือกคันที่จะขับ · ทุกคันนับเป็นทรัพย์สินในแรงค์</div>
+      <div class="car-pick-list">${pick}</div>${detail}`;
   }
+  const owned = new Set((state.cars||[]).map(c=>c.id));
   const grid = CARS.map(c=>{
     const img = carImg(c.id);
-    const isMine = state.car && state.car.id === c.id;
+    const isMine = owned.has(c.id);
     const minToday = Math.ceil(c.price*CAR_DOWN_RATE) + CAR_PRB;   // ถูกสุดที่ต้องมีวันนี้ = ดาวน์+พ.ร.บ.
-    const btn = isMine ? `<button class="hq-price car-cur">🚘 รถของหนู</button>`
-      : state.car ? `<button class="hq-price car-cur">มีรถอยู่แล้ว</button>`
+    const btn = isMine ? `<button class="hq-price car-cur">🚘 มีคันนี้แล้ว</button>`
       : `<button class="hq-price car-buy ${state.coins>=minToday?'':'cant-afford'}" data-id="${c.id}">🪙${fmtNum(c.price)} · ดูรายละเอียด</button>`;
     return `<div class="hq-card ${isMine?'hq-cur':''}" style="border-color:${c.c}">
       <div class="hq-head">${c.name}</div>
@@ -4588,7 +4605,7 @@ function renderVehicleShop(){
     </div>`;
   }).join('');
   return `<div class="mkt-listhead" id="mkt-vehicles">🚗 ยานพาหนะ — โชว์รูมรถ</div>
-    <div class="gp-note">มีตั๋วโลกขับรถแล้วต้องมี<b>รถ</b>ถึงจะออกถนนได้ · ซื้อรถต้องมี <b>พ.ร.บ.</b> (บังคับ 🪙${fmtNum(CAR_PRB)})
+    <div class="gp-note">มีตั๋วโลกขับรถแล้วต้องมี<b>รถ</b>ถึงจะออกถนนได้ · <b>ซื้อสะสมได้หลายคัน</b> (ทุกคันนับเป็นทรัพย์สินในแรงค์ · เลือกคันขับได้) · ซื้อรถต้องมี <b>พ.ร.บ.</b> (บังคับ 🪙${fmtNum(CAR_PRB)})
     · <b>ประกันภัย</b>เลือกได้ (🪙${fmtNum(CAR_INSURANCE)} — คุ้มครองชนรถผู้เล่นอื่น)
     · จ่ายสด หรือผ่อน ${CAR_LOAN_MONTHS} เดือน (ดาวน์ ${Math.round(CAR_DOWN_RATE*100)}%) โปะปิดยอดได้ทุกเมื่อ</div>
     ${mine}
@@ -4737,7 +4754,7 @@ function pickMechaRobot(){
 /* กล่องซื้อรถ — แจ้งชัด 3 รายการ: ราคารถ · พ.ร.บ. (บังคับ) · ประกัน (ทางเลือก) + เลือกจ่ายสด/ผ่อน */
 function openCarBuyDialog(id){
   const c = carInfo(id);
-  if(!c || state.car) return;
+  if(!c || (state.cars||[]).some(car=>car.id===id)) return;   // 🚗 รอบ 211: ซื้อได้หลายคัน (บล็อกเฉพาะคันที่มีแล้ว)
   sfx.select();
   let ins = false, plan = 'cash';
   const down = Math.ceil(c.price*CAR_DOWN_RATE);
@@ -4779,8 +4796,10 @@ function openCarBuyDialog(id){
     const t = todayCost();
     if(state.coins < t){ sfx.wrong(); toast(`เหรียญยังไม่พอ — วันนี้ต้องจ่าย 🪙${fmtNum(t)} สู้ๆ!`); return; }
     state.coins -= t;
-    state.car = {id, insured:ins,
-      loan: plan==='cash' ? null : {remain:c.price-down, perMonth, month:ymStr(Date.now()), paid:0, carry:0}};
+    state.cars = state.cars || [];
+    state.cars.push({id, insured:ins,
+      loan: plan==='cash' ? null : {remain:c.price-down, perMonth, month:ymStr(Date.now()), paid:0, carry:0}});
+    state.carIdx = state.cars.length - 1;                 // 🚗 คันใหม่ = คันที่ขับทันที
     if(typeof sellInc==='function') sellInc(id);          // 🛒 นับยอดขายรถ
     sfx.buy();
     toast(plan==='cash'
@@ -4795,15 +4814,17 @@ function openCarBuyDialog(id){
 }
 
 function buyCarInsurance(){
-  if(!state.car || state.car.insured) return;
+  const car = myCar();
+  if(!car || car.insured) return;
   if(state.coins < CAR_INSURANCE){ sfx.wrong(); toast(`ประกันภัยรถ 🪙${fmtNum(CAR_INSURANCE)} — เหรียญยังไม่พอ สู้ๆ!`); return; }
   askConfirm(`<h2>🛡️ ซื้อประกันภัยรถ</h2>
     <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(CAR_INSURANCE)}</b> (จ่ายครั้งเดียว)<br>
     ชนรถผู้เล่นอื่นเมื่อไหร่ ประกันจ่ายค่าเสียหาย 🪙${fmtNum(CAR_HITCAR_FEE)} ให้ทุกครั้ง<br>
     <small>ไม่มีประกัน = จ่ายเองเต็มๆ ตอนออกจากโลกขับรถ</small></p>`,
     'ซื้อเลย! 🛡️', ()=>{
+      const car2 = myCar(); if(!car2) return;
       state.coins -= CAR_INSURANCE;
-      state.car.insured = true;
+      car2.insured = true;
       sfx.buy();
       toast('🛡️ มีประกันแล้ว! ชนรถเพื่อนเมื่อไหร่ประกันจ่ายให้');
       saveState();
@@ -4824,7 +4845,8 @@ function payCarLoanMonthly(){
 }
 
 function payCarLoanFull(){
-  const L = state.car && state.car.loan;
+  const car = myCar();
+  const L = car && car.loan;
   if(!L) return;
   if(state.coins < L.remain){ sfx.wrong(); toast(`โปะปิดยอดต้องใช้ 🪙${fmtNum(L.remain)} — เหรียญยังไม่พอ`); return; }
   askConfirm(`<h2>💰 โปะปิดยอดผ่อนรถ</h2>
@@ -4842,8 +4864,8 @@ function payCarLoanFull(){
 
 /* 🔐 ด่านกันขับ: มีตั๋วแต่ยังไม่มีรถ / ค้างค่างวด — คืน '' เมื่อขับได้ */
 function carDriveBlock(){
-  if(!state.car) return 'nocar';
-  if(carLoanOverdue() > 0) return 'overdue';
+  if(!myCar()) return 'nocar';                 // 🚗 รอบ 211: เช็กคันที่ขับอยู่
+  if(carLoanOverdue() > 0) return 'overdue';   // คันที่ขับค้างงวด = ขับไม่ได้ (สลับไปคันอื่นได้)
   return '';
 }
 function gotoVehicleShop(){

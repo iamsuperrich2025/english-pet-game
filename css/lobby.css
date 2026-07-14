@@ -1105,6 +1105,19 @@ html.no-anim .rs-big-img{animation:none}
 .car-mine-btns .car-od-btn{background:#fdecea;border-color:#e57368;color:#9d2f24;animation:lawPulse 1.2s ease-in-out infinite;}
 @keyframes lawPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
 .car-locked small{line-height:1.55;}
+/* 🚗 รอบ 211: แถบเลือกคันที่จะขับ (มีหลายคัน) */
+.car-mine-head{font-size:13px;font-weight:800;color:#8b6a1f;margin:2px 0 6px;}
+.car-pick-list{display:flex;gap:9px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:none;}
+.car-pick-list::-webkit-scrollbar{display:none;}
+.car-pick{flex:0 0 auto;width:96px;background:linear-gradient(180deg,#fffdf2,#fdf3d8);border:2px solid #e8c86a;
+  border-radius:12px;padding:7px 6px 8px;cursor:pointer;font-family:inherit;display:flex;flex-direction:column;align-items:center;gap:3px;transition:.15s;}
+.car-pick:hover{transform:translateY(-2px);}
+.car-pick.active{border-color:#3a9e4a;box-shadow:0 0 0 2px rgba(58,158,74,.35),0 4px 12px rgba(58,158,74,.25);}
+.car-pick-pic{width:100%;height:52px;display:flex;align-items:center;justify-content:center;}
+.car-pick-pic img{max-height:52px;max-width:90%;object-fit:contain;}
+.car-pick-name{font-size:11.5px;font-weight:800;color:#4a3d18;text-align:center;line-height:1.1;}
+.car-pick-name b{color:#2e7d32;}
+.car-pick-od{font-size:10px;font-weight:800;color:#c62828;}
 /* กล่องซื้อรถ (levelup-overlay กลางจอ) — 3 รายการ: รถ/พ.ร.บ./ประกัน + เลือกจ่ายสด-ผ่อน */
 .car-buy-box{max-width:min(440px,94vw);text-align:center;}
 .cb-pic{display:flex;justify-content:center;margin:4px 0 8px;}

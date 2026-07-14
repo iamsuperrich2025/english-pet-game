@@ -54,8 +54,8 @@ const DEFAULT_STATE = {
   robots:[],                          // รอบ 199: หุ่นยนต์นักรบที่ครอบครอง (array ของ id · ซื้อกี่ตัวก็ได้)
   mechaRobot:null,                    // หุ่นที่เลือกใช้ล่าสุดในโลก 3D
   mechaDone:[],                       // คำที่พิชิตในโลกหุ่นยนต์ (แยกคลังต่อโลก)
-  car:null,                           // 🚗 รอบ 131: รถส่วนตัว {id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month:'YYYY-MM',paid,carry}}
-                                      //    ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ (ไม่มีรถ=ขับไม่ได้) · loan.carry=ยอดงวดค้างเลยกำหนด (>0 = ล็อกขับ)
+  cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
+  carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
   daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
   daredevilBadge:0,                   // รอบ 87: เข็มนักบินผาดโผนสูงสุดที่เคยได้ 0=ไม่มี 1=🎯(10) 2=🌀(30) 3=🔥(60) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
@@ -284,19 +284,23 @@ function loadState(){
       if(typeof s.soccerNo !== 'string') s.soccerNo = '10';
       if(!Array.isArray(s.robots)) s.robots = [];                                            // รอบ 199: หุ่นยนต์นักรบ
       if(!Array.isArray(s.mechaDone)) s.mechaDone = [];
-      // 🚗 รอบ 131: รถส่วนตัว — เซฟเก่า/ข้อมูลเสีย → ไม่มีรถ · loan เสีย → ถือว่าผ่อนหมดแล้ว (ให้ประโยชน์ผู้เล่น ปลอดภัยกว่าล็อกขับผิดๆ)
-      if(!s.car || typeof s.car !== 'object' || !carInfo(s.car.id)) s.car = null;
-      if(s.car){
-        s.car.insured = s.car.insured === true;
-        const l = s.car.loan;
-        if(!l || typeof l !== 'object' || typeof l.remain !== 'number' || l.remain <= 0) s.car.loan = null;
+      // 🚗 รอบ 211: รถส่วนตัวหลายคัน — ย้ายจากเซฟเก่า s.car (คันเดียว) → s.cars[] · sanitize รายคัน
+      if(s.car && typeof s.car === 'object' && !Array.isArray(s.cars)){ s.cars = [s.car]; }   // migrate คันเดียว→array
+      delete s.car;
+      if(!Array.isArray(s.cars)) s.cars = [];
+      s.cars = s.cars.filter(c => c && typeof c === 'object' && carInfo(c.id));               // ทิ้ง id เสีย
+      s.cars.forEach(c => {
+        c.insured = c.insured === true;
+        const l = c.loan;
+        if(!l || typeof l !== 'object' || typeof l.remain !== 'number' || l.remain <= 0) c.loan = null;
         else{
           if(typeof l.perMonth !== 'number' || l.perMonth < 1) l.perMonth = Math.ceil(l.remain/CAR_LOAN_MONTHS);
           if(typeof l.month !== 'string') l.month = ymStr(Date.now());
           if(typeof l.paid  !== 'number' || l.paid  < 0) l.paid  = 0;
           if(typeof l.carry !== 'number' || l.carry < 0) l.carry = 0;
         }
-      }
+      });
+      if(typeof s.carIdx !== 'number' || s.carIdx < 0 || s.carIdx >= s.cars.length) s.carIdx = 0;
       if(typeof s.daredevilCount !== 'number') s.daredevilCount = 0;                        // รอบ 87
       if(typeof s.daredevilBadge !== 'number') s.daredevilBadge = 0;
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70
@@ -489,10 +493,10 @@ function assetValue(){
   if(state.driveTicket) v += DRIVE_PRICE;                                                  // ตั๋วโลกขับรถกำแพงเพชร (รอบ 113)
   if(state.soccerTicket) v += SOCCER_PRICE;                                                // ตั๋วโลกสนามฟุตบอล (รอบ 196)
   if(Array.isArray(state.robots)) for(const rid of state.robots){ const r=(typeof ROBOTS!=='undefined')&&ROBOTS.find(x=>x.id===rid); if(r) v += r.price; }  // หุ่นยนต์นักรบ (รอบ 199)
-  if(state.car){                                                                           // 🚗 รถ+พ.ร.บ.+ประกัน (รอบ 131)
-    const c = carInfo(state.car.id);
+  for(const car of (state.cars || [])){                                                    // 🚗 รอบ 211: รถทุกคัน+พ.ร.บ.+ประกัน (สะสมนับเป็นทรัพย์สินรวม)
+    const c = carInfo(car.id);
     // ผ่อนอยู่นับเฉพาะส่วนที่จ่ายแล้ว (ราคาเต็ม - หนี้คงเหลือ) → ซื้อผ่อน net worth เท่าเดิม ไม่ได้แรงค์ฟรี
-    if(c) v += c.price - (state.car.loan ? state.car.loan.remain : 0) + CAR_PRB + (state.car.insured ? CAR_INSURANCE : 0);
+    if(c) v += c.price - (car.loan ? car.loan.remain : 0) + CAR_PRB + (car.insured ? CAR_INSURANCE : 0);
   }
   for(const t of state.farm){ const f = fruitInfo(t.id); if(f) v += f.price; }             // ต้นไม้ในสวน
   for(const id of state.collection){ const c = collectInfo(id); if(c) v += c.price; }      // สินค้าสะสมในคลัง
@@ -512,7 +516,7 @@ function assetCount(){
   n += state.farm.length;                  // ต้นไม้ในสวน
   n += state.collection.length;            // สินค้าสะสมในคลัง
   n += state.listings.length;              // ของที่ลงขายอยู่
-  if(state.car) n += 1;                     // 🚗 รถส่วนตัว (รอบ 131)
+  n += (state.cars ? state.cars.length : 0); // 🚗 รอบ 211: รถส่วนตัว (นับทุกคัน)
   return n;
 }
 
@@ -653,47 +657,51 @@ function billTick(now){
   if(!state.home){ delete state.bills.maint; delete state.bills.trash; }
   /* 🚗 รอบ 131: งวดผ่อนรถรายเดือน — ข้ามเข้าเดือนใหม่ทั้งที่งวดยังจ่ายไม่ครบ
      → ส่วนที่ขาดทบเป็น "ยอดค้าง" (carry) · ค้าง = ล็อกขับจนกว่าจะจ่าย (ไม่ยึดรถ — ผู้ใช้เคาะ 11 ก.ค.) */
-  const L = state.car && state.car.loan;
-  if(L && L.month !== ym){
-    const due = Math.min(L.perMonth, Math.max(0, L.remain - (L.carry||0)));
-    const short = Math.max(0, due - (L.paid||0));
-    if(short > 0){
-      L.carry = (L.carry||0) + short;
-      if(typeof toast === 'function')
-        toast(`🚗⚠️ ค้างค่างวดรถ 🪙${short.toLocaleString()} — ขับรถไม่ได้จนกว่าจะจ่ายที่หมวดยานพาหนะนะ`, 4200);
+  (state.cars || []).forEach(car => {                     // 🚗 รอบ 211: ทบยอดค้างงวดผ่อนทุกคัน
+    const L = car.loan;
+    if(L && L.month !== ym){
+      const due = Math.min(L.perMonth, Math.max(0, L.remain - (L.carry||0)));
+      const short = Math.max(0, due - (L.paid||0));
+      if(short > 0){
+        L.carry = (L.carry||0) + short;
+        if(typeof toast === 'function')
+          toast(`🚗⚠️ ค้างค่างวดรถ 🪙${short.toLocaleString()} — ขับรถไม่ได้จนกว่าจะจ่ายที่หมวดยานพาหนะนะ`, 4200);
+      }
+      L.month = ym; L.paid = 0;
     }
-    L.month = ym; L.paid = 0;
-  }
+  });
 }
+/* 🚗 รอบ 211: รถคันที่เลือกใช้ขับตอนนี้ (ไว้แทน state.car เดิม) */
+function myCar(){ return (state.cars && state.cars[state.carIdx]) || null; }
 
 /* 🚗 รอบ 131: ตัวช่วยงวดผ่อนรถ — เรียกจาก UI หมวดยานพาหนะ + ด่านล็อกขับ
    remain = หนี้คงเหลือทั้งหมด · carry = ส่วนของ remain ที่ค้างเลยกำหนด (>0 = ล็อกขับ)
    งวดเดือนนี้ = min(perMonth, remain-carry) · paid = จ่ายงวดเดือนนี้ไปแล้วเท่าไหร่ */
 function carLoanDue(){
-  const L = state.car && state.car.loan;
+  const L = myCar() && myCar().loan;
   if(!L) return 0;
   return Math.min(L.perMonth, Math.max(0, L.remain - (L.carry||0)));
 }
 function carLoanOverdue(){
-  const L = state.car && state.car.loan;
+  const L = myCar() && myCar().loan;
   return L ? (L.carry||0) : 0;
 }
 /* ยอดที่ควรจ่ายตอนนี้ = ยอดค้าง + งวดเดือนนี้ส่วนที่ยังไม่จ่าย */
 function carLoanPayable(){
-  const L = state.car && state.car.loan;
+  const L = myCar() && myCar().loan;
   if(!L) return 0;
   return (L.carry||0) + Math.max(0, carLoanDue() - (L.paid||0));
 }
 /* จ่ายเงินเข้ายอดผ่อน amt เหรียญ (ผู้เรียกหักเหรียญเอง) — เคลียร์ยอดค้างก่อน แล้วเข้างวดเดือนนี้ ที่เหลือ=โปะต้น
    ผ่อนหมด → ปลดหนี้ (loan=null) · คืน true เมื่อปิดยอดแล้ว */
 function carLoanPay(amt){
-  const L = state.car && state.car.loan;
+  const L = myCar() && myCar().loan;
   if(!L || amt <= 0) return false;
   const clearCarry = Math.min(amt, L.carry||0);
   L.carry = (L.carry||0) - clearCarry;
   L.paid = (L.paid||0) + Math.max(0, amt - clearCarry);
   L.remain = Math.max(0, L.remain - amt);
-  if(L.remain <= 0){ state.car.loan = null; return true; }
+  if(L.remain <= 0){ const c=myCar(); if(c) c.loan = null; return true; }
   return false;
 }
 

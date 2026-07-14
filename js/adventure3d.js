@@ -2764,6 +2764,16 @@ function drawMinimap(){
 /* ============================================================
    DOM overlay + CSS (สร้างครั้งเดียว — self-contained ไม่แตะ style.css)
    ============================================================ */
+/* 🚗 รอบ 211: โหลดคอนโซล/หน้าปัดตามคันที่ขับ — dash_<carId>.png (ถ้ามี) → dash.png → CSS จำลอง */
+function loadCarDash(){
+  if(!carDashEl) return;
+  const cid = (typeof myCar==='function' && myCar()) ? myCar().id : null;
+  const put = im=>{ carDashEl.innerHTML=''; carDashEl.appendChild(im); carDashImg=im; };
+  const css = ()=>{ carDashEl.innerHTML='<div class="cd-css"></div>'; carDashImg=null; };
+  const tryLoad = (src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
+  const base = ()=>tryLoad('img/car/dash.png', css);
+  if(cid) tryLoad('img/car/dash_'+cid+'.png', base); else base();
+}
 function buildDom(){
   const st=document.createElement('style');
   st.textContent=`
@@ -3550,10 +3560,7 @@ function buildDom(){
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
-  const cdImg=new Image();
-  cdImg.onload=()=>{ carDashEl.innerHTML=''; carDashEl.appendChild(cdImg); carDashImg=cdImg; };
-  cdImg.onerror=()=>{ carDashEl.innerHTML=`<div class="cd-css"></div>`; };
-  cdImg.src='img/car/dash.png';
+  loadCarDash();                                    // 🚗 รอบ 211: คอนโซลตามคันที่ขับ (dash_<id>.png → dash.png → CSS)
   carGaugeCv=overlayEl.querySelector('#adv-cargauges');
   carGaugeCtx=carGaugeCv.getContext('2d');
   const cwImg=new Image();
@@ -4581,7 +4588,7 @@ function tickDrive(dt,now){
           }else{
             showBanner(`🚗💥 ชนรถของ <b>${escapeHTML(pr.n)}</b>!<br><small>โดนค่าซ่อมเจตนาชนไปแล้วรอบนี้ — ขับดีๆ นะ 🙏</small>`);
           }
-        }else if(state.car && state.car.insured){
+        }else if(typeof myCar==='function' && myCar() && myCar().insured){   // 🚗 รอบ 211: ประกันของคันที่ขับอยู่
           showBanner(`🚗💥 ชนรถของ <b>${escapeHTML(pr.n)}</b>!<br><small>🛡️ ประกันเป็นผู้จ่ายให้แล้ว — ขับระวังขึ้นอีกนิดนะ${warn2}</small>`);
         }else{
           carFines.push({t:'hitcar', fine:CAR_HITCAR_FEE});
@@ -6347,6 +6354,7 @@ function start(md){
     // 🚦 รอบ 133: รีเซ็ตตัวนับเจตนาชน + ไฟแดง แล้วปักไฟจราจรตามแยกใหญ่ (ครั้งแรกครั้งเดียว)
     carPeerHits=0; rlChkAt=0; rlCoolAt=0; rlForce=null;
     buildTrafficLights();
+    loadCarDash();                                 // 🚗 รอบ 211: คอนโซล/หน้าปัดตามคันที่ขับ (dash_<id>.png · fallback dash.png)
     carStartShow();
   }else if(M.soccer){
     // ⚽ รีเซ็ตเล็ง/ชาร์จ/บอล · กล้องเริ่มหลังบอล (kit picker เด้งก่อนเล่น)
