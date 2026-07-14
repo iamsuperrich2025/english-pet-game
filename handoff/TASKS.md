@@ -27,6 +27,18 @@
 - **รอผู้ใช้: ทดสอบจริง 2 เครื่อง:** เครื่อง A เปิดเผยกิจกรรมในตั้งค่า ⚙️ + ทำภารกิจ/สอบผ่าน · เครื่อง B เปิด profile ของ A (เห็นกิจกรรม + กด ➕ ติดตาม) → กลับ lobby ดูฟีดขึ้นแถวใหม่ · แถมดูไฟเลี้ยวรถเพื่อน (รอบ 132 เพิ่งเปิดใช้พร้อมกัน)
 - หรือเลือกงานใหม่จาก backlog (`handoff/BACKLOG.md`) / feedback หลังลองจริงมือถือรอบ 146–155
 
+### ✅ รอบ 211 (14 ก.ค.) — 💾 สำรองข้อมูล server ลงเครื่อง (เผื่อโดนลบเหมือน GitHub)
+- **ผู้ใช้สั่ง (รอบ 209):** "ข้อมูลทุกอย่างที่เอาขึ้น server ให้สำรองไว้ในเครื่องด้วย รวมถึงระบบ database เผื่อโดนลบเหมือน GitHub"
+- **สคริปต์ใหม่ `tools/backup_db.sh`** (ใช้ firebase CLI ที่ login ค้างไว้ ชุดเดียวกับ deploy) ดึงลงเครื่อง:
+  - **(1) Realtime Database ทั้งก้อน** → `backups/db_<เวลา>.json` (`firebase database:get "/"`)
+  - **(2) รายชื่อผู้ใช้ Auth ทั้งหมด** → `backups/auth_<เวลา>.json` (`firebase auth:export`)
+  - เก็บย้อนหลัง 14 ชุด/ชนิด (ลบเก่ากว่านั้นออกกันดิสก์เต็ม)
+- **⚠️ gotcha ที่แก้:** Git Bash แปลง `"/"` เป็น path วินโดวส์ → `database:get` error "Path must begin with /" · แก้ด้วย `export MSYS_NO_PATHCONV=1` · แต่ทำให้ `auth:export` (รับ path เป็น argument) เปิดไฟล์ POSIX path ไม่ได้ → ต้อง `cygpath -w` แปลง output เป็น path วินโดวส์เฉพาะ auth:export
+- **`backups/` เข้า .gitignore** — มีข้อมูลเด็ก (ชื่อเล่น/เซฟ) ห้าม push ขึ้น repo สาธารณะ
+- **ยืนยันรันจริง:** db 16,203 bytes (chats/users/... จริง) + auth 3 accounts 1,928 bytes ✓ · **กู้คืน:** `firebase database:set / backups/db_<เวลา>.json` + `firebase auth:import backups/auth_<เวลา>.json`
+- **ไม่ต้อง deploy** (สคริปต์ dev-only · deploy_firebase.sh ตัด tools/ ออกอยู่แล้ว)
+- **💡 ต่อยอด (ยังไม่ทำ · เสนอผู้ใช้):** (1) ตั้ง Task Scheduler วินโดวส์รันอัตโนมัติทุกวัน (2) ปุ่มให้ผู้เล่น export/import เซฟตัวเองเป็นไฟล์ JSON ในหน้าตั้งค่า
+
 ### ✅ รอบ 211 (14 ก.ค.) — 🚗 ระบบซื้อรถหลายคัน (multi-car) + เลือกคันที่จะขับ (version .202)
 - **ผู้ใช้สั่ง (รอบ 209):** "ไม่จำกัด ว่าจะต้องซื้อได้แค่คันเดียว บางคนอยากซื้อสะสมหลายคัน · แต่ให้แต่ละคันมีลักษณะเฉพาะตัว เช่น สี console ภายใน + เสียงเครื่องยนต์"
 - **เปลี่ยนโมเดล `state.car` (คันเดียว) → `state.cars[]` + `carIdx`** (คันที่กำลังขับ) · migration: ของเดิม `state.car`→`[state.car]` อัตโนมัติ · helper `myCar()` = `state.cars[state.carIdx]` · ทุกที่ที่อ้าง `state.car` เปลี่ยนเป็น `myCar()` (`js/state.js`, `js/ui.js`, `js/adventure3d.js`)
