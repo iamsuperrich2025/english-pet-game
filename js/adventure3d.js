@@ -201,6 +201,9 @@ let soccerStartEl=null, powerFillEl=null;
 const MECHA_EYE=5.0, MECHA_ACCEL=9, MECHA_VMAX=11, MECHA_DECEL=7, MECHA_TURN=1.35;
 const ALIEN_COUNT=3, ALIEN_SPEED=2.4, MECHA_LETTER_COIN=3;
 const MECHA_ATK_RANGE=8, MECHA_ATK_DMG=8;          // 🤖 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → HUD กะพริบแดง + สัญญาณเตือน
+const ALIEN_SHOT_SPD=15, ALIEN_SHOT_DMG=6, ALIEN_SHOT_GAP=3200;   // 🤖 รอบ 226: เอเลี่ยนยิงกระสุน (หลบได้)
+const POWERUP_GAP=15000, POWERUP_MAX=2, POWERUP_RANGE=3.4, POWERUP_HEAL=30;   // ❄️❤️ ของเก็บลดร้อน/ฟื้นพลัง
+const BOSS_EVERY=5, BOSS_SCALE=1.85, BOSS_BONUS=45;   // 👾 บอสทุก 5 คำ (คำยาวพิเศษ + โบนัสเหรียญ)
 /* อาวุธต่อหุ่น (ผูกกับ robot_id ในตลาด) — ต่างกันที่ สี tracer · จังหวะยิง · ลูกเล่น (twin/spread/beam) */
 const MECHA_WEAPONS={
   robot_01:{name:'หอกพลาสมา',   color:0xff4d4d, gap:300},
@@ -219,6 +222,7 @@ let mFwdBtn=0, mStrafeBtn=0, mFireHeld=false;
 let aliens=[], mechaWeapon=MECHA_WEAPONS.robot_01, mechaTracers=[], mFocusAlien=null;
 let mhUI=null, mHeat=0, mHudAt=0;   // 🤖 รอบ 224: กรอบ HUD ห้องนักบิน (ภาพตามหุ่น + ค่าตัวเลขเรียลไทม์ + ความร้อนปืน)
 let mOverheat=false, mHitAt=0, mLowHp=false;   // 🤖 รอบ 225: ปืนโอเวอร์ฮีต + iframe โดนตี + สถานะพลังงานต่ำ
+let alienShots=[], powerups=[], mNextPowerAt=0;   // 🤖 รอบ 226: กระสุนเอเลี่ยน + ของเก็บ (คูลแดนต์/ซ่อม)
 
 /* ============================================================
    📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
@@ -3493,6 +3497,7 @@ function buildDom(){
   html.no-anim #mecha-hud .mh-rsweep{animation:none;opacity:.32}
   #mecha-hud .mh-blip{position:absolute;left:75px;top:75px;width:7px;height:7px;border-radius:50%;
     background:var(--mh);box-shadow:0 0 7px var(--mh);transform:translate(-50%,-50%);display:none}
+  #mecha-hud .mh-blip.boss{width:12px;height:12px;background:#ff3b6b;box-shadow:0 0 10px #ff3b6b}
   #mecha-hud .mh-blip.tgt{width:11px;height:11px;background:#fff;box-shadow:0 0 10px var(--mh),0 0 4px #fff;
     animation:mhBlip .7s ease-in-out infinite}
   @keyframes mhBlip{50%{transform:translate(-50%,-50%) scale(1.5)}}
@@ -6164,18 +6169,34 @@ const MechaAudio={
       const g=c.createGain(); g.gain.setValueAtTime(.0001,t+dt); g.gain.exponentialRampToValueAtTime(.16,t+dt+.02); g.gain.exponentialRampToValueAtTime(.0001,t+dt+.13);
       const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=800; bp.Q.value=1.2;
       o.connect(bp); bp.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.14); }); },
+  enemyShot(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // 👾 เสียงเอเลี่ยนยิง (ซาวด์ต่ำลง)
+    const o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(300,t); o.frequency.exponentialRampToValueAtTime(90,t+.22);
+    const g=c.createGain(); g.gain.setValueAtTime(.14,t); g.gain.exponentialRampToValueAtTime(.001,t+.24);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.25); },
+  pickup(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // ✨ เสียงเก็บของ (ไล่ขึ้นสดใส)
+    [660,990,1320].forEach((f,i)=>{ const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(f,t+i*.07);
+      const g=c.createGain(); g.gain.setValueAtTime(.0001,t+i*.07); g.gain.exponentialRampToValueAtTime(.16,t+i*.07+.02); g.gain.exponentialRampToValueAtTime(.0001,t+i*.07+.16);
+      o.connect(g); g.connect(c.destination); o.start(t+i*.07); o.stop(t+i*.07+.18); }); },
 };
-function makeAlien(){
+/* ✨ รอบ 226: สไปรต์ไอคอนอิโมจิ (ของเก็บ) */
+function emojiSprite(emoji){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const x=cv.getContext('2d'); x.font='96px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(emoji,64,74);
+  return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
+}
+function makeAlien(boss){
   const grp=new THREE.Group();
-  const bodyCol=new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
-  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol}));
+  const bodyCol = boss ? 0xff2f5f : new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
+  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol,emissive:boss?0x551126:0x000000}));
   body.scale.set(1,1.15,1); grp.add(body);
-  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:0xffee55}));
+  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:boss?0xff5555:0xffee55}));
     e.position.set((i-1)*.8,.5,-1.95); grp.add(e); }
   const tCol=new THREE.MeshLambertMaterial({color:bodyCol});
   for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; const leg=new THREE.Mesh(new THREE.CylinderGeometry(.18,.05,2.8,6),tCol);
     leg.position.set(Math.cos(a)*1.6,-1.7,Math.sin(a)*1.6); leg.rotation.z=Math.cos(a)*.5; leg.rotation.x=Math.sin(a)*.5; grp.add(leg); }
-  const word=(pickWords(1)[0])||{en:'cat',th:'แมว'};
+  let word;
+  if(boss){ const c=pickWords(8); word=(c.slice().sort((a,b)=>b.en.length-a.en.length)[0])||{en:'dragon',th:'มังกร'}; }
+  else word=(pickWords(1)[0])||{en:'cat',th:'แมว'};
   const letters=[]; const n=word.en.length;
   word.en.split('').forEach((ch,i)=>{
     const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
@@ -6185,9 +6206,12 @@ function makeAlien(){
     letters.push({ch,spr,idx:i,off,done:false});
   });
   const p=alienSpawnPos();
-  grp.position.set(p.x,4.5,p.z); scene.add(grp);
-  const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now()};
-  aliens.push(al); return al;
+  grp.position.set(p.x,4.5,p.z); if(boss) grp.scale.setScalar(BOSS_SCALE); scene.add(grp);
+  const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now(),
+            boss:!!boss, gs:boss?BOSS_SCALE:1, shotAt:performance.now()+1400+Math.random()*1600};
+  aliens.push(al);
+  if(boss) showBanner('👾 <b>บอสมาแล้ว!</b> คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙');
+  return al;
 }
 function alienSpawnPos(){
   for(let i=0;i<24;i++){ const x=(Math.random()*2-1)*(HALF-8), z=(Math.random()*2-1)*(HALF-8);
@@ -6218,12 +6242,72 @@ function setMechaHudSkin(rid){
   if(mhUI.heatlbl) mhUI.heatlbl.textContent='HEAT';
   if(mhUI.root) mhUI.root.classList.remove('locked','hit','overheat','lowhp');
 }
-/* 🚨 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → เสียหาย + HUD กะพริบแดง + คลักซอนเตือน */
-function mechaHitByAlien(a){
-  damagePlayer(MECHA_ATK_DMG);                                // ลด hp + แฟลช #adv-dmg + สั่น + knockedOut ถ้า hp หมด
+/* 🚨 รอบ 225: โดนโจมตี → เสียหาย + HUD กะพริบแดง + คลักซอนเตือน */
+function mechaDamageFx(n){
+  damagePlayer(n);                                            // ลด hp + แฟลช #adv-dmg + สั่น + knockedOut ถ้า hp หมด
   MechaAudio.warn();
   if(mhUI&&mhUI.root){ mhUI.root.classList.remove('hit'); void mhUI.root.offsetWidth; mhUI.root.classList.add('hit'); }
-  if(a&&a.grp){ a.grp.scale.setScalar(1.28); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(1); },160); }   // พุ่งเข้าใส่ (เด้งโต)
+}
+function mechaHitByAlien(a){
+  mechaDamageFx(MECHA_ATK_DMG);
+  if(a&&a.grp){ const gs=a.gs||1; a.grp.scale.setScalar(gs*1.18); setTimeout(()=>{ if(a.grp) a.grp.scale.setScalar(gs); },160); }   // พุ่งเข้าใส่ (เด้งโต · คืนสเกลเดิม รวมบอส)
+}
+/* 👾 รอบ 226: เอเลี่ยนยิงกระสุนใส่หุ่น (เล็งตรงตำแหน่งปัจจุบัน — หลบได้ด้วยการสเตรฟ/เดิน) */
+function spawnAlienShot(a){
+  const from=a.grp.position.clone(); from.y=4.2;
+  const dir=camera.position.clone().sub(from); dir.y+=.5; dir.normalize();
+  const m=new THREE.Mesh(new THREE.SphereGeometry(a.boss?.6:.4,10,8),
+    new THREE.MeshBasicMaterial({color:a.boss?0xff3b6b:0xffb43a}));
+  m.position.copy(from); scene.add(m);
+  alienShots.push({mesh:m,vel:dir.multiplyScalar(ALIEN_SHOT_SPD*(a.boss?1.1:1)),life:5,dmg:a.boss?ALIEN_SHOT_DMG+3:ALIEN_SHOT_DMG});
+  MechaAudio.enemyShot();
+}
+function removeAlienShot(i){
+  const s=alienShots[i]; if(!s) return; scene.remove(s.mesh);
+  if(s.mesh.geometry)s.mesh.geometry.dispose(); if(s.mesh.material)s.mesh.material.dispose();
+  alienShots.splice(i,1);
+}
+function tickAlienShots(dt,now){
+  for(let i=alienShots.length-1;i>=0;i--){
+    const s=alienShots[i]; s.mesh.position.addScaledVector(s.vel,dt); s.life-=dt;
+    if(s.mesh.position.distanceTo(camera.position)<2.2){          // โดนหุ่น
+      if(now>mHitAt){ mHitAt=now+700; mechaDamageFx(s.dmg); }
+      removeAlienShot(i); continue;
+    }
+    if(s.life<=0 || Math.abs(s.mesh.position.x)>HALF || Math.abs(s.mesh.position.z)>HALF || s.mesh.position.y<0) removeAlienShot(i);
+  }
+}
+/* ❄️❤️ รอบ 226: ของเก็บกลางสนาม — คูลแดนต์ (ลดร้อน) / ซ่อมเกราะ (ฟื้น hp) */
+function spawnPowerup(){
+  const type = (hp<=60 && Math.random()<.6)?'repair' : (mHeat>50||mOverheat)?'cool' : (Math.random()<.5?'cool':'repair');
+  const grp=new THREE.Group();
+  const col=type==='cool'?0x5fd0ff:0x4dff9b;
+  const core=new THREE.Mesh(new THREE.OctahedronGeometry(.95,0),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.5}));
+  grp.add(core);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(1.35,.09,8,24),new THREE.MeshBasicMaterial({color:col}));
+  ring.rotation.x=Math.PI/2; grp.add(ring);
+  const icon=emojiSprite(type==='cool'?'❄️':'❤️'); icon.scale.set(2.3,2.3,1); grp.add(icon);
+  const p=alienSpawnPos(); grp.position.set(p.x,2.6,p.z); scene.add(grp);
+  powerups.push({grp,core,ring,type,bob:Math.random()*6});
+}
+function removePowerup(i){
+  const pu=powerups[i]; if(!pu) return; scene.remove(pu.grp);
+  pu.grp.traverse(o=>{ if(o.material)o.material.dispose&&o.material.dispose(); if(o.geometry)o.geometry.dispose&&o.geometry.dispose(); });
+  powerups.splice(i,1);
+}
+function collectPowerup(pu){
+  MechaAudio.pickup();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
+  if(pu.type==='cool'){ mHeat=0; mOverheat=false; showBanner('❄️ <b>ระบายความร้อน!</b> ปืนพร้อมยิงเต็มพิกัด'); }
+  else { hp=Math.min(100,hp+POWERUP_HEAL); renderHudTop(); showBanner(`❤️ <b>ซ่อมเกราะ +${POWERUP_HEAL}</b> พลังงานฟื้นแล้ว`); }
+}
+function tickPowerups(dt,now){
+  for(let i=powerups.length-1;i>=0;i--){
+    const pu=powerups[i]; pu.bob+=dt*2.2; pu.grp.position.y=2.6+Math.sin(pu.bob)*.35;
+    pu.core.rotation.y+=dt*1.7; pu.core.rotation.x+=dt*1.1; pu.ring.rotation.z+=dt*1.4;
+    if(Math.hypot(pu.grp.position.x-camera.position.x,pu.grp.position.z-camera.position.z)<POWERUP_RANGE){ collectPowerup(pu); removePowerup(i); }
+  }
+  if(now>mNextPowerAt && powerups.length<POWERUP_MAX){ mNextPowerAt=now+POWERUP_GAP; spawnPowerup(); }
 }
 /* อัปเดตค่าตัวเลขบน HUD (ระยะเป้า/จำนวนเป้า/ความร้อนปืน/ล็อกเป้า) + เรดาร์ + สถานะโอเวอร์ฮีต/พลังงานต่ำ — เรียกถี่จาก tickMecha (throttle) */
 function updateMechaHud(dt,now){
@@ -6251,7 +6335,7 @@ function updateMechaHud(dt,now){
       const beta=Math.atan2(Fx*dz-Fz*dx, Fx*dx+Fz*dz);      // มุมสัมพัทธ์จากทิศหันหน้า (บวก=ขวา)
       const b=mhUI.blips[bi++]; b.style.display='block';
       b.style.left=(75+Math.sin(beta)*r)+'px'; b.style.top=(75-Math.cos(beta)*r)+'px';
-      b.classList.toggle('tgt',a===mFocusAlien);
+      b.classList.toggle('boss',!!a.boss); b.classList.toggle('tgt',a===mFocusAlien);
     }
     for(;bi<mhUI.blips.length;bi++) mhUI.blips[bi].style.display='none';
   }
@@ -6275,7 +6359,7 @@ function mechaFire(now){
   let best=null, bestD=0.1;
   aliens.forEach(a=>a.letters.forEach(l=>{
     if(l.done) return;
-    const wx=a.grp.position.x+l.off.x, wy=a.grp.position.y+l.off.y, wz=a.grp.position.z+l.off.z;
+    const gs=a.gs||1, wx=a.grp.position.x+l.off.x*gs, wy=a.grp.position.y+l.off.y*gs, wz=a.grp.position.z+l.off.z*gs;
     const v=new THREE.Vector3(wx,wy,wz).project(camera);
     if(v.z>1) return;
     const dd=Math.hypot(v.x,v.y);
@@ -6305,16 +6389,17 @@ function explodeAlien(a){
     const dir=new THREE.Vector3(Math.random()*2-1,Math.random()*2-1,Math.random()*2-1).normalize();
     mechaTracers.push({line:pc,until:performance.now()+650,vel:dir.multiplyScalar(7+Math.random()*9),particle:true});
   }
-  addCoins(M.reward); sessionCoins+=M.reward; sessionWords++;
+  const reward=M.reward+(a.boss?BOSS_BONUS:0);       // 👾 บอส = โบนัสเหรียญเพิ่ม
+  addCoins(reward); sessionCoins+=reward; sessionWords++;
   if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
   doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
-  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(80);
-  showBanner(`💥 <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${M.reward} 🪙</span>`);
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(a.boss?[90,60,120]:80);
+  showBanner(`${a.boss?'👾💥':'💥'} <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${reward} 🪙</span>`);
   setTimeout(()=>speakWord(a.word.en),500);
   const wasFocus=(mFocusAlien===a);
   removeAlien(a);
   if(wasFocus){ mFocusAlien=null; mechaHudWord(null); }
-  makeAlien();
+  makeAlien(sessionWords>0 && sessionWords%BOSS_EVERY===0);   // 👾 ทุก 5 คำ ตัวใหม่เป็นบอส
   saveState(); renderHudTop(); renderBoard();
   if(myRef) sendPos(true);
 }
@@ -6348,19 +6433,22 @@ function tickMecha(dt,now){
     if(now>a.wanderAt){ a.tgt={x:(Math.random()*2-1)*(HALF-12),z:(Math.random()*2-1)*(HALF-12)}; a.wanderAt=now+2600+Math.random()*3200; }
     const g=a.grp.position, dx=a.tgt.x-g.x, dz=a.tgt.z-g.z, d=Math.hypot(dx,dz)||1;
     g.x+=dx/d*ALIEN_SPEED*dt; g.z+=dz/d*ALIEN_SPEED*dt; g.y=4.5+Math.sin(now/500+g.x)*.4;
-    // 🚨 รอบ 225: เข้าประชิดหุ่น → โจมตี (iframe 900ms รวม · คูลดาวน์ต่อตัว 2.2s)
+    // 🚨 รอบ 225-226: เข้าประชิด→ทุบ (iframe 900ms · คูลดาวน์ 2.2s) · ระยะกลาง→ยิงกระสุน (หลบได้)
     if(running){ const dc=Math.hypot(g.x-camera.position.x,g.z-camera.position.z);
-      if(dc<MECHA_ATK_RANGE && now>mHitAt && now>(a.atkAt||0)){ a.atkAt=now+2200; mHitAt=now+900; mechaHitByAlien(a); } }
+      if(dc<MECHA_ATK_RANGE && now>mHitAt && now>(a.atkAt||0)){ a.atkAt=now+2200; mHitAt=now+900; mechaHitByAlien(a); }
+      else if(dc>=MECHA_ATK_RANGE && dc<75 && now>(a.shotAt||0)){ a.shotAt=now+ALIEN_SHOT_GAP+Math.random()*1600; spawnAlienShot(a); } }
     a.letters.forEach(l=>{ if(!l.done && l.spr.material){ const nx2=(l.idx===a.nextIdx);
       l.spr.scale.setScalar(nx2?2.5:1.9); l.spr.material.opacity=nx2?1:.8; } });
   });
   // โฟกัสเอเลี่ยนที่เล็งอยู่ → อัปเดต HUD คำ
   let fa=null, fd=0.55;
   aliens.forEach(a=>{ const l=a.letters[a.nextIdx]; if(!l||l.done) return;
-    const wx=a.grp.position.x+l.off.x, wy=a.grp.position.y+l.off.y, wz=a.grp.position.z+l.off.z;
+    const gs=a.gs||1, wx=a.grp.position.x+l.off.x*gs, wy=a.grp.position.y+l.off.y*gs, wz=a.grp.position.z+l.off.z*gs;
     const v=new THREE.Vector3(wx,wy,wz).project(camera); if(v.z>1) return;
     const dd=Math.hypot(v.x,v.y); if(dd<fd){ fd=dd; fa=a; } });
   if(fa!==mFocusAlien){ mFocusAlien=fa; mechaHudWord(fa); }
+  tickAlienShots(dt,now);                            // 👾 รอบ 226: กระสุนเอเลี่ยน (โดน→เสียหาย+กะพริบแดง)
+  tickPowerups(dt,now);                              // ❄️❤️ รอบ 226: ของเก็บ (ลดร้อน/ฟื้นพลัง) + ตัวจับเวลาสปอว์น
   updateMechaHud(dt,now);                            // 🤖 รอบ 224: อัปเดตค่าตัวเลข HUD (ทิศ/ระยะ/เป้า/เหรียญ/ความร้อน)
   // tracer + particle ระเบิด
   for(let i=mechaTracers.length-1;i>=0;i--){
@@ -6406,6 +6494,8 @@ function clearEntities(){
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
   aliens.forEach(a=>scene.remove(a.grp)); aliens=[];                          // 🤖 เอเลี่ยน
   mechaTracers.forEach(t=>{ scene.remove(t.line); }); mechaTracers=[];
+  while(alienShots.length) removeAlienShot(0);                                // 👾 รอบ 226: กระสุนเอเลี่ยน
+  while(powerups.length) removePowerup(0);                                    // ❄️❤️ ของเก็บ
 }
 /* ============================================================
    ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
@@ -6585,6 +6675,7 @@ function start(md){
     mSpeed=0; mBobPhase=0; mStepDn=false; mFwdBtn=0; mStrafeBtn=0; mFireHeld=false; mLastFire=0;
     aliens=[]; mechaTracers=[]; mFocusAlien=null;
     mHeat=0; mOverheat=false; mHitAt=0; mLowHp=false;   // 🤖 รอบ 225: รีเซ็ตความร้อน/โอเวอร์ฮีต/iframe/พลังงานต่ำ
+    alienShots=[]; powerups=[]; mNextPowerAt=performance.now()+8000;   // 🤖 รอบ 226: รีเซ็ตกระสุน/ของเก็บ (ชิ้นแรก ~8 วิ)
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
@@ -6716,7 +6807,9 @@ window.Adventure3D={
     get mecha(){ return {get aliens(){return aliens}, get weapon(){return mechaWeapon}, fire:mechaFire,
                          spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set strafe(v){mStrafeBtn=v},
                          get focus(){return mFocusAlien}, audio:MechaAudio,
-                         get heat(){return mHeat}, get overheat(){return mOverheat}, hit:mechaHitByAlien}; },
+                         get heat(){return mHeat}, get overheat(){return mOverheat}, hit:mechaHitByAlien,
+                         get shots(){return alienShots}, get powerups(){return powerups},
+                         spawnBoss:()=>makeAlien(true), enemyShoot:spawnAlienShot, dropPowerup:spawnPowerup, collect:collectPowerup}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
     setKeys(o){ keys=o||{}; },
