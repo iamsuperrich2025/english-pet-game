@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>อบแอนิเมชัน 3D → สไปรต์วนลูป (เครื่องมือพัฒนา)</title>
+<style>
+  body{font-family:system-ui,sans-serif;background:#12203a;color:#dceaff;margin:0;padding:18px}
+  h1{font-size:17px;margin:0 0 10px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+  label{font-size:13px;opacity:.85}
+  input,select{background:#1d3157;color:#dceaff;border:1px solid #34537f;border-radius:6px;padding:5px 7px;font-size:13px}
+  button{background:#2f7ae5;color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
+  #log{white-space:pre-wrap;font:12px ui-monospace,monospace;background:#0d1830;border-radius:8px;padding:10px;margin-top:10px;min-height:60px}
+  /* พื้นตาหมากรุก = เห็นชัดว่าพื้นหลังโปร่งจริง */
+  #stage{margin-top:12px;background:repeating-conic-gradient(#2a3c60 0 25%,#22314f 0 50%) 0 0/22px 22px;
+         border-radius:10px;display:inline-block;padding:6px;max-width:100%;overflow:auto}
+  #sheet{display:block;max-width:100%}
+  #live{border-radius:8px}
+</style>
+
+<h1>🔥 อบแอนิเมชัน 3D → แผ่นสไปรต์วนลูป (พื้นหลังโปร่ง)</h1>
+<div class="row">
+  <label>โมเดล</label><input id="model" size="34" value="img/models/caretaker_male.glb">
+  <label>ท่า#</label><input id="clip" type="number" value="0" style="width:52px">
+  <label>เฟรม</label><input id="frames" type="number" value="24" style="width:60px">
+  <label>ขนาดช่อง</label><input id="cell" type="number" value="256" style="width:70px">
+  <label>ชื่อไฟล์</label><input id="name" size="18" value="test.png">
+  <button id="go">อบเลย</button>
+</div>
+<canvas id="live" width="256" height="256"></canvas>
+<div id="log">พร้อม</div>
+<div id="stage"><canvas id="sheet"></canvas></div>
+
+<script src="../js/vendor/three.min.js"></script>
+<script src="../js/vendor/GLTFLoader.js"></script>
+<script>
+const logEl = document.getElementById('log');
+const say = m => { logEl.textContent += '\n' + m; console.log(m); };
+
+/* เรนเดอร์เฟรมทีละเฟรมบนแคนวาสพื้นหลังโปร่ง แล้วปะลงแผ่นสไปรต์
+   หัวใจการวนลูปเนียน: สุ่มเวลาที่ t = i/frames * duration (ไม่เอาเฟรมสุดท้ายซ้ำกับเฟรมแรก)
+   หัวใจการไม่สั่น: กล้อง+กรอบภาพคำนวณครั้งเดียวจากท่าตั้งต้น แล้วล็อกไว้ตลอดทุกเฟรม */
+async function bake(opts){
+  // yaw: หมุนโมเดลให้หันหน้าเข้ากล้อง — ค่าเดียวกับ FACE_CAMERA ใน js/lobby3d.js (โมเดล Tripo หันข้างมาแต่เกิด)
+  const { model, clipIndex=0, frames=24, cell=256, name='test.png', pad=1.38, yaw=-Math.PI/2 } = opts;
+  const live = document.getElementById('live');
+  live.width = live.height = cell;
+
+  const renderer = new THREE.WebGLRenderer({canvas:live, antialias:true, alpha:true, preserveDrawingBuffer:true});
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(1);
+  renderer.setSize(cell, cell, false);
+  if('outputColorSpace' in renderer && THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  // แสงชุดเดียวกับล็อบบี้ (js/lobby3d.js) → ภาพที่อบได้กลมกลืนกับฉากเดิม
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x6a7ba0, 1.15));
+  const key = new THREE.DirectionalLight(0xfff4e0, 1.05); key.position.set(3, 6, 5); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xbfe0ff, 0.5); rim.position.set(-4, 3, -3); scene.add(rim);
+
+  const gltf = await new Promise((res, rej) => new THREE.GLTFLoader().load(model, res, undefined, rej));
+  const root = gltf.scene;
+  root.rotation.y = yaw;
+  scene.add(root);
+  say(`โหลดแล้ว: ${model}\nท่าในไฟล์: ${gltf.animations.map((a,i)=>`[${i}] ${a.name} ${a.duration.toFixed(2)}s`).join(' · ') || '— ไม่มีท่าเลย —'}`);
+
+  const clip = gltf.animations[clipIndex];
+  let mixer = null;
+  if(clip){ mixer = new THREE.AnimationMixer(root); mixer.clipAction(clip).play(); }
+
+  // กรอบภาพ: วัดจากท่าตั้งต้น เผื่อขอบ (pad) ให้แขน/ขา/หางที่เหวี่ยงออกไม่โดนตัด แล้วล็อกกล้องไว้
+  const box = new THREE.Box3().setFromObject(root);
+  const size = new THREE.Vector3(); box.getSize(size);
+  const center = new THREE.Vector3(); box.getCenter(center);
+  const radius = Math.max(size.x, size.y, size.z) * 0.5 * pad;
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.01, 1000);
+  const dist = radius / Math.sin((32 * Math.PI / 180) / 2);
+  camera.position.set(center.x + dist * 0.26, center.y + size.y * 0.10, center.z + dist * 0.95);
+  camera.lookAt(center);
+
+  // แผ่นสไปรต์: เรียงเป็นตาราง (กว้างไม่เกิน 6 ช่อง กันภาพยาวเกินขีดจำกัดเครื่องมือถือ)
+  const cols = Math.min(6, frames);
+  const rows = Math.ceil(frames / cols);
+  const sheet = document.getElementById('sheet');
+  sheet.width = cols * cell; sheet.height = rows * cell;
+  const ctx = sheet.getContext('2d');
+  ctx.clearRect(0, 0, sheet.width, sheet.height);
+
+  const dur = clip ? clip.duration : 0;
+  for(let i = 0; i < frames; i++){
+    if(mixer) mixer.setTime((i / frames) * dur);   // setTime = ตรงเป๊ะทุกเฟรม (ไม่สะสมความคลาดเคลื่อนแบบ update(dt))
+    renderer.render(scene, camera);
+    ctx.drawImage(live, (i % cols) * cell, Math.floor(i / cols) * cell);
+    if(i % 6 === 0) await new Promise(r => setTimeout(r, 0));   // ปล่อยให้จอวาดทัน (ดูความคืบหน้าได้)
+  }
+
+  const blob = await new Promise(r => sheet.toBlob(r, 'image/png'));
+  const resp = await fetch('/_save/' + name, {method:'POST', body:blob});
+  const kb = Math.round(blob.size / 1024);
+  say(`✅ อบเสร็จ ${frames} เฟรม · ช่องละ ${cell}px · แผ่น ${sheet.width}×${sheet.height} · ${kb} KB → img/anim/${name} (${resp.ok ? 'เขียนลงดิสก์แล้ว' : 'เขียนไม่สำเร็จ!'})`);
+
+  renderer.dispose();
+  return { ok:resp.ok, frames, cols, rows, cell, kb, clip: clip ? clip.name : null,
+           duration: +dur.toFixed(2), clips: gltf.animations.map(a => a.name) };
+}
+window.bake = bake;   // เรียกจาก console/อัตโนมัติได้
+
+document.getElementById('go').onclick = async () => {
+  logEl.textContent = 'กำลังอบ...';
+  try{
+    await bake({
+      model: document.getElementById('model').value,
+      clipIndex: +document.getElementById('clip').value,
+      frames: +document.getElementById('frames').value,
+      cell: +document.getElementById('cell').value,
+      name: document.getElementById('name').value,
+    });
+  }catch(e){ say('❌ ' + e.message); }
+};
+</script>
