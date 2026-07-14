@@ -363,6 +363,12 @@ const DILIGENT_TIERS = [[20,1],[50,2],[100,3]];
 const DILIGENT_TIER_UI = ['', '🏅 เข็มนักเล่นขยัน', '🎖️ เข็มนักเล่นตัวยง', '🏆 เข็มยอดนักสู้คำศัพท์'];
 function diligentEmoji(b){ return ['','🏅','🎖️','🏆'][b||0] || ''; }
 
+/* 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่นยนต์) — สะสมจากจำนวนบอสที่ล้มสำเร็จ (state.mechaBoss ถาวร)
+   ครบ 3=⚔️ · 10=🛡️ · 25=🤖 — ได้แล้วไม่หาย ติดท้ายชื่อให้เพื่อนเห็นทุกโลก (นับ+ประกาศใน adventure3d.js) */
+const MECHABOSS_TIERS = [[3,1],[10,2],[25,3]];
+const MECHABOSS_TIER_UI = ['', '⚔️ เข็มนักล่าบอส', '🛡️ เข็มอัศวินเหล็ก', '🤖 เข็มเจ้าสมรภูมิ'];
+function mechaBossEmoji(b){ return ['','⚔️','🛡️','🤖'][b||0] || ''; }
+
 /* 🎖️ เข็มทั้งหมดต่อท้ายชื่อ (นักบิน🥉+สายฟ้า⚡+ผาดโผน🎯+นักเล่นขยัน🏅) — ใช้โชว์ในการ์ดเพื่อน/
    กระดานหน้าเมือง (บันทึกลง presence.n/leaderboard.n ให้เพื่อนเห็นด้วย) · pilotEmoji เป็น local
    ของ adventure3d จึง inline อาร์เรย์นักบินที่นี่ให้เป็นฟังก์ชัน global */
@@ -371,7 +377,8 @@ function badgeSuffix(){
     + (['','🥉','🥈','🥇'][state.pilotBadge||0]||'')
     + thunderEmoji(state.thunderBadge)
     + daredevilEmoji(state.daredevilBadge)
-    + diligentEmoji(state.diligentBadge);
+    + diligentEmoji(state.diligentBadge)
+    + mechaBossEmoji(state.mechaBossBadge);            // 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่น)
 }
 
 /* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3 · เข็มลับ 👑=5) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน
@@ -382,8 +389,9 @@ const BADGE_META = {
   '⚡':{n:'เข็มสายฟ้า',p:1}, '🌩️':{n:'เข็มพายุฟ้าคะนอง',p:2}, '⛈️':{n:'เข็มมหาพายุ',p:3},
   '🎯':{n:'เข็มเฉียดเฉี่ยว',p:1}, '🌀':{n:'เข็มนักบินผาดโผน',p:2}, '🔥':{n:'เข็มเจ้าเวหา',p:3},
   '🏅':{n:'เข็มนักเล่นขยัน',p:1}, '🎖️':{n:'เข็มนักเล่นตัวยง',p:2}, '🏆':{n:'เข็มยอดนักสู้คำศัพท์',p:3},
+  '⚔️':{n:'เข็มนักล่าบอส',p:1}, '🛡️':{n:'เข็มอัศวินเหล็ก',p:2}, '🤖':{n:'เข็มเจ้าสมรภูมิ',p:3},   // 🤖 รอบ 229: เข็มโลกหุ่น
 };
-const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆)+$/u;
+const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖)+$/u;
 function splitNameBadges(full){                        // แยก "ชื่อสะอาด" กับ "เข็มท้ายชื่อ"
   full = String(full || '');
   const m = full.match(NAME_BADGE_RE);
@@ -391,7 +399,7 @@ function splitNameBadges(full){                        // แยก "ชื่�
   return { name: badges ? full.slice(0, full.length - badges.length).trim() : full, badges };
 }
 function badgeEmojis(str){                              // แตกอิโมจิเข็มเป็นอาร์เรย์ตามลำดับที่พบ
-  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆/gu; let x;
+  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖/gu; let x;
   while((x = re.exec(String(str || '')))) arr.push(x[0]);
   return arr;
 }

@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v13';   // v13: โลกหุ่น — สรุปสถิติจบเกม + ปุ่มยิงเปลี่ยนสี + กระดานล้มบอสออนไลน์ (รอบ 228)
+const CACHE_VERSION = 'pet-vocab-v14';   // v14: โลกหุ่น — เข็มล้มบอส + บอสหลายสายพันธุ์ + Endless Wave (รอบ 229)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

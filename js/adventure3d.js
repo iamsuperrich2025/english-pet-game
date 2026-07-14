@@ -203,8 +203,29 @@ const ALIEN_COUNT=3, ALIEN_SPEED=2.4, MECHA_LETTER_COIN=3;
 const MECHA_ATK_RANGE=8, MECHA_ATK_DMG=8;          // 🤖 รอบ 225: เอเลี่ยนเข้าประชิดโจมตี → HUD กะพริบแดง + สัญญาณเตือน
 const ALIEN_SHOT_SPD=15, ALIEN_SHOT_DMG=6, ALIEN_SHOT_GAP=3200;   // 🤖 รอบ 226: เอเลี่ยนยิงกระสุน (หลบได้)
 const POWERUP_GAP=15000, POWERUP_MAX=2, POWERUP_RANGE=3.4, POWERUP_HEAL=30;   // ❄️❤️ ของเก็บลดร้อน/ฟื้นพลัง
-const BOSS_EVERY=5, BOSS_SCALE=1.85, BOSS_BONUS=45;   // 👾 บอสทุก 5 คำ (คำยาวพิเศษ + โบนัสเหรียญ)
+const BOSS_SCALE=1.85, BOSS_BONUS=45;   // 👾 บอส: คำยาวพิเศษ + โบนัสเหรียญ (สเกลเริ่มต้น · แต่ละสายพันธุ์ override)
 const COMBO_X2=3, COMBO_X3=6, SHIELD_MS=3500;   // 🔥 รอบ 227: คอมโบ ×2/×3 · 🛡️ โล่กันกระสุน 3.5 วิ
+/* 👾 รอบ 229: บอสหลายสายพันธุ์ — ต่างกันที่ รูปทรง/สี/ตา/สีกระสุน/ความเร็วยิง/ความยาวคำ (หมุนเวียนทีละสาย)
+   ธีมน่ารักเหมาะเด็ก (ไม่ใช้หัวกะโหลก/เลือด) · geo() คืน geometry ใหม่ทุกครั้ง (dispose ได้อิสระ) */
+const BOSS_SPECIES=[
+  {key:'ember', name:'Ember', th:'อีมเบอร์ จอมเพลิง',   emoji:'🔥', geo:()=>new THREE.IcosahedronGeometry(2.2,1), body:0xff5a2f, emis:0x551126, eye:0xffdd55, shot:0xff6a3a, scale:1.9,  shotSpd:1.0,  wordPick:8 },
+  {key:'frost', name:'Frost', th:'ฟรอสต์ ราชันน้ำแข็ง', emoji:'❄️', geo:()=>new THREE.OctahedronGeometry(2.6,0),  body:0x6fd8ff, emis:0x14384f, eye:0xffffff, shot:0x9fe6ff, scale:1.85, shotSpd:1.28, wordPick:8 },
+  {key:'venom', name:'Venom', th:'เวน่อม พิษมรกต',      emoji:'🟢', geo:()=>new THREE.DodecahedronGeometry(2.3,0),body:0x6bd23a, emis:0x1d4a12, eye:0xeaff5a, shot:0x9bff5a, scale:1.85, shotSpd:1.1,  wordPick:9 },
+  {key:'volt',  name:'Volt',  th:'โวลต์ สายฟ้า',         emoji:'⚡', geo:()=>new THREE.TetrahedronGeometry(2.8,0), body:0xffd23a, emis:0x5a4400, eye:0xfff2a0, shot:0xffe14d, scale:1.72, shotSpd:1.4,  wordPick:7 },
+  {key:'titan', name:'Titan', th:'ไททัน เหล็กกล้า',      emoji:'🛡️', geo:()=>new THREE.BoxGeometry(3.4,3.4,3.4),  body:0x9aa7b4, emis:0x2a3540, eye:0xff8a8a, shot:0xcfe0ff, scale:2.05, shotSpd:0.85, wordPick:10 },
+];
+let mBossSpeciesIdx=0;
+function pickBossSpecies(){ const sp=BOSS_SPECIES[mBossSpeciesIdx%BOSS_SPECIES.length]; mBossSpeciesIdx++; return sp; }
+/* 🌊 รอบ 229: Endless Wave — เอเลี่ยนมาเป็นเวฟ เคลียร์ครบ→เวฟถัดไป (ยากขึ้น) · ทุกเวฟที่ 3 = Boss Wave */
+const WAVE_BASE_GOAL=4, WAVE_BOSS_EVERY=3;
+function waveCfg(w){
+  const boss = w % WAVE_BOSS_EVERY === 0;                          // เวฟ 3,6,9… มีบอสปิดท้าย
+  const goal = WAVE_BASE_GOAL + Math.floor((w-1)/2) + (boss?1:0);  // ยิ่งเวฟสูง ยิ่งต้องล้มเยอะ (+บอส)
+  const conc = Math.min(3 + Math.floor(w/3), 6);                   // เอเลี่ยนพร้อมกันบนสนาม (เพดาน 6)
+  const spd  = 1 + (w-1)*0.05;                                     // เอเลี่ยนยิงถี่/เร็วขึ้นตามเวฟ
+  return {boss, goal, conc, spd};
+}
+let mWave=0, mWaveGoal=0, mWaveConc=3, mWaveKilled=0, mWaveSpawned=0, mWaveBoss=false, mWaveBossDone=false, mWaveSpd=1;
 /* อาวุธต่อหุ่น (ผูกกับ robot_id ในตลาด) — ต่างกันที่ สี tracer · จังหวะยิง · ลูกเล่น (twin/spread/beam) */
 const MECHA_WEAPONS={
   robot_01:{name:'หอกพลาสมา',   color:0xff4d4d, gap:300},
@@ -2117,7 +2138,7 @@ function sendPos(force){
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
-    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
+    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
     av:((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
@@ -2643,7 +2664,7 @@ function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.ind
 /* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ + ท็อปนักผาดโผนในสนาม (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
-  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge), w:sessionWords, me:true}];
+  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge), w:sessionWords, me:true}];
   Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
@@ -3683,6 +3704,7 @@ function buildDom(){
       <div class="mh-sweep"></div>       <!-- ลำแสงกวาดไล่เฉด -->
       <div class="mh-scan"></div>        <!-- เส้นสแกน -->
       <div class="mh-tele">
+        <div class="mh-chip mh-wavechip"><span>WAVE</span><b id="mh-wave">1</b></div>
         <div class="mh-chip"><span>RNG</span><b id="mh-rng">--</b><i>m</i></div>
         <div class="mh-chip"><span>TGT</span><b id="mh-tgt">0</b></div>
         <div class="mh-chip mh-heatchip"><span id="mh-heatlbl">HEAT</span><div class="mh-bar mh-heat"><i id="mh-heatbar"></i></div></div>
@@ -3720,6 +3742,7 @@ function buildDom(){
     rng:overlayEl.querySelector('#mh-rng'), tgt:overlayEl.querySelector('#mh-tgt'),
     heat:overlayEl.querySelector('#mh-heatbar'), heatlbl:overlayEl.querySelector('#mh-heatlbl'),
     lock:overlayEl.querySelector('#mh-lock'), bossFill:overlayEl.querySelector('#mh-boss-fill'),
+    bossTtl:overlayEl.querySelector('#mecha-hud .mh-boss-ttl'), wave:overlayEl.querySelector('#mh-wave'),   // 🌊👾 รอบ 229: เวฟ + ชื่อสายพันธุ์บอส
     combo:overlayEl.querySelector('#mh-combo'),
     fireBtns:[overlayEl.querySelector('#mecha-fire'),overlayEl.querySelector('#mecha-fire2')],
     blips:[] };   // 🤖 รอบ 224-228: HUD กรอบหุ่น + เรดาร์ + บอส/คอมโบ + ปุ่มยิง feedback
@@ -6229,18 +6252,20 @@ function emojiSprite(emoji){
   const x=cv.getContext('2d'); x.font='96px serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText(emoji,64,74);
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
-function makeAlien(boss){
+function makeAlien(bossArg){
+  const boss=!!bossArg;
+  const sp = boss ? (typeof bossArg==='object' ? bossArg : pickBossSpecies()) : null;   // 👾 รอบ 229: บอสมีสายพันธุ์
   const grp=new THREE.Group();
-  const bodyCol = boss ? 0xff2f5f : new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
-  const body=new THREE.Mesh(new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol,emissive:boss?0x551126:0x000000}));
+  const bodyCol = boss ? sp.body : new THREE.Color().setHSL(.28+Math.random()*.5,.55,.45).getHex();
+  const body=new THREE.Mesh(boss ? sp.geo() : new THREE.IcosahedronGeometry(2.2,1),new THREE.MeshLambertMaterial({color:bodyCol,emissive:boss?sp.emis:0x000000}));
   body.scale.set(1,1.15,1); grp.add(body);
-  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:boss?0xff5555:0xffee55}));
+  for(let i=0;i<3;i++){ const e=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),new THREE.MeshBasicMaterial({color:boss?sp.eye:0xffee55}));
     e.position.set((i-1)*.8,.5,-1.95); grp.add(e); }
   const tCol=new THREE.MeshLambertMaterial({color:bodyCol});
   for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; const leg=new THREE.Mesh(new THREE.CylinderGeometry(.18,.05,2.8,6),tCol);
     leg.position.set(Math.cos(a)*1.6,-1.7,Math.sin(a)*1.6); leg.rotation.z=Math.cos(a)*.5; leg.rotation.x=Math.sin(a)*.5; grp.add(leg); }
   let word;
-  if(boss){ const c=pickWords(8); word=(c.slice().sort((a,b)=>b.en.length-a.en.length)[0])||{en:'dragon',th:'มังกร'}; }
+  if(boss){ const c=pickWords(sp.wordPick); word=(c.slice().sort((a,b)=>b.en.length-a.en.length)[0])||{en:'dragon',th:'มังกร'}; }
   else word=(pickWords(1)[0])||{en:'cat',th:'แมว'};
   const letters=[]; const n=word.en.length;
   word.en.split('').forEach((ch,i)=>{
@@ -6251,12 +6276,55 @@ function makeAlien(boss){
     letters.push({ch,spr,idx:i,off,done:false});
   });
   const p=alienSpawnPos();
-  grp.position.set(p.x,4.5,p.z); if(boss) grp.scale.setScalar(BOSS_SCALE); scene.add(grp);
+  const scl=boss?sp.scale:1;
+  grp.position.set(p.x,4.5,p.z); if(boss) grp.scale.setScalar(scl); scene.add(grp);
   const al={grp,word,letters,nextIdx:0,tgt:{x:p.x,z:p.z},wanderAt:0,born:performance.now(),
-            boss:!!boss, gs:boss?BOSS_SCALE:1, shotAt:performance.now()+1400+Math.random()*1600};
+            boss:!!boss, species:sp, gs:scl, shotAt:performance.now()+1400+Math.random()*1600};
   aliens.push(al);
-  if(boss) showBanner('👾 <b>บอสมาแล้ว!</b> คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙');
+  if(boss) showBanner(`${sp.emoji} <b>บอส${escapeHTML(sp.th)} มาแล้ว!</b><br>คำยาวพิเศษ — ยิงให้ครบรับโบนัส 🪙`);
   return al;
+}
+/* 🌊 รอบ 229: Endless Wave — เริ่มเวฟใหม่ (ตั้งเป้า/จำนวน/ความยาก) แล้วปล่อยเอเลี่ยนให้ครบ */
+function startWave(w){
+  const cfg=waveCfg(w);
+  mWave=w; mWaveGoal=cfg.goal; mWaveConc=cfg.conc; mWaveSpd=cfg.spd;
+  mWaveBoss=cfg.boss; mWaveBossDone=false; mWaveKilled=0; mWaveSpawned=0;
+  if(w>(state.mechaWaveBest||0)) state.mechaWaveBest=w;              // 🏅 สถิติเวฟสูงสุด
+  updateWaveHud();
+  if(cfg.boss) showBanner(`🌊 <b>เวฟ ${w}</b> · 👾 <b>Boss Wave!</b><br>ล้มบอสให้ได้เพื่อไปต่อ 💪`);
+  else showBanner(`🌊 <b>เวฟ ${w}</b> — ล้มเอเลี่ยน ${cfg.goal} ตัว!`);
+  waveSpawnFill();
+}
+/* เติมเอเลี่ยนบนสนามให้ครบจำนวนพร้อมกัน (ไม่เกินเป้าเวฟ) · Boss Wave: บอสมาเป็นตัวสุดท้าย */
+function waveSpawnFill(){
+  while(aliens.length < mWaveConc && mWaveSpawned < mWaveGoal){
+    const asBoss = mWaveBoss && !mWaveBossDone && (mWaveSpawned === mWaveGoal-1);   // มินเนี่ยนมาก่อน บอสปิดท้าย
+    makeAlien(asBoss ? pickBossSpecies() : false);
+    if(asBoss) mWaveBossDone=true;
+    mWaveSpawned++;
+  }
+}
+/* เคลียร์เวฟครบ → โบนัสเหรียญตามเวฟ + ฉลอง แล้วขึ้นเวฟถัดไป (หน่วงให้แบนเนอร์โชว์) */
+function waveComplete(){
+  const bonus=20+mWave*10;
+  addCoins(bonus); sessionCoins+=bonus;
+  if(MechaAudio.boom) MechaAudio.boom();
+  showBanner(`🌊✨ <b>เวฟ ${mWave} สำเร็จ!</b><br><span class="adv-ban-coin">+${bonus} 🪙</span>`);
+  if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([60,40,60,40,120]);
+  saveState(); renderHudTop();
+  const nxt=mWave+1;
+  setTimeout(()=>{ if(running && M.mecha) startWave(nxt); }, 1500);
+}
+function updateWaveHud(){ if(mhUI&&mhUI.wave) mhUI.wave.textContent=mWave||1; }
+/* 🤖 รอบ 229: เช็ก+มอบเข็มนักล่าบอส (ล้มบอสสะสม 3/10/25) — แพทเทิร์นเดียวกับเข็มผาดโผน (game.js) */
+function checkMechaBossBadge(){
+  if(typeof MECHABOSS_TIERS==='undefined') return;
+  const tier=MECHABOSS_TIERS.filter(t=>(state.mechaBoss||0)>=t[0]).pop();
+  if(tier && tier[1]>(state.mechaBossBadge||0)){
+    state.mechaBossBadge=tier[1]; saveState();
+    setTimeout(()=>{ celebrateBadge(mechaBossEmoji(tier[1]), `ได้${MECHABOSS_TIER_UI[tier[1]]}!`,
+      `ล้มบอสสะสมครบ ${tier[0]} ตัว — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกเลยนะ 🎉`); }, 1400);
+  }
 }
 function alienSpawnPos(){
   for(let i=0;i<24;i++){ const x=(Math.random()*2-1)*(HALF-8), z=(Math.random()*2-1)*(HALF-8);
@@ -6310,9 +6378,10 @@ function spawnAlienShot(a){
   const from=a.grp.position.clone(); from.y=4.2;
   const dir=camera.position.clone().sub(from); dir.y+=.5; dir.normalize();
   const m=new THREE.Mesh(new THREE.SphereGeometry(a.boss?.6:.4,10,8),
-    new THREE.MeshBasicMaterial({color:a.boss?0xff3b6b:0xffb43a}));
+    new THREE.MeshBasicMaterial({color:a.boss?(a.species?a.species.shot:0xff3b6b):0xffb43a}));
   m.position.copy(from); scene.add(m);
-  alienShots.push({mesh:m,vel:dir.multiplyScalar(ALIEN_SHOT_SPD*(a.boss?1.1:1)),life:5,dmg:a.boss?ALIEN_SHOT_DMG+3:ALIEN_SHOT_DMG});
+  const spd=ALIEN_SHOT_SPD*(a.boss?(a.species?a.species.shotSpd:1.1):1)*(mWaveSpd||1);   // 👾🌊 สายพันธุ์ + เวฟ
+  alienShots.push({mesh:m,vel:dir.multiplyScalar(spd),life:5,dmg:a.boss?ALIEN_SHOT_DMG+3:ALIEN_SHOT_DMG});
   MechaAudio.enemyShot();
 }
 function removeAlienShot(i){
@@ -6381,6 +6450,7 @@ function updateMechaHud(dt,now){
   const boss=aliens.find(a=>a.boss);                        // 👾 แถบพลังบอส (เหลือกี่ตัวอักษร)
   root.classList.toggle('bosson',!!boss);
   if(boss && mhUI.bossFill){ const len=boss.word.en.length; mhUI.bossFill.style.width=Math.round((len-boss.nextIdx)/len*100)+'%'; }
+  if(boss && mhUI.bossTtl && boss.species) mhUI.bossTtl.textContent=`${boss.species.emoji} ${boss.species.name}`;   // 👾 รอบ 229: ชื่อสายพันธุ์บอส
   // 🔫 รอบ 228: ปุ่มยิงเปลี่ยนสีตามสถานะ (โอเวอร์ฮีต > โล่ > คอมโบ > ร้อน)
   if(mhUI.fireBtns){
     const fs = mOverheat?'fs-over' : (now<mShieldUntil?'fs-shield' : (mCombo>=COMBO_X2?'fs-combo' : (mHeat>60?'fs-hot':'')));
@@ -6463,7 +6533,8 @@ function explodeAlien(a){
   const reward=M.reward+(a.boss?BOSS_BONUS:0);       // 👾 บอส = โบนัสเหรียญเพิ่ม
   addCoins(reward); sessionCoins+=reward; sessionWords++;
   if(a.boss){ mBossKills++; state.mechaBoss=(state.mechaBoss||0)+1;   // 📊 รอบ 228: นับล้มบอส (เซสชัน + สะสมถาวร → กระดานออนไลน์)
-    if(typeof onlinePushScore==='function') onlinePushScore(); }
+    if(typeof onlinePushScore==='function') onlinePushScore();
+    checkMechaBossBadge(); }                                          // 🤖 รอบ 229: เช็ก/มอบเข็มนักล่าบอส
   if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
   doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(a.boss?[90,60,120]:80);
@@ -6472,7 +6543,10 @@ function explodeAlien(a){
   const wasFocus=(mFocusAlien===a);
   removeAlien(a);
   if(wasFocus){ mFocusAlien=null; mechaHudWord(null); }
-  makeAlien(sessionWords>0 && sessionWords%BOSS_EVERY===0);   // 👾 ทุก 5 คำ ตัวใหม่เป็นบอส
+  mWaveKilled++;                                    // 🌊 รอบ 229: นับความคืบหน้าเวฟ
+  if(mWaveKilled>=mWaveGoal) waveComplete();        // เคลียร์เวฟครบ → โบนัส + เวฟถัดไป
+  else waveSpawnFill();                             // ยังไม่ครบ → เติมตัวใหม่คงจำนวนบนสนาม
+  updateWaveHud();
   saveState(); renderHudTop(); renderBoard();
   if(myRef) sendPos(true);
 }
@@ -6751,6 +6825,7 @@ function start(md){
     alienShots=[]; powerups=[]; mNextPowerAt=performance.now()+8000;   // 🤖 รอบ 226: รีเซ็ตกระสุน/ของเก็บ (ชิ้นแรก ~8 วิ)
     mCombo=0; mShieldUntil=0;   // 🔥🛡️ รอบ 227: รีเซ็ตคอมโบ + โล่
     mComboMax=0; mBossKills=0; mShotsFired=0; mShotsHit=0;   // 📊 รอบ 228: รีเซ็ตสถิติรอบ
+    mWave=0; mWaveKilled=0; mWaveSpawned=0; mWaveBoss=false; mWaveBossDone=false; mWaveSpd=1; mBossSpeciesIdx=0;   // 🌊 รอบ 229: รีเซ็ต Endless Wave
     const rid=(state.mechaRobot&&MECHA_WEAPONS[state.mechaRobot])?state.mechaRobot:((state.robots&&state.robots[0])||'robot_01');
     mechaWeapon=MECHA_WEAPONS[rid]||MECHA_WEAPONS.robot_01;
     setMechaHudSkin(rid);                          // 🤖 รอบ 224: กรอบ HUD + สีตามหุ่น
@@ -6762,7 +6837,7 @@ function start(md){
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
-  else if(M.mecha){ for(let i=0;i<ALIEN_COUNT;i++) makeAlien(); }   // 🤖 เอเลี่ยนตัวอักษร (แต่ละตัวมีคำของตัวเอง)
+  else if(M.mecha){ startWave(1); }   // 🌊 รอบ 229: เริ่ม Endless Wave (เดิม spawn ALIEN_COUNT ตายตัว)
   else{
     words.forEach(spawnLettersForWord);
     for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
@@ -6849,7 +6924,7 @@ function exitWorld(){
 /* 📊 รอบ 228: สรุปสถิติรอบโลกหุ่น (คอมโบสูงสุด · ล้มบอส · ความแม่น · จำนวนคำ) */
 function mechaRecapLine(){
   const acc = mShotsFired ? Math.round(mShotsHit/mShotsFired*100) : 0;
-  return `⭐ คอมโบสูงสุด ×${mComboMax} · 👾 ล้มบอส ${mBossKills} · 🎯 แม่นยำ ${acc}% · 📖 ${sessionWords} คำ`;
+  return `🌊 ถึงเวฟ ${mWave||1} · ⭐ คอมโบสูงสุด ×${mComboMax} · 👾 ล้มบอส ${mBossKills} · 🎯 แม่นยำ ${acc}% · 📖 ${sessionWords} คำ`;
 }
 
 window.Adventure3D={
@@ -6891,8 +6966,10 @@ window.Adventure3D={
                          get focus(){return mFocusAlien}, audio:MechaAudio,
                          get heat(){return mHeat}, get overheat(){return mOverheat}, hit:mechaHitByAlien,
                          get shots(){return alienShots}, get powerups(){return powerups},
-                         spawnBoss:()=>makeAlien(true), enemyShoot:spawnAlienShot, dropPowerup:spawnPowerup, collect:collectPowerup,
+                         spawnBoss:(sp)=>makeAlien(sp||true), enemyShoot:spawnAlienShot, dropPowerup:spawnPowerup, collect:collectPowerup,
                          get combo(){return mCombo}, get shielded(){return performance.now()<mShieldUntil},
+                         species:BOSS_SPECIES, startWave, waveComplete, kill:(a)=>explodeAlien(a||aliens[0]),   // 🌊👾 รอบ 229: Endless Wave + สายพันธุ์บอส (kill=จำลองล้ม)
+                         get wave(){return {n:mWave,goal:mWaveGoal,killed:mWaveKilled,conc:mWaveConc,spawned:mWaveSpawned,boss:mWaveBoss,spd:mWaveSpd}},
                          get stats(){return {comboMax:mComboMax,bossKills:mBossKills,fired:mShotsFired,hit:mShotsHit,recap:mechaRecapLine()}}}; },
     set col(v){ hCol=v; },
     set landed(v){ hLanded=v; },
