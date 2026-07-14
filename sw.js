@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v19';   // v19: GPS แม่นขึ้น — string-pulling ตัดจุดเลี้ยวผีบนถนนเฉียง + โชว์ระยะถึงจุดเลี้ยว (รอบ 234)
+const CACHE_VERSION = 'pet-vocab-v20';   // v20: จอวิทยุต่อคัน (RADIO_RECT map) + ล็อกหมุนตัวละคร/สัตว์ในล็อบบี้ (รอบ 235)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

@@ -5012,7 +5012,15 @@ function drawCarGauges(){
    จอวางทับ "หน้าจอดำระหว่างลูกบิด 2 ปุ่ม" บนภาพ dash.png (พิกัดภาพ RADIO_RECT)
    map พิกัดภาพ→จอ สูตรเดียวกับเข็มเกจ (object-fit cover + object-position 50% 66%)
    ============================================================ */
-const RADIO_RECT=[560,514,835,606];                         // 🚗 รอบ 231: จอ head-unit (พิกัดภาพแดชบอร์ดชุดใหม่ 1536×1024)
+const RADIO_RECT=[560,514,835,606];                         // 🚗 รอบ 231: จอ head-unit ค่ากลาง (fallback ถ้าไม่รู้จักคัน)
+/* 🚗 รอบ 235: จอ head-unit ต่อคัน — จอดำแต่ละคันขนาด/ตำแหน่งไม่เท่ากัน (วัดจากภาพ 3d_dash_<id>.png จริง 1536×1024) */
+const CAR_RADIO_RECT={
+  car_01:[555,456,856,606], car_02:[585,518,821,652], car_03:[555,524,787,645],
+  car_04:[506,471,789,591], car_05:[512,543,749,669], car_06:[550,500,788,606],
+  car_07:[563,580,782,685], car_08:[528,598,710,700], car_09:[550,501,786,592],
+  car_10:[521,520,808,669],
+};
+function carRadioRect(){ const c=(typeof myCar==='function'&&myCar())?myCar():null; return (c&&CAR_RADIO_RECT[c.id])||RADIO_RECT; }
 let _radioVW=0,_radioVH=0;
 function radioLayout(){
   if(!radioScreenEl) return;
@@ -5021,7 +5029,7 @@ function radioLayout(){
   if(!box.width){ radioScreenEl.style.display='none'; return; }
   const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.65;   // 🚗 รอบ 231: ตรงกับ object-position 65% ของแดชบอร์ดชุดใหม่
   const gx=ix=>box.left+ix*s, gy=iy=>box.top+iy*s-offY;
-  const [X0,Y0,X1,Y1]=RADIO_RECT;
+  const [X0,Y0,X1,Y1]=carRadioRect();   // 🚗 รอบ 235: จอตามคันที่ขับ
   const L=gx(X0), T=gy(Y0), W=(X1-X0)*s, H=(Y1-Y0)*s;
   radioScreenEl.style.display='block';
   radioScreenEl.style.left=L+'px'; radioScreenEl.style.top=T+'px';
