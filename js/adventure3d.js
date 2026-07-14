@@ -3417,13 +3417,14 @@ function buildDom(){
     border-radius:16px;align-items:center;justify-content:center;font-size:26px;font-weight:800;backdrop-filter:blur(2px)}
   .mecha-btn:active{background:rgba(120,200,255,.34)}
   .adv-touch.adv-mecha .mecha-btn{display:flex}
-  /* รอบ 219 (ผู้ใช้): ▲▼ ย้ายไปมุมขวาล่าง (แทนที่ปุ่มยิงเดิม) · ปุ่มยิงย้ายขึ้นไปใต้คำ (ใต้ตัวท้าย) ค่อนขวา */
-  #mecha-fwd{right:22px;bottom:104px;width:76px;height:70px}
-  #mecha-back{right:22px;bottom:24px;width:76px;height:70px}
-  #mecha-left{left:170px;bottom:24px;width:70px;height:70px;border-radius:50%}   /* รอบ 218: ขยับ ◀▶ ไปขวาอีกนิด (ห่าง ▲▼ ให้นิ้วไม่ชนกัน) */
-  #mecha-right{left:248px;bottom:24px;width:70px;height:70px;border-radius:50%}
-  #mecha-fire{left:calc(50% + 60px);top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
-    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* ใต้คำ ค่อนขวา (ใต้ตัวท้าย) · อิงกลางจอ = ทุกจอไม่ชน ◀▶ ซ้าย/▲▼ ขวา */
+  /* รอบ 220 (ผู้ใช้ · แก้ชนบนจอแคบ): 3 คลัสเตอร์แยกกันชัด — ◀▶ ซ้ายล่าง · ▲▼ ขวาล่าง · ปุ่มยิงกลางใต้คำ
+     (รอบ 219 ปุ่มยิงใต้ตัวท้าย H ค่อนขวา → ชน ▲▼ ขวาล่างบนจอ ~480px · ย้ายปุ่มยิงมากลางจอ = ช่องกลางกว้างพอ ไม่ชนทั้ง 2 ฝั่ง) */
+  #mecha-fwd{right:22px;bottom:104px;width:76px;height:70px}       /* ▲ เดินหน้า (ขวาล่าง) */
+  #mecha-back{right:22px;bottom:24px;width:76px;height:70px}       /* ▼ ถอย (ขวาล่าง) */
+  #mecha-left{left:22px;bottom:24px;width:70px;height:70px;border-radius:50%}    /* ◀ เลี้ยวซ้าย (ซ้ายล่าง) */
+  #mecha-right{left:100px;bottom:24px;width:70px;height:70px;border-radius:50%}  /* ▶ เลี้ยวขวา (ซ้ายล่าง) */
+  #mecha-fire{left:calc(50% - 46px);top:186px;width:92px;height:92px;border-radius:50%;font-size:34px;
+    background:rgba(255,90,110,.32);border-color:rgba(255,150,160,.7)}   /* ปุ่มยิง กลางจอใต้คำ (46=ครึ่งปุ่ม → center พอดี) ทุกจอไม่ชน ◀▶/▲▼ */
   #mecha-fire:active{background:rgba(255,90,110,.55)}
   /* 🧭 GPS นำทาง (โหมดขับรถ) — การ์ดสไตล์ Google Maps: ลูกศรชี้ + คำสั่งเลี้ยว + ระยะทาง + ตัวอักษรเป้า */
   #adv-gps{position:absolute;display:none;left:8px;top:150px;z-index:6;pointer-events:none;
