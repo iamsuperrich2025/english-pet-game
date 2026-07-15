@@ -1575,7 +1575,7 @@ html.no-anim .cs-big-img{animation:none}
 .lbf-title{font-size:clamp(15px,2.4vh,20px);font-weight:900;color:#8fd6ff;}
 .lbf-tabs{display:flex;gap:6px;margin-left:auto;}
 .lbf-close{margin-left:4px;}
-.lbf-body{flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0;}
+.lbf-body{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;min-height:0;}
 .lbf-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-auto-flow:column;
   gap:5px 12px;width:100%;}
 .lbf-cell{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;

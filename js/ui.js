@@ -1012,7 +1012,7 @@ function openLeaderboardFull(){
       const rank = idx + 1;
       const rk = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
       return `<div class="pod pod-${rank}${r.me?' me':''}">
-        <img class="pod-char" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
+        <img class="pod-char" data-blk="${lbChar(r)}" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
         <div class="pod-base"><span class="pod-rank">${rk}</span></div>
         <div class="pod-label">
           <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
@@ -1038,16 +1038,29 @@ function openLeaderboardFull(){
         <button class="pl-close lbf-close">✕</button>
       </div>
       ${podHtml}
-      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.4).toFixed(1)}vh">${cells}</div></div>`
+      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(51, rpc*2.65).toFixed(1)}vh">${cells}</div></div>`
                     : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
     </div>`;
     ov.querySelector('.lbf-close').addEventListener('click', close);
     ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
+    seatPodChars(ov);   // เท้าติดแท่น + ลดช่องเหนือหัว (ชดเชยขอบใสในรูป blk)
   };
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
+  document.body.appendChild(ov);   // ต่อ DOM ก่อน render → seatPodChars อ่าน offsetHeight ได้
   render();
-  document.body.appendChild(ov);
   if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+}
+/* เท้าตัวละครติดแท่น + ตัดช่องว่างเหนือหัว — รูป blk มีขอบใส (วัดจริง: บน/ล่าง ต่างกันต่อรูป)
+   ดึงหัวขึ้น (margin-top ลบ = ครึ่งขอบบน) + ดึงแท่นขึ้นชนเท้า (margin-bottom ลบ = ขอบล่าง) */
+const BLK_PAD = {blk1:[.11,.25], blk2:[.14,.24], blk3:[.10,.22], blk4:[.04,.18],
+                 blk5:[.17,.20], blk6:[.13,.20], blk7:[.12,.21], blk8:[.13,.22]};
+function seatPodChars(scope){
+  (scope || document).querySelectorAll('.pod-char').forEach(img=>{
+    const p = BLK_PAD[img.getAttribute('data-blk')]; if(!p) return;
+    const h = img.offsetHeight; if(!h) return;                 // offsetHeight = สูงจาก CSS (ไม่โดน transform ย่อ)
+    img.style.marginTop = (-(p[0]*h)).toFixed(1) + 'px';       // ครอปขอบใสบน → หัวชิดบน
+    img.style.marginBottom = (-(p[1]*h) + 2).toFixed(1) + 'px';// ดึงแท่นขึ้นชนเท้า (+2 เท้าจมแท่นนิด ดูยืนจริง)
+  });
 }
 
 /* 🪙 เนื้อหาแท็บเหรียญ */
