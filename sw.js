@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v31';   // v31: หน้าข้อมูลน้อง — เพิ่มปุ่มปิดมุมบนซ้าย รอบ 246
+const CACHE_VERSION = 'pet-vocab-v32';   // v32: ปุ่มปิดหน้าข้อมูลน้องเด่นชัด (วงกลมแดง 2 มุม) รอบ 247
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

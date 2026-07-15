@@ -1545,9 +1545,16 @@ html.no-anim .cs-big-img{animation:none}
   scrollbar-width:none;-ms-overflow-style:none;   /* กันชนจอเตี้ยมาก — ปกติเนื้อหาพอดีไม่ต้องเลื่อน */
 }
 .pi-box .stage-plate.pi-plate::-webkit-scrollbar{display:none;width:0;}
-.pi-close{position:absolute;top:6px;right:6px;z-index:2;}
-/* รอบ 246: ปุ่มปิดเพิ่มที่มุมบนซ้ายสุด (เหนือรูปน้อง) */
-.pi-close-left{left:6px;right:auto;}
+/* รอบ 247: ปุ่มปิดเด่นชัด (วงกลมแดง กากบาทขาว ขอบขาว) — เห็นชัดทั้งบนรูปน้องและบนแผง */
+.pi-close{position:absolute;top:8px;right:8px;z-index:6;
+  width:34px;height:34px;border-radius:50%;
+  background:rgba(224,59,82,.95);color:#fff;border:2px solid rgba(255,255,255,.9);
+  font-size:17px;font-weight:900;line-height:1;
+  box-shadow:0 3px 10px rgba(0,0,0,.45);}
+.pi-close:hover{background:#e03b52;}
+.pi-close:active{transform:scale(.9);}
+/* รอบ 246-247: ปุ่มปิดเพิ่มที่มุมบนซ้ายสุด (เหนือรูปน้อง) */
+.pi-close-left{left:8px;right:auto;}
 /* 🐾 รอบ 246: รูปน้องตัวใหญ่ในหน้าข้อมูล (คลิกน้อง→เปิด · ให้เด็กอินกับสัตว์เลี้ยง) */
 .pi-portrait{display:block;margin:2px auto 8px;max-height:min(30vh,260px);max-width:90%;
   object-fit:contain;filter:drop-shadow(0 10px 20px rgba(3,15,35,.5));}
