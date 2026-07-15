@@ -1695,19 +1695,28 @@ function openChat(friend){
   const emojiPanel = overlay.querySelector('#chat-emoji');
   const box    = overlay.querySelector('#chat-box');
 
-  // 🎨 เลือกธีม (แถบ swatch เปิด/ปิด · จำแยกตามคู่สนทนา)
+  // 🎨 เลือกธีม (แถบ swatch เปิด/ปิด) — รอบ 241: ธีม "ร่วมกันทั้งคู่" เปลี่ยนแล้วอีกฝ่ายเห็นตามผ่าน DB
   const themeStrip = overlay.querySelector('#chat-theme-strip');
+  const applyTheme = (th, fromRemote)=>{
+    if(!CHAT_THEMES.some(t=>t.id === th) || th === theme) return;
+    theme = th;
+    box.className = 'chat-box ct-' + theme;
+    overlay.querySelectorAll('.chat-theme-sw').forEach(t=>t.classList.toggle('on', t.dataset.th === theme));
+    state.chatTheme[pid] = theme; saveState();                                     // จำในเครื่อง (fallback ตอนออฟไลน์/rules ยังไม่เปิด)
+    if(!fromRemote && typeof chatSetTheme === 'function') chatSetTheme(friend.uid, theme);   // เผยแพร่ให้อีกฝ่ายเห็น
+  };
   overlay.querySelector('#chat-theme-btn').addEventListener('click', ()=>{
     themeStrip.style.display = themeStrip.style.display === 'none' ? '' : 'none';
   });
   overlay.querySelectorAll('.chat-theme-sw').forEach(b=>b.addEventListener('click', ()=>{
-    theme = b.dataset.th;
-    box.className = 'chat-box ct-' + theme;
-    overlay.querySelectorAll('.chat-theme-sw').forEach(t=>t.classList.toggle('on', t === b));
+    applyTheme(b.dataset.th, false);
     themeStrip.style.display = 'none';
-    state.chatTheme[pid] = theme; saveState();
     if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
   }));
+  // เฝ้าธีมจาก DB: อีกฝ่ายเปลี่ยน → เห็นเปลี่ยนตามทันที (ยิงค่าเริ่มต้นตอนเปิดด้วย)
+  const stopTheme = (typeof chatWatchTheme === 'function')
+    ? chatWatchTheme(friend.uid, th=>{ if(document.body.contains(overlay)) applyTheme(th, true); })
+    : ()=>{};
 
   // 🕵️ แชทลับ: อ่านแล้วลบข้อความใน 20 วิ (ฝั่งผู้อ่านลบ = อีกฝ่ายก็เห็นหายด้วย)
   const secretNote = overlay.querySelector('#chat-secret-note');
@@ -1792,6 +1801,7 @@ function openChat(friend){
   const close = ()=>{
     if(chatUnsub){ chatUnsub(); chatUnsub = null; }
     stopTyping();
+    stopTheme();
     clearVanishTimers();
     if(typeof chatClearTyping === 'function') chatClearTyping(friend.uid);
     overlay.remove();

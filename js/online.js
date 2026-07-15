@@ -362,6 +362,23 @@ function chatWatchTyping(otherUid, cb){
   return ()=>{ if(timer) clearTimeout(timer); ref.off('value', handler); };
 }
 
+/* 🎨 รอบ 241: ธีมแชท "ร่วมกันทั้งคู่" — /chattheme/<pairId> = themeId (string)
+   ใครเปลี่ยนธีม อีกฝ่ายเห็นเปลี่ยนตามทันที (เดิมจำแยกในเครื่องใครเครื่องมัน)
+   สิทธิ์: ทั้งคู่ใน pairId อ่าน/เขียนได้ (โซนใหม่ /chattheme — ต้อง publish rules ก่อนใช้จริง
+   ยังไม่ publish = เขียนโดน deny เงียบๆ → ตกไปใช้ธีมในเครื่องเดิม แชทปกติไม่กระทบ) */
+function chatThemeRef(otherUid){ return Online.db.ref('chattheme/' + chatPairId(otherUid)); }
+function chatSetTheme(otherUid, themeId){
+  if(!Online.ready || !Online.db || typeof themeId !== 'string') return;
+  chatThemeRef(otherUid).set(themeId).catch(()=>{});
+}
+/* ฝั่งรับ: เฝ้าธีมของคู่สนทนา → cb(themeId) ทุกครั้งที่เปลี่ยน (รวมค่าเริ่มต้นตอนเปิด) · คืนฟังก์ชันเลิกฟัง */
+function chatWatchTheme(otherUid, cb){
+  if(!Online.ready || !Online.db) return ()=>{};
+  const ref = chatThemeRef(otherUid);
+  const handler = ref.on('value', s=>{ const v = s.val(); if(typeof v === 'string' && v) cb(v); });
+  return ()=>ref.off('value', handler);
+}
+
 /* ตัดข้อความเก่าให้เหลือ 100 ล่าสุด (best-effort — ล้มเหลวไม่กระทบการส่ง) */
 function chatPrune(base){
   return base.once('value').then(snap=>{

@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v25';   // v25: ตัดตัวละคร 🦸 ชาย/หญิง ทิ้ง — ใช้ "ตัวละครในล็อบบี้" (blk) เป็นรูปโปรไฟล์หลัก รอบ 240
+const CACHE_VERSION = 'pet-vocab-v26';   // v26: ธีมแชท sync ทั้งคู่ (/chattheme) — ใครเปลี่ยนอีกฝ่ายเห็นตาม รอบ 241
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
