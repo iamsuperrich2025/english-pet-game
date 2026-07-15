@@ -29,10 +29,11 @@ function startHTML(key){
    แผ่นเป็นแถวเดียว (frames ช่องเรียงกัน) เล่นด้วย CSS steps() → ไม่ต้องโหลด three.js/glb ในล็อบบี้
    ⚠️ ไฟล์ img/anim/*.webp ต้อง commit ไม่งั้นไม่ขึ้นเว็บ (deploy ใช้ git archive HEAD) */
 // roam:false = ท่าในไฟล์เป็น "ยืนอยู่กับที่" (ไม่ใช่ท่าเดิน) → ห้ามสั่งให้เลื่อนไปมา ไม่งั้นดูเหมือนไถลข้าง
+// flip:true = สไปรต์อบมาหันขวา (ตรงข้ามค่ามาตรฐาน "หันซ้าย") → พลิกกลับให้หันซ้ายเหมือนตัวอื่น ไม่งั้น moonwalk
 const PET_ANIM = {
   cat:    { file:'img/anim/pet_cat_walk.webp',    frames:24, fw:172, fh:172, fps:14, roam:true  },
-  dog:    { file:'img/anim/pet_dog_walk.webp',    frames:24, fw:127, fh:165, fps:14, roam:true  },
-  dragon: { file:'img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:false },
+  dog:    { file:'img/anim/pet_dog_walk.webp',    frames:24, fw:127, fh:165, fps:14, roam:true, flip:true },
+  dragon: { file:'img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:true  },
 };
 function petAnimHTML(p){
   const a = PET_ANIM[p.type];
@@ -45,6 +46,7 @@ function petAnimHTML(p){
   return `<div class="pet-roam${a.roam === false ? ' no-roam' : ''}"><div class="pet-anim" style="`
     + `aspect-ratio:${a.fw}/${a.fh};background-image:url('${a.file}');`
     + `background-size:${a.frames * 100}% 100%;--bpx:${bpx}%;`
+    + `${a.flip ? 'transform:scaleX(-1);' : ''}`
     + `animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`;
 }
 
