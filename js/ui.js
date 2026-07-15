@@ -2174,7 +2174,7 @@ function openPetInfoOverlay(){
     if(!__petPlates || !activePet()){ close(); return; }
     ov.innerHTML = `<div class="pi-box${__petPlates.care ? '' : ' one-col'}">
       <button class="pl-close pi-close">✕</button>
-      <div class="stage-plate pi-plate">${__petPlates.info}</div>
+      <div class="stage-plate pi-plate pi-plate-img">${__petPlates.info}</div>
       ${__petPlates.care ? `<div class="stage-plate pi-plate">${__petPlates.care}</div>` : ''}
     </div>`;
     bindPetPlateButtons(ov);
@@ -2514,10 +2514,8 @@ function renderDashboard(){
   /* 📰 รอบ 155 (สเปกผู้ใช้): กล่อง "ข้อมูลน้อง"+"การดูแล" ย้ายไป overlay ใหญ่ (openPetInfoOverlay)
      ซ้าย = ปุ่มเปิด overlay (เหนือตำแหน่งกล่องข้อมูลน้องเดิม) + ฟีดเพื่อน 📰 กว้างขึ้น
      เวทีน้อง (hero) ขยับไปฝั่งขวา แทนที่กล่องการดูแลเดิม */
-  __petPlates = {
-    info: `
-      <div class="plate-title">⬢ ข้อมูลน้อง</div>
-      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
+  /* รอบ 247 (สเปกผู้ใช้): คอลัมน์ซ้าย = รูปน้องตัวใหญ่เต็มคอลัมน์ · ตัวหนังสือทั้งหมดย้ายไปคอลัมน์ขวา (รวมกับการดูแล) */
+  const infoText = `
       <div class="plate-head">
         <span class="pet-name">${escapeHTML(p.name)} <button class="chip-edit" id="btn-pet-rename" title="เปลี่ยนชื่อน้อง">✏️</button></span>
         <span class="stage-label">${stageNames[stage]}</span>
@@ -2544,8 +2542,12 @@ function renderDashboard(){
             : `<div class="giant-max">🎉 ยักษ์เต็มขั้นแล้ว!</div>`}
           ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
         </div>
-      </div>` : ''}`,
-    care: hungerUI ? `<div class="plate-title">⬢ การดูแล</div>${hungerUI}` : '',
+      </div>` : ''}`;
+  __petPlates = {
+    info: `
+      <div class="plate-title">⬢ ข้อมูลน้อง</div>
+      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}`,
+    care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
   };
   const petAlert = p.sick ? ' <span class="pib-alert">🤒</span>' : (petHungry(p) ? ' <span class="pib-alert">😫</span>' : '');
   card.innerHTML = `

@@ -1549,6 +1549,11 @@ html.no-anim .cs-big-img{animation:none}
 /* 🐾 รอบ 246: รูปน้องตัวใหญ่ในหน้าข้อมูล (คลิกน้อง→เปิด · ให้เด็กอินกับสัตว์เลี้ยง) */
 .pi-portrait{display:block;margin:2px auto 8px;max-height:min(30vh,260px);max-width:90%;
   object-fit:contain;filter:drop-shadow(0 10px 20px rgba(3,15,35,.5));}
+/* 🐾 รอบ 247: คอลัมน์ซ้าย = รูปน้องเต็มคอลัมน์ (ตัวหนังสือย้ายไปขวาหมดแล้ว) */
+.pi-box .pi-plate-img{display:flex;flex-direction:column;align-items:center;}
+.pi-box .pi-plate-img .pi-portrait{flex:1 1 auto;min-height:0;height:auto;
+  max-height:none;max-width:100%;margin:6px auto;}
+.pi-care-title{margin-top:14px;}
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */
 .lbf-overlay{position:fixed;inset:0;z-index:90;background:rgba(8,22,48,.72);
