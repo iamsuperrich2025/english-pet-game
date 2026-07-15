@@ -1013,8 +1013,8 @@ function openLeaderboardFull(){
       const rk = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
       return `<div class="pod pod-${rank}${r.me?' me':''}">
         <img class="pod-char" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
-        <div class="pod-base">
-          <span class="pod-rank">${rk}</span>
+        <div class="pod-base"><span class="pod-rank">${rk}</span></div>
+        <div class="pod-label">
           <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
           <span class="pod-sc">${r.sc}</span>
         </div>
@@ -1038,7 +1038,7 @@ function openLeaderboardFull(){
         <button class="pl-close lbf-close">✕</button>
       </div>
       ${podHtml}
-      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(54, rpc*2.9).toFixed(1)}vh">${cells}</div></div>`
+      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.4).toFixed(1)}vh">${cells}</div></div>`
                     : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
     </div>`;
     ov.querySelector('.lbf-close').addEventListener('click', close);

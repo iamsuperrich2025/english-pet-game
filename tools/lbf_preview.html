@@ -14,7 +14,8 @@
   const pod=top.length?`<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{const r=top[idx];if(!r)return '';const rk=idx+1;
     const m=rk===1?'🥇':rk===2?'🥈':rk===3?'🥉':rk;
     return `<div class="pod pod-${rk}${r.me?' me':''}"><img class="pod-char" src="../img/blocks/${r.ch}.png">
-      <div class="pod-base"><span class="pod-rank">${m}</span><span class="pod-name">${r.name}</span><span class="pod-sc">${r.sc}</span></div></div>`;
+      <div class="pod-base"><span class="pod-rank">${m}</span></div>
+      <div class="pod-label"><span class="pod-name">${r.name}</span><span class="pod-sc">${r.sc}</span></div></div>`;
   }).join('')}</div>`:'';
   const cells=rest.map((r,i)=>`<div class="lbf-cell${r.me?' me':''}"><span class="r">${i+6}</span>
     <span class="nm">${r.name}</span><span class="sc">${r.sc}</span></div>`).join('');
@@ -24,6 +25,6 @@
       <span class="lbf-tabs"><button class="lb-tab active">🪙 เหรียญ</button><button class="lb-tab">🏅 เข็ม</button><button class="lb-tab">🤖 ล้มบอส</button></span>
       <button class="pl-close lbf-close">✕</button></div>
     ${pod}
-    ${rest.length?`<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(54,rpc*2.9).toFixed(1)}vh">${cells}</div></div>`:''}
+    ${rest.length?`<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46,rpc*2.4).toFixed(1)}vh">${cells}</div></div>`:''}
     </div></div>`;
 </script>
