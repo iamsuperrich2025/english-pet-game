@@ -23,7 +23,7 @@
     + `--bpx:${bpx}%;animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`;
   document.getElementById('scene').innerHTML =
     `<div class="hero-ground"></div>`
-    + `<div class="caretaker-fig"><div class="blk-rig lively"><img class="caretaker-img blk-char" src="../img/blocks/blk1.png" alt=""></div></div>`
+    + `<button class="spell-btn">🌀 สะกดคำ</button>`
     + `<div class="pet-stage pet-stage-anim"><div class="pet-wrap">${petAnim}</div></div>`;
   // freeze สำหรับสกรีนช็อต (สไปรต์วนลูปทำให้ตัวจับภาพค้าง) — เปิด no-anim หยุดทุกอย่าง
   if(new URLSearchParams(location.search).get('static')!=='0') document.documentElement.classList.add('no-anim');

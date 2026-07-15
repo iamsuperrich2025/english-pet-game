@@ -686,7 +686,8 @@ html.no-anim .stage-hero::before{animation:none;}
 /* ฉาก 3D: ผู้เลี้ยง + น้อง ยืนคู่กันกลางจอ บนลานเรืองแสง (สไตล์ COD) */
 /* ขนาดน้อง/ผู้เลี้ยง คุมด้วยความสูง (vh) ที่ JS ตั้งตามระดับร่างยักษ์ (--pet-vh/--owner-vh/--hero-gap)
    ปกติ: น้องเตี้ยกว่าผู้เลี้ยง · ยักษ์สุด: ผู้เลี้ยงสูงแค่เข่าน้อง */
-.hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;}
+.hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;
+  container-type:inline-size;}   /* รอบ 245: เป็น container ให้ลูกใช้ cqw (1cqw = 1% ความกว้างกรอบ) — น้องเดินอิงกรอบ ปรับตามจอ */
 .hero-scene .pet-stage{
   width:auto;height:clamp(64px, calc(var(--pet-vh,29) * 1vh), 760px);   /* รอบ 161: ขั้นต่ำ 140→64 ให้ร่างปกติเล็กระดับเอวได้จริงบนจอเตี้ย */
   align-items:flex-end;
@@ -702,8 +703,10 @@ html.no-anim .stage-hero::before{animation:none;}
    แยกกันแบบนี้ปรับความเร็วขา/ระยะเดินได้อิสระ ไม่ต้องกลับไปอบใหม่ */
 .hero-scene .pet-stage .pet-roam{
   height:100%;display:flex;align-items:flex-end;
-  --roam:clamp(26px, 7vw, 96px);                  /* ระยะเดินไป-กลับจากจุดกลาง */
-  animation:petRoam 13s ease-in-out infinite;
+  /* ระยะจากกลางถึงขอบ (อิงกรอบด้วย cqw) = ครึ่งกรอบ 50cqw ลบครึ่งตัวแมว ≈8.5cqw → ~41cqw
+     ตั้งไว้ให้ "ขอบตัวชนขอบกรอบ ไม่พ้นจอ" (ผู้ใช้สั่ง รอบ 245) · ปรับเลขนี้ได้ตามภาพจริง */
+  --roam:41cqw;
+  animation:petRoam 14s ease-in-out infinite;
 }
 /* ท่าในไฟล์เป็น "ยืนอยู่กับที่" (เช่น มังกร) → ยืนขยับเฉยๆ ไม่ต้องเดินไปมา (ไม่งั้นเหมือนไถลข้าง) */
 .hero-scene .pet-stage .pet-roam.no-roam{animation:none;}
@@ -716,13 +719,12 @@ html.no-anim .stage-hero::before{animation:none;}
 /* เฟรมแรก→เฟรมสุดท้าย (--bpx ตั้งจาก JS) · steps() = เปลี่ยนเฟรมเป็นขั้น ไม่ไหลเบลอ */
 @keyframes petWalk{ from{background-position-x:0;} to{background-position-x:var(--bpx,100%);} }
 /* สไปรต์หันซ้ายมาแต่เดิม → scaleX(1)=เดินซ้าย · scaleX(-1)=พลิกหน้าเดินขวา
-   พลิกตอน "ยืนนิ่งปลายทาง" (44→50%) = ดูเหมือนหยุดแล้วค่อยกลับตัว ไม่ใช่บิดกลางคัน */
+   เดินถึงขอบกรอบแล้ว "เลี้ยวกลับทันที" (พลิกใน 1% ที่ 49→50% และ 99→100%) ไม่พ้นจอ (ผู้ใช้สั่ง รอบ 245) */
 @keyframes petRoam{
-  0%   {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}
-  44%  {transform:translateX(var(--roam)) scaleX(-1);}
-  50%  {transform:translateX(var(--roam)) scaleX(1);}
-  94%  {transform:translateX(calc(-1 * var(--roam))) scaleX(1);}
-  100% {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}
+  0%,100% {transform:translateX(calc(-1 * var(--roam))) scaleX(-1);}  /* ชนขอบซ้าย หันขวา เริ่มเดินไปขวา */
+  49%     {transform:translateX(var(--roam)) scaleX(-1);}             /* ถึงขอบขวา */
+  50%     {transform:translateX(var(--roam)) scaleX(1);}              /* เลี้ยวทันทีที่ขอบขวา หันซ้าย */
+  99%     {transform:translateX(calc(-1 * var(--roam))) scaleX(1);}   /* ถึงขอบซ้าย */
 }
 /* การคุมเอฟเฟกต์: ใช้สวิตช์ "เอฟเฟกต์เคลื่อนไหว" ในเกม (state.noAnim → html.no-anim) ตัวเดียว
    สอดคล้องกับทั้งเกม — ที่อื่น (การ์ตูนเด็กเด้ง/ฟ้าผ่า/ประกาย) ก็ยึดสวิตช์นี้ ไม่แยกเคารพ
@@ -785,11 +787,13 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
   background:linear-gradient(90deg,transparent,rgba(120,210,255,.55),transparent);}
 /* รอบ 161: ร่างปกติ (g0) — PNG fallback แยกคนซ้ายสุด/น้องขวาสุด เปิดกลางให้เหรียญ rank
    (โมเดล 3D จัดเองใน lobby3d.js sideLayout — CSS ชุดนี้คุมเฉพาะตอนไม่มีโมเดล) */
-.stage-hero.hero-side .hero-scene{width:100%;height:100%;justify-content:flex-end;}
+.stage-hero.hero-side .hero-scene{width:100%;height:100%;justify-content:center;}   /* รอบ 245: เอาคนออกแล้ว → น้องกลับมากลางกรอบ (เดิม flex-end ดันชิดขวาเพื่อเปิดที่ให้คนซ้าย) */
 /* 🧱 รอบ 238: 2D ทั้งคู่ — คนซ้าย/สัตว์ขวา · เท้าอยู่บน "เส้นฟ้า" (stage-hero::after bottom:30px)
    หมายเหตุ: .hero-scene ถูกร่นด้วย padding-bottom:22px ของ stage-hero → ตั้ง bottom:6px ให้เท้าลงพอดีเส้น (ปรับได้)
    ⚠️ ร่างยักษ์: --pet-vh เดิมจูนไว้ให้กล้อง 3D เฟรม (ใหญ่มาก) · โหมด 2D ยืนข้างคนต้อง "คุมโซนขวา" ไม่ให้ล้นทับคน */
-.stage-hero.hero-side .hero-scene .pet-stage{margin-right:3%;margin-bottom:6px;max-width:52%;}
+/* รอบ 245: ล้าง margin auto (style.css:.pet-stage มี margin:0 auto ดันชิดขวา) → กลางกรอบจริง
+   บ้าน = กลางกรอบ · roam เดินออกซ้าย-ขวาเท่ากัน ชนขอบแล้วเลี้ยว */
+.stage-hero.hero-side .hero-scene .pet-stage{margin-left:0;margin-right:0;margin-bottom:6px;max-width:52%;}
 /* สไปรต์อบ: ดึงลงให้เท้าน้องยืนพื้นเดียวกับตัวละครเด็ก (ชดเชย padding เวที + ไม่มี footAlign)
    ปรับ --anim-drop ได้ตามภาพจริง (ค่าเริ่ม 22px จากที่วัดว่าเท้าลอยสูงกว่าเด็ก ~24px) */
 .stage-hero.hero-side .pet-stage.pet-stage-anim{transform:translateY(var(--anim-drop,22px));}
@@ -1733,7 +1737,7 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
    🌀 Spin-to-Spell (รอบ 171) — เกมวงแหวนสะกดคำบนเวที hero
    วงแหวน/ตัวอักษร/ช่องเป้าอยู่ใน canvas 3D (z1) · ก้อนนี้คือ HUD HTML ทับเวที
    ============================================================ */
-.spell-btn{position:absolute;left:10px;bottom:10px;z-index:3;cursor:pointer;
+.spell-btn{position:absolute;left:10px;top:10px;z-index:3;cursor:pointer;   /* รอบ 245: ย้ายจากล่าง→บนซ้าย (ผู้ใช้: อยู่ล่างแล้วบังแมวที่เดินมาทางซ้าย) */
   padding:6px 13px;border-radius:20px;border:1px solid rgba(120,210,255,.55);
   background:linear-gradient(165deg,rgba(30,90,170,.88),rgba(12,40,90,.92));color:#dff1ff;
   font:800 clamp(11px,2.8vh,13.5px) inherit;font-family:inherit;

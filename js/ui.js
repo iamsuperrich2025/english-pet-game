@@ -67,7 +67,8 @@ function petVisualHTML(p){
     if(p.sick) overlays += `<span class="sick-badge">🤒</span>`;
     else if(p.sleeping) overlays += `<span class="sick-badge sleep-badge">💤</span>`;
   }
-  const auraHTML = (stage === 'adult' && !p.sick)
+  // ดาววิบวับ ✨ รอบตัว — เอาออกตอนเป็นสไปรต์อบ (ผู้ใช้: ดูไม่มืออาชีพ) · คงไว้เฉพาะภาพนิ่งร่างโต
+  const auraHTML = (stage === 'adult' && !p.sick && !anim)
     ? `<div class="aura"><span class="sparkle sp1">✨</span><span class="sparkle sp2">✨</span><span class="sparkle sp3">✨</span></div>`
     : '';
   // pet-stage-anim: สไปรต์อบไม่ได้ผ่าน footAlign (ต่างจาก .pet-img) + กรอบ flex โดน padding เวทีดันขึ้น
