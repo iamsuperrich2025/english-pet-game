@@ -419,6 +419,10 @@ html.no-anim .coin-pill.net{animation:none;}
 }
 .rankup-btn:hover{filter:brightness(1.06);}
 .rankup-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #cf9722;}
+/* 🏭 ฉลองผลิตสำเร็จ: 2 ปุ่ม (ไว้ก่อน / ไปเปิดคลัง) เรียงข้างกัน หดพอดีจอเตี้ย */
+.cr-btn-row{display:flex;gap:clamp(8px,2.4vmin,14px);justify-content:center;flex-wrap:wrap;}
+.rankup-btn-2{background:linear-gradient(180deg,#c9d0e6,#9aa3bf);color:#33384a;box-shadow:0 5px 0 #767d95;}
+.rankup-btn-2:active{box-shadow:0 2px 0 #767d95;}
 
 /* ---------- ⚡ เอฟเฟกต์ฟ้าผ่า (จับคู่ครบใน 5 วิ / สอบสายฟ้า — canvas จาก thunderFx ใน util.js) ---------- */
 .thunder-fx{position:fixed;inset:0;z-index:9980;pointer-events:none;}

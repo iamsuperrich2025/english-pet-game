@@ -10,7 +10,7 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-### 📌 สรุปสถานะล่าสุด (17 ก.ค. · deploy `.237`) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (15 ก.ค. · deploy `.238` · SW v24) — อ่านก่อน
 - **เว็บจริง = `vocabworld.web.app`** · ขึ้นเว็บต้อง `bash tools/deploy_firebase.sh` (git push ไม่พอ) · จบงานบัมพ์ `version.json` เสมอ
 - **⚠️ เครื่องมือ screenshot ของ Claude เสียทั้ง session นี้** (ค้าง/ย่อ 0.4x จาก popIn ตอนแท็บ hidden) → **ตรวจ layout ด้วยตัวเลข** (`getBoundingClientRect`/`getComputedStyle`) ไม่ใช่ screenshot · เข้าล็อบบี้จริงไม่ได้ (ล็อกอิน Google) → ให้ผู้ใช้ส่งภาพยืนยันเสมอ
 - **หน้าจำลอง (dev · pull css จริง):** `tools/lobby_ground_preview.html` (พื้น+ตำแหน่งน้อง), `tools/lbf_preview.html` (กระดานเต็มจอ), `tools/anim_preview.html` (สไปรต์) — เสิร์ฟผ่าน `python tools/bake_server.py` (:8766)
@@ -24,9 +24,10 @@
 - **`.237`: คลิกกลุ่มอันดับ→กระดานเต็มจอ 5 คอลัมน์ Top 100** (`openLeaderboardFull` ui.js · grid `repeat(rpc,1fr)` สูง `min(76,rpc*4)vh`) · **คลิกน้อง→`openPetInfoOverlay` + รูปใหญ่ `.pi-portrait`** · `LEADERBOARD_SIZE 50→100`
 
 ### ▶️ งานค้างถัดไป
-- 🏭 **[ผู้ใช้สั่ง 15 ก.ค. · ยังไม่เริ่ม] ผลิตสินค้าเสร็จแล้วผู้เล่นหาไม่เจอว่าไปไหน:**
-  - ผลิตเสร็จ → เข้า `state.collection` (`addCraft` [state.js:786]) แต่ UI ไม่บอกว่าไปดูที่ไหน
-  - **แนวทาง:** ฉากฉลอง "ผลิตสำเร็จ" (game.js:818) + toast → เพิ่ม "เก็บในคลัง" + ปุ่มพาไปเปิดคลัง · หาว่าคลังสะสมเปิดจาก panel ไหนในล็อบบี้
+- ✅ **[รอบ 239 · เสร็จ .238] ผลิตสินค้าเสร็จแล้วผู้เล่นหาไม่เจอว่าไปไหน — แก้แล้ว:**
+  - ฉากฉลอง "🏭 ผลิตสำเร็จ" (`showCollectReveal` ui.js) ตอน `produced` → เพิ่มปุ่ม **"📦 ไปเปิดคลัง"** (คู่ปุ่ม "ไว้ก่อน") พาไป `gotoMyStock()` = `showScreen('screen-dashboard')`+`renderDashboard()`+`openPanel('panel-market')` เลื่อนถึง `#mkt-mystock` (หัวข้อ "🎁 คลังสินค้าของฉัน" ท้ายแผงตลาด)
+  - คลังสะสมอยู่ท้าย **แผงตลาด `panel-market`** (`renderCollectMine` → `.hq-grid`) · **ยืนยัน browser จริง:** ผลิต cupcake → ปุ่มโผล่ → คลิก → เปิดแผงตลาด · `#mkt-mystock` โชว์ "(1 ชิ้น)" + การ์ด "คัพเค้กสตรอว์เบอร์รี" · ฟิตจอ 812×375 · ไม่มี console error
+  - ⚠️ ค้าง: **ผู้ใช้ลองจริง** (ผลิตของในเกมจริง → กดปุ่มไปคลัง)
 - 🐾 **สไปรต์น้อง — ครบ 3 ตัวแล้ว:** แมวเดิน · หมาเดิน · มังกรยืนโยกตัว
   - **มี skill `/bake-pet-sprite` แล้ว** (`~/.claude/skills/`) — สูตรเต็ม+หลุมที่เคยตก อยู่ในนั้น ทำสัตว์ตัวใหม่เรียก skill ได้เลย
   - yaw ที่ใช้จริง: แมว/มังกร -2.35 · หมา -0.52 · ทุกตัว frames:24 cell:320 · แมว/หมา fps14 roam:true · มังกร fps12 roam:false (ท่าในไฟล์เป็นยืน ไม่ใช่เดิน)

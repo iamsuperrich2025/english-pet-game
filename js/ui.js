@@ -4626,7 +4626,7 @@ function renderMarketCard(){
     ${renderOrdersUI()}
     ${renderMarketBrowse()}
     ${renderVehicleShop()}
-    <div class="mkt-listhead">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
+    <div class="mkt-listhead" id="mkt-mystock">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
     ${renderCollectMine()}`;
 
   const soldOk = document.getElementById('mkt-sold-ok');
@@ -5172,6 +5172,13 @@ function gotoVehicleShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
   setTimeout(()=>{ const s = document.getElementById('mkt-vehicles'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
 }
+/* 🏭→📦 พาผู้เล่นจากฉากฉลอง "ผลิตสำเร็จ" ไปเปิดคลังสินค้า (ท้ายแผงตลาด) เพื่อให้เจอของที่เพิ่งผลิต */
+function gotoMyStock(){
+  showScreen('screen-dashboard');                               // ออกจากหน้าเกม/ผลสอบกลับล็อบบี้ก่อน (showScreen จะ closePanel ให้)
+  if(typeof renderDashboard === 'function') renderDashboard();  // รีเฟรชแผงตลาด — ชิ้นที่เพิ่งเข้าคลังจึงโผล่
+  if(typeof openPanel === 'function') openPanel('panel-market');
+  setTimeout(()=>{ const s = document.getElementById('mkt-mystock'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 180);
+}
 function showNeedCarDialog(why){
   askConfirm(why==='overdue'
     ? `<div style="font-size:56px;line-height:1">🔐</div>
@@ -5489,12 +5496,20 @@ function showCollectReveal(id, price, produced){
       <div class="rankup-name" style="color:${tier.color}">${c.name}</div>
       <div class="collect-reveal-stars" style="color:${tier.color}">${tier.stars} ${tier.label}</div>
       <p class="rankup-sub">${sub}</p>
-      <button class="rankup-btn">เยี่ยมไปเลย! 🎉</button>
+      ${produced
+        ? `<div class="cr-btn-row">
+             <button class="rankup-btn rankup-btn-2 cr-close">ไว้ก่อน</button>
+             <button class="rankup-btn cr-warehouse">📦 ไปเปิดคลัง</button>
+           </div>`
+        : `<button class="rankup-btn cr-close">เยี่ยมไปเลย! 🎉</button>`}
     </div>`;
-  overlay.querySelector('.rankup-btn').addEventListener('click', ()=>{
+  const closeReveal = ()=>{
     overlay.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
-  });
+  };
+  overlay.querySelector('.cr-close').addEventListener('click', closeReveal);
+  const whBtn = overlay.querySelector('.cr-warehouse');
+  if(whBtn) whBtn.addEventListener('click', ()=>{ overlay.remove(); gotoMyStock(); });
   document.body.appendChild(overlay);
 }
 

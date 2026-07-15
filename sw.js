@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v23';   // v23: ล็อบบี้ 2D — ตัวละคร blk ขยับมีชีวิต + สัตว์ 2D · เลือกตัวใน Profile · เท้าลงเส้นพื้น (รอบ 238)
+const CACHE_VERSION = 'pet-vocab-v24';   // v24: ผลิตสำเร็จ → ปุ่ม 📦 ไปเปิดคลัง (พาไปแผงตลาด เลื่อนถึงคลังสินค้า) รอบ 239
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
