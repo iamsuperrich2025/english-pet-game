@@ -918,6 +918,86 @@ function renderLeaderboardCard(){
   el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml() : lbCoinHtml());
   bindPlayerClicks();
   initSideScroll(el);
+  bindLbGroupOpen();
+}
+/* รอบ 246: คลิกกลุ่มอันดับ (หัวข้อ 🏆 + การ์ด) → เปิดกระดานเต็มจอ
+   ยกเว้นคลิกชื่อผู้เล่น (.pl-click → โปรไฟล์) หรือแท็บ (.lb-tab → สลับการ์ดเล็ก) */
+let __lbGroupBound = false;
+function bindLbGroupOpen(){
+  if(__lbGroupBound) return; __lbGroupBound = true;
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab')) return; openLeaderboardFull(); };
+  const label = document.getElementById('lb-label');
+  const card = document.getElementById('leaderboard-card');
+  if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
+  if(card){ card.style.cursor = 'pointer'; card.addEventListener('click', open); }
+}
+
+/* 🏆 รอบ 246: กระดานอันดับเต็มจอ (5 คอลัมน์ Top 100 ไม่ต้องเลื่อน) — ผู้ใช้สั่งคลิกกลุ่มอันดับแล้วขยาย
+   lbRankRows(tab): คืน [{uid,name,g,dataN,sc,me}] เรียงอันดับแล้ว (แหล่งข้อมูลเดียวกับการ์ดเล็ก) */
+function lbRankRows(tab){
+  const myId = onlineKey();
+  const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู')
+               + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
+  const meG = state.student ? state.student.grade : '';
+  if(tab === 'badges'){
+    if(typeof badgeScore !== 'function') return [];
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
+    map[myId] = {id:myId, n:meName, g:meG};
+    let rows = Object.values(map).map(r=>{ const sp = splitNameBadges(r.n);
+      return {id:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId}; })
+      .filter(r=>r.score > 0);
+    rows.sort((a,b)=> b.score - a.score);
+    return rows.map(r=>({uid:r.id, name:r.name, g:r.g, dataN:r.name + r.badges, sc:`🏅 ${r.score}`, me:r.me}));
+  }
+  if(tab === 'boss'){
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
+    map[myId] = {id:myId, n:meName, g:meG, bk:Math.round(state.mechaBoss||0)};
+    const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
+    return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, me:r.id===myId}));
+  }
+  return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, me:r.id===myId}));
+}
+
+let __lbfTab = 'coins';
+function openLeaderboardFull(){
+  if(typeof Online === 'undefined' || !Online.ready){
+    if(typeof toast === 'function') toast('📡 ต่ออินเทอร์เน็ตก่อนดูอันดับเต็มนะ');
+    return;
+  }
+  __lbfTab = (lbTab === 'badges' || lbTab === 'boss') ? lbTab : 'coins';
+  const ov = document.createElement('div'); ov.className = 'lbf-overlay';
+  const close = ()=> ov.remove();
+  const render = ()=>{
+    const rows = lbRankRows(__lbfTab).slice(0, 100);
+    const n = rows.length;
+    const rpc = Math.min(20, Math.max(1, Math.ceil(n / 5)));   // แถวต่อคอลัมน์ (เต็ม=20 · น้อยคน=หดสั้น ไม่โล่ง)
+    const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
+    const cells = rows.map((r,i)=>`
+      <div class="lbf-cell${r.me ? ' me' : ''}">
+        <span class="r">${medal(i)}</span>
+        <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}</span>
+        <span class="sc">${r.sc}</span>
+      </div>`).join('');
+    const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส' : '🪙 อันดับเหรียญ';
+    ov.innerHTML = `<div class="lbf-box">
+      <div class="lbf-head">
+        <span class="lbf-title">🏆 ${title} · Top 100</span>
+        <span class="lbf-tabs">
+          <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
+          <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
+          <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
+        </span>
+        <button class="pl-close lbf-close">✕</button>
+      </div>
+      <div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(76, rpc*4).toFixed(1)}vh">${cells || '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>'}</div></div>
+    </div>`;
+    ov.querySelector('.lbf-close').addEventListener('click', close);
+    ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
+  };
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
+  render();
+  document.body.appendChild(ov);
+  if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
 }
 
 /* 🪙 เนื้อหาแท็บเหรียญ */
@@ -2427,6 +2507,7 @@ function renderDashboard(){
   __petPlates = {
     info: `
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
+      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
       <div class="plate-head">
         <span class="pet-name">${escapeHTML(p.name)} <button class="chip-edit" id="btn-pet-rename" title="เปลี่ยนชื่อน้อง">✏️</button></span>
         <span class="stage-label">${stageNames[stage]}</span>
@@ -2497,14 +2578,12 @@ function renderDashboard(){
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
   tap.style.cursor = 'pointer'; tap.style.pointerEvents = 'auto';
+  // รอบ 246: แตะน้อง → เด้งดึ๋งสั้นๆ + เปิดหน้าข้อมูลน้อง (มีรูปตัวใหญ่ ให้อินกับสัตว์เลี้ยง)
   tap.addEventListener('click', ()=>{
     sfx.select();
-    if(!p.sick && !p.sleeping && stage!=='egg' && !petHungry(p) && IMG_FILES[`${p.type}_${stage}_happy`]){
-      makeHappy(2500);
-    }else{
-      tap.style.transform = 'scale(1.15) rotate(-5deg)';
-      setTimeout(()=>tap.style.transform = '', 180);
-    }
+    tap.style.transform = 'scale(1.12) rotate(-4deg)';
+    setTimeout(()=>tap.style.transform = '', 160);
+    if(typeof openPetInfoOverlay === 'function') openPetInfoOverlay();
   });
 
   renderHomeCard();

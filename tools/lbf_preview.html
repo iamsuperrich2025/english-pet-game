@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>ตรวจกระดานอันดับเต็มจอ (เครื่องมือพัฒนา)</title>
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/lobby.css">
+<script>
+  // จำลอง openLeaderboardFull ด้วย mock 100 คน — ตรวจว่า 5 คอลัมน์ พอดี ไม่ scroll
+  const N = +(new URLSearchParams(location.search).get('n') || 100);
+  const rpc = Math.min(20, Math.max(1, Math.ceil(N/5)));
+  const medal=(i)=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const cells=Array.from({length:N},(_,i)=>`<div class="lbf-cell${i===7?' me':''}">
+     <span class="r">${medal(i)}</span>
+     <span class="nm">${i===3?'ชื่อยาวมากๆๆๆๆๆๆทดสอบตัดจุด':'ผู้เล่น'+(i+1)}</span>
+     <span class="sc">🪙 ${(999999-i*3117).toLocaleString()}</span></div>`).join('');
+  document.write(`<div class="lbf-overlay" style="position:static;height:100vh">
+    <div class="lbf-box"><div class="lbf-head">
+      <span class="lbf-title">🏆 🪙 อันดับเหรียญ · Top 100</span>
+      <span class="lbf-tabs"><button class="lb-tab active">🪙 เหรียญ</button><button class="lb-tab">🏅 เข็ม</button><button class="lb-tab">🤖 ล้มบอส</button></span>
+      <button class="pl-close lbf-close">✕</button></div>
+    <div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(76,rpc*4).toFixed(1)}vh">${cells}</div></div>
+    </div></div>`);
+</script>
