@@ -1593,27 +1593,29 @@ html.no-anim .cs-big-img{animation:none}
   min-width:0;width:clamp(84px,17%,240px);}
 .pod-char{width:auto;display:block;object-fit:contain;object-position:bottom;margin-bottom:-2px;
   filter:drop-shadow(0 8px 12px rgba(3,15,35,.5));}
-.pod-base{width:100%;border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;
-  padding-top:5px;background:linear-gradient(180deg,#cfe4ff,#8fb6e6);box-shadow:inset 0 2px 0 rgba(255,255,255,.4);}
+.pod-base{width:100%;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,#cfe4ff,#8fb6e6);box-shadow:inset 0 2px 0 rgba(255,255,255,.4);}
 .pod-rank{font-size:clamp(16px,3.4vh,30px);font-weight:900;line-height:1;color:#0b1a34;}
-/* ชื่อ+เหรียญ อยู่ "ใต้แท่น" → โชว์ครบทุกอันดับ (รวม 4,5 ที่แท่นเตี้ย) · ฐานเดียวกันทุกช่อง */
+/* ชื่อ+เหรียญ อยู่ "เหนือหัวตัวละคร" (ผู้ใช้ รอบ 248) */
 .pod-label{width:100%;display:flex;flex-direction:column;align-items:center;gap:0;
-  padding:3px 4px 0;min-height:0;}
+  padding:0 4px 2px;min-height:0;}
 .pod-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-weight:800;font-size:clamp(11px,1.8vh,14px);color:#e6f2ff;cursor:pointer;}
 .pod-sc{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-size:clamp(10px,1.6vh,13px);font-weight:800;color:#9ec8e8;}
 /* ตัวละครใหญ่ (ผู้ใช้ขอ) + แท่นสูงลดหลั่น พีคกลาง=อันดับ1 */
+/* ความสูงแท่นตั้งจาก JS (baseVh ตามคะแนนจริง) — ที่นี่คุมแค่ "สีเหรียญ" + ขนาดตัวละคร
+   ตัวละคร: อันดับ 1 ใหญ่สุด ลดหลั่นออกข้าง (เน้นแชมป์) */
 .pod-1 .pod-char{height:clamp(108px,22vh,270px);}
-.pod-1 .pod-base{height:clamp(48px,9vh,108px);background:linear-gradient(180deg,#ffe79a,#f4c145);}
+.pod-1 .pod-base{background:linear-gradient(180deg,#ffe79a,#f4c145);}
 .pod-2 .pod-char{height:clamp(94px,19vh,230px);}
-.pod-2 .pod-base{height:clamp(38px,7vh,86px);background:linear-gradient(180deg,#eef2f7,#c2ced9);}
+.pod-2 .pod-base{background:linear-gradient(180deg,#eef2f7,#c2ced9);}
 .pod-3 .pod-char{height:clamp(94px,19vh,230px);}
-.pod-3 .pod-base{height:clamp(30px,5.5vh,72px);background:linear-gradient(180deg,#f7cfa6,#d99a68);}
+.pod-3 .pod-base{background:linear-gradient(180deg,#f7cfa6,#d99a68);}
 .pod-4 .pod-char{height:clamp(80px,16vh,200px);}
-.pod-4 .pod-base{height:clamp(22px,3.8vh,50px);background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
+.pod-4 .pod-base{background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
 .pod-5 .pod-char{height:clamp(80px,16vh,200px);}
-.pod-5 .pod-base{height:clamp(17px,3vh,42px);background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
+.pod-5 .pod-base{background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
 .pod.me .pod-base{outline:2px solid #7ad0ff;outline-offset:-2px;}
 .pod.me .pod-name{color:#7ad0ff;}
 /* ---- การ์ดผู้เล่นแบบกว้าง (รอบ 155): สถิติ | กิจกรรม + กริดทรัพย์สิน ---- */

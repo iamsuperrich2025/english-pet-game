@@ -948,15 +948,15 @@ function lbRankRows(tab){
       return {id:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId}; })
       .filter(r=>r.score > 0);
     rows.sort((a,b)=> b.score - a.score);
-    return rows.map(r=>({uid:r.id, name:r.name, g:r.g, dataN:r.name + r.badges, sc:`🏅 ${r.score}`, me:r.me}));
+    return rows.map(r=>({uid:r.id, name:r.name, g:r.g, dataN:r.name + r.badges, sc:`🏅 ${r.score}`, val:r.score, me:r.me}));
   }
   if(tab === 'boss'){
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
     map[myId] = {id:myId, n:meName, g:meG, bk:Math.round(state.mechaBoss||0)};
     const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
-    return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, me:r.id===myId}));
+    return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, val:r.bk, me:r.id===myId}));
   }
-  return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, me:r.id===myId}));
+  return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
 
 /* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
@@ -969,7 +969,7 @@ function lbDemoRows(tab){
     const base = names[i % names.length];
     const nm = (i % 9 === 0) ? base + 'สุดยอดนักสะสมแห่งปีการศึกษา' : base + (i >= names.length ? (i+1) : '');
     const score = Math.max(1, 999999 - i*8123 - i*i*11);
-    rows.push({uid:'demo'+i, name:nm, g:'', dataN:nm, sc:`${em} ${score.toLocaleString()}`, ch:'blk'+(1+(i%8)), me:i===36});
+    rows.push({uid:'demo'+i, name:nm, g:'', dataN:nm, sc:`${em} ${score.toLocaleString()}`, val:score, ch:'blk'+(1+(i%8)), me:i===36});
   }
   return rows;
 }
@@ -1006,18 +1006,22 @@ function openLeaderboardFull(){
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
     const n = rest.length;
     const rpc = Math.min(19, Math.max(1, Math.ceil(n / 5)));
-    // เรียงบนแท่น L→R = อันดับ 4,2,1,3,5 (index 3,1,0,2,4) → พีคตรงกลาง ลดหลั่นออกข้าง
+    // ความสูงแท่น "สอดคล้องคะแนนจริง" — normalize คะแนน Top 5 → 3–11vh (คนคะแนนมาก แท่นสูง)
+    const vals = top.map(r=> +r.val || 0);
+    const maxV = Math.max(...vals), minV = Math.min(...vals);
+    const baseVh = (v)=> (3 + 8 * (maxV > minV ? (v - minV) / (maxV - minV) : 1)).toFixed(1);
+    // เรียงบนแท่น L→R = อันดับ 4,2,1,3,5 (index 3,1,0,2,4) → ชื่อ+เหรียญเหนือหัว · แท่นสูงตามคะแนน
     const podHtml = top.length ? `<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{
       const r = top[idx]; if(!r) return '';
       const rank = idx + 1;
       const rk = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
       return `<div class="pod pod-${rank}${r.me?' me':''}">
-        <img class="pod-char" data-blk="${lbChar(r)}" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
-        <div class="pod-base"><span class="pod-rank">${rk}</span></div>
         <div class="pod-label">
           <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
           <span class="pod-sc">${r.sc}</span>
         </div>
+        <img class="pod-char" data-blk="${lbChar(r)}" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
+        <div class="pod-base" style="height:${baseVh(r.val)}vh"><span class="pod-rank">${rk}</span></div>
       </div>`;
     }).join('')}</div>` : '';
     const cells = rest.map((r,i)=>`
@@ -1058,7 +1062,7 @@ function seatPodChars(scope){
   (scope || document).querySelectorAll('.pod-char').forEach(img=>{
     const p = BLK_PAD[img.getAttribute('data-blk')]; if(!p) return;
     const h = img.offsetHeight; if(!h) return;                 // offsetHeight = สูงจาก CSS (ไม่โดน transform ย่อ)
-    img.style.marginTop = (-(p[0]*h)).toFixed(1) + 'px';       // ครอปขอบใสบน → หัวชิดบน
+    img.style.marginTop = (-(p[0]*h) + 4).toFixed(1) + 'px';   // ครอปขอบใสบน เหลือช่อง ~4px ให้หัวห่างชื่อ (ชื่ออยู่เหนือหัว)
     img.style.marginBottom = (-(p[1]*h) + 2).toFixed(1) + 'px';// ดึงแท่นขึ้นชนเท้า (+2 เท้าจมแท่นนิด ดูยืนจริง)
   });
 }
