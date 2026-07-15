@@ -2173,12 +2173,13 @@ function openPetInfoOverlay(){
   const fill = ()=>{
     if(!__petPlates || !activePet()){ close(); return; }
     ov.innerHTML = `<div class="pi-box${__petPlates.care ? '' : ' one-col'}">
-      <button class="pl-close pi-close">✕</button>
+      <button class="pl-close pi-close pi-close-left" aria-label="ปิด">✕</button>
+      <button class="pl-close pi-close" aria-label="ปิด">✕</button>
       <div class="stage-plate pi-plate pi-plate-img">${__petPlates.info}</div>
       ${__petPlates.care ? `<div class="stage-plate pi-plate">${__petPlates.care}</div>` : ''}
     </div>`;
     bindPetPlateButtons(ov);
-    ov.querySelector('.pi-close').addEventListener('click', close);
+    ov.querySelectorAll('.pi-close').forEach(b=>b.addEventListener('click', close));
   };
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
   window.__piOverlay = {refresh: fill};
