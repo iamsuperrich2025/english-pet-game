@@ -935,6 +935,7 @@ function bindLbGroupOpen(){
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ (5 คอลัมน์ Top 100 ไม่ต้องเลื่อน) — ผู้ใช้สั่งคลิกกลุ่มอันดับแล้วขยาย
    lbRankRows(tab): คืน [{uid,name,g,dataN,sc,me}] เรียงอันดับแล้ว (แหล่งข้อมูลเดียวกับการ์ดเล็ก) */
 function lbRankRows(tab){
+  if(window.__LBDEMO) return lbDemoRows(tab);   // 🧪 รอบ 247 (ชั่วคราว): เดโม 100 คนดูผลบนมือถือ — ลบทั้งบล็อกเดโมหลังผู้ใช้ capture
   const myId = onlineKey();
   const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู')
                + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
@@ -958,9 +959,31 @@ function lbRankRows(tab){
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, me:r.id===myId}));
 }
 
+/* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
+   ไม่แตะ Firebase จริง เห็นเฉพาะเครื่องที่ใส่ param · **ลบทั้งบล็อกนี้ + บรรทัด __LBDEMO ใน lbRankRows/openLeaderboardFull หลังผู้ใช้ capture** */
+function lbDemoRows(tab){
+  const em = tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : '🪙';
+  const names = ['ลูกหมูน้อย','เจ้าเหมียวส้ม','นักสะกดคำ','ดาวรุ่งพุ่งแรง','กัปตันมังกร','น้องข้าวปั้น','เก่งเวอร์','ยัยตัวป่วน','พ่อมดน้อย','เจ้าชายกบ','ราชินีผึ้ง','ฮีโร่ตัวจิ๋ว','นักผจญภัย','เพชรน้ำหนึ่ง','ต้นกล้า','ฟ้าใส','ข้าวโอ๊ต','มะนาว','ปลาทู','ส้มโอ'];
+  const rows = [];
+  for(let i=0;i<100;i++){
+    const base = names[i % names.length];
+    const nm = (i % 9 === 0) ? base + 'สุดยอดนักสะสมแห่งปีการศึกษา' : base + (i >= names.length ? (i+1) : '');
+    const score = Math.max(1, 999999 - i*8123 - i*i*11);
+    rows.push({uid:'demo'+i, name:nm, g:'', dataN:nm, sc:`${em} ${score.toLocaleString()}`, me:i===36});
+  }
+  return rows;
+}
+try{
+  if(/[?&]lbdemo\b/.test(location.search)){
+    window.__LBDEMO = true;
+    window.addEventListener('load', ()=> setTimeout(()=>{ try{ openLeaderboardFull(); }catch(e){} }, 2200));
+  }
+}catch(e){}
+/* 🧪🧪 จบบล็อกเดโม */
+
 let __lbfTab = 'coins';
 function openLeaderboardFull(){
-  if(typeof Online === 'undefined' || !Online.ready){
+  if(!window.__LBDEMO && (typeof Online === 'undefined' || !Online.ready)){
     if(typeof toast === 'function') toast('📡 ต่ออินเทอร์เน็ตก่อนดูอันดับเต็มนะ');
     return;
   }
