@@ -1724,6 +1724,13 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
 .settings-box .set-feed-head{margin-top:6px;}
 .settings-box .set-help{margin-top:2px;padding:9px;}
 .settings-box > div:last-child{margin-top:0 !important;}
+/* 🦸 รอบ 243: แถวเลือกตัวละคร = เต็มความกว้างทุกคอลัมน์ · รูปใหญ่ 4 บน/4 ล่าง (ผู้ใช้สั่งให้ใช้พื้นที่เต็ม) */
+.settings-box .set-blk-row{grid-column:1/-1;display:block;}
+.settings-box .set-blk-row .set-label{display:block;margin:0 0 8px;text-align:left;}
+.settings-box .blk-grid{grid-template-columns:repeat(4,1fr);gap:10px;max-width:none;margin:0;justify-content:stretch;}
+.settings-box .blk-mini{padding:6px;border-radius:16px;}
+/* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด */
+.settings-box .blk-mini img{width:auto;height:clamp(96px,17vh,150px);aspect-ratio:341/512;}
 /* วิธีเล่น + คู่มือครู (ใช้ .help-box ร่วม): การ์ดหัวข้อเรียง 3 คอลัมน์ */
 .help-box{max-width:min(96vw,980px);padding:16px 22px;}
 .help-box .help-body{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;}
