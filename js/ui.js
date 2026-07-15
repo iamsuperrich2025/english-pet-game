@@ -2174,7 +2174,6 @@ function openPetInfoOverlay(){
     if(!__petPlates || !activePet()){ close(); return; }
     ov.innerHTML = `<div class="pi-box${__petPlates.care ? '' : ' one-col'}">
       <button class="pl-close pi-close pi-close-left" aria-label="ปิด">✕</button>
-      <button class="pl-close pi-close" aria-label="ปิด">✕</button>
       <div class="stage-plate pi-plate pi-plate-img">${__petPlates.info}</div>
       ${__petPlates.care ? `<div class="stage-plate pi-plate">${__petPlates.care}</div>` : ''}
     </div>`;
