@@ -1,22 +1,29 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>ตรวจกระดานอันดับเต็มจอ (เครื่องมือพัฒนา)</title>
+<title>ตรวจกระดานอันดับ + โพเดียม (เครื่องมือพัฒนา)</title>
 <link rel="stylesheet" href="../css/style.css">
 <link rel="stylesheet" href="../css/lobby.css">
+<div id="root"></div>
 <script>
-  // จำลอง openLeaderboardFull ด้วย mock 100 คน — ตรวจว่า 5 คอลัมน์ พอดี ไม่ scroll
   const N = +(new URLSearchParams(location.search).get('n') || 100);
-  const rpc = Math.min(20, Math.max(1, Math.ceil(N/5)));
-  const medal=(i)=>i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
-  const cells=Array.from({length:N},(_,i)=>`<div class="lbf-cell${i===7?' me':''}">
-     <span class="r">${medal(i)}</span>
-     <span class="nm">${i===3?'ชื่อยาวมากๆๆๆๆๆๆทดสอบตัดจุด':'ผู้เล่น'+(i+1)}</span>
-     <span class="sc">🪙 ${(999999-i*3117).toLocaleString()}</span></div>`).join('');
-  document.write(`<div class="lbf-overlay" style="position:static;height:100vh">
+  const rows = Array.from({length:N},(_,i)=>({uid:'d'+i,
+    name: i%9===0 ? 'ผู้เล่นชื่อยาวสุดยอดนักสะสมแห่งปี'+(i+1) : 'ผู้เล่น'+(i+1),
+    sc:'🪙 '+(999999-i*8123).toLocaleString(), ch:'blk'+(1+i%8), me:i===36}));
+  const top=rows.slice(0,5), rest=rows.slice(5);
+  const rpc=Math.min(19,Math.max(1,Math.ceil(rest.length/5)));
+  const pod=top.length?`<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{const r=top[idx];if(!r)return '';const rk=idx+1;
+    const m=rk===1?'🥇':rk===2?'🥈':rk===3?'🥉':rk;
+    return `<div class="pod pod-${rk}${r.me?' me':''}"><img class="pod-char" src="../img/blocks/${r.ch}.png">
+      <div class="pod-base"><span class="pod-rank">${m}</span><span class="pod-name">${r.name}</span><span class="pod-sc">${r.sc}</span></div></div>`;
+  }).join('')}</div>`:'';
+  const cells=rest.map((r,i)=>`<div class="lbf-cell${r.me?' me':''}"><span class="r">${i+6}</span>
+    <span class="nm">${r.name}</span><span class="sc">${r.sc}</span></div>`).join('');
+  document.getElementById('root').innerHTML=`<div class="lbf-overlay" style="position:static;height:100vh">
     <div class="lbf-box"><div class="lbf-head">
       <span class="lbf-title">🏆 🪙 อันดับเหรียญ · Top 100</span>
       <span class="lbf-tabs"><button class="lb-tab active">🪙 เหรียญ</button><button class="lb-tab">🏅 เข็ม</button><button class="lb-tab">🤖 ล้มบอส</button></span>
       <button class="pl-close lbf-close">✕</button></div>
-    <div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(76,rpc*4).toFixed(1)}vh">${cells}</div></div>
-    </div></div>`);
+    ${pod}
+    ${rest.length?`<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(54,rpc*2.9).toFixed(1)}vh">${cells}</div></div>`:''}
+    </div></div>`;
 </script>

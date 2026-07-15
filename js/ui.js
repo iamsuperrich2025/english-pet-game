@@ -969,7 +969,7 @@ function lbDemoRows(tab){
     const base = names[i % names.length];
     const nm = (i % 9 === 0) ? base + 'สุดยอดนักสะสมแห่งปีการศึกษา' : base + (i >= names.length ? (i+1) : '');
     const score = Math.max(1, 999999 - i*8123 - i*i*11);
-    rows.push({uid:'demo'+i, name:nm, g:'', dataN:nm, sc:`${em} ${score.toLocaleString()}`, me:i===36});
+    rows.push({uid:'demo'+i, name:nm, g:'', dataN:nm, sc:`${em} ${score.toLocaleString()}`, ch:'blk'+(1+(i%8)), me:i===36});
   }
   return rows;
 }
@@ -981,6 +981,16 @@ try{
 }catch(e){}
 /* 🧪🧪 จบบล็อกเดโม */
 
+/* ตัวละคร (blk) ของแถวกระดาน: ตัวเรา=ตัวจริงที่เลือก · คนอื่น=ฟิลด์ ch ถ้ามี ไม่งั้นสุ่มคงที่จาก uid
+   (กระดานยังไม่เก็บ ch จริง — ต้องแก้ Firebase rules ก่อน · ดู handoff) */
+function lbChar(r){
+  if(r.me && typeof lobbyBlk === 'function') return lobbyBlk();
+  if(r.ch && /^blk[1-8]$/.test(r.ch)) return r.ch;
+  let h = 0; const s = r.uid || '';
+  for(let i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0;
+  return 'blk' + (1 + h % 8);
+}
+
 let __lbfTab = 'coins';
 function openLeaderboardFull(){
   if(!window.__LBDEMO && (typeof Online === 'undefined' || !Online.ready)){
@@ -991,13 +1001,28 @@ function openLeaderboardFull(){
   const ov = document.createElement('div'); ov.className = 'lbf-overlay';
   const close = ()=> ov.remove();
   const render = ()=>{
-    const rows = lbRankRows(__lbfTab).slice(0, 100);
-    const n = rows.length;
-    const rpc = Math.min(20, Math.max(1, Math.ceil(n / 5)));   // แถวต่อคอลัมน์ (เต็ม=20 · น้อยคน=หดสั้น ไม่โล่ง)
-    const medal = (i)=> i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : (i+1);
-    const cells = rows.map((r,i)=>`
+    const all = lbRankRows(__lbfTab).slice(0, 100);
+    const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
+    const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
+    const n = rest.length;
+    const rpc = Math.min(19, Math.max(1, Math.ceil(n / 5)));
+    // เรียงบนแท่น L→R = อันดับ 4,2,1,3,5 (index 3,1,0,2,4) → พีคตรงกลาง ลดหลั่นออกข้าง
+    const podHtml = top.length ? `<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{
+      const r = top[idx]; if(!r) return '';
+      const rank = idx + 1;
+      const rk = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank;
+      return `<div class="pod pod-${rank}${r.me?' me':''}">
+        <img class="pod-char" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
+        <div class="pod-base">
+          <span class="pod-rank">${rk}</span>
+          <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
+          <span class="pod-sc">${r.sc}</span>
+        </div>
+      </div>`;
+    }).join('')}</div>` : '';
+    const cells = rest.map((r,i)=>`
       <div class="lbf-cell${r.me ? ' me' : ''}">
-        <span class="r">${medal(i)}</span>
+        <span class="r">${i + 6}</span>
         <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}</span>
         <span class="sc">${r.sc}</span>
       </div>`).join('');
@@ -1012,7 +1037,9 @@ function openLeaderboardFull(){
         </span>
         <button class="pl-close lbf-close">✕</button>
       </div>
-      <div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(76, rpc*4).toFixed(1)}vh">${cells || '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>'}</div></div>
+      ${podHtml}
+      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(54, rpc*2.9).toFixed(1)}vh">${cells}</div></div>`
+                    : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
     </div>`;
     ov.querySelector('.lbf-close').addEventListener('click', close);
     ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
