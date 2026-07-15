@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v28';   // v28: กริดตัวละครในตั้งค่า = เต็มความกว้าง 4×2 รูปใหญ่ขึ้น 2 เท่า รอบ 243
+const CACHE_VERSION = 'pet-vocab-v29';   // v29: Word Search — เอาเพื่อนออนไลน์ออก + คำศัพท์เต็มแผงเรียบร้อยขึ้น รอบ 244
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

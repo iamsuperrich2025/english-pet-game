@@ -2107,36 +2107,15 @@ html.no-anim .ws-coinpop{animation:none;opacity:0;}
 /* รอบ 196: กว้างพอทำ 2 คอลัมน์ — เห็นคำครบทุกคำไม่ต้องเลื่อน */
 .ws-side{flex:0 0 clamp(210px,40%,400px);display:flex;flex-direction:column;min-height:0;}
 .ws-find{font-size:13px;font-weight:800;color:#8fd6ff;margin-bottom:6px;flex-shrink:0;}
-/* 2 คอลัมน์ · align-content:start ให้เรียงจากบน · overflow-y auto เป็น fallback เผื่อคำเยอะจริงๆ */
-/* รอบ 207: คำ = ก้อนกะทัดรัดด้านบน (จำกัดความสูง เลื่อนซ่อน scrollbar ถ้าเยอะ) เปิดที่ให้กล่องเพื่อนสูงเกือบเต็มแผง */
-#ws-words{flex:0 1 auto;min-height:0;max-height:clamp(52px,17%,108px);overflow-y:auto;
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;align-content:start;scrollbar-width:none;}
+/* 2 คอลัมน์ · align-content:start ให้เรียงจากบน · รอบ 244: เอากล่องเพื่อนออก → คำกินพื้นที่เต็มแผง เห็นครบทุกคำ */
+#ws-words{flex:1 1 auto;min-height:0;overflow-y:auto;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;scrollbar-width:none;}
 #ws-words::-webkit-scrollbar{display:none;}
-/* 👥 รอบ 206: เพื่อนออนไลน์ + ปุ่มเชิญ (วนรายชื่อแบบซ่อน scrollbar เหมือนกล่องอันดับใน Lobby) */
-.ws-friends-head{font-size:12.5px;font-weight:800;color:#8fd6ff;margin:9px 0 5px;flex-shrink:0;
-  display:flex;align-items:center;gap:6px;}
-.ws-friends-head b{color:#7dffb0;}
-/* รอบ 207: กล่องเพื่อนสูงเกือบเต็มแนวแผง (flex:1 กินที่ที่เหลือ · เยอะเกินค่อยวน) */
-#ws-friends{flex:1 1 auto;min-height:64px;overflow-y:auto;scrollbar-width:none;
-  display:flex;flex-direction:column;gap:6px;}
-#ws-friends::-webkit-scrollbar{display:none;}
-#ws-friends .ss-chunk{display:flex;flex-direction:column;gap:5px;}
-.ws-fr{display:flex;align-items:center;gap:8px;background:rgba(20,52,96,.6);border:1px solid rgba(95,200,255,.2);
-  border-radius:11px;padding:8px 10px;flex-shrink:0;}
-.ws-fr-dot{width:9px;height:9px;border-radius:50%;background:#3ddc84;box-shadow:0 0 6px #3ddc84;flex-shrink:0;
-  animation:wsFrDot 1.6s ease-in-out infinite;}
-@keyframes wsFrDot{0%,100%{opacity:1}50%{opacity:.45}}
-html.no-anim .ws-fr-dot{animation:none;}
-.ws-fr-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font-size:13.5px;font-weight:700;color:#dcefff;}
-.ws-fr-inv{flex-shrink:0;background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;border:0;border-radius:9px;
-  font-family:inherit;font-weight:800;font-size:12px;padding:6px 12px;cursor:pointer;white-space:nowrap;}
-.ws-fr-inv:active{transform:scale(.94);}
-.ws-fr-note{font-size:12px;color:#9ec8e8;padding:6px 4px;line-height:1.4;}
-.ws-word{background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:9px;
-  padding:5px 8px;font-size:13.5px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.15;
+.ws-word{display:flex;flex-direction:column;justify-content:center;
+  background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:10px;
+  padding:8px 10px;font-size:15px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.2;
   min-width:0;overflow:hidden;}
-.ws-word small{display:block;font-size:10px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:1px;
+.ws-word small{display:block;font-size:11.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
 #ws-prog{flex-shrink:0;margin-top:7px;font-size:12.5px;font-weight:700;color:#ffe08a;text-align:center;}
