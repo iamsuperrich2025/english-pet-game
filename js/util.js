@@ -444,15 +444,8 @@ function openSettings(){
         <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
       <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
     </div>
-    <div class="set-row" id="set-avatar">
-      <span class="set-label">🦸 ตัวละครของหนู</span>
-      <span class="set-avatar-btns">
-        <button class="avatar-mini" data-av="male">🦸‍♂️ ชาย</button>
-        <button class="avatar-mini" data-av="female">🦸‍♀️ หญิง</button>
-      </span>
-    </div>
     <div class="set-row set-blk-row" id="set-blk">
-      <span class="set-label">🧱 ตัวละครในล็อบบี้<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง</small></span>
+      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · เป็นรูปโปรไฟล์ของหนูด้วย</small></span>
       <div class="blk-grid">
         ${['blk1','blk2','blk3','blk4','blk5','blk6','blk7','blk8'].map(b=>
           `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="${b}"></button>`).join('')}
@@ -480,24 +473,18 @@ function openSettings(){
     setSwitch(overlay.querySelector('#set-sound .set-switch'), state.sound);
     setSwitch(overlay.querySelector('#set-haptic .set-switch'), state.haptic !== false);
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
-    // ข้อ 4: ไฮไลต์ตัวละครที่เลือกอยู่ (ผู้เล่นเดิมยังไม่เลือก = ไม่ไฮไลต์)
-    overlay.querySelectorAll('.avatar-mini').forEach(b=>b.classList.toggle('sel', state.playerAvatar === b.dataset.av));
-    const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238
+    const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238 · ไฮไลต์ตัวที่เลือกอยู่
     overlay.querySelectorAll('.blk-mini').forEach(b=>b.classList.toggle('sel', curBlk === b.dataset.blk));
     // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default ปิดทุกหมวด)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
   };
-  overlay.querySelectorAll('.avatar-mini').forEach(b=>b.addEventListener('click', ()=>{
-    state.playerAvatar = b.dataset.av;
-    saveState(); sfx.select(); paint();
-    if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ทันที
-  }));
-  // 🧱 รอบ 238: เลือกตัวละครบล็อกในล็อบบี้ (เก็บใน state.blockAv — ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย)
+  // 🧱 รอบ 238/245: เลือก "ตัวละครของหนู" (บล็อก blk1..8) = ยืนข้างน้องในล็อบบี้ + เป็นรูปโปรไฟล์
+  //   (เก็บใน state.blockAv — ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย)
   overlay.querySelectorAll('.blk-mini').forEach(b=>b.addEventListener('click', ()=>{
     state.blockAv = b.dataset.blk;
     saveState(); sfx.select(); paint();
-    if(typeof renderDashboard === 'function') renderDashboard();
+    if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ + ตัวในล็อบบี้ทันที
   }));
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();

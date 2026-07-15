@@ -2763,15 +2763,11 @@ function feedWith(p, food){
 /* ตัวละครผู้เลี้ยง (ข้อ 4): มีภาพ player_male/female.png ใช้ภาพ ไม่มีใช้อีโมจิแทน
    fallback = สิ่งที่โชว์เมื่อผู้เล่นยังไม่เลือกตัวละคร (แต่ละจุดใช้ต่างกัน) */
 const AVATAR_UI = {male:{emoji:'🦸‍♂️', name:'เด็กชาย'}, female:{emoji:'🦸‍♀️', name:'เด็กหญิง'}};
+// 🧱 รอบ 245: รูปโปรไฟล์หลัก = "ตัวละครในล็อบบี้" (blk1..8) ตัวเดียวกับที่ยืนข้างน้อง
+// (เลิกใช้ 🦸 ชาย/หญิง แยกต่างหาก — ผู้ใช้สั่ง 15 ก.ค. · เปลี่ยนตัวที่ ⚙️ ตั้งค่า)
 function playerAvatarHTML(fallback){
-  const av = state.playerAvatar;
-  if(!av || !AVATAR_UI[av]) return fallback !== undefined ? fallback : '📛';
-  const img = IMG_FILES[`player_${av}`];
-  if(img) return `<img class="avatar-chip-img" src="${img}" alt="">`;
-  // ไม่มีไฟล์ player_*.png จริงในเกม → เดิมตกไปเป็นอีโมจิ 🦸 (การ์ดโปรไฟล์เลยไม่ใช่ตัวเรา)
-  // ใช้ "การ์ตูนบล็อกที่เลือกตอนสมัคร" แทน = ตัวเดียวกับที่ยืนอยู่ในล็อบบี้ · ซูมที่หัวด้วย .avatar-chip-blk
   if(typeof lobbyBlk === 'function') return `<img class="avatar-chip-img avatar-chip-blk" src="img/blocks/${lobbyBlk()}.png" alt="">`;
-  return AVATAR_UI[av].emoji;
+  return fallback !== undefined ? fallback : '📛';
 }
 
 /* ข้อความประจำร่าง (ข้อ 5.2) — ใช้ทั้งการ์ดสัตว์ + กล่องกินเสร็จ */

@@ -10,7 +10,9 @@
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
-### 📌 สรุปสถานะล่าสุด (15 ก.ค. · deploy `.238` · SW v24) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (15 ก.ค. · deploy `.239` · SW v25) — อ่านก่อน
+- **รอบ 240:** ตัดแถว "🦸 ตัวละครของหนู ชาย/หญิง" ในตั้งค่าทิ้ง → ใช้ **"ตัวละครในล็อบบี้" (blk1..8 · `state.blockAv`) เป็นรูปโปรไฟล์หลัก** ทุกที่ (`playerAvatarHTML` คืนภาพ blk เสมอ) · แถว blk เปลี่ยน label เป็น "🦸 ตัวละครของหนู · เป็นรูปโปรไฟล์ด้วย" · quiz cheer avatar โชว์เสมอ · registration ยังตั้ง `playerAvatar` male/female เป็น seed default (male→blk1 · female→blk6)
+- **⚠️ ค้าง (ผู้ใช้แจ้ง 15 ก.ค.):** สไปรต์ล็อบบี้ — **หมาเดิน "moonwalk" (ถอยหลัง)** ต้องแก้ทิศ (yaw/กลับด้านสไปรต์) ผ่าน skill `/bake-pet-sprite` · แมวเดินถูก · มังกรยืนโยกกับที่ (ปกติ)
 - **เว็บจริง = `vocabworld.web.app`** · ขึ้นเว็บต้อง `bash tools/deploy_firebase.sh` (git push ไม่พอ) · จบงานบัมพ์ `version.json` เสมอ
 - **⚠️ เครื่องมือ screenshot ของ Claude เสียทั้ง session นี้** (ค้าง/ย่อ 0.4x จาก popIn ตอนแท็บ hidden) → **ตรวจ layout ด้วยตัวเลข** (`getBoundingClientRect`/`getComputedStyle`) ไม่ใช่ screenshot · เข้าล็อบบี้จริงไม่ได้ (ล็อกอิน Google) → ให้ผู้ใช้ส่งภาพยืนยันเสมอ
 - **หน้าจำลอง (dev · pull css จริง):** `tools/lobby_ground_preview.html` (พื้น+ตำแหน่งน้อง), `tools/lbf_preview.html` (กระดานเต็มจอ), `tools/anim_preview.html` (สไปรต์) — เสิร์ฟผ่าน `python tools/bake_server.py` (:8766)

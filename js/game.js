@@ -510,9 +510,9 @@ function startGame(cat){
   const rb = document.getElementById('btn-report');
   if(rb) rb.onclick = showProgressReport;   // .onclick กัน handler ซ้อนเวลาเข้าเกมหลายรอบ
   document.getElementById('game-coin-count').textContent = fmtNum(state.coins);
-  // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — ยังไม่เลือกตัวละคร = ซ่อนไว้
+  // ตัวละครผู้เลี้ยงมาเชียร์ (ข้อ 4 ต่อยอด) — รอบ 245: ใช้ตัวละครในล็อบบี้ (blk) เป็นรูปโปรไฟล์ โชว์เสมอ
   const gav = document.getElementById('game-avatar');
-  if(gav){ gav.innerHTML = playerAvatarHTML(''); gav.style.display = state.playerAvatar ? '' : 'none'; }
+  if(gav){ const h = playerAvatarHTML(''); gav.innerHTML = h; gav.style.display = h ? '' : 'none'; }
   const p = activePet();
   const hintBtn = document.getElementById('hint-btn');
   hintBtn.style.display = (p && p.type==='cat' && abilityOn(p)) ? 'block' : 'none';
