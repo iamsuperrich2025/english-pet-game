@@ -1576,8 +1576,10 @@ html.no-anim .cs-big-img{animation:none}
 .lbf-head{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-bottom:12px;flex-wrap:wrap;}
 .lbf-title{font-size:clamp(15px,2.4vh,20px);font-weight:900;color:#8fd6ff;}
 .lbf-tabs{display:flex;gap:6px;margin-left:auto;}
-.lbf-close{margin-left:4px;}
-.lbf-close-l{margin-left:0;margin-right:10px;}   /* รอบ 249: ปุ่มปิดซ้ายบนด้วย (ผู้ใช้) */
+/* ปุ่มปิดทั้งสอง: override .pl-close (absolute มุมขวา) → in-flow เรียงในแถวหัว ไม่ซ้อนกัน/ทับแท็บ
+   ซ้าย(ก่อนหัวข้อ) · ขวา(หลังแท็บ) — รอบ 249 ผู้ใช้: เพิ่มปุ่มปิดซ้ายบน */
+.lbf-close{position:static;margin-left:8px;flex:0 0 auto;}
+.lbf-close-l{position:static;margin:0 10px 0 0;flex:0 0 auto;}
 .lbf-body{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;min-height:0;}
 .lbf-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-auto-flow:column;
   gap:5px 12px;width:100%;}
