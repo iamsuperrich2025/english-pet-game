@@ -1566,8 +1566,10 @@ html.no-anim .cs-big-img{animation:none}
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */
 .lbf-overlay{position:fixed;inset:0;z-index:90;background:rgba(8,22,48,.72);
-  display:flex;align-items:center;justify-content:center;animation:fadeIn .2s;}
-.lbf-box{position:relative;width:96vw;height:92vh;display:flex;flex-direction:column;
+  display:flex;align-items:flex-start;justify-content:center;padding:1.8vh 0;animation:fadeIn .2s;}
+/* height:auto = กล่องสูงพอดีเนื้อหา (ไม่บังคับ 92vh ที่ดันแถวล่างตกขอบบนจอเตี้ย) · cap 96vh กันล้น */
+.lbf-box{position:relative;width:96vw;height:auto;max-height:96vh;overflow:hidden;
+  display:flex;flex-direction:column;
   background:linear-gradient(180deg,#12294c,#0b1a34);border:2px solid #3a76d8;border-radius:18px;
   box-shadow:0 24px 60px rgba(0,0,0,.6);padding:14px 16px;
   animation:popIn .3s cubic-bezier(.2,1.4,.4,1);}
@@ -1575,6 +1577,7 @@ html.no-anim .cs-big-img{animation:none}
 .lbf-title{font-size:clamp(15px,2.4vh,20px);font-weight:900;color:#8fd6ff;}
 .lbf-tabs{display:flex;gap:6px;margin-left:auto;}
 .lbf-close{margin-left:4px;}
+.lbf-close-l{margin-left:0;margin-right:10px;}   /* รอบ 249: ปุ่มปิดซ้ายบนด้วย (ผู้ใช้) */
 .lbf-body{flex:1 1 auto;display:flex;align-items:flex-start;justify-content:center;min-height:0;}
 .lbf-grid{display:grid;grid-template-columns:repeat(5,1fr);grid-auto-flow:column;
   gap:5px 12px;width:100%;}
@@ -1606,15 +1609,15 @@ html.no-anim .cs-big-img{animation:none}
 /* ตัวละครใหญ่ (ผู้ใช้ขอ) + แท่นสูงลดหลั่น พีคกลาง=อันดับ1 */
 /* ความสูงแท่นตั้งจาก JS (baseVh ตามคะแนนจริง) — ที่นี่คุมแค่ "สีเหรียญ" + ขนาดตัวละคร
    ตัวละคร: อันดับ 1 ใหญ่สุด ลดหลั่นออกข้าง (เน้นแชมป์) */
-.pod-1 .pod-char{height:clamp(108px,22vh,270px);}
+.pod-1 .pod-char{height:clamp(80px,20vh,260px);}
 .pod-1 .pod-base{background:linear-gradient(180deg,#ffe79a,#f4c145);}
-.pod-2 .pod-char{height:clamp(94px,19vh,230px);}
+.pod-2 .pod-char{height:clamp(72px,17vh,220px);}
 .pod-2 .pod-base{background:linear-gradient(180deg,#eef2f7,#c2ced9);}
-.pod-3 .pod-char{height:clamp(94px,19vh,230px);}
+.pod-3 .pod-char{height:clamp(72px,17vh,220px);}
 .pod-3 .pod-base{background:linear-gradient(180deg,#f7cfa6,#d99a68);}
-.pod-4 .pod-char{height:clamp(80px,16vh,200px);}
+.pod-4 .pod-char{height:clamp(62px,15vh,190px);}
 .pod-4 .pod-base{background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
-.pod-5 .pod-char{height:clamp(80px,16vh,200px);}
+.pod-5 .pod-char{height:clamp(62px,15vh,190px);}
 .pod-5 .pod-base{background:linear-gradient(180deg,#bcd3ef,#8fb0d6);}
 .pod.me .pod-base{outline:2px solid #7ad0ff;outline-offset:-2px;}
 .pod.me .pod-name{color:#7ad0ff;}

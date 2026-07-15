@@ -12,7 +12,7 @@
   const top=rows.slice(0,5), rest=rows.slice(5);
   const rpc=Math.min(19,Math.max(1,Math.ceil(rest.length/5)));
   const vals=top.map(r=>+r.val||0), maxV=Math.max(...vals), minV=Math.min(...vals);
-  const baseVh=v=>(3+8*(maxV>minV?(v-minV)/(maxV-minV):1)).toFixed(1);
+  const baseVh=v=>(2.5+6*(maxV>minV?(v-minV)/(maxV-minV):1)).toFixed(1);
   const pod=top.length?`<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{const r=top[idx];if(!r)return '';const rk=idx+1;
     const m=rk===1?'🥇':rk===2?'🥈':rk===3?'🥉':rk;
     return `<div class="pod pod-${rk}${r.me?' me':''}">
@@ -24,11 +24,12 @@
     <span class="nm">${r.name}</span><span class="sc">${r.sc}</span></div>`).join('');
   document.getElementById('root').innerHTML=`<div class="lbf-overlay" style="position:static;height:100vh">
     <div class="lbf-box"><div class="lbf-head">
+      <button class="pl-close lbf-close lbf-close-l">✕</button>
       <span class="lbf-title">🏆 🪙 อันดับเหรียญ · Top 100</span>
       <span class="lbf-tabs"><button class="lb-tab active">🪙 เหรียญ</button><button class="lb-tab">🏅 เข็ม</button><button class="lb-tab">🤖 ล้มบอส</button></span>
       <button class="pl-close lbf-close">✕</button></div>
     ${pod}
-    ${rest.length?`<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(51,rpc*2.65).toFixed(1)}vh">${cells}</div></div>`:''}
+    ${rest.length?`<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46,rpc*2.35).toFixed(1)}vh">${cells}</div></div>`:''}
     </div></div>`;
   const BLK_PAD={blk1:[.11,.25],blk2:[.14,.24],blk3:[.10,.22],blk4:[.04,.18],blk5:[.17,.20],blk6:[.13,.20],blk7:[.12,.21],blk8:[.13,.22]};
   document.querySelectorAll('.pod-char').forEach(img=>{const p=BLK_PAD[img.getAttribute('data-blk')];if(!p)return;const h=img.offsetHeight;img.style.marginTop=(-(p[0]*h)+4).toFixed(1)+'px';img.style.marginBottom=(-(p[1]*h)+2).toFixed(1)+'px';});

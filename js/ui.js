@@ -1009,7 +1009,7 @@ function openLeaderboardFull(){
     // ความสูงแท่น "สอดคล้องคะแนนจริง" — normalize คะแนน Top 5 → 3–11vh (คนคะแนนมาก แท่นสูง)
     const vals = top.map(r=> +r.val || 0);
     const maxV = Math.max(...vals), minV = Math.min(...vals);
-    const baseVh = (v)=> (3 + 8 * (maxV > minV ? (v - minV) / (maxV - minV) : 1)).toFixed(1);
+    const baseVh = (v)=> (2.5 + 6 * (maxV > minV ? (v - minV) / (maxV - minV) : 1)).toFixed(1);
     // เรียงบนแท่น L→R = อันดับ 4,2,1,3,5 (index 3,1,0,2,4) → ชื่อ+เหรียญเหนือหัว · แท่นสูงตามคะแนน
     const podHtml = top.length ? `<div class="lbf-podium">${[3,1,0,2,4].map(idx=>{
       const r = top[idx]; if(!r) return '';
@@ -1033,6 +1033,7 @@ function openLeaderboardFull(){
     const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส' : '🪙 อันดับเหรียญ';
     ov.innerHTML = `<div class="lbf-box">
       <div class="lbf-head">
+        <button class="pl-close lbf-close lbf-close-l">✕</button>
         <span class="lbf-title">🏆 ${title} · Top 100</span>
         <span class="lbf-tabs">
           <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
@@ -1042,10 +1043,10 @@ function openLeaderboardFull(){
         <button class="pl-close lbf-close">✕</button>
       </div>
       ${podHtml}
-      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(51, rpc*2.65).toFixed(1)}vh">${cells}</div></div>`
+      ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.35).toFixed(1)}vh">${cells}</div></div>`
                     : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
     </div>`;
-    ov.querySelector('.lbf-close').addEventListener('click', close);
+    ov.querySelectorAll('.lbf-close').forEach(b=> b.addEventListener('click', close));
     ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
     seatPodChars(ov);   // เท้าติดแท่น + ลดช่องเหนือหัว (ชดเชยขอบใสในรูป blk)
   };
