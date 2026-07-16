@@ -19,5 +19,6 @@
 
 ## 🧱 โครงโค้ด (ทั่วไป)
 - **แยก data จาก logic** (`js/data/*` = data · `js/*.js` = logic)
+- **`js/data/band/` (ผู้ใช้สั่ง 17 ก.ค. — ใช้ทุก band ทุกหมวด):** อ่าน/ใช้งานได้**เฉพาะไฟล์แบบแยกช่วงคำ** ที่ชื่อลงท้าย `_<คำแรก>-<คำสุดท้าย>` เช่น `b6_academic_abandon-bias.js` · **ห้ามอ่านไฟล์ก้อนรวม** เช่น `b6_academic.js` (data ทั้งก้อนยังไม่แยก เปลือง tokens — วางไว้จัดหมวดหมู่เฉยๆ)
 - **ห้ามทำเซฟผู้เล่นเดิมพัง** — field ใหม่ทุกตัวต้องมี default ใน `loadState()` (migration)
 - state เซฟที่ localStorage key `petVocabAdventure_v1`
