@@ -39,6 +39,7 @@ const DEFAULT_STATE = {
   advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
   hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
+  hauntSurviveBest:0,                 // ⏱ รอบ 256: สถิติหนีผีรอดนานสุด (วินาที · โชว์ HUD โลกผี + การ์ดผู้เล่น field hs)
   heliTicket:false,                   // ตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 51 · ซื้อได้เมื่อมีตั๋วโลกผจญภัย)
   heliDone:[],                        // คำที่ประกอบสำเร็จแล้วในโลกเฮลิคอปเตอร์ (แยกคลังต่อโลก)
   heliStreak:0,                       // รอบ 62: สตรีคประกอบคำในโลกเฮลิฯ โดยไม่ชนเลย (สะสมข้ามรอบ · ชน/กระแทกแรง = รีเซ็ต)
@@ -273,6 +274,7 @@ function loadState(){
       s.advHurt = false;   // รอบ 255: เลิกระบบบาดเจ็บถาวร (โลก 3D ไม่มีตาย/เกมโอเวอร์) — ล้าง flag ค้างของเซฟเก่าด้วย
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
+      if(typeof s.hauntSurviveBest !== 'number') s.hauntSurviveBest = 0;   // ⏱ รอบ 256
       if(typeof s.heliTicket !== 'boolean') s.heliTicket = false;                          // โลกเฮลิคอปเตอร์
       if(!Array.isArray(s.heliDone)) s.heliDone = [];
       if(typeof s.heliStreak !== 'number') s.heliStreak = 0;                               // รอบ 62

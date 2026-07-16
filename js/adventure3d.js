@@ -371,6 +371,7 @@ const ATC={
 let yaw=0, pitch=0;
 let hp=100, maxHp=100, sessionCoins=0, sessionWords=0;   // 🤖 รอบ 236: maxHp ต่อโลก (โลกหุ่น=MECHA_MAX_HP · อื่นๆ=100)
 let hauntLives=HAUNT_LIVES, hurtUntil=0;   // 👻 ระบบหัวใจโลกผี + ช่วงกันโดนซ้ำ
+let hauntRunStart=0, hauntRecordShown=false;   // ⏱ รอบ 256: จับเวลา "หนีผีรอดนานสุด" (รอดต่อเนื่องไม่โดนจับ · สถิติใน state.hauntSurviveBest)
 let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
 let words=[];                     // guideline [{en,th}]
@@ -378,7 +379,7 @@ let letters=[];                   // ตัวอักษรในโลก [{c
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
-let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
+let dmgFlashEl, hudWordsEl, hudInvEl, hudHpEl, hudCoinEl, hudHuntEl, hudHeartEl, hudSurvEl, hudBoardEl, mapCv, mapCtx, banEl, overlayEl, canvasEl, scareEl, hintEl, introEl;
 let texCache={};
 
 /* ---------- multiplayer ---------- */
@@ -1841,6 +1842,7 @@ function respawnGhost(g, minDist){
   }
 }
 function tickGhosts(dt,now){
+  tickSurvive();                                   // ⏱ อัปเดตนาฬิกาหนีรอด + banner สถิติใหม่
   const px=camera.position.x, pz=camera.position.z;
   let hunted=null;
   monsters.forEach(g=>{
@@ -1890,10 +1892,37 @@ function sessionRecapHtml(){
   return `<div class="adv-recap"><div class="adv-recap-h">📖 คำที่หนูประกอบได้รอบนี้ (${sessionWordLog.length} คำ)</div><div class="adv-recap-list">${chips}</div></div>`;
 }
 
+/* ⏱ รอบ 256: สถิติ "หนีผีรอดนานสุด" — เวลารอดต่อเนื่อง (วินาที) ไม่โดนจับ · จบช่วงตอนโดนจับ/ออกโลก */
+function hauntRunSec(){ return hauntRunStart ? Math.floor((performance.now()-hauntRunStart)/1000) : 0; }
+function fmtSurv(s){ return s>=60 ? `${Math.floor(s/60)} นาที ${s%60} วิ` : `${s} วิ`; }
+function hauntSurviveFinish(){
+  if(mode!=='haunt' || !hauntRunStart) return;
+  const run=hauntRunSec();
+  hauntRunStart=0;
+  if(run > (state.hauntSurviveBest||0)){
+    state.hauntSurviveBest=run;
+    saveState();
+    if(typeof onlinePushScore==='function') onlinePushScore();   // ดันสถิติขึ้น /leaderboard (field hs) ให้เพื่อนเห็นในการ์ด
+  }
+}
+function tickSurvive(){
+  if(!hudSurvEl || mode!=='haunt' || !running || !hauntRunStart) return;
+  const run=hauntRunSec(), best=state.hauntSurviveBest||0;
+  const txt=`⏱ รอด ${fmtSurv(run)} · 🏆 ${fmtSurv(Math.max(best,run))}`;
+  if(hudSurvEl.textContent!==txt) hudSurvEl.textContent=txt;
+  if(!hauntRecordShown && best>0 && run>best){
+    hauntRecordShown=true;
+    sfx.levelup();
+    showBanner(`🏆 <b>สถิติใหม่! หนีผีรอดนานสุด ${fmtSurv(run)}</b><br><small>ยิ่งรอดนานสถิติยิ่งพุ่ง — เพื่อนเห็นในการ์ดของหนูด้วยนะ</small>`);
+  }
+}
+
 /* ---------- โดนผีแตะ = เสียหัวใจ 1 ดวง (ไม่ตายทีเดียว) ---------- */
 function renderHearts(){
   if(!hudHeartEl) return;
-  if(mode!=='haunt'){ hudHeartEl.style.display='none'; return; }
+  const on = mode==='haunt';
+  if(hudSurvEl) hudSurvEl.style.display = on ? 'block' : 'none';
+  if(!on){ hudHeartEl.style.display='none'; return; }
   hudHeartEl.style.display='block';
   const live=Math.max(0,Math.min(HAUNT_LIVES,hauntLives));
   hudHeartEl.textContent='❤️'.repeat(live)+'🖤'.repeat(HAUNT_LIVES-live);
@@ -1922,6 +1951,7 @@ function ghostHit(g){
    หลอกเต็มจอเหมือนเดิม (ผู้ใช้เคาะ: เต็มที่) แต่ไม่จบเกม — ฟื้นหัวใจครบ 3 ดวง ผีย้ายไปไกล เล่นต่อได้เลย */
 function caught(){
   if(!running) return;
+  hauntSurviveFinish();                          // ⏱ โดนจับ = จบช่วงรอด เก็บสถิติถ้าทำได้นานกว่าเดิม
   hurtUntil=performance.now()+6000;              // กันผีแตะซ้ำช่วงโดนหลอก+เพิ่งฟื้น
   HSound.heartbeat(null);
   HSound.scream();
@@ -1937,7 +1967,8 @@ function caught(){
     hauntLives=HAUNT_LIVES;
     renderHearts();
     monsters.forEach(g=>respawnGhost(g, 28));    // ผีกระเจิงไปเกิดไกลๆ ให้ผู้เล่นตั้งตัวใหม่
-    showBanner(`👻 <b>โดนผีจับ!! แต่หนูฟื้นแล้ว</b> ❤️❤️❤️<br><small>ผีกระเจิงไปไกลแล้ว — เล่นต่อได้เลย เบื่อเมื่อไหร่ค่อยกดออกนะ</small>`);
+    hauntRunStart=performance.now(); hauntRecordShown=false;   // ⏱ เริ่มจับเวลารอดรอบใหม่
+    showBanner(`👻 <b>โดนผีจับ!! แต่หนูฟื้นแล้ว</b> ❤️❤️❤️<br><small>ผีกระเจิงไปไกลแล้ว — เริ่มจับเวลาหนีรอดรอบใหม่ ⏱ ทำสถิติให้ดีกว่าเดิมนะ</small>`);
   },1500);
 }
 
@@ -2875,6 +2906,8 @@ function buildDom(){
   .adv-fth{color:#ffe082;font-size:clamp(13px,3.4vw,18px);font-weight:700;margin-top:4px;text-shadow:0 1px 3px #000}
   #adv-hearts{display:none;left:10px;top:42px;font-size:24px;letter-spacing:3px;pointer-events:none;
     filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
+  #adv-survive{display:none;left:10px;top:78px;font-size:14px;font-weight:800;color:#c6f6d5;pointer-events:none;
+    background:rgba(0,0,0,.45);border-radius:10px;padding:3px 10px;text-shadow:0 1px 3px #000}
   #adv-map{top:8px;right:8px;pointer-events:auto;cursor:pointer}  /* รอบ 144: แตะ = เปิดแผนที่ขยาย */
   #adv-exit{top:118px;right:8px;pointer-events:auto;background:rgba(211,47,47,.92);color:#fff;border:2px solid #fff;
     border-radius:12px;font-weight:800;font-size:14px;padding:7px 12px;font-family:inherit}
@@ -3621,6 +3654,7 @@ function buildDom(){
     <button class="adv-hud" id="adv-help">❓</button>
     <div class="adv-hud" id="adv-hunt"></div>
     <div class="adv-hud" id="adv-hearts"></div>
+    <div class="adv-hud" id="adv-survive"></div>
     <div class="adv-hud" id="adv-inst"></div>
     <div class="adv-hud" id="adv-warn"></div>
     <div class="adv-hud" id="adv-junc">⚠️ ใกล้ทางแยก! เปิดไฟเลี้ยว ⬅️ ➡️ ก่อนเข้าแยก · ไม่งั้นปรับ 🪙5</div>
@@ -3769,6 +3803,7 @@ function buildDom(){
   hudCoinEl=overlayEl.querySelector('#adv-coin');
   hudHuntEl=overlayEl.querySelector('#adv-hunt');
   hudHeartEl=overlayEl.querySelector('#adv-hearts');
+  hudSurvEl=overlayEl.querySelector('#adv-survive');   // ⏱ รอบ 256: นาฬิกาหนีผีรอด
   banEl=overlayEl.querySelector('#adv-banner');
   juncEl=overlayEl.querySelector('#adv-junc');       // 🚦 รอบ 182: ป้ายเตือนใกล้ทางแยก
   gpsArrowEl=overlayEl.querySelector('#gps-arrow');  // 🧭 รอบ 200: GPS นำทาง
@@ -6835,6 +6870,7 @@ function start(md){
 
   maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง
   hauntLives=HAUNT_LIVES; hurtUntil=0;                                 // 👻 รีเซ็ตหัวใจโลกผี
+  hauntRunStart=performance.now(); hauntRecordShown=false;             // ⏱ รอบ 256: เริ่มจับเวลาหนีผีรอด
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
@@ -6949,6 +6985,7 @@ function start(md){
 }
 
 function exitWorld(){
+  hauntSurviveFinish();                            // ⏱ ออกโลกผีเอง = นับเวลารอดรอบนี้เข้าสถิติด้วย
   running=false;
   cancelAnimationFrame(rafId);
   closeBigMap();                                   // 🗺️ รอบ 144: ปิดแผนที่ขยาย + หยุด interval วาด

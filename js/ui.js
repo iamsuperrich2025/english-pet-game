@@ -1265,6 +1265,10 @@ function showPlayerCard(uid, name, grade){
         <span class="pl-lbl">🏆 มูลค่าทรัพย์สินรวม</span>
         <span class="pl-val pl-gold">${av}</span>
       </div>
+      <div class="pl-stat">
+        <span class="pl-lbl">👻 หนีผีรอดนานสุด</span>
+        <span class="pl-val">${d.hs > 0 ? (d.hs >= 60 ? `${Math.floor(d.hs/60)} นาที ${d.hs%60} วิ` : `${d.hs} วิ`) : '—'}</span>
+      </div>
       <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
   });
 
