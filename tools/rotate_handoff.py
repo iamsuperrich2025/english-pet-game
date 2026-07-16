@@ -204,6 +204,13 @@ def main():
     total += n1 + n2 + n3
 
     report("📏 หลังหมุน —")
+
+    # 🗺️ เจน CODE_MAP.md ใหม่ทุกครั้ง (แผนที่ฟังก์ชัน:บรรทัด จะได้ไม่ล้าสมัย)
+    import subprocess
+    r = subprocess.run([sys.executable, os.path.join(ROOT, "tools", "gen_code_map.py")])
+    if r.returncode != 0:
+        print("⚠️ gen_code_map ล้มเหลว (ไม่กระทบการหมุน)")
+
     print("✅ เสร็จ (ย้าย %d ก้อน) · archive อยู่ handoff/archive/ (อย่าอ่านทั้งไฟล์ — Grep เท่านั้น)" % total)
 
 

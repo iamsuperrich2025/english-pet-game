@@ -14,6 +14,10 @@ FB="firebase"
 SITE="vocabworld"                        # → https://vocabworld.web.app (แก้ตรงนี้ถ้าชื่อโดนจอง)
 PROJECT="english-pet-game"               # Firebase project เดิม (Auth/RTDB ไม่ต้องย้าย)
 
+# 💰 กันลืม (รอบ 250): หมุน handoff ให้ผอม + เจน CODE_MAP ใหม่ ทุกครั้งที่ deploy
+#    แก้ไฟล์ handoff ใน working tree เท่านั้น (deploy ใช้ git HEAD ไม่กระทบ) — จบงานอย่าลืม commit handoff ตามปกติ
+python "$REPO/tools/rotate_handoff.py" || echo "⚠️ rotate_handoff ข้ามไป (ไม่กระทบ deploy)"
+
 echo "📦 เตรียมไฟล์จาก git HEAD → $STAGE"
 rm -rf "$STAGE" && mkdir -p "$STAGE/public"
 cd "$REPO"
