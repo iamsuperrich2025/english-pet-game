@@ -44,7 +44,7 @@ const MODES = {
     sky:0x090916, fogN:9, fogF:46, ground:0x18251d,
     ghostMax:7, ghostLife:20000, ghostSpeed:4.3, huntR:14, seeR:9,
     ghostEmoji:['👻','👻','👻','💀','🧟'],
-    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>มีหัวใจ ❤️❤️❤️ 3 ดวง โดนผีแตะเสีย 1 ดวง (กระเด็นหนีได้) หมดเมื่อไรจบเกม</small>',
+    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>มีหัวใจ ❤️❤️❤️ 3 ดวง โดนผีแตะเสีย 1 ดวง (กระเด็นหนีได้) หมดเมื่อไรโดนผีหลอกเต็มจอ แล้วฟื้นใหม่เล่นต่อได้เลย</small>',
     hint:'คลิกจอ=ล็อกเมาส์ · WASD วิ่งหนี · สู้ไม่ได้!! · โดนแตะเสียหัวใจ · Esc ปลดเมาส์แล้วค่อยกดออก',
     koTitle:'💫 พลังหมดแล้ว!',
   },
@@ -1904,7 +1904,7 @@ function ghostHit(g){
   if(now<hurtUntil) return;                      // อยู่ในช่วงกันโดนซ้ำ — ยังไม่เสียหัวใจ
   hauntLives--;
   renderHearts();
-  if(hauntLives<=0){ caught(); return; }         // หัวใจหมด → jump scare + จบเกมจริง
+  if(hauntLives<=0){ caught(); return; }         // หัวใจหมด → jump scare เต็มจอ แล้วฟื้นเล่นต่อ (รอบ 255 ไม่มีจบเกม)
   hurtUntil=now+HAUNT_IFRAME;
   // กระเด็นผู้เล่นออกจากผี + ผีถอย + เลิกไล่ชั่วครู่ (ให้ตั้งตัวหนีต่อ)
   const mp=g.spr.position, dx=camera.position.x-mp.x, dz=camera.position.z-mp.z, dd=Math.hypot(dx,dz)||1;
@@ -1915,14 +1915,14 @@ function ghostHit(g){
   HSound.whoosh();
   // 📳 สั่นแรงชัด "โดนผีทำร้าย" — กระแทก 2 ที (iOS ไม่รองรับ Vibration API สั่นไม่ได้)
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate([350,90,180,90,350]);
-  showBanner(`💔 <b>โดนผีแตะ! เหลือ ${hauntLives} หัวใจ</b><br><small>รีบวิ่งหนีต่อ! หัวใจหมดเมื่อไรจบเกมนะ</small>`);
+  showBanner(`💔 <b>โดนผีแตะ! เหลือ ${hauntLives} หัวใจ</b><br><small>รีบวิ่งหนีต่อ! หัวใจหมดระวังผีหลอกเต็มจอ!!</small>`);
 }
 
-/* ---------- Jump scare + game over (ผู้ใช้เคาะ: เต็มที่) ---------- */
+/* ---------- Jump scare (รอบ 255 ผู้ใช้สั่ง 17 ก.ค. 2026: โลก 3D ไม่มีตาย/เกมโอเวอร์) ----------
+   หลอกเต็มจอเหมือนเดิม (ผู้ใช้เคาะ: เต็มที่) แต่ไม่จบเกม — ฟื้นหัวใจครบ 3 ดวง ผีย้ายไปไกล เล่นต่อได้เลย */
 function caught(){
   if(!running) return;
-  running=false;
-  state.advHurt=true; saveState();
+  hurtUntil=performance.now()+6000;              // กันผีแตะซ้ำช่วงโดนหลอก+เพิ่งฟื้น
   HSound.heartbeat(null);
   HSound.scream();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate([400,90,220]);
@@ -1934,27 +1934,21 @@ function caught(){
   setTimeout(()=>{
     scareEl.classList.remove('on');
     overlayEl.classList.remove('adv-shake');
-    banEl.innerHTML=`<div class="adv-ko">👻 โดนผีจับแล้ว!!<br>
-      <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
-      รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${sessionRecapHtml()}<br>
-      <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
-    banEl.classList.add('show','stay');
-    document.getElementById('adv-ko-exit').addEventListener('click',()=>exitWorld());
+    hauntLives=HAUNT_LIVES;
+    renderHearts();
+    monsters.forEach(g=>respawnGhost(g, 28));    // ผีกระเจิงไปเกิดไกลๆ ให้ผู้เล่นตั้งตัวใหม่
+    showBanner(`👻 <b>โดนผีจับ!! แต่หนูฟื้นแล้ว</b> ❤️❤️❤️<br><small>ผีกระเจิงไปไกลแล้ว — เล่นต่อได้เลย เบื่อเมื่อไหร่ค่อยกดออกนะ</small>`);
   },1500);
 }
 
-/* ---------- พลังหมดโหมด adv (8.5) ---------- */
+/* ---------- พลังหมด (รอบ 255 ผู้ใช้สั่ง 17 ก.ค. 2026): ไม่มีตาย/เกมโอเวอร์ทุกโลก 3D ----------
+   ฟื้นพลังเต็มอัตโนมัติ เล่นต่อได้เรื่อยๆ เบื่อเมื่อไหร่กดออกเอง (ไม่ต้องจ่ายค่ารักษา ไม่ล็อกเข้าโลก)
+   ⚠️ ค่าปรับจราจรโลกขับรถกำแพงเพชรเป็นคนละระบบ — ยังมีผลตามเดิม */
 function knockedOut(){
-  running=false;
-  state.advHurt=true; saveState();
-  if(M.heli) HeliSound.stop();
-  if(M.drive) CarSound.stop();
-  banEl.innerHTML=`<div class="adv-ko">${M.koTitle||'💫 พลังหมดแล้ว!'}<br>
-    <small>ต้องกลับไปรักษาตัวที่ Lobby ค่ารักษา 🪙${fmtNum(CURE_COST)}<br>
-    รอบนี้เก็บได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙</small>${M.mecha?`<div class="adv-ko-stat">${mechaRecapLine()}</div>`:''}${sessionRecapHtml()}<br>
-    <button class="adv-ko-btn" id="adv-ko-exit">🏠 กลับ Lobby</button></div>`;
-  banEl.classList.add('show','stay');
-  document.getElementById('adv-ko-exit').addEventListener('click',()=>exitWorld());
+  hp=maxHp;
+  renderHudTop();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([200,80,200]);
+  showBanner(`${M.koTitle||'💫 พลังหมดแล้ว!'}<br><small>🔧 ฟื้นพลังอัตโนมัติเต็มหลอด — เล่นต่อได้เลย เบื่อเมื่อไหร่ค่อยกดออกนะ</small>`);
 }
 
 /* ============================================================
@@ -6724,7 +6718,7 @@ const INTRO={
           ['🔥','คลิกเมาส์ = ยิง · <b>Esc</b> = ปลดล็อกเมาส์']],
   },
   haunt:{
-    goal:'เก็บตัวอักษรต่อคำเหมือนโลกอื่น แต่ <b>สู้ผีไม่ได้</b>! ผีเข้าใกล้เมื่อไร <b>ต้องวิ่งหนี</b> — โดนจับ = จบเกมทันที',
+    goal:'เก็บตัวอักษรต่อคำเหมือนโลกอื่น แต่ <b>สู้ผีไม่ได้</b>! ผีเข้าใกล้เมื่อไร <b>ต้องวิ่งหนี</b> — โดนจับ = ผีหลอกเต็มจอ แล้วฟื้นเล่นต่อได้เลย (ไม่มีจบเกม)',
     touch:[['🕹️','ลากนิ้วครึ่งจอ <b>ซ้าย</b> = วิ่ง'],
            ['👀','ลากนิ้วครึ่งจอ <b>ขวา</b> = หันมองรอบ'],
            ['🏃','เห็นผีใกล้ = รีบวิ่งหนีไปทางตรงข้าม!']],
@@ -6822,7 +6816,7 @@ function start(md){
   if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }
   if(mode==='mecha' && !(state.robots&&state.robots.length)){ toast('🤖 ต้องมีหุ่นยนต์อย่างน้อย 1 ตัวก่อนนะ'); return; }
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
-  if(state.advHurt){ toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D'); return; }
+  /* รอบ 255: เลิกระบบบาดเจ็บล็อกเข้าโลก (advHurt) — โลก 3D ไม่มีตาย/เกมโอเวอร์แล้ว เข้าได้เสมอ */
   if(typeof Music!=='undefined') Music.suspendBg();   // 🎵 รอบ 181: พักเพลงพื้นหลัง (โลก 3D มี soundscape เอง)
 
   if(!built){

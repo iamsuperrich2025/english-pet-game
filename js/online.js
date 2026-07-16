@@ -111,14 +111,17 @@ function onlinePushScore(){
   const ni    = assetCount();               // จำนวนชิ้นทรัพย์สิน
   const bs    = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อบนกระดาน
   const bk    = Math.round(state.mechaBoss || 0);                          // 🤖 รอบ 228: บอสที่ล้มสะสม (กระดานโลกหุ่น)
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk;   // เข็ม/บอสเปลี่ยน = re-push
+  const ba    = (typeof lobbyBlk === 'function') ? lobbyBlk() : '';        // 🪪 รอบ 255: ตัวละคร blk ที่เลือก (โชว์เต็มตัวในการ์ดผู้เล่น)
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba;   // เข็ม/บอส/ตัวละครเปลี่ยน = re-push
   if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอสไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
-    // เผื่อ rules ยังไม่รองรับ av/ni/bk (ช่วงอัปเดต) → เขียนเวอร์ชันเดิม ไม่ให้ leaderboard พัง
-    Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba}, base)).catch(()=>{
+    // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+      Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+    });
   });
   if(typeof feedPushAssets === 'function') feedPushAssets();   // 📰 ทรัพย์สินเปลี่ยน → อัปเดตคลังที่เปิดเผย (มี sig กันเขียนซ้ำ)
 }
@@ -129,7 +132,7 @@ function onlinePushScore(){
 function fetchPlayerStats(uid){
   if(uid && uid === onlineKey()){
     return Promise.resolve({coins: Math.round(state.coins), av: Math.round(assetValue()),
-                            ni: assetCount(), me: true});
+                            ni: assetCount(), ba: (typeof lobbyBlk === 'function') ? lobbyBlk() : null, me: true});
   }
   if(!Online.ready || !uid) return Promise.resolve(null);
   return Online.db.ref('leaderboard/' + uid).get().then(s=>{
@@ -139,6 +142,7 @@ function fetchPlayerStats(uid){
       coins: typeof v.coins === 'number' ? v.coins : 0,
       av:    typeof v.av    === 'number' ? v.av    : null,   // null = ผู้เล่นยังไม่ได้อัปเดตหลังเพิ่มฟีเจอร์
       ni:    typeof v.ni    === 'number' ? v.ni    : null,
+      ba:    (typeof v.ba === 'string' && /^blk[1-8]$/.test(v.ba)) ? v.ba : null,   // 🪪 รอบ 255: ตัวละคร blk
       me: false,
     };
   }).catch(()=>null);

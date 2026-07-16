@@ -1247,7 +1247,11 @@ function showPlayerCard(uid, name, grade){
     }
     const av = (d.av == null) ? '—' : fmtNum(d.av) + ' 🪙';
     const ni = (d.ni == null) ? '—' : fmtNum(d.ni) + ' ชิ้น';
+    /* 🪪 รอบ 255: ตัวละคร blk เต็มตัวใหญ่ใต้ชื่อ (ba จาก /leaderboard · เจ้าของการ์ดยังไม่อัปเดต = ไม่โชว์) */
+    const blkImg = (d.ba && /^blk[1-8]$/.test(d.ba))
+      ? `<div class="pl-blk-wrap"><img class="pl-blk" src="img/blocks/${d.ba}.png" alt="ตัวละคร"></div>` : '';
     body.innerHTML = `
+      ${blkImg}
       ${d.me ? `<div class="pl-me-tag">⭐ นี่คือ${selfTag()}</div>` : ''}
       <div class="pl-stat">
         <span class="pl-lbl">💰 เงินรวม</span>

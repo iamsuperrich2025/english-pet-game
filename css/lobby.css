@@ -476,6 +476,9 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .pl-loading,.pl-none{text-align:center;color:#5a6b82;font-size:14.5px;padding:14px 6px;line-height:1.6;}
 .pl-none small{color:#8496ac;font-size:12.5px;}
 .pl-me-tag{text-align:center;color:var(--gold-d);font-weight:700;font-size:14px;margin-bottom:10px;}
+/* 🪪 รอบ 255: ตัวละคร blk เต็มตัวใหญ่ใต้ชื่อในการ์ดผู้เล่น */
+.pl-blk-wrap{text-align:center;margin:0 0 10px;}
+.pl-blk{height:clamp(140px,26vh,220px);width:auto;filter:drop-shadow(0 6px 14px rgba(10,30,70,.35));}
 .pl-stat{
   display:flex;align-items:center;justify-content:space-between;gap:10px;
   background:#fff;border:1px solid #cfe0f4;border-radius:13px;

@@ -270,7 +270,7 @@ function loadState(){
       if(!/^blk[1-8]$/.test(s.blockAv||'')) s.blockAv = null;                              // 🧱 ตัวละครบล็อกโลก 3D
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
-      if(typeof s.advHurt !== 'boolean') s.advHurt = false;                                // ข้อ 8
+      s.advHurt = false;   // รอบ 255: เลิกระบบบาดเจ็บถาวร (โลก 3D ไม่มีตาย/เกมโอเวอร์) — ล้าง flag ค้างของเซฟเก่าด้วย
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];
       if(typeof s.heliTicket !== 'boolean') s.heliTicket = false;                          // โลกเฮลิคอปเตอร์
