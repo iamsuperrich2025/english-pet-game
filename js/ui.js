@@ -1164,7 +1164,7 @@ function showPlayerCard(uid, name, grade){
   ov.innerHTML = `<div class="pl-card pl-wide">
       <button class="pl-close">✕</button>
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
-        ${canFollow ? `<button class="pl-follow"></button>` : ''}
+        ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
       </div>
       <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
       ${badgeRow}
@@ -1199,26 +1199,38 @@ function showPlayerCard(uid, name, grade){
       if(el && n != null) el.textContent = ` · 👥 ผู้ติดตาม ${fmtNum(n)} คน`;
     });
   };
+  /* ปุ่มเลิกติดตามแยกออกมาไว้หน้าปุ่มสถานะ "ติดตามแล้ว" (ผู้ใช้สั่ง 16 ก.ค. 2026)
+     — เดิมซ่อนรวมในปุ่มเดียว คนไม่กล้าคลิกมั่วเลยหาไม่เจอ · ป้ายอังกฤษ+คำแปลไทย */
   const fBtn = ov.querySelector('.pl-follow');
+  const uBtn = ov.querySelector('.pl-unfollow');
   if(fBtn){
+    const afterChange = ()=>{
+      paintFollow();
+      setTimeout(loadFollowers, 600);   // รอ DB รับค่าก่อนนับใหม่
+      if(typeof renderFeedCard === 'function') renderFeedCard();
+    };
     const paintFollow = ()=>{
       const onF = !!(state.follows && state.follows[uid]);
       fBtn.textContent = onF ? '✓ ติดตามแล้ว' : '➕ ติดตาม';
       fBtn.classList.toggle('on', onF);
+      if(uBtn) uBtn.style.display = onF ? '' : 'none';
     };
     paintFollow();
     fBtn.addEventListener('click', ()=>{
       if(state.follows && state.follows[uid]){
-        followUnset(uid);
-        toast(`เลิกติดตาม ${sp.name} แล้ว`);
-      }else{
-        followSet(uid, sp.name, grade || '');
-        sfx.select();
-        toast(`📰 ติดตาม ${sp.name} แล้ว! กิจกรรมของเขาจะมาโชว์ในฟีดหน้าหลัก`);
+        toast('อยากเลิกติดตาม กดปุ่มแดง "Unfollow เลิกติดตาม" ได้เลยนะ');
+        return;
       }
-      paintFollow();
-      setTimeout(loadFollowers, 600);   // รอ DB รับค่าก่อนนับใหม่
-      if(typeof renderFeedCard === 'function') renderFeedCard();
+      followSet(uid, sp.name, grade || '');
+      sfx.select();
+      toast(`📰 ติดตาม ${sp.name} แล้ว! กิจกรรมของเขาจะมาโชว์ในฟีดหน้าหลัก`);
+      afterChange();
+    });
+    if(uBtn) uBtn.addEventListener('click', ()=>{
+      if(!(state.follows && state.follows[uid])) return;
+      followUnset(uid);
+      toast(`เลิกติดตาม ${sp.name} แล้ว`);
+      afterChange();
     });
   }
   loadFollowers();
