@@ -1,0 +1,32 @@
+"use strict";
+/* DICT ไฟล์ 020 — คำ: population ถึง prayer */
+DICT_FILES.push([
+["population","n.","/ˌpɑːpjuˈleɪʃn/","พ็อพพิวเลเชิน","The number of people living in a place.","ประชากร","The population of this city is large.","ประชากรของเมืองนี้มีจำนวนมาก"],
+["port","n.","/pɔːrt/","พอร์ต","A place where ships stop.","ท่าเรือ","The ship arrived at the port this morning.","เรือมาถึงที่ท่าเรือเมื่อเช้านี้"],
+["pose","v.","/poʊz/","โพส","To sit or stand for a picture.","โพสท่า","Can you pose for a photo?","คุณช่วยโพสท่าถ่ายรูปหน่อยได้ไหม"],
+["position","n.","/pəˈzɪʃn/","พะซิเชิน","The place where something is.","ตำแหน่ง, ที่ตั้ง","What is your position in the company?","ตำแหน่งของคุณในบริษัทคืออะไร"],
+["positive","adj.","/ˈpɑːzətɪv/","พ็อซเซิททิฟ","Good, hopeful, or certain.","เชิงบวก, มั่นใจ","Try to have a positive attitude.","พยายามมองโลกในแง่บวกเข้าไว้"],
+["possess","v.","/pəˈzes/","พะเซส","To own or have something.","ครอบครอง, มี","He possesses a lot of talent.","เขามีพรสวรรค์มากมาย"],
+["possession","n.","/pəˈzeʃn/","พะเซสเชิน","Something that you own.","สมบัติ, สิ่งของที่เป็นเจ้าของ","These books are my most valuable possession.","หนังสือเหล่านี้เป็นสมบัติที่มีค่าที่สุดของฉัน"],
+["possibility","n.","/ˌpɑːsəˈbɪləti/","พ็อซเซอะบิลลิตี้","A chance that something may happen.","ความเป็นไปได้","There is a possibility of rain today.","มีความเป็นไปได้ว่าฝนจะตกในวันนี้"],
+["possible","adj.","/ˈpɑːsəbl/","พ็อซเซอะเบิล","Able to be done or happen.","เป็นไปได้","It is possible to finish the work today.","เป็นไปได้ที่จะทำงานให้เสร็จในวันนี้"],
+["possibly","adv.","/ˈpɑːsəbli/","พ็อซเซอะบลี่","Maybe or perhaps.","อาจจะ","I will possibly go to the cinema later.","ฉันอาจจะไปโรงหนังในภายหลัง"],
+["post","n.","/poʊst/","โพสต์","A message on the internet or mail.","โพสต์, จดหมาย","Did you see my post on social media?","คุณเห็นโพสต์ของฉันบนโซเชียลมีเดียไหม"],
+["post","v.","/poʊst/","โพสต์","To send a letter or put a message online.","ส่งจดหมาย, โพสต์","I need to post this letter today.","ฉันต้องส่งจดหมายฉบับนี้วันนี้"],
+["post office","n.","/ˈpoʊst ˌɔːfɪs/","โพสต์ ออฟฟิศ","A place where you buy stamps and send mail.","ที่ทำการไปรษณีย์","We went to the post office to send a gift.","พวกเราไปที่ที่ทำการไปรษณีย์เพื่อส่งของขวัญ"],
+["pot","n.","/pɑːt/","พ็อท","A container for cooking or plants.","หม้อ, กระถาง","She is cooking soup in a big pot.","เธอกำลังต้มซุปในหม้อใบใหญ่"],
+["potato","n.","/pəˈteɪtoʊ/","พะเทโท","A round vegetable that grows underground.","มันฝรั่ง","We had mashed potatoes for dinner.","พวกเราทานมันฝรั่งบดเป็นมื้อเย็น"],
+["potential","adj.","/pəˈtenʃl/","พะเทนเชิล","Possible; able to become real.","ที่มีศักยภาพ, ที่อาจเป็นไปได้","She is a potential leader.","เธอเป็นคนที่มีศักยภาพที่จะเป็นผู้นำ"],
+["pound","n.","/paʊnd/","เพาด์","A unit of money in the UK or weight.","ปอนด์ (เงิน/น้ำหนัก)","The item costs five pounds.","สินค้านี้ราคา 5 ปอนด์"],
+["pour","v.","/pɔːr/","พอร์","To make liquid flow from a container.","เท","Please pour some water into my glass.","ช่วยเทน้ำใส่แก้วของฉันหน่อย"],
+["poverty","n.","/ˈpɑːvərti/","พ็อพเวอร์ตี้","The state of being poor.","ความยากจน","Education helps to end poverty.","การศึกษาช่วยลดความยากจน"],
+["powder","n.","/ˈpaʊdər/","เพาด์เดอร์","A dry substance made of tiny pieces.","ผง, แป้ง","Add some milk powder to the tea.","เติมผงนมลงในชาหน่อย"],
+["power","n.","/ˈpaʊər/","เพาเวอร์","Energy, strength, or control.","พลัง, อำนาจ","The storm knocked out the power.","พายุทำให้ไฟฟ้าดับ"],
+["powerful","adj.","/ˈpaʊərfʊl/","เพาเวอร์ฟูล","Having a lot of power or strength.","ทรงพลัง, มีอำนาจ","He has a powerful engine in his car.","เขามีเครื่องยนต์ที่ทรงพลังในรถของเขา"],
+["practical","adj.","/ˈpræktɪkl/","แพรคทิคัล","Useful or relating to real life.","ที่ใช้ได้จริง, ในทางปฏิบัติ","This is a practical solution to the problem.","นี่เป็นทางแก้ปัญหาที่ใช้ได้จริง"],
+["practice","n.","/ˈpræktɪs/","แพรคทิส","Doing something often to get better.","การฝึกฝน","Practice makes perfect.","การฝึกฝนทำให้เกิดความสมบูรณ์แบบ"],
+["practice","v.","/ˈpræktɪs/","แพรคทิส","To do something often to get better.","ฝึกฝน","I practice the guitar every day.","ฉันฝึกเล่นกีตาร์ทุกวัน"],
+["praise","v.","/preɪz/","เพรซ","To say good things about someone.","ยกย่อง, ชมเชย","The teacher praised her for the hard work.","คุณครูชมเชยเธอที่ตั้งใจทำงานอย่างหนัก"],
+["pray","v.","/preɪ/","เพรซ","To speak to God.","สวดมนต์, อธิษฐาน","They go to the temple to pray.","พวกเขาไปที่วัดเพื่อสวดมนต์"],
+["prayer","n.","/prer/","แพรร์","A message sent to God.","คำอธิษฐาน","He said a silent prayer.","เขากล่าวคำอธิษฐานในใจ"]
+]);

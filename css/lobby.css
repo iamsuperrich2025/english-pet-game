@@ -511,6 +511,48 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .rank-mini:active{transform:scale(.95);}
 .rank-mini img{width:26px;height:26px;object-fit:contain;}
 .rank-mini .rank-badge-emoji{font-size:19px;filter:none;}
+/* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (แทนที่ว่างหลังถอด rank-mini) */
+.pass-photo{
+  width:52px;height:62px;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative;
+  border:2px solid rgba(255,255,255,.6);background:linear-gradient(180deg,#cfe9ff,#7fb7e8);
+  box-shadow:0 3px 9px rgba(0,30,80,.4);
+}
+.pass-photo img{width:170%;margin-left:-35%;display:block;}   /* ขยายแล้วเห็นเฉพาะครึ่งตัวบนเหมือนรูป passport */
+/* รอบ 254: กล่องค้นหาพจนานุกรมในแถวแท็บสัตว์ (ถัดจากปุ่ม ➕) */
+.pet-tabs .dict-box{flex:1 1 150px;min-width:120px;display:flex;gap:5px;align-items:center;margin-left:6px;}
+.dict-box input{
+  flex:1;min-width:0;border:1.5px solid rgba(255,255,255,.45);border-radius:999px;
+  background:rgba(8,30,66,.5);color:#fff;font-family:inherit;font-size:13px;padding:6px 13px;outline:none;
+}
+.dict-box input::placeholder{color:#a9c9ec;}
+.dict-box input:focus{border-color:#7fd0ff;box-shadow:0 0 8px rgba(90,180,255,.45);}
+.dict-box button{
+  flex-shrink:0;border:none;border-radius:999px;width:33px;height:33px;font-size:15px;cursor:pointer;
+  background:linear-gradient(135deg,#57c1ff,#2f8fdd);color:#fff;box-shadow:0 3px 0 #1c6bb0;
+}
+.dict-box button:active{transform:translateY(2px);box-shadow:0 1px 0 #1c6bb0;}
+/* แผงผลการค้นหาพจนานุกรม — 1 คำ = 5 บรรทัด */
+.dict-card{
+  width:min(760px,94vw);max-height:92vh;position:relative;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#f6f9ff,#e8eefc);border:3px solid var(--sky-d);
+  border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:12px 14px;
+}
+.dict-card .pl-close{background:#e05252;border:2px solid #fff;}
+.dict-head{font-size:17px;font-weight:800;color:#2f4a78;margin:0 0 9px;padding-right:40px;}
+.dict-head .dict-count{font-size:13px;font-weight:600;color:#7a8cae;}
+.dict-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding-right:4px;}
+.dict-item{
+  background:#fff;border:1.5px solid #cdd9f0;border-left:5px solid #57c1ff;border-radius:12px;
+  padding:8px 12px;font-size:13.5px;line-height:1.5;color:#41506b;
+}
+.dict-item .di-head{font-size:16.5px;color:#173a6b;}
+.dict-item .di-pos{color:#7a8cae;font-size:13px;}
+.dict-item .di-ipa{color:#2f8fdd;}
+.dict-item .di-pron{color:#b0568c;}
+.dict-item .di-say{border:none;background:none;cursor:pointer;font-size:15px;padding:0 4px;}
+.dict-item .di-th{color:#0b7a37;font-weight:700;}
+.dict-item .di-ex{color:#5a6b82;font-style:italic;}
+.dict-item .di-exth{color:#8a7ba5;}
 .lobby-top .coin-pill{font-size:15px;padding:3px 13px;white-space:nowrap;box-shadow:0 3px 8px rgba(3,15,35,.35);}
 .lobby-top .coin-pill.today{font-size:12.5px;padding:3px 11px;}
 .lobby-top .icon-btn{

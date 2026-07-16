@@ -2187,10 +2187,7 @@ function renderRankCard(){
       <div class="rank-text">${nextText}</div>
     </div>`;
 
-  /* ป้ายแรงค์เล็กบนแถบบน Lobby (คลิกเปิดแผงแรงค์เต็ม — โฉมใหม่ 5725691826) */
-  const mini = document.getElementById('rank-mini');
-  if(mini) mini.innerHTML =
-    `${rankBadgeHTML(r.id, r.emoji, 'rank-mini-img')}<span>${info.label}</span>`;
+  /* รอบ 254: ป้ายแรงค์เล็กบนแถบบนถูกถอดออก — ดูแรงค์คลิกเหรียญใหญ่กลางเวที (renderDashboard) */
 }
 
 /* ฉากอัพแรงค์ใหญ่: เหรียญตราใหญ่ + รัศมีหมุน (สไตล์เกมยิงแรงค์) */
@@ -2337,7 +2334,7 @@ function renderFeedCard(){
    เรียกท้าย renderDashboard + ตอน resize */
 function alignPetTabs(){
   const tabs = document.getElementById('pet-tabs');
-  const rm = document.getElementById('rank-mini');
+  const rm = document.querySelector('.profile-plate');   // รอบ 254: rank-mini ถูกถอด → ยึดแนวป้ายชื่อแทน (อยู่ตำแหน่งเดิมของ rank-mini)
   const stage = document.querySelector('.lobby-stage');
   if(!tabs || !rm || !stage || tabs.style.display === 'none') return;
   const s = stage.getBoundingClientRect(), r = rm.getBoundingClientRect();
@@ -2345,7 +2342,105 @@ function alignPetTabs(){
   const scale = s.width / stage.offsetWidth;   // เพจโดนย่อ (transform) → แปลงกลับเป็น layout px
   tabs.style.setProperty('--tabs-left', Math.max(0, (r.left - s.left) / scale) + 'px');
 }
-window.addEventListener('resize', ()=>{ if(typeof alignPetTabs === 'function') alignPetTabs(); });
+window.addEventListener('resize', ()=>{
+  if(typeof alignPetTabs === 'function') alignPetTabs();
+  if(typeof alignCureBtn === 'function') alignCureBtn();
+});
+
+/* รอบ 254 (ผู้ใช้สั่ง 16 ก.ค. 2026): ขยับปุ่ม 💊 รักษา ลงให้แนวบนตรงกับปุ่ม "🐾 ข้อมูลน้อง & การดูแล"
+   (rail กับ stage เริ่มบรรทัดเดียวกัน — ดัน margin-top เท่าระยะที่ปุ่มข้อมูลน้องอยู่ลึกลงไป) */
+function alignCureBtn(){
+  const cure = document.getElementById('btn-rail-cure');
+  if(!cure) return;
+  const info = document.getElementById('btn-pet-info');
+  if(!info){ cure.style.marginTop = ''; return; }
+  cure.style.marginTop = '0px';
+  const c = cure.getBoundingClientRect(), b = info.getBoundingClientRect();
+  const rail = cure.parentElement;
+  const scale = rail && rail.offsetWidth ? rail.getBoundingClientRect().width / rail.offsetWidth : 1;  // เพจโดนย่อ (transform) → แปลงกลับ layout px
+  cure.style.marginTop = Math.max(0, (b.top - c.top) / scale) + 'px';
+}
+
+/* ============================================================
+   📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
+   ข้อมูล js/data/dict/dict_001..057.js — แถวละ 8 ช่อง:
+   [คำ, ชนิดคำ, IPA, คำอ่านไทย, นิยามอังกฤษ, คำแปลไทย, ประโยคตัวอย่าง, แปลตัวอย่าง]
+   โหลดขี้เกียจตอนค้นครั้งแรก (57 ไฟล์ ~1.7MB — ไม่ถ่วงตอนเปิดเกม) · ไฟล์หายข้ามได้ไม่ค้าง
+   แสดงผล 1 คำ = 5 บรรทัด: หัวคำ(+ชนิด+IPA+คำอ่าน) / นิยาม / คำแปล / ตัวอย่าง / แปลตัวอย่าง
+   ============================================================ */
+window.DICT_FILES = window.DICT_FILES || [];
+let __dictLastQ = '', __dictAll = null, __dictLoading = null;
+const DICT_FILE_COUNT = 57;
+function loadDict(){
+  if(__dictAll) return Promise.resolve(__dictAll);
+  if(__dictLoading) return __dictLoading;
+  __dictLoading = new Promise(res=>{
+    let done = 0;
+    const fin = ()=>{ if(++done < DICT_FILE_COUNT) return; __dictAll = [].concat(...DICT_FILES); res(__dictAll); };
+    for(let i = 1; i <= DICT_FILE_COUNT; i++){
+      const s = document.createElement('script');
+      s.src = `js/data/dict/dict_${String(i).padStart(3,'0')}.js`;
+      s.onload = fin; s.onerror = fin;
+      document.head.appendChild(s);
+    }
+  });
+  return __dictLoading;
+}
+function dictSearch(q){
+  q = q.trim().toLowerCase();
+  if(!q || !__dictAll) return [];
+  const starts = [], has = [], thai = [];
+  for(const r of __dictAll){
+    const w = String(r[0]).toLowerCase();
+    if(w.startsWith(q)) starts.push(r);
+    else if(w.includes(q)) has.push(r);
+    else if(String(r[5]||'').includes(q) || String(r[3]||'').includes(q)) thai.push(r);   // พิมพ์ไทยก็เจอ (คำแปล/คำอ่าน)
+  }
+  const cmp = (a,b)=>String(a[0]).localeCompare(String(b[0]));   // script โหลด async ลำดับไฟล์ไม่แน่นอน → เรียง ก-ฮ/a-z เอง
+  return starts.sort(cmp).concat(has.sort(cmp), thai.sort(cmp)).slice(0, 40);
+}
+function dictEntryHTML(r){
+  const [w, pos, ipa, pron, def, th, ex, exTh] = r.map(x=>escapeHTML(x));
+  return `<div class="dict-item">
+    <div class="di-head"><b>${w}</b> <span class="di-pos">(${pos})</span> <span class="di-ipa">${ipa}</span> <span class="di-pron">${pron}</span>
+      <button class="di-say" data-w="${w}" title="ฟังเสียง">🔊</button></div>
+    <div class="di-def">${def}</div>
+    <div class="di-th">${th}</div>
+    <div class="di-ex">${ex}</div>
+    <div class="di-exth">${exTh}</div>
+  </div>`;
+}
+function openDictOverlay(q){
+  let ov = document.getElementById('dict-overlay');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'dict-overlay'; ov.className = 'pl-overlay';
+    ov.innerHTML = `<div class="dict-card">
+      <button class="pl-close" id="dict-close">✕</button>
+      <div class="dict-head">📖 พจนานุกรม <span class="dict-count" id="dict-count"></span></div>
+      <div class="dict-list" id="dict-list"></div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click', (e)=>{ if(e.target === ov) ov.remove(); });
+    ov.querySelector('#dict-close').addEventListener('click', ()=>ov.remove());
+    ov.querySelector('#dict-list').addEventListener('click', (e)=>{
+      const b = e.target.closest('.di-say');
+      if(b && typeof speakWord === 'function') speakWord(b.dataset.w);
+    });
+  }
+  const list = ov.querySelector('#dict-list'), cnt = ov.querySelector('#dict-count');
+  cnt.textContent = `"${q}"`;
+  list.innerHTML = `<div class="pl-loading">⏳ กำลังเปิดพจนานุกรม...</div>`;
+  loadDict().then(()=>{
+    if(!document.body.contains(ov)) return;   // ผู้ใช้ปิดไปก่อนโหลดเสร็จ
+    const rs = dictSearch(q);
+    cnt.textContent = `"${q}" · พบ ${fmtNum(rs.length)} คำ`;
+    list.innerHTML = rs.length
+      ? rs.map(dictEntryHTML).join('')
+      : `<div class="pl-none">ไม่พบคำว่า "${escapeHTML(q)}" 😅<br><small>ลองสะกดใหม่ หรือพิมพ์คำแปลภาษาไทยก็ค้นได้นะ</small></div>`;
+    list.scrollTop = 0;
+  });
+}
 
 function renderDashboard(){
   careTick();
@@ -2376,6 +2471,12 @@ function renderDashboard(){
       + ` · ${idTag(myUid)}`;
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
   }else chip.textContent = '';
+  /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า) */
+  const pp = document.getElementById('pass-photo');
+  if(pp){
+    const src = `img/blocks/${lobbyBlk()}.png`;
+    if(!pp.dataset.src || pp.dataset.src !== src){ pp.dataset.src = src; pp.innerHTML = `<img src="${src}" alt="">`; }
+  }
 
   renderClock();
   renderRankCard();
@@ -2403,7 +2504,7 @@ function renderDashboard(){
      รอบ 179: ปุ่มข้าวเย็น #btn-dinner ย้ายจาก header มาต่อท้ายปุ่ม ➕ (สเปกผู้ใช้ — header ใส่ปุ่มแชทแทน)
      element สร้างใหม่ทุก render → ผูก click ตรงนี้ · โชว์/ซ่อน+หน้า emoji คุมโดย renderDinnerChip เดิม */
   const tabs = document.getElementById('pet-tabs');
-  if(state.pets.length || state.playerSick || dinnerDue()){
+  if(state.pets.length || state.playerSick || dinnerDue() || state.student){   // รอบ 254: มีกล่องค้นหาศัพท์ → โชว์แถวนี้เสมอหลังลงทะเบียน
     tabs.style.display = 'flex';
     tabs.innerHTML = state.pets.map((p,i)=>{
       const stage = petStage(p);
@@ -2412,7 +2513,9 @@ function renderDashboard(){
       return `<button class="pet-tab ${i===state.active?'on':''}" data-i="${i}">${face} ${escapeHTML(p.name)}${alert}</button>`;
     }).join('')
       + (state.pets.length ? `<button class="pet-tab add" id="tab-addpet">➕</button>` : '')
-      + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`;
+      + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`
+      /* รอบ 254: กล่องค้นหาพจนานุกรมถัดจากปุ่ม ➕ (ข้อมูล js/data/dict/dict_001-057) */
+      + `<div class="dict-box"><input id="dict-input" type="search" placeholder="📖 ค้นหาคำศัพท์ Dictionary" autocomplete="off" value="${escapeHTML(__dictLastQ)}"><button id="dict-go" title="ค้นหา">🔍</button></div>`;
     tabs.querySelectorAll('.pet-tab[data-i]').forEach(b=>b.addEventListener('click', ()=>{
       const i = +b.dataset.i;
       // รอบ 189: คลิกแท็บน้องที่กำลังแสดงอยู่แล้ว = เปิดกล่องเปลี่ยนชื่อ · คลิกตัวอื่น = สลับไปแสดงตัวนั้น
@@ -2423,6 +2526,11 @@ function renderDashboard(){
     if(addBtn) addBtn.addEventListener('click', ()=>{ renderPetShop(); showScreen('screen-select'); });
     document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
     renderDinnerChip();
+    const dIn = document.getElementById('dict-input');
+    const dGo = ()=>{ const q = dIn.value.trim(); if(!q) return; __dictLastQ = q; sfx.select(); openDictOverlay(q); };
+    dIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') dGo(); });
+    dIn.addEventListener('input', ()=>{ __dictLastQ = dIn.value; });   // จำข้อความไว้ — render รอบใหม่ไม่ล้างช่อง
+    document.getElementById('dict-go').addEventListener('click', dGo);
   }else{
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
@@ -2643,6 +2751,22 @@ function renderDashboard(){
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
+  alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
+  /* รอบ 254: คลิกเหรียญแรงค์ใหญ่กลางเวที = เปิดแผงแรงค์ (แทน rank เล็กบนแถบบนที่ถอดออก)
+     คลิกที่ตัวน้อง/ปุ่มยังทำงานเดิม — กรอง target ก่อน */
+  {
+    const heroEl = card.querySelector('.stage-hero');
+    const rankBgEl = card.querySelector('.hero-rank-bg');
+    if(heroEl && rankBgEl){
+      heroEl.style.cursor = 'pointer';
+      heroEl.title = 'ดูแรงค์ของหนู';
+      heroEl.addEventListener('click', (e)=>{
+        if(e.target.closest('.pet-wrap, .spell-btn, button')) return;
+        sfx.select();
+        if(typeof openPanel === 'function') openPanel('panel-rank');
+      });
+    }
+  }
   if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง

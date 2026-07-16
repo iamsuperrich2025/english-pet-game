@@ -1,0 +1,32 @@
+"use strict";
+/* DICT ไฟล์ 045 — คำ: shock ถึง silent */
+DICT_FILES.push([
+["shock","n.","/ʃɑːk/","ช็อค","A sudden unpleasant surprise.","ความตกใจ, อาการช็อค","The news came as a great shock to us.","ข่าวนี้ทำให้พวกเราตกใจมาก"],
+["shoe","n.","/ʃuː/","ชู","A covering for the foot.","รองเท้า","Please take off your shoes before entering.","กรุณาถอดรองเท้าก่อนเข้าข้างใน"],
+["shoot","v.","/ʃuːt/","ชูท","To hit or kill something with a gun or arrow.","ยิง","The photographer tried to shoot the picture.","ช่างภาพพยายามจะถ่ายรูปนั้น (อีกความหมายคือถ่ายรูป)"],
+["shop","n.","/ʃɑːp/","ช็อพ","A place where you can buy things.","ร้านค้า","Let's go to the shop to buy some milk.","ไปร้านค้าเพื่อซื้อนมกันเถอะ"],
+["shop","v.","/ʃɑːp/","ช็อพ","To buy things in stores.","ซื้อของ, จับจ่ายใช้สอย","I like to shop for new clothes.","ฉันชอบไปซื้อเสื้อผ้าใหม่"],
+["shore","n.","/ʃɔːr/","ชอร์","The land along the edge of a sea or lake.","ชายฝั่ง","The boat is approaching the shore.","เรือกำลังเข้าใกล้ชายฝั่ง"],
+["short","adj.","/ʃɔːrt/","ชอร์ท","Not tall or not long in distance or time.","สั้น, เตี้ย","He has short hair.","เขามีผมสั้น"],
+["shorts","n.","/ʃɔːrts/","ชอร์ทส","Trousers that stop above the knee.","กางเกงขาสั้น","I wear shorts when it is hot.","ฉันใส่กางเกงขาสั้นตอนอากาศร้อน"],
+["shot","n.","/ʃɑːt/","ช็อท","The sound of a gun, or a try to score in sports.","การยิง, การฉีดวัคซีน","He took a shot at the goal.","เขายิงไปที่ประตู"],
+["should","modal v.","/ʃʊd/","ชูด","Used to give advice or say what is right.","ควรจะ","You should eat more vegetables.","คุณควรกินผักให้มากขึ้น"],
+["shoulder","n.","/ˈʃoʊldər/","โชลเดอร์","The part of the body between the neck and the arm.","หัวไหล่","She tapped me on the shoulder.","เธอแตะที่หัวไหล่ของฉัน"],
+["shout","v.","/ʃaʊt/","เชาท์","To speak very loudly.","ตะโกน","Please do not shout in the library.","กรุณาอย่าตะโกนในห้องสมุด"],
+["show","v.","/ʃoʊ/","โช","To let someone see something.","แสดงให้ดู, บอกทาง","Can you show me the way to the park?","คุณช่วยบอกทางไปสวนสาธารณะให้ฉันหน่อยได้ไหม"],
+["shower","n.","/ˈʃaʊər/","เชาเออร์","A bath where water sprays on you.","การอาบน้ำฝักบัว, ฝักบัว","I take a cold shower every morning.","ฉันอาบน้ำฝักบัวตอนเช้าทุกวัน"],
+["shrug","v.","/ʃrʌɡ/","ชรัก","To move your shoulders up to show you do not know.","ยักไหล่","He just shrugged his shoulders.","เขาแค่ยักไหล่"],
+["shut","v.","/ʃʌt/","ชัท","To close something.","ปิด","Please shut the door quietly.","กรุณาปิดประตูเบาๆ"],
+["shy","adj.","/ʃaɪ/","ชาย","Feeling nervous or quiet with other people.","ขี้อาย","The little boy is very shy.","เด็กชายตัวน้อยเป็นคนขี้อายมาก"],
+["sick","adj.","/sɪk/","สิค","Feeling unwell or ill.","ป่วย, ไม่สบาย","I stayed home because I was sick.","ฉันอยู่ที่บ้านเพราะว่าฉันป่วย"],
+["side","n.","/saɪd/","ไซด์","An outer surface or part of something.","ด้าน, ฝ่าย","Please stand on the other side.","กรุณายืนที่อีกด้านหนึ่ง"],
+["sidewalk","n.","/ˈsaɪdwɔːk/","ไซด์วอล์ค","A path for people to walk on next to the road.","ทางเท้า","Walk on the sidewalk, not the road.","เดินบนทางเท้า ไม่ใช่บนถนน"],
+["sight","n.","/saɪt/","ไซท์","The ability to see or something that you see.","การมองเห็น, ทัศนียภาพ","The sunset is a beautiful sight.","พระอาทิตย์ตกดินเป็นทัศนียภาพที่สวยงาม"],
+["sign","n.","/saɪn/","ไชน์","A symbol or notice that gives information.","ป้าย, สัญลักษณ์","Look at the traffic sign.","ดูที่ป้ายจราจรนั่นสิ"],
+["signal","n.","/ˈsɪɡnəl/","ซิกเนิล","A movement or sound that gives a message.","สัญญาณ","The traffic light changed the signal to red.","ไฟจราจรเปลี่ยนสัญญาณเป็นสีแดง"],
+["signature","n.","/ˈsɪɡnətʃər/","ซิกเนเจอร์","Your name written in your own way.","ลายเซ็น","Please put your signature here.","กรุณาเขียนลายเซ็นของคุณที่ตรงนี้"],
+["significance","n.","/sɪɡˈnɪfɪkəns/","ซิกนิฟิเคินซ์","The importance of something.","ความสำคัญ","This day has great significance to me.","วันนี้มีความสำคัญอย่างยิ่งต่อฉัน"],
+["significant","adj.","/sɪɡˈnɪfɪkənt/","ซิกนิฟิเคินท์","Important or large enough to be noticed.","สำคัญ, มีนัยสำคัญ","There was a significant change in the weather.","มีการเปลี่ยนแปลงที่สำคัญในสภาพอากาศ"],
+["silence","n.","/ˈsaɪləns/","ไซเลินซ์","The complete lack of noise.","ความเงียบ","The silence in the room was scary.","ความเงียบในห้องนั้นน่ากลัว"],
+["silent","adj.","/ˈsaɪlənt/","ไซเลินท์","Not making any sound.","เงียบ","Please keep your phones silent in class.","กรุณาปิดเสียงโทรศัพท์ในห้องเรียน"]
+]);

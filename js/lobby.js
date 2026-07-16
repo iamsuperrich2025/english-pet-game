@@ -40,8 +40,8 @@ document.getElementById('panel-overlay').addEventListener('click', (e)=>{
 });
 document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closePanel(); });
 
-/* ป้ายแรงค์เล็กบนแถบบน → เปิดแผงแรงค์เต็ม */
-document.getElementById('rank-mini').addEventListener('click', ()=>openPanel('panel-rank'));
+/* รอบ 254: ถอดป้ายแรงค์เล็กบนแถบบนออก — เปิดแผงแรงค์เต็มด้วยการคลิกเหรียญแรงค์ใหญ่กลางเวทีแทน
+   (ผูกไว้ที่ .stage-hero ใน renderDashboard เพราะ element สร้างใหม่ทุก render) */
 
 /* เปลี่ยนหน้าจอเมื่อไหร่ ปิดแผงค้างไว้เสมอ (เช่น กด "🎮 ไปเล่นเกม" จากในแผงโรงงาน) */
 const _lobbyShowScreen = showScreen;

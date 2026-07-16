@@ -1,0 +1,31 @@
+"use strict";
+/* DICT ไฟล์ 018 — คำ: plan ถึง poison */
+DICT_FILES.push([
+["plan","n.","/plæn/","แพลน","An idea or way to do something.","แผนการ","Do you have a plan for the weekend?","คุณมีแผนสำหรับช่วงวันหยุดสุดสัปดาห์นี้หรือยัง"],
+["plan","v.","/plæn/","แพลน","To think about how to do something.","วางแผน","We plan to visit the zoo tomorrow.","พวกเราวางแผนจะไปเที่ยวสวนสัตว์กันพรุ่งนี้"],
+["plane","n.","/pleɪn/","เพลน","A vehicle that flies in the sky.","เครื่องบิน","The plane will land in ten minutes.","เครื่องบินกำลังจะลงจอดในอีกสิบนาที"],
+["planet","n.","/ˈplænɪt/","แพลนเน็ท","A very large round object in space.","ดาวเคราะห์","Earth is a beautiful planet.","โลกเป็นดาวเคราะห์ที่สวยงาม"],
+["plant","n.","/plænt/","แพลนท์","A living thing that grows in the ground.","พืช, ต้นไม้","I water my plant every morning.","ฉันรดน้ำต้นไม้ของฉันทุกเช้า"],
+["plant","v.","/plænt/","แพลนท์","To put a seed into the ground to grow.","ปลูก","We will plant flowers in the garden.","พวกเราจะปลูกดอกไม้ในสวน"],
+["plastic","n.","/ˈplæstɪk/","พลาสติก","A light, strong material.","พลาสติก","This bottle is made of plastic.","ขวดใบนี้ทำมาจากพลาสติก"],
+["plate","n.","/pleɪt/","เพลท","A round dish to put food on.","จาน","Please put your food on the plate.","กรุณาวางอาหารของคุณบนจาน"],
+["platform","n.","/ˈplætfɔːrm/","แพลทฟอร์ม","A place to stand at a train station.","ชานชาลา","The train is waiting at the platform.","รถไฟกำลังรออยู่ที่ชานชาลา"],
+["play","n.","/pleɪ/","เพลย์","A story performed by actors.","ละครเวที","We went to see a play at the theater.","พวกเราไปดูละครเวทีที่โรงละคร"],
+["play","v.","/pleɪ/","เพลย์","To have fun or use a game.","เล่น","The children like to play in the park.","เด็กๆ ชอบไปเล่นที่สวนสาธารณะ"],
+["player","n.","/ˈpleɪər/","เพลย์เยอร์","A person who plays a game or music.","ผู้เล่น, นักดนตรี","He is a very good soccer player.","เขาเป็นนักฟุตบอลที่เก่งมาก"],
+["playground","n.","/ˈpleɪɡraʊnd/","เพลย์กราวด์","A place outside for children to play.","สนามเด็กเล่น","Let's go to the playground after school.","ไปสนามเด็กเล่นหลังเลิกเรียนกันเถอะ"],
+["pleasant","adj.","/ˈpleznt/","เพลเซ็นท์","Nice, enjoyable, or friendly.","น่าพอใจ, สบาย","It is a pleasant day for a walk.","วันนี้เป็นวันที่อากาศดีเหมาะแก่การเดินเล่น"],
+["please","adv.","/pliːz/","พลีซ","A word used to be polite.","กรุณา, โปรด","Please open the door for me.","ช่วยเปิดประตูให้ฉันหน่อยได้ไหม"],
+["pleased","adj.","/pliːzd/","พลีซด์","Feeling happy or satisfied.","ดีใจ, พอใจ","I am pleased to meet you.","ฉันดีใจที่ได้พบคุณ"],
+["pleasure","n.","/ˈpleʒər/","เพลเชอร์","A feeling of being happy.","ความยินดี, ความสุข","It is a pleasure to help you.","ฉันยินดีมากที่ได้ช่วยเหลือคุณ"],
+["plenty","pron.","/ˈplenti/","เพลนที้","A large amount; enough or more.","มากมาย, เพียงพอ","We have plenty of food for everyone.","พวกเรามีอาหารเพียงพอสำหรับทุกคน"],
+["plug","n.","/plʌɡ/","พลัก","An object used to connect to electricity.","ปลั๊กไฟ","Please put the plug in the wall.","ช่วยเสียบปลั๊กไฟที่ผนังหน่อย"],
+["plus","prep.","/plʌs/","พลัส","Added to.","บวก","Two plus two equals four.","สองบวกสองเท่ากับสี่"],
+["pocket","n.","/ˈpɑːkɪt/","พ็อคเก็ต","A small bag sewn into clothes.","กระเป๋ากางเกง/เสื้อ","I have a coin in my pocket.","ฉันมีเหรียญอยู่ในกระเป๋ากางเกง"],
+["poem","n.","/ˈpoʊəm/","โพเอ็ม","A piece of writing with rhyme.","บทกวี","She wrote a beautiful poem about nature.","เธอแต่งบทกวีที่สวยงามเกี่ยวกับธรรมชาติ"],
+["poet","n.","/ˈpoʊɪt/","โพเอ็ท","A person who writes poems.","กวี","The poet read his work to the class.","กวีคนนั้นอ่านผลงานของเขาให้ชั้นเรียนฟัง"],
+["poetry","n.","/ˈpoʊətri/","โพเอททรี่","The art of writing poems.","บทกวี (วิชาการ)","I enjoy reading English poetry.","ฉันสนุกกับการอ่านบทกวีภาษาอังกฤษ"],
+["point","n.","/pɔɪnt/","พอยท์","A sharp end or an idea.","จุด, ประเด็น","What is your main point?","ประเด็นหลักของคุณคืออะไร"],
+["point","v.","/pɔɪnt/","พอยท์","To show something with your finger.","ชี้","Don't point at people, it's rude.","อย่าชี้ไปที่คนอื่น มันไม่สุภาพ"],
+["poison","n.","/ˈpɔɪzn/","พอยซัน","A substance that can kill or hurt.","ยาพิษ","Keep poison away from children.","เก็บยาพิษให้ห่างจากเด็กๆ"]
+]);
