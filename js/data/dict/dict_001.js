@@ -47,6 +47,8 @@ DICT_FILES.push([
 ["ago","adv.","/əˈɡəʊ/","อะโก","In the past.","ที่ผ่านมา, ก่อนหน้านี้","I arrived two hours ago.","ฉันมาถึงเมื่อสองชั่วโมงที่แล้ว"],
 ["agree","v.","/əˈɡriː/","อะกรี","To have the same opinion.","เห็นด้วย","I agree with you.","ฉันเห็นด้วยกับคุณ"],
 ["agreement","n.","/əˈɡriːmənt/","อะกรีเมินท์","A promise between people.","ข้อตกลง","We have an agreement.","พวกเรามีข้อตกลงกัน"],
+["agricultural","adj.","/ˌæɡrɪˈkʌltʃərəl/","แอกริคัลเชอรัล","Related to farming.","ทางการเกษตร","This is an agricultural area.","นี่คือพื้นที่ทางการเกษตร"],
+  ["agriculture","n.","/ˈæɡrɪkʌltʃər/","แอกริคัลเชอร์","The science or practice of farming.","เกษตรกรรม","Agriculture is important for the economy.","เกษตรกรรมมีความสำคัญต่อเศรษฐกิจ"],
 ["ahead","adv.","/əˈhed/","อะเฮด","Further forward in space or time.","ข้างหน้า","The finish line is ahead.","เส้นชัยอยู่ข้างหน้า"],
 ["aid","n.","/eɪd/","เอด","Help or support.","การช่วยเหลือ","The doctor gave him medical aid.","หมอให้การรักษาพยาบาลแก่เขา"],
 ["aim","n.","/eɪm/","เอม","A goal or purpose.","เป้าหมาย","My aim is to be a pilot.","เป้าหมายของฉันคือการเป็นนักบิน"],

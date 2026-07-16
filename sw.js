@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v39';   // v39: ⏱ สถิติหนีผีรอดนานสุด (HUD โลกผี + การ์ดผู้เล่น field hs) รอบ 256
+const CACHE_VERSION = 'pet-vocab-v40';   // v40: อัปเดต dict_001 (เพิ่ม agricultural/agriculture — ผู้ใช้แก้เอง) รอบ 257
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
