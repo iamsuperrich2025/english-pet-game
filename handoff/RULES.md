@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 255 (field `ba` = ตัวละคร blk ในการ์ดผู้เล่น) — รอ publish 17 ก.ค. 2026:** เพิ่ม `ba` (string ≤8 เช่น "blk3") ใน `/leaderboard/$uid` — client ส่งตัวละครที่เลือกขึ้นไปให้การ์ดผู้เล่นโชว์ blk เต็มตัว · **ยังไม่ publish = เกมไม่พัง:** เขียนโดน deny → client ถอยไปเขียนก้อนเดิมอัตโนมัติ (แค่การ์ดคนอื่นยังไม่มีรูปตัวละคร) · ก้อนเต็มด้านล่างอัปเดตแล้ว
 - ⏳ **รอบ 241 (โซนใหม่ `chattheme` = ธีมแชทร่วมกันทั้งคู่) — รอ publish 15 ก.ค. 2026:** `/chattheme/$pairId` = themeId (string ≤16) · read/write เฉพาะคู่สนทนา (`$pairId.contains(auth.uid)`) · ใครเปลี่ยนธีมแชท อีกฝ่ายเห็นเปลี่ยนตามทันที (เดิมจำแยกในเครื่องใครเครื่องมัน) · **ยังไม่ publish = แชทปกติไม่กระทบ แค่ธีมยังไม่ sync ข้ามเครื่อง** (client เขียนโดน deny เงียบๆ → ตกไปใช้ธีมในเครื่องเดิม) · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/5d652aa8-0a38-4b9c-b98d-dbd4d585b657
 - ✅ **รอบ 208 (โซนใหม่ `sales` = ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์) — ผู้ใช้ publish แล้ว 14 ก.ค. 2026 · ตรวจ REST ผ่าน:** GET /sales = 200 (null · อ่านสาธารณะได้) · PUT /sales ไม่ล็อกอิน = 401 Permission denied (เขียนต้อง auth · กันปั่นยอด) → ยอดขายนับจริงข้ามเครื่องแล้ว · เดิม:** `/sales/$id` = number · `.read:true` (ทุกคนเห็นยอดขาย) · `.write` เฉพาะ auth + **เพิ่มได้ทีละ 1 เท่านั้น** (`newData === data+1` หรือสร้างใหม่ = 1) กันปั่นยอด · client `sellInc(id)` = transaction +1 ตอนซื้อ (robots/cars/tickets/pets/home/phone/computer/ac/items) · **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่าน /sales โดน deny เงียบ → `Online.salesOk=false` · ป้ายโชว์ "ขายไปแล้ว 0 ชิ้น" (+นับ local ของตัวเองในเซสชัน) จนกว่าจะ publish · Artifact ปุ่มคัดลอกก้อนเต็ม (ก้อนเต็มด้านล่างอัปเดตแล้ว)
 - ⏳ **รอบ 187 (โซนใหม่ `typing` = "กำลังพิมพ์…") — รวมมาในก้อน/Artifact เดียวกับรอบ 186 · รอ publish 13 ก.ค. 2026:** `/typing/$pairId/$uid` = timestamp (number) · read/write เฉพาะคู่สนทนา (`$pairId.contains(auth.uid)` + เขียนได้เฉพาะ node ตัวเอง) · **ยังไม่ publish = แชทปกติไม่กระทบ แค่ไม่เห็นสถานะพิมพ์** (client เขียนโดน deny เงียบๆ) · Artifact เดียวกับรอบ 186 (อัปเดตแล้ว): https://claude.ai/code/artifact/fdfc973b-559a-4a05-b181-f21416cd8cd6
@@ -53,6 +54,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "av":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "ni":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "bk":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "ba":    { ".validate": "newData.isString() && newData.val().length <= 8" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }
