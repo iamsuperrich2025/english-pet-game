@@ -163,12 +163,30 @@ def rotate_history_section(lines):
     return new_lines, 1
 
 
+LONG_LINE = 1000  # ตัวอักษร (ไม่ใช่ byte) ต่อบรรทัด — บันทึกรอบควรย่อ ≤4 บรรทัดสั้นๆ (กฎทอง #8)
+
+
 def report(tag):
     print("%s ขนาดไฟล์บูต:" % tag)
     for p in (HANDOFF, TASKS):
         sz = os.path.getsize(p)
         warn = "  ⚠️ เกินงบ %d — มีอย่างอื่นบวม ตรวจด้วยตา" % BUDGET[p] if sz > BUDGET[p] else ""
         print("  %-22s %8s bytes%s" % (os.path.relpath(p, ROOT), format(sz, ","), warn))
+
+
+def warn_long_lines():
+    """เตือนบรรทัดยาวผิดปกติในไฟล์บูต — สัญญาณว่าบันทึกรอบเขียนยาวเกิน (ควรย่อตามกฎทอง #8)"""
+    hits = []
+    for p in (HANDOFF, TASKS):
+        rel = os.path.relpath(p, ROOT)
+        for i, ln in enumerate(read_lines(p), 1):
+            if len(ln) > LONG_LINE:
+                hits.append((len(ln), "%s:%d" % (rel, i)))
+    if hits:
+        hits.sort(reverse=True)
+        print("⚠️ บรรทัดยาวเกิน %d ตัวอักษร %d จุด (บันทึกรอบใหม่ควรย่อ ≤4 บรรทัด — ของเก่าจะหมุนออกเอง):" % (LONG_LINE, len(hits)))
+        for length, loc in hits[:5]:
+            print("   %s (%s ตัวอักษร)" % (loc, format(length, ",")))
 
 
 def main():
@@ -204,6 +222,7 @@ def main():
     total += n1 + n2 + n3
 
     report("📏 หลังหมุน —")
+    warn_long_lines()
 
     # 🗺️ เจน CODE_MAP.md ใหม่ทุกครั้ง (แผนที่ฟังก์ชัน:บรรทัด จะได้ไม่ล้าสมัย)
     import subprocess

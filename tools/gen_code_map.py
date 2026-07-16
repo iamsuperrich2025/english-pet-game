@@ -64,7 +64,7 @@ def scan_css(path):
     return entries, i
 
 
-def file_summary(path, max_parts=3, max_len=230):
+def file_summary(path, max_parts=3, max_len=360):
     """ดึงสรุปจาก comment block หัวไฟล์ (/* ... */) — ข้ามบรรทัดตกแต่ง ==="""
     parts = []
     in_block = False
