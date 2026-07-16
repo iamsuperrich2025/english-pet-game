@@ -443,6 +443,8 @@ html.no-anim body.quake{animation:none;}
 .pet-tab{
   background:rgba(255,255,255,.65);border:2px solid #e6d9f5;border-radius:999px;
   padding:5px 12px;font-family:inherit;font-size:14px;color:var(--ink);cursor:pointer;
+  /* 🏷️ รอบ 260: ชื่อน้องบรรทัดเดียวเสมอ — ชื่อเก่าที่ยาว (เซฟก่อนจำกัด 9 ตัว) ตัดด้วย … แทนการตกบรรทัด */
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px;flex:0 0 auto;
 }
 .pet-tab.on{background:#fff;border-color:var(--pink-d);box-shadow:var(--card-shadow);font-weight:bold;}
 .pet-tab.add{border-style:dashed;color:#9a8aac;}

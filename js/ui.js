@@ -242,8 +242,8 @@ function renamePet(p){
   const conf = PETS[p.type];
   askNameDialog({
     emoji:'🏷️', title:`เปลี่ยนชื่อ${conf.name}`,
-    desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว',
-    placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:15,
+    desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–9 ตัว (สั้นๆ จะได้พอดีแท็บ ไม่ตกบรรทัด)',
+    placeholder:'เช่น บ็อบบี้, Lucky', value:p.name, min:1, max:9,
     okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
     onOk:(name)=>{
       p.name = name; saveState(); sfx.select();
@@ -5894,8 +5894,8 @@ function renderPetShop(){
           // ข้อ 7: บังคับตั้งชื่อก่อนรับน้อง (กดยกเลิก = ไม่ซื้อ เหรียญไม่หาย)
           askNameDialog({
             emoji:'🏷️', title:`ตั้งชื่อให้${conf.name}ก่อนรับกลับบ้าน`,
-            desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–15 ตัว (เปลี่ยนทีหลังได้ที่ปุ่ม ✏️)',
-            placeholder:'เช่น บ็อบบี้, Lucky', min:1, max:15,
+            desc:'ชื่อไทย/อังกฤษ/ตัวเลข 1–9 ตัว (เปลี่ยนทีหลังได้ที่ปุ่ม ✏️)',
+            placeholder:'เช่น บ็อบบี้, Lucky', min:1, max:9,
             okText:'รับเลย! 🥰', cancelText:'ยังไม่รับ',
             onOk:(name)=>{
               state.coins -= conf.price;
