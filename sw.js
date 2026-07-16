@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v40';   // v40: อัปเดต dict_001 (เพิ่ม agricultural/agriculture — ผู้ใช้แก้เอง) รอบ 257
+const CACHE_VERSION = 'pet-vocab-v41';   // v41: รางปุ่มซ้าย — แนวปุ่มรักษาตรงขอบบนแถวชื่อสัตว์ รอบ 258
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

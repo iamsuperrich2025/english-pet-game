@@ -2355,15 +2355,16 @@ window.addEventListener('resize', ()=>{
   if(typeof alignCureBtn === 'function') alignCureBtn();
 });
 
-/* รอบ 254 (ผู้ใช้สั่ง 16 ก.ค. 2026): ขยับปุ่ม 💊 รักษา ลงให้แนวบนตรงกับปุ่ม "🐾 ข้อมูลน้อง & การดูแล"
-   (rail กับ stage เริ่มบรรทัดเดียวกัน — ดัน margin-top เท่าระยะที่ปุ่มข้อมูลน้องอยู่ลึกลงไป) */
+/* รอบ 258 (ผู้ใช้สั่ง 17 ก.ค. 2026): ขยับแถบปุ่มซ้ายทั้งแถว — แนวบนปุ่ม 💊 รักษา ตรงกับขอบบนแถวชื่อสัตว์ (#pet-tabs)
+   (เดิมรอบ 254 ยึดปุ่มข้อมูลน้อง — ผู้ใช้ขอเลื่อนขึ้นมาเสมอแนวชื่อสัตว์แทน) · ดัน margin-top ปุ่มแรกของราง ทั้งแถวเลื่อนตาม */
 function alignCureBtn(){
   const cure = document.getElementById('btn-rail-cure');
   if(!cure) return;
-  const info = document.getElementById('btn-pet-info');
-  if(!info){ cure.style.marginTop = ''; return; }
+  const tabs = document.getElementById('pet-tabs');
+  const anchor = (tabs && tabs.style.display !== 'none') ? tabs : document.getElementById('btn-pet-info');
+  if(!anchor){ cure.style.marginTop = ''; return; }
   cure.style.marginTop = '0px';
-  const c = cure.getBoundingClientRect(), b = info.getBoundingClientRect();
+  const c = cure.getBoundingClientRect(), b = anchor.getBoundingClientRect();
   const rail = cure.parentElement;
   const scale = rail && rail.offsetWidth ? rail.getBoundingClientRect().width / rail.offsetWidth : 1;  // เพจโดนย่อ (transform) → แปลงกลับ layout px
   cure.style.marginTop = Math.max(0, (b.top - c.top) / scale) + 'px';
