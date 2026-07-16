@@ -120,7 +120,7 @@ ONLINE_RATE:732 · onlineEarnActive:733 · onlineEarnTick:737 · onlineEarnFlush
 ORDER_MAX:801 · ORDER_LIFE_MS:802 · ORDER_GAP_MIN_MS:803 · ORDER_GAP_SPAN_MS:804 · ORDER_TIER_WEIGHT:805 · newOrder:806
 orderTick:819 · careTick:827 · expNeed:908 · addExp:913 · addRP:933
 
-## js/ui.js (6,062 บรรทัด · 237 รายการ)
+## js/ui.js (6,063 บรรทัด · 237 รายการ)
 FACTORY_PAGE_SIZE:10 · startHTML:13 · PET_ANIM:33 · petAnimHTML:38 · petVisualHTML:53 · lobbyBlk:84
 caretakerFigureHTML:90 · footAlign:100 · heroRankBgHTML:128 · renderNewWord:162 · showNewWordPopup:181 · GIANT_MAX:204
 GIANT_COST:205 · GIANT_PET_VH:206 · GIANT_OWNER_VH:207 · GIANT_OWNER_X:208 · GIANT_NAMES:209 · giantLevel:210
@@ -139,28 +139,28 @@ chatBadgeSync:1636 · ibTimeStr:1644 · openChatInbox:1651 · openChat:1738 · g
 giftItemPic:1934 · giftItemName:1940 · updateGiftBadge:1945 · renderGiftPanel:1954 · acceptGift:2012 · declineGift:2024
 showGiftReveal:2033 · openGiftPicker:2059 · confirmSendGift:2127 · doSendGift:2151 · rankBadgeHTML:2175 · renderRankCard:2180
 showRankUp:2202 · bindPetPlateButtons:2237 · openPetInfoOverlay:2254 · feedAgo:2277 · renderFeedCard:2290 · alignPetTabs:2343
-alignCureBtn:2360 · DICT_FILE_COUNT:2381 · loadDict:2382 · dictSearch:2397 · dictEntryHTML:2410 · openDictOverlay:2421
-renderDashboard:2453 · sleepBtnHTML:2834 · sleepHintHTML:2841 · sleepAllPets:2852 · wakeAllPets:2865 · feedPet:2876
-openFoodMenu:2889 · feedWith:2960 · AVATAR_UI:2990 · playerAvatarHTML:2993 · SHAPE_UI:2999 · showFeedResult:3008
-curePet:3044 · railCureClick:3067 · detoxPet:3079 · openFoodQuiz:3102 · renderShop:3182 · homeVisualHTML:3242
-showHomeRuined:3256 · showCutNotice:3277 · renderHomeCard:3295 · payMaint:3379 · trashBillUI:3395 · payTrash:3412
-UTILITY_UI:3431 · utilityBillUI:3480 · payUtility:3505 · buyUtilityFix:3531 · renderPhoneCard:3549 · buyPhone:3589
-sellPhone:3611 · compLiveTotal:3632 · onlineLiveTotal:3643 · renderOnlineEarnPill:3648 · openPillInfo:3671 · renderComputerCard:3711
-buyComputer:3746 · sellComputer:3769 · soldCount:3795 · soldBadge:3796 · renderTicketCard:3801 · loadScriptOnce:3857
-enterAdventure3D:3873 · enterHaunted3D:3895 · advHealClick:3917 · buyTicket:3937 · renderHauntCard:3963 · buyHauntTicket:4018
-renderHeliCard:4045 · buyHeliTicket:4103 · enterHeli3D:4126 · renderDroneCard:4148 · buyDroneTicket:4203 · enterDrone3D:4226
-renderDriveCard:4249 · buyDriveTicket:4322 · enterDrive3D:4345 · renderSoccerCard:4378 · buySoccerTicket:4426 · enterSoccer3D:4449
-WORLD3D:4473 · gotoRobotShop:4482 · scrollShopCardIntoView:4487 · railWorldClick:4490 · renderRailWorlds:4511 · tinvNoticeHTML:4570
-openTinvPicker:4578 · fruitCountdown:4622 · renderFarmCard:4634 · renderFarmClock:4695 · buyFruit:4711 · sellFruit:4731
-sellAllFruit:4748 · collectImg:4774 · renderFactoryCard:4780 · renderMarketCard:4827 · updateWishBadge:4882 · openWishlistDialog:4893
-renderMarketBrowse:4930 · carImg:4959 · renderVehicleShop:4960 · CS_CYCLE_MS:5011 · carInteriorImg:5012 · carStatHtml:5014
-renderCarShowroom:5021 · csShowBig:5047 · csInit:5074 · RS_CYCLE_MS:5097 · robotImg:5098 · renderRobotShop:5099
-rsShowBig:5121 · rsInit:5142 · buyRobot:5161 · enterMecha3D:5183 · pickMechaRobot:5204 · pickDriveCar:5236
-openCarBuyDialog:5277 · buyCarInsurance:5338 · payCarLoanMonthly:5357 · payCarLoanFull:5369 · carDriveBlock:5388 · gotoVehicleShop:5393
-gotoMyStock:5398 · showNeedCarDialog:5404 · craftDiscount:5416 · renderFactory:5419 · renderOrdersUI:5486 · startProduce:5505
-buyCollectible:5533 · cancelProduce:5561 · deliverOrder:5575 · renderOrderClock:5592 · renderCollectMine:5602 · openListDialog:5644
-cancelListing:5697 · buyMarketItem:5720 · showCollectReveal:5747 · buyAC:5783 · openHomeShop:5802 · renderPetShop:5861
-showLevelUp:5922 · renderStats:5959 · showTeacherCard:6030
+alignCureBtn:2360 · DICT_FILE_COUNT:2382 · loadDict:2383 · dictSearch:2398 · dictEntryHTML:2411 · openDictOverlay:2422
+renderDashboard:2454 · sleepBtnHTML:2835 · sleepHintHTML:2842 · sleepAllPets:2853 · wakeAllPets:2866 · feedPet:2877
+openFoodMenu:2890 · feedWith:2961 · AVATAR_UI:2991 · playerAvatarHTML:2994 · SHAPE_UI:3000 · showFeedResult:3009
+curePet:3045 · railCureClick:3068 · detoxPet:3080 · openFoodQuiz:3103 · renderShop:3183 · homeVisualHTML:3243
+showHomeRuined:3257 · showCutNotice:3278 · renderHomeCard:3296 · payMaint:3380 · trashBillUI:3396 · payTrash:3413
+UTILITY_UI:3432 · utilityBillUI:3481 · payUtility:3506 · buyUtilityFix:3532 · renderPhoneCard:3550 · buyPhone:3590
+sellPhone:3612 · compLiveTotal:3633 · onlineLiveTotal:3644 · renderOnlineEarnPill:3649 · openPillInfo:3672 · renderComputerCard:3712
+buyComputer:3747 · sellComputer:3770 · soldCount:3796 · soldBadge:3797 · renderTicketCard:3802 · loadScriptOnce:3858
+enterAdventure3D:3874 · enterHaunted3D:3896 · advHealClick:3918 · buyTicket:3938 · renderHauntCard:3964 · buyHauntTicket:4019
+renderHeliCard:4046 · buyHeliTicket:4104 · enterHeli3D:4127 · renderDroneCard:4149 · buyDroneTicket:4204 · enterDrone3D:4227
+renderDriveCard:4250 · buyDriveTicket:4323 · enterDrive3D:4346 · renderSoccerCard:4379 · buySoccerTicket:4427 · enterSoccer3D:4450
+WORLD3D:4474 · gotoRobotShop:4483 · scrollShopCardIntoView:4488 · railWorldClick:4491 · renderRailWorlds:4512 · tinvNoticeHTML:4571
+openTinvPicker:4579 · fruitCountdown:4623 · renderFarmCard:4635 · renderFarmClock:4696 · buyFruit:4712 · sellFruit:4732
+sellAllFruit:4749 · collectImg:4775 · renderFactoryCard:4781 · renderMarketCard:4828 · updateWishBadge:4883 · openWishlistDialog:4894
+renderMarketBrowse:4931 · carImg:4960 · renderVehicleShop:4961 · CS_CYCLE_MS:5012 · carInteriorImg:5013 · carStatHtml:5015
+renderCarShowroom:5022 · csShowBig:5048 · csInit:5075 · RS_CYCLE_MS:5098 · robotImg:5099 · renderRobotShop:5100
+rsShowBig:5122 · rsInit:5143 · buyRobot:5162 · enterMecha3D:5184 · pickMechaRobot:5205 · pickDriveCar:5237
+openCarBuyDialog:5278 · buyCarInsurance:5339 · payCarLoanMonthly:5358 · payCarLoanFull:5370 · carDriveBlock:5389 · gotoVehicleShop:5394
+gotoMyStock:5399 · showNeedCarDialog:5405 · craftDiscount:5417 · renderFactory:5420 · renderOrdersUI:5487 · startProduce:5506
+buyCollectible:5534 · cancelProduce:5562 · deliverOrder:5576 · renderOrderClock:5593 · renderCollectMine:5603 · openListDialog:5645
+cancelListing:5698 · buyMarketItem:5721 · showCollectReveal:5748 · buyAC:5784 · openHomeShop:5803 · renderPetShop:5862
+showLevelUp:5923 · renderStats:5960 · showTeacherCard:6031
 
 ## js/util.js (576 บรรทัด · 28 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
