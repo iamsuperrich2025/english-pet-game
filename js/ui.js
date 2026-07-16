@@ -5252,9 +5252,11 @@ function pickDriveCar(){
         ${lk?'<div class="dcp-lock">🔐 ค้างงวด</div>':''}
       </div>`;
     };
+    // 📐 รอบ 259: กล่องเกือบเต็มจอ ไม่มี scrollbar — คำนวณแถว/คอลัมน์ให้พอดีจำนวนคัน (≤5 = แถวเดียว · 6-10 = 2 แถว)
+    const rows = cars.length > 5 ? 2 : 1, cols = Math.ceil(cars.length/rows);
     const ov = document.createElement('div');
     ov.className = 'levelup-overlay';
-    ov.innerHTML = `<div class="levelup-box" style="max-width:620px">
+    ov.innerHTML = `<div class="levelup-box dcp-box" style="--dcp-cols:${cols};--dcp-rows:${rows}">
       <h2>🚗 เลือกรถออกขับ</h2>
       <div class="dcp-grid" id="dcp-grid">${cars.map((car,i)=>cardHtml(car,i)).join('')}</div>
       <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="dcp-go">ออกขับ! 🚗</button></div>
