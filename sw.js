@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v35';   // v35: การ์ดผู้เล่น — แยกปุ่ม Unfollow เลิกติดตาม ไว้หน้าปุ่มติดตามแล้ว รอบ 252
+const CACHE_VERSION = 'pet-vocab-v36';   // v36: โรงงาน — 🎟️ แต้มส่วนลดจากการตอบคำศัพท์ ลดราคาซื้อสูงสุด 50% รอบ 253
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

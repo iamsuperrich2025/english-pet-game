@@ -1119,6 +1119,13 @@ html.no-anim .q-bigcard{animation:none;}
 .hq-card.hq-cur .hq-price{background:#e9e4f6;border-top-color:#cabfe8;color:#6b5b95;cursor:default;}
 /* โรงงาน 16 ก.ค. 2026: เหรียญพอ = ปุ่มทอง "ซื้อเลย" · เหรียญไม่พอ = ปุ่มเขียวไปเล่นเกมเก็บแต้ม */
 .hq-price.craft-buy{background:linear-gradient(180deg,#ffedae,#ffd763);border-top-color:#e8b93c;color:#6b4a06;font-weight:800;}
+.hq-price.craft-buy small{display:block;font-size:10px;font-weight:600;color:#9a6a10;}
+.hq-price.craft-buy s{opacity:.65;}
+/* 🎟️ ชิปแต้มส่วนลดโรงงาน (สะสมจากการตอบคำศัพท์ถูก) */
+.craft-credit{background:linear-gradient(135deg,#fff3f8,#ffe3ef);border:1.5px dashed #e77fb0;border-radius:12px;
+  padding:7px 12px;margin:8px 0 2px;font-size:13px;color:#a83a6e;line-height:1.4;}
+.craft-credit b{font-size:15px;}
+.craft-credit small{display:block;font-size:11px;color:#c06a94;}
 .hq-price.hq-play{background:#e7f7ec;border-top-color:#9adfb2;color:#0b7a37;font-weight:700;}
 .hq-price.hq-play small{display:block;color:#c0392b;font-weight:600;font-size:10.5px;}
 

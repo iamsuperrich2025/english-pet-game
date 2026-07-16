@@ -5280,6 +5280,9 @@ function showNeedCarDialog(why){
     '🏪 ไปหมวดยานพาหนะ', gotoVehicleShop);
 }
 
+/* 🎟️ ส่วนลดโรงงานจากแต้มคำศัพท์ (16 ก.ค. 2026): 1 แต้ม = ลด 🪙1 · ลดได้สูงสุดครึ่งราคาต่อชิ้น · ใช้แล้วแต้มหมดไป */
+function craftDiscount(price){ return Math.min(state.wordCredit||0, Math.floor(price/2)); }
+
 /* ---- มุมมอง "โรงงานผลิต": งานที่กำลังผลิต + แคตตาล็อกเลือกสินค้า ---- */
 function renderFactory(){
   let jobUI;
@@ -5318,12 +5321,13 @@ function renderFactory(){
   const rows = items.slice(factoryPage*FACTORY_PAGE_SIZE, (factoryPage+1)*FACTORY_PAGE_SIZE).map(c=>{
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     const cur = state.producing && state.producing.id === c.id;
-    /* เหรียญพอ = ซื้อเข้าคลังทันที · เหรียญไม่พอค่อยโชว์ปุ่มไปเล่นเกมเก็บแต้มผลิต (ผู้ใช้สั่ง 16 ก.ค. 2026) */
+    /* เหรียญพอ = ซื้อเข้าคลังทันที (หักส่วนลด 🎟️ อัตโนมัติ) · เหรียญไม่พอค่อยโชว์ปุ่มไปเล่นเกมเก็บแต้มผลิต (ผู้ใช้สั่ง 16 ก.ค. 2026) */
+    const disc = craftDiscount(c.price), pay = c.price - disc;
     const btn = cur
       ? `<button class="hq-price craft-make" data-id="${c.id}">⏳ กำลังผลิตอยู่...</button>`
-      : state.coins >= c.price
-        ? `<button class="hq-price craft-buy" data-id="${c.id}">🪙${fmtNum(c.price)} ซื้อเลย</button>`
-        : `<button class="hq-price hq-play craft-make" data-id="${c.id}"><small>เหรียญไม่พอ (🪙${fmtNum(c.price)})</small>🎮 ไปเล่นเกมเก็บแต้มผลิต</button>`;
+      : state.coins >= pay
+        ? `<button class="hq-price craft-buy" data-id="${c.id}">${disc>0?`<small><s>🪙${fmtNum(c.price)}</s> ลด 🎟️${fmtNum(disc)}</small>`:''}🪙${fmtNum(pay)} ซื้อเลย</button>`
+        : `<button class="hq-price hq-play craft-make" data-id="${c.id}"><small>เหรียญไม่พอ (🪙${fmtNum(pay)})</small>🎮 ไปเล่นเกมเก็บแต้มผลิต</button>`;
     return `<div class="hq-card ${cur?'hq-cur':''}" style="border-color:${tier.color}">
       <div class="hq-head">${c.name}</div>
       <div class="hq-pic">
@@ -5340,7 +5344,9 @@ function renderFactory(){
       <div class="pg-mid"><div class="pg-dots">${dots}</div><small>หน้า ${factoryPage+1}/${pages} · ปัดซ้าย-ขวาเพื่อดูเพิ่ม</small></div>
       <button class="pg-btn" id="factory-next" ${factoryPage===pages-1?'disabled':''}>▶</button>
     </div>` : '';
-  return jobUI + `<select class="mkt-filter" id="factory-cat">${opts}</select>` +
+  const creditChip = `<div class="craft-credit">🎟️ แต้มส่วนลด <b>${fmtNum(state.wordCredit||0)}</b> แต้ม
+    <small>ตอบคำศัพท์ถูก 1 คำ = 1 แต้ม (สะสมจากทุกเกม) · ใช้เป็นส่วนลด 1 แต้ม = 🪙1 ลดได้สูงสุดครึ่งราคา</small></div>`;
+  return jobUI + creditChip + `<select class="mkt-filter" id="factory-cat">${opts}</select>` +
     `<div class="mkt-catalog hq-grid${factorySlide?' slide-'+factorySlide:''}" id="factory-list">${rows}</div>` + pager;
 }
 
@@ -5395,22 +5401,28 @@ function startProduce(id, goGame){
 function buyCollectible(id){
   const c = collectInfo(id);
   if(!c) return;
-  if(state.coins < c.price){
-    sfx.wrong(); toast(`เหรียญไม่พอ — ${c.name} ราคา 🪙${fmtNum(c.price)} เล่นเกมเก็บแต้มผลิตเองได้ฟรีนะ!`);
+  const disc = craftDiscount(c.price), pay = c.price - disc;
+  if(state.coins < pay){
+    sfx.wrong(); toast(`เหรียญไม่พอ — ${c.name} ราคา 🪙${fmtNum(pay)} เล่นเกมเก็บแต้มผลิตเองได้ฟรีนะ!`);
     renderFactoryCard();   // เหรียญเพิ่งลด → สลับปุ่มการ์ดเป็นโหมดไปเล่นเกมให้ตรงสถานะ
     return;
   }
   askConfirm(`<h2>🏭 ซื้อ${c.name}?</h2>
-    <p style="font-size:15px;margin:6px 0">จ่าย <b>🪙${fmtNum(c.price)}</b> รับ${c.name}เข้าคลังทันที<br>
+    <p style="font-size:15px;margin:6px 0">${disc>0
+      ? `ราคา <s>🪙${fmtNum(c.price)}</s> − ส่วนลดแต้มคำศัพท์ 🎟️${fmtNum(disc)}<br>จ่ายจริง <b>🪙${fmtNum(pay)}</b> รับ${c.name}เข้าคลังทันที`
+      : `จ่าย <b>🪙${fmtNum(c.price)}</b> รับ${c.name}เข้าคลังทันที`}<br>
     <small>เอาไปตั้งขายในตลาด หรือส่งมอบออเดอร์พิเศษได้เลย</small></p>`,
     'ซื้อเลย', ()=>{
-      if(state.coins < c.price){ sfx.wrong(); toast('เหรียญไม่พอแล้ว'); return; }
-      state.coins -= c.price;
+      const d2 = craftDiscount(c.price), p2 = c.price - d2;   // คิดใหม่ตอนยืนยัน กันค่าเปลี่ยนระหว่างเปิดกล่อง
+      if(state.coins < p2){ sfx.wrong(); toast('เหรียญไม่พอแล้ว'); return; }
+      state.coins -= p2;
+      if(d2 > 0) state.wordCredit = (state.wordCredit||0) - d2;
       state.collection.push(c.id);
       if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji||''} ${c.name} จากโรงงาน 🏭`);
       saveState();
       renderDashboard();
-      showCollectReveal(c.id, c.price, false);
+      showCollectReveal(c.id, p2, false);
+      if(d2 > 0) toast(`🎟️ ใช้แต้มส่วนลดไป ${fmtNum(d2)} แต้ม เหลือ ${fmtNum(state.wordCredit)} แต้ม`);
     });
 }
 

@@ -778,6 +778,8 @@ function marketTick(now){
    ครบตามจำนวนคำของสินค้า → เข้าคลัง คืนค่า id ให้ UI เปิดฉากฉลอง
    ============================================================ */
 function addCraft(n){
+  // 🎟️ แต้มส่วนลดโรงงาน: ตอบถูกสะสมเสมอแม้ไม่ได้ตั้งงานผลิต (ใช้ลดราคาซื้อสูงสุดครึ่งราคา — buyCollectible)
+  if(n > 0) state.wordCredit = Math.min(9999, (state.wordCredit||0) + n);
   if(!state.producing || n <= 0) return null;
   const c = collectInfo(state.producing.id);
   if(!c){ state.producing = null; return null; }
