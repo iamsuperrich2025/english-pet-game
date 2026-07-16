@@ -4637,7 +4637,7 @@ function renderFactoryCard(){
   const el = document.getElementById('factory-card');
   if(!el) return;
   el.innerHTML = `<h3 class="shop-title">🏭 โรงงานผลิตสินค้า</h3>
-    <p class="collect-sub">เล่นเกมคำศัพท์เพื่อผลิตสินค้า (ตอบถูก 1 คำ = 1 แต้มผลิต) ผลิตเสร็จเก็บเข้าคลัง เอาไปตั้งขายที่เมนู 🏪 ตลาดได้เลย</p>
+    <p class="collect-sub">มีเหรียญพอ กด "ซื้อเลย" รับสินค้าเข้าคลังทันที · เหรียญไม่พอ เล่นเกมคำศัพท์เก็บแต้มผลิตเองได้ฟรี (ตอบถูก 1 คำ = 1 แต้ม) ได้ของแล้วเอาไปตั้งขายที่เมนู 🏪 ตลาดได้เลย</p>
     ${renderFactory()}`;
 
   const catSel = document.getElementById('factory-cat');
@@ -4668,7 +4668,8 @@ function renderFactoryCard(){
       if(dx > 0 && prevB && !prevB.disabled) goPage(-1);                 // ปัดขวา = หน้าก่อนหน้า
     }, {passive:true});
   }
-  el.querySelectorAll('.craft-make').forEach(b=>b.addEventListener('click', ()=>startProduce(b.dataset.id)));
+  el.querySelectorAll('.craft-make').forEach(b=>b.addEventListener('click', ()=>startProduce(b.dataset.id, true)));
+  el.querySelectorAll('.craft-buy').forEach(b=>b.addEventListener('click', ()=>buyCollectible(b.dataset.id)));
   const goBtn = document.getElementById('craft-go');
   if(goBtn) goBtn.addEventListener('click', ()=>startGame(null));
   const cancelBtn = document.getElementById('craft-cancel');
@@ -5289,8 +5290,8 @@ function renderFactory(){
   }else{
     jobUI = `<div class="home-current none">
       <span class="home-emoji">🏭</span>
-      <div><b>โรงงานยังว่างอยู่</b><br>
-        <small>เลือกสินค้าจากแคตตาล็อกด้านล่าง แล้วเล่นเกมคำศัพท์เพื่อสะสมแต้มผลิต — ยิ่งเก่งยิ่งผลิตไว ผลิตเสร็จขายได้เงิน!</small>
+      <div><b>โรงงานพร้อมส่งสินค้า</b><br>
+        <small>มีเหรียญพอ กดซื้อจากแคตตาล็อกด้านล่างเข้าคลังได้ทันที · เหรียญไม่พอ กดปุ่ม 🎮 เล่นเกมคำศัพท์เก็บแต้มผลิตเองได้ฟรี!</small>
       </div>
     </div>`;
   }
@@ -5305,6 +5306,12 @@ function renderFactory(){
   const rows = items.slice(factoryPage*FACTORY_PAGE_SIZE, (factoryPage+1)*FACTORY_PAGE_SIZE).map(c=>{
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     const cur = state.producing && state.producing.id === c.id;
+    /* เหรียญพอ = ซื้อเข้าคลังทันที · เหรียญไม่พอค่อยโชว์ปุ่มไปเล่นเกมเก็บแต้มผลิต (ผู้ใช้สั่ง 16 ก.ค. 2026) */
+    const btn = cur
+      ? `<button class="hq-price craft-make" data-id="${c.id}">⏳ กำลังผลิตอยู่...</button>`
+      : state.coins >= c.price
+        ? `<button class="hq-price craft-buy" data-id="${c.id}">🪙${fmtNum(c.price)} ซื้อเลย</button>`
+        : `<button class="hq-price hq-play craft-make" data-id="${c.id}"><small>เหรียญไม่พอ (🪙${fmtNum(c.price)})</small>🎮 ไปเล่นเกมเก็บแต้มผลิต</button>`;
     return `<div class="hq-card ${cur?'hq-cur':''}" style="border-color:${tier.color}">
       <div class="hq-head">${c.name}</div>
       <div class="hq-pic">
@@ -5312,7 +5319,7 @@ function renderFactory(){
         <span class="hq-badge">🔤 ${fmtNum(c.words)}</span>
         <span class="hq-stars" style="color:${tier.color}">${tier.stars}</span>
       </div>
-      <button class="hq-price craft-make" data-id="${c.id}">${cur?'⏳ กำลังผลิตอยู่...':`🏭 ผลิต · ขาย ~🪙${fmtNum(c.price)}`}</button>
+      ${btn}
     </div>`;
   }).join('');
   const dots = Array.from({length: pages}, (_,i)=>`<span class="pg-dot ${i===factoryPage?'on':''}"></span>`).join('');
@@ -5345,11 +5352,13 @@ function renderOrdersUI(){
   return `<div class="order-head">📦 ออเดอร์พิเศษ — ลูกค้าจ่ายแพงกว่าราคาตลาด!</div>${rows}`;
 }
 
-function startProduce(id){
+function startProduce(id, goGame){
   const c = collectInfo(id);
   if(!c) return;
   if(state.producing && state.producing.id === id){
-    sfx.select(); toast(`🏭 กำลังผลิต${c.name}อยู่แล้ว — ไปเล่นเกมเก็บแต้มกันเถอะ!`); return;
+    sfx.select();
+    if(goGame){ startGame(null); return; }   // กดปุ่มการ์ดตัวที่ผลิตอยู่ = พาเข้าเกมเก็บแต้มเลย
+    toast(`🏭 กำลังผลิต${c.name}อยู่แล้ว — ไปเล่นเกมเก็บแต้มกันเถอะ!`); return;
   }
   const doStart = ()=>{
     state.producing = {id, progress:0};
@@ -5357,6 +5366,7 @@ function startProduce(id){
     toast(`🏭 เริ่มผลิต${c.name}! ตอบคำศัพท์ถูกให้ครบ ${fmtNum(c.words)} คำนะ`);
     saveState();
     renderFactoryCard();
+    if(goGame) startGame(null);              // เหรียญไม่พอ → เริ่มผลิตแล้วพาไปเล่นเกมเก็บแต้มทันที
   };
   if(state.producing && state.producing.progress > 0){
     const oc = collectInfo(state.producing.id);
@@ -5366,6 +5376,30 @@ function startProduce(id){
   }else{
     doStart();
   }
+}
+
+/* ซื้อสินค้าโรงงานด้วยเหรียญทันที (ผู้ใช้สั่ง 16 ก.ค. 2026) — จ่ายราคาฐานเข้าคลังเลย
+   ไม่นับ producedCount/เควสต์ผลิต (นั่นสงวนให้การผลิตด้วยแต้มคำศัพท์จริง) */
+function buyCollectible(id){
+  const c = collectInfo(id);
+  if(!c) return;
+  if(state.coins < c.price){
+    sfx.wrong(); toast(`เหรียญไม่พอ — ${c.name} ราคา 🪙${fmtNum(c.price)} เล่นเกมเก็บแต้มผลิตเองได้ฟรีนะ!`);
+    renderFactoryCard();   // เหรียญเพิ่งลด → สลับปุ่มการ์ดเป็นโหมดไปเล่นเกมให้ตรงสถานะ
+    return;
+  }
+  askConfirm(`<h2>🏭 ซื้อ${c.name}?</h2>
+    <p style="font-size:15px;margin:6px 0">จ่าย <b>🪙${fmtNum(c.price)}</b> รับ${c.name}เข้าคลังทันที<br>
+    <small>เอาไปตั้งขายในตลาด หรือส่งมอบออเดอร์พิเศษได้เลย</small></p>`,
+    'ซื้อเลย', ()=>{
+      if(state.coins < c.price){ sfx.wrong(); toast('เหรียญไม่พอแล้ว'); return; }
+      state.coins -= c.price;
+      state.collection.push(c.id);
+      if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji||''} ${c.name} จากโรงงาน 🏭`);
+      saveState();
+      renderDashboard();
+      showCollectReveal(c.id, c.price, false);
+    });
 }
 
 function cancelProduce(){

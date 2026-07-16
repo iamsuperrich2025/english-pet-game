@@ -1117,6 +1117,10 @@ html.no-anim .q-bigcard{animation:none;}
 .hq-price:hover{filter:brightness(1.05);}
 .hq-price:active{filter:brightness(.95);}
 .hq-card.hq-cur .hq-price{background:#e9e4f6;border-top-color:#cabfe8;color:#6b5b95;cursor:default;}
+/* โรงงาน 16 ก.ค. 2026: เหรียญพอ = ปุ่มทอง "ซื้อเลย" · เหรียญไม่พอ = ปุ่มเขียวไปเล่นเกมเก็บแต้ม */
+.hq-price.craft-buy{background:linear-gradient(180deg,#ffedae,#ffd763);border-top-color:#e8b93c;color:#6b4a06;font-weight:800;}
+.hq-price.hq-play{background:#e7f7ec;border-top-color:#9adfb2;color:#0b7a37;font-weight:700;}
+.hq-price.hq-play small{display:block;color:#c0392b;font-weight:600;font-size:10.5px;}
 
 /* ============================================================
    🚗 รอบ 131: หมวดยานพาหนะ — แคตตาล็อกรถ 5 ช่อง/แถว + กล่องรถของฉัน + กล่องซื้อรถ
