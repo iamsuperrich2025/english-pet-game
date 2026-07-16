@@ -52,7 +52,7 @@ authOnLogin({uid:'test1',email:'t@test.com'});        // → เข้าหน�
 | งานถัดไป / อาการบั๊ก(ยืนยัน) vs เดา(ยังไม่พิสูจน์) / backlog สรุป | `C:\Users\rober\english-pet-game\handoff\TASKS.md` |
 | สภาพแวดล้อม + ข้อควรระวังหายาก (image probe, ห้ามหลายชุดแต่งตัว, ลิขสิทธิ์) | `C:\Users\rober\english-pet-game\handoff\NOTES.md` |
 | แตะ Firebase / publish rules (ส่งเต็มทั้งหน้าเสมอ) | `C:\Users\rober\english-pet-game\handoff\RULES.md` |
-| หาว่าฟังก์ชัน/ค่าคงที่อยู่บรรทัดไหน | Grep ชื่อใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ) |
+| หาว่าฟังก์ชัน/ค่าคงที่/CSS selector อยู่บรรทัดไหน | Grep ชื่อใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ · บั๊ก UI เริ่มหา selector ที่นี่) |
 | โครงสร้างโค้ด/ภาพรวมสถาปัตยกรรม | `C:\Users\rober\english-pet-game\handoff\ARCHITECTURE.md` |
 | แก้ระบบเกม (สัตว์/บ้าน/บิล/แรงค์/โรงงาน/ตลาด/ออนไลน์/ของขวัญ) | `C:\Users\rober\english-pet-game\handoff\GAME_RULES.md` |
 | ดูสเปก backlog เต็ม | `C:\Users\rober\english-pet-game\handoff\BACKLOG.md` |
