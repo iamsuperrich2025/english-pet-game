@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v52';   // v52: สรุปผลสอบซ่อมละเอียด รอบ 271
+const CACHE_VERSION = 'pet-vocab-v53';   // v53: เอาป้ายอากาศออกจาก footer ปุ่มล่างบรรทัดเดียว รอบ 272
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

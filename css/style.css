@@ -257,13 +257,6 @@ html.no-anim .coin-pill.net{animation:none;}
 .attn-total b{color:#b8860b;}
 .attn-box .set-close{display:block;margin:0 auto;}
 
-/* ---------- สภาพอากาศ ---------- */
-.weather-banner{
-  text-align:center;font-size:14.5px;color:#4a6a8a;background:rgba(255,255,255,.7);
-  border-radius:14px;padding:6px 12px;margin-bottom:10px;border:2px solid #fff;
-  box-shadow:var(--card-shadow);
-}
-
 /* ---------- แถบฝนประจำวัน (ตกทุกวัน 19:00 นับถอยหลัง) ---------- */
 .rain-banner{
   font-size:13.5px;color:#3d6d99;background:rgba(232,246,255,.85);

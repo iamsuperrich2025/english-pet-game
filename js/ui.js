@@ -2498,16 +2498,6 @@ function renderDashboard(){
   renderFriendPanel();
   renderGiftPanel();
 
-  /* ---- สภาพอากาศ ---- */
-  const w = weatherNow();
-  let wMsg = '';
-  if(!state.home && state.pets.some(p=>p.level>=2)){
-    if(w.id === 'rain') wMsg = ' — น้องไม่มีที่หลบฝนเลย รีบหาที่พักนะ!';
-    else if(w.id === 'hot' || w.id === 'sunny') wMsg = ' — น้องตากแดดอยู่ หาที่พักให้น้องหน่อยนะ';
-  }
-  document.getElementById('weather-banner').innerHTML =
-    `${w.emoji} อากาศในเกมตอนนี้: <b>${w.name}</b>${wMsg}`;
-
   renderNewWord();   // 🆕 คำศัพท์ใหม่ 1 คำ/การ login (รอบ 116)
 
   /* ---- แท็บสลับสัตว์ (หลายตัว) ----
