@@ -1921,7 +1921,7 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
 .ab-btns button{margin-top:0;padding:clamp(7px,2vh,10px) clamp(16px,3vw,26px);font-size:clamp(15px,4.4vh,18px);}
 .ab-btns .ab-extra{background:#3aa66b;box-shadow:0 4px 0 #2c8153;}
 /* 💗 ฉลองรักษาหาย (คู่ cureCelebrateFx ใน ui.js): หัวใจลอย + เวทีน้องเด้งดีใจ */
-.heal-heart{position:fixed;z-index:95;pointer-events:none;opacity:0;animation:healHeartUp 1.4s ease-out forwards;}
+.heal-heart{position:fixed;z-index:9500;pointer-events:none;opacity:0;animation:healHeartUp 1.4s ease-out forwards;}  /* เหนือ dialog (levelup-overlay z100) ใต้ toast (9990) — หัวใจต้องลอยทับกล่องกินเสร็จ */
 @keyframes healHeartUp{
   0%{opacity:0;transform:translate(0,0) scale(.4);}
   15%{opacity:1;transform:translate(calc(var(--hx,0px)*.2),-20px) scale(1.1);}

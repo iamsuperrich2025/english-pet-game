@@ -3201,6 +3201,11 @@ function showFeedResult(p, food, shapeChange){
     else renderDashboard();
   });
   document.body.appendChild(overlay);
+  // 💗 น้องดีใจที่ได้กิน — หัวใจลอยจากรูปน้องในกล่อง (ป่วยคามื้อ = ไม่ลอย · มื้อมีพิษปน = ลอยน้อย)
+  // หน่วงรอ popIn ของกล่องจบก่อน ตำแหน่ง anchor ถึงนิ่ง
+  if(!toxinSick) setTimeout(()=>{
+    if(overlay.isConnected) heartsFx(overlay.querySelector('.feed-pet'), gotToxin ? 4 : 8);
+  }, 450);
 }
 
 function curePet(){
@@ -3225,20 +3230,14 @@ function curePet(){
   cureCelebrateFx();   // เรียกหลัง render เพื่อให้คลาสเด้งเกาะ .pet-stage ตัวใหม่ (ที่ไม่ grayscale แล้ว)
 }
 
-/* 💗 ฉลองรักษาหาย: น้องเด้งดีใจ + หัวใจลอยขึ้นจากตัวน้อง
-   รักษาจากหน้าเกมจับคู่ (ไม่เห็นน้อง) → หัวใจลอยกลางจอแทน */
-function cureCelebrateFx(){
+/* 💗 หัวใจลอยขึ้นจาก anchor (ไม่มี/ถูกซ่อน = กลางจอ) — ใช้ทั้งรักษาหาย + ป้อนอาหาร */
+function heartsFx(anchor, n=10){
   if(document.documentElement.classList.contains('no-anim')) return;  // เคารพสวิตช์ปิดแอนิเมชันในเกม
-  const stage = document.querySelector('.hero-scene .pet-stage');
   let cx = innerWidth/2, cy = innerHeight*0.45;
-  if(stage){
-    const r = stage.getBoundingClientRect();
-    if(r.width > 0){ cx = r.left + r.width/2; cy = r.top + r.height*0.35; }
-    stage.classList.add('heal-bounce');
-    setTimeout(()=>stage.classList.remove('heal-bounce'), 1300);
-  }
+  const r = anchor ? anchor.getBoundingClientRect() : null;
+  if(r && r.width > 0){ cx = r.left + r.width/2; cy = r.top + r.height*0.35; }
   const HEARTS = ['💗','💖','💕','❤️','💓'];
-  for(let i=0;i<10;i++){
+  for(let i=0;i<n;i++){
     const h = document.createElement('div');
     h.className = 'heal-heart';
     h.textContent = HEARTS[i%HEARTS.length];
@@ -3250,6 +3249,16 @@ function cureCelebrateFx(){
     document.body.appendChild(h);
     setTimeout(()=>h.remove(), 1600 + i*70);
   }
+}
+
+/* ฉลองรักษาหาย: น้องบนเวทีเด้งดีใจ + หัวใจลอย (รักษาจากหน้าเกมจับคู่ ไม่เห็นน้อง → ลอยกลางจอ) */
+function cureCelebrateFx(){
+  const stage = document.querySelector('.hero-scene .pet-stage');
+  if(stage){
+    stage.classList.add('heal-bounce');   // no-anim: CSS ปิด animation ที่ .pet-wrap อยู่แล้ว
+    setTimeout(()=>stage.classList.remove('heal-bounce'), 1300);
+  }
+  heartsFx(stage, 10);
 }
 
 /* ปุ่มรักษาด่วนในรางซ้าย: น้องป่วยตัวไหนก็รักษาได้จากปุ่มเดียว
