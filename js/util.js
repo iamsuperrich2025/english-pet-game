@@ -400,16 +400,21 @@ function askConfirm(html, okText, onOk){
 }
 
 /* ---------- กล่องเตือนสำคัญกลางจอ (สำหรับคำเตือนที่ห้ามพลาด เช่น น้องป่วย) ---------- */
-// html = เนื้อหา (ใส่ emoji ใหญ่ + ข้อความได้) · ปุ่มเดียว กด/แตะนอกกล่อง = ปิด
-function alertBox(html, okText='เข้าใจแล้ว'){
+// html = เนื้อหา (ใส่ emoji ใหญ่ + ข้อความได้) · กด/แตะนอกกล่อง = ปิด
+// extraBtn (ไม่บังคับ) = {text,onClick} ปุ่มที่สองสีเขียว กดแล้วปิดกล่องก่อนค่อยทำงาน
+function alertBox(html, okText='เข้าใจแล้ว', extraBtn=null){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay alert-overlay';
   overlay.innerHTML = `<div class="levelup-box alert-box">
     ${html}
-    <div style="margin-top:16px"><button class="cf-ok alert-ok">${okText}</button></div>
+    <div class="ab-btns">
+      ${extraBtn ? `<button class="cf-ok ab-extra">${extraBtn.text}</button>` : ''}
+      <button class="cf-ok alert-ok">${okText}</button>
+    </div>
   </div>`;
   const close = ()=>overlay.remove();
-  overlay.querySelector('.cf-ok').addEventListener('click', close);
+  overlay.querySelector('.alert-ok').addEventListener('click', close);
+  if(extraBtn) overlay.querySelector('.ab-extra').addEventListener('click', ()=>{ close(); extraBtn.onClick(); });
   overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });   // แตะพื้นหลังปิดได้
   document.body.appendChild(overlay);
   if(typeof sfx !== 'undefined') sfx.wrong();

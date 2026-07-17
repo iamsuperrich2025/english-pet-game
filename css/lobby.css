@@ -1898,6 +1898,14 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
   .pillinfo-desc{margin-top:8px;line-height:1.5;}
 }
 .alert-box{max-width:min(92vw,560px) !important;}   /* ทับ 320px เดิม (เดิมมี !important ที่ border) */
+/* เนื้อกล่อง alertBox (emoji/หัว/คำอธิบาย/แถวปุ่ม) — clamp ตามความสูงจอ กฎถาวรผู้ใช้: เห็นครบทั้งใบ ไม่มี scrollbar */
+.alert-box{padding:clamp(14px,4vh,26px) clamp(18px,4vw,30px);}
+.ab-emoji{font-size:clamp(34px,12vh,56px);line-height:1;}
+.ab-title{font-size:clamp(17px,5.5vh,21px);font-weight:bold;margin-top:clamp(4px,1.6vh,8px);}
+.ab-desc{margin-top:clamp(4px,1.6vh,8px);color:#6a5a78;line-height:1.5;font-size:clamp(13px,4vh,16px);}
+.ab-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:clamp(8px,2.4vh,16px);}
+.ab-btns button{margin-top:0;padding:clamp(7px,2vh,10px) clamp(16px,3vw,26px);font-size:clamp(15px,4.4vh,18px);}
+.ab-btns .ab-extra{background:#3aa66b;box-shadow:0 4px 0 #2c8153;}
 .attn-box{max-width:min(92vw,620px);}
 .nw-box{width:min(92vw,620px);}
 /* หน้าตั้งค่า: แถวสวิตช์เรียง 3 คอลัมน์ + แถวหนาแน่นขึ้น (หัวข้อ/ปุ่มยาวเต็มแถว) — เตี้ยลงมาก */

@@ -2994,7 +2994,8 @@ function wakeAllPets(){
 function feedPet(){
   const p = activePet();
   if(!p) return;
-  if(p.sick){ alertBox('<div style="font-size:56px;line-height:1">🤒</div><div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">น้องป่วยอยู่นะ</div><div style="margin-top:8px;color:#6a5a78;line-height:1.5">กินไม่ลงเลย... ต้องพาไป <b>รักษา</b> ก่อน น้องถึงจะหายแล้วกลับมากินได้ 🩺</div>', 'พาไปรักษา'); return; }
+  if(p.sick){ alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">น้องป่วยอยู่นะ</div><div class="ab-desc">กินไม่ลงเลย... ต้องพาไป <b>รักษา</b> ก่อน น้องถึงจะหายแล้วกลับมากินได้ 🩺</div>', 'ไว้ก่อน',
+      {text:`🩺 รักษาเลย (🪙${fmtNum(CURE_COST)})`, onClick:curePet}); return; }
   if(p.sleeping){ sfx.wrong(); toast('😴 น้องหลับอยู่ อย่าเพิ่งปลุกมากินข้าวเลยนะ'); return; }
   const hungry = petHungry(p);
   const canFeast = p.fedUpTo < nextSlotStart(Date.now());
