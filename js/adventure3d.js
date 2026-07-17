@@ -1035,8 +1035,13 @@ function buildDriveCity(sc){
   const roadTris=[], dashTris=[], nameSegs=[], roadPts=[];
   const GS=6, GW=Math.ceil(RX*2/GS), GOFF=RX;               // road grid: 0=นอกถนน 1=ถนน 2=น้ำ (คลุมสุดปลายถนน รอบ 213)
   const grid=new Uint8Array(GW*GW);
+  /* 🧭 รอบ 284: กริดนำทาง GPS แยกจากกริดฟิสิกส์ — grid เดิมทาเผื่อกว้าง (สี่เหลี่ยม ±rr ช่อง ไว้ให้ขับไหล่ทางไม่สะดุด)
+     แต่ GPS ใช้แล้วได้เส้นทาง/จุดเลี้ยวนอกผิวถนนจริง → ngrid ทาเป็นวงกลมรัศมีครึ่งความกว้างถนนจริงเท่านั้น */
+  const ngrid=new Uint8Array(GW*GW);
   const gset=(x,z,v)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
     if(gx>=0&&gz>=0&&gx<GW&&gz<GW){ const k=gz*GW+gx; if(v===1||!grid[k]) grid[k]=v; } };
+  const ngset=(x,z)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+    if(gx>=0&&gz>=0&&gx<GW&&gz<GW) ngrid[gz*GW+gx]=1; };
   rivSegs.forEach(s=>{                                       // ทาสีน้ำลง grid ก่อน (ถนน=สะพาน ทาทับทีหลัง)
     const L=Math.hypot(s[2]-s[0],s[3]-s[1]), st=Math.max(1,Math.floor(L/GS*2));
     for(let i=0;i<=st;i++){
@@ -1063,9 +1068,15 @@ function buildDriveCity(sc){
         }
       }
       const rr=Math.ceil((w/2+1.5)/GS), st=Math.max(1,Math.floor(L/GS*2));
+      // 🧭 รอบ 284: nrad = รัศมีทาสีกริดนำทาง — ตามครึ่งความกว้างถนนจริง (+1ม. กันหลุดขอบ)
+      //   ขั้นต่ำ GS+0.1 การันตีแสตมป์รูปกากบาท (±1 ช่องแนวตั้ง/นอน) ให้ถนนเฉียงต่อกันแบบ cardinal ผ่านกฎกันตัดมุมของ A*
+      const nrad=Math.max(w/2+1, GS+0.1);
       for(let s2=0;s2<=st;s2++){
         const x=x1+dx*s2/st, z=z1+dz*s2/st;
-        for(let ox=-rr;ox<=rr;ox++) for(let oz=-rr;oz<=rr;oz++) gset(x+ox*GS,z+oz*GS,1);
+        for(let ox=-rr;ox<=rr;ox++) for(let oz=-rr;oz<=rr;oz++){
+          gset(x+ox*GS,z+oz*GS,1);
+          if(Math.hypot(ox*GS,oz*GS)<=nrad) ngset(x+ox*GS,z+oz*GS);
+        }
       }
       if(w>=5) for(let t=0;t<L;t+=15) roadPts.push(x1+ux*t,z1+uz*t);  // จุด spawn ตัวอักษรบนถนน
     }
@@ -1257,7 +1268,7 @@ function buildDriveCity(sc){
   mc.fillStyle='#ffab40'; mc.beginPath(); mc.arc(M0,M0,3,0,7); mc.fill();   // หอนาฬิกา
 
   worlds.drive={scene:sc, trees:[], buildings:[],
-    d:{grid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};
+    d:{grid,ngrid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};   // ngrid = กริดนำทาง GPS (รอบ 284)
   /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
      (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
   const junctions=[];
@@ -2978,7 +2989,8 @@ function buildDom(){
   .adv-drive #adv-inst{display:block}
   .adv-drive #adv-cross{display:none}
   .adv-drive #adv-gauges,.adv-drive #adv-cockpit{display:none}
-  #adv-cardash{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
+  /* 🚗 รอบ 284 (สเปกผู้ใช้): คอนโซลสูงบังเส้นทาง → เลื่อนทั้งแผงลง 20vh (จอวิทยุ/ตุ๊กตา/เกจ ผูกกับ rect ของภาพ เลื่อนตามเอง) */
+  #adv-cardash{position:absolute;left:0;right:0;bottom:-20vh;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cardash{display:block}
   /* 🚗 รอบ 231: แดชบอร์ดชุดใหม่ — object-position 65% ตัดกระจกหน้า(ถนนวาดในภาพ)ทิ้งให้หมด เหลือเฉพาะแผงหน้าปัด
      · max-height 46vh (เตี้ยลง ไม่บังทางมองเห็นฉาก 3D จริง) — ยืนยันตัดกระจกครบทุกคัน (กระจกจบ ~40% ของภาพ) */
@@ -2986,8 +2998,8 @@ function buildDom(){
   /* เข็มหน้าปัดวิ่งจริง — canvas ทับตำแหน่งวงเกจของภาพ dash.png (อยู่เหนือแผง ใต้พวงมาลัย) */
   #adv-cargauges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:3}
   .adv-drive #adv-cargauges{display:block}
-  #adv-cardash .cd-css{height:16vh;background:linear-gradient(180deg,#262a31,#101216);
-    border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}
+  #adv-cardash .cd-css{height:36vh;background:linear-gradient(180deg,#262a31,#101216);
+    border-top:5px solid #343943;border-radius:26px 26px 0 0;margin:0 -2vw}  /* รอบ 284: แผงเลื่อนลง 20vh → เพิ่มสูงชดเชยให้เหลือแถบ 16vh */
   /* 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่เลือก (blkN.png) ยืนบนแผงหน้าปัด หัวส่ายตามแรงเลี้ยว
      JS ตั้ง left/top/size ตามพิกัดภาพ dash (BOBBLE_FOOT) · img หมุนรอบฐาน (เท้า) ด้วยสปริงใน bobbleTick */
   #adv-bobble{position:absolute;display:none;z-index:4;pointer-events:auto;cursor:pointer;
@@ -3082,7 +3094,8 @@ function buildDom(){
   #adv-radio-list .rl-power:active,#adv-radio-list .rl-mode:active,#adv-radio-list .rl-track:active{transform:scale(.96)}
   /* 🚗 รอบ 230: พวงมาลัยขวาแบบไทย (ภาพชุดใหม่ ต่อคัน · โปร่งใส) · โผล่จากขอบล่างขวาแบบมองจากที่นั่งคนขับ
      ภาพ aspect ~1.5 (กว้างกว่าสูง) → คงสัดส่วนไม่บิด · เกจวิ่งจริงลอดช่องบนพวงมาลัย (drawCarGauges อิงตำแหน่งนี้) */
-  #adv-carwheel{position:absolute;left:76%;bottom:-1vh;transform:translateX(-50%);
+  /* รอบ 284 (สเปกผู้ใช้): กดพวงมาลัยลงจนขอบบนเกือบแตะขอบล่างจอ — bottom=calc(8vh-สูง) = เห็นขอบบน 8vh พอดีทุกจอ */
+  #adv-carwheel{position:absolute;left:76%;bottom:calc(8vh - min(50vh,50vw));transform:translateX(-50%);
     height:min(50vh,50vw);width:auto;aspect-ratio:1.5;pointer-events:none;display:none;z-index:4;will-change:transform}
   .adv-drive #adv-carwheel{display:block}
   #adv-carwheel img{width:100%;height:100%;display:block;object-fit:contain}
@@ -4632,7 +4645,8 @@ function rlTick(px,pz,now){
    🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) + เสียงอังกฤษเลี้ยว
    ============================================================ */
 /* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
-function cellDrivable(D,gx,gz){ return gx>=0&&gz>=0&&gx<D.GW&&gz<D.GW && D.grid[gz*D.GW+gx]===1; }
+/* 🧭 รอบ 284: เส้นทาง GPS ใช้ ngrid (ผิวถนนจริง) — grid ฟิสิกส์ทาเผื่อกว้าง ทำ A* หาเส้น/จุดเลี้ยวนอกถนน */
+function cellDrivable(D,gx,gz){ return gx>=0&&gz>=0&&gx<D.GW&&gz<D.GW && (D.ngrid||D.grid)[gz*D.GW+gx]===1; }
 function cellCenter(D,gx,gz){ return {x:gx*D.GS-D.GOFF+D.GS/2, z:gz*D.GS-D.GOFF+D.GS/2}; }
 /* 🚗 รอบ 234: มองเห็นตรงๆบนถนนไหม (สุ่มจุดตามเส้นตรง a→b เช็กทุกช่องว่าเป็นถนน) — ใช้ string-pulling ตัด staircase ของกริด */
 function losClear(D,ax,az,bx,bz){
@@ -5033,8 +5047,9 @@ function drawCarGauges(){
   const ww=carWheelEl.offsetWidth, wh=carWheelEl.offsetHeight;
   if(!ww||!wh) return;
   const gcx=carWheelEl.offsetLeft;                          // translateX(-50%) → offsetLeft = จุดกึ่งกลางแนวนอน
-  const gcy=carWheelEl.offsetTop + wh*0.285;                // ช่องเปิดเหนือดุมพวงมาลัย
+  let gcy=carWheelEl.offsetTop + wh*0.285;                  // ช่องเปิดเหนือดุมพวงมาลัย
   const r=wh*0.105;
+  gcy=Math.min(gcy, vh - r*1.25);   // 🚗 รอบ 284: พวงมาลัยถูกกดลงเกือบพ้นจอ → ยกเกจขึ้นเกาะขอบล่าง ไม่หลุดจอ
   const kmh=Math.abs(dSpeed)*3.6;
   drawCarDial(c, gcx-r*1.30, gcy, r, kmh/240, 240, 40, CAR_LEGAL_KMH);   // สปีด 0-240 · โซนแดง = เกิน 90 ผิดกฎหมาย
   drawCarDial(c, gcx+r*1.30, gcy, r, .1+(CarSound.rpm||0)*.75, 8, 1, 6.5);  // วัดรอบ (idle ~0.8)
