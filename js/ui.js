@@ -5958,7 +5958,9 @@ function buyMarketItem(key){
    produced=true → ฉาก "ผลิตสำเร็จ" (เรียกจาก game.js ตอนแต้มผลิตครบ) */
 function showCollectReveal(id, price, produced){
   const c = collectInfo(id), tier = COLLECT_TIERS[c.tier];
-  sfx.rankup();
+  // ซื้อของ (จ่ายเหรียญ — โรงงาน/ตลาดเพื่อน) = เสียงแคชเชียร์ชิ้ง! · ผลิตเอง = แฟนแฟร์เดิม
+  if(!produced && price != null && sfx.cashier) sfx.cashier();
+  else sfx.rankup();
   const img = collectImg(id);
   const overlay = document.createElement('div');
   overlay.className = 'rankup-overlay';

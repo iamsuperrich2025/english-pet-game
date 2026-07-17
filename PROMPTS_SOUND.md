@@ -60,8 +60,25 @@ no music, cinematic sound design, video game victory lightning effect
 
 ---
 
+## 5) `sound/cashier.mp3` — 🛒 เสียงแคชเชียร์ "จ่ายเงินสำเร็จ" (ชิ้ง!)
+> ดังตอนซื้อสินค้าสำเร็จในโรงงาน 🏭 และตลาดเพื่อน 🏪 (ก่อนฉากเปิดของสะสม)
+> เกมมีเสียงสังเคราะห์ในตัวแล้ว (แกร๊กลิ้นชัก+กริ๊งกริ๊ง+เหรียญ) — ไฟล์นี้เป็นตัวอัปเกรด วางแล้วสลับใช้เองอัตโนมัติ
+
+**Prompt (ElevenLabs Sound Effects หรือ Suno · ติ๊ก Instrumental):**
+```
+cash register purchase success sound effect, classic "cha-ching" bell ring,
+cash drawer sliding open with a metallic clunk, bright double bell ding,
+a few coins jingling and settling, cheerful and satisfying, retro shop
+checkout counter, very short around 1-2 seconds, no vocals, no melody,
+no music, clean video game UI sound effect
+```
+> เคล็ดลับ: ความยาวที่พอดีคือ ~1–2 วินาที เปิดมา "ชิ้ง" ทันที · ถ้าเจนจาก ElevenLabs
+> เลือกเมนู Sound Effects (ไม่ใช่เพลง) จะได้เสียงสั้นตรงสเปกกว่า Suno
+
+---
+
 ## เช็กลิสต์หลังวางไฟล์
-- [ ] ไฟล์อยู่ที่ `sound/haunt_ambient.mp3` · `sound/haunt_chase.mp3` · `sound/haunt_scare.mp3` · `sound/spark.mp3` (ชื่อตรงเป๊ะ ตัวพิมพ์เล็กทั้งหมด)
+- [ ] ไฟล์อยู่ที่ `sound/haunt_ambient.mp3` · `sound/haunt_chase.mp3` · `sound/haunt_scare.mp3` · `sound/spark.mp3` · `sound/cashier.mp3` (ชื่อตรงเป๊ะ ตัวพิมพ์เล็กทั้งหมด)
 - [ ] commit + push (sw.js cache ให้เองแบบ cache-first — ผู้เล่นโหลดครั้งเดียว)
 - [ ] เข้าโลกผีสิง: ได้ยินเสียงบรรยากาศทันที · ผีไล่มีเสียงเร่งเร้า · โดนจับเสียงตูมดัง
 - [ ] เกมจับคู่: เคลียร์ 4 คู่ใน 5 วิไม่พลาด → ฟ้าผ่า+เสียงเปรี้ยง

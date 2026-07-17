@@ -127,6 +127,7 @@ const sfx = {
   rankup : ()=>{ [392,523,659,784,1047,1319].forEach((f,i)=>beep(f,.25,i*.11,'triangle',.18)); },
   spark  : ()=>{ playSpark(); },   // ⚡ ฟ้าผ่า/กระแสไฟ (จับคู่ครบใน 5 วิ / สอบสายฟ้า)
   siren  : ()=>{ sirenSynth(); },  // 🚨 หวอเบาๆ ตอนน้องเพิ่งล้มป่วย
+  cashier: ()=>{ playCashier(); }, // 🛒 จ่ายเงินสำเร็จที่แคชเชียร์ (ซื้อของโรงงาน/ตลาดเพื่อน)
 };
 
 /* ---------- 🚨 เสียงหวอเบาๆ (วี้-หว่อ 2 รอบ เสียงนุ่มไม่ทำเด็กตกใจ) ---------- */
@@ -147,6 +148,53 @@ function sirenSynth(){
     g.gain.exponentialRampToValueAtTime(.001, t+1.5);
     o.connect(g); g.connect(audioCtx.destination);
     o.start(t); o.stop(t+1.5);
+  }catch(e){}
+}
+
+/* ---------- 🛒 เสียงแคชเชียร์ "จ่ายเงินสำเร็จ" (ชิ้ง! ลิ้นชักเปิด + กระดิ่ง + เหรียญกรุ๊งกริ๊ง) ----------
+   ชั้น 1: ไฟล์ sound/cashier.mp3 (prompt เจนเสียงใน PROMPTS_SOUND.md หัวข้อ cashier)
+   ชั้น 2 (ไม่มีไฟล์): สังเคราะห์ WebAudio — แกร๊กลิ้นชัก + กริ๊งกริ๊งกระดิ่ง + เศษเหรียญท้าย */
+let cashierAudio = null, cashierFileMiss = false;
+function playCashier(){
+  if(!state.sound) return;
+  if(!cashierFileMiss){
+    try{
+      cashierAudio = cashierAudio || new Audio('sound/cashier.mp3');
+      cashierAudio.onerror = ()=>{ cashierFileMiss = true; cashierSynth(); };
+      cashierAudio.currentTime = 0;
+      const p = cashierAudio.play();
+      if(p && p.catch) p.catch(()=>{ cashierFileMiss = true; cashierSynth(); });
+      return;
+    }catch(e){ cashierFileMiss = true; }
+  }
+  cashierSynth();
+}
+function cashierSynth(){
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    // แกร๊ก — ลิ้นชักเงินเปิด (ช็อตเสียงซ่าสั้นผ่าน lowpass)
+    const len = Math.ceil(audioCtx.sampleRate*.09);
+    const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i] = (Math.random()*2-1)*(1-i/len);
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const lp = audioCtx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 950;
+    const ng = audioCtx.createGain(); ng.gain.value = .22;
+    src.connect(lp); lp.connect(ng); ng.connect(audioCtx.destination); src.start(t);
+    // กริ๊ง-กริ๊ง — กระดิ่งแคชเชียร์ 2 ที (โน้ตสูง + harmonic ให้ใสเหมือนโลหะ)
+    [.10,.24].forEach(at=>{
+      [[2093,.13],[2093*2.4,.05]].forEach(([fq,v])=>{
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = 'triangle'; o.frequency.value = fq;
+        g.gain.setValueAtTime(v, t+at);
+        g.gain.exponentialRampToValueAtTime(.001, t+at+.5);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(t+at); o.stop(t+at+.5);
+      });
+    });
+    // เศษเหรียญกรุ๊งกริ๊งตกท้ายเสียง
+    [1568,1976,2637].forEach((fq,i)=>beep(fq,.08,.36+i*.06,'triangle',.07));
   }catch(e){}
 }
 
