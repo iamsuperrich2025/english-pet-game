@@ -1804,6 +1804,21 @@ html.no-anim .cs-big-img{animation:none}
   box-shadow:0 3px 12px rgba(0,0,0,.4);
 }
 html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none;}
+/* 💬🐾 รอบ 276: ปุ่มแชทหัวการ์ดโปรไฟล์ + การ์ดข้อมูลน้องฉบับย่อ (คลิกน้องในโปรไฟล์) */
+.pl-chat{
+  flex-shrink:0;border:none;border-radius:999px;cursor:pointer;font-family:inherit;
+  font-size:13px;font-weight:700;padding:7px 14px;transition:transform .12s;
+  background:linear-gradient(135deg,#5aa7f2,#2f7fd2);color:#fff;box-shadow:0 3px 0 #1c5b9e;
+}
+.pl-chat:active{transform:scale(.94);}
+.pet-peek img{max-height:52vh;}                     /* เผื่อที่ให้ชื่อ+ชิปในจอเตี้ย ไม่ล้น */
+.pet-peek .pp-emoji{font-size:clamp(70px,20vh,130px);line-height:1.2;
+  filter:drop-shadow(0 6px 18px rgba(90,180,255,.35));}
+.pp-chips{margin-top:10px;display:flex;flex-wrap:wrap;gap:7px;justify-content:center;max-width:92vw;}
+.pp-chip{
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;
+  padding:5px 13px;color:#eaf6ff;font-size:clamp(12px,1.9vw,15px);font-weight:700;
+}
 /* ---- หัวข้อโซน privacy ในหน้าตั้งค่า + กล่องตั้งค่าเลื่อนได้ (แถวเยอะขึ้น) ---- */
 .settings-box{max-height:92vh;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
 .settings-box::-webkit-scrollbar{display:none;width:0;}

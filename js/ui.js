@@ -1159,11 +1159,15 @@ function showPlayerCard(uid, name, grade){
   const me = (typeof onlineKey === 'function') && uid === onlineKey();
   const canFollow = !!uid && !me && typeof followSet === 'function'
                     && typeof Online !== 'undefined' && Online.ready;
+  /* 💬 รอบ 276: เป็นเพื่อนกันแล้ว → ปุ่มทักแชทตรงจากการ์ด (แชทเปิดเฉพาะคู่เพื่อน) */
+  const myFriend = (!me && typeof Online !== 'undefined' && Online.ready && typeof openChat === 'function')
+    ? (Online.myFriends || []).find(f=>f.uid === uid) : null;
   const ov = document.createElement('div');
   ov.className = 'pl-overlay';
   ov.innerHTML = `<div class="pl-card pl-wide">
       <button class="pl-close">✕</button>
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
+        ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>` : ''}
         ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
       </div>
       <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
@@ -1234,6 +1238,10 @@ function showPlayerCard(uid, name, grade){
     });
   }
   loadFollowers();
+
+  /* ---- 💬 รอบ 276: ปุ่มทักแชท → ปิดการ์ดแล้วเปิดกล่องแชทกับเพื่อนคนนี้เลย ---- */
+  const chatBtn = ov.querySelector('.pl-chat');
+  if(chatBtn) chatBtn.addEventListener('click', ()=>{ sfx.select(); close(); openChat(myFriend); });
 
   /* ---- คอลัมน์ซ้าย: สถิติการเงิน (เดิม) ---- */
   const statsFn = (typeof fetchPlayerStats === 'function') ? fetchPlayerStats(uid) : Promise.resolve(null);
@@ -1314,25 +1322,29 @@ function showPlayerCard(uid, name, grade){
 
   /* ---- 🐾 รอบ 195: สัตว์เลี้ยง (สูงสุด 3 ตัว) — ของตัวเองจาก state · คนอื่นจาก DB ถ้าเปิดเผย ---- */
   const petsFn = (typeof fetchPlayerPets === 'function') ? fetchPlayerPets(uid) : Promise.resolve(null);
+  let plPets = null;   // รอบ 276: เก็บ descriptor ไว้เปิดการ์ดข้อมูลน้องตอนคลิก
   petsFn.then(list=>{
     if(!list || !list.length) return;
     const wrap = ov.querySelector('.pl-pets-wrap');
     const gridEl = ov.querySelector('.pl-pets');
     if(!wrap || !gridEl) return;
-    gridEl.innerHTML = list.map(d=>{
+    plPets = list;
+    gridEl.innerHTML = list.map((d,i)=>{
       const img = petDescImg(d);
       const nm = d.nm || ((PETS[d.t] || {}).name) || 'สัตว์เลี้ยง';
-      return `<div class="pl-pet" title="${escapeHTML(nm)}" data-name="${escapeHTML(nm)}">
-        ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${(PETS[d.t] || {}).emoji || '🐾'}</span>`}
+      return `<div class="pl-pet" title="${escapeHTML(nm)}" data-name="${escapeHTML(nm)}" data-pi="${i}">
+        ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${(PETS[d.t] || {}).adult || '🐾'}</span>`}
         <span class="pl-pet-nm">${escapeHTML(nm)}</span>
       </div>`;
     }).join('');
     wrap.style.display = '';
   });
 
-  /* ---- 🖼️ รอบ 195: แตะภาพเล็ก (สัตว์เลี้ยง/ทรัพย์สิน) → เปิดภาพใหญ่เกือบเต็มจอ (ไม่มี scroll) ---- */
+  /* ---- 🖼️ รอบ 195: แตะภาพเล็ก → ภาพใหญ่ · รอบ 276: น้อง → การ์ดข้อมูลย่อ openPetPeek ---- */
   ov.addEventListener('click', (e)=>{
-    const cell = e.target.closest('.pl-pet, .pl-asset');
+    const pet = e.target.closest('.pl-pet');
+    if(pet && plPets && plPets[+pet.dataset.pi]){ openPetPeek(plPets[+pet.dataset.pi]); return; }
+    const cell = e.target.closest('.pl-asset');
     if(!cell) return;
     const img = cell.querySelector('img');
     const src = img && img.getAttribute('src');
@@ -1361,6 +1373,37 @@ function openImgLightbox(src, caption){
   lb.innerHTML = `<div class="ilb-inner">
       <img src="${src}" alt="">
       ${caption ? `<div class="ilb-cap">${escapeHTML(caption)}</div>` : ''}
+      <button class="ilb-x" type="button" aria-label="ปิด">✕</button>
+    </div>`;
+  document.body.appendChild(lb);
+  requestAnimationFrame(()=>lb.classList.add('on'));
+  const close = ()=>{ lb.classList.remove('on'); setTimeout(()=>lb.remove(), 220); };
+  lb.addEventListener('click', close);
+  if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
+}
+
+/* 🐾 รอบ 276: การ์ดข้อมูลน้องฉบับย่อ — คลิกน้องในโปรไฟล์ผู้เล่น (ของเพื่อนมีแค่ descriptor {t,s,sh,e,nm}
+   จาก /feed/<uid>/pt จึงโชว์ได้เท่าที่เปิดเผย: ชนิด/วัย/หุ่น/ไอเทมที่สวม) · แตะที่ไหนก็ปิด ไม่มี scroll */
+function openPetPeek(d){
+  if(!d || !d.t) return;
+  const P = (typeof PETS !== 'undefined' && PETS[d.t]) || {};
+  const img = petDescImg(d);
+  const nm = d.nm || P.name || 'สัตว์เลี้ยง';
+  const stageNames = {egg:'🥚 ยังเป็นไข่', baby:'🍼 ร่างเด็ก', adult:'🌟 ร่างโตเต็มวัย'};
+  const chips = [`${P.adult || '🐾'} ${P.name || 'สัตว์เลี้ยง'}`];
+  if(stageNames[d.s]) chips.push(stageNames[d.s]);
+  if(d.s !== 'egg'){
+    const sh = (typeof SHAPE_UI !== 'undefined') ? SHAPE_UI[d.sh] : null;
+    chips.push(sh ? `${sh.icon} ${sh.name}` : '✨ สมส่วน');
+  }
+  const it = (d.e && typeof ITEMS !== 'undefined') ? ITEMS.find(i=>i.id === d.e) : null;
+  if(it) chips.push(`${it.emoji} สวม${it.name}`);
+  const lb = document.createElement('div');
+  lb.className = 'img-lightbox pet-peek';
+  lb.innerHTML = `<div class="ilb-inner">
+      ${img ? `<img src="${img}" alt="">` : `<div class="pp-emoji">${P.adult || '🐾'}</div>`}
+      <div class="ilb-cap">${escapeHTML(nm)}</div>
+      <div class="pp-chips">${chips.map(c=>`<span class="pp-chip">${escapeHTML(c)}</span>`).join('')}</div>
       <button class="ilb-x" type="button" aria-label="ปิด">✕</button>
     </div>`;
   document.body.appendChild(lb);
