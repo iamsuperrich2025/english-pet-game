@@ -1906,6 +1906,22 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
 .ab-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:clamp(8px,2.4vh,16px);}
 .ab-btns button{margin-top:0;padding:clamp(7px,2vh,10px) clamp(16px,3vw,26px);font-size:clamp(15px,4.4vh,18px);}
 .ab-btns .ab-extra{background:#3aa66b;box-shadow:0 4px 0 #2c8153;}
+/* 💗 ฉลองรักษาหาย (คู่ cureCelebrateFx ใน ui.js): หัวใจลอย + เวทีน้องเด้งดีใจ */
+.heal-heart{position:fixed;z-index:95;pointer-events:none;opacity:0;animation:healHeartUp 1.4s ease-out forwards;}
+@keyframes healHeartUp{
+  0%{opacity:0;transform:translate(0,0) scale(.4);}
+  15%{opacity:1;transform:translate(calc(var(--hx,0px)*.2),-20px) scale(1.1);}
+  100%{opacity:0;transform:translate(var(--hx,0px),-140px) scale(1.4);}
+}
+/* ชนะ idle petIdle/bounce ชั่วคราว (3 คลาส > 2-3 คลาสของเดิม + ประกาศทีหลัง) — จบแล้ว JS ถอดคลาสคืน idle เอง */
+.pet-stage.heal-bounce .pet-wrap{animation:healBounce 1.2s cubic-bezier(.34,1.56,.5,1);}
+@keyframes healBounce{
+  0%,100%{transform:translateY(0) scale(1);}
+  20%{transform:translateY(-26px) scale(1.06);}
+  40%{transform:translateY(0) scale(1);}
+  60%{transform:translateY(-14px) scale(1.03);}
+  80%{transform:translateY(0) scale(1);}
+}
 .attn-box{max-width:min(92vw,620px);}
 .nw-box{width:min(92vw,620px);}
 /* หน้าตั้งค่า: แถวสวิตช์เรียง 3 คอลัมน์ + แถวหนาแน่นขึ้น (หัวข้อ/ปุ่มยาวเต็มแถว) — เตี้ยลงมาก */

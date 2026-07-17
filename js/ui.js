@@ -3179,6 +3179,34 @@ function curePet(){
   toast('💊 รักษาหายแล้ว! น้องกลับมาแข็งแรงร่าเริง 🎉');
   saveState();
   renderDashboard();
+  cureCelebrateFx();   // เรียกหลัง render เพื่อให้คลาสเด้งเกาะ .pet-stage ตัวใหม่ (ที่ไม่ grayscale แล้ว)
+}
+
+/* 💗 ฉลองรักษาหาย: น้องเด้งดีใจ + หัวใจลอยขึ้นจากตัวน้อง
+   รักษาจากหน้าเกมจับคู่ (ไม่เห็นน้อง) → หัวใจลอยกลางจอแทน */
+function cureCelebrateFx(){
+  if(document.documentElement.classList.contains('no-anim')) return;  // เคารพสวิตช์ปิดแอนิเมชันในเกม
+  const stage = document.querySelector('.hero-scene .pet-stage');
+  let cx = innerWidth/2, cy = innerHeight*0.45;
+  if(stage){
+    const r = stage.getBoundingClientRect();
+    if(r.width > 0){ cx = r.left + r.width/2; cy = r.top + r.height*0.35; }
+    stage.classList.add('heal-bounce');
+    setTimeout(()=>stage.classList.remove('heal-bounce'), 1300);
+  }
+  const HEARTS = ['💗','💖','💕','❤️','💓'];
+  for(let i=0;i<10;i++){
+    const h = document.createElement('div');
+    h.className = 'heal-heart';
+    h.textContent = HEARTS[i%HEARTS.length];
+    h.style.left = (cx + (Math.random()-0.5)*150) + 'px';
+    h.style.top  = cy + 'px';
+    h.style.fontSize = (18 + Math.random()*18) + 'px';
+    h.style.animationDelay = (i*70) + 'ms';
+    h.style.setProperty('--hx', ((Math.random()-0.5)*70) + 'px');  // ปลายทางเอียงซ้าย/ขวาสุ่ม
+    document.body.appendChild(h);
+    setTimeout(()=>h.remove(), 1600 + i*70);
+  }
 }
 
 /* ปุ่มรักษาด่วนในรางซ้าย: น้องป่วยตัวไหนก็รักษาได้จากปุ่มเดียว
