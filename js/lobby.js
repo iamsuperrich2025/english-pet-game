@@ -28,6 +28,7 @@ function openPanel(id){
 function closePanel(){
   document.getElementById('panel-overlay').classList.remove('open');
   document.querySelectorAll('.rail-btn[data-panel]').forEach(b=>b.classList.remove('on'));
+  window.__dressFromPetInfo = false;   // รอบ 274: ออกจากร้านเมื่อไหร่ เลิกโหมด "เด้งกลับหน้าข้อมูลน้อง"
 }
 
 /* เมนูซ้าย (ปุ่มที่มี data-panel — ปุ่มสถิติใช้ id btn-stats ผูกใน main.js เดิม) */

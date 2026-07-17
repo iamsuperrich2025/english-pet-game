@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v54';   // v54: คำบรรยายรูปร่างใต้รูปน้อง + ปุ่มแต่งตัวใน overlay รอบ 273
+const CACHE_VERSION = 'pet-vocab-v55';   // v55: ห้องลองชุด — ซื้อ/สวมจากปุ่มแต่งตัวแล้วเด้งกลับหน้าข้อมูลน้อง รอบ 274
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

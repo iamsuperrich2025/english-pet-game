@@ -2251,6 +2251,7 @@ function bindPetPlateButtons(root){
     window.__piOverlay = null;
     const ov = root.closest ? (root.classList.contains('pi-overlay') ? root : root.closest('.pi-overlay')) : null;
     if(ov) ov.remove();
+    window.__dressFromPetInfo = true;   // รอบ 274: ซื้อ/สวมเสร็จ → เด้งกลับมาดูน้องใส่ชุดใหม่ (ล้างใน closePanel)
     if(typeof openPanel === 'function') openPanel('panel-shop');
   });
 }
@@ -2478,20 +2479,28 @@ function renderDashboard(){
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
   document.getElementById('coin-count').textContent = fmtNum(state.coins);
   document.getElementById('coin-today').textContent = fmtNum(state.daily.coins);
-  /* แถบโปรไฟล์ (รอบ 187 คุ้มครองเด็ก): ตัวละคร + ชื่อเล่น + ✏️ แก้ชื่อ + 🆔 รหัสประจำตัว (ไม่โชว์ชื่อจริง/ชั้นแล้ว) */
+  /* แถบโปรไฟล์ (รอบ 187 คุ้มครองเด็ก): ตัวละคร + ชื่อเล่น + ✏️ แก้ชื่อ + 🆔 รหัสประจำตัว (ไม่โชว์ชื่อจริง/ชั้นแล้ว)
+     รอบ 274: รูป+ชื่อเป็น .pl-click → เปิดการ์ดโปรไฟล์ตัวเอง (showPlayerCard เดียวกับคลิกชื่อบนกระดาน) */
   const chip = document.getElementById('student-chip');
+  const myUid = (typeof onlineKey === 'function') ? onlineKey() : '';
+  const myPlName = (state.profileName || 'ผู้เล่น') + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
+  const myPlGrade = state.student ? (state.student.grade || '') : '';
   if(state.student){
-    const myUid = (typeof onlineKey === 'function') ? onlineKey() : '';
-    chip.innerHTML = `${playerAvatarHTML()} <b>${escapeHTML(state.profileName || 'ผู้เล่น')}</b>`
+    chip.innerHTML = `<span class="pl-click" data-uid="${escapeHTML(myUid)}" data-n="${escapeHTML(myPlName)}" data-g="${escapeHTML(myPlGrade)}">${playerAvatarHTML()} <b>${escapeHTML(state.profileName || 'ผู้เล่น')}</b></span>`
       + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
       + ` · ${idTag(myUid)}`;
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
+    bindPlayerClicks();
   }else chip.textContent = '';
   /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า) */
   const pp = document.getElementById('pass-photo');
   if(pp){
     const src = `img/blocks/${lobbyBlk()}.png`;
     if(!pp.dataset.src || pp.dataset.src !== src){ pp.dataset.src = src; pp.innerHTML = `<img src="${src}" alt="">`; }
+    if(state.student){   // รอบ 274: คลิกรูป passport → การ์ดโปรไฟล์ตัวเองเช่นกัน
+      pp.classList.add('pl-click');
+      pp.dataset.uid = myUid; pp.dataset.n = myPlName; pp.dataset.g = myPlGrade;
+    }
   }
 
   renderClock();
@@ -3239,6 +3248,10 @@ function renderShop(){
       }
       saveState();
       renderDashboard();
+      if(window.__dressFromPetInfo){   // รอบ 274: มาจากปุ่ม 🎀 ในหน้าข้อมูลน้อง → เด้งกลับไปเห็นน้องใส่ชุดใหม่ตัวใหญ่ทันที (ฟีลห้องลองชุด)
+        closePanel();                  // closePanel ล้าง __dressFromPetInfo ให้เอง
+        openPetInfoOverlay();
+      }
     });
   });
 }
