@@ -1112,6 +1112,8 @@ html.no-anim .q-bigcard{animation:none;}
 /* ป้ายอากาศออกจาก footer แล้ว (ย้ายไปดูในการ์ดบ้าน) — ปุ่มห้ามตัด 2 บรรทัด */
 .lobby-bottom .big-btn{width:auto;display:inline-block;margin:0;white-space:nowrap;}
 .lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
+.lobby-book-btn{padding:9px 13px !important;font-size:18px !important;background:linear-gradient(180deg,#f7bf8f,#e8945a);box-shadow:0 6px 0 #c06f33;}   /* 📒 สมุดคำศัพท์ — ไอคอนเดี่ยว ประหยัดที่แถบล่าง */
+.lobby-book-btn:active{box-shadow:0 2px 0 #c06f33;}
 .lobby-foodquiz-btn{background:linear-gradient(180deg,#7ed49a,#4cb56d) !important;box-shadow:0 6px 0 #368a50 !important;}
 .lobby-foodquiz-btn:active{box-shadow:0 2px 0 #368a50 !important;}
 .lobby-play-btn{

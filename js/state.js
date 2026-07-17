@@ -75,6 +75,7 @@ const DEFAULT_STATE = {
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
   voiceMode:'all',                    // voice chat: 'all'=คุยทุกคนใน map · 'friends'=เฉพาะเพื่อนที่ invite กันใน map นั้น (ไมค์ไม่จำ — ปิดทุกครั้งที่เข้า เพื่อความปลอดภัยเด็ก)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
+  vocabBook:{},                       // 📒 รอบ 288: สมุดคำศัพท์ของฉัน — {en:{th,c:ถูก,w:ผิด,t:เจอล่าสุด,lw:ล่าสุดผิด?}} เก็บจากเกมจับคู่+ข้อสอบทุกแบบ (เพดาน VB_MAX ใน vocabbook.js)
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   rp:0,                               // Rank Points
   coins:0,

@@ -598,6 +598,7 @@ function checkMatch(){
     game.sessionMatches++;
     state.totalMatches++;
     questEvent('match');                              // 🎯 Daily Quest: จับคู่ถูก
+    if(typeof vbRecord === 'function') vbRecord(en.dataset.word, th.textContent, true);   // 📒 ลงสมุดคำศัพท์
 
     // ---- คำนวณรางวัล + ความสามารถพิเศษ ----
     const p = activePet();
@@ -664,6 +665,9 @@ function checkMatch(){
   }else{
     sfx.wrong();
     game.roundClean = false;    // พลาดแล้ว รอบนี้อดสายฟ้า
+    // 📒 จับคู่ผิด = ยังไม่รู้ความหมายคำอังกฤษที่เลือก → ลงสมุดเป็นคำต้องทบทวน (คู่แปลที่ถูกจาก game.pairs)
+    const pr = game.pairs.find(p=>p.en === en.dataset.word);
+    if(pr && typeof vbRecord === 'function'){ vbRecord(pr.en, pr.th, false); saveState(); }
     en.classList.add('shake'); th.classList.add('shake');
     game.combo = 0;
     updateComboPill();
@@ -721,7 +725,8 @@ function renderCats(){
         <button class="cat-btn quiz" data-cat="${c.id}">📝 สอบ 10 ข้อ</button>
       </div>
     </div>`;
-  }).join('') + (typeof bandCardsHTML === 'function' ? bandCardsHTML() : '');
+  }).join('') + (typeof bandCardsHTML === 'function' ? bandCardsHTML() : '')
+    + (typeof vbCardHTML === 'function' ? vbCardHTML() : '');   // 📒 การ์ดสมุดคำศัพท์ท้ายรายการ
   list.querySelectorAll('.cat-btn.practice').forEach(b=>
     b.addEventListener('click', ()=>b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
   list.querySelectorAll('.cat-btn.quiz').forEach(b=>
@@ -773,6 +778,7 @@ function renderQuizQuestion(){
       if(quiz.answered) return;
       quiz.answered = true;
       quiz.results.push({en: q.en, ok: btn.textContent === q.correct});
+      if(typeof vbRecord === 'function') vbRecord(q.en, q.correct, btn.textContent === q.correct);   // 📒 ลงสมุดคำศัพท์
       if(btn.textContent !== q.correct || Date.now() - quiz.qAt > THUNDER_MS) quiz.fastAll = false;
       if(btn.textContent === q.correct){
         quiz.correct++;
@@ -861,6 +867,8 @@ function finishQuiz(){
     showScreen('screen-cats');
     // ชุดข้อสอบ/สอบซ่อมรวม band: เด้งแผงเลือกชุดกลับมาให้เลือกชุดถัดไปต่อเลย
     if((cat.setIdx !== undefined || cat.retakeSets) && typeof openBandSetPicker === 'function') openBandSetPicker(cat.band);
+    // 📒 สอบทบทวนส่วนตัว: เด้งสมุดกลับมา — เห็นเลยว่าคำไหนเลื่อนกลุ่มแล้ว
+    if(cat.vbook && typeof openVocabBook === 'function') openVocabBook();
     // สอบซ่อมรวม: สรุปละเอียดรายชุด + คำที่ยังผิด ทับแผง (รอบ 271)
     if(cat.retakeSets && typeof bandShowRetakeSummary === 'function') bandShowRetakeSummary();
   });

@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v66';   // v66: ปุ่ม ✕ แผงชุดข้อสอบ band มองเห็นแล้ว รอบ 287
+const CACHE_VERSION = 'pet-vocab-v67';   // v67: 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว รอบ 288
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -27,6 +27,7 @@ const SHELL = [
   './js/data/firebase-config.js',
   './js/data/dict_band/manifest.js',
   './js/dictband.js',
+  './js/vocabbook.js',
   './js/util.js',
   './js/state.js',
   './js/images.js',
