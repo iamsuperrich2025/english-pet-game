@@ -114,6 +114,14 @@ function openBandSetPicker(b){
     if(ov) ov.remove();
     ov = document.createElement('div');
     ov.id = 'bsp-overlay'; ov.className = 'pl-overlay';
+    // รอบ 269: คะแนนสูงสุดที่เคยสอบของแต่ละชุด (จาก state.quizLog) — โชว์บนชิป
+    const best = {};   // setIdx → {s:คะแนนสูงสุด, t:จำนวนข้อ}
+    state.quizLog.forEach(l=>{
+      const m = /^band(\d+)s(\d+)$/.exec(l.cat || '');
+      if(!m || Number(m[1]) !== Number(b)) return;
+      const i = Number(m[2]) - 1;
+      if(!best[i] || l.score > best[i].s) best[i] = {s:l.score, t:l.total};
+    });
     let nextMarked = false;
     ov.innerHTML = `<div class="bsp-box">
       <button class="pl-close" id="bsp-close">✕</button>
@@ -121,11 +129,14 @@ function openBandSetPicker(b){
         <span class="bsp-prog">ผ่านแล้ว ${passedN}/${sets.length} ชุด</span></div>
       <div class="bsp-grid" id="bsp-grid">${sets.map((s, i)=>{
         const done = state.quizPassed.includes(bandSetId(b, i));
+        const bs = best[i];
+        const tried = !done && bs;   // 🧡 เคยสอบแต่ยังไม่ผ่าน = ชุดที่ควรกลับไปสอบซ่อม
         const next = !done && !nextMarked ? (nextMarked = true, ' next') : '';
-        return `<button class="bsp-chip${done ? ' done' : ''}${next}" data-i="${i}"
-          title="ชุดที่ ${i+1} · ${s.length} ข้อ">${i+1}${done ? '<span class="bsp-tick">✓</span>' : ''}</button>`;
+        return `<button class="bsp-chip${done ? ' done' : ''}${tried ? ' tried' : ''}${next}" data-i="${i}"
+          title="ชุดที่ ${i+1} · ${s.length} ข้อ${bs ? ` · คะแนนสูงสุด ${bs.s}/${bs.t}` : ''}">
+          <span class="bsp-num">${i+1}</span>${done ? '<span class="bsp-tick">✓</span>' : ''}${bs ? `<span class="bsp-best">${bs.s}/${bs.t}</span>` : ''}</button>`;
       }).join('')}</div>
-      <div class="bsp-foot">ชุดละ 10 ข้อ (ชุดสุดท้าย ${sets[sets.length-1].length} ข้อ) · ผ่าน = ตอบถูก 80% ขึ้นไป · ผ่านครั้งแรกรับ ${BAND_SET_REWARD} 🪙 · ครบทุกชุดโบนัส ${BAND_DONE_BONUS} 🪙</div>
+      <div class="bsp-foot">ชุดละ 10 ข้อ (ชุดสุดท้าย ${sets[sets.length-1].length} ข้อ) · ผ่าน = ตอบถูก 80% ขึ้นไป · 🧡 ส้ม = เคยสอบยังไม่ผ่าน ลองซ่อมดูนะ · ผ่านครั้งแรกรับ ${BAND_SET_REWARD} 🪙 · ครบทุกชุดโบนัส ${BAND_DONE_BONUS} 🪙</div>
     </div>`;
     document.body.appendChild(ov);
     // จัดคอลัมน์ให้ชิปทั้งหมดพอดีพื้นที่ ไม่ต้องเลื่อน

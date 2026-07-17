@@ -72,6 +72,7 @@ document.getElementById('btn-settings').addEventListener('click', openSettings);
 document.getElementById('coin-count').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('coins'));
 document.getElementById('coin-today').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('today'));
 document.getElementById('net-pill').addEventListener('click', ()=>openPillInfo('net'));
+document.getElementById('offline-pill').addEventListener('click', ()=>openPillInfo('offline'));   // รอบ 269: แตะป้าย 📴 = กล่องอธิบาย
 // รอบ 179: ปุ่มแชท header → หน้ารวมข้อความ (ปุ่มข้าวเย็นย้ายไปแถวแท็บสัตว์ ผูก click ใน renderDashboard)
 document.getElementById('btn-chat').addEventListener('click', openChatInbox);
 // 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง)
