@@ -17,6 +17,7 @@
 
 const Online = {
   ready:false,      // ต่อ Firebase สำเร็จและกำลังเชื่อมต่ออยู่
+  started:false,    // onlineStart รันแล้ว (กันรันซ้ำ — เรียกได้จาก authEnterGame/authLateSync)
   db:null,
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
@@ -967,6 +968,8 @@ function fetchFollowers(uid){
 }
 
 function onlineStart(){
+  if(Online.started) return;   // รอบ 267: กันรันซ้ำ (เรียกได้ทั้งจาก authEnterGame และ authLateSync หลังเล่นออฟไลน์)
+  Online.started = true;
   Online.db = firebase.database();
   const id = onlineKey();
   const presRef = Online.db.ref('presence/' + id);
@@ -1067,13 +1070,13 @@ function onlineStart(){
 }
 
 /* ---------- โหลด Firebase SDK แบบ dynamic (app → auth → database)
-   เกมบังคับ login (ข้อ 0.1): โหลดครบ → authStart() พาเข้าระบบ login
-   โหลดไม่ได้/config หาย → หน้าประตู offline ใน auth.js (เข้าเกมไม่ได้) ---------- */
-(function onlineInit(){
-  if(typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.databaseURL){
-    setTimeout(()=>authGateOffline('ตั้งค่าระบบออนไลน์ไม่ครบ (firebase-config) แจ้งคุณครูให้ตรวจสอบนะ 🛠️'), 0);
-    return;
-  }
+   โหลดครบ → authStart() พาเข้าระบบ login
+   โหลดไม่ได้ → หน้าประตู offline (มีปุ่มเล่นออฟไลน์ · รอบ 267)
+   เรียกซ้ำได้: หลังเข้าเกมออฟไลน์ auth.js จะ retry ทุกครั้งที่เน็ตกลับมา ---------- */
+let __sdkLoading = false;
+function onlineLoadSDK(){
+  if(Auth.sdkReady || __sdkLoading) return;
+  __sdkLoading = true;
   const base = 'https://www.gstatic.com/firebasejs/10.14.1/';
   const load = (f)=>new Promise((res, rej)=>{
     const s = document.createElement('script');
@@ -1085,5 +1088,15 @@ function onlineStart(){
     .then(()=>load('firebase-auth-compat.js'))
     .then(()=>load('firebase-database-compat.js'))
     .then(()=>authStart())
-    .catch(()=>authGateOffline());
+    .catch(()=>{
+      __sdkLoading = false;                        // เปิดทางลองใหม่รอบหน้า
+      if(!Auth.booted) authGateOffline();          // เล่นอยู่แล้ว (ออฟไลน์) → เงียบๆ ไม่เด้งหน้า login ทับ
+    });
+}
+(function onlineInit(){
+  if(typeof FIREBASE_CONFIG === 'undefined' || !FIREBASE_CONFIG.databaseURL){
+    setTimeout(()=>authGateOffline('ตั้งค่าระบบออนไลน์ไม่ครบ (firebase-config) แจ้งคุณครูให้ตรวจสอบนะ 🛠️'), 0);
+    return;
+  }
+  onlineLoadSDK();
 })();

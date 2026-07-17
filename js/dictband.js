@@ -103,6 +103,7 @@ function bandSetsPassed(b, total){
 /* แผงเลือกชุดข้อสอบ — เห็นครบทุกชุดในจอเดียว ไม่มี scrollbar (กฎถาวรข้อ 7)
    คำนวณจำนวนคอลัมน์จากสัดส่วนพื้นที่จริง ชิปหดตามจอ */
 function openBandSetPicker(b){
+  if(!bandUnlocked(b)){ bandLockToast(b); return; }
   if(!__bandLoading[b]) toast('⏳ กำลังเปิดคลังศัพท์...');
   bandLoad(b).then(()=>{
     const cat = bandCat(b);
@@ -147,8 +148,28 @@ function openBandSetPicker(b){
   });
 }
 
+/* ---------- ปลดล็อกระดับ (รอบ 267): ระดับ ≤ ชั้นเรียนตัวเอง = เปิดเสมอ
+   ระดับสูงกว่า = ต้องสอบผ่านครบทุกชุดของระดับก่อนหน้า (state.bandComplete) ---------- */
+function bandMine(){ return gradeBand(state.student ? state.student.grade : 'ป.1').band; }
+function bandUnlocked(b){
+  b = Number(b);
+  if(b <= bandMine()) return true;
+  return !!(state.bandComplete && state.bandComplete[b-1]);
+}
+function bandLockToast(b){
+  const prev = DICT_BAND_MANIFEST[Number(b)-1];
+  toast(`🔒 ระดับนี้ยังไม่ปลดล็อก — สอบผ่านครบทุกชุดของระดับ ${prev ? prev.label : 'ก่อนหน้า'} ก่อนนะ`, 2600);
+}
+
+/* ปุ่ม "📝 สอบเลื่อนขั้น" หน้า lobby → เปิดแผงชุดข้อสอบของระดับตัวเองทันที */
+function bandExamLobby(){
+  if(typeof DICT_BAND_MANIFEST === 'undefined'){ toast('ยังเปิดคลังข้อสอบไม่ได้ ลองใหม่อีกครั้งนะ 😅'); return; }
+  openBandSetPicker(bandMine());
+}
+
 /* ปุ่มบนการ์ด band → จับคู่ = โหลดแล้วเข้าเกมทั้งคลัง · สอบ = เปิดแผงเลือกชุด */
 function bandPlay(b, mode){
+  if(!bandUnlocked(b)){ bandLockToast(b); return; }
   if(mode === 'quiz'){ openBandSetPicker(b); return; }
   if(!__bandLoading[b]) toast('⏳ กำลังเปิดคลังศัพท์...');
   bandLoad(b).then(()=>{
@@ -174,27 +195,33 @@ function bandPlayLobby(){
 /* การ์ด band 5 ใบ ต่อท้ายหน้าเลือกหมวด (เรียกจาก renderCats ใน game.js) */
 function bandCardsHTML(){
   if(typeof DICT_BAND_MANIFEST === 'undefined') return '';
-  const myBand = gradeBand(state.student ? state.student.grade : 'ป.1').band;
+  const myBand = bandMine();
   return `<div class="band-sec-head">📖 คลังศัพท์ใหญ่ตามระดับ
-      <small>ศัพท์เยอะจุใจทุกระดับ · ข้อสอบมีคำอ่าน + เฉลยประโยคตัวอย่าง</small></div>`
+      <small>ศัพท์เยอะจุใจทุกระดับ · ข้อสอบมีคำอ่าน + เฉลยประโยคตัวอย่าง · ผ่านครบทุกชุด = ปลดล็อกระดับถัดไป</small></div>`
     + Object.keys(DICT_BAND_MANIFEST).map(b=>{
       const m = DICT_BAND_MANIFEST[b];
       const setsDone = state.quizPassed.filter(id=>new RegExp(`^band${b}s\\d+$`).test(id)).length;
       const complete = state.bandComplete && state.bandComplete[b];
       const mine = Number(b) === myBand;
-      return `<div class="cat-card band-card${mine ? ' mine' : ''}">
+      const open = bandUnlocked(b);
+      const prev = DICT_BAND_MANIFEST[Number(b)-1];
+      return `<div class="cat-card band-card${mine ? ' mine' : ''}${open ? '' : ' locked'}">
         <div class="cat-head">
-          <span class="cat-emoji">${BAND_EMOJI[b] || '📖'}</span>
+          <span class="cat-emoji">${open ? (BAND_EMOJI[b] || '📖') : '🔒'}</span>
           <span class="cat-name">ระดับ ${m.label}${mine ? ' <span class="band-mine-tag">⭐ ระดับของหนู</span>' : ''}</span>
           ${complete
             ? '<span class="cat-pass">🏆 ครบทุกชุด</span>'
-            : `<span class="cat-pass" style="background:var(--yellow);color:#a8791a;border-color:var(--yellow-d)">🎁 ชุดละ ${BAND_SET_REWARD} 🪙</span>`}
+            : open
+              ? `<span class="cat-pass" style="background:var(--yellow);color:#a8791a;border-color:var(--yellow-d)">🎁 ชุดละ ${BAND_SET_REWARD} 🪙</span>`
+              : '<span class="cat-pass" style="background:#eee6f6;color:#9a8aac;border-color:#d9c9ef">🔒 ยังไม่ปลดล็อก</span>'}
         </div>
         <div class="cat-info">${fmtNum(m.count)} คำ แบ่งสอบชุดละ 10 ข้อ${setsDone ? ` · ✅ ผ่านแล้ว ${setsDone} ชุด` : ''}</div>
-        <div class="cat-btns">
-          <button class="cat-btn practice" data-band="${b}">🎮 ฝึกจับคู่</button>
-          <button class="cat-btn quiz" data-band="${b}">📝 สอบเป็นชุด</button>
-        </div>
+        ${open
+          ? `<div class="cat-btns">
+              <button class="cat-btn practice" data-band="${b}">🎮 ฝึกจับคู่</button>
+              <button class="cat-btn quiz" data-band="${b}">📝 สอบเป็นชุด</button>
+            </div>`
+          : `<div class="band-lock">🔒 สอบผ่านครบทุกชุดของระดับ ${prev ? prev.label : 'ก่อนหน้า'} ก่อน จะปลดล็อกระดับนี้</div>`}
       </div>`;
     }).join('');
 }

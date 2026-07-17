@@ -914,6 +914,12 @@ html.no-anim body.quake{animation:none;}
 .bsp-tick{position:absolute;top:-3px;right:1px;font-size:.68em;}
 .bsp-foot{font-size:clamp(10px,2vh,13px);color:#9a8aac;margin-top:8px;text-align:center;}
 
+/* 🔒 ระดับที่ยังไม่ปลดล็อก (รอบ 267) + ปุ่มเล่นออฟไลน์หน้า login */
+.cat-card.band-card.locked{opacity:.75;filter:grayscale(.35);}
+.band-lock{font-size:13px;color:#9a8aac;background:#f4eefb;border:2px dashed #d9c9ef;border-radius:12px;padding:8px 10px;text-align:center;}
+.offline-btn{background:linear-gradient(180deg,#b8c4d4,#8d9cb2);box-shadow:0 6px 0 #6d7d94;margin-top:8px;}
+.offline-btn:active{box-shadow:0 2px 0 #6d7d94;}
+
 /* ---------- แบบทดสอบ ---------- */
 .quiz-progress{font-size:15px;color:#8a76a8;text-align:center;margin:4px 0;}
 .quiz-phon{font-size:15px;color:#5b87ad;margin-top:6px;}   /* IPA + คำอ่าน ใต้คำโจทย์ (หมวด band) */

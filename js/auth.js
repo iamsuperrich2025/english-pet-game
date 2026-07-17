@@ -79,6 +79,9 @@ function authSetStatus(mode, msg){
   st.textContent = msg || '';
   btn.style.display   = mode === 'ready'   ? '' : 'none';
   retry.style.display = mode === 'offline' ? '' : 'none';
+  // รอบ 267: ต่อเน็ตไม่ได้ → เปิดทางเล่นออฟไลน์ (เซฟอยู่ในเครื่อง เน็ตกลับมาค่อย sync)
+  const off = document.getElementById('btn-offline-play');
+  if(off) off.style.display = mode === 'offline' ? '' : 'none';
 }
 function authShowLogin(){
   authSetStatus('ready', 'เข้าสู่ระบบเพื่อเริ่มผจญภัยเลย! 👇');
@@ -153,7 +156,10 @@ function authStart(){
   firebase.initializeApp(FIREBASE_CONFIG);
   firebase.auth().getRedirectResult().catch(()=>{});   // เก็บผลกรณี login แบบ redirect
   firebase.auth().onAuthStateChanged(user=>{
-    if(Auth.booted) return;                            // เข้าเกมไปแล้ว ไม่ทำซ้ำ
+    if(Auth.booted){                                   // เข้าเกมไปแล้ว (รวมโหมดออฟไลน์)
+      if(user) authLateSync(user);                     // SDK เพิ่งมาหลังเล่นออฟไลน์ → sync ย้อนหลัง
+      return;
+    }
     if(user) authOnLogin(user);
     else authShowLogin();
   });
@@ -163,6 +169,46 @@ function authStart(){
 setTimeout(()=>{
   if(!Auth.sdkReady && !Auth.gated) authGateOffline();
 }, AUTH_SDK_TIMEOUT_MS);
+/* รอบ 267: เปิดแอพตอนไม่มีเน็ตเลย → ไม่ต้องรอ 20 วิ เปิดประตูออฟไลน์ทันที */
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    if(!navigator.onLine && !Auth.sdkReady && !Auth.booted && !Auth.gated)
+      authGateOffline('ยังไม่มีอินเทอร์เน็ต 📶 เล่นแบบออฟไลน์ไปก่อนได้เลย');
+  }, 700);
+});
+
+/* ---------- เข้าเกมแบบออฟไลน์ (รอบ 267): เล่นด้วยเซฟในเครื่อง ไม่ต้อง login ----------
+   เน็ตกลับมาเมื่อไหร่ → โหลด SDK ใหม่ → onAuthStateChanged เรียก authLateSync
+   ดันเซฟ + คะแนนขึ้น server ให้เอง (บัญชี Google จำไว้ในเครื่องจากการ login ครั้งก่อน) */
+function authEnterOffline(){
+  if(Auth.booted) return;
+  Auth.booted = true;
+  Auth.offlineMode = true;
+  bootGame();
+  setInterval(()=>authPushSave(false), AUTH_PUSH_MS);      // เริ่มมีผลจริงหลัง authLateSync (ต้องมี Auth.user)
+  const retry = ()=>{
+    if(!Auth.sdkReady && navigator.onLine && typeof onlineLoadSDK === 'function') onlineLoadSDK();
+  };
+  window.addEventListener('online', ()=>setTimeout(retry, 1500));
+  setInterval(retry, 60*1000);
+  setTimeout(()=>toast('📴 เล่นแบบออฟไลน์ — ต่อเน็ตเมื่อไหร่ คะแนนจะขึ้นเซิร์ฟเวอร์ให้เอง', 3000), 700);
+}
+
+/* เน็ตกลับมาหลังเล่นออฟไลน์: บัญชีที่เครื่องจำไว้กลับมา → ดันเซฟในเครื่องขึ้น cloud + เปิดระบบออนไลน์
+   (เซฟในเครื่องคือเซสชันที่กำลังเล่น = ใหม่สุดเสมอ ไม่ดึง cloud มาทับ) */
+function authLateSync(user){
+  if(Auth.user) return;                                    // มีบัญชีอยู่แล้ว — ไม่ทำซ้ำ
+  if(state.ownerUid && state.ownerUid !== user.uid){       // เซฟเครื่องเป็นของอีกบัญชี — ห้ามเขียนทับ cloud เขา
+    toast('⚠️ เซฟในเครื่องเป็นของอีกบัญชี — คะแนนไม่ถูก sync (เข้าสู่ระบบใหม่ตอนเปิดเกมครั้งหน้านะ)', 3200);
+    return;
+  }
+  Auth.user = user;
+  if(!state.ownerUid && state.student){ state.ownerUid = user.uid; saveState(); }
+  authPushSave(true);
+  authPushProfile();
+  try{ if(typeof onlineStart === 'function') onlineStart(); }catch(e){}
+  toast('☁️ กลับมาออนไลน์แล้ว — เซฟ + คะแนนขึ้นเซิร์ฟเวอร์เรียบร้อย!', 2800);
+}
 
 /* ---------- ปุ่ม "เข้าสู่ระบบด้วย Google" ---------- */
 function authLoginClick(){

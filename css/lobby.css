@@ -1084,6 +1084,9 @@ html.no-anim .q-bigcard{animation:none;}
   box-shadow:0 5px 0 #cf9722 !important;font-size:18px !important;padding:11px 28px !important;
 }
 .lobby-play-btn:active{box-shadow:0 2px 0 #cf9722 !important;}
+/* 📝 ปุ่มสอบเลื่อนขั้น (รอบ 267) — ม่วงเข้าชุดปุ่มควิซ อยู่ข้างปุ่มส้ม */
+.lobby-exam-btn{background:linear-gradient(180deg,#c39df0,#9a6fdc) !important;box-shadow:0 6px 0 #7d5fc0 !important;}
+.lobby-exam-btn:active{box-shadow:0 2px 0 #7d5fc0 !important;}
 
 /* ============================================================
    แผงรายละเอียดกลางจอ (panel) — คลิกเมนูแล้วเด้งขึ้น มี scroll ภายใน
