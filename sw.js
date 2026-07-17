@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v50';   // v50: กล่องอธิบายป้ายออฟไลน์ + คะแนนบนชิปชุดข้อสอบ รอบ 269
+const CACHE_VERSION = 'pet-vocab-v51';   // v51: สอบซ่อมรวมชุดสีส้ม รอบ 270
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

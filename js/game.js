@@ -737,6 +737,7 @@ function startQuiz(cat){
     return {en, correct:th, choices:shuffle([th, ...wrong]), meta};
   });
   quiz.cat = cat; quiz.idx = 0; quiz.correct = 0; quiz.fastAll = true;
+  quiz.results = [];   // ผลรายข้อ {en, ok} — สอบซ่อมรวม band ใช้ตัดเกรดรายชุด (รอบ 270)
   renderQuizQuestion();
   showScreen('screen-quiz');
 }
@@ -766,6 +767,7 @@ function renderQuizQuestion(){
     btn.addEventListener('click', ()=>{
       if(quiz.answered) return;
       quiz.answered = true;
+      quiz.results.push({en: q.en, ok: btn.textContent === q.correct});
       if(btn.textContent !== q.correct || Date.now() - quiz.qAt > THUNDER_MS) quiz.fastAll = false;
       if(btn.textContent === q.correct){
         quiz.correct++;
@@ -826,6 +828,7 @@ function finishQuiz(){
   const p = activePet();
   if(exp && p && !p.sick) addExp(exp, p);
   saveState();
+  if(typeof cat.onFinish === 'function') cat.onFinish(passed);   // สอบซ่อมรวม band: ตัดเกรดรายชุด (dictband.js)
 
   // ⚡ สอบสายฟ้า: ตอบถูกทุกข้อ + แต่ละข้อไม่เกิน 5 วิ → ฟ้าผ่าเต็มจอ+จอสั่น+เสียง spark
   const thunder = quiz.fastAll && quiz.correct === quiz.questions.length;
@@ -851,8 +854,8 @@ function finishQuiz(){
     overlay.remove();
     renderCats();
     showScreen('screen-cats');
-    // ชุดข้อสอบ band: เด้งแผงเลือกชุดกลับมาให้เลือกชุดถัดไปต่อเลย
-    if(cat.setIdx !== undefined && typeof openBandSetPicker === 'function') openBandSetPicker(cat.band);
+    // ชุดข้อสอบ/สอบซ่อมรวม band: เด้งแผงเลือกชุดกลับมาให้เลือกชุดถัดไปต่อเลย
+    if((cat.setIdx !== undefined || cat.retakeSets) && typeof openBandSetPicker === 'function') openBandSetPicker(cat.band);
   });
   document.body.appendChild(overlay);
   if(passed && typeof cat.onPass === 'function') cat.onPass();   // โบนัสครบทุกชุดของระดับ (dictband.js)

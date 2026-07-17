@@ -74,6 +74,20 @@ function bandSets(words){
 }
 function bandSetId(b, i){ return `band${b}s${i+1}`; }
 
+/* ผ่านครบทุกชุดของระดับ → โบนัสครั้งเดียว (เรียกได้ทั้งจากสอบชุดปกติและสอบซ่อมรวม) */
+function bandCheckComplete(b){
+  const cat = bandCat(b), sets = bandSets(cat.words);
+  const allDone = sets.every((_, k)=>state.quizPassed.includes(bandSetId(b, k)));
+  state.bandComplete = state.bandComplete || {};
+  if(!allDone || state.bandComplete[b]) return;
+  state.bandComplete[b] = true;
+  addCoins(BAND_DONE_BONUS);
+  saveState();
+  setTimeout(()=>alertBox(`<div style="font-size:56px;line-height:1">🏆</div>
+    <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#7d5fc0">สุดยอด! ผ่านครบทุกชุดของระดับ ${DICT_BAND_MANIFEST[b].label}</div>
+    <div style="margin-top:8px;color:#6a5a78">ทั้งหมด ${sets.length} ชุด ${fmtNum(cat.words.length)} คำ — รับโบนัสพิเศษ <b>+${BAND_DONE_BONUS} 🪙</b></div>`, 'เย้! 🎉'), 900);
+}
+
 /* หมวดเสมือนของ "ชุดที่ i" — สอบทุกคำในชุด (10-19 ข้อ) ตัวลวงสุ่มจากทั้ง band */
 function bandSetCat(b, i){
   const cat = bandCat(b), sets = bandSets(cat.words), set = sets[i];
@@ -81,16 +95,53 @@ function bandSetCat(b, i){
     name:`${DICT_BAND_MANIFEST[b].label} ชุดที่ ${i+1}`, emoji:BAND_EMOJI[b] || '📖',
     reward:BAND_SET_REWARD, words:set, quizCount:set.length,
     distractPool:cat.words, dictMeta:cat.dictMeta,
-    onPass(){   // ผ่านครบทุกชุดของระดับ → โบนัสครั้งเดียว
-      const allDone = sets.every((_, k)=>state.quizPassed.includes(bandSetId(b, k)));
-      state.bandComplete = state.bandComplete || {};
-      if(!allDone || state.bandComplete[b]) return;
-      state.bandComplete[b] = true;
-      addCoins(BAND_DONE_BONUS);
+    onPass(){ bandCheckComplete(b); }};
+}
+
+/* ---------- 🔁 สอบซ่อมรวม (รอบ 270): รวบคำจากชุดสีส้ม (เคยสอบยังไม่ผ่าน) มาสอบรอบเดียว
+   หยิบชุดคะแนนต่ำสุดก่อน สูงสุด 3 ชุด/รอบ · ตัดเกรด "รายชุด" — ชุดไหนตอบถูก ≥80%
+   ของคำชุดนั้นถึงเคลียร์ (+รางวัลชุดละ ${BAND_SET_REWARD}) ชุดที่ไม่ถึงยังส้มอยู่ สอบซ่อมต่อได้ ---------- */
+const BAND_RETAKE_MAX = 3;
+function bandTriedSets(b){
+  const cat = bandCat(b), sets = bandSets(cat.words), out = [];
+  sets.forEach((s, i)=>{
+    if(state.quizPassed.includes(bandSetId(b, i))) return;
+    let bs = null;
+    state.quizLog.forEach(l=>{ if(l.cat === bandSetId(b, i) && (bs === null || l.score > bs)) bs = l.score; });
+    if(bs !== null) out.push({i, s, bs});
+  });
+  out.sort((x, y)=>x.bs - y.bs);   // คะแนนต่ำสุดก่อน = ชุดที่ต้องซ่อมด่วนสุด
+  return out;
+}
+function bandRetakeCat(b){
+  const cat = bandCat(b);
+  const pick = bandTriedSets(b).slice(0, BAND_RETAKE_MAX);
+  if(!pick.length) return null;
+  const words = pick.flatMap(t=>t.s);
+  return {id:`band${b}retake`, band:Number(b), retakeSets:pick.map(t=>t.i),
+    name:`${DICT_BAND_MANIFEST[b].label} สอบซ่อม ${pick.length} ชุด`, emoji:'🔁',
+    reward:0, words, quizCount:words.length, distractPool:cat.words, dictMeta:cat.dictMeta,
+    onFinish(){   // เรียกจาก finishQuiz — ตัดเกรดรายชุดจากผลรายข้อ (quiz.results)
+      const okByEn = {};
+      (quiz.results || []).forEach(r=>{ okByEn[r.en] = r.ok; });
+      let cleared = 0, coins = 0;
+      pick.forEach(t=>{
+        const okN = t.s.filter(w=>okByEn[w[0]]).length;
+        const passSet = okN >= Math.ceil(t.s.length * 0.8);
+        state.quizLog.push({cat:bandSetId(b, t.i), score:okN, total:t.s.length, passed:passSet, ts:Date.now()});
+        if(passSet && !state.quizPassed.includes(bandSetId(b, t.i))){
+          state.quizPassed.push(bandSetId(b, t.i));
+          cleared++; coins += BAND_SET_REWARD;
+        }
+      });
+      if(coins) addCoins(coins);
       saveState();
-      setTimeout(()=>alertBox(`<div style="font-size:56px;line-height:1">🏆</div>
-        <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#7d5fc0">สุดยอด! ผ่านครบทุกชุดของระดับ ${DICT_BAND_MANIFEST[b].label}</div>
-        <div style="margin-top:8px;color:#6a5a78">ทั้งหมด ${sets.length} ชุด ${fmtNum(cat.words.length)} คำ — รับโบนัสพิเศษ <b>+${BAND_DONE_BONUS} 🪙</b></div>`, 'เย้! 🎉'), 900);
+      if(cleared){
+        bandCheckComplete(b);
+        setTimeout(()=>toast(`🔁 สอบซ่อมสำเร็จ! เคลียร์ ${cleared} ชุด +${fmtNum(coins)} 🪙`, 3200), 800);
+      }else{
+        setTimeout(()=>toast('🔁 ยังไม่มีชุดไหนถึง 80% — ดูเฉลยแล้วลองใหม่อีกครั้งนะ 💪', 3000), 800);
+      }
     }};
 }
 
@@ -122,11 +173,16 @@ function openBandSetPicker(b){
       const i = Number(m[2]) - 1;
       if(!best[i] || l.score > best[i].s) best[i] = {s:l.score, t:l.total};
     });
+    // 🔁 สอบซ่อมรวม: โชว์ปุ่มเมื่อมีชุดสีส้ม ≥2 (ชุดเดียวแตะชิปตรงๆ ง่ายกว่า)
+    const tried = bandTriedSets(b);
+    const rN = Math.min(tried.length, BAND_RETAKE_MAX);
+    const rW = tried.slice(0, rN).reduce((a, t)=>a + t.s.length, 0);
     let nextMarked = false;
     ov.innerHTML = `<div class="bsp-box">
       <button class="pl-close" id="bsp-close">✕</button>
       <div class="bsp-head">${cat.emoji} ข้อสอบ ${DICT_BAND_MANIFEST[b].label} · ${sets.length} ชุด
-        <span class="bsp-prog">ผ่านแล้ว ${passedN}/${sets.length} ชุด</span></div>
+        <span class="bsp-prog">ผ่านแล้ว ${passedN}/${sets.length} ชุด</span>
+        ${tried.length >= 2 ? `<button class="bsp-retake" id="bsp-retake">🔁 สอบซ่อมรวม ${rN} ชุด (${rW} ข้อ)</button>` : ''}</div>
       <div class="bsp-grid" id="bsp-grid">${sets.map((s, i)=>{
         const done = state.quizPassed.includes(bandSetId(b, i));
         const bs = best[i];
@@ -150,6 +206,13 @@ function openBandSetPicker(b){
     fit();
     ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
     ov.querySelector('#bsp-close').addEventListener('click', ()=>ov.remove());
+    const rBtn = ov.querySelector('#bsp-retake');
+    if(rBtn) rBtn.addEventListener('click', ()=>{
+      const rc = bandRetakeCat(b);
+      if(!rc) return;
+      ov.remove();
+      startQuiz(rc);
+    });
     grid.addEventListener('click', e=>{
       const c = e.target.closest('.bsp-chip');
       if(!c) return;
