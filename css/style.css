@@ -919,6 +919,8 @@ html.no-anim body.quake{animation:none;}
 .band-lock{font-size:13px;color:#9a8aac;background:#f4eefb;border:2px dashed #d9c9ef;border-radius:12px;padding:8px 10px;text-align:center;}
 .offline-btn{background:linear-gradient(180deg,#b8c4d4,#8d9cb2);box-shadow:0 6px 0 #6d7d94;margin-top:8px;}
 .offline-btn:active{box-shadow:0 2px 0 #6d7d94;}
+/* ป้าย 📴 บนหัว lobby (รอบ 268) — เล่นออฟไลน์อยู่ คะแนนยังไม่ขึ้น server */
+.coin-pill.offline{background:linear-gradient(180deg,#8d9cb2,#6d7d94);color:#fff;border-color:#b8c4d4;}
 
 /* ---------- แบบทดสอบ ---------- */
 .quiz-progress{font-size:15px;color:#8a76a8;text-align:center;margin:4px 0;}

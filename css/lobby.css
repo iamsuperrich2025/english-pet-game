@@ -1087,6 +1087,8 @@ html.no-anim .q-bigcard{animation:none;}
 /* 📝 ปุ่มสอบเลื่อนขั้น (รอบ 267) — ม่วงเข้าชุดปุ่มควิซ อยู่ข้างปุ่มส้ม */
 .lobby-exam-btn{background:linear-gradient(180deg,#c39df0,#9a6fdc) !important;box-shadow:0 6px 0 #7d5fc0 !important;}
 .lobby-exam-btn:active{box-shadow:0 2px 0 #7d5fc0 !important;}
+/* ป้ายคืบหน้าใต้ข้อความปุ่ม (รอบ 268): "ผ่านแล้ว k/n ชุด" */
+.lobby-exam-btn .exam-sub{display:block;font-size:11px;font-weight:600;opacity:.92;margin-top:1px;line-height:1.2;white-space:nowrap;}
 
 /* ============================================================
    แผงรายละเอียดกลางจอ (panel) — คลิกเมนูแล้วเด้งขึ้น มี scroll ภายใน
@@ -1469,6 +1471,8 @@ html.no-anim .cs-big-img{animation:none}
   .rail-btn .rail-ico{font-size:18px;}
   .lobby-play-btn{font-size:15px !important;padding:8px 20px !important;}
   .lobby-quiz-btn{font-size:13px !important;padding:7px 14px !important;}
+  .lobby-exam-btn{padding:4px 14px !important;}                     /* รอบ 268: มี 2 บรรทัด — หดกันล้นจอเตี้ย */
+  .lobby-exam-btn .exam-sub{font-size:9.5px;margin-top:0;}
   .profile-plate .clock-chip{font-size:10px;}
 }
 

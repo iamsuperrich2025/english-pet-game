@@ -167,6 +167,37 @@ function bandExamLobby(){
   openBandSetPicker(bandMine());
 }
 
+/* ---------- ป้ายความคืบหน้าใต้ปุ่มสอบเลื่อนขั้น (รอบ 268): "ผ่านแล้ว k/n ชุด" ----------
+   n ต้องรู้จำนวนคำจริงหลัง dedupe → พรีโหลดคลังระดับตัวเองเบื้องหลัง (ครั้งเดียว
+   หลังเข้า lobby 2.5 วิ — ไฟล์เล็ก + SW cache ให้ · กดปุ่มส้ม/ปุ่มม่วงครั้งแรกก็ไวขึ้นด้วย) */
+let __bandPreloadTimer = null;
+function updateBandExamBtn(){
+  const btn = document.getElementById('btn-band-exam');
+  if(!btn || typeof DICT_BAND_MANIFEST === 'undefined' || !state.student) return;
+  const b = bandMine();
+  const done = state.quizPassed.filter(id=>new RegExp(`^band${b}s\\d+$`).test(id)).length;
+  let sub;
+  if(__bandCats[b]){
+    const total = bandSets(__bandCats[b].words).length;
+    sub = (state.bandComplete && state.bandComplete[b])
+      ? `🏆 ครบ ${total} ชุดแล้ว!`
+      : `ผ่านแล้ว ${done}/${total} ชุด`;
+  }else{
+    sub = done ? `ผ่านแล้ว ${done} ชุด` : `ระดับ ${DICT_BAND_MANIFEST[b].label}`;
+  }
+  btn.innerHTML = `📝 สอบเลื่อนขั้น <span class="exam-sub">${escapeHTML(sub)}</span>`;
+}
+/* เรียกจาก renderDashboard (ui.js) — อัปเดตป้ายปุ่ม + ป้ายออฟไลน์ + ตั้งพรีโหลดครั้งเดียว */
+function bandLobbyTick(){
+  updateBandExamBtn();
+  if(typeof updateOfflinePill === 'function') updateOfflinePill();
+  if(__bandPreloadTimer || typeof DICT_BAND_MANIFEST === 'undefined' || !state.student) return;
+  __bandPreloadTimer = setTimeout(()=>{
+    const b = bandMine();
+    bandLoad(b).then(()=>{ bandCat(b); updateBandExamBtn(); });
+  }, 2500);
+}
+
 /* ปุ่มบนการ์ด band → จับคู่ = โหลดแล้วเข้าเกมทั้งคลัง · สอบ = เปิดแผงเลือกชุด */
 function bandPlay(b, mode){
   if(!bandUnlocked(b)){ bandLockToast(b); return; }

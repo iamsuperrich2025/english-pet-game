@@ -180,11 +180,18 @@ window.addEventListener('load', ()=>{
 /* ---------- เข้าเกมแบบออฟไลน์ (รอบ 267): เล่นด้วยเซฟในเครื่อง ไม่ต้อง login ----------
    เน็ตกลับมาเมื่อไหร่ → โหลด SDK ใหม่ → onAuthStateChanged เรียก authLateSync
    ดันเซฟ + คะแนนขึ้น server ให้เอง (บัญชี Google จำไว้ในเครื่องจากการ login ครั้งก่อน) */
+/* ป้าย "📴 ออฟไลน์ · ยังไม่ sync" บนหัว lobby (รอบ 268) — โชว์เฉพาะตอนเล่นออฟไลน์และยังไม่ได้ sync */
+function updateOfflinePill(){
+  const pill = document.getElementById('offline-pill');
+  if(pill) pill.style.display = (Auth.offlineMode && !Auth.user) ? '' : 'none';
+}
+
 function authEnterOffline(){
   if(Auth.booted) return;
   Auth.booted = true;
   Auth.offlineMode = true;
   bootGame();
+  updateOfflinePill();
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);      // เริ่มมีผลจริงหลัง authLateSync (ต้องมี Auth.user)
   const retry = ()=>{
     if(!Auth.sdkReady && navigator.onLine && typeof onlineLoadSDK === 'function') onlineLoadSDK();
@@ -207,6 +214,7 @@ function authLateSync(user){
   authPushSave(true);
   authPushProfile();
   try{ if(typeof onlineStart === 'function') onlineStart(); }catch(e){}
+  updateOfflinePill();                                     // sync แล้ว → เก็บป้าย 📴
   toast('☁️ กลับมาออนไลน์แล้ว — เซฟ + คะแนนขึ้นเซิร์ฟเวอร์เรียบร้อย!', 2800);
 }
 

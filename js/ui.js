@@ -2466,6 +2466,7 @@ function renderDashboard(){
   applyNoAnim();
   updateBillBadges();
   renderRailWorlds();
+  if(typeof bandLobbyTick === 'function') bandLobbyTick();   // รอบ 268: ป้ายคืบหน้าปุ่มสอบเลื่อนขั้น + ป้ายออฟไลน์
   const now = Date.now();
 
   /* ---- เหรียญ: สะสมทั้งหมด + วันนี้ ---- */
