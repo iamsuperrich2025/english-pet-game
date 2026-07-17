@@ -2508,6 +2508,7 @@ function openDictOverlay(q){
     ov.innerHTML = `<div class="dict-card">
       <button class="pl-close" id="dict-close">✕</button>
       <div class="dict-head">📖 พจนานุกรม <span class="dict-count" id="dict-count"></span></div>
+      <div class="dict-box"><input id="dict-input-ov" type="search" placeholder="🔍 ค้นคำถัดไปต่อได้เลย" autocomplete="off"><button id="dict-go-ov" title="ค้นหา">🔍</button></div>
       <div class="dict-list" id="dict-list"></div>
     </div>`;
     document.body.appendChild(ov);
@@ -2517,7 +2518,19 @@ function openDictOverlay(q){
       const b = e.target.closest('.di-say');
       if(b && typeof speakWord === 'function') speakWord(b.dataset.w);
     });
+    /* รอบ 279: ค้นคำถัดไปจากในแผงผลลัพธ์ได้เลย ไม่ต้องปิดก่อน · blur ยุบแป้นมือถือเหมือนช่องหลัก
+       + sync ค่ากลับช่องค้นหาใน lobby (#dict-input) ให้ตรงกัน */
+    const oIn = ov.querySelector('#dict-input-ov');
+    const oGo = ()=>{
+      const q2 = oIn.value.trim(); if(!q2) return;
+      __dictLastQ = q2; sfx.select(); oIn.blur();
+      const li = document.getElementById('dict-input'); if(li) li.value = q2;
+      openDictOverlay(q2);
+    };
+    oIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') oGo(); });
+    ov.querySelector('#dict-go-ov').addEventListener('click', oGo);
   }
+  ov.querySelector('#dict-input-ov').value = q;
   const list = ov.querySelector('#dict-list'), cnt = ov.querySelector('#dict-count');
   cnt.textContent = `"${q}"`;
   list.innerHTML = `<div class="pl-loading">⏳ กำลังเปิดพจนานุกรม...</div>`;

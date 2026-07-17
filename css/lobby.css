@@ -561,6 +561,11 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .dict-card .pl-close{background:#e05252;border:2px solid #fff;}
 .dict-head{font-size:17px;font-weight:800;color:#2f4a78;margin:0 0 9px;padding-right:40px;}
 .dict-head .dict-count{font-size:13px;font-weight:600;color:#7a8cae;}
+/* รอบ 279: ช่องค้นคำถัดไปบนหัวแผงผลลัพธ์ — การ์ดพื้นสว่าง ใช้โทนสว่างแทนโทนเข้มของ lobby */
+.dict-card .dict-box{display:flex;gap:5px;align-items:center;flex-shrink:0;margin:0 0 9px;}
+.dict-card .dict-box input{background:#fff;color:#2f4a78;border-color:#b9cbe8;}
+.dict-card .dict-box input::placeholder{color:#8fa5c8;}
+.dict-card .dict-box input:focus{border-color:#57c1ff;box-shadow:0 0 8px rgba(87,193,255,.35);}
 .dict-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding-right:4px;}
 .dict-item{
   background:#fff;border:1.5px solid #cdd9f0;border-left:5px solid #57c1ff;border-radius:12px;
