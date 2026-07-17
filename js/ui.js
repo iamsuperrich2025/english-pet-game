@@ -2460,6 +2460,19 @@ function alignCureBtn(){
    ============================================================ */
 window.DICT_FILES = window.DICT_FILES || [];
 let __dictLastQ = '', __dictAll = null, __dictLoading = null;
+let __dictTrail = [];   // รอบ 285: เส้นทางไล่ศัพท์ใน session นี้ (fine › good › ...) — แตะ crumb ย้อนกลับได้
+/* รอบ 285: นับคำที่ค้นเจอวันนี้ (ไม่นับคำเดิมซ้ำ) → ยิง questEvent('dict') เข้าภารกิจรายวัน 📖 */
+function dictRecordLookup(w){
+  const d = todayStr();
+  if(!state.dictDaily || state.dictDaily.date !== d) state.dictDaily = {date:d, n:0, w:[]};
+  w = String(w).toLowerCase();
+  if(state.dictDaily.w.includes(w)) return;
+  state.dictDaily.w.push(w);
+  if(state.dictDaily.w.length > 300) state.dictDaily.w.shift();   // กันเซฟบวม (n สะสมต่อได้)
+  state.dictDaily.n++;
+  saveState();
+  if(typeof questEvent === 'function') questEvent('dict');
+}
 const DICT_FILE_COUNT = 57;
 function loadDict(){
   if(__dictAll) return Promise.resolve(__dictAll);
@@ -2513,8 +2526,9 @@ function openDictOverlay(q){
     ov.id = 'dict-overlay'; ov.className = 'pl-overlay';
     ov.innerHTML = `<div class="dict-card">
       <button class="pl-close" id="dict-close">✕</button>
-      <div class="dict-head">📖 พจนานุกรม <span class="dict-count" id="dict-count"></span></div>
+      <div class="dict-head">📖 พจนานุกรม <span class="dict-count" id="dict-count"></span><span class="dict-today" id="dict-today"></span></div>
       <div class="dict-box"><input id="dict-input-ov" type="search" placeholder="🔍 ค้นคำถัดไปต่อได้เลย" autocomplete="off"><button id="dict-go-ov" title="ค้นหา">🔍</button></div>
+      <div class="dict-trail" id="dict-trail" style="display:none"></div>
       <div class="dict-list" id="dict-list"></div>
     </div>`;
     document.body.appendChild(ov);
@@ -2544,8 +2558,32 @@ function openDictOverlay(q){
     };
     oIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') oGo(); });
     ov.querySelector('#dict-go-ov').addEventListener('click', oGo);
+    /* รอบ 285: แตะ crumb ในแถบเส้นทางไล่ศัพท์ = ย้อนกลับไปคำนั้น (ตัดหางเส้นทางใน openDictOverlay) */
+    ov.querySelector('#dict-trail').addEventListener('click', (e)=>{
+      const c = e.target.closest('.dt-c');
+      if(!c || c.classList.contains('on')) return;
+      const w = c.dataset.w;
+      __dictLastQ = w; sfx.select();
+      const li = document.getElementById('dict-input'); if(li) li.value = w;
+      openDictOverlay(w);
+    });
   }
   ov.querySelector('#dict-input-ov').value = q;
+  /* รอบ 285: อัปเดตเส้นทางไล่ศัพท์ — เคยค้นคำนี้แล้ว = ย้อนกลับ ตัดหางทิ้ง · คำใหม่ = ต่อท้าย (เก็บ ≤20) */
+  q = String(q).trim();
+  const __ql = q.toLowerCase();
+  let __ti = -1;
+  for(let i = __dictTrail.length - 1; i >= 0; i--){ if(__dictTrail[i].toLowerCase() === __ql){ __ti = i; break; } }
+  if(__ti >= 0) __dictTrail = __dictTrail.slice(0, __ti + 1);
+  else { __dictTrail.push(q); if(__dictTrail.length > 20) __dictTrail.shift(); }
+  const tr = ov.querySelector('#dict-trail');
+  if(__dictTrail.length >= 2){
+    tr.style.display = '';
+    tr.innerHTML = __dictTrail.map((w,i)=>
+      `<button class="dt-c ${i === __dictTrail.length-1 ? 'on' : ''}" data-w="${escapeHTML(w)}" type="button">${escapeHTML(w)}</button>`
+    ).join('<span class="dt-sep">›</span>');
+    tr.scrollLeft = tr.scrollWidth;   // เส้นทางยาว → เลื่อนให้เห็นคำล่าสุดเสมอ
+  }else{ tr.style.display = 'none'; tr.innerHTML = ''; }
   const list = ov.querySelector('#dict-list'), cnt = ov.querySelector('#dict-count');
   cnt.textContent = `"${q}"`;
   list.innerHTML = `<div class="pl-loading">⏳ กำลังเปิดพจนานุกรม...</div>`;
@@ -2557,6 +2595,11 @@ function openDictOverlay(q){
       ? rs.map(dictEntryHTML).join('')
       : `<div class="pl-none">ไม่พบคำว่า "${escapeHTML(q)}" 😅<br><small>ลองสะกดใหม่ หรือพิมพ์คำแปลภาษาไทยก็ค้นได้นะ</small></div>`;
     list.scrollTop = 0;
+    /* รอบ 285: เจอผล = นับสถิติวันนี้ (คำใหม่เท่านั้น) + อัปเดตชิป 📚 บนหัวแผง */
+    if(rs.length) dictRecordLookup(q);
+    const td = ov.querySelector('#dict-today');
+    if(td) td.textContent = (state.dictDaily && state.dictDaily.date === todayStr() && state.dictDaily.n)
+      ? `📚 วันนี้ ${fmtNum(state.dictDaily.n)} คำ` : '';
   });
 }
 

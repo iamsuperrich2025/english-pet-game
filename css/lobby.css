@@ -566,6 +566,20 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .dict-card .dict-box input{background:#fff;color:#2f4a78;border-color:#b9cbe8;}
 .dict-card .dict-box input::placeholder{color:#8fa5c8;}
 .dict-card .dict-box input:focus{border-color:#57c1ff;box-shadow:0 0 8px rgba(87,193,255,.35);}
+/* รอบ 285: แถบเส้นทางไล่ศัพท์ (breadcrumb) + ชิปนับคำวันนี้ */
+.dict-trail{
+  display:flex;gap:4px;align-items:center;flex-shrink:0;margin:0 0 8px;
+  overflow-x:auto;scrollbar-width:none;white-space:nowrap;
+}
+.dict-trail::-webkit-scrollbar{display:none;}
+.dt-c{
+  flex-shrink:0;border:1px solid #b9cbe8;background:#fff;color:#41609c;border-radius:999px;
+  padding:2px 10px;font-size:12px;font-family:inherit;cursor:pointer;
+}
+.dt-c:active{transform:scale(.94);}
+.dt-c.on{background:#57c1ff;border-color:#2f8fdd;color:#fff;font-weight:700;cursor:default;}
+.dt-sep{flex-shrink:0;color:#9db9e6;font-size:11px;}
+.dict-today{margin-left:8px;font-size:12px;font-weight:700;color:#3aa66b;}
 /* รอบ 281: คำอังกฤษในนิยาม/ตัวอย่างแตะได้ — เส้นประใต้คำบอกใบ้ว่ากดค้นต่อได้ */
 .di-w{cursor:pointer;border-bottom:1px dashed #9db9e6;}
 .di-w:hover{color:#1d7fd6;border-bottom-color:#57c1ff;}
