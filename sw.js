@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v46';   // v46: ปุ่มจับคู่หน้า lobby ใช้คลังศัพท์ band ตามชั้น รอบ 265
+const CACHE_VERSION = 'pet-vocab-v47';   // v47: ข้อสอบ band แบ่งชุดตายตัว ชุดละ 10 รอบ 266
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

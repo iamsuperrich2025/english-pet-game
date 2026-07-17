@@ -727,9 +727,11 @@ const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
               qAt:0, fastAll:true};   // ⚡ สอบสายฟ้า: ถูกทุกข้อ + ข้อละไม่เกิน 5 วิ
 
 function startQuiz(cat){
-  // สุ่ม 10 ข้อจากหมวด: โจทย์อังกฤษ + ช้อยส์ไทย 4 ตัว (ตัวลวงจากหมวดเดียวกัน ไม่ซ้ำข้อความ)
-  quiz.questions = shuffle(cat.words).slice(0,10).map(([en,th])=>{
-    const wrong = shuffle([...new Set(cat.words.map(w=>w[1]).filter(t=>t !== th))]).slice(0,3);
+  // สุ่มข้อจากหมวด (ปกติ 10 · ชุด band = ทุกคำในชุด 10-19 ข้อ) + ช้อยส์ไทย 4 ตัวไม่ซ้ำข้อความ
+  // ตัวลวง: หมวดปกติจากหมวดเดียวกัน · ชุด band จากทั้งระดับ (distractPool)
+  const dPool = cat.distractPool || cat.words;
+  quiz.questions = shuffle(cat.words).slice(0, cat.quizCount || 10).map(([en,th])=>{
+    const wrong = shuffle([...new Set(dPool.map(w=>w[1]).filter(t=>t !== th))]).slice(0,3);
     // หมวด band (dictband.js) มีข้อมูลพจนานุกรมแนบ: IPA/คำอ่านโชว์บนโจทย์ + ประโยคตัวอย่างไว้เฉลย
     const meta = cat.dictMeta ? cat.dictMeta[en] : null;
     return {en, correct:th, choices:shuffle([th, ...wrong]), meta};
@@ -800,7 +802,8 @@ function finishQuiz(){
   const qx = document.getElementById('quiz-extra');
   if(qx){ qx.classList.remove('show'); qx.innerHTML = ''; }
   const cat = quiz.cat;
-  const passed = quiz.correct >= 8;                              // เกณฑ์ผ่าน: 8/10
+  const passMark = Math.ceil(quiz.questions.length * 0.8);       // เกณฑ์ผ่าน 80% (10 ข้อ = 8 เท่าเดิม · ชุดท้าย band 11-19 ข้อคิดตามสัดส่วน)
+  const passed = quiz.correct >= passMark;
   const firstPass = passed && !state.quizPassed.includes(cat.id);
   let coins = 0, exp = 0, rp = 5;                                // สอบไม่ผ่านก็ยังได้ +5 RP จากความพยายาม
   if(passed){
@@ -837,7 +840,7 @@ function finishQuiz(){
       ${thunder ? '<b style="color:#3b8dde">ถูกทุกข้อ แถมไวปานสายฟ้า (ข้อละไม่เกิน 5 วิ)! ⚡</b><br>' : ''}
       ${passed
         ? (firstPass ? `รับรางวัลพิเศษ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}! 🎁` : `ผ่านอีกครั้ง รับ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}`)
-        : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก 8 ข้อขึ้นไปถึงจะได้รางวัลพิเศษ ลองใหม่อีกครั้งนะ`}
+        : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก ${passMark} ข้อขึ้นไปถึงจะได้รางวัลพิเศษ ลองใหม่อีกครั้งนะ`}
       ${homeBonus > 0 ? `<br>${homeB.emoji} โบนัสขยันจาก${homeB.name} <b>+${homeBonus} 🪙</b>` : ''}
       ${quiz.correct > 0 && made ? `<br>🏭 แต้มผลิต +${quiz.correct} — <b>ผลิตสำเร็จ!</b> 🎉` : ''}
       ${quiz.correct > 0 && !made && state.producing ? `<br>🏭 แต้มผลิต +${quiz.correct} (${collectInfo(state.producing.id).name} ${state.producing.progress}/${collectInfo(state.producing.id).words})` : ''}
@@ -848,8 +851,11 @@ function finishQuiz(){
     overlay.remove();
     renderCats();
     showScreen('screen-cats');
+    // ชุดข้อสอบ band: เด้งแผงเลือกชุดกลับมาให้เลือกชุดถัดไปต่อเลย
+    if(cat.setIdx !== undefined && typeof openBandSetPicker === 'function') openBandSetPicker(cat.band);
   });
   document.body.appendChild(overlay);
+  if(passed && typeof cat.onPass === 'function') cat.onPass();   // โบนัสครบทุกชุดของระดับ (dictband.js)
   if(made) setTimeout(()=>showCollectReveal(made, null, true), 600);
   if(passed) sfx.levelup(); else sfx.wrong();
 }
