@@ -49,7 +49,8 @@ document.getElementById('btn-google-login').addEventListener('click', authLoginC
 document.getElementById('btn-login-retry').addEventListener('click', ()=>location.reload());
 document.getElementById('btn-logout').addEventListener('click', authLogout);
 
-document.getElementById('btn-play').addEventListener('click', ()=>startGame(null));
+document.getElementById('btn-play').addEventListener('click', ()=>
+  typeof bandPlayLobby === 'function' ? bandPlayLobby() : startGame(null));   // จับคู่ด้วยคลังศัพท์ band ตามชั้น (รอบ 265)
 document.getElementById('btn-foodquiz').addEventListener('click', openFoodQuiz);   // ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
 document.getElementById('btn-cats').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
 document.getElementById('btn-stats').addEventListener('click', ()=>{ renderStats(); showScreen('screen-stats'); });

@@ -69,6 +69,19 @@ function bandPlay(b, mode){
   });
 }
 
+/* ปุ่มส้ม "เล่นเกมจับคู่คำศัพท์" หน้า lobby → คลังศัพท์ band ตามชั้นเรียนผู้เล่น
+   (manifest หาย/โหลดไม่สำเร็จ = ถอยกลับคลังเดิม vocabForStudent ผ่าน startGame(null)) */
+function bandPlayLobby(){
+  const b = (typeof DICT_BAND_MANIFEST !== 'undefined')
+    ? gradeBand(state.student ? state.student.grade : 'ป.1').band : 0;
+  if(!b || !DICT_BAND_MANIFEST[b]){ startGame(null); return; }
+  if(!__bandLoading[b]) toast('⏳ กำลังเปิดคลังศัพท์...');   // เตือนเฉพาะโหลดครั้งแรก
+  bandLoad(b).then(()=>{
+    const cat = bandCat(b);
+    if(cat.words.length) startGame(cat); else startGame(null);
+  });
+}
+
 /* การ์ด band 5 ใบ ต่อท้ายหน้าเลือกหมวด (เรียกจาก renderCats ใน game.js) */
 function bandCardsHTML(){
   if(typeof DICT_BAND_MANIFEST === 'undefined') return '';

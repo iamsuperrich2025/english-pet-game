@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v45';   // v45: คลังศัพท์ band 1-5 → เกมจับคู่+ข้อสอบ รอบ 264
+const CACHE_VERSION = 'pet-vocab-v46';   // v46: ปุ่มจับคู่หน้า lobby ใช้คลังศัพท์ band ตามชั้น รอบ 265
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -25,6 +25,8 @@ const SHELL = [
   './js/data/players.js',
   './js/data/badwords.js',
   './js/data/firebase-config.js',
+  './js/data/dict_band/manifest.js',
+  './js/dictband.js',
   './js/util.js',
   './js/state.js',
   './js/images.js',
