@@ -231,6 +231,48 @@ html.no-anim .coin-pill.net{animation:none;}
 .strip-arrow:hover{filter:brightness(1.1);}
 .strip-arrow:active{transform:scale(.92);}
 .strip-wrap.no-x .strip-arrow{display:none;}
+/* การ์ด Trade HQ ในแถบปัด (โรงงาน/ตลาดเพื่อน/คลังของฉัน) — flex ต้องกำหนดกว้างเอง
+   รูปเตี้ยกว่าแบบตาราง (150→112) ให้แผงโรงงานทั้งใบอยู่ในจอไม่ต้องเลื่อนขึ้นลง */
+.strip-x .hq-card{width:168px;}
+.strip-x .hq-pic{height:112px;}
+/* แถวเครื่องมือโรงงาน: ชิปแต้มส่วนลด + ตัวกรองหมวด ซ้อนกันในคอลัมน์ซ้าย */
+.craft-toolbar{display:flex;flex-direction:column;gap:6px;align-items:stretch;margin:8px 0 6px;}
+.craft-toolbar .craft-credit{margin:0;min-width:0;}
+/* โรงงาน 2 โซนเคียงข้าง (ซ้าย=สถานะ+เครื่องมือ · ขวา=แคตตาล็อกปัด) — จอแคบ (<700px) ซ้อนเป็นชั้น */
+.fc-cols{display:grid;grid-template-columns:2fr 3fr;gap:0 12px;align-items:start;}
+.fc-cols .fc-left,.fc-cols .fc-right{min-width:0;}
+@media (max-width:700px){.fc-cols{display:block;}}
+@media (max-height:460px){
+  .strip-x .hq-card{width:128px;}
+  .strip-x .hq-pic{height:62px;padding:4px;}
+  .strip-x .hq-emoji{font-size:40px;}
+  .strip-x .hq-head{font-size:11.5px;padding:4px 6px;}
+  .strip-x .hq-price{padding:4px 4px;font-size:10.5px;}
+  .strip-x .hq-badge{font-size:9.5px;}
+  /* โรงงาน: ซ่อนย่อหน้าอธิบายยาว + ย่อกล่องสถานะ/แถวเครื่องมือ ให้ทั้งแผงอยู่ในจอ (กฎ 7) */
+  #factory-card .collect-sub{display:none;}
+  #factory-card .shop-title{font-size:15px;margin-bottom:4px;}
+  #factory-card .home-current{padding:6px 10px;}
+  #factory-card .home-current small{display:none;}
+  #factory-card .home-emoji{font-size:22px;}
+  .craft-toolbar{margin:4px 0;}
+  .craft-toolbar .craft-credit{padding:4px 10px;font-size:12px;}
+  .craft-toolbar .craft-credit small{display:none;}
+  .craft-toolbar .mkt-filter{font-size:12.5px;}
+  .craft-box{padding:8px 10px;margin-bottom:6px;}
+  .craft-box .craft-text{display:none;}                          /* % อยู่ในแถบ+ข้อความหัวแล้ว */
+  .craft-box .craft-head small{font-size:10.5px;}
+  .craft-box .big-btn{padding:6px 10px;font-size:12.5px;}
+  .craft-box .mkt-emoji,.craft-box .mkt-emoji img{width:34px;height:34px;font-size:24px;}
+  .craft-box .craft-bar{height:9px;margin-top:5px;}
+  .craft-box .craft-btn-row{margin-top:6px;}
+  .craft-box .craft-cancel{padding:6px 10px;font-size:12px;}
+  /* จอเตี้ย: บังคับ 2 คอลัมน์เสมอ (ชนะกฎ max-width:700 ซ้อนชั้น — แนวนอนมือถือแคบก็ต้องไม่เลื่อนแนวตั้ง) */
+  .fc-cols{display:grid;grid-template-columns:2fr 3fr;gap:0 10px;}
+  .craft-toolbar{gap:4px;}
+  .craft-toolbar .mkt-filter{padding:5px 8px;}
+  .fc-cols .craft-toolbar .craft-credit{padding:3px 10px;line-height:1.3;}
+}
 
 .wl-box{width:min(1020px,96vw);box-sizing:border-box;}
 .wl-head{display:flex;align-items:center;gap:10px;}

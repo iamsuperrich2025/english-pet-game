@@ -5,9 +5,6 @@
 
 /* ---- สถานะการ์ดโรงงานผลิต (ในหน่วยความจำ ไม่ต้องเซฟ) ---- */
 let factoryCat = 'all';         // ตัวกรองหมวดสินค้าในแคตตาล็อกโรงงาน ('all' | id หมวด)
-let factoryPage = 0;            // หน้าปัจจุบันของแคตตาล็อก (5 รายการ/หน้า — ปัดซ้ายขวา/กดลูกศรเปลี่ยนหน้า)
-let factorySlide = '';          // ทิศอนิเมชันตอนเปลี่ยนหน้า ('left'|'right'|'' = ไม่เล่น)
-const FACTORY_PAGE_SIZE = 5;
 
 /* ---------- ภาพเริ่มต้น (ตะกร้า/ไข่ วาดด้วย CSS ถ้าไม่มีภาพเจน) ---------- */
 function startHTML(key){
@@ -5004,33 +5001,9 @@ function renderFactoryCard(){
     ${renderFactory()}`;
 
   const catSel = document.getElementById('factory-cat');
-  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; factoryPage = 0; sfx.select(); renderFactoryCard(); });
-  /* เปลี่ยนหน้าแคตตาล็อก: ปุ่มลูกศร (เมาส์) + ปัดซ้ายขวา (จอสัมผัส) */
-  const goPage = (d)=>{
-    factorySlide = d > 0 ? 'left' : 'right';   // ปัดไปหน้าถัดไป → รายการใหม่สไลด์เข้าจากขวา
-    factoryPage += d;
-    sfx.select();
-    renderFactoryCard();
-    factorySlide = '';
-  };
-  const prevB = document.getElementById('factory-prev');
-  const nextB = document.getElementById('factory-next');
-  if(prevB) prevB.addEventListener('click', ()=>{ if(!prevB.disabled) goPage(-1); });
-  if(nextB) nextB.addEventListener('click', ()=>{ if(!nextB.disabled) goPage(1); });
-  const flist = document.getElementById('factory-list');
-  if(flist){
-    let sx = 0, sy = 0;
-    flist.addEventListener('touchstart', (e)=>{
-      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
-    }, {passive:true});
-    flist.addEventListener('touchend', (e)=>{
-      const dx = e.changedTouches[0].clientX - sx;
-      const dy = e.changedTouches[0].clientY - sy;
-      if(Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)*1.5) return;   // ปัดสั้นไป/ตั้งใจเลื่อนจอแนวตั้ง
-      if(dx < 0 && nextB && !nextB.disabled) goPage(1);                  // ปัดซ้าย = หน้าถัดไป
-      if(dx > 0 && prevB && !prevB.disabled) goPage(-1);                 // ปัดขวา = หน้าก่อนหน้า
-    }, {passive:true});
-  }
+  if(catSel) catSel.addEventListener('change', ()=>{ factoryCat = catSel.value; sfx.select(); renderFactoryCard(); });
+  /* รอบ 292: แคตตาล็อกเป็นแถบปัดแนวนอนต่อเนื่อง — ปัดนิ้ว/ลูกศรเลื่อนเอง (เลิกแบ่งหน้า) */
+  el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);
   el.querySelectorAll('.craft-make').forEach(b=>b.addEventListener('click', ()=>startProduce(b.dataset.id, true)));
   el.querySelectorAll('.craft-buy').forEach(b=>b.addEventListener('click', ()=>buyCollectible(b.dataset.id)));
   const goBtn = document.getElementById('craft-go');
@@ -5070,6 +5043,7 @@ function renderMarketCard(){
     <div class="mkt-listhead" id="mkt-mystock">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
     ${renderCollectMine()}`;
 
+  el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);   // รอบ 292: ลูกศรแถบปัดแนวนอน (ชั้นเพื่อน+คลังของฉัน)
   const soldOk = document.getElementById('mkt-sold-ok');
   if(soldOk) soldOk.addEventListener('click', ()=>{ state.tradeSold = []; saveState(); renderMarketCard(); });
   el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
@@ -5171,7 +5145,7 @@ function renderMarketBrowse(){
   const me = (typeof onlineKey === 'function') ? onlineKey() : '';
   const items = (Online.market || []).filter(m=>m.sid !== me);
   const inner = items.length
-    ? `<div class="hq-grid">` + items.map(m=>{
+    ? `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x">` + items.map(m=>{
         const c = collectInfo(m.id), tier = COLLECT_TIERS[c.tier], img = collectImg(m.id);
         const afford = state.coins >= m.p;
         const wished = (state.wishlist || []).includes(m.id);   // 💖 ของที่เล็งไว้ — ขับให้เด่น
@@ -5184,7 +5158,7 @@ function renderMarketBrowse(){
           <div class="mb-seller">🧑‍🤝‍🧑 ร้านของ ${escapeHTML(m.sn)}</div>
           <button class="hq-price mb-buy ${afford?'':'cant-afford'}" data-key="${m.key}">🪙${fmtNum(m.p)} · ซื้อเลย</button>
         </div>`;
-      }).join('') + `</div>`
+      }).join('') + `</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`
     : `<div class="mkt-empty">ยังไม่มีเพื่อนลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
   return `<div class="mkt-listhead">🌏 ตลาดเพื่อนออนไลน์ — ของที่เพื่อนผลิตเอง${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
 }
@@ -5685,13 +5659,10 @@ function renderFactory(){
   }
   const opts = `<option value="all">📦 ทุกหมวดสินค้า (${COLLECTIBLES.length} ชนิด)</option>` +
     COLLECT_CATS.map(g=>`<option value="${g.id}" ${factoryCat===g.id?'selected':''}>${g.emoji} หมวด${g.name}</option>`).join('');
-  /* แบ่งหน้า 5 รายการ/หน้า (ผู้ใช้สั่ง 5 ก.ค. 2026) — ปัดซ้ายขวาบนจอสัมผัส หรือกดลูกศร */
+  /* รอบ 292: เลิกแบ่งหน้า 5 ชิ้น → แถบปัดแนวนอนต่อเนื่องสไตล์ SimCity BuildIt (เหมือนสวน/เล็งของ) */
   const items = COLLECTIBLES.filter(c=>factoryCat==='all' || c.cat===factoryCat);
-  const pages = Math.max(1, Math.ceil(items.length/FACTORY_PAGE_SIZE));
-  factoryPage = Math.min(Math.max(factoryPage, 0), pages - 1);
-  /* การ์ดสินค้าสไตล์ Trade HQ (โฉมใหม่ 5725691826): หัวการ์ดชื่อสินค้า + ภาพใหญ่
-     + badge แต้มคำ + แถบราคาทองเป็นปุ่มผลิต — โครง pagination/ปัดซ้ายขวาเดิมทั้งหมด */
-  const rows = items.slice(factoryPage*FACTORY_PAGE_SIZE, (factoryPage+1)*FACTORY_PAGE_SIZE).map(c=>{
+  /* การ์ดสินค้าสไตล์ Trade HQ: หัวการ์ดชื่อสินค้า + ภาพใหญ่ + badge แต้มคำ + แถบราคาทองเป็นปุ่ม */
+  const rows = items.map(c=>{
     const tier = COLLECT_TIERS[c.tier], img = collectImg(c.id);
     const cur = state.producing && state.producing.id === c.id;
     /* เหรียญพอ = ซื้อเข้าคลังทันที (หักส่วนลด 🎟️ อัตโนมัติ) · เหรียญไม่พอค่อยโชว์ปุ่มไปเล่นเกมเก็บแต้มผลิต (ผู้ใช้สั่ง 16 ก.ค. 2026) */
@@ -5711,16 +5682,14 @@ function renderFactory(){
       ${btn}
     </div>`;
   }).join('');
-  const dots = Array.from({length: pages}, (_,i)=>`<span class="pg-dot ${i===factoryPage?'on':''}"></span>`).join('');
-  const pager = pages > 1 ? `<div class="mkt-pager">
-      <button class="pg-btn" id="factory-prev" ${factoryPage===0?'disabled':''}>◀</button>
-      <div class="pg-mid"><div class="pg-dots">${dots}</div><small>หน้า ${factoryPage+1}/${pages} · ปัดซ้าย-ขวาเพื่อดูเพิ่ม</small></div>
-      <button class="pg-btn" id="factory-next" ${factoryPage===pages-1?'disabled':''}>▶</button>
-    </div>` : '';
   const creditChip = `<div class="craft-credit">🎟️ แต้มส่วนลด <b>${fmtNum(state.wordCredit||0)}</b> แต้ม
     <small>ตอบคำศัพท์ถูก 1 คำ = 1 แต้ม (สะสมจากทุกเกม) · ใช้เป็นส่วนลด 1 แต้ม = 🪙1 ลดได้สูงสุดครึ่งราคา</small></div>`;
-  return jobUI + creditChip + `<select class="mkt-filter" id="factory-cat">${opts}</select>` +
-    `<div class="mkt-catalog hq-grid${factorySlide?' slide-'+factorySlide:''}" id="factory-list">${rows}</div>` + pager;
+  /* .fc-cols: จอปกติซ้อนเป็นชั้น · จอเตี้ยแบ่ง 2 คอลัมน์ ซ้าย=สถานะ+เครื่องมือ ขวา=แคตตาล็อก (กฎ 7) */
+  return `<div class="fc-cols"><div class="fc-left">${jobUI}
+      <div class="craft-toolbar">${creditChip}<select class="mkt-filter" id="factory-cat">${opts}</select></div></div>
+    <div class="fc-right"><div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+      <div class="strip-x" id="factory-list">${rows}</div>
+      <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div></div>`;
 }
 
 /* ---- ออเดอร์พิเศษ: ลูกค้าจำลองสั่งผลิตเจาะจง จ่ายแพงกว่าราคาฐาน 30–80% ---- */
@@ -5846,8 +5815,8 @@ function renderCollectMine(){
   const ids = COLLECTIBLES.map(c=>c.id).filter(id=>counts[id]);
   let ownedUI;
   if(ids.length){
-    /* การ์ดสินค้าสไตล์ Trade HQ เหมือนแคตตาล็อกโรงงาน (โฉมใหม่ 5725691826) */
-    ownedUI = `<div class="hq-grid">` + ids.map(id=>{
+    /* การ์ดสินค้าสไตล์ Trade HQ เหมือนแคตตาล็อกโรงงาน — รอบ 292: แถบปัดแนวนอน */
+    ownedUI = `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x">` + ids.map(id=>{
       const c = collectInfo(id), tier = COLLECT_TIERS[c.tier], img = collectImg(id);
       return `<div class="hq-card" style="border-color:${tier.color}">
         <div class="hq-head">${c.name}</div>
@@ -5858,7 +5827,7 @@ function renderCollectMine(){
         </div>
         <button class="hq-price cc-list-btn" data-id="${id}">🏷️ ตั้งราคาขาย</button>
       </div>`;
-    }).join('') + `</div>`;
+    }).join('') + `</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`;
   }else{
     ownedUI = `<div class="mkt-empty">คลังยังว่างอยู่ — ไปผลิตสินค้าชิ้นแรกที่เมนู <b>🏭 โรงงาน</b> กันเถอะ!<br>ผลิตเสร็จเอามาตั้งขาย หรือส่งมอบออเดอร์พิเศษได้เงินเพิ่ม 💰</div>`;
   }
