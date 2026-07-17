@@ -894,8 +894,20 @@ html.no-anim body.quake{animation:none;}
 .cat-btn.practice{background:linear-gradient(180deg,#8fc7f7,#5b9fd6);box-shadow:0 3px 0 #3d7fb5;}
 .cat-btn.quiz{background:linear-gradient(180deg,#c39df0,#9a6fdc);box-shadow:0 3px 0 #7d5fc0;}
 
+/* ---------- คลังศัพท์ใหญ่ band 1-5 (dictband.js · รอบ 264) ---------- */
+.band-sec-head{margin:20px 4px 10px;font-size:17px;font-weight:bold;color:#5a4a6e;}
+.band-sec-head small{display:block;font-size:12.5px;font-weight:normal;color:#9a8aac;margin-top:2px;}
+.cat-card.band-card.mine{border-color:var(--yellow-d);box-shadow:0 0 0 3px var(--yellow),var(--card-shadow);}
+.band-mine-tag{font-size:11.5px;background:var(--yellow);color:#a8791a;border:2px solid var(--yellow-d);border-radius:999px;padding:1px 8px;white-space:nowrap;vertical-align:middle;}
+
 /* ---------- แบบทดสอบ ---------- */
 .quiz-progress{font-size:15px;color:#8a76a8;text-align:center;margin:4px 0;}
+.quiz-phon{font-size:15px;color:#5b87ad;margin-top:6px;}   /* IPA + คำอ่าน ใต้คำโจทย์ (หมวด band) */
+#quiz-extra{display:none;background:rgba(255,255,255,.9);border:3px solid #fff;border-radius:16px;
+  padding:10px 14px;margin-top:12px;box-shadow:var(--card-shadow);}
+#quiz-extra.show{display:block;}
+#quiz-extra .qx-ex{font-size:16.5px;font-weight:bold;color:#4a3a5e;}
+#quiz-extra .qx-exth{font-size:14px;color:#9a8aac;margin-top:2px;}
 .quiz-word-card{
   background:var(--blue);border:3px solid #fff;border-radius:22px;padding:26px 10px;
   text-align:center;font-size:34px;color:#2f6ea5;box-shadow:var(--card-shadow);margin-bottom:14px;

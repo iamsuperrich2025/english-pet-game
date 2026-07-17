@@ -697,6 +697,7 @@ function renderCats(){
   document.getElementById('cats-level-label').textContent =
     `📚 คำศัพท์ระดับ${gradeBand(state.student ? state.student.grade : 'ป.1').label}`;
   const list = document.getElementById('cats-list');
+  /* หมวดตามชั้นเรียน + การ์ดคลังศัพท์ใหญ่ band 1-5 ต่อท้าย (dictband.js · รอบ 264) */
   list.innerHTML = catsForStudent().map(c=>{
     const attempts = state.quizLog.filter(l=>l.cat === c.id);
     const best = attempts.length ? Math.max(...attempts.map(a=>a.score)) : null;
@@ -715,21 +716,23 @@ function renderCats(){
         <button class="cat-btn quiz" data-cat="${c.id}">📝 สอบ 10 ข้อ</button>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + (typeof bandCardsHTML === 'function' ? bandCardsHTML() : '');
   list.querySelectorAll('.cat-btn.practice').forEach(b=>
-    b.addEventListener('click', ()=>startGame(findCat(b.dataset.cat))));
+    b.addEventListener('click', ()=>b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
   list.querySelectorAll('.cat-btn.quiz').forEach(b=>
-    b.addEventListener('click', ()=>startQuiz(findCat(b.dataset.cat))));
+    b.addEventListener('click', ()=>b.dataset.band ? bandPlay(b.dataset.band, 'quiz') : startQuiz(findCat(b.dataset.cat))));
 }
 
 const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
               qAt:0, fastAll:true};   // ⚡ สอบสายฟ้า: ถูกทุกข้อ + ข้อละไม่เกิน 5 วิ
 
 function startQuiz(cat){
-  // สุ่ม 10 ข้อจากหมวด: โจทย์อังกฤษ + ช้อยส์ไทย 4 ตัว (ตัวลวงจากหมวดเดียวกัน)
+  // สุ่ม 10 ข้อจากหมวด: โจทย์อังกฤษ + ช้อยส์ไทย 4 ตัว (ตัวลวงจากหมวดเดียวกัน ไม่ซ้ำข้อความ)
   quiz.questions = shuffle(cat.words).slice(0,10).map(([en,th])=>{
-    const wrong = shuffle(cat.words.filter(w=>w[1] !== th)).slice(0,3).map(w=>w[1]);
-    return {en, correct:th, choices:shuffle([th, ...wrong])};
+    const wrong = shuffle([...new Set(cat.words.map(w=>w[1]).filter(t=>t !== th))]).slice(0,3);
+    // หมวด band (dictband.js) มีข้อมูลพจนานุกรมแนบ: IPA/คำอ่านโชว์บนโจทย์ + ประโยคตัวอย่างไว้เฉลย
+    const meta = cat.dictMeta ? cat.dictMeta[en] : null;
+    return {en, correct:th, choices:shuffle([th, ...wrong]), meta};
   });
   quiz.cat = cat; quiz.idx = 0; quiz.correct = 0; quiz.fastAll = true;
   renderQuizQuestion();
@@ -744,8 +747,17 @@ function renderQuizQuestion(){
     `${quiz.cat.emoji} หมวด${quiz.cat.name} · ข้อ ${quiz.idx+1} จาก ${quiz.questions.length} · คำนี้แปลว่าอะไร?`;
   document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
   const wordEl = document.getElementById('quiz-word');
-  wordEl.innerHTML = `${escapeHTML(q.en)} <span class="quiz-speak">🔊</span>`;
+  wordEl.innerHTML = `${escapeHTML(q.en)} <span class="quiz-speak">🔊</span>`
+    + (q.meta && (q.meta.ipa || q.meta.pron)
+        ? `<div class="quiz-phon">${escapeHTML(q.meta.ipa || '')} ${escapeHTML(q.meta.pron || '')}</div>` : '');
   wordEl.onclick = ()=>speakWord(q.en);             // 🔊 แตะการ์ดคำโจทย์ = อ่านออกเสียง
+  // กล่องเฉลยประโยคตัวอย่าง (โผล่หลังตอบ เฉพาะหมวด band ที่มีตัวอย่าง)
+  let xb = document.getElementById('quiz-extra');
+  if(!xb){
+    xb = document.createElement('div'); xb.id = 'quiz-extra';
+    document.getElementById('quiz-choices').after(xb);
+  }
+  xb.classList.remove('show'); xb.innerHTML = '';
   const box = document.getElementById('quiz-choices');
   box.innerHTML = q.choices.map(c=>`<button class="quiz-choice">${c}</button>`).join('');
   box.querySelectorAll('.quiz-choice').forEach(btn=>{
@@ -765,16 +777,28 @@ function renderQuizQuestion(){
         });
       }
       document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
+      // หมวด band: เฉลยประโยคตัวอย่าง EN+TH แล้วค้างไว้ให้อ่านก่อนขึ้นข้อใหม่
+      let wait = 950;
+      if(q.meta && q.meta.ex){
+        xb.innerHTML = `<div class="qx-ex">💬 ${escapeHTML(q.meta.ex)}</div>`
+          + (q.meta.exTh ? `<div class="qx-exth">${escapeHTML(q.meta.exTh)}</div>` : '');
+        xb.classList.add('show');
+        // จอเตี้ย: กล่องเฉลยอาจอยู่ใต้ fold → เลื่อนให้เห็นทันที (smooth โดนเบราว์เซอร์ throttle ได้ตอนแท็บพัก)
+        xb.scrollIntoView({block:'nearest'});
+        wait = 2400;
+      }
       setTimeout(()=>{
         quiz.idx++;
         if(quiz.idx >= quiz.questions.length) finishQuiz();
         else renderQuizQuestion();
-      }, 950);
+      }, wait);
     });
   });
 }
 
 function finishQuiz(){
+  const qx = document.getElementById('quiz-extra');
+  if(qx){ qx.classList.remove('show'); qx.innerHTML = ''; }
   const cat = quiz.cat;
   const passed = quiz.correct >= 8;                              // เกณฑ์ผ่าน: 8/10
   const firstPass = passed && !state.quizPassed.includes(cat.id);
