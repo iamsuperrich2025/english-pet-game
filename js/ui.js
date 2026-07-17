@@ -2489,14 +2489,20 @@ function dictSearch(q){
   const cmp = (a,b)=>String(a[0]).localeCompare(String(b[0]));   // script โหลด async ลำดับไฟล์ไม่แน่นอน → เรียง ก-ฮ/a-z เอง
   return starts.sort(cmp).concat(has.sort(cmp), thai.sort(cmp)).slice(0, 40);
 }
+/* รอบ 281: ห่อคำอังกฤษในนิยาม/ตัวอย่างเป็น .di-w — แตะคำไหนค้นคำนั้นต่อทันที (ไล่ศัพท์ไม่ต้องพิมพ์)
+   ทำงานบนข้อความที่ escape แล้ว: ข้าม entity อื่น (&amp; ฯลฯ) · &#39; (apostrophe) นับเป็นส่วนของคำ เช่น don&#39;t */
+function dictTapWords(s){
+  return s.replace(/&[a-zA-Z]+;|&#\d+;|[A-Za-z]+(?:(?:&#39;|-)[A-Za-z]+)*/g,
+    m => m[0] === '&' ? m : `<span class="di-w">${m}</span>`);
+}
 function dictEntryHTML(r){
   const [w, pos, ipa, pron, def, th, ex, exTh] = r.map(x=>escapeHTML(x));
   return `<div class="dict-item">
     <div class="di-head"><b>${w}</b> <span class="di-pos">(${pos})</span> <span class="di-ipa">${ipa}</span> <span class="di-pron">${pron}</span>
       <button class="di-say" data-w="${w}" title="ฟังเสียง">🔊</button></div>
-    <div class="di-def">${def}</div>
+    <div class="di-def">${dictTapWords(def)}</div>
     <div class="di-th">${th}</div>
-    <div class="di-ex">${ex}</div>
+    <div class="di-ex">${dictTapWords(ex)}</div>
     <div class="di-exth">${exTh}</div>
   </div>`;
 }
@@ -2516,7 +2522,16 @@ function openDictOverlay(q){
     ov.querySelector('#dict-close').addEventListener('click', ()=>ov.remove());
     ov.querySelector('#dict-list').addEventListener('click', (e)=>{
       const b = e.target.closest('.di-say');
-      if(b && typeof speakWord === 'function') speakWord(b.dataset.w);
+      if(b && typeof speakWord === 'function'){ speakWord(b.dataset.w); return; }
+      /* รอบ 281: แตะคำอังกฤษในผลลัพธ์ = ค้นคำนั้นต่อทันที (sync ช่อง lobby เหมือนค้นจากช่องบนแผง) */
+      const wEl = e.target.closest('.di-w');
+      if(wEl){
+        const q2 = wEl.textContent.trim();
+        if(!q2) return;
+        __dictLastQ = q2; sfx.select();
+        const li = document.getElementById('dict-input'); if(li) li.value = q2;
+        openDictOverlay(q2);
+      }
     });
     /* รอบ 279: ค้นคำถัดไปจากในแผงผลลัพธ์ได้เลย ไม่ต้องปิดก่อน · blur ยุบแป้นมือถือเหมือนช่องหลัก
        + sync ค่ากลับช่องค้นหาใน lobby (#dict-input) ให้ตรงกัน */

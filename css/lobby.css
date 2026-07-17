@@ -566,6 +566,10 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .dict-card .dict-box input{background:#fff;color:#2f4a78;border-color:#b9cbe8;}
 .dict-card .dict-box input::placeholder{color:#8fa5c8;}
 .dict-card .dict-box input:focus{border-color:#57c1ff;box-shadow:0 0 8px rgba(87,193,255,.35);}
+/* รอบ 281: คำอังกฤษในนิยาม/ตัวอย่างแตะได้ — เส้นประใต้คำบอกใบ้ว่ากดค้นต่อได้ */
+.di-w{cursor:pointer;border-bottom:1px dashed #9db9e6;}
+.di-w:hover{color:#1d7fd6;border-bottom-color:#57c1ff;}
+.di-w:active{color:#1d7fd6;background:#e3f2ff;border-radius:4px;}
 .dict-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding-right:4px;}
 .dict-item{
   background:#fff;border:1.5px solid #cdd9f0;border-left:5px solid #57c1ff;border-radius:12px;
