@@ -1340,10 +1340,14 @@ function showPlayerCard(uid, name, grade){
     wrap.style.display = '';
   });
 
-  /* ---- 🖼️ รอบ 195: แตะภาพเล็ก → ภาพใหญ่ · รอบ 276: น้อง → การ์ดข้อมูลย่อ openPetPeek ---- */
+  /* ---- 🖼️ รอบ 195: แตะภาพเล็ก → ภาพใหญ่ · รอบ 276: น้อง → การ์ดข้อมูลย่อ openPetPeek
+     รอบ 277: เจ้าของเป็นเพื่อนกัน → การ์ดน้องมีปุ่ม 🎁 (onGift ปิดการ์ดโปรไฟล์ก่อน กันบังกล่องของขวัญ) ---- */
   ov.addEventListener('click', (e)=>{
     const pet = e.target.closest('.pl-pet');
-    if(pet && plPets && plPets[+pet.dataset.pi]){ openPetPeek(plPets[+pet.dataset.pi]); return; }
+    if(pet && plPets && plPets[+pet.dataset.pi]){
+      openPetPeek(plPets[+pet.dataset.pi], myFriend ? {giftFriend: myFriend, onGift: close} : null);
+      return;
+    }
     const cell = e.target.closest('.pl-asset');
     if(!cell) return;
     const img = cell.querySelector('img');
@@ -1383,8 +1387,10 @@ function openImgLightbox(src, caption){
 }
 
 /* 🐾 รอบ 276: การ์ดข้อมูลน้องฉบับย่อ — คลิกน้องในโปรไฟล์ผู้เล่น (ของเพื่อนมีแค่ descriptor {t,s,sh,e,nm}
-   จาก /feed/<uid>/pt จึงโชว์ได้เท่าที่เปิดเผย: ชนิด/วัย/หุ่น/ไอเทมที่สวม) · แตะที่ไหนก็ปิด ไม่มี scroll */
-function openPetPeek(d){
+   จาก /feed/<uid>/pt จึงโชว์ได้เท่าที่เปิดเผย: ชนิด/วัย/หุ่น/ไอเทมที่สวม) · แตะที่ไหนก็ปิด ไม่มี scroll
+   รอบ 277: opts.giftFriend = เจ้าของน้องเป็นเพื่อนกัน → ปุ่ม 🎁 ส่งของขวัญให้เจ้าของ (opts.onGift ให้ผู้เรียก
+   ปิดการ์ดโปรไฟล์ก่อน — gift-pick-overlay z 85 ต่ำกว่า pl-overlay 90 ไม่ปิดจะโดนบัง) */
+function openPetPeek(d, opts){
   if(!d || !d.t) return;
   const P = (typeof PETS !== 'undefined' && PETS[d.t]) || {};
   const img = petDescImg(d);
@@ -1398,18 +1404,27 @@ function openPetPeek(d){
   }
   const it = (d.e && typeof ITEMS !== 'undefined') ? ITEMS.find(i=>i.id === d.e) : null;
   if(it) chips.push(`${it.emoji} สวม${it.name}`);
+  const gf = (opts && opts.giftFriend && typeof openGiftPicker === 'function') ? opts.giftFriend : null;
   const lb = document.createElement('div');
   lb.className = 'img-lightbox pet-peek';
   lb.innerHTML = `<div class="ilb-inner">
       ${img ? `<img src="${img}" alt="">` : `<div class="pp-emoji">${P.adult || '🐾'}</div>`}
       <div class="ilb-cap">${escapeHTML(nm)}</div>
       <div class="pp-chips">${chips.map(c=>`<span class="pp-chip">${escapeHTML(c)}</span>`).join('')}</div>
+      ${gf ? `<button class="pp-gift" type="button">🎁 ส่งของขวัญให้ ${escapeHTML(splitNameBadges(gf.n).name || gf.n)}</button>` : ''}
       <button class="ilb-x" type="button" aria-label="ปิด">✕</button>
     </div>`;
   document.body.appendChild(lb);
   requestAnimationFrame(()=>lb.classList.add('on'));
   const close = ()=>{ lb.classList.remove('on'); setTimeout(()=>lb.remove(), 220); };
   lb.addEventListener('click', close);
+  const gBtn = lb.querySelector('.pp-gift');
+  if(gBtn) gBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    close();
+    if(opts.onGift) opts.onGift();
+    openGiftPicker(gf);
+  });
   if(typeof sfx !== 'undefined' && sfx.select) sfx.select();
 }
 
@@ -1714,14 +1729,30 @@ function openChatInbox(){
   const onlineFriends = friends.map((f,i)=>({f,i})).filter(x=>onlineIds.has(String(x.f.uid)));
   if(onlineFriends.length){
     storyEl.innerHTML = onlineFriends.map(({f,i})=>
-      `<button class="ib-story-item" data-i="${i}" type="button">
+      `<button class="ib-story-item" data-i="${i}" type="button" title="แตะ = แชท · กดค้าง = ดูโปรไฟล์">
         <span class="ib-story-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}<i class="ib-story-on"></i><span class="ib-story-badge" data-uid="${escapeHTML(f.uid)}" style="display:none"></span></span>
         <small>${escapeHTML((f.n||'').trim().split(' ')[0])}</small>
       </button>`).join('');
-    storyEl.querySelectorAll('.ib-story-item').forEach(b=>b.addEventListener('click', ()=>{
-      const f = friends[+b.dataset.i];
-      if(f){ sfx.select(); close(); openChat(f); }
-    }));
+    /* รอบ 277: แตะ = แชท (เดิม) · กดค้าง ≥550ms = เปิดโปรไฟล์เพื่อนคนนั้น */
+    storyEl.querySelectorAll('.ib-story-item').forEach(b=>{
+      let lpTimer = null, lpFired = false;
+      const cancel = ()=>{ if(lpTimer){ clearTimeout(lpTimer); lpTimer = null; } };
+      b.addEventListener('pointerdown', ()=>{
+        lpFired = false;
+        lpTimer = setTimeout(()=>{
+          lpTimer = null; lpFired = true;
+          const f = friends[+b.dataset.i];
+          if(f){ sfx.select(); close(); showPlayerCard(f.uid, f.n, f.g || ''); }
+        }, 550);
+      });
+      ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev, cancel));
+      b.addEventListener('contextmenu', e=>e.preventDefault());   // มือถือกดค้างชอบเด้งเมนู — กันไว้
+      b.addEventListener('click', ()=>{
+        if(lpFired){ lpFired = false; return; }                   // เพิ่งกดค้างไป — ไม่เปิดแชทซ้ำ
+        const f = friends[+b.dataset.i];
+        if(f){ sfx.select(); close(); openChat(f); }
+      });
+    });
   } else storyEl.style.display = 'none';
 
   const listEl = overlay.querySelector('#ib-list');
@@ -2585,7 +2616,7 @@ function renderDashboard(){
     document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
     renderDinnerChip();
     const dIn = document.getElementById('dict-input');
-    const dGo = ()=>{ const q = dIn.value.trim(); if(!q) return; __dictLastQ = q; sfx.select(); openDictOverlay(q); };
+    const dGo = ()=>{ const q = dIn.value.trim(); if(!q) return; __dictLastQ = q; sfx.select(); dIn.blur(); openDictOverlay(q); };   // blur = ยุบแป้นพิมพ์มือถือ ไม่บังผลค้นหา (แตะช่องใหม่ค่อยเด้งกลับ)
     dIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') dGo(); });
     dIn.addEventListener('input', ()=>{ __dictLastQ = dIn.value; });   // จำข้อความไว้ — render รอบใหม่ไม่ล้างช่อง
     document.getElementById('dict-go').addEventListener('click', dGo);
