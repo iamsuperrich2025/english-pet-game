@@ -35,6 +35,7 @@
 - **`.237`: คลิกกลุ่มอันดับ→กระดานเต็มจอ 5 คอลัมน์ Top 100** (`openLeaderboardFull` ui.js · grid `repeat(rpc,1fr)` สูง `min(76,rpc*4)vh`) · **คลิกน้อง→`openPetInfoOverlay` + รูปใหญ่ `.pi-portrait`** · `LEADERBOARD_SIZE 50→100`
 
 ### ▶️ งานค้างถัดไป
+- 📚 **เชื่อมข้อมูล band (js/data/band/) เข้าระบบเลือกความยากของเกม — ⚠️ "ห้ามลืมเด็ดขาด" (ผู้ใช้สั่ง 17 ก.ค.): ตอนเชื่อมต้อง normalize คำอังกฤษเป็นตัวเล็ก** (business ขึ้นต้นตัวใหญ่ทุกคำ เช่น "Balance sheet" · academic เป็นตัวเล็ก — ไม่ normalize = เทียบคำตอบพลาด) · เครื่องมือ: `tools/split_band.py --lower` หรือ normalize ตอนโหลด · กฎอ่านไฟล์: เปิดได้เฉพาะไฟล์แยกช่วงคำ `_a-b.js` ห้ามอ่านก้อนรวม .json (NOTES.md)
 - ✅ **[รอบ 239 · เสร็จ .238] ผลิตสินค้าเสร็จแล้วผู้เล่นหาไม่เจอว่าไปไหน — แก้แล้ว:**
   - ฉากฉลอง "🏭 ผลิตสำเร็จ" (`showCollectReveal` ui.js) ตอน `produced` → เพิ่มปุ่ม **"📦 ไปเปิดคลัง"** (คู่ปุ่ม "ไว้ก่อน") พาไป `gotoMyStock()` = `showScreen('screen-dashboard')`+`renderDashboard()`+`openPanel('panel-market')` เลื่อนถึง `#mkt-mystock` (หัวข้อ "🎁 คลังสินค้าของฉัน" ท้ายแผงตลาด)
   - คลังสะสมอยู่ท้าย **แผงตลาด `panel-market`** (`renderCollectMine` → `.hq-grid`) · **ยืนยัน browser จริง:** ผลิต cupcake → ปุ่มโผล่ → คลิก → เปิดแผงตลาด · `#mkt-mystock` โชว์ "(1 ชิ้น)" + การ์ด "คัพเค้กสตรอว์เบอร์รี" · ฟิตจอ 812×375 · ไม่มี console error
