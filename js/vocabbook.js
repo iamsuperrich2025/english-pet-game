@@ -72,7 +72,8 @@ function vbReviewCat(){
   const pool = all.map(e=>[e.en, e.th])
     .concat(typeof vocabForStudent === 'function' ? vocabForStudent() : []);
   return {id:'vbreview', vbook:true, name:'ทบทวนคำของหนู', emoji:'📒', reward:50,
-          words, quizCount:words.length, distractPool:pool};
+          words, quizCount:words.length, distractPool:pool,
+          onFinish(){ if(typeof questEvent === 'function') questEvent('vbquiz'); }};   // 🎯 ภารกิจ 📒: สอบทบทวนจบ 1 รอบ (ไม่ต้องผ่าน — นับความพยายาม)
 }
 function vbStartReview(){
   const cat = vbReviewCat();

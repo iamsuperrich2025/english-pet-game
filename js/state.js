@@ -439,6 +439,7 @@ const QUEST_POOL = [
   {id:'produce1', ev:'produce', target:1,  reward:120, emoji:'🏭', name:'ผลิตสินค้าในโรงงานสำเร็จ 1 ชิ้น'},
   {id:'replay2',  ev:'replay',  target:2,  reward:80,  emoji:'🔁', name:'กด "เล่นต่ออีกรอบ" 2 ครั้ง'},
   {id:'dict5',    ev:'dict',    target:5,  reward:80,  emoji:'📖', name:'เปิดพจนานุกรมค้นคำ 5 คำ'},   // รอบ 285: นับเฉพาะคำใหม่ที่เจอผล (ไม่นับค้นคำเดิมซ้ำ)
+  {id:'vbreview1',ev:'vbquiz',  target:1,  reward:120, emoji:'📒', name:'สอบทบทวนคำในสมุดของหนู 1 รอบ'},   // รอบ 291: นับตอนสอบทบทวนจบ (ผ่านหรือไม่ก็นับ — ให้กำลังใจความพยายาม)
 ];
 const QUEST_PER_DAY = 3, QUEST_ALL_BONUS = 150;
 function questsToday(){               // เลือก 3 ภารกิจของวันนี้ (deterministic จากวันที่)

@@ -216,6 +216,21 @@ function showProgressReport(){
   const qTotalCats = (typeof catsForStudent === 'function') ? catsForStudent().length : 0;
   const qAvg = qCount ? Math.round(state.quizLog.reduce((a,l)=>a + (l.total? l.score/l.total : 0), 0) / qCount * 100) : 0;
 
+  // 📒 สมุดคำศัพท์ (รอบ 291): สรุปกลุ่มคำ + คำที่ยังอ่อน — ครู/ผู้ปกครองเห็นว่าลูกติดคำไหน (แตะคำ=ฟังเสียง)
+  const vb = (typeof vbStats === 'function') ? vbStats() : {total:0, review:0, learn:0, master:0};
+  const vbWeak = (typeof vbList === 'function') ? vbList('review').slice(0, 8) : [];
+  const vbHtml = vb.total ? `
+    <div class="rp-section">
+      <h3 class="rp-h3">📒 สมุดคำศัพท์ของ${name} <span class="rp-badge-mini">${fmtNum(vb.total)} คำ</span></h3>
+      <div class="rp-row"><span>⭐ แม่นแล้ว</span><span><b>${fmtNum(vb.master)}</b> คำ</span></div>
+      <div class="rp-row"><span>🌱 กำลังเรียนรู้</span><span><b>${fmtNum(vb.learn)}</b> คำ</span></div>
+      <div class="rp-row"><span>💪 ต้องทบทวน</span><span><b>${fmtNum(vb.review)}</b> คำ</span></div>
+      ${vbWeak.length ? `<div class="rp-tl-note" style="margin-top:4px">คำที่ยังติดบ่อย — ชวนหนูทวนคำพวกนี้กันนะ (แตะฟังเสียง 🔊):</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px">${vbWeak.map(e=>
+          `<button class="vb-word g-review" data-w="${escapeHTML(e.en)}"><b>${escapeHTML(e.en)}</b> — ${escapeHTML(e.th)}</button>`).join('')}</div>`
+        : `<div class="rp-tl-note" style="margin-top:4px">🌟 ตอนนี้ไม่มีคำค้างทบทวนเลย เก่งมาก!</div>`}
+    </div>` : '';
+
   // โลกผจญภัย 3D: คำที่พิชิตต่อโลก (โชว์เฉพาะโลกที่มีตั๋วหรือเคยพิชิต)
   const worlds = [
     {ic:'🌍', nm:'โลกผจญภัย',   n:(state.advDone||[]).length,   own:state.advTicket},
@@ -314,7 +329,7 @@ function showProgressReport(){
       <div class="rp-row"><span>สอบไปทั้งหมด</span><span><b>${fmtNum(qCount)}</b> ครั้ง</span></div>
       ${qCount ? `<div class="rp-row"><span>คะแนนเฉลี่ย</span><span><b>${qAvg}%</b> ถูก</span></div>` : ''}
     </div>
-
+    ${vbHtml}
     <div class="rp-section">
       <h3 class="rp-h3">🌍 คำที่พิชิตในโลก 3D <span class="rp-badge-mini">รวม ${fmtNum(world3dTotal)} คำ</span></h3>
       ${worldRows}
@@ -340,6 +355,10 @@ function showProgressReport(){
   overlay.querySelector('.report-close').addEventListener('click', close);
   overlay.querySelector('.report-ok').addEventListener('click', close);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) close(); });
+  overlay.addEventListener('click', e=>{   // 📒 แตะชิปคำที่ยังติดบ่อย = ฟังเสียง
+    const w = e.target.closest('.vb-word');
+    if(w && typeof speakWord === 'function') speakWord(w.dataset.w);
+  });
   document.body.appendChild(overlay);
   if(typeof sfx !== 'undefined') sfx.levelup();
 }

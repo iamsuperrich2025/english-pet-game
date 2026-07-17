@@ -153,6 +153,7 @@
     if(!hit){ if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong(); flashWrong(cells); return; }
     hit.found=true;
     hit.cells.forEach(([r,c],i)=>{ wsGame.grid[r][c].found=true; wsGame.grid[r][c].zi=i; });   // zi = ลำดับตัวอักษร (คลื่นไฟฟ้าไล่)
+    if(typeof vbRecord==='function') vbRecord(hit.w, hit.th, true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร (normalize ตัวเล็กใน vbRecord)
     const reward=hit.w.length*2;                                    // 🪙 รางวัลตามความยาวคำ (3 ตัว=6 … 10 ตัว=20)
     if(typeof addCoins==='function') addCoins(reward);
     if(typeof sfx!=='undefined'){ if(sfx.spark)sfx.spark(); else if(sfx.coin)sfx.coin(); }   // ⚡ ฟ้าร้อง+ไฟช็อต

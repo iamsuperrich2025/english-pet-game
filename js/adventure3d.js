@@ -1686,6 +1686,7 @@ function completeWord(i){
   sessionCoins+=M.reward; sessionWords++;
   questEvent('word3d');                     // 🎯 Daily Quest: ประกอบคำในโลก 3D
   if(!sessionWordLog.some(x=>x.en===w.en)) sessionWordLog.push({en:w.en,th:w.th});   // 📖 เก็บเข้าสมุดคำศัพท์รอบนี้ (ไม่ซ้ำ)
+  if(typeof vbRecord==='function') vbRecord(w.en,w.th,true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร (vocabbook.js)
   sfx.levelup();
   setTimeout(()=>speakWord(w.en), 700);     // 🔊 อ่านคำที่ผสมสำเร็จ (รอแตรฉลองจบก่อน)
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(60);
@@ -6641,6 +6642,7 @@ function explodeAlien(a){
     if(typeof onlinePushScore==='function') onlinePushScore();
     checkMechaBossBadge(); }                                          // 🤖 รอบ 229: เช็ก/มอบเข็มนักล่าบอส
   if(!sessionWordLog.some(x=>x.en===a.word.en)) sessionWordLog.push({en:a.word.en,th:a.word.th});
+  if(typeof vbRecord==='function') vbRecord(a.word.en,a.word.th,true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร
   doneList().push(a.word.en); questEvent('word3d'); sfx.levelup();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(a.boss?[90,60,120]:80);
   showBanner(`${a.boss?'👾💥':'💥'} <b>${escapeHTML(a.word.en.toUpperCase())}</b> = ${escapeHTML(a.word.th)}<br><span class="adv-ban-coin">+${reward} 🪙</span>`);
