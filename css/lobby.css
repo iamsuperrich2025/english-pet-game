@@ -1634,9 +1634,22 @@ html.no-anim .cs-big-img{animation:none}
 .pi-portrait{display:block;margin:2px auto 8px;max-height:min(30vh,260px);max-width:90%;
   object-fit:contain;filter:drop-shadow(0 10px 20px rgba(3,15,35,.5));}
 /* 🐾 รอบ 247: คอลัมน์ซ้าย = รูปน้องเต็มคอลัมน์ (ตัวหนังสือย้ายไปขวาหมดแล้ว) */
-.pi-box .pi-plate-img{display:flex;flex-direction:column;align-items:center;}
+.pi-box .pi-plate-img{display:flex;flex-direction:column;align-items:center;position:relative;}
 .pi-box .pi-plate-img .pi-portrait{flex:1 1 auto;min-height:0;height:auto;
   max-height:none;max-width:100%;margin:6px auto;}
+/* รอบ 273: ปุ่มแต่งตัวมุมบนขวาแผงรูป (เปิดร้านค้า & ห้องแต่งตัว) + คำบรรยายรูปร่างใต้รูปน้อง */
+.pi-dress-btn{position:absolute;top:8px;right:8px;z-index:6;
+  padding:6px 14px;border-radius:999px;border:2px solid rgba(255,255,255,.85);
+  background:linear-gradient(135deg,#ff5a7a,#ffb84f);color:#fff;font-weight:800;font-size:13px;
+  box-shadow:0 3px 10px rgba(0,0,0,.4);cursor:pointer;white-space:nowrap;}
+.pi-dress-btn:hover{filter:brightness(1.08);}
+.pi-dress-btn:active{transform:scale(.94);}
+.pi-shape-cap{flex:0 0 auto;margin:0 4px 4px;padding:6px 12px;border-radius:12px;
+  font-size:12.5px;line-height:1.5;color:#cfe4fa;text-align:center;max-width:96%;
+  background:rgba(7,25,52,.55);border:1px solid var(--glass-line);}
+.pi-shape-cap b{color:#ffe9a8;}
+.pi-shape-cap.shape-cap-thin,.pi-shape-cap.shape-cap-fat{border-color:#e8935a;color:#ffddc2;}
+.pi-shape-cap.shape-cap-strong{border-color:#5fcf85;color:#d8f7e2;}
 .pi-care-title{margin-top:14px;}
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */

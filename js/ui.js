@@ -2247,6 +2247,12 @@ function bindPetPlateButtons(root){
   on('btn-wake', wakeAllPets);
   on('btn-detox', ()=>detoxPet(p));
   on('btn-pet-rename', ()=>renamePet(p));
+  on('btn-pi-dress', ()=>{           // รอบ 273: ปิด overlay แล้วเปิดร้านค้า & ห้องแต่งตัว (ซื้อ+สวมได้เลย)
+    window.__piOverlay = null;
+    const ov = root.closest ? (root.classList.contains('pi-overlay') ? root : root.closest('.pi-overlay')) : null;
+    if(ov) ov.remove();
+    if(typeof openPanel === 'function') openPanel('panel-shop');
+  });
 }
 
 /* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว) ไม่มี scrollbar
@@ -2732,10 +2738,19 @@ function renderDashboard(){
           ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
         </div>
       </div>` : ''}`;
+  /* รอบ 273 (สเปกผู้ใช้): ใต้รูปน้อง = คำบรรยายว่าทำไมถึงผอม/อ้วน/ล่ำ · ปุ่ม 🎀 แต่งตัว มุมบนขวา เปิดร้านค้าซื้อใส่ได้เลย */
+  const shapeWhy = {
+    thin:  `🦴 <b>ผอมโซ</b> — เพราะอดข้าวบ่อย ปล่อยให้หิวจนป่วยติดกัน ${SHAPE_MISS_MEALS} มื้อ · กินให้อิ่มเต็มหลอดทุกมื้อ น้องจะค่อยๆ กลับมาแข็งแรง`,
+    fat:   `🍩 <b>อ้วนกลม</b> — เพราะกินอาหารโทษ/ขนมติดกัน ${SHAPE_JUNK_MEALS} มื้อ · กลับมากินอาหารดีๆ เต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด จะหุ่นดีเหมือนเดิม`,
+    strong:`💪 <b>ล่ำกำยำ</b> — เพราะกินอาหารดีเต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด · ได้โบนัส EXP +${SHAPE_EXP_BONUS} ทุกคำที่จับคู่ถูก`,
+    normal:`😊 <b>หุ่นสมส่วน</b> — เพราะกินอิ่มสม่ำเสมอ ไม่อดข้าว ไม่กินของโทษบ่อย · กินดีเต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด จะล่ำกำยำได้โบนัส EXP`,
+  };
   __petPlates = {
     info: `
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
-      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}`,
+      ${stage !== 'egg' ? `<button class="pi-dress-btn" id="btn-pi-dress">🎀 แต่งตัวน้อง</button>` : ''}
+      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
+      ${stage !== 'egg' ? `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>` : ''}`,
     care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
   };
   const petAlert = p.sick ? ' <span class="pib-alert">🤒</span>' : (petHungry(p) ? ' <span class="pib-alert">😫</span>' : '');
