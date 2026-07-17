@@ -8,7 +8,7 @@
 # ============================================================
 set -e
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-STAGE="$(cygpath -u "${TEMP:-/tmp}" 2>/dev/null || echo /tmp)/vocabworld_deploy"   # tar ต้องการ POSIX path
+STAGE="$(cygpath -u "${TEMP:-/tmp}" 2>/dev/null || echo /tmp)/vocabworld_deploy_$$"   # tar ต้องการ POSIX path · _$$ = ต่อ PID กัน 2 session deploy พร้อมกันชนโฟลเดอร์กัน (เจอจริงรอบ 291)
 export PATH="/c/Users/rober/bin/node:$PATH"   # Node พกพา + firebase-tools (npm -g) — ตัว standalone .exe ใช้ไม่ได้ (firepit crash)
 FB="firebase"
 SITE="vocabworld"                        # → https://vocabworld.web.app (แก้ตรงนี้ถ้าชื่อโดนจอง)
@@ -50,3 +50,4 @@ cd "$STAGE"
 # 🧹 ล้าง Hosting versions เก่า (รอบ 158) — กันชนโควตา storage แผนฟรี (429)
 # พลาดไม่เป็นไร deploy สำเร็จไปแล้ว (|| true)
 node "$REPO/tools/cleanup_hosting_versions.mjs" || echo "⚠️ cleanup ข้ามไป (ไม่กระทบ deploy)"
+cd "$REPO" && rm -rf "$STAGE"            # เก็บกวาด staging ของตัวเอง (ตอนนี้ชื่อมี PID ไม่สะสมทับกัน)

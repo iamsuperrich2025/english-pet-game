@@ -200,3 +200,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-17 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 280:** 🔍📖 **ช่องค้นคำถัดไปบนหัวแผงผลพจนานุกรม** (ไอเดียต่อยอดรอบ 278 ผู้ใช้อนุมัติ) — `#dict-input-ov`+`#dict-go-ov` ใต้หัว dict-card (openDictOverlay ui.js): ค้นใหม่ได้เลยไม่ต้องปิดแผง · Enter/🔍 → blur ยุบแป้น + sync ค่ากลับช่อง lobby · เปิดแผงเติมคำที่ค้นให้ · CSS โทนสว่าง `.dict-card .dict-box` (lobby.css) · ยืนยัน browser: fine→define→fine ผลเปลี่ยนถูก blur ทุกทาง overlay ไม่ซ้อน · 812×375 การ์ดในจอ (h345) ช่องค้นหาโผล่ครบ · ไม่มี console error · ค้าง: ผู้ใช้ลองจริงบนมือถือ
+
+
+## ⏬ ย้ายเมื่อ 2026-07-17 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 281:** 👆📖 **แตะคำอังกฤษในผลพจนานุกรม = ค้นคำนั้นต่อทันที** (ไอเดียต่อยอดรอบ 280 ผู้ใช้อนุมัติ) — `dictTapWords` (ui.js) ห่อคำในนิยาม+ตัวอย่างเป็น `.di-w` (regex ข้าม entity · `&#39;` นับในคำ เช่น don't) · click delegation ใน dict-list: `.di-say`=🔊 เดิม / `.di-w`=ค้นต่อ+sync ช่อง lobby · CSS เส้นประใต้คำ (lobby.css) · ยืนยัน browser: fine→แตะ good ได้ 3 คำ · 🔊 ไม่ trigger ค้น · entity/apostrophe ถูก · ไม่มี console error · ⚠️ commit `1e21741` **stage เฉพาะ hunk พจนานุกรม** (`git apply --cached` patch) — งานค้าง session คู่ขนาน (refactor alertBox `.ab-*` + ปุ่มรักษาใน feedPet) **ยังไม่ commit อยู่ใน working tree ตามเดิม** ไม่ถูกกวาด · ค้าง: ผู้ใช้ลองจริงบนมือถือ
