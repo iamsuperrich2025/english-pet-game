@@ -4845,13 +4845,15 @@ function renderFarmCard(){
   const el = document.getElementById('farm-card');
   if(!el) return;
   const now = Date.now();
+  // ร้านต้นไม้ = การ์ดปัดแนวนอนสไตล์ SimCity BuildIt (หัวน้ำเงิน · ภาพใหญ่ · แถบราคาทอง)
   const shop = FRUITS.map(f=>`
-    <button class="farm-buy-btn" data-fruit="${f.id}">
-      <span class="farm-buy-emoji">${f.emoji}</span>
-      <span>ปลูก${f.name} 🪙${fmtNum(f.price)}
-        <small>โตใน ${f.growDays} วัน · เก็บขายผลได้ 🪙${fmtNum(f.sell)} (ขายแล้วออกผลใหม่เรื่อยๆ)</small>
-      </span>
-    </button>`).join('');
+    <div class="hq-card farm-hq">
+      <div class="hq-head">${f.name}</div>
+      <div class="hq-pic"><span class="hq-emoji">${f.emoji}</span>
+        <span class="hq-badge">⏰ โต ${f.growDays} วัน</span></div>
+      <div class="farm-yield">เก็บขายผลได้ <b>🪙${fmtNum(f.sell)}</b><small>ขายแล้วออกผลใหม่เรื่อยๆ</small></div>
+      <button class="hq-price craft-buy farm-buy-btn" data-fruit="${f.id}">🪙${fmtNum(f.price)} ปลูกเลย</button>
+    </div>`).join('');
 
   let list, sig = '';
   if(state.farm.length){
@@ -4870,10 +4872,8 @@ function renderFarmCard(){
         : `<div class="farm-grow-badge">🌱 กำลังโต</div>`;
       return `<div class="farm-tree ${ready ? 'ready' : ''}">
         <span class="farm-tree-emoji">${f.emoji}</span>
-        <div class="farm-tree-info">
-          <b>${f.name}</b>
-          <div class="farm-tree-status" id="farm-time-${i}">${status}</div>
-        </div>
+        <b class="farm-tree-name">${f.name}</b>
+        <div class="farm-tree-status" id="farm-time-${i}">${status}</div>
         ${action}
       </div>`;
     }).join('');
@@ -4881,20 +4881,29 @@ function renderFarmCard(){
     const sellAll = readyCount >= 2
       ? `<button class="farm-sellall-btn" id="btn-farm-sellall">🧺 เก็บขายทั้งหมดที่สุกแล้ว (${readyCount} ต้น) 🪙${fmtNum(readyTotal)}</button>`
       : '';
-    list = sellAll + '<div class="farm-list">' + rows + '</div>';
+    list = `<div class="farm-sec"><h4 class="farm-sub">🌱 ต้นไม้ของหนู (${state.farm.length} ต้น)</h4>${sellAll}
+      <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+        <div class="farm-list strip-x">${rows}</div>
+        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div>`;
   }else{
-    list = `<div class="home-current none">
+    list = `<div class="farm-sec"><div class="home-current none">
       <span class="home-emoji">🌱</span>
       <div><b>สวนยังว่างอยู่</b><br>
         <small>ซื้อต้นไม้มาปลูก รอผลสุกแล้วเก็บขายได้เงิน — ลงทุนครั้งเดียวเก็บผลได้เรื่อยๆ!</small>
       </div>
-    </div>`;
+    </div></div>`;
   }
 
   el.innerHTML = `<h3 class="shop-title">🌳 สวนผลไม้</h3>
-    <div class="farm-shop">${shop}</div>
-    ${list}`;
+    <div class="farm-cols">
+    <div class="farm-sec"><h4 class="farm-sub">🪴 ร้านต้นไม้ — ปัดซ้ายขวาเลือกได้เลย</h4>
+      <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+        <div class="farm-shop strip-x">${shop}</div>
+        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div>
+    ${list}
+    </div>`;
   el.dataset.readysig = sig;
+  el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);
   el.querySelectorAll('.farm-buy-btn').forEach(b=>b.addEventListener('click', ()=>buyFruit(b.dataset.fruit)));
   el.querySelectorAll('.farm-sell-btn').forEach(b=>b.addEventListener('click', ()=>sellFruit(+b.dataset.tree)));
   const sellAllBtn = document.getElementById('btn-farm-sellall');
@@ -5114,12 +5123,19 @@ function openWishlistDialog(){
     </div>`;
   }).join('');
   overlay.innerHTML = `<div class="levelup-box wl-box">
-    <h2>💖 ของที่หนูเล็งไว้</h2>
-    <p class="ld-note">แตะเลือกของที่อยากได้ — พอมีเพื่อนลงขายในตลาด เกมจะแจ้งเตือนหนูทันที!</p>
-    <div class="wl-grid">${grid()}</div>
-    <button class="cf-ok" style="margin-top:12px">เสร็จแล้ว ✅</button>
+    <div class="wl-head">
+      <h2>💖 ของที่หนูเล็งไว้</h2>
+      <button class="cf-ok wl-done">เสร็จแล้ว ✅</button>
+    </div>
+    <p class="ld-note">แตะเลือกของที่อยากได้ — พอมีเพื่อนลงขายในตลาด เกมจะแจ้งเตือนหนูทันที! · ปัดซ้ายขวาดูของทั้งหมด</p>
+    <div class="strip-wrap">
+      <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+      <div class="wl-grid strip-x">${grid()}</div>
+      <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
+    </div>
   </div>`;
   const wrap = overlay.querySelector('.wl-grid');
+  bindStripArrows(overlay.querySelector('.strip-wrap'));
   wrap.addEventListener('click', e=>{
     const it = e.target.closest('.wl-it');
     if(!it) return;
@@ -5134,6 +5150,19 @@ function openWishlistDialog(){
   });
   overlay.querySelector('.cf-ok').addEventListener('click', ()=>{ overlay.remove(); renderMarketCard(); });
   document.body.appendChild(overlay);
+}
+
+/* ลูกศรเลื่อนแถบปัดแนวนอน (สไตล์ SimCity BuildIt) — wrap = .strip-wrap ที่มี .strip-x ข้างใน
+   คลิกเลื่อนทีละ ~80% ของช่องมอง · เนื้อหาไม่ล้น = ซ่อนลูกศรเอง (เรียกซ้ำได้หลัง re-render) */
+function bindStripArrows(wrap){
+  if(!wrap) return;
+  const strip = wrap.querySelector('.strip-x');
+  const page = ()=> Math.max(120, strip.clientWidth * 0.8);
+  const l = wrap.querySelector('.sa-l'), r = wrap.querySelector('.sa-r');
+  if(l && !l.dataset.bound){ l.dataset.bound = '1'; l.addEventListener('click', ()=>{ sfx.select(); strip.scrollBy({left:-page(), behavior:'smooth'}); }); }
+  if(r && !r.dataset.bound){ r.dataset.bound = '1'; r.addEventListener('click', ()=>{ sfx.select(); strip.scrollBy({left: page(), behavior:'smooth'}); }); }
+  // setTimeout ไม่ใช่ rAF — rAF ไม่ยิงตอนแท็บ hidden (วัดแล้วซ่อนลูกศรไม่ทำงาน)
+  setTimeout(()=> wrap.classList.toggle('no-x', strip.scrollWidth <= strip.clientWidth + 4), 0);
 }
 
 /* 🏪 item 2: ชั้นวางของจากเพื่อนทั้งเซิร์ฟเวอร์ — โชว์เมื่อตลาดจริงเปิดแล้ว (rules /market publish) */

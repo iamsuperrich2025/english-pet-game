@@ -1137,7 +1137,7 @@ html.no-anim .q-bigcard{animation:none;}
 }
 .panel-overlay.open{display:flex;animation:fadeIn .22s ease;}
 .panel-box{
-  width:min(880px,96vw);max-height:min(600px,92dvh);
+  width:min(1180px,98vw);max-height:min(600px,92dvh);   /* รอบ 290: ยืดกว้างขึ้น (ผู้ใช้ขอ) รับแถบปัดแนวนอน */
   background:linear-gradient(180deg,#cfe7fb 0%,#a9cff2 55%,#8fbfec 100%);  /* โทนฟ้าแบบ Trade HQ (feedback ผู้ใช้: พื้นขาวเหมือนเว็บ shopping) */
   border:1px solid #b5d4f4;border-radius:18px;
   display:flex;flex-direction:column;overflow:hidden;
@@ -1155,6 +1155,7 @@ html.no-anim .q-bigcard{animation:none;}
 }
 .panel-close:hover{background:rgba(255,80,80,.65);}
 .panel-body{flex:1;overflow-y:auto;padding:14px 16px;}
+@media (max-height:460px){.panel-body{padding:8px 12px;} .panel-body .shop-card{padding:8px 10px;margin-bottom:8px;}}
 .panel-page{display:none;}
 .panel-page.on{display:block;animation:fadeIn .2s ease;}
 .panel-body .shop-card,.panel-body .rank-card{margin-left:auto;margin-right:auto;}
@@ -1993,6 +1994,7 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
    การเพิ่ม max-width ไม่ทำให้กล่องข้อความสั้นบานเกินจำเป็น
    ============================================================ */
 .levelup-box{max-width:min(92vw,600px);}          /* base เดิม 340 — ครอบกล่องผลสอบ/ยืนยัน/เลเวลอัป ฯลฯ */
+.wl-box{max-width:min(96vw,1020px);}              /* รอบ 290: แผงเล็งของ กว้างพิเศษ รับแถบปัดแนวนอน */
 .food-box{max-width:min(92vw,640px);}             /* เมนูป้อนอาหาร — กริดอาหารได้คอลัมน์เพิ่ม เตี้ยลง */
 .fq-box{width:min(92vw,560px);}                   /* ควิซอาหารปลอดภัย (เดิม width 420 ใน lobby.css) */
 .home-shop-box{max-width:min(92vw,640px);}        /* ร้านที่พัก/แอร์ */
