@@ -63,9 +63,9 @@ authFetchCloud:95 · authWriteCloud:96 · authDeleteCloud:97 · authWriteProfile
 authAskProfileName:129 · authEditProfileName:140 · authStart:151 · authLoginClick:168 · authOnLogin:187 · authSyncOnLogin:200
 authFreshStart:229 · authAskLink:238 · authEnterGame:288 · authPushSave:303 · authLogout:314
 
-## js/dictband.js (99 บรรทัด · 7 รายการ)
+## js/dictband.js (112 บรรทัด · 8 รายการ)
 BAND_EMOJI:12 · BAND_REWARD:13 · bandLoad:17 · bandShortTH:35 · bandCat:42 · bandPlay:63
-bandCardsHTML:73
+bandPlayLobby:74 · bandCardsHTML:86
 
 ## js/game.js (855 บรรทัด · 50 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
@@ -88,8 +88,8 @@ PANEL_TITLES:9 · openPanel:20 · closePanel:28
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (152 บรรทัด · 2 รายการ)
-syncMusicBtn:73 · bootGame:107
+## js/main.js (153 บรรทัด · 2 รายการ)
+syncMusicBtn:74 · bootGame:108
 
 ## js/music.js (136 บรรทัด · 0 รายการ)
 
