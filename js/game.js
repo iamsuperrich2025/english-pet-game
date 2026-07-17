@@ -856,6 +856,8 @@ function finishQuiz(){
     showScreen('screen-cats');
     // ชุดข้อสอบ/สอบซ่อมรวม band: เด้งแผงเลือกชุดกลับมาให้เลือกชุดถัดไปต่อเลย
     if((cat.setIdx !== undefined || cat.retakeSets) && typeof openBandSetPicker === 'function') openBandSetPicker(cat.band);
+    // สอบซ่อมรวม: สรุปละเอียดรายชุด + คำที่ยังผิด ทับแผง (รอบ 271)
+    if(cat.retakeSets && typeof bandShowRetakeSummary === 'function') bandShowRetakeSummary();
   });
   document.body.appendChild(overlay);
   if(passed && typeof cat.onPass === 'function') cat.onPass();   // โบนัสครบทุกชุดของระดับ (dictband.js)

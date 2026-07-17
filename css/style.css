@@ -910,6 +910,25 @@ html.no-anim body.quake{animation:none;}
   background:#ffe9d6;color:#b26a1e;border:2px solid #f2a95e;border-radius:999px;padding:2px 12px;
   white-space:nowrap;vertical-align:middle;}
 .bsp-retake:active{transform:scale(.95);}
+
+/* 🔁 สรุปผลสอบซ่อมละเอียด (รอบ 271) — รายชุด + คำที่ยังผิด · ฟิตจอเตี้ยไม่มี scrollbar */
+.rts-box{position:relative;display:flex;flex-direction:column;width:min(94vw,860px);max-height:92vh;
+  background:#fff;border:3px solid #fff;border-radius:20px;box-shadow:var(--card-shadow);padding:12px 16px;}
+.rts-head{font-size:clamp(14px,3vh,19px);font-weight:bold;color:#5a4a6e;margin:0 30px 8px 0;}
+.rts-sets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.rts-set{font-size:clamp(11px,2.2vh,14px);font-weight:bold;border-radius:999px;padding:3px 12px;border:2px solid;white-space:nowrap;}
+.rts-set.ok{background:var(--green);color:#2e7d44;border-color:var(--green-d);}
+.rts-set.no{background:#ffe9d6;color:#b26a1e;border-color:#f2a95e;}
+.rts-sub{font-size:clamp(11px,2.1vh,13.5px);color:#9a8aac;margin-bottom:6px;}
+.rts-words{display:flex;flex-wrap:wrap;gap:5px;align-content:flex-start;min-height:0;overflow:hidden;}
+.rts-word{font-size:clamp(10.5px,2vh,13.5px);font-family:inherit;cursor:pointer;background:#f7f2ff;
+  color:#6a5a78;border:2px solid #e0d4f0;border-radius:10px;padding:3px 9px;white-space:nowrap;}
+.rts-word b{color:#7d5fc0;}
+.rts-word:active{transform:scale(.95);}
+.rts-foot{margin-top:10px;text-align:center;}
+.rts-okbtn{font-family:inherit;font-size:clamp(13px,2.6vh,16px);font-weight:bold;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,#c39df0,#9a6fdc);border:none;border-radius:999px;padding:8px 26px;box-shadow:0 4px 0 #7d5fc0;}
+.rts-okbtn:active{box-shadow:0 1px 0 #7d5fc0;transform:translateY(2px);}
 .bsp-grid{flex:1;display:grid;grid-template-columns:repeat(var(--bsp-cols,10),1fr);grid-auto-rows:1fr;gap:clamp(3px,.8vh,8px);min-height:0;}
 .bsp-chip{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
   border:2px solid #e0d4f0;border-radius:10px;background:#f7f2ff;color:#7d5fc0;

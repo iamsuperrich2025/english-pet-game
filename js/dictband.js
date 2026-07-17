@@ -125,10 +125,13 @@ function bandRetakeCat(b){
       const okByEn = {};
       (quiz.results || []).forEach(r=>{ okByEn[r.en] = r.ok; });
       let cleared = 0, coins = 0;
+      const rows = [], wrong = [];
       pick.forEach(t=>{
         const okN = t.s.filter(w=>okByEn[w[0]]).length;
         const passSet = okN >= Math.ceil(t.s.length * 0.8);
         state.quizLog.push({cat:bandSetId(b, t.i), score:okN, total:t.s.length, passed:passSet, ts:Date.now()});
+        rows.push({no:t.i+1, ok:passSet, score:okN, total:t.s.length});
+        t.s.forEach(w=>{ if(okByEn[w[0]] === false) wrong.push(w); });   // เฉพาะข้อที่ตอบผิดจริง (ไม่นับข้อที่ไม่ได้ออก)
         if(passSet && !state.quizPassed.includes(bandSetId(b, t.i))){
           state.quizPassed.push(bandSetId(b, t.i));
           cleared++; coins += BAND_SET_REWARD;
@@ -136,13 +139,40 @@ function bandRetakeCat(b){
       });
       if(coins) addCoins(coins);
       saveState();
-      if(cleared){
-        bandCheckComplete(b);
-        setTimeout(()=>toast(`🔁 สอบซ่อมสำเร็จ! เคลียร์ ${cleared} ชุด +${fmtNum(coins)} 🪙`, 3200), 800);
-      }else{
-        setTimeout(()=>toast('🔁 ยังไม่มีชุดไหนถึง 80% — ดูเฉลยแล้วลองใหม่อีกครั้งนะ 💪', 3000), 800);
-      }
+      __retakeLast = {cleared, coins, rows, wrong};   // สรุปละเอียดเด้งหลังปิดกล่องผลสอบ (bandShowRetakeSummary)
+      if(cleared) bandCheckComplete(b);
     }};
+}
+
+/* ---------- สรุปผลสอบซ่อมแบบละเอียด (รอบ 271): รายชุดผ่าน/ไม่ผ่าน + คำที่ยังตอบผิด
+   เด้งหลังผู้เล่นปิดกล่องผลสอบ (game.js เรียก) — แตะการ์ดคำ = ฟังเสียง ---------- */
+let __retakeLast = null;
+function bandShowRetakeSummary(){
+  const r = __retakeLast;
+  if(!r) return;
+  __retakeLast = null;
+  const ov = document.createElement('div');
+  ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="rts-box">
+    <button class="pl-close" id="rts-close">✕</button>
+    <div class="rts-head">🔁 ผลสอบซ่อม ${r.cleared ? `· เคลียร์ ${r.cleared} ชุด +${fmtNum(r.coins)} 🪙 🎉` : '· ยังไม่มีชุดไหนถึง 80% สู้ต่อนะ 💪'}</div>
+    <div class="rts-sets">${r.rows.map(s=>
+      `<span class="rts-set ${s.ok ? 'ok' : 'no'}">${s.ok ? '✅' : '❌'} ชุดที่ ${s.no} · ${s.score}/${s.total}</span>`).join('')}</div>
+    ${r.wrong.length
+      ? `<div class="rts-sub">📖 คำที่ยังตอบผิด ${r.wrong.length} คำ — ทบทวนก่อนซ่อมรอบหน้า (แตะคำเพื่อฟังเสียง 🔊)</div>
+         <div class="rts-words">${r.wrong.map(w=>
+           `<button class="rts-word" data-w="${escapeHTML(w[0])}"><b>${escapeHTML(w[0])}</b> — ${escapeHTML(w[1])}</button>`).join('')}</div>`
+      : `<div class="rts-sub">🌟 ไม่มีคำตอบผิดเลย เก่งมาก!</div>`}
+    <div class="rts-foot"><button class="rts-okbtn" id="rts-ok">เข้าใจแล้ว ไปต่อ!</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
+  ov.querySelector('#rts-close').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#rts-ok').addEventListener('click', ()=>ov.remove());
+  ov.addEventListener('click', e=>{
+    const w = e.target.closest('.rts-word');
+    if(w && typeof speakWord === 'function') speakWord(w.dataset.w);
+  });
 }
 
 function bandSetsPassed(b, total){
