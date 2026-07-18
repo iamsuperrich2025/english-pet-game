@@ -3,7 +3,7 @@
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-19
 
-## js/adventure3d.js (8,392 บรรทัด · 387 รายการ)
+## js/adventure3d.js (8,547 บรรทัด · 392 รายการ)
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
 AD_COUNT:95 · SHOP_ADS:99 · PILOT_TIERS:101 · pilotEmoji:102 · DRONE_R:114 · DRONE_ACCEL:115
@@ -50,25 +50,26 @@ radioToggleList:5800 · drawRadioViz:5805 · radioTick:5823 · BOBBLE_FOOT:5836 
 BOB_OMEGA:5841 · BOB_PITCH_FORCE:5843 · BOBBLE_SKINS:5845 · bobbleSetAvatar:5852 · bobbleLayout:5859 · bobbleTick:5872
 bobblePoke:5897 · bobbleApplySkin:5914 · dollOwned:5924 · openDollPicker:5925 · carStartShow:5962 · showLawInfo:5980
 lawNotice:6002 · driveFineSettle:6012 · HELI_PHASES:6191 · heliStartPhase:6198 · heliFloorAt:6205 · tickHeli:6212
-CP_NAT:6370 · CP_GAUGES:6371 · SEAT_LABEL:6384 · SEAT_P_FULL:6385 · SEAT_ZOOM:6386 · DASH_OFF_Y:6387
-DASH_DROP:6388 · setSeat:6390 · layoutCockpit:6402 · WIPER:6441 · WIPER_SPD:6442 · sunUpdate:6448
-RAIN_MAX:6456 · VISOR_Y:6457 · RAIN_MIN:6458 · RAIN_DUR:6459 · DROP_ZONE:6463 · addDrop:6464
-tickDrops:6472 · WIPE_R:6488 · wipeDrops:6489 · setWiper:6505 · setVisor:6511 · rainTick:6517
-drawBlade:6529 · drawGlass:6543 · drawBellyCam:6610 · drawBellyHud:6634 · heliShake:6662 · cpNeedle:6673
-drawGauges:6690 · XF_START:6737 · PRELOAD_WAIT:6738 · ALT_QUIET_FROM:6740 · ALT_MAX_DAMP:6741 · ALT_LP_MIN:6742
-ECHO_NEAR:6743 · WIND_FULL_SPD:6744 · SHUTDOWN_SEC:6745 · PAN_MAX:6747 · OD_RPM:6748 · SHAKE_RPM:6749
-SHAKE_HIT:6750 · soccerLetterPos:7212 · letterNeeded:7216 · soccerNeededSet:7221 · soccerTileGeo:7227 · soccerGoldTexture:7229
-makeSoccerTile:7246 · soccerRefreshSkins:7255 · soccerBuildTargets:7262 · soccerRetarget:7271 · soccerCoinPop:7283 · soccerFieldTexture:7295
-soccerNetTexture:7306 · soccerCrowdTexture:7313 · soccerBallMat:7321 · buildSoccerGoal:7329 · buildStands:7340 · soccerNumTex:7348
-makeSoccerPlayer:7358 · soccerResetBall:7382 · soccerKick:7387 · soccerCheer:7395 · updateSoccerGuide:7396 · soccerCamera:7410
-tickSoccer:7425 · soccerKitShow:7501 · soccerKitGo:7516 · emojiSprite:7567 · makeAlien:7572 · startWave:7605
-waveSpawnFill:7616 · waveComplete:7625 · updateWaveHud:7635 · checkMechaBossBadge:7637 · alienSpawnPos:7646 · removeAlien:7651
-mechaHudWord:7656 · setMechaHudSkin:7664 · mechaComboPop:7676 · mechaShielded:7681 · mechaDamageFx:7683 · mechaHitByAlien:7688
-spawnAlienShot:7694 · removeAlienShot:7704 · tickAlienShots:7709 · spawnPowerup:7721 · removePowerup:7734 · collectPowerup:7739
-tickPowerups:7746 · updateMechaHud:7755 · mechaTracer:7795 · mechaFire:7804 · explodeAlien:7841 · tickMecha:7871
-loop:7927 · grabShot:7954 · savePhoto:7965 · clearEntities:7977 · INTRO_KEY:7991 · introSeenObj:7992
-introSeen:7993 · markIntroSeen:7994 · INTRO:7995 · showIntro:8060 · closeIntro:8085 · beginPlay:8091
-start:8093 · exitWorld:8259 · mechaRecapLine:8298
+CP_NAT:6374 · CP_GAUGES:6375 · SEAT_LABEL:6388 · SEAT_P_FULL:6389 · SEAT_ZOOM:6390 · DASH_OFF_Y:6391
+DASH_DROP:6392 · setSeat:6394 · layoutCockpit:6406 · WIPER:6445 · WIPER_SPD:6446 · sunUpdate:6452
+HELI_FOG_N0:6462 · fogUpdate:6465 · RAIN_MAX:6482 · VISOR_Y:6483 · RAIN_MIN:6484 · RAIN_DUR:6485
+DROP_ZONE:6489 · addDrop:6490 · tickDrops:6498 · WIPE_R:6514 · wipeDrops:6515 · setWiper:6531
+setVisor:6537 · rainTick:6543 · drawBlade:6555 · drawGlass:6569 · drawBellyCam:6636 · drawBellyHud:6660
+drawLandingTargets:6692 · VS_HARD:6762 · drawDescentBar:6763 · heliShake:6812 · cpNeedle:6823 · drawGauges:6840
+XF_START:6887 · PRELOAD_WAIT:6888 · ALT_QUIET_FROM:6890 · ALT_MAX_DAMP:6891 · ALT_LP_MIN:6892 · ECHO_NEAR:6893
+WIND_FULL_SPD:6894 · SHUTDOWN_SEC:6895 · PAN_MAX:6897 · OD_RPM:6898 · SHAKE_RPM:6899 · SHAKE_HIT:6900
+soccerLetterPos:7362 · letterNeeded:7366 · soccerNeededSet:7371 · soccerTileGeo:7377 · soccerGoldTexture:7379 · makeSoccerTile:7396
+soccerRefreshSkins:7405 · soccerBuildTargets:7412 · soccerRetarget:7421 · soccerCoinPop:7433 · soccerFieldTexture:7445 · soccerNetTexture:7456
+soccerCrowdTexture:7463 · soccerBallMat:7471 · buildSoccerGoal:7479 · buildStands:7490 · soccerNumTex:7498 · makeSoccerPlayer:7508
+soccerResetBall:7532 · soccerKick:7537 · soccerCheer:7545 · updateSoccerGuide:7546 · soccerCamera:7560 · tickSoccer:7575
+soccerKitShow:7651 · soccerKitGo:7666 · emojiSprite:7717 · makeAlien:7722 · startWave:7755 · waveSpawnFill:7766
+waveComplete:7775 · updateWaveHud:7785 · checkMechaBossBadge:7787 · alienSpawnPos:7796 · removeAlien:7801 · mechaHudWord:7806
+setMechaHudSkin:7814 · mechaComboPop:7826 · mechaShielded:7831 · mechaDamageFx:7833 · mechaHitByAlien:7838 · spawnAlienShot:7844
+removeAlienShot:7854 · tickAlienShots:7859 · spawnPowerup:7871 · removePowerup:7884 · collectPowerup:7889 · tickPowerups:7896
+updateMechaHud:7905 · mechaTracer:7945 · mechaFire:7954 · explodeAlien:7991 · tickMecha:8021 · loop:8077
+grabShot:8104 · savePhoto:8115 · clearEntities:8127 · INTRO_KEY:8141 · introSeenObj:8142 · introSeen:8143
+markIntroSeen:8144 · INTRO:8145 · showIntro:8210 · closeIntro:8235 · beginPlay:8241 · start:8243
+exitWorld:8409 · mechaRecapLine:8448
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43

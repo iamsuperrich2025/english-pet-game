@@ -6334,7 +6334,8 @@ function tickHeli(dt,now){
     }else{
       const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
       const stk=(state.heliStreak||0)>0?` · 🎖️ สตรีค ${state.heliStreak}`:'';
-      hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk} ${hLanded?'· 🛬 จอดแล้ว':''}`;
+      const fog=heliFog>.35?' · 🌫️ หมอกลง พึ่งกล้อง':'';
+      hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk}${fog} ${hLanded?'· 🛬 จอดแล้ว':''}`;
     }
   }
   // 🎚️🌬️ ส่งสภาพแวดล้อมให้ระบบเสียง: สูงเท่าไหร่ · เร็วเท่าไหร่ · ใกล้ตึกแค่ไหน
@@ -6342,7 +6343,10 @@ function tickHeli(dt,now){
                                    near:wallDist, side:wallSide});
   rainTick(now);                                              // 🌧️ ตารางฝนตกเป็นช่วงๆ
   tickDrops(dt,Math.hypot(hVel.x,hVel.z));                    // 💧 หยดน้ำไหล/ปลิวตามความเร็ว
+  fogUpdate(now);                                             // 🌫️ หมอกตอนเช้าตามเวลาจริง
   drawGauges();
+  drawLandingTargets();                 // 🎯 วงเป้าลงจอดบนดาดฟ้าที่มีตัวอักษร
+  drawDescentBar();                     // 📏 แถบเตือน + กรอบแดงตอนดิ่งเร็วเกิน
   drawBellyHud();                       // 📹 กรอบ+เส้นเล็งกล้องใต้ท้อง (ตัวภาพเรนเดอร์ใน loop)
   drawGlass(dt,now);                    // 🌧️☀️🕶️ หยดน้ำ + ที่ปัด + แสงแดด + ม่านบังแดด
   // 🎚️ สตาร์ทเสร็จ → ตัดไปมุมบิน (เห็นวิวสะดวก ไม่มีแผงเหนือหัว) ครั้งเดียวต่อรอบ
@@ -6451,6 +6455,28 @@ function sunUpdate(){
   sunDir=(t-.5)*3.2;
   sunHi=Math.sin(t*Math.PI);                     // สูงสุดตอนเที่ยง
   sunWarm=1-sunHi;                               // เช้า/เย็น = แสงส้มอุ่น · เที่ยง = ขาว
+}
+/* 🌫️ หมอกตอนเช้า (รอบ 349) — ต่อจากระบบเวลาจริง (sunUpdate)
+   เช้ามืดมีหมอกบางๆ ทัศนวิสัยสั้นลง → ต้องพึ่ง "กล้องใต้ท้อง" มากขึ้นตอนหาดาดฟ้าลงจอด
+   หนาสุด ~05:30 · จางหมดหลัง 08:30 · พลบค่ำ 18-19 มีบางๆ อีกที */
+const HELI_FOG_N0=45, HELI_FOG_F0=150;           // ค่าปกติ (ตรงกับ MODES.heli)
+let heliFog=0, _fogAt=0;
+const _fogSky=new THREE.Color(), _fogMist=new THREE.Color(0xdfe6ea), _fogCol=new THREE.Color();
+function fogUpdate(now){
+  if(!scene||!scene.fog) return;
+  if(now-_fogAt<800) return;                      // เวลาเปลี่ยนช้า — คำนวณใหม่ทุก ~0.8 วิพอ (กัน GC)
+  _fogAt=now;
+  const h=new Date().getHours()+new Date().getMinutes()/60;
+  let f=0;
+  if(h>=4 && h<=9)          f=1-Math.abs(h-5.8)/2.7;          // หมอกเช้า (หนาสุด 05:48)
+  else if(h>=17.5 && h<=20) f=(1-Math.abs(h-18.6)/2)*.5;      // พลบค่ำบางๆ
+  heliFog=Math.max(0,Math.min(1,f));
+  scene.fog.near=HELI_FOG_N0*(1-.86*heliFog);    // 45 → ~6 (มองเห็นใกล้มาก)
+  scene.fog.far =HELI_FOG_F0*(1-.74*heliFog);    // 150 → ~39
+  _fogSky.set(MODES.heli.sky);
+  _fogCol.copy(_fogSky).lerp(_fogMist,heliFog*.8);   // ฟ้า → ขาวนวลอมเทา
+  scene.fog.color.copy(_fogCol);
+  if(scene.background&&scene.background.copy) scene.background.copy(_fogCol);
 }
 /* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
 const RAIN_MAX=90, RAIN_SPAWN=26;                // จำนวนหยดสูงสุด · หยด/วินาที ตอนฝนตก
@@ -6656,6 +6682,130 @@ function drawBellyHud(){
   c.moveTo(cx,cy-r-7); c.lineTo(cx,cy-r+3); c.moveTo(cx,cy+r-3); c.lineTo(cx,cy+r+7);
   c.stroke();
   c.restore();
+}
+/* ============================================================
+   🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
+   จับกลุ่มตัวอักษรตาม "ดาดฟ้าเดียวกัน" → วงเดียวต่อดาดฟ้า พร้อมตัวอักษรที่รออยู่
+   อยู่ในจอ = วงเป้าเต้นเป็นจังหวะ (ใกล้/ตรง = เขียว) · หลุดจอ = ลูกศรชี้ทางที่ขอบ
+   ============================================================ */
+const _tgtV=new THREE.Vector3(), _tgtC=new THREE.Vector3();
+function drawLandingTargets(){
+  if(!gaugeCtx||!camera||!letters.length) return;
+  camera.updateMatrixWorld();                         // ⚠️ HUD นี้วาดก่อน renderer.render → เมทริกซ์กล้องยังเป็นเฟรมก่อน ต้องอัปเดตเอง
+  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  const roofs={};
+  for(const l of letters){
+    const p=l.spr.position;
+    const key=Math.round(p.x)+','+Math.round(p.z);
+    let r=roofs[key];
+    if(!r) r=roofs[key]={x:p.x,z:p.z,y:(l.baseY||1.3)-1.3,chs:[]};   // y = ยอดตึก (b.h)
+    r.chs.push(l.ch);
+  }
+  const c=gaugeCtx, dpr=Math.min(window.devicePixelRatio||1,2);
+  const W=window.innerWidth, H=window.innerHeight, cx=W/2, cy=H/2;
+  const now=performance.now(), pulse=.5+.5*Math.sin(now/300);
+  const mgx=44, mgy=76;                            // ระยะขอบจอที่ยังถือว่า "อยู่ในจอ"
+  c.save(); c.setTransform(dpr,0,0,dpr,0,0);
+  c.textAlign='center'; c.textBaseline='middle';
+  for(const key in roofs){
+    const r=roofs[key];
+    _tgtC.set(r.x,r.y+.1,r.z).applyMatrix4(camera.matrixWorldInverse);   // พิกัดในระบบกล้อง (-z=หน้า)
+    const inFront=_tgtC.z<-.15;
+    _tgtV.set(r.x,r.y+.1,r.z).project(camera);
+    let sx=(_tgtV.x*.5+.5)*W, sy=(-_tgtV.y*.5+.5)*H;
+    const onScreen=inFront && sx>=mgx && sx<=W-mgx && sy>=mgy && sy<=H-mgy;
+    const dxz=Math.hypot(r.x-camera.position.x, r.z-camera.position.z);
+    const alt=camera.position.y-r.y;
+    const near=dxz<7 && alt>0 && alt<16;          // เกือบถึงเป้า → เขียว
+    const label=r.chs.join(' ');
+    if(onScreen){
+      const rad=Math.max(15,Math.min(64,760/(dxz+8)));
+      const col=near?'120,255,150':'120,224,255';
+      c.lineWidth=2.4; c.strokeStyle=`rgba(${col},${(.55+.4*pulse).toFixed(2)})`;
+      c.beginPath(); c.arc(sx,sy,rad,0,7); c.stroke();
+      c.lineWidth=1.4; c.strokeStyle=`rgba(${col},.4)`;
+      c.beginPath(); c.arc(sx,sy,rad*(.55+.35*pulse),0,7); c.stroke();
+      for(let k=0;k<4;k++){                        // ขีดกากบาทเล็ง 4 ทิศ
+        const a=k*Math.PI/2, ux=Math.cos(a), uy=Math.sin(a);
+        c.beginPath(); c.moveTo(sx+ux*(rad-6),sy+uy*(rad-6)); c.lineTo(sx+ux*(rad+6),sy+uy*(rad+6)); c.stroke();
+      }
+      c.font='800 15px system-ui,sans-serif';
+      c.fillStyle='rgba(6,20,30,.62)';
+      const tw=c.measureText(label).width+14;
+      c.fillRect(sx-tw/2,sy-rad-24,tw,19);
+      c.fillStyle=near?'#c6ffd2':'#dff4ff';
+      c.fillText(label,sx,sy-rad-14);
+      c.font='700 11px system-ui,sans-serif'; c.fillStyle=`rgba(${col},.95)`;
+      c.fillText(near?'🛬 ลงจอดเก็บได้':Math.round(dxz)+' ม.',sx,sy+rad+13);
+    }else{
+      // หลุดจอ → ลูกศรที่ขอบชี้ทิศไปหาดาดฟ้า (ครอบคลุมกรณีอยู่ข้างหลังด้วย)
+      let dx=sx-cx, dy=sy-cy;
+      if(!inFront){ dx=-dx; dy=-dy; }             // หลังกล้อง = โปรเจกต์กลับด้าน ต้องพลิก
+      const m=Math.hypot(dx,dy)||1; dx/=m; dy/=m;
+      const ex=cx+dx*(W/2-30), ey=cy+dy*(H/2-64);
+      const px=Math.max(30,Math.min(W-30,ex)), py=Math.max(60,Math.min(H-40,ey));
+      const a=Math.atan2(dy,dx);
+      c.save(); c.translate(px,py); c.rotate(a);
+      c.fillStyle='rgba(120,224,255,'+(.6+.4*pulse).toFixed(2)+')';
+      c.beginPath(); c.moveTo(13,0); c.lineTo(-8,-9); c.lineTo(-8,9); c.closePath(); c.fill();
+      c.restore();
+      c.font='800 13px system-ui,sans-serif'; c.fillStyle='#dff4ff';
+      c.fillText(label,px-dx*16,py-dy*16);
+    }
+  }
+  c.restore();
+}
+/* ============================================================
+   📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
+   แถบแนวตั้งซ้ายจอ: บอกอัตราไต่/ดิ่ง · โซนแดง = ดิ่งแรงเกิน (จะเจ็บตอนแตะพื้น)
+   ============================================================ */
+const VS_HARD=-6, VS_CAUTION=-3;                 // m/s: ดิ่งแรงเกิน (เจ็บ) · เริ่มเตือน
+function drawDescentBar(){
+  if(!gaugeCtx||hLanded||!HeliSound.ready) return;
+  const c=gaugeCtx, dpr=Math.min(window.devicePixelRatio||1,2);
+  const H=window.innerHeight, now=performance.now();
+  const bh=Math.min(190,H*.42), bw=12, x=16, y=(H-bh)/2;
+  const vy=hVel.y, danger=vy<=VS_HARD, caution=vy<=VS_CAUTION;
+  c.save(); c.setTransform(dpr,0,0,dpr,0,0);
+  // ราง
+  c.fillStyle='rgba(8,18,26,.55)';
+  c.beginPath(); c.roundRect?c.roundRect(x,y,bw,bh,6):c.rect(x,y,bw,bh); c.fill();
+  // โซนแดงล่าง (ช่วงดิ่งแรงเกิน) — ล่างสุดของแถบ
+  const map=v=>y+bh*(1-(v+10)/20);               // +10 บนสุด · -10 ล่างสุด
+  c.fillStyle='rgba(239,83,80,.22)';
+  c.fillRect(x,map(VS_HARD),bw,y+bh-map(VS_HARD));
+  // เส้นศูนย์ (0 = ลอยนิ่ง)
+  c.strokeStyle='rgba(255,255,255,.5)'; c.lineWidth=1.5;
+  const z0=map(0); c.beginPath(); c.moveTo(x-3,z0); c.lineTo(x+bw+3,z0); c.stroke();
+  // ตัวชี้ปัจจุบัน
+  const yy=Math.max(y,Math.min(y+bh,map(vy)));
+  const col=danger?'#ff5350':caution?'#ffca3a':'#8be88f';
+  c.fillStyle=col;
+  c.beginPath(); c.moveTo(x+bw+3,yy); c.lineTo(x+bw+13,yy-5); c.lineTo(x+bw+13,yy+5); c.closePath(); c.fill();
+  c.fillRect(x,yy-1.5,bw,3);
+  // ป้าย 📏 + ค่าดิ่ง
+  c.font='700 11px system-ui,sans-serif'; c.textAlign='center'; c.fillStyle=col;
+  c.fillText('📏',x+bw/2,y-9);
+  c.fillText((vy>=0?'+':'')+vy.toFixed(1),x+bw/2,y+bh+13);
+  c.restore();
+  // 🔴 ดิ่งแรงเกิน + ยังไม่ถึงพื้นไกลๆ → กรอบจอกะพริบแดง
+  if(danger){
+    const floor=heliFloorAt(camera.position.x,camera.position.z);
+    if(camera.position.y-floor<12){
+      const a=(.28+.32*(.5+.5*Math.sin(now/90)))*Math.min(1,(VS_HARD-vy)/4+.4);
+      c.save(); c.setTransform(dpr,0,0,dpr,0,0);
+      const W=window.innerWidth, th=Math.round(Math.min(W,H)*.09), red=`rgba(255,30,30,${a.toFixed(2)})`, clr='rgba(255,30,30,0)';
+      const gT=c.createLinearGradient(0,0,0,th);   gT.addColorStop(0,red); gT.addColorStop(1,clr);
+      c.fillStyle=gT; c.fillRect(0,0,W,th);                                   // บน
+      const gB=c.createLinearGradient(0,H,0,H-th); gB.addColorStop(0,red); gB.addColorStop(1,clr);
+      c.fillStyle=gB; c.fillRect(0,H-th,W,th);                                // ล่าง
+      const gL=c.createLinearGradient(0,0,th,0);   gL.addColorStop(0,red); gL.addColorStop(1,clr);
+      c.fillStyle=gL; c.fillRect(0,0,th,H);                                   // ซ้าย
+      const gR=c.createLinearGradient(W,0,W-th,0); gR.addColorStop(0,red); gR.addColorStop(1,clr);
+      c.fillStyle=gR; c.fillRect(W-th,0,th,H);                                // ขวา
+      c.restore();
+    }
+  }
 }
 /* 📳 แรงสั่นสะเทือนของเครื่อง — เข็มกระตุกตามรอบใบพัดสูง + ตอนชน (รอบ 343)
    คืนค่า 0..1 · เข็มแต่ละตัวสั่นคนละจังหวะ จะได้ไม่ขยับพร้อมกันเป็นบล็อกเดียว */
@@ -8328,7 +8478,12 @@ window.Adventure3D={
                         // บังคับวาดใหม่ 1 เฟรม — ใช้ตอนเทสต์ เพราะแท็บที่ถูก throttle ลูปแทบไม่เดิน
                         redraw:(dt)=>{ dt=dt||.016;
                           tickDrops(dt,Math.hypot(hVel.x,hVel.z));
-                          drawGauges(); drawBellyHud(); drawGlass(dt,performance.now()); },
+                          fogUpdate(performance.now());
+                          drawGauges(); drawLandingTargets(); drawDescentBar();
+                          drawBellyHud(); drawGlass(dt,performance.now()); },
+                        get fog(){return +heliFog.toFixed(2)},
+                        get fogFar(){return scene&&scene.fog?+scene.fog.far.toFixed(1):null},
+                        set landed(v){hLanded=v}, get vy(){return hVel.y}, set vy(v){hVel.y=v},
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
                           sunDir=(t-.5)*3.2; sunHi=Math.sin(t*Math.PI); sunWarm=1-sunHi;
