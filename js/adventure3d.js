@@ -191,6 +191,8 @@ let shotWanted=false, photoEl=null, photoImgEl=null, flashEl=null;
 /* 🪟⛈🚪 รอบ 336: กระจกที่ยังไม่แตก + ฟ้าแลบสะท้อนกระจก + ประตูเปิดได้ */
 let droneGlass=[], droneDoors=[], droneWinMat=null, droneGlassMat=null;
 let boltAt=0, boltFlashUntil=0, boltEl=null, rainEl=null, rainUntil=0;
+let skipStartEl=null;                                   // ⏭ ปุ่มข้ามซีเควนซ์สตาร์ทเฮลิฯ
+function showHeliSkip(on){ if(skipStartEl) skipStartEl.classList.toggle('on',!!on); }
 const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุก 11-24 วิ
 const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
 const DOOR_R=2.6, DOOR_COIN=8, DOOR_BAT=15;         // ชนประตู: รัศมี · รางวัลในห้องเก็บของ
@@ -3214,6 +3216,13 @@ function buildDom(){
   .adv-drone #adv-race,.adv-drone #adv-shot{display:block}
   #adv-race:active,#adv-shot:active{background:rgba(124,255,157,.28)}
   #adv-race.on{background:rgba(255,214,79,.22);border-color:#ffd54f;color:#ffe9a3;text-shadow:0 0 6px rgba(255,213,79,.7)}
+  /* ⏭ ปุ่มข้ามซีเควนซ์สตาร์ทเฮลิฯ (โชว์เฉพาะระหว่างสตาร์ท · บินรอบ 2-3 ไม่ต้องรอครบ) */
+  #adv-skipstart{position:absolute;display:none;left:50%;bottom:74px;transform:translateX(-50%);z-index:6;
+    pointer-events:auto;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,213,79,.6);
+    background:rgba(38,26,0,.72);color:#ffe9a3;font-size:13px;font-family:'Courier New',monospace;
+    text-shadow:0 0 6px rgba(255,213,79,.6)}
+  #adv-skipstart.on{display:block}
+  #adv-skipstart:active{background:rgba(255,213,79,.28)}
   #adv-racehud{display:none;top:64px;left:50%;transform:translateX(-50%);z-index:5;
     background:rgba(0,22,8,.62);border:1px solid rgba(124,255,157,.45);border-radius:8px;
     padding:4px 12px;color:#9dffc4;font-family:'Courier New',monospace;font-size:13px;white-space:nowrap}
@@ -3959,6 +3968,7 @@ function buildDom(){
     </div>
     <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div><div class="dframe"><i class="skid skid-l"></i><i class="skid skid-r"></i></div></div>
     <div class="adv-hud" id="adv-racehud"></div>
+    <button id="adv-skipstart">⏭ ข้ามการสตาร์ทเครื่อง</button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
     <div id="adv-flash"></div>
@@ -4368,6 +4378,8 @@ function buildDom(){
   rainEl=overlayEl.querySelector('#adv-rain');
   raceBtnEl.addEventListener('click',e=>{ e.preventDefault(); if(raceOn) raceStop(false); else raceStartRun(); });
   overlayEl.querySelector('#adv-shot').addEventListener('click',e=>{ e.preventDefault(); shotWanted=true; });
+  skipStartEl=overlayEl.querySelector('#adv-skipstart');
+  skipStartEl.addEventListener('click',e=>{ e.preventDefault(); HeliSound.skipStart(); });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -6066,6 +6078,22 @@ const CarSound={
   },
 };
 
+/* ขั้นตอนสตาร์ทเครื่อง Bell 212 — ข้อความตรงกับเสียงที่ได้ยินจริงในไฟล์ heli_start.mp3 */
+const HELI_PHASES=[
+  [0 ,'🔋 เปิดแบตเตอรี่ · ตรวจระบบก่อนสตาร์ท'],
+  [4 ,'🎚️ เปิดคันเร่งไปตำแหน่ง IDLE · ปั๊มเชื้อเพลิงทำงาน'],
+  [9 ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน (ฟังเสียงครางสูงขึ้น)'],
+  [16,'🔥 จุดระเบิด! เครื่องยนต์ติดแล้ว'],
+  [20,'🚁 ใบพัดเริ่มหมุน · รอบกำลังไต่ขึ้น'],
+  [25,'📈 ใบพัดใกล้รอบเต็ม... เตรียมขึ้นบิน'],
+];
+function heliStartPhase(now){
+  const t=(now-(HeliSound._startAt||now))/1000;
+  let txt=HELI_PHASES[0][1];
+  for(const [at,s] of HELI_PHASES) if(t>=at) txt=s;
+  const left=Math.max(0,Math.ceil((HeliSound.startDur||29)-t));
+  return txt+(left?` · ⏱️ ${left} วิ`:'');
+}
 function heliFloorAt(x,z){
   let f=0;
   for(const b of buildings){
@@ -6195,7 +6223,7 @@ function tickHeli(dt,now){
   // ---- หน้าปัด + เสียงใบพัด ----
   if(hudInstEl){
     if(!HeliSound.ready){
-      hudInstEl.textContent='🔑 กำลังสตาร์ทเครื่องยนต์... รอใบพัดหมุนเต็มรอบ';
+      hudInstEl.textContent=heliStartPhase(now);
     }else{
       const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
       const stk=(state.heliStreak||0)>0?` · 🎖️ สตรีค ${state.heliStreak}`:'';
@@ -6297,19 +6325,34 @@ function drawGauges(){
   gaugeText(c,rx,cy,R,'RPM',Math.round(HeliSound.rpm*100)+'%');
 }
 
-/* ---------- เสียงใบพัด Bell — สังเคราะห์ (ปลอดลิขสิทธิ์) · มีไฟล์ sound/heli_rotor.mp3 ใช้แทนอัตโนมัติ ---------- */
+/* ---------- เสียงใบพัด Bell 212 — ไฟล์เสียงจริง (sound/heli_*.mp3) · ไม่มีไฟล์ = ตกไปใช้เสียงสังเคราะห์ ---------- */
+const XF_START=1.1;              // วินาที: crossfade ท้ายไฟล์สตาร์ท → ลูปบิน
+const PRELOAD_WAIT=6000;         // ms: รอไฟล์เสียงจริง decode เสร็จก่อน ถ้าเกินนี้ใช้เสียงสังเคราะห์แทน
 const HeliSound={
   ctx:null,master:null,lfo:null,whine:null,whineG:null,nodes:[],
   files:{start:null,rotor:null,high:null},probed:false,on:false,
-  ready:false,rpm:0,_startTm:0,highOn:false,
+  startPlay:null,rotorPlay:null,highPlay:null,
+  ready:false,rpm:0,_startTm:0,highOn:false,_startAt:0,startDur:0,
   probe(){
     if(this.probed) return; this.probed=true;
-    // 3 ไฟล์อัปเกรดจาก Suno (PROMPTS_HELI.md): สตาร์ทเครื่อง / ลูปบินปกติ / ลูปเร่งเครื่องเต็มกำลัง
-    [['start','sound/heli_start.mp3'],['rotor','sound/heli_rotor.mp3'],['high','sound/heli_rotor_high.mp3']].forEach(([k,src])=>{
-      const a=new Audio();
-      a.addEventListener('canplaythrough',()=>{ this.files[k]=a; },{once:true});
-      a.preload='auto'; a.src=src;
-    });
+    // 3 ไฟล์ตัดจากเสียง Bell 212 จริง (tools/cut_heli.py): สตาร์ทเครื่อง / ลูปบินปกติ / ลูปเร่งเครื่องเต็มกำลัง
+    // ⚠️ โหลดเป็น AudioBuffer ไม่ใช่ <audio> — HTMLAudio loop มีรอยสะดุดทุกรอบจาก encoder padding ของ mp3
+    this.ensureCtx();
+    this.loading=Promise.all(
+      [['start','sound/heli_start.mp3'],['rotor','sound/heli_rotor.mp3'],['high','sound/heli_rotor_high.mp3']].map(([k,src])=>
+        fetch(src).then(r=>r.ok?r.arrayBuffer():Promise.reject())
+          .then(b=>this.ctx.decodeAudioData(b))
+          .then(buf=>{ this.files[k]=buf; })
+          .catch(()=>{})                      // ไม่มีไฟล์ = ตกไปใช้เสียงสังเคราะห์เหมือนเดิม
+      ));
+  },
+  /* เล่น AudioBuffer ผ่าน gain ของตัวเอง — คืน {src,gain} ไว้คุมทีหลัง */
+  playBuf(buf,{loop=false,vol=1,at=0,rate=1}={}){
+    const src=this.ctx.createBufferSource(); src.buffer=buf; src.loop=loop; src.playbackRate.value=rate;
+    const g=this.ctx.createGain(); g.gain.value=vol;
+    src.connect(g); g.connect(this.master);
+    src.start(at||this.ctx.currentTime);
+    return {src,gain:g};
   },
   ensureCtx(){
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -6346,14 +6389,35 @@ const HeliSound={
     this.on=true; this.ready=false; this.rpm=0; this.highOn=false;
     this.probe();
     if(!state.sound){ this.ready=true; this.rpm=.55; return; }   // ปิดเสียง = ข้ามซีเควนซ์ บินได้เลย
+    // ⚠️ เข้าโลกครั้งแรก ไฟล์ยัง decode ไม่เสร็จ → ต้องรอก่อน ไม่งั้นตกไปใช้เสียงสังเคราะห์ทุกครั้ง
+    if(!this.files.start && this.loading){
+      let raced=false;
+      Promise.race([this.loading,new Promise(r=>setTimeout(r,PRELOAD_WAIT))]).then(()=>{
+        if(raced || !this.on) return; raced=true;
+        this.fileOrSynthStart();
+      });
+      return;
+    }
+    this.fileOrSynthStart();
+  },
+  fileOrSynthStart(){
     if(this.files.start){
-      const a=this.files.start;
-      a.currentTime=0; a.volume=.85; a.play().catch(()=>{});
-      const durMs=Math.min(((a.duration||5)*1000)||5000, 9000);
-      this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; this.loopStart(); },durMs);
+      // ▶️ ซีเควนซ์สตาร์ทเต็มลำดับของ Bell 212 (เทอร์ไบน์คราง → จุดระเบิด → ใบพัดเร่งจนรอบเต็ม ~29 วิ)
+      const buf=this.files.start, dur=buf.duration;
+      this._startAt=performance.now(); this.startDur=dur;   // ให้ HUD บอกขั้นตอนตรงกับเสียงที่ได้ยิน
+      this.ensureCtx();
+      this.master.gain.value=1;              // ⚠️ stop() ปิด master ไว้ — เข้าโลกรอบ 2 ต้องเปิดคืน ไม่งั้นเงียบสนิท
+      this.startPlay=this.playBuf(buf,{vol:.85});
+      const t=this.ctx.currentTime;
+      // ท้ายไฟล์สตาร์ท crossfade เข้าลูปบิน — ไม่ให้ได้ยินรอยต่อ
+      this.startPlay.gain.gain.setValueAtTime(.85,t+dur-XF_START);
+      this.startPlay.gain.gain.linearRampToValueAtTime(.0001,t+dur);
+      this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; this.loopStart(); },(dur-XF_START)*1000);
+      showHeliSkip(true);                    // ปุ่ม "ข้ามการสตาร์ท" สำหรับรอบถัดๆ ไป
       return;
     }
     // สังเคราะห์: เทอร์ไบน์สปูลขึ้น + ใบพัดค่อยๆ หมุนเร็วขึ้น ~3.5 วิ
+    this._startAt=performance.now(); this.startDur=3.6;
     this.buildNodes();
     const t=this.ctx.currentTime;
     this.master.gain.setValueAtTime(.1,t);
@@ -6366,15 +6430,29 @@ const HeliSound={
     this.lfo.frequency.linearRampToValueAtTime(10.5,t+3.4);
     this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; },3600);
   },
+  /* ⏭ ข้ามซีเควนซ์สตาร์ท (บินรอบ 2-3 ไม่ต้องนั่งรอครบ 29 วิ) */
+  skipStart(){
+    if(!this.on || this.ready) return;
+    clearTimeout(this._startTm);
+    if(this.startPlay){
+      const t=this.ctx.currentTime;
+      this.startPlay.gain.gain.cancelScheduledValues(t);
+      this.startPlay.gain.gain.setValueAtTime(this.startPlay.gain.gain.value,t);
+      this.startPlay.gain.gain.linearRampToValueAtTime(.0001,t+.45);   // หรี่ลงนุ่มๆ ไม่ตัดห้วน
+      try{ this.startPlay.src.stop(t+.5); }catch(e){}
+      this.startPlay=null;
+    }
+    this.ready=true; this.rpm=.55;
+    this.loopStart();
+  },
   loopStart(){                   // จบไฟล์สตาร์ท → เข้าลูปบิน (ไฟล์ถ้ามี · ไม่มีใช้สังเคราะห์)
     if(!state.sound) return;
+    showHeliSkip(false);
     if(this.files.rotor){
-      this.files.rotor.loop=true; this.files.rotor.volume=.55;
-      this.files.rotor.play().catch(()=>{});
-      if(this.files.high){
-        this.files.high.loop=true; this.files.high.volume=0;
-        this.files.high.play().catch(()=>{});
-      }
+      if(this.rotorPlay) return;                          // กันเรียกซ้ำ (สตาร์ทจบ + กดข้าม)
+      this.rotorPlay=this.playBuf(this.files.rotor,{loop:true,vol:.0001});
+      this.rotorPlay.gain.gain.linearRampToValueAtTime(.55,this.ctx.currentTime+XF_START);
+      if(this.files.high) this.highPlay=this.playBuf(this.files.high,{loop:true,vol:.0001});
     }else{
       this.buildNodes();
       this.master.gain.value=.4;
@@ -6390,15 +6468,16 @@ const HeliSound={
     const target=landed?.55:(1+Math.max(0,col)*.45);
     this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*.9);
     const r=this.rpm;
-    if(this.files.rotor){
-      this.files.rotor.playbackRate=.8+r*.35;
-      if(this.files.high){
+    if(this.rotorPlay){
+      const t=this.ctx.currentTime, sm=.08;             // setTargetAtTime = ไล่ค่านุ่มๆ ไม่กระตุกเป็นขั้น
+      this.rotorPlay.src.playbackRate.setTargetAtTime(.8+r*.35,t,sm);
+      if(this.highPlay){
         const hi=Math.max(0,Math.min(1,(r-.85)/.5));   // crossfade ลูปปกติ ↔ ลูปเร่งเครื่อง
-        this.files.high.playbackRate=.9+r*.2;
-        this.files.high.volume=.7*hi;
-        this.files.rotor.volume=.55*(1-hi*.75);
+        this.highPlay.src.playbackRate.setTargetAtTime(.9+r*.2,t,sm);
+        this.highPlay.gain.gain.setTargetAtTime(.7*hi,t,sm);
+        this.rotorPlay.gain.gain.setTargetAtTime(.55*(1-hi*.75),t,sm);
       }else{
-        this.files.rotor.volume=.3+r*.3;
+        this.rotorPlay.gain.gain.setTargetAtTime(.3+r*.3,t,sm);
       }
       return;
     }
@@ -6464,7 +6543,9 @@ const HeliSound={
     this.on=false; this.ready=false; this.rpm=0;
     this.proximity(0);
     clearTimeout(this._startTm);
-    Object.values(this.files).forEach(f=>{ if(f) f.pause(); });
+    showHeliSkip(false);
+    [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{ if(p) try{ p.src.stop(); }catch(e){} });
+    this.startPlay=this.rotorPlay=this.highPlay=null;
     this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
     this.nodes=[]; this.lfo=null; this.whine=null; this.whineG=null;
     if(this.master) this.master.gain.value=0;
