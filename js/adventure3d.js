@@ -3142,6 +3142,9 @@ function buildDom(){
   #adv-coin{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px #000;white-space:nowrap}
   #adv-board{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);border-radius:12px;
     padding:6px 9px;min-width:132px;max-width:190px;pointer-events:none}
+  /* 🚁 รอบ 352: กล้องใต้ท้องย้ายไปมุมซ้ายบน (ไม่บังวิวหน้า) → กระดานอันดับหลบลงมาอยู่ใต้กล้อง
+     สูตร: y กล้อง 30px + สูงกล้อง 26vh (BC.h) + ช่องไฟ 8px — แก้ BC ต้องแก้ตรงนี้ด้วย */
+  .adv-heli #adv-board{top:calc(26vh + 38px)}
   .adv-b-title{color:#ffd54f;font-weight:800;font-size:12px;margin-bottom:2px;white-space:nowrap}
   .adv-b-row{color:#fff;font-size:12px;font-weight:600;display:flex;gap:8px;justify-content:space-between;line-height:1.4}
   .adv-b-row.me{color:#8ef7a5}
@@ -6737,16 +6740,15 @@ function drawGlass(dt,now){
    เรนเดอร์ฉากเดิมซ้ำอีกรอบด้วยกล้องที่มองตรงลงพื้น แล้วยัดลงมุมจอ (scissor)
    ใช้ดูว่าใต้ท้องมีอะไร ตอนร่อนลงจอดจะได้วางเครื่องตรงเป้า
    ============================================================ */
-const BC={w:.23, h:.26, gap:9};                  // สัดส่วนของจอ (กว้าง/สูง) · ระยะเหนือแผงหน้าปัด
+const BC={w:.23, h:.26, x:10, y:30};             // สัดส่วนของจอ (กว้าง/สูง) · มุมซ้ายบน (y เว้นที่แถบชื่อกล้อง 16px)
 let bellyCam=null, bellyRect=null;
 function drawBellyCam(){
   if(!renderer||!scene||!M.heli) return;
   if(!bellyCam) bellyCam=new THREE.PerspectiveCamera(78,1,.1,220);
   const W=window.innerWidth, H=window.innerHeight;
   const w=Math.round(W*BC.w), h=Math.round(H*BC.h);
-  const x=Math.round((W-w)/2);
-  // วางชิดขอบบนของแผงหน้าปัด (ในโซนกระจก) → ไม่โดนภาพค็อกพิตบัง
-  const yTop=Math.round(Math.max(6,(cpPanelTop||H*.62)-h-BC.gap));
+  // 📍 รอบ 352 (ผู้ใช้สั่ง): ย้ายจากกลางจอ (บังวิวข้างหน้า) → มุมซ้ายบนสุด · กระดานอันดับย้ายลงไปอยู่ใต้กล้อง (CSS .adv-heli #adv-board)
+  const x=BC.x, yTop=BC.y;
   bellyRect={x,y:yTop,w,h};
   // กล้องอยู่ใต้ท้องเครื่องเล็กน้อย มองดิ่งลง · หมุนตามหัวเครื่องให้ทิศตรงกับที่นักบินเห็น
   bellyCam.position.set(camera.position.x,Math.max(.6,camera.position.y-1.1),camera.position.z);
