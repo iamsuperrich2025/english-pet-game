@@ -2962,13 +2962,15 @@ function renderDashboard(){
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
   tap.style.cursor = 'pointer'; tap.style.pointerEvents = 'auto';
-  // แตะน้อง = ลูบหัว — เด้งดึ๋ง + หัวใจลอย 2-3 ดวง
-  // (เดิมรอบ 246 แตะแล้วเปิดหน้าข้อมูลน้อง — หน้าข้อมูลยังเปิดได้จากปุ่ม #btn-pet-info และการ์ดน้อง)
+  // แตะน้อง = ลูบหัว (เด้งดึ๋ง + หัวใจลอย) แล้วเปิดหน้าโปรไฟล์น้องต่อทันที
+  // (ผู้ใช้สั่ง 18 ก.ค. 2026: คลิกตัวน้อง — โดยเฉพาะตอนร่างยักษ์ที่ตัวบังเวทีเกือบหมด — ต้องเข้าโปรไฟล์ได้)
   tap.addEventListener('click', ()=>{
     sfx.select();
     tap.style.transform = 'scale(1.12) rotate(-4deg)';
     setTimeout(()=>tap.style.transform = '', 160);
-    petPatFx(tap);
+    heartsFx(tap, 3);   // ⚠️ เดิมเรียก petPatFx() ที่ "ไม่เคยมีอยู่จริง" → ReferenceError ทุกครั้งที่แตะน้อง
+                        //    (โค้ดบรรทัดถัดไปเลยไม่ทำงาน = แตะน้องแล้วเงียบ) · ใช้ heartsFx ตัวเดียวกับฉลองรักษาหาย
+    setTimeout(()=>{ if(!window.__piOverlay) openPetInfoOverlay(); }, 200);   // หน่วงให้เห็นน้องเด้ง/หัวใจก่อน
   });
 
   renderHomeCard();
