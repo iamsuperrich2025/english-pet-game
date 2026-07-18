@@ -197,7 +197,7 @@ const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุ�
 const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
 const DOOR_R=2.6, DOOR_COIN=8, DOOR_BAT=15;         // ชนประตู: รัศมี · รางวัลในห้องเก็บของ
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
-let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
+let gaugeCtx=null, gaugeCanvasEl=null;   // canvas เข็มที่วาดทับหน้าปัดในภาพค็อกพิต (รอบ 342)
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
 
 /* ============================================================
@@ -3612,9 +3612,11 @@ function buildDom(){
   .adv-tlreflect.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
   #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
-  #adv-cockpit img{width:100%;display:block;max-height:38vh;object-fit:cover;object-position:top}
-  #adv-gauges{position:absolute;bottom:1vh;left:50%;transform:translateX(-50%);width:min(560px,72vw);
-    pointer-events:none;display:none;z-index:4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.55))}
+  /* ภาพค็อกพิตจริง — แถบหน้าปัดนักบิน (objectPosition คำนวณใน layoutCockpit ให้เข็มอยู่กลางแถบเสมอ) */
+  #adv-cockpit img{width:100%;display:block;height:36vh;object-fit:cover;object-position:center 20%}
+  /* canvas เข็ม: ทับภาพค็อกพิตพอดีเป๊ะ (ไม่ใช่แถบหน้าปัดลอยอย่างเดิม) */
+  #adv-gauges{position:absolute;left:0;bottom:0;width:100%;height:36vh;
+    pointer-events:none;display:none;z-index:4}
   .adv-heli #adv-gauges{display:block}
   #adv-radio{position:absolute;bottom:calc(1vh + 14vh);left:50%;transform:translateX(-50%);max-width:82vw;
     pointer-events:none;display:none;z-index:5;background:rgba(6,14,8,.78);color:#8ef7a5;
@@ -4138,18 +4140,22 @@ function buildDom(){
   nmPopEl=overlayEl.querySelector('#adv-nearmiss');
   comboFxEl=overlayEl.querySelector('#adv-combofx');
   cockpitEl=overlayEl.querySelector('#adv-cockpit');
-  gaugeCtx=overlayEl.querySelector('#adv-gauges').getContext('2d');
+  gaugeCanvasEl=overlayEl.querySelector('#adv-gauges');
+  gaugeCtx=gaugeCanvasEl.getContext('2d');
   ATC.el=overlayEl.querySelector('#adv-radio');
   ATC.replyEl=overlayEl.querySelector('#adv-reply');
   ATC.replyEl.querySelectorAll('.adv-rp').forEach(b=>{
     b.addEventListener('click',()=>ATC.reply(+b.dataset.i));
   });
-  // cockpit: ใช้ภาพ img/heli_cockpit.png ถ้าเจนแล้ว (PROMPTS_HELI.md) · ไม่มี → แผง CSS จำลอง
-  // (เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับด้านหน้าเสมอ — รอบ 61)
+  // cockpit: ภาพค็อกพิตจริง (รอบ 342 เปลี่ยนเป็น new_heli_cockpit — .jpg ย่อแล้ว 159KB · ไม่มี → .png ต้นฉบับ)
+  // เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับ "หน้าปัดที่มีอยู่ในภาพ" ตามพิกัด CP_GAUGES
   const cpImg=new Image();
-  cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); };
-  cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; };
-  cpImg.src='img/heli_cockpit.png';
+  cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); layoutCockpit(); };
+  cpImg.onerror=()=>{
+    if(cpImg.src.endsWith('.jpg')){ cpImg.src='img/new_heli_cockpit.png'; return; }
+    cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null;
+  };
+  cpImg.src='img/new_heli_cockpit.jpg';
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
@@ -4516,6 +4522,7 @@ function bindInput(){
     camera.aspect=window.innerWidth/window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth,window.innerHeight);
+    layoutCockpit();                               // 🎛️ เข็มต้องขยับตามภาพค็อกพิตเมื่อหมุนจอ
   });
 }
 
@@ -6193,9 +6200,8 @@ function tickHeli(dt,now){
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
 
   // ---- ระบบเตือนภัยใกล้ชน (proximity warning — บี๊บถี่ขึ้นตามระยะ + ไฟแดงกะพริบ) ----
-  hWarnLvl=0; let warnMsg='';
+  hWarnLvl=0; let warnMsg='', wallDist=99;      // wallDist ใช้ต่อที่เสียงสะท้อนตึกด้วย (รอบ 342)
   if(!hLanded && HeliSound.ready){
-    let wallDist=99;
     for(const b of buildings){
       if(ny>b.h+.8) continue;                          // อยู่เหนือยอดตึกนี้แล้ว ไม่มีทางชน
       const dx=Math.max(0,Math.abs(nx-b.x)-b.w/2);
@@ -6230,7 +6236,8 @@ function tickHeli(dt,now){
       hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk} ${hLanded?'· 🛬 จอดแล้ว':''}`;
     }
   }
-  HeliSound.update(col,hLanded,dt);
+  // 🎚️🌬️ ส่งสภาพแวดล้อมให้ระบบเสียง: สูงเท่าไหร่ · เร็วเท่าไหร่ · ใกล้ตึกแค่ไหน
+  HeliSound.update(col,hLanded,dt,{alt:Math.max(0,ny-floor), spd:Math.hypot(hVel.x,hVel.z), near:wallDist});
   drawGauges();
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
@@ -6246,92 +6253,112 @@ function tickHeli(dt,now){
    SPD ความเร็ว · ATT เส้นขอบฟ้าเทียม (ฟ้า/ดิน เอียง-ก้ม-เงยตามหัวเครื่อง)
    ALT ความสูง · V/S อัตราไต่-ลด · RPM รอบเครื่อง (โซนเขียว/เหลือง/แดง)
    ============================================================ */
-function gaugeBezel(c,cx,cy,r){
-  c.beginPath(); c.arc(cx,cy,r,0,7);
-  c.fillStyle='#14171d'; c.fill();
-  c.lineWidth=4; c.strokeStyle='#465061'; c.stroke();
-}
-function gaugeTicks(c,cx,cy,r,n){
-  c.strokeStyle='#8fa0b5'; c.lineWidth=2;
-  for(let i=0;i<n;i++){
-    const a=-Math.PI*.75 + i*(Math.PI*1.5)/(n-1);
-    c.beginPath();
-    c.moveTo(cx+Math.sin(a)*(r-6),cy-Math.cos(a)*(r-6));
-    c.lineTo(cx+Math.sin(a)*(r-13),cy-Math.cos(a)*(r-13));
-    c.stroke();
+/* ---------- 🎛️ เข็มวัดบนหน้าปัดจริงในภาพค็อกพิต ----------
+   รอบ 342: เลิกวาดหน้าปัดยักษ์ลอยหน้าจอ (ไม่สมจริง) → วาดเฉพาะ "เข็ม" ทับหน้าปัดที่มีอยู่ในภาพ
+   พิกัดด้านล่างเป็นพิกัดในไฟล์ img/new_heli_cockpit.jpg (1200×488) — วัดจากภาพจริง */
+const CP_NAT={w:1200,h:488};
+const CP_GAUGES={
+  spd:{x:330,y:146,r:23},   // ความเร็วลม
+  att:{x:391,y:121,r:23},   // ขอบฟ้าเทียม (โดมฟ้า-ส้มในภาพ)
+  alt:{x:447,y:125,r:23},   // ความสูง
+  rpm:{x:392,y:191,r:26},   // รอบใบพัด
+  vs :{x:453,y:191,r:23},   // อัตราไต่/ลด
+};
+let cpMap=null, cpBox='';                        // {scale,ox,oy} แปลงพิกัดภาพ → พิกัด canvas · cpBox = ขนาดกล่องที่วัดไว้ล่าสุด
+/* จัดวางภาพค็อกพิต + canvas เข็มให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ) */
+function layoutCockpit(){
+  const img=cockpitEl&&cockpitEl.querySelector('img'), cv=gaugeCanvasEl;
+  if(!img||!cv||!img.naturalWidth) return;
+  const bw=img.clientWidth, bh=img.clientHeight;
+  if(!bw||!bh) return;
+  const nw=img.naturalWidth, nh=img.naturalHeight;
+  const scale=Math.max(bw/nw,bh/nh);             // object-fit:cover
+  const dw=nw*scale, dh=nh*scale;
+  // เลื่อนภาพแนวตั้งให้กลุ่มหน้าปัดนักบินอยู่กลางแถบที่มองเห็นเสมอ (ทุกขนาดจอ)
+  const gy=(CP_GAUGES.att.y+CP_GAUGES.rpm.y)/2*(nh/CP_NAT.h);
+  let p=dh>bh ? (gy*scale-bh/2)/(dh-bh) : 0;
+  p=Math.max(0,Math.min(1,p));
+  img.style.objectPosition='center '+(p*100).toFixed(1)+'%';
+  // ⚠️ ห้ามตั้ง cv.style.height เอง — ปล่อยให้ CSS (36vh เท่ากับภาพ) คุม ไม่งั้นค้างค่าเก่าตอนหมุนจอ
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  if(cv.width!==Math.round(bw*dpr)||cv.height!==Math.round(bh*dpr)){
+    cv.width=Math.round(bw*dpr); cv.height=Math.round(bh*dpr);
   }
+  cpBox=bw+'x'+bh;
+  cpMap={scale:scale*(nw/CP_NAT.w)*dpr, ox:(bw-dw)/2*dpr, oy:(bh-dh)*p*dpr};
 }
-function gaugeNeedle(c,cx,cy,r,frac,color){
-  const a=-Math.PI*.75 + Math.max(0,Math.min(1,frac))*Math.PI*1.5;
-  c.strokeStyle=color; c.lineWidth=3.5; c.lineCap='round';
-  c.beginPath(); c.moveTo(cx-Math.sin(a)*10,cy+Math.cos(a)*10);
-  c.lineTo(cx+Math.sin(a)*(r-16),cy-Math.cos(a)*(r-16)); c.stroke();
-  c.beginPath(); c.arc(cx,cy,4.5,0,7); c.fillStyle='#e0e4ea'; c.fill();
-}
-function gaugeText(c,cx,cy,r,label,val){
-  c.textAlign='center'; c.fillStyle='#9fb2c8'; c.font='700 10px Arial';
-  c.fillText(label,cx,cy-r+22);
-  c.fillStyle='#fff'; c.font='900 14px Arial';
-  c.fillText(val,cx,cy+r-14);
+/* เข็มบาง ยาวไม่เกินหน้าปัดที่วาดไว้ในภาพ — สเกลตามขนาดเข็มจริง ไม่ fix พิกเซล */
+function cpNeedle(c,g,frac,color,opt){
+  const o=opt||{}, sw=(o.sweep||1.5)*Math.PI, a0=-Math.PI*.75;
+  const a=a0+Math.max(0,Math.min(1,frac))*sw;
+  const R=g.r*cpMap.scale, cx=g.x*cpMap.scale+cpMap.ox, cy=g.y*cpMap.scale+cpMap.oy;
+  c.save();
+  c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=Math.max(1.5,R*.12);
+  c.strokeStyle=color; c.lineWidth=Math.max(1.3,R*.11); c.lineCap='round';
+  c.beginPath();
+  c.moveTo(cx-Math.sin(a)*R*.22,cy+Math.cos(a)*R*.22);      // หางเข็มสั้นๆ แบบเข็มจริง
+  c.lineTo(cx+Math.sin(a)*R*.78,cy-Math.cos(a)*R*.78);
+  c.stroke();
+  c.shadowBlur=0;
+  c.beginPath(); c.arc(cx,cy,Math.max(1,R*.1),0,7); c.fillStyle='#d8dde6'; c.fill();
+  c.restore();
 }
 function drawGauges(){
   if(!gaugeCtx) return;
-  const c=gaugeCtx, R=56;
-  c.clearRect(0,0,620,130);
-  const cy=65, xs=[64,187,310,433,556];
-  // SPD (0–70 กม./ชม.)
-  const spd=Math.hypot(hVel.x,hVel.z)*3.6;
-  gaugeBezel(c,xs[0],cy,R); gaugeTicks(c,xs[0],cy,R,8);
-  gaugeNeedle(c,xs[0],cy,R,spd/70,'#ffb74d');
-  gaugeText(c,xs[0],cy,R,'SPD',Math.round(spd)+'');
-  // ATT เส้นขอบฟ้าเทียม — ก้มหัว = เห็นพื้นดินมากขึ้น (ขอบฟ้าเลื่อนขึ้น) · เอียงข้าง = ขอบฟ้าเอียง
-  const ax=xs[1];
+  // วัดใหม่เมื่อกล่องเปลี่ยนขนาด (หมุนจอ/ย่อขยายหน้าต่าง/แถบ URL ยุบ) — เช็กทุกเฟรมแต่ราคาถูก
+  const _im=cockpitEl&&cockpitEl.querySelector('img');
+  if(!cpMap || (_im && cpBox!==_im.clientWidth+'x'+_im.clientHeight)) layoutCockpit();
+  if(!cpMap) return;
+  const c=gaugeCtx;
+  c.clearRect(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height);
+  const S=cpMap.scale, X=g=>g.x*S+cpMap.ox, Y=g=>g.y*S+cpMap.oy;
+  // ── ขอบฟ้าเทียม: วาดในวงโดมที่มีอยู่ (ฟ้า/พื้นดินหมุน-เลื่อนตามการเอียง) ──
+  const G=CP_GAUGES.att, R=G.r*S, ax=X(G), ay=Y(G);
   c.save();
-  c.beginPath(); c.arc(ax,cy,R-3,0,7); c.clip();
-  c.translate(ax,cy);
-  c.rotate(hTiltS*.5);
-  const hy=-hTiltF*34;                          // เชิดหัว (fw<0) → ขอบฟ้าลง เห็นฟ้ามากขึ้น
-  c.fillStyle='#58b6e8'; c.fillRect(-R,-R*2,R*2,R*2+hy);      // ท้องฟ้า
-  c.fillStyle='#a1887f'; c.fillRect(-R,hy,R*2,R*2);           // พื้นดิน
-  c.strokeStyle='#fff'; c.lineWidth=2.5;
-  c.beginPath(); c.moveTo(-R,hy); c.lineTo(R,hy); c.stroke(); // เส้นขอบฟ้า
-  c.lineWidth=1.5;                                            // ขีดพิตช์ ±
-  [-22,22].forEach(o=>{ c.beginPath(); c.moveTo(-14,hy+o); c.lineTo(14,hy+o); c.stroke(); });
+  c.beginPath(); c.arc(ax,ay,R*.9,0,7); c.clip();
+  c.translate(ax,ay); c.rotate(hTiltS*.5);
+  const hy=-hTiltF*R*.6;
+  c.fillStyle='#5aa9d6'; c.fillRect(-R,-R*2,R*2,R*2+hy);
+  c.fillStyle='#c2762c'; c.fillRect(-R,hy,R*2,R*2);
+  c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=Math.max(1,R*.07);
+  c.beginPath(); c.moveTo(-R,hy); c.lineTo(R,hy); c.stroke();
   c.restore();
-  c.beginPath(); c.arc(ax,cy,R-2,0,7);          // วงขอบ
-  c.lineWidth=4; c.strokeStyle='#465061'; c.stroke();
-  c.strokeStyle='#ff9800'; c.lineWidth=3.5; c.lineCap='round'; // สัญลักษณ์เครื่องบิน (ตรึงกลาง)
-  c.beginPath(); c.moveTo(ax-22,cy); c.lineTo(ax-8,cy); c.lineTo(ax-4,cy+5); c.stroke();
-  c.beginPath(); c.moveTo(ax+22,cy); c.lineTo(ax+8,cy); c.lineTo(ax+4,cy+5); c.stroke();
-  c.beginPath(); c.arc(ax,cy,2.5,0,7); c.fillStyle='#ff9800'; c.fill();
-  // ALT (0–60m)
+  c.strokeStyle='#ff9800'; c.lineWidth=Math.max(1,R*.09); c.lineCap='round';  // สัญลักษณ์เครื่อง (ตรึงกลาง)
+  c.beginPath(); c.moveTo(ax-R*.5,ay); c.lineTo(ax-R*.16,ay); c.stroke();
+  c.beginPath(); c.moveTo(ax+R*.5,ay); c.lineTo(ax+R*.16,ay); c.stroke();
+  // ── เข็มที่เหลือ ──
+  const spd=Math.hypot(hVel.x,hVel.z)*3.6;
+  cpNeedle(c,CP_GAUGES.spd,spd/70,'#ffd9a0');
   const alt=Math.max(0,camera.position.y-HELI_SKID);
-  gaugeBezel(c,xs[2],cy,R); gaugeTicks(c,xs[2],cy,R,7);
-  gaugeNeedle(c,xs[2],cy,R,alt/60,'#4fc3f7');
-  gaugeText(c,xs[2],cy,R,'ALT',Math.round(alt)+'m');
-  // V/S อัตราไต่-ลด (±10 m/s · กลาง=0)
-  gaugeBezel(c,xs[3],cy,R); gaugeTicks(c,xs[3],cy,R,9);
-  gaugeNeedle(c,xs[3],cy,R,(hVel.y+10)/20, hVel.y<-5?'#ef5350':'#aed581');
-  gaugeText(c,xs[3],cy,R,'V/S',(hVel.y>=0?'+':'')+hVel.y.toFixed(1));
-  // RPM (0–150% · โซนเขียว/เหลือง/แดง)
-  const rx=xs[4];
-  gaugeBezel(c,rx,cy,R);
+  cpNeedle(c,CP_GAUGES.alt,alt/60,'#bfe6ff');
+  cpNeedle(c,CP_GAUGES.vs,(hVel.y+10)/20, hVel.y<-5?'#ff8a80':'#d6f5b0');
+  // รอบใบพัด: มีแถบเขียว-แดงบางๆ บอกโซนปลอดภัย (ไม่ทึบ ไม่บังลายหน้าปัดในภาพ)
+  const rg=CP_GAUGES.rpm, rr=rg.r*S, rx=X(rg), ry=Y(rg);
+  c.save(); c.globalAlpha=.55; c.lineWidth=Math.max(1.2,rr*.1); c.lineCap='butt';
   [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]].forEach(([col,f1,f2])=>{
     c.beginPath();
-    c.arc(rx,cy,R-9,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
-    c.strokeStyle=col; c.lineWidth=5; c.lineCap='butt'; c.stroke();
+    c.arc(rx,ry,rr*.86,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
+    c.strokeStyle=col; c.stroke();
   });
-  gaugeNeedle(c,rx,cy,R,HeliSound.rpm/1.5,'#ffb74d');
-  gaugeText(c,rx,cy,R,'RPM',Math.round(HeliSound.rpm*100)+'%');
+  c.restore();
+  cpNeedle(c,rg,HeliSound.rpm/1.5,'#ffd9a0');
 }
 
 /* ---------- เสียงใบพัด Bell 212 — ไฟล์เสียงจริง (sound/heli_*.mp3) · ไม่มีไฟล์ = ตกไปใช้เสียงสังเคราะห์ ---------- */
 const XF_START=1.1;              // วินาที: crossfade ท้ายไฟล์สตาร์ท → ลูปบิน
 const PRELOAD_WAIT=6000;         // ms: รอไฟล์เสียงจริง decode เสร็จก่อน ถ้าเกินนี้ใช้เสียงสังเคราะห์แทน
+/* 🎚️ เสียงตามสภาพแวดล้อม (รอบ 342) — จูนค่าพวกนี้ได้ถ้าอยากให้ชัด/บางกว่านี้ */
+const ALT_QUIET_FROM=8, ALT_QUIET_TO=55;   // ม.: เริ่มเบาลงที่ 8 ม. → เบาสุดที่ 55 ม.
+const ALT_MAX_DAMP=.42;                    // สูงสุดเบาลง 42% (ไม่ให้เงียบหาย)
+const ALT_LP_MIN=1800;                     // Hz: ตอนสูงสุด ตัดความแหลมเหลือ 1.8kHz = เสียงทุ้มไกล
+const ECHO_NEAR=9, ECHO_BOOST=.28;         // ม.: ใกล้ตึกกว่า 9 ม. เสียงสะท้อนดังขึ้นสูงสุด 28%
+const WIND_FULL_SPD=26, WIND_MAX=.17;      // ม./วิ ที่ลมดังเต็ม · ระดับเสียงลมสูงสุด
+const SHUTDOWN_SEC=4.2;                    // วินาที: ใบพัดค่อยๆ ช้าลงจนหยุดตอนออกจากโลก
 const HeliSound={
   ctx:null,master:null,lfo:null,whine:null,whineG:null,nodes:[],
   files:{start:null,rotor:null,high:null},probed:false,on:false,
   startPlay:null,rotorPlay:null,highPlay:null,
+  windG:null,windBp:null,envG:null,envLp:null,_downTm:0,   // 🌬️🎚️ ลมปะทะ + เสียงตามสภาพแวดล้อม (รอบ 342)
   ready:false,rpm:0,_startTm:0,highOn:false,_startAt:0,startDur:0,
   probe(){
     if(this.probed) return; this.probed=true;
@@ -6386,6 +6413,7 @@ const HeliSound={
   },
   start(){                       // เข้าโลก → ซีเควนซ์สตาร์ทเครื่องก่อน (ready แล้วถึงบินได้)
     if(this.on) return;
+    clearTimeout(this._downTm);  // ⚠️ เข้าโลกใหม่ระหว่างเครื่องยังดับไม่สุด — กัน stop() ที่ค้างคิวมาฆ่าเสียงที่เพิ่งสตาร์ท
     this.on=true; this.ready=false; this.rpm=0; this.highOn=false;
     this.probe();
     if(!state.sound){ this.ready=true; this.rpm=.55; return; }   // ปิดเสียง = ข้ามซีเควนซ์ บินได้เลย
@@ -6430,6 +6458,47 @@ const HeliSound={
     this.lfo.frequency.linearRampToValueAtTime(10.5,t+3.4);
     this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; },3600);
   },
+  /* 🌬️ เสียงลมปะทะ — noise ผ่าน bandpass ดังขึ้นตามความเร็ว (สร้างครั้งเดียว ใช้ยาว) */
+  buildWind(){
+    if(this.windG) return;
+    this.ensureCtx();
+    const len=this.ctx.sampleRate*3, b=this.ctx.createBuffer(1,len,this.ctx.sampleRate);
+    const d=b.getChannelData(0);
+    let last=0;
+    for(let i=0;i<len;i++){                     // brown-ish noise: ทุ้มกว่า white noise = เหมือนลมจริง
+      last=(last+Math.random()*2-1)*.5; d[i]=last*1.6;
+    }
+    const src=this.ctx.createBufferSource(); src.buffer=b; src.loop=true;
+    this.windBp=this.ctx.createBiquadFilter(); this.windBp.type='bandpass';
+    this.windBp.frequency.value=520; this.windBp.Q.value=.55;
+    this.windG=this.ctx.createGain(); this.windG.gain.value=.0001;
+    src.connect(this.windBp); this.windBp.connect(this.windG); this.windG.connect(this.ctx.destination);
+    src.start(); this.nodes.push(src);
+  },
+  /* 🛬 ดับเครื่อง: ใบพัดค่อยๆ ช้าลงจนหยุด (playbackRate + volume ไหลลงพร้อมกัน) */
+  shutdown(){
+    if(!this.ctx || (!this.rotorPlay && !this.startPlay)) return 0;
+    const t=this.ctx.currentTime, D=SHUTDOWN_SEC;
+    clearTimeout(this._startTm);
+    showHeliSkip(false);
+    [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{
+      if(!p) return;
+      try{
+        p.gain.gain.cancelScheduledValues(t);
+        p.gain.gain.setValueAtTime(Math.max(.0001,p.gain.gain.value),t);
+        p.gain.gain.linearRampToValueAtTime(.0001,t+D);
+        p.src.playbackRate.cancelScheduledValues(t);
+        p.src.playbackRate.setValueAtTime(p.src.playbackRate.value,t);
+        p.src.playbackRate.linearRampToValueAtTime(.16,t+D);   // ใบพัดหมุนช้าลงเรื่อยๆ (เสียงตุบห่างออก)
+        p.src.stop(t+D+.05);
+      }catch(e){}
+    });
+    if(this.windG){ this.windG.gain.cancelScheduledValues(t); this.windG.gain.linearRampToValueAtTime(.0001,t+.6); }
+    this.startPlay=this.rotorPlay=this.highPlay=null;
+    this.ready=false; this.rpm=0;
+    this._downTm=setTimeout(()=>this.stop(),(D+.2)*1000);
+    return D*1000;
+  },
   /* ⏭ ข้ามซีเควนซ์สตาร์ท (บินรอบ 2-3 ไม่ต้องนั่งรอครบ 29 วิ) */
   skipStart(){
     if(!this.on || this.ready) return;
@@ -6460,9 +6529,10 @@ const HeliSound={
       this.lfo.frequency.value=10.5;
     }
   },
-  update(col,landed,dt){
+  update(col,landed,dt,env){
     if(!this.on) return;
     if(!state.sound){ this.stop(); this.on=true; this.ready=true; return; }  // ปิดเสียงกลางคัน: เงียบแต่ยังบินได้
+    if(env) this.envUpdate(env,dt);              // 🎚️🌬️ เสียงตามสภาพแวดล้อม + ลมปะทะ (ทำก่อน เพราะทำงานตอนสตาร์ทด้วย)
     if(!this.ready) return;                       // ระหว่างสตาร์ทเครื่อง ไม่ปรับ RPM
     // โมเดล RPM มีแรงเฉื่อย: เร่ง/เบาเครื่องค่อยเป็นค่อยไป (สมจริง ไม่กระโดด)
     const target=landed?.55:(1+Math.max(0,col)*.45);
@@ -6484,6 +6554,31 @@ const HeliSound={
     if(this.lfo) this.lfo.frequency.value=6.5+r*6.5;
     if(this.whine){ this.whine.frequency.value=230+r*360; this.whineG.gain.value=.02+r*.05; }
     if(this.master) this.master.gain.value=.18+r*.32;
+  },
+  /* 🎚️🌬️ ปรับเสียงตามสภาพแวดล้อม — เรียกทุกเฟรมจาก tickHeli
+     env = {alt: ความสูงเหนือพื้น(ม.), spd: ความเร็วแนวราบ(ม./วิ), near: ระยะถึงตึกใกล้สุด(ม.)} */
+  envUpdate(env,dt){
+    this.ensureCtx();
+    const t=this.ctx.currentTime, sm=.12;
+    // ⚠️ ห้ามแตะ master.gain ตรงนี้ — โหมดเสียงสังเคราะห์ใช้ master คุมระดับเครื่องยนต์อยู่ (จะตีกัน)
+    // จึงแทรก envG (ระดับตามสภาพแวดล้อม) + envLp (ความทุ้ม) คั่นระหว่าง master → ลำโพง
+    if(!this.envG){
+      this.envG=this.ctx.createGain();
+      this.envLp=this.ctx.createBiquadFilter(); this.envLp.type='lowpass'; this.envLp.frequency.value=20000;
+      this.master.disconnect();
+      this.master.connect(this.envG); this.envG.connect(this.envLp); this.envLp.connect(this.ctx.destination);
+    }
+    // ① ยิ่งสูง อากาศบาง+ไกลพื้น = เสียงเบาลงและทุ้มลง (ไม่เกิน MAX_DAMP)
+    const hi=Math.max(0,Math.min(1,(env.alt-ALT_QUIET_FROM)/(ALT_QUIET_TO-ALT_QUIET_FROM)));
+    // ② บินใกล้ตึก = เสียงสะท้อนกลับมา ดังขึ้นนิดหน่อย (ground/wall effect)
+    const echo=Math.max(0,Math.min(1,(ECHO_NEAR-Math.min(env.near,ECHO_NEAR))/ECHO_NEAR));
+    this.envG.gain.setTargetAtTime((1-hi*ALT_MAX_DAMP)*(1+echo*ECHO_BOOST),t,sm);
+    this.envLp.frequency.setTargetAtTime(20000-hi*(20000-ALT_LP_MIN),t,sm);
+    // ③ ลมปะทะตามความเร็ว (ยิ่งเร็วยิ่งดังและแหลมขึ้น) — ลมในห้องนักบิน ไม่ต้องโดนหรี่ตามความสูง
+    this.buildWind();
+    const sp=Math.max(0,Math.min(1,env.spd/WIND_FULL_SPD));
+    this.windG.gain.setTargetAtTime(sp*sp*WIND_MAX,t,sm);
+    this.windBp.frequency.setTargetAtTime(420+sp*900,t,sm);
   },
   /* เสียงวิทยุ "ซ่า-คลิก" (squelch) ก่อนหอบังคับพูด — สไตล์วิทยุการบินจริง */
   squelch(){
@@ -6542,12 +6637,14 @@ const HeliSound={
   stop(){
     this.on=false; this.ready=false; this.rpm=0;
     this.proximity(0);
-    clearTimeout(this._startTm);
+    clearTimeout(this._startTm); clearTimeout(this._downTm);
     showHeliSkip(false);
+    if(this.windG) this.windG.gain.value=.0001;          // 🌬️ ลมต้องหยุดด้วย ไม่งั้นซ่าค้างหลังออกจากโลก
     [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{ if(p) try{ p.src.stop(); }catch(e){} });
     this.startPlay=this.rotorPlay=this.highPlay=null;
     this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
-    this.nodes=[]; this.lfo=null; this.whine=null; this.whineG=null;
+    // ⚠️ แหล่งเสียงลมถูก stop() ไปกับ nodes แล้ว ต้องล้างตัวแปรด้วย ไม่งั้น buildWind คิดว่ามีอยู่ = รอบหน้าไม่มีเสียงลม
+    this.nodes=[]; this.lfo=null; this.whine=null; this.whineG=null; this.windG=null; this.windBp=null;
     if(this.master) this.master.gain.value=0;
   },
 };
@@ -7690,7 +7787,7 @@ function start(md){
   overlayEl.classList.toggle('adv-drive',mode==='drive');
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
-  if(mode==='heli') HeliSound.start();
+  if(mode==='heli'){ HeliSound.start(); layoutCockpit(); }   // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   else if(mode==='drone') DroneSound.start();
   // โหมด drive ไม่สตาร์ทเสียงเครื่องอัตโนมัติแล้ว (รอบ 128) — ผู้เล่นเลื่อนสวิตช์สตาร์ทเองในแผงเตรียมออกรถ
   hintEl.textContent=M.hint;
@@ -7736,7 +7833,8 @@ function exitWorld(){
   if(photoEl) photoEl.classList.remove('on');      // 📸 ปิดการ์ดพรีวิวภาพที่ค้าง
   netLeave();
   HSound.stopAll();
-  HeliSound.stop();
+  // 🛬 ออกจากโลกเฮลิฯ = ดับเครื่อง (ใบพัดค่อยๆ ช้าลงจนหยุด) แทนตัดเสียงห้วนๆ
+  if(mode==='heli' && state.sound && HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
   DroneSound.stop();
   CarSound.stop();
   ATC.reset();
