@@ -23,6 +23,8 @@ let segs=[], buckets=new Map();            // ถนน: เส้นย่อ�
 let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
 let shadowEl=null;                         // 🌑 เงาวงรีใต้ล้อ (รอบ 303)
 let wheelEl=null, wheelOff=0;              // 🛞 เอฟเฟกต์ล้อหมุน (รอบ 304) — offset ลายวิ่งสะสมตาม spd
+let speedFxEl=null;                        // 🌪️ เส้นสปีดขอบจอ (รอบ 305)
+let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอบ 305) — ตัวจับจังหวะ spawn + สลับท่อซ้าย/ขวา
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
@@ -106,6 +108,22 @@ const CSS=`
   background:repeating-linear-gradient(180deg,
     rgba(205,210,220,.5) 0 3px, rgba(205,210,220,0) 3px 11px,
     rgba(110,116,128,.4) 11px 14px, rgba(110,116,128,0) 14px 22px)}
+/* 💨 รอบ 305: ควันท่อไอเสีย — ก้อนควันจางพุ่งออกจากปลายท่อคู่ (พิกเซล: ซ้าย~20% ขวา~80% y~71%) ตอนบิดคันเร่ง */
+.m-smoke{position:absolute;width:8%;aspect-ratio:1;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(205,208,214,.6) 0%,rgba(185,190,198,.35) 45%,rgba(185,190,198,0) 72%);
+  transform:translate(-50%,-50%);animation:msmoke .8s ease-out forwards}
+@keyframes msmoke{
+  0%{transform:translate(-50%,-50%) scale(.5);opacity:.75}
+  100%{transform:translate(calc(-50% + var(--dx,200%)),250%) scale(2.3);opacity:0}}
+/* 🌪️ รอบ 305: เส้นสปีดขอบจอ >90 กม./ชม. — แถบเส้นวิ่งลงเร็ว 2 ฝั่ง จางเข้ากลางจอ (opacity คุมใน frame) */
+#moto-speedfx{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s}
+#moto-speedfx::before,#moto-speedfx::after{content:'';position:absolute;top:0;bottom:0;width:15%;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.28) 0 2px,rgba(255,255,255,0) 2px 9px,
+    rgba(255,255,255,.16) 9px 10px,rgba(255,255,255,0) 10px 27px);
+  animation:mspeed .14s linear infinite}
+#moto-speedfx::before{left:0;-webkit-mask-image:linear-gradient(90deg,#000,transparent);mask-image:linear-gradient(90deg,#000,transparent)}
+#moto-speedfx::after{right:0;-webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent)}
+@keyframes mspeed{to{background-position:0 27px}}
 #moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
   background:transparent}
 #moto-slider .m-arr{display:none}
@@ -166,6 +184,7 @@ function buildDom(){
     <button id="moto-power"><span class="m-hint">ออก</span></button>
     <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
+      <div id="moto-speedfx"></div>
       <div id="moto-shadow"></div>
       <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
         <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
@@ -196,6 +215,7 @@ function buildDom(){
   bikeEl=document.getElementById('moto-bikewrap');   // หมุน+ไฟเลี้ยวที่ wrapper (ภาพ+ไฟหมุนไปด้วยกัน)
   shadowEl=document.getElementById('moto-shadow');
   wheelEl=wrapEl.querySelector('.m-wheel');
+  speedFxEl=document.getElementById('moto-speedfx');
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
@@ -880,6 +900,24 @@ function frame(dt,now){
     wheelOff=(wheelOff+spd*dt*90)%22;
     wheelEl.style.backgroundPosition='0 '+wheelOff.toFixed(1)+'px';
     wheelEl.style.opacity=Math.min(.8,spd*.05).toFixed(2);
+  }
+  /* 💨 ควันท่อ: บิดคันเร่ง = พ่นก้อนควันสลับท่อซ้าย/ขวาทุก 90ms (ลบตัวเองใน 850ms · สูงสุด ~9 ก้อน) */
+  if(thr&&bikeEl){
+    smokeAcc+=dt;
+    if(smokeAcc>0.09 && bikeEl.querySelectorAll('.m-smoke').length<12){   // cap 12 ก้อน (กันเทสต์/แท็บกระตุกยิงรัว)
+      smokeAcc=0; smokeSide=-smokeSide;
+      const el=document.createElement('span'); el.className='m-smoke';
+      el.style.left=((smokeSide<0?20:80)+(Math.random()*4-2))+'%';
+      el.style.top=(71+Math.random()*3)+'%';
+      el.style.setProperty('--dx',(smokeSide<0?-1:1)*(140+Math.random()*160)+'%');
+      bikeEl.appendChild(el);
+      setTimeout(()=>el.remove(),850);
+    }
+  }
+  /* 🌪️ เส้นสปีด: โผล่เกิน 90 กม./ชม. เข้มขึ้นตามความเร็ว */
+  if(speedFxEl){
+    const kmh=spd*3.6;
+    speedFxEl.style.opacity=kmh>90?Math.min(.8,(kmh-90)/45).toFixed(2):0;
   }
   spdEl.textContent=Math.round(spd*3.6)+' กม./ชม.';
   Eng.tick();
