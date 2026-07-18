@@ -22,6 +22,7 @@ let wrapEl,screenEl,cvEl,knobEl,sliderEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist
 let segs=[], buckets=new Map();            // ถนน: เส้นย่อย + ตารางแฮช
 let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
 let shadowEl=null;                         // 🌑 เงาวงรีใต้ล้อ (รอบ 303)
+let wheelEl=null, wheelOff=0;              // 🛞 เอฟเฟกต์ล้อหมุน (รอบ 304) — offset ลายวิ่งสะสมตาม spd
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
@@ -98,6 +99,13 @@ const CSS=`
 #moto-bikewrap.sig-l .m-tl.l{animation:mblink .7s steps(1,end) infinite}
 #moto-bikewrap.sig-r .m-tl.r{animation:mblink .7s steps(1,end) infinite}
 @keyframes mblink{0%{opacity:1}55%{opacity:0}100%{opacity:0}}
+/* 🛞 รอบ 304: ล้อหมุน — แถบเบลอวิ่งลงบนหน้ายาง (พิกเซลจริง: x 37-63% y 73.5-84%) · เร็ว=ชัด จอด=หาย
+   ทิศลง: มองจากท้ายรถตอนวิ่งไปหน้า ผิวยางฝั่งเรากวาดลงหาพื้น · offset+opacity อัปเดตใน frame ตาม spd */
+.m-wheel{position:absolute;left:37%;top:73.5%;width:26%;height:10.5%;border-radius:50%;
+  opacity:0;pointer-events:none;filter:blur(.6px);
+  background:repeating-linear-gradient(180deg,
+    rgba(205,210,220,.5) 0 3px, rgba(205,210,220,0) 3px 11px,
+    rgba(110,116,128,.4) 11px 14px, rgba(110,116,128,0) 14px 22px)}
 #moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
   background:transparent}
 #moto-slider .m-arr{display:none}
@@ -160,7 +168,7 @@ function buildDom(){
       <canvas id="moto-cv"></canvas>
       <div id="moto-shadow"></div>
       <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
-        <span class="m-tl l"></span><span class="m-tl r"></span></div>
+        <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
       <div id="moto-gps"><span id="moto-gps-arr">➤</span><span id="moto-gps-d">--</span></div>
@@ -187,6 +195,7 @@ function buildDom(){
   screenEl=document.getElementById('moto-screen'); cvEl=document.getElementById('moto-cv');
   bikeEl=document.getElementById('moto-bikewrap');   // หมุน+ไฟเลี้ยวที่ wrapper (ภาพ+ไฟหมุนไปด้วยกัน)
   shadowEl=document.getElementById('moto-shadow');
+  wheelEl=wrapEl.querySelector('.m-wheel');
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
@@ -866,6 +875,12 @@ function frame(dt,now){
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); postTick(); }
   /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง (เหมือนตัวรถเทออกจากจุดสัมผัส) */
   if(shadowEl) shadowEl.style.transform='translateX('+(-50+lean*14).toFixed(1)+'%) scaleX('+(1-Math.abs(lean)*.3).toFixed(2)+')';
+  /* 🛞 ล้อหมุน: ลายวิ่งลงเร็วตาม spd (period 22px) · จอด=โปร่งใสเห็นดอกยางนิ่งจากภาพ */
+  if(wheelEl){
+    wheelOff=(wheelOff+spd*dt*90)%22;
+    wheelEl.style.backgroundPosition='0 '+wheelOff.toFixed(1)+'px';
+    wheelEl.style.opacity=Math.min(.8,spd*.05).toFixed(2);
+  }
   spdEl.textContent=Math.round(spd*3.6)+' กม./ชม.';
   Eng.tick();
   renderer.render(scene,camera);
