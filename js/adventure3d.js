@@ -6400,9 +6400,35 @@ const FOOT_EYE=1.55, FOOT_SPD=5.2, WING_COLLECT=3.4, RIDE_SPD=8.5;
 let hPhase='walk', termB=null, liftUntil=0, liftToRoof=true, liftEl=null;
 let rideWp=[], rideIdx=0, ridePos={x:0,y:0,z:0}, rideYaw=0, paxSnd=null;
 let rideSpin=1, _rideDusted=false;                   // 🌪️ 0→1 = ใบพัดกำลังเร่งก่อนยกตัว (รอบ 357)
-/* 🚪 เลื่อนประตูสไลด์ของลำ (target 0=ปิด 1=เปิด) — เรียกทุกเฟรม เลื่อนนุ่มเอง */
+/* 🔊 เสียงประตูสไลด์ (รอบ 358) — "ชึ่ก" (noise ผ่าน bandpass กวาดตามทิศเลื่อน) จบด้วย "กึก" (ทุ้มสั้นเข้าราง)
+   ต่อตรง destination แบบ assist (ไม่ผ่าน master ที่โดน envLp) · แพตเทิร์นเดียวกับ beltClick */
+function doorSlideSfx(open){
+  if(!state.sound) return;
+  try{
+    HeliSound.ensureCtx();
+    const c=HeliSound.ctx, t=c.currentTime;
+    const nb=c.createBuffer(1,c.sampleRate*.3,c.sampleRate);
+    const d=nb.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length*.6);
+    const n=c.createBufferSource(); n.buffer=nb;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.1;
+    bp.frequency.setValueAtTime(open?700:1350,t);               // เปิด=กวาดขึ้น · ปิด=กวาดลง
+    bp.frequency.linearRampToValueAtTime(open?1350:700,t+.26);
+    const g=c.createGain();
+    g.gain.setValueAtTime(.045,t); g.gain.linearRampToValueAtTime(.028,t+.2);
+    g.gain.exponentialRampToValueAtTime(.001,t+.3);
+    n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t);
+    const o=c.createOscillator(), og=c.createGain();            // "กึก" สุดราง
+    o.type='sine'; o.frequency.setValueAtTime(150,t+.26); o.frequency.exponentialRampToValueAtTime(70,t+.33);
+    og.gain.setValueAtTime(.0001,t); og.gain.setValueAtTime(.09,t+.26); og.gain.exponentialRampToValueAtTime(.001,t+.36);
+    o.connect(og); og.connect(c.destination); o.start(t); o.stop(t+.38);
+  }catch(e){}
+}
+/* 🚪 เลื่อนประตูสไลด์ของลำ (target 0=ปิด 1=เปิด) — เรียกทุกเฟรม เลื่อนนุ่มเอง + เล่นเสียงตอนทิศเปลี่ยน */
 function doorLerp(h,target,k){
   if(!h||!h._door) return;
+  if(h._doorTgt===undefined) h._doorTgt=target;       // เฟรมแรกไม่ต้องดัง (สถานะตั้งต้น)
+  else if(h._doorTgt!==target){ h._doorTgt=target; doorSlideSfx(target===1); }
   h._doorOpen+=(target-h._doorOpen)*Math.min(1,k);
   h._door.position.z=h._doorOpen*1.15;               // สไลด์ไปทางหางตามรางจริง
 }
@@ -6470,6 +6496,11 @@ function heliMeshBuild(col,accent){
   const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});            // เหล็กเข้ม (ใบพัด/สกี)
   const gl=new THREE.MeshLambertMaterial({color:0x223744});            // กระจกเข้มอมฟ้า
   const wt=new THREE.MeshLambertMaterial({color:accent||0xe8e6df});    // คาดใต้ท้อง (ทูโทน — เทศกาลเปลี่ยนสีได้)
+  // 🖼️ รอบ 358: มีไฟล์ texture = แปะอัตโนมัติ (prompt เจนใน PROMPTS_HELI_TEXTURE.md + Artifact)
+  //    ⚠️ ภาพต้องเป็น "โทนเทาอ่อนเกือบขาว" — applyTex ใช้ tint คูณทับ ลายเดียวย้อมได้ทุกสีลำ (แดง/ฟ้า/เทศกาล)
+  applyTex(bm,'tex_heli_body',1,1,col);              // ผิวโลหะรอยแนวแผ่น+หมุดย้ำ ย้อมสีตัวถัง
+  applyTex(wt,'tex_heli_body',1,1,accent||0xe8e6df); // คาดใต้ท้องลายเดียวกัน ย้อมสี accent
+  applyTex(dk,'tex_heli_metal',1,1);                 // โลหะเข้มด้านใช้งานหนัก (ใบพัด/สกี — สีจากภาพตรงๆ)
   // ── ห้องโดยสาร: กล่องหลัก + ท้องมน + คาดสีขาว ──
   const cab=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.25,3.1),bm); cab.position.set(0,1.28,0); g.add(cab);
   const belly=new THREE.Mesh(new THREE.BoxGeometry(1.45,.42,2.9),wt); belly.position.set(0,.68,0); g.add(belly);
