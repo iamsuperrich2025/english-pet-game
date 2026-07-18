@@ -41,11 +41,11 @@ let keydownFn=null,keyupFn=null,resizeFn=null;
 
 /* ---------- 🔊 เสียงเครื่องยนต์จริง (รอบ 306 — ตัดจากเสียงอัดมอไซค์จริงของผู้ใช้ sound/MotorbikeSound.m4a)
    sound/moto/: eng_idle 5.6s ลูปเดินเบา (248.7s ในต้นฉบับ ช่วงนิ่งสุด) · eng_cruise 5.6s ลูปวิ่งไหล (129.2s)
-   eng_accel 2.6s รอบกวาดขึ้น (377.2s) · eng_decel 3.5s รอบไหลลง (393.7s) — ทุกไฟล์กรอง 60Hz-7.5kHz ตัดลม/ซ่า
+   eng_accel 2.05s รอบกวาดขึ้น (รอบ 307: ย้าย 377.2s→93.65s · เดิม noise flatness 0.013 ผู้ใช้ได้ยิน → ใหม่ 0.0008 สะอาดเท่า idle) · eng_decel 3.5s รอบไหลลง (393.7s) — ทุกไฟล์กรอง 60Hz-7.5kHz ตัดลม/ซ่า
    ลูป bake crossfade 80ms วนไร้รอยต่อ · idle↔cruise crossfade ตาม spd · cruise เร่ง pitch ตามความเร็ว
    accel/decel เล่น one-shot ตอนบิด/ปล่อยคันเร่ง · เริ่มหลัง gesture ปุ่มเริ่ม (นโยบาย autoplay) ---------- */
 const ENG_FILES={idle:'sound/moto/eng_idle.wav',cruise:'sound/moto/eng_cruise.wav',
-                 accel:'sound/moto/eng_accel.wav',decel:'sound/moto/eng_decel.wav'};
+                 accel:'sound/moto/eng_accel.wav?v=307',decel:'sound/moto/eng_decel.wav'};
 const Eng={ctx:null,master:null,ready:false,bufs:{},iG:null,cG:null,cS:null,prevThr:false,
   start(){ if(this.ctx||!(window.AudioContext||window.webkitAudioContext)) return;
     try{
