@@ -21,6 +21,7 @@ let bikeEl=null;                           // 🏍️ ภาพมอไซค�
 let yaw=0, spd=0, lean=0, leanV=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
 let steerCtl=0, kL=false, kR=false;        // 🎛️ รอบ 297: เอียงแมนวล — ค่าคุมค้างตามที่ผู้เล่นตั้ง ไม่เด้งกลับเอง (คีย์ A/D = ค่อยๆ ปรับ)
+let _sigCur='';                            // 🟠 รอบ 300: สถานะไฟเลี้ยวปัจจุบัน ('l'/'r'/'')
 let camX=0,camY=0,camZ=0,camInit=false;
 let word=null, chips=[], letters=[], relocAt=0;
 let trees=null, treeTop=null, treePos=[], TREE_N=200;
@@ -73,10 +74,20 @@ const CSS=`
   background:#0e1118;border-radius:1.6vmin;overflow:hidden;
   box-shadow:inset 0 0 2vmin rgba(0,0,0,.85)}
 #moto-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-/* 🏍️ ภาพมอเตอร์ไซค์จริง (img/moterbike/bike.webp) — ล่างกึ่งกลางจอ เอียงเข้าโค้ง */
-#moto-bike{position:absolute;left:50%;bottom:-2%;height:56%;pointer-events:none;z-index:2;
-  transform:translateX(-50%);transform-origin:50% 92%;
+/* 🏍️ ภาพมอเตอร์ไซค์จริง (img/moterbike/bike.webp) — ล่างกึ่งกลางจอ เอียงเข้าโค้ง
+   รอบ 300: ห่อใน wrapper เพื่อให้ไฟเลี้ยวกะพริบหมุนตามตัวรถ */
+#moto-bikewrap{position:absolute;left:50%;bottom:-2%;height:56%;aspect-ratio:520/750;
+  pointer-events:none;z-index:2;transform:translateX(-50%);transform-origin:50% 92%;
   filter:drop-shadow(0 1.2vmin 1vmin rgba(0,0,0,.55))}
+#moto-bike{position:absolute;inset:0;width:100%;height:100%}
+/* 🟠 ไฟเลี้ยวกะพริบ — จุดเรืองแสงซ้อนบนตำแหน่งไฟส้มในภาพ (วัดจากพิกเซล: y 63% · ซ้าย 36% ขวา 64%) */
+.m-tl{position:absolute;width:13%;aspect-ratio:1;border-radius:50%;opacity:0;top:57.5%;
+  background:radial-gradient(circle,#fff2b0 0%,#ffc23d 38%,rgba(255,150,30,0) 70%);
+  box-shadow:0 0 1.8vmin .5vmin rgba(255,180,50,.9)}
+.m-tl.l{left:29.5%} .m-tl.r{left:57.5%}
+#moto-bikewrap.sig-l .m-tl.l{animation:mblink .7s steps(1,end) infinite}
+#moto-bikewrap.sig-r .m-tl.r{animation:mblink .7s steps(1,end) infinite}
+@keyframes mblink{0%{opacity:1}55%{opacity:0}100%{opacity:0}}
 #moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
   background:transparent}
 #moto-slider .m-arr{display:none}
@@ -137,7 +148,8 @@ function buildDom(){
     <button id="moto-power"><span class="m-hint">ออก</span></button>
     <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
-      <img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
+      <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
+        <span class="m-tl l"></span><span class="m-tl r"></span></div>
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
       <div id="moto-gps"><span id="moto-gps-arr">➤</span><span id="moto-gps-d">--</span></div>
@@ -162,7 +174,7 @@ function buildDom(){
   </div></div>`;
   document.body.appendChild(wrapEl);
   screenEl=document.getElementById('moto-screen'); cvEl=document.getElementById('moto-cv');
-  bikeEl=document.getElementById('moto-bike');
+  bikeEl=document.getElementById('moto-bikewrap');   // หมุน+ไฟเลี้ยวที่ wrapper (ภาพ+ไฟหมุนไปด้วยกัน)
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
@@ -744,7 +756,16 @@ function frame(dt,now){
      เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
   const leanTgt=steer*LEAN_MAX;
   leanV+=(leanTgt-lean)*6*dt; leanV*=Math.exp(-5*dt); lean+=leanV;   // รอบ 298: สปริงนุ่มหนืดขึ้น
-  if(bikeEl) bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
+  if(bikeEl){
+    bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
+    /* 🟠 รอบ 300: ไฟเลี้ยวกะพริบตามทิศที่ตั้งเอียง (เกิน ±0.12 = ถือว่ากำลังเลี้ยว) */
+    const sig=steerCtl<-0.12?'l':steerCtl>0.12?'r':'';
+    if(sig!==_sigCur){
+      _sigCur=sig;
+      bikeEl.classList.toggle('sig-l',sig==='l');
+      bikeEl.classList.toggle('sig-r',sig==='r');
+    }
+  }
   /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง) */
   const cd=6.2, ch=2.6;
   const tx=px-Math.sin(yaw)*cd, tz=pz-Math.cos(yaw)*cd;
