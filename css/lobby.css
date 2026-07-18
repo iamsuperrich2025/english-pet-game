@@ -1716,6 +1716,37 @@ html.no-anim .cs-big-img{animation:none}
 .pi-shape-cap b{color:#ffe9a8;}
 .pi-shape-cap.shape-cap-thin,.pi-shape-cap.shape-cap-fat{border-color:#e8935a;color:#ffddc2;}
 .pi-shape-cap.shape-cap-strong{border-color:#5fcf85;color:#d8f7e2;}
+/* 🐾 รอบ 325: แผงเลือกคำทักทายน้องของเพื่อน (เปิดจากปุ่ม 🐾 ในการ์ดโปรไฟล์)
+   กริดยืดตามที่ว่าง + ตัวอักษร clamp → จอเตี้ย 812×375 เห็นครบทั้งใบ ไม่ต้องเลื่อน (กฎทอง #7) */
+.pl-head .pl-greet{margin-left:6px;padding:4px 10px;border-radius:999px;cursor:pointer;
+  background:linear-gradient(180deg,#2f7fd0,#1b5590);color:#eaf6ff;border:1px solid rgba(120,200,255,.5);
+  font-family:inherit;font-size:12.5px;font-weight:600;white-space:nowrap;}
+.pl-head .pl-greet:active{transform:scale(.95);}
+.greet-card{max-width:min(560px,94vw);}
+.greet-sub{margin:2px 0 10px;font-size:clamp(11px,2.8vh,13px);color:#a9c9ec;line-height:1.5;text-align:center;}
+.greet-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:clamp(5px,1.4vh,9px);}
+.greet-opt{display:flex;align-items:center;gap:7px;padding:clamp(6px,1.8vh,11px) 10px;border-radius:13px;cursor:pointer;
+  background:rgba(7,25,52,.7);border:1px solid var(--glass-line);color:#dcecff;
+  font-family:inherit;font-size:clamp(12px,2.9vh,14px);text-align:left;}
+.greet-opt:hover{border-color:#7fd0ff;background:rgba(20,55,100,.8);}
+.greet-opt:active{transform:scale(.97);}
+.greet-opt:disabled{opacity:.5;cursor:default;}
+.greet-e{font-size:1.5em;}
+
+/* 📅 รอบ 325: ปฏิทินจุด 30 วัน "ลูบน้องติดกัน" ในหน้าโปรไฟล์น้อง
+   ขนาดอิง clamp+vh ทั้งหมด → จอเตี้ย 812×375 ก็ยังอยู่ในกล่อง ไม่ดันให้ต้องเลื่อน (กฎทอง #7) */
+.pi-streak{flex:0 0 auto;margin:0 4px;padding:clamp(4px,1.2vh,8px) 10px;border-radius:12px;max-width:96%;
+  background:rgba(7,25,52,.55);border:1px solid var(--glass-line);text-align:center;}
+.pi-streak-head{font-size:clamp(11px,2.6vh,13px);color:#cfe4fa;display:flex;gap:6px;
+  align-items:center;justify-content:center;flex-wrap:wrap;}
+.pi-streak-head b{color:#ffcf6b;font-size:1.15em;}
+.pi-streak-best{font-size:.86em;color:#8fb8e8;}
+.pi-dots{display:grid;grid-template-columns:repeat(15,1fr);gap:clamp(2px,.6vh,4px);
+  margin:clamp(3px,1vh,6px) auto 0;max-width:230px;}
+.pi-dot{width:100%;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.13);}
+.pi-dot.on{background:linear-gradient(180deg,#ffd06b,#ff9b3d);box-shadow:0 0 5px rgba(255,170,70,.65);}
+.pi-dot.today{outline:1.5px solid #7fd0ff;outline-offset:1px;}
+.pi-streak-note{margin-top:clamp(2px,.8vh,5px);font-size:clamp(10px,2.2vh,11.5px);color:#9fc6ee;}
 .pi-care-title{margin-top:14px;}
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */

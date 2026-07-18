@@ -69,6 +69,7 @@ const DEFAULT_STATE = {
   patStreak:0,                        // รอบ 323: จำนวนวันติดต่อกันที่ "ลูบยาว" น้อง (นับวันละครั้ง · ขาดวัน = เริ่มใหม่)
   patStreakDay:'',                    // รอบ 323: วันล่าสุดที่นับสตรีคลูบยาวไปแล้ว (todayStr)
   patStreakBest:0,                    // รอบ 323: สตรีคยาวสุดที่เคยทำได้ (โชว์ในตู้เข็ม)
+  patDays:[],                         // รอบ 325: วันที่ลูบยาว 30 วันล่าสุด ['YYYY-MM-DD'] — ปฏิทินจุดในหน้าโปรไฟล์น้อง
   bffBadge:0,                         // รอบ 323: เข็มเพื่อนซี้สูงสุดที่เคยได้ 0=ไม่มี 1=🐾(7 วัน) 2=💞(30) 3=🫶(100) — ได้แล้วไม่หาย
   crownBadge:0,                       // รอบ 109: เข็มลับ 👑 "นักสะสมเข็ม" — ได้เมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน) · โชว์นำหน้าชื่อ
   badgeWeekKey:'',                    // รอบ 109: คีย์สัปดาห์ (วันจันทร์) ที่เริ่มนับแต้มเข็มรายสัปดาห์
@@ -124,6 +125,7 @@ const DEFAULT_STATE = {
   savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
+  greetSent:{},                       // รอบ 325: {uid: 'YYYY-MM-DD'} วันล่าสุดที่ส่ง "ทักทายน้อง" ให้แต่ละคน (จำกัดคนละ 1/วัน)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
   foodQuizDay:'',                     // ควิซอาหารปลอดภัย: วัน (toDateString) ที่รับรางวัลรอบแรกไปแล้ว (เล่นซ้ำได้แต่ไม่ได้เหรียญ)
@@ -324,6 +326,8 @@ function loadState(){
       if(typeof s.patStreak !== 'number') s.patStreak = 0;                                 // รอบ 323 (เข็มเพื่อนซี้)
       if(typeof s.patStreakDay !== 'string') s.patStreakDay = '';
       if(typeof s.patStreakBest !== 'number') s.patStreakBest = 0;
+      if(!Array.isArray(s.patDays)) s.patDays = [];                                       // รอบ 325
+      if(!s.greetSent || typeof s.greetSent !== 'object') s.greetSent = {};                // รอบ 325
       if(typeof s.bffBadge !== 'number') s.bffBadge = 0;
       if(typeof s.crownBadge !== 'number') s.crownBadge = 0;                               // รอบ 109
       if(typeof s.badgeWeekKey !== 'string') s.badgeWeekKey = '';

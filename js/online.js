@@ -490,6 +490,20 @@ function giftSend(toUid, kind, id){
   });
 }
 
+/* 🐾 รอบ 325: "ทักทายน้อง" — ส่งคำทักถึงสัตว์เลี้ยงของเพื่อน (ไม่เสียของ ไม่เสียเหรียญ)
+   ใช้ท่อเดียวกับของขวัญ (/gifts/<to>/<from>) แต่ k='greet' + id=รหัสคำทัก → ไม่ต้องเพิ่มโซนใหม่ใน DB
+   ⚠️ ต้อง publish rules ให้ k รับค่า 'greet' ด้วย ไม่งั้น server ปฏิเสธ (โค้ดจะบอกผู้ใช้เอง) */
+function greetSend(toUid, greetId){
+  if(!Online.ready || !state.student) return Promise.reject('ต้องต่ออินเทอร์เน็ตก่อนถึงจะทักทายน้องของเพื่อนได้นะ 📡');
+  const name = onlineDisplayName();
+  if(!name) return Promise.reject('ตั้งชื่อในเกมก่อนนะ');
+  if(typeof greetId !== 'string' || greetId.length > 20) return Promise.reject('คำทักไม่ถูกต้อง');
+  return Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
+    k: 'greet', id: greetId, fn: name, st: 'pending',
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  });
+}
+
 /* ผู้รับกด "รับ": จำของเข้าห้องของขวัญ (ผู้เรียกทำ) + ตั้งสถานะ accepted ให้ผู้ส่งเห็น */
 function giftAccept(item){
   return Online.db.ref('gifts/' + onlineKey() + '/' + item.from + '/' + item.key + '/st').set('accepted');

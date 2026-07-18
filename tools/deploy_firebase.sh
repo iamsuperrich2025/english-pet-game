@@ -28,6 +28,17 @@ rm -f  "$STAGE/public"/*.md              # PROMPTS_*.md / TASK_*.md ไม่ใ
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง
 #    (ตรวจสำเนา staged = git HEAD ไม่ใช่ working tree → ตรงกับของที่ผู้เล่นจะได้เป๊ะ)
 #    เจอ = exit 2 → set -e หยุด deploy ทันที · บั๊กแบบ petPatFx (รอบ 320) แตะแล้วเงียบ จะไม่หลุดขึ้นเว็บอีก
+# 📦 ด่านที่ 2 (รอบ 325): ไฟล์ที่ index.html อ้างถึงต้องมีอยู่ "ในชุดที่กำลังจะขึ้นเว็บ" จริงๆ
+#    (ไฟล์ untracked จะไม่ติดมากับ git archive → live 404 เงียบๆ แบบ word_new.js รอบ 324)
+echo "📦 ตรวจไฟล์ที่หน้าเว็บอ้างถึงครบไหม..."
+if ! python "$REPO/tools/check_missing_assets.py" --path "$STAGE/public"; then
+  echo ""
+  echo "❌ หยุด deploy: มีไฟล์ที่ index.html อ้างถึงแต่ไม่ได้ขึ้นเว็บ (ดูรายการด้านบน)"
+  echo "   ส่วนใหญ่คือไฟล์ใหม่ที่ลืม git add — add + commit แล้ว deploy ใหม่"
+  rm -rf "$STAGE"
+  exit 2
+fi
+
 echo "🕵️ ตรวจฟังก์ชันที่ไม่มีอยู่จริงก่อน deploy..."
 if ! python "$REPO/tools/check_undefined_calls.py" --path "$STAGE/public"; then
   echo ""

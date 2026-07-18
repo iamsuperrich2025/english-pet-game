@@ -1165,6 +1165,8 @@ function showPlayerCard(uid, name, grade){
       <button class="pl-close">✕</button>
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
         ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>` : ''}
+        ${(!me && typeof Online !== 'undefined' && Online.ready && typeof greetSend === 'function')
+          ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 ทักทายน้อง</button>` : ''}
         ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
       </div>
       <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
@@ -1239,6 +1241,8 @@ function showPlayerCard(uid, name, grade){
   /* ---- 💬 รอบ 276: ปุ่มทักแชท → ปิดการ์ดแล้วเปิดกล่องแชทกับเพื่อนคนนี้เลย ---- */
   const chatBtn = ov.querySelector('.pl-chat');
   if(chatBtn) chatBtn.addEventListener('click', ()=>{ sfx.select(); close(); openChat(myFriend); });
+  const greetBtn = ov.querySelector('.pl-greet');   // 🐾 รอบ 325: ทักทายน้องของเพื่อน (ฟรี ไม่ต้องเป็นเพื่อนกันก็ทักได้)
+  if(greetBtn) greetBtn.addEventListener('click', ()=>{ sfx.select(); openGreetPicker(uid, sp.name); });
 
   /* ---- คอลัมน์ซ้าย: สถิติการเงิน (เดิม) ---- */
   const statsFn = (typeof fetchPlayerStats === 'function') ? fetchPlayerStats(uid) : Promise.resolve(null);
@@ -2001,14 +2005,73 @@ function giftDateStr(ts){
   catch(e){ return ''; }
 }
 
-/* ภาพ/ชื่อของขวัญ 1 ชิ้น (k='shop' → gifts.js · k='collect' → collectibles.js) */
+/* 🐾 รอบ 325: คำทักทายน้องของเพื่อน (ส่งฟรี ไม่เสียของ) — ผู้รับกดรับแล้วน้องได้ EXP
+   เป็นข้อความสำเร็จรูปล้วน = ไม่ต้องกรองคำหยาบ (แนวเดียวกับแชทสำเร็จรูปในโลกมอไซค์) */
+const GREETS = [
+  {id:'hi',    e:'👋', t:'สวัสดีน้อง!',        msg:'ส่งมาทักทายน้องของหนู'},
+  {id:'hug',   e:'🤗', t:'กอดน้องหน่อย',       msg:'ส่งกอดอุ่นๆ มาให้น้อง'},
+  {id:'treat', e:'🍪', t:'ฝากขนมให้น้อง',      msg:'ฝากขนมมาให้น้องหนึ่งชิ้น'},
+  {id:'play',  e:'🎾', t:'ชวนน้องเล่น',        msg:'ชวนน้องออกไปวิ่งเล่นด้วยกัน'},
+  {id:'cute',  e:'😍', t:'น้องน่ารักมาก!',     msg:'บอกว่าน้องของหนูน่ารักมาก'},
+  {id:'proud', e:'🏆', t:'เก่งมากเลย',         msg:'ชมว่าหนูเลี้ยงน้องได้เก่งมาก'},
+];
+const GREET_EXP = 8;                    // EXP ที่น้องได้เมื่อเจ้าของกดรับคำทัก
+function greetInfo(id){ return GREETS.find(g=>g.id === id) || null; }
+
+/* แผงเลือกคำทัก (เปิดจากปุ่ม 🐾 ในการ์ดโปรไฟล์เพื่อน)
+   จำกัด "คนละ 1 ครั้ง/วัน" (state.greetSent) — กันเด็กสแปมกล่องของขวัญเพื่อนรัวๆ */
+function openGreetPicker(uid, name){
+  if(!state.greetSent || typeof state.greetSent !== 'object') state.greetSent = {};
+  const today = todayStr();
+  if(state.greetSent[uid] === today){
+    toast(`วันนี้ทักทายน้องของ ${name} ไปแล้วนะ พรุ่งนี้มาทักใหม่ได้ 🐾`);
+    return;
+  }
+  const ov = document.createElement('div');
+  ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="pl-card greet-card">
+      <button class="pl-close">✕</button>
+      <div class="pl-head">🐾 <span>ทักทายน้องของ ${escapeHTML(name)}</span></div>
+      <div class="greet-sub">เลือกคำทัก 1 อย่าง — เพื่อนจะเห็นในกล่องของขวัญ 🎁 กดรับแล้วน้องได้ EXP +${GREET_EXP}</div>
+      <div class="greet-grid">
+        ${GREETS.map(g=>`<button class="greet-opt" data-g="${g.id}"><span class="greet-e">${g.e}</span>${g.t}</button>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+  const close = ()=>ov.remove();
+  ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
+  ov.querySelector('.pl-close').addEventListener('click', close);
+  ov.querySelectorAll('.greet-opt').forEach(b=>b.addEventListener('click', ()=>{
+    const gr = greetInfo(b.dataset.g);
+    if(!gr) return;
+    b.disabled = true;
+    greetSend(uid, gr.id)
+      .then(()=>{
+        state.greetSent[uid] = today; saveState();
+        sfx.buy(); close();
+        toast(`${gr.e} ส่งคำทัก "${gr.t}" ถึงน้องของ ${name} แล้ว!`);
+      })
+      .catch(msg=>{
+        b.disabled = false;
+        sfx.wrong();
+        // ส่งไม่ผ่านเพราะ rules ยังไม่รับ k='greet' → บอกให้ชัด จะได้รู้ว่าต้อง publish rules
+        toast(typeof msg === 'string' ? msg
+          : 'ส่งคำทักไม่สำเร็จ — ผู้ปกครอง/ครูอาจยังไม่ได้อัปเดตกติกาฐานข้อมูล (rules) ให้รองรับคำทักทาย');
+      });
+  }));
+}
+
+/* ภาพ/ชื่อของขวัญ 1 ชิ้น (k='shop' → gifts.js · k='collect' → collectibles.js · k='greet' → คำทัก) */
 function giftItemPic(k, id){
+  if(k === 'greet'){ const gr = greetInfo(id);
+    return `<span class="hq-emoji">${gr ? gr.e : '🐾'}</span>`; }
   if(k === 'shop'){ const g = giftInfo(id), img = giftImg(id);
     return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g ? g.emoji : '🎁'}</span>`; }
   const c = collectInfo(id), img = collectImg(id);
   return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c ? c.emoji : '📦'}</span>`;
 }
 function giftItemName(k, id){
+  if(k === 'greet'){ const gr = greetInfo(id); return gr ? gr.t : 'คำทักทายน้อง'; }
   if(k === 'shop'){ const g = giftInfo(id); return g ? g.name : 'ของขวัญ'; }
   const c = collectInfo(id); return c ? c.name : 'สินค้า';
 }
@@ -2081,6 +2144,17 @@ function renderGiftPanel(){
 
 /* ผู้รับกด "รับ": ยืนยันสถานะกับ server ก่อน (กันรับซ้ำ) → เก็บเข้าห้องของขวัญ + ฉากเปิด */
 function acceptGift(it){
+  // 🐾 รอบ 325: คำทักทายน้อง — ไม่ใช่ของ ไม่เข้าห้องของขวัญ · น้องที่เปิดอยู่ได้ EXP + ดีใจ
+  if(it.k === 'greet'){
+    return giftAccept(it).then(()=>{
+      Online.giftIn = (Online.giftIn || []).filter(g=>!(g.from === it.from && g.key === it.key));
+      const p = activePet();
+      if(p) addExp(GREET_EXP, p);
+      saveState();
+      showGreetReveal(it);
+      renderDashboard();
+    }).catch(()=>{ sfx.wrong(); toast('รับคำทักไม่สำเร็จ ลองใหม่นะ'); });
+  }
   return giftAccept(it).then(()=>{
     state.giftBox.push({k: it.k, id: it.id, from: it.from, fn: it.fn, ts: it.ts || Date.now()});
     saveState();
@@ -2098,6 +2172,33 @@ function declineGift(it){
     sfx.select(); toast('บอกเพื่อนแล้วว่ายังไม่สะดวกรับนะ');
     renderGiftPanel();
   }).catch(()=>{ sfx.wrong(); toast('ทำรายการไม่สำเร็จ ลองใหม่นะ'); });
+}
+
+/* 🐾 รอบ 325: ฉากรับ "คำทักทายน้อง" — น้องดีใจ หัวใจลอย + EXP (ไม่มีของเก็บ) */
+function showGreetReveal(it){
+  const gr = greetInfo(it.id);
+  const p = activePet();
+  if(sfx.petVoice && p) sfx.petVoice(p.type, 'happy');   // น้องร้องรับเสียงสดใส
+  const overlay = document.createElement('div');
+  overlay.className = 'rankup-overlay';
+  overlay.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#7fd0ff"></div>
+    <div class="rankup-content">
+      <div class="rankup-title">🐾 เพื่อนทักทายน้อง!</div>
+      <div class="collect-reveal-frame" style="--rank-color:#7fd0ff"><span class="cr-emoji">${gr ? gr.e : '👋'}</span></div>
+      <div class="rankup-name" style="color:#2f8fd0">${escapeHTML(gr ? gr.t : 'สวัสดีน้อง!')}</div>
+      <p class="rankup-sub">💌 ${escapeHTML(it.fn || 'เพื่อน')} ${escapeHTML(gr ? gr.msg : 'ทักทายน้องของหนู')}<br>
+        ${p ? `${escapeHTML(p.name)} ดีใจมาก! ได้ EXP +${GREET_EXP} 🥰` : 'น้องดีใจมาก! 🥰'}</p>
+      <button class="rankup-btn">ขอบคุณนะ! 🥰</button>
+    </div>`;
+  overlay.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    overlay.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(overlay);
+  const stage = document.querySelector('.hero-scene .pet-stage');
+  heartsFx(stage, 6);
+  setTimeout(()=>{ if(document.body.contains(overlay)) overlay.remove(); }, 9000);   // กันค้างถ้าเด็กไม่กดปุ่ม
 }
 
 /* ฉากเปิดของขวัญ (สไตล์เดียวกับฉากได้ของสะสม โทนชมพู) */
@@ -2897,7 +2998,8 @@ function renderDashboard(){
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       ${stage !== 'egg' ? `<button class="pi-dress-btn" id="btn-pi-dress">🎀 แต่งตัวน้อง</button>` : ''}
       ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
-      ${stage !== 'egg' ? `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>` : ''}`,
+      ${stage !== 'egg' ? `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>` : ''}
+      ${stage !== 'egg' ? patCalendarHTML() : ''}`,
     care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
   };
   const petAlert = p.sick ? ' <span class="pib-alert">🤒</span>' : (petHungry(p) ? ' <span class="pib-alert">😫</span>' : '');
@@ -3306,6 +3408,32 @@ function longPatPet(p, tap){
     + (streak ? ` · 🔥 ลูบติดกัน ${streak} วัน` : ''));
 }
 
+/* 📅 ปฏิทินจุด 30 วันในหน้าโปรไฟล์น้อง (รอบ 325) — เด็กเห็น "ความต่อเนื่อง" เป็นภาพ
+   จุดทึบ = วันที่ลูบน้อง · จุดจาง = วันที่ข้าม · วงขอบ = วันนี้ (ยังไม่ลูบก็เห็นว่ารอเรา) */
+function patCalendarHTML(){
+  const days = new Set(state.patDays || []);
+  const today = todayStr();
+  const cells = [];
+  for(let i = 29; i >= 0; i--){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    const cls = (days.has(key) ? ' on' : '') + (key === today ? ' today' : '');
+    cells.push(`<span class="pi-dot${cls}" title="${key}"></span>`);
+  }
+  const now = state.patStreak || 0;
+  const best = state.patStreakBest || 0;
+  const badge = (typeof bffEmoji === 'function' && state.bffBadge) ? ` ${bffEmoji(state.bffBadge)}` : '';
+  return `<div class="pi-streak">
+    <div class="pi-streak-head">🔥 ลูบติดกัน <b>${fmtNum(now)}</b> วัน${badge}
+      <span class="pi-streak-best">ดีสุด ${fmtNum(best)} วัน</span></div>
+    <div class="pi-dots">${cells.join('')}</div>
+    <div class="pi-streak-note">${days.has(today)
+      ? 'วันนี้ลูบแล้ว เก่งมาก! 🥰'
+      : 'วันนี้ยังไม่ได้ลูบ — กดค้างที่ตัวน้องในล็อบบี้ได้เลย 🐾'}</div>
+  </div>`;
+}
+
 /* 🐾 สตรีคลูบยาว → เข็ม "เพื่อนซี้" (รอบ 323)
    นับ "วันละครั้ง" ไม่ว่าจะลูบกี่ตัว (สตรีคเป็นของผู้เล่น ไม่ใช่ของสัตว์รายตัว)
    ลูบต่อจากเมื่อวาน = +1 · ขาดไปเกิน 1 วัน = เริ่มนับใหม่ที่ 1 · เข็มที่ได้แล้วไม่หายแม้สตรีคขาด
@@ -3317,6 +3445,10 @@ function patStreakTick(day){
   const yesterday = yd.getFullYear() + '-' + String(yd.getMonth()+1).padStart(2,'0') + '-' + String(yd.getDate()).padStart(2,'0');
   state.patStreak = (state.patStreakDay === yesterday) ? (state.patStreak || 0) + 1 : 1;
   state.patStreakDay = day;
+  // 📅 รอบ 325: จำวันที่ลูบไว้ 30 วันล่าสุด → ปฏิทินจุดในหน้าโปรไฟล์น้อง (เก็บแค่ 30 กันเซฟบวม)
+  if(!Array.isArray(state.patDays)) state.patDays = [];
+  if(!state.patDays.includes(day)) state.patDays.push(day);
+  if(state.patDays.length > 30) state.patDays = state.patDays.slice(-30);
   if(state.patStreak > (state.patStreakBest || 0)) state.patStreakBest = state.patStreak;
   const tier = BFF_TIERS.filter(t=>state.patStreak >= t[0]).pop();
   if(tier && tier[1] > (state.bffBadge || 0)){
