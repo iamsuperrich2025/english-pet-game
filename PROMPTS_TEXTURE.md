@@ -9,6 +9,8 @@
 | `tex_concrete` | ผนัง/เสา/พื้นตึกร้างทุกหลัง | 2×2 ต่อชิ้น |
 | `tex_asphalt` | ถนนยางมะตอยในเมืองร้าง | 24×2 ต่อเส้น |
 | `tex_ground` | พื้นดิน/ลานปูนรอบเมือง (แผ่นใหญ่สุด) | 26×26 |
+| `tex_window` | 🆕 หน้าต่างแตกบนตึกร้าง (**ต้องเป็น .png พื้นโปร่ง**) | 1×1 ต่อบาน |
+| `tex_door` | 🆕 ประตูเหล็กสนิมชั้นล่าง (.png) | 1×1 ต่อบาน |
 
 ## 🔧 สไตล์ร่วม (ต่อท้ายทุกพรอมป์)
 ```
@@ -28,6 +30,18 @@ Cracked old asphalt road surface, dark charcoal-grey bitumen with visible gravel
 ## 🌍 3. tex_ground — พื้นดิน/ลานรอบเมืองร้าง
 ```
 Dry cracked earth and broken concrete ground, mixture of dusty tan soil, gravel and shattered pavement slabs, sparse dead grass tufts pushing through the cracks, scattered small rubble and pebbles, sun-bleached desaturated brown and grey tones, flat matte natural surface.
+```
+
+## 🪟 4. tex_window — หน้าต่างแตก (⚠️ ต้องเป็น PNG พื้นโปร่ง)
+> โดรน **บินลอดช่องหน้าต่างจริง** → ตรงกลางบานต้องโปร่งสนิท ถ้าทึบจะดูเหมือนบินทะลุกระจก · จัตุรัส 1024×1024 · ไม่ต้อง seamless
+```
+Broken window opening on an abandoned concrete building, PNG with fully transparent background in the middle of the frame, only a weathered dark metal window frame around the edges and a few jagged shards of dirty broken glass clinging to the corners, thin cracks in the remaining glass, rust and grime on the frame, front-facing flat view, no wall around it, no background, no text.
+```
+
+## 🚪 5. tex_door — ประตูเหล็กสนิม (PNG)
+> บานเดียวติดชั้นล่างของตึก · แนวตั้งประมาณ 3:4 (เช่น 768×1024)
+```
+Old rusty steel door of an abandoned building, closed, seen straight on and flat, weathered brown and orange rust streaks, dented metal surface, two recessed panels, a worn round door handle, peeling paint, transparent background outside the door outline, no wall, no frame around it, no text.
 ```
 
 ## 🌤️ ท้องฟ้า — มีไฟล์แยกอยู่แล้ว
