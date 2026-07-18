@@ -1840,6 +1840,61 @@ function removeLetter(i){
 }
 
 /* ============================================================
+   🔠🪙 เก็บตัวอักษร 1 ตัว = ได้ 1 เหรียญ (รอบ 345)
+   รวมขั้นตอนไว้ที่เดียว — ทุกโลก (เดิน/เฮลิฯ/โดรน/ขับรถ) เรียกฟังก์ชันนี้
+   เดิมแต่ละโลกเขียนซ้ำกัน 4 ที่ ทำให้แก้ตกหล่นง่าย
+   ============================================================ */
+const LETTER_COIN=1;                         // เหรียญต่อตัวอักษร 1 ตัว
+function pickUpLetter(i){
+  const l=letters[i], ch=l.ch;
+  const at=l.spr.position.clone();            // เก็บตำแหน่งไว้ก่อนลบ (ไว้เด้งป้ายตรงจุดนั้น)
+  inv[ch]=(inv[ch]||0)+1;
+  addCoins(LETTER_COIN);
+  sessionCoins+=LETTER_COIN;                  // ให้สรุปท้ายรอบตรงกับที่ได้จริง
+  removeLetter(i);
+  letterPop(at,ch);                           // 🅰️ ป้ายตัวอักษร +1🪙 เด้งตรงจุดที่เก็บ
+  letterChime();                              // 🔔 เสียงเก็บตัวอักษร (คนละเสียงกับจบคำ)
+  speakLetter(ch);                            // 🔠 อ่านชื่อตัวอักษร (เอ บี ซี)
+  renderHudInv(); renderHudWords(); renderHudTop();   // renderHudTop = อัปเดตเลขเหรียญบนจอทันที
+  tryCompleteWords();
+}
+/* ป้ายเด้ง "ตัวอักษร +1🪙" ที่ตำแหน่งตัวอักษรในโลก 3D */
+function letterPop(worldPos,ch){
+  if(!coinPopEl || !camera) return;
+  const v=worldPos.clone().project(camera);
+  const el=document.createElement('div');
+  el.className='sc-pop letter-pop';
+  el.innerHTML=`<b>${ch.toUpperCase()}</b> +${LETTER_COIN}🪙`;
+  const W=window.innerWidth, H=window.innerHeight;
+  // เก็บตอนตัวอักษรอยู่ชิดตัว/หลังกล้อง (v.z>1) → เด้งกลางจอแทน ห้ามหายไปเฉยๆ
+  const behind=v.z>1;
+  const px=behind ? W*.5 : (v.x*.5+.5)*W;
+  const py=behind ? H*.62 : (-v.y*.5+.5)*H;
+  const pad=44;
+  el.style.left=Math.max(pad,Math.min(W-pad,px))+'px';
+  el.style.top =Math.max(pad,Math.min(H-pad,py))+'px';
+  coinPopEl.appendChild(el);
+  setTimeout(()=>el.remove(),900);
+}
+/* เสียง "ติ๊ง" สองโน้ตไล่ขึ้น — สั้น สดใส แยกออกจากเสียงจบคำชัดเจน */
+function letterChime(){
+  if(!state.sound) return;
+  try{
+    const S=HeliSound; S.ensureCtx();
+    const ctx=S.ctx, t=ctx.currentTime;
+    [[880,0],[1320,.07]].forEach(([f,d])=>{
+      const o=ctx.createOscillator(); o.type='triangle'; o.frequency.value=f;
+      const g=ctx.createGain();
+      g.gain.setValueAtTime(.0001,t+d);
+      g.gain.exponentialRampToValueAtTime(.13,t+d+.012);
+      g.gain.exponentialRampToValueAtTime(.0001,t+d+.19);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t+d); o.stop(t+d+.2);
+    });
+  }catch(e){ sfx.coin(); }                            // เบราว์เซอร์ไม่รองรับ → ใช้เสียงเดิม
+}
+
+/* ============================================================
    ประกอบคำอัตโนมัติเมื่อมีตัวอักษรครบ (8.1/8.4)
    ============================================================ */
 function tryCompleteWords(){
@@ -3794,6 +3849,14 @@ function buildDom(){
     38%{transform:translate(-50%,-62%) scale(1)}
     100%{opacity:0;transform:translate(-50%,-150%) scale(1)}}
   html.no-anim #adv-coinpop .sc-pop{animation:none;opacity:0}
+  /* 🔠 ป้ายตอนเก็บตัวอักษร: โชว์ตัวอักษรตัวใหญ่ในวงกลม + เหรียญที่ได้ (รอบ 345) */
+  #adv-coinpop .letter-pop{display:flex;align-items:center;gap:7px;font-size:clamp(15px,3vw,20px);
+    color:#fff8d6;text-shadow:0 0 8px rgba(255,190,30,.85),0 2px 5px #000}
+  #adv-coinpop .letter-pop b{display:inline-flex;align-items:center;justify-content:center;
+    width:1.85em;height:1.85em;border-radius:50%;font-size:1.25em;line-height:1;
+    background:radial-gradient(circle at 35% 28%,#fff3ad,#f7b733 62%,#c8801a);
+    color:#4a2c00;border:2px solid #fff2c4;text-shadow:none;
+    box-shadow:0 0 12px rgba(255,200,60,.85),0 2px 6px rgba(0,0,0,.5)}
   /* 🤖 โหมดหุ่นยนต์นักรบ — ปุ่มบังคับใสๆ (เดินหน้า/ถอย/หัน/ยิง) + ไฮไลต์ตัวอักษรตัวถัดไปที่ต้องยิง */
   .adv-mecha #adv-cross{width:26px;height:26px;background:none;border:2px solid rgba(120,230,255,.9);
     border-radius:50%;box-shadow:0 0 8px rgba(0,0,0,.7),0 0 10px rgba(80,200,255,.5)}
@@ -4555,15 +4618,7 @@ function tickPlayer(dt,now){
   // เก็บตัวอักษร
   for(let i=letters.length-1;i>=0;i--){
     const lp=letters[i].spr.position;
-    if(Math.hypot(lp.x-camera.position.x,lp.z-camera.position.z)<PICK_DIST){
-      const ch=letters[i].ch;
-      inv[ch]=(inv[ch]||0)+1;
-      removeLetter(i);
-      sfx.coin();
-      speakLetter(ch);                       // 🔠 อ่านชื่อตัวอักษร (เอ บี ซี)
-      renderHudInv(); renderHudWords();
-      tryCompleteWords();
-    }
+    if(Math.hypot(lp.x-camera.position.x,lp.z-camera.position.z)<PICK_DIST) pickUpLetter(i);
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
 }
@@ -4800,10 +4855,8 @@ function tickDrone(dt,now){
   for(let i=letters.length-1;i>=0;i--){
     const lp=letters[i].spr.position;
     if(Math.hypot(lp.x-p.x,lp.y-p.y,lp.z-p.z)<2.4){
-      const ch=letters[i].ch;
-      inv[ch]=(inv[ch]||0)+1; removeLetter(i); sfx.coin(); speakLetter(ch);
+      pickUpLetter(i);
       droneBatAdd(BAT_LETTER); propFix();          // 🔋 ชาร์จแบต + 🔧 ซ่อมใบพัดที่หัก
-      renderHudInv(); renderHudWords(); tryCompleteWords();
     }
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.5)+Math.sin(now/380+l.spr.position.x*2)*.12; });
@@ -5523,9 +5576,7 @@ function tickDrive(dt,now){
   for(let i=letters.length-1;i>=0;i--){
     const lp=letters[i].spr.position;
     if(Math.hypot(lp.x-p.x,lp.z-p.z)<3.4){
-      const ch=letters[i].ch;
-      inv[ch]=(inv[ch]||0)+1; removeLetter(i); sfx.coin(); speakLetter(ch);
-      renderHudInv(); renderHudWords(); tryCompleteWords();
+      pickUpLetter(i);
     }
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.7)+Math.sin(now/380+l.spr.position.x*2)*.14; });
@@ -6184,15 +6235,7 @@ function tickHeli(dt,now){
   if(hLanded){
     for(let i=letters.length-1;i>=0;i--){
       const lp=letters[i].spr.position;
-      if(Math.hypot(lp.x-nx,lp.z-nz)<3.6 && Math.abs((letters[i].baseY-1.3)-floor)<2){
-        const ch=letters[i].ch;
-        inv[ch]=(inv[ch]||0)+1;
-        removeLetter(i);
-        sfx.coin();
-        speakLetter(ch);                     // 🔠 อ่านชื่อตัวอักษร (เอ บี ซี)
-        renderHudInv(); renderHudWords();
-        tryCompleteWords();
-      }
+      if(Math.hypot(lp.x-nx,lp.z-nz)<3.6 && Math.abs((letters[i].baseY-1.3)-floor)<2) pickUpLetter(i);
     }
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
