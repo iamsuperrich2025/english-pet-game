@@ -6399,19 +6399,77 @@ function mailTick(now){
 const FOOT_EYE=1.55, FOOT_SPD=5.2, WING_COLLECT=3.4, RIDE_SPD=8.5;
 let hPhase='walk', termB=null, liftUntil=0, liftToRoof=true, liftEl=null;
 let rideWp=[], rideIdx=0, ridePos={x:0,y:0,z:0}, rideYaw=0, paxSnd=null;
+let rideSpin=1, _rideDusted=false;                   // 🌪️ 0→1 = ใบพัดกำลังเร่งก่อนยกตัว (รอบ 357)
+/* 🚪 เลื่อนประตูสไลด์ของลำ (target 0=ปิด 1=เปิด) — เรียกทุกเฟรม เลื่อนนุ่มเอง */
+function doorLerp(h,target,k){
+  if(!h||!h._door) return;
+  h._doorOpen+=(target-h._doorOpen)*Math.min(1,k);
+  h._door.position.z=h._doorOpen*1.15;               // สไลด์ไปทางหางตามรางจริง
+}
 let wSpd=12, wP=0, wBank=0, _footHintAt=0;
 const WRING_COIN=5;                                  // 💫 เหรียญฐานต่อแหวน (×คอมโบ: 5,10,15,...)
 let ringCombo=0;
+/* 🎨 สีลำพิเศษตามเทศกาล (รอบ 357) — ตัดสินตอน buildScene จากวันที่จริงของเครื่องผู้เล่น
+   ปีใหม่ 20 ธ.ค.–5 ม.ค. = ทอง-แดงมงคล · สงกรานต์ 11–16 เม.ย. = ฟ้าน้ำ-ชมพูดอกไม้ */
+function festivalPaint(d){
+  d=d||new Date();
+  const mo=d.getMonth()+1, day=d.getDate();
+  if((mo===12&&day>=20)||(mo===1&&day<=5))
+    return {name:'ปีใหม่', emoji:'🎊', pilot:0xd4a017, pilotAcc:0xc62828, pax:0xb8860b, paxAcc:0xe53935};
+  if(mo===4&&day>=11&&day<=16)
+    return {name:'สงกรานต์', emoji:'💦', pilot:0x00acc1, pilotAcc:0xf48fb1, pax:0x26c6da, paxAcc:0xffe082};
+  return null;
+}
+/* 🌪️ ฝุ่นตลบใต้ใบพัด (รอบ 357) — สไปรต์วงแหวนพุ่งออก+ลอยขึ้น+จาง แล้วลบตัวเอง
+   ใช้ตอนเครื่องติด/เฮลิฯ ออกบิน · ticked ทั้งใน tickHeli (pilot) และ tickHeliFoot */
+let dusts=[], _dustTex=null;
+function dustTexture(){
+  if(_dustTex) return _dustTex;
+  const cv=document.createElement('canvas'); cv.width=cv.height=48;
+  const c=cv.getContext('2d');
+  const gr=c.createRadialGradient(24,24,3,24,24,23);
+  gr.addColorStop(0,'rgba(214,204,186,.85)'); gr.addColorStop(.6,'rgba(196,186,168,.4)'); gr.addColorStop(1,'rgba(180,172,156,0)');
+  c.fillStyle=gr; c.fillRect(0,0,48,48);
+  return _dustTex=new THREE.CanvasTexture(cv);
+}
+function dustBurst(x,y,z,n){
+  if(!scene) return;
+  for(let i=0;i<(n||24);i++){
+    const a=Math.random()*Math.PI*2, r=.6+Math.random()*1.2;
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:dustTexture(),transparent:true,
+      opacity:.55+Math.random()*.3,depthWrite:false}));
+    const sc0=.7+Math.random()*.9;
+    s.scale.set(sc0,sc0,1);
+    s.position.set(x+Math.cos(a)*r, y+.25+Math.random()*.3, z+Math.sin(a)*r);
+    scene.add(s);
+    dusts.push({s, vx:Math.cos(a)*(2.2+Math.random()*2.4), vz:Math.sin(a)*(2.2+Math.random()*2.4),
+                vy:.5+Math.random()*.9, life:1.4+Math.random()*.9, t:0});
+  }
+}
+function dustTick(dt){
+  for(let i=dusts.length-1;i>=0;i--){
+    const d=dusts[i];
+    d.t+=dt;
+    d.s.position.x+=d.vx*dt; d.s.position.z+=d.vz*dt; d.s.position.y+=d.vy*dt;
+    d.vx*=1-1.3*dt; d.vz*=1-1.3*dt;                    // แรงพุ่งออกหน่วงลง เหลือลอยฟุ้ง
+    d.s.scale.multiplyScalar(1+1.1*dt);                // ฟุ้งบานออก
+    d.s.material.opacity*=1-(d.t/d.life)*dt*3.2;
+    if(d.t>=d.life||d.s.material.opacity<.03){
+      scene.remove(d.s); d.s.material.dispose();       // texture แชร์ cache ห้าม dispose map
+      dusts.splice(i,1);
+    }
+  }
+}
 /* 🚁 เฮลิคอปเตอร์ทรง Bell 212 (รอบ 356 — ผู้ใช้ให้ดูวิดีโอ Bell 212 Landing เป็นแบบ)
    จุดสังเกตจริงของ 212 ที่เก็บครบ: ห้องโดยสารเหลี่ยมมน · จมูกกระจกมน+กระจกคาง ·
    ฝาครอบเครื่อง Twin-Pac ยาวบนหลังคา+ท่อไอเสีย · ใบพัดหลัก "2 กลีบ"+flybar ถ่วง ·
    บูมหางเรียว+แพนหางกลางบูม+ครีบตั้งเฉียง · ใบพัดหาง 2 กลีบฝั่งซ้าย · สกีลงจอด 2 ราง */
-function heliMeshBuild(col){
+function heliMeshBuild(col,accent){
   const g=new THREE.Group();
   const bm=new THREE.MeshLambertMaterial({color:col});                 // สีตัวถังหลัก
   const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});            // เหล็กเข้ม (ใบพัด/สกี)
   const gl=new THREE.MeshLambertMaterial({color:0x223744});            // กระจกเข้มอมฟ้า
-  const wt=new THREE.MeshLambertMaterial({color:0xe8e6df});            // คาดขาวใต้ท้อง (ทูโทนแบบลำจริง)
+  const wt=new THREE.MeshLambertMaterial({color:accent||0xe8e6df});    // คาดใต้ท้อง (ทูโทน — เทศกาลเปลี่ยนสีได้)
   // ── ห้องโดยสาร: กล่องหลัก + ท้องมน + คาดสีขาว ──
   const cab=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.25,3.1),bm); cab.position.set(0,1.28,0); g.add(cab);
   const belly=new THREE.Mesh(new THREE.BoxGeometry(1.45,.42,2.9),wt); belly.position.set(0,.68,0); g.add(belly);
@@ -6423,11 +6481,18 @@ function heliMeshBuild(col){
   const chinL=new THREE.Mesh(new THREE.BoxGeometry(.5,.4,.07),gl);
   chinL.position.set(-.4,.78,-1.98); chinL.rotation.x=.35; g.add(chinL);
   const chinR=chinL.clone(); chinR.position.x=.4; g.add(chinR);
-  // ── หน้าต่างบานเลื่อนข้างลำ (ประตูสไลด์ของ 212) ──
-  [[-.81],[.81]].forEach(([sx])=>{
-    const win=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,1.5),gl);
-    win.position.set(sx,1.55,.15); g.add(win);
-  });
+  // ── หน้าต่างบานเลื่อนฝั่งซ้าย + 🚪 ประตูสไลด์จริงฝั่งขวา (รอบ 357 — เลื่อนเปิดตอนผู้เล่นเดินเข้าใกล้) ──
+  const winL=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,1.5),gl);
+  winL.position.set(-.81,1.55,.15); g.add(winL);
+  const door=new THREE.Group(); door.position.set(.82,0,0);            // เลื่อนแกน z ของกลุ่มนี้ = ประตูสไลด์
+  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.06,1.1,1.35),bm);  // บานประตูสีตัวถัง
+  doorP.position.set(0,1.35,.15); door.add(doorP);
+  const doorW=new THREE.Mesh(new THREE.BoxGeometry(.07,.48,.9),gl);    // หน้าต่างบนบาน
+  doorW.position.set(0,1.56,.15); door.add(doorW);
+  const rail=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,2.6),dk);    // รางเลื่อนบนลำ
+  rail.position.set(.84,1.98,.6); g.add(rail);
+  g.add(door);
+  g._door=door; g._doorOpen=0;                                         // 0=ปิดสนิท · 1=เลื่อนไปหลังสุด
   // ── ฝาครอบเครื่องยนต์ Twin-Pac บนหลังคา + ช่องรับลม + ท่อไอเสีย ──
   const cowl=new THREE.Mesh(new THREE.BoxGeometry(.95,.5,2.5),bm); cowl.position.set(0,2.12,.45); g.add(cowl);
   const intake=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.6),dk); intake.position.set(0,2.05,-.6); g.add(intake);
@@ -6526,8 +6591,11 @@ function buildHeliFoot(sc,list){
     p.rotation.x=-Math.PI/2; p.position.set(liftIn.x,y,liftIn.z); sc.add(p); return p; };
   const padG=mkPad(.09), padR=mkPad(term.h+.09);
   // 🚁 เฮลิฯ นักบิน (แดง) จอดลานกลาง · เฮลิฯ โดยสาร (ฟ้า) จอดดาดฟ้าเทอร์มินัล
-  const pilotH=heliMeshBuild(0xd8342e); pilotH.position.set(0,.03,0); pilotH.rotation.y=.6; sc.add(pilotH);
-  const paxH=heliMeshBuild(0x2f7fd4);
+  // 🎨 เทศกาล = ลำพิเศษ (ปีใหม่ทอง-แดง · สงกรานต์ฟ้า-ชมพู) — ปกติ แดง/ฟ้า
+  const fest=festivalPaint();
+  const pilotH=heliMeshBuild(fest?fest.pilot:0xd8342e, fest&&fest.pilotAcc);
+  pilotH.position.set(0,.03,0); pilotH.rotation.y=.6; sc.add(pilotH);
+  const paxH=heliMeshBuild(fest?fest.pax:0x2f7fd4, fest&&fest.paxAcc);
   const paxPos={x:term.x+(ax==='x'?dir*1.2:2.2), y:term.h+.03, z:term.z+(ax==='z'?dir*1.2:2.2)};
   paxH.position.set(paxPos.x,paxPos.y,paxPos.z); sc.add(paxH);
   // 💫 แหวนทองลอยกลางอากาศ (รอบ 355) — ร่อนวิงสูทลอดได้เหรียญ+คอมโบ · seed คงที่ เพื่อนเห็นตำแหน่งเดียวกัน
@@ -6544,7 +6612,7 @@ function buildHeliFoot(sc,list){
     sc.add(m);
     rings.push({m,got:false});
   }
-  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings};
+  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings,fest};
 }
 /* พื้นสำหรับ "คนเดิน" — ต่างจาก heliFloorAt: นับดาดฟ้าเฉพาะเมื่อผู้เล่นอยู่สูงระดับนั้นจริง
    (ไม่งั้นก้าวเข้าล็อบบี้ชั้นล่างจะโดนดีดขึ้นดาดฟ้าทันที เพราะ heliFloorAt มองตึกทึบทั้งก้อน) */
@@ -6584,6 +6652,8 @@ function beginRide(){
   rideWp=[ {x:0,y:26,z:0}, {x:-30,y:20,z:26}, {x:34,y:23,z:20},
            {x:22,y:18,z:-30}, {x:-26,y:24,z:-18}, {x:termB.x,y:termB.h+9,z:termB.z} ];
   rideIdx=0; rideYaw=0;
+  rideSpin=0; _rideDusted=false;                    // 🌪️ เริ่มจากใบพัดนิ่ง ค่อยๆ เร่งก่อนยกตัว
+  dustBurst(F.paxPos.x,F.paxPos.y,F.paxPos.z,20);   // ฝุ่นฟุ้งรอบแรกตอนเครื่องติด
   yaw=rideYaw-Math.PI/2;                            // มองออกหน้าต่างขวาเป็นมุมตั้งต้น (ลากมองรอบได้)
   pitch=-.08;
   showBanner('🚁 ออกบินชมเมือง! นั่งริมหน้าต่าง ลากจอมองวิวได้ · พร้อมเมื่อไหร่กด 🪂 โดดวิงสูท');
@@ -6655,6 +6725,7 @@ function beginPilot(){
   HeliSound.start();
   hViewSwitched=false; setSeat(0);
   layoutCockpit();
+  dustBurst(0,.05,0,18);                             // 🌪️ ฝุ่นเริ่มฟุ้งตอนเครื่องติด
   showBanner('🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
   if(myRef) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน
 }
@@ -6688,6 +6759,7 @@ function tickHeliFoot(dt,now){
     for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
+  dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
   const p=camera.position;
   // ── 🛗 ลิฟต์ ──
   if(hPhase==='lift'){
@@ -6701,6 +6773,21 @@ function tickHeliFoot(dt,now){
   }
   // ── 🚁 นั่งริมหน้าต่าง (ทัวร์อัตโนมัติ) ──
   if(hPhase==='ride'){
+    // 🌪️ ช่วงเร่งใบพัด 2.6 วิ: ลำยังจอด ประตูเลื่อนปิด ใบพัดหมุนไต่รอบ → ครบแล้วฝุ่นตลบ+ยกตัว
+    if(rideSpin<1){
+      rideSpin=Math.min(1,rideSpin+dt/2.6);
+      F.paxH._rotor.rotation.y+=dt*28*rideSpin*rideSpin;
+      if(F.paxH._trotor) F.paxH._trotor.rotation.x+=dt*46*rideSpin;
+      doorLerp(F.paxH,0,dt*2.0);
+      if(rideSpin>=1&&!_rideDusted){ _rideDusted=true; dustBurst(ridePos.x,F.paxPos.y,ridePos.z,28); }
+      const rg={x:Math.cos(rideYaw),z:-Math.sin(rideYaw)};
+      camera.position.set(ridePos.x+rg.x*.8, ridePos.y+.3, ridePos.z+rg.z*.8);
+      camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.8);
+      drawCabinWindow();
+      setFootBtns(true,true);
+      footHint('🚁 เครื่องติดแล้ว! ใบพัดกำลังเร่งรอบ เตรียมออกบิน...');
+      return;
+    }
     const wp=rideWp[rideIdx];
     const dx=wp.x-ridePos.x, dy=wp.y-ridePos.y, dz=wp.z-ridePos.z;
     const dd=Math.hypot(dx,dz);
@@ -6818,6 +6905,9 @@ function tickHeliFoot(dt,now){
   const dPax=Math.hypot(nx-F.paxPos.x,nz-F.paxPos.z);
   const glow=.35+.3*(.5+.5*Math.sin(now/300));
   F.padG.material.opacity=glow; F.padR.material.opacity=glow;
+  // 🚪 ประตูสไลด์ต้อนรับ: เดินใกล้ลำไหน บานลำนั้นเลื่อนเปิดเอง (ลำแดงเปิดเฉพาะคนมีตั๋ว)
+  doorLerp(F.paxH,(onRoof&&dPax<4.5)?1:0,dt*2.4);
+  doorLerp(F.pilotH,(dPilot<4&&camera.position.y<3&&state.heliTicket)?1:0,dt*2.4);
   if(insideTerm(nx,nz,-.3)&&camera.position.y<3.2){
     if(dLift<1.2){ liftStart(true,now); return; }
     footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
@@ -6996,6 +7086,7 @@ function tickHeli(dt,now){
     }
   }
   mailTick(now);                                              // 🛩️📦 ภารกิจไปรษณีย์ (ทำงานเฉพาะกลางคืน)
+  dustTick(dt);                                               // 🌪️ ฝุ่นตลบตอนสตาร์ท/เทคออฟ
   // 🎯 ระบบช่วยจัดกึ่งกลางเป้า (รอบ 350) — เหมือนเซนเซอร์ถอยรถ: ยิ่งใกล้เป้ายิ่งติ๊ดถี่ ตรงเป้า=รัว+โทนสูง
   assistTgt=null;
   if(!hLanded && HeliSound.ready){
@@ -7027,6 +7118,7 @@ function tickHeli(dt,now){
   if(HeliSound.ready && !hViewSwitched){
     hViewSwitched=true;
     setSeat(state.heliSeat==null?1:Math.min(2,Math.max(1,state.heliSeat)));
+    dustBurst(nx,heliFloorAt(nx,nz)+.05,nz,30);      // 🌪️ ใบพัดถึงรอบเต็ม = ฝุ่นตลบชุดใหญ่
   }
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
@@ -9251,6 +9343,12 @@ window.Adventure3D={
                         get wing(){return {spd:+wSpd.toFixed(1),p:+wP.toFixed(2)}},
                         get rings(){const F=worlds.heli&&worlds.heli.foot;return F?F.rings.map(r=>({x:+r.m.position.x.toFixed(1),y:+r.m.position.y.toFixed(1),z:+r.m.position.z.toFixed(1),got:r.got})):null},
                         get ringCombo(){return ringCombo},
+                        // 🚪🌪️🎨 รอบ 357
+                        get doors(){const F=worlds.heli&&worlds.heli.foot;return F?{pax:+F.paxH._doorOpen.toFixed(2),pilot:+F.pilotH._doorOpen.toFixed(2)}:null},
+                        get dustN(){return dusts.length},
+                        get rideSpin(){return +rideSpin.toFixed(2)},
+                        get fest(){const F=worlds.heli&&worlds.heli.foot;return F?(F.fest&&F.fest.name)||null:null},
+                        festAt:(iso)=>{const f=festivalPaint(new Date(iso));return f?f.name:null},
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
