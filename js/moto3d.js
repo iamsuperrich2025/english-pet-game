@@ -8,6 +8,10 @@ const REWARD=45, DONE_KEY='motoDone';
 const ACCEL=13, DECEL=5.5, VMAX=55.6, VMAX_OFF=6.5, WHEEL_R=0.34;   // รอบ 312: VMAX 32→55.6 (=200 กม./ชม.) + ACCEL 10→13 ให้ไต่ถึงได้
 const DASH_LEN=4, DASH_GAP=5, DASH_W=0.28;  // 🛣️ รอบ 312: เส้นประกลางถนน — ยาวขีด/ช่องว่าง/ครึ่งกว้าง (m)
 const DOG_HIT_COIN=500, DOG_SPD=11, DOG_GAP_MS=9000;   // 🐕 รอบ 312: ชนหมาปรับ 500 · ความเร็ววิ่ง · เว้นระยะ spawn
+/* 🕳️⛰️ รอบ 315: หลุม/เนิน + เหิน + สปริง */
+const FEAT_SP=16, FEAT_FILL=0.9, FEAT_CELL=18;         // ระยะห่างจุดวาง/โอกาสวาง (คุม coverage ~60%)/ขนาดช่องแฮช (≥รัศมีสูงสุด)
+const GRAV=22, IMPACT_MIN=3.5, LAUNCH_SPD=5, LAUNCH_VMAX=9;   // โน้มถ่วง · ลงแรงพอมีเสียง · เร็วพอเหิน · เพดานความเร็วเหิน (กันพุ่งสูงเกิน)
+const SUSP_K=55, SUSP_D=9, SUSP_KICK=0.22;             // สปริงโช้ก: อ่อนลง+เตะแรงขึ้น = ยวบเห็นชัด
 const ROAD_WIDE=3.6;                       // ตัวคูณความกว้างถนน (รอบ 301: ×2 จาก 1.8 — ผู้ใช้ขอกว้างขึ้นอีก 2 เท่า)
 const EDGE_M=0.55;                         // ระยะกันชนจากขอบถนน (m) — ชนขอบแล้วดันกลับ ขับออกนอกถนนไม่ได้
 const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโลก (m) ต่อ 1 รอบลายภาพถนน/หญ้า (UV พิกัดโลก — รอยต่อทางแยกเนียน)
@@ -30,6 +34,8 @@ let throttleCharge=0;                      // 💡 รอบ 309: ระดั�
 let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอบ 305) — ตัวจับจังหวะ spawn + สลับท่อซ้าย/ขวา
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let dog=null, dogNextAt=0;                  // 🐕 รอบ 312: หมาวิ่งตัดถนน {grp,vx,vz,life}
+let feats=[], featBuckets=new Map();        // 🕳️⛰️ รอบ 315: หลุม/เนิน {x,z,r,h} (h>0=เนิน h<0=หลุม) + แฮชค้นเร็ว
+let bikeY=0, bikeVY=0, airborne=false, prevFollowVY=0, suspY=0, suspV=0;   // ความสูงรถ/ความเร็วดิ่ง/สถานะเหิน/สปริงโช้ก
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
 let steerCtl=0, kL=false, kR=false;        // 🎛️ รอบ 297: เอียงแมนวล — ค่าคุมค้างตามที่ผู้เล่นตั้ง ไม่เด้งกลับเอง (คีย์ A/D = ค่อยๆ ปรับ)
@@ -68,6 +74,19 @@ const Eng={ctx:null,master:null,ready:false,bufs:{},iG:null,cG:null,cS:null,prev
   shot(n,v){ if(!this.bufs[n]) return;
     const s=this.ctx.createBufferSource(); s.buffer=this.bufs[n];
     const g=this.ctx.createGain(); g.gain.value=v; s.connect(g); g.connect(this.master); s.start(); },
+  /* 🕳️ รอบ 315: เสียงรถกระแทกถนน (ตกหลุม/ลงจากเนิน) — thump เบสตก + เสียงกรวดสั้นๆ สังเคราะห์ */
+  thud(v){ if(!this.ctx||!this.master) return;
+    const c=this.ctx, t=c.currentTime;
+    const o=c.createOscillator(), g=c.createGain();
+    o.type='sine'; o.frequency.setValueAtTime(115,t); o.frequency.exponentialRampToValueAtTime(38,t+.16);
+    g.gain.setValueAtTime(Math.min(.85,v),t); g.gain.exponentialRampToValueAtTime(.001,t+.24);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t+.26);
+    const nb=c.createBuffer(1,(c.sampleRate*.1)|0,c.sampleRate), d=nb.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(1-i/d.length);
+    const ns=c.createBufferSource(); ns.buffer=nb;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=850; bp.Q.value=1.2;
+    const ng=c.createGain(); ng.gain.value=Math.min(.5,v*.6);
+    ns.connect(bp); bp.connect(ng); ng.connect(this.master); ns.start(t); },
   tick(){ if(!this.ctx) return;
     const on=(typeof state==='undefined'||state.sound!==false)&&running;
     const t=this.ctx.currentTime;
@@ -338,17 +357,65 @@ function smoothPts(pts){
   }
   return cur;
 }
+/* 🕳️⛰️ รอบ 315: ภูมิประเทศหลุม/เนิน — วางจุดตามถนน + ค้นความสูงเร็วผ่านแฮช */
+function featKey(cx,cz){ return cx+'_'+cz; }
+function addFeat(x,z,r,h){
+  feats.push({x,z,r,h});
+  const k=featKey(Math.floor(x/FEAT_CELL),Math.floor(z/FEAT_CELL));
+  let a=featBuckets.get(k); if(!a){ a=[]; featBuckets.set(k,a); } a.push(feats[feats.length-1]);
+}
+function genFeatures(pts){
+  let dist=0, next=FEAT_SP*Math.random();
+  for(let i=0;i<pts.length-2;i+=2){
+    const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
+    const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.01) continue;
+    const ux=dx/L,uz=dz/L;
+    while(next<=dist+L){
+      if(Math.random()<FEAT_FILL){
+        const t=next-dist, fx=ax+ux*t, fz=az+uz*t;
+        const bump=Math.random()<0.5, r=5+Math.random()*4;
+        const h=bump ? (0.55+Math.random()*Math.random()*1.3)   // เนิน 0.55–1.85 (เอียงเตี้ย · ลูกใหญ่นานๆ ที = เหินไกล)
+                     : -(0.4+Math.random()*0.55);                // หลุม 0.4–0.95 ลึก
+        addFeat(fx,fz,r,h);
+      }
+      next+=FEAT_SP;
+    }
+    dist+=L;
+  }
+}
+function terrainAt(x,z){
+  const cx=Math.floor(x/FEAT_CELL), cz=Math.floor(z/FEAT_CELL);
+  let h=0;
+  for(let ox=-1;ox<=1;ox++)for(let oz=-1;oz<=1;oz++){
+    const a=featBuckets.get(featKey(cx+ox,cz+oz)); if(!a) continue;
+    for(const f of a){
+      const d=Math.hypot(x-f.x,z-f.z);
+      if(d<f.r) h += f.h*0.5*(1+Math.cos(Math.PI*d/f.r));   // cos falloff: 1 ที่กลาง → 0 ที่ขอบ (นุ่ม)
+    }
+  }
+  return h<-2?-2:(h>2.5?2.5:h);
+}
+/* ความสูงถนนใต้รถ = ยกไปที่แนวกลางถนน (ยุบ/นูนตามยาว สม่ำเสมอทั้งความกว้าง เหมือนถนนจริง) */
+function roadGroundY(x,z){
+  const info=roadInfo(x,z);
+  if(!info.seg) return 0;
+  const s=info.seg, dx=s.bx-s.ax, dz=s.bz-s.az, L2=dx*dx+dz*dz;
+  let t=L2?((x-s.ax)*dx+(z-s.az)*dz)/L2:0; t=t<0?0:(t>1?1:t);
+  return terrainAt(s.ax+dx*t, s.az+dz*t);
+}
 function buildRoads(){
   const D=window.MOTO_MAP;
   const posMinor=[], posMajor=[], posLine=[], posEdge=[], uvMinor=[], uvMajor=[];
+  const roads=[];   // 🕳️ รอบ 315: pass 1 — เก็บ pts ที่ smooth แล้ว + สร้าง segs/buckets/features ก่อน แล้วค่อยสร้าง geometry (pass 2) ที่ sample ความสูง
+  /* ── PASS 1: smooth + segs/buckets ชน + วางหลุม/เนิน (ต้องครบก่อน geometry จะ sample ความสูงถูก) ── */
   D.r.forEach(rd=>{
     const w=rd[0], major=rd[1], pts=smoothPts(rd[3]), hw=w/2*ROAD_WIDE;   // รอบ 313: pts ผ่าน smoothPts = เส้นโค้ง
+    roads.push({pts,major,hw});
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.5) continue;
       const si=segs.length;
       segs.push({ax,az,bx,bz,hw,len:L});
-      /* ลง bucket ทุกช่องที่เส้นผ่าน */
       const steps=Math.ceil(L/BUCKET)+1;
       let pbx=null,pbz=null;
       for(let s=0;s<=steps;s++){
@@ -360,34 +427,46 @@ function buildRoads(){
           if(arr[arr.length-1]!==si) arr.push(si);
         }
       }
-      /* ribbon 2 สามเหลี่ยม (⚠️ รอบ 296: ยกสูงขึ้น 0.15+ กัน z-fight พื้นหญ้าระยะไกล) */
-      const nx=-dz/L*hw, nz=dx/L*hw, y=major?0.18:0.15;
+    }
+    genFeatures(pts);   // 🕳️⛰️ วางหลุม/เนินตามถนนเส้นนี้
+  });
+  /* ── PASS 2: geometry — sample terrainAt ต่อจุด (ถนนยุบ/นูนตามหลุม/เนินจริง) ── */
+  roads.forEach(r=>{
+    const pts=r.pts, major=r.major, hw=r.hw, yb=major?0.18:0.15;
+    let ta=terrainAt(pts[0],pts[1]);          // รอบ 315: terrain หัว segment รียูสจากท้าย segment ก่อน (ครึ่ง terrainAt)
+    for(let i=0;i<pts.length-2;i+=2){
+      const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
+      const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz);
+      const tB=terrainAt(bx,bz);
+      if(L<0.5){ ta=tB; continue; }
+      const nx=-dz/L*hw, nz=dx/L*hw;
+      const ya=yb+ta, yB=yb+tB;
       const tgt=major?posMajor:posMinor;
-      tgt.push(ax+nx,y,az+nz, ax-nx,y,az-nz, bx+nx,y,bz+nz,
-               ax-nx,y,az-nz, bx-nx,y,bz-nz, bx+nx,y,bz+nz);
-      /* 🛣️ รอบ 302: UV พิกัดโลก (u=x/S v=z/S) — ลายยางมะตอยต่อเนื่องข้ามเส้น/ทางแยกไม่มีรอยชน */
+      tgt.push(ax+nx,ya,az+nz, ax-nx,ya,az-nz, bx+nx,yB,bz+nz,
+               ax-nx,ya,az-nz, bx-nx,yB,bz-nz, bx+nx,yB,bz+nz);
       const uvt=major?uvMajor:uvMinor, S=ROAD_TEX_S;
       uvt.push((ax+nx)/S,(az+nz)/S, (ax-nx)/S,(az-nz)/S, (bx+nx)/S,(bz+nz)/S,
                (ax-nx)/S,(az-nz)/S, (bx-nx)/S,(bz-nz)/S, (bx+nx)/S,(bz+nz)/S);
-      /* 🧱 รอบ 301: ขอบถนนขาว — ribbon กว้างกว่าถนน 1m รองใต้ (y ต่ำกว่า) โผล่เป็นเส้นขอบ 2 ฝั่งในก้อนเดียว */
-      const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ey=0.12;
-      posEdge.push(ax+exx,ey,az+ezz, ax-exx,ey,az-ezz, bx+exx,ey,bz+ezz,
-                   ax-exx,ey,az-ezz, bx-exx,ey,bz-ezz, bx+exx,ey,bz+ezz);
+      const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ea=0.12+ta, eB=0.12+tB;
+      posEdge.push(ax+exx,ea,az+ezz, ax-exx,ea,az-ezz, bx+exx,eB,bz+ezz,
+                   ax-exx,ea,az-ezz, bx-exx,eB,bz-ezz, bx+exx,eB,bz+ezz);
+      ta=tB;
     }
-    /* 🛣️ รอบ 312-313: เส้นประขาวกลางถนน แบ่งเลน — คิดตามระยะทางสะสมทั้งเส้น (segment โค้งสั้นก็ยังเป็นขีดต่อเนื่อง ไม่กลายเป็นเส้นทึบ) */
+    /* เส้นประกลางถนน — sample ความสูงหัว/ท้ายแต่ละขีด */
     const period=DASH_LEN+DASH_GAP; let dashAcc=0;
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.01) continue;
-      const ux=dx/L,uz=dz/L,lx=-uz*DASH_W,lz=ux*DASH_W,dy=0.21;
+      const ux=dx/L,uz=dz/L,lx=-uz*DASH_W,lz=ux*DASH_W;
       let d=0;
       while(d<L){
         const phase=(dashAcc+d)%period;
         if(phase<DASH_LEN){
           const de=Math.min(L, d+(DASH_LEN-phase));
           const p0x=ax+ux*d,p0z=az+uz*d,p1x=ax+ux*de,p1z=az+uz*de;
-          posLine.push(p0x+lx,dy,p0z+lz, p0x-lx,dy,p0z-lz, p1x+lx,dy,p1z+lz,
-                       p0x-lx,dy,p0z-lz, p1x-lx,dy,p1z-lz, p1x+lx,dy,p1z+lz);
+          const y0=0.22+terrainAt(p0x,p0z), y1=0.22+terrainAt(p1x,p1z);
+          posLine.push(p0x+lx,y0,p0z+lz, p0x-lx,y0,p0z-lz, p1x+lx,y1,p1z+lz,
+                       p0x-lx,y0,p0z-lz, p1x-lx,y1,p1z-lz, p1x+lx,y1,p1z+lz);
           d=de;
         } else { d+=(period-phase); }
       }
@@ -1035,12 +1114,40 @@ function frame(dt,now){
       spd*=Math.max(0,1-1.5*dt);
     }
   }
+  /* 🕳️⛰️ รอบ 315: ฟิสิกส์แนวดิ่ง — ตกหลุม/ขึ้นเนิน/เหิน/ลงพื้นสปริง
+     groundY = ความสูงถนนตรงจุดรถ (แนวกลาง) · เหินเมื่อพื้นหล่นเร็วกว่าแรงโน้มถ่วง (สันเนิน/ขอบหลุม) */
+  const fwdX=Math.sin(yaw), fwdZ=Math.cos(yaw);
+  const groundY=roadGroundY(px,pz);
+  const groundNext=roadGroundY(px+fwdX*spd*dt, pz+fwdZ*spd*dt);
+  let followVY=dt>0?(groundNext-groundY)/dt:0;
+  if(followVY>18) followVY=18; else if(followVY<-18) followVY=-18;   // กัน spike จาก sample เฟรมเดียว
+  if(airborne){
+    bikeVY-=GRAV*dt; bikeY+=bikeVY*dt;
+    if(bikeY<=groundY){                        // แตะพื้น
+      const impact=-bikeVY;
+      bikeY=groundY; airborne=false; bikeVY=0;
+      if(impact>IMPACT_MIN){
+        suspV-=Math.min(impact,LAUNCH_VMAX)*SUSP_KICK;   // เตะโช้กยุบลง (สปริงยวบ)
+        if(typeof Eng!=='undefined'&&Eng.thud) Eng.thud(Math.min(.85,impact*0.07));
+        if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(Math.min(60,impact*7|0));
+      }
+    }
+  } else {
+    bikeY=groundY;
+    if(spd>LAUNCH_SPD && followVY<prevFollowVY-GRAV*dt){   // พื้นหล่นเร็วเกินตามทัน → ลอย
+      airborne=true; bikeVY=Math.min(prevFollowVY,LAUNCH_VMAX);   // เพดานความเร็วเหิน (สูงสุด ~1.8m)
+    }
+    prevFollowVY=followVY;
+  }
+  suspV+=(-SUSP_K*suspY - SUSP_D*suspV)*dt; suspY+=suspV*dt;   // สปริงโช้กคืนตัว (damped)
   /* 🏍️ เอียงเข้าโค้ง (รอบ 294) + รอบ 297: องศาเอียง = ค่าที่ผู้เล่นตั้งตรงๆ ไม่ผูกความเร็ว ไม่คืนกลางเอง
      เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
   const leanTgt=steer*LEAN_MAX;
   lean+=(leanTgt-lean)*(1-Math.exp(-3.5*dt)); // รอบ 301: เลิกสปริง (เด้งแบบตุ๊กตาหัวโยก ผู้ใช้ไม่เอา) → ไล่เข้าเป้าหนืดนิ่งแบบ Ride 4 ไม่ overshoot
   if(bikeEl){
-    bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
+    /* สปริงยวบ: suspY<0 = ยุบ → บีบแนวตั้ง (transform-origin ล่าง ล้อติดพื้น) · airborne = ยืดเล็กน้อย */
+    const sq=airborne?0.07:Math.max(-0.3,Math.min(0.07,suspY*0.26));
+    bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg) scaleY('+(1+sq).toFixed(3)+')';
     /* 🟠 รอบ 300: ไฟเลี้ยวกะพริบตามทิศที่ตั้งเอียง (เกิน ±0.12 = ถือว่ากำลังเลี้ยว) */
     const sig=steerCtl<-0.12?'l':steerCtl>0.12?'r':'';
     if(sig!==_sigCur){
@@ -1049,21 +1156,26 @@ function frame(dt,now){
       bikeEl.classList.toggle('sig-r',sig==='r');
     }
   }
-  /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง) */
+  /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง)
+     รอบ 315: บวก bikeY (เหิน/ตกหลุมเห็นจริง) + suspY*.5 (ยวบตอนลง) เข้ากับความสูงกล้อง */
   const cd=6.2, ch=2.6;
   const tx=px-Math.sin(yaw)*cd, tz=pz-Math.cos(yaw)*cd;
   if(!camInit){ camX=tx; camY=ch; camZ=tz; camInit=true; }
   const k=1-Math.exp(-5.5*dt);
   camX+=(tx-camX)*k; camZ+=(tz-camZ)*k; camY+=(ch-camY)*k;
-  camera.position.set(camX,camY,camZ);
-  camera.lookAt(px+Math.sin(yaw)*4, 1.4, pz+Math.cos(yaw)*4);
+  camera.position.set(camX, camY+bikeY+suspY*0.5, camZ);
+  camera.lookAt(px+Math.sin(yaw)*4, 1.4+bikeY+suspY*0.5, pz+Math.cos(yaw)*4);
   camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
   collectTick(); relocTick(now); dogTick(dt,now); gpsTick(); miniTick();
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); postTick(); }
-  /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง (เหมือนตัวรถเทออกจากจุดสัมผัส) */
-  if(shadowEl) shadowEl.style.transform='translateX('+(-50+lean*14).toFixed(1)+'%) scaleX('+(1-Math.abs(lean)*.3).toFixed(2)+')';
+  /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง · รอบ 315: เหินสูง = เงาเล็ก+จาง */
+  if(shadowEl){
+    const air=Math.max(0,bikeY);
+    shadowEl.style.transform='translateX('+(-50+lean*14).toFixed(1)+'%) scale('+((1-Math.abs(lean)*.3)/(1+air*0.25)).toFixed(2)+')';
+    shadowEl.style.opacity=(1/(1+air*0.5)).toFixed(2);
+  }
   /* 🛞 ล้อหมุน: ลายวิ่งลงเร็วตาม spd (period 22px) · จอด=โปร่งใสเห็นดอกยางนิ่งจากภาพ */
   if(wheelEl){
     wheelOff=(wheelOff+spd*dt*90)%22;
@@ -1107,6 +1219,7 @@ function start(){
   px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; thr=0; padThr=0; kThr=false;
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
+  bikeY=0; bikeVY=0; airborne=false; prevFollowVY=0; suspY=0; suspV=0;   // 🕳️⛰️ รอบ 315
   if(dog) dog.grp.visible=false; dogNextAt=performance.now()+DOG_GAP_MS;   // 🐕 รอบ 312
   scatterTrees(true); scatterClouds(true);
   fit();
@@ -1159,6 +1272,8 @@ window.MotoWorld={
     eng:Eng,
     forceDog(){ dogNextAt=0; spd=Math.max(spd,10); dogTick(1/60,performance.now()); return dog&&dog.grp.visible; },
     get dog(){ return dog; }, dogTick, gpsTick,
+    get feats(){ return feats.length; }, terrainAt, roadGroundY,
+    get vert(){ return {bikeY,bikeVY,airborne,suspY}; },
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('spd'in v)spd=v.spd; },
     get pos(){return {x:px,z:pz,yaw,spd}},
     set input(v){ if('steer' in v) steerCtl=v.steer; if('thr' in v) padThr=v.thr; },
