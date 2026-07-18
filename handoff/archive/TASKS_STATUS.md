@@ -351,3 +351,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 308:** 🔘 **ปุ่มเร่งยุบ/เด้ง** (ผู้ใช้: ปุ่มวงกลมขวาให้เหมือนถูกกดลง+คลายตัวตอนปล่อย) — moto3d.js CSS: `#moto-throttle.pressing` = `scale(.84)`+เงา inset จม+ไอคอนเลื่อนลง · กด snap เร็ว (.08s ease-out) ปล่อยเด้งสปริง (.2s bezier overshoot) · frame() `thrEl.classList.toggle('pressing',!!thr)` ครอบทั้งแตะ+คีย์ W · ยืนยัน (ปิด transition วัดค่าปลายทาง เพราะแท็บ throttle): กด scale .84 เงา .45 inset ไอคอน translateY+ย่อ / ปล่อย scale 1 เงา none / ไม่มี error · deploy `.302`
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 309:** 🎛️ **knob ยกนูน+haptic · LED เทอร์โบ · ย้ายคำศัพท์กลางจอ** (ผู้ใช้สั่ง 2 ข้อ) — moto3d.js: (1) `#moto-knob.grab` ยก translateY-6%+scale1.06+เงาลึก เพิ่มตอน pointerdown สไลเดอร์ + `navigator.vibrate(15)` (2) `#moto-throttle::after` วง LED ฟ้า opacity=`var(--charge)` · frame() charge `+dt/1.4` กดค้าง/`-dt*3` ปล่อย · เต็ม→`.charged` keyframes `mturbo` เต้น (3) `#moto-word` มุมบนซ้าย→กลางบน `left:50% top:9%` chip 3.6→5.2vmin+คำแปล 3vmin+พื้นเข้มโปร่ง · **ย้าย GPS ไปบนซ้าย** (เดิมกลางบน ชนคำ) · ยืนยัน browser 1000×640+812×375: คำ center 50% top9% inScreen ไม่ทับ GPS · คำ 9 ตัวwrap 2 แถวไม่ล้น · charge 0.12→เต็ม1.0→charged→คาย0 · knob grab on/off · ไม่มี error · deploy `.303`
