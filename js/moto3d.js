@@ -8,6 +8,7 @@ const REWARD=45, DONE_KEY='motoDone';
 const ACCEL=10, DECEL=5.5, VMAX=32, VMAX_OFF=6.5, WHEEL_R=0.34;
 const ROAD_WIDE=3.6;                       // ตัวคูณความกว้างถนน (รอบ 301: ×2 จาก 1.8 — ผู้ใช้ขอกว้างขึ้นอีก 2 เท่า)
 const EDGE_M=0.55;                         // ระยะกันชนจากขอบถนน (m) — ชนขอบแล้วดันกลับ ขับออกนอกถนนไม่ได้
+const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโลก (m) ต่อ 1 รอบลายภาพถนน/หญ้า (UV พิกัดโลก — รอยต่อทางแยกเนียน)
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
 const COLLECT_R=2.8;                       // ระยะชนเก็บตัวอักษร
 const SPAWN_MIN=110, SPAWN_MAX=430, RELOC_D=800;   // ระยะวางตัวอักษรจากรถ + ไกลเกินย้ายใหม่
@@ -26,6 +27,7 @@ let _sigCur='';                            // 🟠 รอบ 300: สถาน�
 let camX=0,camY=0,camZ=0,camInit=false;
 let word=null, chips=[], letters=[], relocAt=0;
 let trees=null, treeTop=null, treePos=[], TREE_N=200;
+let skyDome=null;                          // 🌤️ รอบ 302: โดมท้องฟ้าภาพจริง ตามผู้เล่น
 let clouds=[], deco=false, decoAt=0;
 let sessionCoins=0, sessionWords=0, texCache={};
 let startX=0,startZ=0,startYaw=0;
@@ -220,7 +222,7 @@ function buildDom(){
 function segKey(bx,bz){ return bx+'_'+bz; }
 function buildRoads(){
   const D=window.MOTO_MAP;
-  const posMinor=[], posMajor=[], posLine=[], posEdge=[];
+  const posMinor=[], posMajor=[], posLine=[], posEdge=[], uvMinor=[], uvMajor=[];
   D.r.forEach(rd=>{
     const w=rd[0], major=rd[1], pts=rd[3], hw=w/2*ROAD_WIDE;   // รอบ 297: ถนนกว้างขึ้น (ผู้ใช้บอกแคบไป) — คูมทั้งภาพและระยะนับ "อยู่บนถนน"
     for(let i=0;i<pts.length-2;i+=2){
@@ -245,6 +247,10 @@ function buildRoads(){
       const tgt=major?posMajor:posMinor;
       tgt.push(ax+nx,y,az+nz, ax-nx,y,az-nz, bx+nx,y,bz+nz,
                ax-nx,y,az-nz, bx-nx,y,bz-nz, bx+nx,y,bz+nz);
+      /* 🛣️ รอบ 302: UV พิกัดโลก (u=x/S v=z/S) — ลายยางมะตอยต่อเนื่องข้ามเส้น/ทางแยกไม่มีรอยชน */
+      const uvt=major?uvMajor:uvMinor, S=ROAD_TEX_S;
+      uvt.push((ax+nx)/S,(az+nz)/S, (ax-nx)/S,(az-nz)/S, (bx+nx)/S,(bz+nz)/S,
+               (ax-nx)/S,(az-nz)/S, (bx-nx)/S,(bz-nz)/S, (bx+nx)/S,(bz+nz)/S);
       /* 🧱 รอบ 301: ขอบถนนขาว — ribbon กว้างกว่าถนน 1m รองใต้ (y ต่ำกว่า) โผล่เป็นเส้นขอบ 2 ฝั่งในก้อนเดียว */
       const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ey=0.12;
       posEdge.push(ax+exx,ey,az+ezz, ax-exx,ey,az-ezz, bx+exx,ey,bz+ezz,
@@ -258,16 +264,21 @@ function buildRoads(){
   });
   /* ⚠️ รอบ 296 บั๊ก "ไม่เห็นถนนเลย": winding สามเหลี่ยมหันคว่ำลง + FrontSide → โดน backface culling
      มองจากบนล่องหนทั้งแผนที่ (minimap ปกติเพราะวาด 2D จากข้อมูล) → ต้อง DoubleSide เสมอ */
-  const mk=(arr,color)=>{
+  /* 🛣️ รอบ 302: ภาพยางมะตอยจริงของผู้ใช้ (img/moterbike/road.webp · seamless 512) ปูตาม UV พิกัดโลก */
+  const roadTex=new THREE.TextureLoader().load('img/moterbike/road.webp');
+  roadTex.wrapS=roadTex.wrapT=THREE.RepeatWrapping;
+  roadTex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  const mk=(arr,color,uv,map)=>{
     const g=new THREE.BufferGeometry();
     g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(arr),3));
-    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide}));
+    if(uv) g.setAttribute('uv',new THREE.BufferAttribute(new Float32Array(uv),2));
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,map:map||null}));
     m.frustumCulled=false; scene.add(m); return m;
   };
-  mk(posEdge,0xf2f4f6);           // ขอบถนนขาว (รองใต้ถนน โผล่ข้างละ 0.5m)
-  mk(posMinor,0x9aa3ad);          // ถนนเล็ก — เทาอ่อน
-  mk(posMajor,0x6f7884);          // ถนนใหญ่ — เทาเข้ม
-  mk(posLine,0xffd54f);           // เส้นกลางเหลือง
+  mk(posEdge,0xf2f4f6);                    // ขอบถนนขาว (รองใต้ถนน โผล่ข้างละ 1m)
+  mk(posMinor,0xffffff,uvMinor,roadTex);   // ถนนเล็ก — ยางมะตอยโทนตรงภาพ
+  mk(posMajor,0xb4bac2,uvMajor,roadTex);   // ถนนใหญ่ — tint เข้มกว่าเล็กน้อยให้แยกจากถนนเล็ก
+  mk(posLine,0xffd54f);                    // เส้นกลางเหลือง
 }
 function distToSeg(x,z,s){
   const dx=s.bx-s.ax, dz=s.bz-s.az, L2=dx*dx+dz*dz;
@@ -497,9 +508,14 @@ function buildSchool(cx,cz,face){
 }
 function buildScenery(){
   const D=window.MOTO_MAP;
-  /* พื้นหญ้าสดใส — polygonOffset ดันพื้นถอยใน depth buffer ให้ถนนชนะเสมอ (กัน z-fight ระยะไกล) */
+  /* พื้นหญ้า — รอบ 302: ภาพหญ้าจริงของผู้ใช้ (grass.webp seamless) ปูซ้ำทั้งผืน
+     polygonOffset ดันพื้นถอยใน depth buffer ให้ถนนชนะเสมอ (กัน z-fight ระยะไกล) */
+  const grassTex=new THREE.TextureLoader().load('img/moterbike/grass.webp');
+  grassTex.wrapS=grassTex.wrapT=THREE.RepeatWrapping;
+  grassTex.repeat.set(64000/GRASS_TEX_S,64000/GRASS_TEX_S);
+  grassTex.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
   const g=new THREE.Mesh(new THREE.PlaneGeometry(64000,64000),
-    new THREE.MeshLambertMaterial({color:0x8fd06c, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:2}));
+    new THREE.MeshLambertMaterial({color:0xe8e8e8, map:grassTex, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:2}));
   g.rotation.x=-Math.PI/2; g.position.y=-0.05; scene.add(g);
   /* 🏫 โรงเรียนบ้านโพธิ์สวัสดิ์ — สร้างตามคลิปจริงของผู้ใช้ (รอบ 295):
      บันไดกระเบื้องลายไม้มันวาว+ผนังม่วง+ราวโครเมียม · ช้างน้ำเงินในสวน · สนามเด็กเล่น · ธงไตรรงค์
@@ -708,8 +724,14 @@ function build(){
   renderer=new THREE.WebGLRenderer({canvas:cvEl,antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
   scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x9fdcf7);
-  scene.fog=new THREE.Fog(0x9fdcf7,220,950);
+  /* 🌤️ รอบ 302: ท้องฟ้าภาพจริง (sky.webp) ครอบโดมครึ่งทรงกลม · fog จูนเป็นสีขอบฟ้าในภาพ (ขาวฟ้าอ่อน) ให้พื้นจางกลืนเข้าขอบฟ้า */
+  scene.background=new THREE.Color(0xcfe8f8);
+  scene.fog=new THREE.Fog(0xcfe8f8,220,950);
+  const skyTex=new THREE.TextureLoader().load('img/moterbike/sky.webp');
+  skyTex.wrapS=THREE.MirroredRepeatWrapping; skyTex.repeat.x=2;   // ขอบซ้าย-ขวาภาพไม่ seamless → mirror 2 รอบโดม เนียนไม่มีรอยชน
+  skyDome=new THREE.Mesh(new THREE.SphereGeometry(1400,48,20,0,Math.PI*2,0,Math.PI/2),
+    new THREE.MeshBasicMaterial({map:skyTex,side:THREE.BackSide,fog:false}));
+  scene.add(skyDome);
   camera=new THREE.PerspectiveCamera(62,16/9,.4,1600);   // near .4 เพิ่มความละเอียด depth ระยะไกล (กันถนนกะพริบ)
   scene.add(new THREE.AmbientLight(0xffffff,.75));
   const sun=new THREE.DirectionalLight(0xfff4d6,.85); sun.position.set(.4,1,.6); scene.add(sun);
@@ -794,6 +816,7 @@ function frame(dt,now){
   camera.position.set(camX,camY,camZ);
   camera.lookAt(px+Math.sin(yaw)*4, 1.4, pz+Math.cos(yaw)*4);
   camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
+  if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
   collectTick(); relocTick(now); gpsTick(); miniTick();
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); }
