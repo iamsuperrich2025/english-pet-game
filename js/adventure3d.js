@@ -180,6 +180,14 @@ const BAT_DRAIN=100/210;                            // เต็ม→หมด 
 const BAT_LETTER=8, BAT_NEARMISS=4;                 // ชาร์จคืนต่อ 1 ตัวอักษร / 1 ครั้งที่บินเฉียดรอด
 const BAT_LOW=20;                                   // ต่ำกว่านี้ = เตือน
 const BAT_EMPTY_MUL=.55;                            // แบตหมด: ความเร็ว+แรงไต่เหลือ 55%
+/* ⚡ สถานีชาร์จบนดาดฟ้า — ลอยในรัศมีเหนือแท่นแล้วแบตวิ่งขึ้นเร็ว */
+let droneChargers=[], droneCharging=false;
+const CHG_R=3.4, CHG_H=7, CHG_RATE=26;              // รัศมีแนวราบ · ความสูงเหนือดาดฟ้าที่ยังชาร์จได้ · %/วินาที
+/* 🏁 โหมดแข่งเวลา — บินผ่านห่วง FPV ครบ 6 ห่วงตามลำดับก่อนแบตหมด */
+let droneGates=[], raceOn=false, raceIdx=0, raceStart=0, raceHudEl=null, raceBtnEl=null;
+const GATE_R=3.4, RACE_REWARD=40;
+/* 📸 กล้องในเกม — จับภาพเฟรมถัดไป (ต้องอ่านทันทีหลัง render เพราะ canvas ถูกล้างทุกเฟรม) */
+let shotWanted=false, photoEl=null, photoImgEl=null, flashEl=null;
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
@@ -945,6 +953,15 @@ function brokenWindowTexture(){
   }
   const t=new THREE.CanvasTexture(cv); return t;
 }
+/* ⚡ ไอคอนสายฟ้าบนแท่นชาร์จ (วาดเอง พื้นโปร่ง) */
+function chargeIconTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#9dffdc'; c.shadowColor='#35ffb0'; c.shadowBlur=14;
+  c.beginPath(); c.moveTo(74,16); c.lineTo(40,70); c.lineTo(62,70); c.lineTo(52,112);
+  c.lineTo(90,54); c.lineTo(66,54); c.closePath(); c.fill();
+  return new THREE.CanvasTexture(cv);
+}
 /* 🚪 ประตูเหล็กสนิม (fallback วาดเอง) — ผู้ใช้วาง img/tex/tex_door.png ทับได้ */
 function rustyDoorTexture(){
   const cv=document.createElement('canvas'); cv.width=96; cv.height=160;
@@ -1566,20 +1583,37 @@ function buildScene(md){
       const w=16+rnd()*6, d=16+rnd()*6;
       list.push(buildAbandoned(sc,cMat,x,z,w,d,rnd,winMat,doorMat));
     }
-    // ห่วงเรืองแสง (เกตแข่ง FPV) — ตกแต่งให้ได้ฟีล racing ไม่มีผลกับการเล่น
+    // ห่วงเรืองแสง (เกตแข่ง FPV) — 🏁 รอบ 335: ใช้เป็นด่านโหมดแข่งเวลาด้วย (เก็บตำแหน่งไว้)
     const gateCol=[0xff3b6b,0x28e0ff,0xffd54f,0x6cff8a,0xb388ff];
+    const gates=[];
     for(let i=0;i<6;i++){
       const g=new THREE.Mesh(new THREE.TorusGeometry(2.6,.28,8,24),
         new THREE.MeshBasicMaterial({color:gateCol[i%gateCol.length]}));
       const a=i/6*Math.PI*2, rr=20+rnd()*18;
       g.position.set(Math.cos(a)*rr, 5+rnd()*10, Math.sin(a)*rr);
       g.rotation.y=a+Math.PI/2; sc.add(g);
+      gates.push({m:g, x:g.position.x, y:g.position.y, z:g.position.z, col:gateCol[i%gateCol.length]});
     }
+    // ⚡ สถานีชาร์จบนดาดฟ้า — ลอยนิ่งเหนือแท่นแล้วแบตเพิ่มเร็ว (ตึกเว้น 3 หลัง)
+    const chargers=[];
+    list.forEach((b,i)=>{
+      if(i%4!==0) return;
+      const pad=new THREE.Mesh(new THREE.CircleGeometry(3.1,22),
+        new THREE.MeshBasicMaterial({color:0x0b3a2e}));
+      pad.rotation.x=-Math.PI/2; pad.position.set(b.x,b.h+.08,b.z); sc.add(pad);
+      const ring=new THREE.Mesh(new THREE.RingGeometry(2.5,3.1,22),
+        new THREE.MeshBasicMaterial({color:0x35ffb0,side:THREE.DoubleSide}));
+      ring.rotation.x=-Math.PI/2; ring.position.set(b.x,b.h+.12,b.z); sc.add(ring);
+      const bolt=new THREE.Mesh(new THREE.PlaneGeometry(2.2,2.2),
+        new THREE.MeshBasicMaterial({map:chargeIconTexture(),transparent:true,side:THREE.DoubleSide}));
+      bolt.rotation.x=-Math.PI/2; bolt.position.set(b.x,b.h+.16,b.z); sc.add(bolt);
+      chargers.push({x:b.x, y:b.h, z:b.z, ring});
+    });
     const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),new THREE.MeshLambertMaterial({color:0x2f3236}));
     basePad.rotation.x=-Math.PI/2; basePad.position.set(0,.03,0); sc.add(basePad);
     const all=[]; list.forEach(b=>b.solids.forEach(s=>all.push(s)));
     ringAds(sc, 4, 14, 0, null);               // 📢 ป้ายโฆษณากลางลานเมืองร้าง (drone)
-    worlds[md]={scene:sc, trees:tr, buildings:list, solids:all};
+    worlds[md]={scene:sc, trees:tr, buildings:list, solids:all, gates, chargers};
     return;
   }else if(md==='soccer'){
     // ⚽ สนามฟุตบอล: พื้นหญ้า+เส้นสนาม · ประตู+ตาข่าย · อัฒจันทร์ 4 ด้าน · ลูกบอล · จุดพรีวิววิถี
@@ -3131,6 +3165,35 @@ function buildDom(){
     background:rgba(40,0,0,.42);text-shadow:0 0 6px rgba(255,120,120,.8);animation:batLow 1.1s ease-in-out infinite}
   @keyframes batLow{0%,100%{opacity:1}50%{opacity:.55}}
   html.no-anim .adv-drone #adv-inst.bat-low{animation:none}
+  /* 🏁📸 ปุ่มโหมดแข่ง + กล้อง (โชว์เฉพาะโลกโดรน · ซ้อนกันมุมขวาล่าง เหนือปุ่มยิงที่ซ่อนอยู่แล้ว) */
+  #adv-race,#adv-shot{position:absolute;right:14px;display:none;pointer-events:auto;z-index:5;
+    width:62px;padding:6px 0 4px;border-radius:12px;border:1px solid rgba(124,255,157,.5);
+    background:rgba(0,26,12,.62);color:#9dffc4;font-size:19px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,255,157,.6)}
+  #adv-race small,#adv-shot small{display:block;font-size:9.5px;letter-spacing:.02em}
+  /* วางใต้ปุ่ม 🚪ออก มุมขวาบน — พ้นจานใบพัดขวา (เริ่มที่ ~265px) และพ้นจอยสติ๊กมุมล่างซ้าย */
+  #adv-race{top:164px} #adv-shot{top:212px}
+  .adv-drone #adv-race,.adv-drone #adv-shot{display:block}
+  #adv-race:active,#adv-shot:active{background:rgba(124,255,157,.28)}
+  #adv-race.on{background:rgba(255,214,79,.22);border-color:#ffd54f;color:#ffe9a3;text-shadow:0 0 6px rgba(255,213,79,.7)}
+  #adv-racehud{display:none;top:64px;left:50%;transform:translateX(-50%);z-index:5;
+    background:rgba(0,22,8,.62);border:1px solid rgba(124,255,157,.45);border-radius:8px;
+    padding:4px 12px;color:#9dffc4;font-family:'Courier New',monospace;font-size:13px;white-space:nowrap}
+  #adv-racehud b{color:#fff}
+  /* 📸 แฟลชตอนกดชัตเตอร์ + การ์ดพรีวิวภาพ */
+  #adv-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
+  #adv-flash.on{animation:advFlash .26s ease-out}
+  @keyframes advFlash{0%{opacity:.85}100%{opacity:0}}
+  #adv-photo{position:absolute;inset:0;display:none;place-items:center;z-index:9;
+    background:rgba(0,0,0,.68);pointer-events:auto;padding:12px}
+  #adv-photo.on{display:grid}
+  #adv-photo .ph-card{display:flex;flex-direction:column;gap:8px;max-width:min(88vw,560px);
+    background:#10151a;border:1px solid rgba(124,255,157,.35);border-radius:12px;padding:10px}
+  #adv-photo img{display:block;width:100%;max-height:58vh;object-fit:contain;border-radius:7px;background:#000}
+  #adv-photo .ph-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  #adv-photo button{pointer-events:auto;border:1px solid rgba(124,255,157,.5);border-radius:9px;
+    padding:8px 14px;font-size:14px;font-weight:700;background:rgba(0,26,12,.7);color:#9dffc4}
+  #adv-photo #adv-photo-save{background:#1f7a4d;border-color:#2fae6d;color:#eafff2}
   /* 🛸 ขอบตัวโดรน+ขาลงจอด ล่างจอ — ให้รู้สึกเหมือนนั่งอยู่บนเครื่องจริง (ไม่บังทางบิน) */
   #adv-props .dframe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
     width:min(58vmin,420px);height:8.5vh;min-height:52px}
@@ -3836,6 +3899,13 @@ function buildDom(){
       <div class="gps-bot"><span class="gps-lab">🎯 ไป</span><b id="gps-letter">A</b><span class="gps-dist" id="gps-dist">0 ม.</span></div>
     </div>
     <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div><div class="dframe"><i class="skid skid-l"></i><i class="skid skid-r"></i></div></div>
+    <div class="adv-hud" id="adv-racehud"></div>
+    <button id="adv-race">🏁<small>แข่งเวลา</small></button>
+    <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
+    <div id="adv-flash"></div>
+    <div id="adv-photo"><div class="ph-card"><img id="adv-photo-img" alt="ภาพที่ถ่ายในโลกโดรน">
+      <div class="ph-btns"><button id="adv-photo-save">📥 บันทึกลงเครื่อง</button>
+      <button id="adv-photo-close">ปิด</button></div></div></div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
@@ -4227,6 +4297,16 @@ function buildDom(){
   holdBtn('#mecha-fire2',()=>mFireHeld=true,()=>mFireHeld=false);   /* รอบ 223: ปุ่มยิงตัวที่ 2 (ใต้ minimap) ยิงเหมือนกัน */
 
   overlayEl.querySelector('#adv-exit').addEventListener('click',confirmExit);
+  // 🏁📸 โหมดแข่งเวลา + กล้องในเกม (โลกโดรน)
+  raceHudEl=overlayEl.querySelector('#adv-racehud');
+  raceBtnEl=overlayEl.querySelector('#adv-race');
+  photoEl=overlayEl.querySelector('#adv-photo');
+  photoImgEl=overlayEl.querySelector('#adv-photo-img');
+  flashEl=overlayEl.querySelector('#adv-flash');
+  raceBtnEl.addEventListener('click',e=>{ e.preventDefault(); if(raceOn) raceStop(false); else raceStartRun(); });
+  overlayEl.querySelector('#adv-shot').addEventListener('click',e=>{ e.preventDefault(); shotWanted=true; });
+  overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
+  overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
   const shootBtn=overlayEl.querySelector('#adv-shoot');
   shootBtn.addEventListener('touchstart',e=>{ e.preventDefault(); shoot(); },{passive:false});
@@ -4457,6 +4537,49 @@ function propFix(){
 }
 /* 🔋 ชาร์จแบต (บวก) — คุมไม่ให้เกิน 100 */
 function droneBatAdd(n){ droneBat=Math.max(0,Math.min(100,droneBat+n)); }
+
+/* 🏁 โหมดแข่งเวลา — เริ่ม/จบ/อัปเดตป้าย */
+function raceStartRun(){
+  if(!droneGates.length) return;
+  raceOn=true; raceIdx=0; raceStart=performance.now(); droneBat=100;
+  gateHighlight();
+  showBanner('🏁 เริ่มแข่ง! บินผ่านห่วงให้ครบ 6 ก่อนแบตหมด');
+  renderRaceHud();
+}
+function raceStop(win){
+  if(!raceOn) return;
+  const secs=(performance.now()-raceStart)/1000;
+  raceOn=false;
+  droneGates.forEach(g=>{ g.m.scale.setScalar(1); g.m.material.color.setHex(g.col); });
+  if(win){
+    const best=state.droneRaceBest||0;
+    const record=!best || secs<best;
+    if(record){ state.droneRaceBest=Math.round(secs*10)/10; saveState(); }
+    addCoins(RACE_REWARD); sessionCoins+=RACE_REWARD; renderHudTop();
+    celebrateBadge('🏁', `จบสนาม ${secs.toFixed(1)} วินาที!`,
+      `ผ่านครบ 6 ห่วง +${RACE_REWARD}🪙${record?' · 🏆 สถิติใหม่!':` · สถิติดีสุด ${best.toFixed(1)} วิ`}`);
+  }else{
+    showBanner('🔋 แบตหมดก่อนจบสนาม — ลองใหม่ได้เลย!');
+  }
+  renderRaceHud();
+}
+/* ห่วงถัดไปโตขึ้น+ขาวสว่าง · ห่วงที่ผ่านแล้วหรี่ลง (เห็นชัดว่าต้องไปไหนต่อ) */
+function gateHighlight(){
+  droneGates.forEach((g,i)=>{
+    const done=i<raceIdx, next=i===raceIdx;
+    g.m.scale.setScalar(next?1.25:1);
+    g.m.material.color.setHex(done?0x39424d:(next?0xffffff:g.col));
+  });
+}
+function renderRaceHud(){
+  if(!raceHudEl) return;
+  if(!raceOn){ raceHudEl.style.display='none'; if(raceBtnEl) raceBtnEl.classList.remove('on'); return; }
+  if(raceBtnEl) raceBtnEl.classList.add('on');
+  const secs=(performance.now()-raceStart)/1000;
+  raceHudEl.style.display='block';
+  raceHudEl.innerHTML=`🏁 ห่วง <b>${raceIdx}/6</b> · ⏱ ${secs.toFixed(1)} วิ`+
+    (state.droneRaceBest?` · 🏆 ${state.droneRaceBest.toFixed(1)} วิ`:'');
+}
 function tickDrone(dt,now){
   let fw=0,sd=0,yawIn=0,col=0;
   if(keys.KeyW||keys.ArrowUp) fw+=1;
@@ -4534,17 +4657,39 @@ function tickDrone(dt,now){
   }
   DroneSound.proximity(hWarnLvl);
 
+  // ⚡ ลอยเหนือแท่นชาร์จ = แบตวิ่งขึ้นเร็ว (ห่วงเต้นตามจังหวะให้เห็นว่ากำลังชาร์จ)
+  droneCharging=false;
+  for(const cg of droneChargers){
+    if(Math.hypot(p.x-cg.x,p.z-cg.z)<CHG_R && p.y>cg.y && p.y<cg.y+CHG_H){ droneCharging=true;
+      droneBatAdd(CHG_RATE*dt);
+      cg.ring.scale.setScalar(1+Math.sin(now/120)*.08);
+      break;
+    }
+  }
+  // 🏁 โหมดแข่ง: ผ่านห่วงตามลำดับ (ห่วงถัดไปเท่านั้นที่นับ)
+  if(raceOn && droneGates.length){
+    const g=droneGates[raceIdx];
+    if(g && Math.hypot(p.x-g.x,p.y-g.y,p.z-g.z)<GATE_R){
+      raceIdx++; sfx.coin(); addCoins(3); sessionCoins+=3; renderHudTop();
+      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(18);
+      if(raceIdx>=droneGates.length) raceStop(true); else { gateHighlight(); showBanner(`🏁 ผ่านห่วง ${raceIdx}/6 · +3🪙`); }
+    }
+    renderRaceHud();
+  }
+
   // 🔋 แบตไหลลงตามเวลา · เตือนตอนต่ำ/หมด (ทุก 6 วิ ไม่ให้รก)
   const batWas=droneBat;
   droneBat=Math.max(0,droneBat-BAT_DRAIN*dt);
+  if(raceOn && droneBat<=0) raceStop(false);
   if(droneBat<=0 && batWas>0) showBanner('🔋 แบตหมด! บินอืดลง — เก็บตัวอักษรเพื่อชาร์จ');
   else if(droneBat<BAT_LOW && now-droneBatWarnAt>6000){ droneBatWarnAt=now; showBanner('🪫 แบตใกล้หมด — เก็บตัวอักษร/บินเฉียดเพื่อชาร์จ'); }
 
   if(hudInstEl){
     const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
     const bat=Math.round(droneBat);
-    const icon=bat<=0?'🪫':(bat<BAT_LOW?'🪫':'🔋');
-    hudInstEl.textContent=`🔴 REC · ▲ ${Math.max(0,p.y-DRONE_R).toFixed(0)}m · 🚀 ${spd} กม./ชม. · ${icon} ${bat}%${propBroken?' · 🌀 ใบพัดหัก':''}`;
+    const icon=droneCharging?'⚡':(bat<BAT_LOW?'🪫':'🔋');
+    hudInstEl.textContent=`🔴 REC · ▲ ${Math.max(0,p.y-DRONE_R).toFixed(0)}m · 🚀 ${spd} กม./ชม. · ${icon} ${bat}%`+
+      (droneCharging?' กำลังชาร์จ':'')+(propBroken?' · 🌀 ใบพัดหัก':'');
     hudInstEl.classList.toggle('bat-low', bat<BAT_LOW);
   }
   // 🌀 ใบพัดหมุนเร็วขึ้นตามคันเร่ง (ความเร็วราบ + ไต่ระดับขึ้น) · ชนแล้วสตอลช้าลงชั่วครู่ — เขียน DOM เฉพาะตอนค่าขยับจริง
@@ -6986,6 +7131,27 @@ function loop(){
   sendPos(false);
   drawMinimap();
   renderer.render(scene,camera);
+  if(shotWanted) grabShot();                       // 📸 ต้องอ่าน canvas ทันทีหลัง render (บัฟเฟอร์ไม่ถูกเก็บไว้)
+}
+/* 📸 เก็บภาพเฟรมที่เพิ่งเรนเดอร์ → เด้งการ์ดพรีวิว (บันทึกลงเครื่องได้) */
+function grabShot(){
+  shotWanted=false;
+  let url='';
+  try{ url=renderer.domElement.toDataURL('image/jpeg',.88); }catch(e){ toast('📸 บันทึกภาพไม่ได้'); return; }
+  if(photoImgEl) photoImgEl.src=url;
+  if(photoEl) photoEl.classList.add('on');
+  if(flashEl){ flashEl.classList.remove('on'); void flashEl.offsetWidth; flashEl.classList.add('on');
+               setTimeout(()=>flashEl&&flashEl.classList.remove('on'),260); }
+  sfx.coin();
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(15);
+}
+function savePhoto(){
+  if(!photoImgEl||!photoImgEl.src) return;
+  const a=document.createElement('a');
+  a.href=photoImgEl.src;
+  a.download='vocabworld-drone-'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.jpg';
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('📥 บันทึกภาพลงเครื่องแล้ว');
 }
 
 /* ============================================================
@@ -7148,6 +7314,11 @@ function start(md){
     camera.position.set(0,10,0);                   // เริ่มลอยเหนือลานกลาง (ลานว่าง gx=gz=0) รอบตัวเป็นตึกร้าง
     hVel={x:0,y:0,z:0}; hCol=0; hHitAt=0; hWarnLvl=0; hTiltF=0; hTiltS=0;
     droneBat=100; droneBatWarnAt=0; propBroken=''; propStallUntil=0;   // 🔋🌀 เข้าใหม่ = แบตเต็ม ใบพัดครบ
+    droneChargers=worlds.drone.chargers||[]; droneGates=worlds.drone.gates||[];   // ⚡🏁 แท่นชาร์จ + ห่วงแข่ง
+    raceOn=false; raceIdx=0; droneCharging=false; shotWanted=false;
+    droneGates.forEach(g=>{ g.m.scale.setScalar(1); g.m.material.color.setHex(g.col); });
+    if(photoEl) photoEl.classList.remove('on');
+    renderRaceHud();
     if(propsEl){ propsEl.classList.remove('hit','broken-l','broken-r'); }
     if(hudInstEl) hudInstEl.classList.remove('bat-low');
     if(hudWarnEl) hudWarnEl.style.display='none';
@@ -7266,6 +7437,8 @@ function exitWorld(){
     const el=document.getElementById(id); if(el) el.style.display='none';
   });
   carStartOpen=false;
+  raceOn=false; renderRaceHud();                   // 🏁 ออกกลางแข่ง = ยกเลิกรอบ + ซ่อนป้าย
+  if(photoEl) photoEl.classList.remove('on');      // 📸 ปิดการ์ดพรีวิวภาพที่ค้าง
   netLeave();
   HSound.stopAll();
   HeliSound.stop();
