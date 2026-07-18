@@ -9,7 +9,8 @@ const ACCEL=13, DECEL=5.5, VMAX=55.6, VMAX_OFF=6.5, WHEEL_R=0.34;   // รอบ
 const DASH_LEN=4, DASH_GAP=5, DASH_W=0.28;  // 🛣️ รอบ 312: เส้นประกลางถนน — ยาวขีด/ช่องว่าง/ครึ่งกว้าง (m)
 const DOG_HIT_COIN=500, DOG_SPD=11, DOG_GAP_MS=9000;   // 🐕 รอบ 312: ชนหมาปรับ 500 · ความเร็ววิ่ง · เว้นระยะ spawn
 /* 🕳️⛰️ รอบ 315: หลุม/เนิน + เหิน + สปริง */
-const FEAT_SP=16, FEAT_FILL=0.9, FEAT_CELL=18;         // ระยะห่างจุดวาง/โอกาสวาง (คุม coverage ~60%)/ขนาดช่องแฮช (≥รัศมีสูงสุด)
+const FEAT_SP=16, FEAT_FILL=0.10, FEAT_CELL=18;        // รอบ 316: โอกาสวาง 0.9→0.10 = หลุม/เนิน ~10% ของเส้นทาง (ผู้ใช้ขอ)
+const DECAL_N=48, DECAL_R=110;                         // 🖼️ รอบ 316: ภาพหลุม/เนินแปะถนน — จำนวน pool / รัศมีรอบผู้เล่น
 const GRAV=22, IMPACT_MIN=3.5, LAUNCH_SPD=5, LAUNCH_VMAX=9;   // โน้มถ่วง · ลงแรงพอมีเสียง · เร็วพอเหิน · เพดานความเร็วเหิน (กันพุ่งสูงเกิน)
 const SUSP_K=55, SUSP_D=9, SUSP_KICK=0.22;             // สปริงโช้ก: อ่อนลง+เตะแรงขึ้น = ยวบเห็นชัด
 const ROAD_WIDE=3.6;                       // ตัวคูณความกว้างถนน (รอบ 301: ×2 จาก 1.8 — ผู้ใช้ขอกว้างขึ้นอีก 2 เท่า)
@@ -35,6 +36,7 @@ let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอ
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let dog=null, dogNextAt=0;                  // 🐕 รอบ 312: หมาวิ่งตัดถนน {grp,vx,vz,life}
 let feats=[], featBuckets=new Map();        // 🕳️⛰️ รอบ 315: หลุม/เนิน {x,z,r,h} (h>0=เนิน h<0=หลุม) + แฮชค้นเร็ว
+let decalPool=[], potTex=null, bumpTex=null, decalAt=0;   // 🖼️ รอบ 316: ภาพแปะถนน
 let bikeY=0, bikeVY=0, airborne=false, prevFollowVY=0, suspY=0, suspV=0;   // ความสูงรถ/ความเร็วดิ่ง/สถานะเหิน/สปริงโช้ก
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
@@ -403,6 +405,52 @@ function roadGroundY(x,z){
   let t=L2?((x-s.ax)*dx+(z-s.az)*dz)/L2:0; t=t<0?0:(t>1?1:t);
   return terrainAt(s.ax+dx*t, s.az+dz*t);
 }
+/* 🖼️ รอบ 316: ภาพหลุม/เนินแปะบนถนน (แบนราบ ไม่ลอย) — pool รีไซเคิลรอบผู้เล่น */
+function decalTex(pot){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128; const c=cv.getContext('2d');
+  if(pot){                                   // หลุม: วงมืดขอบขรุขระ + ก้อนหิน
+    const g=c.createRadialGradient(64,64,3,64,64,60);
+    g.addColorStop(0,'rgba(12,10,8,0.94)'); g.addColorStop(0.6,'rgba(28,23,18,0.72)'); g.addColorStop(1,'rgba(40,34,26,0)');
+    c.fillStyle=g; c.beginPath();
+    for(let a=0,first=1;a<6.283;a+=0.32,first=0){ const rr=50+Math.random()*12, x=64+Math.cos(a)*rr, y=64+Math.sin(a)*rr; first?c.moveTo(x,y):c.lineTo(x,y); }
+    c.closePath(); c.fill();
+    c.fillStyle='rgba(75,64,52,0.5)'; for(let i=0;i<9;i++){ c.beginPath(); c.arc(40+Math.random()*48,40+Math.random()*48,1.4+Math.random()*2,0,7); c.fill(); }
+  } else {                                    // เนิน: mound น้ำตาลอ่อน ไฮไลต์บน เงาล่าง
+    const g=c.createRadialGradient(64,52,6,64,64,60);
+    g.addColorStop(0,'rgba(158,128,86,0.6)'); g.addColorStop(0.7,'rgba(112,88,56,0.42)'); g.addColorStop(1,'rgba(92,72,46,0)');
+    c.fillStyle=g; c.beginPath(); c.arc(64,64,58,0,7); c.fill();
+    c.globalCompositeOperation='source-atop';
+    const g2=c.createLinearGradient(0,58,0,122); g2.addColorStop(0,'rgba(255,240,210,0.18)'); g2.addColorStop(0.5,'rgba(0,0,0,0)'); g2.addColorStop(1,'rgba(0,0,0,0.3)');
+    c.fillStyle=g2; c.fillRect(0,0,128,128); c.globalCompositeOperation='source-over';
+  }
+  return new THREE.CanvasTexture(cv);
+}
+function makeDecals(){
+  potTex=decalTex(true); bumpTex=decalTex(false);
+  const geo=new THREE.PlaneGeometry(2,2);
+  for(let i=0;i<DECAL_N;i++){
+    const m=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3,polygonOffsetUnits:-3}));
+    m.rotation.x=-Math.PI/2; m.position.y=0.2; m.renderOrder=1; m.visible=false; m.frustumCulled=false;
+    scene.add(m); decalPool.push(m);
+  }
+}
+function decalTick(){
+  if(!decalPool.length) return;
+  const cx=Math.floor(px/FEAT_CELL), cz=Math.floor(pz/FEAT_CELL), rng=Math.ceil(DECAL_R/FEAT_CELL);
+  let n=0;
+  outer:
+  for(let ox=-rng;ox<=rng;ox++)for(let oz=-rng;oz<=rng;oz++){
+    const a=featBuckets.get(featKey(cx+ox,cz+oz)); if(!a) continue;
+    for(const f of a){
+      if(Math.hypot(f.x-px,f.z-pz)>DECAL_R) continue;
+      const m=decalPool[n]; m.visible=true; m.position.set(f.x,0.2,f.z);
+      const s=f.r*0.92; m.scale.set(s,s,1);
+      const tex=f.h<0?potTex:bumpTex; if(m.material.map!==tex){ m.material.map=tex; m.material.needsUpdate=true; }
+      if(++n>=DECAL_N) break outer;
+    }
+  }
+  for(let i=n;i<DECAL_N;i++) decalPool[i].visible=false;
+}
 function buildRoads(){
   const D=window.MOTO_MAP;
   const posMinor=[], posMajor=[], posLine=[], posEdge=[], uvMinor=[], uvMajor=[];
@@ -430,43 +478,37 @@ function buildRoads(){
     }
     genFeatures(pts);   // 🕳️⛰️ วางหลุม/เนินตามถนนเส้นนี้
   });
-  /* ── PASS 2: geometry — sample terrainAt ต่อจุด (ถนนยุบ/นูนตามหลุม/เนินจริง) ── */
+  /* ── PASS 2: geometry — ถนนแบนราบ (รอบ 316: คืนแบน เส้นขาว+หญ้าแนบสนิท · หลุม/เนินสื่อด้วยฟิสิกส์รถ+ภาพแปะถนน) ── */
   roads.forEach(r=>{
     const pts=r.pts, major=r.major, hw=r.hw, yb=major?0.18:0.15;
-    let ta=terrainAt(pts[0],pts[1]);          // รอบ 315: terrain หัว segment รียูสจากท้าย segment ก่อน (ครึ่ง terrainAt)
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
-      const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz);
-      const tB=terrainAt(bx,bz);
-      if(L<0.5){ ta=tB; continue; }
+      const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.5) continue;
       const nx=-dz/L*hw, nz=dx/L*hw;
-      const ya=yb+ta, yB=yb+tB;
       const tgt=major?posMajor:posMinor;
-      tgt.push(ax+nx,ya,az+nz, ax-nx,ya,az-nz, bx+nx,yB,bz+nz,
-               ax-nx,ya,az-nz, bx-nx,yB,bz-nz, bx+nx,yB,bz+nz);
+      tgt.push(ax+nx,yb,az+nz, ax-nx,yb,az-nz, bx+nx,yb,bz+nz,
+               ax-nx,yb,az-nz, bx-nx,yb,bz-nz, bx+nx,yb,bz+nz);
       const uvt=major?uvMajor:uvMinor, S=ROAD_TEX_S;
       uvt.push((ax+nx)/S,(az+nz)/S, (ax-nx)/S,(az-nz)/S, (bx+nx)/S,(bz+nz)/S,
                (ax-nx)/S,(az-nz)/S, (bx-nx)/S,(bz-nz)/S, (bx+nx)/S,(bz+nz)/S);
-      const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ea=0.12+ta, eB=0.12+tB;
-      posEdge.push(ax+exx,ea,az+ezz, ax-exx,ea,az-ezz, bx+exx,eB,bz+ezz,
-                   ax-exx,ea,az-ezz, bx-exx,eB,bz-ezz, bx+exx,eB,bz+ezz);
-      ta=tB;
+      const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ey=0.12;
+      posEdge.push(ax+exx,ey,az+ezz, ax-exx,ey,az-ezz, bx+exx,ey,bz+ezz,
+                   ax-exx,ey,az-ezz, bx-exx,ey,bz-ezz, bx+exx,ey,bz+ezz);
     }
-    /* เส้นประกลางถนน — sample ความสูงหัว/ท้ายแต่ละขีด */
+    /* เส้นประกลางถนน (แบนราบ) */
     const period=DASH_LEN+DASH_GAP; let dashAcc=0;
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.01) continue;
-      const ux=dx/L,uz=dz/L,lx=-uz*DASH_W,lz=ux*DASH_W;
+      const ux=dx/L,uz=dz/L,lx=-uz*DASH_W,lz=ux*DASH_W,dy=0.21;
       let d=0;
       while(d<L){
         const phase=(dashAcc+d)%period;
         if(phase<DASH_LEN){
           const de=Math.min(L, d+(DASH_LEN-phase));
           const p0x=ax+ux*d,p0z=az+uz*d,p1x=ax+ux*de,p1z=az+uz*de;
-          const y0=0.22+terrainAt(p0x,p0z), y1=0.22+terrainAt(p1x,p1z);
-          posLine.push(p0x+lx,y0,p0z+lz, p0x-lx,y0,p0z-lz, p1x+lx,y1,p1z+lz,
-                       p0x-lx,y0,p0z-lz, p1x-lx,y1,p1z-lz, p1x+lx,y1,p1z+lz);
+          posLine.push(p0x+lx,dy,p0z+lz, p0x-lx,dy,p0z-lz, p1x+lx,dy,p1z+lz,
+                       p0x-lx,dy,p0z-lz, p1x-lx,dy,p1z-lz, p1x+lx,dy,p1z+lz);
           d=de;
         } else { d+=(period-phase); }
       }
@@ -1060,6 +1102,7 @@ function build(){
   }
   buildScenery();
   dog={grp:makeDog(),vx:0,vz:0,life:0,hit:false};   // 🐕 รอบ 312: สร้างหมาครั้งเดียว รีไซเคิลตลอด
+  makeDecals();                                     // 🖼️ รอบ 316: pool ภาพหลุม/เนิน
   built=true;
 }
 function fit(){
@@ -1170,6 +1213,7 @@ function frame(dt,now){
   /* เกม */
   collectTick(); relocTick(now); dogTick(dt,now); gpsTick(); miniTick();
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); postTick(); }
+  if(now-decalAt>450){ decalAt=now; decalTick(); }   // 🖼️ รอบ 316: อัปเดตภาพหลุม/เนินรอบผู้เล่น
   /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง · รอบ 315: เหินสูง = เงาเล็ก+จาง */
   if(shadowEl){
     const air=Math.max(0,bikeY);
@@ -1220,6 +1264,7 @@ function start(){
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
   bikeY=0; bikeVY=0; airborne=false; prevFollowVY=0; suspY=0; suspV=0;   // 🕳️⛰️ รอบ 315
+  decalAt=0;                                                             // 🖼️ รอบ 316
   if(dog) dog.grp.visible=false; dogNextAt=performance.now()+DOG_GAP_MS;   // 🐕 รอบ 312
   scatterTrees(true); scatterClouds(true);
   fit();
