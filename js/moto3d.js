@@ -155,10 +155,19 @@ const CSS=`
   text-shadow:0 1px 2px rgba(120,40,0,.6)}
 #moto-knob span{opacity:.5}
 #moto-throttle{position:absolute;left:74.5%;top:40%;width:19.5%;height:48%;border-radius:50%;border:none;cursor:pointer;
-  background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin}
-#moto-throttle:active{background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.22),rgba(255,255,255,0) 62%)}
-#moto-throttle .m-ico{font-size:4.4vmin;opacity:.5;pointer-events:none;text-shadow:0 1px 3px rgba(0,60,70,.6)}
-#moto-throttle .m-lb{font-size:2.3vmin;font-weight:900;opacity:.5;pointer-events:none;text-shadow:0 1px 2px rgba(0,60,70,.6)}
+  background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin;
+  transform-origin:50% 50%;transition:transform .2s cubic-bezier(.34,1.56,.64,1),box-shadow .2s ease}
+/* 🔘 รอบ 308: ปุ่มเร่งยุบลงตอนกด (คลาส .pressing คุมจาก frame ตาม thr — ครอบทั้งแตะ+คีย์ W)
+   กด = snap ยุบเร็ว (ease-out .08s) + เงา inset จมลง · ปล่อย = เด้งคลายตัวสปริง (bezier overshoot .2s) */
+#moto-throttle.pressing{transform:scale(.84);transition:transform .08s ease-out,box-shadow .08s ease;
+  background:radial-gradient(circle at 50% 44%,rgba(0,0,0,.32),rgba(0,0,0,0) 66%);
+  box-shadow:inset 0 .6vmin 1.6vmin rgba(0,0,0,.45)}
+#moto-throttle .m-ico{font-size:4.4vmin;opacity:.5;pointer-events:none;text-shadow:0 1px 3px rgba(0,60,70,.6);
+  transition:transform .12s ease,opacity .12s ease}
+#moto-throttle .m-lb{font-size:2.3vmin;font-weight:900;opacity:.5;pointer-events:none;text-shadow:0 1px 2px rgba(0,60,70,.6);
+  transition:opacity .12s ease}
+#moto-throttle.pressing .m-ico{opacity:.85;transform:translateY(.35vmin) scale(.94)}
+#moto-throttle.pressing .m-lb{opacity:.85}
 /* ---------- HUD ในจอ ---------- */
 #moto-word{position:absolute;left:1.6%;top:2.5%;display:flex;gap:.45vmin;align-items:center;flex-wrap:wrap;max-width:70%}
 #moto-word .m-th{color:#ffe9a8;font-size:1.9vmin;font-weight:800;margin-left:.8vmin;text-shadow:0 1px 3px #000}
@@ -865,6 +874,7 @@ function frame(dt,now){
   }
   steer=steerCtl;
   thr=(padThr||kThr)?1:0;
+  if(thrEl) thrEl.classList.toggle('pressing',!!thr);   // 🔘 รอบ 308: ปุ่มเร่งยุบ/เด้งตามการกดจริง (แตะ+คีย์ W)
   const road=onRoad(px,pz);
   const vmax=road?VMAX:VMAX_OFF;
   if(thr){ spd+=ACCEL*dt; } else { spd-=DECEL*dt; }
