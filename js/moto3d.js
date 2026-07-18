@@ -222,22 +222,24 @@ function buildRoads(){
           if(arr[arr.length-1]!==si) arr.push(si);
         }
       }
-      /* ribbon 2 สามเหลี่ยม */
-      const nx=-dz/L*hw, nz=dx/L*hw, y=major?0.06:0.04;
+      /* ribbon 2 สามเหลี่ยม (⚠️ รอบ 296: ยกสูงขึ้น 0.15+ กัน z-fight พื้นหญ้าระยะไกล) */
+      const nx=-dz/L*hw, nz=dx/L*hw, y=major?0.18:0.15;
       const tgt=major?posMajor:posMinor;
       tgt.push(ax+nx,y,az+nz, ax-nx,y,az-nz, bx+nx,y,bz+nz,
                ax-nx,y,az-nz, bx-nx,y,bz-nz, bx+nx,y,bz+nz);
       if(major){  // เส้นกลางเหลืองถนนใหญ่
         const lw=0.35, lx=-dz/L*lw, lz=dx/L*lw;
-        posLine.push(ax+lx,0.08,az+lz, ax-lx,0.08,az-lz, bx+lx,0.08,bz+lz,
-                     ax-lx,0.08,az-lz, bx-lx,0.08,bz-lz, bx+lx,0.08,bz+lz);
+        posLine.push(ax+lx,0.22,az+lz, ax-lx,0.22,az-lz, bx+lx,0.22,bz+lz,
+                     ax-lx,0.22,az-lz, bx-lx,0.22,bz-lz, bx+lx,0.22,bz+lz);
       }
     }
   });
+  /* ⚠️ รอบ 296 บั๊ก "ไม่เห็นถนนเลย": winding สามเหลี่ยมหันคว่ำลง + FrontSide → โดน backface culling
+     มองจากบนล่องหนทั้งแผนที่ (minimap ปกติเพราะวาด 2D จากข้อมูล) → ต้อง DoubleSide เสมอ */
   const mk=(arr,color)=>{
     const g=new THREE.BufferGeometry();
     g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(arr),3));
-    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color}));
+    const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide}));
     m.frustumCulled=false; scene.add(m); return m;
   };
   mk(posMinor,0x9aa3ad);          // ถนนเล็ก — เทาอ่อน
@@ -472,9 +474,9 @@ function buildSchool(cx,cz,face){
 }
 function buildScenery(){
   const D=window.MOTO_MAP;
-  /* พื้นหญ้าสดใส */
+  /* พื้นหญ้าสดใส — polygonOffset ดันพื้นถอยใน depth buffer ให้ถนนชนะเสมอ (กัน z-fight ระยะไกล) */
   const g=new THREE.Mesh(new THREE.PlaneGeometry(64000,64000),
-    new THREE.MeshLambertMaterial({color:0x8fd06c}));
+    new THREE.MeshLambertMaterial({color:0x8fd06c, polygonOffset:true, polygonOffsetFactor:2, polygonOffsetUnits:2}));
   g.rotation.x=-Math.PI/2; g.position.y=-0.05; scene.add(g);
   /* 🏫 โรงเรียนบ้านโพธิ์สวัสดิ์ — สร้างตามคลิปจริงของผู้ใช้ (รอบ 295):
      บันไดกระเบื้องลายไม้มันวาว+ผนังม่วง+ราวโครเมียม · ช้างน้ำเงินในสวน · สนามเด็กเล่น · ธงไตรรงค์
@@ -685,7 +687,7 @@ function build(){
   scene=new THREE.Scene();
   scene.background=new THREE.Color(0x9fdcf7);
   scene.fog=new THREE.Fog(0x9fdcf7,220,950);
-  camera=new THREE.PerspectiveCamera(62,16/9,.1,1600);
+  camera=new THREE.PerspectiveCamera(62,16/9,.4,1600);   // near .4 เพิ่มความละเอียด depth ระยะไกล (กันถนนกะพริบ)
   scene.add(new THREE.AmbientLight(0xffffff,.75));
   const sun=new THREE.DirectionalLight(0xfff4d6,.85); sun.position.set(.4,1,.6); scene.add(sun);
   /* จุดสตาร์ท = จุดบนถนนที่ใกล้โรงเรียน (0,0) ที่สุด */
