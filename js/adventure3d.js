@@ -1592,7 +1592,30 @@ function buildScene(md){
     const baseH=new THREE.Mesh(new THREE.RingGeometry(3.4,4.2,24),
       new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
     baseH.rotation.x=-Math.PI/2; baseH.position.set(0,.06,0); sc.add(baseH);
-    worlds[md]={scene:sc, trees:tr, buildings:list, ads, lights:{hemi,sun}};   // 🌙 lights ใช้หรี่ตอนกลางคืน
+    // ⭐🌕 ดาว+พระจันทร์ (รอบ 353) — โผล่เฉพาะกลางคืน (fogUpdate คุม opacity/visible) · fog:false ไม่งั้นหมอกกลืน
+    const sp=[];
+    for(let i=0;i<190;i++){
+      const a=rnd()*Math.PI*2, e=.15+rnd()*.8, R=170;      // กระจายบนโดมฟ้า มุมเงย .15-.95 rad
+      sp.push(Math.cos(a)*Math.cos(e)*R, Math.sin(e)*R, Math.sin(a)*Math.cos(e)*R);
+    }
+    const starG=new THREE.BufferGeometry();
+    starG.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));
+    const stars=new THREE.Points(starG,new THREE.PointsMaterial({color:0xdfe8ff,size:1.7,
+      sizeAttenuation:false,transparent:true,opacity:0,fog:false,depthWrite:false}));
+    stars.visible=false; sc.add(stars);
+    const moon=new THREE.Mesh(new THREE.CircleGeometry(7,24),
+      new THREE.MeshBasicMaterial({color:0xf2eeda,transparent:true,opacity:0,fog:false,depthWrite:false}));
+    moon.position.set(-90,95,-120); moon.lookAt(0,0,0); moon.visible=false; sc.add(moon);
+    // 🚨 ไฟกันชนกะพริบบนยอดตึกสูงสุด 6 หลัง (รอบ 353) — แบบตึกจริง ช่วยกะระยะยอดตึกตอนมืด
+    const beacons=[];
+    [...list].sort((a,b)=>b.h-a.h).slice(0,6).forEach((b,i)=>{
+      const m=new THREE.Mesh(new THREE.SphereGeometry(.34,8,6),
+        new THREE.MeshBasicMaterial({color:0xff2d2d,transparent:true,opacity:0,fog:false}));
+      m.position.set(b.x,b.h+.55,b.z); m.visible=false; sc.add(m);
+      beacons.push({m,ph:i*.37});                    // ph = เฟสคนละจังหวะ ไม่วาบพร้อมกัน
+    });
+    worlds[md]={scene:sc, trees:tr, buildings:list, ads, lights:{hemi,sun},
+                night:{stars,moon}, beacons};        // 🌙 ของตกแต่งกลางคืน (fogUpdate/tickHeli คุม)
     return;
   }else if(md==='drone'){
     // 🛸 เมืองตึกร้าง: ตึกกลวงมีหน้าต่าง บินลอดเข้าไปเก็บตัวอักษรในห้องต่างๆ
@@ -6280,6 +6303,49 @@ function setHeliLight(on){
     scene.add(heliLight); scene.add(heliLight.target);
   }else if(heliLight){ scene.remove(heliLight); scene.remove(heliLight.target); }
 }
+/* ============================================================
+   🛩️📦 ภารกิจไปรษณีย์กลางคืน (รอบ 353) — เฉพาะช่วงฟ้ามืด (heliNight>.5)
+   สุ่มดาดฟ้าเป้าหมาย → เสาแสงเขียวพัลส์มองเห็นไกล → บินไปลงจอด = +เหรียญ → เป้าใหม่วนไป
+   ใช้ระบบที่มีอยู่ครบ: วงเป้า/ติ๊ดช่วยเล็ง/โบนัสลงนุ่ม ทำงานร่วมกันเอง
+   ============================================================ */
+const MAIL_COIN=25, MAIL_FIRST_MS=15000, MAIL_GAP_MS=9000;   // เหรียญ/ชิ้น · หน่วงก่อนงานแรก · พักระหว่างงาน
+let mailOn=false, mailTgt=null, mailNextAt=0, mailCount=0, mailMk=null;
+function mailStart(){
+  const c=buildings.filter(b=>!mailTgt||b!==mailTgt.b);
+  const b=c[Math.floor(Math.random()*c.length)];
+  if(!b) return;
+  if(!mailMk){                                     // มาร์กเกอร์สร้างครั้งเดียว (ค้างใน scene แค่ย้าย/ซ่อน)
+    const g=new THREE.Group();
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.15,26,12,1,true),
+      new THREE.MeshBasicMaterial({color:0x39ffb2,transparent:true,opacity:.26,
+        side:THREE.DoubleSide,depthWrite:false,fog:false}));
+    col.position.y=13; g.add(col);
+    const ring=new THREE.Mesh(new THREE.RingGeometry(1.6,2.4,20),
+      new THREE.MeshBasicMaterial({color:0x39ffb2,transparent:true,opacity:.9,
+        side:THREE.DoubleSide,depthWrite:false}));
+    ring.rotation.x=-Math.PI/2; ring.position.y=.2; g.add(ring);
+    g._col=col; g._ring=ring;
+    mailMk=g; scene.add(g);
+  }
+  mailMk.visible=true;
+  mailMk.position.set(b.x,b.h,b.z);
+  mailTgt={b}; mailOn=true;
+  ATC.say('Night mail mission, captain! Deliver to the glowing green rooftop.');
+  showBanner('🛩️📦 ภารกิจไปรษณีย์กลางคืน! บินไปลงจอดดาดฟ้าแสงเขียว');
+}
+function mailStop(){ mailOn=false; mailTgt=null; if(mailMk) mailMk.visible=false; }
+function mailTick(now){
+  if(!HeliSound.ready) return;
+  if(heliNight<.5){ if(mailOn) mailStop(); return; }   // ฟ้าสว่างแล้ว = จบกะไปรษณีย์
+  if(!mailOn){
+    if(!mailNextAt) mailNextAt=now+MAIL_FIRST_MS;
+    if(now>=mailNextAt) mailStart();
+    return;
+  }
+  const p=.5+.5*Math.sin(now/320);                  // เสาแสงหายใจ มองแล้วรู้ว่าเป็นเป้า
+  mailMk._col.material.opacity=.14+.2*p;
+  mailMk._ring.material.opacity=.5+.45*p;
+}
 function tickHeli(dt,now){
   // ---- อ่านอินพุต ----
   let fw=0,sd=0,yawIn=0;
@@ -6341,6 +6407,17 @@ function tickHeli(dt,now){
         hLanded=true; hVel={x:0,y:0,z:0}; sfx.select(); HeliSound.thud(.4);
         if(!softLandBonus(impact,now) && Math.random()<.35)
           ATC.say('Beautiful landing, captain. Very smooth!');   // 📻 หอชมเป็นครั้งคราว (ถ้าไม่ได้โบนัสอยู่แล้ว)
+        // 🛩️📦 ลงจอดบนดาดฟ้าเป้าไปรษณีย์ = ส่งพัสดุสำเร็จ (ต้องจอดบน "ยอดตึกนั้นจริง" ไม่ใช่พื้นข้างตึก)
+        if(mailOn && mailTgt){
+          const mb=mailTgt.b;
+          if(Math.abs(nx-mb.x)<=mb.w/2+.5 && Math.abs(nz-mb.z)<=mb.d/2+.5 && Math.abs(floor-mb.h)<.5){
+            mailCount++;
+            addCoins(MAIL_COIN); sessionCoins+=MAIL_COIN; renderHudTop();
+            showBanner(`📦 ส่งพัสดุสำเร็จ! +${MAIL_COIN}🪙 · คืนนี้ส่งแล้ว ${mailCount} ชิ้น`);
+            sfx.levelup(); ATC.say('Package delivered! Excellent work, captain.');
+            mailStop(); mailNextAt=now+MAIL_GAP_MS;    // พักครู่แล้วสุ่มดาดฟ้าใหม่
+          }
+        }
       }
       hVel.y=Math.max(0,hVel.y);
       if(hLanded){ hVel.x=0; hVel.z=0; }
@@ -6408,7 +6485,8 @@ function tickHeli(dt,now){
       const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
       const stk=(state.heliStreak||0)>0?` · 🎖️ สตรีค ${state.heliStreak}`:'';
       const fog=heliFog>.35?' · 🌫️ หมอกลง พึ่งกล้อง':(heliNight>.6?' · 🌙 บินกลางคืน':'');
-      hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk}${fog} ${hLanded?'· 🛬 จอดแล้ว':''}`;
+      const mail=mailOn&&mailTgt?` · 📦 ${Math.round(Math.hypot(mailTgt.b.x-nx,mailTgt.b.z-nz))} ม.`:'';
+      hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk}${fog}${mail} ${hLanded?'· 🛬 จอดแล้ว':''}`;
     }
   }
   // 🎚️🌬️ ส่งสภาพแวดล้อมให้ระบบเสียง: สูงเท่าไหร่ · เร็วเท่าไหร่ · ใกล้ตึกแค่ไหน
@@ -6416,7 +6494,17 @@ function tickHeli(dt,now){
                                    near:wallDist, side:wallSide});
   rainTick(now);                                              // 🌧️ ตารางฝนตกเป็นช่วงๆ
   tickDrops(dt,Math.hypot(hVel.x,hVel.z));                    // 💧 หยดน้ำไหล/ปลิวตามความเร็ว
-  fogUpdate(now);                                             // 🌫️ หมอกตอนเช้าตามเวลาจริง
+  fogUpdate(now);                                             // 🌫️🌙 หมอกเช้า+กลางคืนตามเวลาจริง
+  // 🚨 ไฟกันชนยอดตึกกะพริบตอนกลางคืน (วาบสั้น 16% ของคาบ 0.9 วิ คนละเฟส — แบบตึกจริง)
+  const bcs=worlds.heli&&worlds.heli.beacons;
+  if(bcs){
+    const bOn=heliNight>.25;
+    for(const b of bcs){
+      b.m.visible=bOn;
+      if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12;
+    }
+  }
+  mailTick(now);                                              // 🛩️📦 ภารกิจไปรษณีย์ (ทำงานเฉพาะกลางคืน)
   // 🎯 ระบบช่วยจัดกึ่งกลางเป้า (รอบ 350) — เหมือนเซนเซอร์ถอยรถ: ยิ่งใกล้เป้ายิ่งติ๊ดถี่ ตรงเป้า=รัว+โทนสูง
   assistTgt=null;
   if(!hLanded && HeliSound.ready){
@@ -6586,6 +6674,16 @@ function fogUpdate(now){
   // หรี่แสงเมือง (ref เก็บไว้ตอน buildScene) — ไม่มืดสนิท ยังเห็นเงาตึกตัดฟ้า
   const L=worlds.heli&&worlds.heli.lights;
   if(L){ L.hemi.intensity=1.0*(1-.72*heliNight); L.sun.intensity=.7*(1-.85*heliNight); }
+  // ⭐🌕 ดาว+พระจันทร์: จางเข้า-ออกตามระดับความมืด (หมอกหนาก็ยังเห็น — fog:false แต่ลด opacity ลงหน่อยให้เนียน)
+  const N=worlds.heli&&worlds.heli.night;
+  if(N){
+    const on=heliNight>.35;
+    N.stars.visible=N.moon.visible=on;
+    if(on){
+      N.stars.material.opacity=heliNight*.9*(1-heliFog*.6);
+      N.moon.material.opacity=heliNight*.95*(1-heliFog*.5);
+    }
+  }
 }
 /* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
 const RAIN_MAX=90, RAIN_SPAWN=26;                // จำนวนหยดสูงสุด · หยด/วินาที ตอนฝนตก
@@ -8516,6 +8614,7 @@ function start(md){
     drops=[]; rainOn=false; rainNextAt=0; bellyRect=null;  // 💧📹 ล้างสภาพอากาศ/กล้องของรอบก่อน
     assistTgt=null; hAirAt=0; _lightHintAt=0;              // 🎯🏆 ล้างระบบช่วยเล็ง/โบนัสลงนุ่มของรอบก่อน
     sLandTot=0; sLandPerf=0; sLandSoft=0;                  // 📊 เริ่มนับสถิติรอบบินใหม่ (สรุปตอนออก)
+    mailStop(); mailNextAt=0; mailCount=0;                 // 🛩️📦 ล้างภารกิจไปรษณีย์ของรอบก่อน
     sunUpdate();                                          // 🌅 ตั้งดวงอาทิตย์ตามเวลาจริงตอนเข้าเล่น
     layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   }
@@ -8583,7 +8682,8 @@ function exitWorld(){
   if(M && M.mecha && (sessionWords>0 || mShotsFired>0))
     toast(`🤖 จบภารกิจหุ่น! ${mechaRecapLine()}`);
   else if(M && M.heli && sLandTot>0)                    // 📊 รอบ 351: สรุปรอบบิน (แพตเทิร์นเดียวกับ mechaRecapLine)
-    toast(`🚁 จบรอบบิน! 🛬 ลงจอด ${sLandTot} ครั้ง · 🏆 เพอร์เฟกต์ ${sLandPerf} · 👍 นุ่ม ${sLandSoft} · 📖 ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
+    toast(`🚁 จบรอบบิน! 🛬 ลงจอด ${sLandTot} ครั้ง · 🏆 เพอร์เฟกต์ ${sLandPerf} · 👍 นุ่ม ${sLandSoft}`+
+      (mailCount>0?` · 📦 ส่งพัสดุ ${mailCount}`:'')+` · 📖 ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
   else if(sessionWords>0 || sessionCoins>0)
     toast(`${M.emoji} กลับจาก${M.label} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
 }
@@ -8637,6 +8737,11 @@ window.Adventure3D={
                         get night(){return +heliNight.toFixed(2)},
                         get lightLv(){const L=worlds.heli&&worlds.heli.lights;return L?{hemi:+L.hemi.intensity.toFixed(2),sun:+L.sun.intensity.toFixed(2)}:null},
                         get landStats(){return {tot:sLandTot,perf:sLandPerf,soft:sLandSoft}},
+                        // ⭐🚨📦 รอบ 353: ของกลางคืน
+                        get sky(){const N=worlds.heli&&worlds.heli.night;return N?{stars:N.stars.visible,starOp:+N.stars.material.opacity.toFixed(2),moon:N.moon.visible}:null},
+                        get beacons(){const B=worlds.heli&&worlds.heli.beacons;return B?B.map(b=>({vis:b.m.visible,op:+b.m.material.opacity.toFixed(2)})):null},
+                        get mail(){return {on:mailOn,count:mailCount,tgt:mailTgt?{x:mailTgt.b.x,z:mailTgt.b.z,h:mailTgt.b.h,w:mailTgt.b.w,d:mailTgt.b.d}:null}},
+                        mailGo:mailStart, mailEnd:mailStop,
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
