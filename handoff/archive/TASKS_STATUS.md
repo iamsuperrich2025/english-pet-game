@@ -346,3 +346,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 307b:** 🔊 **เสียงเร่งเครื่องมอไซค์ช่วงสะอาด** (ผู้ใช้: accel มี noise จริงติดมา เดินเบา/decel โอเคแล้ว) — วิเคราะห์ spectral flatness ทั้งไฟล์ (feat3.npy): accel เดิม 377.2s flatness 0.013-0.047 = broadband noise · หาช่วงเบิ้ลรอบสะอาด → **93.65s** (centroid 296→445 ไต่เรียบ 2.05s flatness 0.0008 เท่า idle) ตัดใหม่ทับ `eng_accel.wav` 64KB · **⚠️ .wav = sw cache-first (sw.js:69)** → บัมพ์ URL `eng_accel.wav?v=307` ใน ENG_FILES กันเครื่องเก่าติดไฟล์เดิม · ยืนยัน browser: buf 2.05s / ZCR 469Hz (ฮาร์มอนิก ไม่ใช่ซ่า) / ยิงตอน thr / ไม่มี error · deploy `.301` · **เครื่องมือ:** moto.npy(raw) + feat3.npy(db/cen/flat) ใน scratchpad — หาเสียงช่วงอื่นใช้ flatness เป็นเกณฑ์ noise ได้
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 308:** 🔘 **ปุ่มเร่งยุบ/เด้ง** (ผู้ใช้: ปุ่มวงกลมขวาให้เหมือนถูกกดลง+คลายตัวตอนปล่อย) — moto3d.js CSS: `#moto-throttle.pressing` = `scale(.84)`+เงา inset จม+ไอคอนเลื่อนลง · กด snap เร็ว (.08s ease-out) ปล่อยเด้งสปริง (.2s bezier overshoot) · frame() `thrEl.classList.toggle('pressing',!!thr)` ครอบทั้งแตะ+คีย์ W · ยืนยัน (ปิด transition วัดค่าปลายทาง เพราะแท็บ throttle): กด scale .84 เงา .45 inset ไอคอน translateY+ย่อ / ปล่อย scale 1 เงา none / ไม่มี error · deploy `.302`
