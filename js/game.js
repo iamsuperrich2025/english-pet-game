@@ -250,6 +250,7 @@ function showProgressReport(){
     {ic:'🎯', label:'บินเฉียดสุดๆ', unit:'ครั้ง', count:state.daredevilCount||0, tiers:DAREDEVIL_TIERS, ui:DAREDEVIL_TIER_UI, ef:daredevilEmoji},
     {ic:'🪟', label:'ทุบกระจกตึกร้าง', unit:'บาน', count:state.glassCount||0,     tiers:GLASS_TIERS,     ui:GLASS_TIER_UI,     ef:glassEmoji},
     {ic:'🪶', label:'Perfect landing (โลกเฮลิฯ)', unit:'ครั้ง', count:state.perfLandCount||0, tiers:SOFTLAND_TIERS, ui:SOFTLAND_TIER_UI, ef:softLandEmoji},
+    {ic:'🪂', label:'เก็บตัวอักษรกลางอากาศ (วิงสูท)', unit:'ตัว', count:state.airLetterCount||0, tiers:AIRL_TIERS, ui:AIRL_TIER_UI, ef:airLetterEmoji},
     {ic:'🏅', label:'เล่นต่ออีกรอบ', unit:'รอบ',  count:state.diligentCount||0,  tiers:DILIGENT_TIERS,  ui:DILIGENT_TIER_UI,  ef:diligentEmoji},
   ];
   const trophyHtml = trophyDefs.map(d=>{
@@ -407,6 +408,12 @@ const SOFTLAND_TIERS = [[10,1],[25,2],[50,3]];
 const SOFTLAND_TIER_UI = ['', '🪶 เข็มมือนุ่มดั่งขนนก', '🕊️ เข็มนักร่อนพิราบขาว', '🦅 เข็มราชันอินทรี'];
 function softLandEmoji(b){ return ['','🪶','🕊️','🦅'][b||0] || ''; }
 
+/* 🪂 รอบ 355: เข็มนักดิ่งพสุธา (โลกเฮลิฯ) — สะสมจากตัวอักษรที่เก็บ "กลางอากาศ" ด้วยวิงสูท (state.airLetterCount ถาวร)
+   ครบ 25=🪂 · 60=🛫 · 120=🦸 — ได้แล้วไม่หาย ติดท้ายชื่อให้เพื่อนเห็นทุกโลก (นับ+ประกาศใน adventure3d.js) */
+const AIRL_TIERS = [[25,1],[60,2],[120,3]];
+const AIRL_TIER_UI = ['', '🪂 เข็มนักดิ่งพสุธา', '🛫 เข็มเหินเวหา', '🦸 เข็มฮีโร่เวหา'];
+function airLetterEmoji(b){ return ['','🪂','🛫','🦸'][b||0] || ''; }
+
 /* 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่นยนต์) — สะสมจากจำนวนบอสที่ล้มสำเร็จ (state.mechaBoss ถาวร)
    ครบ 3=⚔️ · 10=🛡️ · 25=🤖 — ได้แล้วไม่หาย ติดท้ายชื่อให้เพื่อนเห็นทุกโลก (นับ+ประกาศใน adventure3d.js) */
 const MECHABOSS_TIERS = [[3,1],[10,2],[25,3]];
@@ -433,6 +440,7 @@ function badgeSuffix(){
     + diligentEmoji(state.diligentBadge)
     + mechaBossEmoji(state.mechaBossBadge)             // 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่น)
     + softLandEmoji(state.perfLandBadge)               // 🪶 รอบ 351: เข็มมือนุ่ม (Perfect landing โลกเฮลิฯ)
+    + airLetterEmoji(state.airLetterBadge)             // 🪂 รอบ 355: เข็มนักดิ่งพสุธา (เก็บตัวอักษรกลางอากาศ)
     + bffEmoji(state.bffBadge);                        // 🐾 รอบ 323: เข็มเพื่อนซี้ (ลูบน้องติดกันหลายวัน)
 }
 
@@ -448,10 +456,11 @@ const BADGE_META = {
   '⚔️':{n:'เข็มนักล่าบอส',p:1}, '🛡️':{n:'เข็มอัศวินเหล็ก',p:2}, '🤖':{n:'เข็มเจ้าสมรภูมิ',p:3},   // 🤖 รอบ 229: เข็มโลกหุ่น
   '🪶':{n:'เข็มมือนุ่มดั่งขนนก',p:1}, '🕊️':{n:'เข็มนักร่อนพิราบขาว',p:2}, '🦅':{n:'เข็มราชันอินทรี',p:3},   // 🪶 รอบ 351: Perfect landing โลกเฮลิฯ
   '🐾':{n:'เข็มเพื่อนซี้',p:1}, '💞':{n:'เข็มเพื่อนแท้',p:2}, '🫶':{n:'เข็มคู่หูตลอดกาล',p:3},   // 🐾 รอบ 323 (ตกหล่น — เติมรอบ 351)
+  '🪂':{n:'เข็มนักดิ่งพสุธา',p:1}, '🛫':{n:'เข็มเหินเวหา',p:2}, '🦸':{n:'เข็มฮีโร่เวหา',p:3},   // 🪂 รอบ 355: วิงสูทโลกเฮลิฯ
 };
 /* ⚠️ regex นี้ต้องมีอิโมจิเข็ม "ครบทุกสาย" ไม่งั้นเข็มท้ายชื่อโดนมองเป็นส่วนหนึ่งของชื่อ
-   (รอบ 351: เติม 🪟💥🥽(รอบ337) · 🐾💞🫶(รอบ323) ที่ตกหล่น + 🪶🕊️🦅 ใหม่) */
-const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅)+$/u;
+   (รอบ 351: เติม 🪟💥🥽(รอบ337) · 🐾💞🫶(รอบ323) ที่ตกหล่น + 🪶🕊️🦅 · รอบ 355: 🪂🛫🦸) */
+const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸)+$/u;
 function splitNameBadges(full){                        // แยก "ชื่อสะอาด" กับ "เข็มท้ายชื่อ"
   full = String(full || '');
   const m = full.match(NAME_BADGE_RE);

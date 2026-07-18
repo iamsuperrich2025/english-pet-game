@@ -627,7 +627,11 @@ function makePeerSprite(name, av){
     c.fillStyle='#fff'; c.font='bold 19px Arial'; c.textAlign='center'; c.textBaseline='middle';
     let nm=(name||'เพื่อน'); if(nm.length>9) nm=nm.slice(0,8)+'…';
     c.fillText(nm,64,18);
-    if(flyMode){ c.font='96px serif'; c.fillText(M.drone?'🛸':'🚁',64,105); }
+    if(flyMode){
+      // 🚁 รอบ 355: โลกเฮลิฯ อ่านเฟสของเพื่อนจาก av ('h_w'=เดิน 'h_r'=นั่งโดยสาร 'h_g'=วิงสูท 'h_p'=ขับ)
+      const em=M.drone?'🛸':(av&&av.slice(0,2)==='h_'?({w:'🚶',r:'💺',g:'🪂',p:'🚁'}[av.charAt(2)]||'🚁'):'🚁');
+      c.font='96px serif'; c.fillText(em,64,105);
+    }
     else if(img){ c.drawImage(img,14,36,100,130); }
     else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,105); }
     tex.needsUpdate=true;
@@ -2441,8 +2445,10 @@ function sendPos(force){
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
-    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge),   // 🎖️⚡🎯🏅🪶 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน+มือนุ่ม ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
-    av:((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
+    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge)+airLetterEmoji(state.airLetterBadge),   // 🎖️⚡🎯🏅🪶🪂 เข็มติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
+    // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก · 🚁 รอบ 355: โลกเฮลิฯ ยัดเฟสเดินเท้าลง av แทน ('h_w/r/g/p' ≤8 ผ่าน rules เดิม ไม่ต้อง publish — makePeerSprite ฝั่งรับไม่เคยใช้ av ในโหมดบินอยู่แล้ว)
+    av:M.heli?('h_'+({walk:'w',lift:'w',ride:'r',wing:'g',pilot:'p'}[hPhase]||'p'))
+      :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||'')),
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
@@ -2507,6 +2513,12 @@ function onPeerData(snap){
     scene.remove(p.spr); disposeBlockPeer(p.spr);
     p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid):makeBlockWalkPeer(d.n,d.av,uid);
     p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
+    scene.add(p.spr);
+  }else if(M.heli && d.av!==p.av){
+    // 🚁 รอบ 355: เพื่อนเปลี่ยนเฟส (เดิน→นั่ง→วิงสูท→ขับ) → วาด sprite ใหม่ให้ตรงอิริยาบถ
+    scene.remove(p.spr); p.spr.material.dispose();
+    p.av=d.av; p.spr=makePeerSprite(d.n,d.av);
+    p.spr.position.set(p.cur.x,p.cur.y,p.cur.z);
     scene.add(p.spr);
   }
   p.tgt={x:d.x,z:d.z,y:py};
@@ -2967,7 +2979,7 @@ function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.ind
 /* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ + ท็อปนักผาดโผนในสนาม (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
-  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge), w:sessionWords, me:true}];
+  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge)+airLetterEmoji(state.airLetterBadge), w:sessionWords, me:true}];
   Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
@@ -6388,6 +6400,8 @@ const FOOT_EYE=1.55, FOOT_SPD=5.2, WING_COLLECT=3.4, RIDE_SPD=8.5;
 let hPhase='walk', termB=null, liftUntil=0, liftToRoof=true, liftEl=null;
 let rideWp=[], rideIdx=0, ridePos={x:0,y:0,z:0}, rideYaw=0, paxSnd=null;
 let wSpd=12, wP=0, wBank=0, _footHintAt=0;
+const WRING_COIN=5;                                  // 💫 เหรียญฐานต่อแหวน (×คอมโบ: 5,10,15,...)
+let ringCombo=0;
 /* เฮลิคอปเตอร์ low-poly ประกอบจากกล่อง (พอเห็นว่าเป็น ฮ. — เด็กโอเค ไม่ต้องโหลดโมเดล) */
 function heliMeshBuild(col){
   const g=new THREE.Group();
@@ -6468,7 +6482,21 @@ function buildHeliFoot(sc,list){
   const paxH=heliMeshBuild(0x2f7fd4);
   const paxPos={x:term.x+(ax==='x'?dir*1.2:2.2), y:term.h+.03, z:term.z+(ax==='z'?dir*1.2:2.2)};
   paxH.position.set(paxPos.x,paxPos.y,paxPos.z); sc.add(paxH);
-  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos};
+  // 💫 แหวนทองลอยกลางอากาศ (รอบ 355) — ร่อนวิงสูทลอดได้เหรียญ+คอมโบ · seed คงที่ เพื่อนเห็นตำแหน่งเดียวกัน
+  const rr=seededRand(7741), rings=[];
+  const ringG=new THREE.TorusGeometry(2.3,.24,8,22);
+  for(let i=0;i<8&&rings.length<8;i++){
+    let x=0,z=0,ok=false,tries=0;
+    while(!ok&&tries++<30){
+      x=(rr()*2-1)*44; z=(rr()*2-1)*44;
+      ok=!list.some(b=>Math.abs(x-b.x)<b.w/2+3&&Math.abs(z-b.z)<b.d/2+3)&&Math.hypot(x,z)>10;
+    }
+    const m=new THREE.Mesh(ringG,new THREE.MeshBasicMaterial({color:0xffd54f,transparent:true,opacity:.9,fog:false}));
+    m.position.set(x,9+rr()*12,z); m.rotation.y=rr()*Math.PI;
+    sc.add(m);
+    rings.push({m,got:false});
+  }
+  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings};
 }
 /* พื้นสำหรับ "คนเดิน" — ต่างจาก heliFloorAt: นับดาดฟ้าเฉพาะเมื่อผู้เล่นอยู่สูงระดับนั้นจริง
    (ไม่งั้นก้าวเข้าล็อบบี้ชั้นล่างจะโดนดีดขึ้นดาดฟ้าทันที เพราะ heliFloorAt มองตึกทึบทั้งก้อน) */
@@ -6511,6 +6539,7 @@ function beginRide(){
   yaw=rideYaw-Math.PI/2;                            // มองออกหน้าต่างขวาเป็นมุมตั้งต้น (ลากมองรอบได้)
   pitch=-.08;
   showBanner('🚁 ออกบินชมเมือง! นั่งริมหน้าต่าง ลากจอมองวิวได้ · พร้อมเมื่อไหร่กด 🪂 โดดวิงสูท');
+  if(myRef) sendPos(true);                           // 💺 เพื่อนเห็นเราเป็นผู้โดยสารทันที
   try{                                              // เสียงใบพัดเบาๆ ในห้องโดยสาร (มีไฟล์ค่อยเล่น)
     if(HeliSound.files.rotor){ HeliSound.ensureCtx(); paxSnd=HeliSound.playBuf(HeliSound.files.rotor,{loop:true,vol:.15}); }
   }catch(e){}
@@ -6523,16 +6552,37 @@ function endRide(backToRoof){
     hPhase='walk';
     camera.position.set(F.paxPos.x+1.5, termB.h+FOOT_EYE, F.paxPos.z+1.5);
     showBanner('🛬 จบทัวร์ กลับดาดฟ้าเทอร์มินัล');
+    if(myRef) sendPos(true);
   }
 }
 function beginWing(fromRide){
   if(fromRide) endRide(false);
   hPhase='wing';
-  wSpd=fromRide?13:9; wP=0; wBank=0;
+  wSpd=fromRide?13:9; wP=0; wBank=0; ringCombo=0;
+  const F=worlds.heli&&worlds.heli.foot;
+  if(F) F.rings.forEach(r=>{ r.got=false; r.m.visible=true; });   // 💫 แหวนคืนครบทุกครั้งที่โดดใหม่
   if(fromRide){ yaw=rideYaw; camera.position.y-=1; }
   pitch=0;
-  showBanner('🪂 วิงสูทกาง! W ก้มดิ่งเร่ง · S เชิดร่อน · A/D เลี้ยว · บินเฉียดเก็บตัวอักษรได้เลย!');
+  showBanner('🪂 วิงสูทกาง! W ก้มดิ่งเร่ง · S เชิดร่อน · A/D เลี้ยว · ลอดแหวนทอง 💫 ได้คอมโบ!');
   sfx.levelup();
+  if(myRef) sendPos(true);                           // 🚁💺 เพื่อนเห็นเราเปลี่ยนเป็นร่มทันที
+}
+/* 🪂🎖️ นับตัวอักษรที่เก็บ "กลางอากาศ" (วิงสูท) → เข็มนักดิ่งพสุธา 25/60/120 (แพตเทิร์น awardGlass) */
+function awardAirLetter(){
+  state.airLetterCount=(state.airLetterCount||0)+1;
+  const tier=AIRL_TIERS.filter(t=>state.airLetterCount>=t[0]).pop();
+  if(tier && tier[1]>(state.airLetterBadge||0)){
+    state.airLetterBadge=tier[1];
+    renderBoard();
+    setTimeout(()=>{
+      if(!running) return;
+      celebrateBadge(airLetterEmoji(tier[1]), `ได้${AIRL_TIER_UI[tier[1]]}!`,
+        `เก็บตัวอักษรกลางอากาศครบ ${tier[0]} ตัว — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
+      if(typeof checkCrown === 'function') checkCrown();
+      if(myRef) sendPos(true);
+    }, 1200);
+  }
+  saveState();
 }
 /* ขับเองแบบเดิม — เดินถึงเฮลิฯ แดงลานกลางแล้วเรียกอันนี้ (ยกมาจาก init เดิมของโลก) */
 function beginPilot(){
@@ -6548,6 +6598,7 @@ function beginPilot(){
   hViewSwitched=false; setSeat(0);
   layoutCockpit();
   showBanner('🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
+  if(myRef) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน
 }
 /* วาดกรอบหน้าต่างห้องโดยสาร (เฟส ride) บน canvas เข็ม — เจาะช่องหน้าต่างมนตรงกลาง */
 function drawCabinWindow(){
@@ -6578,6 +6629,7 @@ function tickHeliFoot(dt,now){
   if(bcs){ const bOn=heliNight>.25;
     for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
+  for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   const p=camera.position;
   // ── 🛗 ลิฟต์ ──
   if(hPhase==='lift'){
@@ -6641,9 +6693,10 @@ function tickHeliFoot(dt,now){
     const floor=heliFloorAt(nx,nz);
     if(ny<=floor+1.4){                               // ถึงพื้น/ดาดฟ้า = จบการร่อน
       camera.position.set(nx,floor+FOOT_EYE,nz);
-      hPhase='walk'; pitch=0;
+      hPhase='walk'; pitch=0; ringCombo=0;
       if(wSpd>21){ damagePlayer(10); showBanner('🪂💥 ลงแรงไปหน่อย! เชิดหัว (S) ก่อนถึงพื้นนะ'); }
       else showBanner('🪂 ลงพื้นสวยงาม! เดินเก็บของต่อหรือหาทางขึ้นตึกใหม่ได้เลย');
+      if(myRef) sendPos(true);                       // 🚶 เพื่อนเห็นเรากลับเป็นคนเดิน
       return;
     }
     camera.position.set(nx,ny,nz);
@@ -6653,7 +6706,20 @@ function tickHeliFoot(dt,now){
     camera.rotateZ(-wBank*.45);
     for(let i=letters.length-1;i>=0;i--){            // บินเฉียดเก็บตัวอักษร (จุดขายของวิงสูท — ไม่ต้องจอด)
       const lp=letters[i].spr.position;
-      if(Math.hypot(lp.x-nx,lp.y-ny,lp.z-nz)<WING_COLLECT) pickUpLetter(i);
+      if(Math.hypot(lp.x-nx,lp.y-ny,lp.z-nz)<WING_COLLECT){ pickUpLetter(i); awardAirLetter(); }
+    }
+    // 💫 ลอดแหวนทอง = เหรียญ×คอมโบ (คอมโบรีเซ็ตตอนแตะพื้น)
+    for(const r of F.rings){
+      if(r.got) continue;
+      const rp=r.m.position;
+      if(Math.hypot(rp.x-nx,rp.y-ny,rp.z-nz)<2.4){
+        r.got=true; r.m.visible=false;
+        ringCombo++;
+        const c=WRING_COIN*ringCombo;
+        addCoins(c); sessionCoins+=c; renderHudTop();
+        showBanner(`💫 ลอดแหวน ×${ringCombo}! +${c}🪙`);
+        if(ringCombo>=3) sfx.levelup(); else sfx.select();
+      }
     }
     letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
     setFootBtns(false,false);
@@ -9120,6 +9186,8 @@ window.Adventure3D={
                         goPilot:beginPilot, goRide:beginRide, goWing:beginWing,
                         rideEnd:endRide, footTick:(dt)=>tickHeliFoot(dt||.016,performance.now()),
                         get wing(){return {spd:+wSpd.toFixed(1),p:+wP.toFixed(2)}},
+                        get rings(){const F=worlds.heli&&worlds.heli.foot;return F?F.rings.map(r=>({x:+r.m.position.x.toFixed(1),y:+r.m.position.y.toFixed(1),z:+r.m.position.z.toFixed(1),got:r.got})):null},
+                        get ringCombo(){return ringCombo},
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
