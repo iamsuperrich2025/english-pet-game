@@ -30,10 +30,11 @@ const LETTER_COIN=1;                                   // เก็บตัว�
 const COIN_VAL=1, COIN_PICK_R=3.6;                     // มูลค่าเหรียญพื้นฐาน · ระยะชนเก็บ
 const COIN_GAP=5.2;                                    // ระยะเยื้องจากตัวอักษร (m · มากกว่า COLLECT_R เพื่อไม่ให้เก็บพร้อมกัน)
 /* 💎 รอบ 318: เหรียญพิเศษตามสภาพเส้นทาง — ทางตรงทอง 🪙1 · ทางโค้งฟ้า 🪙5 · หลุม/เนินเพชร 🪙20 */
+/* key = ชื่อไฟล์ภาพจริงใน img/coins/<key>.png (พื้นโปร่ง) — ไม่มีไฟล์ = ใช้ลายวาดจาก hi/mid/lo/mark */
 const COIN_TIERS=[
-  {val:1, size:2.3, y:1.5, mark:'★', name:'',            hi:'#fff7cc', mid:'#ffd23f', lo:'#e08c00', ring:'rgba(180,110,0,.55)', ink:'#b06e00'},
-  {val:5, size:2.9, y:1.7, mark:'◆', name:'โค้งสวย!',    hi:'#e6f9ff', mid:'#4fc3f7', lo:'#0277bd', ring:'rgba(2,90,150,.5)',   ink:'#01579b'},
-  {val:20,size:3.6, y:2.0, mark:'💎',name:'เหรียญเพชร!', hi:'#fdeaff', mid:'#ce93d8', lo:'#7b1fa2', ring:'rgba(90,20,120,.5)',  ink:'#4a148c'},
+  {val:1, size:2.3, y:1.5, mark:'★', name:'',            key:'coin_gold',    hi:'#fff7cc', mid:'#ffd23f', lo:'#e08c00', ring:'rgba(180,110,0,.55)', ink:'#b06e00'},
+  {val:5, size:2.9, y:1.7, mark:'◆', name:'โค้งสวย!',    key:'coin_sapphire',hi:'#e6f9ff', mid:'#4fc3f7', lo:'#0277bd', ring:'rgba(2,90,150,.5)',   ink:'#01579b'},
+  {val:20,size:3.6, y:2.0, mark:'💎',name:'เหรียญเพชร!', key:'coin_diamond', hi:'#fdeaff', mid:'#ce93d8', lo:'#7b1fa2', ring:'rgba(90,20,120,.5)',  ink:'#4a148c'},
 ];
 const COIN_CURVE_RAD=0.19;   // มุมหักขั้นต่ำที่ถือว่า "โค้งจริง" (rad ≈ 11° = p90 ของถนนทั้งแผนที่) — ใช้เลือกชนิดเหรียญพิเศษ
 /* 🚗🧑‍🤝‍🧑 รอบ 317: รถยนต์มาร่วมแผนที่นี้ได้ + เห็นยานพาหนะเพื่อนตรงกับที่เขาขับจริง */
@@ -1064,7 +1065,23 @@ function coinTexture(tier){
   c.fillStyle=T.ink; c.font='900 52px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(T.mark,64,68);
   return new THREE.CanvasTexture(cv);
 }
-function makeCoins(){ coinTex=COIN_TIERS.map((t,i)=>coinTexture(i)); }
+function makeCoins(){
+  coinTex=COIN_TIERS.map((t,i)=>coinTexture(i));
+  COIN_TIERS.forEach((t,i)=>loadCoinImg(i,t.key));      // 🖼️ มีภาพจริงใน img/coins/ = ใช้แทนลายวาดทันที
+}
+/* 🖼️ รอบ 338: เหรียญภาพจริง — วางไฟล์ `img/coins/<key>.png` (พื้นโปร่ง) แล้วเกมสลับให้เอง
+   ไม่มีไฟล์ = ใช้เหรียญที่วาดด้วยโค้ดเหมือนเดิม · prompt ภาพใน PROMPTS_COINS.md */
+function loadCoinImg(i,key){
+  if(!key) return;
+  const im=new Image();
+  im.onload=()=>{
+    const t=new THREE.Texture(im); t.needsUpdate=true;
+    if(coinTex[i] && coinTex[i].dispose) coinTex[i].dispose();
+    coinTex[i]=t;
+    coins.forEach(c=>{ if(c.tier===i && c.spr) c.spr.material.map=t, c.spr.material.needsUpdate=true; });
+  };
+  im.src='img/coins/'+key+'.png';
+}
 /* วางเหรียญ 1 ใบ · side: +1 = ด้านหลังตัวอักษร (ทอง) · -1 = ด้านหน้า (พิเศษ) — จำไว้เพื่อย้ายตามตอนตัวอักษรย้ายที่ */
 function addCoin(l,tier,side){
   const T=COIN_TIERS[tier], p=l.spr.position;
