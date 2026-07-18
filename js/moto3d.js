@@ -78,7 +78,7 @@ const Eng={ctx:null,master:null,ready:false,bufs:{},iG:null,cG:null,cS:null,prev
     if(th!==this.prevThr){
       this.prevThr=th;
       if(th) this.shot('accel',.85);
-      else if(spd>8) this.shot('decel',.3);                        // รอบ 307: หรี่ .75→.3 (ผู้ใช้: ดังเหมือนเสียงรบกวน) · ปล่อยตอนช้าไม่ต้องมีเสียงรอบไหลลง
+      else if(spd>8) this.shot('decel',.1);                        // รอบ 310: หรี่ .3→.1 (ผู้ใช้ขอเบาลงอีก) · ปล่อยตอนช้าไม่ต้องมีเสียงรอบไหลลง
     }
   },
   stop(){ if(this.master&&this.ctx) this.master.gain.setTargetAtTime(0,this.ctx.currentTime,.05); }
