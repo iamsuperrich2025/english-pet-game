@@ -126,6 +126,7 @@ const DEFAULT_STATE = {
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
   nwQueue:[],                         // รอบ 326: คิวคำศัพท์ 🆕 New Word ที่ยังไม่ได้โชว์ (สลับลำดับแล้ว) — หมดคิว = สลับใหม่
+  nwPaidAt:0,                         // รอบ 327: nwAt ของคำที่รับเหรียญไปแล้ว (กดอ่านซ้ำคำเดิมไม่ได้เหรียญซ้ำ)
   nwAt:0,                             // รอบ 326: เวลาที่เปลี่ยนคำล่าสุด (เปลี่ยนทุก 2 นาทีระหว่างอยู่ Lobby)
   greetSent:{},                       // รอบ 325: {uid: 'YYYY-MM-DD'} วันล่าสุดที่ส่ง "ทักทายน้อง" ให้แต่ละคน (จำกัดคนละ 1/วัน)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
@@ -332,6 +333,7 @@ function loadState(){
       if(!s.greetSent || typeof s.greetSent !== 'object') s.greetSent = {};                // รอบ 325
       if(!Array.isArray(s.nwQueue)) s.nwQueue = [];                                        // รอบ 326
       if(typeof s.nwAt !== 'number') s.nwAt = 0;
+      if(typeof s.nwPaidAt !== 'number') s.nwPaidAt = 0;                                    // รอบ 327
       if(typeof s.bffBadge !== 'number') s.bffBadge = 0;
       if(typeof s.crownBadge !== 'number') s.crownBadge = 0;                               // รอบ 109
       if(typeof s.badgeWeekKey !== 'string') s.badgeWeekKey = '';

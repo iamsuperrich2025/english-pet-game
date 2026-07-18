@@ -181,10 +181,14 @@ function renderNewWord(){
   if(!newWordPick){ el.style.display='none'; return; }
   const [en] = newWordPick;
   el.style.display='';
+  /* รอบ 327: โชว์ป้าย 🪙+1 เมื่อคำนี้ยังไม่ได้รับเหรียญ — เด็กเห็นชัดว่ากดแล้วได้อะไร
+     รับไปแล้วเปลี่ยนเป็นเครื่องหมายถูก (ไม่ล่อให้กดรัวๆ โดยไม่ได้อะไร) */
+  const paid = state.nwPaidAt === state.nwAt;
   el.innerHTML = `
     <span class="nw-tag">🆕 New!</span>
     <span class="nw-word">${en}</span>
-    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>`;
+    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>
+    <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>`;
   el.onclick = showNewWordPopup;
   alignNewWord();          // จัดให้กึ่งกลางตรงกับภาพ Rank ใหญ่ (ความกว้างแบนเนอร์เปลี่ยนตามความยาวคำ)
   startNewWordTimer();
@@ -223,8 +227,59 @@ function startNewWordTimer(){
 
 /* ป๊อปอัปรายละเอียดคำ — format ตามสเปกพจนานุกรม (TASK_DICTIONARY_SONNET.md):
    คำ / (pos) /IPA/ เสียงอ่านไทย / ประโยคอังกฤษอธิบายความหมาย / ความหมายไทย */
+/* 🪙 รอบ 327 (ผู้ใช้สั่ง): เปิดอ่านคำใหม่ = ได้ 1 เหรียญ พร้อมเสียง+ภาพชัดเจน
+   ให้ "คำละ 1 เหรียญ" (ยึด state.nwAt = เวลาที่ขึ้นคำนี้เป็นตัวระบุคำ) — กดซ้ำคำเดิมไม่ได้เพิ่ม
+   ไม่งั้นเด็กกดรัวๆ คำเดียวได้เหรียญไม่จำกัด · คำเปลี่ยนทุก 2 นาที = ได้เหรียญใหม่ทุกคำ */
+const NEW_WORD_COIN = 1;
+function newWordReward(){
+  if(state.nwPaidAt === state.nwAt) return false;    // คำนี้รับไปแล้ว
+  state.nwPaidAt = state.nwAt;
+  addCoins(NEW_WORD_COIN);
+  saveState();
+  const banner = document.getElementById('newword-banner');
+  coinFlyFx(banner, NEW_WORD_COIN);                  // 🪙 บินจากแบนเนอร์ไปเข้ากระเป๋า + ป้าย +1
+  if(sfx.coinGet) sfx.coinGet();                     // เสียง "เหรียญเข้า" (ชัดกว่า sfx.coin ปกติ)
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([15,30,15]);
+  const cc = document.getElementById('coin-count');
+  const pill = cc && cc.closest('.coin-pill');
+  if(pill){ pill.classList.remove('coin-pop'); void pill.offsetWidth; pill.classList.add('coin-pop'); }
+  if(typeof renderDashboard === 'function') renderDashboard();   // ตัวเลขเหรียญบนแถบบนอัปเดตทันที
+  return true;
+}
+
+/* เหรียญบินจากจุดที่กด → กระเป๋าเหรียญมุมขวาบน + ป้าย "+🪙1" ลอยขึ้น
+   ใช้ตำแหน่งจริงจาก getBoundingClientRect ทั้งคู่ → ตรงทุกขนาดจอ */
+function coinFlyFx(fromEl, amount){
+  if(document.documentElement.classList.contains('no-anim')) return;
+  const target = document.getElementById('coin-count');
+  if(!fromEl || !target) return;
+  const a = fromEl.getBoundingClientRect(), b = target.getBoundingClientRect();
+  if(!a.width || !b.width) return;
+  const n = 5;                                        // เหรียญหลายเหรียญบินตามกันให้เห็นชัด
+  for(let i = 0; i < n; i++){
+    const c = document.createElement('div');
+    c.className = 'coin-fly';
+    c.textContent = '🪙';
+    c.style.left = (a.left + a.width/2 + (Math.random()-0.5)*a.width*0.5) + 'px';
+    c.style.top  = (a.top + a.height/2) + 'px';
+    c.style.setProperty('--dx', (b.left + b.width/2 - (a.left + a.width/2)) + 'px');
+    c.style.setProperty('--dy', (b.top + b.height/2 - (a.top + a.height/2)) + 'px');
+    c.style.animationDelay = (i*70) + 'ms';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 1000 + i*70);
+  }
+  const tag = document.createElement('div');
+  tag.className = 'coin-plus';
+  tag.textContent = `+🪙${amount}`;
+  tag.style.left = (a.left + a.width/2) + 'px';
+  tag.style.top  = (a.top - 6) + 'px';
+  document.body.appendChild(tag);
+  setTimeout(()=>tag.remove(), 1200);
+}
+
 function showNewWordPopup(){
   if(!newWordPick) return;
+  const gotCoin = newWordReward();                    // 🪙 อ่านคำใหม่ = ได้เหรียญ (คำละครั้ง)
   const [en, pos, ipa, thRead, sentence, thMean] = newWordPick;
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
@@ -233,6 +288,9 @@ function showNewWordPopup(){
     <div class="nw-pop-phon">(${pos}) <span class="nw-ipa">${ipa}</span> ${thRead}</div>
     <div class="nw-pop-sent">${sentence}</div>
     <div class="nw-pop-mean">${thMean}</div>
+    ${gotCoin
+      ? `<div class="nw-pop-coin">🪙 <b>+${NEW_WORD_COIN} เหรียญ</b> — รางวัลที่ตั้งใจอ่านคำใหม่!</div>`
+      : `<div class="nw-pop-coin nw-coin-done">✅ รับเหรียญคำนี้ไปแล้ว — <b>คำใหม่มาทุก 2 นาที</b> มารับอีกได้เลย</div>`}
     <div style="margin-top:14px"><button class="cf-ok">เข้าใจแล้ว! ✨</button></div>
   </div>`;
   const close = ()=>overlay.remove();
