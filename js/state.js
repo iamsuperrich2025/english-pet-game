@@ -60,6 +60,8 @@ const DEFAULT_STATE = {
   mechaWaveBest:0,                    // รอบ 229: เวฟสูงสุดที่เคยไปถึงในโลกหุ่น (Endless Wave) — สถิติส่วนตัว
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
   carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
+  glassCount:0,                       // รอบ 337: จำนวนบานกระจกที่ทุบแตกในโลกโดรน — สู่เข็มจอมทุบกระจก
+  glassBadge:0,                       // รอบ 337: เข็มจอมทุบกระจกสูงสุดที่เคยได้ 0=ไม่มี 1=🪟(20) 2=💥(50) 3=🥽(100) — ได้แล้วไม่หาย
   daredevilCount:0,                   // รอบ 87: จำนวน "บินเฉียดสุดๆ" สะสม (heli/drone) — สู่เข็มนักบินผาดโผน
   daredevilBadge:0,                   // รอบ 87: เข็มนักบินผาดโผนสูงสุดที่เคยได้ 0=ไม่มี 1=🎯(10) 2=🌀(30) 3=🔥(60) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   thunderCount:0,                     // รอบ 70: สายฟ้าแลบสะสม (จับคู่ครบไม่พลาดใน 5 วิ / สอบสายฟ้า)
@@ -324,6 +326,8 @@ function loadState(){
         }
       });
       if(typeof s.carIdx !== 'number' || s.carIdx < 0 || s.carIdx >= s.cars.length) s.carIdx = 0;
+      if(typeof s.glassCount !== 'number') s.glassCount = 0;                               // รอบ 337 (เข็มจอมทุบกระจก)
+      if(typeof s.glassBadge !== 'number') s.glassBadge = 0;
       if(typeof s.daredevilCount !== 'number') s.daredevilCount = 0;                        // รอบ 87
       if(typeof s.daredevilBadge !== 'number') s.daredevilBadge = 0;
       if(typeof s.thunderCount !== 'number') s.thunderCount = 0;                           // รอบ 70

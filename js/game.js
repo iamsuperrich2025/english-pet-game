@@ -248,6 +248,7 @@ function showProgressReport(){
   const trophyDefs = [
     {ic:'⚡', label:'สายฟ้าแลบ',   unit:'ครั้ง', count:state.thunderCount||0,   tiers:THUNDER_TIERS,   ui:THUNDER_TIER_UI,   ef:thunderEmoji},
     {ic:'🎯', label:'บินเฉียดสุดๆ', unit:'ครั้ง', count:state.daredevilCount||0, tiers:DAREDEVIL_TIERS, ui:DAREDEVIL_TIER_UI, ef:daredevilEmoji},
+    {ic:'🪟', label:'ทุบกระจกตึกร้าง', unit:'บาน', count:state.glassCount||0,     tiers:GLASS_TIERS,     ui:GLASS_TIER_UI,     ef:glassEmoji},
     {ic:'🏅', label:'เล่นต่ออีกรอบ', unit:'รอบ',  count:state.diligentCount||0,  tiers:DILIGENT_TIERS,  ui:DILIGENT_TIER_UI,  ef:diligentEmoji},
   ];
   const trophyHtml = trophyDefs.map(d=>{
@@ -387,6 +388,12 @@ const DAREDEVIL_TIERS = [[10,1],[30,2],[60,3]];
 const DAREDEVIL_TIER_UI = ['', '🎯 เข็มเฉียดเฉี่ยว', '🌀 เข็มนักบินผาดโผน', '🔥 เข็มเจ้าเวหา'];
 function daredevilEmoji(b){ return ['','🎯','🌀','🔥'][b||0] || ''; }
 
+/* 🪟 รอบ 337: เข็มจอมทุบกระจก — สะสมจากบานกระจกที่ทุบแตกในโลกโดรน
+   ครบ 20=🪟 · 50=💥 · 100=🥽 — ได้แล้วไม่หาย ติดท้ายชื่อให้เพื่อนเห็นทุกโลก (นับ+ประกาศใน adventure3d.js) */
+const GLASS_TIERS = [[20,1],[50,2],[100,3]];
+const GLASS_TIER_UI = ['', '🪟 เข็มมือทุบกระจก', '💥 เข็มจอมทลายบาน', '🥽 เข็มราชาเศษแก้ว'];
+function glassEmoji(b){ return ['','🪟','💥','🥽'][b||0] || ''; }
+
 /* 🏅 รอบ 105: เข็มนักเล่นขยัน (สไตล์เดียวกับเข็มสายฟ้า) — สะสมจากจำนวน "รอบเล่นต่อ" ทั้งหมด (ถาวร)
    ครบ 20=🏅 · 50=🎖️ · 100=🏆 — ได้แล้วไม่หาย ติดท้ายชื่อใน map/กระดานให้เพื่อนเห็น */
 const DILIGENT_TIERS = [[20,1],[50,2],[100,3]];
@@ -415,6 +422,7 @@ function badgeSuffix(){
     + (['','🥉','🥈','🥇'][state.pilotBadge||0]||'')
     + thunderEmoji(state.thunderBadge)
     + daredevilEmoji(state.daredevilBadge)
+    + glassEmoji(state.glassBadge)               // 🪟 รอบ 337: เข็มจอมทุบกระจก (โลกโดรน)
     + diligentEmoji(state.diligentBadge)
     + mechaBossEmoji(state.mechaBossBadge)             // 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่น)
     + bffEmoji(state.bffBadge);                        // 🐾 รอบ 323: เข็มเพื่อนซี้ (ลูบน้องติดกันหลายวัน)
@@ -428,6 +436,7 @@ const BADGE_META = {
   '⚡':{n:'เข็มสายฟ้า',p:1}, '🌩️':{n:'เข็มพายุฟ้าคะนอง',p:2}, '⛈️':{n:'เข็มมหาพายุ',p:3},
   '🎯':{n:'เข็มเฉียดเฉี่ยว',p:1}, '🌀':{n:'เข็มนักบินผาดโผน',p:2}, '🔥':{n:'เข็มเจ้าเวหา',p:3},
   '🏅':{n:'เข็มนักเล่นขยัน',p:1}, '🎖️':{n:'เข็มนักเล่นตัวยง',p:2}, '🏆':{n:'เข็มยอดนักสู้คำศัพท์',p:3},
+  '🪟':{n:'เข็มมือทุบกระจก',p:1}, '💥':{n:'เข็มจอมทลายบาน',p:2}, '🥽':{n:'เข็มราชาเศษแก้ว',p:3},   // 🪟 รอบ 337: โลกโดรน
   '⚔️':{n:'เข็มนักล่าบอส',p:1}, '🛡️':{n:'เข็มอัศวินเหล็ก',p:2}, '🤖':{n:'เข็มเจ้าสมรภูมิ',p:3},   // 🤖 รอบ 229: เข็มโลกหุ่น
 };
 const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖)+$/u;

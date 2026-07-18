@@ -190,7 +190,7 @@ const GATE_R=3.4, RACE_REWARD=40;
 let shotWanted=false, photoEl=null, photoImgEl=null, flashEl=null;
 /* 🪟⛈🚪 รอบ 336: กระจกที่ยังไม่แตก + ฟ้าแลบสะท้อนกระจก + ประตูเปิดได้ */
 let droneGlass=[], droneDoors=[], droneWinMat=null, droneGlassMat=null;
-let boltAt=0, boltFlashUntil=0, boltEl=null;
+let boltAt=0, boltFlashUntil=0, boltEl=null, rainEl=null, rainUntil=0;
 const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุก 11-24 วิ
 const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
 const DOOR_R=2.6, DOOR_COIN=8, DOOR_BAT=15;         // ชนประตู: รัศมี · รางวัลในห้องเก็บของ
@@ -1069,7 +1069,8 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat,glassMat){
       pivot.position.set(cx-dw/2,1.7,cz+dz); pivot.rotation.y=doorSide===0?0:Math.PI; sc.add(pivot);
       const dr=new THREE.Mesh(new THREE.PlaneGeometry(dw,3.4),doorMat);
       dr.position.set(dw/2,0,0); pivot.add(dr);
-      doors.push({pivot, base:pivot.rotation.y, x:cx, y:1.7, z:cz+dz, open:false, ang:0});
+      // inz = ทิศ "เข้าไปในตัวตึก" จากหน้าประตู (ใช้วางตัวอักษรลับในห้องหลังประตู)
+      doors.push({pivot, base:pivot.rotation.y, x:cx, y:1.7, z:cz+dz, inz:(doorSide===0?1:-1), open:false, ang:0});
     }
   }
   return {x:cx,z:cz,w,d,h,solids,rooms,glass,doors};
@@ -2354,7 +2355,7 @@ function sendPos(force){
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
-    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
+    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
     av:((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
@@ -2880,7 +2881,7 @@ function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.ind
 /* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ + ท็อปนักผาดโผนในสนาม (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
-  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge), w:sessionWords, me:true}];
+  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge), w:sessionWords, me:true}];
   Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
@@ -3218,6 +3219,21 @@ function buildDom(){
     padding:4px 12px;color:#9dffc4;font-family:'Courier New',monospace;font-size:13px;white-space:nowrap}
   #adv-racehud b{color:#fff}
   /* 📸 แฟลชตอนกดชัตเตอร์ + การ์ดพรีวิวภาพ */
+  /* 🌧️ ฝนบนเลนส์กล้อง FPV — ริ้วฝนเฉียงวิ่งลง + หยดน้ำเกาะเลนส์ (CSS ล้วน · เปิดตอนพายุเท่านั้น) */
+  #adv-rain{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 1.4s ease}
+  #adv-rain.on{opacity:1}
+  #adv-rain:before{content:'';position:absolute;inset:-20% -10%;
+    background:repeating-linear-gradient(74deg,rgba(255,255,255,0) 0 9px,rgba(198,222,240,.30) 9px 10.5px,rgba(255,255,255,0) 10.5px 22px);
+    animation:advRain .55s linear infinite}
+  @keyframes advRain{to{transform:translate3d(-42px,150px,0)}}
+  #adv-rain i{position:absolute;display:block;border-radius:52% 48% 46% 54%;
+    background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.62),rgba(190,215,235,.28) 58%,rgba(120,150,175,.10));
+    box-shadow:inset 0 -1px 2px rgba(255,255,255,.45),0 1px 3px rgba(0,0,0,.28);
+    backdrop-filter:blur(1px);animation:advDrop 3s ease-in infinite}
+  @keyframes advDrop{0%{transform:translateY(0) scale(1);opacity:.85}
+    72%{transform:translateY(16px) scale(1.04);opacity:.7}
+    100%{transform:translateY(46px) scale(.7);opacity:0}}
+  html.no-anim #adv-rain:before,html.no-anim #adv-rain i{animation:none}
   /* ⛈ ฟ้าแลบ — วาบ 2 จังหวะแบบสายฟ้าจริง (ขาวอมฟ้า ไม่ใช่ขาวล้วนแบบแฟลชกล้อง) */
   #adv-bolt{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;
     background:linear-gradient(180deg,rgba(226,240,255,.92),rgba(150,190,230,.35) 55%,rgba(60,80,110,0))}
@@ -3947,6 +3963,7 @@ function buildDom(){
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
     <div id="adv-flash"></div>
     <div id="adv-bolt"></div>
+    <div id="adv-rain"></div>
     <div id="adv-photo"><div class="ph-card"><img id="adv-photo-img" alt="ภาพที่ถ่ายในโลกโดรน">
       <div class="ph-btns"><button id="adv-photo-save">📥 บันทึกลงเครื่อง</button>
       <button id="adv-photo-close">ปิด</button></div></div></div>
@@ -4348,6 +4365,7 @@ function buildDom(){
   photoImgEl=overlayEl.querySelector('#adv-photo-img');
   flashEl=overlayEl.querySelector('#adv-flash');
   boltEl=overlayEl.querySelector('#adv-bolt');
+  rainEl=overlayEl.querySelector('#adv-rain');
   raceBtnEl.addEventListener('click',e=>{ e.preventDefault(); if(raceOn) raceStop(false); else raceStartRun(); });
   overlayEl.querySelector('#adv-shot').addEventListener('click',e=>{ e.preventDefault(); shotWanted=true; });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
@@ -4586,12 +4604,30 @@ function droneBatAdd(n){ droneBat=Math.max(0,Math.min(100,droneBat+n)); }
 /* ⛈ ฟ้าแลบ — จอวาบ + กระจกทุกบานสะท้อนแสงขาววับ + เสียงฟ้าร้องตามมา */
 function lightningBolt(now){
   boltFlashUntil=now+220;
+  startRain(now);                                   // 🌧️ ฟ้าแลบแล้วฝนสาดเลนส์ตามมา
   if(boltEl){ boltEl.classList.remove('on'); void boltEl.offsetWidth; boltEl.classList.add('on');
               setTimeout(()=>boltEl&&boltEl.classList.remove('on'),420); }
   if(droneGlassMat){ droneGlassMat.color.setHex(0xffffff); droneGlassMat.opacity=1; }
   setTimeout(()=>{ if(droneGlassMat){ droneGlassMat.color.setHex(0xffffff); droneGlassMat.opacity=.82; } },200);
   setTimeout(()=>DroneSound.thunder(), 300+Math.random()*700);   // เสียงมาทีหลังแสง (ระยะทาง)
 }
+/* 🌧️ ฝนสาดเลนส์กล้อง FPV — เปิดหลังฟ้าแลบ 9-15 วิ แล้วค่อยๆ จางเอง (CSS ล้วน ไม่กินเฟรม)
+   หยดน้ำบนเลนส์สุ่มตำแหน่งใหม่ทุกครั้ง = ไม่ซ้ำแพตเทิร์นเดิม */
+function startRain(now){
+  if(!rainEl) return;
+  rainUntil=now+9000+Math.random()*6000;
+  if(!rainEl.childElementCount){
+    let html='';
+    for(let i=0;i<14;i++){
+      const x=(4+Math.random()*92).toFixed(1), y=(4+Math.random()*88).toFixed(1);
+      const s=(9+Math.random()*22).toFixed(0), d=(2.2+Math.random()*3.4).toFixed(1), dl=(Math.random()*4).toFixed(1);
+      html+=`<i style="left:${x}%;top:${y}%;width:${s}px;height:${(s*1.25)|0}px;animation-duration:${d}s;animation-delay:-${dl}s"></i>`;
+    }
+    rainEl.innerHTML=html;
+  }
+  rainEl.classList.add('on');
+}
+function stopRain(){ if(rainEl) rainEl.classList.remove('on'); }
 /* 🪟 บินชนบานที่ยังมีกระจก = แตก (สลับเป็นบานโล่ง) + เศษกระจกกระเด็น + เหรียญ */
 function smashGlass(g,now){
   g.done=true;
@@ -4601,14 +4637,58 @@ function smashGlass(g,now){
   droneBatAdd(3);
   showBanner(`🪟 กระจกแตก! +${GLASS_COIN}🪙`);
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(22);
+  awardGlass();
 }
-/* 🚪 บินชนประตู = บานแกว่งเปิด เจอของในห้องเก็บของ (เหรียญ + แบต) */
+/* 🪟 นับบานกระจกที่ทุบสะสม → ปลดเข็มจอมทุบกระจก (แพตเทิร์นเดียวกับเข็มผาดโผน) */
+function awardGlass(){
+  state.glassCount=(state.glassCount||0)+1;
+  const tier=GLASS_TIERS.filter(t=>state.glassCount>=t[0]).pop();
+  if(tier && tier[1]>(state.glassBadge||0)){
+    state.glassBadge=tier[1];
+    renderBoard();
+    setTimeout(()=>{
+      if(!running) return;
+      celebrateBadge(glassEmoji(tier[1]), `ได้${GLASS_TIER_UI[tier[1]]}!`,
+        `ทุบกระจกตึกร้างครบ ${tier[0]} บาน — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
+      if(typeof checkCrown === 'function') checkCrown();
+      if(myRef) sendPos(true);
+    }, 1200);
+  }
+  saveState();
+}
+/* 🔤 ตัวอักษรที่ยัง "ขาดจริง" ตัวหนึ่ง (ยังไม่มีในมือและยังไม่มีวางในโลก) — ใช้ซ่อนหลังประตู */
+function neededLetter(){
+  const worldCnt={}; letters.forEach(l=>worldCnt[l.ch]=(worldCnt[l.ch]||0)+1);
+  const haveCnt=Object.assign({},inv);
+  for(const w of words){
+    for(const ch of w.en.split('')){
+      const used=Math.min(1,haveCnt[ch]||0);
+      if(used){ haveCnt[ch]--; continue; }
+      if((worldCnt[ch]||0)>0){ worldCnt[ch]--; continue; }
+      return ch;                                   // ตัวนี้ขาดจริง
+    }
+  }
+  const w=words[0];                                // ไม่ขาดเลย → แถมตัวแรกของคำแรก
+  return w?w.en[0]:'A';
+}
+/* 🚪 บินชนประตู = บานแกว่งเปิด เจอของในห้องเก็บของ (เหรียญ + แบต + ตัวอักษรลับในห้อง) */
 function openDoor(dr){
   dr.open=true;
   DroneSound.thud();
   addCoins(DOOR_COIN); sessionCoins+=DOOR_COIN; renderHudTop();
   droneBatAdd(DOOR_BAT);
-  showBanner(`🚪 เปิดประตูเจอห้องเก็บของ! +${DOOR_COIN}🪙 · 🔋+${DOOR_BAT}%`);
+  // 🔤 ตัวอักษรลับโผล่ในห้องหลังประตู (ตัวที่ยังขาดอยู่จริง) — บินเข้าไปเก็บต่อได้เลย
+  let secret='';
+  if(letters.length<90 && words.length){
+    secret=neededLetter();
+    const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(secret),transparent:true}));
+    spr.position.set(dr.x, 1.8, dr.z+dr.inz*2.8);      // เยื้องเข้าไปในห้องหลังประตู
+    spr.scale.set(2.1,2.1,1);
+    scene.add(spr);
+    letters.push({ch:secret,spr,born:performance.now(),baseY:1.8});
+    renderHudWords();
+  }
+  showBanner(`🚪 เปิดประตูเจอห้องเก็บของ! +${DOOR_COIN}🪙 · 🔋+${DOOR_BAT}%`+(secret?` · 🔤 เจอตัว ${secret} ข้างใน!`:''));
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate([18,40,18]);
 }
 /* 🏁 โหมดแข่งเวลา — เริ่ม/จบ/อัปเดตป้าย */
@@ -4732,6 +4812,7 @@ function tickDrone(dt,now){
 
   // ⛈ ฟ้าแลบเป็นระยะ (เมืองร้างใต้พายุ)
   if(now>boltAt){ boltAt=now+BOLT_MIN+Math.random()*(BOLT_MAX-BOLT_MIN); if(boltEl) lightningBolt(now); }
+  if(rainUntil && now>rainUntil){ rainUntil=0; stopRain(); }      // 🌧️ ฝนหยุดเอง
   // 🪟 ชนบานที่ยังมีกระจก → แตก (เช็กเฉพาะบานที่ยังไม่แตก · ตัดด้วยระยะหยาบก่อน)
   for(const g of droneGlass){
     if(g.done) continue;
@@ -7446,7 +7527,7 @@ function start(md){
     droneWinMat=worlds.drone.winMat||null; droneGlassMat=worlds.drone.glassMat||null;
     droneGlass.forEach(g=>{ g.done=false; if(droneGlassMat) g.m.material=droneGlassMat; });
     droneDoors.forEach(dr=>{ dr.open=false; dr.ang=0; dr.pivot.rotation.y=dr.base; });
-    boltAt=performance.now()+BOLT_MIN; boltFlashUntil=0;
+    boltAt=performance.now()+BOLT_MIN; boltFlashUntil=0; rainUntil=0; stopRain();
     raceOn=false; raceIdx=0; droneCharging=false; shotWanted=false;
     droneGates.forEach(g=>{ g.m.scale.setScalar(1); g.m.material.color.setHex(g.col); });
     if(photoEl) photoEl.classList.remove('on');
@@ -7570,6 +7651,7 @@ function exitWorld(){
   });
   carStartOpen=false;
   raceOn=false; renderRaceHud();                   // 🏁 ออกกลางแข่ง = ยกเลิกรอบ + ซ่อนป้าย
+  rainUntil=0; stopRain();                         // 🌧️ ฝนไม่ค้างข้ามโลก
   if(photoEl) photoEl.classList.remove('on');      // 📸 ปิดการ์ดพรีวิวภาพที่ค้าง
   netLeave();
   HSound.stopAll();
