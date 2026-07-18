@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v70';   // v70: 🏭🏪 โรงงาน+ตลาด แถบปัดแนวนอน SimCity รอบ 292
+const CACHE_VERSION = 'pet-vocab-v71';   // v71: 🏍️ โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ รอบ 293
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

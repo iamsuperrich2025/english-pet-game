@@ -2727,6 +2727,7 @@ function renderDashboard(){
     renderDroneCard();
     renderDriveCard();
     renderSoccerCard();
+    renderMotoCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -2961,12 +2962,13 @@ function renderDashboard(){
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
   tap.style.cursor = 'pointer'; tap.style.pointerEvents = 'auto';
-  // รอบ 246: แตะน้อง → เด้งดึ๋งสั้นๆ + เปิดหน้าข้อมูลน้อง (มีรูปตัวใหญ่ ให้อินกับสัตว์เลี้ยง)
+  // แตะน้อง = ลูบหัว — เด้งดึ๋ง + หัวใจลอย 2-3 ดวง
+  // (เดิมรอบ 246 แตะแล้วเปิดหน้าข้อมูลน้อง — หน้าข้อมูลยังเปิดได้จากปุ่ม #btn-pet-info และการ์ดน้อง)
   tap.addEventListener('click', ()=>{
     sfx.select();
     tap.style.transform = 'scale(1.12) rotate(-4deg)';
     setTimeout(()=>tap.style.transform = '', 160);
-    if(typeof openPetInfoOverlay === 'function') openPetInfoOverlay();
+    petPatFx(tap);
   });
 
   renderHomeCard();
@@ -2978,6 +2980,7 @@ function renderDashboard(){
   renderDroneCard();
   renderDriveCard();
   renderSoccerCard();
+  renderMotoCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -4672,6 +4675,102 @@ async function enterSoccer3D(){
 }
 
 /* ============================================================
+   🏍️ การ์ดตั๋วโลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) — ซื้อได้เมื่อมีตั๋วขับรถ
+   ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (OSM)
+   เล่นบน "เครื่องเกมพกพา" เต็มจอ · เก็บตัวอักษรบนถนนประกอบคำ คำละ 🪙45
+   ============================================================ */
+function renderMotoCard(){
+  const el = document.getElementById('moto-card');
+  if(!el) return;
+  let body;
+  if(state.motoTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับไปขี่มอเตอร์ไซค์ได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-moto-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.motoTicket){
+    body = `
+      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🏍️🎮</div>
+        <b>สตาร์ทเครื่องพร้อมซิ่ง!</b><br>
+        <small>ขี่มอเตอร์ไซค์บน<b>ถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์</b> รัศมี 30 กม.<br>
+        เล่นบนเครื่องเกมพกพาสุดน่ารัก — สไลเดอร์ส้มเลี้ยว · ปุ่มฟ้าเร่งเครื่อง<br>
+        ขับชนตัวอักษรบนถนนประกอบคำ คำละ 🪙45 · ลูกศรเขียวนำทาง</small>
+      </div>
+      <button class="big-btn green home-btn" id="btn-enter-moto">🏍️ ออกซิ่ง!</button>`;
+  }else if(!state.driveTicket){
+    body = `
+      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกขับรถ 🚗</b>ก่อน (ขับรถเป็นแล้วค่อยซิ่งมอไซค์)</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
+      <div class="ticket-desc">
+        <div style="font-size:44px">🏍️🏫</div>
+        <b>ซิ่งมอเตอร์ไซค์รอบบ้านโพธิ์สวัสดิ์ของจริง!</b><br>
+        <small>ถนนจริง หมู่บ้านจริง จากแผนที่จริง รัศมี 30 กม. — ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b><br>
+        เล่นบน<b>เครื่องเกมพกพา</b>สุดน่ารัก · เอียงรถเข้าโค้งเหมือนจริง<br>
+        เก็บตัวอักษรบนถนนประกอบคำ คำละ 🪙45 · มอเตอร์ไซค์แถมกับตั๋ว!<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      <button class="big-btn blue home-btn" id="btn-buy-moto">🏍️ ซื้อตั๋ว 🪙${fmtNum(MOTO_PRICE)}</button>${soldBadge('tk_moto')}`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-moto');
+  if(buy) buy.addEventListener('click', buyMotoTicket);
+  const enter = document.getElementById('btn-enter-moto');
+  if(enter) enter.addEventListener('click', enterMoto3D);
+  const heal = document.getElementById('btn-moto-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+}
+
+function buyMotoTicket(){
+  if(state.motoTicket) return;
+  if(!state.driveTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกขับรถก่อนถึงจะซื้อตั๋วมอเตอร์ไซค์ได้นะ'); return; }
+  if(state.coins < MOTO_PRICE){
+    sfx.wrong(); toast(`ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ 🪙${fmtNum(MOTO_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🏍️ ซื้อตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(MOTO_PRICE)}</b><br>
+    ซิ่งมอเตอร์ไซค์บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. — คำละ 🪙45<br>
+    <small>🎮 เล่นบนเครื่องเกมพกพาสุดน่ารัก · เอียงรถเข้าโค้งเหมือนจริง · มอเตอร์ไซค์แถมกับตั๋ว<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! 🏍️', ()=>{
+      state.coins -= MOTO_PRICE;
+      state.motoTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_moto');
+      sfx.buy();
+      toast('🏍️ ได้ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์แล้ว! กดปุ่มเขียว "ออกซิ่ง" ได้เลย 🎮');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
+async function enterMoto3D(){
+  if(!state.motoTicket || state.advHurt || advLoading) return;
+  if(!window.MotoWorld || !window.MOTO_MAP){
+    advLoading = true;
+    toast('🏍️ กำลังสตาร์ทมอเตอร์ไซค์ + โหลดแผนที่บ้านโพธิ์สวัสดิ์...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/data/moto_phosawat.js');
+      await loadScriptOnce('js/moto3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกมอเตอร์ไซค์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  MotoWorld.start();
+}
+
+/* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
    แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
@@ -4684,6 +4783,7 @@ const WORLD3D = [
   { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
   { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
   { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',price:SOCCER_PRICE, card:'soccer-card', enter:enterSoccer3D },
+  { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  price:MOTO_PRICE,   card:'moto-card',   enter:enterMoto3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, card:'mkt-robots', enter:enterMecha3D },
 ];
 function gotoRobotShop(){
