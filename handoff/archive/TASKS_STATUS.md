@@ -361,3 +361,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 310:** 🔉 หรี่เสียงปล่อยคันเร่งมอไซค์อีกครั้ง (ผู้ใช้ขอ) — moto3d.js Eng.tick `shot('decel',.3→.1)` · ยืนยัน browser: ปล่อยที่ 115กม.ชม. decel ยิง v=0.1 (accel คง .85) · deploy `.304`
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 311:** 🔤 **คำศัพท์ไม่ตกบรรทัด** (ผู้ใช้ส่งภาพ NEGOTIATE ตัว E ตกแถวล่าง) — moto3d.js: `#moto-word` เป็น column · `.m-chips` flex `nowrap`+`.m-chip{flex:none}` (อักษรแถวเดียวเสมอ) · คำแปลไทยย้ายบรรทัดล่าง (เลิก margin-left) · `renderWordHud` ห่อ chips ใน `.m-chips` + เรียก `fitWord()` · `fitWord()` วัด offsetWidth เทียบ screen*0.96 → `scale(k)` ย่อถ้าเกิน (transform-origin top center คงกลาง) เรียกใน fit() ตอน resize ด้วย · ยืนยัน browser 1000×640+812×375: negotiate(9)/extravagant(11)/responsibility(14) แถวเดียว scale 1.0 กลาง 50% ไม่ล้น · คำ 24 ตัว scale 0.67 ยังแถวเดียวไม่ล้น · ไม่มี error · deploy `.305`
