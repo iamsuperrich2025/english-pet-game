@@ -6,6 +6,7 @@
 'use strict';
 const REWARD=45, DONE_KEY='motoDone';
 const ACCEL=10, DECEL=5.5, VMAX=32, VMAX_OFF=6.5, WHEEL_R=0.34;
+const ROAD_WIDE=1.8;                       // ตัวคูณความกว้างถนน (รอบ 297 — ผู้ใช้บอกถนนแคบเกิน)
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
 const COLLECT_R=2.8;                       // ระยะชนเก็บตัวอักษร
 const SPAWN_MIN=110, SPAWN_MAX=430, RELOC_D=800;   // ระยะวางตัวอักษรจากรถ + ไกลเกินย้ายใหม่
@@ -18,7 +19,8 @@ let wrapEl,screenEl,cvEl,knobEl,sliderEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist
 let segs=[], buckets=new Map();            // ถนน: เส้นย่อย + ตารางแฮช
 let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
 let yaw=0, spd=0, lean=0, leanV=0, px=0, pz=0;
-let steer=0, thr=0, kSteer=0, kThr=false, padSteer=0, padThr=0;
+let steer=0, thr=0, kThr=false, padThr=0;
+let steerCtl=0, kL=false, kR=false;        // 🎛️ รอบ 297: เอียงแมนวล — ค่าคุมค้างตามที่ผู้เล่นตั้ง ไม่เด้งกลับเอง (คีย์ A/D = ค่อยๆ ปรับ)
 let camX=0,camY=0,camZ=0,camInit=false;
 let word=null, chips=[], letters=[], relocAt=0;
 let trees=null, treeTop=null, treePos=[], TREE_N=200;
@@ -145,7 +147,7 @@ function buildDom(){
       <div id="moto-intro"><div class="m-card">
         <h3>🏍️ มอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
         <p>ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b> — ถนนจริงรอบหมู่บ้าน รัศมี 30 กม.!<br>
-        🟠 สไลเดอร์ส้มซ้าย = เลี้ยว · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>
+        🟠 สไลเดอร์ส้มซ้าย = เอียงรถเลี้ยว <b>ค้างตำแหน่งที่ตั้งไว้</b> (เลื่อนกลับกลาง = วิ่งตรง) · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>
         ขับชน<b>ตัวอักษร</b>บนถนนให้ครบคำ = 🪙${REWARD} · ลูกศรเขียวชี้ทางให้<br>
         <small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว</small></p>
         <button id="moto-go">🏁 สตาร์ทเครื่อง!</button>
@@ -176,17 +178,18 @@ function buildDom(){
   thrEl.addEventListener('pointerup',thrOff);
   thrEl.addEventListener('pointercancel',thrOff);
   thrEl.addEventListener('pointerleave',thrOff);
-  /* สไลเดอร์เลี้ยว: ลากต่อเนื่อง -1..1 · ปล่อย = คืนกลาง */
+  /* สไลเดอร์เอียงรถ (รอบ 297 แมนวลเต็มตัว — ผู้ใช้สั่ง): ลากตั้งองศา -1..1
+     ปล่อยนิ้ว = knob "ค้างตำแหน่งเดิม" ไม่เด้งกลับกลาง · อยากวิ่งตรงต้องเลื่อนกลับกลางเอง */
   let sliding=false;
   const setSteer=e=>{
     const r=sliderEl.getBoundingClientRect();
     let t=((e.clientX-r.left)/r.width-0.5)*2.4;   // ขยับสุดขอบ = เกิน 1 เล็กน้อย → เต็มคันง่าย
-    padSteer=Math.max(-1,Math.min(1,t));
-    knobEl.style.left=(50+padSteer*26)+'%';
+    steerCtl=Math.max(-1,Math.min(1,t));
+    knobEl.style.left=(50+steerCtl*26)+'%';
   };
   sliderEl.addEventListener('pointerdown',e=>{ sliding=true; try{ sliderEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
   sliderEl.addEventListener('pointermove',e=>{ if(sliding) setSteer(e); });
-  const slEnd=()=>{ sliding=false; padSteer=0; knobEl.style.left='50%'; };
+  const slEnd=()=>{ sliding=false; };               // ค้างตำแหน่งที่ปล่อย
   sliderEl.addEventListener('pointerup',slEnd);
   sliderEl.addEventListener('pointercancel',slEnd);
   document.getElementById('moto-power').addEventListener('click',()=>{ exitBox.classList.add('on'); });
@@ -206,7 +209,7 @@ function buildRoads(){
   const D=window.MOTO_MAP;
   const posMinor=[], posMajor=[], posLine=[];
   D.r.forEach(rd=>{
-    const w=rd[0], major=rd[1], pts=rd[3], hw=w/2;
+    const w=rd[0], major=rd[1], pts=rd[3], hw=w/2*ROAD_WIDE;   // รอบ 297: ถนนกว้างขึ้น (ผู้ใช้บอกแคบไป) — คูมทั้งภาพและระยะนับ "อยู่บนถนน"
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.5) continue;
@@ -721,7 +724,12 @@ function tick(){
   frame(dt,now);
 }
 function frame(dt,now){
-  steer=padSteer||kSteer;
+  /* คีย์บอร์ด A/D = ค่อยๆ ปรับองศาเอียง (ปล่อยคีย์ = ค้างองศาเดิม เหมือนสไลเดอร์) */
+  if(kL!==kR){
+    steerCtl=Math.max(-1,Math.min(1, steerCtl+(kR?1:-1)*1.6*dt));
+    knobEl.style.left=(50+steerCtl*26)+'%';
+  }
+  steer=steerCtl;
   thr=(padThr||kThr)?1:0;
   const road=onRoad(px,pz);
   const vmax=road?VMAX:VMAX_OFF;
@@ -732,9 +740,9 @@ function frame(dt,now){
   const yr=steer*Math.min(spd,14)/(6.5+spd*0.42);
   yaw-=yr*dt*1.5;
   px+=Math.sin(yaw)*spd*dt; pz+=Math.cos(yaw)*spd*dt;
-  /* 🏍️ เอียงเข้าโค้ง (รอบ 294 ผู้ใช้สั่ง: มอไซค์ต้องเอียง "เข้า" โค้งต้านแรงเหวี่ยง ไม่ใช่โคลงออกแบบรถยนต์)
+  /* 🏍️ เอียงเข้าโค้ง (รอบ 294) + รอบ 297: องศาเอียง = ค่าที่ผู้เล่นตั้งตรงๆ ไม่ผูกความเร็ว ไม่คืนกลางเอง
      เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
-  const leanTgt=steer*Math.min(1,spd/11)*LEAN_MAX;
+  const leanTgt=steer*LEAN_MAX;
   leanV+=(leanTgt-lean)*10*dt; leanV*=Math.exp(-6*dt); lean+=leanV;
   if(bikeEl) bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
   /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง) */
@@ -765,7 +773,8 @@ function start(){
   exitBox.classList.remove('on');
   sessionCoins=0; sessionWords=0;
   coinsEl.textContent='🪙 +0';
-  px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; leanV=0; thr=0; padSteer=0; kSteer=0; kThr=false;
+  px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; leanV=0; thr=0; padThr=0; kThr=false;
+  steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
   scatterTrees(true); scatterClouds(true);
   fit();
@@ -774,15 +783,15 @@ function start(){
   keydownFn=e=>{
     if(e.repeat) return;
     const k=e.key.toLowerCase();
-    if(k==='a'||k==='arrowleft') kSteer=-1;
-    else if(k==='d'||k==='arrowright') kSteer=1;
+    if(k==='a'||k==='arrowleft') kL=true;
+    else if(k==='d'||k==='arrowright') kR=true;
     else if(k==='w'||k==='arrowup'||k===' '){ kThr=true; Eng.start(); if(introEl.style.display!=='none') introEl.style.display='none'; }
     else if(k==='escape') exitBox.classList.add('on');
   };
   keyupFn=e=>{
     const k=e.key.toLowerCase();
-    if(k==='a'||k==='arrowleft'){ if(kSteer<0) kSteer=0; }
-    else if(k==='d'||k==='arrowright'){ if(kSteer>0) kSteer=0; }
+    if(k==='a'||k==='arrowleft') kL=false;
+    else if(k==='d'||k==='arrowright') kR=false;
     else if(k==='w'||k==='arrowup'||k===' ') kThr=false;
   };
   resizeFn=()=>fit();
@@ -815,7 +824,7 @@ window.MotoWorld={
     get running(){return running}, set running(v){running=v},
     get letters(){return letters}, get word(){return word}, get segs(){return segs},
     get pos(){return {x:px,z:pz,yaw,spd}},
-    set input(v){ if('steer' in v) padSteer=v.steer; if('thr' in v) padThr=v.thr; },
+    set input(v){ if('steer' in v) steerCtl=v.steer; if('thr' in v) padThr=v.thr; },
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
     step(dt,n){ for(let i=0;i<(n||1);i++) frame(dt||1/60, performance.now()); },   // เดินเฟรมเองตอนแท็บ hidden (rAF ไม่ยิง)
     exitWorld, fit, roadInfo, randomRoadPoint,
