@@ -1007,7 +1007,8 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat){
   rooms.push({x:cx, y:h+1.5, z:cz});             // ดาดฟ้าเปิด — ดิ่งลงมาจากด้านบนได้
   /* 🪟🚪 กระจกแตก 1 บานต่อหน้าตึกต่อชั้น + ประตูสนิมชั้นล่าง (ตกแต่งล้วน ไม่มี solid — บินลอดได้เหมือนเดิม) */
   if(winMat){
-    const pw2=Math.min(w,d)*0.42, ph2=(fH-1)*0.66, eps=0.07;
+    // ขนาดบานผูกกับสัดส่วนภาพจริง (tex_window 704×525 = 1.34 · tex_door 448×884 = 0.507) ไม่งั้นภาพยืดบิด
+    const ph2=(fH-1)*0.66, pw2=Math.min(Math.min(w,d)*0.42, ph2*1.34), eps=0.07;
     for(let li=0;li<levels;li++){
       const yMid=li*fH+fH/2;
       [[0,-d/2+eps,0],[0,d/2-eps,Math.PI],[-w/2+eps,0,Math.PI/2],[w/2-eps,0,-Math.PI/2]].forEach(([ox,oz,ry],fi)=>{
@@ -1019,7 +1020,7 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat){
     }
     if(doorMat){
       const dz=doorSide===0?-d/2+eps:d/2-eps;
-      const dr=new THREE.Mesh(new THREE.PlaneGeometry(2.4,3.4),doorMat);
+      const dr=new THREE.Mesh(new THREE.PlaneGeometry(1.72,3.4),doorMat);
       dr.position.set(cx,1.7,cz+dz); dr.rotation.y=doorSide===0?0:Math.PI; sc.add(dr);
     }
   }
