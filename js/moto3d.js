@@ -137,7 +137,7 @@ function buildDom(){
     <button id="moto-power"><span class="m-hint">ออก</span></button>
     <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
-      <img id="moto-bike" src="img/moterbike/bike.webp" alt="">
+      <img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
       <div id="moto-gps"><span id="moto-gps-arr">➤</span><span id="moto-gps-d">--</span></div>
