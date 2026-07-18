@@ -168,6 +168,11 @@ let cityMapCv=null;               // แผนที่เมืองวาด�
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
+/* 🎯💡🏆 รอบ 350: ระบบช่วยจัดกึ่งกลางเป้า + ไฟส่องหมอก + โบนัสลงนุ่ม */
+const ASSIST_R=14, ASSIST_ALT=26, ASSIST_PAD=3.0;   // รัศมีเริ่มติ๊ด · สูงไม่เกิน · "ตรงเป้า" = ในวง helipad (ring 2.4-3.0)
+let assistTgt=null;                      // เป้าดาดฟ้าตัวอักษรที่ใกล้สุดตอนกำลังร่อนลง {x,z,y,d}
+let heliLight=null, heliLightOn=false, _lightHintAt=0;   // 💡 สปอตไลต์ใต้ท้อง (แสงจริง — ตึกเป็น Lambert รับแสงได้)
+let hAirAt=0;                            // เวลาเทคออฟล่าสุด — โบนัสลงนุ่มต้องบินจริง >3 วิ (กันเด้งฟาร์ม)
 let propsEl=null, propSpinCur=0, propStallUntil=0;   // 🌀 ใบพัดโดรน — จำค่า --pspin ล่าสุด (เขียน DOM เฉพาะตอนเปลี่ยนจริง) + ช่วงสตอลหลังชน
 const PROP_STALL_MS=420;                            // ชนแล้วใบพัดหมุนช้า+สะบัดนานเท่านี้
 /* 🌀 ใบพัดหัก (ชนแรงมาก) — ใบข้างที่ชนหยุดหมุน บินช้าลง จนกว่าจะเก็บตัวอักษรถัดไป = ซ่อมเสร็จ */
@@ -3286,7 +3291,15 @@ function buildDom(){
   #adv-visor small{display:block;font-size:9px;letter-spacing:.02em}
   .adv-heli #adv-visor{display:block}
   #adv-visor:active{background:rgba(124,200,255,.28)}
-  #adv-visor.on,#adv-wiper.on{background:rgba(124,255,157,.2);border-color:#7cff9d;color:#c6ffd8}
+  #adv-visor.on,#adv-wiper.on,#adv-light.on{background:rgba(124,255,157,.2);border-color:#7cff9d;color:#c6ffd8}
+  /* 💡 ปุ่มไฟส่องหมอก (รอบ 350) — ต่อแถวล่างขวา: seat 14 · wiper 78 · visor 142 · light 206 */
+  #adv-light{position:absolute;bottom:10px;right:206px;display:none;pointer-events:auto;z-index:6;
+    width:58px;padding:5px 0 3px;border-radius:12px;border:1px solid rgba(124,200,255,.5);
+    background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,200,255,.6)}
+  #adv-light small{display:block;font-size:9px;letter-spacing:.02em}
+  .adv-heli #adv-light{display:block}
+  #adv-light:active{background:rgba(124,200,255,.28)}
   #adv-wiper{right:78px} #adv-seat{right:14px}
   .adv-heli #adv-wiper,.adv-heli #adv-seat{display:block}
   #adv-wiper:active,#adv-seat:active{background:rgba(124,200,255,.28)}
@@ -4060,6 +4073,7 @@ function buildDom(){
     <div class="adv-hud" id="adv-racehud"></div>
     <button id="adv-skipstart">⏭ ข้ามการสตาร์ทเครื่อง</button>
     <button id="adv-visor">🕶️<small>ม่านบังแดด</small></button>
+    <button id="adv-light">💡<small>ไฟส่อง</small></button>
     <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
@@ -4498,6 +4512,9 @@ function buildDom(){
   overlayEl.querySelector('#adv-visor').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setVisor(!visorDown);
   });
+  overlayEl.querySelector('#adv-light').addEventListener('click',e=>{
+    e.preventDefault(); sfx.select(); setHeliLight(!heliLightOn);
+  });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -4582,7 +4599,7 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -6209,6 +6226,38 @@ function heliFloorAt(x,z){
   }
   return f;
 }
+/* 🏆 โบนัสลงนุ่ม (รอบ 350) — ต่อยอดแถบเตือนดิ่ง: แตะพื้นช้ากว่าเกณฑ์ = ได้เหรียญ
+   สอนทักษะเดียวกับที่แถบสอน (ร่อนลงนุ่มๆ) แต่เป็นรางวัลบวกแทนคำเตือน
+   คืน true เมื่อได้โบนัส (ผู้เรียกใช้ตัดสินใจว่ายังต้องให้ ATC ชมซ้ำไหม) */
+const SOFT_TIERS=[[1.3,10,'🏆 Perfect landing!'],[3,4,'👍 ลงนุ่มมาก']];   // [ดิ่งไม่เกิน m/s, เหรียญ, ป้าย]
+function softLandBonus(impact,now){
+  if(!hAirAt || now-hAirAt<3000) return false;         // ต้องบินจริง >3 วิ — กันกระดกขึ้นลงถี่ๆ ฟาร์มเหรียญ
+  const tier=SOFT_TIERS.find(t=>impact<=t[0]);
+  if(!tier) return false;
+  const [,coin,label]=tier;
+  addCoins(coin); sessionCoins+=coin; renderHudTop();
+  showBanner(`${label} +${coin}🪙 (แตะพื้น ${impact.toFixed(1)} m/s)`);
+  if(coin>=10){ sfx.levelup(); ATC.say('Perfect landing, captain! Textbook approach!'); }
+  else sfx.select();
+  return true;
+}
+/* 💡 ไฟส่องหมอก (รอบ 350) — สปอตไลต์จริงใต้ท้องเครื่อง ส่องไปข้างหน้า-ลงล่าง
+   ตึก/แท่นจอดเป็น MeshLambert รับแสงจริง → เห็นวงแสงบนดาดฟ้า ช่วยหาเป้าตอนหมอกลง
+   เปิดไฟ = หมอกบางลงด้วย (fogUpdate คูณ .62) ให้รู้สึกว่า "ไฟตัดหมอก" จริง */
+function setHeliLight(on){
+  heliLightOn=on;
+  const b=overlayEl&&overlayEl.querySelector('#adv-light');
+  if(b){ b.classList.toggle('on',on); b.querySelector('small').textContent=on?'ไฟเปิด':'ไฟส่อง'; }
+  _fogAt=0;                                            // บังคับ fogUpdate คำนวณใหม่ทันที (ปกติ throttle 800ms)
+  if(!scene) return;
+  if(on){
+    if(!heliLight){
+      heliLight=new THREE.SpotLight(0xfff2c8, 2.6, 90, .5, .45, 1.1);
+      heliLight.target=new THREE.Object3D();
+    }
+    scene.add(heliLight); scene.add(heliLight.target);
+  }else if(heliLight){ scene.remove(heliLight); scene.remove(heliLight.target); }
+}
 function tickHeli(dt,now){
   // ---- อ่านอินพุต ----
   let fw=0,sd=0,yawIn=0;
@@ -6229,7 +6278,7 @@ function tickHeli(dt,now){
   // ---- ฟิสิกส์ ----
   const sin=Math.sin(yaw),cos=Math.cos(yaw);
   if(hLanded){
-    if(col>.25 && HeliSound.ready){ hLanded=false; hVel.y=2.5; }  // เทคออฟได้เมื่อสตาร์ทเครื่องเสร็จ
+    if(col>.25 && HeliSound.ready){ hLanded=false; hVel.y=2.5; hAirAt=now; }  // เทคออฟได้เมื่อสตาร์ทเครื่องเสร็จ
   }else{
     hVel.x+=(-sin*fw+cos*sd)*13*dt;
     hVel.z+=(-cos*fw-sin*sd)*13*dt;
@@ -6266,8 +6315,10 @@ function tickHeli(dt,now){
     else{
       ny=minY;
       if(!hLanded && Math.abs(hVel.y)<=7 && col<=.1){
+        const impact=Math.max(0,-hVel.y);              // ความเร็วดิ่งตอนแตะพื้น (ก่อนเคลียร์)
         hLanded=true; hVel={x:0,y:0,z:0}; sfx.select(); HeliSound.thud(.4);
-        if(Math.random()<.35) ATC.say('Beautiful landing, captain. Very smooth!');   // 📻 หอชมเป็นครั้งคราว
+        if(!softLandBonus(impact,now) && Math.random()<.35)
+          ATC.say('Beautiful landing, captain. Very smooth!');   // 📻 หอชมเป็นครั้งคราว (ถ้าไม่ได้โบนัสอยู่แล้ว)
       }
       hVel.y=Math.max(0,hVel.y);
       if(hLanded){ hVel.x=0; hVel.z=0; }
@@ -6344,6 +6395,27 @@ function tickHeli(dt,now){
   rainTick(now);                                              // 🌧️ ตารางฝนตกเป็นช่วงๆ
   tickDrops(dt,Math.hypot(hVel.x,hVel.z));                    // 💧 หยดน้ำไหล/ปลิวตามความเร็ว
   fogUpdate(now);                                             // 🌫️ หมอกตอนเช้าตามเวลาจริง
+  // 🎯 ระบบช่วยจัดกึ่งกลางเป้า (รอบ 350) — เหมือนเซนเซอร์ถอยรถ: ยิ่งใกล้เป้ายิ่งติ๊ดถี่ ตรงเป้า=รัว+โทนสูง
+  assistTgt=null;
+  if(!hLanded && HeliSound.ready){
+    let bd=ASSIST_R;
+    for(const l of letters){
+      const lp=l.spr.position, roofY=(l.baseY||1.3)-1.3;
+      const dxz=Math.hypot(lp.x-nx,lp.z-nz), alt=ny-roofY;
+      if(dxz<bd && alt>0 && alt<ASSIST_ALT){ bd=dxz; assistTgt={x:lp.x,z:lp.z,y:roofY,d:dxz}; }
+    }
+    if(assistTgt) HeliSound.assist(assistTgt.d, assistTgt.d<ASSIST_PAD, now);
+  }
+  // 💡 ไฟส่อง: ตามตัวเครื่องทุกเฟรม — ส่องไปข้างหน้า-ลงล่าง (ทิศหน้า = -sin,-cos ตามฟิสิกส์ด้านบน)
+  if(heliLight&&heliLightOn){
+    heliLight.position.set(nx,ny-.6,nz);
+    heliLight.target.position.set(nx-sin*14, Math.max(0,ny-16), nz-cos*14);
+  }
+  // 📻 หมอกหนา+ยังไม่เปิดไฟ → หอเตือนให้เปิด (เว้นช่วง 2 นาที ไม่พูดซ้ำถี่)
+  if(heliFog>.5 && !heliLightOn && now>_lightHintAt){
+    _lightHintAt=now+120000;
+    ATC.say('Heavy fog, captain. Switch on your searchlight.');
+  }
   drawGauges();
   drawLandingTargets();                 // 🎯 วงเป้าลงจอดบนดาดฟ้าที่มีตัวอักษร
   drawDescentBar();                     // 📏 แถบเตือน + กรอบแดงตอนดิ่งเร็วเกิน
@@ -6471,6 +6543,7 @@ function fogUpdate(now){
   if(h>=4 && h<=9)          f=1-Math.abs(h-5.8)/2.7;          // หมอกเช้า (หนาสุด 05:48)
   else if(h>=17.5 && h<=20) f=(1-Math.abs(h-18.6)/2)*.5;      // พลบค่ำบางๆ
   heliFog=Math.max(0,Math.min(1,f));
+  if(heliLightOn) heliFog*=.62;                    // 💡 เปิดไฟส่อง = ลำแสงตัดหมอก มองไกลขึ้น (รอบ 350)
   scene.fog.near=HELI_FOG_N0*(1-.86*heliFog);    // 45 → ~6 (มองเห็นใกล้มาก)
   scene.fog.far =HELI_FOG_F0*(1-.74*heliFog);    // 150 → ~39
   _fogSky.set(MODES.heli.sky);
@@ -6681,6 +6754,20 @@ function drawBellyHud(){
   c.moveTo(cx-r-7,cy); c.lineTo(cx-r+3,cy); c.moveTo(cx+r-3,cy); c.lineTo(cx+r+7,cy);
   c.moveTo(cx,cy-r-7); c.lineTo(cx,cy-r+3); c.moveTo(cx,cy+r-3); c.lineTo(cx,cy+r+7);
   c.stroke();
+  // 🎯 จุดเป้าลงจอด (รอบ 350): ฉายเป้าด้วย bellyCam ตรงๆ = ตรงกับภาพในกล้องเสมอ
+  //    (เมทริกซ์ bellyCam อัปเดตตอน render เฟรมก่อน — lag 1 เฟรมมองไม่ออก)
+  if(assistTgt&&bellyCam){
+    _tgtV.set(assistTgt.x,assistTgt.y,assistTgt.z).project(bellyCam);
+    let tx=x+(_tgtV.x*.5+.5)*w, ty=y+(-_tgtV.y*.5+.5)*h;
+    tx=Math.max(x+5,Math.min(x+w-5,tx)); ty=Math.max(y+5,Math.min(y+h-5,ty));   // หลุดกรอบ = หนีบไว้ริมขอบ
+    const hit=assistTgt.d<ASSIST_PAD;
+    c.fillStyle=hit?'rgba(140,255,150,.95)':'rgba(255,205,80,.95)';
+    c.beginPath(); c.arc(tx,ty,4,0,7); c.fill();
+    c.strokeStyle=c.fillStyle; c.lineWidth=1.4;
+    c.beginPath(); c.arc(tx,ty,8,0,7); c.stroke();
+    c.font='700 10px system-ui,sans-serif'; c.textAlign='center'; c.fillStyle=c.strokeStyle;
+    c.fillText(hit?'✓ ตรงเป้า ร่อนลงเลย':'◈ เป้า '+assistTgt.d.toFixed(1)+' ม.',cx,y+h-6);
+  }
   c.restore();
 }
 /* ============================================================
@@ -6925,6 +7012,23 @@ const HeliSound={
     src.connect(g); g.connect(this.master);
     src.start(at||this.ctx.currentTime);
     return {src,gain:g};
+  },
+  /* 🎯 ติ๊ดช่วยจัดกึ่งกลางเป้า (รอบ 350) — แบบเซนเซอร์ถอยรถ: ไกล=ห่าง ใกล้=ถี่ ตรงเป้า=รัว+โทนสูง
+     ⚠️ ต่อตรง destination ไม่ผ่าน master — master โดน envLp (lowpass ตามความสูง) ทุ้มจนติ๊ดหาย */
+  _assistAt:0,
+  assist(dist,centered,now){
+    if(!state.sound||!this.ctx) return;
+    const gap=centered?130:280+(dist/14)*520;      // ms ระหว่างติ๊ด
+    if(now-this._assistAt<gap) return;
+    this._assistAt=now;
+    try{
+      const c=this.ctx,t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='sine'; o.frequency.value=centered?1560:1180;
+      g.gain.setValueAtTime(centered?.055:.042,t);
+      g.gain.exponentialRampToValueAtTime(.001,t+.045);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.06);
+    }catch(e){}
   },
   ensureCtx(){
     const AC=window.AudioContext||window.webkitAudioContext;
@@ -8373,8 +8477,9 @@ function start(md){
     HeliSound.start();
     hViewSwitched=false;
     setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
-    setWiper(0); setVisor(false);                         // 🌧️🕶️ เข้าโลกใหม่ = ที่ปัด/ม่าน ปิดเสมอ
+    setWiper(0); setVisor(false); setHeliLight(false);    // 🌧️🕶️💡 เข้าโลกใหม่ = ที่ปัด/ม่าน/ไฟ ปิดเสมอ
     drops=[]; rainOn=false; rainNextAt=0; bellyRect=null;  // 💧📹 ล้างสภาพอากาศ/กล้องของรอบก่อน
+    assistTgt=null; hAirAt=0; _lightHintAt=0;              // 🎯🏆 ล้างระบบช่วยเล็ง/โบนัสลงนุ่มของรอบก่อน
     sunUpdate();                                          // 🌅 ตั้งดวงอาทิตย์ตามเวลาจริงตอนเข้าเล่น
     layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   }
@@ -8479,11 +8584,19 @@ window.Adventure3D={
                         redraw:(dt)=>{ dt=dt||.016;
                           tickDrops(dt,Math.hypot(hVel.x,hVel.z));
                           fogUpdate(performance.now());
+                          drawBellyCam();                     // เรนเดอร์กล้องใต้ท้อง + ตั้ง bellyRect (ลูปตายก็เทสต์ได้)
                           drawGauges(); drawLandingTargets(); drawDescentBar();
                           drawBellyHud(); drawGlass(dt,performance.now()); },
                         get fog(){return +heliFog.toFixed(2)},
                         get fogFar(){return scene&&scene.fog?+scene.fog.far.toFixed(1):null},
                         set landed(v){hLanded=v}, get vy(){return hVel.y}, set vy(v){hVel.y=v},
+                        // 🎯💡🏆 รอบ 350: ช่วยเล็ง/ไฟส่อง/โบนัสลงนุ่ม
+                        get assistTgt(){return assistTgt},
+                        get light(){return heliLightOn}, setLight:setHeliLight,
+                        get lightObj(){return heliLight},
+                        set airAt(v){hAirAt=v},
+                        softLand:(impact)=>softLandBonus(impact,performance.now()),
+                        tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
                           sunDir=(t-.5)*3.2; sunHi=Math.sin(t*Math.PI); sunWarm=1-sunHi;
