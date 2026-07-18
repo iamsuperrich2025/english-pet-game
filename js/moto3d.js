@@ -60,12 +60,12 @@ const CSS=`
 /* เครื่องเกมพกพา = ภาพจริงของผู้ใช้ (img/moterbike/console_crop.webp) ยืดเต็มจอ
    ตำแหน่งปุ่ม/จอ วัดจากพิกเซลภาพจริง (grid 10%): จอใน 25–69.6% x 18–71% · power กลาง 47% · knob ส้มซ้าย · บอลฟ้าขวา */
 #moto-body{position:absolute;inset:0;background:url('img/moterbike/console_crop.webp') center/100% 100% no-repeat}
-#moto-power{position:absolute;left:43.3%;top:0.5%;width:8.2%;height:13.6%;border-radius:50%;
+#moto-power{position:absolute;left:45.5%;top:0.5%;width:8%;height:12.5%;border-radius:50%;
   border:none;cursor:pointer;background:transparent;color:#fff;
   display:flex;align-items:flex-end;justify-content:center}
 #moto-power .m-hint{font-size:1.5vmin;font-weight:800;opacity:.5;margin-bottom:-2.2vmin;text-shadow:0 1px 2px #000}
 #moto-power:active{background:rgba(255,255,255,.14)}
-#moto-screen{position:absolute;left:25.1%;top:18%;width:44.4%;height:53%;
+#moto-screen{position:absolute;left:25.2%;top:20%;width:46.4%;height:60.5%;
   background:#0e1118;border-radius:1.6vmin;overflow:hidden;
   box-shadow:inset 0 0 2vmin rgba(0,0,0,.85)}
 #moto-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -73,7 +73,7 @@ const CSS=`
 #moto-bike{position:absolute;left:50%;bottom:-2%;height:56%;pointer-events:none;z-index:2;
   transform:translateX(-50%);transform-origin:50% 92%;
   filter:drop-shadow(0 1.2vmin 1vmin rgba(0,0,0,.55))}
-#moto-slider{position:absolute;left:2%;top:41%;width:22.5%;height:24%;border-radius:999px;cursor:pointer;
+#moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
   background:transparent}
 #moto-slider .m-arr{display:none}
 #moto-knob{position:absolute;left:50%;top:21%;height:56%;width:62%;transform:translateX(-50%);border-radius:999px;
@@ -82,7 +82,7 @@ const CSS=`
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:2.1vmin;
   text-shadow:0 1px 2px rgba(120,40,0,.6)}
 #moto-knob span{opacity:.5}
-#moto-throttle{position:absolute;left:72%;top:32.5%;width:19.5%;height:48%;border-radius:50%;border:none;cursor:pointer;
+#moto-throttle{position:absolute;left:74.5%;top:40%;width:19.5%;height:48%;border-radius:50%;border:none;cursor:pointer;
   background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin}
 #moto-throttle:active{background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.22),rgba(255,255,255,0) 62%)}
 #moto-throttle .m-ico{font-size:4.4vmin;opacity:.5;pointer-events:none;text-shadow:0 1px 3px rgba(0,60,70,.6)}
@@ -300,30 +300,189 @@ function letterTexture(ch){
   const t=new THREE.CanvasTexture(cv);
   texCache[key]=t; return t;
 }
+/* ---------- 🏫 โรงเรียน 3D ตามคลิปจริง (รอบ 295) ---------- */
+function woodTileMat(){          // กระเบื้องลายไม้เฉียงมันวาว (บันไดในคลิป)
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.fillStyle='#a9642a'; c.fillRect(0,0,128,128);
+  c.strokeStyle='rgba(255,214,160,.75)'; c.lineWidth=3;
+  for(let i=-128;i<256;i+=14){ c.beginPath(); c.moveTo(i,0); c.lineTo(i+64,64); c.moveTo(i,64); c.lineTo(i+64,128); c.stroke(); }
+  c.strokeStyle='#efe8dc'; c.lineWidth=4;
+  c.strokeRect(0,0,64,64); c.strokeRect(64,64,64,64); c.strokeRect(64,0,64,64); c.strokeRect(0,64,64,64);
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  return new THREE.MeshPhongMaterial({map:t, shininess:90, specular:0x777777});
+}
+function muralTexture(){         // ภาพวาดการ์ตูนบนผนังทางเดิน (จากคลิป)
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=96;
+  const c=cv.getContext('2d');
+  c.fillStyle='#fdf6e8'; c.fillRect(0,0,256,96);
+  const sky=c.createLinearGradient(0,0,0,60); sky.addColorStop(0,'#9fdcf7'); sky.addColorStop(1,'#e8f7ff');
+  c.fillStyle=sky; c.fillRect(6,6,244,58);
+  c.fillStyle='#8fd06c'; c.fillRect(6,56,244,34);
+  c.font='34px serif'; c.textBaseline='middle';
+  ['🌈','🐘','🌻','🦋','🏫','🌳'].forEach((e,i)=>c.fillText(e,14+i*40,60));
+  c.font='26px serif'; c.fillText('☀️',216,24); c.fillText('☁️',30,22);
+  return new THREE.CanvasTexture(cv);
+}
+function buildSchool(cx,cz,face){
+  const g=new THREE.Group();
+  const lam=c=>new THREE.MeshLambertMaterial({color:c});
+  const purple=lam(0x8e5fc0), purpleD=lam(0x6a4694), white=lam(0xf2f3f6),
+        winMat=lam(0xcfe6ff), doorMat=lam(0x7a4b26), chrome=new THREE.MeshPhongMaterial({color:0xd9dee4,shininess:110,specular:0xaaaaaa});
+  /* ลานคอนกรีตหน้าอาคาร */
+  const yard=new THREE.Mesh(new THREE.BoxGeometry(76,.12,58), lam(0xd0d5da));
+  yard.position.y=.06; g.add(yard);
+  /* อาคารม่วง 2 ชั้น + ระเบียงทางเดินหน้า (เหมือนภาพ Google/คลิป) */
+  const FH=3.4, BL=38, BD=8;
+  const bld=new THREE.Mesh(new THREE.BoxGeometry(BL,FH*2,BD), purple);
+  bld.position.set(0,FH,-19); g.add(bld);
+  const slab=new THREE.Mesh(new THREE.BoxGeometry(BL+3,.35,BD+3.4), purpleD);   // พื้นระเบียงชั้น 2
+  slab.position.set(0,FH,-19+.6); g.add(slab);
+  const roof=new THREE.Mesh(new THREE.BoxGeometry(BL+4,1,BD+4), lam(0xb0562e)); // หลังคาส้มอิฐ
+  roof.position.set(0,FH*2+.6,-19); g.add(roof);
+  const roofTop=new THREE.Mesh(new THREE.CylinderGeometry(0,3.4,2.2,4), lam(0x9c4826));
+  roofTop.scale.set(BL/6,1,1); roofTop.rotation.y=Math.PI/4; roofTop.position.set(0,FH*2+2.1,-19); g.add(roofTop);
+  /* เสาระเบียงขาว + ราวกันตกชั้น 2 */
+  for(let x=-18;x<=18;x+=4.5){
+    const col=new THREE.Mesh(new THREE.CylinderGeometry(.18,.18,FH*2,8), white);
+    col.position.set(x,FH,-14.2); g.add(col);
+  }
+  const rail2=new THREE.Mesh(new THREE.BoxGeometry(BL+2,.12,.12), chrome);
+  rail2.position.set(0,FH+1.05,-14.2); g.add(rail2);
+  const rail2b=new THREE.Mesh(new THREE.BoxGeometry(BL+2,.55,.06), lam(0xb69ad8));
+  rail2b.position.set(0,FH+.62,-14.2); g.add(rail2b);
+  /* หน้าต่างฟ้า 2 ชั้น + ประตู + ภาพวาดการ์ตูนผนังชั้นล่าง */
+  const winGeo=new THREE.BoxGeometry(2.6,1.7,.18);
+  for(let f=0;f<2;f++) for(let i=-3;i<=3;i++){
+    if(f===0&&(i===-1||i===1)) continue;                        // เว้นช่องประตู
+    const w=new THREE.Mesh(winGeo,winMat); w.position.set(i*4.8,1.9+f*FH,-14.95); g.add(w);
+  }
+  [-1,1].forEach(i=>{
+    const d=new THREE.Mesh(new THREE.BoxGeometry(1.7,2.6,.18), doorMat);
+    d.position.set(i*4.8,1.3,-14.95); g.add(d);
+  });
+  const mural=new THREE.Mesh(new THREE.PlaneGeometry(7,2.6),
+    new THREE.MeshBasicMaterial({map:muralTexture()}));
+  mural.position.set(-13.5,1.7,-14.93); g.add(mural);
+  /* 🪜 บันไดซิกเนเจอร์จากคลิป: กระเบื้องลายไม้มันวาว + ผนังข้างม่วง + ราวโครเมียม (ปลายอาคารขวา) */
+  const tile=woodTileMat();
+  const STEPS=9, SW=3.2, SD=.62, SH=FH/STEPS;
+  const stairX=BL/2+2.2;
+  for(let i=0;i<STEPS;i++){
+    const st=new THREE.Mesh(new THREE.BoxGeometry(SW,SH,SD), tile);
+    st.position.set(stairX, SH/2+i*SH, -14.5-i*SD);
+    g.add(st);
+  }
+  const sideW=new THREE.Mesh(new THREE.BoxGeometry(.25,FH+1.2,STEPS*SD+1.4), purple);
+  sideW.position.set(stairX+SW/2+.15, (FH+1.2)/2, -14.5-(STEPS*SD)/2); g.add(sideW);
+  const railLen=Math.hypot(STEPS*SD,FH)+1;
+  const rail=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,railLen,8), chrome);
+  rail.rotation.x=Math.atan2(FH,STEPS*SD)+Math.PI/2;
+  rail.position.set(stairX-SW/2-.1, FH/2+.95, -14.5-(STEPS*SD)/2); g.add(rail);
+  for(let i=0;i<3;i++){
+    const post=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.95,6), chrome);
+    const t=i/2;
+    post.position.set(stairX-SW/2-.1, t*FH+.5, -14.5-t*STEPS*SD); g.add(post);
+  }
+  /* 🇹🇭 เสาธงชาติไทย */
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.1,.14,13,8), white);
+  pole.position.set(-24,6.5,2); g.add(pole);
+  const STRIPES=[[0xB5002D,.45],[0xffffff,.45],[0x2D2A4A,.9],[0xffffff,.45],[0xB5002D,.45]];
+  let fy=12.3;
+  STRIPES.forEach(([col,h])=>{
+    const s=new THREE.Mesh(new THREE.PlaneGeometry(4,h), new THREE.MeshBasicMaterial({color:col,side:THREE.DoubleSide}));
+    s.position.set(-21.9,fy-h/2,2); g.add(s); fy-=h;
+  });
+  const poleBase=new THREE.Mesh(new THREE.CylinderGeometry(1.2,1.5,.8,10), white);
+  poleBase.position.set(-24,.4,2); g.add(poleBase);
+  /* 🐘 รูปปั้นช้างน้ำเงิน (จากคลิป) บนแท่นขาว กลางสวนหน้าลาน */
+  const ele=new THREE.Group();
+  const blue=lam(0x2e6fd8);
+  const ped=new THREE.Mesh(new THREE.BoxGeometry(3.4,.7,2.4), white); ped.position.y=.35; ele.add(ped);
+  const body=new THREE.Mesh(new THREE.SphereGeometry(1.05,12,10), blue);
+  body.scale.set(1.35,1,.95); body.position.y=1.85; ele.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.62,12,10), blue); head.position.set(1.55,2.25,0); ele.add(head);
+  [-1,1].forEach(s=>{
+    const ear=new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.1,10), blue);
+    ear.rotation.z=Math.PI/2; ear.position.set(1.35,2.35,s*.55); ele.add(ear);
+    const eye=new THREE.Mesh(new THREE.SphereGeometry(.07,6,6), lam(0x111111));
+    eye.position.set(2.02,2.42,s*.26); ele.add(eye);
+  });
+  const tr1=new THREE.Mesh(new THREE.CylinderGeometry(.16,.13,.9,8), blue);
+  tr1.rotation.z=-.7; tr1.position.set(2.2,1.85,0); ele.add(tr1);
+  const tr2=new THREE.Mesh(new THREE.CylinderGeometry(.13,.11,.6,8), blue);
+  tr2.rotation.z=-.15; tr2.position.set(2.5,1.4,0); ele.add(tr2);
+  for(const [lx,lz] of [[-.7,-.45],[-.7,.45],[.5,-.45],[.5,.45]]){
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.22,.25,.95,8), blue);
+    leg.position.set(lx,1.15,lz); ele.add(leg);
+  }
+  ele.position.set(-12,0,14); ele.rotation.y=.5; g.add(ele);
+  /* 🌼 แปลงดอกไม้รอบช้าง + ริมลาน */
+  const bed=new THREE.Mesh(new THREE.BoxGeometry(10,.3,6), lam(0x4e9b45));
+  bed.position.set(-12,.15,14); g.add(bed);
+  const FLW=[0xff5f8f,0xffd54f,0xff8a3d,0xb388ff,0xff4d6d,0xffffff];
+  const flower=new THREE.InstancedMesh(new THREE.SphereGeometry(.22,6,6), lam(0xffffff), 46);
+  const fm=new THREE.Matrix4(), fc=new THREE.Color();
+  for(let i=0;i<46;i++){
+    const onBed=i<22;
+    const fx=onBed?(-12+(Math.random()*9-4.5)):(Math.random()*70-35);
+    const fz=onBed?(14+(Math.random()*5-2.5)):(26.5+Math.random()*1.6);
+    fm.makeScale(1,1,1); fm.setPosition(fx,.42,fz); flower.setMatrixAt(i,fm);
+    fc.setHex(FLW[i%FLW.length]); flower.setColorAt(i,fc);
+  }
+  g.add(flower);
+  /* 🛝 สนามเด็กเล่น: สไลเดอร์แดง + ชิงช้าเหลือง (จากคลิป) */
+  const slide=new THREE.Group();
+  const ramp=new THREE.Mesh(new THREE.BoxGeometry(1.1,.14,4.6), lam(0xe84d5b));
+  ramp.rotation.x=-.55; ramp.position.set(0,1.25,1.05); slide.add(ramp);
+  const deck=new THREE.Mesh(new THREE.BoxGeometry(1.2,.14,1.2), lam(0xf6c026));
+  deck.position.set(0,2.35,-1.35); slide.add(deck);
+  for(const [px2,pz2] of [[-.5,-1.9],[.5,-1.9],[-.5,-.8],[.5,-.8]]){
+    const lg=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,2.35,6), lam(0x3b8fd4));
+    lg.position.set(px2,1.18,pz2); slide.add(lg);
+  }
+  for(let i=0;i<4;i++){
+    const rung=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1,6), lam(0xf2f3f6));
+    rung.rotation.z=Math.PI/2; rung.position.set(0,.5+i*.55,-2.42); slide.add(rung);
+  }
+  slide.position.set(12,0,16); slide.rotation.y=-.7; g.add(slide);
+  const swing=new THREE.Group();
+  [-1.6,1.6].forEach(sx=>{
+    [-1,1].forEach(sz=>{
+      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,2.9,6), lam(0xf6c026));
+      leg.rotation.x=sz*.32; leg.position.set(sx,1.35,sz*.5); swing.add(leg);
+    });
+  });
+  const beam=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3.6,6), lam(0xf6c026));
+  beam.rotation.z=Math.PI/2; beam.position.y=2.7; swing.add(beam);
+  [-0.75,0.75].forEach(sx=>{
+    [-.28,.28].forEach(dx=>{
+      const rope=new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1.9,5), lam(0xcccccc));
+      rope.position.set(sx+dx,1.72,0); swing.add(rope);
+    });
+    const seat=new THREE.Mesh(new THREE.BoxGeometry(.75,.08,.3), lam(0xe84d5b));
+    seat.position.set(sx,.75,0); swing.add(seat);
+  });
+  swing.position.set(21,0,13); swing.rotation.y=.4; g.add(swing);
+  /* ป้ายชื่อโรงเรียนลอย */
+  const sign=makeTextSprite('โรงเรียนบ้านโพธิ์สวัสดิ์','#7c4fb5','#ffffff','🏫');
+  sign.scale.set(46,11.5,1); sign.position.set(0,15,-19); g.add(sign);
+  g.position.set(cx,0,cz); g.rotation.y=face;
+  scene.add(g);
+}
 function buildScenery(){
   const D=window.MOTO_MAP;
   /* พื้นหญ้าสดใส */
   const g=new THREE.Mesh(new THREE.PlaneGeometry(64000,64000),
     new THREE.MeshLambertMaterial({color:0x8fd06c}));
   g.rotation.x=-Math.PI/2; g.position.y=-0.05; scene.add(g);
-  /* 🏫 โรงเรียนบ้านโพธิ์สวัสดิ์ (0,0) — อาคารม่วงเหมือนจริง + ป้าย + เสาธง */
-  const sch=new THREE.Group();
-  const bld=new THREE.Mesh(new THREE.BoxGeometry(26,8,10), new THREE.MeshLambertMaterial({color:0x9b6fc9}));
-  bld.position.y=4; sch.add(bld);
-  const roof=new THREE.Mesh(new THREE.BoxGeometry(28,1.2,12), new THREE.MeshLambertMaterial({color:0x6a4b8f}));
-  roof.position.y=8.6; sch.add(roof);
-  for(let i=-2;i<=2;i++){
-    const win=new THREE.Mesh(new THREE.BoxGeometry(3,2.2,.3), new THREE.MeshLambertMaterial({color:0xdcecff}));
-    win.position.set(i*5,4.6,5.02); sch.add(win);
-  }
-  const pole=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,12,8), new THREE.MeshLambertMaterial({color:0xe8ecf2}));
-  pole.position.set(-16,6,6); sch.add(pole);
-  const flag=new THREE.Mesh(new THREE.PlaneGeometry(3,1.8), new THREE.MeshBasicMaterial({color:0xe53935,side:THREE.DoubleSide}));
-  flag.position.set(-14.4,11,6); sch.add(flag);
-  const sign=makeTextSprite('โรงเรียนบ้านโพธิ์สวัสดิ์','#7c4fb5','#ffffff','🏫');
-  sign.scale.set(46,11.5,1); sign.position.set(0,15,0); sch.add(sign);
-  sch.position.set(startX-28,0,startZ-20);   // ถอยจากริมถนนจุดสตาร์ท
-  scene.add(sch);
+  /* 🏫 โรงเรียนบ้านโพธิ์สวัสดิ์ — สร้างตามคลิปจริงของผู้ใช้ (รอบ 295):
+     บันไดกระเบื้องลายไม้มันวาว+ผนังม่วง+ราวโครเมียม · ช้างน้ำเงินในสวน · สนามเด็กเล่น · ธงไตรรงค์
+     วางข้างถนนจุดสตาร์ท ฝั่งที่ไม่ทับถนน หันหน้าเข้าถนน — ขี่เข้าไปเดินเล่นในลานได้ (นอกถนน=ช้าอัตโนมัติ) */
+  const nrmX=Math.cos(startYaw), nrmZ=-Math.sin(startYaw);      // ตั้งฉากกับทิศถนน
+  let scx=startX+nrmX*52, scz=startZ+nrmZ*52;
+  if(roadInfo(scx,scz).d<10){ scx=startX-nrmX*52; scz=startZ-nrmZ*52; }
+  buildSchool(scx, scz, Math.atan2(startX-scx, startZ-scz));
   /* 🏘️ ป้ายชื่อหมู่บ้าน (จาก OSM place) — ป้ายชมพูลอยเหนือหมู่บ้าน + บ้านหลังเล็กพาสเทล */
   const PASTEL=[0xffc9de,0xffe0a3,0xbfe6ff,0xd6f5c1,0xe6d0ff,0xfff3b0];
   const houseN=Math.min(D.pl.length*3,650);
