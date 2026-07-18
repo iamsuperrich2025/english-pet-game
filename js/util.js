@@ -128,7 +128,83 @@ const sfx = {
   spark  : ()=>{ playSpark(); },   // ⚡ ฟ้าผ่า/กระแสไฟ (จับคู่ครบใน 5 วิ / สอบสายฟ้า)
   siren  : ()=>{ sirenSynth(); },  // 🚨 หวอเบาๆ ตอนน้องเพิ่งล้มป่วย
   cashier: ()=>{ playCashier(); }, // 🛒 จ่ายเงินสำเร็จที่แคชเชียร์ (ซื้อของโรงงาน/ตลาดเพื่อน)
+  petVoice: (type)=>{ petVoiceSynth(type); },  // 🐾 เสียงร้องของน้องตามชนิด (แตะน้องในล็อบบี้)
 };
+
+/* ---------- 🐾 เสียงร้องของน้องตามชนิด (รอบ 322 · สังเคราะห์ WebAudio ไม่ต้องมีไฟล์) ----------
+   แมว = เหมียว (สระเลื่อนขึ้นแล้วตกด้วย lowpass ขยับ) · หมา = โฮ่ง 2 ครั้งสั้นๆ (พัลส์ + noise)
+   มังกร = คำรามต่ำ (sawtooth ต่ำ + noise เบา) · ชนิดอื่น/ไม่รู้จัก = เสียงจิ๊บสั้นเป็นกลาง
+   คุมความดังไว้ต่ำ (เกมสำหรับเด็ก ไม่ให้ตกใจ) และเคารพสวิตช์เสียงเหมือน beep() */
+function petVoiceSynth(type){
+  if(!state.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const ctx = audioCtx, t0 = ctx.currentTime;
+    const noiseBuf = (ms)=>{                       // ก้อน noise สั้นๆ ใช้ผสมให้เสียงมีเนื้อ
+      const n = Math.ceil(ctx.sampleRate*ms/1000);
+      const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+      for(let i=0;i<n;i++) d[i] = (Math.random()*2-1)*(1-i/n);
+      return b;
+    };
+    if(type === 'cat'){
+      // เหมียว~ : ความถี่ไต่ขึ้นเล็กน้อยแล้วตกยาว + lowpass ปิดลง = ฟังเป็นเสียงแมวจริงกว่าบี๊บเปล่า
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(520, t0);
+      o.frequency.linearRampToValueAtTime(760, t0+.10);
+      o.frequency.linearRampToValueAtTime(430, t0+.42);
+      f.type = 'lowpass';
+      f.frequency.setValueAtTime(2200, t0);
+      f.frequency.linearRampToValueAtTime(900, t0+.42);
+      g.gain.setValueAtTime(.0001, t0);
+      g.gain.linearRampToValueAtTime(.12, t0+.06);
+      g.gain.exponentialRampToValueAtTime(.001, t0+.45);
+      o.connect(f); f.connect(g); g.connect(ctx.destination);
+      o.start(t0); o.stop(t0+.46);
+    }else if(type === 'dog'){
+      // โฮ่ง โฮ่ง : 2 พัลส์สั้น (ตัวเสียงต่ำตกเร็ว + noise แต้มหัวเสียงให้เหมือนลมเห่า)
+      [0, .19].forEach(dt=>{
+        const t = t0 + dt;
+        const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = 'square';
+        o.frequency.setValueAtTime(300, t);
+        o.frequency.exponentialRampToValueAtTime(140, t+.13);
+        f.type = 'lowpass'; f.frequency.setValueAtTime(1500, t);
+        g.gain.setValueAtTime(.14, t);
+        g.gain.exponentialRampToValueAtTime(.001, t+.14);
+        o.connect(f); f.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t+.15);
+        const ns = ctx.createBufferSource(), ng = ctx.createGain();
+        ns.buffer = noiseBuf(60);
+        ng.gain.setValueAtTime(.05, t);
+        ng.gain.exponentialRampToValueAtTime(.001, t+.06);
+        ns.connect(ng); ng.connect(ctx.destination);
+        ns.start(t); ns.stop(t+.07);
+      });
+    }else if(type === 'dragon'){
+      // คำรามต่ำๆ (ไม่ดุจนเด็กกลัว): sawtooth ต่ำสั่นเบา + noise คลอ
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(110, t0);
+      o.frequency.linearRampToValueAtTime(78, t0+.55);
+      f.type = 'lowpass'; f.frequency.setValueAtTime(700, t0);
+      g.gain.setValueAtTime(.0001, t0);
+      g.gain.linearRampToValueAtTime(.13, t0+.09);
+      g.gain.exponentialRampToValueAtTime(.001, t0+.62);
+      o.connect(f); f.connect(g); g.connect(ctx.destination);
+      o.start(t0); o.stop(t0+.63);
+      const ns = ctx.createBufferSource(), ng = ctx.createGain(), nf = ctx.createBiquadFilter();
+      ns.buffer = noiseBuf(500);
+      nf.type = 'lowpass'; nf.frequency.setValueAtTime(400, t0);
+      ng.gain.setValueAtTime(.05, t0);
+      ng.gain.exponentialRampToValueAtTime(.001, t0+.5);
+      ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination);
+      ns.start(t0); ns.stop(t0+.52);
+    }else{
+      beep(700,.14,0,'triangle',.10);   // ชนิดใหม่ที่ยังไม่มีเสียงเฉพาะ
+    }
+  }catch(e){}
+}
 
 /* ---------- 🚨 เสียงหวอเบาๆ (วี้-หว่อ 2 รอบ เสียงนุ่มไม่ทำเด็กตกใจ) ---------- */
 function sirenSynth(){

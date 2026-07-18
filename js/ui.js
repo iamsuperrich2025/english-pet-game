@@ -2957,16 +2957,12 @@ function renderDashboard(){
   // แตะน้องแล้วเด้งดึ๋ง + มีเสียง
   const tap = document.getElementById('pet-tap');
   tap.style.cursor = 'pointer'; tap.style.pointerEvents = 'auto';
-  // แตะน้อง = ลูบหัว (เด้งดึ๋ง + หัวใจลอย) แล้วเปิดหน้าโปรไฟล์น้องต่อทันที
-  // (ผู้ใช้สั่ง 18 ก.ค. 2026: คลิกตัวน้อง — โดยเฉพาะตอนร่างยักษ์ที่ตัวบังเวทีเกือบหมด — ต้องเข้าโปรไฟล์ได้)
-  tap.addEventListener('click', ()=>{
-    sfx.select();
-    tap.style.transform = 'scale(1.12) rotate(-4deg)';
-    setTimeout(()=>tap.style.transform = '', 160);
-    heartsFx(tap, 3);   // ⚠️ เดิมเรียก petPatFx() ที่ "ไม่เคยมีอยู่จริง" → ReferenceError ทุกครั้งที่แตะน้อง
-                        //    (โค้ดบรรทัดถัดไปเลยไม่ทำงาน = แตะน้องแล้วเงียบ) · ใช้ heartsFx ตัวเดียวกับฉลองรักษาหาย
-    setTimeout(()=>{ if(!window.__piOverlay) openPetInfoOverlay(); }, 200);   // หน่วงให้เห็นน้องเด้ง/หัวใจก่อน
-  });
+  /* แตะน้อง 2 จังหวะ (รอบ 322 ผู้ใช้สั่ง):
+       · แตะสั้น = น้องร้องตามชนิด (เหมียว/โฮ่ง/คำราม) + เด้ง + หัวใจ 3 ดวง แล้วเปิดหน้าโปรไฟล์
+       · แตะค้าง ≥ PAT_HOLD_MS = "ลูบยาว" หัวใจฟุ้ง + โบนัส EXP วันละครั้งต่อตัว (ไม่เปิดโปรไฟล์)
+     ใช้ pointer event เพื่อจับการกดค้างได้ทั้งเมาส์และนิ้ว · ⚠️ เดิมบรรทัดนี้เรียก petPatFx()
+     ที่ไม่เคยมีอยู่จริง → ReferenceError ทำให้แตะน้องแล้วเงียบทั้งหมด (แก้รอบ 320) */
+  bindPetTap(tap, p);
 
   renderHomeCard();
   renderPhoneCard();
@@ -3249,6 +3245,56 @@ function heartsFx(anchor, n=10){
 }
 
 /* ฉลองรักษาหาย: น้องบนเวทีเด้งดีใจ + หัวใจลอย (รักษาจากหน้าเกมจับคู่ ไม่เห็นน้อง → ลอยกลางจอ) */
+/* ---------- 🐾 แตะน้องในล็อบบี้ (รอบ 322) ----------
+   แตะสั้น = ร้อง+เด้ง+หัวใจ แล้วเปิดโปรไฟล์ · กดค้าง = ลูบยาว ได้ EXP โบนัสวันละครั้ง/ตัว */
+const PAT_HOLD_MS = 800;    // กดค้างนานเท่านี้ = ลูบยาว (สั้นกว่านี้ = แตะธรรมดา)
+const PAT_EXP     = 12;     // EXP โบนัสลูบยาว (วันละครั้งต่อสัตว์ 1 ตัว)
+function bindPetTap(tap, p){
+  let timer = null, longDone = false;
+  const cancel = ()=>{ if(timer){ clearTimeout(timer); timer = null; } };
+  tap.addEventListener('pointerdown', ()=>{
+    longDone = false;
+    cancel();
+    timer = setTimeout(()=>{ timer = null; longDone = true; longPatPet(p, tap); }, PAT_HOLD_MS);
+  });
+  // ปล่อยนิ้ว/เมาส์: ยังไม่ครบเวลา = นับเป็นแตะสั้น · ครบไปแล้ว = ลูบยาวจบไปแล้ว ไม่ต้องทำซ้ำ
+  tap.addEventListener('pointerup', ()=>{
+    cancel();
+    if(longDone){ longDone = false; return; }
+    shortPatPet(p, tap);
+  });
+  // นิ้วเลื่อนออกนอกตัวน้อง/ระบบยกเลิก touch → ยกเลิกทั้งคู่ (ไม่ให้เปิดโปรไฟล์ตอนตั้งใจจะลาก)
+  tap.addEventListener('pointercancel', ()=>{ cancel(); longDone = false; });
+  tap.addEventListener('pointerleave',  ()=>{ cancel(); longDone = false; });
+}
+function petBounce(tap, scale, deg, ms){
+  tap.style.transform = `scale(${scale}) rotate(${deg}deg)`;
+  setTimeout(()=>tap.style.transform = '', ms);
+}
+function shortPatPet(p, tap){
+  sfx.petVoice(p.type);          // 🔊 เหมียว/โฮ่ง/คำราม ตามชนิดน้อง
+  petBounce(tap, 1.12, -4, 160);
+  heartsFx(tap, 3);
+  setTimeout(()=>{ if(!window.__piOverlay) openPetInfoOverlay(); }, 200);   // หน่วงให้เห็นน้องเด้ง/หัวใจก่อน
+}
+/* ลูบยาว: หัวใจฟุ้ง + เด้งนุ่มกว่า + ร้องเสียงดีใจ · โบนัส EXP ให้วันละครั้งต่อตัว (p.patDay)
+   ไม่เรียก renderDashboard ระหว่างนิ้วยังจิ้มอยู่ — DOM ถูกสร้างใหม่กลางคันจะทำให้ pointerup หลุด */
+function longPatPet(p, tap){
+  sfx.petVoice(p.type);
+  petBounce(tap, 1.06, 0, 420);
+  heartsFx(tap, 10);
+  if(state.haptic !== false && navigator.vibrate) navigator.vibrate([20,40,20]);
+  const day = todayStr();
+  if(p.patDay === day){
+    toast(`${p.name} ฟินเลย 🥰 (โบนัสลูบยาววันนี้รับไปแล้ว พรุ่งนี้มาลูบใหม่นะ)`);
+    return;
+  }
+  p.patDay = day;
+  addExp(PAT_EXP, p);            // addExp จัดการเลื่อนเลเวล/กล่องฉลองให้เอง
+  saveState();
+  toast(`🥰 ลูบ${p.name}จนฟิน! ได้ EXP +${PAT_EXP} (วันละครั้ง)`);
+}
+
 function cureCelebrateFx(){
   const stage = document.querySelector('.hero-scene .pet-stage');
   if(stage){
