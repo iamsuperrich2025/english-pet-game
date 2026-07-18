@@ -41,6 +41,23 @@ function vbRecord(en, th, ok){
   }
 }
 
+/* 📖 รอบ 329: "เคยอ่านคำนี้" — เก็บคำที่เด็กกดอ่านจากแถบ 🆕 New Word เข้าสมุดอัตโนมัติ
+   ต่างจาก vbRecord: ไม่ใช่การตอบถูก/ผิด จึงไม่แตะ c/w → คำใหม่จะอยู่กลุ่ม 🌱 กำลังเรียนรู้
+   (vbGroup: c=0,w=0,lw=0 → 'learn') และถูกหยิบเข้าข้อสอบทบทวนก่อนใคร เพราะเรียงจาก "ฝึกน้อยสุด"
+   คำที่เคยตอบมาแล้วจะไม่ถูกรีเซ็ตสถิติ — แค่ขยับเวลาเจอล่าสุด
+   คืน true ถ้าเป็นคำใหม่ที่เพิ่งเข้าสมุด (ผู้เรียกเอาไปแจ้งเด็กได้) */
+function vbSeen(en, th){
+  en = String(en || '').trim().toLowerCase();
+  th = String(th || '').trim();
+  if(!en || typeof state === 'undefined' || !state) return false;
+  const b = state.vocabBook || (state.vocabBook = {});
+  const fresh = !b[en];
+  const e = b[en] || (b[en] = {th, c:0, w:0, t:0, lw:0});
+  if(th) e.th = th;
+  e.t = Date.now();
+  return fresh;
+}
+
 /* นับจำนวนคำแต่ละกลุ่ม → {review, learn, master, total} */
 function vbStats(){
   const b = (typeof state !== 'undefined' && state && state.vocabBook) || {};

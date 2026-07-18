@@ -126,6 +126,9 @@ const DEFAULT_STATE = {
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
   nwQueue:[],                         // รอบ 326: คิวคำศัพท์ 🆕 New Word ที่ยังไม่ได้โชว์ (สลับลำดับแล้ว) — หมดคิว = สลับใหม่
+  nwReadDay:'',                       // รอบ 329: วันที่กำลังนับ "อ่านคำใหม่กี่คำ" (todayStr)
+  nwReadCount:0,                      // รอบ 329: อ่านคำใหม่ไปกี่คำแล้ววันนี้ (ครบ NW_DAILY_GOAL รับโบนัส)
+  nwBonusDay:'',                      // รอบ 329: วันที่รับโบนัสอ่านครบไปแล้ว (กันรับซ้ำ)
   patRemindDay:'',                    // รอบ 328: วันที่เตือน "ยังไม่ได้ลูบน้อง" ไปแล้ว (เตือนวันละครั้งตอนเย็น)
   nwPaidAt:0,                         // รอบ 327: nwAt ของคำที่รับเหรียญไปแล้ว (กดอ่านซ้ำคำเดิมไม่ได้เหรียญซ้ำ)
   nwAt:0,                             // รอบ 326: เวลาที่เปลี่ยนคำล่าสุด (เปลี่ยนทุก 2 นาทีระหว่างอยู่ Lobby)
@@ -336,6 +339,9 @@ function loadState(){
       if(typeof s.nwAt !== 'number') s.nwAt = 0;
       if(typeof s.nwPaidAt !== 'number') s.nwPaidAt = 0;                                    // รอบ 327
       if(typeof s.patRemindDay !== 'string') s.patRemindDay = '';                           // รอบ 328
+      if(typeof s.nwReadDay !== 'string') s.nwReadDay = '';                                 // รอบ 329
+      if(typeof s.nwReadCount !== 'number') s.nwReadCount = 0;
+      if(typeof s.nwBonusDay !== 'string') s.nwBonusDay = '';
       if(typeof s.bffBadge !== 'number') s.bffBadge = 0;
       if(typeof s.crownBadge !== 'number') s.crownBadge = 0;                               // รอบ 109
       if(typeof s.badgeWeekKey !== 'string') s.badgeWeekKey = '';

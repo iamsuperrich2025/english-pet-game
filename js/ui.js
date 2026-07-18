@@ -283,11 +283,17 @@ function applyPatRemindGlow(){
 /* 🪙 รอบ 327 (ผู้ใช้สั่ง): เปิดอ่านคำใหม่ = ได้ 1 เหรียญ พร้อมเสียง+ภาพชัดเจน
    ให้ "คำละ 1 เหรียญ" (ยึด state.nwAt = เวลาที่ขึ้นคำนี้เป็นตัวระบุคำ) — กดซ้ำคำเดิมไม่ได้เพิ่ม
    ไม่งั้นเด็กกดรัวๆ คำเดียวได้เหรียญไม่จำกัด · คำเปลี่ยนทุก 2 นาที = ได้เหรียญใหม่ทุกคำ */
-const NEW_WORD_COIN = 1;
+const NEW_WORD_COIN  = 1;
+const NW_DAILY_GOAL  = 10;   // รอบ 329: อ่านคำใหม่ครบกี่คำในวันเดียว
+const NW_DAILY_BONUS = 20;   // 🪙 โบนัสเมื่อครบ (วันละครั้ง)
 function newWordReward(){
   if(state.nwPaidAt === state.nwAt) return false;    // คำนี้รับไปแล้ว
   state.nwPaidAt = state.nwAt;
   addCoins(NEW_WORD_COIN);
+  /* 📒 รอบ 329: คำที่กดอ่าน → เก็บเข้าสมุดคำศัพท์อัตโนมัติ (กลุ่ม 🌱 กำลังเรียนรู้)
+     จะได้ถูกหยิบไปออกข้อสอบทบทวนของตัวเองภายหลัง */
+  if(typeof vbSeen === 'function' && newWordPick) vbSeen(newWordPick[0], newWordPick[5]);
+  nwDailyTick();                                     // 🎯 นับคำที่อ่านวันนี้ + โบนัสครบ 10 คำ
   saveState();
   const banner = document.getElementById('newword-banner');
   coinFlyFx(banner, NEW_WORD_COIN);                  // 🪙 บินจากแบนเนอร์ไปเข้ากระเป๋า + ป้าย +1
@@ -298,6 +304,26 @@ function newWordReward(){
   if(pill){ pill.classList.remove('coin-pop'); void pill.offsetWidth; pill.classList.add('coin-pop'); }
   if(typeof renderDashboard === 'function') renderDashboard();   // ตัวเลขเหรียญบนแถบบนอัปเดตทันที
   return true;
+}
+
+/* 🎯 รอบ 329 (ผู้ใช้สั่ง): นับ "อ่านคำใหม่วันนี้กี่คำ" → ครบ NW_DAILY_GOAL รับโบนัสก้อน 1 ครั้ง/วัน
+   นับเฉพาะคำที่ได้เหรียญจริง (คำละครั้ง) → กดซ้ำคำเดิมไม่ปั่นยอด
+   ฉลองด้วย celebrateBadge เดิม (แบนเนอร์กลางจอ + โปรยคอนเฟตติ + เสียง) — ไม่ต้องทำฉากใหม่ */
+function nwDailyTick(){
+  const day = todayStr();
+  if(state.nwReadDay !== day){ state.nwReadDay = day; state.nwReadCount = 0; state.nwBonusDay = ''; }
+  state.nwReadCount = (state.nwReadCount || 0) + 1;
+  if(state.nwReadCount < NW_DAILY_GOAL || state.nwBonusDay === day) return;
+  state.nwBonusDay = day;
+  addCoins(NW_DAILY_BONUS);
+  setTimeout(()=>{     // หน่วงให้เอฟเฟกต์เหรียญ +1 กับป๊อปอัปคำศัพท์เล่นจบก่อน
+    if(typeof celebrateBadge === 'function'){
+      celebrateBadge('📚', `อ่านครบ ${NW_DAILY_GOAL} คำวันนี้!`,
+        `เก่งมาก! รับโบนัส 🪙${fmtNum(NW_DAILY_BONUS)} — พรุ่งนี้มาสะสมใหม่ได้อีกนะ`);
+    }
+    const banner = document.getElementById('newword-banner');
+    if(banner) coinFlyFx(banner, NW_DAILY_BONUS);
+  }, 900);
 }
 
 /* เหรียญบินจากจุดที่กด → กระเป๋าเหรียญมุมขวาบน + ป้าย "+🪙1" ลอยขึ้น
@@ -330,6 +356,18 @@ function coinFlyFx(fromEl, amount){
   setTimeout(()=>tag.remove(), 1200);
 }
 
+/* แถบความคืบหน้า "อ่านวันนี้ x/10 คำ" ในป๊อปอัป — ครบแล้วบอกว่ารับโบนัสไปแล้ว */
+function nwDailyBarHTML(){
+  const done = (state.nwReadDay === todayStr()) ? (state.nwReadCount || 0) : 0;
+  const n = Math.min(done, NW_DAILY_GOAL);
+  const full = done >= NW_DAILY_GOAL;
+  return `<div class="nw-pop-goal${full ? ' done' : ''}">
+    <div class="nw-goal-head">🎯 อ่านคำใหม่วันนี้ <b>${n}/${NW_DAILY_GOAL}</b> คำ
+      <span>${full ? `รับโบนัส 🪙${fmtNum(NW_DAILY_BONUS)} แล้ว 🎉` : `ครบ ${NW_DAILY_GOAL} คำ รับ 🪙${fmtNum(NW_DAILY_BONUS)}`}</span></div>
+    <div class="nw-goal-bar"><div class="nw-goal-fill" style="width:${n / NW_DAILY_GOAL * 100}%"></div></div>
+  </div>`;
+}
+
 function showNewWordPopup(){
   if(!newWordPick) return;
   const gotCoin = newWordReward();                    // 🪙 อ่านคำใหม่ = ได้เหรียญ (คำละครั้ง)
@@ -344,6 +382,8 @@ function showNewWordPopup(){
     ${gotCoin
       ? `<div class="nw-pop-coin">🪙 <b>+${NEW_WORD_COIN} เหรียญ</b> — รางวัลที่ตั้งใจอ่านคำใหม่!</div>`
       : `<div class="nw-pop-coin nw-coin-done">✅ รับเหรียญคำนี้ไปแล้ว — <b>คำใหม่มาทุก 2 นาที</b> มารับอีกได้เลย</div>`}
+    ${nwDailyBarHTML()}
+    <div class="nw-pop-book">📒 เก็บคำนี้เข้า<b>สมุดคำศัพท์ของหนู</b>แล้ว — ไว้ทบทวนทีหลังได้</div>
     <div style="margin-top:14px"><button class="cf-ok">เข้าใจแล้ว! ✨</button></div>
   </div>`;
   const close = ()=>overlay.remove();

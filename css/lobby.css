@@ -699,6 +699,40 @@ html.no-anim .lobby-top .coin-pill.coin-pop{animation:none;}
   background:linear-gradient(180deg,#fff3d0,#ffe19a);color:#7a5510;border:1px solid #ffcf6b;}
 .nw-pop-coin b{color:#a5690a;}
 .nw-pop-coin.nw-coin-done{background:#eef3fa;color:#5a6b80;border-color:#d2ddec;font-size:13.5px;}
+/* 🎯📒 รอบ 329: ความคืบหน้า "อ่านครบ 10 คำวันนี้" + บอกว่าคำถูกเก็บเข้าสมุดแล้ว
+   (อยู่ในป๊อปอัปพื้นขาว — ใช้โทนเดียวกับกล่องคำศัพท์ ไม่ใช่โทนกระจกฟ้าของล็อบบี้) */
+.nw-pop-goal{margin-top:10px;padding:8px 12px;border-radius:12px;background:#f2f6fc;border:1px solid #d8e3f2;}
+.nw-pop-goal.done{background:#eafaf1;border-color:#a9e2c4;}
+.nw-goal-head{display:flex;gap:8px;justify-content:space-between;align-items:baseline;flex-wrap:wrap;
+  font-size:13.5px;color:#4a5c72;}
+.nw-goal-head b{color:#2f6ed0;font-size:1.1em;font-variant-numeric:tabular-nums;}
+.nw-pop-goal.done .nw-goal-head b{color:#1f7a4d;}
+.nw-goal-head span{font-size:12px;color:#7b8ca3;}
+.nw-goal-bar{margin-top:6px;height:7px;border-radius:99px;background:#dde6f3;overflow:hidden;}
+.nw-goal-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#6fb4ff,#ffd76a);transition:width .4s ease;}
+.nw-pop-goal.done .nw-goal-fill{background:linear-gradient(90deg,#5ed19a,#2f9e69);}
+.nw-pop-book{margin-top:8px;font-size:12.5px;color:#5a6b80;}
+.nw-pop-book b{color:#3a76d8;}
+/* 📱 จอแนวนอนเตี้ย (มือถือ 812×375): กล่องคำศัพท์เดิมสูงเกินจอมาตั้งแต่ก่อนเพิ่มบล็อกใหม่แล้ว
+   → จัดเป็น 2 คอลัมน์ (ซ้าย=ตัวคำ/คำอ่าน/ประโยค/คำแปล · ขวา=เหรียญ/เป้าหมายวันนี้/สมุด/ปุ่ม)
+   ตามกฎถาวร: ทุก dialog ต้องเห็นครบทั้งใบ ไม่ต้องเลื่อน */
+@media (max-height:520px){
+  .nw-box{display:grid;grid-template-columns:1.15fr 1fr;gap:4px 16px;align-items:start;
+    text-align:left;width:min(96vw,760px);}
+  .nw-box > :nth-child(1){grid-area:1/1;}
+  .nw-box > :nth-child(2){grid-area:2/1;}
+  .nw-box > :nth-child(3){grid-area:3/1;}
+  .nw-box > :nth-child(4){grid-area:4/1;}
+  .nw-box > :nth-child(5){grid-area:1/2;margin-top:0;}
+  .nw-box > :nth-child(6){grid-area:2/2;margin-top:0;}
+  .nw-box > :nth-child(7){grid-area:3/2;margin-top:0;}
+  .nw-box > :nth-child(8){grid-area:4/2;margin-top:4px !important;}
+  .nw-pop-word{font-size:clamp(24px,8vh,34px);}
+  .nw-pop-phon,.nw-pop-sent,.nw-pop-mean{font-size:clamp(12px,3.6vh,15px);margin-top:2px;}
+  .nw-pop-coin{font-size:13px;padding:6px 10px;}
+  .nw-goal-head{font-size:12px;}
+  .nw-pop-book{font-size:11.5px;margin-top:4px;}
+}
 .nw-tag{background:linear-gradient(135deg,#ff5a7a,#ffb84f);color:#fff;font-weight:700;
   font-size:11.5px;padding:2px 9px;border-radius:999px;white-space:nowrap;
   animation:nwPulse 1.8s ease-in-out infinite;}
