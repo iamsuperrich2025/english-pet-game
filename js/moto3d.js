@@ -183,13 +183,15 @@ const CSS=`
 @keyframes mturbo{0%,100%{box-shadow:0 0 2vmin .4vmin rgba(80,210,255,.75), inset 0 0 1.2vmin rgba(130,235,255,.5)}
   50%{box-shadow:0 0 3.4vmin .9vmin rgba(120,235,255,1), inset 0 0 1.8vmin rgba(160,245,255,.8)}}
 /* ---------- HUD ในจอ ---------- */
-/* 🔤 รอบ 309: ย้ายคำศัพท์จากมุมบนซ้าย → กลางจอตัวใหญ่ แนวท้องฟ้า (ผู้ใช้สั่ง) — ป้ายบิลบอร์ดกลางบน
-   พื้นหลังโปร่งเข้มบางๆ ให้อ่านชัดบนฟ้าสว่าง · ตัวอักษร+คำแปลใหญ่ขึ้น · flex-wrap กันคำยาวล้น */
-#moto-word{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;gap:.7vmin;
-  align-items:center;justify-content:center;flex-wrap:wrap;max-width:92%;
-  padding:.9vmin 1.5vmin;border-radius:1.8vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
-#moto-word .m-th{color:#ffe9a8;font-size:3vmin;font-weight:800;margin-left:1vmin;text-shadow:0 2px 5px #000,0 0 2vmin rgba(0,0,0,.6)}
-.m-chip{width:5.2vmin;height:5.2vmin;border-radius:1.2vmin;display:flex;align-items:center;justify-content:center;
+/* 🔤 รอบ 309-311: คำศัพท์ป้ายบิลบอร์ดกลางบนแนวท้องฟ้า — ตัวอักษรแถวเดียวเสมอ (nowrap ไม่ตกบรรทัด)
+   คำแปลไทยอยู่บรรทัดล่าง · fitWord() ย่ออัตโนมัติถ้าคำยาวเกินจอ (รองรับคำยาวในอนาคต ไม่ดันตัวตก) */
+#moto-word{position:absolute;left:50%;top:8%;transform:translateX(-50%);transform-origin:top center;
+  display:flex;flex-direction:column;align-items:center;gap:.35vmin;
+  padding:.9vmin 1.6vmin;border-radius:1.8vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
+#moto-word .m-chips{display:flex;gap:.7vmin;align-items:center;flex-wrap:nowrap}
+#moto-word .m-th{color:#ffe9a8;font-size:3vmin;font-weight:800;white-space:nowrap;
+  text-shadow:0 2px 5px #000,0 0 2vmin rgba(0,0,0,.6)}
+.m-chip{width:5.2vmin;height:5.2vmin;flex:none;border-radius:1.2vmin;display:flex;align-items:center;justify-content:center;
   font-weight:900;font-size:3.3vmin;color:#fff;background:rgba(255,255,255,.2);border:.34vmin solid rgba(255,255,255,.7);
   text-shadow:0 1px 3px rgba(0,0,0,.7);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .m-chip.got{background:#43d06c;border-color:#fff;box-shadow:0 0 1.6vmin rgba(90,255,140,.6)}
@@ -755,9 +757,18 @@ function spawnLetters(){
 }
 function renderWordHud(){
   if(!word) return;
-  wordEl.innerHTML=word.en.split('').map((ch,i)=>
-    `<span class="m-chip${word.got.includes(i)?' got':''}">${ch.toUpperCase()}</span>`).join('')
-    +`<span class="m-th">${escapeHTML(word.th)}</span>`;
+  const chips=word.en.split('').map((ch,i)=>
+    `<span class="m-chip${word.got.includes(i)?' got':''}">${ch.toUpperCase()}</span>`).join('');
+  wordEl.innerHTML=`<div class="m-chips">${chips}</div><span class="m-th">${escapeHTML(word.th)}</span>`;
+  fitWord();
+}
+/* 🔤 รอบ 311: ย่อป้ายคำอัตโนมัติถ้ากว้างเกินจอ — ตัวอักษรคงแถวเดียวเสมอ (คำยาวก็ไม่ตกบรรทัด) */
+function fitWord(){
+  if(!wordEl||!screenEl) return;
+  wordEl.style.transform='translateX(-50%) scale(1)';
+  const avail=screenEl.clientWidth*0.96, w=wordEl.offsetWidth;
+  const k=w>avail?avail/w:1;
+  wordEl.style.transform='translateX(-50%) scale('+k.toFixed(3)+')';
 }
 function collectTick(){
   for(let i=letters.length-1;i>=0;i--){
@@ -877,6 +888,7 @@ function fit(){
   const w=Math.max(64,Math.round(r.width)), h=Math.max(64,Math.round(r.height));
   renderer.setSize(w,h,false);
   camera.aspect=w/h; camera.updateProjectionMatrix();
+  fitWord();                         // 🔤 รอบ 311: จอเปลี่ยนขนาด → ย่อป้ายคำใหม่ให้พอดี
 }
 function tick(){
   if(!running) return;
