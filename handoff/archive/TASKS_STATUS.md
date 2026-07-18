@@ -316,3 +316,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 302:** 🌤️ **ภาพจริงพื้นถนน+หญ้า+ฟ้าโลกมอไซค์** (ผู้ใช้เจนภาพตาม prompt Artifact แล้ววาง road/grass/sky.png ใน img/moterbike/) — แปลง webp (road/grass 512 · sky 1536 รวม 295KB) · moto3d.js: ถนนปูลาย UV พิกัดโลก (u=x/16 v=z/16 ทางแยกเนียน · minor tint ขาว/major เข้ม) · หญ้า repeat ทั้งผืน 64km · โดมฟ้า SphereGeometry ครึ่งบน r1400 MirroredRepeat x2 (ขอบภาพไม่ seamless) ตามผู้เล่นทุกเฟรม · fog เปลี่ยน 0x9fdcf7→0xcfe8f8 กลืนขอบฟ้าภาพ · ยืนยัน readPixels: เกรนถนน texVar 20.3 / หญ้าเขียว 25.9% / ฟ้า+เมฆ / ไม่มี error · deploy `.295` · ค้าง: ผู้ใช้ลองจริง (ความสวย/ความเนียนบนมือถือ)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 303:** 🚧 **เงามอไซค์ + หลักเขตทางขาว-แดง** (ไอเดียต่อยอด ผู้ใช้อนุมัติ) — moto3d.js: `#moto-shadow` วงรี radial ใต้ล้อ z1 นอก wrapper (ไม่หมุนตามรถ) เอียง=เลื่อน lean*14% + scaleX ลด · หลักเขต: InstancedMesh ต้นขาว+หัวแดง POST_N=400 `postTick()` ทุก 1 วิ วางตามขอบถนน (hw+0.9) ทุก POST_SP=42m รัศมี 380m deterministic ตามเส้น ไม่สุ่ม · เว้นจุดทับถนนอื่น (roadInfo d<.4) · ยืนยัน: posts 38→56 ตอนขับ / เงา transform ตอบ lean / readPixels เจอหัวแดง 2 ฝั่งถนน / 0.83ms/เฟรม / ไม่มี error · deploy `.296` · ค้าง: ผู้ใช้ลองจริง
