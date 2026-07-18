@@ -5,7 +5,9 @@
 (function(){
 'use strict';
 const REWARD=45, DONE_KEY='motoDone';
-const ACCEL=10, DECEL=5.5, VMAX=32, VMAX_OFF=6.5, WHEEL_R=0.34;
+const ACCEL=13, DECEL=5.5, VMAX=55.6, VMAX_OFF=6.5, WHEEL_R=0.34;   // รอบ 312: VMAX 32→55.6 (=200 กม./ชม.) + ACCEL 10→13 ให้ไต่ถึงได้
+const DASH_LEN=4, DASH_GAP=5, DASH_W=0.28;  // 🛣️ รอบ 312: เส้นประกลางถนน — ยาวขีด/ช่องว่าง/ครึ่งกว้าง (m)
+const DOG_HIT_COIN=500, DOG_SPD=11, DOG_GAP_MS=9000;   // 🐕 รอบ 312: ชนหมาปรับ 500 · ความเร็ววิ่ง · เว้นระยะ spawn
 const ROAD_WIDE=3.6;                       // ตัวคูณความกว้างถนน (รอบ 301: ×2 จาก 1.8 — ผู้ใช้ขอกว้างขึ้นอีก 2 เท่า)
 const EDGE_M=0.55;                         // ระยะกันชนจากขอบถนน (m) — ชนขอบแล้วดันกลับ ขับออกนอกถนนไม่ได้
 const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโลก (m) ต่อ 1 รอบลายภาพถนน/หญ้า (UV พิกัดโลก — รอยต่อทางแยกเนียน)
@@ -27,6 +29,7 @@ let speedFxEl=null;                        // 🌪️ เส้นสปีด�
 let throttleCharge=0;                      // 💡 รอบ 309: ระดับชาร์จไฟ LED เทอร์โบปุ่มเร่ง (กดค้างนาน→เต็ม)
 let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอบ 305) — ตัวจับจังหวะ spawn + สลับท่อซ้าย/ขวา
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
+let dog=null, dogNextAt=0;                  // 🐕 รอบ 312: หมาวิ่งตัดถนน {grp,vx,vz,life}
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
 let steerCtl=0, kL=false, kR=false;        // 🎛️ รอบ 297: เอียงแมนวล — ค่าคุมค้างตามที่ผู้เล่นตั้ง ไม่เด้งกลับเอง (คีย์ A/D = ค่อยๆ ปรับ)
@@ -197,10 +200,15 @@ const CSS=`
 .m-chip.got{background:#43d06c;border-color:#fff;box-shadow:0 0 1.6vmin rgba(90,255,140,.6)}
 #moto-coins{position:absolute;right:2%;top:2.5%;color:#ffd54f;font-weight:900;font-size:2.3vmin;text-shadow:0 1px 3px #000}
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
-#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;align-items:center;gap:.8vmin;
-  background:rgba(10,20,35,.55);border-radius:999px;padding:.5vmin 1.6vmin;color:#fff}
-#moto-gps-arr{display:inline-block;font-size:2.8vmin;color:#5ef08a;transition:transform .12s linear;text-shadow:0 0 1.2vmin rgba(90,255,140,.8)}
-#moto-gps-d{font-size:2vmin;font-weight:800}
+/* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข */
+#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;flex-direction:column;align-items:center;gap:.5vmin;
+  background:rgba(10,20,35,.6);border-radius:1.4vmin;padding:.7vmin 1.2vmin;color:#fff;max-width:30vmin}
+.m-gps-lb{font-size:1.5vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
+.m-gps-row{display:flex;align-items:center;gap:1.2vmin}
+#moto-gps-arr{display:inline-block;width:4.4vmin;height:5.1vmin;transition:transform .12s linear;
+  filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
+#moto-gps-arr svg{display:block;width:100%;height:100%}
+#moto-gps-d{font-size:2.8vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
 #moto-mini{position:absolute;right:2%;bottom:3%;width:15vmin;height:15vmin;max-width:130px;max-height:130px;
   border-radius:50%;background:rgba(8,16,28,.72);border:.35vmin solid rgba(255,255,255,.4)}
 #moto-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);opacity:0;text-align:center;
@@ -240,7 +248,10 @@ function buildDom(){
         <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
-      <div id="moto-gps"><span id="moto-gps-arr">➤</span><span id="moto-gps-d">--</span></div>
+      <div id="moto-gps">
+        <div class="m-gps-lb">ตอนนี้คุณอยู่ห่างจากตัวอักษรที่จะต้องเก็บ เป็นระยะทาง</div>
+        <div class="m-gps-row"><span id="moto-gps-arr"><svg viewBox="0 0 24 28"><path d="M12 1 L22 13 L15.5 13 L15.5 27 L8.5 27 L8.5 13 L2 13 Z" fill="#5ef08a" stroke="#083" stroke-width="1.3" stroke-linejoin="round"/></svg></span><span id="moto-gps-d">--</span></div>
+      </div>
       <div id="moto-speed">0 กม./ชม.</div>
       <canvas id="moto-mini" width="130" height="130"></canvas>
       <div id="moto-banner"></div>
@@ -310,11 +321,28 @@ function buildDom(){
    ถนนจากแผนที่จริง → geometry + ตารางแฮชชนถนน
    ============================================================ */
 function segKey(bx,bz){ return bx+'_'+bz; }
+/* 🛣️ รอบ 313: ลบมุมเหลี่ยม → เส้นโค้งนุ่ม (Chaikin corner-cutting · เก็บปลายทั้งสองไว้กันหลุดทางแยก)
+   ถนน ≥3 จุด (มีมุม) เท่านั้น · 2 รอบ = โค้งเนียน · ถนนตรง 2 จุด คืนเดิม ไม่เพิ่ม cost */
+function smoothPts(pts){
+  if(pts.length<6) return pts;                    // ≤2 จุด = เส้นตรง ไม่มีมุม
+  let cur=pts;
+  for(let it=0; it<2; it++){
+    const out=[cur[0],cur[1]];                    // คงจุดแรก (ต่อทางแยก)
+    for(let i=0;i<cur.length-2;i+=2){
+      const ax=cur[i],az=cur[i+1],bx=cur[i+2],bz=cur[i+3];
+      out.push(ax*0.75+bx*0.25, az*0.75+bz*0.25,  // Q (ใกล้ A)
+               ax*0.25+bx*0.75, az*0.25+bz*0.75); // R (ใกล้ B)
+    }
+    out.push(cur[cur.length-2],cur[cur.length-1]); // คงจุดสุดท้าย (ต่อทางแยก)
+    cur=out;
+  }
+  return cur;
+}
 function buildRoads(){
   const D=window.MOTO_MAP;
   const posMinor=[], posMajor=[], posLine=[], posEdge=[], uvMinor=[], uvMajor=[];
   D.r.forEach(rd=>{
-    const w=rd[0], major=rd[1], pts=rd[3], hw=w/2*ROAD_WIDE;   // รอบ 297: ถนนกว้างขึ้น (ผู้ใช้บอกแคบไป) — คูมทั้งภาพและระยะนับ "อยู่บนถนน"
+    const w=rd[0], major=rd[1], pts=smoothPts(rd[3]), hw=w/2*ROAD_WIDE;   // รอบ 313: pts ผ่าน smoothPts = เส้นโค้ง
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.5) continue;
@@ -345,11 +373,25 @@ function buildRoads(){
       const ew=hw+1.0, exx=-dz/L*ew, ezz=dx/L*ew, ey=0.12;
       posEdge.push(ax+exx,ey,az+ezz, ax-exx,ey,az-ezz, bx+exx,ey,bz+ezz,
                    ax-exx,ey,az-ezz, bx-exx,ey,bz-ezz, bx+exx,ey,bz+ezz);
-      if(major){  // เส้นกลางเหลืองถนนใหญ่
-        const lw=0.35, lx=-dz/L*lw, lz=dx/L*lw;
-        posLine.push(ax+lx,0.22,az+lz, ax-lx,0.22,az-lz, bx+lx,0.22,bz+lz,
-                     ax-lx,0.22,az-lz, bx-lx,0.22,bz-lz, bx+lx,0.22,bz+lz);
+    }
+    /* 🛣️ รอบ 312-313: เส้นประขาวกลางถนน แบ่งเลน — คิดตามระยะทางสะสมทั้งเส้น (segment โค้งสั้นก็ยังเป็นขีดต่อเนื่อง ไม่กลายเป็นเส้นทึบ) */
+    const period=DASH_LEN+DASH_GAP; let dashAcc=0;
+    for(let i=0;i<pts.length-2;i+=2){
+      const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
+      const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.01) continue;
+      const ux=dx/L,uz=dz/L,lx=-uz*DASH_W,lz=ux*DASH_W,dy=0.21;
+      let d=0;
+      while(d<L){
+        const phase=(dashAcc+d)%period;
+        if(phase<DASH_LEN){
+          const de=Math.min(L, d+(DASH_LEN-phase));
+          const p0x=ax+ux*d,p0z=az+uz*d,p1x=ax+ux*de,p1z=az+uz*de;
+          posLine.push(p0x+lx,dy,p0z+lz, p0x-lx,dy,p0z-lz, p1x+lx,dy,p1z+lz,
+                       p0x-lx,dy,p0z-lz, p1x-lx,dy,p1z-lz, p1x+lx,dy,p1z+lz);
+          d=de;
+        } else { d+=(period-phase); }
       }
+      dashAcc=(dashAcc+L)%period;
     }
   });
   /* ⚠️ รอบ 296 บั๊ก "ไม่เห็นถนนเลย": winding สามเหลี่ยมหันคว่ำลง + FrontSide → โดน backface culling
@@ -368,7 +410,7 @@ function buildRoads(){
   mk(posEdge,0xf2f4f6);                    // ขอบถนนขาว (รองใต้ถนน โผล่ข้างละ 1m)
   mk(posMinor,0xffffff,uvMinor,roadTex);   // ถนนเล็ก — ยางมะตอยโทนตรงภาพ
   mk(posMajor,0xb4bac2,uvMajor,roadTex);   // ถนนใหญ่ — tint เข้มกว่าเล็กน้อยให้แยกจากถนนเล็ก
-  mk(posLine,0xffd54f);                    // เส้นกลางเหลือง
+  mk(posLine,0xffffff);                    // เส้นประขาวกลางถนน (รอบ 312 แบ่งเลน)
 }
 function distToSeg(x,z,s){
   const dx=s.bx-s.ax, dz=s.bz-s.az, L2=dx*dx+dz*dz;
@@ -732,6 +774,58 @@ function scatterClouds(all){
 }
 
 /* ============================================================
+   🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 500 เหรียญ
+   ============================================================ */
+function makeDog(){
+  const g=new THREE.Group();
+  const brown=new THREE.MeshLambertMaterial({color:0x8a5a2b}), dark=new THREE.MeshLambertMaterial({color:0x5c3a1a});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(1.4,.7,.6),brown); body.position.y=.9; g.add(body);
+  const head=new THREE.Mesh(new THREE.BoxGeometry(.55,.55,.5),brown); head.position.set(.9,1.15,0); g.add(head);
+  const snout=new THREE.Mesh(new THREE.BoxGeometry(.35,.3,.35),dark); snout.position.set(1.2,1.05,0); g.add(snout);
+  [.35,-.35].forEach(ez=>{ const ear=new THREE.Mesh(new THREE.BoxGeometry(.15,.3,.2),dark); ear.position.set(.72,1.48,ez); g.add(ear); });
+  const tail=new THREE.Mesh(new THREE.BoxGeometry(.5,.15,.15),brown); tail.rotation.z=.6; tail.position.set(-.85,1.1,0); g.add(tail);
+  const legs=[];
+  for(const [lx,lz] of [[.5,.22],[.5,-.22],[-.5,.22],[-.5,-.22]]){
+    const leg=new THREE.Mesh(new THREE.BoxGeometry(.18,.6,.18),dark); leg.position.set(lx,.4,lz); g.add(leg); legs.push(leg);
+  }
+  g.userData.legs=legs; g.visible=false; scene.add(g);
+  return g;
+}
+function spawnDog(){
+  const ahead=25+Math.random()*30;
+  const cx=px+Math.sin(yaw)*ahead, cz=pz+Math.cos(yaw)*ahead;
+  const info=roadInfo(cx,cz); if(!info.seg) return;          // ข้างหน้าไม่ใช่ถนน → ข้ามรอบนี้
+  const side=Math.random()<.5?1:-1, rpx=Math.cos(yaw), rpz=-Math.sin(yaw), off=info.seg.hw+3.5;
+  dog.grp.position.set(cx+rpx*side*off,0,cz+rpz*side*off); dog.grp.visible=true;
+  dog.vx=-rpx*side*DOG_SPD; dog.vz=-rpz*side*DOG_SPD;
+  dog.life=(off*2)/DOG_SPD+1; dog.hit=false;
+  dog.grp.rotation.y=Math.atan2(dog.vx,dog.vz);
+}
+function dogHit(){
+  const have=(typeof state!=='undefined'&&typeof state.coins==='number')?state.coins:0;
+  const pen=Math.min(DOG_HIT_COIN,have);
+  if(typeof addCoins==='function'&&pen>0) addCoins(-pen);
+  if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate([50,40,50]);
+  if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
+  banEl.innerHTML=`🐕💥 ชนหมา!<br><span class="m-coin" style="color:#ff9a9a">−${fmtNum(pen)} 🪙</span>`;
+  banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1900);
+  dog.grp.visible=false; if(typeof saveState==='function') saveState();
+}
+function dogTick(dt,now){
+  if(!dog) return;
+  if(!dog.grp.visible){
+    if(now>=dogNextAt && spd>6){ spawnDog(); dogNextAt=now+DOG_GAP_MS+Math.random()*6000; }
+    return;
+  }
+  dog.grp.position.x+=dog.vx*dt; dog.grp.position.z+=dog.vz*dt; dog.life-=dt;
+  const t=now*.02;
+  dog.grp.userData.legs.forEach((lg,i)=>{ lg.rotation.x=Math.sin(t+(i%2)*Math.PI)*.8; });
+  dog.grp.position.y=Math.abs(Math.sin(t))*.14;
+  if(!dog.hit && Math.hypot(dog.grp.position.x-px,dog.grp.position.z-pz)<2.7){ dog.hit=true; dogHit(); }
+  if(dog.life<=0) dog.grp.visible=false;
+}
+
+/* ============================================================
    คำศัพท์ + ตัวอักษรบนถนน
    ============================================================ */
 function pickWord(){
@@ -814,8 +908,9 @@ function gpsTick(){
   let best=null,bd=1e18;
   letters.forEach(l=>{ const d=Math.hypot(l.spr.position.x-px,l.spr.position.z-pz); if(d<bd){bd=d;best=l;} });
   if(!best){ gpsDist.textContent='--'; return; }
-  const a=Math.atan2(best.spr.position.x-px, best.spr.position.z-pz)-yaw;
-  gpsArr.style.transform='rotate('+(-a*180/Math.PI)+'deg)';
+  /* 🧭 รอบ 312: ลูกศรชี้ทิศตัวอักษรบนจอ (SVG ชี้ขึ้น=ข้างหน้า) — rel=บ่ายเป้า−ทิศรถ · หมุนตามเข็ม */
+  const rel=Math.atan2(best.spr.position.x-px, best.spr.position.z-pz)-yaw;
+  gpsArr.style.transform='rotate('+(rel*180/Math.PI).toFixed(1)+'deg)';
   gpsDist.textContent=bd>=1000?(bd/1000).toFixed(1)+' กม.':Math.round(bd)+' ม.';
 }
 function miniTick(){
@@ -880,6 +975,7 @@ function build(){
     startYaw=Math.atan2(dx,dz);
   }
   buildScenery();
+  dog={grp:makeDog(),vx:0,vz:0,life:0,hit:false};   // 🐕 รอบ 312: สร้างหมาครั้งเดียว รีไซเคิลตลอด
   built=true;
 }
 function fit(){
@@ -959,7 +1055,7 @@ function frame(dt,now){
   camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
-  collectTick(); relocTick(now); gpsTick(); miniTick();
+  collectTick(); relocTick(now); dogTick(dt,now); gpsTick(); miniTick();
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); postTick(); }
   /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง (เหมือนตัวรถเทออกจากจุดสัมผัส) */
   if(shadowEl) shadowEl.style.transform='translateX('+(-50+lean*14).toFixed(1)+'%) scaleX('+(1-Math.abs(lean)*.3).toFixed(2)+')';
@@ -1006,6 +1102,7 @@ function start(){
   px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; thr=0; padThr=0; kThr=false;
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
+  if(dog) dog.grp.visible=false; dogNextAt=performance.now()+DOG_GAP_MS;   // 🐕 รอบ 312
   scatterTrees(true); scatterClouds(true);
   fit();
   pickWord();
@@ -1055,6 +1152,9 @@ window.MotoWorld={
     get letters(){return letters}, get word(){return word}, get segs(){return segs},
     get posts(){return postBody?postBody.count:0},
     eng:Eng,
+    forceDog(){ dogNextAt=0; spd=Math.max(spd,10); dogTick(1/60,performance.now()); return dog&&dog.grp.visible; },
+    get dog(){ return dog; }, dogTick, gpsTick,
+    set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('spd'in v)spd=v.spd; },
     get pos(){return {x:px,z:pz,yaw,spd}},
     set input(v){ if('steer' in v) steerCtl=v.steer; if('thr' in v) padThr=v.thr; },
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
