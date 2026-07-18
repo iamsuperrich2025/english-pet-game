@@ -4493,7 +4493,8 @@ function renderDriveCard(){
         <small>ขับรถเที่ยว<b>เมืองกำแพงเพชรของจริง</b> — ถนนทุกสายตรงตามแผนที่จริง<br>
         เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · ขับชนตัวอักษรบนถนนเก็บมาประกอบคำ คำละ 🪙40<br>
         ออกนอกถนนรถช้าลง · ชนตึกแรงๆ รถพัง ระวังด้วยนะ!<br>
-        🧑‍🤝‍🧑 เห็นเพื่อนขับรถในเมืองเดียวกันแบบสด</small>
+        🧑‍🤝‍🧑 เห็นเพื่อนขับรถในเมืองเดียวกันแบบสด<br>
+        🗺️ <b>ใหม่!</b> เลือกแผนที่ได้ — ไป<b>บ้านโพธิ์สวัสดิ์</b>ขับรถเล่นรวมกับเพื่อนที่ขี่มอเตอร์ไซค์ได้เลย</small>
       </div>
       ${tinvNoticeHTML('drive')}
       <button class="big-btn green home-btn" id="btn-enter-drive">🚗 ออกรถ!</button>
@@ -4570,15 +4571,75 @@ async function enterDrive3D(){
     }
     advLoading = false;
   }
+  // 🗺️ รอบ 317: เลือกแผนที่ก่อนออกรถ (ผู้ใช้สั่ง — รถยนต์ไปเล่นแผนที่บ้านโพธิ์สวัสดิ์ร่วมกับมอเตอร์ไซค์ได้)
+  const map = await pickDriveMap();
+  if(!map) return;
   // 🚗 รอบ 233: เลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — ตั้ง state.carIdx → สมรรถนะ (drivePerf) + ภายในรถ (loadCarDash) ตามคันที่เลือก
   const gotCar = await pickDriveCar();
   if(!gotCar) return;
   // 🔐 คันที่เลือกค้างค่างวด → ขับไม่ได้ (เลือกคันอื่นได้)
   if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
+  if(map === 'phosawat'){ await enterMotoMapAsCar(); return; }   // 🏫 ไปแผนที่บ้านโพธิ์สวัสดิ์ด้วยรถยนต์
   // 🧱 เลือกตัวละครบล็อกก่อนออกรถ (จำตัวล่าสุดไว้ · เพื่อนใน map เห็นเป็นตัวที่เลือก) — กดยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar();
   if(!go) return;
   Adventure3D.start('drive');
+}
+
+/* 🗺️ รอบ 317: หน้าเลือกแผนที่ของผู้เล่นโลกขับรถ (ผู้ใช้สั่ง)
+   คืน 'city' = เมืองกำแพงเพชรเดิม · 'phosawat' = แผนที่มอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (ขับรถยนต์เข้าไปเล่นร่วมกัน) · null = ยกเลิก */
+function pickDriveMap(){
+  return new Promise(res=>{
+    let sel = state.driveMap === 'phosawat' ? 'phosawat' : 'city';
+    const ov = document.createElement('div');
+    ov.className = 'levelup-overlay';
+    ov.innerHTML = `<div class="levelup-box dmap-box">
+      <h2>🗺️ วันนี้จะไปขับที่ไหนดี?</h2>
+      <div class="dmap-grid">
+        <div class="dmap-card${sel==='city'?' sel':''}" data-m="city">
+          <div class="dmap-ico">🏙️🕰️</div>
+          <b>เมืองกำแพงเพชร</b>
+          <small>เมืองจริง ถนน–ตึก–แม่น้ำปิง · ไฟจราจร ตำรวจ วิทยุในรถ<br>เก็บตัวอักษรบนถนน คำละ 🪙40</small>
+        </div>
+        <div class="dmap-card${sel==='phosawat'?' sel':''}" data-m="phosawat">
+          <div class="dmap-ico">🏫🛣️</div>
+          <b>บ้านโพธิ์สวัสดิ์ <span class="dmap-new">ใหม่!</span></b>
+          <small>ถนนหมู่บ้านจริงรัศมี 30 กม. · <b>ขับร่วมกับเพื่อนที่ขี่มอเตอร์ไซค์</b><br>
+          ออกรถหน้าโรงเรียน · คำละ 🪙45 + เหรียญทองตามถนน</small>
+        </div>
+      </div>
+      <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="dmap-go">ไปเลย! 🚗</button></div>
+    </div>`;
+    ov.querySelectorAll('.dmap-card').forEach(el=>el.addEventListener('click',()=>{
+      sel = el.dataset.m; sfx.select();
+      ov.querySelectorAll('.dmap-card').forEach(e2=>e2.classList.toggle('sel', e2===el));
+    }));
+    ov.querySelector('.cb-x').addEventListener('click',()=>{ ov.remove(); res(null); });
+    ov.querySelector('#dmap-go').addEventListener('click',()=>{
+      state.driveMap = sel; saveState();
+      ov.remove(); res(sel);
+    });
+    document.body.appendChild(ov);
+  });
+}
+/* 🚗🏫 รอบ 317: เอารถยนต์เข้าไปเล่นแผนที่มอเตอร์ไซค์ (engine moto3d โหมด vehicle:'car')
+   ไม่ต้องมีตั๋วมอเตอร์ไซค์ — ตั๋วขับรถ + มีรถ ก็เข้าได้ (จุดประสงค์คือเล่นรวมกัน) */
+async function enterMotoMapAsCar(){
+  if(!window.MotoWorld || !window.MOTO_MAP){
+    advLoading = true;
+    toast('🚗 กำลังโหลดแผนที่บ้านโพธิ์สวัสดิ์...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/data/moto_phosawat.js');
+      await loadScriptOnce('js/moto3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดแผนที่บ้านโพธิ์สวัสดิ์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  MotoWorld.start({vehicle:'car'});
 }
 
 /* ============================================================

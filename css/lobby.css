@@ -1225,6 +1225,28 @@ html.no-anim .q-bigcard{animation:none;}
 .car-grid .hq-pic{height:78px;}
 .car-grid .hq-pic img{width:88px;height:66px;}
 .robot-weap{font-size:11.5px;font-weight:800;text-align:center;margin:2px 0 4px;letter-spacing:.02em}
+/* 🗺️ รอบ 317: หน้าเลือกแผนที่ก่อนออกรถ (เมืองกำแพงเพชร / บ้านโพธิ์สวัสดิ์ — เล่นรวมกับมอเตอร์ไซค์)
+   กฎทอง #7: ต้องเห็นครบทั้งใบไม่มี scrollbar แม้จอเตี้ย → 2 คอลัมน์ตายตัว + ตัวอักษร clamp ตาม vh */
+.dmap-box{max-width:min(94vw,620px);padding:16px 20px}
+.dmap-box h2{margin:0 0 6px;font-size:clamp(15px,3.4vh,21px)}
+@media (max-height:430px){
+  .dmap-box{padding:10px 14px}
+  .dmap-grid{gap:7px;margin:4px 2px 6px}
+  .dmap-card{padding:5px 8px 7px}
+}
+.dmap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:6px 2px 8px}
+@media (max-width:430px){.dmap-grid{grid-template-columns:1fr}}
+.dmap-card{position:relative;background:linear-gradient(180deg,#f4faff,#d9ecfb);border:2.5px solid #7fb0e0;
+  border-radius:14px;padding:8px 10px 10px;cursor:pointer;text-align:center;
+  box-shadow:0 3px 10px rgba(15,60,110,.2);transition:transform .12s,box-shadow .15s}
+.dmap-card:hover{transform:translateY(-2px)}
+.dmap-card.sel{border-color:#ffb300;box-shadow:0 0 0 3px #fff,0 0 14px 3px #ffd76a,0 4px 14px rgba(15,60,110,.3)}
+.dmap-card.sel::after{content:"✓";position:absolute;top:4px;right:6px;width:22px;height:22px;border-radius:50%;
+  background:#ffb300;color:#fff;font-weight:900;line-height:22px;font-size:14px}
+.dmap-ico{font-size:clamp(22px,5.2vh,34px);line-height:1.15}
+.dmap-card b{display:block;font-size:clamp(13px,2.4vh,15.5px);color:#0d47a1;margin:2px 0 3px}
+.dmap-card small{display:block;font-size:clamp(10.5px,1.9vh,12.5px);line-height:1.4;color:#33506b}
+.dmap-new{background:#e53935;color:#fff;border-radius:999px;padding:1px 7px;font-size:10.5px;vertical-align:middle}
 /* 🚗 รอบ 233: หน้าเลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — การ์ดโชว์ภาพรถ + ป้ายสมรรถนะต่อคัน */
 .dcp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;
   margin:6px 2px 4px;max-height:60vh;overflow:auto;padding:2px}
