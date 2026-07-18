@@ -42,9 +42,9 @@ const MODES = {
     label:'โลกผีสิง', emoji:'👻', reward:25, doneKey:'hauntDone',
     shoot:false, ghost:true,
     sky:0x090916, fogN:9, fogF:46, ground:0x18251d,
-    ghostMax:7, ghostLife:20000, ghostSpeed:4.3, huntR:14, seeR:9,
+    ghostMax:7, ghostLife:3000, ghostSpeed:4.3, huntR:14, seeR:9,
     ghostEmoji:['👻','👻','👻','💀','🧟'],
-    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 20 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>มีหัวใจ ❤️❤️❤️ 3 ดวง โดนผีแตะเสีย 1 ดวง (กระเด็นหนีได้) หมดเมื่อไรโดนผีหลอกเต็มจอ แล้วฟื้นใหม่เล่นต่อได้เลย</small>',
+    intro:'👻 <b>โลกผีสิง...</b><br><small>ผีโผล่ทีละ 3 วิแล้วย้ายที่ · สู้ไม่ได้ ถ้าโผล่ใกล้ให้วิ่งหนี!<br>มีหัวใจ ❤️❤️❤️ 3 ดวง โดนผีแตะเสีย 1 ดวง (กระเด็นหนีได้) หมดเมื่อไรโดนผีหลอกเต็มจอ แล้วฟื้นใหม่เล่นต่อได้เลย</small>',
     hint:'คลิกจอ=ล็อกเมาส์ · WASD วิ่งหนี · สู้ไม่ได้!! · โดนแตะเสียหัวใจ · Esc ปลดเมาส์แล้วค่อยกดออก',
     koTitle:'💫 พลังหมดแล้ว!',
   },
@@ -1815,7 +1815,7 @@ function tickShots(dt){
 }
 
 /* ============================================================
-   โหมด haunt: ผีโผล่ 20 วิ → ย้ายที่ · สู้ไม่ได้ · โดนจับ = game over
+   โหมด haunt: ผีโผล่ 3 วิ → ย้ายที่ · สู้ไม่ได้ · โดนจับ = game over
    ============================================================ */
 function spawnGhost(first){
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:0}));
@@ -1859,9 +1859,10 @@ function tickGhosts(dt,now){
   let hunted=null;
   monsters.forEach(g=>{
     const life=now-g.born;
-    if(life>=M.ghostLife){ respawnGhost(g); return; }     // ครบ 20 วิ → หายไปเกิดที่ใหม่ (รอด!)
-    // โปร่งใสตอนเกิด/ก่อนหาย (เตือนล่วงหน้า)
-    const fadeIn=Math.min(1,life/600), fadeOut=Math.min(1,(M.ghostLife-life)/600);
+    if(life>=M.ghostLife){ respawnGhost(g); return; }     // ครบอายุผี (3 วิ) → หายไปเกิดที่ใหม่ (รอด!)
+    // โปร่งใสตอนเกิด/ก่อนหาย (เตือนล่วงหน้า) · fade สั้นลงตามอายุ ไม่งั้นผี 3 วิจะจางเกือบตลอด
+    const fade=Math.min(600,M.ghostLife*.12);
+    const fadeIn=Math.min(1,life/fade), fadeOut=Math.min(1,(M.ghostLife-life)/fade);
     g.spr.material.opacity=.92*Math.min(fadeIn,fadeOut);
     const mp=g.spr.position;
     const d=Math.hypot(px-mp.x,pz-mp.z);
