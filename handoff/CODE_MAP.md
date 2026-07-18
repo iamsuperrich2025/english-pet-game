@@ -96,15 +96,15 @@ PANEL_TITLES:9 · openPanel:20 · closePanel:28
 ## js/main.js (158 บรรทัด · 2 รายการ)
 syncMusicBtn:79 · bootGame:113
 
-## js/moto3d.js (1,018 บรรทัด · 43 รายการ)
+## js/moto3d.js (1,028 บรรทัด · 43 รายการ)
 REWARD:7 · ACCEL:8 · ROAD_WIDE:9 · EDGE_M:10 · ROAD_TEX_S:11 · POST_N:12
 LEAN_MAX:13 · COLLECT_R:14 · SPAWN_MIN:15 · BUCKET:16 · TILE_COLORS:17 · ENG_FILES:47
-CSS:89 · buildDom:200 · segKey:281 · buildRoads:282 · distToSeg:342 · roadInfo:347
-onRoad:353 · randomRoadPoint:354 · makeTextSprite:371 · letterTexture:384 · woodTileMat:399 · muralTexture:410
-buildSchool:422 · buildScenery:568 · scatterTrees:647 · postTick:667 · scatterClouds:694 · pickWord:706
-spawnLetters:716 · renderWordHud:727 · collectTick:733 · completeWord:746 · relocTick:762 · gpsTick:773
-miniTick:781 · build:816 · fit:845 · tick:852 · frame:860 · start:951
-exitWorld:987
+CSS:89 · buildDom:209 · segKey:290 · buildRoads:291 · distToSeg:351 · roadInfo:356
+onRoad:362 · randomRoadPoint:363 · makeTextSprite:380 · letterTexture:393 · woodTileMat:408 · muralTexture:419
+buildSchool:431 · buildScenery:577 · scatterTrees:656 · postTick:676 · scatterClouds:703 · pickWord:715
+spawnLetters:725 · renderWordHud:736 · collectTick:742 · completeWord:755 · relocTick:771 · gpsTick:782
+miniTick:790 · build:825 · fit:854 · tick:861 · frame:869 · start:961
+exitWorld:997
 
 ## js/music.js (136 บรรทัด · 0 รายการ)
 
