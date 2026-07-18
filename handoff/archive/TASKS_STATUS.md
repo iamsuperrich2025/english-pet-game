@@ -321,3 +321,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 303:** 🚧 **เงามอไซค์ + หลักเขตทางขาว-แดง** (ไอเดียต่อยอด ผู้ใช้อนุมัติ) — moto3d.js: `#moto-shadow` วงรี radial ใต้ล้อ z1 นอก wrapper (ไม่หมุนตามรถ) เอียง=เลื่อน lean*14% + scaleX ลด · หลักเขต: InstancedMesh ต้นขาว+หัวแดง POST_N=400 `postTick()` ทุก 1 วิ วางตามขอบถนน (hw+0.9) ทุก POST_SP=42m รัศมี 380m deterministic ตามเส้น ไม่สุ่ม · เว้นจุดทับถนนอื่น (roadInfo d<.4) · ยืนยัน: posts 38→56 ตอนขับ / เงา transform ตอบ lean / readPixels เจอหัวแดง 2 ฝั่งถนน / 0.83ms/เฟรม / ไม่มี error · deploy `.296` · ค้าง: ผู้ใช้ลองจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 304:** 🛞 **ล้อหมุน** (ผู้ใช้สั่ง "ยางให้ดูเหมือนล้อหมุน") — moto3d.js: `.m-wheel` ellipse ซ้อนหน้ายางใน bikewrap (พิกเซลจริงวัดด้วย PIL: x37-63% y73.5-84%) repeating-gradient period 22px + blur .6px · frame(): `wheelOff+=spd*dt*90` set backgroundPosition + opacity `min(.8,spd*.05)` (จอด=0 มองไม่เห็น) · ยืนยัน browser: จอด op0 / 115กม.ชม. op.8 bp วิ่ง / rect ตรง 37/73.5/26/10.5% / ไม่มี error · deploy `.297` · ค้าง: ผู้ใช้ลองจริง
