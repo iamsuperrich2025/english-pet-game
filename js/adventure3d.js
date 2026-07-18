@@ -188,6 +188,12 @@ let droneGates=[], raceOn=false, raceIdx=0, raceStart=0, raceHudEl=null, raceBtn
 const GATE_R=3.4, RACE_REWARD=40;
 /* 📸 กล้องในเกม — จับภาพเฟรมถัดไป (ต้องอ่านทันทีหลัง render เพราะ canvas ถูกล้างทุกเฟรม) */
 let shotWanted=false, photoEl=null, photoImgEl=null, flashEl=null;
+/* 🪟⛈🚪 รอบ 336: กระจกที่ยังไม่แตก + ฟ้าแลบสะท้อนกระจก + ประตูเปิดได้ */
+let droneGlass=[], droneDoors=[], droneWinMat=null, droneGlassMat=null;
+let boltAt=0, boltFlashUntil=0, boltEl=null;
+const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุก 11-24 วิ
+const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
+const DOOR_R=2.6, DOOR_COIN=8, DOOR_BAT=15;         // ชนประตู: รัศมี · รางวัลในห้องเก็บของ
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
@@ -953,6 +959,24 @@ function brokenWindowTexture(){
   }
   const t=new THREE.CanvasTexture(cv); return t;
 }
+/* 🪟 กระจกที่ยังไม่แตก — ฟ้าแลบสะท้อนวับได้ · โดรนชนแล้วแตกเป็นช่องโล่ง (รอบ 336) */
+function intactGlassTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  const g=c.createLinearGradient(0,0,128,128);
+  g.addColorStop(0,'rgba(150,190,205,.62)'); g.addColorStop(.45,'rgba(96,132,150,.5)');
+  g.addColorStop(1,'rgba(176,206,216,.58)');
+  c.fillStyle=g; c.fillRect(0,0,128,128);
+  c.strokeStyle='rgba(255,255,255,.30)'; c.lineWidth=7;                 // แสงพาดเฉียงบนกระจก
+  c.beginPath(); c.moveTo(-10,44); c.lineTo(52,-10); c.stroke();
+  c.beginPath(); c.moveTo(24,124); c.lineTo(104,30); c.lineWidth=3; c.stroke();
+  for(let i=0;i<40;i++){                                                // คราบฝุ่น
+    c.fillStyle=`rgba(70,80,80,${(.03+Math.random()*.09).toFixed(3)})`;
+    c.beginPath(); c.arc(Math.random()*128,Math.random()*128,2+Math.random()*9,0,7); c.fill();
+  }
+  c.strokeStyle='rgba(44,46,44,.95)'; c.lineWidth=11; c.strokeRect(5.5,5.5,117,117);   // กรอบเดียวกับบานแตก
+  return new THREE.CanvasTexture(cv);
+}
 /* ⚡ ไอคอนสายฟ้าบนแท่นชาร์จ (วาดเอง พื้นโปร่ง) */
 function chargeIconTexture(){
   const cv=document.createElement('canvas'); cv.width=cv.height=128;
@@ -984,7 +1008,7 @@ function dAddBox(sc,mat,solids,cx,cy,cz,sx,sy,sz){
 }
 /* ตึกร้าง 1 หลัง: เสา 4 มุม + มุลเลียนแบ่งหน้าต่าง (เว้นช่องบินลอด) + พื้นแต่ละชั้นมีปล่องกลาง + ผนังกั้นห้อง
    คืน {x,z,w,d,h,solids,rooms} — rooms = จุดวางตัวอักษรในห้องต่างๆ */
-function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat){
+function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat,glassMat){
   const solids=[], rooms=[];
   const levels=2+(rnd()<.5?1:0);               // 2–3 ชั้น
   const fH=5, h=levels*fH, t=0.4, pw=0.7;
@@ -1023,6 +1047,7 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat){
   rooms.push({x:cx+w/4, y:1.6, z:cz+d/4});
   rooms.push({x:cx, y:h+1.5, z:cz});             // ดาดฟ้าเปิด — ดิ่งลงมาจากด้านบนได้
   /* 🪟🚪 กระจกแตก 1 บานต่อหน้าตึกต่อชั้น + ประตูสนิมชั้นล่าง (ตกแต่งล้วน ไม่มี solid — บินลอดได้เหมือนเดิม) */
+  const glass=[], doors=[];
   if(winMat){
     // ขนาดบานผูกกับสัดส่วนภาพจริง (tex_window 704×525 = 1.34 · tex_door 448×884 = 0.507) ไม่งั้นภาพยืดบิด
     const ph2=(fH-1)*0.66, pw2=Math.min(Math.min(w,d)*0.42, ph2*1.34), eps=0.07;
@@ -1030,18 +1055,24 @@ function buildAbandoned(sc,mat,cx,cz,w,d,rnd,winMat,doorMat){
       const yMid=li*fH+fH/2;
       [[0,-d/2+eps,0],[0,d/2-eps,Math.PI],[-w/2+eps,0,Math.PI/2],[w/2-eps,0,-Math.PI/2]].forEach(([ox,oz,ry],fi)=>{
         if(li===0 && fi===doorSide) return;      // ชั้นล่างด้านประตู เว้นไว้ให้ประตู
-        const g=new THREE.PlaneGeometry(pw2,ph2);
-        const m=new THREE.Mesh(g,winMat);
+        // 🪟 ~1 ใน 3 ของบานยังมีกระจกอยู่ (แพตเทิร์นคงที่ ไม่ใช้ rnd → ผังเมืองเดิมเป๊ะ) — บินชนแล้วแตกได้
+        const intact=glassMat && ((li+fi)%3===0);
+        const m=new THREE.Mesh(new THREE.PlaneGeometry(pw2,ph2), intact?glassMat:winMat);
         m.position.set(cx+ox,yMid,cz+oz); m.rotation.y=ry; sc.add(m);
+        if(intact) glass.push({m, x:cx+ox, y:yMid, z:cz+oz, done:false});
       });
     }
     if(doorMat){
-      const dz=doorSide===0?-d/2+eps:d/2-eps;
-      const dr=new THREE.Mesh(new THREE.PlaneGeometry(1.72,3.4),doorMat);
-      dr.position.set(cx,1.7,cz+dz); dr.rotation.y=doorSide===0?0:Math.PI; sc.add(dr);
+      // 🚪 บานประตูหมุนรอบบานพับ: pivot อยู่ขอบซ้าย ตัวบานเลื่อนออกครึ่งความกว้าง
+      const dw=1.72, dz=doorSide===0?-d/2+eps:d/2-eps;
+      const pivot=new THREE.Object3D();
+      pivot.position.set(cx-dw/2,1.7,cz+dz); pivot.rotation.y=doorSide===0?0:Math.PI; sc.add(pivot);
+      const dr=new THREE.Mesh(new THREE.PlaneGeometry(dw,3.4),doorMat);
+      dr.position.set(dw/2,0,0); pivot.add(dr);
+      doors.push({pivot, base:pivot.rotation.y, x:cx, y:1.7, z:cz+dz, open:false, ang:0});
     }
   }
-  return {x:cx,z:cz,w,d,h,solids,rooms};
+  return {x:cx,z:cz,w,d,h,solids,rooms,glass,doors};
 }
 
 /* ============================================================
@@ -1574,6 +1605,9 @@ function buildScene(md){
     applyTex(winMat,'tex_window',1,1,null,true);
     const doorMat=new THREE.MeshLambertMaterial({map:rustyDoorTexture(),side:THREE.DoubleSide});
     applyTex(doorMat,'tex_door',1,1,null,true);
+    // 🪟 บานที่ยังมีกระจก (โปร่งแสงจริง ต้องใช้ transparent — มีไม่มาก ~1/3 ของบานทั้งหมด)
+    const glassMat=new THREE.MeshLambertMaterial({map:intactGlassTexture(),transparent:true,
+      opacity:.82,side:THREE.DoubleSide,depthWrite:false});
     const rnd=seededRand(41987);
     const list=[];
     for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
@@ -1581,7 +1615,7 @@ function buildScene(md){
       if(rnd()<.18) continue;                            // เว้นช่องให้เมืองโปร่ง บินได้สะดวก
       const x=gx*26+(rnd()*4-2), z=gz*26+(rnd()*4-2);
       const w=16+rnd()*6, d=16+rnd()*6;
-      list.push(buildAbandoned(sc,cMat,x,z,w,d,rnd,winMat,doorMat));
+      list.push(buildAbandoned(sc,cMat,x,z,w,d,rnd,winMat,doorMat,glassMat));
     }
     // ห่วงเรืองแสง (เกตแข่ง FPV) — 🏁 รอบ 335: ใช้เป็นด่านโหมดแข่งเวลาด้วย (เก็บตำแหน่งไว้)
     const gateCol=[0xff3b6b,0x28e0ff,0xffd54f,0x6cff8a,0xb388ff];
@@ -1613,7 +1647,10 @@ function buildScene(md){
     basePad.rotation.x=-Math.PI/2; basePad.position.set(0,.03,0); sc.add(basePad);
     const all=[]; list.forEach(b=>b.solids.forEach(s=>all.push(s)));
     ringAds(sc, 4, 14, 0, null);               // 📢 ป้ายโฆษณากลางลานเมืองร้าง (drone)
-    worlds[md]={scene:sc, trees:tr, buildings:list, solids:all, gates, chargers};
+    const glassAll=[], doorAll=[];
+    list.forEach(b=>{ (b.glass||[]).forEach(g=>glassAll.push(g)); (b.doors||[]).forEach(dr=>doorAll.push(dr)); });
+    worlds[md]={scene:sc, trees:tr, buildings:list, solids:all, gates, chargers,
+                glass:glassAll, doors:doorAll, winMat, glassMat};
     return;
   }else if(md==='soccer'){
     // ⚽ สนามฟุตบอล: พื้นหญ้า+เส้นสนาม · ประตู+ตาข่าย · อัฒจันทร์ 4 ด้าน · ลูกบอล · จุดพรีวิววิถี
@@ -3181,6 +3218,12 @@ function buildDom(){
     padding:4px 12px;color:#9dffc4;font-family:'Courier New',monospace;font-size:13px;white-space:nowrap}
   #adv-racehud b{color:#fff}
   /* 📸 แฟลชตอนกดชัตเตอร์ + การ์ดพรีวิวภาพ */
+  /* ⛈ ฟ้าแลบ — วาบ 2 จังหวะแบบสายฟ้าจริง (ขาวอมฟ้า ไม่ใช่ขาวล้วนแบบแฟลชกล้อง) */
+  #adv-bolt{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;
+    background:linear-gradient(180deg,rgba(226,240,255,.92),rgba(150,190,230,.35) 55%,rgba(60,80,110,0))}
+  #adv-bolt.on{animation:advBolt .42s ease-out}
+  @keyframes advBolt{0%{opacity:0}6%{opacity:.9}16%{opacity:.12}28%{opacity:.75}48%{opacity:.06}100%{opacity:0}}
+  html.no-anim #adv-bolt.on{animation:none}
   #adv-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:8}
   #adv-flash.on{animation:advFlash .26s ease-out}
   @keyframes advFlash{0%{opacity:.85}100%{opacity:0}}
@@ -3903,6 +3946,7 @@ function buildDom(){
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
     <div id="adv-flash"></div>
+    <div id="adv-bolt"></div>
     <div id="adv-photo"><div class="ph-card"><img id="adv-photo-img" alt="ภาพที่ถ่ายในโลกโดรน">
       <div class="ph-btns"><button id="adv-photo-save">📥 บันทึกลงเครื่อง</button>
       <button id="adv-photo-close">ปิด</button></div></div></div>
@@ -4303,6 +4347,7 @@ function buildDom(){
   photoEl=overlayEl.querySelector('#adv-photo');
   photoImgEl=overlayEl.querySelector('#adv-photo-img');
   flashEl=overlayEl.querySelector('#adv-flash');
+  boltEl=overlayEl.querySelector('#adv-bolt');
   raceBtnEl.addEventListener('click',e=>{ e.preventDefault(); if(raceOn) raceStop(false); else raceStartRun(); });
   overlayEl.querySelector('#adv-shot').addEventListener('click',e=>{ e.preventDefault(); shotWanted=true; });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
@@ -4538,6 +4583,34 @@ function propFix(){
 /* 🔋 ชาร์จแบต (บวก) — คุมไม่ให้เกิน 100 */
 function droneBatAdd(n){ droneBat=Math.max(0,Math.min(100,droneBat+n)); }
 
+/* ⛈ ฟ้าแลบ — จอวาบ + กระจกทุกบานสะท้อนแสงขาววับ + เสียงฟ้าร้องตามมา */
+function lightningBolt(now){
+  boltFlashUntil=now+220;
+  if(boltEl){ boltEl.classList.remove('on'); void boltEl.offsetWidth; boltEl.classList.add('on');
+              setTimeout(()=>boltEl&&boltEl.classList.remove('on'),420); }
+  if(droneGlassMat){ droneGlassMat.color.setHex(0xffffff); droneGlassMat.opacity=1; }
+  setTimeout(()=>{ if(droneGlassMat){ droneGlassMat.color.setHex(0xffffff); droneGlassMat.opacity=.82; } },200);
+  setTimeout(()=>DroneSound.thunder(), 300+Math.random()*700);   // เสียงมาทีหลังแสง (ระยะทาง)
+}
+/* 🪟 บินชนบานที่ยังมีกระจก = แตก (สลับเป็นบานโล่ง) + เศษกระจกกระเด็น + เหรียญ */
+function smashGlass(g,now){
+  g.done=true;
+  if(droneWinMat) g.m.material=droneWinMat;
+  DroneSound.glass();
+  addCoins(GLASS_COIN); sessionCoins+=GLASS_COIN; renderHudTop();
+  droneBatAdd(3);
+  showBanner(`🪟 กระจกแตก! +${GLASS_COIN}🪙`);
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate(22);
+}
+/* 🚪 บินชนประตู = บานแกว่งเปิด เจอของในห้องเก็บของ (เหรียญ + แบต) */
+function openDoor(dr){
+  dr.open=true;
+  DroneSound.thud();
+  addCoins(DOOR_COIN); sessionCoins+=DOOR_COIN; renderHudTop();
+  droneBatAdd(DOOR_BAT);
+  showBanner(`🚪 เปิดประตูเจอห้องเก็บของ! +${DOOR_COIN}🪙 · 🔋+${DOOR_BAT}%`);
+  if(state.haptic!==false && navigator.vibrate) navigator.vibrate([18,40,18]);
+}
 /* 🏁 โหมดแข่งเวลา — เริ่ม/จบ/อัปเดตป้าย */
 function raceStartRun(){
   if(!droneGates.length) return;
@@ -4656,6 +4729,25 @@ function tickDrone(dt,now){
     else hudWarnEl.style.display='none';
   }
   DroneSound.proximity(hWarnLvl);
+
+  // ⛈ ฟ้าแลบเป็นระยะ (เมืองร้างใต้พายุ)
+  if(now>boltAt){ boltAt=now+BOLT_MIN+Math.random()*(BOLT_MAX-BOLT_MIN); if(boltEl) lightningBolt(now); }
+  // 🪟 ชนบานที่ยังมีกระจก → แตก (เช็กเฉพาะบานที่ยังไม่แตก · ตัดด้วยระยะหยาบก่อน)
+  for(const g of droneGlass){
+    if(g.done) continue;
+    if(Math.abs(p.x-g.x)>GLASS_HIT_R || Math.abs(p.y-g.y)>GLASS_HIT_R || Math.abs(p.z-g.z)>GLASS_HIT_R) continue;
+    if(Math.hypot(p.x-g.x,p.y-g.y,p.z-g.z)<GLASS_HIT_R) smashGlass(g,now);
+  }
+  // 🚪 ชนประตู → เปิด + ของรางวัล · บานที่เปิดแล้วค่อยๆ แกว่งจนสุด
+  for(const dr of droneDoors){
+    if(!dr.open){
+      if(Math.abs(p.x-dr.x)<DOOR_R && Math.abs(p.z-dr.z)<DOOR_R && p.y<4.2 &&
+         Math.hypot(p.x-dr.x,p.z-dr.z)<DOOR_R) openDoor(dr);
+    }else if(dr.ang>-1.55){
+      dr.ang=Math.max(-1.55, dr.ang-2.6*dt);      // แกว่งเปิดจนสุด ~110°
+      dr.pivot.rotation.y=dr.base+dr.ang;
+    }
+  }
 
   // ⚡ ลอยเหนือแท่นชาร์จ = แบตวิ่งขึ้นเร็ว (ห่วงเต้นตามจังหวะให้เห็นว่ากำลังชาร์จ)
   droneCharging=false;
@@ -6379,6 +6471,40 @@ const DroneSound={
     const g=this.ctx.createGain(); g.gain.setValueAtTime(.5,t); g.gain.exponentialRampToValueAtTime(.001,t+.25);
     o.connect(g); g.connect(this.master||this.ctx.destination); o.start(t); o.stop(t+.27);
   },
+  /* 🪟 กระจกแตก — noise ความถี่สูงสั้นๆ ซ้อนเสียงเศษกระจกร่วง */
+  glass(){
+    if(!state.sound||!this.ctx) return;
+    const t=this.ctx.currentTime, dur=.5;
+    const buf=this.ctx.createBuffer(1,Math.floor(this.ctx.sampleRate*dur),this.ctx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){ const k=i/ch.length; ch[i]=(Math.random()*2-1)*Math.pow(1-k,2.4); }
+    const src=this.ctx.createBufferSource(); src.buffer=buf;
+    const hp=this.ctx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2600;
+    const g=this.ctx.createGain(); g.gain.value=.5;
+    src.connect(hp); hp.connect(g); g.connect(this.master||this.ctx.destination); src.start(t);
+    for(let i=0;i<5;i++){                                   // เศษกระจกกระเด็นเป็นเม็ดๆ
+      const o=this.ctx.createOscillator(); o.type='triangle';
+      o.frequency.value=1800+Math.random()*2600;
+      const gg=this.ctx.createGain(); const st=t+.05+Math.random()*.3;
+      gg.gain.setValueAtTime(.0001,st); gg.gain.exponentialRampToValueAtTime(.12,st+.008);
+      gg.gain.exponentialRampToValueAtTime(.0001,st+.12);
+      o.connect(gg); gg.connect(this.master||this.ctx.destination); o.start(st); o.stop(st+.14);
+    }
+  },
+  /* ⛈ ฟ้าผ่า — เสียงเปรี้ยงแล้วครืนยาว */
+  thunder(){
+    if(!state.sound||!this.ctx) return;
+    const t=this.ctx.currentTime, dur=2.2;
+    const buf=this.ctx.createBuffer(1,Math.floor(this.ctx.sampleRate*dur),this.ctx.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){ const k=i/ch.length; ch[i]=(Math.random()*2-1)*Math.pow(1-k,1.5); }
+    const src=this.ctx.createBufferSource(); src.buffer=buf;
+    const lp=this.ctx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.setValueAtTime(1400,t);
+    lp.frequency.exponentialRampToValueAtTime(160,t+1.6);
+    const g=this.ctx.createGain(); g.gain.setValueAtTime(.0001,t);
+    g.gain.linearRampToValueAtTime(.42,t+.06); g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+    src.connect(lp); lp.connect(g); g.connect(this.master||this.ctx.destination); src.start(t);
+  },
   stop(){
     this.on=false; this.ready=false; this.rpm=0; this.proximity(0);
     if(this.files.loop) this.files.loop.pause();
@@ -7315,6 +7441,12 @@ function start(md){
     hVel={x:0,y:0,z:0}; hCol=0; hHitAt=0; hWarnLvl=0; hTiltF=0; hTiltS=0;
     droneBat=100; droneBatWarnAt=0; propBroken=''; propStallUntil=0;   // 🔋🌀 เข้าใหม่ = แบตเต็ม ใบพัดครบ
     droneChargers=worlds.drone.chargers||[]; droneGates=worlds.drone.gates||[];   // ⚡🏁 แท่นชาร์จ + ห่วงแข่ง
+    // 🪟🚪⛈ คืนสภาพกระจก/ประตูทุกครั้งที่เข้าใหม่ (ฉากถูก cache ไว้ใช้ซ้ำ)
+    droneGlass=worlds.drone.glass||[]; droneDoors=worlds.drone.doors||[];
+    droneWinMat=worlds.drone.winMat||null; droneGlassMat=worlds.drone.glassMat||null;
+    droneGlass.forEach(g=>{ g.done=false; if(droneGlassMat) g.m.material=droneGlassMat; });
+    droneDoors.forEach(dr=>{ dr.open=false; dr.ang=0; dr.pivot.rotation.y=dr.base; });
+    boltAt=performance.now()+BOLT_MIN; boltFlashUntil=0;
     raceOn=false; raceIdx=0; droneCharging=false; shotWanted=false;
     droneGates.forEach(g=>{ g.m.scale.setScalar(1); g.m.material.color.setHex(g.col); });
     if(photoEl) photoEl.classList.remove('on');
@@ -7484,7 +7616,9 @@ window.Adventure3D={
     get drone(){ return {vel:hVel, col:hCol, buildings, solids, warn:hWarnLvl,
                          rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone,
                          get bat(){return droneBat}, set bat(v){droneBat=v},        // 🔋 เทสต์แบต
-                         get broken(){return propBroken}, breakProp:propBreak}; },  // 🌀 เทสต์ใบพัดหัก
+                         get broken(){return propBroken}, breakProp:propBreak,      // 🌀 เทสต์ใบพัดหัก
+                         get glass(){return droneGlass}, get doors(){return droneDoors},   // 🪟🚪 เทสต์กระจก/ประตู
+                         bolt:()=>lightningBolt(performance.now())}; },             // ⛈ เทสต์ฟ้าแลบ
     get drive(){ return {get speed(){return dSpeed}, get steer(){return dSteer}, get street(){return carStreet},
                          d:worlds.drive&&worlds.drive.d, cell:driveCell, collide:collideCar,
                          sound:CarSound, wheelEl:carWheelEl, dashEl:carDashEl,
