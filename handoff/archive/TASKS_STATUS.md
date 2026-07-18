@@ -241,3 +241,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 289:** 🛒 **เสียงแคชเชียร์ "ชิ้ง!" ตอนซื้อสินค้าสำเร็จ** (ผู้ใช้สั่ง 17 ก.ค.) — `sfx.cashier`+`playCashier` (util.js): ไฟล์ `sound/cashier.mp3` มาก่อน → ไม่มีไฟล์ใช้ `cashierSynth` (แกร๊กลิ้นชัก+กระดิ่งกริ๊งกริ๊ง 2093Hz+เหรียญท้าย) · showCollectReveal (ui.js): ซื้อ (price!=null,!produced — โรงงาน+ตลาดเพื่อน) = แคชเชียร์ / ผลิตเอง = rankup เดิม · prompt เจนเสียงใน `PROMPTS_SOUND.md` ข้อ 5 + Artifact ปุ่มคัดลอกส่งผู้ใช้แล้ว · ยืนยัน browser: spy 3 เคส cashier/rankup/rankup ถูก · fallback synth ทำงาน (fileMiss=true) · ไม่มี console error · commit `fea24ee` (stage เฉพาะ hunk — ui.js มีงาน session คู่ขนานค้าง @2964) · ค้าง: ผู้ใช้เจนไฟล์เสียงจริงวาง `sound/cashier.mp3` (ไม่วางก็มีเสียงสังเคราะห์ใช้เลย)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 290:** 🌳💖 **สวนผลไม้+เล็งของ ปัดแนวนอนสไตล์ SimCity BuildIt** (ผู้ใช้สั่ง 17 ก.ค. — ปุ่ม "เสร็จแล้ว" โดนตัด+ลิสต์แนวตั้งธรรมดาไป) — `.panel-box` 880→1180px (lobby.css) · เล็งของ: ปุ่มย้ายขึ้นหัวขวา `.wl-head` + การ์ด 2 แถว grid-auto-flow:column ในถาด `.strip-x` น้ำเงินเข้ม + `.wl-box` max-width 1020 (ต้อง override ใน lobby.css — levelup-box 600 ชนะ style.css) · สวน: ร้าน=hq-card + ต้นปลูก=การ์ดตั้ง `.farm-tree` ปัดขวางทั้งคู่ · `.farm-cols` 2 โซนเคียงข้าง (<700px ซ้อน) · `bindStripArrows` (ui.js) ลูกศรเลื่อน+ซ่อนเองเมื่อไม่ล้น (⚠️ ใช้ setTimeout ไม่ใช่ rAF — rAF ไม่ยิงตอนแท็บ hidden) · ยืนยัน browser ด้วย rect: 1000×640 + 812×375 ไม่มี scroll แนวตั้งทั้งสองแผง · ซื้อ/ขาย/เล็ง/sellAll ทำงาน · ไม่มี console error · commit `03bd14b` (stage เฉพาะ hunk — ui.js @2964 ของ session คู่ขนานไม่ถูกกวาด) · ค้าง: ผู้ใช้ลองจริง (ปัดบนมือถือจริง)
