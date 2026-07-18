@@ -168,7 +168,8 @@ let cityMapCv=null;               // แผนที่เมืองวาด�
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
-let propsEl=null, propSpinCur=0;      // 🌀 ใบพัดโดรน — จำค่า --pspin ล่าสุด เขียน DOM เฉพาะตอนเปลี่ยนจริง
+let propsEl=null, propSpinCur=0, propStallUntil=0;   // 🌀 ใบพัดโดรน — จำค่า --pspin ล่าสุด (เขียน DOM เฉพาะตอนเปลี่ยนจริง) + ช่วงสตอลหลังชน
+const PROP_STALL_MS=420;                            // ชนแล้วใบพัดหมุนช้า+สะบัดนานเท่านี้
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
@@ -1304,14 +1305,14 @@ function applySky(sc, mode){
    prompt ภาพใน PROMPTS_TEXTURE.md
    ============================================================ */
 const imgTexCache={};                                  // key -> Image ที่โหลดแล้ว | 'none' (ไม่มีไฟล์ ไม่ต้องลองซ้ำ)
-function applyTex(mat,key,rx,ry){
+function applyTex(mat,key,rx,ry,tint){                 // tint = สีคูณทับภาพ (เช่นโลกกลางคืนใช้ภาพเดียวกันแต่หม่นลง)
   if(!mat||!key) return;
   rx=rx||1; ry=ry||1;
   const use=img=>{
     const t=new THREE.Texture(img); t.needsUpdate=true;
     t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry);
     if(mat.map && mat.map.dispose) mat.map.dispose();
-    mat.map=t; if(mat.color) mat.color.set(0xffffff); mat.needsUpdate=true;
+    mat.map=t; if(mat.color) mat.color.set(tint||0xffffff); mat.needsUpdate=true;
   };
   const c=imgTexCache[key];
   if(c==='none') return;
@@ -1357,6 +1358,9 @@ function buildScene(md){
     new THREE.PlaneGeometry(HALF*2+20,HALF*2+20),
     new THREE.MeshLambertMaterial({color:cfg.ground}));
   ground.rotation.x=-Math.PI/2; sc.add(ground);
+  // 🧱 พื้นภาพจริงในโลกเมือง (โดรนใส่ในบล็อกตัวเอง) · โลกผีใช้ภาพเดียวกันแต่ tint หม่นให้เข้ากับกลางคืน
+  if(md==='heli') applyTex(ground.material,'tex_ground',26,26);
+  else if(md==='haunt') applyTex(ground.material,'tex_ground',20,20,0x7d8490);
 
   // รั้วรอบแผนที่
   const fenceMat=new THREE.MeshLambertMaterial({color:md==='adv'?0xb98a5a:0x3a3a4a});
@@ -1408,6 +1412,7 @@ function buildScene(md){
     const sun=new THREE.DirectionalLight(0xfff4d6,.7); sun.position.set(40,80,30); sc.add(sun);
     // ถนนตาราง (เส้นเข้มบนพื้น)
     const roadM=new THREE.MeshLambertMaterial({color:0x50545a});
+    applyTex(roadM,'tex_asphalt',22,2);              // 🧱 ถนนภาพจริง (ชุดเดียวกับโลกโดรน)
     for(let i=-2;i<=2;i++){
       const r1=new THREE.Mesh(new THREE.PlaneGeometry(HALF*2+20,6),roadM);
       r1.rotation.x=-Math.PI/2; r1.position.set(0,.02,i*24); sc.add(r1);
@@ -3040,6 +3045,25 @@ function buildDom(){
   #adv-props .prop-r:after{transform:translateY(-50%) rotate(142deg)}
   @keyframes advProp{to{transform:rotate(360deg)}}
   html.no-anim #adv-props .prop i{animation:none}
+  /* 💥 ชนกำแพง: ทั้งชุดสะบัด + ใบพัดหมุนช้าลง (ตั้ง --pspin เป็นค่าสตอลใน tickDrone) */
+  #adv-props.hit{animation:propShake .42s ease-out}
+  #adv-props.hit .prop i{filter:blur(2.2px) saturate(.5) brightness(.8)}
+  @keyframes propShake{0%{transform:translate3d(0,0,0)}18%{transform:translate3d(-7px,5px,0)}
+    42%{transform:translate3d(6px,-4px,0)}68%{transform:translate3d(-4px,2px,0)}100%{transform:none}}
+  html.no-anim #adv-props.hit{animation:none}
+  /* 🛸 ขอบตัวโดรน+ขาลงจอด ล่างจอ — ให้รู้สึกเหมือนนั่งอยู่บนเครื่องจริง (ไม่บังทางบิน) */
+  #adv-props .dframe{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    width:min(58vmin,420px);height:8.5vh;min-height:52px}
+  #adv-props .dframe:before{content:'';position:absolute;left:50%;bottom:3.4vh;transform:translateX(-50%);
+    width:38%;height:2.2vh;min-height:14px;border-radius:16px 16px 7px 7px;
+    background:linear-gradient(180deg,#39404a,#12161b 78%);
+    box-shadow:0 -1px 0 rgba(255,255,255,.09),0 6px 16px rgba(0,0,0,.5)}
+  #adv-props .dframe:after{content:'';position:absolute;left:12%;right:12%;bottom:.6vh;height:1vh;min-height:6px;
+    border-radius:5px;background:linear-gradient(180deg,#333a43,#0d1115);box-shadow:0 3px 10px rgba(0,0,0,.55)}
+  #adv-props .skid{position:absolute;bottom:1vh;width:1.1vh;min-width:7px;height:4.4vh;min-height:26px;
+    border-radius:4px;background:linear-gradient(180deg,#39404a,#0f1317)}
+  #adv-props .skid-l{left:33%;transform:rotate(11deg)}
+  #adv-props .skid-r{right:33%;transform:rotate(-11deg)}
   /* 🚗 โหมดขับรถกำแพงเพชร: แผงหน้าปัด+ฝากระโปรง (img/car/dash.png) + พวงมาลัยขวาหมุนจริง (img/car/wheel.png)
      รถพวงมาลัยขวาแบบเมืองไทย · ไม่มีภาพ → CSS จำลองทั้งคู่ (พวงมาลัยยังหมุนได้) */
   .adv-drive #adv-inst{display:block}
@@ -3731,7 +3755,7 @@ function buildDom(){
       <div class="gps-top"><span class="gps-arrow" id="gps-arrow">▲</span><span class="gps-turn" id="gps-turn">ตรงไป</span></div>
       <div class="gps-bot"><span class="gps-lab">🎯 ไป</span><b id="gps-letter">A</b><span class="gps-dist" id="gps-dist">0 ม.</span></div>
     </div>
-    <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div></div>
+    <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div><div class="dframe"><i class="skid skid-l"></i><i class="skid skid-r"></i></div></div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
@@ -4330,6 +4354,13 @@ function collideDrone(p){
   }
   return hit?spd:0;
 }
+/* 💥 ชนกำแพง → ใบพัดสะบัด+หมุนช้าลง (รีสตาร์ตแอนิเมชันด้วยการถอด class ก่อนใส่ใหม่ ชนรัวๆ ก็สะบัดทุกครั้ง) */
+function propStall(now){
+  if(!propsEl) return;
+  propStallUntil=now+PROP_STALL_MS;
+  propsEl.classList.remove('hit'); void propsEl.offsetWidth; propsEl.classList.add('hit');
+  setTimeout(()=>{ if(propsEl) propsEl.classList.remove('hit'); }, PROP_STALL_MS);
+}
 function tickDrone(dt,now){
   let fw=0,sd=0,yawIn=0,col=0;
   if(keys.KeyW||keys.ArrowUp) fw+=1;
@@ -4359,7 +4390,7 @@ function tickDrone(dt,now){
   p.y=Math.min(62,p.y);
   if(p.y<DRONE_R){ p.y=DRONE_R; if(hVel.y<0) hVel.y*=-.2; }         // แตะพื้น = เด้งเบา
   const crashSpd=collideDrone(p);
-  if(crashSpd>9 && now-hHitAt>900){ hHitAt=now; damagePlayer(14); DroneSound.thud(); nmCrashed=true; nmCombo=0; }
+  if(crashSpd>9 && now-hHitAt>900){ hHitAt=now; damagePlayer(14); DroneSound.thud(); nmCrashed=true; nmCombo=0; propStall(now); }
   camera.position.set(p.x,p.y,p.z);
 
   // เอียงตัวแบบ FPV (แรงเฉื่อย) — ก้ม/เงยตามเดินหน้า + banking ตอนสไลด์
@@ -4404,10 +4435,10 @@ function tickDrone(dt,now){
     const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
     hudInstEl.textContent=`🔴 REC · ▲ ${Math.max(0,p.y-DRONE_R).toFixed(0)}m · 🚀 ${spd} กม./ชม.`;
   }
-  // 🌀 ใบพัดหมุนเร็วขึ้นตามคันเร่ง (ความเร็วราบ + ไต่ระดับขึ้น) — เขียน DOM เฉพาะตอนค่าขยับจริง
+  // 🌀 ใบพัดหมุนเร็วขึ้นตามคันเร่ง (ความเร็วราบ + ไต่ระดับขึ้น) · ชนแล้วสตอลช้าลงชั่วครู่ — เขียน DOM เฉพาะตอนค่าขยับจริง
   if(propsEl){
     const load=Math.min(1, Math.hypot(hVel.x,hVel.z)/DRONE_VMAX*.75 + Math.max(0,col)*.4);
-    const dur=.34-.22*load;
+    const dur=now<propStallUntil ? .95 : .34-.22*load;
     if(Math.abs(dur-propSpinCur)>.012){ propSpinCur=dur; propsEl.style.setProperty('--pspin',dur.toFixed(3)+'s'); }
   }
   DroneSound.update(col,Math.hypot(hVel.x,hVel.z),dt);
