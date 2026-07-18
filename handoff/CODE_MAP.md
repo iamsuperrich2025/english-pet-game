@@ -3,7 +3,7 @@
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-19
 
-## js/adventure3d.js (8,197 บรรทัด · 373 รายการ)
+## js/adventure3d.js (8,392 บรรทัด · 387 รายการ)
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
 AD_COUNT:95 · SHOP_ADS:99 · PILOT_TIERS:101 · pilotEmoji:102 · DRONE_R:114 · DRONE_ACCEL:115
@@ -36,37 +36,39 @@ RTC_CFG:2626 · tinvLinked:2627 · partyWord:2634 · syncPartyWord:2647 · updat
 podiumJoin:2826 · podiumLeave:2837 · endRound:2838 · showPodium:2849 · tinvCheck:2889 · showBanner:2909
 renderHudTop:2915 · renderHudWords:2920 · renderHudInv:2930 · ddTierFromName:2937 · renderBoard:2939 · drawBigMap:2963
 openBigMap:3018 · closeBigMap:3026 · drawMinimap:3031 · loadCarDash:3103 · loadCarWheel:3115 · buildDom:3125
-confirmExit:4524 · IS_TOUCH:4543 · bindInput:4544 · movePlayer:4630 · tickPlayer:4640 · collideDrone:4673
-propStall:4692 · propBreak:4699 · propFix:4706 · droneBatAdd:4713 · lightningBolt:4716 · startRain:4727
-stopRain:4741 · smashGlass:4743 · awardGlass:4754 · neededLetter:4771 · openDoor:4786 · raceStartRun:4806
-raceStop:4813 · gateHighlight:4831 · renderRaceHud:4838 · tickDrone:4847 · nearMissTick:4989 · showNearMiss:5013
-awardDaredevil:5024 · comboCheer:5041 · comboFlash:5057 · driveCell:5066 · nearestStreet:5072 · collideCar:5082
-tlDotY:5113 · tlSet:5117 · driveArms:5134 · tlTick:5146 · TL_GREEN:5190 · tlRedDur:5192
-tlightPhase:5193 · buildTrafficLights:5200 · rlTick:5252 · cellDrivable:5284 · cellCenter:5285 · losClear:5287
-nearestDrivableCell:5297 · routeGrid:5306 · pickGpsTarget:5359 · gpsSpeak:5371 · NAVLINE_W:5390 · navLineEnsure:5391
-navLineHide:5401 · navLineUpdate:5402 · tickGps:5429 · tickDrive:5505 · drawCarDial:5681 · drawCarGauges:5711
-RADIO_RECT:5739 · CAR_RADIO_RECT:5741 · carRadioRect:5747 · radioLayout:5749 · radioSetHint:5772 · renderRadioList:5778
-radioToggleList:5788 · drawRadioViz:5793 · radioTick:5811 · BOBBLE_FOOT:5824 · BOBBLE_H:5825 · BOBBLE_ASPECT:5826
-BOB_OMEGA:5829 · BOB_PITCH_FORCE:5831 · BOBBLE_SKINS:5833 · bobbleSetAvatar:5840 · bobbleLayout:5847 · bobbleTick:5860
-bobblePoke:5885 · bobbleApplySkin:5902 · dollOwned:5912 · openDollPicker:5913 · carStartShow:5950 · showLawInfo:5968
-lawNotice:5990 · driveFineSettle:6000 · HELI_PHASES:6179 · heliStartPhase:6186 · heliFloorAt:6193 · tickHeli:6200
-CP_NAT:6355 · CP_GAUGES:6356 · SEAT_LABEL:6369 · SEAT_P_FULL:6370 · SEAT_ZOOM:6371 · DASH_OFF_Y:6372
-DASH_DROP:6373 · setSeat:6375 · layoutCockpit:6387 · WIPER:6423 · WIPER_SPD:6424 · setWiper:6427
-drawBlade:6434 · drawGlass:6448 · heliShake:6486 · cpNeedle:6497 · drawGauges:6514 · XF_START:6561
-PRELOAD_WAIT:6562 · ALT_QUIET_FROM:6564 · ALT_MAX_DAMP:6565 · ALT_LP_MIN:6566 · ECHO_NEAR:6567 · WIND_FULL_SPD:6568
-SHUTDOWN_SEC:6569 · PAN_MAX:6571 · OD_RPM:6572 · SHAKE_RPM:6573 · SHAKE_HIT:6574 · soccerLetterPos:7036
-letterNeeded:7040 · soccerNeededSet:7045 · soccerTileGeo:7051 · soccerGoldTexture:7053 · makeSoccerTile:7070 · soccerRefreshSkins:7079
-soccerBuildTargets:7086 · soccerRetarget:7095 · soccerCoinPop:7107 · soccerFieldTexture:7119 · soccerNetTexture:7130 · soccerCrowdTexture:7137
-soccerBallMat:7145 · buildSoccerGoal:7153 · buildStands:7164 · soccerNumTex:7172 · makeSoccerPlayer:7182 · soccerResetBall:7206
-soccerKick:7211 · soccerCheer:7219 · updateSoccerGuide:7220 · soccerCamera:7234 · tickSoccer:7249 · soccerKitShow:7325
-soccerKitGo:7340 · emojiSprite:7391 · makeAlien:7396 · startWave:7429 · waveSpawnFill:7440 · waveComplete:7449
-updateWaveHud:7459 · checkMechaBossBadge:7461 · alienSpawnPos:7470 · removeAlien:7475 · mechaHudWord:7480 · setMechaHudSkin:7488
-mechaComboPop:7500 · mechaShielded:7505 · mechaDamageFx:7507 · mechaHitByAlien:7512 · spawnAlienShot:7518 · removeAlienShot:7528
-tickAlienShots:7533 · spawnPowerup:7545 · removePowerup:7558 · collectPowerup:7563 · tickPowerups:7570 · updateMechaHud:7579
-mechaTracer:7619 · mechaFire:7628 · explodeAlien:7665 · tickMecha:7695 · loop:7751 · grabShot:7777
-savePhoto:7788 · clearEntities:7800 · INTRO_KEY:7814 · introSeenObj:7815 · introSeen:7816 · markIntroSeen:7817
-INTRO:7818 · showIntro:7883 · closeIntro:7908 · beginPlay:7914 · start:7916 · exitWorld:8080
-mechaRecapLine:8119
+confirmExit:4536 · IS_TOUCH:4555 · bindInput:4556 · movePlayer:4642 · tickPlayer:4652 · collideDrone:4685
+propStall:4704 · propBreak:4711 · propFix:4718 · droneBatAdd:4725 · lightningBolt:4728 · startRain:4739
+stopRain:4753 · smashGlass:4755 · awardGlass:4766 · neededLetter:4783 · openDoor:4798 · raceStartRun:4818
+raceStop:4825 · gateHighlight:4843 · renderRaceHud:4850 · tickDrone:4859 · nearMissTick:5001 · showNearMiss:5025
+awardDaredevil:5036 · comboCheer:5053 · comboFlash:5069 · driveCell:5078 · nearestStreet:5084 · collideCar:5094
+tlDotY:5125 · tlSet:5129 · driveArms:5146 · tlTick:5158 · TL_GREEN:5202 · tlRedDur:5204
+tlightPhase:5205 · buildTrafficLights:5212 · rlTick:5264 · cellDrivable:5296 · cellCenter:5297 · losClear:5299
+nearestDrivableCell:5309 · routeGrid:5318 · pickGpsTarget:5371 · gpsSpeak:5383 · NAVLINE_W:5402 · navLineEnsure:5403
+navLineHide:5413 · navLineUpdate:5414 · tickGps:5441 · tickDrive:5517 · drawCarDial:5693 · drawCarGauges:5723
+RADIO_RECT:5751 · CAR_RADIO_RECT:5753 · carRadioRect:5759 · radioLayout:5761 · radioSetHint:5784 · renderRadioList:5790
+radioToggleList:5800 · drawRadioViz:5805 · radioTick:5823 · BOBBLE_FOOT:5836 · BOBBLE_H:5837 · BOBBLE_ASPECT:5838
+BOB_OMEGA:5841 · BOB_PITCH_FORCE:5843 · BOBBLE_SKINS:5845 · bobbleSetAvatar:5852 · bobbleLayout:5859 · bobbleTick:5872
+bobblePoke:5897 · bobbleApplySkin:5914 · dollOwned:5924 · openDollPicker:5925 · carStartShow:5962 · showLawInfo:5980
+lawNotice:6002 · driveFineSettle:6012 · HELI_PHASES:6191 · heliStartPhase:6198 · heliFloorAt:6205 · tickHeli:6212
+CP_NAT:6370 · CP_GAUGES:6371 · SEAT_LABEL:6384 · SEAT_P_FULL:6385 · SEAT_ZOOM:6386 · DASH_OFF_Y:6387
+DASH_DROP:6388 · setSeat:6390 · layoutCockpit:6402 · WIPER:6441 · WIPER_SPD:6442 · sunUpdate:6448
+RAIN_MAX:6456 · VISOR_Y:6457 · RAIN_MIN:6458 · RAIN_DUR:6459 · DROP_ZONE:6463 · addDrop:6464
+tickDrops:6472 · WIPE_R:6488 · wipeDrops:6489 · setWiper:6505 · setVisor:6511 · rainTick:6517
+drawBlade:6529 · drawGlass:6543 · drawBellyCam:6610 · drawBellyHud:6634 · heliShake:6662 · cpNeedle:6673
+drawGauges:6690 · XF_START:6737 · PRELOAD_WAIT:6738 · ALT_QUIET_FROM:6740 · ALT_MAX_DAMP:6741 · ALT_LP_MIN:6742
+ECHO_NEAR:6743 · WIND_FULL_SPD:6744 · SHUTDOWN_SEC:6745 · PAN_MAX:6747 · OD_RPM:6748 · SHAKE_RPM:6749
+SHAKE_HIT:6750 · soccerLetterPos:7212 · letterNeeded:7216 · soccerNeededSet:7221 · soccerTileGeo:7227 · soccerGoldTexture:7229
+makeSoccerTile:7246 · soccerRefreshSkins:7255 · soccerBuildTargets:7262 · soccerRetarget:7271 · soccerCoinPop:7283 · soccerFieldTexture:7295
+soccerNetTexture:7306 · soccerCrowdTexture:7313 · soccerBallMat:7321 · buildSoccerGoal:7329 · buildStands:7340 · soccerNumTex:7348
+makeSoccerPlayer:7358 · soccerResetBall:7382 · soccerKick:7387 · soccerCheer:7395 · updateSoccerGuide:7396 · soccerCamera:7410
+tickSoccer:7425 · soccerKitShow:7501 · soccerKitGo:7516 · emojiSprite:7567 · makeAlien:7572 · startWave:7605
+waveSpawnFill:7616 · waveComplete:7625 · updateWaveHud:7635 · checkMechaBossBadge:7637 · alienSpawnPos:7646 · removeAlien:7651
+mechaHudWord:7656 · setMechaHudSkin:7664 · mechaComboPop:7676 · mechaShielded:7681 · mechaDamageFx:7683 · mechaHitByAlien:7688
+spawnAlienShot:7694 · removeAlienShot:7704 · tickAlienShots:7709 · spawnPowerup:7721 · removePowerup:7734 · collectPowerup:7739
+tickPowerups:7746 · updateMechaHud:7755 · mechaTracer:7795 · mechaFire:7804 · explodeAlien:7841 · tickMecha:7871
+loop:7927 · grabShot:7954 · savePhoto:7965 · clearEntities:7977 · INTRO_KEY:7991 · introSeenObj:7992
+introSeen:7993 · markIntroSeen:7994 · INTRO:7995 · showIntro:8060 · closeIntro:8085 · beginPlay:8091
+start:8093 · exitWorld:8259 · mechaRecapLine:8298
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
