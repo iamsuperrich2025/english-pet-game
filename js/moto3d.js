@@ -13,7 +13,7 @@ const EDGE_M=0.55;                         // ระยะกันชนจา�
 const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโลก (m) ต่อ 1 รอบลายภาพถนน/หญ้า (UV พิกัดโลก — รอยต่อทางแยกเนียน)
 const POST_N=400, POST_SP=42, POST_R=380;  // รอบ 303: หลักเขตทาง — จำนวน pool · ระยะห่างต่อหลัก (m) · รัศมีวางรอบผู้เล่น (m)
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
-const COLLECT_R=2.8;                       // ระยะชนเก็บตัวอักษร
+const COLLECT_R=3.6;                       // รอบ 314: ระยะชนเก็บตัวอักษร (2.8→3.6 · ตัวอยู่เลนซ้าย+ใหญ่ขึ้น ขับในเลนซ้ายเก็บได้พอดี)
 const SPAWN_MIN=110, SPAWN_MAX=430, RELOC_D=800;   // ระยะวางตัวอักษรจากรถ + ไกลเกินย้ายใหม่
 const BUCKET=250;                          // ตารางแฮชถนน (เมตร/ช่อง)
 const TILE_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
@@ -429,10 +429,15 @@ function randomRoadPoint(cx,cz,rMin,rMax){
     const a=Math.random()*Math.PI*2, r=rMin+Math.random()*(rMax-rMin);
     const x=cx+Math.cos(a)*r, z=cz+Math.sin(a)*r;
     const info=roadInfo(x,z);
-    if(info.seg && info.d<40){          // ใกล้ถนน → ดึงลงกลางถนน
+    if(info.seg && info.d<40){          // ใกล้ถนน → ดึงลงถนน
       const s=info.seg, dx=s.bx-s.ax, dz=s.bz-s.az, L2=dx*dx+dz*dz;
       let t=L2?((x-s.ax)*dx+(z-s.az)*dz)/L2:0; t=Math.max(.05,Math.min(.95,t));
-      return {x:s.ax+dx*t, z:s.az+dz*t};
+      const cxp=s.ax+dx*t, czp=s.az+dz*t;         // จุดกลางถนน
+      /* 🛣️ รอบ 314: เยื้องเข้าเลนซ้าย (ผู้ใช้สั่ง — ห้ามอยู่กลาง) · ทิศหน้า = ทิศที่ผู้เล่นเข้าหา · ซ้าย=(-fz,fx) */
+      let fx=dx, fz=dz; const fl=Math.hypot(fx,fz)||1; fx/=fl; fz/=fl;
+      if(fx*(cxp-cx)+fz*(czp-cz)<0){ fx=-fx; fz=-fz; }   // จัดหน้าให้ชี้ออกจากผู้เล่น
+      const lane=Math.min(s.hw*0.55, 3.6);        // กลางเลนซ้าย (จำกัดไม่เกิน ~1 เลน)
+      return {x:cxp+(-fz)*lane, z:czp+fx*lane};
     }
   }
   return null;
@@ -844,7 +849,7 @@ function spawnLetters(){
   word.en.split('').forEach((ch,i)=>{
     const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20,z:pz+30};
     const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-    spr.scale.set(3,3,1); spr.position.set(p.x,1.7,p.z);
+    spr.scale.set(4.6,4.6,1); spr.position.set(p.x,2.3,p.z);   // รอบ 314: ตัวใหญ่ขึ้น 3→4.6 + ยกสูงให้เห็นชัด
     scene.add(spr);
     letters.push({ch,idx:i,spr});
   });
@@ -898,7 +903,7 @@ function relocTick(now){
   letters.forEach(l=>{
     if(Math.hypot(l.spr.position.x-px,l.spr.position.z-pz)>RELOC_D){
       const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX);
-      if(p) l.spr.position.set(p.x,1.7,p.z);
+      if(p) l.spr.position.set(p.x,2.3,p.z);
     }
   });
 }
