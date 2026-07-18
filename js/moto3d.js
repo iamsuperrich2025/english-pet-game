@@ -25,10 +25,22 @@ const TILE_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','
 /* 🪙 รอบ 317: เหรียญบนถนน + โบนัสตัวอักษร (ผู้ใช้: เก็บตัวอักษรให้เหรียญด้วย + เหรียญบนถนนน้อยไป) */
 const LETTER_COIN=1;                                   // เก็บตัวอักษร 1 ตัว = แถม 🪙1 ทันที (นอกเหนือจาก REWARD ตอนครบคำ)
 const COIN_N=120, COIN_R=320, COIN_MIN=25;             // จำนวนเหรียญที่ลอยรอบผู้เล่น · รัศมีวาง (m) · ใกล้สุด
-const COIN_VAL=1, COIN_PICK_R=3.6, COIN_FILL=12;       // มูลค่าต่อเหรียญ · ระยะชนเก็บ · เติมสูงสุดต่อรอบ (กันกระตุก)
+const COIN_VAL=1, COIN_PICK_R=3.6, COIN_FILL=12;       // มูลค่าเหรียญพื้นฐาน · ระยะชนเก็บ · เติมสูงสุดต่อรอบ (กันกระตุก)
+/* 💎 รอบ 318: เหรียญพิเศษตามสภาพเส้นทาง — ทางตรงทอง 🪙1 · ทางโค้งฟ้า 🪙5 · หลุม/เนินเพชร 🪙20 */
+const COIN_TIERS=[
+  {val:1, size:2.3, y:1.5, mark:'★', name:'',            hi:'#fff7cc', mid:'#ffd23f', lo:'#e08c00', ring:'rgba(180,110,0,.55)', ink:'#b06e00'},
+  {val:5, size:2.9, y:1.7, mark:'◆', name:'โค้งสวย!',    hi:'#e6f9ff', mid:'#4fc3f7', lo:'#0277bd', ring:'rgba(2,90,150,.5)',   ink:'#01579b'},
+  {val:20,size:3.6, y:2.0, mark:'💎',name:'เหรียญเพชร!', hi:'#fdeaff', mid:'#ce93d8', lo:'#7b1fa2', ring:'rgba(90,20,120,.5)',  ink:'#4a148c'},
+];
+const COIN_CURVE_RAD=0.19, COIN_CURVE_EVERY=6, COIN_CURVE_TRY=22;
+/* มุมหักขั้นต่ำที่ถือว่า "โค้งจริง" (rad ≈ 11° · = p90 ของถนนทั้งแผนที่) — จุดสุ่มธรรมดามักตกบนช่วงตรงยาว
+   จึง "เล็งหาโค้ง" ทุกๆ 6 เหรียญ (สุ่มลอง 22 จุด) ไม่งั้นเหรียญโค้งแทบไม่โผล่เลย */
 /* 🚗🧑‍🤝‍🧑 รอบ 317: รถยนต์มาร่วมแผนที่นี้ได้ + เห็นยานพาหนะเพื่อนตรงกับที่เขาขับจริง */
 const NET_SEND_MS=180, SPAWN_GAP=9, SPAWN_FREE_R=5.5;  // ถี่ส่งตำแหน่ง · ระยะเว้นช่องเกิด · ถือว่าช่องนี้ "มีคนแล้ว"
 const PEER_COLORS=[0xef5350,0x42a5f5,0x66bb6a,0xffca28,0xab47bc,0x26c6da,0xff7043,0x8d6e63];
+/* 💬 รอบ 318: แชทลอยหัว — ข้อความสำเร็จรูป (เด็กแตะส่งได้เลย ไม่ต้องพิมพ์บนมือถือ ไม่ต้องกรองคำหยาบ) */
+const CHAT_MS=5000;
+const CHAT_PRESETS=['สวัสดี! 👋','ตามมาเลย!','เร็วมาก! 😲','รอด้วย~','เก่งจัง! 👍','สู้ๆ 💪','ไปทางนั้น! ➡️','555 😂'];
 
 let built=false, running=false, rafId=0, lastT=0;
 let renderer=null, scene=null, camera=null;
@@ -58,8 +70,10 @@ let sessionCoins=0, sessionWords=0, texCache={};
 let startX=0,startZ=0,startYaw=0;
 let vehicle='moto';                        // 🚗 รอบ 317: 'moto' = มอเตอร์ไซค์ (ตั๋วมอไซค์) · 'car' = ผู้เล่นโลกขับรถมาร่วมแผนที่นี้
 let selfCar=null;                          // โมเดลรถยนต์ของเราเอง (โหมด car — แทนสไปรต์มอไซค์)
-let coinPool=[], coinTex=null, coinAt=0;   // 🪙 เหรียญบนถนน (pool รีไซเคิลรอบผู้เล่น)
+let coinPool=[], coinTex=null, coinAt=0, coinSeq=0;   // 🪙 เหรียญบนถนน (pool รีไซเคิลรอบผู้เล่น)
 let worldRef=null,myRef=null,peers={},lastNetSend=0,netOk=true,netAvOk=true,spawnFixAt=0;   // 🧑‍🤝‍🧑 เพื่อนในแผนที่เดียวกัน
+let boardEl=null,boardSig='';              // 🏆 รอบ 318: กระดานคะแนนสด (วาดใหม่เมื่อข้อมูลเปลี่ยนจริงเท่านั้น)
+let chatBtn=null,chatBarEl=null,selfMsgEl=null,myChat=null;   // 💬 รอบ 318: แชทลอยหัวข้อความสำเร็จรูป
 let keydownFn=null,keyupFn=null,resizeFn=null;
 
 /* ---------- 🔊 เสียงเครื่องยนต์จริง (รอบ 306 — ตัดจากเสียงอัดมอไซค์จริงของผู้ใช้ sound/MotorbikeSound.m4a)
@@ -249,13 +263,39 @@ const CSS=`
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
 /* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข */
 #moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;flex-direction:column;align-items:center;gap:.5vmin;
-  background:rgba(10,20,35,.6);border-radius:1.4vmin;padding:.7vmin 1.2vmin;color:#fff;max-width:30vmin}
+  background:rgba(10,20,35,.6);border-radius:1.4vmin;padding:.7vmin 1.2vmin;color:#fff;max-width:26%}
 .m-gps-lb{font-size:1.5vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
 .m-gps-row{display:flex;align-items:center;gap:1.2vmin}
 #moto-gps-arr{display:inline-block;width:4.4vmin;height:5.1vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
 #moto-gps-arr svg{display:block;width:100%;height:100%}
 #moto-gps-d{font-size:2.8vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
+/* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ) */
+#moto-board{position:absolute;right:2%;top:10.5%;min-width:17vmin;max-width:30vmin;display:none;flex-direction:column;gap:.25vmin;
+  background:rgba(10,20,35,.62);border-radius:1.2vmin;padding:.6vmin .9vmin;color:#fff;z-index:2}
+#moto-board.on{display:flex}
+.m-bd-h{font-size:1.35vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
+.m-bd-r{display:flex;align-items:center;gap:.6vmin;font-size:1.7vmin;font-weight:800;line-height:1.35}
+.m-bd-r.me{color:#ffe082}
+.m-bd-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-bd-w{font-variant-numeric:tabular-nums;color:#8dffb0}
+/* 💬 รอบ 318: ปุ่มแชท + แถบข้อความสำเร็จรูป + ข้อความของเราเองมุมล่าง */
+#moto-chat{position:absolute;left:2%;bottom:12%;z-index:4;border:none;cursor:pointer;border-radius:999px;
+  width:6.4vmin;height:6.4vmin;font-size:3vmin;color:#fff;background:rgba(20,40,70,.72);
+  box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+#moto-chat:active{transform:scale(.92)}
+/* กว้างแบบ % ของ "จอเกม" (ไม่ใช่ vmin ของหน้าต่าง) — มินิแมพเป็น vmin จึงกินพื้นที่ต่างกันตามอัตราส่วนจอ
+   วางกึ่งกลางกว้าง 50% (ขอบขวา 75% < มินิแมพซ้ายสุด 77%) = พ้นมินิแมพทุกอัตราส่วนที่ทดสอบ (1000×640 และ 812×375) */
+#moto-chatbar{position:absolute;left:50%;transform:translateX(-50%);width:50%;bottom:22.5%;z-index:4;display:none;flex-wrap:wrap;gap:.7vmin;
+  justify-content:center;background:rgba(8,16,28,.82);border-radius:1.4vmin;padding:.9vmin}
+#moto-chatbar.on{display:flex}
+#moto-chatbar button{border:none;cursor:pointer;border-radius:999px;padding:.7vmin 1.4vmin;font-size:1.9vmin;
+  font-weight:800;color:#0e2136;background:linear-gradient(180deg,#e9f4ff,#bcd9f5)}
+#moto-chatbar button:active{transform:scale(.95)}
+#moto-selfmsg{position:absolute;left:50%;bottom:8%;transform:translateX(-50%);z-index:3;opacity:0;
+  background:rgba(255,255,255,.92);color:#123;border-radius:1.2vmin;padding:.5vmin 1.4vmin;font-size:2vmin;
+  font-weight:800;white-space:nowrap;transition:opacity .2s;pointer-events:none}
+#moto-selfmsg.on{opacity:1}
 #moto-mini{position:absolute;right:2%;bottom:3%;width:15vmin;height:15vmin;max-width:130px;max-height:130px;
   border-radius:50%;background:rgba(8,16,28,.72);border:.35vmin solid rgba(255,255,255,.4)}
 #moto-banner{position:absolute;left:50%;top:38%;transform:translate(-50%,-50%) scale(.6);opacity:0;text-align:center;
@@ -299,6 +339,10 @@ function buildDom(){
         <div class="m-gps-lb">ตอนนี้คุณอยู่ห่างจากตัวอักษรที่จะต้องเก็บ เป็นระยะทาง</div>
         <div class="m-gps-row"><span id="moto-gps-arr"><svg viewBox="0 0 24 28"><path d="M12 1 L22 13 L15.5 13 L15.5 27 L8.5 27 L8.5 13 L2 13 Z" fill="#5ef08a" stroke="#083" stroke-width="1.3" stroke-linejoin="round"/></svg></span><span id="moto-gps-d">--</span></div>
       </div>
+      <div id="moto-board"></div>
+      <button id="moto-chat">💬</button>
+      <div id="moto-chatbar"></div>
+      <div id="moto-selfmsg"></div>
       <div id="moto-speed">0 กม./ชม.</div>
       <canvas id="moto-mini" width="130" height="130"></canvas>
       <div id="moto-banner"></div>
@@ -331,6 +375,18 @@ function buildDom(){
   coinsEl=document.getElementById('moto-coins'); banEl=document.getElementById('moto-banner');
   miniCv=document.getElementById('moto-mini'); miniCtx=miniCv.getContext('2d');
   introEl=document.getElementById('moto-intro'); exitBox=document.getElementById('moto-exitbox');
+  /* 🏆💬 รอบ 318: กระดานคะแนน + แชทข้อความสำเร็จรูป */
+  boardEl=document.getElementById('moto-board');
+  chatBtn=document.getElementById('moto-chat'); chatBarEl=document.getElementById('moto-chatbar');
+  selfMsgEl=document.getElementById('moto-selfmsg');
+  chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button type="button">${escapeHTML(t)}</button>`).join('');
+  chatBarEl.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',e=>{
+    e.preventDefault(); sendChat(CHAT_PRESETS[i]); chatBarEl.classList.remove('on');
+  }));
+  chatBtn.addEventListener('click',e=>{
+    e.preventDefault(); chatBarEl.classList.toggle('on');
+    if(typeof sfx!=='undefined') sfx.select();
+  });
   /* ปุ่มเร่ง (กดค้าง) */
   const thrOn=e=>{ e.preventDefault(); padThr=1; Eng.start();
     if(introEl&&introEl.style.display!=='none') introEl.style.display='none'; };
@@ -485,11 +541,25 @@ function buildRoads(){
   D.r.forEach(rd=>{
     const w=rd[0], major=rd[1], pts=smoothPts(rd[3]), hw=w/2*ROAD_WIDE;   // รอบ 313: pts ผ่าน smoothPts = เส้นโค้ง
     roads.push({pts,major,hw});
+    let prevSi=-1;                                   // 💎 รอบ 318: segment ก่อนหน้าในถนนเส้นนี้ (ใช้คิดความโค้ง)
     for(let i=0;i<pts.length-2;i+=2){
       const ax=pts[i],az=pts[i+1],bx=pts[i+2],bz=pts[i+3];
       const dx=bx-ax,dz=bz-az,L=Math.hypot(dx,dz); if(L<0.5) continue;
       const si=segs.length;
-      segs.push({ax,az,bx,bz,hw,len:L});
+      segs.push({ax,az,bx,bz,hw,len:L,curv:0});
+      /* 💎 รอบ 318: ความโค้งต่อ segment (มุมหักกับ segment ถัดไปในถนนเส้นเดียวกัน) — ใช้เลือกระดับเหรียญ
+         คิดครั้งเดียวตอน build · ทั้งสองฝั่งของหัวโค้งได้ค่าเท่ากัน (เหรียญโค้งโผล่ทั้งก่อน/หลังหัวโค้ง) */
+      if(prevSi>=0){
+        const q=segs[prevSi];
+        if(q.bx===ax && q.bz===az){
+          const qx=q.bx-q.ax, qz=q.bz-q.az, QL=Math.hypot(qx,qz)||1;
+          let dot=(qx*dx+qz*dz)/(QL*L); dot=dot>1?1:(dot<-1?-1:dot);
+          const ang=Math.acos(dot);
+          if(ang>q.curv) q.curv=ang;
+          segs[si].curv=ang;
+        }
+      }
+      prevSi=si;
       const steps=Math.ceil(L/BUCKET)+1;
       let pbx=null,pbz=null;
       for(let s=0;s<=steps;s++){
@@ -981,23 +1051,60 @@ function dogTick(dt,now){
    🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
    (ผู้ใช้: "เหรียญบนถนนน้อยไป" + เก็บได้ต้องมีเสียง/ภาพชัด)
    ============================================================ */
-function coinTexture(){
+function coinTexture(tier){
+  const T=COIN_TIERS[tier];
   const cv=document.createElement('canvas'); cv.width=cv.height=128; const c=cv.getContext('2d');
   const g=c.createRadialGradient(48,42,4,64,64,60);
-  g.addColorStop(0,'#fff7cc'); g.addColorStop(.45,'#ffd23f'); g.addColorStop(1,'#e08c00');
+  g.addColorStop(0,T.hi); g.addColorStop(.45,T.mid); g.addColorStop(1,T.lo);
   c.beginPath(); c.arc(64,64,58,0,7); c.fillStyle=g; c.fill();
-  c.lineWidth=7; c.strokeStyle='#fff3b0'; c.stroke();
-  c.beginPath(); c.arc(64,64,38,0,7); c.lineWidth=5; c.strokeStyle='rgba(180,110,0,.55)'; c.stroke();
-  c.fillStyle='#b06e00'; c.font='900 58px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('★',64,68);
+  c.lineWidth=7; c.strokeStyle=T.hi; c.stroke();
+  c.beginPath(); c.arc(64,64,38,0,7); c.lineWidth=5; c.strokeStyle=T.ring; c.stroke();
+  c.fillStyle=T.ink; c.font='900 52px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(T.mark,64,68);
   return new THREE.CanvasTexture(cv);
 }
 function makeCoins(){
-  coinTex=coinTexture();
+  coinTex=COIN_TIERS.map((t,i)=>coinTexture(i));
   for(let i=0;i<COIN_N;i++){
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:coinTex,transparent:true}));
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:coinTex[0],transparent:true}));
     s.scale.set(2.3,2.3,1); s.visible=false; s.frustumCulled=false;
-    scene.add(s); coinPool.push({spr:s,on:false});
+    scene.add(s); coinPool.push({spr:s,on:false,tier:0});
   }
+}
+/* 💎 รอบ 318: เลือกระดับเหรียญจากสภาพเส้นทางตรงจุดนั้น
+   ใกล้หลุม/เนิน (feats) = เหรียญเพชร 🪙20 · ทางโค้ง (ทิศถนนหักเกิน ~20°) = เหรียญฟ้า 🪙5 · ทางตรง = ทอง 🪙1 */
+/* เล็งหาจุดบน "หัวโค้งจริง" รอบผู้เล่น — ไล่จาก segment ในตารางแฮชโดยตรง
+   (สุ่มจุดในระนาบแล้วสแนปเข้าถนน จะตกบนช่วงตรงยาวเกือบตลอด เพราะพื้นที่มากกว่า → หาโค้งไม่เจอ) */
+function curvyRoadPoint(){
+  const cand=[], seen=new Set();
+  const b0=Math.floor((px-COIN_R)/BUCKET), b1=Math.floor((px+COIN_R)/BUCKET);
+  const c0=Math.floor((pz-COIN_R)/BUCKET), c1=Math.floor((pz+COIN_R)/BUCKET);
+  for(let bx=b0;bx<=b1;bx++)for(let bz=c0;bz<=c1;bz++){
+    const arr=buckets.get(segKey(bx,bz)); if(!arr) continue;
+    for(const si of arr){
+      if(seen.has(si)) continue; seen.add(si);
+      const s=segs[si]; if(s.curv<COIN_CURVE_RAD) continue;
+      const mx=(s.ax+s.bx)/2, mz=(s.az+s.bz)/2, d=Math.hypot(mx-px,mz-pz);
+      if(d>=COIN_MIN && d<=COIN_R) cand.push(s);
+      if(cand.length>=COIN_CURVE_TRY*8) break;
+    }
+  }
+  if(!cand.length) return null;
+  const s=cand[(Math.random()*cand.length)|0];
+  const dx=s.bx-s.ax, dz=s.bz-s.az, L=Math.hypot(dx,dz)||1, t=0.2+Math.random()*0.6;
+  const cx=s.ax+dx*t, cz=s.az+dz*t;
+  let fx=dx/L, fz=dz/L;
+  if(fx*(cx-px)+fz*(cz-pz)<0){ fx=-fx; fz=-fz; }        // จัดหน้าให้ชี้ออกจากผู้เล่น (เลนซ้ายเดียวกับตัวอักษร)
+  const lane=Math.min(s.hw*0.55,3.6);
+  return {x:cx+(-fz)*lane, z:cz+fx*lane};
+}
+function coinTierAt(x,z){
+  const cx=Math.floor(x/FEAT_CELL), cz=Math.floor(z/FEAT_CELL);
+  for(let ox=-1;ox<=1;ox++)for(let oz=-1;oz<=1;oz++){
+    const a=featBuckets.get(featKey(cx+ox,cz+oz)); if(!a) continue;
+    for(const f of a) if(Math.hypot(x-f.x,z-f.z)<f.r*0.9) return 2;      // อยู่ในวงหลุม/เนิน
+  }
+  const s=roadInfo(x,z).seg;
+  return (s && s.curv>=COIN_CURVE_RAD) ? 1 : 0;                         // ทางโค้ง (มุมหักของถนนตรงจุดนี้)
 }
 /* เอฟเฟกต์ "ได้เหรียญ": ป้ายลอยขึ้น + วงประกาย + ตัวเลขมุมขวาเด้ง + เสียง + สั่น */
 function coinFx(txt,big){
@@ -1009,29 +1116,44 @@ function coinFx(txt,big){
   screenEl.appendChild(rg); setTimeout(()=>rg.remove(),520);
   if(coinsEl){ coinsEl.classList.remove('pop'); void coinsEl.offsetWidth; coinsEl.classList.add('pop'); }
 }
-function grabCoin(v){
+function grabCoin(tier){
+  const T=COIN_TIERS[tier], v=T.val;
   if(typeof addCoins==='function') addCoins(v);
   sessionCoins+=v;
   if(coinsEl) coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
-  coinFx('+'+v+' 🪙');
-  if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
-  if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(16);
+  coinFx((tier?T.name+' ':'')+'+'+v+' 🪙',tier>0);
+  if(typeof sfx!=='undefined'){
+    if(sfx.coin) sfx.coin();
+    if(tier===2&&sfx.levelup) setTimeout(()=>sfx.levelup(),90);          // 💎 เหรียญเพชรมีเสียงฉลอง
+    else if(tier===1&&sfx.buy) setTimeout(()=>sfx.buy(),70);
+  }
+  if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(tier?[18,30,26]:16);
+  if(tier===2&&banEl){                                                    // ป้ายใหญ่เฉพาะเหรียญเพชร
+    banEl.innerHTML=`💎 เจอเหรียญเพชร!<br><span class="m-coin">+${v} 🪙</span>`;
+    banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1300);
+  }
 }
 function coinTick(dt,now){
   for(const c of coinPool){
     if(!c.on) continue;
     const p=c.spr.position;
-    p.y=1.5+Math.sin(now*.004+p.x*.7)*.28;                       // ลอยขึ้นลงให้สะดุดตา
+    p.y=COIN_TIERS[c.tier].y+Math.sin(now*.004+p.x*.7)*.28;      // ลอยขึ้นลงให้สะดุดตา
     const d=Math.hypot(p.x-px,p.z-pz);
-    if(d<COIN_PICK_R){ c.on=false; c.spr.visible=false; grabCoin(COIN_VAL); }
+    if(d<COIN_PICK_R){ c.on=false; c.spr.visible=false; grabCoin(c.tier); }
     else if(d>COIN_R+120){ c.on=false; c.spr.visible=false; }     // ไกลเกิน → ปล่อยคืน pool ไปวางใหม่ข้างหน้า
   }
   if(now-coinAt<400) return; coinAt=now;
   let fill=0;
   for(const c of coinPool){
     if(c.on) continue;
-    const p=randomRoadPoint(px,pz,COIN_MIN,COIN_R); if(!p) break;
-    c.spr.position.set(p.x,1.5,p.z); c.spr.visible=true; c.on=true;
+    coinSeq++;
+    let p=(coinSeq%COIN_CURVE_EVERY===0)?curvyRoadPoint():null;    // 💎 ทุก 6 ใบ เล็งหาโค้งก่อน
+    if(!p) p=randomRoadPoint(px,pz,COIN_MIN,COIN_R);
+    if(!p) break;
+    const tier=coinTierAt(p.x,p.z), T=COIN_TIERS[tier];
+    c.tier=tier; c.spr.material.map=coinTex[tier]; c.spr.material.needsUpdate=true;
+    c.spr.scale.set(T.size,T.size,1);
+    c.spr.position.set(p.x,T.y,p.z); c.spr.visible=true; c.on=true;
     if(++fill>=COIN_FILL) break;
   }
 }
@@ -1096,14 +1218,58 @@ function netSend(force){
   const now=performance.now();
   if(!force && now-lastNetSend<NET_SEND_MS) return;
   lastNetSend=now;
-  const payload={ n:(typeof onlineDisplayName==='function'?onlineDisplayName():'ผู้เล่น'),
+  const payload={ n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ผู้เล่น'),
     x:Math.round(px*10)/10, z:Math.round(pz*10)/10, yaw:Math.round(yaw*100)/100,
     w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP };
   if(netAvOk) payload.av=vehicle;
+  /* 💬 รอบ 318: แนบข้อความลอยหัวระหว่างยังสด (ct คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า) */
+  if(myChat && Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   myRef.set(payload).catch(()=>{
     if(payload.av!==undefined){ netAvOk=false; delete payload.av; myRef.set(payload).catch(()=>{ netOk=false; }); }
     else netOk=false;
   });
+}
+/* 💬 ส่งข้อความสำเร็จรูป (ไม่ใช่ช่องพิมพ์ → ไม่มีคำหยาบให้กรอง) + โชว์ของตัวเองมุมล่างจอ */
+function sendChat(text){
+  myChat={text:String(text).slice(0,60), ts:Date.now()};
+  netSend(true);
+  if(selfMsgEl){
+    selfMsgEl.textContent='💬 '+myChat.text; selfMsgEl.classList.add('on');
+    clearTimeout(selfMsgEl._tm); selfMsgEl._tm=setTimeout(()=>selfMsgEl.classList.remove('on'),CHAT_MS);
+  }
+  if(typeof sfx!=='undefined') sfx.select();
+}
+/* 💬 ป้ายคำพูดลอยเหนือหัวเพื่อน (สไปรต์ข้อความ ลบตัวเองใน 5 วิ) */
+function showPeerBubble(p,text){
+  removePeerBubble(p);
+  const sp=makeTextSprite(String(text).slice(0,40),'rgba(255,255,255,.94)','#12283f','💬');
+  sp.scale.set(9,2.25,1); sp.position.y=(p.kind==='car'?4.1:4.3);
+  p.grp.add(sp); p.bubble=sp;
+  p.bubbleTm=setTimeout(()=>removePeerBubble(p),CHAT_MS);
+}
+function removePeerBubble(p){
+  if(p.bubbleTm){ clearTimeout(p.bubbleTm); p.bubbleTm=0; }
+  if(p.bubble){ if(p.bubble.parent) p.bubble.parent.remove(p.bubble);
+    if(p.bubble.material.map) p.bubble.material.map.dispose();
+    p.bubble.material.dispose(); p.bubble=null; }
+}
+/* 🏆 กระดานคะแนนสด — เรา + เพื่อนในแผนที่ เรียงตามจำนวนคำที่ประกอบได้รอบนี้ */
+function renderBoard(){
+  if(!boardEl) return;
+  const uids=Object.keys(peers);
+  if(!uids.length){ boardEl.classList.remove('on'); boardSig=''; return; }
+  const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ฉัน';
+  const me={n:myName,w:sessionWords,me:true,v:vehicle};
+  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind}))
+    .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
+  const sig=rows.map(r=>r.n+':'+r.w+':'+r.v).join('|');
+  if(sig===boardSig){ boardEl.classList.add('on'); return; }
+  boardSig=sig;
+  boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
+    `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
+    `<span class="m-bd-n">${r.v==='car'?'🚗':'🏍️'} ${escapeHTML(r.n)}</span>`+
+    `<span class="m-bd-w">${r.w}</span></div>`).join('');
+  boardEl.classList.add('on');
 }
 function peerColor(uid){
   let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0;
@@ -1134,14 +1300,24 @@ function onPeer(snap){
       banEl.innerHTML=`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> มาขับ${kind==='car'?'รถยนต์ 🚗':'มอเตอร์ไซค์ 🏍️'}ด้วย!`;
       banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1900);
     }
-  }else if(p.kind!==kind){ buildPeer(uid,p,kind); }      // เพื่อนสลับพาหนะกลางคัน → เปลี่ยนโมเดลตาม
+  }else if(p.kind!==kind){ const b=p.bubble?p.bubble:null; if(b) removePeerBubble(p); buildPeer(uid,p,kind); }   // สลับพาหนะกลางคัน → เปลี่ยนโมเดล
   p.tgt={x:d.x,z:d.z};
   if(typeof d.yaw==='number') p.yawTgt=d.yaw;
+  /* 🏆 คะแนน (จำนวนคำรอบนี้) เปลี่ยน → วาดกระดานใหม่ */
+  const w=typeof d.w==='number'?d.w:0;
+  if(p.w!==w){ p.w=w; }
+  renderBoard();
+  /* 💬 ct เปลี่ยน = ข้อความใหม่ (ct คงที่ต่อข้อความ ฝั่งส่งแนบซ้ำได้ไม่เด้งซ้ำ) */
+  if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){
+    p.lastCt=d.ct; showPeerBubble(p,d.c);
+  }
 }
 function dropPeer(uid){
   const p=peers[uid]; if(!p) return;
+  removePeerBubble(p);
   if(p.grp) scene.remove(p.grp);
   delete peers[uid];
+  renderBoard();
 }
 function netLeave(){
   if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
@@ -1236,6 +1412,7 @@ function completeWord(){
   state[DONE_KEY].push(w.en);
   addCoins(REWARD); sessionCoins+=REWARD; sessionWords++;
   coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
+  renderBoard(); netSend(true);                       // 🏆 รอบ 318: คะแนนเราขึ้น → กระดานทุกเครื่องเห็นทันที
   if(typeof questEvent==='function') questEvent('word3d');
   if(typeof vbRecord==='function') vbRecord(w.en,w.th,true);
   if(typeof sfx!=='undefined') sfx.levelup();
@@ -1348,8 +1525,10 @@ function applyVehicleUi(){
     ? `เอารถของคุณมาวิ่ง<b>ถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์</b> — ออกรถหน้าโรงเรียนพร้อมเพื่อนๆ!<br>`
     : `ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b> — ถนนจริงรอบหมู่บ้าน รัศมี 30 กม.!<br>`)
     + `🟠 สไลเดอร์ส้มซ้าย = ${car?'พวงมาลัย':'เอียงรถเลี้ยว'} <b>ค้างตำแหน่งที่ตั้งไว้</b> (เลื่อนกลับกลาง = วิ่งตรง) · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>`
-    + `ขับชน<b>ตัวอักษร</b>บนถนนให้ครบคำ = 🪙${REWARD} · <b>ตัวอักษรละแถม 🪙${LETTER_COIN}</b> · เก็บ<b>เหรียญทอง ★</b>ตามถนน = 🪙${COIN_VAL}/เหรียญ<br>`
-    + `<small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว · 🧑‍🤝‍🧑 เห็นเพื่อนที่เข้ามาเล่นแผนที่เดียวกันแบบสด</small>`;
+    + `ขับชน<b>ตัวอักษร</b>บนถนนให้ครบคำ = 🪙${REWARD} · <b>ตัวอักษรละแถม 🪙${LETTER_COIN}</b><br>`
+    + `เก็บเหรียญตามถนน: <b>★ ทาง​ตรง 🪙${COIN_TIERS[0].val}</b> · <b>◆ ทางโค้ง 🪙${COIN_TIERS[1].val}</b> · <b>💎 หลุม/เนิน 🪙${COIN_TIERS[2].val}</b><br>`
+    + `<small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว<br>`
+    + `🧑‍🤝‍🧑 เห็นเพื่อนในแผนที่เดียวกันแบบสด · 🏆 กระดานคะแนนมุมขวา · 💬 ปุ่มซ้ายล่างส่งข้อความหาเพื่อน</small>`;
 }
 function fit(){
   if(!renderer) return;
@@ -1521,6 +1700,11 @@ function start(opts){
   sessionCoins=0; sessionWords=0;
   coinsEl.textContent='🪙 +0';
   coinPool.forEach(c=>{ c.on=false; c.spr.visible=false; }); coinAt=0;   // 🪙 วางเหรียญใหม่รอบจุดเกิด
+  /* 🏆💬 รอบ 318: ล้างกระดาน/แชทจากรอบก่อน */
+  myChat=null; boardSig='';
+  if(boardEl){ boardEl.classList.remove('on'); boardEl.innerHTML=''; }
+  if(chatBarEl) chatBarEl.classList.remove('on');
+  if(selfMsgEl) selfMsgEl.classList.remove('on');
   px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; thr=0; padThr=0; kThr=false;
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
@@ -1560,6 +1744,10 @@ function exitWorld(){
   running=false;
   netLeave();                                   // 🧑‍🤝‍🧑 รอบ 317: ออกจากห้องแผนที่ + ลบตัวเองจาก DB
   coinPool.forEach(c=>{ c.on=false; c.spr.visible=false; });
+  myChat=null;                                  // 💬🏆 รอบ 318
+  if(boardEl) boardEl.classList.remove('on');
+  if(chatBarEl) chatBarEl.classList.remove('on');
+  if(selfMsgEl) selfMsgEl.classList.remove('on');
   cancelAnimationFrame(rafId);
   window.removeEventListener('keydown',keydownFn);
   window.removeEventListener('keyup',keyupFn);
@@ -1599,7 +1787,12 @@ window.MotoWorld={
     get peers(){ return peers; },
     get selfCar(){ return selfCar; },
     spawnSlot, coinTick, peerTick, makeVehicle, applyVehicleUi,
-    fakePeer(uid,x,z,kind){ onPeer({key:uid,val:()=>({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'})}); return peers[uid]; },
+    /* 🏆💬💎 รอบ 318 */
+    sendChat, renderBoard, coinTierAt,
+    get board(){ return boardEl?boardEl.textContent:''; },
+    get coinTiers(){ const n=[0,0,0]; coinPool.forEach(c=>{ if(c.on) n[c.tier]++; }); return n; },
+    get myChat(){ return myChat; },
+    fakePeer(uid,x,z,kind,extra){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'},extra||{})}); return peers[uid]; },
     get start(){ return {x:startX,z:startZ,yaw:startYaw}; },
   }
 };
