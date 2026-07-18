@@ -331,3 +331,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 305:** 💨 **ควันท่อ + เส้นสปีด** (ไอเดียต่อยอด ผู้ใช้อนุมัติ) — moto3d.js: `.m-smoke` ก้อนควัน radial spawn ใน bikewrap ปลายท่อคู่ (ซ้าย20%/ขวา80% y71%) ทุก 90ms ตอน thr สลับข้าง `--dx` พุ่งออก 0.8s ลบตัวเอง **cap 12 ก้อน** · `#moto-speedfx` ::before/::after แถบเส้นวิ่งลง 2 ฝั่งจอ mask จางเข้ากลาง opacity=`(kmh-90)/45` max .8 · ยืนยัน browser: จอด 0 ควัน/115กม.ชม. fxOp .56 ควัน 12/ปล่อยคันเร่งดับหมด/ไม่มี error · deploy `.298` · ค้าง: ผู้ใช้ลองจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 306:** 🔊 **เสียงเครื่องยนต์จริง** (ผู้ใช้อัด `sound/MotorbikeSound.m4a` 15นาที มือถือ — ห้าม commit ไฟล์ต้นฉบับ/sound ทั้งโฟลเดอร์ มี github-recovery-codes.txt) — วิเคราะห์ RMS+spectral centroid (numpy+imageio-ffmpeg ติดตั้งแล้ว) เลือกช่วงนิ่งสุด: idle 248.7s / cruise 129.2s / accel 377.2s / decel 393.7s → กรอง 60Hz-7.5kHz ตัดลม/ซ่า · 16kHz mono · ลูป bake crossfade 80ms → `sound/moto/eng_*.wav` รวม 540KB · moto3d.js: แทน Eng สังเคราะห์ทั้งก้อน = ลูป idle↔cruise crossfade `mix=spd/7` + cruise pitch `.8+(spd/VMAX)*.55` + one-shot accel/decel ที่ขอบ thr (decel เฉพาะ spd>8) · ยืนยัน browser: 4 buf โหลด/gain สลับตาม spd/rate ไต่/shots ยิงตรงขอบ/ไม่มี error · **⚠️ Eng.tick เช็ก running — เทสต์ต้อง T.running=true** · deploy `.299` · ค้าง: ผู้ใช้ฟังจริง (ความดัง/สมดุลปรับได้ที่ gain .75/.55/.35 กับ shot .85/.75)

@@ -96,17 +96,18 @@ PANEL_TITLES:9 · openPanel:20 · closePanel:28
 ## js/main.js (158 บรรทัด · 2 รายการ)
 syncMusicBtn:79 · bootGame:113
 
-## js/moto3d.js (1,285 บรรทัด · 59 รายการ)
-REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · GRAV:13
-SUSP_K:14 · ROAD_WIDE:15 · EDGE_M:16 · ROAD_TEX_S:17 · POST_N:18 · LEAN_MAX:19
-COLLECT_R:20 · SPAWN_MIN:21 · BUCKET:22 · TILE_COLORS:23 · ENG_FILES:57 · CSS:112
-buildDom:256 · segKey:342 · smoothPts:345 · featKey:361 · addFeat:362 · genFeatures:367
-terrainAt:386 · roadGroundY:399 · buildRoads:406 · distToSeg:494 · roadInfo:499 · onRoad:505
-randomRoadPoint:506 · makeTextSprite:528 · letterTexture:541 · woodTileMat:556 · muralTexture:567 · buildSchool:579
-buildScenery:725 · scatterTrees:804 · postTick:824 · scatterClouds:851 · makeDog:863 · spawnDog:878
-dogHit:888 · dogTick:898 · pickWord:915 · spawnLetters:925 · renderWordHud:936 · fitWord:944
-collectTick:951 · completeWord:964 · relocTick:980 · gpsTick:991 · miniTick:1000 · build:1035
-fit:1065 · tick:1073 · frame:1081 · start:1211 · exitWorld:1249
+## js/moto3d.js (1,330 บรรทัด · 63 รายการ)
+REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
+GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
+LEAN_MAX:20 · COLLECT_R:21 · SPAWN_MIN:22 · BUCKET:23 · TILE_COLORS:24 · ENG_FILES:59
+CSS:114 · buildDom:258 · segKey:344 · smoothPts:347 · featKey:363 · addFeat:364
+genFeatures:369 · terrainAt:388 · roadGroundY:401 · decalTex:409 · makeDecals:428 · decalTick:437
+buildRoads:454 · distToSeg:536 · roadInfo:541 · onRoad:547 · randomRoadPoint:548 · makeTextSprite:570
+letterTexture:583 · woodTileMat:598 · muralTexture:609 · buildSchool:621 · buildScenery:767 · scatterTrees:846
+postTick:866 · scatterClouds:893 · makeDog:905 · spawnDog:920 · dogHit:930 · dogTick:940
+pickWord:957 · spawnLetters:967 · renderWordHud:978 · fitWord:986 · collectTick:993 · completeWord:1006
+relocTick:1022 · gpsTick:1033 · miniTick:1042 · build:1077 · fit:1108 · tick:1116
+frame:1124 · start:1255 · exitWorld:1294
 
 ## js/music.js (136 บรรทัด · 0 รายการ)
 
