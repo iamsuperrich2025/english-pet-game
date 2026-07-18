@@ -3,7 +3,7 @@
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-19
 
-## js/adventure3d.js (8,660 บรรทัด · 396 รายการ)
+## js/adventure3d.js (8,699 บรรทัด · 397 รายการ)
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
 AD_COUNT:95 · SHOP_ADS:99 · PILOT_TIERS:101 · pilotEmoji:102 · DRONE_R:114 · DRONE_ACCEL:115
@@ -50,26 +50,27 @@ renderRadioList:5807 · radioToggleList:5817 · drawRadioViz:5822 · radioTick:5
 BOBBLE_ASPECT:5855 · BOB_OMEGA:5858 · BOB_PITCH_FORCE:5860 · BOBBLE_SKINS:5862 · bobbleSetAvatar:5869 · bobbleLayout:5876
 bobbleTick:5889 · bobblePoke:5914 · bobbleApplySkin:5931 · dollOwned:5941 · openDollPicker:5942 · carStartShow:5979
 showLawInfo:5997 · lawNotice:6019 · driveFineSettle:6029 · HELI_PHASES:6208 · heliStartPhase:6215 · heliFloorAt:6222
-SOFT_TIERS:6232 · softLandBonus:6233 · setHeliLight:6247 · tickHeli:6261 · CP_NAT:6446 · CP_GAUGES:6447
-SEAT_LABEL:6460 · SEAT_P_FULL:6461 · SEAT_ZOOM:6462 · DASH_OFF_Y:6463 · DASH_DROP:6464 · setSeat:6466
-layoutCockpit:6478 · WIPER:6517 · WIPER_SPD:6518 · sunUpdate:6524 · HELI_FOG_N0:6534 · fogUpdate:6537
-RAIN_MAX:6555 · VISOR_Y:6556 · RAIN_MIN:6557 · RAIN_DUR:6558 · DROP_ZONE:6562 · addDrop:6563
-tickDrops:6571 · WIPE_R:6587 · wipeDrops:6588 · setWiper:6604 · setVisor:6610 · rainTick:6616
-drawBlade:6628 · drawGlass:6642 · drawBellyCam:6709 · drawBellyHud:6733 · drawLandingTargets:6779 · VS_HARD:6849
-drawDescentBar:6850 · heliShake:6899 · cpNeedle:6910 · drawGauges:6927 · XF_START:6974 · PRELOAD_WAIT:6975
-ALT_QUIET_FROM:6977 · ALT_MAX_DAMP:6978 · ALT_LP_MIN:6979 · ECHO_NEAR:6980 · WIND_FULL_SPD:6981 · SHUTDOWN_SEC:6982
-PAN_MAX:6984 · OD_RPM:6985 · SHAKE_RPM:6986 · SHAKE_HIT:6987 · soccerLetterPos:7466 · letterNeeded:7470
-soccerNeededSet:7475 · soccerTileGeo:7481 · soccerGoldTexture:7483 · makeSoccerTile:7500 · soccerRefreshSkins:7509 · soccerBuildTargets:7516
-soccerRetarget:7525 · soccerCoinPop:7537 · soccerFieldTexture:7549 · soccerNetTexture:7560 · soccerCrowdTexture:7567 · soccerBallMat:7575
-buildSoccerGoal:7583 · buildStands:7594 · soccerNumTex:7602 · makeSoccerPlayer:7612 · soccerResetBall:7636 · soccerKick:7641
-soccerCheer:7649 · updateSoccerGuide:7650 · soccerCamera:7664 · tickSoccer:7679 · soccerKitShow:7755 · soccerKitGo:7770
-emojiSprite:7821 · makeAlien:7826 · startWave:7859 · waveSpawnFill:7870 · waveComplete:7879 · updateWaveHud:7889
-checkMechaBossBadge:7891 · alienSpawnPos:7900 · removeAlien:7905 · mechaHudWord:7910 · setMechaHudSkin:7918 · mechaComboPop:7930
-mechaShielded:7935 · mechaDamageFx:7937 · mechaHitByAlien:7942 · spawnAlienShot:7948 · removeAlienShot:7958 · tickAlienShots:7963
-spawnPowerup:7975 · removePowerup:7988 · collectPowerup:7993 · tickPowerups:8000 · updateMechaHud:8009 · mechaTracer:8049
-mechaFire:8058 · explodeAlien:8095 · tickMecha:8125 · loop:8181 · grabShot:8208 · savePhoto:8219
-clearEntities:8231 · INTRO_KEY:8245 · introSeenObj:8246 · introSeen:8247 · markIntroSeen:8248 · INTRO:8249
-showIntro:8314 · closeIntro:8339 · beginPlay:8345 · start:8347 · exitWorld:8514 · mechaRecapLine:8553
+SOFT_TIERS:6232 · softLandBonus:6234 · awardPerfLand:6247 · setHeliLight:6266 · tickHeli:6280 · CP_NAT:6466
+CP_GAUGES:6467 · SEAT_LABEL:6480 · SEAT_P_FULL:6481 · SEAT_ZOOM:6482 · DASH_OFF_Y:6483 · DASH_DROP:6484
+setSeat:6486 · layoutCockpit:6498 · WIPER:6537 · WIPER_SPD:6538 · sunUpdate:6544 · HELI_FOG_N0:6555
+fogUpdate:6559 · RAIN_MAX:6588 · VISOR_Y:6589 · RAIN_MIN:6590 · RAIN_DUR:6591 · DROP_ZONE:6595
+addDrop:6596 · tickDrops:6604 · WIPE_R:6620 · wipeDrops:6621 · setWiper:6637 · setVisor:6643
+rainTick:6649 · drawBlade:6661 · drawGlass:6675 · drawBellyCam:6742 · drawBellyHud:6766 · drawLandingTargets:6812
+VS_HARD:6882 · drawDescentBar:6883 · heliShake:6932 · cpNeedle:6943 · drawGauges:6960 · XF_START:7007
+PRELOAD_WAIT:7008 · ALT_QUIET_FROM:7010 · ALT_MAX_DAMP:7011 · ALT_LP_MIN:7012 · ECHO_NEAR:7013 · WIND_FULL_SPD:7014
+SHUTDOWN_SEC:7015 · PAN_MAX:7017 · OD_RPM:7018 · SHAKE_RPM:7019 · SHAKE_HIT:7020 · soccerLetterPos:7499
+letterNeeded:7503 · soccerNeededSet:7508 · soccerTileGeo:7514 · soccerGoldTexture:7516 · makeSoccerTile:7533 · soccerRefreshSkins:7542
+soccerBuildTargets:7549 · soccerRetarget:7558 · soccerCoinPop:7570 · soccerFieldTexture:7582 · soccerNetTexture:7593 · soccerCrowdTexture:7600
+soccerBallMat:7608 · buildSoccerGoal:7616 · buildStands:7627 · soccerNumTex:7635 · makeSoccerPlayer:7645 · soccerResetBall:7669
+soccerKick:7674 · soccerCheer:7682 · updateSoccerGuide:7683 · soccerCamera:7697 · tickSoccer:7712 · soccerKitShow:7788
+soccerKitGo:7803 · emojiSprite:7854 · makeAlien:7859 · startWave:7892 · waveSpawnFill:7903 · waveComplete:7912
+updateWaveHud:7922 · checkMechaBossBadge:7924 · alienSpawnPos:7933 · removeAlien:7938 · mechaHudWord:7943 · setMechaHudSkin:7951
+mechaComboPop:7963 · mechaShielded:7968 · mechaDamageFx:7970 · mechaHitByAlien:7975 · spawnAlienShot:7981 · removeAlienShot:7991
+tickAlienShots:7996 · spawnPowerup:8008 · removePowerup:8021 · collectPowerup:8026 · tickPowerups:8033 · updateMechaHud:8042
+mechaTracer:8082 · mechaFire:8091 · explodeAlien:8128 · tickMecha:8158 · loop:8214 · grabShot:8241
+savePhoto:8252 · clearEntities:8264 · INTRO_KEY:8278 · introSeenObj:8279 · introSeen:8280 · markIntroSeen:8281
+INTRO:8282 · showIntro:8347 · closeIntro:8372 · beginPlay:8378 · start:8380 · exitWorld:8548
+mechaRecapLine:8589
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
@@ -86,17 +87,17 @@ bandRetakeCat:116 · bandShowRetakeSummary:150 · bandSetsPassed:178 · openBand
 bandLockToast:263 · bandExamLobby:269 · updateBandExamBtn:278 · bandLobbyTick:295 · bandPlay:306 · bandPlayLobby:319
 bandCardsHTML:331
 
-## js/game.js (927 บรรทัด · 57 รายการ)
+## js/game.js (939 บรรทัด · 60 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:132 · sprinkleConfetti:179 · VOCAB_PER_LEVEL:198
-VOCAB_RANK_NAMES:199 · vocabRankName:200 · showProgressReport:202 · THUNDER_MS:377 · THUNDER_TIERS:381 · THUNDER_TIER_UI:382
-thunderEmoji:383 · DAREDEVIL_TIERS:387 · DAREDEVIL_TIER_UI:388 · daredevilEmoji:389 · GLASS_TIERS:393 · GLASS_TIER_UI:394
-glassEmoji:395 · DILIGENT_TIERS:399 · DILIGENT_TIER_UI:400 · diligentEmoji:401 · MECHABOSS_TIERS:405 · MECHABOSS_TIER_UI:406
-mechaBossEmoji:407 · BFF_TIERS:412 · BFF_TIER_UI:413 · BFF_COIN:414 · bffEmoji:415 · badgeSuffix:420
-BADGE_META:433 · NAME_BADGE_RE:442 · splitNameBadges:443 · badgeEmojis:449 · badgeScore:454 · checkCrown:460
-currentBadgeScore:476 · rolloverBadgeWeek:480 · addDiligent:493 · celebrateBadge:509 · addThunder:523 · startGame:537
-newRound:577 · updateTimerBar:616 · updateComboPill:622 · pickCard:626 · checkMatch:638 · renderCats:752
-startQuiz:787 · renderQuizQuestion:803 · finishQuiz:862
+VOCAB_RANK_NAMES:199 · vocabRankName:200 · showProgressReport:202 · THUNDER_MS:378 · THUNDER_TIERS:382 · THUNDER_TIER_UI:383
+thunderEmoji:384 · DAREDEVIL_TIERS:388 · DAREDEVIL_TIER_UI:389 · daredevilEmoji:390 · GLASS_TIERS:394 · GLASS_TIER_UI:395
+glassEmoji:396 · DILIGENT_TIERS:400 · DILIGENT_TIER_UI:401 · diligentEmoji:402 · SOFTLAND_TIERS:406 · SOFTLAND_TIER_UI:407
+softLandEmoji:408 · MECHABOSS_TIERS:412 · MECHABOSS_TIER_UI:413 · mechaBossEmoji:414 · BFF_TIERS:419 · BFF_TIER_UI:420
+BFF_COIN:421 · bffEmoji:422 · badgeSuffix:427 · BADGE_META:441 · NAME_BADGE_RE:454 · splitNameBadges:455
+badgeEmojis:461 · badgeScore:466 · checkCrown:472 · currentBadgeScore:488 · rolloverBadgeWeek:492 · addDiligent:505
+celebrateBadge:521 · addThunder:535 · startGame:549 · newRound:589 · updateTimerBar:628 · updateComboPill:634
+pickCard:638 · checkMatch:650 · renderCats:764 · startQuiz:799 · renderQuizQuestion:815 · finishQuiz:874
 
 ## js/images.js (101 บรรทัด · 14 รายการ)
 IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 · probeRankImages:39

@@ -1526,7 +1526,7 @@ function buildScene(md){
     });
   }else if(md==='heli'){
     // เมืองตึกสูง: ตัวอักษรวางบนดาดฟ้า ต้องบินลอดตึกแล้วลงจอดเก็บ
-    sc.add(new THREE.HemisphereLight(0xffffff,0x777a80,1.0));
+    const hemi=new THREE.HemisphereLight(0xffffff,0x777a80,1.0); sc.add(hemi);   // 🌙 เก็บ ref ไว้หรี่ตอนกลางคืน (รอบ 351)
     const sun=new THREE.DirectionalLight(0xfff4d6,.7); sun.position.set(40,80,30); sc.add(sun);
     // ถนนตาราง (เส้นเข้มบนพื้น)
     const roadM=new THREE.MeshLambertMaterial({color:0x50545a});
@@ -1592,7 +1592,7 @@ function buildScene(md){
     const baseH=new THREE.Mesh(new THREE.RingGeometry(3.4,4.2,24),
       new THREE.MeshBasicMaterial({color:0xffffff,side:THREE.DoubleSide}));
     baseH.rotation.x=-Math.PI/2; baseH.position.set(0,.06,0); sc.add(baseH);
-    worlds[md]={scene:sc, trees:tr, buildings:list, ads};
+    worlds[md]={scene:sc, trees:tr, buildings:list, ads, lights:{hemi,sun}};   // 🌙 lights ใช้หรี่ตอนกลางคืน
     return;
   }else if(md==='drone'){
     // 🛸 เมืองตึกร้าง: ตึกกลวงมีหน้าต่าง บินลอดเข้าไปเก็บตัวอักษรในห้องต่างๆ
@@ -2417,7 +2417,7 @@ function sendPos(force){
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
   const payload={
-    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge),   // 🎖️⚡🎯🏅 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
+    n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge),   // 🎖️⚡🎯🏅🪶 เข็มนักบิน+สายฟ้า+ผาดโผน+นักเล่นขยัน+มือนุ่ม ติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
     av:((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||''),   // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก (ผ่าน validate เดิม string ≤8)
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
@@ -2943,7 +2943,7 @@ function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.ind
 /* 🏆 กระดานคะแนนสด: ใครประกอบคำได้เยอะสุดรอบนี้ + ท็อปนักผาดโผนในสนาม (me + เพื่อนใน map) */
 function renderBoard(){
   if(!hudBoardEl) return;
-  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge), w:sessionWords, me:true}];
+  const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge), w:sessionWords, me:true}];
   Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
@@ -6230,16 +6230,35 @@ function heliFloorAt(x,z){
    สอนทักษะเดียวกับที่แถบสอน (ร่อนลงนุ่มๆ) แต่เป็นรางวัลบวกแทนคำเตือน
    คืน true เมื่อได้โบนัส (ผู้เรียกใช้ตัดสินใจว่ายังต้องให้ ATC ชมซ้ำไหม) */
 const SOFT_TIERS=[[1.3,10,'🏆 Perfect landing!'],[3,4,'👍 ลงนุ่มมาก']];   // [ดิ่งไม่เกิน m/s, เหรียญ, ป้าย]
+let sLandTot=0, sLandPerf=0, sLandSoft=0;              // 📊 สถิติรอบบินนี้ (รีเซ็ตตอนเข้าโลก) — โชว์สรุปตอนออก
 function softLandBonus(impact,now){
+  sLandTot++;
   if(!hAirAt || now-hAirAt<3000) return false;         // ต้องบินจริง >3 วิ — กันกระดกขึ้นลงถี่ๆ ฟาร์มเหรียญ
   const tier=SOFT_TIERS.find(t=>impact<=t[0]);
   if(!tier) return false;
   const [,coin,label]=tier;
   addCoins(coin); sessionCoins+=coin; renderHudTop();
   showBanner(`${label} +${coin}🪙 (แตะพื้น ${impact.toFixed(1)} m/s)`);
-  if(coin>=10){ sfx.levelup(); ATC.say('Perfect landing, captain! Textbook approach!'); }
-  else sfx.select();
+  if(coin>=10){ sfx.levelup(); ATC.say('Perfect landing, captain! Textbook approach!'); sLandPerf++; awardPerfLand(); }
+  else{ sfx.select(); sLandSoft++; }
   return true;
+}
+/* 🪶 นับ Perfect landing สะสมถาวร → เข็มมือนุ่ม 10/25/50 (แพตเทิร์นเดียวกับ awardGlass รอบ 337) */
+function awardPerfLand(){
+  state.perfLandCount=(state.perfLandCount||0)+1;
+  const tier=SOFTLAND_TIERS.filter(t=>state.perfLandCount>=t[0]).pop();
+  if(tier && tier[1]>(state.perfLandBadge||0)){
+    state.perfLandBadge=tier[1];
+    renderBoard();
+    setTimeout(()=>{
+      if(!running) return;
+      celebrateBadge(softLandEmoji(tier[1]), `ได้${SOFTLAND_TIER_UI[tier[1]]}!`,
+        `ลงจอดเพอร์เฟกต์ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
+      if(typeof checkCrown === 'function') checkCrown();
+      if(myRef) sendPos(true);
+    }, 1200);
+  }
+  saveState();
 }
 /* 💡 ไฟส่องหมอก (รอบ 350) — สปอตไลต์จริงใต้ท้องเครื่อง ส่องไปข้างหน้า-ลงล่าง
    ตึก/แท่นจอดเป็น MeshLambert รับแสงจริง → เห็นวงแสงบนดาดฟ้า ช่วยหาเป้าตอนหมอกลง
@@ -6385,7 +6404,7 @@ function tickHeli(dt,now){
     }else{
       const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
       const stk=(state.heliStreak||0)>0?` · 🎖️ สตรีค ${state.heliStreak}`:'';
-      const fog=heliFog>.35?' · 🌫️ หมอกลง พึ่งกล้อง':'';
+      const fog=heliFog>.35?' · 🌫️ หมอกลง พึ่งกล้อง':(heliNight>.6?' · 🌙 บินกลางคืน':'');
       hudInstEl.textContent=`⛰️ ${Math.max(0,ny-HELI_SKID).toFixed(0)}m · 🚀 ${spd} กม./ชม.${stk}${fog} ${hLanded?'· 🛬 จอดแล้ว':''}`;
     }
   }
@@ -6411,10 +6430,11 @@ function tickHeli(dt,now){
     heliLight.position.set(nx,ny-.6,nz);
     heliLight.target.position.set(nx-sin*14, Math.max(0,ny-16), nz-cos*14);
   }
-  // 📻 หมอกหนา+ยังไม่เปิดไฟ → หอเตือนให้เปิด (เว้นช่วง 2 นาที ไม่พูดซ้ำถี่)
-  if(heliFog>.5 && !heliLightOn && now>_lightHintAt){
+  // 📻 หมอกหนา/ฟ้ามืด + ยังไม่เปิดไฟ → หอเตือนให้เปิด (เว้นช่วง 2 นาที ไม่พูดซ้ำถี่)
+  if((heliFog>.5||heliNight>.6) && !heliLightOn && now>_lightHintAt){
     _lightHintAt=now+120000;
-    ATC.say('Heavy fog, captain. Switch on your searchlight.');
+    ATC.say(heliNight>.6?'Night flight, captain. Switch on your searchlight.'
+                        :'Heavy fog, captain. Switch on your searchlight.');
   }
   drawGauges();
   drawLandingTargets();                 // 🎯 วงเป้าลงจอดบนดาดฟ้าที่มีตัวอักษร
@@ -6528,12 +6548,14 @@ function sunUpdate(){
   sunHi=Math.sin(t*Math.PI);                     // สูงสุดตอนเที่ยง
   sunWarm=1-sunHi;                               // เช้า/เย็น = แสงส้มอุ่น · เที่ยง = ขาว
 }
-/* 🌫️ หมอกตอนเช้า (รอบ 349) — ต่อจากระบบเวลาจริง (sunUpdate)
-   เช้ามืดมีหมอกบางๆ ทัศนวิสัยสั้นลง → ต้องพึ่ง "กล้องใต้ท้อง" มากขึ้นตอนหาดาดฟ้าลงจอด
-   หนาสุด ~05:30 · จางหมดหลัง 08:30 · พลบค่ำ 18-19 มีบางๆ อีกที */
+/* 🌫️🌙 บรรยากาศตามเวลาจริง (รอบ 349+351) — ต่อจากระบบเวลาจริง (sunUpdate)
+   หมอกเช้า: หนาสุด ~05:48 จางหมดหลัง 08:30 · พลบค่ำ 18-19 บางๆ · ทัศนวิสัยสั้น → พึ่งกล้อง/ไฟ
+   กลางคืน (หลัง ~2 ทุ่ม): ฟ้ามืด แสงเมืองหรี่ ป้ายโฆษณา/วง helipad เป็น MeshBasic ไม่โดนหรี่
+   = เรืองแสงเหมือนป้ายไฟกลางคืนเองอัตโนมัติ · ไฟส่อง 💡 ยิ่งจำเป็น */
 const HELI_FOG_N0=45, HELI_FOG_F0=150;           // ค่าปกติ (ตรงกับ MODES.heli)
-let heliFog=0, _fogAt=0;
+let heliFog=0, heliNight=0, _fogAt=0;
 const _fogSky=new THREE.Color(), _fogMist=new THREE.Color(0xdfe6ea), _fogCol=new THREE.Color();
+const _nightSky=new THREE.Color(0x0d1322);       // ฟ้ากลางคืน (น้ำเงินเข้มเกือบดำ)
 function fogUpdate(now){
   if(!scene||!scene.fog) return;
   if(now-_fogAt<800) return;                      // เวลาเปลี่ยนช้า — คำนวณใหม่ทุก ~0.8 วิพอ (กัน GC)
@@ -6544,12 +6566,23 @@ function fogUpdate(now){
   else if(h>=17.5 && h<=20) f=(1-Math.abs(h-18.6)/2)*.5;      // พลบค่ำบางๆ
   heliFog=Math.max(0,Math.min(1,f));
   if(heliLightOn) heliFog*=.62;                    // 💡 เปิดไฟส่อง = ลำแสงตัดหมอก มองไกลขึ้น (รอบ 350)
+  // 🌙 ความมืด 0-1: มืดสนิท 20:00-04:30 · ไล่มืด 18:30→20:00 · ไล่สว่าง 04:30→06:00
+  let n=0;
+  if(h>=20 || h<4.5)        n=1;
+  else if(h>=18.5)          n=(h-18.5)/1.5;
+  else if(h<6)              n=1-(h-4.5)/1.5;
+  heliNight=Math.max(0,Math.min(1,n));
   scene.fog.near=HELI_FOG_N0*(1-.86*heliFog);    // 45 → ~6 (มองเห็นใกล้มาก)
   scene.fog.far =HELI_FOG_F0*(1-.74*heliFog);    // 150 → ~39
   _fogSky.set(MODES.heli.sky);
-  _fogCol.copy(_fogSky).lerp(_fogMist,heliFog*.8);   // ฟ้า → ขาวนวลอมเทา
+  _fogCol.copy(_fogSky).lerp(_fogMist,heliFog*.8);   // ฟ้า → ขาวนวลอมเทา (หมอก)
+  _fogCol.lerp(_nightSky,heliNight);                 // → มืดตามระดับกลางคืน
   scene.fog.color.copy(_fogCol);
-  if(scene.background&&scene.background.copy) scene.background.copy(_fogCol);
+  // ⚠️ background อาจเป็น "ภาพท้องฟ้า" (applySky) ไม่ใช่สี — .copy สีใส่ Texture = พัง ต้องเช็ก isColor
+  if(scene.background&&scene.background.isColor) scene.background.copy(_fogCol);
+  // หรี่แสงเมือง (ref เก็บไว้ตอน buildScene) — ไม่มืดสนิท ยังเห็นเงาตึกตัดฟ้า
+  const L=worlds.heli&&worlds.heli.lights;
+  if(L){ L.hemi.intensity=1.0*(1-.72*heliNight); L.sun.intensity=.7*(1-.85*heliNight); }
 }
 /* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
 const RAIN_MAX=90, RAIN_SPAWN=26;                // จำนวนหยดสูงสุด · หยด/วินาที ตอนฝนตก
@@ -8480,6 +8513,7 @@ function start(md){
     setWiper(0); setVisor(false); setHeliLight(false);    // 🌧️🕶️💡 เข้าโลกใหม่ = ที่ปัด/ม่าน/ไฟ ปิดเสมอ
     drops=[]; rainOn=false; rainNextAt=0; bellyRect=null;  // 💧📹 ล้างสภาพอากาศ/กล้องของรอบก่อน
     assistTgt=null; hAirAt=0; _lightHintAt=0;              // 🎯🏆 ล้างระบบช่วยเล็ง/โบนัสลงนุ่มของรอบก่อน
+    sLandTot=0; sLandPerf=0; sLandSoft=0;                  // 📊 เริ่มนับสถิติรอบบินใหม่ (สรุปตอนออก)
     sunUpdate();                                          // 🌅 ตั้งดวงอาทิตย์ตามเวลาจริงตอนเข้าเล่น
     layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   }
@@ -8546,6 +8580,8 @@ function exitWorld(){
   renderDashboard();
   if(M && M.mecha && (sessionWords>0 || mShotsFired>0))
     toast(`🤖 จบภารกิจหุ่น! ${mechaRecapLine()}`);
+  else if(M && M.heli && sLandTot>0)                    // 📊 รอบ 351: สรุปรอบบิน (แพตเทิร์นเดียวกับ mechaRecapLine)
+    toast(`🚁 จบรอบบิน! 🛬 ลงจอด ${sLandTot} ครั้ง · 🏆 เพอร์เฟกต์ ${sLandPerf} · 👍 นุ่ม ${sLandSoft} · 📖 ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
   else if(sessionWords>0 || sessionCoins>0)
     toast(`${M.emoji} กลับจาก${M.label} — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
 }
@@ -8596,6 +8632,9 @@ window.Adventure3D={
                         get lightObj(){return heliLight},
                         set airAt(v){hAirAt=v},
                         softLand:(impact)=>softLandBonus(impact,performance.now()),
+                        get night(){return +heliNight.toFixed(2)},
+                        get lightLv(){const L=worlds.heli&&worlds.heli.lights;return L?{hemi:+L.hemi.intensity.toFixed(2),sun:+L.sun.intensity.toFixed(2)}:null},
+                        get landStats(){return {tot:sLandTot,perf:sLandPerf,soft:sLandSoft}},
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
