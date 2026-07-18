@@ -168,6 +168,7 @@ let cityMapCv=null;               // แผนที่เมืองวาด�
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
+let propsEl=null, propSpinCur=0;      // 🌀 ใบพัดโดรน — จำค่า --pspin ล่าสุด เขียน DOM เฉพาะตอนเปลี่ยนจริง
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
 let gaugeCtx=null;                // canvas หน้าปัดเข็มขยับจริง 5 ตัว
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
@@ -1297,6 +1298,34 @@ function applySky(sc, mode){
   jpg.onerror=()=>{ const png=new Image(); png.onload=()=>set(png); png.src='img/sky/'+key+'.png'; };  // ลอง .png ถ้าไม่มี .jpg
   jpg.src='img/sky/'+key+'.jpg';
 }
+/* ============================================================
+   🧱 เทกซ์เจอร์ภาพจริง (รอบ 323) — วางไฟล์ `img/tex/<key>.jpg` (หรือ .png) แล้วแปะทับพื้นผิวทันที
+   ไม่มีไฟล์ = คงลายที่วาดด้วยโค้ดเดิม (เกมไม่พังแน่นอน) · ภาพต้องต่อขอบได้ไร้รอยต่อ (seamless/tileable)
+   prompt ภาพใน PROMPTS_TEXTURE.md
+   ============================================================ */
+const imgTexCache={};                                  // key -> Image ที่โหลดแล้ว | 'none' (ไม่มีไฟล์ ไม่ต้องลองซ้ำ)
+function applyTex(mat,key,rx,ry){
+  if(!mat||!key) return;
+  rx=rx||1; ry=ry||1;
+  const use=img=>{
+    const t=new THREE.Texture(img); t.needsUpdate=true;
+    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry);
+    if(mat.map && mat.map.dispose) mat.map.dispose();
+    mat.map=t; if(mat.color) mat.color.set(0xffffff); mat.needsUpdate=true;
+  };
+  const c=imgTexCache[key];
+  if(c==='none') return;
+  if(c){ use(c); return; }
+  const jpg=new Image();
+  jpg.onload=()=>{ imgTexCache[key]=jpg; use(jpg); };
+  jpg.onerror=()=>{
+    const png=new Image();
+    png.onload=()=>{ imgTexCache[key]=png; use(png); };
+    png.onerror=()=>{ imgTexCache[key]='none'; };
+    png.src='img/tex/'+key+'.png';
+  };
+  jpg.src='img/tex/'+key+'.jpg';
+}
 function buildScene(md){
   if(md==='drive'){
     const sc=new THREE.Scene();
@@ -1447,11 +1476,14 @@ function buildScene(md){
     sc.add(new THREE.HemisphereLight(0xcfd6dd,0x3a3d42,.95));
     const sun=new THREE.DirectionalLight(0xd8dde4,.5); sun.position.set(-30,70,40); sc.add(sun);
     const roadM=new THREE.MeshLambertMaterial({color:0x3c3f44});
+    applyTex(roadM,'tex_asphalt',24,2);              // 🧱 ถนนยางมะตอย (มีภาพจริงก็ใช้ ไม่มีก็สีเดิม)
+    applyTex(ground.material,'tex_ground',26,26);    // 🧱 พื้นดิน/ลานคอนกรีตแตกร้าวรอบเมืองร้าง
     for(let i=-2;i<=2;i++){
       const r1=new THREE.Mesh(new THREE.PlaneGeometry(HALF*2+20,7),roadM); r1.rotation.x=-Math.PI/2; r1.position.set(0,.02,i*26); sc.add(r1);
       const r2=new THREE.Mesh(new THREE.PlaneGeometry(7,HALF*2+20),roadM); r2.rotation.x=-Math.PI/2; r2.position.set(i*26,.02,0); sc.add(r2);
     }
     const cMat=new THREE.MeshLambertMaterial({map:concreteTexture()});
+    applyTex(cMat,'tex_concrete',2,2);               // 🧱 ผนังตึกร้าง (ทับลาย canvas เดิมถ้ามีไฟล์ภาพ)
     const rnd=seededRand(41987);
     const list=[];
     for(let gx=-2;gx<=2;gx++) for(let gz=-2;gz<=2;gz++){
@@ -2986,6 +3018,28 @@ function buildDom(){
     border-radius:0;box-shadow:0 0 5px rgba(0,0,0,.85)}
   #adv-overlay.adv-drone:after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
     box-shadow:inset 0 0 130px 34px rgba(0,0,0,.5)}
+  /* 🌀 ใบพัดโดรนซ้าย-ขวา (รอบ 323) — แขน+มอเตอร์+จานใบพัดเบลอหมุน เอียงตามมุมกล้อง FPV
+     ความเร็วหมุนผูกกับคันเร่งจริงผ่านตัวแปร --pspin (ตั้งใน tickDrone) */
+  #adv-props{position:absolute;inset:0;pointer-events:none;display:none;z-index:2;overflow:hidden}
+  .adv-drone #adv-props{display:block}
+  #adv-props .prop{position:absolute;bottom:4vh;width:34vmin;height:34vmin;
+    transform:perspective(420px) rotateX(56deg)}
+  #adv-props .prop-l{left:-8vmin}
+  #adv-props .prop-r{right:-8vmin}
+  #adv-props .prop i{position:absolute;inset:0;border-radius:50%;
+    background:conic-gradient(rgba(226,235,245,.34) 0deg 14deg,rgba(226,235,245,.05) 14deg 172deg,
+      rgba(226,235,245,.34) 180deg 194deg,rgba(226,235,245,.05) 194deg 360deg);
+    filter:blur(1.1px);animation:advProp var(--pspin,.3s) linear infinite;
+    box-shadow:inset 0 0 26px rgba(0,0,0,.28),0 0 12px rgba(0,0,0,.25)}
+  #adv-props .prop b{position:absolute;left:50%;top:50%;width:17%;height:17%;transform:translate(-50%,-50%);
+    border-radius:50%;background:radial-gradient(circle at 35% 30%,#79808a,#22252a 72%);
+    box-shadow:0 0 9px rgba(0,0,0,.65)}
+  #adv-props .prop:after{content:'';position:absolute;left:50%;top:50%;width:60%;height:8%;border-radius:5px;
+    background:linear-gradient(180deg,#454b55,#181b20);box-shadow:0 2px 6px rgba(0,0,0,.5);transform-origin:0 50%}
+  #adv-props .prop-l:after{transform:translateY(-50%) rotate(38deg)}
+  #adv-props .prop-r:after{transform:translateY(-50%) rotate(142deg)}
+  @keyframes advProp{to{transform:rotate(360deg)}}
+  html.no-anim #adv-props .prop i{animation:none}
   /* 🚗 โหมดขับรถกำแพงเพชร: แผงหน้าปัด+ฝากระโปรง (img/car/dash.png) + พวงมาลัยขวาหมุนจริง (img/car/wheel.png)
      รถพวงมาลัยขวาแบบเมืองไทย · ไม่มีภาพ → CSS จำลองทั้งคู่ (พวงมาลัยยังหมุนได้) */
   .adv-drive #adv-inst{display:block}
@@ -3677,6 +3731,7 @@ function buildDom(){
       <div class="gps-top"><span class="gps-arrow" id="gps-arrow">▲</span><span class="gps-turn" id="gps-turn">ตรงไป</span></div>
       <div class="gps-bot"><span class="gps-lab">🎯 ไป</span><b id="gps-letter">A</b><span class="gps-dist" id="gps-dist">0 ม.</span></div>
     </div>
+    <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div></div>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
@@ -3833,6 +3888,7 @@ function buildDom(){
   chatInputEl=overlayEl.querySelector('#adv-chat-input');
   selfMsgEl=overlayEl.querySelector('#adv-selfmsg');
   hudInstEl=overlayEl.querySelector('#adv-inst');
+  propsEl=overlayEl.querySelector('#adv-props');
   hudWarnEl=overlayEl.querySelector('#adv-warn');
   nmPopEl=overlayEl.querySelector('#adv-nearmiss');
   comboFxEl=overlayEl.querySelector('#adv-combofx');
@@ -4348,6 +4404,12 @@ function tickDrone(dt,now){
     const spd=Math.round(Math.hypot(hVel.x,hVel.z)*3.6);
     hudInstEl.textContent=`🔴 REC · ▲ ${Math.max(0,p.y-DRONE_R).toFixed(0)}m · 🚀 ${spd} กม./ชม.`;
   }
+  // 🌀 ใบพัดหมุนเร็วขึ้นตามคันเร่ง (ความเร็วราบ + ไต่ระดับขึ้น) — เขียน DOM เฉพาะตอนค่าขยับจริง
+  if(propsEl){
+    const load=Math.min(1, Math.hypot(hVel.x,hVel.z)/DRONE_VMAX*.75 + Math.max(0,col)*.4);
+    const dur=.34-.22*load;
+    if(Math.abs(dur-propSpinCur)>.012){ propSpinCur=dur; propsEl.style.setProperty('--pspin',dur.toFixed(3)+'s'); }
+  }
   DroneSound.update(col,Math.hypot(hVel.x,hVel.z),dt);
 }
 
@@ -4749,6 +4811,49 @@ function gpsSpeak(text,force){
     if(v) u.voice=v;
     speechSynthesis.speak(u);
   }catch(e){}
+}
+/* 🧭 รอบ 286: เส้นนำทางสีฟ้าลอยบนถนน (แบบ Google Maps) — ribbon แบนตาม gpsRoute ที่ A* คำนวณ
+   วาดใหม่ทุกเฟรม (จุดเริ่ม = ตัวรถ เลื่อนตลอด) ลง buffer จองล่วงหน้า ไม่ alloc ซ้ำ · y=0.09 เหนือเส้นประถนน (.075)
+   ข้อต่อใช้ perp เฉลี่ย (miter) เส้นเลยต่อเนื่องไม่มีรอยหักตรงมุมเลี้ยว · route fallback (เชื่อมถนนไม่ถึง) ไม่วาด */
+let navLineMesh=null, navLinePos=null;
+const NAVLINE_W=1.15, NAVLINE_MAXP=200;                     // ครึ่งกว้าง 1.15ม. · จุดสูงสุด/เส้น
+function navLineEnsure(){
+  if(navLineMesh) return;
+  navLinePos=new Float32Array((NAVLINE_MAXP-1)*6*3);
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(navLinePos,3));
+  navLineMesh=new THREE.Mesh(g, new THREE.MeshBasicMaterial({color:0x2f9cff, transparent:true, opacity:.55,
+    depthWrite:false, side:THREE.DoubleSide}));
+  navLineMesh.renderOrder=2; navLineMesh.frustumCulled=false;   // เส้นยาวคดเคี้ยว bounding เพี้ยนง่าย — วาดเสมอ
+  worlds.drive.scene.add(navLineMesh);
+}
+function navLineHide(){ if(navLineMesh) navLineMesh.visible=false; }
+function navLineUpdate(cx,cz){
+  if(!gpsRoute || gpsRoute.fallback || gpsWpi>=gpsRoute.length){ navLineHide(); return; }
+  navLineEnsure();
+  const pts=[{x:cx,z:cz}];
+  for(let i=gpsWpi;i<gpsRoute.length;i++) pts.push(gpsRoute[i]);
+  const P=[pts[0]];                                          // ตัดจุดชิดกัน (<0.6ม.) กัน perp เพี้ยน
+  for(let i=1;i<pts.length;i++){ const q=P[P.length-1];
+    if(Math.hypot(pts[i].x-q.x, pts[i].z-q.z)>0.6) P.push(pts[i]); }
+  if(P.length<2){ navLineHide(); return; }
+  if(P.length>NAVLINE_MAXP) P.length=NAVLINE_MAXP;
+  const per=[];
+  for(let i=0;i<P.length;i++){
+    const a=P[Math.max(0,i-1)], b=P[Math.min(P.length-1,i+1)];
+    const dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx,dz)||1e-6;
+    per.push([-dz/L*NAVLINE_W, dx/L*NAVLINE_W]);
+  }
+  const y=0.09, arr=navLinePos; let o=0;
+  for(let i=0;i<P.length-1;i++){
+    const ax=P[i].x+per[i][0],   az=P[i].z+per[i][1],   bx=P[i].x-per[i][0],   bz=P[i].z-per[i][1];
+    const ex=P[i+1].x+per[i+1][0], ez=P[i+1].z+per[i+1][1], fx=P[i+1].x-per[i+1][0], fz=P[i+1].z-per[i+1][1];
+    arr[o++]=ax;arr[o++]=y;arr[o++]=az; arr[o++]=bx;arr[o++]=y;arr[o++]=bz; arr[o++]=ex;arr[o++]=y;arr[o++]=ez;
+    arr[o++]=bx;arr[o++]=y;arr[o++]=bz; arr[o++]=fx;arr[o++]=y;arr[o++]=fz; arr[o++]=ex;arr[o++]=y;arr[o++]=ez;
+  }
+  navLineMesh.visible=true;
+  navLineMesh.geometry.setDrawRange(0,(P.length-1)*6);
+  navLineMesh.geometry.attributes.position.needsUpdate=true;
 }
 function tickGps(now){
   const D=worlds.drive.d;
