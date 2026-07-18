@@ -2661,7 +2661,7 @@ function renderDashboard(){
      รอบ 179: ปุ่มข้าวเย็น #btn-dinner ย้ายจาก header มาต่อท้ายปุ่ม ➕ (สเปกผู้ใช้ — header ใส่ปุ่มแชทแทน)
      element สร้างใหม่ทุก render → ผูก click ตรงนี้ · โชว์/ซ่อน+หน้า emoji คุมโดย renderDinnerChip เดิม */
   const tabs = document.getElementById('pet-tabs');
-  if(state.pets.length || state.playerSick || dinnerDue() || state.student){   // รอบ 254: มีกล่องค้นหาศัพท์ → โชว์แถวนี้เสมอหลังลงทะเบียน
+  if(state.pets.length || state.playerSick || dinnerDue() || state.student){   // แถวแท็บน้อง (รอบ 321: ถอดกล่องค้นหาศัพท์ออกแล้ว)
     tabs.style.display = 'flex';
     tabs.innerHTML = state.pets.map((p,i)=>{
       const stage = petStage(p);
@@ -2670,9 +2670,9 @@ function renderDashboard(){
       return `<button class="pet-tab ${i===state.active?'on':''}" data-i="${i}">${face} ${escapeHTML(p.name)}${alert}</button>`;
     }).join('')
       + (state.pets.length ? `<button class="pet-tab add" id="tab-addpet">➕</button>` : '')
-      + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`
-      /* รอบ 254: กล่องค้นหาพจนานุกรมถัดจากปุ่ม ➕ (ข้อมูล js/data/dict/dict_001-057) */
-      + `<div class="dict-box"><input id="dict-input" type="search" placeholder="📖 ค้นหาคำศัพท์ Dictionary" autocomplete="off" value="${escapeHTML(__dictLastQ)}"><button id="dict-go" title="ค้นหา">🔍</button></div>`;
+      + `<button class="pet-tab dinner" id="btn-dinner" style="display:none">🍚</button>`;
+      /* รอบ 321 (ผู้ใช้สั่ง 18 ก.ค. 2026): เอากล่องค้นหาพจนานุกรม (.dict-box) ออกจากหน้า Lobby
+         — ฟังก์ชัน openDictOverlay() ยังอยู่ เรียกจากที่อื่นได้ (การ์ดคลังศัพท์ในหน้าเลือกหมวด) */
     tabs.querySelectorAll('.pet-tab[data-i]').forEach(b=>b.addEventListener('click', ()=>{
       const i = +b.dataset.i;
       // รอบ 189: คลิกแท็บน้องที่กำลังแสดงอยู่แล้ว = เปิดกล่องเปลี่ยนชื่อ · คลิกตัวอื่น = สลับไปแสดงตัวนั้น
@@ -2683,11 +2683,6 @@ function renderDashboard(){
     if(addBtn) addBtn.addEventListener('click', ()=>{ renderPetShop(); showScreen('screen-select'); });
     document.getElementById('btn-dinner').addEventListener('click', dinnerClick);
     renderDinnerChip();
-    const dIn = document.getElementById('dict-input');
-    const dGo = ()=>{ const q = dIn.value.trim(); if(!q) return; __dictLastQ = q; sfx.select(); dIn.blur(); openDictOverlay(q); };   // blur = ยุบแป้นพิมพ์มือถือ ไม่บังผลค้นหา (แตะช่องใหม่ค่อยเด้งกลับ)
-    dIn.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') dGo(); });
-    dIn.addEventListener('input', ()=>{ __dictLastQ = dIn.value; });   // จำข้อความไว้ — render รอบใหม่ไม่ล้างช่อง
-    document.getElementById('dict-go').addEventListener('click', dGo);
   }else{
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
