@@ -3271,6 +3271,18 @@ function buildDom(){
   .adv-drone #adv-race,.adv-drone #adv-shot{display:block}
   #adv-race:active,#adv-shot:active{background:rgba(124,255,157,.28)}
   #adv-race.on{background:rgba(255,214,79,.22);border-color:#ffd54f;color:#ffe9a3;text-shadow:0 0 6px rgba(255,213,79,.7)}
+  /* 🌧️🎚️ ปุ่มที่ปัดน้ำฝน + ปรับมุมนั่ง (เฉพาะโลกเฮลิฯ · วางใต้ปุ่มออก มุมขวาบน) */
+  /* ⚠️ คอลัมน์ขวาเต็มถึง y~317 (ออก/แชท/ไมค์/ลำโพง/โหมดเสียง) → วางคู่นี้ "ชิดล่างขวา" แทน
+     ยึดจากขอบล่าง จอเตี้ยแค่ไหนก็ไม่หลุด */
+  #adv-wiper,#adv-seat{position:absolute;bottom:10px;display:none;pointer-events:auto;z-index:6;
+    width:58px;padding:5px 0 3px;border-radius:12px;border:1px solid rgba(124,200,255,.5);
+    background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,200,255,.6)}
+  #adv-wiper small,#adv-seat small{display:block;font-size:9px;letter-spacing:.02em}
+  #adv-wiper{right:78px} #adv-seat{right:14px}
+  .adv-heli #adv-wiper,.adv-heli #adv-seat{display:block}
+  #adv-wiper:active,#adv-seat:active{background:rgba(124,200,255,.28)}
+  #adv-wiper.on{background:rgba(124,255,157,.2);border-color:#7cff9d;color:#c6ffd8}
   /* ⏭ ปุ่มข้ามซีเควนซ์สตาร์ทเฮลิฯ (โชว์เฉพาะระหว่างสตาร์ท · บินรอบ 2-3 ไม่ต้องรอครบ) */
   #adv-skipstart{position:absolute;display:none;left:50%;bottom:74px;transform:translateX(-50%);z-index:6;
     pointer-events:auto;padding:7px 16px;border-radius:14px;border:1px solid rgba(255,213,79,.6);
@@ -3665,11 +3677,15 @@ function buildDom(){
   #adv-tlreflect-l{left:0;background:radial-gradient(88% 72% at 10% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
   #adv-tlreflect-r{right:0;background:radial-gradient(88% 72% at 90% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
   .adv-tlreflect.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
+  /* 🌧️☀️ ชั้น "บนกระจก" — ที่ปัดน้ำฝน + แสงแดดสาด
+     ⚠️ ต้องอยู่ "ใต้" กรอบค็อกพิต (z3) เพื่อให้เสา/หลังคาบังได้เอง แต่ "เหนือ" โลก 3D (canvas ไม่มี z-index) */
+  #adv-glass{position:absolute;inset:0;pointer-events:none;display:none;z-index:2}
+  .adv-heli #adv-glass{display:block}
   #adv-cockpit{position:absolute;inset:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
   /* 🚁 กรอบค็อกพิตเต็มจอ — ช่องกระจกในไฟล์ png โปร่งใส จึงมองทะลุเห็นโลก 3D ผ่านกระจกจริงๆ
-     cover + ชิดล่าง = ไม่ยืดภาพให้เพี้ยน · จอเตี้ยมากก็แค่กินขอบเพดานบนไป แผงหน้าปัดอยู่ครบเสมอ */
-  #adv-cockpit img{width:100%;height:100%;display:block;object-fit:cover;object-position:center bottom}
+     ⚠️ ใช้ background-image ไม่ใช่ <img> เพราะต้องคุมสเกล/ตำแหน่งเองให้ตรงกับ cpMap (ปรับมุมนั่งได้) */
+  #adv-cockpit{background-repeat:no-repeat}
   /* canvas เข็ม: ทับกรอบพอดีเป๊ะ วาดด้วยพิกัดในภาพผ่าน transform */
   #adv-gauges{position:absolute;inset:0;width:100%;height:100%;
     pointer-events:none;display:none;z-index:4}
@@ -4035,6 +4051,8 @@ function buildDom(){
     <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div><div class="dframe"><i class="skid skid-l"></i><i class="skid skid-r"></i></div></div>
     <div class="adv-hud" id="adv-racehud"></div>
     <button id="adv-skipstart">⏭ ข้ามการสตาร์ทเครื่อง</button>
+    <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
+    <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
     <div id="adv-flash"></div>
@@ -4043,6 +4061,7 @@ function buildDom(){
     <div id="adv-photo"><div class="ph-card"><img id="adv-photo-img" alt="ภาพที่ถ่ายในโลกโดรน">
       <div class="ph-btns"><button id="adv-photo-save">📥 บันทึกลงเครื่อง</button>
       <button id="adv-photo-close">ปิด</button></div></div></div>
+    <canvas id="adv-glass"></canvas>
     <div id="adv-cockpit"></div>
     <div id="adv-cardash"></div>
     <div id="adv-bobble"><span class="bob-base"></span><span class="bob-coil"></span><img id="adv-bobble-img" alt=""></div>
@@ -4214,8 +4233,12 @@ function buildDom(){
   // 🚁 กรอบค็อกพิตเต็มจอ (รอบ 344): img/heli_frame.png ช่องกระจกโปร่ง → มองทะลุเห็นโลก 3D ผ่านกระจกจริง
   // สร้างไฟล์ด้วย tools/cockpit_prep.py · เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับหน้าปัดในภาพ (CP_GAUGES)
   const cpImg=new Image();
-  cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); layoutCockpit(); };
-  cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null; };
+  cpImg.onload=()=>{
+    cpNat={w:cpImg.naturalWidth,h:cpImg.naturalHeight};
+    cockpitEl.style.backgroundImage=`url(${cpImg.src})`;
+    cpBox=''; layoutCockpit();
+  };
+  cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null; cpNat=null; };
   cpImg.src='img/heli_frame.png';
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
@@ -4447,6 +4470,15 @@ function buildDom(){
   overlayEl.querySelector('#adv-shot').addEventListener('click',e=>{ e.preventDefault(); shotWanted=true; });
   skipStartEl=overlayEl.querySelector('#adv-skipstart');
   skipStartEl.addEventListener('click',e=>{ e.preventDefault(); HeliSound.skipStart(); });
+  // 🌧️🎚️ ที่ปัดน้ำฝน (ปิด→ช้า→เร็ว) + ปรับมุมนั่ง (ต่ำ→ปกติ→สูง)
+  glassCanvasEl=overlayEl.querySelector('#adv-glass');
+  glassCtx=glassCanvasEl.getContext('2d');
+  overlayEl.querySelector('#adv-wiper').addEventListener('click',e=>{
+    e.preventDefault(); sfx.select(); setWiper((wiperMode+1)%3);
+  });
+  overlayEl.querySelector('#adv-seat').addEventListener('click',e=>{
+    e.preventDefault(); sfx.select(); setSeat((seatLevel+1)%3);
+  });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -4531,7 +4563,7 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn')) continue;  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -6289,6 +6321,7 @@ function tickHeli(dt,now){
   HeliSound.update(col,hLanded,dt,{alt:Math.max(0,ny-floor), spd:Math.hypot(hVel.x,hVel.z),
                                    near:wallDist, side:wallSide});
   drawGauges();
+  drawGlass(dt,now);                    // 🌧️☀️ ที่ปัดน้ำฝน + แสงแดดบนกระจก
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
     hAtcCleared=true;
@@ -6314,22 +6347,106 @@ const CP_GAUGES={
   rpm:{x:359,y:354,r:24},   // รอบใบพัด
   vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
 };
-let cpMap=null, cpBox='';                        // {s,ox,oy} แปลงพิกัดในภาพ → canvas · cpBox = กล่องที่วัดล่าสุด
-/* จัดวางกรอบค็อกพิต + canvas เข็มให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ)
-   ต้องคำนวณ cover + ชิดล่าง ให้ตรงกับที่ CSS ทำกับภาพ ไม่งั้นเข็มหลุดออกนอกหน้าปัด */
+let cpMap=null, cpBox='', cpNat=null;            // {s,ox,oy} แปลงพิกัดในภาพ → canvas · cpNat = ขนาดจริงของไฟล์
+/* 🎚️ มุมนั่ง: 0=ต่ำ (เห็นแผงหน้าปัดเยอะ) · 1=ปกติ · 2=สูง (เห็นวิวนอกกระจกเยอะ)
+   ค่าคือสัดส่วนการเลื่อนภาพในแนวตั้ง (0=ชิดบน · 1=ชิดล่าง) */
+const SEAT_P=[1,.62,.26], SEAT_LABEL=['เบาะต่ำ','มุมนั่ง','เบาะสูง'];
+const SEAT_ZOOM=1.12;                            // ซูมเล็กน้อยเพื่อให้มีระยะเลื่อนขึ้น-ลงจริงทุกสัดส่วนจอ
+let seatLevel=1;
+function setSeat(lv){
+  seatLevel=lv;
+  const b=overlayEl&&overlayEl.querySelector('#adv-seat');
+  if(b) b.querySelector('small').textContent=SEAT_LABEL[lv];
+  state.heliSeat=lv; saveState();                // จำไว้ให้รอบหน้า
+  cpBox='';
+  layoutCockpit();   // ⚠️ ต้องวัดใหม่ "ทันที" ห้ามรอ drawGauges — ถ้าลูปหยุดอยู่ (พัก/ยังไม่เริ่มบิน) เบาะจะไม่ขยับเลย
+}
+/* จัดวางกรอบค็อกพิต + canvas เข็ม/กระจกให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ/ปรับเบาะ) */
 function layoutCockpit(){
-  const img=cockpitEl&&cockpitEl.querySelector('img'), cv=gaugeCanvasEl;
-  if(!img||!cv||!img.naturalWidth) return;
-  const bw=img.clientWidth, bh=img.clientHeight;
+  const cv=gaugeCanvasEl;
+  if(!cockpitEl||!cv||!cpNat) return;
+  const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
   if(!bw||!bh) return;
   const dpr=Math.min(window.devicePixelRatio||1,2);
-  if(cv.width!==Math.round(bw*dpr)||cv.height!==Math.round(bh*dpr)){
-    cv.width=Math.round(bw*dpr); cv.height=Math.round(bh*dpr);
+  [cv,glassCanvasEl].forEach(cc=>{
+    if(!cc) return;
+    if(cc.width!==Math.round(bw*dpr)||cc.height!==Math.round(bh*dpr)){
+      cc.width=Math.round(bw*dpr); cc.height=Math.round(bh*dpr);
+    }
+  });
+  const nw=cpNat.w, nh=cpNat.h;
+  const s=Math.max(bw/nw,bh/nh)*SEAT_ZOOM;       // cover + ซูมนิดหน่อยให้มีระยะปรับเบาะ
+  const dw=nw*s, dh=nh*s;
+  const ox=(bw-dw)/2, oy=(bh-dh)*SEAT_P[seatLevel];
+  cockpitEl.style.backgroundSize=dw.toFixed(1)+'px '+dh.toFixed(1)+'px';
+  cockpitEl.style.backgroundPosition=ox.toFixed(1)+'px '+oy.toFixed(1)+'px';
+  cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+seatLevel;
+  cpMap={s:s*dpr*(nw/CP_NAT.w), ox:ox*dpr, oy:oy*dpr};
+}
+/* ============================================================
+   🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
+   วาดด้วย "พิกัดในภาพกรอบ" ชุดเดียวกับเข็ม (cpMap) → ตรงกับกระจกในภาพเสมอ
+   ที่ปัดที่วาดไว้ในภาพ = ท่าจอด (พาดแนวนอน) · ตัวที่ขยับกวาดออกจากจุดหมุนเดียวกัน
+   ============================================================ */
+const WIPER={ pivot:{x:404,y:126}, len:145, sweep:1.02, rest:Math.PI };  // rest=ชี้ซ้าย (ท่าจอดในภาพ)
+const WIPER_SPD=[0,1.5,3.1];                    // เรเดียน/วิ ต่อโหมด (ปิด/ช้า/เร็ว)
+let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — ตรงกับ applySky
+let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
+function setWiper(mode){
+  wiperMode=mode;
+  const b=overlayEl&&overlayEl.querySelector('#adv-wiper');
+  if(b){ b.classList.toggle('on',mode>0);
+    b.querySelector('small').textContent=['ที่ปัดน้ำ','ปัดช้า','ปัดเร็ว'][mode]; }
+}
+/* วาดใบปัด 1 ใบ (mirror=true = ฝั่งขวา สะท้อนแกน x) */
+function drawBlade(c,ang,mirror){
+  const P=WIPER.pivot, px=mirror?CP_NAT.w-P.x:P.x;
+  // ⚠️ มุมคือทิศของใบปัดตรงๆ: ang=π คือชี้ซ้าย (ท่าจอดฝั่งซ้าย) · ฝั่งขวาสะท้อนเป็น π-ang
+  // เคยพลาด: ใส่ rotate(a-π) + scale(-1,1) ทำให้ใบซ้ายชี้กลับเข้ากลางจอ
+  const a=mirror?Math.PI-ang:ang;
+  c.save();
+  c.translate(px,P.y); c.rotate(a);
+  c.strokeStyle='rgba(18,20,24,.92)'; c.lineCap='round';
+  c.lineWidth=5.2; c.beginPath(); c.moveTo(6,0); c.lineTo(WIPER.len,0); c.stroke();  // ใบยาง
+  c.lineWidth=2.4; c.strokeStyle='rgba(40,44,50,.95)';
+  c.beginPath(); c.moveTo(0,0); c.lineTo(WIPER.len*.55,0); c.stroke();               // ก้าน
+  c.beginPath(); c.arc(0,0,4.5,0,7); c.fillStyle='#2a2e34'; c.fill();                // หัวหมุน
+  c.restore();
+}
+function drawGlass(dt,now){
+  if(!glassCtx||!cpMap) return;
+  const c=glassCtx;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,glassCanvasEl.width,glassCanvasEl.height);
+  c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);
+  // ── ☀️ แสงแดดสาดผ่านกระจก: ตำแหน่งตามมุมระหว่างหัวเครื่องกับดวงอาทิตย์ ──
+  let rel=sunDir-yaw;                                    // มุมสัมพัทธ์
+  while(rel>Math.PI) rel-=Math.PI*2;
+  while(rel<-Math.PI) rel+=Math.PI*2;
+  if(Math.abs(rel)<1.15){                                // หันหน้าเข้าหาแดดถึงจะเห็นแสงจ้า
+    const k=1-Math.abs(rel)/1.15;                        // 1=ตรงหน้า 0=พ้นขอบ
+    const sx=CP_NAT.w*(.5-rel*.42), sy=140-pitch*90;
+    const g=c.createRadialGradient(sx,sy,4,sx,sy,300);
+    g.addColorStop(0,'rgba(255,246,214,'+(.5*k).toFixed(3)+')');
+    g.addColorStop(.35,'rgba(255,224,150,'+(.18*k).toFixed(3)+')');
+    g.addColorStop(1,'rgba(255,210,120,0)');
+    c.fillStyle=g; c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
+    // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดงส่อง (เหมือนกระจกเป็นรอย)
+    c.save(); c.globalAlpha=.13*k; c.strokeStyle='#fff6d8'; c.lineWidth=2.2;
+    for(let i=0;i<7;i++){
+      const bx=180+i*112;
+      c.beginPath(); c.moveTo(bx,96); c.bezierCurveTo(bx+26,150,bx-14,200,bx+18,262); c.stroke();
+    }
+    c.restore();
   }
-  cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+img.naturalWidth+'x'+img.naturalHeight;
-  const nw=img.naturalWidth, nh=img.naturalHeight;
-  const s=Math.max(bw/nw,bh/nh);                 // object-fit:cover
-  cpMap={s:s*dpr*(nw/CP_NAT.w), ox:(bw-nw*s)/2*dpr, oy:(bh-nh*s)*dpr};   // oy: ชิดล่าง = ส่วนเกินหายด้านบน
+  // ── 🌧️ ที่ปัดน้ำฝน ──
+  if(wiperMode>0){
+    wiperPhase+=dt*WIPER_SPD[wiperMode];
+    const t=(Math.cos(wiperPhase)+1)/2;                   // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
+    const ang=WIPER.rest-WIPER.sweep*(1-t);
+    drawBlade(c,ang,false);
+    drawBlade(c,ang,true);
+  }
 }
 /* 📳 แรงสั่นสะเทือนของเครื่อง — เข็มกระตุกตามรอบใบพัดสูง + ตอนชน (รอบ 343)
    คืนค่า 0..1 · เข็มแต่ละตัวสั่นคนละจังหวะ จะได้ไม่ขยับพร้อมกันเป็นบล็อกเดียว */
@@ -6363,9 +6480,9 @@ function cpNeedle(c,g,frac,color,opt){
 }
 function drawGauges(){
   if(!gaugeCtx) return;
-  // วัดใหม่เมื่ออะไรก็ตามเปลี่ยน (หมุนจอ/ย่อหน้าต่าง/ภาพเพิ่งโหลดเสร็จ/canvas โดนรีเซ็ต) — เช็กทุกเฟรมแต่ราคาถูก
-  const _im=cockpitEl&&cockpitEl.querySelector('img'), _cv=gaugeCanvasEl;
-  if(!cpMap || (_im && cpBox!==_im.clientWidth+'x'+_im.clientHeight+'/'+_cv.width+'x'+_cv.height+'/'+_im.naturalWidth+'x'+_im.naturalHeight))
+  // วัดใหม่เมื่ออะไรก็ตามเปลี่ยน (หมุนจอ/ย่อหน้าต่าง/ภาพเพิ่งโหลด/ปรับเบาะ/canvas โดนรีเซ็ต) — เช็กทุกเฟรมแต่ราคาถูก
+  const _cv=gaugeCanvasEl;
+  if(!cpMap || cpBox!==cockpitEl.clientWidth+'x'+cockpitEl.clientHeight+'/'+_cv.width+'x'+_cv.height+'/'+seatLevel)
     layoutCockpit();
   if(!cpMap) return;
   const c=gaugeCtx;
@@ -7889,7 +8006,12 @@ function start(md){
   overlayEl.classList.toggle('adv-drive',mode==='drive');
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
-  if(mode==='heli'){ HeliSound.start(); layoutCockpit(); }   // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
+  if(mode==='heli'){
+    HeliSound.start();
+    setSeat(state.heliSeat==null?1:Math.min(2,Math.max(0,state.heliSeat)));  // 🎚️ มุมนั่งที่เลือกไว้รอบก่อน (ค่าเริ่ม=ปกติ)
+    setWiper(0);                                          // 🌧️ เข้าโลกใหม่ = ที่ปัดปิดเสมอ
+    layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
+  }
   else if(mode==='drone') DroneSound.start();
   // โหมด drive ไม่สตาร์ทเสียงเครื่องอัตโนมัติแล้ว (รอบ 128) — ผู้เล่นเลื่อนสวิตช์สตาร์ทเองในแผงเตรียมออกรถ
   hintEl.textContent=M.hint;
@@ -7975,7 +8097,11 @@ window.Adventure3D={
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
-                        ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC}; },
+                        ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC,
+                        // 🌧️☀️🎚️ testkit: ที่ปัดน้ำฝน / แสงแดด / มุมนั่ง
+                        get wiper(){return wiperMode}, setWiper,
+                        get seat(){return seatLevel}, setSeat,
+                        get yaw(){return yaw}, setSun:v=>{sunDir=v}}; },
     get drone(){ return {vel:hVel, col:hCol, buildings, solids, warn:hWarnLvl,
                          rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone,
                          get bat(){return droneBat}, set bat(v){droneBat=v},        // 🔋 เทสต์แบต
