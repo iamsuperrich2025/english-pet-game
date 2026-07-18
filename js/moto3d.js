@@ -24,6 +24,7 @@ let bikeEl=null;                           // 🏍️ ภาพมอไซค�
 let shadowEl=null;                         // 🌑 เงาวงรีใต้ล้อ (รอบ 303)
 let wheelEl=null, wheelOff=0;              // 🛞 เอฟเฟกต์ล้อหมุน (รอบ 304) — offset ลายวิ่งสะสมตาม spd
 let speedFxEl=null;                        // 🌪️ เส้นสปีดขอบจอ (รอบ 305)
+let throttleCharge=0;                      // 💡 รอบ 309: ระดับชาร์จไฟ LED เทอร์โบปุ่มเร่ง (กดค้างนาน→เต็ม)
 let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอบ 305) — ตัวจับจังหวะ spawn + สลับท่อซ้าย/ขวา
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let yaw=0, spd=0, lean=0, px=0, pz=0;
@@ -148,11 +149,15 @@ const CSS=`
 #moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
   background:transparent}
 #moto-slider .m-arr{display:none}
-#moto-knob{position:absolute;left:50%;top:21%;height:56%;width:62%;transform:translateX(-50%);border-radius:999px;
+#moto-knob{position:absolute;left:50%;top:21%;height:56%;width:62%;transform:translate(-50%,0);border-radius:999px;
   background:linear-gradient(180deg,#ff7a45,#f04f16);pointer-events:none;
   box-shadow:0 3px 7px rgba(0,0,0,.5), inset 0 3px 5px rgba(255,200,160,.5);
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:2.1vmin;
-  text-shadow:0 1px 2px rgba(120,40,0,.6)}
+  text-shadow:0 1px 2px rgba(120,40,0,.6);
+  transition:box-shadow .14s ease,transform .14s cubic-bezier(.34,1.56,.64,1),filter .14s ease}
+/* 🎛️ รอบ 309: จับลาก = knob ยกนูน (เงาลึก+สว่างขึ้น+เด้งขยายนิด) ให้ฟีลจับพวงมาลัยจริง */
+#moto-knob.grab{transform:translate(-50%,-6%) scale(1.06);filter:brightness(1.12);
+  box-shadow:0 .9vmin 1.8vmin rgba(0,0,0,.55), 0 0 1.4vmin rgba(255,140,60,.7), inset 0 3px 6px rgba(255,210,175,.7)}
 #moto-knob span{opacity:.5}
 #moto-throttle{position:absolute;left:74.5%;top:40%;width:19.5%;height:48%;border-radius:50%;border:none;cursor:pointer;
   background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin;
@@ -168,16 +173,29 @@ const CSS=`
   transition:opacity .12s ease}
 #moto-throttle.pressing .m-ico{opacity:.85;transform:translateY(.35vmin) scale(.94)}
 #moto-throttle.pressing .m-lb{opacity:.85}
+/* 💡 รอบ 309: ไฟ LED เทอร์โบ — วงแหวนเรืองรอบปุ่มเร่ง เข้มขึ้นตามเวลาที่กดค้าง (var --charge 0→1 คุมจาก frame)
+   ชาร์จเต็ม (.charged) = เต้นเป็นจังหวะเหมือนเทอร์โบพร้อมพุ่ง */
+#moto-throttle::after{content:'';position:absolute;inset:-7%;border-radius:50%;pointer-events:none;
+  opacity:var(--charge,0);border:.45vmin solid rgba(150,235,255,.9);
+  box-shadow:0 0 2.2vmin .5vmin rgba(80,210,255,.85), inset 0 0 1.4vmin rgba(130,235,255,.6);
+  transition:opacity .1s linear}
+#moto-throttle.charged::after{animation:mturbo .5s ease-in-out infinite}
+@keyframes mturbo{0%,100%{box-shadow:0 0 2vmin .4vmin rgba(80,210,255,.75), inset 0 0 1.2vmin rgba(130,235,255,.5)}
+  50%{box-shadow:0 0 3.4vmin .9vmin rgba(120,235,255,1), inset 0 0 1.8vmin rgba(160,245,255,.8)}}
 /* ---------- HUD ในจอ ---------- */
-#moto-word{position:absolute;left:1.6%;top:2.5%;display:flex;gap:.45vmin;align-items:center;flex-wrap:wrap;max-width:70%}
-#moto-word .m-th{color:#ffe9a8;font-size:1.9vmin;font-weight:800;margin-left:.8vmin;text-shadow:0 1px 3px #000}
-.m-chip{width:3.6vmin;height:3.6vmin;border-radius:.9vmin;display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:2.3vmin;color:#fff;background:rgba(255,255,255,.16);border:.28vmin solid rgba(255,255,255,.5);
-  text-shadow:0 1px 2px rgba(0,0,0,.5)}
+/* 🔤 รอบ 309: ย้ายคำศัพท์จากมุมบนซ้าย → กลางจอตัวใหญ่ แนวท้องฟ้า (ผู้ใช้สั่ง) — ป้ายบิลบอร์ดกลางบน
+   พื้นหลังโปร่งเข้มบางๆ ให้อ่านชัดบนฟ้าสว่าง · ตัวอักษร+คำแปลใหญ่ขึ้น · flex-wrap กันคำยาวล้น */
+#moto-word{position:absolute;left:50%;top:9%;transform:translateX(-50%);display:flex;gap:.7vmin;
+  align-items:center;justify-content:center;flex-wrap:wrap;max-width:92%;
+  padding:.9vmin 1.5vmin;border-radius:1.8vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
+#moto-word .m-th{color:#ffe9a8;font-size:3vmin;font-weight:800;margin-left:1vmin;text-shadow:0 2px 5px #000,0 0 2vmin rgba(0,0,0,.6)}
+.m-chip{width:5.2vmin;height:5.2vmin;border-radius:1.2vmin;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:3.3vmin;color:#fff;background:rgba(255,255,255,.2);border:.34vmin solid rgba(255,255,255,.7);
+  text-shadow:0 1px 3px rgba(0,0,0,.7);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .m-chip.got{background:#43d06c;border-color:#fff;box-shadow:0 0 1.6vmin rgba(90,255,140,.6)}
 #moto-coins{position:absolute;right:2%;top:2.5%;color:#ffd54f;font-weight:900;font-size:2.3vmin;text-shadow:0 1px 3px #000}
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
-#moto-gps{position:absolute;left:50%;top:2%;transform:translateX(-50%);display:flex;align-items:center;gap:.8vmin;
+#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;align-items:center;gap:.8vmin;
   background:rgba(10,20,35,.55);border-radius:999px;padding:.5vmin 1.6vmin;color:#fff}
 #moto-gps-arr{display:inline-block;font-size:2.8vmin;color:#5ef08a;transition:transform .12s linear;text-shadow:0 0 1.2vmin rgba(90,255,140,.8)}
 #moto-gps-d{font-size:2vmin;font-weight:800}
@@ -270,9 +288,11 @@ function buildDom(){
     steerCtl=Math.max(-1,Math.min(1,t));
     knobEl.style.left=(50+steerCtl*26)+'%';
   };
-  sliderEl.addEventListener('pointerdown',e=>{ sliding=true; try{ sliderEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
+  sliderEl.addEventListener('pointerdown',e=>{ sliding=true; knobEl.classList.add('grab');   // 🎛️ รอบ 309: ยกนูน+haptic ตอนจับ
+    if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(15);
+    try{ sliderEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
   sliderEl.addEventListener('pointermove',e=>{ if(sliding) setSteer(e); });
-  const slEnd=()=>{ sliding=false; };               // ค้างตำแหน่งที่ปล่อย
+  const slEnd=()=>{ sliding=false; knobEl.classList.remove('grab'); };   // ค้างตำแหน่งที่ปล่อย
   sliderEl.addEventListener('pointerup',slEnd);
   sliderEl.addEventListener('pointercancel',slEnd);
   document.getElementById('moto-power').addEventListener('click',()=>{ exitBox.classList.add('on'); });
@@ -874,7 +894,12 @@ function frame(dt,now){
   }
   steer=steerCtl;
   thr=(padThr||kThr)?1:0;
-  if(thrEl) thrEl.classList.toggle('pressing',!!thr);   // 🔘 รอบ 308: ปุ่มเร่งยุบ/เด้งตามการกดจริง (แตะ+คีย์ W)
+  if(thrEl){
+    thrEl.classList.toggle('pressing',!!thr);           // 🔘 รอบ 308: ปุ่มเร่งยุบ/เด้งตามการกดจริง (แตะ+คีย์ W)
+    throttleCharge=thr?Math.min(1,throttleCharge+dt/1.4):Math.max(0,throttleCharge-dt*3);  // 💡 รอบ 309: กดค้าง 1.4วิ เต็ม · ปล่อยคายเร็ว
+    thrEl.style.setProperty('--charge',throttleCharge.toFixed(2));
+    thrEl.classList.toggle('charged',throttleCharge>=1);
+  }
   const road=onRoad(px,pz);
   const vmax=road?VMAX:VMAX_OFF;
   if(thr){ spd+=ACCEL*dt; } else { spd-=DECEL*dt; }
