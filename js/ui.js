@@ -188,7 +188,10 @@ function renderNewWord(){
     <span class="nw-tag">🆕 New!</span>
     <span class="nw-word">${en}</span>
     <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>
-    <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>`;
+    <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>
+    <span class="nw-countdown" title="เวลาที่เหลือก่อนเปลี่ยนคำใหม่"></span>
+    <i class="nw-bar"><i class="nw-bar-fill"></i></i>`;
+  nwCountdownTick();       // เติมเลขนับถอยหลังทันที ไม่ต้องรอ tick แรก
   el.onclick = showNewWordPopup;
   alignNewWord();          // จัดให้กึ่งกลางตรงกับภาพ Rank ใหญ่ (ความกว้างแบนเนอร์เปลี่ยนตามความยาวคำ)
   startNewWordTimer();
@@ -217,12 +220,62 @@ function startNewWordTimer(){
     const dash = document.getElementById('screen-dashboard');
     if(!dash || !dash.classList.contains('active')) return;        // อยู่หน้าอื่น/ในเกม = ไม่ต้องเปลี่ยน
     if(!state.student || typeof NEW_WORDS === 'undefined') return;
-    if(Date.now() - (state.nwAt || 0) < NEW_WORD_MS) return;
+    patRemindTick();                                               // 🐾 รอบ 328: เตือนอ่อนๆ ตอนเย็นถ้ายังไม่ได้ลูบน้อง
+    if(Date.now() - (state.nwAt || 0) < NEW_WORD_MS){ nwCountdownTick(); return; }
     newWordNext();
     renderNewWord();
     const el = document.getElementById('newword-banner');
     if(el){ el.classList.remove('nw-swap'); void el.offsetWidth; el.classList.add('nw-swap'); }
-  }, 5000);
+  }, 1000);
+}
+
+/* ⏳ รอบ 328 (ผู้ใช้สั่ง): นับถอยหลังจางๆ บนแถบคำใหม่ — บอกว่าอีกกี่วินาทีจะเปลี่ยนคำ
+   อัปเดตเฉพาะข้อความ/ความกว้างแถบ (ไม่ render ใหม่ทั้งแบนเนอร์) = ไม่กระพริบ ไม่กินแรงเครื่อง */
+function nwCountdownTick(){
+  const el = document.getElementById('newword-banner');
+  if(!el || el.style.display === 'none') return;
+  const cd = el.querySelector('.nw-countdown'), fill = el.querySelector('.nw-bar-fill');
+  if(!cd) return;
+  const left = Math.max(0, NEW_WORD_MS - (Date.now() - (state.nwAt || 0)));
+  const s = Math.ceil(left / 1000);
+  cd.textContent = `⏳ ${Math.floor(s/60)}:${String(s % 60).padStart(2,'0')}`;
+  if(fill) fill.style.width = (100 * (1 - left / NEW_WORD_MS)).toFixed(1) + '%';
+}
+
+/* 🐾 รอบ 328 (ผู้ใช้สั่ง): เตือนอ่อนๆ ตอนเย็น ถ้าวันนี้ยังไม่ได้ลูบน้อง — กันสตรีคเข็มเพื่อนซี้ขาด
+   · เตือน "วันละครั้ง" เท่านั้น (state.patRemindDay) ตั้งแต่ PAT_REMIND_HOUR เป็นต้นไป
+   · เตือนแบบไม่ขวางทาง: toast + เรืองแสงนุ่มๆ ที่ตัวน้อง (ไม่มี dialog ให้ต้องกดปิด)
+   · ลูบแล้วแสงหายเอง (renderDashboard วาดเวทีใหม่ทุกครั้ง) */
+const PAT_REMIND_HOUR = 17;
+function patRemindTick(){
+  const day = todayStr();
+  if(state.patRemindDay === day) return;                       // เตือนไปแล้ววันนี้
+  if(new Date().getHours() < PAT_REMIND_HOUR) return;          // ยังไม่ถึงเวลาเย็น
+  if(!state.pets || !state.pets.length) return;
+  if(Array.isArray(state.patDays) && state.patDays.includes(day)) return;   // ลูบไปแล้ววันนี้
+  state.patRemindDay = day;
+  saveState();
+  const p = activePet();
+  const streak = state.patStreak || 0;
+  /* ⚠️ ถ้อยคำต้องเลี่ยงคำใน TOAST_WARN_RE (util.js) เช่น "ยังไม่" / "ไม่ได้" —
+     ไม่งั้น toast กลายเป็นแบบ "คำเตือน" = ค้างจอรอกดปิด + เสียงเตือน + สั่น (ไม่ใช่เตือนอ่อนๆ) */
+  toast(streak > 0
+    ? `🐾 ${p ? p.name : 'น้อง'}รอให้มาลูบอยู่นะ — กดค้างที่ตัวน้อง ต่อสตรีค 🔥 ${fmtNum(streak)} วันให้ยาวขึ้น`
+    : `🐾 ${p ? p.name : 'น้อง'}รอให้มาลูบอยู่นะ — กดค้างที่ตัวน้องสักครู่ รับ EXP + เริ่มนับสตรีคเข็มเพื่อนซี้`, 5200);
+  applyPatRemindGlow();
+}
+
+/* แสงนุ่มๆ ที่ตัวน้อง "ระหว่างที่ยังไม่ได้ลูบวันนี้ (หลังเวลาเย็น)" — ลูบแล้วหายเอง
+   ต้องทาคลาสใหม่ทุกครั้งที่ renderDashboard วาดเวทีใหม่ (ปุ่ม/เหรียญ/นาฬิกาก็สั่งวาดใหม่ได้)
+   ไม่งั้นแสงหายไปเงียบๆ กลางทางแบบที่เจอตอนทดสอบ */
+function applyPatRemindGlow(){
+  const stage = document.querySelector('.hero-scene .pet-stage');
+  if(!stage) return;
+  const day = todayStr();
+  const need = (state.pets || []).length
+    && new Date().getHours() >= PAT_REMIND_HOUR
+    && !(Array.isArray(state.patDays) && state.patDays.includes(day));
+  stage.classList.toggle('pat-remind', !!need);
 }
 
 /* ป๊อปอัปรายละเอียดคำ — format ตามสเปกพจนานุกรม (TASK_DICTIONARY_SONNET.md):
@@ -2899,6 +2952,7 @@ function renderDashboard(){
      (renderNewWord ถูกเรียกก่อนหน้านี้ตอน .stage-hero ยังไม่มีในหน้า → วัดตำแหน่งไม่ได้) */
   alignNewWord();
   requestAnimationFrame(alignNewWord);   // เผื่อ layout ยังไม่นิ่งในเฟรมแรก (ฟอนต์/ภาพ rank เพิ่งโหลด)
+  applyPatRemindGlow();                  // 🐾 รอบ 328: คงแสงชวนลูบไว้จนกว่าจะได้ลูบวันนี้
 
   /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย + badge เลขบอกป่วยกี่ตัว ---- */
   const railCure = document.getElementById('btn-rail-cure');
@@ -3176,6 +3230,9 @@ function renderDashboard(){
      ใช้ pointer event เพื่อจับการกดค้างได้ทั้งเมาส์และนิ้ว · ⚠️ เดิมบรรทัดนี้เรียก petPatFx()
      ที่ไม่เคยมีอยู่จริง → ReferenceError ทำให้แตะน้องแล้วเงียบทั้งหมด (แก้รอบ 320) */
   bindPetTap(tap, p);
+  /* 🐾 รอบ 328: ต้องทาแสง "ชวนมาลูบ" ตรงนี้ — หลัง card.innerHTML ถูกเขียนใหม่
+     (เรียกก่อนหน้านั้นคลาสจะโดนล้างไปพร้อมเวทีเก่า) */
+  applyPatRemindGlow();
 
   renderHomeCard();
   renderPhoneCard();

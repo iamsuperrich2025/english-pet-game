@@ -715,6 +715,21 @@ html.no-anim .nw-tag{animation:none;}
 .nw-coin.paid{background:rgba(255,255,255,.14);color:#8fb8e8;box-shadow:none;animation:none;}
 @keyframes nwCoinBlink{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
 html.no-anim .nw-coin{animation:none;}
+/* ⏳ รอบ 328: นับถอยหลังจางๆ ว่าอีกกี่วินาทีคำจะเปลี่ยน + แถบเวลาบางๆ ที่ขอบล่างแบนเนอร์
+   จงใจให้จาง = บอกข้อมูลได้โดยไม่ดึงสายตาไปจากตัวคำศัพท์ */
+.nw-countdown{font-size:11px;color:#7fa3c9;opacity:.75;white-space:nowrap;
+  font-variant-numeric:tabular-nums;letter-spacing:.3px;}
+.nw-bar{position:absolute;left:10px;right:10px;bottom:3px;height:2px;border-radius:2px;
+  background:rgba(255,255,255,.10);overflow:hidden;pointer-events:none;}
+.nw-bar-fill{display:block;height:100%;width:0;border-radius:2px;
+  background:linear-gradient(90deg,rgba(127,208,255,.5),rgba(255,214,90,.75));transition:width .9s linear;}
+/* 🐾 รอบ 328: เตือนอ่อนๆ ตอนเย็น — น้องเรืองแสงนุ่มๆ ชวนให้มาลูบ (ไม่มีกล่องมาขวางจอ) */
+.pet-stage.pat-remind{animation:patRemindGlow 2.4s ease-in-out infinite;}
+@keyframes patRemindGlow{
+  0%,100%{filter:drop-shadow(0 14px 22px rgba(3,15,35,.55));}
+  50%    {filter:drop-shadow(0 14px 22px rgba(3,15,35,.55)) drop-shadow(0 0 16px rgba(255,190,120,.75));}
+}
+html.no-anim .pet-stage.pat-remind{animation:none;}
 /* ป๊อปอัปรายละเอียดคำ (format พจนานุกรม) */
 .nw-box{width:min(440px,92vw);box-sizing:border-box;}
 .nw-pop-word{font-size:clamp(30px,6vw,42px);font-weight:800;color:#3a76d8;line-height:1.1;}
