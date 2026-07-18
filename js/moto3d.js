@@ -9,6 +9,7 @@ const ACCEL=10, DECEL=5.5, VMAX=32, VMAX_OFF=6.5, WHEEL_R=0.34;
 const ROAD_WIDE=3.6;                       // ตัวคูณความกว้างถนน (รอบ 301: ×2 จาก 1.8 — ผู้ใช้ขอกว้างขึ้นอีก 2 เท่า)
 const EDGE_M=0.55;                         // ระยะกันชนจากขอบถนน (m) — ชนขอบแล้วดันกลับ ขับออกนอกถนนไม่ได้
 const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโลก (m) ต่อ 1 รอบลายภาพถนน/หญ้า (UV พิกัดโลก — รอยต่อทางแยกเนียน)
+const POST_N=400, POST_SP=42, POST_R=380;  // รอบ 303: หลักเขตทาง — จำนวน pool · ระยะห่างต่อหลัก (m) · รัศมีวางรอบผู้เล่น (m)
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
 const COLLECT_R=2.8;                       // ระยะชนเก็บตัวอักษร
 const SPAWN_MIN=110, SPAWN_MAX=430, RELOC_D=800;   // ระยะวางตัวอักษรจากรถ + ไกลเกินย้ายใหม่
@@ -20,6 +21,8 @@ let renderer=null, scene=null, camera=null;
 let wrapEl,screenEl,cvEl,knobEl,sliderEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist,coinsEl,banEl,miniCv,miniCtx,introEl,exitBox;
 let segs=[], buckets=new Map();            // ถนน: เส้นย่อย + ตารางแฮช
 let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
+let shadowEl=null;                         // 🌑 เงาวงรีใต้ล้อ (รอบ 303)
+let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let yaw=0, spd=0, lean=0, px=0, pz=0;
 let steer=0, thr=0, kThr=false, padThr=0;
 let steerCtl=0, kL=false, kR=false;        // 🎛️ รอบ 297: เอียงแมนวล — ค่าคุมค้างตามที่ผู้เล่นตั้ง ไม่เด้งกลับเอง (คีย์ A/D = ค่อยๆ ปรับ)
@@ -82,6 +85,10 @@ const CSS=`
 #moto-bikewrap{position:absolute;left:50%;bottom:-2%;height:56%;aspect-ratio:520/750;
   pointer-events:none;z-index:2;transform:translateX(-50%);transform-origin:50% 92%;
   filter:drop-shadow(0 1.2vmin 1vmin rgba(0,0,0,.55))}
+/* 🌑 รอบ 303: เงามอไซค์ทอดบนถนน — วงรีจางใต้ล้อ อยู่นอก wrapper (เงาจริงไม่หมุนตามตัวรถ) */
+#moto-shadow{position:absolute;left:50%;bottom:0.5%;width:30%;height:6%;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,0,0,.4) 0%,rgba(0,0,0,.22) 45%,rgba(0,0,0,0) 72%);
+  transform:translateX(-50%)}
 #moto-bike{position:absolute;inset:0;width:100%;height:100%}
 /* 🟠 ไฟเลี้ยวกะพริบ — จุดเรืองแสงซ้อนบนตำแหน่งไฟส้มในภาพ (วัดจากพิกเซล: y 63% · ซ้าย 36% ขวา 64%) */
 .m-tl{position:absolute;width:13%;aspect-ratio:1;border-radius:50%;opacity:0;top:57.5%;
@@ -151,6 +158,7 @@ function buildDom(){
     <button id="moto-power"><span class="m-hint">ออก</span></button>
     <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
+      <div id="moto-shadow"></div>
       <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
         <span class="m-tl l"></span><span class="m-tl r"></span></div>
       <div id="moto-word"></div>
@@ -178,6 +186,7 @@ function buildDom(){
   document.body.appendChild(wrapEl);
   screenEl=document.getElementById('moto-screen'); cvEl=document.getElementById('moto-cv');
   bikeEl=document.getElementById('moto-bikewrap');   // หมุน+ไฟเลี้ยวที่ wrapper (ภาพ+ไฟหมุนไปด้วยกัน)
+  shadowEl=document.getElementById('moto-shadow');
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
@@ -565,6 +574,13 @@ function buildScenery(){
   }
   scene.add(trees); scene.add(treeTop);
   scatterTrees(true);
+  /* 🚧 หลักเขตทางขาว-แดงริมถนนแบบไทย (รอบ 303) — instanced 2 ก้อน (ต้นขาว+หัวแดง) วางตามขอบถนนรอบผู้เล่น */
+  postBody=new THREE.InstancedMesh(new THREE.CylinderGeometry(.09,.12,1.0,6),
+    new THREE.MeshLambertMaterial({color:0xf4f6f8}),POST_N);
+  postTop=new THREE.InstancedMesh(new THREE.CylinderGeometry(.095,.095,.24,6),
+    new THREE.MeshLambertMaterial({color:0xd63535}),POST_N);
+  scene.add(postBody); scene.add(postTop);
+  postTick();
   /* ☁️ เมฆน่ารักลอยสูง */
   const puff=document.createElement('canvas'); puff.width=puff.height=128;
   const pc=puff.getContext('2d');
@@ -596,6 +612,34 @@ function scatterTrees(all){
   }
   if(dirty||all){ trees.instanceMatrix.needsUpdate=true; treeTop.instanceMatrix.needsUpdate=true;
     if(treeTop.instanceColor) treeTop.instanceColor.needsUpdate=true; }
+}
+/* 🚧 วางหลักเขตทางตามขอบถนนในรัศมี POST_R — เรียกซ้ำทุก 1 วิ (ตำแหน่ง deterministic ตามเส้นถนน ไม่สุ่ม ไม่กระพริบย้ายที่) */
+function postTick(){
+  if(!postBody) return;
+  const m=new THREE.Matrix4(); let n=0;
+  const seen=new Set();
+  const b0x=Math.floor((px-POST_R)/BUCKET), b1x=Math.floor((px+POST_R)/BUCKET);
+  const b0z=Math.floor((pz-POST_R)/BUCKET), b1z=Math.floor((pz+POST_R)/BUCKET);
+  outer:
+  for(let bx=b0x;bx<=b1x;bx++)for(let bz=b0z;bz<=b1z;bz++){
+    const arr=buckets.get(segKey(bx,bz)); if(!arr) continue;
+    for(const si of arr){
+      if(seen.has(si)) continue; seen.add(si);
+      const s=segs[si], ux=(s.bx-s.ax)/s.len, uz=(s.bz-s.az)/s.len;
+      for(let d=POST_SP*.5; d<s.len; d+=POST_SP){
+        for(const side of [1,-1]){
+          const x=s.ax+ux*d-uz*side*(s.hw+.9), z=s.az+uz*d+ux*side*(s.hw+.9);
+          if(Math.hypot(x-px,z-pz)>POST_R) continue;
+          if(roadInfo(x,z).d<.4) continue;       // จุดนี้ทับถนนเส้นอื่น (ทางแยก) — ข้าม
+          m.setPosition(x,.5,z); postBody.setMatrixAt(n,m);
+          m.setPosition(x,1.1,z); postTop.setMatrixAt(n,m);
+          if(++n>=POST_N) break outer;
+        }
+      }
+    }
+  }
+  postBody.count=n; postTop.count=n;
+  postBody.instanceMatrix.needsUpdate=true; postTop.instanceMatrix.needsUpdate=true;
 }
 function scatterClouds(all){
   clouds.forEach(c=>{
@@ -819,7 +863,9 @@ function frame(dt,now){
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
   collectTick(); relocTick(now); gpsTick(); miniTick();
-  if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); }
+  if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); postTick(); }
+  /* 🌑 เงาใต้ล้อ: เอียงรถ = เงาขยับตามทิศเอียงนิด + แคบลง (เหมือนตัวรถเทออกจากจุดสัมผัส) */
+  if(shadowEl) shadowEl.style.transform='translateX('+(-50+lean*14).toFixed(1)+'%) scaleX('+(1-Math.abs(lean)*.3).toFixed(2)+')';
   spdEl.textContent=Math.round(spd*3.6)+' กม./ชม.';
   Eng.tick();
   renderer.render(scene,camera);
@@ -886,6 +932,7 @@ window.MotoWorld={
   _t:{
     get running(){return running}, set running(v){running=v},
     get letters(){return letters}, get word(){return word}, get segs(){return segs},
+    get posts(){return postBody?postBody.count:0},
     get pos(){return {x:px,z:pz,yaw,spd}},
     set input(v){ if('steer' in v) steerCtl=v.steer; if('thr' in v) padThr=v.thr; },
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
