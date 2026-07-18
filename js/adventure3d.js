@@ -3279,6 +3279,14 @@ function buildDom(){
     background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
     font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,200,255,.6)}
   #adv-wiper small,#adv-seat small{display:block;font-size:9px;letter-spacing:.02em}
+  #adv-visor{position:absolute;bottom:10px;right:142px;display:none;pointer-events:auto;z-index:6;
+    width:58px;padding:5px 0 3px;border-radius:12px;border:1px solid rgba(124,200,255,.5);
+    background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,200,255,.6)}
+  #adv-visor small{display:block;font-size:9px;letter-spacing:.02em}
+  .adv-heli #adv-visor{display:block}
+  #adv-visor:active{background:rgba(124,200,255,.28)}
+  #adv-visor.on,#adv-wiper.on{background:rgba(124,255,157,.2);border-color:#7cff9d;color:#c6ffd8}
   #adv-wiper{right:78px} #adv-seat{right:14px}
   .adv-heli #adv-wiper,.adv-heli #adv-seat{display:block}
   #adv-wiper:active,#adv-seat:active{background:rgba(124,200,255,.28)}
@@ -4051,6 +4059,7 @@ function buildDom(){
     <div id="adv-props"><div class="prop prop-l"><i></i><b></b></div><div class="prop prop-r"><i></i><b></b></div><div class="dframe"><i class="skid skid-l"></i><i class="skid skid-r"></i></div></div>
     <div class="adv-hud" id="adv-racehud"></div>
     <button id="adv-skipstart">⏭ ข้ามการสตาร์ทเครื่อง</button>
+    <button id="adv-visor">🕶️<small>ม่านบังแดด</small></button>
     <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
@@ -4485,6 +4494,9 @@ function buildDom(){
   });
   overlayEl.querySelector('#adv-seat').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setSeat((seatLevel+1)%3);
+  });
+  overlayEl.querySelector('#adv-visor').addEventListener('click',e=>{
+    e.preventDefault(); sfx.select(); setVisor(!visorDown);
   });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
@@ -6328,8 +6340,11 @@ function tickHeli(dt,now){
   // 🎚️🌬️ ส่งสภาพแวดล้อมให้ระบบเสียง: สูงเท่าไหร่ · เร็วเท่าไหร่ · ใกล้ตึกแค่ไหน
   HeliSound.update(col,hLanded,dt,{alt:Math.max(0,ny-floor), spd:Math.hypot(hVel.x,hVel.z),
                                    near:wallDist, side:wallSide});
+  rainTick(now);                                              // 🌧️ ตารางฝนตกเป็นช่วงๆ
+  tickDrops(dt,Math.hypot(hVel.x,hVel.z));                    // 💧 หยดน้ำไหล/ปลิวตามความเร็ว
   drawGauges();
-  drawGlass(dt,now);                    // 🌧️☀️ ที่ปัดน้ำฝน + แสงแดดบนกระจก
+  drawBellyHud();                       // 📹 กรอบ+เส้นเล็งกล้องใต้ท้อง (ตัวภาพเรนเดอร์ใน loop)
+  drawGlass(dt,now);                    // 🌧️☀️🕶️ หยดน้ำ + ที่ปัด + แสงแดด + ม่านบังแดด
   // 🎚️ สตาร์ทเสร็จ → ตัดไปมุมบิน (เห็นวิวสะดวก ไม่มีแผงเหนือหัว) ครั้งเดียวต่อรอบ
   if(HeliSound.ready && !hViewSwitched){
     hViewSwitched=true;
@@ -6360,7 +6375,7 @@ const CP_GAUGES={
   rpm:{x:359,y:354,r:24},   // รอบใบพัด
   vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
 };
-let cpMap=null, cpBox='', cpNat=null, cpDashNat=null;   // {s,ox,oy} แปลงพิกัด "ในภาพกรอบ" → canvas
+let cpMap=null, cpBox='', cpNat=null, cpDashNat=null, cpPanelTop=0;   // {s,ox,oy} แปลงพิกัด "ในภาพกรอบ" → canvas
 /* 🎚️ มุมมองในห้องนักบิน (รอบ 347)
    0 = เต็มลำ  — เห็นทั้งกระจก เสา หลังคา (ใช้ตอนสตาร์ทเครื่อง ได้อารมณ์)
    1 = มุมบิน  — เหลือแค่แผงหน้าปัดล่าง ไม่มีแผงเหนือหัว (ค่าเริ่มต้นหลังสตาร์ทเสร็จ)
@@ -6414,21 +6429,101 @@ function layoutCockpit(){
   cockpitEl.style.backgroundPosition=ox.toFixed(1)+'px '+bgY.toFixed(1)+'px';
   cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+seatLevel;
   cpMap={s:s*dpr*(nat.w/CP_NAT.w), ox:ox*dpr, oy:oy*dpr};
+  // ขอบบนของแผงหน้าปัดบนจอ (CSS px) — กล้องใต้ท้องต้องลอยอยู่ "เหนือ" เส้นนี้
+  // ⚠️ ถ้าวางทับแผง ภาพจากกล้องจะโดนภาพค็อกพิต (z3) บังหมด เพราะกล้องเรนเดอร์ลง canvas ฉาก (ชั้นล่างสุด)
+  cpPanelTop=dash?bgY:(DASH_OFF_Y*s+oy);
 }
 /* ============================================================
    🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
    วาดด้วย "พิกัดในภาพกรอบ" ชุดเดียวกับเข็ม (cpMap) → ตรงกับกระจกในภาพเสมอ
    ที่ปัดที่วาดไว้ในภาพ = ท่าจอด (พาดแนวนอน) · ตัวที่ขยับกวาดออกจากจุดหมุนเดียวกัน
    ============================================================ */
-const WIPER={ pivot:{x:404,y:126}, len:145, sweep:1.02, rest:Math.PI };  // rest=ชี้ซ้าย (ท่าจอดในภาพ)
+const WIPER={ pivot:{x:404,y:126}, len:145, sweep:1.25, rest:Math.PI };  // rest=ชี้ซ้าย (ท่าจอดในภาพ)
 const WIPER_SPD=[0,1.5,3.1];                    // เรเดียน/วิ ต่อโหมด (ปิด/ช้า/เร็ว)
-let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — ตรงกับ applySky
+let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — คำนวณใหม่ตามเวลาจริงใน sunUpdate()
+let sunHi=.6, sunWarm=0;                        // ความสูงดวงอาทิตย์ 0-1 · ความอุ่นของแสง 0-1 (เช้า/เย็น=1)
 let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
+/* 🌅 ดวงอาทิตย์ตามเวลาจริงของเครื่องผู้เล่น — เช้าตะวันออก เที่ยงสูง เย็นตะวันตก
+   06:00 → ทิศ -1.6 rad (ซ้าย) · 12:00 → 0 (ตรงหน้า สูง) · 18:00 → +1.6 (ขวา) */
+function sunUpdate(){
+  const h=new Date().getHours()+new Date().getMinutes()/60;
+  const t=Math.max(0,Math.min(1,(h-6)/12));      // 0 = 6 โมงเช้า · 1 = 6 โมงเย็น
+  sunDir=(t-.5)*3.2;
+  sunHi=Math.sin(t*Math.PI);                     // สูงสุดตอนเที่ยง
+  sunWarm=1-sunHi;                               // เช้า/เย็น = แสงส้มอุ่น · เที่ยง = ขาว
+}
+/* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
+const RAIN_MAX=90, RAIN_SPAWN=26;                // จำนวนหยดสูงสุด · หยด/วินาที ตอนฝนตก
+const VISOR_Y=168, VISOR_CUT=.32;                // ม่านลงมาถึง y นี้ (พิกัดในภาพ) · เหลือแสงจ้าแค่ 32%
+const RAIN_MIN=42000, RAIN_MAX_GAP=95000;        // ms: ฝนตกทุก ~42-95 วิ
+const RAIN_DUR=[14000,26000];                    // ms: ตกนาน 14-26 วิ
+let drops=[], rainOn=false, visorDown=false, rainNextAt=0, rainUntilAt=0;
+/* หยดน้ำเกิดในโซนที่ "ที่ปัดกวาดถึง" เป็นหลัก — ปัดแล้วกระจกจะได้โล่งจริง
+   (เกาะนอกโซนบ้างเล็กน้อยให้ดูเป็นธรรมชาติ แต่พวกนั้นจะไหลลง/ปลิวหายเอง) */
+const DROP_ZONE=[[252,470],[630,848]], DROP_Y=[98,268];
+function addDrop(){
+  if(drops.length>=RAIN_MAX) return;
+  const z=DROP_ZONE[Math.random()<.5?0:1];
+  const wide=Math.random()<.18;                  // 18% เกาะนอกโซนที่ปัด
+  drops.push({x:wide?120+Math.random()*860:z[0]+Math.random()*(z[1]-z[0]),
+              y:DROP_Y[0]+Math.random()*(DROP_Y[1]-DROP_Y[0]),
+              r:1.6+Math.random()*3.4, a:.5+Math.random()*.5, vy:0});
+}
+function tickDrops(dt,spd){
+  if(rainOn) for(let i=0;i<RAIN_SPAWN*dt;i++) addDrop();
+  if(rainOn && Math.random()<RAIN_SPAWN*dt%1) addDrop();
+  const blow=Math.min(1,spd/22);                 // บินเร็ว = ลมพัดหยดน้ำหลุดไว
+  for(let i=drops.length-1;i>=0;i--){
+    const d=drops[i];
+    // ⚠️ หยดน้ำจริงเกาะกระจกอยู่นาน ไม่ได้ร่วงทันที — ถ้าให้ไหลเร็วจะหลุดพ้นแนวที่ปัดก่อนโดนกวาด
+    d.vy=Math.min(16,d.vy+(1.1+d.r*.45)*dt);     // หยดใหญ่ไหลลงเร็วกว่านิดหน่อย
+    d.y+=d.vy*dt*(1+blow*2.5);
+    d.a-=dt*(.035+blow*.45);
+    if(d.a<=0||d.y>360) drops.splice(i,1);
+  }
+}
+/* ที่ปัดกวาดผ่าน → ลบหยดน้ำในแนวใบปัด
+   ⚠️ ต้องกวาด "ตลอดเส้นทางจากมุมเดิมถึงมุมใหม่" ไม่ใช่เช็กแค่มุมปัจจุบัน
+   เพราะถ้าเฟรมตก (มือถือช้า/แท็บพักหลัง) ใบปัดจะกระโดดข้ามหยดไปเฉยๆ */
+const WIPE_R=14;
+function wipeDrops(angFrom,angTo){
+  const P=WIPER.pivot, steps=Math.max(1,Math.min(10,Math.ceil(Math.abs(angTo-angFrom)/.06)));
+  for(let s=0;s<=steps;s++){
+    const ang=angFrom+(angTo-angFrom)*(s/steps);
+    for(const side of [0,1]){
+      const px=side?CP_NAT.w-P.x:P.x, a=side?Math.PI-ang:ang;
+      const vx=Math.cos(a)*WIPER.len, vy=Math.sin(a)*WIPER.len;
+      for(let i=drops.length-1;i>=0;i--){
+        const d=drops[i];
+        const wx=d.x-px, wy=d.y-P.y;
+        const t=Math.max(0,Math.min(1,(wx*vx+wy*vy)/(vx*vx+vy*vy)));
+        if(Math.hypot(wx-vx*t, wy-vy*t)<WIPE_R+d.r) drops.splice(i,1);
+      }
+    }
+  }
+}
 function setWiper(mode){
   wiperMode=mode;
   const b=overlayEl&&overlayEl.querySelector('#adv-wiper');
   if(b){ b.classList.toggle('on',mode>0);
     b.querySelector('small').textContent=['ที่ปัดน้ำ','ปัดช้า','ปัดเร็ว'][mode]; }
+}
+function setVisor(on){
+  visorDown=on;
+  const b=overlayEl&&overlayEl.querySelector('#adv-visor');
+  if(b){ b.classList.toggle('on',on); b.querySelector('small').textContent=on?'ม่านลง':'ม่านบังแดด'; }
+}
+/* 🌧️ ตารางฝน: ตกเป็นช่วงๆ เอง + เตือนทางวิทยุให้เปิดที่ปัด */
+function rainTick(now){
+  if(!rainNextAt){ rainNextAt=now+RAIN_MIN+Math.random()*(RAIN_MAX_GAP-RAIN_MIN); return; }
+  if(!rainOn && now>=rainNextAt){
+    rainOn=true;
+    rainUntilAt=now+RAIN_DUR[0]+Math.random()*(RAIN_DUR[1]-RAIN_DUR[0]);
+    ATC.say('Rain shower ahead, captain. Switch on your windshield wipers.');
+  }else if(rainOn && now>=rainUntilAt){
+    rainOn=false;
+    rainNextAt=now+RAIN_MIN+Math.random()*(RAIN_MAX_GAP-RAIN_MIN);
+  }
 }
 /* วาดใบปัด 1 ใบ (mirror=true = ฝั่งขวา สะท้อนแกน x) */
 function drawBlade(c,ang,mirror){
@@ -6452,19 +6547,22 @@ function drawGlass(dt,now){
   c.clearRect(0,0,glassCanvasEl.width,glassCanvasEl.height);
   if(seatLevel>0) return;        // มุมบินไม่มีกระจก/หลังคาในภาพ → ไม่ต้องวาดที่ปัดกับแสงแดด
   c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);
-  // ── ☀️ แสงแดดสาดผ่านกระจก: ตำแหน่งตามมุมระหว่างหัวเครื่องกับดวงอาทิตย์ ──
+  // ── ☀️ แสงแดดสาดผ่านกระจก: ทิศ/ความสูง/สี เปลี่ยนตามเวลาจริง (sunUpdate) ──
   let rel=sunDir-yaw;                                    // มุมสัมพัทธ์
   while(rel>Math.PI) rel-=Math.PI*2;
   while(rel<-Math.PI) rel+=Math.PI*2;
+  const visorCut=visorDown?VISOR_CUT:1;                  // 🕶️ ม่านลง = แสงจ้าลดลง
   if(Math.abs(rel)<1.15){                                // หันหน้าเข้าหาแดดถึงจะเห็นแสงจ้า
-    const k=1-Math.abs(rel)/1.15;                        // 1=ตรงหน้า 0=พ้นขอบ
-    const sx=CP_NAT.w*(.5-rel*.42), sy=140-pitch*90;
+    const k=(1-Math.abs(rel)/1.15)*visorCut;             // 1=ตรงหน้า 0=พ้นขอบ
+    const sx=CP_NAT.w*(.5-rel*.42);
+    const sy=210-sunHi*150-pitch*90;                     // เที่ยง=ดวงอาทิตย์สูง (y น้อย) · เช้า/เย็น=ต่ำลงมา
+    const warm=Math.round(214-sunWarm*80), warm2=Math.round(150-sunWarm*70);
     const g=c.createRadialGradient(sx,sy,4,sx,sy,300);
-    g.addColorStop(0,'rgba(255,246,214,'+(.5*k).toFixed(3)+')');
-    g.addColorStop(.35,'rgba(255,224,150,'+(.18*k).toFixed(3)+')');
-    g.addColorStop(1,'rgba(255,210,120,0)');
+    g.addColorStop(0,`rgba(255,246,${warm},${(.5*k).toFixed(3)})`);
+    g.addColorStop(.35,`rgba(255,${Math.round(224-sunWarm*40)},${warm2},${(.18*k).toFixed(3)})`);
+    g.addColorStop(1,'rgba(255,190,110,0)');
     c.fillStyle=g; c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
-    // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดงส่อง (เหมือนกระจกเป็นรอย)
+    // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดดส่อง (เหมือนกระจกเป็นรอย)
     c.save(); c.globalAlpha=.13*k; c.strokeStyle='#fff6d8'; c.lineWidth=2.2;
     for(let i=0;i<7;i++){
       const bx=180+i*112;
@@ -6472,14 +6570,92 @@ function drawGlass(dt,now){
     }
     c.restore();
   }
-  // ── 🌧️ ที่ปัดน้ำฝน ──
+  // ── 💧 หยดน้ำบนกระจก (วาดก่อนใบปัด ใบปัดจะได้ดูเหมือนกวาดทับ) ──
+  for(const d of drops){
+    const g=c.createRadialGradient(d.x-d.r*.3,d.y-d.r*.35,d.r*.15,d.x,d.y,d.r);
+    g.addColorStop(0,`rgba(255,255,255,${(d.a*.55).toFixed(3)})`);
+    g.addColorStop(.55,`rgba(200,225,245,${(d.a*.28).toFixed(3)})`);
+    g.addColorStop(1,`rgba(120,160,195,${(d.a*.12).toFixed(3)})`);
+    c.fillStyle=g; c.beginPath(); c.arc(d.x,d.y,d.r,0,7); c.fill();
+  }
+  // ── 🕶️ ม่านบังแดด: แผ่นทึบแสงดึงลงจากขอบบนกระจก ──
+  if(visorDown){
+    const vy=VISOR_Y;
+    const g=c.createLinearGradient(0,88,0,vy);
+    g.addColorStop(0,'rgba(30,26,18,.93)');
+    g.addColorStop(.82,'rgba(48,40,26,.86)');
+    g.addColorStop(1,'rgba(60,50,32,.55)');
+    c.fillStyle=g; c.fillRect(96,88,CP_NAT.w-192,vy-88);
+    c.strokeStyle='rgba(120,104,70,.9)'; c.lineWidth=2.5;
+    c.beginPath(); c.moveTo(96,vy); c.lineTo(CP_NAT.w-96,vy); c.stroke();
+  }
+  // ── 🌧️ ที่ปัดน้ำฝน (กวาดผ่านตรงไหน หยดน้ำตรงนั้นหายไปจริง) ──
   if(wiperMode>0){
+    const prev=WIPER.rest-WIPER.sweep*(1-(Math.cos(wiperPhase)+1)/2);
     wiperPhase+=dt*WIPER_SPD[wiperMode];
     const t=(Math.cos(wiperPhase)+1)/2;                   // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
     const ang=WIPER.rest-WIPER.sweep*(1-t);
+    wipeDrops(prev,ang);
     drawBlade(c,ang,false);
     drawBlade(c,ang,true);
   }
+}
+/* ============================================================
+   📹 กล้องใต้ท้องเครื่อง (belly cam) — รอบ 348
+   เรนเดอร์ฉากเดิมซ้ำอีกรอบด้วยกล้องที่มองตรงลงพื้น แล้วยัดลงมุมจอ (scissor)
+   ใช้ดูว่าใต้ท้องมีอะไร ตอนร่อนลงจอดจะได้วางเครื่องตรงเป้า
+   ============================================================ */
+const BC={w:.23, h:.26, gap:9};                  // สัดส่วนของจอ (กว้าง/สูง) · ระยะเหนือแผงหน้าปัด
+let bellyCam=null, bellyRect=null;
+function drawBellyCam(){
+  if(!renderer||!scene||!M.heli) return;
+  if(!bellyCam) bellyCam=new THREE.PerspectiveCamera(78,1,.1,220);
+  const W=window.innerWidth, H=window.innerHeight;
+  const w=Math.round(W*BC.w), h=Math.round(H*BC.h);
+  const x=Math.round((W-w)/2);
+  // วางชิดขอบบนของแผงหน้าปัด (ในโซนกระจก) → ไม่โดนภาพค็อกพิตบัง
+  const yTop=Math.round(Math.max(6,(cpPanelTop||H*.62)-h-BC.gap));
+  bellyRect={x,y:yTop,w,h};
+  // กล้องอยู่ใต้ท้องเครื่องเล็กน้อย มองดิ่งลง · หมุนตามหัวเครื่องให้ทิศตรงกับที่นักบินเห็น
+  bellyCam.position.set(camera.position.x,Math.max(.6,camera.position.y-1.1),camera.position.z);
+  bellyCam.rotation.set(-Math.PI/2,0,-yaw,'YXZ');
+  bellyCam.aspect=w/h; bellyCam.updateProjectionMatrix();
+  const pr=renderer.getPixelRatio();
+  renderer.setScissorTest(true);
+  // ⚠️ พิกัด viewport ของ WebGL นับจาก "ล่างซ้าย" ไม่ใช่บนซ้ายแบบ DOM
+  const gy=H-yTop-h;
+  renderer.setViewport(x,gy,w,h);
+  renderer.setScissor(x,gy,w,h);
+  renderer.render(scene,bellyCam);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0,0,W,H);
+}
+/* กรอบ+เส้นเล็งของกล้องใต้ท้อง วาดบน canvas เข็ม (พิกัดจอตรงๆ ไม่ผ่าน cpMap) */
+function drawBellyHud(){
+  if(!bellyRect||!gaugeCtx) return;
+  const c=gaugeCtx, dpr=Math.min(window.devicePixelRatio||1,2);
+  const {x,y,w,h}=bellyRect;
+  c.save();
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.strokeStyle='rgba(150,230,255,.85)'; c.lineWidth=2;
+  c.strokeRect(x,y,w,h);
+  c.fillStyle='rgba(0,20,32,.55)'; c.fillRect(x,y-16,w,16);
+  c.fillStyle='#9fe8ff'; c.font='700 11px "Courier New",monospace'; c.textAlign='left';
+  c.fillText('📹 ใต้ท้องเครื่อง',x+5,y-4);
+  const alt=Math.max(0,camera.position.y-HELI_SKID);
+  c.textAlign='right';
+  c.fillStyle=alt<6?'#b6ffb0':'#9fe8ff';
+  c.fillText(alt.toFixed(1)+' m',x+w-5,y-4);
+  // เส้นเล็งกลางจอกล้อง — ยิ่งใกล้พื้นวงยิ่งเล็ก = เล็งจุดลงจอดได้แม่น
+  const cx=x+w/2, cy=y+h/2, r=Math.max(6,Math.min(w,h)*.5*Math.min(1,alt/26));
+  c.strokeStyle=alt<6?'rgba(150,255,150,.95)':'rgba(150,230,255,.8)';
+  c.lineWidth=1.6;
+  c.beginPath(); c.arc(cx,cy,r,0,7); c.stroke();
+  c.beginPath();
+  c.moveTo(cx-r-7,cy); c.lineTo(cx-r+3,cy); c.moveTo(cx+r-3,cy); c.lineTo(cx+r+7,cy);
+  c.moveTo(cx,cy-r-7); c.lineTo(cx,cy-r+3); c.moveTo(cx,cy+r-3); c.lineTo(cx,cy+r+7);
+  c.stroke();
+  c.restore();
 }
 /* 📳 แรงสั่นสะเทือนของเครื่อง — เข็มกระตุกตามรอบใบพัดสูง + ตอนชน (รอบ 343)
    คืนค่า 0..1 · เข็มแต่ละตัวสั่นคนละจังหวะ จะได้ไม่ขยับพร้อมกันเป็นบล็อกเดียว */
@@ -7771,6 +7947,7 @@ function loop(){
   sendPos(false);
   drawMinimap();
   renderer.render(scene,camera);
+  if(M.heli) drawBellyCam();            // 📹 เรนเดอร์ซ้ำอีกรอบด้วยกล้องมองลงพื้น ยัดลงมุมจอ
   if(shotWanted) grabShot();                       // 📸 ต้องอ่าน canvas ทันทีหลัง render (บัฟเฟอร์ไม่ถูกเก็บไว้)
 }
 /* 📸 เก็บภาพเฟรมที่เพิ่งเรนเดอร์ → เด้งการ์ดพรีวิว (บันทึกลงเครื่องได้) */
@@ -8046,7 +8223,9 @@ function start(md){
     HeliSound.start();
     hViewSwitched=false;
     setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
-    setWiper(0);                                          // 🌧️ เข้าโลกใหม่ = ที่ปัดปิดเสมอ
+    setWiper(0); setVisor(false);                         // 🌧️🕶️ เข้าโลกใหม่ = ที่ปัด/ม่าน ปิดเสมอ
+    drops=[]; rainOn=false; rainNextAt=0; bellyRect=null;  // 💧📹 ล้างสภาพอากาศ/กล้องของรอบก่อน
+    sunUpdate();                                          // 🌅 ตั้งดวงอาทิตย์ตามเวลาจริงตอนเข้าเล่น
     layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   }
   else if(mode==='drone') DroneSound.start();
@@ -8135,10 +8314,26 @@ window.Adventure3D={
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
                         rpm:HeliSound.rpm, soundReady:HeliSound.ready, sound:HeliSound, warn:hWarnLvl,
                         ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC,
-                        // 🌧️☀️🎚️ testkit: ที่ปัดน้ำฝน / แสงแดด / มุมนั่ง
+                        // 🌧️☀️🎚️💧🕶️📹 testkit: ที่ปัด / แสงแดด / มุมมอง / ฝน / ม่าน / กล้องใต้ท้อง
                         get wiper(){return wiperMode}, setWiper,
                         get seat(){return seatLevel}, setSeat,
-                        get yaw(){return yaw}, setSun:v=>{sunDir=v}}; },
+                        get yaw(){return yaw}, setSun:v=>{sunDir=v},
+                        get drops(){return drops.length},
+                        // ⚠️ ต้องตั้ง rainUntilAt ด้วย ไม่งั้น rainTick เห็นว่าหมดเวลาแล้วปิดฝนทันที
+                        rain:on=>{ rainOn=on; rainUntilAt=on?performance.now()+3e5:0;
+                                   rainNextAt=performance.now()+3e5; },
+                        clearDrops:()=>{ drops=[]; },
+                        get visor(){return visorDown}, setVisor,
+                        get bellyRect(){return bellyRect},
+                        // บังคับวาดใหม่ 1 เฟรม — ใช้ตอนเทสต์ เพราะแท็บที่ถูก throttle ลูปแทบไม่เดิน
+                        redraw:(dt)=>{ dt=dt||.016;
+                          tickDrops(dt,Math.hypot(hVel.x,hVel.z));
+                          drawGauges(); drawBellyHud(); drawGlass(dt,performance.now()); },
+                        sunAt:h=>{
+                          const t=Math.max(0,Math.min(1,(h-6)/12));
+                          sunDir=(t-.5)*3.2; sunHi=Math.sin(t*Math.PI); sunWarm=1-sunHi;
+                          return {sunDir:+sunDir.toFixed(2),sunHi:+sunHi.toFixed(2),sunWarm:+sunWarm.toFixed(2)};
+                        }}; },
     get drone(){ return {vel:hVel, col:hCol, buildings, solids, warn:hWarnLvl,
                          rpm:DroneSound.rpm, sound:DroneSound, collide:collideDrone,
                          get bat(){return droneBat}, set bat(v){droneBat=v},        // 🔋 เทสต์แบต
