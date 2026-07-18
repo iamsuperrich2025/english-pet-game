@@ -191,7 +191,7 @@ let shotWanted=false, photoEl=null, photoImgEl=null, flashEl=null;
 /* 🪟⛈🚪 รอบ 336: กระจกที่ยังไม่แตก + ฟ้าแลบสะท้อนกระจก + ประตูเปิดได้ */
 let droneGlass=[], droneDoors=[], droneWinMat=null, droneGlassMat=null;
 let boltAt=0, boltFlashUntil=0, boltEl=null, rainEl=null, rainUntil=0;
-let skipStartEl=null;                                   // ⏭ ปุ่มข้ามซีเควนซ์สตาร์ทเฮลิฯ
+let skipStartEl=null, hViewSwitched=false;              // ⏭ ปุ่มข้ามสตาร์ท · ธงตัดไปมุมบินแล้ว (รอบ 347)
 function showHeliSkip(on){ if(skipStartEl) skipStartEl.classList.toggle('on',!!on); }
 const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุก 11-24 วิ
 const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
@@ -4234,12 +4234,19 @@ function buildDom(){
   // สร้างไฟล์ด้วย tools/cockpit_prep.py · เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับหน้าปัดในภาพ (CP_GAUGES)
   const cpImg=new Image();
   cpImg.onload=()=>{
-    cpNat={w:cpImg.naturalWidth,h:cpImg.naturalHeight};
-    cockpitEl.style.backgroundImage=`url(${cpImg.src})`;
+    cpNat={w:cpImg.naturalWidth,h:cpImg.naturalHeight,src:cpImg.src};
     cpBox=''; layoutCockpit();
   };
   cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null; cpNat=null; };
   cpImg.src='img/heli_frame.png';
+  // 🎚️ ภาพ "มุมบิน" — เฉพาะแผงหน้าปัดล่าง (ตัดจากกรอบเต็มที่ y=DASH_OFF_Y)
+  const dashImg=new Image();
+  dashImg.onload=()=>{
+    cpDashNat={w:dashImg.naturalWidth,h:dashImg.naturalHeight,src:dashImg.src};
+    cpBox=''; layoutCockpit();
+  };
+  dashImg.onerror=()=>{ cpDashNat=null; };      // ไม่มีไฟล์ = ใช้กรอบเต็มอย่างเดียว
+  dashImg.src='img/heli_dash.png';
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
@@ -6167,13 +6174,14 @@ const CarSound={
 };
 
 /* ขั้นตอนสตาร์ทเครื่อง Bell 212 — ข้อความตรงกับเสียงที่ได้ยินจริงในไฟล์ heli_start.mp3 */
+/* ⚠️ เวลาต้องตรงกับ heli_start.mp3 (18.3 วิ · สร้างจาก tools/cut_heli.py)
+   แก้ไฟล์เสียงเมื่อไหร่ ต้องมาไล่เวลาตรงนี้ด้วย ไม่งั้นข้อความไม่ตรงกับที่ได้ยิน */
 const HELI_PHASES=[
-  [0 ,'🔋 เปิดแบตเตอรี่ · ตรวจระบบก่อนสตาร์ท'],
-  [4 ,'🎚️ เปิดคันเร่งไปตำแหน่ง IDLE · ปั๊มเชื้อเพลิงทำงาน'],
-  [9 ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน (ฟังเสียงครางสูงขึ้น)'],
-  [16,'🔥 จุดระเบิด! เครื่องยนต์ติดแล้ว'],
-  [20,'🚁 ใบพัดเริ่มหมุน · รอบกำลังไต่ขึ้น'],
-  [25,'📈 ใบพัดใกล้รอบเต็ม... เตรียมขึ้นบิน'],
+  [0 ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน (ฟังเสียงครางสูงขึ้น)'],
+  [5 ,'⛽ จ่ายเชื้อเพลิง · รอจังหวะจุดระเบิด'],
+  [8 ,'🔥 จุดระเบิด! เครื่องยนต์ติดแล้ว'],
+  [11,'🚁 ใบพัดเริ่มหมุน · รอบกำลังไต่ขึ้น'],
+  [15,'📈 ใบพัดใกล้รอบเต็ม... เตรียมขึ้นบิน'],
 ];
 function heliStartPhase(now){
   const t=(now-(HeliSound._startAt||now))/1000;
@@ -6322,6 +6330,11 @@ function tickHeli(dt,now){
                                    near:wallDist, side:wallSide});
   drawGauges();
   drawGlass(dt,now);                    // 🌧️☀️ ที่ปัดน้ำฝน + แสงแดดบนกระจก
+  // 🎚️ สตาร์ทเสร็จ → ตัดไปมุมบิน (เห็นวิวสะดวก ไม่มีแผงเหนือหัว) ครั้งเดียวต่อรอบ
+  if(HeliSound.ready && !hViewSwitched){
+    hViewSwitched=true;
+    setSeat(state.heliSeat==null?1:Math.min(2,Math.max(1,state.heliSeat)));
+  }
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
     hAtcCleared=true;
@@ -6347,24 +6360,35 @@ const CP_GAUGES={
   rpm:{x:359,y:354,r:24},   // รอบใบพัด
   vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
 };
-let cpMap=null, cpBox='', cpNat=null;            // {s,ox,oy} แปลงพิกัดในภาพ → canvas · cpNat = ขนาดจริงของไฟล์
-/* 🎚️ มุมนั่ง: 0=ต่ำ (เห็นแผงหน้าปัดเยอะ) · 1=ปกติ · 2=สูง (เห็นวิวนอกกระจกเยอะ)
-   ค่าคือสัดส่วนการเลื่อนภาพในแนวตั้ง (0=ชิดบน · 1=ชิดล่าง) */
-const SEAT_P=[1,.62,.26], SEAT_LABEL=['เบาะต่ำ','มุมนั่ง','เบาะสูง'];
-const SEAT_ZOOM=1.12;                            // ซูมเล็กน้อยเพื่อให้มีระยะเลื่อนขึ้น-ลงจริงทุกสัดส่วนจอ
+let cpMap=null, cpBox='', cpNat=null, cpDashNat=null;   // {s,ox,oy} แปลงพิกัด "ในภาพกรอบ" → canvas
+/* 🎚️ มุมมองในห้องนักบิน (รอบ 347)
+   0 = เต็มลำ  — เห็นทั้งกระจก เสา หลังคา (ใช้ตอนสตาร์ทเครื่อง ได้อารมณ์)
+   1 = มุมบิน  — เหลือแค่แผงหน้าปัดล่าง ไม่มีแผงเหนือหัว (ค่าเริ่มต้นหลังสตาร์ทเสร็จ)
+   2 = มุมบินต่ำ — ดันแผงลงอีก เห็นวิวมากสุด
+   ⚠️ ทุกโหมดวาดเข็ม/ที่ปัดด้วย "พิกัดในภาพกรอบเต็ม" เหมือนกันหมด — cpMap เป็นตัวแปลงให้ */
+const SEAT_LABEL=['เต็มลำ','มุมบิน','บินต่ำ'];
+const SEAT_P_FULL=.62;                           // ตำแหน่งแนวตั้งของกรอบเต็มลำ (0=ชิดบน 1=ชิดล่าง)
+const SEAT_ZOOM=1.12;                            // ซูมกรอบเต็มลำเล็กน้อย ให้ครอบจอทุกสัดส่วน
+const DASH_OFF_Y=228;                            // heli_dash.png ตัดมาจากกรอบเต็มที่ y นี้ (ต้องตรงกับ cockpit_prep.py)
+const DASH_DROP=[0,0,.3];                        // โหมด 2 ดันแผงลงอีก 30% ของความสูงแผง
 let seatLevel=1;
 function setSeat(lv){
   seatLevel=lv;
   const b=overlayEl&&overlayEl.querySelector('#adv-seat');
   if(b) b.querySelector('small').textContent=SEAT_LABEL[lv];
-  state.heliSeat=lv; saveState();                // จำไว้ให้รอบหน้า
+  if(lv>0){ state.heliSeat=lv; saveState(); }    // จำเฉพาะมุมบิน (เต็มลำใช้ตอนสตาร์ทเท่านั้น)
+  if(lv>0) setWiper(0);                          // มุมบินไม่มีกระจกให้ปัด
+  const wb=overlayEl&&overlayEl.querySelector('#adv-wiper');
+  if(wb) wb.style.visibility=lv>0?'hidden':'visible';   // ซ่อนปุ่มที่ปัดตอนมุมบิน (กดไปก็ไม่เห็นอะไร)
   cpBox='';
-  layoutCockpit();   // ⚠️ ต้องวัดใหม่ "ทันที" ห้ามรอ drawGauges — ถ้าลูปหยุดอยู่ (พัก/ยังไม่เริ่มบิน) เบาะจะไม่ขยับเลย
+  layoutCockpit();   // ⚠️ ต้องวัดใหม่ "ทันที" ห้ามรอ drawGauges — ถ้าลูปหยุดอยู่ มุมมองจะไม่เปลี่ยนเลย
 }
 /* จัดวางกรอบค็อกพิต + canvas เข็ม/กระจกให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ/ปรับเบาะ) */
 function layoutCockpit(){
   const cv=gaugeCanvasEl;
-  if(!cockpitEl||!cv||!cpNat) return;
+  if(!cockpitEl||!cv) return;
+  const dash=seatLevel>0, nat=dash?cpDashNat:cpNat;
+  if(!nat) return;
   const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
   if(!bw||!bh) return;
   const dpr=Math.min(window.devicePixelRatio||1,2);
@@ -6374,14 +6398,22 @@ function layoutCockpit(){
       cc.width=Math.round(bw*dpr); cc.height=Math.round(bh*dpr);
     }
   });
-  const nw=cpNat.w, nh=cpNat.h;
-  const s=Math.max(bw/nw,bh/nh)*SEAT_ZOOM;       // cover + ซูมนิดหน่อยให้มีระยะปรับเบาะ
-  const dw=nw*s, dh=nh*s;
-  const ox=(bw-dw)/2, oy=(bh-dh)*SEAT_P[seatLevel];
+  let s,ox,oy,dw,dh,bgY;
+  if(dash){
+    s=bw/nat.w;                                  // เต็มความกว้าง ไม่ซูม (แผงจะได้ไม่ใหญ่เกิน)
+    dw=bw; dh=nat.h*s;
+    ox=0; bgY=bh-dh+dh*DASH_DROP[seatLevel];     // ชิดล่าง (โหมดบินต่ำดันลงอีก)
+    oy=bgY-DASH_OFF_Y*s;                         // แปลงกลับเป็น "พิกัดกรอบเต็ม" ให้เข็มวางถูกที่
+  }else{
+    s=Math.max(bw/nat.w,bh/nat.h)*SEAT_ZOOM;
+    dw=nat.w*s; dh=nat.h*s;
+    ox=(bw-dw)/2; oy=bgY=(bh-dh)*SEAT_P_FULL;
+  }
+  cockpitEl.style.backgroundImage=`url(${dash?cpDashNat.src:cpNat.src})`;
   cockpitEl.style.backgroundSize=dw.toFixed(1)+'px '+dh.toFixed(1)+'px';
-  cockpitEl.style.backgroundPosition=ox.toFixed(1)+'px '+oy.toFixed(1)+'px';
+  cockpitEl.style.backgroundPosition=ox.toFixed(1)+'px '+bgY.toFixed(1)+'px';
   cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+seatLevel;
-  cpMap={s:s*dpr*(nw/CP_NAT.w), ox:ox*dpr, oy:oy*dpr};
+  cpMap={s:s*dpr*(nat.w/CP_NAT.w), ox:ox*dpr, oy:oy*dpr};
 }
 /* ============================================================
    🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
@@ -6418,6 +6450,7 @@ function drawGlass(dt,now){
   const c=glassCtx;
   c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0,glassCanvasEl.width,glassCanvasEl.height);
+  if(seatLevel>0) return;        // มุมบินไม่มีกระจก/หลังคาในภาพ → ไม่ต้องวาดที่ปัดกับแสงแดด
   c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);
   // ── ☀️ แสงแดดสาดผ่านกระจก: ตำแหน่งตามมุมระหว่างหัวเครื่องกับดวงอาทิตย์ ──
   let rel=sunDir-yaw;                                    // มุมสัมพัทธ์
@@ -6706,6 +6739,9 @@ const HeliSound={
     if(this.windG){ this.windG.gain.cancelScheduledValues(t); this.windG.gain.linearRampToValueAtTime(.0001,t+.6); }
     this.startPlay=this.rotorPlay=this.highPlay=null;
     this.ready=false; this.rpm=0;
+    // ⚠️ ต้องปลด on ทันที ไม่ใช่รอ stop() ตอนจบเฟด — ไม่งั้นผู้เล่นที่กลับเข้าโลกใหม่ภายใน 4.2 วิ
+    //    จะโดน `if(this.on) return` ใน start() เตะออก = ไม่มีเสียงเครื่อง + ready ค้าง false = บินไม่ได้เลย
+    this.on=false;
     this._downTm=setTimeout(()=>this.stop(),(D+.2)*1000);
     return D*1000;
   },
@@ -8008,7 +8044,8 @@ function start(md){
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
   if(mode==='heli'){
     HeliSound.start();
-    setSeat(state.heliSeat==null?1:Math.min(2,Math.max(0,state.heliSeat)));  // 🎚️ มุมนั่งที่เลือกไว้รอบก่อน (ค่าเริ่ม=ปกติ)
+    hViewSwitched=false;
+    setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
     setWiper(0);                                          // 🌧️ เข้าโลกใหม่ = ที่ปัดปิดเสมอ
     layoutCockpit();                                      // 🎛️ วัดขนาดหลังค็อกพิตโชว์แล้ว เข็มถึงทับตรงจุด
   }

@@ -7,6 +7,7 @@ OUT = r"C:\Users\rober\english-pet-game\sound"
 TMP = os.path.dirname(os.path.abspath(__file__))
 SR  = 44100
 BLADE = 10.7                      # Hz — จังหวะใบพัดตอนรอบเต็ม (วัดจากไฟล์จริง)
+HEAD_GAIN = 3.2                   # เท่า: ดันเสียงเทอร์ไบน์ช่วงต้นให้ได้ยินชัดตั้งแต่วินาทีแรก
 
 full = os.path.join(TMP, "full.wav")
 if not os.path.exists(full):
@@ -50,12 +51,17 @@ def save(name, x, kbps="96k"):
     print("%-22s %5.2f s  %6.0f KB" % (name + ".mp3", len(x) / SR, os.path.getsize(mp3) / 1024))
 
 # ---------- 1) heli_start: สตาร์ทเครื่องเต็มลำดับ ----------
-# 2.0-21.5s  = เทอร์ไบน์ครางเบาๆ → จุดระเบิด (light-off) → ใบพัดเริ่มออกตัว   ← สเน่ห์ของ Bell 212
+# ⚠️ ต้นฉบับ 0-12s ดังแค่ -40dB = แทบไม่ได้ยินบนลำโพงมือถือ (ผู้ใช้บอก "ว่าง 7-8 วิ")
+#    → เริ่มที่ 12.5s + ดันเกนช่วงต้นขึ้น ให้ได้ยินเทอร์ไบน์ตั้งแต่วินาทีแรก
+# 12.5-21.5s = เทอร์ไบน์ครางดังขึ้น → จุดระเบิด (light-off)   ← สเน่ห์ของ Bell 212
 # 99-104s    = ใบพัดเร่งรอบกลาง (blade 8.7Hz)
 # 157.5-164s = รอบเต็ม 10.7Hz พร้อมบิน
-s = xfade(cut(2.0, 21.5), cut(99.0, 104.2), 1100)
+segA = cut(12.5, 21.5)
+lift = np.linspace(HEAD_GAIN, 1.0, len(segA))[:, None]   # ดันหัวขึ้นแล้วค่อยๆ คืนเป็น 1 ตอนถึงจังหวะจุดระเบิด
+segA *= lift
+s = xfade(segA, cut(99.0, 104.2), 1100)
 s = xfade(s, cut(157.5, 164.0), 1300)
-n = int(1.2 * SR); s[:n] *= np.linspace(0, 1, n)[:, None]          # เฟดหัวกันเสียงป๊อก
+n = int(0.45 * SR); s[:n] *= np.linspace(0, 1, n)[:, None]        # เฟดหัวสั้นๆ กันเสียงป๊อก (ยาวไปจะรู้สึกว่าง)
 n = int(0.5 * SR); s[-n:] *= np.linspace(1, 0, n)[:, None] * 0.35 + 0.65
 save("heli_start", norm(s, 0.86), "112k")
 

@@ -74,3 +74,17 @@ px = np.asarray(out.getchannel("A"))
 print("ผลลัพธ์ %s  %dx%d  โปร่ง %.1f%%  %d KB (จาก %d KB)"
       % (os.path.basename(OUT), out.width, out.height, (px < 128).mean() * 100,
          os.path.getsize(OUT) // 1024, os.path.getsize(SRC) // 1024))
+
+# ---- 4) "มุมบิน": เอาเฉพาะแผงหน้าปัดลงมา ไม่มีแผงเหนือหัว (รอบ 347) ----
+# ตัดที่ขอบบนของแผงบังแดด → ขอบบนเป็นเส้นโค้งธรรมชาติ ไม่ใช่เส้นตรงทื่อๆ
+# เฟดอัลฟาขอบบน ~26px เพื่อกลืนรอยตัดตรงเสา/ประตูสองข้าง
+DASH_CROP = (0, 228, OUT_W, 415)
+FADE = 26
+dash = out.crop(DASH_CROP)
+da = np.asarray(dash.getchannel("A")).astype(np.float32).copy()
+ramp = np.clip(np.arange(dash.height) / FADE, 0, 1)[:, None]
+dash.putalpha(Image.fromarray((da * ramp).astype(np.uint8)))
+dash_out = os.path.join(ROOT, "img", "heli_dash.png")
+dash.quantize(colors=200, method=Image.FASTOCTREE, dither=Image.NONE).save(dash_out, optimize=True)
+print("ผลลัพธ์ heli_dash.png  %dx%d  %d KB  (พิกัดเข็ม = พิกัดกรอบ ลบ %d)"
+      % (dash.width, dash.height, os.path.getsize(dash_out) // 1024, DASH_CROP[1]))
