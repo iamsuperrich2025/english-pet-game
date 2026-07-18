@@ -236,3 +236,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 288:** 📒 **สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว** (ผู้ใช้สั่ง 17 ก.ค.) — ไฟล์ใหม่ `js/vocabbook.js`: ทุกคำที่เจอ (จับคู่ถูก/ผิด + ข้อสอบทุกแบบรวม band) ลง `state.vocabBook` {en:{th,c,w,t,lw}} เพดาน 500 คำ · แบ่ง 3 กลุ่ม 💪ต้องทบทวน(ล่าสุดผิด/ผิด>ถูก)/🌱เรียนรู้/⭐แม่น(ถูก≥3) · กล่อง `.vb-box` แบ่งหน้า ◀▶ วัด offsetTop จริง ไม่มี scrollbar · สอบทบทวน=คำอ่อน ≤10 ข้อเข้า startQuiz เดิม (id `vbreview` ผ่านแรก+50🪙 จบสอบเด้งสมุดกลับ) · จุดเข้า: ปุ่ม 📒 แถบล่าง lobby + การ์ดท้ายหน้าหมวด (⚠️ ปุ่มการ์ดห้ามใช้คลาส practice/quiz — renderCats ผูก listener ทุกปุ่ม) · hook: checkMatch ถูก/ผิด + quiz รายข้อ → `vbRecord` normalize ตัวเล็ก · ยืนยัน browser ครบ: hook จับคู่ผิด→w:1 / สอบ 7 ข้อผิด 1 กลุ่มเลื่อนถูก / แบ่งหน้า 127 คำ 6 หน้าครบ / 812×375 noScroll / กันสมุด<4 คำ=toast / ไม่มี console error · commit `a635230` · ค้าง: ผู้ใช้ลองจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 289:** 🛒 **เสียงแคชเชียร์ "ชิ้ง!" ตอนซื้อสินค้าสำเร็จ** (ผู้ใช้สั่ง 17 ก.ค.) — `sfx.cashier`+`playCashier` (util.js): ไฟล์ `sound/cashier.mp3` มาก่อน → ไม่มีไฟล์ใช้ `cashierSynth` (แกร๊กลิ้นชัก+กระดิ่งกริ๊งกริ๊ง 2093Hz+เหรียญท้าย) · showCollectReveal (ui.js): ซื้อ (price!=null,!produced — โรงงาน+ตลาดเพื่อน) = แคชเชียร์ / ผลิตเอง = rankup เดิม · prompt เจนเสียงใน `PROMPTS_SOUND.md` ข้อ 5 + Artifact ปุ่มคัดลอกส่งผู้ใช้แล้ว · ยืนยัน browser: spy 3 เคส cashier/rankup/rankup ถูก · fallback synth ทำงาน (fileMiss=true) · ไม่มี console error · commit `fea24ee` (stage เฉพาะ hunk — ui.js มีงาน session คู่ขนานค้าง @2964) · ค้าง: ผู้ใช้เจนไฟล์เสียงจริงวาง `sound/cashier.mp3` (ไม่วางก็มีเสียงสังเคราะห์ใช้เลย)
