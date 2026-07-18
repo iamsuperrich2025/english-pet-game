@@ -675,6 +675,7 @@ html.no-anim .newword-banner.nw-swap{animation:none;}
 .coin-fly{position:fixed;z-index:9800;pointer-events:none;font-size:26px;line-height:1;
   transform:translate(-50%,-50%);animation:coinFly .9s cubic-bezier(.45,.05,.35,1) forwards;
   filter:drop-shadow(0 0 10px rgba(255,214,90,.9));}
+.coin-fly .coin-ic{width:26px;height:26px;vertical-align:top;display:block;filter:none;}   /* 🪙 รอบ 340: เหรียญบิน = ภาพจริง */
 @keyframes coinFly{
   0%  {opacity:0;transform:translate(-50%,-50%) scale(.5);}
   15% {opacity:1;transform:translate(-50%,-140%) scale(1.35);}

@@ -29,13 +29,19 @@ const LETTER_COIN=1;                                   // เก็บตัว�
    เหรียญพิเศษ (◆5 / 💎20) = "ด้านหน้า" ตัวอักษรตัวสุดท้ายที่เหลือของแต่ละคำ */
 const COIN_VAL=1, COIN_PICK_R=3.6;                     // มูลค่าเหรียญพื้นฐาน · ระยะชนเก็บ
 const COIN_GAP=5.2;                                    // ระยะเยื้องจากตัวอักษร (m · มากกว่า COLLECT_R เพื่อไม่ให้เก็บพร้อมกัน)
+/* 🪙 รอบ 340: เหรียญหมุนวิบวับ — บีบแกน x ตาม |cos| (สไปรต์หันหน้าเข้ากล้อง → เห็นเป็นหมุนจริง) */
+const COIN_SPIN_SPD=0.0045, COIN_EDGE_MIN=0.11;        // ความเร็วหมุน (rad/ms) · ความบางสุดตอนหันข้าง
 /* 💎 รอบ 318: เหรียญพิเศษตามสภาพเส้นทาง — ทางตรงทอง 🪙1 · ทางโค้งฟ้า 🪙5 · หลุม/เนินเพชร 🪙20 */
 /* key = ชื่อไฟล์ภาพจริงใน img/coins/<key>.png (พื้นโปร่ง) — ไม่มีไฟล์ = ใช้ลายวาดจาก hi/mid/lo/mark */
 const COIN_TIERS=[
   {val:1, size:2.3, y:1.5, mark:'★', name:'',            key:'coin_gold',    hi:'#fff7cc', mid:'#ffd23f', lo:'#e08c00', ring:'rgba(180,110,0,.55)', ink:'#b06e00'},
   {val:5, size:2.9, y:1.7, mark:'◆', name:'โค้งสวย!',    key:'coin_sapphire',hi:'#e6f9ff', mid:'#4fc3f7', lo:'#0277bd', ring:'rgba(2,90,150,.5)',   ink:'#01579b'},
   {val:20,size:3.6, y:2.0, mark:'💎',name:'เหรียญเพชร!', key:'coin_diamond', hi:'#fdeaff', mid:'#ce93d8', lo:'#7b1fa2', ring:'rgba(90,20,120,.5)',  ink:'#4a148c'},
+  /* 🍀 รอบ 340: เหรียญมรกต — โผล่เฉพาะตอนเก็บครบคำแบบไม่ชนอะไรเลย (ไม่โดนหมา ไม่ตกหลุมแรงๆ) */
+  {val:50,size:4.2, y:2.2, mark:'🍀',name:'เหรียญมรกต!', key:'coin_emerald', hi:'#e8fff2', mid:'#2ecc71', lo:'#0b6b3a', ring:'rgba(8,90,50,.5)',   ink:'#064e2e'},
 ];
+const EMERALD_TIER=3;
+const HARD_LAND=7.5;        // แรงกระแทกตอนลงพื้นที่ถือว่า "ชน" (เหินธรรมดาไม่นับ)
 const COIN_CURVE_RAD=0.19;   // มุมหักขั้นต่ำที่ถือว่า "โค้งจริง" (rad ≈ 11° = p90 ของถนนทั้งแผนที่) — ใช้เลือกชนิดเหรียญพิเศษ
 /* 🚗🧑‍🤝‍🧑 รอบ 317: รถยนต์มาร่วมแผนที่นี้ได้ + เห็นยานพาหนะเพื่อนตรงกับที่เขาขับจริง */
 const NET_SEND_MS=180, SPAWN_GAP=9, SPAWN_FREE_R=5.5;  // ถี่ส่งตำแหน่ง · ระยะเว้นช่องเกิด · ถือว่าช่องนี้ "มีคนแล้ว"
@@ -72,7 +78,7 @@ let sessionCoins=0, sessionWords=0, texCache={};
 let startX=0,startZ=0,startYaw=0;
 let vehicle='moto';                        // 🚗 รอบ 317: 'moto' = มอเตอร์ไซค์ (ตั๋วมอไซค์) · 'car' = ผู้เล่นโลกขับรถมาร่วมแผนที่นี้
 let selfCar=null;                          // โมเดลรถยนต์ของเราเอง (โหมด car — แทนสไปรต์มอไซค์)
-let coins=[], coinTex=null, specialDone=false;   // 🪙 เหรียญที่วางอยู่ตอนนี้ (ผูกกับตัวอักษร) + วางเหรียญพิเศษของคำนี้แล้วหรือยัง
+let coins=[], coinTex=null, specialDone=false, cleanWord=true;   // 🍀 cleanWord = คำนี้ยังไม่ชนอะไรเลย (ชนหมา/ลงหลุมแรง = false)   // 🪙 เหรียญที่วางอยู่ตอนนี้ (ผูกกับตัวอักษร) + วางเหรียญพิเศษของคำนี้แล้วหรือยัง
 let worldRef=null,myRef=null,peers={},lastNetSend=0,netOk=true,netAvOk=true,spawnFixAt=0;   // 🧑‍🤝‍🧑 เพื่อนในแผนที่เดียวกัน
 let boardEl=null,boardSig='';              // 🏆 รอบ 318: กระดานคะแนนสด (วาดใหม่เมื่อข้อมูลเปลี่ยนจริงเท่านั้น)
 let chatBtn=null,chatBarEl=null,selfMsgEl=null,myChat=null;   // 💬 รอบ 318: แชทลอยหัวข้อความสำเร็จรูป
@@ -1027,6 +1033,7 @@ function spawnDog(){
   dog.grp.rotation.y=Math.atan2(dog.vx,dog.vz);
 }
 function dogHit(){
+  cleanWord=false;                                   // 🍀 ชนหมา = คำนี้อดเหรียญมรกต
   const have=(typeof state!=='undefined'&&typeof state.coins==='number')?state.coins:0;
   const pen=Math.min(DOG_HIT_COIN,have);
   if(typeof addCoins==='function'&&pen>0) addCoins(-pen);
@@ -1089,9 +1096,18 @@ function addCoin(l,tier,side){
   s.scale.set(T.size,T.size,1);
   s.position.set(p.x+l.fx*COIN_GAP*side, T.y, p.z+l.fz*COIN_GAP*side);
   s.frustumCulled=false; scene.add(s);
-  coins.push({spr:s,tier,l,side});
+  coins.push({spr:s,tier,l,side,phase:Math.random()*Math.PI*2});   // phase = เหรียญแต่ละใบหมุนไม่พร้อมกัน
 }
-function clearCoins(){ coins.forEach(c=>scene.remove(c.spr)); coins=[]; }
+function clearCoins(){                                  // 🍀 เหรียญ keep (มรกตรางวัล) ไม่โดนล้างตอนขึ้นคำใหม่
+  coins=coins.filter(c=>{ if(c.keep) return true; scene.remove(c.spr); return false; });
+}
+/* 🍀 เหรียญอิสระ (ไม่ผูกกับตัวอักษร) — ใช้กับเหรียญมรกตรางวัล "เก็บครบคำโดยไม่ชนเลย" */
+function addFreeCoin(tier,x,z){
+  const T=COIN_TIERS[tier];
+  const s2=new THREE.Sprite(new THREE.SpriteMaterial({map:coinTex[tier],transparent:true}));
+  s2.scale.set(T.size,T.size,1); s2.position.set(x,T.y,z); s2.frustumCulled=false; scene.add(s2);
+  coins.push({spr:s2,tier,l:null,side:0,keep:true,phase:Math.random()*Math.PI*2});
+}
 /* 💎 รอบ 318: เลือกระดับเหรียญจากสภาพเส้นทางตรงจุดนั้น
    ใกล้หลุม/เนิน (feats) = เหรียญเพชร 🪙20 · ทางโค้ง (ทิศถนนหักเกิน ~20°) = เหรียญฟ้า 🪙5 · ทางตรง = ทอง 🪙1 */
 function coinTierAt(x,z){
@@ -1121,19 +1137,25 @@ function grabCoin(tier){
   coinFx((tier?T.name+' ':'')+'+'+v+' 🪙',tier>0);
   if(typeof sfx!=='undefined'){
     if(sfx.coin) sfx.coin();
-    if(tier===2&&sfx.levelup) setTimeout(()=>sfx.levelup(),90);          // 💎 เหรียญเพชรมีเสียงฉลอง
+    if(tier>=2&&sfx.levelup) setTimeout(()=>sfx.levelup(),90);          // 💎🍀 เพชร/มรกตมีเสียงฉลอง
     else if(tier===1&&sfx.buy) setTimeout(()=>sfx.buy(),70);
   }
   if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(tier?[18,30,26]:16);
-  if(tier===2&&banEl){                                                    // ป้ายใหญ่เฉพาะเหรียญเพชร
-    banEl.innerHTML=`💎 เจอเหรียญเพชร!<br><span class="m-coin">+${v} 🪙</span>`;
-    banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1300);
+  if(tier>=2&&banEl){                                                     // ป้ายใหญ่: เพชร 💎 / มรกต 🍀
+    banEl.innerHTML=`${tier===EMERALD_TIER?'🍀 เหรียญมรกต — รางวัลขับสะอาด!':'💎 เจอเหรียญเพชร!'}<br><span class="m-coin">+${v} 🪙</span>`;
+    banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1500);
   }
 }
 function coinTick(dt,now){
   for(let i=coins.length-1;i>=0;i--){
-    const c=coins[i], p=c.spr.position;
-    p.y=COIN_TIERS[c.tier].y+Math.sin(now*.004+p.x*.7)*.28;      // ลอยขึ้นลงให้สะดุดตา
+    const c=coins[i], p=c.spr.position, T=COIN_TIERS[c.tier];
+    p.y=T.y+Math.sin(now*.004+p.x*.7)*.28;      // ลอยขึ้นลงให้สะดุดตา
+    // 🪙 หมุนรอบตัว: บีบแกน x ตาม |cos| (สไปรต์หันหน้าเข้ากล้องเสมอ → บีบ = เห็นเป็นเหรียญหมุนจริง)
+    //    + วิบวับตอนหันหน้าเต็มใบ (ช่วงที่แสงกระทบหน้าเหรียญ)
+    const a=now*COIN_SPIN_SPD+c.phase, ca=Math.abs(Math.cos(a));
+    c.spr.scale.x=T.size*Math.max(COIN_EDGE_MIN,ca);
+    const shine=1+.22*Math.pow(ca,8);           // ยิ่งหันหน้าตรง ยิ่งวาบ
+    c.spr.material.color.setScalar(shine);
     if(Math.hypot(p.x-px,p.z-pz)<COIN_PICK_R){ scene.remove(c.spr); coins.splice(i,1); grabCoin(c.tier); }
   }
 }
@@ -1355,7 +1377,7 @@ function pickWord(){
 function spawnLetters(){
   letters.forEach(l=>{ scene.remove(l.spr); });
   letters=[];
-  clearCoins(); specialDone=false;                             // 🪙 รอบ 319: เหรียญของคำก่อนหน้าออกทั้งหมด
+  clearCoins(); specialDone=false; cleanWord=true;             // 🪙 รอบ 319: เหรียญคำก่อนออกหมด · 🍀 รอบ 340: เริ่มนับ "ไม่ชนเลย" ใหม่
   word.en.split('').forEach((ch,i)=>{
     const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20,z:pz+30,fx:0,fz:1};
     const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
@@ -1411,9 +1433,17 @@ function completeWord(){
   if(typeof vbRecord==='function') vbRecord(w.en,w.th,true);
   if(typeof sfx!=='undefined') sfx.levelup();
   setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); },700);
-  banEl.innerHTML=`🎉 ${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}<br><span class="m-coin">+${REWARD} 🪙</span>`;
+  const clean=cleanWord;                              // 🍀 จำไว้ก่อน spawnLetters ของคำใหม่จะรีเซ็ต
+  banEl.innerHTML=`🎉 ${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}<br><span class="m-coin">+${REWARD} 🪙</span>`
+    +(clean?`<br><span class="m-coin" style="color:#7dffb0">🍀 ไม่ชนเลย! เหรียญมรกตโผล่ข้างหน้า</span>`:'');
   banEl.classList.add('show');
   setTimeout(()=>banEl.classList.remove('show'),2200);
+  // 🍀 รางวัลขับสะอาด: วางเหรียญมรกตบนถนนข้างหน้าให้ไปเก็บ (รอให้คำใหม่ spawn เสร็จก่อน ไม่งั้นโดนล้าง)
+  if(clean) setTimeout(()=>{
+    if(!running) return;
+    const p=randomRoadPoint(px,pz,28,60);
+    if(p) addFreeCoin(EMERALD_TIER,p.x,p.z);
+  },900);
   saveState();
   word=null;
   setTimeout(()=>{ if(running) pickWord(); },1400);
@@ -1427,7 +1457,7 @@ function relocTick(now){
       l.spr.position.set(p.x,2.3,p.z);
       l.fx=(p.fx||0); l.fz=(p.fz===undefined?1:p.fz);
       /* 🪙 รอบ 319: เหรียญของตัวอักษรนี้ย้ายตามไปด้วย (คงหน้า/หลังเดิม) */
-      coins.forEach(c=>{ if(c.l===l) c.spr.position.set(p.x+l.fx*COIN_GAP*c.side, COIN_TIERS[c.tier].y, p.z+l.fz*COIN_GAP*c.side); });
+      coins.forEach(c=>{ if(c.l && c.l===l) c.spr.position.set(p.x+l.fx*COIN_GAP*c.side, COIN_TIERS[c.tier].y, p.z+l.fz*COIN_GAP*c.side); });
     }
   });
 }
@@ -1595,6 +1625,7 @@ function frame(dt,now){
       bikeY=groundY; airborne=false; bikeVY=0;
       if(impact>IMPACT_MIN){
         suspV-=Math.min(impact,LAUNCH_VMAX)*SUSP_KICK;   // เตะโช้กยุบลง (สปริงยวบ)
+        if(impact>HARD_LAND) cleanWord=false;            // 🍀 ลงพื้นแรงมาก = ถือว่าชน อดเหรียญมรกต
         if(typeof Eng!=='undefined'&&Eng.thud) Eng.thud(Math.min(.85,impact*0.07));
         if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(Math.min(60,impact*7|0));
       }
@@ -1781,7 +1812,9 @@ window.MotoWorld={
     exitWorld, fit, roadInfo, randomRoadPoint,
     /* 🪙🚗🧑‍🤝‍🧑 รอบ 317 */
     get coins(){ return coins.length; },
-    get coinList(){ return coins.map(c=>({x:c.spr.position.x,z:c.spr.position.z,tier:c.tier,side:c.side,ch:c.l&&c.l.ch})); },
+    get coinList(){ return coins.map(c=>({x:c.spr.position.x,z:c.spr.position.z,tier:c.tier,side:c.side,ch:c.l&&c.l.ch,sx:c.spr.scale.x,shine:c.spr.material.color.r,keep:!!c.keep})); },
+    get cleanWord(){ return cleanWord; }, set cleanWord(v){ cleanWord=v; },   // 🍀 เทสต์: บังคับสถานะ "ไม่ชนเลย"
+    dropEmerald(){ const p=randomRoadPoint(px,pz,20,50); if(p) addFreeCoin(EMERALD_TIER,p.x,p.z); return !!p; },
     get vehicle(){ return vehicle; },
     get peers(){ return peers; },
     get selfCar(){ return selfCar; },
@@ -1789,7 +1822,7 @@ window.MotoWorld={
     /* 🏆💬💎 รอบ 318 */
     sendChat, renderBoard, coinTierAt,
     get board(){ return boardEl?boardEl.textContent:''; },
-    get coinTiers(){ const n=[0,0,0]; coins.forEach(c=>n[c.tier]++); return n; },
+    get coinTiers(){ const n=[0,0,0,0]; coins.forEach(c=>n[c.tier]++); return n; },
     placeSpecialCoin, get specialDone(){ return specialDone; },
     get myChat(){ return myChat; },
     fakePeer(uid,x,z,kind,extra){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'},extra||{})}); return peers[uid]; },

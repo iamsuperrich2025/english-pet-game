@@ -338,7 +338,11 @@ function coinFlyFx(fromEl, amount){
   for(let i = 0; i < n; i++){
     const c = document.createElement('div');
     c.className = 'coin-fly';
-    c.textContent = '🪙';
+    // 🪙 รอบ 340: ใช้เหรียญภาพจริงชุดเดียวกับในโลก 3D (โหลดไม่ได้ = กลับไปใช้อีโมจิ)
+    const ci = document.createElement('img');
+    ci.className = 'coin-ic'; ci.src = 'img/coins/coin_gold.png'; ci.alt = '';
+    ci.onerror = () => { c.textContent = '🪙'; };
+    c.appendChild(ci);
     c.style.left = (a.left + a.width/2 + (Math.random()-0.5)*a.width*0.5) + 'px';
     c.style.top  = (a.top + a.height/2) + 'px';
     c.style.setProperty('--dx', (b.left + b.width/2 - (a.left + a.width/2)) + 'px');

@@ -9,6 +9,7 @@
 | `coin_gold` | เหรียญทองหลังตัวอักษรทุกตัว | 🪙 1 | ทองคำ |
 | `coin_sapphire` | วางบนทางโค้งสวย | 🪙 5 | ฟ้าไพลิน |
 | `coin_diamond` | วางบนหลุม/เนิน (ยากสุด) | 🪙 20 | ม่วง-เพชร |
+| `coin_emerald` | 🆕 รางวัลเก็บครบคำโดย **ไม่ชนอะไรเลย** | 🪙 50 | เขียวมรกต |
 
 ## 🔧 สไตล์ร่วม (ต่อท้ายทุกพรอมป์)
 ```
@@ -28,6 +29,12 @@ Elegant silver-platinum coin with a deep sapphire blue enamel field, brilliant-c
 ## 💎 3. coin_diamond — เหรียญเพชร (มูลค่า 20)
 ```
 Regal royal-purple and white-gold coin, deep amethyst enamel field with a large brilliant-cut diamond mounted at the center throwing rainbow prismatic sparkles, ornate white-gold rim engraved with a crown-and-filigree motif, tiny diamond studs set around the border, radiant highlights and light dispersion, the rarest treasure of the collection.
+```
+
+## 🍀 4. coin_emerald — เหรียญมรกต (มูลค่า 50 · หายากสุด)
+> รางวัลของคนที่เก็บครบคำ **โดยไม่ชนหมาและไม่ลงพื้นแรงเลย** — ต้องดูสูงค่ากว่าทุกใบ
+```
+Prestigious emerald victory coin, radiant green enamel field with a large step-cut emerald gemstone set at the center glowing from within, ornate antique gold rim engraved with an olive-branch victory motif, fine beading around the edge, warm gold highlights contrasting the deep green, flawless jeweller finish, the ultimate reward medal.
 ```
 
 ## ✅ เช็กหลังวางไฟล์
