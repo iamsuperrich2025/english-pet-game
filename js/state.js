@@ -125,6 +125,8 @@ const DEFAULT_STATE = {
   savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
   chatSeen:{},                        // pairId → ts ข้อความล่าสุดที่อ่านแล้ว (ไว้แจ้งเตือนข้อความใหม่ ข้อ 0.4)
+  nwQueue:[],                         // รอบ 326: คิวคำศัพท์ 🆕 New Word ที่ยังไม่ได้โชว์ (สลับลำดับแล้ว) — หมดคิว = สลับใหม่
+  nwAt:0,                             // รอบ 326: เวลาที่เปลี่ยนคำล่าสุด (เปลี่ยนทุก 2 นาทีระหว่างอยู่ Lobby)
   greetSent:{},                       // รอบ 325: {uid: 'YYYY-MM-DD'} วันล่าสุดที่ส่ง "ทักทายน้อง" ให้แต่ละคน (จำกัดคนละ 1/วัน)
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
@@ -328,6 +330,8 @@ function loadState(){
       if(typeof s.patStreakBest !== 'number') s.patStreakBest = 0;
       if(!Array.isArray(s.patDays)) s.patDays = [];                                       // รอบ 325
       if(!s.greetSent || typeof s.greetSent !== 'object') s.greetSent = {};                // รอบ 325
+      if(!Array.isArray(s.nwQueue)) s.nwQueue = [];                                        // รอบ 326
+      if(typeof s.nwAt !== 'number') s.nwAt = 0;
       if(typeof s.bffBadge !== 'number') s.bffBadge = 0;
       if(typeof s.crownBadge !== 'number') s.crownBadge = 0;                               // รอบ 109
       if(typeof s.badgeWeekKey !== 'string') s.badgeWeekKey = '';

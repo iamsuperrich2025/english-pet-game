@@ -156,14 +156,29 @@ function heroRankBgHTML(){
    คลิกแบนเนอร์ = ป๊อปอัปรายละเอียดตาม format พจนานุกรม + อ่านออกเสียง
    ============================================================ */
 let newWordPick = null;
+const NEW_WORD_MS = 120000;   // รอบ 326 (ผู้ใช้สั่ง): เปลี่ยนคำใหม่ทุก 2 นาทีระหว่างอยู่หน้า Lobby
+
+/* หยิบคำถัดไปจาก "คิวสุ่มไม่ซ้ำ" (รอบ 326)
+   คิว = คำทั้งพูลของระดับชั้น สลับลำดับแล้วหยิบทีละคำ → ไม่มีคำซ้ำจนกว่าจะครบทุกคำ
+   หมดคิว = สลับใหม่แล้ววนต่อเรื่อยๆ · เก็บใน state จึงไม่ซ้ำข้ามการรีเฟรชด้วย
+   เปลี่ยนระดับชั้น → คำที่ไม่อยู่ในพูลใหม่ถูกคัดออกเอง */
+function newWordNext(){
+  const pool = (typeof newWordPool === 'function') ? newWordPool() : [];
+  if(!pool.length) return;
+  if(!Array.isArray(state.nwQueue)) state.nwQueue = [];
+  state.nwQueue = state.nwQueue.filter(w=>pool.some(r=>r[0] === w));
+  if(!state.nwQueue.length) state.nwQueue = shuffle(pool.map(r=>r[0]));
+  const en = state.nwQueue.shift();
+  newWordPick = pool.find(r=>r[0] === en) || pool[0];
+  state.nwAt = Date.now();
+  saveState();
+}
 function renderNewWord(){
   const el = document.getElementById('newword-banner');
   if(!el) return;
   if(typeof NEW_WORDS === 'undefined' || !state.student){ el.style.display='none'; return; }
-  if(!newWordPick){
-    const pool = newWordPool();
-    newWordPick = pool[Math.floor(Math.random()*pool.length)];
-  }
+  if(!newWordPick) newWordNext();
+  if(!newWordPick){ el.style.display='none'; return; }
   const [en] = newWordPick;
   el.style.display='';
   el.innerHTML = `
@@ -171,6 +186,39 @@ function renderNewWord(){
     <span class="nw-word">${en}</span>
     <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>`;
   el.onclick = showNewWordPopup;
+  alignNewWord();          // จัดให้กึ่งกลางตรงกับภาพ Rank ใหญ่ (ความกว้างแบนเนอร์เปลี่ยนตามความยาวคำ)
+  startNewWordTimer();
+}
+
+/* จัดแบนเนอร์ให้ "กึ่งกลางตรงกับภาพ Rank ใหญ่กลางเวที" (ผู้ใช้สั่งรอบ 326)
+   เวทีน้องอยู่คอลัมน์ขวาของการ์ด → กึ่งกลางเวทีไม่ใช่กึ่งกลางจอ ต้องวัดเอา
+   (แพทเทิร์นเดียวกับ alignPetTabs — หารด้วย scale เผื่อหน้าเพจโดนย่อด้วย transform) */
+function alignNewWord(){
+  const el = document.getElementById('newword-banner');
+  const stage = document.querySelector('.lobby-stage');
+  const hero = document.querySelector('.stage-hero');
+  if(!el || !stage || !hero || el.style.display === 'none') return;
+  const s = stage.getBoundingClientRect(), h = hero.getBoundingClientRect();
+  if(!s.width || !stage.offsetWidth) return;
+  const scale = s.width / stage.offsetWidth;
+  el.style.setProperty('--nw-left', ((h.left + h.width/2) - s.left) / scale + 'px');
+}
+
+/* นาฬิกาเปลี่ยนคำ — เช็กทุก 5 วินาที (ไม่ใช่ setTimeout 2 นาทีเดียว) เพื่อให้
+   เครื่องที่หลับ/สลับแท็บกลับมาแล้วคำเปลี่ยนตามเวลาจริง ไม่ค้างคำเดิม */
+let __nwTimer = null;
+function startNewWordTimer(){
+  if(__nwTimer) return;
+  __nwTimer = setInterval(()=>{
+    const dash = document.getElementById('screen-dashboard');
+    if(!dash || !dash.classList.contains('active')) return;        // อยู่หน้าอื่น/ในเกม = ไม่ต้องเปลี่ยน
+    if(!state.student || typeof NEW_WORDS === 'undefined') return;
+    if(Date.now() - (state.nwAt || 0) < NEW_WORD_MS) return;
+    newWordNext();
+    renderNewWord();
+    const el = document.getElementById('newword-banner');
+    if(el){ el.classList.remove('nw-swap'); void el.offsetWidth; el.classList.add('nw-swap'); }
+  }, 5000);
 }
 
 /* ป๊อปอัปรายละเอียดคำ — format ตามสเปกพจนานุกรม (TASK_DICTIONARY_SONNET.md):
@@ -2532,6 +2580,7 @@ function alignPetTabs(){
 window.addEventListener('resize', ()=>{
   if(typeof alignPetTabs === 'function') alignPetTabs();
   if(typeof alignCureBtn === 'function') alignCureBtn();
+  if(typeof alignNewWord === 'function') alignNewWord();   // รอบ 326: แบนเนอร์คำใหม่ต้องตรงกลางภาพ Rank เสมอ
 });
 
 /* รอบ 258 (ผู้ใช้สั่ง 17 ก.ค. 2026): ขยับแถบปุ่มซ้ายทั้งแถว — แนวบนปุ่ม 💊 รักษา ตรงกับขอบบนแถวชื่อสัตว์ (#pet-tabs)
@@ -2788,6 +2837,10 @@ function renderDashboard(){
     tabs.style.display = 'none'; tabs.innerHTML = '';
   }
   alignPetTabs();   // รอบ 160: ขอบซ้ายแท็บตรงแนว rank chip
+  /* รอบ 326: จัดแบนเนอร์คำใหม่ให้ตรงกลางภาพ Rank — ต้องเรียก "หลังการ์ดน้องถูกสร้าง" เท่านั้น
+     (renderNewWord ถูกเรียกก่อนหน้านี้ตอน .stage-hero ยังไม่มีในหน้า → วัดตำแหน่งไม่ได้) */
+  alignNewWord();
+  requestAnimationFrame(alignNewWord);   // เผื่อ layout ยังไม่นิ่งในเฟรมแรก (ฟอนต์/ภาพ rank เพิ่งโหลด)
 
   /* ---- ปุ่มรักษาด่วนในรางซ้าย: กดได้เฉพาะตอนมีน้องป่วย + badge เลขบอกป่วยกี่ตัว ---- */
   const railCure = document.getElementById('btn-rail-cure');
