@@ -24,17 +24,18 @@ const BUCKET=250;                          // ตารางแฮชถนน 
 const TILE_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
 /* 🪙 รอบ 317: เหรียญบนถนน + โบนัสตัวอักษร (ผู้ใช้: เก็บตัวอักษรให้เหรียญด้วย + เหรียญบนถนนน้อยไป) */
 const LETTER_COIN=1;                                   // เก็บตัวอักษร 1 ตัว = แถม 🪙1 ทันที (นอกเหนือจาก REWARD ตอนครบคำ)
-const COIN_N=120, COIN_R=320, COIN_MIN=25;             // จำนวนเหรียญที่ลอยรอบผู้เล่น · รัศมีวาง (m) · ใกล้สุด
-const COIN_VAL=1, COIN_PICK_R=3.6, COIN_FILL=12;       // มูลค่าเหรียญพื้นฐาน · ระยะชนเก็บ · เติมสูงสุดต่อรอบ (กันกระตุก)
+/* 🪙 รอบ 319 (ผู้ใช้สั่ง): เลิกโปรยเหรียญสุ่มทั้งแผนที่ → เหรียญผูกกับตัวอักษรโดยตรง
+   เหรียญทอง 🪙1 = "ด้านหลัง" ตัวอักษรทุกตัว (ตัวละ 1 เหรียญเท่านั้น)
+   เหรียญพิเศษ (◆5 / 💎20) = "ด้านหน้า" ตัวอักษรตัวสุดท้ายที่เหลือของแต่ละคำ */
+const COIN_VAL=1, COIN_PICK_R=3.6;                     // มูลค่าเหรียญพื้นฐาน · ระยะชนเก็บ
+const COIN_GAP=5.2;                                    // ระยะเยื้องจากตัวอักษร (m · มากกว่า COLLECT_R เพื่อไม่ให้เก็บพร้อมกัน)
 /* 💎 รอบ 318: เหรียญพิเศษตามสภาพเส้นทาง — ทางตรงทอง 🪙1 · ทางโค้งฟ้า 🪙5 · หลุม/เนินเพชร 🪙20 */
 const COIN_TIERS=[
   {val:1, size:2.3, y:1.5, mark:'★', name:'',            hi:'#fff7cc', mid:'#ffd23f', lo:'#e08c00', ring:'rgba(180,110,0,.55)', ink:'#b06e00'},
   {val:5, size:2.9, y:1.7, mark:'◆', name:'โค้งสวย!',    hi:'#e6f9ff', mid:'#4fc3f7', lo:'#0277bd', ring:'rgba(2,90,150,.5)',   ink:'#01579b'},
   {val:20,size:3.6, y:2.0, mark:'💎',name:'เหรียญเพชร!', hi:'#fdeaff', mid:'#ce93d8', lo:'#7b1fa2', ring:'rgba(90,20,120,.5)',  ink:'#4a148c'},
 ];
-const COIN_CURVE_RAD=0.19, COIN_CURVE_EVERY=6, COIN_CURVE_TRY=22;
-/* มุมหักขั้นต่ำที่ถือว่า "โค้งจริง" (rad ≈ 11° · = p90 ของถนนทั้งแผนที่) — จุดสุ่มธรรมดามักตกบนช่วงตรงยาว
-   จึง "เล็งหาโค้ง" ทุกๆ 6 เหรียญ (สุ่มลอง 22 จุด) ไม่งั้นเหรียญโค้งแทบไม่โผล่เลย */
+const COIN_CURVE_RAD=0.19;   // มุมหักขั้นต่ำที่ถือว่า "โค้งจริง" (rad ≈ 11° = p90 ของถนนทั้งแผนที่) — ใช้เลือกชนิดเหรียญพิเศษ
 /* 🚗🧑‍🤝‍🧑 รอบ 317: รถยนต์มาร่วมแผนที่นี้ได้ + เห็นยานพาหนะเพื่อนตรงกับที่เขาขับจริง */
 const NET_SEND_MS=180, SPAWN_GAP=9, SPAWN_FREE_R=5.5;  // ถี่ส่งตำแหน่ง · ระยะเว้นช่องเกิด · ถือว่าช่องนี้ "มีคนแล้ว"
 const PEER_COLORS=[0xef5350,0x42a5f5,0x66bb6a,0xffca28,0xab47bc,0x26c6da,0xff7043,0x8d6e63];
@@ -70,7 +71,7 @@ let sessionCoins=0, sessionWords=0, texCache={};
 let startX=0,startZ=0,startYaw=0;
 let vehicle='moto';                        // 🚗 รอบ 317: 'moto' = มอเตอร์ไซค์ (ตั๋วมอไซค์) · 'car' = ผู้เล่นโลกขับรถมาร่วมแผนที่นี้
 let selfCar=null;                          // โมเดลรถยนต์ของเราเอง (โหมด car — แทนสไปรต์มอไซค์)
-let coinPool=[], coinTex=null, coinAt=0, coinSeq=0;   // 🪙 เหรียญบนถนน (pool รีไซเคิลรอบผู้เล่น)
+let coins=[], coinTex=null, specialDone=false;   // 🪙 เหรียญที่วางอยู่ตอนนี้ (ผูกกับตัวอักษร) + วางเหรียญพิเศษของคำนี้แล้วหรือยัง
 let worldRef=null,myRef=null,peers={},lastNetSend=0,netOk=true,netAvOk=true,spawnFixAt=0;   // 🧑‍🤝‍🧑 เพื่อนในแผนที่เดียวกัน
 let boardEl=null,boardSig='';              // 🏆 รอบ 318: กระดานคะแนนสด (วาดใหม่เมื่อข้อมูลเปลี่ยนจริงเท่านั้น)
 let chatBtn=null,chatBarEl=null,selfMsgEl=null,myChat=null;   // 💬 รอบ 318: แชทลอยหัวข้อความสำเร็จรูป
@@ -654,7 +655,8 @@ function randomRoadPoint(cx,cz,rMin,rMax){
       let fx=dx, fz=dz; const fl=Math.hypot(fx,fz)||1; fx/=fl; fz/=fl;
       if(fx*(cxp-cx)+fz*(czp-cz)<0){ fx=-fx; fz=-fz; }   // จัดหน้าให้ชี้ออกจากผู้เล่น
       const lane=Math.min(s.hw*0.55, 3.6);        // กลางเลนซ้าย (จำกัดไม่เกิน ~1 เลน)
-      return {x:cxp+(-fz)*lane, z:czp+fx*lane};
+      /* 🪙 รอบ 319: คืนทิศถนน (fx,fz ชี้ออกจากผู้เล่น = ทิศที่ผู้เล่นวิ่งผ่านจุดนี้) ให้คนเรียกวางเหรียญหน้า/หลังได้ */
+      return {x:cxp+(-fz)*lane, z:czp+fx*lane, fx, fz};
     }
   }
   return null;
@@ -1062,41 +1064,19 @@ function coinTexture(tier){
   c.fillStyle=T.ink; c.font='900 52px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(T.mark,64,68);
   return new THREE.CanvasTexture(cv);
 }
-function makeCoins(){
-  coinTex=COIN_TIERS.map((t,i)=>coinTexture(i));
-  for(let i=0;i<COIN_N;i++){
-    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:coinTex[0],transparent:true}));
-    s.scale.set(2.3,2.3,1); s.visible=false; s.frustumCulled=false;
-    scene.add(s); coinPool.push({spr:s,on:false,tier:0});
-  }
+function makeCoins(){ coinTex=COIN_TIERS.map((t,i)=>coinTexture(i)); }
+/* วางเหรียญ 1 ใบ · side: +1 = ด้านหลังตัวอักษร (ทอง) · -1 = ด้านหน้า (พิเศษ) — จำไว้เพื่อย้ายตามตอนตัวอักษรย้ายที่ */
+function addCoin(l,tier,side){
+  const T=COIN_TIERS[tier], p=l.spr.position;
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:coinTex[tier],transparent:true}));
+  s.scale.set(T.size,T.size,1);
+  s.position.set(p.x+l.fx*COIN_GAP*side, T.y, p.z+l.fz*COIN_GAP*side);
+  s.frustumCulled=false; scene.add(s);
+  coins.push({spr:s,tier,l,side});
 }
+function clearCoins(){ coins.forEach(c=>scene.remove(c.spr)); coins=[]; }
 /* 💎 รอบ 318: เลือกระดับเหรียญจากสภาพเส้นทางตรงจุดนั้น
    ใกล้หลุม/เนิน (feats) = เหรียญเพชร 🪙20 · ทางโค้ง (ทิศถนนหักเกิน ~20°) = เหรียญฟ้า 🪙5 · ทางตรง = ทอง 🪙1 */
-/* เล็งหาจุดบน "หัวโค้งจริง" รอบผู้เล่น — ไล่จาก segment ในตารางแฮชโดยตรง
-   (สุ่มจุดในระนาบแล้วสแนปเข้าถนน จะตกบนช่วงตรงยาวเกือบตลอด เพราะพื้นที่มากกว่า → หาโค้งไม่เจอ) */
-function curvyRoadPoint(){
-  const cand=[], seen=new Set();
-  const b0=Math.floor((px-COIN_R)/BUCKET), b1=Math.floor((px+COIN_R)/BUCKET);
-  const c0=Math.floor((pz-COIN_R)/BUCKET), c1=Math.floor((pz+COIN_R)/BUCKET);
-  for(let bx=b0;bx<=b1;bx++)for(let bz=c0;bz<=c1;bz++){
-    const arr=buckets.get(segKey(bx,bz)); if(!arr) continue;
-    for(const si of arr){
-      if(seen.has(si)) continue; seen.add(si);
-      const s=segs[si]; if(s.curv<COIN_CURVE_RAD) continue;
-      const mx=(s.ax+s.bx)/2, mz=(s.az+s.bz)/2, d=Math.hypot(mx-px,mz-pz);
-      if(d>=COIN_MIN && d<=COIN_R) cand.push(s);
-      if(cand.length>=COIN_CURVE_TRY*8) break;
-    }
-  }
-  if(!cand.length) return null;
-  const s=cand[(Math.random()*cand.length)|0];
-  const dx=s.bx-s.ax, dz=s.bz-s.az, L=Math.hypot(dx,dz)||1, t=0.2+Math.random()*0.6;
-  const cx=s.ax+dx*t, cz=s.az+dz*t;
-  let fx=dx/L, fz=dz/L;
-  if(fx*(cx-px)+fz*(cz-pz)<0){ fx=-fx; fz=-fz; }        // จัดหน้าให้ชี้ออกจากผู้เล่น (เลนซ้ายเดียวกับตัวอักษร)
-  const lane=Math.min(s.hw*0.55,3.6);
-  return {x:cx+(-fz)*lane, z:cz+fx*lane};
-}
 function coinTierAt(x,z){
   const cx=Math.floor(x/FEAT_CELL), cz=Math.floor(z/FEAT_CELL);
   for(let ox=-1;ox<=1;ox++)for(let oz=-1;oz<=1;oz++){
@@ -1134,28 +1114,20 @@ function grabCoin(tier){
   }
 }
 function coinTick(dt,now){
-  for(const c of coinPool){
-    if(!c.on) continue;
-    const p=c.spr.position;
+  for(let i=coins.length-1;i>=0;i--){
+    const c=coins[i], p=c.spr.position;
     p.y=COIN_TIERS[c.tier].y+Math.sin(now*.004+p.x*.7)*.28;      // ลอยขึ้นลงให้สะดุดตา
-    const d=Math.hypot(p.x-px,p.z-pz);
-    if(d<COIN_PICK_R){ c.on=false; c.spr.visible=false; grabCoin(c.tier); }
-    else if(d>COIN_R+120){ c.on=false; c.spr.visible=false; }     // ไกลเกิน → ปล่อยคืน pool ไปวางใหม่ข้างหน้า
+    if(Math.hypot(p.x-px,p.z-pz)<COIN_PICK_R){ scene.remove(c.spr); coins.splice(i,1); grabCoin(c.tier); }
   }
-  if(now-coinAt<400) return; coinAt=now;
-  let fill=0;
-  for(const c of coinPool){
-    if(c.on) continue;
-    coinSeq++;
-    let p=(coinSeq%COIN_CURVE_EVERY===0)?curvyRoadPoint():null;    // 💎 ทุก 6 ใบ เล็งหาโค้งก่อน
-    if(!p) p=randomRoadPoint(px,pz,COIN_MIN,COIN_R);
-    if(!p) break;
-    const tier=coinTierAt(p.x,p.z), T=COIN_TIERS[tier];
-    c.tier=tier; c.spr.material.map=coinTex[tier]; c.spr.material.needsUpdate=true;
-    c.spr.scale.set(T.size,T.size,1);
-    c.spr.position.set(p.x,T.y,p.z); c.spr.visible=true; c.on=true;
-    if(++fill>=COIN_FILL) break;
-  }
+}
+/* 💎 เหรียญพิเศษหน้าตัวอักษร "ตัวสุดท้ายที่เหลือ" ของคำ — อยู่บนหลุม/เนิน = เพชร 🪙20 · ไม่งั้น = โค้ง 🪙5 */
+function placeSpecialCoin(){
+  if(specialDone || letters.length!==1) return;
+  specialDone=true;
+  const l=letters[0], p=l.spr.position;
+  const fx=p.x-l.fx*COIN_GAP, fz=p.z-l.fz*COIN_GAP;
+  const tier=coinTierAt(fx,fz)===2?2:1;
+  addCoin(l,tier,-1);
 }
 /* ============================================================
    🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
@@ -1366,13 +1338,17 @@ function pickWord(){
 function spawnLetters(){
   letters.forEach(l=>{ scene.remove(l.spr); });
   letters=[];
+  clearCoins(); specialDone=false;                             // 🪙 รอบ 319: เหรียญของคำก่อนหน้าออกทั้งหมด
   word.en.split('').forEach((ch,i)=>{
-    const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20,z:pz+30};
+    const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20,z:pz+30,fx:0,fz:1};
     const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
     spr.scale.set(4.6,4.6,1); spr.position.set(p.x,2.3,p.z);   // รอบ 314: ตัวใหญ่ขึ้น 3→4.6 + ยกสูงให้เห็นชัด
     scene.add(spr);
-    letters.push({ch,idx:i,spr});
+    const l={ch,idx:i,spr,fx:(p.fx||0),fz:(p.fz===undefined?1:p.fz)};
+    letters.push(l);
+    addCoin(l,0,+1);                                           // 🪙 เหรียญทองด้านหลังตัวอักษร ตัวละ 1 เหรียญ
   });
+  placeSpecialCoin();                                          // (คำ 1 ตัวอักษร — กันไว้)
 }
 function renderWordHud(){
   if(!word) return;
@@ -1403,6 +1379,7 @@ function collectTick(){
       if(typeof sfx!=='undefined'){ sfx.select(); if(sfx.coin) setTimeout(()=>sfx.coin(),80); }
       if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
       renderWordHud();
+      placeSpecialCoin();                       // 💎 รอบ 319: เหลือตัวสุดท้าย → วางเหรียญพิเศษไว้ "ด้านหน้า" ตัวนั้น
       if(!letters.length) completeWord();
     }
   }
@@ -1429,7 +1406,11 @@ function relocTick(now){
   letters.forEach(l=>{
     if(Math.hypot(l.spr.position.x-px,l.spr.position.z-pz)>RELOC_D){
       const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX);
-      if(p) l.spr.position.set(p.x,2.3,p.z);
+      if(!p) return;
+      l.spr.position.set(p.x,2.3,p.z);
+      l.fx=(p.fx||0); l.fz=(p.fz===undefined?1:p.fz);
+      /* 🪙 รอบ 319: เหรียญของตัวอักษรนี้ย้ายตามไปด้วย (คงหน้า/หลังเดิม) */
+      coins.forEach(c=>{ if(c.l===l) c.spr.position.set(p.x+l.fx*COIN_GAP*c.side, COIN_TIERS[c.tier].y, p.z+l.fz*COIN_GAP*c.side); });
     }
   });
 }
@@ -1526,7 +1507,8 @@ function applyVehicleUi(){
     : `ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b> — ถนนจริงรอบหมู่บ้าน รัศมี 30 กม.!<br>`)
     + `🟠 สไลเดอร์ส้มซ้าย = ${car?'พวงมาลัย':'เอียงรถเลี้ยว'} <b>ค้างตำแหน่งที่ตั้งไว้</b> (เลื่อนกลับกลาง = วิ่งตรง) · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>`
     + `ขับชน<b>ตัวอักษร</b>บนถนนให้ครบคำ = 🪙${REWARD} · <b>ตัวอักษรละแถม 🪙${LETTER_COIN}</b><br>`
-    + `เก็บเหรียญตามถนน: <b>★ ทาง​ตรง 🪙${COIN_TIERS[0].val}</b> · <b>◆ ทางโค้ง 🪙${COIN_TIERS[1].val}</b> · <b>💎 หลุม/เนิน 🪙${COIN_TIERS[2].val}</b><br>`
+    + `<b>★ เหรียญทอง 🪙${COIN_TIERS[0].val}</b> วางอยู่<b>ด้านหลังตัวอักษรทุกตัว</b> (ตัวละ 1 เหรียญ)<br>`
+    + `<b>◆ ${COIN_TIERS[1].val} / 💎 ${COIN_TIERS[2].val} เหรียญพิเศษ</b> โผล่<b>ด้านหน้าตัวอักษรตัวสุดท้าย</b>ของคำ — เก็บให้ครบก่อนจบคำ!<br>`
     + `<small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว<br>`
     + `🧑‍🤝‍🧑 เห็นเพื่อนในแผนที่เดียวกันแบบสด · 🏆 กระดานคะแนนมุมขวา · 💬 ปุ่มซ้ายล่างส่งข้อความหาเพื่อน</small>`;
 }
@@ -1699,7 +1681,7 @@ function start(opts){
   exitBox.classList.remove('on');
   sessionCoins=0; sessionWords=0;
   coinsEl.textContent='🪙 +0';
-  coinPool.forEach(c=>{ c.on=false; c.spr.visible=false; }); coinAt=0;   // 🪙 วางเหรียญใหม่รอบจุดเกิด
+  clearCoins(); specialDone=false;                                       // 🪙 รอบ 319: ล้างเหรียญคำเก่า (วางใหม่พร้อมตัวอักษรใน pickWord)
   /* 🏆💬 รอบ 318: ล้างกระดาน/แชทจากรอบก่อน */
   myChat=null; boardSig='';
   if(boardEl){ boardEl.classList.remove('on'); boardEl.innerHTML=''; }
@@ -1743,7 +1725,7 @@ function start(opts){
 function exitWorld(){
   running=false;
   netLeave();                                   // 🧑‍🤝‍🧑 รอบ 317: ออกจากห้องแผนที่ + ลบตัวเองจาก DB
-  coinPool.forEach(c=>{ c.on=false; c.spr.visible=false; });
+  clearCoins();
   myChat=null;                                  // 💬🏆 รอบ 318
   if(boardEl) boardEl.classList.remove('on');
   if(chatBarEl) chatBarEl.classList.remove('on');
@@ -1781,8 +1763,8 @@ window.MotoWorld={
     step(dt,n){ for(let i=0;i<(n||1);i++) frame(dt||1/60, performance.now()); },   // เดินเฟรมเองตอนแท็บ hidden (rAF ไม่ยิง)
     exitWorld, fit, roadInfo, randomRoadPoint,
     /* 🪙🚗🧑‍🤝‍🧑 รอบ 317 */
-    get coins(){ return coinPool.filter(c=>c.on).length; },
-    get coinPts(){ return coinPool.filter(c=>c.on).map(c=>({x:c.spr.position.x,z:c.spr.position.z})); },
+    get coins(){ return coins.length; },
+    get coinList(){ return coins.map(c=>({x:c.spr.position.x,z:c.spr.position.z,tier:c.tier,side:c.side,ch:c.l&&c.l.ch})); },
     get vehicle(){ return vehicle; },
     get peers(){ return peers; },
     get selfCar(){ return selfCar; },
@@ -1790,7 +1772,8 @@ window.MotoWorld={
     /* 🏆💬💎 รอบ 318 */
     sendChat, renderBoard, coinTierAt,
     get board(){ return boardEl?boardEl.textContent:''; },
-    get coinTiers(){ const n=[0,0,0]; coinPool.forEach(c=>{ if(c.on) n[c.tier]++; }); return n; },
+    get coinTiers(){ const n=[0,0,0]; coins.forEach(c=>n[c.tier]++); return n; },
+    placeSpecialCoin, get specialDone(){ return specialDone; },
     get myChat(){ return myChat; },
     fakePeer(uid,x,z,kind,extra){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'},extra||{})}); return peers[uid]; },
     get start(){ return {x:startX,z:startZ,yaw:startYaw}; },
