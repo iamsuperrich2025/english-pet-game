@@ -39,27 +39,48 @@ let sessionCoins=0, sessionWords=0, texCache={};
 let startX=0,startZ=0,startYaw=0;
 let keydownFn=null,keyupFn=null,resizeFn=null;
 
-/* ---------- เสียงเครื่องยนต์ (WebAudio สังเคราะห์ · เริ่มหลัง gesture ปุ่มเริ่ม) ---------- */
-const Eng={ctx:null,o1:null,o2:null,g:null,
-  start(){ if(this.ctx||!window.AudioContext&&!window.webkitAudioContext) return;
+/* ---------- 🔊 เสียงเครื่องยนต์จริง (รอบ 306 — ตัดจากเสียงอัดมอไซค์จริงของผู้ใช้ sound/MotorbikeSound.m4a)
+   sound/moto/: eng_idle 5.6s ลูปเดินเบา (248.7s ในต้นฉบับ ช่วงนิ่งสุด) · eng_cruise 5.6s ลูปวิ่งไหล (129.2s)
+   eng_accel 2.6s รอบกวาดขึ้น (377.2s) · eng_decel 3.5s รอบไหลลง (393.7s) — ทุกไฟล์กรอง 60Hz-7.5kHz ตัดลม/ซ่า
+   ลูป bake crossfade 80ms วนไร้รอยต่อ · idle↔cruise crossfade ตาม spd · cruise เร่ง pitch ตามความเร็ว
+   accel/decel เล่น one-shot ตอนบิด/ปล่อยคันเร่ง · เริ่มหลัง gesture ปุ่มเริ่ม (นโยบาย autoplay) ---------- */
+const ENG_FILES={idle:'sound/moto/eng_idle.wav',cruise:'sound/moto/eng_cruise.wav',
+                 accel:'sound/moto/eng_accel.wav',decel:'sound/moto/eng_decel.wav'};
+const Eng={ctx:null,master:null,ready:false,bufs:{},iG:null,cG:null,cS:null,prevThr:false,
+  start(){ if(this.ctx||!(window.AudioContext||window.webkitAudioContext)) return;
     try{
       const C=window.AudioContext||window.webkitAudioContext; this.ctx=new C();
-      this.o1=this.ctx.createOscillator(); this.o1.type='sawtooth';
-      this.o2=this.ctx.createOscillator(); this.o2.type='square';
-      const f=this.ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=480;
-      this.g=this.ctx.createGain(); this.g.gain.value=0;
-      this.o1.connect(f); this.o2.connect(f); f.connect(this.g); this.g.connect(this.ctx.destination);
-      this.o1.start(); this.o2.start();
+      this.master=this.ctx.createGain(); this.master.gain.value=0; this.master.connect(this.ctx.destination);
+      Promise.all(Object.entries(ENG_FILES).map(([n,u])=>
+        fetch(u).then(r=>r.arrayBuffer()).then(b=>this.ctx.decodeAudioData(b)).then(bf=>{ this.bufs[n]=bf; })
+      )).then(()=>{
+        const mk=(n,g0)=>{ const s=this.ctx.createBufferSource(); s.buffer=this.bufs[n]; s.loop=true;
+          const g=this.ctx.createGain(); g.gain.value=g0; s.connect(g); g.connect(this.master); s.start(); return {s,g}; };
+        const i=mk('idle',.75), c=mk('cruise',0);
+        this.iG=i.g; this.cG=c.g; this.cS=c.s; this.ready=true;
+      }).catch(()=>{});
     }catch(e){ this.ctx=null; }
   },
+  shot(n,v){ if(!this.bufs[n]) return;
+    const s=this.ctx.createBufferSource(); s.buffer=this.bufs[n];
+    const g=this.ctx.createGain(); g.gain.value=v; s.connect(g); g.connect(this.master); s.start(); },
   tick(){ if(!this.ctx) return;
-    const on=(typeof state!=='undefined'&&state.sound!==false)&&running;
-    const rev=55+spd*3.4+(thr?26:0);
-    this.o1.frequency.setTargetAtTime(rev,this.ctx.currentTime,.06);
-    this.o2.frequency.setTargetAtTime(rev/2,this.ctx.currentTime,.06);
-    this.g.gain.setTargetAtTime(on?(.028+Math.min(.03,spd*.0012)):0,this.ctx.currentTime,.1);
+    const on=(typeof state==='undefined'||state.sound!==false)&&running;
+    const t=this.ctx.currentTime;
+    this.master.gain.setTargetAtTime(on?.9:0,t,.1);
+    if(!this.ready||!on) return;
+    const mix=Math.min(1,spd/7);                                   // 0=เดินเบา → 1=วิ่ง
+    this.iG.gain.setTargetAtTime((1-mix)*.75,t,.15);
+    this.cG.gain.setTargetAtTime(mix*(.55+(thr?.35:0)),t,.15);
+    this.cS.playbackRate.setTargetAtTime(.8+(spd/VMAX)*.55+(thr?.05:0),t,.12);
+    const th=!!thr;
+    if(th!==this.prevThr){
+      this.prevThr=th;
+      if(th) this.shot('accel',.85);
+      else if(spd>8) this.shot('decel',.75);                       // ปล่อยตอนช้าไม่ต้องมีเสียงรอบไหลลง
+    }
   },
-  stop(){ if(this.g&&this.ctx) this.g.gain.setTargetAtTime(0,this.ctx.currentTime,.05); }
+  stop(){ if(this.master&&this.ctx) this.master.gain.setTargetAtTime(0,this.ctx.currentTime,.05); }
 };
 
 /* ============================================================
@@ -986,6 +1007,7 @@ window.MotoWorld={
     get running(){return running}, set running(v){running=v},
     get letters(){return letters}, get word(){return word}, get segs(){return segs},
     get posts(){return postBody?postBody.count:0},
+    eng:Eng,
     get pos(){return {x:px,z:pz,yaw,spd}},
     set input(v){ if('steer' in v) steerCtl=v.steer; if('thr' in v) padThr=v.thr; },
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
