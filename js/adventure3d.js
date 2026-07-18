@@ -52,8 +52,8 @@ const MODES = {
     label:'โลกเฮลิคอปเตอร์', emoji:'🚁', reward:30, doneKey:'heliDone',
     shoot:false, ghost:false, heli:true,
     sky:0x9fd9f7, fogN:45, fogF:150, ground:0x8a8f96,
-    intro:'🚁 <b>โลกเฮลิคอปเตอร์ Bell!</b><br><small>ตัวอักษรอยู่บนยอดตึก — บินลอดระหว่างตึก<br>แล้ว<b>ลงจอดบนดาดฟ้า</b>เพื่อเก็บ · ระวังชนตึก!<br>💨 บินเฉียดตึกแบบไม่ชน = ได้เหรียญโบนัสค่าความกล้า!</small>',
-    hint:'W/S เอียงหน้า-หลัง · A/D สไลด์ · Q/E หันหัว · Space ขึ้น · Shift ลง · จอดเบาๆ บนดาดฟ้าเพื่อเก็บตัวอักษร',
+    intro:'🚁 <b>โลกเฮลิคอปเตอร์ Bell!</b><br><small>เริ่มแบบ<b>เดินเท้า</b>ในเมือง — เลือกทางของหนูเอง:<br>🔴 เดินไปหา<b>เฮลิฯ สีแดง</b>ลานกลาง = ขับเองเต็มระบบ<br>🛗 เข้า<b>ตึกป้ายเขียว</b> ขึ้นลิฟต์ → นั่ง<b>เฮลิฯ สีฟ้า</b>ชมวิวริมหน้าต่าง → กด 🪂 <b>โดดวิงสูท</b>ร่อนเก็บตัวอักษรระหว่างตึก!</small>',
+    hint:'เดิน: WASD+เมาส์มอง · ขับ: W/S เอียง A/D สไลด์ Q/E หัน Space ขึ้น Shift ลง · วิงสูท: W ก้มดิ่ง S เชิด A/D เลี้ยว',
     koTitle:'🚁💥 เฮลิคอปเตอร์พังแล้ว!',
   },
   drone: {
@@ -1615,7 +1615,8 @@ function buildScene(md){
       beacons.push({m,ph:i*.37});                    // ph = เฟสคนละจังหวะ ไม่วาบพร้อมกัน
     });
     worlds[md]={scene:sc, trees:tr, buildings:list, ads, lights:{hemi,sun},
-                night:{stars,moon}, beacons};        // 🌙 ของตกแต่งกลางคืน (fogUpdate/tickHeli คุม)
+                night:{stars,moon}, beacons,         // 🌙 ของตกแต่งกลางคืน (fogUpdate/tickHeli คุม)
+                foot:buildHeliFoot(sc,list)};        // 🚶 รอบ 354: ของโหมดเดินเท้า (ตึกเทอร์มินัล/ลิฟต์/เฮลิฯ จอด)
     return;
   }else if(md==='drone'){
     // 🛸 เมืองตึกร้าง: ตึกกลวงมีหน้าต่าง บินลอดเข้าไปเก็บตัวอักษรในห้องต่างๆ
@@ -3326,6 +3327,25 @@ function buildDom(){
   #adv-light small{display:block;font-size:9px;letter-spacing:.02em}
   .adv-heli #adv-light{display:block}
   #adv-light:active{background:rgba(124,200,255,.28)}
+  /* 🚶🪂 รอบ 354: เฟสเดินเท้าในโลกเฮลิฯ */
+  #adv-wing,#adv-tour{position:absolute;bottom:10px;display:none;pointer-events:auto;z-index:7;
+    width:64px;padding:6px 0 4px;border-radius:12px;border:1px solid rgba(255,213,79,.65);
+    background:rgba(40,28,0,.78);color:#ffe9a8;font-size:19px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(255,213,79,.6)}
+  #adv-wing{right:14px} #adv-tour{right:86px}
+  #adv-wing small,#adv-tour small{display:block;font-size:9px;letter-spacing:.02em}
+  #adv-wing:active,#adv-tour:active{background:rgba(255,213,79,.3)}
+  .adv-heli.show-wing #adv-wing{display:block}
+  .adv-heli.show-tour #adv-tour{display:block}
+  /* เฟสเดิน/นั่ง/วิงสูท = ไม่ใช่นักบิน → ซ่อนกรอบค็อกพิต/กระจก/ปุ่มนักบินทั้งชุด */
+  .adv-heli.hfoot #adv-cockpit,.adv-heli.hfoot #adv-glass,.adv-heli.hfoot #adv-wiper,
+  .adv-heli.hfoot #adv-seat,.adv-heli.hfoot #adv-visor,.adv-heli.hfoot #adv-light,
+  .adv-heli.hfoot #adv-skipstart{display:none}
+  .adv-heli.hfoot #adv-board{top:8px}                /* ไม่มีกล้องใต้ท้องมุมซ้ายบน — กระดานกลับขึ้นบนสุด */
+  #adv-liftfx{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none;z-index:8;
+    display:flex;align-items:center;justify-content:center;color:#b9ffdd;font-weight:800;font-size:18px;
+    transition:opacity .35s ease}
+  #adv-liftfx.on{opacity:1;pointer-events:auto}
   #adv-wiper{right:78px} #adv-seat{right:14px}
   .adv-heli #adv-wiper,.adv-heli #adv-seat{display:block}
   #adv-wiper:active,#adv-seat:active{background:rgba(124,200,255,.28)}
@@ -4100,6 +4120,8 @@ function buildDom(){
     <button id="adv-skipstart">⏭ ข้ามการสตาร์ทเครื่อง</button>
     <button id="adv-visor">🕶️<small>ม่านบังแดด</small></button>
     <button id="adv-light">💡<small>ไฟส่อง</small></button>
+    <button id="adv-wing">🪂<small>โดดวิงสูท</small></button>
+    <button id="adv-tour">🛬<small>จบทัวร์</small></button>
     <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
@@ -4541,6 +4563,14 @@ function buildDom(){
   overlayEl.querySelector('#adv-light').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setHeliLight(!heliLightOn);
   });
+  overlayEl.querySelector('#adv-wing').addEventListener('click',e=>{   // 🪂 โดดจากเฮลิฯ ทัวร์ หรือจากขอบดาดฟ้า
+    e.preventDefault();
+    if(hPhase==='ride') beginWing(true);
+    else if(hPhase==='walk') beginWing(false);
+  });
+  overlayEl.querySelector('#adv-tour').addEventListener('click',e=>{
+    e.preventDefault(); if(hPhase==='ride') endRide(true);
+  });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
   overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
@@ -4625,7 +4655,7 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -4647,8 +4677,9 @@ function bindInput(){
           if(M.drive){
             // โหมดขับรถ: ลากขวา = ชะโงกมองซ้าย-ขวาชั่วคราว (ปล่อยแล้วเด้งกลับมองหน้า)
             dLook=Math.max(-1.35,Math.min(1.35,dLook-(t.clientX-lookTouch.x)*.006));
-          }else if(M.heli||M.drone){
-            // โหมดบิน: ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (throttle/collective)
+          }else if((M.heli&&hPhase==='pilot')||M.drone){
+            // โหมดบิน (ขับเอง): ลากขวาแนวนอน = หันหัว · แนวตั้ง = ขึ้น/ลง (throttle/collective)
+            // 🚶 รอบ 354: เฟสเดิน/นั่ง/วิงสูทของโลกเฮลิฯ ตกไปใช้ look ปกติข้างล่างแทน
             yaw-=(t.clientX-lookTouch.x)*(M.drone?.005:.004);
             hCol=Math.max(-1,Math.min(1,hCol-(t.clientY-lookTouch.y)*.012));
           }else{
@@ -6345,6 +6376,339 @@ function mailTick(now){
   const p=.5+.5*Math.sin(now/320);                  // เสาแสงหายใจ มองแล้วรู้ว่าเป็นเป้า
   mailMk._col.material.opacity=.14+.2*p;
   mailMk._ring.material.opacity=.5+.45*p;
+}
+/* ============================================================
+   🚶🛗🚁🪂 โหมดเดินเท้าในเมืองเฮลิฯ (รอบ 354 — ผู้ใช้สั่ง)
+   เข้าโลกแล้ว "เริ่มเดิน" → เดินเข้าตึกเทอร์มินัล (ล็อบบี้จริง) → ลิฟต์ขึ้นดาดฟ้า →
+   ขึ้นเฮลิฯ โดยสาร นั่งริมหน้าต่างชมเมือง → กด 🪂 ใส่วิงสูทโดดร่อนเก็บตัวอักษรระหว่างตึก
+   หรือเดินไปที่เฮลิฯ สีแดงลานกลาง = ขับเองแบบเดิมครบทุกระบบ
+   hPhase: walk | lift | ride | wing | pilot
+   ============================================================ */
+const FOOT_EYE=1.55, FOOT_SPD=5.2, WING_COLLECT=3.4, RIDE_SPD=8.5;
+let hPhase='walk', termB=null, liftUntil=0, liftToRoof=true, liftEl=null;
+let rideWp=[], rideIdx=0, ridePos={x:0,y:0,z:0}, rideYaw=0, paxSnd=null;
+let wSpd=12, wP=0, wBank=0, _footHintAt=0;
+/* เฮลิคอปเตอร์ low-poly ประกอบจากกล่อง (พอเห็นว่าเป็น ฮ. — เด็กโอเค ไม่ต้องโหลดโมเดล) */
+function heliMeshBuild(col){
+  const g=new THREE.Group();
+  const bm=new THREE.MeshLambertMaterial({color:col});
+  const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.5,3.6),bm); body.position.y=1.15; g.add(body);
+  const nose=new THREE.Mesh(new THREE.BoxGeometry(1.5,.9,1.0),
+    new THREE.MeshLambertMaterial({color:0x9fd8f0})); nose.position.set(0,1.35,-2.0); g.add(nose);
+  const tail=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,3.2),bm); tail.position.set(0,1.5,3.2); g.add(tail);
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(.1,1.0,.6),bm); fin.position.set(0,2.0,4.6); g.add(fin);
+  const rotor=new THREE.Mesh(new THREE.BoxGeometry(7.4,.07,.32),dk); rotor.position.y=2.15; g.add(rotor);
+  [[-.75],[.75]].forEach(([sx])=>{
+    const sk=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,3.0),dk); sk.position.set(sx,.22,0); g.add(sk);
+  });
+  g._rotor=rotor;
+  return g;
+}
+/* สร้างของโหมดเดินครั้งเดียวตอน buildScene: เลือกตึกเทอร์มินัล เจาะประตู ทำล็อบบี้+ลิฟต์+เฮลิฯ 2 ลำ */
+function buildHeliFoot(sc,list){
+  let term=null,td=1e9;
+  list.forEach(b=>{ const d=Math.hypot(b.x,b.z); if(b.h>=12&&d<td){td=d;term=b;} });
+  if(!term) term=list[0];
+  // ประตูอยู่ผนังด้านที่หันเข้าลานกลาง (แกนที่ห่างจากศูนย์มากสุด)
+  const ax=Math.abs(term.x)>=Math.abs(term.z)?'x':'z';
+  const dir=ax==='x'?(term.x>0?-1:1):(term.z>0?-1:1);
+  const doorC=ax==='x'
+    ? {x:term.x+dir*term.w/2, z:term.z}
+    : {x:term.x, z:term.z+dir*term.d/2};
+  const IN=.18, CH=3.4;                              // ผนังในเยื้องเข้า · เพดานล็อบบี้สูง 3.4
+  const wallM=new THREE.MeshBasicMaterial({color:0x23262e,side:THREE.DoubleSide});
+  const w2=term.w/2-IN, d2=term.d/2-IN;
+  // พื้น+เพดานล็อบบี้ (Basic = ไม่ง้อแสง ในตึกสว่างพอมองเห็น)
+  const flo=new THREE.Mesh(new THREE.PlaneGeometry(term.w-IN*2,term.d-IN*2),
+    new THREE.MeshBasicMaterial({color:0x383d47}));
+  flo.rotation.x=-Math.PI/2; flo.position.set(term.x,.05,term.z); sc.add(flo);
+  const cei=new THREE.Mesh(new THREE.PlaneGeometry(term.w-IN*2,term.d-IN*2),
+    new THREE.MeshBasicMaterial({color:0x1b1e24}));
+  cei.rotation.x=Math.PI/2; cei.position.set(term.x,CH,term.z); sc.add(cei);
+  // ผนังใน 4 ด้าน (ด้านประตูเว้นช่องกว้าง 2.6)
+  const mkWall=(w,h,x,z,ry)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),wallM);
+    m.position.set(x,h/2,z); m.rotation.y=ry; sc.add(m); return m; };
+  const G=1.3;                                       // ครึ่งความกว้างประตู
+  if(ax==='x'){
+    mkWall(term.d-IN*2,CH,term.x-dir*w2,term.z,Math.PI/2);            // ผนังหลัง (ตรงข้ามประตู)
+    mkWall(term.w-IN*2,CH,term.x,term.z-d2,0);                        // ผนังข้าง 2 ด้าน
+    mkWall(term.w-IN*2,CH,term.x,term.z+d2,0);
+    const seg=(term.d-IN*2)/2-G;                                      // ผนังประตู 2 ท่อนขนาบช่อง
+    mkWall(seg,CH,term.x+dir*w2,term.z-(G+seg/2),Math.PI/2);
+    mkWall(seg,CH,term.x+dir*w2,term.z+(G+seg/2),Math.PI/2);
+  }else{
+    mkWall(term.w-IN*2,CH,term.x,term.z-dir*d2,0);
+    mkWall(term.d-IN*2,CH,term.x-w2,term.z,Math.PI/2);
+    mkWall(term.d-IN*2,CH,term.x+w2,term.z,Math.PI/2);
+    const seg=(term.w-IN*2)/2-G;
+    mkWall(seg,CH,term.x-(G+seg/2),term.z+dir*d2,0);
+    mkWall(seg,CH,term.x+(G+seg/2),term.z+dir*d2,0);
+  }
+  // ป้าย 🛗 เหนือประตู (canvas texture — เห็นแต่ไกลว่าตึกนี้เข้าได้)
+  const sc2=document.createElement('canvas'); sc2.width=256; sc2.height=96;
+  const g2=sc2.getContext('2d');
+  g2.fillStyle='#0d3527'; g2.fillRect(0,0,256,96);
+  g2.strokeStyle='#39ffb2'; g2.lineWidth=5; g2.strokeRect(4,4,248,88);
+  g2.fillStyle='#b9ffdd'; g2.font='700 44px system-ui'; g2.textAlign='center'; g2.textBaseline='middle';
+  g2.fillText('🛗 ขึ้นดาดฟ้า',128,50);
+  const sign=new THREE.Mesh(new THREE.PlaneGeometry(4.4,1.65),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc2),transparent:true,side:THREE.DoubleSide}));
+  sign.position.set(doorC.x+(ax==='x'?dir*.12:0), 4.4, doorC.z+(ax==='z'?dir*.12:0));
+  sign.rotation.y=ax==='x'?(dir>0?Math.PI/2:-Math.PI/2):(dir>0?0:Math.PI);
+  sc.add(sign);
+  // แผ่นลิฟต์เรืองแสง: ในล็อบบี้ (ชิดผนังหลัง) + จุดเดียวกันบนดาดฟ้า (ขาลง)
+  const liftIn=ax==='x'? {x:term.x-dir*(w2-1.6), z:term.z} : {x:term.x, z:term.z-dir*(d2-1.6)};
+  const mkPad=(y)=>{ const p=new THREE.Mesh(new THREE.CircleGeometry(1.15,20),
+      new THREE.MeshBasicMaterial({color:0x39ffb2,transparent:true,opacity:.5}));
+    p.rotation.x=-Math.PI/2; p.position.set(liftIn.x,y,liftIn.z); sc.add(p); return p; };
+  const padG=mkPad(.09), padR=mkPad(term.h+.09);
+  // 🚁 เฮลิฯ นักบิน (แดง) จอดลานกลาง · เฮลิฯ โดยสาร (ฟ้า) จอดดาดฟ้าเทอร์มินัล
+  const pilotH=heliMeshBuild(0xd8342e); pilotH.position.set(0,.03,0); pilotH.rotation.y=.6; sc.add(pilotH);
+  const paxH=heliMeshBuild(0x2f7fd4);
+  const paxPos={x:term.x+(ax==='x'?dir*1.2:2.2), y:term.h+.03, z:term.z+(ax==='z'?dir*1.2:2.2)};
+  paxH.position.set(paxPos.x,paxPos.y,paxPos.z); sc.add(paxH);
+  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos};
+}
+/* พื้นสำหรับ "คนเดิน" — ต่างจาก heliFloorAt: นับดาดฟ้าเฉพาะเมื่อผู้เล่นอยู่สูงระดับนั้นจริง
+   (ไม่งั้นก้าวเข้าล็อบบี้ชั้นล่างจะโดนดีดขึ้นดาดฟ้าทันที เพราะ heliFloorAt มองตึกทึบทั้งก้อน) */
+function footFloorAt(x,z,py){
+  let f=0;
+  for(const b of buildings){
+    if(Math.abs(x-b.x)<=b.w/2+.3 && Math.abs(z-b.z)<=b.d/2+.3 && py>b.h-1.2 && b.h>f) f=b.h;
+  }
+  return f;
+}
+function insideTerm(x,z,m){ m=m||0; return Math.abs(x-termB.x)<=termB.w/2-m && Math.abs(z-termB.z)<=termB.d/2-m; }
+function inDoorZone(x,z){
+  const F=worlds.heli.foot;
+  return Math.abs(x-F.doorC.x)<=1.35 && Math.abs(z-F.doorC.z)<=1.35;
+}
+function footHint(msg){ if(hudInstEl) hudInstEl.textContent=msg; }
+function setFootBtns(wing,tour){
+  overlayEl.classList.toggle('show-wing',!!wing);
+  overlayEl.classList.toggle('show-tour',!!tour);
+}
+/* 🛗 ลิฟต์: เฟดดำสั้นๆ แล้วโผล่ปลายทาง (ขึ้นดาดฟ้า/ลงล็อบบี้) */
+function liftStart(up,now){
+  hPhase='lift'; liftToRoof=up; liftUntil=now+1300;
+  if(!liftEl){
+    liftEl=document.createElement('div');
+    liftEl.id='adv-liftfx';
+    overlayEl.appendChild(liftEl);
+  }
+  liftEl.textContent=up?'🛗 กำลังขึ้นลิฟต์ไปดาดฟ้า...':'🛗 กำลังลงลิฟต์ไปล็อบบี้...';
+  liftEl.classList.add('on');
+  sfx.select();
+}
+function beginRide(){
+  const F=worlds.heli.foot;
+  hPhase='ride';
+  ridePos={x:F.paxPos.x, y:F.paxPos.y+1, z:F.paxPos.z};
+  rideWp=[ {x:0,y:26,z:0}, {x:-30,y:20,z:26}, {x:34,y:23,z:20},
+           {x:22,y:18,z:-30}, {x:-26,y:24,z:-18}, {x:termB.x,y:termB.h+9,z:termB.z} ];
+  rideIdx=0; rideYaw=0;
+  yaw=rideYaw-Math.PI/2;                            // มองออกหน้าต่างขวาเป็นมุมตั้งต้น (ลากมองรอบได้)
+  pitch=-.08;
+  showBanner('🚁 ออกบินชมเมือง! นั่งริมหน้าต่าง ลากจอมองวิวได้ · พร้อมเมื่อไหร่กด 🪂 โดดวิงสูท');
+  try{                                              // เสียงใบพัดเบาๆ ในห้องโดยสาร (มีไฟล์ค่อยเล่น)
+    if(HeliSound.files.rotor){ HeliSound.ensureCtx(); paxSnd=HeliSound.playBuf(HeliSound.files.rotor,{loop:true,vol:.15}); }
+  }catch(e){}
+}
+function endRide(backToRoof){
+  const F=worlds.heli.foot;
+  try{ if(paxSnd){ paxSnd.src.stop(); paxSnd=null; } }catch(e){}
+  F.paxH.position.set(F.paxPos.x,F.paxPos.y,F.paxPos.z); F.paxH.rotation.y=0;
+  if(backToRoof){
+    hPhase='walk';
+    camera.position.set(F.paxPos.x+1.5, termB.h+FOOT_EYE, F.paxPos.z+1.5);
+    showBanner('🛬 จบทัวร์ กลับดาดฟ้าเทอร์มินัล');
+  }
+}
+function beginWing(fromRide){
+  if(fromRide) endRide(false);
+  hPhase='wing';
+  wSpd=fromRide?13:9; wP=0; wBank=0;
+  if(fromRide){ yaw=rideYaw; camera.position.y-=1; }
+  pitch=0;
+  showBanner('🪂 วิงสูทกาง! W ก้มดิ่งเร่ง · S เชิดร่อน · A/D เลี้ยว · บินเฉียดเก็บตัวอักษรได้เลย!');
+  sfx.levelup();
+}
+/* ขับเองแบบเดิม — เดินถึงเฮลิฯ แดงลานกลางแล้วเรียกอันนี้ (ยกมาจาก init เดิมของโลก) */
+function beginPilot(){
+  const F=worlds.heli.foot;
+  hPhase='pilot';
+  overlayEl.classList.remove('hfoot'); setFootBtns(false,false);
+  if(F) F.pilotH.visible=false;                      // เราขึ้นไปนั่งแล้ว — ซ่อนลำที่จอดโชว์
+  camera.position.set(0,HELI_SKID,0);
+  yaw=.6; pitch=0;
+  hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
+  hAtcCleared=false; ATC.reset();
+  HeliSound.start();
+  hViewSwitched=false; setSeat(0);
+  layoutCockpit();
+  showBanner('🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
+}
+/* วาดกรอบหน้าต่างห้องโดยสาร (เฟส ride) บน canvas เข็ม — เจาะช่องหน้าต่างมนตรงกลาง */
+function drawCabinWindow(){
+  if(!gaugeCtx) return;
+  const c=gaugeCtx, dpr=Math.min(window.devicePixelRatio||1,2);
+  const W=window.innerWidth, H=window.innerHeight;
+  c.save(); c.setTransform(dpr,0,0,dpr,0,0);
+  const mx=W*.09, my=H*.1, r=Math.min(W,H)*.16;
+  c.fillStyle='#14171d';
+  c.beginPath();
+  c.rect(0,0,W,H);
+  if(c.roundRect) c.roundRect(mx,my,W-mx*2,H-my*2,r);
+  else c.rect(mx,my,W-mx*2,H-my*2);
+  c.fill('evenodd');
+  c.strokeStyle='#3a4150'; c.lineWidth=5;
+  c.beginPath();
+  if(c.roundRect) c.roundRect(mx+3,my+3,W-mx*2-6,H-my*2-6,r*.94); else c.rect(mx+3,my+3,W-mx*2-6,H-my*2-6);
+  c.stroke();
+  c.fillStyle='#9aa5b5'; c.font='700 12px system-ui'; c.textAlign='left';
+  c.fillText('💺 ที่นั่งริมหน้าต่าง · ลากจอมองวิว',mx+14,H-my-12);
+  c.restore();
+}
+function tickHeliFoot(dt,now){
+  const F=worlds.heli&&worlds.heli.foot; if(!F) return;
+  if(gaugeCtx){ gaugeCtx.setTransform(1,0,0,1,0,0); gaugeCtx.clearRect(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height); }
+  fogUpdate(now);                                    // 🌫️🌙 บรรยากาศ+ไฟกลางคืนทำงานทุกเฟสเหมือนกัน
+  const bcs=worlds.heli.beacons;
+  if(bcs){ const bOn=heliNight>.25;
+    for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
+  F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
+  const p=camera.position;
+  // ── 🛗 ลิฟต์ ──
+  if(hPhase==='lift'){
+    if(now>=liftUntil){
+      liftEl.classList.remove('on');
+      camera.position.set(F.liftIn.x+(liftToRoof?1.6:1.6), (liftToRoof?termB.h:0)+FOOT_EYE, F.liftIn.z);
+      hPhase='walk';
+      showBanner(liftToRoof?'🛗 ถึงดาดฟ้าแล้ว! เดินไปขึ้นเฮลิคอปเตอร์สีฟ้าได้เลย':'🛗 ถึงล็อบบี้ชั้นล่าง');
+    }
+    return;
+  }
+  // ── 🚁 นั่งริมหน้าต่าง (ทัวร์อัตโนมัติ) ──
+  if(hPhase==='ride'){
+    const wp=rideWp[rideIdx];
+    const dx=wp.x-ridePos.x, dy=wp.y-ridePos.y, dz=wp.z-ridePos.z;
+    const dd=Math.hypot(dx,dz);
+    if(dd<3){ rideIdx=(rideIdx+1)%rideWp.length; }
+    else{
+      const tgtYaw=Math.atan2(-dx,-dz);              // หัวเครื่องชี้ทาง (forward = -sin,-cos)
+      let dyaw=tgtYaw-rideYaw;
+      while(dyaw>Math.PI) dyaw-=Math.PI*2; while(dyaw<-Math.PI) dyaw+=Math.PI*2;
+      rideYaw+=dyaw*Math.min(1,dt*1.4);
+      ridePos.x+=(dx/dd)*RIDE_SPD*dt; ridePos.z+=(dz/dd)*RIDE_SPD*dt;
+      ridePos.y+=Math.max(-3,Math.min(3,dy))*dt*.9;
+    }
+    F.paxH.position.set(ridePos.x,ridePos.y-1.6,ridePos.z);
+    F.paxH.rotation.y=rideYaw;
+    F.paxH._rotor.rotation.y+=dt*28;
+    const rgt={x:Math.cos(rideYaw),z:-Math.sin(rideYaw)};            // เวกเตอร์ด้านขวาของหัวเครื่อง
+    camera.position.set(ridePos.x+rgt.x*.8, ridePos.y+.3, ridePos.z+rgt.z*.8);
+    camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.8);
+    drawCabinWindow();
+    setFootBtns(true,true);
+    footHint('💺 นั่งชมวิวริมหน้าต่าง · 🪂 = โดดวิงสูท · 🛬 = จบทัวร์กลับดาดฟ้า');
+    return;
+  }
+  // ── 🪂 วิงสูท ──
+  if(hPhase==='wing'){
+    let dv=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+    let bk=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+    if(joy.on){ dv=-joy.dy; bk=joy.dx; }
+    wP+=(dv-wP)*Math.min(1,dt*4);
+    wBank+=(bk-wBank)*Math.min(1,dt*5);
+    yaw-=wBank*1.5*dt;
+    wSpd+=(Math.max(0,wP)*16-(wSpd-13)*.5)*dt;
+    wSpd=Math.max(7,Math.min(30,wSpd));
+    const vy=-(2.4+Math.max(0,wP)*11+Math.min(0,wP)*1.7);            // ก้ม=ดิ่งเร็ว · เชิด=ร่อนช้าลง
+    const sin=Math.sin(yaw),cos=Math.cos(yaw);
+    let nx=p.x-sin*wSpd*dt, nz=p.z-cos*wSpd*dt, ny=p.y+vy*dt;
+    nx=Math.max(-HALF+1,Math.min(HALF-1,nx)); nz=Math.max(-HALF+1,Math.min(HALF-1,nz));
+    for(const b of buildings){                       // ชนข้างตึก = เจ็บ+เด้ง (สูตรเดียวกับตอนขับ)
+      if(Math.abs(nx-b.x)<=b.w/2+.5 && Math.abs(nz-b.z)<=b.d/2+.5 && ny<b.h-.5){
+        const pushX=(nx>b.x?1:-1)*((b.w/2+.7)-Math.abs(nx-b.x));
+        const pushZ=(nz>b.z?1:-1)*((b.d/2+.7)-Math.abs(nz-b.z));
+        if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
+        if(now-hHitAt>900){ hHitAt=now; damagePlayer(12); sfx.wrong(); }
+        wSpd*=.45;
+        break;
+      }
+    }
+    const floor=heliFloorAt(nx,nz);
+    if(ny<=floor+1.4){                               // ถึงพื้น/ดาดฟ้า = จบการร่อน
+      camera.position.set(nx,floor+FOOT_EYE,nz);
+      hPhase='walk'; pitch=0;
+      if(wSpd>21){ damagePlayer(10); showBanner('🪂💥 ลงแรงไปหน่อย! เชิดหัว (S) ก่อนถึงพื้นนะ'); }
+      else showBanner('🪂 ลงพื้นสวยงาม! เดินเก็บของต่อหรือหาทางขึ้นตึกใหม่ได้เลย');
+      return;
+    }
+    camera.position.set(nx,ny,nz);
+    camera.rotation.set(0,0,0);
+    camera.rotateY(yaw);
+    camera.rotateX(-.18-wP*.42+pitch*.3);
+    camera.rotateZ(-wBank*.45);
+    for(let i=letters.length-1;i>=0;i--){            // บินเฉียดเก็บตัวอักษร (จุดขายของวิงสูท — ไม่ต้องจอด)
+      const lp=letters[i].spr.position;
+      if(Math.hypot(lp.x-nx,lp.y-ny,lp.z-nz)<WING_COLLECT) pickUpLetter(i);
+    }
+    letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
+    setFootBtns(false,false);
+    footHint(`🪂 ⛰️ ${Math.max(0,ny-floor).toFixed(0)}m · 🚀 ${Math.round(wSpd*3.6)} กม./ชม. · W ก้มดิ่ง · S เชิดร่อน · A/D เลี้ยว`);
+    return;
+  }
+  // ── 🚶 เดิน (พื้นเมือง / ในล็อบบี้ / บนดาดฟ้า) ──
+  let fw=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
+  let sd=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
+  if(joy.on){ fw=-joy.dy; sd=joy.dx; }
+  const sin=Math.sin(yaw),cos=Math.cos(yaw);
+  let nx=p.x+(-sin*fw+cos*sd)*FOOT_SPD*dt;
+  let nz=p.z+(-cos*fw-sin*sd)*FOOT_SPD*dt;
+  nx=Math.max(-HALF+1,Math.min(HALF-1,nx)); nz=Math.max(-HALF+1,Math.min(HALF-1,nz));
+  const curFloor=footFloorAt(p.x,p.z,p.y), onRoof=p.y>curFloor-1&&curFloor>2;
+  for(const b of buildings){
+    const inN=Math.abs(nx-b.x)<=b.w/2+.3 && Math.abs(nz-b.z)<=b.d/2+.3;
+    if(!inN) continue;
+    if(p.y>b.h-1) continue;                          // ยืนบนดาดฟ้าตึกนี้อยู่ — ไม่ใช่การชนผนัง
+    if(b===termB){                                   // ตึกเทอร์มินัล: ทะลุผนังได้เฉพาะช่องประตู
+      const wasIn=insideTerm(p.x,p.z), willIn=insideTerm(nx,nz);
+      if(wasIn===willIn) continue;                   // อยู่ฝั่งเดิม (ในล็อบบี้/นอกตึก) เดินต่อได้
+      if(inDoorZone(nx,nz)||inDoorZone(p.x,p.z)) continue;
+      nx=p.x; nz=p.z; break;
+    }
+    const pushX=(nx>b.x?1:-1)*((b.w/2+.4)-Math.abs(nx-b.x));
+    const pushZ=(nz>b.z?1:-1)*((b.d/2+.4)-Math.abs(nz-b.z));
+    if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
+  }
+  const newFloor=footFloorAt(nx,nz,p.y);
+  if(onRoof && curFloor-newFloor>2){ nx=p.x; nz=p.z; }              // ราวกันตกที่ขอบดาดฟ้า
+  camera.position.set(nx,footFloorAt(nx,nz,p.y)+FOOT_EYE,nz);
+  camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.9);
+  // ── จุดโต้ตอบ ──
+  const dLift=Math.hypot(nx-F.liftIn.x,nz-F.liftIn.z);
+  const dPilot=Math.hypot(nx,nz);
+  const dPax=Math.hypot(nx-F.paxPos.x,nz-F.paxPos.z);
+  const glow=.35+.3*(.5+.5*Math.sin(now/300));
+  F.padG.material.opacity=glow; F.padR.material.opacity=glow;
+  if(insideTerm(nx,nz,-.3)&&camera.position.y<3.2){
+    if(dLift<1.2){ liftStart(true,now); return; }
+    footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
+  }else if(onRoof&&insideTerm(nx,nz,-1)){
+    if(dLift<1.2){ liftStart(false,now); return; }
+    if(dPax<2.6){ beginRide(); return; }
+    footHint('🚁 เดินเข้าหาเฮลิฯ สีฟ้า = ขึ้นนั่งชมวิว · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
+  }else if(dPilot<3.6&&camera.position.y<3){
+    if(dPilot<2.1){ beginPilot(); return; }
+    footHint('🚁 เดินชิดเฮลิฯ สีแดงอีกนิด = ขึ้นขับเอง!');
+  }else if(now>_footHintAt){
+    _footHintAt=now+400;
+    footHint(onRoof?'🚶 บนดาดฟ้า · กด 🪂 โดดวิงสูทได้เลย!'
+      :'🚶 เดินสำรวจเมือง · ตึกป้าย 🛗 = ขึ้นดาดฟ้ารอเฮลิฯ · เฮลิฯ แดงลานกลาง = ขับเอง');
+  }
+  setFootBtns(onRoof&&curFloor>6,false);             // บนดาดฟ้าสูงพอ = โชว์ปุ่มโดดวิงสูท
 }
 function tickHeli(dt,now){
   // ---- อ่านอินพุต ----
@@ -8315,7 +8679,7 @@ function loop(){
   if(!running) return;
   rafId=requestAnimationFrame(loop);
   const dt=Math.min(clock.getDelta(),.1), now=performance.now();
-  if(M.heli){ tickHeli(dt,now); }
+  if(M.heli){ if(hPhase==='pilot') tickHeli(dt,now); else tickHeliFoot(dt,now); }   // 🚶 รอบ 354: เฟสเดินเท้า/นั่ง/วิงสูท
   else if(M.drone){ tickDrone(dt,now); }
   else if(M.drive){ tickDrive(dt,now); }
   else if(M.soccer){ tickSoccer(dt,now); }
@@ -8334,7 +8698,7 @@ function loop(){
   sendPos(false);
   drawMinimap();
   renderer.render(scene,camera);
-  if(M.heli) drawBellyCam();            // 📹 เรนเดอร์ซ้ำอีกรอบด้วยกล้องมองลงพื้น ยัดลงมุมจอ
+  if(M.heli&&hPhase==='pilot') drawBellyCam();   // 📹 กล้องใต้ท้อง — เฉพาะตอนขับเอง (เฟสเดิน/นั่ง/วิงสูทไม่มี)
   if(shotWanted) grabShot();                       // 📸 ต้องอ่าน canvas ทันทีหลัง render (บัฟเฟอร์ไม่ถูกเก็บไว้)
 }
 /* 📸 เก็บภาพเฟรมที่เพิ่งเรนเดอร์ → เด้งการ์ดพรีวิว (บันทึกลงเครื่องได้) */
@@ -8607,7 +8971,14 @@ function start(md){
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
   if(mode==='heli'){
-    HeliSound.start();
+    // 🚶 รอบ 354: เข้าโลกแล้ว "เริ่มเดินเท้า" — เครื่องยนต์ยังไม่สตาร์ท (beginPilot ค่อยสตาร์ทตอนเดินไปขึ้นเฮลิฯ แดง)
+    hPhase='walk';
+    termB=worlds.heli.foot.term;
+    worlds.heli.foot.pilotH.visible=true;                 // ลำที่จอดโชว์กลับมา (เผื่อรอบก่อนขับอยู่)
+    endRide(false);                                       // เฮลิฯ โดยสารกลับที่จอดดาดฟ้า + ตัดเสียงค้าง
+    overlayEl.classList.add('hfoot'); setFootBtns(false,false);
+    camera.position.set(1.5,FOOT_EYE,9);                  // เกิดริมลานกลาง มองเห็นเฮลิฯ แดง+เมือง
+    HeliSound.probe();                                    // โหลดไฟล์เสียงรอไว้ (ใช้ทั้งตอนขับและเสียงห้องโดยสาร)
     hViewSwitched=false;
     setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
     setWiper(0); setVisor(false); setHeliLight(false);    // 🌧️🕶️💡 เข้าโลกใหม่ = ที่ปัด/ม่าน/ไฟ ปิดเสมอ
@@ -8665,6 +9036,7 @@ function exitWorld(){
   HSound.stopAll();
   // 🛬 ออกจากโลกเฮลิฯ = ดับเครื่อง (ใบพัดค่อยๆ ช้าลงจนหยุด) แทนตัดเสียงห้วนๆ
   if(mode==='heli' && state.sound && HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
+  try{ if(paxSnd){ paxSnd.src.stop(); paxSnd=null; } }catch(e){}   // 🚁💺 รอบ 354: ตัดเสียงห้องโดยสารถ้าออกกลางทัวร์
   DroneSound.stop();
   CarSound.stop();
   ATC.reset();
@@ -8710,7 +9082,7 @@ window.Adventure3D={
                         // 🌧️☀️🎚️💧🕶️📹 testkit: ที่ปัด / แสงแดด / มุมมอง / ฝน / ม่าน / กล้องใต้ท้อง
                         get wiper(){return wiperMode}, setWiper,
                         get seat(){return seatLevel}, setSeat,
-                        get yaw(){return yaw}, setSun:v=>{sunDir=v},
+                        get yaw(){return yaw}, setYaw:v=>{yaw=v}, setSun:v=>{sunDir=v},
                         get drops(){return drops.length},
                         // ⚠️ ต้องตั้ง rainUntilAt ด้วย ไม่งั้น rainTick เห็นว่าหมดเวลาแล้วปิดฝนทันที
                         rain:on=>{ rainOn=on; rainUntilAt=on?performance.now()+3e5:0;
@@ -8742,6 +9114,12 @@ window.Adventure3D={
                         get beacons(){const B=worlds.heli&&worlds.heli.beacons;return B?B.map(b=>({vis:b.m.visible,op:+b.m.material.opacity.toFixed(2)})):null},
                         get mail(){return {on:mailOn,count:mailCount,tgt:mailTgt?{x:mailTgt.b.x,z:mailTgt.b.z,h:mailTgt.b.h,w:mailTgt.b.w,d:mailTgt.b.d}:null}},
                         mailGo:mailStart, mailEnd:mailStop,
+                        // 🚶🪂 รอบ 354: เฟสเดินเท้า
+                        get phase(){return hPhase},
+                        get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos}:null},
+                        goPilot:beginPilot, goRide:beginRide, goWing:beginWing,
+                        rideEnd:endRide, footTick:(dt)=>tickHeliFoot(dt||.016,performance.now()),
+                        get wing(){return {spd:+wSpd.toFixed(1),p:+wP.toFixed(2)}},
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),   // รัน tickHeli 1 สเต็ป (assistTgt/ไฟ คำนวณในนี้)
                         sunAt:h=>{
                           const t=Math.max(0,Math.min(1,(h-6)/12));
@@ -8789,7 +9167,7 @@ window.Adventure3D={
     setDriveSpeed(v){ dSpeed=v; },   // 🚔 รอบ 128: testkit — inject ความเร็วตรงๆ (เทสต์ใบสั่ง/เกจ ไม่ต้องขับตามถนนจริง)
     step(dt){                        // เดินเกม 1 เฟรมเอง — rAF ไม่ fire ใน preview ที่มองไม่เห็นหน้าต่าง
       const now=performance.now(); dt=dt||.016;
-      if(M.heli){ tickHeli(dt,now); }
+      if(M.heli){ if(hPhase==='pilot') tickHeli(dt,now); else tickHeliFoot(dt,now); }
       else if(M.drone){ tickDrone(dt,now); }
       else if(M.drive){ tickDrive(dt,now); }
       else if(M.soccer){ tickSoccer(dt,now); }
