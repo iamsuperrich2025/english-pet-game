@@ -6402,21 +6402,69 @@ let rideWp=[], rideIdx=0, ridePos={x:0,y:0,z:0}, rideYaw=0, paxSnd=null;
 let wSpd=12, wP=0, wBank=0, _footHintAt=0;
 const WRING_COIN=5;                                  // 💫 เหรียญฐานต่อแหวน (×คอมโบ: 5,10,15,...)
 let ringCombo=0;
-/* เฮลิคอปเตอร์ low-poly ประกอบจากกล่อง (พอเห็นว่าเป็น ฮ. — เด็กโอเค ไม่ต้องโหลดโมเดล) */
+/* 🚁 เฮลิคอปเตอร์ทรง Bell 212 (รอบ 356 — ผู้ใช้ให้ดูวิดีโอ Bell 212 Landing เป็นแบบ)
+   จุดสังเกตจริงของ 212 ที่เก็บครบ: ห้องโดยสารเหลี่ยมมน · จมูกกระจกมน+กระจกคาง ·
+   ฝาครอบเครื่อง Twin-Pac ยาวบนหลังคา+ท่อไอเสีย · ใบพัดหลัก "2 กลีบ"+flybar ถ่วง ·
+   บูมหางเรียว+แพนหางกลางบูม+ครีบตั้งเฉียง · ใบพัดหาง 2 กลีบฝั่งซ้าย · สกีลงจอด 2 ราง */
 function heliMeshBuild(col){
   const g=new THREE.Group();
-  const bm=new THREE.MeshLambertMaterial({color:col});
-  const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(1.7,1.5,3.6),bm); body.position.y=1.15; g.add(body);
-  const nose=new THREE.Mesh(new THREE.BoxGeometry(1.5,.9,1.0),
-    new THREE.MeshLambertMaterial({color:0x9fd8f0})); nose.position.set(0,1.35,-2.0); g.add(nose);
-  const tail=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,3.2),bm); tail.position.set(0,1.5,3.2); g.add(tail);
-  const fin=new THREE.Mesh(new THREE.BoxGeometry(.1,1.0,.6),bm); fin.position.set(0,2.0,4.6); g.add(fin);
-  const rotor=new THREE.Mesh(new THREE.BoxGeometry(7.4,.07,.32),dk); rotor.position.y=2.15; g.add(rotor);
-  [[-.75],[.75]].forEach(([sx])=>{
-    const sk=new THREE.Mesh(new THREE.BoxGeometry(.12,.1,3.0),dk); sk.position.set(sx,.22,0); g.add(sk);
+  const bm=new THREE.MeshLambertMaterial({color:col});                 // สีตัวถังหลัก
+  const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});            // เหล็กเข้ม (ใบพัด/สกี)
+  const gl=new THREE.MeshLambertMaterial({color:0x223744});            // กระจกเข้มอมฟ้า
+  const wt=new THREE.MeshLambertMaterial({color:0xe8e6df});            // คาดขาวใต้ท้อง (ทูโทนแบบลำจริง)
+  // ── ห้องโดยสาร: กล่องหลัก + ท้องมน + คาดสีขาว ──
+  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.25,3.1),bm); cab.position.set(0,1.28,0); g.add(cab);
+  const belly=new THREE.Mesh(new THREE.BoxGeometry(1.45,.42,2.9),wt); belly.position.set(0,.68,0); g.add(belly);
+  // ── จมูกมน (ครึ่งทรงกลมบี้) + กระจกหน้า 2 บานเอียง + กระจกคาง ──
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.78,12,9),bm);
+  nose.scale.set(1,.92,1.15); nose.position.set(0,1.05,-1.62); g.add(nose);
+  const shield=new THREE.Mesh(new THREE.BoxGeometry(1.38,.82,.07),gl);
+  shield.position.set(0,1.68,-1.46); shield.rotation.x=-.52; g.add(shield);
+  const chinL=new THREE.Mesh(new THREE.BoxGeometry(.5,.4,.07),gl);
+  chinL.position.set(-.4,.78,-1.98); chinL.rotation.x=.35; g.add(chinL);
+  const chinR=chinL.clone(); chinR.position.x=.4; g.add(chinR);
+  // ── หน้าต่างบานเลื่อนข้างลำ (ประตูสไลด์ของ 212) ──
+  [[-.81],[.81]].forEach(([sx])=>{
+    const win=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,1.5),gl);
+    win.position.set(sx,1.55,.15); g.add(win);
   });
-  g._rotor=rotor;
+  // ── ฝาครอบเครื่องยนต์ Twin-Pac บนหลังคา + ช่องรับลม + ท่อไอเสีย ──
+  const cowl=new THREE.Mesh(new THREE.BoxGeometry(.95,.5,2.5),bm); cowl.position.set(0,2.12,.45); g.add(cowl);
+  const intake=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.6),dk); intake.position.set(0,2.05,-.6); g.add(intake);
+  const exh=new THREE.Mesh(new THREE.CylinderGeometry(.15,.17,.5,8),dk);
+  exh.rotation.x=Math.PI/2-.35; exh.position.set(0,2.15,1.85); g.add(exh);
+  // ── เสาใบพัด + ใบพัดหลัก 2 กลีบ + flybar ถ่วง (เอกลักษณ์ Bell) ──
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,8),dk); mast.position.set(0,2.5,.1); g.add(mast);
+  const rotor=new THREE.Group(); rotor.position.set(0,2.72,.1);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.16,10),dk); rotor.add(hub);
+  const blade=new THREE.Mesh(new THREE.BoxGeometry(8.6,.055,.42),dk); rotor.add(blade);   // 2 กลีบ = แท่งเดียวทะลุดุม
+  const fly=new THREE.Mesh(new THREE.BoxGeometry(2.5,.04,.08),dk); fly.rotation.y=Math.PI/2; fly.position.y=-.12; rotor.add(fly);
+  [[-1.25],[1.25]].forEach(([fz])=>{ const w=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),dk);
+    w.position.set(0,-.12,fz); rotor.add(w); });
+  g.add(rotor);
+  // ── บูมหางเรียว + แพนหางกลางบูม + ครีบตั้งเฉียงหลัง ──
+  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.15,.31,3.6,9),bm);
+  boom.rotation.x=Math.PI/2; boom.position.set(0,1.62,3.25); g.add(boom);
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.7,.05,.44),bm); hstab.position.set(0,1.66,3.35); g.add(hstab);
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(.08,1.3,.62),bm);
+  fin.position.set(0,2.28,4.9); fin.rotation.x=-.16; g.add(fin);
+  // ── ใบพัดหาง 2 กลีบ "ฝั่งซ้าย" ตามลำจริง ──
+  const trot=new THREE.Group(); trot.position.set(-.17,2.42,4.98);
+  const thub=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.1,8),dk); thub.rotation.z=Math.PI/2; trot.add(thub);
+  const tblade=new THREE.Mesh(new THREE.BoxGeometry(.05,1.62,.15),dk); trot.add(tblade);
+  g.add(trot);
+  // ── สกีลงจอด: ราง 2 เส้น + ขาโค้ง 4 จุด ──
+  [[-.78],[.78]].forEach(([sx])=>{
+    const rail=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,8),dk);
+    rail.rotation.x=Math.PI/2; rail.position.set(sx,.16,-.1); g.add(rail);
+    const tip=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.55,8),dk);
+    tip.rotation.x=Math.PI/2-.7; tip.position.set(sx,.32,-1.95); g.add(tip);   // ปลายหน้างอนขึ้น
+    [[-.95],[.95]].forEach(([lz])=>{
+      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.62,8),dk);
+      leg.rotation.z=sx>0?.42:-.42; leg.position.set(sx*.82,.48,lz); g.add(leg);
+    });
+  });
+  g._rotor=rotor; g._trotor=trot;
   return g;
 }
 /* สร้างของโหมดเดินครั้งเดียวตอน buildScene: เลือกตึกเทอร์มินัล เจาะประตู ทำล็อบบี้+ลิฟต์+เฮลิฯ 2 ลำ */
@@ -6585,7 +6633,17 @@ function awardAirLetter(){
   saveState();
 }
 /* ขับเองแบบเดิม — เดินถึงเฮลิฯ แดงลานกลางแล้วเรียกอันนี้ (ยกมาจาก init เดิมของโลก) */
+let _pilotDenyAt=0;
 function beginPilot(){
+  // 🎫 รอบ 356: คนเดินเข้ามาจากแผนที่โลกผจญภัย (ไม่มีตั๋วเฮลิฯ) นั่ง/วิงสูทฟรี แต่ขับเองต้องมีตั๋ว
+  if(!state.heliTicket){
+    const now=performance.now();
+    if(now>_pilotDenyAt){ _pilotDenyAt=now+4000;
+      sfx.wrong();
+      showBanner('🎫 ขับเองต้องมีตั๋วโลกเฮลิคอปเตอร์ (ซื้อที่หน้าตลาด) — แต่นั่งโดยสาร/โดดวิงสูทฟรีนะ! ไปที่ตึกป้าย 🛗 เลย');
+    }
+    return;
+  }
   const F=worlds.heli.foot;
   hPhase='pilot';
   overlayEl.classList.remove('hfoot'); setFootBtns(false,false);
@@ -6658,6 +6716,7 @@ function tickHeliFoot(dt,now){
     F.paxH.position.set(ridePos.x,ridePos.y-1.6,ridePos.z);
     F.paxH.rotation.y=rideYaw;
     F.paxH._rotor.rotation.y+=dt*28;
+    if(F.paxH._trotor) F.paxH._trotor.rotation.x+=dt*46;   // ใบพัดหางหมุนเร็วกว่าตามจริง
     const rgt={x:Math.cos(rideYaw),z:-Math.sin(rideYaw)};            // เวกเตอร์ด้านขวาของหัวเครื่อง
     camera.position.set(ridePos.x+rgt.x*.8, ridePos.y+.3, ridePos.z+rgt.z*.8);
     camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.8);
@@ -6767,8 +6826,10 @@ function tickHeliFoot(dt,now){
     if(dPax<2.6){ beginRide(); return; }
     footHint('🚁 เดินเข้าหาเฮลิฯ สีฟ้า = ขึ้นนั่งชมวิว · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
   }else if(dPilot<3.6&&camera.position.y<3){
-    if(dPilot<2.1){ beginPilot(); return; }
-    footHint('🚁 เดินชิดเฮลิฯ สีแดงอีกนิด = ขึ้นขับเอง!');
+    if(dPilot<2.1&&state.heliTicket){ beginPilot(); return; }
+    if(dPilot<2.1&&!state.heliTicket){ beginPilot(); }   // ไม่มีตั๋ว → เด้งป้ายบอก (คูลดาวน์ในตัว) แล้วเดินต่อได้
+    footHint(state.heliTicket?'🚁 เดินชิดเฮลิฯ สีแดงอีกนิด = ขึ้นขับเอง!'
+      :'🎫 ลำนี้ต้องมีตั๋วเฮลิฯ ถึงขับได้ — นั่งโดยสารฟรีที่ตึกป้าย 🛗');
   }else if(now>_footHintAt){
     _footHintAt=now+400;
     footHint(onRoof?'🚶 บนดาดฟ้า · กด 🪂 โดดวิงสูทได้เลย!'
@@ -8907,12 +8968,14 @@ function closeIntro(md){
 }
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
-function start(md){
+function start(md,opt){
   mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive'||md==='soccer'||md==='mecha')?md:'adv';
   M=MODES[mode];
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🎃 ต้องมีตั๋วโลกผีสิงก่อนนะ'); return; }
-  if(mode==='heli' && !state.heliTicket){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
+  // 🗺️ รอบ 356: เข้าเมืองเฮลิฯ แบบ "เดินเท้า" ผ่านแผนที่โลกผจญภัยได้โดยไม่ต้องมีตั๋วเฮลิฯ
+  //    (เดิน/นั่งโดยสาร/วิงสูทฟรี — ขับเองค่อยเช็กตั๋วที่ beginPilot)
+  if(mode==='heli' && !state.heliTicket && !(opt&&opt.walkIn)){ toast('🚁 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนนะ'); return; }
   if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
   if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
   if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }

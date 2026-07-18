@@ -4519,10 +4519,48 @@ async function enterAdventure3D(){
     }
     advLoading = false;
   }
+  // 🗺️ รอบ 356: เลือกแผนที่ก่อน — ทุ่งผจญภัยดั้งเดิม หรือเดินเที่ยวเมืองเฮลิคอปเตอร์ (นั่งโดยสาร/วิงสูทฟรี · ขับเองต้องมีตั๋วเฮลิฯ)
+  const map = await pickAdvMap();
+  if(!map) return;
+  if(map==='heli'){ Adventure3D.start('heli',{walkIn:true}); return; }
   // 🧱 เลือกตัวละครบล็อกก่อนเข้า (เพื่อนใน map เห็นเราเป็นหุ่นบล็อกเดินได้) — ยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar('🌍 ลุยเลย!');
   if(!go) return;
   Adventure3D.start('adv');
+}
+/* 🗺️ กล่องเลือกแผนที่โลกเดิน (รอบ 356) — 2 การ์ดใหญ่ แตะง่าย ออกแบบให้พอดีจอเตี้ย 812×375 ไม่มี scroll (กฎ 7) */
+function pickAdvMap(){
+  return new Promise(res=>{
+    const ov=document.createElement('div');
+    ov.style.cssText='position:fixed;inset:0;z-index:2600;background:rgba(8,6,18,.82);display:flex;align-items:center;justify-content:center;padding:10px';
+    ov.innerHTML=`
+      <div style="background:linear-gradient(160deg,#241a3d,#161028);border:2px solid #6c5ce7;border-radius:18px;
+                  padding:clamp(10px,2.6vh,18px) clamp(12px,2.6vw,22px);max-width:min(560px,96vw);width:100%;
+                  max-height:94vh;display:flex;flex-direction:column;gap:clamp(6px,1.6vh,12px)">
+        <div style="color:#ffd54f;font-weight:800;font-size:clamp(15px,3.4vh,19px);text-align:center">🗺️ วันนี้อยากไปเดินเล่นที่ไหน?</div>
+        <div style="display:flex;gap:clamp(8px,2vw,14px)">
+          <button class="am-c" data-m="field" style="flex:1;background:rgba(76,175,80,.14);border:2px solid #66bb6a;border-radius:14px;
+                  padding:clamp(8px,2vh,14px) 6px;color:#eafbe7;cursor:pointer">
+            <div style="font-size:clamp(26px,7vh,38px)">🌳</div>
+            <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">ทุ่งผจญภัยดั้งเดิม</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">เดินเก็บตัวอักษร ยิงมอนสเตอร์ 👾<br>สนุกแบบคลาสสิก</div>
+          </button>
+          <button class="am-c" data-m="heli" style="flex:1;background:rgba(41,182,246,.13);border:2px solid #4fc3f7;border-radius:14px;
+                  padding:clamp(8px,2vh,14px) 6px;color:#e5f6ff;cursor:pointer">
+            <div style="font-size:clamp(26px,7vh,38px)">🚁</div>
+            <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">เมืองเฮลิคอปเตอร์</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">เดินเข้าตึก 🛗 นั่ง ฮ. ชมวิว โดดวิงสูท 🪂 ฟรี!<br>มีตั๋วเฮลิฯ = ขับเองได้ด้วย</div>
+          </button>
+        </div>
+        <button class="am-x" style="align-self:center;background:none;border:1px solid #5a4d80;border-radius:10px;
+                color:#b3a8d0;padding:4px 18px;font-size:clamp(11px,2.4vh,13px);cursor:pointer">ยังก่อน</button>
+      </div>`;
+    const done=v=>{ ov.remove(); res(v); };
+    ov.querySelectorAll('.am-c').forEach(b=>b.addEventListener('click',()=>{ sfx.select(); done(b.dataset.m); }));
+    ov.querySelector('.am-x').addEventListener('click',()=>done(null));
+    ov.addEventListener('click',e=>{ if(e.target===ov) done(null); });
+    document.body.appendChild(ov);
+  });
 }
 
 /* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
