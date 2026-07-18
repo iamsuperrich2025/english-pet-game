@@ -183,7 +183,7 @@ function buildDom(){
   let sliding=false;
   const setSteer=e=>{
     const r=sliderEl.getBoundingClientRect();
-    let t=((e.clientX-r.left)/r.width-0.5)*2.4;   // ขยับสุดขอบ = เกิน 1 เล็กน้อย → เต็มคันง่าย
+    let t=((e.clientX-r.left)/r.width-0.5)*2.05;  // รอบ 298: ลดความไวสไลเดอร์ (เดิม 2.4) — ต้องลากไกลขึ้นถึงเอียงเต็ม
     steerCtl=Math.max(-1,Math.min(1,t));
     knobEl.style.left=(50+steerCtl*26)+'%';
   };
@@ -726,7 +726,7 @@ function tick(){
 function frame(dt,now){
   /* คีย์บอร์ด A/D = ค่อยๆ ปรับองศาเอียง (ปล่อยคีย์ = ค้างองศาเดิม เหมือนสไลเดอร์) */
   if(kL!==kR){
-    steerCtl=Math.max(-1,Math.min(1, steerCtl+(kR?1:-1)*1.6*dt));
+    steerCtl=Math.max(-1,Math.min(1, steerCtl+(kR?1:-1)*1.0*dt));   // รอบ 298: คีย์ปรับช้าลง
     knobEl.style.left=(50+steerCtl*26)+'%';
   }
   steer=steerCtl;
@@ -736,14 +736,14 @@ function frame(dt,now){
   if(thr){ spd+=ACCEL*dt; } else { spd-=DECEL*dt; }
   if(spd>vmax) spd=Math.max(vmax,spd-14*dt);   // ออกนอกถนน = หน่วงแรง
   if(spd<0) spd=0;
-  /* เลี้ยว: ต้องมีความเร็ว · วงเลี้ยวแคบตอนช้า */
+  /* เลี้ยว: ต้องมีความเร็ว · วงเลี้ยวแคบตอนช้า (รอบ 298: ลดตัวคูณ 1.5→0.85 — ผู้ใช้บอกไวไป) */
   const yr=steer*Math.min(spd,14)/(6.5+spd*0.42);
-  yaw-=yr*dt*1.5;
+  yaw-=yr*dt*0.85;
   px+=Math.sin(yaw)*spd*dt; pz+=Math.cos(yaw)*spd*dt;
   /* 🏍️ เอียงเข้าโค้ง (รอบ 294) + รอบ 297: องศาเอียง = ค่าที่ผู้เล่นตั้งตรงๆ ไม่ผูกความเร็ว ไม่คืนกลางเอง
      เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
   const leanTgt=steer*LEAN_MAX;
-  leanV+=(leanTgt-lean)*10*dt; leanV*=Math.exp(-6*dt); lean+=leanV;
+  leanV+=(leanTgt-lean)*6*dt; leanV*=Math.exp(-5*dt); lean+=leanV;   // รอบ 298: สปริงนุ่มหนืดขึ้น
   if(bikeEl) bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
   /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง) */
   const cd=6.2, ch=2.6;
