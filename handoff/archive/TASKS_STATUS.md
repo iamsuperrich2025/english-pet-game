@@ -221,3 +221,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 285:** 🧭📖 **เส้นทางไล่ศัพท์ + นับคำวันนี้ + ภารกิจ dict** (ไอเดียต่อยอดรอบ 281 ผู้ใช้อนุมัติ) — breadcrumb `#dict-trail` ใต้ช่องค้นบนแผงพจนานุกรม (`__dictTrail` ≤20 คำ session-based · แตะ crumb ย้อน=ตัดหาง · โชว์เมื่อ ≥2 คำ · เลื่อนแนวนอน scrollbar ซ่อน) · ชิป `#dict-today` "📚 วันนี้ N คำ" หัวแผง · `dictRecordLookup` (ui.js) นับเฉพาะคำใหม่ที่เจอผล (`state.dictDaily` {date,n,w≤300}) → `questEvent('dict')` · QUEST_POOL เพิ่ม `dict5` 5 คำ +80🪙 (state.js) · ยืนยัน browser: trail fine›good›quality ย้อน fine ตัดหางถูก · คำซ้ำไม่นับ n · patch questsToday จำลอง → ครบ 5 ได้ +80 questDone · 812×375 การ์ดในจอ trail 8 คำไม่ดันกว้าง · ไม่มี console error · commit `158b9e3` · ค้าง: ผู้ใช้ลองจริง (ภารกิจ 📖 จะสุ่มโผล่ตามวัน)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 286:** 💗🍽️ **หัวใจลอยตอนป้อนอาหารสำเร็จ** (ไอเดียต่อยอดรอบ 283 ผู้ใช้อนุมัติ) — refactor: แยก `heartsFx(anchor,n)` ออกจาก cureCelebrateFx (ui.js) ใช้ร่วมกัน · showFeedResult ท้ายฟังก์ชัน: หน่วง 450ms (รอ popIn) ยิงหัวใจจากรูปน้อง `.feed-pet` ในกล่องกินเสร็จ — มื้อดี 8 ดวง / มื้อพิษปน (gotToxin) 4 ดวง / ป่วยคามื้อ (toxinSick) 0 · `.heal-heart` z 95→9500 ให้ลอยทับ dialog (lobby.css) · ยืนยัน browser ครบ 4 เคส (ดี/พิษ/ป่วย/รักษาหายยัง 10 ดวง+เด้ง) · ไม่มี console error · ⚠️ เทสหัวใจต้อง feed+วัดใน eval เดียว (ต่าง eval ห่างกันหลายวิ หัวใจหมดอายุก่อน) · ค้าง: ผู้ใช้ลองจริง
