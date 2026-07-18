@@ -9,3 +9,4 @@ backups/
 # ค็อกพิตเฮลิฯ ตัวเก่า (เลิกใช้รอบ 342 · ใช้ new_heli_cockpit.jpg แทน)
 # เก็บไว้ในเครื่องอย่างเดียว ไม่ต้องขึ้น repo/deploy — 2.8MB
 img/heli_cockpit.png
+img/new_heli_cockpit.jpg

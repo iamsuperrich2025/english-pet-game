@@ -3610,12 +3610,13 @@ function buildDom(){
   #adv-tlreflect-l{left:0;background:radial-gradient(88% 72% at 10% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
   #adv-tlreflect-r{right:0;background:radial-gradient(88% 72% at 90% 100%,rgba(255,150,25,.62),rgba(255,120,0,.18) 46%,transparent 74%)}
   .adv-tlreflect.on{display:block;animation:tlGlowBlink .8s steps(1,end) infinite}
-  #adv-cockpit{position:absolute;left:0;right:0;bottom:0;pointer-events:none;display:none;z-index:3}
+  #adv-cockpit{position:absolute;inset:0;pointer-events:none;display:none;z-index:3}
   .adv-heli #adv-cockpit{display:block}
-  /* ภาพค็อกพิตจริง — แถบหน้าปัดนักบิน (objectPosition คำนวณใน layoutCockpit ให้เข็มอยู่กลางแถบเสมอ) */
-  #adv-cockpit img{width:100%;display:block;height:36vh;object-fit:cover;object-position:center 20%}
-  /* canvas เข็ม: ทับภาพค็อกพิตพอดีเป๊ะ (ไม่ใช่แถบหน้าปัดลอยอย่างเดิม) */
-  #adv-gauges{position:absolute;left:0;bottom:0;width:100%;height:36vh;
+  /* 🚁 กรอบค็อกพิตเต็มจอ — ช่องกระจกในไฟล์ png โปร่งใส จึงมองทะลุเห็นโลก 3D ผ่านกระจกจริงๆ
+     cover + ชิดล่าง = ไม่ยืดภาพให้เพี้ยน · จอเตี้ยมากก็แค่กินขอบเพดานบนไป แผงหน้าปัดอยู่ครบเสมอ */
+  #adv-cockpit img{width:100%;height:100%;display:block;object-fit:cover;object-position:center bottom}
+  /* canvas เข็ม: ทับกรอบพอดีเป๊ะ วาดด้วยพิกัดในภาพผ่าน transform */
+  #adv-gauges{position:absolute;inset:0;width:100%;height:100%;
     pointer-events:none;display:none;z-index:4}
   .adv-heli #adv-gauges{display:block}
   #adv-radio{position:absolute;bottom:calc(1vh + 14vh);left:50%;transform:translateX(-50%);max-width:82vw;
@@ -4147,15 +4148,12 @@ function buildDom(){
   ATC.replyEl.querySelectorAll('.adv-rp').forEach(b=>{
     b.addEventListener('click',()=>ATC.reply(+b.dataset.i));
   });
-  // cockpit: ภาพค็อกพิตจริง (รอบ 342 เปลี่ยนเป็น new_heli_cockpit — .jpg ย่อแล้ว 159KB · ไม่มี → .png ต้นฉบับ)
-  // เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับ "หน้าปัดที่มีอยู่ในภาพ" ตามพิกัด CP_GAUGES
+  // 🚁 กรอบค็อกพิตเต็มจอ (รอบ 344): img/heli_frame.png ช่องกระจกโปร่ง → มองทะลุเห็นโลก 3D ผ่านกระจกจริง
+  // สร้างไฟล์ด้วย tools/cockpit_prep.py · เข็มที่ขยับจริงคือ canvas #adv-gauges วาดทับหน้าปัดในภาพ (CP_GAUGES)
   const cpImg=new Image();
   cpImg.onload=()=>{ cockpitEl.innerHTML=''; cockpitEl.appendChild(cpImg); layoutCockpit(); };
-  cpImg.onerror=()=>{
-    if(cpImg.src.endsWith('.jpg')){ cpImg.src='img/new_heli_cockpit.png'; return; }
-    cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null;
-  };
-  cpImg.src='img/new_heli_cockpit.jpg';
+  cpImg.onerror=()=>{ cockpitEl.innerHTML=`<div class="cp-css"></div>`; cpMap=null; };
+  cpImg.src='img/heli_frame.png';
   // 🚗 หน้าปัดรถ+พวงมาลัย: ใช้ภาพ img/car/dash.png + wheel.png ถ้าเจนแล้ว (PROMPTS_CAR.md) · ไม่มี → CSS จำลอง
   carDashEl=overlayEl.querySelector('#adv-cardash');
   carWheelEl=overlayEl.querySelector('#adv-carwheel');
@@ -6200,14 +6198,22 @@ function tickHeli(dt,now){
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
 
   // ---- ระบบเตือนภัยใกล้ชน (proximity warning — บี๊บถี่ขึ้นตามระยะ + ไฟแดงกะพริบ) ----
-  hWarnLvl=0; let warnMsg='', wallDist=99;      // wallDist ใช้ต่อที่เสียงสะท้อนตึกด้วย (รอบ 342)
+  hWarnLvl=0; let warnMsg='', wallDist=99, wallSide=0;  // wallDist/wallSide ใช้ต่อที่เสียงสะท้อน+แพนซ้ายขวา
   if(!hLanded && HeliSound.ready){
+    let near=null;
     for(const b of buildings){
       if(ny>b.h+.8) continue;                          // อยู่เหนือยอดตึกนี้แล้ว ไม่มีทางชน
       const dx=Math.max(0,Math.abs(nx-b.x)-b.w/2);
       const dz=Math.max(0,Math.abs(nz-b.z)-b.d/2);
       const dw=Math.hypot(dx,dz);
-      if(dw<wallDist) wallDist=dw;
+      if(dw<wallDist){ wallDist=dw; near=b; }
+    }
+    // 🎧 ตึกที่ใกล้สุดอยู่ซ้ายหรือขวาของหัวเครื่อง? (-1 ซ้ายสุด · +1 ขวาสุด)
+    // หมุนเวกเตอร์ไปหาตึกด้วย -yaw แล้วดูแกน x = ด้านข้างของนักบิน
+    if(near){
+      const rx=near.x-nx, rz=near.z-nz, c=Math.cos(-yaw), s=Math.sin(-yaw);
+      const sx=rx*c-rz*s, len=Math.hypot(rx,rz);
+      wallSide=len>.1 ? Math.max(-1,Math.min(1,sx/len)) : 0;
     }
     if(wallDist<3.5){ hWarnLvl=3; warnMsg='🚨 ใกล้ตึกมาก! หลบเดี๋ยวนี้!'; }
     else if(wallDist<6){ hWarnLvl=2; warnMsg='⚠️ ใกล้ตึก! ระวังชน'; }
@@ -6237,7 +6243,8 @@ function tickHeli(dt,now){
     }
   }
   // 🎚️🌬️ ส่งสภาพแวดล้อมให้ระบบเสียง: สูงเท่าไหร่ · เร็วเท่าไหร่ · ใกล้ตึกแค่ไหน
-  HeliSound.update(col,hLanded,dt,{alt:Math.max(0,ny-floor), spd:Math.hypot(hVel.x,hVel.z), near:wallDist});
+  HeliSound.update(col,hLanded,dt,{alt:Math.max(0,ny-floor), spd:Math.hypot(hVel.x,hVel.z),
+                                   near:wallDist, side:wallSide});
   drawGauges();
   // 📻 หอบังคับการบิน: อนุญาตขึ้นบินครั้งแรกหลังสตาร์ทเสร็จ + รายงานสภาพแวดล้อมเป็นระยะ
   if(HeliSound.ready && !hAtcCleared){
@@ -6253,95 +6260,108 @@ function tickHeli(dt,now){
    SPD ความเร็ว · ATT เส้นขอบฟ้าเทียม (ฟ้า/ดิน เอียง-ก้ม-เงยตามหัวเครื่อง)
    ALT ความสูง · V/S อัตราไต่-ลด · RPM รอบเครื่อง (โซนเขียว/เหลือง/แดง)
    ============================================================ */
-/* ---------- 🎛️ เข็มวัดบนหน้าปัดจริงในภาพค็อกพิต ----------
-   รอบ 342: เลิกวาดหน้าปัดยักษ์ลอยหน้าจอ (ไม่สมจริง) → วาดเฉพาะ "เข็ม" ทับหน้าปัดที่มีอยู่ในภาพ
-   พิกัดด้านล่างเป็นพิกัดในไฟล์ img/new_heli_cockpit.jpg (1200×488) — วัดจากภาพจริง */
-const CP_NAT={w:1200,h:488};
+/* ---------- 🎛️ เข็มวัดบนหน้าปัดจริงในกรอบค็อกพิต ----------
+   รอบ 342: เลิกวาดหน้าปัดยักษ์ลอยหน้าจอ → วาดเฉพาะ "เข็ม" ทับหน้าปัดที่มีอยู่ในภาพ
+   รอบ 344: ค็อกพิตเป็น "กรอบเต็มจอ" (img/heli_frame.png ช่องกระจกโปร่ง) → พิกัดใหม่ในภาพ 1100×626 */
+const CP_NAT={w:1100,h:537};
 const CP_GAUGES={
-  spd:{x:330,y:146,r:23},   // ความเร็วลม
-  att:{x:391,y:121,r:23},   // ขอบฟ้าเทียม (โดมฟ้า-ส้มในภาพ)
-  alt:{x:447,y:125,r:23},   // ความสูง
-  rpm:{x:392,y:191,r:26},   // รอบใบพัด
-  vs :{x:453,y:191,r:23},   // อัตราไต่/ลด
+  spd:{x:302,y:313,r:21},   // ความเร็วลม
+  att:{x:358,y:290,r:21},   // ขอบฟ้าเทียม (โดมฟ้า-ส้มในภาพ)
+  alt:{x:410,y:294,r:21},   // ความสูง
+  rpm:{x:359,y:354,r:24},   // รอบใบพัด
+  vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
 };
-let cpMap=null, cpBox='';                        // {scale,ox,oy} แปลงพิกัดภาพ → พิกัด canvas · cpBox = ขนาดกล่องที่วัดไว้ล่าสุด
-/* จัดวางภาพค็อกพิต + canvas เข็มให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ) */
+let cpMap=null, cpBox='';                        // {s,ox,oy} แปลงพิกัดในภาพ → canvas · cpBox = กล่องที่วัดล่าสุด
+/* จัดวางกรอบค็อกพิต + canvas เข็มให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ)
+   ต้องคำนวณ cover + ชิดล่าง ให้ตรงกับที่ CSS ทำกับภาพ ไม่งั้นเข็มหลุดออกนอกหน้าปัด */
 function layoutCockpit(){
   const img=cockpitEl&&cockpitEl.querySelector('img'), cv=gaugeCanvasEl;
   if(!img||!cv||!img.naturalWidth) return;
   const bw=img.clientWidth, bh=img.clientHeight;
   if(!bw||!bh) return;
-  const nw=img.naturalWidth, nh=img.naturalHeight;
-  const scale=Math.max(bw/nw,bh/nh);             // object-fit:cover
-  const dw=nw*scale, dh=nh*scale;
-  // เลื่อนภาพแนวตั้งให้กลุ่มหน้าปัดนักบินอยู่กลางแถบที่มองเห็นเสมอ (ทุกขนาดจอ)
-  const gy=(CP_GAUGES.att.y+CP_GAUGES.rpm.y)/2*(nh/CP_NAT.h);
-  let p=dh>bh ? (gy*scale-bh/2)/(dh-bh) : 0;
-  p=Math.max(0,Math.min(1,p));
-  img.style.objectPosition='center '+(p*100).toFixed(1)+'%';
-  // ⚠️ ห้ามตั้ง cv.style.height เอง — ปล่อยให้ CSS (36vh เท่ากับภาพ) คุม ไม่งั้นค้างค่าเก่าตอนหมุนจอ
   const dpr=Math.min(window.devicePixelRatio||1,2);
   if(cv.width!==Math.round(bw*dpr)||cv.height!==Math.round(bh*dpr)){
     cv.width=Math.round(bw*dpr); cv.height=Math.round(bh*dpr);
   }
-  cpBox=bw+'x'+bh;
-  cpMap={scale:scale*(nw/CP_NAT.w)*dpr, ox:(bw-dw)/2*dpr, oy:(bh-dh)*p*dpr};
+  cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+img.naturalWidth+'x'+img.naturalHeight;
+  const nw=img.naturalWidth, nh=img.naturalHeight;
+  const s=Math.max(bw/nw,bh/nh);                 // object-fit:cover
+  cpMap={s:s*dpr*(nw/CP_NAT.w), ox:(bw-nw*s)/2*dpr, oy:(bh-nh*s)*dpr};   // oy: ชิดล่าง = ส่วนเกินหายด้านบน
 }
-/* เข็มบาง ยาวไม่เกินหน้าปัดที่วาดไว้ในภาพ — สเกลตามขนาดเข็มจริง ไม่ fix พิกเซล */
+/* 📳 แรงสั่นสะเทือนของเครื่อง — เข็มกระตุกตามรอบใบพัดสูง + ตอนชน (รอบ 343)
+   คืนค่า 0..1 · เข็มแต่ละตัวสั่นคนละจังหวะ จะได้ไม่ขยับพร้อมกันเป็นบล็อกเดียว */
+function heliShake(now){
+  let s=0;
+  if(HeliSound.ready){
+    const r=HeliSound.rpm;
+    if(r>SHAKE_RPM) s=Math.min(1,(r-SHAKE_RPM)/(1.5-SHAKE_RPM));   // รอบยิ่งเกิน ยิ่งสั่น
+  }
+  const since=now-hHitAt;                                          // เพิ่งชน = สั่นแรงแล้วจางหาย
+  if(since<SHAKE_HIT_MS) s=Math.max(s,SHAKE_HIT*(1-since/SHAKE_HIT_MS));
+  return s;
+}
+/* เข็มบาง ยาวไม่เกินหน้าปัดที่วาดไว้ในภาพ — วาดด้วย "พิกัดในภาพ" (canvas ถูก transform ไว้แล้ว) */
 function cpNeedle(c,g,frac,color,opt){
   const o=opt||{}, sw=(o.sweep||1.5)*Math.PI, a0=-Math.PI*.75;
-  const a=a0+Math.max(0,Math.min(1,frac))*sw;
-  const R=g.r*cpMap.scale, cx=g.x*cpMap.scale+cpMap.ox, cy=g.y*cpMap.scale+cpMap.oy;
+  let a=a0+Math.max(0,Math.min(1,frac))*sw;
+  // สั่นที่ "มุมเข็ม" ไม่ใช่ขยับทั้งหน้าปัด — เหมือนเข็มจริงที่สะบัดอยู่กับที่
+  if(o.shake) a+=Math.sin(o.now/38+(o.phase||0))*o.shake*.055 + (Math.random()-.5)*o.shake*.02;
+  const R=g.r;
   c.save();
-  c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=Math.max(1.5,R*.12);
-  c.strokeStyle=color; c.lineWidth=Math.max(1.3,R*.11); c.lineCap='round';
+  c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=R*.12;
+  c.strokeStyle=color; c.lineWidth=R*.12; c.lineCap='round';
   c.beginPath();
-  c.moveTo(cx-Math.sin(a)*R*.22,cy+Math.cos(a)*R*.22);      // หางเข็มสั้นๆ แบบเข็มจริง
-  c.lineTo(cx+Math.sin(a)*R*.78,cy-Math.cos(a)*R*.78);
+  c.moveTo(g.x-Math.sin(a)*R*.22,g.y+Math.cos(a)*R*.22);      // หางเข็มสั้นๆ แบบเข็มจริง
+  c.lineTo(g.x+Math.sin(a)*R*.78,g.y-Math.cos(a)*R*.78);
   c.stroke();
   c.shadowBlur=0;
-  c.beginPath(); c.arc(cx,cy,Math.max(1,R*.1),0,7); c.fillStyle='#d8dde6'; c.fill();
+  c.beginPath(); c.arc(g.x,g.y,R*.1,0,7); c.fillStyle='#d8dde6'; c.fill();
   c.restore();
 }
 function drawGauges(){
   if(!gaugeCtx) return;
-  // วัดใหม่เมื่อกล่องเปลี่ยนขนาด (หมุนจอ/ย่อขยายหน้าต่าง/แถบ URL ยุบ) — เช็กทุกเฟรมแต่ราคาถูก
-  const _im=cockpitEl&&cockpitEl.querySelector('img');
-  if(!cpMap || (_im && cpBox!==_im.clientWidth+'x'+_im.clientHeight)) layoutCockpit();
+  // วัดใหม่เมื่ออะไรก็ตามเปลี่ยน (หมุนจอ/ย่อหน้าต่าง/ภาพเพิ่งโหลดเสร็จ/canvas โดนรีเซ็ต) — เช็กทุกเฟรมแต่ราคาถูก
+  const _im=cockpitEl&&cockpitEl.querySelector('img'), _cv=gaugeCanvasEl;
+  if(!cpMap || (_im && cpBox!==_im.clientWidth+'x'+_im.clientHeight+'/'+_cv.width+'x'+_cv.height+'/'+_im.naturalWidth+'x'+_im.naturalHeight))
+    layoutCockpit();
   if(!cpMap) return;
   const c=gaugeCtx;
+  c.setTransform(1,0,0,1,0,0);
   c.clearRect(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height);
-  const S=cpMap.scale, X=g=>g.x*S+cpMap.ox, Y=g=>g.y*S+cpMap.oy;
+  // จับพิกัดให้ตรงกับกรอบที่ CSS วางไว้ → ต่อจากนี้วาดด้วย "พิกัดในภาพ" ได้เลย
+  c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);
+  const now=performance.now(), sh=heliShake(now);      // 📳 แรงสั่นร่วมของทุกเข็มรอบนี้
   // ── ขอบฟ้าเทียม: วาดในวงโดมที่มีอยู่ (ฟ้า/พื้นดินหมุน-เลื่อนตามการเอียง) ──
-  const G=CP_GAUGES.att, R=G.r*S, ax=X(G), ay=Y(G);
+  const G=CP_GAUGES.att, R=G.r, ax=G.x, ay=G.y;
   c.save();
   c.beginPath(); c.arc(ax,ay,R*.9,0,7); c.clip();
-  c.translate(ax,ay); c.rotate(hTiltS*.5);
-  const hy=-hTiltF*R*.6;
+  c.translate(ax,ay); c.rotate(hTiltS*.5+(sh?Math.sin(now/31)*sh*.028:0));   // โดมสั่นตามเครื่องด้วย
+  const hy=-hTiltF*R*.6+(sh?Math.sin(now/26)*sh*R*.035:0);
   c.fillStyle='#5aa9d6'; c.fillRect(-R,-R*2,R*2,R*2+hy);
   c.fillStyle='#c2762c'; c.fillRect(-R,hy,R*2,R*2);
-  c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=Math.max(1,R*.07);
+  c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=R*.08;
   c.beginPath(); c.moveTo(-R,hy); c.lineTo(R,hy); c.stroke();
   c.restore();
-  c.strokeStyle='#ff9800'; c.lineWidth=Math.max(1,R*.09); c.lineCap='round';  // สัญลักษณ์เครื่อง (ตรึงกลาง)
+  c.strokeStyle='#ff9800'; c.lineWidth=R*.1; c.lineCap='round';  // สัญลักษณ์เครื่อง (ตรึงกลาง)
   c.beginPath(); c.moveTo(ax-R*.5,ay); c.lineTo(ax-R*.16,ay); c.stroke();
   c.beginPath(); c.moveTo(ax+R*.5,ay); c.lineTo(ax+R*.16,ay); c.stroke();
-  // ── เข็มที่เหลือ ──
+  // ── เข็มที่เหลือ (แต่ละตัวสั่นคนละ phase = ดูเป็นเข็มกลไกแยกกัน) ──
   const spd=Math.hypot(hVel.x,hVel.z)*3.6;
-  cpNeedle(c,CP_GAUGES.spd,spd/70,'#ffd9a0');
+  cpNeedle(c,CP_GAUGES.spd,spd/70,'#ffd9a0',{shake:sh,now,phase:0});
   const alt=Math.max(0,camera.position.y-HELI_SKID);
-  cpNeedle(c,CP_GAUGES.alt,alt/60,'#bfe6ff');
-  cpNeedle(c,CP_GAUGES.vs,(hVel.y+10)/20, hVel.y<-5?'#ff8a80':'#d6f5b0');
+  cpNeedle(c,CP_GAUGES.alt,alt/60,'#bfe6ff',{shake:sh,now,phase:1.7});
+  cpNeedle(c,CP_GAUGES.vs,(hVel.y+10)/20, hVel.y<-5?'#ff8a80':'#d6f5b0',{shake:sh,now,phase:3.4});
   // รอบใบพัด: มีแถบเขียว-แดงบางๆ บอกโซนปลอดภัย (ไม่ทึบ ไม่บังลายหน้าปัดในภาพ)
-  const rg=CP_GAUGES.rpm, rr=rg.r*S, rx=X(rg), ry=Y(rg);
-  c.save(); c.globalAlpha=.55; c.lineWidth=Math.max(1.2,rr*.1); c.lineCap='butt';
+  const rg=CP_GAUGES.rpm;
+  c.save(); c.globalAlpha=.55; c.lineWidth=rg.r*.11; c.lineCap='butt';
   [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]].forEach(([col,f1,f2])=>{
     c.beginPath();
-    c.arc(rx,ry,rr*.86,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
+    c.arc(rg.x,rg.y,rg.r*.86,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
     c.strokeStyle=col; c.stroke();
   });
   c.restore();
-  cpNeedle(c,rg,HeliSound.rpm/1.5,'#ffd9a0');
+  // เข็มรอบ: เข้าโซนแดงให้เข็มแดงขึ้นด้วย (ตากับหูบอกเรื่องเดียวกัน)
+  cpNeedle(c,rg,HeliSound.rpm/1.5, HeliSound.rpm>=OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
 }
 
 /* ---------- เสียงใบพัด Bell 212 — ไฟล์เสียงจริง (sound/heli_*.mp3) · ไม่มีไฟล์ = ตกไปใช้เสียงสังเคราะห์ ---------- */
@@ -6354,11 +6374,17 @@ const ALT_LP_MIN=1800;                     // Hz: ตอนสูงสุด �
 const ECHO_NEAR=9, ECHO_BOOST=.28;         // ม.: ใกล้ตึกกว่า 9 ม. เสียงสะท้อนดังขึ้นสูงสุด 28%
 const WIND_FULL_SPD=26, WIND_MAX=.17;      // ม./วิ ที่ลมดังเต็ม · ระดับเสียงลมสูงสุด
 const SHUTDOWN_SEC=4.2;                    // วินาที: ใบพัดค่อยๆ ช้าลงจนหยุดตอนออกจากโลก
+/* 🎧🚨📳 รอบ 343 */
+const PAN_MAX=.65, PAN_SMOOTH=.25;         // แพนซ้าย-ขวาสูงสุด (1=สุดข้าง) · หน่วงให้ลื่น ไม่วืดไปมา
+const OD_RPM=1.25, OD_VOL=.085;            // rpm ที่เข้าโซนแดง (ตรงกับแถบแดงบนหน้าปัด) · ระดับเสียงหวอ
+const SHAKE_RPM=1.15, SHAKE_MAX=.9;        // rpm ที่เข็มเริ่มสั่น · แอมพลิจูดสั่นสูงสุด (พิกเซลในพิกัดภาพ)
+const SHAKE_HIT=2.6, SHAKE_HIT_MS=650;     // แรงสั่นตอนชน · สั่นนานเท่าไหร่แล้วจางหาย
 const HeliSound={
   ctx:null,master:null,lfo:null,whine:null,whineG:null,nodes:[],
   files:{start:null,rotor:null,high:null},probed:false,on:false,
   startPlay:null,rotorPlay:null,highPlay:null,
   windG:null,windBp:null,envG:null,envLp:null,_downTm:0,   // 🌬️🎚️ ลมปะทะ + เสียงตามสภาพแวดล้อม (รอบ 342)
+  envPan:null,_odOn:false,_odTm:0,                         // 🎧🚨 แพนซ้ายขวา + หวอรอบเกิน (รอบ 343)
   ready:false,rpm:0,_startTm:0,highOn:false,_startAt:0,startDur:0,
   probe(){
     if(this.probed) return; this.probed=true;
@@ -6458,6 +6484,29 @@ const HeliSound={
     this.lfo.frequency.linearRampToValueAtTime(10.5,t+3.4);
     this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; },3600);
   },
+  /* 🚨 เสียงหวอเตือนรอบใบพัดเกินโซนแดง — สองโทนสลับแบบหวอเครื่องบินจริง
+     เปิด/ปิดเองตาม rpm (เรียกทุกเฟรมได้ ไม่สร้าง node ซ้ำ) */
+  overspeed(on){
+    if(on===this._odOn) return;
+    this._odOn=on;
+    if(this._odTm){ clearInterval(this._odTm); this._odTm=0; }
+    if(!on) return;
+    let hi=false;
+    const beep=()=>{
+      if(!state.sound || !this.ctx || this.ctx.state==='closed') return;
+      const t=this.ctx.currentTime;
+      const o=this.ctx.createOscillator(); o.type='square';
+      o.frequency.value=hi?1240:930; hi=!hi;              // สลับสองโทน = หวอ ไม่ใช่บี๊บเฉยๆ
+      const g=this.ctx.createGain();
+      g.gain.setValueAtTime(.001,t);
+      g.gain.exponentialRampToValueAtTime(OD_VOL,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.19);
+      o.connect(g); g.connect(this.master||this.ctx.destination);
+      o.start(t); o.stop(t+.21);
+    };
+    this.ensureCtx(); beep();
+    this._odTm=setInterval(beep,230);
+  },
   /* 🌬️ เสียงลมปะทะ — noise ผ่าน bandpass ดังขึ้นตามความเร็ว (สร้างครั้งเดียว ใช้ยาว) */
   buildWind(){
     if(this.windG) return;
@@ -6480,6 +6529,7 @@ const HeliSound={
     if(!this.ctx || (!this.rotorPlay && !this.startPlay)) return 0;
     const t=this.ctx.currentTime, D=SHUTDOWN_SEC;
     clearTimeout(this._startTm);
+    this.overspeed(false);                 // 🚨 ดับเครื่องแล้วไม่ต้องหวอต่อ
     showHeliSkip(false);
     [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{
       if(!p) return;
@@ -6538,6 +6588,7 @@ const HeliSound={
     const target=landed?.55:(1+Math.max(0,col)*.45);
     this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*.9);
     const r=this.rpm;
+    this.overspeed(r>=OD_RPM);                    // 🚨 เข้าโซนแดงบนหน้าปัด = หวอเตือน
     if(this.rotorPlay){
       const t=this.ctx.currentTime, sm=.08;             // setTargetAtTime = ไล่ค่านุ่มๆ ไม่กระตุกเป็นขั้น
       this.rotorPlay.src.playbackRate.setTargetAtTime(.8+r*.35,t,sm);
@@ -6566,7 +6617,12 @@ const HeliSound={
       this.envG=this.ctx.createGain();
       this.envLp=this.ctx.createBiquadFilter(); this.envLp.type='lowpass'; this.envLp.frequency.value=20000;
       this.master.disconnect();
-      this.master.connect(this.envG); this.envG.connect(this.envLp); this.envLp.connect(this.ctx.destination);
+      this.master.connect(this.envG); this.envG.connect(this.envLp);
+      // 🎧 แพนซ้าย-ขวาตามทิศตึกที่สะท้อนเสียงกลับมา (เบราว์เซอร์เก่าไม่มี StereoPanner = ข้ามไป ไม่พัง)
+      if(this.ctx.createStereoPanner){
+        this.envPan=this.ctx.createStereoPanner();
+        this.envLp.connect(this.envPan); this.envPan.connect(this.ctx.destination);
+      }else this.envLp.connect(this.ctx.destination);
     }
     // ① ยิ่งสูง อากาศบาง+ไกลพื้น = เสียงเบาลงและทุ้มลง (ไม่เกิน MAX_DAMP)
     const hi=Math.max(0,Math.min(1,(env.alt-ALT_QUIET_FROM)/(ALT_QUIET_TO-ALT_QUIET_FROM)));
@@ -6574,6 +6630,8 @@ const HeliSound={
     const echo=Math.max(0,Math.min(1,(ECHO_NEAR-Math.min(env.near,ECHO_NEAR))/ECHO_NEAR));
     this.envG.gain.setTargetAtTime((1-hi*ALT_MAX_DAMP)*(1+echo*ECHO_BOOST),t,sm);
     this.envLp.frequency.setTargetAtTime(20000-hi*(20000-ALT_LP_MIN),t,sm);
+    // 🎧 เสียงสะท้อนเอียงไปข้างที่มีตึก — ไกลตึก (echo≈0) = อยู่กลางเหมือนเดิม
+    if(this.envPan) this.envPan.pan.setTargetAtTime((env.side||0)*echo*PAN_MAX,t,PAN_SMOOTH);
     // ③ ลมปะทะตามความเร็ว (ยิ่งเร็วยิ่งดังและแหลมขึ้น) — ลมในห้องนักบิน ไม่ต้องโดนหรี่ตามความสูง
     this.buildWind();
     const sp=Math.max(0,Math.min(1,env.spd/WIND_FULL_SPD));
@@ -6637,6 +6695,7 @@ const HeliSound={
   stop(){
     this.on=false; this.ready=false; this.rpm=0;
     this.proximity(0);
+    this.overspeed(false);                               // 🚨 หวอต้องหยุด ไม่งั้นดังค้างนอกโลกเฮลิฯ
     clearTimeout(this._startTm); clearTimeout(this._downTm);
     showHeliSkip(false);
     if(this.windG) this.windG.gain.value=.0001;          // 🌬️ ลมต้องหยุดด้วย ไม่งั้นซ่าค้างหลังออกจากโลก
