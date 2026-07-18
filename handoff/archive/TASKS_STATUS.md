@@ -251,3 +251,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 291:** 📒 **สมุดคำศัพท์ต่อยอด 3 ข้อ (ผู้ใช้อนุมัติจากไอเดียรอบ 288)** — (1) โลก 3D ทุกโลก (`wordDone`+mecha kill ใน adventure3d.js) + Word Search (`commit` ใน wordsearch.js) เจอคำ → `vbRecord(...,true)` ลงสมุดถาวร (2) QUEST_POOL เพิ่ม `vbreview1` ev `vbquiz` +120🪙 — ยิงจาก `onFinish` ของ vbReviewCat (นับตอนสอบจบ ไม่ต้องผ่าน) (3) รายงานความก้าวหน้า (showProgressReport game.js): หมวด 📒 นับ 3 กลุ่ม + ชิปคำติดบ่อย ≤8 (คลาส `.vb-word g-review` เดิม — ไม่แตะ CSS เลย เลี่ยงชน WIP คู่ขนาน) แตะฟังเสียง · ยืนยัน browser: WS พบ READ→read c:1 / quest จำลอง questsToday → done+120 (8→178 ตรง) / รายงานชิปส้ม+speakWord ยิงถูก / ไม่มี console error · ⚠️ commit `b825eed` **stage adventure3d.js เฉพาะ 2 hunk vbRecord** (patch ผ่าน python — ห้าม text-mode เขียน patch บน Windows CRLF ทำ apply fail ต้อง `newline=''`) — งาน navline คู่ขนานอยู่ working tree ตามเดิม · ค้าง: ผู้ใช้ลองจริง (โดยเฉพาะเก็บคำในโลก 3D จริง — hook ยืนยันแค่ pattern+โหลดไฟล์ ไม่ได้เข้าโลกจริง)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 291ข:** 🛒 **วางไฟล์เสียงจริง `sound/cashier.mp3`** (ผู้ใช้เจน 73KB/3วิ) — commit `8fa7bbf` · deploy `.283` ยืนยัน HTTP 200 บน live · เกมสลับใช้ไฟล์แทน synth อัตโนมัติ
