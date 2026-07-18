@@ -3,7 +3,7 @@
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-18
 
-## js/adventure3d.js (7,153 บรรทัด · 308 รายการ)
+## js/adventure3d.js (7,207 บรรทัด · 309 รายการ)
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
 AD_COUNT:95 · SHOP_ADS:99 · PILOT_TIERS:101 · pilotEmoji:102 · DRONE_R:114 · DRONE_ACCEL:115
@@ -21,41 +21,41 @@ buildingFacadeTexture:562 · makePeerSprite:585 · BLOCK_AVATARS:619 · blkGeo:6
 blkFaceMat:634 · makeBlockFigure:649 · makeBlockCar:689 · blkNameSprite:734 · makeBlockPeer:746 · makeBlockWalkPeer:760
 disposeBlockPeer:768 · blkBuildThumbs:773 · blkBuildPicker:791 · pickBlockAvatar:836 · bubbleSprite:859 · showPeerBubble:886
 removePeerBubble:894 · concreteTexture:904 · dAddBox:919 · buildAbandoned:926 · makeNameSprite:972 · flatGeom:985
-flatGeomUV:994 · buildDriveCity:1004 · SKY_IMG:1290 · applySky:1291 · buildScene:1300 · randPos:1566
-randRoadPos:1574 · spawnLetter:1586 · spawnLettersForWord:1617 · ensureCoverage:1619 · relocateLetters:1632 · removeLetter:1657
-tryCompleteWords:1666 · completeWord:1680 · spawnMonster:1725 · killMonster:1734 · tickMonsters:1742 · damagePlayer:1764
-shoot:1780 · tickShots:1794 · spawnGhost:1820 · GHOST_STYLE:1829 · GHOST_H_DEFAULT:1830 · applyGhostSize:1831
-respawnGhost:1840 · tickGhosts:1856 · sessionRecapHtml:1902 · hauntRunSec:1909 · fmtSurv:1910 · hauntSurviveFinish:1911
-tickSurvive:1921 · renderHearts:1934 · ghostHit:1943 · caught:1965 · knockedOut:1991 · netReady:2155
-netJoin:2159 · sendPos:2172 · sendChat:2199 · toggleChatBox:2213 · onPeerData:2223 · removePeer:2301
-netLeave:2313 · tickPeers:2321 · RTC_CFG:2392 · tinvLinked:2393 · partyWord:2400 · syncPartyWord:2413
-updateVoiceBtns:2565 · PODIUM_BONUS:2590 · podiumJoin:2592 · podiumLeave:2603 · endRound:2604 · showPodium:2615
-tinvCheck:2655 · showBanner:2675 · renderHudTop:2681 · renderHudWords:2686 · renderHudInv:2696 · ddTierFromName:2703
-renderBoard:2705 · drawBigMap:2729 · openBigMap:2784 · closeBigMap:2792 · drawMinimap:2797 · loadCarDash:2869
-loadCarWheel:2881 · buildDom:2891 · confirmExit:4103 · IS_TOUCH:4122 · bindInput:4123 · movePlayer:4208
-tickPlayer:4218 · collideDrone:4259 · tickDrone:4277 · nearMissTick:4357 · showNearMiss:4380 · awardDaredevil:4391
-comboCheer:4408 · comboFlash:4424 · driveCell:4433 · nearestStreet:4439 · collideCar:4449 · tlDotY:4480
-tlSet:4484 · driveArms:4501 · tlTick:4513 · TL_GREEN:4557 · tlRedDur:4559 · tlightPhase:4560
-buildTrafficLights:4567 · rlTick:4619 · cellDrivable:4651 · cellCenter:4652 · losClear:4654 · nearestDrivableCell:4664
-routeGrid:4673 · pickGpsTarget:4726 · gpsSpeak:4738 · NAVLINE_W:4757 · navLineEnsure:4758 · navLineHide:4768
-navLineUpdate:4769 · tickGps:4796 · tickDrive:4872 · drawCarDial:5050 · drawCarGauges:5080 · RADIO_RECT:5108
-CAR_RADIO_RECT:5110 · carRadioRect:5116 · radioLayout:5118 · radioSetHint:5141 · renderRadioList:5147 · radioToggleList:5157
-drawRadioViz:5162 · radioTick:5180 · BOBBLE_FOOT:5193 · BOBBLE_H:5194 · BOBBLE_ASPECT:5195 · BOB_OMEGA:5198
-BOB_PITCH_FORCE:5200 · BOBBLE_SKINS:5202 · bobbleSetAvatar:5209 · bobbleLayout:5216 · bobbleTick:5229 · bobblePoke:5254
-bobbleApplySkin:5271 · dollOwned:5281 · openDollPicker:5282 · carStartShow:5319 · showLawInfo:5337 · lawNotice:5359
-driveFineSettle:5369 · heliFloorAt:5545 · tickHeli:5552 · gaugeBezel:5697 · gaugeTicks:5702 · gaugeNeedle:5712
-gaugeText:5719 · drawGauges:5725 · soccerLetterPos:6045 · letterNeeded:6049 · soccerNeededSet:6054 · soccerTileGeo:6060
-soccerGoldTexture:6062 · makeSoccerTile:6079 · soccerRefreshSkins:6088 · soccerBuildTargets:6095 · soccerRetarget:6104 · soccerCoinPop:6116
-soccerFieldTexture:6128 · soccerNetTexture:6139 · soccerCrowdTexture:6146 · soccerBallMat:6154 · buildSoccerGoal:6162 · buildStands:6173
-soccerNumTex:6181 · makeSoccerPlayer:6191 · soccerResetBall:6215 · soccerKick:6220 · soccerCheer:6228 · updateSoccerGuide:6229
-soccerCamera:6243 · tickSoccer:6258 · soccerKitShow:6334 · soccerKitGo:6349 · emojiSprite:6400 · makeAlien:6405
-startWave:6438 · waveSpawnFill:6449 · waveComplete:6458 · updateWaveHud:6468 · checkMechaBossBadge:6470 · alienSpawnPos:6479
-removeAlien:6484 · mechaHudWord:6489 · setMechaHudSkin:6497 · mechaComboPop:6509 · mechaShielded:6514 · mechaDamageFx:6516
-mechaHitByAlien:6521 · spawnAlienShot:6527 · removeAlienShot:6537 · tickAlienShots:6542 · spawnPowerup:6554 · removePowerup:6567
-collectPowerup:6572 · tickPowerups:6579 · updateMechaHud:6588 · mechaTracer:6628 · mechaFire:6637 · explodeAlien:6674
-tickMecha:6704 · loop:6760 · clearEntities:6788 · INTRO_KEY:6802 · introSeenObj:6803 · introSeen:6804
-markIntroSeen:6805 · INTRO:6806 · showIntro:6871 · closeIntro:6896 · beginPlay:6902 · start:6904
-exitWorld:7048 · mechaRecapLine:7083
+flatGeomUV:994 · buildDriveCity:1004 · SKY_IMG:1290 · applySky:1291 · applyTex:1306 · buildScene:1328
+randPos:1597 · randRoadPos:1605 · spawnLetter:1617 · spawnLettersForWord:1648 · ensureCoverage:1650 · relocateLetters:1663
+removeLetter:1688 · tryCompleteWords:1697 · completeWord:1711 · spawnMonster:1756 · killMonster:1765 · tickMonsters:1773
+damagePlayer:1795 · shoot:1811 · tickShots:1825 · spawnGhost:1851 · GHOST_STYLE:1860 · GHOST_H_DEFAULT:1861
+applyGhostSize:1862 · respawnGhost:1871 · tickGhosts:1887 · sessionRecapHtml:1933 · hauntRunSec:1940 · fmtSurv:1941
+hauntSurviveFinish:1942 · tickSurvive:1952 · renderHearts:1965 · ghostHit:1974 · caught:1996 · knockedOut:2022
+netReady:2186 · netJoin:2190 · sendPos:2203 · sendChat:2230 · toggleChatBox:2244 · onPeerData:2254
+removePeer:2332 · netLeave:2344 · tickPeers:2352 · RTC_CFG:2423 · tinvLinked:2424 · partyWord:2431
+syncPartyWord:2444 · updateVoiceBtns:2596 · PODIUM_BONUS:2621 · podiumJoin:2623 · podiumLeave:2634 · endRound:2635
+showPodium:2646 · tinvCheck:2686 · showBanner:2706 · renderHudTop:2712 · renderHudWords:2717 · renderHudInv:2727
+ddTierFromName:2734 · renderBoard:2736 · drawBigMap:2760 · openBigMap:2815 · closeBigMap:2823 · drawMinimap:2828
+loadCarDash:2900 · loadCarWheel:2912 · buildDom:2922 · confirmExit:4157 · IS_TOUCH:4176 · bindInput:4177
+movePlayer:4262 · tickPlayer:4272 · collideDrone:4313 · tickDrone:4331 · nearMissTick:4411 · showNearMiss:4434
+awardDaredevil:4445 · comboCheer:4462 · comboFlash:4478 · driveCell:4487 · nearestStreet:4493 · collideCar:4503
+tlDotY:4534 · tlSet:4538 · driveArms:4555 · tlTick:4567 · TL_GREEN:4611 · tlRedDur:4613
+tlightPhase:4614 · buildTrafficLights:4621 · rlTick:4673 · cellDrivable:4705 · cellCenter:4706 · losClear:4708
+nearestDrivableCell:4718 · routeGrid:4727 · pickGpsTarget:4780 · gpsSpeak:4792 · NAVLINE_W:4811 · navLineEnsure:4812
+navLineHide:4822 · navLineUpdate:4823 · tickGps:4850 · tickDrive:4926 · drawCarDial:5104 · drawCarGauges:5134
+RADIO_RECT:5162 · CAR_RADIO_RECT:5164 · carRadioRect:5170 · radioLayout:5172 · radioSetHint:5195 · renderRadioList:5201
+radioToggleList:5211 · drawRadioViz:5216 · radioTick:5234 · BOBBLE_FOOT:5247 · BOBBLE_H:5248 · BOBBLE_ASPECT:5249
+BOB_OMEGA:5252 · BOB_PITCH_FORCE:5254 · BOBBLE_SKINS:5256 · bobbleSetAvatar:5263 · bobbleLayout:5270 · bobbleTick:5283
+bobblePoke:5308 · bobbleApplySkin:5325 · dollOwned:5335 · openDollPicker:5336 · carStartShow:5373 · showLawInfo:5391
+lawNotice:5413 · driveFineSettle:5423 · heliFloorAt:5599 · tickHeli:5606 · gaugeBezel:5751 · gaugeTicks:5756
+gaugeNeedle:5766 · gaugeText:5773 · drawGauges:5779 · soccerLetterPos:6099 · letterNeeded:6103 · soccerNeededSet:6108
+soccerTileGeo:6114 · soccerGoldTexture:6116 · makeSoccerTile:6133 · soccerRefreshSkins:6142 · soccerBuildTargets:6149 · soccerRetarget:6158
+soccerCoinPop:6170 · soccerFieldTexture:6182 · soccerNetTexture:6193 · soccerCrowdTexture:6200 · soccerBallMat:6208 · buildSoccerGoal:6216
+buildStands:6227 · soccerNumTex:6235 · makeSoccerPlayer:6245 · soccerResetBall:6269 · soccerKick:6274 · soccerCheer:6282
+updateSoccerGuide:6283 · soccerCamera:6297 · tickSoccer:6312 · soccerKitShow:6388 · soccerKitGo:6403 · emojiSprite:6454
+makeAlien:6459 · startWave:6492 · waveSpawnFill:6503 · waveComplete:6512 · updateWaveHud:6522 · checkMechaBossBadge:6524
+alienSpawnPos:6533 · removeAlien:6538 · mechaHudWord:6543 · setMechaHudSkin:6551 · mechaComboPop:6563 · mechaShielded:6568
+mechaDamageFx:6570 · mechaHitByAlien:6575 · spawnAlienShot:6581 · removeAlienShot:6591 · tickAlienShots:6596 · spawnPowerup:6608
+removePowerup:6621 · collectPowerup:6626 · tickPowerups:6633 · updateMechaHud:6642 · mechaTracer:6682 · mechaFire:6691
+explodeAlien:6728 · tickMecha:6758 · loop:6814 · clearEntities:6842 · INTRO_KEY:6856 · introSeenObj:6857
+introSeen:6858 · markIntroSeen:6859 · INTRO:6860 · showIntro:6925 · closeIntro:6950 · beginPlay:6956
+start:6958 · exitWorld:7102 · mechaRecapLine:7137
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
@@ -72,16 +72,16 @@ bandRetakeCat:116 · bandShowRetakeSummary:150 · bandSetsPassed:178 · openBand
 bandLockToast:263 · bandExamLobby:269 · updateBandExamBtn:278 · bandLobbyTick:295 · bandPlay:306 · bandPlayLobby:319
 bandCardsHTML:331
 
-## js/game.js (898 บรรทัด · 50 รายการ)
+## js/game.js (918 บรรทัด · 54 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:132 · sprinkleConfetti:179 · VOCAB_PER_LEVEL:198
-VOCAB_RANK_NAMES:199 · vocabRankName:200 · showProgressReport:202 · THUNDER_MS:365 · THUNDER_TIERS:369 · THUNDER_TIER_UI:370
-thunderEmoji:371 · DAREDEVIL_TIERS:375 · DAREDEVIL_TIER_UI:376 · daredevilEmoji:377 · DILIGENT_TIERS:381 · DILIGENT_TIER_UI:382
-diligentEmoji:383 · MECHABOSS_TIERS:387 · MECHABOSS_TIER_UI:388 · mechaBossEmoji:389 · badgeSuffix:394 · BADGE_META:405
-NAME_BADGE_RE:413 · splitNameBadges:414 · badgeEmojis:420 · badgeScore:425 · checkCrown:431 · currentBadgeScore:447
-rolloverBadgeWeek:451 · addDiligent:464 · celebrateBadge:480 · addThunder:494 · startGame:508 · newRound:548
-updateTimerBar:587 · updateComboPill:593 · pickCard:597 · checkMatch:609 · renderCats:723 · startQuiz:758
-renderQuizQuestion:774 · finishQuiz:833
+VOCAB_RANK_NAMES:199 · vocabRankName:200 · showProgressReport:202 · THUNDER_MS:376 · THUNDER_TIERS:380 · THUNDER_TIER_UI:381
+thunderEmoji:382 · DAREDEVIL_TIERS:386 · DAREDEVIL_TIER_UI:387 · daredevilEmoji:388 · DILIGENT_TIERS:392 · DILIGENT_TIER_UI:393
+diligentEmoji:394 · MECHABOSS_TIERS:398 · MECHABOSS_TIER_UI:399 · mechaBossEmoji:400 · BFF_TIERS:405 · BFF_TIER_UI:406
+BFF_COIN:407 · bffEmoji:408 · badgeSuffix:413 · BADGE_META:425 · NAME_BADGE_RE:433 · splitNameBadges:434
+badgeEmojis:440 · badgeScore:445 · checkCrown:451 · currentBadgeScore:467 · rolloverBadgeWeek:471 · addDiligent:484
+celebrateBadge:500 · addThunder:514 · startGame:528 · newRound:568 · updateTimerBar:607 · updateComboPill:613
+pickCard:617 · checkMatch:629 · renderCats:743 · startQuiz:778 · renderQuizQuestion:794 · finishQuiz:853
 
 ## js/images.js (101 บรรทัด · 14 รายการ)
 IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 · probeRankImages:39
@@ -96,23 +96,24 @@ PANEL_TITLES:9 · openPanel:20 · closePanel:28
 ## js/main.js (158 บรรทัด · 2 รายการ)
 syncMusicBtn:79 · bootGame:113
 
-## js/moto3d.js (1,799 บรรทัด · 95 รายการ)
+## js/moto3d.js (1,782 บรรทัด · 97 รายการ)
 REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
 GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
 LEAN_MAX:20 · COLLECT_R:21 · SPAWN_MIN:22 · BUCKET:23 · TILE_COLORS:24 · LETTER_COIN:26
-COIN_N:27 · COIN_VAL:28 · COIN_TIERS:30 · COIN_CURVE_RAD:35 · NET_SEND_MS:39 · PEER_COLORS:40
-CHAT_MS:42 · CHAT_PRESETS:43 · ENG_FILES:84 · CSS:139 · buildDom:324 · segKey:426
-smoothPts:429 · featKey:445 · addFeat:446 · genFeatures:451 · terrainAt:470 · roadGroundY:483
-decalTex:491 · makeDecals:510 · decalTick:519 · buildRoads:536 · distToSeg:632 · roadInfo:637
-onRoad:643 · randomRoadPoint:644 · makeTextSprite:666 · letterTexture:679 · woodTileMat:694 · muralTexture:705
-buildSchool:717 · buildScenery:863 · scatterTrees:942 · postTick:962 · scatterClouds:989 · makeDog:1001
-spawnDog:1016 · dogHit:1026 · dogTick:1036 · coinTexture:1054 · makeCoins:1065 · curvyRoadPoint:1077
-coinTierAt:1100 · coinFx:1110 · grabCoin:1119 · coinTick:1136 · makeVehicle:1164 · netReady:1199
-netJoin:1203 · netSend:1216 · sendChat:1233 · showPeerBubble:1243 · removePeerBubble:1250 · renderBoard:1257
-peerColor:1274 · buildPeer:1278 · onPeer:1287 · dropPeer:1315 · netLeave:1322 · peerTick:1328
-spawnSlot:1339 · pickWord:1356 · spawnLetters:1366 · renderWordHud:1377 · fitWord:1385 · collectTick:1392
-completeWord:1410 · relocTick:1427 · gpsTick:1438 · miniTick:1447 · build:1482 · applyVehicleUi:1516
-fit:1533 · tick:1541 · frame:1549 · start:1692 · exitWorld:1743
+COIN_VAL:30 · COIN_GAP:31 · COIN_TIERS:33 · COIN_CURVE_RAD:38 · NET_SEND_MS:40 · PEER_COLORS:41
+CHAT_MS:43 · CHAT_PRESETS:44 · ENG_FILES:85 · CSS:140 · buildDom:325 · segKey:427
+smoothPts:430 · featKey:446 · addFeat:447 · genFeatures:452 · terrainAt:471 · roadGroundY:484
+decalTex:492 · makeDecals:511 · decalTick:520 · buildRoads:537 · distToSeg:633 · roadInfo:638
+onRoad:644 · randomRoadPoint:645 · makeTextSprite:668 · letterTexture:681 · woodTileMat:696 · muralTexture:707
+buildSchool:719 · buildScenery:865 · scatterTrees:944 · postTick:964 · scatterClouds:991 · makeDog:1003
+spawnDog:1018 · dogHit:1028 · dogTick:1038 · coinTexture:1056 · makeCoins:1067 · addCoin:1069
+clearCoins:1077 · coinTierAt:1080 · coinFx:1090 · grabCoin:1099 · coinTick:1116 · placeSpecialCoin:1124
+makeVehicle:1136 · netReady:1171 · netJoin:1175 · netSend:1188 · sendChat:1205 · showPeerBubble:1215
+removePeerBubble:1222 · renderBoard:1229 · peerColor:1246 · buildPeer:1250 · onPeer:1259 · dropPeer:1287
+netLeave:1294 · peerTick:1300 · spawnSlot:1311 · pickWord:1328 · spawnLetters:1338 · renderWordHud:1353
+fitWord:1361 · collectTick:1368 · completeWord:1387 · relocTick:1404 · gpsTick:1419 · miniTick:1428
+build:1463 · applyVehicleUi:1497 · fit:1515 · tick:1523 · frame:1531 · start:1674
+exitWorld:1725
 
 ## js/music.js (136 บรรทัด · 0 รายการ)
 
@@ -131,23 +132,23 @@ feedPrune:796 · feedPurgeCat:807 · feedPushAssets:818 · petDescriptor:836 · 
 followSet:872 · followUnset:883 · feedRebuild:890 · feedWatchSync:902 · fetchPlayerFeed:929 · fetchPlayerAssets:942
 fetchFollowers:961 · onlineStart:970 · onlineLoadSDK:1077
 
-## js/state.js (941 บรรทัด · 83 รายการ)
+## js/state.js (949 บรรทัด · 83 รายการ)
 STORAGE_KEY:6 · CURE_COST:8 · HUNGRY_SICK_MS:9 · MEAL_HOUR:11 · MEAL_FULL:12 · SLEEP_FROM_HOUR:13
 SLEEP_SICK_HOUR:14 · WAKE_HOUR:15 · DINNER_COST:16 · TOXIN_FULL:18 · DETOX_COST:19 · FOODQUIZ_Q:21
 FOODQUIZ_COIN:22 · FOODQUIZ_BONUS:23 · SHAPE_JUNK_MEALS:25 · SHAPE_CLEAN_MEALS:26 · SHAPE_MISS_MEALS:27 · SHAPE_EXP_BONUS:28
-HEAT_SICK_MS:29 · THIRST_SICK_MS:30 · DEFAULT_STATE:32 · FEED_CATS:140 · SLOT_MS:151 · currentSlotStart:152
-nextSlotStart:158 · mealDayKey:160 · nightKeyOf:162 · newPet:168 · loadState:193 · saveState:390
-activePet:397 · petStage:398 · isAdult:403 · abilityOn:404 · hasPetType:405 · todayStr:408
-dailyTick:412 · addCoins:415 · QUEST_POOL:435 · QUEST_PER_DAY:445 · questsToday:446 · questTick:453
-questEvent:457 · assetValue:493 · netWorth:518 · assetCount:520 · refreshRank:537 · heatProtected:553
-rainProtected:557 · petHungry:560 · petShapeOf:564 · updatePetShape:570 · shapeMealDone:577 · heatPct:587
-ymStr:596 · billOutstanding:600 · UTILITIES:607 · HOME_UTILITIES:613 · homeDecayed:615 · billTick:618
-myCar:687 · carLoanDue:692 · carLoanOverdue:697 · carLoanPayable:702 · carLoanPay:709 · compTick:722
-ONLINE_RATE:736 · onlineEarnActive:737 · onlineEarnTick:741 · onlineEarnFlush:752 · marketTick:762 · addCraft:786
-ORDER_MAX:805 · ORDER_LIFE_MS:806 · ORDER_GAP_MIN_MS:807 · ORDER_GAP_SPAN_MS:808 · ORDER_TIER_WEIGHT:809 · newOrder:810
-orderTick:823 · careTick:831 · expNeed:912 · addExp:917 · addRP:937
+HEAT_SICK_MS:29 · THIRST_SICK_MS:30 · DEFAULT_STATE:32 · FEED_CATS:144 · SLOT_MS:155 · currentSlotStart:156
+nextSlotStart:162 · mealDayKey:164 · nightKeyOf:166 · newPet:172 · loadState:197 · saveState:398
+activePet:405 · petStage:406 · isAdult:411 · abilityOn:412 · hasPetType:413 · todayStr:416
+dailyTick:420 · addCoins:423 · QUEST_POOL:443 · QUEST_PER_DAY:453 · questsToday:454 · questTick:461
+questEvent:465 · assetValue:501 · netWorth:526 · assetCount:528 · refreshRank:545 · heatProtected:561
+rainProtected:565 · petHungry:568 · petShapeOf:572 · updatePetShape:578 · shapeMealDone:585 · heatPct:595
+ymStr:604 · billOutstanding:608 · UTILITIES:615 · HOME_UTILITIES:621 · homeDecayed:623 · billTick:626
+myCar:695 · carLoanDue:700 · carLoanOverdue:705 · carLoanPayable:710 · carLoanPay:717 · compTick:730
+ONLINE_RATE:744 · onlineEarnActive:745 · onlineEarnTick:749 · onlineEarnFlush:760 · marketTick:770 · addCraft:794
+ORDER_MAX:813 · ORDER_LIFE_MS:814 · ORDER_GAP_MIN_MS:815 · ORDER_GAP_SPAN_MS:816 · ORDER_TIER_WEIGHT:817 · newOrder:818
+orderTick:831 · careTick:839 · expNeed:920 · addExp:925 · addRP:945
 
-## js/ui.js (6,478 บรรทัด · 253 รายการ)
+## js/ui.js (6,515 บรรทัด · 255 รายการ)
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · lobbyBlk:81 · caretakerFigureHTML:87
 footAlign:97 · heroRankBgHTML:125 · renderNewWord:159 · showNewWordPopup:178 · GIANT_MAX:201 · GIANT_COST:202
 GIANT_PET_VH:203 · GIANT_OWNER_VH:204 · GIANT_OWNER_X:205 · GIANT_NAMES:206 · giantLevel:207 · giantUnlocked:211
@@ -170,35 +171,35 @@ alignCureBtn:2438 · dictRecordLookup:2462 · DICT_FILE_COUNT:2473 · loadDict:2
 dictEntryHTML:2508 · openDictOverlay:2519 · renderDashboard:2603 · sleepBtnHTML:2988 · sleepHintHTML:2995 · sleepAllPets:3006
 wakeAllPets:3019 · feedPet:3030 · openFoodMenu:3044 · feedWith:3115 · AVATAR_UI:3145 · playerAvatarHTML:3148
 SHAPE_UI:3154 · showFeedResult:3163 · curePet:3204 · heartsFx:3227 · PAT_HOLD_MS:3250 · PAT_EXP:3251
-bindPetTap:3252 · petBounce:3270 · shortPatPet:3274 · longPatPet:3282 · cureCelebrateFx:3298 · railCureClick:3309
-detoxPet:3321 · openFoodQuiz:3344 · renderShop:3424 · homeVisualHTML:3488 · showHomeRuined:3502 · showCutNotice:3523
-renderHomeCard:3541 · payMaint:3625 · trashBillUI:3641 · payTrash:3658 · UTILITY_UI:3677 · utilityBillUI:3726
-payUtility:3751 · buyUtilityFix:3777 · renderPhoneCard:3795 · buyPhone:3835 · sellPhone:3857 · compLiveTotal:3878
-onlineLiveTotal:3889 · renderOnlineEarnPill:3894 · openPillInfo:3917 · renderComputerCard:3964 · buyComputer:3999 · sellComputer:4022
-soldCount:4048 · soldBadge:4049 · renderTicketCard:4054 · loadScriptOnce:4110 · enterAdventure3D:4126 · enterHaunted3D:4148
-advHealClick:4170 · buyTicket:4190 · renderHauntCard:4216 · buyHauntTicket:4271 · renderHeliCard:4298 · buyHeliTicket:4356
-enterHeli3D:4379 · renderDroneCard:4401 · buyDroneTicket:4456 · enterDrone3D:4479 · renderDriveCard:4502 · buyDriveTicket:4576
-enterDrive3D:4599 · pickDriveMap:4634 · enterMotoMapAsCar:4670 · renderSoccerCard:4692 · buySoccerTicket:4740 · enterSoccer3D:4763
-renderMotoCard:4786 · buyMotoTicket:4835 · enterMoto3D:4858 · WORLD3D:4883 · gotoRobotShop:4893 · scrollShopCardIntoView:4898
-railWorldClick:4901 · renderRailWorlds:4922 · tinvNoticeHTML:4981 · openTinvPicker:4989 · fruitCountdown:5033 · renderFarmCard:5045
-renderFarmClock:5115 · buyFruit:5131 · sellFruit:5151 · sellAllFruit:5168 · collectImg:5194 · renderFactoryCard:5200
-renderMarketCard:5223 · updateWishBadge:5279 · openWishlistDialog:5290 · bindStripArrows:5335 · renderMarketBrowse:5347 · carImg:5376
-renderVehicleShop:5377 · CS_CYCLE_MS:5428 · carInteriorImg:5429 · carStatHtml:5431 · renderCarShowroom:5438 · csShowBig:5464
-csInit:5491 · RS_CYCLE_MS:5514 · robotImg:5515 · renderRobotShop:5516 · rsShowBig:5538 · rsInit:5559
-buyRobot:5578 · enterMecha3D:5600 · pickMechaRobot:5621 · pickDriveCar:5653 · openCarBuyDialog:5696 · buyCarInsurance:5757
-payCarLoanMonthly:5776 · payCarLoanFull:5788 · carDriveBlock:5807 · gotoVehicleShop:5812 · gotoMyStock:5817 · showNeedCarDialog:5823
-craftDiscount:5835 · renderFactory:5838 · renderOrdersUI:5900 · startProduce:5919 · buyCollectible:5947 · cancelProduce:5975
-deliverOrder:5989 · renderOrderClock:6006 · renderCollectMine:6016 · openListDialog:6058 · cancelListing:6111 · buyMarketItem:6134
-showCollectReveal:6161 · buyAC:6199 · openHomeShop:6218 · renderPetShop:6277 · showLevelUp:6338 · renderStats:6375
-showTeacherCard:6446
+bindPetTap:3252 · petBounce:3270 · petMood:3276 · shortPatPet:3283 · longPatPet:3291 · patStreakTick:3313
+cureCelebrateFx:3335 · railCureClick:3346 · detoxPet:3358 · openFoodQuiz:3381 · renderShop:3461 · homeVisualHTML:3525
+showHomeRuined:3539 · showCutNotice:3560 · renderHomeCard:3578 · payMaint:3662 · trashBillUI:3678 · payTrash:3695
+UTILITY_UI:3714 · utilityBillUI:3763 · payUtility:3788 · buyUtilityFix:3814 · renderPhoneCard:3832 · buyPhone:3872
+sellPhone:3894 · compLiveTotal:3915 · onlineLiveTotal:3926 · renderOnlineEarnPill:3931 · openPillInfo:3954 · renderComputerCard:4001
+buyComputer:4036 · sellComputer:4059 · soldCount:4085 · soldBadge:4086 · renderTicketCard:4091 · loadScriptOnce:4147
+enterAdventure3D:4163 · enterHaunted3D:4185 · advHealClick:4207 · buyTicket:4227 · renderHauntCard:4253 · buyHauntTicket:4308
+renderHeliCard:4335 · buyHeliTicket:4393 · enterHeli3D:4416 · renderDroneCard:4438 · buyDroneTicket:4493 · enterDrone3D:4516
+renderDriveCard:4539 · buyDriveTicket:4613 · enterDrive3D:4636 · pickDriveMap:4671 · enterMotoMapAsCar:4707 · renderSoccerCard:4729
+buySoccerTicket:4777 · enterSoccer3D:4800 · renderMotoCard:4823 · buyMotoTicket:4872 · enterMoto3D:4895 · WORLD3D:4920
+gotoRobotShop:4930 · scrollShopCardIntoView:4935 · railWorldClick:4938 · renderRailWorlds:4959 · tinvNoticeHTML:5018 · openTinvPicker:5026
+fruitCountdown:5070 · renderFarmCard:5082 · renderFarmClock:5152 · buyFruit:5168 · sellFruit:5188 · sellAllFruit:5205
+collectImg:5231 · renderFactoryCard:5237 · renderMarketCard:5260 · updateWishBadge:5316 · openWishlistDialog:5327 · bindStripArrows:5372
+renderMarketBrowse:5384 · carImg:5413 · renderVehicleShop:5414 · CS_CYCLE_MS:5465 · carInteriorImg:5466 · carStatHtml:5468
+renderCarShowroom:5475 · csShowBig:5501 · csInit:5528 · RS_CYCLE_MS:5551 · robotImg:5552 · renderRobotShop:5553
+rsShowBig:5575 · rsInit:5596 · buyRobot:5615 · enterMecha3D:5637 · pickMechaRobot:5658 · pickDriveCar:5690
+openCarBuyDialog:5733 · buyCarInsurance:5794 · payCarLoanMonthly:5813 · payCarLoanFull:5825 · carDriveBlock:5844 · gotoVehicleShop:5849
+gotoMyStock:5854 · showNeedCarDialog:5860 · craftDiscount:5872 · renderFactory:5875 · renderOrdersUI:5937 · startProduce:5956
+buyCollectible:5984 · cancelProduce:6012 · deliverOrder:6026 · renderOrderClock:6043 · renderCollectMine:6053 · openListDialog:6095
+cancelListing:6148 · buyMarketItem:6171 · showCollectReveal:6198 · buyAC:6236 · openHomeShop:6255 · renderPetShop:6314
+showLevelUp:6375 · renderStats:6412 · showTeacherCard:6483
 
-## js/util.js (705 บรรทัด · 31 รายการ)
+## js/util.js (723 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
 showScreen:44 · TOAST_WARN_RE:52 · restackToasts:55 · toast:77 · floatFx:97 · beep:107
-petVoiceSynth:138 · sirenSynth:210 · playCashier:234 · cashierSynth:248 · playSpark:281 · sparkSynth:295
-thunderFx:330 · wordAudioFile:398 · speakWord:401 · speakLetter:421 · pickSpeakVoice:440 · speakWordTTS:451
-askNameDialog:471 · askConfirm:511 · alertBox:529 · applyNoAnim:549 · openSettings:554 · openHelp:660
-openTeacherGuide:686
+PET_MOOD:144 · petVoiceSynth:151 · sirenSynth:228 · playCashier:252 · cashierSynth:266 · playSpark:299
+sparkSynth:313 · thunderFx:348 · wordAudioFile:416 · speakWord:419 · speakLetter:439 · pickSpeakVoice:458
+speakWordTTS:469 · askNameDialog:489 · askConfirm:529 · alertBox:547 · applyNoAnim:567 · openSettings:572
+openHelp:678 · openTeacherGuide:704
 
 ## js/vocabbook.js (190 บรรทัด · 13 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
