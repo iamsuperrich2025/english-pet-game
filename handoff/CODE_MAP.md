@@ -102,24 +102,24 @@ PANEL_TITLES:9 · openPanel:20 · closePanel:28
 ## js/main.js (158 บรรทัด · 2 รายการ)
 syncMusicBtn:79 · bootGame:113
 
-## js/moto3d.js (1,782 บรรทัด · 97 รายการ)
+## js/moto3d.js (1,799 บรรทัด · 98 รายการ)
 REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
 GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
 LEAN_MAX:20 · COLLECT_R:21 · SPAWN_MIN:22 · BUCKET:23 · TILE_COLORS:24 · LETTER_COIN:26
-COIN_VAL:30 · COIN_GAP:31 · COIN_TIERS:33 · COIN_CURVE_RAD:38 · NET_SEND_MS:40 · PEER_COLORS:41
-CHAT_MS:43 · CHAT_PRESETS:44 · ENG_FILES:85 · CSS:140 · buildDom:325 · segKey:427
-smoothPts:430 · featKey:446 · addFeat:447 · genFeatures:452 · terrainAt:471 · roadGroundY:484
-decalTex:492 · makeDecals:511 · decalTick:520 · buildRoads:537 · distToSeg:633 · roadInfo:638
-onRoad:644 · randomRoadPoint:645 · makeTextSprite:668 · letterTexture:681 · woodTileMat:696 · muralTexture:707
-buildSchool:719 · buildScenery:865 · scatterTrees:944 · postTick:964 · scatterClouds:991 · makeDog:1003
-spawnDog:1018 · dogHit:1028 · dogTick:1038 · coinTexture:1056 · makeCoins:1067 · addCoin:1069
-clearCoins:1077 · coinTierAt:1080 · coinFx:1090 · grabCoin:1099 · coinTick:1116 · placeSpecialCoin:1124
-makeVehicle:1136 · netReady:1171 · netJoin:1175 · netSend:1188 · sendChat:1205 · showPeerBubble:1215
-removePeerBubble:1222 · renderBoard:1229 · peerColor:1246 · buildPeer:1250 · onPeer:1259 · dropPeer:1287
-netLeave:1294 · peerTick:1300 · spawnSlot:1311 · pickWord:1328 · spawnLetters:1338 · renderWordHud:1353
-fitWord:1361 · collectTick:1368 · completeWord:1387 · relocTick:1404 · gpsTick:1419 · miniTick:1428
-build:1463 · applyVehicleUi:1497 · fit:1515 · tick:1523 · frame:1531 · start:1674
-exitWorld:1725
+COIN_VAL:30 · COIN_GAP:31 · COIN_TIERS:34 · COIN_CURVE_RAD:39 · NET_SEND_MS:41 · PEER_COLORS:42
+CHAT_MS:44 · CHAT_PRESETS:45 · ENG_FILES:86 · CSS:141 · buildDom:326 · segKey:428
+smoothPts:431 · featKey:447 · addFeat:448 · genFeatures:453 · terrainAt:472 · roadGroundY:485
+decalTex:493 · makeDecals:512 · decalTick:521 · buildRoads:538 · distToSeg:634 · roadInfo:639
+onRoad:645 · randomRoadPoint:646 · makeTextSprite:669 · letterTexture:682 · woodTileMat:697 · muralTexture:708
+buildSchool:720 · buildScenery:866 · scatterTrees:945 · postTick:965 · scatterClouds:992 · makeDog:1004
+spawnDog:1019 · dogHit:1029 · dogTick:1039 · coinTexture:1057 · makeCoins:1068 · loadCoinImg:1074
+addCoin:1086 · clearCoins:1094 · coinTierAt:1097 · coinFx:1107 · grabCoin:1116 · coinTick:1133
+placeSpecialCoin:1141 · makeVehicle:1153 · netReady:1188 · netJoin:1192 · netSend:1205 · sendChat:1222
+showPeerBubble:1232 · removePeerBubble:1239 · renderBoard:1246 · peerColor:1263 · buildPeer:1267 · onPeer:1276
+dropPeer:1304 · netLeave:1311 · peerTick:1317 · spawnSlot:1328 · pickWord:1345 · spawnLetters:1355
+renderWordHud:1370 · fitWord:1378 · collectTick:1385 · completeWord:1404 · relocTick:1421 · gpsTick:1436
+miniTick:1445 · build:1480 · applyVehicleUi:1514 · fit:1532 · tick:1540 · frame:1548
+start:1691 · exitWorld:1742
 
 ## js/music.js (136 บรรทัด · 0 รายการ)
 
