@@ -128,80 +128,98 @@ const sfx = {
   spark  : ()=>{ playSpark(); },   // ⚡ ฟ้าผ่า/กระแสไฟ (จับคู่ครบใน 5 วิ / สอบสายฟ้า)
   siren  : ()=>{ sirenSynth(); },  // 🚨 หวอเบาๆ ตอนน้องเพิ่งล้มป่วย
   cashier: ()=>{ playCashier(); }, // 🛒 จ่ายเงินสำเร็จที่แคชเชียร์ (ซื้อของโรงงาน/ตลาดเพื่อน)
-  petVoice: (type)=>{ petVoiceSynth(type); },  // 🐾 เสียงร้องของน้องตามชนิด (แตะน้องในล็อบบี้)
+  petVoice: (type, mood)=>{ petVoiceSynth(type, mood); },  // 🐾 เสียงร้องของน้องตามชนิด+อารมณ์ (แตะน้องในล็อบบี้)
 };
 
-/* ---------- 🐾 เสียงร้องของน้องตามชนิด (รอบ 322 · สังเคราะห์ WebAudio ไม่ต้องมีไฟล์) ----------
-   แมว = เหมียว (สระเลื่อนขึ้นแล้วตกด้วย lowpass ขยับ) · หมา = โฮ่ง 2 ครั้งสั้นๆ (พัลส์ + noise)
-   มังกร = คำรามต่ำ (sawtooth ต่ำ + noise เบา) · ชนิดอื่น/ไม่รู้จัก = เสียงจิ๊บสั้นเป็นกลาง
-   คุมความดังไว้ต่ำ (เกมสำหรับเด็ก ไม่ให้ตกใจ) และเคารพสวิตช์เสียงเหมือน beep() */
-function petVoiceSynth(type){
+/* ---------- 🐾 เสียงร้องของน้องตามชนิด + อารมณ์ (รอบ 322 · ปรับตามอารมณ์รอบ 323) ----------
+   ชนิด: แมว = เหมียว (สระไต่ขึ้นแล้วตกยาว + lowpass ปิดลง) · หมา = โฮ่ง 2 พัลส์ + noise
+         มังกร = คำรามต่ำ (saw ต่ำ + noise) · ชนิดใหม่ที่ยังไม่มีเสียงเฉพาะ = จิ๊บสั้นเป็นกลาง
+   อารมณ์ (mood — ui.js ส่งมาจาก p.sick / p.sleeping / petHungry(p)):
+     happy  = อิ่มสบายดี → เสียงสูงขึ้น สั้นกระชับ ดังกว่า (สดใส)
+     hungry = หิว        → เสียงต่ำลง ยาวขึ้น เบาลง (ออดอ้อน)
+     sick   = ป่วย       → ต่ำและอ่อยที่สุด ยาวเอื่อย (ไม่มีแรง)
+     sleep  = หลับอยู่   → เบามาก เสียงต่ำสั้น (ละเมอ ไม่ปลุกทั้งบ้าน)
+   ทำด้วยตัวคูณ 3 ตัว (pitch/แรง/ความยาว) กับสูตรเสียงชุดเดิม — ไม่ต้องเขียนเสียงใหม่ทุกอารมณ์
+   คุมความดังไว้ต่ำ (เกมเด็ก ไม่ให้ตกใจ) และเคารพสวิตช์เสียงเหมือน beep() */
+const PET_MOOD = {
+  normal:{p:1,    v:1,   d:1   },
+  happy: {p:1.12, v:1.15, d:.88},
+  hungry:{p:.86,  v:.72, d:1.25},
+  sick:  {p:.74,  v:.55, d:1.45},
+  sleep: {p:.8,   v:.4,  d:1.1 },
+};
+function petVoiceSynth(type, mood){
   if(!state.sound) return;
   try{
     audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
     const ctx = audioCtx, t0 = ctx.currentTime;
-    const noiseBuf = (ms)=>{                       // ก้อน noise สั้นๆ ใช้ผสมให้เสียงมีเนื้อ
+    const M = PET_MOOD[mood] || PET_MOOD.normal;
+    const F = hz => hz * M.p;            // ความถี่ (อารมณ์ดี=สูงขึ้น · ป่วย/หิว=ต่ำลง)
+    const V = v  => v  * M.v;            // ความดัง (ป่วย/หลับ=เบาลง)
+    const D = s  => s  * M.d;            // ความยาว (ป่วย/หิว=ลากยาวกว่า)
+    const noiseBuf = (ms)=>{             // ก้อน noise สั้นๆ ใช้ผสมให้เสียงมีเนื้อ
       const n = Math.ceil(ctx.sampleRate*ms/1000);
       const b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
       for(let i=0;i<n;i++) d[i] = (Math.random()*2-1)*(1-i/n);
       return b;
     };
     if(type === 'cat'){
-      // เหมียว~ : ความถี่ไต่ขึ้นเล็กน้อยแล้วตกยาว + lowpass ปิดลง = ฟังเป็นเสียงแมวจริงกว่าบี๊บเปล่า
+      // เหมียว~ : ไต่ขึ้นนิดแล้วตกยาว · ตอนป่วย/หิว ตัวคูณจะทำให้กลายเป็น "เหมี้ยว..." ต่ำยาวอ่อยเอง
       const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
       o.type = 'sawtooth';
-      o.frequency.setValueAtTime(520, t0);
-      o.frequency.linearRampToValueAtTime(760, t0+.10);
-      o.frequency.linearRampToValueAtTime(430, t0+.42);
+      o.frequency.setValueAtTime(F(520), t0);
+      o.frequency.linearRampToValueAtTime(F(760), t0+D(.10));
+      o.frequency.linearRampToValueAtTime(F(430), t0+D(.42));
       f.type = 'lowpass';
-      f.frequency.setValueAtTime(2200, t0);
-      f.frequency.linearRampToValueAtTime(900, t0+.42);
+      f.frequency.setValueAtTime(F(2200), t0);
+      f.frequency.linearRampToValueAtTime(F(900), t0+D(.42));
       g.gain.setValueAtTime(.0001, t0);
-      g.gain.linearRampToValueAtTime(.12, t0+.06);
-      g.gain.exponentialRampToValueAtTime(.001, t0+.45);
+      g.gain.linearRampToValueAtTime(V(.12), t0+D(.06));
+      g.gain.exponentialRampToValueAtTime(.001, t0+D(.45));
       o.connect(f); f.connect(g); g.connect(ctx.destination);
-      o.start(t0); o.stop(t0+.46);
+      o.start(t0); o.stop(t0+D(.46));
     }else if(type === 'dog'){
-      // โฮ่ง โฮ่ง : 2 พัลส์สั้น (ตัวเสียงต่ำตกเร็ว + noise แต้มหัวเสียงให้เหมือนลมเห่า)
-      [0, .19].forEach(dt=>{
+      // โฮ่ง โฮ่ง : 2 พัลส์ (ป่วย/หลับเหลือเสียงเดียว = ไม่มีแรงเห่ารัว)
+      const beats = (mood === 'sick' || mood === 'sleep') ? [0] : [0, D(.19)];
+      beats.forEach(dt=>{
         const t = t0 + dt;
         const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
         o.type = 'square';
-        o.frequency.setValueAtTime(300, t);
-        o.frequency.exponentialRampToValueAtTime(140, t+.13);
-        f.type = 'lowpass'; f.frequency.setValueAtTime(1500, t);
-        g.gain.setValueAtTime(.14, t);
-        g.gain.exponentialRampToValueAtTime(.001, t+.14);
+        o.frequency.setValueAtTime(F(300), t);
+        o.frequency.exponentialRampToValueAtTime(F(140), t+D(.13));
+        f.type = 'lowpass'; f.frequency.setValueAtTime(F(1500), t);
+        g.gain.setValueAtTime(V(.14), t);
+        g.gain.exponentialRampToValueAtTime(.001, t+D(.14));
         o.connect(f); f.connect(g); g.connect(ctx.destination);
-        o.start(t); o.stop(t+.15);
+        o.start(t); o.stop(t+D(.15));
         const ns = ctx.createBufferSource(), ng = ctx.createGain();
         ns.buffer = noiseBuf(60);
-        ng.gain.setValueAtTime(.05, t);
-        ng.gain.exponentialRampToValueAtTime(.001, t+.06);
+        ng.gain.setValueAtTime(V(.05), t);
+        ng.gain.exponentialRampToValueAtTime(.001, t+D(.06));
         ns.connect(ng); ng.connect(ctx.destination);
-        ns.start(t); ns.stop(t+.07);
+        ns.start(t); ns.stop(t+D(.07));
       });
     }else if(type === 'dragon'){
-      // คำรามต่ำๆ (ไม่ดุจนเด็กกลัว): sawtooth ต่ำสั่นเบา + noise คลอ
+      // คำรามต่ำๆ (ไม่ดุจนเด็กกลัว) · ป่วย = ครางเบาๆ ยาวกว่าเดิม
       const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
       o.type = 'sawtooth';
-      o.frequency.setValueAtTime(110, t0);
-      o.frequency.linearRampToValueAtTime(78, t0+.55);
-      f.type = 'lowpass'; f.frequency.setValueAtTime(700, t0);
+      o.frequency.setValueAtTime(F(110), t0);
+      o.frequency.linearRampToValueAtTime(F(78), t0+D(.55));
+      f.type = 'lowpass'; f.frequency.setValueAtTime(F(700), t0);
       g.gain.setValueAtTime(.0001, t0);
-      g.gain.linearRampToValueAtTime(.13, t0+.09);
-      g.gain.exponentialRampToValueAtTime(.001, t0+.62);
+      g.gain.linearRampToValueAtTime(V(.13), t0+D(.09));
+      g.gain.exponentialRampToValueAtTime(.001, t0+D(.62));
       o.connect(f); f.connect(g); g.connect(ctx.destination);
-      o.start(t0); o.stop(t0+.63);
+      o.start(t0); o.stop(t0+D(.63));
       const ns = ctx.createBufferSource(), ng = ctx.createGain(), nf = ctx.createBiquadFilter();
       ns.buffer = noiseBuf(500);
-      nf.type = 'lowpass'; nf.frequency.setValueAtTime(400, t0);
-      ng.gain.setValueAtTime(.05, t0);
-      ng.gain.exponentialRampToValueAtTime(.001, t0+.5);
+      nf.type = 'lowpass'; nf.frequency.setValueAtTime(F(400), t0);
+      ng.gain.setValueAtTime(V(.05), t0);
+      ng.gain.exponentialRampToValueAtTime(.001, t0+D(.5));
       ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination);
-      ns.start(t0); ns.stop(t0+.52);
+      ns.start(t0); ns.stop(t0+D(.52));
     }else{
-      beep(700,.14,0,'triangle',.10);   // ชนิดใหม่ที่ยังไม่มีเสียงเฉพาะ
+      beep(F(700), D(.14), 0, 'triangle', V(.10));   // ชนิดใหม่ที่ยังไม่มีเสียงเฉพาะ
     }
   }catch(e){}
 }

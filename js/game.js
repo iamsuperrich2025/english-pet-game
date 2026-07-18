@@ -268,6 +268,16 @@ function showProgressReport(){
   const pilotHtml = state.pilotBadge
     ? `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span><b>${pilotNames[state.pilotBadge]}</b></span></div>`
     : `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span style="color:#9a8aac">ยังไม่ได้ — บินเก็บ 5 คำติดไม่ชน 🥉</span></div>`;
+  /* 🐾 รอบ 323: แถวเข็มเพื่อนซี้ — อิงสตรีค "วันที่ลูบน้องติดกัน" (เหมือนนักบิน ไม่ใช่ยอดสะสม)
+     โชว์สตรีคปัจจุบัน + สถิติดีสุด + บอกว่าอีกกี่วันได้เข็มถัดไป */
+  const bffNow  = state.patStreak || 0;
+  // เข็มถัดไป = ระดับที่ "ยังไม่เคยได้" (ไม่ใช่แค่ยังไม่ถึงสตรีค — สตรีคขาดแล้วเริ่มใหม่ เข็มเก่ายังอยู่)
+  const bffNext = BFF_TIERS.find(t=>t[1] > (state.bffBadge || 0));
+  const bffHtml = `<div class="rp-row"><span>🐾 เพื่อนซี้ (ลูบน้องค้างในล็อบบี้ วันละครั้ง)</span><span>`
+    + (state.bffBadge ? `<b>${BFF_TIER_UI[state.bffBadge]}</b> · ` : '')
+    + `ติดกัน <b>${fmtNum(bffNow)}</b> วัน (ดีสุด ${fmtNum(state.patStreakBest||0)})`
+    + (bffNext ? ` · อีก ${bffNext[0]-bffNow} วัน = ${BFF_TIER_UI[bffNext[1]]}` : ' · ครบทุกเข็มแล้ว! 🏆')
+    + `</span></div>`;
   const crownHtml = state.crownBadge
     ? `<div class="rp-crown">👑 <b>เข็มลับ "นักสะสมเข็ม"</b> — สะสมครบทั้ง 4 สาย! สุดยอด</div>`
     : `<div class="rp-row"><span>👑 เข็มลับ "นักสะสมเข็ม"</span><span style="color:#9a8aac">ได้เข็มครบทั้ง 4 สายแล้วปลดล็อก</span></div>`;
@@ -339,6 +349,7 @@ function showProgressReport(){
       <h3 class="rp-h3">🏆 ตู้เข็มสะสมของ${name}</h3>
       ${trophyHtml}
       ${pilotHtml}
+      ${bffHtml}
       ${crownHtml}
       ${weekBadgeHtml}
     </div>
@@ -388,6 +399,14 @@ const MECHABOSS_TIERS = [[3,1],[10,2],[25,3]];
 const MECHABOSS_TIER_UI = ['', '⚔️ เข็มนักล่าบอส', '🛡️ เข็มอัศวินเหล็ก', '🤖 เข็มเจ้าสมรภูมิ'];
 function mechaBossEmoji(b){ return ['','⚔️','🛡️','🤖'][b||0] || ''; }
 
+/* 🐾 รอบ 323: เข็ม "เพื่อนซี้" — ลูบยาวน้อง (กดค้างบนตัวน้องในล็อบบี้) ติดต่อกันกี่วัน
+   นับวันละครั้ง (state.patStreak / patStreakDay ใน ui.js longPatPet) · ขาดวัน = เริ่มนับใหม่จาก 1
+   แต่ "เข็มที่ได้แล้วไม่หาย" เหมือนเข็มสายอื่น · โบนัสเหรียญให้ครั้งเดียวตอนแตะเส้นแต่ละระดับ */
+const BFF_TIERS = [[7,1],[30,2],[100,3]];
+const BFF_TIER_UI = ['', '🐾 เข็มเพื่อนซี้', '💞 เข็มเพื่อนแท้', '🫶 เข็มคู่หูตลอดกาล'];
+const BFF_COIN = [0, 500, 2000, 8000];          // 🪙 โบนัสตอนได้เข็มแต่ละระดับ
+function bffEmoji(b){ return ['','🐾','💞','🫶'][b||0] || ''; }
+
 /* 🎖️ เข็มทั้งหมดต่อท้ายชื่อ (นักบิน🥉+สายฟ้า⚡+ผาดโผน🎯+นักเล่นขยัน🏅) — ใช้โชว์ในการ์ดเพื่อน/
    กระดานหน้าเมือง (บันทึกลง presence.n/leaderboard.n ให้เพื่อนเห็นด้วย) · pilotEmoji เป็น local
    ของ adventure3d จึง inline อาร์เรย์นักบินที่นี่ให้เป็นฟังก์ชัน global */
@@ -397,7 +416,8 @@ function badgeSuffix(){
     + thunderEmoji(state.thunderBadge)
     + daredevilEmoji(state.daredevilBadge)
     + diligentEmoji(state.diligentBadge)
-    + mechaBossEmoji(state.mechaBossBadge);            // 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่น)
+    + mechaBossEmoji(state.mechaBossBadge)             // 🤖 รอบ 229: เข็มนักล่าบอส (โลกหุ่น)
+    + bffEmoji(state.bffBadge);                        // 🐾 รอบ 323: เข็มเพื่อนซี้ (ลูบน้องติดกันหลายวัน)
 }
 
 /* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3 · เข็มลับ 👑=5) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน

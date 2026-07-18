@@ -25,6 +25,19 @@ git archive HEAD | tar -x -C "$STAGE/public"
 rm -rf "$STAGE/public/handoff" "$STAGE/public/tools"
 rm -f  "$STAGE/public"/*.md              # PROMPTS_*.md / TASK_*.md ไม่ใช่ของผู้เล่น
 
+# 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง
+#    (ตรวจสำเนา staged = git HEAD ไม่ใช่ working tree → ตรงกับของที่ผู้เล่นจะได้เป๊ะ)
+#    เจอ = exit 2 → set -e หยุด deploy ทันที · บั๊กแบบ petPatFx (รอบ 320) แตะแล้วเงียบ จะไม่หลุดขึ้นเว็บอีก
+echo "🕵️ ตรวจฟังก์ชันที่ไม่มีอยู่จริงก่อน deploy..."
+if ! python "$REPO/tools/check_undefined_calls.py" --path "$STAGE/public"; then
+  echo ""
+  echo "❌ หยุด deploy: พบการเรียกฟังก์ชันที่ไม่มีนิยาม (ดูรายการด้านบน)"
+  echo "   แก้โค้ด + commit ก่อน แล้วค่อย deploy ใหม่"
+  echo "   (ถ้าเป็น global ของไลบรารีภายนอกจริงๆ ให้เติมชื่อใน BUILTINS ของ tools/check_undefined_calls.py)"
+  rm -rf "$STAGE"
+  exit 2
+fi
+
 cat > "$STAGE/firebase.json" <<'EOF'
 {
   "hosting": {

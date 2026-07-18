@@ -3271,8 +3271,17 @@ function petBounce(tap, scale, deg, ms){
   tap.style.transform = `scale(${scale}) rotate(${deg}deg)`;
   setTimeout(()=>tap.style.transform = '', ms);
 }
+/* อารมณ์ที่ใช้เลือกโทนเสียงร้อง (รอบ 323) — เรียงตามความเร่งด่วน: ป่วย > หลับ > หิว > อิ่มดี
+   ไข่ยังไม่ฟัก (level 1) ไม่ร้อง — ให้เสียงกลางๆ ไปก่อน */
+function petMood(p){
+  if(!p) return 'normal';
+  if(p.sick) return 'sick';
+  if(p.sleeping) return 'sleep';
+  if(typeof petHungry === 'function' && petHungry(p)) return 'hungry';
+  return p.level >= 2 ? 'happy' : 'normal';
+}
 function shortPatPet(p, tap){
-  sfx.petVoice(p.type);          // 🔊 เหมียว/โฮ่ง/คำราม ตามชนิดน้อง
+  sfx.petVoice(p.type, petMood(p));   // 🔊 เหมียว/โฮ่ง/คำราม ตามชนิด + โทนตามอารมณ์
   petBounce(tap, 1.12, -4, 160);
   heartsFx(tap, 3);
   setTimeout(()=>{ if(!window.__piOverlay) openPetInfoOverlay(); }, 200);   // หน่วงให้เห็นน้องเด้ง/หัวใจก่อน
@@ -3280,7 +3289,7 @@ function shortPatPet(p, tap){
 /* ลูบยาว: หัวใจฟุ้ง + เด้งนุ่มกว่า + ร้องเสียงดีใจ · โบนัส EXP ให้วันละครั้งต่อตัว (p.patDay)
    ไม่เรียก renderDashboard ระหว่างนิ้วยังจิ้มอยู่ — DOM ถูกสร้างใหม่กลางคันจะทำให้ pointerup หลุด */
 function longPatPet(p, tap){
-  sfx.petVoice(p.type);
+  sfx.petVoice(p.type, petMood(p));
   petBounce(tap, 1.06, 0, 420);
   heartsFx(tap, 10);
   if(state.haptic !== false && navigator.vibrate) navigator.vibrate([20,40,20]);
@@ -3291,8 +3300,36 @@ function longPatPet(p, tap){
   }
   p.patDay = day;
   addExp(PAT_EXP, p);            // addExp จัดการเลื่อนเลเวล/กล่องฉลองให้เอง
+  const streak = patStreakTick(day);
   saveState();
-  toast(`🥰 ลูบ${p.name}จนฟิน! ได้ EXP +${PAT_EXP} (วันละครั้ง)`);
+  toast(`🥰 ลูบ${p.name}จนฟิน! ได้ EXP +${PAT_EXP} (วันละครั้ง)`
+    + (streak ? ` · 🔥 ลูบติดกัน ${streak} วัน` : ''));
+}
+
+/* 🐾 สตรีคลูบยาว → เข็ม "เพื่อนซี้" (รอบ 323)
+   นับ "วันละครั้ง" ไม่ว่าจะลูบกี่ตัว (สตรีคเป็นของผู้เล่น ไม่ใช่ของสัตว์รายตัว)
+   ลูบต่อจากเมื่อวาน = +1 · ขาดไปเกิน 1 วัน = เริ่มนับใหม่ที่ 1 · เข็มที่ได้แล้วไม่หายแม้สตรีคขาด
+   คืนจำนวนวันสตรีคปัจจุบัน (null = วันนี้นับไปแล้ว) */
+function patStreakTick(day){
+  if(state.patStreakDay === day) return null;                 // ลูบตัวที่ 2 ของวันเดียวกัน — ไม่นับซ้ำ
+  const yd = new Date();
+  yd.setDate(yd.getDate() - 1);
+  const yesterday = yd.getFullYear() + '-' + String(yd.getMonth()+1).padStart(2,'0') + '-' + String(yd.getDate()).padStart(2,'0');
+  state.patStreak = (state.patStreakDay === yesterday) ? (state.patStreak || 0) + 1 : 1;
+  state.patStreakDay = day;
+  if(state.patStreak > (state.patStreakBest || 0)) state.patStreakBest = state.patStreak;
+  const tier = BFF_TIERS.filter(t=>state.patStreak >= t[0]).pop();
+  if(tier && tier[1] > (state.bffBadge || 0)){
+    state.bffBadge = tier[1];
+    const coin = BFF_COIN[tier[1]] || 0;
+    if(coin) addCoins(coin);
+    setTimeout(()=>{      // หน่วงให้ toast/หัวใจเล่นจบก่อนค่อยฉลองเข็ม (แพทเทิร์นเดียวกับเข็มนักเล่นขยัน)
+      celebrateBadge(bffEmoji(tier[1]), `ได้${BFF_TIER_UI[tier[1]]}!`,
+        `ลูบน้องติดกัน ${tier[0]} วัน — รับ 🪙${fmtNum(coin)} + เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกเลย 🎉`);
+      if(typeof checkCrown === 'function') checkCrown();
+    }, 1200);
+  }
+  return state.patStreak;
 }
 
 function cureCelebrateFx(){

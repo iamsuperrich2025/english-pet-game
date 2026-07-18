@@ -24,6 +24,9 @@ except Exception:
     pass
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
+# --path <dir> = ตรวจโฟลเดอร์อื่น (deploy ใช้ตรวจสำเนาที่ staged จาก git HEAD ก่อนขึ้นเว็บ)
+if "--path" in sys.argv:
+    ROOT = pathlib.Path(sys.argv[sys.argv.index("--path") + 1]).resolve()
 JS_DIR = ROOT / "js"
 SHOW_ALL = "--all" in sys.argv
 
@@ -220,7 +223,9 @@ def main():
             print(f"      {f.relative_to(ROOT).as_posix()}:{ln}  {line[:110]}")
     print("\n💡 ⚠️ = เรียกที่เดียวในโปรเจกต์ → เสี่ยงเป็นฟังก์ชันที่ลืมเขียน/พิมพ์ผิดมากที่สุด")
     print("   (ตัวที่เรียกหลายจุดมักเป็น global ของไลบรารีภายนอก เช่น firebase/THREE — ตรวจด้วยตาอีกที)")
-    return 0
+    # exit 2 = เจอของน่าสงสัย → deploy_firebase.sh (set -e) หยุดทันที ไม่ปล่อยบั๊กเงียบขึ้นเว็บ
+    # ถ้าเป็น global ภายนอกจริงๆ ให้เติมชื่อลง BUILTINS ด้านบน แล้วรันใหม่
+    return 2
 
 if __name__ == "__main__":
     sys.exit(main())
