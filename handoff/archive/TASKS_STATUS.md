@@ -336,3 +336,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 306:** 🔊 **เสียงเครื่องยนต์จริง** (ผู้ใช้อัด `sound/MotorbikeSound.m4a` 15นาที มือถือ — ห้าม commit ไฟล์ต้นฉบับ/sound ทั้งโฟลเดอร์ มี github-recovery-codes.txt) — วิเคราะห์ RMS+spectral centroid (numpy+imageio-ffmpeg ติดตั้งแล้ว) เลือกช่วงนิ่งสุด: idle 248.7s / cruise 129.2s / accel 377.2s / decel 393.7s → กรอง 60Hz-7.5kHz ตัดลม/ซ่า · 16kHz mono · ลูป bake crossfade 80ms → `sound/moto/eng_*.wav` รวม 540KB · moto3d.js: แทน Eng สังเคราะห์ทั้งก้อน = ลูป idle↔cruise crossfade `mix=spd/7` + cruise pitch `.8+(spd/VMAX)*.55` + one-shot accel/decel ที่ขอบ thr (decel เฉพาะ spd>8) · ยืนยัน browser: 4 buf โหลด/gain สลับตาม spd/rate ไต่/shots ยิงตรงขอบ/ไม่มี error · **⚠️ Eng.tick เช็ก running — เทสต์ต้อง T.running=true** · deploy `.299` · ค้าง: ผู้ใช้ฟังจริง (ความดัง/สมดุลปรับได้ที่ gain .75/.55/.35 กับ shot .85/.75)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-18 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 307:** 🔉 **หรี่เสียงปล่อยคันเร่งมอไซค์** (ผู้ใช้: ดังเหมือนเสียงรบกวน) — moto3d.js Eng.tick: `shot('decel',.75→.3)` · ยืนยัน browser: ปล่อยคันเร่งที่ 115กม.ชม. → decel ยิงที่ v=0.3 (accel ยังคง .85) ไม่มี error · deploy `.300` · **หมายเหตุ:** ผู้ใช้เคยสั่งให้เอาเสียงมอไซค์ไปใส่โลกขับรถ (adventure3d) แต่**ยกเลิก**แล้ว — โลกขับรถใช้ CarSound สังเคราะห์เดิม (adventure3d.js diff เหลือแค่ navLine รอบ 286 ที่ค้างมาก่อน ไม่เกี่ยวเสียง)
