@@ -16,7 +16,7 @@ let built=false, running=false, rafId=0, lastT=0;
 let renderer=null, scene=null, camera=null;
 let wrapEl,screenEl,cvEl,knobEl,sliderEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist,coinsEl,banEl,miniCv,miniCtx,introEl,exitBox;
 let segs=[], buckets=new Map();            // ถนน: เส้นย่อย + ตารางแฮช
-let bike=null, leanG=null, wheelF=null, wheelR=null, forkG=null;
+let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
 let yaw=0, spd=0, lean=0, leanV=0, px=0, pz=0;
 let steer=0, thr=0, kSteer=0, kThr=false, padSteer=0, padThr=0;
 let camX=0,camY=0,camZ=0,camInit=false;
@@ -54,52 +54,39 @@ const Eng={ctx:null,o1:null,o2:null,g:null,
    DOM เครื่องเกมพกพา (สร้างครั้งเดียว · CSS ฉีดเอง ไม่แตะ style.css)
    ============================================================ */
 const CSS=`
-#moto-wrap{position:fixed;inset:0;z-index:4000;display:none;background:#c8d4e2;touch-action:none;
+#moto-wrap{position:fixed;inset:0;z-index:4000;display:none;background:#0c0e12;touch-action:none;
   user-select:none;-webkit-user-select:none;font-family:inherit;overflow:hidden}
 #moto-wrap.on{display:block}
-#moto-body{position:absolute;inset:0;border-radius:0;
-  background:linear-gradient(178deg,#ffffff 0%,#f3f5f8 46%,#e2e7ee 78%,#d3dae3 100%);
-  box-shadow:inset 0 -14px 30px rgba(90,110,140,.18), inset 0 10px 18px rgba(255,255,255,.9)}
-#moto-body::before,#moto-body::after{content:'';position:absolute;top:0;width:13%;height:4.5%;
-  background:#cfd7e2;border-radius:0 0 26px 26px;opacity:.75}
-#moto-body::before{left:12%} #moto-body::after{right:12%}
-.m-deco{position:absolute;font-size:4.6vmin;opacity:.85;filter:saturate(1.15);pointer-events:none}
-.m-deco.d1{left:5.5%;top:11%;font-size:5vmin}
-.m-deco.d2{left:9.5%;top:6%;font-size:3.4vmin}
-.m-deco.d3{left:12.5%;top:13%;font-size:3.6vmin}
-.m-deco.d4{right:12%;top:7%;font-size:5.4vmin}
-.m-deco.d5{right:6.5%;top:13.5%;font-size:4vmin;opacity:.9}
-#moto-power{position:absolute;left:50%;top:1.6%;transform:translateX(-50%);width:8.6vmin;height:8.6vmin;
-  border-radius:50%;border:.9vmin solid #fff;cursor:pointer;
-  background:radial-gradient(circle at 34% 30%,#ff9d9d,#ef5350 58%,#d8383f);
-  box-shadow:0 4px 10px rgba(180,60,60,.45), inset 0 -3px 6px rgba(140,20,30,.4);
-  color:#fff;font-size:3.6vmin;line-height:1;display:flex;align-items:center;justify-content:center;flex-direction:column}
-#moto-power .m-hint{font-size:1.55vmin;font-weight:800;opacity:.55;margin-top:.2vmin}
-#moto-screen-frame{position:absolute;left:50%;top:49%;transform:translate(-50%,-50%);
-  width:min(47vw,105vh);aspect-ratio:1.6;
-  background:linear-gradient(180deg,#fbfcfe,#e9edf2);border-radius:3.2vmin;
-  box-shadow:0 6px 16px rgba(80,100,130,.25), inset 0 0 0 .55vmin #fff}
-#moto-screen{position:absolute;inset:4.2%;background:#0e1118;border-radius:2vmin;overflow:hidden;
-  box-shadow:inset 0 0 2.6vmin rgba(0,0,0,.85)}
+/* เครื่องเกมพกพา = ภาพจริงของผู้ใช้ (img/moterbike/console_crop.webp) ยืดเต็มจอ
+   ตำแหน่งปุ่ม/จอ วัดจากพิกเซลภาพจริง (grid 10%): จอใน 25–69.6% x 18–71% · power กลาง 47% · knob ส้มซ้าย · บอลฟ้าขวา */
+#moto-body{position:absolute;inset:0;background:url('img/moterbike/console_crop.webp') center/100% 100% no-repeat}
+#moto-power{position:absolute;left:43.3%;top:0.5%;width:8.2%;height:13.6%;border-radius:50%;
+  border:none;cursor:pointer;background:transparent;color:#fff;
+  display:flex;align-items:flex-end;justify-content:center}
+#moto-power .m-hint{font-size:1.5vmin;font-weight:800;opacity:.5;margin-bottom:-2.2vmin;text-shadow:0 1px 2px #000}
+#moto-power:active{background:rgba(255,255,255,.14)}
+#moto-screen{position:absolute;left:25.1%;top:18%;width:44.4%;height:53%;
+  background:#0e1118;border-radius:1.6vmin;overflow:hidden;
+  box-shadow:inset 0 0 2vmin rgba(0,0,0,.85)}
 #moto-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-#moto-slider{position:absolute;left:2.6%;top:41%;width:20%;height:22%;border-radius:999px;cursor:pointer;
-  background:linear-gradient(180deg,#ffd54a,#ffb300);
-  box-shadow:0 5px 12px rgba(190,130,10,.4), inset 0 -4px 8px rgba(180,110,0,.45), 0 0 0 1.4vmin #fff;
-  display:flex;align-items:center;justify-content:space-between;padding:0 4%}
-#moto-slider .m-arr{color:#fff;opacity:.5;font-size:3.4vmin;font-weight:900;pointer-events:none;text-shadow:0 1px 2px rgba(120,80,0,.4)}
-#moto-knob{position:absolute;left:50%;top:13%;height:74%;width:44%;transform:translateX(-50%);border-radius:999px;
-  background:linear-gradient(180deg,#ff9a3d,#f57200);pointer-events:none;
-  box-shadow:0 3px 7px rgba(150,70,0,.5), inset 0 3px 5px rgba(255,220,170,.55);
+/* 🏍️ ภาพมอเตอร์ไซค์จริง (img/moterbike/bike.webp) — ล่างกึ่งกลางจอ เอียงเข้าโค้ง */
+#moto-bike{position:absolute;left:50%;bottom:-2%;height:56%;pointer-events:none;z-index:2;
+  transform:translateX(-50%);transform-origin:50% 92%;
+  filter:drop-shadow(0 1.2vmin 1vmin rgba(0,0,0,.55))}
+#moto-slider{position:absolute;left:2%;top:41%;width:22.5%;height:24%;border-radius:999px;cursor:pointer;
+  background:transparent}
+#moto-slider .m-arr{display:none}
+#moto-knob{position:absolute;left:50%;top:21%;height:56%;width:62%;transform:translateX(-50%);border-radius:999px;
+  background:linear-gradient(180deg,#ff7a45,#f04f16);pointer-events:none;
+  box-shadow:0 3px 7px rgba(0,0,0,.5), inset 0 3px 5px rgba(255,200,160,.5);
   display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:2.1vmin;
-  opacity:1;text-shadow:0 1px 2px rgba(140,60,0,.5)}
-#moto-knob span{opacity:.55}
-#moto-throttle{position:absolute;right:3%;top:29%;width:17%;aspect-ratio:1;border-radius:50%;border:none;cursor:pointer;
-  background:radial-gradient(circle at 32% 26%,#9df1f5,#26c6da 52%,#00a3b8);
-  box-shadow:0 8px 18px rgba(0,120,140,.4), inset 0 -6px 12px rgba(0,90,110,.45), 0 0 0 1.6vmin #fff;
-  color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin}
-#moto-throttle:active{transform:scale(.965)}
-#moto-throttle .m-ico{font-size:4.6vmin;opacity:.55;pointer-events:none}
-#moto-throttle .m-lb{font-size:2.4vmin;font-weight:900;opacity:.55;pointer-events:none;text-shadow:0 1px 2px rgba(0,80,100,.5)}
+  text-shadow:0 1px 2px rgba(120,40,0,.6)}
+#moto-knob span{opacity:.5}
+#moto-throttle{position:absolute;left:72%;top:32.5%;width:19.5%;height:48%;border-radius:50%;border:none;cursor:pointer;
+  background:transparent;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vmin}
+#moto-throttle:active{background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.22),rgba(255,255,255,0) 62%)}
+#moto-throttle .m-ico{font-size:4.4vmin;opacity:.5;pointer-events:none;text-shadow:0 1px 3px rgba(0,60,70,.6)}
+#moto-throttle .m-lb{font-size:2.3vmin;font-weight:900;opacity:.5;pointer-events:none;text-shadow:0 1px 2px rgba(0,60,70,.6)}
 /* ---------- HUD ในจอ ---------- */
 #moto-word{position:absolute;left:1.6%;top:2.5%;display:flex;gap:.45vmin;align-items:center;flex-wrap:wrap;max-width:70%}
 #moto-word .m-th{color:#ffe9a8;font-size:1.9vmin;font-weight:800;margin-left:.8vmin;text-shadow:0 1px 3px #000}
@@ -143,11 +130,10 @@ function buildDom(){
   wrapEl=document.createElement('div'); wrapEl.id='moto-wrap';
   wrapEl.innerHTML=`
   <div id="moto-body">
-    <span class="m-deco d1">⭐</span><span class="m-deco d2">✨</span><span class="m-deco d3">🎵</span>
-    <span class="m-deco d4">🏍️</span><span class="m-deco d5">☁️</span>
-    <button id="moto-power">⏻<span class="m-hint">ออก</span></button>
-    <div id="moto-screen-frame"><div id="moto-screen">
+    <button id="moto-power"><span class="m-hint">ออก</span></button>
+    <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
+      <img id="moto-bike" src="img/moterbike/bike.webp" alt="">
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
       <div id="moto-gps"><span id="moto-gps-arr">➤</span><span id="moto-gps-d">--</span></div>
@@ -162,7 +148,7 @@ function buildDom(){
         <small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว</small></p>
         <button id="moto-go">🏁 สตาร์ทเครื่อง!</button>
       </div></div>
-    </div></div>
+    </div>
     <div id="moto-slider"><span class="m-arr">◀</span><div id="moto-knob"><span>เลี้ยว</span></div><span class="m-arr">▶</span></div>
     <button id="moto-throttle"><span class="m-ico">🏍️</span><span class="m-lb">เร่ง</span></button>
   </div>
@@ -172,6 +158,7 @@ function buildDom(){
   </div></div>`;
   document.body.appendChild(wrapEl);
   screenEl=document.getElementById('moto-screen'); cvEl=document.getElementById('moto-cv');
+  bikeEl=document.getElementById('moto-bike');
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
@@ -420,68 +407,6 @@ function scatterClouds(all){
 }
 
 /* ============================================================
-   🏍️ มอเตอร์ไซค์ (อ้างภาพผู้ใช้: ถังเขียวเข้ม เบาะน้ำตาล ท่อโครเมียมคู่ กระจกกลม ไฟเลี้ยวส้ม)
-   root(ตำแหน่ง+yaw) → leanG(เอียงซ้ายขวา) → ตัวรถ+คนขี่
-   ============================================================ */
-function makeBike(){
-  const mat=(c)=>new THREE.MeshLambertMaterial({color:c});
-  const root=new THREE.Group();
-  leanG=new THREE.Group(); root.add(leanG);
-  const green=mat(0x3e4b40), black=mat(0x22252a), chrome=mat(0xd3dae2),
-        brown=mat(0x8a5a33), orange=new THREE.MeshLambertMaterial({color:0xff9a2e,emissive:0x7a3c00});
-  /* ล้อ */
-  const wg=new THREE.CylinderGeometry(WHEEL_R,WHEEL_R,.22,16);
-  wheelR=new THREE.Mesh(wg,black); wheelR.rotation.z=Math.PI/2; wheelR.position.set(0,WHEEL_R,-.75); leanG.add(wheelR);
-  forkG=new THREE.Group(); forkG.position.set(0,WHEEL_R,.78); leanG.add(forkG);
-  wheelF=new THREE.Mesh(wg,black); wheelF.rotation.z=Math.PI/2; forkG.add(wheelF);
-  /* ตัวถัง/ถังน้ำมันเขียวเข้ม + เบาะหนังน้ำตาล */
-  const tank=new THREE.Mesh(new THREE.BoxGeometry(.44,.34,.9),green); tank.position.set(0,.82,.22); leanG.add(tank);
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.36,.3,1.15),black); body.position.set(0,.56,-.1); leanG.add(body);
-  const seat=new THREE.Mesh(new THREE.BoxGeometry(.4,.14,.72),brown); seat.position.set(0,.86,-.5); leanG.add(seat);
-  /* ท่อไอเสียโครเมียมคู่ */
-  const eg=new THREE.CylinderGeometry(.085,.1,.85,10);
-  [[-.3],[.3]].forEach(([sx])=>{
-    const ex=new THREE.Mesh(eg,chrome); ex.rotation.x=Math.PI/2;
-    ex.position.set(sx,.42,-.62); leanG.add(ex);
-  });
-  /* แฮนด์ + กระจกกลม + กริปน้ำตาล */
-  const bar=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.72,8),chrome);
-  bar.rotation.z=Math.PI/2; bar.position.set(0,1.06,.62); leanG.add(bar);
-  [[-.34],[.34]].forEach(([sx])=>{
-    const grip=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.16,8),brown);
-    grip.rotation.z=Math.PI/2; grip.position.set(sx,1.06,.62); leanG.add(grip);
-    const stalk=new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,.2,6),chrome);
-    stalk.position.set(sx*.9,1.2,.6); leanG.add(stalk);
-    const mir=new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,.02,12),chrome);
-    mir.rotation.x=Math.PI/2; mir.position.set(sx*.9,1.3,.6); leanG.add(mir);
-    const ind=new THREE.Mesh(new THREE.SphereGeometry(.06,8,8),orange);
-    ind.position.set(sx*.8,.62,-.95); leanG.add(ind);     // ไฟเลี้ยวหลังส้ม
-  });
-  /* ไฟหน้า + ไฟท้าย */
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.14,10,10),
-    new THREE.MeshLambertMaterial({color:0xfff3c4,emissive:0x8a7a30}));
-  head.position.set(0,.95,.95); leanG.add(head);
-  const tail=new THREE.Mesh(new THREE.BoxGeometry(.2,.09,.06),
-    new THREE.MeshLambertMaterial({color:0xff4444,emissive:0x661111}));
-  tail.position.set(0,.72,-1.05); leanG.add(tail);
-  /* 🧒 คนขี่หัวโต หมวกแดง (น่ารัก) */
-  const rider=new THREE.Group();
-  const torso=new THREE.Mesh(new THREE.BoxGeometry(.4,.52,.28),mat(0x37b6d9)); torso.position.y=1.25; rider.add(torso);
-  const helm=new THREE.Mesh(new THREE.SphereGeometry(.24,12,12),mat(0xe0475e)); helm.position.y=1.72; rider.add(helm);
-  const visor=new THREE.Mesh(new THREE.SphereGeometry(.2,10,10),mat(0xcfe8ff));
-  visor.scale.set(.9,.62,.6); visor.position.set(0,1.7,.14); rider.add(visor);
-  [[-.26],[.26]].forEach(([sx])=>{
-    const arm=new THREE.Mesh(new THREE.BoxGeometry(.1,.42,.1),mat(0x37b6d9));
-    arm.position.set(sx,1.28,.3); arm.rotation.x=-.8; rider.add(arm);
-    const leg=new THREE.Mesh(new THREE.BoxGeometry(.13,.4,.16),mat(0x35507c));
-    leg.position.set(sx*.8,.78,-.28); leg.rotation.x=.5; rider.add(leg);
-  });
-  rider.position.z=-.42; leanG.add(rider);
-  scene.add(root);
-  return root;
-}
-
-/* ============================================================
    คำศัพท์ + ตัวอักษรบนถนน
    ============================================================ */
 function pickWord(){
@@ -615,7 +540,6 @@ function build(){
     startYaw=Math.atan2(dx,dz);
   }
   buildScenery();
-  bike=makeBike();
   built=true;
 }
 function fit(){
@@ -645,22 +569,20 @@ function frame(dt,now){
   const yr=steer*Math.min(spd,14)/(6.5+spd*0.42);
   yaw-=yr*dt*1.5;
   px+=Math.sin(yaw)*spd*dt; pz+=Math.cos(yaw)*spd*dt;
-  /* เอียงตัวรถ (สปริงนุ่ม) + ล้อหมุน + แฮนด์หัน */
-  const leanTgt=-steer*Math.min(1,spd/11)*LEAN_MAX;
+  /* 🏍️ เอียงเข้าโค้ง (รอบ 294 ผู้ใช้สั่ง: มอไซค์ต้องเอียง "เข้า" โค้งต้านแรงเหวี่ยง ไม่ใช่โคลงออกแบบรถยนต์)
+     เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
+  const leanTgt=steer*Math.min(1,spd/11)*LEAN_MAX;
   leanV+=(leanTgt-lean)*10*dt; leanV*=Math.exp(-6*dt); lean+=leanV;
-  bike.position.set(px,0,pz); bike.rotation.y=yaw;
-  leanG.rotation.z=lean;
-  forkG.rotation.y=steer*.35;
-  const wr=spd/WHEEL_R*dt;
-  wheelF.rotation.x-=wr; wheelR.rotation.x-=wr;
-  /* กล้อง third-person ตามหลังนุ่มๆ */
-  const cd=7.2, ch=3.1;
+  if(bikeEl) bikeEl.style.transform='translateX(-50%) rotate('+(lean*57.296).toFixed(1)+'deg)';
+  /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง) */
+  const cd=6.2, ch=2.6;
   const tx=px-Math.sin(yaw)*cd, tz=pz-Math.cos(yaw)*cd;
   if(!camInit){ camX=tx; camY=ch; camZ=tz; camInit=true; }
   const k=1-Math.exp(-5.5*dt);
   camX+=(tx-camX)*k; camZ+=(tz-camZ)*k; camY+=(ch-camY)*k;
   camera.position.set(camX,camY,camZ);
-  camera.lookAt(px+Math.sin(yaw)*3.5, 1.5, pz+Math.cos(yaw)*3.5);
+  camera.lookAt(px+Math.sin(yaw)*4, 1.4, pz+Math.cos(yaw)*4);
+  camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
   /* เกม */
   collectTick(); relocTick(now); gpsTick(); miniTick();
   if(now-decoAt>1000){ decoAt=now; scatterTrees(false); scatterClouds(false); }
