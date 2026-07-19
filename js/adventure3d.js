@@ -2748,6 +2748,7 @@ function removePeer(uid){
   if(!p) return;
   removePeerBubble(p);
   if(p.heliSpr){ scene.remove(p.heliSpr); disposeHeliMesh(p.heliSpr); p.heliSpr=null; }   // 🚁 รอบ 376
+  peerRotorStop(p);                                                                        // 🔊 รอบ 386: ปิดเสียงใบพัดเพื่อน
   if(p.flySpr){ scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }       // 🚁 รอบ 385: ลำบิน 3D
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
@@ -2831,17 +2832,32 @@ function tickPeers(dt,now){
       // 🚁 รอบ 385: เพื่อนที่กำลัง "บิน" = ลำโมเดล 3D จริงหันตาม yaw (ผู้ใช้ทัก "ยังเป็นภาพแบน")
       //    เฟส av: h_p=ขับลำแดง · h_r=นั่งลำฟ้า · เดิน/วิงสูทคง sprite เดิม — ป้ายชื่อยกขึ้นลอยเหนือใบพัด
       const flyCol=p.av==='h_p'?0xd8342e:p.av==='h_r'?0x2f7fd4:0;
-      if(p.flySpr&&(!flyCol||p._flyCol!==flyCol)){ scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }
+      if(p.flySpr&&(!flyCol||p._flyCol!==flyCol)){ peerRotorStop(p); scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }
       if(flyCol&&!p.flySpr){ p.flySpr=heliMeshBuild(flyCol); p._flyCol=flyCol; scene.add(p.flySpr); }
       if(p.flySpr){
         const hy=Math.max(.03,(p.cur.y||1.5)-2.2);        // y ที่ส่งมา = ระดับสายตานักบิน → ฐานลำต่ำกว่า ~2.2ม.
         p.flySpr.position.set(p.cur.x,hy,p.cur.z);
         let dyF=p.yawTgt-p.yawCur; dyF=((dyF+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
         p.yawCur+=dyF*k; p.flySpr.rotation.y=p.yawCur;    // หันหัวลำตามทิศที่เพื่อนหันจริง (lerp ทางสั้น)
+        // 🛩️ รอบ 386: เอียงลำเข้าโค้งตามอัตราเลี้ยว + ก้มหัวตามความเร็ว (order YZX = roll/pitch รอบแกนลำหลัง yaw)
+        if(p.flySpr.rotation.order!=='YZX') p.flySpr.rotation.order='YZX';
+        const spdF=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k/Math.max(dt,.001);
+        const yawRate=dyF*k/Math.max(dt,.001);
+        const bankT=Math.max(-.32,Math.min(.32,-yawRate*.55));
+        p._bank=(p._bank||0)+(bankT-(p._bank||0))*Math.min(1,dt*4);
+        p.flySpr.rotation.z=p._bank;
+        const pitT=-Math.min(.16,spdF*.008);              // ลบ = ก้มจมูก (จมูกลำอยู่ -Z)
+        p._pit=(p._pit||0)+(pitT-(p._pit||0))*Math.min(1,dt*3);
+        p.flySpr.rotation.x=p._pit;
         if(p.flySpr._rotor) p.flySpr._rotor.rotation.y+=dt*28;
         if(p.flySpr._trotor) p.flySpr._trotor.rotation.x+=dt*46;
         p.spr.position.y=hy+4.6;                          // ป้ายชื่อพ้นวงใบพัด
+        heliNavTick(p.flySpr,now,p._ph||(p._ph=Math.random()));   // 🔦 ไฟกลางคืนลำบิน
       }
+      heliNavTick(p.heliSpr,now,p._ph||(p._ph=Math.random()));    // 🔦 ลำแดงที่เพื่อนจอดทิ้งไว้ก็มีไฟ
+      // 🔊 เสียงใบพัดเพื่อนดังตามระยะจริง 3 แกน (เงียบ ~85ม. · ปิดสวิตช์เสียงเกม = เงียบ)
+      const d3=Math.hypot(p.cur.x-camera.position.x,(p.cur.y||1.5)-camera.position.y,p.cur.z-camera.position.z);
+      peerRotorTick(p,d3);
     }
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
@@ -6826,7 +6842,47 @@ function heliGlbAssemble(g,src,blue){
   g.add(root);
   if(mr) g._rotor=mr;
   if(tr) g._trotor=tr;
-  g._glbShared=true;                                  // geometry/material แชร์กับ cache — disposeHeliMesh ต้องข้าม
+  // 🔦 รอบ 386: ไฟเดินอากาศ (โชว์เฉพาะกลางคืน — heliNavTick คุม): nav แดงซ้าย/เขียวขวา + บีคอนแดงกะพริบบนบูม + ไฟท้ายขาว
+  const nl=new THREE.Group();
+  const lamp=(c,x,y,z,r)=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(r||.07,6,5),
+    new THREE.MeshBasicMaterial({color:c,transparent:true,fog:false})); m.position.set(x,y,z); nl.add(m); return m; };
+  lamp(0xff3b30,-.95,1.1,-1.0);                       // 🔴 nav ซ้าย
+  lamp(0x2ecc55,.95,1.1,-1.0);                        // 🟢 nav ขวา
+  nl._beacon=lamp(0xff2222,0,2.35,3.6,.09);           // 🔴 บีคอนกะพริบบนบูมหาง
+  lamp(0xffffff,0,2.05,5.05,.06);                     // ⚪ ไฟท้าย
+  nl.visible=false; g.add(nl); g._nl=nl;
+  g._glbShared=true;                                  // geometry/material แชร์กับ cache — disposeHeliMesh ต้องข้าม (ไฟ nl สร้างต่อลำ เล็กมาก ปล่อยตาม GC)
+}
+/* 🔦 กะพริบไฟเดินอากาศตอนกลางคืน — ใช้ร่วมทั้งลำจอดของฉากและลำเพื่อน (ลำ legacy ไม่มี _nl = ข้าม) */
+function heliNavTick(h,now,ph){
+  const nl=h&&h._nl; if(!nl) return;
+  nl.visible=heliNight>.15;
+  if(nl.visible&&nl._beacon) nl._beacon.material.opacity=((now/900+ph)%1)<.16?1:.25;
+}
+/* 🔊 รอบ 386: เสียงใบพัดลำเพื่อน — แชร์ AudioBuffer จาก HeliSound · gain แยกต่อคน ดังตามระยะ (สไตล์ voice chat)
+   ต่อตรง ctx.destination (แพตเทิร์น doorSlideSfx) — ไม่ผ่าน master ที่โดน env ของลำเราหรี่/ปิดตอนไม่ได้บิน */
+function peerRotorStop(p){
+  if(!p._rs) return;
+  try{ p._rs.src.stop(); }catch(e){}
+  try{ p._rs.g.disconnect(); }catch(e){}
+  p._rs=null;
+}
+function peerRotorTick(p,d3){
+  if(!p.flySpr){ peerRotorStop(p); return; }
+  if(!p._rs){
+    try{
+      HeliSound.probe();                                       // idempotent — เดินเครื่องโหลด buffer ถ้ายังไม่เคย
+      if(!(HeliSound.ctx&&HeliSound.files.rotor)) return;      // ยังไม่พร้อม → ลองใหม่เฟรมหน้า
+      const src=HeliSound.ctx.createBufferSource();
+      src.buffer=HeliSound.files.rotor; src.loop=true;
+      src.playbackRate.value=.94+Math.random()*.12;            // แต่ละลำเพี้ยนพิตช์นิดๆ ไม่พร้อมเพรียงปลอม
+      const g=HeliSound.ctx.createGain(); g.gain.value=0;
+      src.connect(g); g.connect(HeliSound.ctx.destination);
+      src.start();
+      p._rs={src,g};
+    }catch(e){ return; }
+  }
+  p._rs.g.gain.value=state.sound?Math.max(0,Math.min(.5,(1.05-d3/85)*.5)):0;   // ไกล ~85ม. = เงียบ
 }
 function heliMeshBuild(col,accent){
   const g=new THREE.Group();
@@ -7258,6 +7314,7 @@ function tickHeliFoot(dt,now){
   heliMusicTick();                                   // 🎬🎵 เพลงตามฉาก (รอบ 369)
   overlayEl.classList.toggle('show-adshop',hPhase==='walk');   // 🪧 ปุ่มเช่าป้ายเฉพาะตอนเดิน (รอบ 362)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
+  heliNavTick(F.pilotH,now,.1); heliNavTick(F.paxH,now,.55);      // 🔦 รอบ 386: ไฟเดินอากาศลำจอดตอนกลางคืน
   F.paxH.visible=hPhase!=='ride';                    // 🐛 รอบ 371: นั่งโดยสาร=ซ่อนลำตัวเอง (กล้องอยู่ในลำ ประตู/กระจกเข้มบังวิว — กรอบหน้าต่าง canvas ทำหน้าที่แทน)
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
