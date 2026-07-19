@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v79';   // v79: 📢 ป้ายโฆษณาเฮลิฯ ย้ายไปแนบผนังตึก รอบ 359
+const CACHE_VERSION = 'pet-vocab-v80';   // v80: 🌙 แสงเรืองขอบป้ายผนังตอนกลางคืน รอบ 360
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

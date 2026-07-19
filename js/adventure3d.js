@@ -1569,7 +1569,7 @@ function buildScene(md){
     }
     // 📢 ป้ายโฆษณาแนบผนังตึก (รอบ 359 — เดิมลอยเหนือดาดฟ้า ค่อมตัวอักษร) — ตึกเว้นตึก สูงสุด AD_COUNT ป้าย เลขคงที่
     // ติดผนังฝั่งหันเข้ากลางเมือง ชิดใต้ขอบดาดฟ้า · วางไฟล์ img/ads/ad_<เลข>.png = โฆษณาลูกค้าขึ้นแทนทันที
-    const ads=[];
+    const ads=[], adGlows=[];
     list.forEach((b,i)=>{
       if(ads.length>=AD_COUNT || i%2===1) return;
       const n=ads.length+1;
@@ -1582,6 +1582,12 @@ function buildScene(md){
       panel.name='adpanel'+n;
       panel.position.set(b.x+sx*(b.w/2+.08), b.h-ph/2-.5, b.z+sz*(b.d/2+.08));
       panel.rotation.y=Math.atan2(sx,sz);               // normal ชี้ออกจากผนังเข้ากลางเมือง
+      // 🌙 แสงเรืองรอบขอบป้ายตอนกลางคืน (รอบ 360) — แผ่นใหญ่กว่าป้ายซ่อนหลังป้าย · fogUpdate คุม visible/opacity
+      const glow=new THREE.Mesh(new THREE.PlaneGeometry(pw+.9,ph+.9),
+        new THREE.MeshBasicMaterial({color:0xffe9a8,transparent:true,opacity:0,
+          blending:THREE.AdditiveBlending,depthWrite:false}));
+      glow.position.z=-.03; glow.visible=false; panel.add(glow);   // ลูกของ panel — หมุน/ย้ายตามอัตโนมัติ
+      adGlows.push(glow);
       sc.add(panel);
       ads.push({n, x:b.x, z:b.z, h:b.h});
     });
@@ -1614,7 +1620,7 @@ function buildScene(md){
       m.position.set(b.x,b.h+.55,b.z); m.visible=false; sc.add(m);
       beacons.push({m,ph:i*.37});                    // ph = เฟสคนละจังหวะ ไม่วาบพร้อมกัน
     });
-    worlds[md]={scene:sc, trees:tr, buildings:list, ads, lights:{hemi,sun},
+    worlds[md]={scene:sc, trees:tr, buildings:list, ads, adGlows, lights:{hemi,sun},
                 night:{stars,moon}, beacons,         // 🌙 ของตกแต่งกลางคืน (fogUpdate/tickHeli คุม)
                 foot:buildHeliFoot(sc,list)};        // 🚶 รอบ 354: ของโหมดเดินเท้า (ตึกเทอร์มินัล/ลิฟต์/เฮลิฯ จอด)
     return;
@@ -7293,6 +7299,12 @@ function fogUpdate(now){
       N.stars.material.opacity=heliNight*.9*(1-heliFog*.6);
       N.moon.material.opacity=heliNight*.95*(1-heliFog*.5);
     }
+  }
+  // 📢🌙 แสงเรืองขอบป้ายผนัง (รอบ 360) — ติดเมื่อมืดพอ หรี่ตามหมอก
+  const G=worlds.heli&&worlds.heli.adGlows;
+  if(G){
+    const on=heliNight>.3, op=heliNight*.55*(1-heliFog*.4);
+    G.forEach(g=>{ g.visible=on; if(on) g.material.opacity=op; });
   }
 }
 /* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
