@@ -93,7 +93,7 @@ MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
 const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อยิง monster แตก (โหมด adv)
 const AD_COUNT = 10;            // ป้ายโฆษณาบนยอดตึกในเมืองเฮลิฯ (เลขป้ายคงที่ — เมือง seed แล้ว)
-const AD_RENT_COIN = 300;       // 🪧 รอบ 362: ค่าเช่าป้ายโฆษณาเฮลิฯ (ผู้เล่นจองใส่ชื่อตัวเอง)
+const AD_RENT_COIN = 1000;      // 🪧 รอบ 362: ค่าเช่าป้ายโฆษณาเฮลิฯ (ผู้เล่นจองใส่ชื่อตัวเอง · ผู้ใช้ปรับ 300→1000 รอบ 365)
 const AD_RENT_MS = 7*864e5;     // อายุสัญญาเช่า 7 วัน — ต้องตรงกับ rules /ads (604800000 ms)
 /* 📢 รอบ 183: ชื่อร้านบนตึกในโลกขับรถ — เอาชื่อจริงจาก OSM ออก (กันปัญหาลิขสิทธิ์)
    โชว์เฉพาะ "ผู้ลงโฆษณากับเรา" เท่านั้น → เพิ่มชื่อที่นี่ (เรียงขึ้นตึกอัตโนมัติ) · ว่าง = ตึกไม่มีชื่อ
@@ -638,7 +638,7 @@ function adsChanged(n,v){
 }
 function adRentBuy(n,btn){
   if(!(Online.ready&&Online.db)){ sfx.wrong(); toast('🔌 ต้องออนไลน์ก่อนถึงเช่าป้ายได้นะ'); return; }
-  if(state.coins<AD_RENT_COIN){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — ค่าเช่าป้าย '+AD_RENT_COIN+' เหรียญ'); return; }
+  if(state.coins<AD_RENT_COIN){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — ค่าเช่าป้าย '+fmtNum(AD_RENT_COIN)+' เหรียญ'); return; }
   if(btn) btn.disabled=true;
   const rec={uid:onlineKey(), n:(onlineDisplayName()||'ผู้เล่น').slice(0,40),
              ts:firebase.database.ServerValue.TIMESTAMP};
@@ -682,7 +682,7 @@ function adShopRender(){
         const days=Math.max(1,Math.ceil((r.ts+AD_RENT_MS-Date.now())/864e5));
         body=(r.uid===onlineKey()?'<span class="ash-st">✅ ของฉัน</span>':'')
           +'<span class="ash-nm">'+esc(r.n)+'</span><span class="ash-st">เหลือ '+days+' วัน</span>';
-      }else body='<button class="ash-rent" data-n="'+n+'">เช่า '+AD_RENT_COIN+'🪙</button>';
+      }else body='<button class="ash-rent" data-n="'+n+'">เช่า '+fmtNum(AD_RENT_COIN)+'🪙</button>';
     }
     cards+='<div class="ash-it"><b>🪧 '+n+'</b>'+body+'</div>';
   }
