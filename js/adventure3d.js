@@ -657,6 +657,12 @@ function adRentBuy(n,btn){
 /* 🪧💰 รอบ 366: บินผ่านป้ายตัวเองระยะใกล้ = +AD_FLYBY_COIN (เพดาน AD_FLYBY_CAP เหรียญ/วัน)
    ให้ผู้เช่าป้ายมีเหตุกลับมาบินชมป้ายทุกวัน · กันฟาร์ม: ต้องออกจากโซนก่อนถึงนับใหม่ + คูลดาวน์ 30 วิ/ป้าย
    นับรายวันใน state.adFlyby={d:'YYYY-MM-DD',n:เหรียญที่ได้วันนี้} (เซฟ cloud ตาม state ปกติ) */
+/* 🎬🎵 รอบ 369: เพลงตามฉากโลกเฮลิฯ — กลางคืน=bgm_03 (สายลับ) · นักบิน/วิงสูท=bgm_01 (ทะยาน) ·
+   เดิน/ลิฟต์/นั่งชม=bgm_02 (ล่องลอย) · sceneBg วนลูปเพลงนั้น ไม่มีไฟล์=คงเพลงเดิม · ออกโลก=ปล่อยคืน */
+function heliMusicTick(){
+  if(typeof Music==='undefined'||!Music.sceneBg) return;
+  Music.sceneBg(heliNight>.5?'bgm_03':(hPhase==='pilot'||hPhase==='wing')?'bgm_01':'bgm_02');
+}
 const AD_FLYBY_COIN=2, AD_FLYBY_CAP=10;
 let _adFlybyNear={}, _adFlybyAt={};
 function adFlybyTick(now){
@@ -6948,6 +6954,7 @@ function tickHeliFoot(dt,now){
   if(bcs){ const bOn=heliNight>.25;
     for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
   adGlowPulse(now);                                  // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
+  heliMusicTick();                                   // 🎬🎵 เพลงตามฉาก (รอบ 369)
   overlayEl.classList.toggle('show-adshop',hPhase==='walk');   // 🪧 ปุ่มเช่าป้ายเฉพาะตอนเดิน (รอบ 362)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
@@ -7278,6 +7285,7 @@ function tickHeli(dt,now){
     }
   }
   adGlowPulse(now);                                           // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
+  heliMusicTick();                                            // 🎬🎵 เพลงตามฉาก (รอบ 369)
   adFlybyTick(now);                                           // 🪧💰 โบนัสบินผ่านป้ายตัวเอง (รอบ 366)
   mailTick(now);                                              // 🛩️📦 ภารกิจไปรษณีย์ (ทำงานเฉพาะกลางคืน)
   dustTick(dt);                                               // 🌪️ ฝุ่นตลบตอนสตาร์ท/เทคออฟ
@@ -9452,6 +9460,7 @@ function exitWorld(){
   hauntSurviveFinish();                            // ⏱ ออกโลกผีเอง = นับเวลารอดรอบนี้เข้าสถิติด้วย
   running=false;
   adsStop();                                       // 🪧 รอบ 363: เลิกฟัง /ads (ป้ายเช่าโลกเฮลิฯ)
+  if(typeof Music!=='undefined'&&Music.sceneBg) Music.sceneBg(null);   // 🎬 คืนเพลงหมุนปกติ (รอบ 369)
   cancelAnimationFrame(rafId);
   closeBigMap();                                   // 🗺️ รอบ 144: ปิดแผนที่ขยาย + หยุด interval วาด
   if(document.pointerLockElement) document.exitPointerLock();

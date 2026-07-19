@@ -47,6 +47,23 @@ const Music = (function(){
     bg.src = bgTracks[bgIdx].url;
     if(bgAllowed()) bg.play().catch(()=>{});
   }
+  /* 🎬 รอบ 369: เพลงตามฉาก — โลก 3D ขอเพลงเฉพาะชื่อ (เช่น 'bgm_03') เล่นวนลูปจนกว่าจะปล่อย (null)
+     ยังไม่ probe เสร็จ/ไม่มีไฟล์ = ไม่เก็บชื่อ → ฝั่งเกมเรียกซ้ำทุก tick จะติดเองเมื่อพร้อม */
+  let sceneName = null;
+  function sceneBg(name){
+    name = name || null;
+    if(name === sceneName) return;
+    if(name){
+      const i = bgTracks.findIndex(t=>t.name===name);
+      if(i < 0) return;
+      sceneName = name;
+      bgStarted = true; bgPlay(i);
+      if(bg) bg.loop = true;
+    }else{
+      sceneName = null;
+      if(bg) bg.loop = false;          // เพลงปัจจุบันเล่นจบแล้วหมุนต่อตามปกติ
+    }
+  }
   function startBg(){
     if(bgStarted || !bgTracks.length || !musicOn()) return;   // ปิดเพลงไว้ = ยังไม่เริ่ม
     bgStarted = true;
@@ -131,6 +148,8 @@ const Music = (function(){
     carRadio, isCarOn:()=>carOn, toggleCar:()=>carRadio(!carOn),
     carTracks:()=>carTracks, curCar:()=>carIdx, playCar:carPlay,
     mode, setMode, vizData, ready:()=>carTracks.length>0,
+    sceneBg, curScene:()=>sceneName,             // 🎬 รอบ 369: เพลงตามฉากโลก 3D
+    bgReady:()=>bgTracks.length>0,
     setMusic, isMusicOn, toggleMusic:()=>setMusic(!musicOn()),   // 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลง Lobby
   };
 })();

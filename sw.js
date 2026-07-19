@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v86';   // v86: 🪧💰 โบนัสบินผ่านป้ายตัวเอง +2/ครั้ง เพดาน 10/วัน รอบ 366
+const CACHE_VERSION = 'pet-vocab-v87';   // v87: 🎬🎵 เพลงตามฉากโลกเฮลิฯ (กลางคืน/บิน/เดิน) รอบ 369
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
