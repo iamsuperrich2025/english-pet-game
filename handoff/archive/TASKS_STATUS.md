@@ -647,3 +647,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 369:** 🎬🎵 **เพลงตามฉากโลกเฮลิฯ (ต่อยอดรอบ 368 ผู้ใช้อนุมัติ)** — music.js เพิ่ม `Music.sceneBg(name|null)` (ล็อกเพลงชื่อนั้นวนลูป · ยังไม่ probe เสร็จ=ไม่เก็บชื่อให้เกมเรียกซ้ำติดเอง · ปล่อย=loop off หมุนต่อปกติ) + `curScene/bgReady` · adventure3d: `heliMusicTick()` ใน tickHeli+tickHeliFoot → `night>.5`=bgm_03 (สายลับ) · pilot/wing=bgm_01 (ทะยาน) · walk/lift/ride=bgm_02 (ล่องลอย) · exitWorld ปล่อย sceneBg(null) · ยืนยัน browser (Audio spy): เดินกลางวัน=bgm_02 · mock 22:00=bgm_03 · goWing กลางวัน=bgm_01 (bg เดียว loop:true src ตามฉาก) · ออกโลก scene=null loop=false · ไม่มี error · deploy `.360` SW v87
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 370:** 🏙️ **ผนังตึกภาพจริงเข้าเกม (ผู้ใช้แจ้ง "วางภาพแล้วตึกไม่เปลี่ยน")** — ต้นตอ: ไฟล์วางถูกครบ (facade_1..6.png 1024² · 9.4MB) แต่**ยังไม่ commit+deploy = live 404** เกม fallback หน้าต่างวาดเอง · แก้: แปลง .jpg q85 (รวม 1.1MB · png ใหญ่อยู่ local) + **buildingFacadeTexture probe .jpg ก่อน .png** (เดิมหา .png อย่างเดียว) · ยืนยัน browser: ตึก 20 หลัง map เป็น facade_1..6.jpg ครบ 0 หลัง procedural · ไม่มี error · deploy `.361` SW v88
