@@ -4,7 +4,7 @@
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-19
 
-## js/adventure3d.js (10,054 บรรทัด · 456 รายการ)
+## js/adventure3d.js (10,084 บรรทัด · 457 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
 - 1-213 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
 - 214-236 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
@@ -39,17 +39,17 @@
 - 6172-6299 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
 - 6300-6603 🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
 - 6604-6646 🛩️📦 ภารกิจไปรษณีย์กลางคืน (รอบ 353) — เฉพาะช่วงฟ้ามืด (heliNight>.5)
-- 6647-7743 🚶🛗🚁🪂 โหมดเดินเท้าในเมืองเฮลิฯ (รอบ 354 — ผู้ใช้สั่ง)
-- 7744-7817 🎛️ หน้าปัดเข็มขยับจริง (รอบ 61) — วาดสดทุกเฟรมจากค่าการบินจริง
-- 7818-8046 🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
-- 8047-8116 📹 กล้องใต้ท้องเครื่อง (belly cam) — รอบ 348
-- 8117-8188 🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
-- 8189-8803 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
-- 8804-8806 Loop หลัก
-- 8807-9123 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
-- 9124-9571 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
-- 9572-9584 เข้า/ออกโลก
-- 9585-10054 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 6647-7773 🚶🛗🚁🪂 โหมดเดินเท้าในเมืองเฮลิฯ (รอบ 354 — ผู้ใช้สั่ง)
+- 7774-7847 🎛️ หน้าปัดเข็มขยับจริง (รอบ 61) — วาดสดทุกเฟรมจากค่าการบินจริง
+- 7848-8076 🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
+- 8077-8146 📹 กล้องใต้ท้องเครื่อง (belly cam) — รอบ 348
+- 8147-8218 🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
+- 8219-8833 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
+- 8834-8836 Loop หลัก
+- 8837-9153 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
+- 9154-9601 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+- 9602-9614 เข้า/ออกโลก
+- 9615-10084 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
@@ -104,29 +104,30 @@ softLandBonus:6558 · awardPerfLand:6571 · setHeliLight:6590 · MAIL_COIN:6609 
 mailTick:6635 · FOOT_EYE:6654 · doorSlideSfx:6660 · doorLerp:6683 · entLerp:6691 · footStepSfx:6701
 WRING_COIN:6722 · festivalPaint:6726 · dustTexture:6738 · dustBurst:6747 · dustTick:6761 · HELI_GLB_URL:6782
 HELI_GLB_TEX_BLUE:6784 · HELI_GLB_ROTOR:6786 · HELI_GLB_TROTOR:6787 · heliGlbEnsure:6789 · heliMatBlueGet:6807 · heliGlbAssemble:6820
-heliNavTick:6859 · peerRotorStop:6866 · peerRotorTick:6872 · heliMeshBuild:6889 · heliMeshBuildLegacy:6900 · buildHeliFoot:7030
-footFloorAt:7146 · insideTerm:7153 · inDoorZone:7154 · footHint:7158 · setFootBtns:7159 · liftStart:7164
-beginRide:7175 · endRide:7192 · beginWing:7203 · awardAirLetter:7216 · beginPilot:7234 · endPilot:7263
-drawCabinWindow:7284 · tickHeliFoot:7308 · tickHeli:7511 · CP_NAT:7752 · CP_GAUGES:7753 · SEAT_LABEL:7766
-SEAT_P_FULL:7767 · SEAT_ZOOM:7768 · DASH_OFF_Y:7769 · DASH_DROP:7770 · setSeat:7772 · layoutCockpit:7784
-WIPER:7823 · WIPER_SPD:7824 · sunUpdate:7830 · HELI_FOG_N0:7841 · fogUpdate:7845 · adGlowPulse:7891
-RAIN_MAX:7900 · VISOR_Y:7901 · RAIN_MIN:7902 · RAIN_DUR:7903 · DROP_ZONE:7907 · addDrop:7908
-tickDrops:7916 · WIPE_R:7932 · wipeDrops:7933 · setWiper:7949 · setVisor:7955 · rainTick:7961
-drawBlade:7973 · drawGlass:7987 · drawBellyCam:8054 · drawBellyHud:8077 · drawLandingTargets:8123 · VS_HARD:8193
-drawDescentBar:8194 · heliShake:8243 · cpNeedle:8254 · drawGauges:8271 · XF_START:8318 · PRELOAD_WAIT:8319
-ALT_QUIET_FROM:8321 · ALT_MAX_DAMP:8322 · ALT_LP_MIN:8323 · ECHO_NEAR:8324 · WIND_FULL_SPD:8325 · SHUTDOWN_SEC:8326
-PAN_MAX:8328 · OD_RPM:8329 · SHAKE_RPM:8330 · SHAKE_HIT:8331 · soccerLetterPos:8810 · letterNeeded:8814
-soccerNeededSet:8819 · soccerTileGeo:8825 · soccerGoldTexture:8827 · makeSoccerTile:8844 · soccerRefreshSkins:8853 · soccerBuildTargets:8860
-soccerRetarget:8869 · soccerCoinPop:8881 · soccerFieldTexture:8893 · soccerNetTexture:8904 · soccerCrowdTexture:8911 · soccerBallMat:8919
-buildSoccerGoal:8927 · buildStands:8938 · soccerNumTex:8946 · makeSoccerPlayer:8956 · soccerResetBall:8980 · soccerKick:8985
-soccerCheer:8993 · updateSoccerGuide:8994 · soccerCamera:9008 · tickSoccer:9023 · soccerKitShow:9099 · soccerKitGo:9114
-emojiSprite:9165 · makeAlien:9170 · startWave:9203 · waveSpawnFill:9214 · waveComplete:9223 · updateWaveHud:9233
-checkMechaBossBadge:9235 · alienSpawnPos:9244 · removeAlien:9249 · mechaHudWord:9254 · setMechaHudSkin:9262 · mechaComboPop:9274
-mechaShielded:9279 · mechaDamageFx:9281 · mechaHitByAlien:9286 · spawnAlienShot:9292 · removeAlienShot:9302 · tickAlienShots:9307
-spawnPowerup:9319 · removePowerup:9332 · collectPowerup:9337 · tickPowerups:9344 · updateMechaHud:9353 · mechaTracer:9393
-mechaFire:9402 · explodeAlien:9439 · tickMecha:9469 · loop:9525 · grabShot:9552 · savePhoto:9563
-clearEntities:9575 · INTRO_KEY:9589 · introSeenObj:9590 · introSeen:9591 · markIntroSeen:9592 · INTRO:9593
-showIntro:9658 · closeIntro:9683 · beginPlay:9689 · start:9691 · exitWorld:9870 · mechaRecapLine:9915
+heliNavTick:6859 · peerRotorStop:6866 · peerRotorTick:6872 · heliCrashSfx:6891 · heliMeshBuild:6919 · heliMeshBuildLegacy:6930
+buildHeliFoot:7060 · footFloorAt:7176 · insideTerm:7183 · inDoorZone:7184 · footHint:7188 · setFootBtns:7189
+liftStart:7194 · beginRide:7205 · endRide:7222 · beginWing:7233 · awardAirLetter:7246 · beginPilot:7264
+endPilot:7293 · drawCabinWindow:7314 · tickHeliFoot:7338 · tickHeli:7541 · CP_NAT:7782 · CP_GAUGES:7783
+SEAT_LABEL:7796 · SEAT_P_FULL:7797 · SEAT_ZOOM:7798 · DASH_OFF_Y:7799 · DASH_DROP:7800 · setSeat:7802
+layoutCockpit:7814 · WIPER:7853 · WIPER_SPD:7854 · sunUpdate:7860 · HELI_FOG_N0:7871 · fogUpdate:7875
+adGlowPulse:7921 · RAIN_MAX:7930 · VISOR_Y:7931 · RAIN_MIN:7932 · RAIN_DUR:7933 · DROP_ZONE:7937
+addDrop:7938 · tickDrops:7946 · WIPE_R:7962 · wipeDrops:7963 · setWiper:7979 · setVisor:7985
+rainTick:7991 · drawBlade:8003 · drawGlass:8017 · drawBellyCam:8084 · drawBellyHud:8107 · drawLandingTargets:8153
+VS_HARD:8223 · drawDescentBar:8224 · heliShake:8273 · cpNeedle:8284 · drawGauges:8301 · XF_START:8348
+PRELOAD_WAIT:8349 · ALT_QUIET_FROM:8351 · ALT_MAX_DAMP:8352 · ALT_LP_MIN:8353 · ECHO_NEAR:8354 · WIND_FULL_SPD:8355
+SHUTDOWN_SEC:8356 · PAN_MAX:8358 · OD_RPM:8359 · SHAKE_RPM:8360 · SHAKE_HIT:8361 · soccerLetterPos:8840
+letterNeeded:8844 · soccerNeededSet:8849 · soccerTileGeo:8855 · soccerGoldTexture:8857 · makeSoccerTile:8874 · soccerRefreshSkins:8883
+soccerBuildTargets:8890 · soccerRetarget:8899 · soccerCoinPop:8911 · soccerFieldTexture:8923 · soccerNetTexture:8934 · soccerCrowdTexture:8941
+soccerBallMat:8949 · buildSoccerGoal:8957 · buildStands:8968 · soccerNumTex:8976 · makeSoccerPlayer:8986 · soccerResetBall:9010
+soccerKick:9015 · soccerCheer:9023 · updateSoccerGuide:9024 · soccerCamera:9038 · tickSoccer:9053 · soccerKitShow:9129
+soccerKitGo:9144 · emojiSprite:9195 · makeAlien:9200 · startWave:9233 · waveSpawnFill:9244 · waveComplete:9253
+updateWaveHud:9263 · checkMechaBossBadge:9265 · alienSpawnPos:9274 · removeAlien:9279 · mechaHudWord:9284 · setMechaHudSkin:9292
+mechaComboPop:9304 · mechaShielded:9309 · mechaDamageFx:9311 · mechaHitByAlien:9316 · spawnAlienShot:9322 · removeAlienShot:9332
+tickAlienShots:9337 · spawnPowerup:9349 · removePowerup:9362 · collectPowerup:9367 · tickPowerups:9374 · updateMechaHud:9383
+mechaTracer:9423 · mechaFire:9432 · explodeAlien:9469 · tickMecha:9499 · loop:9555 · grabShot:9582
+savePhoto:9593 · clearEntities:9605 · INTRO_KEY:9619 · introSeenObj:9620 · introSeen:9621 · markIntroSeen:9622
+INTRO:9623 · showIntro:9688 · closeIntro:9713 · beginPlay:9719 · start:9721 · exitWorld:9900
+mechaRecapLine:9945
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
