@@ -6657,75 +6657,108 @@ function dustTick(dt){
    บูมหางเรียว+แพนหางกลางบูม+ครีบตั้งเฉียง · ใบพัดหาง 2 กลีบฝั่งซ้าย · สกีลงจอด 2 ราง */
 function heliMeshBuild(col,accent){
   const g=new THREE.Group();
-  const bm=new THREE.MeshLambertMaterial({color:col});                 // สีตัวถังหลัก
-  const dk=new THREE.MeshLambertMaterial({color:0x2a2d33});            // เหล็กเข้ม (ใบพัด/สกี)
-  const gl=new THREE.MeshLambertMaterial({color:0x223744});            // กระจกเข้มอมฟ้า
-  const wt=new THREE.MeshLambertMaterial({color:accent||0xe8e6df});    // คาดใต้ท้อง (ทูโทน — เทศกาลเปลี่ยนสีได้)
+  // 🚁 รอบ 371: ลำตัวโค้งมนทั้งลำ (ellipsoid) + วัสดุ Phong มีแสงสะท้อน — เลิกทรงกล่องเลโก้
+  const bm=new THREE.MeshPhongMaterial({color:col,shininess:52,specular:0x565a60});          // สีตัวถังหลัก (มันเงาโลหะ)
+  const dk=new THREE.MeshPhongMaterial({color:0x2a2d33,shininess:24,specular:0x33363b});     // เหล็กเข้ม (ใบพัด/สกี)
+  const gl=new THREE.MeshPhongMaterial({color:0x223744,shininess:150,specular:0xaad4ee});    // กระจก highlight ฟ้าจัด
+  const wt=new THREE.MeshPhongMaterial({color:accent||0xe8e6df,shininess:52,specular:0x565a60}); // ท้องทูโทน (เทศกาลเปลี่ยนสีได้)
   // 🖼️ รอบ 358: มีไฟล์ texture = แปะอัตโนมัติ (prompt เจนใน PROMPTS_HELI_TEXTURE.md + Artifact)
   //    ⚠️ ภาพต้องเป็น "โทนเทาอ่อนเกือบขาว" — applyTex ใช้ tint คูณทับ ลายเดียวย้อมได้ทุกสีลำ (แดง/ฟ้า/เทศกาล)
-  applyTex(bm,'tex_heli_body',1,1,col);              // ผิวโลหะรอยแนวแผ่น+หมุดย้ำ ย้อมสีตัวถัง
-  applyTex(wt,'tex_heli_body',1,1,accent||0xe8e6df); // คาดใต้ท้องลายเดียวกัน ย้อมสี accent
-  applyTex(dk,'tex_heli_metal',1,1);                 // โลหะเข้มด้านใช้งานหนัก (ใบพัด/สกี — สีจากภาพตรงๆ)
-  applyTex(gl,'tex_heli_glass',1,1);                 // 🪟 รอบ 364: กระจกสะท้อนฟ้า (ไฟล์ผู้ใช้เจน — สีจากภาพตรงๆ)
-  // ── ห้องโดยสาร: กล่องหลัก + ท้องมน + คาดสีขาว ──
-  const cab=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.25,3.1),bm); cab.position.set(0,1.28,0); g.add(cab);
-  const belly=new THREE.Mesh(new THREE.BoxGeometry(1.45,.42,2.9),wt); belly.position.set(0,.68,0); g.add(belly);
-  // ── จมูกมน (ครึ่งทรงกลมบี้) + กระจกหน้า 2 บานเอียง + กระจกคาง ──
-  const nose=new THREE.Mesh(new THREE.SphereGeometry(.78,12,9),bm);
-  nose.scale.set(1,.92,1.15); nose.position.set(0,1.05,-1.62); g.add(nose);
-  const shield=new THREE.Mesh(new THREE.BoxGeometry(1.38,.82,.07),gl);
-  shield.position.set(0,1.68,-1.46); shield.rotation.x=-.52; g.add(shield);
-  const chinL=new THREE.Mesh(new THREE.BoxGeometry(.5,.4,.07),gl);
-  chinL.position.set(-.4,.78,-1.98); chinL.rotation.x=.35; g.add(chinL);
-  const chinR=chinL.clone(); chinR.position.x=.4; g.add(chinR);
-  // ── หน้าต่างบานเลื่อนฝั่งซ้าย + 🚪 ประตูสไลด์จริงฝั่งขวา (รอบ 357 — เลื่อนเปิดตอนผู้เล่นเดินเข้าใกล้) ──
-  const winL=new THREE.Mesh(new THREE.BoxGeometry(.04,.5,1.5),gl);
-  winL.position.set(-.81,1.55,.15); g.add(winL);
-  const door=new THREE.Group(); door.position.set(.82,0,0);            // เลื่อนแกน z ของกลุ่มนี้ = ประตูสไลด์
-  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.06,1.1,1.35),bm);  // บานประตูสีตัวถัง
-  doorP.position.set(0,1.35,.15); door.add(doorP);
-  const doorW=new THREE.Mesh(new THREE.BoxGeometry(.07,.48,.9),gl);    // หน้าต่างบนบาน
-  doorW.position.set(0,1.56,.15); door.add(doorW);
-  const rail=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,2.6),dk);    // รางเลื่อนบนลำ
-  rail.position.set(.84,1.98,.6); g.add(rail);
+  applyTex(bm,'tex_heli_body',2,1,col);              // repeat 2,1 — UV ทรงกลมพันรอบลำ ลายไม่ยืด
+  applyTex(wt,'tex_heli_body',2,1,accent||0xe8e6df);
+  applyTex(dk,'tex_heli_metal',1,1);
+  applyTex(gl,'tex_heli_glass',1,1);                 // 🪟 รอบ 364: กระจกสะท้อนฟ้า
+  // ── ลำตัวหลัก ellipsoid เรียบลื่นหัวจรดท้าย + ท้อง accent มนรับกัน ──
+  const hull=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),bm);
+  hull.scale.set(.82,.75,2.32); hull.position.set(0,1.34,-.08); g.add(hull);
+  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),wt);
+  belly.scale.set(.76,.5,2.02); belly.position.set(0,1.0,-.1); g.add(belly);
+  // ── กระจกโดมหน้า (bubble canopy) ครอบหัว โผล่เหนือ/ข้างจมูกแบบลำจริง ──
+  const canopy=new THREE.Mesh(new THREE.SphereGeometry(1,24,14),gl);
+  canopy.scale.set(.73,.63,1.0); canopy.position.set(0,1.55,-1.4); g.add(canopy);
+  // ── หน้าต่างห้องโดยสารฝั่งซ้าย (กรอบเข้ม+กระจก นูนจากผิวเล็กน้อยแบบบานจริง) ──
+  const winF=new THREE.Mesh(new THREE.BoxGeometry(.05,.56,1.44),dk);
+  winF.position.set(-.8,1.52,.15); g.add(winF);
+  const winL=new THREE.Mesh(new THREE.BoxGeometry(.06,.46,1.32),gl);
+  winL.position.set(-.805,1.52,.15); g.add(winL);
+  // ── 🚪 ประตูสไลด์จริงฝั่งขวา (รอบ 357) — บานนอกลำวิ่งบนราง 2 เส้นแบบเฮลิฯ ขนส่งจริง ──
+  const door=new THREE.Group(); door.position.set(.84,0,0);            // เลื่อนแกน z ของกลุ่มนี้ = ประตูสไลด์
+  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.05,1.12,1.35),bm);
+  doorP.position.set(0,1.36,.15); door.add(doorP);
+  const doorW=new THREE.Mesh(new THREE.BoxGeometry(.06,.46,.92),gl);   // หน้าต่างบนบาน
+  doorW.position.set(0,1.55,.15); door.add(doorW);
+  const doorH=new THREE.Mesh(new THREE.BoxGeometry(.06,.05,.26),dk);   // มือจับ
+  doorH.position.set(.01,1.12,-.32); door.add(doorH);
+  [[1.98],[.8]].forEach(([ry])=>{ const rail=new THREE.Mesh(new THREE.BoxGeometry(.03,.05,2.6),dk);
+    rail.position.set(.85,ry,.6); g.add(rail); });                     // รางบน+ล่าง
   g.add(door);
   g._door=door; g._doorOpen=0;                                         // 0=ปิดสนิท · 1=เลื่อนไปหลังสุด
-  // ── ฝาครอบเครื่องยนต์ Twin-Pac บนหลังคา + ช่องรับลม + ท่อไอเสีย ──
-  const cowl=new THREE.Mesh(new THREE.BoxGeometry(.95,.5,2.5),bm); cowl.position.set(0,2.12,.45); g.add(cowl);
-  const intake=new THREE.Mesh(new THREE.BoxGeometry(1.2,.3,.6),dk); intake.position.set(0,2.05,-.6); g.add(intake);
-  const exh=new THREE.Mesh(new THREE.CylinderGeometry(.15,.17,.5,8),dk);
-  exh.rotation.x=Math.PI/2-.35; exh.position.set(0,2.15,1.85); g.add(exh);
-  // ── เสาใบพัด + ใบพัดหลัก 2 กลีบ + flybar ถ่วง (เอกลักษณ์ Bell) ──
-  const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,8),dk); mast.position.set(0,2.5,.1); g.add(mast);
-  const rotor=new THREE.Group(); rotor.position.set(0,2.72,.1);
-  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.17,.17,.16,10),dk); rotor.add(hub);
-  const blade=new THREE.Mesh(new THREE.BoxGeometry(8.6,.055,.42),dk); rotor.add(blade);   // 2 กลีบ = แท่งเดียวทะลุดุม
-  const fly=new THREE.Mesh(new THREE.BoxGeometry(2.5,.04,.08),dk); fly.rotation.y=Math.PI/2; fly.position.y=-.12; rotor.add(fly);
+  // ── ฝาครอบเครื่องยนต์แคปซูลมน + ช่องรับลม 2 ข้าง + ท่อไอเสียคู่บานออก ──
+  const cowl=new THREE.Mesh(new THREE.CapsuleGeometry(.4,1.5,4,12),bm);
+  cowl.rotation.x=Math.PI/2; cowl.position.set(0,2.14,.55); g.add(cowl);
+  [[-.3],[.3]].forEach(([ix])=>{ const sc=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),dk);
+    sc.scale.set(.16,.12,.3); sc.position.set(ix,2.32,-.42); g.add(sc); });
+  [[-.22,-.5],[.22,.5]].forEach(([ex,dir])=>{
+    const exh=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,.52,10),dk);
+    exh.rotation.x=Math.PI/2-.3; exh.rotation.z=dir*.35; exh.position.set(ex,2.22,1.72); g.add(exh);
+  });
+  // ── เสาใบพัด + ดุม/swashplate + ใบหลัก 2 กลีบแยกชิ้น มีมุมกระดก (coning) + flybar Bell ──
+  const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,10),dk); mast.position.set(0,2.52,.1); g.add(mast);
+  const rotor=new THREE.Group(); rotor.position.set(0,2.74,.1);
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(.16,.17,.2,12),dk); rotor.add(hub);
+  const swash=new THREE.Mesh(new THREE.TorusGeometry(.2,.035,8,16),dk);
+  swash.rotation.x=Math.PI/2; swash.position.y=-.11; rotor.add(swash);
+  [[1],[-1]].forEach(([s])=>{
+    const bl=new THREE.Mesh(new THREE.BoxGeometry(4.15,.05,.36),dk);
+    bl.position.x=s*2.22; bl.rotation.z=s*.028; bl.rotation.x=.05*s; rotor.add(bl);   // กระดกปลายขึ้น+มุมพิทช์
+    const grip=new THREE.Mesh(new THREE.BoxGeometry(.34,.09,.14),dk);
+    grip.position.x=s*.26; rotor.add(grip);
+  });
+  const fly=new THREE.Mesh(new THREE.BoxGeometry(2.5,.04,.08),dk); fly.rotation.y=Math.PI/2; fly.position.y=-.15; rotor.add(fly);
   [[-1.25],[1.25]].forEach(([fz])=>{ const w=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),dk);
-    w.position.set(0,-.12,fz); rotor.add(w); });
+    w.position.set(0,-.15,fz); rotor.add(w); });
   g.add(rotor);
-  // ── บูมหางเรียว + แพนหางกลางบูม + ครีบตั้งเฉียงหลัง ──
-  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.15,.31,3.6,9),bm);
-  boom.rotation.x=Math.PI/2; boom.position.set(0,1.62,3.25); g.add(boom);
-  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.7,.05,.44),bm); hstab.position.set(0,1.66,3.35); g.add(hstab);
-  const fin=new THREE.Mesh(new THREE.BoxGeometry(.08,1.3,.62),bm);
+  // ── บูมหางเรียวเนียน + แพนหางมีแผ่นปิดปลาย (endplate) + ครีบตั้ง + แฟริ่งเกียร์หาง ──
+  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.13,.33,3.9,12),bm);
+  boom.rotation.x=Math.PI/2; boom.position.set(0,1.64,3.3); g.add(boom);
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.75,.05,.44),bm); hstab.position.set(0,1.7,3.4); g.add(hstab);
+  [[-.875],[.875]].forEach(([px])=>{ const ep=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.5),bm);
+    ep.position.set(px,1.7,3.4); g.add(ep); });
+  const fin=new THREE.Mesh(new THREE.BoxGeometry(.08,1.32,.62),bm);
   fin.position.set(0,2.28,4.9); fin.rotation.x=-.16; g.add(fin);
+  const gbox=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),bm);
+  gbox.scale.set(.12,.14,.3); gbox.position.set(-.1,2.44,4.98); g.add(gbox);
+  const tskid=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.55,8),dk);  // กันหางกระแทก
+  tskid.rotation.x=.5; tskid.position.set(0,1.35,4.75); g.add(tskid);
   // ── ใบพัดหาง 2 กลีบ "ฝั่งซ้าย" ตามลำจริง ──
-  const trot=new THREE.Group(); trot.position.set(-.17,2.42,4.98);
-  const thub=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.1,8),dk); thub.rotation.z=Math.PI/2; trot.add(thub);
-  const tblade=new THREE.Mesh(new THREE.BoxGeometry(.05,1.62,.15),dk); trot.add(tblade);
+  const trot=new THREE.Group(); trot.position.set(-.18,2.42,4.98);
+  const thub=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.12,10),dk); thub.rotation.z=Math.PI/2; trot.add(thub);
+  const tblade=new THREE.Mesh(new THREE.BoxGeometry(.05,1.66,.14),dk); trot.add(tblade);
   g.add(trot);
   // ── สกีลงจอด: ราง 2 เส้น + ขาโค้ง 4 จุด ──
   [[-.78],[.78]].forEach(([sx])=>{
-    const rail=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,8),dk);
+    const rail=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,3.4,10),dk);
     rail.rotation.x=Math.PI/2; rail.position.set(sx,.16,-.1); g.add(rail);
-    const tip=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.55,8),dk);
+    const tip=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.55,10),dk);
     tip.rotation.x=Math.PI/2-.7; tip.position.set(sx,.32,-1.95); g.add(tip);   // ปลายหน้างอนขึ้น
     [[-.95],[.95]].forEach(([lz])=>{
-      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.62,8),dk);
+      const leg=new THREE.Mesh(new THREE.CylinderGeometry(.045,.045,.62,10),dk);
       leg.rotation.z=sx>0?.42:-.42; leg.position.set(sx*.82,.48,lz); g.add(leg);
     });
   });
+  // ── รายละเอียดสมจริง: ไฟนำทางแดงซ้าย/เขียวขวา + บีคอนแดงบนหลัง + ไฟท้ายขาว + เสา pitot + เสาอากาศ ──
+  const lamp=(c,x,y,z,r)=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(r||.05,6,5),
+    new THREE.MeshBasicMaterial({color:c})); m.position.set(x,y,z); g.add(m); return m; };
+  lamp(0xff3b30,-.8,1.3,-1.0);        // 🔴 nav ซ้าย
+  lamp(0x2ecc55,.8,1.3,-1.0);         // 🟢 nav ขวา
+  lamp(0xff2222,0,2.6,1.05,.06);      // 🔴 บีคอนกันชนบนฝาเครื่อง
+  lamp(0xffffff,0,2.9,5.18,.04);      // ⚪ ไฟท้ายบนครีบ
+  const pitot=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.5,6),dk);
+  pitot.rotation.x=Math.PI/2; pitot.position.set(.3,1.32,-2.5); g.add(pitot);
+  const ant1=new THREE.Mesh(new THREE.BoxGeometry(.03,.22,.28),dk);   // เสาอากาศครีบบนบูม
+  ant1.position.set(0,2.0,2.6); g.add(ant1);
+  const ant2=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.34,6),dk); // เสาใต้ท้อง
+  ant2.position.set(-.2,.42,.9); g.add(ant2);
   g._rotor=rotor; g._trotor=trot;
   return g;
 }
@@ -6931,8 +6964,12 @@ function drawCabinWindow(){
   if(!gaugeCtx) return;
   const c=gaugeCtx, dpr=Math.min(window.devicePixelRatio||1,2);
   const W=window.innerWidth, H=window.innerHeight;
+  // 🐛 รอบ 371: โหมดเดินเท้า cockpit ถูกซ่อน (กว้าง 0) → layoutCockpit ไม่เคยตั้งขนาด buffer
+  //    ค้างที่ 620×130 แล้วถูก CSS ยืดเต็มจอ = กรอบบวมบังเกินครึ่งจอ — ตั้งเองให้ตรงจอเสมอ
+  const cv=gaugeCanvasEl;
+  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){ cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); }
   c.save(); c.setTransform(dpr,0,0,dpr,0,0);
-  const mx=W*.09, my=H*.1, r=Math.min(W,H)*.16;
+  const mx=W*.055, my=H*.065, r=Math.min(W,H)*.12;   // ขอบบางลง (เดิม .09/.1/.16 — ผู้ใช้บอกบังเยอะ)
   c.fillStyle='#14171d';
   c.beginPath();
   c.rect(0,0,W,H);
@@ -6958,6 +6995,7 @@ function tickHeliFoot(dt,now){
   heliMusicTick();                                   // 🎬🎵 เพลงตามฉาก (รอบ 369)
   overlayEl.classList.toggle('show-adshop',hPhase==='walk');   // 🪧 ปุ่มเช่าป้ายเฉพาะตอนเดิน (รอบ 362)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
+  F.paxH.visible=hPhase!=='ride';                    // 🐛 รอบ 371: นั่งโดยสาร=ซ่อนลำตัวเอง (กล้องอยู่ในลำ ประตู/กระจกเข้มบังวิว — กรอบหน้าต่าง canvas ทำหน้าที่แทน)
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
   const p=camera.position;
