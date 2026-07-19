@@ -2846,7 +2846,7 @@ function tickPeers(dt,now){
         const bankT=Math.max(-.32,Math.min(.32,-yawRate*.55));
         p._bank=(p._bank||0)+(bankT-(p._bank||0))*Math.min(1,dt*4);
         p.flySpr.rotation.z=p._bank;
-        const pitT=-Math.min(.16,spdF*.008);              // ลบ = ก้มจมูก (จมูกลำอยู่ -Z)
+        const pitT=-Math.min(.22,spdF*.012);              // ลบ = ก้มจมูก (จมูกลำอยู่ -Z · รอบ 388 เพิ่มมุมให้เห็นชัด)
         p._pit=(p._pit||0)+(pitT-(p._pit||0))*Math.min(1,dt*3);
         p.flySpr.rotation.x=p._pit;
         if(p.flySpr._rotor) p.flySpr._rotor.rotation.y+=dt*28;
@@ -7587,12 +7587,15 @@ function tickHeli(dt,now){
   }
   camera.position.set(nx,ny,nz);
   // การเอียงแบบ smooth (แรงเฉื่อยเหมือนตัวเครื่องจริง) — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า
-  const tiltIn=hLanded?0:fw, sideIn=hLanded?0:sd;
+  // 🚁 รอบ 388: กดหัวตาม "ความเร็วเดินหน้าจริง" ไม่ใช่แค่คันบังคับ (ผู้ใช้ขอ "บินหน้า หัวต้องกดต่ำ")
+  //    ปล่อยคันแต่ลำยังพุ่ง = หัวยังกดค้างเหมือนจริง · บินถอย = เชิดหัว · เข็มขอบฟ้าหน้าปัดขยับตามอัตโนมัติ
+  const vFwd=hVel.x*-Math.sin(yaw)+hVel.z*-Math.cos(yaw);      // m/s องค์ประกอบความเร็วไปข้างหน้า
+  const tiltIn=hLanded?0:Math.max(-1.2,Math.min(1.5, fw*.6+vFwd/13)), sideIn=hLanded?0:sd;
   hTiltF+=(tiltIn-hTiltF)*Math.min(1,dt*5);
   hTiltS+=(sideIn-hTiltS)*Math.min(1,dt*5);
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw);
-  camera.rotateX(-hTiltF*.12);                  // กดหัว/เชิดหัวตามการเอียง (cockpit feedback)
+  camera.rotateX(-hTiltF*.15);                  // กดหัว/เชิดหัวตามการเอียง (cockpit feedback · รอบ 388 เพิ่มมุมชัดขึ้น)
   camera.rotateZ(-hTiltS*.09);
 
   // ---- เก็บตัวอักษร: ต้อง "ลงจอดแล้ว" บนดาดฟ้า/พื้นใกล้ตัวอักษร ----
