@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v93';   // v93: 🚁 ลำทรง Bell 212 หัวแหลมมน ทูโทนขาว-แดง รอบ 377
+const CACHE_VERSION = 'pet-vocab-v94';   // v94: 📏 ลำเฮลิฯ ขนาดสัดส่วนจริงเทียบคน (×1.6) รอบ 378
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

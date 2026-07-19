@@ -170,6 +170,7 @@ let radioBars=new Float32Array(32);                       // ระดับแ�
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
+const HELI_MESH_SCALE=1.6;        // 📏 รอบ 378: ขยายลำจอด/ลำเพื่อนเป็นสัดส่วนจริงเทียบคน (Bell 212)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
 /* 🎯💡🏆 รอบ 350: ระบบช่วยจัดกึ่งกลางเป้า + ไฟส่องหมอก + โบนัสลงนุ่ม */
 const ASSIST_R=14, ASSIST_ALT=26, ASSIST_PAD=3.0;   // รัศมีเริ่มติ๊ด · สูงไม่เกิน · "ตรงเป้า" = ในวง helipad (ring 2.4-3.0)
@@ -6846,6 +6847,9 @@ function heliMeshBuild(col,accent){
   const ant2=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.34,6),dk); // เสาใต้ท้อง
   ant2.position.set(-.2,.42,.9); g.add(ant2);
   g._rotor=rotor; g._trotor=trot;
+  // 📏 รอบ 378: ขยายทั้งลำเป็นสัดส่วนจริงเทียบคน (ผู้ใช้ขอ) — คูณ 1.6 → ลำ ~12.8ม. ใบพัด ~14.2ม.
+  //    (Bell 212 จริง: ลำ 12.9ม. · ใบพัด 14.6ม. · คนในเกมสูง ~1.7ม.) — ระยะโต้ตอบใน tickHeliFoot ขยายตาม
+  g.scale.setScalar(HELI_MESH_SCALE);
   return g;
 }
 /* สร้างของโหมดเดินครั้งเดียวตอน buildScene: เลือกตึกเทอร์มินัล เจาะประตู ทำล็อบบี้+ลิฟต์+เฮลิฯ 2 ลำ */
@@ -7008,7 +7012,7 @@ function endRide(backToRoof){
   F.paxH.position.set(F.paxPos.x,F.paxPos.y,F.paxPos.z); F.paxH.rotation.y=0;
   if(backToRoof){
     hPhase='walk';
-    camera.position.set(F.paxPos.x+1.5, termB.h+FOOT_EYE, F.paxPos.z+1.5);
+    camera.position.set(F.paxPos.x+2.3, termB.h+FOOT_EYE, F.paxPos.z+2.3);   // 📏 ลงข้างลำใหญ่ ไม่โผล่กลางลำ
     showBanner('🛬 จบทัวร์ กลับดาดฟ้าเทอร์มินัล');
     if(myRef) sendPos(true);
   }
@@ -7084,8 +7088,8 @@ function endPilot(){
   const ok=(tx,tz)=>{ if(Math.abs(footFloorAt(tx,tz,fy+1)-fy)>=1) return false;
     if(fy<1 && buildings.some(b=>Math.abs(tx-b.x)<b.w/2+.5&&Math.abs(tz-b.z)<b.d/2+.5)) return false;
     return true; };
-  let px=hx+cand[0][0]*2.4, pz=hz+cand[0][1]*2.4;
-  for(const [ox,oz] of cand){ const tx=hx+ox*2.4, tz=hz+oz*2.4; if(ok(tx,tz)){ px=tx; pz=tz; break; } }
+  let px=hx+cand[0][0]*3.2, pz=hz+cand[0][1]*3.2;   // 📏 รอบ 378: ลำใหญ่ขึ้น ยืนห่างออกมาพ้นลำ
+  for(const [ox,oz] of cand){ const tx=hx+ox*3.2, tz=hz+oz*3.2; if(ok(tx,tz)){ px=tx; pz=tz; break; } }
   hPhase='walk';
   overlayEl.classList.add('hfoot'); overlayEl.classList.remove('show-dismount');
   setFootBtns(false,false);
@@ -7153,7 +7157,7 @@ function tickHeliFoot(dt,now){
       doorLerp(F.paxH,0,dt*2.0);
       if(rideSpin>=1&&!_rideDusted){ _rideDusted=true; dustBurst(ridePos.x,F.paxPos.y,ridePos.z,28); }
       const rg={x:Math.cos(rideYaw),z:-Math.sin(rideYaw)};
-      camera.position.set(ridePos.x+rg.x*.8, ridePos.y+.3, ridePos.z+rg.z*.8);
+      camera.position.set(ridePos.x+rg.x*1.3, ridePos.y+.55, ridePos.z+rg.z*1.3);   // 📏 นั่งริมหน้าต่างลำใหญ่
       camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.8);
       drawCabinWindow();
       setFootBtns(true,true);
@@ -7177,7 +7181,7 @@ function tickHeliFoot(dt,now){
     F.paxH._rotor.rotation.y+=dt*28;
     if(F.paxH._trotor) F.paxH._trotor.rotation.x+=dt*46;   // ใบพัดหางหมุนเร็วกว่าตามจริง
     const rgt={x:Math.cos(rideYaw),z:-Math.sin(rideYaw)};            // เวกเตอร์ด้านขวาของหัวเครื่อง
-    camera.position.set(ridePos.x+rgt.x*.8, ridePos.y+.3, ridePos.z+rgt.z*.8);
+    camera.position.set(ridePos.x+rgt.x*1.3, ridePos.y+.55, ridePos.z+rgt.z*1.3);   // 📏 รอบ 378: ลำใหญ่ นั่งถัดออกมาถึงแนวหน้าต่าง
     camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.8);
     drawCabinWindow();
     setFootBtns(true,true);
@@ -7290,8 +7294,9 @@ function tickHeliFoot(dt,now){
   const glow=.35+.3*(.5+.5*Math.sin(now/300));
   F.padG.material.opacity=glow; F.padR.material.opacity=glow;
   // 🚪 ประตูสไลด์ต้อนรับ: เดินใกล้ลำไหน บานลำนั้นเลื่อนเปิดเอง (ลำแดงเปิดเฉพาะคนมีตั๋ว)
-  doorLerp(F.paxH,(onRoof&&dPax<4.5)?1:0,dt*2.4);
-  doorLerp(F.pilotH,(dPilot<4&&pLv&&state.heliTicket)?1:0,dt*2.4);
+  //    📏 รอบ 378: ระยะขยายตาม HELI_MESH_SCALE (ลำใหญ่ขึ้น 1.6 เท่า)
+  doorLerp(F.paxH,(onRoof&&dPax<6.4)?1:0,dt*2.4);
+  doorLerp(F.pilotH,(dPilot<5.8&&pLv&&state.heliTicket)?1:0,dt*2.4);
   // 🚪 ประตูกระจกทางเข้าเทอร์มินัลเปิดเองตอนเดินใกล้ (รอบ 374)
   const dEnt=Math.hypot(nx-F.doorC.x,nz-F.doorC.z);
   entLerp(F.entD,(dEnt<3.6&&camera.position.y<3.2)?1:0,dt*2.4);
@@ -7300,11 +7305,11 @@ function tickHeliFoot(dt,now){
     footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
   }else if(onRoof&&insideTerm(nx,nz,-1)){
     if(dLift<1.2){ liftStart(false,now); return; }
-    if(dPax<2.6){ beginRide(); return; }
+    if(dPax<3.7){ beginRide(); return; }
     footHint('🚁 เดินเข้าหาเฮลิฯ สีฟ้า = ขึ้นนั่งชมวิว · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
-  }else if(dPilot<3.6&&pLv){
-    if(dPilot<2.1&&state.heliTicket){ beginPilot(); return; }
-    if(dPilot<2.1&&!state.heliTicket){ beginPilot(); }   // ไม่มีตั๋ว → เด้งป้ายบอก (คูลดาวน์ในตัว) แล้วเดินต่อได้
+  }else if(dPilot<5.2&&pLv){
+    if(dPilot<3.0&&state.heliTicket){ beginPilot(); return; }
+    if(dPilot<3.0&&!state.heliTicket){ beginPilot(); }   // ไม่มีตั๋ว → เด้งป้ายบอก (คูลดาวน์ในตัว) แล้วเดินต่อได้
     footHint(state.heliTicket?'🚁 เดินชิดเฮลิฯ สีแดงอีกนิด = ขึ้นขับเอง!'
       :'🎫 ลำนี้ต้องมีตั๋วเฮลิฯ ถึงขับได้ — นั่งโดยสารฟรีที่ตึกป้าย 🛗');
   }else if(now>_footHintAt){
