@@ -642,3 +642,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 368:** 🌅🎵 **ฟ้าจริง+เพลงหนังเข้าเกม (ผู้ใช้เจนวางครบ)** — sky_dawn.png ผู้ใช้ 1536×1024 (ratio 1.5 ผิดสเปก 2:1) → PIL resize 2048×1024 เซฟ `img/sky/sky_dawn.jpg` 238KB (png ใหญ่อยู่ local ไม่ commit) · bgm_01..03.mp3 (~12MB) commit ตรงๆ แพตเทิร์น SongsInCar · ยืนยัน browser: เข้าเฮลิฯ `scene.background` เป็น Texture sky_dawn.jpg mapping equirect(303) จริง · Music probe HEAD 01→200,02→200,03→200,04→404 หยุดถูก = เจอ 3 เพลง (เล่นจริงรอ user gesture ตาม autoplay policy) · **⚠️ เจอ dev server ตายกลางเทสต์ SW เสิร์ฟ cache เงียบ (gotcha 167 อีกรอบ) — preview_start ใหม่+unregister SW แก้ได้** · deploy `.359` (ไม่บัมพ์ SW — ไม่แตะไฟล์ shell)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 369:** 🎬🎵 **เพลงตามฉากโลกเฮลิฯ (ต่อยอดรอบ 368 ผู้ใช้อนุมัติ)** — music.js เพิ่ม `Music.sceneBg(name|null)` (ล็อกเพลงชื่อนั้นวนลูป · ยังไม่ probe เสร็จ=ไม่เก็บชื่อให้เกมเรียกซ้ำติดเอง · ปล่อย=loop off หมุนต่อปกติ) + `curScene/bgReady` · adventure3d: `heliMusicTick()` ใน tickHeli+tickHeliFoot → `night>.5`=bgm_03 (สายลับ) · pilot/wing=bgm_01 (ทะยาน) · walk/lift/ride=bgm_02 (ล่องลอย) · exitWorld ปล่อย sceneBg(null) · ยืนยัน browser (Audio spy): เดินกลางวัน=bgm_02 · mock 22:00=bgm_03 · goWing กลางวัน=bgm_01 (bg เดียว loop:true src ตามฉาก) · ออกโลก scene=null loop=false · ไม่มี error · deploy `.360` SW v87
