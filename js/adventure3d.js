@@ -739,9 +739,10 @@ function buildingFacadeTexture(n){
     tex.needsUpdate=true;
   };
   drawProc();
-  const img=new Image();                               // probe รูปผนังจริง (กติกาเดียวกับ probeImages)
+  const img=new Image();                               // probe รูปผนังจริง .jpg ก่อน .png (รอบ 370 — jpg เบากว่า ~8 เท่า)
   img.onload=()=>{ tex.image=img; tex.needsUpdate=true; };
-  img.src='img/buildings/facade_'+n+'.png';
+  img.onerror=()=>{ const p=new Image(); p.onload=()=>{ tex.image=p; tex.needsUpdate=true; }; p.src='img/buildings/facade_'+n+'.png'; };
+  img.src='img/buildings/facade_'+n+'.jpg';
   return tex;
 }
 
