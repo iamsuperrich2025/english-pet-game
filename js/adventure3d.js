@@ -154,6 +154,7 @@ let tlJuncWarnUntil=0, juncEl=null;                   // 🚦 รอบ 182: ป
 let tlChkAt=0, tlCoolAt=0;                            // จังหวะเช็กทางแยก (ทุก 300ms) + cooldown หลังออกจากแยก
 let carPeerHitAt=0;                                   // cooldown ชนรถเพื่อน (กันโดนรัวติดๆ)
 let netTlOk=true;                                     // rules /world ยังไม่รับ field tl → ตัด tl ส่งซ้ำ ไม่พัง multiplayer
+let netHpOk=true;                                     // 🚁 รอบ 376: field hp (ลำแดงจอดทิ้งไว้) แพตเทิร์นเดียวกับ tl
 let carPeerHits=0;                                    // 🛠️ รอบ 133: นับ "เจตนาชน" รถเพื่อนรอบนี้ (ครบ 3 = ค่าซ่อม CAR_RAM_FEE)
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
@@ -2596,14 +2597,25 @@ function sendPos(force){
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
   // 🚦 รอบ 132: ไฟเลี้ยว (1=ซ้าย 2=ขวา) — ปิดไม่ส่ง field หายไปเอง (set ทับทั้ง node) · rules ต้องรับ tl ก่อน (RULES.md)
   if(M.drive && netTlOk && tlSig) payload.tl=tlSig;
+  // 🚁 รอบ 376: ลำแดงที่จอดทิ้งไว้ (ลงเดิน/ไปนั่งลำอื่น) — เพื่อนเห็นลำเราจอดตรงนั้นจริง
+  //    ส่งเฉพาะลำย้ายพ้นลานกลาง >4m (กันลำ default ทุกคนวางซ้อนกลางลาน) · rules ยังไม่รับ hp = ตัดทิ้ง (แพตเทิร์น tl)
+  if(M.heli && netHpOk && hPhase!=='pilot' && worlds.heli && worlds.heli.foot){
+    const hpH=worlds.heli.foot.pilotH;
+    if(Math.hypot(hpH.position.x,hpH.position.z)>4)
+      payload.hp=Math.round(hpH.position.x*10)/10+','+Math.round(hpH.position.z*10)/10+','
+        +Math.round(hpH.position.y*10)/10+','+Math.round(hpH.rotation.y*100)/100;
+  }
   // 🤝 คำเป้าหมายปัจจุบัน — ส่งเฉพาะตอนมีเพื่อนปาร์ตี้(invite กัน)อยู่ในโลกจริง
   // (คนเล่นทั่วไปไม่ส่ง → ไม่ผูกกับ rules ใหม่ ไม่มีทางทำ /world พังถ้ายังไม่ publish)
   if(words[0] && Object.keys(peers).some(uid=>tinvLinked(uid))) payload.cw=words[0].en+'|'+words[0].th;
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   myRef.set(payload).catch(()=>{
-    // 🚦 rules ยังไม่รับ field tl (ยังไม่ publish) → ตัด tl แล้วส่งซ้ำทันที กัน multiplayer พังทั้งก้อน
-    if(payload.tl!==undefined){ netTlOk=false; delete payload.tl; myRef.set(payload).catch(()=>{}); }
+    // 🚦🚁 rules ยังไม่รับ field tl/hp (ยังไม่ publish) → ตัดออกแล้วส่งซ้ำทันที กัน multiplayer พังทั้งก้อน
+    let retry=false;
+    if(payload.tl!==undefined){ netTlOk=false; delete payload.tl; retry=true; }
+    if(payload.hp!==undefined){ netHpOk=false; delete payload.hp; retry=true; }
+    if(retry) myRef.set(payload).catch(()=>{});
   });
 }
 /* ส่งแชทลอยหัว: กรองคำหยาบ + echo ของตัวเองมุมล่าง */
@@ -2700,6 +2712,7 @@ function onPeerData(snap){
   if(p.w!==w){ p.w=w; renderBoard(); }
   p.cw=(typeof d.cw==='string')?d.cw:null;             // 🤝 คำเป้าหมายของเพื่อน (ใช้ตอนเราเป็นลูกทีมตามหัวหน้า)
   p.tl=(d.tl===1||d.tl===2)?d.tl:0;                    // 🚦 ไฟเลี้ยวของเพื่อน (รอบ 132 — tickPeers สั่งกะพริบ)
+  p.hp=(typeof d.hp==='string')?d.hp:null;             // 🚁 รอบ 376: ลำแดงเพื่อนจอดทิ้งไว้ "x,z,y,yaw" (tickPeers วาด)
   // ไอคอน 🎤 เหนือหัวคนที่เปิดไมค์ (เด็กเห็นชัดว่าเดินเข้าใกล้ใครแล้วคุยได้)
   if(d.m===1 && !p.micSpr){
     p.micSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:emojiTexture('🎤'),transparent:true}));
@@ -2715,10 +2728,16 @@ function onPeerData(snap){
     showPeerBubble(p, d.c);
   }
 }
+/* 🚁 รอบ 376: เก็บ mesh ลำเพื่อน — geometry/material สร้างต่อลำ dispose ได้ (texture ต่อ material ด้วย · ภาพต้นทางแชร์ใน imgTexCache ไม่โดนแตะ) */
+function disposeHeliMesh(h){
+  h.traverse(o=>{ if(o.isMesh){ o.geometry.dispose();
+    (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map)m.map.dispose(); m.dispose(); }); } });
+}
 function removePeer(uid){
   const p=peers[uid];
   if(!p) return;
   removePeerBubble(p);
+  if(p.heliSpr){ scene.remove(p.heliSpr); disposeHeliMesh(p.heliSpr); p.heliSpr=null; }   // 🚁 รอบ 376
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
   scene.remove(p.spr);
@@ -2788,6 +2807,17 @@ function tickPeers(dt,now){
       else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:p.walk?2.8:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก: พ้นป้ายชื่อ)
     }
     if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:p.walk?2.55:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
+    // 🚁 รอบ 376: วาด/ย้าย/เก็บลำแดงที่เพื่อนจอดทิ้งไว้ (field hp) — สร้าง mesh ครั้งเดียว ขยับเฉพาะค่าเปลี่ยน
+    if(M.heli){
+      if(p.hp && !p.heliSpr){ p.heliSpr=heliMeshBuild(0xd8342e); scene.add(p.heliSpr); p._hpLast=null; }
+      if(!p.hp && p.heliSpr){ scene.remove(p.heliSpr); disposeHeliMesh(p.heliSpr); p.heliSpr=null; }
+      if(p.heliSpr && p.hp!==p._hpLast){
+        p._hpLast=p.hp;
+        const [hx,hz,hy,hyaw]=p.hp.split(',').map(Number);
+        if([hx,hz,hy,hyaw].every(isFinite)){ p.heliSpr.position.set(hx,hy,hz); p.heliSpr.rotation.y=hyaw; }
+      }
+      if(p.heliSpr&&p.heliSpr._rotor) p.heliSpr._rotor.rotation.y+=dt*.6;   // ใบพัดเอื่อยๆ เหมือนลำจอดของเรา
+    }
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
     if(en && en.audio && !en.audio.muted){
@@ -6623,7 +6653,29 @@ function entLerp(E,target,k){
   E.pL.position.x=-.64-E.open*1.06;
   E.pR.position.x=.64+E.open*1.06;
 }
-let wSpd=12, wP=0, wBank=0, _footHintAt=0;
+let wSpd=12, wP=0, wBank=0, _footHintAt=0, _stridePh=0;
+/* 👟 เสียงฝีเท้าสังเคราะห์ (รอบ 376) — hard=คอนกรีตดาดฟ้า/ล็อบบี้ (ก้องสั้นแหลม) · false=ถนนยางมะตอย (ทุ้มนุ่ม) */
+function footStepSfx(hard){
+  if(!state.sound) return;
+  try{
+    HeliSound.ensureCtx();
+    const c=HeliSound.ctx, t=c.currentTime;
+    const o=c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(hard?150:95,t);
+    o.frequency.exponentialRampToValueAtTime(hard?58:40,t+.09);
+    const g=c.createGain();
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(hard?.06:.075,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+(hard?.1:.14));
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16);
+    const n=c.createBufferSource(), buf=c.createBuffer(1,900,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);
+    n.buffer=buf;
+    const bp=c.createBiquadFilter(); bp.type=hard?'bandpass':'lowpass';
+    bp.frequency.value=hard?3400:900; if(hard) bp.Q.value=1;
+    const ng=c.createGain(); ng.gain.value=hard?.05:.03;
+    n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t);
+  }catch(e){}
+}
 const WRING_COIN=5;                                  // 💫 เหรียญฐานต่อแหวน (×คอมโบ: 5,10,15,...)
 let ringCombo=0;
 /* 🎨 สีลำพิเศษตามเทศกาล (รอบ 357) — ตัดสินตอน buildScene จากวันที่จริงของเครื่องผู้เล่น
@@ -7211,6 +7263,15 @@ function tickHeliFoot(dt,now){
   if(onRoof && curFloor-newFloor>2){ nx=p.x; nz=p.z; }              // ราวกันตกที่ขอบดาดฟ้า
   camera.position.set(nx,footFloorAt(nx,nz,p.y)+FOOT_EYE,nz);
   camera.rotation.set(0,0,0); camera.rotateY(yaw); camera.rotateX(pitch*.9);
+  // 👟 รอบ 376: เสียงฝีเท้าตามจังหวะก้าวจริง — ดาดฟ้า/ล็อบบี้=คอนกรีตก้อง · พื้นเมือง=ยางมะตอยทุ้ม
+  _stridePh+=Math.hypot(nx-p.x,nz-p.z);
+  if(_stridePh>1.55){ _stridePh=0; footStepSfx(onRoof||insideTerm(nx,nz,0)); }
+  // 🔠 รอบ 376: เดินชนตัวอักษรเก็บได้เลย (เดิมต้องใช้เฮลิฯ ลงจอดเท่านั้น — เด็กไม่มีตั๋วก็เก็บคำได้)
+  for(let i=letters.length-1;i>=0;i--){
+    const lp=letters[i].spr.position;
+    if(Math.hypot(lp.x-nx,lp.z-nz)<1.7 && Math.abs(lp.y-camera.position.y)<2.4) pickUpLetter(i);
+  }
+  letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
   // ── จุดโต้ตอบ ──
   const dLift=Math.hypot(nx-F.liftIn.x,nz-F.liftIn.z);
   // 🚶 รอบ 375: วัดจากตำแหน่งลำแดงจริง (หลังลงเดิน ลำอาจจอดบนดาดฟ้า/ที่อื่น) + ต้องอยู่ระดับพื้นเดียวกัน
@@ -7240,7 +7301,7 @@ function tickHeliFoot(dt,now){
       :'🎫 ลำนี้ต้องมีตั๋วเฮลิฯ ถึงขับได้ — นั่งโดยสารฟรีที่ตึกป้าย 🛗');
   }else if(now>_footHintAt){
     _footHintAt=now+400;
-    footHint(onRoof?'🚶 บนดาดฟ้า · กด 🪂 โดดวิงสูทได้เลย!'
+    footHint(onRoof?'🚶 บนดาดฟ้า · เดินชนตัวอักษรเก็บได้เลย · กด 🪂 โดดวิงสูท!'
       :'🚶 เดินสำรวจเมือง · ตึกป้าย 🛗 = ขึ้นดาดฟ้ารอเฮลิฯ · เฮลิฯ แดงลานกลาง = ขับเอง');
   }
   setFootBtns(onRoof&&curFloor>6,false);             // บนดาดฟ้าสูงพอ = โชว์ปุ่มโดดวิงสูท
@@ -9437,6 +9498,7 @@ function start(md,opt){
     camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
     hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
     hAtcCleared=false; ATC.reset();
+    netHpOk=true;                                  // 🚁 รอบ 376: คืนสิทธิ์ส่ง hp เผื่อผู้ใช้เพิ่ง publish rules
     if(hudWarnEl) hudWarnEl.style.display='none';
   }else if(M.drone){
     camera.position.set(0,10,0);                   // เริ่มลอยเหนือลานกลาง (ลานว่าง gx=gz=0) รอบตัวเป็นตึกร้าง
@@ -9636,6 +9698,7 @@ window.Adventure3D={
     get inv(){return inv}, get peers(){return peers}, get hp(){return hp}, get mode(){return mode},
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
+    peersTick:(dt)=>tickPeers(dt||.016,performance.now()),   // 🚁 รอบ 376: เทสต์ลำเพื่อนตอนแท็บโดน throttle
     showIntro, introSeen, get introEl(){return introEl}, get wordLog(){return sessionWordLog}, knockedOut,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,
