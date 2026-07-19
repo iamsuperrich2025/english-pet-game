@@ -6745,6 +6745,9 @@ function dustTick(dt){
 //    โหลดครั้งเดียวแล้ว cache → clone ต่อลำ (แชร์ geometry/material — disposeHeliMesh ห้าม dispose ดูธง _glbShared)
 //    ลำโค้ดเดิมเก็บไว้เป็น fallback (heliMeshBuildLegacy) เผื่อไฟล์หาย/โหลดพลาด
 const HELI_GLB_URL='img/models/helicopter.glb';
+// 🔵 รอบ 383: ลำโดยสารใช้ลายฟ้า (texture เดิมย้อม แดง→ฟ้า ด้วย tools — geometry แชร์ลำเดียวกัน)
+const HELI_GLB_TEX_BLUE='img/models/helicopter_tex_blue.jpg';
+let heliMatBlue=null;
 const HELI_GLB_ROTOR=['tripo_part_2','tripo_part_7','tripo_part_8'];                    // ใบพัดหลัก (ชื่อ node ใน glb)
 const HELI_GLB_TROTOR=['tripo_part_9','tripo_part_10','tripo_part_19','tripo_part_24']; // ใบพัดหาง+ดุม
 let heliGlbSrc=null, heliGlbFail=false; const heliGlbCbs=[];
@@ -6765,9 +6768,23 @@ function heliGlbEnsure(cb){
   else{ const s=document.createElement('script'); s.src='js/vendor/GLTFLoader.js';
     s.onload=load; s.onerror=()=>fin(null); document.head.appendChild(s); }
 }
+/* material ลายฟ้า — clone จาก material กลางครั้งเดียว cache แชร์ทุกลำฟ้า (disposeHeliMesh ข้ามอยู่แล้วผ่าน _glbShared) */
+function heliMatBlueGet(root){
+  if(heliMatBlue) return heliMatBlue;
+  let base=null; root.traverse(o=>{ if(!base&&o.isMesh) base=o.material; });
+  if(!base) return null;
+  heliMatBlue=base.clone();
+  const tx=new THREE.TextureLoader().load(HELI_GLB_TEX_BLUE);
+  tx.flipY=false;                                    // ⚠️ UV ของ glTF ไม่กลับแกน y — ต้องปิด flip ไม่งั้นลายกลับหัว
+  tx.encoding=THREE.LinearEncoding;
+  if(base.map){ tx.wrapS=base.map.wrapS; tx.wrapT=base.map.wrapT; }
+  heliMatBlue.map=tx;
+  return heliMatBlue;
+}
 /* ประกอบลำจากโมเดลจริงลงกลุ่ม g — จัดทิศ/ขนาด/พื้นให้แทนลำโค้ดเดิมพอดี (ระยะโต้ตอบใน tickHeliFoot ใช้ต่อได้) */
-function heliGlbAssemble(g,src){
+function heliGlbAssemble(g,src,blue){
   const root=src.clone(true);
+  if(blue){ const m=heliMatBlueGet(root); if(m) root.traverse(o=>{ if(o.isMesh) o.material=m; }); }
   root.updateMatrixWorld(true);
   // ครอบ pivot ให้ใบพัดหมุนได้ตาม API เดิม (_rotor.rotation.y · _trotor.rotation.x)
   const mkSpin=(names,preYaw)=>{
@@ -6800,7 +6817,9 @@ function heliMeshBuild(col,accent){
   g._rotor=g._trotor=new THREE.Group();               // dummy กัน tick แตะก่อนโหลดเสร็จ (แทนที่เมื่อประกอบจริง)
   // 📏 รอบ 378: ขยายทั้งลำเป็นสัดส่วนจริงเทียบคน — ระยะโต้ตอบใน tickHeliFoot ขยายตามแล้ว
   g.scale.setScalar(HELI_MESH_SCALE);
-  heliGlbEnsure(src=>{ if(src) heliGlbAssemble(g,src); else heliMeshBuildLegacy(g,col,accent); });
+  // 🔵 รอบ 383: สีที่ขอโทนฟ้า (ช่อง b > r เช่น ลำโดยสาร 0x2f7fd4 / เทศกาลสงกรานต์) → ใช้ลายฟ้า นอกนั้นลายแดงเดิม
+  const blue=((col||0)&0xff)>(((col||0)>>16)&0xff);
+  heliGlbEnsure(src=>{ if(src) heliGlbAssemble(g,src,blue); else heliMeshBuildLegacy(g,col,accent); });
   return g;
 }
 function heliMeshBuildLegacy(g,col,accent){
