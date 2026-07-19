@@ -6746,14 +6746,22 @@ function heliMeshBuild(col,accent){
   applyTex(wt,'tex_heli_body',2,1,accent||0xe8e6df);
   applyTex(dk,'tex_heli_metal',1,1);
   applyTex(gl,'tex_heli_glass',1,1);                 // 🪟 รอบ 364: กระจกสะท้อนฟ้า
-  // ── ลำตัวหลัก ellipsoid เรียบลื่นหัวจรดท้าย + ท้อง accent มนรับกัน ──
-  const hull=new THREE.Mesh(new THREE.SphereGeometry(1,24,16),bm);
-  hull.scale.set(.82,.75,2.32); hull.position.set(0,1.34,-.08); g.add(hull);
-  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),wt);
-  belly.scale.set(.76,.5,2.02); belly.position.set(0,1.0,-.1); g.add(belly);
-  // ── กระจกโดมหน้า (bubble canopy) ครอบหัว โผล่เหนือ/ข้างจมูกแบบลำจริง ──
+  // ── 🚁 รอบ 377: ลำตัวโปรไฟล์ Bell 212 จริง (ผู้ใช้ส่งภาพอ้างอิง) — หยดน้ำหัวแหลมมน ท้ายเรียวยกขึ้น
+  //    LatheGeometry หมุนโปรไฟล์รอบแกน (r,ยาว) → เอียง -.07 = หัวก้มท้ายเชิดรับบูมสูงแบบลำจริง
+  //    โทนสีสลับจากเดิม: "ขาว(accent)บน - สี(col)ล่าง" คาดแถบกวาดขึ้นหุ้มหัว ตามภาพ N212KA
+  const prof=[[.001,-2.75],[.3,-2.58],[.52,-2.28],[.7,-1.8],[.8,-1.05],[.82,-.15],[.78,.75],[.64,1.55],[.46,2.1],[.28,2.35]]
+    .map(([r,y])=>new THREE.Vector2(r,y));
+  const hull=new THREE.Mesh(new THREE.LatheGeometry(prof,22),wt);           // ลำบนสีขาว/accent
+  hull.rotation.x=Math.PI/2-.07; hull.scale.set(1,1,.93); hull.position.set(0,1.35,-.08); g.add(hull);
+  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),bm);         // ครึ่งล่างสี col (แดง/ฟ้า)
+  belly.scale.set(.79,.6,2.28); belly.rotation.x=-.07; belly.position.set(0,1.02,-.15); g.add(belly);
+  const noseCap=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),bm);       // แถบสีกวาดขึ้นหุ้มปลายหัว
+  noseCap.scale.set(.42,.36,.55); noseCap.position.set(0,1.1,-2.42); g.add(noseCap);
+  const fair=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),wt);          // แฟริ่งท้ายเชื่อมลำ→บูม
+  fair.scale.set(.36,.46,.95); fair.position.set(0,1.68,2.15); g.add(fair);
+  // ── กระจกโดมหน้า (bubble canopy) ครอบเหนือหัวเรียว โผล่บน/ข้างแบบลำจริง ──
   const canopy=new THREE.Mesh(new THREE.SphereGeometry(1,24,14),gl);
-  canopy.scale.set(.73,.63,1.0); canopy.position.set(0,1.55,-1.4); g.add(canopy);
+  canopy.scale.set(.72,.62,1.0); canopy.position.set(0,1.56,-1.5); g.add(canopy);
   // ── หน้าต่างห้องโดยสารฝั่งซ้าย (กรอบเข้ม+กระจก นูนจากผิวเล็กน้อยแบบบานจริง) ──
   const winF=new THREE.Mesh(new THREE.BoxGeometry(.05,.56,1.44),dk);
   winF.position.set(-.8,1.52,.15); g.add(winF);
@@ -6761,8 +6769,10 @@ function heliMeshBuild(col,accent){
   winL.position.set(-.805,1.52,.15); g.add(winL);
   // ── 🚪 ประตูสไลด์จริงฝั่งขวา (รอบ 357) — บานนอกลำวิ่งบนราง 2 เส้นแบบเฮลิฯ ขนส่งจริง ──
   const door=new THREE.Group(); door.position.set(.84,0,0);            // เลื่อนแกน z ของกลุ่มนี้ = ประตูสไลด์
-  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.05,1.12,1.35),bm);
+  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.05,1.12,1.35),wt); // บานขาวตามลำบน (รอบ 377)
   doorP.position.set(0,1.36,.15); door.add(doorP);
+  const doorBand=new THREE.Mesh(new THREE.BoxGeometry(.052,.3,1.35),bm); // แถบสีล่างบานต่อเนื่องกับท้อง
+  doorBand.position.set(0,.97,.15); door.add(doorBand);
   const doorW=new THREE.Mesh(new THREE.BoxGeometry(.06,.46,.92),gl);   // หน้าต่างบนบาน
   doorW.position.set(0,1.55,.15); door.add(doorW);
   const doorH=new THREE.Mesh(new THREE.BoxGeometry(.06,.05,.26),dk);   // มือจับ
@@ -6771,15 +6781,13 @@ function heliMeshBuild(col,accent){
     rail.position.set(.85,ry,.6); g.add(rail); });                     // รางบน+ล่าง
   g.add(door);
   g._door=door; g._doorOpen=0;                                         // 0=ปิดสนิท · 1=เลื่อนไปหลังสุด
-  // ── ฝาครอบเครื่องยนต์แคปซูลมน + ช่องรับลม 2 ข้าง + ท่อไอเสียคู่บานออก ──
-  const cowl=new THREE.Mesh(new THREE.CapsuleGeometry(.4,1.5,4,12),bm);
+  // ── ฝาครอบเครื่องยนต์ Twin-Pac แคปซูลมน (ขาวตามลำ) + ช่องรับลม 2 ข้าง + ท่อไอเสียใหญ่เดี่ยวแบบ 212 ──
+  const cowl=new THREE.Mesh(new THREE.CapsuleGeometry(.4,1.5,4,12),wt);
   cowl.rotation.x=Math.PI/2; cowl.position.set(0,2.14,.55); g.add(cowl);
   [[-.3],[.3]].forEach(([ix])=>{ const sc=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),dk);
     sc.scale.set(.16,.12,.3); sc.position.set(ix,2.32,-.42); g.add(sc); });
-  [[-.22,-.5],[.22,.5]].forEach(([ex,dir])=>{
-    const exh=new THREE.Mesh(new THREE.CylinderGeometry(.1,.12,.52,10),dk);
-    exh.rotation.x=Math.PI/2-.3; exh.rotation.z=dir*.35; exh.position.set(ex,2.22,1.72); g.add(exh);
-  });
+  const exh=new THREE.Mesh(new THREE.CylinderGeometry(.15,.18,.62,12),dk);
+  exh.rotation.x=Math.PI/2-.38; exh.position.set(0,2.28,1.72); g.add(exh);
   // ── เสาใบพัด + ดุม/swashplate + ใบหลัก 2 กลีบแยกชิ้น มีมุมกระดก (coning) + flybar Bell ──
   const mast=new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,.5,10),dk); mast.position.set(0,2.52,.1); g.add(mast);
   const rotor=new THREE.Group(); rotor.position.set(0,2.74,.1);
@@ -6796,20 +6804,20 @@ function heliMeshBuild(col,accent){
   [[-1.25],[1.25]].forEach(([fz])=>{ const w=new THREE.Mesh(new THREE.SphereGeometry(.09,8,6),dk);
     w.position.set(0,-.15,fz); rotor.add(w); });
   g.add(rotor);
-  // ── บูมหางเรียวเนียน + แพนหางมีแผ่นปิดปลาย (endplate) + ครีบตั้ง + แฟริ่งเกียร์หาง ──
-  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.13,.33,3.9,12),bm);
-  boom.rotation.x=Math.PI/2; boom.position.set(0,1.64,3.3); g.add(boom);
-  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.75,.05,.44),bm); hstab.position.set(0,1.7,3.4); g.add(hstab);
-  [[-.875],[.875]].forEach(([px])=>{ const ep=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.5),bm);
-    ep.position.set(px,1.7,3.4); g.add(ep); });
+  // ── บูมหางยกสูงต่อแนวหลังคาแบบ 212 (ขาว) + แพนหาง endplate + ครีบตั้งสี col + แฟริ่งเกียร์หาง ──
+  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.13,.3,3.9,12),wt);
+  boom.rotation.x=Math.PI/2; boom.position.set(0,1.85,3.3); g.add(boom);
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.75,.05,.44),wt); hstab.position.set(0,1.9,3.4); g.add(hstab);
+  [[-.875],[.875]].forEach(([px])=>{ const ep=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.5),wt);
+    ep.position.set(px,1.9,3.4); g.add(ep); });
   const fin=new THREE.Mesh(new THREE.BoxGeometry(.08,1.32,.62),bm);
-  fin.position.set(0,2.28,4.9); fin.rotation.x=-.16; g.add(fin);
-  const gbox=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),bm);
-  gbox.scale.set(.12,.14,.3); gbox.position.set(-.1,2.44,4.98); g.add(gbox);
+  fin.position.set(0,2.42,4.95); fin.rotation.x=-.16; g.add(fin);
+  const gbox=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),wt);
+  gbox.scale.set(.12,.14,.3); gbox.position.set(-.1,2.6,5.0); g.add(gbox);
   const tskid=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.55,8),dk);  // กันหางกระแทก
-  tskid.rotation.x=.5; tskid.position.set(0,1.35,4.75); g.add(tskid);
+  tskid.rotation.x=.5; tskid.position.set(0,1.52,4.72); g.add(tskid);
   // ── ใบพัดหาง 2 กลีบ "ฝั่งซ้าย" ตามลำจริง ──
-  const trot=new THREE.Group(); trot.position.set(-.18,2.42,4.98);
+  const trot=new THREE.Group(); trot.position.set(-.18,2.55,5.0);
   const thub=new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,.12,10),dk); thub.rotation.z=Math.PI/2; trot.add(thub);
   const tblade=new THREE.Mesh(new THREE.BoxGeometry(.05,1.66,.14),dk); trot.add(tblade);
   g.add(trot);
@@ -6830,7 +6838,7 @@ function heliMeshBuild(col,accent){
   lamp(0xff3b30,-.8,1.3,-1.0);        // 🔴 nav ซ้าย
   lamp(0x2ecc55,.8,1.3,-1.0);         // 🟢 nav ขวา
   lamp(0xff2222,0,2.6,1.05,.06);      // 🔴 บีคอนกันชนบนฝาเครื่อง
-  lamp(0xffffff,0,2.9,5.18,.04);      // ⚪ ไฟท้ายบนครีบ
+  lamp(0xffffff,0,3.08,5.2,.04);      // ⚪ ไฟท้ายบนครีบ (บูมยกสูงขึ้นรอบ 377)
   const pitot=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.5,6),dk);
   pitot.rotation.x=Math.PI/2; pitot.position.set(.3,1.32,-2.5); g.add(pitot);
   const ant1=new THREE.Mesh(new THREE.BoxGeometry(.03,.22,.28),dk);   // เสาอากาศครีบบนบูม
