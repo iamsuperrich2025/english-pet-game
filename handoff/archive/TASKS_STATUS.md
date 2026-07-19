@@ -677,3 +677,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 375:** 🏢🚶 **ดาดฟ้าพื้นทึบ + ปุ่มลงจากเฮลิฯ (ผู้ใช้ส่งภาพ+ขอ)** — (1) ตึกเมืองเฮลิฯ facade ห่อทั้งกล่องรวมหน้าบน → material array `[wall×2,roofM×2,wall×2]` roofM=`tex_concrete` probe (ไม่มีไฟล์=เทา 0x565b63) · ยืนยัน: ตึก 20 หลัง roof=tex_concrete.jpg ผนัง=facade ✓ (2) ปุ่ม `#adv-dismount` โชว์เฉพาะจอดสนิท (toggle `show-dismount` ใน tickHeli) → `endPilot()`: ลำแดงย้ายมาจอดตรงจุดลง+หาที่ยืนข้างลำระดับพื้นเดียวกัน (กันตกขอบ/ในตึก) → เฟสเดิน · ขึ้นต่อ: dPilot/doorLerp วัดจาก `pilotH.position`+ระดับ `pLv` (ไม่ใช่ origin/y<3) · beginPilot เริ่มจากตำแหน่งลำจริง · ยืนยัน browser: จอด=ปุ่มโชว์ บิน=ซ่อน · ลงบนดาดฟ้าตึก h21 ยืนข้างลำ · เดินใกล้ประตูเปิด .99 · ชิด=phase pilot camY ถูก · ไม่มี error · testkit เพิ่ม `heli.tick` `goFoot` · deploy `.364` SW v91 · ค้าง: ผู้ใช้ลองจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 376:** 👟🔠🚁 **3 ต่อยอดรอบ 375 (ผู้ใช้ "ทำได้เลย")** — (1) `footStepSfx(hard)` ฝีเท้า synth ตามจังหวะก้าว (`_stridePh` ทุก 1.55m): ดาดฟ้า/ล็อบบี้=ก้องแหลม · ถนน=ทุ้มนุ่ม (2) เฟสเดินชนตัวอักษรเก็บได้ (dxz<1.7 + ระดับสูง <2.4 กันเก็บทะลุชั้น) · ยืนยัน: บนดาดฟ้าเก็บได้ 54→49 · พื้นล่าง=ไม่เก็บ (3) field `hp`="x,z,y,yaw" ลำแดงจอดทิ้งไว้ (ส่งเมื่อพ้นลาน >4m · fallback แพตเทิร์น tl `netHpOk`) · ฝั่งรับ tickPeers วาด `p.heliSpr` heliMeshBuild+เก็บเมื่อ hp หาย+`disposeHeliMesh` ใน removePeer · ยืนยัน 3 เคส: วาดตรงตำแหน่ง/เก็บ/ค่าเพี้ยนไม่ crash · ไม่มี error · **⏳ รอผู้ใช้ publish rules เพิ่ม "hp" — Artifact ปุ่มคัดลอก https://claude.ai/code/artifact/15c56471-3c45-4425-81ae-f6cb1b6d858d (สำรองใน RULES.md)** · testkit เพิ่ม `peersTick` · deploy `.365` SW v92
