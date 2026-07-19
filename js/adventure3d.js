@@ -2737,6 +2737,7 @@ function onPeerData(snap){
 }
 /* 🚁 รอบ 376: เก็บ mesh ลำเพื่อน — geometry/material สร้างต่อลำ dispose ได้ (texture ต่อ material ด้วย · ภาพต้นทางแชร์ใน imgTexCache ไม่โดนแตะ) */
 function disposeHeliMesh(h){
+  if(h._glbShared) return;   // 🚁 รอบ 382: ลำโมเดลจริงแชร์ geometry/material กับ cache กลาง — ห้าม dispose (ลำอื่นพัง)
   h.traverse(o=>{ if(o.isMesh){ o.geometry.dispose();
     (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{ if(m.map)m.map.dispose(); m.dispose(); }); } });
 }
@@ -6740,8 +6741,69 @@ function dustTick(dt){
    จุดสังเกตจริงของ 212 ที่เก็บครบ: ห้องโดยสารเหลี่ยมมน · จมูกกระจกมน+กระจกคาง ·
    ฝาครอบเครื่อง Twin-Pac ยาวบนหลังคา+ท่อไอเสีย · ใบพัดหลัก "2 กลีบ"+flybar ถ่วง ·
    บูมหางเรียว+แพนหางกลางบูม+ครีบตั้งเฉียง · ใบพัดหาง 2 กลีบฝั่งซ้าย · สกีลงจอด 2 ราง */
+// ── 🚁 รอบ 382: ใช้โมเดลจริง img/models/helicopter.glb แทนลำที่ประกอบด้วยโค้ด (ผู้ใช้สั่ง) ──
+//    โหลดครั้งเดียวแล้ว cache → clone ต่อลำ (แชร์ geometry/material — disposeHeliMesh ห้าม dispose ดูธง _glbShared)
+//    ลำโค้ดเดิมเก็บไว้เป็น fallback (heliMeshBuildLegacy) เผื่อไฟล์หาย/โหลดพลาด
+const HELI_GLB_URL='img/models/helicopter.glb';
+const HELI_GLB_ROTOR=['tripo_part_2','tripo_part_7','tripo_part_8'];                    // ใบพัดหลัก (ชื่อ node ใน glb)
+const HELI_GLB_TROTOR=['tripo_part_9','tripo_part_10','tripo_part_19','tripo_part_24']; // ใบพัดหาง+ดุม
+let heliGlbSrc=null, heliGlbFail=false; const heliGlbCbs=[];
+function heliGlbEnsure(cb){
+  if(heliGlbSrc) return cb(heliGlbSrc);
+  if(heliGlbFail) return cb(null);
+  heliGlbCbs.push(cb);
+  if(heliGlbCbs.length>1) return;                    // มีคนโหลดอยู่แล้ว รอ callback เดียวกัน
+  const fin=g=>{ heliGlbSrc=g||null; heliGlbFail=!g; heliGlbCbs.splice(0).forEach(f=>f(heliGlbSrc)); };
+  const load=()=>{ try{
+    new THREE.GLTFLoader().load(HELI_GLB_URL,gl=>{
+      // texture ใน glb ถูกตั้ง sRGB แต่ renderer เกมเป็น Linear (default) → ปรับให้โทนตรงกับ texture อื่นของเกม
+      gl.scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.map) o.material.map.encoding=THREE.LinearEncoding; });
+      fin(gl.scene);
+    },undefined,()=>fin(null));
+  }catch(e){ fin(null); } };
+  if(THREE.GLTFLoader) load();
+  else{ const s=document.createElement('script'); s.src='js/vendor/GLTFLoader.js';
+    s.onload=load; s.onerror=()=>fin(null); document.head.appendChild(s); }
+}
+/* ประกอบลำจากโมเดลจริงลงกลุ่ม g — จัดทิศ/ขนาด/พื้นให้แทนลำโค้ดเดิมพอดี (ระยะโต้ตอบใน tickHeliFoot ใช้ต่อได้) */
+function heliGlbAssemble(g,src){
+  const root=src.clone(true);
+  root.updateMatrixWorld(true);
+  // ครอบ pivot ให้ใบพัดหมุนได้ตาม API เดิม (_rotor.rotation.y · _trotor.rotation.x)
+  const mkSpin=(names,preYaw)=>{
+    const parts=names.map(n=>root.getObjectByName(n)).filter(Boolean);
+    if(!parts.length) return null;
+    const box=new THREE.Box3(); parts.forEach(p=>box.expandByObject(p));
+    const holder=new THREE.Group(); holder.position.copy(box.getCenter(new THREE.Vector3()));
+    if(preYaw) holder.rotation.y=preYaw;             // หันแกน x ของ pivot ไปตามแกนใบพัดหาง (โมเดลหมุนรอบแกน z)
+    const spin=new THREE.Group(); holder.add(spin); root.add(holder);
+    root.updateMatrixWorld(true);
+    parts.forEach(p=>spin.attach(p));                // attach คงตำแหน่งโลกเดิม แค่ย้ายไปอยู่ใต้ pivot
+    return spin;
+  };
+  const mr=mkSpin(HELI_GLB_ROTOR,0), tr=mkSpin(HELI_GLB_TROTOR,Math.PI/2);
+  // โมเดล Tripo หันหัวไปทาง -X → หมุนให้หัวชี้ -Z ตามลำเดิม แล้วปรับขนาด+วางสกีแตะพื้น+จมูกที่ z เดิม
+  root.rotation.y=-Math.PI/2;
+  root.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(root);
+  const s=7.7/(bb.max.z-bb.min.z);                   // ยาวเท่าลำโค้ดเดิม (×HELI_MESH_SCALE ข้างนอก ≈ 12.3ม.)
+  root.scale.setScalar(s);
+  root.position.set(0,-bb.min.y*s,-2.45-bb.min.z*s); // สกีแตะ y=0 · ปลายจมูก z=-2.45 → ตำแหน่งประตู/ที่นั่งใกล้ลำเดิม
+  g.add(root);
+  if(mr) g._rotor=mr;
+  if(tr) g._trotor=tr;
+  g._glbShared=true;                                  // geometry/material แชร์กับ cache — disposeHeliMesh ต้องข้าม
+}
 function heliMeshBuild(col,accent){
   const g=new THREE.Group();
+  g._doorOpen=0;                                      // โมเดลจริงไม่มีบานประตูแยก — คงค่าไว้ให้ doorLerp/testkit อ่านได้
+  g._rotor=g._trotor=new THREE.Group();               // dummy กัน tick แตะก่อนโหลดเสร็จ (แทนที่เมื่อประกอบจริง)
+  // 📏 รอบ 378: ขยายทั้งลำเป็นสัดส่วนจริงเทียบคน — ระยะโต้ตอบใน tickHeliFoot ขยายตามแล้ว
+  g.scale.setScalar(HELI_MESH_SCALE);
+  heliGlbEnsure(src=>{ if(src) heliGlbAssemble(g,src); else heliMeshBuildLegacy(g,col,accent); });
+  return g;
+}
+function heliMeshBuildLegacy(g,col,accent){
   // 🚁 รอบ 371: ลำตัวโค้งมนทั้งลำ (ellipsoid) + วัสดุ Phong มีแสงสะท้อน — เลิกทรงกล่องเลโก้
   const bm=new THREE.MeshPhongMaterial({color:col,shininess:52,specular:0x565a60});          // สีตัวถังหลัก (มันเงาโลหะ)
   const dk=new THREE.MeshPhongMaterial({color:0x2a2d33,shininess:24,specular:0x33363b});     // เหล็กเข้ม (ใบพัด/สกี)
@@ -6773,9 +6835,13 @@ function heliMeshBuild(col,accent){
   bellyF.position.set(0,.62,-.45); g.add(bellyF);
   const bellyR=new THREE.Mesh(new THREE.BoxGeometry(1.28,.26,1.55),wt);
   bellyR.rotation.x=-.62; bellyR.position.set(0,1.0,1.85); g.add(bellyR);
-  // ── กระจกหน้าแนบลาด + กระจกข้างห้องนักบิน + กระจกคาง ──
-  const shield=new THREE.Mesh(new THREE.BoxGeometry(1.5,.92,.06),gl);
-  shield.rotation.x=-1.0; shield.position.set(0,1.82,-1.33); g.add(shield);
+  // ── กระจกหน้า "แนบลาด" ตามผิวลำ (รอบ 381 — เดิมมุมกลับด้าน ยื่นนูนเหมือนโดม F-16 ผู้ใช้ทัก)
+  //    ลาดลำ: (-1.85,1.48)→(-.85,2.08) ชัน .6/1.0 → rotation.x=+1.03 บนพิงหลัง แบนเรียบเสมอผิว
+  //    + เสากลางแบ่ง 2 บานแบบ Bell จริง ──
+  const shield=new THREE.Mesh(new THREE.BoxGeometry(1.42,1.05,.05),gl);
+  shield.rotation.x=1.03; shield.position.set(0,1.8,-1.37); g.add(shield);
+  const wpost=new THREE.Mesh(new THREE.BoxGeometry(.07,1.05,.08),dk);
+  wpost.rotation.x=1.03; wpost.position.set(0,1.8,-1.38); g.add(wpost);
   [[-.85],[.85]].forEach(([sx])=>{ const w=new THREE.Mesh(new THREE.BoxGeometry(.06,.5,.72),gl);
     w.position.set(sx,1.62,-1.3); g.add(w); });
   [[-.38],[.38]].forEach(([cx])=>{ const w=new THREE.Mesh(new THREE.BoxGeometry(.5,.34,.06),gl);
@@ -6864,10 +6930,7 @@ function heliMeshBuild(col,accent){
   const ant2=new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,.34,6),dk); // เสาใต้ท้อง
   ant2.position.set(-.2,.42,.9); g.add(ant2);
   g._rotor=rotor; g._trotor=trot;
-  // 📏 รอบ 378: ขยายทั้งลำเป็นสัดส่วนจริงเทียบคน (ผู้ใช้ขอ) — คูณ 1.6 → ลำ ~12.8ม. ใบพัด ~14.2ม.
-  //    (Bell 212 จริง: ลำ 12.9ม. · ใบพัด 14.6ม. · คนในเกมสูง ~1.7ม.) — ระยะโต้ตอบใน tickHeliFoot ขยายตาม
-  g.scale.setScalar(HELI_MESH_SCALE);
-  return g;
+  // (สเกล HELI_MESH_SCALE ถูกคูณให้แล้วใน heliMeshBuild — รอบ 382)
 }
 /* สร้างของโหมดเดินครั้งเดียวตอน buildScene: เลือกตึกเทอร์มินัล เจาะประตู ทำล็อบบี้+ลิฟต์+เฮลิฯ 2 ลำ */
 function buildHeliFoot(sc,list){
