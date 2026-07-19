@@ -6886,6 +6886,36 @@ function peerRotorTick(p,d3){
   }
   p._rs.g.gain.value=state.sound?Math.max(0,Math.min(.5,(1.05-d3/85)*.5)):0;   // ไกล ~85ม. = เงียบ
 }
+/* 🔩 รอบ 391: เสียงโลหะกระทบ (ชนตึก/กระแทกพื้นแรง/ชนลำเพื่อน) — สังเคราะห์ล้วน ต่อตรง destination
+   เหตุ: thud เดิมเป็นเบสลึก 35-70Hz ลำโพงมือถือเปล่งไม่ได้ ผู้ใช้ทัก "ไม่ได้ยินเสียงตอนชน" */
+function heliCrashSfx(hard){
+  if(!state.sound) return;
+  try{
+    HeliSound.ensureCtx();
+    const c=HeliSound.ctx; if(!c) return;
+    const t=c.currentTime, vol=hard?1:.7;
+    // 1) "คลัง!" — พาร์เชียลโลหะไม่เป็นฮาร์โมนิก ดีเคย์ไว + detune สุ่มนิดๆ (ตัวถังเหล็กกระแทก)
+    [[326,.5,.28],[547,.38,.22],[831,.3,.18],[1214,.22,.14],[1780,.14,.11]].forEach(([f,g0,dur])=>{
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='triangle'; o.frequency.setValueAtTime(f*(1+(Math.random()-.5)*.04),t);
+      g.gain.setValueAtTime(g0*vol,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.02);
+    });
+    // 2) "ครืด" — noise ผ่าน bandpass สั้นๆ (โลหะเสียดสี)
+    const nd=.16, buf=c.createBuffer(1,Math.floor(c.sampleRate*nd),c.sampleRate);
+    const ch=buf.getChannelData(0);
+    for(let i=0;i<ch.length;i++){ const k=i/ch.length; ch[i]=(Math.random()*2-1)*Math.pow(1-k,1.8); }
+    const src=c.createBufferSource(); src.buffer=buf;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2400; bp.Q.value=.8;
+    const ng=c.createGain(); ng.gain.setValueAtTime(.55*vol,t); ng.gain.exponentialRampToValueAtTime(.001,t+nd);
+    src.connect(bp); bp.connect(ng); ng.connect(c.destination); src.start(t);
+    // 3) "ตุ้บ" กลาง 180→55Hz ให้มีน้ำหนัก (เริ่ม 180 = ลำโพงเล็กก็ได้ยิน)
+    const o2=c.createOscillator(), g2=c.createGain();
+    o2.type='sine'; o2.frequency.setValueAtTime(180,t); o2.frequency.exponentialRampToValueAtTime(55,t+.22);
+    g2.gain.setValueAtTime(.6*vol,t); g2.gain.exponentialRampToValueAtTime(.001,t+.28);
+    o2.connect(g2); g2.connect(c.destination); o2.start(t); o2.stop(t+.3);
+  }catch(e){}
+}
 function heliMeshBuild(col,accent){
   const g=new THREE.Group();
   g._doorOpen=0;                                      // โมเดลจริงไม่มีบานประตูแยก — คงค่าไว้ให้ doorLerp/testkit อ่านได้
@@ -7555,7 +7585,7 @@ function tickHeli(dt,now){
       const pushZ=(nz>b.z?1:-1)*((b.d/2+1)-Math.abs(nz-b.z));
       if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
       hVel.x*=-.25; hVel.z*=-.25;
-      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); nmCrashed=true; nmCombo=0; }
+      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); heliCrashSfx(true); nmCrashed=true; nmCombo=0; }   // 🔩 รอบ 391: เสียงเหล็กกระทบ
       break;
     }
   }
@@ -7570,7 +7600,7 @@ function tickHeli(dt,now){
         _heliCrashAt=now;
         const fine=Math.min(HELI_CRASH_FINE,state.coins);
         state.coins=Math.max(0,state.coins-HELI_CRASH_FINE); saveState(); renderHudTop();
-        HeliSound.thud(); sfx.wrong();
+        HeliSound.thud(); heliCrashSfx(true); sfx.wrong();          // 🔩 รอบ 391: เสียงเหล็กกระทบ (thud เดิมเบสลึกเกิน ไม่ได้ยิน)
         dustBurst(nx,Math.max(0,ny-2),nz,26);                       // ควันตลบตรงจุดชนก่อนวาร์ป
         nmCrashed=true; nmCombo=0;
         showBanner(`💥 ชนเฮลิคอปเตอร์ของ <b>${escapeHTML(peers[uid].n)}</b>! เสียค่าปรับ ${fine}🪙 · กลับไปเริ่มใหม่ที่ลานจอด`);
@@ -7586,7 +7616,7 @@ function tickHeli(dt,now){
   // ---- พื้น/ดาดฟ้า: แตะพื้นเบา = ลงจอด · กระแทกแรง = เจ็บ ----
   const floor=heliFloorAt(nx,nz), minY=floor+HELI_SKID;
   if(ny<=minY){
-    if(hVel.y<-7 && now-hHitAt>1000){ hHitAt=now; damagePlayer(25); HeliSound.thud(); ny=minY; hVel.y=2.2; }
+    if(hVel.y<-7 && now-hHitAt>1000){ hHitAt=now; damagePlayer(25); HeliSound.thud(); heliCrashSfx(true); ny=minY; hVel.y=2.2; }   // 🔩 รอบ 391
     else{
       ny=minY;
       if(!hLanded && Math.abs(hVel.y)<=7 && col<=.1){
