@@ -622,3 +622,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 364:** 🖼️🏙️ **texture ลำเฮลิฯ เข้าเกม + prompt ผนังตึกสมจริง (ผู้ใช้วางไฟล์+ขอ)** — (1) ผู้ใช้วาง `img/tex/tex_heli_{body,metal,glass}.png` → แปลง .jpg (q86 · 5.4MB→518KB · แพตเทิร์นเดียว asphalt: jpg เข้า git, png ใหญ่อยู่ local) + **ต่อสายกระจก `applyTex(gl,'tex_heli_glass')`** (รอบ 358 ค้างไว้) · ยืนยัน browser: ลำจอด 2 ลำ map ติด body16(ย้อมแดง/ฟ้า/ขาวจากลายเดียว)/glass10/metal38 · ไม่มี error · live .jpg 200 ครบ 3 · deploy `.356` SW v84 (2) 🏙️ **prompt ผนังตึก photorealistic 6 แบบ** (ผู้ใช้ขอ "สมจริง" — ชุดเดิมใน PROMPTS_BUILDINGS.md เป็นการ์ตูน) → Artifact ปุ่มคัดลอก **https://claude.ai/code/artifact/597a2937-aefe-486e-877a-15885d3bfd66** + สำรองท้าย PROMPTS_BUILDINGS.md · **ค้างผู้ใช้: เจน facade_1..6.png วาง `img/buildings/` แล้วบอก commit** (เกม probe เองอยู่แล้ว ไม่ต้องแก้โค้ด)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 365:** 🪧💰 **ค่าเช่าป้ายโฆษณา 300→1,000 เหรียญ (ผู้ใช้สั่ง)** — `AD_RENT_COIN` adventure3d.js + จัดรูป `fmtNum` ในปุ่ม/toast · ยืนยัน browser: ปุ่ม "เช่า 1,000🪙" · ซื้อหัก 1500→500 · เหรียญ 500 ไม่พอ=ไม่เช่าไม่หัก · deploy `.357` SW v85
