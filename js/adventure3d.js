@@ -93,6 +93,8 @@ MODES.adv.koTitle='💫 พลังหมดแล้ว!';
 const SHOOT_GAP_MS = 280;
 const MONSTER_REWARD = 2;       // เหรียญ/ตัว เมื่อยิง monster แตก (โหมด adv)
 const AD_COUNT = 10;            // ป้ายโฆษณาบนยอดตึกในเมืองเฮลิฯ (เลขป้ายคงที่ — เมือง seed แล้ว)
+const AD_RENT_COIN = 300;       // 🪧 รอบ 362: ค่าเช่าป้ายโฆษณาเฮลิฯ (ผู้เล่นจองใส่ชื่อตัวเอง)
+const AD_RENT_MS = 7*864e5;     // อายุสัญญาเช่า 7 วัน — ต้องตรงกับ rules /ads (604800000 ms)
 /* 📢 รอบ 183: ชื่อร้านบนตึกในโลกขับรถ — เอาชื่อจริงจาก OSM ออก (กันปัญหาลิขสิทธิ์)
    โชว์เฉพาะ "ผู้ลงโฆษณากับเรา" เท่านั้น → เพิ่มชื่อที่นี่ (เรียงขึ้นตึกอัตโนมัติ) · ว่าง = ตึกไม่มีชื่อ
    ตึกที่ไม่มีผู้ลงโฆษณา จะขึ้นป้ายเชิญ "ลงโฆษณาที่นี่" ห่างๆ (ทุก ~16 หลัง) */
@@ -530,6 +532,10 @@ const AD_STYLES=[
   ['#80cbc4','#004d40','#fff'],['#ffab91','#bf360c','#fff'],['#cfd8dc','#263238','#eceff1'],
   ['#fff59d','#f9a825','#5d3a00'],
 ];
+/* 🪧 รอบ 362: ผู้เช่าป้ายจาก DB /ads/<n>={uid,n,ts} — ผู้เล่นจ่ายเหรียญจองใส่ชื่อ 7 วัน
+   ลูกค้าจริง (img/ads/ad_<n>.png) สำคัญกว่าเสมอ · _adTexDraws เก็บตัววาดซ้ำต่อป้าย (ข้อมูล DB มาทีหลัง) */
+let adRenters={}, _adTexDraws={}, _adHasImg={};
+function adRenterActive(n){ const r=adRenters[n]; return (r&&r.n&&Date.now()-r.ts<AD_RENT_MS)?r:null; }
 function adBoardTexture(n){
   const cv=document.createElement('canvas'); cv.width=512; cv.height=192;
   const c=cv.getContext('2d');
@@ -545,8 +551,15 @@ function adBoardTexture(n){
     else if(n%3===1){ for(let x=28;x<512;x+=72) for(let y=28;y<192;y+=68){ c.beginPath(); c.arc(x,y,13,0,7); c.fill(); } }
     else{ c.font='40px serif'; for(let x=14;x<512;x+=92) c.fillText('✦',x,58+((x/92|0)%2)*84); }
     c.globalAlpha=1;
+    const renter=adRenterActive(n);
     if(img){
       c.drawImage(img,6,6,500,180);                    // โฆษณาลูกค้าเต็มป้าย (เว้นกรอบ 6px)
+    }else if(renter){                                  // 🪧 ป้ายผู้เล่นเช่า — ชื่อเล่น+เข็ม (ไม่มีชื่อจริง)
+      c.fillStyle=tc; c.textAlign='center';
+      c.font='900 30px Kanit, Tahoma, Arial'; c.fillText('🪧 ป้ายนี้เป็นของ',256,60);
+      let fs=52; c.font='900 '+fs+'px Kanit, Tahoma, Arial';
+      while(fs>20 && c.measureText(renter.n).width>470){ fs-=4; c.font='900 '+fs+'px Kanit, Tahoma, Arial'; }
+      c.fillText(renter.n,256,140);
     }else{
       c.fillStyle=tc; c.textAlign='center';
       c.font='900 42px Kanit, Tahoma, Arial'; c.fillText('ติดต่อโฆษณา',256,76);
@@ -562,8 +575,9 @@ function adBoardTexture(n){
   };
   draw(null);
   const img=new Image();                               // probe ภาพลูกค้า (กติกาเดียวกับ probeImages)
-  img.onload=()=>draw(img);
+  img.onload=()=>{ _adHasImg[n]=true; draw(img); };
   img.src='img/ads/ad_'+n+'.png';
+  _adTexDraws[n]=()=>draw(_adHasImg[n]?img:null);      // 🪧 วาดซ้ำเมื่อข้อมูลผู้เช่ามาถึง/เปลี่ยน
   return tex;
 }
 /* 📢 รอบ 204: ป้ายโฆษณาตั้งพื้น (แผ่น 8:3 บนเสา 2 ต้น) — ใช้ adBoardTexture (โชว์ "ติดต่อโฆษณา โทร 064-357 6645"
@@ -586,6 +600,72 @@ function ringAds(sc,count,radius,groundY,tr){
     addAdBillboard(sc,++_adSeq,x,z,Math.atan2(-x,-z),groundY);
     if(tr) tr.push({x,z,r:1.4});
   }
+}
+
+/* 🪧 รอบ 362: ระบบเช่าป้ายโฆษณาเมืองเฮลิฯ — จ่าย AD_RENT_COIN จองป้าย 1-10 ชื่อขึ้นบนตึก 7 วัน
+   DB /ads/<n>={uid,n,ts} (rules: เขียนได้เมื่อ ว่าง/หมดอายุ/ป้ายตัวเอง — ดู handoff/RULES.md)
+   rules ยังไม่ publish = เขียนโดน deny → toast บอก ไม่หักเหรียญ ไม่พังเกม · ปุ่ม 🪧 โชว์เฉพาะเฟสเดิน */
+function adsFetch(){
+  if(!(window.Online&&Online.ready&&Online.db)) return;
+  Online.db.ref('ads').once('value').then(s=>{
+    adRenters=s.val()||{};
+    for(const k in _adTexDraws) _adTexDraws[k]();
+    adShopRender();
+  }).catch(()=>{});
+}
+function adRentBuy(n,btn){
+  if(!(window.Online&&Online.ready&&Online.db)){ sfx.wrong(); toast('🔌 ต้องออนไลน์ก่อนถึงเช่าป้ายได้นะ'); return; }
+  if(state.coins<AD_RENT_COIN){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — ค่าเช่าป้าย '+AD_RENT_COIN+' เหรียญ'); return; }
+  if(btn) btn.disabled=true;
+  const rec={uid:onlineKey(), n:(onlineDisplayName()||'ผู้เล่น').slice(0,40),
+             ts:firebase.database.ServerValue.TIMESTAMP};
+  Online.db.ref('ads/'+n).set(rec).then(()=>{
+    state.coins-=AD_RENT_COIN; saveState(); renderHudTop();      // หักเหรียญหลังเขียนสำเร็จเท่านั้น
+    adRenters[n]={uid:rec.uid, n:rec.n, ts:Date.now()};
+    if(_adTexDraws[n]) _adTexDraws[n]();
+    sfx.coin(); toast('🪧 เช่าป้าย '+n+' สำเร็จ! ชื่อขึ้นบนตึกให้ทุกคนเห็น 7 วัน');
+    adShopRender();
+  }).catch(()=>{
+    if(btn) btn.disabled=false;
+    sfx.wrong(); toast('⚠️ ยังเช่าไม่ได้ — ป้ายอาจถูกจองตัดหน้า หรือระบบยังไม่เปิด ลองใหม่อีกทีนะ');
+    adsFetch();
+  });
+}
+let adShopEl=null;
+function adShopOpen(){
+  adsFetch();                                          // รีเฟรชสถานะล่าสุดก่อนโชว์
+  if(!adShopEl){
+    adShopEl=document.createElement('div');
+    adShopEl.id='adv-adshop-dlg';
+    overlayEl.appendChild(adShopEl);
+    adShopEl.addEventListener('click',e=>{
+      if(e.target===adShopEl||e.target.closest('.ash-x')){ adShopEl.style.display='none'; return; }
+      const b=e.target.closest('.ash-rent'); if(b) adRentBuy(+b.dataset.n,b);
+    });
+  }
+  adShopEl.style.display='flex';
+  adShopRender(); sfx.select();
+}
+function adShopRender(){
+  if(!adShopEl||adShopEl.style.display!=='flex') return;
+  const esc=s=>String(s).replace(/[<>&"]/g,ch=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[ch]));
+  let cards='';
+  for(let n=1;n<=AD_COUNT;n++){
+    let body;
+    if(_adHasImg[n]) body='<span class="ash-st">🔒 มีผู้สนับสนุน</span>';
+    else{
+      const r=adRenterActive(n);
+      if(r){
+        const days=Math.max(1,Math.ceil((r.ts+AD_RENT_MS-Date.now())/864e5));
+        body=(r.uid===onlineKey()?'<span class="ash-st">✅ ของฉัน</span>':'')
+          +'<span class="ash-nm">'+esc(r.n)+'</span><span class="ash-st">เหลือ '+days+' วัน</span>';
+      }else body='<button class="ash-rent" data-n="'+n+'">เช่า '+AD_RENT_COIN+'🪙</button>';
+    }
+    cards+='<div class="ash-it"><b>🪧 '+n+'</b>'+body+'</div>';
+  }
+  adShopEl.innerHTML='<div class="ash-card"><div class="ash-head"><b>🪧 เช่าป้ายโฆษณา</b>'
+    +'<small>ชื่อเราขึ้นบนตึกให้ทุกคนเห็น 7 วัน · ป้ายหมดอายุใครก็เช่าต่อได้</small>'
+    +'<button class="ash-x">✖</button></div><div class="ash-grid">'+cards+'</div></div>';
 }
 
 /* 🏙️ ผนังตึกโลกเฮลิฯ — default วาดหน้าต่างเรียงชั้น (procedural) ให้ดูมีมิติกว่ากล่องสีล้วน
@@ -1592,6 +1672,7 @@ function buildScene(md){
       sc.add(panel);
       ads.push({n, x:b.x, z:b.z, h:b.h});
     });
+    adsFetch();                                       // 🪧 รอบ 362: โหลดผู้เช่าป้ายจาก DB (ไม่ออนไลน์=ข้ามเงียบ)
     // ลานจอดกลางเมือง (จุดเกิด)
     const basePad=new THREE.Mesh(new THREE.CircleGeometry(5,24),
       new THREE.MeshLambertMaterial({color:0x3d434b}));
@@ -3352,6 +3433,32 @@ function buildDom(){
   #adv-wing:active,#adv-tour:active{background:rgba(255,213,79,.3)}
   .adv-heli.show-wing #adv-wing{display:block}
   .adv-heli.show-tour #adv-tour{display:block}
+  /* 🪧 รอบ 362: ปุ่ม+หน้าต่างเช่าป้ายโฆษณา (เฟสเดินเท้าเท่านั้น) */
+  #adv-adshop{position:absolute;bottom:10px;right:158px;display:none;pointer-events:auto;z-index:7;
+    width:64px;padding:6px 0 4px;border-radius:12px;border:1px solid rgba(255,213,79,.65);
+    background:rgba(40,28,0,.78);color:#ffe9a8;font-size:19px;line-height:1.1;
+    font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(255,213,79,.6)}
+  #adv-adshop small{display:block;font-size:9px;letter-spacing:.02em}
+  #adv-adshop:active{background:rgba(255,213,79,.3)}
+  .adv-heli.show-adshop #adv-adshop{display:block}
+  #adv-adshop-dlg{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.55);z-index:9;pointer-events:auto}
+  #adv-adshop-dlg .ash-card{background:#10202f;border:1px solid #3d5a75;border-radius:14px;
+    padding:8px 10px;width:min(92vw,560px);max-height:92vh;color:#dceeff}
+  #adv-adshop-dlg .ash-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  #adv-adshop-dlg .ash-head b{font-size:14px;white-space:nowrap}
+  #adv-adshop-dlg .ash-head small{color:#9fc0da;font-size:10px;line-height:1.25;flex:1}
+  #adv-adshop-dlg .ash-x{background:none;border:none;color:#9fc0da;font-size:17px;cursor:pointer;padding:2px 4px}
+  #adv-adshop-dlg .ash-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+  #adv-adshop-dlg .ash-it{background:#182c40;border:1px solid #31506b;border-radius:10px;
+    padding:4px 3px;text-align:center;font-size:11px;min-height:52px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:2px}
+  #adv-adshop-dlg .ash-it b{font-size:12px}
+  #adv-adshop-dlg .ash-nm{color:#ffe9a8;font-weight:700;max-width:100%;overflow:hidden;
+    text-overflow:ellipsis;white-space:nowrap}
+  #adv-adshop-dlg .ash-st{color:#9fc0da;font-size:9px}
+  #adv-adshop-dlg .ash-rent{border:1px solid #ffd54f;background:rgba(255,213,79,.14);color:#ffe9a8;
+    border-radius:8px;padding:2px 5px;font-size:10px;cursor:pointer}
   /* เฟสเดิน/นั่ง/วิงสูท = ไม่ใช่นักบิน → ซ่อนกรอบค็อกพิต/กระจก/ปุ่มนักบินทั้งชุด */
   .adv-heli.hfoot #adv-cockpit,.adv-heli.hfoot #adv-glass,.adv-heli.hfoot #adv-wiper,
   .adv-heli.hfoot #adv-seat,.adv-heli.hfoot #adv-visor,.adv-heli.hfoot #adv-light,
@@ -4137,6 +4244,7 @@ function buildDom(){
     <button id="adv-light">💡<small>ไฟส่อง</small></button>
     <button id="adv-wing">🪂<small>โดดวิงสูท</small></button>
     <button id="adv-tour">🛬<small>จบทัวร์</small></button>
+    <button id="adv-adshop">🪧<small>เช่าป้าย</small></button>
     <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
@@ -4578,6 +4686,7 @@ function buildDom(){
   overlayEl.querySelector('#adv-light').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setHeliLight(!heliLightOn);
   });
+  overlayEl.querySelector('#adv-adshop').addEventListener('click',adShopOpen);   // 🪧 รอบ 362: เช่าป้ายโฆษณา
   overlayEl.querySelector('#adv-wing').addEventListener('click',e=>{   // 🪂 โดดจากเฮลิฯ ทัวร์ หรือจากขอบดาดฟ้า
     e.preventDefault();
     if(hPhase==='ride') beginWing(true);
@@ -4670,7 +4779,7 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour,#adv-adshop,#adv-adshop-dlg')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -6750,7 +6859,7 @@ function beginPilot(){
   }
   const F=worlds.heli.foot;
   hPhase='pilot';
-  overlayEl.classList.remove('hfoot'); setFootBtns(false,false);
+  overlayEl.classList.remove('hfoot','show-adshop'); setFootBtns(false,false);
   if(F) F.pilotH.visible=false;                      // เราขึ้นไปนั่งแล้ว — ซ่อนลำที่จอดโชว์
   camera.position.set(0,HELI_SKID,0);
   yaw=.6; pitch=0;
@@ -6792,6 +6901,7 @@ function tickHeliFoot(dt,now){
   if(bcs){ const bOn=heliNight>.25;
     for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
   adGlowPulse(now);                                  // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
+  overlayEl.classList.toggle('show-adshop',hPhase==='walk');   // 🪧 ปุ่มเช่าป้ายเฉพาะตอนเดิน (รอบ 362)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
@@ -9387,6 +9497,10 @@ window.Adventure3D={
                         get beacons(){const B=worlds.heli&&worlds.heli.beacons;return B?B.map(b=>({vis:b.m.visible,op:+b.m.material.opacity.toFixed(2)})):null},
                         get mail(){return {on:mailOn,count:mailCount,tgt:mailTgt?{x:mailTgt.b.x,z:mailTgt.b.z,h:mailTgt.b.h,w:mailTgt.b.w,d:mailTgt.b.d}:null}},
                         mailGo:mailStart, mailEnd:mailStop,
+                        // 🪧 รอบ 362: testkit เช่าป้ายโฆษณา
+                        adShop:{open:adShopOpen, buy:adRentBuy, fetchAds:adsFetch, render:adShopRender,
+                                get renters(){return adRenters}, set renters(v){adRenters=v},
+                                get el(){return adShopEl}, redraw:n=>_adTexDraws[n]&&_adTexDraws[n]()},
                         // 🚶🪂 รอบ 354: เฟสเดินเท้า
                         get phase(){return hPhase},
                         get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos}:null},
