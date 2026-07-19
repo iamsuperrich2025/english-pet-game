@@ -58,3 +58,12 @@ A seamless tileable texture of a cute pastel building facade, flat front orthogr
 - **หน้าต่างเล็ก/ถี่ไป?** ตอน tile จริงจะยิ่งถี่ → สั่ง `large windows, few rows` (เกมคูณ repeat ตามความสูงตึกอยู่แล้ว)
 - **อยากให้ดูเหมือนกลางคืน?** เปลี่ยน `daytime` → `at dusk, many windows glowing warm yellow` (แต่โลกเฮลิฯเป็นกลางวัน แนะนำ daytime ให้เข้าฉาก)
 - ไม่ต้องครบ 6 ภาพก็ได้ — มีกี่ภาพเกมสุ่มใช้เท่านั้น ที่เหลือใช้หน้าต่าง procedural เดิม
+
+---
+
+# 🆕 ชุด "สมจริง (photorealistic)" — ผู้ใช้ขอ 19 ก.ค. 2026 (รอบ 364)
+
+ชุดบนเป็นสไตล์การ์ตูน — ชุดนี้แทนที่ได้เลย ใช้ชื่อไฟล์/กติกาเดิมทุกข้อ (seamless 1:1 1024 มุมตรง ไม่มีตัวอักษร)
+**Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/597a2937-aefe-486e-877a-15885d3bfd66
+สรุปหัวข้อ 6 ตึก: 1=กระจกฟ้าออฟฟิศ · 2=อพาร์ตเมนต์ปูนครีม+ระเบียง+แอร์ · 3=คอนกรีต-ไม้โมเดิร์น · 4=อิฐแดงคลาสสิก · 5=กระจกเขียวมรกต+คาดขาว · 6=หินทรายอบอุ่นกรอบบรอนซ์
+โครงพรอมป์ต่างจากชุดการ์ตูนแค่: `photorealistic ... realistic architectural detail, neutral even daylight, no harsh shadows, 4k detail` แทน `bright clean cartoon low-poly style`
