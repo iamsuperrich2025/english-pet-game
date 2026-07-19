@@ -6597,6 +6597,15 @@ function doorLerp(h,target,k){
   h._doorOpen+=(target-h._doorOpen)*Math.min(1,k);
   h._door.position.z=h._doorOpen*1.15;               // สไลด์ไปทางหางตามรางจริง
 }
+/* 🚪 บานกระจกทางเข้าเทอร์มินัล (รอบ 374) — เลื่อนแยกซ้าย-ขวาเหมือนประตูสนามบิน + เสียงเดียวกับประตูเฮลิฯ */
+function entLerp(E,target,k){
+  if(!E) return;
+  if(E.tgt===undefined) E.tgt=target;
+  else if(E.tgt!==target){ E.tgt=target; doorSlideSfx(target===1); }
+  E.open+=(target-E.open)*Math.min(1,k);
+  E.pL.position.x=-.64-E.open*1.06;
+  E.pR.position.x=.64+E.open*1.06;
+}
 let wSpd=12, wP=0, wBank=0, _footHintAt=0;
 const WRING_COIN=5;                                  // 💫 เหรียญฐานต่อแหวน (×คอมโบ: 5,10,15,...)
 let ringCombo=0;
@@ -6814,6 +6823,30 @@ function buildHeliFoot(sc,list){
   sign.position.set(doorC.x+(ax==='x'?dir*.12:0), 4.4, doorC.z+(ax==='z'?dir*.12:0));
   sign.rotation.y=ax==='x'?(dir>0?Math.PI/2:-Math.PI/2):(dir>0?0:Math.PI);
   sc.add(sign);
+  // 🚪 รอบ 374: เจาะทางเข้าให้เห็นเป็นประตูจริง (ผู้ใช้แจ้ง "เป็นผนังหน้าต่าง") — ซุ้มประตูกระจก
+  //    สไลด์อัตโนมัติแบบสนามบิน แปะทับ facade ตรงช่อง: ช่องมืด+วงกบ+กันสาด+บานกระจก 2 บานเลื่อนเอง
+  const ent=new THREE.Group();
+  ent.position.set(doorC.x,0,doorC.z); ent.rotation.y=sign.rotation.y;   // local +z = หันออกนอกตึก
+  const frM=new THREE.MeshLambertMaterial({color:0x3a3f47});             // วงกบ/กันสาดโลหะเข้ม
+  const hole=new THREE.Mesh(new THREE.PlaneGeometry(2.6,3.1),
+    new THREE.MeshBasicMaterial({color:0x11141a}));                      // ช่องมืด = โถงข้างใน
+  hole.position.set(0,1.55,.06); ent.add(hole);
+  [[-1.42],[1.42]].forEach(([px])=>{ const post=new THREE.Mesh(new THREE.BoxGeometry(.22,3.3,.3),frM);
+    post.position.set(px,1.65,.1); ent.add(post); });
+  const lintel=new THREE.Mesh(new THREE.BoxGeometry(3.06,.3,.3),frM);
+  lintel.position.set(0,3.28,.1); ent.add(lintel);
+  const awn=new THREE.Mesh(new THREE.BoxGeometry(3.8,.14,1.2),frM);      // กันสาดยื่นหน้า
+  awn.position.set(0,3.5,.62); ent.add(awn);
+  const step=new THREE.Mesh(new THREE.BoxGeometry(3.4,.1,1.2),
+    new THREE.MeshLambertMaterial({color:0x8b9096}));                    // ธรณีประตูคอนกรีต
+  step.position.set(0,.05,.5); ent.add(step);
+  const glM=new THREE.MeshLambertMaterial({color:0xa8d9e8,transparent:true,opacity:.45});
+  const mkPanel=(px)=>{ const p=new THREE.Mesh(new THREE.BoxGeometry(1.26,2.95,.06),glM);
+    p.position.set(px,1.52,.14); ent.add(p);
+    const bar=new THREE.Mesh(new THREE.BoxGeometry(.08,2.95,.08),frM);   // สันขอบบานฝั่งชนกลาง มองออกว่าเป็น 2 บาน
+    bar.position.set(px<0?.6:-.6,0,.01); p.add(bar); return p; };
+  const entD={pL:mkPanel(-.64), pR:mkPanel(.64), open:0};
+  sc.add(ent);
   // แผ่นลิฟต์เรืองแสง: ในล็อบบี้ (ชิดผนังหลัง) + จุดเดียวกันบนดาดฟ้า (ขาลง)
   const liftIn=ax==='x'? {x:term.x-dir*(w2-1.6), z:term.z} : {x:term.x, z:term.z-dir*(d2-1.6)};
   const mkPad=(y)=>{ const p=new THREE.Mesh(new THREE.CircleGeometry(1.15,20),
@@ -6842,7 +6875,7 @@ function buildHeliFoot(sc,list){
     sc.add(m);
     rings.push({m,got:false});
   }
-  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings,fest};
+  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings,fest,entD};
 }
 /* พื้นสำหรับ "คนเดิน" — ต่างจาก heliFloorAt: นับดาดฟ้าเฉพาะเมื่อผู้เล่นอยู่สูงระดับนั้นจริง
    (ไม่งั้นก้าวเข้าล็อบบี้ชั้นล่างจะโดนดีดขึ้นดาดฟ้าทันที เพราะ heliFloorAt มองตึกทึบทั้งก้อน) */
@@ -7146,6 +7179,9 @@ function tickHeliFoot(dt,now){
   // 🚪 ประตูสไลด์ต้อนรับ: เดินใกล้ลำไหน บานลำนั้นเลื่อนเปิดเอง (ลำแดงเปิดเฉพาะคนมีตั๋ว)
   doorLerp(F.paxH,(onRoof&&dPax<4.5)?1:0,dt*2.4);
   doorLerp(F.pilotH,(dPilot<4&&camera.position.y<3&&state.heliTicket)?1:0,dt*2.4);
+  // 🚪 ประตูกระจกทางเข้าเทอร์มินัลเปิดเองตอนเดินใกล้ (รอบ 374)
+  const dEnt=Math.hypot(nx-F.doorC.x,nz-F.doorC.z);
+  entLerp(F.entD,(dEnt<3.6&&camera.position.y<3.2)?1:0,dt*2.4);
   if(insideTerm(nx,nz,-.3)&&camera.position.y<3.2){
     if(dLift<1.2){ liftStart(true,now); return; }
     footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
@@ -9604,7 +9640,7 @@ window.Adventure3D={
                                 clearFlyby(){ _adFlybyNear={}; _adFlybyAt={}; }},
                         // 🚶🪂 รอบ 354: เฟสเดินเท้า
                         get phase(){return hPhase},
-                        get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos}:null},
+                        get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos,ent:F.entD?+F.entD.open.toFixed(2):null}:null},
                         goPilot:beginPilot, goRide:beginRide, goWing:beginWing,
                         rideEnd:endRide, footTick:(dt)=>tickHeliFoot(dt||.016,performance.now()),
                         get wing(){return {spd:+wSpd.toFixed(1),p:+wP.toFixed(2)}},
