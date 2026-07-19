@@ -654,6 +654,29 @@ function adRentBuy(n,btn){
     adsFetch();
   });
 }
+/* 🪧💰 รอบ 366: บินผ่านป้ายตัวเองระยะใกล้ = +AD_FLYBY_COIN (เพดาน AD_FLYBY_CAP เหรียญ/วัน)
+   ให้ผู้เช่าป้ายมีเหตุกลับมาบินชมป้ายทุกวัน · กันฟาร์ม: ต้องออกจากโซนก่อนถึงนับใหม่ + คูลดาวน์ 30 วิ/ป้าย
+   นับรายวันใน state.adFlyby={d:'YYYY-MM-DD',n:เหรียญที่ได้วันนี้} (เซฟ cloud ตาม state ปกติ) */
+const AD_FLYBY_COIN=2, AD_FLYBY_CAP=10;
+let _adFlybyNear={}, _adFlybyAt={};
+function adFlybyTick(now){
+  const A=worlds.heli&&worlds.heli.ads; if(!A||!A.length) return;
+  const day=new Date().toISOString().slice(0,10);
+  if(!state.adFlyby||state.adFlyby.d!==day) state.adFlyby={d:day,n:0};
+  const me=onlineKey();
+  for(const a of A){
+    const r=adRenterActive(a.n);
+    if(!r||r.uid!==me){ _adFlybyNear[a.n]=false; continue; }
+    const dxz=Math.hypot(camera.position.x-a.x,camera.position.z-a.z);
+    const near=dxz<14 && camera.position.y>a.h-9 && camera.position.y<a.h+7;
+    if(near && !_adFlybyNear[a.n] && now-(_adFlybyAt[a.n]||-1e9)>3e4 && state.adFlyby.n<AD_FLYBY_CAP){   // ⚠️ default -1e9 ไม่ใช่ 0 — ไม่งั้น 30 วิแรกหลังโหลดหน้าไม่ได้รางวัล
+      _adFlybyAt[a.n]=now; state.adFlyby.n+=AD_FLYBY_COIN;
+      addCoins(AD_FLYBY_COIN); sessionCoins+=AD_FLYBY_COIN; saveState(); renderHudTop();
+      sfx.coin(); toast('🪧 บินผ่านป้ายตัวเอง +'+AD_FLYBY_COIN+'🪙 (วันนี้ '+state.adFlyby.n+'/'+AD_FLYBY_CAP+')');
+    }
+    _adFlybyNear[a.n]=near;
+  }
+}
 let adShopEl=null;
 function adShopOpen(){
   adsFetch();                                          // รีเฟรชสถานะล่าสุดก่อนโชว์
@@ -7255,6 +7278,7 @@ function tickHeli(dt,now){
     }
   }
   adGlowPulse(now);                                           // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
+  adFlybyTick(now);                                           // 🪧💰 โบนัสบินผ่านป้ายตัวเอง (รอบ 366)
   mailTick(now);                                              // 🛩️📦 ภารกิจไปรษณีย์ (ทำงานเฉพาะกลางคืน)
   dustTick(dt);                                               // 🌪️ ฝุ่นตลบตอนสตาร์ท/เทคออฟ
   // 🎯 ระบบช่วยจัดกึ่งกลางเป้า (รอบ 350) — เหมือนเซนเซอร์ถอยรถ: ยิ่งใกล้เป้ายิ่งติ๊ดถี่ ตรงเป้า=รัว+โทนสูง
@@ -9527,7 +9551,9 @@ window.Adventure3D={
                                 get renters(){return adRenters}, set renters(v){adRenters=v},
                                 get el(){return adShopEl}, redraw:n=>_adTexDraws[n]&&_adTexDraws[n](),
                                 changed:adsChanged, watch:adsWatch, stop:adsStop,
-                                get watching(){return !!_adsRef}},
+                                get watching(){return !!_adsRef},
+                                flybyTick:adFlybyTick, get flybyNear(){return _adFlybyNear},
+                                clearFlyby(){ _adFlybyNear={}; _adFlybyAt={}; }},
                         // 🚶🪂 รอบ 354: เฟสเดินเท้า
                         get phase(){return hPhase},
                         get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos}:null},
