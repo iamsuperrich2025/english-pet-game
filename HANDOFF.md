@@ -5,7 +5,7 @@
 
 ## 🏆 กฎทอง (ยึด 4 ข้อนี้ก่อนเสมอ)
 1. **ภาพก่อนโค้ด** — บั๊กที่มองเห็นได้ (UI/layout) → **ขอ/ดู screenshot ก่อน ห้ามเปิดโค้ดเดา** (รอบที่ผ่านมาเดา z-index จากโค้ดเสียเวลาเปล่า พอเห็นภาพเจอต้นตอทันที)
-2. **CODE_MAP ก่อน Grep ก่อน Read** — หาว่าฟังก์ชัน/ค่าคงที่อยู่ไหน: Grep ชื่อใน `handoff/CODE_MAP.md` (แผนที่ `ชื่อ:บรรทัด` ทุกไฟล์ js เจนอัตโนมัติ) → Read ไฟล์จริง offset=บรรทัดนั้น limit=40 · ไฟล์ใหญ่ (`adventure3d.js` ~7,100 บรรทัด · `ui.js` ~5,900) **ห้ามอ่านทั้งไฟล์** · หาสิ่งที่ไม่ใช่ชื่อฟังก์ชัน (selector/ข้อความ) ค่อย Grep โค้ดตรง
+2. **CODE_MAP ก่อน Grep ก่อน Read** — หาว่าฟังก์ชัน/ค่าคงที่อยู่ไหน: Grep ชื่อใน `handoff/CODE_MAP.md` (แผนที่ `ชื่อ:บรรทัด` ทุกไฟล์ js เจนอัตโนมัติ) → Read ไฟล์จริง offset=บรรทัดนั้น limit=40 · **งานทั้งระบบ/โลก 3D (เช่น เฮลิฯ/รถ/soccer/mecha): Grep ชื่อโซนใน 🗂️ สารบัญโซน ของ CODE_MAP ได้ช่วง `st-end` แล้วทำงานเฉพาะในช่วงนั้น** · ไฟล์อ้วน (`adventure3d.js`/`ui.js` — เลขบรรทัดปัจจุบันดูหัวตารางใน CODE_MAP อย่าจำตัวเลขเก่า) **ห้ามอ่านทั้งไฟล์** · **เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน+อีโมจิ+เลขรอบ** (สารบัญเจนเองตอน rotate · rotate เตือนโซน >900 บรรทัดให้คั่น banner ย่อย) · หาสิ่งที่ไม่ใช่ชื่อฟังก์ชัน (selector/ข้อความ) ค่อย Grep โค้ดตรง
 3. **preview: resize landscape ก่อน · เชื่อ `getBoundingClientRect` ไม่เชื่อ screenshot/elementFromPoint** (ดู 🖥️ ล่าง)
 4. **จบงาน: บัมพ์ `version.json` → commit เฉพาะไฟล์ที่แก้ (ห้าม `git add -A`) → อัปเดต `handoff/TASKS.md` (แบบย่อ ดูข้อ 8) → `python tools/rotate_handoff.py` → 🚀 `bash tools/deploy_firebase.sh` (⚠️ push อย่างเดียว "ไม่ขึ้นเว็บ"! เว็บจริง = Firebase Hosting `vocabworld.web.app` ไม่ใช่ GitHub Pages) → ยืนยัน `curl -s https://vocabworld.web.app/version.json` ตรงเลขที่บัมพ์**
 5. **เลือก session ตามการประหยัด token (ผู้ใช้ยกเป็นกฎเคร่งครัด 12 ก.ค. 2026): ทุกครั้งที่ผู้ใช้เสนอ/สั่งงานใหม่ ต้องประเมินก่อนเริ่มเสมอ** — ทำใน session เดิมถูกกว่า (context โหลดแล้ว งานเล็ก) → **ทำเลย ไม่ต้องพูดถึง** · New session ถูกกว่า (session เดิมยาว/context บวม, งานใหม่ไม่พึ่งของเดิม) → **"ต้องบอกทุกครั้ง" ห้ามเงียบแล้วทำต่อ**
@@ -52,7 +52,7 @@ authOnLogin({uid:'test1',email:'t@test.com'});        // → เข้าหน�
 | งานถัดไป / อาการบั๊ก(ยืนยัน) vs เดา(ยังไม่พิสูจน์) / backlog สรุป | `C:\Users\rober\english-pet-game\handoff\TASKS.md` |
 | สภาพแวดล้อม + ข้อควรระวังหายาก (image probe, ห้ามหลายชุดแต่งตัว, ลิขสิทธิ์) | `C:\Users\rober\english-pet-game\handoff\NOTES.md` |
 | แตะ Firebase / publish rules (ส่งเต็มทั้งหน้าเสมอ) | `C:\Users\rober\english-pet-game\handoff\RULES.md` |
-| หาว่าฟังก์ชัน/ค่าคงที่/CSS selector อยู่บรรทัดไหน | Grep ชื่อใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ · บั๊ก UI เริ่มหา selector ที่นี่) |
+| หาว่าฟังก์ชัน/ค่าคงที่/CSS selector อยู่บรรทัดไหน · หาช่วงบรรทัดของทั้งระบบ/โลก 3D (🗂️ สารบัญโซน) | Grep ชื่อ/ชื่อโซนใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ · บั๊ก UI เริ่มหา selector ที่นี่) |
 | โครงสร้างโค้ด/ภาพรวมสถาปัตยกรรม | `C:\Users\rober\english-pet-game\handoff\ARCHITECTURE.md` |
 | แก้ระบบเกม (สัตว์/บ้าน/บิล/แรงค์/โรงงาน/ตลาด/ออนไลน์/ของขวัญ) | `C:\Users\rober\english-pet-game\handoff\GAME_RULES.md` |
 | ดูสเปก backlog เต็ม | `C:\Users\rober\english-pet-game\handoff\BACKLOG.md` |

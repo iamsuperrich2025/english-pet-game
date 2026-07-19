@@ -3,6 +3,9 @@
 """gen_code_map.py — เจนแผนที่โค้ดอัตโนมัติจากโค้ดจริง (2 ปลายทาง)
   1. handoff/CODE_MAP.md — แผนที่ `ชื่อ:บรรทัด`
      · js:  function/async function top-level + const/let ชื่อตัวพิมพ์ใหญ่ (ค่าคงที่/config)
+     · js ไฟล์อ้วน (≥TOC_MIN_LINES บรรทัด): 🗂️ สารบัญโซน จาก banner `/* ==== */` — ช่วงบรรทัด `st-end ชื่อโซน`
+       → งานทั้งระบบ/โลก 3D: Grep ชื่อโซนใน CODE_MAP ได้ช่วงบรรทัด แล้ว Read/Edit เฉพาะช่วงนั้น
+       → เตือนโซนอ้วน (>ZONE_FAT บรรทัด ไม่มี banner คั่น) ทุกครั้งที่เจน = กลไกกำกับอัตโนมัติ
      · css: selector index (`.class`/`#id` ตัวแรกของแต่ละ rule → ทุกบรรทัดที่ประกาศ)
   2. handoff/ARCHITECTURE.md — บล็อก "ไฟล์ไหนทำอะไร" ระหว่าง marker AUTO-FILES
      (สรุปจาก comment หัวไฟล์จริง — ห้ามแก้มือในบล็อก เดี๋ยวโดนเขียนทับ)
@@ -27,16 +30,27 @@ CSS_RULE = re.compile(r"^([.#a-zA-Z\*:\[][^{;]*)\{")
 CSS_TOKEN = re.compile(r"[.#][A-Za-z_-][\w-]*")
 PER_LINE = 6  # entries ต่อบรรทัด (อ่านทั้งไฟล์แล้วยังประหยัด token)
 DECOR = set("=-–—~* ")  # บรรทัดตกแต่งใน comment หัวไฟล์
+BANNER = re.compile(r"^\s*/\* ={8,}\s*$")  # banner หัวโซน /* ============
+TOC_MIN_LINES = 1200  # ไฟล์เล็กกว่านี้ Grep ตรงถูกกว่า — ไม่ต้องมีสารบัญโซน
+ZONE_FAT = 900        # โซนยาวกว่านี้ = เตือนให้คั่น banner ย่อยตอนแตะครั้งถัดไป
 
 
 def scan(path):
-    entries = []
+    entries, secs = [], []
     with io.open(path, "r", encoding="utf-8", errors="replace") as f:
-        for i, ln in enumerate(f, 1):
-            m = FN.match(ln) or CONST.match(ln)
-            if m:
-                entries.append("%s:%d" % (m.group(1), i))
-    return entries, i
+        lines = f.readlines()
+    for i, ln in enumerate(lines, 1):
+        m = FN.match(ln) or CONST.match(ln)
+        if m:
+            entries.append("%s:%d" % (m.group(1), i))
+        elif BANNER.match(ln):
+            # ชื่อโซน = บรรทัดเนื้อหาแรกถัดจาก banner (ข้ามบรรทัดตกแต่ง)
+            for j in range(i, min(i + 5, len(lines))):
+                t = lines[j].split("*/")[0].strip().strip("*•· ").strip()
+                if t and not set(t) <= DECOR:
+                    secs.append((i, re.sub(r"\s+", " ", t)[:110]))
+                    break
+    return entries, len(lines), secs
 
 
 def scan_css(path):
@@ -135,14 +149,24 @@ def main():
         "# CODE_MAP.md — แผนที่โค้ด:บรรทัด (เจนอัตโนมัติโดย `tools/gen_code_map.py` — **ห้ามแก้มือ** เดี๋ยวโดนเขียนทับ)\n",
         "\n",
         "> วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`\n",
+        "> 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)\n",
         "> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: %s\n" % datetime.date.today().isoformat(),
     ]
     total = 0
+    fat_zones = []
     for path in js_files:
         rel = os.path.relpath(path, ROOT).replace("\\", "/")
-        entries, nlines = scan(path)
+        entries, nlines, secs = scan(path)
         total += len(entries)
         out.append("\n## %s (%s บรรทัด · %d รายการ)\n" % (rel, format(nlines, ","), len(entries)))
+        if nlines >= TOC_MIN_LINES and len(secs) >= 3:
+            out.append("### 🗂️ สารบัญโซน %s (Read/Edit เฉพาะช่วง)\n" % rel)
+            for k, (st, title) in enumerate(secs):
+                end = secs[k + 1][0] - 1 if k + 1 < len(secs) else nlines
+                out.append("- %d-%d %s\n" % (st, end, title))
+                if end - st + 1 > ZONE_FAT:
+                    fat_zones.append((rel, st, end, title))
+            out.append("### รายการ %s\n" % rel)
         for k in range(0, len(entries), PER_LINE):
             out.append(" · ".join(entries[k:k + PER_LINE]) + "\n")
     for path in css_files:
@@ -155,6 +179,10 @@ def main():
     with io.open(OUT, "w", encoding="utf-8", newline="") as f:
         f.writelines(out)
     print("🗺️ CODE_MAP.md: %d ไฟล์ · %d รายการ · %s bytes" % (len(js_files) + len(css_files), total, format(os.path.getsize(OUT), ",")))
+    if fat_zones:
+        print("⚠️ โซนอ้วน >%d บรรทัด %d จุด — แตะโซนนั้นครั้งถัดไปช่วยคั่น banner /* ==== */ ย่อย ให้สารบัญโซนละเอียดพอ:" % (ZONE_FAT, len(fat_zones)))
+        for rel, st, end, title in sorted(fat_zones, key=lambda z: z[1] - z[2])[:6]:
+            print("   %s:%d-%d (%s บรรทัด) %s" % (rel, st, end, format(end - st + 1, ","), title[:60]))
 
     update_architecture(js_files + css_files + ([sw] if os.path.exists(sw) else []))
 
