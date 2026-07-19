@@ -1587,6 +1587,7 @@ function buildScene(md){
         new THREE.MeshBasicMaterial({color:0xffe9a8,transparent:true,opacity:0,
           blending:THREE.AdditiveBlending,depthWrite:false}));
       glow.position.z=-.03; glow.visible=false; panel.add(glow);   // ลูกของ panel — หมุน/ย้ายตามอัตโนมัติ
+      if(n%4===1) glow.userData.ph=n*2.1;               // ✨ รอบ 361: ป้าย 1/5/9 กะพริบหายใจ คนละเฟส (adGlowPulse)
       adGlows.push(glow);
       sc.add(panel);
       ads.push({n, x:b.x, z:b.z, h:b.h});
@@ -6790,6 +6791,7 @@ function tickHeliFoot(dt,now){
   const bcs=worlds.heli.beacons;
   if(bcs){ const bOn=heliNight>.25;
     for(const b of bcs){ b.m.visible=bOn; if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12; } }
+  adGlowPulse(now);                                  // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
@@ -7118,6 +7120,7 @@ function tickHeli(dt,now){
       if(bOn) b.m.material.opacity=((now/900+b.ph)%1)<.16?1:.12;
     }
   }
+  adGlowPulse(now);                                           // 📢✨ ป้ายผนังกะพริบหายใจ (รอบ 361)
   mailTick(now);                                              // 🛩️📦 ภารกิจไปรษณีย์ (ทำงานเฉพาะกลางคืน)
   dustTick(dt);                                               // 🌪️ ฝุ่นตลบตอนสตาร์ท/เทคออฟ
   // 🎯 ระบบช่วยจัดกึ่งกลางเป้า (รอบ 350) — เหมือนเซนเซอร์ถอยรถ: ยิ่งใกล้เป้ายิ่งติ๊ดถี่ ตรงเป้า=รัว+โทนสูง
@@ -7300,11 +7303,21 @@ function fogUpdate(now){
       N.moon.material.opacity=heliNight*.95*(1-heliFog*.5);
     }
   }
-  // 📢🌙 แสงเรืองขอบป้ายผนัง (รอบ 360) — ติดเมื่อมืดพอ หรี่ตามหมอก
+  // 📢🌙 แสงเรืองขอบป้ายผนัง (รอบ 360) — ติดเมื่อมืดพอ หรี่ตามหมอก · เก็บ base ให้ adGlowPulse ใช้
   const G=worlds.heli&&worlds.heli.adGlows;
   if(G){
     const on=heliNight>.3, op=heliNight*.55*(1-heliFog*.4);
-    G.forEach(g=>{ g.visible=on; if(on) g.material.opacity=op; });
+    G.forEach(g=>{ g.visible=on; g.userData.base=op; if(on) g.material.opacity=op; });
+  }
+}
+/* 📢✨ รอบ 361: ป้ายผนังบางป้าย (มี userData.ph) กะพริบหายใจช้าๆ คาบ ~2.8 วิ คนละเฟส —
+   เรียกทุกเฟรมคู่กับไฟกันชน (ทั้ง tickHeli+tickHeliFoot) · base opacity มาจาก fogUpdate */
+function adGlowPulse(now){
+  const G=worlds.heli&&worlds.heli.adGlows;
+  if(!G||heliNight<=.3) return;
+  for(const g of G){
+    if(g.userData.ph===undefined) continue;
+    g.material.opacity=(g.userData.base||0)*(.35+.65*(.5+.5*Math.sin(now/446+g.userData.ph)));
   }
 }
 /* 💧 หยดน้ำบนกระจก — เกิดตอนฝนตก · ถูกที่ปัดกวาดหาย · ความเร็วสูงก็ปลิวหายเอง */
