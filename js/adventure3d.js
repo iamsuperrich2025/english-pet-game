@@ -726,6 +726,8 @@ function adShopRender(){
    วางไฟล์ img/buildings/facade_<n>.png (n=1..6 · ภาพต่อกันได้/seamless จัตุรัส) → ผนังจริงขึ้นแทน tile ขึ้นตึกอัตโนมัติ
    prompt อยู่ใน PROMPTS_BUILDINGS.md */
 const BUILDING_TINTS=[0x9fb2c8,0xc8b89f,0xb0c8a8,0xc8a8b8,0x9fc8c4,0xbfae90];
+// 🪟 รอบ 379: จำนวน "แถวหน้าต่าง (ชั้น)" ใน 1 tile ของ facade_1..6 — นับจากภาพจริง (เปลี่ยนภาพต้องนับใหม่)
+const FACADE_ROWS={1:8,2:6,3:5,4:4,5:8,6:5};
 function buildingFacadeTexture(n){
   const cv=document.createElement('canvas'); cv.width=cv.height=128;
   const c=cv.getContext('2d');
@@ -1693,7 +1695,11 @@ function buildScene(md){
       const w=9+rnd()*4, d=9+rnd()*4, h=8+rnd()*20;
       const tn=Math.floor(rnd()*6)+1;                   // 1 rnd() ต่อตึก (เท่าเดิม → ผังเมือง seed คงเดิมเป๊ะ)
       const facade=buildingFacadeTexture(tn);
-      facade.repeat.set(Math.max(1,Math.round(w/8)), Math.max(2,Math.round(h/6)));  // หน้าต่าง ~ทุก 8m กว้าง / ทุกชั้น ~6m
+      // 🪟 รอบ 379: 1 แถวหน้าต่าง = 1 ชั้นจริง ~3ม. (ผู้ใช้ทัก "2 บาน = 1 ชั้น ขัดความจริง")
+      //    ภาพ facade แต่ละแบบมีจำนวนชั้นใน tile ไม่เท่ากัน (นับจากภาพจริง) → repeat.y = ชั้นทั้งตึก/ชั้นต่อ tile
+      //    floors เป็นจำนวนเต็ม = ขอบบนตึกตัดตรงรอยต่อชั้นพอดี ไม่หั่นกลางหน้าต่าง
+      const rows=FACADE_ROWS[tn]||5, floors=Math.max(2,Math.round(h/3));
+      facade.repeat.set(Math.max(1,Math.round(w/8)), floors/rows);
       const wallM=new THREE.MeshLambertMaterial({map:facade});
       const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),
         [wallM,wallM,roofM,roofM,wallM,wallM]);          // ลำดับหน้า box: +x,-x,บน,ล่าง,+z,-z
