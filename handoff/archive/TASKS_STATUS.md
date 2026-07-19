@@ -632,3 +632,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 366:** 🪧💰 **โบนัสบินผ่านป้ายตัวเอง (ต่อยอดรอบ 365 ผู้ใช้อนุมัติ)** — `adFlybyTick(now)` ใน tickHeli (โหมดนักบิน): ผ่านป้ายที่ตัวเองเช่า (dxz<14 · y∈[h-9,h+7]) = +`AD_FLYBY_COIN`2 เพดาน `AD_FLYBY_CAP`10🪙/วัน (`state.adFlyby={d,n}` เซฟปกติ) · กันฟาร์ม: ต้องออกโซนก่อน (hysteresis `_adFlybyNear`) + คูลดาวน์ 30 วิ/ป้าย · **🐛 เจอตอนเทสต์: default `_adFlybyAt||0` ทำ 30 วิแรกหลังโหลดหน้าไม่ได้รางวัล → ใช้ `||-1e9`** · ยืนยัน browser: เข้าโซน +2 · ค้างโซน/กลับเร็ว=0 · ครบ 30 วิ +2 · เพดาน 10=0 · ป้ายคนอื่น=0 · ไม่มี error · deploy `.358` SW v86 · testkit: `adShop.{flybyTick,flybyNear,clearFlyby}`
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 367 (เอกสาร ไม่ deploy):** 🌅🎬 **prompt ท้องฟ้า+เพลง Suno แบบหนัง (ผู้ใช้ขอ)** — Artifact ปุ่มคัดลอก **https://claude.ai/code/artifact/37b31b7f-d44a-4f9c-a2b3-5f0e27a990cb** · ฟ้า 2 อารมณ์ (A รุ่งอรุณทอง/B เมฆยักษ์) → `img/sky/sky_dawn.jpg` equirect 2:1 (สำรองท้าย PROMPTS_SKY.md) · เพลง instrumental 3 เพลง (ธีมหลัก/ลอยรุ่งอรุณ/ภารกิจกลางคืน) → `sound/bgm/bgm_01..03.mp3` music.js probe เอง (สำรอง PROMPTS_MUSIC_SUNO.md ใหม่) · ✅ ผู้ใช้วางไฟล์แล้ว → รอบ 368
