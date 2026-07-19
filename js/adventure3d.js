@@ -6636,6 +6636,7 @@ function heliMeshBuild(col,accent){
   applyTex(bm,'tex_heli_body',1,1,col);              // ผิวโลหะรอยแนวแผ่น+หมุดย้ำ ย้อมสีตัวถัง
   applyTex(wt,'tex_heli_body',1,1,accent||0xe8e6df); // คาดใต้ท้องลายเดียวกัน ย้อมสี accent
   applyTex(dk,'tex_heli_metal',1,1);                 // โลหะเข้มด้านใช้งานหนัก (ใบพัด/สกี — สีจากภาพตรงๆ)
+  applyTex(gl,'tex_heli_glass',1,1);                 // 🪟 รอบ 364: กระจกสะท้อนฟ้า (ไฟล์ผู้ใช้เจน — สีจากภาพตรงๆ)
   // ── ห้องโดยสาร: กล่องหลัก + ท้องมน + คาดสีขาว ──
   const cab=new THREE.Mesh(new THREE.BoxGeometry(1.6,1.25,3.1),bm); cab.position.set(0,1.28,0); g.add(cab);
   const belly=new THREE.Mesh(new THREE.BoxGeometry(1.45,.42,2.9),wt); belly.position.set(0,.68,0); g.add(belly);
