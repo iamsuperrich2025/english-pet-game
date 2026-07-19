@@ -769,7 +769,7 @@ function makePeerSprite(name, av){
     if(flyMode){
       // 🚁 รอบ 355: โลกเฮลิฯ อ่านเฟสของเพื่อนจาก av ('h_w'=เดิน 'h_r'=นั่งโดยสาร 'h_g'=วิงสูท 'h_p'=ขับ)
       // 🚁 รอบ 385: เฟสขับ/นั่ง (p/r) ไม่วาด emoji — tickPeers วาดลำโมเดล 3D จริงแทน เหลือแค่ป้ายชื่อลอยเหนือลำ
-      const hm={w:'🚶',r:'',g:'🪂',p:''}, hc=av?av.charAt(2):'';
+      const hm={w:'🚶',r:'',g:'🪂',p:'',b:''}, hc=av?av.charAt(2):'';   // b=ขับลำฟ้า (รอบ 392) — วาดลำ 3D แทน emoji
       const em=M.drone?'🛸':(av&&av.slice(0,2)==='h_'?(hc in hm?hm[hc]:'🚁'):'🚁');
       if(em){ c.font='96px serif'; c.fillText(em,64,105); }
     }
@@ -2601,7 +2601,8 @@ function sendPos(force){
   const payload={
     n:onlineDisplayName()+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge)+airLetterEmoji(state.airLetterBadge),   // 🎖️⚡🎯🏅🪶🪂 เข็มติดท้ายชื่อ (เพื่อนเห็นทุกโลก)
     // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก · 🚁 รอบ 355: โลกเฮลิฯ ยัดเฟสเดินเท้าลง av แทน ('h_w/r/g/p' ≤8 ผ่าน rules เดิม ไม่ต้อง publish — makePeerSprite ฝั่งรับไม่เคยใช้ av ในโหมดบินอยู่แล้ว)
-    av:M.heli?('h_'+({walk:'w',lift:'w',ride:'r',wing:'g',pilot:'p'}[hPhase]||'p'))
+    av:M.heli?('h_'+(hPhase==='pilot'?(pilotShip==='blue'?'b':'p')                      // 🔵 รอบ 392: ขับลำฟ้า='h_b' เพื่อนเห็นลำฟ้า
+      :({walk:'w',lift:'w',ride:'r',wing:'g'}[hPhase]||'p')))
       :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||'')),
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
@@ -2610,7 +2611,7 @@ function sendPos(force){
   if(M.drive && netTlOk && tlSig) payload.tl=tlSig;
   // 🚁 รอบ 376: ลำแดงที่จอดทิ้งไว้ (ลงเดิน/ไปนั่งลำอื่น) — เพื่อนเห็นลำเราจอดตรงนั้นจริง
   //    ส่งเฉพาะลำย้ายพ้นลานกลาง >4m (กันลำ default ทุกคนวางซ้อนกลางลาน) · rules ยังไม่รับ hp = ตัดทิ้ง (แพตเทิร์น tl)
-  if(M.heli && netHpOk && hPhase!=='pilot' && worlds.heli && worlds.heli.foot){
+  if(M.heli && netHpOk && !(hPhase==='pilot'&&pilotShip==='red') && worlds.heli && worlds.heli.foot){   // 🔵 รอบ 392: ขับลำฟ้าอยู่ ลำแดงจอด=ส่ง hp ต่อ
     const hpH=worlds.heli.foot.pilotH;
     if(Math.hypot(hpH.position.x,hpH.position.z)>4)
       payload.hp=Math.round(hpH.position.x*10)/10+','+Math.round(hpH.position.z*10)/10+','
@@ -2833,7 +2834,7 @@ function tickPeers(dt,now){
       if(p.heliSpr&&p.heliSpr._rotor) p.heliSpr._rotor.rotation.y+=dt*.6;   // ใบพัดเอื่อยๆ เหมือนลำจอดของเรา
       // 🚁 รอบ 385: เพื่อนที่กำลัง "บิน" = ลำโมเดล 3D จริงหันตาม yaw (ผู้ใช้ทัก "ยังเป็นภาพแบน")
       //    เฟส av: h_p=ขับลำแดง · h_r=นั่งลำฟ้า · เดิน/วิงสูทคง sprite เดิม — ป้ายชื่อยกขึ้นลอยเหนือใบพัด
-      const flyCol=p.av==='h_p'?0xd8342e:p.av==='h_r'?0x2f7fd4:0;
+      const flyCol=p.av==='h_p'?0xd8342e:(p.av==='h_r'||p.av==='h_b')?0x2f7fd4:0;   // 🔵 รอบ 392: h_b=เพื่อนขับลำฟ้า
       if(p.flySpr&&(!flyCol||p._flyCol!==flyCol)){ peerRotorStop(p); scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }
       if(flyCol&&!p.flySpr){ p.flySpr=heliMeshBuild(flyCol); p._flyCol=flyCol; scene.add(p.flySpr); }
       if(p.flySpr){
@@ -7205,9 +7206,15 @@ function liftStart(up,now){
 function beginRide(){
   const F=worlds.heli.foot;
   hPhase='ride';
-  ridePos={x:F.paxPos.x, y:F.paxPos.y+1, z:F.paxPos.z};
-  rideWp=[ {x:0,y:26,z:0}, {x:-30,y:20,z:26}, {x:34,y:23,z:20},
-           {x:22,y:18,z:-30}, {x:-26,y:24,z:-18}, {x:termB.x,y:termB.h+9,z:termB.z} ];
+  ridePos={x:F.paxH.position.x, y:F.paxH.position.y+1, z:F.paxH.position.z};
+  // 🏢 รอบ 392: ทัวร์ห้ามทะลุตึก (ผู้ใช้ทัก "ระบบบินชนตึกมั่ว") — บินที่เพดานสูงกว่าตึกสูงสุด +6ม. ทุกช่วง
+  //    ขึ้นตรงๆ จากจุดจอดก่อน → วนเมืองที่เพดานปลอดภัย → กลับมาตั้งลำเหนือเทอร์มินัลแล้วค่อยหย่อนลง
+  const clr=Math.max(26, buildings.reduce((m,b)=>Math.max(m,b.h),0)+6);
+  const sx=F.paxH.position.x, sz=F.paxH.position.z;
+  rideWp=[ {x:sx,y:clr,z:sz},
+           {x:0,y:clr,z:0}, {x:-30,y:clr,z:26}, {x:34,y:clr,z:20},
+           {x:22,y:clr,z:-30}, {x:-26,y:clr,z:-18},
+           {x:termB.x,y:clr,z:termB.z}, {x:termB.x,y:termB.h+9,z:termB.z} ];
   rideIdx=0; rideYaw=0;
   rideSpin=0; _rideDusted=false;                    // 🌪️ เริ่มจากใบพัดนิ่ง ค่อยๆ เร่งก่อนยกตัว
   dustBurst(F.paxPos.x,F.paxPos.y,F.paxPos.z,20);   // ฝุ่นฟุ้งรอบแรกตอนเครื่องติด
@@ -7259,34 +7266,69 @@ function awardAirLetter(){
   }
   saveState();
 }
-/* ขับเองแบบเดิม — เดินถึงเฮลิฯ แดงลานกลางแล้วเรียกอันนี้ (ยกมาจาก init เดิมของโลก) */
-let _pilotDenyAt=0;
-function beginPilot(){
-  // 🎫 รอบ 356: คนเดินเข้ามาจากแผนที่โลกผจญภัย (ไม่มีตั๋วเฮลิฯ) นั่ง/วิงสูทฟรี แต่ขับเองต้องมีตั๋ว
-  if(!state.heliTicket){
+/* 🔵💺 รอบ 392: กล่องเลือกบทบาทลำฟ้า (ผู้ใช้สั่ง "เลือกได้ว่าจะขับหรือโดยสาร") — เด้งตอนเดินชิดลำ
+   สร้าง DOM ครั้งเดียวแบบ adShopEl · เดินออกห่าง/เปลี่ยนเฟส = ปิดเอง · ปิดแล้วเว้น 2.5วิ กันเด้งรัว */
+let paxChoiceEl=null, _paxChoiceCd=0;
+function paxChoiceShow(now){
+  if(now<_paxChoiceCd || hPhase!=='walk') return;
+  if(!paxChoiceEl){
+    paxChoiceEl=document.createElement('div');
+    paxChoiceEl.id='adv-paxchoice';
+    paxChoiceEl.style.cssText='position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.35);z-index:60;pointer-events:auto;';
+    paxChoiceEl.innerHTML='<div style="background:#101720;border:2px solid #39ffb2;border-radius:18px;padding:16px 18px;max-width:min(86vw,360px);text-align:center;color:#eaf7ff">'
+      +'<div style="font-size:1.05rem;font-weight:700;margin-bottom:10px">🚁 เฮลิคอปเตอร์สีฟ้า (ฟรีทุกคน)</div>'
+      +'<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+      +'<button data-act="fly" style="font:inherit;padding:10px 14px;border-radius:12px;border:0;background:#2f7fd4;color:#fff;font-weight:700">🧑‍✈️ ขับเอง</button>'
+      +'<button data-act="ride" style="font:inherit;padding:10px 14px;border-radius:12px;border:0;background:#39ffb2;color:#083b2a;font-weight:700">💺 นั่งชมวิว</button>'
+      +'<button data-act="x" style="font:inherit;padding:10px 14px;border-radius:12px;border:0;background:#2a313c;color:#cfd8e3">เดินต่อ</button>'
+      +'</div></div>';
+    overlayEl.appendChild(paxChoiceEl);
+    paxChoiceEl.addEventListener('click',e=>{
+      const b=e.target.closest('button'); const act=b&&b.dataset.act;
+      paxChoiceEl.style.display='none'; _paxChoiceCd=performance.now()+2500;
+      if(act==='fly') beginPilot('blue');
+      else if(act==='ride') beginRide();
+    });
+  }
+  if(paxChoiceEl.style.display!=='flex'){
+    if(document.pointerLockElement) document.exitPointerLock();
+    paxChoiceEl.style.display='flex'; sfx.select();
+  }
+}
+function paxChoiceHide(){ if(paxChoiceEl&&paxChoiceEl.style.display==='flex') paxChoiceEl.style.display='none'; }
+/* ขับเอง — เดินถึงเฮลิฯ แล้วเรียกอันนี้ · 🔵 รอบ 392: รับ ship ('red'/'blue') — ลำฟ้าทุกคนขับฟรี (ผู้ใช้สั่ง
+   "ลำฟ้าให้ผู้เล่นขับ ไม่ใช่ระบบขับ") · ลำแดงขับต้องมีตั๋วเหมือนเดิม */
+let _pilotDenyAt=0, pilotShip='red';
+function pilotShipMesh(){ const F=worlds.heli&&worlds.heli.foot; return F?(pilotShip==='blue'?F.paxH:F.pilotH):null; }
+function beginPilot(ship){
+  ship=ship==='blue'?'blue':'red';
+  // 🎫 รอบ 356: ขับลำแดงต้องมีตั๋ว — รอบ 392: ลำฟ้าบนดาดฟ้าขับฟรีทุกคน
+  if(ship==='red'&&!state.heliTicket){
     const now=performance.now();
     if(now>_pilotDenyAt){ _pilotDenyAt=now+4000;
       sfx.wrong();
-      showBanner('🎫 ขับเองต้องมีตั๋วโลกเฮลิคอปเตอร์ (ซื้อที่หน้าตลาด) — แต่นั่งโดยสาร/โดดวิงสูทฟรีนะ! ไปที่ตึกป้าย 🛗 เลย');
+      showBanner('🎫 ลำแดงต้องมีตั๋วโลกเฮลิคอปเตอร์ (ซื้อที่หน้าตลาด) — แต่ลำสีฟ้าบนดาดฟ้าตึกป้าย 🛗 ขับฟรีนะ!');
     }
     return;
   }
   const F=worlds.heli.foot;
+  pilotShip=ship;
+  const M2=ship==='blue'?F.paxH:F.pilotH;
   hPhase='pilot';
   overlayEl.classList.remove('hfoot','show-adshop'); setFootBtns(false,false);
   // 🚶 รอบ 375: ขึ้นขับจากตำแหน่งลำจอดจริง (หลังลงเดิน ลำอาจจอดที่อื่น ไม่ใช่ลานกลางเสมอ)
-  const P=F?F.pilotH.position:{x:0,y:.03,z:0};
+  const P=M2?M2.position:{x:0,y:.03,z:0};
   camera.position.set(P.x,P.y-.03+HELI_SKID,P.z);
-  yaw=F?F.pilotH.rotation.y:.6; pitch=0;
-  if(F) F.pilotH.visible=false;                      // เราขึ้นไปนั่งแล้ว — ซ่อนลำที่จอดโชว์
+  yaw=M2?M2.rotation.y:.6; pitch=0;
+  if(M2) M2.visible=false;                           // เราขึ้นไปนั่งแล้ว — ซ่อนลำที่จอดโชว์
   hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
   hAtcCleared=false; ATC.reset();
   HeliSound.start();
   hViewSwitched=false; setSeat(0);
   layoutCockpit();
   dustBurst(P.x,P.y+.02,P.z,18);                     // 🌪️ ฝุ่นเริ่มฟุ้งตอนเครื่องติด
-  showBanner('🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
-  if(myRef) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน
+  showBanner(ship==='blue'?'🚁 ขึ้นขับลำสีฟ้า (ฟรี)! สตาร์ทเครื่องยนต์...':'🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
+  if(myRef) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน (ลำสีตรงกับที่ขับ)
 }
 /* 🚶 รอบ 375: ลงจากเฮลิฯ ตอนจอดสนิท (ผู้ใช้ขอ) — ลำแดงย้ายมาจอดตรงจุดนี้ ผู้เล่นเดินเล่น/
    ไปนั่งลำฟ้า แล้วเดินกลับมาใกล้ลำ = ขึ้นขับต่อจากที่เดิมได้ */
@@ -7295,7 +7337,8 @@ function endPilot(){
   const F=worlds.heli.foot; if(!F) return;
   if(state.sound&&HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
   const hx=camera.position.x, hz=camera.position.z, fy=heliFloorAt(hx,hz);
-  F.pilotH.position.set(hx,fy+.03,hz); F.pilotH.rotation.y=yaw; F.pilotH.visible=true;
+  const M2=pilotShip==='blue'?F.paxH:F.pilotH;       // 🔵 รอบ 392: ลำที่ขับอยู่จริงมาจอดตรงนี้
+  M2.position.set(hx,fy+.03,hz); M2.rotation.y=yaw; M2.visible=true;
   // หาที่ยืนข้างลำ "พื้นระดับเดียวกัน" (กันโผล่พ้นขอบดาดฟ้า/ในตึก): ประตูขวา → ซ้าย → ท้ายลำ
   const cand=[[Math.cos(yaw),-Math.sin(yaw)],[-Math.cos(yaw),Math.sin(yaw)],[Math.sin(yaw),Math.cos(yaw)]];
   const ok=(tx,tz)=>{ if(Math.abs(footFloorAt(tx,tz,fy+1)-fy)>=1) return false;
@@ -7307,7 +7350,7 @@ function endPilot(){
   overlayEl.classList.add('hfoot'); overlayEl.classList.remove('show-dismount');
   setFootBtns(false,false);
   camera.position.set(px,fy+FOOT_EYE,pz); pitch=0;
-  showBanner('🚶 ลงจากเฮลิฯ แล้ว เดินเล่นได้เลย — อยากขับต่อ เดินกลับมาใกล้ลำแดง');
+  showBanner(`🚶 ลงจากเฮลิฯ แล้ว เดินเล่นได้เลย — อยากขับต่อ เดินกลับมาใกล้ลำสี${pilotShip==='blue'?'ฟ้า':'แดง'}`);
   if(myRef) sendPos(true);                           // เพื่อนเห็นเรากลับเป็นคนเดิน
 }
 /* วาดกรอบหน้าต่างห้องโดยสาร (เฟส ride) บน canvas เข็ม — เจาะช่องหน้าต่างมนตรงกลาง */
@@ -7347,7 +7390,7 @@ function tickHeliFoot(dt,now){
   overlayEl.classList.toggle('show-adshop',hPhase==='walk');   // 🪧 ปุ่มเช่าป้ายเฉพาะตอนเดิน (รอบ 362)
   F.pilotH._rotor.rotation.y+=dt*(hPhase==='ride'?0:.6);          // ใบพัดลำจอดหมุนเอื่อยๆ มีชีวิต
   heliNavTick(F.pilotH,now,.1); heliNavTick(F.paxH,now,.55);      // 🔦 รอบ 386: ไฟเดินอากาศลำจอดตอนกลางคืน
-  F.paxH.visible=hPhase!=='ride';                    // 🐛 รอบ 371: นั่งโดยสาร=ซ่อนลำตัวเอง (กล้องอยู่ในลำ ประตู/กระจกเข้มบังวิว — กรอบหน้าต่าง canvas ทำหน้าที่แทน)
+  F.paxH.visible=!(hPhase==='ride'||(hPhase==='pilot'&&pilotShip==='blue'));   // 🐛 รอบ 371+392: นั่ง/ขับลำฟ้าอยู่=ซ่อนลำ (กล้องอยู่ในลำ)
   for(const r of F.rings) if(!r.got) r.m.rotation.y+=dt*.5;       // 💫 แหวนหมุนช้าๆ เห็นแต่ไกล
   dustTick(dt);                                                    // 🌪️ ฝุ่นตลบ (ถ้ามี) ฟุ้ง-จาง-ลบตัวเอง
   const p=camera.position;
@@ -7509,12 +7552,15 @@ function tickHeliFoot(dt,now){
   const pP=F.pilotH.position;
   const dPilot=Math.hypot(nx-pP.x,nz-pP.z);
   const pLv=Math.abs(camera.position.y-pP.y-FOOT_EYE+.03)<1.8;
-  const dPax=Math.hypot(nx-F.paxPos.x,nz-F.paxPos.z);
+  // 🔵 รอบ 392: ลำฟ้า = ผู้เล่นขับเอง (ฟรี) — วัดจากตำแหน่งลำจริง+ระดับพื้นเดียวกัน แบบลำแดง (ลำอาจจอดที่อื่นหลังบิน)
+  const xP=F.paxH.position;
+  const dPax=Math.hypot(nx-xP.x,nz-xP.z);
+  const xLv=Math.abs(camera.position.y-xP.y-FOOT_EYE+.03)<1.8;
   const glow=.35+.3*(.5+.5*Math.sin(now/300));
   F.padG.material.opacity=glow; F.padR.material.opacity=glow;
-  // 🚪 ประตูสไลด์ต้อนรับ: เดินใกล้ลำไหน บานลำนั้นเลื่อนเปิดเอง (ลำแดงเปิดเฉพาะคนมีตั๋ว)
+  // 🚪 ประตูสไลด์ต้อนรับ: เดินใกล้ลำไหน บานลำนั้นเลื่อนเปิดเอง (ลำแดงเปิดเฉพาะคนมีตั๋ว · ลำฟ้าเปิดทุกคน)
   //    📏 รอบ 378: ระยะขยายตาม HELI_MESH_SCALE (ลำใหญ่ขึ้น 1.6 เท่า)
-  doorLerp(F.paxH,(onRoof&&dPax<6.4)?1:0,dt*2.4);
+  doorLerp(F.paxH,(dPax<6.4&&xLv)?1:0,dt*2.4);
   doorLerp(F.pilotH,(dPilot<5.8&&pLv&&state.heliTicket)?1:0,dt*2.4);
   // 🚪 ประตูกระจกทางเข้าเทอร์มินัลเปิดเองตอนเดินใกล้ (รอบ 374)
   const dEnt=Math.hypot(nx-F.doorC.x,nz-F.doorC.z);
@@ -7522,10 +7568,12 @@ function tickHeliFoot(dt,now){
   if(insideTerm(nx,nz,-.3)&&camera.position.y<3.2){
     if(dLift<1.2){ liftStart(true,now); return; }
     footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
+  }else if(dPax<5.2&&xLv){
+    if(dPax<3.0){ paxChoiceShow(now); }                        // 🔵💺 รอบ 392: เด้งกล่องเลือก ขับเอง/นั่งชมวิว
+    else footHint('🚁 เดินชิดเฮลิฯ สีฟ้าอีกนิด = เลือกขับเอง หรือนั่งชมวิว (ฟรี)');
   }else if(onRoof&&insideTerm(nx,nz,-1)){
     if(dLiftR<1.2){ liftStart(false,now); return; }
-    if(dPax<3.7){ beginRide(); return; }
-    footHint('🚁 เดินเข้าหาเฮลิฯ สีฟ้า = ขึ้นนั่งชมวิว · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
+    footHint('🚁 เฮลิฯ สีฟ้า = ขับเองได้ฟรี · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
   }else if(dPilot<5.2&&pLv){
     if(dPilot<3.0&&state.heliTicket){ beginPilot(); return; }
     if(dPilot<3.0&&!state.heliTicket){ beginPilot(); }   // ไม่มีตั๋ว → เด้งป้ายบอก (คูลดาวน์ในตัว) แล้วเดินต่อได้
@@ -7536,6 +7584,7 @@ function tickHeliFoot(dt,now){
     footHint(onRoof?'🚶 บนดาดฟ้า · เดินชนตัวอักษรเก็บได้เลย · กด 🪂 โดดวิงสูท!'
       :'🚶 เดินสำรวจเมือง · ตึกป้าย 🛗 = ขึ้นดาดฟ้ารอเฮลิฯ · เฮลิฯ แดงลานกลาง = ขับเอง');
   }
+  if(dPax>=3.6) paxChoiceHide();                     // 🔵💺 รอบ 392: เดินออกห่างลำฟ้า = กล่องเลือกปิดเอง
   setFootBtns(onRoof&&curFloor>6,false);             // บนดาดฟ้าสูงพอ = โชว์ปุ่มโดดวิงสูท
 }
 function tickHeli(dt,now){
@@ -7585,7 +7634,17 @@ function tickHeli(dt,now){
       const pushZ=(nz>b.z?1:-1)*((b.d/2+1)-Math.abs(nz-b.z));
       if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
       hVel.x*=-.25; hVel.z*=-.25;
-      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); heliCrashSfx(true); nmCrashed=true; nmCombo=0; }   // 🔩 รอบ 391: เสียงเหล็กกระทบ
+      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); heliCrashSfx(true); nmCrashed=true; nmCombo=0;   // 🔩 รอบ 391: เสียงเหล็กกระทบ
+        // 🏢💸 รอบ 392: กฎห้ามบินชนตึก (ผู้ใช้สั่ง) — ชนสะสมครบทุก 10 ครั้ง หัก 100 เหรียญ (นับสะสมข้ามรอบเล่น)
+        state.heliWallHits=(state.heliWallHits||0)+1;
+        if(state.heliWallHits%10===0){
+          state.coins=Math.max(0,state.coins-100); renderHudTop(); sfx.wrong();
+          showBanner(`🏢💸 ชนตึกครบ ${state.heliWallHits} ครั้ง! หักค่าซ่อมเมือง <b>100🪙</b> — บินระวังขึ้นนะกัปตัน`);
+        }else if(state.heliWallHits%10>=7){
+          showBanner(`⚠️ ชนตึกสะสม ${state.heliWallHits%10}/10 ครั้ง — ครบ 10 โดนหัก 100🪙`);
+        }
+        saveState();
+      }
       break;
     }
   }
