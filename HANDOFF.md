@@ -28,6 +28,7 @@ authOnLogin({uid:'test1',email:'t@test.com'});        // → เข้าหน�
 ```
 - **เพื่อน/แชท/ของขวัญ:** ตั้ง `Online.ready=true` + fake `Online.db={ref:path=>({...})}` (firebase SDK โหลดจริงบน localhost ได้ · ServerValue.TIMESTAMP ใช้ได้) — fake db ต้องรองรับ push/on/off/once/update/orderByKey/limitToLast/get/set/remove/child
 - **จบงานล้างเสมอ:** `localStorage.removeItem('petVocabAdventure_v1')` + reload คืนหน้า login
+- **🔇 กฎเสียง (ผู้ใช้สั่ง 19 ก.ค. 2026): ทดสอบเสียงเสร็จแล้วไม่ใช้ต่อ ต้อง "ปิดเสียงนั้นให้เรียบร้อย" ทุกครั้ง** — เสียงลูป (rotor/เพลง/peer sound) ที่สตาร์ทระหว่างเทสต์ ห้ามปล่อยดังค้างในแท็บ preview · วิธีง่ายสุด: reload หน้า (ฆ่า AudioContext/Audio ทั้งหมด) หรือ stop source ที่สร้างเอง
 
 ## 🖥️ preview gotchas (เจอซ้ำทุกรอบ — อ่านก่อนเทสต์)
 - server ชื่อ **`english-pet-game`** (python http.server, config ใน `.claude/launch.json`) · **ไม่มี Node มีแต่ Python 3.12**
