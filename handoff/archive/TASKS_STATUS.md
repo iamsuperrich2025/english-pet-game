@@ -652,3 +652,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 370:** 🏙️ **ผนังตึกภาพจริงเข้าเกม (ผู้ใช้แจ้ง "วางภาพแล้วตึกไม่เปลี่ยน")** — ต้นตอ: ไฟล์วางถูกครบ (facade_1..6.png 1024² · 9.4MB) แต่**ยังไม่ commit+deploy = live 404** เกม fallback หน้าต่างวาดเอง · แก้: แปลง .jpg q85 (รวม 1.1MB · png ใหญ่อยู่ local) + **buildingFacadeTexture probe .jpg ก่อน .png** (เดิมหา .png อย่างเดียว) · ยืนยัน browser: ตึก 20 หลัง map เป็น facade_1..6.jpg ครบ 0 หลัง procedural · ไม่มี error · deploy `.361` SW v88
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 371:** 🚁 **เฮลิฯ ลำโค้งมนสมจริง (ผู้ใช้ขอ "สมจริงกว่านี้")** — `heliMeshBuild` เลิกทรงกล่อง: ลำตัว ellipsoid+ท้อง accent มน+โดมกระจกหน้า (SphereGeometry) · Lambert→**Phong** (specular/มันเงา · กระจก shininess150) · เพิ่มแคปซูลฝาเครื่อง+ไอเสียคู่+swashplate+ใบพัดแยก 2 กลีบ coning+endplate แพนหาง+กันหางกระแทก+ไฟ nav แดง/เขียว+บีคอน+pitot+เสาอากาศ (49 mesh/ลำ) · คง `_door/_rotor/_trotor` + applyTex เดิม (body repeat 2,1 กัน UV ยืด) · ยืนยัน browser: 2 ลำประกอบครบ Phong 45/45 มี texture map · ประตูสไลด์ 0→.99 (z 1.14) · ไม่มี console/GL error (screenshot tool ค้าง — ตรวจตัวเลขตามกฎ) · deploy `.362` SW v89 · **ค้าง: ผู้ใช้ดูภาพลำจริงในเกมแล้ว feedback**
