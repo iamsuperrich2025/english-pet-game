@@ -46,3 +46,9 @@ Otherworldly alien sky, purple and teal-green gradient with glowing nebula cloud
 ---
 วิธีใช้: copy `สไตล์ร่วม` + พรอมป์ของแบบนั้นต่อกัน แล้วเจนภาพ (เลือกโหมด/สัดส่วน panorama 2:1) → เซฟเป็น `sky_day.jpg` ฯลฯ วางใน `img/sky/`
 เคล็ด: ครึ่งล่างของภาพ (ใต้เส้นขอบฟ้า) ถูกพื้น/หมอกบังในเกม ไม่ต้องเนี้ยบมาก · เน้นครึ่งบน (ท้องฟ้า+เมฆ) ให้สวย
+
+---
+
+# 🆕 sky_dawn ชุด "หนัง" (ผู้ใช้ขอ 19 ก.ค. 2026 · รอบ 367)
+2 อารมณ์ เลือก 1 เซฟชื่อเดิม `img/sky/sky_dawn.jpg` — **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/37b31b7f-d44a-4f9c-a2b3-5f0e27a990cb
+A=รุ่งอรุณทองหนัง (แนะนำ เข้าหมอกเช้า) · B=เมฆยักษ์กลางวันหนังผจญภัย · โครงเหมือนชุดเดิม+เติม `cinematic, volumetric god rays, high dynamic range look`
