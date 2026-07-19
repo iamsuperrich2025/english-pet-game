@@ -637,3 +637,8 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 367 (เอกสาร ไม่ deploy):** 🌅🎬 **prompt ท้องฟ้า+เพลง Suno แบบหนัง (ผู้ใช้ขอ)** — Artifact ปุ่มคัดลอก **https://claude.ai/code/artifact/37b31b7f-d44a-4f9c-a2b3-5f0e27a990cb** · ฟ้า 2 อารมณ์ (A รุ่งอรุณทอง/B เมฆยักษ์) → `img/sky/sky_dawn.jpg` equirect 2:1 (สำรองท้าย PROMPTS_SKY.md) · เพลง instrumental 3 เพลง (ธีมหลัก/ลอยรุ่งอรุณ/ภารกิจกลางคืน) → `sound/bgm/bgm_01..03.mp3` music.js probe เอง (สำรอง PROMPTS_MUSIC_SUNO.md ใหม่) · ✅ ผู้ใช้วางไฟล์แล้ว → รอบ 368
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 368:** 🌅🎵 **ฟ้าจริง+เพลงหนังเข้าเกม (ผู้ใช้เจนวางครบ)** — sky_dawn.png ผู้ใช้ 1536×1024 (ratio 1.5 ผิดสเปก 2:1) → PIL resize 2048×1024 เซฟ `img/sky/sky_dawn.jpg` 238KB (png ใหญ่อยู่ local ไม่ commit) · bgm_01..03.mp3 (~12MB) commit ตรงๆ แพตเทิร์น SongsInCar · ยืนยัน browser: เข้าเฮลิฯ `scene.background` เป็น Texture sky_dawn.jpg mapping equirect(303) จริง · Music probe HEAD 01→200,02→200,03→200,04→404 หยุดถูก = เจอ 3 เพลง (เล่นจริงรอ user gesture ตาม autoplay policy) · **⚠️ เจอ dev server ตายกลางเทสต์ SW เสิร์ฟ cache เงียบ (gotcha 167 อีกรอบ) — preview_start ใหม่+unregister SW แก้ได้** · deploy `.359` (ไม่บัมพ์ SW — ไม่แตะไฟล์ shell)
