@@ -1567,25 +1567,21 @@ function buildScene(md){
       ring.rotation.x=-Math.PI/2; ring.position.set(x,h+.06,z); sc.add(ring);
       list.push({x,z,w,d,h});
     }
-    // 📢 ป้ายโฆษณาบนยอดตึก (รอบ 58) — ตึกเว้นตึก สูงสุด AD_COUNT ป้าย เลขคงที่
-    // พื้นหลังต่างกันทุกป้าย · วางไฟล์ img/ads/ad_<เลข>.png = โฆษณาลูกค้าขึ้นแทนทันที
+    // 📢 ป้ายโฆษณาแนบผนังตึก (รอบ 359 — เดิมลอยเหนือดาดฟ้า ค่อมตัวอักษร) — ตึกเว้นตึก สูงสุด AD_COUNT ป้าย เลขคงที่
+    // ติดผนังฝั่งหันเข้ากลางเมือง ชิดใต้ขอบดาดฟ้า · วางไฟล์ img/ads/ad_<เลข>.png = โฆษณาลูกค้าขึ้นแทนทันที
     const ads=[];
     list.forEach((b,i)=>{
       if(ads.length>=AD_COUNT || i%2===1) return;
       const n=ads.length+1;
-      const pw=Math.min(b.w+2,11), ph=pw*3/8;
+      const toX=Math.abs(b.x)>=Math.abs(b.z);           // เลือกผนังฝั่งแกนที่หันเข้ากลางเมืองมากสุด
+      const sx=toX?-Math.sign(b.x||1):0, sz=toX?0:-Math.sign(b.z||1);
+      const faceW=toX?b.d:b.w;                          // ความกว้างผนังด้านนั้น
+      const pw=Math.min(faceW-.8,11), ph=pw*3/8;
       const panel=new THREE.Mesh(new THREE.PlaneGeometry(pw,ph),
         new THREE.MeshBasicMaterial({map:adBoardTexture(n),side:THREE.DoubleSide}));
-      panel.position.set(b.x, b.h+2.2+ph/2, b.z);
-      panel.lookAt(0, panel.position.y, 0);             // หันหน้าเข้ากลางเมือง มองเห็นตอนบิน
-      // เสาค้ำ 2 ต้น (ลูกของ panel — หมุนตามอัตโนมัติ)
-      const poleG=new THREE.CylinderGeometry(.12,.12,2.4,6);
-      const poleM=new THREE.MeshLambertMaterial({color:0x37474f});
-      [-pw/3,pw/3].forEach(off=>{
-        const p=new THREE.Mesh(poleG,poleM);
-        p.position.set(off,-ph/2-1.1,0);
-        panel.add(p);
-      });
+      panel.name='adpanel'+n;
+      panel.position.set(b.x+sx*(b.w/2+.08), b.h-ph/2-.5, b.z+sz*(b.d/2+.08));
+      panel.rotation.y=Math.atan2(sx,sz);               // normal ชี้ออกจากผนังเข้ากลางเมือง
       sc.add(panel);
       ads.push({n, x:b.x, z:b.z, h:b.h});
     });
