@@ -607,3 +607,13 @@
 ## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 361:** ✨📢 **ป้ายผนัง 3 ป้ายกะพริบหายใจกลางคืน (ต่อยอดรอบ 360 ผู้ใช้อนุมัติ)** — ป้าย n%4===1 (1/5/9) ตั้ง `glow.userData.ph=n*2.1` · `adGlowPulse(now)` คูณ base ด้วย `.35+.65*(.5+.5*sin(now/446+ph))` คาบ ~2.8 วิ · fogUpdate เก็บ `userData.base` ให้ · เรียกคู่ไฟกันชนทั้ง tickHeli+tickHeliFoot · ยืนยัน browser mock 22:00 + footTick 3 จุดเวลา: ป้าย 1 ขึ้น .35→.55 · ป้าย 5 ลง .53→.31 · ป้าย 9 แกว่งต่ำ · ป้าย 2 นิ่ง .55 · ไม่มี error · deploy `.353` SW v81
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 362:** 🪧 **ระบบเช่าป้ายโฆษณาเมืองเฮลิฯ (backlog รอบ 183 ผู้ใช้อนุมัติ)** — ปุ่ม 🪧 เฟสเดิน (`show-adshop` toggle ใน tickHeliFoot) → dialog grid 5×2 ป้าย 1-10 (ว่าง=เช่า `AD_RENT_COIN`300 · มีผู้เช่า=ชื่อ+วันเหลือ · `_adHasImg`=🔒ผู้สนับสนุน) · DB `/ads/<n>`={uid,n,ts} เช่า `AD_RENT_MS` 7 วัน · adBoardTexture วาดชื่อผู้เช่าเมื่อไม่มีไฟล์ลูกค้า (`_adTexDraws` redraw ทีหลัง) · **หักเหรียญหลัง set สำเร็จเท่านั้น** deny=toast ไม่เสียเหรียญ · ยืนยัน browser 812×375: dialog fit sh=ch=158 · ซื้อจริง 500→200+ชื่อขึ้น "✅ ของฉัน เหลือ 7 วัน" · deny เหรียญไม่หด+ปุ่มคืน · ไม่มี error · deploy `.354` SW v82 · **✅ rules /ads publish แล้ว 19 ก.ค. ตรวจสดผ่านครบ** (REST + เทียบทั้งไฟล์ identical 20 โซน · ของค้างเก่า 186/187/241/255-256 ติดมาครบ — ดู RULES.md) · ระบบเช่าป้ายเปิดใช้จริงบน live แล้ว รอผู้ใช้ลองเช่าจริงในเกม · testkit: `_t.heli.adShop.{open,buy,fetchAds,render,renters,el,redraw}`
+
+
+## ⏬ ย้ายเมื่อ 2026-07-19 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 363:** 📻🪧 **ATC ประกาศป้ายใหม่ + sync ผู้เช่าสด + 🐛 แก้บั๊กร้ายแรงรอบ 362** — (1) 🐛 **guard `window.Online` ใช้ไม่ได้จริง!** online.js ประกาศ `const Online` = global lexical ไม่มีบน window → adsFetch/adRentBuy รอบ 362 return เงียบทุกครั้งบนโปรดักชัน (เทสต์รอบก่อนผ่านเพราะ fake `window.Online` ค้างจาก attempt แรก) → แก้เป็น `Online.ready&&Online.db` ตรงๆ ทั้ง 3 จุด · **⚠️ บทเรียน: เทสต์ mock Online ต้อง mutate ตัวจริง (`Online.ready=true; Online.db=fake`) ห้ามตั้ง window.Online** (2) `adsWatch()` on child_added/changed/removed หลัง adsFetch เติม adRenters (ชุดแรกข้อมูลเท่าเดิม=ไม่ประกาศ) · ป้าย/dialog อัปเดตสดทุกเครื่อง · `adsStop()` ใน exitWorld (3) ผู้เช่าใหม่จริง (ไม่ใช่ตัวเอง · ts สด <2 นาที) → `ATC.say` วิทยุอังกฤษ + toast "🪧 ป้าย n มีเจ้าของใหม่: ชื่อ" · ยืนยัน browser 4 เคส: เพื่อนใหม่=วิทยุ+toast ✓ · ข้อมูลเดิม/ตัวเอง/เก่า 5 นาที=เงียบ (renters ยังอัปเดต) · exitWorld ตัด listener ครบ · ไม่มี error · deploy `.355` SW v83 · testkit เพิ่ม: `adShop.{changed,watch,stop,watching}`
