@@ -7041,6 +7041,15 @@ function buildHeliFoot(sc,list){
   const paxH=heliMeshBuild(fest?fest.pax:0x2f7fd4, fest&&fest.paxAcc);
   const paxPos={x:term.x+(ax==='x'?dir*1.2:2.2), y:term.h+.03, z:term.z+(ax==='z'?dir*1.2:2.2)};
   paxH.position.set(paxPos.x,paxPos.y,paxPos.z); sc.add(paxH);
+  // 🟢 รอบ 384: วงลิฟต์ "บนดาดฟ้า" แยกจากจุดในล็อบบี้ (ผู้ใช้ส่งภาพ: ลำโมเดลจริงใหญ่จนวงเดิมจ่อข้างลำ
+  //    เดินเบียดแล้วเหยียบวงโดนส่งกลับชั้น 1) → เลือกมุมดาดฟ้าที่ไกลลำฟ้าสุดจาก 4 มุม (เยื้องขอบ 1.6 เท่าเดิม)
+  let liftRoof={x:liftIn.x,z:liftIn.z}, _farBest=-1;
+  [[-1,-1],[-1,1],[1,-1],[1,1]].forEach(([sx,sz])=>{
+    const c={x:term.x+sx*(w2-1.6), z:term.z+sz*(d2-1.6)};
+    const d=Math.hypot(c.x-paxPos.x,c.z-paxPos.z);
+    if(d>_farBest){ _farBest=d; liftRoof=c; }
+  });
+  padR.position.set(liftRoof.x,term.h+.09,liftRoof.z);
   // 💫 แหวนทองลอยกลางอากาศ (รอบ 355) — ร่อนวิงสูทลอดได้เหรียญ+คอมโบ · seed คงที่ เพื่อนเห็นตำแหน่งเดียวกัน
   const rr=seededRand(7741), rings=[];
   const ringG=new THREE.TorusGeometry(2.3,.24,8,22);
@@ -7055,7 +7064,7 @@ function buildHeliFoot(sc,list){
     sc.add(m);
     rings.push({m,got:false});
   }
-  return {term,ax,dir,doorC,liftIn,padG,padR,pilotH,paxH,paxPos,rings,fest,entD};
+  return {term,ax,dir,doorC,liftIn,liftRoof,padG,padR,pilotH,paxH,paxPos,rings,fest,entD};
 }
 /* พื้นสำหรับ "คนเดิน" — ต่างจาก heliFloorAt: นับดาดฟ้าเฉพาะเมื่อผู้เล่นอยู่สูงระดับนั้นจริง
    (ไม่งั้นก้าวเข้าล็อบบี้ชั้นล่างจะโดนดีดขึ้นดาดฟ้าทันที เพราะ heliFloorAt มองตึกทึบทั้งก้อน) */
@@ -7240,7 +7249,11 @@ function tickHeliFoot(dt,now){
   if(hPhase==='lift'){
     if(now>=liftUntil){
       liftEl.classList.remove('on');
-      camera.position.set(F.liftIn.x+(liftToRoof?1.6:1.6), (liftToRoof?termB.h:0)+FOOT_EYE, F.liftIn.z);
+      if(liftToRoof){
+        // 🟢 รอบ 384: โผล่ข้างวงดาดฟ้า เยื้อง 1.6 เข้าหากลางดาดฟ้า (พ้นรัศมีวง 1.2 — ไม่โดนส่งกลับลงทันที)
+        const vx=termB.x-F.liftRoof.x, vz=termB.z-F.liftRoof.z, vl=Math.hypot(vx,vz)||1;
+        camera.position.set(F.liftRoof.x+vx/vl*1.6, termB.h+FOOT_EYE, F.liftRoof.z+vz/vl*1.6);
+      }else camera.position.set(F.liftIn.x+1.6, FOOT_EYE, F.liftIn.z);
       hPhase='walk';
       showBanner(liftToRoof?'🛗 ถึงดาดฟ้าแล้ว! เดินไปขึ้นเฮลิคอปเตอร์สีฟ้าได้เลย':'🛗 ถึงล็อบบี้ชั้นล่าง');
     }
@@ -7385,6 +7398,7 @@ function tickHeliFoot(dt,now){
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
   // ── จุดโต้ตอบ ──
   const dLift=Math.hypot(nx-F.liftIn.x,nz-F.liftIn.z);
+  const dLiftR=Math.hypot(nx-F.liftRoof.x,nz-F.liftRoof.z);   // 🟢 รอบ 384: วงดาดฟ้าอยู่คนละจุดกับล็อบบี้
   // 🚶 รอบ 375: วัดจากตำแหน่งลำแดงจริง (หลังลงเดิน ลำอาจจอดบนดาดฟ้า/ที่อื่น) + ต้องอยู่ระดับพื้นเดียวกัน
   const pP=F.pilotH.position;
   const dPilot=Math.hypot(nx-pP.x,nz-pP.z);
@@ -7403,7 +7417,7 @@ function tickHeliFoot(dt,now){
     if(dLift<1.2){ liftStart(true,now); return; }
     footHint('🛗 เดินไปยืนบนวงแสงเขียว = ขึ้นลิฟต์ไปดาดฟ้า');
   }else if(onRoof&&insideTerm(nx,nz,-1)){
-    if(dLift<1.2){ liftStart(false,now); return; }
+    if(dLiftR<1.2){ liftStart(false,now); return; }
     if(dPax<3.7){ beginRide(); return; }
     footHint('🚁 เดินเข้าหาเฮลิฯ สีฟ้า = ขึ้นนั่งชมวิว · วงแสงเขียว = ลิฟต์ลง · 🪂 โดดจากขอบก็ได้');
   }else if(dPilot<5.2&&pLv){
@@ -9861,7 +9875,7 @@ window.Adventure3D={
                                 clearFlyby(){ _adFlybyNear={}; _adFlybyAt={}; }},
                         // 🚶🪂 รอบ 354: เฟสเดินเท้า
                         get phase(){return hPhase},
-                        get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos,ent:F.entD?+F.entD.open.toFixed(2):null}:null},
+                        get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,liftRoof:F.liftRoof,pax:F.paxPos,ent:F.entD?+F.entD.open.toFixed(2):null}:null},
                         goPilot:beginPilot, goRide:beginRide, goWing:beginWing, goFoot:endPilot,
                         rideEnd:endRide, footTick:(dt)=>tickHeliFoot(dt||.016,performance.now()),
                         tick:(dt)=>tickHeli(dt||.016,performance.now()),
