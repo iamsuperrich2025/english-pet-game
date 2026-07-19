@@ -2848,7 +2848,7 @@ function tickPeers(dt,now){
         const bankT=Math.max(-.32,Math.min(.32,-yawRate*.55));
         p._bank=(p._bank||0)+(bankT-(p._bank||0))*Math.min(1,dt*4);
         p.flySpr.rotation.z=p._bank;
-        const pitT=-Math.min(.22,spdF*.012);              // ลบ = ก้มจมูก (จมูกลำอยู่ -Z · รอบ 388 เพิ่มมุมให้เห็นชัด)
+        const pitT=-Math.min(.52,spdF*.027);              // ลบ = ก้มจมูก (จมูกลำอยู่ -Z · รอบ 390: สูตรเดียวกับกล้องเรา สูงสุด ~30° ตรงกับที่เจ้าของลำเห็น)
         p._pit=(p._pit||0)+(pitT-(p._pit||0))*Math.min(1,dt*3);
         p.flySpr.rotation.x=p._pit;
         if(p.flySpr._rotor) p.flySpr._rotor.rotation.y+=dt*28;
@@ -7620,7 +7620,7 @@ function tickHeli(dt,now){
   hTiltS+=(sideIn-hTiltS)*Math.min(1,dt*5);
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw);
-  camera.rotateX(-hTiltF*.15);                  // กดหัว/เชิดหัวตามการเอียง (cockpit feedback · รอบ 388 เพิ่มมุมชัดขึ้น)
+  camera.rotateX(-hTiltF*.35);                  // กดหัว/เชิดหัวตามการเอียง — รอบ 390: เพดาน 30° (1.5×.35≈.52rad) ภาพนอกเครื่องกดตามเต็มมุม
   camera.rotateZ(-hTiltS*.09);
 
   // ---- เก็บตัวอักษร: ต้อง "ลงจอดแล้ว" บนดาดฟ้า/พื้นใกล้ตัวอักษร ----
