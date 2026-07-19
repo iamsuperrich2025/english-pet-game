@@ -766,8 +766,10 @@ function makePeerSprite(name, av){
     c.fillText(nm,64,18);
     if(flyMode){
       // 🚁 รอบ 355: โลกเฮลิฯ อ่านเฟสของเพื่อนจาก av ('h_w'=เดิน 'h_r'=นั่งโดยสาร 'h_g'=วิงสูท 'h_p'=ขับ)
-      const em=M.drone?'🛸':(av&&av.slice(0,2)==='h_'?({w:'🚶',r:'💺',g:'🪂',p:'🚁'}[av.charAt(2)]||'🚁'):'🚁');
-      c.font='96px serif'; c.fillText(em,64,105);
+      // 🚁 รอบ 385: เฟสขับ/นั่ง (p/r) ไม่วาด emoji — tickPeers วาดลำโมเดล 3D จริงแทน เหลือแค่ป้ายชื่อลอยเหนือลำ
+      const hm={w:'🚶',r:'',g:'🪂',p:''}, hc=av?av.charAt(2):'';
+      const em=M.drone?'🛸':(av&&av.slice(0,2)==='h_'?(hc in hm?hm[hc]:'🚁'):'🚁');
+      if(em){ c.font='96px serif'; c.fillText(em,64,105); }
     }
     else if(img){ c.drawImage(img,14,36,100,130); }
     else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,105); }
@@ -2746,6 +2748,7 @@ function removePeer(uid){
   if(!p) return;
   removePeerBubble(p);
   if(p.heliSpr){ scene.remove(p.heliSpr); disposeHeliMesh(p.heliSpr); p.heliSpr=null; }   // 🚁 รอบ 376
+  if(p.flySpr){ scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }       // 🚁 รอบ 385: ลำบิน 3D
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
   scene.remove(p.spr);
@@ -2825,6 +2828,20 @@ function tickPeers(dt,now){
         if([hx,hz,hy,hyaw].every(isFinite)){ p.heliSpr.position.set(hx,hy,hz); p.heliSpr.rotation.y=hyaw; }
       }
       if(p.heliSpr&&p.heliSpr._rotor) p.heliSpr._rotor.rotation.y+=dt*.6;   // ใบพัดเอื่อยๆ เหมือนลำจอดของเรา
+      // 🚁 รอบ 385: เพื่อนที่กำลัง "บิน" = ลำโมเดล 3D จริงหันตาม yaw (ผู้ใช้ทัก "ยังเป็นภาพแบน")
+      //    เฟส av: h_p=ขับลำแดง · h_r=นั่งลำฟ้า · เดิน/วิงสูทคง sprite เดิม — ป้ายชื่อยกขึ้นลอยเหนือใบพัด
+      const flyCol=p.av==='h_p'?0xd8342e:p.av==='h_r'?0x2f7fd4:0;
+      if(p.flySpr&&(!flyCol||p._flyCol!==flyCol)){ scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }
+      if(flyCol&&!p.flySpr){ p.flySpr=heliMeshBuild(flyCol); p._flyCol=flyCol; scene.add(p.flySpr); }
+      if(p.flySpr){
+        const hy=Math.max(.03,(p.cur.y||1.5)-2.2);        // y ที่ส่งมา = ระดับสายตานักบิน → ฐานลำต่ำกว่า ~2.2ม.
+        p.flySpr.position.set(p.cur.x,hy,p.cur.z);
+        let dyF=p.yawTgt-p.yawCur; dyF=((dyF+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
+        p.yawCur+=dyF*k; p.flySpr.rotation.y=p.yawCur;    // หันหัวลำตามทิศที่เพื่อนหันจริง (lerp ทางสั้น)
+        if(p.flySpr._rotor) p.flySpr._rotor.rotation.y+=dt*28;
+        if(p.flySpr._trotor) p.flySpr._trotor.rotation.x+=dt*46;
+        p.spr.position.y=hy+4.6;                          // ป้ายชื่อพ้นวงใบพัด
+      }
     }
     // เสียงพูดเบาลงตามระยะห่างในโลก (สไตล์ Roblox) — ไกลเกิน ~45m = เงียบ
     const en=Voice.pcs[uid];
