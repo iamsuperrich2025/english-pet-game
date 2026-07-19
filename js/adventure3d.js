@@ -606,15 +606,38 @@ function ringAds(sc,count,radius,groundY,tr){
    DB /ads/<n>={uid,n,ts} (rules: เขียนได้เมื่อ ว่าง/หมดอายุ/ป้ายตัวเอง — ดู handoff/RULES.md)
    rules ยังไม่ publish = เขียนโดน deny → toast บอก ไม่หักเหรียญ ไม่พังเกม · ปุ่ม 🪧 โชว์เฉพาะเฟสเดิน */
 function adsFetch(){
-  if(!(window.Online&&Online.ready&&Online.db)) return;
+  if(!(Online.ready&&Online.db)) return;             // ⚠️ Online เป็น const (ไม่มี window.Online!) — adventure3d โหลดหลัง online.js เสมอ
   Online.db.ref('ads').once('value').then(s=>{
     adRenters=s.val()||{};
     for(const k in _adTexDraws) _adTexDraws[k]();
     adShopRender();
+    adsWatch();                                        // 📻 รอบ 363: เริ่มฟังสดหลังได้ snapshot แรก
   }).catch(()=>{});
 }
+/* 📻 รอบ 363: sync ผู้เช่าป้ายสด + หอบังคับประกาศเมื่อมีคนเช่าป้ายใหม่ (ทุกคนในเมืองเห็นชื่อขึ้นทันที)
+   attach หลัง adsFetch เติม adRenters แล้ว → child_added ชุดแรกชื่อ/uid เท่าเดิม = ไม่ประกาศซ้ำ */
+let _adsRef=null;
+function adsWatch(){
+  if(_adsRef||!(Online.ready&&Online.db)) return;
+  _adsRef=Online.db.ref('ads');
+  const onCh=s=>adsChanged(s.key,s.val());
+  _adsRef.on('child_added',onCh); _adsRef.on('child_changed',onCh);
+  _adsRef.on('child_removed',s=>adsChanged(s.key,null));
+}
+function adsStop(){ if(_adsRef){ _adsRef.off(); _adsRef=null; } }
+function adsChanged(n,v){
+  const old=adRenters[n];
+  if(v) adRenters[n]=v; else delete adRenters[n];
+  if(_adTexDraws[n]) _adTexDraws[n]();
+  adShopRender();
+  // ประกาศเฉพาะผู้เช่าใหม่จริง: ข้อมูลเดิม/ตัวเอง (มี toast อยู่แล้ว)/ข้อมูลเก่าเกิน 2 นาที = เงียบ
+  if(!v || (old&&old.uid===v.uid&&old.n===v.n)) return;
+  if(v.uid===onlineKey() || Date.now()-v.ts>12e4) return;
+  ATC.say('Attention all pilots! Billboard '+n+' has a new sponsor. Congratulations!');
+  toast('🪧 ป้าย '+n+' มีเจ้าของใหม่: '+v.n);
+}
 function adRentBuy(n,btn){
-  if(!(window.Online&&Online.ready&&Online.db)){ sfx.wrong(); toast('🔌 ต้องออนไลน์ก่อนถึงเช่าป้ายได้นะ'); return; }
+  if(!(Online.ready&&Online.db)){ sfx.wrong(); toast('🔌 ต้องออนไลน์ก่อนถึงเช่าป้ายได้นะ'); return; }
   if(state.coins<AD_RENT_COIN){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — ค่าเช่าป้าย '+AD_RENT_COIN+' เหรียญ'); return; }
   if(btn) btn.disabled=true;
   const rec={uid:onlineKey(), n:(onlineDisplayName()||'ผู้เล่น').slice(0,40),
@@ -9403,6 +9426,7 @@ function start(md,opt){
 function exitWorld(){
   hauntSurviveFinish();                            // ⏱ ออกโลกผีเอง = นับเวลารอดรอบนี้เข้าสถิติด้วย
   running=false;
+  adsStop();                                       // 🪧 รอบ 363: เลิกฟัง /ads (ป้ายเช่าโลกเฮลิฯ)
   cancelAnimationFrame(rafId);
   closeBigMap();                                   // 🗺️ รอบ 144: ปิดแผนที่ขยาย + หยุด interval วาด
   if(document.pointerLockElement) document.exitPointerLock();
@@ -9500,7 +9524,9 @@ window.Adventure3D={
                         // 🪧 รอบ 362: testkit เช่าป้ายโฆษณา
                         adShop:{open:adShopOpen, buy:adRentBuy, fetchAds:adsFetch, render:adShopRender,
                                 get renters(){return adRenters}, set renters(v){adRenters=v},
-                                get el(){return adShopEl}, redraw:n=>_adTexDraws[n]&&_adTexDraws[n]()},
+                                get el(){return adShopEl}, redraw:n=>_adTexDraws[n]&&_adTexDraws[n](),
+                                changed:adsChanged, watch:adsWatch, stop:adsStop,
+                                get watching(){return !!_adsRef}},
                         // 🚶🪂 รอบ 354: เฟสเดินเท้า
                         get phase(){return hPhase},
                         get foot(){const F=worlds.heli&&worlds.heli.foot;return F?{term:{x:F.term.x,z:F.term.z,h:F.term.h,w:F.term.w,d:F.term.d},door:F.doorC,lift:F.liftIn,pax:F.paxPos}:null},
