@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 362 (โซนใหม่ `ads` = เช่าป้ายโฆษณาเมืองเฮลิฯ) — รอ publish 19 ก.ค. 2026:** `/ads/<n 1-10>` = `{uid, n:ชื่อผู้เช่า ≤40, ts}` · อ่านสาธารณะ (ชื่อโชว์บนป้ายอยู่แล้ว — ระดับเดียวกับ leaderboard) · เขียนได้เมื่อ **ว่าง / หมดอายุ (ts เกิน 7 วัน = 604800000 ms) / ป้ายของตัวเอง** · `uid` ต้อง = auth.uid · `ts` ห้ามอนาคตเกิน 1 นาที (กันจองแช่ถาวร) · **ยังไม่ publish = เกมไม่พัง:** ปุ่ม 🪧 เช่าป้ายกดแล้วเขียนโดน deny → toast บอก "ระบบยังไม่เปิด" **ไม่หักเหรียญ** (หักหลังเขียนสำเร็จเท่านั้น) ป้ายโชว์ข้อความติดต่อโฆษณาเดิม · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/b22a7f09-1429-4645-86df-14a637750a15
 - ✅ **รอบ 325 (🐾 ทักทายน้องของเพื่อน) — ผู้ใช้ publish แล้ว 18 ก.ค. 2026 · ตรวจ rules สดผ่าน CLI token แล้ว:** `k` ของ `/gifts` รับ `'shop' | 'collect' | 'greet'` จริงบน server · **เทียบทั้งไฟล์กับก้อนใน RULES.md = ตรงกันเป๊ะทุกโซน (19 โซน identical)** ไม่มีโซนไหนหาย · ของที่เคยค้างมาก่อนติดมาครบด้วย (leaderboard `ba`+`hs` รอบ 255-256 · `chattheme` รอบ 241 · `typing` รอบ 187 · world enum `moto`) → **ปิดค้างทั้งหมด** · เดิม: แก้ **จุดเดียว** ใน `/gifts/$toUid/$fromUid/$giftKey/k` → เพิ่มค่า `'greet'` เข้า enum เดิม (เดิมรับแค่ `'shop'`/`'collect'`) · ไม่มีโซนใหม่ ไม่มี field ใหม่ (ใช้ `id` เก็บรหัสคำทัก เช่น `hi`/`hug`/`treat` ≤40 ตัวอักษรตาม validate เดิม) · **ยังไม่ publish = เกมไม่พัง:** ปุ่ม 🐾 ทักทายน้อง กดแล้วโดน deny → เด้ง toast บอกว่ายังอัปเดตกติกาไม่เสร็จ ส่วนของขวัญปกติ/แชท/ทุกอย่างอื่นทำงานเหมือนเดิมทั้งหมด · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/b7b0dfb7-9e21-48bf-917f-0cdc6cce5136
 - ⏳ **รอบ 255-256 (field `ba` ตัวละคร blk + `hs` หนีผีรอดนานสุด ในการ์ดผู้เล่น) — รอ publish 17 ก.ค. 2026:** เพิ่มใน `/leaderboard/$uid`: `ba` (string ≤8 เช่น "blk3" — การ์ดโชว์ blk เต็มตัว) + `hs` (number ≥0 วินาที — สถิติหนีผีรอดนานสุด) · **ยังไม่ publish = เกมไม่พัง:** เขียนโดน deny → client ถอยไปเขียนก้อนเดิมอัตโนมัติ (แค่การ์ดคนอื่นไม่มีรูป/สถิติผี) · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก (รวม ba+hs publish ทีเดียวจบ):** https://claude.ai/code/artifact/107ef295-bb7f-4bb1-a381-82b24ab80184
 - ⏳ **รอบ 241 (โซนใหม่ `chattheme` = ธีมแชทร่วมกันทั้งคู่) — รอ publish 15 ก.ค. 2026:** `/chattheme/$pairId` = themeId (string ≤16) · read/write เฉพาะคู่สนทนา (`$pairId.contains(auth.uid)`) · ใครเปลี่ยนธีมแชท อีกฝ่ายเห็นเปลี่ยนตามทันที (เดิมจำแยกในเครื่องใครเครื่องมัน) · **ยังไม่ publish = แชทปกติไม่กระทบ แค่ธีมยังไม่ sync ข้ามเครื่อง** (client เขียนโดน deny เงียบๆ → ตกไปใช้ธีมในเครื่องเดิม) · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/5d652aa8-0a38-4b9c-b98d-dbd4d585b657
@@ -271,6 +272,17 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       "$id": {
         ".write": "auth != null && newData.isNumber() && ((!data.exists() && newData.val() === 1) || (data.exists() && newData.val() === data.val() + 1))",
         ".validate": "newData.isNumber() && newData.val() >= 0"
+      }
+    },
+    "ads": {
+      ".read": true,
+      "$n": {
+        ".write": "auth != null && ($n === '1' || $n === '2' || $n === '3' || $n === '4' || $n === '5' || $n === '6' || $n === '7' || $n === '8' || $n === '9' || $n === '10') && (!data.exists() || data.child('ts').val() < now - 604800000 || data.child('uid').val() === auth.uid)",
+        ".validate": "newData.hasChildren(['uid','n','ts'])",
+        "uid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
+        "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "ts":  { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "$other": { ".validate": false }
       }
     },
     "class": {
