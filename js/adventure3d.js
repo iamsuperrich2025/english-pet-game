@@ -170,6 +170,7 @@ let radioBars=new Float32Array(32);                       // ระดับแ�
 let cityMapCv=null;               // แผนที่เมืองวาดครั้งเดียว → ใช้เป็นเรดาร์หมุนได้
 /* ---------- เฮลิคอปเตอร์ (โหมด heli) ---------- */
 const HELI_SKID=1.35;             // ความสูงตาคนขับเหนือแท่นลงจอด (คาน skid)
+const HELI_CRASH_FINE=500;        // 💥 รอบ 389: ค่าปรับขับชนเฮลิฯ ผู้เล่นอื่นกลางอากาศ (ฝ่ายพุ่งชนจ่าย)
 const HELI_MESH_SCALE=1.6;        // 📏 รอบ 378: ขยายลำจอด/ลำเพื่อนเป็นสัดส่วนจริงเทียบคน (Bell 212)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
 /* 🎯💡🏆 รอบ 350: ระบบช่วยจัดกึ่งกลางเป้า + ไฟส่องหมอก + โบนัสลงนุ่ม */
@@ -206,6 +207,7 @@ const BOLT_MIN=11000, BOLT_MAX=24000;               // ฟ้าแลบทุ�
 const GLASS_HIT_R=1.9, GLASS_COIN=2;                // ชนบานกระจก: รัศมี · เหรียญที่ได้
 const DOOR_R=2.6, DOOR_COIN=8, DOOR_BAT=15;         // ชนประตู: รัศมี · รางวัลในห้องเก็บของ
 let hTiltF=0, hTiltS=0;           // การเอียงหัว/ข้าง แบบ smooth — ใช้ทั้งมุมกล้องและเข็มเส้นขอบฟ้า (รอบ 61)
+let _heliCrashAt=-1e9;            // 💥 รอบ 389: คูลดาวน์ชนเฮลิฯ เพื่อน (กันโดนปรับรัวใน 3 วิ)
 let gaugeCtx=null, gaugeCanvasEl=null;   // canvas เข็มที่วาดทับหน้าปัดในภาพค็อกพิต (รอบ 342)
 let hAtcCleared=false;            // รอบ 64: หอบังคับประกาศ "อนุญาตขึ้นบิน" ไปแล้ว (ครั้งเดียว/รอบเข้าโลก)
 
@@ -7555,6 +7557,29 @@ function tickHeli(dt,now){
       hVel.x*=-.25; hVel.z*=-.25;
       if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); nmCrashed=true; nmCombo=0; }
       break;
+    }
+  }
+
+  // ---- 💥 รอบ 389: ขับชนเฮลิฯ ผู้เล่นอื่นกลางอากาศ (ผู้ใช้สั่ง) — ฝ่ายพุ่งชนปรับ 500🪙 + เกิดใหม่ลานจอด ----
+  //    ฝ่ายถูกชนบินต่อได้ปกติ (ไม่แตะอะไรฝั่งเขา) · ตัดสิน "ใครชน" ฝั่งใครฝั่งมัน: ต้องเคลื่อนที่เร็วพอ
+  //    (>3.5 m/s) ตอนแตะลำเพื่อนถึงนับเป็นฝ่ายชน — ลอยนิ่งแล้วโดนเพื่อนพุ่งใส่ เครื่องเพื่อนเป็นคนจ่ายเอง
+  if(!hLanded && now-_heliCrashAt>3000 && Math.hypot(hVel.x,hVel.z)>3.5){
+    for(const uid in peers){
+      const f=peers[uid].flySpr; if(!f) continue;
+      if(Math.hypot(nx-f.position.x,nz-f.position.z)<6.2 && Math.abs(ny-(f.position.y+2.2))<3.2){
+        _heliCrashAt=now;
+        const fine=Math.min(HELI_CRASH_FINE,state.coins);
+        state.coins=Math.max(0,state.coins-HELI_CRASH_FINE); saveState(); renderHudTop();
+        HeliSound.thud(); sfx.wrong();
+        dustBurst(nx,Math.max(0,ny-2),nz,26);                       // ควันตลบตรงจุดชนก่อนวาร์ป
+        nmCrashed=true; nmCombo=0;
+        showBanner(`💥 ชนเฮลิคอปเตอร์ของ <b>${escapeHTML(peers[uid].n)}</b>! เสียค่าปรับ ${fine}🪙 · กลับไปเริ่มใหม่ที่ลานจอด`);
+        ATC.say('Midair collision! Return to base immediately, captain.');
+        nx=0; nz=0; ny=heliFloorAt(0,0)+HELI_SKID;                  // 🐣 เกิดใหม่ลานจอดกลาง เครื่องจอดสนิท
+        hVel={x:0,y:0,z:0}; hLanded=true; hCol=0;
+        if(myRef) sendPos(true);                                    // เพื่อนเห็นลำเราวาร์ปกลับลานทันที
+        break;
+      }
     }
   }
 
