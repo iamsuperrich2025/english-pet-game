@@ -6753,33 +6753,44 @@ function heliMeshBuild(col,accent){
   applyTex(wt,'tex_heli_body',2,1,accent||0xe8e6df);
   applyTex(dk,'tex_heli_metal',1,1);
   applyTex(gl,'tex_heli_glass',1,1);                 // 🪟 รอบ 364: กระจกสะท้อนฟ้า
-  // ── 🚁 รอบ 377: ลำตัวโปรไฟล์ Bell 212 จริง (ผู้ใช้ส่งภาพอ้างอิง) — หยดน้ำหัวแหลมมน ท้ายเรียวยกขึ้น
-  //    LatheGeometry หมุนโปรไฟล์รอบแกน (r,ยาว) → เอียง -.07 = หัวก้มท้ายเชิดรับบูมสูงแบบลำจริง
-  //    โทนสีสลับจากเดิม: "ขาว(accent)บน - สี(col)ล่าง" คาดแถบกวาดขึ้นหุ้มหัว ตามภาพ N212KA
-  const prof=[[.001,-2.75],[.3,-2.58],[.52,-2.28],[.7,-1.8],[.8,-1.05],[.82,-.15],[.78,.75],[.64,1.55],[.46,2.1],[.28,2.35]]
-    .map(([r,y])=>new THREE.Vector2(r,y));
-  const hull=new THREE.Mesh(new THREE.LatheGeometry(prof,22),wt);           // ลำบนสีขาว/accent
-  hull.rotation.x=Math.PI/2-.07; hull.scale.set(1,1,.93); hull.position.set(0,1.35,-.08); g.add(hull);
-  const belly=new THREE.Mesh(new THREE.SphereGeometry(1,20,12),bm);         // ครึ่งล่างสี col (แดง/ฟ้า)
-  belly.scale.set(.79,.6,2.28); belly.rotation.x=-.07; belly.position.set(0,1.02,-.15); g.add(belly);
-  const noseCap=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),bm);       // แถบสีกวาดขึ้นหุ้มปลายหัว
-  noseCap.scale.set(.42,.36,.55); noseCap.position.set(0,1.1,-2.42); g.add(noseCap);
-  const fair=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),wt);          // แฟริ่งท้ายเชื่อมลำ→บูม
-  fair.scale.set(.36,.46,.95); fair.position.set(0,1.68,2.15); g.add(fair);
-  // ── กระจกโดมหน้า (bubble canopy) ครอบเหนือหัวเรียว โผล่บน/ข้างแบบลำจริง ──
-  const canopy=new THREE.Mesh(new THREE.SphereGeometry(1,24,14),gl);
-  canopy.scale.set(.72,.62,1.0); canopy.position.set(0,1.56,-1.5); g.add(canopy);
+  // ── 🚁 รอบ 380: ลากเส้นขอบข้างตามภาพ Bell 212 จริง (ผู้ใช้ทัก "ลำตัว/หางยังไม่เหมือน") ──
+  //    เลิกหยดน้ำ lathe → วาด Shape ข้างลำแล้ว Extrude+bevel: จมูกสั้นมนระดับต่ำ · กระจกหน้าลาดชัน ·
+  //    หลังคาแบนยาว · ท้องแบน · ท้ายลำ "ท้องกวาดขึ้น" สอบเข้าโคนบูมสูง — ตรงเส้นขอบนอกภาพอ้างอิง
+  const sp=new THREE.Shape();
+  sp.moveTo(-2.45,1.05);                        // ปลายจมูก (มน อยู่ระดับกลางลำแบบภาพ)
+  sp.quadraticCurveTo(-2.45,.76,-2.0,.64);      // ใต้คางโค้งเข้าท้อง
+  sp.lineTo(1.15,.6);                           // ท้องแบนยาวใต้ห้องโดยสาร
+  sp.quadraticCurveTo(1.95,.64,2.75,1.52);      // ท้ายลำ: ท้องกวาดขึ้นหาโคนบูม (เอกลักษณ์ 212)
+  sp.lineTo(2.75,2.1);                          // คอบูม
+  sp.lineTo(-.85,2.08);                         // หลังคาแบนยาว
+  sp.lineTo(-1.85,1.48);                        // ลาดกระจกหน้าชัน
+  sp.quadraticCurveTo(-2.45,1.32,-2.45,1.05);   // โค้งปิดหน้าจมูก
+  const hull=new THREE.Mesh(new THREE.ExtrudeGeometry(sp,
+    {depth:1.24,bevelEnabled:true,bevelThickness:.22,bevelSize:.18,bevelSegments:3,curveSegments:10}),bm);
+  hull.rotation.y=-Math.PI/2; hull.position.x=.62; g.add(hull);   // แกนยาว shape → แกน z โลก · จัดกึ่งกลางความกว้าง
+  // ── แถบท้องขาว (accent) คาดล่างยาว + ท่อนท้ายเอียงตามท้องกวาดขึ้น — ตามลาย 2 โทนในภาพ ──
+  const bellyF=new THREE.Mesh(new THREE.BoxGeometry(1.58,.3,3.25),wt);
+  bellyF.position.set(0,.62,-.45); g.add(bellyF);
+  const bellyR=new THREE.Mesh(new THREE.BoxGeometry(1.28,.26,1.55),wt);
+  bellyR.rotation.x=-.62; bellyR.position.set(0,1.0,1.85); g.add(bellyR);
+  // ── กระจกหน้าแนบลาด + กระจกข้างห้องนักบิน + กระจกคาง ──
+  const shield=new THREE.Mesh(new THREE.BoxGeometry(1.5,.92,.06),gl);
+  shield.rotation.x=-1.0; shield.position.set(0,1.82,-1.33); g.add(shield);
+  [[-.85],[.85]].forEach(([sx])=>{ const w=new THREE.Mesh(new THREE.BoxGeometry(.06,.5,.72),gl);
+    w.position.set(sx,1.62,-1.3); g.add(w); });
+  [[-.38],[.38]].forEach(([cx])=>{ const w=new THREE.Mesh(new THREE.BoxGeometry(.5,.34,.06),gl);
+    w.rotation.x=.5; w.position.set(cx,1.05,-2.2); g.add(w); });
   // ── หน้าต่างห้องโดยสารฝั่งซ้าย (กรอบเข้ม+กระจก นูนจากผิวเล็กน้อยแบบบานจริง) ──
   const winF=new THREE.Mesh(new THREE.BoxGeometry(.05,.56,1.44),dk);
-  winF.position.set(-.8,1.52,.15); g.add(winF);
+  winF.position.set(-.84,1.52,.15); g.add(winF);      // ผนัง extrude หนาถึง ±.84 (รอบ 380)
   const winL=new THREE.Mesh(new THREE.BoxGeometry(.06,.46,1.32),gl);
-  winL.position.set(-.805,1.52,.15); g.add(winL);
+  winL.position.set(-.85,1.52,.15); g.add(winL);
   // ── 🚪 ประตูสไลด์จริงฝั่งขวา (รอบ 357) — บานนอกลำวิ่งบนราง 2 เส้นแบบเฮลิฯ ขนส่งจริง ──
   const door=new THREE.Group(); door.position.set(.84,0,0);            // เลื่อนแกน z ของกลุ่มนี้ = ประตูสไลด์
-  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.05,1.12,1.35),wt); // บานขาวตามลำบน (รอบ 377)
+  const doorP=new THREE.Mesh(new THREE.BoxGeometry(.05,1.12,1.35),bm); // บานสีตัวถัง (รอบ 380 ตามภาพ)
   doorP.position.set(0,1.36,.15); door.add(doorP);
-  const doorBand=new THREE.Mesh(new THREE.BoxGeometry(.052,.3,1.35),bm); // แถบสีล่างบานต่อเนื่องกับท้อง
-  doorBand.position.set(0,.97,.15); door.add(doorBand);
+  const doorBand=new THREE.Mesh(new THREE.BoxGeometry(.052,.24,1.35),wt); // แถบขาวล่างบานรับกับแถบท้อง
+  doorBand.position.set(0,.72,.15); door.add(doorBand);
   const doorW=new THREE.Mesh(new THREE.BoxGeometry(.06,.46,.92),gl);   // หน้าต่างบนบาน
   doorW.position.set(0,1.55,.15); door.add(doorW);
   const doorH=new THREE.Mesh(new THREE.BoxGeometry(.06,.05,.26),dk);   // มือจับ
@@ -6789,7 +6800,7 @@ function heliMeshBuild(col,accent){
   g.add(door);
   g._door=door; g._doorOpen=0;                                         // 0=ปิดสนิท · 1=เลื่อนไปหลังสุด
   // ── ฝาครอบเครื่องยนต์ Twin-Pac แคปซูลมน (ขาวตามลำ) + ช่องรับลม 2 ข้าง + ท่อไอเสียใหญ่เดี่ยวแบบ 212 ──
-  const cowl=new THREE.Mesh(new THREE.CapsuleGeometry(.4,1.5,4,12),wt);
+  const cowl=new THREE.Mesh(new THREE.CapsuleGeometry(.4,1.5,4,12),bm);
   cowl.rotation.x=Math.PI/2; cowl.position.set(0,2.14,.55); g.add(cowl);
   [[-.3],[.3]].forEach(([ix])=>{ const sc=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),dk);
     sc.scale.set(.16,.12,.3); sc.position.set(ix,2.32,-.42); g.add(sc); });
@@ -6812,14 +6823,14 @@ function heliMeshBuild(col,accent){
     w.position.set(0,-.15,fz); rotor.add(w); });
   g.add(rotor);
   // ── บูมหางยกสูงต่อแนวหลังคาแบบ 212 (ขาว) + แพนหาง endplate + ครีบตั้งสี col + แฟริ่งเกียร์หาง ──
-  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.13,.3,3.9,12),wt);
+  const boom=new THREE.Mesh(new THREE.CylinderGeometry(.13,.3,3.9,12),bm);   // บูมสีตัวถัง (รอบ 380 ตามภาพ)
   boom.rotation.x=Math.PI/2; boom.position.set(0,1.85,3.3); g.add(boom);
-  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.75,.05,.44),wt); hstab.position.set(0,1.9,3.4); g.add(hstab);
-  [[-.875],[.875]].forEach(([px])=>{ const ep=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.5),wt);
+  const hstab=new THREE.Mesh(new THREE.BoxGeometry(1.75,.05,.44),bm); hstab.position.set(0,1.9,3.4); g.add(hstab);
+  [[-.875],[.875]].forEach(([px])=>{ const ep=new THREE.Mesh(new THREE.BoxGeometry(.05,.4,.5),bm);
     ep.position.set(px,1.9,3.4); g.add(ep); });
   const fin=new THREE.Mesh(new THREE.BoxGeometry(.08,1.32,.62),bm);
   fin.position.set(0,2.42,4.95); fin.rotation.x=-.16; g.add(fin);
-  const gbox=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),wt);
+  const gbox=new THREE.Mesh(new THREE.SphereGeometry(1,10,8),bm);
   gbox.scale.set(.12,.14,.3); gbox.position.set(-.1,2.6,5.0); g.add(gbox);
   const tskid=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.55,8),dk);  // กันหางกระแทก
   tskid.rotation.x=.5; tskid.position.set(0,1.52,4.72); g.add(tskid);
@@ -6842,8 +6853,8 @@ function heliMeshBuild(col,accent){
   // ── รายละเอียดสมจริง: ไฟนำทางแดงซ้าย/เขียวขวา + บีคอนแดงบนหลัง + ไฟท้ายขาว + เสา pitot + เสาอากาศ ──
   const lamp=(c,x,y,z,r)=>{ const m=new THREE.Mesh(new THREE.SphereGeometry(r||.05,6,5),
     new THREE.MeshBasicMaterial({color:c})); m.position.set(x,y,z); g.add(m); return m; };
-  lamp(0xff3b30,-.8,1.3,-1.0);        // 🔴 nav ซ้าย
-  lamp(0x2ecc55,.8,1.3,-1.0);         // 🟢 nav ขวา
+  lamp(0xff3b30,-.87,1.3,-1.0);       // 🔴 nav ซ้าย (พ้นผนัง extrude ±.84)
+  lamp(0x2ecc55,.87,1.3,-1.0);        // 🟢 nav ขวา
   lamp(0xff2222,0,2.6,1.05,.06);      // 🔴 บีคอนกันชนบนฝาเครื่อง
   lamp(0xffffff,0,3.08,5.2,.04);      // ⚪ ไฟท้ายบนครีบ (บูมยกสูงขึ้นรอบ 377)
   const pitot=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.5,6),dk);
