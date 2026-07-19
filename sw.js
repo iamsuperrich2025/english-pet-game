@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v101';  // v101: 🛩️🔊🔦 ลำเพื่อน: เอียงโค้ง+เสียงตามระยะ+ไฟกลางคืน รอบ 386
+const CACHE_VERSION = 'pet-vocab-v102';  // v102: 🎵 แก้เพลงฉากโลกเฮลิฯ ไม่ดัง (bgSuspended บล็อก) รอบ 387
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

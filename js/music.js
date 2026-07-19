@@ -23,7 +23,9 @@ const Music = (function(){
 
   function soundOn(){ return typeof state === 'undefined' || state.sound; }
   function musicOn(){ return !(typeof state !== 'undefined' && state.musicOff); }   // 🎵 รอบ 184: ปุ่มปิดเพลงแยก
-  function bgAllowed(){ return soundOn() && musicOn() && !carOn && !bgSuspended; }
+  // 🐛 รอบ 387: เพลงตามฉาก (sceneBg) ต้องเล่นได้แม้ bg โดนพักตอนเข้าโลก 3D — เดิม bgSuspended
+  //    บล็อกหมด ทำให้เพลงโลกเฮลิฯ ไม่เคยดังตั้งแต่รอบ 369 (ฉากขอเพลงเอง = ตั้งใจให้ดังในโลก)
+  function bgAllowed(){ return soundOn() && musicOn() && !carOn && (!bgSuspended || !!sceneName); }
   function mode(){ return (typeof state !== 'undefined' && MODES.includes(state.musicMode)) ? state.musicMode : 'all'; }
   function setMode(m){ if(MODES.includes(m) && typeof state !== 'undefined'){ state.musicMode = m; if(typeof saveState === 'function') saveState(); } }
 
@@ -73,7 +75,7 @@ const Music = (function(){
   function setMusic(on){
     if(typeof state !== 'undefined'){ state.musicOff = !on; if(typeof saveState === 'function') saveState(); }
     if(!on){ if(bg) bg.pause(); }
-    else if(!carOn && !bgSuspended && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+    else if(!carOn && (!bgSuspended || sceneName) && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }   // 🐛 รอบ 387: เปิดเพลงกลับกลางโลก 3D ที่มีเพลงฉากต้องกลับมาดัง
   }
   function isMusicOn(){ return musicOn(); }
 
@@ -121,7 +123,7 @@ const Music = (function(){
   function onSound(){
     if(!soundOn()){ if(bg) bg.pause(); if(car) car.pause(); return; }
     if(carOn){ if(car) car.play().catch(()=>{}); }
-    else if(!bgSuspended && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+    else if((!bgSuspended || sceneName) && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }   // 🐛 รอบ 387
   }
 
   // ---------- visualizer feed ----------
