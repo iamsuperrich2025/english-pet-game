@@ -76,8 +76,8 @@ const MODES = {
     label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
-    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>กดปุ่มเตะ<b>ค้าง</b>เพิ่มพลังแล้วปล่อย · เล็งได้ทุกทิศ · ครบคำ +20🪙<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
-    hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · ⭐ กด A/D ค้างระหว่างบอลลอย = จับบอลโค้ง! · V สลับมุมกล้อง',
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
+    hint:'🕹️ สติ๊กมือซ้าย = เล็ง (ซ้าย-ขวา หันทิศ · ขึ้น-ลง ปรับความสูง) · ⚽ ปุ่มขวากดค้าง = ชาร์จพลัง ปล่อย = เตะ · ⭐ ดันสติ๊กค้างตอนบอลลอย = จับบอลโค้ง! · คอม: A/D W/S + เว้นวรรค · V สลับมุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
   mecha: {
@@ -231,7 +231,7 @@ let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
 let aimYaw=0, aimPitch=0.34, sChg=0, sCharging=false, sKickHeld=false, sPrevV=false, sLegSwing=0;
 let soccerCam1=false;                                      // true=มุมมองบุคคลที่ 1
 let sKitShirt=0xe53935, sKitNo='10';
-let sPadU=false, sPadD=false, sPadL=false, sPadR=false;    // ปุ่มเล็ง (มือถือ)
+const AIM_STICK=1.35;                                      // 🕹️ รอบ 398: ตัวคูณความไวสติ๊กเล็ง (มือถือ · ดันสุด=เร็วกว่าปุ่มเดิม)
 let soccerStartEl=null, powerFillEl=null;
 /* ⚽🎨 รอบ 396: PES-look — ฟิสิกส์จริง (drag/Magnus/after-touch/เสา-คาน/ตาข่าย) + สนามสมจริง */
 const SB_DRAG=0.018, SB_MAGNUS=0.055, SB_TOUCH=9.5;        // สปส.ต้านอากาศ · แรงโค้ง Magnus · ความไวบังคับโค้งกลางอากาศ (A/D)
@@ -4368,6 +4368,7 @@ function buildDom(){
   .adv-haunt .adv-recap-w small{color:#9fe8bf}
   /* ⚽ โหมดสนามฟุตบอล — ปุ่มเล็ง (ซ้าย) · ปุ่มเตะกดค้าง (ขวา) · แถบพลัง · ปุ่มสลับกล้อง · แผงเลือกชุด */
   .adv-soccer #adv-cross,.adv-soccer #adv-gauges,.adv-soccer #adv-cockpit{display:none}
+  /* 🕹️ รอบ 398: แป้น ▲▼◀▶ เลิกใช้แล้ว (เล็งด้วยสติ๊ก #adv-joy มือซ้ายแบบ PES) — CSS เก็บไว้เผื่อย้อนกลับ */
   #adv-aimpad{position:absolute;display:none;left:16px;bottom:20px;width:150px;height:150px;z-index:6;
     pointer-events:none;-webkit-user-select:none;user-select:none}
   .adv-touch.adv-soccer #adv-aimpad{display:block}
@@ -4710,11 +4711,7 @@ function buildDom(){
       </div>
     </div>
     <div id="adv-selfmsg"></div>
-    <!-- ⚽ โหมดสนามฟุตบอล -->
-    <div id="adv-aimpad">
-      <div class="apb ap-u">▲</div><div class="apb ap-d">▼</div>
-      <div class="apb ap-l">◀</div><div class="apb ap-r">▶</div>
-    </div>
+    <!-- ⚽ โหมดสนามฟุตบอล (รอบ 398: เล็งด้วยสติ๊กมือซ้าย #adv-joy แบบ PES — ไม่มีแป้นลูกศรแล้ว) -->
     <button id="adv-kick">⚽<small>เตะ</small></button>
     <div id="adv-power"><div id="adv-power-fill"></div></div>
     <button id="adv-scam">👁️ มุมกล้อง</button>
@@ -5019,11 +5016,7 @@ function buildDom(){
     el.addEventListener('touchcancel',u,{passive:false});
     el.addEventListener('mousedown',d); el.addEventListener('mouseup',u); el.addEventListener('mouseleave',u);
   };
-  holdBtn('#adv-aimpad .ap-u',()=>sPadU=true,()=>sPadU=false);
-  holdBtn('#adv-aimpad .ap-d',()=>sPadD=true,()=>sPadD=false);
-  holdBtn('#adv-aimpad .ap-l',()=>sPadL=true,()=>sPadL=false);
-  holdBtn('#adv-aimpad .ap-r',()=>sPadR=true,()=>sPadR=false);
-  holdBtn('#adv-kick',()=>sKickHeld=true,()=>sKickHeld=false);
+  holdBtn('#adv-kick',()=>sKickHeld=true,()=>sKickHeld=false);   // 🕹️ รอบ 398: เลิกใช้แป้น ▲▼◀▶ — เล็งด้วยสติ๊กมือซ้ายแบบ PES
   overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ if(M.drive) driveCamToggle(); else soccerCam1=!soccerCam1; sfx.select(); });   // 👁️ รอบ 394: ปุ่มเดียวใช้ทั้ง soccer/drive
   overlayEl.querySelector('#adv-pk').addEventListener('click',()=>{ if(pkOn) pkEnd(true); else pkStart(); });   // 🎯 รอบ 397: โหมดจุดโทษ
   overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
@@ -5160,15 +5153,15 @@ function bindInput(){
     const joyEl=overlayEl.querySelector('#adv-joy'), dotEl=overlayEl.querySelector('#adv-joy-dot');
     let joyId=null, joyCx=0, joyCy=0;
     overlayEl.addEventListener('touchstart',e=>{
-      if(M.soccer) return;                            // ⚽ โหมดฟุตบอลใช้ปุ่มเล็ง/เตะเอง ไม่มีจอย/ลากมองรอบ
+      // ⚽ รอบ 398: ฟุตบอลใช้ "สติ๊กมือซ้าย" แบบ PES (ครึ่งซ้าย=เล็ง) · ครึ่งขวาเป็นปุ่มยิงล้วน ไม่มีลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour,#adv-adshop,#adv-adshop-dlg')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-pk,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour,#adv-adshop,#adv-adshop-dlg')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
           joyEl.classList.add('live');                 // รอบ 143: โหมดขับรถซ่อนวงจอยตอนพัก — โชว์เฉพาะตอนใช้จริง
           joy.on=true; joy.dx=0; joy.dy=0;
-        }else if(lookTouch===null){
+        }else if(!M.soccer && lookTouch===null){       // ⚽ ฟุตบอลไม่มีลากมองรอบ (ครึ่งขวา = ปุ่มยิงอย่างเดียว)
           lookTouch={id:t.identifier,x:t.clientX,y:t.clientY};
         }
       }
@@ -9664,7 +9657,9 @@ function soccerKick(power){
   sbVel.x=dx*ch*spd; sbVel.z=dz*ch*spd; sbVel.y=sh*spd;
   // 🎨 รอบ 396: สปินตั้งต้น — เตะโด่ง=แบ็คสปิน (ลอยค้าง) · กด A/D ตอนปล่อย=ไซด์สปินเข้าโค้งทันที
   sbSpin.x=sh*(3+spd*.12); sbSpin.z=0;               // ωx>0 = แบ็คสปิน (บอลวิ่ง -z แล้ว ω×v ยกขึ้น)
-  sbSpin.y=((keys.KeyA||keys.ArrowLeft||sPadL)?SB_SPIN_MAX*.55:0)-((keys.KeyD||keys.ArrowRight||sPadR)?SB_SPIN_MAX*.55:0);
+  let side=((keys.KeyA||keys.ArrowLeft)?1:0)-((keys.KeyD||keys.ArrowRight)?1:0);
+  if(joy.on&&Math.abs(joy.dx)>.15) side=-joy.dx;     // 🕹️ ค้างสติ๊กไว้ตอนปล่อยเตะ = ออกโค้งตั้งแต่แรก
+  sbSpin.y=side*SB_SPIN_MAX*.55;
   sbInNet=false; repTrace=[];                          // 🎬 เริ่มบันทึกวิถีลูกนี้
   if(pkOn) pkKicks++;                                  // 🎯 นับลูกที่ดวล
   sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
@@ -9710,11 +9705,15 @@ function tickSoccer(dt,now){
   if(repOn){ repTick(dt,now); return; }                            // 🎬 รอบ 397: กำลังฉายรีเพลย์ — คุมบอล+กล้องเอง
   if(repPendAt&&now>=repPendAt){ repPendAt=0; repTrace=repPendTrace||repTrace; repStart(); if(repOn) return; }
   soccerGKEnsure(); soccerGKTick(dt,now); pkTick(now);             // 🧤🎯 น้อง GK + นาฬิกาจุดโทษ
-  // เล็ง (คีย์บอร์ด + ปุ่มมือถือ) — ปรับได้ตลอด แม้กำลังชาร์จ
-  if(keys.KeyA||keys.ArrowLeft||sPadL) aimYaw-=AIM_YAW_SP*dt;
-  if(keys.KeyD||keys.ArrowRight||sPadR) aimYaw+=AIM_YAW_SP*dt;
-  if(keys.KeyW||keys.ArrowUp||sPadU) aimPitch+=AIM_PITCH_SP*dt;
-  if(keys.KeyS||keys.ArrowDown||sPadD) aimPitch-=AIM_PITCH_SP*dt;
+  // เล็ง (คีย์บอร์ด + 🕹️ สติ๊กอนาล็อกมือซ้ายแบบ PES) — ปรับได้ตลอด แม้กำลังชาร์จ
+  if(keys.KeyA||keys.ArrowLeft) aimYaw-=AIM_YAW_SP*dt;
+  if(keys.KeyD||keys.ArrowRight) aimYaw+=AIM_YAW_SP*dt;
+  if(keys.KeyW||keys.ArrowUp) aimPitch+=AIM_PITCH_SP*dt;
+  if(keys.KeyS||keys.ArrowDown) aimPitch-=AIM_PITCH_SP*dt;
+  if(joy.on){                                    // ดันเบา=ขยับช้า (เล็งละเอียด) · ดันสุด=หมุนไว · ปล่อยนิ้ว=ค้างมุมเดิม
+    aimYaw  +=joy.dx*AIM_YAW_SP*AIM_STICK*dt;
+    aimPitch-=joy.dy*AIM_PITCH_SP*AIM_STICK*dt;  // ดันขึ้น (dy ติดลบ) = เงยสูง
+  }
   aimYaw=Math.max(-.8,Math.min(.8,aimYaw));
   aimPitch=Math.max(.06,Math.min(.92,aimPitch));
   if(keys.KeyV && !sPrevV){ soccerCam1=!soccerCam1; sfx.select(); } sPrevV=!!keys.KeyV;
@@ -9740,8 +9739,10 @@ function tickSoccer(dt,now){
     const b=soccerBall.position;
     // 🎨 รอบ 396 ฟิสิกส์จริง: after-touch แบบ PES — A/D ระหว่างบอลลอย (1.2 วิแรก) = จับบอลโค้งกลางอากาศ
     if(b.y>BALL_R+.05 && now-sbKickAt<1200){
-      if(keys.KeyA||keys.ArrowLeft||sPadL) sbSpin.y=Math.min(SB_SPIN_MAX,sbSpin.y+SB_TOUCH*dt);
-      if(keys.KeyD||keys.ArrowRight||sPadR) sbSpin.y=Math.max(-SB_SPIN_MAX,sbSpin.y-SB_TOUCH*dt);
+      if(keys.KeyA||keys.ArrowLeft) sbSpin.y=Math.min(SB_SPIN_MAX,sbSpin.y+SB_TOUCH*dt);
+      if(keys.KeyD||keys.ArrowRight) sbSpin.y=Math.max(-SB_SPIN_MAX,sbSpin.y-SB_TOUCH*dt);
+      if(joy.on&&Math.abs(joy.dx)>.15)            // 🕹️ ดันสติ๊กระหว่างบอลลอย = จับบอลโค้ง (after-touch แบบ PES)
+        sbSpin.y=Math.max(-SB_SPIN_MAX,Math.min(SB_SPIN_MAX,sbSpin.y-joy.dx*SB_TOUCH*dt));
     }
     if(b.y>BALL_R+.05){
       const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z), dr=Math.max(0,1-SB_DRAG*sp*dt);
@@ -10536,7 +10537,7 @@ function start(md,opt){
   }else if(M.soccer){
     // ⚽ รีเซ็ตเล็ง/ชาร์จ/บอล · กล้องเริ่มหลังบอล (kit picker เด้งก่อนเล่น)
     aimYaw=0; aimPitch=.34; sChg=0; sCharging=false; sKickHeld=false; sPrevV=false; sLegSwing=0;
-    soccerCam1=false; sPadU=sPadD=sPadL=sPadR=false;
+    soccerCam1=false; joy.on=false; joy.dx=joy.dy=0;    // 🕹️ รอบ 398: เคลียร์สติ๊กเล็ง (เลิกใช้แป้น ▲▼◀▶)
     soccerResetBall();
     camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
   }else if(M.mecha){
@@ -10800,6 +10801,7 @@ window.Adventure3D={
                           get spin(){return sbSpin}, get shadow(){return sbShadow},
                           get nets(){return soccerNets}, get ripple(){return sbNetRipple}, get inNet(){return sbInNet},
                           audio:SoccerAudio,
+                          get stick(){return joy},        // 🕹️ รอบ 398: สติ๊กเล็งมือซ้าย (เทสต์: stick.on=true; stick.dx=1)
                           // 🧤🎯🎬 รอบ 397: testkit GK / จุดโทษ / รีเพลย์
                           get gk(){return {mesh:gkMesh,x:gkX,saveAt:gkSaveAt,type:gkType,ensure:soccerGKEnsure}},
                           pk:{start:pkStart,end:pkEnd,get on(){return pkOn},get goals(){return pkGoals},
