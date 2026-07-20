@@ -4,7 +4,7 @@
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-20
 
-## js/adventure3d.js (11,263 บรรทัด · 510 รายการ)
+## js/adventure3d.js (11,308 บรรทัด · 512 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
 - 1-213 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
 - 214-270 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
@@ -47,10 +47,10 @@
 - 8578-8649 🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
 - 8650-9264 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
 - 9265-9267 Loop หลัก
-- 9268-10278 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
-- 10279-10726 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
-- 10727-10739 เข้า/ออกโลก
-- 10740-11263 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 9268-10323 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
+- 10324-10771 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+- 10772-10784 เข้า/ออกโลก
+- 10785-11308 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
@@ -121,22 +121,23 @@ wipeDrops:8394 · setWiper:8410 · setVisor:8416 · rainTick:8422 · drawBlade:8
 drawBellyCam:8515 · drawBellyHud:8538 · drawLandingTargets:8584 · VS_HARD:8654 · drawDescentBar:8655 · heliShake:8704
 cpNeedle:8715 · drawGauges:8732 · XF_START:8779 · PRELOAD_WAIT:8780 · ALT_QUIET_FROM:8782 · ALT_MAX_DAMP:8783
 ALT_LP_MIN:8784 · ECHO_NEAR:8785 · WIND_FULL_SPD:8786 · SHUTDOWN_SEC:8787 · PAN_MAX:8789 · OD_RPM:8790
-SHAKE_RPM:8791 · SHAKE_HIT:8792 · soccerLetterPos:9271 · letterNeeded:9275 · soccerNeededSet:9280 · soccerTileGeo:9286
-soccerGoldTexture:9288 · makeSoccerTile:9305 · soccerRefreshSkins:9314 · soccerBuildTargets:9321 · soccerRetarget:9330 · soccerCoinPop:9342
-soccerGrassTexture:9355 · grassNormalTexture:9370 · grassTuftTexture:9397 · buildGrassTufts:9417 · soccerLinesTexture:9442 · soccerNetTexture:9466
-soccerCrowdTexture:9474 · soccerBallMat:9493 · buildSoccerGoal:9513 · buildStands:9532 · soccerLedBoards:9567 · soccerGKEnsure:9664
-soccerGKTick:9680 · fkBuildWall:9709 · fkToggle:9724 · fkHitTest:9738 · pkHud:9757 · pkStart:9766
-pkEnd:9780 · pkTick:9796 · repQualify:9803 · repEnsureEl:9806 · repStart:9817 · repTick:9824
-soccerNumTex:9849 · makeSoccerPlayer:9859 · soccerResetBall:9883 · soccerKick:9889 · soccerCheer:9906 · guideTexture:9909
-buildLandRing:9933 · buildGuideRibbon:9943 · renderSpinPad:9957 · spinPadToggle:9969 · spinPadPick:9975 · renderCurl:9987
-kickLaunch:9998 · updateSoccerGuide:10006 · soccerCamera:10069 · tickSoccer:10090 · soccerKitShow:10252 · soccerKitGo:10267
-emojiSprite:10320 · makeAlien:10325 · startWave:10358 · waveSpawnFill:10369 · waveComplete:10378 · updateWaveHud:10388
-checkMechaBossBadge:10390 · alienSpawnPos:10399 · removeAlien:10404 · mechaHudWord:10409 · setMechaHudSkin:10417 · mechaComboPop:10429
-mechaShielded:10434 · mechaDamageFx:10436 · mechaHitByAlien:10441 · spawnAlienShot:10447 · removeAlienShot:10457 · tickAlienShots:10462
-spawnPowerup:10474 · removePowerup:10487 · collectPowerup:10492 · tickPowerups:10499 · updateMechaHud:10508 · mechaTracer:10548
-mechaFire:10557 · explodeAlien:10594 · tickMecha:10624 · loop:10680 · grabShot:10707 · savePhoto:10718
-clearEntities:10730 · INTRO_KEY:10744 · introSeenObj:10745 · introSeen:10746 · markIntroSeen:10747 · INTRO:10748
-showIntro:10814 · closeIntro:10839 · beginPlay:10845 · start:10847 · exitWorld:11036 · mechaRecapLine:11091
+SHAKE_RPM:8791 · SHAKE_HIT:8792 · soccerLetterPos:9272 · letterNeeded:9280 · soccerNeededSet:9285 · soccerTileGeo:9291
+soccerGoldTexture:9293 · makeSoccerTile:9310 · soccerRefreshSkins:9319 · soccerBuildTargets:9326 · soccerNextTile:9336 · soccerRetarget:9349
+soccerCoinPop:9361 · soccerGrassTexture:9374 · grassNormalTexture:9389 · grassTuftTexture:9416 · buildGrassTufts:9436 · soccerLinesTexture:9461
+soccerNetTexture:9485 · soccerCrowdTexture:9493 · soccerBallMat:9512 · buildSoccerGoal:9532 · buildStands:9551 · soccerLedBoards:9586
+soccerGKEnsure:9683 · soccerGKTick:9699 · fkBuildWall:9728 · fkToggle:9743 · fkHitTest:9759 · pkHud:9778
+pkStart:9787 · pkEnd:9801 · pkTick:9816 · repQualify:9823 · repEnsureEl:9826 · repStart:9837
+repTick:9844 · soccerNumTex:9869 · makeSoccerPlayer:9879 · soccerNewSpot:9905 · soccerResetBall:9915 · soccerKick:9922
+soccerCheer:9939 · guideTexture:9942 · buildLandRing:9966 · buildGuideRibbon:9976 · renderSpinPad:10001 · spinPadToggle:10013
+spinPadPick:10019 · renderCurl:10031 · kickLaunch:10042 · updateSoccerGuide:10050 · soccerCamera:10113 · tickSoccer:10134
+soccerKitShow:10297 · soccerKitGo:10312 · emojiSprite:10365 · makeAlien:10370 · startWave:10403 · waveSpawnFill:10414
+waveComplete:10423 · updateWaveHud:10433 · checkMechaBossBadge:10435 · alienSpawnPos:10444 · removeAlien:10449 · mechaHudWord:10454
+setMechaHudSkin:10462 · mechaComboPop:10474 · mechaShielded:10479 · mechaDamageFx:10481 · mechaHitByAlien:10486 · spawnAlienShot:10492
+removeAlienShot:10502 · tickAlienShots:10507 · spawnPowerup:10519 · removePowerup:10532 · collectPowerup:10537 · tickPowerups:10544
+updateMechaHud:10553 · mechaTracer:10593 · mechaFire:10602 · explodeAlien:10639 · tickMecha:10669 · loop:10725
+grabShot:10752 · savePhoto:10763 · clearEntities:10775 · INTRO_KEY:10789 · introSeenObj:10790 · introSeen:10791
+markIntroSeen:10792 · INTRO:10793 · showIntro:10859 · closeIntro:10884 · beginPlay:10890 · start:10892
+exitWorld:11081 · mechaRecapLine:11136
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
