@@ -4,53 +4,53 @@
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-07-20
 
-## js/adventure3d.js (11,308 บรรทัด · 512 รายการ)
+## js/adventure3d.js (11,323 บรรทัด · 512 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
 - 1-213 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
-- 214-270 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
-- 271-325 🤖 โหมดหุ่นยนต์นักรบ (โหมด mecha · รอบ 199) — มุมมองในหุ่นสูง 5m เดินยิงเอเลี่ยนตัวอักษร
-- 326-466 📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
-- 467-487 คำศัพท์ — ตามระดับชั้น + ไม่ซ้ำคำที่ประกอบแล้ว (8.1/8.6) · แยกคลังต่อโหมด
-- 488-824 Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)
-- 825-991 🧱 ตัวละครบล็อก (โลกขับรถ) — เลือกก่อนออกรถ · เพื่อนใน map เห็นเป็นหุ่นบล็อกขับรถบล็อก
-- 992-1298 🚙 รอบ 393: รถเพื่อนในโลกขับรถ = โมเดลจริง img/models/car_01.glb (ผู้ใช้สั่ง)
-- 1299-1451 สร้างฉาก static ครั้งเดียวต่อโหมด
-- 1452-1769 🚗 เมืองกำแพงเพชรจริง (โหมด drive) — ข้อมูล OpenStreetMap ใน js/data/city_kpp.js
-- 1770-1784 🌅 ท้องฟ้าภาพจริง (รอบ 203) — ใส่ภาพ panorama 360° (equirectangular 2:1) เป็นฉากหลังท้องฟ้า
-- 1785-2164 🧱 เทกซ์เจอร์ภาพจริง (รอบ 323) — วางไฟล์ `img/tex/<key>.jpg` (หรือ .png) แล้วแปะทับพื้นผิวทันที
-- 2165-2264 ตัวอักษรในโลก (8.2)
-- 2265-2319 🔠🪙 เก็บตัวอักษร 1 ตัว = ได้ 1 เหรียญ (รอบ 345)
-- 2320-2378 ประกอบคำอัตโนมัติเมื่อมีตัวอักษรครบ (8.1/8.4)
-- 2379-2473 โหมด adv: monsters ยิงสู้ได้ (สเปกเดิม 8.5)
-- 2474-2654 โหมด haunt: ผีโผล่ 3 วิ → ย้ายที่ · สู้ไม่ได้ · โดนจับ = game over
-- 2655-2806 เสียงหลอนโหมดผีสิง — สังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
-- 2807-3124 Multiplayer — ผู้เล่นอื่นใน map เดียวกัน (สไตล์ Roblox)
-- 3125-3324 Voice chat ใน map — WebRTC P2P mesh (เสียงวิ่งตรงระหว่างเครื่อง)
-- 3325-3411 🏁 พิธีประกาศแชมป์ (ครูกด "จบรอบแข่ง") — /class/<map>/podium
-- 3412-3604 HUD
-- 3605-5232 DOM overlay + CSS (สร้างครั้งเดียว — self-contained ไม่แตะ style.css)
-- 5233-5358 Input — เมาส์+คีย์บอร์ด และจอสัมผัส (มือถือ landscape)
-- 5359-5363 🚁 โหมดเฮลิคอปเตอร์ Bell — ฟิสิกส์บินแบบอาร์เคด (สไตล์ Helicopter Flight Pilot)
-- 5364-5755 🛸 โดรน FPV (โหมด drone) — บินเร็ว/คล่อง ลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้อง
-- 5756-5878 🚗 โหมดขับรถเมืองกำแพงเพชร — ฟิสิกส์รถอาร์เคด (bicycle model)
-- 5879-5972 🚦 รอบ 133: ไฟจราจรจริงที่ทางแยกใหญ่ + ฝ่าไฟแดงโดนใบสั่ง ม.22
-- 5973-6400 🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) + เสียงอังกฤษเลี้ยว
-- 6401-6459 🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-180 + วัดรอบ 0-8×1000) — วาดทับวงเกจของภาพ dash.png
-- 6460-6544 🎵 รอบ 181: วิทยุในรถ — จอ head-unit กลางคอนโซล (visualizer + เลือกเพลง 3 โหมด)
-- 6545-6672 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
-- 6673-6976 🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
-- 6977-7019 🛩️📦 ภารกิจไปรษณีย์กลางคืน (รอบ 353) — เฉพาะช่วงฟ้ามืด (heliNight>.5)
-- 7020-8204 🚶🛗🚁🪂 โหมดเดินเท้าในเมืองเฮลิฯ (รอบ 354 — ผู้ใช้สั่ง)
-- 8205-8278 🎛️ หน้าปัดเข็มขยับจริง (รอบ 61) — วาดสดทุกเฟรมจากค่าการบินจริง
-- 8279-8507 🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
-- 8508-8577 📹 กล้องใต้ท้องเครื่อง (belly cam) — รอบ 348
-- 8578-8649 🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
-- 8650-9264 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
-- 9265-9267 Loop หลัก
-- 9268-10323 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
-- 10324-10771 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
-- 10772-10784 เข้า/ออกโลก
-- 10785-11308 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 214-271 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
+- 272-326 🤖 โหมดหุ่นยนต์นักรบ (โหมด mecha · รอบ 199) — มุมมองในหุ่นสูง 5m เดินยิงเอเลี่ยนตัวอักษร
+- 327-467 📻 หอบังคับการบิน (รอบ 64 · รอบ 66 เปลี่ยนเป็นอังกฤษล้วนตามผู้ใช้สั่ง)
+- 468-488 คำศัพท์ — ตามระดับชั้น + ไม่ซ้ำคำที่ประกอบแล้ว (8.1/8.6) · แยกคลังต่อโหมด
+- 489-825 Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)
+- 826-992 🧱 ตัวละครบล็อก (โลกขับรถ) — เลือกก่อนออกรถ · เพื่อนใน map เห็นเป็นหุ่นบล็อกขับรถบล็อก
+- 993-1299 🚙 รอบ 393: รถเพื่อนในโลกขับรถ = โมเดลจริง img/models/car_01.glb (ผู้ใช้สั่ง)
+- 1300-1452 สร้างฉาก static ครั้งเดียวต่อโหมด
+- 1453-1770 🚗 เมืองกำแพงเพชรจริง (โหมด drive) — ข้อมูล OpenStreetMap ใน js/data/city_kpp.js
+- 1771-1785 🌅 ท้องฟ้าภาพจริง (รอบ 203) — ใส่ภาพ panorama 360° (equirectangular 2:1) เป็นฉากหลังท้องฟ้า
+- 1786-2165 🧱 เทกซ์เจอร์ภาพจริง (รอบ 323) — วางไฟล์ `img/tex/<key>.jpg` (หรือ .png) แล้วแปะทับพื้นผิวทันที
+- 2166-2265 ตัวอักษรในโลก (8.2)
+- 2266-2320 🔠🪙 เก็บตัวอักษร 1 ตัว = ได้ 1 เหรียญ (รอบ 345)
+- 2321-2379 ประกอบคำอัตโนมัติเมื่อมีตัวอักษรครบ (8.1/8.4)
+- 2380-2474 โหมด adv: monsters ยิงสู้ได้ (สเปกเดิม 8.5)
+- 2475-2655 โหมด haunt: ผีโผล่ 3 วิ → ย้ายที่ · สู้ไม่ได้ · โดนจับ = game over
+- 2656-2807 เสียงหลอนโหมดผีสิง — สังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
+- 2808-3125 Multiplayer — ผู้เล่นอื่นใน map เดียวกัน (สไตล์ Roblox)
+- 3126-3325 Voice chat ใน map — WebRTC P2P mesh (เสียงวิ่งตรงระหว่างเครื่อง)
+- 3326-3412 🏁 พิธีประกาศแชมป์ (ครูกด "จบรอบแข่ง") — /class/<map>/podium
+- 3413-3605 HUD
+- 3606-5233 DOM overlay + CSS (สร้างครั้งเดียว — self-contained ไม่แตะ style.css)
+- 5234-5359 Input — เมาส์+คีย์บอร์ด และจอสัมผัส (มือถือ landscape)
+- 5360-5364 🚁 โหมดเฮลิคอปเตอร์ Bell — ฟิสิกส์บินแบบอาร์เคด (สไตล์ Helicopter Flight Pilot)
+- 5365-5756 🛸 โดรน FPV (โหมด drone) — บินเร็ว/คล่อง ลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้อง
+- 5757-5879 🚗 โหมดขับรถเมืองกำแพงเพชร — ฟิสิกส์รถอาร์เคด (bicycle model)
+- 5880-5973 🚦 รอบ 133: ไฟจราจรจริงที่ทางแยกใหญ่ + ฝ่าไฟแดงโดนใบสั่ง ม.22
+- 5974-6401 🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) + เสียงอังกฤษเลี้ยว
+- 6402-6460 🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-180 + วัดรอบ 0-8×1000) — วาดทับวงเกจของภาพ dash.png
+- 6461-6545 🎵 รอบ 181: วิทยุในรถ — จอ head-unit กลางคอนโซล (visualizer + เลือกเพลง 3 โหมด)
+- 6546-6673 🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
+- 6674-6977 🚔 รอบ 128: แผงเตรียมออกรถ + กฎหมายจราจร + ใบสั่ง
+- 6978-7020 🛩️📦 ภารกิจไปรษณีย์กลางคืน (รอบ 353) — เฉพาะช่วงฟ้ามืด (heliNight>.5)
+- 7021-8205 🚶🛗🚁🪂 โหมดเดินเท้าในเมืองเฮลิฯ (รอบ 354 — ผู้ใช้สั่ง)
+- 8206-8279 🎛️ หน้าปัดเข็มขยับจริง (รอบ 61) — วาดสดทุกเฟรมจากค่าการบินจริง
+- 8280-8508 🌧️☀️ ชั้นบนกระจก: ที่ปัดน้ำฝน + แสงแดดสาด (รอบ 346)
+- 8509-8578 📹 กล้องใต้ท้องเครื่อง (belly cam) — รอบ 348
+- 8579-8650 🎯 วงเป้าลงจอด (รอบ 349) — ไฮไลต์ดาดฟ้าที่มีตัวอักษร ให้รู้ว่าควรร่อนลงตรงไหน
+- 8651-9265 📏 แถบเตือนความเร็วดิ่ง (รอบ 349) — ลงเร็วเกินกรอบกล้องกะพริบแดง สอนให้ร่อนลงนุ่มๆ
+- 9266-9268 Loop หลัก
+- 9269-10338 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
+- 10339-10786 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
+- 10787-10799 เข้า/ออกโลก
+- 10800-11323 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
@@ -62,82 +62,82 @@ CAR_VREV:137 · CAR_WB:138 · CAR_STEER_MAX:139 · HELI_SKID:172 · HELI_CRASH_F
 ASSIST_R:177 · PROP_STALL_MS:182 · PROP_BREAK_SPD:185 · PROP_BROKEN_MUL:186 · BAT_DRAIN:189 · BAT_LETTER:190
 BAT_LOW:191 · BAT_EMPTY_MUL:192 · CHG_R:195 · GATE_R:198 · showHeliSkip:205 · BOLT_MIN:206
 GLASS_HIT_R:207 · DOOR_R:208 · SOCCER_SHIRTS:218 · BALL_R:223 · GOAL_HW:224 · KICK_SPD_MIN:225
-AIM_YAW_SP:226 · SOCCER_TILES:227 · AIM_STICK:234 · CURL_SWIPE:237 · CURL_SPIN:238 · HIT_LIFT:242
-GUIDE_N:243 · FK_SPOT_Z:249 · FK_MAN_R:250 · SB_DRAG:256 · SPOST_R:257 · GK_Z:262
-GK_SPRITES:263 · PK_TIME:265 · MECHA_EYE:275 · ALIEN_COUNT:276 · MECHA_MAX_HP:277 · MECHA_ATK_RANGE:278
-ALIEN_SHOT_SPD:279 · POWERUP_GAP:280 · BOSS_SCALE:281 · COMBO_X2:282 · BOSS_SPECIES:285 · pickBossSpecies:293
-WAVE_BASE_GOAL:295 · waveCfg:296 · MECHA_WEAPONS:305 · ATC_REPLIES:334 · ATC_CLOSERS:339 · ATC:344
-CHAT_MAX:463 · doneList:470 · wordPool:471 · pickWords:484 · TILE_COLORS:491 · letterTexture:492
-emojiTexture:506 · GHOST_IMG_MAX:518 · measureGhostBox:525 · probeGhostImages:538 · whenGhostsReady:550 · ghostTexture:554
-ghostScareSrc:559 · AD_STYLES:567 · adRenterActive:576 · adBoardTexture:577 · addAdBillboard:624 · ringAds:635
-adsFetch:646 · adsWatch:658 · adsStop:665 · adsChanged:666 · adRentBuy:677 · heliMusicTick:700
-AD_FLYBY_COIN:704 · adFlybyTick:706 · adShopOpen:725 · adShopRender:739 · BUILDING_TINTS:764 · FACADE_ROWS:766
-buildingFacadeTexture:767 · makePeerSprite:791 · BLOCK_AVATARS:831 · blkGeo:842 · blkMat:843 · blkCyl:844
-blkFaceMat:846 · makeBlockFigure:861 · makeBlockCar:901 · blkNameSprite:946 · makeBlockPeer:959 · makeBlockWalkPeer:980
-disposeBlockPeer:988 · CAR_GLB_URL:999 · CAR_GLB_LEN:1000 · carSplitWheel:1004 · carGlbEnsure:1031 · carMatGet:1050
-carGlbBuild:1066 · carAvCode:1115 · driveCamToggle:1122 · SKID_N:1141 · skidGeomGet:1143 · skidDrop:1148
-skidTick:1162 · blkBuildThumbs:1172 · blkBuildPicker:1190 · pickBlockAvatar:1235 · bubbleSprite:1258 · showPeerBubble:1285
-removePeerBubble:1293 · concreteTexture:1303 · brokenWindowTexture:1320 · intactGlassTexture:1336 · chargeIconTexture:1354 · rustyDoorTexture:1363
-dAddBox:1377 · buildAbandoned:1384 · makeNameSprite:1457 · flatGeom:1470 · flatGeomUV:1479 · buildDriveCity:1489
-SKY_IMG:1775 · applySky:1776 · applyTex:1791 · buildScene:1814 · randPos:2168 · randRoadPos:2176
-spawnLetter:2188 · spawnLettersForWord:2219 · ensureCoverage:2221 · relocateLetters:2234 · removeLetter:2259 · LETTER_COIN:2270
-pickUpLetter:2271 · letterPop:2285 · letterChime:2303 · tryCompleteWords:2323 · completeWord:2337 · spawnMonster:2382
-killMonster:2391 · tickMonsters:2399 · damagePlayer:2421 · shoot:2437 · tickShots:2451 · spawnGhost:2477
-GHOST_STYLE:2486 · GHOST_H_DEFAULT:2487 · applyGhostSize:2488 · respawnGhost:2497 · tickGhosts:2513 · sessionRecapHtml:2559
-hauntRunSec:2566 · fmtSurv:2567 · hauntSurviveFinish:2568 · tickSurvive:2578 · renderHearts:2591 · ghostHit:2600
-caught:2622 · knockedOut:2648 · netReady:2812 · netJoin:2816 · sendPos:2829 · sendChat:2875
-toggleChatBox:2889 · onPeerData:2899 · disposeHeliMesh:2985 · removePeer:2990 · netLeave:3005 · tickPeers:3013
-RTC_CFG:3133 · tinvLinked:3134 · partyWord:3141 · syncPartyWord:3154 · updateVoiceBtns:3306 · PODIUM_BONUS:3331
-podiumJoin:3333 · podiumLeave:3344 · endRound:3345 · showPodium:3356 · tinvCheck:3396 · showBanner:3416
-renderHudTop:3422 · renderHudWords:3427 · renderHudInv:3437 · ddTierFromName:3444 · renderBoard:3446 · drawBigMap:3470
-openBigMap:3525 · closeBigMap:3533 · drawMinimap:3538 · loadCarDash:3610 · loadCarWheel:3622 · buildDom:3632
-confirmExit:5217 · IS_TOUCH:5236 · bindInput:5237 · movePlayer:5324 · tickPlayer:5334 · collideDrone:5367
-propStall:5386 · propBreak:5393 · propFix:5400 · droneBatAdd:5407 · lightningBolt:5410 · startRain:5421
-stopRain:5435 · smashGlass:5437 · awardGlass:5448 · neededLetter:5465 · openDoor:5480 · raceStartRun:5500
-raceStop:5507 · gateHighlight:5525 · renderRaceHud:5532 · tickDrone:5541 · nearMissTick:5683 · showNearMiss:5707
-awardDaredevil:5718 · comboCheer:5735 · comboFlash:5751 · driveCell:5760 · nearestStreet:5766 · collideCar:5776
-tlDotY:5807 · tlSet:5811 · driveArms:5828 · tlTick:5840 · TL_GREEN:5884 · tlRedDur:5886
-tlightPhase:5887 · buildTrafficLights:5894 · rlTick:5946 · cellDrivable:5978 · cellCenter:5979 · losClear:5981
-nearestDrivableCell:5991 · routeGrid:6000 · pickGpsTarget:6053 · gpsSpeak:6065 · NAVLINE_W:6084 · navLineEnsure:6085
-navLineHide:6095 · navLineUpdate:6096 · tickGps:6123 · tickDrive:6199 · drawCarDial:6407 · drawCarGauges:6437
-RADIO_RECT:6465 · CAR_RADIO_RECT:6467 · carRadioRect:6473 · radioLayout:6475 · radioSetHint:6498 · renderRadioList:6504
-radioToggleList:6514 · drawRadioViz:6519 · radioTick:6537 · BOBBLE_FOOT:6550 · BOBBLE_H:6551 · BOBBLE_ASPECT:6552
-BOB_OMEGA:6555 · BOB_PITCH_FORCE:6557 · BOBBLE_SKINS:6559 · bobbleSetAvatar:6566 · bobbleLayout:6573 · bobbleTick:6586
-bobblePoke:6611 · bobbleApplySkin:6628 · dollOwned:6638 · openDollPicker:6639 · carStartShow:6676 · showLawInfo:6694
-lawNotice:6716 · driveFineSettle:6726 · HELI_PHASES:6905 · heliStartPhase:6912 · heliFloorAt:6919 · SOFT_TIERS:6929
-softLandBonus:6931 · awardPerfLand:6944 · setHeliLight:6963 · MAIL_COIN:6982 · mailStart:6984 · mailStop:7007
-mailTick:7008 · FOOT_EYE:7027 · doorSlideSfx:7033 · doorLerp:7056 · entLerp:7064 · footStepSfx:7074
-WRING_COIN:7095 · festivalPaint:7099 · dustTexture:7111 · dustBurst:7120 · dustTick:7134 · HELI_GLB_URL:7155
-HELI_GLB_TEX_BLUE:7157 · HELI_GLB_ROTOR:7159 · HELI_GLB_TROTOR:7160 · heliGlbEnsure:7162 · heliMatBlueGet:7180 · heliGlbAssemble:7193
-heliNavTick:7232 · peerRotorStop:7239 · peerRotorTick:7245 · heliCrashSfx:7264 · heliMeshBuild:7292 · heliMeshBuildLegacy:7303
-buildHeliFoot:7433 · footFloorAt:7549 · insideTerm:7556 · inDoorZone:7557 · footHint:7561 · setFootBtns:7562
-liftStart:7567 · beginRide:7578 · endRide:7601 · beginWing:7612 · awardAirLetter:7625 · paxChoiceShow:7644
-paxChoiceHide:7670 · pilotShipMesh:7674 · beginPilot:7675 · endPilot:7707 · drawCabinWindow:7729 · tickHeliFoot:7753
-tickHeli:7962 · CP_NAT:8213 · CP_GAUGES:8214 · SEAT_LABEL:8227 · SEAT_P_FULL:8228 · SEAT_ZOOM:8229
-DASH_OFF_Y:8230 · DASH_DROP:8231 · setSeat:8233 · layoutCockpit:8245 · WIPER:8284 · WIPER_SPD:8285
-sunUpdate:8291 · HELI_FOG_N0:8302 · fogUpdate:8306 · adGlowPulse:8352 · RAIN_MAX:8361 · VISOR_Y:8362
-RAIN_MIN:8363 · RAIN_DUR:8364 · DROP_ZONE:8368 · addDrop:8369 · tickDrops:8377 · WIPE_R:8393
-wipeDrops:8394 · setWiper:8410 · setVisor:8416 · rainTick:8422 · drawBlade:8434 · drawGlass:8448
-drawBellyCam:8515 · drawBellyHud:8538 · drawLandingTargets:8584 · VS_HARD:8654 · drawDescentBar:8655 · heliShake:8704
-cpNeedle:8715 · drawGauges:8732 · XF_START:8779 · PRELOAD_WAIT:8780 · ALT_QUIET_FROM:8782 · ALT_MAX_DAMP:8783
-ALT_LP_MIN:8784 · ECHO_NEAR:8785 · WIND_FULL_SPD:8786 · SHUTDOWN_SEC:8787 · PAN_MAX:8789 · OD_RPM:8790
-SHAKE_RPM:8791 · SHAKE_HIT:8792 · soccerLetterPos:9272 · letterNeeded:9280 · soccerNeededSet:9285 · soccerTileGeo:9291
-soccerGoldTexture:9293 · makeSoccerTile:9310 · soccerRefreshSkins:9319 · soccerBuildTargets:9326 · soccerNextTile:9336 · soccerRetarget:9349
-soccerCoinPop:9361 · soccerGrassTexture:9374 · grassNormalTexture:9389 · grassTuftTexture:9416 · buildGrassTufts:9436 · soccerLinesTexture:9461
-soccerNetTexture:9485 · soccerCrowdTexture:9493 · soccerBallMat:9512 · buildSoccerGoal:9532 · buildStands:9551 · soccerLedBoards:9586
-soccerGKEnsure:9683 · soccerGKTick:9699 · fkBuildWall:9728 · fkToggle:9743 · fkHitTest:9759 · pkHud:9778
-pkStart:9787 · pkEnd:9801 · pkTick:9816 · repQualify:9823 · repEnsureEl:9826 · repStart:9837
-repTick:9844 · soccerNumTex:9869 · makeSoccerPlayer:9879 · soccerNewSpot:9905 · soccerResetBall:9915 · soccerKick:9922
-soccerCheer:9939 · guideTexture:9942 · buildLandRing:9966 · buildGuideRibbon:9976 · renderSpinPad:10001 · spinPadToggle:10013
-spinPadPick:10019 · renderCurl:10031 · kickLaunch:10042 · updateSoccerGuide:10050 · soccerCamera:10113 · tickSoccer:10134
-soccerKitShow:10297 · soccerKitGo:10312 · emojiSprite:10365 · makeAlien:10370 · startWave:10403 · waveSpawnFill:10414
-waveComplete:10423 · updateWaveHud:10433 · checkMechaBossBadge:10435 · alienSpawnPos:10444 · removeAlien:10449 · mechaHudWord:10454
-setMechaHudSkin:10462 · mechaComboPop:10474 · mechaShielded:10479 · mechaDamageFx:10481 · mechaHitByAlien:10486 · spawnAlienShot:10492
-removeAlienShot:10502 · tickAlienShots:10507 · spawnPowerup:10519 · removePowerup:10532 · collectPowerup:10537 · tickPowerups:10544
-updateMechaHud:10553 · mechaTracer:10593 · mechaFire:10602 · explodeAlien:10639 · tickMecha:10669 · loop:10725
-grabShot:10752 · savePhoto:10763 · clearEntities:10775 · INTRO_KEY:10789 · introSeenObj:10790 · introSeen:10791
-markIntroSeen:10792 · INTRO:10793 · showIntro:10859 · closeIntro:10884 · beginPlay:10890 · start:10892
-exitWorld:11081 · mechaRecapLine:11136
+AIM_YAW_SP:226 · SOCCER_TILES:227 · AIM_STICK:235 · CURL_SWIPE:238 · CURL_SPIN:239 · HIT_LIFT:243
+GUIDE_N:244 · FK_SPOT_Z:250 · FK_MAN_R:251 · SB_DRAG:257 · SPOST_R:258 · GK_Z:263
+GK_SPRITES:264 · PK_TIME:266 · MECHA_EYE:276 · ALIEN_COUNT:277 · MECHA_MAX_HP:278 · MECHA_ATK_RANGE:279
+ALIEN_SHOT_SPD:280 · POWERUP_GAP:281 · BOSS_SCALE:282 · COMBO_X2:283 · BOSS_SPECIES:286 · pickBossSpecies:294
+WAVE_BASE_GOAL:296 · waveCfg:297 · MECHA_WEAPONS:306 · ATC_REPLIES:335 · ATC_CLOSERS:340 · ATC:345
+CHAT_MAX:464 · doneList:471 · wordPool:472 · pickWords:485 · TILE_COLORS:492 · letterTexture:493
+emojiTexture:507 · GHOST_IMG_MAX:519 · measureGhostBox:526 · probeGhostImages:539 · whenGhostsReady:551 · ghostTexture:555
+ghostScareSrc:560 · AD_STYLES:568 · adRenterActive:577 · adBoardTexture:578 · addAdBillboard:625 · ringAds:636
+adsFetch:647 · adsWatch:659 · adsStop:666 · adsChanged:667 · adRentBuy:678 · heliMusicTick:701
+AD_FLYBY_COIN:705 · adFlybyTick:707 · adShopOpen:726 · adShopRender:740 · BUILDING_TINTS:765 · FACADE_ROWS:767
+buildingFacadeTexture:768 · makePeerSprite:792 · BLOCK_AVATARS:832 · blkGeo:843 · blkMat:844 · blkCyl:845
+blkFaceMat:847 · makeBlockFigure:862 · makeBlockCar:902 · blkNameSprite:947 · makeBlockPeer:960 · makeBlockWalkPeer:981
+disposeBlockPeer:989 · CAR_GLB_URL:1000 · CAR_GLB_LEN:1001 · carSplitWheel:1005 · carGlbEnsure:1032 · carMatGet:1051
+carGlbBuild:1067 · carAvCode:1116 · driveCamToggle:1123 · SKID_N:1142 · skidGeomGet:1144 · skidDrop:1149
+skidTick:1163 · blkBuildThumbs:1173 · blkBuildPicker:1191 · pickBlockAvatar:1236 · bubbleSprite:1259 · showPeerBubble:1286
+removePeerBubble:1294 · concreteTexture:1304 · brokenWindowTexture:1321 · intactGlassTexture:1337 · chargeIconTexture:1355 · rustyDoorTexture:1364
+dAddBox:1378 · buildAbandoned:1385 · makeNameSprite:1458 · flatGeom:1471 · flatGeomUV:1480 · buildDriveCity:1490
+SKY_IMG:1776 · applySky:1777 · applyTex:1792 · buildScene:1815 · randPos:2169 · randRoadPos:2177
+spawnLetter:2189 · spawnLettersForWord:2220 · ensureCoverage:2222 · relocateLetters:2235 · removeLetter:2260 · LETTER_COIN:2271
+pickUpLetter:2272 · letterPop:2286 · letterChime:2304 · tryCompleteWords:2324 · completeWord:2338 · spawnMonster:2383
+killMonster:2392 · tickMonsters:2400 · damagePlayer:2422 · shoot:2438 · tickShots:2452 · spawnGhost:2478
+GHOST_STYLE:2487 · GHOST_H_DEFAULT:2488 · applyGhostSize:2489 · respawnGhost:2498 · tickGhosts:2514 · sessionRecapHtml:2560
+hauntRunSec:2567 · fmtSurv:2568 · hauntSurviveFinish:2569 · tickSurvive:2579 · renderHearts:2592 · ghostHit:2601
+caught:2623 · knockedOut:2649 · netReady:2813 · netJoin:2817 · sendPos:2830 · sendChat:2876
+toggleChatBox:2890 · onPeerData:2900 · disposeHeliMesh:2986 · removePeer:2991 · netLeave:3006 · tickPeers:3014
+RTC_CFG:3134 · tinvLinked:3135 · partyWord:3142 · syncPartyWord:3155 · updateVoiceBtns:3307 · PODIUM_BONUS:3332
+podiumJoin:3334 · podiumLeave:3345 · endRound:3346 · showPodium:3357 · tinvCheck:3397 · showBanner:3417
+renderHudTop:3423 · renderHudWords:3428 · renderHudInv:3438 · ddTierFromName:3445 · renderBoard:3447 · drawBigMap:3471
+openBigMap:3526 · closeBigMap:3534 · drawMinimap:3539 · loadCarDash:3611 · loadCarWheel:3623 · buildDom:3633
+confirmExit:5218 · IS_TOUCH:5237 · bindInput:5238 · movePlayer:5325 · tickPlayer:5335 · collideDrone:5368
+propStall:5387 · propBreak:5394 · propFix:5401 · droneBatAdd:5408 · lightningBolt:5411 · startRain:5422
+stopRain:5436 · smashGlass:5438 · awardGlass:5449 · neededLetter:5466 · openDoor:5481 · raceStartRun:5501
+raceStop:5508 · gateHighlight:5526 · renderRaceHud:5533 · tickDrone:5542 · nearMissTick:5684 · showNearMiss:5708
+awardDaredevil:5719 · comboCheer:5736 · comboFlash:5752 · driveCell:5761 · nearestStreet:5767 · collideCar:5777
+tlDotY:5808 · tlSet:5812 · driveArms:5829 · tlTick:5841 · TL_GREEN:5885 · tlRedDur:5887
+tlightPhase:5888 · buildTrafficLights:5895 · rlTick:5947 · cellDrivable:5979 · cellCenter:5980 · losClear:5982
+nearestDrivableCell:5992 · routeGrid:6001 · pickGpsTarget:6054 · gpsSpeak:6066 · NAVLINE_W:6085 · navLineEnsure:6086
+navLineHide:6096 · navLineUpdate:6097 · tickGps:6124 · tickDrive:6200 · drawCarDial:6408 · drawCarGauges:6438
+RADIO_RECT:6466 · CAR_RADIO_RECT:6468 · carRadioRect:6474 · radioLayout:6476 · radioSetHint:6499 · renderRadioList:6505
+radioToggleList:6515 · drawRadioViz:6520 · radioTick:6538 · BOBBLE_FOOT:6551 · BOBBLE_H:6552 · BOBBLE_ASPECT:6553
+BOB_OMEGA:6556 · BOB_PITCH_FORCE:6558 · BOBBLE_SKINS:6560 · bobbleSetAvatar:6567 · bobbleLayout:6574 · bobbleTick:6587
+bobblePoke:6612 · bobbleApplySkin:6629 · dollOwned:6639 · openDollPicker:6640 · carStartShow:6677 · showLawInfo:6695
+lawNotice:6717 · driveFineSettle:6727 · HELI_PHASES:6906 · heliStartPhase:6913 · heliFloorAt:6920 · SOFT_TIERS:6930
+softLandBonus:6932 · awardPerfLand:6945 · setHeliLight:6964 · MAIL_COIN:6983 · mailStart:6985 · mailStop:7008
+mailTick:7009 · FOOT_EYE:7028 · doorSlideSfx:7034 · doorLerp:7057 · entLerp:7065 · footStepSfx:7075
+WRING_COIN:7096 · festivalPaint:7100 · dustTexture:7112 · dustBurst:7121 · dustTick:7135 · HELI_GLB_URL:7156
+HELI_GLB_TEX_BLUE:7158 · HELI_GLB_ROTOR:7160 · HELI_GLB_TROTOR:7161 · heliGlbEnsure:7163 · heliMatBlueGet:7181 · heliGlbAssemble:7194
+heliNavTick:7233 · peerRotorStop:7240 · peerRotorTick:7246 · heliCrashSfx:7265 · heliMeshBuild:7293 · heliMeshBuildLegacy:7304
+buildHeliFoot:7434 · footFloorAt:7550 · insideTerm:7557 · inDoorZone:7558 · footHint:7562 · setFootBtns:7563
+liftStart:7568 · beginRide:7579 · endRide:7602 · beginWing:7613 · awardAirLetter:7626 · paxChoiceShow:7645
+paxChoiceHide:7671 · pilotShipMesh:7675 · beginPilot:7676 · endPilot:7708 · drawCabinWindow:7730 · tickHeliFoot:7754
+tickHeli:7963 · CP_NAT:8214 · CP_GAUGES:8215 · SEAT_LABEL:8228 · SEAT_P_FULL:8229 · SEAT_ZOOM:8230
+DASH_OFF_Y:8231 · DASH_DROP:8232 · setSeat:8234 · layoutCockpit:8246 · WIPER:8285 · WIPER_SPD:8286
+sunUpdate:8292 · HELI_FOG_N0:8303 · fogUpdate:8307 · adGlowPulse:8353 · RAIN_MAX:8362 · VISOR_Y:8363
+RAIN_MIN:8364 · RAIN_DUR:8365 · DROP_ZONE:8369 · addDrop:8370 · tickDrops:8378 · WIPE_R:8394
+wipeDrops:8395 · setWiper:8411 · setVisor:8417 · rainTick:8423 · drawBlade:8435 · drawGlass:8449
+drawBellyCam:8516 · drawBellyHud:8539 · drawLandingTargets:8585 · VS_HARD:8655 · drawDescentBar:8656 · heliShake:8705
+cpNeedle:8716 · drawGauges:8733 · XF_START:8780 · PRELOAD_WAIT:8781 · ALT_QUIET_FROM:8783 · ALT_MAX_DAMP:8784
+ALT_LP_MIN:8785 · ECHO_NEAR:8786 · WIND_FULL_SPD:8787 · SHUTDOWN_SEC:8788 · PAN_MAX:8790 · OD_RPM:8791
+SHAKE_RPM:8792 · SHAKE_HIT:8793 · soccerLetterPos:9273 · letterNeeded:9281 · soccerNeededSet:9286 · soccerTileGeo:9292
+soccerGoldTexture:9294 · makeSoccerTile:9311 · soccerRefreshSkins:9320 · soccerBuildTargets:9327 · soccerNextTile:9337 · soccerRetarget:9350
+soccerCoinPop:9362 · soccerGrassTexture:9375 · grassNormalTexture:9390 · grassTuftTexture:9417 · buildGrassTufts:9437 · soccerLinesTexture:9462
+soccerNetTexture:9486 · soccerCrowdTexture:9494 · soccerBallMat:9513 · buildSoccerGoal:9533 · buildStands:9552 · soccerLedBoards:9587
+soccerGKEnsure:9684 · soccerGKTick:9700 · fkBuildWall:9729 · fkToggle:9744 · fkHitTest:9760 · pkHud:9779
+pkStart:9788 · pkEnd:9802 · pkTick:9817 · repQualify:9824 · repEnsureEl:9827 · repStart:9838
+repTick:9845 · soccerNumTex:9870 · makeSoccerPlayer:9880 · soccerNewSpot:9906 · soccerResetBall:9916 · soccerKick:9923
+soccerCheer:9940 · guideTexture:9943 · buildLandRing:9967 · buildGuideRibbon:9977 · renderSpinPad:10002 · spinPadToggle:10014
+spinPadPick:10020 · renderCurl:10032 · kickLaunch:10043 · updateSoccerGuide:10051 · soccerCamera:10114 · tickSoccer:10135
+soccerKitShow:10312 · soccerKitGo:10327 · emojiSprite:10380 · makeAlien:10385 · startWave:10418 · waveSpawnFill:10429
+waveComplete:10438 · updateWaveHud:10448 · checkMechaBossBadge:10450 · alienSpawnPos:10459 · removeAlien:10464 · mechaHudWord:10469
+setMechaHudSkin:10477 · mechaComboPop:10489 · mechaShielded:10494 · mechaDamageFx:10496 · mechaHitByAlien:10501 · spawnAlienShot:10507
+removeAlienShot:10517 · tickAlienShots:10522 · spawnPowerup:10534 · removePowerup:10547 · collectPowerup:10552 · tickPowerups:10559
+updateMechaHud:10568 · mechaTracer:10608 · mechaFire:10617 · explodeAlien:10654 · tickMecha:10684 · loop:10740
+grabShot:10767 · savePhoto:10778 · clearEntities:10790 · INTRO_KEY:10804 · introSeenObj:10805 · introSeen:10806
+markIntroSeen:10807 · INTRO:10808 · showIntro:10874 · closeIntro:10899 · beginPlay:10905 · start:10907
+exitWorld:11096 · mechaRecapLine:11151
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
