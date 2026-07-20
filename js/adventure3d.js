@@ -76,7 +76,7 @@ const MODES = {
     label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
-    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎀 <b>ริบบิ้นทอง</b>จะโชว์วิถีบอลให้เห็นก่อนเตะเลย (อ้อมน้องที่เฝ้าประตูได้)<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎀 <b>ริบบิ้นนำทาง</b>โชว์วิถีก่อนเตะ — <b>เขียว=เบา · ส้ม · แดง=เต็มแรง</b> · วงบนพื้นบอกจุดที่บอลจะตก<br>🧱 กด <b>ฟรีคิก</b> มีกำแพงคนมาขวาง ต้องปั่นอ้อมหรือเตะข้ามหัว!<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
     hint:'🕹️ สติ๊กมือซ้าย = เล็ง · ⚽ ปุ่มขวากดค้าง = ชาร์จพลัง ปล่อย = เตะ · 🎱 ปุ่ม "จุดสัมผัส" = เปิดหน้าต่างซูมเลือกจุดเตะบนลูกบอล (ซ้าย-ขวา = ลูกโค้ง · ล่าง = ลอยโด่ง · บน = พุ่งจิก) ดูริบบิ้นทองบอกวิถีก่อนเตะ! · คอม: A/D W/S · Q/E โค้ง · เว้นวรรค เตะ · V มุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
@@ -245,6 +245,11 @@ let sHit=0;                                                // -1 เตะใต
 let sKickPunch=0;                                          // 💥 แรงกระตุกกล้องตอนเตะ (จางเองทุกเฟรม)
 let spinPadEl=null, spinDotEl=null, spinLblEl=null, spinOpen=false;
 let guideRibbon=null, guideMat=null, _gPts=[];
+/* 🎨🎯🧱 รอบ 402: ริบบิ้นไล่สีตามพลัง · วงจุดตก · กำแพงคนฟรีคิก */
+const FK_SPOT_Z=GOAL_Z+18, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก · ระยะกำแพงตามกติกาจริง · จำนวนคน
+const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/ความสูงคนในกำแพง (ใช้เช็กบอลชน)
+let landRing=null, landPt=null;
+let fkOn=false, fkWall=null, fkMen=[];
 let sCurl=0, curlEl=null, _curlShown=null;                 // -1 โค้งซ้าย .. +1 โค้งขวา
 let soccerStartEl=null, powerFillEl=null;
 /* ⚽🎨 รอบ 396: PES-look — ฟิสิกส์จริง (drag/Magnus/after-touch/เสา-คาน/ตาข่าย) + สนามสมจริง */
@@ -2083,6 +2088,7 @@ function buildScene(md){
       new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.34,depthWrite:false}));
     sbShadow.rotation.x=-Math.PI/2; sbShadow.position.set(0,.045,PLAYER_Z); sc.add(sbShadow);
     buildGuideRibbon(sc);                      // 🎀 รอบ 401: เส้นไกด์ริบบิ้นแบนกว้าง (แทนจุดกลมเล็ก 14 จุดเดิม)
+    buildLandRing(sc);                         // 🎯 รอบ 402: วงบอกจุดตกลูก
     ringAds(sc, 6, 26, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer)
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
@@ -4452,6 +4458,17 @@ function buildDom(){
     padding:6px 10px;font:700 13px system-ui;cursor:pointer}
   .adv-soccer #adv-pk{display:block}
   #adv-pk.on{background:rgba(200,60,30,.8)}
+  /* 🧱 รอบ 402: ปุ่มโหมดฟรีคิก (ใต้ปุ่มจุดโทษ) */
+  #adv-fk{position:absolute;display:none;top:138px;right:8px;z-index:6;pointer-events:auto;
+    background:rgba(20,40,20,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;
+    padding:6px 10px;font:700 13px system-ui;cursor:pointer}
+  .adv-soccer #adv-fk{display:block}
+  #adv-fk.on{background:rgba(200,60,30,.8)}
+  /* จอเตี้ย: ย่อปุ่มทั้งคู่แล้วเรียงต่อกัน (เดิม fk ที่ 126 ชน pk ที่จบ 131) */
+  @media (max-height:400px){
+    #adv-pk{padding:4px 8px;font-size:11px}
+    #adv-fk{top:130px;padding:4px 8px;font-size:11px}
+  }
   /* 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — ซ่อนชิ้นส่วนห้องคนขับ (ปุ่มบังคับ/GPS คงอยู่) */
   .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
   .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,
@@ -4776,6 +4793,7 @@ function buildDom(){
     <div id="adv-power"><div id="adv-power-fill"></div></div>
     <button id="adv-scam">👁️ มุมกล้อง</button>
     <button id="adv-pk">🎯 จุดโทษ</button>
+    <button id="adv-fk">🧱 ฟรีคิก</button>
     <div id="adv-coinpop"></div>
     <!-- 🤖 โหมดหุ่นยนต์นักรบ -->
     <div id="mecha-hud" class="adv-hud">
@@ -5111,6 +5129,7 @@ function buildDom(){
   window.addEventListener('mouseup',spUp);
   overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ if(M.drive) driveCamToggle(); else soccerCam1=!soccerCam1; sfx.select(); });   // 👁️ รอบ 394: ปุ่มเดียวใช้ทั้ง soccer/drive
   overlayEl.querySelector('#adv-pk').addEventListener('click',()=>{ if(pkOn) pkEnd(true); else pkStart(); });   // 🎯 รอบ 397: โหมดจุดโทษ
+  overlayEl.querySelector('#adv-fk').addEventListener('click',()=>{ if(!repOn) fkToggle(); });                 // 🧱 รอบ 402: โหมดฟรีคิก
   overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
@@ -5247,7 +5266,7 @@ function bindInput(){
     overlayEl.addEventListener('touchstart',e=>{
       // ⚽ รอบ 398: ฟุตบอลใช้ "สติ๊กมือซ้าย" แบบ PES (ครึ่งซ้าย=เล็ง) · ครึ่งขวาเป็นปุ่มยิงล้วน ไม่มีลากมองรอบ
       for(const t of e.changedTouches){
-        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-pk,#adv-spinbtn,#adv-spinpad,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour,#adv-adshop,#adv-adshop-dlg')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
+        if(t.target.closest('#adv-shoot,#adv-horn,#adv-exit,#adv-help,#adv-intro,#adv-banner,#adv-chat-btn,#adv-chat-box,.adv-vbtn,#adv-podium,#adv-reply,#adv-map,#adv-bigmap,#adv-aimpad,#adv-kick,#adv-scam,#adv-pk,#adv-fk,#adv-spinbtn,#adv-spinpad,#adv-soccerstart,.mecha-btn,#adv-wiper,#adv-seat,#adv-skipstart,#adv-visor,#adv-light,#adv-wing,#adv-tour,#adv-adshop,#adv-adshop-dlg')) continue;   /* รอบ 346: +ที่ปัดน้ำ/มุมนั่ง/ข้ามสตาร์ท — อยู่ครึ่งขวา ถ้าไม่กันไว้ นิ้วที่กดปุ่มจะกลายเป็นลากคันเร่ง · รอบ 350: +ม่านบังแดด(ตกหล่นจากรอบ 348!)/ไฟส่อง */  /* #adv-words เอาออก — เป็น pointer-events:none แล้ว นิ้วโดนคันบังคับได้ · รอบ 144: +map/bigmap · รอบ 196: +soccer · รอบ 199: +mecha */
         if(!M.mecha && t.clientX<window.innerWidth*.45 && joyId===null){   // 🤖 mecha ใช้ปุ่มบังคับเอง ครึ่งซ้ายไม่เป็นจอย (ลากได้แต่มองรอบครึ่งขวา)
           joyId=t.identifier; joyCx=t.clientX; joyCy=t.clientY;
           joyEl.style.left=(joyCx-55)+'px'; joyEl.style.top=(joyCy-55)+'px'; joyEl.style.bottom='auto';
@@ -9616,6 +9635,55 @@ function soccerGKTick(dt,now){
     showBanner('🧤 <b>น้องเซฟได้!</b> ลองยิงเสามุม/โด่งข้ามหัวดูสิ');
   }
 }
+/* 🧱 รอบ 402: โหมดฟรีคิก — กำแพงคนยืนขวางหน้าบอล 9.15m ตามกติกาจริง
+   ยิงตรงๆ ไม่ผ่าน ต้อง "ปั่นโค้งอ้อมข้าง" หรือ "เตะใต้ลูกให้ลอยข้ามหัว" = ระบบจุดสัมผัสได้ใช้เต็มที่ */
+function fkBuildWall(){
+  if(fkWall) return;
+  fkWall=new THREE.Group(); fkMen=[];
+  const cols=[0x2b6cd4,0x2b6cd4,0x2b6cd4,0x2b6cd4,0x2b6cd4];
+  for(let i=0;i<FK_WALL_N;i++){
+    const man=makeSoccerPlayer(cols[i%cols.length], String(2+i));
+    const x=(i-(FK_WALL_N-1)/2)*0.78;
+    man.position.set(x,0,0);
+    man.rotation.y=Math.PI;                     // หันหน้าเข้าหาคนเตะ
+    // แขนไขว้ป้องกันแบบกำแพงจริง (หมุนแขนเข้าหากลางลำตัว)
+    fkWall.add(man); fkMen.push({m:man,x});
+  }
+  fkWall.visible=false;
+  scene.add(fkWall);
+}
+function fkToggle(){
+  fkBuildWall();
+  fkOn=!fkOn;
+  sBaseZ = fkOn ? FK_SPOT_Z : (pkOn ? PK_SPOT_Z : PLAYER_Z);
+  fkWall.visible=fkOn;
+  fkWall.position.set(0,0,sBaseZ-FK_WALL_GAP);
+  if(soccerPlayer) soccerPlayer.position.z=sBaseZ;
+  soccerResetBall();
+  const b=overlayEl.querySelector('#adv-fk');
+  if(b){ b.classList.toggle('on',fkOn); b.textContent=fkOn?'⏹ เลิกฟรีคิก':'🧱 ฟรีคิก'; }
+  sfx.select();
+  if(fkOn) showBanner('🧱 <b>ฟรีคิก!</b><br><small>กำแพงคนขวางอยู่ — เปิด 🎱 จุดสัมผัส แล้ว<b>ปั่นอ้อมข้าง</b> หรือ<b>เตะใต้ลูกให้ข้ามหัว</b></small>');
+}
+/* บอลชนกำแพง = เด้งกลับ (เช็กทรงกระบอกต่อคน) */
+function fkHitTest(now){
+  if(!fkOn||!sbLive||!fkWall) return;
+  const b=soccerBall.position, wz=fkWall.position.z;
+  if(Math.abs(b.z-wz)>0.55 || sbVel.z>=0) return;          // ต้องวิ่งเข้าหากำแพงและอยู่ระนาบเดียวกัน
+  if(b.y>FK_MAN_H+BALL_R) return;                          // ลอยข้ามหัวไปแล้ว = รอด
+  for(const mn of fkMen){
+    if(Math.abs(b.x-mn.x)<FK_MAN_R+BALL_R){
+      sbVel.z=Math.abs(sbVel.z)*.42;                       // เด้งกลับ
+      sbVel.x+=(b.x-mn.x)*4+(Math.random()-.5)*1.5;
+      sbVel.y=Math.abs(sbVel.y)*.4+1.6;
+      sbSpin.y*=.35;
+      b.z=wz+0.56;
+      SoccerAudio.save();
+      showBanner('🧱 <b>ชนกำแพง!</b> ลองปั่นอ้อมข้าง หรือเตะใต้ลูกให้ลอยข้ามหัว');
+      return;
+    }
+  }
+}
 /* 🎯 โหมดจุดโทษจับเวลา 60 วิ — ยืนจุดโทษ 7m ยิงให้ผ่านน้อง GK เก็บแต้ม (+เหรียญเล็กน้อย/ประตู) */
 function pkHud(){
   if(pkHudEl) return pkHudEl;
@@ -9628,6 +9696,7 @@ function pkHud(){
 }
 function pkStart(){
   if(repOn) return;
+  if(fkOn) fkToggle();                             // 🧱 รอบ 402: เข้าโหมดจุดโทษ = เก็บกำแพงฟรีคิกก่อน (ไม่ให้ 2 โหมดชนกัน)
   pkOn=true; pkGoals=0; pkKicks=0; pkEndAt=performance.now()+PK_TIME*1000;
   pkBest=state.soccerPKBest||0;
   sBaseZ=PK_SPOT_Z;
@@ -9771,12 +9840,13 @@ function soccerCheer(){ SoccerAudio.goal(); sfx.levelup(); showBanner('⚽ <b>�
 function guideTexture(){
   const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
   const c=cv.getContext('2d');
+  // ⚠️ ใช้ "ขาวล้วน" แล้วย้อมสีด้วย material.color — ไม่งั้นย้อมเขียว/แดงตามพลังแล้วสีขุ่น (รอบ 402)
   const g=c.createLinearGradient(0,0,0,64);                 // แนวตั้ง = ความกว้างริบบิ้น (ขอบจาง กลางสว่าง)
-  g.addColorStop(0,'rgba(255,214,102,0)');
-  g.addColorStop(.22,'rgba(255,214,102,.55)');
+  g.addColorStop(0,'rgba(255,255,255,0)');
+  g.addColorStop(.22,'rgba(255,255,255,.5)');
   g.addColorStop(.5,'rgba(255,255,255,.95)');
-  g.addColorStop(.78,'rgba(255,214,102,.55)');
-  g.addColorStop(1,'rgba(255,214,102,0)');
+  g.addColorStop(.78,'rgba(255,255,255,.5)');
+  g.addColorStop(1,'rgba(255,255,255,0)');
   c.fillStyle=g; c.fillRect(0,0,256,64);
   c.globalCompositeOperation='lighter';                     // ลายขีดเฉียงวิ่งไหล (ฟีลหรู)
   for(let i=0;i<256;i+=32){
@@ -9789,6 +9859,17 @@ function guideTexture(){
   const t=new THREE.CanvasTexture(cv);
   t.wrapS=THREE.RepeatWrapping; t.wrapT=THREE.ClampToEdgeWrapping; t.repeat.set(3,1);
   return t;
+}
+/* 🎯 รอบ 402: วงจุดตกลูก — วงแหวนเรืองแสงบนพื้นตรงจุดที่บอลจะตกกระทบครั้งแรก (เต้นเบาๆ) */
+function buildLandRing(sc){
+  landRing=new THREE.Group();
+  const mk=(r0,r1,op)=>new THREE.Mesh(new THREE.RingGeometry(r0,r1,32),
+    new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false}));
+  const outer=mk(.52,.62,.95), inner=mk(.16,.22,.7);
+  landRing.add(outer); landRing.add(inner);
+  landRing.userData={outer,inner};
+  landRing.rotation.x=-Math.PI/2; landRing.visible=false; landRing.renderOrder=4;
+  sc.add(landRing);
 }
 function buildGuideRibbon(sc){
   const geo=new THREE.BufferGeometry();
@@ -9856,8 +9937,14 @@ function kickLaunch(power){
 /* 🎀 เส้นไกด์ริบบิ้น — จำลองฟิสิกส์จริงทุกแรงแล้วขึงแถบกว้างตามวิถี (เห็นทั้งความโค้งและความโด่งก่อนเตะ) */
 function updateSoccerGuide(ready,dx,dz){
   if(!guideRibbon) return;
-  if(!ready){ guideRibbon.visible=false; return; }
-  const L=kickLaunch(sCharging?sChg:55);
+  if(!ready){ guideRibbon.visible=false; if(landRing) landRing.visible=false; return; }
+  const power=sCharging?sChg:55;
+  const L=kickLaunch(power);
+  // 🎨 รอบ 402: ริบบิ้นไล่สีตามพลังชาร์จ — เขียว(เบา) → ส้ม → แดงเพลิง(เต็มแรง)
+  const pw=Math.max(0,Math.min(1,power/100));
+  guideMat.color.setHSL(0.33*(1-pw)*(1-pw*.35), 0.95, 0.5+pw*0.12);
+  guideMat.opacity=0.82+pw*0.18;
+  landPt=null;
   const ch=Math.cos(L.pit), sh=Math.sin(L.pit);
   let vx=dx*ch*L.spd, vy=sh*L.spd, vz=dz*ch*L.spd;
   let px=0, py=BALL_R, pz=sBaseZ;
@@ -9879,6 +9966,7 @@ function updateSoccerGuide(ready,dx,dz){
       vy-=BALL_G*h;
       px+=vx*h; py+=vy*h; pz+=vz*h;
       if(py<=BALL_R){ py=BALL_R;
+        if(!landPt) landPt={x:px,z:pz};                                                          // 🎯 จุดตกกระทบครั้งแรก
         if(vy<-0.6){ vy=-vy*.55; vx*=.88; vz*=.88; vz-=wx*.05; vx+=wy*.04; wx*=.6; wy*=.65; }   // เด้งพื้น
         else { vy=0; vx*=(1-.5*h); vz*=(1-.5*h); wy*=(1-.9*h); }                                 // กลิ้งบนพื้น
       }
@@ -9897,6 +9985,18 @@ function updateSoccerGuide(ready,dx,dz){
   guideRibbon.geometry.attributes.position.needsUpdate=true;
   guideRibbon.geometry.attributes.uv.needsUpdate=true;
   guideRibbon.visible=true;
+  // 🎯 วงจุดตก — สีเดียวกับริบบิ้น เต้นเบาๆ ให้สังเกตง่าย
+  if(landRing){
+    if(landPt){
+      landRing.visible=true;
+      landRing.position.set(landPt.x,.06,landPt.z);
+      const s=1+Math.sin(performance.now()/220)*.07;
+      landRing.scale.setScalar(s);
+      const ud=landRing.userData;
+      ud.outer.material.color.copy(guideMat.color);
+      ud.inner.material.color.copy(guideMat.color);
+    } else landRing.visible=false;
+  }
 }
 function soccerCamera(dt,dx,dz){
   const b=soccerBall.position;
@@ -9961,6 +10061,7 @@ function tickSoccer(dt,now){
   if(sbLive){
     const b=soccerBall.position;
     // 🎨 รอบ 396 ฟิสิกส์จริง: after-touch แบบ PES — A/D ระหว่างบอลลอย (1.2 วิแรก) = จับบอลโค้งกลางอากาศ
+    fkHitTest(now);                               // 🧱 รอบ 402: บอลชนกำแพงฟรีคิก
     const airborne=b.y>BALL_R+.05;
     if(airborne){                                 // 🌀 รอบ 400: จับบอลโค้งได้ "ตลอดที่ลอยอยู่" (เดิมตัดที่ 1.2 วิ — สั้นจนแทบไม่ทัน)
       if(keys.KeyA||keys.ArrowLeft) sbSpin.y=Math.min(SB_SPIN_MAX,sbSpin.y+SB_TOUCH*dt);
@@ -10768,6 +10869,7 @@ function start(md,opt){
     aimYaw=0; aimPitch=.34; sChg=0; sCharging=false; sKickHeld=false; sPrevV=false; sLegSwing=0;
     soccerCam1=false; joy.on=false; joy.dx=joy.dy=0;    // 🕹️ รอบ 398: เคลียร์สติ๊กเล็ง (เลิกใช้แป้น ▲▼◀▶)
     sCurl=0; sHit=0; sKickPunch=0; renderCurl();        // 🌀 รอบ 400-401: เริ่มเกมไม่มีโค้ง/จุดสัมผัสค้าง
+    fkOn=false; fkWall=null; fkMen=[]; landPt=null;     // 🧱🎯 รอบ 402: กำแพง/วงจุดตกเริ่มใหม่ทุกครั้ง (ฉากสร้างใหม่)
     spinOpen=false;
     if(spinPadEl) spinPadEl.classList.remove('on');
     { const sb=overlayEl.querySelector('#adv-spinbtn'); if(sb) sb.classList.remove('on'); }
@@ -10889,8 +10991,11 @@ function exitWorld(){
   DroneSound.stop();
   CarSound.stop();
   SoccerAudio.stopAmb();                           // ⚽🔊 รอบ 396: หยุดฮัมฝูงชนสนามบอล
-  // ⚽🎯🎬 รอบ 397: ล้างสถานะจุดโทษ/รีเพลย์ (ป้ายคำโดน clearEntities ลบอยู่แล้ว)
+  // ⚽🎯🎬🧱 รอบ 397-402: ล้างสถานะจุดโทษ/รีเพลย์/ฟรีคิก (ป้ายคำโดน clearEntities ลบอยู่แล้ว)
   pkOn=false; sBaseZ=PLAYER_Z; repOn=false; repPendAt=0;
+  fkOn=false; fkWall=null; fkMen=[];                // ฉากถูกทิ้งทั้งก้อนตอนออก — เคลียร์อ้างอิงกัน mesh ค้างข้ามรอบ
+  { const fkb=overlayEl&&overlayEl.querySelector('#adv-fk');
+    if(fkb){ fkb.classList.remove('on'); fkb.textContent='🧱 ฟรีคิก'; } }
   if(pkHudEl) pkHudEl.style.display='none';
   if(repEl) repEl.style.display='none';
   { const pkb=overlayEl&&overlayEl.querySelector('#adv-pk');
@@ -11028,7 +11133,8 @@ window.Adventure3D={
     get soccer(){ return {get ball(){return soccerBall}, get vel(){return sbVel}, get live(){return sbLive},
                           get aimYaw(){return aimYaw}, set aimYaw(v){aimYaw=v},
                           get aimPitch(){return aimPitch}, set aimPitch(v){aimPitch=v},
-                          get charge(){return sChg}, kick:soccerKick, reset:soccerResetBall, kitGo:soccerKitGo,
+                          get charge(){return sChg}, set charge(v){ sChg=v; sCharging=v>0; },   // 🎨 รอบ 402: ตั้งพลังเพื่อเทสต์สีริบบิ้น
+                          kick:soccerKick, reset:soccerResetBall, kitGo:soccerKitGo,
                           get player(){return soccerPlayer},
                           get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v},
                           // ⚽🎨 รอบ 396: testkit ฟิสิกส์ PES (สปิน/เงา/ตาข่าย/เสียง) + เดินเฟรมเองตอนแท็บ hidden
@@ -11043,6 +11149,11 @@ window.Adventure3D={
                           pad:{toggle:spinPadToggle, pick:spinPadPick, get open(){return spinOpen},
                                get el(){return spinPadEl}, get dot(){return spinDotEl}, get lbl(){return spinLblEl}},
                           get ribbon(){return guideRibbon}, get guidePts(){return _gPts.map(p=>({x:+p.x.toFixed(2),y:+p.y.toFixed(2),z:+p.z.toFixed(2)}));},
+                          // 🎨🎯🧱 รอบ 402: สีริบบิ้นตามพลัง · วงจุดตก · กำแพงฟรีคิก
+                          get ribbonColor(){return guideMat?'#'+guideMat.color.getHexString():null},
+                          get landRing(){return landRing}, get landPt(){return landPt},
+                          fk:{toggle:fkToggle, get on(){return fkOn}, get wall(){return fkWall},
+                              get men(){return fkMen.map(m=>+m.x.toFixed(2))}, get baseZ(){return sBaseZ}},
                           get punch(){return sKickPunch}, launch:kickLaunch,
                           // 🧤🎯🎬 รอบ 397: testkit GK / จุดโทษ / รีเพลย์
                           get gk(){return {mesh:gkMesh,x:gkX,saveAt:gkSaveAt,type:gkType,ensure:soccerGKEnsure}},
