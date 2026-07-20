@@ -1083,6 +1083,56 @@ function carAvCode(){
   const m=c&&/^car_(\d\d)$/.exec(c.id);
   return m?'c'+m[1]:'';
 }
+/* ── 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — เห็นรถโมเดลคันจริงของตัวเอง (ปุ่ม 👁️ เดียวกับ soccer / คีย์ V) ── */
+let dCam3=false, carSelfM=null, carSelfCid=null, dPrevV=false;
+function driveCamToggle(){
+  dCam3=!dCam3;
+  overlayEl.classList.toggle('cam3',dCam3&&!!M.drive);
+  if(!dCam3){ if(carSelfM) carSelfM.visible=false; return; }
+  const cid=(typeof myCar==='function'&&myCar())?myCar().id:'car_01';
+  carGlbEnsure(src=>{
+    if(!src||!dCam3||!M.drive){ if(!src){ dCam3=false; overlayEl.classList.remove('cam3'); } return; }
+    if(carSelfM&&carSelfCid!==cid){ if(carSelfM.parent)carSelfM.parent.remove(carSelfM); carSelfM=null; }
+    if(!carSelfM){
+      carSelfM=carGlbBuild(cid); carSelfCid=cid;
+      carSelfM.rotation.order='YZX';
+      scene.add(carSelfM);
+    }
+    carSelfM.position.set(camera.position.x,0,camera.position.z);
+    carSelfM.rotation.y=yaw;
+    carSelfM.visible=true;
+  });
+}
+/* ── 🛞 รอบ 394: รอยยางดำตอนไถล — ทริกเกอร์ slipPerp ตัวเดียวกับเสียงยางรอบ 183 · pool วนใช้ซ้ำ จาง 6 วิ ── */
+const SKID_N=90, SKID_MS=6000;
+let skids=[], skidI=0, skidAcc=9;
+function skidGeomGet(){
+  if(skidGeomGet.g) return skidGeomGet.g;
+  const g=new THREE.PlaneGeometry(.3,1.05); g.rotateX(-Math.PI/2);   // อบให้แบนราบใน geometry — mesh หมุนแค่ rotation.y
+  return skidGeomGet.g=g;
+}
+function skidDrop(x,z,yw,now){
+  if(!skids.length){                              // สร้าง pool ครั้งแรกตอนอยู่ฉาก drive แน่ๆ (เรียกจาก tickDrive เท่านั้น)
+    for(let i=0;i<SKID_N;i++){
+      const m=new THREE.Mesh(skidGeomGet(),
+        new THREE.MeshBasicMaterial({color:0x14161a,transparent:true,opacity:0,depthWrite:false}));
+      m.visible=false; m.renderOrder=1;
+      m.position.y=.02+(i%7)*.004;                // เหลื่อมความสูงกัน z-fight ระหว่างรอยซ้อน
+      scene.add(m); skids.push(m);
+    }
+  }
+  const m=skids[skidI++%SKID_N];
+  m.position.x=x; m.position.z=z; m.rotation.y=yw;
+  m.visible=true; m.userData.t=now;
+}
+function skidTick(now){
+  for(const m of skids){
+    if(!m.visible) continue;
+    const a=1-(now-m.userData.t)/SKID_MS;
+    if(a<=0){ m.visible=false; continue; }
+    m.material.opacity=.4*a;
+  }
+}
 
 /* ---------- 🧱 หน้าต่างเลือกตัวละครบล็อกก่อนออกรถ (เรียกจาก ui.js ก่อน start('drive')) ---------- */
 function blkBuildThumbs(){
@@ -2731,7 +2781,10 @@ function sendPos(force){
   if(!myRef) return;
   const now=performance.now();
   if(!force && now-lastNetSend<NET_SEND_MS) return;
-  const x=Math.round(camera.position.x*10)/10, z=Math.round(camera.position.z*10)/10,
+  // 👁️ รอบ 394: มุมมองที่ 3 กล้องลอยหลังรถ ~7m — ตำแหน่งที่ประกาศให้เพื่อนต้องเป็น "ตัวรถ" ไม่ใช่กล้อง
+  const _px=(M.drive&&dCam3&&carSelfM)?carSelfM.position.x:camera.position.x,
+        _pz=(M.drive&&dCam3&&carSelfM)?carSelfM.position.z:camera.position.z;
+  const x=Math.round(_px*10)/10, z=Math.round(_pz*10)/10,
         y=Math.round(yaw*100)/100;
   if(!force && lastSent && lastSent.x===x && lastSent.z===z && lastSent.yaw===y) return;
   lastNetSend=now; lastSent={x,z,yaw:y};
@@ -4312,7 +4365,11 @@ function buildDom(){
   #adv-scam{position:absolute;display:none;top:56px;right:8px;z-index:6;pointer-events:auto;
     background:rgba(0,0,0,.5);color:#fff;border:2px solid #fff;border-radius:12px;
     font-family:inherit;font-weight:800;font-size:13px;padding:6px 10px}
-  .adv-soccer #adv-scam{display:block}
+  .adv-soccer #adv-scam,.adv-drive #adv-scam{display:block}
+  /* 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — ซ่อนชิ้นส่วนห้องคนขับ (ปุ่มบังคับ/GPS คงอยู่) */
+  .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
+  .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,
+  .adv-drive.cam3 #adv-tlreflect-l,.adv-drive.cam3 #adv-tlreflect-r{display:none}
   #adv-soccerstart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:8;
     width:min(420px,92vw);box-sizing:border-box;background:rgba(10,30,20,.95);border:2px solid #43d17a;
     border-radius:20px;padding:16px 20px 18px;color:#e6fff0;pointer-events:auto;
@@ -4934,7 +4991,7 @@ function buildDom(){
   holdBtn('#adv-aimpad .ap-l',()=>sPadL=true,()=>sPadL=false);
   holdBtn('#adv-aimpad .ap-r',()=>sPadR=true,()=>sPadR=false);
   holdBtn('#adv-kick',()=>sKickHeld=true,()=>sKickHeld=false);
-  overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ soccerCam1=!soccerCam1; sfx.select(); });
+  overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ if(M.drive) driveCamToggle(); else soccerCam1=!soccerCam1; sfx.select(); });   // 👁️ รอบ 394: ปุ่มเดียวใช้ทั้ง soccer/drive
   overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
@@ -6017,6 +6074,10 @@ function tickDrive(dt,now){
   if(padBr) th=0;                            // 🦶 รอบ 139: เบรคชนะคันเร่ง (เบรคอย่างเดียว ไม่สลับไปถอย)
   if(!carEngineOn || carStartOpen) th=0;     // 🚔 รอบ 128: เครื่องยังไม่ติด/ยังไม่กดออกรถ → คันเร่งไม่ทำงาน
   if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
+  // 👁️ รอบ 394: คีย์ V สลับมุมมอง (แบบ soccer) + คืนกล้องมายืนที่ตัวรถก่อนคิดฟิสิกส์ (ฟิสิกส์ยึด camera.position)
+  if(keys.KeyV && !dPrevV) driveCamToggle();
+  dPrevV=!!keys.KeyV;
+  if(dCam3&&carSelfM) camera.position.set(carSelfM.position.x,CAR_EYE,carSelfM.position.z);
   // 🔊 รอบ 140: "ติ๊ด ติ๊ด" ถอยหลัง — เกียร์ R (มือถือ) หรือกำลังวิ่งถอยจริง (คีย์บอร์ด S) · ทุก 600ms
   if(carEngineOn && !carStartOpen && (gearR || dSpeed<-.5) && now-carRevBeepAt>600){
     carRevBeepAt=now; CarSound.revBeep();
@@ -6112,6 +6173,22 @@ function tickDrive(dt,now){
   dRollV+=((rollTgt-dRoll)*60 - dRollV*9)*sdt;
   dRoll+=dRollV*sdt;
   camera.rotateZ(dRoll);
+  // 👁️ รอบ 394: มุมมองที่ 3 — อัปเดตรถตัวเอง (หัน/โคลง/ล้อเลี้ยว/ล้อหมุน/ไฟครบ) แล้วย้ายกล้องลอยตามหลัง
+  if(dCam3&&carSelfM){
+    carSelfM.position.set(p.x,0,p.z);
+    carSelfM.rotation.y=yaw;
+    carSelfM.rotation.z=dRoll*1.6;                                 // ตัวถังโคลงแรง G เดียวกับกล้องเดิม (ขยายให้เห็นชัด)
+    (carSelfM.userData.steerW||[]).forEach(h=>{ h.rotation.y=-dSteer; });   // ล้อหน้าหักตามพวงมาลัยจริง (ทิศเดียวกับล้อเพื่อน)
+    (carSelfM.userData.wheels||[]).forEach(w=>{ w.rotation.x-=dSpeed*dt/.5; });
+    const phL=Math.floor(now/400)%2===0;
+    (carSelfM.userData.blinkL||[]).forEach(m=>{ m.visible=tlSig===1&&phL; });
+    (carSelfM.userData.blinkR||[]).forEach(m=>{ m.visible=tlSig===2&&phL; });
+    (carSelfM.userData.brks||[]).forEach(m=>{ m.visible=padBr||(th<0&&dSpeed>.3); });
+    (carSelfM.userData.revs||[]).forEach(m=>{ m.visible=dSpeed<-.5; });
+    camera.position.set(p.x+Math.sin(dCamYaw)*7.4, 3.15, p.z+Math.cos(dCamYaw)*7.4);
+    camera.rotation.set(0,0,0);
+    camera.lookAt(p.x,1.65,p.z);
+  }
 
   // เก็บตัวอักษร: ขับชน (ไม่ต้องจอด)
   for(let i=letters.length-1;i>=0;i--){
@@ -6170,6 +6247,18 @@ function tickDrive(dt,now){
   const _vlen=Math.hypot(dVelX,dVelZ);
   const slipPerp=(_vlen>0.6 && onRoad===1)?Math.abs(dVelX*(-cos)-dVelZ*(-sin)):0;
   CarSound.setSkid(Math.max(0,Math.min(1,(slipPerp-1.6)/6)));
+  // 🛞 รอบ 394: ไถลแรงพอมีเสียงยาง = ทิ้งรอยยางดำที่ล้อหลังทั้งคู่ ทุก ~0.5m ของระยะที่ไถล
+  if((slipPerp-1.6)/6>.06 && Math.abs(dSpeed)>4){
+    skidAcc+=_vlen*dt;
+    if(skidAcc>.5){
+      skidAcc=0;
+      const rrx=Math.cos(yaw), rrz=-Math.sin(yaw);                 // แกนขวางตัวรถ (ขวา)
+      const bx=p.x+Math.sin(yaw)*1.35, bz=p.z+Math.cos(yaw)*1.35;  // จุดเพลาหลัง
+      skidDrop(bx+rrx*.97, bz+rrz*.97, yaw, now);
+      skidDrop(bx-rrx*.97, bz-rrz*.97, yaw, now);
+    }
+  }else skidAcc=.5;                                                // เริ่มไถลปุ๊บทิ้งรอยทันทีคู่แรก
+  skidTick(now);
   drawCarGauges();
   radioTick();                                              // 🎵 รอบ 181: จอวิทยุ + visualizer
   bobbleTick(dt, latA, dSpeed, now);                        // 🪆 รอบ 191: ตุ๊กตาหัวส่ายตามแรงเลี้ยว
@@ -9868,10 +9957,11 @@ const INTRO={
     goal:'ขับรถบน<b>ถนนจริงของเมืองกำแพงเพชร</b> (แผนที่จริงทั้งเมือง!) เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · <b>ขับชนตัวอักษร</b>บนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง ระวังชนตึก!',
     touch:[['🎛️','แถบ<b>พวงมาลัย</b>ล่างซ้าย = เลี้ยว · ปุ่มเขียว <b>▲ เร่ง</b> กดค้าง · ปุ่มแดง <b>■ เบรค</b> กดค้าง'],
            ['⚙️','ปุ่ม <b>D/R</b> เหนือคันเร่ง = สลับเกียร์เดินหน้า/ถอยหลัง (R แล้วปุ่มเร่งกลายเป็นถอย)'],
-           ['📯','แตะปุ่มฟ้า มุมขวาล่าง = บีบแตร · ก้านขวา = ไฟเลี้ยว']],
+           ['📯','แตะปุ่มฟ้า มุมขวาล่าง = บีบแตร · ก้านขวา = ไฟเลี้ยว'],
+           ['🎥','ปุ่ม 👁️ มุมขวาบน = ออกมาดูรถตัวเองมุมมองที่ 3']],
     keys:[['⌨️','<b>W</b> = คันเร่ง · <b>S</b> = เบรก/ถอยหลัง'],
           ['🔄','<b>A/D</b> = หมุนพวงมาลัยซ้าย-ขวา'],
-          ['📯','<b>H</b> = บีบแตร · เมาส์ = ชะโงกมองข้างทาง']],
+          ['📯','<b>H</b> = บีบแตร · <b>V</b> = มุมมองที่ 3 · เมาส์ = ชะโงกมองข้าง']],
   },
   soccer:{
     goal:'<b>เตะบอล</b>ใส่ป้ายตัวอักษร <b>สีทองวิบวับ</b> (ตัวที่ประกอบคำได้) = <b>ได้เหรียญ 🪙</b> · ป้ายจะ<b>หงายหลังแล้วเด้งกลับ</b>ให้เตะได้เรื่อยๆ · ครบคำ +20🪙 · เพื่อนมาร่วมเตะในสนามเดียวกันได้!',
@@ -9988,6 +10078,10 @@ function start(md,opt){
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
     carGlbEnsure(()=>{});                          // 🚙 รอบ 393: พรีโหลดโมเดลรถ — เพื่อนโผล่มาเห็นเป็นรถจริงทันที
+    // 👁️🛞 รอบ 394: เข้าโลกเริ่มมุมมองที่ 1 เสมอ + ล้างรอยยางเก่า
+    dCam3=false; dPrevV=false; overlayEl.classList.remove('cam3');
+    if(carSelfM) carSelfM.visible=false;
+    skids.forEach(m=>{ m.visible=false; }); skidAcc=9;
     // 🚗 รอบ 232: ผูกสมรรถนะตามคันที่เลือกขับ (ตรงกับป้ายในโชว์รูม · คันแพง/สปอร์ต = เร็ว·เร่ง·เกาะถนนดีกว่าเบาๆ)
     (function(){ const cp=(typeof myCar==='function'&&myCar())?carInfo(myCar().id):null;
       const sp=(cp&&cp.spd)||3, ac=(cp&&cp.acc)||3, gr=(cp&&cp.grip)||3;
@@ -10240,7 +10334,13 @@ window.Adventure3D={
                          get broken(){return propBroken}, breakProp:propBreak,      // 🌀 เทสต์ใบพัดหัก
                          get glass(){return droneGlass}, get doors(){return droneDoors},   // 🪟🚪 เทสต์กระจก/ประตู
                          bolt:()=>lightningBolt(performance.now())}; },             // ⛈ เทสต์ฟ้าแลบ
-    get drive(){ return {get speed(){return dSpeed}, get steer(){return dSteer}, get street(){return carStreet},
+    get drive(){ return {
+      // 🚙 รอบ 394: มุมมองที่ 3 / รอยยาง / บังคับรถ (testkit)
+      get cam3(){return dCam3}, toggle:driveCamToggle, get selfCar(){return carSelfM}, get skids(){return skids},
+      get keys(){return keys}, engineOn(){ carEngineOn=true; carStartOpen=false; },
+      tick:dt=>tickDrive(dt||.016,performance.now()),          // เดินเฟรมเองตอนแท็บ hidden (rAF ไม่ยิง)
+      setYaw:v=>{yaw=v}, setSpeed:v=>{dSpeed=v},
+      get speed(){return dSpeed}, get steer(){return dSteer}, get street(){return carStreet},
                          d:worlds.drive&&worlds.drive.d, cell:driveCell, collide:collideCar,
                          sound:CarSound, wheelEl:carWheelEl, dashEl:carDashEl,
                          // 🚦 รอบ 132: testkit ไฟเลี้ยว/ทางแยก/ใบสั่ง

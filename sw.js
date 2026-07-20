@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v108';  // v108: 🚙 รถเพื่อนโลกขับรถ = โมเดล car_01.glb ย้อม 10 สี + ล้อหน้าเลี้ยวจริง รอบ 393
+const CACHE_VERSION = 'pet-vocab-v109';  // v109: 👁️🛞🚗 มุมมองที่ 3 + รอยยางดริฟท์ + รถ GLB ใน moto map รอบ 394
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
