@@ -2082,8 +2082,11 @@ function buildScene(md){
     // 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเส้นตั้ง 2 ชั้น — วัดแล้วเส้นแทบไม่กินเวลาเรนเดอร์ (+0.1ms/เฟรม)
     //   ชั้นหนา: โซนหน้าประตูที่กล้องจ้องเกือบตลอด (~3 แถบตัดหญ้า) 150 ต้น/ตร.ม. ดูเป็นหญ้าจริง
     //   ชั้นบาง: ทั่วสนามที่เหลือ กันขอบเขตชั้นหนาดูตัดกัน (หมอกฉากช่วยกลืนระยะไกลอยู่แล้ว)
-    buildGrassBlades(sc, 90000, -15, 15, GOAL_Z, GOAL_Z+22, .09, .20);   // 136 ต้น/ตร.ม.
-    buildGrassBlades(sc, 30000, -(fieldW+22)/2, (fieldW+22)/2, -(fieldL+22)/2, (fieldL+22)/2, .09, .26);
+    // 🌱 รอบ 407 (ผู้ใช้): ตัดใบสั้นลงครึ่งหนึ่ง แล้วเอาที่ประหยัดได้ไปโรยเพิ่มในพื้นที่โล่งที่เหลือ
+    //   โซนหน้าประตูคงความหนาแน่นเดิม · ส่วนที่เหลือเพิ่มจาก 30k → 130k (ข้ามโซนประตูที่หนาอยู่แล้ว)
+    const GZ={x0:-15,x1:15,z0:GOAL_Z,z1:GOAL_Z+22};
+    buildGrassBlades(sc, 90000, GZ.x0, GZ.x1, GZ.z0, GZ.z1, .045, .10);
+    buildGrassBlades(sc, 130000, -(fieldW+22)/2, (fieldW+22)/2, -(fieldL+22)/2, (fieldL+22)/2, .045, .13, GZ);
     const lines=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
       new THREE.MeshBasicMaterial({map:soccerLinesTexture(),transparent:true,depthWrite:false}));
     lines.rotation.x=-Math.PI/2; lines.position.y=.035; sc.add(lines);
@@ -9465,11 +9468,17 @@ function buildGrassTufts(sc,halfW,halfL){
 /* 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเป็น "เส้นตั้งฉากกับพื้น" เล็กๆ สีเขียวจริง เต็มสนาม
    ใช้ LineSegments ก้อนเดียว = 1 draw call · เส้นไม่กินค่า fill เลย จึงใส่ได้เป็นหมื่นเส้นบนมือถือ
    โคนเข้ม-ยอดสว่าง (vertex color) + เอียงสุ่มเล็กน้อย + หมอกฉากทำให้ไกลๆ จางเอง = เห็นชัดราว 3 แถบตัดหญ้า */
-function buildGrassBlades(sc,N,x0,x1,z0,z1,hMin,hMax){
+function buildGrassBlades(sc,N,x0,x1,z0,z1,hMin,hMax,skip){
   const pos=new Float32Array(N*6), col=new Float32Array(N*6);
   const lo=new THREE.Color(0x2c6b28), hi=new THREE.Color(0x8fd350), c=new THREE.Color();
   for(let i=0;i<N;i++){
-    const x=x0+Math.random()*(x1-x0), z=z0+Math.random()*(z1-z0);
+    let x=x0+Math.random()*(x1-x0), z=z0+Math.random()*(z1-z0);
+    // 🌱 รอบ 407: ข้ามโซนที่หนาแน่นอยู่แล้ว — ต้นที่ประหยัดได้จะไปตกในพื้นที่โล่งแทน (ไม่ซ้ำซ้อน)
+    if(skip){ let guard=0;
+      while(guard++<12 && x>skip.x0 && x<skip.x1 && z>skip.z0 && z<skip.z1){
+        x=x0+Math.random()*(x1-x0); z=z0+Math.random()*(z1-z0);
+      }
+    }
     const h=hMin+Math.random()*(hMax-hMin), lx=(Math.random()-.5)*.05, lz=(Math.random()-.5)*.05;
     const o=i*6;
     pos[o]=x;      pos[o+1]=.021;   pos[o+2]=z;

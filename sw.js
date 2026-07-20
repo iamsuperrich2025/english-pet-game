@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v121';  // v121: 🌱 ใบหญ้าเส้นตั้ง 120,000 ต้น (ไอเดียผู้ใช้) รอบ 406
+const CACHE_VERSION = 'pet-vocab-v122';  // v122: 🌱 ใบหญ้าสั้นลงครึ่ง + โรยเพิ่มเต็มสนาม 220,000 ต้น รอบ 407
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
