@@ -224,7 +224,7 @@ const BALL_R=0.34, BALL_G=17, PLAYER_Z=8, GOAL_Z=-19;      // รัศมีบ
 const GOAL_HW=4, GOAL_H=3;                                 // ครึ่งกว้างประตู · ความสูงคาน
 const KICK_SPD_MIN=9, KICK_SPD_MAX=44, CHARGE_RATE=78;     // ความเร็วเตะต่ำ-สูง (m/s · รอบ 401 เพิ่ม 32→44 ให้ซัดเต็มแรงแล้วสะใจ) · พลังชาร์จ/วินาที
 const AIM_YAW_SP=0.9, AIM_PITCH_SP=0.7, SOCCER_COLLECT=1.7;// ความไวเล็ง + ระยะบอลชนป้าย
-const SOCCER_TILES=14, SOCCER_LETTER_COIN=5;              // จำนวนป้ายเป้าคงที่ · เหรียญ/ตัวอักษรที่ประกอบคำได้
+const SOCCER_TILES=1, SOCCER_LETTER_COIN=5;               // รอบ 404: เหลือป้ายเดียว โผล่ทีละตัวในกรอบประตู · เหรียญ/ตัวอักษรที่ประกอบคำได้
 let soccerBall=null, soccerPlayer=null;                    // ลูกบอล · หุ่นนักเตะ (รอบ 401: จุดพรีวิวเดิม → ริบบิ้น guideRibbon)
 let _soccerTileGeo=null, coinPopEl=null;                   // geometry ป้าย (แชร์) · เลเยอร์ป๊อปเหรียญ
 let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
@@ -264,7 +264,7 @@ const GK_SPRITES={ cat:{f:'pet_cat_walk.webp',fw:172,fh:172,fps:14}, dog:{f:'pet
                    dragon:{f:'pet_dragon_idle.webp',fw:147,fh:139,fps:12} };
 const PK_TIME=60, PK_COIN=2, PK_SPOT_Z=GOAL_Z+7;           // วินาทีต่อรอบจุดโทษ · เหรียญ/ประตู · จุดโทษ (7m หน้าประตู)
 let gkMesh=null, gkX=0, gkType='', gkSaveAt=0, gkCoolAt=0;
-let sBaseZ=PLAYER_Z;                                       // จุดยืนเตะปัจจุบัน (โหมดปกติ=PLAYER_Z · จุดโทษ=PK_SPOT_Z)
+let sBaseZ=PLAYER_Z, sBaseX=0;                             // จุดยืนเตะปัจจุบัน (โหมดปกติ=สุ่ม · จุดโทษ=PK_SPOT_Z · ฟรีคิก=FK_SPOT_Z)
 let pkOn=false, pkEndAt=0, pkGoals=0, pkKicks=0, pkBest=0, pkHudEl=null;
 let repOn=false, repTrace=[], repT=0, repEl=null, repSide=1, repPendAt=0, repPendTrace=null, repPkLeft=0;
 
@@ -9268,8 +9268,13 @@ const DroneSound={
 /* ============================================================
    ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
    ============================================================ */
+/* 🎯 รอบ 404 (ผู้ใช้): ป้ายโผล่ "ทีละตัว ในกรอบประตู" ตำแหน่งสุ่ม — ต้องเล็งเข้าประตูจริงถึงจะเก็บได้ สนุกกว่าลอยเกลื่อน */
 function soccerLetterPos(){
-  return {x:(Math.random()*2-1)*9, y:1.1+Math.random()*4, z:GOAL_Z+3+Math.random()*11};   // ลอยนิ่งหน้าประตู
+  return {
+    x:(Math.random()*2-1)*(GOAL_HW-0.95),          // อยู่ในกรอบเสา (เผื่อขอบป้าย)
+    y:0.85+Math.random()*(GOAL_H-1.5),             // ตั้งแต่ระดับต่ำถึงใต้คาน
+    z:GOAL_Z+0.55                                  // ลอยหน้าเส้นประตูนิดเดียว = อยู่ในกรอบ
+  };
 }
 /* ตัวอักษรนี้ยัง "ต้องการ" ประกอบคำเป้าหมายอยู่ไหม (need รวมทุกคำ > ที่เก็บใน inv แล้ว) */
 function letterNeeded(ch){
@@ -9325,6 +9330,20 @@ function soccerBuildTargets(){
   while(chars.length<SOCCER_TILES && pool.length) chars.push(pool[Math.floor(Math.random()*pool.length)]);
   chars=chars.slice(0,SOCCER_TILES);
   shuffle(chars).forEach(ch=>letters.push(makeSoccerTile(ch,soccerLetterPos())));
+}
+/* 🎯 รอบ 404: ย้ายป้ายไปจุดใหม่ในกรอบประตู + เปลี่ยนเป็นตัวอักษรที่ยังต้องการตัวถัดไป
+   (กันจุดซ้ำเดิม: ถ้าสุ่มได้ใกล้ที่เดิมมาก ให้สุ่มใหม่ ผู้เล่นจะได้ต้องเล็งใหม่ทุกครั้ง) */
+function soccerNextTile(l){
+  const need=soccerNeededSet();
+  const nextCh = need.length ? need[0] : l.ch;
+  const old=l.spr.position;
+  let p=soccerLetterPos(), guard=0;
+  while(guard++<8 && Math.hypot(p.x-old.x,p.y-old.y)<2.2) p=soccerLetterPos();
+  l.ch=nextCh;
+  l.home=p; l.baseY=p.y;
+  l.spr.position.set(p.x,p.y,p.z);
+  l.gold=!letterNeeded(nextCh);                   // บังคับให้ soccerRefreshSkins เปลี่ยนรูปให้ตรงตัวใหม่
+  soccerRefreshSkins();
 }
 /* หลังประกอบคำเสร็จ: รีไซเคิลป้ายที่ไม่ต้องการแล้ว → ตัวอักษรที่ยังขาด (คงจำนวนป้ายเท่าเดิม) */
 function soccerRetarget(){
@@ -9725,9 +9744,11 @@ function fkToggle(){
   fkBuildWall();
   fkOn=!fkOn;
   sBaseZ = fkOn ? FK_SPOT_Z : (pkOn ? PK_SPOT_Z : PLAYER_Z);
+  sBaseX = 0;                                       // 🎲 รอบ 404: โหมดฟรีคิก/ปกติ กลับมาตั้งกลางก่อน (ปกติจะสุ่มใหม่ตอน reset)
+  if(fkOn){ aimYaw=0; aimPitch=.34; }
   fkWall.visible=fkOn;
   fkWall.position.set(0,0,sBaseZ-FK_WALL_GAP);
-  if(soccerPlayer) soccerPlayer.position.z=sBaseZ;
+  if(soccerPlayer) soccerPlayer.position.set(sBaseX,0,sBaseZ);
   soccerResetBall();
   const b=overlayEl.querySelector('#adv-fk');
   if(b){ b.classList.toggle('on',fkOn); b.textContent=fkOn?'⏹ เลิกฟรีคิก':'🧱 ฟรีคิก'; }
@@ -9768,9 +9789,9 @@ function pkStart(){
   if(fkOn) fkToggle();                             // 🧱 รอบ 402: เข้าโหมดจุดโทษ = เก็บกำแพงฟรีคิกก่อน (ไม่ให้ 2 โหมดชนกัน)
   pkOn=true; pkGoals=0; pkKicks=0; pkEndAt=performance.now()+PK_TIME*1000;
   pkBest=state.soccerPKBest||0;
-  sBaseZ=PK_SPOT_Z;
+  sBaseZ=PK_SPOT_Z; sBaseX=0; aimYaw=0; aimPitch=.34;              // 🎲 รอบ 404: จุดโทษยืนตรงกลางเสมอ (ไม่สุ่ม)
   letters.forEach(l=>l.spr.visible=false);                         // เก็บป้ายคำไว้ก่อน โฟกัสดวลจุดโทษ
-  if(soccerPlayer) soccerPlayer.position.z=sBaseZ;
+  if(soccerPlayer) soccerPlayer.position.set(sBaseX,0,sBaseZ);
   soccerResetBall();
   const btn=overlayEl.querySelector('#adv-pk'); if(btn){ btn.classList.add('on'); btn.textContent='⏹ เลิกดวล'; }
   pkHud().style.display='block';
@@ -9781,8 +9802,7 @@ function pkEnd(byUser){
   if(!pkOn) return;
   pkOn=false; sBaseZ=PLAYER_Z;
   letters.forEach(l=>l.spr.visible=true);
-  if(soccerPlayer) soccerPlayer.position.z=sBaseZ;
-  soccerResetBall();
+  soccerResetBall();                                               // 🎲 จบดวล = กลับไปสุ่มจุดยืนตามปกติ
   const btn=overlayEl.querySelector('#adv-pk'); if(btn){ btn.classList.remove('on'); btn.textContent='🎯 จุดโทษ'; }
   if(pkHudEl) pkHudEl.style.display='none';
   SoccerAudio.whistle(true);
@@ -9880,9 +9900,22 @@ function makeSoccerPlayer(shirtColor,no){
   g.userData.legs=legs;
   return g;
 }
+/* 🎲 รอบ 404 (ผู้ใช้): สุ่มจุดยืนเตะใหม่ทุกครั้ง — มุม/ระยะต่างกันทุกลูก ต้องเล็งใหม่เสมอ
+   (โหมดจุดโทษ/ฟรีคิกมีจุดตายตัวของตัวเอง ไม่สุ่ม) · หันหน้าเข้าประตูให้อัตโนมัติ ไม่งั้นเด็กงงว่าประตูอยู่ไหน */
+function soccerNewSpot(){
+  if(pkOn||fkOn) return;
+  sBaseX=(Math.random()*2-1)*13;                     // ซ้าย-ขวา ±13m (มุมแคบบ้างกว้างบ้าง)
+  sBaseZ=PLAYER_Z-3+Math.random()*11;               // ใกล้-ไกลประตู
+  aimYaw=Math.atan2(-sBaseX, sBaseZ-GOAL_Z);        // เล็งไปกลางประตูเป็นค่าตั้งต้น
+  // มุมยกตั้งต้นตามระยะ: ยิ่งไกลยิ่งต้องยิงราบ (วัดจริง ระยะ ~30m ต้อง ~0.12 ไม่งั้นข้ามคานตลอด)
+  const dist=Math.hypot(sBaseX, sBaseZ-GOAL_Z);
+  aimPitch=Math.max(.10, Math.min(.30, .30-dist*.006));
+  if(soccerPlayer) soccerPlayer.position.set(sBaseX,0,sBaseZ);
+}
 function soccerResetBall(){
   if(!soccerBall) return;
-  soccerBall.position.set(0,BALL_R,sBaseZ);
+  soccerNewSpot();
+  soccerBall.position.set(sBaseX,BALL_R,sBaseZ);
   sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false;
   sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
 }
@@ -9943,12 +9976,23 @@ function buildLandRing(sc){
 function buildGuideRibbon(sc){
   const geo=new THREE.BufferGeometry();
   const pos=new Float32Array(GUIDE_N*2*3), uv=new Float32Array(GUIDE_N*2*2), idx=[];
+  const col=new Float32Array(GUIDE_N*2*3);
+  // 💙 รอบ 404 (ผู้ใช้): แสงสีฟ้าไล่ "เข้ม→อ่อน" ตามระยะ — ต้นทางน้ำเงินเข้ม ปลายทางฟ้าอ่อนเกือบขาว
+  //    ใช้ vertex color เพราะไล่ตามความยาวริบบิ้น (material.color เดียวทำไม่ได้)
+  const near=new THREE.Color(0x0b3fd6), far=new THREE.Color(0xb6ecff), tmp=new THREE.Color();
+  for(let i=0;i<GUIDE_N;i++){
+    const t=i/(GUIDE_N-1);
+    tmp.copy(near).lerp(far, Math.pow(t,0.7));
+    const o=i*6;
+    col[o]=col[o+3]=tmp.r; col[o+1]=col[o+4]=tmp.g; col[o+2]=col[o+5]=tmp.b;
+  }
   for(let i=0;i<GUIDE_N-1;i++){ const a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }
   geo.setIndex(idx);
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
   guideMat=new THREE.MeshBasicMaterial({map:guideTexture(),transparent:true,side:THREE.DoubleSide,
-    depthWrite:false,blending:THREE.AdditiveBlending,opacity:.92});
+    depthWrite:false,blending:THREE.AdditiveBlending,opacity:.92,vertexColors:true});
   guideRibbon=new THREE.Mesh(geo,guideMat);
   guideRibbon.frustumCulled=false; guideRibbon.visible=false; guideRibbon.renderOrder=3;
   sc.add(guideRibbon);
@@ -10008,14 +10052,14 @@ function updateSoccerGuide(ready,dx,dz){
   if(!ready){ guideRibbon.visible=false; if(landRing) landRing.visible=false; return; }
   const power=sCharging?sChg:55;
   const L=kickLaunch(power);
-  // 🎨 รอบ 402: ริบบิ้นไล่สีตามพลังชาร์จ — เขียว(เบา) → ส้ม → แดงเพลิง(เต็มแรง)
+  // 💙 รอบ 404: สีฟ้าไล่ตามระยะทำที่ vertex color แล้ว — พลังชาร์จจึงคุม "ความสว่าง/ทึบ" แทน (ยิ่งแรงยิ่งสว่างจ้า)
   const pw=Math.max(0,Math.min(1,power/100));
-  guideMat.color.setHSL(0.33*(1-pw)*(1-pw*.35), 0.95, 0.5+pw*0.12);
-  guideMat.opacity=0.82+pw*0.18;
+  guideMat.color.setScalar(0.72+pw*0.5);
+  guideMat.opacity=0.78+pw*0.22;
   landPt=null;
   const ch=Math.cos(L.pit), sh=Math.sin(L.pit);
   let vx=dx*ch*L.spd, vy=sh*L.spd, vz=dz*ch*L.spd;
-  let px=0, py=BALL_R, pz=sBaseZ;
+  let px=sBaseX, py=BALL_R, pz=sBaseZ;
   const h=0.016;   // ⚠️ ต้องเท่ากับ dt จริงของเกม — step ใหญ่กว่านี้ Euler คลาดสะสม (h=.035 เคยเพี้ยนถึง 1.2m)
   const pos=guideRibbon.geometry.attributes.position.array;
   const uv=guideRibbon.geometry.attributes.uv.array;
@@ -10060,9 +10104,9 @@ function updateSoccerGuide(ready,dx,dz){
       landRing.position.set(landPt.x,.06,landPt.z);
       const s=1+Math.sin(performance.now()/220)*.07;
       landRing.scale.setScalar(s);
-      const ud=landRing.userData;
-      ud.outer.material.color.copy(guideMat.color);
-      ud.inner.material.color.copy(guideMat.color);
+      const ud=landRing.userData;                    // 💙 วงจุดตกใช้โทนฟ้าปลายริบบิ้น (จุดตก=ปลายทาง)
+      ud.outer.material.color.setRGB(0.62,0.90,1);
+      ud.inner.material.color.setRGB(0.62,0.90,1);
     } else landRing.visible=false;
   }
 }
@@ -10070,11 +10114,11 @@ function soccerCamera(dt,dx,dz){
   const b=soccerBall.position;
   const k=Math.min(1,dt*4);
   if(soccerCam1){
-    camera.position.set(-dx*.35,1.55,sBaseZ-dz*.35);
-    camera.lookAt(dx*12,1.55+Math.sin(aimPitch)*7,sBaseZ+dz*12);
+    camera.position.set(sBaseX-dx*.35,1.55,sBaseZ-dz*.35);
+    camera.lookAt(sBaseX+dx*12,1.55+Math.sin(aimPitch)*7,sBaseZ+dz*12);
     return;
   }
-  const foc = sbLive? b : {x:0,y:1.1,z:sBaseZ-1.5};
+  const foc = sbLive? b : {x:sBaseX,y:1.1,z:sBaseZ-1.5};
   const cx=foc.x - dx*8, cz=foc.z - dz*8, cy=(sbLive?b.y:1.4)+3.4;
   camera.position.x+=(cx-camera.position.x)*k;
   camera.position.y+=(cy-camera.position.y)*k;
@@ -10198,7 +10242,8 @@ function tickSoccer(dt,now){
           renderHudInv(); renderHudWords(); renderHudTop();
           tryCompleteWords();
           soccerRefreshSkins();
-        } else { sfx.select(); }                                       // ตัวไม่ต้องการ = แค่เด้ง ไม่ได้เหรียญ
+          soccerNextTile(l);                                           // 🎯 รอบ 404: เก็บได้แล้ว → ตัวถัดไปโผล่จุดใหม่ในกรอบประตู
+        } else { sfx.select(); soccerNextTile(l); }                    // ตัวไม่ต้องการ = ย้ายที่ให้ตัวใหม่เหมือนกัน
       }
     }
     if(!sbGoaled && b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){
@@ -10208,7 +10253,7 @@ function tickSoccer(dt,now){
       if(repQualify(b.x,b.y)){ repPendAt=now+750; repPendTrace=repTrace.slice(); }   // 🎬 ยิงมุมสวย → ฉายรีเพลย์
     }
     const spd=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
-    const oob=Math.abs(b.x)>30||b.z<GOAL_Z-7||b.z>PLAYER_Z+9||b.y>28;
+    const oob=Math.abs(b.x)>30||b.z<GOAL_Z-7||b.z>Math.max(PLAYER_Z,sBaseZ)+9||b.y>28;   // 🎲 รอบ 404: จุดยืนสุ่มไปได้ถึง z≈16 ต้องเผื่อขอบ
     if((b.y<=BALL_R+.02 && spd<1.1) || oob || now-sbKickAt>4500){
       if(!sbRestAt) sbRestAt=now;
       if(now-sbRestAt>350 || oob) soccerResetBall();
@@ -10269,7 +10314,7 @@ function soccerKitGo(){
   soccerStartEl.classList.remove('on');
   if(soccerPlayer && scene) scene.remove(soccerPlayer);
   soccerPlayer=makeSoccerPlayer(sKitShirt,sKitNo);
-  soccerPlayer.position.set(0,0,sBaseZ); scene.add(soccerPlayer);
+  soccerPlayer.position.set(sBaseX,0,sBaseZ); scene.add(soccerPlayer);
   SoccerAudio.amb();                                   // 🔊 รอบ 396: ฮัมฝูงชน (เริ่มหลัง gesture กดปุ่มลงสนาม)
   soccerGKEnsure();                                    // 🧤 รอบ 397: น้องตัว active มายืนเฝ้าประตู
   if(introSeen('soccer')){ beginPlay(); showBanner(M.intro); }
@@ -10941,8 +10986,8 @@ function start(md,opt){
     spinOpen=true;                                      // 🎱 รอบ 403: แพดจุดสัมผัสเปิดค้างตลอด (ผู้ใช้สั่ง)
     if(spinPadEl) spinPadEl.style.display='';
     renderSpinPad();
-    soccerResetBall();
-    camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
+    soccerResetBall();                                  // 🎲 สุ่มจุดยืนแรกให้เลย
+    camera.position.set(sBaseX,4,sBaseZ+8); camera.lookAt(0,1.2,GOAL_Z);
   }else if(M.mecha){
     // 🤖 มุมมองในหุ่นสูง 5m · เลือกอาวุธตามหุ่นที่ครอบครอง
     maxHp=MECHA_MAX_HP; hp=maxHp;                       // 🤖 รอบ 236: หุ่นพลังเยอะกว่าโลกอื่น (ทนขึ้น ไม่ตายง่าย)
@@ -11059,7 +11104,7 @@ function exitWorld(){
   CarSound.stop();
   SoccerAudio.stopAmb();                           // ⚽🔊 รอบ 396: หยุดฮัมฝูงชนสนามบอล
   // ⚽🎯🎬🧱 รอบ 397-402: ล้างสถานะจุดโทษ/รีเพลย์/ฟรีคิก (ป้ายคำโดน clearEntities ลบอยู่แล้ว)
-  pkOn=false; sBaseZ=PLAYER_Z; repOn=false; repPendAt=0;
+  pkOn=false; sBaseZ=PLAYER_Z; sBaseX=0; repOn=false; repPendAt=0;
   fkOn=false; fkWall=null; fkMen=[];                // ฉากถูกทิ้งทั้งก้อนตอนออก — เคลียร์อ้างอิงกัน mesh ค้างข้ามรอบ
   { const fkb=overlayEl&&overlayEl.querySelector('#adv-fk');
     if(fkb){ fkb.classList.remove('on'); fkb.textContent='🧱 ฟรีคิก'; } }
