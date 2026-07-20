@@ -26,3 +26,45 @@ function fruitGrowMs(id){
 function fruitMsLeft(tree, now){
   return Math.max(0, tree.plantedAt + fruitGrowMs(tree.id) - now);
 }
+
+/* ── 📊 ราคาตลาดขึ้นลงตามอุปทาน — กันเหรียญเฟ้อ (รอบ 395) ──
+   ปัญหาเดิม: ต้นไม้ปลูกไม่จำกัด ขายราคาคงที่ตลอดกาล → เอากำไรทบต้น
+   ซื้อต้นเพิ่มได้เรื่อยๆ เหรียญโตทวีคูณไม่มีเพดาน
+   กลไกใหม่: ขายผลชนิดไหน อุปทาน (supply) ชนิดนั้น +1 ต่อต้นที่ขาย
+   → ราคาจริง = ราคาฐาน × (1 − DROP×supply) ต่ำสุด FLOOR
+   supply ลดลงครึ่งหนึ่งทุก HALF_MS (หยุดขายราคาฟื้นเอง)
+   ผล: เล่นเบาๆ วันละไม่กี่ต้นราคาแทบไม่ตก · ปลูกเป็นฟาร์มร้อยต้น
+   ราคาดิ่งเหลือ 25% คืนทุนช้ามาก ไม่คุ้มทบต้นอีก + เด็กได้เรียนรู้
+   อุปสงค์-อุปทานจริงๆ (ขายเยอะ=ล้นตลาด · กระจายชนิด=ราคาดี) */
+const FRUIT_MKT_DROP    = 0.10;             // ขาย 1 ต้น ราคาชนิดนั้นตก 10%
+const FRUIT_MKT_FLOOR   = 0.25;             // ราคาต่ำสุด 25% ของราคาฐาน
+const FRUIT_MKT_HALF_MS = 10*3600*1000;     // supply ลดครึ่งทุก 10 ชม.
+
+/* อุปทานปัจจุบันของผลไม้ชนิดนี้ (ตัวเลขสลายตัวเองตามเวลา) */
+function fruitMktSupply(id, now){
+  const m = state.fruitMkt && state.fruitMkt[id];
+  if(!m || !(m.s > 0)) return 0;
+  return m.s * Math.pow(0.5, (now - m.at)/FRUIT_MKT_HALF_MS);
+}
+/* ตัวคูณราคาตลาดตอนนี้ 0.25–1.0 */
+function fruitPriceMult(id, now){
+  return Math.max(FRUIT_MKT_FLOOR, 1 - FRUIT_MKT_DROP*fruitMktSupply(id, now));
+}
+/* ราคาขายจริงตอนนี้ (ปัดเป็นจำนวนเต็ม อย่างน้อย 1) */
+function fruitSellNow(id, now){
+  const f = fruitInfo(id);
+  return f ? Math.max(1, Math.round(f.sell * fruitPriceMult(id, now))) : 0;
+}
+/* บันทึกการขาย n ต้น → อุปทานพุ่ง ราคาชนิดนี้ตกสำหรับรอบถัดไป */
+function fruitMktAdd(id, n, now){
+  if(!state.fruitMkt || typeof state.fruitMkt !== 'object') state.fruitMkt = {};
+  state.fruitMkt[id] = {s: fruitMktSupply(id, now) + n, at: now};
+}
+/* ป้ายสถานะตลาดไว้โชว์เด็กเข้าใจง่าย */
+function fruitMktLabel(id, now){
+  const pct = Math.round(fruitPriceMult(id, now)*100);
+  if(pct >= 90) return {pct, emoji:'📈', text:'ราคาดีมาก'};
+  if(pct >= 60) return {pct, emoji:'🙂', text:'ราคาปกติ'};
+  if(pct >= 35) return {pct, emoji:'📉', text:'เริ่มล้นตลาด'};
+  return {pct, emoji:'🫠', text:'ล้นตลาด ราคาถูกมาก'};
+}

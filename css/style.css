@@ -376,6 +376,7 @@ html.no-anim .coin-pill.net{animation:none;}
    ร้านต้นไม้ = hq-card (หัวน้ำเงิน/ภาพใหญ่/แถบราคาทอง idiom เดียวกับโรงงาน) ในถาด .strip-x
    ต้นที่ปลูก = การ์ดแนวตั้งเล็ก ปัดซ้ายขวา · ต้นสุก = ขอบทองเรือง+เด้ง */
 .farm-sub{margin:12px 2px 6px;font-size:14.5px;color:#2a5f8f;font-weight:600;}
+.farm-mkt-hint{margin:-2px 2px 4px;color:#7a8aa0;font-size:10.5px;line-height:1.3;}
 /* 2 โซน (ร้าน | ต้นของหนู) เคียงข้างกัน — จอแคบ (<700px) ซ้อนเป็นชั้นแทน */
 .farm-cols{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:start;}
 .farm-cols .farm-sec{min-width:0;}

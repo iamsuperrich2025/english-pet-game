@@ -107,6 +107,7 @@ const DEFAULT_STATE = {
   phone:false,                        // มีมือถือ (โบนัสจับคู่ +5/ข้อ · ค่าเน็ต 1,000/เดือน)
   netCut:false,                       // ถูกตัดเน็ต (ค้างค่าเน็ตข้ามเดือน) — โบนัสมือถือระงับ
   farm:[],                            // ต้นไม้ที่ปลูกอยู่: {id:'orange'..., plantedAt:ts} ไม่จำกัดจำนวน
+  fruitMkt:{},                        // 📊 อุปทานตลาดผลไม้ต่อชนิด {orange:{s,at}} — ขายถี่ราคาตก ฟื้นเองตามเวลา (รอบ 395)
   computer:false,                     // มีคอมพิวเตอร์ (รายได้ +0.01 เหรียญ/วิ · ค่าบริการข้อมูล 5,000/เดือน)
   compSince:null,                     // timestamp ที่ตกเหรียญรายได้คอมครั้งล่าสุด (เศษวินาทีสะสมต่อจากนี้)
   compEarned:0,                       // เหรียญที่คอมทำให้ทั้งหมด (ไว้โชว์)
@@ -381,6 +382,8 @@ function loadState(){
       // สวนผลไม้ (ข้อ 12): เซฟเก่าไม่มีสวน → เริ่มว่าง / คัดต้นที่ข้อมูลเสียทิ้ง
       if(!Array.isArray(s.farm)) s.farm = [];
       s.farm = s.farm.filter(t=>t && fruitInfo(t.id) && typeof t.plantedAt === 'number');
+      // ตลาดผลไม้ (รอบ 395): เซฟเก่าไม่มี → เริ่มว่าง (ราคาเต็ม 100% ทุกชนิด)
+      if(!s.fruitMkt || typeof s.fruitMkt !== 'object' || Array.isArray(s.fruitMkt)) s.fruitMkt = {};
       // สินค้าสะสม + ตลาดขายต่อ: เซฟเก่าไม่มี → เริ่มว่าง / คัดข้อมูลที่เสียทิ้ง
       if(!Array.isArray(s.collection)) s.collection = [];
       s.collection = s.collection.filter(id=>collectInfo(id));

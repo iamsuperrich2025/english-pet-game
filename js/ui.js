@@ -5466,14 +5466,16 @@ function renderFarmCard(){
   if(!el) return;
   const now = Date.now();
   // ร้านต้นไม้ = การ์ดปัดแนวนอนสไตล์ SimCity BuildIt (หัวน้ำเงิน · ภาพใหญ่ · แถบราคาทอง)
-  const shop = FRUITS.map(f=>`
+  const shop = FRUITS.map(f=>{
+    const mk = fruitMktLabel(f.id, now);
+    return `
     <div class="hq-card farm-hq">
       <div class="hq-head">${f.name}</div>
       <div class="hq-pic"><span class="hq-emoji">${f.emoji}</span>
         <span class="hq-badge">⏰ โต ${f.growDays} วัน</span></div>
-      <div class="farm-yield">เก็บขายผลได้ <b>🪙${fmtNum(f.sell)}</b><small>ขายแล้วออกผลใหม่เรื่อยๆ</small></div>
+      <div class="farm-yield">ขายผลตอนนี้ <b>🪙${fmtNum(fruitSellNow(f.id, now))}</b><small>${mk.emoji} ตลาด ${mk.pct}% — ${mk.text}</small></div>
       <button class="hq-price craft-buy farm-buy-btn" data-fruit="${f.id}">🪙${fmtNum(f.price)} ปลูกเลย</button>
-    </div>`).join('');
+    </div>`;}).join('');
 
   let list, sig = '';
   if(state.farm.length){
@@ -5483,12 +5485,14 @@ function renderFarmCard(){
       const left = fruitMsLeft(t, now);
       const ready = left <= 0;
       sig += ready ? '1' : '0';
-      if(ready){ readyCount++; readyTotal += f.sell; }
+      const sellNow = fruitSellNow(t.id, now);        // 📊 ราคาตลาดตอนนี้ ไม่ใช่ราคาฐาน
+      if(ready){ readyCount++; readyTotal += sellNow; }
+      const mk = fruitMktLabel(t.id, now);
       const status = ready
-        ? '✅ ผลสุกแล้ว! เก็บขายได้เลย'
+        ? (mk.pct < 90 ? `✅ ผลสุกแล้ว! ${mk.emoji} ตลาด ${mk.pct}%` : '✅ ผลสุกแล้ว! เก็บขายได้เลย')
         : '⏳ อีก ' + fruitCountdown(left);
       const action = ready
-        ? `<button class="farm-sell-btn" data-tree="${i}">เก็บขาย 🪙${fmtNum(f.sell)}</button>`
+        ? `<button class="farm-sell-btn" data-tree="${i}">เก็บขาย 🪙${fmtNum(sellNow)}</button>`
         : `<div class="farm-grow-badge">🌱 กำลังโต</div>`;
       return `<div class="farm-tree ${ready ? 'ready' : ''}">
         <span class="farm-tree-emoji">${f.emoji}</span>
@@ -5501,7 +5505,8 @@ function renderFarmCard(){
     const sellAll = readyCount >= 2
       ? `<button class="farm-sellall-btn" id="btn-farm-sellall">🧺 เก็บขายทั้งหมดที่สุกแล้ว (${readyCount} ต้น) 🪙${fmtNum(readyTotal)}</button>`
       : '';
-    list = `<div class="farm-sec"><h4 class="farm-sub">🌱 ต้นไม้ของหนู (${state.farm.length} ต้น)</h4>${sellAll}
+    list = `<div class="farm-sec"><h4 class="farm-sub">🌱 ต้นไม้ของหนู (${state.farm.length} ต้น)</h4>
+      <div class="farm-mkt-hint"><small>📊 ขายผลชนิดเดียวถี่ๆ ราคาจะตก · พักขายสักพักราคาฟื้นเอง</small></div>${sellAll}
       <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
         <div class="farm-list strip-x">${rows}</div>
         <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div>`;
@@ -5555,8 +5560,8 @@ function buyFruit(id){
   }
   askConfirm(`<h2>${f.emoji} ปลูก${f.name}</h2>
     <p style="font-size:15px;margin:6px 0">ราคาต้น <b>🪙${fmtNum(f.price)}</b><br>
-    โตเต็มที่ใน <b>${f.growDays} วัน</b> แล้วเก็บขายผลได้ <b>🪙${fmtNum(f.sell)}</b><br>
-    <small>🌱 ขายแล้วต้นไม่หาย เริ่มออกผลรอบใหม่ทันที เก็บขายได้เรื่อยๆ</small></p>`,
+    โตเต็มที่ใน <b>${f.growDays} วัน</b> ขายผลได้สูงสุด <b>🪙${fmtNum(f.sell)}</b><br>
+    <small>🌱 ขายแล้วต้นไม่หาย ออกผลรอบใหม่ทันที · 📊 ราคาขายขึ้นลงตามตลาด ขายถี่ราคาตก พักขายราคาฟื้น</small></p>`,
     'ปลูกเลย!', ()=>{
       state.coins -= f.price;
       state.farm.push({id: f.id, plantedAt: Date.now()});
@@ -5571,14 +5576,18 @@ function sellFruit(i){
   const t = state.farm[i];
   if(!t) return;
   const f = fruitInfo(t.id);
-  if(fruitMsLeft(t, Date.now()) > 0){       // ยังไม่สุก (อาจกดพร้อมนาฬิกาพอดี) — กันพลาด
+  const now = Date.now();
+  if(fruitMsLeft(t, now) > 0){              // ยังไม่สุก (อาจกดพร้อมนาฬิกาพอดี) — กันพลาด
     sfx.wrong(); toast('ผลยังไม่สุกนะ รออีกนิดหนึ่ง 🌱'); renderFarmCard(); return;
   }
-  addCoins(f.sell);
-  t.plantedAt = Date.now();                 // เริ่มออกผลรอบใหม่ทันที ต้นเดิมไม่หาย
+  const gain = fruitSellNow(t.id, now);     // 📊 ขายตามราคาตลาดตอนนี้ (รอบ 395)
+  addCoins(gain);
+  fruitMktAdd(t.id, 1, now);                // อุปทานพุ่ง ราคาชนิดนี้ตกสำหรับรอบถัดไป
+  t.plantedAt = now;                        // เริ่มออกผลรอบใหม่ทันที ต้นเดิมไม่หาย
   sfx.buy();
-  floatFx(`+🪙${fmtNum(f.sell)}`);
-  toast(`${f.emoji} เก็บ${f.name}ขายได้ 🪙${fmtNum(f.sell)}! ต้นเริ่มออกผลรอบใหม่แล้ว 🌱`);
+  floatFx(`+🪙${fmtNum(gain)}`);
+  const mk = fruitMktLabel(t.id, now);
+  toast(`${f.emoji} เก็บ${f.name}ขายได้ 🪙${fmtNum(gain)}! ${mk.pct < 90 ? mk.emoji+' ตลาดตอนนี้ '+mk.pct+'% — พักขายให้ราคาฟื้นนะ' : 'ต้นเริ่มออกผลรอบใหม่แล้ว 🌱'}`);
   saveState();
   renderDashboard();
 }
@@ -5587,17 +5596,20 @@ function sellFruit(i){
 function sellAllFruit(){
   const now = Date.now();
   let count = 0, total = 0;
+  const soldByType = {};                      // 📊 ขายทั้งล็อตที่ราคาตลาดตอนกด แล้วค่อยกดอุปทานทีเดียว (รอบ 395)
   for(const t of state.farm){
     if(fruitMsLeft(t, now) > 0) continue;
-    const f = fruitInfo(t.id);
-    addCoins(f.sell);
-    total += f.sell; count++;
+    const gain = fruitSellNow(t.id, now);
+    addCoins(gain);
+    total += gain; count++;
+    soldByType[t.id] = (soldByType[t.id]||0) + 1;
     t.plantedAt = now;                        // เริ่มออกผลรอบใหม่ทันที ต้นเดิมไม่หาย
   }
   if(!count){ sfx.wrong(); toast('ยังไม่มีต้นไหนสุกเลยนะ รออีกนิด 🌱'); renderFarmCard(); return; }
+  for(const id in soldByType) fruitMktAdd(id, soldByType[id], now);
   sfx.buy();
   floatFx(`+🪙${fmtNum(total)}`);
-  toast(`🧺 เก็บผลสุก ${count} ต้นขายรวดเดียว ได้ 🪙${fmtNum(total)}! ทุกต้นออกผลรอบใหม่แล้ว 🌱`);
+  toast(`🧺 เก็บผลสุก ${count} ต้นขายรวดเดียว ได้ 🪙${fmtNum(total)}! ขายทีละมากราคาจะตกนะ พักให้ตลาดฟื้นก่อน 📊`);
   saveState();
   renderDashboard();
 }
