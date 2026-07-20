@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v128';  // v128: 🛸 โลกใหม่ "ยานแม่บุกโลก" FPS ทะเลทราย + พันธมิตร AI รอบ 413
+const CACHE_VERSION = 'pet-vocab-v129';  // v129: 🚁🌐 ยานแม่: ขับเฮลิยิงเอง + เพื่อนออนไลน์ร่วมสมรภูมิ รอบ 414
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

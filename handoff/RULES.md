@@ -160,7 +160,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "world": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion'",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
