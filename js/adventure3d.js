@@ -3416,7 +3416,7 @@ function renderHudInv(){
   const ks=Object.keys(inv).sort();
   hudInvEl.innerHTML=ks.length
     ? ks.map(ch=>`<span class="adv-inv-ch">${ch.toUpperCase()}${inv[ch]>1?'×'+inv[ch]:''}</span>`).join('')
-    : '<span class="adv-inv-empty">เดินชนตัวอักษรเพื่อเก็บ ✨</span>';
+    : `<span class="adv-inv-empty">${(M&&M.soccer)?'⚽ เตะบอลใส่ป้ายตัวอักษรเพื่อเก็บ':'เดินชนตัวอักษรเพื่อเก็บ ✨'}</span>`;   // ⚽ รอบ 399: สนามบอลไม่ได้เดินเก็บ
 }
 /* ระดับเข็มนักผาดโผนจาก "ชื่อที่ sync มาแล้ว" (เข็มติดท้ายชื่อ) — ไม่ต้องเพิ่ม field/rules ใหม่ */
 function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.indexOf('🌀')>=0) return 2; if(n.indexOf('🎯')>=0) return 1; return 0; }
@@ -3639,6 +3639,12 @@ function buildDom(){
     color:#fff;background:rgba(255,255,255,.15);border-radius:9px;padding:3px 8px;text-shadow:0 2px 4px #000;transition:background .2s,box-shadow .2s}
   .adv-fch.got{background:#66bb6a;box-shadow:0 0 13px #66bb6a}
   .adv-fth{color:#ffe082;font-size:clamp(13px,3.4vw,18px);font-weight:700;margin-top:4px;text-shadow:0 1px 3px #000}
+  /* ⚽ รอบ 399 (ผู้ใช้ส่งภาพ): จอมือถือเตี้ย top:82px กลายเป็นกลางจอ = แผงคำบังป้ายตัวอักษรที่ต้องเตะพอดี
+     → ย้ายลงล่างสุดตรงกลาง วางเหนือแถบตัวอักษรที่เก็บ (#adv-inv bottom:8px) + ย่อขนาดให้เป็นข้อมูลอ้างอิง
+     กว้างไม่เกิน 66vw กันไปทับสติ๊กเล็งซ้ายล่าง/ปุ่มเตะขวาล่าง */
+  .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
+  .adv-soccer #adv-words .adv-fch{font-size:clamp(15px,3.2vw,22px);min-width:22px;padding:2px 6px;border-radius:7px}
+  .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}
   #adv-hearts{display:none;left:10px;top:42px;font-size:24px;letter-spacing:3px;pointer-events:none;
     filter:drop-shadow(0 1px 3px rgba(0,0,0,.85))}
   #adv-survive{display:none;left:10px;top:78px;font-size:14px;font-weight:800;color:#c6f6d5;pointer-events:none;
