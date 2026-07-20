@@ -77,7 +77,7 @@ const MODES = {
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
     intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>กดปุ่มเตะ<b>ค้าง</b>เพิ่มพลังแล้วปล่อย · เล็งได้ทุกทิศ · ครบคำ +20🪙</small>',
-    hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · V สลับมุมกล้อง',
+    hint:'A/D เล็งซ้าย-ขวา · W/S เงย-ก้ม · เว้นวรรค(กดค้าง)=ชาร์จพลัง ปล่อย=เตะ · ⭐ กด A/D ค้างระหว่างบอลลอย = จับบอลโค้ง! · V สลับมุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
   mecha: {
@@ -233,6 +233,12 @@ let soccerCam1=false;                                      // true=มุมม�
 let sKitShirt=0xe53935, sKitNo='10';
 let sPadU=false, sPadD=false, sPadL=false, sPadR=false;    // ปุ่มเล็ง (มือถือ)
 let soccerStartEl=null, powerFillEl=null;
+/* ⚽🎨 รอบ 396: PES-look — ฟิสิกส์จริง (drag/Magnus/after-touch/เสา-คาน/ตาข่าย) + สนามสมจริง */
+const SB_DRAG=0.022, SB_MAGNUS=0.055, SB_TOUCH=9.5;        // สปส.ต้านอากาศ · แรงโค้ง Magnus · ความไวบังคับโค้งกลางอากาศ (A/D)
+const SPOST_R=0.12, SB_SPIN_MAX=9;                         // รัศมีเสาประตู · สปินสูงสุด (rad/s)
+let sbSpin={x:0,y:0,z:0};                                  // สปินบอล: y=ไซด์สปิน(โค้งซ้ายขวา) x=แบ็ค/ท็อปสปิน
+let sbShadow=null, soccerNets=[], sbNetRipple=0, sbInNet=false;   // เงาบอล · ตาข่าย(กระเพื่อม) · บอลติดตาข่ายอยู่
+const _sbAxis=new THREE.Vector3();                         // ตัวแปรหมุนบอล (reuse กัน GC)
 
 /* ============================================================
    🤖 โหมดหุ่นยนต์นักรบ (โหมด mecha · รอบ 199) — มุมมองในหุ่นสูง 5m เดินยิงเอเลี่ยนตัวอักษร
@@ -2030,17 +2036,29 @@ function buildScene(md){
                 glass:glassAll, doors:doorAll, winMat, glassMat};
     return;
   }else if(md==='soccer'){
-    // ⚽ สนามฟุตบอล: พื้นหญ้า+เส้นสนาม · ประตู+ตาข่าย · อัฒจันทร์ 4 ด้าน · ลูกบอล · จุดพรีวิววิถี
-    sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,1.12));
-    const sun=new THREE.DirectionalLight(0xfff4d0,.72); sun.position.set(24,55,32); sc.add(sun);
+    // ⚽🎨 รอบ 396 PES-look: หญ้าลายตัด(ชั้นล่าง)+เส้นสนามคม(ชั้นบนโปร่ง) · ประตูตาข่ายอุ้มบอล ·
+    //    อัฒจันทร์ 2 ชั้นมีหลังคา · สปอตไลต์ 4 มุม · ป้าย LED ริมสนาม · เงาบอล
+    sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,1.05));
+    const sun=new THREE.DirectionalLight(0xfff4d0,.85); sun.position.set(24,55,32); sc.add(sun);
+    const fill=new THREE.DirectionalLight(0xdfe8ff,.28); fill.position.set(-30,40,-20); sc.add(fill);
     const fieldW=44, fieldL=64;
-    const field=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
-      new THREE.MeshLambertMaterial({map:soccerFieldTexture()}));
-    field.rotation.x=-Math.PI/2; field.position.y=.02; sc.add(field);
+    const grassM=new THREE.MeshLambertMaterial({map:soccerGrassTexture()});
+    const grass=new THREE.Mesh(new THREE.PlaneGeometry(fieldW+26,fieldL+26),grassM);
+    grass.rotation.x=-Math.PI/2; grass.position.y=.02; sc.add(grass);
+    applyTex(grassM,'soccer_grass',10,14);                     // 📷 วางภาพหญ้าจริง img/tex/soccer_grass.jpg ทับได้
+    const lines=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
+      new THREE.MeshBasicMaterial({map:soccerLinesTexture(),transparent:true,depthWrite:false}));
+    lines.rotation.x=-Math.PI/2; lines.position.y=.035; sc.add(lines);
     buildSoccerGoal(sc, GOAL_Z, GOAL_HW*2, GOAL_H);
     buildStands(sc, fieldW, fieldL);
-    soccerBall=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,18,14), soccerBallMat());
+    soccerLedBoards(sc, fieldW, fieldL);
+    const ballM=soccerBallMat();
+    soccerBall=new THREE.Mesh(new THREE.SphereGeometry(BALL_R,24,18), ballM);
     soccerBall.position.set(0,BALL_R,PLAYER_Z); sc.add(soccerBall);
+    applyTex(ballM,'soccer_ball',1,1);                         // 📷 ภาพลายบอลจริง img/tex/soccer_ball.jpg ทับได้
+    sbShadow=new THREE.Mesh(new THREE.CircleGeometry(BALL_R*1.2,18),
+      new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.34,depthWrite:false}));
+    sbShadow.rotation.x=-Math.PI/2; sbShadow.position.set(0,.045,PLAYER_Z); sc.add(sbShadow);
     soccerGuide=[];
     const gm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
     for(let i=0;i<14;i++){ const d=new THREE.Mesh(new THREE.SphereGeometry(.09,7,6),gm); d.visible=false; sc.add(d); soccerGuide.push(d); }
@@ -9215,60 +9233,221 @@ function soccerCoinPop(worldPos){
   coinPopEl.appendChild(el);
   setTimeout(()=>el.remove(),900);
 }
-/* พื้นสนาม: หญ้าลายตัด + เส้นขาว (ขอบ/เส้นกลาง/วงกลมกลาง/กรอบเขตโทษ 2 ฝั่ง) */
-function soccerFieldTexture(){
-  const cv=document.createElement('canvas'); cv.width=cv.height=512;
+/* ==== ⚽🎨 รอบ 396: PES-look — เทกซ์เจอร์สนาม/บอล/อัฒจันทร์ + เสียงสนาม + ฟิสิกส์จริง ==== */
+/* หญ้าไทล์ซ้ำได้: ลายตัด 2 โทน (ครึ่งบนอ่อน/ครึ่งล่างเข้ม) + เม็ดหญ้า noise — repeat แล้วได้ลายตัดถี่ทั้งสนาม */
+function soccerGrassTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=256;
   const c=cv.getContext('2d');
-  for(let i=0;i<11;i++){ c.fillStyle=i%2?'#3f9d43':'#379139'; c.fillRect(0,i*512/11,512,512/11+1); }
-  c.strokeStyle='rgba(255,255,255,.92)'; c.lineWidth=5;
-  c.strokeRect(26,26,460,460);                                  // ขอบสนาม
-  c.beginPath(); c.moveTo(26,256); c.lineTo(486,256); c.stroke();// เส้นกลาง
-  c.beginPath(); c.arc(256,256,58,0,7); c.stroke();             // วงกลมกลาง
-  [26,486-96].forEach(y0=>{ c.strokeRect(160,y0>256?y0:y0+70,192,96); }); // กรอบเขตโทษหยาบๆ 2 ฝั่ง
-  const t=new THREE.CanvasTexture(cv); return t;
+  c.fillStyle='#3f9d43'; c.fillRect(0,0,256,128);
+  c.fillStyle='#37913a'; c.fillRect(0,128,256,128);
+  for(let i=0;i<2600;i++){                                      // เม็ดหญ้า (ขีดสั้นแนวตั้งสุ่มโทน)
+    const x=Math.random()*256, y=Math.random()*256, up=y<128;
+    const v=Math.random();
+    c.strokeStyle=`rgba(${v<.5?'255,255,255':'20,60,20'},${.045+Math.random()*.05})`;
+    c.lineWidth=1; c.beginPath(); c.moveTo(x,y); c.lineTo(x+(Math.random()-.5)*2,y-2-Math.random()*3); c.stroke();
+  }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(10,14); return t;
+}
+/* เส้นสนามชั้นโปร่ง 1024² map ตรงกับ plane 44×64m (คานวณ px จากเมตรจริง) — ขอบสนาม/เส้นกลาง/วงกลมกลาง/
+   เขตโทษ+เขต 6 หลา+จุดโทษ+โค้งหน้าเขตโทษ (ฝั่งประตู z=-19 และ mirror ฝั่งตรงข้าม) + โค้งมุมสนาม */
+function soccerLinesTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=1024;
+  const c=cv.getContext('2d');
+  const W=44,L=64, PX=x=>(x+W/2)/W*1024, PY=z=>(z+L/2)/L*1024;  // เมตร→พิกเซล (แกน z: บนผืนผ้า=ฝั่งประตู -z)
+  const RX=m=>m/W*1024, RY=m=>m/L*1024;
+  c.strokeStyle='rgba(255,255,255,.95)'; c.fillStyle='rgba(255,255,255,.95)'; c.lineWidth=4;
+  const X0=-20,X1=20, Z0=-19,Z1=19;                              // ขอบสนามจริง (เส้นประตูทับ GOAL_Z)
+  c.strokeRect(PX(X0),PY(Z0),RX(X1-X0),RY(Z1-Z0));
+  c.beginPath(); c.moveTo(PX(X0),PY(0)); c.lineTo(PX(X1),PY(0)); c.stroke();     // เส้นกลาง
+  c.beginPath(); c.ellipse(PX(0),PY(0),RX(6),RY(6),0,0,7); c.stroke();           // วงกลมกลาง
+  c.beginPath(); c.ellipse(PX(0),PY(0),RX(.28),RY(.28),0,0,7); c.fill();         // จุดกลาง
+  [[Z0,1],[Z1,-1]].forEach(([gz,dir])=>{                        // เขตโทษ 2 ฝั่ง (dir=ทิศเข้าสนาม)
+    c.strokeRect(PX(-12),PY(Math.min(gz,gz+dir*9)),RX(24),RY(9));               // เขตโทษ 24×9m
+    c.strokeRect(PX(-6),PY(Math.min(gz,gz+dir*3.6)),RX(12),RY(3.6));            // เขต 6 หลา
+    c.beginPath(); c.ellipse(PX(0),PY(gz+dir*7),RX(.28),RY(.28),0,0,7); c.fill();// จุดโทษ
+    c.beginPath();                                              // โค้งหน้าเขตโทษ (เฉพาะส่วนพ้นกรอบ)
+    c.ellipse(PX(0),PY(gz+dir*7),RX(5.2),RY(5.2),0, dir>0?Math.PI*.13:Math.PI*1.13, dir>0?Math.PI*.87:Math.PI*1.87);
+    c.stroke();
+  });
+  [[X0,Z0],[X1,Z0],[X0,Z1],[X1,Z1]].forEach(([cx,cz])=>{        // โค้งมุมสนาม
+    c.beginPath(); c.ellipse(PX(cx),PY(cz),RX(1),RY(1),0,0,7); c.stroke();
+  });
+  return new THREE.CanvasTexture(cv);
 }
 function soccerNetTexture(){
   const cv=document.createElement('canvas'); cv.width=cv.height=128;
   const c=cv.getContext('2d'); c.clearRect(0,0,128,128);
-  c.strokeStyle='rgba(255,255,255,.85)'; c.lineWidth=2;
-  for(let i=0;i<=128;i+=12){ c.beginPath(); c.moveTo(i,0); c.lineTo(i,128); c.moveTo(0,i); c.lineTo(128,i); c.stroke(); }
+  c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=1.6;
+  for(let i=0;i<=128;i+=10){ c.beginPath(); c.moveTo(i,0); c.lineTo(i,128); c.moveTo(0,i); c.lineTo(128,i); c.stroke(); }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(6,3); return t;
 }
+/* ฝูงชนแบบชั้นที่นั่ง: แถวเก้าอี้เข้ม + หัว-ไหล่คนสุ่มสี ไล่แถว (อ่านเป็นสแตนด์จริงจากไกล) */
 function soccerCrowdTexture(){
-  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
-  const c=cv.getContext('2d'); c.fillStyle='#2a3138'; c.fillRect(0,0,256,64);
-  const cols=['#ff5252','#ffd54f','#4fc3f7','#fff','#66bb6a','#ba68c8','#ff8a65'];
-  for(let i=0;i<520;i++){ c.fillStyle=cols[(Math.random()*cols.length)|0];
-    c.beginPath(); c.arc(Math.random()*256,Math.random()*64,1.6+Math.random()*1.4,0,7); c.fill(); }
-  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(8,1); return t;
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=128;
+  const c=cv.getContext('2d'); c.fillStyle='#232a31'; c.fillRect(0,0,512,128);
+  const cols=['#ff5252','#ffd54f','#4fc3f7','#eceff1','#66bb6a','#ba68c8','#ff8a65','#274b8f','#c62828'];
+  const skin=['#ffcf9e','#e8b184','#b07b4f'];
+  for(let row=0;row<6;row++){
+    const y0=14+row*19;
+    c.fillStyle=row%2?'#2c343c':'#28303a'; c.fillRect(0,y0-8,512,19);          // แถบชั้นที่นั่ง
+    for(let x=3+(row%2)*4;x<512;x+=9){
+      const jx=x+(Math.random()-.5)*3, jy=y0+(Math.random()-.5)*4;
+      c.fillStyle=cols[(Math.random()*cols.length)|0];                          // เสื้อ (ไหล่)
+      c.fillRect(jx-3.4,jy,6.8,7);
+      c.fillStyle=skin[(Math.random()*skin.length)|0];                          // หัว
+      c.beginPath(); c.arc(jx,jy-1.5,2.6,0,7); c.fill();
+    }
+  }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(5,1); return t;
 }
+/* ลูกบอลลายจริง: แพตเทิร์นห้าเหลี่ยมจัดเรียงสม่ำเสมอ (แถวสลับ offset) + แสงเงานุ่ม — ห่อทรงกลมแล้วอ่านเป็นบอลแข่ง */
 function soccerBallMat(){
-  const cv=document.createElement('canvas'); cv.width=cv.height=128;
-  const c=cv.getContext('2d'); c.fillStyle='#f5f5f5'; c.fillRect(0,0,128,128);
-  c.fillStyle='#1a1a1a';
-  for(let i=0;i<7;i++){ const x=Math.random()*128,y=Math.random()*128,r=8+Math.random()*7;
-    c.beginPath(); for(let k=0;k<5;k++){ const a=k/5*7+i; const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r; k?c.lineTo(px,py):c.moveTo(px,py); } c.closePath(); c.fill(); }
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=128;
+  const c=cv.getContext('2d');
+  const g=c.createLinearGradient(0,0,0,128);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.55,'#f2f2f2'); g.addColorStop(1,'#d8d8d8');
+  c.fillStyle=g; c.fillRect(0,0,256,128);
+  const pent=(x,y,r,rot)=>{ c.beginPath();
+    for(let k=0;k<5;k++){ const a=rot+k/5*Math.PI*2; const px=x+Math.cos(a)*r,py=y+Math.sin(a)*r; k?c.lineTo(px,py):c.moveTo(px,py); }
+    c.closePath(); c.fill(); c.stroke(); };
+  c.fillStyle='#181818'; c.strokeStyle='rgba(0,0,0,.35)'; c.lineWidth=2;
+  for(let row=0;row<3;row++) for(let col=0;col<5;col++){
+    const x=26+col*52+(row%2)*26, y=20+row*44;
+    pent(x,y,11,row*.5+col*.3);
+  }
+  c.strokeStyle='rgba(0,0,0,.12)'; c.lineWidth=1.4;                             // ตะเข็บจางเชื่อมแผ่น
+  for(let i=0;i<10;i++){ c.beginPath(); c.moveTo(Math.random()*256,Math.random()*128);
+    c.quadraticCurveTo(Math.random()*256,Math.random()*128,Math.random()*256,Math.random()*128); c.stroke(); }
   return new THREE.MeshLambertMaterial({map:new THREE.CanvasTexture(cv)});
 }
+/* ประตูจริง: เสา-คานขาว + เสาค้ำหลังเอียง + ตาข่ายหลังลาดเก็บบอล (เก็บ mesh ไว้ให้กระเพื่อมตอนบอลปะทะ) */
 function buildSoccerGoal(sc,z,w,h){
   const white=new THREE.MeshLambertMaterial({color:0xffffff});
-  const r=0.12, hw=w/2;
+  const r=SPOST_R, hw=w/2, depth=2.4;
+  soccerNets=[];
   [-hw,hw].forEach(x=>{ const p=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10),white); p.position.set(x,h/2,z); sc.add(p); });
   const bar=new THREE.Mesh(new THREE.CylinderGeometry(r,r,w,10),white); bar.rotation.z=Math.PI/2; bar.position.set(0,h,z); sc.add(bar);
-  const net=new THREE.MeshBasicMaterial({map:soccerNetTexture(),transparent:true,side:THREE.DoubleSide,opacity:.5});
-  const depth=2.4;
-  const back=new THREE.Mesh(new THREE.PlaneGeometry(w,h),net); back.position.set(0,h/2,z-depth); sc.add(back);
-  const top=new THREE.Mesh(new THREE.PlaneGeometry(w,depth),net); top.rotation.x=Math.PI/2; top.position.set(0,h,z-depth/2); sc.add(top);
-  [-hw,hw].forEach(x=>{ const sd=new THREE.Mesh(new THREE.PlaneGeometry(depth,h),net); sd.rotation.y=Math.PI/2; sd.position.set(x,h/2,z-depth/2); sc.add(sd); });
+  [-hw,hw].forEach(x=>{                                        // เสาค้ำหลัง (เอียงจากหัวเสาลงท้ายตาข่าย)
+    const st=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,Math.hypot(h,depth),8),white);
+    st.position.set(x,h/2,z-depth/2); st.rotation.x=Math.atan2(depth,h); sc.add(st);
+  });
+  const net=new THREE.MeshBasicMaterial({map:soccerNetTexture(),transparent:true,side:THREE.DoubleSide,opacity:.55,depthWrite:false});
+  const back=new THREE.Mesh(new THREE.PlaneGeometry(w,Math.hypot(h*.55,depth*.4)+h*.6),net);
+  back.position.set(0,h*.42,z-depth*.8); back.rotation.x=-.32; sc.add(back);    // ผืนหลังลาดเหมือนตาข่ายหย่อน
+  const top=new THREE.Mesh(new THREE.PlaneGeometry(w,depth*.7),net); top.rotation.x=Math.PI/2; top.position.set(0,h*.98,z-depth*.35); sc.add(top);
+  soccerNets.push(back,top);
+  [-hw,hw].forEach(x=>{ const sd=new THREE.Mesh(new THREE.PlaneGeometry(depth,h),net); sd.rotation.y=Math.PI/2; sd.position.set(x,h/2,z-depth/2); sc.add(sd); soccerNets.push(sd); });
+  soccerNets.forEach(m=>{ m.userData.bx=m.rotation.x; });
 }
+/* อัฒจันทร์ 2 ชั้นเอียง + กำแพงหน้า + หลังคายื่น + สปอตไลต์ 4 มุม */
 function buildStands(sc,fw,fl){
-  const crowd=new THREE.MeshLambertMaterial({map:soccerCrowdTexture(),side:THREE.DoubleSide});
-  const hw=fw/2+5, hl=fl/2+5, H=7;
-  const add=(w,px,pz,ry)=>{ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,H),crowd);
-    m.position.set(px,H/2,pz); m.rotation.y=ry; m.rotation.x=-.2; sc.add(m); };
-  add(fw+12,0,-hl,0); add(fw+12,0,hl,Math.PI);
-  add(fl+12,-hw,0,Math.PI/2); add(fl+12,hw,0,-Math.PI/2);
+  const crowdM=new THREE.MeshLambertMaterial({map:soccerCrowdTexture(),side:THREE.DoubleSide});
+  applyTex(crowdM,'soccer_crowd',5,1);                          // 📷 ภาพฝูงชนจริง img/tex/soccer_crowd.jpg ทับได้
+  const wallM=new THREE.MeshLambertMaterial({color:0x39424c});
+  const roofM=new THREE.MeshLambertMaterial({color:0x222a33,side:THREE.DoubleSide});
+  const hw=fw/2+5, hl=fl/2+5;
+  const side=(len,px,pz,ry)=>{
+    const g=new THREE.Group(); g.position.set(px,0,pz); g.rotation.y=ry;        // สร้างบนแกน local: ผนังหันเข้าสนาม (-z ใน local)
+    const wall=new THREE.Mesh(new THREE.PlaneGeometry(len,1.4),wallM); wall.position.set(0,.7,0); g.add(wall);
+    [[.9,4.6,1.5],[4.4,4.6,4.2]].forEach(([z0,tH,y0])=>{                        // 2 ชั้น: [ระยะถอย, สูงผืน, ฐาน y]
+      const tier=new THREE.Mesh(new THREE.PlaneGeometry(len,tH),crowdM);
+      tier.position.set(0,y0+tH*.34,z0+tH*.3); tier.rotation.x=-.58; g.add(tier);
+    });
+    const roof=new THREE.Mesh(new THREE.PlaneGeometry(len,5.4),roofM);
+    roof.position.set(0,9.6,4.4); roof.rotation.x=Math.PI/2-.12; g.add(roof);
+    const backW=new THREE.Mesh(new THREE.PlaneGeometry(len,9.6),wallM); backW.position.set(0,4.8,7.4); g.add(backW);
+    sc.add(g);
+  };
+  side(fw+16,0,-hl,Math.PI); side(fw+16,0,hl,0);
+  side(fl+16,-hw,0,-Math.PI/2); side(fl+16,hw,0,Math.PI/2);
+  const poleM=new THREE.MeshLambertMaterial({color:0x8a97a5});
+  const glowM=new THREE.MeshBasicMaterial({color:0xfffbe0});
+  [[-hw-4,-hl-4],[hw+4,-hl-4],[-hw-4,hl+4],[hw+4,hl+4]].forEach(([x,z])=>{      // สปอตไลต์มุมสนาม
+    const pole=new THREE.Mesh(new THREE.CylinderGeometry(.22,.3,17,8),poleM); pole.position.set(x,8.5,z); sc.add(pole);
+    const head=new THREE.Group(); head.position.set(x,17.6,z); head.lookAt(0,0,0);
+    const panel=new THREE.Mesh(new THREE.PlaneGeometry(3.4,2.2),new THREE.MeshLambertMaterial({color:0x2a2f36,side:THREE.DoubleSide}));
+    head.add(panel);
+    for(let r=0;r<2;r++) for(let k=0;k<4;k++){
+      const b=new THREE.Mesh(new THREE.SphereGeometry(.3,8,6),glowM);
+      b.position.set(-1.2+k*.8,-.5+r*1,0.12); head.add(b);
+    }
+    sc.add(head);
+  });
 }
+/* ป้าย LED ริมสนาม (แบรนด์ในเกม) — วางเตี้ยรอบขอบสนามแบบสนามแข่งจริง · วางภาพจริง img/tex/soccer_ads.jpg ทับได้ */
+function soccerLedBoards(sc,fw,fl){
+  const cv=document.createElement('canvas'); cv.width=1024; cv.height=64;
+  const c=cv.getContext('2d');
+  const ads=[['#1450b4','VOCAB WORLD ⚽'],['#c62828','ENGLISH IS FUN!'],['#1b8a3a','PET SHOP 🐾'],['#6a1fa0','GOAL! GOAL! GOAL!']];
+  ads.forEach(([bg,txt],i)=>{ c.fillStyle=bg; c.fillRect(i*256,0,256,64);
+    c.fillStyle='#fff'; c.font='900 30px Arial'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,i*256+128,34); });
+  const mat=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv)});
+  mat.map.wrapS=mat.map.wrapT=THREE.RepeatWrapping;
+  applyTex(mat,'soccer_ads',1,1);
+  const hw=fw/2+3.4, hl=fl/2+3.4, H=.9;
+  const add=(len,px,pz,ry,rep)=>{ const m2=mat.clone(); m2.map=mat.map.clone(); m2.map.needsUpdate=true; m2.map.repeat.set(rep,1);
+    const b=new THREE.Mesh(new THREE.PlaneGeometry(len,H),m2);
+    b.position.set(px,H/2+.02,pz); b.rotation.y=ry; b.rotation.x=-.1; sc.add(b); };
+  add(fw+8,0,-hl,0,2); add(fw+8,0,hl,Math.PI,2);
+  add(fl+8,-hw,0,Math.PI/2,3); add(fl+8,hw,0,-Math.PI/2,3);
+}
+/* 🔊 เสียงสนามสังเคราะห์ (แพตเทิร์น MechaAudio · ปลอดลิขสิทธิ์) — ฮัมฝูงชนลูป + เตะ + เสา + ตาข่าย + เชียร์กระหึ่ม */
+const SoccerAudio={
+  ctx:null, ambNodes:null,
+  ac(){ if(!this.ctx){ try{ this.ctx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return this.ctx; },
+  amb(){ if(!state.sound||this.ambNodes) return; const c=this.ac(); if(!c) return;
+    const len=Math.floor(c.sampleRate*2), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+    let last=0; for(let i=0;i<len;i++){ last=(last+(Math.random()*2-1)*.02)*.995; d[i]=last*6; }  // เสียงฮัมทุ้มแบบฝูงชนไกลๆ
+    const src=c.createBufferSource(); src.buffer=buf; src.loop=true;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=.5;
+    const g=c.createGain(); g.gain.value=.0001;
+    const lfo=c.createOscillator(); lfo.frequency.value=.13;                     // คลื่นฮัมเบาๆ ขึ้นลงช้า
+    const lg=c.createGain(); lg.gain.value=.02;
+    lfo.connect(lg); lg.connect(g.gain);
+    src.connect(bp); bp.connect(g); g.connect(c.destination);
+    src.start(); lfo.start();
+    g.gain.exponentialRampToValueAtTime(.07,c.currentTime+1.6);
+    this.ambNodes={src,lfo,g};
+  },
+  stopAmb(){ const n=this.ambNodes; if(!n) return; this.ambNodes=null;
+    try{ const c=this.ctx, t=c.currentTime; n.g.gain.cancelScheduledValues(t);
+      n.g.gain.setValueAtTime(Math.max(.0001,n.g.gain.value),t); n.g.gain.exponentialRampToValueAtTime(.0001,t+.4);
+      n.src.stop(t+.5); n.lfo.stop(t+.5); }catch(e){}
+  },
+  kick(power){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime, v=.2+(power/100)*.45;
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(150,t); o.frequency.exponentialRampToValueAtTime(42,t+.12);
+    const g=c.createGain(); g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.001,t+.16);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.18);
+    const n=c.createBufferSource(), buf=c.createBuffer(1,900,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+    n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1700; bp.Q.value=.7;
+    const ng=c.createGain(); ng.gain.value=v*.5; n.connect(bp); bp.connect(ng); ng.connect(c.destination); n.start(t); },
+  bounce(v){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(110,t); o.frequency.exponentialRampToValueAtTime(55,t+.07);
+    const g=c.createGain(); g.gain.setValueAtTime(Math.min(.25,v*.02),t); g.gain.exponentialRampToValueAtTime(.001,t+.09);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.1); },
+  post(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // "ปิ๊ง" โลหะโดนเสา
+    [620,935,1420,2210].forEach((f,i)=>{ const o=c.createOscillator(); o.type='sine';
+      o.frequency.setValueAtTime(f*(1+(Math.random()-.5)*.01),t);
+      const g=c.createGain(); g.gain.setValueAtTime(.22/(i+1),t); g.gain.exponentialRampToValueAtTime(.0001,t+.5-i*.07);
+      o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.55); }); },
+  net(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;    // "ฟึ่บ" บอลซุกตาข่าย
+    const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*.25),c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);
+    n.buffer=buf; const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=3400; bp.Q.value=.6;
+    const g=c.createGain(); g.gain.value=.22; n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t); },
+  goal(){ if(!state.sound) return; const c=this.ac(); if(!c) return; const t=c.currentTime;   // ฝูงชนเชียร์กระหึ่ม ~2 วิ
+    const len=Math.floor(c.sampleRate*2.2), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+    let last=0; for(let i=0;i<len;i++){ last=(last+(Math.random()*2-1)*.05)*.99; d[i]=last*4+(Math.random()*2-1)*.25; }
+    const n=c.createBufferSource(); n.buffer=buf;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.setValueAtTime(700,t); bp.frequency.linearRampToValueAtTime(1300,t+.5); bp.Q.value=.4;
+    const g=c.createGain(); g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.5,t+.28); g.gain.exponentialRampToValueAtTime(.001,t+2.1);
+    n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t);
+    [880,1100,1320].forEach((f,i)=>{ const o=c.createOscillator(); o.type='triangle';         // เสียงนกหวีด/โห่แหลมแทรก
+      o.frequency.setValueAtTime(f,t+.15+i*.12); o.frequency.linearRampToValueAtTime(f*1.12,t+.5+i*.12);
+      const og=c.createGain(); og.gain.setValueAtTime(.0001,t+.15+i*.12); og.gain.exponentialRampToValueAtTime(.05,t+.25+i*.12); og.gain.exponentialRampToValueAtTime(.0001,t+.8+i*.12);
+      o.connect(og); og.connect(c.destination); o.start(t+.15+i*.12); o.stop(t+.9+i*.12); }); },
+};
 function soccerNumTex(no){
   const cv=document.createElement('canvas'); cv.width=cv.height=128;
   const c=cv.getContext('2d'); c.clearRect(0,0,128,128);
@@ -9306,17 +9485,22 @@ function makeSoccerPlayer(shirtColor,no){
 function soccerResetBall(){
   if(!soccerBall) return;
   soccerBall.position.set(0,BALL_R,PLAYER_Z);
-  sbVel.x=sbVel.y=sbVel.z=0; sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
+  sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false;
+  sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
 }
 function soccerKick(power){
   const spd=KICK_SPD_MIN+(Math.max(6,power)/100)*(KICK_SPD_MAX-KICK_SPD_MIN);
   const dx=Math.sin(aimYaw), dz=-Math.cos(aimYaw), ch=Math.cos(aimPitch), sh=Math.sin(aimPitch);
   sbVel.x=dx*ch*spd; sbVel.z=dz*ch*spd; sbVel.y=sh*spd;
+  // 🎨 รอบ 396: สปินตั้งต้น — เตะโด่ง=แบ็คสปิน (ลอยค้าง) · กด A/D ตอนปล่อย=ไซด์สปินเข้าโค้งทันที
+  sbSpin.x=sh*(3+spd*.12); sbSpin.z=0;               // ωx>0 = แบ็คสปิน (บอลวิ่ง -z แล้ว ω×v ยกขึ้น)
+  sbSpin.y=((keys.KeyA||keys.ArrowLeft||sPadL)?SB_SPIN_MAX*.55:0)-((keys.KeyD||keys.ArrowRight||sPadR)?SB_SPIN_MAX*.55:0);
+  sbInNet=false;
   sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
-  sfx.select();
+  SoccerAudio.kick(power);
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
 }
-function soccerCheer(){ sfx.levelup(); showBanner('⚽ <b>เข้าประตู!</b> เก่งมาก!'); }
+function soccerCheer(){ SoccerAudio.goal(); sfx.levelup(); showBanner('⚽ <b>เข้าประตู!</b> เก่งมาก!'); }
 function updateSoccerGuide(ready,dx,dz){
   if(!ready){ soccerGuide.forEach(d=>d.visible=false); return; }
   const power=sCharging?sChg:55;
@@ -9324,9 +9508,14 @@ function updateSoccerGuide(ready,dx,dz){
   const ch=Math.cos(aimPitch), sh=Math.sin(aimPitch);
   let vx=dx*ch*spd, vy=sh*spd, vz=dz*ch*spd;
   let px=0, py=BALL_R, pz=PLAYER_Z;
-  const h=0.055;
+  const h=0.055, bs=sh*(3+spd*.12);                  // จำลอง drag+ลิฟต์แบ็คสปินให้ตรงฟิสิกส์จริง (รอบ 396)
   for(let i=0;i<soccerGuide.length;i++){
-    for(let k=0;k<3;k++){ vy-=BALL_G*h; px+=vx*h; py+=vy*h; pz+=vz*h; }
+    for(let k=0;k<3;k++){
+      const sp=Math.hypot(vx,vy,vz), dr=1-SB_DRAG*sp*h;
+      vx*=dr; vy*=dr; vz*=dr;
+      vy+=bs*Math.hypot(vx,vz)*SB_MAGNUS*h;         // แบ็คสปินยกบอล (ω×v องค์ประกอบแนวตั้ง)
+      vy-=BALL_G*h; px+=vx*h; py+=vy*h; pz+=vz*h;
+    }
     soccerGuide[i].position.set(px,Math.max(BALL_R,py),pz);
     soccerGuide[i].visible=(py>-.2);
   }
@@ -9374,14 +9563,54 @@ function tickSoccer(dt,now){
   updateSoccerGuide(ready,dx,dz);
 
   if(sbLive){
-    sbVel.y-=BALL_G*dt;
     const b=soccerBall.position;
-    b.x+=sbVel.x*dt; b.y+=sbVel.y*dt; b.z+=sbVel.z*dt;
-    if(b.y<=BALL_R){ b.y=BALL_R;
-      if(sbVel.y<-0.6){ sbVel.y=-sbVel.y*.5; sbVel.x*=.82; sbVel.z*=.82; }   // เด้งพื้น (สูญเสียแรงบ้าง)
-      else { sbVel.y=0; sbVel.x*=(1-1.7*dt); sbVel.z*=(1-1.7*dt); }          // กลิ้งบนพื้น (แรงเสียดทานต่อวินาที)
+    // 🎨 รอบ 396 ฟิสิกส์จริง: after-touch แบบ PES — A/D ระหว่างบอลลอย (1.2 วิแรก) = จับบอลโค้งกลางอากาศ
+    if(b.y>BALL_R+.05 && now-sbKickAt<1200){
+      if(keys.KeyA||keys.ArrowLeft||sPadL) sbSpin.y=Math.min(SB_SPIN_MAX,sbSpin.y+SB_TOUCH*dt);
+      if(keys.KeyD||keys.ArrowRight||sPadR) sbSpin.y=Math.max(-SB_SPIN_MAX,sbSpin.y-SB_TOUCH*dt);
     }
-    else { sbVel.x*=(1-.12*dt); sbVel.z*=(1-.12*dt); }                       // แรงต้านอากาศ (เฉพาะตอนลอย)
+    if(b.y>BALL_R+.05){
+      const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z), dr=Math.max(0,1-SB_DRAG*sp*dt);
+      sbVel.x*=dr; sbVel.y*=dr; sbVel.z*=dr;                                 // แรงต้านอากาศ ∝ ความเร็ว² (สมจริง)
+      sbVel.x+=(sbSpin.y*sbVel.z-sbSpin.z*sbVel.y)*SB_MAGNUS*dt;             // Magnus: a = k(ω×v) — ลูกโค้ง/ลอยค้าง
+      sbVel.y+=(sbSpin.z*sbVel.x-sbSpin.x*sbVel.z)*SB_MAGNUS*dt;
+      sbVel.z+=(sbSpin.x*sbVel.y-sbSpin.y*sbVel.x)*SB_MAGNUS*dt;
+    }
+    sbVel.y-=BALL_G*dt;
+    b.x+=sbVel.x*dt; b.y+=sbVel.y*dt; b.z+=sbVel.z*dt;
+    // เสา 2 ต้น + คาน: ชนแล้วสะท้อนจริง + เสียง "ปิ๊ง" (ทรงกระบอกชนทรงกลม)
+    const postHit=(nx,ny,nz,dist,rr)=>{                                      // สะท้อน v รอบ normal แล้วดันบอลออก
+      const dot=sbVel.x*nx+sbVel.y*ny+sbVel.z*nz;
+      if(dot<0){ sbVel.x-=2*dot*nx; sbVel.y-=2*dot*ny; sbVel.z-=2*dot*nz;
+        sbVel.x*=.62; sbVel.y*=.62; sbVel.z*=.62;
+        b.x+=nx*(rr-dist+.01); b.y+=ny*(rr-dist+.01); b.z+=nz*(rr-dist+.01);
+        SoccerAudio.post(); }
+    };
+    const RR=BALL_R+SPOST_R;
+    if(b.y<GOAL_H+.6){ [-GOAL_HW,GOAL_HW].forEach(px=>{                      // เสาตั้ง (เช็กระยะในระนาบ xz)
+      const ddx=b.x-px, ddz=b.z-GOAL_Z, d2=Math.hypot(ddx,ddz);
+      if(d2<RR && b.y<GOAL_H) postHit(ddx/d2,0,ddz/d2,d2,RR);
+    }); }
+    if(Math.abs(b.x)<GOAL_HW+.4){                                            // คานนอน (เช็กระยะในระนาบ yz)
+      const ddy=b.y-GOAL_H, ddz=b.z-GOAL_Z, d2=Math.hypot(ddy,ddz);
+      if(d2<RR) postHit(0,ddy/d2,ddz/d2,d2,RR);
+    }
+    // ตาข่ายอุ้มบอล: เข้าประตูแล้วหน่วงแรง + ผนังหลัง/ข้างกันทะลุ + ตาข่ายกระเพื่อม
+    if(b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){
+      if(!sbInNet){ sbInNet=true; sbNetRipple=1; SoccerAudio.net(); }
+      const damp=Math.max(0,1-6*dt); sbVel.x*=damp; sbVel.z*=damp;
+      if(b.z<GOAL_Z-1.9){ b.z=GOAL_Z-1.9; sbVel.z=Math.abs(sbVel.z)*.2; sbNetRipple=1; }
+      if(Math.abs(b.x)>GOAL_HW-.3) b.x=Math.sign(b.x)*(GOAL_HW-.3);
+    } else sbInNet=false;
+    if(b.y<=BALL_R){ b.y=BALL_R;
+      if(sbVel.y<-0.6){
+        SoccerAudio.bounce(-sbVel.y);
+        sbVel.y=-sbVel.y*.55; sbVel.x*=.82; sbVel.z*=.82;                    // เด้งพื้น (สูญเสียแรงบ้าง)
+        sbVel.z-=sbSpin.x*.05; sbVel.x+=sbSpin.y*.04;                        // สปินกัดพื้นตอนเด้ง (แบ็คสปินหน่วง/ไซด์สปินไถล)
+        sbSpin.x*=.6; sbSpin.y*=.65;
+      }
+      else { sbVel.y=0; sbVel.x*=(1-1.7*dt); sbVel.z*=(1-1.7*dt); sbSpin.y*=(1-2.2*dt); }  // กลิ้งบนพื้น
+    }
     for(let i=0;i<letters.length;i++){
       const l=letters[i], lp=l.spr.position;
       if((l.cool||0)>now) continue;                                    // ยังหงายค้าง ยังไม่นับซ้ำ
@@ -9405,6 +9634,25 @@ function tickSoccer(dt,now){
       if(!sbRestAt) sbRestAt=now;
       if(now-sbRestAt>350 || oob) soccerResetBall();
     } else sbRestAt=0;
+  }
+  // 🎨 รอบ 396: บอลหมุนตามความเร็วจริง + เงาบอลตามความสูง + ตาข่ายกระเพื่อมหลังโดนบอล
+  {
+    const b=soccerBall.position, hs=Math.hypot(sbVel.x,sbVel.z);
+    if(hs>.1){
+      const ax=sbVel.z/hs, az=-sbVel.x/hs;                       // แกนหมุนกลิ้ง = ตั้งฉากกับทิศวิ่ง (ในระนาบพื้น)
+      soccerBall.rotateOnWorldAxis(_sbAxis.set(ax,0,az).normalize(), hs*dt/BALL_R);
+    }
+    if(Math.abs(sbSpin.y)>.2) soccerBall.rotateOnWorldAxis(_sbAxis.set(0,1,0), sbSpin.y*dt);
+    if(sbShadow){
+      sbShadow.position.set(b.x,.045,b.z);
+      const k=1/(1+b.y*.22);
+      sbShadow.scale.setScalar(Math.max(.35,k));
+      sbShadow.material.opacity=.34*Math.max(.25,k);
+    }
+    if(sbNetRipple>0){
+      sbNetRipple=Math.max(0,sbNetRipple-dt*1.8);
+      soccerNets.forEach((m,i)=>{ m.rotation.x=(m.userData.bx||0)+Math.sin(now/38+i*1.7)*.05*sbNetRipple; });
+    }
   }
   soccerCamera(dt,dx,dz);
   // แอนิเมชันป้าย: โดนเตะ = หงายหลัง+เด้งถอย แล้วสปริงกลับ · ปกติ = ลอยไหวเบาๆ
@@ -9443,6 +9691,7 @@ function soccerKitGo(){
   if(soccerPlayer && scene) scene.remove(soccerPlayer);
   soccerPlayer=makeSoccerPlayer(sKitShirt,sKitNo);
   soccerPlayer.position.set(0,0,PLAYER_Z); scene.add(soccerPlayer);
+  SoccerAudio.amb();                                   // 🔊 รอบ 396: ฮัมฝูงชน (เริ่มหลัง gesture กดปุ่มลงสนาม)
   if(introSeen('soccer')){ beginPlay(); showBanner(M.intro); }
   else showIntro('soccer',false);
 }
@@ -10223,6 +10472,7 @@ function exitWorld(){
   try{ if(paxSnd){ paxSnd.src.stop(); paxSnd=null; } }catch(e){}   // 🚁💺 รอบ 354: ตัดเสียงห้องโดยสารถ้าออกกลางทัวร์
   DroneSound.stop();
   CarSound.stop();
+  SoccerAudio.stopAmb();                           // ⚽🔊 รอบ 396: หยุดฮัมฝูงชนสนามบอล
   ATC.reset();
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
@@ -10358,7 +10608,12 @@ window.Adventure3D={
                           get aimPitch(){return aimPitch}, set aimPitch(v){aimPitch=v},
                           get charge(){return sChg}, kick:soccerKick, reset:soccerResetBall, kitGo:soccerKitGo,
                           get player(){return soccerPlayer}, get guide(){return soccerGuide},
-                          get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v}}; },
+                          get cam1(){return soccerCam1}, set cam1(v){soccerCam1=v},
+                          // ⚽🎨 รอบ 396: testkit ฟิสิกส์ PES (สปิน/เงา/ตาข่าย/เสียง) + เดินเฟรมเองตอนแท็บ hidden
+                          get spin(){return sbSpin}, get shadow(){return sbShadow},
+                          get nets(){return soccerNets}, get ripple(){return sbNetRipple}, get inNet(){return sbInNet},
+                          audio:SoccerAudio,
+                          tick:dt=>tickSoccer(dt||.016,performance.now())}; },
     get mecha(){ return {get aliens(){return aliens}, get weapon(){return mechaWeapon}, fire:mechaFire,
                          spawn:makeAlien, get speed(){return mSpeed}, set fwd(v){mFwdBtn=v}, set strafe(v){mStrafeBtn=v},
                          get focus(){return mFocusAlien}, audio:MechaAudio,
