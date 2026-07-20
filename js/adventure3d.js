@@ -2067,17 +2067,18 @@ function buildScene(md){
   }else if(md==='soccer'){
     // ⚽🎨 รอบ 396 PES-look: หญ้าลายตัด(ชั้นล่าง)+เส้นสนามคม(ชั้นบนโปร่ง) · ประตูตาข่ายอุ้มบอล ·
     //    อัฒจันทร์ 2 ชั้นมีหลังคา · สปอตไลต์ 4 มุม · ป้าย LED ริมสนาม · เงาบอล
-    sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,1.05));
-    const sun=new THREE.DirectionalLight(0xfff4d0,.85); sun.position.set(24,55,32); sc.add(sun);
-    const fill=new THREE.DirectionalLight(0xdfe8ff,.28); fill.position.set(-30,40,-20); sc.add(fill);
+    // 🌿 รอบ 410: ลดไฟลง (เดิม 1.05 ทำให้หญ้าเรืองแสงเป็นเขียวนีออน) + เพิ่มคอนทราสต์แดดให้มีมิติแบบภาพตัวอย่าง
+    sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,.80));
+    const sun=new THREE.DirectionalLight(0xfff4d0,.95); sun.position.set(24,55,32); sc.add(sun);
+    const fill=new THREE.DirectionalLight(0xdfe8ff,.20); fill.position.set(-30,40,-20); sc.add(fill);
     const fieldW=44, fieldL=64;
     // 🌿 รอบ 403: Phong + normal map = แสงจับใบหญ้าเป็นร่องเงา (เดิม Lambert เรียบแบนเหมือนกระดาษ)
-    const grassM=new THREE.MeshPhongMaterial({map:soccerGrassTexture(),normalMap:grassNormalTexture(),
-      shininess:4, specular:0x1e2c1a});
-    grassM.normalScale=new THREE.Vector2(1.15,1.15);
+    // 🌿 รอบ 410: ใช้ soccerTurfTexture (ภาพจริงรีดแถบออก+ลดสีจัด ปูถี่ 24×30) แทน applyTex ที่ปูแค่ 3×2
+    const grassM=new THREE.MeshPhongMaterial({map:soccerTurfTexture(),normalMap:grassNormalTexture(),
+      shininess:3, specular:0x16240f});
+    grassM.normalScale=new THREE.Vector2(.85,.85);
     const grass=new THREE.Mesh(new THREE.PlaneGeometry(fieldW+26,fieldL+26),grassM);
     grass.rotation.x=-Math.PI/2; grass.position.y=.02; sc.add(grass);
-    applyTex(grassM,'soccer_grass',3,2);                       // 📷 ภาพหญ้าจริง — ในภาพมีลายตัด 6 แถบอยู่แล้ว repeat 2 ตามยาว = 12 แถบทั่วสนาม (รอบ 397)
     /* 🌱 รอบ 409 (ผู้ใช้สั่งถอด): เคยมีกอหญ้า 3D (รอบ 403) + ใบหญ้าเส้นตั้ง 220,000 ต้น (รอบ 406-408)
        ถอดออกหมดแล้ว — ยังไม่สวยสมบูรณ์ และวัดผลกระทบความลื่นไหลบนมือถือจริงไม่ได้ ไม่คุ้มความเสี่ยง
        เหลือ "ภาพสนามหญ้า" ล้วน: เทกซ์เจอร์ + normal map (แสงจับผิวหญ้า ไม่เพิ่ม geometry เลย) */
@@ -9387,6 +9388,55 @@ function soccerGrassTexture(){
   }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(10,14); return t;
 }
+/* ==== 🌿 รอบ 410: ยกเครื่องพื้นสนามให้เหมือนภาพตัวอย่าง (PES) ====
+   วิเคราะห์ว่าทำไมของเดิมไม่ผ่าน:
+   ① สเกลผิด — ภาพหญ้า 1024px ถูกยืดคลุม 23×45 เมตร ใบหญ้าจึงกว้างเป็นเมตร เห็นเป็นรอยเบลอ/ด่าง
+      (ภาพตัวอย่างใบหญ้าละเอียดเพราะ 1 กระเบื้อง ≈ 2-3 เมตร)
+   ② แถบตัดหญ้าติดมาในภาพ — พอจะทำใบให้ละเอียดต้องปูถี่ขึ้น แถบก็ถี่ตามจนลายมั่ว (ผูกติดกันแก้ไม่ได้)
+      ต้อง "แยกชั้น": ใบหญ้าปูถี่ + แถบตัดวาดต่างหากตามขนาดจริง
+   ③ สีจัดเกินจริง — ภาพเป็นเขียวนีออน + ไฟฉากสว่าง 1.05 = เรืองแสง ต่างจากตัวอย่างที่เขียวหม่นสมจริง */
+/* ใบหญ้าละเอียด: ดึงภาพจริงของผู้ใช้มา "รีดแถบออก" (ปรับความสว่างรายแถวให้เท่ากัน) + ลดความจัดจ้าน
+   แล้วปูแบบสะท้อนขอบ (MirroredRepeat) จึงต่อไร้รอยแม้ครอปมาจากภาพถ่าย */
+function soccerTurfGrade(c,S){
+  const d=c.getImageData(0,0,S,S), p=d.data;
+  const rowMean=new Float32Array(S); let global=0;
+  for(let y=0;y<S;y++){                          // ① รีดแถบตัดหญ้าที่ติดมากับภาพออก
+    let s=0;
+    for(let x=0;x<S;x++){ const k=(y*S+x)*4; s+=p[k]*.299+p[k+1]*.587+p[k+2]*.114; }
+    rowMean[y]=s/S; global+=rowMean[y];
+  }
+  global/=S;
+  for(let y=0;y<S;y++){
+    const f=rowMean[y]>1?global/rowMean[y]:1;
+    for(let x=0;x<S;x++){ const k=(y*S+x)*4;
+      p[k]=Math.min(255,p[k]*f); p[k+1]=Math.min(255,p[k+1]*f); p[k+2]=Math.min(255,p[k+2]*f); }
+  }
+  const SAT=.62, BRI=.74;                        // ② ลดความอิ่มสี+หรี่ลง = เขียวสนามจริง ไม่ใช่เขียวนีออน
+  for(let i=0;i<p.length;i+=4){
+    const l=p[i]*.299+p[i+1]*.587+p[i+2]*.114;
+    p[i]  =Math.min(255,(l+(p[i]  -l)*SAT)*BRI);
+    p[i+1]=Math.min(255,(l+(p[i+1]-l)*SAT)*BRI);
+    p[i+2]=Math.min(255,(l+(p[i+2]-l)*SAT)*BRI);
+  }
+  c.putImageData(d,0,0);
+}
+function soccerTurfTexture(){
+  const S=512, cv=document.createElement('canvas'); cv.width=cv.height=S;
+  const c=cv.getContext('2d');
+  c.fillStyle='#3c6b34'; c.fillRect(0,0,S,S);               // fallback: ใบหญ้าวาดเอง (ถ้าไม่มีไฟล์ภาพ)
+  for(let i=0;i<9000;i++){
+    const x=Math.random()*S, y=Math.random()*S, v=Math.random();
+    c.strokeStyle=`rgba(${v<.5?'190,225,150':'26,58,24'},${.05+Math.random()*.09})`;
+    c.lineWidth=1; c.beginPath(); c.moveTo(x,y); c.lineTo(x+(Math.random()-.5)*2.5,y-2-Math.random()*4); c.stroke();
+  }
+  const t=new THREE.CanvasTexture(cv);
+  t.wrapS=t.wrapT=THREE.MirroredRepeatWrapping;             // สะท้อนขอบ = ต่อไร้รอย
+  t.repeat.set(24,30);                                      // 1 กระเบื้อง ≈ 2.9×3.0 m (ใบหญ้าขนาดจริง)
+  const img=new Image();
+  img.onload=()=>{ c.clearRect(0,0,S,S); c.drawImage(img,0,0,S,S); soccerTurfGrade(c,S); t.needsUpdate=true; };
+  img.src='img/tex/soccer_grass.jpg';
+  return t;
+}
 /* 🌿 รอบ 403 (ผู้ใช้: "หญ้าดูแบนเรียบเกินไป"): normal map ใบหญ้า — ทำให้แสงจับเป็นร่องเงามีมิติ
    สร้าง height field จากขีดใบหญ้าสุ่ม → sobel → encode เป็น normal RGB */
 function grassNormalTexture(){
@@ -9421,6 +9471,18 @@ function grassNormalTexture(){
 function soccerLinesTexture(){
   const cv=document.createElement('canvas'); cv.width=cv.height=1024;
   const c=cv.getContext('2d');
+  /* 🌿 รอบ 410: แถบตัดหญ้าย้ายมาวาดที่ชั้นนี้ (แยกจากเทกซ์เจอร์ใบหญ้า จึงคุมขนาดจริงได้อิสระ)
+     วางเป็นแถบ "แนวเดียวกับทิศเตะ" (แปรตามแกน x) → มองจากหลังผู้เตะเห็นแถบพุ่งเข้าหาประตู เหมือนภาพตัวอย่าง
+     ขอบแถบไล่จางแบบรอยล้อรถตัดหญ้าจริง ไม่ใช่เส้นตัดคม */
+  const NB=10;                                     // 10 แถบบนความกว้างสนาม 44m = แถบละ 4.4m (มาตรฐานจริง)
+  for(let i=0;i<NB;i+=2){
+    const x0=i*1024/NB, w=1024/NB;
+    const g=c.createLinearGradient(x0,0,x0+w,0);
+    g.addColorStop(0,'rgba(0,0,0,0)');
+    g.addColorStop(.5,'rgba(0,0,0,.085)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g; c.fillRect(x0,0,w,1024);
+  }
   const W=44,L=64, PX=x=>(x+W/2)/W*1024, PY=z=>(z+L/2)/L*1024;  // เมตร→พิกเซล (แกน z: บนผืนผ้า=ฝั่งประตู -z)
   const RX=m=>m/W*1024, RY=m=>m/L*1024;
   c.strokeStyle='rgba(255,255,255,.95)'; c.fillStyle='rgba(255,255,255,.95)'; c.lineWidth=4;
