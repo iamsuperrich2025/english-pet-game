@@ -920,18 +920,26 @@ function blkNameSprite(name){
   spr.scale.set(2.7,.68,1); spr.userData.own=true;
   return spr;
 }
-/* เพื่อนในโลกขับรถ = รถบล็อก + หุ่นบล็อกนั่งขับ + ป้ายชื่อ · av ไม่ใช่ blk (client เก่า) → สุ่มคงที่จาก uid */
+/* เพื่อนในโลกขับรถ = โมเดลรถ GLB สีตรงคันที่เขาขับ (รอบ 393 · av='blk3c07') + ป้ายชื่อ
+   ยังไม่รู้รุ่น/โหลดโมเดลไม่ทัน → รถบล็อก+หุ่นนั่งขับแบบเดิมก่อน แล้วสลับเมื่อโหลดเสร็จ */
 function makeBlockPeer(name, av, uid){
-  const bid=BLOCK_AVATARS[av]?av:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
+  const pm=/^(blk\d+)c(\d\d)$/.exec(av||'');
+  const bav=pm?pm[1]:av, cid=pm?'car_'+pm[2]:null;
+  const bid=BLOCK_AVATARS[bav]?bav:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
   const g=new THREE.Group();
-  g.add(makeBlockCar(bid));
-  const fig=makeBlockFigure(bid,true); fig.position.set(.35,1.02,.3); g.add(fig);
+  const setRefs=car=>['wheels','steerW','blinkL','blinkR','revs','brks'].forEach(k=>g.userData[k]=car.userData[k]||[]);
+  if(cid&&carGlbSrc){
+    const car=carGlbBuild(cid); g.add(car); setRefs(car);
+  }else{
+    const car=makeBlockCar(bid); g.add(car); setRefs(car);
+    const fig=makeBlockFigure(bid,true); fig.position.set(.35,1.02,.3); g.add(fig);
+    if(cid) carGlbEnsure(src=>{             // โหลดเสร็จ → สลับรถบล็อกเป็นโมเดลจริง (กลุ่ม peer เดิม ป้ายชื่อคงอยู่)
+      if(!src) return;
+      g.remove(car); g.remove(fig);         // material บล็อกแชร์ใน cache — ไม่ dispose
+      const gl=carGlbBuild(cid); g.add(gl); setRefs(gl);
+    });
+  }
   const label=blkNameSprite(name); label.position.set(0,2.85,0); g.add(label);
-  g.userData.wheels=g.children[0].userData.wheels;
-  g.userData.blinkL=g.children[0].userData.blinkL;   // 🚦 ให้ tickPeers สั่งไฟเลี้ยวกะพริบได้ตรงๆ
-  g.userData.blinkR=g.children[0].userData.blinkR;
-  g.userData.revs=g.children[0].userData.revs;       // ⬜ รอบ 140: ไฟถอยหลังขาว
-  g.userData.brks=g.children[0].userData.brks;       // 🔴 รอบ 141: ไฟเบรคแดง
   return g;
 }
 /* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
@@ -945,6 +953,135 @@ function makeBlockWalkPeer(name, av, uid){
 }
 function disposeBlockPeer(g){
   g.traverse(o=>{ if(o.userData&&o.userData.own){ if(o.material.map)o.material.map.dispose(); o.material.dispose(); } });
+}
+
+/* ============================================================
+   🚙 รอบ 393: รถเพื่อนในโลกขับรถ = โมเดลจริง img/models/car_01.glb (ผู้ใช้สั่ง)
+   โหลดครั้งเดียว cache → clone ต่อคัน (แพตเทิร์น heliGlbEnsure รอบ 382) · texture ย้อม 10 สี
+   ตามคันที่เพื่อนขับจริง (tools/retint_car.py → img/models/car_tex_NN.jpg · คัน 01 ใช้ texture ฝัง)
+   รุ่นรถส่งพ่วงใน av: 'blk3c07' (≤8 ตัว ผ่าน rules เดิม ไม่ต้อง publish · client เก่าเห็นรถบล็อกสุ่ม)
+   ล้อหน้าหักเลี้ยวตามพวงมาลัยเพื่อน — ประเมินจาก yaw rate ย้อน bicycle model (ไม่ต้องส่ง field ใหม่)
+   ============================================================ */
+const CAR_GLB_URL='img/models/car_01.glb';
+const CAR_GLB_LEN=4.35;                     // ยาวเท่ารถบล็อกเดิม — ระยะชน/ป้ายชื่อ/กล้องเดิมใช้ต่อได้
+let carGlbSrc=null, carGlbFail=false; const carGlbCbs=[];
+/* Tripo รวม "ล้อหน้าขวา+กันชนหน้า" ใน tripo_part_1 ก้อนเดียว → ผ่า triangle แยกล้อออกมาให้เลี้ยวได้
+   (ล้ออื่นแยก node อยู่แล้ว: part_2=หน้าซ้าย part_3=หลังซ้าย part_5=หลังขวา · หัวรถโมเดล = +Z) */
+function carSplitWheel(root){
+  const p1=root.getObjectByName('tripo_part_1');
+  if(!p1||!p1.geometry||!p1.geometry.index) return;
+  const g=p1.geometry, idx=g.index.array, pos=g.attributes.position.array;
+  const w=[], b=[];
+  const mn=[1e9,1e9,1e9], mx=[-1e9,-1e9,-1e9];       // bbox เฉพาะ vertex ล้อ (position แชร์กับกันชน — Box3 ปกติจะได้ศูนย์ผิด)
+  for(let i=0;i<idx.length;i+=3){
+    let cx=0,cz=0;
+    for(let k=0;k<3;k++){ cx+=pos[idx[i+k]*3]; cz+=pos[idx[i+k]*3+2]; }
+    // พิกัดโลก = local + ตำแหน่ง node — ล้ออยู่ x>0.10, z<0.365 · กันชนโค้งอยู่หน้าสุด z>0.365 + ฝั่งซ้าย
+    if((cx/3+p1.position.x)>.10 && (cz/3+p1.position.z)<.365){
+      w.push(idx[i],idx[i+1],idx[i+2]);
+      for(let k=0;k<3;k++) for(let a=0;a<3;a++){ const v=pos[idx[i+k]*3+a];
+        if(v<mn[a])mn[a]=v; if(v>mx[a])mx[a]=v; }
+    }else b.push(idx[i],idx[i+1],idx[i+2]);
+  }
+  if(!w.length||!b.length) return;
+  const wg=new THREE.BufferGeometry();
+  wg.setAttribute('position',g.attributes.position);
+  if(g.attributes.normal) wg.setAttribute('normal',g.attributes.normal);
+  if(g.attributes.uv) wg.setAttribute('uv',g.attributes.uv);
+  wg.setIndex(w);
+  const wm=new THREE.Mesh(wg,p1.material); wm.name='car_wheel_fr'; wm.position.copy(p1.position);
+  wm.userData.wCtr=new THREE.Vector3((mn[0]+mx[0])/2+p1.position.x,(mn[1]+mx[1])/2+p1.position.y,(mn[2]+mx[2])/2+p1.position.z);
+  p1.parent.add(wm);
+  g.setIndex(b);                             // part_1 เหลือเฉพาะกันชน
+}
+function carGlbEnsure(cb){
+  if(carGlbSrc) return cb(carGlbSrc);
+  if(carGlbFail) return cb(null);
+  carGlbCbs.push(cb);
+  if(carGlbCbs.length>1) return;
+  const fin=g=>{ carGlbSrc=g||null; carGlbFail=!g; carGlbCbs.splice(0).forEach(f=>f(carGlbSrc)); };
+  const load=()=>{ try{
+    new THREE.GLTFLoader().load(CAR_GLB_URL,gl=>{
+      gl.scene.traverse(o=>{ if(o.isMesh&&o.material&&o.material.map) o.material.map.encoding=THREE.LinearEncoding; });
+      carSplitWheel(gl.scene);
+      fin(gl.scene);
+    },undefined,()=>fin(null));
+  }catch(e){ fin(null); } };
+  if(THREE.GLTFLoader) load();
+  else{ const s=document.createElement('script'); s.src='js/vendor/GLTFLoader.js';
+    s.onload=load; s.onerror=()=>fin(null); document.head.appendChild(s); }
+}
+/* material ต่อรุ่นรถ — clone จาก material ฝังครั้งเดียว cache แชร์ทุกคันรุ่นเดียวกัน (car_01 = ฝังเดิม ไม่ clone) */
+const carMatCache={};
+function carMatGet(root,cid){
+  const mm=/^car_(\d\d)$/.exec(cid||''), nn=mm?mm[1]:'01';
+  if(nn==='01') return null;
+  if(carMatCache[nn]) return carMatCache[nn];
+  let base=null; root.traverse(o=>{ if(!base&&o.isMesh) base=o.material; });
+  if(!base) return null;
+  const mat=base.clone();
+  const tx=new THREE.TextureLoader().load('img/models/car_tex_'+nn+'.jpg');
+  tx.flipY=false;                            // ⚠️ UV ของ glTF ไม่กลับแกน y (บทเรียนรอบ 383)
+  tx.encoding=THREE.LinearEncoding;
+  if(base.map){ tx.wrapS=base.map.wrapS; tx.wrapT=base.map.wrapT; }
+  mat.map=tx;
+  carMatCache[nn]=mat;
+  return mat;
+}
+/* ประกอบรถ 1 คันจาก cache: ย้อมสี + pivot ล้อ (หน้า=steer ครอบ spin · หลัง=spin) + ไฟเลี้ยว/ถอย/เบรคชุดเดิม */
+function carGlbBuild(cid){
+  const g=new THREE.Group();
+  g.userData.wheels=[]; g.userData.steerW=[];
+  const root=carGlbSrc.clone(true);
+  const mat=carMatGet(carGlbSrc,cid);
+  if(mat) root.traverse(o=>{ if(o.isMesh) o.material=mat; });
+  root.updateMatrixWorld(true);
+  const mkWheel=(name,steer)=>{
+    const part=root.getObjectByName(name); if(!part) return;
+    const hold=new THREE.Group();
+    if(part.userData.wCtr) hold.position.copy(part.userData.wCtr);   // ล้อผ่า: ศูนย์จริงจาก vertex ล้อ (geometry แชร์กับกันชน Box3 เชื่อไม่ได้)
+    else hold.position.copy(new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3()));
+    const spin=new THREE.Group(); hold.add(spin); root.add(hold);
+    root.updateMatrixWorld(true);
+    spin.attach(part);                       // attach คงตำแหน่งโลกเดิม — ล้อหมุนรอบศูนย์ตัวเอง
+    g.userData.wheels.push(spin);
+    if(steer) g.userData.steerW.push(hold);
+  };
+  mkWheel('tripo_part_2',true); mkWheel('car_wheel_fr',true);
+  mkWheel('tripo_part_3',false); mkWheel('tripo_part_5',false);
+  root.rotation.y=Math.PI;                   // หัวโมเดล +Z → หันหัว -Z ตาม convention รถบล็อกเดิม
+  root.updateMatrixWorld(true);
+  const bb=new THREE.Box3().setFromObject(root);
+  const s=CAR_GLB_LEN/(bb.max.z-bb.min.z);
+  root.scale.setScalar(s);
+  root.position.set(-(bb.min.x+bb.max.x)/2*s, -bb.min.y*s, -(bb.min.z+bb.max.z)/2*s);
+  g.add(root);
+  // 🚦⬜🔴 ชุดไฟเดิมของรถบล็อก (tickPeers คุมผ่าน userData เดิมได้ทันที) — ตัวถัง GLB กว้าง/มนกว่า ขยับตำแหน่งตาม
+  const blink=blkMat(0xff9800);
+  g.userData.blinkL=[]; g.userData.blinkR=[];
+  [[-1,'blinkL'],[1,'blinkR']].forEach(([sx,key])=>{
+    [-2.1,2.1].forEach(z=>{
+      const m=new THREE.Mesh(blkGeo(.16,.15,.1),blink);
+      m.position.set(sx*.95,1.0,z); m.visible=false;
+      g.add(m); g.userData[key].push(m);
+    });
+  });
+  const revM=blkMat(0xffffff);
+  g.userData.revs=[];
+  [-.4,.4].forEach(x=>{ const m=new THREE.Mesh(blkGeo(.2,.15,.1),revM);
+    m.position.set(x,1.0,2.12); m.visible=false; g.add(m); g.userData.revs.push(m); });
+  const brkM=blkMat(0xd50000);
+  g.userData.brks=[];
+  [-.72,.72].forEach(x=>{ const m=new THREE.Mesh(blkGeo(.24,.18,.1),brkM);
+    m.position.set(x,1.0,2.12); m.visible=false; g.add(m); g.userData.brks.push(m); });
+  g._glbShared=true;                         // geometry/material แชร์กับ cache — ห้าม dispose
+  return g;
+}
+/* รหัสรุ่นรถของเรา ('c07') พ่วงท้าย av ตอนอยู่โลกขับรถ */
+function carAvCode(){
+  const c=(typeof myCar==='function')?myCar():null;
+  const m=c&&/^car_(\d\d)$/.exec(c.id);
+  return m?'c'+m[1]:'';
 }
 
 /* ---------- 🧱 หน้าต่างเลือกตัวละครบล็อกก่อนออกรถ (เรียกจาก ui.js ก่อน start('drive')) ---------- */
@@ -2603,7 +2740,9 @@ function sendPos(force){
     // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก · 🚁 รอบ 355: โลกเฮลิฯ ยัดเฟสเดินเท้าลง av แทน ('h_w/r/g/p' ≤8 ผ่าน rules เดิม ไม่ต้อง publish — makePeerSprite ฝั่งรับไม่เคยใช้ av ในโหมดบินอยู่แล้ว)
     av:M.heli?('h_'+(hPhase==='pilot'?(pilotShip==='blue'?'b':'p')                      // 🔵 รอบ 392: ขับลำฟ้า='h_b' เพื่อนเห็นลำฟ้า
       :({walk:'w',lift:'w',ride:'r',wing:'g'}[hPhase]||'p')))
-      :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)?state.blockAv:(state.playerAvatar||'')),
+      :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)
+        ?state.blockAv+(M.drive?carAvCode():'')                                          // 🚙 รอบ 393: 'blk3c07' — เพื่อนเห็นโมเดลรถสีตรงคันเรา
+        :(state.playerAvatar||'')),
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
@@ -2790,6 +2929,15 @@ function tickPeers(dt,now){
       p.roll=(p.roll||0)+(pRollTgt-(p.roll||0))*Math.min(1,dt*6);
       p.spr.rotation.z=p.roll;
       (p.spr.userData.wheels||[]).forEach(w=>{ w.rotation.x-=moved/.5; });
+      // 🛞 รอบ 393: ล้อหน้าโมเดล GLB หักเลี้ยวตามพวงมาลัยเพื่อน — ย้อน bicycle model จาก yaw rate จริง
+      //    (steer=atan(yawRate·WB/v) สูตรเดียวกับฟิสิกส์รถเรา ไม่ต้องส่ง field ใหม่ · จอดนิ่ง=ล้อคืนตรง)
+      if(p.spr.userData.steerW&&p.spr.userData.steerW.length){
+        const pv=moved/Math.max(dt,.001);
+        const st=pv>1.2?Math.max(-CAR_STEER_MAX,Math.min(CAR_STEER_MAX,
+          Math.atan((dy*k/Math.max(dt,.001))*CAR_WB/pv))):0;
+        p.steerV=(p.steerV||0)+(st-(p.steerV||0))*Math.min(1,dt*7);
+        p.spr.userData.steerW.forEach(h=>{ h.rotation.y=p.steerV; });
+      }
       // 🚦 รอบ 132: ไฟเลี้ยวเพื่อนกะพริบตาม field tl (จังหวะ 400ms เหมือนไฟเลี้ยวจริง)
       const ph=Math.floor(now/400)%2===0;
       (p.spr.userData.blinkL||[]).forEach(m=>{ m.visible=p.tl===1&&ph; });
@@ -9839,6 +9987,7 @@ function start(md,opt){
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
+    carGlbEnsure(()=>{});                          // 🚙 รอบ 393: พรีโหลดโมเดลรถ — เพื่อนโผล่มาเห็นเป็นรถจริงทันที
     // 🚗 รอบ 232: ผูกสมรรถนะตามคันที่เลือกขับ (ตรงกับป้ายในโชว์รูม · คันแพง/สปอร์ต = เร็ว·เร่ง·เกาะถนนดีกว่าเบาๆ)
     (function(){ const cp=(typeof myCar==='function'&&myCar())?carInfo(myCar().id):null;
       const sp=(cp&&cp.spd)||3, ac=(cp&&cp.acc)||3, gr=(cp&&cp.grip)||3;
