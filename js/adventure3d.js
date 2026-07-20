@@ -76,7 +76,7 @@ const MODES = {
     label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
-    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎀 <b>ริบบิ้นนำทาง</b>โชว์วิถีก่อนเตะ — <b>เขียว=เบา · ส้ม · แดง=เต็มแรง</b> · วงบนพื้นบอกจุดที่บอลจะตก<br>🧱 กด <b>ฟรีคิก</b> มีกำแพงคนมาขวาง ต้องปั่นอ้อมหรือเตะข้ามหัว!<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎯 <b>ยิงแบบกะระยะเอง</b> (ไม่มีเส้นช่วย) — อยากได้เส้นนำทาง กดปุ่ม <b>⚡ พลัง 500🪙</b> แปลงร่าง 60 นาที: มีออร่ารอบตัว + เส้นไกด์สีฟ้า + ลำแสงควงสว่านตอนชาร์จ<br>🧱 กด <b>ฟรีคิก</b> มีกำแพงคนมาขวาง ต้องปั่นอ้อมหรือเตะข้ามหัว!<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
     hint:'🕹️ สติ๊กมือซ้าย = เล็ง · ⚽ ปุ่มขวากดค้าง = ชาร์จพลัง ปล่อย = เตะ · 🎱 ปุ่ม "จุดสัมผัส" = เปิดหน้าต่างซูมเลือกจุดเตะบนลูกบอล (ซ้าย-ขวา = ลูกโค้ง · ล่าง = ลอยโด่ง · บน = พุ่งจิก) ดูริบบิ้นทองบอกวิถีก่อนเตะ! · คอม: A/D W/S · Q/E โค้ง · เว้นวรรค เตะ · V มุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
@@ -250,6 +250,12 @@ let guideRibbon=null, guideMat=null, _gPts=[];
 const FK_SPOT_Z=GOAL_Z+18, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก · ระยะกำแพงตามกติกาจริง · จำนวนคน
 const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/ความสูงคนในกำแพง (ใช้เช็กบอลชน)
 let landRing=null, landPt=null;
+/* ⚡ รอบ 412: "โหมดพลังโอเวอร์ไดรฟ์" — จ่าย 500 เหรียญ ได้ 60 นาที
+   ปกติ (ร่างธรรมดา) = ไม่มีเส้นไกด์ ต้องกะระยะเอาแบบดั้งเดิม
+   แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีฟ้ากลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์ */
+const AURA_COST=500, AURA_MS=60*60*1000;
+let auraGrp=null, auraRings=[], auraSparks=[], auraCore=null, auraBarEl=null, auraBtnEl=null;
+let drillMesh=null, drillMat=null, drillPhase=0, _auraHudAt=0;
 let fkOn=false, fkWall=null, fkMen=[];
 let sCurl=0, curlEl=null, _curlShown=null;                 // -1 โค้งซ้าย .. +1 โค้งขวา
 let soccerStartEl=null, powerFillEl=null;
@@ -2097,6 +2103,7 @@ function buildScene(md){
     sbShadow.rotation.x=-Math.PI/2; sbShadow.position.set(0,.045,PLAYER_Z); sc.add(sbShadow);
     buildGuideRibbon(sc);                      // 🎀 รอบ 401: เส้นไกด์ริบบิ้นแบนกว้าง (แทนจุดกลมเล็ก 14 จุดเดิม)
     buildLandRing(sc);                         // 🎯 รอบ 402: วงบอกจุดตกลูก
+    buildAura(sc); buildDrill(sc);             // ⚡ รอบ 412: ออร่ารอบตัว + ลำแสงควงสว่าน
     ringAds(sc, 6, 26, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer)
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
@@ -4472,6 +4479,23 @@ function buildDom(){
     #adv-pk{padding:4px 8px;font-size:11px}
     #adv-fk{top:130px;padding:4px 8px;font-size:11px}
   }
+  /* ⚡ รอบ 412: ปุ่มซื้อพลังโอเวอร์ไดรฟ์ + แถบนับถอยหลัง */
+  #adv-aura{position:absolute;display:none;top:176px;right:8px;z-index:6;pointer-events:auto;
+    background:rgba(18,52,74,.72);color:#cdefff;border:1px solid rgba(120,220,255,.55);border-radius:10px;
+    padding:6px 10px;font:700 13px system-ui;cursor:pointer}
+  .adv-soccer #adv-aura{display:block}
+  #adv-aura.on{background:rgba(0,150,210,.9);color:#fff;border-color:#bdeeff;
+    box-shadow:0 0 12px rgba(90,220,255,.7)}
+  #adv-aurabar{position:absolute;display:none;top:34px;left:50%;transform:translateX(-50%);z-index:6;
+    width:190px;height:17px;border-radius:9px;pointer-events:none;overflow:hidden;
+    background:rgba(4,26,38,.72);border:1px solid rgba(120,220,255,.6)}
+  #adv-aurabar.on{display:block}
+  #adv-aurabar .ab-fill{position:absolute;left:0;top:0;bottom:0;
+    background:linear-gradient(90deg,#0a6ea8,#4fd8ff);transition:width .5s linear}
+  #adv-aurabar .ab-txt{position:absolute;inset:0;text-align:center;line-height:17px;
+    color:#eaffff;font:800 11px system-ui;text-shadow:0 1px 2px #000}
+  /* ⚠️ media query ของปุ่มพลังต้องอยู่ "หลัง" การประกาศด้านบน ไม่งั้นโดน top:176px เขียนทับ (specificity เท่ากัน = ตัวหลังชนะ) */
+  @media (max-height:400px){ #adv-aura{top:160px;padding:4px 8px;font-size:11px} }
   /* 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — ซ่อนชิ้นส่วนห้องคนขับ (ปุ่มบังคับ/GPS คงอยู่) */
   .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
   .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,
@@ -4796,6 +4820,8 @@ function buildDom(){
     <button id="adv-scam">👁️ มุมกล้อง</button>
     <button id="adv-pk">🎯 จุดโทษ</button>
     <button id="adv-fk">🧱 ฟรีคิก</button>
+    <button id="adv-aura">⚡ พลัง 500🪙</button>
+    <div id="adv-aurabar"><div class="ab-fill"></div><div class="ab-txt"></div></div>
     <div id="adv-coinpop"></div>
     <!-- 🤖 โหมดหุ่นยนต์นักรบ -->
     <div id="mecha-hud" class="adv-hud">
@@ -5131,6 +5157,10 @@ function buildDom(){
   overlayEl.querySelector('#adv-scam').addEventListener('click',()=>{ if(M.drive) driveCamToggle(); else soccerCam1=!soccerCam1; sfx.select(); });   // 👁️ รอบ 394: ปุ่มเดียวใช้ทั้ง soccer/drive
   overlayEl.querySelector('#adv-pk').addEventListener('click',()=>{ if(pkOn) pkEnd(true); else pkStart(); });   // 🎯 รอบ 397: โหมดจุดโทษ
   overlayEl.querySelector('#adv-fk').addEventListener('click',()=>{ if(!repOn) fkToggle(); });                 // 🧱 รอบ 402: โหมดฟรีคิก
+  // ⚡ รอบ 412: ปุ่มซื้อพลังโอเวอร์ไดรฟ์ + แถบเวลา
+  auraBtnEl=overlayEl.querySelector('#adv-aura');
+  auraBarEl=overlayEl.querySelector('#adv-aurabar');
+  auraBtnEl.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); auraBuy(); });
   overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
@@ -10001,6 +10031,124 @@ function guideTexture(){
   t.wrapS=THREE.RepeatWrapping; t.wrapT=THREE.ClampToEdgeWrapping; t.repeat.set(3,1);
   return t;
 }
+/* ==== ⚡ รอบ 412: โหมดพลังโอเวอร์ไดรฟ์ (ออร่า + เส้นไกด์ + ลำแสงควงสว่าน) ==== */
+function auraActive(){ return (state.soccerAuraUntil||0) > Date.now(); }
+function auraLeftMs(){ return Math.max(0,(state.soccerAuraUntil||0)-Date.now()); }
+/* ออร่าออกแบบเอง: วงแหวนพลังลอยขึ้น + แกนแสงเย็น + ประกายโคจร (โทนฟ้า-ขาว ไม่ใช่เปลวทองแบบการ์ตูนดัง) */
+function buildAura(sc){
+  auraGrp=new THREE.Group(); auraRings=[]; auraSparks=[];
+  const ringMat=()=>new THREE.MeshBasicMaterial({color:0x6fe4ff,transparent:true,opacity:.5,
+    side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
+  for(let i=0;i<3;i++){                                    // วงแหวนไหลขึ้นต่อเนื่อง (เฟสต่างกัน)
+    const r=new THREE.Mesh(new THREE.TorusGeometry(.62,.045,6,26),ringMat());
+    r.rotation.x=Math.PI/2; auraGrp.add(r); auraRings.push({m:r,ph:i/3});
+  }
+  auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.46,.72,2.1,14,1,true),
+    new THREE.MeshBasicMaterial({color:0x2fb9ff,transparent:true,opacity:.16,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending}));
+  auraCore.position.y=1.05; auraGrp.add(auraCore);
+  const sparkMat=new THREE.MeshBasicMaterial({color:0xd8f6ff,transparent:true,opacity:.9,
+    depthWrite:false,blending:THREE.AdditiveBlending});
+  for(let i=0;i<7;i++){                                     // ประกายโคจรรอบตัว
+    const sp=new THREE.Mesh(new THREE.SphereGeometry(.075,6,5),sparkMat);
+    auraGrp.add(sp); auraSparks.push({m:sp,a:i/7*Math.PI*2,rr:.55+Math.random()*.35,yy:.3+Math.random()*1.5,sp:1.2+Math.random()*1.4});
+  }
+  auraGrp.visible=false; sc.add(auraGrp);
+}
+/* 💰 ซื้อพลัง 500 เหรียญ = 60 นาที (ซื้อซ้ำได้ = ต่อเวลาเพิ่ม) */
+function auraBuy(){
+  if(state.coins<AURA_COST){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — พลังโอเวอร์ไดรฟ์ราคา '+fmtNum(AURA_COST)+' เหรียญ'); return; }
+  state.coins-=AURA_COST;
+  const base=Math.max(Date.now(), state.soccerAuraUntil||0);   // ซื้อตอนยังไม่หมด = ต่อเวลา
+  state.soccerAuraUntil=base+AURA_MS;
+  saveState(); renderHudTop(); auraRender();
+  sfx.levelup(); SoccerAudio.goal();
+  showBanner('⚡ <b>โอเวอร์ไดรฟ์!</b> พลังล้อมรอบตัว 60 นาที<br><small>เส้นไกด์สีฟ้ากลับมาแล้ว · กดชาร์จจะมีลำแสงควงสว่านพันรอบ</small>');
+}
+/* แถบนับถอยหลัง + สถานะปุ่ม */
+function auraRender(){
+  if(!auraBarEl) return;
+  const ms=auraLeftMs();
+  if(ms<=0){
+    auraBarEl.classList.remove('on');
+    if(auraBtnEl){ auraBtnEl.classList.remove('on'); auraBtnEl.innerHTML='⚡ พลัง 500🪙'; }
+    return;
+  }
+  auraBarEl.classList.add('on');
+  const m=Math.floor(ms/60000), s=Math.floor(ms%60000/1000);
+  auraBarEl.querySelector('.ab-fill').style.width=(ms/AURA_MS*100)+'%';
+  auraBarEl.querySelector('.ab-txt').textContent=`⚡ โอเวอร์ไดรฟ์ ${m}:${String(s).padStart(2,'0')}`;
+  if(auraBtnEl){ auraBtnEl.classList.add('on'); auraBtnEl.innerHTML='⚡ ต่อเวลา 500🪙'; }
+}
+function auraTick(dt,now){
+  if(!auraGrp) return;
+  const on=auraActive();
+  auraGrp.visible=on;
+  if(!on) return;
+  auraGrp.position.set(sBaseX,0,sBaseZ);
+  auraRings.forEach(r=>{
+    const t=((now/1400)+r.ph)%1;                            // 0→1 = ลอยขึ้นแล้ววนใหม่
+    r.m.position.y=.12+t*2.0;
+    const s=.7+t*1.1; r.m.scale.set(s,s,s);
+    r.m.material.opacity=.55*(1-t)*(1-t);
+    r.m.rotation.z=now/900;
+  });
+  auraSparks.forEach(s=>{
+    const a=s.a+now/1000*s.sp;
+    s.m.position.set(Math.cos(a)*s.rr, s.yy+Math.sin(now/700+s.a)*.22, Math.sin(a)*s.rr);
+  });
+  if(auraCore){ auraCore.rotation.y=now/1600; auraCore.material.opacity=.13+Math.sin(now/380)*.05; }
+}
+/* 🌀 ลำแสงควงสว่าน: พันรอบเส้นไกด์เดิม หมุนตลอด + มีหัวสว่างวิ่งจากต้นทางไปปลายทาง (ตอนกดชาร์จ) */
+function buildDrill(sc){
+  const N=GUIDE_N;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(N*2*3),3));
+  geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(N*2*3),3));
+  const idx=[]; for(let i=0;i<N-1;i++){ const a=i*2; idx.push(a,a+1,a+2, a+1,a+3,a+2); }
+  geo.setIndex(idx);
+  drillMat=new THREE.MeshBasicMaterial({vertexColors:true,transparent:true,side:THREE.DoubleSide,
+    depthWrite:false,blending:THREE.AdditiveBlending,opacity:.95});
+  drillMesh=new THREE.Mesh(geo,drillMat);
+  drillMesh.frustumCulled=false; drillMesh.visible=false; drillMesh.renderOrder=4;
+  sc.add(drillMesh);
+}
+function drillTick(dt,now,charging,power){
+  if(!drillMesh) return;
+  if(!charging || !auraActive() || _gPts.length<4){ drillMesh.visible=false; return; }
+  drillPhase+=dt*7.5;                                        // ความเร็วหมุนควง
+  const head=((now%900)/900);                                // หัวแสงวิ่งต้น→ปลาย ทุก 0.9 วินาที
+  const pos=drillMesh.geometry.attributes.position.array;
+  const col=drillMesh.geometry.attributes.color.array;
+  const R=.34+ (power/100)*.30;                              // ยิ่งชาร์จแรง เกลียวยิ่งกว้าง
+  const TURNS=5.5;
+  const up=_dUp, rt=_dRt, tg=_dTg;
+  for(let i=0;i<_gPts.length;i++){
+    const p=_gPts[i], q=_gPts[Math.min(_gPts.length-1,i+1)], pv=_gPts[Math.max(0,i-1)];
+    tg.set(q.x-pv.x,q.y-pv.y,q.z-pv.z);
+    if(tg.lengthSq()<1e-6) tg.set(0,0,-1); else tg.normalize();
+    rt.set(tg.z,0,-tg.x); if(rt.lengthSq()<1e-6) rt.set(1,0,0); else rt.normalize();
+    up.crossVectors(tg,rt).normalize();
+    const t=i/(_gPts.length-1);
+    const a=t*TURNS*Math.PI*2 + drillPhase;
+    const ox=rt.x*Math.cos(a)*R+up.x*Math.sin(a)*R;
+    const oy=rt.y*Math.cos(a)*R+up.y*Math.sin(a)*R;
+    const oz=rt.z*Math.cos(a)*R+up.z*Math.sin(a)*R;
+    const w=.055;                                            // ความหนาริบบิ้นเกลียว
+    const o=i*6;
+    pos[o  ]=p.x+ox-rt.x*w; pos[o+1]=p.y+oy-rt.y*w; pos[o+2]=p.z+oz-rt.z*w;
+    pos[o+3]=p.x+ox+rt.x*w; pos[o+4]=p.y+oy+rt.y*w; pos[o+5]=p.z+oz+rt.z*w;
+    let d=t-head; if(d<0) d+=1;                              // ระยะจากหัวแสง (วนรอบ)
+    const glow=Math.max(.18, 1-Math.min(1,d*4.2));           // หัวสว่างจ้า หางจาง
+    col[o]=col[o+3]=.35*glow+.15;
+    col[o+1]=col[o+4]=.85*glow+.25;
+    col[o+2]=col[o+5]=glow+.4;
+  }
+  drillMesh.geometry.attributes.position.needsUpdate=true;
+  drillMesh.geometry.attributes.color.needsUpdate=true;
+  drillMesh.visible=true;
+}
+const _dUp=new THREE.Vector3(), _dRt=new THREE.Vector3(), _dTg=new THREE.Vector3();
 /* 🎯 รอบ 402: วงจุดตกลูก — วงแหวนเรืองแสงบนพื้นตรงจุดที่บอลจะตกกระทบครั้งแรก (เต้นเบาๆ) */
 function buildLandRing(sc){
   landRing=new THREE.Group();
@@ -10088,7 +10236,8 @@ function kickLaunch(power){
 /* 🎀 เส้นไกด์ริบบิ้น — จำลองฟิสิกส์จริงทุกแรงแล้วขึงแถบกว้างตามวิถี (เห็นทั้งความโค้งและความโด่งก่อนเตะ) */
 function updateSoccerGuide(ready,dx,dz){
   if(!guideRibbon) return;
-  if(!ready){ guideRibbon.visible=false; if(landRing) landRing.visible=false; return; }
+  // ⚡ รอบ 412 (ผู้ใช้): ร่างธรรมดา = ไม่มีเส้นไกด์ ต้องกะระยะเอาแบบดั้งเดิม · เส้นฟ้าโผล่เฉพาะตอนแปลงร่าง
+  if(!ready || !auraActive()){ guideRibbon.visible=false; if(landRing) landRing.visible=false; return; }
   const power=sCharging?sChg:55;
   const L=kickLaunch(power);
   // 💙 รอบ 404: สีฟ้าไล่ตามระยะทำที่ vertex color แล้ว — พลังชาร์จจึงคุม "ความสว่าง/ทึบ" แทน (ยิ่งแรงยิ่งสว่างจ้า)
@@ -10208,6 +10357,9 @@ function tickSoccer(dt,now){
     }
   }
   updateSoccerGuide(ready,dx,dz);
+  auraTick(dt,now);                                  // ⚡ รอบ 412: ออร่ารอบตัว (โชว์เฉพาะตอนแปลงร่าง)
+  drillTick(dt,now,sCharging&&ready,sChg);           // 🌀 ลำแสงควงสว่านตอนกดชาร์จ
+  if(auraBarEl && now-_auraHudAt>500){ _auraHudAt=now; auraRender(); }   // อัปเดตนาฬิกาถอยหลังทุกครึ่งวินาที
 
   if(sbLive){
     const b=soccerBall.position;
@@ -11036,6 +11188,7 @@ function start(md,opt){
     soccerCam1=false; joy.on=false; joy.dx=joy.dy=0;    // 🕹️ รอบ 398: เคลียร์สติ๊กเล็ง (เลิกใช้แป้น ▲▼◀▶)
     sCurl=0; sHit=0; sKickPunch=0; renderCurl();        // 🌀 รอบ 400-401: เริ่มเกมไม่มีโค้ง/จุดสัมผัสค้าง
     fkOn=false; fkWall=null; fkMen=[]; landPt=null;     // 🧱🎯 รอบ 402: กำแพง/วงจุดตกเริ่มใหม่ทุกครั้ง (ฉากสร้างใหม่)
+    auraRender();                                       // ⚡ รอบ 412: ปุ่ม/แถบพลังให้ตรงสถานะที่ค้างไว้ (ซื้อแล้วออกเกมแล้วกลับเข้ามา)
     spinOpen=true;                                      // 🎱 รอบ 403: แพดจุดสัมผัสเปิดค้างตลอด (ผู้ใช้สั่ง)
     if(spinPadEl) spinPadEl.style.display='';
     renderSpinPad();
@@ -11159,6 +11312,8 @@ function exitWorld(){
   // ⚽🎯🎬🧱 รอบ 397-402: ล้างสถานะจุดโทษ/รีเพลย์/ฟรีคิก (ป้ายคำโดน clearEntities ลบอยู่แล้ว)
   pkOn=false; sBaseZ=PLAYER_Z; sBaseX=0; repOn=false; repPendAt=0;
   fkOn=false; fkWall=null; fkMen=[];                // ฉากถูกทิ้งทั้งก้อนตอนออก — เคลียร์อ้างอิงกัน mesh ค้างข้ามรอบ
+  if(auraBarEl) auraBarEl.classList.remove('on');   // ⚡ รอบ 412: ซ่อนแถบพลังนอกสนามบอล (เวลายังเดินอยู่ใน state)
+  if(drillMesh) drillMesh.visible=false;
   { const fkb=overlayEl&&overlayEl.querySelector('#adv-fk');
     if(fkb){ fkb.classList.remove('on'); fkb.textContent='🧱 ฟรีคิก'; } }
   if(pkHudEl) pkHudEl.style.display='none';
@@ -11316,6 +11471,11 @@ window.Adventure3D={
                           get ribbon(){return guideRibbon}, get guidePts(){return _gPts.map(p=>({x:+p.x.toFixed(2),y:+p.y.toFixed(2),z:+p.z.toFixed(2)}));},
                           // 🎨🎯🧱 รอบ 402: สีริบบิ้นตามพลัง · วงจุดตก · กำแพงฟรีคิก
                           get ribbonColor(){return guideMat?'#'+guideMat.color.getHexString():null},
+                          // ⚡ รอบ 412: testkit พลังโอเวอร์ไดรฟ์
+                          aura:{buy:auraBuy, get on(){return auraActive()}, get leftMs(){return auraLeftMs()},
+                                get grp(){return auraGrp}, get bar(){return auraBarEl}, get btn(){return auraBtnEl},
+                                set until(v){ state.soccerAuraUntil=v; auraRender(); }},
+                          get drill(){return drillMesh},
                           get landRing(){return landRing}, get landPt(){return landPt},
                           fk:{toggle:fkToggle, get on(){return fkOn}, get wall(){return fkWall},
                               get men(){return fkMen.map(m=>+m.x.toFixed(2))}, get baseZ(){return sBaseZ}},
