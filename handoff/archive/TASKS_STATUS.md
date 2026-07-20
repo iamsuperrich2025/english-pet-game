@@ -707,3 +707,18 @@
 ## ⏬ ย้ายเมื่อ 2026-07-20 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
 
 - **รอบ 382:** 🚁 **เปลี่ยนลำเฮลิฯ เป็นโมเดลจริง `img/models/helicopter.glb` (ผู้ใช้สั่ง)** — heliMeshBuild โหลด GLB ครั้งเดียว cache→clone ต่อลำ (Tripo 28 ชิ้น 48K tris ลาย แดง-ขาว baked) · ครอบ pivot node ใบพัดหลัก(part_2/7/8)+หาง(9/10/19/24) คง API `_rotor.rotation.y`/`_trotor.rotation.x` เดิม · หมุนหัว -X→-Z + สเกลยาว 12.3ม. จมูก z=-3.92 ตรงลำเดิม สกีแตะพื้น · ลำโค้ดเดิม=fallback (heliMeshBuildLegacy) · disposeHeliMesh ข้ามลำ `_glbShared` (แชร์ geometry กับ cache) · texture encoding→Linear ให้โทนตรงเกม · ⚠️ ประตูสไลด์/สีทูโทน per ลำ/สีเทศกาล หายไป (โมเดลไม่มีบานแยก+ลายอบตายตัว — doorLerp/testkit กันไว้ไม่ crash) · ยืนยัน browser: ลำจอด 2 ลำ+ลำเพื่อน(hp) เป็น GLB · ใบพัดหมุนถูกแกน (หลัก=แกนตั้ง หาง=ระนาบตั้ง) · removePeer ไม่พังลำอื่น · ไม่มี error (screenshot tool ค้างทั้ง session — ตรวจตัวเลขตามกฎ) · deploy `.370` SW v97 · ค้าง: ผู้ใช้ดูภาพลำจริงในเกม
+
+
+## ⏬ ย้ายเมื่อ 2026-07-20 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 383:** 🔵 **ลำโดยสารลายฟ้ากลับมาแยกจากลำแดง (ต่อยอด (1) รอบ 382 ผู้ใช้สั่ง)** — ไม่เจน Tripo ใหม่: ย้อม texture เดิมด้วย Python (HSV: hue แดงจัด→211° ฟ้า 0x2f7fd4 · ขาว/เทา/ส้มคงเดิม) → `img/models/helicopter_tex_blue.jpg` · โค้ด: `heliMatBlueGet` clone material กลางครั้งเดียว cache แชร์ทุกลำฟ้า (⚠️ TextureLoader ต้อง `flipY=false` ตาม UV ของ glTF + encoding Linear) · เลือกลาย: ช่องสี b>r ของ col (pax 0x2f7fd4/สงกรานต์=ฟ้า · pilot/peer/ปีใหม่=แดง) · ยืนยัน browser: paxH ใช้ tex_blue 1024px flipY=false ✓ pilot/peer material แดงเดิมแชร์กัน ✓ ไม่มี error · deploy `.371` SW v98 · ค้าง: ผู้ใช้ดูภาพจริง 2 ลำ
+
+
+## ⏬ ย้ายเมื่อ 2026-07-20 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 384:** 🟢 **วงลิฟต์บนดาดฟ้าย้ายมุมไกลลำ (ผู้ใช้ส่งภาพ: วงจ่อข้างลำฟ้า เดินเบียดแล้วเหยียบวงโดนส่งกลับชั้น 1)** — ต้นตอ: วงดาดฟ้าใช้จุดเดียวกับลิฟต์ล็อบบี้ (`liftIn` ชิดผนังหลัง) แต่ลำ GLB กว้าง 6ม. จอดห่างแกนตึกแค่ 2.2ม. · แก้ buildHeliFoot: เพิ่ม `liftRoof` เลือกมุมดาดฟ้าไกล paxPos สุดจาก 4 มุม (เยื้องขอบ 1.6) ย้าย padR ไป · trigger ขาลง `dLiftR` แยกจากขาขึ้น (ล็อบบี้ใช้ liftIn เดิม) · ขาขึ้นโผล่ liftRoof+1.6 เข้าหากลางดาดฟ้า (พ้นรัศมีวง 1.2 ไม่เด้งกลับ) · testkit `foot.liftRoof` · ยืนยัน browser: วงใหม่ห่างลำ 7.6ม.(เดิม 5.37 จ่อข้างลำ) · จุดเก่าบนดาดฟ้าไม่ trigger แล้ว · ขึ้น=โผล่ (-1.7,26.5,24.7) ห่างลำ 4.7 · ลงจากวงใหม่=ถึงล็อบบี้ตรงเป๊ะ · ไม่มี error · ⚠️ บทเรียน testkit: เฟสลิฟต์/เดิน จบใน `footTick` ไม่ใช่ `tick` (tick=ฟิสิกส์บิน) · deploy `.372` SW v99 · ค้าง: ผู้ใช้ลองเดินจริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-20 — จาก handoff/TASKS.md (สรุปสถานะล่าสุด)
+
+- **รอบ 385:** 🚁 **ลำเพื่อนที่กำลังบิน = โมเดล 3D หันตาม yaw (ผู้ใช้ทัก "ยังเป็นภาพแบน")** — tickPeers โซน M.heli: อ่านเฟส `p.av` (`h_p`=ขับ→ลำแดง · `h_r`=นั่ง→ลำฟ้า · เดิน/วิงสูทคง sprite) สร้าง `p.flySpr`=heliMeshBuild ตาม x/z + y-2.2 (y ที่ส่ง=ระดับสายตานักบิน) + rotation.y lerp ทางสั้นเข้าหา yawTgt · ใบพัดหมุนเร็ว 28/46 · makePeerSprite เฟส p/r ไม่วาด emoji (เหลือป้ายชื่อ ยกลอย +4.6 พ้นใบพัด) · removePeer เก็บ flySpr · ยืนยัน browser: peer h_p=แดง 28 mesh yaw ตรง · h_r=tex ฟ้า · เปลี่ยนเฟส h_w ลำหาย/กลับ h_p ลำโผล่ yaw converge · ไม่มี error · deploy `.373` SW v100 · ค้าง: ผู้ใช้ลองจริง 2 เครื่อง
