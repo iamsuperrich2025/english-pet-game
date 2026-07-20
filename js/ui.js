@@ -3033,6 +3033,7 @@ function renderDashboard(){
     renderDriveCard();
     renderSoccerCard();
     renderMotoCard();
+    renderInvasionCard();
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -3288,6 +3289,7 @@ function renderDashboard(){
   renderDriveCard();
   renderSoccerCard();
   renderMotoCard();
+  renderInvasionCard();
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -5294,6 +5296,103 @@ async function enterMoto3D(){
 }
 
 /* ============================================================
+   🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
+   FPS ทะเลทราย — ยิงยานลูกให้ตกครบ แล้วถล่มยานแม่ที่โชว์คำศัพท์บนท้องยาน
+   ============================================================ */
+function renderInvasionCard(){
+  const el = document.getElementById('invasion-card');
+  if(!el) return;
+  let body;
+  if(state.invasionTicket && state.advHurt){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🤕</div>
+        <b>ยังบาดเจ็บอยู่!</b><br>
+        <small>ต้องรักษาตัวก่อนถึงจะกลับเข้าสมรภูมิได้</small>
+      </div>
+      <button class="big-btn red home-btn" id="btn-invasion-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
+  }else if(state.invasionTicket){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
+      <div class="ticket-owned">
+        <div style="font-size:44px">🛸🔫</div>
+        <b>สมรภูมิรออยู่!</b><br>
+        <small>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — บนท้องยานมี<b>ช่องตัวอักษร</b>เป็นคำศัพท์<br>
+        ยิง<b>ยานลูก</b>ให้ตกครบทุกลำ → เกราะยานแม่เปิด → ถล่มด้วยปืนใหญ่+มิสไซล์ คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
+        👥 มีหน่วยรบภาคพื้น + เฮลิคอปเตอร์ติดมิสไซล์ ช่วยสู้เคียงข้าง</small>
+      </div>
+      <button class="big-btn green home-btn" id="btn-enter-invasion">⚔️ เข้าสมรภูมิ!</button>`;
+  }else if(!state.motoTicket){
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
+      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วมอเตอร์ไซค์ 🏍️</b>ก่อน</div>`;
+  }else{
+    body = `
+      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
+      <div class="ticket-desc">
+        <div style="font-size:44px">🛸🏜️</div>
+        <b>เอเลี่ยนบุกโลกแล้ว — ออกไปสู้!</b><br>
+        <small>มุมมองบุคคลที่ 1 ถืออาวุธเอง ในเมืองทะเลทราย<br>
+        ยานแม่ลำมหึมาลอย<b>เกือบเต็มท้องฟ้า</b> โชว์คำศัพท์เป็นช่องตัวอักษรยักษ์<br>
+        ยิงยานลูกตก = ตัวอักษรกะพริบ · ครบทุกลำ = ถล่มยานแม่ให้ระเบิด คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
+        👥 พันธมิตรช่วยสู้: หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ติดมิสไซล์<br>
+        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
+      <button class="big-btn blue home-btn" id="btn-buy-invasion">🛸 ซื้อตั๋ว 🪙${fmtNum(INVASION_PRICE)}</button>${soldBadge('tk_invasion')}`;
+  }
+  el.innerHTML = body;
+  const buy = document.getElementById('btn-buy-invasion');
+  if(buy) buy.addEventListener('click', buyInvasionTicket);
+  const enter = document.getElementById('btn-enter-invasion');
+  if(enter) enter.addEventListener('click', enterInvasion3D);
+  const heal = document.getElementById('btn-invasion-heal');
+  if(heal) heal.addEventListener('click', advHealClick);
+}
+const INVASION_REWARD = 60;   // ต้องตรงกับ REWARD ใน js/invasion3d.js (โชว์ในการ์ดร้าน)
+
+function buyInvasionTicket(){
+  if(state.invasionTicket) return;
+  if(!state.motoTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วมอเตอร์ไซค์ก่อนถึงจะซื้อตั๋วโลกยานแม่บุกโลกได้นะ'); return; }
+  if(state.coins < INVASION_PRICE){
+    sfx.wrong(); toast(`ตั๋วโลกยานแม่บุกโลก 🪙${fmtNum(INVASION_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
+  }
+  askConfirm(`<h2>🛸 ซื้อตั๋วโลกยานแม่บุกโลก</h2>
+    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(INVASION_PRICE)}</b><br>
+    เกมยิงมุมมองบุคคลที่ 1 ในเมืองทะเลทราย — ยิงยานลูกให้ตกครบแล้วถล่มยานแม่ คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
+    <small>🛸 ยานแม่ลอยเกือบเต็มท้องฟ้า โชว์คำศัพท์เป็นช่องตัวอักษรยักษ์<br>
+    👥 มีหน่วยรบภาคพื้น + เฮลิคอปเตอร์ติดมิสไซล์ ช่วยสู้เคียงข้าง<br>
+    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
+    'ซื้อเลย! 🛸', ()=>{
+      state.coins -= INVASION_PRICE;
+      state.invasionTicket = true;
+      if(typeof sellInc==='function') sellInc('tk_invasion');
+      sfx.buy();
+      toast('🛸 ได้ตั๋วโลกยานแม่บุกโลกแล้ว! กดปุ่มเขียว "เข้าสมรภูมิ" ได้เลย ⚔️');
+      saveState();
+      renderDashboard();
+    });
+}
+
+/* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
+async function enterInvasion3D(){
+  if(!state.invasionTicket || state.advHurt || advLoading) return;
+  if(!window.InvasionWorld){
+    advLoading = true;
+    toast('🛸 กำลังเปิดสมรภูมิทะเลทราย...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/invasion3d.js');
+    }catch(e){
+      advLoading = false;
+      sfx.wrong(); toast('⚠️ โหลดโลกยานแม่บุกโลกไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+      return;
+    }
+    advLoading = false;
+  }
+  InvasionWorld.start();
+}
+
+/* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
    แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
@@ -5307,6 +5406,7 @@ const WORLD3D = [
   { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
   { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',price:SOCCER_PRICE, card:'soccer-card', enter:enterSoccer3D },
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  price:MOTO_PRICE,   card:'moto-card',   enter:enterMoto3D },
+  { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',price:INVASION_PRICE, card:'invasion-card', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, card:'mkt-robots', enter:enterMecha3D },
 ];
 function gotoRobotShop(){

@@ -52,6 +52,9 @@ const DEFAULT_STATE = {
   soccerDone:[],                      // คำที่ประกอบสำเร็จแล้วในโลกฟุตบอล (แยกคลังต่อโลก)
   soccerShirt:0xe53935,               // สีเสื้อนักเตะที่เลือกล่าสุด
   soccerNo:'10',                      // เบอร์หลังเสื้อที่เลือกล่าสุด
+  invasionTicket:false,               // 🛸 รอบ 413: ตั๋วโลกยานแม่บุกโลก (ซื้อได้เมื่อมีตั๋วมอเตอร์ไซค์)
+  invasionDone:[],                    // คำที่พิชิตในโลกยานแม่บุกโลก (แยกคลังต่อโลก)
+  invasionBest:0,                     // ยานแม่ที่ปราบได้มากสุดในรอบเดียว (สถิติส่วนตัว)
   robots:[],                          // รอบ 199: หุ่นยนต์นักรบที่ครอบครอง (array ของ id · ซื้อกี่ตัวก็ได้)
   mechaRobot:null,                    // หุ่นที่เลือกใช้ล่าสุดในโลก 3D
   mechaDone:[],                       // คำที่พิชิตในโลกหุ่นยนต์ (แยกคลังต่อโลก)
@@ -306,6 +309,8 @@ function loadState(){
       if(typeof s.soccerShirt !== 'number') s.soccerShirt = 0xe53935;
       if(typeof s.soccerNo !== 'string') s.soccerNo = '10';
       if(!Array.isArray(s.robots)) s.robots = [];                                            // รอบ 199: หุ่นยนต์นักรบ
+      if(!Array.isArray(s.invasionDone)) s.invasionDone = [];   // 🛸 รอบ 413: โลกยานแม่บุกโลก
+      if(typeof s.invasionBest !== 'number') s.invasionBest = 0;
       if(!Array.isArray(s.mechaDone)) s.mechaDone = [];
       if(typeof s.mechaBoss !== 'number') s.mechaBoss = 0;   // รอบ 228: บอสที่ล้มสะสม
       if(typeof s.mechaBossBadge !== 'number') s.mechaBossBadge = 0;   // รอบ 229: เข็มนักล่าบอส
@@ -537,6 +542,7 @@ function assetValue(){
   if(state.droneTicket) v += DRONE_PRICE;                                                  // ตั๋วโลกโดรน FPV (รอบ 85)
   if(state.driveTicket) v += DRIVE_PRICE;                                                  // ตั๋วโลกขับรถกำแพงเพชร (รอบ 113)
   if(state.soccerTicket) v += SOCCER_PRICE;                                                // ตั๋วโลกสนามฟุตบอล (รอบ 196)
+  if(state.invasionTicket && typeof INVASION_PRICE!=='undefined') v += INVASION_PRICE;     // 🛸 ตั๋วโลกยานแม่บุกโลก (รอบ 413)
   if(Array.isArray(state.robots)) for(const rid of state.robots){ const r=(typeof ROBOTS!=='undefined')&&ROBOTS.find(x=>x.id===rid); if(r) v += r.price; }  // หุ่นยนต์นักรบ (รอบ 199)
   for(const car of (state.cars || [])){                                                    // 🚗 รอบ 211: รถทุกคัน+พ.ร.บ.+ประกัน (สะสมนับเป็นทรัพย์สินรวม)
     const c = carInfo(car.id);
