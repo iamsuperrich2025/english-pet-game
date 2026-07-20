@@ -9483,23 +9483,38 @@ function soccerLinesTexture(){
     g.addColorStop(1,'rgba(0,0,0,0)');
     c.fillStyle=g; c.fillRect(x0,0,w,1024);
   }
+  /* ⚽📐 รอบ 411 (ผู้ใช้ทัก 3 ข้อ): เดิมวาดสนาม "เกือบจัตุรัส" กว้าง 40 × ยาวแค่ 38m ทั้งที่สนามจริงยาว/กว้าง ≈ 1.54
+     ผลคือทุกอย่างอัดกันจนโค้งเขตโทษเกือบชนวงกลมกลาง + มีเส้นเขตโทษ "ฝั่งตรงข้าม" โผล่มาพาดใกล้วงกลมกลาง
+     แก้: วาดเป็น "ครึ่งสนามจริง" ย่อส่วนตามมาตรฐาน FIFA (105×68) — เล่นยิงประตูเดียวอยู่แล้ว ไม่ต้องมีฝั่งตรงข้าม */
   const W=44,L=64, PX=x=>(x+W/2)/W*1024, PY=z=>(z+L/2)/L*1024;  // เมตร→พิกเซล (แกน z: บนผืนผ้า=ฝั่งประตู -z)
   const RX=m=>m/W*1024, RY=m=>m/L*1024;
   c.strokeStyle='rgba(255,255,255,.95)'; c.fillStyle='rgba(255,255,255,.95)'; c.lineWidth=4;
-  const X0=-20,X1=20, Z0=-19,Z1=19;                              // ขอบสนามจริง (เส้นประตูทับ GOAL_Z)
-  c.strokeRect(PX(X0),PY(Z0),RX(X1-X0),RY(Z1-Z0));
-  c.beginPath(); c.moveTo(PX(X0),PY(0)); c.lineTo(PX(X1),PY(0)); c.stroke();     // เส้นกลาง
-  c.beginPath(); c.ellipse(PX(0),PY(0),RX(6),RY(6),0,0,7); c.stroke();           // วงกลมกลาง
-  c.beginPath(); c.ellipse(PX(0),PY(0),RX(.28),RY(.28),0,0,7); c.fill();         // จุดกลาง
-  [[Z0,1],[Z1,-1]].forEach(([gz,dir])=>{                        // เขตโทษ 2 ฝั่ง (dir=ทิศเข้าสนาม)
-    c.strokeRect(PX(-12),PY(Math.min(gz,gz+dir*9)),RX(24),RY(9));               // เขตโทษ 24×9m
-    c.strokeRect(PX(-6),PY(Math.min(gz,gz+dir*3.6)),RX(12),RY(3.6));            // เขต 6 หลา
-    c.beginPath(); c.ellipse(PX(0),PY(gz+dir*7),RX(.28),RY(.28),0,0,7); c.fill();// จุดโทษ
-    c.beginPath();                                              // โค้งหน้าเขตโทษ (เฉพาะส่วนพ้นกรอบ)
-    c.ellipse(PX(0),PY(gz+dir*7),RX(5.2),RY(5.2),0, dir>0?Math.PI*.13:Math.PI*1.13, dir>0?Math.PI*.87:Math.PI*1.87);
-    c.stroke();
-  });
-  [[X0,Z0],[X1,Z0],[X0,Z1],[X1,Z1]].forEach(([cx,cz])=>{        // โค้งมุมสนาม
+  const PW=40, K=PW/68;                       // กว้าง 40m · ตัวคูณย่อส่วนจากสนามจริง 68m
+  const X0=-PW/2, X1=PW/2;
+  const GL=GOAL_Z;                            // เส้นประตู (-19)
+  const HALF=GL+52.5*K;                       // เส้นกลางสนาม = ครึ่งความยาวจริง 52.5m ย่อส่วน → z ≈ +11.9
+  const PB_W=40.3*K/2, PB_D=16.5*K;           // เขตโทษ 40.3×16.5m ย่อส่วน
+  const GB_W=18.32*K/2, GB_D=5.5*K;           // เขตประตู (6 หลา) 18.32×5.5m
+  const SPOT=11*K, ARC=9.15*K, CIR=9.15*K;    // จุดโทษ 11m · โค้ง/วงกลมกลาง รัศมี 9.15m
+  // ขอบสนาม: เส้นประตู + เส้นข้าง 2 เส้น + เส้นกลางสนาม (ไม่มีขอบฝั่งตรงข้าม เพราะเป็นครึ่งสนาม)
+  c.beginPath();
+  c.moveTo(PX(X0),PY(GL));   c.lineTo(PX(X1),PY(GL));      // เส้นประตู
+  c.moveTo(PX(X0),PY(GL));   c.lineTo(PX(X0),PY(HALF));    // เส้นข้างซ้าย
+  c.moveTo(PX(X1),PY(GL));   c.lineTo(PX(X1),PY(HALF));    // เส้นข้างขวา
+  c.moveTo(PX(X0),PY(HALF)); c.lineTo(PX(X1),PY(HALF));    // เส้นกลางสนาม
+  c.stroke();
+  // วงกลมกลางสนาม: อยู่ที่เส้นกลาง เห็นเฉพาะครึ่งที่อยู่ในสนามเรา (โค้งด้านประตู)
+  c.beginPath(); c.ellipse(PX(0),PY(HALF),RX(CIR),RY(CIR),0,Math.PI,Math.PI*2); c.stroke();
+  c.beginPath(); c.ellipse(PX(0),PY(HALF),RX(.3),RY(.3),0,0,7); c.fill();        // จุดเขี่ยกลาง
+  // เขตโทษ + เขตประตู + จุดโทษ (ฝั่งเดียว)
+  c.strokeRect(PX(-PB_W),PY(GL),RX(PB_W*2),RY(PB_D));
+  c.strokeRect(PX(-GB_W),PY(GL),RX(GB_W*2),RY(GB_D));
+  c.beginPath(); c.ellipse(PX(0),PY(GL+SPOT),RX(.3),RY(.3),0,0,7); c.fill();
+  // โค้งหน้าเขตโทษ: วาดเฉพาะส่วนที่พ้นกรอบเขตโทษออกมา (คำนวณมุมตัดจากระยะจริง)
+  const cut=Math.acos(Math.max(-1,Math.min(1,(GL+PB_D-(GL+SPOT))/ARC)));         // มุมที่โค้งตัดขอบเขตโทษ
+  c.beginPath(); c.ellipse(PX(0),PY(GL+SPOT),RX(ARC),RY(ARC),0,cut,Math.PI-cut); c.stroke();
+  // โค้งมุมสนาม (เฉพาะ 2 มุมฝั่งประตู)
+  [[X0,GL],[X1,GL]].forEach(([cx,cz])=>{
     c.beginPath(); c.ellipse(PX(cx),PY(cz),RX(1),RY(1),0,0,7); c.stroke();
   });
   return new THREE.CanvasTexture(cv);
@@ -9926,8 +9941,10 @@ function makeSoccerPlayer(shirtColor,no){
    (โหมดจุดโทษ/ฟรีคิกมีจุดตายตัวของตัวเอง ไม่สุ่ม) · หันหน้าเข้าประตูให้อัตโนมัติ ไม่งั้นเด็กงงว่าประตูอยู่ไหน */
 function soccerNewSpot(){
   if(pkOn||fkOn) return;
-  sBaseX=(Math.random()*2-1)*13;                     // ซ้าย-ขวา ±13m (มุมแคบบ้างกว้างบ้าง)
-  sBaseZ=PLAYER_Z-3+Math.random()*11;               // ใกล้-ไกลประตู
+  // 🎲 รอบ 411 (ผู้ใช้): จุดเกิดต้องอยู่ใน "ครึ่งสนามฝั่งที่ยิงประตู" เสมอ — เส้นกลางสนามอยู่ที่ z≈+11.9
+  //    ช่วง z −4..+10 = พ้นเขตโทษ (จบที่ −9.3) และไม่ล้ำเส้นกลาง · ระยะยิง 15–29m กำลังท้าทาย
+  sBaseX=(Math.random()*2-1)*13;                     // ซ้าย-ขวา ±13m (อยู่ในสนามกว้าง ±20)
+  sBaseZ=-4+Math.random()*14;
   aimYaw=Math.atan2(-sBaseX, sBaseZ-GOAL_Z);        // เล็งไปกลางประตูเป็นค่าตั้งต้น
   // มุมยกตั้งต้นตามระยะ: ยิ่งไกลยิ่งต้องยิงราบ (วัดจริง ระยะ ~30m ต้อง ~0.12 ไม่งั้นข้ามคานตลอด)
   const dist=Math.hypot(sBaseX, sBaseZ-GOAL_Z);
