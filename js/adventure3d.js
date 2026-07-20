@@ -2070,10 +2070,14 @@ function buildScene(md){
     const sun=new THREE.DirectionalLight(0xfff4d0,.85); sun.position.set(24,55,32); sc.add(sun);
     const fill=new THREE.DirectionalLight(0xdfe8ff,.28); fill.position.set(-30,40,-20); sc.add(fill);
     const fieldW=44, fieldL=64;
-    const grassM=new THREE.MeshLambertMaterial({map:soccerGrassTexture()});
+    // 🌿 รอบ 403: Phong + normal map = แสงจับใบหญ้าเป็นร่องเงา (เดิม Lambert เรียบแบนเหมือนกระดาษ)
+    const grassM=new THREE.MeshPhongMaterial({map:soccerGrassTexture(),normalMap:grassNormalTexture(),
+      shininess:4, specular:0x1e2c1a});
+    grassM.normalScale=new THREE.Vector2(1.15,1.15);
     const grass=new THREE.Mesh(new THREE.PlaneGeometry(fieldW+26,fieldL+26),grassM);
     grass.rotation.x=-Math.PI/2; grass.position.y=.02; sc.add(grass);
     applyTex(grassM,'soccer_grass',3,2);                       // 📷 ภาพหญ้าจริง — ในภาพมีลายตัด 6 แถบอยู่แล้ว repeat 2 ตามยาว = 12 แถบทั่วสนาม (รอบ 397)
+    buildGrassTufts(sc,(fieldW+24)/2,(fieldL+24)/2);           // 🌿 กอหญ้า 3D จริงกระจายทั่วสนาม
     const lines=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
       new THREE.MeshBasicMaterial({map:soccerLinesTexture(),transparent:true,depthWrite:false}));
     lines.rotation.x=-Math.PI/2; lines.position.y=.035; sc.add(lines);
@@ -4418,16 +4422,12 @@ function buildDom(){
     background:rgba(0,0,0,.5);color:#fff;border:2px solid #fff;border-radius:12px;
     font-family:inherit;font-weight:800;font-size:13px;padding:6px 10px}
   .adv-soccer #adv-scam,.adv-drive #adv-scam{display:block}
-  /* 🎱 รอบ 401: หน้าต่างซูมเลือกจุดสัมผัสบอล (สไตล์สนุกเกอร์) — ลอยฝั่งซ้ายเหนือสติ๊ก ลากเลือกจุดได้ */
-  #adv-spinbtn{position:absolute;display:none;top:56px;left:10px;z-index:6;pointer-events:auto;
-    background:rgba(20,40,20,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;
-    padding:6px 10px;font:700 13px system-ui;cursor:pointer}
-  .adv-soccer #adv-spinbtn{display:block}
-  #adv-spinbtn.on{background:rgba(255,196,60,.92);color:#2b2000;border-color:#fff}
-  #adv-spinpad{position:absolute;display:none;top:94px;left:10px;z-index:7;pointer-events:auto;
-    background:rgba(8,20,10,.72);border:2px solid rgba(255,214,102,.85);border-radius:16px;padding:8px;
+  /* 🎱 รอบ 401: หน้าต่างซูมเลือกจุดสัมผัสบอล (สไตล์สนุกเกอร์) — ลอยฝั่งซ้ายเหนือสติ๊ก ลากเลือกจุดได้
+     รอบ 403 (ผู้ใช้สั่ง): เปิดค้างตลอดเต็มขนาด ไม่มีปุ่มเปิด/ปิด และไม่ย่อบนจอเตี้ย */
+  #adv-spinpad{position:absolute;display:none;top:62px;left:10px;z-index:7;pointer-events:auto;
+    background:rgba(8,20,10,.72);border:2px solid rgba(255,214,102,.85);border-radius:16px;padding:7px;
     box-shadow:0 6px 18px rgba(0,0,0,.5);touch-action:none;-webkit-user-select:none;user-select:none}
-  #adv-spinpad.on{display:block}
+  .adv-soccer #adv-spinpad{display:block}
   #adv-spinpad .sp-ball{position:relative;width:112px;height:112px;border-radius:50%;
     background:radial-gradient(circle at 34% 30%,#ffffff 0%,#f2f2f2 42%,#c9c9c9 78%,#9a9a9a 100%);
     box-shadow:inset -6px -8px 16px rgba(0,0,0,.28),0 2px 6px rgba(0,0,0,.5)}
@@ -4440,13 +4440,12 @@ function buildDom(){
     border:2px solid #fff;box-shadow:0 0 10px rgba(255,170,40,.9)}
   #adv-spinpad .sp-lbl{margin-top:6px;text-align:center;color:#ffe082;font:800 11px system-ui;
     text-shadow:0 1px 3px #000;min-height:14px;white-space:nowrap}
-  /* จอเตี้ย (มือถือแนวนอน ~320px): ช่องว่างซ้ายระหว่างกระดานคะแนนกับวงสติ๊กเหลือ ~135px → ย่อทั้งชุดให้พอดี ไม่ทับสติ๊ก */
+  /* จอเตี้ย: แพดคงขนาดเต็ม (ผู้ใช้สั่ง "ไม่ต้องย่อ") → ย่อ "วงสติ๊ก" ลงแทน + ดันแพดขึ้นให้พ้นกัน
+     จอ 306px: กระดานคะแนนจบ 57 · แพด 60..210 · สติ๊ก 214..298 (พ้นกันทั้งบนและล่าง) */
   @media (max-height:400px){
-    #adv-spinbtn{top:60px;padding:3px 8px;font-size:11px}
-    #adv-spinpad{top:88px;padding:6px;border-radius:13px}
-    #adv-spinpad .sp-ball{width:72px;height:72px}
-    #adv-spinpad .sp-dot{width:20px;height:20px}
-    #adv-spinpad .sp-lbl{font-size:10px;margin-top:4px;min-height:12px}
+    .adv-soccer #adv-spinpad{top:60px}
+    .adv-soccer #adv-joy{width:84px;height:84px;bottom:8px}
+    .adv-soccer #adv-joy-dot{width:34px;height:34px}
   }
   /* 🌀 รอบ 400: ป้ายความโค้ง — ลอยเหนือปุ่มเตะ (โผล่เฉพาะตอนตั้งโค้งไว้) */
   #adv-curl{position:absolute;display:none;right:22px;bottom:120px;width:88px;z-index:6;pointer-events:none;
@@ -4784,8 +4783,7 @@ function buildDom(){
     <!-- ⚽ โหมดสนามฟุตบอล (รอบ 398: เล็งด้วยสติ๊กมือซ้าย #adv-joy แบบ PES — ไม่มีแป้นลูกศรแล้ว) -->
     <button id="adv-kick">⚽<small>เตะ</small></button>
     <div id="adv-curl"></div>       <!-- 🌀 รอบ 400: ป้ายบอกความโค้งที่ตั้งไว้ (โผล่เมื่อปัดปุ่มเตะ) -->
-    <!-- 🎱 รอบ 401: หน้าต่างซูมเลือกจุดสัมผัสบอลแบบสนุกเกอร์ -->
-    <button id="adv-spinbtn">🎱 จุดสัมผัส</button>
+    <!-- 🎱 รอบ 401: หน้าต่างซูมเลือกจุดสัมผัสบอลแบบสนุกเกอร์ (รอบ 403: เปิดค้างตลอด ไม่มีปุ่มปิดแล้ว) -->
     <div id="adv-spinpad">
       <div class="sp-ball"><div class="sp-cross"></div><div class="sp-dot"></div></div>
       <div class="sp-lbl"></div>
@@ -5112,7 +5110,6 @@ function buildDom(){
   spinPadEl=overlayEl.querySelector('#adv-spinpad');
   spinDotEl=overlayEl.querySelector('#adv-spinpad .sp-dot');
   spinLblEl=overlayEl.querySelector('#adv-spinpad .sp-lbl');
-  overlayEl.querySelector('#adv-spinbtn').addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); spinPadToggle(); });
   const spBall=overlayEl.querySelector('#adv-spinpad .sp-ball');
   let spDrag=false;
   const spDown=e=>{ e.preventDefault(); e.stopPropagation(); spDrag=true;
@@ -9368,6 +9365,78 @@ function soccerGrassTexture(){
   }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(10,14); return t;
 }
+/* 🌿 รอบ 403 (ผู้ใช้: "หญ้าดูแบนเรียบเกินไป"): normal map ใบหญ้า — ทำให้แสงจับเป็นร่องเงามีมิติ
+   สร้าง height field จากขีดใบหญ้าสุ่ม → sobel → encode เป็น normal RGB */
+function grassNormalTexture(){
+  const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S;
+  const c=cv.getContext('2d'), h=new Float32Array(S*S);
+  for(let i=0;i<14000;i++){                       // ขีดใบหญ้าเอียงสุ่ม (ยอดสว่าง โคนจาง)
+    const x=Math.random()*S, y=Math.random()*S, len=3+Math.random()*6, a=-Math.PI/2+(Math.random()-.5)*.9;
+    for(let t=0;t<len;t++){
+      const px=(x+Math.cos(a)*t)|0, py=(y+Math.sin(a)*t)|0;
+      if(px<0||py<0||px>=S||py>=S) continue;
+      const k=py*S+px, v=1-t/len;
+      if(v>h[k]) h[k]=v;
+    }
+  }
+  const img=c.createImageData(S,S), d=img.data;
+  const at=(x,y)=>h[((y+S)%S)*S+((x+S)%S)];
+  for(let y=0;y<S;y++) for(let x=0;x<S;x++){
+    const dx=(at(x+1,y)-at(x-1,y))*2.2, dy=(at(x,y+1)-at(x,y-1))*2.2;
+    let nx=-dx, ny=-dy, nz=1;
+    const l=Math.hypot(nx,ny,nz)||1; nx/=l; ny/=l; nz/=l;
+    const k=(y*S+x)*4;
+    d[k]=(nx*.5+.5)*255; d[k+1]=(ny*.5+.5)*255; d[k+2]=(nz*.5+.5)*255; d[k+3]=255;
+  }
+  c.putImageData(img,0,0);
+  const t=new THREE.CanvasTexture(cv);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(26,34);   // ถี่กว่าลายตัด = เห็นเนื้อหญ้าละเอียด
+  return t;
+}
+/* 🌿 กอหญ้า 3D จริง — แผ่นไขว้กากบาทติดเทกซ์เจอร์ใบหญ้าโปร่ง รวมเป็น mesh เดียว (draw call เดียว เบามาก) */
+function grassTuftTexture(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=64;
+  const c=cv.getContext('2d');
+  c.clearRect(0,0,64,64);
+  for(let i=0;i<16;i++){                          // ใบหญ้าโค้งเรียวจากโคนขึ้นยอด
+    const x0=6+Math.random()*52, w=1.6+Math.random()*2.2, hh=26+Math.random()*34;
+    const lean=(Math.random()-.5)*20;
+    const g=c.createLinearGradient(0,64,0,64-hh);
+    const dark=`rgb(${34+Math.random()*22|0},${86+Math.random()*40|0},${34+Math.random()*20|0})`;
+    const lite=`rgb(${96+Math.random()*50|0},${176+Math.random()*54|0},${74+Math.random()*40|0})`;
+    g.addColorStop(0,dark); g.addColorStop(1,lite);
+    c.fillStyle=g;
+    c.beginPath(); c.moveTo(x0-w,64);
+    c.quadraticCurveTo(x0-w*.4+lean*.5,64-hh*.6, x0+lean,64-hh);
+    c.quadraticCurveTo(x0+w*.6+lean*.5,64-hh*.55, x0+w,64);
+    c.closePath(); c.fill();
+  }
+  const t=new THREE.CanvasTexture(cv); t.minFilter=THREE.LinearFilter; t.generateMipmaps=false;
+  return t;
+}
+function buildGrassTufts(sc,halfW,halfL){
+  const N=1100, verts=[], uvs=[], idx=[];
+  let vi=0;
+  const push=(cx,cz,ang,w,hgt)=>{
+    const sn=Math.sin(ang)*w/2, cs=Math.cos(ang)*w/2;
+    verts.push(cx-cs,0,cz-sn, cx+cs,0,cz+sn, cx+cs,hgt,cz+sn, cx-cs,hgt,cz-sn);
+    uvs.push(0,0, 1,0, 1,1, 0,1);
+    idx.push(vi,vi+1,vi+2, vi,vi+2,vi+3); vi+=4;
+  };
+  for(let i=0;i<N;i++){
+    const x=(Math.random()*2-1)*halfW, z=(Math.random()*2-1)*halfL;
+    const a=Math.random()*Math.PI, w=.42+Math.random()*.34, hgt=.20+Math.random()*.16;
+    push(x,z,a,w,hgt); push(x,z,a+Math.PI/2,w,hgt);       // ไขว้กากบาท = มองมุมไหนก็เห็นเป็นกอ
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  g.setIndex(idx); g.computeVertexNormals();
+  const m=new THREE.MeshLambertMaterial({map:grassTuftTexture(),transparent:true,alphaTest:.45,
+    side:THREE.DoubleSide,depthWrite:true});
+  const mesh=new THREE.Mesh(g,m); mesh.position.y=.03; sc.add(mesh);
+  return mesh;
+}
 /* เส้นสนามชั้นโปร่ง 1024² map ตรงกับ plane 44×64m (คานวณ px จากเมตรจริง) — ขอบสนาม/เส้นกลาง/วงกลมกลาง/
    เขตโทษ+เขต 6 หลา+จุดโทษ+โค้งหน้าเขตโทษ (ฝั่งประตู z=-19 และ mirror ฝั่งตรงข้าม) + โค้งมุมสนาม */
 function soccerLinesTexture(){
@@ -9896,11 +9965,10 @@ function renderSpinPad(){
     spinLblEl.textContent=[side,vert].filter(Boolean).join(' · ') || 'เตะกลางลูก (ตรง)';
   }
 }
+/* รอบ 403: แพดเปิดค้างตลอด — ฟังก์ชันนี้เหลือไว้ให้ testkit/อนาคตเรียกได้ แต่ UI ไม่มีปุ่มปิดแล้ว */
 function spinPadToggle(){
   spinOpen=!spinOpen;
-  if(spinPadEl) spinPadEl.classList.toggle('on',spinOpen);
-  const b=overlayEl.querySelector('#adv-spinbtn'); if(b) b.classList.toggle('on',spinOpen);
-  sfx.select();
+  if(spinPadEl) spinPadEl.style.display=spinOpen?'block':'none';
   if(spinOpen) renderSpinPad();
 }
 /* ลาก/แตะในวงลูกบอล = เลือกจุดสัมผัส (คลิปในวงกลม รัศมี 1) */
@@ -10870,9 +10938,8 @@ function start(md,opt){
     soccerCam1=false; joy.on=false; joy.dx=joy.dy=0;    // 🕹️ รอบ 398: เคลียร์สติ๊กเล็ง (เลิกใช้แป้น ▲▼◀▶)
     sCurl=0; sHit=0; sKickPunch=0; renderCurl();        // 🌀 รอบ 400-401: เริ่มเกมไม่มีโค้ง/จุดสัมผัสค้าง
     fkOn=false; fkWall=null; fkMen=[]; landPt=null;     // 🧱🎯 รอบ 402: กำแพง/วงจุดตกเริ่มใหม่ทุกครั้ง (ฉากสร้างใหม่)
-    spinOpen=false;
-    if(spinPadEl) spinPadEl.classList.remove('on');
-    { const sb=overlayEl.querySelector('#adv-spinbtn'); if(sb) sb.classList.remove('on'); }
+    spinOpen=true;                                      // 🎱 รอบ 403: แพดจุดสัมผัสเปิดค้างตลอด (ผู้ใช้สั่ง)
+    if(spinPadEl) spinPadEl.style.display='';
     renderSpinPad();
     soccerResetBall();
     camera.position.set(0,4,PLAYER_Z+8); camera.lookAt(0,1.2,0);
