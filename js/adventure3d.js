@@ -228,6 +228,7 @@ const SOCCER_TILES=1, SOCCER_LETTER_COIN=5;               // รอบ 404: เ�
 let soccerBall=null, soccerPlayer=null;                    // ลูกบอล · หุ่นนักเตะ (รอบ 401: จุดพรีวิวเดิม → ริบบิ้น guideRibbon)
 let _soccerTileGeo=null, coinPopEl=null;                   // geometry ป้าย (แชร์) · เลเยอร์ป๊อปเหรียญ
 let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
+let sbInGoal=false;                                        // ⚽ รอบ 405: ลูกนี้ "ผ่านเส้นประตูในกรอบจริง" แล้วหรือยัง (ตาข่ายจะอุ้มเฉพาะลูกที่เข้า)
 let aimYaw=0, aimPitch=0.34, sChg=0, sCharging=false, sKickHeld=false, sPrevV=false, sLegSwing=0;
 let soccerCam1=false;                                      // true=มุมมองบุคคลที่ 1
 let sKitShirt=0xe53935, sKitNo='10';
@@ -9916,7 +9917,7 @@ function soccerResetBall(){
   if(!soccerBall) return;
   soccerNewSpot();
   soccerBall.position.set(sBaseX,BALL_R,sBaseZ);
-  sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false;
+  sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false; sbInGoal=false;
   sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
 }
 function soccerKick(power){
@@ -9928,7 +9929,7 @@ function soccerKick(power){
   sbSpin.x=L.wx; sbSpin.z=0;                         // ωx>0 = แบ็คสปิน (ลอยค้าง) · ติดลบ = ท็อปสปิน (จิกลง)
   sbSpin.y=L.wy;                                     // 🌀 ไซด์สปิน = ลูกโค้ง (ตั้งจากจุดสัมผัส/ปัดปุ่มเตะ)
   sCurl=0; sHit=0; renderCurl(); renderSpinPad();    // ตั้งใหม่ทุกลูกแบบ PES (ไม่ค้างข้ามลูกให้งง)
-  sbInNet=false; repTrace=[];                          // 🎬 เริ่มบันทึกวิถีลูกนี้
+  sbInNet=false; sbInGoal=false; repTrace=[];          // 🎬 เริ่มบันทึกวิถีลูกนี้
   if(pkOn) pkKicks++;                                  // 🎯 นับลูกที่ดวล
   sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
   SoccerAudio.kick(power);
@@ -10194,6 +10195,7 @@ function tickSoccer(dt,now){
       sbVel.z+=(sbSpin.x*sbVel.y)*mg;                                        // เฉพาะผลจากแบ็คสปิน
     }
     sbVel.y-=BALL_G*dt;
+    const pX=b.x, pY=b.y, pZ=b.z;                                 // ⚽ รอบ 405: ตำแหน่งก่อนขยับ — ใช้หาจุดตัดเส้นประตู
     b.x+=sbVel.x*dt; b.y+=sbVel.y*dt; b.z+=sbVel.z*dt;
     if(repTrace.length<400) repTrace.push({x:b.x,y:b.y,z:b.z});    // 🎬 บันทึกวิถีไว้ฉายรีเพลย์
     // เสา 2 ต้น + คาน: ชนแล้วสะท้อนจริง + เสียง "ปิ๊ง" (ทรงกระบอกชนทรงกลม)
@@ -10213,8 +10215,27 @@ function tickSoccer(dt,now){
       const ddy=b.y-GOAL_H, ddz=b.z-GOAL_Z, d2=Math.hypot(ddy,ddz);
       if(d2<RR) postHit(0,ddy/d2,ddz/d2,d2,RR);
     }
-    // ตาข่ายอุ้มบอล: เข้าประตูแล้วหน่วงแรง + ผนังหลัง/ข้างกันทะลุ + ตาข่ายกระเพื่อม
-    if(b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){
+    /* ⚽🐛 รอบ 405 (ผู้ใช้ส่งภาพ: ลูกข้ามคานแต่ขึ้น "เข้าประตู"): ตัดสินประตู "ตอนผ่านเส้นประตู" เท่านั้น
+       เดิมเช็กว่าบอลอยู่ในกล่องประตูไหม "ทุกเฟรม" → ลูกที่ลอยข้ามคานไปตกหลังประตู พอ y ต่ำกว่าคานก็ถูกนับ
+       ใหม่: จับจังหวะ z ตัดผ่าน GOAL_Z แล้ว interpolate หาตำแหน่ง x,y ณ จุดตัดจริง แล้วตัดสินครั้งเดียว */
+    if(!sbGoaled && pZ>GOAL_Z && b.z<=GOAL_Z && sbVel.z<0){
+      const t=(pZ-GOAL_Z)/((pZ-b.z)||1);
+      const cx=pX+(b.x-pX)*t, cy=pY+(b.y-pY)*t;
+      sbGoaled=true;                                              // ตัดสินแล้ว ไม่ตัดสินซ้ำ (เข้าก็จบ ไม่เข้าก็จบ)
+      if(Math.abs(cx)<GOAL_HW && cy<GOAL_H && cy>0){
+        sbInGoal=true;
+        if(pkOn){ pkGoals++; SoccerAudio.goal(); sfx.coin(); showBanner(`⚽ <b>เข้า!</b> ${pkGoals} ประตูแล้ว`); }
+        else soccerCheer();
+        if(repQualify(cx,cy)){ repPendAt=now+750; repPendTrace=repTrace.slice(); }   // 🎬 ยิงมุมสวย → ฉายรีเพลย์
+      }else{
+        const overBar=cy>=GOAL_H, wide=Math.abs(cx)>=GOAL_HW;      // บอกให้รู้ว่าพลาดยังไง จะได้ปรับเป็น
+        showBanner(overBar&&wide ? '😅 <b>ข้ามคานและออกข้าง</b> — ลดพลังกับเล็งเข้ากรอบอีกนิด'
+                 : overBar ? '😮 <b>ข้ามคานไป!</b> ลองเตะ<b>บนลูก</b> (พุ่งจิก) หรือลดพลังลง'
+                 : '😯 <b>ออกข้างเสา!</b> เล็งเข้ากรอบอีกนิดนะ');
+      }
+    }
+    // ตาข่ายอุ้มบอล: เข้าประตูแล้วหน่วงแรง + ผนังหลัง/ข้างกันทะลุ + ตาข่ายกระเพื่อม (เฉพาะลูกที่เข้าจริง)
+    if(sbInGoal && b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){
       if(!sbInNet){ sbInNet=true; sbNetRipple=1; SoccerAudio.net(); }
       const damp=Math.max(0,1-6*dt); sbVel.x*=damp; sbVel.z*=damp;
       if(b.z<GOAL_Z-1.9){ b.z=GOAL_Z-1.9; sbVel.z=Math.abs(sbVel.z)*.2; sbNetRipple=1; }
@@ -10245,12 +10266,6 @@ function tickSoccer(dt,now){
           soccerNextTile(l);                                           // 🎯 รอบ 404: เก็บได้แล้ว → ตัวถัดไปโผล่จุดใหม่ในกรอบประตู
         } else { sfx.select(); soccerNextTile(l); }                    // ตัวไม่ต้องการ = ย้ายที่ให้ตัวใหม่เหมือนกัน
       }
-    }
-    if(!sbGoaled && b.z<GOAL_Z && Math.abs(b.x)<GOAL_HW && b.y<GOAL_H){
-      sbGoaled=true;
-      if(pkOn){ pkGoals++; SoccerAudio.goal(); sfx.coin(); showBanner(`⚽ <b>เข้า!</b> ${pkGoals} ประตูแล้ว`); }
-      else soccerCheer();
-      if(repQualify(b.x,b.y)){ repPendAt=now+750; repPendTrace=repTrace.slice(); }   // 🎬 ยิงมุมสวย → ฉายรีเพลย์
     }
     const spd=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
     const oob=Math.abs(b.x)>30||b.z<GOAL_Z-7||b.z>Math.max(PLAYER_Z,sBaseZ)+9||b.y>28;   // 🎲 รอบ 404: จุดยืนสุ่มไปได้ถึง z≈16 ต้องเผื่อขอบ
