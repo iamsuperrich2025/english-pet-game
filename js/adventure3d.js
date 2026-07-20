@@ -250,6 +250,7 @@ let guideRibbon=null, guideMat=null, _gPts=[];
 const FK_SPOT_Z=GOAL_Z+18, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก · ระยะกำแพงตามกติกาจริง · จำนวนคน
 const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/ความสูงคนในกำแพง (ใช้เช็กบอลชน)
 let landRing=null, landPt=null;
+let grassBand=null;                                        // 🌱 รอบ 408: แถบหญ้า 3 แถบที่เลื่อนตามผู้เล่น
 let fkOn=false, fkWall=null, fkMen=[];
 let sCurl=0, curlEl=null, _curlShown=null;                 // -1 โค้งซ้าย .. +1 โค้งขวา
 let soccerStartEl=null, powerFillEl=null;
@@ -2082,11 +2083,9 @@ function buildScene(md){
     // 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเส้นตั้ง 2 ชั้น — วัดแล้วเส้นแทบไม่กินเวลาเรนเดอร์ (+0.1ms/เฟรม)
     //   ชั้นหนา: โซนหน้าประตูที่กล้องจ้องเกือบตลอด (~3 แถบตัดหญ้า) 150 ต้น/ตร.ม. ดูเป็นหญ้าจริง
     //   ชั้นบาง: ทั่วสนามที่เหลือ กันขอบเขตชั้นหนาดูตัดกัน (หมอกฉากช่วยกลืนระยะไกลอยู่แล้ว)
-    // 🌱 รอบ 407 (ผู้ใช้): ตัดใบสั้นลงครึ่งหนึ่ง แล้วเอาที่ประหยัดได้ไปโรยเพิ่มในพื้นที่โล่งที่เหลือ
-    //   โซนหน้าประตูคงความหนาแน่นเดิม · ส่วนที่เหลือเพิ่มจาก 30k → 130k (ข้ามโซนประตูที่หนาอยู่แล้ว)
-    const GZ={x0:-15,x1:15,z0:GOAL_Z,z1:GOAL_Z+22};
-    buildGrassBlades(sc, 90000, GZ.x0, GZ.x1, GZ.z0, GZ.z1, .045, .10);
-    buildGrassBlades(sc, 130000, -(fieldW+22)/2, (fieldW+22)/2, -(fieldL+22)/2, (fieldL+22)/2, .045, .13, GZ);
+    // 🌱 รอบ 408 (ผู้ใช้): ทุกต้นรวมไว้ใน 3 แถบรอบผู้เล่น (ยืน 1 + ข้างหน้า 2) · ไกลกว่านั้นปล่อยโล่ง ไม่งั้นดูรก
+    //   แถบตัดหญ้ากว้าง ~7.5m (12 แถบตลอดสนาม 90m) → 3 แถบ = ลึก 22.5m · เลื่อนตามจุดยืนที่สุ่มใหม่ทุกลูก
+    grassBand=buildGrassBlades(sc, 220000, 18, 3.8, -18.7, .045, .13);
     const lines=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
       new THREE.MeshBasicMaterial({map:soccerLinesTexture(),transparent:true,depthWrite:false}));
     lines.rotation.x=-Math.PI/2; lines.position.y=.035; sc.add(lines);
@@ -9468,18 +9467,18 @@ function buildGrassTufts(sc,halfW,halfL){
 /* 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเป็น "เส้นตั้งฉากกับพื้น" เล็กๆ สีเขียวจริง เต็มสนาม
    ใช้ LineSegments ก้อนเดียว = 1 draw call · เส้นไม่กินค่า fill เลย จึงใส่ได้เป็นหมื่นเส้นบนมือถือ
    โคนเข้ม-ยอดสว่าง (vertex color) + เอียงสุ่มเล็กน้อย + หมอกฉากทำให้ไกลๆ จางเอง = เห็นชัดราว 3 แถบตัดหญ้า */
-function buildGrassBlades(sc,N,x0,x1,z0,z1,hMin,hMax,skip){
+/* 🌱 รอบ 408 (ผู้ใช้): รวมทุกต้นไว้ "3 แถบรอบผู้เล่น" (แถบที่ยืน + ข้างหน้าอีก 2) ที่ไกลปล่อยโล่ง เพราะดูรก
+   สร้างในพิกัด local รอบจุด (0,0) แล้วเลื่อนทั้งก้อนตามจุดยืนที่สุ่มใหม่ทุกลูก (ย้ายแค่ position ไม่ต้องสร้างใหม่)
+   ขอบแถบ: ใบเตี้ยลงเรื่อยๆ ไม่ให้เห็นเป็นขอบพรมตัดตรง */
+function buildGrassBlades(sc,N,halfW,zBack,zFront,hMin,hMax){
   const pos=new Float32Array(N*6), col=new Float32Array(N*6);
   const lo=new THREE.Color(0x2c6b28), hi=new THREE.Color(0x8fd350), c=new THREE.Color();
   for(let i=0;i<N;i++){
-    let x=x0+Math.random()*(x1-x0), z=z0+Math.random()*(z1-z0);
-    // 🌱 รอบ 407: ข้ามโซนที่หนาแน่นอยู่แล้ว — ต้นที่ประหยัดได้จะไปตกในพื้นที่โล่งแทน (ไม่ซ้ำซ้อน)
-    if(skip){ let guard=0;
-      while(guard++<12 && x>skip.x0 && x<skip.x1 && z>skip.z0 && z<skip.z1){
-        x=x0+Math.random()*(x1-x0); z=z0+Math.random()*(z1-z0);
-      }
-    }
-    const h=hMin+Math.random()*(hMax-hMin), lx=(Math.random()-.5)*.05, lz=(Math.random()-.5)*.05;
+    const x=(Math.random()*2-1)*halfW, z=zFront+Math.random()*(zBack-zFront);
+    const fade=Math.max(0,Math.min(1,
+      Math.min((halfW-Math.abs(x))/3.5, (z-zFront)/4.5, (zBack-z)/2)));   // จางที่ขอบข้าง/ขอบไกล/ขอบหลัง
+    const h=(hMin+Math.random()*(hMax-hMin))*(.3+.7*fade);
+    const lx=(Math.random()-.5)*.05, lz=(Math.random()-.5)*.05;
     const o=i*6;
     pos[o]=x;      pos[o+1]=.021;   pos[o+2]=z;
     pos[o+3]=x+lx; pos[o+4]=.021+h; pos[o+5]=z+lz;
@@ -9956,6 +9955,7 @@ function soccerNewSpot(){
 function soccerResetBall(){
   if(!soccerBall) return;
   soccerNewSpot();
+  if(grassBand) grassBand.position.set(sBaseX,0,sBaseZ);   // 🌱 รอบ 408: ย้ายแถบหญ้าไปที่จุดยืนใหม่ (ทุกโหมด)
   soccerBall.position.set(sBaseX,BALL_R,sBaseZ);
   sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false; sbInGoal=false;
   sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
