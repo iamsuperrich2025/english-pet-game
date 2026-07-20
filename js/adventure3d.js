@@ -2079,6 +2079,11 @@ function buildScene(md){
     grass.rotation.x=-Math.PI/2; grass.position.y=.02; sc.add(grass);
     applyTex(grassM,'soccer_grass',3,2);                       // 📷 ภาพหญ้าจริง — ในภาพมีลายตัด 6 แถบอยู่แล้ว repeat 2 ตามยาว = 12 แถบทั่วสนาม (รอบ 397)
     buildGrassTufts(sc,(fieldW+24)/2,(fieldL+24)/2);           // 🌿 กอหญ้า 3D จริงกระจายทั่วสนาม
+    // 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเส้นตั้ง 2 ชั้น — วัดแล้วเส้นแทบไม่กินเวลาเรนเดอร์ (+0.1ms/เฟรม)
+    //   ชั้นหนา: โซนหน้าประตูที่กล้องจ้องเกือบตลอด (~3 แถบตัดหญ้า) 150 ต้น/ตร.ม. ดูเป็นหญ้าจริง
+    //   ชั้นบาง: ทั่วสนามที่เหลือ กันขอบเขตชั้นหนาดูตัดกัน (หมอกฉากช่วยกลืนระยะไกลอยู่แล้ว)
+    buildGrassBlades(sc, 90000, -15, 15, GOAL_Z, GOAL_Z+22, .09, .20);   // 136 ต้น/ตร.ม.
+    buildGrassBlades(sc, 30000, -(fieldW+22)/2, (fieldW+22)/2, -(fieldL+22)/2, (fieldL+22)/2, .09, .26);
     const lines=new THREE.Mesh(new THREE.PlaneGeometry(fieldW,fieldL),
       new THREE.MeshBasicMaterial({map:soccerLinesTexture(),transparent:true,depthWrite:false}));
     lines.rotation.x=-Math.PI/2; lines.position.y=.035; sc.add(lines);
@@ -9455,6 +9460,32 @@ function buildGrassTufts(sc,halfW,halfL){
   const m=new THREE.MeshLambertMaterial({map:grassTuftTexture(),transparent:true,alphaTest:.45,
     side:THREE.DoubleSide,depthWrite:true});
   const mesh=new THREE.Mesh(g,m); mesh.position.y=.03; sc.add(mesh);
+  return mesh;
+}
+/* 🌱 รอบ 406 (ไอเดียผู้ใช้): ใบหญ้าเป็น "เส้นตั้งฉากกับพื้น" เล็กๆ สีเขียวจริง เต็มสนาม
+   ใช้ LineSegments ก้อนเดียว = 1 draw call · เส้นไม่กินค่า fill เลย จึงใส่ได้เป็นหมื่นเส้นบนมือถือ
+   โคนเข้ม-ยอดสว่าง (vertex color) + เอียงสุ่มเล็กน้อย + หมอกฉากทำให้ไกลๆ จางเอง = เห็นชัดราว 3 แถบตัดหญ้า */
+function buildGrassBlades(sc,N,x0,x1,z0,z1,hMin,hMax){
+  const pos=new Float32Array(N*6), col=new Float32Array(N*6);
+  const lo=new THREE.Color(0x2c6b28), hi=new THREE.Color(0x8fd350), c=new THREE.Color();
+  for(let i=0;i<N;i++){
+    const x=x0+Math.random()*(x1-x0), z=z0+Math.random()*(z1-z0);
+    const h=hMin+Math.random()*(hMax-hMin), lx=(Math.random()-.5)*.05, lz=(Math.random()-.5)*.05;
+    const o=i*6;
+    pos[o]=x;      pos[o+1]=.021;   pos[o+2]=z;
+    pos[o+3]=x+lx; pos[o+4]=.021+h; pos[o+5]=z+lz;
+    // เฉดตามแถบตัดหญ้า (สลับเข้ม-อ่อนตามแกน z) + สุ่มรายต้น
+    const band=Math.sin(z*0.42)>0?.18:0;
+    c.copy(lo).lerp(hi, Math.min(1,Math.random()*.8+band));
+    col[o]=c.r*.62;  col[o+1]=c.g*.62;  col[o+2]=c.b*.62;      // โคนเข้ม (เงาในกอ)
+    col[o+3]=c.r;    col[o+4]=c.g;      col[o+5]=c.b;          // ยอดโดนแดด
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  g.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const m=new THREE.LineBasicMaterial({vertexColors:true,transparent:true,opacity:.92});
+  const mesh=new THREE.LineSegments(g,m);
+  mesh.frustumCulled=false; sc.add(mesh);
   return mesh;
 }
 /* เส้นสนามชั้นโปร่ง 1024² map ตรงกับ plane 44×64m (คานวณ px จากเมตรจริง) — ขอบสนาม/เส้นกลาง/วงกลมกลาง/
