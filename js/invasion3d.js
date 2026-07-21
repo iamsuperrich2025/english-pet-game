@@ -103,10 +103,15 @@ const ADS_BREATH=0.0060;                // แอมพลิจูดการ�
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด */
 const REC_RECOVER=5.2;                  // ความเร็วดึงกลับเข้าเป้า (ยิ่งมากยิ่งกลับไว)
 const REC_RIFLE=[0.0115,0.0045];        // [เด้งขึ้น, ส่ายซ้าย-ขวา] เรเดียน
-const REC_R93=[0.052,0.011];
+const REC_R93=[0.088,0.020];            // 448: กระแทกแรงขึ้นตามคลิปอ้างอิง (เดิม .052/.011)
 const BOLT_MS=1200;                     // เวลาชักลูกเลื่อน R93 (ตรงกับ WEAPONS.r93.gap)
 const BREATH_MAX=5.0, BREATH_RECOVER=4.0;   // กลั้นหายใจได้กี่วินาที / เวลาฟื้นเต็ม
 let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
+/* 🏃 รอบ 448: ท่าลดปืนตอนวิ่ง (sprint) — วิ่ง = ปืนก้มลงข้างตัว ยิงไม่ได้จนกว่าจะยกกลับ
+   sprintT 0=ท่าพร้อมยิง · 1=ลดปืนสุด · sprintHold = เวลาที่ "ห้ามลดปืน" (เพิ่งยิง/เพิ่งเล็ง) */
+const SPRINT_IN=0.22, SPRINT_OUT=0.14;
+const SPRINT_POS=[.16,-.20,.10], SPRINT_ROT=[-.62,.42,-.30];   // เลื่อนลง-เข้าใน · ก้มปากกระบอกลง
+let sprintRaw=0, sprintT=0, sprintHold=0, moveLen=0;
 let recPitch=0, recYaw=0, boltAt=0;   // 💥 แรงถอยค้างอยู่ + เวลาที่เริ่มชักลูกเลื่อน
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
@@ -680,7 +685,12 @@ const Snd={
     const g=c.createGain(); g.gain.setValueAtTime(.30,t); g.gain.exponentialRampToValueAtTime(.001,t+.34);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.35);
     this.noise(t,.30,1500,.26);
-    this.noise(t+.16,.55,700,.10);                    // หางเสียงก้องทุ่ง
+    /* 🔊 รอบ 448 (ผู้ใช้ขอ "เสียงยิงก้องไกล" แบบคลิป): หางเสียงสะท้อนหลายชั้น
+       ยิ่งชั้นหลังยิ่งเบา-ทึบ (ตัดความถี่สูงลง) = เสียงวิ่งไปกระทบตึกไกลๆ แล้วกลับมา */
+    this.noise(t+.13,.50,900,.13);                    // สะท้อนตึกใกล้
+    this.noise(t+.34,.70,520,.085);                   // สะท้อนตึกไกล
+    this.noise(t+.62,.95,320,.05);                    // ก้องทุ่งกว้าง
+    this.noise(t+1.05,1.2,210,.028);                  // หางสุดท้าย จางหายไปกับลม
   },
   /* 🔩 เสียงชักลูกเลื่อน/บรรจุกระสุน */
   bolt(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
@@ -2309,13 +2319,15 @@ function tickBolt(now){
   const p=(now-boltAt)/BOLT_MS;
   if(p>=1){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=false; return 0; }
   const seg=(a,b)=>Math.max(0,Math.min(1,(p-a)/(b-a)));
-  const lift = seg(.10,.26)-seg(.80,.95);                 // ยกคันรั้งขึ้น แล้วกดลงตอนจบ
-  const pull = seg(.26,.50)-seg(.60,.84);                 // ดึงถอยหลัง แล้วดันกลับ
-  const cant = seg(.02,.18)-seg(.84,1.0);                 // เอียงปืนเข้าหาตัวให้เห็นคันรั้ง
+  /* ⏱️ รอบ 448 (ผู้ใช้ขอจังหวะแบบคลิป): เริ่มไวขึ้น–กระชากแรงขึ้น–ค้างสั้นๆ ตอนถอยสุด
+     (ของเดิมนิ่ง 0.3 วิแรกก่อนค่อยยก ดูเฉื่อย) */
+  const lift = seg(.04,.16)-seg(.74,.88);                 // ยกคันรั้งขึ้น แล้วกดลงตอนจบ
+  const pull = seg(.16,.38)-seg(.50,.72);                 // ดึงถอยหลัง (เร็ว) → ค้าง → ดันกลับ
+  const cant = seg(.00,.12)-seg(.78,.96);                 // เอียงปืนเข้าหาตัวให้เห็นคันรั้ง
   rig.pivot.rotation.z=-1.15*lift;
   rig.pivot.position.z=rig.z0+rig.L*0.15*pull;
   /* 🟡 ปลอกกระสุนดีดออกตอนดึงสุด — ยิงออกทางขวา-บน แล้วตกลงพื้นตามแรงโน้มถ่วง */
-  if(!rig.ejected && p>.48){
+  if(!rig.ejected && p>.36){
     rig.ejected=true;
     const shell=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.075,7),
       new THREE.MeshLambertMaterial({color:0xc9a13c}));
@@ -2447,6 +2459,22 @@ function tickAds(dt,now){
       GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
       GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
     gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
+    /* 🏃 รอบ 448: ท่าวิ่ง — วิ่งอยู่ (ไม่เล็ง ไม่ชักลูกเลื่อน) ปืนก้มลงข้างตัว แล้วยกกลับนุ่มๆ ตอนหยุด/ยิง */
+    const wantSprint=(isRun||keys.shift) && moveLen>.05 && !scoped && !inHeli && !riding
+                     && now>sprintHold && !boltAt ? 1 : 0;
+    sprintRaw=clamp(sprintRaw + (wantSprint? dt/SPRINT_IN : -dt/SPRINT_OUT), 0, 1);
+    sprintT=smoothstep(sprintRaw)*(1-adsT);          // เล็งอยู่ = ไม่ลดปืน
+    if(sprintT>0.001){
+      gunGrp.position.x+=SPRINT_POS[0]*sprintT;
+      gunGrp.position.y+=SPRINT_POS[1]*sprintT;
+      gunGrp.position.z+=SPRINT_POS[2]*sprintT;
+      gunGrp.rotation.x+=SPRINT_ROT[0]*sprintT;
+      gunGrp.rotation.y+=SPRINT_ROT[1]*sprintT;
+      gunGrp.rotation.z+=SPRINT_ROT[2]*sprintT;
+      /* ปืนโยกตามจังหวะวิ่ง (แรงกว่าตอนเดินปกติ) */
+      gunGrp.position.y+=Math.sin(now*.018)*.022*sprintT;
+      gunGrp.rotation.z+=Math.sin(now*.009)*.05*sprintT;
+    }
   }
   /* 🔩 ชักลูกเลื่อนหลังยิง (R93) — คันรั้งถอยหลัง-ดันกลับ + ปืนสะบัดตามจังหวะ
      ทำให้ "ยิงทีละนัด" รู้สึกมีน้ำหนัก ไม่ใช่แค่หน่วงเวลาเปล่าๆ */
@@ -2675,6 +2703,9 @@ function fireGun(now){
   }
   lastFire=now;
   gunRecoil=W.recoil; muzzleUntil=now+(W.mag?90:55);
+  /* 💥 รอบ 448 (ผู้ใช้ขอฟีลแบบคลิป): สไนเปอร์ = "กระแทก" ไม่ใช่แค่เด้ง
+     → สั่นจอ + ปืนกระชากแรงกว่าปกติ + ยกปืนขึ้นจากท่าวิ่งทันทีถ้ากำลังวิ่งอยู่ */
+  if(W.mag){ shake=Math.min(1.2,shake+.34); gunRecoil=W.recoil*1.25; sprintHold=now+520; }
   if(W.mag){ Snd.sniper(); boltAt=now; } else Snd.gun();
   const origin=camera.position.clone();
   const dir=aimDir();
@@ -3138,6 +3169,7 @@ function tickPlayer(dt,now){
   const run=isRun||keys.shift;
   let spd=(run?RUN:WALK);
   const len=Math.hypot(f,s);
+  moveLen=len;                                   // 🏃 รอบ 448: ท่าวิ่งต้องรู้ว่ากำลังขยับอยู่ไหม
   if(len>1){ f/=len; s/=len; }
   const sinY=Math.sin(yaw), cosY=Math.cos(yaw);
   const dirX=(-sinY*f + cosY*s), dirZ=(-cosY*f - sinY*s);
@@ -4357,6 +4389,8 @@ window.InvasionWorld={
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
+    /* 🏃 รอบ 448: ท่าลดปืนตอนวิ่ง */
+    get sprintT(){return +sprintT.toFixed(3)}, set moveLen(v){moveLen=v}, get moveLen(){return moveLen},
     get recoil(){return {pitch:+recPitch.toFixed(5), yaw:+recYaw.toFixed(5)}}, addRecoil, applyRecoil,
     get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
     /* 🔩 รอบ 447: ตรวจคันรั้งลูกเลื่อนของโมเดลจริง */

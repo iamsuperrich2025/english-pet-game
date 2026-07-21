@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v162';  // v162: 🔩 ชักลูกเลื่อน R93 แบบ SV-98 + ปลอกกระสุนดีด รอบ 447
+const CACHE_VERSION = 'pet-vocab-v163';  // v163: 🎯 ฟีล SV-98 ครบ 4 ข้อ (จังหวะ/แรงถอย/เสียงก้อง/ท่าวิ่ง) รอบ 448
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
