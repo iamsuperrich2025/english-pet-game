@@ -844,6 +844,7 @@ let msLamps=[], msCore=null, msGlow=null, msBoard=null, msPlate=null;
    ============================================================ */
 const glbCache={};                 // path -> gltf.scene ต้นฉบับ (clone ได้)
 let glbLoaderPending=[];           // คิว callback ที่รอ GLTFLoader โหลดเสร็จ
+const glbWait={};                  // 🐛 รอบ 436: คิว callback ต่อ path — กัน "โหลดไฟล์เดียวกันพร้อมกันหลายรอบ"
 function loadGlb(path,cb){
   if(glbCache[path]){ cb(glbCache[path].clone(true)); return; }
   if(!THREE.GLTFLoader){           // ยังไม่มี loader → โหลด script แล้วค่อยลองใหม่ (โหลดครั้งเดียว)
@@ -856,11 +857,20 @@ function loadGlb(path,cb){
     }
     return;
   }
+  /* ⚠️ รอบ 436: ของเดิม ทหาร 18 คนเรียกพร้อมกัน = ยิง GLTFLoader 18 ครั้ง ได้ "ต้นฉบับคนละก้อน"
+     (glbCache โดนเขียนทับไปมา) → โหลดไฟล์เดียวซ้ำ 18 รอบเปลืองเน็ตมาก และการแก้ต้นฉบับ
+     (เช่นอบทิศให้หันหน้าถูก) มีผลแค่ก้อนเดียว ที่เหลือหันหลังหมด — ต้นตอ "บอทหันหลังยิง"
+     → เข้าคิวต่อ path: โหลดจริงครั้งเดียว แล้วแจก clone จาก cache ให้ทุกคน */
+  if(glbWait[path]){ glbWait[path].push(cb); return; }
+  glbWait[path]=[cb];
+  const flush=()=>{ const q=glbWait[path]||[]; delete glbWait[path];
+    if(glbCache[path]) q.forEach(f=>f(glbCache[path].clone(true))); };
   try{
     new THREE.GLTFLoader().load(path,g=>{
-      if(g&&g.scene){ tameGlbMaterials(g.scene); glbCache[path]=g.scene; cb(g.scene.clone(true)); }
-    },undefined,()=>{});
-  }catch(e){}
+      if(g&&g.scene){ tameGlbMaterials(g.scene); glbCache[path]=g.scene; }
+      flush();
+    },undefined,()=>{ delete glbWait[path]; });
+  }catch(e){ delete glbWait[path]; }
 }
 /* ⚠️ โมเดลที่เจนจาก AI มักตั้ง metalness สูง (เหล็ก/ปืน) — ฉากนี้ไม่มี environment map
    ผิวโลหะจึงเรนเดอร์ออกมา "ดำสนิท" (เจอจริง: ปืนกลายเป็นก้อนดำบังจอ)
@@ -1532,6 +1542,13 @@ function buildSoldierRig(){
 }
 /* 🧩 เสียบโมเดลจริงเข้าโครง: หา node ตามชื่อใน SOLDIER_PARTS แล้วย้ายไปห้อยใต้ข้อต่อเดิม
    แยกชิ้นไม่ได้ (โมเดลชิ้นเดียว) → แปะทั้งตัวที่สะโพก ยังเห็นเป็นทหาร แค่ไม่ขยับแขนขา */
+/* 🧭 รอบ 436 (ผู้ใช้: "บอทหันหลังยิง") — ต้นตอที่ 2 ของอาการหันหลัง:
+   `faceModelForward` หมุน "ตัว obj" 180° แต่ตอนแยกชิ้นเข้าข้อต่อ เราใช้ `j.add(mesh)`
+   = ย้าย mesh ไปอยู่ใต้ข้อต่อโดยไม่พาการหมุนของ obj ไปด้วย → **การกลับหลังหายทั้งหมด**
+   (วัดจากในเกมจริง: ในพิกัดตัวทหารเอง ปลายเท้ายังชี้ +Z = ยืนหันหลังให้เป้า)
+   แก้ที่ต้นทาง: ตัดสินใจกลับหลัง "ครั้งเดียวจากไฟล์ต้นฉบับใน cache" แล้ว **อบ 180° ลงใน geometry**
+   → ทุกสำเนาหลังจากนั้นหันหน้า −Z มาแต่เกิด ไม่มี transform ให้หายอีก (ใช้ได้ทั้ง rig ตามชื่อและ auto-rig) */
+function loadSoldierGlb(path,cb){ loadGlb(path,cb); }
 function applySoldierGlb(s,obj){
   s.flipped=faceModelForward(obj);      /* 🧭 จัดให้หันหน้าไป −Z ก่อนเสมอ */
   const found={};
@@ -1554,9 +1571,16 @@ function applySoldierGlb(s,obj){
   keys.forEach(function(k){
     const m=found[k], j=s.J[k]; if(!j) return;
     const box=new THREE.Box3().setFromObject(m), c=new THREE.Vector3(); box.getCenter(c);
+    /* 🐛 รอบ 436: เดิมใช้ j.add(m) เฉยๆ → ชิ้นหลุดจากการหมุนของ obj = "การกลับหลัง 180° หายไป"
+       (ต้นตอบอทหันหลังยิง) → แบนเป็นพิกัดโลกก่อน (เก็บทิศไว้) แล้วค่อยเลื่อนเข้าข้อต่อ
+       วิธีเดียวกับที่ autoRigSoldier ทำอยู่แล้ว จึงไม่พังกับโมเดลที่ชิ้นมี transform ของตัวเอง */
+    m.updateWorldMatrix(true,false);
+    const wm=m.matrixWorld.clone();
+    if(m.parent) m.parent.remove(m);
+    wm.decompose(m.position,m.quaternion,m.scale);
     /* ให้ "ปลายบนของชิ้น" อยู่ที่ข้อต่อพอดี → หมุนแล้วดูเป็นธรรมชาติเหมือนข้อต่อจริง */
-    if(k==='hips'||k==='torso'||k==='head') m.position.set(-c.x,0,-c.z);
-    else m.position.set(-c.x,-box.max.y,-c.z);
+    m.position.x-=c.x; m.position.z-=c.z;
+    m.position.y-=(k==='hips'||k==='torso'||k==='head')?0:box.max.y;
     j.add(m);
   });
   s.glb=true; return true;
@@ -1823,7 +1847,7 @@ function makeSoldier(x,z,crouch,kind){
   poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
   scene.add(s.grp);
   /* 🧩 มีโมเดลจริงก็สลับให้เอง (ไม่มีไฟล์ = ใช้ทรงที่วาดไว้ ไม่พัง) */
-  loadGlb('img/models/soldier_'+(kind||'a')+'.glb',function(obj){
+  loadSoldierGlb('img/models/soldier_'+(kind||'a')+'.glb',function(obj){
     fitInto(obj,1.8);                       /* สูงราว 1.8 ม. เท่าคนจริง */
     obj.position.y=0;
     applySoldierGlb(s,obj);
@@ -3571,7 +3595,7 @@ function peerBody(kind,color){
     const rig=buildSoldierRig();
     rig.J.torso.children.forEach(c=>{ if(c.isMesh&&c.material&&c.material.color) c.material=new THREE.MeshLambertMaterial({color}); });
     g.add(rig.grp); g.userData.rig=rig;
-    loadGlb('img/models/soldier_b.glb',(obj)=>{
+    loadSoldierGlb('img/models/soldier_b.glb',(obj)=>{
       fitInto(obj,1.8); obj.position.y=0;
       applySoldierGlb({J:rig.J},obj);
     });
@@ -3807,7 +3831,9 @@ function tickSquad(dt,now){
     const aim=tgt?tgt.grp.position:((msOpen&&msCore)?msCore.position:null);
     if(aim){
       const d=new THREE.Vector3().subVectors(aim,s.grp.position);
-      s.grp.rotation.y=Math.atan2(d.x,d.z);
+      /* 🧭 รอบ 436 (ผู้ใช้: "บอทหันหลังยิง"): ทหารหันหน้าไป −Z ตอน rotation=0
+         → ต้องใช้ atan2(−x,−z) ไม่ใช่ atan2(x,z) (ของเดิมหันก้นใส่เป้าเป๊ะ 180°) */
+      s.grp.rotation.y=Math.atan2(-d.x,-d.z);
       /* 🪖 รอบ 423: หันตัว+เงยหน้าตามเป้า แล้วให้ poseSoldier จัดท่าแขน/ลำตัวเอง
          (เดิมหมุนเฉพาะ "ปืน" ทำให้ปืนลอยแยกจากตัว) */
       s.lookUp=Math.atan2(d.y,Math.hypot(d.x,d.z));
@@ -3978,38 +4004,53 @@ function start(){
   pickWord();
   netJoin();                                            // 🌐 เข้าห้องสมรภูมิออนไลน์ (เห็นเพื่อน map เดียวกัน)
   if(typeof Music!=='undefined'&&Music.suspendBg) Music.suspendBg();
+  /* ⌨️ รอบ 436 (ผู้ใช้: "WASD ไม่ทำงาน ต้องใช้ลูกศร"):
+     ต้นตอ = โค้ดเดิมอ่าน `e.key` ซึ่งเป็น "ตัวอักษรที่พิมพ์ออกมา" → สลับแป้นเป็นภาษาไทยแล้ว
+     W กลายเป็น "ไ" · A="ฟ" · S="ห" · D="ก" → เทียบไม่ตรงเลย (ลูกศรไม่มีตัวอักษรจึงยังใช้ได้)
+     แก้: อ่าน `e.code` = "ปุ่มตัวไหนบนแป้น" ไม่ขึ้นกับภาษา (โลก 3D อื่นใช้ e.code อยู่แล้ว)
+     ยังรับ e.key ไว้เป็นตัวสำรอง เผื่อเบราว์เซอร์เก่าไม่มี e.code */
+  const codeOf=e=>{
+    const c=e.code||'';
+    if(c) return c;
+    const k=(e.key||'').toLowerCase();
+    const map={w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',q:'KeyQ',e:'KeyE',r:'KeyR',h:'KeyH',
+               f:'KeyF',g:'KeyG',z:'KeyZ',b:'KeyB',' ':'Space',shift:'ShiftLeft',
+               control:'ControlLeft',escape:'Escape',arrowup:'ArrowUp',arrowdown:'ArrowDown',
+               arrowleft:'ArrowLeft',arrowright:'ArrowRight'};
+    return map[k]||'';
+  };
   keydownFn=e=>{
-    const k=e.key.toLowerCase();
-    if(k==='w'||k==='arrowup') keys.w=true;
-    else if(k==='s'||k==='arrowdown') keys.s=true;
-    else if(k==='a'||k==='arrowleft') keys.a=true;
-    else if(k==='d'||k==='arrowright') keys.d=true;
-    else if(k==='shift') keys.shift=true;
-    else if(k===' ') keys.space=true;
-    else if(k==='control') keys.ctrl=true;
-    else if(k==='q') keys.q=true;      // 🚁 หันลำซ้าย (เหมือนโลกเฮลิฯ)
-    else if(k==='e') keys.e=true;      // 🚁 หันลำขวา
-    else if(k==='r'&&!e.repeat) fireMissile(performance.now());
-    else if(k==='h'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
-    else if(k==='f'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
-    else if(k==='g'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
-    else if(k==='z'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
-    else if(k==='b'){ if(breathLeft>0) holdBreath=true; }  // 🫁 กลั้นหายใจ
-    else if(k==='escape'){ unlockMouse(); exitBox.classList.add('on'); }
-    if(['w','a','s','d',' '].includes(k)) e.preventDefault();
+    const c=codeOf(e);
+    if(c==='KeyW'||c==='ArrowUp') keys.w=true;
+    else if(c==='KeyS'||c==='ArrowDown') keys.s=true;
+    else if(c==='KeyA'||c==='ArrowLeft') keys.a=true;
+    else if(c==='KeyD'||c==='ArrowRight') keys.d=true;
+    else if(c==='ShiftLeft'||c==='ShiftRight') keys.shift=true;
+    else if(c==='Space') keys.space=true;
+    else if(c==='ControlLeft'||c==='ControlRight') keys.ctrl=true;
+    else if(c==='KeyQ') keys.q=true;      // 🚁 หันลำซ้าย (เหมือนโลกเฮลิฯ)
+    else if(c==='KeyE') keys.e=true;      // 🚁 หันลำขวา
+    else if(c==='KeyR'&&!e.repeat) fireMissile(performance.now());
+    else if(c==='KeyH'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
+    else if(c==='KeyF'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
+    else if(c==='KeyG'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
+    else if(c==='KeyZ'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
+    else if(c==='KeyB'){ if(breathLeft>0) holdBreath=true; }  // 🫁 กลั้นหายใจ
+    else if(c==='Escape'){ unlockMouse(); exitBox.classList.add('on'); }
+    if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(c)) e.preventDefault();
   };
   keyupFn=e=>{
-    const k=e.key.toLowerCase();
-    if(k==='w'||k==='arrowup') keys.w=false;
-    else if(k==='s'||k==='arrowdown') keys.s=false;
-    else if(k==='a'||k==='arrowleft') keys.a=false;
-    else if(k==='d'||k==='arrowright') keys.d=false;
-    else if(k==='shift') keys.shift=false;
-    else if(k===' ') keys.space=false;
-    else if(k==='control') keys.ctrl=false;
-    else if(k==='b') holdBreath=false;
-    else if(k==='q') keys.q=false;
-    else if(k==='e') keys.e=false;
+    const c=codeOf(e);
+    if(c==='KeyW'||c==='ArrowUp') keys.w=false;
+    else if(c==='KeyS'||c==='ArrowDown') keys.s=false;
+    else if(c==='KeyA'||c==='ArrowLeft') keys.a=false;
+    else if(c==='KeyD'||c==='ArrowRight') keys.d=false;
+    else if(c==='ShiftLeft'||c==='ShiftRight') keys.shift=false;
+    else if(c==='Space') keys.space=false;
+    else if(c==='ControlLeft'||c==='ControlRight') keys.ctrl=false;
+    else if(c==='KeyB') holdBreath=false;
+    else if(c==='KeyQ') keys.q=false;
+    else if(c==='KeyE') keys.e=false;
   };
   resizeFn=()=>{ fit(); fitSpawnMap(); layoutScope(); };
   window.addEventListener('keydown',keydownFn);
@@ -4087,6 +4128,7 @@ window.InvasionWorld={
       detail:!!(h.detail&&h.detail.visible),proxy:h.proxy.visible}))},
     get sniperSpots(){return sniperSpots.map(s=>({x:+s.x.toFixed(0),z:+s.z.toFixed(0),e:+s.e.toFixed(1)}))},
     houseBlocked, houseCover, tickHouseLod, get inCover(){return inCover},
+    get glbCache(){return glbCache}, loadSoldierGlb, faceModelForward,
     /* 🚁 รอบ 434: เฮลิจอด */
     get pads(){return pads.map(p=>({x:+p.x.toFixed(1),z:+p.z.toFixed(1),rot:+p.rot.toFixed(2),ready:!!p.model,vis:p.grp.visible}))},
     get heliReady(){return heliReady}, get seat(){return seatLv}, setSeatView, padAt, get myPad(){return myPad?myPad.idx:null},
