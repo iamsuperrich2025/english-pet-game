@@ -2271,6 +2271,64 @@ function forceGunForward(obj){
    ไม่ใช่มือ · โมเดลปืนจริงมีด้ามจับ/การ์ดมือครบอยู่แล้ว ปล่อยให้เห็นตัวปืนล้วนๆ สะอาดกว่า
    ⚠️ session หน้า: ถ้าจะทำมืออีก อย่าประกอบจากกล่อง/ทรงกระบอกอีก — ต้องเป็นโมเดล .glb มือที่ rig
    มาพร้อมปืน (แบบที่เกมจริงทำ) ไม่งั้นผลลัพธ์จะวนกลับมาที่เดิม */
+/* ============================================================
+   🔩 รอบ 447: ชักลูกเลื่อนแบบ SV-98/Delta Force (ผู้ใช้ส่งคลิปอ้างอิงมา)
+   ลำดับที่เห็นในเกมจริง: เอียงปืนเข้าหาตัว → ยกคันรั้งขึ้น (ปลดล็อก) → ดึงถอยหลังสุด
+     → ปลอกกระสุนดีดออก → ดันกลับไปข้างหน้า → กดคันรั้งลง (ล็อก) → ปืนคืนท่าเดิม
+   ⚠️ โมเดล .glb ใหม่เป็น "ก้อนเดียว" ไม่มีชิ้นคันรั้งให้ขยับ → สร้างคันรั้งเสริมเองแล้ววาง
+      จากกรอบโมเดล (ด้านขวาของโครงปืน ค่อนไปทางท้าย) = ใช้ได้กับปืนโมเดลไหนก็ได้
+   ============================================================ */
+function attachBoltHandle(gunObj){
+  if(!gunObj) return;
+  if(gunObj.userData.boltRig&&gunObj.userData.boltRig.pivot.parent)
+    gunObj.userData.boltRig.pivot.parent.remove(gunObj.userData.boltRig.pivot);
+  gunObj.updateMatrixWorld(true);
+  const box=new THREE.Box3(), v=new THREE.Vector3();
+  gunObj.traverse(o=>{ if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=9){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld); box.expandByPoint(v); } });
+  if(box.isEmpty()) return;
+  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3());
+  const L=Math.max(s.x,s.y,s.z);
+  const met=new THREE.MeshLambertMaterial({color:0x2a2d33});
+  const dark=new THREE.MeshLambertMaterial({color:0x15171b});
+  const pivot=new THREE.Group();
+  pivot.position.set(c.x+s.x*0.30, c.y+s.y*0.10, c.z+s.z*0.12);   // ขวาของโครงปืน ค่อนไปทางท้าย
+  const arm=new THREE.Mesh(new THREE.CylinderGeometry(L*.014,L*.014,L*.10,8),met);
+  arm.rotation.z=Math.PI/2; arm.position.x=L*.05; pivot.add(arm);
+  const knob=new THREE.Mesh(new THREE.SphereGeometry(L*.026,10,8),dark);
+  knob.position.x=L*.10; pivot.add(knob);
+  gunObj.add(pivot);
+  gunObj.userData.boltRig={pivot, z0:pivot.position.z, L, ejected:false};
+}
+/* 🔩 อัปเดตท่าชักลูกเลื่อน + ดีดปลอกกระสุน (เรียกทุกเฟรมจาก tickAds) */
+function tickBolt(now){
+  const rig=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
+  if(!rig) return 0;
+  if(!boltAt||weapon!=='r93'){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=false; return 0; }
+  const p=(now-boltAt)/BOLT_MS;
+  if(p>=1){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=false; return 0; }
+  const seg=(a,b)=>Math.max(0,Math.min(1,(p-a)/(b-a)));
+  const lift = seg(.10,.26)-seg(.80,.95);                 // ยกคันรั้งขึ้น แล้วกดลงตอนจบ
+  const pull = seg(.26,.50)-seg(.60,.84);                 // ดึงถอยหลัง แล้วดันกลับ
+  const cant = seg(.02,.18)-seg(.84,1.0);                 // เอียงปืนเข้าหาตัวให้เห็นคันรั้ง
+  rig.pivot.rotation.z=-1.15*lift;
+  rig.pivot.position.z=rig.z0+rig.L*0.15*pull;
+  /* 🟡 ปลอกกระสุนดีดออกตอนดึงสุด — ยิงออกทางขวา-บน แล้วตกลงพื้นตามแรงโน้มถ่วง */
+  if(!rig.ejected && p>.48){
+    rig.ejected=true;
+    const shell=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.075,7),
+      new THREE.MeshLambertMaterial({color:0xc9a13c}));
+    const wp=new THREE.Vector3(); rig.pivot.getWorldPosition(wp);
+    shell.position.copy(wp); scene.add(shell);
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+    const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+    const back=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion);
+    const vel=right.multiplyScalar(rnd(2.2,3.4)).add(up.multiplyScalar(rnd(1.6,2.6))).add(back.multiplyScalar(rnd(.2,1.0)));
+    fx.push({o:shell,kind:'bit',t:0,life:2.6,v:vel,rv:new THREE.Vector3(rnd(-9,9),rnd(-9,9),0)});
+  }
+  return cant;
+}
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -2337,7 +2395,7 @@ function buildGun(){
       });
     });
     g.remove(gunModels.r93); gunModels.r93=obj; obj.visible=(weapon==='r93');
-    g.add(obj);
+    g.add(obj); attachBoltHandle(obj);                     // 🔩 รอบ 447: คันรั้งลูกเลื่อนที่ขยับได้
   });
 }
 /* สลับปืน (เฉพาะตอนเดินเท้า — บนเฮลิใช้ปืนกลติดลำ) */
@@ -2394,15 +2452,20 @@ function tickAds(dt,now){
      ทำให้ "ยิงทีละนัด" รู้สึกมีน้ำหนัก ไม่ใช่แค่หน่วงเวลาเปล่าๆ */
   if(boltAt && weapon==='r93'){
     const bt=(now-boltAt)/BOLT_MS;
-    if(bt>=1){ boltAt=0; }
+    if(bt>=1){ boltAt=0; tickBolt(now); }
     else{
+      /* 🔩 รอบ 447: คันรั้งของโมเดลจริง (ยก-ดึง-ดัน-กด) + ปลอกกระสุนดีด */
+      const cant=tickBolt(now);
+      /* เอียงปืนเข้าหาตัว + ยกขึ้นนิด ระหว่างชักลูกเลื่อน (เหมือนคลิป SV-98 ที่ผู้ใช้ส่งมา) */
+      gunGrp.rotation.z+=cant*.30;
+      gunGrp.rotation.y+=cant*.16;
+      gunGrp.rotation.x+=cant*.05;
+      gunGrp.position.y+=cant*.035;
+      /* ทรงปืนที่โค้ดวาดเอง (ตอนโมเดลจริงยังโหลดไม่เสร็จ) ใช้ลูกบิดเดิม */
       const knob=gunModels.r93 && gunModels.r93.userData ? gunModels.r93.userData.bolt : null;
-      /* จังหวะ: 0-.35 ดึงถอยหลัง · .35-.7 ดันกลับ · ที่เหลือนิ่ง */
-      const pull = bt<.35 ? (bt/.35) : (bt<.7 ? 1-((bt-.35)/.35) : 0);
-      if(knob) knob.position.z=.14+pull*.16;
-      if(gunGrp) gunGrp.rotation.x+=pull*.035;      // ปืนสะบัดตามมือที่ชักลูกเลื่อน
+      if(knob){ const pull=bt<.35?(bt/.35):(bt<.7?1-((bt-.35)/.35):0); knob.position.z=.14+pull*.16; }
     }
-  }
+  }else if(gunModels.r93&&gunModels.r93.userData&&gunModels.r93.userData.boltRig&&!boltAt) tickBolt(now);
   /* ③ ขอบเลนส์ค่อยๆ ขยายเข้ามา + ⑤ เรติเคิลชัดขึ้นตามจังหวะ */
   const on=adsT>0.02;
   wrapEl.classList.toggle('scoped',on);
@@ -4296,6 +4359,10 @@ window.InvasionWorld={
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
     get recoil(){return {pitch:+recPitch.toFixed(5), yaw:+recYaw.toFixed(5)}}, addRecoil, applyRecoil,
     get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
+    /* 🔩 รอบ 447: ตรวจคันรั้งลูกเลื่อนของโมเดลจริง */
+    get boltRig(){ const r=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
+      return r?{lift:+r.pivot.rotation.z.toFixed(3), back:+(r.pivot.position.z-r.z0).toFixed(3), ejected:r.ejected}:null; },
+    tickBolt, attachBoltHandle,
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
     get gunPose(){return gunGrp?{p:gunGrp.position.toArray().map(n=>+n.toFixed(3)),
       r:gunGrp.rotation.toArray().slice(0,3).map(n=>+n.toFixed(3)), s:+gunGrp.scale.x.toFixed(3)}:null},
