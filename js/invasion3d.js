@@ -1269,6 +1269,45 @@ const BODY_MAP={            /* [x สัดส่วนความกว้า�
   legUL:[-.22,.36], legLL:[-.24,.13],
   legUR:[ .22,.36], legLR:[ .24,.13],
 };
+/* ⚡ รอบ 425: รวมหลายชิ้นเป็นก้อนเดียวต่อข้อต่อ — "ตัวเลขที่สำคัญกว่าจำนวนโพลี"
+   Tripo Smart Segment แตกเป็น ~110 ชิ้น = 110 draw call ต่อทหาร 1 คน
+   มีทหาร 20 คนในแมพ = 2,200 draw call → มือถือเด็กเอาไม่อยู่แน่นอน
+   รวมแล้วเหลือ 11 ก้อน (ข้อต่อละ 1) = ลดลงราว 10 เท่า โดยหน้าตาเหมือนเดิมทุกประการ
+   (three.min.js ที่ใช้ไม่มี BufferGeometryUtils จึงเขียนรวมเองแบบตรงไปตรงมา) */
+function mergeMeshList(meshes){
+  const byMat={};
+  meshes.forEach(function(m){
+    const key=(m.material&&m.material.uuid)||'x';
+    if(!byMat[key]) byMat[key]={mat:m.material,list:[]};
+    byMat[key].list.push(m);
+  });
+  const out=[];
+  Object.keys(byMat).forEach(function(k){
+    const mat=byMat[k].mat, list=byMat[k].list;
+    const pos=[], nor=[], uv=[];
+    const v=new THREE.Vector3();
+    list.forEach(function(m){
+      let g=m.geometry; if(!g||!g.attributes||!g.attributes.position) return;
+      if(g.index) g=g.toNonIndexed();
+      const P=g.attributes.position, N=g.attributes.normal, T=g.attributes.uv;
+      m.updateMatrix();
+      const mtx=m.matrix, nm=new THREE.Matrix3().getNormalMatrix(mtx);
+      for(let i=0;i<P.count;i++){
+        v.fromBufferAttribute(P,i).applyMatrix4(mtx); pos.push(v.x,v.y,v.z);
+        if(N){ v.fromBufferAttribute(N,i).applyMatrix3(nm).normalize(); nor.push(v.x,v.y,v.z); }
+        if(T) uv.push(T.getX(i),T.getY(i));
+      }
+    });
+    if(!pos.length) return;
+    const g2=new THREE.BufferGeometry();
+    g2.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+    if(nor.length===pos.length) g2.setAttribute('normal',new THREE.Float32BufferAttribute(nor,3));
+    else g2.computeVertexNormals();
+    if(uv.length===pos.length/3*2) g2.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
+    out.push(new THREE.Mesh(g2,mat));
+  });
+  return out;
+}
 function autoRigSoldier(s,obj){
   obj.updateWorldMatrix(true,true);
   /* 1) เก็บทุกชิ้น + กรอบของมัน (ทำให้เป็นพิกัดโลกก่อน จะได้ไม่ต้องสนใจ transform ซ้อนกัน) */
@@ -1331,8 +1370,10 @@ function autoRigSoldier(s,obj){
     j.position.set(w.x-pw.x, w.y-pw.y, w.z-pw.z);
   });
   /* 5) ย้ายชิ้นจริงไปห้อยใต้ข้อต่อ (แบนพิกัดเป็นโลกก่อน แล้วลบตำแหน่งข้อต่อออก) */
+  let merged=0;
   used.forEach(function(k){
     const j=J[k]; if(!j) return;
+    const list=[];
     bucket[k].forEach(function(p){
       const m=p.o;
       m.updateWorldMatrix(true,false);
@@ -1340,12 +1381,16 @@ function autoRigSoldier(s,obj){
       if(m.parent) m.parent.remove(m);
       wm.decompose(m.position,m.quaternion,m.scale);
       m.position.sub(piv[k]);
-      j.add(m);
+      list.push(m);
     });
+    /* ⚡ รวมทุกชิ้นในข้อต่อนี้เป็นก้อนเดียว (ลด draw call ~10 เท่า) */
+    const one=mergeMeshList(list);
+    if(one.length){ one.forEach(function(m){ j.add(m); merged++; }); }
+    else list.forEach(function(m){ j.add(m); merged++; });
   });
   /* 6) ยกทั้งตัวให้เท้าแตะพื้น (ข้อต่อ hips ของโครงอยู่ที่ y=0.92 อยู่แล้ว) */
   J.hips.position.y=(piv.hips.y-all.min.y);
-  s.glb=true; s.autoRig=true; s.rigInfo={parts:parts.length,joints:used.length};
+  s.glb=true; s.autoRig=true; s.rigInfo={parts:parts.length,joints:used.length,meshes:merged};
   return true;
 }
 /* 🎞️ ท่าทางทหาร — ขยับด้วยโค้ดตามสถานการณ์จริงในเกม (เนียนกว่าคลิปสำเร็จรูป)
@@ -3255,7 +3300,7 @@ window.InvasionWorld={
       r.pose={}; Object.keys(s.J).forEach(k=>{ r.pose[k]=[+s.J[k].rotation.x.toFixed(3),+s.J[k].rotation.z.toFixed(3)]; });
       r.hipsY=+s.J.hips.position.y.toFixed(3); return r; },
     squadPose(i,mode){ const s=squad[i||0]; if(s){ s.mode=mode; poseSoldier(s,performance.now()); } return s?s.mode:null; },
-    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP,
+    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP, mergeMeshList,
     get shots(){return fShots.length}, get missiles(){return missiles.length}, get fx(){return fx.length},
     get mother(){return mother}, get camera(){return camera}, get scene(){return scene},
     get renderInfo(){ return {calls:renderer.info.render.calls, tris:renderer.info.render.triangles,
