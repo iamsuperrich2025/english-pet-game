@@ -2014,9 +2014,15 @@ function tickPads(dt,now){
    FOV 68 · จอ 16:9 → กว้าง ≈ 2.40·d เมตร · สูง ≈ 1.35·d เมตร
    ปืนโมเดลจริงกว้างประมาณ 1.09 × (fitInto × GUN_SCALE) → อยากให้กินจอ ~48% ต้องได้ ~0.88m ที่ d=0.75
    ⛔ อย่าลด z เข้าใกล้กล้องเพื่อ "ให้ปืนใหญ่ขึ้น" โดยไม่ลด scale ตาม — จอจะโดนบังหมด */
-const GUN_POS=[.22,-.26,-.75];      // ตำแหน่งปืนเทียบกล้อง (x ขวา · y ล่าง · z ระยะหน้ากล้อง)
-const GUN_ROT=[.05,-.20,.20];       // มุมปืน: [ก้ม-เงย, หันซ้าย-ขวา, "เอียงทแยง"(roll)] — roll ทำให้ดูเหมือนภาพอ้างอิง
-const GUN_SCALE=.85;                // ขนาดปืนในจอ (ภาพอ้างอิงปืนกินมุมขวาล่างราวครึ่งจอ)
+/* 🔫 รอบ 440 (ผู้ใช้ส่งภาพอ้างอิงเกมจริง: "ปืนไม่ตั้งอย่างนี้ ให้เอียงและเห็นชัดๆ"):
+   ท่าเดิมเล็งปืนขนานแกนกล้องเป๊ะ → มองจากท้ายปืน เห็นเป็น "ท่อตั้งกลางจอ" จำไม่ได้ว่าปืนอะไร
+   ท่าใหม่แบบภาพอ้างอิง: ปืนอยู่ล่าง-ขวา · **หันปากกระบอกเฉียงเข้ากลางจอ** (เห็นด้านข้างลำ+กล้อง)
+   · เอียงตัวปืน (roll) ให้ดูเป็นแนวทแยง · ขยายอีกนิดให้เห็นรายละเอียด */
+const GUN_POS=[.30,-.26,-.66];      // ตำแหน่งปืนเทียบกล้อง (x ขวา · y ล่าง · z ระยะหน้ากล้อง)
+const GUN_ROT=[.04,.20,.16];        // มุมปืน: [ก้ม-เงย, หันซ้าย-ขวา, "เอียงทแยง"(roll)]
+const GUN_SCALE=.78;                // ขนาดปืนในจอ
+/* 📐 ท่านี้วัดจากในเกมจริง (จุดปลายลำกล้อง/พานท้ายฉายลงจอ): ปากกระบอกอยู่ (0.13,−0.32) เฉียงเข้ากลางจอ 17°
+   · ยอดกล้องส่องอยู่ (0.28,−0.05) เห็นเต็มๆ · พานท้ายไหลออกมุมขวาล่าง = องค์ประกอบเดียวกับภาพอ้างอิง */
 /* 💪 แขนเสื้อลายพรางจับปืน — สร้างเองเสมอ (ไม่ถูกแทนตอนโหลด .glb ปืน) */
 function buildArms(){
   const camo=new THREE.MeshLambertMaterial({color:0x7d7a55});    // เสื้อลายพรางทะเลทราย
@@ -2226,6 +2232,32 @@ function mergeGunParts(obj){
   obj.updateWorldMatrix(true,true);
   return merged.length;
 }
+/* 🧭 รอบ 440 (ผู้ใช้: "ปืนไม่ตั้งอย่างนี้ ให้เอียงและเห็นชัดๆ"):
+   ด่านสุดท้ายกันปืนวางผิดแกน — วัดจากตัวโมเดลจริงหลังประกอบเสร็จแล้วบังคับให้
+     · แกนที่ยาวที่สุด = ลำกล้อง → ชี้ไป −Z (หน้ากล้อง)
+     · ปลายที่ "เบากว่า" = ปากกระบอก (ปืนหนักทางท้ายเสมอ)
+   ⚠️ ทำไมต้องมี ทั้งที่มี orientGunModel อยู่แล้ว: โมเดล new_gun_r93 เข้ามาเป็นก้อนเดียว
+   ตัวเดิมเลยไม่หมุนให้ → วัดในเกมได้ว่าแกนยาวชี้ไปทางขวาจอ (0.96,0.19,0.20) = ปืนขวางจอ */
+function forceGunForward(obj){
+  obj.updateMatrixWorld(true);
+  const inv=new THREE.Matrix4().copy(obj.matrixWorld).invert();
+  const v=new THREE.Vector3(), box=new THREE.Box3();
+  let cz=0,cx=0,n=0;
+  obj.traverse(o=>{
+    if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=7){
+      v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv);
+      box.expandByPoint(v); cz+=v.z; cx+=v.x; n++;
+    }
+  });
+  if(!n) return;
+  const s=new THREE.Vector3(); box.getSize(s);
+  if(s.x>s.z){ obj.rotation.y+=Math.PI/2; const t=cz/n; cz=(cx/n)*n; cx=t*n; }   // แกนยาวอยู่ X → หมุนมาที่ Z
+  obj.updateMatrixWorld(true);
+  if(cz/n<0) obj.rotation.y+=Math.PI;      // มวลอยู่ฝั่ง −Z = ท้ายปืนชี้หน้า → กลับหลัง
+  obj.updateMatrixWorld(true);
+}
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -2270,6 +2302,7 @@ function buildGun(){
         m.needsUpdate=true;
       });
     });
+    forceGunForward(obj);                                 // 🧭 รอบ 440: ไรเฟิลก็ผ่านด่านเดียวกัน
     g.remove(gunModels.rifle); gunModels.rifle=obj; obj.visible=(weapon==='rifle');
     g.add(obj);
   });
@@ -2281,6 +2314,7 @@ function buildGun(){
     stretchGunBarrel(obj);                                // 🔧 ยืดลำกล้องให้ได้สัดส่วนสไนเปอร์จริง
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว (ปืนวาดทุกเฟรม)
     fitInto(obj,1.25);                                    // สไนเปอร์ยาวกว่าไรเฟิล
+    forceGunForward(obj);                                 // 🧭 รอบ 440: ด่านสุดท้าย บังคับลำกล้องชี้หน้าจริงๆ
     obj.traverse(c=>{
       if(!c.isMesh||!c.material) return;
       (Array.isArray(c.material)?c.material:[c.material]).forEach(m=>{
@@ -3613,16 +3647,22 @@ function peerRifle(kind){
     blending:THREE.AdditiveBlending,depthWrite:false}));
   flash.scale.setScalar(sniper?.55:.42); flash.position.set(0,.028,-.42-bl); g.add(flash);
   g.userData.flash=flash;
-  g.position.set(0,-.30,-.34);          // อยู่ในระดับมือที่ปลายแขนล่าง
   return g;
 }
 /* สลับปืนในมือเพื่อน (เรียกตอนได้ข้อมูลใหม่ + ตอนโมเดลตัวละครโหลดเสร็จ) */
+/* 🪖 รอบ 440 (ผู้ใช้: "ท่าผิดธรรมชาติ ปรับใหม่"):
+   เดิมแขวนปืนไว้ใต้ "แขนล่างขวา" → วัดในเกมได้ว่าลำกล้องชี้ (0,−0.92,+0.39) = **ปืนห้อยลงและชี้ไปข้างหลัง**
+   (แกนของท่อนแขนไม่ได้ชี้ไปทางเดียวกับตัว และเปลี่ยนไปทุกท่า จะแก้ด้วยการหมุนค่าคงที่ไม่ได้)
+   → ย้ายมาแขวนที่ "ลำตัว" ระดับอก ฝั่งขวา ชี้ไปข้างหน้าเสมอ = ท่าประทับปืนแบบทหารจริง
+   ทั้งท่าเดิน/เล็ง/หมอบ ปืนจะอยู่แนวหน้าอกตลอด และก้ม-เงยตามลำตัวที่ poseSoldier จัดให้แล้ว */
 function attachPeerGun(rig,kind){
-  if(!rig||!rig.J||!rig.J.armLR) return;
+  if(!rig||!rig.J||!rig.J.torso) return;
   if(rig.gun&&rig.gun.parent) rig.gun.parent.remove(rig.gun);
   rig.wantGun=kind||'rifle';
   rig.gun=peerRifle(rig.wantGun);
-  rig.J.armLR.add(rig.gun);
+  rig.gun.position.set(.20,.40,-.26);        // ขวาของอก ยื่นออกหน้าเล็กน้อย
+  rig.gun.rotation.set(.02,-.10,.05);        // เฉียงเข้าในนิดหน่อย เหมือนประคองด้วย 2 มือ
+  rig.J.torso.add(rig.gun);
 }
 /* 🛡️ รอบ 439: จุดนี้ถือว่า "มีที่กำบัง" ไหม (หลังกระสอบทราย ≤4 ม. หรืออยู่ในบ้าน) */
 function peerInCover(x,z){
