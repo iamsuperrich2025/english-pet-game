@@ -2244,8 +2244,10 @@ function buildGun(){
     blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false}));
   muzzle.scale.setScalar(.42); muzzle.position.set(0,.012,-.72); g.add(muzzle);
 
-  /* 💪 แขนถือปืน — เก็บอ้างอิงไว้ เพราะตอน .glb โหลดเสร็จจะลบเฉพาะ "ทรงปืนชั่วคราว" ไม่ลบแขน */
-  gunArms=buildArms(); g.add(gunArms);
+  /* 💪 แขนถือปืน — รอบ 438 (ผู้ใช้สั่ง): **มุมมองบุคคลที่ 1 ไม่โชว์มือแล้ว เน้นเห็นตัวปืนเต็มๆ**
+     (โมเดลปืนจริงมีด้าม/การ์ดมืออยู่ในตัว มือที่วาดเองบังลายปืนและดูไม่เนียนกว่า)
+     ยังสร้างไว้เพื่อ "แกว่งตามการเดิน" ตัวเดิมทำงานได้ แต่ตั้ง visible=false ไม่ต้องวาด */
+  gunArms=buildArms(); gunArms.visible=false; g.add(gunArms);
 
   g.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]);
   g.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]);   // เอียงทแยงแบบภาพอ้างอิง
@@ -2279,8 +2281,10 @@ function buildGun(){
     g.remove(gunModels.rifle); gunModels.rifle=obj; obj.visible=(weapon==='rifle');
     g.add(obj);
   });
-  /* 🎯 โมเดลจริงของ R93 ถ้าผู้ใช้วางไฟล์ไว้ (prompt อยู่ใน PROMPTS_INVASION.md) */
-  loadGlb('img/models/gun_r93.glb',(obj)=>{
+  /* 🎯 รอบ 438 (ผู้ใช้สั่ง): เปลี่ยนมาใช้โมเดลใหม่ `new_gun_r93`
+     ต้นฉบับ 98,327 tris / 8.6MB → ใช้ตัวลดโพลี **24,581 tris / 2.3MB** (สูตรใน handoff/NOTES.md)
+     ปืนเป็น view model วาดทุกเฟรมและอยู่ใกล้จอที่สุด งบสามเหลี่ยมจึงต้องคุม · ต้นฉบับไม่ถูกแตะ */
+  loadGlb('img/models/new_gun_r93_lite.glb',(obj)=>{
     orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z ก่อน
     stretchGunBarrel(obj);                                // 🔧 ยืดลำกล้องให้ได้สัดส่วนสไนเปอร์จริง
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว (ปืนวาดทุกเฟรม)
@@ -3582,6 +3586,22 @@ function nameSprite(name){
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
 /* ตัวเพื่อน: ทหารราบ (foot) หรือเฮลิคอปเตอร์ (heli) */
+/* 🔫 รอบ 438: ปืนในมือของ "ตัวละครที่คนอื่นเห็น" — ทรงง่ายๆ 4 ชิ้น (เห็นจากระยะไม่กี่เมตร พอแล้ว)
+   ห้อยใต้แขนล่างขวา → ยกแขนเล็ง/เดินแกว่ง ปืนตามไปเองทุกท่า */
+function peerRifle(){
+  const g=new THREE.Group();
+  const met=new THREE.MeshLambertMaterial({color:0x23262c});
+  const wood=new THREE.MeshLambertMaterial({color:0x3a2f24});
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.085,.115,.62),met); body.position.z=-.10; g.add(body);
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.022,.024,.52,6),met);
+  barrel.rotation.x=Math.PI/2; barrel.position.set(0,.028,-.62); g.add(barrel);
+  const stock=new THREE.Mesh(new THREE.BoxGeometry(.075,.10,.34),wood); stock.position.set(0,-.02,.34); g.add(stock);
+  const mag=new THREE.Mesh(new THREE.BoxGeometry(.055,.17,.10),met); mag.position.set(0,-.12,-.05); mag.rotation.x=.18; g.add(mag);
+  const scope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.20,6),met);
+  scope.rotation.x=Math.PI/2; scope.position.set(0,.11,-.16); g.add(scope);
+  g.position.set(0,-.30,-.34);          // อยู่ในระดับมือที่ปลายแขนล่าง
+  return g;
+}
 function peerBody(kind,color){
   const g=new THREE.Group();
   if(kind==='heli'){
@@ -3607,6 +3627,9 @@ function peerBody(kind,color){
     loadSoldierGlb('img/models/soldier_b.glb',(obj)=>{
       fitInto(obj,1.8); obj.position.y=0;
       applySoldierGlb({J:rig.J},obj);
+      /* 🔫 รอบ 438 (ผู้ใช้สั่ง): "ผู้เล่นอื่นต้องเห็นว่าเราถือปืน" — โมเดลตัวละครเป็นท่า A-pose มือเปล่า
+         และการเสียบเข้าข้อต่อจะล้าง mesh เดิมในข้อต่อทิ้ง (ปืนของโครงหายไปด้วย) → ใส่กลับหลังประกอบเสร็จ */
+      rig.J.armLR.add(peerRifle());
     });
   }
   return g;
@@ -3677,7 +3700,19 @@ function peerTick(dt,now){
     const rig=p.grp.children[0]&&p.grp.children[0].userData?p.grp.children[0].userData.rig:null;
     if(rig){
       if(!p.anim) p.anim={J:rig.J,phase:0,lookUp:0,fireT:0,mode:'idle'};
-      p.anim.mode=(moved>0.12)?'walk':(p.kind==='gun'?'aim':'idle');
+      /* 🪖 รอบ 438 (ผู้ใช้สั่ง "ไม่ใช่ยืนนิ่งอย่างเดียว"): ท่าทางตามสถานการณ์จริง
+           เดินอยู่ = ท่าเดิน (แขนแกว่ง ขาสลับ) · หยุดนิ่ง = ท่าเล็งปืน (ไม่ใช่ยืนปล่อยมือ)
+           + เงยหน้า/ยกปืนตามเป้าจริงที่มีอยู่ตอนนั้น (ยานลูกลำใกล้สุด ไม่มีก็แกนยานแม่)
+           + สะบัดไหล่เป็นจังหวะเหมือนกำลังยิงคุ้มกัน (สถานะยิงไม่ได้ซิงก์ผ่านเน็ต จึงจำลองให้ดูมีชีวิต) */
+      p.anim.mode=(moved>0.12)?'walk':'aim';
+      let aim=null, bd=1e9;
+      fighters.forEach(f=>{ const d=f.grp.position.distanceToSquared(p.grp.position); if(d<bd){ bd=d; aim=f.grp.position; } });
+      if(!aim && msCore && msOpen && !msDead) aim=msCore.position;
+      if(aim && p.anim.mode==='aim'){
+        const dy=aim.y-(p.grp.position.y+1.4), dh=Math.hypot(aim.x-p.grp.position.x, aim.z-p.grp.position.z);
+        p.anim.lookUp=Math.atan2(dy,dh);
+        if(!p.fireAt || now>p.fireAt){ p.fireAt=now+rnd(900,2600); p.anim.fireT=1; }
+      }else p.anim.lookUp=0;
       poseSoldier(p.anim,now);
     }
   }
