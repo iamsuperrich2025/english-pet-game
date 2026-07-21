@@ -27,7 +27,12 @@ const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (
      · ยานใหญ่ขนาดนี้ผู้เล่นจะอยู่ "ใต้ทรงกลมกันชน" ของมัน → เล็งยิงตัวลำไม่ได้
        จึงต้องมี "แกนพลังงาน" (msCore) เป็นจุดอ่อนแยกต่างหาก ดู CORE_* ด้านล่าง
      · หมอกฉากไกลแค่ ~650m แต่ยานอยู่ ~1,700m → ตั้ง fog:false ที่ตัวลำ ไม่งั้นยานหายกลืนไปกับฟ้า */
-const MS_Y=1500, MS_Z=-1500, MS_R=2800;   // ความสูงลอย · ระยะหน้า · รัศมีลำ (เดิม 340/-300/560)
+/* 📏 รอบ 432 (ผู้ใช้: "ตั้งอยู่นั่นคืออะไร ไม่เหมือนที่ออกแบบไว้เลย"):
+   รอบ 417 ขยายลำเป็น 5,600 ม. แล้ววางห่างแค่ ~2,200 ม. → ลำกินมุมมองเกิน 100° เห็นได้แค่ "เสี้ยวเดียว"
+   เป็นแถบดำทแยงจอ จำทรงยานที่ผู้ใช้ออกแบบไม่ได้เลย
+   ⚖️ กฎใหม่: ต้องให้ "ความกว้างลำ ÷ ระยะห่างจากจุดเกิด" ≤ ~0.85 (ราว 45–50° ของ FOV 68°)
+      = เห็นทรงเต็มลำในเฟรมเดียว แต่ยังมหึมา (1,800 ม. = ยาวกว่าสนามบิน 10 เท่า) */
+const MS_Y=760, MS_Z=-1900, MS_R=900;     // ความสูงลอย · ระยะหน้า · รัศมีลำ (417: 1500/-1500/2800)
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* 🔠 แผงตัวอักษร + แกนพลังงาน — "แยกขนาดจากตัวลำ" เพราะถ้าผูกกับ MS_R ตัวอักษรจะโตตาม 5 เท่าจนล้นจอ
@@ -37,6 +42,7 @@ const CORE_Y=210, CORE_Z=-120, CORE_R=45;         // แกนพลังงา
 
 /* 👾 ยานลูก */
 const F_HP=3, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=95, F_R=190;
+const FIGHTER_SIZE=11.5;               // 📏 รอบ 432: ขนาดยานลูก = เท่าเฮลิคอปเตอร์ (เดิม 7 ม. เล็กจนมองไม่เห็น)
 const F_SHOT_GAP=2600, F_SHOT_SPD=52, F_SHOT_DMG=9;
 const MS_BEAM_GAP=5200, MS_BEAM_DMG=14;   // ยานแม่ยิงลำแสงหนักเป็นระยะ
 
@@ -1303,11 +1309,17 @@ function buildMothership(){
   core.position.set(0,CORE_Y,CORE_Z); scene.add(core); msCore=core;
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff3a2a,transparent:true,opacity:0,
     blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
-  glow.scale.setScalar(CORE_R*7); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
-  /* ลำแสงยึดแกนไว้กับท้องยาน (ให้เห็นว่าแกนเป็นของยานแม่ ไม่ใช่ลอยเฉยๆ) */
-  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.34,CORE_R*.9,MS_Y-MS_R*0.30-CORE_Y,10,1,true),
+  /* ⚠️ รอบ 432: ออร่าเดิมกว้าง CORE_R*7 = 315 ม. → ล้างจอเป็นสีชมพูทั้งครึ่งซ้าย (เห็นในภาพผู้ใช้) */
+  glow.scale.setScalar(CORE_R*3.4); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
+  /* ลำแสงยึดแกนไว้กับท้องยาน (ให้เห็นว่าแกนเป็นของยานแม่ ไม่ใช่ลอยเฉยๆ)
+     🔗 รอบ 432: ยานถอยไปไกลขึ้น ลำแสงจึงต้อง "เอียงชี้ไปหาท้องยาน" ไม่ใช่ตั้งตรงลอยๆ */
+  const from=new THREE.Vector3(0,CORE_Y,CORE_Z), to=new THREE.Vector3(0,MS_Y-MS_R*0.30,MS_Z);
+  const seg=new THREE.Vector3().subVectors(to,from);
+  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.34,CORE_R*.9,seg.length(),10,1,true),
     new THREE.MeshBasicMaterial({color:0x2a1410,transparent:true,opacity:.55,side:THREE.DoubleSide,fog:false}));
-  tether.position.set(0,(CORE_Y+MS_Y-MS_R*0.30)/2,CORE_Z); scene.add(tether);
+  tether.position.copy(from).addScaledVector(seg,.5);
+  tether.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),seg.clone().normalize());
+  scene.add(tether);
 
   /* 🧩 แผงช่องตัวอักษร — ห้อยใต้ขอบหน้าลำ
      ⚠️ ต้องเป็นลูกของ "ฉาก" ไม่ใช่ลูกของลำยาน! ลำยานหมุนช้าๆ ตลอดเวลา ถ้าแผงเป็นลูกของลำยาน
@@ -1366,19 +1378,22 @@ function setLetterLit(l,lit){
 function makeFighter(letterIdx){
   const grp=new THREE.Group();
   const bodyM=new THREE.MeshPhongMaterial({color:0x23262e,emissive:0x06080d,shininess:32,flatShading:true});
-  const hull=new THREE.Mesh(new THREE.ConeGeometry(2.5,1.5,7),bodyM); hull.position.y=.4; grp.add(hull);
-  const hull2=new THREE.Mesh(new THREE.ConeGeometry(2.5,2.2,7),bodyM); hull2.rotation.z=Math.PI; hull2.position.y=-.7; grp.add(hull2);
+  /* 📏 รอบ 432 (ผู้ใช้: "มองไม่เห็นยานลูกเลย"): ขยายจาก 7 ม. → เท่าเฮลิคอปเตอร์ (วัดจริง 11.5 ม.)
+     ทรงที่โค้ดวาดอยู่ในกลุ่มย่อยที่สเกลได้ทีเดียว — โมเดลจริง .glb ใช้ FIGHTER_SIZE ตัวเดียวกัน */
+  const body=new THREE.Group(); body.scale.setScalar(FIGHTER_SIZE/7); grp.add(body);
+  const hull=new THREE.Mesh(new THREE.ConeGeometry(2.5,1.5,7),bodyM); hull.position.y=.4; body.add(hull);
+  const hull2=new THREE.Mesh(new THREE.ConeGeometry(2.5,2.2,7),bodyM); hull2.rotation.z=Math.PI; hull2.position.y=-.7; body.add(hull2);
   [-1,1].forEach(s=>{                                        // ปีกลิ่ม 2 ข้าง
     const w=new THREE.Mesh(new THREE.ConeGeometry(.9,4.2,4),bodyM);
-    w.rotation.z=s*Math.PI/2; w.position.set(s*3.0,0,0); grp.add(w);
+    w.rotation.z=s*Math.PI/2; w.position.set(s*3.0,0,0); body.add(w);
   });
   const eye=new THREE.Mesh(new THREE.SphereGeometry(.52,10,8),new THREE.MeshBasicMaterial({color:0x59ff9d}));
-  eye.position.set(0,.1,-2.1); grp.add(eye);
+  eye.position.set(0,.1,-2.1); body.add(eye);
   const eng=new THREE.Sprite(new THREE.SpriteMaterial({color:0x66e0ff,transparent:true,opacity:.8,
     blending:THREE.AdditiveBlending,depthWrite:false}));
-  eng.scale.setScalar(4.2); eng.position.set(0,0,2.4); grp.add(eng);
+  eng.scale.setScalar(4.2*FIGHTER_SIZE/7); eng.position.set(0,0,2.4*FIGHTER_SIZE/7); grp.add(eng);
   const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(word.en[letterIdx]),transparent:true,depthTest:false}));
-  lb.scale.setScalar(5.2); lb.position.y=4.8; grp.add(lb);
+  lb.scale.setScalar(7.0); lb.position.y=FIGHTER_SIZE*0.78; grp.add(lb);   // ป้ายตัวอักษรลอยเหนือลำ อ่านออกแต่ไกล
 
   /* 🤝 ตำแหน่งเกิดคำนวณจาก (เลขรอบ, ลำดับตัวอักษร) แบบสุ่มมีเมล็ด
      → ทุกเครื่องในห้องเห็นยานลูกอยู่ตำแหน่งเดียวกัน ไม่ใช่ต่างคนต่างสุ่ม */
@@ -1390,8 +1405,10 @@ function makeFighter(letterIdx){
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0};
   fighters.push(f);
-  loadGlb('img/models/alien_fighter.glb',(obj)=>{
-    fitInto(obj,7);
+  /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — ยานลูกมีได้ถึง 8 ลำพร้อมกัน
+     ต้นฉบับ `alien_fighter.glb` ยังอยู่ครบ ไม่ได้แตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
+  loadGlb('img/models/alien_fighter_lite.glb',(obj)=>{
+    fitInto(obj,FIGHTER_SIZE);
     grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng) grp.remove(c); });
     grp.add(obj);
   });
@@ -2406,7 +2423,7 @@ function lockTarget(){
 function rayTarget(origin,dir,maxD){
   let best=null, bestT=maxD;
   fighters.forEach(f=>{
-    const t=raySphere(origin,dir,f.grp.position,4.6);
+    const t=raySphere(origin,dir,f.grp.position,FIGHTER_SIZE*0.66);   // 📏 รอบ 432: กันชนโตตามลำ (เดิม 4.6 = ลำ 7 ม.)
     if(t!==null && t<bestT){ bestT=t; best={type:'fighter',obj:f,t}; }
   });
   if(msOpen && !msDead && mother){
