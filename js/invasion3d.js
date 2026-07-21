@@ -1646,6 +1646,36 @@ function buildR93Model(){
    ============================================================ */
 const GUN_CUT=0.46;      /* ระนาบตัด: สัดส่วนความยาวปืนวัดจากท้าย (0=ท้ายสุด 1=ปากกระบอก) */
 const GUN_STRETCH=1.7;   /* ยืดลำกล้องกี่เท่า — ปรับค่านี้ค่าเดียวถ้าอยากยาว/สั้นกว่านี้ */
+/* 🧭 รอบ 429: จัดแกนปืนอัตโนมัติ — โมเดลที่เจนมามักวางตามแกน X (ลำกล้องชี้ข้าง)
+   เกมต้องการให้ "ลำกล้องชี้ −Z" ทั้งเพื่อการถือ และเพื่อให้ stretchGunBarrel ทำงานถูก
+   วิธี: ① หมุนให้แกนที่ยาวที่สุดมาเป็น Z ② ดูปลายไหน "เรียวกว่า" = ปากกระบอก แล้วให้ชี้ −Z
+        (ปลายพานท้ายจะอ้วนกว่าปลายลำกล้องเสมอ) */
+function orientGunModel(obj){
+  obj.updateWorldMatrix(true,true);
+  const b=new THREE.Box3().setFromObject(obj), sz=b.getSize(new THREE.Vector3());
+  if(sz.x>=sz.y && sz.x>=sz.z)      obj.rotation.y+=Math.PI/2;   /* ยาวตาม X → หมุนมาเป็น Z */
+  else if(sz.y>sz.x && sz.y>sz.z)   obj.rotation.x+=Math.PI/2;   /* ยาวตาม Y → หมุนมาเป็น Z */
+  obj.updateWorldMatrix(true,true);
+  const b2=new THREE.Box3().setFromObject(obj);
+  const zMin=b2.min.z, zMax=b2.max.z, L=zMax-zMin;
+  if(L<=0.0001) return false;
+  /* ⚠️ อย่าใช้ "ความอ้วนเฉลี่ยของปลาย" ตัดสิน — ขาทราย/ปากลำกล้อง/ศูนย์หน้า อ้วนพอกับพานท้าย
+     ใช้ "จุดศูนย์กลางมวล" แทน: ปืนหนักทางท้ายเสมอ (พานท้าย+โครง+กล้อง+แม็ก+ด้าม)
+     ส่วนลำกล้องผอมและเบา → มวลอยู่ฝั่งไหน ฝั่งนั้นคือท้ายปืน */
+  let mz=0, mn=0;
+  obj.traverse(function(o){
+    if(!o.isMesh||!o.geometry.attributes.position) return;
+    const bb=new THREE.Box3().setFromObject(o), c=bb.getCenter(new THREE.Vector3());
+    const w=o.geometry.attributes.position.count;
+    mz+=c.z*w; mn+=w;
+  });
+  let flipped=false;
+  if(mn){
+    const cz=mz/mn, mid=(zMin+zMax)/2;
+    if(cz<mid){ obj.rotation.y+=Math.PI; obj.updateWorldMatrix(true,true); flipped=true; }  /* มวลอยู่ทาง −Z = ท้ายปืนหันไปหน้า → กลับ */
+  }
+  return flipped;
+}
 function stretchGunBarrel(obj,cut,k){
   cut=(cut===undefined)?GUN_CUT:cut; k=(k===undefined)?GUN_STRETCH:k;
   if(k===1) return 0;
@@ -1716,7 +1746,11 @@ function mergeGunParts(obj){
   });
   const merged=mergeMeshList(meshes);
   obj.children.slice().forEach(function(c){ obj.remove(c); });
+  /* ⚠️ ต้องล้าง transform ของตัว obj ด้วย — เพราะเพิ่ง bake world matrix ลงในลูกไปแล้ว
+     ถ้าไม่ล้าง จะโดนหมุน/ย่อซ้ำอีกรอบ (เจอจริง: ปืนไรเฟิลหมุน 2 เท่า แกนเพี้ยน) */
+  obj.position.set(0,0,0); obj.rotation.set(0,0,0); obj.scale.set(1,1,1);
   merged.forEach(function(m){ obj.add(m); });
+  obj.updateWorldMatrix(true,true);
   return merged.length;
 }
 function buildGun(){
@@ -1745,6 +1779,7 @@ function buildGun(){
   const vFill=new THREE.PointLight(0x9fb6d8,.85,4);   // ไฟเสริมฝั่งเงา ให้เห็นรูปทรงไม่ตันดำ
   vFill.position.set(-.5,-.15,.1); camera.add(vFill);
   loadGlb('img/models/gun_rifle.glb',(obj)=>{
+    orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว
     fitInto(obj,.95);
     /* 🔦 ยกเงาเฉพาะปืนที่ถืออยู่ (view model) — texture ปืนเป็นสีดำ + roughness 1
@@ -1765,6 +1800,7 @@ function buildGun(){
   });
   /* 🎯 โมเดลจริงของ R93 ถ้าผู้ใช้วางไฟล์ไว้ (prompt อยู่ใน PROMPTS_INVASION.md) */
   loadGlb('img/models/gun_r93.glb',(obj)=>{
+    orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z ก่อน
     stretchGunBarrel(obj);                                // 🔧 ยืดลำกล้องให้ได้สัดส่วนสไนเปอร์จริง
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว (ปืนวาดทุกเฟรม)
     fitInto(obj,1.25);                                    // สไนเปอร์ยาวกว่าไรเฟิล
@@ -3449,7 +3485,7 @@ window.InvasionWorld={
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
-    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts,
+    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
