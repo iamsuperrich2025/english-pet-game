@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v145';  // v145: ⛰️ ภูมิประเทศเนินเขา + กล่องเลือกจุดลงสนามกางเต็มจอ รอบ 430
+const CACHE_VERSION = 'pet-vocab-v146';  // v146: 🏠 บ้านหลบซุ่มยิง + จุดสูงข่ม + ยานลูกเลียดเนิน รอบ 431
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

@@ -10,3 +10,7 @@ backups/
 # เก็บไว้ในเครื่องอย่างเดียว ไม่ต้องขึ้น repo/deploy — 2.8MB
 img/heli_cockpit.png
 img/new_heli_cockpit.jpg
+
+# ต้นฉบับโมเดลบ้านจาก Tripo 62MB (รอบ 431) — เกมใช้ house_01_lite.glb (1.1MB) ที่ลดโพลี/ย่อเทกซ์เจอร์แล้ว
+# เก็บต้นฉบับไว้ในเครื่องอย่างเดียว ห้ามขึ้น repo/deploy
+img/models/house_01.glb

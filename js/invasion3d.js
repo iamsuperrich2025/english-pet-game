@@ -184,6 +184,12 @@ const CSS=`
 #inv-msbar span{background:linear-gradient(90deg,#ff3b3b,#ff9a3b)}
 #inv-coins{position:absolute;right:12px;top:84px;z-index:5;pointer-events:none;font-weight:900;font-size:15px;
   color:#ffd54f;text-shadow:0 2px 6px #000}
+/* 🏠 รอบ 431: ป้าย "อยู่ในที่กำบัง" (โผล่เฉพาะตอนอยู่ในบ้าน) */
+#inv-cover{position:absolute;left:50%;top:52px;transform:translateX(-50%);z-index:6;display:none;
+  background:rgba(10,32,20,.82);border:2px solid #55d98a;border-radius:999px;padding:4px 14px;
+  color:#b6ffd2;font-weight:900;font-size:13px;text-shadow:0 2px 6px #000;pointer-events:none}
+#inv-cover.on{display:block}
+@media (max-height:400px){ #inv-cover{top:34px;font-size:11px;padding:3px 10px} }
 /* ---- ปุ่มมือถือ ---- */
 #inv-joy{position:absolute;left:16px;bottom:74px;width:118px;height:118px;border-radius:50%;z-index:6;
   background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.22)}
@@ -306,6 +312,19 @@ const CSS=`
 #inv-intro,#inv-exitbox,#inv-mapbox{position:absolute;inset:0;z-index:9;background:rgba(4,8,16,.9);
   display:none;align-items:center;justify-content:center;padding:12px}
 #inv-intro.on,#inv-exitbox.on,#inv-mapbox.on{display:flex}
+/* 📖 การ์ดวิธีเล่น — เนื้อหายาว จัด 2 คอลัมน์บนจอกว้าง + ย่อบนจอเตี้ย
+   (กฎ #7: ต้องเห็นครบทั้งใบ ไม่มีแถบเลื่อน · รอบ 431 เพิ่มบรรทัดบ้าน/เนินเขาแล้วเคยล้นจอ 812×375) */
+@media (min-width:900px){
+  #inv-intro p{columns:2;column-gap:26px;text-align:left}
+  #inv-intro small{display:block;margin-top:6px}
+}
+@media (max-height:430px){
+  #inv-intro .inv-card{padding:8px 14px}
+  #inv-intro h3{font-size:15px;margin-bottom:3px}
+  #inv-intro p{font-size:10.5px;line-height:1.42;margin-bottom:7px}
+  #inv-intro small{font-size:9.5px;line-height:1.35}
+  #inv-intro .inv-btn{padding:7px 20px;font-size:14px}
+}
 /* 🗺️ แผนที่เลือกจุดเกิด — รอบ 430: กางออกด้านข้างเกือบเต็มจอ + แยกเป็น 2 คอลัมน์
    (แผนที่ซ้าย · คำแนะนำ/ปุ่มขวา) → แผนที่ใหญ่ขึ้นมาก และกล่องเตี้ยลง ไม่มีแถบเลื่อน */
 #inv-mapbox .inv-card{max-width:min(1400px,97vw);width:min(1400px,97vw);padding:12px 18px}
@@ -355,6 +374,7 @@ const CSS=`
 .inv-btn{border:none;border-radius:999px;padding:11px 30px;font-size:17px;font-weight:900;color:#fff;cursor:pointer;
   background:linear-gradient(180deg,#3ad07f,#1c8f4e);box-shadow:0 5px 14px rgba(20,150,80,.5)}
 .inv-btn.red{background:linear-gradient(180deg,#ef5350,#c62828);box-shadow:0 5px 14px rgba(160,30,30,.5)}
+.inv-btn.amber{background:linear-gradient(180deg,#ffb74d,#ef8a1b);box-shadow:0 5px 14px rgba(170,110,20,.5);color:#26180a}
 .inv-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 @media (max-width:820px){
   #inv-word .ic{min-width:22px;height:28px;font-size:17px}
@@ -409,6 +429,9 @@ const CSS=`
 /* จอเตี้ยพิเศษ (≤330px · จอสี่เหลี่ยมยาวมาก) — พื้นที่ขวาไม่พอวางกระดานคะแนน+ปุ่มเฮลิพร้อมกัน
    → ซ่อนกระดานคะแนนมุมขวา (multiplayer ยังทำงานเต็ม เห็นเพื่อนในฉาก+ป้ายชื่อ+แชท) */
 @media (max-height:330px){
+  #inv-intro h3{font-size:13px;margin-bottom:2px}
+  #inv-intro p{font-size:9.5px;line-height:1.34;margin-bottom:5px}
+  #inv-intro small{font-size:8.8px;line-height:1.3}
   #inv-board,#inv-board.on{display:none}
   #inv-maphint{display:none}
   #inv-mapbox h3{font-size:14px;margin-bottom:2px}
@@ -434,6 +457,7 @@ function buildDom(){
     <div id="inv-word"></div>
     <div id="inv-target"></div>
     <div id="inv-coins">🪙 +0</div>
+    <div id="inv-cover">🏠 อยู่ในที่กำบัง — โดนยิงเบาลง</div>
     <div id="inv-stat">
       <div class="inv-lb">❤️ พลังชีวิต</div><div class="inv-bar" id="inv-hp"><span></span></div>
       <div class="inv-lb" style="margin-top:5px">🔥 ความร้อนปืน</div><div class="inv-bar" id="inv-heat"><span></span></div>
@@ -468,6 +492,8 @@ function buildDom(){
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>กดปุ่มเฮลิ = ขับเฮลิคอปเตอร์เอง</b> บินยิงจรวดจากฟ้า! (บังคับเหมือนโลกเฮลิฯ · ทั้งโลกมีได้ 5 ลำ)<br>
       🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) แม็ก 10 นัด · กด 🔭 ส่องกล้อง (ในเลนส์ขยาย นอกเลนส์ยังเห็นรอบตัว) · ปุ่ม <b>4×/6×/8×</b> เลือกกำลังขยาย<br>
+      🏠 <b>วิ่งเข้าไปหลบในบ้านได้!</b> บ้านร้างริมถนน (🏠 บนแผนที่) เข้าไปซุ่มยิงในนั้น <b>โดนยิงเบาลงมาก</b> ·
+      ⛰️ <b>ยืนบนเนินสูง (🎯 จุดสูงข่ม) มองไกลกว่า</b> — วิ่งขึ้นเนินช้าลง ลงเนินไหลเร็วขึ้นนะ<br>
       🎖️ <b>ทีมเวิร์ก!</b> เดินเข้าใกล้เฮลิที่กำลังบิน แล้วกดปุ่ม 🎖️ = <b>ขึ้นเป็นพลปืนประจำประตู</b> —
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
       <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (▲▼ ไต่ระดับ) · 💬 คุยกับเพื่อน<br>
@@ -490,6 +516,7 @@ function buildDom(){
           </div>
           <div class="inv-row">
             <button class="inv-btn" id="inv-mapgo">🪂 ลงตรงนี้!</button>
+            <button class="inv-btn amber" id="inv-mapsnipe">🎯 จุดซุ่มยิง</button>
             <button class="inv-btn red" id="inv-maprand">🎲 สุ่มจุด</button>
           </div>
           <div id="inv-maphint">💡 ยืนบนเนินสูงจะเห็นสนามรบไกลกว่า — เหมาะกับ R93<br>เข้าเกมแล้วกดปุ่ม 🗺️ ย้ายจุดลงใหม่ได้ทุกเมื่อ</div>
@@ -507,6 +534,7 @@ function buildDom(){
   wordEl=document.getElementById('inv-word'); hpEl=document.getElementById('inv-hp');
   heatEl=document.getElementById('inv-heat'); misEl=document.getElementById('inv-mis');
   tgtEl=document.getElementById('inv-target'); coinsEl=document.getElementById('inv-coins');
+  coverEl=document.getElementById('inv-cover');
   banEl=document.getElementById('inv-ban'); introEl=document.getElementById('inv-intro');
   exitBox=document.getElementById('inv-exitbox'); crossEl=document.getElementById('inv-cross');
   hurtEl=document.getElementById('inv-hurt'); flashEl=document.getElementById('inv-flash');
@@ -745,6 +773,7 @@ let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null
 let battleRound=0, myKill=0, myArmorDmg=0;
 let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, upBtn=null, downBtn=null, canopyEl=null;
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
+let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
 let gunnerBtn=null, riding=null;   // 🎖️ พลปืนประจำประตู: riding = key ของลำที่นั่งอยู่ (uid เพื่อน หรือ 'botN')
 let terrainH=null;                     // ฟังก์ชันความสูงพื้นทราย
 let solids=[];                         // กันชนตึก {x,z,r}
@@ -1089,6 +1118,144 @@ function tickDust(dt,now){
     if(a[i+2]-pz<-60) a[i+2]+=120;
   }
   p.needsUpdate=true;
+}
+
+/* ============================================================
+   🏠 รอบ 431: บ้านหลบซุ่มยิง (โมเดล house_01 ของผู้ใช้) + จุดสูงข่มบนเนินเขา
+   · วิ่งเข้าไปในบ้านได้จริง — กันชนสร้าง "อัตโนมัติจากตัวโมเดล" (ไม่ต้องวัดผนังเอง)
+     วิธี: ไล่สามเหลี่ยมทุกอันของโมเดล เอาเฉพาะที่อยู่ช่วง "ความสูงระดับตัวคน" มาปั๊มลงตารางช่อง
+     → ประตู/หน้าต่าง/ช่องว่างกลายเป็นทางเดินเอง · ใช้ซ้ำได้กับโมเดลอาคารอื่นในอนาคต
+   · อยู่ในบ้าน = ที่กำบัง ลดดาเมจ (HOUSE_COVER)
+   ⚠️ โมเดลจริงหนัก (285k tris) → ใช้ LOD: ใกล้กว่า HOUSE_LOD เมตรค่อยโชว์ของจริง
+     ไกลกว่านั้นโชว์กล่องแทน (เห็นเป็นอาคารเหมือนเดิม แต่แทบไม่กินเครื่อง)
+   ============================================================ */
+const HOUSE_SIZE=18;            // ด้านยาวสุดของบ้าน (เมตร)
+const HOUSE_LOD=115;            // ระยะสลับโมเดลจริง ↔ กล่องแทน
+const HOUSE_COVER=0.35;         // อยู่ในบ้าน โดนดาเมจเหลือ 35%
+const HOUSE_CELL=0.45;          // ความละเอียดตารางกันชน (เมตร)
+const HOUSE_SPOTS=[             // ริมถนนสมรภูมิ — ระยะห่างกันพอที่จะไม่โชว์ของจริงพร้อมกัน
+  {x:-34, z:STREET_Z0-46,  rot: Math.PI*0.52},
+  {x: 36, z:STREET_Z0-104, rot:-Math.PI*0.48},
+];
+let houses=[];                  // {grp,detail,proxy,blk,box,inside}
+let inCover=false;
+function buildHouses(){
+  HOUSE_SPOTS.forEach(sp=>{
+    const base=terrainH(sp.x,sp.z);
+    const grp=new THREE.Group(); grp.position.set(sp.x,base,sp.z); grp.rotation.y=sp.rot;
+    scene.add(grp);
+    /* กล่องแทนตอนอยู่ไกล (สร้างก่อน เห็นอาคารทันทีแม้โมเดลยังโหลดไม่เสร็จ) */
+    const pm=new THREE.MeshLambertMaterial({color:0xffffff,map:wallTex('#cbb08c')});
+    tryTex(pm,'img/invasion/wall.png',1,1);
+    const proxy=new THREE.Mesh(new THREE.BoxGeometry(HOUSE_SIZE*0.82,HOUSE_SIZE*0.56,HOUSE_SIZE),pm);
+    proxy.position.y=HOUSE_SIZE*0.28; grp.add(proxy);
+    const h={grp,detail:null,proxy,blk:null,box:null};
+    houses.push(h);
+    loadGlb('img/models/house_01_lite.glb',obj=>{
+      fitInto(obj,HOUSE_SIZE);
+      const b=new THREE.Box3().setFromObject(obj);
+      obj.position.y-=b.min.y;                        // วางให้พื้นบ้านแตะดิน
+      obj.visible=false; grp.add(obj); h.detail=obj;
+      grp.updateMatrixWorld(true);
+      h.box=new THREE.Box3().setFromObject(obj);
+      h.blk=buildBlockGrid(obj,HOUSE_CELL,h.box.min.y+0.4,h.box.min.y+2.1);
+      /* กันชนวงกลมของ solids จะทำให้เข้าบ้านไม่ได้ → บ้านไม่ลง solids เด็ดขาด (ใช้ตารางช่องแทน) */
+    });
+  });
+}
+/* 🧱 ตารางกันชนจากตัวโมเดล — เอาเฉพาะสามเหลี่ยมช่วงความสูง yLo..yHi (ระดับลำตัวคน)
+   พื้น/หลังคา/ขอบประตูด้านบน จึงไม่กลายเป็นกำแพงขวางทาง */
+function buildBlockGrid(root,cell,yLo,yHi){
+  root.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(root);
+  const x0=box.min.x-cell, z0=box.min.z-cell;
+  const n=Math.ceil((box.max.x-x0)/cell)+2, m=Math.ceil((box.max.z-z0)/cell)+2;
+  const g=new Uint8Array(n*m);
+  const A=new THREE.Vector3(),B=new THREE.Vector3(),C=new THREE.Vector3();
+  root.traverse(o=>{
+    if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const pos=o.geometry.attributes.position, idx=o.geometry.index, cnt=idx?idx.count:pos.count;
+    for(let i=0;i<cnt;i+=3){
+      const ia=idx?idx.getX(i):i, ib=idx?idx.getX(i+1):i+1, ic=idx?idx.getX(i+2):i+2;
+      A.fromBufferAttribute(pos,ia).applyMatrix4(o.matrixWorld);
+      B.fromBufferAttribute(pos,ib).applyMatrix4(o.matrixWorld);
+      C.fromBufferAttribute(pos,ic).applyMatrix4(o.matrixWorld);
+      if(Math.max(A.y,B.y,C.y)<yLo || Math.min(A.y,B.y,C.y)>yHi) continue;
+      /* ⚠️ บทเรียน: ครั้งแรกปั๊มทั้ง "กรอบสี่เหลี่ยม" ของสามเหลี่ยม → บ้านตันทั้งหลัง เดินเข้าไม่ได้เลย
+         (โมเดลลดโพลีแล้วมีสามเหลี่ยมใหญ่ทแยง กรอบมันกินพื้นที่ทั้งห้อง)
+         แก้เป็น: ① ข้ามสามเหลี่ยมที่หงายขึ้น/คว่ำลง (พื้น/เพดาน/บันได ไม่ใช่กำแพง)
+                  ② ปั๊มตาม "ขอบ" ของสามเหลี่ยมเท่านั้น — กำแพงตั้งฉากฉายลงพื้นเป็นเส้น ขอบจึงคลุมครบพอดี */
+      const nx1=B.x-A.x, ny1=B.y-A.y, nz1=B.z-A.z, nx2=C.x-A.x, ny2=C.y-A.y, nz2=C.z-A.z;
+      const cy=nz1*nx2-nx1*nz2;                                   // องค์ประกอบ y ของ normal
+      const nlen=Math.hypot(ny1*nz2-nz1*ny2, cy, nx1*ny2-ny1*nx2)||1;
+      if(Math.abs(cy/nlen)>0.7) continue;                          // เกือบราบ = พื้น/เพดาน ไม่กั้นทางเดิน
+      const mark=(ax,az,bx,bz)=>{
+        const steps=Math.ceil(Math.hypot(bx-ax,bz-az)/(cell*0.5))||1;
+        for(let k=0;k<=steps;k++){
+          const gx=Math.floor((ax+(bx-ax)*k/steps-x0)/cell), gz=Math.floor((az+(bz-az)*k/steps-z0)/cell);
+          if(gx>=0&&gz>=0&&gx<n&&gz<m) g[gz*n+gx]=1;
+        }
+      };
+      mark(A.x,A.z,B.x,B.z); mark(B.x,B.z,C.x,C.z); mark(C.x,C.z,A.x,A.z);
+    }
+  });
+  return {x0,z0,n,m,cell,g};
+}
+function gridBlocked(blk,x,z){
+  if(!blk) return false;
+  const gx=Math.floor((x-blk.x0)/blk.cell), gz=Math.floor((z-blk.z0)/blk.cell);
+  if(gx<0||gz<0||gx>=blk.n||gz>=blk.m) return false;
+  return !!blk.g[gz*blk.n+gx];
+}
+/* ชนผนังบ้านไหม (เช็ก 4 มุมรอบตัวผู้เล่น กันหน้าจอทะลุผนัง) */
+function houseBlocked(x,z){
+  const R=0.42;
+  for(const h of houses){
+    if(!h.blk) continue;
+    for(const [ox,oz] of [[R,0],[-R,0],[0,R],[0,-R]]) if(gridBlocked(h.blk,x+ox,z+oz)) return true;
+  }
+  return false;
+}
+/* อยู่ในบ้านหลังไหนอยู่หรือเปล่า (ใช้เป็น "ที่กำบัง") */
+function houseCover(x,z){
+  for(const h of houses){
+    if(!h.box) continue;
+    if(x>h.box.min.x&&x<h.box.max.x&&z>h.box.min.z&&z<h.box.max.z && !houseBlocked(x,z)) return true;
+  }
+  return false;
+}
+/* สลับโมเดลจริง ↔ กล่องแทน ตามระยะ (เรียกทุกเฟรม แต่เปลี่ยนค่าเฉพาะตอนข้ามเส้น) */
+function tickHouseLod(){
+  for(const h of houses){
+    if(!h.detail) continue;
+    const near=Math.hypot(px-h.grp.position.x,pz-h.grp.position.z)<HOUSE_LOD;
+    if(h.detail.visible!==near){ h.detail.visible=near; h.proxy.visible=!near; }
+  }
+}
+/* 🎯 จุดสูงข่ม — ยอดเนินที่ยืนแล้วมองเห็นสนามรบกว้าง (คำนวณจากภูมิประเทศจริงตอนสร้างฉาก) */
+let sniperSpots=[];
+function findSniperSpots(){
+  const cand=[];
+  for(let x=-WORLD*0.86;x<=WORLD*0.86;x+=28)
+    for(let z=-WORLD*0.86;z<=WORLD*0.86;z+=28){
+      const e=terrainH(x,z);
+      let hi=true, sum=0, n=0;
+      for(let a=0;a<8;a++){                              // ต้องสูงกว่ารอบตัวทุกทิศ = ยอดเนินจริง
+        const ax=x+Math.cos(a/8*TAU)*26, az=z+Math.sin(a/8*TAU)*26, ne=terrainH(ax,az);
+        if(ne>e){ hi=false; break; }
+        sum+=e-ne; n++;
+      }
+      if(!hi) continue;
+      const toCore=Math.hypot(x-0,z-CORE_Z);
+      if(toCore>620) continue;                           // ไกลเกินจนยิงไม่ถึง = ไม่แนะนำ
+      cand.push({x,z,e,score:e*2+sum/n*6-toCore*0.012});
+    }
+  cand.sort((a,b)=>b.score-a.score);
+  sniperSpots=[];
+  for(const c of cand){                                  // เก็บ 4 จุด ห่างกันอย่างน้อย 120 ม.
+    if(sniperSpots.every(s=>Math.hypot(s.x-c.x,s.z-c.z)>120)) sniperSpots.push(c);
+    if(sniperSpots.length>=4) break;
+  }
 }
 
 /* ============================================================
@@ -2557,6 +2724,15 @@ function bindInput(){
   mapCv.addEventListener('click',e=>pickAt(e.clientX,e.clientY));
   mapCv.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; pickAt(t.clientX,t.clientY); e.preventDefault(); },{passive:false});
   document.getElementById('inv-mapgo').addEventListener('click',applySpawnPick);
+  /* 🎯 รอบ 431: วนเลือก "จุดสูงข่ม" ที่คำนวณจากเนินเขาจริง (กดซ้ำ = จุดถัดไป) */
+  document.getElementById('inv-mapsnipe').addEventListener('click',()=>{
+    if(!sniperSpots.length) return;
+    snipeIdx=(snipeIdx+1)%sniperSpots.length;
+    const s=sniperSpots[snipeIdx];
+    mapPick={x:s.x,z:s.z};
+    if(mapNameEl) mapNameEl.textContent=zoneName(s.x,s.z);
+    drawSpawnMap();
+  });
   document.getElementById('inv-maprand').addEventListener('click',()=>{
     const a=rnd(0,TAU), r=rnd(20,WORLD*0.7);
     mapPick={x:Math.cos(a)*r, z:Math.sin(a)*r};
@@ -2605,19 +2781,36 @@ function tickPlayer(dt,now){
   if(keys.a) s-=1; if(keys.d) s+=1;
   f-=joy.dy; s+=joy.dx;
   const run=isRun||keys.shift;
-  const spd=(run?RUN:WALK);
+  let spd=(run?RUN:WALK);
   const len=Math.hypot(f,s);
   if(len>1){ f/=len; s/=len; }
   const sinY=Math.sin(yaw), cosY=Math.cos(yaw);
-  let nx=px+(-sinY*f + cosY*s)*spd*dt;
-  let nz=pz+(-cosY*f - sinY*s)*spd*dt;
+  const dirX=(-sinY*f + cosY*s), dirZ=(-cosY*f - sinY*s);
+  /* ⛰️ รอบ 431: ความชันมีผลจริง — วิ่งขึ้นเนินช้าลง ลงเนินไหลเร็วขึ้น
+     (วัดความชันข้างหน้า 2 เมตรตามทิศที่กำลังไป) */
+  if(len>.05){
+    const ahead=2.0/Math.max(.001,Math.hypot(dirX,dirZ));
+    const slope=(terrainH(px+dirX*ahead,pz+dirZ*ahead)-terrainH(px,pz))/2.0;
+    spd*=clamp(1-slope*1.35, 0.52, 1.22);
+  }
+  let nx=px+dirX*spd*dt;
+  let nz=pz+dirZ*spd*dt;
   /* กันทะลุตึก */
   for(const o of solids){
     const dx=nx-o.x, dz=nz-o.z, d=Math.hypot(dx,dz);
     if(d<o.r+.6){ const k=(o.r+.6)/(d||.001); nx=o.x+dx*k; nz=o.z+dz*k; }
   }
+  /* 🏠 ผนังบ้าน: ชนแล้ว "ไถลตามผนัง" (ลองแยกแกน) — ประตู/ช่องว่างเดินผ่านได้ตามปกติ */
+  if(houses.length && houseBlocked(nx,nz)){
+    if(!houseBlocked(nx,pz)) nz=pz;
+    else if(!houseBlocked(px,nz)) nx=px;
+    else { nx=px; nz=pz; }
+  }
   const lim=WORLD*0.94;
   px=clamp(nx,-lim,lim); pz=clamp(nz,-lim,lim);
+  /* 🛡️ อยู่ในบ้าน = ที่กำบัง (ลดดาเมจ + ขึ้นป้ายบอกเด็ก) */
+  const cov=!inHeli&&!riding&&houseCover(px,pz);
+  if(cov!==inCover){ inCover=cov; if(coverEl) coverEl.classList.toggle('on',cov); }
   py=terrainH(px,pz)+EYE;
   /* หัวโยกตอนเดิน (ให้รู้สึกเป็นทหารเดินจริง) */
   const bob=(len>.05? Math.sin(now*(run?.016:.011))*(run?.09:.055) : 0);
@@ -2655,6 +2848,7 @@ function tickPlayer(dt,now){
 }
 function hurtPlayer(dmg,now){
   if(now-lastHurt<HURT_IFRAME) return;
+  if(inCover) dmg*=HOUSE_COVER;                   // 🏠 รอบ 431: หลบอยู่ในบ้าน = โดนเบาลงมาก
   lastHurt=now; hp-=dmg;
   Snd.hit();
   if(hurtEl){ hurtEl.classList.add('on'); setTimeout(()=>hurtEl&&hurtEl.classList.remove('on'),260); }
@@ -2685,6 +2879,10 @@ const MAP_VIEW=WORLD*0.98;                      // ครึ่งความ�
 function mapToWorld(mx,my,w,h){ return {x:(mx/w-.5)*2*MAP_VIEW, z:(my/h-.5)*2*MAP_VIEW}; }
 function worldToMap(x,z,w,h){ return {mx:(x/(2*MAP_VIEW)+.5)*w, my:(z/(2*MAP_VIEW)+.5)*h}; }
 function zoneName(x,z){
+  for(const hs of houses) if(Math.hypot(x-hs.grp.position.x,z-hs.grp.position.z)<HOUSE_SIZE*0.8)
+    return '🏠 บ้านร้าง (วิ่งเข้าไปหลบยิงได้)';
+  for(const s of sniperSpots) if(Math.hypot(x-s.x,z-s.z)<45)
+    return `🎯 จุดสูงข่ม (สูง ${Math.round(s.e)} ม. — ซุ่มยิงชั้นดี)`;
   if(Math.abs(x)<STREET_HW+6 && z<STREET_Z0+6 && z>STREET_Z0-STREET_LEN) return '🏚️ ถนนสมรภูมิ (ใจกลางการรบ)';
   if(z>STREET_Z0) return '🛡️ แนวหลัง (ปลอดภัย เริ่มใหม่ได้)';
   if(Math.hypot(x,z)<120) return '🎯 ใกล้แกนพลังงานยานแม่';
@@ -2735,6 +2933,23 @@ function drawSpawnMap(){
   g.fillStyle='#3fbf62';
   sandbagWalls().forEach(s=>{ const p=worldToMap(s.x,s.z,w,h);
     g.beginPath(); g.arc(p.mx,p.my,5,0,TAU); g.fill(); });
+  /* 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบได้ */
+  houses.forEach(hs=>{
+    const p=worldToMap(hs.grp.position.x,hs.grp.position.z,w,h), r=HOUSE_SIZE/(2*MAP_VIEW)*w*0.6;
+    g.fillStyle='#6f5a3f'; g.fillRect(p.mx-r,p.my-r,r*2,r*2);
+    g.strokeStyle='#ffd98a'; g.lineWidth=2; g.strokeRect(p.mx-r,p.my-r,r*2,r*2);
+    g.fillStyle='#ffd98a'; g.font='bold 13px system-ui'; g.textAlign='center';
+    g.fillText('🏠',p.mx,p.my+5);
+  });
+  /* 🎯 รอบ 431: จุดสูงข่มบนเนินเขา (ที่ซุ่มยิงชั้นดี) */
+  sniperSpots.forEach(s=>{
+    const p=worldToMap(s.x,s.z,w,h);
+    g.strokeStyle='#7dffb0'; g.lineWidth=2;
+    g.beginPath(); g.arc(p.mx,p.my,9,0,TAU); g.stroke();
+    g.font='bold 13px system-ui'; g.textAlign='center';
+    g.fillStyle='#0e1a28'; g.fillText('🎯',p.mx+.5,p.my+5.5);
+    g.fillStyle='#eaffef'; g.fillText('🎯',p.mx,p.my+5);
+  });
   /* แกนพลังงานยานแม่ (เป้าหมาย) */
   const cp=worldToMap(0,CORE_Z,w,h);
   g.strokeStyle='#ff4a3a'; g.lineWidth=2.5;
@@ -2764,8 +2979,8 @@ function drawSpawnMap(){
 /* หาจุดลงที่ไม่ทับตึก */
 function safeSpawn(x,z){
   for(let tries=0;tries<24;tries++){
-    let ok=true;
-    for(const o of solids){ if(Math.hypot(x-o.x,z-o.z)<o.r+2.2){ ok=false; break; } }
+    let ok=!houseBlocked(x,z);                     // 🏠 ไม่ลงกลางผนังบ้าน (ลงในห้องได้ปกติ)
+    if(ok) for(const o of solids){ if(Math.hypot(x-o.x,z-o.z)<o.r+2.2){ ok=false; break; } }
     if(ok) return {x,z};
     x+=rnd(-6,6); z+=rnd(-6,6);
   }
@@ -3201,12 +3416,19 @@ function tickFighters(dt,now){
     f.ang+=f.spin*dt;
     f.rad+=Math.sin(now*.0004+f.ang)*8*dt;
     f.rad=clamp(f.rad,45,F_R);
-    if(now>f.yAt){ f.tgtY=rnd(F_Y_MIN,F_Y_MAX); f.yAt=now+rnd(2600,5200); }
+    /* ⛰️ รอบ 431: บางช่วง "โฉบต่ำเลียดสันเขา" (หลบยาก ต้องไล่ยิงจริงจัง) สลับกับบินสูงตามเดิม */
+    if(now>f.yAt){
+      f.hug=Math.random()<.45;
+      f.tgtY=f.hug? rnd(9,17) : rnd(F_Y_MIN,F_Y_MAX);
+      f.yAt=now+rnd(2600,5200);
+    }
     const tx=Math.cos(f.ang)*f.rad, tz=Math.sin(f.ang)*f.rad;
     const p=f.grp.position;
     p.x+=(tx-p.x)*Math.min(1,dt*1.6);
     p.z+=(tz-p.z)*Math.min(1,dt*1.6);
-    p.y+=(f.tgtY-p.y)*Math.min(1,dt*.9);
+    /* บินอิงพื้นเสมอ — ผ่านเนินสูงก็ไต่ขึ้นตาม ไม่มุดทะลุภูเขา (ยกเร็วกว่าลดเพื่อกันชนยอดเนิน) */
+    const gnd=terrainH(p.x,p.z), wantY=gnd+f.tgtY;
+    p.y+=(wantY-p.y)*Math.min(1, dt*(wantY>p.y?2.6:.9));
     /* หันหัวไปทางที่บิน + เอียงตัวเข้าโค้ง */
     f.grp.rotation.y=Math.atan2(tx-p.x,tz-p.z)+Math.PI;
     f.grp.rotation.z=-f.spin*2.4;
@@ -3397,6 +3619,7 @@ function frame(dt,now){
   netSend(false);                   // 🌐 ส่งตำแหน่งเราขึ้น DB
   tickReload(now);                  // 🎯 บรรจุกระสุน R93
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
+  tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickFx(dt);
   renderer.render(scene,camera);
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
@@ -3433,6 +3656,8 @@ function build(){
   buildTerrain();
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
+  buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
+  findSniperSpots();                // 🎯 รอบ 431: หา "จุดสูงข่ม" บนเนินเขาไว้แนะนำในแผนที่
   buildDustMotes();                 // 🌫️ ฝุ่นฟุ้งในอากาศ
   buildMothership();
   buildGun();
@@ -3545,7 +3770,10 @@ window.InvasionWorld={
   _t:{
     get running(){return running}, set running(v){running=v},
     get word(){return word}, get letters(){return letters.map(l=>({ch:l.ch,down:l.down,op:l.mesh.material.opacity}))},
-    get fighters(){return fighters.length}, get msOpen(){return msOpen}, get msArmor(){return msArmor},
+    get fighters(){return fighters.length},
+    /* ⛰️ รอบ 431: ตรวจว่ายานลูกบินเลียดเนินจริง (ระยะห่างจากพื้นของแต่ละลำ) */
+    get fighterClear(){return fighters.map(f=>+(f.grp.position.y-terrainH(f.grp.position.x,f.grp.position.z)).toFixed(1))},
+    get msOpen(){return msOpen}, get msArmor(){return msArmor},
     get msDead(){return msDead}, get hp(){return hp}, get heat(){return heat}, get mis(){return misLeft},
     get coins(){return sessionCoins}, get words(){return sessionWords},
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
@@ -3580,6 +3808,12 @@ window.InvasionWorld={
     get heliCount(){return heliCount()}, get bots(){return helis.length}, syncBotHelis,
     get landed(){return hLanded}, set landed(v){hLanded=v},
     openSpawnMap, applySpawnPick, drawSpawnMap, safeSpawn, zoneName,
+    /* 🏠🎯 รอบ 431 */
+    get houses(){return houses.map(h=>({x:h.grp.position.x,z:h.grp.position.z,ready:!!h.blk,
+      detail:!!(h.detail&&h.detail.visible),proxy:h.proxy.visible}))},
+    get sniperSpots(){return sniperSpots.map(s=>({x:+s.x.toFixed(0),z:+s.z.toFixed(0),e:+s.e.toFixed(1)}))},
+    houseBlocked, houseCover, tickHouseLod, get inCover(){return inCover},
+    get coverShown(){return coverEl&&coverEl.classList.contains('on')},
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
