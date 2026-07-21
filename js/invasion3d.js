@@ -814,7 +814,7 @@ let built=false, running=false, rafId=0, lastT=0;
 let renderer,scene,camera;
 let px=0, pz=90, py=EYE, yaw=0, pitch=0.35;
 let word=null, letters=[];            // letters = ช่องตัวอักษรบนยานแม่ [{ch,mesh,down}]
-let mother=null, msArmor=MS_HP, msOpen=false, msDead=false, msBeamAt=0;
+let mother=null, msArmor=MS_HP, msOpen=false, msDead=false, msBeamAt=0, msRecover=false;
 let fighters=[], fShots=[], myShots=[], missiles=[], fx=[], squad=[], helis=[];
 let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
@@ -1380,16 +1380,8 @@ function buildMothership(){
     blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
   /* ⚠️ รอบ 432: ออร่าเดิมกว้าง CORE_R*7 = 315 ม. → ล้างจอเป็นสีชมพูทั้งครึ่งซ้าย (เห็นในภาพผู้ใช้) */
   glow.scale.setScalar(CORE_R*3.4); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
-  /* 🔗 ลำแสงยึดแกนไว้กับท้องยาน — รอบ 437 เปลี่ยนจาก "กรวยทึบสีน้ำตาล" (บังจอเป็นก้อนใหญ่
-     จนผู้ใช้ถามว่ายานแม่อยู่ไหน) เป็น "ลำแสงเรืองแสงผอมๆ" ที่แค่บอกว่าแกนห้อยมาจากลำ */
-  const from=new THREE.Vector3(0,CORE_Y,CORE_Z), to=new THREE.Vector3(0,MS_Y-MS_R*0.22,MS_Z);
-  const seg=new THREE.Vector3().subVectors(to,from);
-  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.10,CORE_R*.22,seg.length(),8,1,true),
-    new THREE.MeshBasicMaterial({color:0xff6a3a,transparent:true,opacity:.28,side:THREE.DoubleSide,
-      depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
-  tether.position.copy(from).addScaledVector(seg,.5);
-  tether.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),seg.clone().normalize());
-  scene.add(tether);
+  /* ❌ รอบ 439: เอา "ลำแสงยึดแกน" ออกถาวร — ผู้ใช้เห็นเป็นกรวยใหญ่กลางฟ้า 2 รอบติดแล้วนึกว่าเป็นยานแม่
+     (ตอนนี้แกนพลังงานอยู่ใต้จมูกลำอยู่แล้ว มองปุ๊บก็รู้ว่าเป็นของยานแม่ ไม่ต้องมีเส้นโยง) */
 
   /* 🧩 แผงช่องตัวอักษร — ห้อยใต้ขอบหน้าลำ
      ⚠️ ต้องเป็นลูกของ "ฉาก" ไม่ใช่ลูกของลำยาน! ลำยานหมุนช้าๆ ตลอดเวลา ถ้าแผงเป็นลูกของลำยาน
@@ -2807,10 +2799,10 @@ function applyShared(){
 }
 function startWave(){
   fighters.slice().forEach(f=>scene.remove(f.grp)); fighters=[];
-  msOpen=false; msDead=false; msArmor=MS_HP;
+  msOpen=false; msDead=false; msArmor=MS_HP; msRecover=false;
   if(msGlow) msGlow.material.opacity=0;
   if(msCore) msCore.material.color.setHex(0x3a0d0d);
-  if(mother){ mother.visible=true; mother.scale.setScalar(1); }
+  if(mother){ mother.visible=true; mother.scale.setScalar(1); mother.position.y=MS_Y; }
   if(msBoard) msBoard.visible=true;                          // แผง/แกน แยกจากลำยานแล้ว ต้องสั่งโชว์/ซ่อนเอง
   if(msCore) msCore.visible=true;
   if(msGlow) msGlow.visible=true;
@@ -2831,9 +2823,14 @@ function completeWord(){
   if((state.invasionBest||0)<sessionWords){ state.invasionBest=sessionWords; }
   toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">+${REWARD} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
   saveState();
-  if(mother) mother.visible=false;
-  if(msBoard) msBoard.visible=false;                         // ยานแม่ระเบิดแล้ว แผง+แกนต้องหายไปด้วย
-  if(msCore) msCore.visible=false;
+  /* 🛸 รอบ 439 (ผู้ใช้: "ยานแม่ลอยใหญ่ๆ ต่ำๆ ค้างไว้ เหมือน ID4 — ตอนนี้ไปไหนอีกแล้ว"):
+     ต้นตอที่ลำหายคือบรรทัดนี้เอง — ยิงสำเร็จแล้วเคย `mother.visible=false` รอลำใหม่ 3.2 วิ
+     (และถ้าหัวหน้าห้องยังไม่ประกาศคำใหม่ ลำจะหายยาวกว่านั้นอีก) → **ลำอยู่ค้างฟ้าเสมอ ไม่หายไปไหน**
+     แค่ "ดับไฟ/มืดลงชั่วคราว" แล้วสว่างกลับตอนคำใหม่มา */
+  msRecover=true;
+  if(msBoard) msBoard.visible=true;
+  letters.forEach(l=>setLetterLit(l,false));
+  if(msCore) msCore.visible=false;                           // แกนพลังงานระเบิดไปแล้ว (โผล่ใหม่พร้อมคำถัดไป)
   if(msGlow) msGlow.visible=false;
   /* 🤝 หัวหน้าห้องเป็นคนเปิดยานแม่ลำใหม่ให้ทั้งห้อง · ลูกทีมรอรับคำผ่าน DB */
   setTimeout(()=>{ if(running && isLeader()) pickWord(); },3200);
@@ -3564,7 +3561,12 @@ function netSend(force){
   lastNetSend=now;
   const payload={ n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||'ผู้เล่น'),
     x:Math.round(px*10)/10, z:Math.round(pz*10)/10, y:Math.round(py*10)/10,
-    yaw:Math.round(yaw*100)/100, av:riding?'gun':(inHeli?'heli':'foot'), w:sessionWords,
+    /* 🔫 รอบ 439: ยัด "ปืนที่ถือ + กำลังยิงอยู่ไหม" ลงในช่อง av (rules อนุญาต string ≤8 ตัวอักษร)
+       → เพื่อนเห็นปืนถูกกระบอกและเห็นไฟปากลำกล้องตอนเรายิง **โดยไม่ต้องแก้ rules เลย**
+       รูปแบบ: foot|gun|heli + '-' + (r=ไรเฟิล / s=สไนเปอร์) + (f=กำลังยิง / .=ไม่ยิง)
+       เครื่องรุ่นเก่าที่ยังไม่อัปเดตจะอ่านไม่ออก → ตกไปเป็น 'foot' ตามเดิม ไม่พัง */
+    yaw:Math.round(yaw*100)/100, w:sessionWords,
+    av:(riding?'gun':(inHeli?'heli':'foot'))+'-'+(weapon==='r93'?'s':'r')+((firing||performance.now()-lastFire<180)?'f':'.'),
     ts:firebase.database.ServerValue.TIMESTAMP };
   if(myChat && Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   /* 🤝 สมรภูมิร่วม — ใช้ field เดิมที่ rules อนุญาตอยู่แล้ว (ไม่ต้อง publish rules ใหม่)
@@ -3588,20 +3590,50 @@ function nameSprite(name){
 /* ตัวเพื่อน: ทหารราบ (foot) หรือเฮลิคอปเตอร์ (heli) */
 /* 🔫 รอบ 438: ปืนในมือของ "ตัวละครที่คนอื่นเห็น" — ทรงง่ายๆ 4 ชิ้น (เห็นจากระยะไม่กี่เมตร พอแล้ว)
    ห้อยใต้แขนล่างขวา → ยกแขนเล็ง/เดินแกว่ง ปืนตามไปเองทุกท่า */
-function peerRifle(){
+function peerRifle(kind){
+  const sniper=(kind==='r93');
   const g=new THREE.Group();
-  const met=new THREE.MeshLambertMaterial({color:0x23262c});
-  const wood=new THREE.MeshLambertMaterial({color:0x3a2f24});
+  const met=new THREE.MeshLambertMaterial({color:sniper?0x2c2f26:0x23262c});
+  const wood=new THREE.MeshLambertMaterial({color:sniper?0x4a3a26:0x3a2f24});
   const body=new THREE.Mesh(new THREE.BoxGeometry(.085,.115,.62),met); body.position.z=-.10; g.add(body);
-  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.022,.024,.52,6),met);
-  barrel.rotation.x=Math.PI/2; barrel.position.set(0,.028,-.62); g.add(barrel);
-  const stock=new THREE.Mesh(new THREE.BoxGeometry(.075,.10,.34),wood); stock.position.set(0,-.02,.34); g.add(stock);
-  const mag=new THREE.Mesh(new THREE.BoxGeometry(.055,.17,.10),met); mag.position.set(0,-.12,-.05); mag.rotation.x=.18; g.add(mag);
-  const scope=new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,.20,6),met);
-  scope.rotation.x=Math.PI/2; scope.position.set(0,.11,-.16); g.add(scope);
+  /* 🎯 รอบ 439: สไนเปอร์ = ลำกล้องยาวกว่า + กล้องใหญ่ + ขาทราย (เพื่อนดูออกว่าถือปืนอะไร) */
+  const bl=sniper?.86:.52;
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(sniper?.026:.022,.024,bl,6),met);
+  barrel.rotation.x=Math.PI/2; barrel.position.set(0,.028,-.36-bl/2); g.add(barrel);
+  const stock=new THREE.Mesh(new THREE.BoxGeometry(.075,.10,sniper?.42:.34),wood);
+  stock.position.set(0,-.02,sniper?.38:.34); g.add(stock);
+  const mag=new THREE.Mesh(new THREE.BoxGeometry(.055,sniper?.12:.17,.10),met);
+  mag.position.set(0,sniper?-.10:-.12,-.05); mag.rotation.x=.18; g.add(mag);
+  const scope=new THREE.Mesh(new THREE.CylinderGeometry(sniper?.045:.03,sniper?.045:.03,sniper?.30:.20,6),met);
+  scope.rotation.x=Math.PI/2; scope.position.set(0,sniper?.14:.11,-.18); g.add(scope);
+  if(sniper){ [-1,1].forEach(s=>{ const leg=new THREE.Mesh(new THREE.CylinderGeometry(.012,.012,.22,5),met);
+    leg.position.set(s*.05,-.10,-.72); leg.rotation.set(.25,0,s*.30); g.add(leg); }); }
+  /* 🔥 ไฟปากลำกล้อง — โผล่ตอนเพื่อน "กำลังยิงจริง" (สถานะส่งมาทางช่อง av) */
+  const flash=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffd27a,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  flash.scale.setScalar(sniper?.55:.42); flash.position.set(0,.028,-.42-bl); g.add(flash);
+  g.userData.flash=flash;
   g.position.set(0,-.30,-.34);          // อยู่ในระดับมือที่ปลายแขนล่าง
   return g;
 }
+/* สลับปืนในมือเพื่อน (เรียกตอนได้ข้อมูลใหม่ + ตอนโมเดลตัวละครโหลดเสร็จ) */
+function attachPeerGun(rig,kind){
+  if(!rig||!rig.J||!rig.J.armLR) return;
+  if(rig.gun&&rig.gun.parent) rig.gun.parent.remove(rig.gun);
+  rig.wantGun=kind||'rifle';
+  rig.gun=peerRifle(rig.wantGun);
+  rig.J.armLR.add(rig.gun);
+}
+/* 🛡️ รอบ 439: จุดนี้ถือว่า "มีที่กำบัง" ไหม (หลังกระสอบทราย ≤4 ม. หรืออยู่ในบ้าน) */
+function peerInCover(x,z){
+  for(const w of sandbagWalls()) if(Math.hypot(x-w.x,z-w.z)<4.2) return true;
+  return houseCover(x,z);
+}
+function peerRig(p){
+  const b=p.grp&&p.grp.children[0];
+  return (b&&b.userData)?b.userData.rig:null;
+}
+function setPeerWeapon(p,kind){ const rig=peerRig(p); if(rig) attachPeerGun(rig,kind); else if(p.grp) p.wantGun=kind; }
 function peerBody(kind,color){
   const g=new THREE.Group();
   if(kind==='heli'){
@@ -3629,7 +3661,7 @@ function peerBody(kind,color){
       applySoldierGlb({J:rig.J},obj);
       /* 🔫 รอบ 438 (ผู้ใช้สั่ง): "ผู้เล่นอื่นต้องเห็นว่าเราถือปืน" — โมเดลตัวละครเป็นท่า A-pose มือเปล่า
          และการเสียบเข้าข้อต่อจะล้าง mesh เดิมในข้อต่อทิ้ง (ปืนของโครงหายไปด้วย) → ใส่กลับหลังประกอบเสร็จ */
-      rig.J.armLR.add(peerRifle());
+      attachPeerGun(rig,rig.wantGun||'rifle');
     });
   }
   return g;
@@ -3648,7 +3680,11 @@ function onPeer(snap){
   if(typeof onlineKey==='function' && uid===onlineKey()) return;
   const d=snap.val()||{};
   if(typeof d.x!=='number'||typeof d.z!=='number') return;
-  const kind=(d.av==='heli')?'heli':((d.av==='gun')?'gun':'foot');
+  /* 🔫 รอบ 439: av = "kind-<r|s><f|.>" (เครื่องเก่าส่งมาแค่ 'foot'/'gun'/'heli' ก็ยังอ่านได้) */
+  const av=String(d.av||'foot');
+  const kind=av.indexOf('heli')===0?'heli':(av.indexOf('gun')===0?'gun':'foot');
+  const peerWeapon=(av.indexOf('-s')>=0)?'r93':'rifle';
+  const peerFiring=av.charAt(av.length-1)==='f';
   let p=peers[uid];
   if(!p){
     p=peers[uid]={grp:null,kind:'',cur:{x:d.x,y:(d.y||0),z:d.z},tgt:{x:d.x,y:(d.y||0),z:d.z},
@@ -3659,6 +3695,9 @@ function onPeer(snap){
   }else if(p.kind!==kind){ if(p.bubble) removePeerBubble(p); buildPeer(uid,p,kind); syncBotHelis(); }
   p.tgt={x:d.x,y:(typeof d.y==='number'?d.y:p.tgt.y),z:d.z};
   if(typeof d.yaw==='number') p.yawTgt=d.yaw;
+  /* 🔫 ปืนที่เพื่อนถือเปลี่ยน → สลับทรงปืนในมือให้ตรง · กำลังยิง → จุดไฟปากลำกล้อง */
+  if(p.weapon!==peerWeapon){ p.weapon=peerWeapon; setPeerWeapon(p,peerWeapon); }
+  if(peerFiring) p.shotUntil=performance.now()+180;
   const w=typeof d.w==='number'?d.w:0; if(p.w!==w) p.w=w;
   /* 🤝 อ่านสถานะสมรภูมิของเพื่อน */
   p.cw=(typeof d.cw==='string')?d.cw:p.cw;
@@ -3704,15 +3743,23 @@ function peerTick(dt,now){
            เดินอยู่ = ท่าเดิน (แขนแกว่ง ขาสลับ) · หยุดนิ่ง = ท่าเล็งปืน (ไม่ใช่ยืนปล่อยมือ)
            + เงยหน้า/ยกปืนตามเป้าจริงที่มีอยู่ตอนนั้น (ยานลูกลำใกล้สุด ไม่มีก็แกนยานแม่)
            + สะบัดไหล่เป็นจังหวะเหมือนกำลังยิงคุ้มกัน (สถานะยิงไม่ได้ซิงก์ผ่านเน็ต จึงจำลองให้ดูมีชีวิต) */
-      p.anim.mode=(moved>0.12)?'walk':'aim';
+      /* 🛡️ รอบ 439: อยู่หลังกระสอบทราย/ในบ้าน แล้วหยุดนิ่ง = **หมอบกำบัง** (คำนวณจากตำแหน่งฝั่งเราเอง
+         ไม่ต้องส่งอะไรเพิ่มผ่านเน็ต — ฉากเหมือนกันทุกเครื่องอยู่แล้ว) */
+      const covered=peerInCover(p.grp.position.x,p.grp.position.z);
+      p.anim.mode=(moved>0.12)?'walk':(covered?'crouch':'aim');
       let aim=null, bd=1e9;
       fighters.forEach(f=>{ const d=f.grp.position.distanceToSquared(p.grp.position); if(d<bd){ bd=d; aim=f.grp.position; } });
       if(!aim && msCore && msOpen && !msDead) aim=msCore.position;
-      if(aim && p.anim.mode==='aim'){
+      if(aim && p.anim.mode!=='walk'){
         const dy=aim.y-(p.grp.position.y+1.4), dh=Math.hypot(aim.x-p.grp.position.x, aim.z-p.grp.position.z);
         p.anim.lookUp=Math.atan2(dy,dh);
-        if(!p.fireAt || now>p.fireAt){ p.fireAt=now+rnd(900,2600); p.anim.fireT=1; }
       }else p.anim.lookUp=0;
+      /* 🔥 รอบ 439: ยิงจริงตามสถานะที่ซิงก์มา (ไม่ใช่จำลองสุ่มแล้ว) — ไฟปากลำกล้อง + สะบัดไหล่ */
+      const shooting=now<(p.shotUntil||0);
+      const rg=peerRig(p);
+      if(rg&&rg.gun&&rg.gun.userData.flash) rg.gun.userData.flash.material.opacity=shooting?1:0;
+      if(shooting && !p.wasShooting) p.anim.fireT=1;
+      p.wasShooting=shooting;
       poseSoldier(p.anim,now);
     }
   }
@@ -3790,7 +3837,9 @@ function tickFighters(dt,now){
 }
 /* ยานแม่ยิงลำแสงหนักเป็นระยะ (ลำใหญ่ ช้ากว่า เห็นแล้วหลบทัน) */
 function tickMother(dt,now){
-  if(!mother||msDead) return;
+  if(!mother) return;
+  /* 🛸 รอบ 439: ลำลอยค้างฟ้าตลอดเวลา แม้ช่วงที่เพิ่งถูกทำลาย (เดิม return ทิ้งทั้งก้อน = ลำนิ่งสนิท/หายไป)
+     ช่วงซ่อมตัว: ยังหมุน+ลอยหายใจ แต่ไฟดับๆ ติดๆ และไม่ยิงลำแสง */
   mother.rotation.y+=dt*.02;
   /* ⚠️ ลำยานหมุนช้าๆ ให้ดูมีชีวิต แต่ "แผงตัวอักษรต้องหันหน้าเข้าเมืองตลอด"
      ไม่งั้นเล่นไปสักพักตัวอักษรจะหันข้าง/หันหลังจนอ่านไม่ออก → หักล้างการหมุนคืนทุกเฟรม */
@@ -3800,6 +3849,7 @@ function tickMother(dt,now){
   if(msBoard) msBoard.position.y=BOARD_Y+breathe;
   if(msCore){ msCore.position.y=CORE_Y+breathe; }
   if(msGlow){ msGlow.position.y=CORE_Y+breathe; }
+  if(msDead||msRecover){ msLamps.forEach(lp=>{ lp.visible=Math.sin(now*.0016+lp.userData.ph)>.72; }); return; }
   msLamps.forEach((lp,i)=>{ lp.visible=Math.sin(now*.004+lp.userData.ph)>-.2; });
   if(msGlow&&msOpen) msGlow.material.opacity=.4+Math.sin(now*.006)*.18;
   /* ตัวอักษรกะพริบ */
