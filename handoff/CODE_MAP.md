@@ -173,38 +173,38 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (3,511 บรรทัด · 199 รายการ)
+## js/invasion3d.js (3,611 บรรทัด · 202 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 14-44 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 45-70 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
 - 71-119 🎬 รอบ 422: แอนิเมชันยกปืนเล็ง (ADS) ของ R93 — ตามสเปกที่ผู้ใช้ให้มา
-- 120-504 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
-- 505-609 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
-- 610-684 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
-- 685-719 🌍 สถานะฉาก
-- 720-769 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
-- 770-851 🏜️ สร้างฉากทะเลทราย + เมือง
-- 852-1022 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (ผู้ใช้ส่งภาพอ้างอิง Delta Force)
-- 1023-1124 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
-- 1125-1162 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
-- 1163-1166 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
-- 1167-1257 🪖 รอบ 423: ระบบตัวละครทหารแบบมี "ข้อต่อ" (rig) — รองรับโมเดล .glb ของผู้ใช้
-- 1258-1532 🤖 รอบ 424: จับชิ้นส่วนเข้าข้อต่อ "อัตโนมัติจากตำแหน่ง" (ผู้ใช้ไม่ต้องตั้งชื่อ)
-- 1533-1637 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
-- 1638-1983 🔧 รอบ 427: ยืดลำกล้องปืนหลัง export (ผู้ใช้: โมเดล R93 ลำกล้องสั้นไป)
-- 1984-2049 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
-- 2050-2190 🎯 ระบบยิงของผู้เล่น
-- 2191-2259 ⚔️ ดาเมจ / เงื่อนไขชนะ
-- 2260-2356 📖 คำศัพท์ + รอบเล่น
-- 2357-2408 🖥️ HUD
-- 2409-2527 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
-- 2528-2602 🚶 ผู้เล่น + AI + ลูป
-- 2603-2607 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
-- 2608-2707 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
-- 2708-2919 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
-- 2920-3268 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 3269-3304 🔁 ลูปหลัก
-- 3305-3511 ▶️ เข้า/ออกโลก
+- 120-537 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
+- 538-642 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
+- 643-717 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
+- 718-752 🌍 สถานะฉาก
+- 753-802 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
+- 803-922 🏜️ สร้างฉากทะเลทราย + เมือง
+- 923-1093 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (ผู้ใช้ส่งภาพอ้างอิง Delta Force)
+- 1094-1195 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
+- 1196-1233 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
+- 1234-1237 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
+- 1238-1328 🪖 รอบ 423: ระบบตัวละครทหารแบบมี "ข้อต่อ" (rig) — รองรับโมเดล .glb ของผู้ใช้
+- 1329-1603 🤖 รอบ 424: จับชิ้นส่วนเข้าข้อต่อ "อัตโนมัติจากตำแหน่ง" (ผู้ใช้ไม่ต้องตั้งชื่อ)
+- 1604-1708 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
+- 1709-2054 🔧 รอบ 427: ยืดลำกล้องปืนหลัง export (ผู้ใช้: โมเดล R93 ลำกล้องสั้นไป)
+- 2055-2120 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
+- 2121-2261 🎯 ระบบยิงของผู้เล่น
+- 2262-2330 ⚔️ ดาเมจ / เงื่อนไขชนะ
+- 2331-2427 📖 คำศัพท์ + รอบเล่น
+- 2428-2479 🖥️ HUD
+- 2480-2598 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
+- 2599-2673 🚶 ผู้เล่น + AI + ลูป
+- 2674-2678 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
+- 2679-2807 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
+- 2808-3019 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
+- 3020-3368 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 3369-3404 🔁 ลูปหลัก
+- 3405-3611 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
 MS_Y:30 · MS_HP:31 · MS_DMG_GUN:32 · BOARD_Y:35 · CORE_Y:36 · F_HP:39
@@ -213,33 +213,33 @@ SCOPE_MAGS:65 · ADS_IN:77 · ADS_POS:78 · ADS_ROT:79 · ADS_SCALE:80 · ADS_BR
 REC_RECOVER:84 · REC_RIFLE:85 · REC_R93:86 · BOLT_MS:87 · BREATH_MAX:88 · MIS_MAX:91
 PLAYER_HP:92 · SQUAD_N:95 · SQUAD_GAP:96 · HELI_MAX:102 · HELI_ACCEL:103 · HELI_SKID:104
 PH_GUN_GAP:105 · PH_MIS_MAX:106 · NET_SEND_MS:109 · CHAT_MS:110 · CHAT_PRESETS:111 · PEER_COLORS:112
-TAU:114 · CSS:123 · buildDom:400 · resumeAudio:608 · tryTex:615 · letterPanelTex:623
-letterSpriteTex:639 · sandTex:649 · wallTex:670 · loadGlb:728 · tameGlbMaterials:749 · fitInto:761
-buildTerrain:773 · buildTown:787 · STREET_Z0:857 · instancer:861 · buildWarStreet:875 · sandbagWalls:980
-squadCoverSpots:988 · buildDustMotes:998 · tickDust:1009 · buildMothership:1027 · layoutLetterPanels:1100 · setLetterLit:1118
-makeFighter:1128 · SOLDIER_PARTS:1174 · joint:1188 · buildSoldierRig:1192 · applySoldierGlb:1229 · BODY_MAP:1266
-mergeMeshList:1278 · faceModelForward:1319 · autoRigSoldier:1345 · fitSoldierGround:1435 · poseSoldier:1445 · makeSoldier:1487
-makeHeli:1503 · GUN_POS:1544 · GUN_ROT:1545 · GUN_SCALE:1546 · buildArms:1548 · buildRifleModel:1571
-buildR93Model:1592 · GUN_CUT:1647 · GUN_STRETCH:1648 · orientGunModel:1653 · stretchGunBarrel:1679 · mergeGunParts:1737
-buildGun:1756 · swapWeapon:1820 · setScoped:1835 · smoothstep:1849 · tickAds:1851 · applyRecoil:1894
-applyBreath:1900 · scopeRadius:1908 · scopeRadiusNow:1910 · layoutScope:1912 · scopeFovDeg:1931 · renderScopePass:1939
-cycleScopeMag:1957 · renderAmmo:1965 · syncWeaponBtns:1976 · boom:1987 · sparkAt:2013 · tracer:2020
-tickFx:2031 · aimDir:2053 · fireGun:2060 · addRecoil:2107 · startReload:2114 · tickReload:2122
-launchMissile:2127 · fireMissile:2142 · lockTarget:2158 · rayTarget:2168 · raySphere:2183 · damageFighter:2195
-dropFighter:2201 · openMothership:2226 · damageMother:2235 · killMother:2240 · flashScreen:2254 · myUid:2264
-leaderUid:2265 · isLeader:2270 · pickWord:2271 · setWord:2284 · adoptWord:2293 · applyShared:2302
-startWave:2323 · completeWord:2337 · renderWord:2360 · renderTarget:2369 · renderCoins:2380 · renderHp:2381
-renderHeat:2387 · renderMissiles:2393 · toastBan:2402 · bindInput:2412 · moveJoy:2518 · unlockMouse:2526
-tickPlayer:2531 · hurtPlayer:2585 · MAP_VIEW:2613 · mapToWorld:2614 · worldToMap:2615 · zoneName:2616
-drawSpawnMap:2622 · safeSpawn:2669 · fitSpawnMap:2679 · openSpawnMap:2686 · applySpawnPick:2695 · RIDE_DIST:2718
-RIDE_UP:2719 · RIDE_OFF:2720 · rideableHelis:2721 · findRide:2727 · nearestRideable:2728 · ridePos:2738
-boardGunner:2745 · dismountGunner:2759 · tickGunner:2771 · updateGunnerBtn:2799 · heliCount:2807 · enterHeli:2812
-exitHeli:2831 · tickHeliFlight:2845 · syncBotHelis:2910 · netReady:2925 · netJoin:2929 · netSend:2942
-peerColor:2958 · nameSprite:2960 · peerBody:2971 · buildPeer:2994 · onPeer:3003 · dropPeer:3029
-netLeave:3036 · peerTick:3042 · renderBoard:3063 · sendChat:3080 · showPeerBubble:3087 · removePeerBubble:3093
-tickFighters:3099 · tickMother:3126 · spawnAlienShot:3151 · tickAlienShots:3163 · tickMissiles:3178 · tickSquad:3210
-tickHelis:3238 · fit:3272 · tick:3278 · frame:3286 · build:3308 · start:3348
-exitWorld:3422
+TAU:114 · CSS:123 · buildDom:423 · resumeAudio:641 · tryTex:648 · letterPanelTex:656
+letterSpriteTex:672 · sandTex:682 · wallTex:703 · loadGlb:761 · tameGlbMaterials:782 · fitInto:794
+HILLS:809 · buildTerrain:818 · baseLow:852 · buildTown:858 · STREET_Z0:928 · instancer:932
+buildWarStreet:946 · sandbagWalls:1051 · squadCoverSpots:1059 · buildDustMotes:1069 · tickDust:1080 · buildMothership:1098
+layoutLetterPanels:1171 · setLetterLit:1189 · makeFighter:1199 · SOLDIER_PARTS:1245 · joint:1259 · buildSoldierRig:1263
+applySoldierGlb:1300 · BODY_MAP:1337 · mergeMeshList:1349 · faceModelForward:1390 · autoRigSoldier:1416 · fitSoldierGround:1506
+poseSoldier:1516 · makeSoldier:1558 · makeHeli:1574 · GUN_POS:1615 · GUN_ROT:1616 · GUN_SCALE:1617
+buildArms:1619 · buildRifleModel:1642 · buildR93Model:1663 · GUN_CUT:1718 · GUN_STRETCH:1719 · orientGunModel:1724
+stretchGunBarrel:1750 · mergeGunParts:1808 · buildGun:1827 · swapWeapon:1891 · setScoped:1906 · smoothstep:1920
+tickAds:1922 · applyRecoil:1965 · applyBreath:1971 · scopeRadius:1979 · scopeRadiusNow:1981 · layoutScope:1983
+scopeFovDeg:2002 · renderScopePass:2010 · cycleScopeMag:2028 · renderAmmo:2036 · syncWeaponBtns:2047 · boom:2058
+sparkAt:2084 · tracer:2091 · tickFx:2102 · aimDir:2124 · fireGun:2131 · addRecoil:2178
+startReload:2185 · tickReload:2193 · launchMissile:2198 · fireMissile:2213 · lockTarget:2229 · rayTarget:2239
+raySphere:2254 · damageFighter:2266 · dropFighter:2272 · openMothership:2297 · damageMother:2306 · killMother:2311
+flashScreen:2325 · myUid:2335 · leaderUid:2336 · isLeader:2341 · pickWord:2342 · setWord:2355
+adoptWord:2364 · applyShared:2373 · startWave:2394 · completeWord:2408 · renderWord:2431 · renderTarget:2440
+renderCoins:2451 · renderHp:2452 · renderHeat:2458 · renderMissiles:2464 · toastBan:2473 · bindInput:2483
+moveJoy:2589 · unlockMouse:2597 · tickPlayer:2602 · hurtPlayer:2656 · MAP_VIEW:2684 · mapToWorld:2685
+worldToMap:2686 · zoneName:2687 · buildMapShade:2696 · drawSpawnMap:2715 · safeSpawn:2765 · fitSpawnMap:2775
+openSpawnMap:2786 · applySpawnPick:2795 · RIDE_DIST:2818 · RIDE_UP:2819 · RIDE_OFF:2820 · rideableHelis:2821
+findRide:2827 · nearestRideable:2828 · ridePos:2838 · boardGunner:2845 · dismountGunner:2859 · tickGunner:2871
+updateGunnerBtn:2899 · heliCount:2907 · enterHeli:2912 · exitHeli:2931 · tickHeliFlight:2945 · syncBotHelis:3010
+netReady:3025 · netJoin:3029 · netSend:3042 · peerColor:3058 · nameSprite:3060 · peerBody:3071
+buildPeer:3094 · onPeer:3103 · dropPeer:3129 · netLeave:3136 · peerTick:3142 · renderBoard:3163
+sendChat:3180 · showPeerBubble:3187 · removePeerBubble:3193 · tickFighters:3199 · tickMother:3226 · spawnAlienShot:3251
+tickAlienShots:3263 · tickMissiles:3278 · tickSquad:3310 · tickHelis:3338 · fit:3372 · tick:3378
+frame:3386 · build:3408 · start:3448 · exitWorld:3522
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
