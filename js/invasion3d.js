@@ -2260,6 +2260,70 @@ function forceGunForward(obj){
   if(cz/n<0) obj.rotation.y+=Math.PI;      // มวลอยู่ฝั่ง −Z = ท้ายปืนชี้หน้า → กลับหลัง
   obj.updateMatrixWorld(true);
 }
+/* ============================================================
+   🤚 รอบ 443: มือซ้ายประคองลำกล้อง — "ทำยังไงให้เนียนแบบ Delta Force"
+   สาเหตุที่ของเดิม (buildArms) ดูปลอม แล้วรอบนี้แก้ยังไง:
+     ① เดิมแขนติดอยู่กับ "กล้อง" ปืนขยับ/รีคอยล์/ยกเล็ง แขนไม่ตามไป = มือหลุดจากปืน
+        → รอบนี้ทำมือเป็น **ลูกของกลุ่มปืน** ตำแหน่งคำนวณจากกรอบโมเดลปืนจริง
+          (65% ไปทางปากกระบอก · ใต้ลำกล้อง) = มือติดการ์ดมือเป๊ะทุกท่า ทุกกระบอก
+     ② เดิมเป็นท่อนกลมสีเดียวลอยอยู่กลางจอ = อ่านเป็น "ท่อ" ไม่ใช่แขน
+        → ใส่ครบชุด: ปลายแขนเรียว + ข้อมือ + ปลอกแขนเข้ม + ฝ่ามือ + **4 นิ้วโอบทับลำกล้อง** + นิ้วโป้งฝั่งตรงข้าม
+     ③ เดิมแขนลอยจบกลางอากาศ (เห็นปลายตัด) → รอบนี้ทำ **ยาวทะลุขอบจอ** (ปลายแขนอยู่นอกเฟรม)
+        = ตาเห็นเป็น "แขนของเรา" ที่โผล่มาจากมุมล่างซ้ายจริงๆ ตามหลักการวางกล้องของเกม FPS
+     ④ นิ้วโอบ "ทับหน้า" ลำกล้องเล็กน้อย (ล้ำเข้าไป) → เกิดการบัง = สมองอ่านว่าจับจริง ไม่ใช่แปะข้างๆ
+   ============================================================ */
+const HAND_SKIN=0x3a3f36, HAND_GLOVE=0x24272a, HAND_SLEEVE=0x5c5a3e;
+function buildSupportHand(gunObj){
+  /* หาจุด "การ์ดมือ" จากกรอบของโมเดลปืนกระบอกนั้นๆ (ทำงานได้กับทุกโมเดล ไม่ต้องตั้งค่ามือใหม่)
+     ⚠️ ต้องวัดใน "พิกัดของตัวปืนเอง" — รอบแรกใช้ Box3.setFromObject ตรงๆ ซึ่งเป็นพิกัดโลก
+     แล้วเอาไปใส่เป็นตำแหน่งลูก = มือหลุดไปใต้จอ (วัดได้ y=−1.35 บนจอ) */
+  gunObj.updateMatrixWorld(true);
+  const inv=new THREE.Matrix4().copy(gunObj.matrixWorld).invert();
+  const box=new THREE.Box3(); const v=new THREE.Vector3();
+  gunObj.traverse(o=>{
+    if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=5){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv); box.expandByPoint(v); }
+  });
+  if(box.isEmpty()) return new THREE.Group();
+  const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3());
+  const grip=new THREE.Vector3(c.x, box.min.y+s.y*0.46, c.z-s.z*0.34);   // ใต้ลำกล้อง ค่อนไปทางปากกระบอก
+  const h=new THREE.Group(); h.position.copy(grip);
+  const glove=new THREE.MeshLambertMaterial({color:HAND_GLOVE});
+  const skin =new THREE.MeshLambertMaterial({color:HAND_SKIN});
+  const sleeve=new THREE.MeshLambertMaterial({color:HAND_SLEEVE});
+  const R=s.z*0.055;                                   // สเกลมือให้พอดีกับปืนกระบอกนั้น
+  /* ฝ่ามือ: กล่องมนแนบใต้ลำกล้อง */
+  const palm=new THREE.Mesh(new THREE.BoxGeometry(R*1.5,R*1.35,R*2.2),glove);
+  palm.position.set(-R*.15,-R*.55,0); palm.rotation.set(.12,0,.18); h.add(palm);
+  /* 4 นิ้วโอบขึ้นมาทับลำกล้อง (ล้ำเข้าไปนิดหน่อย = เกิดการบังจริง ไม่ลอยข้างๆ) */
+  for(let i=0;i<4;i++){
+    const f=new THREE.Mesh(new THREE.BoxGeometry(R*.42,R*1.25,R*.42),glove);
+    f.position.set(R*.55,-R*.05,(i-1.5)*R*.52);
+    f.rotation.set(0,0,-.62-i*.05); h.add(f);
+  }
+  /* นิ้วโป้งอีกฝั่ง — ทำให้ "โอบรอบ" สมบูรณ์ (ไม่มีแล้วจะเหมือนมือแตะเฉยๆ) */
+  const thumb=new THREE.Mesh(new THREE.BoxGeometry(R*.40,R*1.0,R*.44),glove);
+  thumb.position.set(-R*.72,-R*.30,R*.30); thumb.rotation.set(.25,0,.75); h.add(thumb);
+  /* ข้อมือ + ปลอกแขนเข้ม (ตัวคั่นสายตา ทำให้อ่านเป็น "แขนเสื้อ" ไม่ใช่ท่อยาว) */
+  const wrist=new THREE.Mesh(new THREE.CylinderGeometry(R*.62,R*.72,R*.9,10),skin);
+  wrist.position.set(-R*.55,-R*1.05,R*.85); wrist.rotation.set(-.95,0,.42); h.add(wrist);
+  const cuff=new THREE.Mesh(new THREE.CylinderGeometry(R*.86,R*.86,R*.55,10),
+    new THREE.MeshLambertMaterial({color:0x33321f}));
+  cuff.position.set(-R*.78,-R*1.5,R*1.35); cuff.rotation.set(-.95,0,.42); h.add(cuff);
+  /* ปลายแขน: ยาวทะลุออกนอกเฟรม (ปลายไม่มีวันโผล่ให้เห็น = ไม่เห็นรอยตัด) */
+  const fore=new THREE.Mesh(new THREE.CylinderGeometry(R*.80,R*1.02,s.z*0.95,12),sleeve);
+  fore.position.set(-R*1.25,-R*2.5,R*1.35+s.z*0.34); fore.rotation.set(-.95,0,.42); h.add(fore);
+  h.rotation.y=-.10;
+  return h;
+}
+/* ผูกมือเข้ากับปืนกระบอกที่กำลังถือ (เรียกทุกครั้งที่โมเดลปืนเปลี่ยน/โหลดเสร็จ) */
+function attachSupportHand(gunObj){
+  if(!gunObj) return;
+  if(gunObj.userData.hand){ gunObj.remove(gunObj.userData.hand); }
+  const h=buildSupportHand(gunObj);
+  gunObj.add(h); gunObj.userData.hand=h;      // เป็นลูกของ "ตัวปืน" → ตามรีคอยล์/สวิง/ยกเล็งเป๊ะ
+}
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -2306,7 +2370,7 @@ function buildGun(){
     });
     forceGunForward(obj);                                 // 🧭 รอบ 440: ไรเฟิลก็ผ่านด่านเดียวกัน
     g.remove(gunModels.rifle); gunModels.rifle=obj; obj.visible=(weapon==='rifle');
-    g.add(obj);
+    g.add(obj); attachSupportHand(obj);                    // 🤚 รอบ 443: มือซ้ายประคองการ์ดมือ
   });
   /* 🎯 รอบ 438 (ผู้ใช้สั่ง): เปลี่ยนมาใช้โมเดลใหม่ `new_gun_r93`
      ต้นฉบับ 98,327 tris / 8.6MB → ใช้ตัวลดโพลี **24,581 tris / 2.3MB** (สูตรใน handoff/NOTES.md)
@@ -2326,7 +2390,7 @@ function buildGun(){
       });
     });
     g.remove(gunModels.r93); gunModels.r93=obj; obj.visible=(weapon==='r93');
-    g.add(obj);
+    g.add(obj); attachSupportHand(obj);                    // 🤚 รอบ 443
   });
 }
 /* สลับปืน (เฉพาะตอนเดินเท้า — บนเฮลิใช้ปืนกลติดลำ) */
