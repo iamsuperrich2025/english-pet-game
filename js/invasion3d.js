@@ -32,7 +32,11 @@ const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (
    เป็นแถบดำทแยงจอ จำทรงยานที่ผู้ใช้ออกแบบไม่ได้เลย
    ⚖️ กฎใหม่: ต้องให้ "ความกว้างลำ ÷ ระยะห่างจากจุดเกิด" ≤ ~0.85 (ราว 45–50° ของ FOV 68°)
       = เห็นทรงเต็มลำในเฟรมเดียว แต่ยังมหึมา (1,800 ม. = ยาวกว่าสนามบิน 10 เท่า) */
-const MS_Y=760, MS_Z=-1900, MS_R=900;     // ความสูงลอย · ระยะหน้า · รัศมีลำ (417: 1500/-1500/2800)
+/* 🔻 รอบ 435 (ผู้ใช้: "ไม่เห็นรายละเอียดของยานแม่เลย อยู่ให้ต่ำกว่านี้"):
+   ลดทั้งขนาดและ "ระยะ+ความสูง" พร้อมกัน — ลำเล็กลงแต่เข้ามาใกล้ขึ้นครึ่งหนึ่ง = พื้นผิว/ลวดลายบนลำชัดขึ้นมาก
+   ⚠️ ข้อจำกัดที่ต้องรักษาไว้: ท้องลำ (MS_Y − MS_R*0.30) ต้อง "สูงกว่าแกนพลังงาน" (CORE_Y=210)
+      ไม่งั้นลำแสงยึดแกนจะกลับหัว/ทะลุลำ */
+const MS_Y=430, MS_Z=-900, MS_R=450;      // ความสูงลอย · ระยะหน้า · รัศมีลำ (432: 760/-1900/900)
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* 🔠 แผงตัวอักษร + แกนพลังงาน — "แยกขนาดจากตัวลำ" เพราะถ้าผูกกับ MS_R ตัวอักษรจะโตตาม 5 เท่าจนล้นจอ
@@ -1630,8 +1634,32 @@ function faceModelForward(obj){
   if(boxes.length<3) return false;
   const all=new THREE.Box3(); boxes.forEach(function(o){ all.union(o.b); });
   const H=all.max.y-all.min.y; if(H<=0.001) return false;
+  /* 🦶 รอบ 435 (ผู้ใช้เจอ: เพื่อนหันหลังให้กันทั้งที่หันหน้าเข้าหากัน):
+     เกณฑ์เดิมใช้ "จุดกึ่งกลางกล่องของชิ้นเท้า เทียบกับกึ่งกลางลำตัว" — ต่างกันแค่ ~0.01 ของความสูง
+     = อยู่ในระดับ noise → soldier_a เดาถูก แต่ soldier_b เดาผิด (กลับหลังคนละทาง)
+     เกณฑ์ใหม่วัดจาก "รูปทรงเท้าจริง": ปลายเท้ายื่นจากข้อเท้าไปข้างหน้า "ไกลกว่า" ส้นเท้าเสมอ
+     → เทียบระยะยื่น 2 ฝั่งของสไลซ์เท้า (วัดระดับจุดยอด ไม่ใช่กล่องรวม) ชัดกว่ามาก */
+  const V=new THREE.Vector3();
+  let ankZ=0,ankN=0, toeMin=Infinity, toeMax=-Infinity;
+  obj.traverse(function(o){
+    if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=3){
+      V.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);
+      const h=(V.y-all.min.y)/H;
+      if(h<0.05){ if(V.z<toeMin) toeMin=V.z; if(V.z>toeMax) toeMax=V.z; }
+      else if(h>=0.06&&h<0.11){ ankZ+=V.z; ankN++; }
+    }
+  });
+  if(ankN>8 && toeMin<Infinity){
+    const ank=ankZ/ankN, back=ank-toeMin, front=toeMax-ank;
+    if(Math.abs(front-back)>H*0.008){                /* ต่างกันชัดพอ = เชื่อได้ */
+      if(front>back){ obj.rotation.y+=Math.PI; obj.updateWorldMatrix(true,true); return true; }
+      return false;
+    }
+  }
+  /* สำรอง: เกณฑ์เดิม (ใช้เมื่อโมเดลไม่มีเท้าชัด เช่น หุ่นครึ่งตัว) */
   const bodyZ=(all.min.z+all.max.z)/2;
-  /* กลุ่ม "เท้า" = ชิ้นที่อยู่ต่ำกว่า 15% ของความสูง */
   const footY=all.min.y+H*0.15;
   let fz=0,fn=0;
   boxes.forEach(function(o){ if(o.c.y<footY){ fz+=o.c.z; fn++; } });

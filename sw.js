@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v149';  // v149: 🚁 เฮลิคอปเตอร์จอดจริง 5 ลำ เดินไปสตาร์ทแล้วบิน รอบ 434
+const CACHE_VERSION = 'pet-vocab-v150';  // v150: 🔻 ยานแม่ลงต่ำเห็นรายละเอียด + แก้เพื่อนหันหลัง รอบ 435
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
