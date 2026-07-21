@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v155';  // v155: 🔫 ท่าถือปืนเอียงแบบเกมจริง + ท่าเพื่อนถือปืนสมจริง รอบ 440
+const CACHE_VERSION = 'pet-vocab-v156';  // v156: 🛸 เอาแผ่นดำบังยานออก + ยานแม่กว้าง 1,040 ม. รอบ 441
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
