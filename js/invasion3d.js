@@ -854,6 +854,7 @@ let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
 let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
+let vmScene=null, vmCam=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
@@ -2066,9 +2067,17 @@ function tickPads(dt,now){
    **ปากกระบอกต้อง "ลู่เข้าหาจุดเล็ง" ไม่ใช่ชี้ออกนอกทาง** — ปืนอยู่ต่ำกว่าระดับตาและอยู่ขวา
    ดังนั้นลำกล้องต้องเงยขึ้นเล็กน้อย + หันเข้าในเล็กน้อย เพื่อชี้ไปยังจุดเดียวกับที่กระสุนไป
    วัดจริง: ปากกระบอกอยู่ห่างจุดเล็งแค่ **0.15** หน่วยจอ (ของเดิม 0.40 = คนละทางกัน) */
-const GUN_POS=[.14,-.11,-.50];      // ตำแหน่งปืนเทียบกล้อง (x ขวา · y ล่าง · z ระยะหน้ากล้อง)
+/* 🎥 รอบ 451 (ผู้ใช้: "ปืนห่างตัวไป ต้องดูเข้ามาอีก + ปลายกระบอกต้องต่ำกว่าศูนย์เล็ง"):
+   ต้นตอที่ทำให้ดึงปืนเข้ามาไม่ได้ = **near plane ของกล้องหลัก 0.1 ม.** (ดึงใกล้กว่านั้นพานท้ายโดนตัด)
+   แก้ถาวรแบบเกมจริง: วาดปืนเป็น **รอบเรนเดอร์แยก (view model pass)** ด้วยกล้องของตัวเอง near .01
+   → ปืนเข้ามาใกล้ตัวได้เต็มที่ ไม่โดนตัด และไม่ถูกฉากบัง (ดู renderViewModel ท้ายไฟล์ส่วนนี้)
+   ต้นตอที่ 2 = **จุดหมุนของโมเดล R93 อยู่ต่ำกว่าลำกล้อง 0.28** → ปากกระบอกจริงลอยเหนือศูนย์เล็ง
+   แก้ด้วย alignGunMuzzle(): เลื่อนโมเดลให้ "แกนลำกล้อง" มาอยู่ที่ y=MUZZLE_Y เสมอ (ทุกกระบอกเท่ากัน)
+   → ปากกระบอกอยู่ต่ำกว่ากากบาทเขียว และไฟ/ควันปากลำกล้องไปโผล่ตรงปากกระบอกจริงด้วย */
+const GUN_POS=[.13,-.10,-.44];      // ตำแหน่งปืนเทียบกล้อง (x ขวา · y ล่าง · z ระยะหน้ากล้อง)
 const GUN_ROT=[.09,.17,.09];        // มุมปืน: [ก้ม-เงย, หันเข้าใน, เอียงทแยง] — ลู่เข้าหาจุดเล็ง
-const GUN_SCALE=.62;                // ขนาดปืนในจอ (ท้ายปืน 0.13 ม. = ระดับประทับไหล่)
+const GUN_SCALE=.66;                // ขนาดปืนในจอ (รอบ 451: ดึงเข้ามา 12% + ใหญ่ขึ้น = เห็นเป็น ~1.2 เท่า)
+const MUZZLE_Y=.012;                // แกนลำกล้องมาตรฐาน (ทุกโมเดลถูกเลื่อนมาที่ระดับนี้)
 /* 📐 ท่านี้วัดจากในเกมจริง (จุดปลายลำกล้อง/พานท้ายฉายลงจอ): ปากกระบอกอยู่ (0.13,−0.32) เฉียงเข้ากลางจอ 17°
    · ยอดกล้องส่องอยู่ (0.28,−0.05) เห็นเต็มๆ · พานท้ายไหลออกมุมขวาล่าง = องค์ประกอบเดียวกับภาพอ้างอิง */
 /* 💪 แขนเสื้อลายพรางจับปืน — สร้างเองเสมอ (ไม่ถูกแทนตอนโหลด .glb ปืน) */
@@ -2323,10 +2332,14 @@ function attachBoltHandle(gunObj){
   if(gunObj.userData.boltRig&&gunObj.userData.boltRig.pivot.parent)
     gunObj.userData.boltRig.pivot.parent.remove(gunObj.userData.boltRig.pivot);
   gunObj.updateMatrixWorld(true);
+  /* ⚠️ รอบ 451: ต้องวัดกรอบใน "พิกัดของตัวโมเดลเอง" (pivot เป็นลูกของโมเดล)
+     ของเดิมใช้ matrixWorld ตรง ๆ → พอปืนย้ายไป vmScene คันรั้งไปโผล่ใต้ปืน/หน้าปากกระบอก */
   const box=new THREE.Box3(), v=new THREE.Vector3();
+  const invG=new THREE.Matrix4().copy(gunObj.matrixWorld).invert();
   gunObj.traverse(o=>{ if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const rel=new THREE.Matrix4().multiplyMatrices(invG,o.matrixWorld);
     const p=o.geometry.attributes.position;
-    for(let i=0;i<p.count;i+=9){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld); box.expandByPoint(v); } });
+    for(let i=0;i<p.count;i+=9){ v.fromBufferAttribute(p,i).applyMatrix4(rel); box.expandByPoint(v); } });
   if(box.isEmpty()) return;
   const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3());
   const L=Math.max(s.x,s.y,s.z);
@@ -2364,7 +2377,7 @@ function tickBolt(now){
     rig.ejected=true;
     const shell=new THREE.Mesh(new THREE.CylinderGeometry(.018,.018,.075,7),
       new THREE.MeshLambertMaterial({color:0xc9a13c}));
-    const wp=new THREE.Vector3(); rig.pivot.getWorldPosition(wp);
+    const wp=vmToWorld(rig.pivot);        // 🎥 รอบ 451: ปืนอยู่ vmScene → ต้องแปลงเป็นพิกัดโลกก่อน
     shell.position.copy(wp); scene.add(shell);
     const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
     const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
@@ -2378,7 +2391,7 @@ function tickBolt(now){
    วางในพิกัดโลกที่ "ปากลำกล้องจริง" (อ่านจากไฟล์ flash ที่ติดอยู่บนกลุ่มปืน) */
 function muzzleSmoke(n){
   if(!muzzle||!camera) return;
-  const wp=new THREE.Vector3(); muzzle.getWorldPosition(wp);
+  const wp=vmToWorld(muzzle);             // 🎥 รอบ 451: แปลงพิกัด vmScene → โลกจริง
   const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
   const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
   const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
@@ -2392,6 +2405,49 @@ function muzzleSmoke(n){
     fx.push({o:sp,kind:'smoke',t:0,life:rnd(.75,1.25),v,sc,a0:rnd(.20,.34)});
   }
 }
+/* 🎯 รอบ 451: จัดโมเดลปืนให้ "แกนลำกล้อง" ตรงกับจุดอ้างอิงเดียวกันทุกกระบอก
+   หาปากกระบอก = จุดศูนย์กลางของกลุ่มจุดยอดที่อยู่หน้าสุด (สแลบหนา 6 ซม.)
+   แล้วเลื่อนโมเดลให้ปากกระบอกมาอยู่ที่ (x=0, y=MUZZLE_Y) — z ไม่ยุ่ง (ความยาวปืนคงเดิม)
+   ⚠️ ต้องเรียก "หลัง" g.add(obj) แล้ว (ใช้ matrixWorld เทียบกับ obj เอง) */
+function alignGunMuzzle(obj){
+  if(!obj) return;
+  if(!obj.parent) return;
+  obj.parent.updateMatrixWorld(true);
+  /* ⚠️ ต้องวัดใน "พิกัดกลุ่มปืน" เท่านั้น — โมเดลบางตัวถูกหมุน 180° (forceGunForward)
+     ถ้าวัดในพิกัดของโมเดลเอง จุด z น้อยสุดจะกลายเป็น "ท้ายปืน" ไม่ใช่ปากกระบอก */
+  const inv=new THREE.Matrix4().copy(obj.parent.matrixWorld).invert();
+  let mz=Infinity; const pts=[]; const v=new THREE.Vector3();
+  obj.traverse(o=>{ if(!o.isMesh||!o.geometry||!o.geometry.attributes.position) return;
+    const m=new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld);
+    const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=3){ v.fromBufferAttribute(p,i).applyMatrix4(m); pts.push(v.clone()); if(v.z<mz) mz=v.z; } });
+  if(!pts.length) return;
+  const slab=pts.filter(p=>p.z<mz+.06);
+  const c=new THREE.Vector3(); slab.forEach(p=>c.add(p)); c.divideScalar(slab.length);
+  const dx=-c.x, dy=MUZZLE_Y-c.y;
+  const base={x:obj.position.x,y:obj.position.y};
+  obj.position.x+=dx; obj.position.y+=dy;
+  obj.userData.align={x:dx,y:dy,bx:base.x,by:base.y};
+  obj.userData.tipZ=c.z;                            // z ของปากกระบอกในกลุ่มปืน (ใช้วางไฟ/ควัน)
+  return obj.userData.align;
+}
+/* 🔥 ย้ายไฟปากลำกล้องไปที่ปากกระบอกของ "ปืนที่ถืออยู่" (แต่ละกระบอกยาวไม่เท่ากัน) */
+function syncMuzzleAnchor(){
+  const m=gunModels[weapon];
+  if(muzzle&&m&&typeof m.userData.tipZ==='number') muzzle.position.set(0,MUZZLE_Y,m.userData.tipZ+.02);
+}
+/* 🎥 รอบ 451: รอบเรนเดอร์ของ view model — วาดปืนทับภาพฉากด้วยกล้อง near .01
+   (ล้างเฉพาะ depth ไม่ล้างสี → ปืนอยู่หน้าสุดเสมอ ไม่โดนกำแพง/พื้นทะลุ และดึงเข้ามาชิดตาได้) */
+function renderViewModel(){
+  if(!vmScene||!vmCam||!gunGrp||!gunGrp.visible) return;
+  vmCam.fov=camera.fov; vmCam.aspect=camera.aspect; vmCam.updateProjectionMatrix();
+  renderer.autoClear=false;
+  renderer.clearDepth();
+  renderer.render(vmScene,vmCam);
+  renderer.autoClear=true;
+}
+/* กลุ่มปืนอยู่ใน vmScene (พิกัดเดียวกับ "ระบบพิกัดกล้อง") → แปลงเป็นพิกัดโลกด้วยกล้องหลัก */
+function vmToWorld(o){ const v=new THREE.Vector3(); o.getWorldPosition(v); return camera.localToWorld(v); }
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -2400,7 +2456,8 @@ function buildGun(){
   /* ไฟปากลำกล้อง (โผล่ตอนยิง) */
   muzzle=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffd27a,transparent:true,opacity:0,
     blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false}));
-  muzzle.scale.setScalar(.42); muzzle.position.set(0,.012,-.72); g.add(muzzle);
+  muzzle.scale.setScalar(.42); muzzle.position.set(0,MUZZLE_Y,-.72); g.add(muzzle);
+  alignGunMuzzle(gunModels.rifle); alignGunMuzzle(gunModels.r93);   // 🎯 รอบ 451: ทรงสำรองก็จัดแกนเหมือนกัน
 
   /* 💪 แขนถือปืน — รอบ 438 (ผู้ใช้สั่ง): **มุมมองบุคคลที่ 1 ไม่โชว์มือแล้ว เน้นเห็นตัวปืนเต็มๆ**
      (โมเดลปืนจริงมีด้าม/การ์ดมืออยู่ในตัว มือที่วาดเองบังลายปืนและดูไม่เนียนกว่า)
@@ -2411,14 +2468,23 @@ function buildGun(){
   g.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]);   // เอียงทแยงแบบภาพอ้างอิง
   g.scale.setScalar(GUN_SCALE);
   g.userData.swayX=0; g.userData.swayY=0;
-  camera.add(g); gunGrp=g;
+  /* 🎥 รอบ 451: ปืนไม่ได้แขวนใต้กล้องหลักแล้ว — อยู่ใน vmScene ที่มีพิกัดเดียวกับกล้อง
+     (กลุ่มปืนวางที่พิกัดกล้องเป๊ะ ๆ เหมือนเดิม จึงเห็นตำแหน่งเท่าเดิม แต่ near .01 ไม่โดนตัด) */
+  vmScene=new THREE.Scene();
+  vmCam=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,.01,12);
+  vmScene.add(vmCam); vmScene.add(g); gunGrp=g;
   /* 💡 ไฟส่อง view model โดยเฉพาะ (ติดกล้อง เคลื่อนตามตลอด)
      ⚠️ จำเป็น! ไฟฉากส่องปืนไม่ถึง — ไม่มีไฟนี้ปืนจะดำสนิทเป็นก้อนบังจอ (เจอจริงตอนเทสต์)
      ใช้ PointLight ระยะสั้น (5m) จึงไม่รบกวนแสงของฉากรอบตัว */
   const vLight=new THREE.PointLight(0xffeccd,3.4,5);
-  vLight.position.set(.55,.42,.30); camera.add(vLight);
+  vLight.position.set(.55,.42,.30); vmScene.add(vLight);
   const vFill=new THREE.PointLight(0x9fb6d8,.85,4);   // ไฟเสริมฝั่งเงา ให้เห็นรูปทรงไม่ตันดำ
-  vFill.position.set(-.5,-.15,.1); camera.add(vFill);
+  vFill.position.set(-.5,-.15,.1); vmScene.add(vFill);
+  /* 🌤️ รอบ 451: ปืนย้ายออกจากฉากหลัก จึงไม่ได้รับแดด/ฟ้าของฉากอีก — ใส่ชุดเดียวกันใน vmScene
+     (ค่าเท่ากับฉากจริงเป๊ะ ๆ ปืนจึงยังดูกลืนกับสภาพแสงทะเลทรายเหมือนเดิม) */
+  vmScene.add(new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52));
+  const vSun=new THREE.DirectionalLight(0xfff0cc,.95); vSun.position.set(.7,.9,1.2); vmScene.add(vSun);
+  const vRim=new THREE.DirectionalLight(0x8aa4c8,.30); vRim.position.set(-.6,.5,-.9); vmScene.add(vRim);
   loadGlb('img/models/gun_rifle.glb',(obj)=>{
     orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว
@@ -2438,7 +2504,7 @@ function buildGun(){
     });
     forceGunForward(obj);                                 // 🧭 รอบ 440: ไรเฟิลก็ผ่านด่านเดียวกัน
     g.remove(gunModels.rifle); gunModels.rifle=obj; obj.visible=(weapon==='rifle');
-    g.add(obj);
+    g.add(obj); alignGunMuzzle(obj); syncMuzzleAnchor();   // 🎯 รอบ 451: แกนลำกล้องเข้าที่มาตรฐาน
   });
   /* 🎯 รอบ 438 (ผู้ใช้สั่ง): เปลี่ยนมาใช้โมเดลใหม่ `new_gun_r93`
      ต้นฉบับ 98,327 tris / 8.6MB → ใช้ตัวลดโพลี **24,581 tris / 2.3MB** (สูตรใน handoff/NOTES.md)
@@ -2458,7 +2524,8 @@ function buildGun(){
       });
     });
     g.remove(gunModels.r93); gunModels.r93=obj; obj.visible=(weapon==='r93');
-    g.add(obj); attachBoltHandle(obj);                     // 🔩 รอบ 447: คันรั้งลูกเลื่อนที่ขยับได้
+    g.add(obj); alignGunMuzzle(obj); syncMuzzleAnchor();   // 🎯 รอบ 451: แกนลำกล้องเข้าที่มาตรฐาน
+    attachBoltHandle(obj);                                 // 🔩 รอบ 447: คันรั้งลูกเลื่อนที่ขยับได้
   });
 }
 /* สลับปืน (เฉพาะตอนเดินเท้า — บนเฮลิใช้ปืนกลติดลำ) */
@@ -2468,6 +2535,7 @@ function swapWeapon(){
   weapon=(weapon==='rifle')?'r93':'rifle';
   if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
   if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
+  syncMuzzleAnchor();                                  // 🔥 รอบ 451: ไฟปากลำกล้องตามความยาวปืนที่ถือ
   reloadAt=0; heat=0; overheat=false;
   renderHeat(); renderAmmo(); syncWeaponBtns();
   const W=WEAPONS[weapon];
@@ -2510,6 +2578,10 @@ function tickAds(dt,now){
       GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
       GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
     gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
+    /* 🎯 รอบ 451: การเลื่อนแกนลำกล้อง (alignGunMuzzle) ใช้เฉพาะ "ท่าถือ" — ตอนแนบไหล่เล็ง
+       ต้องคลายกลับเป็นตำแหน่งเดิม ค่า ADS_POS/ADS_ROT ที่จูนไว้เดิมจึงยังตรงเป๊ะ */
+    const am=gunModels[weapon], al=am&&am.userData.align;
+    if(al){ am.position.x=al.bx+al.x*(1-k); am.position.y=al.by+al.y*(1-k); }
     /* 🏃 รอบ 448: ท่าวิ่ง — วิ่งอยู่ (ไม่เล็ง ไม่ชักลูกเลื่อน) ปืนก้มลงข้างตัว แล้วยกกลับนุ่มๆ ตอนหยุด/ยิง */
     const wantSprint=(isRun||keys.shift) && moveLen>.05 && !scoped && !inHeli && !riding
                      && now>sprintHold && !boltAt ? 1 : 0;
@@ -4235,6 +4307,7 @@ function frame(dt,now){
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
   renderer.render(scene,camera);
+  renderViewModel();                // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
 }
 
@@ -4469,6 +4542,10 @@ window.InvasionWorld={
       return r?{lift:+r.pivot.rotation.z.toFixed(3), back:+(r.pivot.position.z-r.z0).toFixed(3), ejected:r.ejected}:null; },
     tickBolt, attachBoltHandle,
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
+    /* 🎥🎯 รอบ 451 */
+    get gunGrp(){return gunGrp}, get vmScene(){return vmScene}, get vmCam(){return vmCam},
+    get gunModels(){return gunModels}, alignGunMuzzle, syncMuzzleAnchor, vmToWorld,
+    get muzzleAnchor(){return muzzle?muzzle.position.toArray().map(n=>+n.toFixed(3)):null},
     get gunPose(){return gunGrp?{p:gunGrp.position.toArray().map(n=>+n.toFixed(3)),
       r:gunGrp.rotation.toArray().slice(0,3).map(n=>+n.toFixed(3)), s:+gunGrp.scale.x.toFixed(3)}:null},
     get magLabel(){return SCOPE_MAGS[scopeMagIdx].label}, get magBtnShown(){return magBtn.style.display==='block'},
