@@ -201,10 +201,15 @@ const CSS=`
   background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.22)}
 #inv-joy i{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px 0 0 -23px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#eaf6ff,#8fb6d6);box-shadow:0 3px 10px rgba(0,0,0,.5)}
-#inv-fire,#inv-rocket,#inv-run{position:absolute;z-index:6;border:none;border-radius:50%;color:#fff;font-weight:900;
+#inv-fire,#inv-fire2,#inv-rocket,#inv-run{position:absolute;z-index:6;border:none;border-radius:50%;color:#fff;font-weight:900;
   box-shadow:0 5px 14px rgba(0,0,0,.55);cursor:pointer;-webkit-tap-highlight-color:transparent}
 #inv-fire{right:18px;bottom:74px;width:104px;height:104px;font-size:34px;
   background:radial-gradient(circle at 34% 28%,#ff8a7a,#c62828)}
+/* 🔫 รอบ 433 (ผู้ใช้สั่ง): ปุ่มยิงใบที่ 2 "เหนือจอยบังคับ" — นิ้วซ้ายเดิน+ยิงได้โดยไม่ต้องย้ายมือ
+   ⚠️ วางกึ่งกลางตรงกับจอยเสมอ (จอย left16 กว้าง118 → กึ่งกลาง 75) และต้องไม่ทับจอย */
+#inv-fire2{left:37px;bottom:204px;width:76px;height:76px;font-size:26px;
+  background:radial-gradient(circle at 34% 28%,#ffb08a,#b34a1e)}
+#inv-fire2:active{transform:scale(.94)}
 #inv-rocket{right:132px;bottom:104px;width:74px;height:74px;font-size:26px;
   background:radial-gradient(circle at 34% 28%,#ffd88a,#e07a10)}
 #inv-rocket:disabled{filter:grayscale(.8) brightness(.6)}
@@ -249,7 +254,11 @@ const CSS=`
 #inv-swap:active,#inv-scope:active{transform:scale(.94)}
 #inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
 /* กระสุนในแม็ก */
-#inv-ammo{margin-top:5px;font-size:13px;font-weight:900;color:#ffe6a8;text-shadow:0 1px 3px #000;display:none}
+/* 🎯 รอบ 433 (ผู้ใช้สั่ง): ย้ายช่องกระสุนมาอยู่ "ถัดจากปุ่มออก" มุมบนซ้าย
+   (เดิมอยู่ท้ายแผงสถานะ ทำให้แผงสูงจนชนปุ่ม/กระดานคะแนนบนจอเตี้ย) */
+#inv-ammo{position:absolute;left:104px;top:11px;z-index:7;font-size:13px;font-weight:900;color:#ffe6a8;
+  text-shadow:0 1px 3px #000;display:none;background:rgba(10,22,38,.72);border:1.5px solid rgba(255,214,138,.5);
+  border-radius:999px;padding:5px 12px;pointer-events:none;white-space:nowrap}
 #inv-ammo .am-ic{margin-right:4px}
 #inv-ammo .am-max{font-size:11px;color:#bcd0e4;font-weight:700}
 #inv-ammo .am-rl{color:#ffb45a;font-size:12px}
@@ -386,6 +395,7 @@ const CSS=`
   #inv-word .ic{min-width:22px;height:28px;font-size:17px}
   #inv-joy{width:96px;height:96px;bottom:62px}
   #inv-fire{width:86px;height:86px;font-size:28px;bottom:62px}
+  #inv-fire2{width:66px;height:66px;font-size:23px;left:31px;bottom:170px}   /* กึ่งกลางตรงจอย (16+48) */
   #inv-rocket{width:62px;height:62px;font-size:22px;right:112px;bottom:88px}
   #inv-run{width:54px;height:54px;font-size:18px;right:112px;bottom:14px}
   #inv-heli{width:56px;height:56px;font-size:23px;bottom:174px;right:16px}
@@ -406,6 +416,8 @@ const CSS=`
   #inv-word .iw-th,#inv-word .iw-tip{font-size:10px}
   #inv-joy{width:84px;height:84px;bottom:54px;left:10px}
   #inv-fire{width:76px;height:76px;font-size:24px;bottom:54px;right:12px}
+  #inv-fire2{width:58px;height:58px;font-size:21px;left:23px;bottom:148px}   /* กึ่งกลางตรงจอย (10+42) */
+  #inv-ammo{left:90px;top:8px;font-size:11.5px;padding:4px 10px}
   #inv-rocket{width:54px;height:54px;font-size:19px;right:96px;bottom:76px}
   #inv-run{width:48px;height:48px;font-size:16px;right:96px;bottom:10px}
   #inv-stat{top:40px;min-width:120px}
@@ -439,6 +451,8 @@ const CSS=`
   #inv-intro p{font-size:9.5px;line-height:1.34;margin-bottom:5px}
   #inv-intro small{font-size:8.8px;line-height:1.3}
   #inv-board,#inv-board.on{display:none}
+  /* 🔫 จอเตี้ยมาก: เหนือจอยไม่เหลือที่ (ชนแผงพลังชีวิต) → เยื้องไปมุมบนขวาของจอยแทน ยังอยู่ในระยะนิ้วซ้าย */
+  #inv-fire2{width:50px;height:50px;font-size:19px;left:100px;bottom:120px}
   #inv-maphint{display:none}
   #inv-mapbox h3{font-size:14px;margin-bottom:2px}
   #inv-mapbox p{font-size:10.5px;margin-bottom:3px}   /* .on มี specificity สูงกว่า ต้องระบุคู่ ไม่งั้นไม่ยอมซ่อน */
@@ -447,7 +461,7 @@ const CSS=`
 }
 `;
 
-let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,rocketBtn,runBtn;
+let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,fire2Btn,rocketBtn,runBtn;
 
 function buildDom(){
   const st=document.createElement('style'); st.id='inv-style'; st.textContent=CSS; document.head.appendChild(st);
@@ -468,12 +482,13 @@ function buildDom(){
       <div class="inv-lb">❤️ พลังชีวิต</div><div class="inv-bar" id="inv-hp"><span></span></div>
       <div class="inv-lb" style="margin-top:5px">🔥 ความร้อนปืน</div><div class="inv-bar" id="inv-heat"><span></span></div>
       <div id="inv-mis"></div>
-      <div id="inv-ammo"></div>
     </div>
+    <div id="inv-ammo"></div>
     <div id="inv-canopy"><span class="strut sl"></span><span class="strut sr"></span></div>
     <div id="inv-board"></div>
     <div id="inv-joy"><i></i></div>
     <button id="inv-fire">🔫</button>
+    <button id="inv-fire2">🔫</button>
     <button id="inv-rocket">🚀</button>
     <button id="inv-run">🏃</button>
     <button id="inv-heli">🚁</button>
@@ -545,7 +560,8 @@ function buildDom(){
   exitBox=document.getElementById('inv-exitbox'); crossEl=document.getElementById('inv-cross');
   hurtEl=document.getElementById('inv-hurt'); flashEl=document.getElementById('inv-flash');
   joyEl=document.getElementById('inv-joy'); joyKnob=joyEl.querySelector('i');
-  fireBtn=document.getElementById('inv-fire'); rocketBtn=document.getElementById('inv-rocket');
+  fireBtn=document.getElementById('inv-fire'); fire2Btn=document.getElementById('inv-fire2');
+  rocketBtn=document.getElementById('inv-rocket');
   runBtn=document.getElementById('inv-run');
   heliBtn=document.getElementById('inv-heli'); upBtn=document.getElementById('inv-up'); downBtn=document.getElementById('inv-down');
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
@@ -2707,6 +2723,7 @@ function bindInput(){
     el.addEventListener('mouseleave',()=>off&&off());
   };
   hold(fireBtn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });
+  hold(fire2Btn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });   // 🔫 ปุ่มยิงเหนือจอย (รอบ 433)
   rocketBtn.addEventListener('click',()=>fireMissile(performance.now()));
   runBtn.addEventListener('click',()=>{ isRun=!isRun; runBtn.classList.toggle('on',isRun); });
   /* 🚁 ขึ้น/ลงเฮลิ + ไต่ระดับ (กดค้าง) */
