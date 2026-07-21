@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v151';  // v151: 🧭 แก้บอทหันหลังยิง + WASD ใช้ได้บนแป้นไทย รอบ 436
+const CACHE_VERSION = 'pet-vocab-v152';  // v152: 🛸 ยานแม่ลงมาคลุมฟ้า + เท้าตัวละครไม่ลอย รอบ 437
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

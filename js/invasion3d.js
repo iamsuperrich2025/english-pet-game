@@ -36,13 +36,21 @@ const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (
    ลดทั้งขนาดและ "ระยะ+ความสูง" พร้อมกัน — ลำเล็กลงแต่เข้ามาใกล้ขึ้นครึ่งหนึ่ง = พื้นผิว/ลวดลายบนลำชัดขึ้นมาก
    ⚠️ ข้อจำกัดที่ต้องรักษาไว้: ท้องลำ (MS_Y − MS_R*0.30) ต้อง "สูงกว่าแกนพลังงาน" (CORE_Y=210)
       ไม่งั้นลำแสงยึดแกนจะกลับหัว/ทะลุลำ */
-const MS_Y=430, MS_Z=-900, MS_R=450;      // ความสูงลอย · ระยะหน้า · รัศมีลำ (432: 760/-1900/900)
+/* 🔻🔻 รอบ 437 (ผู้ใช้: "ยานแม่อยู่ไหนล่ะ ให้บินลงมาต่ำ เห็นชัดๆ ลำใหญ่ๆ"):
+   รอบ 435 ยังลอยสูง 430 ม. ห่าง 1,150 ม. → ตัวลำอยู่ "เหนือกรอบภาพ" ตอนมองตรง ต้องแหงนหาถึงจะเจอ
+   คราวนี้ลงมาเตี้ยและใกล้มาก: อยู่ในแนวสายตาปกติเลย (มุมเงยพอๆ กับ pitch เริ่มต้น 17°) */
+const MS_Y=240, MS_Z=-260, MS_R=320;      // ความสูงลอย · ระยะหน้า · รัศมีลำ (435: 430/-900/450)
+/* ⚠️ ข้อจำกัดตอนตั้งค่า 3 ตัวนี้ (เจอมาแล้วทั้งหมด):
+     · ปลายหนามใต้ท้อง ≈ MS_Y − MS_R*0.30 − MS_R*0.20 ต้องสูงกว่ายอดเนินสูงสุด (~49 ม.) ไม่งั้นเนินทะลุลำ
+     · ความกว้างลำ (MS_R*2) ÷ ระยะจากจุดเกิด ≈ 1.3 → กินจอเกินครึ่ง = "ลำใหญ่คลุมฟ้า" ตามที่ผู้ใช้ต้องการ
+     · เงยจากจุดเกิดถึงกลางลำ ~28° (pitch เริ่มต้น 17°) → เห็นท้องลำเต็มๆ ตั้งแต่ยังไม่แหงนหน้า */
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* 🔠 แผงตัวอักษร + แกนพลังงาน — "แยกขนาดจากตัวลำ" เพราะถ้าผูกกับ MS_R ตัวอักษรจะโตตาม 5 เท่าจนล้นจอ
    ค่าพวกนี้เลือกจากมุมมองจริง: ยืนที่ z≈176 เงย ~17° แล้วเห็นแถวตัวอักษรกลางจอพอดี อ่านออกชัด */
 const BOARD_Y=133, BOARD_Z=-48, BOARD_CELL=60;    // ความสูง · ระยะ · ขนาดช่องต่อ 1 ตัวอักษร
-const CORE_Y=210, CORE_Z=-120, CORE_R=45;         // แกนพลังงาน (จุดที่ยิงโดน) เหนือ-หลังแผงขึ้นไป
+/* 🎯 รอบ 437: ย้ายแกนพลังงานไป "ห้อยใต้จมูกยานแม่" (เดิมลอยแยกคนละมุมฟ้ากับลำ เด็กงงว่าอะไรคืออะไร) */
+const CORE_Y=150, CORE_Z=-170, CORE_R=45;         // แกนพลังงาน (จุดที่ยิงโดน) — ใต้จมูกลำ มองเห็นพร้อมกัน
 
 /* 👾 ยานลูก */
 const F_HP=3, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=95, F_R=190;
@@ -1372,12 +1380,13 @@ function buildMothership(){
     blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
   /* ⚠️ รอบ 432: ออร่าเดิมกว้าง CORE_R*7 = 315 ม. → ล้างจอเป็นสีชมพูทั้งครึ่งซ้าย (เห็นในภาพผู้ใช้) */
   glow.scale.setScalar(CORE_R*3.4); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
-  /* ลำแสงยึดแกนไว้กับท้องยาน (ให้เห็นว่าแกนเป็นของยานแม่ ไม่ใช่ลอยเฉยๆ)
-     🔗 รอบ 432: ยานถอยไปไกลขึ้น ลำแสงจึงต้อง "เอียงชี้ไปหาท้องยาน" ไม่ใช่ตั้งตรงลอยๆ */
-  const from=new THREE.Vector3(0,CORE_Y,CORE_Z), to=new THREE.Vector3(0,MS_Y-MS_R*0.30,MS_Z);
+  /* 🔗 ลำแสงยึดแกนไว้กับท้องยาน — รอบ 437 เปลี่ยนจาก "กรวยทึบสีน้ำตาล" (บังจอเป็นก้อนใหญ่
+     จนผู้ใช้ถามว่ายานแม่อยู่ไหน) เป็น "ลำแสงเรืองแสงผอมๆ" ที่แค่บอกว่าแกนห้อยมาจากลำ */
+  const from=new THREE.Vector3(0,CORE_Y,CORE_Z), to=new THREE.Vector3(0,MS_Y-MS_R*0.22,MS_Z);
   const seg=new THREE.Vector3().subVectors(to,from);
-  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.34,CORE_R*.9,seg.length(),10,1,true),
-    new THREE.MeshBasicMaterial({color:0x2a1410,transparent:true,opacity:.55,side:THREE.DoubleSide,fog:false}));
+  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.10,CORE_R*.22,seg.length(),8,1,true),
+    new THREE.MeshBasicMaterial({color:0xff6a3a,transparent:true,opacity:.28,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
   tether.position.copy(from).addScaledVector(seg,.5);
   tether.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),seg.clone().normalize());
   scene.add(tether);
@@ -3657,7 +3666,11 @@ function peerTick(dt,now){
     p.cur.x+=(p.tgt.x-p.cur.x)*k; p.cur.y+=(p.tgt.y-p.cur.y)*k; p.cur.z+=(p.tgt.z-p.cur.z)*k;
     let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%TAU+TAU)%TAU-Math.PI; p.yawCur+=dy*k;
     const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z);
-    p.grp.position.set(p.cur.x,p.cur.y,p.cur.z); p.grp.rotation.y=p.yawCur;
+    /* 🦶 รอบ 437 (ผู้ใช้: "เท้าตัวละครลอย"): ค่า y ที่เพื่อนส่งมาคือ "ระดับตา" (พื้น+1.7)
+       เอามาวางตัวโมเดลตรงๆ = ทั้งตัวลอยสูงจากพื้น 1.7 ม. → เพื่อนที่เดินเท้าให้ยืนบนพื้นของเราเอง
+       (ภูมิประเทศเป็นสูตรตายตัว ทุกเครื่องได้ความสูงเท่ากันเป๊ะ จึงไม่หลุดตำแหน่ง) */
+    const gy=(p.kind==='foot')?terrainH(p.cur.x,p.cur.z):p.cur.y;
+    p.grp.position.set(p.cur.x,gy,p.cur.z); p.grp.rotation.y=p.yawCur;
     const ro=p.grp.children[0]&&p.grp.children[0].userData.rotor;
     if(ro) ro.rotation.y+=dt*40;
     /* 🪖 รอบ 423: เพื่อนบนพื้นขยับแขนขาจริง — เดินอยู่=ท่าเดิน · หยุด=ท่าเล็ง */
