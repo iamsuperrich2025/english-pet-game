@@ -112,6 +112,10 @@ let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
 const SPRINT_IN=0.22, SPRINT_OUT=0.14;
 const SPRINT_POS=[.16,-.20,.10], SPRINT_ROT=[-.62,.42,-.30];   // เลื่อนลง-เข้าใน · ก้มปากกระบอกลง
 let sprintRaw=0, sprintT=0, sprintHold=0, moveLen=0;
+/* 🫁 รอบ 449: วิ่งนาน = เหนื่อย — จอโยกเบาๆ + เสียงหายใจแรงเป็นจังหวะ (ฟื้นเองเมื่อหยุดวิ่ง)
+   เริ่มรู้สึกเหนื่อยหลังวิ่งต่อเนื่อง ~PANT_FROM วินาที · เต็มที่ที่ ~PANT_FULL */
+const PANT_FROM=2.6, PANT_FULL=6.5, PANT_GAP=980;
+let sprintTime=0, fatigue=0, pantAt=0;
 let recPitch=0, recYaw=0, boltAt=0;   // 💥 แรงถอยค้างอยู่ + เวลาที่เริ่มชักลูกเลื่อน
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
@@ -701,6 +705,24 @@ const Snd={
       o.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.08);
       this.noise(t+dt,.06,3200,.07);
     }); },
+  /* 🔩 รอบ 449: เสียงลูกเลื่อนแยก 2 จังหวะ ให้ตรงกับแอนิเมชันเป๊ะ
+     boltPull = ดึงถอยหลัง "แชะ" (โลหะครูดแล้วกระแทกสุด) · boltPush = ดันกลับ+ล็อก "คลิก" (สั้น คม) */
+  boltPull(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.noise(t,.10,2600,.075);                         // เสียงครูดตอนเริ่มดึง
+    const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(300,t);
+    o.frequency.exponentialRampToValueAtTime(130,t+.07);
+    const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.10);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.11);
+    this.noise(t+.11,.05,1500,.06); },                   // กระแทกสุดระยะ
+  boltPush(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(240,t);
+    o.frequency.exponentialRampToValueAtTime(105,t+.05);
+    const g=c.createGain(); g.gain.setValueAtTime(.10,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
+    this.noise(t+.02,.05,3000,.08); },                   // เสียงล็อกคม
+  /* 🫁 รอบ 449: หายใจแรงตอนวิ่งนาน (หายใจออก 1 ครั้ง) */
+  pant(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.noise(t,.22,520,.075); this.noise(t+.26,.18,340,.045); },
   /* 🎬 เสียงยกปืนเข้าเล็ง / ลดปืนลง (ผ้า+โลหะเบาๆ ให้รู้สึกมีมวล) */
   ads(inOn){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.13,inOn?900:620,.055);
@@ -2315,9 +2337,9 @@ function attachBoltHandle(gunObj){
 function tickBolt(now){
   const rig=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
   if(!rig) return 0;
-  if(!boltAt||weapon!=='r93'){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=false; return 0; }
+  if(!boltAt||weapon!=='r93'){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=rig.sndPull=rig.sndPush=false; return 0; }
   const p=(now-boltAt)/BOLT_MS;
-  if(p>=1){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=false; return 0; }
+  if(p>=1){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=rig.sndPull=rig.sndPush=false; return 0; }
   const seg=(a,b)=>Math.max(0,Math.min(1,(p-a)/(b-a)));
   /* ⏱️ รอบ 448 (ผู้ใช้ขอจังหวะแบบคลิป): เริ่มไวขึ้น–กระชากแรงขึ้น–ค้างสั้นๆ ตอนถอยสุด
      (ของเดิมนิ่ง 0.3 วิแรกก่อนค่อยยก ดูเฉื่อย) */
@@ -2326,6 +2348,9 @@ function tickBolt(now){
   const cant = seg(.00,.12)-seg(.78,.96);                 // เอียงปืนเข้าหาตัวให้เห็นคันรั้ง
   rig.pivot.rotation.z=-1.15*lift;
   rig.pivot.position.z=rig.z0+rig.L*0.15*pull;
+  /* 🔊 รอบ 449: เสียงลูกเลื่อน 2 จังหวะ ยิงตรงกับภาพ (ดึงตอนเริ่มถอย · ล็อกตอนดันกลับสุด) */
+  if(!rig.sndPull && p>.16){ rig.sndPull=true; Snd.boltPull(); }
+  if(!rig.sndPush && p>.70){ rig.sndPush=true; Snd.boltPush(); }
   /* 🟡 ปลอกกระสุนดีดออกตอนดึงสุด — ยิงออกทางขวา-บน แล้วตกลงพื้นตามแรงโน้มถ่วง */
   if(!rig.ejected && p>.36){
     rig.ejected=true;
@@ -2340,6 +2365,24 @@ function tickBolt(now){
     fx.push({o:shell,kind:'bit',t:0,life:2.6,v:vel,rv:new THREE.Vector3(rnd(-9,9),rnd(-9,9),0)});
   }
   return cant;
+}
+/* 💨 รอบ 449: ควันปากลำกล้องหลังยิง — สไปรต์จางๆ 2–4 ก้อน ลอยขึ้นตามทิศเล็ง แล้วบานจางหาย
+   วางในพิกัดโลกที่ "ปากลำกล้องจริง" (อ่านจากไฟล์ flash ที่ติดอยู่บนกลุ่มปืน) */
+function muzzleSmoke(n){
+  if(!muzzle||!camera) return;
+  const wp=new THREE.Vector3(); muzzle.getWorldPosition(wp);
+  const fwd=new THREE.Vector3(0,0,-1).applyQuaternion(camera.quaternion);
+  const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+  const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+  for(let i=0;i<n;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({color:0xd9d3c6,transparent:true,
+      opacity:.30,depthWrite:false,fog:false}));
+    sp.position.copy(wp).addScaledVector(fwd,rnd(.05,.35)).addScaledVector(right,rnd(-.06,.06));
+    const sc=rnd(.10,.18); sp.scale.setScalar(sc); scene.add(sp);
+    const v=up.clone().multiplyScalar(rnd(.35,.7))
+      .addScaledVector(fwd,rnd(.25,.8)).addScaledVector(right,rnd(-.22,.22));
+    fx.push({o:sp,kind:'smoke',t:0,life:rnd(.75,1.25),v,sc,a0:rnd(.20,.34)});
+  }
 }
 function buildGun(){
   const g=new THREE.Group();
@@ -2464,6 +2507,10 @@ function tickAds(dt,now){
                      && now>sprintHold && !boltAt ? 1 : 0;
     sprintRaw=clamp(sprintRaw + (wantSprint? dt/SPRINT_IN : -dt/SPRINT_OUT), 0, 1);
     sprintT=smoothstep(sprintRaw)*(1-adsT);          // เล็งอยู่ = ไม่ลดปืน
+    /* 🫁 รอบ 449: สะสมความเหนื่อยตอนวิ่ง — หยุดวิ่งแล้วฟื้นเร็วกว่าที่สะสม (ไม่ทรมานเด็ก) */
+    sprintTime=Math.max(0, sprintTime + (wantSprint? dt : -dt*1.7));
+    fatigue=clamp((sprintTime-PANT_FROM)/(PANT_FULL-PANT_FROM),0,1);
+    if(fatigue>.12 && now>pantAt){ pantAt=now+PANT_GAP*(1.5-fatigue*.6); Snd.pant(); }
     if(sprintT>0.001){
       gunGrp.position.x+=SPRINT_POS[0]*sprintT;
       gunGrp.position.y+=SPRINT_POS[1]*sprintT;
@@ -2659,6 +2706,12 @@ function tickFx(dt){
       const gy=terrainH(f.o.position.x,f.o.position.z);
       if(f.o.position.y<gy){ f.o.position.y=gy; f.v.set(0,0,0); } }
     else if(f.kind==='fade'){ f.o.material.opacity=.95*(1-k); }
+    /* 💨 รอบ 449: ควันปากลำกล้อง — ลอยขึ้น บานออก จางหาย (ติดกล้องเพราะเป็นลูกของกล้อง) */
+    else if(f.kind==='smoke'){
+      f.o.position.addScaledVector(f.v,dt);
+      f.o.scale.setScalar(f.sc*(1+k*2.6));
+      f.o.material.opacity=f.a0*(1-k)*(1-k);
+    }
   }
 }
 
@@ -2707,6 +2760,7 @@ function fireGun(now){
      → สั่นจอ + ปืนกระชากแรงกว่าปกติ + ยกปืนขึ้นจากท่าวิ่งทันทีถ้ากำลังวิ่งอยู่ */
   if(W.mag){ shake=Math.min(1.2,shake+.34); gunRecoil=W.recoil*1.25; sprintHold=now+520; }
   if(W.mag){ Snd.sniper(); boltAt=now; } else Snd.gun();
+  muzzleSmoke(W.mag?4:2);                                      // 💨 รอบ 449: ควันลอยจากปากลำกล้อง
   const origin=camera.position.clone();
   const dir=aimDir();
   const sp=W.mag ? (scoped?W.spread:W.hipSpread) : W.spread;   // ไม่ส่องกล้อง = เป๋มาก (ตาม Accuracy ต่ำ)
@@ -3204,6 +3258,12 @@ function tickPlayer(dt,now){
   camera.position.set(px,py+bob,pz);
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw); camera.rotateX(pitch);
+  /* 🫁 รอบ 449: วิ่งนานแล้วเหนื่อย — จอโยกช้าๆ ตามจังหวะหายใจ (ยิ่งเหนื่อยยิ่งโยก) */
+  if(fatigue>0.02){
+    camera.position.y+=Math.sin(now*.0052)*.045*fatigue;
+    camera.rotateZ(Math.sin(now*.0041)*.012*fatigue);
+    camera.rotateX(Math.sin(now*.0063)*.009*fatigue);
+  }
   /* สั่นจอตอนระเบิด */
   if(shake>0.001){
     camera.position.x+=rnd(-1,1)*shake*.35;
@@ -4391,6 +4451,9 @@ window.InvasionWorld={
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
     /* 🏃 รอบ 448: ท่าลดปืนตอนวิ่ง */
     get sprintT(){return +sprintT.toFixed(3)}, set moveLen(v){moveLen=v}, get moveLen(){return moveLen},
+    /* 🫁💨 รอบ 449 */
+    get fatigue(){return +fatigue.toFixed(3)}, get sprintTime(){return +sprintTime.toFixed(2)},
+    get smokeCount(){return fx.filter(f=>f.kind==='smoke').length}, muzzleSmoke,
     get recoil(){return {pitch:+recPitch.toFixed(5), yaw:+recYaw.toFixed(5)}}, addRecoil, applyRecoil,
     get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
     /* 🔩 รอบ 447: ตรวจคันรั้งลูกเลื่อนของโมเดลจริง */
