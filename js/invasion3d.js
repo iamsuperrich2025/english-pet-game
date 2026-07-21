@@ -294,6 +294,27 @@ const CSS=`
 #inv-canopy::before{left:0;right:0;top:0;height:8%;box-shadow:0 6px 14px rgba(0,0,0,.4)}
 #inv-canopy .strut{position:absolute;top:0;bottom:38%;width:10px;background:rgba(24,30,40,.6);transform-origin:top}
 #inv-canopy .sl{left:16%;transform:rotate(11deg)}#inv-canopy .sr{right:16%;transform:rotate(-11deg)}
+/* 🚁 รอบ 434: มุมมองในห้องนักบิน 3 ระดับ — กรอบกระจก/แผงหน้าปัดขยับตามเบาะ (เหมือนโลกเฮลิฯ) */
+#inv-wrap.seat0 #inv-canopy::before{height:15%}
+#inv-wrap.seat0 #inv-canopy .strut{bottom:22%;width:14px}
+#inv-wrap.seat2 #inv-canopy::before{height:4%}
+#inv-wrap.seat2 #inv-canopy .strut{bottom:52%;width:7px;opacity:.7}
+#inv-canopy .dash{position:absolute;left:0;right:0;bottom:0;height:0;background:linear-gradient(180deg,#2b3240,#151b25);
+  border-top:2px solid rgba(255,255,255,.12);transition:height .18s}
+#inv-wrap.seat0 #inv-canopy .dash{height:26%}
+#inv-wrap.seat1 #inv-canopy .dash{height:13%}
+#inv-wrap.seat2 #inv-canopy .dash{height:6%}
+#inv-seat{position:absolute;right:88px;bottom:190px;z-index:6;border:none;border-radius:14px;width:62px;height:50px;
+  font-size:19px;font-weight:900;color:#0e2136;cursor:pointer;display:none;line-height:1;
+  box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
+#inv-seat small{display:block;font-size:9.5px;margin-top:1px}
+#inv-seat:active{transform:scale(.94)}
+/* 🌀 ป้ายขั้นตอนสตาร์ทเครื่อง */
+#inv-start{position:absolute;left:50%;top:44%;transform:translateX(-50%);z-index:8;display:none;text-align:center;
+  background:rgba(6,16,28,.86);border:2px solid #7fe3ff;border-radius:14px;padding:9px 18px;
+  color:#dff4ff;font-weight:900;font-size:15px;text-shadow:0 2px 6px #000;pointer-events:none;white-space:nowrap}
+#inv-start.on{display:block}
+@media (max-height:400px){ #inv-start{font-size:12px;padding:6px 12px;top:40%} #inv-seat{width:54px;height:44px;font-size:16px;right:70px;bottom:150px} }
 /* 🏆 กระดานคะแนนสด (ผู้เล่นออนไลน์) */
 #inv-board{position:absolute;right:12px;top:120px;z-index:5;pointer-events:none;min-width:118px;
   background:rgba(6,14,26,.7);border:1px solid rgba(120,220,255,.28);border-radius:10px;padding:5px 8px;display:none}
@@ -416,7 +437,8 @@ const CSS=`
   #inv-word .iw-th,#inv-word .iw-tip{font-size:10px}
   #inv-joy{width:84px;height:84px;bottom:54px;left:10px}
   #inv-fire{width:76px;height:76px;font-size:24px;bottom:54px;right:12px}
-  #inv-fire2{width:58px;height:58px;font-size:21px;left:23px;bottom:148px}   /* กึ่งกลางตรงจอย (10+42) */
+  /* ⚠️ จอเตี้ย: กระดานคะแนนย้ายมาคอลัมน์ซ้าย (รอบ 418) → ปุ่มยิงซ้ายต้องเยื้องขวาพ้นกระดาน ไม่งั้นทับกัน */
+  #inv-fire2{width:58px;height:58px;font-size:21px;left:136px;bottom:150px}
   #inv-ammo{left:90px;top:8px;font-size:11.5px;padding:4px 10px}
   #inv-rocket{width:54px;height:54px;font-size:19px;right:96px;bottom:76px}
   #inv-run{width:48px;height:48px;font-size:16px;right:96px;bottom:10px}
@@ -428,7 +450,7 @@ const CSS=`
   #inv-coins{top:84px}
   /* ⚠️ จอเตี้ย: คอลัมน์ขวาแน่นมาก (เป้าหมาย+เหรียญ+ปุ่มเฮลิ/พลปืน) กระดานคะแนนโตตามจำนวนคน
      จนชนปุ่ม → ย้ายกระดานไปคอลัมน์ซ้าย ใต้แถบสถานะ (ช่องว่างระหว่างแถบสถานะกับจอย) */
-  #inv-board{left:12px;right:auto;top:152px;min-width:92px}
+  #inv-board{left:12px;right:auto;top:152px;min-width:92px;max-width:120px;overflow:hidden}   /* คุมความกว้าง กันโตไปชนปุ่มยิงซ้าย (รอบ 434) */
   #inv-board .bd-r{font-size:10.5px;line-height:1.4}
   #inv-board .bd-h{font-size:9.5px}
   #inv-heli{width:48px;height:48px;font-size:19px;bottom:150px;right:12px}
@@ -452,7 +474,8 @@ const CSS=`
   #inv-intro small{font-size:8.8px;line-height:1.3}
   #inv-board,#inv-board.on{display:none}
   /* 🔫 จอเตี้ยมาก: เหนือจอยไม่เหลือที่ (ชนแผงพลังชีวิต) → เยื้องไปมุมบนขวาของจอยแทน ยังอยู่ในระยะนิ้วซ้าย */
-  #inv-fire2{width:50px;height:50px;font-size:19px;left:100px;bottom:120px}
+  /* จอเตี้ยมาก: เหนือจอยเป็นที่ของแผงสถานะ (สูงขึ้นอีกตอนอยู่ในเฮลิ) → วางชิดขวาจอยแทน นิ้วซ้ายยังถึง */
+  #inv-fire2{width:50px;height:50px;font-size:19px;left:100px;bottom:56px}
   #inv-maphint{display:none}
   #inv-mapbox h3{font-size:14px;margin-bottom:2px}
   #inv-mapbox p{font-size:10.5px;margin-bottom:3px}   /* .on มี specificity สูงกว่า ต้องระบุคู่ ไม่งั้นไม่ยอมซ่อน */
@@ -484,7 +507,8 @@ function buildDom(){
       <div id="inv-mis"></div>
     </div>
     <div id="inv-ammo"></div>
-    <div id="inv-canopy"><span class="strut sl"></span><span class="strut sr"></span></div>
+    <div id="inv-canopy"><span class="strut sl"></span><span class="strut sr"></span><span class="dash"></span></div>
+    <div id="inv-start"></div>
     <div id="inv-board"></div>
     <div id="inv-joy"><i></i></div>
     <button id="inv-fire">🔫</button>
@@ -499,6 +523,7 @@ function buildDom(){
     <button id="inv-mag">6×</button>
     <button id="inv-breath">🫁</button>
     <button id="inv-gunner">🎖️</button>
+    <button id="inv-seat">👁️<small>มุมบิน</small></button>
     <button id="inv-map">🗺️</button>
     <button id="inv-chat">💬</button>
     <div id="inv-chatbar"></div>
@@ -511,7 +536,8 @@ function buildDom(){
       👾 <b>ยานลูกบินออกมาเท่ากับจำนวนตัวอักษร</b> — ยิงตกทีละลำ ตัวอักษรของลำนั้นจะ<b>กะพริบ</b><br>
       ✨ ยิงครบทุกลำ = ตัวอักษรกะพริบทั้งแถว <b>เกราะยานแม่เปิด</b> → ระดมยิง/ยิงมิสไซล์จนระเบิด = 🪙${REWARD}<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
-      🚁 <b>กดปุ่มเฮลิ = ขับเฮลิคอปเตอร์เอง</b> บินยิงจรวดจากฟ้า! (บังคับเหมือนโลกเฮลิฯ · ทั้งโลกมีได้ 5 ลำ)<br>
+      🚁 <b>เฮลิคอปเตอร์จอดจริง 5 ลำ!</b> เดินไปที่ลำ (จุด 🚁 ในแผนที่) → กดปุ่ม 🚁 ขึ้นเครื่อง →
+      <b>รอสตาร์ทเครื่องครบขั้น</b> → ดันคันเร่งขึ้นบินยิงจรวดจากฟ้า! · กด 👁️ ปรับมุมมองในห้องนักบินได้ 3 ระดับ<br>
       🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) แม็ก 10 นัด · กด 🔭 ส่องกล้อง (ในเลนส์ขยาย นอกเลนส์ยังเห็นรอบตัว) · ปุ่ม <b>4×/6×/8×</b> เลือกกำลังขยาย<br>
       🏠 <b>วิ่งเข้าไปหลบในบ้านได้!</b> บ้านร้างริมถนน (🏠 บนแผนที่) เข้าไปซุ่มยิงในนั้น <b>โดนยิงเบาลงมาก</b> ·
       ⛰️ <b>ยืนบนเนินสูง (🎯 จุดสูงข่ม) มองไกลกว่า</b> — วิ่งขึ้นเนินช้าลง ลงเนินไหลเร็วขึ้นนะ<br>
@@ -529,6 +555,7 @@ function buildDom(){
         <div id="inv-mapside">
           <p>แตะบนแผนที่เพื่อเลือกว่าจะ<b>ลงตรงไหน</b><br><span id="inv-mapname"></span></p>
           <div id="inv-maplegend">
+            🚁 วงฟ้า = เฮลิคอปเตอร์จอดอยู่ (เกิดตรงนั้นได้)<br>
             🟢 จุดเขียว = แนวกำบังที่มีหน่วยรบ<br>
             🟡 จุดเหลือง/ฟ้า = เพื่อนที่กำลังเล่นอยู่<br>
             ⛰️ <b>พื้นสว่าง = เนินเขาสูง</b> · พื้นเข้ม = ที่ต่ำ/แอ่ง<br>
@@ -565,6 +592,9 @@ function buildDom(){
   runBtn=document.getElementById('inv-run');
   heliBtn=document.getElementById('inv-heli'); upBtn=document.getElementById('inv-up'); downBtn=document.getElementById('inv-down');
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
+  seatBtn=document.getElementById('inv-seat'); startEl=document.getElementById('inv-start');
+  seatBtn.addEventListener('click',()=>{ setSeatView(seatLv+1);
+    if(heliReady){ state.heliSeat=seatLv; if(typeof saveState==='function') saveState(); } });
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
   gunnerBtn=document.getElementById('inv-gunner');
   swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
@@ -796,6 +826,7 @@ let battleRound=0, myKill=0, myArmorDmg=0;
 let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, upBtn=null, downBtn=null, canopyEl=null;
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
+let seatBtn=null, startEl=null;        // 🚁 ปุ่มปรับมุมมองห้องนักบิน + ป้ายขั้นตอนสตาร์ท (รอบ 434)
 let gunnerBtn=null, riding=null;   // 🎖️ พลปืนประจำประตู: riding = key ของลำที่นั่งอยู่ (uid เพื่อน หรือ 'botN')
 let terrainH=null;                     // ฟังก์ชันความสูงพื้นทราย
 let solids=[];                         // กันชนตึก {x,z,r}
@@ -1797,8 +1828,126 @@ function makeHeli(i){
   const a=(i/HELI_MAX)*TAU;
   grp.position.set(Math.cos(a)*130, rnd(48,72), Math.sin(a)*130);
   scene.add(grp);
-  return {grp,rotor,trotor,ang:a,rad:rnd(110,165),y:grp.position.y,
-          spin:(i%2?-1:1)*rnd(.10,.17), shotAt:performance.now()+rnd(0,HELI_GAP)};
+  const h={grp,rotor,trotor,ang:a,rad:rnd(110,165),y:grp.position.y,
+           spin:(i%2?-1:1)*rnd(.10,.17), shotAt:performance.now()+rnd(0,HELI_GAP)};
+  /* 🚁 รอบ 434: บอทก็ใช้โมเดลจริงลำเดียวกับผู้เล่น — ทุกคนเห็นเฮลิแบบเดียวกันทั้งสนาม */
+  heliModel(m=>{ if(!m) return;
+    grp.children.slice().forEach(c=>grp.remove(c));
+    grp.add(m); h.rotor=m._rotor||rotor; h.trotor=m._trotor||trotor; });
+  return h;
+}
+
+/* ============================================================
+   🚁🅿️ รอบ 434: เฮลิคอปเตอร์จอดในสนามรบ 5 ลำ (โมเดลจริง helicopter.glb — ผู้ใช้สั่ง)
+   ใช้งาน "เหมือนโลกเฮลิฯ ทุกอย่าง": เดินเข้าไปหาลำ → กด 🚁 ขึ้นเครื่อง → รอสตาร์ทเครื่องครบขั้น → บิน
+   · ปรับมุมมองในห้องนักบินได้ 3 ระดับ (เต็มลำ / มุมบิน / บินต่ำ) เหมือนปุ่มเบาะของโลกเฮลิฯ
+   · ลงจากเครื่องแล้ว "ลำจอดอยู่ตรงนั้น" (ไม่หายไป) เดินกลับขึ้นใหม่ได้
+   · จุดจอดทุกลำโชว์บนแผนที่เลือกจุดลงสนาม (เลือกเกิดข้างเฮลิได้เลย)
+   ⚠️ ตำแหน่งจอดเป็นค่าตายตัว — ผู้เล่นออนไลน์ทุกเครื่องต้องเห็นลำจอดที่เดียวกัน
+   ============================================================ */
+const HELI_ROTOR_NODES=['tripo_part_2','tripo_part_7','tripo_part_8'];                    // ชื่อ node ใบพัดหลักใน .glb
+const HELI_TROTOR_NODES=['tripo_part_9','tripo_part_10','tripo_part_19','tripo_part_24']; // ใบพัดหาง+ดุม
+const HELI_LEN=12.3;                    // ความยาวลำ (เท่าโลกเฮลิฯ)
+const HELI_DESERT=0xb6a678;             // 🎨 ย้อมสีลำให้กลืนกับทะเลทราย/สนามรบ (ของเดิมลายแดงสด)
+const BOARD_DIST=10;                    // เดินเข้าใกล้เท่านี้ถึงขึ้นเครื่องได้
+const START_MS=9500;                    // เวลาสตาร์ทเครื่องก่อนบินได้
+const START_PHASES=[
+  [0  ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน'],
+  [2.2,'⛽ จ่ายเชื้อเพลิง · รอจังหวะจุดระเบิด'],
+  [4.2,'🔥 จุดระเบิด! เครื่องยนต์ติดแล้ว'],
+  [6.2,'🚁 ใบพัดเริ่มหมุน · รอบกำลังไต่ขึ้น'],
+  [8.0,'📈 ใบพัดใกล้รอบเต็ม... เตรียมขึ้นบิน'],
+];
+const HELI_PADS=[                       // จุดจอดหลังแนวรบ (เดินถึงง่าย ไม่กีดขวางถนน)
+  {x:-30, z:STREET_Z0+26, rot: 0.15},
+  {x: 30, z:STREET_Z0+26, rot:-0.15},
+  {x:-72, z:STREET_Z0+52, rot: 0.55},
+  {x: 72, z:STREET_Z0+52, rot:-0.55},
+  {x:  0, z:STREET_Z0+72, rot: Math.PI},
+];
+let pads=[], myPad=null, heliReady=false, heliStartAt=0, seatLv=1, padRotorSpin=0;
+const SEAT_VIEWS=[                      // มุมมองในห้องนักบิน (เหมือนปุ่มเบาะโลกเฮลิฯ)
+  {label:'เต็มลำ', dy:-0.30, dz: 0.85},
+  {label:'มุมบิน', dy: 0.00, dz: 0.00},
+  {label:'บินต่ำ', dy: 0.32, dz:-0.70},
+];
+/* โหลด+ประกอบโมเดลลำจริง 1 ลำ (geometry/material แชร์กันทุกลำ = เพิ่มลำแทบไม่กินเครื่อง) */
+let heliDesertMat=null;
+function heliModel(cb){
+  /* ⚡ ใช้ตัวลดโพลี 9.6k tris (ต้นฉบับ 48k) — สนามรบมีได้ถึง 5 ลำพร้อมกัน + ลำเพื่อน
+     ต้นฉบับ helicopter.glb ยังใช้ในโลกเฮลิฯ ตามเดิม ไม่ถูกแตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
+  loadGlb('img/models/helicopter_lite.glb',src=>{
+    if(!src) return cb(null);
+    const grp=new THREE.Group();
+    /* ครอบ pivot ให้ใบพัดหมุนได้ (โมเดลไม่มี pivot มาให้) */
+    const mkSpin=(names,preYaw)=>{
+      const parts=names.map(n=>src.getObjectByName(n)).filter(Boolean);
+      if(!parts.length) return null;
+      const box=new THREE.Box3(); parts.forEach(p=>box.expandByObject(p));
+      const holder=new THREE.Group(); holder.position.copy(box.getCenter(new THREE.Vector3()));
+      if(preYaw) holder.rotation.y=preYaw;
+      const spin=new THREE.Group(); holder.add(spin); src.add(holder);
+      src.updateMatrixWorld(true);
+      parts.forEach(p=>spin.attach(p));
+      return spin;
+    };
+    const mr=mkSpin(HELI_ROTOR_NODES,0), tr=mkSpin(HELI_TROTOR_NODES,Math.PI/2);
+    /* 🧭 โมเดล Tripo หันหัวไป −X → หมุนให้ "หัวชี้ −Z" ตรงกับทิศหน้าของผู้เล่น (สูตรเดียวกับโลกเฮลิฯ) */
+    src.rotation.y=-Math.PI/2;
+    src.updateMatrixWorld(true);
+    const bb=new THREE.Box3().setFromObject(src);
+    const s=HELI_LEN/(bb.max.z-bb.min.z);
+    src.scale.setScalar(s);
+    src.position.set(0,-bb.min.y*s,-3.9-bb.min.z*s);      // สกีแตะพื้น y=0 · จมูกอยู่หน้าที่นั่งนักบิน
+    if(!heliDesertMat){ let base=null; src.traverse(o=>{ if(!base&&o.isMesh) base=o.material; });
+      if(base){ heliDesertMat=base.clone(); heliDesertMat.color=new THREE.Color(HELI_DESERT); } }
+    if(heliDesertMat) src.traverse(o=>{ if(o.isMesh) o.material=heliDesertMat; });
+    grp.add(src); grp._rotor=mr; grp._trotor=tr;
+    cb(grp);
+  });
+}
+function buildHeliPads(){
+  HELI_PADS.forEach((sp,i)=>{
+    const p={x:sp.x, z:sp.z, rot:sp.rot, grp:new THREE.Group(), model:null, idx:i};
+    p.grp.position.set(p.x,terrainH(p.x,p.z),p.z); p.grp.rotation.y=p.rot;
+    scene.add(p.grp);
+    heliModel(m=>{ if(m){ p.grp.add(m); p.model=m; } });
+    pads.push(p);
+  });
+}
+function padAt(x,z){                                     // ลำจอดที่ใกล้พอจะขึ้นได้
+  let best=null,bd=BOARD_DIST;
+  for(const p of pads){ if(p===myPad&&inHeli) continue;
+    const d=Math.hypot(x-p.x,z-p.z); if(d<bd){ bd=d; best=p; } }
+  return best;
+}
+function movePad(p,x,z,rot){                             // ย้ายลำไปจอดที่ใหม่ (ตอนลงจากเครื่อง)
+  p.x=x; p.z=z; p.rot=rot;
+  p.grp.position.set(x,terrainH(x,z),z); p.grp.rotation.y=rot;
+  p.grp.visible=true;
+}
+function startPhaseText(now){
+  const t=(now-heliStartAt)/1000;
+  let txt=START_PHASES[0][1];
+  for(const [at,s] of START_PHASES) if(t>=at) txt=s;
+  const left=Math.max(0,Math.ceil(START_MS/1000-t));
+  return txt+(left?` · ⏱️ ${left} วิ`:'');
+}
+function setSeatView(lv){
+  seatLv=((lv%SEAT_VIEWS.length)+SEAT_VIEWS.length)%SEAT_VIEWS.length;
+  if(wrapEl){ wrapEl.classList.remove('seat0','seat1','seat2'); wrapEl.classList.add('seat'+seatLv); }
+  if(seatBtn) seatBtn.innerHTML='👁️<small>'+SEAT_VIEWS[seatLv].label+'</small>';
+}
+/* ใบพัดลำที่จอด: หมุนเฉพาะลำที่กำลังสตาร์ท/ที่เราขับอยู่ (ลำอื่นจอดนิ่ง) */
+function tickPads(dt,now){
+  padRotorSpin+=dt;
+  for(const p of pads){
+    if(!p.model) continue;
+    const mine=(p===myPad&&inHeli);
+    const spd=mine? (heliReady?42:Math.min(42,((now-heliStartAt)/START_MS)*42)) : 0;
+    if(p.model._rotor) p.model._rotor.rotation.y+=spd*dt;
+    if(p.model._trotor) p.model._trotor.rotation.x+=spd*1.2*dt;
+  }
 }
 
 /* ============================================================
@@ -2913,6 +3062,7 @@ const MAP_VIEW=WORLD*0.98;                      // ครึ่งความ�
 function mapToWorld(mx,my,w,h){ return {x:(mx/w-.5)*2*MAP_VIEW, z:(my/h-.5)*2*MAP_VIEW}; }
 function worldToMap(x,z,w,h){ return {mx:(x/(2*MAP_VIEW)+.5)*w, my:(z/(2*MAP_VIEW)+.5)*h}; }
 function zoneName(x,z){
+  for(const pd of pads) if(Math.hypot(x-pd.x,z-pd.z)<18) return '🚁 ลานจอดเฮลิคอปเตอร์ (เดินขึ้นเครื่องได้)';
   for(const hs of houses) if(Math.hypot(x-hs.grp.position.x,z-hs.grp.position.z)<HOUSE_SIZE*0.8)
     return '🏠 บ้านร้าง (วิ่งเข้าไปหลบยิงได้)';
   for(const s of sniperSpots) if(Math.hypot(x-s.x,z-s.z)<45)
@@ -2974,6 +3124,14 @@ function drawSpawnMap(){
     g.strokeStyle='#ffd98a'; g.lineWidth=2; g.strokeRect(p.mx-r,p.my-r,r*2,r*2);
     g.fillStyle='#ffd98a'; g.font='bold 13px system-ui'; g.textAlign='center';
     g.fillText('🏠',p.mx,p.my+5);
+  });
+  /* 🚁 รอบ 434: จุดจอดเฮลิคอปเตอร์ (เลือกเกิดข้างลำได้เลย) */
+  pads.forEach(pd=>{
+    const p=worldToMap(pd.x,pd.z,w,h);
+    g.fillStyle='rgba(20,60,90,.85)'; g.strokeStyle='#7fe3ff'; g.lineWidth=2;
+    g.beginPath(); g.arc(p.mx,p.my,10,0,TAU); g.fill(); g.stroke();
+    g.font='bold 12px system-ui'; g.textAlign='center'; g.fillStyle='#eaffff';
+    g.fillText('🚁',p.mx,p.my+4.5);
   });
   /* 🎯 รอบ 431: จุดสูงข่มบนเนินเขา (ที่ซุ่มยิงชั้นดี) */
   sniperSpots.forEach(s=>{
@@ -3150,6 +3308,8 @@ function updateGunnerBtn(now){
   gunnerBtnAt=now;
   const show=!inHeli && !riding && !!nearestRideable();
   gunnerBtn.style.display=show?'block':'none';
+  /* 🚁 รอบ 434: ปุ่มเฮลิโผล่เฉพาะตอน "ยืนอยู่ข้างลำจริง" (หรือกำลังบิน/นั่งเป็นพลปืน = ใช้ลง) */
+  if(heliBtn) heliBtn.style.display=(inHeli||riding||padAt(px,pz))?'block':'none';
 }
 
 /* นับเฮลิที่บินอยู่ทั้งโลกตอนนี้ = ของเรา + ของเพื่อนที่กำลังบิน + บอท (พลปืนไม่นับ — นั่งลำที่มีอยู่แล้ว) */
@@ -3160,25 +3320,43 @@ function heliCount(){
 }
 function enterHeli(){
   if(inHeli||riding) return;      // นั่งเป็นพลปืนอยู่ ต้องกระโดดลงก่อน
+  /* 🚁 รอบ 434: ขึ้นเครื่องได้เฉพาะตอน "เดินไปถึงลำจริง" เหมือนโลกเฮลิฯ (เดิมกดที่ไหนก็ขึ้นได้) */
+  const pad=padAt(px,pz);
+  if(!pad){
+    toastBan('🚁 <b>ต้องเดินไปที่เฮลิคอปเตอร์ก่อน</b><br><span class="ib-sub">กด 🗺️ ดูแผนที่ — จุด 🚁 คือลำที่จอดอยู่ (มี 5 ลำ)</span>',2400);
+    if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
+    return;
+  }
   if(heliCount()>=HELI_MAX){                    // 🚁 เพดาน 5 ลำทั้งโลก (ผู้ใช้สั่ง)
     toastBan(`🚁 <b>เฮลิคอปเตอร์เต็มแล้ว (${HELI_MAX} ลำ)</b><br><span class="ib-sub">รอเพื่อนลงจากเครื่องก่อนนะ</span>`,2200);
     if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
     return;
   }
+  myPad=pad; heliReady=false; heliStartAt=performance.now();
+  px=pad.x; pz=pad.z; yaw=pad.rot;              // นั่งประจำที่นักบิน หันตามลำ
+  setSeatView(0);                                // ตอนสตาร์ทใช้มุม "เต็มลำ" ได้อารมณ์ (เหมือนโลกเฮลิฯ)
+  if(seatBtn) seatBtn.style.display='block';
   inHeli=true; setScoped(false);
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
-  py=Math.max(py+18, terrainH(px,pz)+HELI_SKID+16);        // ยกตัวขึ้นจากพื้น
+  py=terrainH(px,pz)+HELI_SKID+1.8;                        // นั่งอยู่ในลำที่ยังจอดอยู่ (ยังไม่ลอย)
+  hLanded=true;                                            // ต้องดันคันเร่งขึ้นเองหลังสตาร์ทเสร็จ
   if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
   firing=false; heat=0; overheat=false; renderHeat();
   renderMissiles(); renderAmmo(); syncWeaponBtns(); syncBotHelis();
   Snd.startRotor();
-  toastBan('🚁 <b>ขึ้นเฮลิคอปเตอร์แล้ว!</b><br><span class="ib-sub">บังคับเหมือนโลกเฮลิฯ: W/S เดินหน้า-ถอย · A/D สไลด์ · Q/E หันลำ · ▲/Space ขึ้น · ▼/Shift ลง<br>แตะพื้นเบาๆ = ลงจอด · 🔫 ปืนกล · 🚀 จรวดชุดคู่ · 🪂 ลงจากเครื่อง</span>',3200);
+  toastBan('🚁 <b>ขึ้นเครื่องแล้ว — กำลังสตาร์ท!</b><br><span class="ib-sub">รอเครื่องติดครบขั้นก่อนนะ (ประมาณ 10 วิ) · กด 👁️ ปรับมุมมองในห้องนักบินได้</span>',3000);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
 }
 function exitHeli(){
   if(!inHeli) return;
+  /* 🅿️ รอบ 434: ลงจากเครื่องแล้ว "ลำจอดค้างไว้ตรงนั้น" — เดินกลับมาขึ้นใหม่ได้ */
+  if(myPad){ movePad(myPad,px,pz,yaw); myPad=null; }
+  heliReady=false;
+  if(seatBtn) seatBtn.style.display='none';
+  if(startEl) startEl.classList.remove('on');
+  if(wrapEl) wrapEl.classList.remove('seat0','seat1','seat2');
   inHeli=false; hLanded=false;
   wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
   if(gunGrp) gunGrp.visible=true;
@@ -3191,7 +3369,36 @@ function exitHeli(){
 /* 🚁 การบิน "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" (ผู้ใช้สั่ง)
    ค่าและสมการทั้งหมดยกมาจาก tickHeli ใน adventure3d.js: เร่ง 13 · เพดานเร็ว 17 · ไต่ 9 หน่วง 1.8
    · drag 1.4 · หันลำ Q/E 1.5 rad/s · auto-hover · แตะพื้นเบา = ลงจอด · ดันคันเร่งขึ้น = เทคออฟ */
+/* 🎥 กล้องที่นั่งนักบิน — ยกตามระดับเบาะที่เลือก (เหมือนปุ่มเบาะโลกเฮลิฯ) + ลากลำจริงมาไว้รอบตัว */
+function seatCamera(now,rollZ){
+  const v=SEAT_VIEWS[seatLv];
+  const sin=Math.sin(yaw), cos=Math.cos(yaw);              // ทิศหน้าลำ = (−sin, −cos)
+  camera.position.set(px + (-sin)*v.dz, py+v.dy+Math.sin(now*.012)*.12, pz + (-cos)*v.dz);
+  camera.rotation.set(0,0,0);
+  camera.rotateY(yaw); camera.rotateX(pitch);
+  if(rollZ) camera.rotateZ(rollZ);
+  /* ลำที่เราขับ = ลำจริงที่ขึ้นมา ตามตัวไปด้วย (เพื่อน/ตัวเราเห็นลำเดียวกัน หันหน้าถูกทิศ) */
+  if(myPad&&myPad.grp){ myPad.grp.position.set(px,py-1.8,pz); myPad.grp.rotation.y=yaw; myPad.grp.visible=true; }
+}
 function tickHeliFlight(dt,now){
+  /* 🌀 รอบ 434: ช่วง "สตาร์ทเครื่อง" — ยังบินไม่ได้ มองรอบตัว/ปรับเบาะได้ ใบพัดค่อยๆ ไต่รอบ */
+  if(!heliReady){
+    const done=now-heliStartAt>=START_MS;
+    if(startEl){ startEl.classList.add('on'); startEl.innerHTML=startPhaseText(now); }
+    if(done){
+      heliReady=true; setSeatView(state.heliSeat||1);
+      if(startEl) startEl.classList.remove('on');
+      toastBan('✅ <b>เครื่องพร้อมบิน!</b><br><span class="ib-sub">ดันคันเร่งขึ้น (▲/Space) เพื่อทะยานขึ้นฟ้า · 👁️ ปรับมุมมอง · 🪂 ลงจากเครื่อง</span>',2600);
+      if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+    }
+    py=terrainH(px,pz)+HELI_SKID+1.8;
+    const shk=Math.min(1,(now-heliStartAt)/START_MS)*.05;   // เครื่องสั่นแรงขึ้นเรื่อยๆ ตามรอบใบพัด
+    seatCamera(now,0);
+    camera.position.y+=Math.sin(now*.05)*shk;
+    camera.position.x+=Math.sin(now*.043)*shk*.6;
+    if(now-lastHurt>3500&&hp<PLAYER_HP){ hp=Math.min(PLAYER_HP,hp+SHIELD_REGEN*dt*10); renderHp(); }
+    return;
+  }
   let fw=0,sd=0,yawIn=0,col=0;
   if(keys.w) fw+=1; if(keys.s) fw-=1;
   if(keys.a) sd-=1; if(keys.d) sd+=1;
@@ -3241,11 +3448,8 @@ function tickHeliFlight(dt,now){
     }
   }
   px=nx; pz=nz; py=ny;
-  /* กล้อง = ตำแหน่งนักบิน + โยกเบาๆ + เอียงลำเข้าโค้ง */
-  camera.position.set(px, py+Math.sin(now*.012)*.12, pz);
-  camera.rotation.set(0,0,0);
-  camera.rotateY(yaw); camera.rotateX(pitch);
-  camera.rotateZ(-clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30));
+  /* กล้อง = ที่นั่งนักบิน (ตามระดับเบาะ) + โยกเบาๆ + เอียงลำเข้าโค้ง */
+  seatCamera(now, -clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30));
   applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.35; camera.position.y+=rnd(-1,1)*shake*.35; shake=Math.max(0,shake-dt*2.2); }
   if(muzzle) muzzle.material.opacity=now<muzzleUntil?1:0;
@@ -3320,6 +3524,12 @@ function nameSprite(name){
 function peerBody(kind,color){
   const g=new THREE.Group();
   if(kind==='heli'){
+    /* 🚁 รอบ 434: เพื่อนที่บินอยู่ = โมเดลลำจริงลำเดียวกับของเรา (ทุกคนเห็นเฮลิเหมือนกันทั้งสนาม)
+       โหลดเสร็จค่อยสลับ — ระหว่างรอใช้ทรงโค้ดเดิมไปก่อน จะได้ไม่มีลำล่องหน */
+    heliModel(m=>{ if(!m) return;
+      g.children.slice().forEach(c=>g.remove(c));
+      g.add(m); g.userData.rotor=m._rotor||null; g.userData.trotor=m._trotor||null;
+    });
     const bodyM=new THREE.MeshPhongMaterial({color,shininess:24,flatShading:true});
     const body=new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.25,4.6,8),bodyM); body.rotation.x=Math.PI/2; g.add(body);
     const nose=new THREE.Mesh(new THREE.SphereGeometry(1.3,10,8),new THREE.MeshPhongMaterial({color:0x1b2733,shininess:90})); nose.position.z=-2.3; g.add(nose);
@@ -3654,6 +3864,7 @@ function frame(dt,now){
   tickReload(now);                  // 🎯 บรรจุกระสุน R93
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
+  tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
   renderer.render(scene,camera);
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
@@ -3691,6 +3902,7 @@ function build(){
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
+  buildHeliPads();                  // 🚁 รอบ 434: เฮลิคอปเตอร์จอด 5 ลำ (เดินไปขึ้นได้)
   findSniperSpots();                // 🎯 รอบ 431: หา "จุดสูงข่ม" บนเนินเขาไว้แนะนำในแผนที่
   buildDustMotes();                 // 🌫️ ฝุ่นฟุ้งในอากาศ
   buildMothership();
@@ -3847,6 +4059,10 @@ window.InvasionWorld={
       detail:!!(h.detail&&h.detail.visible),proxy:h.proxy.visible}))},
     get sniperSpots(){return sniperSpots.map(s=>({x:+s.x.toFixed(0),z:+s.z.toFixed(0),e:+s.e.toFixed(1)}))},
     houseBlocked, houseCover, tickHouseLod, get inCover(){return inCover},
+    /* 🚁 รอบ 434: เฮลิจอด */
+    get pads(){return pads.map(p=>({x:+p.x.toFixed(1),z:+p.z.toFixed(1),rot:+p.rot.toFixed(2),ready:!!p.model,vis:p.grp.visible}))},
+    get heliReady(){return heliReady}, get seat(){return seatLv}, setSeatView, padAt, get myPad(){return myPad?myPad.idx:null},
+    get startText(){return startEl?startEl.textContent:''}, get heliBtnShown(){return heliBtn&&heliBtn.style.display==='block'},
     get coverShown(){return coverEl&&coverEl.classList.contains('on')},
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
