@@ -6,7 +6,7 @@
    👥 พันธมิตร AI: หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์ ช่วยยิงอย่างเมามันส์
    🧩 โมเดลจริง (ถ้าผู้ใช้วางไฟล์ไว้ จะสลับใช้อัตโนมัติ ไม่ต้องแก้โค้ด):
       img/models/mothership.glb · img/models/alien_fighter.glb · img/models/gun_rifle.glb
-      img/invasion/sky.webp (ท้องฟ้า 360°) · img/invasion/sand.jpg · img/invasion/wall.jpg
+      img/invasion/sky.png (ท้องฟ้า 360°) · img/invasion/sand.png · img/invasion/wall.png
    โหลดขี้เกียจผ่าน enterInvasion3D (ui.js) — ไม่แตะ adventure3d.js */
 (function(){
 'use strict';
@@ -484,13 +484,29 @@ let solids=[];                         // กันชนตึก {x,z,r}
 let msLamps=[], msCore=null, msGlow=null, msBoard=null, msPlate=null;
 
 /* ============================================================
-   📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้จะเอาของจริงมาใส่ทีหลัง)
-   ไม่มีไฟล์/ไม่มี GLTFLoader = เงียบๆ ใช้ทรงที่โค้ดสร้างไว้ต่อไป
+   📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
+   ไม่มีไฟล์ = เงียบๆ ใช้ทรงที่โค้ดสร้างไว้ต่อไป
+   ⚡ cache ต่อ path แล้ว clone ให้ทุกครั้ง — ยานลูก 1 คำมีหลายลำ ต้องโหลดไฟล์ครั้งเดียวพอ (ไม่งั้นโหลด 2.5MB ซ้ำทุกลำ)
+   GLTFLoader ไม่ได้อยู่ใน three.min.js → ui.js โหลด js/vendor/GLTFLoader.js มาก่อนแล้ว (มี fallback เผื่อ)
    ============================================================ */
+const glbCache={};                 // path -> gltf.scene ต้นฉบับ (clone ได้)
+let glbLoaderPending=[];           // คิว callback ที่รอ GLTFLoader โหลดเสร็จ
 function loadGlb(path,cb){
-  if(!THREE.GLTFLoader) return;
+  if(glbCache[path]){ cb(glbCache[path].clone(true)); return; }
+  if(!THREE.GLTFLoader){           // ยังไม่มี loader → โหลด script แล้วค่อยลองใหม่ (โหลดครั้งเดียว)
+    glbLoaderPending.push(()=>loadGlb(path,cb));
+    if(glbLoaderPending.length===1){
+      const s=document.createElement('script'); s.src='js/vendor/GLTFLoader.js';
+      s.onload=()=>{ const q=glbLoaderPending; glbLoaderPending=[]; q.forEach(fn=>fn()); };
+      s.onerror=()=>{ glbLoaderPending=[]; };
+      document.head.appendChild(s);
+    }
+    return;
+  }
   try{
-    new THREE.GLTFLoader().load(path,g=>{ if(g&&g.scene) cb(g.scene); },undefined,()=>{});
+    new THREE.GLTFLoader().load(path,g=>{
+      if(g&&g.scene){ glbCache[path]=g.scene; cb(g.scene.clone(true)); }
+    },undefined,()=>{});
   }catch(e){}
 }
 /* ย่อ/ขยายโมเดลให้ด้านกว้างสุดเท่ากับ size แล้วจัดให้ศูนย์กลางอยู่ที่ origin */
@@ -516,14 +532,14 @@ function buildTerrain(){
   g.computeVertexNormals();
   /* สีวัสดุ = ขาวล้วน ปล่อยให้ภาพทรายคุมโทนเอง (เคยใส่สีอุ่นทับ + ไฟแรง = พื้นสว่างจ้าจนแสบตา) */
   const m=new THREE.MeshLambertMaterial({color:0xffffff,map:sandTex()});
-  tryTex(m,'img/invasion/sand.jpg',70,70);
+  tryTex(m,'img/invasion/sand.png',70,70);
   const ground=new THREE.Mesh(g,m); ground.rotation.x=-Math.PI/2; scene.add(ground);
 }
 /* 🏘️ บ้านดินเผาหลังคาแบน + โดม + หอมินาเรต + ต้นอินทผลัม */
 function buildTown(){
   const tones=['#d8bc93','#c9a87c','#e2cda9','#bfa07a','#d2b489'];
   const mats=tones.map(t=>{ const m=new THREE.MeshLambertMaterial({color:0xffffff,map:wallTex(t)});
-    tryTex(m,'img/invasion/wall.jpg',1,1); return m; });
+    tryTex(m,'img/invasion/wall.png',1,1); return m; });
   const winMat=new THREE.MeshBasicMaterial({color:0x24303f});
   const domeMat=new THREE.MeshLambertMaterial({color:0xd8d2c4});
   /* 💡 จำนวนพวกนี้คุม draw call โดยตรง (มือถือเด็กเป็นหลัก) — บ้าน 1 หลัง ≈ 4 ชิ้น, ต้นอินทผลัม 1 ต้น ≈ 7 ชิ้น
@@ -1706,7 +1722,7 @@ function build(){
       new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false}));
     scene.add(dome); };
   skyTex.onerror=()=>{};
-  skyTex.src='img/invasion/sky.webp';
+  skyTex.src='img/invasion/sky.png';
   camera=new THREE.PerspectiveCamera(74,innerWidth/innerHeight,.1,WORLD*2.6);
   scene.add(camera);
   scene.add(new THREE.HemisphereLight(0xffe3b8,0x8a6a45,.48));
