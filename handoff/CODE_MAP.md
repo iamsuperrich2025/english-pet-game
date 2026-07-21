@@ -173,66 +173,69 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (3,006 บรรทัด · 178 รายการ)
+## js/invasion3d.js (3,196 บรรทัด · 189 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 14-44 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 45-70 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
-- 71-112 🎬 รอบ 422: แอนิเมชันยกปืนเล็ง (ADS) ของ R93 — ตามสเปกที่ผู้ใช้ให้มา
-- 113-497 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
-- 498-602 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
-- 603-677 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
-- 678-712 🌍 สถานะฉาก
-- 713-762 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
-- 763-844 🏜️ สร้างฉากทะเลทราย + เมือง
-- 845-1015 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (ผู้ใช้ส่งภาพอ้างอิง Delta Force)
-- 1016-1117 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
-- 1118-1155 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
-- 1156-1210 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
-- 1211-1518 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
-- 1519-1584 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
-- 1585-1715 🎯 ระบบยิงของผู้เล่น
-- 1716-1784 ⚔️ ดาเมจ / เงื่อนไขชนะ
-- 1785-1881 📖 คำศัพท์ + รอบเล่น
-- 1882-1933 🖥️ HUD
-- 1934-2052 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
-- 2053-2126 🚶 ผู้เล่น + AI + ลูป
-- 2127-2131 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
-- 2132-2231 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
-- 2232-2441 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
-- 2442-2773 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 2774-2809 🔁 ลูปหลัก
-- 2810-3006 ▶️ เข้า/ออกโลก
+- 71-119 🎬 รอบ 422: แอนิเมชันยกปืนเล็ง (ADS) ของ R93 — ตามสเปกที่ผู้ใช้ให้มา
+- 120-504 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
+- 505-609 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
+- 610-684 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
+- 685-719 🌍 สถานะฉาก
+- 720-769 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
+- 770-851 🏜️ สร้างฉากทะเลทราย + เมือง
+- 852-1022 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (ผู้ใช้ส่งภาพอ้างอิง Delta Force)
+- 1023-1124 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
+- 1125-1162 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
+- 1163-1166 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
+- 1167-1340 🪖 รอบ 423: ระบบตัวละครทหารแบบมี "ข้อต่อ" (rig) — รองรับโมเดล .glb ของผู้ใช้
+- 1341-1668 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
+- 1669-1734 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
+- 1735-1875 🎯 ระบบยิงของผู้เล่น
+- 1876-1944 ⚔️ ดาเมจ / เงื่อนไขชนะ
+- 1945-2041 📖 คำศัพท์ + รอบเล่น
+- 2042-2093 🖥️ HUD
+- 2094-2212 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
+- 2213-2287 🚶 ผู้เล่น + AI + ลูป
+- 2288-2292 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
+- 2293-2392 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
+- 2393-2604 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
+- 2605-2953 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 2954-2989 🔁 ลูปหลัก
+- 2990-3196 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
 MS_Y:30 · MS_HP:31 · MS_DMG_GUN:32 · BOARD_Y:35 · CORE_Y:36 · F_HP:39
 F_SHOT_GAP:40 · MS_BEAM_GAP:41 · GUN_GAP:44 · WEAPONS:51 · SNIPER_SENS:58 · SCOPE_R:62
 SCOPE_MAGS:65 · ADS_IN:77 · ADS_POS:78 · ADS_ROT:79 · ADS_SCALE:80 · ADS_BREATH:81
-BREATH_MAX:82 · MIS_MAX:84 · PLAYER_HP:85 · SQUAD_N:88 · SQUAD_GAP:89 · HELI_MAX:95
-HELI_ACCEL:96 · HELI_SKID:97 · PH_GUN_GAP:98 · PH_MIS_MAX:99 · NET_SEND_MS:102 · CHAT_MS:103
-CHAT_PRESETS:104 · PEER_COLORS:105 · TAU:107 · CSS:116 · buildDom:393 · resumeAudio:601
-tryTex:608 · letterPanelTex:616 · letterSpriteTex:632 · sandTex:642 · wallTex:663 · loadGlb:721
-tameGlbMaterials:742 · fitInto:754 · buildTerrain:766 · buildTown:780 · STREET_Z0:850 · instancer:854
-buildWarStreet:868 · sandbagWalls:973 · squadCoverSpots:981 · buildDustMotes:991 · tickDust:1002 · buildMothership:1020
-layoutLetterPanels:1093 · setLetterLit:1111 · makeFighter:1121 · makeSoldier:1160 · makeHeli:1181 · GUN_POS:1222
-GUN_ROT:1223 · GUN_SCALE:1224 · buildArms:1226 · buildRifleModel:1249 · buildR93Model:1270 · buildGun:1316
-swapWeapon:1375 · setScoped:1390 · smoothstep:1404 · tickAds:1406 · applyBreath:1435 · scopeRadius:1443
-scopeRadiusNow:1445 · layoutScope:1447 · scopeFovDeg:1466 · renderScopePass:1474 · cycleScopeMag:1492 · renderAmmo:1500
-syncWeaponBtns:1511 · boom:1522 · sparkAt:1548 · tracer:1555 · tickFx:1566 · aimDir:1588
-fireGun:1595 · startReload:1639 · tickReload:1647 · launchMissile:1652 · fireMissile:1667 · lockTarget:1683
-rayTarget:1693 · raySphere:1708 · damageFighter:1720 · dropFighter:1726 · openMothership:1751 · damageMother:1760
-killMother:1765 · flashScreen:1779 · myUid:1789 · leaderUid:1790 · isLeader:1795 · pickWord:1796
-setWord:1809 · adoptWord:1818 · applyShared:1827 · startWave:1848 · completeWord:1862 · renderWord:1885
-renderTarget:1894 · renderCoins:1905 · renderHp:1906 · renderHeat:1912 · renderMissiles:1918 · toastBan:1927
-bindInput:1937 · moveJoy:2043 · unlockMouse:2051 · tickPlayer:2056 · hurtPlayer:2109 · MAP_VIEW:2137
-mapToWorld:2138 · worldToMap:2139 · zoneName:2140 · drawSpawnMap:2146 · safeSpawn:2193 · fitSpawnMap:2203
-openSpawnMap:2210 · applySpawnPick:2219 · RIDE_DIST:2242 · RIDE_UP:2243 · RIDE_OFF:2244 · rideableHelis:2245
-findRide:2251 · nearestRideable:2252 · ridePos:2262 · boardGunner:2269 · dismountGunner:2283 · tickGunner:2295
-updateGunnerBtn:2322 · heliCount:2330 · enterHeli:2335 · exitHeli:2354 · tickHeliFlight:2368 · syncBotHelis:2432
-netReady:2447 · netJoin:2451 · netSend:2464 · peerColor:2480 · nameSprite:2482 · peerBody:2493
-buildPeer:2514 · onPeer:2523 · dropPeer:2549 · netLeave:2556 · peerTick:2562 · renderBoard:2575
-sendChat:2592 · showPeerBubble:2599 · removePeerBubble:2605 · tickFighters:2611 · tickMother:2638 · spawnAlienShot:2663
-tickAlienShots:2675 · tickMissiles:2690 · tickSquad:2722 · tickHelis:2743 · fit:2777 · tick:2783
-frame:2791 · build:2813 · start:2853 · exitWorld:2926
+REC_RECOVER:84 · REC_RIFLE:85 · REC_R93:86 · BOLT_MS:87 · BREATH_MAX:88 · MIS_MAX:91
+PLAYER_HP:92 · SQUAD_N:95 · SQUAD_GAP:96 · HELI_MAX:102 · HELI_ACCEL:103 · HELI_SKID:104
+PH_GUN_GAP:105 · PH_MIS_MAX:106 · NET_SEND_MS:109 · CHAT_MS:110 · CHAT_PRESETS:111 · PEER_COLORS:112
+TAU:114 · CSS:123 · buildDom:400 · resumeAudio:608 · tryTex:615 · letterPanelTex:623
+letterSpriteTex:639 · sandTex:649 · wallTex:670 · loadGlb:728 · tameGlbMaterials:749 · fitInto:761
+buildTerrain:773 · buildTown:787 · STREET_Z0:857 · instancer:861 · buildWarStreet:875 · sandbagWalls:980
+squadCoverSpots:988 · buildDustMotes:998 · tickDust:1009 · buildMothership:1027 · layoutLetterPanels:1100 · setLetterLit:1118
+makeFighter:1128 · SOLDIER_PARTS:1174 · joint:1188 · buildSoldierRig:1192 · applySoldierGlb:1227 · poseSoldier:1255
+makeSoldier:1295 · makeHeli:1311 · GUN_POS:1352 · GUN_ROT:1353 · GUN_SCALE:1354 · buildArms:1356
+buildRifleModel:1379 · buildR93Model:1400 · buildGun:1446 · swapWeapon:1505 · setScoped:1520 · smoothstep:1534
+tickAds:1536 · applyRecoil:1579 · applyBreath:1585 · scopeRadius:1593 · scopeRadiusNow:1595 · layoutScope:1597
+scopeFovDeg:1616 · renderScopePass:1624 · cycleScopeMag:1642 · renderAmmo:1650 · syncWeaponBtns:1661 · boom:1672
+sparkAt:1698 · tracer:1705 · tickFx:1716 · aimDir:1738 · fireGun:1745 · addRecoil:1792
+startReload:1799 · tickReload:1807 · launchMissile:1812 · fireMissile:1827 · lockTarget:1843 · rayTarget:1853
+raySphere:1868 · damageFighter:1880 · dropFighter:1886 · openMothership:1911 · damageMother:1920 · killMother:1925
+flashScreen:1939 · myUid:1949 · leaderUid:1950 · isLeader:1955 · pickWord:1956 · setWord:1969
+adoptWord:1978 · applyShared:1987 · startWave:2008 · completeWord:2022 · renderWord:2045 · renderTarget:2054
+renderCoins:2065 · renderHp:2066 · renderHeat:2072 · renderMissiles:2078 · toastBan:2087 · bindInput:2097
+moveJoy:2203 · unlockMouse:2211 · tickPlayer:2216 · hurtPlayer:2270 · MAP_VIEW:2298 · mapToWorld:2299
+worldToMap:2300 · zoneName:2301 · drawSpawnMap:2307 · safeSpawn:2354 · fitSpawnMap:2364 · openSpawnMap:2371
+applySpawnPick:2380 · RIDE_DIST:2403 · RIDE_UP:2404 · RIDE_OFF:2405 · rideableHelis:2406 · findRide:2412
+nearestRideable:2413 · ridePos:2423 · boardGunner:2430 · dismountGunner:2444 · tickGunner:2456 · updateGunnerBtn:2484
+heliCount:2492 · enterHeli:2497 · exitHeli:2516 · tickHeliFlight:2530 · syncBotHelis:2595 · netReady:2610
+netJoin:2614 · netSend:2627 · peerColor:2643 · nameSprite:2645 · peerBody:2656 · buildPeer:2679
+onPeer:2688 · dropPeer:2714 · netLeave:2721 · peerTick:2727 · renderBoard:2748 · sendChat:2765
+showPeerBubble:2772 · removePeerBubble:2778 · tickFighters:2784 · tickMother:2811 · spawnAlienShot:2836 · tickAlienShots:2848
+tickMissiles:2863 · tickSquad:2895 · tickHelis:2923 · fit:2957 · tick:2963 · frame:2971
+build:2993 · start:3033 · exitWorld:3107
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28

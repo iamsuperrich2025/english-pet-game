@@ -79,8 +79,15 @@ const ADS_POS=[0,-0.105,-0.34];         // ท่าแนบไหล่: ป�
 const ADS_ROT=[0.02,0,0];               // เลิกเอียงทแยง จัดลำกล้องให้ตรงแนวสายตา
 const ADS_SCALE=1.06;                   // ขยับเข้าใกล้ตาอีกนิด (ให้รู้สึกมีมวล)
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
+/* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
+   เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด */
+const REC_RECOVER=5.2;                  // ความเร็วดึงกลับเข้าเป้า (ยิ่งมากยิ่งกลับไว)
+const REC_RIFLE=[0.0115,0.0045];        // [เด้งขึ้น, ส่ายซ้าย-ขวา] เรเดียน
+const REC_R93=[0.052,0.011];
+const BOLT_MS=1200;                     // เวลาชักลูกเลื่อน R93 (ตรงกับ WEAPONS.r93.gap)
 const BREATH_MAX=5.0, BREATH_RECOVER=4.0;   // กลั้นหายใจได้กี่วินาที / เวลาฟื้นเต็ม
 let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
+let recPitch=0, recYaw=0, boltAt=0;   // 💥 แรงถอยค้างอยู่ + เวลาที่เริ่มชักลูกเลื่อน
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
@@ -1157,26 +1164,149 @@ function makeFighter(letterIdx){
    👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
    (ช่วยยิงจริง ทำดาเมจจริง — เด็กจะรู้สึกว่า "ไม่ได้สู้คนเดียว")
    ============================================================ */
-function makeSoldier(x,z,crouch){
-  const grp=new THREE.Group();
-  const uni=new THREE.MeshLambertMaterial({color:0x6b6f4a});      // ชุดลายทะเลทราย
+/* ============================================================
+   🪖 รอบ 423: ระบบตัวละครทหารแบบมี "ข้อต่อ" (rig) — รองรับโมเดล .glb ของผู้ใช้
+   ออกแบบให้ "โครงเดียวใช้ได้ทั้งทรงที่โค้ดวาดเอง และโมเดลจริงที่แยกชิ้นส่วนมา"
+   ข้อต่อมาตรฐาน 11 จุด: hips · torso · head · แขนบน/ล่าง ซ้าย-ขวา · ขาบน/ล่าง ซ้าย-ขวา
+   ▶ มีไฟล์ img/models/soldier_a.glb / soldier_b.glb (แยกชิ้น ตั้งชื่อตาม SOLDIER_PARTS)
+     เมื่อไหร่ ระบบสลับไปใช้โมเดลจริงเอง แล้วขยับด้วยโค้ดชุดเดียวกันนี้
+   ============================================================ */
+const SOLDIER_PARTS={           /* ชื่อข้อต่อ → คำที่ยอมรับได้ในชื่อ node ของไฟล์ glb */
+  hips:  ['hips','pelvis','waist'],
+  torso: ['torso','chest','spine','body'],
+  head:  ['head','helmet'],
+  armUL:['upperarm_l','arm_l_upper','l_upperarm','shoulder_l','armul'],
+  armLL:['forearm_l','arm_l_lower','l_forearm','armll'],
+  armUR:['upperarm_r','arm_r_upper','r_upperarm','shoulder_r','armur'],
+  armLR:['forearm_r','arm_r_lower','r_forearm','armlr'],
+  legUL:['thigh_l','leg_l_upper','l_thigh','upleg_l','legul'],
+  legLL:['calf_l','shin_l','leg_l_lower','l_calf','legll'],
+  legUR:['thigh_r','leg_r_upper','r_thigh','upleg_r','legur'],
+  legLR:['calf_r','shin_r','leg_r_lower','r_calf','leglr'],
+};
+/* สร้างข้อต่อเปล่า (Group) ที่จุดหมุน แล้วเอา mesh ไปห้อยใต้ข้อต่อ */
+function joint(parent,x,y,z){
+  const j=new THREE.Group(); j.position.set(x,y,z); parent.add(j); return j;
+}
+/* ทรงทหารที่โค้ดวาดเอง — ผูกเข้าโครงข้อต่อชุดเดียวกับโมเดลจริง */
+function buildSoldierRig(){
+  const uni=new THREE.MeshLambertMaterial({color:0x6b6f4a});      /* ชุดลายทะเลทราย */
   const gear=new THREE.MeshLambertMaterial({color:0x3a3d33});
   const skin=new THREE.MeshLambertMaterial({color:0xc79a72});
-  const body=new THREE.Mesh(new THREE.BoxGeometry(.62,.86,.36),uni); body.position.y=1.15; grp.add(body);
-  const vest=new THREE.Mesh(new THREE.BoxGeometry(.68,.5,.44),gear); vest.position.y=1.22; grp.add(vest);
-  const head=new THREE.Mesh(new THREE.SphereGeometry(.21,8,6),skin); head.position.y=1.76; grp.add(head);
-  const helm=new THREE.Mesh(new THREE.SphereGeometry(.24,8,6,0,TAU,0,Math.PI/2),gear); helm.position.y=1.78; grp.add(helm);
-  [-1,1].forEach(s=>{
-    const leg=new THREE.Mesh(new THREE.BoxGeometry(.22,.76,.24),uni); leg.position.set(s*.16,.38,0); grp.add(leg);
-    const arm=new THREE.Mesh(new THREE.BoxGeometry(.18,.62,.2),uni); arm.position.set(s*.42,1.2,0); grp.add(arm);
+  const grp=new THREE.Group();
+  const J={};
+  J.hips=joint(grp,0,0.92,0);
+  J.torso=joint(J.hips,0,0,0);
+  const body=new THREE.Mesh(new THREE.BoxGeometry(.62,.86,.36),uni); body.position.y=.23; J.torso.add(body);
+  const vest=new THREE.Mesh(new THREE.BoxGeometry(.68,.5,.44),gear); vest.position.y=.30; J.torso.add(vest);
+  J.head=joint(J.torso,0,.72,0);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.21,8,6),skin); head.position.y=.12; J.head.add(head);
+  const helm=new THREE.Mesh(new THREE.SphereGeometry(.24,8,6,0,TAU,0,Math.PI/2),gear); helm.position.y=.14; J.head.add(helm);
+  [['L',-1],['R',1]].forEach(function(pair){
+    var side=pair[0], sx=pair[1];
+    /* แขน: ไหล่ → ข้อศอก (ชิ้นห้อยลงจากข้อต่อ จึงหมุนถูกจุด) */
+    const up=joint(J.torso,sx*.42,.50,0);
+    const uMesh=new THREE.Mesh(new THREE.BoxGeometry(.17,.34,.19),uni); uMesh.position.y=-.17; up.add(uMesh);
+    const lo=joint(up,0,-.34,0);
+    const lMesh=new THREE.Mesh(new THREE.BoxGeometry(.155,.32,.175),uni); lMesh.position.y=-.16; lo.add(lMesh);
+    J['armU'+side]=up; J['armL'+side]=lo;
+    /* ขา: สะโพก → เข่า */
+    const th=joint(J.hips,sx*.16,-.02,0);
+    const tMesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.44,.24),uni); tMesh.position.y=-.22; th.add(tMesh);
+    const sh=joint(th,0,-.44,0);
+    const sMesh=new THREE.Mesh(new THREE.BoxGeometry(.20,.46,.22),uni); sMesh.position.y=-.23; sh.add(sMesh);
+    J['legU'+side]=th; J['legL'+side]=sh;
   });
+  /* ปืนอยู่ในมือขวา (ห้อยใต้แขนล่างขวา → ยกแขนแล้วปืนตามไปเอง) */
   const rifle=new THREE.Mesh(new THREE.BoxGeometry(.11,.13,1.15),new THREE.MeshLambertMaterial({color:0x22242a}));
-  rifle.position.set(.34,1.34,-.5); grp.add(rifle);
-  grp.position.set(x,terrainH(x,z),z);
-  /* 🎯 รอบ 416: ท่าหมอบยิงหลังกระสอบทราย (เหมือนทหารในภาพอ้างอิง) — ย่อตัวลง + เอนไปข้างหน้า */
-  if(crouch){ grp.scale.y=.62; grp.rotation.x=-.12; grp.position.y+=.02; }
-  scene.add(grp);
-  return {grp,rifle,crouch:!!crouch,shotAt:performance.now()+rnd(0,SQUAD_GAP)};
+  rifle.position.set(0,-.28,-.42); J.armLR.add(rifle);
+  return {grp:grp,J:J,rifle:rifle};
+}
+/* 🧩 เสียบโมเดลจริงเข้าโครง: หา node ตามชื่อใน SOLDIER_PARTS แล้วย้ายไปห้อยใต้ข้อต่อเดิม
+   แยกชิ้นไม่ได้ (โมเดลชิ้นเดียว) → แปะทั้งตัวที่สะโพก ยังเห็นเป็นทหาร แค่ไม่ขยับแขนขา */
+function applySoldierGlb(s,obj){
+  const found={};
+  obj.traverse(function(o){
+    if(!o.isMesh) return;
+    const n=(o.name||'').toLowerCase().replace(/[\s.\-]/g,'_');
+    for(const key in SOLDIER_PARTS){
+      if(found[key]) continue;
+      if(SOLDIER_PARTS[key].some(function(w){ return n.indexOf(w)>=0; })){ found[key]=o; break; }
+    }
+  });
+  const keys=Object.keys(found);
+  if(keys.length<4){
+    Object.keys(s.J).forEach(function(k){ s.J[k].children.slice().forEach(function(c){ if(c.isMesh) s.J[k].remove(c); }); });
+    obj.position.y=-0.92; s.J.hips.add(obj); s.static=true; return false;
+  }
+  Object.keys(s.J).forEach(function(k){ s.J[k].children.slice().forEach(function(c){ if(c.isMesh) s.J[k].remove(c); }); });
+  keys.forEach(function(k){
+    const m=found[k], j=s.J[k]; if(!j) return;
+    const box=new THREE.Box3().setFromObject(m), c=new THREE.Vector3(); box.getCenter(c);
+    /* ให้ "ปลายบนของชิ้น" อยู่ที่ข้อต่อพอดี → หมุนแล้วดูเป็นธรรมชาติเหมือนข้อต่อจริง */
+    if(k==='hips'||k==='torso'||k==='head') m.position.set(-c.x,0,-c.z);
+    else m.position.set(-c.x,-box.max.y,-c.z);
+    j.add(m);
+  });
+  s.glb=true; return true;
+}
+/* 🎞️ ท่าทางทหาร — ขยับด้วยโค้ดตามสถานการณ์จริงในเกม (เนียนกว่าคลิปสำเร็จรูป)
+   mode: 'idle' | 'walk' | 'aim' | 'crouch' */
+function poseSoldier(s,now){
+  const J=s.J; if(!J||s.static) return;
+  const t=now*0.001+s.phase, m=s.mode||'idle';
+  const br=Math.sin(t*1.6)*0.02;                     /* หายใจ */
+  if(m==='walk'){
+    const w=Math.sin(t*6.5), w2=Math.cos(t*6.5);
+    J.legUL.rotation.x= w*0.62;  J.legUR.rotation.x=-w*0.62;
+    J.legLL.rotation.x=Math.max(0,-w2*0.5);  J.legLR.rotation.x=Math.max(0,w2*0.5);
+    J.armUL.rotation.x=-w*0.42;  J.armUR.rotation.x= w*0.30;
+    J.armLR.rotation.x=-0.55;                        /* ประคองปืนไว้เสมอ */
+    J.torso.rotation.y=w*0.06;
+    J.hips.position.y=0.92+Math.abs(w)*0.03;
+    J.torso.rotation.x=0;
+  }else{
+    const crouch=(m==='crouch');
+    J.legUL.rotation.x=J.legUR.rotation.x=crouch?-0.95:0;
+    J.legLL.rotation.x=J.legLR.rotation.x=crouch? 1.35:0;
+    J.hips.position.y=crouch?0.58:0.92;
+    J.torso.rotation.x=crouch?0.18:br;
+    J.torso.rotation.y=0;
+    /* ยกปืนเล็ง: แขนขวาแนบแก้ม แขนซ้ายประคองลำกล้อง */
+    const aim=(m==='aim'||crouch)?1:0.25;
+    J.armUR.rotation.x=-1.32*aim+br;
+    J.armLR.rotation.x=-0.42*aim;
+    J.armUL.rotation.x=-1.18*aim;
+    J.armUL.rotation.z= 0.42*aim;
+    J.armLL.rotation.x=-0.62*aim;
+    J.armLL.rotation.z=-0.30*aim;
+  }
+  /* เงยหน้าตามเป้า (ยานลูกอยู่บนฟ้า) */
+  const up=s.lookUp||0;
+  J.head.rotation.x=-up*0.55;
+  J.torso.rotation.x=J.torso.rotation.x-up*0.30;
+  /* สะบัดตอนยิง */
+  if(s.fireT>0){
+    J.armUR.rotation.x-=s.fireT*0.16;
+    J.torso.rotation.x-=s.fireT*0.05;
+    s.fireT=Math.max(0,s.fireT-0.06);
+  }
+}
+function makeSoldier(x,z,crouch,kind){
+  const rig=buildSoldierRig();
+  const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch,
+           mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
+           shotAt:performance.now()+rnd(0,SQUAD_GAP)};
+  s.grp.position.set(x,terrainH(x,z),z);
+  poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
+  scene.add(s.grp);
+  /* 🧩 มีโมเดลจริงก็สลับให้เอง (ไม่มีไฟล์ = ใช้ทรงที่วาดไว้ ไม่พัง) */
+  loadGlb('img/models/soldier_'+(kind||'a')+'.glb',function(obj){
+    fitInto(obj,1.8);                       /* สูงราว 1.8 ม. เท่าคนจริง */
+    obj.position.y=0;
+    applySoldierGlb(s,obj);
+  });
+  return s;
 }
 function makeHeli(i){
   const grp=new THREE.Group();
@@ -1421,6 +1551,19 @@ function tickAds(dt,now){
       GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
     gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
   }
+  /* 🔩 ชักลูกเลื่อนหลังยิง (R93) — คันรั้งถอยหลัง-ดันกลับ + ปืนสะบัดตามจังหวะ
+     ทำให้ "ยิงทีละนัด" รู้สึกมีน้ำหนัก ไม่ใช่แค่หน่วงเวลาเปล่าๆ */
+  if(boltAt && weapon==='r93'){
+    const bt=(now-boltAt)/BOLT_MS;
+    if(bt>=1){ boltAt=0; }
+    else{
+      const knob=gunModels.r93 && gunModels.r93.userData ? gunModels.r93.userData.bolt : null;
+      /* จังหวะ: 0-.35 ดึงถอยหลัง · .35-.7 ดันกลับ · ที่เหลือนิ่ง */
+      const pull = bt<.35 ? (bt/.35) : (bt<.7 ? 1-((bt-.35)/.35) : 0);
+      if(knob) knob.position.z=.14+pull*.16;
+      if(gunGrp) gunGrp.rotation.x+=pull*.035;      // ปืนสะบัดตามมือที่ชักลูกเลื่อน
+    }
+  }
   /* ③ ขอบเลนส์ค่อยๆ ขยายเข้ามา + ⑤ เรติเคิลชัดขึ้นตามจังหวะ */
   const on=adsT>0.02;
   wrapEl.classList.toggle('scoped',on);
@@ -1432,6 +1575,13 @@ function tickAds(dt,now){
   if(breathBtn) breathBtn.style.opacity=(0.45+0.55*breathLeft).toFixed(2);
 }
 /* ⑥ การแกว่งจากการหายใจ — ใส่ที่กล้องหลังหมุน yaw/pitch แล้ว (ภาพในเลนส์แกว่งตามด้วย) */
+/* 💥 คลายแรงถอยกลับเข้าเป้าแบบสปริง + ใส่ที่กล้อง (ภาพในเลนส์สะบัดตามไปด้วย) */
+function applyRecoil(dt){
+  if(Math.abs(recPitch)<1e-5 && Math.abs(recYaw)<1e-5){ recPitch=0; recYaw=0; return; }
+  camera.rotateX(recPitch); camera.rotateY(recYaw);
+  const k=Math.min(1,dt*REC_RECOVER);
+  recPitch-=recPitch*k; recYaw-=recYaw*k;
+}
 function applyBreath(now){
   if(adsT<=0.02) return;
   const steady=(holdBreath&&breathLeft>0)?0.12:1;
@@ -1603,6 +1753,7 @@ function fireGun(now){
     if(hit){ sparkAt(hit.point);
       if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
       else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } }
+    recPitch+=REC_RIFLE[0]*.45; recYaw+=rnd(-1,1)*REC_RIFLE[1]*.45;   // ปืนกลติดลำเด้งเบาๆ
     return;
   }
   const W=WEAPONS[weapon];
@@ -1622,11 +1773,12 @@ function fireGun(now){
   }
   lastFire=now;
   gunRecoil=W.recoil; muzzleUntil=now+(W.mag?90:55);
-  if(W.mag) Snd.sniper(); else Snd.gun();
+  if(W.mag){ Snd.sniper(); boltAt=now; } else Snd.gun();
   const origin=camera.position.clone();
   const dir=aimDir();
   const sp=W.mag ? (scoped?W.spread:W.hipSpread) : W.spread;   // ไม่ส่องกล้อง = เป๋มาก (ตาม Accuracy ต่ำ)
   dir.x+=rnd(-sp,sp); dir.y+=rnd(-sp,sp); dir.normalize();
+  addRecoil();                                                 // 💥 เด้งหลังคำนวณวิถีแล้ว
   const hit=rayTarget(origin,dir,W.mag?4000:900);              // สไนเปอร์ยิงได้ไกลกว่ามาก
   const end=hit? hit.point : origin.clone().addScaledVector(dir,W.mag?2500:700);
   tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05);
@@ -1634,6 +1786,14 @@ function fireGun(now){
   sparkAt(hit.point);
   if(hit.type==='fighter'){ damageFighter(hit.obj,W.dmg,now); Snd.ping(); }
   else if(hit.type==='mother'){ damageMother(W.msDmg); }
+}
+/* 💥 ใส่แรงถอย — เรียก "หลัง" คำนวณวิถีกระสุนแล้ว กระสุนจึงไปตรงที่เล็งไว้ตอนลั่นไก
+   เล็งผ่านกล้องอยู่ = เด้งน้อยลง (พานท้ายชิดไหล่) · กลั้นหายใจช่วยอีกนิด */
+function addRecoil(){
+  const [up,side]=(weapon==='r93')?REC_R93:REC_RIFLE;
+  const steady=(1-0.35*adsT)*((holdBreath&&breathLeft>0)?0.85:1);
+  recPitch+=up*steady;
+  recYaw+=rnd(-side,side)*steady;
 }
 /* 🎯 บรรจุกระสุนใหม่ (R93) — เล่นเสียงลูกเลื่อนแล้วเติมเต็มแม็ก */
 function startReload(now){
@@ -2094,6 +2254,7 @@ function tickPlayer(dt,now){
   }
   tickAds(dt,now);                                // 🎬 ยกปืนเล็ง/ถอยออก + ขอบเลนส์ + หายใจ
   applyBreath(now);
+  applyRecoil(dt);
   if(muzzle) muzzle.material.opacity = now<muzzleUntil?1:0;
   /* ความร้อนปืน */
   if(!firing||overheat) heat=Math.max(0,heat-GUN_COOL*dt);
@@ -2305,6 +2466,7 @@ function tickGunner(dt,now){
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw); camera.rotateX(pitch);
   camera.rotateZ(-clamp(host.obj.rotation.z*.6,-.25,.25));   // เอียงตามลำที่นักบินเลี้ยว
+  applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.3; camera.position.y+=rnd(-1,1)*shake*.3; shake=Math.max(0,shake-dt*2.2); }
   /* ปืนประจำประตู: รัวเหมือนปืนกลติดลำ ไม่โอเวอร์ฮีต */
   if(gunGrp){
@@ -2420,6 +2582,7 @@ function tickHeliFlight(dt,now){
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw); camera.rotateX(pitch);
   camera.rotateZ(-clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30));
+  applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.35; camera.position.y+=rnd(-1,1)*shake*.35; shake=Math.max(0,shake-dt*2.2); }
   if(muzzle) muzzle.material.opacity=now<muzzleUntil?1:0;
   if(phMisLeft<=0&&phMisReloadAt&&now>phMisReloadAt){ phMisLeft=PH_MIS_MAX; phMisReloadAt=0; renderMissiles();
@@ -2501,13 +2664,15 @@ function peerBody(kind,color){
     for(let k=0;k<4;k++){ const bl=new THREE.Mesh(new THREE.BoxGeometry(.26,.06,8.6),bodyM); bl.rotation.y=k*Math.PI/4; rotor.add(bl); }
     rotor.position.y=1.6; g.add(rotor); g.userData.rotor=rotor;
   }else{
-    const uni=new THREE.MeshLambertMaterial({color});
-    const gear=new THREE.MeshLambertMaterial({color:0x3a3d33});
-    const body=new THREE.Mesh(new THREE.BoxGeometry(.62,.86,.36),uni); body.position.y=1.15; g.add(body);
-    const head=new THREE.Mesh(new THREE.SphereGeometry(.21,8,6),new THREE.MeshLambertMaterial({color:0xc79a72})); head.position.y=1.76; g.add(head);
-    const helm=new THREE.Mesh(new THREE.SphereGeometry(.24,8,6,0,TAU,0,Math.PI/2),gear); helm.position.y=1.78; g.add(helm);
-    [-1,1].forEach(sd=>{ const leg=new THREE.Mesh(new THREE.BoxGeometry(.22,.76,.24),uni); leg.position.set(sd*.16,.38,0); g.add(leg); });
-    const rifle=new THREE.Mesh(new THREE.BoxGeometry(.1,.12,1.0),new THREE.MeshLambertMaterial({color:0x22242a})); rifle.position.set(.32,1.3,-.4); g.add(rifle);
+    /* 🪖 รอบ 423: เพื่อนบนพื้นใช้ "โครงข้อต่อ" ชุดเดียวกับหน่วยรบ → เดิน/เล็งได้เหมือนกัน
+       และรองรับโมเดล .glb ของผู้ใช้ด้วย (soldier_b = ชุดของผู้เล่นออนไลน์) */
+    const rig=buildSoldierRig();
+    rig.J.torso.children.forEach(c=>{ if(c.isMesh&&c.material&&c.material.color) c.material=new THREE.MeshLambertMaterial({color}); });
+    g.add(rig.grp); g.userData.rig=rig;
+    loadGlb('img/models/soldier_b.glb',(obj)=>{
+      fitInto(obj,1.8); obj.position.y=0;
+      applySoldierGlb({J:rig.J},obj);
+    });
   }
   return g;
 }
@@ -2565,9 +2730,17 @@ function peerTick(dt,now){
     const p=peers[uid]; if(!p.grp) continue;
     p.cur.x+=(p.tgt.x-p.cur.x)*k; p.cur.y+=(p.tgt.y-p.cur.y)*k; p.cur.z+=(p.tgt.z-p.cur.z)*k;
     let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%TAU+TAU)%TAU-Math.PI; p.yawCur+=dy*k;
+    const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z);
     p.grp.position.set(p.cur.x,p.cur.y,p.cur.z); p.grp.rotation.y=p.yawCur;
     const ro=p.grp.children[0]&&p.grp.children[0].userData.rotor;
     if(ro) ro.rotation.y+=dt*40;
+    /* 🪖 รอบ 423: เพื่อนบนพื้นขยับแขนขาจริง — เดินอยู่=ท่าเดิน · หยุด=ท่าเล็ง */
+    const rig=p.grp.children[0]&&p.grp.children[0].userData?p.grp.children[0].userData.rig:null;
+    if(rig){
+      if(!p.anim) p.anim={J:rig.J,phase:0,lookUp:0,fireT:0,mode:'idle'};
+      p.anim.mode=(moved>0.12)?'walk':(p.kind==='gun'?'aim':'idle');
+      poseSoldier(p.anim,now);
+    }
   }
 }
 /* 🏆 กระดานคะแนนสด — เรา + เพื่อน เรียงตามจำนวนคำที่พิชิตรอบนี้ */
@@ -2722,21 +2895,28 @@ function tickMissiles(dt,now){
 function tickSquad(dt,now){
   squad.forEach(s=>{
     const tgt=fighters.length?fighters[(Math.random()*fighters.length)|0]:null;
-    const aim=tgt?tgt.grp.position:(msOpen&&mother?mother.position:null);
+    const aim=tgt?tgt.grp.position:((msOpen&&msCore)?msCore.position:null);
     if(aim){
       const d=new THREE.Vector3().subVectors(aim,s.grp.position);
       s.grp.rotation.y=Math.atan2(d.x,d.z);
-      s.rifle.rotation.x=-Math.atan2(d.y,Math.hypot(d.x,d.z));
+      /* 🪖 รอบ 423: หันตัว+เงยหน้าตามเป้า แล้วให้ poseSoldier จัดท่าแขน/ลำตัวเอง
+         (เดิมหมุนเฉพาะ "ปืน" ทำให้ปืนลอยแยกจากตัว) */
+      s.lookUp=Math.atan2(d.y,Math.hypot(d.x,d.z));
+      s.mode=s.crouch?'crouch':'aim';
+    }else{
+      s.lookUp=0; s.mode=s.crouch?'crouch':'idle';
     }
     if(now>s.shotAt&&aim){
       s.shotAt=now+SQUAD_GAP*rnd(.6,1.7);
-      const from=s.grp.position.clone().add(new THREE.Vector3(0,1.4,0));
+      s.fireT=1;                                   // 🪖 สะบัดไหล่ตอนลั่นไก
+      const from=s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
       if(Math.random()<0.35){
         if(tgt) damageFighter(tgt,0.5,now);
         else if(msOpen) damageMother(MS_DMG_GUN*0.5);
       }
     }
+    poseSoldier(s,now);
   });
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
@@ -2868,6 +3048,7 @@ function start(){
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
   adsRaw=0; adsT=0; holdBreath=false; breathLeft=1;                             // 🎬 ล้างสถานะเล็ง
+  recPitch=0; recYaw=0; boltAt=0;                                               // 💥 ล้างแรงถอย
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
   renderAmmo(); syncWeaponBtns();
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
@@ -2955,6 +3136,13 @@ window.InvasionWorld={
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     get squad(){return squad.length}, get helis(){return helis.length},
+    /* 🪖 รอบ 423: ตรวจข้อต่อทหาร */
+    get squadRig(){ const s=squad[0]; if(!s) return null;
+      const r={mode:s.mode,lookUp:+(s.lookUp||0).toFixed(3),static:!!s.static,glb:!!s.glb,joints:Object.keys(s.J).length};
+      r.pose={}; Object.keys(s.J).forEach(k=>{ r.pose[k]=[+s.J[k].rotation.x.toFixed(3),+s.J[k].rotation.z.toFixed(3)]; });
+      r.hipsY=+s.J.hips.position.y.toFixed(3); return r; },
+    squadPose(i,mode){ const s=squad[i||0]; if(s){ s.mode=mode; poseSoldier(s,performance.now()); } return s?s.mode:null; },
+    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS,
     get shots(){return fShots.length}, get missiles(){return missiles.length}, get fx(){return fx.length},
     get mother(){return mother}, get camera(){return camera}, get scene(){return scene},
     get renderInfo(){ return {calls:renderer.info.render.calls, tris:renderer.info.render.triangles,
@@ -2986,6 +3174,8 @@ window.InvasionWorld={
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
+    get recoil(){return {pitch:+recPitch.toFixed(5), yaw:+recYaw.toFixed(5)}}, addRecoil, applyRecoil,
+    get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
     get gunPose(){return gunGrp?{p:gunGrp.position.toArray().map(n=>+n.toFixed(3)),
       r:gunGrp.rotation.toArray().slice(0,3).map(n=>+n.toFixed(3)), s:+gunGrp.scale.x.toFixed(3)}:null},
