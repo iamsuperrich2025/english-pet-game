@@ -1227,6 +1227,7 @@ function buildSoldierRig(){
 /* 🧩 เสียบโมเดลจริงเข้าโครง: หา node ตามชื่อใน SOLDIER_PARTS แล้วย้ายไปห้อยใต้ข้อต่อเดิม
    แยกชิ้นไม่ได้ (โมเดลชิ้นเดียว) → แปะทั้งตัวที่สะโพก ยังเห็นเป็นทหาร แค่ไม่ขยับแขนขา */
 function applySoldierGlb(s,obj){
+  s.flipped=faceModelForward(obj);      /* 🧭 จัดให้หันหน้าไป −Z ก่อนเสมอ */
   const found={};
   obj.traverse(function(o){
     if(!o.isMesh) return;
@@ -1307,6 +1308,39 @@ function mergeMeshList(meshes){
     out.push(new THREE.Mesh(g2,mat));
   });
   return out;
+}
+/* 🧭 รอบ 426: หา "ทิศที่ตัวละครหันหน้า" เองจากรูปร่าง แล้วหมุนให้ถูกอัตโนมัติ
+   เหตุผล: Tripo ไม่มีปุ่มตั้งแกนให้ผู้ใช้ — บังคับให้ผู้ใช้จัดทิศเองไม่ได้จริง
+   วิธีดู (2 สัญญาณที่ตรงกันเสมอในคนยืน):
+     · ปลายเท้ายื่นไป "ข้างหน้า" มากกว่าส้นเท้า
+     · เป้สะพายหลัง/ของหลังตัวดันจุดกึ่งกลางลำตัวไป "ข้างหลัง"
+   → เอา z ของกลุ่มเท้า เทียบกับ z กึ่งกลางตัว ถ้าเท้าอยู่หน้ากว่า = โมเดลหันหน้าไป +Z ต้องหมุน 180°
+   (เกมกำหนดให้ตัวละครหันหน้าไป −Z เหมือนกล้องผู้เล่น) */
+function faceModelForward(obj){
+  obj.updateWorldMatrix(true,true);
+  const boxes=[];
+  obj.traverse(function(o){
+    if(!o.isMesh) return;
+    const b=new THREE.Box3().setFromObject(o);
+    if(b.isEmpty()) return;
+    boxes.push({b:b,c:b.getCenter(new THREE.Vector3())});
+  });
+  if(boxes.length<3) return false;
+  const all=new THREE.Box3(); boxes.forEach(function(o){ all.union(o.b); });
+  const H=all.max.y-all.min.y; if(H<=0.001) return false;
+  const bodyZ=(all.min.z+all.max.z)/2;
+  /* กลุ่ม "เท้า" = ชิ้นที่อยู่ต่ำกว่า 15% ของความสูง */
+  const footY=all.min.y+H*0.15;
+  let fz=0,fn=0;
+  boxes.forEach(function(o){ if(o.c.y<footY){ fz+=o.c.z; fn++; } });
+  if(!fn) return false;
+  const feetZ=fz/fn;
+  if(feetZ>bodyZ+H*0.004){        /* เท้าอยู่ทาง +Z = โมเดลหันหน้าไป +Z → ต้องกลับหลัง */
+    obj.rotation.y+=Math.PI;
+    obj.updateWorldMatrix(true,true);
+    return true;
+  }
+  return false;
 }
 function autoRigSoldier(s,obj){
   obj.updateWorldMatrix(true,true);
@@ -3300,7 +3334,7 @@ window.InvasionWorld={
       r.pose={}; Object.keys(s.J).forEach(k=>{ r.pose[k]=[+s.J[k].rotation.x.toFixed(3),+s.J[k].rotation.z.toFixed(3)]; });
       r.hipsY=+s.J.hips.position.y.toFixed(3); return r; },
     squadPose(i,mode){ const s=squad[i||0]; if(s){ s.mode=mode; poseSoldier(s,performance.now()); } return s?s.mode:null; },
-    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP, mergeMeshList,
+    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP, mergeMeshList, faceModelForward,
     get shots(){return fShots.length}, get missiles(){return missiles.length}, get fx(){return fx.length},
     get mother(){return mother}, get camera(){return camera}, get scene(){return scene},
     get renderInfo(){ return {calls:renderer.info.render.calls, tris:renderer.info.render.triangles,
