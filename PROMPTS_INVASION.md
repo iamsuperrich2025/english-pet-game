@@ -9,7 +9,8 @@
 |------|-----------|--------------|
 | `img/models/mothership.glb` | ยานแม่ลำมหึมา (แทนทรงชั่วคราว) | ≤6 MB · ให้ด้านกว้างสุดเป็นแกน X · **ห้ามมีพื้น/ฉากติดมา** |
 | `img/models/alien_fighter.glb` | ยานลูก 1 ลำ (ระบบก๊อปตามจำนวนตัวอักษร) | ≤1.5 MB · หัวยานชี้ไปทาง **−Z** |
-| `img/models/gun_rifle.glb` | ปืนในมือผู้เล่น (มุมมองบุคคลที่ 1) | ≤2 MB · ปากลำกล้องชี้ **−Z** |
+| `img/models/gun_rifle.glb` | ปืนไรเฟิลจู่โจม (มุมมองบุคคลที่ 1) | ≤2 MB · ปากลำกล้องชี้ **−Z** |
+| `img/models/gun_r93.glb` | 🎯 **R93 สไนเปอร์** (ปืนกระบอกที่ 2 · รอบ 419) | ≤2 MB · ปากลำกล้องชี้ **−Z** |
 | `img/invasion/sky.webp` | ท้องฟ้า 360° (equirectangular 2:1) | 4096×2048 |
 | `img/invasion/sand.jpg` | พื้นทราย (ต่อลายไร้รอยต่อ) | 1024² seamless |
 | `img/invasion/wall.jpg` | ผนังบ้านดินเผา (ต่อลายไร้รอยต่อ) | 512² seamless |
@@ -45,6 +46,17 @@ straight magazine, adjustable stock, subtle cyan energy indicator strips on the 
 Military hard-surface design, clean readable silhouette, isolated object, no background,
 no hands, barrel pointing forward.
 ```
+
+## 3️⃣.5 🎯 R93 สไนเปอร์ — `img/models/gun_r93.glb`
+```
+Modern bolt-action sniper rifle, first-person view model, matte grey-green metal receiver with a long
+heavy fluted barrel and muzzle brake, large high-magnification telescopic scope mounted on tall rings,
+straight-pull bolt handle protruding from the right side, dark walnut thumbhole stock with raised
+cheek piece, straight 10-round box magazine, folded bipod under the front barrel. Precision marksman
+weapon, hard-surface realistic design, clean readable silhouette, isolated object, no background,
+no hands, barrel pointing forward.
+```
+> ยังไม่มีไฟล์ = เกมใช้ทรงที่โค้ดสร้างเอง (ลำกล้องยาว + กล้องเล็งใหญ่ + คันรั้งลูกเลื่อน + ขาทราย) ได้ปกติ
 
 ## 4️⃣ ท้องฟ้า 360° — `img/invasion/sky.webp`
 ```

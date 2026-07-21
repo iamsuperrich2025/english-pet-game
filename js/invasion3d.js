@@ -42,6 +42,20 @@ const MS_BEAM_GAP=5200, MS_BEAM_DMG=14;   // ยานแม่ยิงลำ�
 
 /* 🔫 อาวุธผู้เล่น */
 const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
+/* ============================================================
+   🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
+   แปลงสเปกจริงเป็นค่าในเกม:
+     ยิงทีละนัด 50 RPM → หน่วงลูกเลื่อน 1,200ms · แม็ก 10 นัด · ดาเมจ 55 (สูงกว่าไรเฟิลมาก → ยานลูกดับนัดเดียว)
+     Accuracy 28 = ส่ายน้อยมากตอนส่องกล้อง แต่ยิงสะโพก (ไม่ส่อง) จะเป๋ · ความเร็วกระสุน 550 m/s
+   ============================================================ */
+const WEAPONS={
+  rifle:{ key:'rifle', name:'ไรเฟิลจู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,
+          spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:false, tracer:0xffe08a, recoil:1 },
+  r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
+          spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true, scopeFov:16,
+          tracer:0xbfe6ff, recoil:2.6 },
+};
+const SNIPER_SENS=0.34;                 // ส่องกล้องแล้วเล็งช้าลง (ไม่งั้นสะบัดจนเล็งไม่ได้)
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
@@ -166,6 +180,33 @@ const CSS=`
 #inv-wrap.fly #inv-up,#inv-wrap.fly #inv-down{display:block}
 #inv-wrap.fly #inv-run{display:none}
 #inv-up{right:214px;bottom:150px}#inv-down{right:214px;bottom:94px}
+/* 🎯 ปุ่มสลับปืน + ปุ่มส่องกล้อง (R93) */
+#inv-swap{position:absolute;left:120px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
+  font-size:20px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.5);
+  background:radial-gradient(circle at 34% 28%,#ffe9c0,#a9762a)}
+#inv-scope{position:absolute;right:214px;bottom:150px;z-index:6;border:none;border-radius:50%;width:56px;height:56px;
+  font-size:22px;cursor:pointer;display:none;box-shadow:0 4px 12px rgba(0,0,0,.5);
+  background:radial-gradient(circle at 34% 28%,#dff0ff,#3a6d96)}
+#inv-scope.on{background:radial-gradient(circle at 34% 28%,#c8ffd8,#2f8f52)}
+#inv-swap:active,#inv-scope:active{transform:scale(.94)}
+#inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
+/* กระสุนในแม็ก */
+#inv-ammo{margin-top:5px;font-size:13px;font-weight:900;color:#ffe6a8;text-shadow:0 1px 3px #000;display:none}
+#inv-ammo .am-ic{margin-right:4px}
+#inv-ammo .am-max{font-size:11px;color:#bcd0e4;font-weight:700}
+#inv-ammo .am-rl{color:#ffb45a;font-size:12px}
+/* 🔭 ภาพในกล้องส่อง — ขอบดำวงกลม + เส้นเล็งกากบาท (ซ่อนเป้าเล็งปกติ) */
+#inv-scopeov{position:absolute;inset:0;z-index:4;pointer-events:none;display:none}
+#inv-wrap.scoped #inv-scopeov{display:block}
+#inv-wrap.scoped #inv-cross{display:none}
+#inv-scopeov::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 27%, rgba(0,0,0,.55) 31%, #000 40%)}
+#inv-scopeov i{position:absolute;background:rgba(20,30,24,.9)}
+#inv-scopeov i.h{left:22%;right:22%;top:50%;height:1.5px;margin-top:-.75px}
+#inv-scopeov i.v{top:14%;bottom:14%;left:50%;width:1.5px;margin-left:-.75px}
+#inv-scopeov i.m{left:50%;width:1.5px;height:9px;margin-left:-.75px;background:rgba(20,30,24,.75)}
+#inv-scopeov .dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;
+  background:#e63b2a;box-shadow:0 0 5px rgba(230,60,40,.9)}
 /* 🎖️ ปุ่มขึ้นเป็นพลปืนประจำประตู — โผล่เฉพาะตอนมีเฮลิบินอยู่ใกล้ (คุมด้วย JS) */
 #inv-gunner{position:absolute;right:96px;bottom:190px;width:60px;height:60px;font-size:24px;z-index:6;border:none;
   border-radius:50%;color:#fff;font-weight:900;cursor:pointer;display:none;
@@ -197,7 +238,7 @@ const CSS=`
 #inv-chat{left:12px}
 #inv-map{left:66px;background:radial-gradient(circle at 34% 28%,#d8ffd0,#4a9a52)}
 #inv-map:active,#inv-chat:active{transform:scale(.94)}
-#inv-chatbar{position:absolute;left:120px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
+#inv-chatbar{position:absolute;left:174px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
 #inv-chatbar.on{display:flex}
 #inv-chatbar button{border:none;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;
   color:#0e2136;background:linear-gradient(180deg,#e9f4ff,#bcd9f5)}
@@ -251,6 +292,9 @@ const CSS=`
   #inv-run{width:54px;height:54px;font-size:18px;right:112px;bottom:14px}
   #inv-heli{width:56px;height:56px;font-size:23px;bottom:174px;right:16px}
   #inv-gunner{width:54px;height:54px;font-size:21px;right:88px;bottom:174px}
+  #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
+  #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
+  #inv-chatbar{left:158px}
   #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
   #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
   .inv-card{padding:12px 16px}.inv-card h3{font-size:18px}.inv-card p{font-size:12.5px}
@@ -277,6 +321,9 @@ const CSS=`
   #inv-board .bd-h{font-size:9.5px}
   #inv-heli{width:48px;height:48px;font-size:19px;bottom:150px;right:12px}
   #inv-gunner{width:46px;height:46px;font-size:18px;right:70px;bottom:150px}
+  #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
+  #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
+  #inv-chatbar{left:144px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
   #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
@@ -303,6 +350,7 @@ function buildDom(){
   wrapEl.innerHTML=`
     <canvas id="inv-cv"></canvas>
     <div id="inv-vig"></div><div id="inv-hurt"></div><div id="inv-flash"></div>
+    <div id="inv-scopeov"><i class="h"></i><i class="v"></i><i class="m" style="top:38%"></i><i class="m" style="top:58%"></i><span class="dot"></span></div>
     <div id="inv-cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><span class="dot"></span></div>
     <div id="inv-word"></div>
     <div id="inv-target"></div>
@@ -311,6 +359,7 @@ function buildDom(){
       <div class="inv-lb">❤️ พลังชีวิต</div><div class="inv-bar" id="inv-hp"><span></span></div>
       <div class="inv-lb" style="margin-top:5px">🔥 ความร้อนปืน</div><div class="inv-bar" id="inv-heat"><span></span></div>
       <div id="inv-mis"></div>
+      <div id="inv-ammo"></div>
     </div>
     <div id="inv-canopy"><span class="strut sl"></span><span class="strut sr"></span></div>
     <div id="inv-board"></div>
@@ -321,6 +370,8 @@ function buildDom(){
     <button id="inv-heli">🚁</button>
     <button id="inv-up">▲</button>
     <button id="inv-down">▼</button>
+    <button id="inv-swap">🎯</button>
+    <button id="inv-scope">🔭</button>
     <button id="inv-gunner">🎖️</button>
     <button id="inv-map">🗺️</button>
     <button id="inv-chat">💬</button>
@@ -335,10 +386,11 @@ function buildDom(){
       ✨ ยิงครบทุกลำ = ตัวอักษรกะพริบทั้งแถว <b>เกราะยานแม่เปิด</b> → ระดมยิง/ยิงมิสไซล์จนระเบิด = 🪙${REWARD}<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>กดปุ่มเฮลิ = ขับเฮลิคอปเตอร์เอง</b> บินยิงจรวดจากฟ้า! (บังคับเหมือนโลกเฮลิฯ · ทั้งโลกมีได้ 5 ลำ)<br>
+      🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) กด 🔭 ส่องกล้องซูมไกล แม็ก 10 นัด<br>
       🎖️ <b>ทีมเวิร์ก!</b> เดินเข้าใกล้เฮลิที่กำลังบิน แล้วกดปุ่ม 🎖️ = <b>ขึ้นเป็นพลปืนประจำประตู</b> —
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
       <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (▲▼ ไต่ระดับ) · 💬 คุยกับเพื่อน<br>
-      💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R หรือคลิกขวา = มิสไซล์ · Esc ปลดเมาส์<br>
+      💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
       ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
       <button class="inv-btn" id="inv-go">⚔️ เข้าสมรภูมิ!</button>
     </div></div>
@@ -374,6 +426,8 @@ function buildDom(){
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
   gunnerBtn=document.getElementById('inv-gunner');
+  swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
+  ammoEl=document.getElementById('inv-ammo');
   mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
   mapCv=document.getElementById('inv-mapcv'); mapNameEl=document.getElementById('inv-mapname');
   document.getElementById('inv-go').addEventListener('click',()=>{
@@ -430,6 +484,24 @@ const Snd={
   hit(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.18,600,.24); },
   /* ✅ ยิงโดน (ติ๊กสั้นให้รู้ว่าเข้าเป้า) */
+  /* 🎯 R93: เสียงแตกดังก้อง + หางเสียงสะท้อน (ต่างจากปืนกลชัดเจน) */
+  sniper(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='sawtooth'; o.frequency.setValueAtTime(420,t);
+    o.frequency.exponentialRampToValueAtTime(48,t+.22);
+    const g=c.createGain(); g.gain.setValueAtTime(.30,t); g.gain.exponentialRampToValueAtTime(.001,t+.34);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.35);
+    this.noise(t,.30,1500,.26);
+    this.noise(t+.16,.55,700,.10);                    // หางเสียงก้องทุ่ง
+  },
+  /* 🔩 เสียงชักลูกเลื่อน/บรรจุกระสุน */
+  bolt(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    [0,.13].forEach((dt,i)=>{
+      const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(i?260:340,t+dt);
+      o.frequency.exponentialRampToValueAtTime(i?120:150,t+dt+.05);
+      const g=c.createGain(); g.gain.setValueAtTime(.10,t+dt); g.gain.exponentialRampToValueAtTime(.001,t+dt+.07);
+      o.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.08);
+      this.noise(t+dt,.06,3200,.07);
+    }); },
   ping(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(1500,t);
     const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
@@ -553,6 +625,9 @@ let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
 let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
+/* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
+let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
+let swapBtn=null, scopeBtn=null, ammoEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -1107,12 +1182,13 @@ function buildArms(){
   });
   return arms;
 }
-function buildGun(){
+/* 🔫 ทรงไรเฟิลจู่โจม (ของเดิม) */
+function buildRifleModel(){
   const g=new THREE.Group();
   const met=new THREE.MeshPhongMaterial({color:0x2b2f36,shininess:48,flatShading:true});
   const dark=new THREE.MeshPhongMaterial({color:0x16181d,shininess:20});
   const accent=new THREE.MeshBasicMaterial({color:0x3ad4ff});
-  const rec=new THREE.Mesh(new THREE.BoxGeometry(.10,.13,.42),met); rec.position.set(0,0,0); g.add(rec);
+  const rec=new THREE.Mesh(new THREE.BoxGeometry(.10,.13,.42),met); g.add(rec);
   const bar=new THREE.Mesh(new THREE.CylinderGeometry(.024,.028,.52,8),dark);
   bar.rotation.x=Math.PI/2; bar.position.set(0,.012,-.44); g.add(bar);
   const shr=new THREE.Mesh(new THREE.BoxGeometry(.075,.085,.30),met); shr.position.set(0,.012,-.34); g.add(shr);
@@ -1121,10 +1197,64 @@ function buildGun(){
   const mag=new THREE.Mesh(new THREE.BoxGeometry(.062,.20,.10),dark);
   mag.position.set(0,-.14,-.06); mag.rotation.x=.10; g.add(mag);
   const stock=new THREE.Mesh(new THREE.BoxGeometry(.07,.10,.26),met); stock.position.set(0,-.02,.32); g.add(stock);
-  const scope=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.20,8),dark);
-  scope.rotation.x=Math.PI/2; scope.position.set(0,.10,-.12); g.add(scope);
+  const sc=new THREE.Mesh(new THREE.CylinderGeometry(.032,.032,.20,8),dark);
+  sc.rotation.x=Math.PI/2; sc.position.set(0,.10,-.12); g.add(sc);
   const led=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.10),accent); led.position.set(.055,.05,-.20); g.add(led);
   const led2=new THREE.Mesh(new THREE.BoxGeometry(.02,.02,.10),accent); led2.position.set(-.055,.05,-.20); g.add(led2);
+  return g;
+}
+/* 🎯 ทรง R93 สไนเปอร์ — ลำกล้องยาว · กล้องเล็งใหญ่ · คันรั้งลูกเลื่อนดึงตรงด้านขวา · ขาทราย */
+function buildR93Model(){
+  const g=new THREE.Group();
+  const met=new THREE.MeshPhongMaterial({color:0x33383f,shininess:54,flatShading:true});
+  const dark=new THREE.MeshPhongMaterial({color:0x14161a,shininess:26});
+  const wood=new THREE.MeshPhongMaterial({color:0x4a3a2a,shininess:18});
+  const glass=new THREE.MeshBasicMaterial({color:0x8fd8ff});
+  const rec=new THREE.Mesh(new THREE.BoxGeometry(.10,.14,.50),met); g.add(rec);
+  /* ลำกล้องยาว (ยาวกว่าไรเฟิลเกือบเท่าตัว) + ปลอกลดแรงถอย */
+  const bar=new THREE.Mesh(new THREE.CylinderGeometry(.020,.023,.92,10),dark);
+  bar.rotation.x=Math.PI/2; bar.position.set(0,.015,-.70); g.add(bar);
+  const brake=new THREE.Mesh(new THREE.CylinderGeometry(.036,.036,.13,10),met);
+  brake.rotation.x=Math.PI/2; brake.position.set(0,.015,-1.12); g.add(brake);
+  /* กล้องเล็งใหญ่ + เลนส์ 2 ฝั่ง */
+  const scope=new THREE.Mesh(new THREE.CylinderGeometry(.052,.052,.44,12),dark);
+  scope.rotation.x=Math.PI/2; scope.position.set(0,.135,-.16); g.add(scope);
+  [-.38,.06].forEach((z,i)=>{
+    const bell=new THREE.Mesh(new THREE.CylinderGeometry(.066,.052,.10,12),met);
+    bell.rotation.x=Math.PI/2; bell.position.set(0,.135,z); g.add(bell);
+    const lens=new THREE.Mesh(new THREE.CircleGeometry(.058,14),glass);
+    lens.position.set(0,.135,z+(i?.052:-.052)); lens.rotation.y=i?0:Math.PI; g.add(lens);
+  });
+  [-.10,.10].forEach(z=>{                                   // ห่วงยึดกล้อง
+    const ring=new THREE.Mesh(new THREE.BoxGeometry(.07,.09,.05),met);
+    ring.position.set(0,.085,z); g.add(ring);
+  });
+  /* คันรั้งลูกเลื่อน "ดึงตรง" ยื่นออกขวา (เอกลักษณ์ R93) */
+  const boltArm=new THREE.Mesh(new THREE.CylinderGeometry(.016,.016,.17,8),met);
+  boltArm.rotation.z=Math.PI/2; boltArm.position.set(.10,.035,.14); g.add(boltArm);
+  const boltKnob=new THREE.Mesh(new THREE.SphereGeometry(.032,10,8),dark);
+  boltKnob.position.set(.19,.035,.14); g.add(boltKnob); g.userData.bolt=boltKnob;
+  /* ด้ามจับ + แม็ก 10 นัด + พานท้ายไม้ */
+  const grip=new THREE.Mesh(new THREE.BoxGeometry(.062,.20,.085),dark);
+  grip.position.set(0,-.15,.14); grip.rotation.x=-.20; g.add(grip);
+  const mag=new THREE.Mesh(new THREE.BoxGeometry(.058,.17,.13),dark);
+  mag.position.set(0,-.15,-.04); g.add(mag);
+  const stock=new THREE.Mesh(new THREE.BoxGeometry(.072,.155,.40),wood);
+  stock.position.set(0,-.045,.42); g.add(stock);
+  const cheek=new THREE.Mesh(new THREE.BoxGeometry(.076,.05,.22),wood);
+  cheek.position.set(0,.055,.36); g.add(cheek);
+  /* ขาทราย (bipod) พับอยู่ใต้ลำกล้องหน้า */
+  [-1,1].forEach(s=>{
+    const leg=new THREE.Mesh(new THREE.CylinderGeometry(.011,.011,.26,6),met);
+    leg.position.set(s*.045,-.10,-.92); leg.rotation.set(.32,0,s*.22); g.add(leg);
+  });
+  return g;
+}
+function buildGun(){
+  const g=new THREE.Group();
+  /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
+  gunModels.rifle=buildRifleModel(); g.add(gunModels.rifle);
+  gunModels.r93=buildR93Model();     g.add(gunModels.r93); gunModels.r93.visible=false;
   /* ไฟปากลำกล้อง (โผล่ตอนยิง) */
   muzzle=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffd27a,transparent:true,opacity:0,
     blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false}));
@@ -1159,9 +1289,66 @@ function buildGun(){
         m.needsUpdate=true;
       });
     });
-    g.children.slice().forEach(c=>{ if(c!==muzzle && c!==gunArms) g.remove(c); });   // เหลือไฟปากลำกล้อง+แขน
+    g.remove(gunModels.rifle); gunModels.rifle=obj; obj.visible=(weapon==='rifle');
     g.add(obj);
   });
+  /* 🎯 โมเดลจริงของ R93 ถ้าผู้ใช้วางไฟล์ไว้ (prompt อยู่ใน PROMPTS_INVASION.md) */
+  loadGlb('img/models/gun_r93.glb',(obj)=>{
+    fitInto(obj,1.25);                                    // สไนเปอร์ยาวกว่าไรเฟิล
+    obj.traverse(c=>{
+      if(!c.isMesh||!c.material) return;
+      (Array.isArray(c.material)?c.material:[c.material]).forEach(m=>{
+        if(typeof m.roughness==='number') m.roughness=Math.min(m.roughness,.5);
+        if(m.emissive) m.emissive.setRGB(.13,.125,.12);
+        m.needsUpdate=true;
+      });
+    });
+    g.remove(gunModels.r93); gunModels.r93=obj; obj.visible=(weapon==='r93');
+    g.add(obj);
+  });
+}
+/* สลับปืน (เฉพาะตอนเดินเท้า — บนเฮลิใช้ปืนกลติดลำ) */
+function swapWeapon(){
+  if(inHeli) return;
+  setScoped(false);
+  weapon=(weapon==='rifle')?'r93':'rifle';
+  if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
+  if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
+  reloadAt=0; heat=0; overheat=false;
+  renderHeat(); renderAmmo(); syncWeaponBtns();
+  const W=WEAPONS[weapon];
+  toastBan(`${W.icon} <b>${W.name}</b><br><span class="ib-sub">${weapon==='r93'
+    ? 'ยิงทีละนัด แรงมาก — กด 🔭 ส่องกล้องก่อนยิงจะแม่นสุด · แม็ก 10 นัด'
+    : 'ยิงรัวต่อเนื่อง เหมาะกับเป้าใกล้ๆ'}</span>`,2200);
+  if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+}
+/* เปิด/ปิดกล้องส่อง (ADS) — ซูมด้วยการลด FOV + ลดความไวการเล็ง */
+function setScoped(on){
+  const W=WEAPONS[weapon];
+  const want=!!on && !!W.scope && !inHeli && !riding;
+  if(want===scoped) return;
+  scoped=want;
+  camera.fov=scoped?W.scopeFov:FOV;
+  camera.updateProjectionMatrix();
+  wrapEl.classList.toggle('scoped',scoped);
+  if(scopeBtn) scopeBtn.classList.toggle('on',scoped);
+  if(scoped && typeof sfx!=='undefined'&&sfx.select) sfx.select();
+}
+function renderAmmo(){
+  if(!ammoEl) return;
+  const W=WEAPONS[weapon];
+  /* บนเฮลิ/เป็นพลปืนใช้ปืนกลติดลำ ไม่มีแม็ก → ซ่อนช่องกระสุน
+     (ถ้าปล่อยโชว์ แถบสถานะจะสูงขึ้นจนไปชนกระดานคะแนนบนจอเตี้ย — เจอจริงตอนเทสต์) */
+  if(!W.mag || inHeli || riding){ ammoEl.style.display='none'; return; }
+  ammoEl.style.display='block';
+  const reloading=reloadAt>0;
+  ammoEl.innerHTML=`<span class="am-ic">${W.icon}</span>`+
+    (reloading?'<b class="am-rl">กำลังบรรจุ…</b>':`<b>${r93Ammo}</b><span class="am-max">/${W.mag}</span>`);
+}
+function syncWeaponBtns(){
+  const W=WEAPONS[weapon];
+  if(swapBtn) swapBtn.textContent=(weapon==='rifle')?'🎯':'🔫';   // โชว์ปืนที่ "จะสลับไป"
+  if(scopeBtn) scopeBtn.style.display=(W.scope && !inHeli && !riding)?'block':'none';
 }
 
 /* ============================================================
@@ -1253,22 +1440,48 @@ function fireGun(now){
       else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } }
     return;
   }
-  if(overheat || now-lastFire<GUN_GAP) return;
+  const W=WEAPONS[weapon];
+  /* 🎯 R93: ยิงทีละนัด · ต้องรอลูกเลื่อน · มีแม็ก 10 นัด · หมดแม็กบรรจุใหม่อัตโนมัติ */
+  if(W.mag){
+    if(reloadAt) return;                                   // กำลังบรรจุอยู่
+    if(now-lastFire<W.gap) return;                         // ยังชักลูกเลื่อนไม่เสร็จ
+    if(r93Ammo<=0){ startReload(now); return; }
+    if(!W.auto && firedThisPress) return;                  // ยิงทีละนัด: ต้องปล่อยนิ้วก่อนถึงยิงใหม่
+    firedThisPress=true;
+    r93Ammo--; renderAmmo();
+    if(r93Ammo<=0) startReload(now);
+  }else{
+    if(overheat || now-lastFire<W.gap) return;
+    heat=Math.min(100,heat+W.heat);
+    if(heat>=100){ overheat=true; toastBan('🔥 ปืนร้อนจัด! รอสักครู่',700); }
+  }
   lastFire=now;
-  heat=Math.min(100,heat+GUN_HEAT);
-  if(heat>=100){ overheat=true; toastBan('🔥 ปืนร้อนจัด! รอสักครู่',700); }
-  gunRecoil=1; muzzleUntil=now+55;
-  Snd.gun();
+  gunRecoil=W.recoil; muzzleUntil=now+(W.mag?90:55);
+  if(W.mag) Snd.sniper(); else Snd.gun();
   const origin=camera.position.clone();
   const dir=aimDir();
-  dir.x+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.y+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.normalize();
-  const hit=rayTarget(origin,dir,900);
-  const end=hit? hit.point : origin.clone().addScaledVector(dir,700);
-  tracer(origin.clone().addScaledVector(dir,3),end,0xffe08a,.05);
+  const sp=W.mag ? (scoped?W.spread:W.hipSpread) : W.spread;   // ไม่ส่องกล้อง = เป๋มาก (ตาม Accuracy ต่ำ)
+  dir.x+=rnd(-sp,sp); dir.y+=rnd(-sp,sp); dir.normalize();
+  const hit=rayTarget(origin,dir,W.mag?4000:900);              // สไนเปอร์ยิงได้ไกลกว่ามาก
+  const end=hit? hit.point : origin.clone().addScaledVector(dir,W.mag?2500:700);
+  tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05);
   if(!hit) return;
   sparkAt(hit.point);
-  if(hit.type==='fighter'){ damageFighter(hit.obj,GUN_DMG,now); Snd.ping(); }
-  else if(hit.type==='mother'){ damageMother(MS_DMG_GUN); }
+  if(hit.type==='fighter'){ damageFighter(hit.obj,W.dmg,now); Snd.ping(); }
+  else if(hit.type==='mother'){ damageMother(W.msDmg); }
+}
+/* 🎯 บรรจุกระสุนใหม่ (R93) — เล่นเสียงลูกเลื่อนแล้วเติมเต็มแม็ก */
+function startReload(now){
+  const W=WEAPONS[weapon];
+  if(!W.mag || reloadAt) return;
+  reloadAt=now+W.reload;
+  renderAmmo();
+  Snd.bolt();
+  toastBan('🎯 <b>บรรจุกระสุนใหม่…</b>',900);
+}
+function tickReload(now){
+  if(!reloadAt || now<reloadAt) return;
+  reloadAt=0; r93Ammo=WEAPONS[weapon].mag||0; renderAmmo(); Snd.bolt();
 }
 /* สร้างมิสไซล์นำวิถี 1 ลูก (side = เยื้องซ้าย/ขวาจากปากกระบอก · heli = ดาเมจแรงกว่า) */
 function launchMissile(now,side,heli){
@@ -1576,7 +1789,8 @@ function bindInput(){
     for(const t of e.changedTouches){
       if(t.identifier===joy.id){ moveJoy(t); e.preventDefault(); }
       else if(t.identifier===lookId){
-        yaw-=(t.clientX-lookX)*PAD_SENS; pitch-=(t.clientY-lookY)*PAD_SENS;
+        const sc=scoped?SNIPER_SENS:1;
+        yaw-=(t.clientX-lookX)*PAD_SENS*sc; pitch-=(t.clientY-lookY)*PAD_SENS*sc;
         pitch=clamp(pitch,PITCH_MIN,PITCH_MAX);
         lookX=t.clientX; lookY=t.clientY; e.preventDefault();
       }
@@ -1597,7 +1811,7 @@ function bindInput(){
     el.addEventListener('mouseup',()=>off&&off());
     el.addEventListener('mouseleave',()=>off&&off());
   };
-  hold(fireBtn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; });
+  hold(fireBtn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });
   rocketBtn.addEventListener('click',()=>fireMissile(performance.now()));
   runBtn.addEventListener('click',()=>{ isRun=!isRun; runBtn.classList.toggle('on',isRun); });
   /* 🚁 ขึ้น/ลงเฮลิ + ไต่ระดับ (กดค้าง) */
@@ -1611,6 +1825,9 @@ function bindInput(){
   heliBtn.addEventListener('click',()=>setTimeout(syncHeliBtn,0));
   gunnerBtn.addEventListener('click',()=>setTimeout(syncHeliBtn,0));
   gunnerBtn.addEventListener('click',()=>{ resumeAudio(); boardGunner(); });
+  /* 🎯 สลับปืน + ส่องกล้อง */
+  swapBtn.addEventListener('click',()=>{ resumeAudio(); swapWeapon(); });
+  scopeBtn.addEventListener('click',()=>{ resumeAudio(); setScoped(!scoped); });
   hold(upBtn,()=>{ phClimb=1; },()=>{ phClimb=0; });
   hold(downBtn,()=>{ phClimb=-1; },()=>{ phClimb=0; });
   /* 💬 แชทสำเร็จรูป */
@@ -1644,13 +1861,14 @@ function bindInput(){
     resumeAudio();
     if(document.pointerLockElement!==cvEl){ cvEl.requestPointerLock&&cvEl.requestPointerLock(); return; }
     if(e.button===0) firing=true;
-    else if(e.button===2) fireMissile(performance.now());
+    else if(e.button===2){ if(WEAPONS[weapon].scope && !inHeli && !riding) setScoped(!scoped); else fireMissile(performance.now()); }
   });
-  window.addEventListener('mouseup',()=>{ firing=false; });
+  window.addEventListener('mouseup',()=>{ firing=false; firedThisPress=false; });
   cvEl.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('mousemove',e=>{
     if(!running||document.pointerLockElement!==cvEl) return;
-    yaw-=e.movementX*LOOK_SENS; pitch-=e.movementY*LOOK_SENS;
+    const sc=scoped?SNIPER_SENS:1;
+    yaw-=e.movementX*LOOK_SENS*sc; pitch-=e.movementY*LOOK_SENS*sc;
     pitch=clamp(pitch,PITCH_MIN,PITCH_MAX);
   });
 }
@@ -1885,11 +2103,11 @@ function boardGunner(){
   if(inHeli||riding) return;
   const r=nearestRideable();
   if(!r){ toastBan('🎖️ <b>ไม่มีเฮลิใกล้ๆ</b><br><span class="ib-sub">เดินเข้าไปใกล้ลำที่กำลังบินก่อนนะ</span>',1800); return; }
-  riding=r.key;
+  riding=r.key; setScoped(false);
   const p=ridePos(r); px=p.x; py=p.y; pz=p.z;
   wrapEl.classList.add('fly','gunner');
   if(gunGrp) gunGrp.visible=true;                    // พลปืนถือปืนอยู่ในมือ (ต่างจากนักบินที่ไม่เห็นปืน)
-  firing=false; heat=0; overheat=false; renderHeat(); renderMissiles();
+  firing=false; heat=0; overheat=false; renderHeat(); renderMissiles(); renderAmmo(); syncWeaponBtns();
   Snd.startRotor();
   toastBan(`🎖️ <b>ขึ้นเป็นพลปืนประจำประตูแล้ว!</b><br><span class="ib-sub">${r.bot?'ลำของหน่วยพันธมิตร':'ลำของเพื่อน'} — เล็งยิงได้รอบทิศขณะนักบินพาบิน · กด 🪂 เพื่อกระโดดลง</span>`,3000);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
@@ -1902,6 +2120,7 @@ function dismountGunner(silent){
   py=terrainH(px,pz)+EYE;                            // กระโดดลงถึงพื้นตรงนั้น
   misLeft=MIS_MAX; misReloadAt=0; renderMissiles();
   Snd.stopRotor();
+  syncWeaponBtns(); renderAmmo();
   if(!silent) toastBan('🪂 <b>กระโดดลงจากเฮลิแล้ว</b>',1500);
   netSend(true);
 }
@@ -1953,14 +2172,14 @@ function enterHeli(){
     if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
     return;
   }
-  inHeli=true;
+  inHeli=true; setScoped(false);
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
   py=Math.max(py+18, terrainH(px,pz)+HELI_SKID+16);        // ยกตัวขึ้นจากพื้น
   if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
   firing=false; heat=0; overheat=false; renderHeat();
-  renderMissiles(); syncBotHelis();
+  renderMissiles(); renderAmmo(); syncWeaponBtns(); syncBotHelis();
   Snd.startRotor();
   toastBan('🚁 <b>ขึ้นเฮลิคอปเตอร์แล้ว!</b><br><span class="ib-sub">บังคับเหมือนโลกเฮลิฯ: W/S เดินหน้า-ถอย · A/D สไลด์ · Q/E หันลำ · ▲/Space ขึ้น · ▼/Shift ลง<br>แตะพื้นเบาๆ = ลงจอด · 🔫 ปืนกล · 🚀 จรวดชุดคู่ · 🪂 ลงจากเครื่อง</span>',3200);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
@@ -1972,6 +2191,7 @@ function exitHeli(){
   if(gunGrp) gunGrp.visible=true;
   py=terrainH(px,pz)+EYE; phClimb=0;
   misLeft=MIS_MAX; misReloadAt=0; renderMissiles(); syncBotHelis();
+  syncWeaponBtns(); renderAmmo();
   Snd.stopRotor();
   toastBan('🪂 <b>ลงพื้นแล้ว</b> — กลับมาเป็นทหารราบ',1500);
 }
@@ -2413,6 +2633,7 @@ function frame(dt,now){
   peerTick(dt,now);                 // 🌐 ขยับตัวเพื่อนออนไลน์ให้ลื่น
   applyShared();                    // 🤝 รวมผลงานทุกคน → สู้ยานแม่ลำเดียวกัน
   netSend(false);                   // 🌐 ส่งตำแหน่งเราขึ้น DB
+  tickReload(now);                  // 🎯 บรรจุกระสุน R93
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickFx(dt);
   renderer.render(scene,camera);
@@ -2476,6 +2697,9 @@ function start(){
   Object.keys(peers).forEach(dropPeer); myChat=null; boardSig='';
   battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
+  weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
+  setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
+  renderAmmo(); syncWeaponBtns();
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
@@ -2502,6 +2726,8 @@ function start(){
     else if(k==='e') keys.e=true;      // 🚁 หันลำขวา
     else if(k==='r'&&!e.repeat) fireMissile(performance.now());
     else if(k==='h'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
+    else if(k==='f'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
+    else if(k==='g'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
     else if(k==='escape'){ unlockMouse(); exitBox.classList.add('on'); }
     if(['w','a','s','d',' '].includes(k)) e.preventDefault();
   };
@@ -2534,7 +2760,8 @@ function exitWorld(){
   Snd.stopHum(); Snd.stopRotor();
   netLeave();                                           // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
-  inHeli=false; riding=null; wrapEl.classList.remove('on','fly','gunner');
+  inHeli=false; riding=null; setScoped(false); wrapEl.classList.remove('on','fly','gunner','scoped');
+  if(camera){ camera.fov=FOV; camera.updateProjectionMatrix(); }
   exitBox.classList.remove('on');
   if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
   saveState();
@@ -2579,6 +2806,11 @@ window.InvasionWorld={
     openSpawnMap, applySpawnPick, drawSpawnMap, safeSpawn, zoneName,
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
+    /* 🎯 รอบ 419: R93 */
+    get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
+    get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
+    get fov(){return camera.fov}, get weaponBtns(){return {swap:swapBtn.textContent,
+      scopeShown:scopeBtn.style.display==='block', ammoText:ammoEl.innerText.replace(/\s+/g,' ')}},
     get gunnerBtnShown(){return gunnerBtn && gunnerBtn.style.display==='block'},
     get gunnerClass(){return wrapEl.classList.contains('gunner')},
     get mapPick(){return mapPick}, set mapPick(v){mapPick=v},
