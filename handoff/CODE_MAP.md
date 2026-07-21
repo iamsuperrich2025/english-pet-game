@@ -173,49 +173,52 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (1,832 บรรทัด · 105 รายการ)
+## js/invasion3d.js (2,113 บรรทัด · 118 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
-- 14-59 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
-- 60-307 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
-- 308-386 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
-- 387-461 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
-- 462-485 🌍 สถานะฉาก
-- 486-505 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้จะเอาของจริงมาใส่ทีหลัง)
-- 506-586 🏜️ สร้างฉากทะเลทราย + เมือง
-- 587-677 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
-- 678-712 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
-- 713-765 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
-- 766-802 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
-- 803-868 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
-- 869-971 🎯 ระบบยิงของผู้เล่น
-- 972-1030 ⚔️ ดาเมจ / เงื่อนไขชนะ
-- 1031-1075 📖 คำศัพท์ + รอบเล่น
-- 1076-1127 🖥️ HUD
-- 1128-1211 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
-- 1212-1282 🚶 ผู้เล่น + AI + ลูป
-- 1283-1346 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
-- 1347-1659 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 1660-1690 🔁 ลูปหลัก
-- 1691-1832 ▶️ เข้า/ออกโลก
+- 14-60 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
+- 61-313 🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
+- 314-392 🔊 เสียงสังเคราะห์ Web Audio (ปลอดลิขสิทธิ์ 100%)
+- 393-467 🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
+- 468-491 🌍 สถานะฉาก
+- 492-541 📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
+- 542-623 🏜️ สร้างฉากทะเลทราย + เมือง
+- 624-794 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (ผู้ใช้ส่งภาพอ้างอิง Delta Force)
+- 795-886 🛸 ยานแม่ลำมหึมา — ทรงลิ่มเหลี่ยมมืด + หนาม + ช่องตัวอักษร (สไตล์ ID4)
+- 887-921 👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
+- 922-976 👥 พันธมิตร — หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์
+- 977-1070 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
+- 1071-1136 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
+- 1137-1239 🎯 ระบบยิงของผู้เล่น
+- 1240-1298 ⚔️ ดาเมจ / เงื่อนไขชนะ
+- 1299-1343 📖 คำศัพท์ + รอบเล่น
+- 1344-1395 🖥️ HUD
+- 1396-1479 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
+- 1480-1553 🚶 ผู้เล่น + AI + ลูป
+- 1554-1617 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
+- 1618-1930 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 1931-1962 🔁 ลูปหลัก
+- 1963-2113 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
-REWARD:17 · WORLD:18 · EYE:19 · LOOK_SENS:20 · PITCH_MIN:21 · MS_Y:27
-MS_HP:28 · MS_DMG_GUN:29 · F_HP:32 · F_SHOT_GAP:33 · MS_BEAM_GAP:34 · GUN_GAP:37
-MIS_MAX:38 · PLAYER_HP:39 · SQUAD_N:42 · SQUAD_GAP:43 · PH_ACCEL:46 · PH_GUN_GAP:47
-PH_MIS_MAX:48 · NET_SEND_MS:51 · CHAT_MS:52 · CHAT_PRESETS:53 · PEER_COLORS:54 · TAU:56
-CSS:63 · buildDom:240 · resumeAudio:385 · tryTex:392 · letterPanelTex:400 · letterSpriteTex:416
-sandTex:426 · wallTex:447 · loadGlb:490 · fitInto:497 · buildTerrain:509 · buildTown:523
-buildMothership:591 · layoutLetterPanels:654 · setLetterLit:671 · makeFighter:681 · makeSoldier:717 · makeHeli:736
-buildGun:770 · boom:806 · sparkAt:832 · tracer:839 · tickFx:850 · aimDir:872
-fireGun:879 · launchMissile:910 · fireMissile:925 · lockTarget:941 · rayTarget:951 · raySphere:964
-damageFighter:975 · openMothership:997 · damageMother:1006 · killMother:1012 · flashScreen:1025 · pickWord:1034
-startWave:1047 · completeWord:1059 · renderWord:1079 · renderTarget:1088 · renderCoins:1099 · renderHp:1100
-renderHeat:1106 · renderMissiles:1112 · toastBan:1121 · bindInput:1131 · moveJoy:1202 · unlockMouse:1210
-tickPlayer:1215 · hurtPlayer:1266 · enterHeli:1288 · exitHeli:1302 · tickHeliFlight:1312 · netReady:1352
-netJoin:1356 · netSend:1369 · peerColor:1381 · nameSprite:1383 · peerBody:1394 · buildPeer:1415
-onPeer:1423 · dropPeer:1442 · netLeave:1448 · peerTick:1454 · renderBoard:1467 · sendChat:1482
-showPeerBubble:1489 · removePeerBubble:1495 · tickFighters:1501 · tickMother:1528 · spawnAlienShot:1549 · tickAlienShots:1561
-tickMissiles:1576 · tickSquad:1608 · tickHelis:1629 · fit:1663 · tick:1669 · frame:1677
-build:1694 · start:1727 · exitWorld:1782
+REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
+MS_Y:28 · MS_HP:29 · MS_DMG_GUN:30 · F_HP:33 · F_SHOT_GAP:34 · MS_BEAM_GAP:35
+GUN_GAP:38 · MIS_MAX:39 · PLAYER_HP:40 · SQUAD_N:43 · SQUAD_GAP:44 · PH_ACCEL:47
+PH_GUN_GAP:48 · PH_MIS_MAX:49 · NET_SEND_MS:52 · CHAT_MS:53 · CHAT_PRESETS:54 · PEER_COLORS:55
+TAU:57 · CSS:64 · buildDom:246 · resumeAudio:391 · tryTex:398 · letterPanelTex:406
+letterSpriteTex:422 · sandTex:432 · wallTex:453 · loadGlb:500 · tameGlbMaterials:521 · fitInto:533
+buildTerrain:545 · buildTown:559 · STREET_Z0:629 · instancer:633 · buildWarStreet:647 · sandbagWalls:752
+squadCoverSpots:760 · buildDustMotes:770 · tickDust:781 · buildMothership:799 · layoutLetterPanels:862 · setLetterLit:880
+makeFighter:890 · makeSoldier:926 · makeHeli:947 · GUN_POS:988 · GUN_ROT:989 · GUN_SCALE:990
+buildArms:992 · buildGun:1014 · boom:1074 · sparkAt:1100 · tracer:1107 · tickFx:1118
+aimDir:1140 · fireGun:1147 · launchMissile:1178 · fireMissile:1193 · lockTarget:1209 · rayTarget:1219
+raySphere:1232 · damageFighter:1243 · openMothership:1265 · damageMother:1274 · killMother:1280 · flashScreen:1293
+pickWord:1302 · startWave:1315 · completeWord:1327 · renderWord:1347 · renderTarget:1356 · renderCoins:1367
+renderHp:1368 · renderHeat:1374 · renderMissiles:1380 · toastBan:1389 · bindInput:1399 · moveJoy:1470
+unlockMouse:1478 · tickPlayer:1483 · hurtPlayer:1537 · enterHeli:1559 · exitHeli:1573 · tickHeliFlight:1583
+netReady:1623 · netJoin:1627 · netSend:1640 · peerColor:1652 · nameSprite:1654 · peerBody:1665
+buildPeer:1686 · onPeer:1694 · dropPeer:1713 · netLeave:1719 · peerTick:1725 · renderBoard:1738
+sendChat:1753 · showPeerBubble:1760 · removePeerBubble:1766 · tickFighters:1772 · tickMother:1799 · spawnAlienShot:1820
+tickAlienShots:1832 · tickMissiles:1847 · tickSquad:1879 · tickHelis:1900 · fit:1934 · tick:1940
+frame:1948 · build:1966 · start:2005 · exitWorld:2061
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
@@ -291,7 +294,7 @@ ONLINE_RATE:775 · onlineEarnActive:776 · onlineEarnTick:780 · onlineEarnFlush
 ORDER_MAX:844 · ORDER_LIFE_MS:845 · ORDER_GAP_MIN_MS:846 · ORDER_GAP_SPAN_MS:847 · ORDER_TIER_WEIGHT:848 · newOrder:849
 orderTick:862 · careTick:870 · expNeed:951 · addExp:956 · addRP:976
 
-## js/ui.js (7,009 บรรทัด · 281 รายการ)
+## js/ui.js (7,010 บรรทัด · 281 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-152 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 153-478 🆕 New Word (รอบ 116): คำศัพท์ใหม่ 1 คำ/การ login ตามระดับชั้น
@@ -329,17 +332,17 @@ orderTick:862 · careTick:870 · expNeed:951 · addExp:956 · addRP:976
 - 4918-5108 🚗 การ์ดตั๋วโลกขับรถกำแพงเพชร (รอบ 113) — ซื้อได้เมื่อมีตั๋วโดรน FPV
 - 5109-5201 ⚽ การ์ดตั๋วโลกสนามฟุตบอล (รอบ 196) — ซื้อได้เมื่อมีตั๋วขับรถ
 - 5202-5297 🏍️ การ์ดตั๋วโลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) — ซื้อได้เมื่อมีตั๋วขับรถ
-- 5298-5394 🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
-- 5395-5546 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 5547-5716 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 5717-5726 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 5727-5749 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 5750-5900 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 5901-6804 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 6805-6865 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 6866-6902 เลเวลอัพ (รายตัว)
-- 6903-6972 สถิติผลการเรียนรู้
-- 6973-7009 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 5298-5395 🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
+- 5396-5547 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 5548-5717 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 5718-5727 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 5728-5750 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 5751-5901 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 5902-6805 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 6806-6866 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 6867-6903 เลเวลอัพ (รายตัว)
+- 6904-6973 สถิติผลการเรียนรู้
+- 6974-7010 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · lobbyBlk:81 · caretakerFigureHTML:87
 footAlign:97 · heroRankBgHTML:125 · NEW_WORD_MS:159 · newWordNext:165 · renderNewWord:176 · alignNewWord:203
@@ -377,17 +380,17 @@ advHealClick:4591 · buyTicket:4611 · renderHauntCard:4637 · buyHauntTicket:46
 enterHeli3D:4800 · renderDroneCard:4822 · buyDroneTicket:4877 · enterDrone3D:4900 · renderDriveCard:4923 · buyDriveTicket:4997
 enterDrive3D:5020 · pickDriveMap:5055 · enterMotoMapAsCar:5091 · renderSoccerCard:5113 · buySoccerTicket:5161 · enterSoccer3D:5184
 renderMotoCard:5207 · buyMotoTicket:5256 · enterMoto3D:5279 · renderInvasionCard:5302 · INVASION_REWARD:5351 · buyInvasionTicket:5353
-enterInvasion3D:5377 · WORLD3D:5401 · gotoRobotShop:5412 · scrollShopCardIntoView:5417 · railWorldClick:5420 · renderRailWorlds:5441
-tinvNoticeHTML:5500 · openTinvPicker:5508 · fruitCountdown:5552 · renderFarmCard:5564 · renderFarmClock:5639 · buyFruit:5655
-sellFruit:5675 · sellAllFruit:5696 · collectImg:5725 · renderFactoryCard:5731 · renderMarketCard:5754 · updateWishBadge:5810
-openWishlistDialog:5821 · bindStripArrows:5866 · renderMarketBrowse:5878 · carImg:5907 · renderVehicleShop:5908 · CS_CYCLE_MS:5959
-carInteriorImg:5960 · carStatHtml:5962 · renderCarShowroom:5969 · csShowBig:5995 · csInit:6022 · RS_CYCLE_MS:6045
-robotImg:6046 · renderRobotShop:6047 · rsShowBig:6069 · rsInit:6090 · buyRobot:6109 · enterMecha3D:6131
-pickMechaRobot:6152 · pickDriveCar:6184 · openCarBuyDialog:6227 · buyCarInsurance:6288 · payCarLoanMonthly:6307 · payCarLoanFull:6319
-carDriveBlock:6338 · gotoVehicleShop:6343 · gotoMyStock:6348 · showNeedCarDialog:6354 · craftDiscount:6366 · renderFactory:6369
-renderOrdersUI:6431 · startProduce:6450 · buyCollectible:6478 · cancelProduce:6506 · deliverOrder:6520 · renderOrderClock:6537
-renderCollectMine:6547 · openListDialog:6589 · cancelListing:6642 · buyMarketItem:6665 · showCollectReveal:6692 · buyAC:6730
-openHomeShop:6749 · renderPetShop:6808 · showLevelUp:6869 · renderStats:6906 · showTeacherCard:6977
+enterInvasion3D:5377 · WORLD3D:5402 · gotoRobotShop:5413 · scrollShopCardIntoView:5418 · railWorldClick:5421 · renderRailWorlds:5442
+tinvNoticeHTML:5501 · openTinvPicker:5509 · fruitCountdown:5553 · renderFarmCard:5565 · renderFarmClock:5640 · buyFruit:5656
+sellFruit:5676 · sellAllFruit:5697 · collectImg:5726 · renderFactoryCard:5732 · renderMarketCard:5755 · updateWishBadge:5811
+openWishlistDialog:5822 · bindStripArrows:5867 · renderMarketBrowse:5879 · carImg:5908 · renderVehicleShop:5909 · CS_CYCLE_MS:5960
+carInteriorImg:5961 · carStatHtml:5963 · renderCarShowroom:5970 · csShowBig:5996 · csInit:6023 · RS_CYCLE_MS:6046
+robotImg:6047 · renderRobotShop:6048 · rsShowBig:6070 · rsInit:6091 · buyRobot:6110 · enterMecha3D:6132
+pickMechaRobot:6153 · pickDriveCar:6185 · openCarBuyDialog:6228 · buyCarInsurance:6289 · payCarLoanMonthly:6308 · payCarLoanFull:6320
+carDriveBlock:6339 · gotoVehicleShop:6344 · gotoMyStock:6349 · showNeedCarDialog:6355 · craftDiscount:6367 · renderFactory:6370
+renderOrdersUI:6432 · startProduce:6451 · buyCollectible:6479 · cancelProduce:6507 · deliverOrder:6521 · renderOrderClock:6538
+renderCollectMine:6548 · openListDialog:6590 · cancelListing:6643 · buyMarketItem:6666 · showCollectReveal:6693 · buyAC:6731
+openHomeShop:6750 · renderPetShop:6809 · showLevelUp:6870 · renderStats:6907 · showTeacherCard:6978
 
 ## js/util.js (727 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
