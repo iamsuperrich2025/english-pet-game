@@ -52,10 +52,14 @@ const WEAPONS={
   rifle:{ key:'rifle', name:'ไรเฟิลจู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,
           spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:false, tracer:0xffe08a, recoil:1 },
   r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
-          spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true, scopeFov:16,
+          spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true, magnify:6,
           tracer:0xbfe6ff, recoil:2.6 },
 };
 const SNIPER_SENS=0.34;                 // ส่องกล้องแล้วเล็งช้าลง (ไม่งั้นสะบัดจนเล็งไม่ได้)
+/* 🔭 รอบ 420: กล้องแบบ Picture-in-Picture (ผู้ใช้สั่ง) — "ในเลนส์ขยาย · นอกเลนส์เห็นปกติ"
+   ทำโดยเรนเดอร์ฉาก 2 รอบต่อเฟรม: รอบแรกมุมมองปกติเต็มจอ → รอบสองมุมแคบเฉพาะวงกลมกลางจอ
+   (ต่างจากเกมทั่วไปที่ซูมทั้งหน้าจอ — แบบนี้ยังเห็นภัยรอบตัวได้) */
+const SCOPE_R=0.30;                     // รัศมีเลนส์ = สัดส่วนของด้านสั้นของจอ
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
@@ -196,15 +200,18 @@ const CSS=`
 #inv-ammo .am-max{font-size:11px;color:#bcd0e4;font-weight:700}
 #inv-ammo .am-rl{color:#ffb45a;font-size:12px}
 /* 🔭 ภาพในกล้องส่อง — ขอบดำวงกลม + เส้นเล็งกากบาท (ซ่อนเป้าเล็งปกติ) */
+/* 🔭 หน้ากากกล้อง PiP — ดำนอกวงเลนส์ (ขนาดตั้งด้วย JS ให้ตรงกับ viewport ที่เรนเดอร์จริง)
+   ⚠️ ห้ามใส่พื้นหลังทึบในวง! ภาพขยายอยู่ "บน canvas" ใต้ชั้นนี้ ถ้าทึบจะบังภาพในเลนส์ทั้งหมด */
 #inv-scopeov{position:absolute;inset:0;z-index:4;pointer-events:none;display:none}
 #inv-wrap.scoped #inv-scopeov{display:block}
 #inv-wrap.scoped #inv-cross{display:none}
-#inv-scopeov::before{content:"";position:absolute;inset:0;
-  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 27%, rgba(0,0,0,.55) 31%, #000 40%)}
-#inv-scopeov i{position:absolute;background:rgba(20,30,24,.9)}
-#inv-scopeov i.h{left:22%;right:22%;top:50%;height:1.5px;margin-top:-.75px}
-#inv-scopeov i.v{top:14%;bottom:14%;left:50%;width:1.5px;margin-left:-.75px}
-#inv-scopeov i.m{left:50%;width:1.5px;height:9px;margin-left:-.75px;background:rgba(20,30,24,.75)}
+#inv-scopeov .so-mask{position:absolute;inset:0}
+#inv-scopeov .so-ring{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  border-radius:50%;overflow:hidden;box-shadow:0 0 0 3px rgba(12,16,20,.95),0 0 26px 8px rgba(0,0,0,.55) inset}
+#inv-scopeov i{position:absolute;background:rgba(16,26,20,.92)}
+#inv-scopeov i.h{left:6%;right:6%;top:50%;height:1.5px;margin-top:-.75px}
+#inv-scopeov i.v{top:6%;bottom:6%;left:50%;width:1.5px;margin-left:-.75px}
+#inv-scopeov i.m{left:50%;width:1.5px;height:7px;margin-left:-.75px;background:rgba(16,26,20,.8)}
 #inv-scopeov .dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;
   background:#e63b2a;box-shadow:0 0 5px rgba(230,60,40,.9)}
 /* 🎖️ ปุ่มขึ้นเป็นพลปืนประจำประตู — โผล่เฉพาะตอนมีเฮลิบินอยู่ใกล้ (คุมด้วย JS) */
@@ -350,7 +357,10 @@ function buildDom(){
   wrapEl.innerHTML=`
     <canvas id="inv-cv"></canvas>
     <div id="inv-vig"></div><div id="inv-hurt"></div><div id="inv-flash"></div>
-    <div id="inv-scopeov"><i class="h"></i><i class="v"></i><i class="m" style="top:38%"></i><i class="m" style="top:58%"></i><span class="dot"></span></div>
+    <div id="inv-scopeov">
+      <div class="so-mask"></div>
+      <div class="so-ring"><i class="h"></i><i class="v"></i><i class="m" style="top:32%"></i><i class="m" style="top:40%"></i><i class="m" style="top:60%"></i><i class="m" style="top:68%"></i><span class="dot"></span></div>
+    </div>
     <div id="inv-cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><span class="dot"></span></div>
     <div id="inv-word"></div>
     <div id="inv-target"></div>
@@ -428,6 +438,8 @@ function buildDom(){
   gunnerBtn=document.getElementById('inv-gunner');
   swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
   ammoEl=document.getElementById('inv-ammo');
+  scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
+  scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
   mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
   mapCv=document.getElementById('inv-mapcv'); mapNameEl=document.getElementById('inv-mapname');
   document.getElementById('inv-go').addEventListener('click',()=>{
@@ -627,7 +639,7 @@ let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let swapBtn=null, scopeBtn=null, ammoEl=null;
+let swapBtn=null, scopeBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -1328,11 +1340,53 @@ function setScoped(on){
   const want=!!on && !!W.scope && !inHeli && !riding;
   if(want===scoped) return;
   scoped=want;
-  camera.fov=scoped?W.scopeFov:FOV;
-  camera.updateProjectionMatrix();
+  /* ⚠️ ไม่แตะ camera.fov แล้ว — การขยายเกิดใน "รอบเรนเดอร์ที่ 2" เฉพาะในวงเลนส์ (renderScopePass)
+     ถ้าไปเปลี่ยน fov หลักจะกลายเป็นซูมทั้งจอ = ไม่ใช่ PiP */
+  layoutScope();
   wrapEl.classList.toggle('scoped',scoped);
   if(scopeBtn) scopeBtn.classList.toggle('on',scoped);
   if(scoped && typeof sfx!=='undefined'&&sfx.select) sfx.select();
+}
+/* 🔭 ขนาดวงเลนส์เป็นพิกเซล (อิงด้านสั้นของจอ — จอเตี้ยก็ยังเป็นวงกลมพอดี ไม่ล้น) */
+function scopeRadius(){ return Math.round(Math.min(innerWidth,innerHeight)*SCOPE_R); }
+/* จัดขนาดหน้ากากดำ + วงเรติเคิลให้ตรงกับวงเลนส์ที่จะเรนเดอร์จริง */
+function layoutScope(){
+  const R=scopeRadius();
+  /* ⚠️ หัวใจของ PiP: "นอกเลนส์ต้องยังเห็นภาพปกติ" — ห้ามถมดำทั้งรอบนอก
+     (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
+     ใส่แค่ "ขอบกระบอกเลนส์" เป็นเงามืดบางๆ วงแคบๆ แล้วจางหายไป */
+  if(scopeMaskEl) scopeMaskEl.style.background=
+    `radial-gradient(circle at 50% 50%,`+
+    ` rgba(0,0,0,0) ${R-2}px,`+
+    ` rgba(6,9,12,.88) ${R}px,`+
+    ` rgba(6,9,12,.55) ${R+7}px,`+
+    ` rgba(6,9,12,.18) ${R+13}px,`+
+    ` rgba(0,0,0,0) ${R+20}px)`;
+  if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=(R*2)+'px'; }
+}
+/* 🔭 รอบเรนเดอร์ที่ 2 — ภาพขยายเฉพาะ "ในเลนส์"
+   ใช้ scissor+viewport เป็นสี่เหลี่ยมจัตุรัสกลางจอ แล้วให้หน้ากากดำ (CSS) บังมุมนอกวงกลม
+   ⚠️ ต้องตั้ง aspect=1 ด้วย ไม่งั้นภาพในเลนส์จะยืดผิดสัดส่วน (viewport เป็นจัตุรัสแต่ aspect ยังเป็นของจอ) */
+function renderScopePass(){
+  const W=innerWidth, H=innerHeight, R=scopeRadius();
+  const mag=WEAPONS[weapon].magnify||6;
+  /* กำลังขยายจริง = ขนาดเชิงมุมต่อพิกเซลของภาพหลัก ÷ ของภาพในเลนส์
+     → tan(fovเลนส์/2) = tan(fovหลัก/2) × (R ÷ ครึ่งความสูงจอ) ÷ กำลังขยาย */
+  const t=Math.tan(FOV*Math.PI/360) * (R/(H/2)) / mag;
+  const sf=Math.atan(t)*360/Math.PI;
+  const oldFov=camera.fov, oldAspect=camera.aspect;
+  const gunWas=gunGrp?gunGrp.visible:false;
+  if(gunGrp) gunGrp.visible=false;              // ในเลนส์ไม่ควรเห็นตัวปืนตัวเอง
+  camera.fov=sf; camera.aspect=1; camera.updateProjectionMatrix();
+  const x=W/2-R, y=H/2-R;
+  renderer.setScissorTest(true);
+  renderer.setViewport(x,y,R*2,R*2);
+  renderer.setScissor(x,y,R*2,R*2);
+  renderer.render(scene,camera);                // autoClear=true → ล้างเฉพาะในกรอบนี้แล้ววาดใหม่
+  renderer.setScissorTest(false);
+  renderer.setViewport(0,0,W,H);
+  camera.fov=oldFov; camera.aspect=oldAspect; camera.updateProjectionMatrix();
+  if(gunGrp) gunGrp.visible=gunWas;
 }
 function renderAmmo(){
   if(!ammoEl) return;
@@ -2637,6 +2691,7 @@ function frame(dt,now){
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickFx(dt);
   renderer.render(scene,camera);
+  if(scoped) renderScopePass();     // 🔭 วาดภาพขยายทับเฉพาะในวงเลนส์
 }
 
 /* ============================================================
@@ -2743,7 +2798,7 @@ function start(){
     else if(k==='q') keys.q=false;
     else if(k==='e') keys.e=false;
   };
-  resizeFn=()=>{ fit(); fitSpawnMap(); };
+  resizeFn=()=>{ fit(); fitSpawnMap(); layoutScope(); };
   window.addEventListener('keydown',keydownFn);
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
@@ -2809,7 +2864,9 @@ window.InvasionWorld={
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
-    get fov(){return camera.fov}, get weaponBtns(){return {swap:swapBtn.textContent,
+    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass,
+    get magnify(){return WEAPONS[weapon].magnify||0},
+    get weaponBtns(){return {swap:swapBtn.textContent,
       scopeShown:scopeBtn.style.display==='block', ammoText:ammoEl.innerText.replace(/\s+/g,' ')}},
     get gunnerBtnShown(){return gunnerBtn && gunnerBtn.style.display==='block'},
     get gunnerClass(){return wrapEl.classList.contains('gunner')},

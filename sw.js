@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v134';  // v134: 🎯 ยานแม่: เพิ่มปืน R93 สไนเปอร์ (ส่องกล้อง/แม็ก 10 นัด) รอบ 419
+const CACHE_VERSION = 'pet-vocab-v135';  // v135: 🔭 R93 กล้อง PiP จริง (ในเลนส์ขยาย 6x นอกเลนส์เห็นปกติ) รอบ 420
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
