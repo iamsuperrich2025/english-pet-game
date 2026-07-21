@@ -22,3 +22,12 @@
 - **`js/data/band/` (ผู้ใช้สั่ง 17 ก.ค. — ใช้ทุก band ทุกหมวด):** อ่าน/ใช้งานได้**เฉพาะไฟล์แบบแยกช่วงคำ** ที่ชื่อลงท้าย `_<คำแรก>-<คำสุดท้าย>` เช่น `b6_academic_abandon-bias.js` · **ห้ามอ่านไฟล์ก้อนรวม** เช่น `b6_academic.js` (data ทั้งก้อนยังไม่แยก เปลือง tokens — วางไว้จัดหมวดหมู่เฉยๆ)
 - **ห้ามทำเซฟผู้เล่นเดิมพัง** — field ใหม่ทุกตัวต้องมี default ใน `loadState()` (migration)
 - state เซฟที่ localStorage key `petVocabAdventure_v1`
+
+## 🪶 ลดขนาดโมเดล .glb ที่หนักเกิน (สูตรรอบ 431 — ใช้ซ้ำได้ทุกโมเดล)
+โมเดลจาก Tripo/สแกน มักหนักเป็นสิบ MB (house_01 = 62MB / 1.88M tris) เอาลงเกมไม่ได้ · เครื่องมือลงไว้แล้ว:
+`export PATH="$HOME/bin/node:$PATH"` + `gltf-transform` (npm -g @gltf-transform/cli)
+- **⚠️ กุญแจสำคัญ: ต้อง "ตัด NORMAL ทิ้งก่อน weld+simplify"** ไม่งั้น simplify ตันอยู่ที่ ~15% ลดไม่ลง
+  (ทุก vertex มี normal ต่างกัน = weld รวมไม่ได้ · GLTFLoader คำนวณ normal ให้เองอยู่แล้วเมื่อไม่มี)
+- สคริปต์ตัวอย่าง `strip.mjs` (ใช้ @gltf-transform/core+functions+meshoptimizer): ลบ NORMAL/TANGENT → `weld()` → `simplify({ratio:0.02,error:0.35})`
+- แล้วต่อด้วย `gltf-transform resize <in> <out> --width 1024 --height 1024` → **`gltf-transform prune`** (ล้าง buffer ที่ไม่ใช้ — ขั้นนี้ตัดจาก 15MB เหลือ 1.1MB)
+- ผลจริง: 62MB/1.88M tris → **1.1MB/37.8k tris** หน้าตาในเกมยังใช้ได้ · เก็บต้นฉบับไว้ในเครื่อง (ใส่ .gitignore) ห้ามขึ้น repo
