@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v136';  // v136: 🔎 R93 กล้อง 3 กำลังขยาย 4x/6x/8x รอบ 421
+const CACHE_VERSION = 'pet-vocab-v137';  // v137: 🎬 R93 แอนิเมชันยกปืนเล็ง ADS + กลั้นหายใจ รอบ 422
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

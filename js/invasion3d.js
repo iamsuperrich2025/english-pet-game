@@ -68,6 +68,19 @@ const SCOPE_MAGS=[
   {m:8, label:'8×', name:'ระยะไกล',            hint:'แผนที่เปิดโล่ง จ่อเป้าไกลๆ ได้นิ่ง'},
 ];
 let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่ากลาง)
+/* ============================================================
+   🎬 รอบ 422: แอนิเมชันยกปืนเล็ง (ADS) ของ R93 — ตามสเปกที่ผู้ใช้ให้มา
+   ลำดับ: ยกปืนเข้าแนวสายตา → กล้องเคลื่อนเข้าหาตา → ขอบเลนส์ค่อยๆ ขยายเข้ามา
+          → ภาพในเลนส์ขยาย → เรติเคิลคมชัด → ปืนแกว่งตามจังหวะหายใจ → ออกจากซูมแบบถอยนุ่มๆ
+   หัวใจคือ "ต่อเนื่อง ไม่ตัดภาพ" ทุกอย่างวิ่งด้วยค่าเดียวคือ adsT (0=ท่าพร้อมยิง · 1=แนบตาเต็มที่)
+   ============================================================ */
+const ADS_IN=0.30, ADS_OUT=0.22;        // เวลายกปืนเข้าเล็ง / ถอยออก (วินาที)
+const ADS_POS=[0,-0.105,-0.34];         // ท่าแนบไหล่: ปืนเข้ากลางจอ พานท้ายชิดไหล่
+const ADS_ROT=[0.02,0,0];               // เลิกเอียงทแยง จัดลำกล้องให้ตรงแนวสายตา
+const ADS_SCALE=1.06;                   // ขยับเข้าใกล้ตาอีกนิด (ให้รู้สึกมีมวล)
+const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
+const BREATH_MAX=5.0, BREATH_RECOVER=4.0;   // กลั้นหายใจได้กี่วินาที / เวลาฟื้นเต็ม
+let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
@@ -206,6 +219,14 @@ const CSS=`
   box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
 #inv-mag:active{transform:scale(.94)}
 #inv-wrap.fly #inv-mag,#inv-wrap.gunner #inv-mag{display:none!important}
+/* 🫁 ปุ่มกลั้นหายใจ — โผล่แทนปุ่มสลับปืนตอนเล็งอยู่ (ตอนเล็งไม่ต้องเปลี่ยนปืน) */
+#inv-breath{position:absolute;left:120px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
+  font-size:20px;cursor:pointer;display:none;box-shadow:0 4px 10px rgba(0,0,0,.5);
+  background:radial-gradient(circle at 34% 28%,#dff6ff,#3f7fa8)}
+#inv-breath:active{transform:scale(.94)}
+#inv-wrap.scoped #inv-swap{display:none}
+#inv-wrap.scoped #inv-breath{display:block}
+#inv-wrap.fly #inv-breath,#inv-wrap.gunner #inv-breath{display:none!important}
 #inv-swap:active,#inv-scope:active{transform:scale(.94)}
 #inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
 /* กระสุนในแม็ก */
@@ -314,6 +335,7 @@ const CSS=`
   #inv-heli{width:56px;height:56px;font-size:23px;bottom:174px;right:16px}
   #inv-gunner{width:54px;height:54px;font-size:21px;right:88px;bottom:174px}
   #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
+  #inv-breath{width:42px;height:42px;font-size:18px;left:110px}
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
   #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
   #inv-chatbar{left:158px}
@@ -344,6 +366,7 @@ const CSS=`
   #inv-heli{width:48px;height:48px;font-size:19px;bottom:150px;right:12px}
   #inv-gunner{width:46px;height:46px;font-size:18px;right:70px;bottom:150px}
   #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
+  #inv-breath{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
   #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
   #inv-chatbar{left:144px}
@@ -399,6 +422,7 @@ function buildDom(){
     <button id="inv-swap">🎯</button>
     <button id="inv-scope">🔭</button>
     <button id="inv-mag">6×</button>
+    <button id="inv-breath">🫁</button>
     <button id="inv-gunner">🎖️</button>
     <button id="inv-map">🗺️</button>
     <button id="inv-chat">💬</button>
@@ -455,6 +479,7 @@ function buildDom(){
   gunnerBtn=document.getElementById('inv-gunner');
   swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
   magBtn=document.getElementById('inv-mag');
+  breathBtn=document.getElementById('inv-breath');
   ammoEl=document.getElementById('inv-ammo');
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
@@ -532,6 +557,14 @@ const Snd={
       o.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.08);
       this.noise(t+dt,.06,3200,.07);
     }); },
+  /* 🎬 เสียงยกปืนเข้าเล็ง / ลดปืนลง (ผ้า+โลหะเบาๆ ให้รู้สึกมีมวล) */
+  ads(inOn){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.noise(t,.13,inOn?900:620,.055);
+    const o=c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(inOn?190:250,t); o.frequency.exponentialRampToValueAtTime(inOn?250:170,t+.12);
+    const g=c.createGain(); g.gain.setValueAtTime(.001,t); g.gain.exponentialRampToValueAtTime(.055,t+.03);
+    g.gain.exponentialRampToValueAtTime(.001,t+.14);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.15); },
   ping(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(1500,t);
     const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
@@ -657,7 +690,7 @@ let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let swapBtn=null, scopeBtn=null, magBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
+let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -1296,6 +1329,7 @@ function buildGun(){
   g.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]);
   g.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]);   // เอียงทแยงแบบภาพอ้างอิง
   g.scale.setScalar(GUN_SCALE);
+  g.userData.swayX=0; g.userData.swayY=0;
   camera.add(g); gunGrp=g;
   /* 💡 ไฟส่อง view model โดยเฉพาะ (ติดกล้อง เคลื่อนตามตลอด)
      ⚠️ จำเป็น! ไฟฉากส่องปืนไม่ถึง — ไม่มีไฟนี้ปืนจะดำสนิทเป็นก้อนบังจอ (เจอจริงตอนเทสต์)
@@ -1359,17 +1393,60 @@ function setScoped(on){
   if(want===scoped) return;
   scoped=want;
   /* ⚠️ ไม่แตะ camera.fov แล้ว — การขยายเกิดใน "รอบเรนเดอร์ที่ 2" เฉพาะในวงเลนส์ (renderScopePass)
-     ถ้าไปเปลี่ยน fov หลักจะกลายเป็นซูมทั้งจอ = ไม่ใช่ PiP */
-  layoutScope();
-  wrapEl.classList.toggle('scoped',scoped);
+     ถ้าไปเปลี่ยน fov หลักจะกลายเป็นซูมทั้งจอ = ไม่ใช่ PiP
+     🎬 ตัวแปร scoped เป็นแค่ "เจตนา" — ภาพจริงวิ่งตาม adsT ใน tickAds() แบบต่อเนื่อง ไม่ตัดภาพ */
   if(scopeBtn) scopeBtn.classList.toggle('on',scoped);
-  if(scoped && typeof sfx!=='undefined'&&sfx.select) sfx.select();
+  if(!scoped) holdBreath=false;
+  Snd.ads(scoped);
+  syncWeaponBtns();
+}
+/* เส้นโค้งนุ่ม (ease-in-out) — ทำให้การยกปืน/ถอยกล้องมีน้ำหนัก ไม่กระตุก */
+function smoothstep(t){ t=clamp(t,0,1); return t*t*(3-2*t); }
+/* 🎬 หัวใจของแอนิเมชัน ADS — เรียกทุกเฟรมตอนเดินเท้า */
+function tickAds(dt,now){
+  const W=WEAPONS[weapon];
+  const target=(scoped && W.scope)?1:0;
+  adsRaw=clamp(adsRaw + (target? dt/ADS_IN : -dt/ADS_OUT), 0, 1);
+  adsT=smoothstep(adsRaw);
+  /* ① ปืนถูกยกจากท่าพร้อมยิง → แนบไหล่เข้าแนวสายตา (lerp ทุกแกนพร้อมกัน) */
+  if(gunGrp){
+    const k=adsT;
+    gunGrp.position.set(
+      GUN_POS[0]+(ADS_POS[0]-GUN_POS[0])*k + gunGrp.userData.swayX*(1-k),
+      GUN_POS[1]+(ADS_POS[1]-GUN_POS[1])*k + gunGrp.userData.swayY*(1-k) - gunRecoil*.03,
+      GUN_POS[2]+(ADS_POS[2]-GUN_POS[2])*k + gunRecoil*.10);
+    gunGrp.rotation.set(
+      GUN_ROT[0]+(ADS_ROT[0]-GUN_ROT[0])*k + gunRecoil*.22,
+      GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
+      GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
+    gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
+  }
+  /* ③ ขอบเลนส์ค่อยๆ ขยายเข้ามา + ⑤ เรติเคิลชัดขึ้นตามจังหวะ */
+  const on=adsT>0.02;
+  wrapEl.classList.toggle('scoped',on);
+  if(on) layoutScope();
+  /* ⑥ กลั้นหายใจ: แกว่งน้อยลงมาก แต่มีลิมิต หมดแล้วต้องผ่อน */
+  if(holdBreath && adsT>.5 && breathLeft>0) breathLeft=Math.max(0,breathLeft-dt/BREATH_MAX);
+  else breathLeft=Math.min(1,breathLeft+dt/BREATH_RECOVER);
+  if(breathLeft<=0) holdBreath=false;
+  if(breathBtn) breathBtn.style.opacity=(0.45+0.55*breathLeft).toFixed(2);
+}
+/* ⑥ การแกว่งจากการหายใจ — ใส่ที่กล้องหลังหมุน yaw/pitch แล้ว (ภาพในเลนส์แกว่งตามด้วย) */
+function applyBreath(now){
+  if(adsT<=0.02) return;
+  const steady=(holdBreath&&breathLeft>0)?0.12:1;
+  const amp=ADS_BREATH*adsT*steady;
+  camera.rotateX(Math.sin(now*0.0016)*amp);
+  camera.rotateY(Math.cos(now*0.0011)*amp*0.8);
 }
 /* 🔭 ขนาดวงเลนส์เป็นพิกเซล (อิงด้านสั้นของจอ — จอเตี้ยก็ยังเป็นวงกลมพอดี ไม่ล้น) */
 function scopeRadius(){ return Math.round(Math.min(innerWidth,innerHeight)*SCOPE_R); }
+/* ③ รัศมีเลนส์ "ขณะนี้" — โตจาก 0 → เต็มวง ตามจังหวะยกปืน (ทำให้ขอบเลนส์ค่อยๆ ขยายเข้ามา) */
+function scopeRadiusNow(){ return Math.max(1,Math.round(scopeRadius()*(0.35+0.65*adsT))); }
 /* จัดขนาดหน้ากากดำ + วงเรติเคิลให้ตรงกับวงเลนส์ที่จะเรนเดอร์จริง */
 function layoutScope(){
-  const R=scopeRadius();
+  const R=scopeRadiusNow();
+  if(scopeRingEl) scopeRingEl.style.opacity=Math.max(0,(adsT-0.25)/0.75).toFixed(2);   // ⑤ เรติเคิลชัดขึ้นตอนเข้าที่
   /* ⚠️ หัวใจของ PiP: "นอกเลนส์ต้องยังเห็นภาพปกติ" — ห้ามถมดำทั้งรอบนอก
      (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
      ใส่แค่ "ขอบกระบอกเลนส์" เป็นเงามืดบางๆ วงแคบๆ แล้วจางหายไป */
@@ -1387,7 +1464,7 @@ function layoutScope(){
    → tan(fovเลนส์/2) = tan(fovหลัก/2) × (R ÷ ครึ่งความสูงจอ) ÷ กำลังขยาย
    ⚠️ ห้ามใช้ FOV/กำลังขยาย ตรงๆ — จะได้กำลังขยายไม่ตรงจริง เพราะวงเลนส์เล็กกว่าจอ */
 function scopeFovDeg(){
-  const R=scopeRadius();
+  const R=scopeRadiusNow();
   const t=Math.tan(FOV*Math.PI/360) * (R/(innerHeight/2)) / SCOPE_MAGS[scopeMagIdx].m;
   return Math.atan(t)*360/Math.PI;
 }
@@ -1395,7 +1472,7 @@ function scopeFovDeg(){
    ใช้ scissor+viewport เป็นสี่เหลี่ยมจัตุรัสกลางจอ แล้วให้หน้ากากดำ (CSS) บังมุมนอกวงกลม
    ⚠️ ต้องตั้ง aspect=1 ด้วย ไม่งั้นภาพในเลนส์จะยืดผิดสัดส่วน (viewport เป็นจัตุรัสแต่ aspect ยังเป็นของจอ) */
 function renderScopePass(){
-  const W=innerWidth, H=innerHeight, R=scopeRadius();
+  const W=innerWidth, H=innerHeight, R=scopeRadiusNow();
   const sf=scopeFovDeg();
   const oldFov=camera.fov, oldAspect=camera.aspect;
   const gunWas=gunGrp?gunGrp.visible:false;
@@ -1877,7 +1954,7 @@ function bindInput(){
     for(const t of e.changedTouches){
       if(t.identifier===joy.id){ moveJoy(t); e.preventDefault(); }
       else if(t.identifier===lookId){
-        const sc=scoped?SNIPER_SENS:1;
+        const sc=1-(1-SNIPER_SENS)*adsT;
         yaw-=(t.clientX-lookX)*PAD_SENS*sc; pitch-=(t.clientY-lookY)*PAD_SENS*sc;
         pitch=clamp(pitch,PITCH_MIN,PITCH_MAX);
         lookX=t.clientX; lookY=t.clientY; e.preventDefault();
@@ -1917,6 +1994,8 @@ function bindInput(){
   swapBtn.addEventListener('click',()=>{ resumeAudio(); swapWeapon(); });
   scopeBtn.addEventListener('click',()=>{ resumeAudio(); setScoped(!scoped); });
   magBtn.addEventListener('click',()=>{ resumeAudio(); cycleScopeMag(); });
+  /* 🫁 กลั้นหายใจ: กดค้าง = ปืนนิ่ง (มีลิมิต หมดแล้วต้องผ่อน) */
+  hold(breathBtn,()=>{ if(breathLeft>0) holdBreath=true; },()=>{ holdBreath=false; });
   hold(upBtn,()=>{ phClimb=1; },()=>{ phClimb=0; });
   hold(downBtn,()=>{ phClimb=-1; },()=>{ phClimb=0; });
   /* 💬 แชทสำเร็จรูป */
@@ -1956,7 +2035,7 @@ function bindInput(){
   cvEl.addEventListener('contextmenu',e=>e.preventDefault());
   document.addEventListener('mousemove',e=>{
     if(!running||document.pointerLockElement!==cvEl) return;
-    const sc=scoped?SNIPER_SENS:1;
+    const sc=1-(1-SNIPER_SENS)*adsT;      // ยิ่งแนบตา ยิ่งเล็งละเอียดขึ้นแบบไล่ระดับ
     yaw-=e.movementX*LOOK_SENS*sc; pitch-=e.movementY*LOOK_SENS*sc;
     pitch=clamp(pitch,PITCH_MIN,PITCH_MAX);
   });
@@ -2005,17 +2084,16 @@ function tickPlayer(dt,now){
     camera.position.y+=rnd(-1,1)*shake*.35;
     shake=Math.max(0,shake-dt*2.2);
   }
-  /* ปืน: รีคอยล์ + แกว่งตามการเดิน (แกว่งรอบท่าตั้งต้น GUN_POS/GUN_ROT ไม่ใช่ค่าคงที่ — ไม่งั้นมุมเอียงหาย) */
+  /* ปืน: รีคอยล์ + แกว่งตามการเดิน
+     🎬 แกว่งเก็บไว้ใน userData แล้วให้ tickAds() เป็นคนประกอบท่าจริง (ยิ่งเล็งยิ่งแกว่งน้อย) */
   if(gunGrp){
     gunRecoil=Math.max(0,gunRecoil-dt*7);
     const sw=len>.05?1:.25;                       // เดินอยู่ = แกว่งเยอะ · ยืนนิ่ง = แกว่งนิดเดียว
-    gunGrp.position.set(GUN_POS[0]+Math.sin(now*.011)*.010*sw,
-                        GUN_POS[1]+Math.cos(now*.022)*.009*sw-gunRecoil*.03,
-                        GUN_POS[2]+gunRecoil*.10);
-    gunGrp.rotation.set(GUN_ROT[0]+gunRecoil*.22+Math.sin(now*.009)*.012*sw,
-                        GUN_ROT[1]+Math.sin(now*.007)*.014*sw,
-                        GUN_ROT[2]-gunRecoil*.05);
+    gunGrp.userData.swayX=Math.sin(now*.011)*.010*sw;
+    gunGrp.userData.swayY=Math.cos(now*.022)*.009*sw;
   }
+  tickAds(dt,now);                                // 🎬 ยกปืนเล็ง/ถอยออก + ขอบเลนส์ + หายใจ
+  applyBreath(now);
   if(muzzle) muzzle.material.opacity = now<muzzleUntil?1:0;
   /* ความร้อนปืน */
   if(!firing||overheat) heat=Math.max(0,heat-GUN_COOL*dt);
@@ -2726,7 +2804,7 @@ function frame(dt,now){
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickFx(dt);
   renderer.render(scene,camera);
-  if(scoped) renderScopePass();     // 🔭 วาดภาพขยายทับเฉพาะในวงเลนส์
+  if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
 }
 
 /* ============================================================
@@ -2789,6 +2867,7 @@ function start(){
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
+  adsRaw=0; adsT=0; holdBreath=false; breathLeft=1;                             // 🎬 ล้างสถานะเล็ง
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
   renderAmmo(); syncWeaponBtns();
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
@@ -2820,6 +2899,7 @@ function start(){
     else if(k==='f'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
     else if(k==='g'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
     else if(k==='z'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
+    else if(k==='b'){ if(breathLeft>0) holdBreath=true; }  // 🫁 กลั้นหายใจ
     else if(k==='escape'){ unlockMouse(); exitBox.classList.add('on'); }
     if(['w','a','s','d',' '].includes(k)) e.preventDefault();
   };
@@ -2832,6 +2912,7 @@ function start(){
     else if(k==='shift') keys.shift=false;
     else if(k===' ') keys.space=false;
     else if(k==='control') keys.ctrl=false;
+    else if(k==='b') holdBreath=false;
     else if(k==='q') keys.q=false;
     else if(k==='e') keys.e=false;
   };
@@ -2903,6 +2984,11 @@ window.InvasionWorld={
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass,
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
+    /* 🎬 รอบ 422: แอนิเมชัน ADS */
+    get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
+    get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
+    get gunPose(){return gunGrp?{p:gunGrp.position.toArray().map(n=>+n.toFixed(3)),
+      r:gunGrp.rotation.toArray().slice(0,3).map(n=>+n.toFixed(3)), s:+gunGrp.scale.x.toFixed(3)}:null},
     get magLabel(){return SCOPE_MAGS[scopeMagIdx].label}, get magBtnShown(){return magBtn.style.display==='block'},
     get weaponBtns(){return {swap:swapBtn.textContent,
       scopeShown:scopeBtn.style.display==='block', ammoText:ammoEl.innerText.replace(/\s+/g,' ')}},
