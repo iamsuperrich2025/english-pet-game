@@ -2272,7 +2272,9 @@ function forceGunForward(obj){
         = ตาเห็นเป็น "แขนของเรา" ที่โผล่มาจากมุมล่างซ้ายจริงๆ ตามหลักการวางกล้องของเกม FPS
      ④ นิ้วโอบ "ทับหน้า" ลำกล้องเล็กน้อย (ล้ำเข้าไป) → เกิดการบัง = สมองอ่านว่าจับจริง ไม่ใช่แปะข้างๆ
    ============================================================ */
-const HAND_SKIN=0x3a3f36, HAND_GLOVE=0x24272a, HAND_SLEEVE=0x5c5a3e;
+/* 🎨 รอบ 444: โทนถุงมือ/ปลอกแขนต้อง "เข้ม" — ของเดิมสีโอลีฟอ่อน (0x5c5a3e) เจอไฟ view model
+   แล้วสว่างจนออกเหลืองซีด ดูเหมือนท่อพลาสติกมากกว่าแขนคน */
+const HAND_GLOVE=0x1b1e22, HAND_SLEEVE=0x353a2c;
 function buildSupportHand(gunObj){
   /* หาจุด "การ์ดมือ" จากกรอบของโมเดลปืนกระบอกนั้นๆ (ทำงานได้กับทุกโมเดล ไม่ต้องตั้งค่ามือใหม่)
      ⚠️ ต้องวัดใน "พิกัดของตัวปืนเอง" — รอบแรกใช้ Box3.setFromObject ตรงๆ ซึ่งเป็นพิกัดโลก
@@ -2287,34 +2289,46 @@ function buildSupportHand(gunObj){
   });
   if(box.isEmpty()) return new THREE.Group();
   const c=box.getCenter(new THREE.Vector3()), s=box.getSize(new THREE.Vector3());
-  const grip=new THREE.Vector3(c.x, box.min.y+s.y*0.46, c.z-s.z*0.34);   // ใต้ลำกล้อง ค่อนไปทางปากกระบอก
+  /* 🧭 รอบ 444: หา "แกนของปืน" เอง แทนที่จะสมมติว่าลำกล้องคือแกน Z เสมอ
+     (ไรเฟิลกับ R93 วางแกนในไฟล์ไม่เหมือนกัน — รอบก่อนมือของไรเฟิลเลยเล็กจิ๋วแค่ 4 ซม.)
+       · แกนที่ยาวที่สุด = ลำกล้อง · แกนที่บางที่สุด = ด้านข้าง · ที่เหลือ = แนวตั้งของปืน
+       · ปากกระบอกอยู่ "ฝั่งตรงข้ามกับมวล" (ปืนหนักทางท้ายเสมอ) */
+  const dims=[s.x,s.y,s.z], axes=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
+  const iLong=dims.indexOf(Math.max.apply(null,dims)), iThin=dims.indexOf(Math.min.apply(null,dims));
+  const iUp=3-iLong-iThin, L=dims[iLong];
+  let mass=0,n2=0;
+  gunObj.traverse(o=>{ if(!o.isMesh||!o.geometry)return; const p=o.geometry.attributes.position;
+    for(let i=0;i<p.count;i+=11){ v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld).applyMatrix4(inv);
+      mass+=v.getComponent(iLong)-c.getComponent(iLong); n2++; } });
+  const fwd=axes[iLong].clone().multiplyScalar((mass/Math.max(1,n2))>0?-1:1);   // ทิศปากกระบอก
+  const up=axes[iUp].clone(), side=axes[iThin].clone();
+  const zAxis=fwd.clone().negate(), yAxis=up.clone(), xAxis=side.clone();
+  if(new THREE.Vector3().crossVectors(xAxis,yAxis).dot(zAxis)<0) xAxis.negate();
+  const grip=c.clone().addScaledVector(fwd,L*0.30).addScaledVector(up,-dims[iUp]*0.16);
   const h=new THREE.Group(); h.position.copy(grip);
+  h.setRotationFromMatrix(new THREE.Matrix4().makeBasis(xAxis,yAxis,zAxis));
   const glove=new THREE.MeshLambertMaterial({color:HAND_GLOVE});
-  const skin =new THREE.MeshLambertMaterial({color:HAND_SKIN});
-  const sleeve=new THREE.MeshLambertMaterial({color:HAND_SLEEVE});
-  const R=s.z*0.055;                                   // สเกลมือให้พอดีกับปืนกระบอกนั้น
-  /* ฝ่ามือ: กล่องมนแนบใต้ลำกล้อง */
-  const palm=new THREE.Mesh(new THREE.BoxGeometry(R*1.5,R*1.35,R*2.2),glove);
-  palm.position.set(-R*.15,-R*.55,0); palm.rotation.set(.12,0,.18); h.add(palm);
-  /* 4 นิ้วโอบขึ้นมาทับลำกล้อง (ล้ำเข้าไปนิดหน่อย = เกิดการบังจริง ไม่ลอยข้างๆ) */
+  const cuffM=new THREE.MeshLambertMaterial({color:HAND_SLEEVE});
+  const R=L*0.070;                                     // สเกลมือให้พอดีกับปืนกระบอกนั้น (ยาวปืน ~14R)
+  /* 🚫 รอบ 444 (ผู้ใช้: "นี่ไม่ใช่มือ นี่มันกระบอก"): **ตัด "ท่อนแขนยาว" ทิ้ง**
+     ท่อนแขนพุ่งเข้าหากล้อง (ห่างแค่ 0.3–0.5 ม. ขณะที่ปืนอยู่ ~1 ม.) → เพอร์สเปกทีฟขยายจนกลายเป็น
+     "ท่อยักษ์พาดจอ" · เกมจริงที่มุมกล้องแบบนี้ก็เห็นแค่ "ถุงมือ + ข้อมือนิดเดียว" เหมือนกัน
+     เหลือเฉพาะมือที่กำการ์ดมือ = อ่านออกทันทีว่าเป็นมือ ไม่มีทางกลายเป็นท่ออีก */
+  /* ฝ่ามือ: แนบใต้ลำกล้อง (แบนตามลำ ไม่ใช่ก้อนกลม) */
+  const palm=new THREE.Mesh(new THREE.BoxGeometry(R*1.15,R*.95,R*2.0),glove);
+  palm.position.set(-R*.10,-R*.60,0); palm.rotation.set(.10,0,.14); h.add(palm);
+  /* 4 นิ้วโอบขึ้นมา "ทับหน้าลำกล้อง" ฝั่งที่กล้องมองเห็น (เกิดการบัง = สมองอ่านว่ากำจริง) */
   for(let i=0;i<4;i++){
-    const f=new THREE.Mesh(new THREE.BoxGeometry(R*.42,R*1.25,R*.42),glove);
-    f.position.set(R*.55,-R*.05,(i-1.5)*R*.52);
-    f.rotation.set(0,0,-.62-i*.05); h.add(f);
+    const f=new THREE.Mesh(new THREE.BoxGeometry(R*.34,R*1.05,R*.36),glove);
+    f.position.set(-R*.42,-R*.12,(i-1.5)*R*.46);
+    f.rotation.set(0,0,.52+i*.05); h.add(f);
   }
-  /* นิ้วโป้งอีกฝั่ง — ทำให้ "โอบรอบ" สมบูรณ์ (ไม่มีแล้วจะเหมือนมือแตะเฉยๆ) */
-  const thumb=new THREE.Mesh(new THREE.BoxGeometry(R*.40,R*1.0,R*.44),glove);
-  thumb.position.set(-R*.72,-R*.30,R*.30); thumb.rotation.set(.25,0,.75); h.add(thumb);
-  /* ข้อมือ + ปลอกแขนเข้ม (ตัวคั่นสายตา ทำให้อ่านเป็น "แขนเสื้อ" ไม่ใช่ท่อยาว) */
-  const wrist=new THREE.Mesh(new THREE.CylinderGeometry(R*.62,R*.72,R*.9,10),skin);
-  wrist.position.set(-R*.55,-R*1.05,R*.85); wrist.rotation.set(-.95,0,.42); h.add(wrist);
-  const cuff=new THREE.Mesh(new THREE.CylinderGeometry(R*.86,R*.86,R*.55,10),
-    new THREE.MeshLambertMaterial({color:0x33321f}));
-  cuff.position.set(-R*.78,-R*1.5,R*1.35); cuff.rotation.set(-.95,0,.42); h.add(cuff);
-  /* ปลายแขน: ยาวทะลุออกนอกเฟรม (ปลายไม่มีวันโผล่ให้เห็น = ไม่เห็นรอยตัด) */
-  const fore=new THREE.Mesh(new THREE.CylinderGeometry(R*.80,R*1.02,s.z*0.95,12),sleeve);
-  fore.position.set(-R*1.25,-R*2.5,R*1.35+s.z*0.34); fore.rotation.set(-.95,0,.42); h.add(fore);
-  h.rotation.y=-.10;
+  /* นิ้วโป้งพาดตามแนวลำกล้องอีกฝั่ง */
+  const thumb=new THREE.Mesh(new THREE.BoxGeometry(R*.34,R*.85,R*.40),glove);
+  thumb.position.set(R*.40,-R*.34,R*.34); thumb.rotation.set(.30,0,-.65); h.add(thumb);
+  /* ข้อมือ+ปลอกแขนสั้นๆ แค่โผล่พ้นมือ (ตัวคั่นสายตาให้รู้ว่ามีแขนต่อ ไม่ยาวจนกลายเป็นท่อ) */
+  const cuff=new THREE.Mesh(new THREE.CylinderGeometry(R*.62,R*.70,R*1.1,10),cuffM);
+  cuff.position.set(-R*.30,-R*1.05,R*.95); cuff.rotation.set(-1.05,0,.30); h.add(cuff);
   return h;
 }
 /* ผูกมือเข้ากับปืนกระบอกที่กำลังถือ (เรียกทุกครั้งที่โมเดลปืนเปลี่ยน/โหลดเสร็จ) */
