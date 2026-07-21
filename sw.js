@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v138';  // v138: 💥 แรงถอย+ลูกเลื่อน · 🪖 ทหารมีข้อต่อ 11 จุด รองรับ .glb รอบ 423
+const CACHE_VERSION = 'pet-vocab-v139';  // v139: 🤖 จับชิ้นส่วนโมเดลเข้าข้อต่ออัตโนมัติจากตำแหน่ง รอบ 424
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

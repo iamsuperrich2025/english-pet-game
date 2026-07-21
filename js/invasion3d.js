@@ -1194,8 +1194,10 @@ function buildSoldierRig(){
   const gear=new THREE.MeshLambertMaterial({color:0x3a3d33});
   const skin=new THREE.MeshLambertMaterial({color:0xc79a72});
   const grp=new THREE.Group();
+  /* ชั้นในไว้ "ยกทั้งตัวให้เท้าแตะพื้น" — แยกจาก grp ที่เกมใช้วางตำแหน่งบนภูมิประเทศ */
+  const inner=new THREE.Group(); grp.add(inner);
   const J={};
-  J.hips=joint(grp,0,0.92,0);
+  J.hips=joint(inner,0,0.92,0);
   J.torso=joint(J.hips,0,0,0);
   const body=new THREE.Mesh(new THREE.BoxGeometry(.62,.86,.36),uni); body.position.y=.23; J.torso.add(body);
   const vest=new THREE.Mesh(new THREE.BoxGeometry(.68,.5,.44),gear); vest.position.y=.30; J.torso.add(vest);
@@ -1220,7 +1222,7 @@ function buildSoldierRig(){
   /* ปืนอยู่ในมือขวา (ห้อยใต้แขนล่างขวา → ยกแขนแล้วปืนตามไปเอง) */
   const rifle=new THREE.Mesh(new THREE.BoxGeometry(.11,.13,1.15),new THREE.MeshLambertMaterial({color:0x22242a}));
   rifle.position.set(0,-.28,-.42); J.armLR.add(rifle);
-  return {grp:grp,J:J,rifle:rifle};
+  return {grp:grp,inner:inner,J:J,rifle:rifle};
 }
 /* 🧩 เสียบโมเดลจริงเข้าโครง: หา node ตามชื่อใน SOLDIER_PARTS แล้วย้ายไปห้อยใต้ข้อต่อเดิม
    แยกชิ้นไม่ได้ (โมเดลชิ้นเดียว) → แปะทั้งตัวที่สะโพก ยังเห็นเป็นทหาร แค่ไม่ขยับแขนขา */
@@ -1236,6 +1238,8 @@ function applySoldierGlb(s,obj){
   });
   const keys=Object.keys(found);
   if(keys.length<4){
+    /* 🤖 ชื่อชิ้นไม่สื่อ (เช่น tripo_part_1..109) → จับเข้าข้อต่อจาก "ตำแหน่งในร่างกาย" แทน */
+    if(autoRigSoldier(s,obj)) return true;
     Object.keys(s.J).forEach(function(k){ s.J[k].children.slice().forEach(function(c){ if(c.isMesh) s.J[k].remove(c); }); });
     obj.position.y=-0.92; s.J.hips.add(obj); s.static=true; return false;
   }
@@ -1250,8 +1254,115 @@ function applySoldierGlb(s,obj){
   });
   s.glb=true; return true;
 }
+/* ============================================================
+   🤖 รอบ 424: จับชิ้นส่วนเข้าข้อต่อ "อัตโนมัติจากตำแหน่ง" (ผู้ใช้ไม่ต้องตั้งชื่อ)
+   Tripo Smart Segment แตกออกมาเป็น tripo_part_1..109 → ชื่อไม่สื่ออะไรเลย
+   วิธีแก้: ดูว่าแต่ละชิ้น "อยู่ตรงไหนของร่างกาย" แล้วจับเข้าข้อต่อที่ใกล้ที่สุด
+     1) หากรอบทั้งตัว → แปลงตำแหน่งทุกชิ้นเป็นสัดส่วน (สูง 0=พื้น 1=หัว · กว้าง -1..1)
+     2) เทียบกับ "แผนผังร่างกายมาตรฐาน" (BODY_MAP) หาข้อต่อที่ใกล้สุด
+     3) จุดหมุนของข้อต่อคำนวณจากชิ้นจริง (ไหล่=ขอบบนของกลุ่มแขนบน · เข่า=ขอบบนของกลุ่มแข้ง ฯลฯ)
+   ============================================================ */
+const BODY_MAP={            /* [x สัดส่วนความกว้าง, y สัดส่วนความสูง] ของข้อต่อในร่างคนยืน A-pose */
+  hips:[0,.50], torso:[0,.70], head:[0,.90],
+  armUL:[-.62,.72], armLL:[-.72,.52],
+  armUR:[ .62,.72], armLR:[ .72,.52],
+  legUL:[-.22,.36], legLL:[-.24,.13],
+  legUR:[ .22,.36], legLR:[ .24,.13],
+};
+function autoRigSoldier(s,obj){
+  obj.updateWorldMatrix(true,true);
+  /* 1) เก็บทุกชิ้น + กรอบของมัน (ทำให้เป็นพิกัดโลกก่อน จะได้ไม่ต้องสนใจ transform ซ้อนกัน) */
+  const parts=[];
+  obj.traverse(function(o){
+    if(!o.isMesh) return;
+    const b=new THREE.Box3().setFromObject(o);
+    if(!isFinite(b.min.y)||b.isEmpty()) return;
+    parts.push({o:o,b:b,c:b.getCenter(new THREE.Vector3())});
+  });
+  if(parts.length<2) return false;
+  const all=new THREE.Box3(); parts.forEach(function(p){ all.union(p.b); });
+  const H=all.max.y-all.min.y, W=Math.max(0.001,all.max.x-all.min.x);
+  const cx=(all.min.x+all.max.x)/2;
+  if(H<=0.001) return false;
+  /* 2) จับแต่ละชิ้นเข้าข้อต่อที่ใกล้ที่สุดในพิกัดสัดส่วน
+        ถ่วงน้ำหนักแกน Y มากกว่า X เล็กน้อย เพราะความสูงบอกส่วนของร่างกายได้ชัดกว่า */
+  const bucket={}; Object.keys(BODY_MAP).forEach(function(k){ bucket[k]=[]; });
+  parts.forEach(function(p){
+    const ny=(p.c.y-all.min.y)/H, nx=(p.c.x-cx)/(W/2);
+    let best=null,bd=1e9;
+    for(const k in BODY_MAP){
+      const t=BODY_MAP[k];
+      const dx=(nx-t[0])*0.85, dy=(ny-t[1])*1.15;
+      const d=dx*dx+dy*dy;
+      if(d<bd){ bd=d; best=k; }
+    }
+    p.key=best; bucket[best].push(p);
+  });
+  /* ต้องกระจายพอสมควรถึงจะถือว่าแยกร่างได้จริง (ไม่งั้นตกไปโหมดนิ่ง) */
+  const used=Object.keys(bucket).filter(function(k){ return bucket[k].length>0; });
+  if(used.length<6) return false;
+  /* 3) จุดหมุนของข้อต่อ — คำนวณจากชิ้นจริงในกลุ่ม ไม่ใช่ค่าคงที่ */
+  const box={}, piv={};
+  used.forEach(function(k){
+    const bb=new THREE.Box3(); bucket[k].forEach(function(p){ bb.union(p.b); });
+    box[k]=bb;
+    const c=bb.getCenter(new THREE.Vector3());
+    if(k==='head')      piv[k]=new THREE.Vector3(cx, bb.min.y, c.z);          /* คอ */
+    else if(k==='hips') piv[k]=new THREE.Vector3(cx, c.y, c.z);
+    else if(k==='torso')piv[k]=new THREE.Vector3(cx, bb.min.y, c.z);          /* เอว */
+    else                piv[k]=new THREE.Vector3(c.x, bb.max.y, c.z);         /* ไหล่/ศอก/สะโพก/เข่า = ขอบบนของชิ้น */
+  });
+  /* ข้อต่อที่ไม่มีชิ้นเลย → เดาจากแผนผัง (กันโครงขาด) */
+  Object.keys(BODY_MAP).forEach(function(k){
+    if(piv[k]) return;
+    piv[k]=new THREE.Vector3(cx+BODY_MAP[k][0]*(W/2), all.min.y+BODY_MAP[k][1]*H, 0);
+  });
+  /* 4) ประกอบลำดับชั้นข้อต่อ (ตำแหน่งลูก = ตำแหน่งโลกของลูก − ของแม่) */
+  const J=s.J;
+  const link=[['hips',null],['torso','hips'],['head','torso'],
+              ['armUL','torso'],['armLL','armUL'],['armUR','torso'],['armLR','armUR'],
+              ['legUL','hips'],['legLL','legUL'],['legUR','hips'],['legLR','legUR']];
+  link.forEach(function(pair){
+    const k=pair[0], par=pair[1];
+    const j=J[k]; if(!j) return;
+    j.children.slice().forEach(function(c){ if(c.isMesh) j.remove(c); });   /* ลบทรงชั่วคราว */
+    j.rotation.set(0,0,0);
+    const w=piv[k], pw=par?piv[par]:new THREE.Vector3(0,0,0);
+    j.position.set(w.x-pw.x, w.y-pw.y, w.z-pw.z);
+  });
+  /* 5) ย้ายชิ้นจริงไปห้อยใต้ข้อต่อ (แบนพิกัดเป็นโลกก่อน แล้วลบตำแหน่งข้อต่อออก) */
+  used.forEach(function(k){
+    const j=J[k]; if(!j) return;
+    bucket[k].forEach(function(p){
+      const m=p.o;
+      m.updateWorldMatrix(true,false);
+      const wm=m.matrixWorld.clone();
+      if(m.parent) m.parent.remove(m);
+      wm.decompose(m.position,m.quaternion,m.scale);
+      m.position.sub(piv[k]);
+      j.add(m);
+    });
+  });
+  /* 6) ยกทั้งตัวให้เท้าแตะพื้น (ข้อต่อ hips ของโครงอยู่ที่ y=0.92 อยู่แล้ว) */
+  J.hips.position.y=(piv.hips.y-all.min.y);
+  s.glb=true; s.autoRig=true; s.rigInfo={parts:parts.length,joints:used.length};
+  return true;
+}
 /* 🎞️ ท่าทางทหาร — ขยับด้วยโค้ดตามสถานการณ์จริงในเกม (เนียนกว่าคลิปสำเร็จรูป)
    mode: 'idle' | 'walk' | 'aim' | 'crouch' */
+/* 🦶 ยกทั้งตัวให้ "เท้าแตะพื้นพอดี" ในทุกท่า
+   จำเป็นเพราะสัดส่วนขาของโมเดลจริงไม่เท่าทรงที่โค้ดวาดไว้ → ท่าหมอบ/เดินอาจจมพื้นหรือลอย
+   วัดกรอบจริงครั้งเดียวตอน "เปลี่ยนท่า" (ไม่ได้วัดทุกเฟรม จึงไม่กินแรง) */
+function fitSoldierGround(s){
+  const inner=s.J.hips.parent; if(!inner) return;
+  inner.position.y=0;
+  inner.updateWorldMatrix(true,true);
+  const b=new THREE.Box3().setFromObject(inner);
+  if(!isFinite(b.min.y)) return;
+  const root=inner.parent;
+  const rootY=root?root.getWorldPosition(new THREE.Vector3()).y:0;
+  inner.position.y=-(b.min.y-rootY);
+}
 function poseSoldier(s,now){
   const J=s.J; if(!J||s.static) return;
   const t=now*0.001+s.phase, m=s.mode||'idle';
@@ -1291,6 +1402,8 @@ function poseSoldier(s,now){
     J.torso.rotation.x-=s.fireT*0.05;
     s.fireT=Math.max(0,s.fireT-0.06);
   }
+  /* เปลี่ยนท่าเมื่อไหร่ ปรับความสูงให้เท้าแตะพื้นใหม่ (ท่าเดินวัดตอนจังหวะกลางก้าว) */
+  if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
 }
 function makeSoldier(x,z,crouch,kind){
   const rig=buildSoldierRig();
@@ -3142,7 +3255,7 @@ window.InvasionWorld={
       r.pose={}; Object.keys(s.J).forEach(k=>{ r.pose[k]=[+s.J[k].rotation.x.toFixed(3),+s.J[k].rotation.z.toFixed(3)]; });
       r.hipsY=+s.J.hips.position.y.toFixed(3); return r; },
     squadPose(i,mode){ const s=squad[i||0]; if(s){ s.mode=mode; poseSoldier(s,performance.now()); } return s?s.mode:null; },
-    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS,
+    poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP,
     get shots(){return fShots.length}, get missiles(){return missiles.length}, get fx(){return fx.length},
     get mother(){return mother}, get camera(){return camera}, get scene(){return scene},
     get renderInfo(){ return {calls:renderer.info.render.calls, tris:renderer.info.render.triangles,
