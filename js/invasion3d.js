@@ -1700,6 +1700,25 @@ function stretchGunBarrel(obj,cut,k){
   }
   return grew;
 }
+/* ⚡ รอบ 428: รวมชิ้นส่วนปืนเป็นก้อนเดียว
+   ปืนเป็น view model ที่ "วาดทุกเฟรม" และอยู่ใกล้กล้องที่สุด — ถ้า Smart Segment แตก 100 ชิ้น
+   = +100 draw call ทุกเฟรมตลอดเกม · ปืนไม่ต้องขยับข้อต่อ (ต่างจากทหาร) จึงรวมทั้งกระบอกได้เลย
+   ⚠️ ต้องเรียก "หลัง" stretchGunBarrel เสมอ (ยืดตอนยังแยกชิ้นอยู่ ไม่งั้นยืดทั้งกระบอก) */
+function mergeGunParts(obj){
+  const meshes=[];
+  obj.traverse(function(o){ if(o.isMesh) meshes.push(o); });
+  if(meshes.length<2) return meshes.length;
+  meshes.forEach(function(m){
+    m.updateWorldMatrix(true,false);
+    const wm=m.matrixWorld.clone();
+    if(m.parent) m.parent.remove(m);
+    wm.decompose(m.position,m.quaternion,m.scale);
+  });
+  const merged=mergeMeshList(meshes);
+  obj.children.slice().forEach(function(c){ obj.remove(c); });
+  merged.forEach(function(m){ obj.add(m); });
+  return merged.length;
+}
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -1726,6 +1745,7 @@ function buildGun(){
   const vFill=new THREE.PointLight(0x9fb6d8,.85,4);   // ไฟเสริมฝั่งเงา ให้เห็นรูปทรงไม่ตันดำ
   vFill.position.set(-.5,-.15,.1); camera.add(vFill);
   loadGlb('img/models/gun_rifle.glb',(obj)=>{
+    mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว
     fitInto(obj,.95);
     /* 🔦 ยกเงาเฉพาะปืนที่ถืออยู่ (view model) — texture ปืนเป็นสีดำ + roughness 1
        ทำให้ไม่จับแสงเลย เห็นเป็นเงาดำตัน · ใช้ texture ตัวเดิมเป็น emissiveMap อ่อนๆ
@@ -1746,6 +1766,7 @@ function buildGun(){
   /* 🎯 โมเดลจริงของ R93 ถ้าผู้ใช้วางไฟล์ไว้ (prompt อยู่ใน PROMPTS_INVASION.md) */
   loadGlb('img/models/gun_r93.glb',(obj)=>{
     stretchGunBarrel(obj);                                // 🔧 ยืดลำกล้องให้ได้สัดส่วนสไนเปอร์จริง
+    mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว (ปืนวาดทุกเฟรม)
     fitInto(obj,1.25);                                    // สไนเปอร์ยาวกว่าไรเฟิล
     obj.traverse(c=>{
       if(!c.isMesh||!c.material) return;
@@ -3428,7 +3449,7 @@ window.InvasionWorld={
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
-    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel,
+    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts,
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
