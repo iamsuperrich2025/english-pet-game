@@ -21,13 +21,19 @@ const FOV=68;                          // 🎯 รอบ 416: แคบลงจ
 const LOOK_SENS=0.0026, PAD_SENS=0.0042;
 const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (ต้องเงยดูยานแม่)
 
-/* 🛸 ยานแม่ — ใหญ่จนเกือบเต็มท้องฟ้า (สไตล์ Independence Day) */
-/* ⚠️ 3 ค่านี้สัมพันธ์กัน อย่าแก้ทีละตัว — จูนแล้วต้องวัดซ้ำ (ดูวิธีวัดใน handoff/TASKS.md รอบ 413)
-   MS_Y ต่ำไป = ท้องยาน+หนามจมพื้น · MS_Z ใกล้ไป = ยานอยู่เหนือหัวจนแผงตัวอักษรหลุดขอบจอบน
-   ค่าปัจจุบัน: ยืนที่ z≈176 เงยหน้า ~17° เห็นยานกินจอ 100% กว้าง / ~70% สูง · แผงตัวอักษรอยู่กลางจอพอดี */
-const MS_Y=340, MS_Z=-300, MS_R=560;   // ความสูงลอย · ระยะหน้า · รัศมีลำ
-const MS_HP=100;                       // พลังเกราะยานแม่ (นับเป็น %)
+/* 🛸 ยานแม่ — รอบ 417 (ผู้ใช้สั่ง): ขยาย 5 เท่า ใหญ่จนคลุมฟ้าทั้งผืนแบบ Independence Day
+   ⚠️ กฎเหล็กของ 3 ค่านี้ (เคยพลาดมาแล้วทั้งคู่):
+     · MS_Y ต้อง > MS_R*0.42 + เผื่อ ไม่งั้น "ท้องยาน+หนามจมทะลุพื้น"
+     · ยานใหญ่ขนาดนี้ผู้เล่นจะอยู่ "ใต้ทรงกลมกันชน" ของมัน → เล็งยิงตัวลำไม่ได้
+       จึงต้องมี "แกนพลังงาน" (msCore) เป็นจุดอ่อนแยกต่างหาก ดู CORE_* ด้านล่าง
+     · หมอกฉากไกลแค่ ~650m แต่ยานอยู่ ~1,700m → ตั้ง fog:false ที่ตัวลำ ไม่งั้นยานหายกลืนไปกับฟ้า */
+const MS_Y=1500, MS_Z=-1500, MS_R=2800;   // ความสูงลอย · ระยะหน้า · รัศมีลำ (เดิม 340/-300/560)
+const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
+/* 🔠 แผงตัวอักษร + แกนพลังงาน — "แยกขนาดจากตัวลำ" เพราะถ้าผูกกับ MS_R ตัวอักษรจะโตตาม 5 เท่าจนล้นจอ
+   ค่าพวกนี้เลือกจากมุมมองจริง: ยืนที่ z≈176 เงย ~17° แล้วเห็นแถวตัวอักษรกลางจอพอดี อ่านออกชัด */
+const BOARD_Y=133, BOARD_Z=-48, BOARD_CELL=60;    // ความสูง · ระยะ · ขนาดช่องต่อ 1 ตัวอักษร
+const CORE_Y=210, CORE_Z=-120, CORE_R=45;         // แกนพลังงาน (จุดที่ยิงโดน) เหนือ-หลังแผงขึ้นไป
 
 /* 👾 ยานลูก */
 const F_HP=3, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=95, F_R=190;
@@ -40,11 +46,16 @@ const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
 /* 👥 พันธมิตร */
-const SQUAD_N=10, HELI_N=3;
+const SQUAD_N=10;
 const SQUAD_GAP=520, HELI_GAP=2600;    // จังหวะยิงของ AI (ms)
 
-/* 🚁 เฮลิคอปเตอร์ที่ผู้เล่นขับเอง (รอบ 414 — ผู้ใช้สั่ง) */
-const PH_ACCEL=26, PH_VMAX=34, PH_CLIMB=20, PH_Y_MIN=14, PH_Y_MAX=95, PH_DRAG=1.4;
+/* 🚁 เฮลิคอปเตอร์ (รอบ 417 ผู้ใช้สั่ง 3 ข้อ):
+   · ทั้งโลกมีได้สูงสุด HELI_MAX ลำ (นับรวมผู้เล่นทุกคน + บอท)
+   · ปกติ "ผู้เล่นขับเท่านั้น" ไม่มีบอท — ยกเว้นในแมพมีคนน้อยกว่า 2 คน จึงปล่อยบอท 1 ลำเป็นเพื่อน
+   · การบังคับ "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" → ค่าพวกนี้ก๊อปตรงจาก tickHeli ใน adventure3d.js */
+const HELI_MAX=5;                      // เพดานจำนวนเฮลิทั้งโลก
+const HELI_ACCEL=13, HELI_VMAX=17, HELI_CLIMB=9, HELI_DAMP=1.8, HELI_DRAG=1.4, HELI_YAWSP=1.5;
+const HELI_SKID=1.35, HELI_CEIL=95;    // ความสูงตาคนขับเหนือคานลงจอด · เพดานบิน
 const PH_GUN_GAP=70, PH_GUN_DMG=1.1;                 // ปืนกลติดเฮลิ (รัวกว่าปืนมือ ไม่มีโอเวอร์ฮีต)
 const PH_MIS_MAX=12, PH_MIS_RELOAD=6000, PH_MIS_DMG=3.2;   // จรวดเฮลิ: ยิงเป็นชุดคู่ เติมเร็ว
 
@@ -56,6 +67,8 @@ const PEER_COLORS=[0xef5350,0x42a5f5,0x66bb6a,0xffca28,0xab47bc,0x26c6da,0xff704
 
 const TAU=Math.PI*2;
 const rnd=(a,b)=>a+Math.random()*(b-a);
+/* สุ่มแบบมีเมล็ด (เลขเดิม→ผลเดิมทุกเครื่อง) — ใช้ให้ยานลูกเกิดตำแหน่งเดียวกันทั้งห้อง */
+const srnd=(seed)=>{ const x=Math.sin(seed*127.1+311.7)*43758.5453; return x-Math.floor(x); };
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 
 /* ============================================================
@@ -170,9 +183,12 @@ const CSS=`
 #inv-board .bd-r.me{color:#8fffb0;font-weight:800}
 #inv-board .bd-r span:last-child{margin-left:auto;font-weight:800}
 /* 💬 แชทสำเร็จรูป */
-#inv-chat{position:absolute;left:12px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer;
+#inv-chat,#inv-map{position:absolute;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;font-size:20px;cursor:pointer;
   background:radial-gradient(circle at 34% 28%,#eaf6ff,#8fb6d6);box-shadow:0 4px 10px rgba(0,0,0,.5)}
-#inv-chatbar{position:absolute;left:66px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
+#inv-chat{left:12px}
+#inv-map{left:66px;background:radial-gradient(circle at 34% 28%,#d8ffd0,#4a9a52)}
+#inv-map:active,#inv-chat:active{transform:scale(.94)}
+#inv-chatbar{position:absolute;left:120px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
 #inv-chatbar.on{display:flex}
 #inv-chatbar button{border:none;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;
   color:#0e2136;background:linear-gradient(180deg,#e9f4ff,#bcd9f5)}
@@ -188,9 +204,26 @@ const CSS=`
 #inv-ban .ib-coin{color:#ffd54f;font-size:19px}
 #inv-ban .ib-sub{display:block;font-size:14px;color:#bfe4ff;font-weight:700;margin-top:3px}
 /* ---- การ์ดวิธีเล่น / ยืนยันออก ---- */
-#inv-intro,#inv-exitbox{position:absolute;inset:0;z-index:9;background:rgba(4,8,16,.9);
+#inv-intro,#inv-exitbox,#inv-mapbox{position:absolute;inset:0;z-index:9;background:rgba(4,8,16,.9);
   display:none;align-items:center;justify-content:center;padding:12px}
-#inv-intro.on,#inv-exitbox.on{display:flex}
+#inv-intro.on,#inv-exitbox.on,#inv-mapbox.on{display:flex}
+/* 🗺️ แผนที่เลือกจุดเกิด */
+#inv-mapbox .inv-card{max-width:min(760px,96vw)}
+#inv-mapwrap{position:relative;display:inline-block;line-height:0;margin:2px 0 8px}
+/* ⚠️ ขนาดผืนแผนที่ "คำนวณด้วย JS" ใน fitSpawnMap() ไม่ใช่ CSS —
+   canvas ไม่รักษาสัดส่วนเองเหมือน <img> ถ้าใช้ max-height คู่ max-width ภาพจะยืดผิดส่วน
+   และกล่องจะเกินจอจนมี scrollbar (ผิดกฎ "ทุกหน้าต่างต้องเห็นครบทั้งใบ") */
+#inv-mapcv{border-radius:12px;border:2px solid #4fb9e8;cursor:crosshair;
+  touch-action:manipulation;background:#d8c0a0;display:block}
+#inv-mapname{font-size:13px;color:#ffd98a;font-weight:800;min-height:18px;margin-bottom:4px}
+#inv-maphint{font-size:12px;color:#9fb6cf;margin-top:2px}
+@media (max-height:400px){
+  #inv-mapbox .inv-card{padding:8px 12px}
+  #inv-mapbox h3{font-size:16px;margin-bottom:3px}
+  #inv-mapbox p{font-size:11.5px;margin-bottom:5px}
+  #inv-mapname{font-size:11px;min-height:14px}
+  #inv-maphint{font-size:10.5px}
+}
 .inv-card{background:linear-gradient(180deg,#0f2136,#0a1626);border:2px solid #4fb9e8;border-radius:18px;
   padding:16px 22px;max-width:min(680px,94vw);max-height:94vh;overflow:auto;text-align:center;color:#e8f4ff;
   box-shadow:0 14px 40px rgba(0,0,0,.7)}
@@ -224,18 +257,24 @@ const CSS=`
   #inv-stat{top:40px;min-width:120px}
   #inv-stat .inv-lb{font-size:10px}
   #inv-exit{font-size:11px;padding:5px 10px}
-  #inv-coins{top:66px}
-  #inv-board{top:90px;min-width:96px}
+  /* ⚠️ กล่องเป้าหมายสูงไม่เท่ากัน: ตอนโชว์ "เกราะยานแม่" มีแถบพลังเพิ่ม สูงกว่าตอนโชว์ "ยานลูกเหลือ" ~15px
+     → เว้นที่ให้เผื่อกรณีสูงสุด ไม่งั้นเหรียญโดนทับตอนเกราะเปิด (เจอจริงตอนเทสต์) */
+  #inv-coins{top:84px}
+  #inv-board{top:110px;min-width:96px}
   #inv-heli{width:48px;height:48px;font-size:19px;bottom:150px;right:12px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
-  #inv-chat{width:38px;height:38px;font-size:15px;bottom:10px}
-  #inv-chatbar{left:54px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
+  #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
+  #inv-map{left:56px}
+  #inv-chatbar{left:102px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
 }
 /* จอเตี้ยพิเศษ (≤330px · จอสี่เหลี่ยมยาวมาก) — พื้นที่ขวาไม่พอวางกระดานคะแนน+ปุ่มเฮลิพร้อมกัน
    → ซ่อนกระดานคะแนนมุมขวา (multiplayer ยังทำงานเต็ม เห็นเพื่อนในฉาก+ป้ายชื่อ+แชท) */
 @media (max-height:330px){
-  #inv-board,#inv-board.on{display:none}   /* .on มี specificity สูงกว่า ต้องระบุคู่ ไม่งั้นไม่ยอมซ่อน */
+  #inv-board,#inv-board.on{display:none}
+  #inv-maphint{display:none}
+  #inv-mapbox h3{font-size:14px;margin-bottom:2px}
+  #inv-mapbox p{font-size:10.5px;margin-bottom:3px}   /* .on มี specificity สูงกว่า ต้องระบุคู่ ไม่งั้นไม่ยอมซ่อน */
   #inv-stat{min-width:108px}
   #inv-stat .inv-lb{font-size:9px}
 }
@@ -267,6 +306,7 @@ function buildDom(){
     <button id="inv-heli">🚁</button>
     <button id="inv-up">▲</button>
     <button id="inv-down">▼</button>
+    <button id="inv-map">🗺️</button>
     <button id="inv-chat">💬</button>
     <div id="inv-chatbar"></div>
     <div id="inv-selfmsg"></div>
@@ -283,6 +323,17 @@ function buildDom(){
       💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R หรือคลิกขวา = มิสไซล์ · Esc ปลดเมาส์<br>
       ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
       <button class="inv-btn" id="inv-go">⚔️ เข้าสมรภูมิ!</button>
+    </div></div>
+    <div id="inv-mapbox"><div class="inv-card">
+      <h3>🗺️ เลือกจุดลงสนาม</h3>
+      <p>แตะบนแผนที่เพื่อเลือกว่าจะ<b>ลงตรงไหน</b> — จุดสีเขียวคือแนวกำบังที่มีหน่วยรบอยู่<br>
+      <span id="inv-mapname"></span></p>
+      <div id="inv-mapwrap"><canvas id="inv-mapcv" width="620" height="380"></canvas></div>
+      <div class="inv-row">
+        <button class="inv-btn" id="inv-mapgo">🪂 ลงตรงนี้!</button>
+        <button class="inv-btn red" id="inv-maprand">🎲 สุ่มจุด</button>
+      </div>
+      <div id="inv-maphint">เข้าเกมแล้วกดปุ่ม 🗺️ เพื่อย้ายจุดลงสนามใหม่ได้ทุกเมื่อ</div>
     </div></div>
     <div id="inv-exitbox"><div class="inv-card">
       <h3>⬅️ ออกจากสมรภูมิ?</h3>
@@ -304,7 +355,12 @@ function buildDom(){
   heliBtn=document.getElementById('inv-heli'); upBtn=document.getElementById('inv-up'); downBtn=document.getElementById('inv-down');
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
-  document.getElementById('inv-go').addEventListener('click',()=>{ introEl.classList.remove('on'); resumeAudio(); });
+  mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
+  mapCv=document.getElementById('inv-mapcv'); mapNameEl=document.getElementById('inv-mapname');
+  document.getElementById('inv-go').addEventListener('click',()=>{
+    introEl.classList.remove('on'); resumeAudio();
+    openSpawnMap();                                   // 🗺️ อ่านวิธีเล่นจบ → เลือกจุดลงสนามก่อนเริ่ม
+  });
   document.getElementById('inv-exit').addEventListener('click',()=>{ exitBox.classList.add('on'); unlockMouse(); });
   document.getElementById('inv-exit-yes').addEventListener('click',exitWorld);
   document.getElementById('inv-exit-no').addEventListener('click',()=>exitBox.classList.remove('on'));
@@ -481,10 +537,17 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
-let inHeli=false, phVel={x:0,y:0,z:0}, phClimb=0, phRotorAt=0, phMisLeft=PH_MIS_MAX, phMisReloadAt=0, playerHeli=null;
+let inHeli=false, phVel={x:0,y:0,z:0}, phClimb=0, hLanded=false, phMisLeft=PH_MIS_MAX, phMisReloadAt=0;
 /* 🌐 ผู้เล่นออนไลน์ */
 let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null;
+/* 🤝 รอบ 417: สมรภูมิร่วม — ทุกคนสู้ "ยานแม่ลำเดียวกัน" เห็นตรงกันทุกเครื่อง
+   วิธี (ไม่ต้องแก้ rules เลย ใช้ field เดิม cw/hp ที่อนุญาตอยู่แล้ว):
+     · หัวหน้าห้อง (uid น้อยสุด) ประกาศคำ+เลขรอบใน `cw` = "en|th|round"
+     · ทุกคนประกาศผลงานตัวเองใน `hp` = "round|บิตยานลูกที่ตัวเองยิงตก|ดาเมจที่ทำกับยานแม่"
+     · ทุกเครื่องรวม (OR บิต / บวกดาเมจ) เอง = สถานะตรงกันโดยไม่ต้องมีเซิร์ฟเวอร์ */
+let battleRound=0, myKill=0, myArmorDmg=0;
 let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, upBtn=null, downBtn=null, canopyEl=null;
+let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let terrainH=null;                     // ฟังก์ชันความสูงพื้นทราย
 let solids=[];                         // กันชนตึก {x,z,r}
 let msLamps=[], msCore=null, msGlow=null, msBoard=null, msPlate=null;
@@ -830,12 +893,18 @@ function buildMothership(){
     lp.position.set(Math.cos(a)*MS_R*0.93,-MS_R*0.06,Math.sin(a)*MS_R*0.93);
     lp.userData.ph=Math.random()*TAU; grp.add(lp); msLamps.push(lp);
   }
-  const core=new THREE.Mesh(new THREE.SphereGeometry(MS_R*0.11,18,14),
-    new THREE.MeshBasicMaterial({color:0x3a0d0d}));
-  core.position.y=-MS_R*0.30; grp.add(core); msCore=core;
+  /* 🔴 แกนพลังงาน = "จุดอ่อนที่ยิงโดน" — อยู่ในฉาก ไม่ใช่ลูกของลำ (ลำใหญ่/หมุน เล็งไม่ได้)
+     ห้อยต่ำลงมาใกล้ผู้เล่น เพื่อให้เล็งยิงได้จริงทั้งจากพื้นและจากเฮลิ */
+  const core=new THREE.Mesh(new THREE.SphereGeometry(CORE_R,20,16),
+    new THREE.MeshBasicMaterial({color:0x3a0d0d,fog:false}));
+  core.position.set(0,CORE_Y,CORE_Z); scene.add(core); msCore=core;
   const glow=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff3a2a,transparent:true,opacity:0,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
-  glow.scale.setScalar(MS_R*0.9); glow.position.y=-MS_R*0.30; grp.add(glow); msGlow=glow;
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  glow.scale.setScalar(CORE_R*7); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
+  /* ลำแสงยึดแกนไว้กับท้องยาน (ให้เห็นว่าแกนเป็นของยานแม่ ไม่ใช่ลอยเฉยๆ) */
+  const tether=new THREE.Mesh(new THREE.CylinderGeometry(CORE_R*.34,CORE_R*.9,MS_Y-MS_R*0.30-CORE_Y,10,1,true),
+    new THREE.MeshBasicMaterial({color:0x2a1410,transparent:true,opacity:.55,side:THREE.DoubleSide,fog:false}));
+  tether.position.set(0,(CORE_Y+MS_Y-MS_R*0.30)/2,CORE_Z); scene.add(tether);
 
   /* 🧩 แผงช่องตัวอักษร — ห้อยใต้ขอบหน้าลำ
      ⚠️ ต้องเป็นลูกของ "ฉาก" ไม่ใช่ลูกของลำยาน! ลำยานหมุนช้าๆ ตลอดเวลา ถ้าแผงเป็นลูกของลำยาน
@@ -843,18 +912,22 @@ function buildMothership(){
      ตำแหน่งนี้ทำให้ผู้เล่นเงยหน้า ~30° (พอดีมุมเริ่มต้น) แล้วเห็นแถวตัวอักษรกลางจอ
      ย้ายแผง "เข้าใกล้ผู้เล่น" (z มากขึ้น) = มุมเงยชันขึ้น ตัวอักษรจะหลุดขอบจอบน */
   const board=new THREE.Group();
-  board.position.set(0,MS_Y-MS_R*0.37,MS_Z+MS_R*0.45);
+  board.position.set(0,BOARD_Y,BOARD_Z);      // ⚠️ แยกจากขนาดลำ ไม่งั้นตัวอักษรโต 5 เท่าจนล้นจอ
   /* ⚠️ เครื่องหมายสำคัญ: rotation.x เป็น "บวก" = หน้าแผงก้มลงหาผู้เล่นที่ยืนอยู่ข้างล่าง
      ใส่ลบจะเงยขึ้นฟ้า ตัวอักษรถูกมองเฉียงจนแบน อ่านยาก (พลาดมาแล้ว วัดด้วย dot ได้ 0.50) */
   board.rotation.x=0.52;
   scene.add(board); msBoard=board;
-  const plate=new THREE.Mesh(new THREE.BoxGeometry(MS_R,MS_R*0.22,MS_R*0.04),darkM);
+  const plate=new THREE.Mesh(new THREE.BoxGeometry(BOARD_CELL*8,BOARD_CELL*1.3,BOARD_CELL*0.5),
+    new THREE.MeshPhongMaterial({color:0x101318,emissive:0x02040a,shininess:14,flatShading:true,fog:false}));
   board.add(plate); msPlate=plate;
 
   scene.add(grp); mother=grp;
+  /* 🌫️ ยานอยู่ไกลกว่าระยะหมอกมาก → ปิด fog ที่ตัวลำ ไม่งั้นกลืนหายไปกับสีฟ้าทั้งลำ */
+  grp.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.fog=false;m.needsUpdate=true;}); } });
   loadGlb('img/models/mothership.glb',(obj)=>{
     fitInto(obj,MS_R*2);
-    grp.children.slice().forEach(c=>{ if(c!==core&&c!==glow) grp.remove(c); });
+    obj.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.fog=false;m.needsUpdate=true;}); } });
+    grp.children.slice().forEach(c=>grp.remove(c));
     grp.add(obj); msLamps=[];
   });
 }
@@ -865,9 +938,9 @@ function layoutLetterPanels(){
     l.mesh.material.dispose(); l.mesh.geometry.dispose(); });
   letters=[];
   const n=word.en.length;
-  const cell=Math.min(MS_R*0.11, MS_R*0.55/n);   // คำยาว = ช่องเล็กลง ไม่ให้แถวกว้างเกินมุมมอง
+  const cell=Math.min(BOARD_CELL, BOARD_CELL*6/n);   // คำยาว = ช่องเล็กลง ไม่ให้แถวกว้างเกินมุมมอง
   const gap=cell*0.16, total=n*cell+(n-1)*gap;
-  if(msPlate){ msPlate.geometry.dispose(); msPlate.geometry=new THREE.BoxGeometry(total+cell*0.5,cell*1.3,MS_R*0.04); }
+  if(msPlate){ msPlate.geometry.dispose(); msPlate.geometry=new THREE.BoxGeometry(total+cell*0.5,cell*1.3,cell*0.4); }
   word.en.split('').forEach((ch,i)=>{
     /* fog:false = ตัวอักษรคมชัดเสมอแม้ยานแม่อยู่ไกลในหมอกฝุ่น (เป็นหัวใจการเล่น เด็กต้องอ่านออก) */
     const m=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),
@@ -904,11 +977,14 @@ function makeFighter(letterIdx){
   const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(word.en[letterIdx]),transparent:true,depthTest:false}));
   lb.scale.setScalar(5.2); lb.position.y=4.8; grp.add(lb);
 
-  const a=rnd(0,TAU), r=rnd(F_R*0.45,F_R);
-  grp.position.set(Math.cos(a)*r, rnd(F_Y_MIN,F_Y_MAX), Math.sin(a)*r);
+  /* 🤝 ตำแหน่งเกิดคำนวณจาก (เลขรอบ, ลำดับตัวอักษร) แบบสุ่มมีเมล็ด
+     → ทุกเครื่องในห้องเห็นยานลูกอยู่ตำแหน่งเดียวกัน ไม่ใช่ต่างคนต่างสุ่ม */
+  const sd=battleRound*97+letterIdx*13;
+  const a=srnd(sd)*TAU, r=F_R*(0.45+srnd(sd+1)*0.55);
+  grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
   const f={grp,eye,eng,label:lb,letterIdx,hp:F_HP,
-           ang:a, rad:r, spin:(Math.random()<.5?-1:1)*rnd(.16,.32),
+           ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0};
   fighters.push(f);
   loadGlb('img/models/alien_fighter.glb',(obj)=>{
@@ -967,7 +1043,7 @@ function makeHeli(i){
     pod.rotation.x=Math.PI/2; pod.position.set(s*2.0,-.5,-.4); grp.add(pod);
     const wing=new THREE.Mesh(new THREE.BoxGeometry(1.6,.16,1.0),bodyM); wing.position.set(s*1.2,-.2,-.4); grp.add(wing);
   });
-  const a=(i/HELI_N)*TAU;
+  const a=(i/HELI_MAX)*TAU;
   grp.position.set(Math.cos(a)*130, rnd(48,72), Math.sin(a)*130);
   scene.add(grp);
   return {grp,rotor,trotor,ang:a,rad:rnd(110,165),y:grp.position.y,
@@ -1154,7 +1230,7 @@ function fireGun(now){
     tracer(origin.clone().addScaledVector(dir,4),hit?hit.point:origin.clone().addScaledVector(dir,700),0x9fe0ff,.07);
     if(hit){ sparkAt(hit.point);
       if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
-      else if(hit.type==='mother'){ damageMother(GUN_DMG_GUN*1.2); } }
+      else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } }
     return;
   }
   if(overheat || now-lastFire<GUN_GAP) return;
@@ -1172,7 +1248,7 @@ function fireGun(now){
   if(!hit) return;
   sparkAt(hit.point);
   if(hit.type==='fighter'){ damageFighter(hit.obj,GUN_DMG,now); Snd.ping(); }
-  else if(hit.type==='mother'){ damageMother(GUN_DMG_GUN); }
+  else if(hit.type==='mother'){ damageMother(MS_DMG_GUN); }
 }
 /* สร้างมิสไซล์นำวิถี 1 ลูก (side = เยื้องซ้าย/ขวาจากปากกระบอก · heli = ดาเมจแรงกว่า) */
 function launchMissile(now,side,heli){
@@ -1223,7 +1299,9 @@ function rayTarget(origin,dir,maxD){
     if(t!==null && t<bestT){ bestT=t; best={type:'fighter',obj:f,t}; }
   });
   if(msOpen && !msDead && mother){
-    const t=raySphere(origin,dir,mother.position,MS_R*0.62);
+    /* 🎯 เล็งที่ "แกนพลังงาน" ไม่ใช่ตัวลำ — ลำใหญ่ 2,800m ผู้เล่นจะอยู่ในทรงกลมกันชนของมันเอง
+       ทำให้ raySphere คืน null ตลอด (ยิงยานแม่ไม่โดนเลย) */
+    const t=raySphere(origin,dir,msCore.position,CORE_R*1.35);
     if(t!==null && t<bestT){ bestT=t; best={type:'mother',obj:mother,t}; }
   }
   if(best) best.point=origin.clone().addScaledVector(dir,bestT);
@@ -1240,24 +1318,34 @@ function raySphere(o,d,c,r){
 /* ============================================================
    ⚔️ ดาเมจ / เงื่อนไขชนะ
    ============================================================ */
-function damageFighter(f,dmg,now){
+/* byMe=false → เป็นผลจากการยิงของเพื่อน (sync มาจาก DB) ไม่ให้เหรียญเรา ไม่บันทึกเป็นผลงานเรา */
+function damageFighter(f,dmg,now,byMe){
   if(f.dead) return;
   f.hp-=dmg; f.hitAt=now||performance.now();
   if(f.hp>0) return;
+  dropFighter(f, byMe!==false);
+}
+function dropFighter(f,mine){
+  if(f.dead) return;
   f.dead=true;
   boom(f.grp.position,1.35,0x8affc0);
   scene.remove(f.grp);
   const i=fighters.indexOf(f); if(i>=0) fighters.splice(i,1);
+  if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าเรายิงลำนี้ → ส่งให้เพื่อนเห็นตรงกัน
   /* 🔴 ตัวอักษรประจำลำนี้บนยานแม่กะพริบ */
   const l=letters[f.letterIdx];
   if(l && !l.down){
     l.down=true; l.blinkUntil=performance.now()+2600;
     setLetterLit(l,true);
-    if(typeof addCoins==='function') addCoins(LETTER_COIN);
-    sessionCoins+=LETTER_COIN; renderCoins();
-    if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
+    if(mine){
+      if(typeof addCoins==='function') addCoins(LETTER_COIN);
+      sessionCoins+=LETTER_COIN; renderCoins();
+      if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
+      toastBan(`💥 ยิงตก! ตัวอักษร <b>${l.ch.toUpperCase()}</b> กะพริบแล้ว<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
+    }else{
+      toastBan(`🤝 เพื่อนยิงตก! ตัวอักษร <b>${l.ch.toUpperCase()}</b> กะพริบแล้ว`,1100);
+    }
     renderWord();
-    toastBan(`💥 ยิงตก! ตัวอักษร <b>${l.ch.toUpperCase()}</b> กะพริบแล้ว<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
   }
   if(!fighters.length && !msOpen) openMothership();
 }
@@ -1273,19 +1361,19 @@ function openMothership(){
 }
 function damageMother(dmg){
   if(!msOpen||msDead) return;
-  msArmor=Math.max(0,msArmor-dmg);
-  renderTarget();
-  if(msArmor<=0) killMother();
+  myArmorDmg+=dmg;                      // 🤝 สะสมดาเมจ "ของเรา" — เกราะจริงคำนวณรวมกับของเพื่อนใน applyShared
+  applyShared();
 }
 function killMother(){
   msDead=true;
-  /* ระเบิดเป็นชุด ลูกใหญ่ขึ้นเรื่อยๆ แล้วยานแม่ค่อยๆ ทรุดหายไป */
-  const p=mother.position.clone();
-  for(let i=0;i<9;i++){
+  /* ระเบิดเป็นชุด — ระเบิดที่ "แกนพลังงาน" (ใกล้ผู้เล่น เห็นชัด) แล้วลามขึ้นไปทั้งลำ */
+  const c=msCore.position.clone();
+  for(let i=0;i<12;i++){
     setTimeout(()=>{ if(!running) return;
-      boom(p.clone().add(new THREE.Vector3(rnd(-MS_R*.7,MS_R*.7),rnd(-MS_R*.3,MS_R*.2),rnd(-MS_R*.5,MS_R*.5))),
-           1.6+i*.35, i%2?0xff8a3a:0xfff0a0);
-    }, i*230);
+      const up=i/11;                                   // ไล่จากแกนขึ้นไปหาท้องยาน
+      boom(c.clone().add(new THREE.Vector3(rnd(-90,90)*(1+up*6), up*(MS_Y-MS_R*0.30-CORE_Y), rnd(-70,70)*(1+up*6))),
+           2.2+i*.55, i%2?0xff8a3a:0xfff0a0);
+    }, i*210);
   }
   setTimeout(()=>{ if(running) flashScreen(); },1900);
   setTimeout(()=>{ if(running) completeWord(); },2500);
@@ -1299,7 +1387,16 @@ function flashScreen(){
 /* ============================================================
    📖 คำศัพท์ + รอบเล่น
    ============================================================ */
+/* 🤝 หัวหน้าห้อง = uid น้อยสุดในแมพ (คนเดียวก็เป็นหัวหน้าเอง) — มีสิทธิ์ "เลือกคำ" ให้ทั้งห้อง */
+function myUid(){ return (typeof onlineKey==='function')?onlineKey():'me'; }
+function leaderUid(){
+  let lead=myUid();
+  for(const uid in peers) if(uid<lead) lead=uid;
+  return lead;
+}
+function isLeader(){ return leaderUid()===myUid(); }
 function pickWord(){
+  if(!isLeader()) return;                       // ลูกทีมรอรับคำจากหัวหน้าผ่าน DB (adoptWord)
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
   let pool=vocabForStudent().filter(([en])=>/^[a-z]{3,8}$/i.test(en))
     .filter(([en])=>!state[DONE_KEY].includes(en.toLowerCase()));
@@ -1307,10 +1404,48 @@ function pickWord(){
     pool=vocabForStudent().filter(([en])=>/^[a-z]{3,8}$/i.test(en)); }
   if(!pool.length) pool=[['alien','มนุษย์ต่างดาว']];
   const [en,th]=pool[(Math.random()*pool.length)|0];
-  word={en:en.toLowerCase(), th};
+  setWord(en.toLowerCase(), th, battleRound+1);
+  netSend(true);                                // ประกาศคำใหม่ให้ทั้งห้องทันที
+}
+/* ตั้งคำ+เลขรอบ แล้วเริ่มเวฟ (ใช้ทั้งหัวหน้าและลูกทีม) */
+function setWord(en,th,round){
+  battleRound=round;
+  myKill=0; myArmorDmg=0;                       // ผลงานรอบใหม่เริ่มจากศูนย์
+  word={en,th};
   layoutLetterPanels();
   renderWord();
   startWave();
+}
+/* ลูกทีมรับคำจากหัวหน้า */
+function adoptWord(cw){
+  if(!cw) return;
+  const [en,th,r]=String(cw).split('|');
+  const round=parseInt(r||'0',10)||0;
+  if(!en || round===battleRound) return;
+  setWord(en,th||'',round);
+  toastBan(`🤝 <b>เข้าร่วมสมรภูมิเดียวกับเพื่อน!</b><br><span class="ib-sub">เป้าหมายร่วม: ${en.toUpperCase()}</span>`,2200);
+}
+/* 🤝 รวมผลงานทุกคน → สถานะยานลูก/เกราะยานแม่ตรงกันทุกเครื่อง (เรียกทุกเฟรม ราคาถูก) */
+function applyShared(){
+  /* ลูกทีม: ตามคำของหัวหน้า */
+  if(!isLeader()){
+    const p=peers[leaderUid()];
+    if(p&&p.cw) adoptWord(p.cw);
+  }
+  /* รวมบิตยานลูกที่ถูกยิงตก + ดาเมจยานแม่ (เฉพาะรอบปัจจุบัน) */
+  let mask=myKill, dmg=myArmorDmg;
+  for(const uid in peers){
+    const p=peers[uid];
+    if(p.round===battleRound){ mask|=(p.kill||0); dmg+=(p.armor||0); }
+  }
+  /* ยานลูกที่เพื่อนยิงตกแล้ว แต่เครื่องเรายังมีอยู่ → เอาออกให้ตรงกัน */
+  if(mask) fighters.slice().forEach(f=>{ if(mask&(1<<f.letterIdx)) dropFighter(f,false); });
+  /* เกราะยานแม่ = พลังเต็ม ลบดาเมจรวมของทุกคน */
+  if(msOpen&&!msDead){
+    const a=Math.max(0,MS_HP-dmg);
+    if(Math.abs(a-msArmor)>0.01){ msArmor=a; renderTarget(); }
+    if(a<=0) killMother();
+  }
 }
 function startWave(){
   fighters.slice().forEach(f=>scene.remove(f.grp)); fighters=[];
@@ -1318,7 +1453,9 @@ function startWave(){
   if(msGlow) msGlow.material.opacity=0;
   if(msCore) msCore.material.color.setHex(0x3a0d0d);
   if(mother){ mother.visible=true; mother.scale.setScalar(1); }
-  if(msBoard) msBoard.visible=true;                          // แผงแยกจากลำยานแล้ว ต้องสั่งโชว์/ซ่อนเอง
+  if(msBoard) msBoard.visible=true;                          // แผง/แกน แยกจากลำยานแล้ว ต้องสั่งโชว์/ซ่อนเอง
+  if(msCore) msCore.visible=true;
+  if(msGlow) msGlow.visible=true;
   letters.forEach(l=>{ l.down=false; l.blinkUntil=0; setLetterLit(l,false); l.mesh.material.opacity=1; });
   word.en.split('').forEach((ch,i)=>makeFighter(i));
   renderTarget();
@@ -1337,8 +1474,11 @@ function completeWord(){
   toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">+${REWARD} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
   saveState();
   if(mother) mother.visible=false;
-  if(msBoard) msBoard.visible=false;                         // ยานแม่ระเบิดแล้ว แผงต้องหายไปด้วย
-  setTimeout(()=>{ if(running) pickWord(); },3200);
+  if(msBoard) msBoard.visible=false;                         // ยานแม่ระเบิดแล้ว แผง+แกนต้องหายไปด้วย
+  if(msCore) msCore.visible=false;
+  if(msGlow) msGlow.visible=false;
+  /* 🤝 หัวหน้าห้องเป็นคนเปิดยานแม่ลำใหม่ให้ทั้งห้อง · ลูกทีมรอรับคำผ่าน DB */
+  setTimeout(()=>{ if(running && isLeader()) pickWord(); },3200);
 }
 
 /* ============================================================
@@ -1445,6 +1585,24 @@ function bindInput(){
   hold(upBtn,()=>{ phClimb=1; },()=>{ phClimb=0; });
   hold(downBtn,()=>{ phClimb=-1; },()=>{ phClimb=0; });
   /* 💬 แชทสำเร็จรูป */
+  /* 🗺️ แผนที่เลือกจุดลงสนาม */
+  mapBtn.addEventListener('click',()=>{ resumeAudio(); openSpawnMap(); });
+  const pickAt=(clientX,clientY)=>{
+    const r=mapCv.getBoundingClientRect();
+    const mx=(clientX-r.left)/r.width*mapCv.width, my=(clientY-r.top)/r.height*mapCv.height;
+    mapPick=mapToWorld(mx,my,mapCv.width,mapCv.height);
+    if(mapNameEl) mapNameEl.textContent=zoneName(mapPick.x,mapPick.z);
+    drawSpawnMap();
+  };
+  mapCv.addEventListener('click',e=>pickAt(e.clientX,e.clientY));
+  mapCv.addEventListener('touchstart',e=>{ const t=e.changedTouches[0]; pickAt(t.clientX,t.clientY); e.preventDefault(); },{passive:false});
+  document.getElementById('inv-mapgo').addEventListener('click',applySpawnPick);
+  document.getElementById('inv-maprand').addEventListener('click',()=>{
+    const a=rnd(0,TAU), r=rnd(20,WORLD*0.7);
+    mapPick={x:Math.cos(a)*r, z:Math.sin(a)*r};
+    if(mapNameEl) mapNameEl.textContent=zoneName(mapPick.x,mapPick.z);
+    drawSpawnMap();
+  });
   chatBtn.addEventListener('click',()=>{
     if(!chatBarEl.childElementCount){
       CHAT_PRESETS.forEach(t=>{ const b=document.createElement('button'); b.textContent=t;
@@ -1556,63 +1714,215 @@ function hurtPlayer(dmg,now){
    กด 🚁 = พุ่งขึ้นฟ้าเป็นเฮลิ · บินยิงปืนกล+จรวดชุดคู่จากมุมสูง · กด 🪂 = ลงพื้นเป็นทหารราบ
    มุมมองจากในห้องนักบิน (กรอบ canopy DOM) — ไม่ต้องมีโมเดลลำ (เราคือลำ)
    ============================================================ */
+/* ============================================================
+   🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
+   วาดมุมมองจากด้านบน: ถนนสมรภูมิ · ตึก (จาก solids) · แนวกำบัง · ตำแหน่งเพื่อน · เงายานแม่
+   แตะที่ไหนก็ได้ = ลงตรงนั้น (กันไม่ให้ทับตึก)
+   ============================================================ */
+const MAP_VIEW=WORLD*0.98;                      // ครึ่งความกว้างโลกที่แผนที่ครอบคลุม
+function mapToWorld(mx,my,w,h){ return {x:(mx/w-.5)*2*MAP_VIEW, z:(my/h-.5)*2*MAP_VIEW}; }
+function worldToMap(x,z,w,h){ return {mx:(x/(2*MAP_VIEW)+.5)*w, my:(z/(2*MAP_VIEW)+.5)*h}; }
+function zoneName(x,z){
+  if(Math.abs(x)<STREET_HW+6 && z<STREET_Z0+6 && z>STREET_Z0-STREET_LEN) return '🏚️ ถนนสมรภูมิ (ใจกลางการรบ)';
+  if(z>STREET_Z0) return '🛡️ แนวหลัง (ปลอดภัย เริ่มใหม่ได้)';
+  if(Math.hypot(x,z)<120) return '🎯 ใกล้แกนพลังงานยานแม่';
+  return '🏜️ ทะเลทรายรอบเมือง';
+}
+function drawSpawnMap(){
+  if(!mapCv) return;
+  const w=mapCv.width, h=mapCv.height, g=mapCv.getContext('2d');
+  g.fillStyle='#cbb08c'; g.fillRect(0,0,w,h);
+  /* เงายานแม่คลุมฟ้า (วงใหญ่จางๆ) */
+  const ms=worldToMap(0,MS_Z,w,h), msr=MS_R/(2*MAP_VIEW)*w;
+  const grd=g.createRadialGradient(ms.mx,ms.my,0,ms.mx,ms.my,msr);
+  grd.addColorStop(0,'rgba(20,24,34,.55)'); grd.addColorStop(1,'rgba(20,24,34,0)');
+  g.fillStyle=grd; g.beginPath(); g.arc(ms.mx,ms.my,msr,0,TAU); g.fill();
+  /* ถนนสมรภูมิ */
+  const a=worldToMap(-STREET_HW,STREET_Z0-STREET_LEN,w,h), b=worldToMap(STREET_HW,STREET_Z0,w,h);
+  g.fillStyle='#a8926e'; g.fillRect(a.mx,a.my,b.mx-a.mx,b.my-a.my);
+  /* ตึก */
+  g.fillStyle='#8d7f6b';
+  solids.forEach(o=>{ const p=worldToMap(o.x,o.z,w,h), r=Math.max(1.5,o.r/(2*MAP_VIEW)*w);
+    g.fillRect(p.mx-r,p.my-r,r*2,r*2); });
+  /* แนวกำบัง (จุดเขียว) */
+  g.fillStyle='#3fbf62';
+  sandbagWalls().forEach(s=>{ const p=worldToMap(s.x,s.z,w,h);
+    g.beginPath(); g.arc(p.mx,p.my,5,0,TAU); g.fill(); });
+  /* แกนพลังงานยานแม่ (เป้าหมาย) */
+  const cp=worldToMap(0,CORE_Z,w,h);
+  g.strokeStyle='#ff4a3a'; g.lineWidth=2.5;
+  g.beginPath(); g.arc(cp.mx,cp.my,9,0,TAU); g.stroke();
+  g.beginPath(); g.moveTo(cp.mx-13,cp.my); g.lineTo(cp.mx+13,cp.my);
+  g.moveTo(cp.mx,cp.my-13); g.lineTo(cp.mx,cp.my+13); g.stroke();
+  /* เพื่อนออนไลน์ */
+  for(const uid in peers){
+    const p=peers[uid], q=worldToMap(p.cur.x,p.cur.z,w,h);
+    g.fillStyle=p.kind==='heli'?'#4fc3f7':'#ffd54f';
+    g.beginPath(); g.arc(q.mx,q.my,5,0,TAU); g.fill();
+    g.strokeStyle='#0e1a28'; g.lineWidth=1.5; g.stroke();
+  }
+  /* ตำแหน่งที่เลือก */
+  if(mapPick){
+    const q=worldToMap(mapPick.x,mapPick.z,w,h);
+    g.strokeStyle='#fff'; g.lineWidth=3;
+    g.beginPath(); g.arc(q.mx,q.my,11,0,TAU); g.stroke();
+    g.fillStyle='#7dffb0'; g.beginPath(); g.arc(q.mx,q.my,5,0,TAU); g.fill();
+  }
+  /* กรอบ + ทิศ */
+  g.strokeStyle='rgba(20,30,45,.8)'; g.lineWidth=2; g.strokeRect(1,1,w-2,h-2);
+  g.fillStyle='#3d3527'; g.font='bold 13px system-ui'; g.textAlign='center';
+  g.fillText('🛸 ยานแม่อยู่ทางนี้',w/2,16);
+  g.fillText('🛡️ แนวหลัง',w/2,h-7);
+}
+/* หาจุดลงที่ไม่ทับตึก */
+function safeSpawn(x,z){
+  for(let tries=0;tries<24;tries++){
+    let ok=true;
+    for(const o of solids){ if(Math.hypot(x-o.x,z-o.z)<o.r+2.2){ ok=false; break; } }
+    if(ok) return {x,z};
+    x+=rnd(-6,6); z+=rnd(-6,6);
+  }
+  return {x,z};
+}
+/* ย่อผืนแผนที่ให้พอดีจอเสมอ (รักษาสัดส่วน) — จอเตี้ยมากก็ต้องเห็นครบทั้งใบ ไม่มีแถบเลื่อน */
+function fitSpawnMap(){
+  if(!mapCv) return;
+  const availW=innerWidth*0.86, availH=innerHeight*(innerHeight<340?0.46:0.52);
+  const k=Math.min(availW/mapCv.width, availH/mapCv.height, 1);
+  mapCv.style.width=Math.round(mapCv.width*k)+'px';
+  mapCv.style.height=Math.round(mapCv.height*k)+'px';
+}
+function openSpawnMap(){
+  if(!mapBoxEl) return;
+  mapPick=mapPick||{x:px,z:pz};
+  if(mapNameEl) mapNameEl.textContent=zoneName(mapPick.x,mapPick.z);
+  fitSpawnMap();
+  drawSpawnMap();
+  mapBoxEl.classList.add('on');
+  unlockMouse();
+}
+function applySpawnPick(){
+  if(!mapPick) return;
+  const s=safeSpawn(mapPick.x,mapPick.z);
+  px=s.x; pz=s.z;
+  py=terrainH(px,pz)+(inHeli?HELI_SKID+16:EYE);
+  if(inHeli){ phVel={x:0,y:0,z:0}; hLanded=false; }
+  /* หันหน้าเข้าหาแกนพลังงานยานแม่เสมอ — เด็กจะได้ไม่งงว่าเป้าอยู่ไหน */
+  yaw=Math.atan2(-(0-px), -(CORE_Z-pz)); pitch=.30;
+  mapBoxEl.classList.remove('on');
+  toastBan(`🪂 <b>ลงสนามแล้ว!</b><br><span class="ib-sub">${zoneName(px,pz)}</span>`,2000);
+  netSend(true);
+}
+
+/* นับเฮลิที่บินอยู่ทั้งโลกตอนนี้ = ของเรา + ของเพื่อนที่กำลังบิน + บอท */
+function heliCount(){
+  let n=inHeli?1:0;
+  for(const uid in peers) if(peers[uid].kind==='heli') n++;
+  return n+helis.length;
+}
 function enterHeli(){
   if(inHeli) return;
+  if(heliCount()>=HELI_MAX){                    // 🚁 เพดาน 5 ลำทั้งโลก (ผู้ใช้สั่ง)
+    toastBan(`🚁 <b>เฮลิคอปเตอร์เต็มแล้ว (${HELI_MAX} ลำ)</b><br><span class="ib-sub">รอเพื่อนลงจากเครื่องก่อนนะ</span>`,2200);
+    if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
+    return;
+  }
   inHeli=true;
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
-  phVel={x:0,y:0,z:0}; phClimb=0;
+  phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
-  py=Math.max(py+28, terrainH(px,pz)+40);                 // พุ่งขึ้นฟ้าทันที
-  if(gunGrp) gunGrp.visible=false;                        // ในเฮลิไม่เห็นปืนมือ
+  py=Math.max(py+18, terrainH(px,pz)+HELI_SKID+16);        // ยกตัวขึ้นจากพื้น
+  if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
   firing=false; heat=0; overheat=false; renderHeat();
-  renderMissiles();
+  renderMissiles(); syncBotHelis();
   Snd.startRotor();
-  toastBan('🚁 <b>ขึ้นเฮลิคอปเตอร์แล้ว!</b><br><span class="ib-sub">▲▼ ไต่ระดับ · 🔫 ปืนกลรัว · 🚀 จรวดชุดคู่ · กด 🪂 เพื่อลงพื้น</span>',2400);
+  toastBan('🚁 <b>ขึ้นเฮลิคอปเตอร์แล้ว!</b><br><span class="ib-sub">บังคับเหมือนโลกเฮลิฯ: W/S เดินหน้า-ถอย · A/D สไลด์ · Q/E หันลำ · ▲/Space ขึ้น · ▼/Shift ลง<br>แตะพื้นเบาๆ = ลงจอด · 🔫 ปืนกล · 🚀 จรวดชุดคู่ · 🪂 ลงจากเครื่อง</span>',3200);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
 }
 function exitHeli(){
   if(!inHeli) return;
-  inHeli=false;
+  inHeli=false; hLanded=false;
   wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
   if(gunGrp) gunGrp.visible=true;
   py=terrainH(px,pz)+EYE; phClimb=0;
-  misLeft=MIS_MAX; misReloadAt=0; renderMissiles();       // กลับพื้น = มิสไซล์ทหารราบเต็ม
+  misLeft=MIS_MAX; misReloadAt=0; renderMissiles(); syncBotHelis();
   Snd.stopRotor();
   toastBan('🪂 <b>ลงพื้นแล้ว</b> — กลับมาเป็นทหารราบ',1500);
 }
+/* 🚁 การบิน "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" (ผู้ใช้สั่ง)
+   ค่าและสมการทั้งหมดยกมาจาก tickHeli ใน adventure3d.js: เร่ง 13 · เพดานเร็ว 17 · ไต่ 9 หน่วง 1.8
+   · drag 1.4 · หันลำ Q/E 1.5 rad/s · auto-hover · แตะพื้นเบา = ลงจอด · ดันคันเร่งขึ้น = เทคออฟ */
 function tickHeliFlight(dt,now){
-  /* เคลื่อนที่แนวราบตามทิศเล็ง (yaw) */
-  let f=0,s=0;
-  if(keys.w) f+=1; if(keys.s) f-=1; if(keys.a) s-=1; if(keys.d) s+=1;
-  f-=joy.dy; s+=joy.dx;
-  const len=Math.hypot(f,s); if(len>1){ f/=len; s/=len; }
-  const sinY=Math.sin(yaw), cosY=Math.cos(yaw);
-  const wantX=(-sinY*f + cosY*s)*PH_VMAX;
-  const wantZ=(-cosY*f - sinY*s)*PH_VMAX;
-  phVel.x+=(wantX-phVel.x)*Math.min(1,dt*PH_ACCEL/PH_VMAX);
-  phVel.z+=(wantZ-phVel.z)*Math.min(1,dt*PH_ACCEL/PH_VMAX);
-  /* ไต่ระดับ: ปุ่ม ▲▼ (phClimb) หรือ Space/Shift */
-  let cl=phClimb; if(keys.space) cl+=1; if(keys.ctrl||keys.shift) cl-=1;
-  phVel.y+=(cl*PH_CLIMB-phVel.y)*Math.min(1,dt*4);
-  /* integrate */
+  let fw=0,sd=0,yawIn=0,col=0;
+  if(keys.w) fw+=1; if(keys.s) fw-=1;
+  if(keys.a) sd-=1; if(keys.d) sd+=1;
+  if(keys.q) yawIn+=1; if(keys.e) yawIn-=1;
+  if(keys.space) col+=1; if(keys.shift||keys.ctrl) col-=1;
+  if(joy.id!==null){ fw=-joy.dy; sd=joy.dx; }              // จอยมือถือ = เดินหน้า/สไลด์ เหมือนโลกเฮลิฯ
+  col+=phClimb; col=clamp(col,-1,1);
+  yaw+=yawIn*HELI_YAWSP*dt;
+
+  const sin=Math.sin(yaw), cos=Math.cos(yaw);
+  if(hLanded){
+    if(col>.25){ hLanded=false; phVel.y=2.5; }             // ดันคันเร่งขึ้น = เทคออฟ
+  }else{
+    phVel.x+=(-sin*fw+cos*sd)*HELI_ACCEL*dt;
+    phVel.z+=(-cos*fw-sin*sd)*HELI_ACCEL*dt;
+    phVel.y+=(col*HELI_CLIMB - phVel.y*HELI_DAMP)*dt;      // ไต่/ลดระดับนุ่มๆ auto-hover
+    const drag=Math.max(0,1-HELI_DRAG*dt);
+    phVel.x*=drag; phVel.z*=drag;
+    const hs=Math.hypot(phVel.x,phVel.z);
+    if(hs>HELI_VMAX){ phVel.x*=HELI_VMAX/hs; phVel.z*=HELI_VMAX/hs; }
+  }
   const lim=WORLD*0.94;
-  px=clamp(px+phVel.x*dt,-lim,lim);
-  pz=clamp(pz+phVel.z*dt,-lim,lim);
-  const gy=terrainH(px,pz);
-  py=clamp(py+phVel.y*dt, gy+PH_Y_MIN, gy+PH_Y_MAX);
-  if(py<=gy+PH_Y_MIN+0.01) phVel.y=Math.max(0,phVel.y);   // แตะเพดานล่าง = ไม่ดิ่งต่อ
-  /* กล้อง = ตำแหน่งเฮลิ + โยกเบาๆ + เอียงลำตามการสไลด์ (bank) */
-  camera.position.set(px, py+Math.sin(now*.012)*.14, pz);
+  let nx=clamp(px+phVel.x*dt,-lim,lim);
+  let nz=clamp(pz+phVel.z*dt,-lim,lim);
+  let ny=Math.min(HELI_CEIL,py+phVel.y*dt);
+  /* ชนตึก: บินต่ำกว่ายอดแล้วทะลุ footprint → เด้งออก + เจ็บ (เหมือนโลกเฮลิฯ) */
+  for(const o of solids){
+    if(Math.hypot(nx-o.x,nz-o.z)<o.r+1.4 && ny<terrainH(o.x,o.z)+14){
+      const dx=nx-o.x, dz=nz-o.z, d=Math.hypot(dx,dz)||.001, k=(o.r+1.5)/d;
+      nx=o.x+dx*k; nz=o.z+dz*k; phVel.x*=-.25; phVel.z*=-.25;
+      if(now-lastHurt>1000) hurtPlayer(12,now);
+      break;
+    }
+  }
+  /* พื้น: แตะเบา = ลงจอด · กระแทกแรง = เจ็บแล้วเด้ง */
+  const minY=terrainH(nx,nz)+HELI_SKID;
+  if(ny<=minY){
+    if(phVel.y<-7 && now-lastHurt>1000){ hurtPlayer(18,now); ny=minY; phVel.y=2.2; }
+    else{
+      ny=minY;
+      if(!hLanded && Math.abs(phVel.y)<=7 && col<=.1){
+        hLanded=true; phVel={x:0,y:0,z:0};
+        toastBan('🛬 <b>ลงจอดแล้ว</b> — ดันคันเร่งขึ้น (▲/Space) เพื่อบินต่อ · 🪂 ลงจากเครื่อง',1800);
+        if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+      }
+      phVel.y=Math.max(0,phVel.y);
+    }
+  }
+  px=nx; pz=nz; py=ny;
+  /* กล้อง = ตำแหน่งนักบิน + โยกเบาๆ + เอียงลำเข้าโค้ง */
+  camera.position.set(px, py+Math.sin(now*.012)*.12, pz);
   camera.rotation.set(0,0,0);
   camera.rotateY(yaw); camera.rotateX(pitch);
-  camera.rotateZ(-clamp(s*.22 + (phVel.x*cosY-phVel.z*sinY)*.004, -.32,.32));
+  camera.rotateZ(-clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30));
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.35; camera.position.y+=rnd(-1,1)*shake*.35; shake=Math.max(0,shake-dt*2.2); }
   if(muzzle) muzzle.material.opacity=now<muzzleUntil?1:0;
-  /* เติมจรวดเฮลิ + ฟื้นพลัง */
   if(phMisLeft<=0&&phMisReloadAt&&now>phMisReloadAt){ phMisLeft=PH_MIS_MAX; phMisReloadAt=0; renderMissiles();
     toastBan('🚀 <b>เติมจรวดเฮลิเต็มแล้ว!</b>',900); }
   if(now-lastHurt>3500&&hp<PLAYER_HP){ hp=Math.min(PLAYER_HP,hp+SHIELD_REGEN*dt*10); renderHp(); }
   if(firing) fireGun(now);
+}
+/* 🤖 บอทขับเฮลิ: ปกติไม่มีเลย (ผู้เล่นขับเท่านั้น) — ยกเว้นในแมพมีคนน้อยกว่า 2 คน ให้มี 1 ลำเป็นเพื่อน
+   เรียกทุกครั้งที่จำนวนผู้เล่น/สถานะการบินเปลี่ยน */
+function syncBotHelis(){
+  const players=1+Object.keys(peers).length;
+  let want=(players<2)?1:0;
+  const flyers=(inHeli?1:0)+Object.keys(peers).filter(u=>peers[u].kind==='heli').length;
+  want=Math.min(want, Math.max(0,HELI_MAX-flyers));        // ไม่ให้รวมแล้วเกินเพดาน 5 ลำ
+  while(helis.length>want){ const h=helis.pop(); scene.remove(h.grp); }
+  while(helis.length<want) helis.push(makeHeli(helis.length));
 }
 
 /* ============================================================
@@ -1647,6 +1957,10 @@ function netSend(force){
     yaw:Math.round(yaw*100)/100, av:inHeli?'heli':'foot', w:sessionWords,
     ts:firebase.database.ServerValue.TIMESTAMP };
   if(myChat && Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
+  /* 🤝 สมรภูมิร่วม — ใช้ field เดิมที่ rules อนุญาตอยู่แล้ว (ไม่ต้อง publish rules ใหม่)
+     cw = คำ+เลขรอบ (เฉพาะหัวหน้าห้องประกาศ) · hp = ผลงานเรา "รอบ|บิตยานลูก|ดาเมจยานแม่" (≤28 ตัวอักษร) */
+  if(word && isLeader()) payload.cw=`${word.en}|${word.th}|${battleRound}`.slice(0,60);
+  payload.hp=`${battleRound}|${myKill}|${Math.round(myArmorDmg)}`.slice(0,28);
   myRef.set(payload).catch(()=>{ netOk=false; });
 }
 function peerColor(uid){ let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0; return PEER_COLORS[h%PEER_COLORS.length]; }
@@ -1703,10 +2017,17 @@ function onPeer(snap){
                   yawCur:(d.yaw||0),yawTgt:(d.yaw||0),n:String(d.n||'เพื่อน').slice(0,24),w:0};
     buildPeer(uid,p,kind);
     toastBan(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> เข้าร่วมสมรภูมิ${kind==='heli'?'ด้วยเฮลิคอปเตอร์ 🚁':' 🔫'}!`,1900);
-  }else if(p.kind!==kind){ if(p.bubble) removePeerBubble(p); buildPeer(uid,p,kind); }
+    syncBotHelis();                                   // 🚁 มีคนเข้ามา → เลิกใช้บอท
+  }else if(p.kind!==kind){ if(p.bubble) removePeerBubble(p); buildPeer(uid,p,kind); syncBotHelis(); }
   p.tgt={x:d.x,y:(typeof d.y==='number'?d.y:p.tgt.y),z:d.z};
   if(typeof d.yaw==='number') p.yawTgt=d.yaw;
   const w=typeof d.w==='number'?d.w:0; if(p.w!==w) p.w=w;
+  /* 🤝 อ่านสถานะสมรภูมิของเพื่อน */
+  p.cw=(typeof d.cw==='string')?d.cw:p.cw;
+  if(typeof d.hp==='string'){
+    const m=d.hp.split('|');
+    p.round=parseInt(m[0],10)||0; p.kill=parseInt(m[1],10)||0; p.armor=parseFloat(m[2])||0;
+  }
   renderBoard();
   if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){ p.lastCt=d.ct; showPeerBubble(p,d.c); }
 }
@@ -1715,6 +2036,7 @@ function dropPeer(uid){
   removePeerBubble(p);
   if(p.grp) scene.remove(p.grp);
   delete peers[uid]; renderBoard();
+  syncBotHelis();                                     // 🚁 เหลือคนเดียว → ปล่อยบอท 1 ลำเป็นเพื่อน
 }
 function netLeave(){
   if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
@@ -1801,9 +2123,12 @@ function tickMother(dt,now){
   mother.rotation.y+=dt*.02;
   /* ⚠️ ลำยานหมุนช้าๆ ให้ดูมีชีวิต แต่ "แผงตัวอักษรต้องหันหน้าเข้าเมืองตลอด"
      ไม่งั้นเล่นไปสักพักตัวอักษรจะหันข้าง/หันหลังจนอ่านไม่ออก → หักล้างการหมุนคืนทุกเฟรม */
-  mother.position.y=MS_Y+Math.sin(now*.0004)*6;
-  /* แผงตัวอักษรลอยตามลำยานเฉพาะแกน Y (ขึ้น-ลงตามที่ยานหายใจ) แต่ "ไม่หมุนตาม" — หันหน้าเข้าเมืองตลอด */
-  if(msBoard) msBoard.position.y=mother.position.y-MS_R*0.37;
+  mother.position.y=MS_Y+Math.sin(now*.0004)*18;
+  /* แผงตัวอักษร+แกน "ไม่หมุนตามลำ" และอยู่ตำแหน่งของตัวเอง — ขยับขึ้นลงตามยานหายใจนิดเดียว */
+  const breathe=Math.sin(now*.0004)*3;
+  if(msBoard) msBoard.position.y=BOARD_Y+breathe;
+  if(msCore){ msCore.position.y=CORE_Y+breathe; }
+  if(msGlow){ msGlow.position.y=CORE_Y+breathe; }
   msLamps.forEach((lp,i)=>{ lp.visible=Math.sin(now*.004+lp.userData.ph)>-.2; });
   if(msGlow&&msOpen) msGlow.material.opacity=.4+Math.sin(now*.006)*.18;
   /* ตัวอักษรกะพริบ */
@@ -1813,7 +2138,8 @@ function tickMother(dt,now){
   });
   if(now>msBeamAt){
     msBeamAt=now+MS_BEAM_GAP*rnd(.8,1.3);
-    const from=mother.position.clone().add(new THREE.Vector3(rnd(-MS_R*.5,MS_R*.5),-MS_R*.3,rnd(-MS_R*.3,MS_R*.4)));
+    /* ลำแสงหนักยิงลงมาจาก "ท้องยานฝั่งที่มองเห็น" (ไม่ใช่กลางลำที่อยู่ไกลลิบ) */
+    const from=new THREE.Vector3(px+rnd(-260,260), MS_Y-MS_R*0.30, pz+rnd(-500,-160));
     spawnAlienShot(from,0xff5a8a,MS_BEAM_DMG,F_SHOT_SPD*.72,1.9);
   }
 }
@@ -1863,7 +2189,7 @@ function tickMissiles(dt,now){
     /* ชนอะไรไหม */
     let hit=null;
     for(const f of fighters){ if(m.mesh.position.distanceTo(f.grp.position)<5.4){ hit=f; break; } }
-    const hitMs=(!hit && msOpen && !msDead && mother && m.mesh.position.distanceTo(mother.position)<MS_R*0.62);
+    const hitMs=(!hit && msOpen && !msDead && msCore && m.mesh.position.distanceTo(msCore.position)<CORE_R*1.35);
     const old=(now-m.born>6500) || m.mesh.position.y<terrainH(m.mesh.position.x,m.mesh.position.z);
     if(hit||hitMs||old){
       boom(m.mesh.position.clone(), hitMs?1.5:1.0, 0xffb347);
@@ -1954,6 +2280,7 @@ function frame(dt,now){
   tickSquad(dt,now);
   tickHelis(dt,now);
   peerTick(dt,now);                 // 🌐 ขยับตัวเพื่อนออนไลน์ให้ลื่น
+  applyShared();                    // 🤝 รวมผลงานทุกคน → สู้ยานแม่ลำเดียวกัน
   netSend(false);                   // 🌐 ส่งตำแหน่งเราขึ้น DB
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickFx(dt);
@@ -1981,7 +2308,8 @@ function build(){
     scene.add(dome); };
   skyTex.onerror=()=>{};
   skyTex.src='img/invasion/sky.png';
-  camera=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,.1,WORLD*2.6);
+  /* far ต้องไกลพอเห็นยานแม่ (อยู่ ~1,700-4,300m หลังขยาย 5 เท่า) ไม่งั้นลำถูกตัดหาย */
+  camera=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,.1,9000);
   scene.add(camera);
   /* 💡 แสงแบบภาพอ้างอิง: แดดแรงเฉียงจากด้านหลัง-ขวา + เงาฟ้าอมเทา + ฝุ่นฟุ้งรับแสง */
   scene.add(new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52));
@@ -1999,7 +2327,7 @@ function build(){
     const a=rnd(0,TAU), r=rnd(14,42);
     squad.push(makeSoldier(px+Math.cos(a)*r, pz+Math.sin(a)*r,false));
   }
-  for(let i=0;i<HELI_N;i++) helis.push(makeHeli(i));
+  syncBotHelis();                   // 🚁 บอทขับเฮลิเฉพาะตอนเล่นคนเดียว (ผู้ใช้สั่ง)
   built=true;
 }
 function start(){
@@ -2015,6 +2343,8 @@ function start(){
   inHeli=false; wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
   phVel={x:0,y:0,z:0}; phClimb=0; phMisLeft=PH_MIS_MAX; phMisReloadAt=0; if(gunGrp) gunGrp.visible=true;
   Object.keys(peers).forEach(dropPeer); myChat=null; boardSig='';
+  battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
+  mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
   missiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail); }); missiles=[];
@@ -2036,6 +2366,8 @@ function start(){
     else if(k==='shift') keys.shift=true;
     else if(k===' ') keys.space=true;
     else if(k==='control') keys.ctrl=true;
+    else if(k==='q') keys.q=true;      // 🚁 หันลำซ้าย (เหมือนโลกเฮลิฯ)
+    else if(k==='e') keys.e=true;      // 🚁 หันลำขวา
     else if(k==='r'&&!e.repeat) fireMissile(performance.now());
     else if(k==='h'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
     else if(k==='escape'){ unlockMouse(); exitBox.classList.add('on'); }
@@ -2050,8 +2382,10 @@ function start(){
     else if(k==='shift') keys.shift=false;
     else if(k===' ') keys.space=false;
     else if(k==='control') keys.ctrl=false;
+    else if(k==='q') keys.q=false;
+    else if(k==='e') keys.e=false;
   };
-  resizeFn=()=>fit();
+  resizeFn=()=>{ fit(); fitSpawnMap(); };
   window.addEventListener('keydown',keydownFn);
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
@@ -2104,6 +2438,16 @@ window.InvasionWorld={
     lockTarget, rayTarget, aimDir,
     /* 🚁🌐 รอบ 414 */
     get inHeli(){return inHeli}, enterHeli, exitHeli, get phMis(){return phMisLeft}, get phVel(){return {...phVel}},
+    /* 🤝🗺️🚁 รอบ 417 */
+    get round(){return battleRound}, get myKill(){return myKill}, get myArmorDmg(){return myArmorDmg},
+    get isLeader(){return isLeader()}, get leader(){return leaderUid()}, get uid(){return myUid()},
+    applyShared, adoptWord, setWord, dropFighter,
+    get heliCount(){return heliCount()}, get bots(){return helis.length}, syncBotHelis,
+    get landed(){return hLanded}, set landed(v){hLanded=v},
+    openSpawnMap, applySpawnPick, drawSpawnMap, safeSpawn, zoneName,
+    get mapPick(){return mapPick}, set mapPick(v){mapPick=v},
+    get mapOpen(){return mapBoxEl.classList.contains('on')},
+    get core(){return msCore}, get letterBoard(){return msBoard},
     get peerCount(){return Object.keys(peers).length}, get peers(){return Object.keys(peers).map(u=>({n:peers[u].n,kind:peers[u].kind,w:peers[u].w,pos:{...peers[u].cur}}))},
     fakePeer(uid,d){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x:0,z:60,y:0,yaw:0,av:'foot',w:0},d||{})}); return peers[uid]; },
     dropPeer, netReady, sendChat, get board(){return boardEl?boardEl.innerText.replace(/\s+/g,' '):''},
