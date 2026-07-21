@@ -306,17 +306,40 @@ const CSS=`
 #inv-intro,#inv-exitbox,#inv-mapbox{position:absolute;inset:0;z-index:9;background:rgba(4,8,16,.9);
   display:none;align-items:center;justify-content:center;padding:12px}
 #inv-intro.on,#inv-exitbox.on,#inv-mapbox.on{display:flex}
-/* 🗺️ แผนที่เลือกจุดเกิด */
-#inv-mapbox .inv-card{max-width:min(760px,96vw)}
-#inv-mapwrap{position:relative;display:inline-block;line-height:0;margin:2px 0 8px}
+/* 🗺️ แผนที่เลือกจุดเกิด — รอบ 430: กางออกด้านข้างเกือบเต็มจอ + แยกเป็น 2 คอลัมน์
+   (แผนที่ซ้าย · คำแนะนำ/ปุ่มขวา) → แผนที่ใหญ่ขึ้นมาก และกล่องเตี้ยลง ไม่มีแถบเลื่อน */
+#inv-mapbox .inv-card{max-width:min(1400px,97vw);width:min(1400px,97vw);padding:12px 18px}
+#inv-mapgrid{display:flex;gap:18px;align-items:center;justify-content:center}
+#inv-mapside{flex:1 1 0;min-width:0;max-width:360px;text-align:left}
+#inv-mapside p{margin:0 0 8px}
+#inv-maplegend{font-size:12px;line-height:1.7;color:#bcd3ea;background:rgba(255,255,255,.05);
+  border-radius:10px;padding:7px 10px;margin-bottom:10px}
+#inv-mapwrap{position:relative;display:inline-block;line-height:0;margin:2px 0}
 /* ⚠️ ขนาดผืนแผนที่ "คำนวณด้วย JS" ใน fitSpawnMap() ไม่ใช่ CSS —
    canvas ไม่รักษาสัดส่วนเองเหมือน <img> ถ้าใช้ max-height คู่ max-width ภาพจะยืดผิดส่วน
    และกล่องจะเกินจอจนมี scrollbar (ผิดกฎ "ทุกหน้าต่างต้องเห็นครบทั้งใบ") */
 #inv-mapcv{border-radius:12px;border:2px solid #4fb9e8;cursor:crosshair;
   touch-action:manipulation;background:#d8c0a0;display:block}
 #inv-mapname{font-size:13px;color:#ffd98a;font-weight:800;min-height:18px;margin-bottom:4px}
-#inv-maphint{font-size:12px;color:#9fb6cf;margin-top:2px}
+#inv-maphint{font-size:12px;color:#9fb6cf;margin-top:6px}
+/* จอกลาง — บีบคอลัมน์คำแนะนำให้แคบลง เพื่อให้แผนที่ได้ที่มากที่สุด */
+@media (max-width:1000px){
+  #inv-mapgrid{gap:12px}
+  #inv-mapside{max-width:270px}
+  #inv-maplegend{font-size:11px;line-height:1.55;padding:5px 8px;margin-bottom:7px}
+  #inv-mapside .inv-btn{padding:9px 18px;font-size:15px}
+  #inv-maphint{font-size:10.5px}
+}
+/* ⚠️ เกมนี้บังคับเล่นแนวนอนอยู่แล้ว → คอลัมน์คู่แทบตลอด
+   (เคยตั้ง breakpoint 900px แล้วจอ 812×375 กลับไปเรียงบนล่าง = แผนที่เหลือนิดเดียว + กล่องล้นจอ)
+   เรียงบนล่างเฉพาะจอแคบจริงๆ เท่านั้น */
+@media (max-width:640px){
+  #inv-mapgrid{flex-direction:column;gap:8px}
+  #inv-mapside{max-width:none;text-align:center;width:100%}
+  #inv-maplegend{font-size:11px;line-height:1.5;padding:5px 8px;margin-bottom:6px}
+}
 @media (max-height:400px){
+  #inv-maplegend{display:none}
   #inv-mapbox .inv-card{padding:8px 12px}
   #inv-mapbox h3{font-size:16px;margin-bottom:3px}
   #inv-mapbox p{font-size:11.5px;margin-bottom:5px}
@@ -324,7 +347,7 @@ const CSS=`
   #inv-maphint{font-size:10.5px}
 }
 .inv-card{background:linear-gradient(180deg,#0f2136,#0a1626);border:2px solid #4fb9e8;border-radius:18px;
-  padding:16px 22px;max-width:min(680px,94vw);max-height:94vh;overflow:auto;text-align:center;color:#e8f4ff;
+  padding:16px 22px;max-width:min(1040px,96vw);max-height:94vh;overflow:auto;text-align:center;color:#e8f4ff;
   box-shadow:0 14px 40px rgba(0,0,0,.7)}
 .inv-card h3{margin:0 0 8px;font-size:22px;color:#7fe3ff}
 .inv-card p{margin:0 0 12px;font-size:14px;line-height:1.6;color:#cfe0f2}
@@ -454,14 +477,24 @@ function buildDom(){
     </div></div>
     <div id="inv-mapbox"><div class="inv-card">
       <h3>🗺️ เลือกจุดลงสนาม</h3>
-      <p>แตะบนแผนที่เพื่อเลือกว่าจะ<b>ลงตรงไหน</b> — จุดสีเขียวคือแนวกำบังที่มีหน่วยรบอยู่<br>
-      <span id="inv-mapname"></span></p>
-      <div id="inv-mapwrap"><canvas id="inv-mapcv" width="620" height="380"></canvas></div>
-      <div class="inv-row">
-        <button class="inv-btn" id="inv-mapgo">🪂 ลงตรงนี้!</button>
-        <button class="inv-btn red" id="inv-maprand">🎲 สุ่มจุด</button>
+      <div id="inv-mapgrid">
+        <div id="inv-mapwrap"><canvas id="inv-mapcv" width="860" height="530"></canvas></div>
+        <div id="inv-mapside">
+          <p>แตะบนแผนที่เพื่อเลือกว่าจะ<b>ลงตรงไหน</b><br><span id="inv-mapname"></span></p>
+          <div id="inv-maplegend">
+            🟢 จุดเขียว = แนวกำบังที่มีหน่วยรบ<br>
+            🟡 จุดเหลือง/ฟ้า = เพื่อนที่กำลังเล่นอยู่<br>
+            ⛰️ <b>พื้นสว่าง = เนินเขาสูง</b> · พื้นเข้ม = ที่ต่ำ/แอ่ง<br>
+            〰️ เส้นถี่ = <b>ลาดชัน</b> · เส้นห่าง = ที่ราบ<br>
+            🎯 วงแดง = แกนพลังงานยานแม่ (เป้าหมาย)
+          </div>
+          <div class="inv-row">
+            <button class="inv-btn" id="inv-mapgo">🪂 ลงตรงนี้!</button>
+            <button class="inv-btn red" id="inv-maprand">🎲 สุ่มจุด</button>
+          </div>
+          <div id="inv-maphint">💡 ยืนบนเนินสูงจะเห็นสนามรบไกลกว่า — เหมาะกับ R93<br>เข้าเกมแล้วกดปุ่ม 🗺️ ย้ายจุดลงใหม่ได้ทุกเมื่อ</div>
+        </div>
       </div>
-      <div id="inv-maphint">เข้าเกมแล้วกดปุ่ม 🗺️ เพื่อย้ายจุดลงสนามใหม่ได้ทุกเมื่อ</div>
     </div></div>
     <div id="inv-exitbox"><div class="inv-card">
       <h3>⬅️ ออกจากสมรภูมิ?</h3>
@@ -770,11 +803,42 @@ function fitInto(obj,size){
 /* ============================================================
    🏜️ สร้างฉากทะเลทราย + เมือง
    ============================================================ */
+/* ⛰️ รอบ 430: เนินเขาลูกใหญ่ประจำแผนที่ (ผู้ใช้สั่ง "อย่ามีแต่พื้นราบ")
+   ⚠️ ต้องเป็น "ค่าตายตัว" ห้ามสุ่ม — ผู้เล่นออนไลน์ทุกเครื่องต้องเห็นภูมิประเทศเดียวกันเป๊ะ
+   (ถ้าสุ่ม เพื่อนจะจมดิน/ลอยฟ้าในสายตาอีกเครื่องทันที) */
+const HILLS=[
+  {x:-215,z:-165,r:135,h:30},   // เนินสูงฝั่งซ้ายหน้า (ที่มั่นมองยานแม่)
+  {x: 250,z:-105,r:160,h:38},   // เนินใหญ่สุดฝั่งขวา
+  {x: 135,z: 215,r:120,h:22},   // เนินหลังแนวหลัง
+  {x:-265,z: 195,r:140,h:26},
+  {x: -55,z:-320,r:180,h:34},   // สันเขาไกลใต้เงายานแม่
+  {x: 330,z: 300,r:150,h:28},
+  {x:-350,z: -60,r:120,h:20},
+];
 function buildTerrain(){
-  /* พื้นทรายเป็นเนินคลื่นเบาๆ (ใช้ฟังก์ชันเดียวกับตอนผู้เล่นเดิน = ไม่ลอย/ไม่จม) */
-  const H=(x,z)=> Math.sin(x*0.0075)*2.6 + Math.cos(z*0.0091)*2.2 + Math.sin((x+z)*0.0031)*3.4;
+  /* พื้นทราย: คลื่นเบาๆ + เนินเขา/สันเขา/ร่องน้ำแห้ง (ใช้ฟังก์ชันเดียวกับตอนผู้เล่นเดิน = ไม่ลอย/ไม่จม) */
+  const H=(x,z)=>{
+    /* ① คลื่นทรายพื้นฐาน (ของเดิม) */
+    let h = Math.sin(x*0.0075)*2.6 + Math.cos(z*0.0091)*2.2 + Math.sin((x+z)*0.0031)*3.4;
+    /* ② ลูกคลื่นเล็ก — กันไม่ให้พื้นเรียบเป็นกระดาน */
+    h += Math.sin(x*0.031+z*0.017)*0.55 + Math.cos(z*0.028-x*0.013)*0.45;
+    /* ③ เนินเขาลูกใหญ่ + สันเขายาว + ร่องน้ำแห้ง (ส่วนที่ "ปรับให้ราบ" ได้ตรงถนน) */
+    let hill=0;
+    for(const k of HILLS){
+      const d=Math.hypot(x-k.x,z-k.z);
+      if(d<k.r){ const t=1-d/k.r; hill += k.h*t*t*(3-2*t); }   // smoothstep = เชิงเนินลาดนุ่ม ไม่เป็นกรวย
+    }
+    hill += Math.sin(x*0.0042+1.1)*Math.cos(z*0.0037-0.6)*7.5;  // สันเขา/แอ่งกว้างสลับกันทั้งแผนที่
+    hill += Math.sin((x*0.6+z*0.8)*0.0090)*3.2;                 // ลอนเฉียงซ้อนอีกชั้น
+    /* ④ ถนนสมรภูมิต้องเดินรบได้ → รีดเนินออกเฉพาะในแนวถนน (ยังลาดตามยาวนิดๆ ไม่แบนสนิท) */
+    const wx=Math.max(0, 1-Math.max(0,Math.abs(x)-STREET_HW-8)/38);
+    const z0=STREET_Z0-STREET_LEN-25, z1=STREET_Z0+55;
+    const wz=Math.max(0, Math.min(1, Math.min(z-z0, z1-z)/45));
+    return h + hill*(1 - wx*wz*0.92);
+  };
   terrainH=H;
-  const seg=80, g=new THREE.PlaneGeometry(WORLD*2,WORLD*2,seg,seg);
+  /* 🔺 seg 80→120: เนินเขาไม่เป็นเหลี่ยม แต่ยังคุมงบสามเหลี่ยมมือถือ (120 = 28,800 tris · 150 = 45,000 หนักไป) */
+  const seg=120, g=new THREE.PlaneGeometry(WORLD*2,WORLD*2,seg,seg);
   const p=g.attributes.position;
   for(let i=0;i<p.count;i++) p.setZ(i,H(p.getX(i),-p.getY(i)));   // ยังไม่หมุน: y ของ plane = -z ของโลก
   g.computeVertexNormals();
@@ -782,6 +846,13 @@ function buildTerrain(){
   const m=new THREE.MeshLambertMaterial({color:0xffffff,map:sandTex()});
   tryTex(m,'img/invasion/sand.png',70,70);
   const ground=new THREE.Mesh(g,m); ground.rotation.x=-Math.PI/2; scene.add(ground);
+}
+/* 🏗️ รอบ 430: ระดับฐานของสิ่งปลูกสร้างบนพื้นลาด — ใช้ "มุมที่ต่ำที่สุด" ของฐาน
+   (พื้นเป็นเนินแล้ว ถ้ายังวางที่ความสูงจุดกึ่งกลาง มุมตึกด้านลาดลงจะลอยเห็นใต้ท้อง) */
+function baseLow(x,z,r){
+  let m=terrainH(x,z);
+  for(const [ox,oz] of [[-r,-r],[r,-r],[-r,r],[r,r]]) m=Math.min(m,terrainH(x+ox,z+oz));
+  return m;
 }
 /* 🏘️ บ้านดินเผาหลังคาแบน + โดม + หอมินาเรต + ต้นอินทผลัม */
 function buildTown(){
@@ -798,7 +869,7 @@ function buildTown(){
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
     if(Math.hypot(x,z-pz)<18) continue;                     // เว้นที่ยืนของผู้เล่น
     const w=rnd(6,14), d=rnd(6,14), h=rnd(4,13);
-    const base=terrainH(x,z);
+    const base=baseLow(x,z,Math.max(w,d)*0.5);
     const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats[(Math.random()*mats.length)|0]);
     b.position.set(x,base+h/2,z); b.rotation.y=rnd(0,TAU); scene.add(b);
     solids.push({x,z,r:Math.max(w,d)*0.55});
@@ -816,7 +887,7 @@ function buildTown(){
     }
   }
   [[-70,-40],[95,10],[-30,-150]].forEach(([x,z])=>{          // 🕌 หอมินาเรต = หมุดสายตาให้เด็กจำทิศ
-    const base=terrainH(x,z);
+    const base=baseLow(x,z,3.2);
     const tw=new THREE.Mesh(new THREE.CylinderGeometry(2.2,2.9,30,12),mats[2]);
     tw.position.set(x,base+15,z); scene.add(tw);
     const bal=new THREE.Mesh(new THREE.CylinderGeometry(3.4,3.4,1.2,12),mats[1]);
@@ -890,7 +961,7 @@ function buildWarStreet(){
       const z=STREET_Z0-8-i*(STREET_LEN/9)*0.94;
       const w=rnd(9,15), d=rnd(10,16), h=rnd(7,17);
       const x=side*(STREET_HW+w/2+rnd(0,3));
-      const base=terrainH(x,z);
+      const base=baseLow(x,z,Math.max(w,d)*0.5);
       const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallM[i%3]);
       b.position.set(x,base+h/2,z); scene.add(b);
       solids.push({x,z,r:Math.max(w,d)*0.5});
@@ -2619,10 +2690,35 @@ function zoneName(x,z){
   if(Math.hypot(x,z)<120) return '🎯 ใกล้แกนพลังงานยานแม่';
   return '🏜️ ทะเลทรายรอบเมือง';
 }
+/* ⛰️ รอบ 430: ชั้นภูมิประเทศ (เนินเขา/ลาดชัน) — คำนวณหนักอยู่บ้าง จึงวาดลง canvas ซ่อนไว้ "ครั้งเดียว"
+   แล้วเอาไป blit ทุกครั้งที่ redraw (ผู้เล่นแตะเลือกจุดถี่ๆ ต้องไม่หน่วง) */
+let mapShade=null;
+function buildMapShade(w,h){
+  const c=document.createElement('canvas'); c.width=w; c.height=h;
+  const g=c.getContext('2d'), STEP=4, D=9;      // D = ระยะวัดความชัน (เมตร)
+  for(let py=0;py<h;py+=STEP)for(let pxx=0;pxx<w;pxx+=STEP){
+    const p=mapToWorld(pxx+STEP/2,py+STEP/2,w,h);
+    const e=terrainH(p.x,p.z);
+    const gx=terrainH(p.x+D,p.z)-terrainH(p.x-D,p.z);
+    const gz=terrainH(p.x,p.z+D)-terrainH(p.x,p.z-D);
+    const lit=Math.max(-1,Math.min(1,-(gx+gz)/7));             // แสงส่องจากทิศเหนือ-ตะวันตก
+    const t=Math.max(0,Math.min(1,(e+10)/48));                 // ต่ำ→สูง
+    /* เส้นชั้นความสูงทุก 6 เมตร: ที่ลาดชันเส้นจะถี่เอง = อ่านความชันได้ทันที */
+    const band=((e/6)%1+1)%1, cont=band<0.13?1:0;
+    let r=172+t*74+lit*28, gg=146+t*70+lit*25, b=112+t*58+lit*20;
+    if(cont){ r-=24; gg-=22; b-=17; }
+    g.fillStyle=`rgb(${r|0},${gg|0},${b|0})`;
+    g.fillRect(pxx,py,STEP,STEP);
+  }
+  return c;
+}
 function drawSpawnMap(){
   if(!mapCv) return;
   const w=mapCv.width, h=mapCv.height, g=mapCv.getContext('2d');
-  g.fillStyle='#cbb08c'; g.fillRect(0,0,w,h);
+  if(terrainH){
+    if(!mapShade || mapShade.width!==w) mapShade=buildMapShade(w,h);
+    g.drawImage(mapShade,0,0);
+  } else { g.fillStyle='#cbb08c'; g.fillRect(0,0,w,h); }
   /* เงายานแม่คลุมฟ้า (วงใหญ่จางๆ) */
   const ms=worldToMap(0,MS_Z,w,h), msr=MS_R/(2*MAP_VIEW)*w;
   const grd=g.createRadialGradient(ms.mx,ms.my,0,ms.mx,ms.my,msr);
@@ -2678,7 +2774,11 @@ function safeSpawn(x,z){
 /* ย่อผืนแผนที่ให้พอดีจอเสมอ (รักษาสัดส่วน) — จอเตี้ยมากก็ต้องเห็นครบทั้งใบ ไม่มีแถบเลื่อน */
 function fitSpawnMap(){
   if(!mapCv) return;
-  const availW=innerWidth*0.86, availH=innerHeight*(innerHeight<340?0.46:0.52);
+  /* จอกว้าง = ผังคอลัมน์คู่ (แผนที่ซ้าย · คำแนะนำขวากว้างสุด 360 + ช่องไฟ) → หักส่วนนั้นออกก่อน */
+  const wide=innerWidth>640;                                   // >640 = ผังคอลัมน์คู่ (ตรงกับ CSS)
+  const side=innerWidth>1000?420:330;                          // ที่ที่คอลัมน์คำแนะนำกิน (กว้าง+ช่องไฟ+padding)
+  const availW=wide? innerWidth*0.97-side : innerWidth*0.88;
+  const availH=innerHeight*(wide?0.78:(innerHeight<340?0.44:0.50));
   const k=Math.min(availW/mapCv.width, availH/mapCv.height, 1);
   mapCv.style.width=Math.round(mapCv.width*k)+'px';
   mapCv.style.height=Math.round(mapCv.height*k)+'px';
