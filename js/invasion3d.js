@@ -52,7 +52,7 @@ const WEAPONS={
   rifle:{ key:'rifle', name:'ไรเฟิลจู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,
           spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:false, tracer:0xffe08a, recoil:1 },
   r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
-          spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true, magnify:6,
+          spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true,   /* กำลังขยายเลือกได้ 3 ระดับ ดู SCOPE_MAGS */
           tracer:0xbfe6ff, recoil:2.6 },
 };
 const SNIPER_SENS=0.34;                 // ส่องกล้องแล้วเล็งช้าลง (ไม่งั้นสะบัดจนเล็งไม่ได้)
@@ -60,6 +60,14 @@ const SNIPER_SENS=0.34;                 // ส่องกล้องแล้�
    ทำโดยเรนเดอร์ฉาก 2 รอบต่อเฟรม: รอบแรกมุมมองปกติเต็มจอ → รอบสองมุมแคบเฉพาะวงกลมกลางจอ
    (ต่างจากเกมทั่วไปที่ซูมทั้งหน้าจอ — แบบนี้ยังเห็นภัยรอบตัวได้) */
 const SCOPE_R=0.30;                     // รัศมีเลนส์ = สัดส่วนของด้านสั้นของจอ
+/* 🔎 รอบ 421: กำลังขยาย 3 ระดับ (ตามสไตล์ที่ผู้เล่นจริงนิยม — ผู้ใช้สั่ง)
+   สลับด้วยปุ่ม "4×/6×/8×" ข้างปุ่มกล้อง หรือคีย์ Z */
+const SCOPE_MAGS=[
+  {m:4, label:'4×', name:'สายบุก (Aggressive)', hint:'ขยับตลอด ยิงระยะใกล้-กลาง เห็นภาพกว้าง หาเป้าไว'},
+  {m:6, label:'6×', name:'ระยะมาตรฐาน',        hint:'ยิงระยะ 100–200 เมตร สมดุลที่สุด'},
+  {m:8, label:'8×', name:'ระยะไกล',            hint:'แผนที่เปิดโล่ง จ่อเป้าไกลๆ ได้นิ่ง'},
+];
+let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่ากลาง)
 const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
@@ -192,6 +200,12 @@ const CSS=`
   font-size:22px;cursor:pointer;display:none;box-shadow:0 4px 12px rgba(0,0,0,.5);
   background:radial-gradient(circle at 34% 28%,#dff0ff,#3a6d96)}
 #inv-scope.on{background:radial-gradient(circle at 34% 28%,#c8ffd8,#2f8f52)}
+/* 🔎 ปุ่มสลับกำลังขยาย (โชว์คู่กับปุ่มกล้อง — ช่องนี้ว่างตอนเดินเท้า เพราะ ▼ ใช้เฉพาะตอนขับเฮลิ) */
+#inv-mag{position:absolute;right:214px;bottom:94px;z-index:6;border:none;border-radius:14px;width:52px;height:40px;
+  font-size:16px;font-weight:900;color:#0e2136;cursor:pointer;display:none;
+  box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
+#inv-mag:active{transform:scale(.94)}
+#inv-wrap.fly #inv-mag,#inv-wrap.gunner #inv-mag{display:none!important}
 #inv-swap:active,#inv-scope:active{transform:scale(.94)}
 #inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
 /* กระสุนในแม็ก */
@@ -301,6 +315,7 @@ const CSS=`
   #inv-gunner{width:54px;height:54px;font-size:21px;right:88px;bottom:174px}
   #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
+  #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
   #inv-chatbar{left:158px}
   #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
   #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
@@ -330,6 +345,7 @@ const CSS=`
   #inv-gunner{width:46px;height:46px;font-size:18px;right:70px;bottom:150px}
   #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
+  #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
   #inv-chatbar{left:144px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
@@ -382,6 +398,7 @@ function buildDom(){
     <button id="inv-down">▼</button>
     <button id="inv-swap">🎯</button>
     <button id="inv-scope">🔭</button>
+    <button id="inv-mag">6×</button>
     <button id="inv-gunner">🎖️</button>
     <button id="inv-map">🗺️</button>
     <button id="inv-chat">💬</button>
@@ -396,7 +413,7 @@ function buildDom(){
       ✨ ยิงครบทุกลำ = ตัวอักษรกะพริบทั้งแถว <b>เกราะยานแม่เปิด</b> → ระดมยิง/ยิงมิสไซล์จนระเบิด = 🪙${REWARD}<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>กดปุ่มเฮลิ = ขับเฮลิคอปเตอร์เอง</b> บินยิงจรวดจากฟ้า! (บังคับเหมือนโลกเฮลิฯ · ทั้งโลกมีได้ 5 ลำ)<br>
-      🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) กด 🔭 ส่องกล้องซูมไกล แม็ก 10 นัด<br>
+      🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) แม็ก 10 นัด · กด 🔭 ส่องกล้อง (ในเลนส์ขยาย นอกเลนส์ยังเห็นรอบตัว) · ปุ่ม <b>4×/6×/8×</b> เลือกกำลังขยาย<br>
       🎖️ <b>ทีมเวิร์ก!</b> เดินเข้าใกล้เฮลิที่กำลังบิน แล้วกดปุ่ม 🎖️ = <b>ขึ้นเป็นพลปืนประจำประตู</b> —
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
       <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (▲▼ ไต่ระดับ) · 💬 คุยกับเพื่อน<br>
@@ -437,6 +454,7 @@ function buildDom(){
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
   gunnerBtn=document.getElementById('inv-gunner');
   swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
+  magBtn=document.getElementById('inv-mag');
   ammoEl=document.getElementById('inv-ammo');
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
@@ -639,7 +657,7 @@ let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let swapBtn=null, scopeBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
+let swapBtn=null, scopeBtn=null, magBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -1364,16 +1382,21 @@ function layoutScope(){
     ` rgba(0,0,0,0) ${R+20}px)`;
   if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=(R*2)+'px'; }
 }
+/* มุมกล้องของภาพในเลนส์ (องศา) ตามกำลังขยายที่เลือก
+   กำลังขยายจริง = ขนาดเชิงมุมต่อพิกเซลของภาพหลัก ÷ ของภาพในเลนส์
+   → tan(fovเลนส์/2) = tan(fovหลัก/2) × (R ÷ ครึ่งความสูงจอ) ÷ กำลังขยาย
+   ⚠️ ห้ามใช้ FOV/กำลังขยาย ตรงๆ — จะได้กำลังขยายไม่ตรงจริง เพราะวงเลนส์เล็กกว่าจอ */
+function scopeFovDeg(){
+  const R=scopeRadius();
+  const t=Math.tan(FOV*Math.PI/360) * (R/(innerHeight/2)) / SCOPE_MAGS[scopeMagIdx].m;
+  return Math.atan(t)*360/Math.PI;
+}
 /* 🔭 รอบเรนเดอร์ที่ 2 — ภาพขยายเฉพาะ "ในเลนส์"
    ใช้ scissor+viewport เป็นสี่เหลี่ยมจัตุรัสกลางจอ แล้วให้หน้ากากดำ (CSS) บังมุมนอกวงกลม
    ⚠️ ต้องตั้ง aspect=1 ด้วย ไม่งั้นภาพในเลนส์จะยืดผิดสัดส่วน (viewport เป็นจัตุรัสแต่ aspect ยังเป็นของจอ) */
 function renderScopePass(){
   const W=innerWidth, H=innerHeight, R=scopeRadius();
-  const mag=WEAPONS[weapon].magnify||6;
-  /* กำลังขยายจริง = ขนาดเชิงมุมต่อพิกเซลของภาพหลัก ÷ ของภาพในเลนส์
-     → tan(fovเลนส์/2) = tan(fovหลัก/2) × (R ÷ ครึ่งความสูงจอ) ÷ กำลังขยาย */
-  const t=Math.tan(FOV*Math.PI/360) * (R/(H/2)) / mag;
-  const sf=Math.atan(t)*360/Math.PI;
+  const sf=scopeFovDeg();
   const oldFov=camera.fov, oldAspect=camera.aspect;
   const gunWas=gunGrp?gunGrp.visible:false;
   if(gunGrp) gunGrp.visible=false;              // ในเลนส์ไม่ควรเห็นตัวปืนตัวเอง
@@ -1387,6 +1410,15 @@ function renderScopePass(){
   renderer.setViewport(0,0,W,H);
   camera.fov=oldFov; camera.aspect=oldAspect; camera.updateProjectionMatrix();
   if(gunGrp) gunGrp.visible=gunWas;
+}
+/* 🔎 สลับกำลังขยาย 4× → 6× → 8× → 4× */
+function cycleScopeMag(){
+  if(!WEAPONS[weapon].scope) return;
+  scopeMagIdx=(scopeMagIdx+1)%SCOPE_MAGS.length;
+  const z=SCOPE_MAGS[scopeMagIdx];
+  syncWeaponBtns();
+  toastBan(`🔎 <b>กล้อง ${z.label} — ${z.name}</b><br><span class="ib-sub">${z.hint}</span>`,2000);
+  if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
 }
 function renderAmmo(){
   if(!ammoEl) return;
@@ -1402,7 +1434,9 @@ function renderAmmo(){
 function syncWeaponBtns(){
   const W=WEAPONS[weapon];
   if(swapBtn) swapBtn.textContent=(weapon==='rifle')?'🎯':'🔫';   // โชว์ปืนที่ "จะสลับไป"
-  if(scopeBtn) scopeBtn.style.display=(W.scope && !inHeli && !riding)?'block':'none';
+  const show=(W.scope && !inHeli && !riding);
+  if(scopeBtn) scopeBtn.style.display=show?'block':'none';
+  if(magBtn){ magBtn.style.display=show?'block':'none'; magBtn.textContent=SCOPE_MAGS[scopeMagIdx].label; }
 }
 
 /* ============================================================
@@ -1882,6 +1916,7 @@ function bindInput(){
   /* 🎯 สลับปืน + ส่องกล้อง */
   swapBtn.addEventListener('click',()=>{ resumeAudio(); swapWeapon(); });
   scopeBtn.addEventListener('click',()=>{ resumeAudio(); setScoped(!scoped); });
+  magBtn.addEventListener('click',()=>{ resumeAudio(); cycleScopeMag(); });
   hold(upBtn,()=>{ phClimb=1; },()=>{ phClimb=0; });
   hold(downBtn,()=>{ phClimb=-1; },()=>{ phClimb=0; });
   /* 💬 แชทสำเร็จรูป */
@@ -2753,6 +2788,7 @@ function start(){
   battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
+  scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
   renderAmmo(); syncWeaponBtns();
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
@@ -2783,6 +2819,7 @@ function start(){
     else if(k==='h'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
     else if(k==='f'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
     else if(k==='g'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
+    else if(k==='z'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
     else if(k==='escape'){ unlockMouse(); exitBox.classList.add('on'); }
     if(['w','a','s','d',' '].includes(k)) e.preventDefault();
   };
@@ -2865,7 +2902,8 @@ window.InvasionWorld={
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass,
-    get magnify(){return WEAPONS[weapon].magnify||0},
+    get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
+    get magLabel(){return SCOPE_MAGS[scopeMagIdx].label}, get magBtnShown(){return magBtn.style.display==='block'},
     get weaponBtns(){return {swap:swapBtn.textContent,
       scopeShown:scopeBtn.style.display==='block', ammoText:ammoEl.innerText.replace(/\s+/g,' ')}},
     get gunnerBtnShown(){return gunnerBtn && gunnerBtn.style.display==='block'},
