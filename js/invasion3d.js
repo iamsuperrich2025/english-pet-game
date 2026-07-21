@@ -1635,6 +1635,71 @@ function buildR93Model(){
   });
   return g;
 }
+/* ============================================================
+   🔧 รอบ 427: ยืดลำกล้องปืนหลัง export (ผู้ใช้: โมเดล R93 ลำกล้องสั้นไป)
+   ทำไมยืดในโค้ดแล้วไม่เพี้ยน: ลำกล้องเป็น "ทรงกระบอกตรง" ยืดตามแกนของมันเอง
+   รูปทรงหน้าตัดไม่เปลี่ยน เห็นเป็นลำกล้องยาวขึ้นเฉยๆ (ต่างจากการขยายทั้งกระบอกที่จะอ้วนตาม)
+   วิธี: ตัดปืนเป็น 2 ส่วนที่ระนาบ GUN_CUT
+     · ชิ้น "ยาวเรียว" ฝั่งหน้า (ลำกล้อง) → ยืดตามแกน Z อย่างเดียว โดยตรึงปลายท้ายไว้
+     · ชิ้นอื่นฝั่งหน้า (ปากลำกล้อง/ศูนย์หน้า/ขาทราย) → เลื่อนไปข้างหน้าเท่าที่ลำกล้องยาวขึ้น
+     · ฝั่งท้าย (โครง/กล้อง/ด้าม/พานท้าย) → ไม่แตะเลย
+   ============================================================ */
+const GUN_CUT=0.46;      /* ระนาบตัด: สัดส่วนความยาวปืนวัดจากท้าย (0=ท้ายสุด 1=ปากกระบอก) */
+const GUN_STRETCH=1.7;   /* ยืดลำกล้องกี่เท่า — ปรับค่านี้ค่าเดียวถ้าอยากยาว/สั้นกว่านี้ */
+function stretchGunBarrel(obj,cut,k){
+  cut=(cut===undefined)?GUN_CUT:cut; k=(k===undefined)?GUN_STRETCH:k;
+  if(k===1) return 0;
+  obj.updateWorldMatrix(true,true);
+  const meshes=[];
+  obj.traverse(function(o){ if(o.isMesh) meshes.push(o); });
+  if(!meshes.length) return 0;
+  /* แบนพิกัดเป็นโลกก่อน จะได้คิดง่าย ไม่ต้องตาม transform ซ้อนกัน */
+  meshes.forEach(function(m){
+    m.updateWorldMatrix(true,false);
+    const wm=m.matrixWorld.clone();
+    if(m.parent) m.parent.remove(m);
+    wm.decompose(m.position,m.quaternion,m.scale);
+    obj.add(m);
+  });
+  obj.position.set(0,0,0); obj.rotation.set(0,0,0); obj.scale.set(1,1,1);
+  obj.updateWorldMatrix(true,true);
+  const all=new THREE.Box3().setFromObject(obj);
+  /* ปืนวางตามแกน Z โดยปากกระบอกอยู่ทาง −Z (ตามที่เกมกำหนด) */
+  const zBack=all.max.z, zFront=all.min.z, L=zBack-zFront;
+  if(L<=0.0001) return 0;
+  const zCut=zBack-L*cut;
+  let grew=0;
+  const info=[];
+  meshes.forEach(function(m){
+    const b=new THREE.Box3().setFromObject(m);
+    const c=b.getCenter(new THREE.Vector3());
+    if(c.z>=zCut) return;                       /* ฝั่งท้าย = ไม่แตะ */
+    const sz=b.getSize(new THREE.Vector3());
+    /* ⚠️ เกณฑ์ต้องเข้มพอ ไม่งั้น "ปากลำกล้อง" (สั้นแต่ก็เรียว) จะโดนยืดตามไปด้วย
+       จนลอยอยู่กลางลำกล้อง (เจอจริงตอนเทสต์) → ต้องเรียวมาก และยาวเทียบกับทั้งกระบอกด้วย */
+    const thin=sz.z>Math.max(sz.x,sz.y)*2.6 && sz.z>L*0.18;
+    if(thin){
+      /* ยืดตามแกน Z โดยตรึง "ปลายท้าย" (ด้านที่ต่อกับโครงปืน) ไว้ */
+      const rear=b.max.z;
+      m.scale.z*=k;
+      m.position.z=rear-(rear-m.position.z)*k;
+      grew=Math.max(grew,sz.z*(k-1));
+      info.push({thin:true});
+    }else info.push({thin:false});
+  });
+  /* ชิ้นที่ไม่ใช่ลำกล้องแต่อยู่ปลายกระบอก (ปากลำกล้อง/ศูนย์หน้า/ขาทราย) เลื่อนตามไปข้างหน้า */
+  if(grew>0){
+    meshes.forEach(function(m){
+      const b=new THREE.Box3().setFromObject(m);
+      const c=b.getCenter(new THREE.Vector3());
+      if(c.z>=zCut) return;
+      const sz=b.getSize(new THREE.Vector3());
+      const thin=sz.z>Math.max(sz.x,sz.y)*2.6 && sz.z>L*0.18;
+      if(!thin) m.position.z-=grew;
+    });
+  }
+  return grew;
+}
 function buildGun(){
   const g=new THREE.Group();
   /* ทรงปืนทั้ง 2 กระบอกอยู่ในกลุ่มเดียวกัน สลับด้วย visible (ไม่ต้องสร้างใหม่ตอนเปลี่ยนปืน) */
@@ -1680,6 +1745,7 @@ function buildGun(){
   });
   /* 🎯 โมเดลจริงของ R93 ถ้าผู้ใช้วางไฟล์ไว้ (prompt อยู่ใน PROMPTS_INVASION.md) */
   loadGlb('img/models/gun_r93.glb',(obj)=>{
+    stretchGunBarrel(obj);                                // 🔧 ยืดลำกล้องให้ได้สัดส่วนสไนเปอร์จริง
     fitInto(obj,1.25);                                    // สไนเปอร์ยาวกว่าไรเฟิล
     obj.traverse(c=>{
       if(!c.isMesh||!c.material) return;
@@ -3362,7 +3428,7 @@ window.InvasionWorld={
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
-    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass,
+    get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel,
     get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
