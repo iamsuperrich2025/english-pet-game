@@ -12,10 +12,12 @@
 ปลายทาง archive: handoff/archive/HANDOFF_STATUS.md · TASKS_STATUS.md · TASKS_ROUNDS.md
 ก่อนแก้จะสำรองไฟล์เดิมไว้ที่ backups/handoff_rotate/<timestamp>/ เสมอ (gitignore แล้ว)
 
-Usage:  python tools/rotate_handoff.py            # หมุนจริง
-        python tools/rotate_handoff.py --check    # รายงานขนาดอย่างเดียว ไม่แตะไฟล์
+Usage:  python tools/rotate_handoff.py              # หมุนจริง
+        python tools/rotate_handoff.py --check      # รายงานขนาดอย่างเดียว ไม่แตะไฟล์
+        python tools/rotate_handoff.py --next-round # พิมพ์ "เลขรอบว่างถัดไป" ตัวเดียว (ไว้ใช้ในสคริปต์ — อย่าเดาเลขเอง!)
+        python tools/rotate_handoff.py --check-round N  # N ว่างไหม? exit 0=ว่าง 1=ชน (ให้ .githooks/commit-msg เรียก)
 """
-import io, os, re, sys, shutil, datetime
+import io, os, re, sys, shutil, subprocess, datetime
 
 if hasattr(sys.stdout, "reconfigure"):  # คอนโซล Windows default cp1252 พิมพ์ไทยไม่ได้
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -37,6 +39,9 @@ ROUND_SECTION = re.compile(r"^### .*รอบ \d")
 # 🆕 หัวข้อสรุปสถานะ — แต่ละ session ชอบ "แทรกหัวข้อใหม่" แทนการเติม bullet ในหัวข้อเดิม
 #    ทำให้ rotate_bullets เดิมไม่เคยทำงาน (แต่ละหัวข้อมี bullet เดียว) → TASKS.md บวมเงียบ ๆ จนเกินงบ
 STATUS_HEAD = re.compile(r"^### .*สรุปสถานะล่าสุด")
+
+# 🔢 เลขรอบ — จับ "รอบ <เลข>" ที่เจอในไฟล์ handoff / ข้อความ commit (ตรงกับที่ commit-msg เดิม grep)
+ROUND_RE = re.compile(r"รอบ\s*(\d+)")
 
 BUDGET = {HANDOFF: 30_000, TASKS: 80_000}
 
@@ -214,8 +219,93 @@ def warn_long_lines():
             print("   %s (%s ตัวอักษร)" % (loc, format(length, ",")))
 
 
+# ============================================================
+# 🔢 เลขรอบ — ที่เดียวที่ตัดสินว่า "รอบไหนว่าง/ชน" (เดิมตรรกะนี้ฝังใน .githooks/commit-msg)
+#    ใช้ทั้งตอนเดาเลขรอบถัดไป (--next-round) และตอน hook เช็กเลขชน (--check-round)
+# ============================================================
+
+def read_text(path):
+    try:
+        with io.open(path, "r", encoding="utf-8", errors="replace") as f:
+            return f.read()
+    except OSError:
+        return ""
+
+
+def _max_round_in_text(text):
+    return max((int(n) for n in ROUND_RE.findall(text or "")), default=0)
+
+
+def _git(args):
+    """รัน git ใน ROOT คืน stdout (คืน "" ถ้า error/ไม่มี git — fail-open)"""
+    try:
+        r = subprocess.run(["git"] + args, cwd=ROOT, capture_output=True,
+                           text=True, encoding="utf-8", errors="replace")
+        return r.stdout if r.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
+def _git_bases():
+    """ref ที่มีจริงในบรรดา main / origin/main (อาจไม่มีเลยถ้ายังไม่มี remote)"""
+    bases = []
+    for b in ("main", "origin/main"):
+        try:
+            ok = subprocess.run(["git", "rev-parse", "--verify", "-q", b],
+                               cwd=ROOT, capture_output=True).returncode == 0
+        except Exception:
+            ok = False
+        if ok:
+            bases.append(b)
+    return bases
+
+
+def max_round_committed():
+    """เลขรอบสูงสุดที่ 'commit ขึ้น main/origin แล้ว' (จาก handoff/TASKS.md ของ base เท่านั้น)
+       — ตรงกับตรรกะเดิมของ .githooks/commit-msg เป๊ะ: เทียบเฉพาะของที่ขึ้น main แล้ว
+         ไม่นับ working tree ปัจจุบัน จึงไม่บล็อกงานของ session ตัวเอง (หลีกเลี่ยง self-collision)"""
+    hi = 0
+    for base in _git_bases():
+        hi = max(hi, _max_round_in_text(_git(["show", "%s:handoff/TASKS.md" % base])))
+    return hi
+
+
+def max_round_seen():
+    """เลขรอบสูงสุด 'ทุกแหล่ง' สำหรับเดาเลขรอบถัดไป:
+         local handoff/TASKS.md + handoff/archive/*.md + (main/origin: TASKS.md + ข้อความ commit)
+       over-count ได้ ไม่เป็นไร เพราะเราแค่ +1 เพื่อเลือกเลขที่ 'ปลอดภัยแน่ ๆ'"""
+    hi = _max_round_in_text(read_text(TASKS))
+    if os.path.isdir(ARCH_DIR):
+        for name in sorted(os.listdir(ARCH_DIR)):
+            if name.endswith(".md"):
+                hi = max(hi, _max_round_in_text(read_text(os.path.join(ARCH_DIR, name))))
+    for base in _git_bases():
+        hi = max(hi, _max_round_in_text(_git(["show", "%s:handoff/TASKS.md" % base])))
+        hi = max(hi, _max_round_in_text(_git(["log", "--format=%s%n%b", base])))
+    return hi
+
+
 def main():
-    check_only = "--check" in sys.argv
+    argv = sys.argv[1:]
+
+    # 🔢 พิมพ์เลขรอบว่างถัดไป "ตัวเดียว" ไม่มี output อื่นปน (ให้สคริปต์/hook เอาไปใช้ได้ตรง ๆ)
+    if "--next-round" in argv:
+        print(max_round_seen() + 1)
+        return
+
+    # 🔢 เช็กว่าเลข N ว่างไหม → พิมพ์ "เลขรอบสูงสุดที่ commit แล้ว" ออก stdout + exit code (0=ว่าง 1=ชน)
+    if "--check-round" in argv:
+        i = argv.index("--check-round")
+        try:
+            n = int(argv[i + 1])
+        except (IndexError, ValueError):
+            print("ใช้: python tools/rotate_handoff.py --check-round <เลขรอบ>", file=sys.stderr)
+            sys.exit(2)
+        hi = max_round_committed()
+        print(hi)                    # ให้ commit-msg เอาไปโชว์ "บันทึกถึงรอบ N แล้ว" + แนะนำ N+1
+        sys.exit(1 if n <= hi else 0)
+
+    check_only = "--check" in argv
     report("📏 ก่อนหมุน —" if not check_only else "📏")
     if check_only:
         return
