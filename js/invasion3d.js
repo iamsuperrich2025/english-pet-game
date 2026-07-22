@@ -403,12 +403,21 @@ const CSS=`
   background:radial-gradient(circle at 34% 28%,#fff3c8,#c9a12a)}
 #inv-torch.off{background:radial-gradient(circle at 34% 28%,#c9ccd2,#4a5058);filter:grayscale(.5)}
 #inv-torch:active{transform:scale(.94)}
+/* 🏮 รอบ 479: ปุ่มวางแท่งไฟเรืองแสง — โผล่เฉพาะตอนฟ้ามืดเหมือนปุ่มไฟฉาย */
+#inv-glow{position:absolute;left:282px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
+  font-size:20px;cursor:pointer;display:none;box-shadow:0 4px 10px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle at 34% 28%,#d6ffe6,#2f9a63)}
+#inv-glow:active{transform:scale(.94)}
+#inv-glow b{position:absolute;right:-2px;top:-2px;font-size:10px;background:#0e2136;color:#b6ffd2;
+  border-radius:999px;padding:1px 4px;font-weight:900}
+/* 🔭 รอบ 479: ขอบเลนส์ตอนเปิดกล้องมองกลางคืน (เขียวเรืองแบบ NV จริง) */
+#inv-scopeov.nv .so-ring{box-shadow:inset 0 0 70px rgba(60,255,140,.30),0 0 0 2px rgba(80,255,150,.55)}
 /* 👤 ป้าย "กำลังย่อง" — บอกเด็กว่ากลยุทธ์ดับไฟได้ผลจริง */
 #inv-sneak{position:absolute;left:50%;top:78px;transform:translateX(-50%);z-index:6;display:none;white-space:nowrap;
   background:rgba(10,26,20,.72);border:1.5px solid rgba(140,255,190,.55);border-radius:999px;padding:3px 12px;
   color:#b6ffd2;font-weight:800;font-size:12.5px;text-shadow:0 1px 3px #000;pointer-events:none}
 #inv-sneak.on{display:block}
-#inv-chatbar{position:absolute;left:228px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
+#inv-chatbar{position:absolute;left:336px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
 #inv-chatbar.on{display:flex}
 #inv-chatbar button{border:none;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;
   color:#0e2136;background:linear-gradient(180deg,#e9f4ff,#bcd9f5)}
@@ -503,10 +512,11 @@ const CSS=`
   #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
   #inv-night{width:42px;height:42px;font-size:18px;left:158px}
   #inv-torch{width:42px;height:42px;font-size:18px;left:206px}
+  #inv-glow{width:42px;height:42px;font-size:18px;left:254px}
   #inv-breath{width:42px;height:42px;font-size:18px;left:110px}
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
   #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
-  #inv-chatbar{left:254px}
+  #inv-chatbar{left:302px}
   #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
   #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
   .inv-card{padding:12px 16px}.inv-card h3{font-size:18px}.inv-card p{font-size:12.5px}
@@ -539,15 +549,16 @@ const CSS=`
   #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-night{width:38px;height:38px;font-size:15px;left:144px;bottom:10px}
   #inv-torch{width:38px;height:38px;font-size:15px;left:188px;bottom:10px}
+  #inv-glow{width:38px;height:38px;font-size:15px;left:232px;bottom:10px}
   #inv-breath{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
   #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
-  #inv-chatbar{left:232px}
+  #inv-chatbar{left:276px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
   #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
   #inv-map{left:56px}
-  #inv-chatbar{left:232px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
+  #inv-chatbar{left:276px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
 }
 /* จอเตี้ยพิเศษ (≤330px · จอสี่เหลี่ยมยาวมาก) — พื้นที่ขวาไม่พอวางกระดานคะแนน+ปุ่มเฮลิพร้อมกัน
    → ซ่อนกระดานคะแนนมุมขวา (multiplayer ยังทำงานเต็ม เห็นเพื่อนในฉาก+ป้ายชื่อ+แชท) */
@@ -616,6 +627,7 @@ function buildDom(){
     <button id="inv-map">🗺️</button>
     <button id="inv-night">🌙</button>
     <button id="inv-torch">🔦</button>
+    <button id="inv-glow">🏮<b>12</b></button>
     <button id="inv-chat">💬</button>
     <div id="inv-chatbar"></div>
     <div id="inv-selfmsg"></div>
@@ -699,6 +711,8 @@ function buildDom(){
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
   scopeRngEl=wrapEl.querySelector('#inv-scopeov .rng');            // 📏 รอบ 464
+  glowBtn=document.getElementById('inv-glow');                     // 🏮 รอบ 479
+  glowBtn.addEventListener('click',dropGlowStick);
   torchBtn=document.getElementById('inv-torch');                   // 🔦 รอบ 477
   sneakEl=document.getElementById('inv-sneak');
   torchBtn.addEventListener('click',()=>{ flashOn=!flashOn;
@@ -2286,7 +2300,7 @@ const GUN_VIEW={
        → ปลายลำกล้อง 78.2% → 81.2% · ท้ายปืน 83.8% → 89.8% · s 1.146 → 1.169
        ⚠️ "เลื่อนลงเฉย ๆ" ทำให้ท้ายปืนตกเร็วกว่าปลายลำกล้องเกือบ 3 เท่า (perspective — ท้ายปืนอยู่ใกล้ตา)
           จึงต้องแก้ 2 ค่าคู่กัน (y + pitch) ถึงจะได้ "ลงเท่ากันทั้งกระบอก" แล้วค่อยกดท้ายเพิ่ม
-     รอบ 478 (ผู้ใช้: "ท้ายปืนลง 2% · ปลายกระบอกขึ้น 2% · ใหญ่อีก 3%"):
+     รอบ 479 (ผู้ใช้: "ท้ายปืนลง 2% · ปลายกระบอกขึ้น 2% · ใหญ่อีก 3%"):
        ปลายลำกล้อง 81.2% → 79.2% · ท้ายปืน 89.9% → 91.9% · s 1.169 → 1.204 (แก้ y+pitch คู่กันเหมือนรอบ 476) */
   rifle: {p:[0.22,-0.375,-0.95], r:[-0.407,0.46,0.09], s:1.204},
 };
@@ -5189,6 +5203,9 @@ let streetLamps=[];                           // 💡 ไฟถนนติด�
 let beams=[], barrels=[], starShot=null, starAt=0, caughtAt=0, caughtBanAt=0;
 /* 🌫️🔇👤 รอบ 477: หมอกดึก · เสียงกลางคืน · ระบบย่อง (ดับไฟฉายแล้วศัตรูมองไม่ค่อยเห็น) */
 let mists=[], flashOn=true, sneaking=false, sneakBanAt=0, torchBtn=null, sneakEl=null, cricketAt=0;
+/* 🌪️🔭🏮 รอบ 479: พายุทราย · กล้องมองกลางคืน (ปลดล็อกด้วยการยิงเป้า) · แท่งไฟเรืองแสง */
+const STORM_MS=32000, NV_NEED=5, GLOW_MAX=12;
+let stormK=0, stormOn=false, stormAt=0, glowSticks=[], glowLeft=GLOW_MAX, glowBtn=null, nvBanAt=0;
 let hemiL=null, sunL=null, rimL=null, skyDome=null, starPts=null, moonSpr=null;
 let flashLight=null, nightBtn=null, msHullMats=[];
 let vmHemi=null, vmSun=null, vmRim=null;      // ไฟใน vmScene (ปืนในมือ) — หรี่พร้อมฉาก
@@ -5372,15 +5389,17 @@ function buildMist(){
   }
 }
 function tickMist(now){
-  const k=Math.max(0,(nightK-.45)/.55);            // เริ่มมีหมอกตอน "ดึกจริง" เท่านั้น
+  /* 🌪️ รอบ 479: ตอนพายุใช้แผ่นหมอกชุดเดิมทำเป็น "ม่านทราย" (สีเปลี่ยน+เข้มขึ้น) ไม่ต้องสร้างของใหม่ */
+  const k=Math.max(Math.max(0,(nightK-.45)/.55), stormK*.9);
   mists.forEach(o=>{
     if(k<=.02){ o.m.visible=false; return; }
     o.a+=o.sp*.016;
     const x=px+Math.cos(o.a)*o.r, z=pz+Math.sin(o.a)*o.r;
     o.m.visible=true;
     o.m.position.set(x,terrainH(x,z)+1.1+Math.sin(now/2600+o.a)*.35,z);
-    o.m.scale.set(o.sc,o.sc,1);
-    o.m.material.opacity=k*.10;
+    o.m.scale.set(o.sc*(1+stormK*.5),o.sc*(1+stormK*.5),1);
+    o.m.material.color.setHex(stormK>.3?0xc8a878:0x9fb8d8);
+    o.m.material.opacity=k*(.10+stormK*.10);
   });
 }
 
@@ -5413,7 +5432,7 @@ Snd.cricket=function(v){
   o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.26);
 };
 function tickNightSound(now){
-  if(Snd.nightGain) Snd.nightGain.gain.value=.045*nightK;   // ลมดังขึ้นตามความมืด
+  if(Snd.nightGain) Snd.nightGain.gain.value=.045*nightK+.075*stormK;   // ลมดังตามความมืด + แรงมากตอนพายุ
   if(nightK<.55 || !Snd.on()) return;
   if(!cricketAt){ cricketAt=now+900; return; }
   if(now>cricketAt){ cricketAt=now+rnd(1400,4200); Snd.cricket(.012+Math.random()*.012); }
@@ -5428,6 +5447,67 @@ function tickSneak(now){
   if(sneaking && !was && now-sneakBanAt>20000){ sneakBanAt=now;
     toastBan('👤 กำลังย่อง!<span class="ib-sub">ดับไฟฉาย+ไม่ยิง = ศัตรูเล็งเราแทบไม่โดน · ยิงเมื่อไหร่ตำแหน่งแตกทันที</span>',2200); }
   if(torchBtn) torchBtn.style.display = nightK>.25 ? 'block' : 'none';   // กลางวันซ่อนปุ่ม
+}
+/* 🌪️ รอบ 479: พายุทรายพัดผ่านเป็นระยะ — ทัศนวิสัยลดชั่วคราว + ลมแรงขึ้น
+   ⚠️ คุมไม่ให้เล่นไม่ได้: หมอกใกล้สุดยังเหลือ ~45% ของปกติ (เห็นตัวเอง/ทางเดิน/ศัตรูใกล้ได้อยู่)
+      และพายุอยู่แค่ 32 วิ เว้นห่างกัน 2.5–4.5 นาที */
+function tickStorm(dt,now){
+  if(!stormAt){ stormAt=now+rnd(60000,120000); return; }
+  if(!stormOn && now>stormAt){ stormOn=true; stormAt=now+STORM_MS;
+    toastBan('🌪️ พายุทรายพัดมา!<span class="ib-sub">มองไกลไม่ค่อยเห็นสักพัก — ระวังยานลูกเข้าใกล้</span>',2400); }
+  else if(stormOn && now>stormAt){ stormOn=false; stormAt=now+rnd(150000,270000);
+    toastBan('🌤️ พายุผ่านไปแล้ว<span class="ib-sub">มองเห็นไกลเหมือนเดิม</span>',1800); }
+  const tgt=stormOn?1:0;
+  if(stormK!==tgt){                       // ไล่เข้า-ออก 3 วิ (ไม่ให้จอเปลี่ยนวูบ)
+    stormK+=Math.min(dt/3,Math.abs(tgt-stormK))*(tgt>stormK?1:-1);
+    applyNightLook(nightK);               // สีฟ้า/หมอกคิดรวมพายุอยู่ในฟังก์ชันเดียว
+  }
+}
+
+/* 🔭 รอบ 479: กล้องมองกลางคืน — ปลดล็อกเมื่อยิงเป้าฝึกโดนครบ 5 ครั้ง (ต่อยอดระบบเป้ารอบ 473)
+   ทำงานเฉพาะ "ตอนเรนเดอร์ภาพในเลนส์" — ดันแสงขึ้น + ย้อมเขียว แล้วคืนค่าทันทีหลังเรนเดอร์
+   (จึงเห็นสว่างเฉพาะในวงเลนส์ ส่วนภาพนอกเลนส์ยังมืดตามจริง = เหมือน NV ของจริง) */
+function nvReady(){ return nightK>.35 && trgHits>=NV_NEED; }
+function nvEnter(){
+  hemiL.intensity=1.45; hemiL.color.setHex(0x8effc0); hemiL.groundColor.setHex(0x1b3a26);
+  sunL.intensity=.75; sunL.color.setHex(0x7dffb0);
+  rimL.intensity=.35; rimL.color.setHex(0x4fe08a);
+  scene.fog.color.setHex(0x08301c);
+}
+function nvExit(){ applyNightLook(nightK); }        // คืนค่าจากแหล่งเดียว ไม่ต้องจำค่าเก่าเอง
+function tickNvHint(now){
+  const ov=scopeRingEl&&scopeRingEl.parentElement;
+  if(ov) ov.classList.toggle('nv', nvReady()&&adsT>0.12);
+  if(nvReady() && now-nvBanAt>90000 && adsT<0.05){ nvBanAt=now;
+    toastBan('🔭 ปลดล็อก "กล้องมองกลางคืน"!<span class="ib-sub">ยิงเป้าฝึกครบแล้ว — ส่องกล้องตอนมืดจะเห็นเป็นภาพเขียวสว่าง</span>',2600); }
+}
+
+/* 🏮 รอบ 479: แท่งไฟเรืองแสง — เด็กวางเองเป็น "ทางกลับบ้าน" / หมายจุดที่เคลียร์แล้ว
+   วางได้ 12 แท่ง วางครบแล้วแท่งเก่าสุดจะดับไปให้เอง (ไม่บวมเป็นขยะในฉาก) */
+function dropGlowStick(){
+  if(!scene) return;
+  const y=terrainH(px,pz);
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),color:0x7dff9d,transparent:true,opacity:.9,
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  spr.scale.setScalar(2.0); spr.position.set(px,y+.5,pz); scene.add(spr);
+  const pool=new THREE.Mesh(new THREE.PlaneGeometry(6,6),
+    new THREE.MeshBasicMaterial({map:glowTex(),color:0x6cff9a,transparent:true,opacity:0,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  pool.rotation.x=-Math.PI/2; pool.position.set(px,y+.05,pz); scene.add(pool);
+  glowSticks.push({spr,pool,ph:Math.random()*TAU});
+  if(glowSticks.length>GLOW_MAX){ const o=glowSticks.shift(); scene.remove(o.spr); scene.remove(o.pool); }
+  glowLeft=Math.max(0,GLOW_MAX-glowSticks.length);
+  if(glowBtn) glowBtn.querySelector('b').textContent=glowLeft;
+  Snd.shell&&Snd.shell(1.2);          // เสียง "กริ๊ง" เบา ๆ ตอนวาง (ใช้เสียงปลอกกระสุนที่มีอยู่แล้ว)
+  if(glowSticks.length===1) toastBan('🏮 วางแท่งไฟแล้ว!<span class="ib-sub">ใช้หมายทางกลับ หรือจุดที่เคลียร์แล้ว — วางได้ 12 แท่ง</span>',2000);
+}
+function tickGlowSticks(now){
+  glowSticks.forEach(g=>{
+    const f=.85+.15*Math.sin(now/520+g.ph);
+    g.spr.material.opacity=(.45+.5*nightK)*f;
+    g.pool.material.opacity=nightK*.45*f; g.pool.visible=nightK>.03;
+  });
+  if(glowBtn) glowBtn.style.display = nightK>.25 ? 'block' : 'none';
 }
 /* 🔦 ไฟฉายติดปืน — ต้องอยู่ใน scene หลัก (ตัวปืนอยู่ vmScene คนละฉาก ส่องออกมาไม่ถึงพื้น) */
 function buildFlashlight(){
@@ -5477,6 +5557,9 @@ function tickNight(dt,now){
   tickMist(nw);                     // 🌫️ รอบ 477: หมอกระดับพื้นตอนดึก
   tickNightSound(nw);               // 🔇 รอบ 477: ลม + จิ้งหรีด
   tickSneak(nw);                    // 👤 รอบ 477: ย่องตอนดับไฟฉาย
+  tickStorm(dt,nw);                 // 🌪️ รอบ 479: พายุทราย
+  tickGlowSticks(nw);               // 🏮 รอบ 479: แท่งไฟที่วางไว้
+  tickNvHint(nw);                   // 🔭 รอบ 479: ป้าย/ขอบเลนส์โหมดมองกลางคืน
   tickFlashlight();
 }
 function applyNightLook(k){
@@ -5505,7 +5588,14 @@ function applyNightLook(k){
     vmSun.intensity=.95+(NIGHT.sun-.95)*q; vmSun.color.copy(C(DAY.sunCol,NIGHT.sunCol));
     vmRim.intensity=.30+(NIGHT.rim-.30)*q; vmRim.color.copy(C(DAY.rimCol,NIGHT.rimCol));
   }
-  if(skyDome) skyDome.material.color.setScalar(L(1,NIGHT.dome));   // ภาพฟ้ากลางวันหรี่ลงเป็นฉากหลังคืน
+  /* 🌪️ รอบ 479: พายุทราย — ฟ้าขุ่นเป็นสีทราย + มองไกลไม่เห็น (คิดต่อจากค่ากลางวัน/กลางคืนด้านบน) */
+  if(stormK>.005){
+    scene.background.lerp(new THREE.Color(0xb08a5e),stormK*.55);
+    scene.fog.color.copy(scene.background);
+    scene.fog.far*=(1-.55*stormK); scene.fog.near*=(1-.35*stormK);
+    hemiL.intensity*=(1-.22*stormK); sunL.intensity*=(1-.45*stormK);
+  }
+  if(skyDome) skyDome.material.color.setScalar(L(1,NIGHT.dome)*(1-.45*stormK));   // ภาพฟ้าหรี่ลงตอนคืน/พายุ
   if(starPts){ starPts.material.opacity=k*.95; starPts.visible=k>.03; }
   if(moonSpr){ moonSpr.material.opacity=k*.75; moonSpr.visible=k>.03; }
   /* 🛸 ยานแม่เรืองแสงเด่นขึ้น — ตัวลำเป็น Phong จะจมมืด ถ้าไม่ดัน emissive ขึ้น
@@ -5576,7 +5666,12 @@ function frame(dt,now){
   if(adsT>0.02){ layoutScope(now); tickRange(); }   // 🫁 ขอบเลนส์หายใจ · 📏 ระยะถึงเป้า
   renderer.render(scene,camera);
   renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
-  if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
+  if(adsT>0.12){                    // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
+    const nv=nvReady();              // 🔭 รอบ 479: ดันแสง+ย้อมเขียวเฉพาะพาสนี้ แล้วคืนค่าทันที
+    if(nv) nvEnter();
+    renderScopePass();
+    if(nv) nvExit();
+  }
 }
 
 /* ============================================================
@@ -5662,6 +5757,9 @@ function start(){
   if(dayMode!=='auto') nightK=night?1:0;
   cycT=0; applyNightLook(nightK);
   flashOn=true; sneaking=false; if(torchBtn) torchBtn.classList.remove('off');
+  stormK=0; stormOn=false; stormAt=0;                                   // 🌪️ รอบ 479
+  glowSticks.forEach(g=>{ scene.remove(g.spr); scene.remove(g.pool); });  // 🏮 ล้างแท่งไฟรอบก่อน
+  glowSticks=[]; glowLeft=GLOW_MAX; if(glowBtn) glowBtn.querySelector('b').textContent=GLOW_MAX;
   if(sneakEl) sneakEl.classList.remove('on');
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
@@ -5906,6 +6004,15 @@ window.InvasionWorld={
       o:mists[0]?+mists[0].m.material.opacity.toFixed(3):null}; },
     get torchShown(){ return torchBtn && torchBtn.style.display==='block'; },
     get nightAirGain(){ return Snd.nightGain?+Snd.nightGain.gain.value.toFixed(4):null; },
+    /* 🌪️🔭🏮 รอบ 479 */
+    get stormK(){return +stormK.toFixed(3)}, set stormAt(v){stormAt=v},
+    startStorm(){ stormOn=true; stormAt=performance.now()+STORM_MS; },
+    get fogNow(){ return {near:Math.round(scene.fog.near),far:Math.round(scene.fog.far),
+      sky:'#'+scene.background.getHexString()}; },
+    nvReady, nvEnter, nvExit, get nvClass(){ return scopeRingEl.parentElement.classList.contains('nv'); },
+    dropGlowStick, get glowInfo(){ return {n:glowSticks.length,left:glowLeft,
+      o:glowSticks[0]?+glowSticks[0].spr.material.opacity.toFixed(2):null,
+      shown:glowBtn&&glowBtn.style.display==='block'}; },
     /* 🧪 เดินเฟรมเองทีละก้าว — แท็บ preview ที่ไม่ได้อยู่หน้าจอ rAF ไม่วิ่ง (document.hidden) */
     stepFrame(dt){ frame(dt||1/60, performance.now()); },
     get night(){return night}, get nightK(){return nightK},
