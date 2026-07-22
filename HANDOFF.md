@@ -51,6 +51,7 @@ authOnLogin({uid:'test1',email:'t@test.com'});        // → เข้าหน�
 | จะทำอะไร | เปิดไฟล์ |
 |----------|----------|
 | งานถัดไป / อาการบั๊ก(ยืนยัน) vs เดา(ยังไม่พิสูจน์) / backlog สรุป | `C:\Users\rober\english-pet-game\handoff\TASKS.md` |
+| **จูนท่าถือปืนในโลกยานแม่ (องศา/ขนาด/ตำแหน่ง)** — ห้ามเขียนสูตรวัดมุมเองใหม่ เปลือง token | `C:\Users\rober\english-pet-game\tools\gunlab.js` (หัวไฟล์มีวิธีใช้) + TUNE ZONE ใน `js\invasion3d.js` |
 | สภาพแวดล้อม + ข้อควรระวังหายาก (image probe, ห้ามหลายชุดแต่งตัว, ลิขสิทธิ์) | `C:\Users\rober\english-pet-game\handoff\NOTES.md` |
 | แตะ Firebase / publish rules (ส่งเต็มทั้งหน้าเสมอ) | `C:\Users\rober\english-pet-game\handoff\RULES.md` |
 | หาว่าฟังก์ชัน/ค่าคงที่/CSS selector อยู่บรรทัดไหน · หาช่วงบรรทัดของทั้งระบบ/โลก 3D (🗂️ สารบัญโซน) | Grep ชื่อ/ชื่อโซนใน `C:\Users\rober\english-pet-game\handoff\CODE_MAP.md` (เจนอัตโนมัติ ห้ามแก้มือ · บั๊ก UI เริ่มหา selector ที่นี่) |
