@@ -236,7 +236,10 @@ const CSS=`
 #inv-cover.on{display:block}
 @media (max-height:400px){ #inv-cover{top:34px;font-size:11px;padding:3px 10px} }
 /* 🔎 รอบ 473: แถบโจทย์ "ยิงเป้าที่แปลว่า …" (ซ้ายบน ใต้ปุ่มออก — ไม่ทับแถบพลังชีวิต) */
-#inv-quiz{position:absolute;left:96px;top:12px;z-index:6;display:none;max-width:46vw;
+/* ⚠️ max-width 28vw + ellipsis = คำแปลไทยยาว ๆ ก็ยังไม่ชน "แผงคำของยานแม่" (#inv-word) กลางจอบน
+   วัดที่ 812×375: ขอบขวาแถบ 315 · #inv-word เริ่ม 327 */
+#inv-quiz{position:absolute;left:96px;top:12px;z-index:6;display:none;max-width:28vw;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   background:rgba(24,12,40,.82);border:2px solid #c39bff;border-radius:999px;padding:4px 14px;
   color:#efe2ff;font-weight:900;font-size:14px;text-shadow:0 2px 6px #000;pointer-events:none}
 #inv-quiz.on{display:block}
