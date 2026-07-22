@@ -82,10 +82,12 @@ const SNIPER_SENS=0.34;                 // ส่องกล้องแล้�
 const SCOPE_R=0.30;                     // รัศมีเลนส์ = สัดส่วนของด้านสั้นของจอ
 /* 🔎 รอบ 421: กำลังขยาย 3 ระดับ (ตามสไตล์ที่ผู้เล่นจริงนิยม — ผู้ใช้สั่ง)
    สลับด้วยปุ่ม "4×/6×/8×" ข้างปุ่มกล้อง หรือคีย์ Z */
+/* 🔭 รอบ 462: `r` = ตัวคูณขนาดวงเลนส์ตามกำลังขยาย — ยิ่งซูมแรง วงยิ่งกว้าง (เห็นรายละเอียดคุ้มการซูม)
+   เหมือนกล้องจริงที่กำลังขยายสูงใช้เลนส์หน้าใหญ่กว่า · ถูกจำกัดด้วยขอบจออีกชั้นใน scopeRadius() */
 const SCOPE_MAGS=[
-  {m:4, label:'4×', name:'สายบุก (Aggressive)', hint:'ขยับตลอด ยิงระยะใกล้-กลาง เห็นภาพกว้าง หาเป้าไว'},
-  {m:6, label:'6×', name:'ระยะมาตรฐาน',        hint:'ยิงระยะ 100–200 เมตร สมดุลที่สุด'},
-  {m:8, label:'8×', name:'ระยะไกล',            hint:'แผนที่เปิดโล่ง จ่อเป้าไกลๆ ได้นิ่ง'},
+  {m:4, r:0.86, label:'4×', name:'สายบุก (Aggressive)', hint:'ขยับตลอด ยิงระยะใกล้-กลาง เห็นภาพกว้าง หาเป้าไว'},
+  {m:6, r:1.00, label:'6×', name:'ระยะมาตรฐาน',        hint:'ยิงระยะ 100–200 เมตร สมดุลที่สุด'},
+  {m:8, r:1.18, label:'8×', name:'ระยะไกล',            hint:'แผนที่เปิดโล่ง จ่อเป้าไกลๆ ได้นิ่ง · วงเลนส์กว้างสุด'},
 ];
 let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่ากลาง)
 /* ============================================================
@@ -2706,17 +2708,28 @@ function applyBreath(now){
 /* 🔭 รอบ 461: จุดเล็งย้ายลงมา 73% ของจอ → วงเลนส์ต้องไม่ล้นขอบล่าง
    จำกัดรัศมีไม่ให้เกินระยะจากจุดเล็งถึงขอบจอที่ใกล้ที่สุด (เว้นขอบ 8px) */
 function scopeRadius(){
-  const base=Math.min(innerWidth,innerHeight)*SCOPE_R;
+  /* 🔭 รอบ 462: วงโตตามกำลังขยาย — แต่จุดเล็งอยู่ค่อนล่าง พื้นที่ว่างถึงขอบจอจึงเป็นตัวจำกัดจริง
+     จึงคิดเป็น "สัดส่วนของพื้นที่ที่มี": 8× = เต็มที่ · 6× = 85% · 4× = 73% (เห็นต่างชัดทุกจอ) */
+  const mag=SCOPE_MAGS[scopeMagIdx]||{r:1};
+  const rel=(mag.r||1)/1.18;
+  const base=Math.min(innerWidth,innerHeight)*SCOPE_R*1.18;
   const o=(typeof aimOffNow==='function')?aimOffNow():[0,0];
   const cx=innerWidth*(.5+o[0]*.5), cy=innerHeight*(.5-o[1]*.5);
   const room=Math.min(cx,innerWidth-cx,cy,innerHeight-cy)-8;
-  return Math.round(Math.max(40,Math.min(base,room)));
+  return Math.round(Math.max(40,Math.min(base,room)*rel));
 }
 /* ③ รัศมีเลนส์ "ขณะนี้" — โตจาก 0 → เต็มวง ตามจังหวะยกปืน (ทำให้ขอบเลนส์ค่อยๆ ขยายเข้ามา) */
 function scopeRadiusNow(){ return Math.max(1,Math.round(scopeRadius()*(0.35+0.65*adsT))); }
 /* จัดขนาดหน้ากากดำ + วงเรติเคิลให้ตรงกับวงเลนส์ที่จะเรนเดอร์จริง */
-function layoutScope(){
+function layoutScope(now){
   const R=scopeRadiusNow();
+  /* 🫁 รอบ 462: ขอบเลนส์ "หายใจ" — วงขยับเข้า-ออกนิดเดียวตามจังหวะหายใจเดียวกับที่กล้องแกว่ง
+     กลั้นหายใจ (ปุ่ม 🫁) = แทบนิ่งสนิท + ขอบเข้มขึ้น · ลมหมด = แกว่งแรงและถี่ขึ้น (เหนื่อย) */
+  const t=(typeof now==='number')?now:performance.now();
+  const tired=(breathLeft<0.25)?(1+(0.25-breathLeft)*4):1;              // ลมใกล้หมด = แรงขึ้นถึง ~2 เท่า
+  const steady=(holdBreath&&breathLeft>0)?0.10:1;
+  const wob=Math.sin(t*0.0016*tired)*3.2*adsT*steady*tired;             // ±3 px (นิ่งตอนกลั้นหายใจ)
+  const dark=((holdBreath&&breathLeft>0)?0.94:0.88)-0.03*Math.cos(t*0.0016*tired)*steady;
   if(scopeRingEl) scopeRingEl.style.opacity=Math.max(0,(adsT-0.25)/0.75).toFixed(2);   // ⑤ เรติเคิลชัดขึ้นตอนเข้าที่
   /* ⚠️ หัวใจของ PiP: "นอกเลนส์ต้องยังเห็นภาพปกติ" — ห้ามถมดำทั้งรอบนอก
      (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
@@ -2724,12 +2737,12 @@ function layoutScope(){
   const ap=aimPct();                                    // 🔭 รอบ 461: วงเลนส์ครอบ "จุดเล็ง" ไม่ใช่กลางจอ
   if(scopeMaskEl) scopeMaskEl.style.background=
     `radial-gradient(circle at ${ap.x}% ${ap.y}%,`+
-    ` rgba(0,0,0,0) ${R-2}px,`+
-    ` rgba(6,9,12,.88) ${R}px,`+
-    ` rgba(6,9,12,.55) ${R+7}px,`+
-    ` rgba(6,9,12,.18) ${R+13}px,`+
-    ` rgba(0,0,0,0) ${R+20}px)`;
-  if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=(R*2)+'px';
+    ` rgba(0,0,0,0) ${R+wob-2}px,`+
+    ` rgba(6,9,12,${dark.toFixed(2)}) ${R+wob}px,`+
+    ` rgba(6,9,12,.55) ${R+wob+7}px,`+
+    ` rgba(6,9,12,.18) ${R+wob+13}px,`+
+    ` rgba(0,0,0,0) ${R+wob+20}px)`;
+  if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=((R+wob)*2)+'px';
     scopeRingEl.style.left=ap.x+'%'; scopeRingEl.style.top=ap.y+'%'; }
 }
 /* มุมกล้องของภาพในเลนส์ (องศา) ตามกำลังขยายที่เลือก
@@ -4400,6 +4413,7 @@ function frame(dt,now){
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
   layoutCross();                    // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
+  if(adsT>0.02) layoutScope(now);   // 🫁 รอบ 462: ขอบเลนส์หายใจ + วงโตตามกำลังขยาย
   renderer.render(scene,camera);
   renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
