@@ -750,6 +750,20 @@ const Snd={
     const g=c.createGain(); g.gain.setValueAtTime(.10,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
     this.noise(t+.02,.05,3000,.08); },                   // เสียงล็อกคม
+  /* 🔔 รอบ 466: ปลอกกระสุนกระทบพื้น "กริ๊ง" — ดังตามระยะจากตัวเรา (ไกล = เบา+ทึบ) */
+  shell(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const near=Math.max(0,1-(dist||0)/9);                 // เกิน 9 เมตรแทบไม่ได้ยิน
+    if(near<=0.02) return;
+    const f0=1500+Math.random()*900;
+    [0,.045].forEach((dt,i)=>{
+      const o=c.createOscillator(); o.type='triangle';
+      o.frequency.setValueAtTime(f0*(i?1.34:1),t+dt);
+      o.frequency.exponentialRampToValueAtTime(f0*(i?.9:.72),t+dt+.12);
+      const g=c.createGain(); g.gain.setValueAtTime(.055*near*(i?.55:1),t+dt);
+      g.gain.exponentialRampToValueAtTime(.0008,t+dt+(i?.10:.16));
+      o.connect(g); g.connect(c.destination); o.start(t+dt); o.stop(t+dt+.18);
+    });
+    this.noise(t,.03,2600,.02*near); },
   /* 🔁 รอบ 465: เสียงเปลี่ยนปืน 2 จังหวะ ให้ตรงท่าใหม่
      swapDown = ตอนลดปืน (ผ้าเสียดสี + โลหะหน่วง) · swapUp = ตอนยกขึ้นล็อกเข้าที่ ("คลิก" คม) */
   swapDown(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
@@ -2444,7 +2458,8 @@ function tickBolt(now){
     const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
     const back=new THREE.Vector3(0,0,1).applyQuaternion(camera.quaternion);
     const vel=right.multiplyScalar(rnd(2.2,3.4)).add(up.multiplyScalar(rnd(1.6,2.6))).add(back.multiplyScalar(rnd(.2,1.0)));
-    fx.push({o:shell,kind:'bit',t:0,life:2.6,v:vel,rv:new THREE.Vector3(rnd(-9,9),rnd(-9,9),0)});
+    fx.push({o:shell,kind:'bit',t:0,life:2.6,v:vel,metal:true,     // 🔔 รอบ 466: ปลอกกระสุน = มีเสียงตกพื้น
+             rv:new THREE.Vector3(rnd(-9,9),rnd(-9,9),0)});
   }
   return cant;
 }
@@ -2496,6 +2511,37 @@ function alignGunMuzzle(obj){
 function syncMuzzleAnchor(){
   const m=gunModels[weapon];
   if(muzzle&&m&&typeof m.userData.tipZ==='number') muzzle.position.set(0,MUZZLE_Y,m.userData.tipZ+.02);
+}
+/* 🌤️ รอบ 466: เงาตัวเรา+ปืนทอดลงพื้น — แดดทะเลทรายจัด ควรมีเงาให้รู้สึกว่า "เรามีตัวตน"
+   ทำเป็นแผ่นเงานุ่ม (texture ไล่สี) วางบนพื้นตามความสูงภูมิประเทศ เอียงตามทิศแดดจริง
+   ถูกกว่า shadow map มาก และไม่กระทบเฟรมบนมือถือเด็ก (1 mesh · ไม่รับแสง) */
+let selfShadow=null;
+function buildSelfShadow(){
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const g=cv.getContext('2d');
+  const grd=g.createRadialGradient(64,64,4,64,64,62);
+  grd.addColorStop(0,'rgba(0,0,0,.55)'); grd.addColorStop(.55,'rgba(0,0,0,.28)'); grd.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=grd; g.fillRect(0,0,128,128);
+  const tex=new THREE.Texture(cv); tex.needsUpdate=true;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+    new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false,fog:true}));
+  m.rotation.x=-Math.PI/2; m.renderOrder=-1;
+  scene.add(m); selfShadow=m;
+}
+/* ทิศแดดใน build(): sun.position (70,90,120) → เงาทอดไปทางตรงข้าม */
+const SUN_DIR=new THREE.Vector3(70,90,120).normalize();
+function tickSelfShadow(){
+  if(!selfShadow) return;
+  const vis=(!inHeli && running);
+  selfShadow.visible=vis; if(!vis) return;
+  const drop=Math.max(.2, EYE);                       // เงาทอดจากตัวเราลงพื้น ตามมุมแดด
+  const ox=-SUN_DIR.x/SUN_DIR.y*drop, oz=-SUN_DIR.z/SUN_DIR.y*drop;
+  const x=px+ox, z=pz+oz;
+  selfShadow.position.set(x, terrainH(x,z)+0.03, z);
+  /* เงายืดไปตาม "ทิศที่แดดสาด" จริง ๆ (ไม่ใช่ทิศที่เรามอง) — หันตัวไปทางไหนเงาก็อยู่ที่เดิม */
+  selfShadow.scale.set(1.6, 3.2, 1);
+  selfShadow.rotation.z=-Math.atan2(-ox,-oz);
+  selfShadow.material.opacity=.85;
 }
 /* 🎥 รอบ 451: รอบเรนเดอร์ของ view model — วาดปืนทับภาพฉากด้วยกล้อง near .01
    (ล้างเฉพาะ depth ไม่ล้างสี → ปืนอยู่หน้าสุดเสมอ ไม่โดนกำแพง/พื้นทะลุ และดึงเข้ามาชิดตาได้) */
@@ -3011,7 +3057,17 @@ function tickFx(dt){
     else if(f.kind==='bit'){ f.o.position.addScaledVector(f.v,dt); f.v.y-=26*dt;
       f.o.rotation.x+=f.rv.x*dt; f.o.rotation.y+=f.rv.y*dt;
       const gy=terrainH(f.o.position.x,f.o.position.z);
-      if(f.o.position.y<gy){ f.o.position.y=gy; f.v.set(0,0,0); } }
+      if(f.o.position.y<gy){
+        /* 🔔 รอบ 466: กระทบพื้นครั้งแรก = เสียงกริ๊ง + เด้งเบา ๆ อีกที (ให้รู้สึกเป็นโลหะจริง) */
+        if(!f.landed){ f.landed=true;
+          if(f.metal){ const d=camera?camera.position.distanceTo(f.o.position):99;
+                       if(d<12) Snd.shell(d); }
+          if(Math.abs(f.v.y)>2.2){ f.v.y=-f.v.y*0.28; f.v.x*=.4; f.v.z*=.4; f.o.position.y=gy+0.01;
+                                   f.landed=false; f.bounced=(f.bounced||0)+1;
+                                   if(f.bounced>1){ f.landed=true; f.v.set(0,0,0); f.o.position.y=gy; } }
+          else { f.v.set(0,0,0); f.o.position.y=gy; }
+        } else { f.o.position.y=gy; f.v.set(0,0,0); }
+      } }
     else if(f.kind==='fade'){ f.o.material.opacity=.95*(1-k); }
     /* 💨 รอบ 449: ควันปากลำกล้อง — ลอยขึ้น บานออก จางหาย (ติดกล้องเพราะเป็นลูกของกล้อง) */
     else if(f.kind==='smoke'){
@@ -3105,11 +3161,23 @@ function fireGun(now){
 }
 /* 💥 ใส่แรงถอย — เรียก "หลัง" คำนวณวิถีกระสุนแล้ว กระสุนจึงไปตรงที่เล็งไว้ตอนลั่นไก
    เล็งผ่านกล้องอยู่ = เด้งน้อยลง (พานท้ายชิดไหล่) · กลั้นหายใจช่วยอีกนิด */
+/* 💥 รอบ 466: "แพตเทิร์นแรงถอย" แบบเกมยิงจริง — ยิงรัวติดกันจะเด้งขึ้นตามแบบเดิมทุกครั้ง
+   (นัดแรก ๆ ขึ้นตรง → กลางชุดเอียงขวา → ท้ายชุดสะบัดซ้าย) เด็กจึงฝึก "กดสวน" ได้จริง
+   เว้นยิงเกิน RECOIL_RESET ms = เริ่มนับชุดใหม่ · สุ่มผสมนิดเดียวเพื่อไม่ให้แข็งเกินไป */
+const RECOIL_PAT=[0,.15,.35,.62,.85,.70,.30,-.20,-.62,-.85,-.55,-.10,.35,.70,.55];
+const RECOIL_RESET=420;
+let shotIdx=0, lastShotAt=0;
 function addRecoil(){
   const [up,side]=(weapon==='r93')?REC_R93:REC_RIFLE;
+  const now=performance.now();
+  if(now-lastShotAt>RECOIL_RESET) shotIdx=0;
+  lastShotAt=now;
   const steady=(1-0.35*adsT)*((holdBreath&&breathLeft>0)?0.85:1);
-  recPitch+=up*steady;
-  recYaw+=rnd(-side,side)*steady;
+  const climb=Math.min(1.6, 1+shotIdx*0.11);               // ยิงยิ่งรัว ยิ่งดีดแรงขึ้น
+  recPitch+=up*steady*climb;
+  const pat=RECOIL_PAT[shotIdx%RECOIL_PAT.length];
+  recYaw+=(pat*side*1.45 + rnd(-side,side)*0.15)*steady;
+  shotIdx++;
 }
 /* 🎯 บรรจุกระสุนใหม่ (R93) — เล่นเสียงลูกเลื่อนแล้วเติมเต็มแม็ก */
 function startReload(now){
@@ -4555,7 +4623,8 @@ function frame(dt,now){
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
-  layoutCross();                    // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
+  tickSelfShadow();                 // 🌤️ รอบ 466: เงาตัวเรา+ปืนทอดลงพื้น
+  layoutCross();                  // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
   if(adsT>0.02){ layoutScope(now); tickRange(); }   // 🫁 ขอบเลนส์หายใจ · 📏 ระยะถึงเป้า
   renderer.render(scene,camera);
   renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
@@ -4591,6 +4660,7 @@ function build(){
   const sun=new THREE.DirectionalLight(0xfff0cc,.95); sun.position.set(70,90,120); scene.add(sun);
   const rim=new THREE.DirectionalLight(0x8aa4c8,.30); rim.position.set(-60,50,-90); scene.add(rim);
   buildTerrain();
+  buildSelfShadow();                // 🌤️ รอบ 466
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
