@@ -2233,8 +2233,9 @@ const GUN_VIEW={
   /* รอบ 472 (ผู้ใช้ขีดเส้นแดงบนภาพ: "จุดกึ่งกลางของปลายปืน ขึ้นไปอยู่ตามแนวเส้นแดง")
      เส้นที่ขีดพาดผ่าน "จุดเล็ง" พอดี (73% ความสูงจอ = AIM_OFF) → เป้าหมายคือยกให้
      ปลายลำกล้องอยู่ระดับเดียวกับจุดเล็ง · วัดแล้ว pitch ยกไม่ได้ (จุดหมุนของโมเดลอยู่ใกล้ปากกระบอก
-     ลากแขนสั้นมาก) จึงยกทั้งกระบอกด้วยแกน y: −0.46 → −0.245 (ปลายลำกล้อง 84.9% → 73.0%) */
-  rifle: {p:[0.22,-0.245,-0.95], r:[-0.44,0.46,0.09], s:1.146},
+     ลากแขนสั้นมาก) จึงยกทั้งกระบอกด้วยแกน y: −0.46 → −0.245 (ปลายลำกล้อง 84.9% → 73.0%)
+     รอบ 475 (ผู้ใช้: "ต่ำลงมา 5%"): −0.245 → −0.339 = ปลายลำกล้อง 73.1% → 78.1% ของจอ (ต่ำลง 5.0 จุด) */
+  rifle: {p:[0.22,-0.339,-0.95], r:[-0.44,0.46,0.09], s:1.146},
 };
 const GUN_POS=[.22,-.17,-.95];      // ← ค่าที่ "กำลังใช้อยู่" (คัดมาจาก GUN_VIEW ตอนสลับปืน)
 const GUN_ROT=[-.645,.004,.09];
@@ -5130,6 +5131,8 @@ const CYCLE_MS=240000;
 let dayMode='day', cycT=0, lastPhase=0;
 const MODE_ICON={day:'☀️',night:'🌙',auto:'🔄'};
 let streetLamps=[];                           // 💡 ไฟถนนติดเองตอนมืด (ดูหมายเหตุใน buildStreetLamps)
+/* 🔦👾🔥🌠 รอบ 475: ของเล่นกลางคืนอีก 3 อย่าง — ไฟค้นหายานลูก · ถังไฟตามตรอก · ดาวตก */
+let beams=[], barrels=[], starShot=null, starAt=0, caughtAt=0, caughtBanAt=0;
 let hemiL=null, sunL=null, rimL=null, skyDome=null, starPts=null, moonSpr=null;
 let flashLight=null, nightBtn=null, msHullMats=[];
 let vmHemi=null, vmSun=null, vmRim=null;      // ไฟใน vmScene (ปืนในมือ) — หรี่พร้อมฉาก
@@ -5196,6 +5199,109 @@ function tickStreetLamps(now){
     l.pool.material.opacity=a*.42; l.pool.visible=a>.02;
   });
 }
+/* 👾🔦 รอบ 475: ยานลูกเปิดไฟค้นหากวาดพื้นตอนกลางคืน
+   กติกาความสนุก (คิดเผื่อเด็กแล้ว): โดนไฟจับ = ลำนั้น "เร่งยิงเร็วขึ้น" + เตือนด้วยป้าย
+   ❌ ไม่หักพลังเพิ่ม ไม่ล็อกตัว — แค่บีบให้ขยับหนี ไม่ใช่ลงโทษจนเล่นไม่สนุก
+   ⚠️ ลำแสงต้องอยู่ใน scene (ไม่ใช่ลูกของ f.grp) เพราะตอนโมเดล .glb โหลดเสร็จ
+      makeFighter จะล้างลูกทั้งหมดของ grp ทิ้ง ลำแสงจะหายไปด้วย */
+function beamPair(){
+  const cone=new THREE.Mesh(new THREE.ConeGeometry(1,1,14,1,true),
+    new THREE.MeshBasicMaterial({color:0xbfe6ff,transparent:true,opacity:0,side:THREE.DoubleSide,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  const pool=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+    new THREE.MeshBasicMaterial({map:glowTex(),color:0xcfeeff,transparent:true,opacity:0,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  pool.rotation.x=-Math.PI/2;
+  scene.add(cone); scene.add(pool);
+  return {cone,pool};
+}
+function tickSearchBeams(now){
+  const on=nightK>.06;
+  fighters.forEach((f,i)=>{
+    if(!beams[i]) beams[i]=beamPair();
+    const b=beams[i];
+    if(!on){ b.cone.visible=b.pool.visible=false; return; }
+    const p=f.grp.position;
+    /* จุดที่ลำแสงตกบนพื้น — กวาดเป็นวงรอบตัวลำ (แต่ละลำเฟสต่างกัน ไม่กวาดพร้อมกันเป็นแถว) */
+    const a=now*.0006+i*2.1, sw=14+Math.sin(now*.00027+i)*7;
+    const bx=p.x+Math.cos(a)*sw, bz=p.z+Math.sin(a)*sw;
+    const gy=terrainH(bx,bz), h=Math.max(4,p.y-gy), r=Math.max(5,h*.30);
+    b.cone.visible=b.pool.visible=true;
+    b.cone.position.set((p.x+bx)/2,(p.y+gy)/2,(p.z+bz)/2);
+    b.cone.scale.set(r,h,r);
+    /* หันกรวยให้ปลายแหลมอยู่ที่ตัวลำ ฐานแผ่ลงพื้นตรงจุดที่ส่อง */
+    b.cone.up.set(0,1,0);
+    b.cone.lookAt(p.x,p.y,p.z);
+    b.cone.rotateX(Math.PI/2);
+    b.pool.position.set(bx,gy+.08,bz); b.pool.scale.set(r*2.6,r*2.6,1);
+    /* 🚨 จับผู้เล่นได้ไหม */
+    const hit=Math.hypot(px-bx,pz-bz)<r*.85;
+    const col=hit?0xff6a4a:0xbfe6ff;
+    b.cone.material.color.setHex(col); b.pool.material.color.setHex(hit?0xff8a5a:0xcfeeff);
+    b.cone.material.opacity=nightK*(hit?.20:.11);
+    b.pool.material.opacity=nightK*(hit?.62:.40);
+    if(hit && !inHeli && !riding){
+      caughtAt=now;
+      f.shotAt=Math.min(f.shotAt,now+700);          // เร่งยิง แต่ยังทันหลบ
+      if(now-caughtBanAt>5000){ caughtBanAt=now;
+        toastBan('🚨 ไฟค้นหาจับเราได้!<span class="ib-sub">วิ่งออกจากวงแสง หรือหลบเข้าที่กำบังเร็ว!</span>',1500); }
+    }
+  });
+  for(let i=fighters.length;i<beams.length;i++){ beams[i].cone.visible=beams[i].pool.visible=false; }
+}
+
+/* 🔥 รอบ 475: ถังไฟตามตรอก — หมุดนำทางกลางคืน (เห็นแต่ไกลว่าถนนไปทางไหน)
+   ไฟลุกทั้งวันทั้งคืน (สมรภูมิจริงก็มีควันไฟ) แต่ "วงแสงบนพื้น" โผล่เฉพาะตอนมืด */
+function buildBarrelFires(){
+  barrels=[];
+  const drumM=new THREE.MeshLambertMaterial({color:0x53433a});
+  const tex=glowTex();
+  [[-9.5,30],[8.5,66],[-8,104],[9.5,132],[-10,156]].forEach(([x,dz],i)=>{
+    const z=STREET_Z0-dz, gy=terrainH(x,z);
+    const drum=new THREE.Mesh(new THREE.CylinderGeometry(.52,.52,1.15,10,1,true),drumM);
+    drum.position.set(x,gy+.58,z); scene.add(drum);
+    const fire=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,color:0xff9a3a,transparent:true,opacity:.85,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    fire.scale.setScalar(2.2); fire.position.set(x,gy+1.5,z); scene.add(fire);
+    const pool=new THREE.Mesh(new THREE.PlaneGeometry(7,7),
+      new THREE.MeshBasicMaterial({map:tex,color:0xff8a3a,transparent:true,opacity:0,
+        blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    pool.rotation.x=-Math.PI/2; pool.position.set(x,gy+.07,z); scene.add(pool);
+    barrels.push({fire,pool,ph:i*1.7});
+  });
+}
+function tickBarrels(now){
+  barrels.forEach(b=>{
+    const f=.82+.18*Math.sin(now/95+b.ph)+.08*Math.sin(now/47+b.ph*2);   // เปลวไหว
+    b.fire.scale.setScalar(2.2*f);
+    b.fire.material.opacity=(.55+.35*nightK)*f;                          // กลางคืนเปลวเด่นขึ้น
+    b.pool.material.opacity=nightK*.5*f; b.pool.visible=nightK>.03;
+  });
+}
+
+/* 🌠 รอบ 475: ดาวตกพาดฟ้า — โผล่เฉพาะกลางคืน ทุก 9–22 วิ (ให้คืนไม่นิ่งเกินไป ไม่ถี่จนกวนสายตา) */
+function tickShootingStar(now){
+  if(!starShot){
+    starShot=new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex(),color:0xffffff,transparent:true,opacity:0,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    starShot.visible=false; scene.add(starShot);
+  }
+  if(nightK<.55){ starShot.visible=false; starAt=0; return; }
+  if(!starAt){ starAt=now+rnd(1500,8000); return; }
+  const t=(now-starAt)/1200;                       // ช่วงวิ่ง 1.2 วิ
+  if(t<0) return;
+  if(t>1){ starAt=now+rnd(9000,22000); starShot.visible=false; return; }
+  if(t<.02){                                       // สุ่มเส้นทางใหม่ตอนเริ่ม
+    const a=rnd(0,TAU), R=WORLD*1.2;
+    starShot.userData.a=a; starShot.userData.R=R; starShot.userData.h=rnd(120,300);
+  }
+  const u=starShot.userData, a=u.a, R=u.R;
+  const x=Math.cos(a)*R*(1-2*t)+Math.sin(a)*R*.35, z=Math.sin(a)*R*(1-2*t)-Math.cos(a)*R*.35;
+  starShot.visible=true;
+  starShot.position.set(x,u.h-t*40,z);
+  starShot.scale.set(30,30,1);
+  starShot.material.opacity=Math.sin(t*Math.PI)*.9;
+}
 /* 🔦 ไฟฉายติดปืน — ต้องอยู่ใน scene หลัก (ตัวปืนอยู่ vmScene คนละฉาก ส่องออกมาไม่ถึงพื้น) */
 function buildFlashlight(){
   flashLight=new THREE.SpotLight(0xfff0d2,0,72,.44,.55,1.2);
@@ -5236,7 +5342,11 @@ function tickNight(dt,now){
       applyNightLook(nightK);
     }
   }
-  tickStreetLamps(now||performance.now());
+  const nw=now||performance.now();
+  tickStreetLamps(nw);
+  tickSearchBeams(nw);              // 👾🔦 รอบ 475: ไฟค้นหาจากยานลูก
+  tickBarrels(nw);                  // 🔥 รอบ 475: ถังไฟตามตรอก
+  tickShootingStar(nw);             // 🌠 รอบ 475: ดาวตก
   tickFlashlight();
 }
 function applyNightLook(k){
@@ -5377,6 +5487,7 @@ function build(){
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildStreetLamps();               // 💡 รอบ 474: ดวงไฟบนเสาถนน (ติดเองตอนมืด)
+  buildBarrelFires();               // 🔥 รอบ 475: ถังไฟตามตรอก (หมุดนำทางกลางคืน)
   buildTargets();                   // 🎯 รอบ 471: เป้าฝึกยิงตามปากตรอก/ริมกำแพง
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
   buildHeliPads();                  // 🚁 รอบ 434: เฮลิคอปเตอร์จอด 5 ลำ (เดินไปขึ้นได้)
@@ -5644,6 +5755,17 @@ window.InvasionWorld={
     get dayMode(){return dayMode}, set cycT(v){cycT=v},
     get lampInfo(){ return streetLamps.map(l=>({b:+l.bulb.material.opacity.toFixed(2),
       p:+l.pool.material.opacity.toFixed(2), vis:l.bulb.visible})); },
+    /* 🔦🔥🌠 รอบ 475 */
+    get beamInfo(){ return beams.filter(b=>b.cone.visible).map(b=>({
+      x:+b.pool.position.x.toFixed(1), z:+b.pool.position.z.toFixed(1),
+      r:+(b.pool.scale.x/2.6/2).toFixed(1), o:+b.cone.material.opacity.toFixed(3),
+      red:b.cone.material.color.getHexString()==='ff6a4a'})); },
+    get caught(){ return performance.now()-caughtAt<200; },
+    get barrelInfo(){ return barrels.map(b=>({f:+b.fire.material.opacity.toFixed(2),
+      p:+b.pool.material.opacity.toFixed(2)})); },
+    get starInfo(){ return starShot?{vis:starShot.visible,o:+starShot.material.opacity.toFixed(2),
+      y:+starShot.position.y.toFixed(0)}:null; },
+    set starAt(v){ starAt=v; },
     /* 🧪 เดินเฟรมเองทีละก้าว — แท็บ preview ที่ไม่ได้อยู่หน้าจอ rAF ไม่วิ่ง (document.hidden) */
     stepFrame(dt){ frame(dt||1/60, performance.now()); },
     get night(){return night}, get nightK(){return nightK},
