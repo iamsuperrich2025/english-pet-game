@@ -376,7 +376,13 @@ const CSS=`
 #inv-chat{left:12px}
 #inv-map{left:66px;background:radial-gradient(circle at 34% 28%,#d8ffd0,#4a9a52)}
 #inv-map:active,#inv-chat:active{transform:scale(.94)}
-#inv-chatbar{position:absolute;left:174px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
+/* 🌙 รอบ 471: ปุ่มสลับกลางวัน/กลางคืน — ต่อท้ายแถว 💬🗺️🎯 (12/66/120) จึงอยู่ที่ 174 ไม่ทับใคร */
+#inv-night{position:absolute;left:174px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
+  font-size:20px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle at 34% 28%,#ffeec0,#d09a2a)}
+#inv-night.night{background:radial-gradient(circle at 34% 28%,#cfe0ff,#2b3f7a)}
+#inv-night:active{transform:scale(.94)}
+#inv-chatbar{position:absolute;left:228px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
 #inv-chatbar.on{display:flex}
 #inv-chatbar button{border:none;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;
   color:#0e2136;background:linear-gradient(180deg,#e9f4ff,#bcd9f5)}
@@ -469,10 +475,11 @@ const CSS=`
   #inv-heli{width:56px;height:56px;font-size:23px;bottom:174px;right:16px}
   #inv-gunner{width:54px;height:54px;font-size:21px;right:88px;bottom:174px}
   #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
+  #inv-night{width:42px;height:42px;font-size:18px;left:158px}
   #inv-breath{width:42px;height:42px;font-size:18px;left:110px}
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
   #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
-  #inv-chatbar{left:158px}
+  #inv-chatbar{left:206px}
   #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
   #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
   .inv-card{padding:12px 16px}.inv-card h3{font-size:18px}.inv-card p{font-size:12.5px}
@@ -503,15 +510,16 @@ const CSS=`
   #inv-heli{width:48px;height:48px;font-size:19px;bottom:150px;right:12px}
   #inv-gunner{width:46px;height:46px;font-size:18px;right:70px;bottom:150px}
   #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
+  #inv-night{width:38px;height:38px;font-size:15px;left:144px;bottom:10px}
   #inv-breath{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
   #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
-  #inv-chatbar{left:144px}
+  #inv-chatbar{left:188px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
   #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
   #inv-map{left:56px}
-  #inv-chatbar{left:102px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
+  #inv-chatbar{left:188px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
 }
 /* จอเตี้ยพิเศษ (≤330px · จอสี่เหลี่ยมยาวมาก) — พื้นที่ขวาไม่พอวางกระดานคะแนน+ปุ่มเฮลิพร้อมกัน
    → ซ่อนกระดานคะแนนมุมขวา (multiplayer ยังทำงานเต็ม เห็นเพื่อนในฉาก+ป้ายชื่อ+แชท) */
@@ -576,6 +584,7 @@ function buildDom(){
     <button id="inv-gunner">🎖️</button>
     <button id="inv-seat">👁️<small>มุมบิน</small></button>
     <button id="inv-map">🗺️</button>
+    <button id="inv-night">🌙</button>
     <button id="inv-chat">💬</button>
     <div id="inv-chatbar"></div>
     <div id="inv-selfmsg"></div>
@@ -594,6 +603,8 @@ function buildDom(){
       ⛰️ <b>ยืนบนเนินสูง (🎯 จุดสูงข่ม) มองไกลกว่า</b> — วิ่งขึ้นเนินช้าลง ลงเนินไหลเร็วขึ้นนะ<br>
       🎖️ <b>ทีมเวิร์ก!</b> เดินเข้าใกล้เฮลิที่กำลังบิน แล้วกดปุ่ม 🎖️ = <b>ขึ้นเป็นพลปืนประจำประตู</b> —
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
+      🌙 <b>โหมดกลางคืน!</b> กดปุ่ม 🌙 มุมซ้ายล่าง (หรือคีย์ <b>N</b>) — ฟ้าเต็มไปด้วยดาว ยานแม่เรืองแสงเด่น
+      <b>ไฟฉายติดปืน</b>เปิดเองส่องทางให้ และทุกนัดที่ยิง <b>แสงปากลำกล้องจะสาดทั้งฉากวาบ</b>!<br>
       <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (▲▼ ไต่ระดับ) · 💬 คุยกับเพื่อน<br>
       💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
       ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
@@ -656,6 +667,8 @@ function buildDom(){
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
   scopeRngEl=wrapEl.querySelector('#inv-scopeov .rng');            // 📏 รอบ 464
+  nightBtn=document.getElementById('inv-night');                   // 🌙 รอบ 471
+  nightBtn.addEventListener('click',()=>setNight(!night));
   mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
   mapCv=document.getElementById('inv-mapcv'); mapNameEl=document.getElementById('inv-mapname');
   document.getElementById('inv-go').addEventListener('click',()=>{
@@ -767,6 +780,21 @@ const Snd={
     o.frequency.exponentialRampToValueAtTime(180,t+.07);
     const g=c.createGain(); g.gain.setValueAtTime(.05*near,t); g.gain.exponentialRampToValueAtTime(.001,t+.09);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.10); },
+  /* 🎯 รอบ 471: โดนเป้าฝึกยิง — ต้อง "แยกออกจาก hitWall/hitSand ให้ชัด" เด็กจะได้รู้ทันทีว่าเข้าเป้า
+     ไม้ "ป๊อก" + กระดาษฉีก + กระดิ่งใสสองโน้ต (ได้ยินไกลกว่าเสียงกระทบวัสดุ: หาร 90 ไม่ใช่ 60) */
+  hitTarget(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const near=Math.max(0,1-(dist||0)/90); if(near<=.02) return;
+    this.noise(t,.04,2400,.05*near);                       // กระดาษขาด
+    const o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(300,t);
+    o.frequency.exponentialRampToValueAtTime(120,t+.10);   // ไม้ "ป๊อก"
+    const g=c.createGain(); g.gain.setValueAtTime(.075*near,t); g.gain.exponentialRampToValueAtTime(.001,t+.12);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.13);
+    [1320,1760].forEach((f,i)=>{                           // กระดิ่ง 2 โน้ต = "ได้แต้ม"
+      const st=t+.02+i*.06;
+      const b=c.createOscillator(); b.type='sine'; b.frequency.setValueAtTime(f,st);
+      const bg=c.createGain(); bg.gain.setValueAtTime(.05*near,st); bg.gain.exponentialRampToValueAtTime(.0008,st+.32);
+      b.connect(bg); bg.connect(c.destination); b.start(st); b.stop(st+.34);
+    }); },
   /* 🔔 รอบ 466: ปลอกกระสุนกระทบพื้น "กริ๊ง" — ดังตามระยะจากตัวเรา (ไกล = เบา+ทึบ) */
   shell(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const near=Math.max(0,1-(dist||0)/9);                 // เกิน 9 เมตรแทบไม่ได้ยิน
@@ -795,6 +823,29 @@ const Snd={
     const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
     this.noise(t+.03,.05,3400,.075); },                 // คลิกล็อกแม็กเข้าที่
+  /* 📣 รอบ 471: ทหารตะโกน — สังเคราะห์ให้ "เหมือนเสียงคน" ด้วยฟอร์แมนต์ 2 ชั้น
+     (ไม่ใช่คำพูดจริง แต่จำนวนพยางค์/จังหวะตรงกับข้อความที่ลอยเหนือหัว) · ดังตามระยะ */
+  shout(dist,syl){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const near=Math.max(0,1-(dist||0)/55); if(near<=.03) return;
+    const n=Math.max(1,Math.min(5,syl||2));
+    const base=132+Math.random()*46;                     // โทนเสียงผู้ชายตะโกน (สุ่มให้ทหารไม่เสียงเดียวกันหมด)
+    this.noise(t,.05,1900,.014*near);                    // ลมหายใจนำหน้าคำ
+    for(let i=0;i<n;i++){
+      const st=t+i*.185, dur=(i===n-1)?.22:.15;          // พยางค์ท้ายลากยาว = สำเนียงตะโกน
+      const f0=base*(i===n-1?1.16:1)*(1+i*.03);
+      const o=c.createOscillator(); o.type='sawtooth';
+      o.frequency.setValueAtTime(f0*.9,st);
+      o.frequency.linearRampToValueAtTime(f0*1.14,st+dur*.35);
+      o.frequency.linearRampToValueAtTime(f0*.86,st+dur);
+      const fa=c.createBiquadFilter(); fa.type='bandpass'; fa.frequency.value=600+Math.random()*190; fa.Q.value=6;
+      const fb=c.createBiquadFilter(); fb.type='bandpass'; fb.frequency.value=1160+Math.random()*280; fb.Q.value=8;
+      const g=c.createGain(); g.gain.setValueAtTime(.0008,st);
+      g.gain.exponentialRampToValueAtTime(.095*near,st+.035);
+      g.gain.exponentialRampToValueAtTime(.0008,st+dur);
+      const gb=c.createGain(); gb.gain.value=.55;
+      o.connect(fa); fa.connect(g); o.connect(fb); fb.connect(gb); gb.connect(g);
+      g.connect(c.destination); o.start(st); o.stop(st+dur+.03);
+    } },
   /* 🫁 รอบ 449: หายใจแรงตอนวิ่งนาน (หายใจออก 1 ครั้ง) */
   pant(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.22,520,.075); this.noise(t+.26,.18,340,.045); },
@@ -1512,13 +1563,14 @@ function buildMothership(){
      บังตัวยานแม่ที่อยู่ไกลกว่า → เอาแผ่นออกถาวร เหลือเฉพาะ "ตัวอักษรเรืองแสง" ลอยเป็นแถว */
 
   scene.add(grp); mother=grp;
+  collectMsMats(grp);              // 🌙 รอบ 471: เก็บวัสดุลำไว้ดัน emissive ตอนกลางคืน
   /* 🌫️ ยานอยู่ไกลกว่าระยะหมอกมาก → ปิด fog ที่ตัวลำ ไม่งั้นกลืนหายไปกับสีฟ้าทั้งลำ */
   grp.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.fog=false;m.needsUpdate=true;}); } });
   loadGlb('img/models/mothership.glb',(obj)=>{
     fitInto(obj,MS_R*2);
     obj.traverse(o=>{ if(o.material){ (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.fog=false;m.needsUpdate=true;}); } });
     grp.children.slice().forEach(c=>grp.remove(c));
-    grp.add(obj); msLamps=[];
+    grp.add(obj); msLamps=[]; collectMsMats(grp);      // 🌙 รอบ 471: โมเดลจริงมาแทน → เก็บวัสดุใหม่
   });
 }
 /* วางช่องตัวอักษรตามความยาวคำ (คำยาว = ช่องเล็กลงพอดีแผง) */
@@ -2708,9 +2760,10 @@ function buildGun(){
   vFill.position.set(-.5,-.15,.1); vmScene.add(vFill);
   /* 🌤️ รอบ 451: ปืนย้ายออกจากฉากหลัก จึงไม่ได้รับแดด/ฟ้าของฉากอีก — ใส่ชุดเดียวกันใน vmScene
      (ค่าเท่ากับฉากจริงเป๊ะ ๆ ปืนจึงยังดูกลืนกับสภาพแสงทะเลทรายเหมือนเดิม) */
-  vmScene.add(new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52));
+  vmHemi=new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52); vmScene.add(vmHemi);
   const vSun=new THREE.DirectionalLight(0xfff0cc,.95); vSun.position.set(.7,.9,1.2); vmScene.add(vSun);
   const vRim=new THREE.DirectionalLight(0x8aa4c8,.30); vRim.position.set(-.6,.5,-.9); vmScene.add(vRim);
+  vmSun=vSun; vmRim=vRim;            // 🌙 รอบ 471: ปืนในมือต้องมืดตามฉาก ไม่งั้นลอยเป็นของกลางวันกลางคืนดึก
   loadGlb('img/models/gun_rifle.glb',(obj)=>{
     orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z
     mergeGunParts(obj);                                   // ⚡ รวมชิ้นเป็นก้อนเดียว
@@ -3154,6 +3207,111 @@ function tickFx(dt){
 }
 
 /* ============================================================
+   🎯📝 รอบ 471: เป้าฝึกยิงในสมรภูมิ (ผู้ใช้สั่ง)
+   เป้ากระดาษบนเสาไม้ ตั้งตามปากตรอกริมถนน + ริมกำแพงในเมือง
+   ยิงโดน = เหรียญ + โผล่คำศัพท์อังกฤษ 1 คำพร้อมคำแปลไทย (ดึงจากคลังคำเดียวกับ pickWord)
+   เป้าล้มแล้วตั้งใหม่เองใน TRG_BACK ms · เสียงโดนเป้าแยกจาก hitWall/hitSand
+   ⚡ งบมือถือ: 12 เป้า × 2 ชิ้น = 24 draw call แต่ซ่อนตัวที่ไกลเกิน TRG_LOD (เหมือน tickHouseLod)
+      geometry/material ใช้ร่วมกันทุกตัว → เพิ่มเป้าอีกก็ไม่บวมเท่าไหร่
+   ============================================================ */
+const TRG_COIN=3, TRG_BACK=7000, TRG_LOD=130, TRG_R=0.95;
+let targets=[], trgTex=null, trgGeo=null, trgMat=null, trgPostGeo=null, trgPostMat=null;
+/* กระดาษเป้า: วงแหวนแดง-ขาว + จุดดำกลาง (วาดเอง ไม่ต้องโหลดไฟล์) */
+function targetTexture(){
+  if(trgTex) return trgTex;
+  const cv=document.createElement('canvas'); cv.width=cv.height=128; const g=cv.getContext('2d');
+  g.fillStyle='#f4efe2'; g.fillRect(0,0,128,128);                 // กระดาษสีนวล
+  g.strokeStyle='#c9bfa8'; g.lineWidth=3; g.strokeRect(2,2,124,124);
+  [[52,'#d8503c'],[40,'#f4efe2'],[28,'#d8503c'],[16,'#f4efe2']].forEach(([r,c])=>{
+    g.fillStyle=c; g.beginPath(); g.arc(64,64,r,0,7); g.fill();
+  });
+  g.fillStyle='#26221c'; g.beginPath(); g.arc(64,64,7,0,7); g.fill();   // จุดกลาง
+  const t=new THREE.Texture(cv); t.needsUpdate=true; return (trgTex=t);
+}
+/* จุดวางเป้า — "ค่าตายตัว" เหมือน HILLS: ผู้เล่นออนไลน์ทุกเครื่องต้องเห็นเป้าตำแหน่งเดียวกัน */
+function targetSpots(){
+  const out=[], gap=(STREET_LEN/9)*0.94;
+  for(let i=0;i<8;i++){                                  // ปากตรอกระหว่างตึกริมถนน สลับซ้าย-ขวา
+    const side=(i%2)?1:-1;
+    const z=STREET_Z0-8-(i+0.5)*gap;
+    const x=side*(STREET_HW+1.6);
+    out.push({x,z,look:[0,z]});                          // หันหน้าเข้าถนน
+  }
+  [[-64,-40],[89,10],[-30,-144],[34,74]].forEach(([x,z])=>{   // ริมกำแพง/หอมินาเรตในเมือง
+    out.push({x,z,look:[0,STREET_Z0-70]});
+  });
+  return out;
+}
+function buildTargets(){
+  targetTexture();
+  trgGeo=new THREE.PlaneGeometry(1.15,1.5);
+  trgMat=new THREE.MeshLambertMaterial({map:trgTex,side:THREE.DoubleSide});
+  trgPostGeo=new THREE.CylinderGeometry(.07,.10,1.5,5);
+  trgPostMat=new THREE.MeshLambertMaterial({color:0x8a6a45});
+  targetSpots().forEach(s=>{
+    /* ⚠️ ตึกในเมือง (buildTown) สุ่มตำแหน่ง → เป้าอาจไปโผล่กลางตึก
+       ดันออกนอกกำแพงให้พ้นก่อน (เรียกหลัง buildTown/buildWarStreet แล้ว solids จึงครบ) */
+    for(const o of solids){
+      const dx=s.x-o.x, dz=s.z-o.z, d=Math.hypot(dx,dz);
+      if(d<o.r+1.2){ const k=(o.r+1.6)/(d||0.01); s.x=o.x+dx*k; s.z=o.z+dz*k; }
+    }
+    const base=terrainH(s.x,s.z);
+    const grp=new THREE.Group();
+    grp.position.set(s.x,base,s.z);
+    grp.rotation.y=Math.atan2(s.look[0]-s.x, s.look[1]-s.z);
+    const post=new THREE.Mesh(trgPostGeo,trgPostMat); post.position.y=.75; grp.add(post);
+    const board=new THREE.Mesh(trgGeo,trgMat); board.position.y=2.05; grp.add(board);
+    scene.add(grp);
+    targets.push({grp, up:true, fallAt:0, backAt:0,
+                  c:new THREE.Vector3(s.x, base+2.05, s.z)});   // จุดกึ่งกลางเป้า (ใช้ตรวจกระสุน)
+  });
+}
+/* ล้ม → ตั้งใหม่ · ซ่อนตัวที่ไกลเกินระยะ (เช็กทุก 12 เฟรม พอสำหรับ LOD) */
+let trgLodTick=0;
+function tickTargets(now){
+  if(++trgLodTick%12===0){
+    for(const t of targets){
+      const near=Math.hypot(px-t.c.x,pz-t.c.z)<TRG_LOD;
+      if(t.grp.visible!==near) t.grp.visible=near;
+    }
+  }
+  for(const t of targets){
+    if(t.up){
+      if(t.backAt && now<t.backAt+240){                  // เด้งกลับตอนเพิ่งตั้งขึ้น
+        const e=(now-t.backAt)/240;
+        t.grp.rotation.x=-0.30*Math.sin(e*Math.PI*2)*(1-e);
+      }else if(t.grp.rotation.x) t.grp.rotation.x=0;
+      continue;
+    }
+    const e=(now-t.fallAt)/380;
+    if(e<1) t.grp.rotation.x=1.35*(1-(1-e)*(1-e));       // ล้มหงายไปข้างหลัง (ชะลอปลายทาง)
+    else if(now-t.fallAt>TRG_BACK){ t.up=true; t.backAt=now; }
+    else t.grp.rotation.x=1.35;
+  }
+}
+/* 📖 คำศัพท์สำหรับเป้า — คลังเดียวกับรอบเล่น แต่ไม่ยุ่งกับคำของยานแม่/DONE_KEY */
+function targetWord(){
+  const pool=(typeof vocabForStudent==='function'?vocabForStudent():[])
+    .filter(([en])=>/^[a-z]{3,10}$/i.test(en));
+  if(!pool.length) return ['target','เป้า'];
+  return pool[(Math.random()*pool.length)|0];
+}
+function hitTarget(t,point){
+  if(!t.up) return;
+  t.up=false; t.fallAt=performance.now();
+  const d=camera.position.distanceTo(t.c);
+  Snd.hitTarget(d);
+  dustPuff(point||t.c);
+  if(typeof addCoins==='function') addCoins(TRG_COIN);
+  sessionCoins+=TRG_COIN; renderCoins();
+  const [en,th]=targetWord();
+  if(typeof vbRecord==='function') vbRecord(en,th,true);
+  toastBan(`🎯 <b>เข้าเป้า!</b> <span class="ib-coin">+${TRG_COIN} 🪙</span><br>`+
+           `<span class="ib-sub">${escapeHTML(en.toUpperCase())} = ${escapeHTML(th||'')}</span>`,2200);
+  if(typeof speakWord==='function') setTimeout(()=>speakWord(en),260);
+}
+
+/* ============================================================
    🎯 ระบบยิงของผู้เล่น
    ============================================================ */
 /* 🎯 รอบ 458 (ผู้ใช้ขีดเส้นบนภาพ: ให้จุดเล็งไปอยู่บน "แนวลำกล้อง" ที่ตัดกับแกนกลางจอ)
@@ -3191,11 +3349,15 @@ function fireGun(now){
     lastFire=now; gunRecoil=.5; muzzleUntil=now+40; Snd.gun();
     const origin=camera.position.clone(), dir=aimDir();
     dir.x+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.y+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.normalize();
-    const hit=rayTarget(origin,dir,900);
+    let hit=rayTarget(origin,dir,900);
+    if(hit && hit.type==='trg'){ const blk=envHit(origin,dir,hit.t);
+      if(blk&&blk.kind==='sand'&&blk.dist<hit.t-0.25) hit=null; }   // เนินบังอยู่ (ดูเหตุผลที่ fireGun)
     tracer(origin.clone().addScaledVector(dir,4),hit?hit.point:origin.clone().addScaledVector(dir,700),0x9fe0ff,.07);
-    if(hit){ sparkAt(hit.point);
-      if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
-      else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } }
+    if(hit){
+      if(hit.type==='trg') hitTarget(hit.obj,hit.point);        // 🎯 รอบ 471: ยิงเป้าจากบนเฮลิก็นับ
+      else{ sparkAt(hit.point);
+        if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
+        else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } } }
     recPitch+=REC_RIFLE[0]*.45; recYaw+=rnd(-1,1)*REC_RIFLE[1]*.45;   // ปืนกลติดลำเด้งเบาๆ
     return;
   }
@@ -3226,7 +3388,15 @@ function fireGun(now){
   const sp=W.mag ? (scoped?W.spread:W.hipSpread) : W.spread;   // ไม่ส่องกล้อง = เป๋มาก (ตาม Accuracy ต่ำ)
   dir.x+=rnd(-sp,sp); dir.y+=rnd(-sp,sp); dir.normalize();
   addRecoil();                                                 // 💥 เด้งหลังคำนวณวิถีแล้ว
-  const hit=rayTarget(origin,dir,W.mag?4000:900);              // สไนเปอร์ยิงได้ไกลกว่ามาก
+  let hit=rayTarget(origin,dir,W.mag?4000:900);                // สไนเปอร์ยิงได้ไกลกว่ามาก
+  /* 🎯 รอบ 471: เป้าฝึกยิงอยู่ "ติดพื้น" จึงมีเนินเขาบังได้ (ยานอยู่บนฟ้าไม่มีปัญหานี้)
+     ⚠️ กันเฉพาะ 'sand' (พื้น/เนิน) เท่านั้น — วัดจริงแล้วเช็กกำแพงด้วยไม่ได้:
+     `solids` เก็บตึกเป็น "วงกลม r=ด้านยาว/2" ซึ่งล้นออกมาคลุมผิวถนน → ยิงเป้าปากตรอกจากกลางถนน
+     โดนตีว่ามีกำแพงบังทั้งที่มองเห็นเป้าเต็มตา (วัดได้ 9 ใน 12 เป้า) */
+  if(hit && hit.type==='trg'){
+    const blk=envHit(origin,dir,hit.t);
+    if(blk && blk.kind==='sand' && blk.dist<hit.t-0.25) hit=null;   // เนิน/พื้นบังอยู่ = ไม่โดน
+  }
   const end=hit? hit.point : origin.clone().addScaledVector(dir,W.mag?2500:700);
   /* 🚀 รอบ 467: กระสุนไม่ถึงเป้าทันทีอีกแล้ว — วิถีถูกคำนวณตอนยิง (เล็งง่ายเหมือนเดิม)
      แต่ "ประกายโดน/ดาเมจ/เสียงโดน" มาถึงตามเวลาเดินทางจริง (ระยะ ÷ ความเร็วกระสุน)
@@ -3316,7 +3486,9 @@ function tickBullets(now){
       else { Snd.hitWall(d); sparkAt(e.point); dustPuff(e.point); }
       continue;
     }
-    const h=b.hit; sparkAt(h.point);
+    const h=b.hit;
+    if(h.type==='trg'){ hitTarget(h.obj,h.point); continue; }   // 🎯 รอบ 471: เป้ากระดาษ ไม่มีประกายไฟโลหะ
+    sparkAt(h.point);
     if(h.type==='fighter'){ damageFighter(h.obj,b.dmg,now); Snd.ping(); }
     else if(h.type==='mother'){ damageMother(b.msDmg); }
   }
@@ -3407,6 +3579,13 @@ function rayTarget(origin,dir,maxD){
        ทำให้ raySphere คืน null ตลอด (ยิงยานแม่ไม่โดนเลย) */
     const t=raySphere(origin,dir,msCore.position,CORE_R*1.35);
     if(t!==null && t<bestT){ bestT=t; best={type:'mother',obj:mother,t}; }
+  }
+  /* 🎯 รอบ 471: เป้าฝึกยิง — เช็กเฉพาะตัวที่ "ยังตั้งอยู่ + อยู่ในระยะมองเห็น"
+     (12 ตัว ทดสอบทรงกลมอย่างละ 1 ครั้ง = ถูกกว่าการวน solids มาก) */
+  for(const t of targets){
+    if(!t.up || !t.grp.visible) continue;
+    const tt=raySphere(origin,dir,t.c,TRG_R);
+    if(tt!==null && tt<bestT){ bestT=tt; best={type:'trg',obj:t,t:tt}; }
   }
   if(best) best.point=origin.clone().addScaledVector(dir,bestT);
   return best;
@@ -4718,6 +4897,97 @@ function tickSquad(dt,now){
     }
     poseSoldier(s,now);
   });
+  tickSquadCalls(now);                            // 📣 รอบ 471: ตะโกนบอกทิศศัตรู
+}
+
+/* ============================================================
+   📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
+   ยานลูกเข้าใกล้ → ทหารในหมู่ที่อยู่ใกล้เราตะโกนทิศ "จริง" เทียบ yaw ของผู้เล่น
+   ("ทางขวา!" / "ระวังหลัง 6 นาฬิกา!") พร้อมป้ายลอยเหนือหัว (ใช้ nameSprite ชุดเดียวกับแชท)
+   คุมความถี่ 3 ชั้นไม่ให้รก: ทั้งหมู่ / ต่อทหาร 1 คน / ต่อทิศ · อยู่บนเฮลิ = เห็นป้ายแต่ไม่มีเสียง
+   ============================================================ */
+const CALL_DIST=170;        // ยานลูกใกล้กว่านี้ = ควรเตือน
+const CALL_NEAR=46;         // ทหารต้องอยู่ในรัศมีนี้จากเรา ถึงจะได้ยิน/มองเห็นป้าย (ม.)
+const CALL_GAP_ALL=2600;    // เว้นระหว่างเสียงตะโกนของทั้งหมู่
+const CALL_GAP_ONE=7000;    // ทหารคนเดิมพูดซ้ำได้ทุกกี่ ms
+const CALL_GAP_DIR=5200;    // ทิศเดิมพูดซ้ำได้ทุกกี่ ms
+const CALL_MS=1900;         // ป้ายลอยหัวอยู่นานเท่าไร
+const CALL_LINES={
+  f :['ด้านหน้า 12 นาฬิกา!','ตรงหน้าเรา!'],
+  fr:['ขวาหน้า 1 นาฬิกา!','เฉียงขวาหน้า!'],
+  r :['ทางขวา!','ขวา 3 นาฬิกา!'],
+  br:['ขวาหลัง 5 นาฬิกา!','เฉียงขวาหลัง!'],
+  b :['ข้างหลัง!','ระวังหลัง 6 นาฬิกา!'],
+  bl:['ซ้ายหลัง 7 นาฬิกา!','เฉียงซ้ายหลัง!'],
+  l :['ทางซ้าย!','ซ้าย 9 นาฬิกา!'],
+  fl:['ซ้ายหน้า 11 นาฬิกา!','เฉียงซ้ายหน้า!'],
+  up:['บนหัวเรา!','มันดิ่งลงมา!'],
+};
+const CALL_SECTORS=['f','fr','r','br','b','bl','l','fl'];
+let callAllAt=0, callDirAt={};
+/* ทิศของเป้าเทียบ "หน้าเรา" — ผู้เล่นหันหน้าไป −Z ตอน yaw=0 (สูตรเดียวกับที่ทหารหันตัว) */
+function bearingKey(x,y,z){
+  const dx=x-px, dz=z-pz, flat=Math.hypot(dx,dz);
+  if(Math.atan2(y-py,Math.max(1,flat))>0.96) return 'up';     // เกิน ~55° = อยู่บนหัว บอกซ้าย/ขวาไม่ช่วย
+  let rel=Math.atan2(-dx,-dz)-yaw;                            // มุมที่ต้องหันเพิ่ม (บวก = หันซ้าย)
+  rel=Math.atan2(Math.sin(rel),Math.cos(rel));                // wrap −π..π
+  const cw=((-rel*180/Math.PI)%360+360)%360;                  // องศาตามเข็มนาฬิกาจากด้านหน้า
+  return CALL_SECTORS[Math.round(cw/45)%8];
+}
+function clearSquadBubble(s){
+  if(s.bubbleTm){ clearTimeout(s.bubbleTm); s.bubbleTm=0; }
+  if(s.bubble){ if(s.bubble.parent) s.bubble.parent.remove(s.bubble);
+    if(s.bubble.material.map) s.bubble.material.map.dispose(); s.bubble.material.dispose(); s.bubble=null; }
+}
+/* ป้ายคำตะโกน — ทำเอง ไม่ใช้ nameSprite เพราะอันนั้นตัดข้อความที่ 14 ตัวอักษร (ไทยยาวกว่านั้น) */
+function callSprite(text){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=96;
+  const x=cv.getContext('2d');
+  x.fillStyle='rgba(10,20,34,.86)'; x.beginPath();
+  if(x.roundRect) x.roundRect(6,14,500,68,14); else x.rect(6,14,500,68);
+  x.fill();
+  x.strokeStyle='rgba(255,214,120,.9)'; x.lineWidth=3; x.stroke();
+  x.font='bold 46px system-ui,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+  let f=46; while(x.measureText(text).width>478 && f>22){ f-=2; x.font='bold '+f+'px system-ui,sans-serif'; }
+  x.fillStyle='#ffe9a8'; x.fillText(text,256,50);
+  return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
+}
+function squadShout(s,text,now){
+  clearSquadBubble(s);
+  const sp=callSprite(text); sp.scale.set(8,1.5,1); sp.userData.txt=text;
+  sp.position.y=s.crouch?1.6:2.4;                            // เหนือหัวทหาร (หมอบ = เตี้ยลง)
+  s.grp.add(sp); s.bubble=sp;
+  s.bubbleTm=setTimeout(()=>clearSquadBubble(s),CALL_MS);
+  s.callAt=now;
+  /* 🚁 อยู่บนเฮลิ/เป็นพลปืน = ใบพัดกลบ + ไม่ได้อยู่กับหมู่แล้ว → เงียบเสียง เหลือแต่ป้าย */
+  if(!inHeli&&!riding){
+    const d=Math.hypot(s.grp.position.x-px, s.grp.position.z-pz);
+    Snd.shout(d, Math.min(5,Math.max(2,Math.round(text.replace(/[!\s]/g,'').length/3))));
+  }
+}
+function tickSquadCalls(now){
+  if(!squad.length||!fighters.length||now<callAllAt) return;
+  /* เตือนเฉพาะลำที่ใกล้ตัวเราสุด (ลำไกลลิบไม่ใช่ภัย = ไม่ต้องพูดถึง) */
+  let best=null, bd=CALL_DIST;
+  for(const f of fighters){
+    const p=f.grp.position, d=Math.hypot(p.x-px,p.z-pz);
+    if(d<bd){ bd=d; best=f; }
+  }
+  if(!best) return;
+  const bp=best.grp.position, key=bearingKey(bp.x,bp.y,bp.z);
+  if(now<(callDirAt[key]||0)) return;
+  /* คนที่จะพูด = ทหารที่อยู่ใกล้เราพอได้ยิน และเพิ่งไม่ได้พูดไป */
+  let who=null, wd=CALL_NEAR*CALL_NEAR;
+  for(const s of squad){
+    if(now-(s.callAt||0)<CALL_GAP_ONE) continue;
+    const g=s.grp.position, d=(g.x-px)*(g.x-px)+(g.z-pz)*(g.z-pz);
+    if(d<wd){ wd=d; who=s; }
+  }
+  if(!who) return;
+  const lines=CALL_LINES[key];
+  squadShout(who, lines[(Math.random()*lines.length)|0], now);
+  callAllAt=now+CALL_GAP_ALL*rnd(.85,1.4);
+  callDirAt[key]=now+CALL_GAP_DIR;
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
 function tickHelis(dt,now){
@@ -4749,6 +5019,111 @@ function tickHelis(dt,now){
       Snd.missile();
     }
   });
+}
+
+/* ============================================================
+   🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
+   ผู้ใช้สั่ง: ให้ worldFlash (แฟลชปากลำกล้อง รอบ 469) กับไฟฉายมีบทบาทจริง
+   ⚠️ กติกาความสนุก (ห้ามลืม): มืดได้ แต่ต้อง "ยังเห็นทางเดิน/ศัตรู" —
+      hemi ต่ำสุด .34 + ฟ้าอมน้ำเงิน (ไม่ใช่ดำสนิท) · ยานลูกมีตาเขียว/ไอพ่น/ป้ายตัวอักษร
+      เป็น MeshBasic/Sprite อยู่แล้ว จึงยังเห็นชัดกลางคืน (เช็กแล้วตอนทำ)
+   ============================================================ */
+const DAY  ={sky:0xd8c0a0,hemiSky:0xffe9c8,hemiGnd:0x6b5a42,hemi:.52,sun:.95,sunCol:0xfff0cc,
+             rim:.30,rimCol:0x8aa4c8,fogN:55,fogF:WORLD*1.55,dome:1};
+const NIGHT={sky:0x0a1224,hemiSky:0x2e4470,hemiGnd:0x11151f,hemi:.34,sun:.30,sunCol:0x9fc0ff,
+             rim:.16,rimCol:0x46689c,fogN:38,fogF:WORLD*1.10,dome:.17,msEm:0x2a3f6e};
+/* เก็บวัสดุลำยานไว้ดัน emissive ตอนกลางคืน — เก็บสี "ตอนกลางวัน" ของแต่ละชิ้นไว้ด้วย
+   (โมเดล .glb ของผู้ใช้มี emissive เดิมไม่เท่ากัน ถ้า hard-code จะเพี้ยนตอนกลางวัน) */
+function collectMsMats(root){
+  msHullMats=[];
+  root.traverse(o=>{ if(!o.material) return;
+    (Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{
+      if(m&&m.emissive) msHullMats.push({m,base:m.emissive.getHex()}); });
+  });
+  applyNightLook(nightK);
+}
+let night=false, nightK=0;                    // nightK = ระดับความมืดจริง (ไล่นุ่ม ๆ ไม่กระตุก)
+let hemiL=null, sunL=null, rimL=null, skyDome=null, starPts=null, moonSpr=null;
+let flashLight=null, nightBtn=null, msHullMats=[];
+let vmHemi=null, vmSun=null, vmRim=null;      // ไฟใน vmScene (ปืนในมือ) — หรี่พร้อมฉาก
+
+/* ⭐ โดมดาว + ดวงจันทร์ — ใช้ Points ก้อนเดียว (1 draw call) fog:false ไม่โดนหมอกกลืน */
+function buildStars(){
+  const N=620, R=WORLD*1.82, pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const a=rnd(0,TAU), h=Math.pow(Math.random(),.65);      // เกาะครึ่งบนฟ้าเป็นหลัก
+    const y=h, r=Math.sqrt(Math.max(0,1-y*y));
+    pos[i*3]=Math.cos(a)*r*R; pos[i*3+1]=y*R*.9+R*.06; pos[i*3+2]=Math.sin(a)*r*R;
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  starPts=new THREE.Points(g,new THREE.PointsMaterial({color:0xdfe9ff,size:R*.006,
+    transparent:true,opacity:0,depthWrite:false,fog:false,sizeAttenuation:true}));
+  starPts.visible=false; scene.add(starPts);
+  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xe8f0ff,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  moonSpr.scale.setScalar(R*.10);
+  /* วางไว้ทางเดียวกับ "ดวงอาทิตย์" (70,90,120) เงาทุกอย่างในฉากจึงยังทอดทางเดิม ไม่ต้องคิดใหม่ */
+  moonSpr.position.set(70,90,120).normalize().multiplyScalar(R*.86);
+  moonSpr.visible=false; scene.add(moonSpr);
+}
+/* 🔦 ไฟฉายติดปืน — ต้องอยู่ใน scene หลัก (ตัวปืนอยู่ vmScene คนละฉาก ส่องออกมาไม่ถึงพื้น) */
+function buildFlashlight(){
+  flashLight=new THREE.SpotLight(0xfff0d2,0,72,.44,.55,1.2);
+  flashLight.position.set(0,0,0);
+  scene.add(flashLight); scene.add(flashLight.target);
+}
+function setNight(on,quiet){
+  night=!!on;
+  if(nightBtn){ nightBtn.textContent=night?'☀️':'🌙'; nightBtn.classList.toggle('night',night); }
+  state.invNight=night; if(typeof saveState==='function') saveState();
+  if(!quiet) toastBan(night?'🌙 กลางคืน<span class="ib-sub">🔦 ไฟฉายติดปืนเปิดเอง — แสงปากลำกล้องสาดฉากชัดมาก</span>'
+                            :'☀️ กลางวัน<span class="ib-sub">กลับสู่ทะเลทรายแดดจ้า</span>',1900);
+}
+function tickNight(dt){
+  const tgt=night?1:0;
+  if(nightK!==tgt){                                  // ไล่ 2 วิ เต็มช่วง (ตาเด็กปรับตามทัน)
+    const step=dt/2.0;
+    nightK += Math.min(step,Math.abs(tgt-nightK))*(tgt>nightK?1:-1);
+    applyNightLook(nightK);
+  }
+  tickFlashlight();
+}
+function applyNightLook(k){
+  if(!scene||!hemiL) return;
+  const L=(a,b)=>a+(b-a)*k, C=(a,b)=>new THREE.Color(a).lerp(new THREE.Color(b),k);
+  const sky=C(DAY.sky,NIGHT.sky);
+  scene.background.copy(sky); scene.fog.color.copy(sky);
+  scene.fog.near=L(DAY.fogN,NIGHT.fogN); scene.fog.far=L(DAY.fogF,NIGHT.fogF);
+  hemiL.intensity=L(DAY.hemi,NIGHT.hemi);
+  hemiL.color.copy(C(DAY.hemiSky,NIGHT.hemiSky)); hemiL.groundColor.copy(C(DAY.hemiGnd,NIGHT.hemiGnd));
+  sunL.intensity=L(DAY.sun,NIGHT.sun); sunL.color.copy(C(DAY.sunCol,NIGHT.sunCol));
+  rimL.intensity=L(DAY.rim,NIGHT.rim); rimL.color.copy(C(DAY.rimCol,NIGHT.rimCol));
+  /* ปืนในมืออยู่คนละฉาก (vmScene) — ต้องหรี่คู่กัน ไม่งั้นกลางคืนแล้วปืนยังโดนแดดเต็ม ๆ
+     ⚠️ vm หรี่ "ไม่สุด" เท่าฉาก (คูณ .55 ของช่วงที่ลด) เพราะปืนคือของที่เด็กต้องเห็นตลอด */
+  if(vmHemi){ const q=k*.55;
+    vmHemi.intensity=.52+(NIGHT.hemi-.52)*q; vmHemi.color.copy(C(DAY.hemiSky,NIGHT.hemiSky));
+    vmHemi.groundColor.copy(C(DAY.hemiGnd,NIGHT.hemiGnd));
+    vmSun.intensity=.95+(NIGHT.sun-.95)*q; vmSun.color.copy(C(DAY.sunCol,NIGHT.sunCol));
+    vmRim.intensity=.30+(NIGHT.rim-.30)*q; vmRim.color.copy(C(DAY.rimCol,NIGHT.rimCol));
+  }
+  if(skyDome) skyDome.material.color.setScalar(L(1,NIGHT.dome));   // ภาพฟ้ากลางวันหรี่ลงเป็นฉากหลังคืน
+  if(starPts){ starPts.material.opacity=k*.95; starPts.visible=k>.03; }
+  if(moonSpr){ moonSpr.material.opacity=k*.75; moonSpr.visible=k>.03; }
+  /* 🛸 ยานแม่เรืองแสงเด่นขึ้น — ตัวลำเป็น Phong จะจมมืด ถ้าไม่ดัน emissive ขึ้น
+     (ไฟสัญญาณ msLamps เป็น MeshBasic อยู่แล้ว = สว่างเท่าเดิม เลยยิ่งเด่นตัดกับฟ้ามืด) */
+  msHullMats.forEach(e=>{ if(e.m&&e.m.emissive) e.m.emissive.copy(new THREE.Color(e.base).lerp(new THREE.Color(NIGHT.msEm),k)); });
+}
+function tickFlashlight(){
+  if(!flashLight) return;
+  const on = nightK>.04 && !inHeli && !riding && adsT<.35;    // ส่องกล้องแล้วหรี่ลง (ไม่ให้แสงบังเลนส์)
+  if(!on){ flashLight.intensity=0; return; }
+  flashLight.intensity=2.9*nightK;
+  const d=aimDir();
+  const p=(muzzle&&gunGrp&&gunGrp.visible)?vmToWorld(muzzle):camera.position.clone();
+  flashLight.position.copy(p);
+  flashLight.target.position.copy(p).addScaledVector(d,45);
+  flashLight.target.updateMatrixWorld();
 }
 
 /* ============================================================
@@ -4786,9 +5161,15 @@ function frame(dt,now){
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
+  tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
+  tickNight(dt);                    // 🌙 รอบ 471: ไล่แสงกลางวัน↔กลางคืน + ไฟฉายติดปืน
   if(worldFlash){                   // 🔥 รอบ 469: แสงแฟลชสาดฉากรอบตัว
     const k=Math.max(0,(muzzleUntil-now)/90);
-    worldFlash.intensity=k*k*13;
+    /* 🌙 กลางคืนดันให้แรง+ไกลขึ้น = ยิงทีนึงฉากทั้งซอยวาบ (บทบาทจริงตามที่ผู้ใช้สั่ง) */
+    /* ⚠️ วัดจริงแล้วกลางคืนแฟลชแรงมาก (ความสว่างจอ 41→164) — คุมไว้ที่ +70% พอให้ตื่นเต้น
+       แต่ไม่แสบตาเด็กตอนยิงรัว (ไฟติดแค่ ~2 เฟรม แล้วดับ) */
+    worldFlash.intensity=k*k*13*(1+nightK*.70);
+    worldFlash.distance=26+nightK*30;
     if(k>0 && muzzle) worldFlash.position.copy(vmToWorld(muzzle));
   }
   tickFx(dt);
@@ -4818,16 +5199,18 @@ function build(){
   skyTex.onload=()=>{ const t=new THREE.Texture(skyTex); t.needsUpdate=true;
     const dome=new THREE.Mesh(new THREE.SphereGeometry(WORLD*1.9,32,16),
       new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false}));
-    scene.add(dome); };
+    scene.add(dome); skyDome=dome; applyNightLook(nightK); };   // 🌙 รอบ 471: โดมมาทีหลัง ต้องหรี่ตามทันที
   skyTex.onerror=()=>{};
   skyTex.src='img/invasion/sky.png';
   /* far ต้องไกลพอเห็นยานแม่ (อยู่ ~1,700-4,300m หลังขยาย 5 เท่า) ไม่งั้นลำถูกตัดหาย */
   camera=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,.1,9000);
   scene.add(camera);
   /* 💡 แสงแบบภาพอ้างอิง: แดดแรงเฉียงจากด้านหลัง-ขวา + เงาฟ้าอมเทา + ฝุ่นฟุ้งรับแสง */
-  scene.add(new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52));
+  hemiL=new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52); scene.add(hemiL);
   const sun=new THREE.DirectionalLight(0xfff0cc,.95); sun.position.set(70,90,120); scene.add(sun);
   const rim=new THREE.DirectionalLight(0x8aa4c8,.30); rim.position.set(-60,50,-90); scene.add(rim);
+  sunL=sun; rimL=rim;                 // 🌙 รอบ 471: เก็บอ้างอิงไว้หรี่ตอนกลางคืน
+  buildStars(); buildFlashlight();    // 🌙 ⭐ โดมดาว + 🔦 ไฟฉายติดปืน (อยู่ scene หลัก)
   buildTerrain();
   buildSelfShadow();                // 🌤️ รอบ 466
   /* 🔥 รอบ 469: ไฟแฟลชปากลำกล้อง "ส่องฉากจริง" — พื้นทราย/กำแพงรอบตัวสว่างวาบตอนยิง
@@ -4835,6 +5218,7 @@ function build(){
   worldFlash=new THREE.PointLight(0xffc070,0,26,1.7); scene.add(worldFlash);
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
+  buildTargets();                   // 🎯 รอบ 471: เป้าฝึกยิงตามปากตรอก/ริมกำแพง
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
   buildHeliPads();                  // 🚁 รอบ 434: เฮลิคอปเตอร์จอด 5 ลำ (เดินไปขึ้นได้)
   findSniperSpots();                // 🎯 รอบ 431: หา "จุดสูงข่ม" บนเนินเขาไว้แนะนำในแผนที่
@@ -4864,6 +5248,7 @@ function start(){
   phVel={x:0,y:0,z:0}; phClimb=0; phMisLeft=PH_MIS_MAX; phMisReloadAt=0; if(gunGrp) gunGrp.visible=true;
   Object.keys(peers).forEach(dropPeer); myChat=null; boardSig='';
   battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
+  callAllAt=0; callDirAt={}; squad.forEach(clearSquadBubble);   // 📣 รอบ 471: ล้างคูลดาวน์/ป้ายตะโกนค้าง
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
   useGunView();                                                                // 🔫 รอบ 463
@@ -4872,6 +5257,7 @@ function start(){
   recPitch=0; recYaw=0; boltAt=0;                                               // 💥 ล้างแรงถอย
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
   renderAmmo(); syncWeaponBtns();
+  setNight(!!state.invNight,true); nightK=night?1:0; applyNightLook(nightK);   // 🌙 รอบ 471: จำโหมดที่เลือกไว้
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
@@ -4897,7 +5283,7 @@ function start(){
     if(c) return c;
     const k=(e.key||'').toLowerCase();
     const map={w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',q:'KeyQ',e:'KeyE',r:'KeyR',h:'KeyH',
-               f:'KeyF',g:'KeyG',z:'KeyZ',b:'KeyB',' ':'Space',shift:'ShiftLeft',
+               f:'KeyF',g:'KeyG',z:'KeyZ',b:'KeyB',n:'KeyN',' ':'Space',shift:'ShiftLeft',
                control:'ControlLeft',escape:'Escape',arrowup:'ArrowUp',arrowdown:'ArrowDown',
                arrowleft:'ArrowLeft',arrowright:'ArrowRight'};
     return map[k]||'';
@@ -4919,6 +5305,7 @@ function start(){
     else if(c==='KeyG'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
     else if(c==='KeyZ'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
     else if(c==='KeyB'){ if(breathLeft>0) holdBreath=true; }  // 🫁 กลั้นหายใจ
+    else if(c==='KeyN'&&!e.repeat){ setNight(!night); }       // 🌙 สลับกลางวัน/กลางคืน
     else if(c==='Escape'){ unlockMouse(); exitBox.classList.add('on'); }
     if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(c)) e.preventDefault();
   };
@@ -4950,7 +5337,8 @@ function exitWorld(){
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
   Snd.stopHum(); Snd.stopRotor();
-  netLeave();                                           // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
+  squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
+  netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
   inHeli=false; riding=null; setScoped(false); wrapEl.classList.remove('on','fly','gunner','scoped');
   if(camera){ camera.fov=FOV; camera.updateProjectionMatrix(); }
@@ -4977,6 +5365,12 @@ window.InvasionWorld={
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     get squad(){return squad.length}, get helis(){return helis.length},
+    /* 🎯 รอบ 471: เป้าฝึกยิง */
+    get targets(){return targets.map(t=>({x:+t.c.x.toFixed(1),z:+t.c.z.toFixed(1),up:t.up,
+      vis:t.grp.visible, rx:+t.grp.rotation.x.toFixed(2),
+      d:+Math.hypot(px-t.c.x,pz-t.c.z).toFixed(1)}))},
+    hitTarget:(i,p)=>hitTarget(targets[i||0],p), tickTargets, targetWord,
+    rayTarget, envHit, get solids(){return solids.length},
     /* 🪖 รอบ 423: ตรวจข้อต่อทหาร */
     get squadRig(){ const s=squad[0]; if(!s) return null;
       const r={mode:s.mode,lookUp:+(s.lookUp||0).toFixed(3),static:!!s.static,glb:!!s.glb,joints:Object.keys(s.J).length};
@@ -5065,6 +5459,29 @@ window.InvasionWorld={
     get core(){return msCore}, get letterBoard(){return msBoard},
     get peerCount(){return Object.keys(peers).length}, get peers(){return Object.keys(peers).map(u=>({n:peers[u].n,kind:peers[u].kind,w:peers[u].w,pos:{...peers[u].cur}}))},
     fakePeer(uid,d){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x:0,z:60,y:0,yaw:0,av:'foot',w:0},d||{})}); return peers[uid]; },
+    /* 📣 รอบ 471: ทหารตะโกนบอกทิศ */
+    bearingKey, tickSquadCalls, squadShout, CALL_LINES,
+    get threats(){ return fighters.map(f=>{ const p=f.grp.position, flat=Math.hypot(p.x-px,p.z-pz);
+      return {flat:+flat.toFixed(1), up:+(Math.atan2(p.y-py,Math.max(1,flat))*180/Math.PI).toFixed(0),
+              key:bearingKey(p.x,p.y,p.z)}; }).sort((a,b)=>a.flat-b.flat); },
+    get shouts(){ return squad.map((s,i)=>({i,txt:s.bubble?s.bubble.userData.txt:null,
+      d:+Math.hypot(s.grp.position.x-px,s.grp.position.z-pz).toFixed(1)})).filter(r=>r.txt); },
+    resetCalls(){ callAllAt=0; callDirAt={}; squad.forEach(s=>{ clearSquadBubble(s); s.callAt=0; }); },
+    /* 🌙 รอบ 471: โหมดกลางคืน */
+    setNight, applyNightLook, tickNight, tickFlashlight,
+    /* 🧪 เดินเฟรมเองทีละก้าว — แท็บ preview ที่ไม่ได้อยู่หน้าจอ rAF ไม่วิ่ง (document.hidden) */
+    stepFrame(dt){ frame(dt||1/60, performance.now()); },
+    get night(){return night}, get nightK(){return nightK},
+    set nightK(v){ nightK=v; applyNightLook(v); },
+    get lightInfo(){ return {hemi:+hemiL.intensity.toFixed(3), sun:+sunL.intensity.toFixed(3),
+      sky:'#'+scene.background.getHexString(), fogFar:Math.round(scene.fog.far),
+      dome:skyDome?+skyDome.material.color.r.toFixed(2):null,
+      stars:starPts?+starPts.material.opacity.toFixed(2):null, starsVis:!!(starPts&&starPts.visible),
+      vmHemi:+vmHemi.intensity.toFixed(3)}; },
+    get flashInfo(){ return {on:flashLight.intensity>0, i:+flashLight.intensity.toFixed(2),
+      p:flashLight.position.toArray().map(n=>+n.toFixed(1)),
+      t:flashLight.target.position.toArray().map(n=>+n.toFixed(1))}; },
+    get worldFlashInfo(){ return {i:+worldFlash.intensity.toFixed(2), d:+worldFlash.distance.toFixed(1)}; },
     dropPeer, netReady, sendChat, get board(){return boardEl?boardEl.innerText.replace(/\s+/g,' '):''},
     get flyClass(){return wrapEl.classList.contains('fly')},
   }
