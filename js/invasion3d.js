@@ -164,7 +164,21 @@ let sprintRaw=0, sprintT=0, sprintHold=0, moveLen=0;
    "ตามไม่ทัน" นิดหน่อย ค่อย ๆ ไหลกลับเข้าที่ (สปริง) · ยิ่งหันเร็ว ยิ่งเอียงตามแรง
    ตอนส่องกล้องลดเหลือ 25% (เล็งอยู่ต้องนิ่ง) */
 let lagYaw=0, lagPitch=0, lastYaw=0, lastPitch=0;
-const LAG_GAIN=0.55, LAG_MAX=0.14, LAG_BACK=7.5;   // แรงตาม · เพดานองศา · ความเร็วไหลกลับ
+const LAG_GAIN=0.72, LAG_MAX=0.17, LAG_BACK=6.2;   // แรงตาม · เพดานองศา · ความเร็วไหลกลับ
+/* 🤝🔧 รอบ 501: WEAPON SWAY/BOB — แก้อาการ "ปืนลอย" (มุมมองนี้ไม่โชว์มือตามคำสั่งผู้ใช้รอบ 438)
+   สมองอ่านว่า "มีคนถือ" จากจังหวะ ไม่ใช่จากรูปมือ → ปืนต้องโยกตามก้าวเดิน + หายใจตอนยืนนิ่ง
+   ⚠️ ทุกค่าที่นี่เป็น **ออฟเซ็ตบวกทับท่าถือ** เท่านั้น — ไม่แตะ GUN_VIEW / AIM_OFF / AIM_BY_GUN ที่ถูกล็อก
+   หยุดเดิน → swAmp ไหลกลับ 0 (สแนปเมื่อ <0.0015) ปืนคืนเข้าท่าเดิมเป๊ะ · กระสุนใช้ aimDir() จึงไม่กระทบจุดเล็ง
+   🔧 จูนสด: InvasionWorld._t.setSway({...}) · ดูค่า/สถานะ: _t.sway */
+const SWAY={
+  walkHz:1.45, runHz:2.25,          // จำนวนรอบก้าว/วินาที (เดิน/วิ่ง)
+  x:.020, y:.014, z:.009,           // ระยะโยก ซ้ายขวา / ขึ้นลง / เข้าออก
+  roll:.045, pitch:.024, yaw:.018,  // องศาสะบัดตามก้าว
+  breathHz:.26, breathY:.005, breathPitch:.009, breathRoll:.006,   // ยืนนิ่ง = ยังหายใจอยู่
+  ampIn:5.5, ampOut:3.4,            // ความไวเร่งแอมป์ / คลายกลับเข้าท่าเดิม
+  ads:.18                           // ส่องกล้องเหลือแรงโยกกี่ % (เล็งต้องนิ่ง)
+};
+let swPhase=0, swAmp=0, swLast={x:0,y:0,z:0,rx:0,ry:0,rz:0};
 /* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดปืนลงแล้วยกกระบอกใหม่ขึ้นมา (สลับโมเดลตอนต่ำสุด) */
 let swapAt=0, swapTo=null, swapSnd=0; const SWAP_MS=420;
 /* 🫁 รอบ 449: วิ่งนาน = เหนื่อย — จอโยกเบาๆ + เสียงหายใจแรงเป็นจังหวะ (ฟื้นเองเมื่อหยุดวิ่ง)
@@ -3035,6 +3049,30 @@ function setScoped(on){
 }
 /* เส้นโค้งนุ่ม (ease-in-out) — ทำให้การยกปืน/ถอยกล้องมีน้ำหนัก ไม่กระตุก */
 function smoothstep(t){ t=clamp(t,0,1); return t*t*(3-2*t); }
+/* 🤝 รอบ 501: คำนวณ "ออฟเซ็ตปืนโยกตามจังหวะก้าว + หายใจ" (ดู SWAY ในโซนค่ากติกา)
+   คืนเป็นออฟเซ็ตล้วน ๆ ให้ tickAds บวกทับท่าถือ — ไม่แก้ค่าฐานใด ๆ
+   ก้าวเดิน = เลข 8 นอน: แกนซ้ายขวาความถี่ 1 รอบ/ก้าวคู่ · แกนขึ้นลง 2 เท่า (เท้าแตะพื้น 2 ครั้ง) */
+function tickSway(dt,now){
+  const moving=moveLen>.05, run=moving&&(isRun||keys.shift);
+  const spd=clamp(moveLen,0,1);
+  const tgt=moving? spd*(run?1.30:1) : 0;
+  swAmp+=(tgt-swAmp)*Math.min(1, dt*(tgt>swAmp?SWAY.ampIn:SWAY.ampOut));
+  if(!moving && swAmp<.0015){ swAmp=0; swPhase=0; }        // หยุดนิ่ง = คืนเข้าท่าเดิมสนิท
+  if(swAmp>0) swPhase+=dt*Math.PI*2*(run?SWAY.runHz:SWAY.walkHz)*Math.max(spd,.35);
+  const damp=1-(1-SWAY.ads)*adsT;                          // เล็งอยู่ = แทบไม่โยก
+  const a=swAmp*damp, s=Math.sin(swPhase), c=Math.cos(swPhase*2);
+  /* 🫁 หายใจ: เด่นตอนยืนนิ่ง (ตอนเดินถูกจังหวะก้าวกลบ) · เหนื่อยจากการวิ่ง = ชัดขึ้น */
+  const bt=now*.001*Math.PI*2*SWAY.breathHz, bA=(1-Math.min(1,swAmp))*(1+fatigue*1.1)*damp;
+  swLast={
+    x: s*SWAY.x*a,
+    y: (c*SWAY.y - Math.abs(s)*SWAY.y*.30)*a + Math.sin(bt)*SWAY.breathY*bA,
+    z: Math.abs(s)*SWAY.z*a,
+    rx: c*SWAY.pitch*a + Math.sin(bt+.9)*SWAY.breathPitch*bA,
+    ry: s*SWAY.yaw*a,
+    rz: -s*SWAY.roll*a + Math.sin(bt*.7)*SWAY.breathRoll*bA
+  };
+  return swLast;
+}
 /* 🎬 หัวใจของแอนิเมชัน ADS — เรียกทุกเฟรมตอนเดินเท้า */
 function tickAds(dt,now){
   const W=WEAPONS[weapon];
@@ -3073,6 +3111,10 @@ function tickAds(dt,now){
     gunGrp.rotation.y+=lagYaw*0.85;
     gunGrp.rotation.x+=lagPitch*0.75;
     gunGrp.rotation.z+=lagYaw*0.55;
+    /* 🤝 รอบ 501: จังหวะก้าวเดิน/หายใจ — บวกทับท่าถือล้วน ๆ (หยุดนิ่งค่าเป็น 0 ปืนกลับท่าเดิม) */
+    const SW=tickSway(dt,now);
+    gunGrp.position.x+=SW.x; gunGrp.position.y+=SW.y; gunGrp.position.z+=SW.z;
+    gunGrp.rotation.x+=SW.rx; gunGrp.rotation.y+=SW.ry; gunGrp.rotation.z+=SW.rz;
     /* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดลง-ยกขึ้นเป็นรูประฆังคว่ำ (0→1→0) */
     const sw2=tickSwap(now);
     if(sw2>0){ gunGrp.position.y-=0.30*sw2; gunGrp.position.z+=0.06*sw2;
@@ -4272,9 +4314,10 @@ function tickPlayer(dt,now){
      🎬 แกว่งเก็บไว้ใน userData แล้วให้ tickAds() เป็นคนประกอบท่าจริง (ยิ่งเล็งยิ่งแกว่งน้อย) */
   if(gunGrp){
     gunRecoil=Math.max(0,gunRecoil-dt*recCfg().gunBack);   /* 💥 รอบ 500: R93 คืนช้า/ไรเฟิลคืนไว */
-    const sw=len>.05?1:.25;                     // เดินอยู่ = แกว่งเยอะ · ยืนนิ่ง = แกว่งนิดเดียว
-    gunGrp.userData.swayX=Math.sin(now*.011)*.010*sw;
-    gunGrp.userData.swayY=Math.cos(now*.022)*.009*sw;
+    /* 🤝 รอบ 501: การแกว่งย้ายไปที่ tickSway() ทั้งหมด (จังหวะก้าว+หายใจ+เหนื่อย) แล้ว
+       ช่องนี้เหลือไว้ให้ระบบอื่นยืมใส่ออฟเซ็ตชั่วคราวได้ — ปกติเป็น 0 ไม่มีคลื่นซ้อน */
+    gunGrp.userData.swayX=0;
+    gunGrp.userData.swayY=0;
   }
   tickAds(dt,now);                                // 🎬 ยกปืนเล็ง/ถอยออก + ขอบเลนส์ + หายใจ
   applyBreath(now);
@@ -5880,6 +5923,7 @@ function start(){
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
   lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
+  swAmp=0; swPhase=0;                                      // 🤝 รอบ 501: เข้าโลกด้วยท่าถือนิ่ง ๆ
   swapAt=0; swapTo=null; swapSnd=0;
   msBeamAt=performance.now()+6000;
   renderHp(); renderHeat(); renderMissiles();
@@ -6064,6 +6108,15 @@ window.InvasionWorld={
       return {weapon, cfg:Object.assign({},c),
         line:`  ${weapon}: { up:${c.up}, side:${c.side}, recover:${c.recover}, climb:${c.climb}, climbMax:${c.climbMax}, ads:${c.ads}, gun:${c.gun}, gunBack:${c.gunBack} },`}; },
     resetRecoil(){ recPitch=0; recYaw=0; shotIdx=0; lastShotAt=0; gunRecoil=0; },
+    /* 🤝 รอบ 501: weapon sway — ดูสถานะ/ออฟเซ็ตล่าสุด + จูนสด (คืนบรรทัดพร้อมวางทับ SWAY) */
+    get sway(){ const f=n=>+n.toFixed(4);
+      return {amp:f(swAmp), phase:f(swPhase), moveLen:f(moveLen), adsT:f(adsT),
+        off:{x:f(swLast.x),y:f(swLast.y),z:f(swLast.z),rx:f(swLast.rx),ry:f(swLast.ry),rz:f(swLast.rz)},
+        cfg:Object.assign({},SWAY)}; },
+    setSway(o){ o=o||{};
+      Object.keys(o).forEach(k=>{ if(k in SWAY && typeof o[k]==='number') SWAY[k]=o[k]; });
+      return {cfg:Object.assign({},SWAY)}; },
+    tickSway,
     get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
     /* 🔩 รอบ 447: ตรวจคันรั้งลูกเลื่อนของโมเดลจริง */
     get boltRig(){ const r=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
