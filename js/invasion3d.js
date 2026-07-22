@@ -608,6 +608,7 @@ function buildDom(){
   coverEl=document.getElementById('inv-cover');
   banEl=document.getElementById('inv-ban'); introEl=document.getElementById('inv-intro');
   exitBox=document.getElementById('inv-exitbox'); crossEl=document.getElementById('inv-cross');
+  layoutCross();                                   // 🎯 รอบ 458: วางจุดเล็งตาม AIM_OFF (ไม่ใช่กลางจอแล้ว)
   hurtEl=document.getElementById('inv-hurt'); flashEl=document.getElementById('inv-flash');
   joyEl=document.getElementById('inv-joy'); joyKnob=joyEl.querySelector('i');
   fireBtn=document.getElementById('inv-fire'); fire2Btn=document.getElementById('inv-fire2');
@@ -2853,8 +2854,22 @@ function tickFx(dt){
 /* ============================================================
    🎯 ระบบยิงของผู้เล่น
    ============================================================ */
+/* 🎯 รอบ 458 (ผู้ใช้ขีดเส้นบนภาพ: ให้จุดเล็งไปอยู่บน "แนวลำกล้อง" ที่ตัดกับแกนกลางจอ)
+   จุดเล็งไม่ได้อยู่กลางจอแล้ว — เลื่อนลงตาม AIM_OFF (หน่วย NDC: 0=กลางจอ · −1=ขอบล่าง)
+   ⚠️ กระสุน/เรดาร์/ล็อกเป้า อ่านทิศจาก aimDir() ที่เดียว → เลื่อนที่นี่แล้วทุกอย่างตรงกันหมด
+   ตอนส่องกล้อง (ADS) ค่อย ๆ กลับไปกลางเลนส์ตาม adsT (ไม่งั้นยิงผ่านกล้องแล้วต่ำกว่าที่เล็ง)
+   จูนสั้น ๆ ตอน preview: GunLab.aim(-0.39) */
+const AIM_OFF=[0,-.39];
+/* ใช้เฉพาะตอนเดินเท้าถือปืนเอง — บนเฮลิ/พลปืนประจำประตู ยังเล็งกลางจอเหมือนเดิม */
+function aimOffNow(){ if(inHeli||riding) return [0,0];
+  const k=1-(adsT||0); return [AIM_OFF[0]*k, AIM_OFF[1]*k]; }
+let crossAt=null;
+function layoutCross(){ if(!crossEl) return;
+  const o=aimOffNow(), key=o[0]+','+o[1]; if(key===crossAt) return; crossAt=key;
+  crossEl.style.left=(50+o[0]*50)+'%'; crossEl.style.top=(50-o[1]*50)+'%'; }
 function aimDir(){
-  const d=new THREE.Vector3(0,0,-1);
+  const o=aimOffNow(), t=Math.tan(camera.fov*Math.PI/360);
+  const d=new THREE.Vector3(o[0]*t*camera.aspect, o[1]*t, -1).normalize();
   d.applyQuaternion(camera.quaternion);
   return d;
 }
@@ -4361,8 +4376,9 @@ function frame(dt,now){
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
+  layoutCross();                    // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
   renderer.render(scene,camera);
-  renderViewModel();                // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
+  renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
 }
 
@@ -4599,6 +4615,11 @@ window.InvasionWorld={
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
     /* 🔧 รอบ 457: จูนท่าปืนด้วยคำสั่งสั้น (ดู TUNE ZONE + tools/gunlab.js) */
     gunSil, setGunPose,
+    /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
+    get aimOff(){return AIM_OFF.slice()},
+    setAimOff(y,x){ if(typeof y==='number')AIM_OFF[1]=y; if(typeof x==='number')AIM_OFF[0]=x; layoutCross();
+      return {aimOff:AIM_OFF.slice(), line:`const AIM_OFF=[${AIM_OFF[0]},${AIM_OFF[1]}];`}; },
+    aimDir, layoutCross,
     /* 🎥🎯 รอบ 451 */
     get gunGrp(){return gunGrp}, get vmScene(){return vmScene}, get vmCam(){return vmCam},
     get gunModels(){return gunModels}, alignGunMuzzle, syncMuzzleAnchor, vmToWorld,

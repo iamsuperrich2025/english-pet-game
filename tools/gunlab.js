@@ -71,7 +71,10 @@ window.GunLab = (function(){
     const sx=full?0:W*0.42, sy0=full?0:H*0.30, sw=full?W:W*0.58, sh=full?H:H*0.70;
     const sm=document.createElement('canvas'); sm.width=w; sm.height=Math.round(w*sh/sw);
     const g2=sm.getContext('2d'); g2.drawImage(big,sx,sy0,sw,sh,0,0,sm.width,sm.height);
-    const cx=(W/2-sx)/sw*sm.width, cy=(H/2-sy0)/sh*sm.height;          // กากบาทอ้างอิง
+    /* กากบาทอ้างอิง = "จุดเล็งจริง" (AIM_OFF) ไม่ใช่กลางจอ — ตั้งแต่รอบ 458 จุดเล็งเลื่อนลงได้ */
+    const ao=(T().aimOff||[0,0]);
+    const ax=W*(0.5+ao[0]*0.5), ay=H*(0.5-ao[1]*0.5);
+    const cx=(ax-sx)/sw*sm.width, cy=(ay-sy0)/sh*sm.height;
     g2.strokeStyle='#39ff6a'; g2.lineWidth=2; g2.beginPath();
     g2.moveTo(cx-10,cy); g2.lineTo(cx+10,cy); g2.moveTo(cx,cy-10); g2.lineTo(cx,cy+10); g2.stroke();
     const b=sm.toDataURL('image/jpeg',q).split(',')[1];
@@ -81,8 +84,19 @@ window.GunLab = (function(){
     return {file:name, kb:Math.round(b.length*3/4/1024), ...T().gunSil()};
   }
 
+  /* เลื่อน "จุดเล็ง" ขึ้น-ลงบนจอ (หน่วย NDC: 0 = กลางจอ · −1 = ขอบล่าง) — รอบ 458
+     คืนบรรทัด AIM_OFF พร้อมก๊อปไปวางทับใน js/invasion3d.js */
+  function aim(y,x){ const r=T().setAimOff(y,x); T().step(1/60,2); return r; }
+
+  /* ตรวจว่ากระสุนไปตรงจุดเล็งจริงไหม: ยิงเรย์ตาม aimDir แล้วฉายจุดที่โดนกลับลงจอ
+     ค่าที่ถูก = ใกล้เคียงตำแหน่งจุดเล็ง (aimOff) */
+  function check(){ const t=T(), cam=t.camera, d=t.aimDir();
+    const hit=t.rayTarget(cam.position.clone(), d, 900);
+    const p=(hit?hit.point.clone():cam.position.clone().addScaledVector(d,300)).project(cam);
+    return {aimOff:t.aimOff, hitNDC:[+p.x.toFixed(3),+p.y.toFixed(3)], hit:hit?hit.type:'none'}; }
+
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
   function done(){ try{ localStorage.removeItem('petVocabAdventure_v1'); }catch(e){} location.reload(); }
 
-  return {boot,tune,big,fwd,shot,done,sil:()=>T().gunSil(),pose:()=>T().gunPose};
+  return {boot,tune,big,fwd,shot,aim,check,done,sil:()=>T().gunSil(),pose:()=>T().gunPose};
 })();
