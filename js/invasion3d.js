@@ -132,10 +132,26 @@ const ADS_BY_GUN={
 function adsView(){ return ADS_BY_GUN[weapon] || {p:ADS_POS, r:ADS_ROT, s:ADS_SCALE}; }
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
-   เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด */
-const REC_RECOVER=5.2;                  // ความเร็วดึงกลับเข้าเป้า (ยิ่งมากยิ่งกลับไว)
-const REC_RIFLE=[0.0115,0.0045];        // [เด้งขึ้น, ส่ายซ้าย-ขวา] เรเดียน
-const REC_R93=[0.088,0.020];            // 448: กระแทกแรงขึ้นตามคลิปอ้างอิง (เดิม .052/.011)
+   เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด
+   💥 รอบ 500: แยกค่าตามกระบอก (โครงเดียวกับ GUN_VIEW / AIM_BY_GUN / ADS_BY_GUN) หลังปืนโตขึ้น ~20%
+   | ช่อง     | ความหมาย                                                            |
+   | up       | มุมเด้งขึ้นต่อนัด (เรเดียน)                                          |
+   | side     | ส่ายซ้าย-ขวา (คูณกับ RECOIL_PAT — แพตเทิร์นชุดยิง)                    |
+   | recover  | ความเร็วดึงกล้องกลับเข้าเป้า (ยิ่งน้อย = คืนช้า ต้องเล็งใหม่)          |
+   | climb    | ยิงรัวติดกันเด้งเพิ่มต่อนัด · climbMax = เพดานตัวคูณ                  |
+   | ads      | ตัวคูณตอนส่องกล้อง (adsT=1) — <1 เสมอ เพราะ "ในเลนส์ขยาย 2–8 เท่า"
+                มุมเท่ากันจึงอ่านออกชัดกว่าตอนถือปกติหลายเท่าอยู่แล้ว (ดูบันทึกรอบ 500)      |
+   | gun      | ตัวคูณแรงสะบัดของ "ตัวโมเดลปืน" (คูณกับ WEAPONS[..].recoil)           |
+   | gunBack  | ความเร็วที่ตัวปืนคืนท่า (ยิ่งน้อย = ค้างนาน ดูหนัก)                    | */
+const REC_BY_GUN={
+  /* ไรเฟิล: ถี่ เบา ส่ายเล็กน้อย คืนตัวไว → ยิงรัวแล้วยังกดสวนคุมได้ */
+  rifle:{ up:0.0088, side:0.0062, recover:9.0, climb:0.12, climbMax:1.80, ads:0.72, gun:0.95, gunBack:10.0 },
+  /* R93: กระชากแรง ดีดสูง คืนตัวช้า → ต้องเล็งใหม่ทุกนัด (ยิงทีละนัด gap 1.2 วิ อยู่แล้ว) */
+  r93:  { up:0.1150, side:0.0260, recover:2.5, climb:0.00, climbMax:1.00, ads:0.55, gun:1.30, gunBack:4.5 },
+};
+const REC_DEFAULT={ up:0.0115, side:0.0045, recover:5.2, climb:0.11, climbMax:1.60, ads:0.65, gun:1, gunBack:7 };
+/* ⚠️ นั่งปืนประจำประตู (riding) ใช้ค่ากลางเสมอ — ไม่ใช่ปืนที่ถืออยู่ */
+function recCfg(){ return riding ? REC_DEFAULT : (REC_BY_GUN[weapon] || REC_DEFAULT); }
 const BOLT_MS=1200;                     // เวลาชักลูกเลื่อน R93 (ตรงกับ WEAPONS.r93.gap)
 const BREATH_MAX=5.0, BREATH_RECOVER=4.0;   // กลั้นหายใจได้กี่วินาที / เวลาฟื้นเต็ม
 let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
@@ -3119,7 +3135,7 @@ function tickAds(dt,now){
 function applyRecoil(dt){
   if(Math.abs(recPitch)<1e-5 && Math.abs(recYaw)<1e-5){ recPitch=0; recYaw=0; return; }
   camera.rotateX(recPitch); camera.rotateY(recYaw);
-  const k=Math.min(1,dt*REC_RECOVER);
+  const k=Math.min(1,dt*recCfg().recover);   /* 💥 รอบ 500: ความเร็วคืนตัวแยกตามกระบอก */
   recPitch-=recPitch*k; recYaw-=recYaw*k;
 }
 function applyBreath(now){
@@ -3600,7 +3616,7 @@ function fireGun(now){
       else{ sparkAt(hit.point);
         if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
         else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } } }
-    recPitch+=REC_RIFLE[0]*.45; recYaw+=rnd(-1,1)*REC_RIFLE[1]*.45;   // ปืนกลติดลำเด้งเบาๆ
+    recPitch+=REC_DEFAULT.up*.45; recYaw+=rnd(-1,1)*REC_DEFAULT.side*.45;   // ปืนกลติดลำเด้งเบาๆ
     return;
   }
   const W=WEAPONS[weapon];
@@ -3620,10 +3636,10 @@ function fireGun(now){
   }
   lastFire=now;
   trgShots++;                                                  // 📊 รอบ 473: นับนัดที่ยิงจริง (เดินเท้าเท่านั้น)
-  gunRecoil=W.recoil; muzzleUntil=now+(W.mag?90:55);
+  gunRecoil=W.recoil*recCfg().gun; muzzleUntil=now+(W.mag?90:55);   /* 💥 รอบ 500: สะบัดตัวปืนแยกตามกระบอก */
   /* 💥 รอบ 448 (ผู้ใช้ขอฟีลแบบคลิป): สไนเปอร์ = "กระแทก" ไม่ใช่แค่เด้ง
      → สั่นจอ + ปืนกระชากแรงกว่าปกติ + ยกปืนขึ้นจากท่าวิ่งทันทีถ้ากำลังวิ่งอยู่ */
-  if(W.mag){ shake=Math.min(1.2,shake+.34); gunRecoil=W.recoil*1.25; sprintHold=now+520; }
+  if(W.mag){ shake=Math.min(1.2,shake+.34); sprintHold=now+520; }   /* 💥 รอบ 500: ตัวคูณย้ายไป REC_BY_GUN.gun */
   if(W.mag){ Snd.sniper(); boltAt=now; } else Snd.gun();
   muzzleSmoke(W.mag?4:2);                                      // 💨 รอบ 449: ควันลอยจากปากลำกล้อง
   const origin=camera.position.clone();
@@ -3745,12 +3761,13 @@ const RECOIL_PAT=[0,.15,.35,.62,.85,.70,.30,-.20,-.62,-.85,-.55,-.10,.35,.70,.55
 const RECOIL_RESET=420;
 let shotIdx=0, lastShotAt=0;
 function addRecoil(){
-  const [up,side]=(weapon==='r93')?REC_R93:REC_RIFLE;
+  const C=recCfg(), up=C.up, side=C.side;                  /* 💥 รอบ 500: ค่าแยกตามกระบอก */
   const now=performance.now();
   if(now-lastShotAt>RECOIL_RESET) shotIdx=0;
   lastShotAt=now;
-  const steady=(1-0.35*adsT)*((holdBreath&&breathLeft>0)?0.85:1);
-  const climb=Math.min(1.6, 1+shotIdx*0.11);               // ยิงยิ่งรัว ยิ่งดีดแรงขึ้น
+  /* ส่องกล้อง = พานท้ายชิดไหล่ + ภาพในเลนส์ขยาย → ลดมุมจริงลงตาม C.ads แต่ "อ่านออก" ชัดกว่าถือปกติ */
+  const steady=(1-(1-C.ads)*adsT)*((holdBreath&&breathLeft>0)?0.85:1);
+  const climb=Math.min(C.climbMax, 1+shotIdx*C.climb);     // ยิงยิ่งรัว ยิ่งดีดแรงขึ้น
   recPitch+=up*steady*climb;
   const pat=RECOIL_PAT[shotIdx%RECOIL_PAT.length];
   recYaw+=(pat*side*1.45 + rnd(-side,side)*0.15)*steady;
@@ -4254,8 +4271,8 @@ function tickPlayer(dt,now){
   /* ปืน: รีคอยล์ + แกว่งตามการเดิน
      🎬 แกว่งเก็บไว้ใน userData แล้วให้ tickAds() เป็นคนประกอบท่าจริง (ยิ่งเล็งยิ่งแกว่งน้อย) */
   if(gunGrp){
-    gunRecoil=Math.max(0,gunRecoil-dt*7);
-    const sw=len>.05?1:.25;                       // เดินอยู่ = แกว่งเยอะ · ยืนนิ่ง = แกว่งนิดเดียว
+    gunRecoil=Math.max(0,gunRecoil-dt*recCfg().gunBack);   /* 💥 รอบ 500: R93 คืนช้า/ไรเฟิลคืนไว */
+    const sw=len>.05?1:.25;                     // เดินอยู่ = แกว่งเยอะ · ยืนนิ่ง = แกว่งนิดเดียว
     gunGrp.userData.swayX=Math.sin(now*.011)*.010*sw;
     gunGrp.userData.swayY=Math.cos(now*.022)*.009*sw;
   }
@@ -6038,6 +6055,15 @@ window.InvasionWorld={
     get fatigue(){return +fatigue.toFixed(3)}, get sprintTime(){return +sprintTime.toFixed(2)},
     get smokeCount(){return fx.filter(f=>f.kind==='smoke').length}, muzzleSmoke,
     get recoil(){return {pitch:+recPitch.toFixed(5), yaw:+recYaw.toFixed(5)}}, addRecoil, applyRecoil,
+    /* 💥 รอบ 500: ค่าแรงถอยของกระบอกที่ถืออยู่ + จูนสด (คืนบรรทัดพร้อมวางทับ REC_BY_GUN) */
+    get recCfg(){ return Object.assign({weapon, own:!!REC_BY_GUN[weapon]}, recCfg()); },
+    get gunRecoil(){ return +gunRecoil.toFixed(3); },
+    setRecoil(o){ o=o||{};
+      const c=REC_BY_GUN[weapon]||(REC_BY_GUN[weapon]=Object.assign({},REC_DEFAULT));
+      Object.keys(o).forEach(k=>{ if(k in c && typeof o[k]==='number') c[k]=o[k]; });
+      return {weapon, cfg:Object.assign({},c),
+        line:`  ${weapon}: { up:${c.up}, side:${c.side}, recover:${c.recover}, climb:${c.climb}, climbMax:${c.climbMax}, ads:${c.ads}, gun:${c.gun}, gunBack:${c.gunBack} },`}; },
+    resetRecoil(){ recPitch=0; recYaw=0; shotIdx=0; lastShotAt=0; gunRecoil=0; },
     get boltActive(){return !!boltAt}, get boltKnobZ(){return (gunModels.r93&&gunModels.r93.userData.bolt)?+gunModels.r93.userData.bolt.position.z.toFixed(3):null},
     /* 🔩 รอบ 447: ตรวจคันรั้งลูกเลื่อนของโมเดลจริง */
     get boltRig(){ const r=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
