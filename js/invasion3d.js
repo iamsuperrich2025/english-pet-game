@@ -165,6 +165,43 @@ function tickAdsBoost(dt){
   adsBoostG=adsZoomG+adsBreathG;
   return adsBoostG;
 }
+/* ============================================================
+   🫁🌑 รอบ 505: สัญญาณรับรู้ลมหายใจตอนส่องกล้อง — เสียงสูด/ผ่อน/สั่น + ขอบจอมืดตามลมที่เหลือ
+   เป้าหมาย: เด็กรู้จังหวะเล็ง "โดยไม่ต้องอ่านตัวเลข" — ได้ยินว่ากลั้นอยู่ เห็นว่าลมใกล้หมด
+   ⛔ เป็นชั้นสัญญาณล้วน — ไม่แตะ GUN_VIEW / AIM_OFF / AIM_BY_GUN / ADS_BY_GUN และไม่ยุ่งกับสูตรแกว่ง
+   ต่อยอดของเดิม ไม่สร้างระบบซ้อน:
+     • เสียง → เมธอดใหม่ในกลุ่ม Snd เดิม (breathIn/breathOut/breathStrain · สังเคราะห์ล้วน ไม่มีไฟล์เสียง)
+     • ภาพ → บวกทับค่า dark เดิมใน layoutScope() + เพิ่มเลเยอร์ไล่สีที่ .so-mask ใบเดิม
+       (เลเยอร์ขอบจอเริ่มมืด "นอกวงเลนส์เสมอ" R+gap → ไม่มีทางบังกากบาท/เป้า)
+     • ปุ่ม 🫁 ใช้ opacity เดิม เพิ่มแค่ brightness ตอนอึดอัด
+   ============================================================ */
+const BREATH_FX={
+  strainAt:0.25,        // breathLeft ต่ำกว่านี้ = เริ่มเสียงสั่น/อึดอัด (เกณฑ์เดียวกับ tired ใน layoutScope)
+  gapHi:900, gapLo:380, // ระยะห่างเสียงสั่น (ms) ตอนเพิ่งเริ่มอึดอัด → ตอนแทบหมดลม
+  vig:0.62,             // ขอบจอมืดสุดกี่ alpha ตอนลมหมดเกลี้ยง
+  vigIn:0.60,           // เริ่มมืดที่รัศมี = กี่เท่าของครึ่งด้านยาวจอ (ยังบังคับ ≥ วงเลนส์+gap เสมอ)
+  vigGap:34,            // ระยะกันชนขั้นต่ำจากขอบเลนส์ถึงจุดเริ่มมืด (px)
+  darkAdd:0.05,         // ขอบเลนส์เข้มเพิ่มสูงสุดตอนลมหมด (บวกทับ dark เดิม)
+  lerp:5.0              // ความเร็วไล่ค่า — ปล่อยแล้วคืนสภาพนุ่ม ๆ ไม่วูบ
+};
+let breathHeld=false, breathStrainAt=0, breathVig=0;
+/* เรียกจาก tickAds() ทุกเฟรม หลังอัปเดต breathLeft แล้ว */
+function tickBreathFx(dt,now){
+  const holding=holdBreath && adsT>0.5 && breathLeft>0;
+  if(holding!==breathHeld){
+    if(holding){ Snd.breathIn(); breathStrainAt=now+BREATH_FX.gapHi; }
+    else Snd.breathOut();                       // ปล่อยปุ่ม/เลิกส่อง/ลมหมด → ผ่อนลมออกเสมอ
+    breathHeld=holding;
+  }
+  if(holding && breathLeft<BREATH_FX.strainAt && now>=breathStrainAt){
+    const k=1-breathLeft/BREATH_FX.strainAt;    // 0 = เพิ่งเริ่มอึดอัด · 1 = แทบหมดลม
+    Snd.breathStrain(k);
+    breathStrainAt=now+(BREATH_FX.gapHi+(BREATH_FX.gapLo-BREATH_FX.gapHi)*k);
+  }
+  const want=holding?Math.pow(1-breathLeft,1.6)*Math.min(1,adsT):0;
+  breathVig+=(want-breathVig)*Math.min(1,dt*BREATH_FX.lerp);
+  if(breathVig<0.002) breathVig=0;
+}
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด
@@ -985,6 +1022,47 @@ const Snd={
   /* 🫁 รอบ 449: หายใจแรงตอนวิ่งนาน (หายใจออก 1 ครั้ง) */
   pant(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.22,520,.075); this.noise(t+.26,.18,340,.045); },
+  /* 🫁 รอบ 505: ลมหายใจตอนกลั้น (ดูโซน BREATH_FX) — ลมผ่านคอ = noise ผ่าน bandpass ที่กวาดความถี่
+     ต่างจาก noise() เดิมตรง "คุมซองเสียงเองได้" (สูดเข้า = ค่อยดังขึ้นแล้วตัด · ผ่อนออก = ดังทันทีแล้วจางยาว)
+     นับจำนวนที่สร้างจริงไว้ที่ Snd.breathN (ใช้ตรวจตอนเทสต์: _t.breathFx.n) */
+  breathN:{in:0,out:0,strain:0},
+  breathAir(t,dur,f0,f1,vol,rise,q){ const c=this.ctx; if(!c) return;
+    const len=Math.max(1,Math.floor(c.sampleRate*dur));
+    const n=c.createBufferSource(), buf=c.createBuffer(1,len,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    n.buffer=buf;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=q||1.2;
+    bp.frequency.setValueAtTime(f0,t); bp.frequency.exponentialRampToValueAtTime(f1,t+dur);
+    const g=c.createGain(); g.gain.setValueAtTime(.0008,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+dur*(rise?.70:.12));
+    g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+    n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t); n.stop(t+dur+.02); },
+  /* 🫁 สูดลมเข้าลึกสั้น ๆ ครั้งเดียว (กดปุ่มกลั้นหายใจ) — ลมกวาดจากต่ำขึ้นสูงแล้วตัดจบ = "ฮึบ" */
+  breathIn(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.breathAir(t,.36,300,1450,.085,1,1.4);
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(120,t);
+    o.frequency.linearRampToValueAtTime(178,t+.30);                 // เนื้อเสียงอก ให้รู้สึกว่าอัดลมเต็มปอด
+    const g=c.createGain(); g.gain.setValueAtTime(.001,t); g.gain.exponentialRampToValueAtTime(.030,t+.24);
+    g.gain.exponentialRampToValueAtTime(.001,t+.36);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.37);
+    this.breathN.in++; },
+  /* 🫁 ผ่อนลมออก (ปล่อยปุ่ม หรือ ลมหมด) — ดังทันทีแล้วจางยาวกว่าตอนสูด */
+  breathOut(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.breathAir(t,.55,1100,240,.072,0,1.0);
+    this.breathAir(t+.30,.34,420,180,.030,0,.9);                    // หางลมสุดท้าย
+    this.breathN.out++; },
+  /* 🫁 สั่น/อึดอัดตอนลมใกล้หมด (k 0→1 ยิ่งมากยิ่งอั้นไม่ไหว) — ลมสั่นเป็นห้วงถี่ ๆ เบา ๆ */
+  breathStrain(k){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    k=Math.max(0,Math.min(1,k||0));
+    const n=2+Math.round(k*2);                                      // ยิ่งอั้นไม่ไหว ห้วงยิ่งถี่
+    for(let i=0;i<n;i++) this.breathAir(t+i*.085,.075,520+i*70,300,(.020+.026*k),0,2.2);
+    const o=c.createOscillator(); o.type='triangle';
+    o.frequency.setValueAtTime(96+18*k,t);
+    o.frequency.linearRampToValueAtTime(72,t+.26);                  // เสียงคอสั่นต่ำ ๆ
+    const g=c.createGain(); g.gain.setValueAtTime(.001,t);
+    g.gain.exponentialRampToValueAtTime(.010+.016*k,t+.06); g.gain.exponentialRampToValueAtTime(.001,t+.28);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.29);
+    this.breathN.strain++; },
   /* 🎬 เสียงยกปืนเข้าเล็ง / ลดปืนลง (ผ้า+โลหะเบาๆ ให้รู้สึกมีมวล) */
   ads(inOn){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.13,inOn?900:620,.055);
@@ -3212,7 +3290,13 @@ function tickAds(dt,now){
   if(holdBreath && adsT>.5 && breathLeft>0) breathLeft=Math.max(0,breathLeft-dt/BREATH_MAX);
   else breathLeft=Math.min(1,breathLeft+dt/BREATH_RECOVER);
   if(breathLeft<=0) holdBreath=false;
-  if(breathBtn) breathBtn.style.opacity=(0.45+0.55*breathLeft).toFixed(2);
+  if(breathBtn){
+    breathBtn.style.opacity=(0.45+0.55*breathLeft).toFixed(2);
+    /* 🫁 รอบ 505: ลมใกล้หมด = ปุ่มวูบสว่างตามจังหวะสั่น (ต่อยอด opacity เดิม ไม่ใช่ระบบใหม่) */
+    breathBtn.style.filter = breathLeft<BREATH_FX.strainAt
+      ? `brightness(${(1+0.5*(1-breathLeft/BREATH_FX.strainAt)*(0.5+0.5*Math.sin(now*0.018))).toFixed(2)})` : '';
+  }
+  tickBreathFx(dt,now);
 }
 /* ⑥ การแกว่งจากการหายใจ — ใส่ที่กล้องหลังหมุน yaw/pitch แล้ว (ภาพในเลนส์แกว่งตามด้วย) */
 /* 💥 คลายแรงถอยกลับเข้าเป้าแบบสปริง + ใส่ที่กล้อง (ภาพในเลนส์สะบัดตามไปด้วย) */
@@ -3277,7 +3361,9 @@ function layoutScope(now){
   const tired=(breathLeft<0.25)?(1+(0.25-breathLeft)*4):1;              // ลมใกล้หมด = แรงขึ้นถึง ~2 เท่า
   const steady=(holdBreath&&breathLeft>0)?0.10:1;
   const wob=Math.sin(t*0.0016*tired)*3.2*adsT*steady*tired;             // ±3 px (นิ่งตอนกลั้นหายใจ)
-  const dark=((holdBreath&&breathLeft>0)?0.94:0.88)-0.03*Math.cos(t*0.0016*tired)*steady;
+  /* 🫁 รอบ 505: ยิ่งลมใกล้หมด ขอบเลนส์ยิ่งเข้ม (บวกทับสูตรเดิม · เพดาน .99 กันดำสนิท) */
+  const dark=Math.min(0.99,((holdBreath&&breathLeft>0)?0.94:0.88)-0.03*Math.cos(t*0.0016*tired)*steady
+    +BREATH_FX.darkAdd*breathVig);
   if(scopeRingEl) scopeRingEl.style.opacity=Math.max(0,(adsT-0.25)/0.75).toFixed(2);   // ⑤ เรติเคิลชัดขึ้นตอนเข้าที่
   /* ⚠️ หัวใจของ PiP: "นอกเลนส์ต้องยังเห็นภาพปกติ" — ห้ามถมดำทั้งรอบนอก
      (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
@@ -3287,13 +3373,29 @@ function layoutScope(now){
      (ใช้ค่าแรงเฉื่อยการหันชุดเดียวกับที่ปืนโยก จึงตรงจังหวะกันเป๊ะ) */
   const eyeX=clamp(-lagYaw*260,-9,9), eyeY=clamp(lagPitch*220,-8,8);
   ap.x+=eyeX/innerWidth*100; ap.y+=eyeY/innerHeight*100;
+  /* 🫁🌑 รอบ 505: "ขอบจอมืดเข้าเป็นวง" ตามลมที่เหลือ — เลเยอร์ที่ 2 ของหน้ากากใบเดิม
+     จุดเริ่มมืดถูกบังคับให้อยู่ "นอกวงเลนส์" อย่างน้อย vigGap px เสมอ → ไม่มีทางบังกากบาท/ภาพในเลนส์
+     ยังคงสเปก PiP: นอกวงไม่ได้ถมทึบ ยังเห็นภัยด้านข้างได้ (alpha สูงสุด .62 เฉพาะมุมจอตอนลมหมด) */
+  let vigLayer='';
+  if(breathVig>0){
+    /* จุดเริ่มมืดอิง "ด้านสั้นของจอ" (จอเตี้ย 812×375 ขอบบน-ล่างจึงมืดจริง ไม่ใช่มืดแค่ซ้าย-ขวา)
+       ปลายไล่สีอิงด้านยาว → มุมจอมืดสุด · ทั้งคู่ยังถูกบังคับ ≥ R+vigGap เสมอ */
+    const hMin=Math.min(innerWidth,innerHeight)*0.5, hMax=Math.max(innerWidth,innerHeight)*0.5;
+    const r0=Math.max(R+wob+BREATH_FX.vigGap, hMin*BREATH_FX.vigIn*(1-0.22*breathVig));
+    const r1=Math.max(r0+40,hMax*1.45), rm=r0+(r1-r0)*0.55;
+    const a=(BREATH_FX.vig*breathVig);
+    vigLayer=`, radial-gradient(circle at ${ap.x}% ${ap.y}%,`+
+      ` rgba(0,0,0,0) ${Math.round(r0)}px,`+
+      ` rgba(2,4,6,${(a*0.42).toFixed(3)}) ${Math.round(rm)}px,`+
+      ` rgba(2,4,6,${a.toFixed(3)}) ${Math.round(r1)}px)`;
+  }
   if(scopeMaskEl) scopeMaskEl.style.background=
     `radial-gradient(circle at ${ap.x}% ${ap.y}%,`+
     ` rgba(0,0,0,0) ${R+wob-2}px,`+
     ` rgba(6,9,12,${dark.toFixed(2)}) ${R+wob}px,`+
     ` rgba(6,9,12,.55) ${R+wob+7}px,`+
     ` rgba(6,9,12,.18) ${R+wob+13}px,`+
-    ` rgba(0,0,0,0) ${R+wob+20}px)`;
+    ` rgba(0,0,0,0) ${R+wob+20}px)`+vigLayer;
   if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=((R+wob)*2)+'px';
     scopeRingEl.style.left=ap.x+'%'; scopeRingEl.style.top=ap.y+'%'; }
 }
@@ -5946,6 +6048,8 @@ function start(){
   useGunView();                                                                // 🔫 รอบ 463
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
   adsRaw=0; adsT=0; holdBreath=false; breathLeft=1;                             // 🎬 ล้างสถานะเล็ง
+  breathHeld=false; breathStrainAt=0; breathVig=0;                              // 🫁 รอบ 505: ล้างสัญญาณลมหายใจ
+  if(breathBtn) breathBtn.style.filter='';
   adsZoomG=0; adsBreathG=0; adsBoostG=0;                                        // 🔍🫁 รอบ 504: ล้างตัวคูณท่าเล็ง
   recPitch=0; recYaw=0; boltAt=0;                                               // 💥 ล้างแรงถอย
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
@@ -6166,6 +6270,15 @@ window.InvasionWorld={
       return r?{lift:+r.pivot.rotation.z.toFixed(3), back:+(r.pivot.position.z-r.z0).toFixed(3), ejected:r.ejected}:null; },
     tickBolt, attachBoltHandle,
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
+    /* 🫁🌑 รอบ 505: สัญญาณลมหายใจ — ดูสถานะ/นับเสียงที่สร้างจริง + จูนสด */
+    get breathFx(){ return {hold:breathHeld, left:+breathLeft.toFixed(3), vig:+breathVig.toFixed(4),
+      n:Object.assign({},Snd.breathN), cfg:Object.assign({},BREATH_FX)}; },
+    setBreathFx(o){ o=o||{};
+      Object.keys(o).forEach(k=>{ if(k in BREATH_FX && typeof o[k]==='number') BREATH_FX[k]=o[k]; });
+      return {cfg:Object.assign({},BREATH_FX)}; },
+    /* ข้ามการไล่นุ่ม — ให้ความมืดเข้าที่ทันทีตอนวัด */
+    snapBreathFx(){ breathVig=(breathHeld?Math.pow(1-breathLeft,1.6)*Math.min(1,adsT):0); return +breathVig.toFixed(4); },
+    tickBreathFx,
     /* 🔧 รอบ 457: จูนท่าปืนด้วยคำสั่งสั้น (ดู TUNE ZONE + tools/gunlab.js) */
     gunSil, setGunPose,
     /* 🎯 รอบ 499: จูน "ท่าเล็ง ADS" ของกระบอกที่ถืออยู่ — {x,y,z,rx,ry,rz,s} (คืนบรรทัดพร้อมวางทับ ADS_BY_GUN) */
