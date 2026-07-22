@@ -18,22 +18,13 @@ done
 fail=0
 say(){ printf '%s\n' "$1" >&2; }
 
-# ── ① main เดินหน้าไปแล้วหรือยัง ─────────────────────────────
-for base in main origin/main; do
-  git rev-parse --verify -q "$base" >/dev/null 2>&1 || continue
-  [ "$(git rev-parse HEAD)" = "$(git rev-parse "$base")" ] && continue
-  if ! git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
-    n=$(git rev-list --count "HEAD..$base" 2>/dev/null)
-    say ""
-    say "🚦 กฎทองข้อ 10: มี session คู่ขนานลงงานไปแล้ว — $base นำหน้าอยู่ $n commit"
-    git log --oneline -3 "HEAD..$base" 2>/dev/null | sed 's/^/     /' >&2
-    say ""
-    say "   ▸ งานเรื่องเดียวกัน/ผลลัพธ์เดียวกัน → หยุด รอเขาเสร็จ แล้วทำเฉพาะส่วนที่ยังไม่สมบูรณ์"
-    say "   ▸ คนละเรื่อง (แค่ไฟล์ชนกัน)       → git rebase $base แล้ว **วัดผลซ้ำ** ก่อน commit"
-    fail=1
-    break
-  fi
-done
+# ── ① main เดินหน้าไปแล้วหรือยัง — ตรรกะกลางที่ tools/check_parallel.sh (ใช้ร่วมกับ SessionStart) ──
+rpt=$(sh tools/check_parallel.sh 2>/dev/null); rc=$?
+if [ "$rc" != 0 ] && [ -n "$rpt" ]; then
+  say ""
+  printf '%s\n' "$rpt" >&2
+  fail=1
+fi
 
 # ── ② version.json ต้องใหม่กว่าของ main ─────────────────────
 num(){ sed -n 's/.*"v"[^"]*"[0-9-]*\.\([0-9]\{1,\}\)".*/\1/p' 2>/dev/null | head -1; }
