@@ -318,6 +318,81 @@ const srnd=(seed)=>{ const x=Math.sin(seed*127.1+311.7)*43758.5453; return x-Mat
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 
 /* ============================================================
+   🎯📏 รอบ 508: กระสุน "ตก" ตามระยะ + ขีดวัดระยะในเลนส์ที่เล็งตามได้จริง
+   (ต่อยอดรอบ 504 ข้อ 3/3 — ผู้ใช้สั่ง)
+   แนวคิด: ยิงไกลกว่าระยะ zero กระสุนจะไปลงต่ำกว่ากากบาท เด็กต้องเล็งสูงขึ้น
+   แต่ไม่ต้องเดาเอง — ใช้ "ขีดวัด" ใต้กากบาทที่มีเลขระยะจริงกำกับ คู่กับป้าย 📏 ระยะถึงเป้า
+   (อ่านระยะได้ 400 ม. → เอาขีด 400 ทาบตัวเป้า → ยิงโดน)
+
+   ⚠️ ต่อยอดของเดิม ไม่สร้างระบบซ้อน:
+     • ขีดวัด = `b.md` + `u.mdl` ชุดเดิมของรอบ 464 (เดิมตำแหน่งตายตัว ไม่ผูกกับอะไร) → คำนวณตำแหน่งจริง
+     • ป้ายระยะ `.rng` (รอบ 464) และความเร็วกระสุน `BULLET_SPD_*` (รอบ 467) ใช้ของเดิมทั้งดุ้น
+   ⚠️ ไม่แตะค่าล็อกปืนใด ๆ (GUN_VIEW / AIM_OFF / AIM_BY_GUN / ADS_BY_GUN)
+
+   สูตร (จดไว้ใช้ซ้ำ): ปืน zero ที่ระยะ z → ที่ระยะ s กระสุนต่ำกว่าแนวเล็ง
+     drop(s) = scale · ½·g/v² · (s² − s·z)   [s=z → 0 พอดี · s<z → ค่าติดลบ = ยังลอยเหนือแนวเล็ง]
+   ตำแหน่งขีดในวงเลนส์คิดเป็นสัดส่วนรัศมี: t = (drop/s) ÷ tan(ครึ่งมุมภาพในเลนส์)
+     → รัศมีตัดกันหมด ขีดจึงขยับตาม "กำลังขยาย" อย่างเดียว (ซูมแรง = ขีดถ่างออก เล็งละเอียดขึ้น)
+
+   🎚️ ทำไมต้องมี `scale` (วัดจริงแล้วถึงรู้ — จดกันเสียเวลาซ้ำ):
+     ใช้ g จริงล้วน ๆ กระสุน R93 (760 m/s) ตกแค่ 4.8 ม. ที่ 800 ม. = 6 มิลลิเรเดียน
+     → ขีดทั้งชุดกองอยู่ในช่วง 51–53.5% ของวง (แทบทับกากบาท) เด็กมองไม่เห็นความต่าง และ "เล็งสูง" ไม่มีผลจริง
+     จึงคูณ scale เป็น "เกมสเกล" ให้วิถีตกอ่านออกด้วยตา · เลือกค่าจนขีดไกลสุดตกราว 75–80% ของวง
+   ============================================================ */
+const DROP={
+  on:true,
+  g:9.81,                                                  // แรงโน้มถ่วง (ม./วิ²)
+  scale:{r93:6, rifle:3},                                  // เกมสเกลของวิถีตก (ดูเหตุผลด้านบน)
+  zero:{r93:100, rifle:100},                               // ระยะที่กระสุนพาดผ่านกากบาทพอดี (ม.)
+  marks:{r93:[200,400,600,800], rifle:[150,250,350,450]},  // ระยะที่มีขีดกำกับในเลนส์
+  maxPct:85,                                               // ขีดต้องไม่เลย % นี้ของวงเลนส์ (ป้าย 📏 อยู่ 88%)
+  maxDeg:4,                                                // เพดานมุมที่วิถีเบี่ยงลงได้ (ดู dropDir)
+};
+function bulletSpd(w){ return (w==='r93')?BULLET_SPD_R93:BULLET_SPD_RIFLE; }
+/* กระสุนต่ำกว่าแนวเล็งกี่เมตร ที่ระยะ s (ค่าลบ = ยังลอยเหนือแนวเล็ง) */
+function dropAt(s,w){
+  if(!DROP.on||!s) return 0;
+  const v=bulletSpd(w), z=DROP.zero[w]||50;
+  return (DROP.scale[w]||1)*0.5*DROP.g/(v*v)*(s*s-s*z);
+}
+/* ระยะถึงสิ่งที่แนวยิงนี้จะไปโดน (คร่าว ๆ พอสำหรับหาจุดตก) — ยาน/เป้าก่อน ไม่เจอค่อยเดินหาพื้น
+   เดินหยาบ 10 ม. เพราะใช้แค่หา "ระยะ" ไปเข้าสูตร ไม่ได้ใช้เป็นจุดกระทบจริง (นั่นเป็นหน้าที่ envHit) */
+function dropRange(origin,dir,maxD){
+  const h=rayTarget(origin,dir,maxD);
+  if(h) return h.t;
+  if(terrainH){
+    const P=new THREE.Vector3();
+    for(let d=10; d<=maxD; d+=10){
+      P.copy(origin).addScaledVector(dir,d);
+      if(P.y<=terrainH(P.x,P.z)) return d;
+    }
+  }
+  return maxD;
+}
+/* ทิศจริงของกระสุน = "คอร์ด" จากปากกระบอกถึงจุดตกจริง
+   → ปลายทางต่ำกว่าแนวเล็งตรงตามสูตร drop() เป๊ะ ส่วนระหว่างทางถือเป็นเส้นตรง (พอสำหรับเกม
+     และทำให้ tracer/envHit/rayTarget เดิมใช้ต่อได้ทั้งชุด ไม่ต้องเขียนตัวเดินวิถีโค้งใหม่)
+   🪤 ต้องวนซ้ำ 2 รอบ (วัดจริงถึงเจอ): พอโค้งลงแล้ว "ระยะถึงสิ่งที่จะโดน" สั้นลงมาก
+      เช่นเงยยิงฟ้าแล้วไม่โดนอะไร รอบแรกได้ระยะ = maxD 4000 ม. → ตกถึง 795 ม. = พับลง 11°
+      รอบสองวัดใหม่บนแนวที่โค้งแล้ว (ไปลงพื้นข้างหน้า) ค่าจึงเข้าที่
+   🚧 maxDeg = เพดานกันวิถีพับดิ่งในเคสสุดโต่ง (เกินระยะขีดวัดไกลสุดเยอะ ~1,470 ม. ขึ้นไปถึงจะชน) */
+function dropDir(origin,dir,w,maxD){
+  if(!DROP.on) return dir;
+  const cap=DROP.maxDeg*Math.PI/180;
+  let out=dir, d=dropRange(origin,dir,maxD);
+  for(let i=0;i<2;i++){
+    const dp=dropAt(d,w);
+    if(dp<=0) return dir;
+    let nd=dir.clone().multiplyScalar(d).add(new THREE.Vector3(0,-dp,0)).normalize();
+    const a=Math.acos(clamp(dir.dot(nd),-1,1));
+    if(a>cap) nd=dir.clone().lerp(nd,cap/a).normalize();
+    out=nd;
+    if(i===0) d=dropRange(origin,nd,maxD);
+  }
+  return out;
+}
+
+/* ============================================================
    🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
    ============================================================ */
 const CSS=`
@@ -485,6 +560,9 @@ const CSS=`
   background:rgba(16,26,20,.85)}
 #inv-scopeov u.mdl{position:absolute;left:50%;margin-left:7px;font:700 9px/1 system-ui,sans-serif;
   color:rgba(16,26,20,.8);text-decoration:none}
+/* 🎯 รอบ 508: กล่องวางขีดวัดระยะ (เต็มวงเลนส์ → % ของลูกยังอิงวงเลนส์เหมือนเดิม) */
+#inv-scopeov .lad{position:absolute;inset:0}
+#inv-scopeov b.md{width:5px;height:5px;margin-left:-2.5px}
 #inv-scopeov .rng{position:absolute;left:50%;top:88%;transform:translateX(-50%);white-space:nowrap;
   font:800 11px/1 system-ui,sans-serif;color:#0f3b22;background:rgba(190,255,214,.55);
   border-radius:6px;padding:2px 7px;letter-spacing:.02em}
@@ -740,9 +818,9 @@ function buildDom(){
     <div id="inv-scopeov">
       <div class="so-mask"></div>
       <div class="so-ring"><i class="h"></i><i class="v"></i><i class="m" style="top:32%"></i><i class="m" style="top:40%"></i><i class="m" style="top:60%"></i><i class="m" style="top:68%"></i><span class="dot"></span>
-        <!-- 📏 รอบ 464: ขีดวัดระยะ (mil-dot) ใต้จุดกึ่งกลาง + ตัวเลขกำกับ -->
-        <b class="md" style="top:58%"></b><b class="md" style="top:66%"></b><b class="md" style="top:74%"></b><b class="md" style="top:82%"></b>
-        <u class="mdl" style="top:56.5%">1</u><u class="mdl" style="top:64.5%">2</u><u class="mdl" style="top:72.5%">3</u><u class="mdl" style="top:80.5%">4</u>
+        <!-- 📏 รอบ 464: ขีดวัดระยะ (mil-dot) ใต้จุดกึ่งกลาง + ตัวเลขกำกับ
+             🎯 รอบ 508: ตำแหน่ง+เลขกำกับคำนวณจากวิถีตกจริง (layoutLadder) แทนค่าตายตัวเดิม -->
+        <span class="lad"></span>
         <span class="rng"></span></div>
     </div>
     <div id="inv-cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><span class="dot"></span></div>
@@ -862,6 +940,7 @@ function buildDom(){
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
   scopeRngEl=wrapEl.querySelector('#inv-scopeov .rng');            // 📏 รอบ 464
+  scopeLadEl=wrapEl.querySelector('#inv-scopeov .lad'); ladSig='';  // 🎯 รอบ 508
   glowBtn=document.getElementById('inv-glow');                     // 🏮 รอบ 479
   glowBtn.addEventListener('click',dropGlowStick);
   torchBtn=document.getElementById('inv-torch');                   // 🔦 รอบ 477
@@ -1231,7 +1310,7 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let vmScene=null, vmCam=null, muzzleLight=null, worldFlash=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
+let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null, scopeLadEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -3388,8 +3467,30 @@ function tickRange(){
   const txt = t ? `📏 ${t} ม.` : '📏 —';
   if(txt!==rngTxt){ rngTxt=txt; scopeRngEl.textContent=txt; }
 }
+/* 🎯📏 รอบ 508: วางขีดวัดระยะตาม "มุมตกจริง" ของกระสุน (ดูสูตรในโซน DROP)
+   สัดส่วนจากกลางวง t = (drop/s) ÷ tan(ครึ่งมุมภาพในเลนส์) → รัศมีตัดกันหมด
+   ขีดจึงถ่างตามกำลังขยายอย่างเดียว (8× เล็งละเอียดกว่า 4× จริง ๆ)
+   คิดใหม่เฉพาะตอน ปืน/ซูม/ขนาดวง เปลี่ยน (sig) — ไม่กินเฟรม */
+let ladSig='';
+function layoutLadder(){
+  if(!scopeLadEl) return;
+  const w=weapon, R=scopeRadiusNow();
+  const sig=w+'|'+R+'|'+curMag().m+'|'+(DROP.on?1:0);
+  if(sig===ladSig) return; ladSig=sig;
+  const half=Math.tan(scopeFovDeg()*Math.PI/360);
+  let html='';
+  for(const s of ((DROP.on?DROP.marks[w]:null)||[])){
+    const dp=dropAt(s,w); if(dp<=0) continue;
+    const pct=50+50*(dp/s)/half;
+    if(pct>DROP.maxPct) continue;
+    html+=`<b class="md" style="top:${pct.toFixed(2)}%"></b>`+
+          `<u class="mdl" style="top:${(pct-1.6).toFixed(2)}%">${s}</u>`;
+  }
+  scopeLadEl.innerHTML=html;
+}
 function layoutScope(now){
   const R=scopeRadiusNow();
+  layoutLadder();                       // 🎯 รอบ 508: ขีดวัดระยะ (คิดใหม่เฉพาะตอนค่าเปลี่ยน)
   /* 🫁 รอบ 462: ขอบเลนส์ "หายใจ" — วงขยับเข้า-ออกนิดเดียวตามจังหวะหายใจเดียวกับที่กล้องแกว่ง
      กลั้นหายใจ (ปุ่ม 🫁) = แทบนิ่งสนิท + ขอบเข้มขึ้น · ลมหมด = แกว่งแรงและถี่ขึ้น (เหนื่อย) */
   const t=(typeof now==='number')?now:performance.now();
@@ -3864,11 +3965,15 @@ function fireGun(now){
   if(W.mag){ Snd.sniper(); boltAt=now; } else Snd.gun();
   muzzleSmoke(W.mag?4:2);                                      // 💨 รอบ 449: ควันลอยจากปากลำกล้อง
   const origin=camera.position.clone();
-  const dir=aimDir();
+  const aim=aimDir();
   const sp=W.mag ? (scoped?W.spread:W.hipSpread) : W.spread;   // ไม่ส่องกล้อง = เป๋มาก (ตาม Accuracy ต่ำ)
-  dir.x+=rnd(-sp,sp); dir.y+=rnd(-sp,sp); dir.normalize();
+  aim.x+=rnd(-sp,sp); aim.y+=rnd(-sp,sp); aim.normalize();
   addRecoil();                                                 // 💥 เด้งหลังคำนวณวิถีแล้ว
-  let hit=rayTarget(origin,dir,W.mag?4000:900);                // สไนเปอร์ยิงได้ไกลกว่ามาก
+  const maxD=W.mag?4000:900;
+  /* 🎯📏 รอบ 508: ทิศจริงของกระสุนโค้งลงกว่าแนวเล็งตามระยะ (ดูโซน DROP)
+     ทุกบรรทัดใต้นี้ใช้ `dir` = ทิศหลังคิดวิถีตก แล้ว → ประกาย/ดาเมจ/tracer/รอยกระสุน ตรงกันหมด */
+  const dir=dropDir(origin,aim,weapon,maxD);
+  let hit=rayTarget(origin,dir,maxD);                          // สไนเปอร์ยิงได้ไกลกว่ามาก
   /* 🎯 รอบ 471: เป้าฝึกยิงอยู่ "ติดพื้น" จึงมีเนินเขาบังได้ (ยานอยู่บนฟ้าไม่มีปัญหานี้)
      ⚠️ กันเฉพาะ 'sand' (พื้น/เนิน) เท่านั้น — วัดจริงแล้วเช็กกำแพงด้วยไม่ได้:
      `solids` เก็บตึกเป็น "วงกลม r=ด้านยาว/2" ซึ่งล้นออกมาคลุมผิวถนน → ยิงเป้าปากตรอกจากกลางถนน
@@ -6342,6 +6447,33 @@ window.InvasionWorld={
     snapAdsBoost(){ const magT=(magList().length>1)?(ADS_BOOST.mag[curMag().m]||0):0;
       adsZoomG=magT; adsBreathG=(holdBreath&&breathLeft>0&&adsT>0.5)?ADS_BOOST.breath:0;
       adsBoostG=adsZoomG+adsBreathG; return adsBoostG; },
+    /* 🎯📏 รอบ 508: วิถีตก + ขีดวัดระยะ — ดูสถานะ/จูนสด/วัดผล
+       drop(s) = กระสุนต่ำกว่าแนวเล็งกี่เมตรที่ระยะ s · lad = ขีดที่โชว์จริง (ระยะ ม. + % ของวง) */
+    get drop(){ const w=weapon, f=n=>+n.toFixed(4);
+      const half=Math.tan(scopeFovDeg()*Math.PI/360), lad=[];
+      for(const s of ((DROP.on?DROP.marks[w]:null)||[])){
+        const dp=dropAt(s,w); if(dp<=0) continue;
+        const pct=50+50*(dp/s)/half;
+        lad.push({m:s, drop:f(dp), mrad:f(dp/s*1000), pct:+pct.toFixed(2), shown:pct<=DROP.maxPct});
+      }
+      return {weapon:w, spd:bulletSpd(w), zero:DROP.zero[w], scale:DROP.scale[w], mag:curMag().m,
+        at:{100:f(dropAt(100,w)),200:f(dropAt(200,w)),300:f(dropAt(300,w)),
+            400:f(dropAt(400,w)),600:f(dropAt(600,w)),800:f(dropAt(800,w))},
+        lad, dom:scopeLadEl?scopeLadEl.innerHTML:'', cfg:JSON.parse(JSON.stringify(DROP))}; },
+    setDrop(o){ o=o||{};
+      if(typeof o.on==='boolean')DROP.on=o.on;
+      ['g','maxPct','maxDeg'].forEach(k=>{ if(typeof o[k]==='number')DROP[k]=o[k]; });
+      if(typeof o.scale==='number')DROP.scale[weapon]=o.scale;
+      if(typeof o.zero==='number')DROP.zero[weapon]=o.zero;
+      if(Array.isArray(o.marks))DROP.marks[weapon]=o.marks.slice();
+      ladSig=''; layoutLadder();
+      return {cfg:JSON.parse(JSON.stringify(DROP))}; },
+    dropAt:s=>dropAt(s,weapon),
+    /* ทิศกระสุนจริงเทียบแนวเล็ง (องศา) จากตำแหน่ง/มุมที่ยืนอยู่ตอนนี้ */
+    dropDrift(){ const o=camera.position.clone(), a=aimDir();
+      const d=dropDir(o,a,weapon,weapon==='r93'?4000:900);
+      return {range:+dropRange(o,a,weapon==='r93'?4000:900).toFixed(1),
+        deg:+(Math.acos(clamp(a.dot(d),-1,1))*180/Math.PI).toFixed(4)}; },
     /* 🔭🫨 รอบ 506: ความนิ่งตามกำลังขยาย — ดูสถานะ + จูนสด
        ang = ตัวคูณ "มุมแกว่งจริง" · hold = steady ตอนกลั้นหายใจ · read = ที่ตาเห็นในเลนส์ (ang×m/baseMag) */
     get swayMag(){ const L=magList(), m=curMag().m, f=n=>+n.toFixed(5);
