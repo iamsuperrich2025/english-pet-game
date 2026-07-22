@@ -86,6 +86,30 @@ window.GunLab = (function(){
     return {file:name, kb:Math.round(b.length*3/4/1024), ...T().gunSil()};
   }
 
+  /* 🔫 จับปืนกระบอกอื่นให้ "หน้าตาเหมือน R93" (รอบ 463)
+     เป้าหมาย 3 อย่างพร้อมกัน: มุมเงาปืน (deg) · ความยาวเงาปืนบนจอ (len) · แนวปืนพาดผ่านจุดเล็ง (yAtX0)
+     วิธี: วนปรับทีละตัว — scale คุม len · y คุม yAtX0 · pitch คุม deg — สัก 12 รอบก็ลู่เข้าแล้ว
+     ใช้: GunLab.match('rifle', GunLab.target('r93'))   */
+  function target(w){ const t=T(); const cur=t.weapon;
+    while(t.weapon!==w) t.swapWeapon();
+    const s=t.gunSil(); const r={deg:s.deg, len:s.len, yAtX0:s.yAtX0};
+    while(t.weapon!==cur) t.swapWeapon();
+    return r; }
+  function match(w,goal,rounds){ const t=T();
+    while(t.weapon!==w) t.swapWeapon();
+    let p=t.gunPose, s=p.s, y=p.p[1];
+    for(let i=0;i<(rounds||12);i++){
+      let r=t.gunSil();
+      s*= (r.len>0)? Math.pow(goal.len/r.len, .7) : 1;      // ขนาดเท่ากัน
+      s=Math.max(.2,Math.min(4,s));
+      t.setGunPose({s});
+      r=t.gunSil();
+      y+= (goal.yAtX0-r.yAtX0)*0.45;                        // แนวปืนพาดผ่านจุดเล็ง
+      t.setGunPose({y});
+      t.setGunPose({deg:goal.deg});                         // มุมเงาปืน
+    }
+    return t.setGunPose({}); }
+
   /* เลื่อน "จุดเล็ง" ขึ้น-ลงบนจอ (หน่วย NDC: 0 = กลางจอ · −1 = ขอบล่าง) — รอบ 458
      คืนบรรทัด AIM_OFF พร้อมก๊อปไปวางทับใน js/invasion3d.js */
   function aim(y,x){ const r=T().setAimOff(y,x); T().step(1/60,2); return r; }
@@ -97,8 +121,40 @@ window.GunLab = (function(){
     const p=(hit?hit.point.clone():cam.position.clone().addScaledVector(d,300)).project(cam);
     return {aimOff:t.aimOff, hitNDC:[+p.x.toFixed(3),+p.y.toFixed(3)], hit:hit?hit.type:'none'}; }
 
+  /* 🔍 เทียบปืน 2 กระบอกในภาพเดียว (ครอปโซนปืนทั้งคู่ ต่อกันแนวนอน) — รอบ 463
+     ใช้ตัดสิน "หน้าตาเหมือนกันไหม" ด้วยภาพเดียว แทนการถ่ายทีละกระบอก */
+  function pair(name,w){
+    const t=T(), cv=document.querySelector('canvas');
+    const gl=cv.getContext('webgl2')||cv.getContext('webgl');
+    const W=cv.width,H=cv.height, cw=w||300;
+    const sx=W*0.42, sy0=H*0.30, sw=W*0.58, sh=H*0.70;
+    const ch=Math.round(cw*sh/sw);
+    const sheet=document.createElement('canvas'); sheet.width=cw*2; sheet.height=ch;
+    const g=sheet.getContext('2d');
+    ['rifle','r93'].forEach((wp,i)=>{
+      for(let k=0;k<4 && t.weapon!==wp;k++) t.swapWeapon();
+      t.step(1/60,3);
+      const buf=new Uint8Array(W*H*4); gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,buf);
+      const big=document.createElement('canvas'); big.width=W; big.height=H;
+      const bx=big.getContext('2d'), img=bx.createImageData(W,H);
+      for(let y=0;y<H;y++){ const a=(H-1-y)*W*4, b=y*W*4; for(let j=0;j<W*4;j++) img.data[b+j]=buf[a+j]; }
+      bx.putImageData(img,0,0);
+      g.drawImage(big,sx,sy0,sw,sh,i*cw,0,cw,ch);
+      const ao=t.aimOff, ax=W*(0.5+ao[0]*0.5), ay=H*(0.5-ao[1]*0.5);
+      const px=i*cw+(ax-sx)/sw*cw, py=(ay-sy0)/sh*ch;
+      g.strokeStyle='#39ff6a'; g.lineWidth=2; g.beginPath();
+      g.moveTo(px-9,py); g.lineTo(px+9,py); g.moveTo(px,py-9); g.lineTo(px,py+9); g.stroke();
+      g.fillStyle='#000'; g.fillRect(i*cw+3,3,86,17);
+      g.fillStyle='#fff'; g.font='12px monospace'; g.fillText(wp+' '+t.gunSil().deg+'°',i*cw+7,16);
+    });
+    const b=sheet.toDataURL('image/jpeg',.45).split(',')[1];
+    const a=document.createElement('a'); a.href='data:image/jpeg;base64,'+b; a.download=name||'gunpair.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+    return {file:name||'gunpair.jpg', kb:Math.round(b.length*3/4/1024)};
+  }
+
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
   function done(){ try{ localStorage.removeItem('petVocabAdventure_v1'); }catch(e){} location.reload(); }
 
-  return {boot,tune,big,fwd,shot,aim,check,done,sil:()=>T().gunSil(),pose:()=>T().gunPose};
+  return {boot,tune,big,fwd,shot,pair,aim,check,match,target,done,sil:()=>T().gunSil(),pose:()=>T().gunPose};
 })();

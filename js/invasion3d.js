@@ -70,7 +70,7 @@ const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
    ============================================================ */
 const WEAPONS={
   rifle:{ key:'rifle', name:'ไรเฟิลจู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,
-          spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:false, tracer:0xffe08a, recoil:1 },
+          spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:true,   /* รอบ 463: ศูนย์เล็ง 2× */ tracer:0xffe08a, recoil:1 },
   r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
           spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true,   /* กำลังขยายเลือกได้ 3 ระดับ ดู SCOPE_MAGS */
           tracer:0xbfe6ff, recoil:2.6 },
@@ -89,7 +89,14 @@ const SCOPE_MAGS=[
   {m:6, r:1.00, label:'6×', name:'ระยะมาตรฐาน',        hint:'ยิงระยะ 100–200 เมตร สมดุลที่สุด'},
   {m:8, r:1.18, label:'8×', name:'ระยะไกล',            hint:'แผนที่เปิดโล่ง จ่อเป้าไกลๆ ได้นิ่ง · วงเลนส์กว้างสุด'},
 ];
-let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่ากลาง)
+/* 🔭 รอบ 463 (ผู้ใช้: "ปืนอื่นซูมได้น้อยกว่า R93"): ไรเฟิลได้ศูนย์เล็งจุดแดง 2× ระดับเดียว
+   วงเลนส์เล็กกว่า (r 0.55) = เห็นภาพรอบข้างเยอะ เหมาะกับการยิงรัวระยะใกล้ */
+const RIFLE_MAGS=[
+  {m:2, r:0.55, label:'2×', name:'ศูนย์เล็งจุดแดง', hint:'ซูมเบา ๆ ยิงรัวได้ เห็นภาพกว้าง เหมาะระยะใกล้-กลาง'},
+];
+function magList(){ return (weapon==='r93')?SCOPE_MAGS:RIFLE_MAGS; }
+function curMag(){ const L=magList(); return L[Math.min(scopeMagIdx,L.length-1)]||L[0]; }
+let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่ากลาง) — ไรเฟิลมีระดับเดียวจึงถูก clamp เอง
 /* ============================================================
    🎬 รอบ 422: แอนิเมชันยกปืนเล็ง (ADS) ของ R93 — ตามสเปกที่ผู้ใช้ให้มา
    ลำดับ: ยกปืนเข้าแนวสายตา → กล้องเคลื่อนเข้าหาตา → ขอบเลนส์ค่อยๆ ขยายเข้ามา
@@ -2081,9 +2088,22 @@ function tickPads(dt,now){
      3) ท่าเล็ง (ADS) แยกคนละชุดค่า ดู ADS_POS/ADS_ROT/ADS_SCALE หัวไฟล์
    ============================================================ */
 const ZERO_DIST=50;                 // ระยะ zero ลำกล้อง (ม.) — ใช้ตอนอยากให้ปืนเล็งเข้ากากบาทจริง
-const GUN_POS=[.22,-.17,-.95];      // [x ขวา, y ล่าง, z ระยะหน้ากล้อง]
-const GUN_ROT=[-.645,.004,.09];     // [ก้ม-เงย, หันเข้าใน, เอียงทแยง] — เงาปืนบนจอ 5.5°
-let   GUN_SCALE=1.35;               // ขนาดปืนในจอ (let: GunLab ปรับสดได้ตอนจูน)
+/* 🔫 รอบ 463: ค่าท่าถือ "แยกตามปืนแต่ละกระบอก" (โมเดลคนละขนาด/คนละจุดหมุน ใช้ค่าร่วมกันไม่ได้)
+   ทุกกระบอกถูกจูนให้ได้ภาพแบบเดียวกับ R93: เงาปืนบนจอ ~5.5° · แนวปืนพาดผ่านจุดเล็ง · ขนาดใกล้เคียงกัน */
+const GUN_VIEW={
+  r93:   {p:[.22,-.17,-.95],  r:[-.645,.004,.09], s:1.35},
+  rifle: {p:[0.22,-0.456,-0.95], r:[-0.38,0.004,0.09], s:1.331},   // จูนด้วย GunLab.match ให้ภาพเท่า R93
+};
+const GUN_POS=[.22,-.17,-.95];      // ← ค่าที่ "กำลังใช้อยู่" (คัดมาจาก GUN_VIEW ตอนสลับปืน)
+const GUN_ROT=[-.645,.004,.09];
+let   GUN_SCALE=1.35;
+/* คัดค่าของปืนที่ถืออยู่มาใส่ตัวแปรที่ระบบวาดใช้จริง */
+function useGunView(){
+  const v=GUN_VIEW[weapon]||GUN_VIEW.r93;
+  GUN_POS[0]=v.p[0]; GUN_POS[1]=v.p[1]; GUN_POS[2]=v.p[2];
+  GUN_ROT[0]=v.r[0]; GUN_ROT[1]=v.r[1]; GUN_ROT[2]=v.r[2];
+  GUN_SCALE=v.s;
+}
 const MUZZLE_Y=.012;                // แกนลำกล้องมาตรฐาน (ทุกโมเดลถูกเลื่อนมาที่ระดับนี้)
 /* 📐 ท่านี้วัดจากในเกมจริง (จุดปลายลำกล้อง/พานท้ายฉายลงจอ): ปากกระบอกอยู่ (0.13,−0.32) เฉียงเข้ากลางจอ 17°
    · ยอดกล้องส่องอยู่ (0.28,−0.05) เห็นเต็มๆ · พานท้ายไหลออกมุมขวาล่าง = องค์ประกอบเดียวกับภาพอ้างอิง */
@@ -2473,7 +2493,12 @@ function gunSil(){
   if(pts.length<40) return {deg:null,vis:0};
   let mx=0,my=0; pts.forEach(p=>{mx+=p[0];my+=p[1]}); mx/=pts.length; my/=pts.length;
   let sxx=0,syy=0,sxy=0; pts.forEach(p=>{const dx=p[0]-mx,dy=p[1]-my;sxx+=dx*dx;syy+=dy*dy;sxy+=dx*dy});
-  return {deg:+Math.abs(Math.atan2(2*sxy,sxx-syy)/2*180/Math.PI).toFixed(1), vis:+(pts.length/tot).toFixed(2)};
+  const th=Math.atan2(2*sxy,sxx-syy)/2, ca=Math.cos(th), sa=Math.sin(th);
+  let lo=1e9,hi=-1e9; pts.forEach(p=>{const u=(p[0]-mx)*ca+(p[1]-my)*sa; if(u<lo)lo=u; if(u>hi)hi=u;});
+  const slope=sxy/sxx;                                  // แนวกึ่งกลางปืน (หน่วย NDC ต่อ NDC-x)
+  return {deg:+Math.abs(th*180/Math.PI).toFixed(1), vis:+(pts.length/tot).toFixed(2),
+          len:+(hi-lo).toFixed(3),                      // ความยาวเงาปืนบนจอ (ใช้เทียบ "ขนาดเท่ากัน")
+          yAtX0:+(my/asp+slope/asp*(0-mx)).toFixed(3)}; // แนวปืนตัดแกนกลางจอที่ y เท่าไร
 }
 /* ตั้งท่าปืนสด ๆ · {x,y,z,s,roll,deg} — ใส่ `deg` = ให้ระบบไล่หามุมก้ม-เงยที่ทำให้เงาปืนได้องศานั้นเอง
    คืนค่าเป็นบรรทัดพร้อมก๊อปไปวางทับใน TUNE ZONE */
@@ -2500,11 +2525,10 @@ function setGunPose(o){
   }
   gunGrp.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]);
   gunGrp.rotation.set(GUN_ROT[0],GUN_ROT[1],GUN_ROT[2]); gunGrp.scale.setScalar(GUN_SCALE);
+  const v=GUN_VIEW[weapon]; if(v){ v.p=GUN_POS.slice(); v.r=GUN_ROT.slice(); v.s=GUN_SCALE; }
   const r=gunSil(), f=n=>(+n).toFixed(3).replace(/0+$/,'').replace(/\.$/,'');
-  return {deg:r&&r.deg, vis:r&&r.vis,
-    line1:`const GUN_POS=[${GUN_POS.map(f).join(',')}];`,
-    line2:`const GUN_ROT=[${GUN_ROT.map(f).join(',')}];`,
-    line3:`let   GUN_SCALE=${f(GUN_SCALE)};`};
+  return {weapon, deg:r&&r.deg, vis:r&&r.vis, len:r&&r.len, yAtX0:r&&r.yAtX0,
+    line:`  ${weapon}: {p:[${GUN_POS.map(f).join(',')}], r:[${GUN_ROT.map(f).join(',')}], s:${f(GUN_SCALE)}},`};
 }
 function buildGun(){
   const g=new THREE.Group();
@@ -2593,6 +2617,7 @@ function swapWeapon(){
   weapon=(weapon==='rifle')?'r93':'rifle';
   if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
   if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
+  useGunView();                                        // 🔫 รอบ 463: ท่าถือของปืนกระบอกนั้น
   syncMuzzleAnchor();                                  // 🔥 รอบ 451: ไฟปากลำกล้องตามความยาวปืนที่ถือ
   reloadAt=0; heat=0; overheat=false;
   renderHeat(); renderAmmo(); syncWeaponBtns();
@@ -2627,10 +2652,13 @@ function tickAds(dt,now){
   /* ① ปืนถูกยกจากท่าพร้อมยิง → แนบไหล่เข้าแนวสายตา (lerp ทุกแกนพร้อมกัน) */
   if(gunGrp){
     const k=adsT;
+    /* 🎯 รอบ 463: จุดเล็งไม่ได้อยู่กลางจอแล้ว → ท่าแนบไหล่ต้องเลื่อนตามไปนั่งตรงจุดเล็งด้วย
+       (ไม่งั้นพอส่องกล้อง ตัวปืนจะลอยอยู่เหนือวงเลนส์) — คำนวณจาก AIM_OFF ทุกเฟรม ใช้ได้ทุกกระบอก */
+    const AP=adsPosNow();
     gunGrp.position.set(
-      GUN_POS[0]+(ADS_POS[0]-GUN_POS[0])*k + gunGrp.userData.swayX*(1-k),
-      GUN_POS[1]+(ADS_POS[1]-GUN_POS[1])*k + gunGrp.userData.swayY*(1-k) - gunRecoil*.03,
-      GUN_POS[2]+(ADS_POS[2]-GUN_POS[2])*k + gunRecoil*.10);
+      GUN_POS[0]+(AP[0]-GUN_POS[0])*k + gunGrp.userData.swayX*(1-k),
+      GUN_POS[1]+(AP[1]-GUN_POS[1])*k + gunGrp.userData.swayY*(1-k) - gunRecoil*.03,
+      GUN_POS[2]+(AP[2]-GUN_POS[2])*k + gunRecoil*.10);
     gunGrp.rotation.set(
       GUN_ROT[0]+(ADS_ROT[0]-GUN_ROT[0])*k + gunRecoil*.22,
       GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
@@ -2710,7 +2738,7 @@ function applyBreath(now){
 function scopeRadius(){
   /* 🔭 รอบ 462: วงโตตามกำลังขยาย — แต่จุดเล็งอยู่ค่อนล่าง พื้นที่ว่างถึงขอบจอจึงเป็นตัวจำกัดจริง
      จึงคิดเป็น "สัดส่วนของพื้นที่ที่มี": 8× = เต็มที่ · 6× = 85% · 4× = 73% (เห็นต่างชัดทุกจอ) */
-  const mag=SCOPE_MAGS[scopeMagIdx]||{r:1};
+  const mag=curMag()||{r:1};
   const rel=(mag.r||1)/1.18;
   const base=Math.min(innerWidth,innerHeight)*SCOPE_R*1.18;
   const o=(typeof aimOffNow==='function')?aimOffNow():[0,0];
@@ -2751,7 +2779,7 @@ function layoutScope(now){
    ⚠️ ห้ามใช้ FOV/กำลังขยาย ตรงๆ — จะได้กำลังขยายไม่ตรงจริง เพราะวงเลนส์เล็กกว่าจอ */
 function scopeFovDeg(){
   const R=scopeRadiusNow();
-  const t=Math.tan(FOV*Math.PI/360) * (R/(innerHeight/2)) / SCOPE_MAGS[scopeMagIdx].m;
+  const t=Math.tan(FOV*Math.PI/360) * (R/(innerHeight/2)) / curMag().m;
   return Math.atan(t)*360/Math.PI;
 }
 /* 🔭 รอบเรนเดอร์ที่ 2 — ภาพขยายเฉพาะ "ในเลนส์"
@@ -2787,8 +2815,8 @@ function renderScopePass(){
 /* 🔎 สลับกำลังขยาย 4× → 6× → 8× → 4× */
 function cycleScopeMag(){
   if(!WEAPONS[weapon].scope) return;
-  scopeMagIdx=(scopeMagIdx+1)%SCOPE_MAGS.length;
-  const z=SCOPE_MAGS[scopeMagIdx];
+  scopeMagIdx=(scopeMagIdx+1)%magList().length;
+  const z=curMag();
   syncWeaponBtns();
   toastBan(`🔎 <b>กล้อง ${z.label} — ${z.name}</b><br><span class="ib-sub">${z.hint}</span>`,2000);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
@@ -2809,7 +2837,8 @@ function syncWeaponBtns(){
   if(swapBtn) swapBtn.textContent=(weapon==='rifle')?'🎯':'🔫';   // โชว์ปืนที่ "จะสลับไป"
   const show=(W.scope && !inHeli && !riding);
   if(scopeBtn) scopeBtn.style.display=show?'block':'none';
-  if(magBtn){ magBtn.style.display=show?'block':'none'; magBtn.textContent=SCOPE_MAGS[scopeMagIdx].label; }
+  /* ปุ่มเลือกกำลังขยายโชว์เฉพาะปืนที่มีหลายระดับ (ไรเฟิลมี 2× ระดับเดียว) */
+  if(magBtn){ magBtn.style.display=(show&&magList().length>1)?'block':'none'; magBtn.textContent=curMag().label; }
 }
 
 /* ============================================================
@@ -2898,6 +2927,11 @@ const AIM_OFF=[0,-.46];   // รอบ 460: ผู้ใช้ขีดเส้
    (ของเดิมจางกลับเป็น 0 ทำให้กล้องขยายจุดกลางจอ ซึ่งไม่ใช่จุดที่กระสุนไป) */
 function aimOffNow(){ if(inHeli||riding) return [0,0]; return [AIM_OFF[0], AIM_OFF[1]]; }
 /* จุดเล็งในหน่วย % ของจอ (ใช้วางวงเลนส์/หน้ากาก CSS) */
+/* ตำแหน่งท่าแนบไหล่ที่ "เลื่อนไปตรงจุดเล็ง" แล้ว (ADS_POS เก็บค่าเทียบแกนเล็ง ไม่ใช่เทียบกลางจอ) */
+function adsPosNow(){
+  const o=aimOffNow(), tn=Math.tan((camera?camera.fov:FOV)*Math.PI/360), d=Math.abs(ADS_POS[2]);
+  return [ADS_POS[0]+o[0]*tn*(camera?camera.aspect:1.78)*d, ADS_POS[1]+o[1]*tn*d, ADS_POS[2]];
+}
 function aimPct(){ const o=aimOffNow(); return {x:50+o[0]*50, y:50-o[1]*50}; }
 let crossAt=null;
 function layoutCross(){ if(!crossEl) return;
@@ -4481,6 +4515,7 @@ function start(){
   battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
+  useGunView();                                                                // 🔫 รอบ 463
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
   adsRaw=0; adsT=0; holdBreath=false; breathLeft=1;                             // 🎬 ล้างสถานะเล็ง
   recPitch=0; recYaw=0; boltAt=0;                                               // 💥 ล้างแรงถอย
@@ -4635,7 +4670,7 @@ window.InvasionWorld={
     get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
-    get magnify(){return SCOPE_MAGS[scopeMagIdx].m}, cycleScopeMag, scopeFovDeg,
+    get magnify(){return curMag().m}, cycleScopeMag, scopeFovDeg,
     /* 🎬 รอบ 422: แอนิเมชัน ADS */
     get adsT(){return adsT}, get adsRaw(){return adsRaw}, scopeRadiusNow, tickAds,
     /* 🏃 รอบ 448: ท่าลดปืนตอนวิ่ง */
@@ -4663,7 +4698,7 @@ window.InvasionWorld={
     get muzzleAnchor(){return muzzle?muzzle.position.toArray().map(n=>+n.toFixed(3)):null},
     get gunPose(){return gunGrp?{p:gunGrp.position.toArray().map(n=>+n.toFixed(3)),
       r:gunGrp.rotation.toArray().slice(0,3).map(n=>+n.toFixed(3)), s:+gunGrp.scale.x.toFixed(3)}:null},
-    get magLabel(){return SCOPE_MAGS[scopeMagIdx].label}, get magBtnShown(){return magBtn.style.display==='block'},
+    get magLabel(){return curMag().label}, get magBtnShown(){return magBtn.style.display==='block'},
     get weaponBtns(){return {swap:swapBtn.textContent,
       scopeShown:scopeBtn.style.display==='block', ammoText:ammoEl.innerText.replace(/\s+/g,' ')}},
     get gunnerBtnShown(){return gunnerBtn && gunnerBtn.style.display==='block'},
