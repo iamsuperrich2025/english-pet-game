@@ -13,7 +13,8 @@
      GunLab.big(1.2)                 // ใหญ่ขึ้น 20% โดยคงมุมเดิม
      GunLab.fwd(.15)                 // ดันไปข้างหน้า 0.15 ม. + ขยายชดเชยอัตโนมัติ (ขนาดบนจอเท่าเดิม)
    ดูภาพผล:
-     GunLab.shot()                   // เซฟ jpg ลงโฟลเดอร์ Downloads (ไฟล์ gunlab.jpg)
+     GunLab.shot()                   // ครอปเฉพาะโซนปืน 320px ≈ 8KB (เซฟลง Downloads/gunlab.jpg)
+     GunLab.shot({full:true})        // ภาพเต็มจอ (ใช้เมื่อต้องดูองค์ประกอบทั้งเฟรมเท่านั้น)
    ค่าที่ได้จะถูกคืนมาเป็น 3 บรรทัดพร้อมก๊อปไปวางทับใน TUNE ZONE ของ js/invasion3d.js
    ============================================================ */
 window.GunLab = (function(){
@@ -48,8 +49,14 @@ window.GunLab = (function(){
   function fwd(d){ const t=T(), p=t.gunPose, z=p.p[2]-(d||.1);
     return tune({z, s:p.s*(z/p.p[2]), deg:+t.gunSil().deg}); }
 
-  /* จับภาพหน้าจอเกมจริง → เซฟลง Downloads (screenshot ของเบราว์เซอร์ค้างกับฉาก 3D นี้เสมอ) */
-  function shot(name,w){
+  /* จับภาพหน้าจอเกมจริง → เซฟลง Downloads (screenshot ของเบราว์เซอร์ค้างกับฉาก 3D นี้เสมอ)
+     ⚡ ค่าเริ่มต้น = **ครอปเฉพาะโซนปืน** (ขวา-ล่าง + กากบาท) กว้าง 320px คุณภาพ .45 ≈ 8KB
+        เล็กกว่าภาพเต็มจอ ~4 เท่า = ประหยัด token ตอนเปิดดู (ผู้ใช้สั่ง 22 ก.ค. 2026)
+     ใช้ภาพเต็มจอเมื่อจำเป็นเท่านั้น: GunLab.shot({full:true})
+     ออปชัน: {name,w,q,full}  (เรียกแบบเก่า shot('a.jpg',460) ก็ยังได้) */
+  function shot(opt,w2){
+    const o = (typeof opt==='string') ? {name:opt, w:w2, full:true} : (opt||{});
+    const name=o.name||'gunlab.jpg', full=!!o.full, w=o.w||(full?460:320), q=o.q||(full?.5:.45);
     const t=T(), cv=document.querySelector('canvas');
     const gl=cv.getContext('webgl2')||cv.getContext('webgl');
     t.step(1/60,1);
@@ -60,16 +67,18 @@ window.GunLab = (function(){
     for(let y=0;y<H;y++){ const sy=(H-1-y)*W*4, dy=y*W*4;
       for(let i=0;i<W*4;i++) img.data[dy+i]=buf[sy+i]; }
     bx.putImageData(img,0,0);
-    const sm=document.createElement('canvas'); sm.width=w||460; sm.height=Math.round((w||460)*H/W);
-    const g2=sm.getContext('2d'); g2.drawImage(big,0,0,sm.width,sm.height);
-    g2.strokeStyle='#39ff6a'; g2.lineWidth=2; g2.beginPath();          // กากบาทอ้างอิง
-    const cx=sm.width/2, cy=sm.height/2;
+    /* โซนปืน: ครึ่งขวา-ล่างของจอ (กากบาทอยู่มุมซ้ายบนของกรอบพอดี ใช้อ้างอิงตำแหน่งได้) */
+    const sx=full?0:W*0.42, sy0=full?0:H*0.30, sw=full?W:W*0.58, sh=full?H:H*0.70;
+    const sm=document.createElement('canvas'); sm.width=w; sm.height=Math.round(w*sh/sw);
+    const g2=sm.getContext('2d'); g2.drawImage(big,sx,sy0,sw,sh,0,0,sm.width,sm.height);
+    const cx=(W/2-sx)/sw*sm.width, cy=(H/2-sy0)/sh*sm.height;          // กากบาทอ้างอิง
+    g2.strokeStyle='#39ff6a'; g2.lineWidth=2; g2.beginPath();
     g2.moveTo(cx-10,cy); g2.lineTo(cx+10,cy); g2.moveTo(cx,cy-10); g2.lineTo(cx,cy+10); g2.stroke();
-    const b=sm.toDataURL('image/jpeg',.5).split(',')[1];
+    const b=sm.toDataURL('image/jpeg',q).split(',')[1];
     const a=document.createElement('a');
-    a.href='data:image/jpeg;base64,'+b; a.download=name||'gunlab.jpg';
+    a.href='data:image/jpeg;base64,'+b; a.download=name;
     document.body.appendChild(a); a.click(); a.remove();
-    return {file:name||'gunlab.jpg', kb:Math.round(b.length*3/4/1024), ...T().gunSil()};
+    return {file:name, kb:Math.round(b.length*3/4/1024), ...T().gunSil()};
   }
 
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
