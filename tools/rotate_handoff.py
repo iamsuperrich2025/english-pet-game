@@ -29,10 +29,14 @@ BAK_ROOT = os.path.join(ROOT, "backups", "handoff_rotate")
 KEEP_HANDOFF_BULLETS = 3
 KEEP_TASKS_BULLETS = 10
 KEEP_TASKS_SECTIONS = 6
+KEEP_STATUS_HEADS = 8      # 🆕 เก็บ "### 📌 สรุปสถานะล่าสุด" ล่าสุดกี่หัวข้อ (ที่เหลือเข้า archive)
 
 # bullet ระดับบนสุดที่ขึ้นต้นด้วย "- <emoji อะไรก็ได้ 0-8 ตัว> **รอบ <เลข>"
 ROUND_BULLET = re.compile(r"^- .{0,8}\*\*รอบ \d")
 ROUND_SECTION = re.compile(r"^### .*รอบ \d")
+# 🆕 หัวข้อสรุปสถานะ — แต่ละ session ชอบ "แทรกหัวข้อใหม่" แทนการเติม bullet ในหัวข้อเดิม
+#    ทำให้ rotate_bullets เดิมไม่เคยทำงาน (แต่ละหัวข้อมี bullet เดียว) → TASKS.md บวมเงียบ ๆ จนเกินงบ
+STATUS_HEAD = re.compile(r"^### .*สรุปสถานะล่าสุด")
 
 BUDGET = {HANDOFF: 30_000, TASKS: 80_000}
 
@@ -122,6 +126,27 @@ def rotate_bullets(path, lines, hdr_prefix, hdr_contains, closers, keep, arch_na
     new_lines = lines[:s] + body + lines[e:]
     print("  %s: ย้าย %d bullet → %s" % (hdr_contains, len(move_blocks), arch_name))
     return new_lines, len(move_blocks)
+
+
+def rotate_status_heads(lines, keep):
+    """🆕 เก็บหัวข้อ 'สรุปสถานะล่าสุด' ใหม่สุด keep อัน — ที่เหลือย้ายเข้า archive ทั้งก้อน
+       (หัวข้อเรียงใหม่→เก่าอยู่แล้ว เพราะทุก session แทรกอันใหม่ไว้บนสุด)"""
+    idxs = [i for i, ln in enumerate(lines) if STATUS_HEAD.match(ln)]
+    if len(idxs) <= keep:
+        print("  หัวข้อสรุปสถานะ: %d ≤ %d — ไม่ต้องหมุน" % (len(idxs), keep))
+        return lines, 0
+    start = idxs[keep]
+    # ก้อนที่ย้าย = ตั้งแต่หัวข้อที่ (keep+1) ไปจนถึงก่อนหัวข้ออื่นที่ "ไม่ใช่สรุปสถานะ" (หรือจบไฟล์)
+    end = len(lines)
+    for i in range(start, len(lines)):
+        ln = lines[i]
+        if (ln.startswith("## ") or ln.startswith("### ")) and not STATUS_HEAD.match(ln):
+            end = i
+            break
+    append_archive("TASKS_STATUS.md", "handoff/TASKS.md (หัวข้อสรุปสถานะเก่า)", lines[start:end])
+    moved = len(idxs) - keep
+    print("  หัวข้อสรุปสถานะ: ย้าย %d หัวข้อ → TASKS_STATUS.md" % moved)
+    return lines[:start] + lines[end:], moved
 
 
 def rotate_round_sections(lines, keep):
@@ -217,9 +242,10 @@ def main():
                                KEEP_TASKS_BULLETS, "TASKS_STATUS.md", "handoff/TASKS.md (สรุปสถานะล่าสุด)")
     lines, n2 = rotate_round_sections(lines, KEEP_TASKS_SECTIONS)
     lines, n3 = rotate_history_section(lines)
-    if n1 or n2 or n3:
+    lines, n4 = rotate_status_heads(lines, KEEP_STATUS_HEADS)   # 🆕 ต้นตอไฟล์บวม
+    if n1 or n2 or n3 or n4:
         write_lines(TASKS, lines)
-    total += n1 + n2 + n3
+    total += n1 + n2 + n3 + n4
 
     report("📏 หลังหมุน —")
     warn_long_lines()
