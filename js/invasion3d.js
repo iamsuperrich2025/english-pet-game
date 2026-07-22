@@ -127,7 +127,7 @@ let sprintRaw=0, sprintT=0, sprintHold=0, moveLen=0;
 let lagYaw=0, lagPitch=0, lastYaw=0, lastPitch=0;
 const LAG_GAIN=0.55, LAG_MAX=0.14, LAG_BACK=7.5;   // แรงตาม · เพดานองศา · ความเร็วไหลกลับ
 /* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดปืนลงแล้วยกกระบอกใหม่ขึ้นมา (สลับโมเดลตอนต่ำสุด) */
-let swapAt=0, swapTo=null; const SWAP_MS=420;
+let swapAt=0, swapTo=null, swapSnd=0; const SWAP_MS=420;
 /* 🫁 รอบ 449: วิ่งนาน = เหนื่อย — จอโยกเบาๆ + เสียงหายใจแรงเป็นจังหวะ (ฟื้นเองเมื่อหยุดวิ่ง)
    เริ่มรู้สึกเหนื่อยหลังวิ่งต่อเนื่อง ~PANT_FROM วินาที · เต็มที่ที่ ~PANT_FULL */
 const PANT_FROM=2.6, PANT_FULL=6.5, PANT_GAP=980;
@@ -750,6 +750,20 @@ const Snd={
     const g=c.createGain(); g.gain.setValueAtTime(.10,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
     this.noise(t+.02,.05,3000,.08); },                   // เสียงล็อกคม
+  /* 🔁 รอบ 465: เสียงเปลี่ยนปืน 2 จังหวะ ให้ตรงท่าใหม่
+     swapDown = ตอนลดปืน (ผ้าเสียดสี + โลหะหน่วง) · swapUp = ตอนยกขึ้นล็อกเข้าที่ ("คลิก" คม) */
+  swapDown(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.noise(t,.14,760,.06);
+    const o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(220,t);
+    o.frequency.exponentialRampToValueAtTime(120,t+.13);
+    const g=c.createGain(); g.gain.setValueAtTime(.07,t); g.gain.exponentialRampToValueAtTime(.001,t+.15);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.16); },
+  swapUp(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(300,t);
+    o.frequency.exponentialRampToValueAtTime(140,t+.05);
+    const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
+    this.noise(t+.03,.05,3400,.075); },                 // คลิกล็อกแม็กเข้าที่
   /* 🫁 รอบ 449: หายใจแรงตอนวิ่งนาน (หายใจออก 1 ครั้ง) */
   pant(){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     this.noise(t,.22,520,.075); this.noise(t+.26,.18,340,.045); },
@@ -884,7 +898,7 @@ let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
 let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
-let vmScene=null, vmCam=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
+let vmScene=null, vmCam=null, muzzleLight=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
@@ -2487,6 +2501,13 @@ function syncMuzzleAnchor(){
    (ล้างเฉพาะ depth ไม่ล้างสี → ปืนอยู่หน้าสุดเสมอ ไม่โดนกำแพง/พื้นทะลุ และดึงเข้ามาชิดตาได้) */
 function renderViewModel(){
   if(!vmScene||!vmCam||!gunGrp||!gunGrp.visible) return;
+  /* 🔥 รอบ 465: ความสว่างไฟแฟลชตามจังหวะยิง (วางตำแหน่งตามปากกระบอกของกระบอกที่ถือ) */
+  if(muzzleLight){
+    const now=performance.now();
+    const k=Math.max(0,(muzzleUntil-now)/90);
+    muzzleLight.intensity=k*9;
+    if(muzzle) muzzle.getWorldPosition(muzzleLight.position);
+  }
   vmCam.fov=camera.fov; vmCam.aspect=camera.aspect; vmCam.updateProjectionMatrix();
   renderer.autoClear=false;
   renderer.clearDepth();
@@ -2580,6 +2601,9 @@ function buildGun(){
      ใช้ PointLight ระยะสั้น (5m) จึงไม่รบกวนแสงของฉากรอบตัว */
   const vLight=new THREE.PointLight(0xffeccd,3.4,5);
   vLight.position.set(.55,.42,.30); vmScene.add(vLight);
+  /* 🔥 รอบ 465: ไฟแฟลชปากลำกล้อง — ตอนยิงจะสาดแสงส้มบนตัวปืนจริง ๆ (เห็นชัดมากตอนกลางคืน/ในเงา) */
+  muzzleLight=new THREE.PointLight(0xffb45a,0,2.2); muzzleLight.position.set(0,MUZZLE_Y,-.7);
+  vmScene.add(muzzleLight);
   const vFill=new THREE.PointLight(0x9fb6d8,.85,4);   // ไฟเสริมฝั่งเงา ให้เห็นรูปทรงไม่ตันดำ
   vFill.position.set(-.5,-.15,.1); vmScene.add(vFill);
   /* 🌤️ รอบ 451: ปืนย้ายออกจากฉากหลัก จึงไม่ได้รับแดด/ฟ้าของฉากอีก — ใส่ชุดเดียวกันใน vmScene
@@ -2635,8 +2659,10 @@ function buildGun(){
 function tickSwap(now){
   if(!swapAt) return 0;
   const p=(now-swapAt)/SWAP_MS;
-  if(p>=1){ swapAt=0; swapTo=null; return 0; }
+  if(p>=1){ swapAt=0; swapTo=null; swapSnd=0; return 0; }
+  if(swapSnd<1 && p>=0.02){ swapSnd=1; Snd.swapDown(); }          // 🔊 รอบ 465: ตอนเริ่มลดปืน
   if(swapTo && p>=0.5){ applyWeapon(swapTo); swapTo=null; }
+  if(swapSnd<2 && p>=0.72){ swapSnd=2; Snd.swapUp(); }            // 🔊 ตอนยกกระบอกใหม่ล็อกเข้าที่
   return Math.sin(Math.min(1,Math.max(0,p))*Math.PI);          // ระฆังคว่ำ
 }
 /* เปลี่ยนกระบอกจริง (โมเดล/ค่าท่าถือ/กระสุน/ปุ่ม) — แยกจากอนิเมชันเพื่อเรียกกลางทางได้ */
@@ -2655,7 +2681,7 @@ function swapWeapon(){
   setScoped(false);
   const next=(weapon==='rifle')?'r93':'rifle';
   /* 🔁 รอบ 464: เริ่มท่าลดปืน แล้วสลับกระบอกจริงตอนต่ำสุด (tickSwap) ไม่สลับวาบทันทีแล้ว */
-  swapAt=performance.now(); swapTo=next;
+  swapAt=performance.now(); swapTo=next; swapSnd=0;
   const W=WEAPONS[next];
   toastBan(`${W.icon} <b>${W.name}</b><br><span class="ib-sub">${next==='r93'
     ? 'ยิงทีละนัด แรงมาก — กด 🔭 ส่องกล้องก่อนยิงจะแม่นสุด · แม็ก 10 นัด'
@@ -2842,6 +2868,10 @@ function layoutScope(now){
      (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
      ใส่แค่ "ขอบกระบอกเลนส์" เป็นเงามืดบางๆ วงแคบๆ แล้วจางหายไป */
   const ap=aimPct();                                    // 🔭 รอบ 461: วงเลนส์ครอบ "จุดเล็ง" ไม่ใช่กลางจอ
+  /* 👁️ รอบ 465: eye-relief — หันเร็ว ๆ ตาไม่ตรงเลนส์ ขอบดำจะเลื่อนบังมาข้างหนึ่งชั่วครู่
+     (ใช้ค่าแรงเฉื่อยการหันชุดเดียวกับที่ปืนโยก จึงตรงจังหวะกันเป๊ะ) */
+  const eyeX=clamp(-lagYaw*260,-9,9), eyeY=clamp(lagPitch*220,-8,8);
+  ap.x+=eyeX/innerWidth*100; ap.y+=eyeY/innerHeight*100;
   if(scopeMaskEl) scopeMaskEl.style.background=
     `radial-gradient(circle at ${ap.x}% ${ap.y}%,`+
     ` rgba(0,0,0,0) ${R+wob-2}px,`+
@@ -4608,7 +4638,7 @@ function start(){
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
   lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
-  swapAt=0; swapTo=null;
+  swapAt=0; swapTo=null; swapSnd=0;
   msBeamAt=performance.now()+6000;
   renderHp(); renderHeat(); renderMissiles();
   fit();
@@ -4748,7 +4778,8 @@ window.InvasionWorld={
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
-    get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt}, setScoped, get scoped(){return scoped},
+    get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt},
+    Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight}, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
     get magnify(){return curMag().m}, cycleScopeMag, scopeFovDeg,
