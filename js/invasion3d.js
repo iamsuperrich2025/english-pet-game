@@ -136,6 +136,35 @@ const ADS_BY_GUN={
   rifle: {p:[0.006,-0.144,-0.713], r:[-0.374,0,0],      s:1.215},   /* 🔍 รอบ 503: ใหญ่ขึ้น +16% */
 };
 function adsView(){ return ADS_BY_GUN[weapon] || {p:ADS_POS, r:ADS_ROT, s:ADS_SCALE}; }
+/* ============================================================
+   🔍🫁 รอบ 504: "ตัวคูณบวกทับ" ท่าเล็ง — ซูมยิ่งแรงปืนยิ่งแนบตา + ท่าประทับแก้มตอนกลั้นหายใจ
+   ⛔ เป็นออฟเซ็ตล้วน ๆ เหมือน SWAY รอบ 501 — **ไม่แก้ตัวเลขใน ADS_BY_GUN / GUN_VIEW / AIM_OFF**
+   วิธีคิด (ต่อยอดสูตรรอบ 503):
+     • ภาพบนจอขึ้นกับอัตราส่วน s/|p| → เพิ่ม s อย่างเดียว = ปืนโตขึ้น/ดูใกล้ตาขึ้น (p เท่าเดิม
+       จึงไม่กระทบ adsPosNow() ที่ผูกกับจุดเล็ง และท้ายปืนถอยห่าง near plane ด้วยซ้ำ)
+     • เงาปืนกว้างโตเร็วกว่า s ~4 เท่า (วัดรอบ 503: s +4.4% → เงา +18%) → ตัวเลข mag/breath จึงเล็กมาก
+     • เพิ่ม s แล้วปลายลำกล้องลอยขึ้น → ต้องดึง y ลงชดเชยด้วย yFix (หน่วย = ดึงลงกี่หน่วยต่อ gain 1.0)
+       วัดค่า yFix จากในเกมจริง (รอบ 504) ให้ปลายลำกล้องอยู่ใต้จุดเล็งเท่าค่าฐานทุกระดับซูม
+     • ทุกค่าถูกไล่แบบ lerp ต่อเฟรม → สลับกำลังขยาย/กลั้นหายใจแล้วไม่กระตุก
+   🔧 จูนสด: InvasionWorld._t.setAdsBoost({m6,m8,breath,yFix,lerp,breathIn,breathOut}) · ดูค่า: _t.adsBoost
+   ============================================================ */
+const ADS_BOOST={
+  mag:{4:0, 6:0.0117, 8:0.0226},   // s เพิ่มกี่ส่วนตามกำลังขยาย (วัดแล้ว: เงากว้าง +0.0/+5.0/+10.0%) — ใช้เฉพาะกระบอกที่ซูมได้หลายระดับ
+  breath:0.0082,                   // 🫁 ประทับแก้มตอนกลั้นหายใจ (วัดแล้ว: เงากว้าง +3.4–3.6% ทั้ง 2 กระบอก)
+  yFix:{ r93:0.148, rifle:0.108 }, // ดึง y ลงกี่หน่วยต่อ gain 1.0 (ชดเชยปลายลำกล้องลอยขึ้น) — วัดจากเกมจริงรอบ 504
+  lerp:6.5,                        // ความเร็วไล่ค่าตอนสลับกำลังขยาย
+  breathIn:3.2, breathOut:5.0      // เข้าท่าประทับแก้มช้ากว่าคืนท่านิดหน่อย (คืนไว = ปล่อยปุ่มแล้วรู้สึกทันที)
+};
+let adsZoomG=0, adsBreathG=0, adsBoostG=0;
+/* ไล่ค่า gain ทุกเฟรม (เรียกจาก tickAds หลังคำนวณ adsT) — คืน gain รวม */
+function tickAdsBoost(dt){
+  const magT=(magList().length>1)?(ADS_BOOST.mag[curMag().m]||0):0;   // ไรเฟิลมีระดับเดียว → ไม่ขยับขนาด
+  adsZoomG+=(magT-adsZoomG)*Math.min(1, dt*ADS_BOOST.lerp);
+  const bT=(holdBreath && breathLeft>0 && adsT>0.5)?ADS_BOOST.breath:0;
+  adsBreathG+=(bT-adsBreathG)*Math.min(1, dt*(bT>adsBreathG?ADS_BOOST.breathIn:ADS_BOOST.breathOut));
+  adsBoostG=adsZoomG+adsBreathG;
+  return adsBoostG;
+}
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด
@@ -3111,6 +3140,13 @@ function tickAds(dt,now){
       GUN_ROT[1]+(AV.r[1]-GUN_ROT[1])*k,
       GUN_ROT[2]+(AV.r[2]-GUN_ROT[2])*k - gunRecoil*.05);
     gunGrp.scale.setScalar(GUN_SCALE+(AV.s-GUN_SCALE)*k);
+    /* 🔍🫁 รอบ 504: ตัวคูณบวกทับ (ซูมแรง=แนบตา · กลั้นหายใจ=ประทับแก้ม) — มีผลเฉพาะตอนเล็ง (คูณ k)
+       ขยาย s อย่างเดียว แล้วดึง y ลงชดเชยให้ปลายลำกล้องอยู่ใต้จุดเล็งเท่าค่าฐาน */
+    const BG=tickAdsBoost(dt)*k;
+    if(BG>0.00002){
+      gunGrp.scale.setScalar(gunGrp.scale.x + AV.s*BG);
+      gunGrp.position.y-=(ADS_BOOST.yFix[weapon]||0)*BG;
+    }
     /* 🌀 รอบ 464: ปืนตามการหันจอ (ตำแหน่งไถลนิดหน่อย + เอียงตาม) */
     gunGrp.position.x+=lagYaw*0.42;
     gunGrp.position.y+=lagPitch*0.34;
@@ -5910,6 +5946,7 @@ function start(){
   useGunView();                                                                // 🔫 รอบ 463
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
   adsRaw=0; adsT=0; holdBreath=false; breathLeft=1;                             // 🎬 ล้างสถานะเล็ง
+  adsZoomG=0; adsBreathG=0; adsBoostG=0;                                        // 🔍🫁 รอบ 504: ล้างตัวคูณท่าเล็ง
   recPitch=0; recYaw=0; boltAt=0;                                               // 💥 ล้างแรงถอย
   setScoped(false); if(gunModels.rifle) gunModels.rifle.visible=true; if(gunModels.r93) gunModels.r93.visible=false;
   renderAmmo(); syncWeaponBtns();
@@ -6141,6 +6178,22 @@ window.InvasionWorld={
       const f=n=>(+n).toFixed(3);
       return {weapon, p:v.p.slice(), r:v.r.slice(), s:v.s,
         line:`  ${weapon}: {p:[${v.p.map(f).join(',')}], r:[${v.r.map(f).join(',')}], s:${f(v.s)}},`}; },
+    /* 🔍🫁 รอบ 504: ตัวคูณบวกทับท่าเล็ง (ซูม/ประทับแก้ม) — ดูสถานะ + จูนสด */
+    get adsBoost(){ const f=n=>+n.toFixed(5);
+      return {weapon, mag:curMag().m, zoom:f(adsZoomG), breath:f(adsBreathG), total:f(adsBoostG),
+        yFix:ADS_BOOST.yFix[weapon]||0, cfg:JSON.parse(JSON.stringify(ADS_BOOST))}; },
+    setAdsBoost(o){ o=o||{};
+      if(typeof o.m4==='number')ADS_BOOST.mag[4]=o.m4;
+      if(typeof o.m6==='number')ADS_BOOST.mag[6]=o.m6;
+      if(typeof o.m8==='number')ADS_BOOST.mag[8]=o.m8;
+      if(typeof o.breath==='number')ADS_BOOST.breath=o.breath;
+      if(typeof o.yFix==='number')ADS_BOOST.yFix[weapon]=o.yFix;
+      ['lerp','breathIn','breathOut'].forEach(k=>{ if(typeof o[k]==='number')ADS_BOOST[k]=o[k]; });
+      return {cfg:JSON.parse(JSON.stringify(ADS_BOOST))}; },
+    /* ข้ามการไล่นุ่ม — ใช้ตอนวัด (ให้ค่าเข้าที่ทันทีไม่ต้องรอ lerp) */
+    snapAdsBoost(){ const magT=(magList().length>1)?(ADS_BOOST.mag[curMag().m]||0):0;
+      adsZoomG=magT; adsBreathG=(holdBreath&&breathLeft>0&&adsT>0.5)?ADS_BOOST.breath:0;
+      adsBoostG=adsZoomG+adsBreathG; return adsBoostG; },
     /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
     get aimOff(){return aimOffNow()},
     /* 🎯 รอบ 490: จูน "เฉพาะกระบอกที่ถืออยู่" — กระบอกที่มีค่าแยก (AIM_BY_GUN) จะไม่ไปแตะค่ากลาง
