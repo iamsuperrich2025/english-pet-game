@@ -2143,7 +2143,7 @@ const ZERO_DIST=50;                 // ระยะ zero ลำกล้อง (
    ทุกกระบอกถูกจูนให้ได้ภาพแบบเดียวกับ R93: เงาปืนบนจอ ~5.5° · แนวปืนพาดผ่านจุดเล็ง · ขนาดใกล้เคียงกัน */
 const GUN_VIEW={
   r93:   {p:[.22,-.17,-.95],  r:[-.645,.004,.09], s:1.35},
-  rifle: {p:[0.22,-0.456,-0.95], r:[-0.38,0.004,0.09], s:1.331},   // จูนด้วย GunLab.match ให้ภาพเท่า R93
+  rifle: {p:[0.22,-0.386,-0.95], r:[-0.504,0.004,0.09], s:1.146},  // รอบ 468: จูนใหม่หลังกลับด้านโมเดล
 };
 const GUN_POS=[.22,-.17,-.95];      // ← ค่าที่ "กำลังใช้อยู่" (คัดมาจาก GUN_VIEW ตอนสลับปืน)
 const GUN_ROT=[-.645,.004,.09];
@@ -2518,6 +2518,19 @@ function alignGunMuzzle(obj){
     const p=o.geometry.attributes.position;
     for(let i=0;i<p.count;i+=3){ v.fromBufferAttribute(p,i).applyMatrix4(m); pts.push(v.clone()); if(v.z<mz) mz=v.z; } });
   if(!pts.length) return;
+  /* 🔄 รอบ 468 (ผู้ใช้ทัก: "ปืนนี้หันปลายกระบอกเข้าหาตัวเอง") — เช็กว่าปลายไหนคือปากกระบอกจริง
+     หลักการที่ใช้ได้กับปืนทุกกระบอก: **ปลายลำกล้องเรียวเสมอ · ท้ายปืน (พานท้าย/แม็ก) อ้วนกว่า**
+     วัดรัศมีเฉลี่ยของสแลบหัว-ท้าย ถ้าฝั่งหน้าอ้วนกว่า = โมเดลกลับหลัง → หมุน 180° แล้ววัดใหม่ */
+  let Mz=-Infinity; pts.forEach(p=>{ if(p.z>Mz) Mz=p.z; });
+  const rad=(arr)=>{ if(arr.length<6) return 1e9; const c=new THREE.Vector3();
+    arr.forEach(p=>c.add(p)); c.divideScalar(arr.length);
+    let r=0; arr.forEach(p=>{ r+=Math.hypot(p.x-c.x,p.y-c.y); }); return r/arr.length; };
+  const frontR=rad(pts.filter(p=>p.z<mz+.10)), backR=rad(pts.filter(p=>p.z>Mz-.10));
+  if(frontR>backR*1.35){                       // หน้าอ้วนกว่าท้ายชัดเจน = กลับหลังแน่นอน
+    obj.rotateY(Math.PI); obj.updateMatrixWorld(true);
+    obj.userData.flipped=!obj.userData.flipped;
+    return alignGunMuzzle(obj);                // วัดใหม่หลังหมุน
+  }
   const slab=pts.filter(p=>p.z<mz+.06);
   const c=new THREE.Vector3(); slab.forEach(p=>c.add(p)); c.divideScalar(slab.length);
   const dx=-c.x, dy=MUZZLE_Y-c.y;
