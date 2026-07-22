@@ -108,9 +108,28 @@ let scopeMagIdx=1;                      // เริ่มที่ 6× (ค่�
    หัวใจคือ "ต่อเนื่อง ไม่ตัดภาพ" ทุกอย่างวิ่งด้วยค่าเดียวคือ adsT (0=ท่าพร้อมยิง · 1=แนบตาเต็มที่)
    ============================================================ */
 const ADS_IN=0.30, ADS_OUT=0.22;        // เวลายกปืนเข้าเล็ง / ถอยออก (วินาที)
-const ADS_POS=[0,-0.09,-0.56];          // ท่าแนบไหล่: ปืนเข้ากลางจอ พานท้ายชิดไหล่ (450: ตามท่าถือใหม่ที่ดึงเข้ามาใกล้)
+const ADS_POS=[0,-0.09,-0.56];          // ท่าแนบไหล่ "ค่ากลาง" — ใช้เฉพาะปืนที่ยังไม่มีค่าแยกใน ADS_BY_GUN
 const ADS_ROT=[0.02,0,0];               // เลิกเอียงทแยง จัดลำกล้องให้ตรงแนวสายตา
 const ADS_SCALE=.72;                    // ขยับเข้าใกล้ตาอีกนิด (ให้รู้สึกมีมวล) — ต้องมากกว่า GUN_SCALE เสมอ ไม่งั้นยกปืนแล้วปืนหดเล็กลง
+/* 🎯 รอบ 499: ท่าเล็ง (ADS) "แยกตามกระบอก" — โครงเดียวกับ AIM_BY_GUN/GUN_VIEW
+   เหตุผล: ท่าถือถูกจูนใหม่ยกชุดรอบ 482–497 (ปืนใหญ่ขึ้นมาก s 1.014/1.485) แต่ ADS ยังเป็นค่ากลางชุดรอบ 450
+   (s .72) → พอยกเล็ง "ปืนหดเล็กลงครึ่งหนึ่ง" และไรเฟิลยังชี้ขึ้นทั้งที่จุดเล็งอยู่ล่างจอ 73%
+   ค่าชุดนี้จูนด้วยเงื่อนไข 4 ข้อ (วัดจากในเกมจริง ดู handoff/TASKS.md รอบ 499):
+     ① แนวปืน (PCA 3 มิติของจุดยอด) ขนานกับ "แนวเล็ง" ของกระบอกนั้น → dPitch/dYaw = 0.00°
+        (ไรเฟิลจุดเล็งอยู่ 73% ของจอ → ท่าเล็งต้องก้มลง ~21° ไม่ใช่เงยขึ้นแบบค่ากลางเดิม)
+     ② ปลายลำกล้องตกใต้จุดเล็ง 3.9% ของจอ ตรงแกน x เดียวกัน (ชี้เข้าเป้าแต่ไม่บังกากบาท/วงเลนส์)
+     ③ s = เท่าท่าถือของกระบอกนั้นเป๊ะ → ยกเล็งแล้ว "ปืนไม่หด" (ค่ากลางเดิม .72 ทำให้ R93 หดครึ่งหนึ่ง)
+     ④ roll = 0 (ปืนตั้งตรง) · z ถูกเลือกให้เงาปืนบนจอกว้าง ~12–16% และไม่โดน near plane ตัด
+   ⚠️ ปืนถูกจัดให้ขนานแนวเล็ง = มองจากท้ายปืน ส่วนที่ใกล้ตาจะบานออกเร็วมาก
+      → ขยาย s หรือดึง z เข้าใกล้อีกนิดเดียว ตัวปืนจะพุ่งจนเต็มจอ (วัดได้: z −0.62 s .85 → เงากว้าง 31% ของจอ)
+      ถ้าอยากให้ "ปืนใหญ่ขึ้นตอนเล็ง" ต้อง **เพิ่ม s พร้อมดัน z ออกไปข้างหน้า** คู่กันเสมอ
+   ⛔ ค่าท่าถือ (GUN_VIEW) และจุดเล็ง (AIM_OFF/AIM_BY_GUN) ถูกล็อก — ห้ามแตะ แก้ได้แค่ตารางนี้
+   🔧 จูนสด: InvasionWorld._t.setAdsPose({x,y,z,rx,ry,rz,s}) → คืนบรรทัดพร้อมวางทับตารางนี้ */
+const ADS_BY_GUN={
+  r93:   {p:[0.011,-0.201,-1.300], r:[-0.415,-0.009,0], s:1.485},
+  rifle: {p:[0.005,-0.123,-0.620], r:[-0.374,0,0],      s:1.014},
+};
+function adsView(){ return ADS_BY_GUN[weapon] || {p:ADS_POS, r:ADS_ROT, s:ADS_SCALE}; }
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด */
@@ -3022,16 +3041,16 @@ function tickAds(dt,now){
     const k=adsT;
     /* 🎯 รอบ 463: จุดเล็งไม่ได้อยู่กลางจอแล้ว → ท่าแนบไหล่ต้องเลื่อนตามไปนั่งตรงจุดเล็งด้วย
        (ไม่งั้นพอส่องกล้อง ตัวปืนจะลอยอยู่เหนือวงเลนส์) — คำนวณจาก AIM_OFF ทุกเฟรม ใช้ได้ทุกกระบอก */
-    const AP=adsPosNow();
+    const AP=adsPosNow(), AV=adsView();          /* 🎯 รอบ 499: ท่าเล็งแยกตามกระบอก */
     gunGrp.position.set(
       GUN_POS[0]+(AP[0]-GUN_POS[0])*k + gunGrp.userData.swayX*(1-k),
       GUN_POS[1]+(AP[1]-GUN_POS[1])*k + gunGrp.userData.swayY*(1-k) - gunRecoil*.03,
       GUN_POS[2]+(AP[2]-GUN_POS[2])*k + gunRecoil*.10);
     gunGrp.rotation.set(
-      GUN_ROT[0]+(ADS_ROT[0]-GUN_ROT[0])*k + gunRecoil*.22,
-      GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
-      GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
-    gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
+      GUN_ROT[0]+(AV.r[0]-GUN_ROT[0])*k + gunRecoil*.22,
+      GUN_ROT[1]+(AV.r[1]-GUN_ROT[1])*k,
+      GUN_ROT[2]+(AV.r[2]-GUN_ROT[2])*k - gunRecoil*.05);
+    gunGrp.scale.setScalar(GUN_SCALE+(AV.s-GUN_SCALE)*k);
     /* 🌀 รอบ 464: ปืนตามการหันจอ (ตำแหน่งไถลนิดหน่อย + เอียงตาม) */
     gunGrp.position.x+=lagYaw*0.42;
     gunGrp.position.y+=lagPitch*0.34;
@@ -3549,8 +3568,9 @@ function aimOffNow(){ if(inHeli||riding) return [0,0];
 /* จุดเล็งในหน่วย % ของจอ (ใช้วางวงเลนส์/หน้ากาก CSS) */
 /* ตำแหน่งท่าแนบไหล่ที่ "เลื่อนไปตรงจุดเล็ง" แล้ว (ADS_POS เก็บค่าเทียบแกนเล็ง ไม่ใช่เทียบกลางจอ) */
 function adsPosNow(){
-  const o=aimOffNow(), tn=Math.tan((camera?camera.fov:FOV)*Math.PI/360), d=Math.abs(ADS_POS[2]);
-  return [ADS_POS[0]+o[0]*tn*(camera?camera.aspect:1.78)*d, ADS_POS[1]+o[1]*tn*d, ADS_POS[2]];
+  const P=adsView().p;                                   /* 🎯 รอบ 499: ตำแหน่งท่าเล็งแยกตามกระบอก */
+  const o=aimOffNow(), tn=Math.tan((camera?camera.fov:FOV)*Math.PI/360), d=Math.abs(P[2]);
+  return [P[0]+o[0]*tn*(camera?camera.aspect:1.78)*d, P[1]+o[1]*tn*d, P[2]];
 }
 function aimPct(){ const o=aimOffNow(); return {x:50+o[0]*50, y:50-o[1]*50}; }
 let crossAt=null;
@@ -6026,6 +6046,16 @@ window.InvasionWorld={
     get breath(){return {hold:holdBreath,left:+breathLeft.toFixed(3)}}, set hold(v){holdBreath=!!v},
     /* 🔧 รอบ 457: จูนท่าปืนด้วยคำสั่งสั้น (ดู TUNE ZONE + tools/gunlab.js) */
     gunSil, setGunPose,
+    /* 🎯 รอบ 499: จูน "ท่าเล็ง ADS" ของกระบอกที่ถืออยู่ — {x,y,z,rx,ry,rz,s} (คืนบรรทัดพร้อมวางทับ ADS_BY_GUN) */
+    get adsView(){ const v=adsView(); return {weapon, p:v.p.slice(), r:v.r.slice(), s:v.s, own:!!ADS_BY_GUN[weapon]}; },
+    setAdsPose(o){ o=o||{};
+      const v=ADS_BY_GUN[weapon]||(ADS_BY_GUN[weapon]={p:ADS_POS.slice(), r:ADS_ROT.slice(), s:ADS_SCALE});
+      if(typeof o.x==='number')v.p[0]=o.x; if(typeof o.y==='number')v.p[1]=o.y; if(typeof o.z==='number')v.p[2]=o.z;
+      if(typeof o.rx==='number')v.r[0]=o.rx; if(typeof o.ry==='number')v.r[1]=o.ry; if(typeof o.rz==='number')v.r[2]=o.rz;
+      if(typeof o.s==='number')v.s=o.s;
+      const f=n=>(+n).toFixed(3);
+      return {weapon, p:v.p.slice(), r:v.r.slice(), s:v.s,
+        line:`  ${weapon}: {p:[${v.p.map(f).join(',')}], r:[${v.r.map(f).join(',')}], s:${f(v.s)}},`}; },
     /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
     get aimOff(){return aimOffNow()},
     /* 🎯 รอบ 490: จูน "เฉพาะกระบอกที่ถืออยู่" — กระบอกที่มีค่าแยก (AIM_BY_GUN) จะไม่ไปแตะค่ากลาง
