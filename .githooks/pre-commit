@@ -1,0 +1,61 @@
+#!/bin/sh
+# ============================================================
+# 🚦 กฎทองข้อ 10 — กัน "commit ทับงาน session คู่ขนาน"
+# เช็ก 2 อย่างก่อนปล่อยให้ commit ผ่าน:
+#   ① main มี commit ที่ HEAD ยังไม่มี  → ต้อง rebase ก่อน (ไม่งั้นวัดผลบนโค้ดคนละชุด)
+#   ② version.json ที่จะ commit ไม่ได้ใหม่กว่าของ main → เลข deploy ชนกัน
+# ข้ามชั่วคราว: SKIP_PARALLEL_CHECK=1 git commit ...
+# ปิดถาวร: git config --unset core.hooksPath
+# ============================================================
+[ -n "$SKIP_PARALLEL_CHECK" ] && exit 0
+
+GD=$(git rev-parse --git-dir 2>/dev/null) || exit 0
+# ระหว่าง rebase/merge/cherry-pick อย่าขวาง (กำลังแก้เรื่องนี้อยู่พอดี)
+for d in rebase-merge rebase-apply MERGE_HEAD CHERRY_PICK_HEAD; do
+  [ -e "$GD/$d" ] && exit 0
+done
+
+fail=0
+say(){ printf '%s\n' "$1" >&2; }
+
+# ── ① main เดินหน้าไปแล้วหรือยัง ─────────────────────────────
+for base in main origin/main; do
+  git rev-parse --verify -q "$base" >/dev/null 2>&1 || continue
+  [ "$(git rev-parse HEAD)" = "$(git rev-parse "$base")" ] && continue
+  if ! git merge-base --is-ancestor "$base" HEAD 2>/dev/null; then
+    n=$(git rev-list --count "HEAD..$base" 2>/dev/null)
+    say ""
+    say "🚦 กฎทองข้อ 10: มี session คู่ขนานลงงานไปแล้ว — $base นำหน้าอยู่ $n commit"
+    git log --oneline -3 "HEAD..$base" 2>/dev/null | sed 's/^/     /' >&2
+    say ""
+    say "   ▸ งานเรื่องเดียวกัน/ผลลัพธ์เดียวกัน → หยุด รอเขาเสร็จ แล้วทำเฉพาะส่วนที่ยังไม่สมบูรณ์"
+    say "   ▸ คนละเรื่อง (แค่ไฟล์ชนกัน)       → git rebase $base แล้ว **วัดผลซ้ำ** ก่อน commit"
+    fail=1
+    break
+  fi
+done
+
+# ── ② version.json ต้องใหม่กว่าของ main ─────────────────────
+num(){ sed -n 's/.*"v"[^"]*"[0-9-]*\.\([0-9]\{1,\}\)".*/\1/p' 2>/dev/null | head -1; }
+if git diff --cached --name-only | grep -qx 'version.json'; then
+  mine=$(git show :version.json 2>/dev/null | num)
+  for base in main origin/main; do
+    theirs=$(git show "$base:version.json" 2>/dev/null | num)
+    [ -n "$mine" ] && [ -n "$theirs" ] || continue
+    if [ "$mine" -le "$theirs" ]; then
+      say ""
+      say "🚦 version.json: .$mine ไม่ได้ใหม่กว่า $base (.$theirs) — เลข deploy จะชนกัน"
+      say "   ▸ บัมพ์เป็น .$((theirs + 1)) ขึ้นไป (ทำหลัง rebase เท่านั้น)"
+      fail=1
+      break
+    fi
+  done
+fi
+
+if [ "$fail" = 1 ]; then
+  say ""
+  say "   (ตั้งใจข้ามจริง ๆ: SKIP_PARALLEL_CHECK=1 git commit ...)"
+  say ""
+  exit 1
+fi
+exit 0

@@ -1,0 +1,32 @@
+#!/bin/sh
+# ============================================================
+# 🚦 กฎทองข้อ 10 (ต่อ) — กัน "เลขรอบชนกับ session คู่ขนาน"
+# เคสจริงรอบ 505: อีก session ลง "รอบ 505" บน main ระหว่างที่ session นี้กำลังทำ
+# → commit message ว่า "รอบ 505" เหมือนกัน ประวัติอ่านไม่รู้เรื่อง
+# เทียบเลขรอบในข้อความ commit กับเลขรอบสูงสุดที่มีอยู่แล้วใน handoff/TASKS.md ของ main
+# ข้ามชั่วคราว: SKIP_PARALLEL_CHECK=1 git commit ...
+# ============================================================
+[ -n "$SKIP_PARALLEL_CHECK" ] && exit 0
+
+MSG=$1
+[ -f "$MSG" ] || exit 0
+
+# เลขรอบที่กำลังจะ commit = เลขแรกที่เจอในบรรทัดหัวข้อ
+mine=$(head -1 "$MSG" | sed -n 's/.*รอบ \([0-9]\{1,\}\).*/\1/p')
+[ -n "$mine" ] || exit 0
+
+for base in main origin/main; do
+  git rev-parse --verify -q "$base" >/dev/null 2>&1 || continue
+  theirs=$(git show "$base:handoff/TASKS.md" 2>/dev/null \
+           | grep -o 'รอบ [0-9]\{1,\}' | grep -o '[0-9]\{1,\}' | sort -n | tail -1)
+  [ -n "$theirs" ] || continue
+  if [ "$mine" -le "$theirs" ]; then
+    printf '\n🚦 เลขรอบชน: กำลังจะ commit "รอบ %s" แต่ %s บันทึกถึงรอบ %s แล้ว\n' "$mine" "$base" "$theirs" >&2
+    printf '   ▸ ถ้าเป็น "งานเดียวกัน" → หยุด ให้ session นั้นทำให้เสร็จก่อน\n' >&2
+    printf '   ▸ ถ้าคนละเรื่อง → rebase แล้วเปลี่ยนเลขรอบตัวเองเป็น %s ขึ้นไป (ในโค้ด/คอมเมนต์/TASKS.md ด้วย)\n' "$((theirs + 1))" >&2
+    printf '\n   (ตั้งใจข้ามจริง ๆ: SKIP_PARALLEL_CHECK=1 git commit ...)\n\n' >&2
+    exit 1
+  fi
+  break
+done
+exit 0
