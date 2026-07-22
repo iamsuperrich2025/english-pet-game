@@ -203,6 +203,36 @@ function tickBreathFx(dt,now){
   if(breathVig<0.002) breathVig=0;
 }
 const ADS_BREATH=0.0060;                // แอมพลิจูดการแกว่งจากการหายใจ (เรเดียน)
+/* ============================================================
+   🔭🫨 รอบ 506: "กำลังขยายมีผลกับความนิ่งของภาพ" — ยิ่งซูมแรงยิ่งสั่นมาก ต้องพึ่งการกลั้นหายใจจริง
+   ⛔ เป็นตัวคูณบวกทับล้วน ๆ เหมือน SWAY (รอบ 501) / ADS_BOOST (รอบ 504)
+      **ไม่แก้ตัวเลขใน ADS_BY_GUN / GUN_VIEW / AIM_OFF / AIM_BY_GUN** และไม่แตะ ADS_BREATH/SWAY ค่าฐาน
+   ปัญหาเดิม: มุมแกว่งเท่ากันทุกระดับซูม แต่ในเลนส์ภาพถูกขยาย m เท่า → "ที่ตาเห็น" โตตาม m ตรง ๆ
+      (8× สั่นเป็น 2 เท่าของ 4× — เล็งเป้าไกลไม่ได้เลย) · แต่ถ้าหักล้างจนเท่ากันหมด ซูมก็ไม่มีราคาต้องจ่าย
+   ✅ ทางออก: กำหนดเป็น "การแกว่งที่อ่านได้ในเลนส์" (มุมจริง × กำลังขยาย) เทียบฐาน 4× แล้วถอยกลับเป็นมุมจริง
+        มุมจริง k(m) = read[m] × baseMag / m     (4× → k=1 = ค่าเดิมเป๊ะ)
+      กลั้นหายใจ: อยากได้ "ระดับที่อ่านได้" เท่ากันทุกซูม → steady(m) = hold / read[m]
+        (4× = 0.12 เท่าค่าเดิม · ซูมแรงกว่าได้ steady เล็กลงพอดีกับที่ภาพถูกขยาย)
+   🔧 จูนสด: InvasionWorld._t.setSwayMag({r6,r8,hold,gun,lerp}) · ดูค่า: _t.swayMag · ข้ามการไล่นุ่ม: _t.snapSwayMag()
+   ============================================================ */
+const SWAY_MAG={
+  read:{4:1.00, 6:1.12, 8:1.25},  // การแกว่งที่ "ตาเห็นในเลนส์" เทียบ 4× (มุมจริง × กำลังขยาย) — ซูมแรงสั่นมากขึ้นแต่ไม่ถึงกับเล็งไม่ได้
+  hold:0.12,                      // กลั้นหายใจแล้วเหลือกี่ส่วนของ "ที่ตาเห็นตอน 4× ไม่กลั้น" (= ค่า steady เดิม → 4× ไม่เปลี่ยนเลย)
+  gun:1,                          // ให้ตัวโมเดลปืนโยกตามตัวคูณเดียวกันกี่ % (0=ปืนโยกเท่าเดิม · 1=ตามเต็ม)
+  lerp:6.5                        // ความเร็วไล่ค่าตอนสลับกำลังขยาย (สลับแล้วต้องไม่กระตุก)
+};
+let swMagG=1, swHoldG=SWAY_MAG.hold;
+/* ไล่ตัวคูณทุกเฟรม (เรียกจาก tickAds) — คืนตัวคูณ "มุมแกว่งจริง" ปัจจุบัน
+   ปืนที่มีกำลังขยายระดับเดียว (ไรเฟิล 2×) ไม่มีอะไรให้เทียบ → คงค่าเดิมทั้งคู่ */
+function tickSwayMag(dt){
+  const L=magList(), multi=L.length>1;
+  const rd = multi ? (SWAY_MAG.read[curMag().m]||1) : 1;
+  const angT = multi ? rd*L[0].m/curMag().m : 1;
+  const a=Math.min(1, dt*SWAY_MAG.lerp);
+  swMagG+=(angT-swMagG)*a;
+  swHoldG+=((SWAY_MAG.hold/rd)-swHoldG)*a;
+  return swMagG;
+}
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด
    💥 รอบ 500: แยกค่าตามกระบอก (โครงเดียวกับ GUN_VIEW / AIM_BY_GUN / ADS_BY_GUN) หลังปืนโตขึ้น ~20%
@@ -3172,7 +3202,9 @@ function tickSway(dt,now){
   swAmp+=(tgt-swAmp)*Math.min(1, dt*(tgt>swAmp?SWAY.ampIn:SWAY.ampOut));
   if(!moving && swAmp<.0015){ swAmp=0; swPhase=0; }        // หยุดนิ่ง = คืนเข้าท่าเดิมสนิท
   if(swAmp>0) swPhase+=dt*Math.PI*2*(run?SWAY.runHz:SWAY.walkHz)*Math.max(spd,.35);
-  const damp=1-(1-SWAY.ads)*adsT;                          // เล็งอยู่ = แทบไม่โยก
+  /* 🔭 รอบ 506: ตอนเล็ง ตัวปืนโยกตามตัวคูณกำลังขยายเดียวกับกล้อง (ซูมแรง = มุมจริงเล็กลง ภาพจึงสั่นพอ ๆ กัน) */
+  const adsK=SWAY.ads*(1+(swMagG-1)*SWAY_MAG.gun);
+  const damp=1-(1-adsK)*adsT;                              // เล็งอยู่ = แทบไม่โยก
   const a=swAmp*damp, s=Math.sin(swPhase), c=Math.cos(swPhase*2);
   /* 🫁 หายใจ: เด่นตอนยืนนิ่ง (ตอนเดินถูกจังหวะก้าวกลบ) · เหนื่อยจากการวิ่ง = ชัดขึ้น */
   const bt=now*.001*Math.PI*2*SWAY.breathHz, bA=(1-Math.min(1,swAmp))*(1+fatigue*1.1)*damp;
@@ -3192,6 +3224,7 @@ function tickAds(dt,now){
   const target=(scoped && W.scope)?1:0;
   adsRaw=clamp(adsRaw + (target? dt/ADS_IN : -dt/ADS_OUT), 0, 1);
   adsT=smoothstep(adsRaw);
+  tickSwayMag(dt);        /* 🔭 รอบ 506: ไล่ตัวคูณความนิ่งตามกำลังขยาย (ต้องเดินทุกเฟรม ไม่ขึ้นกับ gunGrp) */
   /* 🌀 รอบ 464: อัปเดตแรงเฉื่อยจากการหันจอ (ทำก่อนตั้งท่าปืน) */
   if(gunGrp){
     let dY=yaw-lastYaw, dP=pitch-lastPitch;
@@ -3308,8 +3341,10 @@ function applyRecoil(dt){
 }
 function applyBreath(now){
   if(adsT<=0.02) return;
-  const steady=(holdBreath&&breathLeft>0)?0.12:1;
-  const amp=ADS_BREATH*adsT*steady;
+  /* 🔭 รอบ 506: มุมแกว่งจริงถูกคูณด้วย swMagG (ตามกำลังขยาย) · กลั้นหายใจใช้ swHoldG แทนค่าคงที่ 0.12
+     → "ที่ตาเห็นในเลนส์" = 4× ค่าเดิม · 6× +12% · 8× +25% และกลั้นหายใจแล้วนิ่งเท่ากันทุกซูม */
+  const steady=(holdBreath&&breathLeft>0)?swHoldG:1;
+  const amp=ADS_BREATH*adsT*steady*swMagG;
   camera.rotateX(Math.sin(now*0.0016)*amp);
   camera.rotateY(Math.cos(now*0.0011)*amp*0.8);
 }
@@ -6307,6 +6342,24 @@ window.InvasionWorld={
     snapAdsBoost(){ const magT=(magList().length>1)?(ADS_BOOST.mag[curMag().m]||0):0;
       adsZoomG=magT; adsBreathG=(holdBreath&&breathLeft>0&&adsT>0.5)?ADS_BOOST.breath:0;
       adsBoostG=adsZoomG+adsBreathG; return adsBoostG; },
+    /* 🔭🫨 รอบ 506: ความนิ่งตามกำลังขยาย — ดูสถานะ + จูนสด
+       ang = ตัวคูณ "มุมแกว่งจริง" · hold = steady ตอนกลั้นหายใจ · read = ที่ตาเห็นในเลนส์ (ang×m/baseMag) */
+    get swayMag(){ const L=magList(), m=curMag().m, f=n=>+n.toFixed(5);
+      return {weapon, mag:m, ang:f(swMagG), hold:f(swHoldG),
+        read:f(swMagG*m/L[0].m), readHold:f(swMagG*swHoldG*m/L[0].m),
+        cfg:JSON.parse(JSON.stringify(SWAY_MAG))}; },
+    setSwayMag(o){ o=o||{};
+      if(typeof o.r4==='number')SWAY_MAG.read[4]=o.r4;
+      if(typeof o.r6==='number')SWAY_MAG.read[6]=o.r6;
+      if(typeof o.r8==='number')SWAY_MAG.read[8]=o.r8;
+      ['hold','gun','lerp'].forEach(k=>{ if(typeof o[k]==='number')SWAY_MAG[k]=o[k]; });
+      return {cfg:JSON.parse(JSON.stringify(SWAY_MAG))}; },
+    /* ข้ามการไล่นุ่ม — ใช้ตอนวัด */
+    snapSwayMag(){ const L=magList(), multi=L.length>1;
+      const rd=multi?(SWAY_MAG.read[curMag().m]||1):1;
+      swMagG=multi? rd*L[0].m/curMag().m : 1; swHoldG=SWAY_MAG.hold/rd;
+      return {ang:swMagG, hold:swHoldG}; },
+    tickSwayMag,
     /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
     get aimOff(){return aimOffNow()},
     /* 🎯 รอบ 490: จูน "เฉพาะกระบอกที่ถืออยู่" — กระบอกที่มีค่าแยก (AIM_BY_GUN) จะไม่ไปแตะค่ากลาง
