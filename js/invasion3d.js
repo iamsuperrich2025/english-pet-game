@@ -750,6 +750,23 @@ const Snd={
     const g=c.createGain(); g.gain.setValueAtTime(.10,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08);
     this.noise(t+.02,.05,3000,.08); },                   // เสียงล็อกคม
+  /* 🎯 รอบ 469: เสียงกระสุนกระทบ "ตามวัสดุ" — ทราย(ตุบนุ่ม) · ปูน/หิน(แคร็กแหลม+เศษ) · โลหะยาน(ปิ๊ง)
+     ดังตามระยะเช่นเดียวกับปลอกกระสุน (ไกล = เบาลง) */
+  hitSand(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const near=Math.max(0,1-(dist||0)/60); if(near<=.02) return;
+    this.noise(t,.13,420,.075*near);
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(150,t);
+    o.frequency.exponentialRampToValueAtTime(60,t+.12);
+    const g=c.createGain(); g.gain.setValueAtTime(.05*near,t); g.gain.exponentialRampToValueAtTime(.001,t+.14);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.15); },
+  hitWall(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const near=Math.max(0,1-(dist||0)/60); if(near<=.02) return;
+    this.noise(t,.05,5200,.10*near);                       // แคร็กแหลมตอนกระทบ
+    this.noise(t+.05,.10,1600,.05*near);                   // เศษปูนร่วง
+    const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(520,t);
+    o.frequency.exponentialRampToValueAtTime(180,t+.07);
+    const g=c.createGain(); g.gain.setValueAtTime(.05*near,t); g.gain.exponentialRampToValueAtTime(.001,t+.09);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.10); },
   /* 🔔 รอบ 466: ปลอกกระสุนกระทบพื้น "กริ๊ง" — ดังตามระยะจากตัวเรา (ไกล = เบา+ทึบ) */
   shell(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const near=Math.max(0,1-(dist||0)/9);                 // เกิน 9 เมตรแทบไม่ได้ยิน
@@ -915,7 +932,7 @@ let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
 let sessionCoins=0, sessionWords=0, shake=0;
 let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
-let vmScene=null, vmCam=null, muzzleLight=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
+let vmScene=null, vmCam=null, muzzleLight=null, worldFlash=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
@@ -3058,6 +3075,16 @@ function boom(pos,scale,color){
   shake=Math.min(1.6, shake + .32*sc);
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(Math.min(220,60*sc));
 }
+/* 💨 รอบ 469: ฝุ่นฟุ้งเล็ก ๆ ตรงจุดกระสุนลง (ทราย/ปูน) */
+function dustPuff(pos){
+  for(let i=0;i<2;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({color:0xcdbb98,transparent:true,opacity:.5,
+      depthWrite:false,fog:true}));
+    sp.position.copy(pos); sp.scale.setScalar(.18); scene.add(sp);
+    fx.push({o:sp,kind:'smoke',t:0,life:rnd(.45,.8),sc:.18,a0:.45,
+             v:new THREE.Vector3(rnd(-.5,.5),rnd(.7,1.5),rnd(-.5,.5))});
+  }
+}
 function sparkAt(pos){
   const s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xfff0a0,transparent:true,opacity:1,
     blending:THREE.AdditiveBlending,depthWrite:false}));
@@ -3204,14 +3231,87 @@ function fireGun(now){
   const spd=W.mag?BULLET_SPD_R93:BULLET_SPD_RIFLE;
   const fly=Math.min(2.2, dist/spd);
   tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05,fly);
-  if(!hit) return;
+  if(!hit){
+    /* 🌍 รอบ 469: ไม่โดนยาน — ไปลงพื้น/กำแพง (มีเสียงตามวัสดุ + รอยกระสุนค้างไว้) */
+    const e=envHit(origin,dir,W.mag?900:500);
+    if(e) bullets.push({at:now+Math.min(2.2,e.dist/spd)*1000, env:e});
+    return;
+  }
   bullets.push({at:now+fly*1000, hit, dmg:W.dmg, msDmg:W.msDmg});
+}
+/* 🌍 รอบ 469: หาจุดที่กระสุนไปลงบน "สิ่งแวดล้อม" (ไม่ได้โดนยาน) — เดินตามวิถีทีละช่วง
+   เจอกำแพงตึกก่อน = 'wall' · ต่ำกว่าพื้น = 'sand' · ไม่เจอเลย = null */
+function envHit(origin,dir,maxD){
+  /* ⚡ คัดเฉพาะตึกที่ "อยู่ใกล้แนวยิง" ก่อน (คำนวณครั้งเดียวต่อนัด) แล้วค่อยเดินตามวิถี
+     ไม่งั้นต้องวน solids ทั้งแมพทุกช่วง 1.2 ม. = หนักเกินไปบนมือถือ */
+  const cand=[]; const hx=dir.x, hz=dir.z;
+  for(const o of solids){
+    const vx=o.x-origin.x, vz=o.z-origin.z;
+    const t=vx*hx+vz*hz; if(t<0||t>maxD) continue;
+    const px=vx-hx*t, pz=vz-hz*t;
+    if(px*px+pz*pz < (o.r+1)*(o.r+1)) cand.push(o);
+  }
+  const P=new THREE.Vector3(); const step=1.2;
+  for(let d=step; d<=maxD; d+=step){
+    P.copy(origin).addScaledVector(dir,d);
+    for(const o of cand){
+      if(P.y>26) continue;                                   // สูงเกินตึกแล้ว
+      const dx=P.x-o.x, dz=P.z-o.z;
+      if(dx*dx+dz*dz < o.r*o.r){
+        const n=new THREE.Vector3(dx,0,dz).normalize();
+        return {point:P.clone(), normal:n, kind:'wall', dist:d};
+      }
+    }
+    if(P.y<=terrainH(P.x,P.z)){
+      let lo=d-step, hi=d;
+      for(let i=0;i<6;i++){ const m=(lo+hi)/2; P.copy(origin).addScaledVector(dir,m);
+        if(P.y<=terrainH(P.x,P.z)) hi=m; else lo=m; }
+      P.copy(origin).addScaledVector(dir,hi);
+      return {point:P.clone(), normal:new THREE.Vector3(0,1,0), kind:'sand', dist:hi};
+    }
+  }
+  return null;
+}
+/* 🕳️ รอบ 469: รอยกระสุนค้างบนพื้นผิว — เก็บได้สูงสุด HOLE_MAX รอย (เก่าสุดหลุดออกก่อน)
+   ใช้ sprite แผ่นเดียวต่อรอย = เบามาก · ทรายเป็นหลุมฟุ้ง · ปูนเป็นรูเข้ม ๆ ขอบสว่าง */
+const HOLE_MAX=44; let holes=[], holeTex={};
+function holeTexture(kind){
+  if(holeTex[kind]) return holeTex[kind];
+  const cv=document.createElement('canvas'); cv.width=cv.height=64; const g=cv.getContext('2d');
+  if(kind==='sand'){
+    const grd=g.createRadialGradient(32,32,2,32,32,30);
+    grd.addColorStop(0,'rgba(58,44,28,.85)'); grd.addColorStop(.5,'rgba(96,76,48,.45)'); grd.addColorStop(1,'rgba(120,96,60,0)');
+    g.fillStyle=grd; g.beginPath(); g.arc(32,32,30,0,7); g.fill();
+  }else{
+    const grd=g.createRadialGradient(32,32,1,32,32,26);
+    grd.addColorStop(0,'rgba(12,12,14,.95)'); grd.addColorStop(.42,'rgba(20,20,22,.75)');
+    grd.addColorStop(.62,'rgba(215,205,190,.55)'); grd.addColorStop(1,'rgba(210,200,185,0)');
+    g.fillStyle=grd; g.beginPath(); g.arc(32,32,26,0,7); g.fill();
+  }
+  const t=new THREE.Texture(cv); t.needsUpdate=true; return (holeTex[kind]=t);
+}
+function bulletHole(point,normal,kind){
+  const size=(kind==='sand')?0.42:0.28;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(size,size),
+    new THREE.MeshBasicMaterial({map:holeTexture(kind),transparent:true,depthWrite:false,fog:true}));
+  m.position.copy(point).addScaledVector(normal,0.03);
+  m.lookAt(point.clone().addScaledVector(normal,1));
+  m.rotation.z=Math.random()*6.28;                       // หมุนสุ่ม ไม่ให้ดูซ้ำแบบ
+  scene.add(m); holes.push(m);
+  while(holes.length>HOLE_MAX){ const old=holes.shift(); scene.remove(old); old.geometry.dispose(); }
 }
 /* 🚀 รอบ 467: คิวกระสุนที่กำลังเดินทาง — ถึงเวลาแล้วค่อยเกิดผล */
 function tickBullets(now){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; if(now<b.at) continue;
     bullets.splice(i,1);
+    if(b.env){                                    // 🌍 กระสุนลงพื้น/กำแพง
+      const e=b.env, d=camera.position.distanceTo(e.point);
+      bulletHole(e.point,e.normal,e.kind);
+      if(e.kind==='sand'){ Snd.hitSand(d); dustPuff(e.point); }
+      else { Snd.hitWall(d); sparkAt(e.point); dustPuff(e.point); }
+      continue;
+    }
     const h=b.hit; sparkAt(h.point);
     if(h.type==='fighter'){ damageFighter(h.obj,b.dmg,now); Snd.ping(); }
     else if(h.type==='mother'){ damageMother(b.msDmg); }
@@ -4682,6 +4782,11 @@ function frame(dt,now){
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
+  if(worldFlash){                   // 🔥 รอบ 469: แสงแฟลชสาดฉากรอบตัว
+    const k=Math.max(0,(muzzleUntil-now)/90);
+    worldFlash.intensity=k*k*13;
+    if(k>0 && muzzle) worldFlash.position.copy(vmToWorld(muzzle));
+  }
   tickFx(dt);
   tickSelfShadow();                 // 🌤️ รอบ 466: เงาตัวเรา+ปืนทอดลงพื้น
   layoutCross();                  // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
@@ -4721,6 +4826,9 @@ function build(){
   const rim=new THREE.DirectionalLight(0x8aa4c8,.30); rim.position.set(-60,50,-90); scene.add(rim);
   buildTerrain();
   buildSelfShadow();                // 🌤️ รอบ 466
+  /* 🔥 รอบ 469: ไฟแฟลชปากลำกล้อง "ส่องฉากจริง" — พื้นทราย/กำแพงรอบตัวสว่างวาบตอนยิง
+     (คนละดวงกับ muzzleLight ที่อยู่ใน vmScene ซึ่งส่องเฉพาะตัวปืน) */
+  worldFlash=new THREE.PointLight(0xffc070,0,26,1.7); scene.add(worldFlash);
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
@@ -4911,7 +5019,7 @@ window.InvasionWorld={
     get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt},
     Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight},
     /* 🚀🔥🔓 รอบ 467 */
-    get bullets(){return bullets.length}, tickBullets, tickBarrelHeat,
+    get bullets(){return bullets.length}, tickBullets, tickBarrelHeat, envHit, bulletHole, get holes(){return holes.length},
     get boltHeld(){const r=gunModels.r93&&gunModels.r93.userData.boltRig; return !!(r&&r.held)}, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
