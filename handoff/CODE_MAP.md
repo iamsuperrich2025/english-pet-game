@@ -173,7 +173,7 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (5,068 บรรทัด · 280 รายการ)
+## js/invasion3d.js (5,072 บรรทัด · 280 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 14-64 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 65-99 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -193,22 +193,22 @@ makeHappy:73 · currentPetImg:84
 - 1702-2005 🤖 รอบ 424: จับชิ้นส่วนเข้าข้อต่อ "อัตโนมัติจากตำแหน่ง" (ผู้ใช้ไม่ต้องตั้งชื่อ)
 - 2006-2118 🚁🅿️ รอบ 434: เฮลิคอปเตอร์จอดในสนามรบ 5 ลำ (โมเดลจริง helicopter.glb — ผู้ใช้สั่ง)
 - 2119-2143 🔫 อาวุธในมือผู้เล่น (view model ติดกล้อง — เห็นปืนที่ถืออยู่แบบ Delta Force)
-- 2144-2268 🎯🔧 TUNE ZONE — ท่าถือปืน (แก้ที่นี่ที่เดียว · 3 บรรทัดล่างนี้เท่านั้น)
-- 2269-2417 🔧 รอบ 427: ยืดลำกล้องปืนหลัง export (ผู้ใช้: โมเดล R93 ลำกล้องสั้นไป)
-- 2418-3048 🔩 รอบ 447: ชักลูกเลื่อนแบบ SV-98/Delta Force (ผู้ใช้ส่งคลิปอ้างอิงมา)
-- 3049-3151 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
-- 3152-3417 🎯 ระบบยิงของผู้เล่น
-- 3418-3486 ⚔️ ดาเมจ / เงื่อนไขชนะ
-- 3487-3588 📖 คำศัพท์ + รอบเล่น
-- 3589-3640 🖥️ HUD
-- 3641-3769 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
-- 3770-3869 🚶 ผู้เล่น + AI + ลูป
-- 3870-3874 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
-- 3875-4033 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
-- 4034-4291 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
-- 4292-4749 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 4750-4798 🔁 ลูปหลัก
-- 4799-5068 ▶️ เข้า/ออกโลก
+- 2144-2272 🎯🔧 TUNE ZONE — ท่าถือปืน (แก้ที่นี่ที่เดียว · 3 บรรทัดล่างนี้เท่านั้น)
+- 2273-2421 🔧 รอบ 427: ยืดลำกล้องปืนหลัง export (ผู้ใช้: โมเดล R93 ลำกล้องสั้นไป)
+- 2422-3052 🔩 รอบ 447: ชักลูกเลื่อนแบบ SV-98/Delta Force (ผู้ใช้ส่งคลิปอ้างอิงมา)
+- 3053-3155 💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
+- 3156-3421 🎯 ระบบยิงของผู้เล่น
+- 3422-3490 ⚔️ ดาเมจ / เงื่อนไขชนะ
+- 3491-3592 📖 คำศัพท์ + รอบเล่น
+- 3593-3644 🖥️ HUD
+- 3645-3773 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
+- 3774-3873 🚶 ผู้เล่น + AI + ลูป
+- 3874-3878 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
+- 3879-4037 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
+- 4038-4295 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
+- 4296-4753 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 4754-4802 🔁 ลูปหลัก
+- 4803-5072 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
 MS_Y:44 · MS_HP:49 · MS_DMG_GUN:50 · BOARD_Y:53 · CORE_Y:55 · F_HP:58
@@ -230,33 +230,33 @@ mergeMeshList:1722 · faceModelForward:1763 · autoRigSoldier:1813 · fitSoldier
 makeHeli:1971 · HELI_ROTOR_NODES:2014 · HELI_TROTOR_NODES:2015 · HELI_LEN:2016 · HELI_DESERT:2017 · BOARD_DIST:2018
 START_MS:2019 · START_PHASES:2020 · HELI_PADS:2027 · SEAT_VIEWS:2035 · heliModel:2042 · buildHeliPads:2075
 padAt:2084 · movePad:2090 · startPhaseText:2095 · setSeatView:2102 · tickPads:2108 · ZERO_DIST:2158
-GUN_VIEW:2161 · GUN_POS:2165 · GUN_ROT:2166 · GUN_SCALE:2167 · useGunView:2169 · MUZZLE_Y:2175
-buildArms:2179 · buildRifleModel:2202 · buildR93Model:2223 · GUN_CUT:2278 · GUN_STRETCH:2279 · orientGunModel:2284
-stretchGunBarrel:2310 · mergeGunParts:2368 · forceGunForward:2393 · attachBoltHandle:2425 · tickBolt:2453 · tickBarrelHeat:2496
-muzzleSmoke:2505 · alignGunMuzzle:2525 · syncMuzzleAnchor:2561 · buildSelfShadow:2569 · SUN_DIR:2582 · tickSelfShadow:2583
-renderViewModel:2598 · vmToWorld:2614 · gunSil:2617 · setGunPose:2642 · buildGun:2670 · tickSwap:2755
-applyWeapon:2765 · swapWeapon:2774 · setScoped:2788 · smoothstep:2802 · tickAds:2804 · applyRecoil:2900
-applyBreath:2906 · scopeRadius:2916 · scopeRadiusNow:2928 · tickRange:2933 · layoutScope:2953 · scopeFovDeg:2985
-renderScopePass:2993 · cycleScopeMag:3021 · renderAmmo:3029 · syncWeaponBtns:3040 · boom:3052 · dustPuff:3079
-sparkAt:3088 · tracer:3095 · tickFx:3111 · AIM_OFF:3160 · aimOffNow:3164 · adsPosNow:3167
-aimPct:3171 · layoutCross:3173 · aimDir:3176 · fireGun:3184 · envHit:3244 · HOLE_MAX:3277
-holeTexture:3278 · bulletHole:3293 · tickBullets:3304 · RECOIL_PAT:3325 · RECOIL_RESET:3326 · addRecoil:3328
-startReload:3341 · tickReload:3349 · launchMissile:3354 · fireMissile:3369 · lockTarget:3385 · rayTarget:3395
-raySphere:3410 · damageFighter:3422 · dropFighter:3428 · openMothership:3453 · damageMother:3462 · killMother:3467
-flashScreen:3481 · myUid:3491 · leaderUid:3492 · isLeader:3497 · pickWord:3498 · setWord:3511
-adoptWord:3520 · applyShared:3529 · startWave:3550 · completeWord:3564 · renderWord:3592 · renderTarget:3601
-renderCoins:3612 · renderHp:3613 · renderHeat:3619 · renderMissiles:3625 · toastBan:3634 · bindInput:3644
-moveJoy:3760 · unlockMouse:3768 · tickPlayer:3773 · hurtPlayer:3851 · MAP_VIEW:3880 · mapToWorld:3881
-worldToMap:3882 · zoneName:3883 · buildMapShade:3897 · drawSpawnMap:3916 · safeSpawn:3991 · fitSpawnMap:4001
-openSpawnMap:4012 · applySpawnPick:4021 · RIDE_DIST:4044 · RIDE_UP:4045 · RIDE_OFF:4046 · rideableHelis:4047
-findRide:4053 · nearestRideable:4054 · ridePos:4064 · boardGunner:4071 · dismountGunner:4085 · tickGunner:4097
-updateGunnerBtn:4125 · heliCount:4135 · enterHeli:4140 · exitHeli:4171 · seatCamera:4192 · tickHeliFlight:4202
-syncBotHelis:4282 · netReady:4297 · netJoin:4301 · netSend:4314 · peerColor:4335 · nameSprite:4337
-peerRifle:4350 · attachPeerGun:4381 · peerInCover:4391 · peerRig:4395 · setPeerWeapon:4399 · peerBody:4400
-buildPeer:4432 · onPeer:4441 · dropPeer:4474 · netLeave:4481 · peerTick:4487 · renderBoard:4532
-sendChat:4549 · showPeerBubble:4556 · removePeerBubble:4562 · tickFighters:4568 · tickMother:4602 · spawnAlienShot:4630
-tickAlienShots:4642 · tickMissiles:4657 · tickSquad:4689 · tickHelis:4719 · fit:4753 · tick:4759
-frame:4767 · build:4802 · start:4849 · exitWorld:4941
+GUN_VIEW:2161 · GUN_POS:2169 · GUN_ROT:2170 · GUN_SCALE:2171 · useGunView:2173 · MUZZLE_Y:2179
+buildArms:2183 · buildRifleModel:2206 · buildR93Model:2227 · GUN_CUT:2282 · GUN_STRETCH:2283 · orientGunModel:2288
+stretchGunBarrel:2314 · mergeGunParts:2372 · forceGunForward:2397 · attachBoltHandle:2429 · tickBolt:2457 · tickBarrelHeat:2500
+muzzleSmoke:2509 · alignGunMuzzle:2529 · syncMuzzleAnchor:2565 · buildSelfShadow:2573 · SUN_DIR:2586 · tickSelfShadow:2587
+renderViewModel:2602 · vmToWorld:2618 · gunSil:2621 · setGunPose:2646 · buildGun:2674 · tickSwap:2759
+applyWeapon:2769 · swapWeapon:2778 · setScoped:2792 · smoothstep:2806 · tickAds:2808 · applyRecoil:2904
+applyBreath:2910 · scopeRadius:2920 · scopeRadiusNow:2932 · tickRange:2937 · layoutScope:2957 · scopeFovDeg:2989
+renderScopePass:2997 · cycleScopeMag:3025 · renderAmmo:3033 · syncWeaponBtns:3044 · boom:3056 · dustPuff:3083
+sparkAt:3092 · tracer:3099 · tickFx:3115 · AIM_OFF:3164 · aimOffNow:3168 · adsPosNow:3171
+aimPct:3175 · layoutCross:3177 · aimDir:3180 · fireGun:3188 · envHit:3248 · HOLE_MAX:3281
+holeTexture:3282 · bulletHole:3297 · tickBullets:3308 · RECOIL_PAT:3329 · RECOIL_RESET:3330 · addRecoil:3332
+startReload:3345 · tickReload:3353 · launchMissile:3358 · fireMissile:3373 · lockTarget:3389 · rayTarget:3399
+raySphere:3414 · damageFighter:3426 · dropFighter:3432 · openMothership:3457 · damageMother:3466 · killMother:3471
+flashScreen:3485 · myUid:3495 · leaderUid:3496 · isLeader:3501 · pickWord:3502 · setWord:3515
+adoptWord:3524 · applyShared:3533 · startWave:3554 · completeWord:3568 · renderWord:3596 · renderTarget:3605
+renderCoins:3616 · renderHp:3617 · renderHeat:3623 · renderMissiles:3629 · toastBan:3638 · bindInput:3648
+moveJoy:3764 · unlockMouse:3772 · tickPlayer:3777 · hurtPlayer:3855 · MAP_VIEW:3884 · mapToWorld:3885
+worldToMap:3886 · zoneName:3887 · buildMapShade:3901 · drawSpawnMap:3920 · safeSpawn:3995 · fitSpawnMap:4005
+openSpawnMap:4016 · applySpawnPick:4025 · RIDE_DIST:4048 · RIDE_UP:4049 · RIDE_OFF:4050 · rideableHelis:4051
+findRide:4057 · nearestRideable:4058 · ridePos:4068 · boardGunner:4075 · dismountGunner:4089 · tickGunner:4101
+updateGunnerBtn:4129 · heliCount:4139 · enterHeli:4144 · exitHeli:4175 · seatCamera:4196 · tickHeliFlight:4206
+syncBotHelis:4286 · netReady:4301 · netJoin:4305 · netSend:4318 · peerColor:4339 · nameSprite:4341
+peerRifle:4354 · attachPeerGun:4385 · peerInCover:4395 · peerRig:4399 · setPeerWeapon:4403 · peerBody:4404
+buildPeer:4436 · onPeer:4445 · dropPeer:4478 · netLeave:4485 · peerTick:4491 · renderBoard:4536
+sendChat:4553 · showPeerBubble:4560 · removePeerBubble:4566 · tickFighters:4572 · tickMother:4606 · spawnAlienShot:4634
+tickAlienShots:4646 · tickMissiles:4661 · tickSquad:4693 · tickHelis:4723 · fit:4757 · tick:4763
+frame:4771 · build:4806 · start:4853 · exitWorld:4945
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
