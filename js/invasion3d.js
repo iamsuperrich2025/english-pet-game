@@ -233,6 +233,59 @@ function tickSwayMag(dt){
   swHoldG+=((SWAY_MAG.hold/rd)-swHoldG)*a;
   return swMagG;
 }
+/* ============================================================
+   🫁💨 รอบ 508: "ลมหมดขณะยังกดกลั้นหายใจอยู่" — ปืนตกวูบแล้วหอบ ก่อนกลับสู่ปกติ
+   บทเรียนที่อยากให้เด็กได้: **เล็งให้จบก่อนลมหมด** — ปล่อยปุ่มเองก่อนหมดลม = ไม่มีโทษนี้เลย
+   ⛔ เป็นออฟเซ็ตบวกทับล้วน ๆ เหมือน SWAY (501) / ADS_BOOST (504) / SWAY_MAG (506)
+      **ไม่แก้ตัวเลขใน ADS_BY_GUN / GUN_VIEW / AIM_OFF / AIM_BY_GUN / ADS_BREATH / SWAY**
+   วิธีคิด:
+     • "ตกกี่ % ของจอ" ต้องเท่ากันทุกกำลังขยาย → แปลงจากสัดส่วนจอกลับเป็นมุมด้วย fov ปัจจุบันทุกเฟรม
+       θ = atan(2 × frac × tan(fov/2))   (8× fov แคบ → มุมเล็กลงเอง แต่ตาเห็นตกเท่ากัน)
+     • ใส่ที่ "กล้อง" เหมือนแรงถอย → ตัวปืนตกตามไปด้วยทั้งภาพ (ทิศกระสุนเทียบกากบาทไม่เปลี่ยน)
+       แล้วเติมให้ตัวปืนจิ้มลงอีกนิด (gunY/gunPitch) ให้รู้สึกว่า "แขนหมดแรง" ไม่ใช่แค่จอเลื่อน
+     • ช่วงหอบ = **ต่อยอด fatigue ตัวเดิม** (บวกเข้าเทอมเดียวกันใน tickSway) + คูณแอมป์ใน applyBreath
+       จึงไม่มีคลื่นหายใจชุดที่ 2 ซ้อนเข้ามา
+   🔧 จูนสด: InvasionWorld._t.setGasp({drop,dropIn,dropOut,mul,hold,ease,fat,gunY,gunPitch})
+             ดูค่า: _t.gasp · ยิงจังหวะหอบเองตอนวัด: _t.fireGasp() · เคลียร์: _t.clearGasp()
+   ============================================================ */
+const GASP={
+  drop:0.008,      // ตกลงกี่ส่วนของความสูงจอ (0.8% — อยู่กลางกรอบ 0.6–1.0% ที่ผู้ใช้ขอ)
+  dropIn:0.25,     // เวลาตกลง (วินาที) — วูบเร็วพอให้ตกใจ
+  dropOut:0.80,    // เวลาคืนขึ้นนุ่ม ๆ (วินาที)
+  mul:1.8,         // แกว่งของภาพในเลนส์แรงขึ้นกี่เท่าตอนหอบ (1.5–2)
+  hold:1.00,       // หอบเต็มแรงกี่วินาที
+  ease:0.70,       // แล้วค่อยคลายลงภายในกี่วินาที
+  fat:0.60,        // บวกเข้า fatigue เดิมเท่าไร (ทำให้ "ตัวโมเดลปืน" โยกแรงขึ้นด้วย)
+  gunY:0.012,      // ตัวปืนจิ้มลงเพิ่ม (หน่วยโลก) ตอนตกสุด
+  gunPitch:0.010   // ตัวปืนก้มปลายลงเพิ่ม (เรเดียน) ตอนตกสุด
+};
+let gaspTime=-1, gaspDrop=0, gaspShake=0;   // gaspTime<0 = ไม่มีจังหวะหอบอยู่
+function fireGasp(){ gaspTime=0; }
+function clearGasp(){ gaspTime=-1; gaspDrop=0; gaspShake=0; }
+/* ไล่ซองจังหวะทุกเฟรม (เรียกจาก tickAds) — จบแล้วรีเซ็ตกลับเป็น 0 สนิท */
+function tickGasp(dt){
+  if(gaspTime<0) return;
+  gaspTime+=dt;
+  const t=gaspTime;
+  gaspDrop = t<GASP.dropIn ? smoothstep(t/GASP.dropIn) : 1-smoothstep((t-GASP.dropIn)/GASP.dropOut);
+  gaspShake = t<GASP.hold ? 1 : 1-smoothstep((t-GASP.hold)/GASP.ease);
+  if(gaspDrop<0) gaspDrop=0;
+  if(gaspShake<0) gaspShake=0;
+  if(gaspDrop<=0 && gaspShake<=0) clearGasp();
+}
+/* ตัวคูณแอมป์การแกว่ง (1 = ปกติ) — ใช้ทั้งใน applyBreath และ tickSway */
+function gaspMul(){ return 1+(GASP.mul-1)*gaspShake; }
+/* มุมกดกล้องลงตอนนี้ (เรเดียน) — คิดจาก fov ปัจจุบัน ให้ "ตกกี่ % ของจอ" เท่ากันทุกกำลังขยาย */
+function gaspPitchNow(){
+  if(gaspDrop<=0 || !camera) return 0;
+  const half=Math.tan((camera.fov||60)*Math.PI/360);
+  return Math.atan(2*GASP.drop*gaspDrop*half);
+}
+/* ใส่ที่กล้องหลัง applyBreath (แนวเดียวกับแรงถอย — ทิศกระสุนเทียบกากบาทไม่ขยับ) */
+function applyGasp(){
+  const p=gaspPitchNow();
+  if(p) camera.rotateX(-p);
+}
 /* 💥 รอบ 423: แรงถอยตอนยิง — ปืนเด้งขึ้นแล้วค่อยๆ กลับเข้าเป้า (ภาพในเลนส์สะบัดตามด้วย
    เพราะแรงถอยใส่ที่ "กล้อง" ไม่ใช่แค่โมเดลปืน) · R93 เด้งแรงกว่าไรเฟิลมาก ต้องเล็งใหม่ทุกนัด
    💥 รอบ 500: แยกค่าตามกระบอก (โครงเดียวกับ GUN_VIEW / AIM_BY_GUN / ADS_BY_GUN) หลังปืนโตขึ้น ~20%
@@ -3207,7 +3260,8 @@ function tickSway(dt,now){
   const damp=1-(1-adsK)*adsT;                              // เล็งอยู่ = แทบไม่โยก
   const a=swAmp*damp, s=Math.sin(swPhase), c=Math.cos(swPhase*2);
   /* 🫁 หายใจ: เด่นตอนยืนนิ่ง (ตอนเดินถูกจังหวะก้าวกลบ) · เหนื่อยจากการวิ่ง = ชัดขึ้น */
-  const bt=now*.001*Math.PI*2*SWAY.breathHz, bA=(1-Math.min(1,swAmp))*(1+fatigue*1.1)*damp;
+  /* 🫁💨 รอบ 508: ช่วงหอบหลังลมหมด = บวกเข้า "fatigue ตัวเดิม" ไม่สร้างคลื่นชุดที่ 2 ซ้อน */
+  const bt=now*.001*Math.PI*2*SWAY.breathHz, bA=(1-Math.min(1,swAmp))*(1+(fatigue+gaspShake*GASP.fat)*1.1)*damp;
   swLast={
     x: s*SWAY.x*a,
     y: (c*SWAY.y - Math.abs(s)*SWAY.y*.30)*a + Math.sin(bt)*SWAY.breathY*bA,
@@ -3225,6 +3279,7 @@ function tickAds(dt,now){
   adsRaw=clamp(adsRaw + (target? dt/ADS_IN : -dt/ADS_OUT), 0, 1);
   adsT=smoothstep(adsRaw);
   tickSwayMag(dt);        /* 🔭 รอบ 506: ไล่ตัวคูณความนิ่งตามกำลังขยาย (ต้องเดินทุกเฟรม ไม่ขึ้นกับ gunGrp) */
+  tickGasp(dt);           /* 🫁💨 รอบ 508: ซองจังหวะ "ลมหมดคาปุ่ม" (ตกวูบ + หอบ) */
   /* 🌀 รอบ 464: อัปเดตแรงเฉื่อยจากการหันจอ (ทำก่อนตั้งท่าปืน) */
   if(gunGrp){
     let dY=yaw-lastYaw, dP=pitch-lastPitch;
@@ -3268,6 +3323,8 @@ function tickAds(dt,now){
     const SW=tickSway(dt,now);
     gunGrp.position.x+=SW.x; gunGrp.position.y+=SW.y; gunGrp.position.z+=SW.z;
     gunGrp.rotation.x+=SW.rx; gunGrp.rotation.y+=SW.ry; gunGrp.rotation.z+=SW.rz;
+    /* 🫁💨 รอบ 508: ลมหมดคาปุ่ม — ตัวปืนจิ้มลงเพิ่มจากที่กล้องตกไปแล้ว (แขนหมดแรง) · จบซองแล้วเป็น 0 สนิท */
+    if(gaspDrop>0){ gunGrp.position.y-=GASP.gunY*gaspDrop; gunGrp.rotation.x-=GASP.gunPitch*gaspDrop; }
     /* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดลง-ยกขึ้นเป็นรูประฆังคว่ำ (0→1→0) */
     const sw2=tickSwap(now);
     if(sw2>0){ gunGrp.position.y-=0.30*sw2; gunGrp.position.z+=0.06*sw2;
@@ -3320,8 +3377,12 @@ function tickAds(dt,now){
   wrapEl.classList.toggle('scoped',on);
   if(on) layoutScope();
   /* ⑥ กลั้นหายใจ: แกว่งน้อยลงมาก แต่มีลิมิต หมดแล้วต้องผ่อน */
-  if(holdBreath && adsT>.5 && breathLeft>0) breathLeft=Math.max(0,breathLeft-dt/BREATH_MAX);
+  const drain=(holdBreath && adsT>.5 && breathLeft>0);
+  if(drain) breathLeft=Math.max(0,breathLeft-dt/BREATH_MAX);
   else breathLeft=Math.min(1,breathLeft+dt/BREATH_RECOVER);
+  /* 🫁💨 รอบ 508: หมดลม "ขณะยังกดค้างอยู่" เท่านั้นจึงโดนตกวูบ+หอบ
+     — ปล่อยปุ่มเองก่อนลมหมด drain เป็น false ตั้งแต่เฟรมนั้น จึงไม่มีทางเข้าเงื่อนไขนี้ (รางวัลคนจับจังหวะเป็น) */
+  if(drain && breathLeft<=0) fireGasp();
   if(breathLeft<=0) holdBreath=false;
   if(breathBtn){
     breathBtn.style.opacity=(0.45+0.55*breathLeft).toFixed(2);
@@ -3344,7 +3405,8 @@ function applyBreath(now){
   /* 🔭 รอบ 506: มุมแกว่งจริงถูกคูณด้วย swMagG (ตามกำลังขยาย) · กลั้นหายใจใช้ swHoldG แทนค่าคงที่ 0.12
      → "ที่ตาเห็นในเลนส์" = 4× ค่าเดิม · 6× +12% · 8× +25% และกลั้นหายใจแล้วนิ่งเท่ากันทุกซูม */
   const steady=(holdBreath&&breathLeft>0)?swHoldG:1;
-  const amp=ADS_BREATH*adsT*steady*swMagG;
+  /* 🫁💨 รอบ 508: ตอนหอบ (ลมหมดคาปุ่ม) แอมป์แรงขึ้นชั่วครู่แล้วคลายเอง */
+  const amp=ADS_BREATH*adsT*steady*swMagG*gaspMul();
   camera.rotateX(Math.sin(now*0.0016)*amp);
   camera.rotateY(Math.cos(now*0.0011)*amp*0.8);
 }
@@ -4500,6 +4562,7 @@ function tickPlayer(dt,now){
   }
   tickAds(dt,now);                                // 🎬 ยกปืนเล็ง/ถอยออก + ขอบเลนส์ + หายใจ
   applyBreath(now);
+  applyGasp();                                    // 🫁💨 รอบ 508: กล้องตกตอนลมหมดคาปุ่ม
   applyRecoil(dt);
   if(muzzle) muzzle.material.opacity = now<muzzleUntil?1:0;
   /* ความร้อนปืน */
@@ -6360,6 +6423,18 @@ window.InvasionWorld={
       swMagG=multi? rd*L[0].m/curMag().m : 1; swHoldG=SWAY_MAG.hold/rd;
       return {ang:swMagG, hold:swHoldG}; },
     tickSwayMag,
+    /* 🫁💨 รอบ 508: จังหวะ "ลมหมดคาปุ่ม" — ดูสถานะ + จูนสด + ยิงเองตอนวัด
+       t = วินาทีตั้งแต่ลมหมด (<0 = ไม่มี) · drop = ซองการตก 0..1 · shake = ซองการหอบ 0..1
+       dropDeg = มุมที่กดกล้องลงตอนนี้ (องศา) · dropPct = ตกกี่ % ของความสูงจอตอนนี้ */
+    get gasp(){ const f=n=>+n.toFixed(5);
+      return {t:f(gaspTime), drop:f(gaspDrop), shake:f(gaspShake), mul:f(gaspMul()),
+        dropDeg:f(gaspPitchNow()*180/Math.PI), dropPct:f(GASP.drop*gaspDrop*100),
+        fov:camera?+camera.fov.toFixed(3):null, cfg:JSON.parse(JSON.stringify(GASP))}; },
+    setGasp(o){ o=o||{};
+      ['drop','dropIn','dropOut','mul','hold','ease','fat','gunY','gunPitch']
+        .forEach(k=>{ if(typeof o[k]==='number')GASP[k]=o[k]; });
+      return {cfg:JSON.parse(JSON.stringify(GASP))}; },
+    fireGasp, clearGasp, tickGasp,
     /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
     get aimOff(){return aimOffNow()},
     /* 🎯 รอบ 490: จูน "เฉพาะกระบอกที่ถืออยู่" — กระบอกที่มีค่าแยก (AIM_BY_GUN) จะไม่ไปแตะค่ากลาง
