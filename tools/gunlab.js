@@ -18,6 +18,24 @@
      GunLab.shot()                   // ครอปเฉพาะโซนปืน 320px ≈ 8KB (เซฟลง Downloads/gunlab.jpg)
      GunLab.shot({full:true})        // ภาพเต็มจอ (ใช้เมื่อต้องดูองค์ประกอบทั้งเฟรมเท่านั้น)
    ค่าที่ได้จะถูกคืนมาเป็น 3 บรรทัดพร้อมก๊อปไปวางทับใน TUNE ZONE ของ js/invasion3d.js
+
+   ── 🆕 รอบ 502: 3 เครื่องมือลด token รอบจูนถัดไป ───────────────────────
+     GunLab.barrel()                 // ทิศลำกล้องจริง 3 มิติ (แนวราบ/ก้ม-เงย) + ปากกระบอกบนจอ %
+     GunLab.snapAim()                // 🎯 ดูดจุดเล็งไปบนแนวลำกล้อง — **ดูค่าเฉย ๆ ไม่แตะของจริง**
+     GunLab.snapAim({apply:true})    //    ใส่ค่าลงเกมสด ๆ (ยังไม่แก้ไฟล์ · ต้องให้ผู้ใช้สั่งก่อนถึงจะก๊อปลงไฟล์)
+     GunLab.yaw(-5)  GunLab.pitch(3) // 🔄 หมุนรอบแกนที่ผ่าน "จุดศูนย์กลางปืน" (สูตรรอบ 482–497)
+                                     //    yaw(+) = ปากกระบอกเบนขวา · pitch(+) = ปากกระบอกเงยขึ้น
+     GunLab.savePreset('a')          // 💾 เซฟท่าถือ+จุดเล็งของกระบอกที่ถืออยู่ (localStorage)
+     GunLab.loadPreset('a')          //    เรียกคืนมาเทียบไป-กลับ โดยไม่ต้องไล่จูนใหม่
+     GunLab.presets() / GunLab.delPreset('a')
+     GunLab.freeze(false)            // 🧊 คืนคลื่น sway/หายใจ (เครื่องมือ 3 ตัวบนหยุดคลื่นให้เองตอนวัด)
+
+   ⛔ **ค่าท่าถือ + จุดเล็งของ rifle/r93 ถูกล็อกไว้** (กล่อง 🔒 LOCKED เหนือ GUN_VIEW ใน js/invasion3d.js)
+      เครื่องมือในไฟล์นี้ **ไม่แก้ไฟล์เกมเอง** — แก้ได้แค่ค่าในหน่วยความจำของ preview เพื่อทดลอง
+      จะก๊อปบรรทัดที่คืนมาไปวางทับในไฟล์จริงได้ **เฉพาะเมื่อผู้ใช้สั่งในรอบนั้น** เท่านั้น
+      ทุกคำสั่งที่แตะค่าล็อกจะคืนธง `locked:true` และคำเตือนมาให้เสมอ
+      ถ้ากระบอกที่ถืออยู่ไม่มีจุดเล็งของตัวเอง (ไม่มีใน AIM_BY_GUN) จะได้ `shared:true`
+      = กำลังจะแตะ **AIM_OFF ค่ากลางที่ใช้ร่วมทุกกระบอก** (รอบ 488 เคยพลาดจนไรเฟิลเล็งเสีย)
    ============================================================ */
 window.GunLab = (function(){
   const T = ()=>window.InvasionWorld && window.InvasionWorld._t;
@@ -153,8 +171,184 @@ window.GunLab = (function(){
     return {file:name||'gunpair.jpg', kb:Math.round(b.length*3/4/1024)};
   }
 
+  /* ══════════════════════════════════════════════════════════════════
+     🆕 รอบ 502 — ชุดเครื่องมือที่ "ใช้ซ้ำทุกรอบจูน" (เดิมต้องส่งสูตรยาวเข้ามาใหม่ทุกครั้ง)
+     ══════════════════════════════════════════════════════════════════ */
+  const LOCKED = ['rifle','r93'];        // ค่าที่ผู้ใช้สั่งล็อก (รอบ 498) — เตือนทุกครั้งที่จะแตะ
+  function lockNote(w){ return LOCKED.indexOf(w)<0 ? null :
+    `⛔ ${w} เป็นค่าที่ผู้ใช้ล็อกไว้ (รอบ 498) — ก๊อปลงไฟล์ได้เฉพาะเมื่อผู้ใช้สั่งในรอบนี้`; }
+
+  /* 🧊 หยุดคลื่น sway/หายใจชั่วคราว (รอบ 501 ทำให้ปืนขยับตลอดเวลา → วัดค่าไม่นิ่ง)
+     เครื่องมือวัด/หมุน/preset ด้านล่างเรียกให้เองอัตโนมัติ — ค่าที่อ่านได้จึงเป็น "ท่าฐาน" ล้วน
+     คืนคลื่นเมื่อจูนเสร็จ: GunLab.freeze(false)  (หรือรีโหลดหน้า) */
+  const SW_AMP=['x','y','z','roll','pitch','yaw','breathY','breathPitch','breathRoll'];
+  let swSaved=null;
+  function freeze(on){
+    const t=T();
+    if(on===false){ if(swSaved){ t.setSway(swSaved); swSaved=null; t.step(1/60,2); } return {frozen:false}; }
+    if(!swSaved){ const c=t.sway.cfg, z={}; swSaved={};
+      SW_AMP.forEach(k=>{ swSaved[k]=c[k]; z[k]=0; });
+      t.setSway(z); t.step(1/60,3); }
+    return {frozen:true};
+  }
+
+  /* 📐 แกนหลักของปืนแบบ 3 มิติ (PCA ของจุดยอดโมเดล)
+     ⚠️ ทำไมต้อง 3 มิติ ไม่ใช่ฉายลงจอ: พานท้าย R93 อยู่ **หลังระนาบกล้อง** (z เป็นบวก)
+        ฉายลงจอแล้วค่าเพี้ยนหลักพัน% (บทเรียนรอบ 487) → หาแนวลำกล้องในสเปซกล้องก่อน
+        แล้วค่อยฉายเฉพาะจุดที่อยู่หน้ากล้อง
+     คืน: c=จุดศูนย์กลางปืน · dir=ทิศท้าย→ปาก (หน่วยเวกเตอร์) · muzzle/butt=ปลายทั้งสองข้าง · len=ความยาว */
+  function gunAxis(){
+    const t=T(), TH=window.THREE, m=t.gunModels[t.weapon];
+    if(!m) return null;
+    freeze();                                          // วัดบนท่าฐาน ไม่ให้คลื่น sway กวน
+    const rig=m.userData.boltRig, skip=new Set(); if(rig) rig.pivot.traverse(o=>skip.add(o));
+    t.gunGrp.updateMatrixWorld(true);
+    const v=new TH.Vector3(), pts=[];
+    m.traverse(o=>{ if(!o.isMesh||skip.has(o)||!o.geometry.attributes.position) return;
+      const pa=o.geometry.attributes.position;
+      for(let i=0;i<pa.count;i+=3){ v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld);
+        pts.push([v.x,v.y,v.z]); } });
+    if(pts.length<20) return null;
+    const c=[0,0,0]; pts.forEach(p=>{c[0]+=p[0];c[1]+=p[1];c[2]+=p[2];});
+    c[0]/=pts.length; c[1]/=pts.length; c[2]/=pts.length;
+    /* เมทริกซ์ความแปรปรวนร่วม 3×3 แล้วหาเวกเตอร์ลักษณะเฉพาะตัวหลักด้วย power iteration */
+    const C=[[0,0,0],[0,0,0],[0,0,0]];
+    pts.forEach(p=>{ const d=[p[0]-c[0],p[1]-c[1],p[2]-c[2]];
+      for(let i=0;i<3;i++) for(let j=0;j<3;j++) C[i][j]+=d[i]*d[j]; });
+    let d=[0,0,-1];
+    for(let k=0;k<80;k++){
+      const n=[0,0,0];
+      for(let i=0;i<3;i++) n[i]=C[i][0]*d[0]+C[i][1]*d[1]+C[i][2]*d[2];
+      const L=Math.hypot(n[0],n[1],n[2]); if(L<1e-12) break;
+      d=[n[0]/L,n[1]/L,n[2]/L];
+    }
+    if(d[2]>0) d=[-d[0],-d[1],-d[2]];                  // ให้ทิศชี้ออกหน้ากล้องเสมอ = ทางปากกระบอก
+    let lo=1e9,hi=-1e9;
+    pts.forEach(p=>{ const u=(p[0]-c[0])*d[0]+(p[1]-c[1])*d[1]+(p[2]-c[2])*d[2];
+      if(u<lo)lo=u; if(u>hi)hi=u; });
+    const at=u=>[c[0]+d[0]*u, c[1]+d[1]*u, c[2]+d[2]*u];
+    return {c, dir:d, muzzle:at(hi), butt:at(lo), len:+(hi-lo).toFixed(3), n:pts.length};
+  }
+
+  /* ฉายจุดในสเปซกล้อง (vmScene) ลงจอ → NDC + % ของจอ · คืน null ถ้าจุดอยู่หลังระนาบกล้อง */
+  function proj(p){
+    const t=T(), TH=window.THREE;
+    if(p[2]>-0.02) return null;
+    const P=(t.vmCam?t.vmCam:t.camera).projectionMatrix;
+    const v=new TH.Vector3(p[0],p[1],p[2]).applyMatrix4(P);
+    return {ndc:[+v.x.toFixed(4),+v.y.toFixed(4)],
+            pct:[+(50+v.x*50).toFixed(1), +(50-v.y*50).toFixed(1)]};
+  }
+
+  /* 🔭 ทิศลำกล้องจริง (องศา) + ปากกระบอกบนจอ — ใช้ยืนยันผลทุกครั้งหลังหมุน */
+  function barrel(){
+    const a=gunAxis(); if(!a) return null;
+    const d=a.dir, mz=proj(a.muzzle);
+    return {weapon:T().weapon,
+      yawDeg:+(Math.atan2(-d[0],-d[2])*180/Math.PI).toFixed(2),   // + = เบนซ้าย · − = เบนขวา
+      pitchDeg:+(Math.atan2(d[1],Math.hypot(d[0],d[2]))*180/Math.PI).toFixed(2), // + = เงย
+      muzzlePct: mz?mz.pct:null, center:a.c.map(n=>+n.toFixed(3)), len:a.len};
+  }
+
+  /* 🎯 ดูดจุดเล็งไปอยู่ "บนแนวลำกล้องจริง" ที่ระยะ zero (ค่าเริ่มต้น 50 ม. = ZERO_DIST)
+     ค่าเริ่มต้น = **ดูอย่างเดียว ไม่แตะอะไร** (ค่าจุดเล็งทั้ง 2 กระบอกถูกล็อก)
+     ใส่ {apply:true} ถึงจะเปลี่ยนค่าในเกมสด ๆ (ยังไม่แตะไฟล์)
+     ออปชัน: {dist, apply} */
+  function snapAim(o){
+    o=o||{}; const t=T(), a=gunAxis(); if(!a) return {err:'no gun'};
+    const dist=(typeof o.dist==='number')?o.dist:50;
+    const far=[a.muzzle[0]+a.dir[0]*dist, a.muzzle[1]+a.dir[1]*dist, a.muzzle[2]+a.dir[2]*dist];
+    const p=proj(far); if(!p) return {err:'แนวลำกล้องชี้ไปหลังกล้อง — ตรวจ pitch/yaw ก่อน'};
+    const q=t.setAimOff();                       // เรียกเปล่า = แค่ถามสถานะ ไม่เปลี่ยนค่า
+    const x=p.ndc[0], y=p.ndc[1], w=t.weapon;
+    const r={weapon:w, aim:[x,y], pct:p.pct, cur:q.aimOff, shared:q.shared,
+      locked:LOCKED.indexOf(w)>=0, applied:!!o.apply, dist,
+      line: q.shared?`const AIM_OFF=[${x},${y}];`:`AIM_BY_GUN={ ${w}:[${x},${y}] };`,
+      warn:[lockNote(w),
+        q.shared?'⚠️ กระบอกนี้ใช้ AIM_OFF ค่ากลางร่วมกับทุกกระบอก — แก้แล้วกระบอกอื่นเล็งเพี้ยนตาม (รอบ 488) ถ้าต้องการเฉพาะกระบอกนี้ให้เพิ่ม key ใน AIM_BY_GUN':null
+      ].filter(Boolean)};
+    if(o.apply){ t.setAimOff(y,x); t.step(1/60,2); r.check=check(); }
+    return r;
+  }
+
+  /* 🔄 หมุนปืนรอบแกนที่ผ่าน "จุดศูนย์กลางปืน" (สูตรที่ใช้ซ้ำทุกรอบใน 482–497)
+     ⚠️ ห้ามบวก yaw/pitch ใส่ Euler ตรง ๆ — Euler เรียง XYZ (pitch มาก่อน) แกนหมุนจะเอียงตาม pitch
+        ต้องคูณเมทริกซ์ T(C)·R(แกน,มุม)·T(−C) ทับของเดิม แล้ว decompose ใหม่ (p กับ r จึงเปลี่ยนพร้อมกัน)
+     yaw : แกนตั้ง (0,1,0) · pitch: แกนนอนที่ **ตั้งฉากกับแนวลำกล้อง** (ไม่ใช่แกน X ของจอ — บทเรียนรอบ 483) */
+  function spin(deg,kind){
+    const t=T(), TH=window.THREE, a=gunAxis(); if(!a) return {err:'no gun'};
+    const before=barrel();
+    const axis = (kind==='yaw') ? new TH.Vector3(0,1,0)
+                                : new TH.Vector3(a.dir[2],0,-a.dir[0]).normalize();
+    /* เครื่องหมาย: yaw(+) = ปากกระบอกไปขวา · pitch(+) = ปากกระบอกเงยขึ้น (วัดยืนยันกับเกมจริงแล้ว) */
+    const ang = -deg*Math.PI/180;
+    const C=a.c;
+    const M=new TH.Matrix4().makeTranslation(C[0],C[1],C[2])
+      .multiply(new TH.Matrix4().makeRotationAxis(axis,ang))
+      .multiply(new TH.Matrix4().makeTranslation(-C[0],-C[1],-C[2]));
+    const g=t.gunGrp; g.updateMatrixWorld(true);
+    M.multiply(g.matrixWorld);
+    if(g.parent){ g.parent.updateMatrixWorld(true);
+      M.premultiply(new TH.Matrix4().copy(g.parent.matrixWorld).invert()); }
+    const pos=new TH.Vector3(), q=new TH.Quaternion(), sc=new TH.Vector3();
+    M.decompose(pos,q,sc);
+    const e=new TH.Euler().setFromQuaternion(q,'XYZ');
+    const r=tune({x:pos.x,y:pos.y,z:pos.z,pitch:e.x,yaw:e.y,roll:e.z,s:sc.x});
+    const after=barrel();
+    r.turned={kind, ask:deg,
+      got:+( kind==='yaw' ? (before.yawDeg-after.yawDeg) : (after.pitchDeg-before.pitchDeg) ).toFixed(2)};
+    r.barrel=after; r.centerKept=a.c.map(n=>+n.toFixed(3));
+    const w=lockNote(t.weapon); if(w) r.warn=[w];
+    return r;
+  }
+  function yaw(deg){ return spin(deg,'yaw'); }        // + = ปากกระบอกเบนขวา (ท้ายปืนมาซ้าย)
+  function pitch(deg){ return spin(deg,'pitch'); }    // + = ปากกระบอกเงยขึ้น
+
+  /* 💾 preset ท่าถือ+จุดเล็ง ของกระบอกที่ถืออยู่ (เก็บใน localStorage)
+     ใช้เทียบท่าไป-กลับเร็ว ๆ โดยไม่ต้องไล่จูนใหม่ · ไม่แตะไฟล์เกม */
+  const PK='gunlab.preset.';
+  function savePreset(name){
+    const t=T(); if(!name) return {err:'ต้องตั้งชื่อ: GunLab.savePreset("a")'};
+    freeze();                                          // เซฟ "ท่าฐาน" ไม่ใช่ท่าที่คลื่น sway ดันอยู่
+    const p=t.gunPose, rec={weapon:t.weapon, p:p.p, r:p.r, s:p.s, aim:t.aimOff.slice(),
+      sil:t.gunSil(), at:new Date().toISOString().slice(0,16)};
+    try{ localStorage.setItem(PK+name, JSON.stringify(rec)); }catch(e){ return {err:String(e)}; }
+    return Object.assign({saved:name}, rec);
+  }
+  /* ออปชัน: {aim:false} = คืนแค่ท่าถือ ไม่แตะจุดเล็ง · {swap:false} = ห้ามสลับกระบอกเอง */
+  function loadPreset(name,o){
+    o=o||{}; const t=T(); freeze();
+    let rec; try{ rec=JSON.parse(localStorage.getItem(PK+name)||'null'); }catch(e){}
+    if(!rec) return {err:'ไม่มี preset ชื่อ '+name, have:presets().map(r=>r.name)};
+    const notes=[];
+    if(rec.weapon!==t.weapon){
+      if(o.swap===false) return {err:`preset นี้เป็นของ ${rec.weapon} แต่ถืออยู่ ${t.weapon}`};
+      t.applyWeapon(rec.weapon); t.step(1/60,2); notes.push('สลับเป็น '+rec.weapon+' ให้แล้ว');
+    }
+    const r=tune({x:rec.p[0],y:rec.p[1],z:rec.p[2],pitch:rec.r[0],yaw:rec.r[1],roll:rec.r[2],s:rec.s});
+    let aim=t.aimOff.slice(), shared=t.setAimOff().shared;
+    if(o.aim!==false && rec.aim){
+      if(shared) notes.push('⚠️ กระบอกนี้ใช้ AIM_OFF ค่ากลาง — คืนจุดเล็งจะกระทบกระบอกอื่นด้วย');
+      t.setAimOff(rec.aim[1],rec.aim[0]); aim=t.aimOff.slice();
+    }
+    const w=lockNote(rec.weapon); if(w) notes.push(w+' (ค่าที่โหลดอยู่ในหน่วยความจำ preview เท่านั้น)');
+    return Object.assign({loaded:name, aim, shared, note:notes}, r);
+  }
+  function presets(){
+    const out=[];
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+      if(k.indexOf(PK)!==0) continue;
+      try{ const v=JSON.parse(localStorage.getItem(k));
+        out.push({name:k.slice(PK.length), weapon:v.weapon, s:v.s, aim:v.aim, at:v.at}); }catch(e){}
+    }
+    return out;
+  }
+  function delPreset(name){ localStorage.removeItem(PK+name); return {del:name, left:presets().map(r=>r.name)}; }
+
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
   function done(){ try{ localStorage.removeItem('petVocabAdventure_v1'); }catch(e){} location.reload(); }
 
-  return {boot,tune,big,fwd,shot,pair,aim,check,match,target,done,sil:()=>T().gunSil(),pose:()=>T().gunPose};
+  return {boot,tune,big,fwd,shot,pair,aim,check,match,target,done,freeze,
+          gunAxis,barrel,snapAim,yaw,pitch,spin,savePreset,loadPreset,presets,delPreset,
+          sil:()=>T().gunSil(),pose:()=>T().gunPose};
 })();
