@@ -121,6 +121,13 @@ let adsRaw=0, adsT=0, holdBreath=false, breathLeft=1;
 const SPRINT_IN=0.22, SPRINT_OUT=0.14;
 const SPRINT_POS=[.16,-.20,.10], SPRINT_ROT=[-.62,.42,-.30];   // เลื่อนลง-เข้าใน · ก้มปากกระบอกลง
 let sprintRaw=0, sprintT=0, sprintHold=0, moveLen=0;
+/* 🌀 รอบ 464: ปืนตามการหันจอแบบมีมวล (weapon sway) — เก็บ yaw/pitch เฟรมก่อน แล้วให้ปืน
+   "ตามไม่ทัน" นิดหน่อย ค่อย ๆ ไหลกลับเข้าที่ (สปริง) · ยิ่งหันเร็ว ยิ่งเอียงตามแรง
+   ตอนส่องกล้องลดเหลือ 25% (เล็งอยู่ต้องนิ่ง) */
+let lagYaw=0, lagPitch=0, lastYaw=0, lastPitch=0;
+const LAG_GAIN=0.55, LAG_MAX=0.14, LAG_BACK=7.5;   // แรงตาม · เพดานองศา · ความเร็วไหลกลับ
+/* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดปืนลงแล้วยกกระบอกใหม่ขึ้นมา (สลับโมเดลตอนต่ำสุด) */
+let swapAt=0, swapTo=null; const SWAP_MS=420;
 /* 🫁 รอบ 449: วิ่งนาน = เหนื่อย — จอโยกเบาๆ + เสียงหายใจแรงเป็นจังหวะ (ฟื้นเองเมื่อหยุดวิ่ง)
    เริ่มรู้สึกเหนื่อยหลังวิ่งต่อเนื่อง ~PANT_FROM วินาที · เต็มที่ที่ ~PANT_FULL */
 const PANT_FROM=2.6, PANT_FULL=6.5, PANT_GAP=980;
@@ -307,6 +314,14 @@ const CSS=`
 #inv-scopeov i.h{left:6%;right:6%;top:50%;height:1.5px;margin-top:-.75px}
 #inv-scopeov i.v{top:6%;bottom:6%;left:50%;width:1.5px;margin-left:-.75px}
 #inv-scopeov i.m{left:50%;width:1.5px;height:7px;margin-left:-.75px;background:rgba(16,26,20,.8)}
+/* 📏 รอบ 464: จุดวัดระยะ + ตัวเลขกำกับ + ป้ายบอกระยะจริงใต้เรติเคิล */
+#inv-scopeov b.md{position:absolute;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;
+  background:rgba(16,26,20,.85)}
+#inv-scopeov u.mdl{position:absolute;left:50%;margin-left:7px;font:700 9px/1 system-ui,sans-serif;
+  color:rgba(16,26,20,.8);text-decoration:none}
+#inv-scopeov .rng{position:absolute;left:50%;top:88%;transform:translateX(-50%);white-space:nowrap;
+  font:800 11px/1 system-ui,sans-serif;color:#0f3b22;background:rgba(190,255,214,.55);
+  border-radius:6px;padding:2px 7px;letter-spacing:.02em}
 #inv-scopeov .dot{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;
   background:#e63b2a;box-shadow:0 0 5px rgba(230,60,40,.9)}
 /* 🎖️ ปุ่มขึ้นเป็นพลปืนประจำประตู — โผล่เฉพาะตอนมีเฮลิบินอยู่ใกล้ (คุมด้วย JS) */
@@ -526,7 +541,11 @@ function buildDom(){
     <div id="inv-vig"></div><div id="inv-hurt"></div><div id="inv-flash"></div>
     <div id="inv-scopeov">
       <div class="so-mask"></div>
-      <div class="so-ring"><i class="h"></i><i class="v"></i><i class="m" style="top:32%"></i><i class="m" style="top:40%"></i><i class="m" style="top:60%"></i><i class="m" style="top:68%"></i><span class="dot"></span></div>
+      <div class="so-ring"><i class="h"></i><i class="v"></i><i class="m" style="top:32%"></i><i class="m" style="top:40%"></i><i class="m" style="top:60%"></i><i class="m" style="top:68%"></i><span class="dot"></span>
+        <!-- 📏 รอบ 464: ขีดวัดระยะ (mil-dot) ใต้จุดกึ่งกลาง + ตัวเลขกำกับ -->
+        <b class="md" style="top:58%"></b><b class="md" style="top:66%"></b><b class="md" style="top:74%"></b><b class="md" style="top:82%"></b>
+        <u class="mdl" style="top:56.5%">1</u><u class="mdl" style="top:64.5%">2</u><u class="mdl" style="top:72.5%">3</u><u class="mdl" style="top:80.5%">4</u>
+        <span class="rng"></span></div>
     </div>
     <div id="inv-cross"><i class="t"></i><i class="b"></i><i class="l"></i><i class="r"></i><span class="dot"></span></div>
     <div id="inv-word"></div>
@@ -636,6 +655,7 @@ function buildDom(){
   ammoEl=document.getElementById('inv-ammo');
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
+  scopeRngEl=wrapEl.querySelector('#inv-scopeov .rng');            // 📏 รอบ 464
   mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
   mapCv=document.getElementById('inv-mapcv'); mapNameEl=document.getElementById('inv-mapname');
   document.getElementById('inv-go').addEventListener('click',()=>{
@@ -867,7 +887,7 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let vmScene=null, vmCam=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null;
+let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
@@ -2611,18 +2631,33 @@ function buildGun(){
   });
 }
 /* สลับปืน (เฉพาะตอนเดินเท้า — บนเฮลิใช้ปืนกลติดลำ) */
-function swapWeapon(){
-  if(inHeli) return;
-  setScoped(false);
-  weapon=(weapon==='rifle')?'r93':'rifle';
+/* 🔁 รอบ 464: ความลึกของท่าเปลี่ยนปืน 0→1→0 · สลับโมเดลจริงตอนปืนลงต่ำสุด (กลางทาง) */
+function tickSwap(now){
+  if(!swapAt) return 0;
+  const p=(now-swapAt)/SWAP_MS;
+  if(p>=1){ swapAt=0; swapTo=null; return 0; }
+  if(swapTo && p>=0.5){ applyWeapon(swapTo); swapTo=null; }
+  return Math.sin(Math.min(1,Math.max(0,p))*Math.PI);          // ระฆังคว่ำ
+}
+/* เปลี่ยนกระบอกจริง (โมเดล/ค่าท่าถือ/กระสุน/ปุ่ม) — แยกจากอนิเมชันเพื่อเรียกกลางทางได้ */
+function applyWeapon(w){
+  weapon=w;
   if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
   if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
-  useGunView();                                        // 🔫 รอบ 463: ท่าถือของปืนกระบอกนั้น
-  syncMuzzleAnchor();                                  // 🔥 รอบ 451: ไฟปากลำกล้องตามความยาวปืนที่ถือ
+  useGunView();
+  syncMuzzleAnchor();
   reloadAt=0; heat=0; overheat=false;
   renderHeat(); renderAmmo(); syncWeaponBtns();
-  const W=WEAPONS[weapon];
-  toastBan(`${W.icon} <b>${W.name}</b><br><span class="ib-sub">${weapon==='r93'
+}
+function swapWeapon(){
+  if(inHeli) return;
+  if(swapAt) return;                                   // 🔁 กันกดรัวระหว่างเปลี่ยนปืน
+  setScoped(false);
+  const next=(weapon==='rifle')?'r93':'rifle';
+  /* 🔁 รอบ 464: เริ่มท่าลดปืน แล้วสลับกระบอกจริงตอนต่ำสุด (tickSwap) ไม่สลับวาบทันทีแล้ว */
+  swapAt=performance.now(); swapTo=next;
+  const W=WEAPONS[next];
+  toastBan(`${W.icon} <b>${W.name}</b><br><span class="ib-sub">${next==='r93'
     ? 'ยิงทีละนัด แรงมาก — กด 🔭 ส่องกล้องก่อนยิงจะแม่นสุด · แม็ก 10 นัด'
     : 'ยิงรัวต่อเนื่อง เหมาะกับเป้าใกล้ๆ'}</span>`,2200);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
@@ -2649,6 +2684,17 @@ function tickAds(dt,now){
   const target=(scoped && W.scope)?1:0;
   adsRaw=clamp(adsRaw + (target? dt/ADS_IN : -dt/ADS_OUT), 0, 1);
   adsT=smoothstep(adsRaw);
+  /* 🌀 รอบ 464: อัปเดตแรงเฉื่อยจากการหันจอ (ทำก่อนตั้งท่าปืน) */
+  if(gunGrp){
+    let dY=yaw-lastYaw, dP=pitch-lastPitch;
+    if(dY>Math.PI) dY-=Math.PI*2; if(dY<-Math.PI) dY+=Math.PI*2;
+    lastYaw=yaw; lastPitch=pitch;
+    const k=(scoped?0.25:1)*LAG_GAIN;
+    lagYaw  =clamp(lagYaw  - dY*k, -LAG_MAX, LAG_MAX);
+    lagPitch=clamp(lagPitch- dP*k, -LAG_MAX, LAG_MAX);
+    const back=Math.min(1, dt*LAG_BACK);
+    lagYaw-=lagYaw*back; lagPitch-=lagPitch*back;
+  }
   /* ① ปืนถูกยกจากท่าพร้อมยิง → แนบไหล่เข้าแนวสายตา (lerp ทุกแกนพร้อมกัน) */
   if(gunGrp){
     const k=adsT;
@@ -2664,6 +2710,16 @@ function tickAds(dt,now){
       GUN_ROT[1]+(ADS_ROT[1]-GUN_ROT[1])*k,
       GUN_ROT[2]+(ADS_ROT[2]-GUN_ROT[2])*k - gunRecoil*.05);
     gunGrp.scale.setScalar(GUN_SCALE+(ADS_SCALE-GUN_SCALE)*k);
+    /* 🌀 รอบ 464: ปืนตามการหันจอ (ตำแหน่งไถลนิดหน่อย + เอียงตาม) */
+    gunGrp.position.x+=lagYaw*0.42;
+    gunGrp.position.y+=lagPitch*0.34;
+    gunGrp.rotation.y+=lagYaw*0.85;
+    gunGrp.rotation.x+=lagPitch*0.75;
+    gunGrp.rotation.z+=lagYaw*0.55;
+    /* 🔁 รอบ 464: ท่าเปลี่ยนปืน — ลดลง-ยกขึ้นเป็นรูประฆังคว่ำ (0→1→0) */
+    const sw2=tickSwap(now);
+    if(sw2>0){ gunGrp.position.y-=0.30*sw2; gunGrp.position.z+=0.06*sw2;
+               gunGrp.rotation.x-=0.55*sw2; gunGrp.rotation.z+=0.20*sw2; }
     /* 🎯 รอบ 451: การเลื่อนแกนลำกล้อง (alignGunMuzzle) ใช้เฉพาะ "ท่าถือ" — ตอนแนบไหล่เล็ง
        ต้องคลายกลับเป็นตำแหน่งเดิม ค่า ADS_POS/ADS_ROT ที่จูนไว้เดิมจึงยังตรงเป๊ะ */
     const am=gunModels[weapon], al=am&&am.userData.align;
@@ -2749,6 +2805,29 @@ function scopeRadius(){
 /* ③ รัศมีเลนส์ "ขณะนี้" — โตจาก 0 → เต็มวง ตามจังหวะยกปืน (ทำให้ขอบเลนส์ค่อยๆ ขยายเข้ามา) */
 function scopeRadiusNow(){ return Math.max(1,Math.round(scopeRadius()*(0.35+0.65*adsT))); }
 /* จัดขนาดหน้ากากดำ + วงเรติเคิลให้ตรงกับวงเลนส์ที่จะเรนเดอร์จริง */
+/* 📏 รอบ 464: บอก "ระยะถึงเป้าที่เล็งอยู่" ใต้เรติเคิล — ช่วยเด็กเลือกกำลังขยาย/เล็งเป้าไกล
+   ยิงเรย์เบา ๆ ทุก 6 เฟรมพอ (ไม่กินเฟรม) · ไม่โดนอะไร = ขีดกลาง */
+let rngTick=0, rngTxt='';
+function tickRange(){
+  if(!scopeRngEl||adsT<0.35) return;
+  if((rngTick++ % 6)!==0) return;
+  const dir=aimDir(), org=camera.position.clone();
+  const hit=rayTarget(org.clone(), dir, 900);
+  let t = hit ? camera.position.distanceTo(hit.point) : 0;
+  if(!t){                                   /* ไม่โดนยาน/ยานแม่ → วัดระยะถึง "พื้นดิน" แทน */
+    const P=new THREE.Vector3();
+    for(let d=6; d<=900; d+=6){
+      P.copy(org).addScaledVector(dir,d);
+      if(P.y<=terrainH(P.x,P.z)){ let lo=d-6, hi=d;
+        for(let i=0;i<6;i++){ const m=(lo+hi)/2; P.copy(org).addScaledVector(dir,m);
+          if(P.y<=terrainH(P.x,P.z)) hi=m; else lo=m; }
+        t=hi; break; }
+    }
+  }
+  t=Math.round(t);
+  const txt = t ? `📏 ${t} ม.` : '📏 —';
+  if(txt!==rngTxt){ rngTxt=txt; scopeRngEl.textContent=txt; }
+}
 function layoutScope(now){
   const R=scopeRadiusNow();
   /* 🫁 รอบ 462: ขอบเลนส์ "หายใจ" — วงขยับเข้า-ออกนิดเดียวตามจังหวะหายใจเดียวกับที่กล้องแกว่ง
@@ -4447,7 +4526,7 @@ function frame(dt,now){
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickFx(dt);
   layoutCross();                    // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
-  if(adsT>0.02) layoutScope(now);   // 🫁 รอบ 462: ขอบเลนส์หายใจ + วงโตตามกำลังขยาย
+  if(adsT>0.02){ layoutScope(now); tickRange(); }   // 🫁 ขอบเลนส์หายใจ · 📏 ระยะถึงเป้า
   renderer.render(scene,camera);
   renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
   if(adsT>0.12) renderScopePass();  // 🔭 วาดภาพขยายในวงเลนส์ (โผล่ตามจังหวะยกปืน ไม่ตัดภาพ)
@@ -4528,6 +4607,8 @@ function start(){
   fx.forEach(f=>scene.remove(f.o)); fx=[];
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
+  lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
+  swapAt=0; swapTo=null;
   msBeamAt=performance.now()+6000;
   renderHp(); renderHeat(); renderMissiles();
   fit();
@@ -4667,7 +4748,7 @@ window.InvasionWorld={
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
-    get weapon(){return weapon}, swapWeapon, setScoped, get scoped(){return scoped},
+    get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt}, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
     get magnify(){return curMag().m}, cycleScopeMag, scopeFovDeg,

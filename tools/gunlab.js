@@ -36,7 +36,7 @@ window.GunLab = (function(){
     InvasionWorld.start();
     await new Promise(r=>setTimeout(r,3500));            // รอโมเดล .glb โหลดครบ
     const t=T(); const want=weapon||'r93';
-    for(let i=0;i<4 && t.weapon!==want;i++) t.swapWeapon();
+    if(t.weapon!==want) t.applyWeapon(want);        // dev: สลับทันที ไม่ต้องรออนิเมชันเปลี่ยนปืน
     t.step(1/60,3);
     return {weapon:t.weapon, ...t.gunSil()};
   }
@@ -91,12 +91,12 @@ window.GunLab = (function(){
      วิธี: วนปรับทีละตัว — scale คุม len · y คุม yAtX0 · pitch คุม deg — สัก 12 รอบก็ลู่เข้าแล้ว
      ใช้: GunLab.match('rifle', GunLab.target('r93'))   */
   function target(w){ const t=T(); const cur=t.weapon;
-    while(t.weapon!==w) t.swapWeapon();
+    t.applyWeapon(w); t.step(1/60,2);
     const s=t.gunSil(); const r={deg:s.deg, len:s.len, yAtX0:s.yAtX0};
-    while(t.weapon!==cur) t.swapWeapon();
+    t.applyWeapon(cur); t.step(1/60,2);
     return r; }
   function match(w,goal,rounds){ const t=T();
-    while(t.weapon!==w) t.swapWeapon();
+    if(t.weapon!==w){ t.applyWeapon(w); t.step(1/60,2); }
     let p=t.gunPose, s=p.s, y=p.p[1];
     for(let i=0;i<(rounds||12);i++){
       let r=t.gunSil();
@@ -132,7 +132,7 @@ window.GunLab = (function(){
     const sheet=document.createElement('canvas'); sheet.width=cw*2; sheet.height=ch;
     const g=sheet.getContext('2d');
     ['rifle','r93'].forEach((wp,i)=>{
-      for(let k=0;k<4 && t.weapon!==wp;k++) t.swapWeapon();
+      if(t.weapon!==wp) t.applyWeapon(wp);
       t.step(1/60,3);
       const buf=new Uint8Array(W*H*4); gl.readPixels(0,0,W,H,gl.RGBA,gl.UNSIGNED_BYTE,buf);
       const big=document.createElement('canvas'); big.width=W; big.height=H;
