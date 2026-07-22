@@ -2703,7 +2703,15 @@ function applyBreath(now){
   camera.rotateY(Math.cos(now*0.0011)*amp*0.8);
 }
 /* 🔭 ขนาดวงเลนส์เป็นพิกเซล (อิงด้านสั้นของจอ — จอเตี้ยก็ยังเป็นวงกลมพอดี ไม่ล้น) */
-function scopeRadius(){ return Math.round(Math.min(innerWidth,innerHeight)*SCOPE_R); }
+/* 🔭 รอบ 461: จุดเล็งย้ายลงมา 73% ของจอ → วงเลนส์ต้องไม่ล้นขอบล่าง
+   จำกัดรัศมีไม่ให้เกินระยะจากจุดเล็งถึงขอบจอที่ใกล้ที่สุด (เว้นขอบ 8px) */
+function scopeRadius(){
+  const base=Math.min(innerWidth,innerHeight)*SCOPE_R;
+  const o=(typeof aimOffNow==='function')?aimOffNow():[0,0];
+  const cx=innerWidth*(.5+o[0]*.5), cy=innerHeight*(.5-o[1]*.5);
+  const room=Math.min(cx,innerWidth-cx,cy,innerHeight-cy)-8;
+  return Math.round(Math.max(40,Math.min(base,room)));
+}
 /* ③ รัศมีเลนส์ "ขณะนี้" — โตจาก 0 → เต็มวง ตามจังหวะยกปืน (ทำให้ขอบเลนส์ค่อยๆ ขยายเข้ามา) */
 function scopeRadiusNow(){ return Math.max(1,Math.round(scopeRadius()*(0.35+0.65*adsT))); }
 /* จัดขนาดหน้ากากดำ + วงเรติเคิลให้ตรงกับวงเลนส์ที่จะเรนเดอร์จริง */
@@ -2713,14 +2721,16 @@ function layoutScope(){
   /* ⚠️ หัวใจของ PiP: "นอกเลนส์ต้องยังเห็นภาพปกติ" — ห้ามถมดำทั้งรอบนอก
      (ถ้าถมดำจะกลายเป็นกล้องเต็มจอแบบเกมทั่วไป ผู้เล่นมองไม่เห็นภัยด้านข้าง = ผิดสเปก)
      ใส่แค่ "ขอบกระบอกเลนส์" เป็นเงามืดบางๆ วงแคบๆ แล้วจางหายไป */
+  const ap=aimPct();                                    // 🔭 รอบ 461: วงเลนส์ครอบ "จุดเล็ง" ไม่ใช่กลางจอ
   if(scopeMaskEl) scopeMaskEl.style.background=
-    `radial-gradient(circle at 50% 50%,`+
+    `radial-gradient(circle at ${ap.x}% ${ap.y}%,`+
     ` rgba(0,0,0,0) ${R-2}px,`+
     ` rgba(6,9,12,.88) ${R}px,`+
     ` rgba(6,9,12,.55) ${R+7}px,`+
     ` rgba(6,9,12,.18) ${R+13}px,`+
     ` rgba(0,0,0,0) ${R+20}px)`;
-  if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=(R*2)+'px'; }
+  if(scopeRingEl){ scopeRingEl.style.width=scopeRingEl.style.height=(R*2)+'px';
+    scopeRingEl.style.left=ap.x+'%'; scopeRingEl.style.top=ap.y+'%'; }
 }
 /* มุมกล้องของภาพในเลนส์ (องศา) ตามกำลังขยายที่เลือก
    กำลังขยายจริง = ขนาดเชิงมุมต่อพิกเซลของภาพหลัก ÷ ของภาพในเลนส์
@@ -2740,8 +2750,17 @@ function renderScopePass(){
   const oldFov=camera.fov, oldAspect=camera.aspect;
   const gunWas=gunGrp?gunGrp.visible:false;
   if(gunGrp) gunGrp.visible=false;              // ในเลนส์ไม่ควรเห็นตัวปืนตัวเอง
+  /* 🔭 รอบ 461: ภาพในเลนส์ต้องเป็น "จุดที่เล็งอยู่" → หมุนกล้องไปตาม AIM_OFF ก่อนเรนเดอร์
+     (คำนวณมุมจาก FOV เดิม ก่อนเปลี่ยนเป็น fov ของเลนส์) แล้วคืนค่าเดิมท้ายฟังก์ชัน */
+  const ao=aimOffNow(), tn=Math.tan(oldFov*Math.PI/360);
+  const oldQuat=camera.quaternion.clone();
+  if(ao[0]||ao[1]){
+    camera.rotateY(-Math.atan(ao[0]*tn*oldAspect));
+    camera.rotateX( Math.atan(ao[1]*tn));
+    camera.updateMatrixWorld(true);
+  }
   camera.fov=sf; camera.aspect=1; camera.updateProjectionMatrix();
-  const x=W/2-R, y=H/2-R;
+  const x=W*(.5+ao[0]*.5)-R, y=H*(.5+ao[1]*.5)-R;   // มุมล่างซ้ายของกรอบเลนส์ (viewport นับ y จากล่าง)
   renderer.setScissorTest(true);
   renderer.setViewport(x,y,R*2,R*2);
   renderer.setScissor(x,y,R*2,R*2);
@@ -2749,6 +2768,7 @@ function renderScopePass(){
   renderer.setScissorTest(false);
   renderer.setViewport(0,0,W,H);
   camera.fov=oldFov; camera.aspect=oldAspect; camera.updateProjectionMatrix();
+  camera.quaternion.copy(oldQuat); camera.updateMatrixWorld(true);   // 🔭 คืนมุมกล้องเดิม
   if(gunGrp) gunGrp.visible=gunWas;
 }
 /* 🔎 สลับกำลังขยาย 4× → 6× → 8× → 4× */
@@ -2860,9 +2880,12 @@ function tickFx(dt){
    ตอนส่องกล้อง (ADS) ค่อย ๆ กลับไปกลางเลนส์ตาม adsT (ไม่งั้นยิงผ่านกล้องแล้วต่ำกว่าที่เล็ง)
    จูนสั้น ๆ ตอน preview: GunLab.aim(-0.39) */
 const AIM_OFF=[0,-.46];   // รอบ 460: ผู้ใช้ขีดเส้นแดงรอบสาม — สูงขึ้นจาก 80% เป็น **73% ของจอ**
-/* ใช้เฉพาะตอนเดินเท้าถือปืนเอง — บนเฮลิ/พลปืนประจำประตู ยังเล็งกลางจอเหมือนเดิม */
-function aimOffNow(){ if(inHeli||riding) return [0,0];
-  const k=1-(adsT||0); return [AIM_OFF[0]*k, AIM_OFF[1]*k]; }
+/* ใช้เฉพาะตอนเดินเท้าถือปืนเอง — บนเฮลิ/พลปืนประจำประตู ยังเล็งกลางจอเหมือนเดิม
+   🔭 รอบ 461: ตอนส่องกล้อง "ไม่คืนกลับกลางจอ" แล้ว — วงเลนส์ย้ายมาครอบจุดเล็งแทน
+   (ของเดิมจางกลับเป็น 0 ทำให้กล้องขยายจุดกลางจอ ซึ่งไม่ใช่จุดที่กระสุนไป) */
+function aimOffNow(){ if(inHeli||riding) return [0,0]; return [AIM_OFF[0], AIM_OFF[1]]; }
+/* จุดเล็งในหน่วย % ของจอ (ใช้วางวงเลนส์/หน้ากาก CSS) */
+function aimPct(){ const o=aimOffNow(); return {x:50+o[0]*50, y:50-o[1]*50}; }
 let crossAt=null;
 function layoutCross(){ if(!crossEl) return;
   const o=aimOffNow(), key=o[0]+','+o[1]; if(key===crossAt) return; crossAt=key;
