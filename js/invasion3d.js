@@ -908,6 +908,9 @@ let px=0, pz=90, py=EYE, yaw=0, pitch=0.35;
 let word=null, letters=[];            // letters = ช่องตัวอักษรบนยานแม่ [{ch,mesh,down}]
 let mother=null, msArmor=MS_HP, msOpen=false, msDead=false, msBeamAt=0, msRecover=false;
 let fighters=[], fShots=[], myShots=[], missiles=[], fx=[], squad=[], helis=[];
+/* 🚀 รอบ 467: กระสุนมีเวลาเดินทาง — ความเร็ว (ม./วิ) + คิวกระสุนที่ยังลอยอยู่ */
+const BULLET_SPD_R93=760, BULLET_SPD_RIFLE=420;
+let bullets=[];
 let hp=PLAYER_HP, lastHurt=0;
 let heat=0, overheat=false, lastFire=0, firing=false, misLeft=MIS_MAX, misReloadAt=0;
 let sessionCoins=0, sessionWords=0, shake=0;
@@ -2433,6 +2436,13 @@ function attachBoltHandle(gunObj){
 function tickBolt(now){
   const rig=gunModels.r93&&gunModels.r93.userData?gunModels.r93.userData.boltRig:null;
   if(!rig) return 0;
+  /* 🔓 รอบ 467: "ลูกเลื่อนค้างเปิด" ตอนกระสุนหมด — เห็นได้ทันทีว่าต้องบรรจุใหม่
+     (ปืนจริงเป็นแบบนี้ · ค้างจนกว่าจะบรรจุเสร็จ แล้วดันกลับพร้อมเสียงล็อก) */
+  if(!boltAt && weapon==='r93' && r93Ammo<=0 && reloadAt){
+    rig.pivot.rotation.z=-1.05; rig.pivot.position.z=rig.z0-rig.L*0.15;
+    rig.ejected=rig.sndPull=rig.sndPush=false; rig.held=true; return -0.06;
+  }
+  if(rig.held && (r93Ammo>0||weapon!=='r93')){ rig.held=false; Snd.boltPush(); }   // ดันกลับตอนบรรจุเสร็จ
   if(!boltAt||weapon!=='r93'){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=rig.sndPull=rig.sndPush=false; return 0; }
   const p=(now-boltAt)/BOLT_MS;
   if(p>=1){ rig.pivot.rotation.z=0; rig.pivot.position.z=rig.z0; rig.ejected=rig.sndPull=rig.sndPush=false; return 0; }
@@ -2462,6 +2472,16 @@ function tickBolt(now){
              rv:new THREE.Vector3(rnd(-9,9),rnd(-9,9),0)});
   }
   return cant;
+}
+/* 🔥 รอบ 467: ปืนร้อนจัด (heat สูง) = ควันบาง ๆ ลอยจากลำกล้องเป็นระยะ จนกว่าจะเย็นลง
+   เตือนสายตาว่า "ใกล้โอเวอร์ฮีตแล้ว" โดยไม่ต้องอ่านแถบ (เด็กเล็กดูแถบไม่ทันตอนยิง) */
+let barrelSmokeAt=0;
+function tickBarrelHeat(now){
+  if(inHeli||riding) return;
+  const hot=heat/100;
+  if(hot<.55 || now<barrelSmokeAt) return;
+  barrelSmokeAt=now + (overheat? 260 : 620-hot*300);
+  muzzleSmoke(overheat?2:1);
 }
 /* 💨 รอบ 449: ควันปากลำกล้องหลังยิง — สไปรต์จางๆ 2–4 ก้อน ลอยขึ้นตามทิศเล็ง แล้วบานจางหาย
    วางในพิกัดโลกที่ "ปากลำกล้องจริง" (อ่านจากไฟล์ flash ที่ติดอยู่บนกลุ่มปืน) */
@@ -3032,16 +3052,21 @@ function sparkAt(pos){
   fx.push({o:s,t:0,life:.22,kind:'ball',sc:.5});
 }
 /* เส้นกระสุนวิ่ง (ใช้ทั้งของผู้เล่นและพันธมิตร) */
-function tracer(from,to,color,width){
+function tracer(from,to,color,width,fly){
   const dir=new THREE.Vector3().subVectors(to,from);
   const len=dir.length();
-  const m=new THREE.Mesh(new THREE.CylinderGeometry(width||.06,width||.06,len,5),
+  /* 🚀 รอบ 467: มีเวลาเดินทาง = วาด "ขีดสั้น" วิ่งไปตามวิถี (เห็นกระสุนพุ่งจริง)
+     ไม่มี = ลำแสงเต็มเส้นแบบเดิม (ปืนกลติดเฮลิ ฯลฯ) */
+  const seg = fly ? Math.min(len, Math.max(6, len*0.10)) : len;
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(width||.06,width||.06,seg,5),
     new THREE.MeshBasicMaterial({color:color||0xffe08a,transparent:true,opacity:.95,
       blending:THREE.AdditiveBlending,depthWrite:false}));
-  m.position.copy(from).addScaledVector(dir,.5);
   m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());
   scene.add(m);
-  fx.push({o:m,t:0,life:.10,kind:'fade'});
+  if(fly){ m.position.copy(from).addScaledVector(dir,seg/len*.5);
+           fx.push({o:m,t:0,life:fly,kind:'trace',from:from.clone(),dir:dir.clone(),len,seg}); }
+  else   { m.position.copy(from).addScaledVector(dir,.5);
+           fx.push({o:m,t:0,life:.10,kind:'fade'}); }
 }
 function tickFx(dt){
   for(let i=fx.length-1;i>=0;i--){
@@ -3069,6 +3094,12 @@ function tickFx(dt){
         } else { f.o.position.y=gy; f.v.set(0,0,0); }
       } }
     else if(f.kind==='fade'){ f.o.material.opacity=.95*(1-k); }
+    /* 🚀 รอบ 467: ขีดกระสุนวิ่งไปตามวิถีจนถึงเป้า */
+    else if(f.kind==='trace'){
+      const u=Math.min(1,k), d=f.len*u;
+      f.o.position.copy(f.from).addScaledVector(f.dir, Math.min(1,(d+f.seg*.5)/f.len));
+      f.o.material.opacity=.95*(1-u*u*.55);
+    }
     /* 💨 รอบ 449: ควันปากลำกล้อง — ลอยขึ้น บานออก จางหาย (ติดกล้องเพราะเป็นลูกของกล้อง) */
     else if(f.kind==='smoke'){
       f.o.position.addScaledVector(f.v,dt);
@@ -3153,11 +3184,25 @@ function fireGun(now){
   addRecoil();                                                 // 💥 เด้งหลังคำนวณวิถีแล้ว
   const hit=rayTarget(origin,dir,W.mag?4000:900);              // สไนเปอร์ยิงได้ไกลกว่ามาก
   const end=hit? hit.point : origin.clone().addScaledVector(dir,W.mag?2500:700);
-  tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05);
+  /* 🚀 รอบ 467: กระสุนไม่ถึงเป้าทันทีอีกแล้ว — วิถีถูกคำนวณตอนยิง (เล็งง่ายเหมือนเดิม)
+     แต่ "ประกายโดน/ดาเมจ/เสียงโดน" มาถึงตามเวลาเดินทางจริง (ระยะ ÷ ความเร็วกระสุน)
+     ยิงยานไกล 800 ม. ด้วย R93 = รอราว 1 วินาที → ได้ฟีลสไนเปอร์จริง โดยไม่ทำให้เด็กเล็งยากขึ้น */
+  const dist=origin.distanceTo(end);
+  const spd=W.mag?BULLET_SPD_R93:BULLET_SPD_RIFLE;
+  const fly=Math.min(2.2, dist/spd);
+  tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05,fly);
   if(!hit) return;
-  sparkAt(hit.point);
-  if(hit.type==='fighter'){ damageFighter(hit.obj,W.dmg,now); Snd.ping(); }
-  else if(hit.type==='mother'){ damageMother(W.msDmg); }
+  bullets.push({at:now+fly*1000, hit, dmg:W.dmg, msDmg:W.msDmg});
+}
+/* 🚀 รอบ 467: คิวกระสุนที่กำลังเดินทาง — ถึงเวลาแล้วค่อยเกิดผล */
+function tickBullets(now){
+  for(let i=bullets.length-1;i>=0;i--){
+    const b=bullets[i]; if(now<b.at) continue;
+    bullets.splice(i,1);
+    const h=b.hit; sparkAt(h.point);
+    if(h.type==='fighter'){ damageFighter(h.obj,b.dmg,now); Snd.ping(); }
+    else if(h.type==='mother'){ damageMother(b.msDmg); }
+  }
 }
 /* 💥 ใส่แรงถอย — เรียก "หลัง" คำนวณวิถีกระสุนแล้ว กระสุนจึงไปตรงที่เล็งไว้ตอนลั่นไก
    เล็งผ่านกล้องอยู่ = เด้งน้อยลง (พานท้ายชิดไหล่) · กลั้นหายใจช่วยอีกนิด */
@@ -4619,9 +4664,11 @@ function frame(dt,now){
   applyShared();                    // 🤝 รวมผลงานทุกคน → สู้ยานแม่ลำเดียวกัน
   netSend(false);                   // 🌐 ส่งตำแหน่งเราขึ้น DB
   tickReload(now);                  // 🎯 บรรจุกระสุน R93
+  tickBarrelHeat(now);              // 🔥 รอบ 467: ปืนร้อน = ควันลอยจากลำกล้อง
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
+  tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickFx(dt);
   tickSelfShadow();                 // 🌤️ รอบ 466: เงาตัวเรา+ปืนทอดลงพื้น
   layoutCross();                  // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
@@ -4704,7 +4751,7 @@ function start(){
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
   missiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail); }); missiles=[];
-  fx.forEach(f=>scene.remove(f.o)); fx=[];
+  fx.forEach(f=>scene.remove(f.o)); fx=[]; bullets=[];
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
   lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
@@ -4800,7 +4847,7 @@ window.InvasionWorld={
     /* ⛰️ รอบ 431: ตรวจว่ายานลูกบินเลียดเนินจริง (ระยะห่างจากพื้นของแต่ละลำ) */
     get fighterClear(){return fighters.map(f=>+(f.grp.position.y-terrainH(f.grp.position.x,f.grp.position.z)).toFixed(1))},
     get msOpen(){return msOpen}, get msArmor(){return msArmor},
-    get msDead(){return msDead}, get hp(){return hp}, get heat(){return heat}, get mis(){return misLeft},
+    get msDead(){return msDead}, get hp(){return hp}, get heat(){return heat}, set heat(v){heat=v}, get mis(){return misLeft},
     get coins(){return sessionCoins}, get words(){return sessionWords},
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
@@ -4849,7 +4896,10 @@ window.InvasionWorld={
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt},
-    Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight}, setScoped, get scoped(){return scoped},
+    Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight},
+    /* 🚀🔥🔓 รอบ 467 */
+    get bullets(){return bullets.length}, tickBullets, tickBarrelHeat,
+    get boltHeld(){const r=gunModels.r93&&gunModels.r93.userData.boltRig; return !!(r&&r.held)}, setScoped, get scoped(){return scoped},
     get ammo(){return r93Ammo}, get reloading(){return reloadAt>0}, startReload, tickReload,
     get fov(){return camera.fov}, scopeRadius, layoutScope, renderScopePass, stretchGunBarrel, mergeGunParts, orientGunModel,
     get magnify(){return curMag().m}, cycleScopeMag, scopeFovDeg,
