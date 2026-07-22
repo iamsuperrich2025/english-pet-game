@@ -50,7 +50,11 @@ const MS_HP=100;                          // พลังเกราะยา�
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* 🔠 แผงตัวอักษร + แกนพลังงาน — "แยกขนาดจากตัวลำ" เพราะถ้าผูกกับ MS_R ตัวอักษรจะโตตาม 5 เท่าจนล้นจอ
    ค่าพวกนี้เลือกจากมุมมองจริง: ยืนที่ z≈176 เงย ~17° แล้วเห็นแถวตัวอักษรกลางจอพอดี อ่านออกชัด */
-const BOARD_Y=150, BOARD_Z=-95, BOARD_CELL=42;    // ความสูง · ระยะ · ขนาดช่องต่อ 1 ตัวอักษร (441: ย่อ+ถอยห่าง ไม่บังลำ)
+/* 🪟 รอบ 477: ย้ายแถวตัวอักษรจาก "ห้อยใต้ท้องยาน" (y 150) ขึ้นไปแนบ "ลำหน้า" ให้อ่านเป็นหน้าต่างของยาน
+   ลำจริง (โมเดล) สูง 338 ม. หนา 304 ม. → หน้าลำอยู่ราว z −108 · ท้องลำ y ≈ 191 · กลางลำ y ≈ 360 */
+/* ⚠️ เพดานความสูง: ยกเกิน ~210 แถวหน้าต่างจะไปมุดใต้ "แผงคำ HUD" (#inv-word) กลางจอบน
+   จอเตี้ย 812×375 คือกรณีคับสุด (ขอบล่างแผง 66px) — 198 เหลือช่องว่าง ~8px */
+const BOARD_Y=198, BOARD_Z=-100, BOARD_CELL=42;   // ความสูง · ระยะ · ขนาดช่องต่อ 1 บานหน้าต่าง
 /* 🎯 รอบ 437: ย้ายแกนพลังงานไป "ห้อยใต้จมูกยานแม่" (เดิมลอยแยกคนละมุมฟ้ากับลำ เด็กงงว่าอะไรคืออะไร) */
 const CORE_Y=150, CORE_Z=-170, CORE_R=45;         // แกนพลังงาน (จุดที่ยิงโดน) — ใต้จมูกลำ มองเห็นพร้อมกัน
 
@@ -393,6 +397,17 @@ const CSS=`
   background:radial-gradient(circle at 34% 28%,#ffeec0,#d09a2a)}
 #inv-night.night{background:radial-gradient(circle at 34% 28%,#cfe0ff,#2b3f7a)}
 #inv-night:active{transform:scale(.94)}
+/* 🔦 รอบ 477: ปุ่มเปิด/ปิดไฟฉาย — **โผล่เฉพาะตอนฟ้ามืด** (กลางวันแถวปุ่มเท่าเดิม ไม่รกขึ้นเลย) */
+#inv-torch{position:absolute;left:228px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
+  font-size:20px;cursor:pointer;display:none;box-shadow:0 4px 10px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;
+  background:radial-gradient(circle at 34% 28%,#fff3c8,#c9a12a)}
+#inv-torch.off{background:radial-gradient(circle at 34% 28%,#c9ccd2,#4a5058);filter:grayscale(.5)}
+#inv-torch:active{transform:scale(.94)}
+/* 👤 ป้าย "กำลังย่อง" — บอกเด็กว่ากลยุทธ์ดับไฟได้ผลจริง */
+#inv-sneak{position:absolute;left:50%;top:78px;transform:translateX(-50%);z-index:6;display:none;white-space:nowrap;
+  background:rgba(10,26,20,.72);border:1.5px solid rgba(140,255,190,.55);border-radius:999px;padding:3px 12px;
+  color:#b6ffd2;font-weight:800;font-size:12.5px;text-shadow:0 1px 3px #000;pointer-events:none}
+#inv-sneak.on{display:block}
 #inv-chatbar{position:absolute;left:228px;bottom:14px;z-index:7;display:none;flex-wrap:wrap;gap:5px;max-width:60vw}
 #inv-chatbar.on{display:flex}
 #inv-chatbar button{border:none;border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer;
@@ -487,10 +502,11 @@ const CSS=`
   #inv-gunner{width:54px;height:54px;font-size:21px;right:88px;bottom:174px}
   #inv-swap{width:42px;height:42px;font-size:18px;left:110px}
   #inv-night{width:42px;height:42px;font-size:18px;left:158px}
+  #inv-torch{width:42px;height:42px;font-size:18px;left:206px}
   #inv-breath{width:42px;height:42px;font-size:18px;left:110px}
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
   #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
-  #inv-chatbar{left:206px}
+  #inv-chatbar{left:254px}
   #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
   #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
   .inv-card{padding:12px 16px}.inv-card h3{font-size:18px}.inv-card p{font-size:12.5px}
@@ -522,15 +538,16 @@ const CSS=`
   #inv-gunner{width:46px;height:46px;font-size:18px;right:70px;bottom:150px}
   #inv-swap{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-night{width:38px;height:38px;font-size:15px;left:144px;bottom:10px}
+  #inv-torch{width:38px;height:38px;font-size:15px;left:188px;bottom:10px}
   #inv-breath{width:38px;height:38px;font-size:16px;left:100px;bottom:10px}
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
   #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
-  #inv-chatbar{left:188px}
+  #inv-chatbar{left:232px}
   #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
   #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
   #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
   #inv-map{left:56px}
-  #inv-chatbar{left:188px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
+  #inv-chatbar{left:232px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
 }
 /* จอเตี้ยพิเศษ (≤330px · จอสี่เหลี่ยมยาวมาก) — พื้นที่ขวาไม่พอวางกระดานคะแนน+ปุ่มเฮลิพร้อมกัน
    → ซ่อนกระดานคะแนนมุมขวา (multiplayer ยังทำงานเต็ม เห็นเพื่อนในฉาก+ป้ายชื่อ+แชท) */
@@ -571,6 +588,7 @@ function buildDom(){
     <div id="inv-target"></div>
     <div id="inv-coins">🪙 +0</div>
     <div id="inv-cover">🏠 อยู่ในที่กำบัง — โดนยิงเบาลง</div>
+    <div id="inv-sneak">👤 กำลังย่อง — ศัตรูมองแทบไม่เห็นเรา</div>
     <div id="inv-quiz"></div>
     <div id="inv-stat">
       <div class="inv-lb">❤️ พลังชีวิต</div><div class="inv-bar" id="inv-hp"><span></span></div>
@@ -597,6 +615,7 @@ function buildDom(){
     <button id="inv-seat">👁️<small>มุมบิน</small></button>
     <button id="inv-map">🗺️</button>
     <button id="inv-night">🌙</button>
+    <button id="inv-torch">🔦</button>
     <button id="inv-chat">💬</button>
     <div id="inv-chatbar"></div>
     <div id="inv-selfmsg"></div>
@@ -680,6 +699,12 @@ function buildDom(){
   scopeMaskEl=wrapEl.querySelector('#inv-scopeov .so-mask');
   scopeRingEl=wrapEl.querySelector('#inv-scopeov .so-ring');
   scopeRngEl=wrapEl.querySelector('#inv-scopeov .rng');            // 📏 รอบ 464
+  torchBtn=document.getElementById('inv-torch');                   // 🔦 รอบ 477
+  sneakEl=document.getElementById('inv-sneak');
+  torchBtn.addEventListener('click',()=>{ flashOn=!flashOn;
+    torchBtn.classList.toggle('off',!flashOn);
+    toastBan(flashOn?'🔦 เปิดไฟฉาย<span class="ib-sub">มองเห็นทางชัด แต่ศัตรูก็เห็นเราชัดด้วย</span>'
+                    :'🌑 ดับไฟฉาย<span class="ib-sub">มืดลงมาก แต่ย่องเข้าหาศัตรูได้!</span>',1500); });
   nightBtn=document.getElementById('inv-night');                   // 🌙 รอบ 471
   nightBtn.addEventListener('click',()=>setDayMode(dayMode==='day'?'night':dayMode==='night'?'auto':'day'));
   mapBtn=document.getElementById('inv-map'); mapBoxEl=document.getElementById('inv-mapbox');
@@ -903,7 +928,8 @@ const Snd={
     this.rotor=[n,lfo]; this.rotorG=g; },
   stopRotor(){ if(this.rotor){ this.rotor.forEach(o=>{ try{o.stop()}catch(e){} }); this.rotor=null; this.rotorG=null; } },
 };
-function resumeAudio(){ const c=Snd.ac(); if(c&&c.state==='suspended') c.resume(); Snd.startHum(); }
+function resumeAudio(){ const c=Snd.ac(); if(c&&c.state==='suspended') c.resume(); Snd.startHum();
+  if(Snd.startNightAir) Snd.startNightAir(); }        // 🔇 รอบ 477: ลมกลางคืน (ดังตาม nightK)
 
 /* ============================================================
    🖼️ เทกซ์เจอร์วาดเอง (canvas) + ตัวช่วยโหลดภาพจริงถ้ามีไฟล์
@@ -1572,6 +1598,7 @@ function buildMothership(){
      ใส่ลบจะเงยขึ้นฟ้า ตัวอักษรถูกมองเฉียงจนแบน อ่านยาก (พลาดมาแล้ว วัดด้วย dot ได้ 0.50) */
   board.rotation.x=0.52;
   scene.add(board); msBoard=board;
+  buildWindowBar();                 // 🪟 รอบ 477: แถวบานหน้าต่าง 8 ช่อง (ตัวอักษรไปนั่งในบาน)
   /* ❌ รอบ 441 (ผู้ใช้: "เอาสี่เหลี่ยมผืนผ้านี้ออกไปเลย เพราะขวางยานแม่"):
      แผ่นหลังตัวอักษร (BoxGeometry 480×78×30 ม. สีเกือบดำ ลอยห่างแค่ ~220 ม.) กินจอเป็นแถบดำยาว
      บังตัวยานแม่ที่อยู่ไกลกว่า → เอาแผ่นออกถาวร เหลือเฉพาะ "ตัวอักษรเรืองแสง" ลอยเป็นแถว */
@@ -1587,23 +1614,43 @@ function buildMothership(){
     grp.add(obj); msLamps=[]; collectMsMats(grp);      // 🌙 รอบ 471: โมเดลจริงมาแทน → เก็บวัสดุใหม่
   });
 }
-/* วางช่องตัวอักษรตามความยาวคำ (คำยาว = ช่องเล็กลงพอดีแผง) */
+/* 🪟 รอบ 477 (ผู้ใช้: "ย้ายตัวอักษรจากใต้ท้องยาน ไปอยู่ตรงหน้าต่างยานแม่ บานละตัว
+   ถ้าใส่ครบแล้วบานไหนไม่มีก็ปล่อยว่าง") — สร้าง "แถวหน้าต่าง" ของยานเองเป็น WIN_N ช่องตายตัว
+   ⚠️ ทำไมต้องสร้างเอง: ยานแม่เป็นโมเดล Tripo **เมชเดียว 21,129 สามเหลี่ยม หน้าต่างเป็นลายในเทกซ์เจอร์**
+      ไม่มีวัตถุ "บานหน้าต่าง" ให้เกาะ → วางแถวช่องของเราแนบผิวลำหน้า ให้อ่านเป็นหน้าต่างของยาน
+   ⚠️ แถวนี้ยัง "ไม่หมุนตามลำ" เหมือนแผงเดิม (ลำหมุน dt*.02 ตลอด — ถ้าหมุนตาม เด็กจะอ่านไม่ออก)
+   คำในเกมยาวสุด 8 ตัว (pickWord กรอง [a-z]{3,8}) → WIN_N=8 พอดีทุกคำ */
+const WIN_N=8;
+let winPanes=[];                       // ช่องหน้าต่างถาวร (สร้างครั้งเดียว ใช้ซ้ำทุกคำ)
+function buildWindowBar(){
+  const cell=BOARD_CELL, gap=cell*0.22, total=WIN_N*cell+(WIN_N-1)*gap;
+  const frameM=new THREE.MeshBasicMaterial({color:0x0a0f16,fog:false});          // ขอบบานสีเหล็กมืด
+  const glassM=new THREE.MeshBasicMaterial({color:0x0e2233,fog:false});          // กระจกบานที่ยังว่าง
+  for(let i=0;i<WIN_N;i++){
+    const x=-total/2+cell/2+i*(cell+gap);
+    const fr=new THREE.Mesh(new THREE.PlaneGeometry(cell*1.12,cell*1.12),frameM);
+    fr.position.set(x,0,MS_R*0.020); msBoard.add(fr);
+    const gl=new THREE.Mesh(new THREE.PlaneGeometry(cell*0.94,cell*0.94),glassM);
+    gl.position.set(x,0,MS_R*0.024); msBoard.add(gl);
+    /* ตัวอักษรของบานนี้ — ซ่อนไว้ก่อน เปิดเฉพาะบานที่มีตัวอักษรของคำปัจจุบัน */
+    const lt=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),
+      new THREE.MeshBasicMaterial({map:letterPanelTex('A',false),transparent:true,fog:false}));
+    lt.position.set(x,0,MS_R*0.028); lt.visible=false; msBoard.add(lt);
+    winPanes.push({x,frame:fr,glass:gl,mesh:lt});
+  }
+}
+/* ใส่ตัวอักษรลงบานหน้าต่าง — บานที่เหลือปล่อยว่าง (กระจกเปล่า) */
 function layoutLetterPanels(){
-  letters.forEach(l=>{ msBoard.remove(l.mesh);
-    if(l.mesh.material.map) l.mesh.material.map.dispose();
-    l.mesh.material.dispose(); l.mesh.geometry.dispose(); });
   letters=[];
-  const n=word.en.length;
-  const cell=Math.min(BOARD_CELL, BOARD_CELL*6/n);   // คำยาว = ช่องเล็กลง ไม่ให้แถวกว้างเกินมุมมอง
-  const gap=cell*0.16, total=n*cell+(n-1)*gap;
-  /* (รอบ 441: ไม่มีแผ่นหลังตัวอักษรแล้ว — เหลือแต่ตัวอักษรเรืองแสง) */
-  word.en.split('').forEach((ch,i)=>{
-    /* fog:false = ตัวอักษรคมชัดเสมอแม้ยานแม่อยู่ไกลในหมอกฝุ่น (เป็นหัวใจการเล่น เด็กต้องอ่านออก) */
-    const m=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),
-      new THREE.MeshBasicMaterial({map:letterPanelTex(ch,false),transparent:true,fog:false}));
-    m.position.set(-total/2+cell/2+i*(cell+gap), 0, MS_R*0.028);
-    msBoard.add(m);
-    letters.push({ch,idx:i,mesh:m,down:false,blinkUntil:0});
+  winPanes.forEach((p,i)=>{
+    const ch=word.en[i];
+    if(!ch){ p.mesh.visible=false; p.glass.visible=true; return; }   // บานว่าง
+    p.mesh.visible=true; p.glass.visible=true;
+    const old=p.mesh.material.map;
+    p.mesh.material.map=letterPanelTex(ch,false);
+    p.mesh.material.opacity=1; p.mesh.material.needsUpdate=true;
+    if(old) old.dispose();
+    letters.push({ch,idx:i,mesh:p.mesh,down:false,blinkUntil:0});
   });
 }
 function setLetterLit(l,lit){
@@ -4862,8 +4909,9 @@ function tickFighters(dt,now){
     f.eng.scale.setScalar(4.2+Math.sin(now*.02+f.ang)*.6);
     /* ยิงใส่ผู้เล่น */
     if(now>f.shotAt){
-      f.shotAt=now+F_SHOT_GAP*rnd(.7,1.5);
-      spawnAlienShot(p.clone(),0x7dff9d,F_SHOT_DMG,F_SHOT_SPD);
+      /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย */
+      f.shotAt=now+F_SHOT_GAP*rnd(.7,1.5)*(sneaking?2.8:1);
+      if(!sneaking || Math.random()<.35) spawnAlienShot(p.clone(),0x7dff9d,F_SHOT_DMG,F_SHOT_SPD);
     }
   });
 }
@@ -5137,6 +5185,8 @@ const MODE_ICON={day:'☀️',night:'🌙',auto:'🔄'};
 let streetLamps=[];                           // 💡 ไฟถนนติดเองตอนมืด (ดูหมายเหตุใน buildStreetLamps)
 /* 🔦👾🔥🌠 รอบ 475: ของเล่นกลางคืนอีก 3 อย่าง — ไฟค้นหายานลูก · ถังไฟตามตรอก · ดาวตก */
 let beams=[], barrels=[], starShot=null, starAt=0, caughtAt=0, caughtBanAt=0;
+/* 🌫️🔇👤 รอบ 477: หมอกดึก · เสียงกลางคืน · ระบบย่อง (ดับไฟฉายแล้วศัตรูมองไม่ค่อยเห็น) */
+let mists=[], flashOn=true, sneaking=false, sneakBanAt=0, torchBtn=null, sneakEl=null, cricketAt=0;
 let hemiL=null, sunL=null, rimL=null, skyDome=null, starPts=null, moonSpr=null;
 let flashLight=null, nightBtn=null, msHullMats=[];
 let vmHemi=null, vmSun=null, vmRim=null;      // ไฟใน vmScene (ปืนในมือ) — หรี่พร้อมฉาก
@@ -5306,6 +5356,77 @@ function tickShootingStar(now){
   starShot.scale.set(30,30,1);
   starShot.material.opacity=Math.sin(t*Math.PI)*.9;
 }
+/* 🌫️ รอบ 477: หมอกลอยระดับพื้นตอนดึก — ทำให้ลำไฟฉาย/ไฟถนน "เห็นเป็นลำ" เด่นขึ้น
+   ⚠️ ไม่ใช้ fog เพิ่ม (fog แน่นขึ้นแล้วยานแม่กับตัวอักษรจะจมหาย เคยพลาดมาแล้วรอบก่อน ๆ)
+      ใช้แผ่นหมอกนุ่ม 10 แผ่น "เกาะรอบตัวผู้เล่น" แทน — ย้ายตามเราทุกเฟรม เลยใช้แค่ 10 ชิ้นก็พอทั้งแมป */
+function buildMist(){
+  mists=[]; const tex=glowTex();
+  for(let i=0;i<10;i++){
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),
+      new THREE.MeshBasicMaterial({map:tex,color:0x9fb8d8,transparent:true,opacity:0,
+        blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    m.rotation.x=-Math.PI/2; m.visible=false; scene.add(m);
+    mists.push({m,a:(i/10)*TAU,r:14+Math.random()*30,sp:.03+Math.random()*.05,sc:26+Math.random()*22});
+  }
+}
+function tickMist(now){
+  const k=Math.max(0,(nightK-.45)/.55);            // เริ่มมีหมอกตอน "ดึกจริง" เท่านั้น
+  mists.forEach(o=>{
+    if(k<=.02){ o.m.visible=false; return; }
+    o.a+=o.sp*.016;
+    const x=px+Math.cos(o.a)*o.r, z=pz+Math.sin(o.a)*o.r;
+    o.m.visible=true;
+    o.m.position.set(x,terrainH(x,z)+1.1+Math.sin(now/2600+o.a)*.35,z);
+    o.m.scale.set(o.sc,o.sc,1);
+    o.m.material.opacity=k*.10;
+  });
+}
+
+/* 🔇 รอบ 477: เสียงกลางคืน — ลมแผ่วลูปตลอด + จิ้งหรีดร้องเป็นระยะ
+   ⚠️ ต้องหยุดตอนออกจากโลก (exitWorld เรียก stopNightAir) ไม่งั้นเสียงค้างในแท็บ */
+Snd.nightAir=null; Snd.nightGain=null;
+Snd.startNightAir=function(){
+  if(!this.on()) return; const c=this.ac(); if(!c||this.nightAir) return;
+  const buf=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*.6;
+  const n=c.createBufferSource(); n.buffer=buf; n.loop=true;
+  const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=330;
+  const g=c.createGain(); g.gain.value=0;
+  n.connect(lp); lp.connect(g); g.connect(c.destination); n.start();
+  this.nightAir=n; this.nightGain=g;
+};
+Snd.stopNightAir=function(){
+  if(this.nightAir){ try{this.nightAir.stop()}catch(e){} this.nightAir=null; this.nightGain=null; }
+};
+Snd.cricket=function(v){
+  if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+  const o=c.createOscillator(); o.type='triangle'; o.frequency.value=4300+Math.random()*900;
+  const g=c.createGain(); g.gain.value=0;
+  for(let i=0;i<3;i++){                                  // ริ่ว ๆ 3 พยางค์ เหมือนจิ้งหรีดจริง
+    const st=t+i*.075;
+    g.gain.setValueAtTime(0,st);
+    g.gain.linearRampToValueAtTime(v,st+.012);
+    g.gain.exponentialRampToValueAtTime(.0008,st+.055);
+  }
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.26);
+};
+function tickNightSound(now){
+  if(Snd.nightGain) Snd.nightGain.gain.value=.045*nightK;   // ลมดังขึ้นตามความมืด
+  if(nightK<.55 || !Snd.on()) return;
+  if(!cricketAt){ cricketAt=now+900; return; }
+  if(now>cricketAt){ cricketAt=now+rnd(1400,4200); Snd.cricket(.012+Math.random()*.012); }
+}
+
+/* 👤 รอบ 477: ระบบย่อง — ดับไฟฉาย + ไม่ยิงสักพัก = ศัตรูมองแทบไม่เห็นเรา
+   (ให้เด็กมีทางเลือก "มืดแต่ปลอดภัย" คู่กับ "สว่างแต่โดนเล็ง" — ไม่ใช่แค่มืดแล้วลำบากอย่างเดียว) */
+function tickSneak(now){
+  const was=sneaking;
+  sneaking = nightK>.55 && !flashOn && !inHeli && !riding && (now-lastFire>2200);
+  if(sneakEl) sneakEl.classList.toggle('on',sneaking);
+  if(sneaking && !was && now-sneakBanAt>20000){ sneakBanAt=now;
+    toastBan('👤 กำลังย่อง!<span class="ib-sub">ดับไฟฉาย+ไม่ยิง = ศัตรูเล็งเราแทบไม่โดน · ยิงเมื่อไหร่ตำแหน่งแตกทันที</span>',2200); }
+  if(torchBtn) torchBtn.style.display = nightK>.25 ? 'block' : 'none';   // กลางวันซ่อนปุ่ม
+}
 /* 🔦 ไฟฉายติดปืน — ต้องอยู่ใน scene หลัก (ตัวปืนอยู่ vmScene คนละฉาก ส่องออกมาไม่ถึงพื้น) */
 function buildFlashlight(){
   flashLight=new THREE.SpotLight(0xfff0d2,0,72,.44,.55,1.2);
@@ -5351,6 +5472,9 @@ function tickNight(dt,now){
   tickSearchBeams(nw);              // 👾🔦 รอบ 475: ไฟค้นหาจากยานลูก
   tickBarrels(nw);                  // 🔥 รอบ 475: ถังไฟตามตรอก
   tickShootingStar(nw);             // 🌠 รอบ 475: ดาวตก
+  tickMist(nw);                     // 🌫️ รอบ 477: หมอกระดับพื้นตอนดึก
+  tickNightSound(nw);               // 🔇 รอบ 477: ลม + จิ้งหรีด
+  tickSneak(nw);                    // 👤 รอบ 477: ย่องตอนดับไฟฉาย
   tickFlashlight();
 }
 function applyNightLook(k){
@@ -5388,7 +5512,7 @@ function applyNightLook(k){
 }
 function tickFlashlight(){
   if(!flashLight) return;
-  const on = nightK>.04 && !inHeli && !riding && adsT<.35;    // ส่องกล้องแล้วหรี่ลง (ไม่ให้แสงบังเลนส์)
+  const on = nightK>.04 && flashOn && !inHeli && !riding && adsT<.35;   // ส่องกล้อง/ปิดสวิตช์ = ดับ
   if(!on){ flashLight.intensity=0; return; }
   flashLight.intensity=2.9*nightK;
   const d=aimDir();
@@ -5492,6 +5616,7 @@ function build(){
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildStreetLamps();               // 💡 รอบ 474: ดวงไฟบนเสาถนน (ติดเองตอนมืด)
   buildBarrelFires();               // 🔥 รอบ 475: ถังไฟตามตรอก (หมุดนำทางกลางคืน)
+  buildMist();                      // 🌫️ รอบ 477: แผ่นหมอกเกาะรอบตัวผู้เล่น
   buildTargets();                   // 🎯 รอบ 471: เป้าฝึกยิงตามปากตรอก/ริมกำแพง
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
   buildHeliPads();                  // 🚁 รอบ 434: เฮลิคอปเตอร์จอด 5 ลำ (เดินไปขึ้นได้)
@@ -5534,6 +5659,8 @@ function start(){
   setDayMode(state.invDayMode||(state.invNight?'night':'day'),true);          // 🌙 รอบ 471/474: จำโหมดที่เลือกไว้
   if(dayMode!=='auto') nightK=night?1:0;
   cycT=0; applyNightLook(nightK);
+  flashOn=true; sneaking=false; if(torchBtn) torchBtn.classList.remove('off');
+  if(sneakEl) sneakEl.classList.remove('on');
   mapPick=null; if(mapBoxEl) mapBoxEl.classList.remove('on');   // 🗺️ ล้างจุดที่เลือกไว้รอบก่อน
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
@@ -5612,7 +5739,7 @@ function exitWorld(){
   window.removeEventListener('keydown',keydownFn);
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
-  Snd.stopHum(); Snd.stopRotor();
+  Snd.stopHum(); Snd.stopRotor(); Snd.stopNightAir();   // 🔇 รอบ 477: กันเสียงลมค้างหลังออกจากโลก
   squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
   netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
@@ -5770,6 +5897,13 @@ window.InvasionWorld={
     get starInfo(){ return starShot?{vis:starShot.visible,o:+starShot.material.opacity.toFixed(2),
       y:+starShot.position.y.toFixed(0)}:null; },
     set starAt(v){ starAt=v; },
+    /* 🌫️🔇👤 รอบ 477 */
+    get flashOn(){return flashOn}, set flashOn(v){flashOn=v; if(torchBtn) torchBtn.classList.toggle('off',!v);},
+    get sneaking(){return sneaking},
+    get mistInfo(){ return {n:mists.filter(o=>o.m.visible).length,
+      o:mists[0]?+mists[0].m.material.opacity.toFixed(3):null}; },
+    get torchShown(){ return torchBtn && torchBtn.style.display==='block'; },
+    get nightAirGain(){ return Snd.nightGain?+Snd.nightGain.gain.value.toFixed(4):null; },
     /* 🧪 เดินเฟรมเองทีละก้าว — แท็บ preview ที่ไม่ได้อยู่หน้าจอ rAF ไม่วิ่ง (document.hidden) */
     stepFrame(dt){ frame(dt||1/60, performance.now()); },
     get night(){return night}, get nightK(){return nightK},
