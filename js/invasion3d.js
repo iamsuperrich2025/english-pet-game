@@ -3507,7 +3507,13 @@ const AIM_OFF=[0,-.46];   /* รอบ 460: ผู้ใช้ขีดเส้
 /* ใช้เฉพาะตอนเดินเท้าถือปืนเอง — บนเฮลิ/พลปืนประจำประตู ยังเล็งกลางจอเหมือนเดิม
    🔭 รอบ 461: ตอนส่องกล้อง "ไม่คืนกลับกลางจอ" แล้ว — วงเลนส์ย้ายมาครอบจุดเล็งแทน
    (ของเดิมจางกลับเป็น 0 ทำให้กล้องขยายจุดกลางจอ ซึ่งไม่ใช่จุดที่กระสุนไป) */
-function aimOffNow(){ if(inHeli||riding) return [0,0]; return [AIM_OFF[0], AIM_OFF[1]]; }
+/* 🎯 รอบ 490: **จุดเล็งแยกตามกระบอก** (ผู้ใช้สั่ง "R93 เท่านั้น" — รอบ 488 เคยพลาดไปแก้ค่ากลางจนไรเฟิลเสีย)
+   กระบอกที่ไม่มีชื่อในตารางนี้ → ใช้ AIM_OFF ค่ากลางเหมือนเดิมทุกประการ (ไรเฟิล = [0,−.46] ไม่เปลี่ยน)
+   R93: ผู้ใช้ขีดเส้นแดง 2 เส้นตัดกัน — จุดตัดอยู่ "สูงเท่ายอดกล้องส่อง · เยื้องซ้ายจากกากบาท"
+        วัดเทียบยอดปืน (58.9% ของจอ) และระยะกากบาท→ปากกระบอก ได้ ≈ (42.3%, 58.9%) ของจอ */
+const AIM_BY_GUN={ r93:[-0.154,-0.178] };
+function aimOffNow(){ if(inHeli||riding) return [0,0];
+  const a=AIM_BY_GUN[weapon]||AIM_OFF; return [a[0], a[1]]; }
 /* จุดเล็งในหน่วย % ของจอ (ใช้วางวงเลนส์/หน้ากาก CSS) */
 /* ตำแหน่งท่าแนบไหล่ที่ "เลื่อนไปตรงจุดเล็ง" แล้ว (ADS_POS เก็บค่าเทียบแกนเล็ง ไม่ใช่เทียบกลางจอ) */
 function adsPosNow(){
@@ -5989,9 +5995,13 @@ window.InvasionWorld={
     /* 🔧 รอบ 457: จูนท่าปืนด้วยคำสั่งสั้น (ดู TUNE ZONE + tools/gunlab.js) */
     gunSil, setGunPose,
     /* 🎯 รอบ 458: ตำแหน่งจุดเล็งบนจอ */
-    get aimOff(){return AIM_OFF.slice()},
-    setAimOff(y,x){ if(typeof y==='number')AIM_OFF[1]=y; if(typeof x==='number')AIM_OFF[0]=x; layoutCross();
-      return {aimOff:AIM_OFF.slice(), line:`const AIM_OFF=[${AIM_OFF[0]},${AIM_OFF[1]}];`}; },
+    get aimOff(){return aimOffNow()},
+    /* 🎯 รอบ 490: จูน "เฉพาะกระบอกที่ถืออยู่" — กระบอกที่มีค่าแยก (AIM_BY_GUN) จะไม่ไปแตะค่ากลาง
+       ⛔ อย่าแก้ AIM_OFF เพื่อปืนกระบอกเดียว (รอบ 488 ทำแล้วไรเฟิลเล็งเสีย) */
+    setAimOff(y,x){ const own=!!AIM_BY_GUN[weapon], a=own?AIM_BY_GUN[weapon]:AIM_OFF;
+      if(typeof y==='number')a[1]=y; if(typeof x==='number')a[0]=x; layoutCross();
+      return {weapon, aimOff:a.slice(), shared:!own,
+        line: own?`AIM_BY_GUN={ ${weapon}:[${a[0]},${a[1]}] };`:`const AIM_OFF=[${a[0]},${a[1]}];`}; },
     aimDir, layoutCross,
     /* 🎥🎯 รอบ 451 */
     get gunGrp(){return gunGrp}, get vmScene(){return vmScene}, get vmCam(){return vmCam},
