@@ -2362,18 +2362,32 @@ function poseSoldier(s,now){
   /* เปลี่ยนท่าเมื่อไหร่ ปรับความสูงให้เท้าแตะพื้นใหม่ (ท่าเดินวัดตอนจังหวะกลางก้าว) */
   if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
 }
-function makeSoldier(x,z,crouch,kind){
+/* 🔥 รอบ 521: ไฟปากลำกล้องสำหรับโมเดล baked (ปืนอบในตัว ไม่มี flash sprite ในตัว)
+   วางที่ "ปลายปืนโดยประมาณ" ใน local ของกลุ่มทหาร (หันหน้า −Z) แยกตามปืน · ค่าจูนจาก strip รอบ 521 */
+const MUZZLE_BY_WEAPON={ r93:[1.398,1.317,-0.520], rifle:[0.705,1.281,-0.449] };   /* วัดปลายลำกล้องจริงจาก geometry รอบ 521 (grp-local · ยืนยัน strip) */
+function makeSoldierFlash(weapon){
+  const f=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffe0a0,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const m=MUZZLE_BY_WEAPON[weapon]||MUZZLE_BY_WEAPON.rifle;
+  f.scale.setScalar(weapon==='r93'?0.55:0.45); f.position.set(m[0],m[1],m[2]);
+  return f;
+}
+function makeSoldier(x,z,crouch,kind,weapon){
   kind=kind||'a';
+  weapon=weapon||'r93';                                /* 🔫 รอบ 521: ปืนที่ทหารคนนี้ถือ (kind 'c' เท่านั้น) */
   const rig=buildSoldierRig();
-  const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind,
+  const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind, weapon:weapon,
            legOnly:(kind==='c'),                     /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → ขยับเฉพาะขา */
            mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
            shotAt:performance.now()+rnd(0,SQUAD_GAP)};
   s.grp.position.set(x,terrainH(x,z),z);
   poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
   scene.add(s.grp);
-  /* 🧩 มีโมเดลจริงก็สลับให้เอง (ไม่มีไฟล์ = ใช้ทรงที่วาดไว้ ไม่พัง) */
-  loadSoldierGlb('img/models/soldier_'+(kind||'a')+'.glb',function(obj){
+  if(kind==='c'){ s.flash=makeSoldierFlash(weapon); s.grp.add(s.flash); }   /* 🔥 รอบ 521: ไฟปากลำกล้อง (โมเดล baked ไม่มีในตัว) */
+  /* 🧩 มีโมเดลจริงก็สลับให้เอง (ไม่มีไฟล์ = ใช้ทรงที่วาดไว้ ไม่พัง)
+     🔫 รอบ 521: kind 'c' = โมเดล baked เลือกไฟล์ตามปืน (r93→soldier_c · rifle/KSR-77→soldier_c_KSR-77) · kind อื่นใช้ชื่อ kind */
+  const path=(kind==='c')?bakedSoldierGlb(weapon):('img/models/soldier_'+kind+'.glb');
+  loadSoldierGlb(path,function(obj){
     fitInto(obj,1.8);                       /* สูงราว 1.8 ม. เท่าคนจริง */
     obj.position.y=0;
     applySoldierGlb(s,obj);
@@ -5218,13 +5232,13 @@ function nameSprite(name){
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
 /* ตัวเพื่อน: ทหารราบ (foot) หรือเฮลิคอปเตอร์ (heli) */
-/* 🔫 รอบ 520: peer มุมมองที่3 ใช้โมเดล baked "ถือปืนมาในตัว" (สูตรเดียวกับ squad รอบ 519)
-   เลือกตามปืนที่ถือ: R93→soldier_c · KSR-77(key 'rifle')→soldier_c_KSR-77
-   ท่อนบน+ปืนอบในตัว (แช่แข็งท่าเล็ง) · ขยับเฉพาะขา (legOnly ใน poseSoldier) → ไม่ต้อง attachPeerGun */
-function peerSoldierGlb(weapon){ return (weapon==='r93')?'img/models/soldier_c.glb':'img/models/soldier_c_KSR-77.glb'; }
+/* 🔫 รอบ 520/521: โมเดลทหาร baked "ถือปืนมาในตัว" (สูตรรอบ 519) — ใช้ทั้ง peer (มุมมองที่3) และ squad (หน่วยเรา)
+   เลือกไฟล์ตามปืนที่ถือ: R93→soldier_c · KSR-77(key 'rifle')→soldier_c_KSR-77
+   ท่อนบน+ปืนอบในตัว (แช่แข็งท่าเล็ง) · ขยับเฉพาะขา (legOnly ใน poseSoldier) */
+function bakedSoldierGlb(weapon){ return (weapon==='r93')?'img/models/soldier_c.glb':'img/models/soldier_c_KSR-77.glb'; }
 function loadPeerSoldier(rig,weapon){
   if(!rig||!rig.J) return;
-  loadSoldierGlb(peerSoldierGlb(weapon),function(obj){
+  loadSoldierGlb(bakedSoldierGlb(weapon),function(obj){
     fitInto(obj,1.8); obj.position.y=0;
     applySoldierGlb({J:rig.J},obj);            /* ชื่อชิ้นแบบ tripo → autoRigSoldier bin ชิ้น (แยกขาซ้าย-ขวา) */
   });
@@ -5233,8 +5247,12 @@ function peerRig(p){
   const b=p.grp&&p.grp.children[0];
   return (b&&b.userData)?b.userData.rig:null;
 }
-/* 🔫 รอบ 520: ปืนเปลี่ยน = โหลดโมเดล baked ใหม่ (ปืนอบในตัวโมเดล ไม่ใช่ปืนแยกแล้ว) */
-function setPeerWeapon(p,weapon){ p.wantWeapon=weapon; const rig=peerRig(p); if(rig) loadPeerSoldier(rig,weapon); }
+/* 🔫 รอบ 520: ปืนเปลี่ยน = โหลดโมเดล baked ใหม่ (ปืนอบในตัวโมเดล ไม่ใช่ปืนแยกแล้ว) + ขยับ flash ตามปลายปืนใหม่ */
+function setPeerWeapon(p,weapon){
+  p.wantWeapon=weapon; const rig=peerRig(p); if(rig) loadPeerSoldier(rig,weapon);
+  const g=p.grp&&p.grp.children[0], fl=g&&g.userData.flash;
+  if(fl){ const m=MUZZLE_BY_WEAPON[weapon]||MUZZLE_BY_WEAPON.rifle; fl.position.set(m[0],m[1],m[2]); fl.scale.setScalar(weapon==='r93'?0.55:0.45); }
+}
 function peerBody(kind,color,weapon){
   const g=new THREE.Group();
   if(kind==='heli'){
@@ -5260,6 +5278,7 @@ function peerBody(kind,color,weapon){
     /* 🔫 รอบ 520: โมเดล baked ถือปืนมาในตัว เลือกตามปืนที่เพื่อนถือ (soldier_c=R93 · soldier_c_KSR-77=rifle)
        ปืนอบในตัว → ไม่ต้อง attachPeerGun · poseSoldier legOnly ขยับเฉพาะขา ท่อนบน+ปืนแช่แข็งท่าเล็ง */
     loadPeerSoldier(rig, weapon||'rifle');
+    const flash=makeSoldierFlash(weapon||'rifle'); g.add(flash); g.userData.flash=flash;   /* 🔥 รอบ 521: ไฟปากลำกล้องตอนเพื่อนยิง */
   }
   return g;
 }
@@ -5340,9 +5359,9 @@ function peerTick(dt,now){
          ขยับเฉพาะขาตามการเคลื่อนที่จริง: ไกล=วิ่ง (ก้าวถี่/เข่าสูง) · ใกล้=เดิน · หยุด=ยืนถือปืน
          (poseSoldier legOnly ไม่แตะ arm/head/lookUp/fireT → ไม่ต้องจำลองเล็ง/ยิงต่อ peer ทุกเฟรมอีก) */
       p.anim.mode=(moved>0.4)?'run':(moved>0.12?'walk':'idle');
-      /* ไฟปากลำกล้องตอนยิง — โมเดล baked ปืนอบในตัวจึงไม่มี rg.gun ก็ข้ามเอง (guard) */
-      const rg=peerRig(p);
-      if(rg&&rg.gun&&rg.gun.userData.flash) rg.gun.userData.flash.material.opacity=(now<(p.shotUntil||0))?1:0;
+      /* 🔥 รอบ 521: ไฟปากลำกล้องตอนเพื่อนยิง (สถานะ p.shotUntil ซิงก์จาก av) */
+      const fl=p.grp.children[0]&&p.grp.children[0].userData.flash;
+      if(fl) fl.material.opacity=(now<(p.shotUntil||0))?1:0;
       poseSoldier(p.anim,now);
     }
   }
@@ -5526,6 +5545,7 @@ function tickSquad(dt,now){
     if(now>s.shotAt&&aim){
       s.shotAt=now+SQUAD_GAP*rnd(.6,1.7);
       s.fireT=1;                                   // 🪖 สะบัดไหล่ตอนลั่นไก
+      s.flashUntil=now+55;                         // 🔥 รอบ 521: ไฟปากลำกล้องแวบสั้น
       const from=s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
       if(Math.random()<0.35){
@@ -5533,6 +5553,7 @@ function tickSquad(dt,now){
         else if(msOpen) damageMother(MS_DMG_GUN*0.5);
       }
     }
+    if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;   // 🔥 รอบ 521
     poseSoldier(s,now);
   });
   tickSquadCalls(now);                            // 📣 รอบ 471: ตะโกนบอกทิศศัตรู
@@ -6210,11 +6231,11 @@ function build(){
   buildMothership();
   buildGun();
   /* 👥 หน่วยรบภาคพื้น — ส่วนใหญ่หมอบยิงหลังแนวกระสอบทราย (เหมือนภาพอ้างอิง) ที่เหลือกระจายรอบ
-     🔫 รอบ 519: ใช้ soldier_c (ถือ R93 อบมาในตัว · ขยับเฉพาะขา) — เทสต์บน squad ก่อน ไม่แตะ soldier_a/b */
-  squadCoverSpots().forEach(s=>squad.push(makeSoldier(s.x,s.z,s.crouch,'c')));
+     🔫 รอบ 519/521: โมเดล baked ถือปืนอบในตัว (ขยับเฉพาะขา) · รอบ 521 ผสม R93/KSR-77 ~ครึ่งต่อครึ่งให้ดูหลากหลาย */
+  squadCoverSpots().forEach(s=>squad.push(makeSoldier(s.x,s.z,s.crouch,'c', rnd(0,1)<0.5?'rifle':'r93')));
   for(let i=squad.length;i<SQUAD_N;i++){
     const a=rnd(0,TAU), r=rnd(14,42);
-    squad.push(makeSoldier(px+Math.cos(a)*r, pz+Math.sin(a)*r,false,'c'));
+    squad.push(makeSoldier(px+Math.cos(a)*r, pz+Math.sin(a)*r,false,'c', rnd(0,1)<0.5?'rifle':'r93'));
   }
   syncBotHelis();                   // 🚁 บอทขับเฮลิเฉพาะตอนเล่นคนเดียว (ผู้ใช้สั่ง)
   built=true;
