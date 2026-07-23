@@ -5579,11 +5579,18 @@ function tickSquad(dt,now){
     }else{
       s.lookUp=0; s.mode=s.crouch?'crouch':'idle';
     }
+    /* 🎯 รอบ 528: จัดท่า/เงย torso "ก่อน" ยิง — เพื่ออ่านปลายลำกล้องจริงจาก world matrix ที่เงยแล้ว
+       (เดิมเรียก poseSoldier ท้ายลูป ทำให้ตอนยิง torso ยังเป็นท่าเฟรมก่อน · recoil เลื่อน 1 เฟรม—ไม่รู้สึก) */
+    poseSoldier(s,now);
     if(now>s.shotAt&&aim){
       s.shotAt=now+SQUAD_GAP*rnd(.6,1.7);
       s.fireT=1;                                   // 🪖 สะบัดไหล่ตอนลั่นไก
       s.flashUntil=now+55;                         // 🔥 รอบ 521: ไฟปากลำกล้องแวบสั้น
-      const from=s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
+      /* 🎯 รอบ 528: จุดเริ่ม tracer = ปลายลำกล้อง "จริง" — flash sprite ถูกผูกใต้ J.torso (รอบ 524)
+         ที่ตำแหน่ง MUZZLE_BY_WEAPON อยู่แล้ว → world position ของมัน = ปากกระบอกที่เงยตามเป้า
+         (เดิมใช้ grp.position + ความสูงคงที่ → tracer พุ่งจากกลางลำตัว ไม่ออกจากปากปืน) */
+      const from=s.flash ? s.flash.getWorldPosition(new THREE.Vector3())
+                         : s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
       if(Math.random()<0.35){
         if(tgt) damageFighter(tgt,0.5,now);
@@ -5591,7 +5598,6 @@ function tickSquad(dt,now){
       }
     }
     if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;   // 🔥 รอบ 521
-    poseSoldier(s,now);
   });
   tickSquadCalls(now);                            // 📣 รอบ 471: ตะโกนบอกทิศศัตรู
   tickSquadChatter(now);                          // 💬 รอบ 522: ตะโกนชนิดปืน/สถานะรบ
@@ -5694,10 +5700,12 @@ const CHAT_LINES={
   r93 :['สไนเปอร์เข้าที่!','เล็งนิ่ง ๆ รอจังหวะ','จัดหัวมันเอง!','นัดเดียวจอด!'],
   rifle:['KSR-77 พร้อมรบ!','ยิงคุ้มกัน เดินหน้า!','กราดให้เละเลย!','ลุยไม่ถอย!'],
   any :['ระวังตัวด้วยเพื่อน!','เราหนุนอยู่ข้างหลัง!','สู้ ๆ อย่าถอย!','เพื่อนสู้ ๆ!'],
+  core:['ระดมยิงแกน!','รุมมันเลย!','แกนแดงเปิดแล้ว รุมเลย!','อัดแกนให้จม!'],   /* 🎯 รอบ 528: เกราะยานแม่เปิด — สาย coreBias ปลุกใจรุมแกน */
 };
 let chatAllAt=0;
 function tickSquadChatter(now){
-  if(!squad.length||!fighters.length||now<callAllAt||now<chatAllAt) return;
+  const coreOpen=(msOpen&&msCore&&!msDead);                // 🎯 รอบ 528: เกราะยานแม่เปิด → ให้ตะโกนได้แม้ยานลูกหมด
+  if(!squad.length||(!fighters.length&&!coreOpen)||now<callAllAt||now<chatAllAt) return;
   let who=null, wd=CALL_NEAR*CALL_NEAR;
   for(const s of squad){
     if(now-(s.callAt||0)<CALL_GAP_ONE) continue;
@@ -5708,7 +5716,8 @@ function tickSquadChatter(now){
   chatAllAt=now+CHAT_GAP_ALL*rnd(.8,1.5);
   callAllAt=now+CALL_GAP_ALL*rnd(.85,1.4);                 // กันเตือนทิศตามมาติด ๆ
   const byGun=CHAT_LINES[who.weapon]||CHAT_LINES.rifle;
-  const pool=(Math.random()<0.6)?byGun:CHAT_LINES.any;    // ส่วนใหญ่บทประจำปืน บางทีปลุกใจทั่วไป
+  const pool=(coreOpen&&who.coreBias)?CHAT_LINES.core     // 🎯 รอบ 528: เกราะเปิด+สายรุมแกน → "ระดมยิงแกน!/รุมมันเลย!"
+            :(Math.random()<0.6)?byGun:CHAT_LINES.any;    // ปกติ: ส่วนใหญ่บทประจำปืน บางทีปลุกใจทั่วไป
   squadShout(who, pool[(Math.random()*pool.length)|0], now);
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
