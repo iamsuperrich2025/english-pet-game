@@ -347,6 +347,7 @@ const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพล�
 /* 👥 พันธมิตร */
 const SQUAD_N=10;
 const SQUAD_GAP=520, HELI_GAP=2600;    // จังหวะยิงของ AI (ms)
+const HELI_CHASE_SPD=44, HELI_DOGFIRE=1400;   // 🐕✈️ รอบ 531: ความเร็วไล่ล่ายานลูก + จังหวะยิงตอน dogfight (ms)
 const SQUAD_RUN=6.4, SQUAD_WALK=2.7;   // 🏃 รอบ 530: ความเร็ววิ่งไปกำบัง / เดินย่อง (หน่วย/วินาที)
 
 /* 🚁 เฮลิคอปเตอร์ (รอบ 417 ผู้ใช้สั่ง 3 ข้อ):
@@ -512,6 +513,13 @@ const CSS=`
 #inv-wrap.fly #inv-breath,#inv-wrap.gunner #inv-breath{display:none!important}
 #inv-swap:active,#inv-scope:active{transform:scale(.94)}
 #inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
+/* 🚁 รอบ 531 (ผู้ใช้สั่ง): ในห้องนักบินโชว์เฉพาะปุ่มบังคับเฮลิ — ซ่อนปุ่มภาคพื้นให้หมด
+   (ปุ่มปกติกลับมาเองตอนออกจากเครื่อง เพราะ .fly หลุด) · เหลือ ▲▼ / 🔫ปืนกล / 🚀มิสไซล์ / 👁️เบาะ / 🪂ลง */
+#inv-wrap.fly #inv-fire2,#inv-wrap.fly #inv-glow,#inv-wrap.fly #inv-torch,
+#inv-wrap.fly #inv-night,#inv-wrap.fly #inv-gunner{display:none!important}
+/* 🚀 ปุ่มยิงมิสไซล์ในห้องนักบิน — เด่นชัด (วงเรืองแสงส้ม) */
+#inv-wrap.fly #inv-rocket{width:80px;height:80px;font-size:30px;
+  box-shadow:0 6px 18px rgba(224,122,16,.6),0 0 0 4px rgba(255,222,150,.42)}
 /* กระสุนในแม็ก */
 /* 🎯 รอบ 433 (ผู้ใช้สั่ง): ย้ายช่องกระสุนมาอยู่ "ถัดจากปุ่มออก" มุมบนซ้าย
    (เดิมอยู่ท้ายแผงสถานะ ทำให้แผงสูงจนชนปุ่ม/กระดานคะแนนบนจอเตี้ย) */
@@ -576,6 +584,22 @@ const CSS=`
   box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
 #inv-seat small{display:block;font-size:9.5px;margin-top:1px}
 #inv-seat:active{transform:scale(.94)}
+/* 🎡 รอบ 531: สัญลักษณ์พวงมาลัยลอยเตือน "เข้าใกล้เฮลิ = แตะเพื่อขึ้นเครื่อง" (ผู้ใช้สั่ง) */
+#inv-wheel{position:absolute;left:50%;top:50%;z-index:8;border:none;background:none;cursor:pointer;
+  display:none;flex-direction:column;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;
+  transform:translate(-50%,-118px);animation:invWhBob 1.5s ease-in-out infinite}
+@keyframes invWhBob{0%,100%{transform:translate(-50%,-118px)}50%{transform:translate(-50%,-131px)}}
+#inv-wheel .wh{width:74px;height:74px;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 38% 32%,#eaddb0,#8a7a3f);border:6px solid #37301d;
+  box-shadow:0 7px 20px rgba(0,0,0,.55),0 0 0 4px rgba(20,26,34,.32)}
+#inv-wheel .wh::before{content:"";position:absolute;left:50%;top:50%;width:20px;height:20px;
+  margin:-10px 0 0 -10px;border-radius:50%;background:#2c2716;box-shadow:0 0 0 3px rgba(234,221,176,.95);z-index:2}
+#inv-wheel .wh i{position:absolute;left:calc(50% - 3px);top:50%;width:6px;height:30px;background:#2c2716;
+  transform-origin:3px 0;border-radius:3px}
+#inv-wheel .wh i.s1{transform:rotate(0deg)}#inv-wheel .wh i.s2{transform:rotate(120deg)}#inv-wheel .wh i.s3{transform:rotate(240deg)}
+#inv-wheel small{background:rgba(20,26,34,.86);color:#ffe6a8;font-weight:900;font-size:12px;
+  padding:4px 12px;border-radius:999px;white-space:nowrap;box-shadow:0 3px 8px rgba(0,0,0,.5)}
+#inv-wheel:active .wh{transform:scale(.93)}
 /* 🌀 ป้ายขั้นตอนสตาร์ทเครื่อง */
 #inv-start{position:absolute;left:50%;top:44%;transform:translateX(-50%);z-index:8;display:none;text-align:center;
   background:rgba(6,16,28,.86);border:2px solid #7fe3ff;border-radius:14px;padding:9px 18px;
@@ -829,6 +853,7 @@ function buildDom(){
     <button id="inv-breath">🫁</button>
     <button id="inv-gunner">🎖️</button>
     <button id="inv-seat">👁️<small>มุมบิน</small></button>
+    <button id="inv-wheel"><span class="wh"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span><small>🚁 แตะเพื่อขึ้นเครื่อง</small></button>
     <button id="inv-map">🗺️</button>
     <button id="inv-night">🌙</button>
     <button id="inv-torch">🔦</button>
@@ -909,6 +934,8 @@ function buildDom(){
     if(heliReady){ state.heliSeat=seatLv; if(typeof saveState==='function') saveState(); } });
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
   gunnerBtn=document.getElementById('inv-gunner');
+  wheelBtn=document.getElementById('inv-wheel');           // 🎡 รอบ 531: พวงมาลัยเตือนเข้าใกล้เฮลิ
+  if(wheelBtn) wheelBtn.addEventListener('click',()=>{ resumeAudio(); enterHeli(); });
   swapBtn=document.getElementById('inv-swap'); scopeBtn=document.getElementById('inv-scope');
   magBtn=document.getElementById('inv-mag');
   breathBtn=document.getElementById('inv-breath');
@@ -1188,6 +1215,200 @@ const Snd={
     this.rotor=[n,lfo]; this.rotorG=g; },
   stopRotor(){ if(this.rotor){ this.rotor.forEach(o=>{ try{o.stop()}catch(e){} }); this.rotor=null; this.rotorG=null; } },
 };
+/* ============================================================
+   🚁🔊 เสียงเฮลิคอปเตอร์ Bell 212 — "เหมือนโลก helicopter ทุกประการ" (รอบ 531 — ผู้ใช้สั่ง)
+   โหลดไฟล์เสียงจริงชุดเดียวกับโลกเฮลิฯ (sound/heli_start|rotor|rotor_high.mp3) ผ่าน AudioContext เดียวกับ Snd
+   สตาร์ทเครื่อง → crossfade เข้าลูปบิน · ปรับ rpm/ลม/หวอตามการบังคับทุกเฟรม · ไม่มีไฟล์ = เสียงสังเคราะห์
+   ยกโครงมาจาก HeliSound ใน adventure3d.js (ตัดส่วนที่โลกนี้ไม่ใช้: assist/squelch/proximity/thud)
+   ============================================================ */
+const HELI_XF=1.1, HELI_OD_RPM=1.25, HELI_OD_VOL=.08;
+const HeliSnd={
+  master:null, files:{start:null,rotor:null,high:null}, probed:false, loading:null,
+  on:false, ready:false, rpm:0, startPlay:null, rotorPlay:null, highPlay:null,
+  lfo:null, whine:null, whineG:null, nodes:[], windG:null, windBp:null,
+  envG:null, envLp:null, envPan:null, _startTm:0, _odOn:false, _odTm:0,
+  ctx(){ return Snd.ac(); },
+  soundOn(){ return Snd.on(); },
+  ensureMaster(){ const c=this.ctx(); if(!c) return null;
+    if(!this.master){ this.master=c.createGain(); this.master.connect(c.destination); }
+    if(c.state==='suspended') c.resume().catch(()=>{});
+    return c; },
+  probe(){ if(this.probed) return; this.probed=true; const c=this.ensureMaster(); if(!c) return;
+    this.loading=Promise.all(
+      [['start','sound/heli_start.mp3'],['rotor','sound/heli_rotor.mp3'],['high','sound/heli_rotor_high.mp3']].map(([k,src])=>
+        fetch(src).then(r=>r.ok?r.arrayBuffer():Promise.reject())
+          .then(b=>c.decodeAudioData(b)).then(buf=>{ this.files[k]=buf; }).catch(()=>{})
+      )); },
+  playBuf(buf,{loop=false,vol=1,rate=1}={}){ const c=this.ctx();
+    const src=c.createBufferSource(); src.buffer=buf; src.loop=loop; src.playbackRate.value=rate;
+    const g=c.createGain(); g.gain.value=vol; src.connect(g); g.connect(this.master);
+    src.start(c.currentTime); return {src,gain:g}; },
+  buildNodes(){ const c=this.ensureMaster(); if(!c) return;
+    const osc=c.createOscillator(); osc.type='sawtooth'; osc.frequency.value=27;
+    const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=140;
+    const og=c.createGain(); og.gain.value=.001;
+    const len=c.sampleRate*2, buf=c.createBuffer(1,len,c.sampleRate);
+    const d=buf.getChannelData(0); for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+    const noi=c.createBufferSource(); noi.buffer=buf; noi.loop=true;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=650; bp.Q.value=.8;
+    const ng=c.createGain(); ng.gain.value=.001;
+    this.lfo=c.createOscillator(); this.lfo.type='square'; this.lfo.frequency.value=2;
+    const lg1=c.createGain(); lg1.gain.value=.14; const lg2=c.createGain(); lg2.gain.value=.05;
+    this.lfo.connect(lg1); lg1.connect(og.gain); this.lfo.connect(lg2); lg2.connect(ng.gain);
+    this.whine=c.createOscillator(); this.whine.type='triangle'; this.whine.frequency.value=120;
+    this.whineG=c.createGain(); this.whineG.gain.value=.0001;
+    this.whine.connect(this.whineG); this.whineG.connect(this.master);
+    osc.connect(lp); lp.connect(og); og.connect(this.master);
+    noi.connect(bp); bp.connect(ng); ng.connect(this.master);
+    osc.start(); noi.start(); this.lfo.start(); this.whine.start();
+    this.nodes=[osc,noi,this.lfo,this.whine]; },
+  /* startMs = ระยะเวลาสตาร์ทของโลกนี้ (START_MS) — crossfade เข้าลูปบินให้ตรงจังหวะ "เครื่องพร้อม" */
+  start(startMs){ if(this.on) return; this.on=true; this.ready=false; this.rpm=0;
+    this.probe(); const c=this.ensureMaster(); if(!c) return;
+    this.master.gain.value=1;
+    if(!this.soundOn()){ this.ready=true; this.rpm=.55; return; }   // ปิดเสียง = พร้อมบินทันที
+    const dur=(startMs||9500)/1000, go=()=>{ if(this.on) this._begin(dur); };
+    if(!this.files.start && this.loading) Promise.race([this.loading,new Promise(r=>setTimeout(r,3000))]).then(go);
+    else go();
+  },
+  _begin(dur){ const c=this.ctx(), t=c.currentTime;
+    if(this.files.start){
+      this.startPlay=this.playBuf(this.files.start,{vol:.85});
+      this.startPlay.gain.gain.setValueAtTime(.85,t+Math.max(0,dur-HELI_XF));
+      this.startPlay.gain.gain.linearRampToValueAtTime(.0001,t+dur);
+    } else {
+      this.buildNodes(); this.master.gain.setValueAtTime(.1,t);
+      this.master.gain.linearRampToValueAtTime(.45,t+Math.min(3.3,dur));
+      this.whine.frequency.setValueAtTime(85,t);
+      this.whine.frequency.exponentialRampToValueAtTime(430,t+Math.min(3.2,dur));
+      this.whineG.gain.setValueAtTime(.0001,t); this.whineG.gain.exponentialRampToValueAtTime(.055,t+Math.min(1.6,dur*.5));
+      this.lfo.frequency.setValueAtTime(1.6,t); this.lfo.frequency.linearRampToValueAtTime(10.5,t+dur);
+    }
+    clearTimeout(this._startTm);
+    this._startTm=setTimeout(()=>{ this.ready=true; this.rpm=.55; this.loopStart(); },Math.max(0,dur-HELI_XF)*1000);
+  },
+  loopStart(){ if(!this.on||!this.soundOn()) return;
+    if(this.files.rotor){ if(this.rotorPlay) return; const c=this.ctx();
+      this.rotorPlay=this.playBuf(this.files.rotor,{loop:true,vol:.0001});
+      this.rotorPlay.gain.gain.linearRampToValueAtTime(.55,c.currentTime+HELI_XF);
+      if(this.files.high) this.highPlay=this.playBuf(this.files.high,{loop:true,vol:.0001});
+    } else if(!this.lfo){ this.buildNodes(); this.master.gain.value=.4;
+      this.whine.frequency.value=380; this.whineG.gain.value=.05; this.lfo.frequency.value=10.5; }
+  },
+  /* เรียกทุกเฟรมจาก tickHeliFlight — col=คันเร่ง(-1..1) landed=จอด env={alt,spd,near} */
+  update(col,landed,dt,env){ if(!this.on||!this.soundOn()) return;
+    if(env) this.envUpdate(env,dt);
+    if(!this.ready) return;
+    const target=landed?.55:(1+Math.max(0,col)*.45);
+    this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*.9);
+    const r=this.rpm; this.overspeed(r>=HELI_OD_RPM);
+    const c=this.ctx(), t=c.currentTime, sm=.08;
+    if(this.rotorPlay){
+      this.rotorPlay.src.playbackRate.setTargetAtTime(.8+r*.35,t,sm);
+      if(this.highPlay){ const hi=Math.max(0,Math.min(1,(r-.85)/.5));
+        this.highPlay.src.playbackRate.setTargetAtTime(.9+r*.2,t,sm);
+        this.highPlay.gain.gain.setTargetAtTime(.7*hi,t,sm);
+        this.rotorPlay.gain.gain.setTargetAtTime(.55*(1-hi*.75),t,sm);
+      } else this.rotorPlay.gain.gain.setTargetAtTime(.3+r*.3,t,sm);
+      return;
+    }
+    if(this.lfo) this.lfo.frequency.value=6.5+r*6.5;
+    if(this.whine){ this.whine.frequency.value=230+r*360; this.whineG.gain.value=.02+r*.05; }
+    if(this.master) this.master.gain.value=.18+r*.32;
+  },
+  envUpdate(env,dt){ const c=this.ensureMaster(); if(!c) return; const t=c.currentTime, sm=.12;
+    if(!this.envG){ this.envG=c.createGain();
+      this.envLp=c.createBiquadFilter(); this.envLp.type='lowpass'; this.envLp.frequency.value=20000;
+      this.master.disconnect(); this.master.connect(this.envG); this.envG.connect(this.envLp);
+      if(c.createStereoPanner){ this.envPan=c.createStereoPanner(); this.envLp.connect(this.envPan); this.envPan.connect(c.destination); }
+      else this.envLp.connect(c.destination);
+    }
+    const hi=Math.max(0,Math.min(1,(env.alt-8)/(55-8)));
+    this.envG.gain.setTargetAtTime(1-hi*.42,t,sm);
+    this.envLp.frequency.setTargetAtTime(20000-hi*(20000-1800),t,sm);
+    this.buildWind(); const sp=Math.max(0,Math.min(1,(env.spd||0)/26));
+    this.windG.gain.setTargetAtTime(sp*sp*.17,t,sm);
+    this.windBp.frequency.setTargetAtTime(420+sp*900,t,sm);
+  },
+  buildWind(){ if(this.windG) return; const c=this.ensureMaster(); if(!c) return;
+    const len=c.sampleRate*3, b=c.createBuffer(1,len,c.sampleRate), d=b.getChannelData(0);
+    let last=0; for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+.02*w)/1.02; d[i]=last*3.5; }
+    const n=c.createBufferSource(); n.buffer=b; n.loop=true;
+    this.windBp=c.createBiquadFilter(); this.windBp.type='bandpass'; this.windBp.frequency.value=500; this.windBp.Q.value=.7;
+    this.windG=c.createGain(); this.windG.gain.value=.0001;
+    n.connect(this.windBp); this.windBp.connect(this.windG); this.windG.connect(this.master);
+    n.start(); this.nodes.push(n);
+  },
+  overspeed(on){ if(on===this._odOn) return; this._odOn=on;
+    if(this._odTm){ clearInterval(this._odTm); this._odTm=0; }
+    if(!on) return; let hi=false;
+    const beep=()=>{ if(!this.soundOn()) return; const c=this.ctx(); if(!c) return; const t=c.currentTime;
+      const o=c.createOscillator(); o.type='square'; o.frequency.value=hi?1240:930; hi=!hi;
+      const g=c.createGain(); g.gain.setValueAtTime(.001,t); g.gain.exponentialRampToValueAtTime(HELI_OD_VOL,t+.02);
+      g.gain.exponentialRampToValueAtTime(.001,t+.19); o.connect(g); g.connect(this.master||c.destination);
+      o.start(t); o.stop(t+.21); };
+    beep(); this._odTm=setInterval(beep,230);
+  },
+  stop(){ this.on=false; this.ready=false; this.rpm=0; this.overspeed(false); clearTimeout(this._startTm);
+    if(this.windG){ try{ this.windG.gain.value=.0001; }catch(e){} }
+    [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{ if(p) try{ p.src.stop(); }catch(e){} });
+    this.startPlay=this.rotorPlay=this.highPlay=null;
+    this.nodes.forEach(n=>{ try{ n.stop(); }catch(e){} });
+    this.nodes=[]; this.lfo=null; this.whine=null; this.whineG=null; this.windG=null; this.windBp=null;
+    if(this.master) this.master.gain.value=0;
+  },
+  shutdown(){ const c=this.ctx();                        // 🛬 ค่อยๆ หรี่ (ใบพัดช้าลง) แล้ว stop
+    if(!this.on||!c){ this.stop(); return; }
+    const t=c.currentTime, D=2.4; this.overspeed(false);
+    [this.startPlay,this.rotorPlay,this.highPlay].forEach(p=>{ if(!p) return;
+      try{ p.gain.gain.cancelScheduledValues(t); p.gain.gain.setValueAtTime(Math.max(.0001,p.gain.gain.value),t);
+        p.gain.gain.linearRampToValueAtTime(.0001,t+D);
+        p.src.playbackRate.cancelScheduledValues(t); p.src.playbackRate.setValueAtTime(p.src.playbackRate.value,t);
+        p.src.playbackRate.linearRampToValueAtTime(.16,t+D); p.src.stop(t+D+.05);
+      }catch(e){} });
+    if(this.windG){ try{ this.windG.gain.cancelScheduledValues(t); this.windG.gain.linearRampToValueAtTime(.0001,t+.6); }catch(e){} }
+    this.startPlay=this.rotorPlay=this.highPlay=null; this.ready=false; this.rpm=0; this.on=false;
+    clearTimeout(this._startTm); setTimeout(()=>this.stop(),(D+.2)*1000);
+  },
+};
+/* ============================================================
+   🚁🔊🌍 เสียงเฮลิรอบตัว (รอบ 531 — ผู้ใช้สั่ง) — ทุกลำในสนามส่งเสียงใบพัดจริง ดังตามระยะ + ซ้าย/ขวา
+   ผู้เล่นทุกคน (เดินเท้า/พลปืน/ขับเอง) ได้ยินเฮลิของบอท+เพื่อนออนไลน์ ดังใกล้-เบาไกล
+   1 voice ต่อลำ (ไฟล์ heli_rotor.mp3 ตัวเดียวกับ HeliSnd) ปรับ gain/pan ทุกเฟรมตามระยะจากกล้อง
+   ลำที่เราขับเองไม่นับ (มี HeliSnd ของตัวเองดังอยู่แล้ว)
+   ============================================================ */
+const CHORUS_RANGE=300, CHORUS_MAXVOL=.45;
+const HeliChorus={
+  voices:{},
+  kill(key){ const v=this.voices[key]; if(!v) return; try{ v.src.stop(); }catch(e){} delete this.voices[key]; },
+  stopAll(){ for(const k in this.voices) this.kill(k); },
+  voice(key){ if(this.voices[key]) return this.voices[key];
+    const c=HeliSnd.ensureMaster(); if(!c||!HeliSnd.files.rotor) return null;
+    const src=c.createBufferSource(); src.buffer=HeliSnd.files.rotor; src.loop=true; src.playbackRate.value=1.05;
+    const g=c.createGain(); g.gain.value=.0001;
+    let pan=null; if(c.createStereoPanner){ pan=c.createStereoPanner(); src.connect(pan); pan.connect(g); } else src.connect(g);
+    g.connect(c.destination);
+    try{ src.start(c.currentTime, Math.random()*(HeliSnd.files.rotor.duration||1)); }catch(e){ try{src.start();}catch(_){} }
+    return this.voices[key]={src,gain:g,pan};
+  },
+  tick(now){
+    if(!Snd.on()){ this.stopAll(); return; }
+    if(!HeliSnd.files.rotor){ HeliSnd.probe(); this.stopAll(); return; }
+    if(typeof camera==='undefined'||!camera) return;
+    const cam=camera.position, right=new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld,0);
+    const c=Snd.ac(); if(!c) return; const t=c.currentTime, active={};
+    const consider=(key,pos)=>{
+      const d=cam.distanceTo(pos); if(d>CHORUS_RANGE){ this.kill(key); return; }
+      const v=this.voice(key); if(!v) return; active[key]=1;
+      v.gain.gain.setTargetAtTime(Math.pow(1-d/CHORUS_RANGE,2)*CHORUS_MAXVOL,t,.15);
+      if(v.pan){ const dn=new THREE.Vector3().subVectors(pos,cam).normalize();
+        v.pan.pan.setTargetAtTime(Math.max(-1,Math.min(1,right.dot(dn))),t,.2); }
+    };
+    for(let i=0;i<helis.length;i++){ if(helis[i]&&helis[i].grp) consider('b'+i,helis[i].grp.position); }
+    for(const uid in peers){ const p=peers[uid]; if(p.kind==='heli'&&p.grp) consider('p'+uid,p.grp.position); }
+    for(const key in this.voices) if(!active[key]) this.kill(key);
+  },
+};
 function resumeAudio(){ const c=Snd.ac(); if(c&&c.state==='suspended') c.resume(); Snd.startHum();
   if(Snd.startNightAir) Snd.startNightAir(); }        // 🔇 รอบ 477: ลมกลางคืน (ดังตาม nightK)
 
@@ -1303,6 +1524,7 @@ let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // �
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
 let quizEl=null;                       // 🔎 รอบ 473: แถบโจทย์ "ยิงเป้าที่แปลว่า …"
 let seatBtn=null, startEl=null;        // 🚁 ปุ่มปรับมุมมองห้องนักบิน + ป้ายขั้นตอนสตาร์ท (รอบ 434)
+let wheelBtn=null;                     // 🎡 รอบ 531: สัญลักษณ์พวงมาลัยเตือนเข้าใกล้เฮลิ
 let gunnerBtn=null, riding=null;   // 🎖️ พลปืนประจำประตู: riding = key ของลำที่นั่งอยู่ (uid เพื่อน หรือ 'botN')
 let terrainH=null;                     // ฟังก์ชันความสูงพื้นทราย
 let solids=[];                         // กันชนตึก {x,z,r}
@@ -2524,7 +2746,13 @@ function heliModel(cb){
     src.scale.setScalar(s);
     src.position.set(0,-bb.min.y*s,-3.9-bb.min.z*s);      // สกีแตะพื้น y=0 · จมูกอยู่หน้าที่นั่งนักบิน
     if(!heliDesertMat){ let base=null; src.traverse(o=>{ if(!base&&o.isMesh) base=o.material; });
-      if(base){ heliDesertMat=base.clone(); heliDesertMat.color=new THREE.Color(HELI_DESERT); } }
+      if(base){ heliDesertMat=base.clone();
+        /* 🎨 รอบ 531 (ผู้ใช้สั่ง): ทิ้งลายแดง/น้ำเงินเดิม — texture map ลายเดิมไปคูณกับ .color ทำให้ยังออกแดง
+           ต้องตัด map ทิ้งถึงจะได้ "สีเนื้อทะเลทรายล้วน" กลืนสนามรบจริง */
+        heliDesertMat.map=null;
+        heliDesertMat.color=new THREE.Color(HELI_DESERT);
+        if('metalness' in heliDesertMat) heliDesertMat.metalness=0.15;
+        if('roughness' in heliDesertMat) heliDesertMat.roughness=0.9; } }
     if(heliDesertMat) src.traverse(o=>{ if(o.isMesh) o.material=heliDesertMat; });
     grp.add(src); grp._rotor=mr; grp._trotor=tr;
     cb(grp);
@@ -4271,8 +4499,14 @@ function launchMissile(now,side,heli){
   const trail=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffb347,transparent:true,opacity:.9,
     blending:THREE.AdditiveBlending,depthWrite:false}));
   trail.scale.setScalar(2.0); scene.add(trail);
-  missiles.push({mesh:m,trail,v:dir.clone().multiplyScalar(MIS_SPD*.55),
-                 lock:lockTarget(), born:now, dmg:heli?PH_MIS_DMG:MIS_DMG});
+  /* 🚀 รอบ 531: ออกตัวแบบ Modern Warship — พุ่งช้าตอนแรกแล้วเร่ง (boost ใน tickMissiles)
+     + เชิดหัวขึ้น (loft) ให้เห็นเป็นวิถีโค้งก่อน homing ดึงลงเข้าเป้า */
+  const up=new THREE.Vector3(0,1,0);
+  const loft=heli?0.16:0.42;                            // ยิงจากพื้นเชิดขึ้นมากกว่ายิงจากเฮลิ
+  const v0=dir.clone().multiplyScalar(MIS_SPD*0.30).addScaledVector(up,MIS_SPD*loft);
+  missiles.push({mesh:m,trail,v:v0,
+                 lock:lockTarget(), born:now, dmg:heli?PH_MIS_DMG:MIS_DMG,
+                 boostUntil:now+330, smokeAt:0});
 }
 /* 🚀 มิสไซล์นำวิถี — ล็อกยานลูกที่อยู่ใกล้กลางจอสุด (ไม่มีก็พุ่งใส่ยานแม่)
    🚁 ตอนขับเฮลิ: ยิงเป็นชุดคู่ (2 ลูก) เติมเร็วกว่า */
@@ -5047,7 +5281,10 @@ function updateGunnerBtn(now){
   const show=!inHeli && !riding && !!nearestRideable();
   gunnerBtn.style.display=show?'block':'none';
   /* 🚁 รอบ 434: ปุ่มเฮลิโผล่เฉพาะตอน "ยืนอยู่ข้างลำจริง" (หรือกำลังบิน/นั่งเป็นพลปืน = ใช้ลง) */
-  if(heliBtn) heliBtn.style.display=(inHeli||riding||padAt(px,pz))?'block':'none';
+  const nearPad=padAt(px,pz);
+  if(heliBtn) heliBtn.style.display=(inHeli||riding||nearPad)?'block':'none';
+  /* 🎡 รอบ 531: พวงมาลัยลอยเตือน เมื่อเดินถึงลำที่จอด (ยังไม่บิน/ไม่เป็นพลปืน + ยังมีที่ว่าง) */
+  if(wheelBtn) wheelBtn.style.display=(!inHeli && !riding && nearPad && heliCount()<HELI_MAX)?'flex':'none';
 }
 
 /* นับเฮลิที่บินอยู่ทั้งโลกตอนนี้ = ของเรา + ของเพื่อนที่กำลังบิน + บอท (พลปืนไม่นับ — นั่งลำที่มีอยู่แล้ว) */
@@ -5074,6 +5311,7 @@ function enterHeli(){
   px=pad.x; pz=pad.z; yaw=pad.rot;              // นั่งประจำที่นักบิน หันตามลำ
   setSeatView(0);                                // ตอนสตาร์ทใช้มุม "เต็มลำ" ได้อารมณ์ (เหมือนโลกเฮลิฯ)
   if(seatBtn) seatBtn.style.display='block';
+  if(wheelBtn) wheelBtn.style.display='none';       // 🎡 ขึ้นเครื่องแล้วซ่อนพวงมาลัย
   inHeli=true; setScoped(false);
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
@@ -5083,7 +5321,8 @@ function enterHeli(){
   if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
   firing=false; heat=0; overheat=false; renderHeat();
   renderMissiles(); renderAmmo(); syncWeaponBtns(); syncBotHelis();
-  Snd.startRotor();
+  Snd.stopRotor();                     // กันเสียงใบพัดย่อเดิมซ้อน
+  HeliSnd.start(START_MS);             // 🔊 รอบ 531: เสียง Bell 212 จริง เหมือนโลก helicopter
   toastBan('🚁 <b>ขึ้นเครื่องแล้ว — กำลังสตาร์ท!</b><br><span class="ib-sub">รอเครื่องติดครบขั้นก่อนนะ (ประมาณ 10 วิ) · กด 👁️ ปรับมุมมองในห้องนักบินได้</span>',3000);
   if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
 }
@@ -5101,7 +5340,7 @@ function exitHeli(){
   py=terrainH(px,pz)+EYE; phClimb=0;
   misLeft=MIS_MAX; misReloadAt=0; renderMissiles(); syncBotHelis();
   syncWeaponBtns(); renderAmmo();
-  Snd.stopRotor();
+  HeliSnd.shutdown();                  // 🔊 รอบ 531: ใบพัดค่อยๆ ช้าลงแล้วดับ
   toastBan('🪂 <b>ลงพื้นแล้ว</b> — กลับมาเป็นทหารราบ',1500);
 }
 /* 🚁 การบิน "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" (ผู้ใช้สั่ง)
@@ -5130,6 +5369,7 @@ function tickHeliFlight(dt,now){
       if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
     }
     py=terrainH(px,pz)+HELI_SKID+1.8;
+    HeliSnd.update(0,true,dt,{alt:1.8,spd:0,near:999});      // 🔊 รอบ 531: เสียงระหว่างสตาร์ท (ยัง !ready → แค่ปรับ env)
     const shk=Math.min(1,(now-heliStartAt)/START_MS)*.05;   // เครื่องสั่นแรงขึ้นเรื่อยๆ ตามรอบใบพัด
     seatCamera(now,0);
     camera.position.y+=Math.sin(now*.05)*shk;
@@ -5194,6 +5434,10 @@ function tickHeliFlight(dt,now){
   if(phMisLeft<=0&&phMisReloadAt&&now>phMisReloadAt){ phMisLeft=PH_MIS_MAX; phMisReloadAt=0; renderMissiles();
     toastBan('🚀 <b>เติมจรวดเฮลิเต็มแล้ว!</b>',900); }
   if(now-lastHurt>3500&&hp<PLAYER_HP){ hp=Math.min(PLAYER_HP,hp+SHIELD_REGEN*dt*10); renderHp(); }
+  /* 🔊 รอบ 531: ปรับเสียง Bell 212 ตามการบิน — คันเร่ง(col)/ความสูง/ความเร็ว/ตึกใกล้สุด */
+  { const alt=Math.max(0,py-terrainH(px,pz)), spd=Math.hypot(phVel.x,phVel.z);
+    let near=999; for(const o of solids){ const d=Math.hypot(px-o.x,pz-o.z)-o.r; if(d<near) near=d; }
+    HeliSnd.update(col,hLanded,dt,{alt,spd,near:Math.max(0,near)}); }
   if(firing) fireGun(now);
 }
 /* 🤖 บอทขับเฮลิ: ปกติไม่มีเลย (ผู้เล่นขับเท่านั้น) — ยกเว้นในแมพมีคนน้อยกว่า 2 คน ให้มี 1 ลำเป็นเพื่อน
@@ -5526,6 +5770,65 @@ function tickAlienShots(dt,now){
     }
   }
 }
+/* ============================================================
+   💨 ควันตามหลังมิสไซล์ (รอบ 531 — ผู้ใช้สั่ง) — สไปรต์ควันนุ่มปล่อยเป็นระยะ
+   ค้างอยู่กับที่แล้วฟุ้งขยาย+จางหาย = เห็นเป็น "ทางควัน" ยาวตามวิถีจรวด (สไตล์ Modern Warship)
+   ============================================================ */
+let smokePuffs=[], _smokeTex=null;
+function smokeTex(){
+  if(_smokeTex) return _smokeTex;
+  const c=document.createElement('canvas'); c.width=c.height=64;
+  const g=c.getContext('2d');
+  const gr=g.createRadialGradient(32,32,0,32,32,32);
+  gr.addColorStop(0,'rgba(255,255,255,0.85)');
+  gr.addColorStop(.45,'rgba(214,210,200,0.5)');
+  gr.addColorStop(1,'rgba(190,185,175,0)');
+  g.fillStyle=gr; g.beginPath(); g.arc(32,32,32,0,TAU); g.fill();
+  _smokeTex=new THREE.CanvasTexture(c); return _smokeTex;
+}
+function spawnPuff(pos,o){ o=o||{};
+  if(smokePuffs.length>240) return;                 // เพดานกันหน่วงตอนยิงรัว/ฝุ่นฟุ้ง
+  const op=o.opacity!=null?o.opacity:.62;
+  const mat=new THREE.SpriteMaterial({map:smokeTex(),transparent:true,opacity:op,
+    depthWrite:false,color:o.color!=null?o.color:0xe8e2d4});
+  const s=new THREE.Sprite(mat); s.position.copy(pos);
+  const g0=o.scale||1.15; s.scale.setScalar(g0); scene.add(s);
+  smokePuffs.push({s,born:performance.now(),life:o.life||1150,g0,op,
+    vx:o.vx||0, vy:o.vy!=null?o.vy:0.7, vz:o.vz||0, grow:o.grow!=null?o.grow:2.4});
+}
+function spawnSmoke(pos){ spawnPuff(pos); }         // 💨 ควันมิสไซล์ = ค่า default (ลอยขึ้น)
+/* 🌪️ รอบ 531: ฝุ่นทะเลทรายฟุ้งใต้เฮลิตอนขึ้น/ลง — ฟุ้งออกด้านข้าง+ลอยขึ้นเบาๆ (สปอว์นฝั่ง client ทุกเครื่องเห็น) */
+function spawnDust(x,z,gy,power){
+  const n=power>.6?3:2;
+  for(let k=0;k<n;k++){
+    const a=Math.random()*TAU, r=1.4+Math.random()*3.6, sp=2.2+Math.random()*2.4;
+    spawnPuff(new THREE.Vector3(x+Math.cos(a)*r, gy+0.2+Math.random()*0.5, z+Math.sin(a)*r),
+      {scale:1.9+Math.random()*1.5, life:850+Math.random()*550, opacity:.4, color:0xccbd97, grow:1.7,
+       vx:Math.cos(a)*sp, vy:0.5+Math.random()*0.6, vz:Math.sin(a)*sp});
+  }
+}
+function tickSmoke(dt,now){
+  for(let i=smokePuffs.length-1;i>=0;i--){
+    const p=smokePuffs[i], age=(now-p.born)/p.life;
+    if(age>=1){ scene.remove(p.s); p.s.material.dispose(); smokePuffs.splice(i,1); continue; }
+    p.s.material.opacity=p.op*(1-age);
+    p.s.scale.setScalar(p.g0*(1+age*p.grow));        // ฟุ้งขยายขึ้นเรื่อยๆ
+    p.s.position.x+=p.vx*dt; p.s.position.y+=p.vy*dt; p.s.position.z+=p.vz*dt;
+    if(p.vx||p.vz){ const dmp=1-dt*1.6; p.vx*=dmp; p.vz*=dmp; }   // ฝุ่นชะลอตอนฟุ้งออก
+  }
+}
+function clearSmoke(){ smokePuffs.forEach(p=>{ scene.remove(p.s); p.s.material.dispose(); }); smokePuffs=[]; }
+/* 🌪️ ฝุ่นใต้เฮลิทุกลำที่อยู่ใกล้พื้น (ลำเรา/บอท/เพื่อนออนไลน์) — client แต่ละเครื่องคำนวณเอง = ทุกคนเห็นฝุ่นของกันและกัน */
+let _dustAt=0;
+function tickHeliDust(dt,now){
+  if(now-_dustAt<55) return; _dustAt=now;              // ~18 ครั้ง/วิ พอเห็นฝุ่นต่อเนื่อง ไม่หน่วง
+  if(inHeli){ const alt=py-terrainH(px,pz);
+    if(alt<7 && (heliReady || now-heliStartAt>2200)) spawnDust(px,pz,terrainH(px,pz),heliReady?1:.6); }
+  for(const h of helis){ if(!h.grp) continue; const g=h.grp.position, gy=terrainH(g.x,g.z);
+    if(g.y-gy<7) spawnDust(g.x,g.z,gy,.7); }
+  for(const uid in peers){ const p=peers[uid]; if(p.kind!=='heli'||!p.grp) continue;
+    const g=p.grp.position, gy=terrainH(g.x,g.z); if(g.y-gy<7) spawnDust(g.x,g.z,gy,.7); }
+}
 function tickMissiles(dt,now){
   for(let i=missiles.length-1;i>=0;i--){
     const m=missiles[i];
@@ -5533,15 +5836,24 @@ function tickMissiles(dt,now){
     let tgt=null;
     if(m.lock && fighters.indexOf(m.lock)>=0) tgt=m.lock.grp.position;
     else if(msOpen&&!msDead&&mother) tgt=mother.position;
-    if(tgt){
+    /* 🚀 รอบ 531: ช่วง boost ตอนออกตัว — ยังไม่นำวิถี (พุ่งเชิดขึ้นตาม loft ก่อน) แล้วเร่งแรง
+       หมด boost ค่อย homing ดึงโค้งลงเข้าเป้า = วิถีโค้งสมจริงแบบ Modern Warship */
+    const boosting = now < (m.boostUntil||0);
+    if(tgt && !boosting){
       const want=new THREE.Vector3().subVectors(tgt,m.mesh.position).normalize().multiplyScalar(MIS_SPD);
       m.v.lerp(want,Math.min(1,dt*2.6));
     }
-    if(m.v.length()<MIS_SPD) m.v.setLength(Math.min(MIS_SPD,m.v.length()+MIS_SPD*dt*1.6));
+    const accel = boosting? MIS_SPD*dt*2.6 : MIS_SPD*dt*1.6;   // ตอนแรกช้า → เร่งพุ่งแรงขึ้น
+    if(m.v.length()<MIS_SPD) m.v.setLength(Math.min(MIS_SPD,m.v.length()+accel));
     m.mesh.position.addScaledVector(m.v,dt);
     m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),m.v.clone().normalize());
     m.trail.position.copy(m.mesh.position).addScaledVector(m.v.clone().normalize(),-1.2);
     m.trail.material.opacity=.9;
+    /* 💨 พ่นควันเป็นทางตามหลัง — ปล่อยถี่ตามเวลา (ควันค้างแล้วฟุ้งจางเอง) */
+    if(now-(m.smokeAt||0) > 20){
+      m.smokeAt=now;
+      spawnSmoke(m.mesh.position.clone().addScaledVector(m.v.clone().normalize(),-1.0));
+    }
     /* ชนอะไรไหม */
     let hit=null;
     for(const f of fighters){ if(m.mesh.position.distanceTo(f.grp.position)<5.4){ hit=f; break; } }
@@ -5775,33 +6087,66 @@ function tickSquadChatter(now){
   squadShout(who, pool[(Math.random()*pool.length)|0], now);
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
+/* 🚀 เฮลิพันธมิตรยิงจรวดนำวิถีจากปีก (จรวดผ่าน tickMissiles = มีควันตามหลัง+นำวิถีเหมือนของผู้เล่น) */
+function heliFireAt(from0,aim,tgt,now){
+  const from=from0.clone().add(new THREE.Vector3(0,-.6,0));
+  const dir=new THREE.Vector3().subVectors(aim,from).normalize();
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,1.2,6),new THREE.MeshBasicMaterial({color:0xdddddd}));
+  m.position.copy(from); scene.add(m);
+  const tr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffc46a,transparent:true,opacity:.85,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  tr.scale.setScalar(1.6); scene.add(tr);
+  missiles.push({mesh:m,trail:tr,v:dir.multiplyScalar(MIS_SPD*.5),lock:tgt,born:now,ally:true,smokeAt:0,boostUntil:now+180});
+  Snd.missile();
+}
+function nearestFighterTo(pos){ let best=null,bd=1e9;
+  for(const f of fighters){ const d=pos.distanceToSquared(f.grp.position); if(d<bd){ bd=d; best=f; } }
+  return best;
+}
+/* 🐕✈️ รอบ 531 (ผู้ใช้สั่ง): เฮลิพันธมิตรทำ dogfight กับยานลูก — ไล่ล่าท้ายยานลูก + ส่ายหลบ + ยิงถี่
+   ไม่มียานลูก = กลับไปบินลาดตระเวนวนรอบ (พฤติกรรมเดิม) */
 function tickHelis(dt,now){
   helis.forEach(h=>{
-    h.ang+=h.spin*dt;
     const p=h.grp.position;
+    if(fighters.length){
+      if(!h.tgt || fighters.indexOf(h.tgt)<0 || now>(h.retgtAt||0)){
+        h.tgt=nearestFighterTo(p); h.retgtAt=now+rnd(2500,4800);
+      }
+    } else h.tgt=null;
+    if(h.tgt){
+      const fp=h.tgt.grp.position;
+      h.wob=(h.wob||Math.random()*TAU)+dt*2.2;
+      const toF=new THREE.Vector3().subVectors(fp,p), dist=toF.length(), dirF=toF.clone().normalize();
+      const side=new THREE.Vector3(-dirF.z,0,dirF.x);            // ตั้งฉากแนวราบ = ส่ายซ้าย/ขวา
+      /* จุดไล่: ถอยหลังยานลูก ~22 หน่วย (ไล่ท้าย) + ส่ายหลบ + ประกบระดับความสูง */
+      const aimPt=fp.clone().addScaledVector(dirF,-22).addScaledVector(side,Math.sin(h.wob)*14);
+      aimPt.y=fp.y+Math.sin(h.wob*.7)*4+2;
+      const step=new THREE.Vector3().subVectors(aimPt,p), sl=step.length();
+      if(sl>0.001){ step.multiplyScalar(Math.min(1,(HELI_CHASE_SPD*dt)/sl)); p.add(step); }
+      p.x=clamp(p.x,-WORLD*.94,WORLD*.94); p.z=clamp(p.z,-WORLD*.94,WORLD*.94);
+      p.y=Math.max(p.y,terrainH(p.x,p.z)+16);
+      h.grp.rotation.y=Math.atan2(dirF.x,dirF.z)+Math.PI;        // จมูกชี้ยานลูก
+      h.grp.rotation.z=clamp(-Math.sin(h.wob)*.5,-.5,.5);        // เอียงเข้าโค้งตอนส่าย
+      h.grp.rotation.x=clamp((fp.y-p.y)*-0.012,-.2,.25);        // ก้ม/เงยตามระดับยานลูก
+      h.rotor.rotation.y+=dt*46; h.trotor.rotation.x+=dt*52;
+      if(now>h.shotAt && dist<170){
+        h.shotAt=now+HELI_DOGFIRE*rnd(.7,1.4);
+        heliFireAt(p,h.tgt.grp.position,h.tgt,now);
+      }
+      return;
+    }
+    /* ---- ลาดตระเวนวนรอบ (ไม่มียานลูก) ---- */
+    h.ang+=h.spin*dt;
     const tx=Math.cos(h.ang)*h.rad, tz=Math.sin(h.ang)*h.rad;
     p.x+=(tx-p.x)*Math.min(1,dt*1.2); p.z+=(tz-p.z)*Math.min(1,dt*1.2);
     p.y+=(h.y-p.y)*Math.min(1,dt*.8);
     h.grp.rotation.y=Math.atan2(tx-p.x,tz-p.z)+Math.PI;
-    h.grp.rotation.z=-h.spin*3.2;      // เอียงเข้าโค้ง
-    h.grp.rotation.x=0.10;             // ก้มหัวแบบเฮลิฯ บินเดินหน้า
-    h.rotor.rotation.y+=dt*38;
-    h.trotor.rotation.x+=dt*46;
+    h.grp.rotation.z=-h.spin*3.2; h.grp.rotation.x=0.10;
+    h.rotor.rotation.y+=dt*38; h.trotor.rotation.x+=dt*46;
     if(now>h.shotAt){
       h.shotAt=now+HELI_GAP*rnd(.7,1.5);
-      const tgt=fighters.length?fighters[(Math.random()*fighters.length)|0]:null;
-      const aim=tgt?tgt.grp.position:((msOpen&&!msDead&&mother)?mother.position:null);
-      if(!aim) return;
-      const from=p.clone().add(new THREE.Vector3(0,-.6,0));
-      const dir=new THREE.Vector3().subVectors(aim,from).normalize();
-      const m=new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,1.2,6),
-        new THREE.MeshBasicMaterial({color:0xdddddd}));
-      m.position.copy(from); scene.add(m);
-      const tr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffc46a,transparent:true,opacity:.85,
-        blending:THREE.AdditiveBlending,depthWrite:false}));
-      tr.scale.setScalar(1.6); scene.add(tr);
-      missiles.push({mesh:m,trail:tr,v:dir.multiplyScalar(MIS_SPD*.5),lock:tgt,born:now,ally:true});
-      Snd.missile();
+      const aim=(msOpen&&!msDead&&mother)?mother.position:null; if(!aim) return;
+      heliFireAt(p,aim,null,now);
     }
   });
 }
@@ -6273,6 +6618,9 @@ function frame(dt,now){
   tickMother(dt,now);
   tickAlienShots(dt,now);
   tickMissiles(dt,now);
+  tickSmoke(dt,now);
+  tickHeliDust(dt,now);
+  HeliChorus.tick(now);           // 🔊🌍 รอบ 531: เสียงเฮลิทุกลำรอบตัว ดังตามระยะ
   tickSquad(dt,now);
   tickHelis(dt,now);
   peerTick(dt,now);                 // 🌐 ขยับตัวเพื่อนออนไลน์ให้ลื่น
@@ -6404,6 +6752,7 @@ function start(){
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
   missiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail); }); missiles=[];
+  clearSmoke();
   fx.forEach(f=>scene.remove(f.o)); fx=[]; bullets=[];
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
@@ -6479,7 +6828,7 @@ function exitWorld(){
   window.removeEventListener('keydown',keydownFn);
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
-  Snd.stopHum(); Snd.stopRotor(); Snd.stopNightAir();   // 🔇 รอบ 477: กันเสียงลมค้างหลังออกจากโลก
+  Snd.stopHum(); Snd.stopRotor(); Snd.stopNightAir(); HeliSnd.stop(); HeliChorus.stopAll();   // 🔇 รอบ 477/531: กันเสียงลม+ใบพัด Bell + เสียงเฮลิรอบตัวค้างหลังออกจากโลก
   squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
   netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
