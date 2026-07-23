@@ -2328,9 +2328,17 @@ function poseSoldier(s,now){
          · ทิศตรงข้าม rig วาดเองที่ path ปกติใช้ −up เพราะคนละการวางแกน) → lookUp>0(เป้าสูง) = +pitch = เงยขึ้น
        - clamp องศาก้ม/เงยให้สมจริง (ไม่หักเอวเกินคน) แต่พอเล็งตามยานที่โจมตีจากมุมสูงได้ */
     const up=s.lookUp||0;
-    const pitch=Math.max(-0.55, Math.min(1.05, up));  /* เงยขึ้นได้ ~60° · ก้มลงได้ ~32° */
+    const pitch=Math.max(-0.55, Math.min(0.85, up));  /* เงยขึ้นได้ ~49° · ก้มลงได้ ~32° (เฮลิ/ยานไม่เคยเหนือหัว 60° · เกินนี้เอวหักดูแข็ง) */
     J.torso.rotation.x=pitch;                          /* เอียงท่อนบน+ปืนทั้งชุดที่เอว (บวก=เชิดขึ้น) */
     if(s.fireT>0){ J.torso.rotation.x+=s.fireT*0.05; s.fireT=Math.max(0,s.fireT-0.06); }  /* สะบัดปากปืนเด้งขึ้นตอนยิง */
+    /* 🩹 รอบ 525: กลบ "รอยตัดที่ท้อง" ตอนก้มเงย — โมเดล baked เป็นก้อนแข็ง "ไม่ยืด"
+       หมุน torso ที่เอว → ฐานลำตัวเผยอห่างจากสะโพก เห็นเป็นช่องโหว่/รอยตัด
+       แก้: จม torso ลง (กลบตามแนวดิ่ง) + เลื่อนฐานไปด้านที่รอยเปิด (อ้าหน้าเวลาเงย/อ้าหลังเวลาก้ม)
+       → ฐานลำตัวเหลื่อมซ้อนสะโพกปิดรอยต่อ (เก็บฐานเดิมครั้งเดียวกัน error สะสม) */
+    if(s._torsoY0==null){ s._torsoY0=J.torso.position.y; s._torsoZ0=J.torso.position.z; }
+    const ap=Math.abs(pitch);
+    J.torso.position.y=s._torsoY0-0.11*ap;             /* จมลงกลบรอยต่อแนวดิ่ง (จูน strip รอบ 525) */
+    J.torso.position.z=s._torsoZ0-0.09*pitch;          /* เงย(+)ดันฐานไปหน้า(−Z) · ก้ม(−)ดันไปหลัง ปิดฝั่งที่อ้า */
     if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
     return;                                           /* ⛔ ไม่แตะ head/arm/ปืน local → ปืนไม่มีทางหลุด (เอียงตาม torso เท่านั้น) */
   }
