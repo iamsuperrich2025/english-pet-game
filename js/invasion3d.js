@@ -2365,8 +2365,10 @@ function poseSoldier(s,now){
 /* 🔥 รอบ 521: ไฟปากลำกล้องสำหรับโมเดล baked (ปืนอบในตัว ไม่มี flash sprite ในตัว)
    วางที่ "ปลายปืนโดยประมาณ" ใน local ของกลุ่มทหาร (หันหน้า −Z) แยกตามปืน · ค่าจูนจาก strip รอบ 521 */
 const MUZZLE_BY_WEAPON={ r93:[1.398,1.317,-0.520], rifle:[0.705,1.281,-0.449] };   /* วัดปลายลำกล้องจริงจาก geometry รอบ 521 (grp-local · ยืนยัน strip) */
+/* 🎨 รอบ 522: สีไฟปากลำกล้องแยกตามปืน — KSR-77 = ฟ้าพลังงาน (เข้าธีมแถบเรืองแสง) · R93 = ส้ม-เหลืองปกติ */
+const FLASH_COLOR={ r93:0xffe0a0, rifle:0x7fe6ff };
 function makeSoldierFlash(weapon){
-  const f=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffe0a0,transparent:true,opacity:0,
+  const f=new THREE.Sprite(new THREE.SpriteMaterial({color:FLASH_COLOR[weapon]||FLASH_COLOR.rifle,transparent:true,opacity:0,
     blending:THREE.AdditiveBlending,depthWrite:false}));
   const m=MUZZLE_BY_WEAPON[weapon]||MUZZLE_BY_WEAPON.rifle;
   f.scale.setScalar(weapon==='r93'?0.55:0.45); f.position.set(m[0],m[1],m[2]);
@@ -5557,6 +5559,7 @@ function tickSquad(dt,now){
     poseSoldier(s,now);
   });
   tickSquadCalls(now);                            // 📣 รอบ 471: ตะโกนบอกทิศศัตรู
+  tickSquadChatter(now);                          // 💬 รอบ 522: ตะโกนชนิดปืน/สถานะรบ
 }
 
 /* ============================================================
@@ -5647,6 +5650,31 @@ function tickSquadCalls(now){
   squadShout(who, lines[(Math.random()*lines.length)|0], now);
   callAllAt=now+CALL_GAP_ALL*rnd(.85,1.4);
   callDirAt[key]=now+CALL_GAP_DIR;
+}
+/* 💬 รอบ 522: ทหารตะโกน "ชนิดปืน/สถานะรบ" ให้สนามดูมีชีวิต (ผู้ใช้สั่ง)
+   ต่างจากเตือนทิศ (tickSquadCalls) — อันนี้เป็นบทพูดปลุกใจ/ประจำปืน · ใช้ bubble+เสียงชุดเดียวกัน
+   ใช้ callAllAt ร่วม (ไม่ตะโกนซ้อนกับเตือนทิศ) + chatAllAt คุมความถี่ตัวเอง (นาน ๆ ที) */
+const CHAT_GAP_ALL=7000;
+const CHAT_LINES={
+  r93 :['สไนเปอร์เข้าที่!','เล็งนิ่ง ๆ รอจังหวะ','จัดหัวมันเอง!','นัดเดียวจอด!'],
+  rifle:['KSR-77 พร้อมรบ!','ยิงคุ้มกัน เดินหน้า!','กราดให้เละเลย!','ลุยไม่ถอย!'],
+  any :['ระวังตัวด้วยเพื่อน!','เราหนุนอยู่ข้างหลัง!','สู้ ๆ อย่าถอย!','เพื่อนสู้ ๆ!'],
+};
+let chatAllAt=0;
+function tickSquadChatter(now){
+  if(!squad.length||!fighters.length||now<callAllAt||now<chatAllAt) return;
+  let who=null, wd=CALL_NEAR*CALL_NEAR;
+  for(const s of squad){
+    if(now-(s.callAt||0)<CALL_GAP_ONE) continue;
+    const g=s.grp.position, d=(g.x-px)*(g.x-px)+(g.z-pz)*(g.z-pz);
+    if(d<wd){ wd=d; who=s; }
+  }
+  if(!who) return;
+  chatAllAt=now+CHAT_GAP_ALL*rnd(.8,1.5);
+  callAllAt=now+CALL_GAP_ALL*rnd(.85,1.4);                 // กันเตือนทิศตามมาติด ๆ
+  const byGun=CHAT_LINES[who.weapon]||CHAT_LINES.rifle;
+  const pool=(Math.random()<0.6)?byGun:CHAT_LINES.any;    // ส่วนใหญ่บทประจำปืน บางทีปลุกใจทั่วไป
+  squadShout(who, pool[(Math.random()*pool.length)|0], now);
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
 function tickHelis(dt,now){
