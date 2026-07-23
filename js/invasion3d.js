@@ -73,7 +73,7 @@ const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
      Accuracy 28 = ส่ายน้อยมากตอนส่องกล้อง แต่ยิงสะโพก (ไม่ส่อง) จะเป๋ · ความเร็วกระสุน 550 m/s
    ============================================================ */
 const WEAPONS={
-  rifle:{ key:'rifle', name:'ไรเฟิลจู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,
+  rifle:{ key:'rifle', name:'KSR-77 จู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,   /* 🏷️ รอบ 520: เปลี่ยนชื่อโชว์ 'ไรเฟิลจู่โจม'→'KSR-77' (ผู้ใช้เลือก · key ยังเป็น 'rifle' คงค่าล็อก) */
           spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:true,   /* รอบ 463: ศูนย์เล็ง 2× */ tracer:0xffe08a, recoil:1 },
   r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
           spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true,   /* กำลังขยายเลือกได้ 3 ระดับ ดู SCOPE_MAGS */
