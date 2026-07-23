@@ -104,37 +104,37 @@ report_worktrees(){
   wt_main=$(git rev-parse --verify -q main 2>/dev/null) || return 0
   wt_self=$(git rev-parse HEAD 2>/dev/null)
   git worktree list --porcelain 2>/dev/null | {
-    hdr=0; wt=""; hd=""
+    hdr=0; wt=""; hd=""; dead=""; dead_n=0
     emit(){
       [ -n "$wt" ] && [ -n "$hd" ] || return 0
       [ "$hd" = "$wt_self" ] && return 0      # ตัวเราเอง (หรือ worktree ที่อยู่ commit เดียวกับเรา)
       [ "$hd" = "$wt_main" ] && return 0      # อยู่ที่ main เป๊ะ = ไม่มีงานค้าง
       ah=$(git rev-list --count "$wt_main..$hd" 2>/dev/null)   # นำ main กี่ commit (งานยังไม่รวมเข้า main)
-      bh=$(git rev-list --count "$hd..$wt_main" 2>/dev/null)   # ตาม main กี่ commit
-      subj=$(git log -1 --format=%s "$hd" 2>/dev/null)
-      rn=$(printf '%s' "$subj" | sed -n 's/.*รอบ \([0-9]\{1,\}\).*/\1/p')
-      if [ -n "$rn" ]; then rn="รอบ $rn"; else rn=$(printf '%.7s' "$hd"); fi
-      if [ "$hdr" = 0 ]; then
-        printf '🌿 worktree อื่นที่ HEAD ต่างจาก main (เช็กก่อนเริ่ม กันทำซ้ำ):\n'
-        hdr=1
-      fi
       if [ "${ah:-0}" -gt 0 ] 2>/dev/null; then
-        # นำ main >0 = session กำลังทำอยู่ (มี commit ยังไม่รวม main) → โชว์หัวข้องานล่าสุดด้วย รู้ว่าเขาทำเรื่องอะไร
+        # นำ main >0 = session กำลังทำอยู่ → โชว์เด่น + หัวข้อ commit ล่าสุด (subject) รู้ว่าเขาทำเรื่องอะไร กันทำซ้ำ
+        bh=$(git rev-list --count "$hd..$wt_main" 2>/dev/null)
+        subj=$(git log -1 --format=%s "$hd" 2>/dev/null)
+        rn=$(printf '%s' "$subj" | sed -n 's/.*รอบ \([0-9]\{1,\}\).*/\1/p')
+        if [ -n "$rn" ]; then rn="รอบ $rn"; else rn=$(printf '%.7s' "$hd"); fi
+        if [ "$hdr" = 0 ]; then
+          printf '🌿 worktree อื่นที่ยังทำงานอยู่ (มี commit ยังไม่รวม main — เช็กก่อนเริ่ม กันทำซ้ำ):\n'
+          hdr=1
+        fi
         printf '     ⚡ %-24s %-9s นำ main %s · ตาม %s — กำลังทำ: %s\n' "${wt##*/}" "$rn" "$ah" "$bh" "$subj"
       else
-        # นำ 0 = commit ทั้งหมดรวมเข้า main แล้ว (session ตาย/เสร็จ) → เก็บกวาดได้ (ไม่ใส่ --force ให้ กันเผลอทิ้งงานที่ยังไม่ commit)
-        printf '     🗑️ %-24s %-9s ตาม main %s · นำ 0 = รวม main แล้ว เก็บกวาดได้:\n' "${wt##*/}" "$rn" "$bh"
-        printf '        git worktree remove %s\n' "$wt"
+        # นำ 0 = commit รวม main แล้ว (session ตาย/เสร็จ) → รวบเป็นบรรทัดเดียวท้ายสุด ลด noise เมื่อค้างเยอะ
+        dead_n=$((dead_n + 1))
+        if [ -z "$dead" ]; then dead="${wt##*/}"; else dead="$dead, ${wt##*/}"; fi
       fi
     }
     while IFS= read -r line; do
       case "$line" in
-        "worktree "*) wt=${line#worktree } ;;
+        "worktree "*) emit; wt=${line#worktree }; hd="" ;;
         "HEAD "*)     hd=${line#HEAD } ;;
-        "")           emit; wt=""; hd="" ;;
       esac
     done
     emit
+    [ "$dead_n" -gt 0 ] && printf '🗑️ worktree ที่รวม main แล้ว %s อัน (%s) — เก็บกวาด: bash tools/clean_worktrees.sh\n' "$dead_n" "$dead"
   }
 }
 
