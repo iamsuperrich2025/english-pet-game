@@ -16,7 +16,7 @@
 #   (main / origin/main แชร์กันทุก worktree อยู่แล้ว จึงเทียบ HEAD ของ worktree กับ main ได้ตรง)
 # ============================================================
 
-MODE=${1:-boot}
+MODE=${1:-manual}
 
 # ── หา repo dir: ยึด cwd ถ้าเป็น git repo (ครอบทั้ง repo หลัก + worktree) · ไม่งั้นยึดที่ตั้งสคริปต์เอง ──
 SELF=$(CDPATH= cd -- "$(dirname -- "$0")/.." 2>/dev/null && pwd)
@@ -99,8 +99,11 @@ report_version(){
   return 0
 }
 
-# ── ③ รายงาน "worktree อื่นที่ค้าง" (boot เท่านั้น) — โชว์เฉพาะอันที่ HEAD ต่าง/ตามหลัง main (กันรก) ──
+# ── ③ รายงาน "worktree อื่นที่ค้าง" — โชว์เฉพาะอันที่ HEAD ต่าง/ตามหลัง main (กันรก) ──
+#    $1=show_dead (1=โชว์บรรทัดสรุป 🗑️ worktree ที่รวม main แล้ว · 0=ซ่อน) · ⚡ active โชว์เสมอ
+#    boot/SessionStart ส่ง 0 (เงียบ ลด noise ทุกบูต) · เรียกมือส่ง 1 (เห็นครบ พร้อมคำสั่งเก็บกวาด)
 report_worktrees(){
+  show_dead=${1:-1}
   wt_main=$(git rev-parse --verify -q main 2>/dev/null) || return 0
   wt_self=$(git rev-parse HEAD 2>/dev/null)
   git worktree list --porcelain 2>/dev/null | {
@@ -134,7 +137,7 @@ report_worktrees(){
       esac
     done
     emit
-    [ "$dead_n" -gt 0 ] && printf '🗑️ worktree ที่รวม main แล้ว %s อัน (%s) — เก็บกวาด: bash tools/clean_worktrees.sh\n' "$dead_n" "$dead"
+    [ "$dead_n" -gt 0 ] && [ "$show_dead" = 1 ] && printf '🗑️ worktree ที่รวม main แล้ว %s อัน (%s) — เก็บกวาด: bash tools/clean_worktrees.sh\n' "$dead_n" "$dead"
   }
 }
 
@@ -166,10 +169,16 @@ case "$MODE" in
     fi
     exit $rc
     ;;
-  *)  # boot / SessionStart — รายงานรวม (ข้อมูลล้วน ไม่บล็อกอะไร · เงียบสนิทเมื่อไม่มีอะไรค้าง)
+  boot)  # SessionStart — เงียบ: ซ่อนบรรทัด 🗑️ (worktree ที่รวม main แล้ว) ลด noise ทุกบูต · โชว์แค่ ⚡ active + base/version
     report_base || true
     report_version "$(git show HEAD:version.json 2>/dev/null | num)" -lt "HEAD" "" || true
-    report_worktrees || true
+    report_worktrees 0 || true
+    exit 0
+    ;;
+  *)  # เรียกมือ (ไม่มี arg / manual) — รายงานครบ รวมบรรทัด 🗑️ พร้อมคำสั่งเก็บกวาด
+    report_base || true
+    report_version "$(git show HEAD:version.json 2>/dev/null | num)" -lt "HEAD" "" || true
+    report_worktrees 1 || true
     exit 0
     ;;
 esac
