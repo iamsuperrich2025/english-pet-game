@@ -133,6 +133,52 @@ def rotate_bullets(path, lines, hdr_prefix, hdr_contains, closers, keep, arch_na
     return new_lines, len(move_blocks)
 
 
+def rotate_status_bullets(lines, keep):
+    """🩹 รอบ 532: หมุน bullet "รอบ N" ใน **ทุก** หัวข้อสรุปสถานะ ไม่ใช่แค่หัวข้อแรกที่เจอ
+
+    ต้นตอที่เจอรอบนี้ (อาการเดียวกับรอบ 480 แต่คนละจุด): `rotate_bullets` ใช้ `find_section`
+    ซึ่งคืน "หัวข้อแรกในไฟล์" — แต่ session ใหม่ ๆ เติม bullet ลงหัวข้อที่อยู่ **ล่างกว่า**
+    หัวข้อแรกจึงมี bullet เดียวตลอด → รายงาน "ไม่ต้องหมุน" ทุกครั้งทั้งที่ไฟล์ 89KB เกินงบ
+    (หัวข้อเดียวโตถึง 46KB) · แก้: ไล่ทุกหัวข้อ เก็บรวมกันแค่ keep bullet ที่เหลือเข้า archive
+    · หัวข้อไหนถูกย้าย bullet ออกจนไม่เหลือเนื้อ = ตัดหัวข้อทิ้งด้วย (ไม่ให้เหลือหัวลอย)
+    """
+    heads = [i for i, ln in enumerate(lines) if STATUS_HEAD.match(ln)]
+    if not heads:
+        print("  bullet ในหัวข้อสรุปสถานะ: (ไม่พบหัวข้อ — ข้าม)")
+        return lines, 0
+    kept = 0
+    drop = set()            # บรรทัดที่ย้ายออก
+    moved_lines = []
+    moved_n = 0
+    for h in heads:
+        end = len(lines)
+        for j in range(h + 1, len(lines)):
+            if lines[j].startswith("### ") or lines[j].startswith("## "):
+                end = j
+                break
+        _, blocks = split_blocks(lines, h + 1, end, ROUND_BULLET)
+        if not blocks:
+            continue
+        head_kept = 0
+        for i, j in blocks:
+            if kept < keep:
+                kept += 1
+                head_kept += 1
+            else:
+                moved_lines.extend(lines[i:j])
+                drop.update(range(i, j))
+                moved_n += 1
+        if head_kept == 0:  # หัวข้อนี้ไม่เหลือ bullet เลย → ตัดทั้งหัวข้อ (เหลือแต่บรรทัดว่าง)
+            if not any(lines[k].strip() and k not in drop for k in range(h + 1, end)):
+                drop.update(range(h, end))
+    if not moved_n:
+        print("  bullet ในหัวข้อสรุปสถานะ: %d ≤ %d — ไม่ต้องหมุน" % (kept, keep))
+        return lines, 0
+    append_archive("TASKS_STATUS.md", "handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)", moved_lines)
+    print("  bullet ในหัวข้อสรุปสถานะ: ย้าย %d รอบ → TASKS_STATUS.md (เหลือ %d)" % (moved_n, kept))
+    return [ln for k, ln in enumerate(lines) if k not in drop], moved_n
+
+
 def rotate_status_heads(lines, keep):
     """🆕 เก็บหัวข้อ 'สรุปสถานะล่าสุด' ใหม่สุด keep อัน — ที่เหลือย้ายเข้า archive ทั้งก้อน
        (หัวข้อเรียงใหม่→เก่าอยู่แล้ว เพราะทุก session แทรกอันใหม่ไว้บนสุด)"""
@@ -328,8 +374,7 @@ def main():
 
     print("handoff/TASKS.md:")
     lines = read_lines(TASKS)
-    lines, n1 = rotate_bullets(TASKS, lines, "### ", "สรุปสถานะล่าสุด", ["### ", "## "],
-                               KEEP_TASKS_BULLETS, "TASKS_STATUS.md", "handoff/TASKS.md (สรุปสถานะล่าสุด)")
+    lines, n1 = rotate_status_bullets(lines, KEEP_TASKS_BULLETS)   # 🩹 รอบ 532: ไล่ "ทุก" หัวข้อ ไม่ใช่หัวข้อแรก
     lines, n2 = rotate_round_sections(lines, KEEP_TASKS_SECTIONS)
     lines, n3 = rotate_history_section(lines)
     lines, n4 = rotate_status_heads(lines, KEEP_STATUS_HEADS)   # 🆕 ต้นตอไฟล์บวม
