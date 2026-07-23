@@ -2320,8 +2320,19 @@ function poseSoldier(s,now){
       J.legLL.rotation.x=J.legLR.rotation.x=0;
       J.hips.position.y=0.92;
     }
+    /* 🎯 รอบ 524: ก้มเงยที่ "เอว" ให้ปากกระบอกเล็งตามทิศเป้า (ยานแม่/ยานลูกยิงมาจากบนฟ้า)
+       - จุดหมุน = J.torso ซึ่ง pivot อยู่ที่ขอบล่างกล่องลำตัว = "เอว" (เส้นเขียว) พอดีอยู่แล้ว (autoRigSoldier บรรทัด piv.torso)
+       - torso เป็นแม่ของ head/arm/ปืน(baked) ทั้งชุด → หมุน torso จุดเดียว ท่อนบนเอียงเป็นก้อนแข็ง "ปืนไม่หลุด"
+       - ขาเป็นลูกของ hips (ไม่ใช่ torso) → หมุน torso ขาไม่ขยับตาม ยังยืน/วิ่งบนพื้นปกติ
+       - sign: โมเดล baked หันหน้า −Z → torso.rotation.x "บวก" = ปากกระบอก "เชิดขึ้น" (ยืนยันด้วย strip รอบ 524
+         · ทิศตรงข้าม rig วาดเองที่ path ปกติใช้ −up เพราะคนละการวางแกน) → lookUp>0(เป้าสูง) = +pitch = เงยขึ้น
+       - clamp องศาก้ม/เงยให้สมจริง (ไม่หักเอวเกินคน) แต่พอเล็งตามยานที่โจมตีจากมุมสูงได้ */
+    const up=s.lookUp||0;
+    const pitch=Math.max(-0.55, Math.min(1.05, up));  /* เงยขึ้นได้ ~60° · ก้มลงได้ ~32° */
+    J.torso.rotation.x=pitch;                          /* เอียงท่อนบน+ปืนทั้งชุดที่เอว (บวก=เชิดขึ้น) */
+    if(s.fireT>0){ J.torso.rotation.x+=s.fireT*0.05; s.fireT=Math.max(0,s.fireT-0.06); }  /* สะบัดปากปืนเด้งขึ้นตอนยิง */
     if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
-    return;                                           /* ⛔ ไม่แตะ torso/head/arms/lookUp/fireT → ปืนไม่มีทางหลุด */
+    return;                                           /* ⛔ ไม่แตะ head/arm/ปืน local → ปืนไม่มีทางหลุด (เอียงตาม torso เท่านั้น) */
   }
   const br=Math.sin(t*1.6)*0.02;                     /* หายใจ */
   if(m==='walk'){
@@ -2393,6 +2404,15 @@ function makeSoldier(x,z,crouch,kind,weapon){
     fitInto(obj,1.8);                       /* สูงราว 1.8 ม. เท่าคนจริง */
     obj.position.y=0;
     applySoldierGlb(s,obj);
+    /* 🎯 รอบ 524: ย้ายไฟปากลำกล้องไปห้อยใต้ข้อต่อ "ลำตัว(torso)" ที่ก้มเงยได้
+       → ทหารเงยเล็งยานบนฟ้า flash เอียงตามปลายปืนจริง ไม่ค้างที่ระดับเดิม (เดิมผูก grp นิ่ง)
+       คงค่า MUZZLE_BY_WEAPON เดิม (วัด grp-local ตอนนิ่ง) แปลงเป็น torso-local ครั้งเดียวตอนท่าพัก */
+    if(s.flash && !s.static && s.J && s.J.torso){
+      s.grp.updateWorldMatrix(true,true);
+      const wp=s.flash.getWorldPosition(new THREE.Vector3());
+      s.J.torso.add(s.flash);
+      s.flash.position.copy(s.J.torso.worldToLocal(wp));
+    }
   });
   return s;
 }
