@@ -173,7 +173,7 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (6,667 บรรทัด · 366 รายการ)
+## js/invasion3d.js (6,614 บรรทัด · 365 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 14-68 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 69-103 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -214,11 +214,11 @@ makeHappy:73 · currentPetImg:84
 - 4743-4747 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
 - 4748-4906 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
 - 4907-5164 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
-- 5165-5593 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 5594-5714 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
-- 5715-6157 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
-- 6158-6217 🔁 ลูปหลัก
-- 6218-6667 ▶️ เข้า/ออกโลก
+- 5165-5540 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 5541-5661 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
+- 5662-6104 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
+- 6105-6164 🔁 ลูปหลัก
+- 6165-6614 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
 MS_Y:44 · MS_HP:49 · MS_DMG_GUN:50 · BOARD_Y:57 · CORE_Y:59 · F_HP:62
@@ -268,19 +268,19 @@ zoneName:4756 · buildMapShade:4770 · drawSpawnMap:4789 · safeSpawn:4864 · fi
 applySpawnPick:4894 · RIDE_DIST:4917 · RIDE_UP:4918 · RIDE_OFF:4919 · rideableHelis:4920 · findRide:4926
 nearestRideable:4927 · ridePos:4937 · boardGunner:4944 · dismountGunner:4958 · tickGunner:4970 · updateGunnerBtn:4998
 heliCount:5008 · enterHeli:5013 · exitHeli:5044 · seatCamera:5065 · tickHeliFlight:5075 · syncBotHelis:5155
-netReady:5170 · netJoin:5174 · netSend:5187 · peerColor:5208 · nameSprite:5210 · peerRifle:5223
-attachPeerGun:5254 · peerInCover:5264 · peerRig:5268 · setPeerWeapon:5272 · peerBody:5273 · buildPeer:5305
-onPeer:5314 · dropPeer:5347 · netLeave:5354 · peerTick:5360 · renderBoard:5405 · sendChat:5422
-showPeerBubble:5429 · removePeerBubble:5435 · tickFighters:5441 · tickMother:5476 · spawnAlienShot:5504 · tickAlienShots:5516
-tickMissiles:5531 · tickSquad:5563 · CALL_DIST:5600 · CALL_NEAR:5601 · CALL_GAP_ALL:5602 · CALL_GAP_ONE:5603
-CALL_GAP_DIR:5604 · CALL_MS:5605 · CALL_LINES:5606 · CALL_SECTORS:5617 · bearingKey:5620 · clearSquadBubble:5628
-callSprite:5634 · squadShout:5646 · tickSquadCalls:5659 · tickHelis:5684 · DAY:5722 · NIGHT:5724
-collectMsMats:5728 · CYCLE_MS:5739 · MODE_ICON:5741 · STORM_MS:5748 · buildStars:5755 · buildStreetLamps:5778
-glowTex:5796 · tickStreetLamps:5804 · beamPair:5821 · tickSearchBeams:5832 · buildBarrelFires:5869 · tickBarrels:5887
-tickShootingStar:5897 · buildMist:5922 · tickMist:5932 · tickNightSound:5975 · tickSneak:5984 · tickStorm:5995
-nvReady:6011 · nvEnter:6012 · nvExit:6018 · tickNvHint:6019 · dropGlowStick:6028 · tickGlowSticks:6045
-buildFlashlight:6054 · setNight:6059 · setDayMode:6060 · tickNight:6074 · applyNightLook:6106 · tickFlashlight:6146
-fit:6161 · tick:6167 · frame:6175 · build:6221 · start:6275 · exitWorld:6381
+netReady:5170 · netJoin:5174 · netSend:5187 · peerColor:5208 · nameSprite:5210 · peerSoldierGlb:5224
+loadPeerSoldier:5225 · peerRig:5232 · setPeerWeapon:5237 · peerBody:5238 · buildPeer:5266 · onPeer:5275
+dropPeer:5308 · netLeave:5315 · peerTick:5321 · renderBoard:5352 · sendChat:5369 · showPeerBubble:5376
+removePeerBubble:5382 · tickFighters:5388 · tickMother:5423 · spawnAlienShot:5451 · tickAlienShots:5463 · tickMissiles:5478
+tickSquad:5510 · CALL_DIST:5547 · CALL_NEAR:5548 · CALL_GAP_ALL:5549 · CALL_GAP_ONE:5550 · CALL_GAP_DIR:5551
+CALL_MS:5552 · CALL_LINES:5553 · CALL_SECTORS:5564 · bearingKey:5567 · clearSquadBubble:5575 · callSprite:5581
+squadShout:5593 · tickSquadCalls:5606 · tickHelis:5631 · DAY:5669 · NIGHT:5671 · collectMsMats:5675
+CYCLE_MS:5686 · MODE_ICON:5688 · STORM_MS:5695 · buildStars:5702 · buildStreetLamps:5725 · glowTex:5743
+tickStreetLamps:5751 · beamPair:5768 · tickSearchBeams:5779 · buildBarrelFires:5816 · tickBarrels:5834 · tickShootingStar:5844
+buildMist:5869 · tickMist:5879 · tickNightSound:5922 · tickSneak:5931 · tickStorm:5942 · nvReady:5958
+nvEnter:5959 · nvExit:5965 · tickNvHint:5966 · dropGlowStick:5975 · tickGlowSticks:5992 · buildFlashlight:6001
+setNight:6006 · setDayMode:6007 · tickNight:6021 · applyNightLook:6053 · tickFlashlight:6093 · fit:6108
+tick:6114 · frame:6122 · build:6168 · start:6222 · exitWorld:6328
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
