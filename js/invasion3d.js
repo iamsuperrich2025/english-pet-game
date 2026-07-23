@@ -579,6 +579,14 @@ const CSS=`
 #inv-wrap.seat0 #inv-canopy .dash{height:26%}
 #inv-wrap.seat1 #inv-canopy .dash{height:13%}
 #inv-wrap.seat2 #inv-canopy .dash{height:6%}
+/* 🎛️ รอบ 532: ภาพห้องนักบินจริง (img/heli_frame.png / heli_dash.png) + canvas เข็มเกจ — ชุดเดียวกับโลกเฮลิฯ
+   มีภาพเมื่อไหร่ → ใส่คลาส .cockpit แล้วซ่อนกรอบ CSS เดิมทิ้ง (ไม่มีภาพ = ตกกลับไปใช้ canopy เดิมอัตโนมัติ) */
+#inv-cockpit{position:absolute;inset:0;z-index:2;pointer-events:none;display:none;background-repeat:no-repeat}
+#inv-gauges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:3}
+#inv-wrap.fly.cockpit #inv-cockpit,#inv-wrap.fly.cockpit #inv-gauges{display:block}
+#inv-wrap.cockpit #inv-canopy{display:none!important}
+/* 🎥 มุมมองภายนอก (seat3): ไม่มีทั้งกรอบ CSS และภาพค็อกพิต — เห็นลำเฮลิเต็มลำ */
+#inv-wrap.seat3 #inv-canopy,#inv-wrap.seat3 #inv-cockpit,#inv-wrap.seat3 #inv-gauges{display:none!important}
 #inv-seat{position:absolute;right:88px;bottom:190px;z-index:6;border:none;border-radius:14px;width:62px;height:50px;
   font-size:19px;font-weight:900;color:#0e2136;cursor:pointer;display:none;line-height:1;
   box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
@@ -837,6 +845,7 @@ function buildDom(){
     </div>
     <div id="inv-ammo"></div>
     <div id="inv-canopy"><span class="strut sl"></span><span class="strut sr"></span><span class="dash"></span></div>
+    <div id="inv-cockpit"></div><canvas id="inv-gauges"></canvas>
     <div id="inv-start"></div>
     <div id="inv-board"></div>
     <div id="inv-joy"><i></i></div>
@@ -929,6 +938,7 @@ function buildDom(){
   runBtn=document.getElementById('inv-run');
   heliBtn=document.getElementById('inv-heli'); upBtn=document.getElementById('inv-up'); downBtn=document.getElementById('inv-down');
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
+  loadCockpitImg();                                        // 🎛️ รอบ 532: ภาพห้องนักบินจริง + canvas เข็มเกจ
   seatBtn=document.getElementById('inv-seat'); startEl=document.getElementById('inv-start');
   seatBtn.addEventListener('click',()=>{ setSeatView(seatLv+1);
     if(heliReady){ state.heliSeat=seatLv; if(typeof saveState==='function') saveState(); } });
@@ -2716,6 +2726,9 @@ const SEAT_VIEWS=[                      // มุมมองในห้อง�
   {label:'เต็มลำ', dy:-0.30, dz: 0.85},
   {label:'มุมบิน', dy: 0.00, dz: 0.00},
   {label:'บินต่ำ', dy: 0.32, dz:-0.70},
+  /* 🎥 รอบ 532 (ผู้ใช้สั่ง): มุมมองที่ 4 = กล้องภายนอก ลอยหลัง+เหนือเครื่อง เห็นลำเฮลิทั้งลำ
+     ext:true → ซ่อนภาพค็อกพิต/เกจ + โชว์ myPad.grp (มุมมองภายในซ่อนลำ กันเห็นจมูกทะลุกระจก) */
+  {label:'ภายนอก', dy: 4.6, dz:-14.5, ext:true, look:0.26},
 ];
 /* โหลด+ประกอบโมเดลลำจริง 1 ลำ (geometry/material แชร์กันทุกลำ = เพิ่มลำแทบไม่กินเครื่อง) */
 let heliDesertMat=null;
@@ -2775,7 +2788,7 @@ function padAt(x,z){                                     // ลำจอดท�
 }
 function movePad(p,x,z,rot){                             // ย้ายลำไปจอดที่ใหม่ (ตอนลงจากเครื่อง)
   p.x=x; p.z=z; p.rot=rot;
-  p.grp.position.set(x,terrainH(x,z),z); p.grp.rotation.y=rot;
+  p.grp.position.set(x,terrainH(x,z),z); p.grp.rotation.set(0,rot,0);   // คืนลำให้ตั้งตรง (มุมภายนอกเอียง z ไว้)
   p.grp.visible=true;
 }
 function startPhaseText(now){
@@ -2787,8 +2800,13 @@ function startPhaseText(now){
 }
 function setSeatView(lv){
   seatLv=((lv%SEAT_VIEWS.length)+SEAT_VIEWS.length)%SEAT_VIEWS.length;
-  if(wrapEl){ wrapEl.classList.remove('seat0','seat1','seat2'); wrapEl.classList.add('seat'+seatLv); }
+  if(wrapEl){
+    wrapEl.classList.remove('seat0','seat1','seat2','seat3'); wrapEl.classList.add('seat'+seatLv);
+    /* 🎛️ รอบ 532: มีภาพค็อกพิตจริงแล้วและอยู่มุมมองภายใน → ใช้ภาพแทนกรอบ CSS */
+    wrapEl.classList.toggle('cockpit', !!cpNat && !SEAT_VIEWS[seatLv].ext);
+  }
   if(seatBtn) seatBtn.innerHTML='👁️<small>'+SEAT_VIEWS[seatLv].label+'</small>';
+  cpBox=''; layoutInvCockpit();          // ⚠️ วัดใหม่ทันที ห้ามรอเฟรมถัดไป (เหมือน setSeat ในโลกเฮลิฯ)
 }
 /* ใบพัดลำที่จอด: หมุนเฉพาะลำที่กำลังสตาร์ท/ที่เราขับอยู่ (ลำอื่นจอดนิ่ง) */
 function tickPads(dt,now){
@@ -2800,6 +2818,143 @@ function tickPads(dt,now){
     if(p.model._rotor) p.model._rotor.rotation.y+=spd*dt;
     if(p.model._trotor) p.model._trotor.rotation.x+=spd*1.2*dt;
   }
+}
+
+/* ============================================================
+   🎛️🚁 รอบ 532: ห้องนักบิน "ภาพจริง + เข็มเกจขยับ" (ผู้ใช้สั่ง — เหมือนโลก helicopter ทุกประการ)
+   เดิมมุมมองในเฮลิเป็นแค่กรอบ CSS (#inv-canopy) → เปลี่ยนมาใช้ภาพเดียวกับโลกเฮลิฯ:
+     · img/heli_frame.png = กรอบเต็มลำ ช่องกระจกโปร่ง (มองทะลุเห็นสนามรบจริง) → มุมมอง "เต็มลำ" (seat 0)
+     · img/heli_dash.png  = เฉพาะแผงหน้าปัดล่าง → มุมมอง "มุมบิน/บินต่ำ" (seat 1/2 · โหมด 2 ดันแผงลงอีก)
+   เข็มทุกตัววาดบน canvas #inv-gauges ด้วย "พิกัดในภาพ 1100×537" (cpMap เป็นตัวแปลง) — พอร์ตสูตร
+   drawGauges/cpNeedle/layoutCockpit จาก adventure3d.js ตรง ๆ แต่ป้อนค่าจากการบินของยานแม่
+   ⚠️ ไม่มีไฟล์ภาพ = cpNat ว่าง → ไม่ใส่คลาส .cockpit → ตกกลับไปใช้กรอบ CSS เดิมอัตโนมัติ
+   ⚠️ ห้ามย่อ/ครอปภาพ 2 ไฟล์นี้ — พิกัดเข็มผูกกับพิกเซลของภาพ
+   ============================================================ */
+const CP_NAT={w:1100,h:537};            // ขนาดอ้างอิงของ "กรอบเต็ม" (พิกัดเข็มทั้งหมดอิงระบบนี้)
+const CP_GAUGES={
+  spd:{x:302,y:313,r:21},   // ความเร็วลม
+  att:{x:358,y:290,r:21},   // ขอบฟ้าเทียม
+  alt:{x:410,y:294,r:21},   // ความสูง
+  rpm:{x:359,y:354,r:24},   // รอบใบพัด
+  vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
+};
+const CP_SEAT_FULL=.62;                 // ตำแหน่งแนวตั้งของกรอบเต็มลำ (0=ชิดบน 1=ชิดล่าง)
+const CP_ZOOM=1.12;                     // ซูมกรอบเต็มลำเล็กน้อย ให้ครอบจอทุกสัดส่วน
+const CP_DASH_OFF_Y=228;                // heli_dash.png ตัดมาจากกรอบเต็มที่ y นี้ (ต้องตรงกับ tools/cockpit_prep.py)
+const CP_DASH_DROP=[0,0,.3];            // มุมบินต่ำดันแผงลงอีก 30% ของความสูงแผง
+const CP_SHAKE_RPM=1.18;                // รอบใบพัดเกินนี้ = เข็มเริ่มสะบัด
+let cpNat=null, cpDashNat=null, cpMap=null, cpBox='';
+let cpEl=null, gaugeCanvasEl=null, gaugeCtx=null;
+let cpTiltS=0, cpTiltF=0;               // เอียงซ้ายขวา / ก้ม-เงย (ค่าหน่วง — ป้อนขอบฟ้าเทียม)
+/* โหลดภาพค็อกพิต 2 ใบ (เรียกครั้งเดียวตอน buildDom) */
+function loadCockpitImg(){
+  cpEl=document.getElementById('inv-cockpit');
+  gaugeCanvasEl=document.getElementById('inv-gauges');
+  if(!cpEl||!gaugeCanvasEl) return;
+  gaugeCtx=gaugeCanvasEl.getContext('2d');
+  const full=new Image();
+  full.onload=()=>{ cpNat={w:full.naturalWidth,h:full.naturalHeight,src:full.src}; cpBox=''; layoutInvCockpit();
+    if(wrapEl&&inHeli&&!SEAT_VIEWS[seatLv].ext) wrapEl.classList.add('cockpit'); };
+  full.onerror=()=>{ cpNat=null; cpMap=null; };        // ไม่มีภาพ → ใช้กรอบ CSS เดิม
+  full.src='img/heli_frame.png';
+  const dash=new Image();
+  dash.onload=()=>{ cpDashNat={w:dash.naturalWidth,h:dash.naturalHeight,src:dash.src}; cpBox=''; layoutInvCockpit(); };
+  dash.onerror=()=>{ cpDashNat=null; };                // ไม่มีไฟล์แผง → ใช้กรอบเต็มทุกมุมมอง
+  dash.src='img/heli_dash.png';
+}
+/* จัดวางภาพค็อกพิต + ปรับ canvas เข็มให้ทับกันพอดี (เรียกตอนโหลดภาพ/หมุนจอ/เปลี่ยนเบาะ) */
+function layoutInvCockpit(){
+  const cv=gaugeCanvasEl;
+  if(!cpEl||!cv||!cpNat||SEAT_VIEWS[seatLv].ext) return;
+  const dash=seatLv>0&&!!cpDashNat, nat=dash?cpDashNat:cpNat;
+  const bw=cpEl.clientWidth, bh=cpEl.clientHeight;
+  if(!bw||!bh) return;
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  if(cv.width!==Math.round(bw*dpr)||cv.height!==Math.round(bh*dpr)){
+    cv.width=Math.round(bw*dpr); cv.height=Math.round(bh*dpr);
+  }
+  let s,ox,oy,dw,dh,bgY;
+  if(dash){
+    s=bw/nat.w;                                        // เต็มความกว้าง ไม่ซูม (แผงจะได้ไม่ใหญ่เกิน)
+    dw=bw; dh=nat.h*s;
+    ox=0; bgY=bh-dh+dh*(CP_DASH_DROP[seatLv]||0);      // ชิดล่าง (มุมบินต่ำดันลงอีก)
+    oy=bgY-CP_DASH_OFF_Y*s;                            // แปลงกลับเป็น "พิกัดกรอบเต็ม" ให้เข็มวางถูกที่
+  }else{
+    s=Math.max(bw/nat.w,bh/nat.h)*CP_ZOOM;
+    dw=nat.w*s; dh=nat.h*s;
+    ox=(bw-dw)/2; oy=bgY=(bh-dh)*CP_SEAT_FULL;
+  }
+  cpEl.style.backgroundImage=`url(${nat.src})`;
+  cpEl.style.backgroundSize=dw.toFixed(1)+'px '+dh.toFixed(1)+'px';
+  cpEl.style.backgroundPosition=ox.toFixed(1)+'px '+bgY.toFixed(1)+'px';
+  cpBox=bw+'x'+bh+'/'+cv.width+'x'+cv.height+'/'+seatLv;
+  cpMap={s:s*dpr*(nat.w/CP_NAT.w), ox:ox*dpr, oy:oy*dpr};
+}
+/* เข็มบาง ยาวไม่เกินหน้าปัดในภาพ — วาดด้วย "พิกัดในภาพ" (canvas ถูก transform ไว้แล้ว) */
+function cpNeedle(c,g,frac,color,opt){
+  const o=opt||{}, sw=(o.sweep||1.5)*Math.PI, a0=-Math.PI*.75;
+  let a=a0+Math.max(0,Math.min(1,frac))*sw;
+  if(o.shake) a+=Math.sin(o.now/38+(o.phase||0))*o.shake*.055 + (Math.random()-.5)*o.shake*.02;
+  const R=g.r;
+  c.save();
+  c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=R*.12;
+  c.strokeStyle=color; c.lineWidth=R*.12; c.lineCap='round';
+  c.beginPath();
+  c.moveTo(g.x-Math.sin(a)*R*.22,g.y+Math.cos(a)*R*.22);        // หางเข็มสั้นๆ แบบเข็มจริง
+  c.lineTo(g.x+Math.sin(a)*R*.78,g.y-Math.cos(a)*R*.78);
+  c.stroke();
+  c.shadowBlur=0;
+  c.beginPath(); c.arc(g.x,g.y,R*.1,0,7); c.fillStyle='#d8dde6'; c.fill();
+  c.restore();
+}
+/* วาดเข็มทุกตัวจาก "ค่าการบินจริง" ของยานแม่ (เรียกท้ายเฟรมตอนอยู่ในเฮลิ) */
+function drawInvGauges(now){
+  if(!gaugeCtx||!cpNat) return;
+  const cv=gaugeCanvasEl;
+  if(!inHeli||SEAT_VIEWS[seatLv].ext){                          // ออกจากเฮลิ/มุมภายนอก = ล้างจอทิ้ง
+    if(cpBox!=='off'){ cpBox='off'; gaugeCtx.setTransform(1,0,0,1,0,0); gaugeCtx.clearRect(0,0,cv.width,cv.height); }
+    return;
+  }
+  if(!cpMap || cpBox!==cpEl.clientWidth+'x'+cpEl.clientHeight+'/'+cv.width+'x'+cv.height+'/'+seatLv) layoutInvCockpit();
+  if(!cpMap) return;
+  const c=gaugeCtx;
+  c.setTransform(1,0,0,1,0,0);
+  c.clearRect(0,0,cv.width,cv.height);
+  c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);        // ต่อจากนี้วาดด้วยพิกัดในภาพได้เลย
+  /* 📳 แรงสั่นร่วมของทุกเข็ม: รอบใบพัดสูง + เพิ่งโดนยิง/ชน (shake ของเกม) */
+  let sh=0;
+  if(HeliSnd.ready&&HeliSnd.rpm>CP_SHAKE_RPM) sh=Math.min(1,(HeliSnd.rpm-CP_SHAKE_RPM)/(1.5-CP_SHAKE_RPM));
+  sh=Math.max(sh,Math.min(1,shake*2.2));
+  /* ── ขอบฟ้าเทียม: ฟ้า/พื้นดินหมุน-เลื่อนตามการเอียง/ก้มเงยของลำ ── */
+  const G=CP_GAUGES.att, R=G.r, ax=G.x, ay=G.y;
+  c.save();
+  c.beginPath(); c.arc(ax,ay,R*.9,0,7); c.clip();
+  c.translate(ax,ay); c.rotate(cpTiltS*.5+(sh?Math.sin(now/31)*sh*.028:0));
+  const hy=-cpTiltF*R*.6+(sh?Math.sin(now/26)*sh*R*.035:0);
+  c.fillStyle='#5aa9d6'; c.fillRect(-R,-R*2,R*2,R*2+hy);
+  c.fillStyle='#c2762c'; c.fillRect(-R,hy,R*2,R*2);
+  c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=R*.08;
+  c.beginPath(); c.moveTo(-R,hy); c.lineTo(R,hy); c.stroke();
+  c.restore();
+  c.strokeStyle='#ff9800'; c.lineWidth=R*.1; c.lineCap='round';   // สัญลักษณ์เครื่อง (ตรึงกลาง)
+  c.beginPath(); c.moveTo(ax-R*.5,ay); c.lineTo(ax-R*.16,ay); c.stroke();
+  c.beginPath(); c.moveTo(ax+R*.5,ay); c.lineTo(ax+R*.16,ay); c.stroke();
+  /* ── เข็มที่เหลือ: ค่าจริงจากฟิสิกส์การบิน (phVel/py/terrainH/HeliSnd) ── */
+  const spd=Math.hypot(phVel.x,phVel.z)*3.6;                      // m/s → km/h
+  cpNeedle(c,CP_GAUGES.spd,spd/70,'#ffd9a0',{shake:sh,now,phase:0});
+  const alt=Math.max(0,py-terrainH(px,pz)-HELI_SKID);
+  cpNeedle(c,CP_GAUGES.alt,alt/60,'#bfe6ff',{shake:sh,now,phase:1.7});
+  cpNeedle(c,CP_GAUGES.vs,(phVel.y+10)/20, phVel.y<-5?'#ff8a80':'#d6f5b0',{shake:sh,now,phase:3.4});
+  /* รอบใบพัด: แถบเขียว-เหลือง-แดงบางๆ บอกโซนปลอดภัย (ไม่ทึบ ไม่บังลายในภาพ) */
+  const rg=CP_GAUGES.rpm;
+  c.save(); c.globalAlpha=.55; c.lineWidth=rg.r*.11; c.lineCap='butt';
+  [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]].forEach(([col,f1,f2])=>{
+    c.beginPath();
+    c.arc(rg.x,rg.y,rg.r*.86,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
+    c.strokeStyle=col; c.stroke();
+  });
+  c.restore();
+  cpNeedle(c,rg,HeliSnd.rpm/1.5, HeliSnd.rpm>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
 }
 
 /* ============================================================
@@ -5333,7 +5488,7 @@ function exitHeli(){
   heliReady=false;
   if(seatBtn) seatBtn.style.display='none';
   if(startEl) startEl.classList.remove('on');
-  if(wrapEl) wrapEl.classList.remove('seat0','seat1','seat2');
+  if(wrapEl) wrapEl.classList.remove('seat0','seat1','seat2','seat3','cockpit');
   inHeli=false; hLanded=false;
   wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
   if(gunGrp) gunGrp.visible=true;
@@ -5352,10 +5507,17 @@ function seatCamera(now,rollZ){
   const sin=Math.sin(yaw), cos=Math.cos(yaw);              // ทิศหน้าลำ = (−sin, −cos)
   camera.position.set(px + (-sin)*v.dz, py+v.dy+Math.sin(now*.012)*.12, pz + (-cos)*v.dz);
   camera.rotation.set(0,0,0);
-  camera.rotateY(yaw); camera.rotateX(pitch);
-  if(rollZ) camera.rotateZ(rollZ);
-  /* ลำที่เราขับ = ลำจริงที่ขึ้นมา ตามตัวไปด้วย (เพื่อน/ตัวเราเห็นลำเดียวกัน หันหน้าถูกทิศ) */
-  if(myPad&&myPad.grp){ myPad.grp.position.set(px,py-1.8,pz); myPad.grp.rotation.y=yaw; myPad.grp.visible=true; }
+  /* 🎥 มุมภายนอก: ก้มลงหาลำเล็กน้อย + หน่วงผลของการเงย-ก้มสายตาลง ไม่ให้ลำหลุดขอบจอตอนเงยหายานลูก */
+  camera.rotateY(yaw); camera.rotateX(v.ext? pitch*.55-(v.look||0) : pitch);
+  if(rollZ) camera.rotateZ(v.ext?rollZ*.45:rollZ);         // ภายนอกเอียงน้อยกว่า (กล้องตามหลัง ไม่ใช่ตัวลำ)
+  /* ลำที่เราขับ = ลำจริงที่ขึ้นมา ตามตัวไปด้วย (เพื่อน/ตัวเราเห็นลำเดียวกัน หันหน้าถูกทิศ)
+     🎥 รอบ 532: มุมมองภายในซ่อนลำเฉพาะ "จอเราเอง" — กันเห็นจมูก/ลำตัวทะลุภาพค็อกพิต
+     (เพื่อนยังเห็นเราปกติ เพราะเขาเห็นเราผ่าน peers ไม่ใช่ myPad.grp ตัวนี้) */
+  if(myPad&&myPad.grp){
+    myPad.grp.position.set(px,py-1.8,pz); myPad.grp.rotation.y=yaw;
+    myPad.grp.rotation.z=v.ext?clamp(-(rollZ||0)*1.15,-.5,.5):0;   // ภายนอกเห็นลำเอียงเข้าโค้งจริง
+    myPad.grp.visible=!!v.ext;
+  }
 }
 function tickHeliFlight(dt,now){
   /* 🌀 รอบ 434: ช่วง "สตาร์ทเครื่อง" — ยังบินไม่ได้ มองรอบตัว/ปรับเบาะได้ ใบพัดค่อยๆ ไต่รอบ */
@@ -5427,7 +5589,13 @@ function tickHeliFlight(dt,now){
   }
   px=nx; pz=nz; py=ny;
   /* กล้อง = ที่นั่งนักบิน (ตามระดับเบาะ) + โยกเบาๆ + เอียงลำเข้าโค้ง */
-  seatCamera(now, -clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30));
+  const rollZ=-clamp(sd*.20 + (phVel.x*cos-phVel.z*sin)*.006, -.30,.30);
+  /* 🎛️ รอบ 532: ป้อน "เอียง/ก้มเงย" ให้ขอบฟ้าเทียมบนหน้าปัด (หน่วงนุ่มๆ เหมือนไจโรจริง)
+     เอียง = ค่าเดียวกับที่กล้องเอียงเข้าโค้ง · ก้มเงย = ความเร็วเดินหน้าเทียบหัวลำ (บินหน้าเร็ว=ก้ม) */
+  const fwSpd=-(phVel.x*sin+phVel.z*cos);
+  cpTiltS+=(rollZ-cpTiltS)*Math.min(1,dt*6);
+  cpTiltF+=(clamp(fwSpd/HELI_VMAX,-1,1)*.55-cpTiltF)*Math.min(1,dt*3.5);
+  seatCamera(now, rollZ);
   applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.35; camera.position.y+=rnd(-1,1)*shake*.35; shake=Math.max(0,shake-dt*2.2); }
   if(muzzle) muzzle.material.opacity=now<muzzleUntil?1:0;
@@ -6646,6 +6814,7 @@ function frame(dt,now){
   tickFx(dt);
   tickSelfShadow();                 // 🌤️ รอบ 466: เงาตัวเรา+ปืนทอดลงพื้น
   layoutCross();                  // 🎯 รอบ 458: จุดเล็งเลื่อนตามโหมด (เดินเท้า/ส่องกล้อง/เฮลิ)
+  if(inHeli||cpBox!=='off') drawInvGauges(now);   // 🎛️ รอบ 532: เข็มบนหน้าปัดค็อกพิตจริง
   if(adsT>0.02){ layoutScope(now); tickRange(); }   // 🫁 ขอบเลนส์หายใจ · 📏 ระยะถึงเป้า
   renderer.render(scene,camera);
   renderViewModel();              // 🎥 รอบ 451: วาดปืนในมือทับภาพฉาก (กล้องแยก near .01)
@@ -6914,6 +7083,16 @@ window.InvasionWorld={
     get pads(){return pads.map(p=>({x:+p.x.toFixed(1),z:+p.z.toFixed(1),rot:+p.rot.toFixed(2),ready:!!p.model,vis:p.grp.visible}))},
     get heliReady(){return heliReady}, get seat(){return seatLv}, setSeatView, padAt, get myPad(){return myPad?myPad.idx:null},
     get startText(){return startEl?startEl.textContent:''}, get heliBtnShown(){return heliBtn&&heliBtn.style.display==='block'},
+    /* 🎛️🎥 รอบ 532: ค็อกพิตภาพจริง + เกจเข็ม + มุมมองภายนอก */
+    get cockpit(){ return {seat:seatLv, label:SEAT_VIEWS[seatLv].label, ext:!!SEAT_VIEWS[seatLv].ext,
+      img:!!cpNat, dashImg:!!cpDashNat, map:cpMap?{s:+cpMap.s.toFixed(3),ox:Math.round(cpMap.ox),oy:Math.round(cpMap.oy)}:null,
+      cls:wrapEl?wrapEl.className:'', bg:cpEl?cpEl.style.backgroundImage.slice(-24):'',
+      cv:gaugeCanvasEl?[gaugeCanvasEl.width,gaugeCanvasEl.height]:null,
+      tilt:[+cpTiltS.toFixed(3),+cpTiltF.toFixed(3)], rpm:+HeliSnd.rpm.toFixed(2),
+      padVis:myPad?myPad.grp.visible:null, padRoll:myPad?+myPad.grp.rotation.z.toFixed(3):null }; },
+    layoutInvCockpit, drawInvGauges, get gaugePix(){ if(!gaugeCtx) return 0;   // นับพิกเซลที่วาดจริง = เข็มขึ้นจอไหม
+      const d=gaugeCtx.getImageData(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height).data; let n=0;
+      for(let i=3;i<d.length;i+=4) if(d[i]>8) n++; return n; },
     get coverShown(){return coverEl&&coverEl.classList.contains('on')},
     /* 🎖️ รอบ 418: พลปืนประจำประตู */
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
