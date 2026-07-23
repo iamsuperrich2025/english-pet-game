@@ -2400,7 +2400,7 @@ function makeSoldier(x,z,crouch,kind,weapon){
   const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind, weapon:weapon,
            legOnly:(kind==='c'),                     /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → ขยับเฉพาะขา */
            mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
-           coreBias:(Math.random()<0.5),             /* 🎯 รอบ 526: สายรุมยานแม่ (~ครึ่ง) เมื่อเกราะเปิด — ดู tickSquad */
+           coreBias:(Math.random()<0.3),             /* 🎯 รอบ 526/527: สายรุมยานแม่ (~30% ผู้ใช้เลือก) เมื่อเกราะเปิด — ดู tickSquad */
            shotAt:performance.now()+rnd(0,SQUAD_GAP)};
   s.grp.position.set(x,terrainH(x,z),z);
   poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
