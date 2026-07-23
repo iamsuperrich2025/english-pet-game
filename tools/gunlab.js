@@ -30,6 +30,16 @@
      GunLab.presets() / GunLab.delPreset('a')
      GunLab.freeze(false)            // 🧊 คืนคลื่น sway/หายใจ (เครื่องมือ 3 ตัวบนหยุดคลื่นให้เองตอนวัด)
 
+   ── 🆕 รอบ 516: อ่าน/สลับหลาย preset รวดเดียว (คิวต่อยอด #5–7) ─────────
+     GunLab.savePreset('a'); GunLab.savePreset('b')
+     GunLab.diff('a','b')            // 📊 เทียบ 2 preset เป็นตารางเดียว (ดู .table) — Δตำแหน่ง/Δขนาด/
+                                     //    Δองศาลำกล้อง/Δจุดเล็ง + ปากกระบอกเลื่อนกี่ % ของจอ (muzzleShiftPct)
+     GunLab.snapAim({fit:true})      // 🎯 กลับด้าน: ขยับ "ท่าถือ" เข้าหาจุดเล็งเดิม (ดูอย่างเดียว คืนบรรทัด GUN_VIEW)
+     GunLab.snapAim({fit:true,apply:true})   //    ค้างค่าไว้ในเกมสด ๆ (ยังไม่แตะไฟล์)
+     GunLab.saveProfile('classic')   // 💾 เก็บ preset "ทุกกระบอกพร้อมกัน" เป็นชุดเดียว
+     GunLab.loadProfile('classic')   //    สลับสไตล์ถือปืนทั้งเกมในคำสั่งเดียว (คืนกระบอกที่ถืออยู่เดิม)
+     GunLab.profiles() / GunLab.delProfile('classic')
+
    ⛔ **ค่าท่าถือ + จุดเล็งของ rifle/r93 ถูกล็อกไว้** (กล่อง 🔒 LOCKED เหนือ GUN_VIEW ใน js/invasion3d.js)
       เครื่องมือในไฟล์นี้ **ไม่แก้ไฟล์เกมเอง** — แก้ได้แค่ค่าในหน่วยความจำของ preview เพื่อทดลอง
       จะก๊อปบรรทัดที่คืนมาไปวางทับในไฟล์จริงได้ **เฉพาะเมื่อผู้ใช้สั่งในรอบนั้น** เท่านั้น
@@ -255,7 +265,8 @@ window.GunLab = (function(){
      ใส่ {apply:true} ถึงจะเปลี่ยนค่าในเกมสด ๆ (ยังไม่แตะไฟล์)
      ออปชัน: {dist, apply} */
   function snapAim(o){
-    o=o||{}; const t=T(), a=gunAxis(); if(!a) return {err:'no gun'};
+    o=o||{}; if(o.fit) return snapAimFit(o);          // 🆕 รอบ 516: กลับด้าน — ขยับปืนเข้าหาจุดเล็งเดิม
+    const t=T(), a=gunAxis(); if(!a) return {err:'no gun'};
     const dist=(typeof o.dist==='number')?o.dist:50;
     const far=[a.muzzle[0]+a.dir[0]*dist, a.muzzle[1]+a.dir[1]*dist, a.muzzle[2]+a.dir[2]*dist];
     const p=proj(far); if(!p) return {err:'แนวลำกล้องชี้ไปหลังกล้อง — ตรวจ pitch/yaw ก่อน'};
@@ -345,10 +356,168 @@ window.GunLab = (function(){
   }
   function delPreset(name){ localStorage.removeItem(PK+name); return {del:name, left:presets().map(r=>r.name)}; }
 
+  /* ══════════════════════════════════════════════════════════════════
+     🆕 รอบ 516 — 3 เครื่องมือลด token รอบจูนถัดไป (คิวต่อยอด #5–7)
+       • diff('a','b')          เทียบ preset 2 ชุดเป็นตารางเดียว อ่านรอบเดียวจบ
+       • snapAim({fit:true})    กลับด้าน snapAim: ขยับ "ท่าถือ" เข้าหาจุดเล็งเดิม (คืนบรรทัด GUN_VIEW)
+       • saveProfile/loadProfile เก็บ/สลับ preset "ทุกกระบอกพร้อมกัน" เป็นชุดเดียว
+     ⚠️ ทั้งหมดแตะแค่ค่าในหน่วยความจำ preview — ไม่เขียนไฟล์เกม · ค่าล็อก rifle/r93 ก๊อปลงไฟล์ได้เฉพาะเมื่อผู้ใช้สั่ง
+     ══════════════════════════════════════════════════════════════════ */
+
+  /* 📸 snapshot/restore "ทุกกระบอก" — setGunPose เขียนทับ GUN_VIEW[weapon] ในหน่วยความจำ (invasion3d.js:3109)
+     → เครื่องมือที่แตะหลายกระบอก (diff/saveProfile) ต้องคืนค่าทุกกระบอกที่แตะ ไม่ใช่แค่กระบอกที่ถืออยู่
+        ไม่งั้นค่าล็อกของอีกกระบอกจะค้างเพี้ยนจนกว่าจะรีโหลดหน้า */
+  function _snapAll(){
+    const t=T(); freeze();
+    const held=t.weapon, guns={};
+    Object.keys(t.gunModels).forEach(w=>{
+      if(t.weapon!==w){ t.applyWeapon(w); t.step(1/60,1); }
+      const p=t.gunPose; guns[w]={p:p.p.slice(), r:p.r.slice(), s:p.s, aim:t.aimOff.slice()};
+    });
+    if(t.weapon!==held){ t.applyWeapon(held); t.step(1/60,1); }
+    return {held, guns};
+  }
+  function _applyGun(w,g){
+    const t=T(); if(!t.gunModels[w]) return false;
+    if(t.weapon!==w){ t.applyWeapon(w); t.step(1/60,1); }
+    t.setGunPose({x:g.p[0],y:g.p[1],z:g.p[2],pitch:g.r[0],yaw:g.r[1],roll:g.r[2],s:g.s});
+    if(g.aim) t.setAimOff(g.aim[1],g.aim[0]);
+    t.step(1/60,1); return true;
+  }
+  function _restoreAll(snap){
+    const t=T();
+    Object.keys(snap.guns).forEach(w=>_applyGun(w,snap.guns[w]));
+    if(t.weapon!==snap.held){ t.applyWeapon(snap.held); t.step(1/60,1); }
+  }
+  function _readPreset(name){
+    try{ return JSON.parse(localStorage.getItem(PK+name)||'null'); }catch(e){ return null; }
+  }
+
+  /* 📊 GunLab.diff('a','b') — เทียบ preset 2 ชุด (savePreset ไว้ก่อน) เป็นตารางเดียว อ่านรอบเดียวจบ
+     คอลัมน์: ค่า a · ค่า b · Δ(b−a) · แถว: ตำแหน่ง xyz / ขนาด / องศาลำกล้องจริง(yaw,pitch) / จุดเล็ง xy
+              + ปากกระบอกเลื่อนกี่ % ของจอ (muzzleShiftPct)
+     วัดองศาลำกล้อง/ปากกระบอกด้วยการ apply preset ลงเกมชั่วคราวแล้ววัด barrel() → คืนทุกกระบอกตามเดิม */
+  function diff(a,b){
+    const t=T();
+    const ra=_readPreset(a), rb=_readPreset(b);
+    if(!ra) return {err:'ไม่มี preset '+a, have:presets().map(r=>r.name)};
+    if(!rb) return {err:'ไม่มี preset '+b, have:presets().map(r=>r.name)};
+    const snap=_snapAll();
+    _applyGun(ra.weapon, ra); const ba=barrel();
+    _applyGun(rb.weapon, rb); const bb=barrel();
+    _restoreAll(snap);
+    const f3=(u,v)=>[+(v[0]-u[0]).toFixed(3),+(v[1]-u[1]).toFixed(3),+(v[2]-u[2]).toFixed(3)];
+    const dPos=f3(ra.p,rb.p), dScale=+(rb.s-ra.s).toFixed(3);
+    const dAim=[+((rb.aim?rb.aim[0]:0)-(ra.aim?ra.aim[0]:0)).toFixed(4),
+               +((rb.aim?rb.aim[1]:0)-(ra.aim?ra.aim[1]:0)).toFixed(4)];
+    const dYaw=+(bb.yawDeg-ba.yawDeg).toFixed(2), dPitch=+(bb.pitchDeg-ba.pitchDeg).toFixed(2);
+    const dMuz=(ba.muzzlePct&&bb.muzzlePct)
+      ? [+(bb.muzzlePct[0]-ba.muzzlePct[0]).toFixed(1), +(bb.muzzlePct[1]-ba.muzzlePct[1]).toFixed(1)] : null;
+    const rows=[
+      ['',              a,                          b,                          'Δ(b−a)'],
+      ['weapon',        ra.weapon,                  rb.weapon,                  ra.weapon===rb.weapon?'—':'≠'],
+      ['pos x',         ra.p[0],                    rb.p[0],                    dPos[0]],
+      ['pos y',         ra.p[1],                    rb.p[1],                    dPos[1]],
+      ['pos z',         ra.p[2],                    rb.p[2],                    dPos[2]],
+      ['scale',         ra.s,                       rb.s,                       dScale],
+      ['barrel yaw°',   ba.yawDeg,                  bb.yawDeg,                  dYaw],
+      ['barrel pitch°', ba.pitchDeg,                bb.pitchDeg,                dPitch],
+      ['aim x',         ra.aim?ra.aim[0]:'—',       rb.aim?rb.aim[0]:'—',       dAim[0]],
+      ['aim y',         ra.aim?ra.aim[1]:'—',       rb.aim?rb.aim[1]:'—',       dAim[1]],
+      ['muzzle x%',     ba.muzzlePct?ba.muzzlePct[0]:'—', bb.muzzlePct?bb.muzzlePct[0]:'—', dMuz?dMuz[0]:'—'],
+      ['muzzle y%',     ba.muzzlePct?ba.muzzlePct[1]:'—', bb.muzzlePct?bb.muzzlePct[1]:'—', dMuz?dMuz[1]:'—'],
+    ];
+    const wid=rows[0].map((_,c)=>Math.max(...rows.map(r=>String(r[c]).length)));
+    const table=rows.map(r=>r.map((c,i)=>String(c).padEnd(wid[i])).join('  ')).join('\n');
+    return {a, b, table, dPos, dScale, dYawDeg:dYaw, dPitchDeg:dPitch, dAim, muzzleShiftPct:dMuz,
+      note:'muzzleShiftPct = ปากกระบอกเลื่อนกี่ % ของจอ (b−a) · x: +=ขวา · y: +=ลง (วัดจากขอบบน)'};
+  }
+
+  /* 🎯 GunLab.snapAim({fit:true}) — กลับด้านของ snapAim:
+     snapAim เดิม = ย้าย "จุดเล็ง" ไปบนแนวลำกล้อง · fit = ขยับ "ท่าถือปืน" เข้าหาจุดเล็งเดิมแทน
+     ไล่ yaw/pitch รอบจุดศูนย์กลางปืน (สูตร spin เดิม) จนแนวลำกล้องที่ระยะ zero พาดผ่านจุดเล็ง (t.aimOff)
+     ค่าเริ่มต้น = ดูอย่างเดียว คืนท่าเดิม (เหมือน snapAim) · {apply:true} ค้างค่าไว้ในเกมสด ๆ
+     ออปชัน: {fit, apply, dist} · คืนบรรทัด GUN_VIEW พร้อมก๊อป (ก๊อปลงไฟล์ได้เฉพาะเมื่อผู้ใช้สั่ง — ค่าล็อก) */
+  function _barNDC(dist){
+    const a=gunAxis(); if(!a) return null;
+    const far=[a.muzzle[0]+a.dir[0]*dist, a.muzzle[1]+a.dir[1]*dist, a.muzzle[2]+a.dir[2]*dist];
+    const p=proj(far); return p?p.ndc:null;
+  }
+  function snapAimFit(o){
+    const t=T(), w=t.weapon, dist=(typeof o.dist==='number')?o.dist:50;
+    const aim=t.aimOff.slice();                       // จุดเล็งเดิม (NDC [x,y]) = เป้าหมายที่ลำกล้องต้องพาดผ่าน
+    freeze();
+    const p0=t.gunPose, back={p:p0.p.slice(), r:p0.r.slice(), s:p0.s};
+    const restore=()=>{ t.setGunPose({x:back.p[0],y:back.p[1],z:back.p[2],
+      pitch:back.r[0],yaw:back.r[1],roll:back.r[2],s:back.s}); t.step(1/60,1); };
+    let base=_barNDC(dist);
+    if(!base){ restore(); return {err:'แนวลำกล้องชี้ไปหลังกล้อง — ตรวจ pitch/yaw ก่อน'}; }
+    /* คาลิเบรต "องศา→หน่วยจอ" ด้วยการโพรบ 1° แล้วคืนท่าเดิม (yaw กระทบแกน x · pitch กระทบแกน y) */
+    yaw(1);   const yx=_barNDC(dist); restore(); const dyx=yx?(yx[0]-base[0]):0;
+    base=_barNDC(dist);
+    pitch(1); const py=_barNDC(dist); restore(); const dpy=py?(py[1]-base[1]):0;
+    if(Math.abs(dyx)<1e-6||Math.abs(dpy)<1e-6){ restore();
+      return {err:'ปืนไม่ตอบสนองการหมุน (dyx/dpy≈0) — จุดเล็งอาจอยู่นอกวิสัยของท่าถือนี้'}; }
+    const gX=1/dyx, gY=1/dpy;
+    let cur=_barNDC(dist), iters=0, err=Infinity;
+    for(let i=0;i<30;i++){ iters++;
+      const ex=aim[0]-cur[0], ey=aim[1]-cur[1]; err=Math.hypot(ex,ey);
+      if(err<1.5e-4) break;
+      yaw(+(ex*gX*0.85).toFixed(4)); pitch(+(ey*gY*0.85).toFixed(4));   // damp .85 กันแกว่ง
+      cur=_barNDC(dist); if(!cur){ restore(); return {err:'ลู่ออกนอกจอระหว่างไล่ — จุดเล็งไกลเกินท่าถือนี้'}; }
+    }
+    const p=t.gunPose, f=n=>+n.toFixed(3), bar=barrel();
+    const res={weapon:w, fit:true, applied:!!o.apply, dist, iters, err:+err.toFixed(5),
+      pose:{p:p.p.map(f), r:p.r.map(f), s:f(p.s)}, barrel:bar, aimTarget:aim, muzzlePct:bar.muzzlePct,
+      line:`  ${w}: {p:[${p.p.map(f).join(',')}], r:[${p.r.map(f).join(',')}], s:${f(p.s)}},`,
+      warn:[lockNote(w),
+        '⚠️ fit ขยับ "ท่าถือ" (GUN_VIEW) เข้าหาจุดเล็งเดิม — ค่าท่าถือถูกล็อก ก๊อปลงไฟล์ได้เฉพาะเมื่อผู้ใช้สั่ง'
+      ].filter(Boolean)};
+    if(!o.apply) restore(); else t.step(1/60,2);
+    return res;
+  }
+
+  /* 💾 GunLab.saveProfile('ชื่อ') / loadProfile('ชื่อ') — preset "ทุกกระบอกพร้อมกัน" เป็นชุดเดียว
+     สลับ "สไตล์ถือปืนทั้งเกม" ได้ในคำสั่งเดียว · วนทุก key ใน gunModels เก็บท่าถือ+จุดเล็ง แล้วคืนกระบอกที่ถืออยู่เดิม
+     เก็บใน localStorage แยกจาก preset รายกระบอก (คนละ namespace) · ไม่แตะไฟล์เกม */
+  const PROF='gunlab.profile.';
+  function saveProfile(name){
+    if(!name) return {err:'ต้องตั้งชื่อ: GunLab.saveProfile("classic")'};
+    const snap=_snapAll();                            // snapAll คืนกระบอกที่ถืออยู่เดิมให้แล้ว
+    const rec={guns:snap.guns, held:snap.held, at:new Date().toISOString().slice(0,16)};
+    try{ localStorage.setItem(PROF+name, JSON.stringify(rec)); }catch(e){ return {err:String(e)}; }
+    return {saved:name, guns:Object.keys(rec.guns), held:rec.held, at:rec.at};
+  }
+  function loadProfile(name){
+    const t=T(); freeze();
+    let rec; try{ rec=JSON.parse(localStorage.getItem(PROF+name)||'null'); }catch(e){}
+    if(!rec||!rec.guns) return {err:'ไม่มี profile ชื่อ '+name, have:profiles().map(r=>r.name)};
+    const held=t.weapon, applied=[], notes=[];
+    Object.keys(rec.guns).forEach(w=>{
+      if(_applyGun(w,rec.guns[w])) applied.push(w); else notes.push('ข้าม '+w+' (ไม่มีในเกมนี้)');
+    });
+    if(t.weapon!==held){ t.applyWeapon(held); t.step(1/60,2); }   // คืนกระบอกที่ถืออยู่เดิม
+    const locked=applied.filter(w=>LOCKED.indexOf(w)>=0);
+    if(locked.length) notes.push('⛔ '+locked.join(',')+
+      ' เป็นค่าล็อก — โหลดอยู่ในหน่วยความจำ preview เท่านั้น ห้ามก๊อปลงไฟล์เว้นแต่ผู้ใช้สั่ง');
+    return {loaded:name, applied, held, note:notes};
+  }
+  function profiles(){
+    const out=[];
+    for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+      if(k.indexOf(PROF)!==0) continue;
+      try{ const v=JSON.parse(localStorage.getItem(k));
+        out.push({name:k.slice(PROF.length), guns:Object.keys(v.guns||{}), held:v.held, at:v.at}); }catch(e){}
+    }
+    return out;
+  }
+  function delProfile(name){ localStorage.removeItem(PROF+name); return {del:name, left:profiles().map(r=>r.name)}; }
+
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
   function done(){ try{ localStorage.removeItem('petVocabAdventure_v1'); }catch(e){} location.reload(); }
 
   return {boot,tune,big,fwd,shot,pair,aim,check,match,target,done,freeze,
           gunAxis,barrel,snapAim,yaw,pitch,spin,savePreset,loadPreset,presets,delPreset,
+          diff,saveProfile,loadProfile,profiles,delProfile,
           sil:()=>T().gunSil(),pose:()=>T().gunPose};
 })();
