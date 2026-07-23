@@ -44,7 +44,9 @@
 6. ~~`GunLab.snapAim({fit:true})`~~ ✅ **ทำแล้วรอบ 516**
 7. ~~`GunLab.saveProfile/loadProfile`~~ ✅ **ทำแล้วรอบ 516** (+`profiles`/`delProfile`)
 
-### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.497`) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.498`) — อ่านก่อน
+- **รอบ 520:** 🏷️ **เปลี่ยนชื่อโชว์ปืน rifle → `KSR-77 จู่โจม`** (ผู้ใช้เลือกจาก 4 ตัวเลือก · เดิม 'ไรเฟิลจู่โจม' กลางไป) — แก้จุดเดียว `WEAPONS.rifle.name` (invasion3d.js:76) · **key ยังเป็น `'rifle'` คงค่าปืนล็อกทั้งหมด (GUN_VIEW/AIM/ADS/REC ไม่แตะ)** · ที่อื่นที่มีคำว่า "ไรเฟิล" เป็นคอมเมนต์ ไม่ใช่หน้าจอ · โชว์จริงที่ toast สลับปืน (invasion3d.js:3372 `${W.name}`) · ยืนยัน fetch ไฟล์เสิร์ฟได้ `KSR-77 จู่โจม` · deploy `.498`
+  - **▶️ ค้าง:** ผู้ใช้ยัง**ไม่ได้เจนโมเดล KSR-77 (ถือปืน) ตัวใหม่** → งาน wire peer มุมมองที่3 เลือกโมเดลตามปืน (R93→soldier_c · KSR-77→โมเดลใหม่) **รอโมเดลก่อน** · เมื่อได้โมเดล: ลดโพลีตามสูตรรอบ 519 → เสียบ · จุด peer soldier_b+attachPeerGun (~invasion3d.js:5255) · set legOnly+mode run เมื่อ peer moved (~:5345 `moved>0.12?'walk'`)
 - **รอบ 519:** 🪖🔫 **ทหารมุมมองที่3 ถือ R93 อบมาในตัว "วิ่งขยับเฉพาะขา" (soldier_c.glb) — เสร็จ+ผู้ใช้อนุมัติ+deploy `.497`**
   - **①ลดโพลี** `img/models/soldier_c.glb` 80.8k→36.3k tris · tex 2K→1K · 3.1MB→**882KB** (สคริปต์ strip: ตัด NORMAL→weld→simplify ratio 0.45 per-primitive คง 23 ชิ้นแยก→resize 1024→prune · เครื่องมือใน `~/bin/node/.../@gltf-transform/cli/`) · ต้นฉบับ 3MB backup ใน scratchpad · **untracked ต้อง git add ตรง** (deploy อัปให้)
   - **②แก้ `autoRigSoldier` (~invasion3d.js:2200)** — R93 ยื่นซ้ายดัน global cx เพี้ยน → เท้าซ้าย bin ไปขาขวา ขารวมข้างเดียว(หุ่นก้าวไม่ออก) · แก้: หา **legCx=กึ่งกลางกลุ่มชิ้นระดับขา** (ny<0.42 · เท้าซ้าย/ขวาสมมาตร) แยกซ้าย-ขวาจากแกนนี้ · ท่อนบนหา nn จาก UPPER 7 ข้อ (ไม่รวมขา) · backward-safe (โมเดลไม่มีปืนยื่น→legCx≈cx) · ผล: **ขาแยกครบ 4 ข้อต่อ** legUL:2/legLL:1/legUR:2/legLR:1
