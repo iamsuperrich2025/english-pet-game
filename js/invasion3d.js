@@ -2620,27 +2620,131 @@ const MUZZLE_Y=.012;                // แกนลำกล้องมาต�
 /* 📐 ท่านี้วัดจากในเกมจริง (จุดปลายลำกล้อง/พานท้ายฉายลงจอ): ปากกระบอกอยู่ (0.13,−0.32) เฉียงเข้ากลางจอ 17°
    · ยอดกล้องส่องอยู่ (0.28,−0.05) เห็นเต็มๆ · พานท้ายไหลออกมุมขวาล่าง = องค์ประกอบเดียวกับภาพอ้างอิง */
 /* 💪 แขนเสื้อลายพรางจับปืน — สร้างเองเสมอ (ไม่ถูกแทนตอนโหลด .glb ปืน) */
+/* ============================================================
+   💪 มือถือปืน มุมมองที่ 1 — รอบ 518 (ผู้ใช้สั่งตรง: เปิดโชว์มือจริง)
+   วัสดุ/สัดส่วน "ชุดเดียวกับทหารฝ่ายเรา" (ดู buildSoldierRig / SOLDIER_PARTS)
+   → ผู้เล่นรู้สึกเป็นทหารคนเดียวกับหมู่ · gunArms เป็น "ลูกของ gunGrp"
+   ⇒ sway(501)/recoil(500)/ADS(499)/lag(464)/sprint(448)/gasp(508)/เดิน ตามอัตโนมัติ
+   ⛔ เป็นออฟเซ็ตทับล้วน — ไม่แตะค่าปืนที่ล็อก (GUN_VIEW/AIM/ADS/SWAY กล่อง LOCKED)
+   จุดยึด (พิกัด gunGrp ก่อน scale): ด้ามปืน≈(0,-.13,.11) · การ์ดมือหน้า rifle≈z-.32 / r93≈z-.54
+   ============================================================ */
+/* สร้าง "มือกำ" หันฝ่ามือเข้าหาปืน — สันนิ้ว 4 นิ้วพาดคร่อมด้านบน + ปลายนิ้วงุ้ม + นิ้วโป้งอีกฝั่ง */
+function buildFist(glove,skin,trigger){
+  const h=new THREE.Group();
+  const wrist=new THREE.Mesh(new THREE.CylinderGeometry(.052,.05,.05,8),skin);
+  wrist.rotation.x=Math.PI/2; wrist.position.set(0,-.005,.075); h.add(wrist);   // ผิวโผล่ที่ข้อมือ
+  const palm=new THREE.Mesh(new THREE.BoxGeometry(.088,.072,.12),glove); h.add(palm);
+  const knuck=new THREE.Mesh(new THREE.BoxGeometry(.09,.03,.052),glove);
+  knuck.position.set(0,.036,-.05); h.add(knuck);                                // สันนิ้ว
+  for(let i=0;i<4;i++){                                                         // นิ้ว 4 (ปล้องบน)
+    const proximal=(trigger&&i===0);                                            // นิ้วชี้เหยียดแตะไก
+    const f=new THREE.Mesh(new THREE.BoxGeometry(.021,.052,.05),glove);
+    f.position.set(-.031+i*.021,.012,-.066); f.rotation.x=proximal?-.15:-.55; h.add(f);
+    const tip=new THREE.Mesh(new THREE.BoxGeometry(.019,.044,.03),glove);       // ปลายนิ้วงุ้มลง
+    if(proximal){ tip.position.set(-.031,-.006,-.11); tip.rotation.x=-.5; }
+    else{ tip.position.set(-.031+i*.021,-.03,-.086); tip.rotation.x=-1.2; }
+    h.add(tip);
+  }
+  const thumb=new THREE.Mesh(new THREE.BoxGeometry(.026,.028,.072),glove);      // นิ้วโป้งพาดอีกฝั่ง
+  thumb.position.set(.05,-.004,-.018); thumb.rotation.set(-.35,0,.55); h.add(thumb);
+  return h;
+}
 function buildArms(){
-  const camo=new THREE.MeshLambertMaterial({color:0x7d7a55});    // เสื้อลายพรางทะเลทราย
-  const glove=new THREE.MeshLambertMaterial({color:0x4a4235});   // ถุงมือ
+  const uni  =new THREE.MeshLambertMaterial({color:0x6b6f4a});   // แขนเสื้อลายพราง (=soldier uni)
+  const cuffM=new THREE.MeshLambertMaterial({color:0x54583a});   // ขอบแขนเสื้อเข้มคั่น
+  const skin =new THREE.MeshLambertMaterial({color:0xc79a72});   // ผิว (=soldier skin) โผล่ที่ข้อมือ
+  const glove=new THREE.MeshLambertMaterial({color:0x39352b});   // ถุงมือยุทธวิธี
   const arms=new THREE.Group();
-  /* แขนขวา (ด้ามปืน) — ทอดจากมุมขวาล่างเข้าหาไกปืน */
-  const rArm=new THREE.Mesh(new THREE.CylinderGeometry(.062,.085,.60,8),camo);
-  rArm.position.set(.16,-.24,.19); rArm.rotation.set(1.15,0,-.30); arms.add(rArm);
-  const rHand=new THREE.Mesh(new THREE.BoxGeometry(.10,.13,.11),glove);
-  rHand.position.set(.055,-.10,.02); rHand.rotation.set(.2,0,-.25); arms.add(rHand);
-  /* แขนซ้าย (ประคองลำกล้อง) — พาดเฉียงข้ามจอ เหมือนภาพอ้างอิง */
-  const lArm=new THREE.Mesh(new THREE.CylinderGeometry(.058,.082,.66,8),camo);
-  lArm.position.set(-.14,-.26,-.05); lArm.rotation.set(1.05,0,.46); arms.add(lArm);
-  const lHand=new THREE.Mesh(new THREE.BoxGeometry(.095,.12,.13),glove);
-  lHand.position.set(-.035,-.10,-.24); lHand.rotation.set(.16,0,.22); arms.add(lHand);
-  /* ข้อมือ/ขอบเสื้อ (วงแหวนเข้มคั่น ให้อ่านเป็นแขนเสื้อ ไม่ใช่ท่อ) */
-  [[.075,-.14,.06,-.30],[-.055,-.15,-.18,.30]].forEach(([x,y,z,rz])=>{
-    const cuff=new THREE.Mesh(new THREE.CylinderGeometry(.088,.088,.055,8),
-      new THREE.MeshLambertMaterial({color:0x5f5c40}));
-    cuff.position.set(x,y,z); cuff.rotation.set(1.1,0,rz); arms.add(cuff);
-  });
+
+  /* ── ขวา: มือลั่นไก (กำด้ามปืน) ทอดจากมุมขวาล่างเข้าหาด้าม ── */
+  const rSide=new THREE.Group(); arms.add(rSide);
+  const rArm=new THREE.Mesh(new THREE.CylinderGeometry(.056,.082,.56,10),uni);
+  rArm.position.set(.17,-.27,.24); rArm.rotation.set(1.12,0,-.28); rSide.add(rArm);
+  const rCuff=new THREE.Mesh(new THREE.CylinderGeometry(.078,.086,.06,10),cuffM);
+  rCuff.position.set(.075,-.155,.075); rCuff.rotation.set(1.12,0,-.28); rSide.add(rCuff);
+  const rHand=buildFist(glove,skin,true);
+  rHand.position.set(.012,-.115,.085); rHand.rotation.set(.28,-.06,-.20); rSide.add(rHand);
+
+  /* ── ซ้าย: มือประคองการ์ดมือ พาดเฉียงข้ามจอ (lSide เลื่อน z ตามความยาวลำกล้องแต่ละกระบอก) ── */
+  const lSide=new THREE.Group(); arms.add(lSide); arms.userData.lSide=lSide;
+  const lArm=new THREE.Mesh(new THREE.CylinderGeometry(.054,.08,.66,10),uni);
+  lArm.position.set(-.16,-.28,-.02); lArm.rotation.set(1.02,0,.5); lSide.add(lArm);
+  const lCuff=new THREE.Mesh(new THREE.CylinderGeometry(.076,.084,.06,10),cuffM);
+  lCuff.position.set(-.06,-.155,-.145); lCuff.rotation.set(1.02,0,.5); lSide.add(lCuff);
+  const lHand=buildFist(glove,skin,false);
+  lHand.position.set(-.008,-.075,-.30); lHand.rotation.set(.12,.16,.28); lSide.add(lHand);
+
   return arms;
+}
+/* ============================================================
+   🧤 รอบ 518: โมเดลมือจริง (GLB จาก Tripo) — ผู้ใช้เจนเอง img/models/hand_grip.glb
+   โมเดล: หมัดกำ+แขนเสื้อลายพราง · แกนแขน=X (หมัด −X · ข้อศอก/แขนเสื้อ +X) · ข้อนิ้ว +Y
+   ทำเป็น "มือขวา 1 ตัว + mirror(scale.x=−1) เป็นมือซ้าย" วาง 2 จุด (ด้าม/การ์ดมือ)
+   ⚠️ draw-on-top (depthTest=false): ปืนล็อกไว้สูง+ลำกล้องหนา ถ้า depth ปกติมือจะจมในตัวปืน
+      view-model วาดมือทับตัวเองเป็นเทคนิคมาตรฐาน FPS · ในเลนส์ ADS ซ่อน gunGrp อยู่แล้ว มือไม่โผล่
+   🔧 จูนค่าใน HAND_POSE แล้วอัปเดตที่นี่ (เป็นออฟเซ็ตทับล้วน ไม่แตะค่าปืนที่ล็อก) */
+/* ท่ามือ "แยกต่อกระบอก" (เหมือน GUN_VIEW) — จำเป็นเพราะมือเป็นลูก gunGrp จึงโดน GUN_SCALE
+   ของแต่ละปืนคูณ (rifle 1.014 · r93 1.485) → ต้องตั้ง scale/ตำแหน่งของมือแยกกันให้ขนาดบนจอเท่ากัน
+   p=ตำแหน่ง (พิกัด gunGrp local) · r=องศา(x,y,z) · scale=ย่อคอนเทนเนอร์ (มือซ้าย mirror x อัตโนมัติ) */
+const HAND_POSE={
+  size:0.46,                                   // fitInto ความยาวแขน-หมัดทั้งท่อนตอนโหลด
+  rifle:{ scale:0.57,
+    right:{ p:[0.07,-0.15,0.05],  r:[0.15,-0.20,-1.25] },   // มือขวา = จับด้าม/ไก
+    left: { p:[-0.04,-0.15,-0.34], r:[0.10,0.20,1.20] } },  // มือซ้าย = ประคองการ์ดมือ
+  r93:{ scale:0.39,
+    right:{ p:[0.05,-0.22,0.06],  r:[0.15,-0.20,-1.25] },
+    left: { p:[-0.01,-0.19,-0.62], r:[0.10,0.20,1.20] } },  // สไนเปอร์ลำกล้องยาว มือหน้าเลื่อนไปหน้า
+};
+function makeHandTopMat(src){                   // ใช้ texture เดิมของโมเดล แต่วาดทับ (ไม่จมปืน)
+  const m=src.clone(); m.depthTest=false; m.depthWrite=false; return m;
+}
+/* 🦾 ท่อนแขนต่อ — โมเดล GLB มีแค่หมัด+ปลอกแขนสั้น ดูเหมือน "แขนขาด" ลอย
+   ต่อทรงกระบอกลายพรางจากปลายปลอกแขน (แกนแขน=+X ของโมเดลที่ fitInto แล้ว) ยื่นออกมา
+   ตามทิศเดียวกับที่ปลอกแขนชี้ (หลังหมุนคอนเทนเนอร์ = พุ่งลงเข้าหากล้อง) จนตกขอบล่างจอ */
+const FOREARM={ x0:0.10, len:1.45, r1:0.175, r2:0.225, y:0.0, z:0.0, color:0xa88951 };
+function addForearm(container){
+  const m=new THREE.MeshLambertMaterial({color:FOREARM.color,depthTest:false,depthWrite:false});
+  const arm=new THREE.Mesh(new THREE.CylinderGeometry(FOREARM.r2,FOREARM.r1,FOREARM.len,14),m);
+  arm.rotation.z=Math.PI/2;                      // วางตามแกน X (แกนแขน)
+  arm.position.set(FOREARM.x0+FOREARM.len/2, FOREARM.y, FOREARM.z);
+  arm.renderOrder=13;                            // อยู่หลังหมัด(14) หน้าตัวปืน
+  container.add(arm); container.userData.forearm=arm;
+}
+function loadHandModel(){
+  loadGlb('img/models/hand_grip.glb',(model)=>{
+    if(!gunArms) return;
+    fitInto(model,HAND_POSE.size);             // ย่อ+จัดศูนย์กลางที่ origin
+    model.traverse(o=>{ if(o.isMesh&&o.material){
+      o.material=Array.isArray(o.material)?o.material.map(makeHandTopMat):makeHandTopMat(o.material);
+      o.renderOrder=14;                         // วาดหลังตัวปืน
+    }});
+    /* มือขวา (ต้นฉบับ) + มือซ้าย (mirror แกน X) — ห่อในคอนเทนเนอร์เพื่อจูนตำแหน่ง/องศาแยกกัน */
+    const rHandC=new THREE.Group(); rHandC.add(model); addForearm(rHandC);
+    const lHandC=new THREE.Group(); const lm=model.clone(true);
+    lm.traverse(o=>{ if(o.isMesh&&o.material) o.material=Array.isArray(o.material)?o.material.map(makeHandTopMat):makeHandTopMat(o.material); });
+    lHandC.add(lm); addForearm(lHandC); lHandC.scale.x=-1;          // mirror → มือซ้าย
+    gunArms.userData.rHandC=rHandC; gunArms.userData.lHandC=lHandC;
+    /* เอาทรง fallback (กล่อง) ออก เหลือมือ GLB จริง */
+    gunArms.children.slice().forEach(c=>gunArms.remove(c));
+    gunArms.add(rHandC); gunArms.add(lHandC);
+    gunArms.userData.glb=true;
+    fitArmsToWeapon(weapon);
+    gunArms.visible=true;
+  });
+}
+function applyHandPose(w){
+  const u=gunArms&&gunArms.userData; if(!u||!u.rHandC) return;
+  const P=HAND_POSE[w]||HAND_POSE.rifle, s=P.scale, R=P.right, L=P.left;
+  u.rHandC.scale.set(s,s,s);
+  u.rHandC.position.set(R.p[0],R.p[1],R.p[2]); u.rHandC.rotation.set(R.r[0],R.r[1],R.r[2]);
+  u.lHandC.scale.set(-s,s,s);                  // มือซ้าย mirror แกน X
+  u.lHandC.position.set(L.p[0],L.p[1],L.p[2]); u.lHandC.rotation.set(L.r[0],L.r[1],L.r[2]);
+}
+/* 🎯 จัดท่ามือให้เข้ากับกระบอกที่ถือ (GLB=ท่าแยกต่อกระบอก · fallback กล่อง=เลื่อน z มือหน้า) */
+function fitArmsToWeapon(w){
+  if(!gunArms) return;
+  if(gunArms.userData.rHandC) applyHandPose(w);                                   // GLB
+  else if(gunArms.userData.lSide) gunArms.userData.lSide.position.z=(w==='r93')?-0.22:0;  // fallback กล่อง
 }
 /* 🔫 ทรงไรเฟิลจู่โจม (ของเดิม) */
 function buildRifleModel(){
@@ -3122,9 +3226,9 @@ function buildGun(){
   muzzle.scale.setScalar(.42); muzzle.position.set(0,MUZZLE_Y,-.72); g.add(muzzle);
   alignGunMuzzle(gunModels.rifle); alignGunMuzzle(gunModels.r93);   // 🎯 รอบ 451: ทรงสำรองก็จัดแกนเหมือนกัน
 
-  /* 💪 แขนถือปืน — รอบ 438 (ผู้ใช้สั่ง): **มุมมองบุคคลที่ 1 ไม่โชว์มือแล้ว เน้นเห็นตัวปืนเต็มๆ**
-     (โมเดลปืนจริงมีด้าม/การ์ดมืออยู่ในตัว มือที่วาดเองบังลายปืนและดูไม่เนียนกว่า)
-     ยังสร้างไว้เพื่อ "แกว่งตามการเดิน" ตัวเดิมทำงานได้ แต่ตั้ง visible=false ไม่ต้องวาด */
+  /* 💪 แขนถือปืน — มุมมองที่ 1 "เห็นแค่ปืน" (ผู้ใช้ยืนยัน 23 ก.ค. 2026 รอบ 519: มือ FP พักไว้ก่อน)
+     โค้ดมือ GLB (buildArms/loadHandModel/HAND_POSE/FOREARM) ยังอยู่ครบ เผื่อกลับมาใช้ แค่ไม่เรียก
+     ⛔ อย่าลบ — ผู้ใช้แค่ "พักไว้ก่อน" ไปโฟกัสท่าทหารมุมมองที่ 3 */
   gunArms=buildArms(); gunArms.visible=false; g.add(gunArms);
 
   g.position.set(GUN_POS[0],GUN_POS[1],GUN_POS[2]);
@@ -3212,6 +3316,7 @@ function applyWeapon(w){
   if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
   if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
   useGunView();
+  fitArmsToWeapon(weapon);           // 💪 รอบ 518: เลื่อนมือหน้าให้เกาะการ์ดมือของกระบอกที่ถือ
   syncMuzzleAnchor();
   reloadAt=0; heat=0; overheat=false;
   renderHeat(); renderAmmo(); syncWeaponBtns();
@@ -6273,6 +6378,7 @@ window.InvasionWorld={
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     get squad(){return squad.length}, get helis(){return helis.length},
+    get squad0(){return squad[0]||null},   /* 🔧 debug รอบ 519: ดึงทหารในหมู่ตัวแรกมา render ดูท่า */
     /* 🎯 รอบ 471: เป้าฝึกยิง */
     get targets(){return targets.map(t=>({x:+t.c.x.toFixed(1),z:+t.c.z.toFixed(1),up:t.up,
       vis:t.grp.visible, rx:+t.grp.rotation.x.toFixed(2),
