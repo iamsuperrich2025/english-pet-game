@@ -2,11 +2,10 @@
 # ============================================================
 # 🚦 กฎทองข้อ 10 (ต่อ) — กัน "เลขรอบชนกับ session คู่ขนาน"
 # เคสจริงรอบ 505: อีก session ลง "รอบ 505" บน main ระหว่างที่ session นี้กำลังทำ
-# → commit message ว่า "รอบ 505" เหมือนกัน ประวัติอ่านไม่รู้เรื่อง
 #
-# ตรรกะ "รอบไหนชน" ย้ายไปอยู่ที่เดียว = tools/rotate_handoff.py --check-round N
-#   (exit 1 = ชน · พิมพ์เลขรอบสูงสุดที่ commit แล้วบน main/origin ออก stdout)
-# hook นี้ทำแค่: ดึงเลขรอบจากข้อความ commit → ถามสคริปต์ → ถ้าชนก็บล็อก+บอกวิธีแก้
+# ตรรกะ "รอบไหนชน" อยู่ที่ tools/check_parallel.sh (โหมด round) → rotate_handoff.py จุดเดียว
+#   (รวมทั้ง guard กัน rotate_handoff.py เวอร์ชันเก่า และการหา python)
+# hook นี้ทำแค่: ดึงเลขรอบจากหัวข้อ commit → ส่งให้ check_parallel.sh
 # ข้ามชั่วคราว: SKIP_PARALLEL_CHECK=1 git commit ...
 # ============================================================
 [ -n "$SKIP_PARALLEL_CHECK" ] && exit 0
@@ -18,19 +17,10 @@ MSG=$1
 mine=$(head -1 "$MSG" | sed -n 's/.*รอบ \([0-9]\{1,\}\).*/\1/p')
 [ -n "$mine" ] || exit 0
 
-# หา python (ถ้าไม่มีก็ปล่อยผ่าน เหมือนตอนเดิมที่หา base ไม่เจอ — fail-open)
-PY=python
-command -v "$PY" >/dev/null 2>&1 || PY=py
-command -v "$PY" >/dev/null 2>&1 || PY=python3
-command -v "$PY" >/dev/null 2>&1 || exit 0
-
-theirs=$("$PY" tools/rotate_handoff.py --check-round "$mine" 2>/dev/null)
-rc=$?
-[ "$rc" -eq 1 ] || exit 0   # ว่าง/สคริปต์พัง → ปล่อยผ่าน (บล็อกเฉพาะตอนชนจริง exit 1)
-
-printf '\n🚦 เลขรอบชน: กำลังจะ commit "รอบ %s" แต่ main/origin บันทึกถึงรอบ %s แล้ว\n' "$mine" "${theirs:-?}" >&2
-printf '   ▸ ถ้าเป็น "งานเดียวกัน" → หยุด ให้ session นั้นทำให้เสร็จก่อน\n' >&2
-printf '   ▸ ถ้าคนละเรื่อง → rebase แล้วเปลี่ยนเลขรอบตัวเองเป็น %s ขึ้นไป (ในโค้ด/คอมเมนต์/TASKS.md ด้วย)\n' "$(( ${theirs:-0} + 1 ))" >&2
-printf '   ▸ ขอเลขรอบว่างถัดไปแบบชัวร์: %s tools/rotate_handoff.py --next-round\n' "$PY" >&2
-printf '\n   (ตั้งใจข้ามจริง ๆ: SKIP_PARALLEL_CHECK=1 git commit ...)\n\n' >&2
-exit 1
+rpt=$(sh tools/check_parallel.sh round "$mine" 2>/dev/null); rc=$?
+if [ "$rc" != 0 ] && [ -n "$rpt" ]; then
+  printf '\n%s\n' "$rpt" >&2
+  printf '\n   (ตั้งใจข้ามจริง ๆ: SKIP_PARALLEL_CHECK=1 git commit ...)\n\n' >&2
+  exit 1
+fi
+exit 0
