@@ -44,7 +44,12 @@
 6. ~~`GunLab.snapAim({fit:true})`~~ ✅ **ทำแล้วรอบ 516**
 7. ~~`GunLab.saveProfile/loadProfile`~~ ✅ **ทำแล้วรอบ 516** (+`profiles`/`delProfile`)
 
-### 📌 สรุปสถานะล่าสุด (24 ก.ค. · deploy `.507`) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (24 ก.ค. · deploy `.508`) — อ่านก่อน
+- **รอบ 530:** 🏃🪖 **หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้: "อย่าปักหลักยืนทื่อ ให้วิ่งหาที่กำบัง เคลื่อนที่ หันปลายกระบอกไปเป้า") · deploy `.508`**
+  - **ต้นตอ:** ทหาร squad ยืนกับที่ตลอด (`grp.position` ตั้งครั้งเดียวตอน spawn) — `tickSquad` แค่หมุนเล็ง+ยิง ไม่เคยขยับตำแหน่ง
+  - **แก้ (invasion3d.js ~5606 zone 🏃🪖):** เพิ่ม `tickSquadMove(s,dt,now,active)` เรียกต้น `tickSquad.forEach` — ตอนมีศัตรู (`fighters||coreOpen`) ทหารสุ่ม "วิ่งไปหลบหลังกระสอบทราย" (60% จาก `squadCoverSpots` 3 จุดใกล้สุด → crouch) หรือย่องสลับที่สั้น ๆ (40%) แล้วปักหลักยิง (`holdUntil` 2.6-6.2s · `repoAt` 3.8-8.2s คุมไม่ให้รก)
+  - ระหว่างวิ่ง: `mode='run'`(ไกล>5)/`'walk'` (poseSoldier เดินขา baked อยู่แล้ว) หันหน้าตามทางวิ่ง `lookUp=0` ไม่ยิง (return true ข้ามบล็อกเล็ง) · ถึงที่/อยู่กับที่ → กลับเล็งเป้าเดิม (หมุนตัว+เงย torso = ปลายกระบอกชี้เป้า รอบ 524) ยิงตามเดิม · `SQUAD_RUN=6.4 SQUAD_WALK=2.7`
+  - **ยืนยัน runtime (preview + `_t.step`):** (A) สั่ง moveTgt ไกล 14u → sawRun+sawWalk, arrived, crouch on arrival, เกาะพื้นไม่ลอย · (B) ย้ายทหารพ้นกำบัง+ล้าง timer → AI เลือก dest เอง+เข้าโหมดวิ่ง · ไม่มี error · ปิด preview กันเสียง · ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก
 - **รอบ 529:** 💬🛸 **ต่อยอด 526 — เกราะยานแม่เปิด (msOpen) ทหารสาย coreBias ตะโกน "ระดมยิงแกน!/รุมมันเลย!" · deploy `.507`**
   - **ทำ:** เพิ่ม `CHAT_LINES.core=['ระดมยิงแกน!','รุมมันเลย!','แกนแดงเปิดแล้ว รุมเลย!','อัดแกนให้จม!']` (invasion3d.js ~5703) · ใช้ระบบ `tickSquadChatter` เดิม (bubble+เสียง+`squadShout` ชุดเดียวกับรอบ 522/523)
   - **เงื่อนไข:** `tickSquadChatter` เดิม return ถ้า `!fighters.length` → เพิ่ม `coreOpen=(msOpen&&msCore&&!msDead)` ให้ตะโกนได้แม้ยานลูกหมด · เลือกบท: `coreOpen&&who.coreBias`→`CHAT_LINES.core` · ไม่งั้น→บทประจำปืน/ทั่วไปเดิม (คุมความถี่ chatAllAt/callAllAt เดิม ไม่รก)

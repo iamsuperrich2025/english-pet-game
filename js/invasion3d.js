@@ -347,6 +347,7 @@ const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพล�
 /* 👥 พันธมิตร */
 const SQUAD_N=10;
 const SQUAD_GAP=520, HELI_GAP=2600;    // จังหวะยิงของ AI (ms)
+const SQUAD_RUN=6.4, SQUAD_WALK=2.7;   // 🏃 รอบ 530: ความเร็ววิ่งไปกำบัง / เดินย่อง (หน่วย/วินาที)
 
 /* 🚁 เฮลิคอปเตอร์ (รอบ 417 ผู้ใช้สั่ง 3 ข้อ):
    · ทั้งโลกมีได้สูงสุด HELI_MAX ลำ (นับรวมผู้เล่นทุกคน + บอท)
@@ -5557,8 +5558,61 @@ function tickMissiles(dt,now){
   }
 }
 /* 👥 พันธมิตรภาคพื้น: ยิงกราดขึ้นฟ้าใส่ยานลูก (ทำดาเมจจริงแต่เบา — ผู้เล่นยังเป็นพระเอก) */
+/* ============================================================
+   🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
+   ให้วิ่งหาที่กำบัง มีการเคลื่อนที่ และหันปลายกระบอกไปเป้าหมาย")
+   - เดิมทหารยืนกับที่ตลอด (grp.position ตั้งครั้งเดียวตอน spawn) แค่หมุนเล็ง+ยิง
+   - เพิ่ม tickSquadMove(): ตอนมีศัตรู ทหารสุ่ม "วิ่งไปหลบหลังกระสอบทราย" (crouch)
+     หรือย่องสลับตำแหน่งสั้น ๆ แล้วปักหลักยิงสักพัก (holdUntil) ก่อนขยับใหม่ (repoAt คุมไม่ให้รก)
+   - ระหว่างวิ่ง: mode='run'/'walk' (poseSoldier เดินขาอยู่แล้ว) หันหน้าตามทางวิ่ง ไม่ยิง
+   - พอถึงที่/อยู่กับที่: กลับไปเล็งเป้า (หมุนตัว+เงย torso = ปลายกระบอกชี้เป้า) แล้วยิงตามเดิม
+   ============================================================ */
+let SQUAD_COVERS=null;
+function squadCoverPool(){ return SQUAD_COVERS||(SQUAD_COVERS=squadCoverSpots()); }  /* 6 จุดหลังกระสอบทราย */
+function pickSquadDest(s){
+  const gx=s.grp.position.x, gz=s.grp.position.z;
+  if(Math.random()<0.6){                              /* 60%: วิ่งไปจุดกำบังใกล้ ๆ (สุ่มจาก 3 จุดใกล้สุด) */
+    const near=squadCoverPool().map(c=>({c,d:(c.x-gx)*(c.x-gx)+(c.z-gz)*(c.z-gz)}))
+                               .sort((a,b)=>a.d-b.d).slice(0,3);
+    if(!near.length) return null;
+    const c=near[(Math.random()*near.length)|0].c;
+    if((c.x-gx)*(c.x-gx)+(c.z-gz)*(c.z-gz)<1.4) return null;   /* อยู่ตรงนั้นแล้ว ไม่ต้องขยับ */
+    return {x:c.x+rnd(-0.6,0.6), z:c.z+rnd(-0.6,0.6), crouch:true};
+  }
+  const a=rnd(0,TAU), r=rnd(2.5,5.5);                 /* 40%: ย่องสลับที่สั้น ๆ รอบตัว (เปลี่ยนมุมยิง) */
+  return {x:gx+Math.cos(a)*r, z:gz+Math.sin(a)*r, crouch:false};
+}
+/* คืน true ถ้ากำลังวิ่ง (คุมท่า/หันหน้าเอง — ระงับการเล็งเป้า+ยิงเฟรมนี้) */
+function tickSquadMove(s,dt,now,active){
+  if(s.moveTgt){
+    const gx=s.grp.position.x, gz=s.grp.position.z;
+    const dx=s.moveTgt.x-gx, dz=s.moveTgt.z-gz, dist=Math.hypot(dx,dz);
+    if(dist<0.5){                                     /* ถึงที่หมาย → ปักหลักยิงสักพัก */
+      s.crouch=!!s.moveTgt.crouch; s.moveTgt=null;
+      s.holdUntil=now+rnd(2600,6200);
+    }else{
+      const run=dist>5, st=Math.min(dist,(run?SQUAD_RUN:SQUAD_WALK)*dt);
+      s.grp.position.x=gx+dx/dist*st; s.grp.position.z=gz+dz/dist*st;
+      if(terrainH) s.grp.position.y=terrainH(s.grp.position.x,s.grp.position.z);
+      s.grp.rotation.y=Math.atan2(-dx,-dz);           /* หันหน้าตามทางวิ่ง (โมเดลหันหน้า −Z) */
+      s.lookUp=0; s.mode=run?'run':'walk';
+      return true;
+    }
+  }
+  if(active && now>(s.holdUntil||0) && now>(s.repoAt||0)){
+    s.repoAt=now+rnd(3800,8200);                      /* พิจารณาขยับใหม่ทุก ~4-8 วิ */
+    if(Math.random()<0.5){ const d=pickSquadDest(s); if(d){ s.moveTgt=d; s.crouch=false; } }  /* ยืนขึ้นวิ่งไปก่อน */
+  }
+  return false;
+}
 function tickSquad(dt,now){
+  const coreOpen0=(msOpen&&msCore&&!msDead), active=(fighters.length>0||coreOpen0);
   squad.forEach(s=>{
+    if(tickSquadMove(s,dt,now,active)){               /* 🏃 รอบ 530: กำลังวิ่งไปกำบัง → ข้ามการเล็ง/ยิงเฟรมนี้ */
+      poseSoldier(s,now);
+      if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;
+      return;
+    }
     /* 🎯 รอบ 526 (ผู้ใช้: "ให้บางส่วนรุมแกนแดง"): เกราะยานแม่เปิด (msOpen) → ทหารสาย coreBias (~ครึ่งหมู่)
        หันไป "ระดมยิงแกนแดง(ยานแม่)" ตามป้าย · ที่เหลือยังจัดการ fighter · ไม่มี fighter เหลือ = ทุกคนยิงแกน
        (เดิมยิงแกนเฉพาะตอนไม่มี fighter เลย → ช่วงระดมยิงยานแม่ทหารมัวยิงยานลูกบินต่ำ ดูไม่เล็งยานแม่) */
