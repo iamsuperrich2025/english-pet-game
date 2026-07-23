@@ -44,7 +44,12 @@
 6. ~~`GunLab.snapAim({fit:true})`~~ ✅ **ทำแล้วรอบ 516**
 7. ~~`GunLab.saveProfile/loadProfile`~~ ✅ **ทำแล้วรอบ 516** (+`profiles`/`delProfile`)
 
-### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.499`) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.500`) — อ่านก่อน
+- **รอบ 522:** 🪖🔫🔥 **ต่อยอด peer/KSR-77 (แชทเดิม) — squad ผสมปืน + ไฟปากลำกล้องโมเดล baked + ยืนยัน strip · deploy `.500`**
+  - **①squad ผสม R93/KSR-77 ~50/50** — `makeSoldier(x,z,crouch,kind,weapon)` รับ weapon · kind 'c' เลือกไฟล์ผ่าน `bakedSoldierGlb(weapon)` (เปลี่ยนชื่อจาก `peerSoldierGlb` ใช้ร่วม peer+squad) · spawn สุ่ม `rnd(0,1)<0.5?'rifle':'r93'` (~invasion3d.js:6235,6238)
+  - **②ไฟปากลำกล้อง** (หายตอนลบปืนโค้ดเก่ารอบ 521 · โมเดล baked ไม่มี flash ในตัว) — `MUZZLE_BY_WEAPON` + `makeSoldierFlash(weapon)` sprite แปะที่ปลายปืน · squad โชว์ตอน `s.flashUntil` (ยิง) · peer โชว์ตอน `p.shotUntil` · เปลี่ยนปืน reposition flash ใน setPeerWeapon
+  - **③ยืนยัน strip ในเกมจริง** (เข้าโลกยานแม่ · `_t.fakePeer`/`_t.poseSoldier` · own renderer→readPixels→download→Read): **KSR-77 เดิน/วิ่งขาสลับเนียน ปืนแช่แข็งไม่หลุด · ไม่มีช่องเป้า** · **วัดปลายลำกล้องจริงจาก geometry** (grp-local · path fitInto จริงผ่าน fakePeer) → **KSR `[0.705,1.281,-0.449]` · R93 `[1.398,1.317,-0.520]`** flash ตรงปากทั้งคู่ · ปิด preview กันเสียง/peer ค้าง
+  - ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก · syntax OK
 - **รอบ 521:** 🪖🔫 **wire peer มุมมองที่3 ใช้โมเดล baked ถือปืนตามที่เพื่อนถือ (R93→soldier_c · KSR-77→soldier_c_KSR-77) + legOnly — เสร็จ deploy `.499`**
   - **①โมเดลใหม่ `img/models/soldier_c_KSR-77.glb`** (ผู้ใช้เจน Tripo ถือปืน KSR-77 ท่าเล็ง) ลดโพลีสูตรรอบ 519: 3.28MB→**934KB** · tris 80k→**38.6k** · tex 2K→1K jpeg · **20 ชิ้นแยก** (drop NORMAL→weld→simplify 0.45 per-primitive→resize 1024 jpeg→prune · สคริปต์ ESM ชั่วคราวใน cli dir ลบแล้ว · ต้นฉบับ backup ใน scratchpad) · **untracked → git add ตรง**
   - **②peer (invasion3d.js ~5254-5400):** เปลี่ยน foot peer จาก `soldier_b`+ปืนโค้ด(`attachPeerGun`/`peerRifle`) → `loadPeerSoldier(rig,weapon)` โหลด baked ตามปืน · `peerSoldierGlb(weapon)` แมป r93/rifle→ไฟล์ · `peerBody(kind,color,weapon)` รับ weapon · `buildPeer` ส่ง `p.weapon` · `onPeer` ตั้ง `p.weapon` ตั้งแต่สร้าง (กัน load ซ้ำ) · `setPeerWeapon` เปลี่ยนปืน=reload โมเดล · peerTick ตั้ง `p.anim.legOnly=true` + `mode=moved>0.4?'run':(moved>0.12?'walk':'idle')`
