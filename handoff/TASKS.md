@@ -44,7 +44,11 @@
 6. ~~`GunLab.snapAim({fit:true})`~~ ✅ **ทำแล้วรอบ 516**
 7. ~~`GunLab.saveProfile/loadProfile`~~ ✅ **ทำแล้วรอบ 516** (+`profiles`/`delProfile`)
 
-### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.500`) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (23 ก.ค. · deploy `.501`) — อ่านก่อน
+- **รอบ 523:** 🎨💬 **ต่อยอด (แชทเดิม) — flash KSR โทนฟ้าพลังงาน + ทหารตะโกนชนิดปืน/สถานะรบ · deploy `.501`**
+  - **①สี flash แยกตามปืน** `FLASH_COLOR={r93:0xffe0a0, rifle:0x7fe6ff}` — KSR-77 = ฟ้า cyan (เข้าธีมแถบเรืองแสง) · R93 = ส้ม-เหลืองเดิม · ยืนยัน render จริง flash KSR = `#7fe6ff` ตรงปากกระบอก
+  - **②`tickSquadChatter(now)`** (เรียกใน tickSquad ต่อจาก tickSquadCalls) — ทหารตะโกนบทประจำปืน/ปลุกใจ (`CHAT_LINES.r93`/`.rifle`/`.any` · 60% ตามปืน 40% ทั่วไป) · ใช้ bubble+เสียง+`squadShout` ชุดเดียวกับเตือนทิศ · แชร์ `callAllAt` กันตะโกนซ้อน + `chatAllAt` (7s) คุมความถี่ · ยืนยันเดินเฟรมจริง (`_t.step`) ~10s ได้ทั้ง chatter ("ระวังตัวด้วยเพื่อน!") + เตือนทิศ อยู่ร่วมกันได้ ไม่รก
+  - ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก · syntax OK · ปิด preview กันเสียงค้าง
 - **รอบ 522:** 🪖🔫🔥 **ต่อยอด peer/KSR-77 (แชทเดิม) — squad ผสมปืน + ไฟปากลำกล้องโมเดล baked + ยืนยัน strip · deploy `.500`**
   - **①squad ผสม R93/KSR-77 ~50/50** — `makeSoldier(x,z,crouch,kind,weapon)` รับ weapon · kind 'c' เลือกไฟล์ผ่าน `bakedSoldierGlb(weapon)` (เปลี่ยนชื่อจาก `peerSoldierGlb` ใช้ร่วม peer+squad) · spawn สุ่ม `rnd(0,1)<0.5?'rifle':'r93'` (~invasion3d.js:6235,6238)
   - **②ไฟปากลำกล้อง** (หายตอนลบปืนโค้ดเก่ารอบ 521 · โมเดล baked ไม่มี flash ในตัว) — `MUZZLE_BY_WEAPON` + `makeSoldierFlash(weapon)` sprite แปะที่ปลายปืน · squad โชว์ตอน `s.flashUntil` (ยิง) · peer โชว์ตอน `p.shotUntil` · เปลี่ยนปืน reposition flash ใน setPeerWeapon
