@@ -2197,17 +2197,35 @@ function autoRigSoldier(s,obj){
   const H=all.max.y-all.min.y, W=Math.max(0.001,all.max.x-all.min.x);
   const cx=(all.min.x+all.max.x)/2;
   if(H<=0.001) return false;
-  /* 2) จับแต่ละชิ้นเข้าข้อต่อที่ใกล้ที่สุดในพิกัดสัดส่วน
+  /* 🔫 รอบ 519: R93 อบมาในตัว soldier_c (ปากกระบอกยื่นซ้าย) → ดัน bbox รวมไปซ้าย
+     ทำให้ cx/W รวมเพี้ยน → เท้าซ้ายถูก bin ไปขาขวา ขาทั้งคู่รวมเป็นข้างเดียว (หุ่นก้าวขาไม่ออก)
+     แก้: หา "แกนกลางลำตัวจริง" จากกลุ่มชิ้นระดับขา (ny ต่ำ = เท้าซ้าย/ขวา ไม่ได้ถือปืน จึงสมมาตร)
+     แล้วใช้แกนนี้แยกซ้าย-ขวาของขาโดยเฉพาะ · ปืน bin เข้าท่อนบน = โอเค เพราะโหมด legOnly แช่แข็งท่อนบน
+     (โมเดลไม่มีปืนยื่น เช่น soldier_a → legCx≈cx ผลเท่าเดิม backward-safe) */
+  const LEG_BAND=0.42, KNEE_BAND=0.24;               /* ny: <0.42 = ระดับขา · <0.24 = ท่อนล่าง(แข้ง/เท้า) */
+  let legCx=cx, legHalf=Math.max(0.001,W/2);
+  const legPc=parts.filter(function(p){ return (p.c.y-all.min.y)/H < LEG_BAND; });
+  if(legPc.length>=2){
+    let lmin=1e9,lmax=-1e9;
+    legPc.forEach(function(p){ if(p.c.x<lmin)lmin=p.c.x; if(p.c.x>lmax)lmax=p.c.x; });
+    legCx=(lmin+lmax)/2; legHalf=Math.max(0.001,(lmax-lmin)/2);   /* กึ่งกลางเท้าซ้าย-ขวา = แกนจริง */
+  }
+  /* 2) จับแต่ละชิ้นเข้าข้อต่อ: ระดับขาแยกซ้าย-ขวาจากแกนขาจริง · ที่เหลือหาเพื่อนบ้านใกล้สุด (ไม่รวมข้อต่อขา)
         ถ่วงน้ำหนักแกน Y มากกว่า X เล็กน้อย เพราะความสูงบอกส่วนของร่างกายได้ชัดกว่า */
   const bucket={}; Object.keys(BODY_MAP).forEach(function(k){ bucket[k]=[]; });
+  const UPPER=['hips','torso','head','armUL','armLL','armUR','armLR'];
   parts.forEach(function(p){
-    const ny=(p.c.y-all.min.y)/H, nx=(p.c.x-cx)/(W/2);
-    let best=null,bd=1e9;
-    for(const k in BODY_MAP){
-      const t=BODY_MAP[k];
-      const dx=(nx-t[0])*0.85, dy=(ny-t[1])*1.15;
-      const d=dx*dx+dy*dy;
-      if(d<bd){ bd=d; best=k; }
+    const ny=(p.c.y-all.min.y)/H;
+    let best;
+    if(ny<LEG_BAND){                                  /* ระดับขา → แยกซ้าย-ขวาจาก legCx (ไม่ใช่ cx รวมที่โดนปืนดึง) */
+      const left=(p.c.x<legCx);
+      best=(ny<KNEE_BAND)?(left?'legLL':'legLR'):(left?'legUL':'legUR');
+    }else{                                            /* ท่อนบน (torso/head/แขน) → เพื่อนบ้านใกล้สุด ใช้ legCx เป็นแกนกลาง */
+      const nx=(p.c.x-legCx)/(W/2);
+      let bd=1e9;
+      for(let i=0;i<UPPER.length;i++){ const k=UPPER[i], t=BODY_MAP[k];
+        const dx=(nx-t[0])*0.85, dy=(ny-t[1])*1.15, d=dx*dx+dy*dy;
+        if(d<bd){ bd=d; best=k; } }
     }
     p.key=best; bucket[best].push(p);
   });
@@ -2285,6 +2303,26 @@ function fitSoldierGround(s){
 function poseSoldier(s,now){
   const J=s.J; if(!J||s.static) return;
   const t=now*0.001+s.phase, m=s.mode||'idle';
+  /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → "ขยับเฉพาะขา" ท่อนบน(แขน/ปืน/หัว)แช่แข็งคงท่าเล็งที่อบมา
+     (ท่าถือปืนอยู่ใน geometry แล้ว ถ้าไปหมุนแขนปืนจะหลุด — ปัญหาเดิมรอบ 518) */
+  if(s.legOnly){
+    const moving=(m==='walk'||m==='run'), run=(m==='run');
+    if(moving){
+      const sp=run?1.5:1.0, w=Math.sin(t*6.2*sp), w2=Math.cos(t*6.2*sp);
+      /* วิ่ง = ก้าวถี่กว่า (1.5×) + ยกเข่าสูงกว่า · amp สะโพกคุมไว้ 0.55 ไม่ให้ขาแยกกว้างจนเห็นช่องหว่างขา
+         (รอบ 519: amp 0.85 เดิมทำ "เป้า" โหว่ตอนก้าวกว้าง — ผู้ใช้เจอ) */
+      const amp=0.55, knee=run?0.9:0.7;
+      J.legUL.rotation.x= w*amp;  J.legUR.rotation.x=-w*amp;
+      J.legLL.rotation.x=Math.max(0,-w2*knee);  J.legLR.rotation.x=Math.max(0, w2*knee);
+      J.hips.position.y=0.92+Math.abs(w)*(run?0.05:0.03);   /* เด้งตามจังหวะก้าว */
+    }else{                                            /* ยืนนิ่งถือปืน — ขาตรง */
+      J.legUL.rotation.x=J.legUR.rotation.x=0;
+      J.legLL.rotation.x=J.legLR.rotation.x=0;
+      J.hips.position.y=0.92;
+    }
+    if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
+    return;                                           /* ⛔ ไม่แตะ torso/head/arms/lookUp/fireT → ปืนไม่มีทางหลุด */
+  }
   const br=Math.sin(t*1.6)*0.02;                     /* หายใจ */
   if(m==='walk'){
     const w=Math.sin(t*6.5), w2=Math.cos(t*6.5);
@@ -2325,8 +2363,10 @@ function poseSoldier(s,now){
   if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
 }
 function makeSoldier(x,z,crouch,kind){
+  kind=kind||'a';
   const rig=buildSoldierRig();
-  const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch,
+  const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind,
+           legOnly:(kind==='c'),                     /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → ขยับเฉพาะขา */
            mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
            shotAt:performance.now()+rnd(0,SQUAD_GAP)};
   s.grp.position.set(x,terrainH(x,z),z);
@@ -6222,11 +6262,12 @@ function build(){
   buildDustMotes();                 // 🌫️ ฝุ่นฟุ้งในอากาศ
   buildMothership();
   buildGun();
-  /* 👥 หน่วยรบภาคพื้น — ส่วนใหญ่หมอบยิงหลังแนวกระสอบทราย (เหมือนภาพอ้างอิง) ที่เหลือกระจายรอบ */
-  squadCoverSpots().forEach(s=>squad.push(makeSoldier(s.x,s.z,s.crouch)));
+  /* 👥 หน่วยรบภาคพื้น — ส่วนใหญ่หมอบยิงหลังแนวกระสอบทราย (เหมือนภาพอ้างอิง) ที่เหลือกระจายรอบ
+     🔫 รอบ 519: ใช้ soldier_c (ถือ R93 อบมาในตัว · ขยับเฉพาะขา) — เทสต์บน squad ก่อน ไม่แตะ soldier_a/b */
+  squadCoverSpots().forEach(s=>squad.push(makeSoldier(s.x,s.z,s.crouch,'c')));
   for(let i=squad.length;i<SQUAD_N;i++){
     const a=rnd(0,TAU), r=rnd(14,42);
-    squad.push(makeSoldier(px+Math.cos(a)*r, pz+Math.sin(a)*r,false));
+    squad.push(makeSoldier(px+Math.cos(a)*r, pz+Math.sin(a)*r,false,'c'));
   }
   syncBotHelis();                   // 🚁 บอทขับเฮลิเฉพาะตอนเล่นคนเดียว (ผู้ใช้สั่ง)
   built=true;
