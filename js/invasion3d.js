@@ -2400,6 +2400,7 @@ function makeSoldier(x,z,crouch,kind,weapon){
   const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind, weapon:weapon,
            legOnly:(kind==='c'),                     /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → ขยับเฉพาะขา */
            mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
+           coreBias:(Math.random()<0.5),             /* 🎯 รอบ 526: สายรุมยานแม่ (~ครึ่ง) เมื่อเกราะเปิด — ดู tickSquad */
            shotAt:performance.now()+rnd(0,SQUAD_GAP)};
   s.grp.position.set(x,terrainH(x,z),z);
   poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
@@ -5558,8 +5559,14 @@ function tickMissiles(dt,now){
 /* 👥 พันธมิตรภาคพื้น: ยิงกราดขึ้นฟ้าใส่ยานลูก (ทำดาเมจจริงแต่เบา — ผู้เล่นยังเป็นพระเอก) */
 function tickSquad(dt,now){
   squad.forEach(s=>{
-    const tgt=fighters.length?fighters[(Math.random()*fighters.length)|0]:null;
-    const aim=tgt?tgt.grp.position:((msOpen&&msCore)?msCore.position:null);
+    /* 🎯 รอบ 526 (ผู้ใช้: "ให้บางส่วนรุมแกนแดง"): เกราะยานแม่เปิด (msOpen) → ทหารสาย coreBias (~ครึ่งหมู่)
+       หันไป "ระดมยิงแกนแดง(ยานแม่)" ตามป้าย · ที่เหลือยังจัดการ fighter · ไม่มี fighter เหลือ = ทุกคนยิงแกน
+       (เดิมยิงแกนเฉพาะตอนไม่มี fighter เลย → ช่วงระดมยิงยานแม่ทหารมัวยิงยานลูกบินต่ำ ดูไม่เล็งยานแม่) */
+    const coreOpen=(msOpen&&msCore&&!msDead);
+    let tgt=null, aim=null;
+    if(coreOpen && s.coreBias){        aim=msCore.position; }              /* สายรุมยานแม่ */
+    else if(fighters.length){          tgt=fighters[(Math.random()*fighters.length)|0]; aim=tgt.grp.position; }
+    else if(coreOpen){                 aim=msCore.position; }              /* ไม่มี fighter → ยิงแกน */
     if(aim){
       const d=new THREE.Vector3().subVectors(aim,s.grp.position);
       /* 🧭 รอบ 436 (ผู้ใช้: "บอทหันหลังยิง"): ทหารหันหน้าไป −Z ตอน rotation=0
