@@ -34,11 +34,14 @@
      GunLab.savePreset('a'); GunLab.savePreset('b')
      GunLab.diff('a','b')            // 📊 เทียบ 2 preset เป็นตารางเดียว (ดู .table) — Δตำแหน่ง/Δขนาด/
                                      //    Δองศาลำกล้อง/Δจุดเล็ง + ปากกระบอกเลื่อนกี่ % ของจอ (muzzleShiftPct)
+     GunLab.diffLive('a')            // 🔴 เทียบ "ท่าที่ถืออยู่ตอนนี้" กับ preset เลย ไม่ต้อง savePreset ก่อน
      GunLab.snapAim({fit:true})      // 🎯 กลับด้าน: ขยับ "ท่าถือ" เข้าหาจุดเล็งเดิม (ดูอย่างเดียว คืนบรรทัด GUN_VIEW)
      GunLab.snapAim({fit:true,apply:true})   //    ค้างค่าไว้ในเกมสด ๆ (ยังไม่แตะไฟล์)
      GunLab.saveProfile('classic')   // 💾 เก็บ preset "ทุกกระบอกพร้อมกัน" เป็นชุดเดียว
      GunLab.loadProfile('classic')   //    สลับสไตล์ถือปืนทั้งเกมในคำสั่งเดียว (คืนกระบอกที่ถืออยู่เดิม)
      GunLab.profiles() / GunLab.delProfile('classic')
+     GunLab.exportProfile('classic') // 📤 คัดลอกเป็น JSON ก้อนเดียว (.json) ย้ายข้ามเครื่อง/แชร์ · ไม่ใส่ชื่อ=รวมทุกอัน
+     GunLab.importProfile('classic', json)   // 📥 วางกลับ · หรือ importProfile(bundleJson) กระจายคืนทั้งก้อน
 
    ⛔ **ค่าท่าถือ + จุดเล็งของ rifle/r93 ถูกล็อกไว้** (กล่อง 🔒 LOCKED เหนือ GUN_VIEW ใน js/invasion3d.js)
       เครื่องมือในไฟล์นี้ **ไม่แก้ไฟล์เกมเอง** — แก้ได้แค่ค่าในหน่วยความจำของ preview เพื่อทดลอง
@@ -397,11 +400,9 @@ window.GunLab = (function(){
      คอลัมน์: ค่า a · ค่า b · Δ(b−a) · แถว: ตำแหน่ง xyz / ขนาด / องศาลำกล้องจริง(yaw,pitch) / จุดเล็ง xy
               + ปากกระบอกเลื่อนกี่ % ของจอ (muzzleShiftPct)
      วัดองศาลำกล้อง/ปากกระบอกด้วยการ apply preset ลงเกมชั่วคราวแล้ววัด barrel() → คืนทุกกระบอกตามเดิม */
-  function diff(a,b){
-    const t=T();
-    const ra=_readPreset(a), rb=_readPreset(b);
-    if(!ra) return {err:'ไม่มี preset '+a, have:presets().map(r=>r.name)};
-    if(!rb) return {err:'ไม่มี preset '+b, have:presets().map(r=>r.name)};
+  /* แกนกลางของ diff — รับ record 2 ชุด {weapon,p,r,s,aim} + ป้ายชื่อ · วัด barrel ของแต่ละชุดแล้วคืนตาราง
+     คืนค่าทุกกระบอกที่แตะตามเดิม (ผ่าน _snapAll/_restoreAll) */
+  function _diffCore(ra,rb,la,lb){
     const snap=_snapAll();
     _applyGun(ra.weapon, ra); const ba=barrel();
     _applyGun(rb.weapon, rb); const bb=barrel();
@@ -414,7 +415,7 @@ window.GunLab = (function(){
     const dMuz=(ba.muzzlePct&&bb.muzzlePct)
       ? [+(bb.muzzlePct[0]-ba.muzzlePct[0]).toFixed(1), +(bb.muzzlePct[1]-ba.muzzlePct[1]).toFixed(1)] : null;
     const rows=[
-      ['',              a,                          b,                          'Δ(b−a)'],
+      ['',              la,                         lb,                         'Δ(b−a)'],
       ['weapon',        ra.weapon,                  rb.weapon,                  ra.weapon===rb.weapon?'—':'≠'],
       ['pos x',         ra.p[0],                    rb.p[0],                    dPos[0]],
       ['pos y',         ra.p[1],                    rb.p[1],                    dPos[1]],
@@ -429,8 +430,25 @@ window.GunLab = (function(){
     ];
     const wid=rows[0].map((_,c)=>Math.max(...rows.map(r=>String(r[c]).length)));
     const table=rows.map(r=>r.map((c,i)=>String(c).padEnd(wid[i])).join('  ')).join('\n');
-    return {a, b, table, dPos, dScale, dYawDeg:dYaw, dPitchDeg:dPitch, dAim, muzzleShiftPct:dMuz,
+    return {a:la, b:lb, table, dPos, dScale, dYawDeg:dYaw, dPitchDeg:dPitch, dAim, muzzleShiftPct:dMuz,
       note:'muzzleShiftPct = ปากกระบอกเลื่อนกี่ % ของจอ (b−a) · x: +=ขวา · y: +=ลง (วัดจากขอบบน)'};
+  }
+  function diff(a,b){
+    const ra=_readPreset(a), rb=_readPreset(b);
+    if(!ra) return {err:'ไม่มี preset '+a, have:presets().map(r=>r.name)};
+    if(!rb) return {err:'ไม่มี preset '+b, have:presets().map(r=>r.name)};
+    return _diffCore(ra,rb,a,b);
+  }
+
+  /* 🔴 GunLab.diffLive('p') — เทียบ "ท่าที่ถืออยู่ตอนนี้" (สด) กับ preset ที่เซฟไว้ โดยไม่ต้อง savePreset ก่อน
+     ใช้ตอนกำลังจูนแล้วอยากรู้ทันทีว่าห่างจาก preset อ้างอิงเท่าไร · freeze ก่อนอ่านท่าฐาน (ไม่นับคลื่น sway) */
+  function diffLive(name){
+    const t=T(); freeze();
+    const rb=_readPreset(name);
+    if(!rb) return {err:'ไม่มี preset '+name, have:presets().map(r=>r.name)};
+    const p=t.gunPose;
+    const ra={weapon:t.weapon, p:p.p.slice(), r:p.r.slice(), s:p.s, aim:t.aimOff.slice()};
+    return _diffCore(ra, rb, 'live', name);
   }
 
   /* 🎯 GunLab.snapAim({fit:true}) — กลับด้านของ snapAim:
@@ -513,11 +531,49 @@ window.GunLab = (function(){
   }
   function delProfile(name){ localStorage.removeItem(PROF+name); return {del:name, left:profiles().map(r=>r.name)}; }
 
+  /* 📤 GunLab.exportProfile('ชื่อ') — คัดลอก profile เป็น JSON ก้อนเดียว (ย้ายข้ามเครื่อง/แชร์)
+     คืน .json = string ก๊อปได้เลย · ไม่ใส่ชื่อ = รวมทุก profile เป็นก้อนเดียว */
+  function exportProfile(name){
+    if(!name){
+      const all={};
+      profiles().forEach(r=>{ try{ all[r.name]=JSON.parse(localStorage.getItem(PROF+r.name)); }catch(e){} });
+      return {names:Object.keys(all), json:JSON.stringify(all)};
+    }
+    const raw=localStorage.getItem(PROF+name);
+    if(!raw) return {err:'ไม่มี profile ชื่อ '+name, have:profiles().map(r=>r.name)};
+    return {name, json:raw};
+  }
+  /* 📥 GunLab.importProfile('ชื่อ', json) — วาง JSON ที่ export มาเก็บกลับเป็น profile
+     • ใส่ชื่อ + json ของ profile เดี่ยว → เก็บชื่อนั้น
+     • ใส่แค่ json ที่ export แบบรวม (ไม่ใส่ชื่อ / ชื่อ=ก้อนรวม) → กระจายคืนทุก profile ตามชื่อเดิม
+     รับได้ทั้ง string และ object */
+  function importProfile(name,json){
+    let data = (name && typeof name==='object') ? name
+             : (json!==undefined ? json : name);          // อนุญาต importProfile(bundleJson) เดี่ยว ๆ
+    const key = (typeof name==='string' && json!==undefined) ? name : null;
+    let obj; try{ obj=(typeof data==='string')?JSON.parse(data):data; }catch(e){ return {err:'JSON เสีย: '+e}; }
+    if(!obj||typeof obj!=='object') return {err:'ข้อมูลว่าง/ไม่ใช่ object'};
+    const isSingle = !!obj.guns;                           // profile เดี่ยวมี key "guns"
+    if(isSingle){
+      const nm=key||'imported';
+      if(!obj.guns||typeof obj.guns!=='object') return {err:'profile ไม่มี guns'};
+      localStorage.setItem(PROF+nm, JSON.stringify(obj));
+      return {imported:[nm], guns:Object.keys(obj.guns), have:profiles().map(r=>r.name)};
+    }
+    /* ก้อนรวม: {ชื่อ:{guns,...}, ...} — ถ้าให้ key มาด้วยจะเก็บทั้งก้อนภายใต้ key เดียว ไม่กระจาย */
+    if(key){ localStorage.setItem(PROF+key, JSON.stringify(obj)); return {imported:[key], have:profiles().map(r=>r.name)}; }
+    const done=[];
+    Object.keys(obj).forEach(nm=>{ const v=obj[nm];
+      if(v&&v.guns){ localStorage.setItem(PROF+nm, JSON.stringify(v)); done.push(nm); } });
+    if(!done.length) return {err:'ไม่พบ profile ที่ถูกต้องในก้อนนี้ (ต้องมี key "guns")'};
+    return {imported:done, have:profiles().map(r=>r.name)};
+  }
+
   /* ปิดเสียง/คืนหน้า login หลังเทสต์ (กฎ: เทสต์เสียงเสร็จต้องปิดให้เรียบร้อย) */
   function done(){ try{ localStorage.removeItem('petVocabAdventure_v1'); }catch(e){} location.reload(); }
 
   return {boot,tune,big,fwd,shot,pair,aim,check,match,target,done,freeze,
           gunAxis,barrel,snapAim,yaw,pitch,spin,savePreset,loadPreset,presets,delPreset,
-          diff,saveProfile,loadProfile,profiles,delProfile,
+          diff,diffLive,saveProfile,loadProfile,profiles,delProfile,exportProfile,importProfile,
           sil:()=>T().gunSil(),pose:()=>T().gunPose};
 })();
