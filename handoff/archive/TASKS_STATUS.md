@@ -1366,3 +1366,22 @@
   - **ทำ:** เพิ่ม `CHAT_LINES.core=['ระดมยิงแกน!','รุมมันเลย!','แกนแดงเปิดแล้ว รุมเลย!','อัดแกนให้จม!']` (invasion3d.js ~5703) · ใช้ระบบ `tickSquadChatter` เดิม (bubble+เสียง+`squadShout` ชุดเดียวกับรอบ 522/523)
   - **เงื่อนไข:** `tickSquadChatter` เดิม return ถ้า `!fighters.length` → เพิ่ม `coreOpen=(msOpen&&msCore&&!msDead)` ให้ตะโกนได้แม้ยานลูกหมด · เลือกบท: `coreOpen&&who.coreBias`→`CHAT_LINES.core` · ไม่งั้น→บทประจำปืน/ทั่วไปเดิม (คุมความถี่ chatAllAt/callAllAt เดิม ไม่รก)
   - **ยืนยัน:** node -c syntax OK · logic: เกราะเปิด+สายรุมแกน = บทระดมยิงแกน / ทหารอื่นยังปลุกใจเดิม · ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก · commit รวมงานรอบ 528 (tracer, session คู่ขนาน) ไปด้วยเพราะไฟล์เดียวกัน (ผู้ใช้อนุมัติ)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-24 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 530:** 🏃🪖 **หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้: "อย่าปักหลักยืนทื่อ ให้วิ่งหาที่กำบัง เคลื่อนที่ หันปลายกระบอกไปเป้า") · deploy `.508`**
+  - **ต้นตอ:** ทหาร squad ยืนกับที่ตลอด (`grp.position` ตั้งครั้งเดียวตอน spawn) — `tickSquad` แค่หมุนเล็ง+ยิง ไม่เคยขยับตำแหน่ง
+  - **แก้ (invasion3d.js ~5606 zone 🏃🪖):** เพิ่ม `tickSquadMove(s,dt,now,active)` เรียกต้น `tickSquad.forEach` — ตอนมีศัตรู (`fighters||coreOpen`) ทหารสุ่ม "วิ่งไปหลบหลังกระสอบทราย" (60% จาก `squadCoverSpots` 3 จุดใกล้สุด → crouch) หรือย่องสลับที่สั้น ๆ (40%) แล้วปักหลักยิง (`holdUntil` 2.6-6.2s · `repoAt` 3.8-8.2s คุมไม่ให้รก)
+  - ระหว่างวิ่ง: `mode='run'`(ไกล>5)/`'walk'` (poseSoldier เดินขา baked อยู่แล้ว) หันหน้าตามทางวิ่ง `lookUp=0` ไม่ยิง (return true ข้ามบล็อกเล็ง) · ถึงที่/อยู่กับที่ → กลับเล็งเป้าเดิม (หมุนตัว+เงย torso = ปลายกระบอกชี้เป้า รอบ 524) ยิงตามเดิม · `SQUAD_RUN=6.4 SQUAD_WALK=2.7`
+  - **ยืนยัน runtime (preview + `_t.step`):** (A) สั่ง moveTgt ไกล 14u → sawRun+sawWalk, arrived, crouch on arrival, เกาะพื้นไม่ลอย · (B) ย้ายทหารพ้นกำบัง+ล้าง timer → AI เลือก dest เอง+เข้าโหมดวิ่ง · ไม่มี error · ปิด preview กันเสียง · ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก
+
+
+## ⏬ ย้ายเมื่อ 2026-07-24 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 531:** 🚁 **เฮลิคอปเตอร์โลกยานแม่ "เหมือนโลก helicopter" (ผู้ใช้สั่งเป็นชุด · deploy `.509`) — ทำ 10/11 ข้อ**
+  - **เสียง:** พอร์ต `HeliSnd` (invasion3d.js ~1200) โหลด `sound/heli_start|rotor|rotor_high.mp3` ชุดเดียวกับโลกเฮลิฯ · สตาร์ท→crossfade ลูปบิน · ปรับ rpm/ลม/หวอทุกเฟรม (wire ใน enterHeli/tickHeliFlight/exitHeli/world-exit) · **`HeliChorus`** = เสียงเฮลิทุกลำรอบตัว (บอท/เพื่อน) ดังตามระยะ+แพนซ้ายขวา (1 voice/ลำ)
+  - **มิสไซล์:** ควันพ่นเป็นทาง (`spawnSmoke`/`tickSmoke` sprite จางๆ) + พุ่งสมจริง Modern Warship (loft+boost แล้ว homing โค้งเข้าเป้า) · **ฝุ่นฟุ้งใต้เฮลิตอนขึ้น/ลง** (`spawnDust`/`tickHeliDust` สปอว์นใต้เฮลิทุกลำใกล้พื้น = ทุก client เห็นของกันเอง)
+  - **บอทเฮลิ dogfight:** `tickHelis` ไล่ล่ายานลูก (ไล่ท้าย+ส่ายหลบ+ยิงจรวดนำวิถีถี่ `heliFireAt`) · ไม่มียานลูก=ลาดตระเวนเดิม · **สี:** `heliDesertMat.map=null` ทิ้งลายแดง เหลือสีทะเลทรายล้วน (คุมลำจอด/บอท/เพื่อน)
+  - **UI:** พวงมาลัย `#inv-wheel` ลอยเตือนตอนเข้าใกล้ลำ→กดขึ้นเครื่อง · `.fly` ซ่อนปุ่มภาคพื้น (fire2/glow/torch/night/gunner) เหลือชุดเฮลิ + ปุ่มมิสไซล์ 🚀 เด่นขึ้น · **ยืนยัน preview:** เข้า/ออกเฮลิ+ยิงมิสไซล์(12→10)+step หลายร้อยเฟรม = ไม่มี console error
+  - ~~**⏳ ค้าง:** ข้อ 11~~ ✅ **ปิดจบรอบ 532** (ดูด้านบน) — เดิมเขียนไว้ว่า: ข้อ 11 = มุมมองภาพ cockpit จริง (`img/heli_cockpit.png`/`heli_dash.png`+เกจเข็ม พอร์ตจาก `drawGauges`/`cpNeedle`/`layoutCockpit` adventure3d ~8247-8810) **แทน** canopy CSS + เพิ่มกล้องภายนอก (seat ที่ 4) — ผู้ใช้เลือก "ทั้งสอง"
