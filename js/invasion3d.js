@@ -2727,8 +2727,9 @@ const SEAT_VIEWS=[                      // มุมมองในห้อง�
   {label:'มุมบิน', dy: 0.00, dz: 0.00},
   {label:'บินต่ำ', dy: 0.32, dz:-0.70},
   /* 🎥 รอบ 532 (ผู้ใช้สั่ง): มุมมองที่ 4 = กล้องภายนอก ลอยหลัง+เหนือเครื่อง เห็นลำเฮลิทั้งลำ
-     ext:true → ซ่อนภาพค็อกพิต/เกจ + โชว์ myPad.grp (มุมมองภายในซ่อนลำ กันเห็นจมูกทะลุกระจก) */
-  {label:'ภายนอก', dy: 4.6, dz:-14.5, ext:true, look:0.26},
+     ext:true → ซ่อนภาพค็อกพิต/เกจ + โชว์ myPad.grp (มุมมองภายในซ่อนลำ กันเห็นจมูกทะลุกระจก)
+     ⚙️ รอบ 533: ระยะ/ความสูง/ความหนืด ย้ายไปอยู่ที่ `EXT_CAM` (TUNE ZONE เหนือ seatCamera) */
+  {label:'ภายนอก', ext:true},
 ];
 /* โหลด+ประกอบโมเดลลำจริง 1 ลำ (geometry/material แชร์กันทุกลำ = เพิ่มลำแทบไม่กินเครื่อง) */
 let heliDesertMat=null;
@@ -2806,6 +2807,7 @@ function setSeatView(lv){
     wrapEl.classList.toggle('cockpit', !!cpNat && !SEAT_VIEWS[seatLv].ext);
   }
   if(seatBtn) seatBtn.innerHTML='👁️<small>'+SEAT_VIEWS[seatLv].label+'</small>';
+  resetExtCam();                         // 🎥 รอบ 533: เพิ่งสลับมุม → วางกล้องภายนอกเข้าที่เลย ไม่ให้เหวี่ยงจากตำแหน่งเก่า
   cpBox=''; layoutInvCockpit();          // ⚠️ วัดใหม่ทันที ห้ามรอเฟรมถัดไป (เหมือน setSeat ในโลกเฮลิฯ)
 }
 /* ใบพัดลำที่จอด: หมุนเฉพาะลำที่กำลังสตาร์ท/ที่เราขับอยู่ (ลำอื่นจอดนิ่ง) */
@@ -2837,7 +2839,19 @@ const CP_GAUGES={
   alt:{x:410,y:294,r:21},   // ความสูง
   rpm:{x:359,y:354,r:24},   // รอบใบพัด
   vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
+  /* 🆕 รอบ 534: หน้าปัดที่ยังว่างอยู่ในภาพ (เลือกจากตำแหน่งวงกลมจริงบนแผง ไม่ทับของเดิม) */
+  fuel:{x:302,y:356,r:21},  // ⛽ เชื้อเพลิง (ใต้เข็มความเร็ว)
+  tmp :{x:490,y:305,r:20},  // 🌡️ อุณหภูมิเครื่อง (กลางแผง ขวาของชุดนักบิน)
 };
+/* 🚨 รอบ 534: แผงไฟเตือน — วางบน "แถบเรียบ" เหนือชุดหน้าปัดนักบิน (พิกัดภาพเดียวกัน) */
+const CP_LAMP={cx:359, y:246, w:36, h:13, gap:5};
+/* ⛽ เชื้อเพลิง — เป็น "มาตรวัด" ล้วน ๆ ไม่มีบทลงโทษ: หมดถังเครื่องไม่ดับ (ไม่เปลี่ยนวิธีเล่นเดิม)
+   จอดนิ่งเมื่อไหร่ = เติมกลับเองจากฐาน · เต็มถังบินได้ ~5 นาที */
+const FUEL_MAX=100, FUEL_IDLE=.09, FUEL_FLY=.26, FUEL_PULL=.16, FUEL_REFUEL=9;
+const FUEL_WARN=.25, FUEL_LOW=.10;
+/* 🌡️ อุณหภูมิเครื่อง (0..1) — ร้อนตามรอบใบพัด+ดึงคันเร่ง · ลมปะทะตอนบินเร็วช่วยระบาย */
+const ENG_AMB=.16, ENG_RISE=.45, ENG_COOL=.22, ENG_WARN=.80, ENG_HOT=.92;
+let cpFuel=FUEL_MAX, cpEngT=ENG_AMB, cpFuelToastAt=0;
 const CP_SEAT_FULL=.62;                 // ตำแหน่งแนวตั้งของกรอบเต็มลำ (0=ชิดบน 1=ชิดล่าง)
 const CP_ZOOM=1.12;                     // ซูมกรอบเต็มลำเล็กน้อย ให้ครอบจอทุกสัดส่วน
 const CP_DASH_OFF_Y=228;                // heli_dash.png ตัดมาจากกรอบเต็มที่ y นี้ (ต้องตรงกับ tools/cockpit_prep.py)
@@ -2907,6 +2921,69 @@ function cpNeedle(c,g,frac,color,opt){
   c.beginPath(); c.arc(g.x,g.y,R*.1,0,7); c.fillStyle='#d8dde6'; c.fill();
   c.restore();
 }
+/* 🎨 รอบ 534: แถบโซนสีบาง ๆ บนขอบหน้าปัด (f = 0..1 ตามช่วงกวาดเข็ม 270° เดียวกับ cpNeedle) */
+function cpArc(c,g,f1,f2,col,alpha){
+  const a0=-Math.PI*.75-Math.PI/2, sw=Math.PI*1.5;
+  c.save(); c.globalAlpha=alpha||.55; c.lineWidth=g.r*.11; c.lineCap='butt';
+  c.beginPath(); c.arc(g.x,g.y,g.r*.86,a0+f1*sw,a0+f2*sw);
+  c.strokeStyle=col; c.stroke(); c.restore();
+}
+function cpRoundRect(c,x,y,w,h,r){    // เขียนเองแทน c.roundRect (เบราว์เซอร์เก่าไม่มี)
+  c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+/* ⛽🌡️ รอบ 534: อัปเดตเชื้อเพลิง/อุณหภูมิทุกเฟรมที่อยู่ในเฮลิ (เรียกจาก tickHeliFlight ทั้ง 2 ช่วง)
+   col = คันเร่ง −1..1 · ค่าพวกนี้เป็นตัวเลขบนหน้าปัดล้วน ๆ ไม่ไปยุ่งกับฟิสิกส์การบิน */
+function tickHeliGauges(dt,col,now){
+  const rpm=HeliSnd.ready?HeliSnd.rpm:0;
+  const run=clamp((rpm-.55)/.7,0,1);                        // 0 = เครื่องดับ · 1 = รอบบินเต็ม
+  if(hLanded&&heliReady&&col<=.1) cpFuel=Math.min(FUEL_MAX,cpFuel+FUEL_REFUEL*dt);   // จอดนิ่ง = ฐานเติมให้
+  else cpFuel=Math.max(0,cpFuel-(FUEL_IDLE+FUEL_FLY*run+FUEL_PULL*Math.max(0,col)*run)*dt);
+  const air=Math.min(1,Math.hypot(phVel.x,phVel.z)/HELI_VMAX);   // ลมปะทะ = ระบายความร้อน
+  const tgt=ENG_AMB + run*.52 + Math.max(0,col)*.22*run + Math.max(0,rpm-HELI_OD_RPM)*.6 - air*.16;
+  cpEngT+=(tgt-cpEngT)*Math.min(1,dt*(tgt>cpEngT?ENG_RISE:ENG_COOL));
+  cpEngT=clamp(cpEngT,0,1.15);
+  if(cpFuel/FUEL_MAX<FUEL_WARN && !hLanded && now-cpFuelToastAt>26000){     // เตือนเป็นคำพูดด้วย ไม่ใช่แค่ไฟ
+    cpFuelToastAt=now;
+    toastBan('⛽ <b>เชื้อเพลิงเหลือน้อย</b><br><span class="ib-sub">ลงจอดสักครู่ ฐานจะเติมให้เอง (เครื่องไม่ดับกลางอากาศนะ)</span>',2400);
+  }
+}
+/* 🚨 รอบ 534: แผงไฟเตือน 4 ดวง — ปกติเป็นป้ายจาง ๆ กลืนกับแผง · ผิดปกติ = สว่างกะพริบ
+   เหลือง = ระวัง · แดงกะพริบถี่ = วิกฤต (น้ำมันใกล้หมด / เครื่องร้อนจัด / รอบเกินแดง / ลำเสียหายหนัก) */
+function cpLamps(c,now){
+  const fr=cpFuel/FUEL_MAX, hpFr=hp/PLAYER_HP, rpm=HeliSnd.ready?HeliSnd.rpm:0;
+  const rows=[
+    ['น้ำมัน',  fr<FUEL_LOW?2:fr<FUEL_WARN?1:0],
+    ['ร้อน',    cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0],
+    ['รอบเกิน', rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0],
+    ['เสียหาย', hpFr<.22?2:hpFr<.42?1:0],
+  ];
+  const n=rows.length, w=CP_LAMP.w, h=CP_LAMP.h, g=CP_LAMP.gap;
+  let x=CP_LAMP.cx-(n*w+(n-1)*g)/2;
+  const y=CP_LAMP.y;
+  c.save(); c.textAlign='center'; c.textBaseline='middle';
+  rows.forEach(([txt,lv])=>{
+    const on=lv>0, col=lv>1?'#ff3b30':'#ffb300';
+    const blink=!on?0: lv>1 ? (Math.sin(now/105)>-.1?1:.15) : (Math.sin(now/230)>0?1:.32);
+    c.globalAlpha=1;
+    cpRoundRect(c,x,y,w,h,3); c.fillStyle='rgba(6,8,10,.55)'; c.fill();
+    c.lineWidth=.8; c.strokeStyle=on?'rgba(255,255,255,.28)':'rgba(255,255,255,.10)'; c.stroke();
+    if(on){
+      c.globalAlpha=blink; c.fillStyle=col;
+      c.shadowColor=col; c.shadowBlur=h*.85;
+      cpRoundRect(c,x,y,w,h,3); c.fill(); c.fill();
+      c.shadowBlur=0; c.globalAlpha=1;
+    }
+    let fs=h*.62;                                   // ย่อฟอนต์ให้คำไทยยาว ๆ พอดีป้ายเสมอ
+    c.font='700 '+fs.toFixed(1)+'px system-ui,sans-serif';
+    while(fs>4 && c.measureText(txt).width>w-5){ fs-=.5; c.font='700 '+fs.toFixed(1)+'px system-ui,sans-serif'; }
+    c.fillStyle=(on&&blink>.5)?'#1c0e00':on?'rgba(255,236,214,.85)':'rgba(198,205,215,.38)';
+    c.fillText(txt,x+w/2,y+h/2+.4);
+    x+=w+g;
+  });
+  c.restore();
+}
 /* วาดเข็มทุกตัวจาก "ค่าการบินจริง" ของยานแม่ (เรียกท้ายเฟรมตอนอยู่ในเฮลิ) */
 function drawInvGauges(now){
   if(!gaugeCtx||!cpNat) return;
@@ -2947,14 +3024,25 @@ function drawInvGauges(now){
   cpNeedle(c,CP_GAUGES.vs,(phVel.y+10)/20, phVel.y<-5?'#ff8a80':'#d6f5b0',{shake:sh,now,phase:3.4});
   /* รอบใบพัด: แถบเขียว-เหลือง-แดงบางๆ บอกโซนปลอดภัย (ไม่ทึบ ไม่บังลายในภาพ) */
   const rg=CP_GAUGES.rpm;
-  c.save(); c.globalAlpha=.55; c.lineWidth=rg.r*.11; c.lineCap='butt';
-  [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]].forEach(([col,f1,f2])=>{
-    c.beginPath();
-    c.arc(rg.x,rg.y,rg.r*.86,-Math.PI*.75-Math.PI/2+(f1/1.5)*Math.PI*1.5,-Math.PI*.75-Math.PI/2+(f2/1.5)*Math.PI*1.5);
-    c.strokeStyle=col; c.stroke();
-  });
-  c.restore();
+  [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]]
+    .forEach(([col,f1,f2])=>cpArc(c,rg,f1/1.5,f2/1.5,col));
   cpNeedle(c,rg,HeliSnd.rpm/1.5, HeliSnd.rpm>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
+  /* ── ⛽ เชื้อเพลิง: โซนแดง = ช่วงต้องหาที่ลงจอด ── */
+  const fg=CP_GAUGES.fuel, fr=cpFuel/FUEL_MAX;
+  cpArc(c,fg,0,FUEL_WARN,'#ef5350'); cpArc(c,fg,FUEL_WARN,1,'#66bb6a',.32);
+  cpNeedle(c,fg,fr, fr<FUEL_LOW?'#ff5252':fr<FUEL_WARN?'#ffca28':'#cfe9ff',{shake:sh,now,phase:2.6});
+  /* ── 🌡️ อุณหภูมิเครื่อง: เหลือง=เริ่มร้อน แดง=ร้อนจัด ── */
+  const tg=CP_GAUGES.tmp;
+  cpArc(c,tg,ENG_WARN,ENG_HOT,'#ffd54f'); cpArc(c,tg,ENG_HOT,1,'#ef5350');
+  cpNeedle(c,tg,cpEngT, cpEngT>=ENG_HOT?'#ff5252':cpEngT>=ENG_WARN?'#ffca28':'#a5d6a7',{shake:sh,now,phase:4.2});
+  /* ป้ายชื่อเล็ก ๆ ใต้หน้าปัดใหม่ 2 ตัว (ของเดิมในภาพมีป้ายอยู่แล้ว) */
+  c.save(); c.textAlign='center'; c.textBaseline='top';
+  c.font='700 7px system-ui,sans-serif'; c.fillStyle='rgba(214,226,238,.55)';
+  c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=2;
+  c.fillText('น้ำมัน',fg.x,fg.y+fg.r*.92);
+  c.fillText('ความร้อน',tg.x,tg.y+tg.r*.92);
+  c.restore();
+  cpLamps(c,now);                                                 // 🚨 ไฟเตือนบนสุด
 }
 
 /* ============================================================
@@ -5471,6 +5559,7 @@ function enterHeli(){
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
+  cpFuel=FUEL_MAX; cpEngT=ENG_AMB; cpFuelToastAt=0;         // ⛽🌡️ รอบ 534: ขึ้นเครื่องใหม่ = ถังเต็ม เครื่องเย็น
   py=terrainH(px,pz)+HELI_SKID+1.8;                        // นั่งอยู่ในลำที่ยังจอดอยู่ (ยังไม่ลอย)
   hLanded=true;                                            // ต้องดันคันเร่งขึ้นเองหลังสตาร์ทเสร็จ
   if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
@@ -5501,15 +5590,55 @@ function exitHeli(){
 /* 🚁 การบิน "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" (ผู้ใช้สั่ง)
    ค่าและสมการทั้งหมดยกมาจาก tickHeli ใน adventure3d.js: เร่ง 13 · เพดานเร็ว 17 · ไต่ 9 หน่วง 1.8
    · drag 1.4 · หันลำ Q/E 1.5 rad/s · auto-hover · แตะพื้นเบา = ลงจอด · ดันคันเร่งขึ้น = เทคออฟ */
+/* 🎥🚁 TUNE ZONE — กล้องภายนอก "ตามหลังแบบภาพยนตร์" (รอบ 533 · ผู้ใช้สั่งจูนต่อจาก 532)
+   เดิมกล้องติดแข็งกับลำ (หันปุ๊บกล้องหันตาม ไม่มีน้ำหนัก) → เปลี่ยนเป็น chase cam จริง:
+   · ตำแหน่งกล้อง "ไล่ตาม" จุดหลังลำแบบหน่วง → เลี้ยว/เร่ง แล้วกล้องค่อยกวาดมาเข้าที่
+   · ยิ่งบินเร็วยิ่งถอยห่าง (รู้สึกเร็วขึ้น) · ลอยนิ่ง = เข้าใกล้เห็นรายละเอียดลำ
+   · เล็งด้วย lookAt ที่ตัวลำเสมอ → ต่อให้กล้องยังตามไม่ทัน ลำก็ไม่หลุดกลางจอ
+   · กันกล้องมุดดิน (ยกขึ้นเหนือ terrain เสมอ) — บินเลียดเนิน/ลงจอดแล้วยังเห็นลำอยู่
+   ⚙️ อยากได้ใกล้/ไกล/หนืดกว่านี้ ปรับแค่ 7 ค่านี้พอ ไม่ต้องแตะสูตรข้างล่าง */
+const EXT_CAM={
+  dist   :13.0,   // ระยะหลังลำตอนลอยนิ่ง (m)
+  distSpd: 6.5,   // บินเต็มสปีด = ถอยห่างเพิ่มอีกเท่านี้ (m)
+  up     : 4.4,   // ความสูงของกล้องเหนือที่นั่งนักบิน (m)
+  aimUp  : 1.3,   // จุดที่กล้องจ้อง = เหนือที่นั่งเท่านี้ (ยิ่งมาก ลำยิ่งอยู่ต่ำในจอ)
+  lag    : 3.4,   // ความหนืดตำแหน่งกล้อง (น้อย=อ้อยอิ่งเป็นหนัง · มาก=ติดลำ)
+  yawLag : 4.2,   // ความหนืดของ "มุมที่กล้องไปยืนหลังลำ" ตอนหันหัว
+  minUp  : 2.4,   // กล้องต้องลอยเหนือพื้นอย่างน้อยเท่านี้ (กันมุดดิน)
+};
+let extPos=null, extYaw=0;                 // ตำแหน่ง/มุมกล้องที่หน่วงแล้ว (null = ยังไม่เริ่ม)
+function resetExtCam(){ extPos=null; extYaw=yaw; }
+/* ผลต่างมุมแบบ "ทางสั้นที่สุด" (−π..π) — ไม่งั้นหันข้าม ±180° แล้วกล้องกวาดอ้อมโลก */
+function angDiff(a){ return Math.atan2(Math.sin(a),Math.cos(a)); }
 /* 🎥 กล้องที่นั่งนักบิน — ยกตามระดับเบาะที่เลือก (เหมือนปุ่มเบาะโลกเฮลิฯ) + ลากลำจริงมาไว้รอบตัว */
-function seatCamera(now,rollZ){
+function seatCamera(now,rollZ,dt){
   const v=SEAT_VIEWS[seatLv];
-  const sin=Math.sin(yaw), cos=Math.cos(yaw);              // ทิศหน้าลำ = (−sin, −cos)
-  camera.position.set(px + (-sin)*v.dz, py+v.dy+Math.sin(now*.012)*.12, pz + (-cos)*v.dz);
-  camera.rotation.set(0,0,0);
-  /* 🎥 มุมภายนอก: ก้มลงหาลำเล็กน้อย + หน่วงผลของการเงย-ก้มสายตาลง ไม่ให้ลำหลุดขอบจอตอนเงยหายานลูก */
-  camera.rotateY(yaw); camera.rotateX(v.ext? pitch*.55-(v.look||0) : pitch);
-  if(rollZ) camera.rotateZ(v.ext?rollZ*.45:rollZ);         // ภายนอกเอียงน้อยกว่า (กล้องตามหลัง ไม่ใช่ตัวลำ)
+  const d0=dt||1/60;
+  if(v.ext){
+    /* ── กล้องภายนอก: ไล่ตามจุดหลังลำแบบหน่วง แล้วจ้องที่ลำเสมอ ── */
+    const spd=Math.hypot(phVel.x,phVel.z);
+    const dist=EXT_CAM.dist+EXT_CAM.distSpd*Math.min(1,spd/HELI_VMAX);
+    extYaw+=angDiff(yaw-extYaw)*Math.min(1,d0*EXT_CAM.yawLag);
+    const s=Math.sin(extYaw), c=Math.cos(extYaw);
+    const tx=px+s*dist, ty=py+EXT_CAM.up, tz=pz+c*dist;   // หลังลำ = ตรงข้ามทิศหน้า (−sin,−cos)
+    if(!extPos) extPos={x:tx,y:ty,z:tz};                  // เพิ่งสลับมามุมนี้ = วางเข้าที่เลย ไม่ให้เหวี่ยง
+    const k=Math.min(1,d0*EXT_CAM.lag);
+    extPos.x+=(tx-extPos.x)*k; extPos.y+=(ty-extPos.y)*k; extPos.z+=(tz-extPos.z)*k;
+    const floor=terrainH(extPos.x,extPos.z)+EXT_CAM.minUp;
+    if(extPos.y<floor) extPos.y=floor;                    // กันมุดดินตอนบินเลียดเนิน/ลงจอด
+    camera.position.set(extPos.x, extPos.y+Math.sin(now*.012)*.10, extPos.z);
+    camera.rotation.set(0,0,0);
+    camera.up.set(0,1,0);
+    camera.lookAt(px, py+EXT_CAM.aimUp, pz);              // จ้องลำไว้เสมอ = ไม่หลุดกลางจอแม้กล้องตามไม่ทัน
+    camera.rotateX(pitch*.55);                            // ผู้เล่นยังเงย/ก้มดูรอบตัวได้ (หน่วงครึ่งเดียว)
+    if(rollZ) camera.rotateZ(rollZ*.45);                  // เอียงน้อยกว่าในลำ (กล้องตามหลัง ไม่ใช่ตัวลำ)
+  }else{
+    const sin=Math.sin(yaw), cos=Math.cos(yaw);           // ทิศหน้าลำ = (−sin, −cos)
+    camera.position.set(px + (-sin)*v.dz, py+v.dy+Math.sin(now*.012)*.12, pz + (-cos)*v.dz);
+    camera.rotation.set(0,0,0);
+    camera.rotateY(yaw); camera.rotateX(pitch);
+    if(rollZ) camera.rotateZ(rollZ);
+  }
   /* ลำที่เราขับ = ลำจริงที่ขึ้นมา ตามตัวไปด้วย (เพื่อน/ตัวเราเห็นลำเดียวกัน หันหน้าถูกทิศ)
      🎥 รอบ 532: มุมมองภายในซ่อนลำเฉพาะ "จอเราเอง" — กันเห็นจมูก/ลำตัวทะลุภาพค็อกพิต
      (เพื่อนยังเห็นเราปกติ เพราะเขาเห็นเราผ่าน peers ไม่ใช่ myPad.grp ตัวนี้) */
@@ -5532,8 +5661,9 @@ function tickHeliFlight(dt,now){
     }
     py=terrainH(px,pz)+HELI_SKID+1.8;
     HeliSnd.update(0,true,dt,{alt:1.8,spd:0,near:999});      // 🔊 รอบ 531: เสียงระหว่างสตาร์ท (ยัง !ready → แค่ปรับ env)
+    tickHeliGauges(dt,0,now);                               // ⛽🌡️ รอบ 534: ระหว่างสตาร์ทก็กินน้ำมัน/อุ่นเครื่องแล้ว
     const shk=Math.min(1,(now-heliStartAt)/START_MS)*.05;   // เครื่องสั่นแรงขึ้นเรื่อยๆ ตามรอบใบพัด
-    seatCamera(now,0);
+    seatCamera(now,0,dt);
     camera.position.y+=Math.sin(now*.05)*shk;
     camera.position.x+=Math.sin(now*.043)*shk*.6;
     if(now-lastHurt>3500&&hp<PLAYER_HP){ hp=Math.min(PLAYER_HP,hp+SHIELD_REGEN*dt*10); renderHp(); }
@@ -5595,7 +5725,8 @@ function tickHeliFlight(dt,now){
   const fwSpd=-(phVel.x*sin+phVel.z*cos);
   cpTiltS+=(rollZ-cpTiltS)*Math.min(1,dt*6);
   cpTiltF+=(clamp(fwSpd/HELI_VMAX,-1,1)*.55-cpTiltF)*Math.min(1,dt*3.5);
-  seatCamera(now, rollZ);
+  tickHeliGauges(dt,col,now);                               // ⛽🌡️ รอบ 534: เชื้อเพลิง/อุณหภูมิตามคันเร่งจริง
+  seatCamera(now, rollZ, dt);
   applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.35; camera.position.y+=rnd(-1,1)*shake*.35; shake=Math.max(0,shake-dt*2.2); }
   if(muzzle) muzzle.material.opacity=now<muzzleUntil?1:0;
@@ -7090,6 +7221,14 @@ window.InvasionWorld={
       cv:gaugeCanvasEl?[gaugeCanvasEl.width,gaugeCanvasEl.height]:null,
       tilt:[+cpTiltS.toFixed(3),+cpTiltF.toFixed(3)], rpm:+HeliSnd.rpm.toFixed(2),
       padVis:myPad?myPad.grp.visible:null, padRoll:myPad?+myPad.grp.rotation.z.toFixed(3):null }; },
+    EXT_CAM, resetExtCam, get extCam(){ return extPos?{x:+extPos.x.toFixed(2),y:+extPos.y.toFixed(2),z:+extPos.z.toFixed(2),
+      yaw:+extYaw.toFixed(3), lag:+Math.hypot(extPos.x-px,extPos.z-pz).toFixed(2)}:null; },
+    /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
+    get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=HeliSnd.ready?HeliSnd.rpm:0, hpFr=hp/PLAYER_HP;
+      return {fuel:+cpFuel.toFixed(2), fuelFrac:+fr.toFixed(3), eng:+cpEngT.toFixed(3), rpm:+rpm.toFixed(2),
+        lamps:{fuel:fr<FUEL_LOW?2:fr<FUEL_WARN?1:0, tmp:cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0,
+               rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0}}; },
+    setHeliGauges(f,t){ if(f!=null) cpFuel=f; if(t!=null) cpEngT=t; },
     layoutInvCockpit, drawInvGauges, get gaugePix(){ if(!gaugeCtx) return 0;   // นับพิกเซลที่วาดจริง = เข็มขึ้นจอไหม
       const d=gaugeCtx.getImageData(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height).data; let n=0;
       for(let i=3;i<d.length;i+=4) if(d[i]>8) n++; return n; },
