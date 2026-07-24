@@ -561,6 +561,10 @@ const CSS=`
 /* พลปืนไม่ได้บังคับลำ → ซ่อนปุ่มไต่ระดับ/วิ่ง และไม่ต้องมีจอย */
 #inv-wrap.gunner #inv-up,#inv-wrap.gunner #inv-down,#inv-wrap.gunner #inv-run,#inv-wrap.gunner #inv-joy{display:none}
 #inv-wrap.gunner #inv-gunner{display:none!important}
+/* 👁️ รอบ 539: พลปืนสลับ "มุมมองภายนอก" ได้ (คลาส .gunext) — ห้ามมีกรอบ/แผงของนักบินค้างบนจอ
+   (ค็อกพิต+เกจเป็นของนักบินล้วน · กรอบ canopy ซ่อนเฉพาะตอนมุมภายนอก มุมประตูคงเดิมไม่แตะ) */
+#inv-wrap.gunner #inv-cockpit,#inv-wrap.gunner #inv-gauges{display:none!important}
+#inv-wrap.gunext #inv-canopy{display:none!important}
 #inv-heli:active,#inv-up:active,#inv-down:active{transform:scale(.94)}
 /* 🚁 กรอบห้องนักบิน (canopy) — โผล่เฉพาะตอนบิน */
 #inv-canopy{position:absolute;inset:0;z-index:2;pointer-events:none;display:none}
@@ -948,11 +952,13 @@ function buildDom(){
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
   loadCockpitImg();                                        // 🎛️ รอบ 532: ภาพห้องนักบินจริง + canvas เข็มเกจ
   seatBtn=document.getElementById('inv-seat'); startEl=document.getElementById('inv-start');
-  seatBtn.addEventListener('click',()=>{ setSeatView(seatLv+1);
+  seatBtn.addEventListener('click',()=>{
+    if(riding){ setRideView(!rideExt); return; }           // 🎖️ รอบ 539: พลปืน = สลับประตูลำ ↔ ภายนอก
+    setSeatView(seatLv+1);
     if(heliReady){ state.heliSeat=seatLv; if(typeof saveState==='function') saveState(); } });
   extBtn=document.getElementById('inv-extcam');            // 🎥 รอบ 537: วนมุมกล้องภายนอก
   extBtn.addEventListener('click',()=>{ cycleExtView(1);
-    if(heliReady){ state.heliExtView=extV; if(typeof saveState==='function') saveState(); } });
+    if(heliReady||riding){ state.heliExtView=extV; if(typeof saveState==='function') saveState(); } });
   chatBtn=document.getElementById('inv-chat'); chatBarEl=document.getElementById('inv-chatbar'); selfMsgEl=document.getElementById('inv-selfmsg');
   gunnerBtn=document.getElementById('inv-gunner');
   wheelBtn=document.getElementById('inv-wheel');           // 🎡 รอบ 531: พวงมาลัยเตือนเข้าใกล้เฮลิ
@@ -5486,13 +5492,31 @@ function ridePos(host){
           y:o.position.y+oy,
           z:o.position.z-Math.sin(a)*ox+Math.cos(a)*oz};
 }
+/* 👁️🎖️ รอบ 539: พลปืนสลับ "มุมมองภายนอก" ได้เหมือนนักบิน (ผู้ใช้สั่ง)
+   rideExt = อยู่มุมภายนอกอยู่ไหม · rideSpd = ความเร็วแนวราบของลำที่เกาะอยู่ (วัดจากตำแหน่งจริง
+   เพราะเราไม่ได้ขับ จึงไม่มี phVel ของลำนั้น) · rideHostP = ตำแหน่งลำเฟรมก่อนไว้หารเป็นความเร็ว */
+let rideExt=false, rideSpd=0, rideHostP=null;
+/* ปุ่ม 👁️ ตอนเป็นพลปืน = สลับ "ประตูลำ" ↔ "ภายนอก" (ไม่มีระดับเบาะให้ไล่ เพราะไม่ได้นั่งห้องนักบิน) */
+function setRideView(on){
+  rideExt=!!on;
+  if(wrapEl) wrapEl.classList.toggle('gunext',rideExt);
+  if(gunGrp) gunGrp.visible=!rideExt;               // มุมภายนอก = ซ่อนปืนในมือ ไม่งั้นปืนลอยกลางจอ
+  if(seatBtn) seatBtn.innerHTML='👁️<small>'+(rideExt?'ภายนอก':'ประตูลำ')+'</small>';
+  rideHostP=null; rideSpd=0;
+  resetExtCam();                                    // วางกล้องเข้าที่ทันที ไม่ให้กวาดมาจากตำแหน่งเก่า
+  syncExtBtn();
+}
 function boardGunner(){
   if(inHeli||riding) return;
   const r=nearestRideable();
   if(!r){ toastBan('🎖️ <b>ไม่มีเฮลิใกล้ๆ</b><br><span class="ib-sub">เดินเข้าไปใกล้ลำที่กำลังบินก่อนนะ</span>',1800); return; }
   riding=r.key; setScoped(false);
   const p=ridePos(r); px=p.x; py=p.y; pz=p.z;
+  wrapEl.classList.remove('seat0','seat1','seat2','seat3','cockpit');   // 🎛️ ค็อกพิต/เกจเป็นของนักบินเท่านั้น
   wrapEl.classList.add('fly','gunner');
+  if(state.heliExtView!=null) extV=clamp(state.heliExtView|0,0,EXT_VIEWS.length-1);   // 🎬 ใช้มุมกล้องเดียวกับที่เลือกไว้ตอนขับ
+  setRideView(false);                                // เริ่มที่มุมประตู (มุมมองที่ 1 เดิม)
+  if(seatBtn) seatBtn.style.display='block';         // 👁️ รอบ 539: พลปืนกดสลับมุมได้แล้ว
   if(gunGrp) gunGrp.visible=true;                    // พลปืนถือปืนอยู่ในมือ (ต่างจากนักบินที่ไม่เห็นปืน)
   firing=false; heat=0; overheat=false; renderHeat(); renderMissiles(); renderAmmo(); syncWeaponBtns();
   Snd.startRotor();
@@ -5503,7 +5527,11 @@ function boardGunner(){
 function dismountGunner(silent){
   if(!riding) return;
   riding=null;
-  wrapEl.classList.remove('fly','gunner');
+  wrapEl.classList.remove('fly','gunner','gunext');
+  rideExt=false; rideHostP=null; rideSpd=0;          // 👁️ รอบ 539: ล้างสถานะมุมภายนอกของพลปืน
+  if(seatBtn) seatBtn.style.display='none';
+  if(extBtn) extBtn.style.display='none';
+  if(gunGrp) gunGrp.visible=true;                    // ลงพื้นแล้วกลับมาถือปืนเห็นในมือเหมือนเดิม
   py=terrainH(px,pz)+EYE;                            // กระโดดลงถึงพื้นตรงนั้น
   misLeft=MIS_MAX; misReloadAt=0; renderMissiles();
   Snd.stopRotor();
@@ -5521,10 +5549,22 @@ function tickGunner(dt,now){
   }
   const p=ridePos(host);
   px=p.x; py=p.y; pz=p.z;
-  camera.position.set(px,py+Math.sin(now*.013)*.10,pz);
-  camera.rotation.set(0,0,0);
-  camera.rotateY(yaw); camera.rotateX(pitch);
-  camera.rotateZ(-clamp(host.obj.rotation.z*.6,-.25,.25));   // เอียงตามลำที่นักบินเลี้ยว
+  const roll=clamp(host.obj.rotation.z*.6,-.25,.25);
+  if(rideExt){
+    /* 🎥 รอบ 539: มุมภายนอก — กล้องอ้างอิง "ลำของ host" ทั้งจุดจ้องและหัวลำ (เราไม่ได้บังคับทิศบิน) */
+    const o=host.obj;
+    if(rideHostP&&dt>0){                                     // ความเร็วลำจากตำแหน่งจริง (ไม่มี phVel ให้ใช้)
+      const v=Math.hypot((o.position.x-rideHostP.x)/dt,(o.position.z-rideHostP.z)/dt);
+      rideSpd+=(Math.min(v,HELI_VMAX*1.5)-rideSpd)*Math.min(1,dt*4);   // หน่วงกันค่ากระตุกตอนเฟรมตก
+    }
+    rideHostP={x:o.position.x,z:o.position.z};
+    extCamera(now,dt,o.position.x,o.position.y+1.8,o.position.z,o.rotation.y,rideSpd,-roll,EXT_RIDE);
+  }else{
+    camera.position.set(px,py+Math.sin(now*.013)*.10,pz);
+    camera.rotation.set(0,0,0);
+    camera.rotateY(yaw); camera.rotateX(pitch);
+    camera.rotateZ(-roll);                                   // เอียงตามลำที่นักบินเลี้ยว
+  }
   applyRecoil(dt);
   if(shake>0.001){ camera.position.x+=rnd(-1,1)*shake*.3; camera.position.y+=rnd(-1,1)*shake*.3; shake=Math.max(0,shake-dt*2.2); }
   /* ปืนประจำประตู: รัวเหมือนปืนกลติดลำ ไม่โอเวอร์ฮีต */
@@ -5652,12 +5692,20 @@ const EXT_VIEWS=[
   {key:'nose', label:'หน้าลำ',  ic:'🔭', yawOff: Math.PI,    dist: 8.6, distSpd:5.0, up:2.2, aimUp:0.6, lag:6.0, yawLag:3.0},
   {key:'top',  label:'มุมสูง',  ic:'🛰️', yawOff: 0.45,       dist:9.0,  distSpd:6.0, up:14.0,aimUp:0.0, lag:2.8, yawLag:2.6},
 ];
+/* 🎖️ รอบ 539: กล้องภายนอกของ "พลปืน" ใช้ค่าชุดเดียวกับนักบิน แต่ต้องชดเชย 2 อย่าง —
+   ลำบอทบินเร็วกว่าเพดานเฮลิผู้เล่นตลอดเวลา (วัดจริง ~25 vs 17 m/s) ทำให้กล้องทั้งถอยสุด
+   ทั้งไล่ตามไม่ทัน → วัดได้ 28m ลำกว้างแค่ 14% ของจอ (เล็กจนดูไม่ออกว่าเกาะลำอะไรอยู่)
+   · `spdMul` = ลดการ "ยิ่งเร็วยิ่งถอย" (เหตุผลเดิมคือให้นักบินรู้สึกเร็ว — พลปืนไม่ได้บังคับความเร็ว)
+   · `catchUp` = เร่งความไวไล่ตามตามส่วนที่ลำเร็วเกินเพดาน → ระยะค้างท้าย ≤ เท่านักบินตอนบินเต็มสปีด
+   ⚠️ ค่ากล้องของนักบิน (EXT_CAM/EXT_VIEWS) ไม่ถูกแตะเลย — `EXT_SELF` คือ "ไม่ชดเชยอะไร" */
+const EXT_SELF={spdMul:1, catchUp:0};
+const EXT_RIDE={spdMul:0.25, catchUp:1.8};   // วัดจริงกับลำบอท 25 m/s: ท้ายลำ 18.5m · ข้าง 14.6 · หน้า 9.2 · มุมสูง 20.9
 let extV=0;                                // มุมกล้องภายนอกที่เลือกอยู่
 function extP(k){ const v=EXT_VIEWS[extV]; return v[k]!==undefined?v[k]:EXT_CAM[k]; }
 /* ปุ่ม 🎬 โผล่เฉพาะตอนอยู่ในเฮลิ + มุมมองภายนอก (มุมในห้องนักบินไม่มีอะไรให้สลับ) */
 function syncExtBtn(){
   if(!extBtn) return;
-  const on=inHeli&&!!SEAT_VIEWS[seatLv].ext;
+  const on=(inHeli&&!!SEAT_VIEWS[seatLv].ext)||(!!riding&&rideExt);   // 🎖️ รอบ 539: พลปืนก็วนมุมกล้องได้
   extBtn.style.display=on?'block':'none';
   if(on) extBtn.innerHTML=EXT_VIEWS[extV].ic+'<small>'+EXT_VIEWS[extV].label+'</small>';
 }
@@ -5677,11 +5725,11 @@ function angDiff(a){ return Math.atan2(Math.sin(a),Math.cos(a)); }
    ยิงรังสีจากลำไปทางกล้อง แล้วหาว่า "ชนขอบวงตึกต้นแรก" ที่ระยะเท่าไร → ถอยได้แค่นั้น
    · นับเฉพาะตึกที่ยอดสูงกว่าระดับกล้อง (บินสูงกว่าหลังคาแล้วไม่ต้องสน)
    · ลำอยู่ในวงตึกอยู่แล้ว = ช่วยไม่ได้ ข้ามไป (ไม่งั้นกล้องจะกระตุกเข้าออก) */
-function extCamClear(ux,uz,want,camY){
+function extCamClear(ox,oz,ux,uz,want,camY){
   let best=want;
   for(const o of solids){
     const R=o.r+EXT_CAM.wallPad;
-    const cx=o.x-px, cz=o.z-pz;
+    const cx=o.x-ox, cz=o.z-oz;
     const along=cx*ux+cz*uz;                       // ระยะตามแนวรังสีถึงจุดที่ใกล้ศูนย์กลางตึกสุด
     if(along<=0 || along-R>best) continue;         // ตึกอยู่ข้างหลัง/ไกลเกินกว่าจะขวาง
     if(camY>terrainH(o.x,o.z)+EXT_CAM.wallTop) continue;   // กล้องลอยพ้นหลังคาแล้ว
@@ -5693,31 +5741,37 @@ function extCamClear(ux,uz,want,camY){
   }
   return Math.max(EXT_CAM.minDist,best);
 }
+/* 🎥 วางกล้องภายนอกรอบ "ลำที่กำหนด" — ใช้ร่วมกันทั้งนักบิน (ลำที่เราขับ) และพลปืน (ลำที่เกาะอยู่ · รอบ 539)
+   cx/cy/cz = จุดที่กล้องจ้อง (ที่นั่งนักบินของลำนั้น) · hy = หัวลำจริง · spd = ความเร็วแนวราบ (m/s)
+   ⚠️ พลปืนไม่ได้บังคับทิศบิน → ต้องส่ง yaw ของ "หัวลำ host" เข้ามา ไม่ใช่ yaw ของผู้เล่น */
+function extCamera(now,dt,cx,cy,cz,hy,spd,rollZ,opt){
+  const d0=dt||1/60, o=opt||EXT_SELF;
+  const up=extP('up');                                  // 🎬 รอบ 537: ค่าตามมุมกล้องที่เลือก (ไม่ใส่=ของ EXT_CAM)
+  let dist=extP('dist')+extP('distSpd')*Math.min(1,spd/HELI_VMAX)*o.spdMul;
+  const cu=o.catchUp?Math.max(1,spd/HELI_VMAX)*o.catchUp:1;   // ลำเร็วเกินเพดานเท่าไร กล้องไล่ไวขึ้นเท่านั้น
+  extYaw+=angDiff(hy-extYaw)*Math.min(1,d0*extP('yawLag')*cu);
+  const a=extYaw+EXT_VIEWS[extV].yawOff;                // กล้องไปยืนทางไหนของลำ
+  const s=Math.sin(a), c=Math.cos(a);
+  dist=extCamClear(cx,cz,s,c,dist,cy+up);               // 🧱 รอบ 536: มีตึกขวางทางกล้อง = ดึงกล้องเข้ามา
+  const tx=cx+s*dist, ty=cy+up, tz=cz+c*dist;           // ท้ายลำ = ตรงข้ามทิศหน้า (−sin,−cos)
+  if(!extPos) extPos={x:tx,y:ty,z:tz};                  // เพิ่งสลับมามุมนี้ = วางเข้าที่เลย ไม่ให้เหวี่ยง
+  const k=Math.min(1,d0*extP('lag')*cu);
+  extPos.x+=(tx-extPos.x)*k; extPos.y+=(ty-extPos.y)*k; extPos.z+=(tz-extPos.z)*k;
+  const floor=terrainH(extPos.x,extPos.z)+EXT_CAM.minUp;
+  if(extPos.y<floor) extPos.y=floor;                    // กันมุดดินตอนบินเลียดเนิน/ลงจอด
+  camera.position.set(extPos.x, extPos.y+Math.sin(now*.012)*.10, extPos.z);
+  camera.rotation.set(0,0,0);
+  camera.up.set(0,1,0);
+  camera.lookAt(cx, cy+extP('aimUp'), cz);              // จ้องลำไว้เสมอ = ไม่หลุดกลางจอแม้กล้องตามไม่ทัน
+  camera.rotateX(pitch*.55);                            // ผู้เล่นยังเงย/ก้มดูรอบตัวได้ (หน่วงครึ่งเดียว)
+  if(rollZ) camera.rotateZ(rollZ*.45);                  // เอียงน้อยกว่าในลำ (กล้องตามหลัง ไม่ใช่ตัวลำ)
+}
 /* 🎥 กล้องที่นั่งนักบิน — ยกตามระดับเบาะที่เลือก (เหมือนปุ่มเบาะโลกเฮลิฯ) + ลากลำจริงมาไว้รอบตัว */
 function seatCamera(now,rollZ,dt){
   const v=SEAT_VIEWS[seatLv];
-  const d0=dt||1/60;
   if(v.ext){
     /* ── กล้องภายนอก: ไล่ตามจุดหลังลำแบบหน่วง แล้วจ้องที่ลำเสมอ ── */
-    const spd=Math.hypot(phVel.x,phVel.z);
-    const up=extP('up');                                  // 🎬 รอบ 537: ค่าตามมุมกล้องที่เลือก (ไม่ใส่=ของ EXT_CAM)
-    let dist=extP('dist')+extP('distSpd')*Math.min(1,spd/HELI_VMAX);
-    extYaw+=angDiff(yaw-extYaw)*Math.min(1,d0*extP('yawLag'));
-    const a=extYaw+EXT_VIEWS[extV].yawOff;                // กล้องไปยืนทางไหนของลำ
-    const s=Math.sin(a), c=Math.cos(a);
-    dist=extCamClear(s,c,dist,py+up);                     // 🧱 รอบ 536: มีตึกขวางทางกล้อง = ดึงกล้องเข้ามา
-    const tx=px+s*dist, ty=py+up, tz=pz+c*dist;           // ท้ายลำ = ตรงข้ามทิศหน้า (−sin,−cos)
-    if(!extPos) extPos={x:tx,y:ty,z:tz};                  // เพิ่งสลับมามุมนี้ = วางเข้าที่เลย ไม่ให้เหวี่ยง
-    const k=Math.min(1,d0*extP('lag'));
-    extPos.x+=(tx-extPos.x)*k; extPos.y+=(ty-extPos.y)*k; extPos.z+=(tz-extPos.z)*k;
-    const floor=terrainH(extPos.x,extPos.z)+EXT_CAM.minUp;
-    if(extPos.y<floor) extPos.y=floor;                    // กันมุดดินตอนบินเลียดเนิน/ลงจอด
-    camera.position.set(extPos.x, extPos.y+Math.sin(now*.012)*.10, extPos.z);
-    camera.rotation.set(0,0,0);
-    camera.up.set(0,1,0);
-    camera.lookAt(px, py+extP('aimUp'), pz);              // จ้องลำไว้เสมอ = ไม่หลุดกลางจอแม้กล้องตามไม่ทัน
-    camera.rotateX(pitch*.55);                            // ผู้เล่นยังเงย/ก้มดูรอบตัวได้ (หน่วงครึ่งเดียว)
-    if(rollZ) camera.rotateZ(rollZ*.45);                  // เอียงน้อยกว่าในลำ (กล้องตามหลัง ไม่ใช่ตัวลำ)
+    extCamera(now,dt,px,py,pz,yaw,Math.hypot(phVel.x,phVel.z),rollZ);
   }else{
     const sin=Math.sin(yaw), cos=Math.cos(yaw);           // ทิศหน้าลำ = (−sin, −cos)
     camera.position.set(px + (-sin)*v.dz, py+v.dy+Math.sin(now*.012)*.12, pz + (-cos)*v.dz);
@@ -7116,6 +7170,7 @@ function start(){
   battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
   callAllAt=0; callDirAt={}; squad.forEach(clearSquadBubble);   // 📣 รอบ 471: ล้างคูลดาวน์/ป้ายตะโกนค้าง
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
+  rideExt=false; rideHostP=null; rideSpd=0;                     // 👁️ รอบ 539: มุมภายนอกของพลปืนไม่ค้างข้ามรอบ
   weapon='rifle'; r93Ammo=WEAPONS.r93.mag; reloadAt=0; firedThisPress=false;   // 🎯 เริ่มด้วยไรเฟิลเสมอ
   useGunView();                                                                // 🔫 รอบ 463
   scopeMagIdx=1;                                                               // 🔎 เริ่มที่ 6×
@@ -7179,10 +7234,11 @@ function start(){
     else if(c==='KeyE') keys.e=true;      // 🚁 หันลำขวา
     else if(c==='KeyR'&&!e.repeat) fireMissile(performance.now());
     else if(c==='KeyH'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
-    else if(c==='KeyC'&&!e.repeat&&inHeli){                  // 🎬 รอบ 537: มุมกล้องภายนอก
-      if(!SEAT_VIEWS[seatLv].ext) setSeatView(3);            // ยังอยู่ในห้องนักบิน = เด้งออกไปมุมภายนอกก่อน
+    else if(c==='KeyC'&&!e.repeat&&(inHeli||riding)){         // 🎬 รอบ 537: มุมกล้องภายนอก (รอบ 539: พลปืนด้วย)
+      if(riding){ if(!rideExt) setRideView(true); else cycleExtView(1); }
+      else if(!SEAT_VIEWS[seatLv].ext) setSeatView(3);       // ยังอยู่ในห้องนักบิน = เด้งออกไปมุมภายนอกก่อน
       else cycleExtView(1);
-      if(heliReady){ state.heliSeat=seatLv; state.heliExtView=extV; if(typeof saveState==='function') saveState(); }
+      if(heliReady||riding){ if(inHeli) state.heliSeat=seatLv; state.heliExtView=extV; if(typeof saveState==='function') saveState(); }
     }
     else if(c==='KeyF'&&!e.repeat){ swapWeapon(); }          // 🎯 สลับปืน
     else if(c==='KeyG'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
@@ -7223,7 +7279,10 @@ function exitWorld(){
   squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
   netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
-  inHeli=false; riding=null; setScoped(false); wrapEl.classList.remove('on','fly','gunner','scoped');
+  inHeli=false; riding=null; rideExt=false; rideHostP=null; rideSpd=0;
+  setScoped(false); wrapEl.classList.remove('on','fly','gunner','gunext','scoped');
+  if(seatBtn) seatBtn.style.display='none';
+  if(extBtn) extBtn.style.display='none';
   if(camera){ camera.fov=FOV; camera.updateProjectionMatrix(); }
   exitBox.classList.remove('on');
   if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
@@ -7320,6 +7379,12 @@ window.InvasionWorld={
         dist:extP('dist'), up:extP('up'), aimUp:extP('aimUp'), lag:extP('lag'), yawLag:extP('yawLag'),
         btn:extBtn?{shown:extBtn.style.display==='block', txt:extBtn.textContent}:null }; },
     setExtView(i){ extV=((i|0)%EXT_VIEWS.length+EXT_VIEWS.length)%EXT_VIEWS.length; resetExtCam(); syncExtBtn(); },
+    /* 👁️🎖️ รอบ 539: มุมภายนอกของ "พลปืนประจำประตู" */
+    setRideView, EXT_RIDE, get rideView(){ return {ext:rideExt, spd:+rideSpd.toFixed(2), gun:gunGrp?gunGrp.visible:null,
+      cls:wrapEl?wrapEl.className:'', seatBtn:seatBtn?{shown:seatBtn.style.display==='block', txt:seatBtn.textContent}:null,
+      extBtn:extBtn?extBtn.style.display==='block':null,
+      cockpit:cpEl?getComputedStyle(cpEl).display:null, gauges:gaugeCanvasEl?getComputedStyle(gaugeCanvasEl).display:null,
+      canopy:canopyEl?getComputedStyle(canopyEl).display:null }; },
     /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
     get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
       return {fuel:+cpFuel.toFixed(2), fuelFrac:+fr.toFixed(3), eng:+cpEngT.toFixed(3), rpm:+rpm.toFixed(2),
