@@ -1344,3 +1344,8 @@
   - **ต้นตอที่ดูไม่เล็งยานแม่:** `tickSquad` เดิมยิงแกนเฉพาะตอน **fighter หมดเกลี้ยง** → ช่วง msOpen ที่ยังมี fighter ทหารมัวยิงยานลูกบินต่ำ (~5°) ไม่หันหาแกน (24°) ขัดป้าย "ระดมยิงยานแม่"
   - **แก้:** เพิ่ม `s.coreBias=(rnd<0.5)` (makeSoldier ~2402) · tickSquad (~5560): `coreOpen&&coreBias`→เล็งแกน · else มี fighter→เล็ง fighter · else coreOpen→เล็งแกน (tgt=null → damageMother ทำงานเดิม)
   - **ยืนยัน:** msOpen เปิดจริง (killAll→openMothership) · squad0 เล็งแกน lookUp=24° · render เห็นทหารเชิดปืนขึ้นหาแกนแดง · 2 เส้นทาง (fighter 5-7° / core 24°) แยกกันชัด · syntax OK · ⛔ ไม่แตะมุมมองที่1/ค่าปืนล็อก
+
+
+## ⏬ ย้ายเมื่อ 2026-07-24 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 527:** 🎯 **ปรับสัดส่วน coreBias 0.5→0.3 (ผู้ใช้เลือก ~30%)** — ทหารส่วนใหญ่ยังกดยานลูก ~30% แยกไปรุมแกนแดง · แก้เลขเดียว makeSoldier (~2402) · syntax OK · deploy `.505`
