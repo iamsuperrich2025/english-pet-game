@@ -3806,6 +3806,10 @@ function buildDom(){
     background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
     font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(124,200,255,.6)}
   #adv-wiper small,#adv-seat small{display:block;font-size:9px;letter-spacing:.02em}
+  /* 🚰 เกจน้ำยาล้างกระจก (รอบ 542) — 5 ขีดใต้ป้ายชื่อปุ่มที่ปัด */
+  #adv-wiper{position:relative}
+  #adv-wiper .wfuel{display:flex;gap:2px;justify-content:center;margin-top:2px}
+  #adv-wiper .wfuel i{width:6px;height:3px;border-radius:1px;transition:background .2s}
   #adv-visor{position:absolute;bottom:10px;right:142px;display:none;pointer-events:auto;z-index:6;
     width:58px;padding:5px 0 3px;border-radius:12px;border:1px solid rgba(124,200,255,.5);
     background:rgba(0,18,32,.72);color:#a9dcff;font-size:17px;line-height:1.1;
@@ -8338,6 +8342,10 @@ let wiperWaitAt=0;
    คราบ/ฝุ่นบนกระจก (grime) สะสมระหว่างบิน เห็นชัดตอนต้องแดด — ล้างแล้วจางลงจริง */
 const WASH_MS=900, WASH_STROKES=3, WASH_HOLD=420;   // พ่นน้ำกี่ ms · ปัดกี่ที · กดค้างกี่ ms ถึงนับว่าล้าง
 let washUntil=0, washLeft=0, washBackTo=0, grime=.45;
+/* 🚰 รอบ 542: ถังน้ำยาล้างกระจกจำกัด — ล้าง 1 ครั้งกินน้ำ 1 หน่วย · จอดสนิทเติมเอง
+   หมดถัง = กดค้างก็ไม่พ่น (มี toast บอกให้ร่อนลงเติม) → เด็กต้องวางแผนใช้ */
+const WASH_TANK_MAX=5, WASH_REFILL=1.1;             // เต็มถัง 5 ครั้ง · เติม 1.1 หน่วย/วิ ตอนจอด
+let washFluid=WASH_TANK_MAX, _washEmptyAt=0;
 let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — คำนวณใหม่ตามเวลาจริงใน sunUpdate()
 let sunHi=.6, sunWarm=0;                        // ความสูงดวงอาทิตย์ 0-1 · ความอุ่นของแสง 0-1 (เช้า/เย็น=1)
 let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
@@ -8517,15 +8525,43 @@ function addWashDrop(){
               r:1.4+Math.random()*2.6, a:.55+Math.random()*.45, vy:2+Math.random()*3});  // ละอองพ่นแรง ไหลลงเร็ว
 }
 function washStart(){
-  if(washUntil>performance.now()) return;              // กำลังล้างอยู่ ไม่ซ้อน
-  sfx.select();
   const now=performance.now();
+  if(washUntil>now) return;                             // กำลังล้างอยู่ ไม่ซ้อน
+  if(washFluid<1){                                      // 🚰 หมดถัง → เตือนให้ลงเติม (คูลดาวน์ toast)
+    if(now>_washEmptyAt){ _washEmptyAt=now+5000;
+      ATC.say('Washer fluid empty, captain. Land to refill the tank.');
+      showBanner&&showBanner('🚰 น้ำยาล้างกระจกหมด — ร่อนลงจอดเพื่อเติมถัง');
+      sfx.wrong&&sfx.wrong();
+    }
+    return;
+  }
+  washFluid=Math.max(0,washFluid-1);                    // ล้าง 1 ครั้ง กินน้ำ 1 หน่วย
+  sfx.select();
   washUntil=now+WASH_MS; washLeft=WASH_STROKES;
   washBackTo=wiperMode;                                 // จำโหมดเดิมไว้คืนหลังล้าง
   setWiper(3);                                          // ปัดเร็วระหว่างล้าง
   washSpraySfx();
+  renderWashGauge();
+}
+/* 🚰 เกจน้ำยาเล็ก ๆ ข้างปุ่มที่ปัด — 5 ขีด ยิ่งเหลือน้อยยิ่งแดง */
+function renderWashGauge(){
+  const b=overlayEl&&overlayEl.querySelector('#adv-wiper'); if(!b) return;
+  let g=b.querySelector('.wfuel');
+  if(!g){ g=document.createElement('span'); g.className='wfuel'; b.appendChild(g); }
+  const n=Math.round(washFluid), col=n<=1?'#ff5a5a':n<=2?'#ffcc4d':'#8fd0ff';
+  g.innerHTML='';
+  for(let i=0;i<WASH_TANK_MAX;i++){
+    const d=document.createElement('i'); d.style.background=i<n?col:'rgba(255,255,255,.18)';
+    g.appendChild(d);
+  }
 }
 function washTick(now,dt){
+  // 🚰 จอดสนิท (แตะพื้น) = เติมถังน้ำยาเอง
+  if(hLanded && washFluid<WASH_TANK_MAX){
+    const was=Math.round(washFluid);
+    washFluid=Math.min(WASH_TANK_MAX,washFluid+dt*WASH_REFILL);
+    if(Math.round(washFluid)!==was) renderWashGauge();
+  }
   if(!washUntil) return;
   if(now<washUntil){                                   // ยังพ่นน้ำ
     for(let i=0;i<46*dt;i++) addWashDrop();
@@ -8705,6 +8741,49 @@ function shadowSweepTick(dt){
   }
   shEdge+=Math.sign(tgt-shEdge)*Math.min(Math.abs(tgt-shEdge),dt/SH_SWEEP);
 }
+/* 🌃 แสงไฟเมืองสะท้อนบนกระจก (รอบ 542) — เห็นเฉพาะบินต่ำ + กลางคืน
+   เม็ดแสงเกิดขอบล่างกระจก ลอยขึ้น (เหมือนไฟถนนไหลผ่านใต้ลำ) เลื่อนข้างตามการเลี้ยว จางตามความสูง
+   สีคละส้ม(โซเดียม)/ขาว/ฟ้า = ป้ายไฟ · เบามาก ไม่กวนการมองทาง */
+const REFL_MAX=26;
+let cityRefl=[], _reflSeed=0;
+const REFL_COL=['255,190,90','255,235,180','150,210,255','255,120,90'];
+function cityGlowLevel(){
+  const alt=Math.max(0,camera.position.y-HELI_SKID);
+  const low=Math.max(0,1-alt/32);                        // ต่ำกว่า 32m เริ่มเห็น สูงกว่านั้น=ไม่มี
+  return heliNight*low;
+}
+function drawCityGlow(c,dt,now){
+  const lv=cityGlowLevel();
+  if(lv<=.03){ if(cityRefl.length) cityRefl.length=0; return; }
+  const spd=Math.hypot(hVel.x,hVel.z);
+  const lat=(hVel.x*Math.cos(yaw)-hVel.z*Math.sin(yaw));  // ไถลข้าง → เม็ดแสงเลื่อนสวนทาง
+  // สปอว์นเม็ดใหม่ที่ขอบล่าง (ถี่ขึ้นตามความเร็ว = บินเร็วไฟผ่านไว)
+  const rate=(2+spd*.5)*lv;
+  if(cityRefl.length<REFL_MAX && Math.random()<rate*dt*3){
+    _reflSeed++;
+    cityRefl.push({x:180+Math.random()*(CP_NAT.w-360), y:300+Math.random()*40,
+                   len:14+Math.random()*30, w:1.4+Math.random()*2.2,
+                   col:REFL_COL[_reflSeed%REFL_COL.length], a:.5+Math.random()*.5,
+                   vy:-(40+spd*10+Math.random()*30)});
+  }
+  c.save(); c.globalCompositeOperation='lighter';
+  for(let i=cityRefl.length-1;i>=0;i--){
+    const p=cityRefl[i];
+    p.y+=p.vy*dt; p.x-=lat*dt*10; p.a-=dt*.35;
+    if(p.a<=0||p.y<70){ cityRefl.splice(i,1); continue; }
+    const aa=p.a*lv*(1-heliFog*.5);
+    const g=c.createLinearGradient(p.x,p.y,p.x,p.y+p.len);
+    g.addColorStop(0,`rgba(${p.col},0)`);
+    g.addColorStop(.5,`rgba(${p.col},${(aa*.5).toFixed(3)})`);
+    g.addColorStop(1,`rgba(${p.col},0)`);
+    c.strokeStyle=g; c.lineWidth=p.w; c.lineCap='round';
+    c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x,p.y+p.len); c.stroke();
+    // จุดหัวสว่างเล็ก ๆ (ไฟดวงจริง)
+    c.fillStyle=`rgba(${p.col},${(aa*.6).toFixed(3)})`;
+    c.beginPath(); c.arc(p.x,p.y+p.len,p.w*.9,0,7); c.fill();
+  }
+  c.restore();
+}
 function setVisor(on){
   visorDown=on;
   const b=overlayEl&&overlayEl.querySelector('#adv-visor');
@@ -8855,6 +8934,9 @@ function drawGlass(dt,now){
       c.fillStyle=g; c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
     }
   }
+  // ── 🌃 แสงไฟเมืองสะท้อนบนกระจกตอนบินต่ำกลางคืน (รอบ 542) ──
+  //    ไฟถนน/ป้ายด้านล่างสาดขึ้นกระจก เป็นเส้นสั้น ๆ เลื่อนสวนทางการบิน (parallax) จางตามความสูง
+  drawCityGlow(c,dt,now);
   // ── 🌫️ ฝ้าไอน้ำเกาะกระจกตอนหมอกหนา (รอบ 533) — ที่ปัดรีดออกได้จริง ──
   const mistTgt=Math.max(0,heliFog-.25)*1.15;
   glassMist+=(Math.min(1,mistTgt)-glassMist)*Math.min(1,dt*.22);
@@ -11630,6 +11712,7 @@ function start(md,opt){
     hViewSwitched=false;
     setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
     setWiper(0); setVisor(false); setHeliLight(false);    // 🌧️🕶️💡 เข้าโลกใหม่ = ที่ปัด/ม่าน/ไฟ ปิดเสมอ
+    washFluid=WASH_TANK_MAX; washUntil=0; grime=.45; renderWashGauge();  // 🚰 เข้าโลกใหม่ = ถังน้ำยาเต็ม กระจกสะอาดพอควร (รอบ 542)
     drops=[]; rainOn=false; rainNextAt=0; bellyRect=null;  // 💧📹 ล้างสภาพอากาศ/กล้องของรอบก่อน
     assistTgt=null; hAirAt=0; _lightHintAt=0;              // 🎯🏆 ล้างระบบช่วยเล็ง/โบนัสลงนุ่มของรอบก่อน
     sLandTot=0; sLandPerf=0; sLandSoft=0;                  // 📊 เริ่มนับสถิติรอบบินใหม่ (สรุปตอนออก)
@@ -11759,8 +11842,11 @@ window.Adventure3D={
                                             heavy:rainHeavy, filter:cockpitEl?cockpitEl.style.filter:'',
                                             // 💦🏢➡️ รอบ 541: ที่ฉีดน้ำ + คราบ + ขอบเงากวาด
                                             grime:+grime.toFixed(3), washing:washUntil>performance.now(),
-                                            washLeft, shEdge:+shEdge.toFixed(3), shDir}},
-                        washNow:washStart, setGrime:v=>{grime=v},
+                                            washLeft, shEdge:+shEdge.toFixed(3), shDir,
+                                            // 🚰🌃 รอบ 542: ถังน้ำยา + ไฟเมืองสะท้อน
+                                            fluid:+washFluid.toFixed(2), refl:cityRefl.length,
+                                            glow:+cityGlowLevel().toFixed(3)}},
+                        washNow:washStart, setGrime:v=>{grime=v}, setFluid:v=>{washFluid=v; renderWashGauge();},
                         rayBlocked:()=>sunRayBlocked(),
                         setMist:v=>{glassMist=v},
                         // ⚠️ ตั้งได้ชั่วคราวเท่านั้น — fogUpdate คำนวณใหม่จากนาฬิกาจริงทุก ~0.8 วิ
