@@ -5190,7 +5190,7 @@ function buildDom(){
   glassCanvasEl=overlayEl.querySelector('#adv-glass');
   glassCtx=glassCanvasEl.getContext('2d');
   overlayEl.querySelector('#adv-wiper').addEventListener('click',e=>{
-    e.preventDefault(); sfx.select(); setWiper((wiperMode+1)%3);
+    e.preventDefault(); sfx.select(); setWiper((wiperMode+1)%4);   // ปิด → หน่วง → ช้า → เร็ว
   });
   overlayEl.querySelector('#adv-seat').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setSeat((seatLevel+1)%3);
@@ -7742,6 +7742,7 @@ function endPilot(){
   if(hPhase!=='pilot'||!hLanded) return;
   const F=worlds.heli.foot; if(!F) return;
   wiperSndOff();                                     // 🔇 ลงจากเครื่อง = ปิดเสียงที่ปัดด้วย (รอบ 537)
+  sunShade=1; sunBlocked=0; applyCockpitShade();     // 🏢 คืนความสว่างห้องนักบิน (ร.540)
   if(state.sound&&HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
   const hx=camera.position.x, hz=camera.position.z, fy=heliFloorAt(hx,hz);
   const M2=pilotShip==='blue'?F.paxH:F.pilotH;       // 🔵 รอบ 392: ลำที่ขับอยู่จริงมาจอดตรงนี้
@@ -8317,7 +8318,12 @@ function layoutCockpit(){
    ที่ปัดที่วาดไว้ในภาพ = ท่าจอด (พาดแนวนอน) · ตัวที่ขยับกวาดออกจากจุดหมุนเดียวกัน
    ============================================================ */
 const WIPER={ pivot:{x:404,y:126}, len:145, sweep:1.25, rest:Math.PI };  // rest=ชี้ซ้าย (ท่าจอดในภาพ)
-const WIPER_SPD=[0,1.5,3.1];                    // เรเดียน/วิ ต่อโหมด (ปิด/ช้า/เร็ว)
+/* 🕒 รอบ 540: เพิ่มโหมด "หน่วง" (INT) เป็นโหมดที่ 1 — ปัด 1 เที่ยวแล้วพักสั้น ๆ ก่อนปัดใหม่
+   ฝนพรำใช้จริงกว่าปัดรัว (ปัดรัวบนกระจกเกือบแห้ง = เอี๊ยดและกวนตา) */
+const WIPER_SPD=[0,1.5,1.5,3.1];                // เรเดียน/วิ ต่อโหมด (ปิด/หน่วง/ช้า/เร็ว)
+const WIPER_LABEL=['ที่ปัดน้ำ','ปัดหน่วง','ปัดช้า','ปัดเร็ว'];
+const INT_GAP=[3400,5200];                      // ms: โหมดหน่วงพักระหว่างเที่ยง (สุ่มในช่วงนี้)
+let wiperWaitAt=0;
 let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — คำนวณใหม่ตามเวลาจริงใน sunUpdate()
 let sunHi=.6, sunWarm=0;                        // ความสูงดวงอาทิตย์ 0-1 · ความอุ่นของแสง 0-1 (เช้า/เย็น=1)
 let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
@@ -8353,10 +8359,26 @@ function sunRayBlocked(){
   }
   return false;
 }
-function sunShadeTick(now,dt){
+let _shadeAt=0, _cpFilter='';
+function sunShadeTick(now){
+  const dt=Math.min(.12,Math.max(0,(now-_shadeAt)/1000)); _shadeAt=now;
   if(now-_sunRayAt>70){ _sunRayAt=now; sunBlocked=sunRayBlocked()?1:0; }
   const tgt=1-SUN_DARK*sunBlocked;
   sunShade+=(tgt-sunShade)*Math.min(1,dt*9);           // วูบเข้า/คืนตัวใน ~0.11 วิ
+  applyCockpitShade();
+}
+/* 🏢🎛️ รอบ 540: เงาตึกต้องพาดถึง "ในห้องนักบิน" ด้วย — ไม่ใช่หรี่แค่ชั้นกระจก
+   หรี่ทั้งภาพกรอบค็อกพิต (z3) และ canvas เข็ม (z4) ด้วย CSS filter ชุดเดียวกัน
+   ⚠️ เขียน style เฉพาะตอนค่าเปลี่ยนจริง (ปัดทศนิยม 2 ตำแหน่ง) — เขียนทุกเฟรม = เบราว์เซอร์รีคอมโพสิตฟรี ๆ */
+function applyCockpitShade(){
+  if(!cockpitEl) return;
+  const day=Math.max(0,1-heliNight);
+  const k=1-(1-sunShade)*day;                          // กลางคืนไม่มีแดดให้บัง = ไม่ต้องหรี่ซ้ำ
+  const f=k>=.995?'':`brightness(${(.66+.34*k).toFixed(2)}) saturate(${(.82+.18*k).toFixed(2)})`;
+  if(f===_cpFilter) return;
+  _cpFilter=f;
+  cockpitEl.style.filter=f;
+  if(gaugeCanvasEl) gaugeCanvasEl.style.filter=f;
 }
 /* 🌀 แสงแดดถูก "ใบพัดตัด" เป็นจังหวะ — ลายเซ็นของการนั่งในเฮลิคอปเตอร์จริง
    คืนค่าตัวคูณความสว่าง 0.75-1 ตามรอบใบพัด (จอด/รอบต่ำ = แทบไม่กะพริบ) */
@@ -8442,7 +8464,7 @@ const RAIN_MAX=90, RAIN_SPAWN=26;                // จำนวนหยดส�
 const VISOR_Y=168, VISOR_CUT=.32;                // ม่านลงมาถึง y นี้ (พิกัดในภาพ) · เหลือแสงจ้าแค่ 32%
 const RAIN_MIN=42000, RAIN_MAX_GAP=95000;        // ms: ฝนตกทุก ~42-95 วิ
 const RAIN_DUR=[14000,26000];                    // ms: ตกนาน 14-26 วิ
-let drops=[], rainOn=false, visorDown=false, rainNextAt=0, rainUntilAt=0;
+let drops=[], rainOn=false, visorDown=false, rainNextAt=0, rainUntilAt=0, rainHeavy=false;
 /* หยดน้ำเกิดในโซนที่ "ที่ปัดกวาดถึง" เป็นหลัก — ปัดแล้วกระจกจะได้โล่งจริง
    (เกาะนอกโซนบ้างเล็กน้อยให้ดูเป็นธรรมชาติ แต่พวกนั้นจะไหลลง/ปลิวหายเอง) */
 const DROP_ZONE=[[252,470],[630,848]], DROP_Y=[98,268];
@@ -8455,8 +8477,9 @@ function addDrop(){
               r:1.6+Math.random()*3.4, a:.5+Math.random()*.5, vy:0});
 }
 function tickDrops(dt,spd){
-  if(rainOn) for(let i=0;i<RAIN_SPAWN*dt;i++) addDrop();
-  if(rainOn && Math.random()<RAIN_SPAWN*dt%1) addDrop();
+  const rate=RAIN_SPAWN*(rainHeavy?1:.4);        // 🌦️ ฝนพรำหยดน้อยกว่า = โหมดหน่วงเอาอยู่จริง
+  if(rainOn) for(let i=0;i<rate*dt;i++) addDrop();
+  if(rainOn && Math.random()<rate*dt%1) addDrop();
   const blow=Math.min(1,spd/22);                 // บินเร็ว = ลมพัดหยดน้ำหลุดไว
   for(let i=drops.length-1;i>=0;i--){
     const d=drops[i];
@@ -8567,18 +8590,26 @@ function setWiper(mode){
   // 🅿️ ปิดกลางคัน = ใบไม่หายวับ ต้องกวาดกลับเข้าท่าจอดก่อน (เหมือนที่ปัดรถจริง)
   if(mode===0) wiperPark=Math.abs(wiperAng-WIPER.rest)>.02;
   else wiperPark=false;
+  if(mode!==1) wiperWaitAt=0;                        // ออกจากโหมดหน่วง = ล้างช่วงพักค้าง
   const b=overlayEl&&overlayEl.querySelector('#adv-wiper');
   if(b){ b.classList.toggle('on',mode>0);
-    b.querySelector('small').textContent=['ที่ปัดน้ำ','ปัดช้า','ปัดเร็ว'][mode]; }
+    b.querySelector('small').textContent=WIPER_LABEL[mode]; }
 }
 /* เดินมุมใบปัด 1 เฟรม → คืนมุมที่ต้องวาด (null = ไม่มีใบให้วาด)
    ⚠️ เดินมุมที่เดียวที่นี่เท่านั้น — ทั้งการกวาดหยด/รอยรีดน้ำ/ฝ้า อิงมุมชุดเดียวกัน */
 function tickWiper(dt,now){
   const prev=wiperAng;
-  if(wiperMode>0){
+  now=now||performance.now();
+  if(wiperMode>0 && !(wiperMode===1 && now<wiperWaitAt)){  // 🕒 โหมดหน่วง: ระหว่างพัก ใบนอนนิ่งที่ท่าจอด
     wiperPhase+=dt*WIPER_SPD[wiperMode];
-    const t=(Math.cos(wiperPhase)+1)/2;                   // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
-    wiperAng=WIPER.rest-WIPER.sweep*(1-t);
+    if(wiperMode===1 && wiperPhase>=Math.PI*2){            // ครบ 1 เที่ยว (ไป-กลับ) → นอนพัก
+      wiperPhase=0; wiperAng=WIPER.rest;
+      wiperWaitAt=now+INT_GAP[0]+Math.random()*(INT_GAP[1]-INT_GAP[0]);
+      wiperThunk(.07);                                    // 🔊 "ตุบ" นอนเข้าท่าจอดจบเที่ยว
+    }else{
+      const t=(Math.cos(wiperPhase)+1)/2;                  // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
+      wiperAng=WIPER.rest-WIPER.sweep*(1-t);
+    }
   }else if(wiperPark){
     const step=dt*WIPER_SPD[1]*1.25;                      // วิ่งกลับท่าจอดเร็วกว่าโหมดช้านิดหน่อย
     if(Math.abs(WIPER.rest-wiperAng)<=step){ wiperAng=WIPER.rest; wiperPark=false; wiperPhase=0; wiperThunk(.075); }   // 🔊 "ตุบ" เข้าท่าจอด
@@ -8605,7 +8636,11 @@ function rainTick(now){
   if(!rainOn && now>=rainNextAt){
     rainOn=true;
     rainUntilAt=now+RAIN_DUR[0]+Math.random()*(RAIN_DUR[1]-RAIN_DUR[0]);
-    ATC.say('Rain shower ahead, captain. Switch on your windshield wipers.');
+    // 🌦️ รอบ 540: ฝนมีสองระดับ — หอบอกด้วยว่าควรใช้ที่ปัดโหมดไหน (สอนศัพท์อังกฤษไปในตัว)
+    rainHeavy=Math.random()<.45;
+    ATC.say(rainHeavy
+      ? 'Heavy rain ahead, captain! Set your wipers to fast.'
+      : 'Light drizzle ahead. Intermittent wipers are enough, captain.');
   }else if(rainOn && now>=rainUntilAt){
     rainOn=false;
     rainNextAt=now+RAIN_MIN+Math.random()*(RAIN_MAX_GAP-RAIN_MIN);
@@ -8667,7 +8702,6 @@ function drawGlass(dt,now){
   // 🌗 รอบ 533: กลางคืนต้องไม่มีแดด (เดิม k ไม่ดูเวลาเลย → เที่ยงคืนยังมีดวงส้มลอยกลางกระจก)
   //    หมอกหนา = แสงฟุ้งแต่ไม่จ้า · ใบพัดตัดแสงเป็นจังหวะตามรอบเครื่อง (rotorChop)
   const day=Math.max(0,1-heliNight), chop=rotorChop(now);
-  sunShadeTick(now,dt);                                  // 🏢 บินหลังตึก = แดดวูบ (รอบ 537)
   const sunAmt=day*(.35+.65*Math.max(0,sunHi))*(1-heliFog*.45)*chop*sunShade;
   let sunK=0;
   if(Math.abs(rel)<1.15 && sunAmt>.02){                  // หันหน้าเข้าหาแดดถึงจะเห็นแสงจ้า
@@ -9028,6 +9062,7 @@ function drawGauges(){
   // จับพิกัดให้ตรงกับกรอบที่ CSS วางไว้ → ต่อจากนี้วาดด้วย "พิกัดในภาพ" ได้เลย
   c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);
   const now=performance.now(), sh=heliShake(now);      // 📳 แรงสั่นร่วมของทุกเข็มรอบนี้
+  sunShadeTick(now);                    // 🏢 บินหลังตึก = แดดวูบ + หรี่ทั้งห้องนักบิน (ร.537/540 · ทุกมุมมอง)
   // ── ขอบฟ้าเทียม: วาดในวงโดมที่มีอยู่ (ฟ้า/พื้นดินหมุน-เลื่อนตามการเอียง) ──
   const G=CP_GAUGES.att, R=G.r, ax=G.x, ay=G.y;
   c.save();
@@ -11557,6 +11592,7 @@ function exitWorld(){
   HSound.stopAll();
   // 🛬 ออกจากโลกเฮลิฯ = ดับเครื่อง (ใบพัดค่อยๆ ช้าลงจนหยุด) แทนตัดเสียงห้วนๆ
   wiperSndOff();                                     // 🔇 ออกจากโลก = ปิดเสียงที่ปัดด้วย (รอบ 537)
+  sunShade=1; sunBlocked=0; applyCockpitShade();     // 🏢 คืนความสว่างห้องนักบิน (ร.540)
   if(mode==='heli' && state.sound && HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
   try{ if(paxSnd){ paxSnd.src.stop(); paxSnd=null; } }catch(e){}   // 🚁💺 รอบ 354: ตัดเสียงห้องโดยสารถ้าออกกลางทัวร์
   DroneSound.stop();
@@ -11623,7 +11659,10 @@ window.Adventure3D={
                                             sunHi:+sunHi.toFixed(2), sunDir:+sunDir.toFixed(2),
                                             // 🏢🔊 รอบ 537: แดดวูบหลังตึก + เสียงที่ปัด
                                             blocked:sunBlocked, shade:+sunShade.toFixed(3),
-                                            snd:wSnd?+wSnd.g.gain.value.toFixed(4):null}},
+                                            snd:wSnd?+wSnd.g.gain.value.toFixed(4):null,
+                                            // 🕒🏢 รอบ 540: โหมดหน่วง + เงาพาดในห้องนักบิน
+                                            wait:Math.max(0,Math.round(wiperWaitAt-performance.now())),
+                                            heavy:rainHeavy, filter:cockpitEl?cockpitEl.style.filter:''}},
                         rayBlocked:()=>sunRayBlocked(),
                         setMist:v=>{glassMist=v},
                         // ⚠️ ตั้งได้ชั่วคราวเท่านั้น — fogUpdate คำนวณใหม่จากนาฬิกาจริงทุก ~0.8 วิ
