@@ -8320,6 +8320,23 @@ const WIPER_SPD=[0,1.5,3.1];                    // เรเดียน/วิ 
 let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — คำนวณใหม่ตามเวลาจริงใน sunUpdate()
 let sunHi=.6, sunWarm=0;                        // ความสูงดวงอาทิตย์ 0-1 · ความอุ่นของแสง 0-1 (เช้า/เย็น=1)
 let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
+/* 🎬 รอบ 533 — "มุมเต็มลำมีชีวิต": สถานะเสริมของชั้นกระจก
+   wiperAng   = มุมใบปัดจริงตอนนี้ (ใช้ต่อเนื่องแม้ปิดสวิตช์ → กวาดกลับเข้าท่าจอดก่อนหยุด)
+   wiperPark  = กำลังวิ่งกลับท่าจอด (ปิดกลางคันแล้วใบไม่ค้างกลางกระจกอีกต่อไป)
+   wiperVel   = ความเร็วเชิงมุม → ใช้ให้ "ปลายใบยางลากตามหลังก้าน" (blade flex)
+   smears     = รอยฟิล์มน้ำที่ใบเพิ่งรีดผ่าน จางเองใน ~0.7 วิ (เห็นชัดตอนโดนแดด/ฝน)
+   glassMist  = ฝ้าไอน้ำเกาะกระจกตอนหมอกหนา — ที่ปัดรีดออกได้จริง */
+let wiperAng=WIPER.rest, wiperPark=false, wiperVel=0, smears=[], glassMist=0;
+const SMEAR_LIFE=.72;                           // วินาที: รอยรีดน้ำจางหมด
+const CHOP_MIN=6.5, CHOP_MAX=17;                // ครั้ง/วินาที: แสงถูกใบพัดตัด (idle → รอบเต็ม)
+/* 🌀 แสงแดดถูก "ใบพัดตัด" เป็นจังหวะ — ลายเซ็นของการนั่งในเฮลิคอปเตอร์จริง
+   คืนค่าตัวคูณความสว่าง 0.75-1 ตามรอบใบพัด (จอด/รอบต่ำ = แทบไม่กะพริบ) */
+function rotorChop(now){
+  const rpm=Math.max(0,Math.min(1.5,(typeof HeliSound!=='undefined'&&HeliSound.rpm)||0));
+  if(rpm<.08) return 1;
+  const hz=CHOP_MIN+(CHOP_MAX-CHOP_MIN)*Math.min(1,rpm);
+  return 1-.24*Math.min(1,rpm)*(.5+.5*Math.sin(now/1000*hz*Math.PI*2));
+}
 /* 🌅 ดวงอาทิตย์ตามเวลาจริงของเครื่องผู้เล่น — เช้าตะวันออก เที่ยงสูง เย็นตะวันตก
    06:00 → ทิศ -1.6 rad (ซ้าย) · 12:00 → 0 (ตรงหน้า สูง) · 18:00 → +1.6 (ขวา) */
 function sunUpdate(){
@@ -8417,6 +8434,8 @@ function tickDrops(dt,spd){
     // ⚠️ หยดน้ำจริงเกาะกระจกอยู่นาน ไม่ได้ร่วงทันที — ถ้าให้ไหลเร็วจะหลุดพ้นแนวที่ปัดก่อนโดนกวาด
     d.vy=Math.min(16,d.vy+(1.1+d.r*.45)*dt);     // หยดใหญ่ไหลลงเร็วกว่านิดหน่อย
     d.y+=d.vy*dt*(1+blow*2.5);
+    // 🎢 รอบ 533: เอียงลำ = น้ำไหลเฉียงไปด้านที่ต่ำกว่า (หยดเล็กโดนลมพัดไวกว่า)
+    d.x+=hTiltS*dt*(46+blow*70)/Math.max(1,d.r*.6);
     d.a-=dt*(.035+blow*.45);
     if(d.a<=0||d.y>360) drops.splice(i,1);
   }
@@ -8443,9 +8462,34 @@ function wipeDrops(angFrom,angTo){
 }
 function setWiper(mode){
   wiperMode=mode;
+  // 🅿️ ปิดกลางคัน = ใบไม่หายวับ ต้องกวาดกลับเข้าท่าจอดก่อน (เหมือนที่ปัดรถจริง)
+  if(mode===0) wiperPark=Math.abs(wiperAng-WIPER.rest)>.02;
+  else wiperPark=false;
   const b=overlayEl&&overlayEl.querySelector('#adv-wiper');
   if(b){ b.classList.toggle('on',mode>0);
     b.querySelector('small').textContent=['ที่ปัดน้ำ','ปัดช้า','ปัดเร็ว'][mode]; }
+}
+/* เดินมุมใบปัด 1 เฟรม → คืนมุมที่ต้องวาด (null = ไม่มีใบให้วาด)
+   ⚠️ เดินมุมที่เดียวที่นี่เท่านั้น — ทั้งการกวาดหยด/รอยรีดน้ำ/ฝ้า อิงมุมชุดเดียวกัน */
+function tickWiper(dt){
+  const prev=wiperAng;
+  if(wiperMode>0){
+    wiperPhase+=dt*WIPER_SPD[wiperMode];
+    const t=(Math.cos(wiperPhase)+1)/2;                   // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
+    wiperAng=WIPER.rest-WIPER.sweep*(1-t);
+  }else if(wiperPark){
+    const step=dt*WIPER_SPD[1]*1.25;                      // วิ่งกลับท่าจอดเร็วกว่าโหมดช้านิดหน่อย
+    if(Math.abs(WIPER.rest-wiperAng)<=step){ wiperAng=WIPER.rest; wiperPark=false; wiperPhase=0; }
+    else wiperAng+=Math.sign(WIPER.rest-wiperAng)*step;
+  }else return null;
+  wiperVel=(wiperAng-prev)/Math.max(dt,1/240);
+  if(wiperAng!==prev){
+    wipeDrops(prev,wiperAng);
+    smears.push({a0:prev,a1:wiperAng,t:SMEAR_LIFE});      // 💦 รอยฟิล์มน้ำที่เพิ่งรีดผ่าน
+    if(smears.length>24) smears.shift();
+    glassMist=Math.max(0,glassMist-Math.abs(wiperAng-prev)*.55);   // รีดฝ้าออกด้วย
+  }
+  return wiperAng;
 }
 function setVisor(on){
   visorDown=on;
@@ -8464,20 +8508,46 @@ function rainTick(now){
     rainNextAt=now+RAIN_MIN+Math.random()*(RAIN_MAX_GAP-RAIN_MIN);
   }
 }
-/* วาดใบปัด 1 ใบ (mirror=true = ฝั่งขวา สะท้อนแกน x) */
-function drawBlade(c,ang,mirror){
+/* วาดใบปัด 1 ใบ (mirror=true = ฝั่งขวา สะท้อนแกน x)
+   รอบ 533: ใบยาง "ลากตามหลังก้าน" ตามความเร็วกวาด (flex) + สั่นตามลำเครื่อง = ไม่แข็งทื่อ */
+function drawBlade(c,ang,mirror,flex,shake){
   const P=WIPER.pivot, px=mirror?CP_NAT.w-P.x:P.x;
   // ⚠️ มุมคือทิศของใบปัดตรงๆ: ang=π คือชี้ซ้าย (ท่าจอดฝั่งซ้าย) · ฝั่งขวาสะท้อนเป็น π-ang
   // เคยพลาด: ใส่ rotate(a-π) + scale(-1,1) ทำให้ใบซ้ายชี้กลับเข้ากลางจอ
-  const a=mirror?Math.PI-ang:ang;
+  const a=mirror?Math.PI-ang:ang, f=(mirror?-1:1)*(flex||0), L=WIPER.len;
   c.save();
-  c.translate(px,P.y); c.rotate(a);
+  c.translate(px,P.y+(shake||0)); c.rotate(a);
   c.strokeStyle='rgba(18,20,24,.92)'; c.lineCap='round';
-  c.lineWidth=5.2; c.beginPath(); c.moveTo(6,0); c.lineTo(WIPER.len,0); c.stroke();  // ใบยาง
+  // ใบยาง: โค้งหน่วง — ปลายเบนไปทางตรงข้ามทิศกวาดเล็กน้อย
+  c.lineWidth=5.2; c.beginPath(); c.moveTo(6,0);
+  c.quadraticCurveTo(L*.6,-f*L*.055,L,-f*L*.1); c.stroke();
   c.lineWidth=2.4; c.strokeStyle='rgba(40,44,50,.95)';
-  c.beginPath(); c.moveTo(0,0); c.lineTo(WIPER.len*.55,0); c.stroke();               // ก้าน
+  c.beginPath(); c.moveTo(0,0); c.lineTo(L*.55,0); c.stroke();                       // ก้าน
+  c.lineWidth=1.4; c.strokeStyle='rgba(70,76,84,.8)';                                // ก้านย่อยจับใบ
+  c.beginPath(); c.moveTo(L*.42,0); c.lineTo(L*.68,-f*L*.03); c.stroke();
   c.beginPath(); c.arc(0,0,4.5,0,7); c.fillStyle='#2a2e34'; c.fill();                // หัวหมุน
   c.restore();
+}
+/* 💦 รอยฟิล์มน้ำที่ใบเพิ่งรีดผ่าน — จางเองเร็ว เห็นชัดเฉพาะตอนกระจกเปียก/โดนแดด */
+function drawSmears(c,dt,wet){
+  const P=WIPER.pivot;
+  for(let i=smears.length-1;i>=0;i--){
+    const s=smears[i]; s.t-=dt;
+    if(s.t<=0){ smears.splice(i,1); continue; }
+    const k=(s.t/SMEAR_LIFE)*wet;
+    if(k<=.01) continue;
+    for(const side of [0,1]){
+      const px=side?CP_NAT.w-P.x:P.x;
+      const a0=side?Math.PI-s.a0:s.a0, a1=side?Math.PI-s.a1:s.a1;
+      c.save();
+      // ⚠️ รอยซ้อนกันได้ ~20 ชั้น (อายุ .72 วิ) — อัลฟ่าต้องเบามาก ไม่งั้นกลายเป็นวงขาวทึบกลางกระจก
+      c.globalAlpha=.09*k; c.strokeStyle='#eaf4ff'; c.lineWidth=9; c.lineCap='round';
+      c.beginPath(); c.arc(px,P.y,WIPER.len*.62,Math.min(a0,a1),Math.max(a0,a1)); c.stroke();
+      c.globalAlpha=.055*k; c.lineWidth=14;
+      c.beginPath(); c.arc(px,P.y,WIPER.len*.9,Math.min(a0,a1),Math.max(a0,a1)); c.stroke();
+      c.restore();
+    }
+  }
 }
 function drawGlass(dt,now){
   if(!glassCtx||!cpMap) return;
@@ -8491,31 +8561,109 @@ function drawGlass(dt,now){
   while(rel>Math.PI) rel-=Math.PI*2;
   while(rel<-Math.PI) rel+=Math.PI*2;
   const visorCut=visorDown?VISOR_CUT:1;                  // 🕶️ ม่านลง = แสงจ้าลดลง
-  if(Math.abs(rel)<1.15){                                // หันหน้าเข้าหาแดดถึงจะเห็นแสงจ้า
-    const k=(1-Math.abs(rel)/1.15)*visorCut;             // 1=ตรงหน้า 0=พ้นขอบ
+  // 🌗 รอบ 533: กลางคืนต้องไม่มีแดด (เดิม k ไม่ดูเวลาเลย → เที่ยงคืนยังมีดวงส้มลอยกลางกระจก)
+  //    หมอกหนา = แสงฟุ้งแต่ไม่จ้า · ใบพัดตัดแสงเป็นจังหวะตามรอบเครื่อง (rotorChop)
+  const day=Math.max(0,1-heliNight), chop=rotorChop(now);
+  const sunAmt=day*(.35+.65*Math.max(0,sunHi))*(1-heliFog*.45)*chop;
+  let sunK=0;
+  if(Math.abs(rel)<1.15 && sunAmt>.02){                  // หันหน้าเข้าหาแดดถึงจะเห็นแสงจ้า
+    const k=sunK=(1-Math.abs(rel)/1.15)*visorCut*sunAmt; // 1=ตรงหน้า 0=พ้นขอบ
     const sx=CP_NAT.w*(.5-rel*.42);
-    const sy=210-sunHi*150-pitch*90;                     // เที่ยง=ดวงอาทิตย์สูง (y น้อย) · เช้า/เย็น=ต่ำลงมา
+    // ⚠️ รอบ 533: หนีบให้อยู่ใน "ช่องกระจกจริง" (y 104-286) — เดิมเที่ยงวัน sy≈60 = ดวงไปซ่อนหลังหลังคา
+    //    ผู้เล่นเลยไม่เคยเห็นดวง เห็นแค่หางแสงจาง ๆ
+    const sy=Math.max(104,Math.min(286,210-sunHi*150-pitch*90));   // เที่ยง=สูง (y น้อย) · เช้า/เย็น=ต่ำลงมา
+    // 🔆 ไอแดดอาบทั้งกระจก — ให้ห้องนักบิน "รู้สึกว่ากลางวัน" แม้ดวงจะเยื้องไปมุมไหน
+    c.fillStyle=`rgba(255,${Math.round(238-sunWarm*28)},${Math.round(196-sunWarm*56)},${(.085*k).toFixed(3)})`;
+    c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
     const warm=Math.round(214-sunWarm*80), warm2=Math.round(150-sunWarm*70);
     const g=c.createRadialGradient(sx,sy,4,sx,sy,300);
     g.addColorStop(0,`rgba(255,246,${warm},${(.5*k).toFixed(3)})`);
     g.addColorStop(.35,`rgba(255,${Math.round(224-sunWarm*40)},${warm2},${(.18*k).toFixed(3)})`);
     g.addColorStop(1,'rgba(255,190,110,0)');
     c.fillStyle=g; c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
+    // ✴️ แฉกแสง + ริ้วยาวแนวนอน (แบบเลนส์กล้อง) — สั่นตามลำเครื่องนิดหน่อย
+    c.save();
+    c.translate(sx,sy); c.rotate(hTiltS*.6+Math.sin(now/900)*.05);
+    c.globalAlpha=.5*k; c.strokeStyle='#fff3cf'; c.lineCap='round';
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3, L=(i%2?46:88)*(.85+.15*Math.sin(now/210+i));
+      c.lineWidth=i%2?2:3.4;
+      c.beginPath(); c.moveTo(Math.cos(a)*10,Math.sin(a)*10); c.lineTo(Math.cos(a)*L,Math.sin(a)*L); c.stroke();
+    }
+    const st=c.createLinearGradient(-330,0,330,0);
+    st.addColorStop(0,'rgba(255,228,170,0)');
+    st.addColorStop(.5,`rgba(255,242,205,${(.3*k).toFixed(3)})`);
+    st.addColorStop(1,'rgba(255,228,170,0)');
+    c.globalAlpha=1; c.fillStyle=st; c.fillRect(-330,-4.5,660,9);
+    c.restore();
+    // 🔮 เงาผี (ghost) ของแสงในแนวดวงอาทิตย์→กลางกระจก: บอกว่ามองผ่าน "กระจกหนา" จริง
+    const cx0=CP_NAT.w/2, cy0=232;
+    [[.42,26,'255,236,190'],[.78,15,'190,255,220'],[1.22,34,'255,205,160']].forEach(([t,rr,col])=>{
+      const gx=sx+(cx0-sx)*t, gy=sy+(cy0-sy)*t;
+      const gg=c.createRadialGradient(gx,gy,1,gx,gy,rr);
+      gg.addColorStop(0,`rgba(${col},${(.16*k).toFixed(3)})`);
+      gg.addColorStop(.7,`rgba(${col},${(.07*k).toFixed(3)})`);
+      gg.addColorStop(1,`rgba(${col},0)`);
+      c.fillStyle=gg; c.beginPath(); c.arc(gx,gy,rr,0,7); c.fill();
+    });
     // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดดส่อง (เหมือนกระจกเป็นรอย)
     c.save(); c.globalAlpha=.13*k; c.strokeStyle='#fff6d8'; c.lineWidth=2.2;
     for(let i=0;i<7;i++){
       const bx=180+i*112;
       c.beginPath(); c.moveTo(bx,96); c.bezierCurveTo(bx+26,150,bx-14,200,bx+18,262); c.stroke();
     }
+    // ฝุ่นจับกระจกเป็นจุด ๆ วิบวับตอนต้องแสง (ตำแหน่งคงที่ = เป็นคราบจริง ไม่ใช่ noise)
+    c.globalAlpha=.5*k;
+    for(let i=0;i<26;i++){
+      const px=150+((i*997)%800), py=100+((i*613)%180);
+      c.fillStyle=`rgba(255,250,225,${(.10+.09*Math.sin(now/380+i)).toFixed(3)})`;
+      c.beginPath(); c.arc(px,py,.9+(i%3)*.55,0,7); c.fill();
+    }
     c.restore();
+  }
+  // ── 🌙 แสงจันทร์นวลตอนกลางคืน (แทนแดด) — ฟ้ามืดแล้วกระจกไม่ตายสนิท ──
+  if(heliNight>.35){
+    let mrel=sunDir+Math.PI-yaw;
+    while(mrel>Math.PI) mrel-=Math.PI*2;
+    while(mrel<-Math.PI) mrel+=Math.PI*2;
+    if(Math.abs(mrel)<1.0){
+      const mk=(1-Math.abs(mrel)/1.0)*heliNight*visorCut*(1-heliFog*.5)*chop;
+      const mx=CP_NAT.w*(.5-mrel*.42), my=150-pitch*90;
+      const g=c.createRadialGradient(mx,my,2,mx,my,190);
+      g.addColorStop(0,`rgba(226,240,255,${(.26*mk).toFixed(3)})`);
+      g.addColorStop(.4,`rgba(170,205,255,${(.09*mk).toFixed(3)})`);
+      g.addColorStop(1,'rgba(140,180,255,0)');
+      c.fillStyle=g; c.fillRect(0,0,CP_NAT.w,CP_NAT.h);
+    }
+  }
+  // ── 🌫️ ฝ้าไอน้ำเกาะกระจกตอนหมอกหนา (รอบ 533) — ที่ปัดรีดออกได้จริง ──
+  const mistTgt=Math.max(0,heliFog-.25)*1.15;
+  glassMist+=(Math.min(1,mistTgt)-glassMist)*Math.min(1,dt*.22);
+  if(glassMist>.02){
+    const g=c.createLinearGradient(0,88,0,300);
+    g.addColorStop(0,`rgba(226,236,242,${(.30*glassMist).toFixed(3)})`);
+    g.addColorStop(1,`rgba(226,236,242,${(.10*glassMist).toFixed(3)})`);
+    c.fillStyle=g; c.fillRect(96,88,CP_NAT.w-192,220);
   }
   // ── 💧 หยดน้ำบนกระจก (วาดก่อนใบปัด ใบปัดจะได้ดูเหมือนกวาดทับ) ──
   for(const d of drops){
+    // หยดที่ไหลเร็วยืดเป็นเส้นทางน้ำ — ยิ่งบินเร็วยิ่งลาก (d.vy มาจาก tickDrops)
+    const tail=Math.min(26,d.vy*1.5);
+    if(tail>3){
+      c.save(); c.globalAlpha=d.a*.22; c.strokeStyle='#cfe6f7';
+      c.lineWidth=d.r*1.1; c.lineCap='round';
+      c.beginPath(); c.moveTo(d.x,d.y-tail); c.lineTo(d.x,d.y); c.stroke(); c.restore();
+    }
     const g=c.createRadialGradient(d.x-d.r*.3,d.y-d.r*.35,d.r*.15,d.x,d.y,d.r);
     g.addColorStop(0,`rgba(255,255,255,${(d.a*.55).toFixed(3)})`);
     g.addColorStop(.55,`rgba(200,225,245,${(d.a*.28).toFixed(3)})`);
     g.addColorStop(1,`rgba(120,160,195,${(d.a*.12).toFixed(3)})`);
     c.fillStyle=g; c.beginPath(); c.arc(d.x,d.y,d.r,0,7); c.fill();
+    // ☀️💧 ต้องแดด = หยดน้ำเป็นเม็ดแก้ววิบวับ
+    if(sunK>.05&&d.r>2){
+      c.fillStyle=`rgba(255,252,232,${(Math.min(.85,d.a*sunK*1.5)).toFixed(3)})`;
+      c.beginPath(); c.arc(d.x-d.r*.34,d.y-d.r*.38,Math.max(.6,d.r*.26),0,7); c.fill();
+    }
   }
   // ── 🕶️ ม่านบังแดด: แผ่นทึบแสงดึงลงจากขอบบนกระจก ──
   if(visorDown){
@@ -8529,14 +8677,14 @@ function drawGlass(dt,now){
     c.beginPath(); c.moveTo(96,vy); c.lineTo(CP_NAT.w-96,vy); c.stroke();
   }
   // ── 🌧️ ที่ปัดน้ำฝน (กวาดผ่านตรงไหน หยดน้ำตรงนั้นหายไปจริง) ──
-  if(wiperMode>0){
-    const prev=WIPER.rest-WIPER.sweep*(1-(Math.cos(wiperPhase)+1)/2);
-    wiperPhase+=dt*WIPER_SPD[wiperMode];
-    const t=(Math.cos(wiperPhase)+1)/2;                   // 1=ท่าจอด · 0=สุดปลายทาง (กลับไปกลับมานุ่ม)
-    const ang=WIPER.rest-WIPER.sweep*(1-t);
-    wipeDrops(prev,ang);
-    drawBlade(c,ang,false);
-    drawBlade(c,ang,true);
+  //    รอบ 533: เดินมุมใน tickWiper (มีท่าจอด/ใบยางหน่วง/รอยรีดน้ำ) แล้วค่อยวาด
+  const ang=tickWiper(dt);
+  drawSmears(c,dt,Math.min(1,(rainOn?1:.45)+glassMist+sunK*.6));
+  if(ang!==null){
+    const flex=Math.max(-1,Math.min(1,wiperVel/2.6));
+    const sh=heliShake(now);                             // 📳 ใบสั่นตามลำเครื่อง
+    drawBlade(c,ang,false,flex,sh?Math.sin(now/29)*sh*1.7:0);
+    drawBlade(c,ang,true ,flex,sh?Math.sin(now/29+1.1)*sh*1.7:0);
   }
 }
 /* ============================================================
@@ -11363,6 +11511,14 @@ window.Adventure3D={
                         ads:(worlds.heli&&worlds.heli.ads)||[], atc:ATC,
                         // 🌧️☀️🎚️💧🕶️📹 testkit: ที่ปัด / แสงแดด / มุมมอง / ฝน / ม่าน / กล้องใต้ท้อง
                         get wiper(){return wiperMode}, setWiper,
+                        // 🎬 รอบ 533: สถานะชั้นกระจกที่มีชีวิต (ท่าจอด/รอยรีดน้ำ/ฝ้า/ใบพัดตัดแสง)
+                        get glass(){return {ang:+wiperAng.toFixed(3), park:wiperPark, vel:+wiperVel.toFixed(2),
+                                            smears:smears.length, mist:+glassMist.toFixed(3),
+                                            chop:+rotorChop(performance.now()).toFixed(3),
+                                            sunHi:+sunHi.toFixed(2), sunDir:+sunDir.toFixed(2)}},
+                        setMist:v=>{glassMist=v},
+                        // ⚠️ ตั้งได้ชั่วคราวเท่านั้น — fogUpdate คำนวณใหม่จากนาฬิกาจริงทุก ~0.8 วิ
+                        setNight:v=>{heliNight=v}, setFog:v=>{heliFog=v},
                         get seat(){return seatLevel}, setSeat,
                         get yaw(){return yaw}, setYaw:v=>{yaw=v}, setSun:v=>{sunDir=v},
                         get drops(){return drops.length},
