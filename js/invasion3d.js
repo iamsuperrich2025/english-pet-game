@@ -2841,7 +2841,7 @@ const CP_GAUGES={
   vs :{x:415,y:354,r:21},   // อัตราไต่/ลด
   /* 🆕 รอบ 534: หน้าปัดที่ยังว่างอยู่ในภาพ (เลือกจากตำแหน่งวงกลมจริงบนแผง ไม่ทับของเดิม) */
   fuel:{x:302,y:356,r:21},  // ⛽ เชื้อเพลิง (ใต้เข็มความเร็ว)
-  tmp :{x:490,y:305,r:20},  // 🌡️ อุณหภูมิเครื่อง (กลางแผง ขวาของชุดนักบิน)
+  tmp :{x:492,y:310,r:17},  // 🌡️ อุณหภูมิเครื่อง (กลางแผง ขวาของชุดนักบิน — วงเล็กกว่าเพื่อน)
 };
 /* 🚨 รอบ 534: แผงไฟเตือน — วางบน "แถบเรียบ" เหนือชุดหน้าปัดนักบิน (พิกัดภาพเดียวกัน) */
 const CP_LAMP={cx:359, y:246, w:36, h:13, gap:5};
@@ -2852,6 +2852,11 @@ const FUEL_WARN=.25, FUEL_LOW=.10;
 /* 🌡️ อุณหภูมิเครื่อง (0..1) — ร้อนตามรอบใบพัด+ดึงคันเร่ง · ลมปะทะตอนบินเร็วช่วยระบาย */
 const ENG_AMB=.16, ENG_RISE=.45, ENG_COOL=.22, ENG_WARN=.80, ENG_HOT=.92;
 let cpFuel=FUEL_MAX, cpEngT=ENG_AMB, cpFuelToastAt=0;
+/* 🔧 รอบ 534: รอบใบพัด "เชิงกล" — เดิมเข็ม rpm (รอบ 532) อ่านจาก HeliSnd.rpm ซึ่งขยับเฉพาะตอน
+   "เปิดเสียง + โหลดไฟล์เสียงเสร็จ" → คนปิดเสียงเห็นเข็มรอบค้าง 0 ตลอด (และเกจใหม่ก็จะตายตาม)
+   จึงคำนวณรอบเองด้วยสูตรเดียวกับ HeliSnd.update แล้วใช้ค่านี้เป็นตัวสำรอง */
+let cpRpm=0;
+function cpRpmNow(){ return HeliSnd.ready?HeliSnd.rpm:cpRpm; }
 const CP_SEAT_FULL=.62;                 // ตำแหน่งแนวตั้งของกรอบเต็มลำ (0=ชิดบน 1=ชิดล่าง)
 const CP_ZOOM=1.12;                     // ซูมกรอบเต็มลำเล็กน้อย ให้ครอบจอทุกสัดส่วน
 const CP_DASH_OFF_Y=228;                // heli_dash.png ตัดมาจากกรอบเต็มที่ y นี้ (ต้องตรงกับ tools/cockpit_prep.py)
@@ -2936,7 +2941,10 @@ function cpRoundRect(c,x,y,w,h,r){    // เขียนเองแทน c.rou
 /* ⛽🌡️ รอบ 534: อัปเดตเชื้อเพลิง/อุณหภูมิทุกเฟรมที่อยู่ในเฮลิ (เรียกจาก tickHeliFlight ทั้ง 2 ช่วง)
    col = คันเร่ง −1..1 · ค่าพวกนี้เป็นตัวเลขบนหน้าปัดล้วน ๆ ไม่ไปยุ่งกับฟิสิกส์การบิน */
 function tickHeliGauges(dt,col,now){
-  const rpm=HeliSnd.ready?HeliSnd.rpm:0;
+  const tRpm=heliReady?(hLanded?.55:(1+Math.max(0,col)*.45))          // สูตรเดียวกับ HeliSnd.update
+                      :Math.min(.55,(now-heliStartAt)/START_MS*.55);  // ช่วงสตาร์ท = ไต่รอบขึ้นเรื่อยๆ
+  cpRpm+=(tRpm-cpRpm)*Math.min(1,dt*.9);
+  const rpm=cpRpmNow();
   const run=clamp((rpm-.55)/.7,0,1);                        // 0 = เครื่องดับ · 1 = รอบบินเต็ม
   if(hLanded&&heliReady&&col<=.1) cpFuel=Math.min(FUEL_MAX,cpFuel+FUEL_REFUEL*dt);   // จอดนิ่ง = ฐานเติมให้
   else cpFuel=Math.max(0,cpFuel-(FUEL_IDLE+FUEL_FLY*run+FUEL_PULL*Math.max(0,col)*run)*dt);
@@ -2952,7 +2960,7 @@ function tickHeliGauges(dt,col,now){
 /* 🚨 รอบ 534: แผงไฟเตือน 4 ดวง — ปกติเป็นป้ายจาง ๆ กลืนกับแผง · ผิดปกติ = สว่างกะพริบ
    เหลือง = ระวัง · แดงกะพริบถี่ = วิกฤต (น้ำมันใกล้หมด / เครื่องร้อนจัด / รอบเกินแดง / ลำเสียหายหนัก) */
 function cpLamps(c,now){
-  const fr=cpFuel/FUEL_MAX, hpFr=hp/PLAYER_HP, rpm=HeliSnd.ready?HeliSnd.rpm:0;
+  const fr=cpFuel/FUEL_MAX, hpFr=hp/PLAYER_HP, rpm=cpRpmNow();
   const rows=[
     ['น้ำมัน',  fr<FUEL_LOW?2:fr<FUEL_WARN?1:0],
     ['ร้อน',    cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0],
@@ -3000,7 +3008,7 @@ function drawInvGauges(now){
   c.setTransform(cpMap.s,0,0,cpMap.s,cpMap.ox,cpMap.oy);        // ต่อจากนี้วาดด้วยพิกัดในภาพได้เลย
   /* 📳 แรงสั่นร่วมของทุกเข็ม: รอบใบพัดสูง + เพิ่งโดนยิง/ชน (shake ของเกม) */
   let sh=0;
-  if(HeliSnd.ready&&HeliSnd.rpm>CP_SHAKE_RPM) sh=Math.min(1,(HeliSnd.rpm-CP_SHAKE_RPM)/(1.5-CP_SHAKE_RPM));
+  if(cpRpmNow()>CP_SHAKE_RPM) sh=Math.min(1,(cpRpmNow()-CP_SHAKE_RPM)/(1.5-CP_SHAKE_RPM));
   sh=Math.max(sh,Math.min(1,shake*2.2));
   /* ── ขอบฟ้าเทียม: ฟ้า/พื้นดินหมุน-เลื่อนตามการเอียง/ก้มเงยของลำ ── */
   const G=CP_GAUGES.att, R=G.r, ax=G.x, ay=G.y;
@@ -3026,7 +3034,8 @@ function drawInvGauges(now){
   const rg=CP_GAUGES.rpm;
   [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]]
     .forEach(([col,f1,f2])=>cpArc(c,rg,f1/1.5,f2/1.5,col));
-  cpNeedle(c,rg,HeliSnd.rpm/1.5, HeliSnd.rpm>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
+  const rv=cpRpmNow();
+  cpNeedle(c,rg,rv/1.5, rv>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
   /* ── ⛽ เชื้อเพลิง: โซนแดง = ช่วงต้องหาที่ลงจอด ── */
   const fg=CP_GAUGES.fuel, fr=cpFuel/FUEL_MAX;
   cpArc(c,fg,0,FUEL_WARN,'#ef5350'); cpArc(c,fg,FUEL_WARN,1,'#66bb6a',.32);
@@ -3039,8 +3048,8 @@ function drawInvGauges(now){
   c.save(); c.textAlign='center'; c.textBaseline='top';
   c.font='700 7px system-ui,sans-serif'; c.fillStyle='rgba(214,226,238,.55)';
   c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=2;
-  c.fillText('น้ำมัน',fg.x,fg.y+fg.r*.92);
-  c.fillText('ความร้อน',tg.x,tg.y+tg.r*.92);
+  c.fillText('น้ำมัน',fg.x,fg.y+fg.r*1.05);       // ใต้ขอบหน้าปัดพอดี ไม่ทับเข็ม
+  c.fillText('ความร้อน',tg.x,tg.y+tg.r*1.05);
   c.restore();
   cpLamps(c,now);                                                 // 🚨 ไฟเตือนบนสุด
 }
@@ -7224,7 +7233,7 @@ window.InvasionWorld={
     EXT_CAM, resetExtCam, get extCam(){ return extPos?{x:+extPos.x.toFixed(2),y:+extPos.y.toFixed(2),z:+extPos.z.toFixed(2),
       yaw:+extYaw.toFixed(3), lag:+Math.hypot(extPos.x-px,extPos.z-pz).toFixed(2)}:null; },
     /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
-    get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=HeliSnd.ready?HeliSnd.rpm:0, hpFr=hp/PLAYER_HP;
+    get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
       return {fuel:+cpFuel.toFixed(2), fuelFrac:+fr.toFixed(3), eng:+cpEngT.toFixed(3), rpm:+rpm.toFixed(2),
         lamps:{fuel:fr<FUEL_LOW?2:fr<FUEL_WARN?1:0, tmp:cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0,
                rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0}}; },
