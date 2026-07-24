@@ -5614,11 +5614,36 @@ const EXT_CAM={
   lag    : 3.4,   // ความหนืดตำแหน่งกล้อง (น้อย=อ้อยอิ่งเป็นหนัง · มาก=ติดลำ)
   yawLag : 4.2,   // ความหนืดของ "มุมที่กล้องไปยืนหลังลำ" ตอนหันหัว
   minUp  : 2.4,   // กล้องต้องลอยเหนือพื้นอย่างน้อยเท่านี้ (กันมุดดิน)
+  /* 🧱 รอบ 536: กันกล้องมุดตึก — บินในซอยแคบแล้วกล้องหลังลำไปโผล่ "ในตัวตึก" เห็นแต่ผนังดำ
+     วิธีมาตรฐานของ chase cam: ดึงกล้องเข้าหาลำจนพ้นตึก (ไม่ใช่ดันออก — ดันออกจะทะลุตึกอื่นต่อ) */
+  wallTop:14.0,   // ความสูงที่ถือว่าตึกยังบังอยู่ (ตรงกับกันชนตอนบินชนตึก)
+  wallPad: 1.8,   // เผื่อขอบตึกให้กล้องไม่เฉี่ยวผนัง (m)
+  minDist: 5.5,   // ดึงเข้าได้ใกล้สุดเท่านี้ (ใกล้กว่านี้กล้องจะไปอยู่ในตัวลำ)
 };
 let extPos=null, extYaw=0;                 // ตำแหน่ง/มุมกล้องที่หน่วงแล้ว (null = ยังไม่เริ่ม)
 function resetExtCam(){ extPos=null; extYaw=yaw; }
 /* ผลต่างมุมแบบ "ทางสั้นที่สุด" (−π..π) — ไม่งั้นหันข้าม ±180° แล้วกล้องกวาดอ้อมโลก */
 function angDiff(a){ return Math.atan2(Math.sin(a),Math.cos(a)); }
+/* 🧱 ระยะไกลสุดที่กล้องยืนหลังลำได้โดยไม่มุดตึก (รอบ 536)
+   ยิงรังสีจากลำไปทางกล้อง แล้วหาว่า "ชนขอบวงตึกต้นแรก" ที่ระยะเท่าไร → ถอยได้แค่นั้น
+   · นับเฉพาะตึกที่ยอดสูงกว่าระดับกล้อง (บินสูงกว่าหลังคาแล้วไม่ต้องสน)
+   · ลำอยู่ในวงตึกอยู่แล้ว = ช่วยไม่ได้ ข้ามไป (ไม่งั้นกล้องจะกระตุกเข้าออก) */
+function extCamClear(ux,uz,want,camY){
+  let best=want;
+  for(const o of solids){
+    const R=o.r+EXT_CAM.wallPad;
+    const cx=o.x-px, cz=o.z-pz;
+    const along=cx*ux+cz*uz;                       // ระยะตามแนวรังสีถึงจุดที่ใกล้ศูนย์กลางตึกสุด
+    if(along<=0 || along-R>best) continue;         // ตึกอยู่ข้างหลัง/ไกลเกินกว่าจะขวาง
+    if(camY>terrainH(o.x,o.z)+EXT_CAM.wallTop) continue;   // กล้องลอยพ้นหลังคาแล้ว
+    const perp2=cx*cx+cz*cz-along*along;           // ระยะตั้งฉากยกกำลังสอง
+    if(perp2>=R*R) continue;                       // รังสีเฉียดไม่โดนวง
+    const t=along-Math.sqrt(R*R-perp2);            // จุดที่รังสีเข้าวง
+    if(t<=0) continue;                             // ลำอยู่ในวงเอง — ข้าม
+    if(t<best) best=t;
+  }
+  return Math.max(EXT_CAM.minDist,best);
+}
 /* 🎥 กล้องที่นั่งนักบิน — ยกตามระดับเบาะที่เลือก (เหมือนปุ่มเบาะโลกเฮลิฯ) + ลากลำจริงมาไว้รอบตัว */
 function seatCamera(now,rollZ,dt){
   const v=SEAT_VIEWS[seatLv];
@@ -5626,9 +5651,10 @@ function seatCamera(now,rollZ,dt){
   if(v.ext){
     /* ── กล้องภายนอก: ไล่ตามจุดหลังลำแบบหน่วง แล้วจ้องที่ลำเสมอ ── */
     const spd=Math.hypot(phVel.x,phVel.z);
-    const dist=EXT_CAM.dist+EXT_CAM.distSpd*Math.min(1,spd/HELI_VMAX);
+    let dist=EXT_CAM.dist+EXT_CAM.distSpd*Math.min(1,spd/HELI_VMAX);
     extYaw+=angDiff(yaw-extYaw)*Math.min(1,d0*EXT_CAM.yawLag);
     const s=Math.sin(extYaw), c=Math.cos(extYaw);
+    dist=extCamClear(s,c,dist,py+EXT_CAM.up);             // 🧱 รอบ 536: มีตึกขวางหลังลำ = ดึงกล้องเข้ามา
     const tx=px+s*dist, ty=py+EXT_CAM.up, tz=pz+c*dist;   // หลังลำ = ตรงข้ามทิศหน้า (−sin,−cos)
     if(!extPos) extPos={x:tx,y:ty,z:tz};                  // เพิ่งสลับมามุมนี้ = วางเข้าที่เลย ไม่ให้เหวี่ยง
     const k=Math.min(1,d0*EXT_CAM.lag);
@@ -7230,7 +7256,7 @@ window.InvasionWorld={
       cv:gaugeCanvasEl?[gaugeCanvasEl.width,gaugeCanvasEl.height]:null,
       tilt:[+cpTiltS.toFixed(3),+cpTiltF.toFixed(3)], rpm:+HeliSnd.rpm.toFixed(2),
       padVis:myPad?myPad.grp.visible:null, padRoll:myPad?+myPad.grp.rotation.z.toFixed(3):null }; },
-    EXT_CAM, resetExtCam, get extCam(){ return extPos?{x:+extPos.x.toFixed(2),y:+extPos.y.toFixed(2),z:+extPos.z.toFixed(2),
+    EXT_CAM, resetExtCam, extCamClear, get extCam(){ return extPos?{x:+extPos.x.toFixed(2),y:+extPos.y.toFixed(2),z:+extPos.z.toFixed(2),
       yaw:+extYaw.toFixed(3), lag:+Math.hypot(extPos.x-px,extPos.z-pz).toFixed(2)}:null; },
     /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
     get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
