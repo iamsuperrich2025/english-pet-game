@@ -5189,9 +5189,18 @@ function buildDom(){
   // 🌧️🎚️ ที่ปัดน้ำฝน (ปิด→ช้า→เร็ว) + ปรับมุมนั่ง (ต่ำ→ปกติ→สูง)
   glassCanvasEl=overlayEl.querySelector('#adv-glass');
   glassCtx=glassCanvasEl.getContext('2d');
-  overlayEl.querySelector('#adv-wiper').addEventListener('click',e=>{
-    e.preventDefault(); sfx.select(); setWiper((wiperMode+1)%4);   // ปิด → หน่วง → ช้า → เร็ว
-  });
+  // 🌧️💦 แตะ = วนโหมด (ปิด → หน่วง → ช้า → เร็ว) · กดค้าง = ฉีดน้ำล้างกระจก (รอบ 541)
+  const wipBtn=overlayEl.querySelector('#adv-wiper');
+  let _wipHold=0, _wipDid=false;
+  const wipDown=e=>{ e.preventDefault(); _wipDid=false;
+    _wipHold=setTimeout(()=>{ _wipDid=true; washStart(); },WASH_HOLD); };
+  const wipUp=e=>{ e.preventDefault(); clearTimeout(_wipHold);
+    if(_wipDid) return;                                   // ล้างไปแล้ว — ปล่อยมือไม่ต้องวนโหมด
+    sfx.select(); setWiper((wiperMode+1)%4); };
+  wipBtn.addEventListener('pointerdown',wipDown);
+  wipBtn.addEventListener('pointerup',wipUp);
+  wipBtn.addEventListener('pointerleave',()=>clearTimeout(_wipHold));
+  wipBtn.addEventListener('click',e=>e.preventDefault());
   overlayEl.querySelector('#adv-seat').addEventListener('click',e=>{
     e.preventDefault(); sfx.select(); setSeat((seatLevel+1)%3);
   });
@@ -8181,6 +8190,7 @@ function tickHeli(dt,now){
                                    near:wallDist, side:wallSide});
   rainTick(now);                                              // 🌧️ ตารางฝนตกเป็นช่วงๆ
   tickDrops(dt,Math.hypot(hVel.x,hVel.z));                    // 💧 หยดน้ำไหล/ปลิวตามความเร็ว
+  washTick(now,dt); grimeTick(dt);                            // 💦🌫️ ที่ฉีดน้ำล้างกระจก + คราบสะสม (รอบ 541)
   fogUpdate(now);                                             // 🌫️🌙 หมอกเช้า+กลางคืนตามเวลาจริง
   // 🚨 ไฟกันชนยอดตึกกะพริบตอนกลางคืน (วาบสั้น 16% ของคาบ 0.9 วิ คนละเฟส — แบบตึกจริง)
   const bcs=worlds.heli&&worlds.heli.beacons;
@@ -8324,6 +8334,10 @@ const WIPER_SPD=[0,1.5,1.5,3.1];                // เรเดียน/วิ 
 const WIPER_LABEL=['ที่ปัดน้ำ','ปัดหน่วง','ปัดช้า','ปัดเร็ว'];
 const INT_GAP=[3400,5200];                      // ms: โหมดหน่วงพักระหว่างเที่ยง (สุ่มในช่วงนี้)
 let wiperWaitAt=0;
+/* 💦 รอบ 541: ที่ฉีดน้ำล้างกระจก — "กดปุ่ม 🌧️ ค้าง" = พ่นน้ำ + ปัดเร็ว 3 ที แล้วคืนโหมดเดิม
+   คราบ/ฝุ่นบนกระจก (grime) สะสมระหว่างบิน เห็นชัดตอนต้องแดด — ล้างแล้วจางลงจริง */
+const WASH_MS=900, WASH_STROKES=3, WASH_HOLD=420;   // พ่นน้ำกี่ ms · ปัดกี่ที · กดค้างกี่ ms ถึงนับว่าล้าง
+let washUntil=0, washLeft=0, washBackTo=0, grime=.45;
 let sunDir=2.1;                                 // ทิศดวงอาทิตย์ในโลก (เรเดียน) — คำนวณใหม่ตามเวลาจริงใน sunUpdate()
 let sunHi=.6, sunWarm=0;                        // ความสูงดวงอาทิตย์ 0-1 · ความอุ่นของแสง 0-1 (เช้า/เย็น=1)
 let wiperMode=0, wiperPhase=0, glassCtx=null, glassCanvasEl=null;
@@ -8365,6 +8379,7 @@ function sunShadeTick(now){
   if(now-_sunRayAt>70){ _sunRayAt=now; sunBlocked=sunRayBlocked()?1:0; }
   const tgt=1-SUN_DARK*sunBlocked;
   sunShade+=(tgt-sunShade)*Math.min(1,dt*9);           // วูบเข้า/คืนตัวใน ~0.11 วิ
+  shadowSweepTick(dt);                                 // 🏢➡️ ขอบเงากวาดผ่านกระจก (รอบ 541)
   applyCockpitShade();
 }
 /* 🏢🎛️ รอบ 540: เงาตึกต้องพาดถึง "ในห้องนักบิน" ด้วย — ไม่ใช่หรี่แค่ชั้นกระจก
@@ -8492,6 +8507,39 @@ function tickDrops(dt,spd){
     if(d.a<=0||d.y>360) drops.splice(i,1);
   }
 }
+/* 💦 ที่ฉีดน้ำล้างกระจก (รอบ 541) — กดปุ่มค้าง → พ่นน้ำเป็นละอองบนโซนที่ปัด + ปัดเร็ว 3 ที
+   ระหว่างพ่น หยดเยอะ + คราบ (grime) ถูกชะออก · เสร็จแล้วคืนโหมดเดิม */
+function addWashDrop(){
+  if(drops.length>=RAIN_MAX) return;
+  const z=DROP_ZONE[Math.random()<.5?0:1];
+  drops.push({x:z[0]+Math.random()*(z[1]-z[0]),
+              y:DROP_Y[0]+Math.random()*(DROP_Y[1]-DROP_Y[0]),
+              r:1.4+Math.random()*2.6, a:.55+Math.random()*.45, vy:2+Math.random()*3});  // ละอองพ่นแรง ไหลลงเร็ว
+}
+function washStart(){
+  if(washUntil>performance.now()) return;              // กำลังล้างอยู่ ไม่ซ้อน
+  sfx.select();
+  const now=performance.now();
+  washUntil=now+WASH_MS; washLeft=WASH_STROKES;
+  washBackTo=wiperMode;                                 // จำโหมดเดิมไว้คืนหลังล้าง
+  setWiper(3);                                          // ปัดเร็วระหว่างล้าง
+  washSpraySfx();
+}
+function washTick(now,dt){
+  if(!washUntil) return;
+  if(now<washUntil){                                   // ยังพ่นน้ำ
+    for(let i=0;i<46*dt;i++) addWashDrop();
+    grime=Math.max(0,grime-dt*1.4);                    // น้ำ+ที่ปัดชะคราบออกเร็ว
+  }else if(washLeft>0 && wiperMode===3 && Math.abs(wiperAng-WIPER.rest)<.03){
+    washLeft--;                                         // นับครบ 3 ที (ทุกครั้งที่ใบกลับถึงท่าจอด)
+    if(washLeft<=0){ setWiper(washBackTo); washUntil=0; }  // คืนโหมดเดิม
+  }
+}
+/* 🌫️ คราบ/ฝุ่นสะสมบนกระจกช้าๆ ระหว่างบิน (ฝนตกก็ล้างเองบางส่วน) — เห็นชัดเฉพาะตอนต้องแดด */
+function grimeTick(dt){
+  if(rainOn) grime=Math.max(.12,grime-dt*.05);         // ฝนล้างคราบบางส่วน (ไม่หมดเกลี้ยง)
+  else grime=Math.min(1,grime+dt*.012);                // แห้ง = ฝุ่นเกาะเพิ่มช้าๆ (เต็มใน ~80 วิ)
+}
 /* ที่ปัดกวาดผ่าน → ลบหยดน้ำในแนวใบปัด
    ⚠️ ต้องกวาด "ตลอดเส้นทางจากมุมเดิมถึงมุมใหม่" ไม่ใช่เช็กแค่มุมปัจจุบัน
    เพราะถ้าเฟรมตก (มือถือช้า/แท็บพักหลัง) ใบปัดจะกระโดดข้ามหยดไปเฉยๆ */
@@ -8545,6 +8593,24 @@ function wiperThunk(vol){
     o.type='sine'; o.frequency.setValueAtTime(128,t); o.frequency.exponentialRampToValueAtTime(58,t+.09);
     g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0008,t+.13);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.15);
+  }catch(e){}
+}
+/* 💦 "ฟู่~" ที่ฉีดน้ำล้างกระจก (รอบ 541) — noise ผ่าน bandpass สูง จาง ๆ ยาวเท่ากับ WASH_MS
+   ต่อตรง ctx.destination แบบ doorSlideSfx (ไม่ผ่าน master) — เล่นได้แม้ไม่มี wSnd */
+function washSpraySfx(){
+  if(!state.sound) return;
+  try{
+    HeliSound.ensureCtx();
+    const c=HeliSound.ctx, t=c.currentTime, dur=WASH_MS/1000;
+    const nb=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate);
+    const d=nb.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+    const n=c.createBufferSource(); n.buffer=nb;
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=.9; bp.frequency.value=2600;
+    const g=c.createGain();
+    g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(.03,t+.06);
+    g.gain.setValueAtTime(.03,t+dur*.6); g.gain.exponentialRampToValueAtTime(.0006,t+dur);
+    n.connect(bp); bp.connect(g); g.connect(c.destination); n.start(t); n.stop(t+dur);
   }catch(e){}
 }
 /* "เอี๊ยด" ยางรีดกระจกแห้ง — noise ผ่าน bandpass กวาดความถี่ตามใบที่ยังเคลื่อน */
@@ -8624,6 +8690,20 @@ function tickWiper(dt,now){
   }
   wiperSndTick(prev,wiperAng,now||performance.now());
   return wiperAng;
+}
+/* 🏢➡️ รอบ 541: ขอบเงาตึก "กวาดผ่านกระจก" จริง (เดิมหรี่ทั้งบานพร้อมกัน)
+   0 = ไม่มีเงา · 1 = เงาคลุมเต็มบาน · ทิศมาจากความเร็วด้านข้างของลำ (บินไปทางขวา = เงามาจากขวา)
+   ⚠️ อัปเดตใน sunShadeTick (เรียกจาก drawGauges ทุกมุมมอง) แต่วาดเฉพาะมุมเต็มลำใน drawGlass */
+const SH_SWEEP=.34;                                     // วินาที: ขอบเงากวาดข้ามกระจก
+let shEdge=0, shDir=1;
+function shadowSweepTick(dt){
+  const tgt=sunBlocked?1:0;
+  if(Math.abs(tgt-shEdge)<.001){ shEdge=tgt; return; }
+  if((tgt>shEdge&&shEdge<=0)||(tgt<shEdge&&shEdge>=1)){  // เริ่มรอบใหม่ = จับทิศ ณ ตอนนั้น
+    const lat=hVel.x*Math.cos(yaw)-hVel.z*Math.sin(yaw); // ความเร็วด้านข้าง (+ = ไถลไปทางขวา)
+    shDir=lat>=0?1:-1;
+  }
+  shEdge+=Math.sign(tgt-shEdge)*Math.min(Math.abs(tgt-shEdge),dt/SH_SWEEP);
 }
 function setVisor(on){
   visorDown=on;
@@ -8744,14 +8824,15 @@ function drawGlass(dt,now){
       gg.addColorStop(1,`rgba(${col},0)`);
       c.fillStyle=gg; c.beginPath(); c.arc(gx,gy,rr,0,7); c.fill();
     });
-    // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดดส่อง (เหมือนกระจกเป็นรอย)
-    c.save(); c.globalAlpha=.13*k; c.strokeStyle='#fff6d8'; c.lineWidth=2.2;
+    // ริ้วคราบบนกระจก — เห็นชัดเฉพาะตอนโดนแดดส่อง (เหมือนกระจกเป็นรอย) · ยิ่งคราบเยอะยิ่งชัด (รอบ 541)
+    const gr=.35+grime*.65;                              // ล้างแล้ว (grime ต่ำ) = ริ้วจางลงจริง
+    c.save(); c.globalAlpha=.13*k*gr; c.strokeStyle='#fff6d8'; c.lineWidth=2.2;
     for(let i=0;i<7;i++){
       const bx=180+i*112;
       c.beginPath(); c.moveTo(bx,96); c.bezierCurveTo(bx+26,150,bx-14,200,bx+18,262); c.stroke();
     }
     // ฝุ่นจับกระจกเป็นจุด ๆ วิบวับตอนต้องแสง (ตำแหน่งคงที่ = เป็นคราบจริง ไม่ใช่ noise)
-    c.globalAlpha=.5*k;
+    c.globalAlpha=.5*k*gr;
     for(let i=0;i<26;i++){
       const px=150+((i*997)%800), py=100+((i*613)%180);
       c.fillStyle=`rgba(255,250,225,${(.10+.09*Math.sin(now/380+i)).toFixed(3)})`;
@@ -8802,6 +8883,19 @@ function drawGlass(dt,now){
       c.fillStyle=`rgba(255,252,232,${(Math.min(.85,d.a*sunK*1.5)).toFixed(3)})`;
       c.beginPath(); c.arc(d.x-d.r*.34,d.y-d.r*.38,Math.max(.6,d.r*.26),0,7); c.fill();
     }
+  }
+  // ── 🏢➡️ ขอบเงาตึกกวาดผ่านกระจก (รอบ 541) — แถบมืดไล่จากขอบด้านที่ลำกำลังไถลเข้าหา ──
+  //    หรี่ทั้งห้อง (applyCockpitShade) ทำเรื่องความสว่างแล้ว · อันนี้เพิ่ม "ขอบไล่" ให้รู้สึกว่าพุ่งผ่านเงาจริง
+  if(shEdge>.01 && shEdge<.99 && day>.2){
+    const w=CP_NAT.w, bw=90;                              // ความกว้างของแนวไล่สี (นุ่ม)
+    // shDir>0 = เงาเข้าจากขวา → บริเวณมืดคือ [ex,w] · shDir<0 = เข้าจากซ้าย → [0,ex]
+    const ex=shDir>0 ? w*(1-shEdge) : w*shEdge;
+    const g=c.createLinearGradient(ex-bw,0,ex+bw,0);
+    const dark=`rgba(20,26,38,${(.3*day).toFixed(3)})`, clear='rgba(20,26,38,0)';
+    g.addColorStop(0,shDir>0?clear:dark); g.addColorStop(1,shDir>0?dark:clear);
+    c.save(); c.fillStyle=g;
+    if(shDir>0) c.fillRect(ex-bw,0,w-(ex-bw),CP_NAT.h); else c.fillRect(0,0,ex+bw,CP_NAT.h);
+    c.restore();
   }
   // ── 🕶️ ม่านบังแดด: แผ่นทึบแสงดึงลงจากขอบบนกระจก ──
   if(visorDown){
@@ -11662,7 +11756,11 @@ window.Adventure3D={
                                             snd:wSnd?+wSnd.g.gain.value.toFixed(4):null,
                                             // 🕒🏢 รอบ 540: โหมดหน่วง + เงาพาดในห้องนักบิน
                                             wait:Math.max(0,Math.round(wiperWaitAt-performance.now())),
-                                            heavy:rainHeavy, filter:cockpitEl?cockpitEl.style.filter:''}},
+                                            heavy:rainHeavy, filter:cockpitEl?cockpitEl.style.filter:'',
+                                            // 💦🏢➡️ รอบ 541: ที่ฉีดน้ำ + คราบ + ขอบเงากวาด
+                                            grime:+grime.toFixed(3), washing:washUntil>performance.now(),
+                                            washLeft, shEdge:+shEdge.toFixed(3), shDir}},
+                        washNow:washStart, setGrime:v=>{grime=v},
                         rayBlocked:()=>sunRayBlocked(),
                         setMist:v=>{glassMist=v},
                         // ⚠️ ตั้งได้ชั่วคราวเท่านั้น — fogUpdate คำนวณใหม่จากนาฬิกาจริงทุก ~0.8 วิ
@@ -11679,6 +11777,7 @@ window.Adventure3D={
                         // บังคับวาดใหม่ 1 เฟรม — ใช้ตอนเทสต์ เพราะแท็บที่ถูก throttle ลูปแทบไม่เดิน
                         redraw:(dt)=>{ dt=dt||.016;
                           tickDrops(dt,Math.hypot(hVel.x,hVel.z));
+                          washTick(performance.now(),dt); grimeTick(dt);
                           fogUpdate(performance.now());
                           drawBellyCam();                     // เรนเดอร์กล้องใต้ท้อง + ตั้ง bellyRect (ลูปตายก็เทสต์ได้)
                           drawGauges(); drawLandingTargets(); drawDescentBar();
