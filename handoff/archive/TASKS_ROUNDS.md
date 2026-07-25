@@ -1627,3 +1627,16 @@
 - 📇 **item 4** การ์ดสรุปส่งครู
 - 🆕 **คิว 7725691507 (10 ข้อ · 7 ก.ค.)** — ✅จูนอาหาร/นอน (ข้อ 1,2,3,6 รอบ 33) · ✅อาหารคน-สัตว์+พิษสะสม (5.1 รอบ 34) · ✅prompt ผู้เลี้ยง/รูปร่างสัตว์ (4,5.2 รอบ 35) · ✅การ์ดตั๋ว (7 รอบ 37) · ✅โลกผจญภัย 3D (8 รอบ 40) · เหลือ: โครงโฆษณา/Play Store (9,10) → สเปกเต็มท้าย `handoff/BACKLOG.md`
 
+
+
+## ⏬ ย้ายเมื่อ 2026-07-26 — จาก handoff/TASKS.md (## ประวัติรอบล่าสุด)
+
+
+### รอบ 547 (26 ก.ค.) — 🪓⛔ ผ่าไฟล์เฟส 4 (sfx): ตรวจ coupling → ตัดสินใจไม่ผ่า
+แผนคาดดูดโซน ATC (333-473) + เสียงที่ปัดน้ำฝน (7348-7752) ≈550 บรรทัด → `js/adv3d_sfx.js` · ตรวจจริงพบผ่าไม่คุ้ม:
+- **โซน 7348-7752 ชื่อ "เสียง" แต่เนื้อในเป็นเสียงจริงแค่ ~95 บรรทัด (7354-7448)** — ที่เหลือ ~300 บรรทัดคือ logic ใบปัด/วาดกระจก/แดด-จันทร์-ไฟเมือง/ม่านบังแดด/ตารางฝน (`tickWiper`/`drawGlass`/`drawBlade`/`drawSmears`/`rainTick`/`shadowSweepTick`/`drawCityGlow`) อ่าน+เขียนตัวแปร closure ร่วมกับโซนกระจก 7078-7347 ราว 30 ตัว (wiperAng/Phase/Vel/Park, smears, drops, glassMist, grime, hVel, yaw, pitch, camera, heliNight, heliFog, sunDir/Hi/Warm/Shade/Blocked, visorDown, seatLevel, glassCtx, cpMap, overlayEl, rotorChop(), heliShake() ฯลฯ) — ย้ายไม่ได้โดยไม่รื้อสถาปัตยกรรม
+- **ส่วนเสียงจริง (wiperSndOn/Off/Thunk/Squeak/washSpraySfx) ~65-95 บรรทัด** ก็เกาะ `HeliSound` (object ใหญ่ใน closure บรรทัด 8039 — ต้นตอ AudioContext ของทั้งโลกเฮลิฯ) + `wiperSndTick` อ่านสถานะใบปัดสด 8 ตัว/เฟรม → ผ่าแล้วได้ก้อนจิ๋วแต่เพิ่ม indirection ต่อเฟรม
+- **ATC (333-450, ~118 บรรทัด)** เกาะ closure 7 ตัว (`HeliSound`, `running`, `camera`, `peers`, `lastBanAt`, `banEl`, `HELI_SKID`) + ถูกเรียก ~15 จุดทั่วไฟล์ + เป็นเสียงพูด/วิทยุที่ verify ใน preview ยาก → bind getter สด 7 ตัวเสี่ยงพังเกินกำไร 1.1% ของไฟล์
+- **สรุป: เข้าเงื่อนไข "พัวพัน closure เยอะเกิน → รายงานผู้ใช้แทนการฝืนผ่า" ที่แผนเขียนไว้เอง** · เป้าหมายหลักสำเร็จแล้วตั้งแต่เฟส 1-3 (12,010 → 10,694 พ้นเกณฑ์ 12,000) · ไม่แตะไฟล์เกม ไม่ deploy
+
+ประวัติรอบเก่าทั้งหมดถูกย้ายไป `handoff/archive/TASKS_ROUNDS.md` และ `handoff/HISTORY.md` — ค้นด้วย Grep `รอบ <เลข>`
