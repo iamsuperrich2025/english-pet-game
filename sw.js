@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v171';  // v171: 🚰🌃 ถังน้ำยาล้างกระจกจำกัด (เติมตอนจอด) + ไฟเมืองสะท้อนบนกระจกตอนบินต่ำกลางคืน รอบ 542
+const CACHE_VERSION = 'pet-vocab-v172';  // v172: ผ่าไฟล์เฟส 1: แยก js/adv3d_css.js
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -38,6 +38,7 @@ const SHELL = [
   './js/online.js',
   './js/main.js',
   './js/vendor/three.min.js',
+  './js/adv3d_css.js',
   './js/adventure3d.js',
   './img/icons/icon-192.png',
   './img/icons/icon-512.png',

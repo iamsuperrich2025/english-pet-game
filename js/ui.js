@@ -4505,6 +4505,12 @@ function loadScriptOnce(src){
     document.head.appendChild(s);
   });
 }
+/* 🪓 รอบ 544: adventure3d.js ถูกผ่าเป็นไฟล์ part (data ล้วน) + ไฟล์หลัก
+   ทุกจุดที่เคยโหลด js/adventure3d.js ตรงๆ ต้องเรียกตัวนี้แทน — part ก่อน หลักทีหลัง */
+async function loadAdv3d(){
+  await loadScriptOnce('js/adv3d_css.js');
+  await loadScriptOnce('js/adventure3d.js');
+}
 let advLoading = false;
 async function enterAdventure3D(){
   if(!state.advTicket || state.advHurt || advLoading) return;
@@ -4513,7 +4519,7 @@ async function enterAdventure3D(){
     toast('🌍 กำลังเปิดประตูโลกผจญภัย...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกผจญภัยไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -4573,7 +4579,7 @@ async function enterHaunted3D(){
     toast('👻 กำลังเปิดประตูโลกผีสิง...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกผีสิงไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -4804,7 +4810,7 @@ async function enterHeli3D(){
     toast('🚁 กำลังสตาร์ทเครื่องยนต์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกเฮลิคอปเตอร์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -4904,7 +4910,7 @@ async function enterDrone3D(){
     toast('🛸 กำลังอาร์มโดรน...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกโดรนไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -5027,7 +5033,7 @@ async function enterDrive3D(){
     try{
       await loadScriptOnce('js/vendor/three.min.js');
       await loadScriptOnce('js/data/city_kpp.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกขับรถไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -5188,7 +5194,7 @@ async function enterSoccer3D(){
     toast('⚽ กำลังเข้าสนาม...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดสนามฟุตบอลไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
@@ -6139,7 +6145,7 @@ async function enterMecha3D(){
     toast('🤖 กำลังบูตระบบหุ่นยนต์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
-      await loadScriptOnce('js/adventure3d.js');
+      await loadAdv3d();
     }catch(e){
       advLoading = false;
       sfx.wrong(); toast('⚠️ โหลดโลกหุ่นยนต์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
