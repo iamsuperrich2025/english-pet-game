@@ -4510,6 +4510,7 @@ function loadScriptOnce(src){
 async function loadAdv3d(){
   await loadScriptOnce('js/adv3d_css.js');
   await loadScriptOnce('js/adv3d_intro.js');   // ❓ เฟส 2 รอบ 545: data การ์ดวิธีเล่น
+  await loadScriptOnce('js/adv3d_tex.js');     // 🖼️ เฟส 3 รอบ 546: texture ตัวอักษร/emoji/ป้าย (window.Adv3dTex)
   await loadScriptOnce('js/adventure3d.js');
 }
 let advLoading = false;
