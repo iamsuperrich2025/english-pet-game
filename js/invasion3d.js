@@ -2433,10 +2433,57 @@ function faceModelForward(obj){
   }
   return false;
 }
+/* 🦵 รอบ 548: "ใส่เข่าจริง" ให้โมเดล baked — ขาข้างละชิ้นเดียวไม่มีรอยแบ่งเข่าใน geometry
+   (วัดจริง: ชิ้นขาซ้ายยาว 1.0 ม. เต็มขา แขวนหมุนที่สะโพกจุดเดียว → เข่าไม่มีวันงอ = "ขาเป็นแท่งตรง")
+   ทางแก้: แปลงขาแต่ละข้างเป็น SkinnedMesh 2 กระดูก (สะโพก b0 + เข่า b1)
+   ถ่วงน้ำหนัก vertex ไล่ smoothstep รอบระดับเข่า → งอเข่าแล้วเนื้อโค้งเนียน ไม่ฉีก ไม่มีรอยต่อ
+   คืนกระดูกกลับเข้า s.J.legUx/legLx → poseSoldier ใช้ได้เหมือนข้อต่อเดิมทุกประการ */
+function skinSoldierLimb(J,side,list,all,H,pivHips){
+  const bb=new THREE.Box3(); list.forEach(function(p){ bb.union(p.b); });
+  const kneeY=all.min.y+H*0.285;                       /* ระดับเข่าคนจริง ~28.5% ของความสูง */
+  const hipY=Math.min(bb.max.y, all.min.y+H*0.50);     /* จุดหมุนสะโพก ~50% (กันชิ้นขาที่ลากถึงเอวดันสูงเกิน) */
+  if(kneeY-bb.min.y<0.05 || hipY-kneeY<0.05) return null;
+  const cx=(bb.min.x+bb.max.x)/2, cz=(bb.min.z+bb.max.z)/2;
+  /* แบนชิ้นเป็นพิกัดโลกแล้วรวมก้อน (สูตรเดียวกับ flow ปกติ) */
+  const flat=[]; list.forEach(function(p){
+    const m=p.o; m.updateWorldMatrix(true,false);
+    const wm=m.matrixWorld.clone(); if(m.parent) m.parent.remove(m);
+    wm.decompose(m.position,m.quaternion,m.scale); flat.push(m);
+  });
+  const merged=mergeMeshList(flat); if(!merged.length) return null;
+  const b0=new THREE.Bone(), b1=new THREE.Bone(), bP=new THREE.Bone();
+  b0.position.set(cx-pivHips.x, hipY-pivHips.y, cz-pivHips.z);
+  b1.position.set(0, kneeY-hipY, 0); b0.add(b1);
+  bP.position.copy(b0.position);                       /* เชิงกราน: อยู่นิ่งกับ hips — โคนขาไล่น้ำหนักหาเพื่อไม่ให้ขาหนีบฉีกตอนยกขาสูง */
+  const B=H*0.045, Bh=H*0.05, out=[];                  /* โซนไล่น้ำหนัก: รอบเข่า ±4.5% · โคนขาบน 5% ของความสูง */
+  merged.forEach(function(m){
+    const g=m.geometry, P=g.attributes.position, n=P.count;
+    const si=new Uint16Array(n*4), sw=new Float32Array(n*4);
+    for(let i=0;i<n;i++){
+      const y=P.getY(i);
+      let w=(y-(kneeY-B))/(2*B); w=w<0?0:(w>1?1:w); w=w*w*(3-2*w);          /* ต้นขา vs แข้ง */
+      let pw=(y-(hipY-Bh))/Bh; pw=pw<0?0:(pw>1?1:pw); pw=pw*pw*(3-2*pw);    /* โคนขา → เชิงกราน */
+      si[i*4]=0; si[i*4+1]=1; si[i*4+2]=2;
+      sw[i*4]=w*(1-pw); sw[i*4+1]=1-w; sw[i*4+2]=w*pw;
+    }
+    g.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(si,4));
+    g.setAttribute('skinWeight',new THREE.Float32BufferAttribute(sw,4));
+    g.translate(-pivHips.x,-pivHips.y,-pivHips.z);     /* พิกัด local ของ J.hips */
+    const mat=m.material.clone(); mat.skinning=true;   /* three เก่าต้องเปิด flag (รุ่นใหม่เมิน ไม่พัง) · ห้ามแตะ material ร่วมของท่อนบน */
+    out.push(new THREE.SkinnedMesh(g,mat));
+  });
+  out[0].add(b0); out[0].add(bP);
+  out.forEach(function(sm){ J.hips.add(sm); });
+  J.hips.updateWorldMatrix(true,true);
+  const skel=new THREE.Skeleton([b0,b1,bP]);
+  out.forEach(function(sm){ sm.bind(skel,sm.matrixWorld); });
+  J['legU'+side]=b0; J['legL'+side]=b1;                /* poseSoldier หมุนกระดูกแทนข้อต่อเดิม โค้ดท่าไม่ต้องแก้ */
+  return {b1:b1, shin:kneeY-bb.min.y, meshes:out.length};
+}
 function autoRigSoldier(s,obj){
   obj.updateWorldMatrix(true,true);
   /* 1) เก็บทุกชิ้น + กรอบของมัน (ทำให้เป็นพิกัดโลกก่อน จะได้ไม่ต้องสนใจ transform ซ้อนกัน) */
-  const parts=[];
+  let parts=[];
   obj.traverse(function(o){
     if(!o.isMesh) return;
     const b=new THREE.Box3().setFromObject(o);
@@ -2461,6 +2508,14 @@ function autoRigSoldier(s,obj){
     legPc.forEach(function(p){ if(p.c.x<lmin)lmin=p.c.x; if(p.c.x>lmax)lmax=p.c.x; });
     legCx=(lmin+lmax)/2; legHalf=Math.max(0.001,(lmax-lmin)/2);   /* กึ่งกลางเท้าซ้าย-ขวา = แกนจริง */
   }
+  /* 🦵 รอบ 548: แยกชิ้นระดับขาออกมาก่อน — ถ้าครบทั้ง 2 ข้างจะเย็บ skin เข่าจริง (ไม่เข้า bucket แข็ง) */
+  const legParts={L:[],R:[]};
+  parts.forEach(function(p){
+    const ny=(p.c.y-all.min.y)/H;
+    if(ny<LEG_BAND) p._leg=(p.c.x<legCx)?'L':'R';
+  });
+  const wantSkin=s.legOnly&&parts.some(function(p){return p._leg==='L';})&&parts.some(function(p){return p._leg==='R';});
+  if(wantSkin){ parts.forEach(function(p){ if(p._leg) legParts[p._leg].push(p); }); parts=parts.filter(function(p){ return !p._leg; }); }
   /* 2) จับแต่ละชิ้นเข้าข้อต่อ: ระดับขาแยกซ้าย-ขวาจากแกนขาจริง · ที่เหลือหาเพื่อนบ้านใกล้สุด (ไม่รวมข้อต่อขา)
         ถ่วงน้ำหนักแกน Y มากกว่า X เล็กน้อย เพราะความสูงบอกส่วนของร่างกายได้ชัดกว่า */
   const bucket={}; Object.keys(BODY_MAP).forEach(function(k){ bucket[k]=[]; });
@@ -2480,9 +2535,10 @@ function autoRigSoldier(s,obj){
     }
     p.key=best; bucket[best].push(p);
   });
-  /* ต้องกระจายพอสมควรถึงจะถือว่าแยกร่างได้จริง (ไม่งั้นตกไปโหมดนิ่ง) */
+  /* ต้องกระจายพอสมควรถึงจะถือว่าแยกร่างได้จริง (ไม่งั้นตกไปโหมดนิ่ง)
+     🦵 ขาถูกดึงไปเย็บ skin แล้ว → ท่อนบนเหลือกี่ก้อนก็ใช้ได้ (ขอแค่ hips มีของ) */
   const used=Object.keys(bucket).filter(function(k){ return bucket[k].length>0; });
-  if(used.length<6) return false;
+  if(used.length<(wantSkin?2:6)) return false;
   /* 3) จุดหมุนของข้อต่อ — คำนวณจากชิ้นจริงในกลุ่ม ไม่ใช่ค่าคงที่ */
   const box={}, piv={};
   used.forEach(function(k){
@@ -2531,9 +2587,24 @@ function autoRigSoldier(s,obj){
     if(one.length){ one.forEach(function(m){ j.add(m); merged++; }); }
     else list.forEach(function(m){ j.add(m); merged++; });
   });
+  /* 🦵 รอบ 548: เย็บ skin เข่าจริงให้ขา 2 ข้าง (หลัง link — ต้องรู้ piv.hips ก่อน) */
+  if(wantSkin){
+    s.skinLegs={pad:0.05};
+    ['L','R'].forEach(function(sd){
+      const res=skinSoldierLimb(J,sd,legParts[sd],all,H,piv.hips);
+      if(res) s.skinLegs[sd]=res;
+      else legParts[sd].forEach(function(p){        /* เย็บไม่ได้ → แปะแข็งกับสะโพก (ยังเห็นขา แค่ไม่งอ) */
+        const m=p.o; if(!m.parent) return;
+        m.updateWorldMatrix(true,false);
+        const wm=m.matrixWorld.clone(); m.parent.remove(m);
+        wm.decompose(m.position,m.quaternion,m.scale); m.position.sub(piv.hips); J.hips.add(m);
+      });
+    });
+    if(!s.skinLegs.L&&!s.skinLegs.R) s.skinLegs=null;
+  }
   /* 6) ยกทั้งตัวให้เท้าแตะพื้น (ข้อต่อ hips ของโครงอยู่ที่ y=0.92 อยู่แล้ว) */
   J.hips.position.y=(piv.hips.y-all.min.y);
-  s.glb=true; s.autoRig=true; s.rigInfo={parts:parts.length,joints:used.length,meshes:merged};
+  s.glb=true; s.autoRig=true; s.rigInfo={parts:parts.length,joints:used.length,meshes:merged,skin:!!s.skinLegs};
   return true;
 }
 /* 🎞️ ท่าทางทหาร — ขยับด้วยโค้ดตามสถานการณ์จริงในเกม (เนียนกว่าคลิปสำเร็จรูป)
@@ -2545,11 +2616,27 @@ function fitSoldierGround(s){
   const inner=s.J.hips.parent; if(!inner) return;
   inner.position.y=0;
   inner.updateWorldMatrix(true,true);
-  const b=new THREE.Box3().setFromObject(inner);
-  if(!isFinite(b.min.y)) return;
   const root=inner.parent;
   const rootY=root?root.getWorldPosition(new THREE.Vector3()).y:0;
-  inner.position.y=-(b.min.y-rootY);
+  let minY;
+  if(s.skinLegs){
+    /* 🦵 รอบ 548: Box3 ไม่รู้จัก bone deform ของ SkinnedMesh (มันวัดท่า bind ยืนตรงเสมอ)
+       → วัดจุดต่ำจริงจากกระดูก: ปลายเท้า (ปลายแข้งใต้เข่า) + ตัวเข่าเอง − เผื่อความหนารองเท้า */
+    minY=Infinity; const V=new THREE.Vector3();
+    inner.traverse(function(o){ if(o.isMesh&&!o.isSkinnedMesh){
+      const b=new THREE.Box3().setFromObject(o);
+      if(isFinite(b.min.y)&&b.min.y<minY) minY=b.min.y; }});
+    ['L','R'].forEach(function(k){ const g=s.skinLegs[k]; if(!g) return;
+      const knee=g.b1.getWorldPosition(new THREE.Vector3()).y;
+      const foot=g.b1.localToWorld(V.set(0,-g.shin,0)).y;
+      const low=Math.min(foot,knee)-s.skinLegs.pad;
+      if(low<minY) minY=low; });
+  }else{
+    const b=new THREE.Box3().setFromObject(inner);
+    minY=b.min.y;
+  }
+  if(!isFinite(minY)) return;
+  inner.position.y=-(minY-rootY);
 }
 function poseSoldier(s,now){
   const J=s.J; if(!J||s.static) return;
@@ -2558,19 +2645,58 @@ function poseSoldier(s,now){
      (ท่าถือปืนอยู่ใน geometry แล้ว ถ้าไปหมุนแขนปืนจะหลุด — ปัญหาเดิมรอบ 518) */
   if(s.legOnly){
     const moving=(m==='walk'||m==='run'), run=(m==='run');
-    if(moving){
-      const sp=run?1.5:1.0, w=Math.sin(t*6.2*sp), w2=Math.cos(t*6.2*sp);
-      /* วิ่ง = ก้าวถี่กว่า (1.5×) + ยกเข่าสูงกว่า · amp สะโพกคุมไว้ 0.55 ไม่ให้ขาแยกกว้างจนเห็นช่องหว่างขา
-         (รอบ 519: amp 0.85 เดิมทำ "เป้า" โหว่ตอนก้าวกว้าง — ผู้ใช้เจอ) */
-      const amp=0.55, knee=run?0.9:0.7;
-      J.legUL.rotation.x= w*amp;  J.legUR.rotation.x=-w*amp;
-      J.legLL.rotation.x=Math.max(0,-w2*knee);  J.legLR.rotation.x=Math.max(0, w2*knee);
-      J.hips.position.y=0.92+Math.abs(w)*(run?0.05:0.03);   /* เด้งตามจังหวะก้าว */
-    }else{                                            /* ยืนนิ่งถือปืน — ขาตรง */
-      J.legUL.rotation.x=J.legUR.rotation.x=0;
-      J.legLL.rotation.x=J.legLR.rotation.x=0;
-      J.hips.position.y=0.92;
+    /* 🦵 รอบ 548: gait ช่วงล่างตามชีวกลศาสตร์คนจริง (แทน sin ทื่อเดิมที่เข่าพับผิดทิศ — rotation.x บวก=แข้งพับไปหน้า)
+       หลัก: เข่างอหนักช่วง "เหวี่ยงขา" (ยกส้นให้พ้นพื้น สุด ~กลางสวิง) → เหยียดเกือบตรงตอนส้นแตะพื้น
+       → ย่อเข่ารับน้ำหนักตลอดช่วงเหยียบ · สะโพกบิดตามข้างก้าว + ถ่ายน้ำหนักซ้าย-ขวา
+       เดิน=ตัวสูงสุดกลาง stance (ร่างโล้ข้ามขา) · วิ่ง=ลอยตัวช่วง flight ต่ำสุดตอนเหยียบ (ตรงข้ามกัน!)
+       + เฟสสะสมของตัวเอง (เดิน↔วิ่งจังหวะไม่กระโดด) + ครอสเฟดทุกการเปลี่ยนท่า ~0.25s */
+    const dt=Math.min(0.06,Math.max(0.001,(now-(s._pt||now))*0.001)); s._pt=now;
+    if(s._ph==null){ s._ph=s.phase*2.1; s._tw=1; }
+    if(moving) s._ph+=dt*(run?9.6:5.8);               /* จังหวะก้าวจริงของคน: เดิน ~1.8 ก้าว/วิ · วิ่ง ~3 ก้าว/วิ */
+    const ph=s._ph;
+    let tL,kL,tR,kR,hy,yaw,swx,lean;
+    if(m==='crouch'){
+      /* 🧎 นั่งชันเข่า 1 ข้าง (ท่าระวังภัยทหารจริง): ก้นนั่งบนส้นขวา เข่าขวาคุกพื้น แข้งราบไปหลัง
+         ขาซ้ายชันหน้า เข่าสูงกว่าสะโพก เท้าวางราบ (มุมจากสัดส่วนโมเดลจริง ต้นขา 0.365/แข้ง 0.513 —
+         จุดแตะพื้น เท้าซ้าย กับ เข่าขวา ลงระนาบเดียวกันพอดี · วัดยืนยันตัวเลขรอบ 548) */
+      tL=1.75; kL=-1.36; tR=-0.14; kR=-1.43; hy=0.46; yaw=-0.16; swx=0; lean=-0.05;
+    }else if(moving){
+      const A=run?0.58:0.44;                          /* วงสวิงต้นขา (คุมไม่เกิน ~0.58 กันหว่างขาโหว่ — รอบ 519) */
+      const bias=run?0.16:0.05;                       /* วิ่ง=เข่าขับนำไปหน้า ต้นขาเฉลี่ยเทหน้า */
+      const kB=run?0.22:0.07, kSw=run?1.30:0.92, kSt=run?0.42:0.16;
+      const leg=function(q){
+        const sw=Math.max(0,Math.cos(q+0.9));         /* หน้าต่างเหวี่ยงขา: เริ่มยกส้นปลาย stance → พีค ~30% ของสวิง → เหยียดก่อนส้นแตะ */
+        const st=Math.max(0,Math.sin(q-1.6));         /* หน้าต่างเหยียบพื้น: ย่อรับน้ำหนักเป็นโค้งเดียวเนียน */
+        return [A*Math.sin(q)+bias, -(kB+kSw*sw*sw+kSt*st)];
+      };
+      const GL=leg(ph), GR=leg(ph+Math.PI);
+      tL=GL[0]; kL=GL[1]; tR=GR[0]; kR=GR[1];
+      const ac=Math.abs(Math.cos(ph));
+      hy=run?(0.92+0.085*(0.55-ac)):(0.92+0.05*(ac-0.5));
+      yaw=(run?-0.10:-0.06)*Math.sin(ph);             /* เชิงกรานบิดตามข้างที่ก้าว */
+      swx=(run?0.012:0.026)*Math.cos(ph);             /* ถ่ายน้ำหนักเหนือขาที่เหยียบ */
+      lean=run?-0.15:-0.045;                          /* โน้มตัวไปหน้า (วิ่งชัดกว่า) */
+    }else{
+      /* 🧍 ยืนเฝ้าระวัง: เท้าเหลื่อมหน้า-หลัง เข่าไม่ล็อกตรง + โยกหายใจช้า ๆ (ต้นขาคงที่ เท้าไม่ถูไถ) */
+      tL=0.10; kL=-0.15; tR=-0.07; kR=-0.09;
+      hy=0.90+0.008*Math.sin(now*0.0017+s.phase); yaw=0.05; swx=0; lean=-0.02;
     }
+    /* ครอสเฟดตอนเปลี่ยนท่า (ยืน↔เดิน↔วิ่ง↔คุกเข่า) — จำท่าปัจจุบันแล้วไล่เข้าท่าใหม่ */
+    if(s._lastMode!==m){ s._lastMode=m; s._tw=0;
+      s._from=[J.legUL.rotation.x,J.legLL.rotation.x,J.legUR.rotation.x,J.legLR.rotation.x,
+               J.hips.position.y,J.hips.rotation.y,(s._hipX0!=null?J.hips.position.x-s._hipX0:0),J.hips.rotation.x]; }
+    if(s._hipX0==null) s._hipX0=J.hips.position.x;
+    let wgt=1, fading=false;
+    if(s._tw<1){ s._tw=Math.min(1,s._tw+dt*4.5); wgt=s._tw*s._tw*(3-2*s._tw); fading=true; }
+    const F=s._from||[tL,kL,tR,kR,hy,yaw,swx,lean];
+    const mix=function(a,b){ return a+(b-a)*wgt; };
+    J.legUL.rotation.x=mix(F[0],tL); J.legLL.rotation.x=mix(F[1],kL);
+    J.legUR.rotation.x=mix(F[2],tR); J.legLR.rotation.x=mix(F[3],kR);
+    J.hips.position.y=mix(F[4],hy);  J.hips.rotation.y=mix(F[5],yaw);
+    J.hips.position.x=s._hipX0+mix(F[6],swx);
+    J.hips.rotation.x=mix(F[7],lean);
+    /* ระหว่างครอสเฟดความสูงท่าเปลี่ยนตลอด → จูนพื้นทุกเฟรมช่วงสั้น ๆ (คุกเข่าไม่จมดิน/ไม่ลอย ไม่มีเด้งตอนจบ) */
+    if(fading) fitSoldierGround(s);
     /* 🎯 รอบ 524: ก้มเงยที่ "เอว" ให้ปากกระบอกเล็งตามทิศเป้า (ยานแม่/ยานลูกยิงมาจากบนฟ้า)
        - จุดหมุน = J.torso ซึ่ง pivot อยู่ที่ขอบล่างกล่องลำตัว = "เอว" (เส้นเขียว) พอดีอยู่แล้ว (autoRigSoldier บรรทัด piv.torso)
        - torso เป็นแม่ของ head/arm/ปืน(baked) ทั้งชุด → หมุน torso จุดเดียว ท่อนบนเอียงเป็นก้อนแข็ง "ปืนไม่หลุด"
@@ -2590,7 +2716,6 @@ function poseSoldier(s,now){
     const ap=Math.abs(pitch);
     J.torso.position.y=s._torsoY0-0.11*ap;             /* จมลงกลบรอยต่อแนวดิ่ง (จูน strip รอบ 525) */
     J.torso.position.z=s._torsoZ0-0.09*pitch;          /* เงย(+)ดันฐานไปหน้า(−Z) · ก้ม(−)ดันไปหลัง ปิดฝั่งที่อ้า */
-    if(s._lastMode!==m){ s._lastMode=m; fitSoldierGround(s); }
     return;                                           /* ⛔ ไม่แตะ head/arm/ปืน local → ปืนไม่มีทางหลุด (เอียงตาม torso เท่านั้น) */
   }
   const br=Math.sin(t*1.6)*0.02;                     /* หายใจ */
@@ -5955,7 +6080,9 @@ function loadPeerSoldier(rig,weapon){
   if(!rig||!rig.J) return;
   loadSoldierGlb(bakedSoldierGlb(weapon),function(obj){
     fitInto(obj,1.8); obj.position.y=0;
-    applySoldierGlb({J:rig.J},obj);            /* ชื่อชิ้นแบบ tripo → autoRigSoldier bin ชิ้น (แยกขาซ้าย-ขวา) */
+    const tmp={J:rig.J,legOnly:true};          /* 🦵 รอบ 548: legOnly เปิดทาง skin เข่าจริงใน autoRigSoldier */
+    applySoldierGlb(tmp,obj);                  /* ชื่อชิ้นแบบ tripo → autoRigSoldier bin ชิ้น (แยกขาซ้าย-ขวา) */
+    rig.skinLegs=tmp.skinLegs||null;           /* ส่งต่อให้ p.anim (fitSoldierGround ใช้วัดขา skinned) */
   });
 }
 function peerRig(p){
@@ -6070,10 +6197,15 @@ function peerTick(dt,now){
     const rig=p.grp.children[0]&&p.grp.children[0].userData?p.grp.children[0].userData.rig:null;
     if(rig){
       if(!p.anim) p.anim={J:rig.J,phase:0,lookUp:0,fireT:0,mode:'idle',legOnly:true};
+      p.anim.skinLegs=rig.skinLegs||null;      /* 🦵 รอบ 548: โมเดลโหลดช้า/สลับปืน → ซิงก์อ้างอิงขา skinned ทุกเฟรม */
       /* 🔫 รอบ 520: peer ใช้โมเดล baked ถือปืนมาในตัว (legOnly) → ท่อนบน+ปืนแช่แข็งท่าเล็งที่อบมา
          ขยับเฉพาะขาตามการเคลื่อนที่จริง: ไกล=วิ่ง (ก้าวถี่/เข่าสูง) · ใกล้=เดิน · หยุด=ยืนถือปืน
          (poseSoldier legOnly ไม่แตะ arm/head/lookUp/fireT → ไม่ต้องจำลองเล็ง/ยิงต่อ peer ทุกเฟรมอีก) */
-      p.anim.mode=(moved>0.4)?'run':(moved>0.12?'walk':'idle');
+      /* 🧎 รอบ 548: ยืนนิ่งเกิน 4 วิ → นั่งชันเข่าระวังภัย (ท่าหมอบทหารจริง — เกมไม่มีปุ่มหมอบให้ซิงก์)
+         ขยับเมื่อไหร่ลุกขึ้นเดิน/วิ่งต่อ (ครอสเฟดใน poseSoldier เนียนเอง) */
+      const mv=(moved>0.4)?'run':(moved>0.12?'walk':'idle');
+      if(mv!=='idle') p.stillAt=0; else if(!p.stillAt) p.stillAt=now;
+      p.anim.mode=(mv==='idle'&&now-p.stillAt>4000)?'crouch':mv;
       /* 🔥 รอบ 521: ไฟปากลำกล้องตอนเพื่อนยิง (สถานะ p.shotUntil ซิงก์จาก av) */
       const fl=p.grp.children[0]&&p.grp.children[0].userData.flash;
       if(fl) fl.material.opacity=(now<(p.shotUntil||0))?1:0;
