@@ -6,7 +6,9 @@
 
 ## js/adv3d_css.js (1,057 บรรทัด · 0 รายการ)
 
-## js/adventure3d.js (10,959 บรรทัด · 551 รายการ)
+## js/adv3d_intro.js (70 บรรทัด · 0 รายการ)
+
+## js/adventure3d.js (10,894 บรรทัด · 551 รายการ)
 ### 🗂️ สารบัญโซน js/adventure3d.js (Read/Edit เฉพาะช่วง)
 - 1-213 adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด)
 - 214-277 ⚽ โหมดสนามฟุตบอล (โหมด soccer · รอบ 196) — เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร
@@ -53,7 +55,7 @@
 - 8714-9940 ⚽ โหมดสนามฟุตบอล — ฟิสิกส์บอล + เล็ง + ชาร์จพลัง + กล้อง 1st/3rd + ชุดนักเตะ
 - 9941-10388 🤖 โหมดหุ่นยนต์นักรบ — เดินยิงเอเลี่ยนตัวอักษร (ต้องยิงเรียงลำดับในคำ)
 - 10389-10401 เข้า/ออกโลก
-- 10402-10959 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
+- 10402-10894 ❓ การ์ด "วิธีเล่น" ตอนเข้าโลกครั้งแรก (จำแยกต่อโลกใน localStorage — ไม่แตะ state.js)
 ### รายการ js/adventure3d.js
 GUIDE_WORDS:20 · RELOCATE_MS:21 · HALF:22 · PLAYER_SPEED:23 · HAUNT_LIVES:24 · HAUNT_IFRAME:25
 PICK_DIST:26 · EYE_H:27 · NET_SEND_MS:28 · MODES:31 · SHOOT_GAP_MS:93 · MONSTER_REWARD:94
@@ -145,8 +147,8 @@ alienSpawnPos:10061 · removeAlien:10066 · mechaHudWord:10071 · setMechaHudSki
 mechaDamageFx:10098 · mechaHitByAlien:10103 · spawnAlienShot:10109 · removeAlienShot:10119 · tickAlienShots:10124 · spawnPowerup:10136
 removePowerup:10149 · collectPowerup:10154 · tickPowerups:10161 · updateMechaHud:10170 · mechaTracer:10210 · mechaFire:10219
 explodeAlien:10256 · tickMecha:10286 · loop:10342 · grabShot:10369 · savePhoto:10380 · clearEntities:10392
-INTRO_KEY:10406 · introSeenObj:10407 · introSeen:10408 · markIntroSeen:10409 · INTRO:10410 · showIntro:10476
-closeIntro:10501 · beginPlay:10507 · start:10509 · exitWorld:10700 · mechaRecapLine:10759
+INTRO_KEY:10406 · introSeenObj:10407 · introSeen:10408 · markIntroSeen:10409 · INTRO:10410 · showIntro:10411
+closeIntro:10436 · beginPlay:10442 · start:10444 · exitWorld:10635 · mechaRecapLine:10694
 
 ## js/auth.js (389 บรรทัด · 32 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
@@ -378,7 +380,7 @@ ONLINE_RATE:775 · onlineEarnActive:776 · onlineEarnTick:780 · onlineEarnFlush
 ORDER_MAX:844 · ORDER_LIFE_MS:845 · ORDER_GAP_MIN_MS:846 · ORDER_GAP_SPAN_MS:847 · ORDER_TIER_WEIGHT:848 · newOrder:849
 orderTick:862 · careTick:870 · expNeed:951 · addExp:956 · addRP:976
 
-## js/ui.js (7,016 บรรทัด · 282 รายการ)
+## js/ui.js (7,017 บรรทัด · 282 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-152 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 153-478 🆕 New Word (รอบ 116): คำศัพท์ใหม่ 1 คำ/การ login ตามระดับชั้น
@@ -409,24 +411,24 @@ orderTick:862 · careTick:870 · expNeed:951 · addExp:956 · addRP:976
 - 4174-4256 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
 - 4257-4267 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
 - 4268-4423 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
-- 4424-4637 🎫 การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7)
-- 4638-4719 🎃 การ์ดตั๋วโลกผีสิงกลางคืน (ต่อยอดข้อ 8 · ผู้ใช้เคาะ 7 ก.ค.)
-- 4720-4823 🚁 การ์ดตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 52)
-- 4824-4923 🛸 การ์ดตั๋วโลกโดรน FPV Racing (รอบ 85) — ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์
-- 4924-5114 🚗 การ์ดตั๋วโลกขับรถกำแพงเพชร (รอบ 113) — ซื้อได้เมื่อมีตั๋วโดรน FPV
-- 5115-5207 ⚽ การ์ดตั๋วโลกสนามฟุตบอล (รอบ 196) — ซื้อได้เมื่อมีตั๋วขับรถ
-- 5208-5303 🏍️ การ์ดตั๋วโลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) — ซื้อได้เมื่อมีตั๋วขับรถ
-- 5304-5401 🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
-- 5402-5553 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 5554-5723 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 5724-5733 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 5734-5756 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 5757-5907 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 5908-6811 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 6812-6872 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 6873-6909 เลเวลอัพ (รายตัว)
-- 6910-6979 สถิติผลการเรียนรู้
-- 6980-7016 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 4424-4638 🎫 การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7)
+- 4639-4720 🎃 การ์ดตั๋วโลกผีสิงกลางคืน (ต่อยอดข้อ 8 · ผู้ใช้เคาะ 7 ก.ค.)
+- 4721-4824 🚁 การ์ดตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 52)
+- 4825-4924 🛸 การ์ดตั๋วโลกโดรน FPV Racing (รอบ 85) — ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์
+- 4925-5115 🚗 การ์ดตั๋วโลกขับรถกำแพงเพชร (รอบ 113) — ซื้อได้เมื่อมีตั๋วโดรน FPV
+- 5116-5208 ⚽ การ์ดตั๋วโลกสนามฟุตบอล (รอบ 196) — ซื้อได้เมื่อมีตั๋วขับรถ
+- 5209-5304 🏍️ การ์ดตั๋วโลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) — ซื้อได้เมื่อมีตั๋วขับรถ
+- 5305-5402 🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
+- 5403-5554 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 5555-5724 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 5725-5734 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 5735-5757 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 5758-5908 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 5909-6812 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 6813-6873 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 6874-6910 เลเวลอัพ (รายตัว)
+- 6911-6980 สถิติผลการเรียนรู้
+- 6981-7017 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · lobbyBlk:81 · caretakerFigureHTML:87
 footAlign:97 · heroRankBgHTML:125 · NEW_WORD_MS:159 · newWordNext:165 · renderNewWord:176 · alignNewWord:203
@@ -459,22 +461,22 @@ openFoodQuiz:3727 · renderShop:3807 · homeVisualHTML:3871 · showHomeRuined:38
 payMaint:4008 · trashBillUI:4024 · payTrash:4041 · UTILITY_UI:4060 · utilityBillUI:4109 · payUtility:4134
 buyUtilityFix:4160 · renderPhoneCard:4178 · buyPhone:4218 · sellPhone:4240 · compLiveTotal:4261 · onlineLiveTotal:4272
 renderOnlineEarnPill:4277 · openPillInfo:4300 · renderComputerCard:4347 · buyComputer:4382 · sellComputer:4405 · soldCount:4431
-soldBadge:4432 · renderTicketCard:4437 · loadScriptOnce:4493 · loadAdv3d:4510 · enterAdventure3D:4515 · pickAdvMap:4540
-enterHaunted3D:4575 · advHealClick:4597 · buyTicket:4617 · renderHauntCard:4643 · buyHauntTicket:4698 · renderHeliCard:4725
-buyHeliTicket:4783 · enterHeli3D:4806 · renderDroneCard:4828 · buyDroneTicket:4883 · enterDrone3D:4906 · renderDriveCard:4929
-buyDriveTicket:5003 · enterDrive3D:5026 · pickDriveMap:5061 · enterMotoMapAsCar:5097 · renderSoccerCard:5119 · buySoccerTicket:5167
-enterSoccer3D:5190 · renderMotoCard:5213 · buyMotoTicket:5262 · enterMoto3D:5285 · renderInvasionCard:5308 · INVASION_REWARD:5357
-buyInvasionTicket:5359 · enterInvasion3D:5383 · WORLD3D:5408 · gotoRobotShop:5419 · scrollShopCardIntoView:5424 · railWorldClick:5427
-renderRailWorlds:5448 · tinvNoticeHTML:5507 · openTinvPicker:5515 · fruitCountdown:5559 · renderFarmCard:5571 · renderFarmClock:5646
-buyFruit:5662 · sellFruit:5682 · sellAllFruit:5703 · collectImg:5732 · renderFactoryCard:5738 · renderMarketCard:5761
-updateWishBadge:5817 · openWishlistDialog:5828 · bindStripArrows:5873 · renderMarketBrowse:5885 · carImg:5914 · renderVehicleShop:5915
-CS_CYCLE_MS:5966 · carInteriorImg:5967 · carStatHtml:5969 · renderCarShowroom:5976 · csShowBig:6002 · csInit:6029
-RS_CYCLE_MS:6052 · robotImg:6053 · renderRobotShop:6054 · rsShowBig:6076 · rsInit:6097 · buyRobot:6116
-enterMecha3D:6138 · pickMechaRobot:6159 · pickDriveCar:6191 · openCarBuyDialog:6234 · buyCarInsurance:6295 · payCarLoanMonthly:6314
-payCarLoanFull:6326 · carDriveBlock:6345 · gotoVehicleShop:6350 · gotoMyStock:6355 · showNeedCarDialog:6361 · craftDiscount:6373
-renderFactory:6376 · renderOrdersUI:6438 · startProduce:6457 · buyCollectible:6485 · cancelProduce:6513 · deliverOrder:6527
-renderOrderClock:6544 · renderCollectMine:6554 · openListDialog:6596 · cancelListing:6649 · buyMarketItem:6672 · showCollectReveal:6699
-buyAC:6737 · openHomeShop:6756 · renderPetShop:6815 · showLevelUp:6876 · renderStats:6913 · showTeacherCard:6984
+soldBadge:4432 · renderTicketCard:4437 · loadScriptOnce:4493 · loadAdv3d:4510 · enterAdventure3D:4516 · pickAdvMap:4541
+enterHaunted3D:4576 · advHealClick:4598 · buyTicket:4618 · renderHauntCard:4644 · buyHauntTicket:4699 · renderHeliCard:4726
+buyHeliTicket:4784 · enterHeli3D:4807 · renderDroneCard:4829 · buyDroneTicket:4884 · enterDrone3D:4907 · renderDriveCard:4930
+buyDriveTicket:5004 · enterDrive3D:5027 · pickDriveMap:5062 · enterMotoMapAsCar:5098 · renderSoccerCard:5120 · buySoccerTicket:5168
+enterSoccer3D:5191 · renderMotoCard:5214 · buyMotoTicket:5263 · enterMoto3D:5286 · renderInvasionCard:5309 · INVASION_REWARD:5358
+buyInvasionTicket:5360 · enterInvasion3D:5384 · WORLD3D:5409 · gotoRobotShop:5420 · scrollShopCardIntoView:5425 · railWorldClick:5428
+renderRailWorlds:5449 · tinvNoticeHTML:5508 · openTinvPicker:5516 · fruitCountdown:5560 · renderFarmCard:5572 · renderFarmClock:5647
+buyFruit:5663 · sellFruit:5683 · sellAllFruit:5704 · collectImg:5733 · renderFactoryCard:5739 · renderMarketCard:5762
+updateWishBadge:5818 · openWishlistDialog:5829 · bindStripArrows:5874 · renderMarketBrowse:5886 · carImg:5915 · renderVehicleShop:5916
+CS_CYCLE_MS:5967 · carInteriorImg:5968 · carStatHtml:5970 · renderCarShowroom:5977 · csShowBig:6003 · csInit:6030
+RS_CYCLE_MS:6053 · robotImg:6054 · renderRobotShop:6055 · rsShowBig:6077 · rsInit:6098 · buyRobot:6117
+enterMecha3D:6139 · pickMechaRobot:6160 · pickDriveCar:6192 · openCarBuyDialog:6235 · buyCarInsurance:6296 · payCarLoanMonthly:6315
+payCarLoanFull:6327 · carDriveBlock:6346 · gotoVehicleShop:6351 · gotoMyStock:6356 · showNeedCarDialog:6362 · craftDiscount:6374
+renderFactory:6377 · renderOrdersUI:6439 · startProduce:6458 · buyCollectible:6486 · cancelProduce:6514 · deliverOrder:6528
+renderOrderClock:6545 · renderCollectMine:6555 · openListDialog:6597 · cancelListing:6650 · buyMarketItem:6673 · showCollectReveal:6700
+buyAC:6738 · openHomeShop:6757 · renderPetShop:6816 · showLevelUp:6877 · renderStats:6914 · showTeacherCard:6985
 
 ## js/util.js (727 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
