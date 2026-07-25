@@ -50,10 +50,11 @@
 > ⚠️ เลขบรรทัดโซนเลื่อนทุกเฟส — Grep banner โซนใน CODE_MAP ที่ rotate เจนใหม่แล้วเสมอ อย่าใช้เลขเก่า
 1. ~~เฟส 2: data การ์ดวิธีเล่น (`INTRO`) → `js/adv3d_intro.js`~~ ✅ **ทำแล้วรอบ 545** (ก้อนจริง 66 บรรทัด ไม่ใช่ 350-450 ตามที่แผนเดา — ที่เหลือในโซน ❓ เป็น logic `showIntro`/`start()` ผ่าไม่ได้)
 2. ~~เฟส 3: โซน Texture → `js/adv3d_tex.js`~~ ✅ **ทำแล้วรอบ 546** (ย้ายได้จริง ~212 บรรทัด — logic โฆษณา DB adsFetch/adShop/flyby พัวพัน closure ทิ้งไว้ไฟล์หลัก · ตัวข้ามฝั่ง inject ผ่าน `Adv3dTex.bind`)
-3. **เฟส 4 (ตรวจ coupling ก่อนลงมีด):** โซนเสียงที่ปัดน้ำฝน (รอบ 537) + หอบังคับการบิน ATC → `js/adv3d_sfx.js` (~550) — ถ้าพัวพัน closure เยอะเกิน ให้รายงานผู้ใช้แทนการฝืนผ่า
+3. ~~เฟส 4 (sfx)~~ ⛔ **ตรวจแล้วรอบ 547 — ไม่ผ่า (พัวพัน closure เกินเกณฑ์ ตามเงื่อนไขในแผนเอง)** — รายละเอียดใน `### รอบ 547` ด้านล่าง · คิวผ่าไฟล์จบแค่นี้ (ไฟล์เหลือ 10,694 พ้นเกณฑ์ 12,000 แล้วตั้งแต่เฟส 1-3)
 📋 **Prompt พร้อมใช้ (วางในแชทใหม่ เปลี่ยนเลขเฟส):** `ทำเฟส 2 ของคิวผ่าไฟล์ adventure3d.js ตามแผนหัวข้อ "🪓 คิวผ่าไฟล์" ใน handoff/TASKS.md (โปรเจกต์ english-pet-game)`
 
 ### 📌 สรุปสถานะล่าสุด (24 ก.ค. · deploy `.520` · SW v171) — อ่านก่อน
+- **รอบ 547 (26 ก.ค.):** 🪓⛔ **ผ่าไฟล์เฟส 4 (sfx) — ตรวจ coupling แล้วตัดสินใจ "ไม่ผ่า"** ตามเงื่อนไขในแผนเอง (พัวพัน closure เยอะเกิน) · ไม่แตะไฟล์เกม ไม่ deploy · รายละเอียด `### รอบ 547` · **คิวผ่าไฟล์ปิดจ๊อบ** (adventure3d.js เหลือ 10,694 บรรทัด พ้นเกณฑ์ 12,000 แล้ว)
 - **รอบ 546 (26 ก.ค.):** 🪓 **ผ่าไฟล์เฟส 3 — ดูดโซน Texture (letter/emoji/ผีไทย/ป้ายโฆษณา/ผนังตึก/ป้ายชื่อ peer) จาก `js/adventure3d.js` (10,894→10,694) เป็น `js/adv3d_tex.js` (225 บรรทัด IIFE `window.Adv3dTex`)** · ไฟล์หลักคง alias ชื่อเดิม + `Adv3dTex.bind({adRenterActive, adSeqBase})` inject ของ closure · `ghostGen`/`adRenters`/logic โฆษณา DB (adsFetch/adShop/flyby บรรทัด ~513-629) พัวพัน closure ไม่ย้าย · `loadAdv3d()` + `sw.js` precache เพิ่มไฟล์ใหม่
   - **ยืนยัน:** สคริปต์ตัดเช็ก anchor ทุกช่วง+replacement ครบ 6 จุด+assert ไม่เหลือ closure ref · `node --check` ผ่าน · preview: เข้าโลกเฮลิฯ (facade หน้าต่าง+ป้าย "ติดต่อโฆษณา"+เลขป้ายขึ้นถูก — ภาพยืนยัน) + โลก adv (แผ่นตัวอักษรสี+ป้ายตั้งพื้น ringAds ขึ้นถูก — ภาพยืนยัน) · เช็กตัวเลข: cache hit / adTexDraws ครบ 10 ป้าย / FACADE_ROWS / peer sprite scale 1.7&2.4 ถูก · console สะอาด · ล้างเซฟ+reload ปิดเสียงแล้ว
   - **เฟสถัดไป: 4 (sfx — ตรวจ coupling ก่อนลงมีด)** — ดูหัวข้อ "🪓 คิวผ่าไฟล์" (เปิดแชทใหม่)
@@ -97,5 +98,12 @@
 2. ~~เจนเสียงหลอนจาก Suno~~ ✅ **เสร็จรอบ 112 (10 ก.ค.)** — haunt 3 ไฟล์ + spark ขึ้น live แล้ว (version .103) · เหลือเสียงที่ยังไม่เจน (ถ้าต้องการ): `drone_loop.mp3` + เฮลิฯ 3 ไฟล์
 
 ## 📌 ประวัติรอบล่าสุด (เก่ากว่านี้อยู่ `handoff/HISTORY.md`)
+
+### รอบ 547 (26 ก.ค.) — 🪓⛔ ผ่าไฟล์เฟส 4 (sfx): ตรวจ coupling → ตัดสินใจไม่ผ่า
+แผนคาดดูดโซน ATC (333-473) + เสียงที่ปัดน้ำฝน (7348-7752) ≈550 บรรทัด → `js/adv3d_sfx.js` · ตรวจจริงพบผ่าไม่คุ้ม:
+- **โซน 7348-7752 ชื่อ "เสียง" แต่เนื้อในเป็นเสียงจริงแค่ ~95 บรรทัด (7354-7448)** — ที่เหลือ ~300 บรรทัดคือ logic ใบปัด/วาดกระจก/แดด-จันทร์-ไฟเมือง/ม่านบังแดด/ตารางฝน (`tickWiper`/`drawGlass`/`drawBlade`/`drawSmears`/`rainTick`/`shadowSweepTick`/`drawCityGlow`) อ่าน+เขียนตัวแปร closure ร่วมกับโซนกระจก 7078-7347 ราว 30 ตัว (wiperAng/Phase/Vel/Park, smears, drops, glassMist, grime, hVel, yaw, pitch, camera, heliNight, heliFog, sunDir/Hi/Warm/Shade/Blocked, visorDown, seatLevel, glassCtx, cpMap, overlayEl, rotorChop(), heliShake() ฯลฯ) — ย้ายไม่ได้โดยไม่รื้อสถาปัตยกรรม
+- **ส่วนเสียงจริง (wiperSndOn/Off/Thunk/Squeak/washSpraySfx) ~65-95 บรรทัด** ก็เกาะ `HeliSound` (object ใหญ่ใน closure บรรทัด 8039 — ต้นตอ AudioContext ของทั้งโลกเฮลิฯ) + `wiperSndTick` อ่านสถานะใบปัดสด 8 ตัว/เฟรม → ผ่าแล้วได้ก้อนจิ๋วแต่เพิ่ม indirection ต่อเฟรม
+- **ATC (333-450, ~118 บรรทัด)** เกาะ closure 7 ตัว (`HeliSound`, `running`, `camera`, `peers`, `lastBanAt`, `banEl`, `HELI_SKID`) + ถูกเรียก ~15 จุดทั่วไฟล์ + เป็นเสียงพูด/วิทยุที่ verify ใน preview ยาก → bind getter สด 7 ตัวเสี่ยงพังเกินกำไร 1.1% ของไฟล์
+- **สรุป: เข้าเงื่อนไข "พัวพัน closure เยอะเกิน → รายงานผู้ใช้แทนการฝืนผ่า" ที่แผนเขียนไว้เอง** · เป้าหมายหลักสำเร็จแล้วตั้งแต่เฟส 1-3 (12,010 → 10,694 พ้นเกณฑ์ 12,000) · ไม่แตะไฟล์เกม ไม่ deploy
 
 ประวัติรอบเก่าทั้งหมดถูกย้ายไป `handoff/archive/TASKS_ROUNDS.md` และ `handoff/HISTORY.md` — ค้นด้วย Grep `รอบ <เลข>`
