@@ -4509,6 +4509,7 @@ function loadScriptOnce(src){
    ทุกจุดที่เคยโหลด js/adventure3d.js ตรงๆ ต้องเรียกตัวนี้แทน — part ก่อน หลักทีหลัง */
 async function loadAdv3d(){
   await loadScriptOnce('js/adv3d_css.js');
+  await loadScriptOnce('js/adv3d_intro.js');   // ❓ เฟส 2 รอบ 545: data การ์ดวิธีเล่น
   await loadScriptOnce('js/adventure3d.js');
 }
 let advLoading = false;
