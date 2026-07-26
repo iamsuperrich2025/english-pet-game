@@ -1151,9 +1151,25 @@ function rankUpCheck(rank, b, btn){
       btn.appendChild(p);
       setTimeout(()=>p.remove(), 1500);
     }
+    rankUpSound(rank, up);
   }
   // ออฟไลน์/หลุดกระดานชั่วคราว (rank=0) ไม่ล้างความจำ — ไม่งั้นพอเน็ตกลับมาจะกลืนการไต่อันดับจริงไป
   if(rank && rank !== prev){ state.rankSeen = rank; saveState(); }
+}
+/* 🔔 รอบ 600: เสียงตอนไต่อันดับ (ต่อยอดรอบ 599) — ใช้เสียงชุดเดิมของเกม ไม่สร้างเสียงใหม่
+   ขึ้น 1-2 = กรุ๊งกริ๊งสั้น · 3-5 = กลาง · ≥6 = ยาว · ติด Top 3 = แฟนแฟร์ sfx.win (ก้าวใหญ่ ควรได้ฉลองเต็ม)
+   ⚠️ ดังเฉพาะตอนอยู่หน้าล็อบบี้ — กระดานอัปเดตได้ตลอดแม้เด็กอยู่ในโลก 3D/กำลังสอบ เสียงโผล่มากลางคันจะรบกวน */
+let __rankSndAt = 0;
+function rankUpSound(rank, up){
+  if(typeof sfx === 'undefined') return;
+  const dash = document.getElementById('screen-dashboard');
+  if(!dash || !dash.classList.contains('active')) return;
+  const now = Date.now();
+  if(now - __rankSndAt < 1500) return;      // ขึ้นรัว ๆ ไม่ให้เสียงซ้อนกัน
+  __rankSndAt = now;
+  if(rank <= 3 && sfx.win) sfx.win();
+  else if(sfx.coinGetTier) sfx.coinGetTier(up >= 6 ? 2 : up >= 3 ? 1 : 0);
+  else if(sfx.coinGet) sfx.coinGet();
 }
 function renderLeaderboardCard(){
   updateRankRailBadge();                 // 🥇 รอบ 595: ป้ายอันดับบนปุ่มราง (การ์ดเล็กถูกถอดแล้ว แต่ผู้เรียกเดิมยังพาข้อมูลใหม่มาให้)
