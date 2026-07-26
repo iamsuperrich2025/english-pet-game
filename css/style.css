@@ -520,6 +520,17 @@ html.no-anim .coin-pill.net{animation:none;}
 }
 .rankup-btn:hover{filter:brightness(1.06);}
 .rankup-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #cf9722;}
+/* 🔍 รอบ 596 (ผู้ใช้สั่ง): ป๊อปอัพ "เงินรางวัลย้อนหลัง" ตัวหนังสือใหญ่พิเศษ — ผู้ใหญ่สายตายาวอ่านชัด
+   ทุกชิ้นอิง em ของ .qbp · fitQbp() ใน main.js ตั้ง --qbp-b ให้ใหญ่สุดเท่าที่ยังไม่ล้นจอ (ไม่มี scrollbar) */
+/* ฐานอิง dvh เอง (พอดีจอโดยไม่ต้องพึ่ง JS) · --qbp-k = ตัวคูณที่ fitQbp() หรี่ลงถ้ายังล้น */
+.qbp{font-size:calc(clamp(15px,4.4dvh,30px) * var(--qbp-k,1));max-width:min(94vw,820px);padding-left:16px;padding-right:16px;}
+.qbp .rankup-title{font-size:1.16em;letter-spacing:.2em;padding-left:.2em;margin-bottom:.45em;line-height:1.35;}
+.qbp .qbp-coin{font-size:2.3em;line-height:1.05;}
+.qbp .rankup-name{font-size:1.9em;margin-top:.24em;}
+.qbp .rankup-sub{font-size:1em;line-height:1.5;margin-top:.5em;color:#d5daee;}
+.qbp .rankup-sub b{color:#ffe6a3;}
+.qbp .rankup-sub small{font-size:.94em;}
+.qbp .rankup-btn{font-size:1.05em;margin-top:.55em;padding:.42em 1.5em;}
 /* 🏭 ฉลองผลิตสำเร็จ: 2 ปุ่ม (ไว้ก่อน / ไปเปิดคลัง) เรียงข้างกัน หดพอดีจอเตี้ย */
 .cr-btn-row{display:flex;gap:clamp(8px,2.4vmin,14px);justify-content:center;flex-wrap:wrap;}
 .rankup-btn-2{background:linear-gradient(180deg,#c9d0e6,#9aa3bf);color:#33384a;box-shadow:0 5px 0 #767d95;}

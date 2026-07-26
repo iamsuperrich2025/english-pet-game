@@ -139,31 +139,34 @@ function showQuizBackPay(){
         หมวดที่ยังไม่ได้สอบ ผ่านครั้งแรกรับ ${num(b.to)} เหรียญเลย 💪</small></p>
       <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
     </div>`;
-  const refit = ()=>fitQbp(ov.querySelector('.qbp'));   // หมุนจอ/ย่อหน้าต่าง = คำนวณใหม่ ไม่ให้ล้น
+  // หมุนจอ/ย่อหน้าต่าง = คำนวณใหม่ ไม่ให้ล้น (หน่วงนิดให้ innerHeight นิ่งก่อน ไม่งั้นวัดได้ค่าเก่า)
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
   ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT);
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
   });
   document.body.appendChild(ov);
-  fitQbp(ov.querySelector('.qbp'));      // 🔍 รอบ 595: ตัวใหญ่สุดเท่าที่จอรับไหว (ผู้ใหญ่สายตายาวอ่านชัด)
+  fitQbp(ov.querySelector('.qbp'));      // 🔍 รอบ 596: ตัวใหญ่สุดเท่าที่จอรับไหว (ผู้ใหญ่สายตายาวอ่านชัด)
   window.addEventListener('resize', refit);
   if(typeof feedEvent === 'function')
     feedEvent('coin', `รับเงินรางวัลย้อนหลัง +${num(b.total)} 🪙 (ปรับรางวัลสอบผ่านเป็น ${num(b.to)} เหรียญ)`);
 }
 
-/* 🔍 รอบ 595 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")
-   ขนาดทุกชิ้นในกล่องอิง em ของ --qbp-b → เริ่มจากใหญ่สุดแล้วลดทีละ 1px จนสูงพอดีจอ
+/* 🔍 รอบ 596 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")
+   ขนาดทุกชิ้นในกล่องอิง em ของ .qbp ซึ่งฐานเป็น clamp(...dvh...) ใน style.css — พอดีจอเองอยู่แล้ว
+   ฟังก์ชันนี้เป็นตัวกันเหนียว: ถ้าบางจอ/บางภาษายังสูงล้น ก็หรี่ตัวคูณ --qbp-k ลงทีละสเต็ป
    ใช้ offsetHeight (ไม่โดน transform ของแอนิเมชัน popIn หลอกเหมือน getBoundingClientRect) */
 function fitQbp(box){
   if(!box) return;
-  const MAX = 30, MIN = 13;                       // px · MIN = เพดานล่างจอเตี้ยสุด (มือถือแนวนอน)
-  const room = ()=> Math.round(window.innerHeight * 0.96);
-  let b = MAX;
-  box.style.setProperty('--qbp-b', b + 'px');
-  while(box.offsetHeight > room() && b > MIN){
-    b -= 1;
-    box.style.setProperty('--qbp-b', b + 'px');
+  const room = ()=> window.innerHeight * 0.96;
+  let k = 1;
+  box.style.setProperty('--qbp-k', k);
+  while(box.offsetHeight > room() && k > 0.6){
+    k = Math.round((k - 0.04) * 100) / 100;
+    box.style.setProperty('--qbp-k', k);
   }
 }
 
