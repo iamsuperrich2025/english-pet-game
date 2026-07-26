@@ -1514,3 +1514,8 @@
 - **รอบ 546 (26 ก.ค.):** 🪓 **ผ่าไฟล์เฟส 3 — ดูดโซน Texture (letter/emoji/ผีไทย/ป้ายโฆษณา/ผนังตึก/ป้ายชื่อ peer) จาก `js/adventure3d.js` (10,894→10,694) เป็น `js/adv3d_tex.js` (225 บรรทัด IIFE `window.Adv3dTex`)** · ไฟล์หลักคง alias ชื่อเดิม + `Adv3dTex.bind({adRenterActive, adSeqBase})` inject ของ closure · `ghostGen`/`adRenters`/logic โฆษณา DB (adsFetch/adShop/flyby บรรทัด ~513-629) พัวพัน closure ไม่ย้าย · `loadAdv3d()` + `sw.js` precache เพิ่มไฟล์ใหม่
   - **ยืนยัน:** สคริปต์ตัดเช็ก anchor ทุกช่วง+replacement ครบ 6 จุด+assert ไม่เหลือ closure ref · `node --check` ผ่าน · preview: เข้าโลกเฮลิฯ (facade หน้าต่าง+ป้าย "ติดต่อโฆษณา"+เลขป้ายขึ้นถูก — ภาพยืนยัน) + โลก adv (แผ่นตัวอักษรสี+ป้ายตั้งพื้น ringAds ขึ้นถูก — ภาพยืนยัน) · เช็กตัวเลข: cache hit / adTexDraws ครบ 10 ป้าย / FACADE_ROWS / peer sprite scale 1.7&2.4 ถูก · console สะอาด · ล้างเซฟ+reload ปิดเสียงแล้ว
   - **เฟสถัดไป: 4 (sfx — ตรวจ coupling ก่อนลงมีด)** — ดูหัวข้อ "🪓 คิวผ่าไฟล์" (เปิดแชทใหม่)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-26 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 547 (26 ก.ค.):** 🪓⛔ **ผ่าไฟล์เฟส 4 (sfx) — ตรวจ coupling แล้วตัดสินใจ "ไม่ผ่า"** ตามเงื่อนไขในแผนเอง (พัวพัน closure เยอะเกิน) · ไม่แตะไฟล์เกม ไม่ deploy · รายละเอียด `### รอบ 547` · **คิวผ่าไฟล์ปิดจ๊อบ** (adventure3d.js เหลือ 10,694 บรรทัด พ้นเกณฑ์ 12,000 แล้ว)
