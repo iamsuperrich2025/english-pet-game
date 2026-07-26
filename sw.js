@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v184';  // v184: รอบ 561: เฮลิโลกยานแม่เปลี่ยนเป็นลำลายพราง heli_ca
+const CACHE_VERSION = 'pet-vocab-v185';  // v185: รอบ 562: ถอดปุ่มขึ้นลงในเฮลิ ใช้ลากนิ้วขวาแทน
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

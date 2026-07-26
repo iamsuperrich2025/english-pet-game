@@ -489,16 +489,13 @@ const CSS=`
 #inv-fire:active,#inv-rocket:active,#inv-run:active{transform:scale(.94)}
 #inv-exit{position:absolute;left:12px;top:10px;z-index:7;border:none;border-radius:999px;cursor:pointer;
   background:rgba(200,40,40,.9);color:#fff;font-weight:900;font-size:13px;padding:7px 14px;box-shadow:0 3px 10px rgba(0,0,0,.5)}
-/* 🚁 ปุ่มขึ้น/ลงเฮลิ + ปุ่มไต่ระดับ (โผล่เฉพาะตอนบิน) */
+/* 🚁 ปุ่มขึ้น/ลงจากเฮลิ */
 #inv-heli{position:absolute;right:18px;bottom:190px;width:64px;height:64px;font-size:26px;z-index:6;border:none;border-radius:50%;
   color:#fff;font-weight:900;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.55);-webkit-tap-highlight-color:transparent;
   background:radial-gradient(circle at 34% 28%,#b0e6c0,#2e8b57)}
 #inv-heli.flying{background:radial-gradient(circle at 34% 28%,#ffd0d0,#c0392b)}
-#inv-up,#inv-down{position:absolute;z-index:6;border:none;border-radius:14px;color:#0e2136;font-weight:900;font-size:22px;cursor:pointer;
-  width:56px;height:50px;box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2);display:none}
-#inv-wrap.fly #inv-up,#inv-wrap.fly #inv-down{display:block}
+/* 🕹️ รอบ 562 (ผู้ใช้สั่ง): ถอดปุ่ม ▲▼ ออกถาวร — ไต่ระดับด้วย "ลากนิ้วขวาขึ้น-ลง" แทน (เหมือนโลกเฮลิฯ) */
 #inv-wrap.fly #inv-run{display:none}
-#inv-up{right:214px;bottom:150px}#inv-down{right:214px;bottom:94px}
 /* 🎯 ปุ่มสลับปืน + ปุ่มส่องกล้อง (R93) */
 #inv-swap{position:absolute;left:120px;bottom:14px;z-index:6;border:none;border-radius:50%;width:46px;height:46px;
   font-size:20px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,.5);
@@ -507,7 +504,7 @@ const CSS=`
   font-size:22px;cursor:pointer;display:none;box-shadow:0 4px 12px rgba(0,0,0,.5);
   background:radial-gradient(circle at 34% 28%,#dff0ff,#3a6d96)}
 #inv-scope.on{background:radial-gradient(circle at 34% 28%,#c8ffd8,#2f8f52)}
-/* 🔎 ปุ่มสลับกำลังขยาย (โชว์คู่กับปุ่มกล้อง — ช่องนี้ว่างตอนเดินเท้า เพราะ ▼ ใช้เฉพาะตอนขับเฮลิ) */
+/* 🔎 ปุ่มสลับกำลังขยาย (โชว์คู่กับปุ่มกล้อง — ช่องนี้ว่างตอนขับเฮลิ) */
 #inv-mag{position:absolute;right:214px;bottom:94px;z-index:6;border:none;border-radius:14px;width:52px;height:40px;
   font-size:16px;font-weight:900;color:#0e2136;cursor:pointer;display:none;
   box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#eaf6ff,#a9d3f2)}
@@ -524,7 +521,8 @@ const CSS=`
 #inv-swap:active,#inv-scope:active{transform:scale(.94)}
 #inv-wrap.fly #inv-swap,#inv-wrap.fly #inv-scope,#inv-wrap.gunner #inv-swap,#inv-wrap.gunner #inv-scope{display:none!important}
 /* 🚁 รอบ 531 (ผู้ใช้สั่ง): ในห้องนักบินโชว์เฉพาะปุ่มบังคับเฮลิ — ซ่อนปุ่มภาคพื้นให้หมด
-   (ปุ่มปกติกลับมาเองตอนออกจากเครื่อง เพราะ .fly หลุด) · เหลือ ▲▼ / 🔫ปืนกล / 🚀มิสไซล์ / 👁️เบาะ / 🪂ลง */
+   (ปุ่มปกติกลับมาเองตอนออกจากเครื่อง เพราะ .fly หลุด) · เหลือ 🔫ปืนกล / 🚀มิสไซล์ / 👁️เบาะ / 🪂ลง
+   🕹️ รอบ 562: ไต่ระดับไม่มีปุ่มแล้ว — ลากนิ้วครึ่งขวาขึ้น-ลงแทน */
 #inv-wrap.fly #inv-fire2,#inv-wrap.fly #inv-glow,#inv-wrap.fly #inv-torch,
 #inv-wrap.fly #inv-night,#inv-wrap.fly #inv-gunner{display:none!important}
 /* 🚀 ปุ่มยิงมิสไซล์ในห้องนักบิน — เด่นชัด (วงเรืองแสงส้ม) */
@@ -568,14 +566,14 @@ const CSS=`
   box-shadow:0 5px 14px rgba(0,0,0,.55);-webkit-tap-highlight-color:transparent;
   background:radial-gradient(circle at 34% 28%,#ffe6a8,#c8901a)}
 #inv-gunner:active{transform:scale(.94)}
-/* พลปืนไม่ได้บังคับลำ → ซ่อนปุ่มไต่ระดับ/วิ่ง และไม่ต้องมีจอย */
-#inv-wrap.gunner #inv-up,#inv-wrap.gunner #inv-down,#inv-wrap.gunner #inv-run,#inv-wrap.gunner #inv-joy{display:none}
+/* พลปืนไม่ได้บังคับลำ → ซ่อนปุ่มวิ่ง และไม่ต้องมีจอย */
+#inv-wrap.gunner #inv-run,#inv-wrap.gunner #inv-joy{display:none}
 #inv-wrap.gunner #inv-gunner{display:none!important}
 /* 👁️ รอบ 539: พลปืนสลับ "มุมมองภายนอก" ได้ (คลาส .gunext) — ห้ามมีกรอบ/แผงของนักบินค้างบนจอ
    (ค็อกพิต+เกจเป็นของนักบินล้วน · กรอบ canopy ซ่อนเฉพาะตอนมุมภายนอก มุมประตูคงเดิมไม่แตะ) */
 #inv-wrap.gunner #inv-cockpit,#inv-wrap.gunner #inv-gauges{display:none!important}
 #inv-wrap.gunext #inv-canopy{display:none!important}
-#inv-heli:active,#inv-up:active,#inv-down:active{transform:scale(.94)}
+#inv-heli:active{transform:scale(.94)}
 /* 🚁 กรอบห้องนักบิน (canopy) — โผล่เฉพาะตอนบิน */
 #inv-canopy{position:absolute;inset:0;z-index:2;pointer-events:none;display:none}
 #inv-wrap.fly #inv-canopy{display:block}
@@ -775,8 +773,6 @@ const CSS=`
   #inv-scope{width:52px;height:52px;font-size:20px;right:184px;bottom:136px}
   #inv-mag{width:48px;height:36px;font-size:14px;right:184px;bottom:88px}
   #inv-chatbar{left:302px}
-  #inv-up,#inv-down{width:50px;height:44px;font-size:19px}
-  #inv-up{right:184px;bottom:136px}#inv-down{right:184px;bottom:84px}
   .inv-card{padding:12px 16px}.inv-card h3{font-size:18px}.inv-card p{font-size:12.5px}
 }
 /* จอเตี้ย (มือถือ landscape) — จัดปุ่มให้กระชับ · ปุ่มไม่ทับกัน */
@@ -812,8 +808,6 @@ const CSS=`
   #inv-scope{width:46px;height:46px;font-size:18px;right:160px;bottom:104px}
   #inv-mag{width:44px;height:32px;font-size:13px;right:160px;bottom:64px}
   #inv-chatbar{left:276px}
-  #inv-up,#inv-down{width:46px;height:40px;font-size:17px}
-  #inv-up{right:160px;bottom:110px}#inv-down{right:160px;bottom:64px}
   #inv-chat,#inv-map{width:38px;height:38px;font-size:15px;bottom:10px}
   #inv-map{left:56px}
   #inv-chatbar{left:276px;bottom:10px}#inv-chatbar button{padding:5px 8px;font-size:11px}
@@ -875,8 +869,6 @@ function buildDom(){
     <button id="inv-rocket">🚀</button>
     <button id="inv-run">🏃</button>
     <button id="inv-heli">🚁</button>
-    <button id="inv-up">▲</button>
-    <button id="inv-down">▼</button>
     <button id="inv-swap">🎯</button>
     <button id="inv-scope">🔭</button>
     <button id="inv-mag">6×</button>
@@ -910,7 +902,7 @@ function buildDom(){
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
       🌙 <b>กลางวัน/กลางคืน!</b> ปุ่มมุมซ้ายล่าง (หรือคีย์ <b>N</b>) กดวน ☀️ กลางวัน → 🌙 กลางคืน → 🔄 <b>เวลาเดินเอง</b> (ตะวันตกดินรอบละ 4 นาที) — ฟ้าเต็มไปด้วยดาว 💡 ไฟถนนติดเอง ยานแม่เรืองแสงเด่น
       <b>ไฟฉายติดปืน</b>เปิดเองส่องทางให้ และทุกนัดที่ยิง <b>แสงปากลำกล้องจะสาดทั้งฉากวาบ</b>!<br>
-      <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (▲▼ ไต่ระดับ) · 💬 คุยกับเพื่อน<br>
+      <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (ขับเฮลิ: <b>ลากครึ่งขวาขึ้น-ลง = ไต่/ลดระดับ</b> ปล่อยนิ้ว = ลอยนิ่ง) · 💬 คุยกับเพื่อน<br>
       💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
       ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
       <button class="inv-btn" id="inv-go">⚔️ เข้าสมรภูมิ!</button>
@@ -959,7 +951,7 @@ function buildDom(){
   fireBtn=document.getElementById('inv-fire'); fire2Btn=document.getElementById('inv-fire2');
   rocketBtn=document.getElementById('inv-rocket');
   runBtn=document.getElementById('inv-run');
-  heliBtn=document.getElementById('inv-heli'); upBtn=document.getElementById('inv-up'); downBtn=document.getElementById('inv-down');
+  heliBtn=document.getElementById('inv-heli');
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
   loadCockpitImg();                                        // 🎛️ รอบ 532: ภาพห้องนักบินจริง + canvas เข็มเกจ
   seatBtn=document.getElementById('inv-seat'); startEl=document.getElementById('inv-start');
@@ -1601,7 +1593,7 @@ let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null
        (🔤 รอบ 556: บิต = ดัชนีตัวอักษร a-z 0..25 · ช่องดาเมจเลิกใช้ ส่ง 0 คงรูปแบบเดิม)
      · ทุกเครื่องรวม (OR บิต) เอง = สถานะตรงกันโดยไม่ต้องมีเซิร์ฟเวอร์ */
 let battleRound=0, myKill=0;
-let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, upBtn=null, downBtn=null, canopyEl=null;
+let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, canopyEl=null;
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
 let quizEl=null;                       // 🔎 รอบ 473: แถบโจทย์ "ยิงเป้าที่แปลว่า …"
@@ -2868,6 +2860,13 @@ const BOARD_DIST=10;                    // เดินเข้าใกล้�
       ปลดสลักเมื่อเดินออกพ้นรัศมีเตือน (padAt คืน null) = ต้องเดินออกไปก่อนถึงจะขึ้นใหม่ได้ */
 const AUTO_BOARD_DIST=5.5;
 let autoBoardLock=false;
+/* 🕹️🚁 รอบ 562 (ผู้ใช้สั่ง "ไม่เอาปุ่มขึ้นลง ให้บังคับเหมือนโลกเฮลิฯ เลื่อนขึ้นลงด้วยมือขวา")
+   ลากนิ้วครึ่งขวาแนวตั้ง = คันเร่ง (collective) · ค่าความไวเท่าโลกเฮลิฯ เป๊ะ (.012 ต่อ 1 พิกเซล)
+   ปล่อยนิ้ว = กลับศูนย์ = ลอยนิ่ง · แนวนอนยังเป็นการหันหัวลำเหมือนเดิม
+   ⚠️ ใช้เฉพาะ "นักบินที่เครื่องพร้อมบินแล้ว" — พลปืนประจำประตูต้องเล็งขึ้น-ลงได้ตามปกติ
+      และระหว่างสตาร์ทเครื่อง 10 วิ ยังให้ลากดูรอบ ๆ ได้เหมือนเดิม */
+const HELI_COL_SENS=0.012;
+function heliPiloting(){ return inHeli && !riding && heliReady; }
 const START_MS=9500;                    // เวลาสตาร์ทเครื่องก่อนบินได้
 const START_PHASES=[
   [0  ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน'],
@@ -3141,7 +3140,7 @@ function tickHeliHot(dt,now){
   /* อยู่ระหว่าง WARN..HOT (ไฟเหลือง) = ค้างไว้เท่าเดิม ไม่ขึ้นไม่ลง */
   if(cpHot>HOT_TOAST_AT && was<=HOT_TOAST_AT && now-cpHotToastAt>12000){
     cpHotToastAt=now; cpHotWarned=true;
-    toastBan('🌡️ <b style="color:#ff8a65">เครื่องร้อนจัด — แรงยกกำลังตก!</b><br><span class="ib-sub">ผ่อนคันเร่งลง (ปล่อย ▲/Space หรือกด ▼/Shift) สักครู่ให้เข็มความร้อนลงพ้นโซนเหลือง แล้วแรงยกจะกลับมาเอง</span>',2800);
+    toastBan('🌡️ <b style="color:#ff8a65">เครื่องร้อนจัด — แรงยกกำลังตก!</b><br><span class="ib-sub">ผ่อนคันเร่งลง (ปล่อยนิ้ว หรือลากครึ่งขวาลง · คอม: ปล่อย Space/กด Shift) สักครู่ให้เข็มความร้อนลงพ้นโซนเหลือง แล้วแรงยกจะกลับมาเอง</span>',2800);
   }
   if(cpHot<=0 && was>0 && cpHotWarned){
     cpHotWarned=false;
@@ -5277,8 +5276,12 @@ function bindInput(){
       if(t.identifier===joy.id){ moveJoy(t); e.preventDefault(); }
       else if(t.identifier===lookId){
         const sc=1-(1-SNIPER_SENS)*adsT;
-        yaw-=(t.clientX-lookX)*PAD_SENS*sc; pitch-=(t.clientY-lookY)*PAD_SENS*sc;
-        pitch=clamp(pitch,PITCH_MIN,PITCH_MAX);
+        yaw-=(t.clientX-lookX)*PAD_SENS*sc;
+        /* 🚁 รอบ 562 (ผู้ใช้สั่ง — เลิกใช้ปุ่ม ▲▼): นักบินที่เครื่องพร้อมบินแล้ว
+           → "ลากนิ้วมือขวาขึ้น-ลง" = คันเร่งขึ้น/ลง (collective) สูตรเดียวกับโลกเฮลิฯ เป๊ะ
+           ระหว่างสตาร์ทเครื่อง (ยังบินไม่ได้) ยังลากดูรอบ ๆ ได้เหมือนเดิม */
+        if(heliPiloting()) phClimb=clamp(phClimb-(t.clientY-lookY)*HELI_COL_SENS,-1,1);
+        else               pitch=clamp(pitch-(t.clientY-lookY)*PAD_SENS*sc,PITCH_MIN,PITCH_MAX);
         lookX=t.clientX; lookY=t.clientY; e.preventDefault();
       }
     }
@@ -5286,7 +5289,8 @@ function bindInput(){
   const endTouch=e=>{
     for(const t of e.changedTouches){
       if(t.identifier===joy.id){ joy.id=null; joy.dx=joy.dy=0; joyKnob.style.transform=''; }
-      if(t.identifier===lookId) lookId=null;
+      /* 🚁 รอบ 562: ปล่อยนิ้ว = คันเร่งกลับศูนย์ → ลอยนิ่ง (hover) เหมือนโลกเฮลิฯ */
+      if(t.identifier===lookId){ lookId=null; phClimb=0; }
     }
   };
   wrapEl.addEventListener('touchend',endTouch); wrapEl.addEventListener('touchcancel',endTouch);
@@ -5302,7 +5306,7 @@ function bindInput(){
   hold(fire2Btn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });   // 🔫 ปุ่มยิงเหนือจอย (รอบ 433)
   rocketBtn.addEventListener('click',()=>fireMissile(performance.now()));
   runBtn.addEventListener('click',()=>{ isRun=!isRun; runBtn.classList.toggle('on',isRun); });
-  /* 🚁 ขึ้น/ลงเฮลิ + ไต่ระดับ (กดค้าง) */
+  /* 🚁 ขึ้น/ลงจากเฮลิ */
   heliBtn.addEventListener('click',()=>{ resumeAudio();
     if(riding) dismountGunner();            // 🎖️ นั่งเป็นพลปืนอยู่ → ปุ่มนี้ = กระโดดลง
     else if(inHeli) exitHeli(); else enterHeli(); });
@@ -5319,8 +5323,6 @@ function bindInput(){
   magBtn.addEventListener('click',()=>{ resumeAudio(); cycleScopeMag(); });
   /* 🫁 กลั้นหายใจ: กดค้าง = ปืนนิ่ง (มีลิมิต หมดแล้วต้องผ่อน) */
   hold(breathBtn,()=>{ if(breathLeft>0) holdBreath=true; },()=>{ holdBreath=false; });
-  hold(upBtn,()=>{ phClimb=1; },()=>{ phClimb=0; });
-  hold(downBtn,()=>{ phClimb=-1; },()=>{ phClimb=0; });
   /* 💬 แชทสำเร็จรูป */
   /* 🗺️ แผนที่เลือกจุดลงสนาม */
   mapBtn.addEventListener('click',()=>{ resumeAudio(); openSpawnMap(); });
@@ -6023,8 +6025,9 @@ function tickHeliFlight(dt,now){
     if(startEl){ startEl.classList.add('on'); startEl.innerHTML=startPhaseText(now); }
     if(done){
       heliReady=true; setSeatView(state.heliSeat||1);
+      pitch=0; phClimb=0;      // 🕹️ รอบ 562: สลับมาโหมด "ลากขวา = คันเร่ง" → ตั้งกล้องให้มองตรงก่อน (ไม่งั้นค้างมุมที่เงยไว้ตอนสตาร์ท)
       if(startEl) startEl.classList.remove('on');
-      toastBan('✅ <b>เครื่องพร้อมบิน!</b><br><span class="ib-sub">ดันคันเร่งขึ้น (▲/Space) เพื่อทะยานขึ้นฟ้า · 👁️ ปรับมุมมอง · 🪂 ลงจากเครื่อง</span>',2600);
+      toastBan('✅ <b>เครื่องพร้อมบิน!</b><br><span class="ib-sub"><b>ลากนิ้วครึ่งขวาของจอขึ้น</b> เพื่อทะยานขึ้นฟ้า (ปล่อยนิ้ว = ลอยนิ่ง · คอม: Space/Shift) · 👁️ ปรับมุมมอง · 🪂 ลงจากเครื่อง</span>',2600);
       if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
     }
     py=terrainH(px,pz)+HELI_SKID+1.8;
@@ -6082,7 +6085,7 @@ function tickHeliFlight(dt,now){
       ny=minY;
       if(!hLanded && Math.abs(phVel.y)<=7 && col<=.1){
         hLanded=true; phVel={x:0,y:0,z:0};
-        toastBan('🛬 <b>ลงจอดแล้ว</b> — ดันคันเร่งขึ้น (▲/Space) เพื่อบินต่อ · 🪂 ลงจากเครื่อง',1800);
+        toastBan('🛬 <b>ลงจอดแล้ว</b> — ลากนิ้วครึ่งขวาขึ้น (คอม: Space) เพื่อบินต่อ · 🪂 ลงจากเครื่อง',1800);
         if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
       }
       phVel.y=Math.max(0,phVel.y);
@@ -7651,6 +7654,8 @@ window.InvasionWorld={
         lamps:heliLampLv(),                                       // 🚨 รอบ 559: อ่านจากแหล่งเดียวกับที่วาดไฟ/ที่เสียงใช้
         hot:+cpHot.toFixed(3), lift:+heliLift().toFixed(3)}; },    // 🔥 รอบ 560: ความล้าจากความร้อน + ตัวคูณแรงยก
     setHeliGauges(f,t,r){ if(f!=null) cpFuel=f; if(t!=null) cpEngT=t; if(r!=null) cpRpm=r; },   // r = รอบเชิงกล (ใช้ตอนไม่มีเสียงใบพัดจริง)
+    /* 🕹️ รอบ 562: ลากนิ้วขวา = คันเร่งขึ้น/ลง (แทนปุ่ม ▲▼ ที่ถอดออก) */
+    heliPiloting, HELI_COL_SENS, get climb(){ return +phClimb.toFixed(3); },
     /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
     tickHeliHot, heliLift, setHeliHot(v){ cpHot=clamp(v,0,1); }, get heliHot(){ return {hot:+cpHot.toFixed(3),
       lift:+heliLift().toFixed(3), warned:cpHotWarned, HOT_FULL, HOT_RECOVER, HOT_PWR_MIN}; },
