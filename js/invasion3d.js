@@ -2896,9 +2896,11 @@ const SEAT_VIEWS=[                      // มุมมองในห้อง�
 /* โหลด+ประกอบโมเดลลำจริง 1 ลำ (geometry/material แชร์กันทุกลำ = เพิ่มลำแทบไม่กินเครื่อง) */
 let heliDesertMat=null;
 function heliModel(cb){
-  /* ⚡ ใช้ตัวลดโพลี 9.6k tris (ต้นฉบับ 48k) — สนามรบมีได้ถึง 5 ลำพร้อมกัน + ลำเพื่อน
-     ต้นฉบับ helicopter.glb ยังใช้ในโลกเฮลิฯ ตามเดิม ไม่ถูกแตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
-  loadGlb('img/models/helicopter_lite.glb',src=>{
+  /* 🎨 รอบ 561 (ผู้ใช้สั่งเปลี่ยนโมเดล): ใช้ `heli_ca.glb` — ลำเดียวกับของเดิมเป๊ะ (48k tris · bbox เท่ากัน)
+     แต่ **พ่นลายพรางทะเลทรายมาในเทกซ์เจอร์แล้ว** (ของเดิมเป็นลายแดง/น้ำเงิน จึงต้องทิ้ง map แล้วทาสีทับ)
+     ⚡ ที่โหลดจริงคือตัวลดโพลี 10.1k tris/446KB (สูตร handoff/NOTES.md) — สนามรบมีได้ถึง 5 ลำ + ลำเพื่อน
+     ต้นฉบับ `heli_ca.glb` 2.3MB เก็บในเครื่องอย่างเดียว (.gitignore) · โลกเฮลิฯ ยังใช้ helicopter.glb ตามเดิม */
+  loadGlb('img/models/heli_ca_lite.glb',src=>{
     if(!src) return cb(null);
     const grp=new THREE.Group();
     /* ครอบ pivot ให้ใบพัดหมุนได้ (โมเดลไม่มี pivot มาให้) */
@@ -2923,10 +2925,11 @@ function heliModel(cb){
     src.position.set(0,-bb.min.y*s,-3.9-bb.min.z*s);      // สกีแตะพื้น y=0 · จมูกอยู่หน้าที่นั่งนักบิน
     if(!heliDesertMat){ let base=null; src.traverse(o=>{ if(!base&&o.isMesh) base=o.material; });
       if(base){ heliDesertMat=base.clone();
-        /* 🎨 รอบ 531 (ผู้ใช้สั่ง): ทิ้งลายแดง/น้ำเงินเดิม — texture map ลายเดิมไปคูณกับ .color ทำให้ยังออกแดง
-           ต้องตัด map ทิ้งถึงจะได้ "สีเนื้อทะเลทรายล้วน" กลืนสนามรบจริง */
-        heliDesertMat.map=null;
-        heliDesertMat.color=new THREE.Color(HELI_DESERT);
+        /* 🎨 รอบ 561: โมเดลใหม่มี "ลายพรางทะเลทราย" อยู่ในเทกซ์เจอร์แล้ว → เก็บ map ไว้ + คูณด้วยสีขาว
+           (เห็นลายจริงเต็ม ๆ) · เดิมรอบ 531 ต้องตัด map ทิ้งแล้วทาทับ เพราะลำเก่าเป็นลายแดง/น้ำเงินสด
+           ⚠️ ถ้าวันหนึ่งโมเดลไม่มีเทกซ์เจอร์มาด้วย → ถอยไปทาสีเนื้อทะเลทรายแบบเดิม ไม่ให้ลำออกมาขาวโพลน */
+        if(heliDesertMat.map) heliDesertMat.color=new THREE.Color(0xffffff);
+        else                  heliDesertMat.color=new THREE.Color(HELI_DESERT);
         if('metalness' in heliDesertMat) heliDesertMat.metalness=0.15;
         if('roughness' in heliDesertMat) heliDesertMat.roughness=0.9; } }
     if(heliDesertMat) src.traverse(o=>{ if(o.isMesh) o.material=heliDesertMat; });
