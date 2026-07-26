@@ -64,6 +64,9 @@ const DEFAULT_STATE = {
   wsScore:0,                          // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (ขึ้นกระดานอันดับ field ws)
   wsWords:0,                          // 🔎 รอบ 590: จำนวนคำที่หาเจอทั้งหมด (โชว์ใต้ชื่อในกระดาน)
   wsBoards:0,                         // 🔎 รอบ 590: กระดานที่เล่นจบครบทุกคำ (โบนัสจบใบ WS_CLEAR_BONUS)
+  wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
+  wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
+  wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
   carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
   glassCount:0,                       // รอบ 337: จำนวนบานกระจกที่ทุบแตกในโลกโดรน — สู่เข็มจอมทุบกระจก
@@ -321,6 +324,9 @@ function loadState(){
       if(typeof s.wsScore !== 'number' || s.wsScore < 0) s.wsScore = 0;   // 🔎 รอบ 590: แต้มสะสม Word Search
       if(typeof s.wsWords !== 'number' || s.wsWords < 0) s.wsWords = 0;
       if(typeof s.wsBoards !== 'number' || s.wsBoards < 0) s.wsBoards = 0;
+      if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
+      if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
+      if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
       // 🚗 รอบ 211: รถส่วนตัวหลายคัน — ย้ายจากเซฟเก่า s.car (คันเดียว) → s.cars[] · sanitize รายคัน
       if(s.car && typeof s.car === 'object' && !Array.isArray(s.cars)){ s.cars = [s.car]; }   // migrate คันเดียว→array
       delete s.car;

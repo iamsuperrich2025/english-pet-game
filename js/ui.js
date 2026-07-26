@@ -1104,6 +1104,12 @@ function bindLbTabs(){
     if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
     renderLeaderboardCard();
   });
+  // 🏆 รอบ 592: แถบ/ปุ่ม "กระดานประกาศรางวัล" (มีทั้งในการ์ดเล็กและกระดานเต็มจอ)
+  document.addEventListener('click', (e)=>{
+    if(!e.target.closest('.wsa-open')) return;
+    e.stopPropagation();
+    if(typeof WsAward !== 'undefined') WsAward.open();
+  });
 }
 function renderLeaderboardCard(){
   const el = document.getElementById('leaderboard-card');
@@ -1132,7 +1138,8 @@ function renderLeaderboardCard(){
 let __lbGroupBound = false;
 function bindLbGroupOpen(){
   if(__lbGroupBound) return; __lbGroupBound = true;
-  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab')) return; openLeaderboardFull(); };
+  // 🏆 รอบ 592: .wsa-open (แถบรางวัล) มี handler ของตัวเอง — ไม่ให้เปิดกระดานเต็มจอทับ
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open')) return; openLeaderboardFull(); };
   const label = document.getElementById('lb-label');
   const card = document.getElementById('leaderboard-card');
   if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
@@ -1167,7 +1174,9 @@ function lbRankRows(tab){
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, ws:r.ws||0}; });
     map[myId] = {id:myId, n:meName, g:meG, ws:Math.round(state.wsScore||0)};
     const rows = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws).slice(0, LB_WS_TOP);
-    return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws, me:r.id===myId}));
+    // 🏆 รอบ 592: pz = เงินรางวัลรายเดือนของอันดับนั้น (โชว์ต่อท้ายชื่อ)
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws,
+      pz:(typeof WsAward !== 'undefined') ? WsAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
@@ -1232,7 +1241,7 @@ function openLeaderboardFull(){
       return `<div class="pod pod-${rank}${r.me?' me':''}">
         <div class="pod-label">
           <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
-          <span class="pod-sc">${r.sc}</span>
+          <span class="pod-sc">${r.sc}${r.pz?` <span class="pod-pz">🎁 ${fmtNum(r.pz)}</span>`:''}</span>
         </div>
         <img class="pod-char" data-blk="${lbChar(r)}" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
         <div class="pod-base" style="height:${baseVh(r.val)}vh"><span class="pod-rank">${rk}</span></div>
@@ -1242,7 +1251,7 @@ function openLeaderboardFull(){
       <div class="lbf-cell${r.me ? ' me' : ''}">
         <span class="r">${i + 6}</span>
         <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}</span>
-        <span class="sc">${r.sc}</span>
+        <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
     const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
                 : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : '🪙 อันดับเหรียญ';
@@ -1257,6 +1266,10 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
         </span>
       </div>
+      ${__lbfTab === 'ws' && typeof WsAward !== 'undefined' ? `<div class="lbf-award wsa-open" role="button" tabindex="0">
+        ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${WsAward.fmtLeft(WsAward.nextCutDate() - Date.now())}
+        · 🎁 อันดับ 1 ได้ ${fmtNum(WsAward.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${WsAward.TOP} ได้ ${fmtNum(WsAward.PRIZES[WsAward.TOP-1])} เหรียญ
+        <span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>` : ''}
       ${podHtml}
       ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.35).toFixed(1)}vh">${cells}</div></div>`
                     : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
@@ -1361,17 +1374,23 @@ function lbWordSearchHtml(){
   const rows = all.slice(0, LB_WS_TOP);
   const myIdx = all.findIndex(r=>r.id===myId);
   const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  // 🏆 รอบ 592: เงินรางวัลรายเดือนต่อท้ายชื่อแต่ละอันดับ (ผู้ใช้สั่งข้อ 2)
+  const pz = (i)=> (typeof WsAward !== 'undefined') ? WsAward.prizeFor(i+1) : 0;
   const list = rows.map((r,i)=>`
     <div class="lb-row${r.id===myId?' lb-me':''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small>${pz(i)?`<small class="lb-prize">🎁 ${fmtNum(pz(i))} เหรียญ</small>`:''}</span>
       <span class="lb-coins">🔎 ${fmtNum(r.ws)}</span>
     </div>`).join('');
   const meLine = myIdx >= 0
     ? (myIdx < LB_WS_TOP ? `${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_WS_TOP} · ${fmtNum(map[myId].ws)} แต้ม 🔎`
                          : `${selfPronoun()}มี ${fmtNum(map[myId].ws)} แต้ม (อันดับ ${myIdx+1}) — เก็บอีกนิดก็ติด Top ${LB_WS_TOP} แล้ว 💪`)
     : `เล่นเกม 🔎 ค้นหาคำ เก็บแต้มเพื่อขึ้น Top ${LB_WS_TOP} นะ 💪`;
-  return `<div class="online-count">${meLine}</div>
+  // ⏰ รอบ 592 (ข้อ 3): บอกให้ชัดว่าตัดสินวันที่ 1 เวลา 00:01 เท่านั้น + ปุ่มเข้ากระดานประกาศรางวัล (ข้อ 4)
+  const when = (typeof WsAward !== 'undefined')
+    ? `<div class="lb-award-bar wsa-open" role="button" tabindex="0">⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 เวลา 00:01 น.</b> เท่านั้น · ${WsAward.fmtLeft(WsAward.nextCutDate() - Date.now())}
+         <span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>` : '';
+  return `<div class="online-count">${meLine}</div>${when}
     <div class="lb-list">${list}</div>`;
 }
 

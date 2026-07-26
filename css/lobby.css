@@ -1207,6 +1207,84 @@ html.no-anim .q-bigcard{animation:none;}
 .lobby-side .lb-badgeline{color:#9fc3ea !important;}
 .lobby-side .lb-empty{color:#8fb3d8;font-size:12.5px;}
 
+/* ============================================================
+   🏆 รอบ 592: รางวัลรายเดือนแท็บ 🔎 ค้นหาคำ — ชิปเงินรางวัลต่อท้ายชื่อ
+   + แถบ "ตัดสินวันที่ 1 เวลา 00:01" ที่กดเข้ากระดานประกาศรางวัลได้
+   ============================================================ */
+.lb-prize{display:block;color:#ffd76e !important;font-size:9.5px;font-weight:800;letter-spacing:-.2px;}
+.lb-award-bar{
+  margin:3px 0 5px;padding:4px 7px;border-radius:9px;cursor:pointer;
+  font-size:10px;line-height:1.35;color:#dff0ff;
+  background:linear-gradient(180deg,rgba(255,196,60,.17),rgba(255,150,40,.10));
+  border:1px solid rgba(255,205,110,.42);
+}
+.lb-award-bar b{color:#ffd76e;}
+.lb-award-bar:hover,.lb-award-bar:focus-visible{background:linear-gradient(180deg,rgba(255,196,60,.3),rgba(255,150,40,.18));outline:none;}
+.lb-award-go{display:block;margin-top:2px;font-weight:800;color:#ffe08a;text-decoration:underline;}
+/* แถบเดียวกันในกระดานเต็มจอ (กว้างกว่า → แถวเดียวพอ) */
+.lbf-award{
+  margin:0 0 10px;padding:7px 12px;border-radius:11px;cursor:pointer;flex:0 0 auto;
+  font-size:clamp(10px,1.55vh,13px);line-height:1.35;color:#e8f4ff;text-align:center;
+  background:linear-gradient(180deg,rgba(255,196,60,.16),rgba(255,150,40,.09));
+  border:1px solid rgba(255,205,110,.45);
+}
+.lbf-award b{color:#ffd76e;}
+.lbf-award:hover,.lbf-award:focus-visible{background:linear-gradient(180deg,rgba(255,196,60,.28),rgba(255,150,40,.16));outline:none;}
+.lbf-award .lb-award-go{display:inline-block;margin:0 0 0 8px;}
+.pod-pz,.cell-pz{color:#ffd76e;font-weight:800;}
+
+/* 📜 กระดานประกาศรางวัล — 3 คอลัมน์ เห็นครบทั้งใบ ไม่มี scroll (กฎทอง #7) */
+.wsa-overlay{position:fixed;inset:0;z-index:95;background:rgba(8,22,48,.75);
+  display:flex;align-items:center;justify-content:center;padding:1.6vh 10px;animation:fadeIn .2s;}
+.wsa-box{position:relative;width:min(97vw,1500px);max-height:96vh;overflow:hidden;
+  display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px);
+  background:linear-gradient(180deg,#13294c,#0b1a34);border:2px solid #d8a33c;border-radius:18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6);padding:clamp(10px,1.8vh,18px) clamp(12px,1.6vw,20px);
+  animation:popIn .3s cubic-bezier(.2,1.4,.4,1);}
+.wsa-head{display:flex;flex-direction:column;gap:2px;flex:0 0 auto;padding-right:34px;}
+.wsa-title{font-size:clamp(14px,2.3vh,20px);font-weight:900;color:#ffd76e;}
+.wsa-when{font-size:clamp(9.5px,1.5vh,12.5px);color:#bfd8f2;}
+.wsa-when b{color:#ffe08a;}
+.wsa-close{position:absolute;top:8px;right:10px;z-index:2;font:inherit;font-size:16px;font-weight:800;
+  width:30px;height:30px;border-radius:50%;cursor:pointer;color:#fff;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);}
+.wsa-close:hover{background:rgba(255,120,120,.35);}
+.wsa-cols{display:grid;grid-template-columns:1.15fr 1.25fr .6fr;gap:clamp(7px,1.1vw,14px);min-height:0;}
+.wsa-col{display:flex;flex-direction:column;gap:clamp(3px,.7vh,7px);min-width:0;}
+.wsa-sec-h{font-size:clamp(10px,1.6vh,13.5px);font-weight:800;color:#8fd6ff;}
+.wsa-sec-h small{font-weight:600;color:#9fbcd8;}
+.wsa-msg{padding:clamp(5px,1vh,9px) clamp(7px,.9vw,12px);border-radius:11px;
+  background:linear-gradient(180deg,rgba(255,196,60,.16),rgba(255,150,40,.08));
+  border:1px solid rgba(255,205,110,.4);}
+.wsa-msg-h{font-size:clamp(11px,1.75vh,15px);font-weight:900;color:#ffe08a;}
+.wsa-msg-b{font-size:clamp(9.5px,1.45vh,12.5px);color:#e6f2ff;line-height:1.45;}
+.wsa-msg-b small{color:#b9d4ef;}
+.wsa-msg-none{background:rgba(255,255,255,.05);border-color:rgba(140,190,240,.3);
+  font-size:clamp(9.5px,1.45vh,12.5px);color:#cfe4f8;line-height:1.45;}
+.wsa-rules{margin:0;padding-left:1.15em;font-size:clamp(9px,1.4vh,12px);color:#cfe4f8;line-height:1.5;}
+.wsa-rules b{color:#ffe08a;}
+.wsa-list{display:flex;flex-direction:column;gap:2px;min-height:0;}
+.wsa-row{display:flex;align-items:center;gap:6px;padding:2px 8px;border-radius:7px;
+  background:rgba(255,255,255,.05);font-size:clamp(9px,1.5vh,12.5px);line-height:1.25;}
+.wsa-row.me{background:rgba(255,215,110,.17);outline:1px solid rgba(255,215,110,.45);}
+.wsa-r{flex:0 0 auto;min-width:1.9em;text-align:right;font-weight:800;color:#ffd76a;}
+.wsa-n{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e6f2ff;}
+.wsa-s{flex:0 0 auto;color:#9ec8e8;font-weight:700;font-variant-numeric:tabular-nums;}
+.wsa-p{flex:0 0 auto;color:#ffd76e;font-weight:800;font-variant-numeric:tabular-nums;}
+.wsa-prizes{display:flex;flex-direction:column;gap:2px;}
+.wsa-pz{display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:1px 8px;border-radius:7px;background:rgba(255,255,255,.05);
+  font-size:clamp(8.5px,1.4vh,12px);color:#dff0ff;}
+.wsa-pz b{color:#ffd76e;font-variant-numeric:tabular-nums;}
+.wsa-reveal-medal{font-size:clamp(38px,9vh,74px);line-height:1;}
+/* จอเตี้ย/แคบ: ยุบเป็น 2 คอลัมน์ (ตารางรางวัลไปอยู่ใต้กติกา) */
+@media (max-width:900px),(max-height:430px){
+  .wsa-cols{grid-template-columns:1.1fr 1fr;}
+  .wsa-col-prize{grid-column:1 / -1;}
+  .wsa-prizes{flex-direction:row;flex-wrap:wrap;}
+  .wsa-pz{flex:1 1 auto;min-width:78px;justify-content:center;gap:4px;}
+}
+
 /* ---------- แถบล่าง: ปุ่มเล่นเกม ---------- */
 .lobby-bottom{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
 /* ป้ายอากาศออกจาก footer แล้ว (ย้ายไปดูในการ์ดบ้าน) — ปุ่มห้ามตัด 2 บรรทัด */
