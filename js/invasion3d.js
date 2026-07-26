@@ -688,7 +688,8 @@ const CSS=`
 #inv-extcam small{display:block;font-size:9.5px;margin-top:1px}
 #inv-extcam:active{transform:scale(.94)}
 /* ⌨️🚁 รอบ 582: ป้ายบอกปุ่มลูกศร "ขึ้น/ลง" ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์ (ผู้ใช้สั่ง)
-   โผล่เมื่อ: มีเมาส์/แป้นพิมพ์ (`.kbd`) + กำลังขับเฮลิ (`.fly` และไม่ใช่พลปืน `.gunner`) */
+   โผล่เมื่อ: มีเมาส์/แป้นพิมพ์ (คลาส kbd) + กำลังขับเฮลิ (คลาส fly และไม่ใช่พลปืน gunner)
+   ⚠️ ทั้งบล็อก CSS นี้อยู่ใน template string — ห้ามใส่เครื่องหมาย backtick ในคอมเมนต์เด็ดขาด (พังทั้งไฟล์) */
 #inv-keyhint{position:absolute;right:12px;top:52%;transform:translateY(-50%);z-index:6;display:none;
   pointer-events:none;background:rgba(6,16,28,.74);border:1.5px solid rgba(120,220,255,.42);
   border-radius:12px;padding:7px 9px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
