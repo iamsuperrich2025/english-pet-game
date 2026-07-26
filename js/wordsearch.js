@@ -9,6 +9,8 @@
               · กดที่ชิปคำ = อ่านออกเสียง (speakWord) + ใบ้ "เส้นที่คำวางอยู่" (แถว/หลัก/ทแยง)
    🆕 รอบ 590: แต้มสะสมตลอดกาล (state.wsScore/wsWords/wsBoards) → แท็บใหม่ "🔎 ค้นหาคำ"
               ในกระดานอันดับ (Top 10 all time · field ws ใน /leaderboard)
+   🆕 รอบ 601: คอมโบ — หาคำติดกันภายใน 3 วิ ตัวคูณเหรียญ ×1→×2→×3 + ป้าย 🔥 บนกระดาน
+              + เสียงคอมโบไต่สูงขึ้น (sfx.combo) · ลากผิดไม่ตัดคอมโบ ตัดเมื่อช้าเกิน 3 วิ
    🔒 กฎเหล็ก: คำที่นำมาเล่น = คำตามระดับชั้นผู้เล่นเท่านั้น (vocabForStudent)
    ปุ่ม: สุ่มเกมใหม่ · เก็บกระดานชั่วคราว (เลื่อนซ้าย เก็บข้อมูล) ·
         ล้างกระดาน-ออกจากเกม (ลบตัวอักษรแบบมีสไตล์ แล้วเลื่อนเก็บซ้าย)
@@ -26,6 +28,9 @@
   let queue=[], qi=0, qGrade=null;    // คิวคำสุ่ม (ไม่ซ้ำข้ามเกมจนกว่าจะหมดคลัง)
   let overlay=null, boardEl=null, gridEl=null, wordsEl=null, progEl=null, winEl=null;
   let sel=null;                       // สถานะลากเลือก {r0,c0,cells}
+  /* 🔥 รอบ 601: คอมโบ — หาคำติดกันภายใน 3 วิ ตัวคูณเหรียญไต่ขึ้น (ตันที่ ×3) */
+  const COMBO_MS=3000, COMBO_MAX=3, COMBO_SHOW_MS=1300;   // SHOW < MS: ป้ายฉลองแล้วหลบ ไม่บังตัวอักษรค้าง
+  let comboN=0, lastFoundAt=0;
 
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
   const grade=()=> (typeof state!=='undefined'&&state.student)?state.student.grade:'ป.1';
@@ -264,7 +269,14 @@
     hit.found=true;
     hit.cells.forEach(([r,c],i)=>{ wsGame.grid[r][c].found=true; wsGame.grid[r][c].zi=i; });   // zi = ลำดับตัวอักษร (คลื่นไฟฟ้าไล่)
     if(typeof vbRecord==='function') vbRecord(hit.w, hit.th, true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร (normalize ตัวเล็กใน vbRecord)
-    const reward=hit.w.length*2;                                    // 🪙 รางวัลตามความยาวคำ (3 ตัว=6 … 10 ตัว=20)
+    /* 🔥 รอบ 601: คอมโบ — หาคำถัดไปได้ภายใน COMBO_MS นับต่อเนื่อง ตัวคูณเหรียญ ×1 → ×2 → ×3 (ตัน)
+       ลากผิดไม่ตัดคอมโบ (เด็กจะได้ไม่ท้อ) · ตัดเมื่อ "ช้าเกิน 3 วิ" อย่างเดียว */
+    const tNow=Date.now();
+    comboN = (tNow - lastFoundAt <= COMBO_MS) ? comboN+1 : 1;
+    lastFoundAt = tNow;
+    const mult = Math.min(COMBO_MAX, comboN);
+    const base = hit.w.length*2;                                    // 🪙 รางวัลตามความยาวคำ (3 ตัว=6 … 10 ตัว=20)
+    const reward = base*mult;
     if(typeof addCoins==='function') addCoins(reward);
     addWsScore(reward, 1);                                          // 🔎 รอบ 590: แต้มสะสมตลอดกาล (กระดานอันดับ)
     // 🪙 รอบ 595: เปลี่ยนจากเสียงฟ้าร้อง (sfx.spark) เป็น "เหรียญเข้ากระเป๋า" ตามที่ผู้ใช้สั่ง 26 ก.ค. 2026
@@ -274,12 +286,30 @@
       if(sfx.coinGetTier) sfx.coinGetTier(tier);
       else if(sfx.coinGet) sfx.coinGet();
       else if(sfx.coin) sfx.coin();
+      if(comboN>=2 && sfx.combo) sfx.combo(comboN);                 // 🔥 รอบ 601: เสียงคอมโบไต่สูงขึ้นเรื่อย ๆ
     }
     if(typeof speakWord==='function') speakWord(hit.w.toLowerCase());
     render(); saveTemp();
     wsFlash();                                                      // ⚡ แฟลชฟ้าผ่าบนกระดาน
-    wsCoinPop(reward, hit.cells);                                   // 🪙 ป๊อปเหรียญตื่นเต้น
+    wsCoinPop(reward, hit.cells, mult);                             // 🪙 ป๊อปเหรียญตื่นเต้น
+    showCombo(mult);                                                // 🔥 แถบคอมโบบนกระดาน
     if(wsGame.words.every(w=>w.found)) win();
+  }
+  /* 🔥 รอบ 601: แถบคอมโบ ×2 ×3 บนกระดาน — โผล่ตอนคอมโบ ≥2 แล้วหายเองเมื่อหมดหน้าต่างเวลา */
+  function showCombo(mult){
+    if(!boardEl) return;
+    let c=boardEl.querySelector('.ws-combo');
+    if(!c){ c=document.createElement('div'); c.className='ws-combo'; boardEl.appendChild(c); }
+    clearTimeout(showCombo._t);
+    if(mult<2){ c.classList.remove('on'); return; }
+    c.innerHTML=`🔥 คอมโบ <b>×${mult}</b>`;
+    c.classList.remove('on','pop'); void c.offsetWidth; c.classList.add('on','pop');
+    showCombo._t=setTimeout(()=>{ c.classList.remove('on'); }, COMBO_SHOW_MS);
+  }
+  function resetCombo(){
+    comboN=0; lastFoundAt=0;
+    clearTimeout(showCombo._t);
+    const c=boardEl&&boardEl.querySelector('.ws-combo'); if(c) c.classList.remove('on');
   }
   /* ⚡ แฟลชฟ้าผ่า + 🪙 ป๊อปเหรียญ (สไตล์เกมจับคู่คำศัพท์) */
   function wsFlash(){
@@ -288,11 +318,13 @@
     if(!f){ f=document.createElement('div'); f.className='ws-flash'; boardEl.appendChild(f); }
     f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
   }
-  function wsCoinPop(reward, cells){
+  function wsCoinPop(reward, cells, mult){
     if(!gridEl || document.documentElement.classList.contains('no-anim')) return;
     const mid=cells[Math.floor(cells.length/2)];
     const el=gridEl.querySelector(`.ws-cell[data-r="${mid[0]}"][data-c="${mid[1]}"]`);
-    const pop=document.createElement('div'); pop.className='ws-coinpop'; pop.textContent=`+${reward} 🪙`;
+    const pop=document.createElement('div');
+    pop.className='ws-coinpop'+((mult>1)?' combo':'');
+    pop.textContent=`+${reward} 🪙`+((mult>1)?` ×${mult}`:'');
     if(el){ const br=boardEl.getBoundingClientRect(), cr=el.getBoundingClientRect();
       pop.style.left=(cr.left-br.left+cr.width/2)+'px'; pop.style.top=(cr.top-br.top+cr.height/2)+'px'; }
     else { pop.style.left='40%'; pop.style.top='40%'; }
@@ -330,7 +362,7 @@
 
   /* ---------- เปิด/เก็บ/ล้าง ---------- */
   function saveTemp(){ if(typeof state==='undefined')return; state.wordSearch=wsGame; if(typeof saveState==='function')saveState(); }
-  function newGame(size){ winEl.classList.remove('on'); wsGame=generate(size); render(); saveTemp(); }
+  function newGame(size){ winEl.classList.remove('on'); resetCombo(); wsGame=generate(size); render(); saveTemp(); }
   function open(){
     if(!overlay) build();
     if(!wsGame){ wsGame=(typeof state!=='undefined'&&state.wordSearch)?normalize(state.wordSearch):null; }
@@ -338,6 +370,7 @@
        (เซฟเก่าจัตุรัส 10 แถว หรือขนาดที่เคยเลือกเองสมัยยังเลือกได้ → สุ่มใหม่ให้ถูกขนาด) */
     if(wsGame && (wsGame.rows!==ROWS || wsGame.cols!==curSize())) wsGame=null;
     if(!wsGame) wsGame=generate();
+    resetCombo();                             // 🔥 รอบ 601: เปิดแผงใหม่ = เริ่มนับคอมโบใหม่
     render();
     overlay.style.display='flex';
     void boardEl.offsetWidth;                 // reflow เพื่อให้ transition เลื่อนเข้าเห็นชัด
@@ -353,6 +386,7 @@
   function stash(){ if(typeof sfx!=='undefined'&&sfx.select)sfx.select(); saveTemp(); slideAway(); }   // เลื่อนซ้าย เก็บข้อมูลไว้
   function clearExit(){
     if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong();
+    resetCombo();
     // ลบตัวอักษรแบบมีสไตล์ (กระจายหายทีละเซลล์แบบสุ่มดีเลย์) แล้วค่อยเลื่อนเก็บ
     [...gridEl.children].forEach(c=>{ c.style.transitionDelay=(Math.random()*0.4).toFixed(2)+'s'; c.classList.add('gone'); });
     winEl.classList.remove('on');
@@ -373,5 +407,8 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindRail); else bindRail();
 
   window.WordSearch={ open, _t:{ get game(){return wsGame;}, generate, pool, takeWords, commit, lineCells,
-    newGame, hintWord, curSize, defaultSize, addWsScore, ROWS, COLS, WANT_BY_COLS, WS_CLEAR_BONUS } };
+    newGame, hintWord, curSize, defaultSize, addWsScore, ROWS, COLS, WANT_BY_COLS, WS_CLEAR_BONUS,
+    resetCombo, COMBO_MS, COMBO_MAX,
+    get combo(){ return {n:comboN, mult:Math.min(COMBO_MAX,comboN), lastAt:lastFoundAt}; },
+    set comboLastAt(v){ lastFoundAt=v; } } };
 })();

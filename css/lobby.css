@@ -610,7 +610,9 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 /* ---------- ส่วนกลาง: เมนูซ้าย + เวทีสัตว์ + การ์ดสดขวา ---------- */
 .lobby-mid{flex:1;display:flex;gap:10px;min-height:0;}
 
-.lobby-rail{display:flex;flex-direction:column;gap:7px;width:76px;flex-shrink:0;overflow-y:auto;}
+/* 🧭 รอบ 600: กล่องห่อรางเมนูซ้าย — ที่ยึดของป้ายบอกทาง ▲/▼ (ราง = ตัวเลื่อนอยู่ข้างใน) */
+.rail-wrap{position:relative;display:flex;flex-direction:column;width:76px;flex-shrink:0;min-height:0;}
+.lobby-rail{display:flex;flex-direction:column;gap:7px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
 .rail-btn{
   display:flex;flex-direction:column;align-items:center;gap:1px;
   background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
@@ -627,6 +629,38 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .rail-btn:disabled:active{transform:none;}
 .rail-btn.cure-alert{background:rgba(168,32,44,.82);border-color:#ff9c9c;color:#fff;animation:cureBlink 1.1s ease-in-out infinite;}
 .rail-btn.cure-alert:hover{background:rgba(200,45,58,.9);}
+/* ============================================================
+   🧭 ป้ายบอกทางของราง (รอบ 600 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+   ปัญหา: ราง 21 ปุ่มยาวเกินจอ → เลื่อนแล้วปุ่มที่เคยเห็นหลุดออกนอกจอ
+   ผู้ใช้ที่ไม่ชำนาญนึกว่า "ปุ่มหาย/เกมพัง"
+   แก้: ขอบรางด้านที่ยังมีปุ่มซ่อนอยู่ = ไล่สีจาง + ปุ่ม ▲/▼ กระดึ๊บเรียกสายตา
+        กดแล้วเลื่อนให้เอง (▲ = กลับบนสุดทันที) · ไม่มีอะไรซ่อน = ไม่โผล่เลย
+   ============================================================ */
+.rail-wrap::before,.rail-wrap::after{
+  content:'';position:absolute;left:0;right:0;height:20px;z-index:3;
+  pointer-events:none;opacity:0;transition:opacity .18s;
+}
+.rail-wrap::before{top:0;background:linear-gradient(to bottom,rgba(6,20,44,.9),rgba(6,20,44,0));}
+.rail-wrap::after{bottom:0;background:linear-gradient(to top,rgba(6,20,44,.9),rgba(6,20,44,0));}
+.rail-wrap.more-up::before,.rail-wrap.more-down::after{opacity:1;}
+.rail-nudge{
+  position:absolute;left:50%;transform:translateX(-50%);display:none;
+  align-items:center;justify-content:center;z-index:4;
+  width:56px;height:17px;padding:0;
+  background:rgba(10,30,62,.94);border:1px solid #7fc0f5;border-radius:999px;
+  color:#ffd98a;font-family:inherit;font-size:9.5px;font-weight:800;line-height:1;
+  letter-spacing:.2px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.45);
+}
+.rail-nudge.up{top:-1px;}
+.rail-nudge.down{bottom:-1px;}
+.rail-wrap.more-up .rail-nudge.up{display:flex;animation:railNudgeUp 1.7s ease-in-out infinite;}
+.rail-wrap.more-down .rail-nudge.down{display:flex;animation:railNudgeDown 1.7s ease-in-out infinite;}
+.rail-nudge:hover{background:rgba(27,95,168,.95);color:#fff;}
+.rail-nudge:active{filter:brightness(1.3);}
+@keyframes railNudgeUp{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,-3px);}}
+@keyframes railNudgeDown{0%,100%{transform:translate(-50%,0);}50%{transform:translate(-50%,3px);}}
+html.no-anim .rail-nudge{animation:none !important;}
+
 /* ปุ่มลัดโลก 3D ในราง — คั่นด้วยเส้นบน + ป้าย "โลก 3D" · ยังไม่มีตั๋ว=จาง+🔒 */
 .rail-worlds{display:flex;flex-direction:column;gap:7px;margin-top:4px;padding-top:7px;border-top:1px solid var(--glass-line);}
 .rail-div{font-size:10px;font-weight:700;color:#9fc3ea;text-align:center;letter-spacing:.5px;opacity:.85;}
@@ -1734,7 +1768,8 @@ html.no-anim .cs-big-img{animation:none}
   .pet-img{width:118px;height:118px;}
   .pet-name{font-size:17px;}
   .lobby-side{width:205px;}
-  .lobby-rail{width:66px;}
+  .rail-wrap{width:66px;}
+  .rail-nudge{width:50px;font-size:9px;height:16px;}
   .rail-btn{font-size:11px;padding:6px 2px;}
   .rail-btn .rail-ico{font-size:18px;}
   .lobby-play-btn{font-size:15px !important;padding:8px 20px !important;}
@@ -2618,6 +2653,22 @@ html.no-anim .ws-flash.on{animation:none;}
   100%{opacity:0;transform:translate(-50%,-175%) scale(1);}
 }
 html.no-anim .ws-coinpop{animation:none;opacity:0;}
+/* 🔥 รอบ 601: แถบคอมโบ ×2 ×3 — ลอยกลางบนของกระดาน โผล่ตอนคอมโบติด แล้วจางหายเมื่อหมดเวลา */
+.ws-combo{position:absolute;left:50%;top:calc(50% - 2px);transform:translate(-50%,-50%) scale(.7);
+  z-index:7;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease;
+  font-size:clamp(20px,3.4vw,40px);font-weight:900;letter-spacing:.5px;color:#fff;white-space:nowrap;
+  text-shadow:0 0 16px rgba(255,140,40,.95),0 0 34px rgba(255,90,20,.7),0 3px 8px #000;}
+.ws-combo b{color:#ffd34d;font-size:1.25em;}
+.ws-combo.on{opacity:1;transform:translate(-50%,-50%) scale(1);}
+.ws-combo.pop{animation:wsComboPop .5s cubic-bezier(.2,1.6,.4,1);}
+@keyframes wsComboPop{
+  0%{transform:translate(-50%,-50%) scale(.55);}
+  55%{transform:translate(-50%,-50%) scale(1.22);}
+  100%{transform:translate(-50%,-50%) scale(1);}
+}
+/* ป๊อปเหรียญตอนคอมโบ = ส้มทองเรืองแสงกว่าปกติ */
+.ws-coinpop.combo{color:#ffb347;text-shadow:0 0 14px rgba(255,150,40,1),0 2px 6px #000;}
+html.no-anim .ws-combo{transition:none;animation:none;}
 /* 🔤 รอบ 588: แถบ "หาคำเหล่านี้ให้เจอ" ย้ายมาบนสุดของกระดาน จัดกึ่งกลางแถวเดียว
    (เดิมรอบ 196/244 เป็นคอลัมน์ขวา 2 หลัก) */
 .ws-find{font-size:13px;font-weight:800;color:#8fd6ff;letter-spacing:.3px;}
