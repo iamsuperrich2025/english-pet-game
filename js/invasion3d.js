@@ -55,9 +55,25 @@ const MS_FLAT=0.325;                      // ครึ่งความสู�
 const MS_BELLY=MS_Y-MS_R*MS_FLAT;         // ท้องลำจริง = 335 ม. (เหนือแถวตัวอักษร 137 ม.)
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
-/* 🔠 แผงตัวอักษร — ตำแหน่งคงเดิม (ต้องอ่านได้จาก pitch เริ่มต้น) แต่ BOARD_CELL ×5 ให้พอดีหน้าต่างยาน 5 เท่า
-   ⚠️ เพดานความสูง: ยกเกิน ~210 แถวหน้าต่างจะไปมุดใต้ "แผงคำ HUD" (#inv-word) */
-const BOARD_Y=198, BOARD_Z=-100, BOARD_CELL=10.5;  // รอบ 551: cell ×5 พอดีหน้าต่างยานแม่ที่ใหญ่ขึ้น 5 เท่า
+/* 🔠 แผงตัวอักษร — รอบ 555 (ผู้ใช้สั่ง "ขยาย 10 เท่า + ขนาบติดข้างตัวยานแม่ทั้ง 2 ด้าน")
+   ผล: 2 แผงซ้าย-ขวา · แต่ละแผงกินจอกว้าง **41%** (เดิมแผงเดียว 13.3%) = ตัวอักษรใหญ่ขึ้น ~3 เท่าต่อด้าน
+        นับเป็นเนื้อที่ตัวอักษรบนจอรวม ≈ **10 เท่าของเดิม** ตามที่สั่ง
+   🚨 บทเรียนสำคัญ (เสียเวลาไป 4 รอบวัด — อย่าย้อนรอย): **"ขยายชิ้นงาน ×10 จริง ๆ" ทำไม่ได้**
+      cell 10.5→105 ทำให้แผงกว้าง 1,002 ม. → ต้องถอยไปไกล ~1,180 ม. ถึงจะพอดีจอ 2 แผง
+      แต่ที่ระยะนั้นแผง **ต้องอยู่ต่ำ** ไม่งั้นจมเข้าไปในลำยาน (ลำหมุน dt*.02 กระดูกงูกวาดลงมาบัง 14–42% ของบาน)
+      พอกดต่ำก็ **ไปโดนตึกในเมืองบังแทน 30%** (เห็นชัดในภาพเรนเดอร์: ตัวอักษรโผล่แค่ช่องถนน)
+      → ทางออกคือ **วางใกล้เหมือนเดิม (หน้าลำยาน ลำจึงบังไม่ได้เลย) แล้วขยาย cell เท่าที่จอรับไหว**
+   📊 ตัวเลขวัดจริงของค่าที่เลือก (ยิงรังสีจากกล้อง 5 จุดยืน × 8 มุมหมุนลำ):
+      ลำบังตัวอักษร **0%** · ตึกบัง 13% (เฉพาะตอนยืนชิดตึก) · มีตัวลำเป็นพื้นหลัง **74%** = ดูเหมือนแปะอยู่บนลำจริง
+      แผงซ้าย x9..43% · แผงขวา x57..91% · สูง y12..34% (พ้นแผงคำ HUD #inv-word ที่ x41..59% y1..12%)
+   ⚠️ ห้ามดันแผงไปไกลกว่านี้เพื่อ "ขยายชิ้นงาน" — ไกลเมื่อไหร่เจอ 2 ด่านข้างบนทันที */
+const BOARD_Y=300, BOARD_Z=-290, BOARD_CELL=35;    // รอบ 555: cell ×3.3 แต่กินจอ ×3 ต่อแผง (×2 แผง)
+const BOARD_SIDE_X=242;                            // ระยะแยกจากแนวกลางของแผงแต่ละข้าง (เหลือขอบจอ ~9% · ช่องกลาง 14%)
+/* มุมหันของแผงแต่ละข้าง — เล็งให้หน้าแผง "หันเข้าหาผู้เล่นที่ยืนกลางเมือง" ตรง ๆ (อ่านง่ายสุด · วัด dot ได้ 1.000)
+   tilt=atan((BOARD_Y−ระดับตา)/ระยะ) · toe=atan(BOARD_SIDE_X/ระยะ) — ขยับค่าใดค่าหนึ่งต้องคิดใหม่ทั้งคู่
+   ⚠️ tilt เป็น "บวก" = ก้มหน้าแผงลงหาผู้เล่นข้างล่าง (ใส่ลบจะเงยขึ้นฟ้า ตัวอักษรแบนจนอ่านไม่ออก)
+   ⚠️ toe = บิดเข้าหาแนวกลาง (แผงซ้ายบิดขวา / แผงขวาบิดซ้าย) — ถ้าไม่บิด แผงจะถูกมองเฉียงจนตัวอักษรแคบ */
+const BOARD_TILT=0.624, BOARD_TOE=0.533;
 /* 🎯 แกนพลังงาน — คงที่ใกล้ผู้เล่น (ต้องเล็งยิงได้) ไม่สเกลตามลำ */
 const CORE_Y=150, CORE_Z=-170, CORE_R=45;         // ใต้ท้องยาน มองเห็นพร้อมกัน
 
@@ -877,7 +893,7 @@ function buildDom(){
     <button id="inv-gunner">🎖️</button>
     <button id="inv-seat">👁️<small>มุมบิน</small></button>
     <button id="inv-extcam">🎬<small>ท้ายลำ</small></button>
-    <button id="inv-wheel"><span class="wh"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span><small>🚁 แตะเพื่อขึ้นเครื่อง</small></button>
+    <button id="inv-wheel"><span class="wh"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span><small>🚁 เดินเข้ามาขึ้นเครื่อง</small></button>
     <button id="inv-map">🗺️</button>
     <button id="inv-night">🌙</button>
     <button id="inv-torch">🔦</button>
@@ -2110,10 +2126,9 @@ function buildMothership(){
      ตำแหน่งนี้ทำให้ผู้เล่นเงยหน้า ~30° (พอดีมุมเริ่มต้น) แล้วเห็นแถวตัวอักษรกลางจอ
      ย้ายแผง "เข้าใกล้ผู้เล่น" (z มากขึ้น) = มุมเงยชันขึ้น ตัวอักษรจะหลุดขอบจอบน */
   const board=new THREE.Group();
-  board.position.set(0,BOARD_Y,BOARD_Z);      // ⚠️ แยกจากขนาดลำ ไม่งั้นตัวอักษรโต 5 เท่าจนล้นจอ
-  /* ⚠️ เครื่องหมายสำคัญ: rotation.x เป็น "บวก" = หน้าแผงก้มลงหาผู้เล่นที่ยืนอยู่ข้างล่าง
-     ใส่ลบจะเงยขึ้นฟ้า ตัวอักษรถูกมองเฉียงจนแบน อ่านยาก (พลาดมาแล้ว วัดด้วย dot ได้ 0.50) */
-  board.rotation.x=0.52;
+  board.position.set(0,BOARD_Y,BOARD_Z);      // ⚠️ แยกจากขนาดลำ ไม่งั้นแผงโตตามลำจนล้นจอ
+  /* 🔠 รอบ 555: กลุ่มนี้เป็นแค่ "จุดอ้างอิงกลาง" — มุมหันไปอยู่ที่กลุ่มลูกซ้าย/ขวาแทน
+     (แผง 2 ข้างต้องบิดเข้าหากันคนละทิศ จะใส่มุมที่กลุ่มแม่ก้อนเดียวไม่ได้) */
   scene.add(board); msBoard=board;
   buildWindowBar();                 // 🪟 รอบ 477: แถวบานหน้าต่าง 8 ช่อง (ตัวอักษรไปนั่งในบาน)
   /* ❌ รอบ 441 (ผู้ใช้: "เอาสี่เหลี่ยมผืนผ้านี้ออกไปเลย เพราะขวางยานแม่"):
@@ -2139,21 +2154,34 @@ function buildMothership(){
    คำในเกมยาวสุด 8 ตัว (pickWord กรอง [a-z]{3,8}) → WIN_N=8 พอดีทุกคำ */
 const WIN_N=8;
 let winPanes=[];                       // ช่องหน้าต่างถาวร (สร้างครั้งเดียว ใช้ซ้ำทุกคำ)
+/* 🔠 รอบ 555: สร้าง "แถวเดียวกัน 2 ชุด" ขนาบซ้าย-ขวา — บานที่ index เดียวกันทั้ง 2 ข้าง
+   **ใช้ material ก้อนเดียวกัน** จึงเปลี่ยนตัวอักษร/ไฟกะพริบทีเดียวติดพร้อมกันทั้ง 2 แผง
+   (ถ้าแยก material จะต้องไล่อัปเดต 2 ที่ทุกจุด — ลืมที่เดียวคือแผงซ้าย-ขวาไม่ตรงกัน) */
 function buildWindowBar(){
   const cell=BOARD_CELL, gap=cell*0.22, total=WIN_N*cell+(WIN_N-1)*gap;
   const frameM=new THREE.MeshBasicMaterial({color:0x0a0f16,fog:false});          // ขอบบานสีเหล็กมืด
   const glassM=new THREE.MeshBasicMaterial({color:0x0e2233,fog:false});          // กระจกบานที่ยังว่าง
+  const sides=[-1,1].map(sgn=>{
+    const g=new THREE.Group();
+    g.position.x=sgn*BOARD_SIDE_X;
+    g.rotation.order='YXZ';                       // ⚠️ บิดซ้าย-ขวาก่อน ค่อยก้มลง (ลำดับ XYZ เดิมจะเอียงบิดเบี้ยว)
+    g.rotation.set(BOARD_TILT,-sgn*BOARD_TOE,0);
+    msBoard.add(g); return g;
+  });
   for(let i=0;i<WIN_N;i++){
     const x=-total/2+cell/2+i*(cell+gap);
-    const fr=new THREE.Mesh(new THREE.PlaneGeometry(cell*1.12,cell*1.12),frameM);
-    fr.position.set(x,0,cell*0.25); msBoard.add(fr);
-    const gl=new THREE.Mesh(new THREE.PlaneGeometry(cell*0.94,cell*0.94),glassM);
-    gl.position.set(x,0,cell*0.30); msBoard.add(gl);
-    /* ตัวอักษรของบานนี้ — ซ่อนไว้ก่อน เปิดเฉพาะบานที่มีตัวอักษรของคำปัจจุบัน */
-    const lt=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),
-      new THREE.MeshBasicMaterial({map:letterPanelTex('A',false),transparent:true,fog:false}));
-    lt.position.set(x,0,cell*0.35); lt.visible=false; msBoard.add(lt);
-    winPanes.push({x,frame:fr,glass:gl,mesh:lt});
+    const ltM=new THREE.MeshBasicMaterial({map:letterPanelTex('A',false),transparent:true,fog:false});
+    const pane={x,frame:[],glass:[],mesh:[],mat:ltM};
+    sides.forEach(g=>{
+      const fr=new THREE.Mesh(new THREE.PlaneGeometry(cell*1.12,cell*1.12),frameM);
+      fr.position.set(x,0,cell*0.25); g.add(fr); pane.frame.push(fr);
+      const gl=new THREE.Mesh(new THREE.PlaneGeometry(cell*0.94,cell*0.94),glassM);
+      gl.position.set(x,0,cell*0.30); g.add(gl); pane.glass.push(gl);
+      /* ตัวอักษรของบานนี้ — ซ่อนไว้ก่อน เปิดเฉพาะบานที่มีตัวอักษรของคำปัจจุบัน */
+      const lt=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),ltM);
+      lt.position.set(x,0,cell*0.35); lt.visible=false; g.add(lt); pane.mesh.push(lt);
+    });
+    winPanes.push(pane);
   }
 }
 /* ใส่ตัวอักษรลงบานหน้าต่าง — บานที่เหลือปล่อยว่าง (กระจกเปล่า) */
@@ -2161,13 +2189,14 @@ function layoutLetterPanels(){
   letters=[];
   winPanes.forEach((p,i)=>{
     const ch=word.en[i];
-    if(!ch){ p.mesh.visible=false; p.glass.visible=true; return; }   // บานว่าง
-    p.mesh.visible=true; p.glass.visible=true;
-    const old=p.mesh.material.map;
-    p.mesh.material.map=letterPanelTex(ch,false);
-    p.mesh.material.opacity=1; p.mesh.material.needsUpdate=true;
+    if(!ch){ p.mesh.forEach(m=>m.visible=false); return; }            // บานว่าง
+    p.mesh.forEach(m=>m.visible=true);
+    const old=p.mat.map;
+    p.mat.map=letterPanelTex(ch,false);
+    p.mat.opacity=1; p.mat.needsUpdate=true;
     if(old) old.dispose();
-    letters.push({ch,idx:i,mesh:p.mesh,down:false,blinkUntil:0});
+    /* mesh = บานฝั่งซ้าย (ใช้เป็นตัวแทน) — โค้ดที่เหลือแตะแค่ `mesh.material` ซึ่งใช้ร่วมทั้ง 2 ข้างอยู่แล้ว */
+    letters.push({ch,idx:i,mesh:p.mesh[0],down:false,blinkUntil:0});
   });
 }
 function setLetterLit(l,lit){
@@ -2856,6 +2885,12 @@ const HELI_TROTOR_NODES=['tripo_part_9','tripo_part_10','tripo_part_19','tripo_p
 const HELI_LEN=12.3;                    // ความยาวลำ (เท่าโลกเฮลิฯ)
 const HELI_DESERT=0xb6a678;             // 🎨 ย้อมสีลำให้กลืนกับทะเลทราย/สนามรบ (ของเดิมลายแดงสด)
 const BOARD_DIST=10;                    // เดินเข้าใกล้เท่านี้ถึงขึ้นเครื่องได้
+/* 🚁 รอบ 555 (ผู้ใช้สั่ง "ไม่ต้องแตะเพื่อขึ้นเครื่องแล้ว เดินเข้าไปในเฮลิก็ตัดภาพขึ้นเครื่องเลย")
+   AUTO_BOARD_DIST แคบกว่า BOARD_DIST ตั้งใจ: 10 ม.= "เห็นพวงมาลัยเตือน" · 5.5 ม.= "เดินเข้าไปในลำแล้ว" จึงขึ้นเอง
+   ⚠️ ต้องมีสลัก autoBoardLock ด้วย ไม่งั้นพอกด 🪂 ลงจากเครื่อง ผู้เล่นยังยืนคาลำอยู่ → เด้งขึ้นเครื่องใหม่ทันที
+      ปลดสลักเมื่อเดินออกพ้นรัศมีเตือน (padAt คืน null) = ต้องเดินออกไปก่อนถึงจะขึ้นใหม่ได้ */
+const AUTO_BOARD_DIST=5.5;
+let autoBoardLock=false;
 const START_MS=9500;                    // เวลาสตาร์ทเครื่องก่อนบินได้
 const START_PHASES=[
   [0  ,'🌀 กดปุ่มสตาร์ท · เทอร์ไบน์เริ่มหมุน'],
@@ -5658,7 +5693,7 @@ function boardGunner(){
 }
 function dismountGunner(silent){
   if(!riding) return;
-  riding=null;
+  riding=null; autoBoardLock=true;                  // 🚁 รอบ 555: กระโดดลงมาอาจตกใกล้ลำจอด — อย่าเพิ่งเด้งขึ้นเอง
   wrapEl.classList.remove('fly','gunner','gunext');
   rideExt=false; rideHostP=null; rideSpd=0;          // 👁️ รอบ 539: ล้างสถานะมุมภายนอกของพลปืน
   if(seatBtn) seatBtn.style.display='none';
@@ -5722,6 +5757,19 @@ function updateGunnerBtn(now){
   if(heliBtn) heliBtn.style.display=(inHeli||riding||nearPad)?'block':'none';
   /* 🎡 รอบ 531: พวงมาลัยลอยเตือน เมื่อเดินถึงลำที่จอด (ยังไม่บิน/ไม่เป็นพลปืน + ยังมีที่ว่าง) */
   if(wheelBtn) wheelBtn.style.display=(!inHeli && !riding && nearPad && heliCount()<HELI_MAX)?'flex':'none';
+  if(!nearPad) autoBoardLock=false;                  // 🔓 เดินออกพ้นลำแล้ว → ขึ้นเครื่องอัตโนมัติได้อีก
+  tickAutoBoard();
+}
+/* 🚁 รอบ 555: เดินเข้าไปในเฮลิที่จอด = ขึ้นเครื่องเลย ไม่ต้องแตะปุ่ม (ผู้ใช้สั่ง)
+   เช็กทุกครั้งที่ updateGunnerBtn ทำงาน (ทุก ~0.4 วิ) — ถี่พอสำหรับความเร็วเดินเท้า */
+function tickAutoBoard(){
+  if(inHeli||riding||autoBoardLock) return;
+  if(heliCount()>=HELI_MAX) return;                  // เต็มเพดาน 5 ลำ → ปล่อยให้กดปุ่มเองจะได้เห็นเหตุผล
+  let near=null,bd=AUTO_BOARD_DIST;
+  for(const p of pads){ const d=Math.hypot(px-p.x,pz-p.z); if(d<bd){ bd=d; near=p; } }
+  if(!near) return;
+  autoBoardLock=true;                                // กันเด้งขึ้นซ้ำตอนลงจากเครื่องแล้วยังยืนคาลำ
+  enterHeli();
 }
 
 /* นับเฮลิที่บินอยู่ทั้งโลกตอนนี้ = ของเรา + ของเพื่อนที่กำลังบิน + บอท (พลปืนไม่นับ — นั่งลำที่มีอยู่แล้ว) */
@@ -5745,6 +5793,7 @@ function enterHeli(){
     return;
   }
   myPad=pad; heliReady=false; heliStartAt=performance.now();
+  autoBoardLock=true;                            // 🚁 รอบ 555: กันเด้งขึ้นเองซ้ำตอนลงมายืนคาลำ (ปลดเมื่อเดินออกพ้นลำ)
   px=pad.x; pz=pad.z; yaw=pad.rot;              // นั่งประจำที่นักบิน หันตามลำ
   inHeli=true;                                   // ⚠️ ตั้งก่อน setSeatView — syncExtBtn ใช้ค่านี้ตัดสินว่าโชว์ปุ่ม 🎬 ไหม
   if(state.heliExtView!=null) extV=clamp(state.heliExtView|0,0,EXT_VIEWS.length-1);   // 🎬 รอบ 537: จำมุมกล้องที่เลือกไว้
@@ -5770,7 +5819,7 @@ function exitHeli(){
   if(!inHeli) return;
   /* 🅿️ รอบ 434: ลงจากเครื่องแล้ว "ลำจอดค้างไว้ตรงนั้น" — เดินกลับมาขึ้นใหม่ได้ */
   if(myPad){ movePad(myPad,px,pz,yaw); myPad=null; }
-  heliReady=false;
+  heliReady=false; autoBoardLock=true;            // 🚁 รอบ 555: ลงมาแล้วยังยืนคาลำ ต้องเดินออกก่อนถึงขึ้นใหม่เอง
   if(seatBtn) seatBtn.style.display='none';
   if(extBtn) extBtn.style.display='none';         // 🎬 รอบ 537: ลงเครื่องแล้วเก็บปุ่มมุมกล้องด้วย
   if(startEl) startEl.classList.remove('on');
