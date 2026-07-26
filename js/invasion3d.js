@@ -2348,7 +2348,9 @@ function makeFighter(letterIdx){
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0,
            /* 🔥🌀 รอบ 565: ของประจำลำสำหรับหลบมิสไซล์ — แฟลร์มีจำกัด FLARE_PODS ชุด (หมดแล้วหมดเลย) */
-           evaUntil:0, evaSpin:0, evaRoll:0, roll:0, flareAt:0, flarePods:FLARE_PODS};
+           evaUntil:0, evaSpin:0, evaRoll:0, roll:0, flareAt:0, flarePods:FLARE_PODS,
+           /* ⚡ รอบ 579: หมดเวลาเร่งเครื่องเมื่อไหร่ (0 = ความเร็วปกติ) */
+           tbUntil:0};
   drawFighterBar(f);
   fighters.push(f);
   /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — รอบ 556 มีพร้อมกัน 26 ลำ (a-z)
@@ -6875,7 +6877,11 @@ function tickFighters(dt,now){
   fighters.forEach(f=>{
     /* 🌀 รอบ 565: กำลังบิดหนีมิสไซล์อยู่ไหม (ตั้งค่าใน tickEvade) — หนี = เลี้ยวสวนแรง ๆ + ม้วนตัว */
     const eva=now<(f.evaUntil||0);
-    f.ang+=(eva?f.evaSpin:f.spin)*dt;
+    /* ⚡ รอบ 579: ลำที่อยู่ในช่วง "เร่งเครื่อง" = คูณความเร็วทุกแกน TURBO_MUL เท่า
+       ⚠️ ต้องคูณทั้ง 3 จุด (มุมวน · การไล่ตามเป้าแนวราบ · การไต่ระดับ) ไม่งั้นเป้าวิ่งหนีตัวลำ
+          → ลำจะ "ตัดวงใน" รัศมีหดแทนที่จะบินเร็วขึ้นจริง */
+    const tb=now<(f.tbUntil||0)?TURBO_MUL:1;
+    f.ang+=(eva?f.evaSpin:f.spin)*dt*tb;
     f.rad+=Math.sin(now*.0004+f.ang)*8*dt;
     f.rad=clamp(f.rad,45,F_R);
     /* ⛰️ รอบ 431: บางช่วง "โฉบต่ำเลียดสันเขา" (หลบยาก ต้องไล่ยิงจริงจัง) สลับกับบินสูงตามเดิม */
@@ -6886,21 +6892,30 @@ function tickFighters(dt,now){
     }
     const tx=Math.cos(f.ang)*f.rad, tz=Math.sin(f.ang)*f.rad;
     const p=f.grp.position;
-    const lat=eva?2.9:1.6;                       // 🌀 หนี = สลัดตัวออกด้านข้างไวกว่าปกติเกือบเท่าตัว
+    /* 🌀 หนี = สลัดตัวออกด้านข้างไวกว่าปกติเกือบเท่าตัว
+       ⚡ รอบ 579: ตอนเร่ง คูณเพิ่ม TURBO_TRACK อีกชั้น — ตัวลำไล่ตามเป้าแบบ lerp จึง "ตามหลัง" เสมอ
+          วัดจริงแล้วตามหลังจนความเร็วพื้นได้แค่ 9.2 เท่า (ไม่ใช่ 10) → ดันให้เกาะเป้าสนิท = ครบ 10 เท่าจริง */
+    const lat=(eva?2.9:1.6)*tb*(tb>1?TURBO_TRACK:1);
+    const p0x=p.x, p0z=p.z;
     p.x+=(tx-p.x)*Math.min(1,dt*lat);
     p.z+=(tz-p.z)*Math.min(1,dt*lat);
     /* บินอิงพื้นเสมอ — ผ่านเนินสูงก็ไต่ขึ้นตาม ไม่มุดทะลุภูเขา (ยกเร็วกว่าลดเพื่อกันชนยอดเนิน) */
     const gnd=terrainH(p.x,p.z), wantY=gnd+f.tgtY;
-    p.y+=(wantY-p.y)*Math.min(1, dt*(wantY>p.y?2.6:.9)*(eva?1.9:1));
-    /* หันหัวไปทางที่บิน + เอียงตัวเข้าโค้ง (🌀 รอบ 565: ตอนหนี = ม้วนตัวต่อเนื่อง) */
-    f.grp.rotation.y=Math.atan2(tx-p.x,tz-p.z)+Math.PI;
+    p.y+=(wantY-p.y)*Math.min(1, dt*(wantY>p.y?2.6:.9)*(eva?1.9:1)*tb);
+    /* หันหัวไปทางที่บิน + เอียงตัวเข้าโค้ง (🌀 รอบ 565: ตอนหนี = ม้วนตัวต่อเนื่อง)
+       ⚡ รอบ 579: ตอนเร่ง lat แรงจน `min(1,dt*lat)` = 1 → ลำเกาะเป้าสนิท ทำให้ (tx−p.x) เป็น 0
+          atan2(0,0)=0 = หัวลำค้างทิศเดียวทั้งที่บินเป็นวง → ตอนเร่งใช้ "ทิศที่ขยับจริงเฟรมนี้" แทน */
+    const hx=tb>1?(p.x-p0x):(tx-p.x), hz=tb>1?(p.z-p0z):(tz-p.z);
+    if(hx||hz) f.grp.rotation.y=Math.atan2(hx,hz)+Math.PI;
     if(eva){ f.roll=(f.roll||0)+f.evaRoll*dt; f.grp.rotation.z=f.roll; }
     else { f.roll=0; f.grp.rotation.z=-f.spin*2.4; }
     if(f.label) f.label.material.opacity=1;
     /* ไฟกะพริบตอนเพิ่งโดนยิง */
     const hitK=Math.max(0,1-(now-f.hitAt)/220);
     f.eye.material.color.setHex(hitK>0?0xff5a3a:0x59ff9d);
-    f.eng.scale.setScalar(4.2+Math.sin(now*.02+f.ang)*.6);
+    /* ⚡ รอบ 579: ลำที่เร่งเครื่อง = ไฟท้ายโตขึ้น + เปลี่ยนเป็นสีส้มร้อน (เด็กแยกออกทันทีว่าลำไหนเร็ว) */
+    f.eng.scale.setScalar((4.2+Math.sin(now*(tb>1?.05:.02)+f.ang)*.6)*(tb>1?1.75:1));
+    f.eng.material.color.setHex(tb>1?0xffb03a:0x66e0ff);
     /* ยิงใส่ผู้เล่น */
     if(now>f.shotAt){
       /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย
@@ -8427,6 +8442,57 @@ function tickMsBeam(dt,now){
 }
 
 /* ============================================================
+   ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
+   กติกาตรงตามที่สั่ง:
+     ① ครบ TURBO_EVERY (5 นาที) นับจากเข้าโลก → สุ่มเลือกยานลูกที่ยังไม่ตก TURBO_N (10) ลำ
+     ② ลำที่ถูกเลือก บินเร็วขึ้น TURBO_MUL (10) เท่า นาน TURBO_MS (10 วิ)
+     ③ ครบ 10 วิ → ความเร็วกลับปกติเป๊ะเหมือนเดิม (ไม่มีค่าตกค้าง — ตัวคูณอ่านจาก f.tbUntil ทุกเฟรม)
+     ④ วนลูปแบบนี้ไปเรื่อย ๆ ทุก 5 นาที (ตารางเดินต่อแม้รอบนั้นจะไม่มีลำเหลือให้เร่ง)
+   🤝 ทุกเครื่องในห้องต้องเห็น "ลำเดียวกัน" เร่ง → สุ่มด้วยเมล็ด srnd(battleRound, ลำดับคลื่น)
+      ไม่ใช่ Math.random() (แบบเดียวกับตำแหน่งเกิดยานลูกในรอบ 556)
+   🧒 กันงงสำหรับเด็ก: toast บอกก่อนทุกครั้งว่าลำไหนเร่ง + ไฟท้ายลำที่เร่งเป็นสีส้มโตขึ้น (ใน tickFighters)
+   ⚠️ ระวัง: อย่าคูณ "ช่วงเวลายิง" (f.shotAt) — ผู้ใช้สั่งแค่ความเร็วบิน ยิงถี่ขึ้น 10 เท่าจะโหดเกินเด็ก
+   🧪 เทสต์: `_t.turbo` (สถานะ+ลำที่เร่ง) · `_t.turboFire()` เร่งให้ถึงคิวทันที
+   ============================================================ */
+const TURBO_EVERY=300000;   // ทุกกี่ ms ถึงจะมีคลื่นเร่งเครื่อง (5 นาที ตามที่ผู้ใช้สั่ง)
+const TURBO_MS=10000;       // เร่งอยู่นานกี่ ms (10 วินาที)
+const TURBO_MUL=10;         // เร็วขึ้นกี่เท่าระหว่างเร่ง
+const TURBO_N=10;           // สุ่มกี่ลำต่อคลื่น (มีทั้งหมด 26 ลำ a-z)
+const TURBO_TRACK=4;        // ตัวชดเชย "อาการตามหลังเป้า" ตอนเร่ง (ดูคอมเมนต์ใน tickFighters)
+let turboAt=0, turboEndAt=0, turboWave=0, turboChs=[];
+function resetTurbo(){
+  turboAt=performance.now()+TURBO_EVERY; turboEndAt=0; turboWave=0; turboChs=[];
+  fighters.forEach(f=>{ f.tbUntil=0; });
+}
+/* สุ่มแบบมีเมล็ด (Fisher-Yates) → ทุกเครื่องได้ชุดเดียวกันเมื่อ battleRound + คลื่นเดียวกัน */
+function turboPick(n){
+  const pool=fighters.slice(), sd=battleRound*911+turboWave*37;
+  for(let i=pool.length-1;i>0;i--){
+    const j=Math.floor(srnd(sd+i)*(i+1)), t=pool[i]; pool[i]=pool[j]; pool[j]=t;
+  }
+  return pool.slice(0,n);
+}
+function turboBegin(now){
+  turboWave++;
+  turboAt=now+TURBO_EVERY;                       // ตารางคลื่นถัดไปตั้งก่อนเสมอ = ลูปไม่มีวันหลุด
+  const pick=turboPick(TURBO_N);
+  if(!pick.length){ turboEndAt=0; turboChs=[]; return; }   // ยิงตกหมดพอดี → ข้ามคลื่นนี้ รอคลื่นหน้า
+  const until=now+TURBO_MS;
+  pick.forEach(f=>{ f.tbUntil=until; });
+  turboEndAt=until; turboChs=pick.map(f=>f.ch);
+  Snd.rwr();                                     // 🔊 เสียงเตือนสั้น ๆ (ตัวเดียวกับเตือนถูกล็อกในเฮลิ)
+  toast(`⚡ ยานลูก ${pick.length} ลำเร่งเครื่อง ${TURBO_MUL} เท่า ${TURBO_MS/1000|0} วินาที! `+
+        `(${turboChs.join(' ').toUpperCase()})`);
+}
+function tickTurbo(now){
+  if(turboEndAt && now>=turboEndAt){             // ครบ 10 วิ → กลับความเร็วปกติ
+    turboEndAt=0; turboChs=[];
+    toast('🐢 ยานลูกกลับมาบินความเร็วปกติแล้ว');
+  }
+  if(now>=turboAt) turboBegin(now);
+}
+
+/* ============================================================
    🔁 ลูปหลัก
    ============================================================ */
 function fit(){
@@ -8470,6 +8536,7 @@ function frame(dt,now){
   tickCounter(dt,now);              // 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา (ต้องมาหลัง tickRadar)
   tickSpike(dt,now);                // 🔥🛡️ รอบ 569: ถูกล็อก→เสียงเตือน→จรวดศัตรู + แฟลร์ของเรา (หลัง tickCounter)
   tickMsBeam(dt,now);               // 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
+  tickTurbo(now);                   // ⚡👾 รอบ 579: ทุก 5 นาที สุ่มยานลูก 10 ลำเร่งความเร็ว 10 เท่า 10 วิ
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
   tickNight(dt,now);                // 🌙 รอบ 471/474: ไล่แสงกลางวัน↔กลางคืน + ไฟถนน + ไฟฉายติดปืน
@@ -8610,6 +8677,7 @@ function start(){
   swapAt=0; swapTo=null; swapSnd=0;
   msBeamAt=performance.now()+6000;
   resetMsBeam();                       // 🔵💀 รอบ 576: เข้าโลกใหม่ = ล้างเคาน์เตอร์เตือน/การ์ดตาย
+  resetTurbo();                        // ⚡👾 รอบ 579: เข้าโลกใหม่ = นับ 5 นาทีใหม่ ไม่มีลำไหนค้างสถานะเร่ง
   renderHp(); renderHeat(); renderMissiles();
   fit();
   pickWord();
@@ -8737,6 +8805,18 @@ window.InvasionWorld={
       vis:!!(msbRing&&msbRing.visible), bar:!!(msbEl&&msbEl.classList.contains('on')),
       card:!!(deadEl&&deadEl.classList.contains('on'))}},
     set msbStay(v){msbStay=v}, msbFire:()=>{ msbState='idle'; msbAt=0; }, msbKickOut,
+    /* ⚡👾 รอบ 579: คลื่นเร่งความเร็วยานลูก */
+    get turbo(){ const n=performance.now(); return {
+      wave:turboWave, chs:turboChs.slice(),
+      on:fighters.filter(f=>n<(f.tbUntil||0)).map(f=>f.ch),
+      left:+Math.max(0,turboEndAt-n).toFixed(0),
+      next:+Math.max(0,turboAt-n).toFixed(0),
+      every:TURBO_EVERY, ms:TURBO_MS, mul:TURBO_MUL, n:TURBO_N }; },
+    turboFire:()=>{ turboAt=0; }, resetTurbo,
+    /* ตำแหน่งยานลูกทุกลำ (ใช้วัดความเร็วจริงตอนเทสต์คลื่นเร่ง) */
+    get fpos(){ const n=performance.now(); return fighters.map(f=>({ch:f.ch,
+      x:+f.grp.position.x.toFixed(2), y:+f.grp.position.y.toFixed(2), z:+f.grp.position.z.toFixed(2),
+      ry:+f.grp.rotation.y.toFixed(3), tb:n<(f.tbUntil||0)})); },
     get squad(){return squad.length}, get helis(){return helis.length},
     get squad0(){return squad[0]||null},   /* 🔧 debug รอบ 519: ดึงทหารในหมู่ตัวแรกมา render ดูท่า */
     /* 🎯 รอบ 471: เป้าฝึกยิง */
