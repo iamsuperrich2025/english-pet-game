@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v198';  // v198: รอบ 602: ป้ายบอกทาง ▲/▼ รางเมนูซ้าย
+const CACHE_VERSION = 'pet-vocab-v199';  // v199: คลิปน้องตามช่วงวัย (mp4 ไม่ผ่าน SW)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -69,6 +69,9 @@ self.addEventListener('fetch', (e)=>{
   if(req.method !== 'GET') return;                        // เขียนข้อมูล → ปล่อยผ่าน
   const url = new URL(req.url);
   if(url.origin !== self.location.origin) return;         // Firebase/Google/ฟอนต์ → ปล่อยผ่าน
+  // 🎬 รอบ 605: คลิปน้อง (clip/*.mp4) — ปล่อยเบราว์เซอร์จัดการเอง
+  // (วิดีโอโหลดเป็นช่วง Range 206 · ถ้า SW เก็บ/คืนสำเนาบางส่วน เล่นพังหรือค้าง + กินที่แคชเป็น MB)
+  if(/\.(mp4|webm|mov|m4v)$/i.test(url.pathname)) return;
 
   const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico|mp3|wav|ogg)$/i.test(url.pathname)
     || url.pathname.includes('/js/vendor/');   // vendor (three.min.js ~600KB) + เสียง แทบไม่เปลี่ยน → cache-first ประหยัดเน็ต

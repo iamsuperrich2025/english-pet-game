@@ -44,6 +44,27 @@ function probeHomeImages(){
   return probeImages(HOMES.flatMap(h=>[`home_${h.id}`, `home_${h.id}_decayed`, `home_${h.id}_ruined`, `home_${h.id}_dark`, `home_${h.id}_nowater`]), 'img/home');
 }
 
+/* 🎬 รอบ 605: คลิปวิดีโอน้องตามช่วงวัย (ผู้ใช้เจนเองด้วย AI วางไว้ใน clip/)
+   ชื่อไฟล์ = ชื่อเดียวกับภาพต้นแบบของวัยนั้น: clip/<pet>_<newborn|baby_normal|adult_normal>.mp4
+   ตรวจแบบ "ลองเล่นก่อน" (ไม่ยิง HEAD ตอนบูต): มีไฟล์ = เล่นได้เลย · ไม่มี = video ยิง error
+   → จำว่า null แล้วถอยไปใช้ฉากการ์ตูน CSS ของรอบ 604 (ครูวางคลิปเพิ่มทีหลังได้เลย ไม่ต้องแก้โค้ด) */
+const CLIP_FILES = {};
+function petClipKey(p){
+  p = p || activePet(); if(!p) return null;
+  const stage = petStage(p);
+  return stage === 'egg' ? startImgKey(p.type) : `${p.type}_${stage}_normal`;
+}
+/* คืน URL คลิปที่ควรเล่นตอนนี้ · null = ให้ใช้ภาพนิ่ง
+   ป่วย/หลับ/หิว/ใส่ชุด = คงภาพนิ่งตามสถานะ (เด็กต้องเห็นอาการ) · ปิดเอฟเฟกต์เคลื่อนไหว = ไม่เล่นคลิป */
+function petClipUrl(p){
+  p = p || activePet(); if(!p) return null;
+  if(state.noAnim || p.sick || p.sleeping) return null;
+  if(typeof petStateImg === 'function' && petStateImg(p)) return null;
+  const k = petClipKey(p); if(!k) return null;
+  if(CLIP_FILES[k] === null) return null;              // เคยลองแล้วไม่มีไฟล์
+  return CLIP_FILES[k] || `clip/${k}.mp4`;
+}
+
 /* ไอเทมที่สวมอยู่ของสัตว์ตัวหนึ่ง (ใส่ได้ทีละ 1 ชิ้น) */
 function equippedItem(p){
   p = p || activePet();

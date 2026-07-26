@@ -2988,3 +2988,23 @@ html.no-anim .pet-show .ps-emote,
 html.no-anim .pet-show .ps-badge,
 html.no-anim .pet-show .ps-fr.ps-f2{animation:none;}
 html.no-anim .pet-show .ps-emote{display:none;}
+
+/* ============================================================
+   🎬 รอบ 605: คลิปวิดีโอน้องตามช่วงวัย (ครูเจนเองด้วย AI · clip/<pet>_<วัย>.mp4)
+   คลิปมี "ฉากในตัวเอง" (พื้นหลังดำ + เงาใต้ตัว) → เล่นเต็มกรอบเวทีแบบโรงหนัง
+   ฉากการ์ตูน CSS ของรอบ 604 ยังอยู่ใต้คลิป = ตัวสำรองเมื่อคลิปโหลดไม่ได้/ยังไม่มีไฟล์ชนิดนั้น
+   ============================================================ */
+.ps-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  border-radius:20px;display:none;z-index:1;pointer-events:none;background:#04060c;}
+/* padding-bottom:22px ของเวที (ที่เผื่อไว้ให้เท้าน้องยืนบนเส้นพื้น) ทำให้คลิปเตี้ยกว่ากรอบ 22px
+   → โหมดคลิปตัดออก ให้วิดีโอเต็มกรอบขอบมนพอดีทั้งใบ */
+.stage-hero.ps-clip-mode{background:#04060c;border-color:rgba(150,200,255,.45);padding-bottom:0;}
+.stage-hero.ps-clip-mode .ps-video{display:block;}
+/* โหมดคลิป: ซ่อนฉากการ์ตูน+ภาพนิ่ง แต่ไม่ถอดออกจากหน้า —
+   .ps-pod ต้องยังกดได้ (แตะน้อง/หัวใจ/แสงชวนลูบยึด element นี้) จึงใช้ opacity ไม่ใช่ display */
+.stage-hero.ps-clip-mode .pet-show-bg{opacity:0;}
+.stage-hero.ps-clip-mode .pet-show::before{opacity:0;}
+.stage-hero.ps-clip-mode .pet-show .ps-pod{opacity:0;}
+/* ขอบในเรืองแสงบาง ๆ ให้คลิปดูเป็น "จอ" ไม่ใช่รูสี่เหลี่ยมดำ */
+.stage-hero.ps-clip-mode .pet-show::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+  border-radius:20px;box-shadow:inset 0 0 42px rgba(4,10,24,.75), inset 0 0 0 1px rgba(140,200,255,.16);}

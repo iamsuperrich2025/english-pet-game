@@ -120,7 +120,7 @@ function petShowBgHTML(p){
 
 /* ตัวน้อง + ท่าเล่นในคลิป (คลาส .pet-stage / id #pet-tap คงเดิม —
    ระบบเก่ายังยึดไว้ใช้: applyPatRemindGlow, heartsFx, cureCelebrateFx, bindPetTap) */
-function petShowHTML(p){
+function petShowHTML(p, clipUrl){
   const stage = petStage(p);
   const base  = currentPetImg(p);                               // ภาพช่วงวัยจริงใน img/
   // เฟรมที่ 2 ของคลิป = ภาพ "ดีใจ" ของวัยเดียวกัน (มีไฟล์ถึงใช้ · ไม่มีก็เล่นเฟรมเดียว)
@@ -131,7 +131,14 @@ function petShowHTML(p){
     ? `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
       + (happy && happy !== base ? `<img class="pet-img ps-fr ps-f2" src="${happy}" alt="">` : '')
     : `<span class="pet-emoji">${(PETS[p.type] || {})[stage] || '🐾'}</span>`;
+  /* 🎬 รอบ 605: มีคลิปวิดีโอของวัยนี้ = เล่นเต็มกรอบเวที (คลิปมีฉากในตัวเอง พื้นหลังดำ)
+     ภาพนิ่ง+ฉากการ์ตูนยังวาดไว้ข้างใต้เสมอ — คลิปโหลดไม่ได้/ออฟไลน์ ถอด ps-clip-mode แล้วเห็นของเดิมทันที
+     ⚠️ .ps-pod ต้องอยู่เสมอ (แม้โปร่งใส) เพราะ #pet-tap / heartsFx / applyPatRemindGlow ยึดไว้ */
+  const video = clipUrl
+    ? `<video class="ps-video" src="${clipUrl}" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>`
+    : '';
   return `<div class="pet-show${calm ? ' ps-calm' : ''}">
+    ${video}
     <div class="pet-stage ps-pod">
       <div class="ps-travel">
         <div class="ps-shadow"></div>
@@ -3508,13 +3515,40 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero hero-side pet-show-mode">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p)}</div></div>`;
+    <div class="stage-hero hero-side pet-show-mode${petClipUrl(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
   /* 🎬 รอบ 604: เวทีกลาง = โชว์น้องน่ารัก (ไม่ใช่เหรียญแรงค์แล้ว) → คลิกเวทีไม่เปิดแผงแรงค์อีก
      ดูแรงค์ = แท็บเล็กใต้วันเดือนปีบนแถบบน (#rank-tab · renderRankTab) · แตะตัวน้องยังเปิดโปรไฟล์เหมือนเดิม */
+  /* 🎬 รอบ 605: คลิปน้อง — โหลดไม่ได้ (ยังไม่มีไฟล์ของชนิด/วัยนั้น, ออฟไลน์, เบราว์เซอร์เล่นไม่ได้)
+     → จำว่าไม่มี แล้วถอยไปฉากการ์ตูน CSS ทันที ไม่มีจอดำค้าง · autoplay ถูกบล็อกก็ลองเล่นซ้ำแบบเงียบ ๆ */
+  {
+    const vid = card.querySelector('.ps-video');
+    if(vid){
+      const heroEl = card.querySelector('.stage-hero');
+      const key = petClipKey(p);
+      vid.addEventListener('error', ()=>{
+        if(key) CLIP_FILES[key] = null;
+        if(heroEl) heroEl.classList.remove('ps-clip-mode');
+        vid.remove();
+      }, {once:true});
+      const tryPlay = ()=>{ const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{}); };
+      // ⚠️ เรียก play() ทันทีหลังตั้ง src มักโดน AbortError (ไฟล์ยังโหลดไม่ถึงเฟรมแรก) → สั่งซ้ำตอน loadeddata
+      vid.addEventListener('loadeddata', ()=>{ if(key) CLIP_FILES[key] = vid.getAttribute('src'); tryPlay(); }, {once:true});
+      tryPlay();
+    }
+  }
+  /* เผื่อเบราว์เซอร์บล็อก autoplay (นโยบายบางเครื่อง/บางเบราว์เซอร์): แตะจอครั้งแรกแล้วคลิปเดินเอง
+     ผูกครั้งเดียวตลอดอายุหน้า (renderDashboard ถูกเรียกบ่อยมาก ห้ามผูกซ้ำทุกรอบ) */
+  if(!window.__clipTapBound){
+    window.__clipTapBound = true;
+    document.addEventListener('pointerdown', ()=>{
+      const v = document.querySelector('.ps-video');
+      if(v && v.paused){ const pr = v.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+    }, true);
+  }
   if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
