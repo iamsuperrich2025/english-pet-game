@@ -135,9 +135,12 @@ h1{color:var(--sky-d);text-shadow:none;}
 #screen-quiz .game-top{margin-bottom:2px;}
 #screen-quiz .quiz-progress{font-size:clamp(12px,3.2dvh,15px);margin:2px 0 clamp(2px,1dvh,6px);}
 #screen-quiz .quiz-word-card{
-  padding:clamp(8px,4.5dvh,24px) 10px;margin-bottom:clamp(6px,2dvh,14px);
+  /* ซ้าย-ขวาเว้นที่ให้ปุ่ม Next เท่ากัน (รอบ 593) — คำยาว ๆ จะได้ไม่ไปทับปุ่ม และยังอยู่กึ่งกลางเป๊ะ */
+  padding:clamp(8px,4.5dvh,24px) clamp(64px,13vw,120px);margin-bottom:clamp(6px,2dvh,14px);
   font-size:clamp(22px,7.5dvh,34px);line-height:1.15;
 }
+#screen-quiz .quiz-next{font-size:clamp(14px,3.4dvh,19px);}
+#screen-quiz .quiz-next .qn-arrow{font-size:clamp(22px,6dvh,33px);}
 #screen-quiz .quiz-phon{font-size:clamp(11px,3dvh,15px);margin-top:clamp(2px,1dvh,6px);}
 /* ตัวเลือก = ตาราง 2×2 (เดิมเรียง 4 แถวลงล่าง จอเตี้ยปุ่มล่างหลุดจอ) */
 #quiz-choices{display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,1.8dvh,10px);align-items:stretch;}

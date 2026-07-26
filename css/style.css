@@ -1104,9 +1104,20 @@ html.no-anim body.quake{animation:none;}
 .quiz-word-card{
   background:var(--blue);border:3px solid #fff;border-radius:22px;padding:26px 10px;
   text-align:center;font-size:34px;color:#2f6ea5;box-shadow:var(--card-shadow);margin-bottom:14px;
-  cursor:pointer;user-select:none;
+  cursor:pointer;user-select:none;position:relative;   /* ▶️ รอบ 593: ยึดปุ่ม Next ไว้ขวาการ์ด */
 }
-.quiz-speak{font-size:20px;opacity:.55;vertical-align:middle;}
+/* ▶️ ปุ่มไปข้อถัดไป (รอบ 593 · ผู้ใช้สั่ง) — โผล่หลังตอบเท่านั้น เด็กอ่านเฉลยจบแล้วค่อยกดเอง */
+.quiz-next{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  display:none;align-items:center;gap:4px;background:none;border:0;padding:6px 6px;
+  font-family:inherit;font-size:19px;font-weight:bold;color:#2f6ea5;line-height:1;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.quiz-next.show{display:inline-flex;animation:qnPop .22s ease-out;}
+.quiz-next .qn-arrow{font-size:33px;line-height:.9;font-weight:bold;}
+.quiz-next:hover{opacity:.72;}
+.quiz-next:active{transform:translateY(-50%) scale(.94);}
+@keyframes qnPop{from{opacity:0;transform:translate(10px,-50%);}to{opacity:1;transform:translate(0,-50%);}}
 .quiz-choice{
   display:block;width:100%;margin-bottom:10px;padding:13px;border:3px solid #fff;border-radius:18px;
   background:var(--pink);color:#c04a82;font-family:inherit;font-size:19px;cursor:pointer;

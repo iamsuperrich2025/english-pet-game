@@ -107,6 +107,42 @@ Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGi
   if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
 });
 
+/* ============================================================
+   🎁 เงินรางวัลย้อนหลัง (รอบ 593 · ผู้ใช้สั่ง) — ปรับรางวัลสอบผ่าน 10 ข้อ 100 → 500
+   เซฟที่เคยสอบผ่านก่อนประกาศใหม่ ได้ส่วนต่างย้อนหลังตอนโหลด (คิดใน loadState → state.quizBackPay)
+   ที่นี่ทำหน้าที่ "เด้งบอกเด็กครั้งเดียว" ว่าได้เพิ่มเท่าไหร่ เพราะอะไร
+   ============================================================ */
+function showQuizBackPay(){
+  const b = state.quizBackPay;
+  if(!b || !b.total) return;
+  state.quizBackPay = null; saveState();              // เด้งครั้งเดียวพอ (เหรียญเข้าไปแล้วตั้งแต่ตอนโหลด)
+  const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  const name = state.profileName || (state.student && state.student.first) || 'หนู';
+  if(typeof sfx !== 'undefined' && sfx.coinGet) sfx.coinGet();
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#ffd76a"></div>
+    <div class="rankup-content">
+      <div class="rankup-title">🎁 ปรับเงินรางวัลใหม่ — จ่ายย้อนหลังให้ด้วย!</div>
+      <div style="font-size:56px;line-height:1">🪙</div>
+      <div class="rankup-name" style="color:#ffb300">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">ยินดีด้วย ${escapeHTML(name)}! 🎉<br>
+        ตอนนี้ <b>สอบผ่าน 10 ข้อ รับ ${num(b.to)} เหรียญ</b> (เดิม ${num(b.from)} เหรียญ)<br>
+        <small>หนูเคยสอบผ่านไปแล้ว <b>${num(b.n)} หมวด</b> ตอนนั้นได้หมวดละ ${num(b.from)}<br>
+        ระบบเลยเติมส่วนต่างให้อีกหมวดละ <b>${num(b.per)}</b> = <b>${num(b.total)} เหรียญ</b> ให้ครบเท่ารางวัลใหม่<br>
+        หมวดที่ยังไม่ได้สอบ ผ่านครั้งแรกรับ ${num(b.to)} เหรียญเลย 💪</small></p>
+      <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
+    </div>`;
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(ov);
+  if(typeof feedEvent === 'function')
+    feedEvent('coin', `รับเงินรางวัลย้อนหลัง +${num(b.total)} 🪙 (ปรับรางวัลสอบผ่านเป็น ${num(b.to)} เหรียญ)`);
+}
+
 /* เข้าเกมจริง — เรียกครั้งเดียวจาก authEnterGame (auth.js) หลัง login + sync เซฟเสร็จ
    (ก่อนหน้านั้นห้ามเรียก careTick เพราะ saveState จะไปบัมพ์ savedAt
    ทำให้เซฟเก่าในเครื่องดู "ใหม่กว่า" เซฟ cloud ทั้งที่ไม่ได้เล่นจริง) */
@@ -127,6 +163,7 @@ function bootGame(){
     showScreen('screen-dashboard');
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
     if(!state.profileName) authAskProfileName();
+    else setTimeout(showQuizBackPay, 700);   // 🎁 รอบ 593: แจ้งเงินรางวัลย้อนหลัง (ถ้ามี) หลังหน้าจอนิ่ง
   }
 }
 

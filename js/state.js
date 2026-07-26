@@ -5,6 +5,11 @@
    ============================================================ */
 const STORAGE_KEY = 'petVocabAdventure_v1';
 
+/* 🎁 รอบ 593 (ผู้ใช้สั่ง): รางวัล "สอบผ่านครั้งแรก" ของทุกหมวด/ทุกชุด 10 ข้อ = 500 (เดิม 100)
+   ค่าจริงอยู่ที่ `reward:` ใน js/data/vocab.js + BAND_SET_REWARD ใน js/dictband.js — ค่านี้ใช้เป็น
+   "เลขรุ่นรางวัล" สำหรับจ่ายย้อนหลัง (state.quizRewardVer) เท่านั้น แก้ที่ไหนต้องแก้ให้ตรงกันทั้ง 3 ที่ */
+const QUIZ_PASS_REWARD = 500;
+
 const CURE_COST      = 100;                // 🩹 รอบ 236: ลด 1000→100 (ตายในโลก 3D บ่อย เงินหมดไว ไม่สนุก)
 const HUNGRY_SICK_MS = 2*60*60*1000;       // หิวเกิน 2 ชม. (ถึง 20:00) ยังกินไม่เต็มหลอด → ป่วย
 /* คิว 7725691507 กลุ่ม A (ข้อ 1,2,3,6) */
@@ -93,6 +98,8 @@ const DEFAULT_STATE = {
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   vocabBook:{},                       // 📒 รอบ 288: สมุดคำศัพท์ของฉัน — {en:{th,c:ถูก,w:ผิด,t:เจอล่าสุด,lw:ล่าสุดผิด?}} เก็บจากเกมจับคู่+ข้อสอบทุกแบบ (เพดาน VB_MAX ใน vocabbook.js)
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
+  quizRewardVer:QUIZ_PASS_REWARD,     // 🎁 รอบ 593: รางวัลสอบผ่านที่เซฟนี้ "เคยได้จริง" ต่อหมวด — น้อยกว่าค่าปัจจุบัน = จ่ายส่วนต่างย้อนหลังตอนโหลด
+  quizBackPay:null,                   // ใบแจ้งจ่ายย้อนหลังที่ยังไม่ได้โชว์ {n,per,total,from,to,ts} (bootGame เด้งป๊อปอัพแล้วล้าง)
   rp:0,                               // Rank Points
   coins:0,
   daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
@@ -327,6 +334,23 @@ function loadState(){
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
+      /* 🎁 รอบ 593 (ผู้ใช้สั่ง): รางวัลสอบผ่าน 10 ข้อ 100 → 500 + "จ่ายย้อนหลัง" ให้คนที่สอบผ่านไปก่อนประกาศใหม่
+         นับเฉพาะ id ที่เคยได้รางวัลเต็มเรตนี้จริง = หมวดคำศัพท์ตามชั้น (ALL_CATS) + ชุดคลังศัพท์ bandXsY
+         (ตัด vbreview รางวัล 50 และสอบซ่อมรวม bandXretake รางวัล 0 ออก — คนละเรต ไม่ต้องชดเชย) */
+      if(!Array.isArray(s.quizPassed)) s.quizPassed = [];
+      // ⚠️ ต้องอ่านจาก old (เซฟดิบ) ไม่ใช่ s — s ถูก Object.assign ทับด้วยค่า default (500) ไปแล้ว เซฟเก่าจะดูเหมือนได้เรตใหม่
+      const rwOld = (typeof old.quizRewardVer === 'number' && old.quizRewardVer > 0) ? old.quizRewardVer : 100;
+      if(rwOld < QUIZ_PASS_REWARD){
+        const per = QUIZ_PASS_REWARD - rwOld;
+        const n = s.quizPassed.filter(id => /^band\d+s\d+$/.test(id) ||
+          (typeof ALL_CATS !== 'undefined' && ALL_CATS.some(c=>c.id === id))).length;
+        if(n > 0){
+          s.coins = (s.coins||0) + per*n;
+          s.lifetimeCoins = (s.lifetimeCoins||0) + per*n;   // เป็นเหรียญที่ได้จริง (แต่ไม่นับใน daily — ไม่ได้หามาจากการเล่นวันนี้)
+          s.quizBackPay = {n, per, total:per*n, from:rwOld, to:QUIZ_PASS_REWARD, ts:Date.now()};
+        }
+        s.quizRewardVer = QUIZ_PASS_REWARD;
+      }
       // 🚗 รอบ 211: รถส่วนตัวหลายคัน — ย้ายจากเซฟเก่า s.car (คันเดียว) → s.cars[] · sanitize รายคัน
       if(s.car && typeof s.car === 'object' && !Array.isArray(s.cars)){ s.cars = [s.car]; }   // migrate คันเดียว→array
       delete s.car;

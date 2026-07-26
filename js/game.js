@@ -829,10 +829,17 @@ function renderQuizQuestion(){
     `${quiz.cat.emoji} หมวด${quiz.cat.name} · ข้อ ${quiz.idx+1} จาก ${quiz.questions.length} · คำนี้แปลว่าอะไร?`;
   document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
   const wordEl = document.getElementById('quiz-word');
+  const lastQ = quiz.idx === quiz.questions.length - 1;
   wordEl.innerHTML = `${escapeHTML(q.en)} <span class="quiz-speak">🔊</span>`
     + (q.meta && (q.meta.ipa || q.meta.pron)
-        ? `<div class="quiz-phon">${escapeHTML(q.meta.ipa || '')} ${escapeHTML(q.meta.pron || '')}</div>` : '');
+        ? `<div class="quiz-phon">${escapeHTML(q.meta.ipa || '')} ${escapeHTML(q.meta.pron || '')}</div>` : '')
+    // ▶️ รอบ 593 (ผู้ใช้สั่ง): เลิกเด้งข้อถัดไปเอง — เด็กอ่านเฉลย/ประโยคตัวอย่างไม่ทัน กดปุ่มนี้เองเมื่อพร้อม
+    + `<button type="button" class="quiz-next" id="quiz-next">${lastQ ? 'ดูผลสอบ' : 'Next'}<span class="qn-arrow">❯</span></button>`;
   wordEl.onclick = ()=>speakWord(q.en);             // 🔊 แตะการ์ดคำโจทย์ = อ่านออกเสียง
+  wordEl.querySelector('.quiz-next').addEventListener('click', e=>{
+    e.stopPropagation();                            // อย่าให้ไปโดน onclick ของการ์ด (อ่านออกเสียง)
+    quizNext();
+  });
   // กล่องเฉลยประโยคตัวอย่าง (โผล่หลังตอบ เฉพาะหมวด band ที่มีตัวอย่าง)
   let xb = document.getElementById('quiz-extra');
   if(!xb){
@@ -862,23 +869,33 @@ function renderQuizQuestion(){
       }
       document.getElementById('quiz-score-pill').textContent = `ถูก ${quiz.correct} ข้อ`;
       // หมวด band: เฉลยประโยคตัวอย่าง EN+TH แล้วค้างไว้ให้อ่านก่อนขึ้นข้อใหม่
-      let wait = 950;
       if(q.meta && q.meta.ex){
         xb.innerHTML = `<div class="qx-ex">💬 ${escapeHTML(q.meta.ex)}</div>`
           + (q.meta.exTh ? `<div class="qx-exth">${escapeHTML(q.meta.exTh)}</div>` : '');
         xb.classList.add('show');
         // จอเตี้ย: กล่องเฉลยอาจอยู่ใต้ fold → เลื่อนให้เห็นทันที (smooth โดนเบราว์เซอร์ throttle ได้ตอนแท็บพัก)
         xb.scrollIntoView({block:'nearest'});
-        wait = 2400;
       }
-      setTimeout(()=>{
-        quiz.idx++;
-        if(quiz.idx >= quiz.questions.length) finishQuiz();
-        else renderQuizQuestion();
-      }, wait);
+      // ▶️ รอบ 593: โผล่ปุ่ม Next ให้เด็กกดเอง (ไม่มี setTimeout เด้งข้อใหม่แล้ว — อ่านเฉลยได้นานเท่าที่อยาก)
+      const nb = document.getElementById('quiz-next');
+      if(nb) nb.classList.add('show');
     });
   });
 }
+
+/* ▶️ ไปข้อถัดไป / จบข้อสอบ — เรียกจากปุ่ม Next หรือปุ่ม Enter/Space/→ บนคีย์บอร์ด */
+function quizNext(){
+  if(!quiz.answered) return;        // ยังไม่ตอบข้อนี้ = ยังไปต่อไม่ได้ (กันกดข้าม)
+  quiz.answered = false;            // กันกดรัว/กดซ้ำระหว่างเปลี่ยนข้อ
+  quiz.idx++;
+  if(quiz.idx >= quiz.questions.length) finishQuiz();
+  else renderQuizQuestion();
+}
+document.addEventListener('keydown', e=>{
+  const sc = document.getElementById('screen-quiz');
+  if(!sc || !sc.classList.contains('active') || !quiz.answered) return;
+  if(e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight'){ e.preventDefault(); quizNext(); }
+});
 
 function finishQuiz(){
   const qx = document.getElementById('quiz-extra');
