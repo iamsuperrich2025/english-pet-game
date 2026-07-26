@@ -41,11 +41,18 @@ const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (
    คราวนี้ลงมาเตี้ยและใกล้มาก: อยู่ในแนวสายตาปกติเลย (มุมเงยพอๆ กับ pitch เริ่มต้น 17°) */
 /* 📏 รอบ 441 (ผู้ใช้: "ขยายยานแม่ให้ยาวพอๆ กับสี่เหลี่ยมนี้"): ลำกว้าง 1,040 ม.
    = กินจอกว้างพอๆ กับแผ่นตัวอักษรที่เพิ่งเอาออก (ลำจริงยาวกว่าสนามบินหลายเท่า คลุมฟ้าแบบ ID4) */
-const MS_Y=1800, MS_Z=-1300, MS_R=2600;   // ×5 จากรอบ 441 (ผู้ใช้สั่งรอบ 551) — ลำกว้าง 5,200 ม. คลุมฟ้า
-/* ⚠️ ข้อจำกัดตอนตั้งค่า 3 ตัวนี้ (เจอมาแล้วทั้งหมด):
-     · ปลายหนามใต้ท้อง ≈ MS_Y − MS_R*0.30 − MS_R*0.20 ต้องสูงกว่ายอดเนินสูงสุด (~49 ม.) ไม่งั้นเนินทะลุลำ
-     · ×5 ทั้ง Y/Z/R → มุมมองเท่าเดิมแต่ลำใหญ่ขึ้น 5 เท่าทางกายภาพ + ตัวอักษรพอดีหน้าต่างยาน
-     · เงยจากจุดเกิดถึงกลางลำ ~28° (pitch เริ่มต้น 17°) → เห็นท้องลำเต็มๆ ตั้งแต่ยังไม่แหงนหน้า */
+const MS_Y=1180, MS_Z=-700, MS_R=2600;    // ลำกว้าง 5,200 ม. (×5 รอบ 550) · รอบ 551 ดึงลงต่ำ+เข้าใกล้
+/* 📐 กติกาวางยาน — วัดเป็น "มุมเงย" จากจุดเกิดผู้เล่น (z=176=STREET_Z0, ตา y≈4.3) เท่านั้น
+     ⚠️ ห้ามคิดจากกึ่งกลางลำ! ลำเป็น "ลิ่มแบน" กว้าง 5,200 หนาแค่ 1,237 → ขอบหน้าลำ (MS_Z+618)
+        คือส่วนที่ผู้เล่นเห็น ไม่ใช่กึ่งกลาง · คิดผิดจุดนี้ทำพลาดมาแล้ว 2 รอบติด:
+          รอบ 550 วางไกล 1,390 → ท้องลำเงย 34° = พ้นขอบจอ "มองตรงไม่เห็นยานเลย"
+          แก้ครั้งแรกรอบ 551 วางไกล 1,236 → เห็นเป็น "แถบมืดบาง" แค่ 15% ของจอ ไม่รู้สึกใหญ่
+     · จอเห็นได้ ±34° รอบกึ่งกลางภาพ (FOV 68) · pitch เริ่มต้น 17°
+     · สูตรที่ใช้จริง: ขอบหน้าลำต้องเงย ≥50° (เกือบเหนือหัว) + ขอบหลังลำเงย ~12°
+       → ลำคลุมจอตั้งแต่ ~56% ขึ้นไปถึงขอบบน = เห็นไม่หมดลำ รู้สึกมหึมา (ผู้ใช้สั่งรอบ 551)
+   ⚠️ ท้องลำต้องสูงกว่า: ยอดเนิน ~49 ม. · แถวตัวอักษร BOARD_Y=198 (ไม่งั้นแผงจมในลำ — ตอนนี้ห่าง 136 ม.) */
+const MS_FLAT=0.325;                      // ครึ่งความสูงลำ ÷ MS_R (วัดจากโมเดลจริง: 1,692 ÷ 2 ÷ 2600)
+const MS_BELLY=MS_Y-MS_R*MS_FLAT;         // ท้องลำจริง = 335 ม. (เหนือแถวตัวอักษร 137 ม.)
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* 🔠 แผงตัวอักษร — ตำแหน่งคงเดิม (ต้องอ่านได้จาก pitch เริ่มต้น) แต่ BOARD_CELL ×5 ให้พอดีหน้าต่างยาน 5 เท่า
@@ -2053,25 +2060,29 @@ function buildMothership(){
   const hullM=new THREE.MeshPhongMaterial({color:0x1c1f26,emissive:0x05070b,shininess:26,flatShading:true});
   const darkM=new THREE.MeshPhongMaterial({color:0x101318,emissive:0x02040a,shininess:14,flatShading:true});
 
+  /* 🥞 ลำสำรอง (ใช้ระหว่างรอ mothership.glb โหลด · ถ้าโหลดไม่ได้ก็ใช้ตัวนี้ถาวร) อยู่ในกลุ่มย่อย "hull"
+     แล้วบีบแกน y ให้เงาลำเท่าโมเดลจริง — ทรงกรวยชุดนี้สูง ±MS_R*0.50 แต่โมเดลจริงสูงแค่ ±MS_R*MS_FLAT
+     ⚠️ ไม่บีบ = ตอนยานลงมาต่ำ (รอบ 551) หนามใต้ท้องยาวถึง y −260 ทิ่มทะลุพื้นทรายให้เห็นตอนเน็ตช้า */
+  const hull=new THREE.Group(); hull.scale.y=MS_FLAT/0.50; grp.add(hull);
   const top=new THREE.Mesh(new THREE.ConeGeometry(MS_R,MS_R*0.30,16,1),hullM);
-  top.position.y=MS_R*0.15; grp.add(top);
+  top.position.y=MS_R*0.15; hull.add(top);
   const bot=new THREE.Mesh(new THREE.ConeGeometry(MS_R,MS_R*0.42,16,1),darkM);
-  bot.rotation.z=Math.PI; bot.position.y=-MS_R*0.21; grp.add(bot);
+  bot.rotation.z=Math.PI; bot.position.y=-MS_R*0.21; hull.add(bot);
   for(let i=0;i<4;i++){                                      // วงแหวนโครงสร้างซ้อนชั้น
     const r=MS_R*(0.94-i*0.17);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(r,MS_R*0.016,4,20),hullM);
-    ring.rotation.x=Math.PI/2; ring.position.y=MS_R*(0.045-i*0.05); grp.add(ring);
+    ring.rotation.x=Math.PI/2; ring.position.y=MS_R*(0.045-i*0.05); hull.add(ring);
   }
   for(let i=0;i<9;i++){                                      // หนามแหลมบนสันยาน
     const a=(i/9)*TAU, r=MS_R*rnd(0.16,0.52), hgt=MS_R*rnd(0.12,0.30);
     const sp=new THREE.Mesh(new THREE.ConeGeometry(MS_R*0.05,hgt,5),hullM);
     sp.position.set(Math.cos(a)*r, MS_R*0.17+hgt/2, Math.sin(a)*r);
-    sp.rotation.z=rnd(-.12,.12); grp.add(sp);
+    sp.rotation.z=rnd(-.12,.12); hull.add(sp);
   }
   for(let i=0;i<14;i++){                                     // หนามใต้ท้องชี้ลงหาเมือง (ยาวเกิน = ทิ่มทะลุพื้นทราย)
     const a=(i/14)*TAU+0.2, r=MS_R*rnd(0.20,0.75), hgt=MS_R*rnd(0.10,0.20);
     const sp=new THREE.Mesh(new THREE.ConeGeometry(MS_R*0.045,hgt,5),darkM);
-    sp.rotation.z=Math.PI; sp.position.set(Math.cos(a)*r, -MS_R*0.30-hgt/2, Math.sin(a)*r); grp.add(sp);
+    sp.rotation.z=Math.PI; sp.position.set(Math.cos(a)*r, -MS_R*0.30-hgt/2, Math.sin(a)*r); hull.add(sp);
   }
   const lampG=new THREE.SphereGeometry(MS_R*0.014,6,5);
   msLamps=[];
@@ -2079,7 +2090,7 @@ function buildMothership(){
     const a=(i/26)*TAU, col=i%3===0?0x3affa0:(i%3===1?0xffa63a:0x3ad4ff);
     const lp=new THREE.Mesh(lampG,new THREE.MeshBasicMaterial({color:col}));
     lp.position.set(Math.cos(a)*MS_R*0.93,-MS_R*0.06,Math.sin(a)*MS_R*0.93);
-    lp.userData.ph=Math.random()*TAU; grp.add(lp); msLamps.push(lp);
+    lp.userData.ph=Math.random()*TAU; hull.add(lp); msLamps.push(lp);
   }
   /* 🔴 แกนพลังงาน = "จุดอ่อนที่ยิงโดน" — อยู่ในฉาก ไม่ใช่ลูกของลำ (ลำใหญ่/หมุน เล็งไม่ได้)
      ห้อยต่ำลงมาใกล้ผู้เล่น เพื่อให้เล็งยิงได้จริงทั้งจากพื้นและจากเฮลิ */
@@ -6306,7 +6317,7 @@ function tickMother(dt,now){
   if(now>msBeamAt){
     msBeamAt=now+MS_BEAM_GAP*rnd(.8,1.3);
     /* ลำแสงหนักยิงลงมาจาก "ท้องยานฝั่งที่มองเห็น" (ไม่ใช่กลางลำที่อยู่ไกลลิบ) */
-    const from=new THREE.Vector3(px+rnd(-260,260), MS_Y-MS_R*0.30, pz+rnd(-500,-160));
+    const from=new THREE.Vector3(px+rnd(-260,260), MS_BELLY, pz+rnd(-500,-160));
     spawnAlienShot(from,0xff5a8a,MS_BEAM_DMG,F_SHOT_SPD*.72,1.9);
   }
 }
