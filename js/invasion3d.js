@@ -1249,6 +1249,35 @@ const Snd={
       h.connect(hg); hg.connect(c.destination); h.start(st); h.stop(st+dur+.02);
     }
     this.gpwsN++; return n*gap; },
+  /* ⛽🌡️🚨 รอบ 559: เสียงเตือนของ "ไฟเตือนบนแผงหน้าปัดเฮลิ" — โครงบี๊บเดียวกับ gpws() แต่แยกเสียงประจำดวง
+     ให้เด็กฟังปุ๊บรู้ว่าไฟดวงไหนติดโดยไม่ต้องอ่านป้าย:
+     ⛽ น้ำมัน = ต่ำ ช้า เสียงตกท้าย · 🌡️ ร้อน = กลาง ไล่เสียงขึ้น (เหมือนของที่กำลังร้อนขึ้น) · 🚨 รอบเกิน = สูง ถี่รัว
+     lv 1 = เหลือง (เบา ห่าง) · lv 2 = แดง (สูงขึ้น ดังขึ้น ถี่ขึ้น เพิ่มอีก 1 ครั้ง) · คืน "ความยาวชุดบี๊บ (วินาที)" */
+  GAUGE_SND:{ fuel:{f:520,  sl:.86, n:[2,3], gap:[.26,.19], dur:.14, vol:.060},
+              tmp :{f:700,  sl:1.16,n:[2,3], gap:[.20,.14], dur:.12, vol:.060},
+              rpm :{f:1150, sl:.97, n:[3,4], gap:[.11,.08], dur:.07, vol:.070} },
+  gaugeN:0, gaugeLast:'',
+  gauge(kind,lv){ const s=this.GAUGE_SND[kind]; if(!s) return 0;
+    const hard=lv>=2?1:0, n=s.n[hard], gap=s.gap[hard], dur=s.dur;
+    if(!this.on()) return n*gap;
+    const c=this.ac(); if(!c) return n*gap; const t=c.currentTime;
+    const f=s.f*(hard?1.12:1), vol=s.vol*(hard?1.45:1);
+    for(let i=0;i<n;i++){
+      const st=t+i*gap;
+      const o=c.createOscillator(); o.type='square';
+      o.frequency.setValueAtTime(f,st); o.frequency.linearRampToValueAtTime(f*s.sl,st+dur);   // sl<1 = เสียงตก · >1 = เสียงไต่ขึ้น
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=f*3.2;           // กันเสียงเหลี่ยมบาดหู
+      const g=c.createGain(); g.gain.setValueAtTime(.0006,st);
+      g.gain.exponentialRampToValueAtTime(vol,st+.01);
+      g.gain.setValueAtTime(vol,st+dur*.7);
+      g.gain.exponentialRampToValueAtTime(.0006,st+dur);
+      o.connect(lp); lp.connect(g); g.connect(c.destination); o.start(st); o.stop(st+dur+.02);
+      const h=c.createOscillator(); h.type='sine'; h.frequency.setValueAtTime(f*2,st);
+      const hg=c.createGain(); hg.gain.setValueAtTime(.0006,st);
+      hg.gain.exponentialRampToValueAtTime(vol*.3,st+.012); hg.gain.exponentialRampToValueAtTime(.0006,st+dur);
+      h.connect(hg); hg.connect(c.destination); h.start(st); h.stop(st+dur+.02);
+    }
+    this.gaugeN++; this.gaugeLast=kind+lv; return n*gap; },
   noise(t,dur,freq,vol){ const c=this.ctx; if(!c) return;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -3090,16 +3119,47 @@ function tickHeliGauges(dt,col,now){
     cpFuelToastAt=now;
     toastBan('⛽ <b>เชื้อเพลิงเหลือน้อย</b><br><span class="ib-sub">ลงจอดสักครู่ ฐานจะเติมให้เอง (เครื่องไม่ดับกลางอากาศนะ)</span>',2400);
   }
+  tickHeliAlarm(now);                                        // 🚨🔊 รอบ 559: บี๊บตามไฟเตือนที่เพิ่งคำนวณเสร็จ
+}
+/* 🚨 รอบ 559: ระดับไฟเตือนแต่ละดวง (0 ดับ · 1 เหลือง · 2 แดง) — "แหล่งความจริงที่เดียว"
+   ใช้ร่วมกัน 3 ที่: วาดไฟ cpLamps() · เสียงเตือน tickHeliAlarm() · `_t.heliGauges.lamps` (เทสต์)
+   เดิมสูตรถูกก๊อปไว้ 2 ที่ (วาด/เทสต์) — ถ้าแก้เกณฑ์ที่เดียวจะเพี้ยนกัน */
+function heliLampLv(){
+  const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
+  return {fuel:fr<FUEL_LOW?2:fr<FUEL_WARN?1:0, tmp:cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0,
+          rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0};
+}
+/* 🚨🔊 รอบ 559: เสียงบี๊บเตือนตามไฟบนแผง (น้ำมันต่ำ/เครื่องร้อน/รอบเกิน — ไฟ "เสียหาย" ไม่มีเสียง
+   เพราะโดนยิงมีเสียง/ภาพเตือนอยู่แล้ว) · เรียกทุกเฟรมจาก tickHeliGauges = ดังเฉพาะตอนอยู่ในเฮลิ
+   • ดังทีละดวงเท่านั้น (เลือกดวงวิกฤตสุด เรียงความเร่งด่วน รอบเกิน→ร้อน→น้ำมัน) กันเสียงซ้อนจนฟังไม่ออก
+   • ไฟแรงขึ้น (ดับ→เหลือง→แดง) = ดังทันที ไม่รอคูลดาวน์ · ระดับเดิม = ย้ำเป็นจังหวะ (แดงถี่กว่าเหลือง) */
+const ALARM_GAP=[0,7000,2800];                       // ms ระหว่างการย้ำ (ดัชนี = ระดับไฟ)
+const ALARM_KEYS=['rpm','tmp','fuel'];               // เรียงตามความเร่งด่วน (ระดับเท่ากันเอาตัวหน้า)
+let alarmLv={fuel:0,tmp:0,rpm:0}, alarmAt={fuel:0,tmp:0,rpm:0}, alarmLast='';
+function resetHeliAlarm(){ alarmLv={fuel:0,tmp:0,rpm:0}; alarmAt={fuel:0,tmp:0,rpm:0}; alarmLast=''; }
+function tickHeliAlarm(now){
+  const lamps=heliLampLv();
+  let pick='', pl=0;
+  for(const k of ALARM_KEYS){
+    const lv=lamps[k];
+    if(lv>alarmLv[k]) alarmAt[k]=0;                  // ไฟแรงขึ้น = ล้างคูลดาวน์ ให้ได้ยินตอนเปลี่ยนทันที
+    alarmLv[k]=lv;
+    if(lv>pl){ pl=lv; pick=k; }
+  }
+  if(!pick){ alarmLast=''; return; }
+  if(now-alarmAt[pick]<ALARM_GAP[pl]) return;
+  alarmAt[pick]=now; alarmLast=pick+pl;
+  Snd.gauge(pick,pl);
 }
 /* 🚨 รอบ 534: แผงไฟเตือน 4 ดวง — ปกติเป็นป้ายจาง ๆ กลืนกับแผง · ผิดปกติ = สว่างกะพริบ
    เหลือง = ระวัง · แดงกะพริบถี่ = วิกฤต (น้ำมันใกล้หมด / เครื่องร้อนจัด / รอบเกินแดง / ลำเสียหายหนัก) */
 function cpLamps(c,now){
-  const fr=cpFuel/FUEL_MAX, hpFr=hp/PLAYER_HP, rpm=cpRpmNow();
+  const lv4=heliLampLv();
   const rows=[
-    ['น้ำมัน',  fr<FUEL_LOW?2:fr<FUEL_WARN?1:0],
-    ['ร้อน',    cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0],
-    ['รอบเกิน', rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0],
-    ['เสียหาย', hpFr<.22?2:hpFr<.42?1:0],
+    ['น้ำมัน',  lv4.fuel],
+    ['ร้อน',    lv4.tmp],
+    ['รอบเกิน', lv4.rpm],
+    ['เสียหาย', lv4.dmg],
   ];
   const n=rows.length, w=CP_LAMP.w, h=CP_LAMP.h, g=CP_LAMP.gap;
   let x=CP_LAMP.cx-(n*w+(n-1)*g)/2;
@@ -5756,6 +5816,7 @@ function enterHeli(){
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
   cpFuel=FUEL_MAX; cpEngT=ENG_AMB; cpFuelToastAt=0;         // ⛽🌡️ รอบ 534: ขึ้นเครื่องใหม่ = ถังเต็ม เครื่องเย็น
+  resetHeliAlarm();                                         // 🚨🔊 รอบ 559: ขึ้นเครื่องใหม่ = เริ่มนับเสียงเตือนใหม่
   py=terrainH(px,pz)+HELI_SKID+1.8;                        // นั่งอยู่ในลำที่ยังจอดอยู่ (ยังไม่ลอย)
   hLanded=true;                                            // ต้องดันคันเร่งขึ้นเองหลังสตาร์ทเสร็จ
   if(gunGrp) gunGrp.visible=false;                         // ในเฮลิไม่เห็นปืนมือ
@@ -7547,11 +7608,14 @@ window.InvasionWorld={
       cockpit:cpEl?getComputedStyle(cpEl).display:null, gauges:gaugeCanvasEl?getComputedStyle(gaugeCanvasEl).display:null,
       canopy:canopyEl?getComputedStyle(canopyEl).display:null }; },
     /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
-    get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
+    get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow();
       return {fuel:+cpFuel.toFixed(2), fuelFrac:+fr.toFixed(3), eng:+cpEngT.toFixed(3), rpm:+rpm.toFixed(2),
-        lamps:{fuel:fr<FUEL_LOW?2:fr<FUEL_WARN?1:0, tmp:cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0,
-               rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0}}; },
-    setHeliGauges(f,t){ if(f!=null) cpFuel=f; if(t!=null) cpEngT=t; },
+        lamps:heliLampLv()}; },                                   // 🚨 รอบ 559: อ่านจากแหล่งเดียวกับที่วาดไฟ/ที่เสียงใช้
+    setHeliGauges(f,t,r){ if(f!=null) cpFuel=f; if(t!=null) cpEngT=t; if(r!=null) cpRpm=r; },   // r = รอบเชิงกล (ใช้ตอนไม่มีเสียงใบพัดจริง)
+    /* 🚨🔊 รอบ 559: เสียงเตือนตามไฟ — n=จำนวนชุดบี๊บที่ดังจริง · last=<ดวง><ระดับ> ครั้งล่าสุด */
+    get heliAlarm(){ return {n:Snd.gaugeN, last:alarmLast, snd:Snd.gaugeLast,
+      lv:Object.assign({},alarmLv), at:Object.assign({},alarmAt), gap:ALARM_GAP}; },
+    tickHeliAlarm, resetHeliAlarm, heliLampLv,
     layoutInvCockpit, drawInvGauges, get gaugePix(){ if(!gaugeCtx) return 0;   // นับพิกเซลที่วาดจริง = เข็มขึ้นจอไหม
       const d=gaugeCtx.getImageData(0,0,gaugeCanvasEl.width,gaugeCanvasEl.height).data; let n=0;
       for(let i=3;i<d.length;i+=4) if(d[i]>8) n++; return n; },
