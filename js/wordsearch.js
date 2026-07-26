@@ -5,7 +5,7 @@
    🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
               · เอาไฟกระพริบที่คำที่เจอออก (เหลือไฮไลต์เขียวนิ่ง ๆ)
    🆕 รอบ 589: กระดาน "เตี้ยกว้าง" 5 แถวเสมอ (ผู้ใช้สั่ง: 10 แถวบนมือถือช่องเล็กเกินไป)
-              เลือกจำนวนคอลัมน์ได้ 5×10 / 5×13 / 5×16 (ตั้งต้นตามระดับชั้น · จำไว้ใน state.wsSize)
+              จำนวนคอลัมน์ 10/13/16 — 🔒 รอบ 591 ล็อกตามระดับชั้นเท่านั้น ผู้เล่นเลือกเองไม่ได้
               · กดที่ชิปคำ = อ่านออกเสียง (speakWord) + ใบ้ "เส้นที่คำวางอยู่" (แถว/หลัก/ทแยง)
    🆕 รอบ 590: แต้มสะสมตลอดกาล (state.wsScore/wsWords/wsBoards) → แท็บใหม่ "🔎 ค้นหาคำ"
               ในกระดานอันดับ (Top 10 all time · field ws ใน /leaderboard)
@@ -30,19 +30,18 @@
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
   const grade=()=> (typeof state!=='undefined'&&state.student)?state.student.grade:'ป.1';
 
-  /* 📐 คอลัมน์ตั้งต้นตามระดับชั้น: ต่ำกว่าประถม-ป.3 = 10 · ป.4-ป.6 = 13 · ม.ต้น-ม.ปลาย = 16 */
+  /* 🔒 รอบ 591 — ผู้ใช้สั่ง "ล็อกขนาดตามระดับชั้นเท่านั้น" (26 ก.ค. 2026) ห้ามให้ผู้เล่นเลือกเอง
+       ต่ำกว่าประถม + ป.1-ป.3 → 5×10 · ป.4 → 5×13 · ป.5 ขึ้นไปจนถึงปริญญา → 5×16
+     (ป.5-ป.6 / ม.1-ม.6 / ปริญญาตรี / สูงกว่าปริญญาตรี = 16 ทั้งหมด) */
   function defaultSize(){
     const g=String(grade()||'');
-    if(g.indexOf('ม.')===0) return 16;
     const m=/^ป\.(\d)/.exec(g);
-    if(m) return (+m[1]>=4)?13:10;
-    return 10;
+    if(m) return (+m[1]<=3)?10:(+m[1]===4)?13:16;
+    if(g.indexOf('ต่ำกว่าประถม')===0) return 10;
+    return 16;                       // ม.1-ม.6 · ปริญญาตรี · สูงกว่าปริญญาตรี
   }
-  /* คอลัมน์ที่ใช้จริง = ที่ผู้เล่นเลือกไว้ (ถ้ามี) ไม่งั้นตามระดับชั้น */
-  function curSize(){
-    const s=(typeof state!=='undefined'&&state.wsSize)?+state.wsSize:0;
-    return (COLS.indexOf(s)>=0)?s:defaultSize();
-  }
+  /* ขนาดที่ใช้จริง = ตามระดับชั้นเสมอ (เลิกอ่าน state.wsSize ที่ผู้เล่นเคยเลือกไว้) */
+  function curSize(){ return defaultSize(); }
 
   /* คลังคำตามระดับชั้น (อังกฤษล้วน A-Z · ยาว 3-10 · ไม่ซ้ำ) — กฎเหล็ก */
   function pool(){
@@ -139,8 +138,7 @@
         <div class="ws-gridwrap"><div id="ws-grid"></div></div>
       </div>
       <div class="ws-actions">
-        <span class="ws-sizes" role="group" aria-label="ขนาดกระดาน"><span class="ws-sizes-lb">📐 ขนาด</span>${
-          COLS.map(s=>`<button type="button" class="ws-size" data-size="${s}">${ROWS}×${s}</button>`).join('')}</span>
+        <span class="ws-sizes"><span class="ws-sizes-lb">📐 ขนาดกระดาน</span><b class="ws-size-now"></b></span>
         <button id="ws-new" type="button">🎲 สุ่มเกมใหม่</button>
         <button id="ws-stash" type="button">📥 เก็บกระดานชั่วคราว</button>
         <button id="ws-clear" type="button">🧹 ล้างกระดาน — ออกจากเกม</button>
@@ -157,16 +155,6 @@
     overlay.querySelector('#ws-stash').addEventListener('click', stash);
     overlay.querySelector('#ws-clear').addEventListener('click', clearExit);
     overlay.querySelector('.ws-grade').textContent='ระดับชั้น '+grade();
-    /* 📐 รอบ 589: เลือกขนาดกระดาน → สุ่มกระดานใหม่ทันทีตามขนาดนั้น */
-    overlay.querySelector('.ws-sizes').addEventListener('click', e=>{
-      const b=e.target.closest('.ws-size'); if(!b) return;
-      const s=+b.dataset.size;
-      if(s===(wsGame?wsGame.cols:curSize())) return;
-      if(typeof state!=='undefined'){ state.wsSize=s; }
-      if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
-      newGame(s);
-      if(typeof toast==='function') toast(`📐 เปลี่ยนเป็นกระดาน ${ROWS}×${s} · หา ${wsGame.words.length} คำ`);
-    });
     /* 🔊 รอบ 589: กดชิปคำ = อ่านออกเสียง + ใบ้ตำแหน่งคร่าว ๆ */
     wordsEl.addEventListener('click', e=>{
       const el=e.target.closest('.ws-word'); if(!el||!wsGame) return;
@@ -214,12 +202,12 @@
     gridEl.style.height=Math.floor(cell*rows+(rows-1)*gap+chrome)+'px';
     gridEl.style.setProperty('--ws-fs', Math.max(11, Math.round(cell*0.54))+'px');
   }
-  /* ปุ่มขนาดที่กำลังใช้อยู่ = ติดไฟ */
+  /* ป้ายบอกขนาดกระดานที่ระดับชั้นนี้ใช้ (รอบ 591: อ่านอย่างเดียว กดเปลี่ยนไม่ได้) */
   function syncSizeBtns(){
     if(!overlay) return;
-    // กระดานเก่าที่เซฟไว้ (จัตุรัส 10 แถว) ไม่ตรงกับปุ่มไหน → ไม่ต้องติดไฟปุ่มใด
-    const cur=(wsGame && wsGame.rows!==ROWS) ? -1 : (wsGame?wsGame.cols:curSize());
-    overlay.querySelectorAll('.ws-size').forEach(b=>b.classList.toggle('on', +b.dataset.size===cur));
+    const lb=overlay.querySelector('.ws-size-now'); if(!lb) return;
+    const g=wsGame||{rows:ROWS, cols:curSize()};
+    lb.textContent=g.rows+'×'+g.cols;
   }
 
   function render(){
@@ -339,6 +327,9 @@
   function open(){
     if(!overlay) build();
     if(!wsGame){ wsGame=(typeof state!=='undefined'&&state.wordSearch)?normalize(state.wordSearch):null; }
+    /* 🔒 รอบ 591: กระดานที่เก็บไว้ต้องตรงขนาดของระดับชั้นเท่านั้น
+       (เซฟเก่าจัตุรัส 10 แถว หรือขนาดที่เคยเลือกเองสมัยยังเลือกได้ → สุ่มใหม่ให้ถูกขนาด) */
+    if(wsGame && (wsGame.rows!==ROWS || wsGame.cols!==curSize())) wsGame=null;
     if(!wsGame) wsGame=generate();
     render();
     overlay.style.display='flex';
