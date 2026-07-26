@@ -186,7 +186,7 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (9,765 บรรทัด · 590 รายการ)
+## js/invasion3d.js (9,814 บรรทัด · 595 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 16-81 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 82-116 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -242,13 +242,14 @@ makeHappy:73 · currentPetImg:84
 - 7547-7714 🔥🌀 รอบ 565 (ผู้ใช้สั่ง): ยานลูก "หลบมิสไซล์ที่ล็อกได้" — ปล่อยแฟลร์ + บิดหนี
 - 7715-7793 🔫↩️ รอบ 568 (ผู้ใช้สั่ง): ยานลูกที่ "ถูกเรดาร์ล็อก" ยิงสวนกลับใส่เฮลิผู้เล่น
 - 7794-7995 🔥🛡️ รอบ 569 (ผู้ใช้สั่ง): แฟลร์ของ "เฮลิผู้เล่น" + เสียงเตือนตอนถูกล็อก
-- 7996-8087 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
-- 8088-8263 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
-- 8264-8706 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
-- 8707-8973 🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
-- 8974-9024 ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
-- 9025-9097 🔁 ลูปหลัก
-- 9098-9765 ▶️ เข้า/ออกโลก
+- 7996-8006 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
+- 8007-8132 🧘🎯 รอบ 586 (ผู้ใช้ส่งคลิป: "ตัวละครดิ้นไปดิ้นมา ไม่เป็นธรรมชาติ")
+- 8133-8308 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
+- 8309-8751 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
+- 8752-9018 🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
+- 9019-9069 ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
+- 9070-9142 🔁 ลูปหลัก
+- 9143-9814 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 WORD_COIN:23 · WORD_TIME:25 · WORLD:26 · EYE:27 · FOV:28 · LOOK_SENS:29
 PITCH_MIN:30 · MS_Y:52 · MS_FLAT:61 · MS_BELLY:62 · MS_HP:63 · MS_DMG_GUN:64
@@ -332,23 +333,24 @@ SPK_BEEP:7815 · AMIS_SPD:7816 · AMIS_TURN:7817 · AMIS_DMG:7818 · AMIS_LIFE:7
 AMIS_PROX:7821 · PH_FLARE_MAX:7822 · PH_FLARE_RE:7823 · PH_FLARE_N:7824 · PH_FLARE_COOL:7825 · PH_FLARE_BACK:7826
 PH_FLARE_DOWN:7827 · PH_TRAP:7828 · PH_FLARE_CH:7829 · renderFlareBtn:7832 · dropPlayerFlares:7838 · fireAlienMissile:7870
 clearAMis:7885 · resetSpike:7890 · spikeStart:7891 · aMisNear:7893 · tickSpike:7901 · tickAMis:7953
-SQUAD_COVERS:8005 · squadCoverPool:8006 · pickSquadDest:8007 · tickSquadMove:8021 · tickSquad:8043 · CALL_DIST:8094
-CALL_NEAR:8095 · CALL_GAP_ALL:8096 · CALL_GAP_ONE:8097 · CALL_GAP_DIR:8098 · CALL_MS:8099 · CALL_LINES:8100
-CALL_SECTORS:8111 · bearingKey:8114 · clearSquadBubble:8122 · callSprite:8128 · squadShout:8140 · tickSquadCalls:8153
-CHAT_GAP_ALL:8180 · CHAT_LINES:8181 · tickSquadChatter:8187 · heliFireAt:8204 · nearestFighterTo:8216 · tickHelis:8222
-DAY:8271 · NIGHT:8273 · collectMsMats:8277 · CYCLE_MS:8288 · MODE_ICON:8290 · STORM_MS:8297
-buildStars:8304 · buildStreetLamps:8327 · glowTex:8345 · tickStreetLamps:8353 · beamPair:8370 · tickSearchBeams:8381
-buildBarrelFires:8418 · tickBarrels:8436 · tickShootingStar:8446 · buildMist:8471 · tickMist:8481 · tickNightSound:8524
-tickSneak:8533 · tickStorm:8544 · nvReady:8560 · nvEnter:8561 · nvExit:8567 · tickNvHint:8568
-dropGlowStick:8577 · tickGlowSticks:8594 · buildFlashlight:8603 · setNight:8608 · setDayMode:8609 · tickNight:8623
-applyNightLook:8655 · tickFlashlight:8695 · MSB_FIRST:8725 · MSB_GAP:8726 · MSB_WARN:8727 · MSB_KILL_WARN:8728
-MSB_NEAR:8729 · MSB_FLEE:8730 · MSB_R:8731 · MSB_HOLD:8732 · MSB_MAX:8733 · MSB_DEAD_MS:8734
-MSB_BEEP:8735 · MSB_COVER_R:8738 · MSB_PAD_R:8739 · MSB_COVER_RECHECK:8740 · msbEnsure:8745 · msbPlace:8762
-msbBarPos:8771 · msbHide:8778 · resetMsBeam:8782 · msbCoverAt:8797 · msbAimBeside:8818 · msbBegin:8824
-msbAim:8841 · msbStrike:8872 · msbKill:8911 · msbKickOut:8924 · tickMsBeam:8934 · TURBO_EVERY:8987
-TURBO_MS:8988 · TURBO_MUL:8989 · TURBO_N:8990 · TURBO_TRACK:8991 · resetTurbo:8993 · turboPick:8998
-turboBegin:9005 · tickTurbo:9017 · fit:9028 · tick:9034 · frame:9042 · build:9101
-start:9163 · exitWorld:9289
+SQUAD_COVERS:8005 · squadCoverPool:8006 · SQ_TURN:8016 · angWrap:8021 · turnTo:8023 · easeLook:8028
+squadTarget:8033 · pickSquadDest:8045 · tickSquadMove:8059 · tickSquad:8085 · CALL_DIST:8139 · CALL_NEAR:8140
+CALL_GAP_ALL:8141 · CALL_GAP_ONE:8142 · CALL_GAP_DIR:8143 · CALL_MS:8144 · CALL_LINES:8145 · CALL_SECTORS:8156
+bearingKey:8159 · clearSquadBubble:8167 · callSprite:8173 · squadShout:8185 · tickSquadCalls:8198 · CHAT_GAP_ALL:8225
+CHAT_LINES:8226 · tickSquadChatter:8232 · heliFireAt:8249 · nearestFighterTo:8261 · tickHelis:8267 · DAY:8316
+NIGHT:8318 · collectMsMats:8322 · CYCLE_MS:8333 · MODE_ICON:8335 · STORM_MS:8342 · buildStars:8349
+buildStreetLamps:8372 · glowTex:8390 · tickStreetLamps:8398 · beamPair:8415 · tickSearchBeams:8426 · buildBarrelFires:8463
+tickBarrels:8481 · tickShootingStar:8491 · buildMist:8516 · tickMist:8526 · tickNightSound:8569 · tickSneak:8578
+tickStorm:8589 · nvReady:8605 · nvEnter:8606 · nvExit:8612 · tickNvHint:8613 · dropGlowStick:8622
+tickGlowSticks:8639 · buildFlashlight:8648 · setNight:8653 · setDayMode:8654 · tickNight:8668 · applyNightLook:8700
+tickFlashlight:8740 · MSB_FIRST:8770 · MSB_GAP:8771 · MSB_WARN:8772 · MSB_KILL_WARN:8773 · MSB_NEAR:8774
+MSB_FLEE:8775 · MSB_R:8776 · MSB_HOLD:8777 · MSB_MAX:8778 · MSB_DEAD_MS:8779 · MSB_BEEP:8780
+MSB_COVER_R:8783 · MSB_PAD_R:8784 · MSB_COVER_RECHECK:8785 · msbEnsure:8790 · msbPlace:8807 · msbBarPos:8816
+msbHide:8823 · resetMsBeam:8827 · msbCoverAt:8842 · msbAimBeside:8863 · msbBegin:8869 · msbAim:8886
+msbStrike:8917 · msbKill:8956 · msbKickOut:8969 · tickMsBeam:8979 · TURBO_EVERY:9032 · TURBO_MS:9033
+TURBO_MUL:9034 · TURBO_N:9035 · TURBO_TRACK:9036 · resetTurbo:9038 · turboPick:9043 · turboBegin:9050
+tickTurbo:9062 · fit:9073 · tick:9079 · frame:9087 · build:9146 · start:9208
+exitWorld:9334
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
