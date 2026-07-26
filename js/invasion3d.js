@@ -1314,6 +1314,15 @@ const Snd={
     g.gain.setValueAtTime(vol,t+dur*.65);
     g.gain.exponentialRampToValueAtTime(.0006,t+dur);
     o.connect(lp); lp.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.02); },
+  /* 🔥 รอบ 565: ยานลูกปล่อยแฟลร์ — "พึ่บ!" ลมพ่นแรงสั้น ๆ + ประกายแหลมซ้อน (ให้รู้ทันทีว่าเป้าเพิ่งหลอกจรวด) */
+  flareN:0,
+  flare(){ this.flareN++;
+    if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    this.noise(t,.42,1500,.16);                       // ลมพ่นแฟลร์
+    const o=c.createOscillator(); o.type='triangle'; o.frequency.setValueAtTime(1500,t);
+    o.frequency.exponentialRampToValueAtTime(420,t+.30);
+    const g=c.createGain(); g.gain.setValueAtTime(.075,t); g.gain.exponentialRampToValueAtTime(.0008,t+.32);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.34); },
   noise(t,dur,freq,vol){ const c=this.ctx; if(!c) return;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -2239,7 +2248,9 @@ function makeFighter(letterIdx){
   const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP,
            bar:{spr:bar,cv:bcv,tx:btx},
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
-           tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0};
+           tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0,
+           /* 🔥🌀 รอบ 565: ของประจำลำสำหรับหลบมิสไซล์ — แฟลร์มีจำกัด FLARE_PODS ชุด (หมดแล้วหมดเลย) */
+           evaUntil:0, evaSpin:0, evaRoll:0, roll:0, flareAt:0, flarePods:FLARE_PODS};
   drawFighterBar(f);
   fighters.push(f);
   /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — รอบ 556 มีพร้อมกัน 26 ลำ (a-z)
@@ -5187,7 +5198,9 @@ function drawLockBoxes(){
     el.style.top =((-p.y*.5+.5)*h).toFixed(0)+'px';
     el.classList.toggle('on',l.on);
     const dist=Math.round(l.f.grp.position.distanceTo(camera.position));
-    lockTxtEls[i].textContent=(l.on?'🔴 LOCK ':'🔶 จับเป้า ')+(LK_NUM[i]||'')+' '+l.f.ch.toUpperCase()+' · '+dist+' ม.';
+    /* 🌀 รอบ 565: ลำที่กำลังบิดหนีมิสไซล์ ขึ้นป้ายเตือน = ผู้เล่นรู้ว่าทำไมล็อกหลุด/จรวดพลาด */
+    const eva=performance.now()<(l.f.evaUntil||0)?' 🌀หนี!':'';
+    lockTxtEls[i].textContent=(l.on?'🔴 LOCK ':'🔶 จับเป้า ')+(LK_NUM[i]||'')+' '+l.f.ch.toUpperCase()+' · '+dist+' ม.'+eva;
   }
 }
 /* จอเรดาร์มุมซ้ายบน: หัวลำชี้ขึ้นเสมอ · จุดเขียว = ยานลูก · จุดแดงโต = เป้าที่ล็อก */
@@ -6626,7 +6639,9 @@ function removePeerBubble(p){
 /* 👾 ยานลูก: บินวน + สุ่มดิ่ง + ยิงลำแสงนำหน้าผู้เล่นเล็กน้อย (หลบได้) */
 function tickFighters(dt,now){
   fighters.forEach(f=>{
-    f.ang+=f.spin*dt;
+    /* 🌀 รอบ 565: กำลังบิดหนีมิสไซล์อยู่ไหม (ตั้งค่าใน tickEvade) — หนี = เลี้ยวสวนแรง ๆ + ม้วนตัว */
+    const eva=now<(f.evaUntil||0);
+    f.ang+=(eva?f.evaSpin:f.spin)*dt;
     f.rad+=Math.sin(now*.0004+f.ang)*8*dt;
     f.rad=clamp(f.rad,45,F_R);
     /* ⛰️ รอบ 431: บางช่วง "โฉบต่ำเลียดสันเขา" (หลบยาก ต้องไล่ยิงจริงจัง) สลับกับบินสูงตามเดิม */
@@ -6637,14 +6652,16 @@ function tickFighters(dt,now){
     }
     const tx=Math.cos(f.ang)*f.rad, tz=Math.sin(f.ang)*f.rad;
     const p=f.grp.position;
-    p.x+=(tx-p.x)*Math.min(1,dt*1.6);
-    p.z+=(tz-p.z)*Math.min(1,dt*1.6);
+    const lat=eva?2.9:1.6;                       // 🌀 หนี = สลัดตัวออกด้านข้างไวกว่าปกติเกือบเท่าตัว
+    p.x+=(tx-p.x)*Math.min(1,dt*lat);
+    p.z+=(tz-p.z)*Math.min(1,dt*lat);
     /* บินอิงพื้นเสมอ — ผ่านเนินสูงก็ไต่ขึ้นตาม ไม่มุดทะลุภูเขา (ยกเร็วกว่าลดเพื่อกันชนยอดเนิน) */
     const gnd=terrainH(p.x,p.z), wantY=gnd+f.tgtY;
-    p.y+=(wantY-p.y)*Math.min(1, dt*(wantY>p.y?2.6:.9));
-    /* หันหัวไปทางที่บิน + เอียงตัวเข้าโค้ง */
+    p.y+=(wantY-p.y)*Math.min(1, dt*(wantY>p.y?2.6:.9)*(eva?1.9:1));
+    /* หันหัวไปทางที่บิน + เอียงตัวเข้าโค้ง (🌀 รอบ 565: ตอนหนี = ม้วนตัวต่อเนื่อง) */
     f.grp.rotation.y=Math.atan2(tx-p.x,tz-p.z)+Math.PI;
-    f.grp.rotation.z=-f.spin*2.4;
+    if(eva){ f.roll=(f.roll||0)+f.evaRoll*dt; f.grp.rotation.z=f.roll; }
+    else { f.roll=0; f.grp.rotation.z=-f.spin*2.4; }
     if(f.label) f.label.material.opacity=1;
     /* ไฟกะพริบตอนเพิ่งโดนยิง */
     const hitK=Math.max(0,1-(now-f.hitAt)/220);
@@ -6768,12 +6785,125 @@ function tickHeliDust(dt,now){
   for(const uid in peers){ const p=peers[uid]; if(p.kind!=='heli'||!p.grp) continue;
     const g=p.grp.position, gy=terrainH(g.x,g.z); if(g.y-gy<7) spawnDust(g.x,g.z,gy,.7); }
 }
+/* ============================================================
+   🔥🌀 รอบ 565 (ผู้ใช้สั่ง): ยานลูก "หลบมิสไซล์ที่ล็อกได้" — ปล่อยแฟลร์ + บิดหนี
+   ต่อยอดเรดาร์ล็อกเป้ารอบ 563/564 — เดิมยิงล็อกแล้ว = เข้าเป้าแน่นอน 100% (ยานลูกบินวนเฉย ๆ)
+   ใหม่: ลำที่ "มีมิสไซล์ล็อกพุ่งเข้าหา" จะรู้ตัวและตอบโต้ 2 อย่าง
+     ① 🌀 บิดหนี — สวนทางเลี้ยวเดิมแรง ๆ (EVA_SPIN) + ม้วนตัว + เปลี่ยนระดับความสูงกะทันหัน
+        ผลพลอยได้: หลุดกรวยเรดาร์ง่ายขึ้น = ล็อกค้างยากขึ้น + ยิงปืนกลตามยากขึ้น (ตั้งใจ)
+     ② 🔥 ปล่อยแฟลร์ — เมื่อจรวดเข้ามาใกล้ EVA_FLARE_D โปรยพลุร้อน FLARE_N ดวง
+        มิสไซล์ที่เฉียดแฟลร์ในรัศมี FLARE_TRAP มีโอกาส FLARE_CH ต่อลูกที่จะ "หลงเป้า"
+        (เปลี่ยนไปวิ่งเข้าแฟลร์แล้วระเบิดกลางอากาศ ไม่โดนยาน)
+   ⚖️ กันเกมยากเกินสำหรับเด็ก: แฟลร์มีจำกัด FLARE_PODS ชุด/ลำ (หมดแล้วหมดเลย) + เว้นคูลดาวน์
+      + ดาเมจสะสมข้ามชุด (F_HP 20 / PH_MIS_DMG 10) → ยิงซ้ำอีกชุดก็จบ ไม่ใช่ยิงเท่าไหร่ก็ไม่ตก
+   ⚠️ ทดสอบ: `_t.setFlareLuck(1)` = หลอกติดแน่นอน · `_t.setFlareLuck(0)` = ไม่หลอกเลย
+   ============================================================ */
+const EVA_WARN=110;           // มิสไซล์ใกล้กว่านี้ (ม.) = ลำนั้นรู้ตัว → เริ่มบิดหนี
+const EVA_FLARE_D=68;         // ใกล้กว่านี้ (ม.) = ปล่อยแฟลร์
+const EVA_TURN=[1500,2400];   // บิดหนีนานกี่ ms (สุ่มในช่วง)
+const EVA_SPIN_MUL=2.4;       // เลี้ยวตอนหนีแรงกว่าปกติกี่เท่า (f.spin ปกติ .16–.32 rad/วิ)
+const EVA_SPD_MAX=78;         // ⚠️ เพดานความเร็วขอบวง (ม./วิ) ตอนหนี — ต้องต่ำกว่า MIS_SPD 95
+                              //    ไม่งั้นวงโคจร F_R 190 ม. × ความเร็วเชิงมุมที่คูณแล้ว = ยานลูกวิ่งหนีจรวดพ้น
+                              //    (วัดจริงรอบ 565: ใช้ค่าคงที่ 2.6 rad/วิ = 494 ม./วิ จรวดตามไม่ทันเลยสักลูก)
+const EVA_ROLL=6.4;           // ม้วนตัว (rad/วิ) ให้เห็นชัดว่ากำลัง "บิดหนี"
+const EVA_Y=[10,20];          // เปลี่ยนระดับความสูงกะทันหันกี่เมตร (ขึ้นหรือลง)
+const FLARE_PODS=2;           // ยานลูก 1 ลำมีแฟลร์กี่ชุด (หมดแล้วหมดเลย ตลอดชีวิตลำนั้น)
+const FLARE_COOL=4600;        // เว้นระหว่างชุด (ms)
+const FLARE_N=7;              // แฟลร์กี่ดวงต่อชุด
+const FLARE_LIFE=2400;        // แฟลร์ติดอยู่กี่ ms
+const FLARE_TRAP=26;          // มิสไซล์เฉียดแฟลร์ใกล้กว่านี้ (ม.) = เสี่ยงหลงเป้า
+let FLARE_CH=0.35;            // โอกาสหลงต่อ 1 ลูก ต่อ 1 ชุดแฟลร์ (เทสต์ปรับผ่าน _t.setFlareLuck)
+let flares=[], flareSeq=0, evaToastAt=0;
+/* มิสไซล์ของ "ผู้เล่น" ที่กำลังล็อกลำนี้และใกล้สุด
+   ⚠️ ไม่นับจรวดของเฮลิบอทพันธมิตร (m.ally) — บอทยิงถี่มาก ถ้านับด้วยยานลูกจะเผาแฟลร์ทิ้งหมด
+      ตั้งแต่ก่อนผู้เล่นได้ยิงสักนัด (วัดจริงในเทสต์รอบ 565: 3 ลำเสียไปลำละ 1 ชุดฟรี ๆ) */
+function incomingMis(f){
+  let best=null, bd=1e9;
+  for(const m of missiles){
+    if(m.ally) continue;
+    if(m.lock!==f) continue;                                  // หลงแฟลร์ไปแล้ว lock=null → ไม่นับเป็นภัยอีก
+    const d=m.mesh.position.distanceTo(f.grp.position);
+    if(d<bd){ bd=d; best=m; }
+  }
+  return best?{m:best,d:bd}:null;
+}
+/* เริ่มท่าบิดหนี: สวนทางเลี้ยวเดิม + สลับระดับความสูง (ค้างไว้จนหมดเวลา) */
+function startEvade(f,now){
+  f.evaUntil=now+rnd(EVA_TURN[0],EVA_TURN[1]);
+  const w=Math.min(Math.abs(f.spin)*EVA_SPIN_MUL, EVA_SPD_MAX/Math.max(30,f.rad));
+  f.evaSpin=(f.spin>0?-1:1)*w;
+  f.evaRoll=f.evaSpin>0?EVA_ROLL:-EVA_ROLL;
+  f.tgtY=clamp(f.tgtY+(Math.random()<.5?-1:1)*rnd(EVA_Y[0],EVA_Y[1]),9,F_Y_MAX);
+  f.yAt=f.evaUntil+600;                                       // กันตัวสุ่มความสูงปกติมาทับกลางท่าหนี
+}
+/* 🔥 โปรยแฟลร์ 1 ชุด (พลุร้อนกระจายท้ายลำ ตกลงพร้อมควัน) */
+function dropFlares(f,now){
+  f.flareAt=now; f.flarePods=(f.flarePods==null?FLARE_PODS:f.flarePods)-1;
+  const sid=++flareSeq, p=f.grp.position;
+  /* แฟลร์ต้อง "พาความเร็วของลำติดไปด้วย" แล้วค่อยหล่นรั้งท้าย — ไม่งั้นลำบินหนีไปไกล
+     แฟลร์ค้างอยู่กับที่ จรวดที่ไล่ตามลำจะไม่มีวันเฉียดแฟลร์เลย (วัดจริงรอบ 565: หลอกไม่ติดสักลูก)
+     ความเร็วลำ = สัมผัสวงโคจร (ang, rad, spin ที่ใช้อยู่ตอนนี้) */
+  const w=(now<f.evaUntil?f.evaSpin:f.spin), vt=f.rad*w;
+  const fv=new THREE.Vector3(-Math.sin(f.ang)*vt,0,Math.cos(f.ang)*vt);
+  const back=fv.lengthSq()>1?fv.clone().normalize().multiplyScalar(-3.5):new THREE.Vector3();
+  for(let i=0;i<FLARE_N;i++){
+    const mat=new THREE.SpriteMaterial({map:smokeTex(),transparent:true,opacity:.95,
+      blending:THREE.AdditiveBlending,depthWrite:false,color:0xffd07a});
+    const s=new THREE.Sprite(mat);
+    s.position.set(p.x+back.x+rnd(-1.5,1.5),p.y+rnd(-1.5,1.5),p.z+back.z+rnd(-1.5,1.5));
+    s.scale.setScalar(3.0); scene.add(s);
+    const a=Math.random()*TAU, sp=rnd(5,13);
+    flares.push({s,sid,born:now,life:FLARE_LIFE*rnd(.8,1.15),smokeAt:0,
+      v:new THREE.Vector3(fv.x*.75+Math.cos(a)*sp, rnd(-2,3.5), fv.z*.75+Math.sin(a)*sp)});
+  }
+  Snd.flare();
+  if(now-evaToastAt>2600){
+    evaToastAt=now;
+    toastBan('🔥 <b style="color:#ffd166">ยานลูก '+f.ch.toUpperCase()+' ปล่อยแฟลร์หนีมิสไซล์!</b><br>'+
+             '<span class="ib-sub">จรวดอาจหลงเป้า — ล็อกใหม่แล้วยิงซ้ำ (แฟลร์ของแต่ละลำมีจำกัด)</span>',1500);
+  }
+}
+/* เรียกทุกเฟรม ก่อน tickMissiles — ① ตัดสินใจหนี/ปล่อยแฟลร์ ② เช็กมิสไซล์หลงแฟลร์ ③ อายุแฟลร์ */
+function tickEvade(dt,now){
+  /* ① ยานลูกแต่ละลำ: มีจรวดล็อกพุ่งเข้ามาไหม */
+  for(const f of fighters){
+    const th=incomingMis(f);
+    if(!th) continue;
+    if(th.d<EVA_WARN && now>=(f.evaUntil||0)) startEvade(f,now);
+    if(th.d<EVA_FLARE_D && (f.flarePods==null||f.flarePods>0) && now-(f.flareAt||0)>FLARE_COOL) dropFlares(f,now);
+  }
+  /* ② มิสไซล์เฉียดแฟลร์ = สุ่มครั้งเดียวต่อ "ชุดแฟลร์" (ไม่ใช่ทุกเฟรม ไม่งั้นหลงแน่นอน) */
+  for(const m of missiles){
+    if(!m.lock || m.ally) continue;                           // จรวดบอทพันธมิตรไม่เกี่ยวกับแฟลร์ (ดู incomingMis)
+    for(const fl of flares){
+      if(m.rolled===fl.sid) continue;                         // ชุดนี้สุ่มไปแล้ว (แพ้/ชนะก็จบ)
+      if(m.mesh.position.distanceTo(fl.s.position)>FLARE_TRAP) continue;
+      m.rolled=fl.sid;
+      if(Math.random()<FLARE_CH){ m.decoy=fl; m.lock=null; }   // 🔥 หลงเป้า → วิ่งเข้าแฟลร์แทน
+      break;
+    }
+  }
+  /* ③ แฟลร์: ร่วงลงตามแรงโน้มถ่วง + หรี่ลงตอนใกล้ดับ + พ่นควันตาม */
+  for(let i=flares.length-1;i>=0;i--){
+    const fl=flares[i], age=(now-fl.born)/fl.life;
+    if(age>=1){ scene.remove(fl.s); fl.s.material.dispose(); flares.splice(i,1); continue; }
+    fl.v.y-=11*dt; fl.v.multiplyScalar(1-Math.min(.9,dt*1.1));
+    fl.s.position.addScaledVector(fl.v,dt);
+    fl.s.material.opacity=.95*(1-age*age);
+    fl.s.scale.setScalar(3.0*(1+Math.sin(now*.05+fl.sid)*.16)*(1-age*.35));
+    if(now-fl.smokeAt>120){ fl.smokeAt=now;
+      spawnPuff(fl.s.position.clone(),{scale:1.1,life:900,opacity:.34,color:0xbfb6a8,grow:2.0,vy:.4}); }
+  }
+}
+function clearFlares(){ flares.forEach(fl=>{ scene.remove(fl.s); fl.s.material.dispose(); }); flares=[]; }
 function tickMissiles(dt,now){
   for(let i=missiles.length-1;i>=0;i--){
     const m=missiles[i];
     /* นำวิถี: ค่อยๆ เบนเข้าหาเป้า (ยานลูกที่ล็อกไว้เท่านั้น — รอบ 556 ไม่มีแกนยานแม่ให้ยิงแล้ว) */
     let tgt=null;
     if(m.lock && fighters.indexOf(m.lock)>=0) tgt=m.lock.grp.position;
+    /* 🔥 รอบ 565: โดนแฟลร์หลอก → เลิกสนใจยาน วิ่งเข้าดวงแฟลร์แทน (แฟลร์ดับก่อน = พุ่งตรงไปจนหมดอายุ) */
+    else if(m.decoy && flares.indexOf(m.decoy)>=0) tgt=m.decoy.s.position;
     /* 🚀 รอบ 531: ช่วง boost ตอนออกตัว — ยังไม่นำวิถี (พุ่งเชิดขึ้นตาม loft ก่อน) แล้วเร่งแรง
        หมด boost ค่อย homing ดึงโค้งลงเข้าเป้า = วิถีโค้งสมจริงแบบ Modern Warship */
     const boosting = now < (m.boostUntil||0);
@@ -6801,7 +6931,9 @@ function tickMissiles(dt,now){
     const prox=m.hard?6.6:5.4;                        // 🎯 รอบ 563: ลูกที่ล็อกเป้า จุดชนวนไวขึ้นนิด
     for(const f of fighters){ if(m.mesh.position.distanceTo(f.grp.position)<prox){ hit=f; break; } }
     const old=(now-m.born>(m.hard?9000:6500)) || m.mesh.position.y<terrainH(m.mesh.position.x,m.mesh.position.z);
-    if(hit||old){
+    /* 🔥 รอบ 565: ถึงดวงแฟลร์ที่หลงตามมา = ระเบิดกลางอากาศเปล่า ๆ (เห็นชัดว่ายานลูกรอด) */
+    const decoyed=m.decoy && flares.indexOf(m.decoy)>=0 && m.mesh.position.distanceTo(m.decoy.s.position)<4.5;
+    if(hit||old||decoyed){
       boom(m.mesh.position.clone(), 1.0, 0xffb347);
       if(hit) damageFighter(hit,m.dmg||MIS_DMG,now);
       scene.remove(m.mesh); scene.remove(m.trail);
@@ -7544,6 +7676,7 @@ function frame(dt,now){
   tickFighters(dt,now);
   tickMother(dt,now);
   tickAlienShots(dt,now);
+  tickEvade(dt,now);                // 🔥🌀 รอบ 565: ยานลูกบิดหนี/ปล่อยแฟลร์ (ต้องมาก่อน tickMissiles)
   tickMissiles(dt,now);
   tickSmoke(dt,now);
   tickHeliDust(dt,now);
@@ -7690,7 +7823,7 @@ function start(){
   if(chatBarEl) chatBarEl.classList.remove('on'); if(selfMsgEl) selfMsgEl.classList.remove('on');
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
   missiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail); }); missiles=[];
-  clearSmoke();
+  clearSmoke(); clearFlares();      // 🔥 รอบ 565: แฟลร์ที่ค้างฟ้าต้องหายไปพร้อมรอบเก่า
   fx.forEach(f=>scene.remove(f.o)); fx=[]; bullets=[];
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
@@ -7915,7 +8048,21 @@ window.InvasionWorld={
       return {n:misQ.length, SALVO_PER_TGT, SALVO_PAIR_MS, SALVO_TGT_MS,
         q:misQ.map(q=>({ch:q.f?q.f.ch:null, side:q.side, in:Math.round(q.at-t)}))}; },
     get missileLocks(){ return missiles.map(m=>({hard:!!m.hard, lock:m.lock?m.lock.ch:null,
+      decoy:!!m.decoy, rolled:m.rolled||0,                       // 🔥 รอบ 565: หลงแฟลร์ไปแล้วหรือยัง
       dist:m.lock?+m.mesh.position.distanceTo(m.lock.grp.position).toFixed(1):null})); },
+    /* 🔥🌀 รอบ 565: ยานลูกหลบมิสไซล์ — แฟลร์ + บิดหนี */
+    tickEvade, dropFlares, startEvade, clearFlares, incomingMis,
+    setFlareLuck(v){ FLARE_CH=v; },                              // เทสต์: 1 = หลอกติดแน่นอน · 0 = ไม่หลอกเลย
+    get evade(){ const t=performance.now();
+      /* gap = ระยะใกล้สุดที่จรวด (ที่ยังล็อกอยู่) เคยเฉียดดวงแฟลร์ ณ ตอนนี้ — ใช้ตรวจว่าโอกาสหลอกเกิดขึ้นจริงไหม */
+      let gap=null;
+      for(const m of missiles){ if(!m.lock||m.ally) continue;
+        for(const fl of flares){ const d=m.mesh.position.distanceTo(fl.s.position); if(gap==null||d<gap) gap=d; } }
+      return {flares:flares.length, snd:Snd.flareN, luck:FLARE_CH, gap:gap==null?null:+gap.toFixed(1),
+        EVA_WARN, EVA_FLARE_D, FLARE_TRAP, FLARE_PODS, FLARE_COOL, FLARE_N,
+        fighters:fighters.map(f=>({ch:f.ch, eva:t<(f.evaUntil||0), left:Math.max(0,Math.round((f.evaUntil||0)-t)),
+          pods:f.flarePods, roll:+(f.roll||0).toFixed(2), y:+f.grp.position.y.toFixed(1), hp:f.hp,
+          inc:(()=>{ const th=incomingMis(f); return th?+th.d.toFixed(1):null; })()})).filter(o=>o.eva||o.inc!=null||o.pods<FLARE_PODS)}; },
     /* 🕹️ รอบ 562: ลากนิ้วขวา = คันเร่งขึ้น/ลง (แทนปุ่ม ▲▼ ที่ถอดออก) */
     heliPiloting, HELI_COL_SENS, get climb(){ return +phClimb.toFixed(3); },
     /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
