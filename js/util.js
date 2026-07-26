@@ -603,7 +603,7 @@ function openSettings(){
       </div>
     </div>
     <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
-      <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดปิดมาตั้งแต่แรก ไม่มีใครเห็นจนกว่าหนูจะเปิด</span></div>
+      <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดเปิดมาตั้งแต่แรก ปิดเองได้ถ้าไม่อยากให้เห็น</span></div>
     ${Object.keys(FEED_CATS).map(k=>`
     <div class="set-row set-feed-row" data-cat="${k}">
       <span class="set-lwrap"><span class="set-label">${FEED_CATS[k].e} ${FEED_CATS[k].n}</span>
@@ -626,7 +626,7 @@ function openSettings(){
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238 · ไฮไลต์ตัวที่เลือกอยู่
     overlay.querySelectorAll('.blk-mini').forEach(b=>b.classList.toggle('sel', curBlk === b.dataset.blk));
-    // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default ปิดทุกหมวด)
+    // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default เปิดทุกหมวดตั้งแต่รอบ 565)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
   };

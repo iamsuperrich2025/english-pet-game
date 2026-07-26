@@ -1491,7 +1491,7 @@ function showPlayerCard(uid, name, grade){
     if(!el) return;
     if(!list.length){
       el.innerHTML = `<div class="pl-none">ยังไม่มีกิจกรรมที่เปิดเผย 🔒<br>
-        <small>${me ? 'เปิดเผยกิจกรรมของหนูได้ในตั้งค่า ⚙️ (default ปิดทุกหมวด)' : 'ผู้เล่นเลือกเองได้ว่าจะเปิดเผยอะไรในตั้งค่า ⚙️'}</small></div>`;
+        <small>${me ? 'เปิด/ปิดกิจกรรมของหนูได้ในตั้งค่า ⚙️' : 'ผู้เล่นเลือกเองได้ว่าจะเปิดเผยอะไรในตั้งค่า ⚙️'}</small></div>`;
       return;
     }
     el.innerHTML = list.map(it=>{

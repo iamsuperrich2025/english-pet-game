@@ -150,8 +150,8 @@ const DEFAULT_STATE = {
   playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
   playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
   playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว
-  feedShare:{coin:false, quiz:false, goods:false, other:false, assets:false},
-                                      // 📰 รอบ 155: หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed (default ปิดทุกหมวด — คนอื่นไม่เห็นจนกว่าจะเปิดเอง)
+  feedShare:{coin:true, quiz:true, goods:true, other:true, assets:true},
+                                      // 📰 รอบ 155 (default เปิดทุกหมวดตั้งแต่รอบ 565): หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed — ปิดเองได้ทีหลังในตั้งค่า
   follows:{},                         // 📰 รอบ 155: คนที่เรา follow {uid:{n:ชื่อ, g:ชั้น, ts}} — feed หน้า lobby รวมกิจกรรมของคนกลุ่มนี้
 };
 
@@ -414,11 +414,11 @@ function loadState(){
       if(!Array.isArray(s.giftBox)) s.giftBox = [];
       s.giftBox = s.giftBox.filter(x=>x && (x.k === 'shop' || x.k === 'collect') &&
         (x.k === 'shop' ? giftInfo(x.id) : collectInfo(x.id)));
-      // 📰 Follow + Feed (รอบ 155): เซฟเก่าไม่มี → default ปิดทุกหมวด / ไม่ follow ใคร
+      // 📰 Follow + Feed (รอบ 155 · default เปิดทุกหมวดตั้งแต่รอบ 565): เซฟเก่าไม่มี → ใช้ default / ไม่ follow ใคร
       if(!s.feedShare || typeof s.feedShare !== 'object' || Array.isArray(s.feedShare))
         s.feedShare = structuredClone(DEFAULT_STATE.feedShare);
       for(const k of Object.keys(DEFAULT_STATE.feedShare))
-        if(typeof s.feedShare[k] !== 'boolean') s.feedShare[k] = false;
+        if(typeof s.feedShare[k] !== 'boolean') s.feedShare[k] = DEFAULT_STATE.feedShare[k];
       if(!s.follows || typeof s.follows !== 'object' || Array.isArray(s.follows)) s.follows = {};
       return s;
     }
