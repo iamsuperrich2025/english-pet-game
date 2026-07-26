@@ -2753,3 +2753,238 @@ html.no-anim .ws-word{transition:none;}
   .lobby-side .side-glass{padding:4px 6px;}
   .sec-online .side-glass{min-height:56px;}
 }
+
+/* ============================================================
+   🎬 รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026) — เวทีกลางล็อบบี้เปลี่ยนใหม่ทั้งหมด
+   ① แรงค์ = แท็บเล็กใต้วันเดือนปี (.rank-tab)  ② เวทีกลาง = "คลิปน้องน่ารัก" สไตล์การ์ตูนญี่ปุ่น
+   (เดิม = เหรียญแรงค์ยักษ์ + สไปรต์อบ 3D เดินไปมา) · แอนิเมชัน CSS ล้วน ไม่มีไฟล์ gif/วิดีโอใหม่
+   ============================================================ */
+/* ---------- ① แท็บแรงค์เล็กใต้วันเดือนปี ---------- */
+.profile-plate .rank-tab{
+  display:none;align-items:center;gap:5px;margin-top:3px;max-width:100%;
+  background:rgba(255,255,255,.10);border:1px solid var(--rk-c,#e0a92e);border-radius:999px;
+  padding:1px 9px 1px 3px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:500;
+  line-height:1.5;color:#ffe9a8;transition:transform .12s, background .12s;
+}
+.profile-plate .rank-tab:hover{background:rgba(255,255,255,.2);}
+.profile-plate .rank-tab:active{transform:scale(.95);}
+.rank-tab .rk-ico{width:17px;height:17px;object-fit:contain;flex-shrink:0;}
+.rank-tab .rank-badge-emoji{font-size:13px;flex-shrink:0;}
+.rank-tab .rk-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rank-tab .rk-bar{width:34px;height:4px;border-radius:999px;flex-shrink:0;overflow:hidden;
+  background:rgba(255,255,255,.22);}
+.rank-tab .rk-bar i{display:block;height:100%;border-radius:999px;background:var(--rk-c,#e0a92e);}
+/* เลื่อนแรงค์ระหว่างเล่น → แท็บเด้งวาบเรียกสายตา (เดิมเหรียญยักษ์กลางเวทีทำหน้าที่นี้) */
+.rank-tab.rk-up{animation:rkUpPop 1.4s ease-out;}
+@keyframes rkUpPop{
+  0%{transform:scale(1);box-shadow:none;}
+  18%{transform:scale(1.16);box-shadow:0 0 16px var(--rk-c,#e0a92e);}
+  100%{transform:scale(1);box-shadow:none;}
+}
+html.no-anim .rank-tab.rk-up{animation:none;}
+/* จอเตี้ย: แท็บแรงค์ขยับไป "ข้างวันเดือนปี" แทนบรรทัดใหม่ — แถบบนไม่สูงขึ้นไปกินเวทีน้อง (กฎทองข้อ 7) */
+@media (max-height:400px){
+  .profile-plate{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:0;}
+  .profile-plate .student-chip{flex:1 0 100%;}
+  .profile-plate .clock-chip{flex:0 1 auto;min-width:0;}
+  .profile-plate .rank-tab{font-size:10px;padding:0 7px 0 2px;margin-top:0;flex:0 0 auto;}
+  .rank-tab .rk-ico{width:14px;height:14px;}
+  .rank-tab .rk-bar{display:none;}
+}
+
+/* ---------- ② ฉากการ์ตูนหลังเวที (ต่อชนิดสัตว์) ---------- */
+/* กรอบเวทีเดิมเป็นห้องนีออนมืด (ตะแกรง synthwave + เส้นฟ้า) → ปิดทั้งคู่ในโหมดโชว์น้อง */
+.stage-hero.pet-show-mode{background:#cfe8ff;border-color:rgba(255,255,255,.5);
+  box-shadow:0 14px 34px rgba(3,15,35,.45), inset 0 0 26px rgba(255,255,255,.18);}
+.stage-hero.pet-show-mode::before,
+.stage-hero.pet-show-mode::after{display:none !important;}
+.pet-show-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:20px;pointer-events:none;
+  background:linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 56%, var(--sky3) 100%);}
+/* หมา = ทุ่งหญ้ากลางวันสดใส */
+.pet-show-bg.ps-dog{
+  --sky1:#8ed6ff;--sky2:#d4f0ff;--sky3:#eafbe4;--hill1:#8ed98c;--hill2:#66c473;
+  --gr1:#9ee08f;--gr2:#5cb862;--cloud:#ffffff;--sun:rgba(255,246,196,.85);}
+/* แมว = ซากุระยามเย็นโทนชมพู */
+.pet-show-bg.ps-cat{
+  --sky1:#ffc3e0;--sky2:#ffe3f0;--sky3:#ffe0cf;--hill1:#f7a9cd;--hill2:#e98bb8;
+  --gr1:#ffd0e2;--gr2:#f2a8c6;--cloud:#fff5fb;--sun:rgba(255,235,210,.9);}
+/* มังกร = ฟ้าสนธยาม่วง-ส้ม มีประกายไฟลอยขึ้น */
+.pet-show-bg.ps-dragon{
+  --sky1:#3d2a72;--sky2:#7a52ab;--sky3:#f2a25c;--hill1:#4b3579;--hill2:#33245a;
+  --gr1:#6b4a94;--gr2:#3a2864;--cloud:#e9d6ff;--sun:rgba(255,214,150,.85);}
+.pet-show-bg .ps-sun{position:absolute;left:50%;top:-34%;width:130%;height:120%;margin-left:-65%;
+  background:
+    radial-gradient(circle at 50% 42%, var(--sun) 0%, transparent 42%),
+    repeating-conic-gradient(from 0deg at 50% 42%, rgba(255,255,255,.22) 0deg 6deg, transparent 6deg 15deg);
+  -webkit-mask-image:radial-gradient(circle at 50% 42%, #000 0%, rgba(0,0,0,.45) 40%, transparent 66%);
+          mask-image:radial-gradient(circle at 50% 42%, #000 0%, rgba(0,0,0,.45) 40%, transparent 66%);
+  animation:psRays 70s linear infinite;}
+@keyframes psRays{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+/* ก้อนเมฆนุ่ม = แคปซูลหลัก + ปุยอีก 2 ก้อนด้วย box-shadow (ต้องเป็นหน่วยความยาว ห้ามใช้ %) */
+.pet-show-bg .ps-cloud{position:absolute;height:clamp(14px,3.4vh,26px);width:clamp(48px,12vh,92px);
+  border-radius:999px;background:var(--cloud,#fff);opacity:.9;
+  box-shadow:16px -11px 0 -3px var(--cloud,#fff), -19px -8px 0 -6px var(--cloud,#fff);
+  animation:psDrift 52s linear infinite;}
+/* delay ติดลบ = เริ่มกลางลูป → มีเมฆอยู่บนฟ้าตั้งแต่วินาทีแรก ไม่ต้องรอลอยเข้าจอ */
+.pet-show-bg .ps-cloud.c1{top:11%;left:-22%;animation-delay:-9s;}
+.pet-show-bg .ps-cloud.c2{top:25%;left:-44%;scale:.72;animation-duration:74s;animation-delay:-38s;opacity:.75;}
+.pet-show-bg .ps-cloud.c3{top:5%;left:-78%;scale:1.18;animation-duration:96s;animation-delay:-62s;opacity:.6;}
+/* เลื่อนด้วย translate (individual property) เพื่อไม่ทับ scale ข้างบน + ไม่รบกวน layout */
+@keyframes psDrift{from{translate:0}to{translate:170vw}}
+.pet-show-bg .ps-hill{position:absolute;bottom:19%;left:-14%;width:66%;height:30%;
+  border-radius:50% 50% 0 0 / 100% 100% 0 0;background:var(--hill1);}
+.pet-show-bg .ps-hill.h2{left:auto;right:-16%;width:74%;height:23%;background:var(--hill2);}
+.pet-show-bg .ps-ground{position:absolute;left:0;right:0;bottom:0;height:20%;
+  background:linear-gradient(180deg, var(--gr1) 0%, var(--gr2) 100%);}
+.pet-show-bg .ps-ground::before{content:'';position:absolute;left:0;right:0;top:-2px;height:5px;
+  background:rgba(255,255,255,.45);border-radius:50%;filter:blur(1px);}
+/* กลีบดอกไม้/ประกายร่วง (มังกร = ประกายไฟลอยขึ้นแทน) */
+.pet-show-bg .ps-fall{position:absolute;inset:0;}
+.pet-show-bg .ps-fall span{position:absolute;top:-9%;opacity:0;
+  animation-name:psFall;animation-timing-function:linear;animation-iteration-count:infinite;}
+@keyframes psFall{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  9%{opacity:.95}
+  92%{opacity:.85}
+  100%{transform:translateY(58vh) rotate(340deg);opacity:0}}
+.pet-show-bg.ps-dragon .ps-fall span{top:auto;bottom:-8%;animation-name:psRise;}
+@keyframes psRise{
+  0%{transform:translateY(0) scale(.65);opacity:0}
+  14%{opacity:.95}
+  100%{transform:translateY(-52vh) scale(1.05);opacity:0}}
+.pet-show-bg .ps-vig{position:absolute;inset:0;
+  background:radial-gradient(ellipse 78% 74% at 50% 52%, transparent 52%, rgba(20,40,80,.20) 100%);}
+html.no-anim .pet-show-bg .ps-sun,
+html.no-anim .pet-show-bg .ps-cloud,
+html.no-anim .pet-show-bg .ps-fall span{animation:none;}
+html.no-anim .pet-show-bg .ps-fall{display:none;}
+
+/* ---------- ③ ตัวน้อง: คลิปสั้นวนลูป 9 วิ (หายใจ → กระโดด 2 ที → ดีใจ → หันกลับ) ---------- */
+.pet-show{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:1%;pointer-events:none;}
+/* แสงสปอตนุ่ม ๆ หลังตัวน้อง — ดึงสายตาไปที่น้อง ไม่ให้ฉากหลังกลืน */
+.pet-show::before{content:'';position:absolute;left:50%;bottom:3%;width:min(72%,460px);height:46%;
+  transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(ellipse at 50% 72%, rgba(255,255,255,.55), rgba(255,255,255,0) 68%);}
+/* ขนาดน้อง: --ps-h = % ของความสูงกรอบ ตามระดับร่างยักษ์ (ui.js PET_SHOW_H)
+   ตัดด้วย 66cqw = 66% ของ "ความกว้างกรอบ" (hero-scene เป็น container) เผื่อที่ให้เดินออกข้าง 16% ไม่พ้นจอ
+   (เจอตอนเทสต์: จอ 735px เวทีเหลือกว้าง 261px น้องเต็มกรอบพอดี พอเดินซ้ายเลยขอบไป 50px) */
+.stage-hero.pet-show-mode .hero-scene .pet-show .ps-pod{
+  position:relative;
+  height:max(52px, min(calc(var(--ps-h,64) * 1%), 66cqw));
+  max-width:none;margin:0;width:auto;
+  display:flex;align-items:flex-end;justify-content:center;
+  filter:drop-shadow(0 10px 14px rgba(40,70,110,.30));}
+.pet-show .ps-travel{position:relative;height:100%;display:flex;align-items:flex-end;
+  animation:psTravel 9s ease-in-out infinite;}
+.pet-show .ps-jump{height:100%;display:flex;align-items:flex-end;
+  animation:psJump 9s ease-in-out infinite;}
+.stage-hero.pet-show-mode .hero-scene .pet-show .pet-wrap{
+  height:100%;display:flex;align-items:flex-end;justify-content:center;position:relative;
+  animation:none;pointer-events:auto;cursor:pointer;}
+.pet-show .ps-body{position:relative;height:100%;display:flex;align-items:flex-end;justify-content:center;
+  transform-origin:50% 100%;animation:psBody 9s ease-in-out infinite;}
+.stage-hero.pet-show-mode .hero-scene .pet-show .ps-fr{
+  height:100%;width:auto;max-width:none;max-height:none;display:block;}
+/* เฟรมที่ 2 (ภาพ "ดีใจ") ซ้อนทับพอดีตัว — margin:auto จัดกลางแทน transform
+   (transform สงวนไว้ให้ footAlign เล็งเท้าลงพื้น ทับกันไม่ได้) */
+.pet-show .ps-fr.ps-f2{position:absolute;left:0;right:0;bottom:0;margin-inline:auto;opacity:0;
+  animation:psFrame2 9s ease-in-out infinite;}
+.pet-show .ps-shadow{position:absolute;left:6%;right:6%;bottom:-4px;height:clamp(7px,1.5vh,14px);
+  border-radius:50%;background:radial-gradient(ellipse at 50% 50%, rgba(30,55,95,.42), transparent 72%);
+  transform-origin:50% 50%;animation:psShadow 9s ease-in-out infinite;}
+.pet-show .ps-emote{position:absolute;left:50%;top:4%;opacity:0;
+  font-size:clamp(13px,2.6vh,24px);animation:psEmote 9s ease-out infinite;}
+.pet-show .ps-emote.e2{animation-delay:.22s;margin-left:-16%;}
+.pet-show .ps-emote.e3{animation-delay:.44s;margin-left:15%;}
+.pet-show .ps-badge{position:absolute;right:-2%;top:2%;font-size:clamp(15px,3vh,28px);
+  filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));animation:psBadge 2.6s ease-in-out infinite;}
+@keyframes psBadge{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+/* ป้ายชื่อน้องมุมบนขวา (ซ้ายบนมีปุ่ม 🌀 สะกดคำ · ล่างซ้ายเคยทับตัวน้องตอนจอแคบ) */
+.pet-show .ps-tag{position:absolute;right:10px;top:8px;z-index:2;
+  background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);border-radius:999px;
+  padding:2px 11px;font-size:clamp(10px,2.2vh,13px);color:#26456d;
+  box-shadow:0 3px 10px rgba(20,50,90,.22);max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* เดินออกซ้าย-ขวา (แกน X เท่านั้น — เงาเดินตามด้วยเพราะอยู่ใน .ps-travel) */
+@keyframes psTravel{
+  0%,28%{transform:translateX(0)}
+  46%,58%{transform:translateX(-16%)}
+  78%{transform:translateX(-16%)}
+  94%,100%{transform:translateX(0)}}
+/* กระโดด (แกน Y เท่านั้น) */
+@keyframes psJump{
+  0%,30%{transform:translateY(0)}
+  34%{transform:translateY(-16%)}
+  38%{transform:translateY(0)}
+  42%{transform:translateY(-17%)}
+  46%,58%{transform:translateY(0)}
+  61%{transform:translateY(-6%)}
+  65%{transform:translateY(0)}
+  69%{transform:translateY(-6%)}
+  73%,84%{transform:translateY(0)}
+  88%{transform:translateY(-14%)}
+  92%,100%{transform:translateY(0)}}
+/* ย่อ-ยืดตัว (squash & stretch) + ส่ายตัวจังหวะดีใจ + หันกลับตอนเดินกลับที่ */
+@keyframes psBody{
+  0%{transform:scale(1,1) rotate(0deg)}
+  9%{transform:scale(1.015,.985) rotate(0deg)}
+  18%{transform:scale(.99,1.02) rotate(0deg)}
+  28%{transform:scale(1,1) rotate(0deg)}
+  31%{transform:scale(1.10,.90) rotate(0deg)}
+  35%{transform:scale(.95,1.08) rotate(0deg)}
+  39%{transform:scale(1.07,.94) rotate(0deg)}
+  43%{transform:scale(.96,1.06) rotate(0deg)}
+  47%,57%{transform:scale(1,1) rotate(0deg)}
+  61%{transform:scale(1.03,.98) rotate(-5deg)}
+  65%{transform:scale(1,1) rotate(5deg)}
+  69%{transform:scale(1.03,.98) rotate(-5deg)}
+  73%{transform:scale(1,1) rotate(3deg)}
+  78%{transform:scale(1,1) rotate(0deg)}
+  80%{transform:scale(-1,1) rotate(0deg)}
+  86%{transform:scale(-1.06,.94) rotate(0deg)}
+  90%{transform:scale(-.96,1.06) rotate(0deg)}
+  95%{transform:scale(-1,1) rotate(0deg)}
+  97%,100%{transform:scale(1,1) rotate(0deg)}}
+/* เงาแบนลงตอนลอยกลางอากาศ */
+@keyframes psShadow{
+  0%,30%{transform:scale(1);opacity:1}
+  34%{transform:scale(.68,.7);opacity:.5}
+  38%{transform:scale(1);opacity:1}
+  42%{transform:scale(.66,.7);opacity:.48}
+  46%,58%{transform:scale(1);opacity:1}
+  61%{transform:scale(.88,.9);opacity:.8}
+  65%{transform:scale(1);opacity:1}
+  69%{transform:scale(.88,.9);opacity:.8}
+  73%,84%{transform:scale(1);opacity:1}
+  88%{transform:scale(.7,.72);opacity:.5}
+  92%,100%{transform:scale(1);opacity:1}}
+/* 2 เฟรมแบบ GIF: สลับเป็นภาพ "ดีใจ" เฉพาะช่วงจังหวะดีใจ */
+@keyframes psFrame2{
+  0%,57%{opacity:0}
+  60%,74%{opacity:1}
+  77%,100%{opacity:0}}
+/* หัวใจ/โน้ต/ประกายลอยขึ้นช่วงดีใจ */
+@keyframes psEmote{
+  0%,56%{opacity:0;transform:translate(-50%,0) scale(.4)}
+  62%{opacity:1;transform:translate(-50%,-26%) scale(1)}
+  76%{opacity:0;transform:translate(-50%,-72%) scale(1.15)}
+  100%{opacity:0;transform:translate(-50%,-72%) scale(1.15)}}
+/* ป่วย/หลับ/ยังเป็นไข่ = ไม่กระโดด ไม่ดีใจ — โยกเบา ๆ อย่างเดียว */
+.pet-show.ps-calm .ps-travel,
+.pet-show.ps-calm .ps-jump,
+.pet-show.ps-calm .ps-shadow{animation:none;}
+.pet-show.ps-calm .ps-body{animation:psCalm 5s ease-in-out infinite;}
+@keyframes psCalm{
+  0%,100%{transform:scale(1,1) rotate(0deg)}
+  25%{transform:scale(1.01,.985) rotate(-1.4deg)}
+  50%{transform:scale(.995,1.015) rotate(0deg)}
+  75%{transform:scale(1.01,.985) rotate(1.4deg)}}
+html.no-anim .pet-show .ps-travel,
+html.no-anim .pet-show .ps-jump,
+html.no-anim .pet-show .ps-body,
+html.no-anim .pet-show .ps-shadow,
+html.no-anim .pet-show .ps-emote,
+html.no-anim .pet-show .ps-badge,
+html.no-anim .pet-show .ps-fr.ps-f2{animation:none;}
+html.no-anim .pet-show .ps-emote{display:none;}

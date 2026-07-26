@@ -75,6 +75,79 @@ function petVisualHTML(p){
   return `<div class="pet-stage${anim ? ' pet-stage-anim' : ''}">${auraHTML}<div class="pet-wrap" id="pet-tap">${core}${overlays}</div></div>`;
 }
 
+/* ============================================================
+   🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
+   ------------------------------------------------------------
+   เดิมกลางล็อบบี้ = เหรียญแรงค์ยักษ์เป็นฉากหลัง + สไปรต์อบ 3D เดินไปมา (petVisualHTML/petAnimHTML)
+   ใหม่ = "คลิปสั้นวนลูป" ของน้องสไตล์การ์ตูนญี่ปุ่น ทำครบทั้ง หมา/แมว/มังกร
+     · ตัวละคร = ภาพต้นแบบใน img/ ตามช่วงวัยจริง (<pet>_newborn / _baby_normal / _adult_normal
+       — ผ่าน currentPetImg() จึงยังเปลี่ยนตามป่วย/หิว/ชุดที่ใส่เหมือนเดิม)
+     · แอนิเมชันเป็น CSS ล้วน 9 วิ/ลูป: หายใจ → กระโดด 2 ที → จังหวะดีใจ (สลับเฟรมเป็นภาพ _happy
+       = 2 เฟรมแบบ GIF) + หัวใจ/โน้ตลอย → หันตัวกลับ  (ไม่มีไฟล์ gif/วิดีโอใหม่ → เบา ใช้ออฟไลน์ได้)
+     · ฉากหลังต่อชนิด: หมา=ทุ่งหญ้ากลางวัน · แมว=ซากุระยามเย็น · มังกร=ฟ้าสนธยา+ประกายไฟ
+     · แตะแท็บสัตว์ตัวไหน = renderDashboard วาดใหม่ตาม activePet() → โชว์ตัวนั้นทันที
+   ป่วย/หลับ/ยังเป็นไข่ = โหมด ps-calm (ไม่กระโดด ไม่มีหัวใจ) ให้ตรงกับอารมณ์น้อง
+   ============================================================ */
+const PET_SHOW = {
+  dog:    { fall:['🌼','🍃','⭐','🐾'] },
+  cat:    { fall:['🌸','💕','✨','🐾'] },
+  dragon: { fall:['✨','🔥','💎','⭐'] },
+};
+const PET_SHOW_STAGE = {egg:'👶 แรกเกิด', baby:'🍼 ร่างเด็ก', adult:'🌟 ร่างโตเต็มวัย'};
+// ความสูงน้องบนเวทีโชว์ = % ของกรอบเวที ตามระดับร่างยักษ์ 0-4 (CSS ตัดด้วย 66cqw อีกชั้น กันล้นจอแคบ)
+const PET_SHOW_H = [64, 70, 75, 80, 85];
+
+/* ฉากหลังการ์ตูน (อยู่หลัง .hero-scene ทั้งใบ — ยังเห็นตอนเกมสะกดคำเปิดฉาก 3D ทับ) */
+function petShowBgHTML(p){
+  const cf = PET_SHOW[p.type] || PET_SHOW.dog;
+  // ตำแหน่ง/จังหวะกลีบดอกไม้ deterministic ต่อชนิดสัตว์ (render ซ้ำแล้วไม่วูบวาบย้ายที่)
+  let s = p.type.charCodeAt(0)*37 + 11, fall = '';
+  const rnd = ()=>{ s = (s*16807) % 2147483647; return s/2147483647; };
+  for(let i=0;i<11;i++){
+    fall += `<span style="left:${(3+rnd()*94).toFixed(1)}%;font-size:${(9+rnd()*12).toFixed(0)}px;`
+      + `animation-delay:${(rnd()*9).toFixed(2)}s;animation-duration:${(7.5+rnd()*6).toFixed(2)}s">`
+      + `${cf.fall[i % cf.fall.length]}</span>`;
+  }
+  return `<div class="pet-show-bg ps-${p.type}">
+    <div class="ps-sun"></div>
+    <div class="ps-cloud c1"></div><div class="ps-cloud c2"></div><div class="ps-cloud c3"></div>
+    <div class="ps-hill h1"></div><div class="ps-hill h2"></div>
+    <div class="ps-ground"></div>
+    <div class="ps-fall">${fall}</div>
+    <div class="ps-vig"></div>
+  </div>`;
+}
+
+/* ตัวน้อง + ท่าเล่นในคลิป (คลาส .pet-stage / id #pet-tap คงเดิม —
+   ระบบเก่ายังยึดไว้ใช้: applyPatRemindGlow, heartsFx, cureCelebrateFx, bindPetTap) */
+function petShowHTML(p){
+  const stage = petStage(p);
+  const base  = currentPetImg(p);                               // ภาพช่วงวัยจริงใน img/
+  // เฟรมที่ 2 ของคลิป = ภาพ "ดีใจ" ของวัยเดียวกัน (มีไฟล์ถึงใช้ · ไม่มีก็เล่นเฟรมเดียว)
+  const happy = (stage !== 'egg' && !p.sick && !p.sleeping) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
+  const calm  = !!(p.sick || p.sleeping || stage === 'egg');
+  const badge = p.sick ? '🤒' : (p.sleeping ? '💤' : (petHungry(p) ? '😫' : ''));
+  const core = base
+    ? `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
+      + (happy && happy !== base ? `<img class="pet-img ps-fr ps-f2" src="${happy}" alt="">` : '')
+    : `<span class="pet-emoji">${(PETS[p.type] || {})[stage] || '🐾'}</span>`;
+  return `<div class="pet-show${calm ? ' ps-calm' : ''}">
+    <div class="pet-stage ps-pod">
+      <div class="ps-travel">
+        <div class="ps-shadow"></div>
+        <div class="ps-jump">
+          <div class="pet-wrap" id="pet-tap">
+            <div class="ps-body">${core}</div>
+            ${calm ? '' : `<span class="ps-emote e1">💕</span><span class="ps-emote e2">🎵</span><span class="ps-emote e3">✨</span>`}
+            ${badge ? `<span class="ps-badge">${badge}</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ps-tag"><b>${escapeHTML(p.name)}</b> · ${PET_SHOW_STAGE[stage] || ''}</div>
+  </div>`;
+}
+
 /* ตัวละครผู้เลี้ยงยืนเต็มตัวข้างน้อง (ฉาก lobby 3D สไตล์ COD — รอบ 86)
    มีภาพ player_male/female.png ใช้ภาพเต็มตัว · ยังไม่เลือก/ไม่มีภาพ = อีโมจิตัวโต */
 // 🧱 รอบ 238: ตัวละครในล็อบบี้ = ตัวบล็อก 2D (blk1..8 · ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย · เปลี่ยนได้ในตั้งค่า)
@@ -121,6 +194,9 @@ function footAlign(scope){
    ใช้แรงค์ปัจจุบันจาก net worth · ไม่มีไฟล์ภาพ = ไม่โชว์ (ไม่ใช้อีโมจิ กันรก)
    รอบ 115: แรงค์เปลี่ยนระหว่าง session → เล่นเอฟเฟกต์เปลี่ยนร่าง (แฟลช+เหรียญหมุนสลับ)
    จำแรงค์ที่โชว์ล่าสุดไว้เทียบ — เข้าเกมครั้งแรก/เปลี่ยนหน้าไปมา ไม่เล่นซ้ำ */
+/* ⚠️ รอบ 604: เลิกใช้บนเวทีแล้ว (แรงค์ย้ายไปแท็บเล็กใต้วันเดือนปี — renderRankTab)
+   เก็บฟังก์ชันไว้เผื่ออยากเอาเหรียญยักษ์กลับมาเป็นฉากหลังในโหมดอื่น · เช่นเดียวกับ petVisualHTML/petAnimHTML
+   (สไปรต์เดินอบจาก 3D) ที่ถูกแทนด้วย petShowHTML */
 let heroRankShownId = null;
 function heroRankBgHTML(){
   const info = rankInfo(netWorth());
@@ -2747,7 +2823,39 @@ function renderRankCard(){
       <div class="rank-text">${nextText}</div>
     </div>`;
 
-  /* รอบ 254: ป้ายแรงค์เล็กบนแถบบนถูกถอดออก — ดูแรงค์คลิกเหรียญใหญ่กลางเวที (renderDashboard) */
+  renderRankTab();   // 🎖️ รอบ 604: ป้ายแรงค์เล็กใต้วันเดือนปี (แทนเหรียญยักษ์กลางเวทีที่ถอดออก)
+}
+
+/* 🎖️ รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026): แรงค์ = แท็บเล็กใต้วันเดือนปีบนแถบบน
+   เดิมเป็นเหรียญยักษ์ฉากหลังเวที (รอบ 114-177) — เวทีถูกเปลี่ยนเป็น "โชว์น้องน่ารัก" แทน
+   แท็บโชว์: เหรียญเล็ก + ชื่อแรงค์ + แถบความคืบหน้าไปแรงค์ถัดไป · คลิก = เปิดแผงแรงค์เต็ม
+   เปลี่ยนแรงค์ระหว่างเล่น = แท็บเด้งวาบ (rk-up) ให้เด็กเห็นว่ามีอะไรเปลี่ยน */
+let rankTabShownId = null;
+function renderRankTab(){
+  const el = document.getElementById('rank-tab');
+  if(!el) return;
+  const info = rankInfo(netWorth());
+  const r = info.rank;
+  const changed = rankTabShownId !== null && rankTabShownId !== r.id && !state.noAnim;
+  rankTabShownId = r.id;
+  el.style.display = 'inline-flex';
+  el.style.setProperty('--rk-c', r.color);
+  el.innerHTML = `${rankBadgeHTML(r.id, r.emoji, 'rk-ico')}`
+    + `<span class="rk-name">${escapeHTML(info.label)}</span>`
+    + `<span class="rk-bar"><i style="width:${Math.round((info.prog || 0)*100)}%"></i></span>`;
+  if(!el.dataset.bound){
+    el.dataset.bound = '1';
+    el.addEventListener('click', ()=>{
+      sfx.select();
+      if(typeof openPanel === 'function') openPanel('panel-rank');
+    });
+  }
+  if(changed){
+    el.classList.remove('rk-up');
+    void el.offsetWidth;          // restart animation
+    el.classList.add('rk-up');
+    setTimeout(()=>el.classList.remove('rk-up'), 1500);
+  }
 }
 
 /* ฉากอัพแรงค์ใหญ่: เหรียญตราใหญ่ + รัศมีหมุน (สไตล์เกมยิงแรงค์) */
@@ -3338,7 +3446,9 @@ function renderDashboard(){
 
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
   const g = giantLevel(p);   // รอบ 102: ระดับร่างยักษ์ → คุมความสูงน้อง/ผู้เลี้ยง
-  const heroVars = `--pet-vh:${GIANT_PET_VH[g]};--owner-vh:${GIANT_OWNER_VH[g]};--owner-x:${GIANT_OWNER_X[g]}`;
+  // 🎬 รอบ 604: --ps-h = ความสูงน้องบนเวทีโชว์ (% ของกรอบ) — ตารางแยกจาก --pet-vh
+  // (ค่าเดิมจูนไว้ให้กล้อง 3D · ใส่ตรง ๆ แล้วร่างยักษ์ทุกระดับชนเพดานกรอบเท่ากันหมด มองไม่ออกว่าขยายร่าง)
+  const heroVars = `--pet-vh:${GIANT_PET_VH[g]};--owner-vh:${GIANT_OWNER_VH[g]};--owner-x:${GIANT_OWNER_X[g]};--ps-h:${PET_SHOW_H[g]}`;
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
   /* 📰 รอบ 155 (สเปกผู้ใช้): กล่อง "ข้อมูลน้อง"+"การดูแล" ย้ายไป overlay ใหญ่ (openPetInfoOverlay)
@@ -3398,26 +3508,13 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero hero-side">${heroRankBgHTML()}<div class="hero-scene" style="${heroVars}"><div class="hero-ground"></div>${petVisualHTML(p)}</div></div>`;
+    <div class="stage-hero hero-side pet-show-mode">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p)}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
-  /* รอบ 254: คลิกเหรียญแรงค์ใหญ่กลางเวที = เปิดแผงแรงค์ (แทน rank เล็กบนแถบบนที่ถอดออก)
-     คลิกที่ตัวน้อง/ปุ่มยังทำงานเดิม — กรอง target ก่อน */
-  {
-    const heroEl = card.querySelector('.stage-hero');
-    const rankBgEl = card.querySelector('.hero-rank-bg');
-    if(heroEl && rankBgEl){
-      heroEl.style.cursor = 'pointer';
-      heroEl.title = 'ดูแรงค์ของหนู';
-      heroEl.addEventListener('click', (e)=>{
-        if(e.target.closest('.pet-wrap, .spell-btn, button')) return;
-        sfx.select();
-        if(typeof openPanel === 'function') openPanel('panel-rank');
-      });
-    }
-  }
+  /* 🎬 รอบ 604: เวทีกลาง = โชว์น้องน่ารัก (ไม่ใช่เหรียญแรงค์แล้ว) → คลิกเวทีไม่เปิดแผงแรงค์อีก
+     ดูแรงค์ = แท็บเล็กใต้วันเดือนปีบนแถบบน (#rank-tab · renderRankTab) · แตะตัวน้องยังเปิดโปรไฟล์เหมือนเดิม */
   if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่
 
   // รอบ 104: โมเดล 3D ผู้เลี้ยง+น้อง (idle + ปัดหมุน) — มีไฟล์ img/models/*.glb ถึงแสดง
