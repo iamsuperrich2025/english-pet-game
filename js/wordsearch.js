@@ -268,7 +268,13 @@
     if(typeof addCoins==='function') addCoins(reward);
     addWsScore(reward, 1);                                          // 🔎 รอบ 590: แต้มสะสมตลอดกาล (กระดานอันดับ)
     // 🪙 รอบ 595: เปลี่ยนจากเสียงฟ้าร้อง (sfx.spark) เป็น "เหรียญเข้ากระเป๋า" ตามที่ผู้ใช้สั่ง 26 ก.ค. 2026
-    if(typeof sfx!=='undefined'){ if(sfx.coinGet)sfx.coinGet(); else if(sfx.coin)sfx.coin(); }
+    // 🪙 รอบ 598: ไล่ระดับตามความยาวคำ — 3-5 ตัว=tier 0 · 6-7=1 · 8-10=2 (คำยาว รางวัลเยอะ เสียงคุ้มกว่า)
+    if(typeof sfx!=='undefined'){
+      const tier = hit.w.length>=8 ? 2 : hit.w.length>=6 ? 1 : 0;
+      if(sfx.coinGetTier) sfx.coinGetTier(tier);
+      else if(sfx.coinGet) sfx.coinGet();
+      else if(sfx.coin) sfx.coin();
+    }
     if(typeof speakWord==='function') speakWord(hit.w.toLowerCase());
     render(); saveTemp();
     wsFlash();                                                      // ⚡ แฟลชฟ้าผ่าบนกระดาน
