@@ -2441,8 +2441,9 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
    ============================================================ */
 #ws-overlay{position:fixed;inset:0;z-index:92;display:none;align-items:stretch;
   background:rgba(3,10,26,.5);}
-#ws-board{position:relative;width:min(96vw,1000px);height:100%;box-sizing:border-box;
-  display:flex;flex-direction:column;gap:8px;padding:12px 14px 14px;color:#eaf6ff;
+/* รอบ 588: ขยายแผงเกือบเต็มจอ (เดิม min(96vw,1000px)) + บีบขอบบน-ล่างให้กระดานโตขึ้น */
+#ws-board{position:relative;width:min(99vw,1900px);height:100%;box-sizing:border-box;
+  display:flex;flex-direction:column;gap:7px;padding:9px 16px 11px;color:#eaf6ff;
   background:linear-gradient(135deg,#0a2550 0%,#0d3a7a 45%,#0a2c66 100%);
   border-right:3px solid #4fd0ff;border-radius:0 22px 22px 0;
   box-shadow:8px 0 40px rgba(0,0,0,.55),0 0 40px rgba(79,208,255,.25) inset;
@@ -2451,31 +2452,31 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
 /* เส้นสแกนแนวนอนจางๆ ให้ฟีล sci-fi */
 #ws-board::before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:0 22px 22px 0;
   background:repeating-linear-gradient(0deg,rgba(120,210,255,.05) 0 2px,transparent 2px 5px);}
-.ws-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;z-index:1;}
-.ws-title{font-size:clamp(15px,2.4vw,20px);font-weight:800;color:#bfeaff;
+/* รอบ 588: หัวแถบ 3 ช่อง — ชื่อเกม(ซ้าย) · ป้าย "หาคำเหล่านี้ให้เจอ"+ความคืบหน้า(กึ่งกลางเป๊ะ) · ระดับชั้น(ขวา) */
+.ws-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;flex-shrink:0;z-index:1;}
+.ws-title{justify-self:start;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:clamp(15px,2.4vw,20px);font-weight:800;color:#bfeaff;
   text-shadow:0 0 12px rgba(80,200,255,.7);}
+.ws-findbar{justify-self:center;display:flex;align-items:center;gap:10px;white-space:nowrap;}
+.ws-grade{justify-self:end;}
 .ws-grade{font-size:12.5px;font-weight:700;color:#0a2c66;background:#7fe0ff;
   padding:3px 11px;border-radius:20px;white-space:nowrap;}
-.ws-body{flex:1 1 auto;min-height:0;display:flex;gap:12px;z-index:1;}
-.ws-gridwrap{flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center;}
+/* รอบ 588: แถบคำอยู่บน · กระดานอยู่ล่าง (เดิมกระดานซ้าย-คำขวา) */
+.ws-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;z-index:1;}
+.ws-gridwrap{flex:1 1 auto;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;}
 #ws-grid{display:grid;grid-template-columns:repeat(var(--ws-n,10),1fr);gap:clamp(2px,.5vw,5px);
   height:100%;width:auto;aspect-ratio:1;max-width:100%;max-height:100%;
   padding:clamp(4px,1vw,10px);background:rgba(4,18,44,.55);border:1.5px solid rgba(95,200,255,.4);
   border-radius:14px;box-shadow:0 0 22px rgba(80,180,255,.18) inset;touch-action:none;}
 .ws-cell{display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;
-  font-size:clamp(11px,2.3vw,21px);font-weight:800;color:#dcefff;border-radius:6px;
+  font-size:clamp(11px,2.9vh,30px);font-weight:800;color:#dcefff;border-radius:6px;
   background:rgba(20,52,96,.7);border:1px solid rgba(95,200,255,.18);line-height:1;
   transition:opacity .35s ease,transform .35s ease,background .18s,color .18s,box-shadow .18s;}
 .ws-cell.sel{background:#4fd0ff;color:#062247;box-shadow:0 0 10px rgba(120,225,255,.8);}
-/* ⚡ รอบ 205: คำที่เจอ = กระแสไฟฟ้าวิ่งผ่านไปมา (คลื่นแสงไล่ตามลำดับตัวอักษร --zi) */
+/* ✅ รอบ 588: คำที่เจอ = ไฮไลต์เขียว "นิ่ง ๆ" ไม่กระพริบ
+   (เดิมรอบ 205 เป็นคลื่นไฟฟ้าวิ่ง animation:wsFlow — ผู้ใช้สั่งเอาออก 26 ก.ค. 2026) */
 .ws-cell.found{background:linear-gradient(160deg,#28e08a,#12b06a);color:#fff;
-  border-color:#7bffbe;box-shadow:0 0 8px rgba(40,224,138,.6);
-  animation:wsFlow 1.25s ease-in-out infinite alternate;animation-delay:calc(var(--zi,0) * -0.13s);}
-@keyframes wsFlow{
-  0%{box-shadow:0 0 6px rgba(40,224,138,.5);filter:brightness(1);}
-  100%{box-shadow:0 0 16px 3px rgba(150,240,255,.95),0 0 30px rgba(120,200,255,.6);filter:brightness(1.42) saturate(1.2);}
-}
-html.no-anim .ws-cell.found{animation:none;}
+  border-color:#7bffbe;box-shadow:0 0 8px rgba(40,224,138,.45);}
 .ws-cell.bad{background:#ff5d6c;color:#fff;}
 .ws-cell.gone{opacity:0;transform:scale(.15) rotate(35deg);}
 html.no-anim .ws-cell{transition:none;}
@@ -2496,24 +2497,28 @@ html.no-anim .ws-flash.on{animation:none;}
   100%{opacity:0;transform:translate(-50%,-175%) scale(1);}
 }
 html.no-anim .ws-coinpop{animation:none;opacity:0;}
-/* รอบ 196: กว้างพอทำ 2 คอลัมน์ — เห็นคำครบทุกคำไม่ต้องเลื่อน */
-.ws-side{flex:0 0 clamp(210px,40%,400px);display:flex;flex-direction:column;min-height:0;}
-.ws-find{font-size:13px;font-weight:800;color:#8fd6ff;margin-bottom:6px;flex-shrink:0;}
-/* 2 คอลัมน์ · align-content:start ให้เรียงจากบน · รอบ 244: เอากล่องเพื่อนออก → คำกินพื้นที่เต็มแผง เห็นครบทุกคำ */
-#ws-words{flex:1 1 auto;min-height:0;overflow-y:auto;
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start;scrollbar-width:none;}
+/* 🔤 รอบ 588: แถบ "หาคำเหล่านี้ให้เจอ" ย้ายมาบนสุดของกระดาน จัดกึ่งกลางแถวเดียว
+   (เดิมรอบ 196/244 เป็นคอลัมน์ขวา 2 หลัก) */
+.ws-find{font-size:13px;font-weight:800;color:#8fd6ff;letter-spacing:.3px;}
+#ws-prog{font-size:12.5px;font-weight:800;color:#ffe08a;line-height:1;
+  background:rgba(4,18,44,.6);border:1px solid rgba(255,224,138,.35);border-radius:20px;padding:4px 11px;}
+/* ชิปคำเรียงแถวเดียวกึ่งกลาง · กว้างเท่ากันทุกใบ · ล้นเมื่อไหร่ค่อยตกบรรทัด */
+#ws-words{flex:0 1 auto;min-height:0;max-height:26vh;overflow-y:auto;scrollbar-width:none;
+  display:flex;flex-wrap:wrap;justify-content:center;align-content:start;gap:7px;
+  padding:7px 9px;background:rgba(4,18,44,.5);border:1.5px solid rgba(95,200,255,.28);
+  border-radius:14px;box-shadow:0 0 18px rgba(80,180,255,.14) inset;}
 #ws-words::-webkit-scrollbar{display:none;}
-.ws-word{display:flex;flex-direction:column;justify-content:center;
+.ws-word{flex:0 1 clamp(118px,13vw,200px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
   background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:10px;
-  padding:8px 10px;font-size:15px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.2;
+  padding:6px 10px;font-size:15px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.2;
   min-width:0;overflow:hidden;}
 .ws-word small{display:block;font-size:11.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
-#ws-prog{flex-shrink:0;margin-top:7px;font-size:12.5px;font-weight:700;color:#ffe08a;text-align:center;}
 .ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;z-index:1;}
-.ws-actions button{border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:14px;
-  padding:9px 15px;cursor:pointer;transition:transform .1s;}
+.ws-actions button{border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13.5px;
+  padding:7px 15px;cursor:pointer;transition:transform .1s;}
 .ws-actions button:active{transform:scale(.95);}
 #ws-new{background:linear-gradient(135deg,#37b6ff,#1668c8);color:#fff;box-shadow:0 3px 0 #0e4c9a;}
 #ws-stash{background:linear-gradient(135deg,#ffce54,#f0a935);color:#5a3d00;box-shadow:0 3px 0 #c88512;}
@@ -2527,7 +2532,11 @@ html.no-anim .ws-coinpop{animation:none;opacity:0;}
 .ws-win-in small{font-size:13px;font-weight:400;color:#a9c8e8;}
 /* จอสูงน้อย (มือถือแนวนอนเตี้ย) — ย่อ action + คำ */
 @media (max-height:430px){
-  .ws-actions button{font-size:12.5px;padding:7px 11px;}
-  .ws-word{font-size:12.5px;padding:4px 7px;}
+  .ws-actions button{font-size:12px;padding:5px 11px;}
+  .ws-word{flex-basis:clamp(94px,11vw,150px);font-size:12.5px;padding:3px 7px;}
+  .ws-word small{font-size:10.5px;margin-top:1px;}
   .ws-title{font-size:15px;}
+  #ws-words{max-height:34vh;padding:5px 7px;gap:5px;}
+  .ws-find{font-size:12px;}
+  #ws-prog{font-size:11.5px;padding:3px 9px;}
 }

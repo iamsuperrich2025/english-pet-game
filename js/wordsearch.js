@@ -2,6 +2,8 @@
 /* ============================================================
    🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194
    แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม
+   🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
+              · เอาไฟกระพริบที่คำที่เจอออก (เหลือไฮไลต์เขียวนิ่ง ๆ)
    🔒 กฎเหล็ก: คำที่นำมาเล่น = คำตามระดับชั้นผู้เล่นเท่านั้น (vocabForStudent)
    ปุ่ม: สุ่มเกมใหม่ · เก็บกระดานชั่วคราว (เลื่อนซ้าย เก็บข้อมูล) ·
         ล้างกระดาน-ออกจากเกม (ลบตัวอักษรแบบมีสไตล์ แล้วเลื่อนเก็บซ้าย)
@@ -76,14 +78,11 @@
     overlay=document.createElement('div'); overlay.id='ws-overlay';
     overlay.innerHTML=`<div id="ws-board">
       <div class="ws-head"><span class="ws-title">🔎 ค้นหาคำศัพท์ · Word Search</span>
+        <span class="ws-findbar"><span class="ws-find">🔤 หาคำเหล่านี้ให้เจอ</span><span id="ws-prog"></span></span>
         <span class="ws-grade"></span></div>
       <div class="ws-body">
+        <div id="ws-words"></div>
         <div class="ws-gridwrap"><div id="ws-grid"></div></div>
-        <div class="ws-side">
-          <div class="ws-find">🔤 หาคำเหล่านี้ให้เจอ</div>
-          <div id="ws-words"></div>
-          <div id="ws-prog"></div>
-        </div>
       </div>
       <div class="ws-actions">
         <button id="ws-new" type="button">🎲 สุ่มเกมใหม่</button>
