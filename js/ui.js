@@ -5356,7 +5356,7 @@ function renderInvasionCard(){
   const heal = document.getElementById('btn-invasion-heal');
   if(heal) heal.addEventListener('click', advHealClick);
 }
-const INVASION_REWARD = 60;   // ต้องตรงกับ REWARD ใน js/invasion3d.js (โชว์ในการ์ดร้าน)
+const INVASION_REWARD = 10;   // 🪙 รอบ 570: ต้องตรงกับ WORD_COIN ใน js/invasion3d.js (โชว์ในการ์ดร้าน) — ครบคำ = ทุกคนในแมพได้คนละ 10
 
 function buyInvasionTicket(){
   if(state.invasionTicket) return;

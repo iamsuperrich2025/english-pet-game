@@ -3,7 +3,7 @@
    🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
      · ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด (ป้ายตัวอักษรลอยเหนือลำ · ลำที่อยู่ในคำ = ป้ายเขียว)
      · ยิงลำที่ตรงกับตัวอักษรของ "คำสีเขียว" (HUD กลางจอบน) → ช่องนั้นติด · เกราะยานแม่ลดตามสัดส่วน
-     · ครบทุกตัวอักษร = เกราะเหลือ 0 → ยานแม่ระเบิด = 🪙REWARD (100) · ยิงยานลูกตกลำละ 🪙LETTER_COIN (1)
+     · ครบทุกตัวอักษร = เกราะเหลือ 0 → ยานแม่ระเบิด = 🪙WORD_COIN (10) ให้ทุกคนในแมพ · ยิงตัวอักษร "ในคำ" เองลำละ 🪙LETTER_COIN (1) เข้าส่วนตัว
      · ⏰ หมดเวลา WORD_TIME ก่อนครบคำ → เปลี่ยนคำใหม่ + ปล่อยยานลูก 26 ลำชุดใหม่
    👥 พันธมิตร AI: หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์ ช่วยยิงอย่างเมามันส์
    🧩 โมเดลจริง (ถ้าผู้ใช้วางไฟล์ไว้ จะสลับใช้อัตโนมัติ ไม่ต้องแก้โค้ด):
@@ -16,7 +16,11 @@
 /* ============================================================
    ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
    ============================================================ */
-const REWARD=500, LETTER_COIN=1, DONE_KEY='invasionDone';   // 🔤 รอบ 556/557: ยานแม่ตก=500 (ผู้ใช้ขยับจาก 100) · ยานลูกตกลำละ 1
+/* 🪙 รอบ 570 (ผู้ใช้สั่ง — เหรียญต้องมาจาก "ฝีมือเราเท่านั้น"):
+   · ตัวอักษรที่ยิงเอง **และอยู่ในคำปัจจุบัน** = +LETTER_COIN เข้าส่วนตัว (ตัวนอกคำ/บอทยิง/เพื่อนยิง = 0)
+   · ครบคำ = +WORD_COIN ให้ "ทุกคนในแมพ" คนละ 10 (ทุกเครื่องรันครบคำพร้อมกัน จึงได้เองไม่ต้องส่งผ่าน DB)
+   · ❌ ยกเลิกโบนัสยานแม่ตก 500 เหรียญ (เดิม REWARD) — เกราะ 0/ยานแม่ตาย ไม่ให้เหรียญแยกอีกต่อไป */
+const WORD_COIN=10, LETTER_COIN=1, DONE_KEY='invasionDone';
 const AZ='abcdefghijklmnopqrstuvwxyz';   // 🔤 รอบ 556: ยานลูก 26 ลำประจำตัวอักษร a-z
 const WORD_TIME=90000;                   // ⏰ รอบ 556: เวลาต่อคำ 90 วิ — หมดแล้วเปลี่ยนคำ + ปล่อยยานลูกชุดใหม่
 const WORLD=420;                       // ครึ่งความกว้างแผนที่ทะเลทราย
@@ -930,7 +934,8 @@ function buildDom(){
       <h3>🛸 ยานแม่บุกโลก!</h3>
       <p>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — <b>คำศัพท์สีเขียว</b>โชว์กลางจอบน<br>
       👾 <b>ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด</b> — ยิงลำ<b>ป้ายเขียว</b>ที่ตรงกับตัวอักษรของคำ ช่องนั้นจะติด · แต่ละลำมี<b>แถบพลัง</b> เขียว→เหลือง→แดงใกล้ตก<br>
-      🛡️ ยิงติดครบทุกตัวอักษร = <b>เกราะยานแม่เหลือ 0 → ระเบิดทั้งลำ</b> = โบนัส 🪙${REWARD} · ยิงยานลูกตกลำละ 🪙${LETTER_COIN}<br>
+      🪙 <b>เหรียญได้จากฝีมือเราเท่านั้น</b> — ยิงลำ<b>ป้ายเขียว</b> (ตัวอักษรที่อยู่ในคำ) เองลำละ 🪙${LETTER_COIN} (ลำนอกคำ/บอท/เพื่อนยิง = ไม่ได้เหรียญ)<br>
+      🛡️ ยิงติดครบทุกตัวอักษร = <b>เกราะยานแม่เหลือ 0 → ระเบิดทั้งลำ</b> = <b>ทุกคนในแมพได้คนละ 🪙${WORD_COIN}</b><br>
       ⏰ <b>มีเวลา ${WORD_TIME/1000} วิต่อคำ</b> — หมดเวลายานแม่เปลี่ยนคำใหม่ + ปล่อยยานลูกชุดใหม่ 26 ลำ!<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>เฮลิคอปเตอร์จอดจริง 5 ลำ!</b> เดินไปที่ลำ (จุด 🚁 ในแผนที่) → กดปุ่ม 🚁 ขึ้นเครื่อง →
@@ -4681,8 +4686,8 @@ function tickFx(dt){
    ⚡ งบมือถือ: 12 เป้า × 2 ชิ้น = 24 draw call แต่ซ่อนตัวที่ไกลเกิน TRG_LOD (เหมือน tickHouseLod)
       geometry/material ใช้ร่วมกันทุกตัว → เพิ่มเป้าอีกก็ไม่บวมเท่าไหร่
    ============================================================ */
-const TRG_COIN=3, TRG_BACK=7000, TRG_LOD=130, TRG_R=0.95;
-const QUIZ_COIN=12, QUIZ_GAP=1400, QUIZ_RANGE=110;   // 🔎 รอบ 473: โบนัสตอบถูก · หน่วงก่อนโจทย์ใหม่ · ระยะที่นับว่า "เห็นเป้า"
+const TRG_COIN=1, TRG_BACK=7000, TRG_LOD=130, TRG_R=0.95;    // 🪙 รอบ 570: ลด 3→1 ให้สมดุลกับตัวอักษร (ผู้ใช้เลือก)
+const QUIZ_COIN=1, QUIZ_GAP=1400, QUIZ_RANGE=110;   // 🔎 รอบ 473: โบนัสตอบถูก · หน่วงก่อนโจทย์ใหม่ · ระยะที่นับว่า "เห็นเป้า" · 🪙 รอบ 570: ลด 12→1
 let targets=[], trgTex=null, trgGeo=null, trgMat=null, trgPostGeo=null, trgPostMat=null;
 let quizT=null, quizAt=0, trgShots=0, trgHits=0;
 /* กระดาษเป้า: วงแหวนแดง-ขาว + จุดดำกลาง + **คำอังกฤษบนหัวกระดาษ** (รอบ 473)
@@ -5342,33 +5347,41 @@ function raySphere(o,d,c,r){
 /* ============================================================
    ⚔️ ดาเมจ / เงื่อนไขชนะ
    ============================================================ */
-/* byMe=false → เป็นผลจากการยิงของเพื่อน (sync มาจาก DB) ไม่ให้เหรียญเรา ไม่บันทึกเป็นผลงานเรา */
+/* ใครเป็นคนยิง (byMe) — 🪙 รอบ 570 แยก "เครดิตเหรียญ" ออกจาก "เครดิต sync" ให้ชัด:
+     undefined/true = ผู้เล่นยิงเอง → ได้เหรียญ (ถ้าตัวอักษรอยู่ในคำ) + ส่งบิตให้เพื่อน
+     'ally'         = ทหาร/เฮลิบอทฝ่ายเรายิง → ลำตกจริงบนเครื่องเรา ต้องส่งบิตให้เพื่อนเห็นตรงกัน **แต่ไม่ให้เหรียญ**
+     false          = เพื่อนยิง (sync มาจาก DB) → ไม่ให้เหรียญ ไม่นับเป็นผลงานเรา */
 function damageFighter(f,dmg,now,byMe){
   if(f.dead) return;
   f.hp-=dmg; f.hitAt=now||performance.now();
   if(f.hp>0){ drawFighterBar(f); return; }        // ❤️ รอบ 557: อัปเดตแถบพลังตอนโดนยิง
-  dropFighter(f, byMe!==false);
+  dropFighter(f, byMe!==false, byMe==='ally');
 }
-/* 🔤 รอบ 556: ยิงยานลูกตก = +1 เหรียญทุกลำ · ถ้าตัวอักษรอยู่ในคำ → ติดทุกช่องที่ตรง (คำมีตัวซ้ำก็ติดพร้อมกัน
-   เพราะ 26 ลำมีตัวอักษรละลำเดียว) · เกราะยานแม่ = สัดส่วนช่องที่ยังไม่ติด · ครบคำ = เกราะ 0 → ยานแม่ระเบิด */
-function dropFighter(f,mine){
+/* 🔤 รอบ 556: ถ้าตัวอักษรอยู่ในคำ → ติดทุกช่องที่ตรง (คำมีตัวซ้ำก็ติดพร้อมกัน เพราะ 26 ลำมีตัวอักษรละลำเดียว)
+   · เกราะยานแม่ = สัดส่วนช่องที่ยังไม่ติด · ครบคำ = เกราะ 0 → ยานแม่ระเบิด
+   🪙 รอบ 570: เหรียญเข้าเฉพาะ "เรายิงเอง + ตัวอักษรอยู่ในคำปัจจุบัน" เท่านั้น (ตัวนอกคำ = 0 เหรียญ) */
+function dropFighter(f,mine,byAlly){
   if(f.dead) return;
   f.dead=true;
   boom(f.grp.position,1.35,0x8affc0);
   scene.remove(f.grp);
   if(f.bar){ f.bar.tx.dispose(); f.bar.spr.material.dispose(); }   // ❤️ รอบ 557: คืนหน่วยความจำแถบพลัง
   const i=fighters.indexOf(f); if(i>=0) fighters.splice(i,1);
-  if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าเรายิงลำนี้ → ส่งให้เพื่อนเห็นตรงกัน (บิต a-z)
+  if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าลำนี้ตกบนเครื่องเรา → ส่งให้เพื่อนเห็นตรงกัน (บิต a-z)
   let match=false;
   letters.forEach(l=>{ if(l.ch===f.ch && !l.down){ l.down=true; match=true; } });
-  if(mine){
-    if(typeof addCoins==='function') addCoins(LETTER_COIN);
-    sessionCoins+=LETTER_COIN; renderCoins();
-    if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
-    if(match) toastBan(`💥 โดน! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว — เกราะยานแม่ลดลง!<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
-    else      toastBan(`💥 ยิงตก <b>${f.ch.toUpperCase()}</b> (ไม่อยู่ในคำ)<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1000);
+  if(mine && !byAlly){
+    if(match){
+      if(typeof addCoins==='function') addCoins(LETTER_COIN);
+      sessionCoins+=LETTER_COIN; renderCoins();
+      if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
+      toastBan(`💥 โดน! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว — เกราะยานแม่ลดลง!<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
+    }else{
+      toastBan(`💥 ยิงตก <b>${f.ch.toUpperCase()}</b> — <b>ไม่อยู่ในคำ ไม่ได้เหรียญ</b><br><span class="ib-sub">ยิงลำ<b>ป้ายเขียว</b>เท่านั้นถึงได้ 🪙</span>`,1200);
+    }
   }else if(match){
-    toastBan(`🤝 เพื่อนยิงตก! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว`,1100);
+    toastBan(byAlly ? `🪖 ฝ่ายเรายิงตก! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว <span class="ib-sub">(ไม่ใช่ฝีมือเรา — ไม่ได้เหรียญ)</span>`
+                    : `🤝 เพื่อนยิงตก! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว`,1100);
   }
   if(match){ renderWord(); updateArmor(); }
 }
@@ -5472,14 +5485,16 @@ function startWave(){
 function completeWord(){
   const w=word;
   state[DONE_KEY].push(w.en);
-  if(typeof addCoins==='function') addCoins(REWARD);
-  sessionCoins+=REWARD; sessionWords++; renderCoins();
+  /* 🪙 รอบ 570: ครบคำ = ทุกคนในแมพได้คนละ WORD_COIN (ไม่ใช่โบนัสยานแม่ตก 500 แบบเดิม)
+     — ทุกเครื่องในสมรภูมิเดียวกันรัน completeWord() พร้อมกันจากเกราะที่ sync ตรงกัน จึงได้ครบทุกคนเอง */
+  if(typeof addCoins==='function') addCoins(WORD_COIN);
+  sessionCoins+=WORD_COIN; sessionWords++; renderCoins();
   if(typeof questEvent==='function') questEvent('word3d');
   if(typeof vbRecord==='function') vbRecord(w.en,w.th,true);
   if(typeof sfx!=='undefined'&&sfx.levelup) sfx.levelup();
   setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); },600);
   if((state.invasionBest||0)<sessionWords){ state.invasionBest=sessionWords; }
-  toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">💥 ยานแม่ถูกทำลาย! โบนัส +${REWARD} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
+  toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">💥 ประกอบคำสำเร็จ! ทุกคนในแมพได้คนละ +${WORD_COIN} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
   saveState();
   /* 🛸 รอบ 439 (ผู้ใช้: "ยานแม่ลอยใหญ่ๆ ต่ำๆ ค้างไว้ เหมือน ID4 — ตอนนี้ไปไหนอีกแล้ว"):
      ต้นตอที่ลำหายคือบรรทัดนี้เอง — ยิงสำเร็จแล้วเคย `mother.visible=false` รอลำใหม่ 3.2 วิ
@@ -6999,7 +7014,7 @@ function tickMissiles(dt,now){
     const decoyed=m.decoy && flares.indexOf(m.decoy)>=0 && m.mesh.position.distanceTo(m.decoy.s.position)<4.5;
     if(hit||old||decoyed){
       boom(m.mesh.position.clone(), 1.0, 0xffb347);
-      if(hit) damageFighter(hit,m.dmg||MIS_DMG,now);
+      if(hit) damageFighter(hit,m.dmg||MIS_DMG,now,m.ally?'ally':true);   // 🪙 รอบ 570: จรวดเฮลิบอทพันธมิตร ไม่ให้เหรียญผู้เล่น
       scene.remove(m.mesh); scene.remove(m.trail);
       m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose();
       missiles.splice(i,1);
@@ -7370,7 +7385,8 @@ function tickSquad(dt,now){
       const from=s.flash ? s.flash.getWorldPosition(new THREE.Vector3())
                          : s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
-      if(Math.random()<0.35 && tgt) damageFighter(tgt,2,now);   /* ❤️ รอบ 557: สเกลตาม F_HP 20 (เดิม 0.5/HP3) */
+      /* ❤️ รอบ 557: สเกลตาม F_HP 20 (เดิม 0.5/HP3) · 🪙 รอบ 570: 'ally' = บอทยิง ไม่ให้เหรียญผู้เล่น */
+      if(Math.random()<0.35 && tgt) damageFighter(tgt,2,now,'ally');
     }
     if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;   // 🔥 รอบ 521
   });
@@ -8318,6 +8334,10 @@ window.InvasionWorld={
     get renderInfo(){ return {calls:renderer.info.render.calls, tris:renderer.info.render.triangles,
                               geo:renderer.info.memory.geometries, tex:renderer.info.memory.textures}; },
     killOne(){ if(fighters.length) damageFighter(fighters[0],99,performance.now()); return fighters.length; },
+    /* 🪙 รอบ 570: ยิงลำตัวอักษรที่ระบุ + เลือกว่าใครยิง (true=เรา · 'ally'=บอทฝ่ายเรา · false=เพื่อน) */
+    killLetter(ch,by){ const f=fighters.find(x=>x.ch===ch); if(!f) return null;
+      damageFighter(f,99,performance.now(),by===undefined?true:by); return {ch,by:by===undefined?true:by}; },
+    get myKill(){return myKill},
     killAll(){ while(fighters.length) damageFighter(fighters[0],99,performance.now()); },
     hitMother(){ letters.forEach(l=>l.down=true); updateArmor(); },   // 🔤 รอบ 556: ติดครบทุกช่อง = เกราะ 0 → ระเบิด
     fire(){ lastFire=0; fireGun(performance.now()); },
