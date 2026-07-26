@@ -1493,3 +1493,10 @@
   - ใหม่ `tools/finish_round.sh` = บัมพ์ version→commit pin pathspec→rotate→deploy (ย่อ output)→curl ยืนยัน live→commit handoff→push ในก้อนเดียว (`--sw "โน้ต"` บัมพ์ SW · `--no-deploy` งานเอกสาร/tools · `--dry` ซ้อม) + ใหม่ `tools/snaplab.js` = `Snap.shot()` ภาพย่อ 820px / `Snap.grid([...])` หลายมุม/สถานะในภาพเดียว — เลิกเขียนโค้ด readPixels/composite ใหม่ทุกรอบ
   - อัปเดตกฎทอง #4 + แถว router ใน `HANDOFF.md` และขั้น "จบงาน" ใน skill `vocab-world` ให้ชี้คำสั่งใหม่
   - **ยืนยัน:** `--dry` 2 โหมดผ่าน · `node --check` ผ่าน · เทสต์จริงใน preview (GunLab.boot → Snap.shot 39KB + Snap.grid r93/rifle 2 ช่อง 35KB ป้ายชื่อ/ปืนต่างกันถูกต้อง) · ล้างเซฟ+reload ปิดเสียงแล้ว · รอบนี้ปิดด้วย `finish_round.sh --no-deploy` = เทสต์เส้นทาง commit จริง
+
+
+## ⏬ ย้ายเมื่อ 2026-07-26 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 544 (26 ก.ค.):** 🪓 **ผ่าไฟล์เฟส 1 — แยก CSS ยักษ์ 1,051 บรรทัดออกจาก `js/adventure3d.js` (12,010→10,959) เป็นไฟล์ใหม่ `js/adv3d_css.js` (`window.ADV3D_CSS` data ล้วน)** · `js/ui.js` เพิ่ม `loadAdv3d()` (โหลด part ก่อนไฟล์หลัก) แทนที่ 7 จุดโหลดตรง · `sw.js` precache เพิ่มไฟล์ใหม่
+  - **ยืนยัน:** สคริปต์ตรวจก่อนตัด = ก้อน CSS ไม่มี `${}`/backtick/backslash · ในเกม `<style>` === `window.ADV3D_CSS` เป๊ะทุกไบต์ · เข้าโลกเฮลิฯ overlay/HUD (เหรียญ/คำศัพท์) ขึ้นครบตำแหน่งถูก (getBoundingClientRect) · ไม่มี console error · `node --check` ผ่านทั้ง 4 ไฟล์ · ล้างเซฟ+reload ปิดเสียงแล้ว
+  - **เฟสถัดไป (2-4) อนุมัติแล้ว** → ดูหัวข้อ "🪓 คิวผ่าไฟล์" ด้านบน (เปิดแชทใหม่ทีละเฟส)
