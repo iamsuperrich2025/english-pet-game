@@ -5306,7 +5306,61 @@ function drawRadar(now){
     c.fillStyle='rgba(0,0,0,.55)'; c.fillText('LOCK x'+nOn,cx+1,W-11);
     c.fillStyle=nOn>=RDR_MAX_LOCK?'#ffd166':'#ff6a5a'; c.fillText('LOCK x'+nOn,cx,W-12);
   }
+  /* 🧭🚀 รอบ 572: ลูกศรบอกทิศจรวดที่พุ่งเข้าหาเรา — วาดท้ายสุดเสมอ = อยู่บนสุด ไม่โดนป้าย LOCK บัง */
+  drawAMisMarks(c,cx,cy,R,now,sin,cos);
   c.restore();
+}
+/* ============================================================
+   🧭🚀 รอบ 572 (ผู้ใช้สั่ง · ต่อยอดรอบ 569): ลูกศรบอกทิศ "จรวดที่พุ่งเข้าหาเฮลิเรา" บนจอเรดาร์
+   เดิม (รอบ 569): รู้ว่าโดนยิงจากเสียง spike + แถบ #inv-spike ที่บอกแค่ "อีกกี่เมตร"
+        แต่ไม่มีอะไรบอก "มาจากทางไหน" — เด็กเลยหักเลี้ยวมั่ว บางทีเลี้ยวเข้าหาจรวดเอง
+   ใหม่: ทุกลูกใน aMissiles ขึ้นจอเรดาร์ 2 อย่าง
+        ① จุดตำแหน่งจริง (เฉพาะที่อยู่ในระยะ RDR_RANGE) — เหมือนจุดยานลูกแต่เป็นสีแดง
+        ② 🔺 ลูกศรที่ขอบวงเรดาร์ "ชี้เข้าหาจุดกลาง (ตัวเรา)" ตรงทิศที่จรวดอยู่ + เรืองแดงที่ขอบ
+           → ยิงมาจากข้างหลังก็เห็น (ลูกศรอยู่ขอบล่าง) ทั้งที่มองไม่เห็นตัวจรวดบนจอ
+   ⚠️ หัวลำชี้ขึ้นเสมอ (พิกัดหมุนตาม yaw เหมือน drawRadar) → ลูกศรซ้าย = หักขวาหนี
+   ⚠️ จรวดที่หลงแฟลร์แล้ว (decoy/blind) เปลี่ยนเป็น "สีเทาจาง ไม่กะพริบ" = สอนเด็กว่าแฟลร์ได้ผลจริง
+   ⚠️ กะพริบถี่ขึ้นตามระยะ (AMK_BEEP) ให้ตรงจังหวะเสียงเตือนของรอบ 569
+   ⚠️ ทดสอบ: `_t.misMarks` (ทิศเป็นองศา 0=ตรงหน้า · 90=ขวา · 180=หลัง) · `_t.drawAMisMarks`
+   ============================================================ */
+const AMK_TRACK='#ff3b30';    // สีจรวดที่ยังไล่เราอยู่
+const AMK_DECOY='#9fb4c4';    // สีจรวดที่หลงแฟลร์/ไม่มีเป้าแล้ว
+const AMK_BEEP=[300,460,680]; // คาบกะพริบ (ms) ตามระยะ [<70 ม., <130 ม., ไกลกว่านั้น]
+/* แปลงพิกัดโลก → พิกัดเรดาร์ (หัวลำขึ้นบน) — สูตรเดียวกับจุดยานลูกใน drawRadar */
+function amisRel(p,sin,cos){
+  const rx=p.x-px, rz=p.z-pz;
+  const fwd=rx*(-sin)+rz*(-cos), rgt=rx*cos+rz*(-sin);
+  return {fwd,rgt,dist:Math.hypot(fwd,rgt),ang:Math.atan2(rgt,fwd)};
+}
+function drawAMisMarks(c,cx,cy,R,now,sin,cos){
+  if(!aMissiles.length) return;
+  for(const m of aMissiles){
+    const r=amisRel(m.mesh.position,sin,cos);
+    if(r.dist<0.5) continue;
+    const live=!m.decoy&&!m.blind;                       // ยังไล่เราอยู่จริงไหม
+    const per=r.dist<70?AMK_BEEP[0]:r.dist<130?AMK_BEEP[1]:AMK_BEEP[2];
+    const puls=live?(1+Math.cos(now/per*TAU))/2:0;
+    /* ① จุดตำแหน่งจริง (เฉพาะที่เข้าระยะเรดาร์) */
+    if(r.dist<=RDR_RANGE){
+      const bx=cx+(r.rgt/RDR_RANGE)*R*.9, by=cy-(r.fwd/RDR_RANGE)*R*.9;
+      if(live){ c.beginPath(); c.arc(bx,by,6.5+puls*4.5,0,TAU);
+        c.fillStyle='rgba(255,59,48,'+(.30+.28*puls).toFixed(3)+')'; c.fill(); }
+      c.beginPath(); c.arc(bx,by,live?4.4:3.2,0,TAU);
+      c.fillStyle=live?AMK_TRACK:AMK_DECOY; c.fill();
+      c.lineWidth=1.6; c.strokeStyle='rgba(255,255,255,.9)'; c.stroke();
+    }
+    /* ② ลูกศรที่ขอบวง — หมุนแกนไปตามทิศ แล้ววาด "ปลายชี้เข้าหาจุดกลาง" */
+    c.save(); c.translate(cx,cy); c.rotate(r.ang);
+    if(live){                                            // เรืองแดงที่ขอบ = เห็นทิศได้ปราดเดียว
+      c.beginPath(); c.arc(0,0,R*0.93,-Math.PI/2-0.34,-Math.PI/2+0.34);
+      c.lineWidth=6; c.strokeStyle='rgba(255,59,48,'+(.30+.45*puls).toFixed(3)+')'; c.stroke();
+    }
+    const rim=R*0.99-(live?puls*6:0), len=live?22:14, w=live?10:6.5;
+    c.beginPath(); c.moveTo(0,-(rim-len)); c.lineTo(-w,-rim); c.lineTo(w,-rim); c.closePath();
+    c.fillStyle=live?AMK_TRACK:AMK_DECOY; c.fill();
+    c.lineWidth=live?2.4:1.6; c.strokeStyle=live?'rgba(255,255,255,.95)':'rgba(255,255,255,.55)'; c.stroke();
+    c.restore();
+  }
 }
 /* หายานลูกที่ใกล้กลางเป้าเล็งที่สุด (มุมไม่เกิน ~28°) */
 function lockTarget(){
@@ -8470,6 +8524,13 @@ window.InvasionWorld={
             onScreen:q.z<1&&Math.abs(q.x)<=1&&Math.abs(q.y)<=1,
             sx:Math.round((q.x*.5+.5)*W), sy:Math.round((-q.y*.5+.5)*H)}; }),
         SPK_MS, SPK_GAP, SPK_WORLD_GAP, SPK_RANGE, AMIS_SPD, AMIS_DMG, AMIS_MAX, PH_FLARE_MAX, PH_FLARE_RE, PH_TRAP}; },
+    /* 🧭🚀 รอบ 572: ลูกศรบอกทิศจรวดบนจอเรดาร์ — deg 0=ตรงหน้า · 90=ขวา · 180=หลัง · 270=ซ้าย */
+    drawAMisMarks, amisRel,
+    get misMarks(){ const sin=Math.sin(yaw), cos=Math.cos(yaw), R=radarEl?radarEl.width/2:90;
+      return aMissiles.map(m=>{ const r=amisRel(m.mesh.position,sin,cos);
+        return {ch:m.ch, live:!m.decoy&&!m.blind, d:+r.dist.toFixed(1),
+          deg:+((r.ang*180/Math.PI+360)%360).toFixed(1), onRadar:r.dist<=RDR_RANGE,
+          x:+(R+(r.rgt/RDR_RANGE)*R*.9).toFixed(1), y:+(R-(r.fwd/RDR_RANGE)*R*.9).toFixed(1)}; }); },
     /* 🕹️ รอบ 562: ลากนิ้วขวา = คันเร่งขึ้น/ลง (แทนปุ่ม ▲▼ ที่ถอดออก) */
     heliPiloting, HELI_COL_SENS, get climb(){ return +phClimb.toFixed(3); },
     /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
