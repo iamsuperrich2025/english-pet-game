@@ -1115,7 +1115,25 @@ function bindLbTabs(){
    ฟังก์ชันนี้จึงไม่ทำงานแล้ว (เจอ #leaderboard-card ไม่เจอ = คืนทันที) แต่คงไว้ให้ผู้เรียกเดิม
    (online.js / wsaward.js / wordsearch.js / renderDashboard) เรียกได้ปลอดภัย
    ทางเข้าอันดับตอนนี้ = ปุ่ม #btn-rail-rank ในรางซ้าย → openLeaderboardFull() */
+/* 🥇 รอบ 595: ป้ายเลขอันดับตัวเองบนปุ่ม 🥇 ในราง (อันดับเหรียญ = แท็บหลัก)
+   ไม่ออนไลน์/ยังไม่ติดกระดาน = ซ่อนป้าย · เรียกทุกครั้งที่ข้อมูลกระดานเปลี่ยน (ผ่าน renderLeaderboardCard) */
+function updateRankRailBadge(){
+  const b = document.getElementById('rank-badge');
+  if(!b) return;
+  let rank = 0;
+  try{
+    if(typeof Online !== 'undefined' && Online.ready){
+      const i = lbRankRows('coins').findIndex(r=>r.me);
+      if(i >= 0) rank = i + 1;
+    }
+  }catch(e){}
+  b.textContent = rank ? String(rank) : '';
+  b.style.display = rank ? '' : 'none';
+  const btn = document.getElementById('btn-rail-rank');
+  if(btn) btn.title = rank ? `ตอนนี้${selfPronoun()}อยู่อันดับที่ ${rank} ของกระดานเหรียญ 🪙` : 'ดูอันดับผู้เล่นทั้งหมด';
+}
 function renderLeaderboardCard(){
+  updateRankRailBadge();                 // 🥇 รอบ 595: ป้ายอันดับบนปุ่มราง (การ์ดเล็กถูกถอดแล้ว แต่ผู้เรียกเดิมยังพาข้อมูลใหม่มาให้)
   const el = document.getElementById('leaderboard-card');
   if(!el) return;
   bindLbTabs();
