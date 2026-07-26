@@ -545,6 +545,25 @@ const CSS=`
 /* 🚀 ปุ่มยิงมิสไซล์ในห้องนักบิน — เด่นชัด (วงเรืองแสงส้ม) */
 #inv-wrap.fly #inv-rocket{width:80px;height:80px;font-size:30px;
   box-shadow:0 6px 18px rgba(224,122,16,.6),0 0 0 4px rgba(255,222,150,.42)}
+/* 🔥🛡️ รอบ 569: ปุ่มแฟลร์ — โผล่เฉพาะตอนขับเฮลิ (ช่องนี้ว่างอยู่แล้วในห้องนักบิน เพราะ 🔭/🔎 ถูกซ่อน) */
+#inv-flare{position:absolute;right:214px;bottom:104px;width:66px;height:66px;font-size:24px;z-index:6;
+  display:none;border:none;border-radius:50%;color:#fff;font-weight:900;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;box-shadow:0 5px 14px rgba(0,0,0,.55);
+  background:radial-gradient(circle at 34% 28%,#ffe9a8,#c9601a)}
+#inv-flare b{display:block;font-size:12px;line-height:1;margin-top:1px;color:#fff7dd}
+#inv-flare:disabled{filter:grayscale(.8) brightness(.6)}
+#inv-flare:active{transform:scale(.94)}
+#inv-wrap.fly #inv-flare{display:block}
+/* 🔒 แถบเตือน "ถูกล็อก / จรวดเข้า" กลางจอบน (ไม่บังคำศัพท์ ไม่ทับกล่อง toast ที่ 34%) */
+#inv-spike{position:absolute;left:50%;top:16%;transform:translateX(-50%);z-index:8;display:none;
+  pointer-events:none;white-space:nowrap;border-radius:12px;padding:6px 16px;font-size:15px;font-weight:900;
+  color:#fff;background:rgba(120,20,20,.82);border:2px solid #ff8a7a;box-shadow:0 6px 20px rgba(0,0,0,.55)}
+#inv-spike b{color:#ffd166}
+#inv-spike.on{display:block;animation:invSpike .7s ease-in-out infinite}
+#inv-spike.hot{background:rgba(170,16,16,.9);border-color:#ffd166;font-size:17px;animation-duration:.42s}
+@keyframes invSpike{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}
+@media (max-height:430px){ #inv-flare{width:56px;height:56px;font-size:20px;right:196px;bottom:96px}
+  #inv-spike{top:12%;font-size:13px;padding:4px 12px} }
 /* กระสุนในแม็ก */
 /* 🎯 รอบ 433 (ผู้ใช้สั่ง): ย้ายช่องกระสุนมาอยู่ "ถัดจากปุ่มออก" มุมบนซ้าย
    (เดิมอยู่ท้ายแผงสถานะ ทำให้แผงสูงจนชนปุ่ม/กระดานคะแนนบนจอเตี้ย) */
@@ -884,6 +903,7 @@ function buildDom(){
     <button id="inv-fire">🔫</button>
     <button id="inv-fire2">🔫</button>
     <button id="inv-rocket">🚀</button>
+    <button id="inv-flare">🔥<b>4</b></button>
     <button id="inv-run">🏃</button>
     <button id="inv-heli">🚁</button>
     <button id="inv-swap">🎯</button>
@@ -904,6 +924,7 @@ function buildDom(){
     <button id="inv-exit">⬅️ ออก</button>
     <canvas id="inv-radar" width="180" height="180"></canvas>
     <div id="inv-locks"></div>
+    <div id="inv-spike"></div>
     <div id="inv-ban"></div>
     <div id="inv-intro"><div class="inv-card">
       <h3>🛸 ยานแม่บุกโลก!</h3>
@@ -921,8 +942,10 @@ function buildDom(){
       เพื่อนขับ เรายิงคุ้มกันรอบทิศจากบนฟ้า (คนละลำเดียวกันได้เลย)<br>
       🌙 <b>กลางวัน/กลางคืน!</b> ปุ่มมุมซ้ายล่าง (หรือคีย์ <b>N</b>) กดวน ☀️ กลางวัน → 🌙 กลางคืน → 🔄 <b>เวลาเดินเอง</b> (ตะวันตกดินรอบละ 4 นาที) — ฟ้าเต็มไปด้วยดาว 💡 ไฟถนนติดเอง ยานแม่เรืองแสงเด่น
       <b>ไฟฉายติดปืน</b>เปิดเองส่องทางให้ และทุกนัดที่ยิง <b>แสงปากลำกล้องจะสาดทั้งฉากวาบ</b>!<br>
-      <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (ขับเฮลิ: <b>ลากครึ่งขวาขึ้น-ลง = ไต่/ลดระดับ</b> ปล่อยนิ้ว = ลอยนิ่ง) · 💬 คุยกับเพื่อน<br>
-      💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
+      🔥 <b>ถูกล็อกต้องรีบปล่อยแฟลร์!</b> ยานลูกที่เราจ่อล็อกไว้นาน ๆ จะ<b>ล็อกกลับแล้วยิงจรวดนำวิถี</b>ใส่เรา —
+      ได้ยิน<b>เสียงเตือนตุ๊บถี่ ๆ</b> พร้อมแถบแดง 🔒 เมื่อไหร่ ให้กดปุ่ม 🔥 (คีย์ <b>X</b>) โปรยพลุหลอกจรวด แล้วหักเลี้ยวออกข้าง · แฟลร์เติมคืนเองเรื่อย ๆ<br>
+      <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🔥 แฟลร์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (ขับเฮลิ: <b>ลากครึ่งขวาขึ้น-ลง = ไต่/ลดระดับ</b> ปล่อยนิ้ว = ลอยนิ่ง) · 💬 คุยกับเพื่อน<br>
+      💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>X แฟลร์</b> · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
       ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
       <button class="inv-btn" id="inv-go">⚔️ เข้าสมรภูมิ!</button>
     </div></div>
@@ -971,6 +994,9 @@ function buildDom(){
   rocketBtn=document.getElementById('inv-rocket');
   runBtn=document.getElementById('inv-run');
   heliBtn=document.getElementById('inv-heli');
+  /* 🔥🛡️ รอบ 569: ปุ่มแฟลร์ + แถบเตือนถูกล็อก */
+  flareBtn=document.getElementById('inv-flare'); spikeEl=document.getElementById('inv-spike');
+  renderFlareBtn();
   /* 🎯📡 รอบ 563: จอเรดาร์ + กรอบล็อกเป้า */
   radarEl=document.getElementById('inv-radar'); radarCtx=radarEl?radarEl.getContext('2d'):null;
   /* 🎯🔒 รอบ 564: กรอบล็อกหลายใบ — สร้างล่วงหน้าเท่าโควตา RDR_MAX_LOCK แล้วเปิด/ปิดเอาตอนวาด */
@@ -1335,6 +1361,20 @@ const Snd={
       g.gain.setValueAtTime(.052,st+.065);
       g.gain.exponentialRampToValueAtTime(.0006,st+.095);
       o.connect(g); g.connect(c.destination); o.start(st); o.stop(st+.11); } },
+  /* 🔥🛡️ รอบ 569: เสียงเตือน "เรากำลังถูกล็อก / จรวดพุ่งเข้าหาเรา" (missile warning ในเครื่องบินรบ)
+     ต่างจาก 2 เสียงข้างบนชัด ๆ: lock = เราล็อกเขา · rwr = เขาจะยิงปืนสวน · spike = ของนำวิถีมาหาเรา
+     lv 0 = ถูกล็อก (โทนกลาง กวาดขึ้น) · lv 1 = จรวดเข้าแล้ว (สูงกว่า ดังกว่า ยาวกว่า) */
+  spikeN:0, spikeLast:-1,
+  spike(lv){ this.spikeN++; this.spikeLast=lv|0;
+    if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const hot=lv?1:0, f0=hot?1500:1050, f1=hot?2050:1380, dur=hot?.15:.11, vol=hot?.07:.048;
+    const o=c.createOscillator(); o.type='square';
+    o.frequency.setValueAtTime(f0,t); o.frequency.linearRampToValueAtTime(f1,t+dur*.8);
+    const g=c.createGain(); g.gain.setValueAtTime(.0006,t);
+    g.gain.exponentialRampToValueAtTime(vol,t+.008);
+    g.gain.setValueAtTime(vol,t+dur*.6);
+    g.gain.exponentialRampToValueAtTime(.0006,t+dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.02); },
   noise(t,dur,freq,vol){ const c=this.ctx; if(!c) return;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -1659,6 +1699,7 @@ let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null
      · ทุกเครื่องรวม (OR บิต) เอง = สถานะตรงกันโดยไม่ต้องมีเซิร์ฟเวอร์ */
 let battleRound=0, myKill=0;
 let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, canopyEl=null;
+let flareBtn=null, spikeEl=null;         // 🔥🛡️ รอบ 569: ปุ่มแฟลร์ + แถบเตือนถูกล็อก
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
 let quizEl=null;                       // 🔎 รอบ 473: แถบโจทย์ "ยิงเป้าที่แปลว่า …"
@@ -5144,6 +5185,7 @@ const LK_NUM=['①','②','③','④','⑤','⑥'];
 function rdrOn(){ return rdrLocks.filter(l=>l.on); }
 function resetRadar(){ rdrLocks=[]; rdrBeepAt=0; rdrAddAt=0; misQ=[];
   ctrQ=[];                                                  // 🔫↩️ รอบ 568: กระสุนยิงสวนที่ค้างคิว = ยกเลิกด้วย
+  resetSpike();                                             // 🔥🛡️ รอบ 569: ล็อกที่ศัตรูจับเรา + จรวดที่ลอยอยู่ ล้างพร้อมกัน
   lockEls.forEach(el=>{ el.style.display='none'; el.classList.remove('on'); });
   if(radarCtx&&radarEl) radarCtx.clearRect(0,0,radarEl.width,radarEl.height); }
 /* เป้าที่ "จ่ออยู่ตอนนี้" — ยานลูกที่ยังไม่ตาย อยู่ในระยะ+ในกรวย และใกล้กลางจอสุด
@@ -5564,6 +5606,8 @@ function bindInput(){
   hold(fireBtn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });
   hold(fire2Btn,()=>{ firing=true; resumeAudio(); },()=>{ firing=false; firedThisPress=false; });   // 🔫 ปุ่มยิงเหนือจอย (รอบ 433)
   rocketBtn.addEventListener('click',()=>fireMissile(performance.now()));
+  /* 🔥🛡️ รอบ 569: ปุ่มแฟลร์ (คีย์ X) — โปรยพลุหลอกจรวดศัตรู/ตัดล็อก */
+  if(flareBtn) flareBtn.addEventListener('click',()=>{ resumeAudio(); dropPlayerFlares(performance.now()); });
   runBtn.addEventListener('click',()=>{ isRun=!isRun; runBtn.classList.toggle('on',isRun); });
   /* 🚁 ขึ้น/ลงจากเฮลิ */
   heliBtn.addEventListener('click',()=>{ resumeAudio();
@@ -6110,6 +6154,7 @@ function enterHeli(){
   wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
+  phFlares=PH_FLARE_MAX; phFlareAt=0; phFlareReAt=0; renderFlareBtn();   // 🔥🛡️ รอบ 569: ลำใหม่ = แฟลร์เต็ม
   cpFuel=FUEL_MAX; cpEngT=ENG_AMB; cpFuelToastAt=0;         // ⛽🌡️ รอบ 534: ขึ้นเครื่องใหม่ = ถังเต็ม เครื่องเย็น
   cpHot=0; cpHotToastAt=0; cpHotWarned=false;               // 🔥 รอบ 560: ลำใหม่ = กำลังยกเต็ม 100%
   resetRadar();                                             // 🎯📡 รอบ 563: ขึ้นเครื่องใหม่ = เรดาร์เริ่มจับใหม่
@@ -6870,7 +6915,8 @@ function dropFlares(f,now){
     s.position.set(p.x+back.x+rnd(-1.5,1.5),p.y+rnd(-1.5,1.5),p.z+back.z+rnd(-1.5,1.5));
     s.scale.setScalar(3.0); scene.add(s);
     const a=Math.random()*TAU, sp=rnd(5,13);
-    flares.push({s,sid,born:now,life:FLARE_LIFE*rnd(.8,1.15),smokeAt:0,
+    /* 🔥🛡️ รอบ 569: ติดฝั่งไว้ด้วย — 'foe' = แฟลร์ของยานลูก (หลอกจรวดเรา) · 'ph' = แฟลร์ของเรา */
+    flares.push({s,sid,side:'foe',born:now,life:FLARE_LIFE*rnd(.8,1.15),smokeAt:0,
       v:new THREE.Vector3(fv.x*.75+Math.cos(a)*sp, rnd(-2,3.5), fv.z*.75+Math.sin(a)*sp)});
   }
   Snd.flare();
@@ -6893,6 +6939,7 @@ function tickEvade(dt,now){
   for(const m of missiles){
     if(!m.lock || m.ally) continue;                           // จรวดบอทพันธมิตรไม่เกี่ยวกับแฟลร์ (ดู incomingMis)
     for(const fl of flares){
+      if(fl.side==='ph') continue;                            // 🔥🛡️ รอบ 569: แฟลร์ของเราไม่หลอกจรวดของเราเอง
       if(m.rolled===fl.sid) continue;                         // ชุดนี้สุ่มไปแล้ว (แพ้/ชนะก็จบ)
       if(m.mesh.position.distanceTo(fl.s.position)>FLARE_TRAP) continue;
       m.rolled=fl.sid;
@@ -7036,6 +7083,207 @@ function tickCounter(dt,now){
     if(now-(l.at||0)<CTR_REACT) continue;                   // ยังอยู่ในช่วงเตือน
     if(now-(l.f.ctrAt||0)<CTR_GAP) continue;                // คูลดาวน์ของลำนั้น
     counterFire(l.f,now);
+  }
+}
+/* ============================================================
+   🔥🛡️ รอบ 569 (ผู้ใช้สั่ง): แฟลร์ของ "เฮลิผู้เล่น" + เสียงเตือนตอนถูกล็อก
+   ต่อยอดรอบ 565 (ยานลูกมีแฟลร์) ให้เป็นของสองฝ่าย — เดิมเราหลอกจรวดใครไม่ได้เลย
+   เพราะฝั่งศัตรูมีแต่กระสุนวิ่งตรง (ไม่มีของนำวิถีให้หลอก)
+   ① 📡 ยานลูกที่ติด 🔴 LOCK ของเรา (และเลย CTR_REACT แล้ว) จะ "ล็อกกลับ" ใส่เฮลิเรา
+      → 🔊 เสียงเตือนถูกล็อก (Snd.spike) ตุ๊บถี่ขึ้นเรื่อย ๆ + แถบแดงกลางจอ + toast บอกทางแก้
+      → ครบ SPK_MS ยิง 🚀 จรวดนำวิถีเข้าหาเฮลิเรา (ช้ากว่าจรวดเรา เลี้ยวช้ากว่า = หลบทัน)
+   ② 🔥 เรากด "แฟลร์" (ปุ่ม 🔥 / คีย์ X) โปรยพลุร้อนท้ายลำ
+      · ช่วงยังไม่ยิง (แค่ล็อก) = ตัดล็อกทิ้งทันที ลำนั้นเข้าคูลดาวน์ (ให้เด็กเห็นผลชัดว่าแฟลร์ช่วยได้)
+      · จรวดที่เฉียดแฟลร์ในรัศมี PH_TRAP มีโอกาส PH_FLARE_CH หลงเป้า → วิ่งเข้าแฟลร์แล้วระเบิดเปล่า
+   ⚖️ กันยากเกินสำหรับเด็ก: แฟลร์เรา "เติมคืนเอง" PH_FLARE_RE (ไม่มีวันหมดถาวรแบบของยานลูก)
+      · จรวดศัตรูลอยพร้อมกันมากสุด AMIS_MAX ลูก · ดาเมจ AMIS_DMG (พลังฟื้นเองอยู่แล้ว ไม่มีตาย)
+      · ยิงเฉพาะลำที่ "เราล็อกไว้ก่อน" = เลิกจ่อล็อกก็ไม่โดนยิงจรวด · ลงจากเครื่อง = ล้างทั้งหมด
+   ⚠️ ใช้อาร์เรย์ flares ร่วมกับรอบ 565 แต่แยกฝั่งด้วย fl.side ('foe' = ของยานลูก · 'ph' = ของเรา)
+      ห้ามลืมกรอง side ทั้งสองทาง ไม่งั้นจรวดเราจะโดนแฟลร์ตัวเองหลอก
+   ⚠️ ทดสอบ: `_t.spike` ดูสถานะ · `_t.setPhFlareLuck(1|0)` · `_t.spikeStart(f)` · `_t.dropPlayerFlares()`
+   ============================================================ */
+const SPK_RANGE=240;          // ยานลูกล็อกเราได้ไกลสุด (ม.) — ไกลกว่านี้เลิกล็อก
+const SPK_MS=1900;            // ล็อกเราค้างเท่านี้ (ms) แล้วถึงยิงจรวด = ช่วงให้กดแฟลร์/หลบ
+const SPK_GAP=9000;           // คูลดาวน์ต่อลำ (ms) — ลำเดิมล็อกเราซ้ำได้เมื่อไหร่
+const SPK_WORLD_GAP=5200;     // เว้นระหว่างการล็อกเรา "ครั้งใดก็ตาม" (กันโดนรุมพร้อมกันหลายลำ)
+const SPK_BEEP=[520,210];     // จังหวะเสียงเตือน (ms) — [เพิ่งโดนล็อก, ใกล้ถูกยิง]
+const AMIS_SPD=54;            // ความเร็วจรวดศัตรู (ม./วิ · จรวดเรา MIS_SPD 95 = ของเราไวกว่าเท่าตัว)
+const AMIS_TURN=2.0;          // ความไวเลี้ยวเข้าหาเรา (จรวดเรา hard 5.2–10.7 = ของศัตรูเลี้ยวช้ากว่ามาก)
+const AMIS_DMG=14;            // ดาเมจเมื่อโดน (PLAYER_HP 120 · ฟื้นเองเมื่อไม่โดนยิง 3.5 วิ)
+const AMIS_LIFE=9500;         // อายุจรวด (ms) — หมดอายุ = ระเบิดกลางอากาศเปล่า
+const AMIS_MAX=2;             // ลอยพร้อมกันมากสุดกี่ลูก
+const AMIS_PROX=5.0;          // เข้าใกล้เฮลิเราเท่านี้ (ม.) = ระเบิด
+const PH_FLARE_MAX=4;         // แฟลร์ที่เราพกได้กี่ชุด
+const PH_FLARE_RE=9000;       // เติมคืนชุดละกี่ ms (ต่างจากยานลูกที่หมดแล้วหมดเลย)
+const PH_FLARE_N=9;           // กี่ดวงต่อชุด
+const PH_FLARE_COOL=800;      // เว้นระหว่างกด (ms)
+const PH_FLARE_BACK=13;       // โปรยห่างท้ายลำกี่เมตร (⚠️ ใกล้กว่านี้พลุบังหน้าจอ — ดูหมายเหตุใน dropPlayerFlares)
+const PH_FLARE_DOWN=3.2;      // ต่ำกว่าลำกี่เมตร
+const PH_TRAP=30;             // จรวดศัตรูเฉียดแฟลร์เราใกล้กว่านี้ (ม.) = เสี่ยงหลงเป้า
+let PH_FLARE_CH=0.75;         // โอกาสหลงต่อ 1 ลูก ต่อ 1 ชุดแฟลร์ (เทสต์ปรับผ่าน _t.setPhFlareLuck)
+let aMissiles=[], spkFrom=null, spkAt=0, spkWorldAt=0, spkBeepAt=0, spkToastAt=0, aMisFired=0;
+let phFlares=PH_FLARE_MAX, phFlareAt=0, phFlareReAt=0, phFlareUsed=0;
+function renderFlareBtn(){
+  if(!flareBtn) return;
+  const b=flareBtn.querySelector('b'); if(b) b.textContent=phFlares;
+  flareBtn.disabled=phFlares<=0;
+}
+/* 🔥 โปรยแฟลร์ 1 ชุดท้ายเฮลิเรา — พาความเร็วลำไปด้วยแล้วร่วงรั้งท้าย (สูตรเดียวกับรอบ 565) */
+function dropPlayerFlares(now){
+  now=now||performance.now();
+  if(!heliPiloting()) return false;
+  if(phFlares<=0 || now-phFlareAt<PH_FLARE_COOL) return false;
+  phFlares--; phFlareAt=now; phFlareReAt=now; phFlareUsed++; renderFlareBtn();
+  const sid=++flareSeq;
+  const fv=new THREE.Vector3(phVel.x,phVel.y,phVel.z);
+  /* ⚠️ ต้องโปรย "ท้ายลำ+ใต้ลำ" ไม่ใช่ที่ตัวกล้อง — วัดจริงรอบ 569: ตอนแรกวางห่างแค่ 4 ม.
+     พลุ additive 9 ดวงเลยมากองหน้าเลนส์ ขาววาบทั้งจอ 24% (ดูภาพ r569_flare.jpg)
+     ใช้ทิศหัวลำ (aimDir) ถอยหลัง PH_FLARE_BACK ม. + ต่ำลง PH_FLARE_DOWN ม. = เห็นเป็นพลุร่วงท้ายลำจริง */
+  const fwd=aimDir();
+  const bx=px-fwd.x*PH_FLARE_BACK, by=py-PH_FLARE_DOWN, bz=pz-fwd.z*PH_FLARE_BACK;
+  for(let i=0;i<PH_FLARE_N;i++){
+    const mat=new THREE.SpriteMaterial({map:smokeTex(),transparent:true,opacity:.85,
+      blending:THREE.AdditiveBlending,depthWrite:false,color:0xfff0a8});
+    const s=new THREE.Sprite(mat);
+    s.position.set(bx+rnd(-2.4,2.4), by+rnd(-1.6,1.6), bz+rnd(-2.4,2.4));
+    s.scale.setScalar(2.6); scene.add(s);
+    const a=Math.random()*TAU, sp=rnd(5,13);
+    flares.push({s,sid,side:'ph',born:now,life:FLARE_LIFE*rnd(.8,1.15),smokeAt:0,
+      v:new THREE.Vector3(fv.x*.75+Math.cos(a)*sp, rnd(-2,3.5), fv.z*.75+Math.sin(a)*sp)});
+  }
+  Snd.flare();
+  /* 🔒 ยังไม่ทันยิง = แฟลร์ตัดล็อกทิ้งเลย (ให้เด็กเห็นผลทันทีว่า "กดแล้วรอด") */
+  if(spkFrom){
+    spkFrom.spkAt=now; spkFrom=null;
+    toastBan('🔥 <b style="color:#ffd166">แฟลร์ตัดล็อกได้แล้ว!</b><br>'+
+             '<span class="ib-sub">ยานลูกต้องเริ่มจับเราใหม่ — รีบหลบออกจากแนวมัน</span>',1300);
+  }
+  return true;
+}
+/* 🚀 ยานลูกยิงจรวดนำวิถีใส่เฮลิเรา */
+function fireAlienMissile(f,now){
+  const p=f.grp.position;
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.8,7),
+    new THREE.MeshPhongMaterial({color:0xffb0c0,emissive:0x551122,shininess:40}));
+  m.position.copy(p); scene.add(m);
+  const trail=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff6a8a,transparent:true,opacity:.9,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  trail.scale.setScalar(2.4); scene.add(trail);
+  const dir=new THREE.Vector3(px-p.x,py-p.y,pz-p.z).normalize();
+  aMissiles.push({mesh:m,trail,v:dir.multiplyScalar(AMIS_SPD*.45),born:now,smokeAt:0,decoy:null,rolled:0,ch:f.ch});
+  aMisFired++;
+  Snd.missile();
+  toastBan('🚀 <b style="color:#ff8a7a">จรวดกำลังพุ่งเข้าหาเรา!</b><br>'+
+           '<span class="ib-sub">กดปุ่ม 🔥 แฟลร์ (คีย์ X) แล้วหักเลี้ยวออกด้านข้าง — จรวดจะหลงตามพลุแทน</span>',2000);
+}
+function clearAMis(){
+  aMissiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail);
+    m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose(); });
+  aMissiles=[];
+}
+function resetSpike(){ spkFrom=null; spkAt=0; spkBeepAt=0; clearAMis(); if(spikeEl) spikeEl.classList.remove('on','hot'); }
+function spikeStart(f,now){ spkFrom=f; spkAt=now; spkBeepAt=now; spkWorldAt=now; }
+/* จรวดศัตรูลูกที่ใกล้เราสุด (ที่ยังตามเราอยู่ ไม่ได้หลงแฟลร์) */
+function aMisNear(){
+  let d=null;
+  for(const m of aMissiles){ if(m.decoy||m.blind) continue;
+    const t=Math.hypot(m.mesh.position.x-px,m.mesh.position.y-py,m.mesh.position.z-pz);
+    if(d==null||t<d) d=t; }
+  return d;
+}
+/* เรียกทุกเฟรม หลัง tickCounter (ต้องรู้ก่อนว่าเฟรมนี้เราล็อกใครอยู่) */
+function tickSpike(dt,now){
+  if(!heliPiloting()){ if(spkFrom||aMissiles.length) resetSpike(); return; }
+  /* ① แฟลร์เติมคืนเอง (ไม่ให้เด็กหมดกระสุนแฟลร์ถาวร) */
+  if(phFlares<PH_FLARE_MAX && now-phFlareReAt>=PH_FLARE_RE){ phFlares++; phFlareReAt=now; renderFlareBtn(); }
+  /* ② ลำที่ล็อกเราอยู่ยังใช้ได้ไหม (ตก/ไกลเกิน = เลิก) */
+  if(spkFrom){
+    const alive=!spkFrom.dead && fighters.indexOf(spkFrom)>=0;
+    const d=alive?spkFrom.grp.position.distanceTo(camera.position):1e9;
+    if(!alive||d>SPK_RANGE) spkFrom=null;
+  }
+  /* ③ หาลำที่จะล็อกเรา — ต้องเป็นลำที่ "เราล็อกไว้ 🔴 และมันรู้ตัวแล้ว" (ctrArming รอบ 568) */
+  if(!spkFrom && aMissiles.length<AMIS_MAX && now-spkWorldAt>=SPK_WORLD_GAP){
+    for(const l of rdrLocks){
+      if(!ctrArming(l,now)) continue;                         // 🔶 กำลังจับ/กำลังหนีมิสไซล์ = ยังไม่ล็อกเรา
+      if(now-(l.f.spkAt||-SPK_GAP)<SPK_GAP) continue;         // คูลดาวน์ของลำนั้น
+      if(l.f.grp.position.distanceTo(camera.position)>SPK_RANGE) continue;
+      spikeStart(l.f,now);
+      if(now-spkToastAt>4000){ spkToastAt=now;
+        toastBan('🔒 <b style="color:#ff8a7a">ยานลูก '+l.f.ch.toUpperCase()+' ล็อกเราไว้ — กำลังยิงจรวด!</b><br>'+
+                 '<span class="ib-sub">กดปุ่ม 🔥 แฟลร์ (คีย์ X) ตัดล็อกทิ้ง · หรือยิง 🚀 ให้มันตกก่อน</span>',2000);
+      }
+      break;
+    }
+  }
+  /* ④ ถูกล็อกครบเวลา = ยิงจรวด */
+  if(spkFrom && now-spkAt>=SPK_MS){
+    if(aMissiles.length<AMIS_MAX) fireAlienMissile(spkFrom,now);
+    spkFrom.spkAt=now; spkFrom=null;
+  }
+  /* ⑤ เสียงเตือน — ถูกล็อก = ตุ๊บถี่ขึ้นตามเวลาที่เหลือ · จรวดเข้า = ถี่ตามระยะ */
+  const near=aMisNear();
+  if(near!=null){
+    const gap=near<70?150:near<130?230:330;
+    if(now-spkBeepAt>=gap){ spkBeepAt=now; Snd.spike(1); }
+  }else if(spkFrom){
+    const k=Math.min(1,(now-spkAt)/SPK_MS);
+    const gap=SPK_BEEP[0]+(SPK_BEEP[1]-SPK_BEEP[0])*k;
+    if(now-spkBeepAt>=gap){ spkBeepAt=now; Snd.spike(0); }
+  }
+  /* ⑥ แถบเตือนกลางจอ */
+  if(spikeEl){
+    if(near!=null){
+      spikeEl.classList.add('on','hot');
+      spikeEl.innerHTML='🚀 <b>จรวดเข้า! '+Math.round(near)+' ม.</b> — กด 🔥 แฟลร์ แล้วหักเลี้ยว!';
+    }else if(spkFrom){
+      spikeEl.classList.add('on'); spikeEl.classList.remove('hot');
+      spikeEl.innerHTML='🔒 <b>ถูกล็อก!</b> ยานลูก '+spkFrom.ch.toUpperCase()+' กำลังยิงจรวด — กด 🔥 แฟลร์';
+    }else spikeEl.classList.remove('on','hot');
+  }
+  tickAMis(dt,now);
+}
+/* จรวดศัตรู: นำวิถีเข้าหาเฮลิเรา · เช็กแฟลร์ของเรา · ชน/หมดอายุ */
+function tickAMis(dt,now){
+  for(let i=aMissiles.length-1;i>=0;i--){
+    const m=aMissiles[i];
+    /* 🔥 หลงแฟลร์ของเราหรือยัง (สุ่มครั้งเดียวต่อชุดแฟลร์ เหมือนรอบ 565) */
+    if(!m.decoy){
+      for(const fl of flares){
+        if(fl.side!=='ph') continue;                          // ⚠️ แฟลร์ของยานลูกไม่หลอกจรวดของยานลูกเอง
+        if(m.rolled===fl.sid) continue;
+        if(m.mesh.position.distanceTo(fl.s.position)>PH_TRAP) continue;
+        m.rolled=fl.sid;
+        if(Math.random()<PH_FLARE_CH){ m.decoy=fl; m.blind=true; }   // 🔥 หลงแล้วหลงเลย ไม่กลับมาไล่เราอีก
+        break;
+      }
+    }
+    if(m.decoy && flares.indexOf(m.decoy)<0) m.decoy=null;    // แฟลร์ดับก่อน = พุ่งตรงไปจนหมดอายุ
+    /* นำวิถี: ปกติ = เข้าหาเฮลิเรา · หลงแฟลร์ = เข้าหาดวงแฟลร์ · แฟลร์ดับแล้ว (blind) = พุ่งตรงไปเฉย ๆ */
+    const tgt=m.decoy?m.decoy.s.position:(m.blind?null:new THREE.Vector3(px,py,pz));
+    if(tgt){
+      const want=new THREE.Vector3().subVectors(tgt,m.mesh.position).normalize().multiplyScalar(AMIS_SPD);
+      m.v.lerp(want,Math.min(1,dt*AMIS_TURN));
+    }
+    if(m.v.length()<AMIS_SPD) m.v.setLength(Math.min(AMIS_SPD,m.v.length()+AMIS_SPD*dt*1.8));
+    m.mesh.position.addScaledVector(m.v,dt);
+    m.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),m.v.clone().normalize());
+    m.trail.position.copy(m.mesh.position).addScaledVector(m.v.clone().normalize(),-1.4);
+    if(now-(m.smokeAt||0)>24){ m.smokeAt=now;
+      spawnSmoke(m.mesh.position.clone().addScaledVector(m.v.clone().normalize(),-1.2)); }
+    const p=m.mesh.position;
+    const hitMe=!m.decoy && !m.blind && Math.hypot(p.x-px,p.y-py,p.z-pz)<AMIS_PROX;
+    const hitDecoy=m.decoy && p.distanceTo(m.decoy.s.position)<4.5;
+    const gone=(now-m.born>AMIS_LIFE) || p.y<terrainH(p.x,p.z);
+    if(hitMe||hitDecoy||gone){
+      boom(p.clone(),1.0,hitMe?0xff6a6a:0xffb347);
+      if(hitMe){ hurtPlayer(AMIS_DMG,now); shake=Math.max(shake,.9);
+        toastBan('💥 <b style="color:#ff8a7a">โดนจรวดเข้า!</b><br>'+
+                 '<span class="ib-sub">คราวหน้ากด 🔥 แฟลร์ตั้งแต่ได้ยินเสียงเตือน แล้วหักเลี้ยวออกข้าง</span>',1500); }
+      scene.remove(m.mesh); scene.remove(m.trail);
+      m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose();
+      aMissiles.splice(i,1);
+    }
   }
 }
 /* 👥 พันธมิตรภาคพื้น: ยิงกราดขึ้นฟ้าใส่ยานลูก (ทำดาเมจจริงแต่เบา — ผู้เล่นยังเป็นพระเอก) */
@@ -7791,6 +8039,7 @@ function frame(dt,now){
   tickRadar(now);                   // 🎯📡 รอบ 563: เรดาร์ล็อกเป้ามิสไซล์ (เฉพาะตอนขับเฮลิ)
   tickMisQueue(now);                // 🚀🔒 รอบ 564: ปล่อยมิสไซล์ตามคิว "รัวทีละชุด"
   tickCounter(dt,now);              // 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา (ต้องมาหลัง tickRadar)
+  tickSpike(dt,now);                // 🔥🛡️ รอบ 569: ถูกล็อก→เสียงเตือน→จรวดศัตรู + แฟลร์ของเรา (หลัง tickCounter)
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
   tickNight(dt,now);                // 🌙 รอบ 471/474: ไล่แสงกลางวัน↔กลางคืน + ไฟถนน + ไฟฉายติดปืน
@@ -7921,6 +8170,8 @@ function start(){
   shake=0; fShots.forEach(s=>scene.remove(s.mesh)); fShots=[];
   missiles.forEach(m=>{ scene.remove(m.mesh); scene.remove(m.trail); }); missiles=[];
   clearSmoke(); clearFlares();      // 🔥 รอบ 565: แฟลร์ที่ค้างฟ้าต้องหายไปพร้อมรอบเก่า
+  /* 🔥🛡️ รอบ 569: เข้าโลกใหม่ = แฟลร์เต็มมือ ไม่มีใครล็อกเรา ไม่มีจรวดค้างฟ้า */
+  resetSpike(); phFlares=PH_FLARE_MAX; phFlareAt=0; phFlareReAt=0; spkWorldAt=0; renderFlareBtn();
   fx.forEach(f=>scene.remove(f.o)); fx=[]; bullets=[];
   /* 🎯 รอบ 416: เกิดที่ "ปากถนน" หันหน้าเข้าเมือง — เปิดเกมมาเห็นถนนสมรภูมิ+ยานแม่เหนือปลายถนน */
   px=0; pz=STREET_Z0; py=terrainH(px,pz)+EYE; yaw=0; pitch=.30;
@@ -7943,7 +8194,7 @@ function start(){
     if(c) return c;
     const k=(e.key||'').toLowerCase();
     const map={w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD',q:'KeyQ',e:'KeyE',r:'KeyR',h:'KeyH',
-               f:'KeyF',g:'KeyG',z:'KeyZ',b:'KeyB',n:'KeyN',c:'KeyC',' ':'Space',shift:'ShiftLeft',
+               f:'KeyF',g:'KeyG',z:'KeyZ',b:'KeyB',n:'KeyN',c:'KeyC',x:'KeyX',' ':'Space',shift:'ShiftLeft',
                control:'ControlLeft',escape:'Escape',arrowup:'ArrowUp',arrowdown:'ArrowDown',
                arrowleft:'ArrowLeft',arrowright:'ArrowRight'};
     return map[k]||'';
@@ -7971,6 +8222,7 @@ function start(){
     else if(c==='KeyG'&&!e.repeat){ setScoped(!scoped); }    // 🔭 ส่องกล้อง
     else if(c==='KeyZ'&&!e.repeat){ cycleScopeMag(); }       // 🔎 สลับกำลังขยาย
     else if(c==='KeyB'){ if(breathLeft>0) holdBreath=true; }  // 🫁 กลั้นหายใจ
+    else if(c==='KeyX'&&!e.repeat){ dropPlayerFlares(performance.now()); }   // 🔥 รอบ 569: ปล่อยแฟลร์
     else if(c==='KeyN'&&!e.repeat){ setDayMode(dayMode==='day'?'night':dayMode==='night'?'auto':'day'); }  // 🌙 วนกลางวัน/คืน/อัตโนมัติ
     else if(c==='Escape'){ unlockMouse(); exitBox.classList.add('on'); }
     if(['KeyW','KeyA','KeyS','KeyD','Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(c)) e.preventDefault();
@@ -8176,6 +8428,28 @@ window.InvasionWorld={
         locks:rdrLocks.map(l=>({ch:l.f.ch, on:l.on, arming:ctrArming(l,t), warned:!!l.warned,
           eva:t<(l.f.evaUntil||0), sinceLock:l.at?Math.round(t-l.at):null,
           cool:Math.max(0,Math.round(CTR_GAP-(t-(l.f.ctrAt||-CTR_GAP))))}))}; },
+    /* 🔥🛡️ รอบ 569: แฟลร์ของเรา + เสียงเตือนถูกล็อก + จรวดนำวิถีของยานลูก */
+    tickSpike, tickAMis, dropPlayerFlares, fireAlienMissile, clearAMis, resetSpike, aMisNear,
+    spikeStart(f){ spikeStart(f||fighters.find(x=>!x.dead), performance.now()); },
+    setPhFlareLuck(v){ PH_FLARE_CH=v; },                         // เทสต์: 1 = หลอกติดแน่นอน · 0 = ไม่หลอกเลย
+    setPhFlares(n){ phFlares=n; renderFlareBtn(); },
+    get spike(){ const t=performance.now(), W=wrapEl.clientWidth, H=wrapEl.clientHeight;
+      return {locking:spkFrom?spkFrom.ch:null, since:spkFrom?Math.round(t-spkAt):null,
+        toLaunch:spkFrom?Math.max(0,Math.round(SPK_MS-(t-spkAt))):null,
+        pods:phFlares, used:phFlareUsed, flares:flares.filter(f=>f.side==='ph').length,
+        foeFlares:flares.filter(f=>f.side!=='ph').length,
+        fired:aMisFired, luck:PH_FLARE_CH, snd:Snd.spikeN, sndLast:Snd.spikeLast, flareSnd:Snd.flareN,
+        near:(()=>{ const d=aMisNear(); return d==null?null:+d.toFixed(1); })(),
+        bar:spikeEl?{on:spikeEl.classList.contains('on'),hot:spikeEl.classList.contains('hot'),
+          txt:spikeEl.textContent}:null,
+        btn:flareBtn?{shown:getComputedStyle(flareBtn).display,disabled:flareBtn.disabled,
+          txt:flareBtn.textContent}:null,
+        mis:aMissiles.map(m=>{ const p=m.mesh.position, q=p.clone().project(camera);
+          return {ch:m.ch, d:+Math.hypot(p.x-px,p.y-py,p.z-pz).toFixed(1), decoy:!!m.decoy, blind:!!m.blind,
+            rolled:m.rolled||0, age:Math.round(t-m.born),
+            onScreen:q.z<1&&Math.abs(q.x)<=1&&Math.abs(q.y)<=1,
+            sx:Math.round((q.x*.5+.5)*W), sy:Math.round((-q.y*.5+.5)*H)}; }),
+        SPK_MS, SPK_GAP, SPK_WORLD_GAP, SPK_RANGE, AMIS_SPD, AMIS_DMG, AMIS_MAX, PH_FLARE_MAX, PH_FLARE_RE, PH_TRAP}; },
     /* 🕹️ รอบ 562: ลากนิ้วขวา = คันเร่งขึ้น/ลง (แทนปุ่ม ▲▼ ที่ถอดออก) */
     heliPiloting, HELI_COL_SENS, get climb(){ return +phClimb.toFixed(3); },
     /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
