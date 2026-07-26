@@ -144,9 +144,20 @@ const ADS_SCALE=.72;                    // ขยับเข้าใกล้�
       • เพิ่ม s แล้วปลายลำกล้องจะขยับขึ้น ต้องดึง y ลงชดเชยให้ปลายกลับไปอยู่ใต้จุดเล็งเท่าเดิม
    ⛔ ค่าท่าถือ (GUN_VIEW) และจุดเล็ง (AIM_OFF/AIM_BY_GUN) ถูกล็อก — ห้ามแตะ แก้ได้แค่ตารางนี้
    🔧 จูนสด: InvasionWorld._t.setAdsPose({x,y,z,rx,ry,rz,s}) → คืนบรรทัดพร้อมวางทับตารางนี้ */
+/* 🔻 รอบ 573 (ผู้ใช้ส่งภาพ: "เล็งแล้วเป้าไปอยู่บริเวณพานท้ายปืน — ให้ขยับปืนต่ำลง"):
+   วัดในเกมจริงเจอต้นตอ — ภาพในเลนส์ถูกวาดทับเป็น **สี่เหลี่ยมจัตุรัสด้าน 2R** รอบจุดเล็ง (renderScopePass)
+   ตัวปืนที่ล้นออกนอกสี่เหลี่ยมนั้นจึง "โผล่ให้เห็นจริง" ขนาบข้างวงเลนส์
+     ไรเฟิล: เงาปืนกว้าง 41.4–58.7% ของจอ แต่สี่เหลี่ยมกล้องกว้างแค่ 43.2–56.8%
+     → ส่วนที่โผล่พ้นขึ้นมาถึง **58.4% ของจอ = สูงกว่าขอบล่างเลนส์ 26 จุด** (พานท้ายเบียดจุดเล็ง 73%)
+   ✅ กติกาใหม่ (วัดได้ ใช้ซ้ำกับปืนใหม่ได้): **ส่วนของปืนที่มองเห็นจริงต้องอยู่ใต้ขอบล่างของสี่เหลี่ยมกล้อง**
+      (จุดสูงสุดที่เห็น ≥ aimY + R) → ลด y ของไรเฟิล −0.144 → −0.344 (ค่าต่ำสุดที่พ้นคือ −0.244
+      เลือก −0.344 ให้พานท้ายถอยพ้นใต้เลนส์จริง ไม่ใช่แตะขอบพอดี · ต่ำกว่านี้ปืนแทบหายจากเฟรม)
+   📏 ยืนยัน 1280×720 และ 812×375: เดิม clearBy −26.6/−26.0 จุด → ใหม่ 0.0/+0.1 (พ้นทั้งสองจอ)
+   ⛔ **R93 ไม่แตะ** — วัดแล้วพ้นอยู่แล้ว (clearBy +0.6) เพราะวงเลนส์ใหญ่ (R 216 px) บังตัวปืนไว้หมด
+   ⚠️ ค่านี้คู่กับ AIM_OFF/สูตรวงเลนส์ — ถ้าวันหน้าแก้จุดเล็งหรือ scopeRadius ต้องวัด clearBy ใหม่ */
 const ADS_BY_GUN={
   r93:   {p:[0.012,-0.221,-1.378], r:[-0.415,-0.009,0], s:1.643},   /* 🔍 รอบ 503: ใหญ่ขึ้น +18% */
-  rifle: {p:[0.006,-0.144,-0.713], r:[-0.374,0,0],      s:1.215},   /* 🔍 รอบ 503: ใหญ่ขึ้น +16% */
+  rifle: {p:[0.006,-0.344,-0.713], r:[-0.374,0,0],      s:1.215},   /* 🔻 รอบ 573: ต่ำลง (y −0.144 → −0.344) */
 };
 function adsView(){ return ADS_BY_GUN[weapon] || {p:ADS_POS, r:ADS_ROT, s:ADS_SCALE}; }
 /* ============================================================
@@ -1915,11 +1926,16 @@ function buildTown(){
   });
   const trunkM=new THREE.MeshLambertMaterial({color:0x8a6a45});
   const leafM=new THREE.MeshLambertMaterial({color:0x5f8a3a,side:THREE.DoubleSide});
-  for(let i=0;i<34;i++){                                     // 🌴 ต้นอินทผลัม
+  /* 🌳 รอบ 580 (ผู้ใช้สั่ง): ต้นไม้ทุกต้นเป็นโมเดลจริง `img/models/tree_lite.glb`
+     ระหว่างรอโมเดลโหลด โชว์ต้นอินทผลัมทรงกล่องเดิมไว้ก่อน (เข้าโลกมาไม่เห็นทะเลทรายโล่ง) แล้วสลับทิ้ง */
+  treeSpots=[]; treeIms=[]; treeParts=[]; treeLodAt=null;
+  treeFallback=new THREE.Group(); scene.add(treeFallback);
+  for(let i=0;i<34;i++){
     const a=rnd(0,TAU), r=rnd(30,WORLD*0.8);
     const x=Math.cos(a)*r, z=Math.sin(a)*r, base=terrainH(x,z), h=rnd(6,11);
+    treeSpots.push({x,z,base,h,rot:rnd(0,TAU)});
     const tr=new THREE.Mesh(new THREE.CylinderGeometry(.28,.45,h,6),trunkM);
-    tr.position.set(x,base+h/2,z); tr.rotation.z=rnd(-.09,.09); scene.add(tr);
+    tr.position.set(x,base+h/2,z); tr.rotation.z=rnd(-.09,.09); treeFallback.add(tr);
     for(let k=0;k<6;k++){
       const ang=k/6*TAU;
       Tleaf.push({p:[x+Math.cos(ang)*1.9, base+h+.5, z+Math.sin(ang)*1.9], r:[-1.05,ang,0]});
@@ -1933,8 +1949,69 @@ function buildTown(){
   }
   /* ⚡ รวมของซ้ำในเมือง (หน้าต่าง ~240 · ใบอินทผลัม ~204 · ก้อนหิน 45) → 3 draw call */
   instancer(new THREE.PlaneGeometry(1,1.6), winMat, Twin);
-  instancer(new THREE.PlaneGeometry(1.5,5.4), leafM, Tleaf);
+  const leafIm=instancer(new THREE.PlaneGeometry(1.5,5.4), leafM, Tleaf);
+  if(leafIm) treeFallback.add(leafIm);            // ใบชั่วคราวอยู่ในกลุ่ม fallback → ทิ้งพร้อมกันตอนโมเดลจริงมา
   instancer(new THREE.DodecahedronGeometry(1,0), rockM, Trock);
+  buildTreesGlb();
+}
+/* ============================================================
+   🌳 รอบ 580 (ผู้ใช้สั่ง): ต้นไม้จริงจากโมเดล tree.glb ของผู้ใช้
+   ⚡ งบมือถือ — 2 ชั้น:
+     ① ไฟล์: ต้นฉบับ 61 MB / 1.1M verts เอาลงเกมไม่ได้ → ลดตามสูตร `handoff/NOTES.md`
+        (ตัด NORMAL → weld → simplify 0.012 → resize tex 512 → prune) เหลือ **803 KB / 26k verts**
+        = `img/models/tree_lite.glb` (ต้นฉบับ tree.glb เก็บไว้ในเครื่อง ไม่ขึ้น repo เหมือน house_01)
+     ② draw call: 34 ต้นใช้โมเดลเดียวกัน → ยัดเป็น InstancedMesh ชิ้นละก้อน (ไม่ใช่ clone 34 ตัว)
+        ต้นไม้ไกลกว่า TREE_LOD ซ่อนทิ้ง (เหมือน tickHouseLod) — ทะเลทรายกว้าง มองไม่เห็นอยู่แล้ว
+   ============================================================ */
+const TREE_LOD=190;
+let treeSpots=[], treeFallback=null, treeIms=[], treeParts=[], treeLodAt=null;
+function buildTreesGlb(){
+  if(!treeSpots.length) return;
+  loadGlb('img/models/tree_lite.glb',obj=>{
+    fitInto(obj,1);                                  // ปรับให้ด้านยาวสุด (= ความสูงต้นไม้) เท่ากับ 1 หน่วย
+    const b=new THREE.Box3().setFromObject(obj);
+    obj.position.y-=b.min.y;                         // โคนต้นแตะพื้นพอดี
+    obj.updateMatrixWorld(true);
+    const parts=[];
+    obj.traverse(o=>{ if(!o.isMesh||!o.geometry) return;
+      /* โมเดล Tripo มาพร้อม metalness .28 — ใบไม้กลายเป็นเงาดำใต้แดดทะเลทราย ปิดให้เป็นวัสดุด้าน */
+      const ms=Array.isArray(o.material)?o.material:[o.material];
+      ms.forEach(m=>{ if(m&&m.isMeshStandardMaterial){ m.metalness=0; m.roughness=1; } });
+      parts.push({geo:o.geometry,mat:o.material,m:o.matrixWorld.clone()}); });
+    if(!parts.length) return;                        // โมเดลว่าง = ปล่อยต้นไม้ทรงเดิมไว้ ดีกว่าไม่มีอะไรเลย
+    treeParts=parts;
+    parts.forEach(p=>{
+      const im=new THREE.InstancedMesh(p.geo,p.mat,treeSpots.length);
+      im.frustumCulled=false;                        // instance กระจายทั้งแมพ — bounding ของก้อนรวมเชื่อไม่ได้
+      scene.add(im); treeIms.push(im);
+    });
+    refreshTreeInstances();
+    if(treeFallback){ scene.remove(treeFallback); treeFallback.traverse(o=>{ if(o.geometry) o.geometry.dispose(); });
+                      treeFallback=null; }
+  });
+}
+/* วาดเฉพาะต้นที่อยู่ในระยะ TREE_LOD (ยัดไว้หัวแถวแล้วตัด `count`) = ต้นไกลไม่กินเวลา vertex shader เลย */
+function refreshTreeInstances(){
+  if(!treeIms.length) return;
+  const d=new THREE.Object3D(), mtx=new THREE.Matrix4();
+  let n=0;
+  treeSpots.forEach(t=>{
+    if(Math.hypot(px-t.x,pz-t.z)>TREE_LOD) return;
+    d.position.set(t.x,t.base,t.z); d.rotation.set(0,t.rot,0); d.scale.setScalar(t.h);
+    d.updateMatrix();
+    treeParts.forEach((p,pi)=>{
+      mtx.multiplyMatrices(d.matrix,p.m);            // ท่าชิ้นส่วนในโมเดล × ท่าของต้นนั้นในฉาก
+      treeIms[pi].setMatrixAt(n,mtx);
+    });
+    n++;
+  });
+  treeIms.forEach(im=>{ im.count=n; im.instanceMatrix.needsUpdate=true; });
+  treeLodAt=[px,pz];
+}
+/* ผู้เล่นขยับไกลพอ (ครึ่งหนึ่งของระยะ LOD) ค่อยจัดแถวใหม่ — ไม่ต้องคิดทุกเฟรม */
+function tickTreeLod(){
+  if(!treeIms.length||!treeLodAt) return;
+  if(Math.hypot(px-treeLodAt[0],pz-treeLodAt[1])>TREE_LOD*0.5) refreshTreeInstances();
 }
 
 /* ============================================================
@@ -2324,8 +2401,8 @@ function makeFighter(letterIdx){
   });
   const eye=new THREE.Mesh(new THREE.SphereGeometry(.52,10,8),new THREE.MeshBasicMaterial({color:0x59ff9d}));
   eye.position.set(0,.1,-2.1); body.add(eye);
-  const eng=new THREE.Sprite(new THREE.SpriteMaterial({color:0x66e0ff,transparent:true,opacity:.8,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const eng=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0x66e0ff,transparent:true,opacity:.8,
+    blending:THREE.AdditiveBlending,depthWrite:false}));   /* 🔆 รอบ 580: ไฟท้ายเป็นดวงกลม ไม่ใช่จัตุรัสฟ้าลอย */
   eng.scale.setScalar(4.2*FIGHTER_SIZE/7); eng.position.set(0,0,2.4*FIGHTER_SIZE/7); grp.add(eng);
   /* 🔤 รอบ 556: letterIdx = ดัชนี a-z (0..25) · ลำที่ตัวอักษรอยู่ในคำ = ป้ายเขียวใหญ่ "ยิงลำนี้!" */
   const ch=AZ[letterIdx], need=word.en.includes(ch);
@@ -2924,8 +3001,8 @@ const MUZZLE_BY_WEAPON={ r93:[1.398,1.317,-0.520], rifle:[0.705,1.281,-0.449] };
 /* 🎨 รอบ 522: สีไฟปากลำกล้องแยกตามปืน — KSR-77 = ฟ้าพลังงาน (เข้าธีมแถบเรืองแสง) · R93 = ส้ม-เหลืองปกติ */
 const FLASH_COLOR={ r93:0xffe0a0, rifle:0x7fe6ff };
 function makeSoldierFlash(weapon){
-  const f=new THREE.Sprite(new THREE.SpriteMaterial({color:FLASH_COLOR[weapon]||FLASH_COLOR.rifle,transparent:true,opacity:0,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const f=new THREE.Sprite(new THREE.SpriteMaterial({map:fxStar(),color:FLASH_COLOR[weapon]||FLASH_COLOR.rifle,
+    transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false}));   /* ✨ รอบ 580 */
   const m=MUZZLE_BY_WEAPON[weapon]||MUZZLE_BY_WEAPON.rifle;
   f.scale.setScalar(weapon==='r93'?0.55:0.45); f.position.set(m[0],m[1],m[2]);
   return f;
@@ -4005,8 +4082,8 @@ function muzzleSmoke(n){
   const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
   const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
   for(let i=0;i<n;i++){
-    const sp=new THREE.Sprite(new THREE.SpriteMaterial({color:0xd9d3c6,transparent:true,
-      opacity:.30,depthWrite:false,fog:false}));
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(),color:0xd9d3c6,transparent:true,
+      opacity:.30,depthWrite:false,fog:false}));   /* 💨 รอบ 580: ควันกลมฟุ้ง ไม่ใช่แผ่นสี่เหลี่ยม */
     sp.position.copy(wp).addScaledVector(fwd,rnd(.05,.35)).addScaledVector(right,rnd(-.06,.06));
     const sc=rnd(.10,.18); sp.scale.setScalar(sc); scene.add(sp);
     const v=up.clone().multiplyScalar(rnd(.35,.7))
@@ -4169,8 +4246,8 @@ function buildGun(){
   gunModels.rifle=buildRifleModel(); g.add(gunModels.rifle);
   gunModels.r93=buildR93Model();     g.add(gunModels.r93); gunModels.r93.visible=false;
   /* ไฟปากลำกล้อง (โผล่ตอนยิง) */
-  muzzle=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffd27a,transparent:true,opacity:0,
-    blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false}));
+  muzzle=new THREE.Sprite(new THREE.SpriteMaterial({map:fxStar(),color:0xffd27a,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthTest:false,depthWrite:false}));   /* ✨ รอบ 580: แฉกแสงกลม */
   muzzle.scale.setScalar(.42); muzzle.position.set(0,MUZZLE_Y,-.72); g.add(muzzle);
   alignGunMuzzle(gunModels.rifle); alignGunMuzzle(gunModels.r93);   // 🎯 รอบ 451: ทรงสำรองก็จัดแกนเหมือนกัน
 
@@ -4619,48 +4696,189 @@ function syncWeaponBtns(){
 
 /* ============================================================
    💥 เอฟเฟกต์: ระเบิด · ประกายโดน · ลำแสง · เศษซาก
+   🎆 รอบ 580 (ผู้ใช้สั่ง): เลิก "ระเบิดสี่เหลี่ยม"
+      ต้นตอ: `SpriteMaterial` ที่ไม่ใส่ `map` = แผ่นสี่เหลี่ยมทึบขอบคม เห็นชัดมากเวลา additive
+      (ลูกไฟ/ประกายโดน/ไฟท้ายยานลูก/ดวงจันทร์ ลอยเป็นจัตุรัสกลางฟ้า)
+      แก้ที่ต้นทาง: ทุกดวงไฟใช้ texture "วงกลมไล่โปร่ง" ที่วาดเองด้วย canvas แคชครั้งเดียวใช้ร่วมทั้งฉาก
+      (fxGlow ดวงแสง · fxFire ลูกไฟขอบหยัก · fxRing คลื่นกระแทก · fxDisc แผ่นกลม · fxStar แฉกแฟลช)
    ============================================================ */
+const _fxTex={};
+function fxTex(key,paint,size){
+  if(_fxTex[key]) return _fxTex[key];
+  const c=document.createElement('canvas'); c.width=c.height=size||128;
+  paint(c.getContext('2d'),c.width);
+  const t=new THREE.CanvasTexture(c); t.needsUpdate=true;
+  _fxTex[key]=t; return t;
+}
+/* 🔆 ดวงแสงกลม — แกนสว่างจัด แล้ว "ค่อย ๆ" จางจนโปร่งสนิทที่ขอบ (ไม่เหลือเส้นขอบให้เห็นเลย) */
+function fxGlow(){ return fxTex('glow',(g,S)=>{
+  const r=S/2, gr=g.createRadialGradient(r,r,0,r,r,r);
+  gr.addColorStop(0,'rgba(255,255,255,1)');    gr.addColorStop(.16,'rgba(255,255,255,.90)');
+  gr.addColorStop(.40,'rgba(255,255,255,.40)');gr.addColorStop(.70,'rgba(255,255,255,.11)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+}); }
+/* 🔥 ลูกไฟ — กลมแต่ขอบไม่เรียบเป๊ะ (เจาะหยักสุ่มรอบขอบ) = ดูเป็นกลุ่มเปลวจริง ไม่ใช่วงกลมคอมพิวเตอร์ */
+function fxFire(){ return fxTex('fire',(g,S)=>{
+  const r=S/2, gr=g.createRadialGradient(r,r,0,r,r,r);
+  gr.addColorStop(0,'rgba(255,255,255,1)');   gr.addColorStop(.28,'rgba(255,255,255,.74)');
+  gr.addColorStop(.58,'rgba(255,255,255,.30)');gr.addColorStop(.82,'rgba(255,255,255,.08)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+  g.globalCompositeOperation='destination-out';
+  for(let i=0;i<16;i++){
+    const a=Math.random()*TAU, d=r*(.52+Math.random()*.46), rr=r*(.09+Math.random()*.15);
+    const cx=r+Math.cos(a)*d, cy=r+Math.sin(a)*d;
+    const hole=g.createRadialGradient(cx,cy,0,cx,cy,rr);
+    hole.addColorStop(0,'rgba(0,0,0,.6)'); hole.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=hole; g.beginPath(); g.arc(cx,cy,rr,0,TAU); g.fill();
+  }
+  g.globalCompositeOperation='source-over';
+},128); }
+/* 💫 คลื่นกระแทก — สว่างสุดกลางความหนาของวง แล้วจางทั้งขอบในและขอบนอก (ไม่มีขอบคม) */
+function fxRing(){ return fxTex('ring',(g,S)=>{
+  const r=S/2, gr=g.createRadialGradient(r,r,0,r,r,r);
+  gr.addColorStop(0,'rgba(255,255,255,0)');   gr.addColorStop(.60,'rgba(255,255,255,0)');
+  gr.addColorStop(.76,'rgba(255,255,255,.45)');gr.addColorStop(.88,'rgba(255,255,255,1)');
+  gr.addColorStop(.96,'rgba(255,255,255,.30)');gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+}); }
+/* 🌕 แผ่นกลมเนื้อเต็ม ขอบฟุ้งบาง ๆ (ดวงจันทร์ · ดวงไฟ) */
+function fxDisc(){ return fxTex('disc',(g,S)=>{
+  const r=S/2, gr=g.createRadialGradient(r,r,0,r,r,r);
+  gr.addColorStop(0,'rgba(255,255,255,1)');   gr.addColorStop(.70,'rgba(255,255,255,.97)');
+  gr.addColorStop(.86,'rgba(255,255,255,.55)');gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+}); }
+/* ✨ แฉกแสงปากลำกล้อง — ดวงกลมกลาง + แฉก 4 ทิศจาง ๆ (ยังคงกลม ไม่เป็นสี่เหลี่ยม) */
+function fxStar(){ return fxTex('star',(g,S)=>{
+  const r=S/2, gr=g.createRadialGradient(r,r,0,r,r,r*.55);
+  gr.addColorStop(0,'rgba(255,255,255,1)'); gr.addColorStop(.45,'rgba(255,255,255,.55)');
+  gr.addColorStop(1,'rgba(255,255,255,0)');
+  g.fillStyle=gr; g.fillRect(0,0,S,S);
+  for(let i=0;i<4;i++){
+    const a=i*Math.PI/4;                                   // แฉกยาว 2 ทิศ + แฉกสั้นทแยง
+    const L=r*(i%2?.62:.98), W=r*(i%2?.05:.075);
+    g.save(); g.translate(r,r); g.rotate(a);
+    const lg=g.createLinearGradient(-L,0,L,0);
+    lg.addColorStop(0,'rgba(255,255,255,0)'); lg.addColorStop(.5,'rgba(255,255,255,.75)');
+    lg.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=lg; g.beginPath(); g.ellipse(0,0,L,W,0,0,TAU); g.fill(); g.restore();
+  }
+},128); }
+/* 💡 แสงระเบิดสาดฉากจริง (ดวงเดียวใช้ซ้ำทุกลูก — เพิ่ม PointLight ต่อลูกจะบังคับ three.js
+   คอมไพล์เชเดอร์ใหม่ทั้งฉาก มือถือกระตุกทันที · ลูกที่แรงกว่าแย่งดวงไฟไปใช้ได้) */
+let boomLight=null, boomLightT=0, boomLightPow=0, boomLightD=30, boomLightMax=.34;
+function boomFlashLight(pos,sc,tint){
+  if(!boomLight) return;
+  /* ⚠️ วัดจริงรอบ 580: ครั้งแรกให้ 3.2+4.6×sc ไกล 22+26×sc → ระเบิดใหญ่ทำ "ตึกทั้งซอยขาวโพลน"
+     (แสงจุดเดียวไกล 79 ม. สว่างเกินแดดกลางวัน) → คุมกำลังและระยะให้เป็นแค่ "แสงวาบสาดของใกล้" */
+  const pw=Math.min(9,2.2+2.4*sc);
+  if(boomLightT<=0 || pw>=boomLightPow*.85){
+    boomLight.position.copy(pos);
+    boomLight.color.copy(tint).lerp(_WHITE,.42);           // ไฟที่สาดออกซีดกว่าเนื้อลูกไฟเล็กน้อย = สมจริง
+    boomLightPow=pw; boomLightD=Math.min(46,14+9*sc); boomLightT=boomLightMax;
+  }
+}
+const _WHITE=new THREE.Color(0xffffff);
+function tickBoomLight(dt){
+  if(!boomLight) return;
+  if(boomLightT>0){ boomLightT-=dt;
+    const k=Math.max(0,boomLightT/boomLightMax);
+    boomLight.intensity=boomLightPow*k*k; boomLight.distance=boomLightD;
+  }else if(boomLight.intensity) boomLight.intensity=0;
+}
+/* 💥 ระเบิด 1 ลูก = 5 ชั้นซ้อนกัน (วาบแรก → ลูกไฟหลายก้อน → คลื่นกระแทก → ควันดำ → สะเก็ด+ถ่านไฟ)
+   ทุกชั้นเป็นวงกลมขอบโปร่ง + ไล่สีตามอายุ ขาวร้อน → สีของระเบิด → คล้ำจนดับ */
 function boom(pos,scale,color){
-  const sc=scale||1;
-  /* ลูกไฟกลาง */
-  const ball=new THREE.Sprite(new THREE.SpriteMaterial({color:color||0xffb347,transparent:true,opacity:1,
+  const sc=scale||1, tint=new THREE.Color(color||0xffb347);
+  const cHot=tint.clone().lerp(_WHITE,.72);                       // แกนร้อนจัดตอนแรก
+  const cMid=tint.clone();                                        // สีประจำระเบิด (ส้ม/เขียวยานลูก/ฟ้าลำแสง)
+  const cLow=tint.clone().multiplyScalar(.34).lerp(new THREE.Color(0x25120a),.5);   // คล้ำก่อนดับ
+  /* ① วาบแรก — ขาวร้อนแวบเดียวสั้นมาก
+     ⚠️ วัดจริงรอบ 580: ครั้งแรกใส่ scale 4.6×sc opacity .9 → ระเบิดใหญ่ (sc 2.2) ห่าง 13 ม. "จอขาวโพลนทั้งจอ"
+        (บทเรียนเดียวกับแฟลร์รอบ 569 / ลำแสงรอบ 576 — ของใกล้เลนส์ต้องเบากว่าที่คิดเสมอ)
+        → ตรึงขนาดไม่ให้โตตาม sc แบบเชิงเส้น (√sc) + ลด opacity เหลือ .62 */
+  const flSc=2.6*Math.sqrt(sc);
+  const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:cHot,transparent:true,opacity:.62,
     blending:THREE.AdditiveBlending,depthWrite:false}));
-  ball.position.copy(pos); ball.scale.setScalar(4*sc); scene.add(ball);
-  fx.push({o:ball,t:0,life:.65,kind:'ball',sc});
-  /* วงคลื่นกระแทก */
-  const ring=new THREE.Mesh(new THREE.RingGeometry(1,1.25,26),
-    new THREE.MeshBasicMaterial({color:0xfff0c0,transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false}));
+  fl.position.copy(pos); fl.scale.setScalar(flSc); scene.add(fl);
+  fx.push({o:fl,t:0,life:.14,kind:'flash',sc:flSc,a0:.62});
+  /* ② ลูกไฟ — ก้อนกลมขอบฟุ้งหลายก้อนเหลื่อมกัน ลอยขึ้นช้า ๆ พร้อมบานออก */
+  const nb=3+Math.min(4,Math.round(sc*1.5));
+  for(let i=0;i<nb;i++){
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:fxFire(),color:cHot.clone(),transparent:true,opacity:0,
+      blending:THREE.AdditiveBlending,depthWrite:false}));
+    s.material.rotation=Math.random()*TAU;                        // หมุนคนละองศา = ขอบหยักไม่ซ้ำกัน
+    s.position.copy(pos).add(new THREE.Vector3(rnd(-1,1),rnd(-.4,.9),rnd(-1,1)).multiplyScalar(1.0*sc));
+    const base=(i?rnd(1.5,2.7):3.3)*sc; s.scale.setScalar(base); scene.add(s);
+    fx.push({o:s,t:0,life:rnd(.55,.95)+.22*sc,kind:'fire',sc:base,a0:i?rnd(.55,.85):.95,
+      gr:rnd(1.0,1.9), rv:rnd(-1.2,1.2), c0:cHot, c1:cMid, c2:cLow,
+      v:new THREE.Vector3(rnd(-1.3,1.3),rnd(.9,2.4),rnd(-1.3,1.3)).multiplyScalar(sc*.62)});
+  }
+  /* ③ คลื่นกระแทก — แผ่นกลมหันเข้ากล้อง ขยายเร็วแล้วจางหาย (ขอบในขอบนอกโปร่งทั้งคู่) */
+  const ring=new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+    new THREE.MeshBasicMaterial({map:fxRing(),color:cHot,transparent:true,opacity:.75,
+      blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false}));
   ring.position.copy(pos); ring.lookAt(camera.position); scene.add(ring);
-  fx.push({o:ring,t:0,life:.85,kind:'ring',sc});
-  /* สะเก็ด */
+  fx.push({o:ring,t:0,life:.8,kind:'shock',sc});
+  /* ④ ควัน — ก้อนคล้ำลอยขึ้นค้างไว้หลังไฟดับ (ระเบิดเล็ก ๆ ไม่ต้องมี ไม่งั้นจอรก) */
+  if(sc>=.5){
+    const ns=2+Math.min(4,Math.round(sc));
+    for(let i=0;i<ns;i++)
+      spawnPuff(pos.clone().add(new THREE.Vector3(rnd(-1,1),rnd(0,1.2),rnd(-1,1)).multiplyScalar(sc)),
+        {scale:1.5*sc+rnd(.2,1), life:1250+Math.random()*900, opacity:.34, color:0x6b6157, grow:2.2,
+         vx:rnd(-.7,.7)*sc, vy:1.0+Math.random()*.9, vz:rnd(-.7,.7)*sc});
+  }
+  /* ⑤ สะเก็ดโลหะ + ถ่านไฟกลม ๆ พุ่งกระจาย */
   const n=Math.min(26,10+Math.round(8*sc));
   for(let i=0;i<n;i++){
-    const s=new THREE.Mesh(new THREE.TetrahedronGeometry(rnd(.25,.7)*sc,0),
-      new THREE.MeshBasicMaterial({color:i%3?0xff8a3a:0x3a3f47}));
+    /* ⚠️ รอบ 580: เดิม .25–.7×sc = สะเก็ดใหญ่ 1.5 ม. ลอยผ่านหน้าเป็น "สามเหลี่ยมส้มแบน ๆ" เต็มจอ
+       ย่อลง + ให้ 2 ใน 3 เป็นโลหะคล้ำ (เศษเหล็กจริง) ปล่อยให้ลูกไฟ/ถ่านไฟเป็นพระเอกแทน */
+    const s=new THREE.Mesh(new THREE.TetrahedronGeometry(Math.min(.55,rnd(.12,.34)*sc),0),
+      new THREE.MeshBasicMaterial({color:i%3?0x4a4038:0x2f343a}));
     s.position.copy(pos); scene.add(s);
     fx.push({o:s,t:0,life:rnd(1.0,1.9),kind:'bit',
       v:new THREE.Vector3(rnd(-1,1),rnd(-.2,1.2),rnd(-1,1)).normalize().multiplyScalar(rnd(9,26)*Math.sqrt(sc)),
       rv:new THREE.Vector3(rnd(-6,6),rnd(-6,6),rnd(-6,6))});
   }
+  const ne=sc>=.8?6:3;
+  for(let i=0;i<ne;i++){
+    const e=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:cMid.clone(),transparent:true,opacity:1,
+      blending:THREE.AdditiveBlending,depthWrite:false}));
+    e.position.copy(pos); e.scale.setScalar(rnd(.3,.7)*sc); scene.add(e);
+    fx.push({o:e,t:0,life:rnd(.5,1.1),kind:'ember',sc:e.scale.x,c1:cMid,c2:cLow,
+      v:new THREE.Vector3(rnd(-1,1),rnd(.2,1.3),rnd(-1,1)).normalize().multiplyScalar(rnd(7,18)*Math.sqrt(sc))});
+  }
+  boomFlashLight(pos,sc,tint);
   Snd.boom(sc);
   shake=Math.min(1.6, shake + .32*sc);
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(Math.min(220,60*sc));
 }
-/* 💨 รอบ 469: ฝุ่นฟุ้งเล็ก ๆ ตรงจุดกระสุนลง (ทราย/ปูน) */
+/* 💨 รอบ 469: ฝุ่นฟุ้งเล็ก ๆ ตรงจุดกระสุนลง (ทราย/ปูน) · รอบ 580: ใช้ texture ควันกลม ไม่ใช่จัตุรัส */
 function dustPuff(pos){
   for(let i=0;i<2;i++){
-    const sp=new THREE.Sprite(new THREE.SpriteMaterial({color:0xcdbb98,transparent:true,opacity:.5,
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTex(),color:0xcdbb98,transparent:true,opacity:.5,
       depthWrite:false,fog:true}));
     sp.position.copy(pos); sp.scale.setScalar(.18); scene.add(sp);
     fx.push({o:sp,kind:'smoke',t:0,life:rnd(.45,.8),sc:.18,a0:.45,
              v:new THREE.Vector3(rnd(-.5,.5),rnd(.7,1.5),rnd(-.5,.5))});
   }
 }
+/* ✨ ประกายตอนกระสุนโดน — ดวงกลมวาบ + ถ่านไฟกระเด็น 3 เม็ด (เดิมเป็นสี่เหลี่ยมเหลืองแปะ) */
 function sparkAt(pos){
-  const s=new THREE.Sprite(new THREE.SpriteMaterial({color:0xfff0a0,transparent:true,opacity:1,
+  const s=new THREE.Sprite(new THREE.SpriteMaterial({map:fxStar(),color:0xfff3c0,transparent:true,opacity:1,
     blending:THREE.AdditiveBlending,depthWrite:false}));
-  s.position.copy(pos); s.scale.setScalar(1.6); scene.add(s);
-  fx.push({o:s,t:0,life:.22,kind:'ball',sc:.5});
+  s.material.rotation=Math.random()*TAU;
+  s.position.copy(pos); s.scale.setScalar(1.5); scene.add(s);
+  fx.push({o:s,t:0,life:.20,kind:'flash',sc:1.5});
+  for(let i=0;i<3;i++){
+    const e=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xffc46a,transparent:true,opacity:1,
+      blending:THREE.AdditiveBlending,depthWrite:false}));
+    e.position.copy(pos); e.scale.setScalar(rnd(.10,.22)); scene.add(e);
+    fx.push({o:e,t:0,life:rnd(.18,.4),kind:'ember',sc:e.scale.x,c1:new THREE.Color(0xffc46a),c2:new THREE.Color(0x7a2c08),
+      v:new THREE.Vector3(rnd(-1,1),rnd(.1,1),rnd(-1,1)).normalize().multiplyScalar(rnd(3,7))});
+  }
 }
 /* เส้นกระสุนวิ่ง (ใช้ทั้งของผู้เล่นและพันธมิตร) */
 function tracer(from,to,color,width,fly){
@@ -4680,6 +4898,7 @@ function tracer(from,to,color,width,fly){
            fx.push({o:m,t:0,life:.10,kind:'fade'}); }
 }
 function tickFx(dt){
+  tickBoomLight(dt);                      // 💡 รอบ 580: แสงระเบิดสาดฉาก (ดวงเดียวใช้ซ้ำ)
   for(let i=fx.length-1;i>=0;i--){
     const f=fx[i]; f.t+=dt;
     const k=f.t/f.life;
@@ -4688,6 +4907,25 @@ function tickFx(dt){
       if(f.o.geometry) f.o.geometry.dispose&&f.o.geometry.dispose();
       fx.splice(i,1); continue; }
     if(f.kind==='ball'){ f.o.scale.setScalar(4*f.sc*(1+k*2.2)); f.o.material.opacity=1-k; }
+    /* 🎆 รอบ 580: วาบแรก — โตเร็วแล้วดับไว (จางแบบยกกำลัง = ขอบไม่กระตุก) */
+    else if(f.kind==='flash'){ f.o.scale.setScalar(f.sc*(1+k*1.5)); f.o.material.opacity=(f.a0||1)*Math.pow(1-k,1.8); }
+    /* 🔥 ลูกไฟ: บานออก + ลอยขึ้น + ไล่สี ขาวร้อน → สีระเบิด → คล้ำ · จางแบบค่อยเป็นค่อยไป */
+    else if(f.kind==='fire'){
+      f.o.position.addScaledVector(f.v,dt); f.v.multiplyScalar(Math.max(0,1-dt*1.6));
+      f.o.scale.setScalar(f.sc*(1+k*f.gr));
+      f.o.material.rotation+=f.rv*dt;
+      const c=f.o.material.color;
+      if(k<.42) c.copy(f.c0).lerp(f.c1,k/.42); else c.copy(f.c1).lerp(f.c2,(k-.42)/.58);
+      f.o.material.opacity=f.a0*(k<.10 ? k/.10 : Math.pow(1-(k-.10)/.90,1.7));
+    }
+    /* 💫 คลื่นกระแทก: ขยายแบบชะลอตัว (เร็วตอนแรก) + จางเร็วช่วงท้าย */
+    else if(f.kind==='shock'){ const s=(1+Math.sqrt(k)*15)*f.sc; f.o.scale.set(s,s,1);
+      f.o.material.opacity=.75*Math.pow(1-k,1.6); f.o.lookAt(camera.position); }
+    /* 🔴 ถ่านไฟ: พุ่งออกแล้วตกตามแรงโน้มถ่วง หรี่ลงจนดับ */
+    else if(f.kind==='ember'){ f.o.position.addScaledVector(f.v,dt); f.v.y-=19*dt;
+      f.v.x*=Math.max(0,1-dt*1.1); f.v.z*=Math.max(0,1-dt*1.1);
+      f.o.material.color.copy(f.c1).lerp(f.c2,k);
+      f.o.scale.setScalar(f.sc*(1-k*.45)); f.o.material.opacity=Math.pow(1-k,1.4); }
     else if(f.kind==='ring'){ const s=(1+k*16)*f.sc; f.o.scale.setScalar(s); f.o.material.opacity=.9*(1-k);
       f.o.lookAt(camera.position); }
     else if(f.kind==='bit'){ f.o.position.addScaledVector(f.v,dt); f.v.y-=26*dt;
@@ -4944,9 +5182,12 @@ function fireGun(now){
     const origin=camera.position.clone(), dir=aimDir();
     dir.x+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.y+=rnd(-GUN_SPREAD,GUN_SPREAD); dir.normalize();
     let hit=rayTarget(origin,dir,900);
-    if(hit && hit.type==='trg'){ const blk=envHit(origin,dir,hit.t);
-      if(blk&&blk.kind==='sand'&&blk.dist<hit.t-0.25) hit=null; }   // เนินบังอยู่ (ดูเหตุผลที่ fireGun)
-    tracer(origin.clone().addScaledVector(dir,4),hit?hit.point:origin.clone().addScaledVector(dir,700),0x9fe0ff,.07);
+    let blk=hit?envHit(origin,dir,Math.min(hit.t,ENV_BLOCK_D)):null;
+    /* 🧱 รอบ 580: กำแพง/ตึก/บ้านบังอยู่ = กระสุนจอดที่กำแพง (เดิมบังได้แค่ 'sand' กับเป้าฝึกยิง) */
+    if(blk && blk.dist<hit.t-0.25 && (blk.kind==='wall'||hit.type==='trg')) hit=null; else blk=null;
+    tracer(origin.clone().addScaledVector(dir,4),
+      hit?hit.point:(blk?blk.point:origin.clone().addScaledVector(dir,700)),0x9fe0ff,.07);
+    if(blk){ sparkAt(blk.point); dustPuff(blk.point); }
     if(hit){
       if(hit.type==='trg') hitTarget(hit.obj,hit.point);        // 🎯 รอบ 471: ยิงเป้าจากบนเฮลิก็นับ
       else{ sparkAt(hit.point);
@@ -4987,11 +5228,14 @@ function fireGun(now){
      ⚠️ กันเฉพาะ 'sand' (พื้น/เนิน) เท่านั้น — วัดจริงแล้วเช็กกำแพงด้วยไม่ได้:
      `solids` เก็บตึกเป็น "วงกลม r=ด้านยาว/2" ซึ่งล้นออกมาคลุมผิวถนน → ยิงเป้าปากตรอกจากกลางถนน
      โดนตีว่ามีกำแพงบังทั้งที่มองเห็นเป้าเต็มตา (วัดได้ 9 ใน 12 เป้า) */
-  if(hit && hit.type==='trg'){
-    const blk=envHit(origin,dir,hit.t);
-    if(blk && blk.kind==='sand' && blk.dist<hit.t-0.25) hit=null;   // เนิน/พื้นบังอยู่ = ไม่โดน
+  /* 🧱 รอบ 580 (ผู้ใช้สั่ง): "อาคารทุกหลังทึบ" — มีตึก/บ้าน/กำแพงคั่นอยู่ = ยิงทะลุไม่ได้อีกแล้ว
+     (เนิน 'sand' ยังบังเฉพาะเป้าฝึกยิงเหมือนเดิม — ยานอยู่บนฟ้า ไม่ควรโดนเนินบัง) */
+  let blocked=null;
+  if(hit){
+    const blk=envHit(origin,dir,Math.min(hit.t,ENV_BLOCK_D));
+    if(blk && blk.dist<hit.t-0.25 && (blk.kind==='wall'||hit.type==='trg')){ blocked=blk; hit=null; }
   }
-  const end=hit? hit.point : origin.clone().addScaledVector(dir,W.mag?2500:700);
+  const end=hit? hit.point : (blocked? blocked.point : origin.clone().addScaledVector(dir,W.mag?2500:700));
   /* 🚀 รอบ 467: กระสุนไม่ถึงเป้าทันทีอีกแล้ว — วิถีถูกคำนวณตอนยิง (เล็งง่ายเหมือนเดิม)
      แต่ "ประกายโดน/ดาเมจ/เสียงโดน" มาถึงตามเวลาเดินทางจริง (ระยะ ÷ ความเร็วกระสุน)
      ยิงยานไกล 800 ม. ด้วย R93 = รอราว 1 วินาที → ได้ฟีลสไนเปอร์จริง โดยไม่ทำให้เด็กเล็งยากขึ้น */
@@ -5001,7 +5245,7 @@ function fireGun(now){
   tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05,fly);
   if(!hit){
     /* 🌍 รอบ 469: ไม่โดนยาน — ไปลงพื้น/กำแพง (มีเสียงตามวัสดุ + รอยกระสุนค้างไว้) */
-    const e=envHit(origin,dir,W.mag?900:500);
+    const e=blocked||envHit(origin,dir,W.mag?900:500);
     if(e) bullets.push({at:now+Math.min(2.2,e.dist/spd)*1000, env:e});
     return;
   }
@@ -5009,6 +5253,29 @@ function fireGun(now){
 }
 /* 🌍 รอบ 469: หาจุดที่กระสุนไปลงบน "สิ่งแวดล้อม" (ไม่ได้โดนยาน) — เดินตามวิถีทีละช่วง
    เจอกำแพงตึกก่อน = 'wall' · ต่ำกว่าพื้น = 'sand' · ไม่เจอเลย = null */
+/* 🧱 รอบ 580 (ผู้ใช้สั่ง "ทำให้อาคารทุกหลังทึบ"): จุดนี้อยู่ใน "เนื้อ" ของสิ่งกีดขวางไหม
+   · ตึก/หอมินาเรต = กล่องหมุนได้ (hw/hd/rot) สูงถึง `top` — เดิม envHit ใช้ "วงกลม r=ด้านยาว/2"
+     ซึ่งอ้วนล้นออกมาคลุมถนน (จึงกล้าใช้บล็อกได้แค่เป้าฝึกยิง) · กล่องจริงแม่นแล้ว บล็อกได้ทุกอย่าง
+   · ซากรถ/กระสอบ/ถัง = วงกลม r เตี้ย ๆ (ไม่มี top = สูงราว 2.4 ม. ยิงข้ามหัวได้)
+   · บ้าน house_01 "ไม่อยู่ใน solids" โดยตั้งใจ (จะได้เดินเข้าไปได้) → เช็กจากตารางกันชนของโมเดลจริง
+     = ผนังทึบ แต่ประตู/หน้าต่างยังยิงลอดได้เหมือนที่เดินลอดได้ */
+const ENV_BLOCK_D=320;          // ระยะที่ยังต้องเช็ก "มีตึกบังไหม" (ไกลกว่านี้ไม่มีสิ่งปลูกสร้างแล้ว)
+function solidAt(x,y,z){
+  for(const o of solids){
+    if(y>(o.top!==undefined?o.top:terrainH(o.x,o.z)+2.4)) continue;
+    const dx=x-o.x, dz=z-o.z;
+    if(o.hw!==undefined){
+      const th=o.rot||0, c=Math.cos(th), s=Math.sin(th);
+      if(Math.abs(dx*c-dz*s)<o.hw && Math.abs(dx*s+dz*c)<o.hd) return o;
+    }else if(dx*dx+dz*dz<o.r*o.r) return o;
+  }
+  for(const h of houses){
+    if(!h.blk||!h.box) continue;
+    if(y<h.box.min.y+0.2 || y>h.box.max.y) continue;
+    if(gridBlocked(h.blk,x,z)) return h;
+  }
+  return null;
+}
 function envHit(origin,dir,maxD){
   /* ⚡ คัดเฉพาะตึกที่ "อยู่ใกล้แนวยิง" ก่อน (คำนวณครั้งเดียวต่อนัด) แล้วค่อยเดินตามวิถี
      ไม่งั้นต้องวน solids ทั้งแมพทุกช่วง 1.2 ม. = หนักเกินไปบนมือถือ */
@@ -5019,15 +5286,41 @@ function envHit(origin,dir,maxD){
     const px=vx-hx*t, pz=vz-hz*t;
     if(px*px+pz*pz < (o.r+1)*(o.r+1)) cand.push(o);
   }
+  /* 🏠 บ้านจริงมีแค่ 2 หลัง — คัดด้วยระยะจากแนวยิงถึงจุดกลางบ้านพอ */
+  const hcand=[];
+  for(const h of houses){
+    if(!h.blk||!h.box) continue;
+    const vx=h.grp.position.x-origin.x, vz=h.grp.position.z-origin.z;
+    const t=vx*hx+vz*hz; if(t<-HOUSE_SIZE||t>maxD+HOUSE_SIZE) continue;
+    const px=vx-hx*t, pz=vz-hz*t;
+    if(px*px+pz*pz < HOUSE_SIZE*HOUSE_SIZE) hcand.push(h);
+  }
   const P=new THREE.Vector3(); const step=1.2;
   for(let d=step; d<=maxD; d+=step){
     P.copy(origin).addScaledVector(dir,d);
     for(const o of cand){
-      if(P.y>26) continue;                                   // สูงเกินตึกแล้ว
+      if(P.y>(o.top!==undefined?o.top:terrainH(o.x,o.z)+2.4)) continue;   // สูงเกินยอดสิ่งนั้นแล้ว
       const dx=P.x-o.x, dz=P.z-o.z;
-      if(dx*dx+dz*dz < o.r*o.r){
+      const inside = o.hw!==undefined
+        ? (()=>{ const th=o.rot||0,c=Math.cos(th),s=Math.sin(th);
+                 return Math.abs(dx*c-dz*s)<o.hw && Math.abs(dx*s+dz*c)<o.hd; })()
+        : dx*dx+dz*dz < o.r*o.r;
+      if(inside){
         const n=new THREE.Vector3(dx,0,dz).normalize();
         return {point:P.clone(), normal:n, kind:'wall', dist:d};
+      }
+    }
+    for(const h of hcand){
+      if(P.y<h.box.min.y+0.2 || P.y>h.box.max.y) continue;
+      /* ⚠️ วัดจริงรอบ 580: ผนังบ้านหนาแค่ "1 ช่องตาราง" (HOUSE_CELL 0.45 ม.) — เดินทีละ 1.2 ม.
+         กระโดดข้ามผนังไปเฉย ๆ (ยิงทะลุบ้านเหมือนเดิม) → ช่วงที่ผ่านบ้านต้องซอยเป็น 4 ก้าวย่อย */
+      for(let u=0;u<4;u++){
+        const dd=d-step*u/4, qx=origin.x+dir.x*dd, qz=origin.z+dir.z*dd;
+        if(gridBlocked(h.blk,qx,qz)){
+          const q=new THREE.Vector3(qx,origin.y+dir.y*dd,qz);
+          const n=new THREE.Vector3(qx-h.grp.position.x,0,qz-h.grp.position.z).normalize();
+          return {point:q, normal:n, kind:'wall', dist:dd};
+        }
       }
     }
     if(P.y<=terrainH(P.x,P.z)){
@@ -5129,8 +5422,8 @@ function launchMissile(now,side,heli,tgt){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.13,.20,1.5,7),
     new THREE.MeshPhongMaterial({color:0xd8d8d8,emissive:0x221100,shininess:40}));
   m.position.copy(start); scene.add(m);
-  const trail=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffb347,transparent:true,opacity:.9,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const trail=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xffb347,transparent:true,opacity:.9,
+    blending:THREE.AdditiveBlending,depthWrite:false}));   /* 🔆 รอบ 580: ไฟท้ายจรวดกลม */
   trail.scale.setScalar(2.0); scene.add(trail);
   /* 🚀 รอบ 531: ออกตัวแบบ Modern Warship — พุ่งช้าตอนแรกแล้วเร่ง (boost ใน tickMissiles)
      + เชิดหัวขึ้น (loft) ให้เห็นเป็นวิถีโค้งก่อน homing ดึงลงเข้าเป้า */
@@ -6968,9 +7261,11 @@ function tickAlienShots(dt,now){
     const p=s.mesh.position;
     const hitPlayer=Math.hypot(p.x-px,p.y-py,p.z-pz)<s.r+1.1;
     const hitGround=p.y<terrainH(p.x,p.z);
-    if(hitPlayer||hitGround||s.life>6){
+    /* 🧱 รอบ 580 (ผู้ใช้สั่ง): ลำแสงยานลูกทะลุตึกไม่ได้เหมือนกัน — หลบหลังกำแพงแล้วต้องปลอดภัยจริง */
+    const hitWall=!hitPlayer&&!hitGround&&s.life>.05&&!!solidAt(p.x,p.y,p.z);
+    if(hitPlayer||hitGround||hitWall||s.life>6){
       if(hitPlayer) hurtPlayer(s.dmg,now);
-      if(hitGround) boom(p.clone(),.7,0xffd08a);
+      if(hitGround||hitWall) boom(p.clone(),.7,0xffd08a);
       scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose();
       fShots.splice(i,1);
     }
@@ -7354,8 +7649,8 @@ function fireAlienMissile(f,now){
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.16,.24,1.8,7),
     new THREE.MeshPhongMaterial({color:0xffb0c0,emissive:0x551122,shininess:40}));
   m.position.copy(p); scene.add(m);
-  const trail=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff6a8a,transparent:true,opacity:.9,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const trail=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xff6a8a,transparent:true,opacity:.9,
+    blending:THREE.AdditiveBlending,depthWrite:false}));   /* 🔆 รอบ 580 */
   trail.scale.setScalar(2.4); scene.add(trail);
   const dir=new THREE.Vector3(px-p.x,py-p.y,pz-p.z).normalize();
   aMissiles.push({mesh:m,trail,v:dir.multiplyScalar(AMIS_SPD*.45),born:now,smokeAt:0,decoy:null,rolled:0,ch:f.ch});
@@ -7688,8 +7983,8 @@ function heliFireAt(from0,aim,tgt,now){
   const dir=new THREE.Vector3().subVectors(aim,from).normalize();
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.11,.16,1.2,6),new THREE.MeshBasicMaterial({color:0xdddddd}));
   m.position.copy(from); scene.add(m);
-  const tr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffc46a,transparent:true,opacity:.85,
-    blending:THREE.AdditiveBlending,depthWrite:false}));
+  const tr=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xffc46a,transparent:true,opacity:.85,
+    blending:THREE.AdditiveBlending,depthWrite:false}));   /* 🔆 รอบ 580 */
   tr.scale.setScalar(1.6); scene.add(tr);
   /* ❤️ รอบ 557: จรวดพันธมิตร dmg 4 (5 นัด/ลำ) — อ่อนกว่าของผู้เล่น (10) ให้เด็กยังเป็นพระเอก */
   missiles.push({mesh:m,trail:tr,v:dir.multiplyScalar(MIS_SPD*.5),lock:tgt,born:now,ally:true,dmg:4,smokeAt:0,boostUntil:now+180});
@@ -7795,8 +8090,8 @@ function buildStars(){
   starPts=new THREE.Points(g,new THREE.PointsMaterial({color:0xdfe9ff,size:R*.006,
     transparent:true,opacity:0,depthWrite:false,fog:false,sizeAttenuation:true}));
   starPts.visible=false; scene.add(starPts);
-  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xe8f0ff,transparent:true,opacity:0,
-    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  moonSpr=new THREE.Sprite(new THREE.SpriteMaterial({map:fxDisc(),color:0xe8f0ff,transparent:true,opacity:0,
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));   /* 🌕 รอบ 580: ดวงจันทร์กลม (เดิมเป็นจัตุรัส) */
   moonSpr.scale.setScalar(R*.10);
   /* วางไว้ทางเดียวกับ "ดวงอาทิตย์" (70,90,120) เงาทุกอย่างในฉากจึงยังทอดทางเดิม ไม่ต้องคิดใหม่ */
   moonSpr.position.set(70,90,120).normalize().multiplyScalar(R*.86);
@@ -7813,8 +8108,8 @@ function buildStreetLamps(){
     const z=STREET_Z0-18-i*24, side=(i%2?1:-1);
     const x=side*(STREET_HW+1.2), base=terrainH(x,z), h=9.5;
     const lx=x-side*1.9, ly=base+h-.95;                       // ปลายแขนเสา
-    const bulb=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffd9a0,transparent:true,opacity:0,
-      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+    const bulb=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xffd9a0,transparent:true,opacity:0,
+      blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));   /* 🔆 รอบ 580 */
     bulb.scale.setScalar(3.2); bulb.position.set(lx,ly,z); scene.add(bulb);
     const pool=new THREE.Mesh(new THREE.PlaneGeometry(11,11),
       new THREE.MeshBasicMaterial({map:poolTex,color:0xffca82,transparent:true,opacity:0,
@@ -8219,6 +8514,7 @@ const MSB_BEEP=[420,150];     // จังหวะเสียงเตือ�
    → ที่กำบังเป็น "ทางรอดที่ 2" คู่กับการวิ่งหนี ใช้ได้แม้กับครั้งสังหาร (ครั้งที่ 4) */
 const MSB_COVER_R=3.4;        // เข้าใกล้ "ขอบ" ตึก/กำแพง/ซากรถ/ถังน้ำมันเท่านี้ (ม.) = อยู่ในที่กำบัง
 const MSB_PAD_R=9;            // เฮลิที่จอด (ยานพาหนะ) วัดจากจุดกลางลำ — ลำใหญ่กว่าสิ่งของทั่วไปมาก
+const MSB_COVER_RECHECK=900;  // 🧱 รอบ 580: อยู่ในที่กำบัง = ไม่เริ่มเล็งเลย · เช็กใหม่ทุก 0.9 วิ
 let msbState='idle', msbAt=0, msbEndAt=0, msbTx=0, msbTz=0, msbHx=0, msbHz=0,
     msbStay=0, msbLethal=false, msbBeepAt=0, msbDeadAt=0,
     msbRing=null, msbDisc=null, msbCol=null,
@@ -8278,6 +8574,13 @@ function resetMsBeam(){
 function msbCoverAt(x,z){
   if(houses.length && houseCover(x,z)) return 'ในบ้าน';
   const R2=MSB_COVER_R*MSB_COVER_R;
+  /* 🏠 รอบ 580 (ผู้ใช้ทัก): บ้าน house_01 ไม่ได้อยู่ใน solids → ยืนแนบผนังบ้านแล้วเมื่อก่อน "ไม่นับเป็นกำบัง"
+     (นับเฉพาะตอนเข้าไปข้างใน) — วัดระยะถึงขอบกล่องบ้านให้ยืนชิดข้างบ้านก็ปลอดภัยเหมือนตึกอื่น */
+  for(const h of houses){
+    if(!h.box) continue;
+    const dx=Math.max(h.box.min.x-x,0,x-h.box.max.x), dz=Math.max(h.box.min.z-z,0,z-h.box.max.z);
+    if(dx*dx+dz*dz<R2) return 'ข้างบ้าน';
+  }
   for(const o of solids){
     if(o.hw!==undefined){
       const dx=x-o.x, dz=z-o.z, th=o.rot||0, c=Math.cos(th), s=Math.sin(th);
@@ -8438,6 +8741,10 @@ function tickMsBeam(dt,now){
     return;
   }
   if(inHeli||riding){ msbAt=now+MSB_GAP; return; }        // อยู่บนเครื่อง = ไม่ยิงลำแสงลงพื้นใส่
+  /* 🧱 รอบ 580 (ผู้ใช้สั่งย้ำ): "อยู่ใกล้อาคาร ห้ามยิงโดน" — เดิมยังเล็ง+เตือนอยู่ (แค่ไม่โดน)
+     ตอนนี้อยู่ในที่กำบัง = ยานแม่ไม่เริ่มเล็งเลย ไม่มีทั้งวงฟ้า/แถบเตือน/เคาน์เตอร์
+     ออกจากที่กำบังเมื่อไหร่ค่อยเริ่มจับเวลาใหม่ (เช็กซ้ำทุก MSB_COVER_RECHECK) */
+  if(msbCoverAt(px,pz)){ msbAt=Math.max(msbAt,now+MSB_COVER_RECHECK); return; }
   if(now>msbAt) msbBegin(now);
 }
 
@@ -8530,6 +8837,7 @@ function frame(dt,now){
   tickBarrelHeat(now);              // 🔥 รอบ 467: ปืนร้อน = ควันลอยจากลำกล้อง
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
+  tickTreeLod();                    // 🌳 รอบ 580: ต้นไม้โมเดลจริง — วาดเฉพาะต้นในระยะ TREE_LOD
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickRadar(now);                   // 🎯📡 รอบ 563: เรดาร์ล็อกเป้ามิสไซล์ (เฉพาะตอนขับเฮลิ)
   tickMisQueue(now);                // 🚀🔒 รอบ 564: ปล่อยมิสไซล์ตามคิว "รัวทีละชุด"
@@ -8605,6 +8913,8 @@ function build(){
   /* 🔥 รอบ 469: ไฟแฟลชปากลำกล้อง "ส่องฉากจริง" — พื้นทราย/กำแพงรอบตัวสว่างวาบตอนยิง
      (คนละดวงกับ muzzleLight ที่อยู่ใน vmScene ซึ่งส่องเฉพาะตัวปืน) */
   worldFlash=new THREE.PointLight(0xffc070,0,26,1.7); scene.add(worldFlash);
+  /* 💥 รอบ 580: แสงจากลูกระเบิดสาดพื้น/ตึก/ทหารรอบ ๆ — ดวงเดียวใช้ซ้ำทุกลูก (ดู boomFlashLight) */
+  boomLight=new THREE.PointLight(0xffa851,0,30,1.8); scene.add(boomLight);
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
   buildStreetLamps();               // 💡 รอบ 474: ดวงไฟบนเสาถนน (ติดเองตอนมืด)
@@ -8794,6 +9104,25 @@ window.InvasionWorld={
     get coins(){return sessionCoins}, get words(){return sessionWords},
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
+    /* 🎆🧱🌳 รอบ 580: ระเบิดวงกลม · อาคารทึบ · ต้นไม้โมเดลจริง */
+    get fxInfo(){ const by={}; fx.forEach(f=>{ by[f.kind]=(by[f.kind]||0)+1; });
+      return {n:fx.length,by,noMap:fx.filter(f=>f.o.material&&f.o.isSprite&&!f.o.material.map).length,
+              light:{i:+boomLight.intensity.toFixed(2),d:+boomLight.distance.toFixed(0),
+                     c:'#'+boomLight.color.getHexString()}}; },
+    boomAt(x,y,z,sc,c){ boom(new THREE.Vector3(x,y,z),sc||1,c); },
+    solidAt(x,y,z){ return !!solidAt(x,y,z); },
+    /* ⚠️ ชื่อ `envHit` ถูก export ดิบ ๆ อยู่แล้วด้านล่าง (บรรทัด rayTarget/tickBullets) — คีย์ซ้ำตัวหลังชนะ
+       เลยต้องตั้งชื่อ probe ใหม่ ไม่งั้นเรียกได้แต่ตัวดิบแล้วได้ null ตลอด (เสียเวลาไล่รอบ 580) */
+    probeEnv(x,y,z,dx,dy,dz,maxD){ const e=envHit(new THREE.Vector3(x,y,z),
+        new THREE.Vector3(dx,dy,dz).normalize(),maxD||320);
+      return e?{kind:e.kind,dist:+e.dist.toFixed(1)}:null; },
+    get treeInfo(){ return {spots:treeSpots.length,parts:treeIms.length,
+      count:treeIms[0]?treeIms[0].count:0, fallback:!!treeFallback,
+      verts:treeIms.reduce((s,im)=>s+(im.geometry.attributes.position?im.geometry.attributes.position.count:0),0)}; },
+    get houseBox(){ return houses.map(h=>h.box?{x:+h.grp.position.x.toFixed(1),z:+h.grp.position.z.toFixed(1),
+      minx:+h.box.min.x.toFixed(1),maxx:+h.box.max.x.toFixed(1),
+      minz:+h.box.min.z.toFixed(1),maxz:+h.box.max.z.toFixed(1)}:null); },
+    cover(x,z){ return msbCoverAt(x,z); },
     /* 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ */
     get msb(){return {state:msbState,stay:msbStay,lethal:msbLethal,dead:!!msbDeadAt,
       near:msbNear,fled:msbFled,hits:msbHits,cover:msbCover,covered:msbCovered,
