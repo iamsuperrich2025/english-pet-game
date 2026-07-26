@@ -2458,18 +2458,24 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
   font-size:clamp(15px,2.4vw,20px);font-weight:800;color:#bfeaff;
   text-shadow:0 0 12px rgba(80,200,255,.7);}
 .ws-findbar{justify-self:center;display:flex;align-items:center;gap:10px;white-space:nowrap;}
+.ws-tip{font-size:11.5px;font-weight:600;color:#8fa8c8;}       /* รอบ 589: บอกวิธีใช้ชิปคำ */
+@media (max-width:1000px){ .ws-tip{display:none;} }
 .ws-grade{justify-self:end;}
 .ws-grade{font-size:12.5px;font-weight:700;color:#0a2c66;background:#7fe0ff;
   padding:3px 11px;border-radius:20px;white-space:nowrap;}
 /* รอบ 588: แถบคำอยู่บน · กระดานอยู่ล่าง (เดิมกระดานซ้าย-คำขวา) */
 .ws-body{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;z-index:1;}
 .ws-gridwrap{flex:1 1 auto;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;}
-#ws-grid{display:grid;grid-template-columns:repeat(var(--ws-n,10),1fr);gap:clamp(2px,.5vw,5px);
-  height:100%;width:auto;aspect-ratio:1;max-width:100%;max-height:100%;
-  padding:clamp(4px,1vw,10px);background:rgba(4,18,44,.55);border:1.5px solid rgba(95,200,255,.4);
-  border-radius:14px;box-shadow:0 0 22px rgba(80,180,255,.18) inset;touch-action:none;}
+/* รอบ 589: กระดานเตี้ยกว้าง 5 แถว — ขนาดจริงคำนวณด้วย fitGrid() ใน js/wordsearch.js (ตั้ง width/height เป็น px)
+   เพราะ aspect-ratio + height:100% ตีกัน (max-width หนีบความกว้างแต่ความสูงไม่ยุบ → ช่องยืดเป็นสี่เหลี่ยมผืนผ้า) */
+#ws-grid{display:grid;grid-template-columns:repeat(var(--ws-c,10),1fr);gap:clamp(3px,.6vw,8px);
+  box-sizing:border-box;max-width:100%;max-height:100%;
+  padding:clamp(4px,1vw,12px);background:rgba(4,18,44,.55);border:1.5px solid rgba(95,200,255,.4);
+  border-radius:16px;box-shadow:0 0 22px rgba(80,180,255,.18) inset;touch-action:none;}
+/* รอบ 589: ตัวอักษรโตตามขนาดช่องจริง (--ws-fs ตั้งจาก fitGrid()) */
 .ws-cell{display:flex;align-items:center;justify-content:center;user-select:none;cursor:pointer;
-  font-size:clamp(11px,2.9vh,30px);font-weight:800;color:#dcefff;border-radius:6px;
+  font-size:var(--ws-fs,20px);
+  font-weight:800;color:#dcefff;border-radius:8px;
   background:rgba(20,52,96,.7);border:1px solid rgba(95,200,255,.18);line-height:1;
   transition:opacity .35s ease,transform .35s ease,background .18s,color .18s,box-shadow .18s;}
 .ws-cell.sel{background:#4fd0ff;color:#062247;box-shadow:0 0 10px rgba(120,225,255,.8);}
@@ -2477,6 +2483,9 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
    (เดิมรอบ 205 เป็นคลื่นไฟฟ้าวิ่ง animation:wsFlow — ผู้ใช้สั่งเอาออก 26 ก.ค. 2026) */
 .ws-cell.found{background:linear-gradient(160deg,#28e08a,#12b06a);color:#fff;
   border-color:#7bffbe;box-shadow:0 0 8px rgba(40,224,138,.45);}
+/* 💡 รอบ 589: ใบ้ตำแหน่งคร่าว ๆ (แถว/หลัก/โซนทแยง) หลังกดที่ชิปคำ — จาง ๆ ไม่ชี้ตัวอักษร */
+.ws-cell.hint{background:rgba(94,166,255,.45);border-color:rgba(180,225,255,.75);
+  box-shadow:0 0 10px rgba(140,215,255,.45) inset;color:#fff;}
 .ws-cell.bad{background:#ff5d6c;color:#fff;}
 .ws-cell.gone{opacity:0;transform:scale(.15) rotate(35deg);}
 html.no-anim .ws-cell{transition:none;}
@@ -2503,22 +2512,38 @@ html.no-anim .ws-coinpop{animation:none;opacity:0;}
 #ws-prog{font-size:12.5px;font-weight:800;color:#ffe08a;line-height:1;
   background:rgba(4,18,44,.6);border:1px solid rgba(255,224,138,.35);border-radius:20px;padding:4px 11px;}
 /* ชิปคำเรียงแถวเดียวกึ่งกลาง · กว้างเท่ากันทุกใบ · ล้นเมื่อไหร่ค่อยตกบรรทัด */
-#ws-words{flex:0 1 auto;min-height:0;max-height:26vh;overflow-y:auto;scrollbar-width:none;
+/* flex:0 0 auto = ห้ามหด (เดิม 0 1 auto → จอเตี้ยโดนบีบจนต้องเลื่อน ผิดกฎทองข้อ 7) */
+#ws-words{flex:0 0 auto;min-height:0;max-height:26vh;overflow-y:auto;scrollbar-width:none;
   display:flex;flex-wrap:wrap;justify-content:center;align-content:start;gap:7px;
   padding:7px 9px;background:rgba(4,18,44,.5);border:1.5px solid rgba(95,200,255,.28);
   border-radius:14px;box-shadow:0 0 18px rgba(80,180,255,.14) inset;}
 #ws-words::-webkit-scrollbar{display:none;}
-.ws-word{flex:0 1 clamp(118px,13vw,200px);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;
+/* รอบ 589: ชิปคำกดได้ (ฟังเสียง + ใบ้ตำแหน่ง) */
+.ws-word{flex:0 1 clamp(112px,12.5vw,180px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;cursor:pointer;
   background:rgba(11,31,66,.7);border:1px solid rgba(95,200,255,.3);border-radius:10px;
   padding:6px 10px;font-size:15px;font-weight:800;letter-spacing:.3px;color:#eaf6ff;line-height:1.2;
-  min-width:0;overflow:hidden;}
+  min-width:0;overflow:hidden;transition:transform .12s,background .18s,border-color .18s,box-shadow .18s;}
+.ws-word:hover{background:rgba(18,50,102,.9);border-color:#7fe0ff;}
+.ws-word:active{transform:scale(.96);}
+.ws-word.hinting{border-color:#9fe0ff;background:rgba(30,84,158,.85);
+  box-shadow:0 0 14px rgba(120,200,255,.55);}
+html.no-anim .ws-word{transition:none;}
 .ws-word small{display:block;font-size:11.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
-.ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;z-index:1;}
+.ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;z-index:1;}
 .ws-actions button{border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13.5px;
   padding:7px 15px;cursor:pointer;transition:transform .1s;}
+/* 📐 รอบ 589: ตัวเลือกขนาดกระดาน (10×10 / 12×12 / 15×15) */
+.ws-sizes{display:flex;align-items:center;gap:4px;background:rgba(4,18,44,.6);
+  border:1px solid rgba(95,200,255,.3);border-radius:12px;padding:3px 6px;}
+.ws-sizes-lb{font-size:12px;font-weight:800;color:#8fd6ff;padding:0 3px;white-space:nowrap;}
+.ws-actions .ws-sizes button{background:rgba(20,52,96,.75);color:#cfe8ff;font-size:12.5px;
+  padding:4px 9px;border-radius:8px;box-shadow:none;border:1px solid rgba(95,200,255,.25);}
+.ws-actions .ws-sizes button:hover{border-color:#7fe0ff;}
+.ws-actions .ws-sizes button.on{background:linear-gradient(135deg,#4fd0ff,#1f8fd6);color:#062247;
+  border-color:#9fe8ff;box-shadow:0 0 10px rgba(79,208,255,.45);}
 .ws-actions button:active{transform:scale(.95);}
 #ws-new{background:linear-gradient(135deg,#37b6ff,#1668c8);color:#fff;box-shadow:0 3px 0 #0e4c9a;}
 #ws-stash{background:linear-gradient(135deg,#ffce54,#f0a935);color:#5a3d00;box-shadow:0 3px 0 #c88512;}
@@ -2539,4 +2564,7 @@ html.no-anim .ws-coinpop{animation:none;opacity:0;}
   #ws-words{max-height:34vh;padding:5px 7px;gap:5px;}
   .ws-find{font-size:12px;}
   #ws-prog{font-size:11.5px;padding:3px 9px;}
+  .ws-sizes{padding:2px 4px;gap:3px;}
+  .ws-sizes-lb{font-size:11px;}
+  .ws-actions .ws-sizes button{font-size:11px;padding:3px 7px;}
 }
