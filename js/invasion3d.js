@@ -1,8 +1,10 @@
-/* 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
+/* 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556)
    FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4)
-   บนท้องยานแม่มีช่องตัวอักษรเรียงเป็น "คำศัพท์ 1 คำ" ขนาดใหญ่ · ยานลูก = จำนวนตัวอักษรของคำ
-   ยิงยานลูกตกทีละลำ → ตัวอักษรประจำลำนั้นบนยานแม่กะพริบ · ครบทุกลำ → ตัวอักษรกะพริบทั้งแถว
-   → เกราะยานแม่เปิด ระดมยิง/มิสไซล์ใส่จนระเบิด = ครบ 1 คำ 🪙INV_REWARD
+   🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
+     · ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด (ป้ายตัวอักษรลอยเหนือลำ · ลำที่อยู่ในคำ = ป้ายเขียว)
+     · ยิงลำที่ตรงกับตัวอักษรของ "คำสีเขียว" (HUD กลางจอบน) → ช่องนั้นติด · เกราะยานแม่ลดตามสัดส่วน
+     · ครบทุกตัวอักษร = เกราะเหลือ 0 → ยานแม่ระเบิด = 🪙REWARD (100) · ยิงยานลูกตกลำละ 🪙LETTER_COIN (1)
+     · ⏰ หมดเวลา WORD_TIME ก่อนครบคำ → เปลี่ยนคำใหม่ + ปล่อยยานลูก 26 ลำชุดใหม่
    👥 พันธมิตร AI: หน่วยรบภาคพื้นอาวุธครบมือ + ฝูงเฮลิคอปเตอร์ติดมิสไซล์ ช่วยยิงอย่างเมามันส์
    🧩 โมเดลจริง (ถ้าผู้ใช้วางไฟล์ไว้ จะสลับใช้อัตโนมัติ ไม่ต้องแก้โค้ด):
       img/models/mothership.glb · img/models/alien_fighter.glb · img/models/gun_rifle.glb
@@ -14,7 +16,9 @@
 /* ============================================================
    ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
    ============================================================ */
-const REWARD=60, LETTER_COIN=5, DONE_KEY='invasionDone';
+const REWARD=100, LETTER_COIN=1, DONE_KEY='invasionDone';   // 🔤 รอบ 556: ยานแม่ตก=100 · ยานลูกตกลำละ 1
+const AZ='abcdefghijklmnopqrstuvwxyz';   // 🔤 รอบ 556: ยานลูก 26 ลำประจำตัวอักษร a-z
+const WORD_TIME=90000;                   // ⏰ รอบ 556: เวลาต่อคำ 90 วิ — หมดแล้วเปลี่ยนคำ + ปล่อยยานลูกชุดใหม่
 const WORLD=420;                       // ครึ่งความกว้างแผนที่ทะเลทราย
 const EYE=1.7, WALK=7.5, RUN=11.5;     // ความสูงตา · เดิน · วิ่ง (Shift)
 const FOV=68;                          // 🎯 รอบ 416: แคบลงจาก 74 → ภาพอัดแน่นเหมือนภาพอ้างอิง (ปืนดูใหญ่ ระยะดูบีบ)
@@ -25,7 +29,7 @@ const PITCH_MIN=-0.55, PITCH_MAX=1.35; // เงยได้สูงมาก (
    ⚠️ กฎเหล็กของ 3 ค่านี้ (เคยพลาดมาแล้วทั้งคู่):
      · MS_Y ต้อง > MS_R*0.42 + เผื่อ ไม่งั้น "ท้องยาน+หนามจมทะลุพื้น"
      · ยานใหญ่ขนาดนี้ผู้เล่นจะอยู่ "ใต้ทรงกลมกันชน" ของมัน → เล็งยิงตัวลำไม่ได้
-       จึงต้องมี "แกนพลังงาน" (msCore) เป็นจุดอ่อนแยกต่างหาก ดู CORE_* ด้านล่าง
+       (รอบ 556: ไม่มีจุดอ่อนให้ยิงแล้ว — เกราะลดจากการยิงยานลูกตามคำเท่านั้น · CORE_* เหลือไว้เป็นจุดระเบิด FX)
      · หมอกฉากไกลแค่ ~650m แต่ยานอยู่ ~1,700m → ตั้ง fog:false ที่ตัวลำ ไม่งั้นยานหายกลืนไปกับฟ้า */
 /* 📏 รอบ 432 (ผู้ใช้: "ตั้งอยู่นั่นคืออะไร ไม่เหมือนที่ออกแบบไว้เลย"):
    รอบ 417 ขยายลำเป็น 5,600 ม. แล้ววางห่างแค่ ~2,200 ม. → ลำกินมุมมองเกิน 100° เห็นได้แค่ "เสี้ยวเดียว"
@@ -49,33 +53,17 @@ const MS_Y=1000, MS_Z=-1200, MS_R=2600;   // ลำกว้าง 5,200 ม. (�
        (ตัวเลขวัดจริง Y1000: Z−500 กิน 22% · Z−1200 กิน 34% · Z−2500 กิน 16%)
    📉 ประวัติที่พลาด (อย่าย้อนรอย): รอบ 550 Y1800/Z−1300 → ท้องลำเงย 34° พ้นขอบจอ "ไม่เห็นยานเลย"
        · รอบ 551 Y1180/Z−700 → เห็นเป็นก้อนลอยกลางฟ้า กิน 22% ผู้ใช้ติง "เห็นใต้ท้องไม่ทั่ว"
-   ⚠️ ท้องลำต้องสูงกว่า: ยอดเนิน ~49 ม. · เพดานยานลูก F_Y_MAX=80 (ตอนนี้ 154 = เหลือ 74)
-      · แถวตัวอักษร BOARD_Y=198 อยู่ z−100 = **นอกเงาลำ** (ลำกิน z −1818..−582) จึงไม่ชนกันแม้ท้องลำต่ำกว่า */
+   ⚠️ ท้องลำต้องสูงกว่า: ยอดเนิน ~49 ม. · เพดานยานลูก F_Y_MAX=80 (ตอนนี้ 154 = เหลือ 74) */
 const MS_FLAT=0.325;                      // ครึ่งความสูงลำ ÷ MS_R (วัดจากโมเดลจริง: 1,692 ÷ 2 ÷ 2600)
 const MS_BELLY=MS_Y-MS_R*MS_FLAT;         // ท้องลำจริง = 335 ม. (เหนือแถวตัวอักษร 137 ม.)
 const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
-/* 🔠 แผงตัวอักษร — รอบ 555 (ผู้ใช้สั่ง "ขยาย 10 เท่า + ขนาบติดข้างตัวยานแม่ทั้ง 2 ด้าน")
-   ผล: 2 แผงซ้าย-ขวา · แต่ละแผงกินจอกว้าง **41%** (เดิมแผงเดียว 13.3%) = ตัวอักษรใหญ่ขึ้น ~3 เท่าต่อด้าน
-        นับเป็นเนื้อที่ตัวอักษรบนจอรวม ≈ **10 เท่าของเดิม** ตามที่สั่ง
-   🚨 บทเรียนสำคัญ (เสียเวลาไป 4 รอบวัด — อย่าย้อนรอย): **"ขยายชิ้นงาน ×10 จริง ๆ" ทำไม่ได้**
-      cell 10.5→105 ทำให้แผงกว้าง 1,002 ม. → ต้องถอยไปไกล ~1,180 ม. ถึงจะพอดีจอ 2 แผง
-      แต่ที่ระยะนั้นแผง **ต้องอยู่ต่ำ** ไม่งั้นจมเข้าไปในลำยาน (ลำหมุน dt*.02 กระดูกงูกวาดลงมาบัง 14–42% ของบาน)
-      พอกดต่ำก็ **ไปโดนตึกในเมืองบังแทน 30%** (เห็นชัดในภาพเรนเดอร์: ตัวอักษรโผล่แค่ช่องถนน)
-      → ทางออกคือ **วางใกล้เหมือนเดิม (หน้าลำยาน ลำจึงบังไม่ได้เลย) แล้วขยาย cell เท่าที่จอรับไหว**
-   📊 ตัวเลขวัดจริงของค่าที่เลือก (ยิงรังสีจากกล้อง 5 จุดยืน × 8 มุมหมุนลำ):
-      ลำบังตัวอักษร **0%** · ตึกบัง 13% (เฉพาะตอนยืนชิดตึก) · มีตัวลำเป็นพื้นหลัง **74%** = ดูเหมือนแปะอยู่บนลำจริง
-      แผงซ้าย x9..43% · แผงขวา x57..91% · สูง y12..34% (พ้นแผงคำ HUD #inv-word ที่ x41..59% y1..12%)
-   ⚠️ ห้ามดันแผงไปไกลกว่านี้เพื่อ "ขยายชิ้นงาน" — ไกลเมื่อไหร่เจอ 2 ด่านข้างบนทันที */
-const BOARD_Y=300, BOARD_Z=-290, BOARD_CELL=35;    // รอบ 555: cell ×3.3 แต่กินจอ ×3 ต่อแผง (×2 แผง)
-const BOARD_SIDE_X=242;                            // ระยะแยกจากแนวกลางของแผงแต่ละข้าง (เหลือขอบจอ ~9% · ช่องกลาง 14%)
-/* มุมหันของแผงแต่ละข้าง — เล็งให้หน้าแผง "หันเข้าหาผู้เล่นที่ยืนกลางเมือง" ตรง ๆ (อ่านง่ายสุด · วัด dot ได้ 1.000)
-   tilt=atan((BOARD_Y−ระดับตา)/ระยะ) · toe=atan(BOARD_SIDE_X/ระยะ) — ขยับค่าใดค่าหนึ่งต้องคิดใหม่ทั้งคู่
-   ⚠️ tilt เป็น "บวก" = ก้มหน้าแผงลงหาผู้เล่นข้างล่าง (ใส่ลบจะเงยขึ้นฟ้า ตัวอักษรแบนจนอ่านไม่ออก)
-   ⚠️ toe = บิดเข้าหาแนวกลาง (แผงซ้ายบิดขวา / แผงขวาบิดซ้าย) — ถ้าไม่บิด แผงจะถูกมองเฉียงจนตัวอักษรแคบ */
-const BOARD_TILT=0.624, BOARD_TOE=0.533;
-/* 🎯 แกนพลังงาน — คงที่ใกล้ผู้เล่น (ต้องเล็งยิงได้) ไม่สเกลตามลำ */
-const CORE_Y=150, CORE_Z=-170, CORE_R=45;         // ใต้ท้องยาน มองเห็นพร้อมกัน
+/* ❌ รอบ 556 (ผู้ใช้สั่ง "เอาแผงตัวอักษร 2 แผงออกให้หมด + เอาแกนพลังงานออก"):
+   ถอดแผงหน้าต่างตัวอักษร (ค่า BOARD_ · buildWindowBar · layoutLetterPanels เดิม) และแกนพลังงาน (msCore/msGlow)
+   ออกถาวร — คำศัพท์อ่านจาก HUD #inv-word อย่างเดียว · เกราะลดจากการยิงยานลูกตามคำ
+   (ค่าจูนแผงรอบ 555 เก็บอยู่ในบันทึก handoff/TASKS.md รอบ 555 ถ้าต้องย้อนดู) */
+/* 🎯 CORE_* — เหลือไว้เป็น "จุดศูนย์กลางระเบิด FX ตอนยานแม่ตาย" เท่านั้น (ไม่มี mesh แกนแล้ว) */
+const CORE_Y=150, CORE_Z=-170, CORE_R=45;
 
 /* 👾 ยานลูก */
 const F_HP=3, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=80, F_R=190;   // 441: เพดานบินต่ำลงนิด กันชนหนามใต้ท้องยานที่ใหญ่ขึ้น
@@ -92,9 +80,9 @@ const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
      Accuracy 28 = ส่ายน้อยมากตอนส่องกล้อง แต่ยิงสะโพก (ไม่ส่อง) จะเป๋ · ความเร็วกระสุน 550 m/s
    ============================================================ */
 const WEAPONS={
-  rifle:{ key:'rifle', name:'KSR-77 จู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG, msDmg:0.55,   /* 🏷️ รอบ 520: เปลี่ยนชื่อโชว์ 'ไรเฟิลจู่โจม'→'KSR-77' (ผู้ใช้เลือก · key ยังเป็น 'rifle' คงค่าล็อก) */
+  rifle:{ key:'rifle', name:'KSR-77 จู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG,   /* 🏷️ รอบ 520: เปลี่ยนชื่อโชว์ 'ไรเฟิลจู่โจม'→'KSR-77' (ผู้ใช้เลือก · key ยังเป็น 'rifle' คงค่าล็อก) */
           spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:true,   /* รอบ 463: ศูนย์เล็ง 2× */ tracer:0xffe08a, recoil:1 },
-  r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,     msDmg:3.3,
+  r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,
           spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true,   /* กำลังขยายเลือกได้ 3 ระดับ ดู SCOPE_MAGS */
           tracer:0xbfe6ff, recoil:2.6 },
 };
@@ -427,11 +415,12 @@ const CSS=`
   background:linear-gradient(180deg,rgba(6,14,26,.86),rgba(6,14,26,.6));border:1px solid rgba(120,220,255,.35);
   border-radius:12px;padding:5px 14px 7px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
 #inv-word .iw-chips{display:flex;gap:5px;justify-content:center}
+/* 🟢 รอบ 556: คำเป็น "ตัวอักษรสีเขียว" ตามกติกาใหม่ — ช่องยังไม่ติด = เขียวหม่น · ติดแล้ว = เขียวสว่างเรืองแสง */
 #inv-word .ic{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:32px;padding:0 6px;
-  border-radius:7px;font-weight:900;font-size:20px;color:#ff8b7a;background:rgba(255,60,40,.14);
-  border:1px solid rgba(255,90,70,.55);text-shadow:0 0 8px rgba(255,80,60,.8)}
-#inv-word .ic.down{color:#8effc0;background:rgba(60,255,150,.16);border-color:rgba(90,255,170,.7);
-  text-shadow:0 0 10px rgba(80,255,160,.9);animation:invblink .5s ease-in-out 3}
+  border-radius:7px;font-weight:900;font-size:20px;color:#5fce8f;background:rgba(40,160,90,.12);
+  border:1px solid rgba(70,200,120,.45);text-shadow:0 0 6px rgba(60,180,100,.5)}
+#inv-word .ic.down{color:#a9ffd0;background:rgba(60,255,150,.22);border-color:rgba(120,255,180,.9);
+  text-shadow:0 0 12px rgba(80,255,160,1);animation:invblink .5s ease-in-out 3}
 @keyframes invblink{50%{opacity:.25}}
 #inv-word .iw-th{display:block;margin-top:2px;font-size:12px;color:#cfe4ff;opacity:.9}
 #inv-word .iw-tip{display:block;font-size:11px;color:#ffd98a;margin-top:1px}
@@ -905,9 +894,10 @@ function buildDom(){
     <div id="inv-ban"></div>
     <div id="inv-intro"><div class="inv-card">
       <h3>🛸 ยานแม่บุกโลก!</h3>
-      <p>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — บนท้องยานมี<b>ช่องตัวอักษร</b>เรียงเป็นคำศัพท์ 1 คำ<br>
-      👾 <b>ยานลูกบินออกมาเท่ากับจำนวนตัวอักษร</b> — ยิงตกทีละลำ ตัวอักษรของลำนั้นจะ<b>กะพริบ</b><br>
-      ✨ ยิงครบทุกลำ = ตัวอักษรกะพริบทั้งแถว <b>เกราะยานแม่เปิด</b> → ระดมยิง/ยิงมิสไซล์จนระเบิด = 🪙${REWARD}<br>
+      <p>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — <b>คำศัพท์สีเขียว</b>โชว์กลางจอบน<br>
+      👾 <b>ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด</b> — ยิงลำ<b>ป้ายเขียว</b>ที่ตรงกับตัวอักษรของคำ ช่องนั้นจะติด<br>
+      🛡️ ยิงติดครบทุกตัวอักษร = <b>เกราะยานแม่เหลือ 0 → ระเบิดทั้งลำ</b> = โบนัส 🪙${REWARD} · ยิงยานลูกตกลำละ 🪙${LETTER_COIN}<br>
+      ⏰ <b>มีเวลา ${WORD_TIME/1000} วิต่อคำ</b> — หมดเวลายานแม่เปลี่ยนคำใหม่ + ปล่อยยานลูกชุดใหม่ 26 ลำ!<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>เฮลิคอปเตอร์จอดจริง 5 ลำ!</b> เดินไปที่ลำ (จุด 🚁 ในแผนที่) → กดปุ่ม 🚁 ขึ้นเครื่อง →
       <b>รอสตาร์ทเครื่องครบขั้น</b> → ดันคันเร่งขึ้นบินยิงจรวดจากฟ้า! · กด 👁️ ปรับมุมมองในห้องนักบินได้ 3 ระดับ<br>
@@ -1471,29 +1461,17 @@ function tryTex(mat,path,rx,ry){
   img.src=path;
 }
 /* 🔠 ป้ายตัวอักษรบนยานแม่ — ช่องโลหะมืด + ตัวอักษรเรืองแสง */
-function letterPanelTex(ch,lit){
-  const cv=document.createElement('canvas'); cv.width=cv.height=256;
-  const x=cv.getContext('2d');
-  x.fillStyle=lit?'#2a0a08':'#140f12'; x.fillRect(0,0,256,256);
-  // ขอบช่องโลหะ
-  x.strokeStyle=lit?'#ff7a5a':'#3a3f4a'; x.lineWidth=12; x.strokeRect(9,9,238,238);
-  x.strokeStyle='#1b2029'; x.lineWidth=4; x.strokeRect(24,24,208,208);
-  // ตัวอักษร
-  x.font='bold 176px system-ui,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
-  x.shadowColor=lit?'#fff2a0':'#ff2a1a'; x.shadowBlur=lit?46:26;
-  x.fillStyle=lit?'#fff6c8':'#ff3b28';
-  x.fillText(ch.toUpperCase(),128,140);
-  x.shadowBlur=0;
-  const t=new THREE.CanvasTexture(cv); return t;
-}
-/* 🔤 ตัวอักษรลอยเหนือยานลูก (ให้เด็กรู้ว่าลำไหนคือตัวไหน) */
-function letterSpriteTex(ch){
-  const k='ls_'+ch; if(texCache[k]) return texCache[k];
+/* 🔤 ตัวอักษรลอยเหนือยานลูก (ให้เด็กรู้ว่าลำไหนคือตัวไหน)
+   🟢 รอบ 556: need=true = ตัวอักษรนี้อยู่ในคำปัจจุบัน → ป้ายสีเขียวสว่าง "ยิงลำนี้!"
+   (ลำอื่นป้ายฟ้าปกติ · ป้ายถูกสร้างใหม่ทุกเวฟตอน makeFighter จึงไม่ต้อง refresh กลางคัน) */
+function letterSpriteTex(ch,need){
+  const k='ls_'+ch+(need?'g':'');  if(texCache[k]) return texCache[k];
   const cv=document.createElement('canvas'); cv.width=cv.height=128;
   const x=cv.getContext('2d');
   x.font='bold 96px system-ui,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
   x.lineWidth=10; x.strokeStyle='#06121f'; x.strokeText(ch.toUpperCase(),64,68);
-  x.fillStyle='#8ff0ff'; x.shadowColor='#3fd0ff'; x.shadowBlur=18; x.fillText(ch.toUpperCase(),64,68);
+  x.fillStyle=need?'#7dffab':'#8ff0ff'; x.shadowColor=need?'#2aff8a':'#3fd0ff'; x.shadowBlur=18;
+  x.fillText(ch.toUpperCase(),64,68);
   return texCache[k]=new THREE.CanvasTexture(cv);
 }
 /* 🏜️ ทรายเมล็ดหยาบ (โทนอุ่นตะวันออกกลาง) */
@@ -1539,8 +1517,9 @@ function wallTex(tone){
 let built=false, running=false, rafId=0, lastT=0;
 let renderer,scene,camera;
 let px=0, pz=90, py=EYE, yaw=0, pitch=0.35;
-let word=null, letters=[];            // letters = ช่องตัวอักษรบนยานแม่ [{ch,mesh,down}]
-let mother=null, msArmor=MS_HP, msOpen=false, msDead=false, msBeamAt=0, msRecover=false;
+let word=null, letters=[];            // 🔤 รอบ 556: letters = ช่องของคำใน HUD [{ch,down}] (ไม่มี mesh แล้ว)
+let wordDeadline=0, hudTickAt=0;      // ⏰ รอบ 556: เส้นตายของคำปัจจุบัน + จังหวะอัปเดต HUD วินาทีละครั้ง
+let mother=null, msArmor=MS_HP, msDead=false, msBeamAt=0, msRecover=false;
 let fighters=[], fShots=[], myShots=[], missiles=[], fx=[], squad=[], helis=[];
 /* 🚀 รอบ 467: กระสุนมีเวลาเดินทาง — ความเร็ว (ม./วิ) + คิวกระสุนที่ยังลอยอยู่ */
 const BULLET_SPD_R93=760, BULLET_SPD_RIFLE=420;
@@ -1562,9 +1541,10 @@ let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null
 /* 🤝 รอบ 417: สมรภูมิร่วม — ทุกคนสู้ "ยานแม่ลำเดียวกัน" เห็นตรงกันทุกเครื่อง
    วิธี (ไม่ต้องแก้ rules เลย ใช้ field เดิม cw/hp ที่อนุญาตอยู่แล้ว):
      · หัวหน้าห้อง (uid น้อยสุด) ประกาศคำ+เลขรอบใน `cw` = "en|th|round"
-     · ทุกคนประกาศผลงานตัวเองใน `hp` = "round|บิตยานลูกที่ตัวเองยิงตก|ดาเมจที่ทำกับยานแม่"
-     · ทุกเครื่องรวม (OR บิต / บวกดาเมจ) เอง = สถานะตรงกันโดยไม่ต้องมีเซิร์ฟเวอร์ */
-let battleRound=0, myKill=0, myArmorDmg=0;
+     · ทุกคนประกาศผลงานตัวเองใน `hp` = "round|บิตยานลูกที่ตัวเองยิงตก|0"
+       (🔤 รอบ 556: บิต = ดัชนีตัวอักษร a-z 0..25 · ช่องดาเมจเลิกใช้ ส่ง 0 คงรูปแบบเดิม)
+     · ทุกเครื่องรวม (OR บิต) เอง = สถานะตรงกันโดยไม่ต้องมีเซิร์ฟเวอร์ */
+let battleRound=0, myKill=0;
 let boardEl=null, chatBtn=null, chatBarEl=null, selfMsgEl=null, heliBtn=null, upBtn=null, downBtn=null, canopyEl=null;
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
@@ -1575,7 +1555,7 @@ let wheelBtn=null;                     // 🎡 รอบ 531: สัญลัก
 let gunnerBtn=null, riding=null;   // 🎖️ พลปืนประจำประตู: riding = key ของลำที่นั่งอยู่ (uid เพื่อน หรือ 'botN')
 let terrainH=null;                     // ฟังก์ชันความสูงพื้นทราย
 let solids=[];                         // กันชนตึก {x,z,r}
-let msLamps=[], msCore=null, msGlow=null, msBoard=null, msPlate=null;
+let msLamps=[];        // ❌ รอบ 556: msCore/msGlow/msBoard ถอดออกแล้ว (ไม่มีแกนพลังงาน/แผงตัวอักษร)
 
 /* ============================================================
    📦 โหลดโมเดล .glb ถ้ามีไฟล์ (ผู้ใช้เอาของจริงมาใส่แล้ว)
@@ -2108,33 +2088,8 @@ function buildMothership(){
     lp.position.set(Math.cos(a)*MS_R*0.93,-MS_R*0.06,Math.sin(a)*MS_R*0.93);
     lp.userData.ph=Math.random()*TAU; hull.add(lp); msLamps.push(lp);
   }
-  /* 🔴 แกนพลังงาน = "จุดอ่อนที่ยิงโดน" — อยู่ในฉาก ไม่ใช่ลูกของลำ (ลำใหญ่/หมุน เล็งไม่ได้)
-     ห้อยต่ำลงมาใกล้ผู้เล่น เพื่อให้เล็งยิงได้จริงทั้งจากพื้นและจากเฮลิ */
-  const core=new THREE.Mesh(new THREE.SphereGeometry(CORE_R,20,16),
-    new THREE.MeshBasicMaterial({color:0x3a0d0d,fog:false}));
-  core.position.set(0,CORE_Y,CORE_Z); scene.add(core); msCore=core;
-  const glow=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff3a2a,transparent:true,opacity:0,
-    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
-  /* ⚠️ รอบ 432: ออร่าเดิมกว้าง CORE_R*7 = 315 ม. → ล้างจอเป็นสีชมพูทั้งครึ่งซ้าย (เห็นในภาพผู้ใช้) */
-  glow.scale.setScalar(CORE_R*3.4); glow.position.set(0,CORE_Y,CORE_Z); scene.add(glow); msGlow=glow;
-  /* ❌ รอบ 439: เอา "ลำแสงยึดแกน" ออกถาวร — ผู้ใช้เห็นเป็นกรวยใหญ่กลางฟ้า 2 รอบติดแล้วนึกว่าเป็นยานแม่
-     (ตอนนี้แกนพลังงานอยู่ใต้จมูกลำอยู่แล้ว มองปุ๊บก็รู้ว่าเป็นของยานแม่ ไม่ต้องมีเส้นโยง) */
-
-  /* 🧩 แผงช่องตัวอักษร — ห้อยใต้ขอบหน้าลำ
-     ⚠️ ต้องเป็นลูกของ "ฉาก" ไม่ใช่ลูกของลำยาน! ลำยานหมุนช้าๆ ตลอดเวลา ถ้าแผงเป็นลูกของลำยาน
-        แผงจะโคจรตามไปอยู่ด้านหลัง/ด้านข้างจนอ่านไม่ได้ (เจอมาแล้วตอนเทสต์) → ตามตำแหน่งเองใน tickMother
-     ตำแหน่งนี้ทำให้ผู้เล่นเงยหน้า ~30° (พอดีมุมเริ่มต้น) แล้วเห็นแถวตัวอักษรกลางจอ
-     ย้ายแผง "เข้าใกล้ผู้เล่น" (z มากขึ้น) = มุมเงยชันขึ้น ตัวอักษรจะหลุดขอบจอบน */
-  const board=new THREE.Group();
-  board.position.set(0,BOARD_Y,BOARD_Z);      // ⚠️ แยกจากขนาดลำ ไม่งั้นแผงโตตามลำจนล้นจอ
-  /* 🔠 รอบ 555: กลุ่มนี้เป็นแค่ "จุดอ้างอิงกลาง" — มุมหันไปอยู่ที่กลุ่มลูกซ้าย/ขวาแทน
-     (แผง 2 ข้างต้องบิดเข้าหากันคนละทิศ จะใส่มุมที่กลุ่มแม่ก้อนเดียวไม่ได้) */
-  scene.add(board); msBoard=board;
-  buildWindowBar();                 // 🪟 รอบ 477: แถวบานหน้าต่าง 8 ช่อง (ตัวอักษรไปนั่งในบาน)
-  /* ❌ รอบ 441 (ผู้ใช้: "เอาสี่เหลี่ยมผืนผ้านี้ออกไปเลย เพราะขวางยานแม่"):
-     แผ่นหลังตัวอักษร (BoxGeometry 480×78×30 ม. สีเกือบดำ ลอยห่างแค่ ~220 ม.) กินจอเป็นแถบดำยาว
-     บังตัวยานแม่ที่อยู่ไกลกว่า → เอาแผ่นออกถาวร เหลือเฉพาะ "ตัวอักษรเรืองแสง" ลอยเป็นแถว */
-
+  /* ❌ รอบ 556 (ผู้ใช้สั่ง): แกนพลังงาน (msCore/msGlow) และแผงตัวอักษร 2 แผง (msBoard/buildWindowBar)
+     ถอดออกถาวรทั้งหมด — เกราะยานแม่ลดจากการยิงยานลูกตามตัวอักษรของคำใน HUD เท่านั้น */
   scene.add(grp); mother=grp;
   collectMsMats(grp);              // 🌙 รอบ 471: เก็บวัสดุลำไว้ดัน emissive ตอนกลางคืน
   /* 🌫️ ยานอยู่ไกลกว่าระยะหมอกมาก → ปิด fog ที่ตัวลำ ไม่งั้นกลืนหายไปกับสีฟ้าทั้งลำ */
@@ -2146,64 +2101,10 @@ function buildMothership(){
     grp.add(obj); msLamps=[]; collectMsMats(grp);      // 🌙 รอบ 471: โมเดลจริงมาแทน → เก็บวัสดุใหม่
   });
 }
-/* 🪟 รอบ 477 (ผู้ใช้: "ย้ายตัวอักษรจากใต้ท้องยาน ไปอยู่ตรงหน้าต่างยานแม่ บานละตัว
-   ถ้าใส่ครบแล้วบานไหนไม่มีก็ปล่อยว่าง") — สร้าง "แถวหน้าต่าง" ของยานเองเป็น WIN_N ช่องตายตัว
-   ⚠️ ทำไมต้องสร้างเอง: ยานแม่เป็นโมเดล Tripo **เมชเดียว 21,129 สามเหลี่ยม หน้าต่างเป็นลายในเทกซ์เจอร์**
-      ไม่มีวัตถุ "บานหน้าต่าง" ให้เกาะ → วางแถวช่องของเราแนบผิวลำหน้า ให้อ่านเป็นหน้าต่างของยาน
-   ⚠️ แถวนี้ยัง "ไม่หมุนตามลำ" เหมือนแผงเดิม (ลำหมุน dt*.02 ตลอด — ถ้าหมุนตาม เด็กจะอ่านไม่ออก)
-   คำในเกมยาวสุด 8 ตัว (pickWord กรอง [a-z]{3,8}) → WIN_N=8 พอดีทุกคำ */
-const WIN_N=8;
-let winPanes=[];                       // ช่องหน้าต่างถาวร (สร้างครั้งเดียว ใช้ซ้ำทุกคำ)
-/* 🔠 รอบ 555: สร้าง "แถวเดียวกัน 2 ชุด" ขนาบซ้าย-ขวา — บานที่ index เดียวกันทั้ง 2 ข้าง
-   **ใช้ material ก้อนเดียวกัน** จึงเปลี่ยนตัวอักษร/ไฟกะพริบทีเดียวติดพร้อมกันทั้ง 2 แผง
-   (ถ้าแยก material จะต้องไล่อัปเดต 2 ที่ทุกจุด — ลืมที่เดียวคือแผงซ้าย-ขวาไม่ตรงกัน) */
-function buildWindowBar(){
-  const cell=BOARD_CELL, gap=cell*0.22, total=WIN_N*cell+(WIN_N-1)*gap;
-  const frameM=new THREE.MeshBasicMaterial({color:0x0a0f16,fog:false});          // ขอบบานสีเหล็กมืด
-  const glassM=new THREE.MeshBasicMaterial({color:0x0e2233,fog:false});          // กระจกบานที่ยังว่าง
-  const sides=[-1,1].map(sgn=>{
-    const g=new THREE.Group();
-    g.position.x=sgn*BOARD_SIDE_X;
-    g.rotation.order='YXZ';                       // ⚠️ บิดซ้าย-ขวาก่อน ค่อยก้มลง (ลำดับ XYZ เดิมจะเอียงบิดเบี้ยว)
-    g.rotation.set(BOARD_TILT,-sgn*BOARD_TOE,0);
-    msBoard.add(g); return g;
-  });
-  for(let i=0;i<WIN_N;i++){
-    const x=-total/2+cell/2+i*(cell+gap);
-    const ltM=new THREE.MeshBasicMaterial({map:letterPanelTex('A',false),transparent:true,fog:false});
-    const pane={x,frame:[],glass:[],mesh:[],mat:ltM};
-    sides.forEach(g=>{
-      const fr=new THREE.Mesh(new THREE.PlaneGeometry(cell*1.12,cell*1.12),frameM);
-      fr.position.set(x,0,cell*0.25); g.add(fr); pane.frame.push(fr);
-      const gl=new THREE.Mesh(new THREE.PlaneGeometry(cell*0.94,cell*0.94),glassM);
-      gl.position.set(x,0,cell*0.30); g.add(gl); pane.glass.push(gl);
-      /* ตัวอักษรของบานนี้ — ซ่อนไว้ก่อน เปิดเฉพาะบานที่มีตัวอักษรของคำปัจจุบัน */
-      const lt=new THREE.Mesh(new THREE.PlaneGeometry(cell,cell),ltM);
-      lt.position.set(x,0,cell*0.35); lt.visible=false; g.add(lt); pane.mesh.push(lt);
-    });
-    winPanes.push(pane);
-  }
-}
-/* ใส่ตัวอักษรลงบานหน้าต่าง — บานที่เหลือปล่อยว่าง (กระจกเปล่า) */
+/* 🔤 รอบ 556: สร้าง "ช่องคำ" ใน HUD จากคำปัจจุบัน — ไม่มีวัตถุ 3D เกี่ยวข้องแล้ว
+   ช่องที่ตัวอักษรถูกยิงครบ = down (HUD ติดเขียวสว่าง) */
 function layoutLetterPanels(){
-  letters=[];
-  winPanes.forEach((p,i)=>{
-    const ch=word.en[i];
-    if(!ch){ p.mesh.forEach(m=>m.visible=false); return; }            // บานว่าง
-    p.mesh.forEach(m=>m.visible=true);
-    const old=p.mat.map;
-    p.mat.map=letterPanelTex(ch,false);
-    p.mat.opacity=1; p.mat.needsUpdate=true;
-    if(old) old.dispose();
-    /* mesh = บานฝั่งซ้าย (ใช้เป็นตัวแทน) — โค้ดที่เหลือแตะแค่ `mesh.material` ซึ่งใช้ร่วมทั้ง 2 ข้างอยู่แล้ว */
-    letters.push({ch,idx:i,mesh:p.mesh[0],down:false,blinkUntil:0});
-  });
-}
-function setLetterLit(l,lit){
-  const old=l.mesh.material.map;
-  l.mesh.material.map=letterPanelTex(l.ch,lit);
-  l.mesh.material.needsUpdate=true;
-  if(old) old.dispose();
+  letters=word.en.split('').map(ch=>({ch,down:false}));
 }
 
 /* ============================================================
@@ -2226,8 +2127,10 @@ function makeFighter(letterIdx){
   const eng=new THREE.Sprite(new THREE.SpriteMaterial({color:0x66e0ff,transparent:true,opacity:.8,
     blending:THREE.AdditiveBlending,depthWrite:false}));
   eng.scale.setScalar(4.2*FIGHTER_SIZE/7); eng.position.set(0,0,2.4*FIGHTER_SIZE/7); grp.add(eng);
-  const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(word.en[letterIdx]),transparent:true,depthTest:false}));
-  lb.scale.setScalar(7.0); lb.position.y=FIGHTER_SIZE*0.78; grp.add(lb);   // ป้ายตัวอักษรลอยเหนือลำ อ่านออกแต่ไกล
+  /* 🔤 รอบ 556: letterIdx = ดัชนี a-z (0..25) · ลำที่ตัวอักษรอยู่ในคำ = ป้ายเขียวใหญ่ "ยิงลำนี้!" */
+  const ch=AZ[letterIdx], need=word.en.includes(ch);
+  const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(ch,need),transparent:true,depthTest:false}));
+  lb.scale.setScalar(need?8.5:7.0); lb.position.y=FIGHTER_SIZE*0.78; grp.add(lb);   // ป้ายตัวอักษรลอยเหนือลำ อ่านออกแต่ไกล
 
   /* 🤝 ตำแหน่งเกิดคำนวณจาก (เลขรอบ, ลำดับตัวอักษร) แบบสุ่มมีเมล็ด
      → ทุกเครื่องในห้องเห็นยานลูกอยู่ตำแหน่งเดียวกัน ไม่ใช่ต่างคนต่างสุ่ม */
@@ -2235,11 +2138,11 @@ function makeFighter(letterIdx){
   const a=srnd(sd)*TAU, r=F_R*(0.45+srnd(sd+1)*0.55);
   grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
-  const f={grp,eye,eng,label:lb,letterIdx,hp:F_HP,
+  const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP,
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0};
   fighters.push(f);
-  /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — ยานลูกมีได้ถึง 8 ลำพร้อมกัน
+  /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — รอบ 556 มีพร้อมกัน 26 ลำ (a-z)
      ต้นฉบับ `alien_fighter.glb` ยังอยู่ครบ ไม่ได้แตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
   loadGlb('img/models/alien_fighter_lite.glb',(obj)=>{
     fitInto(obj,FIGHTER_SIZE);
@@ -2812,7 +2715,6 @@ function makeSoldier(x,z,crouch,kind,weapon){
   const s={grp:rig.grp, J:rig.J, rifle:rig.rifle, crouch:!!crouch, kind:kind, weapon:weapon,
            legOnly:(kind==='c'),                     /* 🔫 รอบ 519: soldier_c ถือ R93 อบมาในตัว → ขยับเฉพาะขา */
            mode:crouch?'crouch':'idle', phase:rnd(0,10), lookUp:0, fireT:0,
-           coreBias:(Math.random()<0.3),             /* 🎯 รอบ 526/527: สายรุมยานแม่ (~30% ผู้ใช้เลือก) เมื่อเกราะเปิด — ดู tickSquad */
            shotAt:performance.now()+rnd(0,SQUAD_GAP)};
   s.grp.position.set(x,terrainH(x,z),z);
   poseSoldier(s,performance.now());        /* จัดท่าเริ่มต้นทันที ไม่ให้ยืนตรงแข็งๆ 1 เฟรม */
@@ -4754,8 +4656,7 @@ function fireGun(now){
     if(hit){
       if(hit.type==='trg') hitTarget(hit.obj,hit.point);        // 🎯 รอบ 471: ยิงเป้าจากบนเฮลิก็นับ
       else{ sparkAt(hit.point);
-        if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); }
-        else if(hit.type==='mother'){ damageMother(MS_DMG_GUN*1.2); } } }
+        if(hit.type==='fighter'){ damageFighter(hit.obj,PH_GUN_DMG,now); Snd.ping(); } } }
     recPitch+=REC_DEFAULT.up*.45; recYaw+=rnd(-1,1)*REC_DEFAULT.side*.45;   // ปืนกลติดลำเด้งเบาๆ
     return;
   }
@@ -4810,7 +4711,7 @@ function fireGun(now){
     if(e) bullets.push({at:now+Math.min(2.2,e.dist/spd)*1000, env:e});
     return;
   }
-  bullets.push({at:now+fly*1000, hit, dmg:W.dmg, msDmg:W.msDmg});
+  bullets.push({at:now+fly*1000, hit, dmg:W.dmg});
 }
 /* 🌍 รอบ 469: หาจุดที่กระสุนไปลงบน "สิ่งแวดล้อม" (ไม่ได้โดนยาน) — เดินตามวิถีทีละช่วง
    เจอกำแพงตึกก่อน = 'wall' · ต่ำกว่าพื้น = 'sand' · ไม่เจอเลย = null */
@@ -4889,7 +4790,6 @@ function tickBullets(now){
     if(h.type==='trg'){ hitTarget(h.obj,h.point); continue; }   // 🎯 รอบ 471: เป้ากระดาษ ไม่มีประกายไฟโลหะ
     sparkAt(h.point);
     if(h.type==='fighter'){ damageFighter(h.obj,b.dmg,now); Snd.ping(); }
-    else if(h.type==='mother'){ damageMother(b.msDmg); }
   }
 }
 /* 💥 ใส่แรงถอย — เรียก "หลัง" คำนวณวิถีกระสุนแล้ว กระสุนจึงไปตรงที่เล็งไว้ตอนลั่นไก
@@ -4980,12 +4880,7 @@ function rayTarget(origin,dir,maxD){
     const t=raySphere(origin,dir,f.grp.position,FIGHTER_SIZE*0.66);   // 📏 รอบ 432: กันชนโตตามลำ (เดิม 4.6 = ลำ 7 ม.)
     if(t!==null && t<bestT){ bestT=t; best={type:'fighter',obj:f,t}; }
   });
-  if(msOpen && !msDead && mother){
-    /* 🎯 เล็งที่ "แกนพลังงาน" ไม่ใช่ตัวลำ — ลำใหญ่ 2,800m ผู้เล่นจะอยู่ในทรงกลมกันชนของมันเอง
-       ทำให้ raySphere คืน null ตลอด (ยิงยานแม่ไม่โดนเลย) */
-    const t=raySphere(origin,dir,msCore.position,CORE_R*1.35);
-    if(t!==null && t<bestT){ bestT=t; best={type:'mother',obj:mother,t}; }
-  }
+  /* ❌ รอบ 556: ไม่มีแกนพลังงานให้ยิงแล้ว — เกราะยานแม่ลดจากการยิงยานลูกตามคำเท่านั้น */
   /* 🎯 รอบ 471: เป้าฝึกยิง — เช็กเฉพาะตัวที่ "ยังตั้งอยู่ + อยู่ในระยะมองเห็น"
      (12 ตัว ทดสอบทรงกลมอย่างละ 1 ครั้ง = ถูกกว่าการวน solids มาก) */
   for(const t of targets){
@@ -5014,49 +4909,41 @@ function damageFighter(f,dmg,now,byMe){
   if(f.hp>0) return;
   dropFighter(f, byMe!==false);
 }
+/* 🔤 รอบ 556: ยิงยานลูกตก = +1 เหรียญทุกลำ · ถ้าตัวอักษรอยู่ในคำ → ติดทุกช่องที่ตรง (คำมีตัวซ้ำก็ติดพร้อมกัน
+   เพราะ 26 ลำมีตัวอักษรละลำเดียว) · เกราะยานแม่ = สัดส่วนช่องที่ยังไม่ติด · ครบคำ = เกราะ 0 → ยานแม่ระเบิด */
 function dropFighter(f,mine){
   if(f.dead) return;
   f.dead=true;
   boom(f.grp.position,1.35,0x8affc0);
   scene.remove(f.grp);
   const i=fighters.indexOf(f); if(i>=0) fighters.splice(i,1);
-  if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าเรายิงลำนี้ → ส่งให้เพื่อนเห็นตรงกัน
-  /* 🔴 ตัวอักษรประจำลำนี้บนยานแม่กะพริบ */
-  const l=letters[f.letterIdx];
-  if(l && !l.down){
-    l.down=true; l.blinkUntil=performance.now()+2600;
-    setLetterLit(l,true);
-    if(mine){
-      if(typeof addCoins==='function') addCoins(LETTER_COIN);
-      sessionCoins+=LETTER_COIN; renderCoins();
-      if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
-      toastBan(`💥 ยิงตก! ตัวอักษร <b>${l.ch.toUpperCase()}</b> กะพริบแล้ว<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
-    }else{
-      toastBan(`🤝 เพื่อนยิงตก! ตัวอักษร <b>${l.ch.toUpperCase()}</b> กะพริบแล้ว`,1100);
-    }
-    renderWord();
+  if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าเรายิงลำนี้ → ส่งให้เพื่อนเห็นตรงกัน (บิต a-z)
+  let match=false;
+  letters.forEach(l=>{ if(l.ch===f.ch && !l.down){ l.down=true; match=true; } });
+  if(mine){
+    if(typeof addCoins==='function') addCoins(LETTER_COIN);
+    sessionCoins+=LETTER_COIN; renderCoins();
+    if(typeof sfx!=='undefined'&&sfx.coin) sfx.coin();
+    if(match) toastBan(`💥 โดน! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว — เกราะยานแม่ลดลง!<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1200);
+    else      toastBan(`💥 ยิงตก <b>${f.ch.toUpperCase()}</b> (ไม่อยู่ในคำ)<br><span class="ib-coin">+${LETTER_COIN} 🪙</span>`,1000);
+  }else if(match){
+    toastBan(`🤝 เพื่อนยิงตก! ตัวอักษร <b>${f.ch.toUpperCase()}</b> ติดแล้ว`,1100);
   }
-  if(!fighters.length && !msOpen) openMothership();
+  if(match){ renderWord(); updateArmor(); }
 }
-/* ✨ ยานลูกหมด → ตัวอักษรกะพริบทั้งแถว + เกราะยานแม่เปิด */
-function openMothership(){
-  msOpen=true; msArmor=MS_HP;
-  letters.forEach(l=>{ l.blinkUntil=performance.now()+4200; });
-  if(msGlow) msGlow.material.opacity=.55;
-  if(msCore) msCore.material.color.setHex(0xff5a2a);
-  toastBan('✨ <b>ยานลูกหมดแล้ว!</b> ตัวอักษรกะพริบทั้งแถว<br><span class="ib-sub">เกราะยานแม่เปิด — ระดมยิง 🔫 และมิสไซล์ 🚀 ใส่แกนสีแดงเลย!</span>',2600);
-  renderTarget();
-  if(typeof sfx!=='undefined'&&sfx.levelup) sfx.levelup();
-}
-function damageMother(dmg){
-  if(!msOpen||msDead) return;
-  myArmorDmg+=dmg;                      // 🤝 สะสมดาเมจ "ของเรา" — เกราะจริงคำนวณรวมกับของเพื่อนใน applyShared
-  applyShared();
+/* 🛡️ รอบ 556: เกราะยานแม่ผูกกับความคืบหน้าของคำ — ติดครบทุกช่อง = 0% → ระเบิด */
+function updateArmor(){
+  if(msDead||!letters.length) return;
+  const done=letters.reduce((n,l)=>n+(l.down?1:0),0);
+  const a=Math.max(0,MS_HP*(1-done/letters.length));
+  if(Math.abs(a-msArmor)>0.01){ msArmor=a; renderTarget(); }
+  if(done>=letters.length) killMother();
 }
 function killMother(){
-  msDead=true;
-  /* ระเบิดเป็นชุด — ระเบิดที่ "แกนพลังงาน" (ใกล้ผู้เล่น เห็นชัด) แล้วลามขึ้นไปทั้งลำ */
-  const c=msCore.position.clone();
+  if(msDead) return;
+  msDead=true; msArmor=0; renderTarget();
+  /* ระเบิดเป็นชุด — เริ่มที่จุด FX ใกล้ผู้เล่น (CORE_*) แล้วลามขึ้นไปทั้งลำ */
+  const c=new THREE.Vector3(0,CORE_Y,CORE_Z);
   for(let i=0;i<12;i++){
     setTimeout(()=>{ if(!running) return;
       const up=i/11;                                   // ไล่จากแกนขึ้นไปหาท้องยาน
@@ -5099,9 +4986,10 @@ function pickWord(){
 /* ตั้งคำ+เลขรอบ แล้วเริ่มเวฟ (ใช้ทั้งหัวหน้าและลูกทีม) */
 function setWord(en,th,round){
   battleRound=round;
-  myKill=0; myArmorDmg=0;                       // ผลงานรอบใหม่เริ่มจากศูนย์
+  myKill=0;                                     // ผลงานรอบใหม่เริ่มจากศูนย์
   word={en,th};
   layoutLetterPanels();
+  wordDeadline=performance.now()+WORD_TIME;     // ⏰ รอบ 556: เริ่มจับเวลาคำใหม่
   renderWord();
   startWave();
 }
@@ -5121,34 +5009,24 @@ function applyShared(){
     const p=peers[leaderUid()];
     if(p&&p.cw) adoptWord(p.cw);
   }
-  /* รวมบิตยานลูกที่ถูกยิงตก + ดาเมจยานแม่ (เฉพาะรอบปัจจุบัน) */
-  let mask=myKill, dmg=myArmorDmg;
+  /* รวมบิตยานลูก a-z ที่ถูกยิงตก (เฉพาะรอบปัจจุบัน) — เกราะ/ช่องคำอัปเดตเองใน dropFighter */
+  let mask=myKill;
   for(const uid in peers){
     const p=peers[uid];
-    if(p.round===battleRound){ mask|=(p.kill||0); dmg+=(p.armor||0); }
+    if(p.round===battleRound) mask|=(p.kill||0);
   }
   /* ยานลูกที่เพื่อนยิงตกแล้ว แต่เครื่องเรายังมีอยู่ → เอาออกให้ตรงกัน */
   if(mask) fighters.slice().forEach(f=>{ if(mask&(1<<f.letterIdx)) dropFighter(f,false); });
-  /* เกราะยานแม่ = พลังเต็ม ลบดาเมจรวมของทุกคน */
-  if(msOpen&&!msDead){
-    const a=Math.max(0,MS_HP-dmg);
-    if(Math.abs(a-msArmor)>0.01){ msArmor=a; renderTarget(); }
-    if(a<=0) killMother();
-  }
 }
 function startWave(){
   fighters.slice().forEach(f=>scene.remove(f.grp)); fighters=[];
-  msOpen=false; msDead=false; msArmor=MS_HP; msRecover=false;
-  if(msGlow) msGlow.material.opacity=0;
-  if(msCore) msCore.material.color.setHex(0x3a0d0d);
+  msDead=false; msArmor=MS_HP; msRecover=false;
   if(mother){ mother.visible=true; mother.scale.setScalar(1); mother.position.y=MS_Y; }
-  if(msBoard) msBoard.visible=true;                          // แผง/แกน แยกจากลำยานแล้ว ต้องสั่งโชว์/ซ่อนเอง
-  if(msCore) msCore.visible=true;
-  if(msGlow) msGlow.visible=true;
-  letters.forEach(l=>{ l.down=false; l.blinkUntil=0; setLetterLit(l,false); l.mesh.material.opacity=1; });
-  word.en.split('').forEach((ch,i)=>makeFighter(i));
+  letters.forEach(l=>{ l.down=false; });
+  /* 🔤 รอบ 556: ปล่อยยานลูกครบ 26 ลำ a-z ทุกเวฟ — ลำที่ตรงกับคำมีป้ายเขียว */
+  for(let i=0;i<26;i++) makeFighter(i);
   renderTarget();
-  toastBan(`🛸 <b>ยานแม่แสดงคำว่า ${word.en.toUpperCase()}</b><br><span class="ib-sub">ยานลูก ${word.en.length} ลำบินออกมาแล้ว — ยิงให้ตกทุกลำ!</span>`,2600);
+  toastBan(`🛸 <b>เป้าหมาย: ${word.en.toUpperCase()}</b><br><span class="ib-sub">ยานลูก 26 ลำ (a-z) บินออกมาแล้ว — ยิงลำ<b>ป้ายเขียว</b>ที่ตรงกับคำ ให้เกราะยานแม่หมด!</span>`,2800);
 }
 function completeWord(){
   const w=word;
@@ -5160,17 +5038,13 @@ function completeWord(){
   if(typeof sfx!=='undefined'&&sfx.levelup) sfx.levelup();
   setTimeout(()=>{ if(typeof speakWord==='function') speakWord(w.en); },600);
   if((state.invasionBest||0)<sessionWords){ state.invasionBest=sessionWords; }
-  toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">+${REWARD} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
+  toastBan(`🎉 <b>${escapeHTML(w.en.toUpperCase())} = ${escapeHTML(w.th)}</b><br><span class="ib-coin">💥 ยานแม่ถูกทำลาย! โบนัส +${REWARD} 🪙</span><span class="ib-sub">ยานแม่ลำใหม่กำลังเคลื่อนเข้ามา…</span>`,3000);
   saveState();
   /* 🛸 รอบ 439 (ผู้ใช้: "ยานแม่ลอยใหญ่ๆ ต่ำๆ ค้างไว้ เหมือน ID4 — ตอนนี้ไปไหนอีกแล้ว"):
      ต้นตอที่ลำหายคือบรรทัดนี้เอง — ยิงสำเร็จแล้วเคย `mother.visible=false` รอลำใหม่ 3.2 วิ
      (และถ้าหัวหน้าห้องยังไม่ประกาศคำใหม่ ลำจะหายยาวกว่านั้นอีก) → **ลำอยู่ค้างฟ้าเสมอ ไม่หายไปไหน**
      แค่ "ดับไฟ/มืดลงชั่วคราว" แล้วสว่างกลับตอนคำใหม่มา */
   msRecover=true;
-  if(msBoard) msBoard.visible=true;
-  letters.forEach(l=>setLetterLit(l,false));
-  if(msCore) msCore.visible=false;                           // แกนพลังงานระเบิดไปแล้ว (โผล่ใหม่พร้อมคำถัดไป)
-  if(msGlow) msGlow.visible=false;
   /* 🤝 หัวหน้าห้องเป็นคนเปิดยานแม่ลำใหม่ให้ทั้งห้อง · ลูกทีมรอรับคำผ่าน DB */
   setTimeout(()=>{ if(running && isLeader()) pickWord(); },3200);
 }
@@ -5182,21 +5056,32 @@ function renderWord(){
   if(!word||!wordEl) return;
   const chips=word.en.split('').map((ch,i)=>
     `<span class="ic${letters[i]&&letters[i].down?' down':''}">${ch.toUpperCase()}</span>`).join('');
-  const left=fighters.length;
+  const need=letters.reduce((n,l)=>n+(l.down?0:1),0);
+  const sec=Math.max(0,Math.ceil((wordDeadline-performance.now())/1000));
   wordEl.innerHTML=`<div class="iw-chips">${chips}</div>`
     +`<span class="iw-th">${escapeHTML(word.th)}</span>`
-    +`<span class="iw-tip">${msOpen?'🎯 เกราะเปิดแล้ว — ระดมยิงยานแม่!':`👾 เหลือยานลูก ${left} ลำ`}</span>`;
+    +`<span class="iw-tip">${need?`🎯 ยิงยานป้ายเขียว เหลือ ${need} ตัว · ⏰ ${sec} วิ`:'💥 ครบคำ! ยานแม่ระเบิด!'}</span>`;
 }
 function renderTarget(){
   if(!tgtEl) return;
-  if(msOpen&&!msDead){
-    tgtEl.innerHTML=`<div class="inv-lb">🛸 เกราะยานแม่</div>
-      <b>${Math.ceil(msArmor)}%</b>
-      <div class="inv-bar" id="inv-msbar"><span style="width:${msArmor}%"></span></div>`;
-  }else{
-    tgtEl.innerHTML=`<div class="inv-lb">👾 ยานลูกที่เหลือ</div><b>${fighters.length} ลำ</b>`;
-  }
+  /* 🛡️ รอบ 556: โชว์เกราะตลอด — ลดลงทุกครั้งที่ยิงตัวอักษรของคำติด · 0% = ยานแม่ระเบิด */
+  tgtEl.innerHTML=`<div class="inv-lb">🛸 เกราะยานแม่</div>
+    <b>${Math.ceil(msArmor)}%</b>
+    <div class="inv-bar" id="inv-msbar"><span style="width:${msArmor}%"></span></div>
+    <div class="inv-lb">👾 ยานลูก ${fighters.length} ลำ</div>`;
   renderWord();
+}
+/* ⏰ รอบ 556: จับเวลาต่อคำ — หมดเวลาก่อนครบคำ = หัวหน้าห้องเปลี่ยนคำใหม่ (ยานลูกเกิดใหม่ครบ 26 ลำใน startWave)
+   เรียกจาก frame() วินาทีละครั้ง (อัปเดตเลขวินาทีใน HUD ไปในตัว) */
+function tickWordTimer(now){
+  if(now<hudTickAt) return;
+  hudTickAt=now+1000;
+  if(!word||msDead) return;
+  renderWord();
+  if(now<=wordDeadline || !letters.some(l=>!l.down)) return;
+  wordDeadline=now+WORD_TIME;              // กันยิงซ้ำระหว่างรอคำใหม่จากหัวหน้าห้อง
+  toastBan('⏰ <b>หมดเวลา!</b> ยานแม่เปลี่ยนคำใหม่ — ยานลูกชุดใหม่ 26 ลำกำลังออกมา!',2400);
+  if(isLeader()) pickWord();               // ลูกทีมรอรับคำใหม่ผ่าน DB (adoptWord)
 }
 function renderCoins(){ if(coinsEl) coinsEl.textContent='🪙 +'+(typeof fmtNum==='function'?fmtNum(sessionCoins):sessionCoins); }
 function renderHp(){
@@ -6112,7 +5997,7 @@ function netSend(force){
   /* 🤝 สมรภูมิร่วม — ใช้ field เดิมที่ rules อนุญาตอยู่แล้ว (ไม่ต้อง publish rules ใหม่)
      cw = คำ+เลขรอบ (เฉพาะหัวหน้าห้องประกาศ) · hp = ผลงานเรา "รอบ|บิตยานลูก|ดาเมจยานแม่" (≤28 ตัวอักษร) */
   if(word && isLeader()) payload.cw=`${word.en}|${word.th}|${battleRound}`.slice(0,60);
-  payload.hp=`${battleRound}|${myKill}|${Math.round(myArmorDmg)}`.slice(0,28);
+  payload.hp=`${battleRound}|${myKill}|0`.slice(0,28);   // 🔤 รอบ 556: ช่องดาเมจเลิกใช้ (คงรูปแบบเดิมให้เครื่องเก่าอ่านได้)
   myRef.set(payload).catch(()=>{ netOk=false; });
 }
 function peerColor(uid){ let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0; return PEER_COLORS[h%PEER_COLORS.length]; }
@@ -6335,8 +6220,9 @@ function tickFighters(dt,now){
     f.eng.scale.setScalar(4.2+Math.sin(now*.02+f.ang)*.6);
     /* ยิงใส่ผู้เล่น */
     if(now>f.shotAt){
-      /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย */
-      f.shotAt=now+F_SHOT_GAP*rnd(.7,1.5)*(sneaking?2.8:1);
+      /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย
+         ⚖️ รอบ 556: มี 26 ลำพร้อมกัน — ถ่วงช่วงยิงตามจำนวนลำ ให้อัตรากระสุนรวมพอ ๆ กับสมัย 8 ลำ */
+      f.shotAt=now+F_SHOT_GAP*rnd(.7,1.5)*(sneaking?2.8:1)*Math.max(1,fighters.length/8);
       if(!sneaking || Math.random()<.35) spawnAlienShot(p.clone(),0x7dff9d,F_SHOT_DMG,F_SHOT_SPD);
     }
   });
@@ -6354,19 +6240,9 @@ function tickMother(dt,now){
      ท้องลำเลยวืดขึ้นลงช่วง 66–246 ม. บางจังหวะต่ำกว่าเพดานยานลูก (80) บางจังหวะลอยพ้นเฟรม
      ⚠️ ถ้าจะเอาการลอยหายใจกลับมา ต้องคุมให้ท้องลำไม่ต่ำกว่า ~120 (แกว่งได้ไม่เกิน ±35) */
   mother.position.y=MS_Y;
-  /* แผงตัวอักษร+แกน "ไม่หมุนตามลำ" และอยู่ตำแหน่งของตัวเอง — ขยับขึ้นลงตามยานหายใจนิดเดียว */
-  const breathe=Math.sin(now*.0004)*3;
-  if(msBoard) msBoard.position.y=BOARD_Y+breathe;
-  if(msCore){ msCore.position.y=CORE_Y+breathe; }
-  if(msGlow){ msGlow.position.y=CORE_Y+breathe; }
+  /* ❌ รอบ 556: แผงตัวอักษร/แกนพลังงานถอดออกแล้ว — เหลือแค่ไฟลำ */
   if(msDead||msRecover){ msLamps.forEach(lp=>{ lp.visible=Math.sin(now*.0016+lp.userData.ph)>.72; }); return; }
   msLamps.forEach((lp,i)=>{ lp.visible=Math.sin(now*.004+lp.userData.ph)>-.2; });
-  if(msGlow&&msOpen) msGlow.material.opacity=.4+Math.sin(now*.006)*.18;
-  /* ตัวอักษรกะพริบ */
-  letters.forEach(l=>{
-    if(now<l.blinkUntil) l.mesh.material.opacity=(Math.sin(now*.022)>0)?1:.15;
-    else l.mesh.material.opacity=1;
-  });
   if(now>msBeamAt){
     msBeamAt=now+MS_BEAM_GAP*rnd(.8,1.3);
     /* ลำแสงหนักยิงลงมาจาก "ท้องยานฝั่งที่มองเห็น" (ไม่ใช่กลางลำที่อยู่ไกลลิบ) */
@@ -6463,10 +6339,9 @@ function tickHeliDust(dt,now){
 function tickMissiles(dt,now){
   for(let i=missiles.length-1;i>=0;i--){
     const m=missiles[i];
-    /* นำวิถี: ค่อยๆ เบนเข้าหาเป้า (ยานลูกที่ล็อกไว้ ไม่มีก็ยานแม่ตอนเกราะเปิด) */
+    /* นำวิถี: ค่อยๆ เบนเข้าหาเป้า (ยานลูกที่ล็อกไว้เท่านั้น — รอบ 556 ไม่มีแกนยานแม่ให้ยิงแล้ว) */
     let tgt=null;
     if(m.lock && fighters.indexOf(m.lock)>=0) tgt=m.lock.grp.position;
-    else if(msOpen&&!msDead&&mother) tgt=mother.position;
     /* 🚀 รอบ 531: ช่วง boost ตอนออกตัว — ยังไม่นำวิถี (พุ่งเชิดขึ้นตาม loft ก่อน) แล้วเร่งแรง
        หมด boost ค่อย homing ดึงโค้งลงเข้าเป้า = วิถีโค้งสมจริงแบบ Modern Warship */
     const boosting = now < (m.boostUntil||0);
@@ -6488,12 +6363,10 @@ function tickMissiles(dt,now){
     /* ชนอะไรไหม */
     let hit=null;
     for(const f of fighters){ if(m.mesh.position.distanceTo(f.grp.position)<5.4){ hit=f; break; } }
-    const hitMs=(!hit && msOpen && !msDead && msCore && m.mesh.position.distanceTo(msCore.position)<CORE_R*1.35);
     const old=(now-m.born>6500) || m.mesh.position.y<terrainH(m.mesh.position.x,m.mesh.position.z);
-    if(hit||hitMs||old){
-      boom(m.mesh.position.clone(), hitMs?1.5:1.0, 0xffb347);
+    if(hit||old){
+      boom(m.mesh.position.clone(), 1.0, 0xffb347);
       if(hit) damageFighter(hit,m.dmg||MIS_DMG,now);
-      if(hitMs) damageMother((m.dmg?m.dmg*2.2:MS_DMG_MISSILE));   // จรวดเฮลิแรงกว่าเล็กน้อยเมื่อเข้ายานแม่
       scene.remove(m.mesh); scene.remove(m.trail);
       m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose();
       missiles.splice(i,1);
@@ -6549,21 +6422,16 @@ function tickSquadMove(s,dt,now,active){
   return false;
 }
 function tickSquad(dt,now){
-  const coreOpen0=(msOpen&&msCore&&!msDead), active=(fighters.length>0||coreOpen0);
+  const active=(fighters.length>0);
   squad.forEach(s=>{
     if(tickSquadMove(s,dt,now,active)){               /* 🏃 รอบ 530: กำลังวิ่งไปกำบัง → ข้ามการเล็ง/ยิงเฟรมนี้ */
       poseSoldier(s,now);
       if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;
       return;
     }
-    /* 🎯 รอบ 526 (ผู้ใช้: "ให้บางส่วนรุมแกนแดง"): เกราะยานแม่เปิด (msOpen) → ทหารสาย coreBias (~ครึ่งหมู่)
-       หันไป "ระดมยิงแกนแดง(ยานแม่)" ตามป้าย · ที่เหลือยังจัดการ fighter · ไม่มี fighter เหลือ = ทุกคนยิงแกน
-       (เดิมยิงแกนเฉพาะตอนไม่มี fighter เลย → ช่วงระดมยิงยานแม่ทหารมัวยิงยานลูกบินต่ำ ดูไม่เล็งยานแม่) */
-    const coreOpen=(msOpen&&msCore&&!msDead);
+    /* 🎯 รอบ 556: ไม่มีแกนพลังงานแล้ว — ทหารเล็งเฉพาะยานลูก */
     let tgt=null, aim=null;
-    if(coreOpen && s.coreBias){        aim=msCore.position; }              /* สายรุมยานแม่ */
-    else if(fighters.length){          tgt=fighters[(Math.random()*fighters.length)|0]; aim=tgt.grp.position; }
-    else if(coreOpen){                 aim=msCore.position; }              /* ไม่มี fighter → ยิงแกน */
+    if(fighters.length){ tgt=fighters[(Math.random()*fighters.length)|0]; aim=tgt.grp.position; }
     if(aim){
       const d=new THREE.Vector3().subVectors(aim,s.grp.position);
       /* 🧭 รอบ 436 (ผู้ใช้: "บอทหันหลังยิง"): ทหารหันหน้าไป −Z ตอน rotation=0
@@ -6589,10 +6457,7 @@ function tickSquad(dt,now){
       const from=s.flash ? s.flash.getWorldPosition(new THREE.Vector3())
                          : s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
-      if(Math.random()<0.35){
-        if(tgt) damageFighter(tgt,0.5,now);
-        else if(msOpen) damageMother(MS_DMG_GUN*0.5);
-      }
+      if(Math.random()<0.35 && tgt) damageFighter(tgt,0.5,now);
     }
     if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;   // 🔥 รอบ 521
   });
@@ -6697,12 +6562,10 @@ const CHAT_LINES={
   r93 :['สไนเปอร์เข้าที่!','เล็งนิ่ง ๆ รอจังหวะ','จัดหัวมันเอง!','นัดเดียวจอด!'],
   rifle:['KSR-77 พร้อมรบ!','ยิงคุ้มกัน เดินหน้า!','กราดให้เละเลย!','ลุยไม่ถอย!'],
   any :['ระวังตัวด้วยเพื่อน!','เราหนุนอยู่ข้างหลัง!','สู้ ๆ อย่าถอย!','เพื่อนสู้ ๆ!'],
-  core:['ระดมยิงแกน!','รุมมันเลย!','แกนแดงเปิดแล้ว รุมเลย!','อัดแกนให้จม!'],   /* 🎯 รอบ 528: เกราะยานแม่เปิด — สาย coreBias ปลุกใจรุมแกน */
 };
 let chatAllAt=0;
 function tickSquadChatter(now){
-  const coreOpen=(msOpen&&msCore&&!msDead);                // 🎯 รอบ 528: เกราะยานแม่เปิด → ให้ตะโกนได้แม้ยานลูกหมด
-  if(!squad.length||(!fighters.length&&!coreOpen)||now<callAllAt||now<chatAllAt) return;
+  if(!squad.length||!fighters.length||now<callAllAt||now<chatAllAt) return;
   let who=null, wd=CALL_NEAR*CALL_NEAR;
   for(const s of squad){
     if(now-(s.callAt||0)<CALL_GAP_ONE) continue;
@@ -6713,8 +6576,7 @@ function tickSquadChatter(now){
   chatAllAt=now+CHAT_GAP_ALL*rnd(.8,1.5);
   callAllAt=now+CALL_GAP_ALL*rnd(.85,1.4);                 // กันเตือนทิศตามมาติด ๆ
   const byGun=CHAT_LINES[who.weapon]||CHAT_LINES.rifle;
-  const pool=(coreOpen&&who.coreBias)?CHAT_LINES.core     // 🎯 รอบ 528: เกราะเปิด+สายรุมแกน → "ระดมยิงแกน!/รุมมันเลย!"
-            :(Math.random()<0.6)?byGun:CHAT_LINES.any;    // ปกติ: ส่วนใหญ่บทประจำปืน บางทีปลุกใจทั่วไป
+  const pool=(Math.random()<0.6)?byGun:CHAT_LINES.any;    // ส่วนใหญ่บทประจำปืน บางทีปลุกใจทั่วไป
   squadShout(who, pool[(Math.random()*pool.length)|0], now);
 }
 /* 🚁 ฝูงเฮลิคอปเตอร์: บินวนแล้วยิงมิสไซล์ใส่เป้าอย่างเมามันส์ */
@@ -6774,11 +6636,7 @@ function tickHelis(dt,now){
     h.grp.rotation.y=Math.atan2(tx-p.x,tz-p.z)+Math.PI;
     h.grp.rotation.z=-h.spin*3.2; h.grp.rotation.x=0.10;
     h.rotor.rotation.y+=dt*38; h.trotor.rotation.x+=dt*46;
-    if(now>h.shotAt){
-      h.shotAt=now+HELI_GAP*rnd(.7,1.5);
-      const aim=(msOpen&&!msDead&&mother)?mother.position:null; if(!aim) return;
-      heliFireAt(p,aim,null,now);
-    }
+    /* ❌ รอบ 556: ช่วงลาดตระเวน (ไม่มียานลูก) ไม่ยิงอะไร — ไม่มีแกนยานแม่ให้ยิงแล้ว */
   });
 }
 
@@ -7256,6 +7114,7 @@ function frame(dt,now){
   tickHelis(dt,now);
   peerTick(dt,now);                 // 🌐 ขยับตัวเพื่อนออนไลน์ให้ลื่น
   applyShared();                    // 🤝 รวมผลงานทุกคน → สู้ยานแม่ลำเดียวกัน
+  tickWordTimer(now);               // ⏰ รอบ 556: เวลาต่อคำ + refresh เลขวินาทีใน HUD
   netSend(false);                   // 🌐 ส่งตำแหน่งเราขึ้น DB
   tickReload(now);                  // 🎯 บรรจุกระสุน R93
   tickBarrelHeat(now);              // 🔥 รอบ 467: ปืนร้อน = ควันลอยจากลำกล้อง
@@ -7365,7 +7224,7 @@ function start(){
   inHeli=false; wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
   phVel={x:0,y:0,z:0}; phClimb=0; phMisLeft=PH_MIS_MAX; phMisReloadAt=0; if(gunGrp) gunGrp.visible=true;
   Object.keys(peers).forEach(dropPeer); myChat=null; boardSig='';
-  battleRound=0; myKill=0; myArmorDmg=0;                // 🤝 ล้างสถานะสมรภูมิร่วม
+  battleRound=0; myKill=0;                              // 🤝 ล้างสถานะสมรภูมิร่วม
   callAllAt=0; callDirAt={}; squad.forEach(clearSquadBubble);   // 📣 รอบ 471: ล้างคูลดาวน์/ป้ายตะโกนค้าง
   riding=null; if(gunnerBtn) gunnerBtn.style.display='none';    // 🎖️ ล้างสถานะพลปืน
   rideExt=false; rideHostP=null; rideSpd=0;                     // 👁️ รอบ 539: มุมภายนอกของพลปืนไม่ค้างข้ามรอบ
@@ -7500,11 +7359,11 @@ window.InvasionWorld={
   /* test hooks — ใช้เฉพาะตอนเทสต์ preview */
   _t:{
     get running(){return running}, set running(v){running=v},
-    get word(){return word}, get letters(){return letters.map(l=>({ch:l.ch,down:l.down,op:l.mesh.material.opacity}))},
+    get word(){return word}, get letters(){return letters.map(l=>({ch:l.ch,down:l.down}))},
     get fighters(){return fighters.length},
     /* ⛰️ รอบ 431: ตรวจว่ายานลูกบินเลียดเนินจริง (ระยะห่างจากพื้นของแต่ละลำ) */
     get fighterClear(){return fighters.map(f=>+(f.grp.position.y-terrainH(f.grp.position.x,f.grp.position.z)).toFixed(1))},
-    get msOpen(){return msOpen}, get msArmor(){return msArmor},
+    get msArmor(){return msArmor}, get wordDeadline(){return wordDeadline},
     get msDead(){return msDead}, get hp(){return hp}, get heat(){return heat}, set heat(v){heat=v}, get mis(){return misLeft},
     get coins(){return sessionCoins}, get words(){return sessionWords},
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
@@ -7536,7 +7395,7 @@ window.InvasionWorld={
                               geo:renderer.info.memory.geometries, tex:renderer.info.memory.textures}; },
     killOne(){ if(fighters.length) damageFighter(fighters[0],99,performance.now()); return fighters.length; },
     killAll(){ while(fighters.length) damageFighter(fighters[0],99,performance.now()); },
-    hitMother(d){ damageMother(d||MS_HP); },
+    hitMother(){ letters.forEach(l=>l.down=true); updateArmor(); },   // 🔤 รอบ 556: ติดครบทุกช่อง = เกราะ 0 → ระเบิด
     fire(){ lastFire=0; fireGun(performance.now()); },
     missile(){ fireMissile(performance.now()); },
     hurt(d){ lastHurt=0; hurtPlayer(d||10,performance.now()); },
@@ -7546,7 +7405,7 @@ window.InvasionWorld={
     /* 🚁🌐 รอบ 414 */
     get inHeli(){return inHeli}, enterHeli, exitHeli, get phMis(){return phMisLeft}, get phVel(){return {...phVel}},
     /* 🤝🗺️🚁 รอบ 417 */
-    get round(){return battleRound}, get myKill(){return myKill}, get myArmorDmg(){return myArmorDmg},
+    get round(){return battleRound}, get myKill(){return myKill},
     get isLeader(){return isLeader()}, get leader(){return leaderUid()}, get uid(){return myUid()},
     applyShared, adoptWord, setWord, dropFighter,
     get heliCount(){return heliCount()}, get bots(){return helis.length}, syncBotHelis,
@@ -7725,7 +7584,6 @@ window.InvasionWorld={
     get gunnerClass(){return wrapEl.classList.contains('gunner')},
     get mapPick(){return mapPick}, set mapPick(v){mapPick=v},
     get mapOpen(){return mapBoxEl.classList.contains('on')},
-    get core(){return msCore}, get letterBoard(){return msBoard},
     get peerCount(){return Object.keys(peers).length}, get peers(){return Object.keys(peers).map(u=>({n:peers[u].n,kind:peers[u].kind,w:peers[u].w,pos:{...peers[u].cur}}))},
     fakePeer(uid,d){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x:0,z:60,y:0,yaw:0,av:'foot',w:0},d||{})}); return peers[uid]; },
     /* 📣 รอบ 471: ทหารตะโกนบอกทิศ */
