@@ -1131,6 +1131,29 @@ function updateRankRailBadge(){
   b.style.display = rank ? '' : 'none';
   const btn = document.getElementById('btn-rail-rank');
   if(btn) btn.title = rank ? `ตอนนี้${selfPronoun()}อยู่อันดับที่ ${rank} ของกระดานเหรียญ 🪙` : 'ดูอันดับผู้เล่นทั้งหมด';
+  rankUpCheck(rank, b, btn);
+}
+/* 🎉 รอบ 599: อันดับดีขึ้นกว่าครั้งก่อน (เลขน้อยลง) → ป้ายเด้ง+เรืองทอง 1 จังหวะ + ป้ายลูกศร ▲n ลอยขึ้น
+   เทียบกับ state.rankSeen (อันดับที่เด็กเห็นล่าสุด) · ครั้งแรกที่ติดกระดานแค่จำไว้ ไม่เด้ง (ไม่มีของเก่าให้เทียบ)
+   อันดับตกลง = จำเลขใหม่เงียบ ๆ ไม่ทักอะไร (ไม่ซ้ำเติมเด็ก) */
+function rankUpCheck(rank, b, btn){
+  const prev = state.rankSeen || 0;
+  if(rank && prev && rank < prev){
+    const up = prev - rank;
+    b.classList.remove('rank-up'); void b.offsetWidth;   // รีสตาร์ต animation กรณีขึ้นติด ๆ กัน
+    b.classList.add('rank-up');
+    setTimeout(()=>b.classList.remove('rank-up'), 1500);
+    if(btn && !document.documentElement.classList.contains('no-anim')){
+      btn.querySelectorAll('.rank-up-pop').forEach(o=>o.remove());   // ขึ้นติด ๆ กัน = แทนที่อันเก่า ไม่ซ้อนกัน
+      const p = document.createElement('span');
+      p.className = 'rank-up-pop';
+      p.textContent = `▲${up}`;
+      btn.appendChild(p);
+      setTimeout(()=>p.remove(), 1500);
+    }
+  }
+  // ออฟไลน์/หลุดกระดานชั่วคราว (rank=0) ไม่ล้างความจำ — ไม่งั้นพอเน็ตกลับมาจะกลืนการไต่อันดับจริงไป
+  if(rank && rank !== prev){ state.rankSeen = rank; saveState(); }
 }
 function renderLeaderboardCard(){
   updateRankRailBadge();                 // 🥇 รอบ 595: ป้ายอันดับบนปุ่มราง (การ์ดเล็กถูกถอดแล้ว แต่ผู้เรียกเดิมยังพาข้อมูลใหม่มาให้)
