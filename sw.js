@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v193';  // v193: รอบ 580: ระเบิดวงกลม + อาคารทึบ + ต้นไม้โมเดลจริง
+const CACHE_VERSION = 'pet-vocab-v194';  // v194: รอบ 590: แท็บอันดับค้นหาคำ (Word Search Top 10 all time)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

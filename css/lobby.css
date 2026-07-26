@@ -1053,12 +1053,13 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .side-label .online-live{font-size:9.5px;padding:0 7px;}
-/* รอบ 151: แถวหัวข้อกระดานอันดับ = ข้อความ + แท็บ 🪙/🏅 นอกกล่อง (คลิกได้ ไม่วนกับเนื้อหา) */
-.side-label-row{display:flex;align-items:center;gap:6px;overflow:visible;}
+/* รอบ 151: แถวหัวข้อกระดานอันดับ = ข้อความ + แท็บ 🪙/🏅 นอกกล่อง (คลิกได้ ไม่วนกับเนื้อหา)
+   🔎 รอบ 590: มี 4 แท็บแล้ว (เพิ่ม "ค้นหาคำ") → บีบ padding/ฟอนต์ + ห่อบรรทัดได้ ไม่ให้ล้นรางข้าง 238px */
+.side-label-row{display:flex;align-items:center;gap:5px;overflow:visible;flex-wrap:wrap;}
 .side-label-row .lab-txt{flex-shrink:0;}
-.lb-tabs-out{display:flex;gap:4px;flex:1;min-width:0;}
+.lb-tabs-out{display:flex;gap:3px;flex:1;min-width:0;flex-wrap:wrap;row-gap:2px;}
 .lb-tabs-out .lb-tab{
-  flex:0 0 auto;padding:2px 9px;font-size:10.5px;border-radius:8px;
+  flex:0 0 auto;padding:2px 7px;font-size:10px;border-radius:8px;letter-spacing:-.2px;
   background:rgba(11,31,66,.55);color:#b9d4ef;border:1px solid rgba(95,200,255,.35);
 }
 .lb-tabs-out .lb-tab.active{
@@ -1859,7 +1860,10 @@ html.no-anim .cs-big-img{animation:none}
   animation:popIn .3s cubic-bezier(.2,1.4,.4,1);}
 .lbf-head{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin-bottom:12px;flex-wrap:wrap;}
 .lbf-title{font-size:clamp(15px,2.4vh,20px);font-weight:900;color:#8fd6ff;}
-.lbf-tabs{display:flex;gap:6px;margin-left:auto;}
+.lbf-tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end;}
+/* 🔎 รอบ 590: มี 4 แท็บแล้ว — .lb-tab เดิมเป็น flex:1 ทำให้ถูกบีบจนตัวหนังสือขึ้น 2 บรรทัด
+   → ให้กว้างตามข้อความบรรทัดเดียว (แถวหัวห่อบรรทัดเองได้ถ้าจอแคบ) */
+.lbf-tabs .lb-tab{flex:0 0 auto;white-space:nowrap;padding:6px 11px;}
 /* ปุ่มปิดทั้งสอง: override .pl-close (absolute มุมขวา) → in-flow เรียงในแถวหัว ไม่ซ้อนกัน/ทับแท็บ
    ซ้าย(ก่อนหัวข้อ) · ขวา(หลังแท็บ) — รอบ 249 ผู้ใช้: เพิ่มปุ่มปิดซ้ายบน */
 .lbf-close{position:static;margin-left:8px;flex:0 0 auto;}

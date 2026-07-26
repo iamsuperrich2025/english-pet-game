@@ -61,6 +61,9 @@ const DEFAULT_STATE = {
   mechaBoss:0,                        // รอบ 228: จำนวนบอสที่ล้มสะสม (ขึ้นกระดานออนไลน์ 🤖)
   mechaBossBadge:0,                   // รอบ 229: เข็มนักล่าบอสสูงสุดที่เคยได้ 0=ไม่มี 1=⚔️(3) 2=🛡️(10) 3=🤖(25) — ได้แล้วไม่หาย โชว์ท้ายชื่อ
   mechaWaveBest:0,                    // รอบ 229: เวฟสูงสุดที่เคยไปถึงในโลกหุ่น (Endless Wave) — สถิติส่วนตัว
+  wsScore:0,                          // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (ขึ้นกระดานอันดับ field ws)
+  wsWords:0,                          // 🔎 รอบ 590: จำนวนคำที่หาเจอทั้งหมด (โชว์ใต้ชื่อในกระดาน)
+  wsBoards:0,                         // 🔎 รอบ 590: กระดานที่เล่นจบครบทุกคำ (โบนัสจบใบ WS_CLEAR_BONUS)
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
   carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
   glassCount:0,                       // รอบ 337: จำนวนบานกระจกที่ทุบแตกในโลกโดรน — สู่เข็มจอมทุบกระจก
@@ -315,6 +318,9 @@ function loadState(){
       if(typeof s.mechaBoss !== 'number') s.mechaBoss = 0;   // รอบ 228: บอสที่ล้มสะสม
       if(typeof s.mechaBossBadge !== 'number') s.mechaBossBadge = 0;   // รอบ 229: เข็มนักล่าบอส
       if(typeof s.mechaWaveBest !== 'number') s.mechaWaveBest = 0;     // รอบ 229: เวฟสูงสุด (Endless Wave)
+      if(typeof s.wsScore !== 'number' || s.wsScore < 0) s.wsScore = 0;   // 🔎 รอบ 590: แต้มสะสม Word Search
+      if(typeof s.wsWords !== 'number' || s.wsWords < 0) s.wsWords = 0;
+      if(typeof s.wsBoards !== 'number' || s.wsBoards < 0) s.wsBoards = 0;
       // 🚗 รอบ 211: รถส่วนตัวหลายคัน — ย้ายจากเซฟเก่า s.car (คันเดียว) → s.cars[] · sanitize รายคัน
       if(s.car && typeof s.car === 'object' && !Array.isArray(s.cars)){ s.cars = [s.car]; }   // migrate คันเดียว→array
       delete s.car;

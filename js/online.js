@@ -114,15 +114,19 @@ function onlinePushScore(){
   const bk    = Math.round(state.mechaBoss || 0);                          // 🤖 รอบ 228: บอสที่ล้มสะสม (กระดานโลกหุ่น)
   const ba    = (typeof lobbyBlk === 'function') ? lobbyBlk() : '';        // 🪪 รอบ 255: ตัวละคร blk ที่เลือก (โชว์เต็มตัวในการ์ดผู้เล่น)
   const hs    = Math.round(state.hauntSurviveBest || 0);                   // ⏱ รอบ 256: สถิติหนีผีรอดนานสุด (วินาที)
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs;   // ค่าใดเปลี่ยน = re-push
-  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอสไม่ขยับ ไม่ต้องเขียนซ้ำ
+  const ws    = Math.round(state.wsScore || 0);                            // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ (กระดานแท็บค้นหาคำ)
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws;   // ค่าใดเปลี่ยน = re-push
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
-    // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
-    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
-      Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+  // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
+  // (ws = รอบ 590 ยังรอ publish → ถอยไปก้อนเดิมที่มี ba/hs ก่อน แล้วค่อยถอยลงอีก)
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
+      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+        Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+      });
     });
   });
   if(typeof feedPushAssets === 'function') feedPushAssets();   // 📰 ทรัพย์สินเปลี่ยน → อัปเดตคลังที่เปิดเผย (มี sig กันเขียนซ้ำ)
@@ -1059,7 +1063,8 @@ function onlineStart(){
       out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins,
                 av: typeof v.av === 'number' ? v.av : null,
                 ni: typeof v.ni === 'number' ? v.ni : null,
-                bk: typeof v.bk === 'number' ? v.bk : 0});   // 🤖 รอบ 228: บอสที่ล้ม (กระดานโลกหุ่น)
+                bk: typeof v.bk === 'number' ? v.bk : 0,     // 🤖 รอบ 228: บอสที่ล้ม (กระดานโลกหุ่น)
+                ws: typeof v.ws === 'number' ? v.ws : 0});   // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;

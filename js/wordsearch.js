@@ -7,6 +7,8 @@
    🆕 รอบ 589: กระดาน "เตี้ยกว้าง" 5 แถวเสมอ (ผู้ใช้สั่ง: 10 แถวบนมือถือช่องเล็กเกินไป)
               เลือกจำนวนคอลัมน์ได้ 5×10 / 5×13 / 5×16 (ตั้งต้นตามระดับชั้น · จำไว้ใน state.wsSize)
               · กดที่ชิปคำ = อ่านออกเสียง (speakWord) + ใบ้ "เส้นที่คำวางอยู่" (แถว/หลัก/ทแยง)
+   🆕 รอบ 590: แต้มสะสมตลอดกาล (state.wsScore/wsWords/wsBoards) → แท็บใหม่ "🔎 ค้นหาคำ"
+              ในกระดานอันดับ (Top 10 all time · field ws ใน /leaderboard)
    🔒 กฎเหล็ก: คำที่นำมาเล่น = คำตามระดับชั้นผู้เล่นเท่านั้น (vocabForStudent)
    ปุ่ม: สุ่มเกมใหม่ · เก็บกระดานชั่วคราว (เลื่อนซ้าย เก็บข้อมูล) ·
         ล้างกระดาน-ออกจากเกม (ลบตัวอักษรแบบมีสไตล์ แล้วเลื่อนเก็บซ้าย)
@@ -276,6 +278,7 @@
     if(typeof vbRecord==='function') vbRecord(hit.w, hit.th, true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร (normalize ตัวเล็กใน vbRecord)
     const reward=hit.w.length*2;                                    // 🪙 รางวัลตามความยาวคำ (3 ตัว=6 … 10 ตัว=20)
     if(typeof addCoins==='function') addCoins(reward);
+    addWsScore(reward, 1);                                          // 🔎 รอบ 590: แต้มสะสมตลอดกาล (กระดานอันดับ)
     if(typeof sfx!=='undefined'){ if(sfx.spark)sfx.spark(); else if(sfx.coin)sfx.coin(); }   // ⚡ ฟ้าร้อง+ไฟช็อต
     if(typeof speakWord==='function') speakWord(hit.w.toLowerCase());
     render(); saveTemp();
@@ -305,9 +308,26 @@
     cells.forEach(([r,c])=>{ const el=gridEl.querySelector(`.ws-cell[data-r="${r}"][data-c="${c}"]`);
       if(el){ el.classList.add('bad'); setTimeout(()=>el.classList.remove('bad'),320); } });
   }
+  /* ============================================================
+     🔎🏆 รอบ 590: แต้มสะสมตลอดกาล → กระดานอันดับ (แท็บ "ค้นหาคำ")
+     แต้ม = เท่ากับเหรียญที่ได้ต่อคำ (ความยาว×2) + โบนัสจบกระดาน WS_CLEAR_BONUS
+     เก็บใน state (เซฟลง cloud ตามระบบเดิม) · ดันขึ้น /leaderboard field ws
+     ============================================================ */
+  const WS_CLEAR_BONUS=20;
+  function addWsScore(pts, words, boards){
+    if(typeof state==='undefined') return;
+    state.wsScore=Math.round((state.wsScore||0)+(pts||0));
+    state.wsWords=(state.wsWords||0)+(words||0);
+    state.wsBoards=(state.wsBoards||0)+(boards||0);
+    if(typeof saveState==='function') saveState();
+    if(typeof onlinePushScore==='function') onlinePushScore();      // ให้เพื่อนเห็นอันดับใหม่ทันที (มี sig กันเขียนซ้ำ)
+    if(typeof renderLeaderboardCard==='function') renderLeaderboardCard();
+  }
+
   function win(){
     wsGame.done=true; saveTemp();
-    winEl.innerHTML=`<div class="ws-win-in">🎉 เก่งมาก! เจอครบทุกคำแล้ว<br><small>กด 🎲 สุ่มเกมใหม่ เล่นต่อได้เลย</small></div>`;
+    addWsScore(WS_CLEAR_BONUS, 0, 1);                               // 🎁 โบนัสจบกระดาน
+    winEl.innerHTML=`<div class="ws-win-in">🎉 เก่งมาก! เจอครบทุกคำแล้ว<br><small>+${WS_CLEAR_BONUS} แต้มโบนัสจบกระดาน · รวม ${(state.wsScore||0).toLocaleString()} แต้ม<br>กด 🎲 สุ่มเกมใหม่ เล่นต่อได้เลย</small></div>`;
     winEl.classList.add('on');
     if(typeof sfx!=='undefined'&&sfx.win)sfx.win(); else if(typeof sfx!=='undefined'&&sfx.coin)sfx.coin();
     setTimeout(()=>winEl.classList.remove('on'), 2600);
@@ -355,5 +375,5 @@
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindRail); else bindRail();
 
   window.WordSearch={ open, _t:{ get game(){return wsGame;}, generate, pool, takeWords, commit, lineCells,
-    newGame, hintWord, curSize, defaultSize, ROWS, COLS, WANT_BY_COLS } };
+    newGame, hintWord, curSize, defaultSize, addWsScore, ROWS, COLS, WANT_BY_COLS, WS_CLEAR_BONUS } };
 })();

@@ -1086,18 +1086,21 @@ function openFriendQuickMenu(uid, name, grade){
 }
 
 /* ============================================================
-   การ์ด Leaderboard — สลับ 2 แท็บในการ์ดเดียว (ประหยัดพื้นที่):
+   การ์ด Leaderboard — สลับแท็บในการ์ดเดียว (ประหยัดพื้นที่):
    🪙 เหรียญ (นักสะสมเหรียญ Top 50) · 🏅 เข็ม (แต้มรวมเข็มสะสม)
+   🤖 ล้มบอส (รอบ 228) · 🔎 ค้นหาคำ (รอบ 590 — แต้มสะสมตลอดกาล Top 10)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่: 'coins' | 'badges'
+const LB_TABS = ['coins','badges','boss','ws'];        // แท็บทั้งหมด (ws = 🔎 รอบ 590)
+const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
+let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
 function bindLbTabs(){
   if(window.__lbTabBound) return;                      // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
   window.__lbTabBound = true;
   document.addEventListener('click', (e)=>{
     const t = e.target.closest('.lb-tab');
-    if(!t) return;
-    lbTab = (t.dataset.tab === 'badges' || t.dataset.tab === 'boss') ? t.dataset.tab : 'coins';
+    if(!t || !t.dataset.tab) return;          // แท็บของกระดานเต็มจอใช้ data-t (มี handler ของตัวเอง) — ไม่ต้องรีเซ็ตการ์ดเล็ก
+    lbTab = LB_TABS.indexOf(t.dataset.tab) >= 0 ? t.dataset.tab : 'coins';
     if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
     renderLeaderboardCard();
   });
@@ -1111,13 +1114,15 @@ function renderLeaderboardCard(){
   if(out) out.innerHTML = `
     <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
     <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
-    <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 ล้มบอส</button>`;
+    <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 บอส</button>
+    <button class="lb-tab${lbTab==='ws' ? ' active' : ''}" data-tab="ws">🔎 ค้นหาคำ</button>`;
   if(typeof Online === 'undefined' || !Online.ready){
     el.innerHTML = `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
     initSideScroll(el);
     return;
   }
-  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml() : lbCoinHtml());
+  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml()
+                : lbTab === 'ws' ? lbWordSearchHtml() : lbCoinHtml());
   bindPlayerClicks();
   initSideScroll(el);
   bindLbGroupOpen();
@@ -1158,13 +1163,19 @@ function lbRankRows(tab){
     const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
     return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, val:r.bk, me:r.id===myId}));
   }
+  if(tab === 'ws'){   // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (field ws) — โชว์แค่ Top 10
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, ws:r.ws||0}; });
+    map[myId] = {id:myId, n:meName, g:meG, ws:Math.round(state.wsScore||0)};
+    const rows = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws).slice(0, LB_WS_TOP);
+    return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws, me:r.id===myId}));
+  }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
 
 /* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
    ไม่แตะ Firebase จริง เห็นเฉพาะเครื่องที่ใส่ param · **ลบทั้งบล็อกนี้ + บรรทัด __LBDEMO ใน lbRankRows/openLeaderboardFull หลังผู้ใช้ capture** */
 function lbDemoRows(tab){
-  const em = tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : '🪙';
+  const em = tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : tab === 'ws' ? '🔎' : '🪙';
   const names = ['ลูกหมูน้อย','เจ้าเหมียวส้ม','นักสะกดคำ','ดาวรุ่งพุ่งแรง','กัปตันมังกร','น้องข้าวปั้น','เก่งเวอร์','ยัยตัวป่วน','พ่อมดน้อย','เจ้าชายกบ','ราชินีผึ้ง','ฮีโร่ตัวจิ๋ว','นักผจญภัย','เพชรน้ำหนึ่ง','ต้นกล้า','ฟ้าใส','ข้าวโอ๊ต','มะนาว','ปลาทู','ส้มโอ'];
   const rows = [];
   for(let i=0;i<100;i++){
@@ -1199,11 +1210,12 @@ function openLeaderboardFull(){
     if(typeof toast === 'function') toast('📡 ต่ออินเทอร์เน็ตก่อนดูอันดับเต็มนะ');
     return;
   }
-  __lbfTab = (lbTab === 'badges' || lbTab === 'boss') ? lbTab : 'coins';
+  __lbfTab = LB_TABS.indexOf(lbTab) >= 0 ? lbTab : 'coins';
   const ov = document.createElement('div'); ov.className = 'lbf-overlay';
   const close = ()=> ov.remove();
   const render = ()=>{
-    const all = lbRankRows(__lbfTab).slice(0, 100);
+    const cap = __lbfTab === 'ws' ? LB_WS_TOP : 100;   // 🔎 รอบ 590: แท็บค้นหาคำ = Top 10 all time
+    const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
     const n = rest.length;
@@ -1232,15 +1244,17 @@ function openLeaderboardFull(){
         <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}</span>
         <span class="sc">${r.sc}</span>
       </div>`).join('');
-    const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส' : '🪙 อันดับเหรียญ';
+    const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
+                : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : '🪙 อันดับเหรียญ';
     ov.innerHTML = `<div class="lbf-box">
       <div class="lbf-head">
         <button class="pl-close lbf-close lbf-close-l">✕</button>
-        <span class="lbf-title">🏆 ${title} · Top 100</span>
+        <span class="lbf-title">🏆 ${title} · Top ${cap}${__lbfTab==='ws' ? ' (all time)' : ''}</span>
         <span class="lbf-tabs">
           <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
           <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
+          <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
         </span>
       </div>
       ${podHtml}
@@ -1330,6 +1344,34 @@ function lbBossHtml(){
       <span class="lb-coins">👾 ${fmtNum(r.bk)}</span>
     </div>`).join('');
   return `<div class="online-count">${myIdx>=0?`${selfPronoun()}ล้มบอสไป ${rows[myIdx].bk} ตัว — อันดับ ${myIdx+1} จาก ${rows.length} คน 🤖`:`เข้าโลกหุ่นล้มบอสเพื่อขึ้นกระดานนะ 👾`}</div>
+    <div class="lb-list">${list}</div>`;
+}
+
+/* 🔎 รอบ 590: เนื้อหาแท็บค้นหาคำ — "10 อันดับผู้สะสมแต้มสูงสุด of all time" (เกม Word Search)
+   แต้ม = ความยาวคำ×2 ต่อคำที่หาเจอ + โบนัสจบกระดาน 20 (สะสมถาวรใน state.wsScore → /leaderboard field ws) */
+function lbWordSearchHtml(){
+  const myId = onlineKey();
+  const map = {};
+  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, ws:r.ws||0}; });
+  // แทนที่ตัวเราด้วยค่าสดจาก state (เห็นทันทีแม้ push ยังไม่ถึง / rules ยังไม่ publish)
+  const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู') + ((typeof badgeSuffix==='function')?badgeSuffix():'');
+  map[myId] = {id:myId, n: meName, g:(state.student?state.student.grade:''), ws: Math.round(state.wsScore||0)};
+  const all = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws);
+  if(!all.length) return `<div class="lb-empty">ยังไม่มีใครเก็บแต้มค้นหาคำเลย — กด 🔎 หาคำให้เจอ เป็นคนแรกบนกระดานสิ! 🥇</div>`;
+  const rows = all.slice(0, LB_WS_TOP);
+  const myIdx = all.findIndex(r=>r.id===myId);
+  const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const list = rows.map((r,i)=>`
+    <div class="lb-row${r.id===myId?' lb-me':''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small></span>
+      <span class="lb-coins">🔎 ${fmtNum(r.ws)}</span>
+    </div>`).join('');
+  const meLine = myIdx >= 0
+    ? (myIdx < LB_WS_TOP ? `${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_WS_TOP} · ${fmtNum(map[myId].ws)} แต้ม 🔎`
+                         : `${selfPronoun()}มี ${fmtNum(map[myId].ws)} แต้ม (อันดับ ${myIdx+1}) — เก็บอีกนิดก็ติด Top ${LB_WS_TOP} แล้ว 💪`)
+    : `เล่นเกม 🔎 ค้นหาคำ เก็บแต้มเพื่อขึ้น Top ${LB_WS_TOP} นะ 💪`;
+  return `<div class="online-count">${meLine}</div>
     <div class="lb-list">${list}</div>`;
 }
 
