@@ -8004,6 +8004,44 @@ function tickAMis(dt,now){
    ============================================================ */
 let SQUAD_COVERS=null;
 function squadCoverPool(){ return SQUAD_COVERS||(SQUAD_COVERS=squadCoverSpots()); }  /* 6 จุดหลังกระสอบทราย */
+/* ============================================================
+   🧘🎯 รอบ 586 (ผู้ใช้ส่งคลิป: "ตัวละครดิ้นไปดิ้นมา ไม่เป็นธรรมชาติ")
+   ต้นตอ = ลูปเล็งของทหาร "กระโดดค่าทันทีทุกเฟรม" 3 จุด:
+   1) สุ่มเป้าใหม่ทุกเฟรม (`fighters[random]`) → ทิศเล็งเปลี่ยน ~60 ครั้ง/วินาที
+   2) `s.grp.rotation.y=atan2(...)` ตรง ๆ → หันตัวสแนปได้ถึง 180° ในเฟรมเดียว = อาการ "ดิ้น"
+   3) `s.lookUp` กระโดดตามเป้าใหม่ → เอว/ท่อนบน+ปืน (torso ทั้งชุด) กระตุกขึ้นลง
+   แก้: ล็อกเป้า 2–3.5 วิ (หรือจนเป้าตาย) · หันตัวแบบ "จำกัดความเร็วเชิงมุม" · ไล่ lookUp แบบ ease
+        + ยิงเฉพาะเมื่อหันเข้าเป้าแล้ว (กันกระสุนพุ่งออกข้างลำตัวระหว่างหมุน)
+   ============================================================ */
+const SQ_TURN=3.4,          /* rad/s ตอนเล็ง (~195°/วิ — เร็วสุดที่คนหันตัวทั้งลำได้) */
+      SQ_TURN_RUN=4.6,      /* ตอนวิ่ง หันตามทางวิ่งได้ไวกว่า */
+      SQ_LOOK_EASE=6.0,     /* ความเร็วไล่มุมก้ม-เงยเข้าค่าเป้าหมาย (ต่อวินาที) */
+      SQ_FIRE_ARC=0.35,     /* ต้องหันเข้าเป้าคลาดไม่เกิน ~20° จึงลั่นไก */
+      SQ_TGT_MIN=2000, SQ_TGT_MAX=3500;   /* อายุการล็อกเป้า (ms) */
+function angWrap(a){ return ((a+Math.PI)%TAU+TAU)%TAU-Math.PI; }   /* มุมต่างเป็นช่วง −π..π (เลี้ยวทางใกล้เสมอ) */
+/* หันตัวเข้าหามุมที่ต้องการ ไม่เกิน rate rad/s · คืน "องศาที่ยังคลาดอยู่ก่อนหัน" (ใช้เช็กว่าเล็งเข้าเป้าหรือยัง) */
+function turnTo(s,want,dt,rate){
+  const d=angWrap(want-s.grp.rotation.y), st=rate*Math.min(0.06,Math.max(0.001,dt));
+  s.grp.rotation.y+=(Math.abs(d)<=st)?d:(d<0?-st:st);
+  return Math.abs(d);
+}
+function easeLook(s,want,dt){                                      /* ไล่ lookUp แบบนุ่ม (torso ไม่กระตุก) */
+  const k=Math.min(1,Math.max(0.001,dt)*SQ_LOOK_EASE);
+  s.lookUp=(s.lookUp||0)+(want-(s.lookUp||0))*k;
+}
+/* เลือกเป้าแล้ว "ล็อกไว้" — เปลี่ยนเมื่อเป้าตาย/หมดอายุล็อกเท่านั้น · สุ่มจาก 3 ลำใกล้สุด (ไม่หันกลับหลังทั้งสนาม) */
+function squadTarget(s,now){
+  if(s.tgt && fighters.indexOf(s.tgt)<0) s.tgt=null;
+  if(!s.tgt || now>(s.tgtUntil||0)){
+    if(!fighters.length){ s.tgt=null; return null; }
+    const gx=s.grp.position.x, gz=s.grp.position.z;
+    const near=fighters.map(f=>({f,d:(f.grp.position.x-gx)*(f.grp.position.x-gx)+(f.grp.position.z-gz)*(f.grp.position.z-gz)}))
+                       .sort((a,b)=>a.d-b.d).slice(0,3);
+    s.tgt=near[(Math.random()*near.length)|0].f;
+    s.tgtUntil=now+rnd(SQ_TGT_MIN,SQ_TGT_MAX);
+  }
+  return s.tgt;
+}
 function pickSquadDest(s){
   const gx=s.grp.position.x, gz=s.grp.position.z;
   if(Math.random()<0.6){                              /* 60%: วิ่งไปจุดกำบังใกล้ ๆ (สุ่มจาก 3 จุดใกล้สุด) */
@@ -8026,11 +8064,15 @@ function tickSquadMove(s,dt,now,active){
       s.crouch=!!s.moveTgt.crouch; s.moveTgt=null;
       s.holdUntil=now+rnd(2600,6200);
     }else{
-      const run=dist>5, st=Math.min(dist,(run?SQUAD_RUN:SQUAD_WALK)*dt);
+      /* 🧘 รอบ 586: หันหน้าตามทางวิ่งแบบจำกัดความเร็ว (โมเดลหันหน้า −Z) + ยังหันไม่ทันก็ก้าวช้าลง
+         (เดิมสแนปมุมทันที ทหารเปลี่ยนทิศเป็นการ "กระตุก" · ถ้าหันช้าแต่เดินเต็มสปีดจะเห็นเป็นไถลข้าง) */
+      const off=turnTo(s,Math.atan2(-dx,-dz),dt,SQ_TURN_RUN);
+      const align=Math.max(0,Math.cos(off));
+      const run=dist>5, st=Math.min(dist,(run?SQUAD_RUN:SQUAD_WALK)*dt*(0.3+0.7*align));
       s.grp.position.x=gx+dx/dist*st; s.grp.position.z=gz+dz/dist*st;
       if(terrainH) s.grp.position.y=terrainH(s.grp.position.x,s.grp.position.z);
-      s.grp.rotation.y=Math.atan2(-dx,-dz);           /* หันหน้าตามทางวิ่ง (โมเดลหันหน้า −Z) */
-      s.lookUp=0; s.mode=run?'run':'walk';
+      easeLook(s,0,dt);                               /* ลดมุมเงยแบบนุ่ม (เดิมตัดเป็น 0 ทันที = ท่อนบนดีดกลับ) */
+      s.mode=(off>1.0)?'walk':(run?'run':'walk');     /* หมุนตัวอยู่ = ก้าวเท้าซอยแทนสปรินต์ */
       return true;
     }
   }
@@ -8048,25 +8090,28 @@ function tickSquad(dt,now){
       if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;
       return;
     }
-    /* 🎯 รอบ 556: ไม่มีแกนพลังงานแล้ว — ทหารเล็งเฉพาะยานลูก */
-    let tgt=null, aim=null;
-    if(fighters.length){ tgt=fighters[(Math.random()*fighters.length)|0]; aim=tgt.grp.position; }
+    /* 🎯 รอบ 556: ไม่มีแกนพลังงานแล้ว — ทหารเล็งเฉพาะยานลูก
+       🧘 รอบ 586: เป้า "ล็อกไว้" ไม่สุ่มใหม่ทุกเฟรมอีก (ต้นตออาการดิ้น) */
+    let tgt=squadTarget(s,now), aim=tgt?tgt.grp.position:null, offA=9;
     if(aim){
       const d=new THREE.Vector3().subVectors(aim,s.grp.position);
       /* 🧭 รอบ 436 (ผู้ใช้: "บอทหันหลังยิง"): ทหารหันหน้าไป −Z ตอน rotation=0
-         → ต้องใช้ atan2(−x,−z) ไม่ใช่ atan2(x,z) (ของเดิมหันก้นใส่เป้าเป๊ะ 180°) */
-      s.grp.rotation.y=Math.atan2(-d.x,-d.z);
+         → ต้องใช้ atan2(−x,−z) ไม่ใช่ atan2(x,z) (ของเดิมหันก้นใส่เป้าเป๊ะ 180°)
+         🧘 รอบ 586: หันแบบจำกัดความเร็ว SQ_TURN แทนการเซ็ตมุมทันที */
+      offA=turnTo(s,Math.atan2(-d.x,-d.z),dt,SQ_TURN);
       /* 🪖 รอบ 423: หันตัว+เงยหน้าตามเป้า แล้วให้ poseSoldier จัดท่าแขน/ลำตัวเอง
-         (เดิมหมุนเฉพาะ "ปืน" ทำให้ปืนลอยแยกจากตัว) */
-      s.lookUp=Math.atan2(d.y,Math.hypot(d.x,d.z));
+         (เดิมหมุนเฉพาะ "ปืน" ทำให้ปืนลอยแยกจากตัว) · รอบ 586 ไล่มุมแบบ ease ไม่กระโดด */
+      easeLook(s,Math.atan2(d.y,Math.hypot(d.x,d.z)),dt);
       s.mode=s.crouch?'crouch':'aim';
     }else{
-      s.lookUp=0; s.mode=s.crouch?'crouch':'idle';
+      easeLook(s,0,dt); s.mode=s.crouch?'crouch':'idle';
     }
     /* 🎯 รอบ 528: จัดท่า/เงย torso "ก่อน" ยิง — เพื่ออ่านปลายลำกล้องจริงจาก world matrix ที่เงยแล้ว
        (เดิมเรียก poseSoldier ท้ายลูป ทำให้ตอนยิง torso ยังเป็นท่าเฟรมก่อน · recoil เลื่อน 1 เฟรม—ไม่รู้สึก) */
     poseSoldier(s,now);
-    if(now>s.shotAt&&aim){
+    /* 🧘 รอบ 586: ยิงเมื่อ "หันเข้าเป้าแล้ว" เท่านั้น — ระหว่างหมุนตัวยังไม่ลั่นไก
+       (กันกระสุน/tracer พุ่งออกข้างลำตัว ซึ่งเป็นอีกอาการที่ทำให้ดูไม่เป็นธรรมชาติ · ไม่ขยับ shotAt = พร้อมยิงทันทีที่เล็งเข้า) */
+    if(now>s.shotAt&&aim&&offA<SQ_FIRE_ARC){
       s.shotAt=now+SQUAD_GAP*rnd(.6,1.7);
       s.fireT=1;                                   // 🪖 สะบัดไหล่ตอนลั่นไก
       s.flashUntil=now+55;                         // 🔥 รอบ 521: ไฟปากลำกล้องแวบสั้น
@@ -9409,6 +9454,10 @@ window.InvasionWorld={
       r.pose={}; Object.keys(s.J).forEach(k=>{ r.pose[k]=[+s.J[k].rotation.x.toFixed(3),+s.J[k].rotation.z.toFixed(3)]; });
       r.hipsY=+s.J.hips.position.y.toFixed(3); return r; },
     squadPose(i,mode){ const s=squad[i||0]; if(s){ s.mode=mode; poseSoldier(s,performance.now()); } return s?s.mode:null; },
+    /* 🧘 รอบ 586: วัดอาการ "ดิ้น" — มุมหันตัว/มุมเงย/เป้าที่ล็อกอยู่ ของทหารทุกนาย (เอาไปหาค่าเปลี่ยนต่อเฟรม) */
+    get squadAim(){ const now=performance.now(); return squad.map((s,i)=>({i,yaw:+s.grp.rotation.y.toFixed(4),
+      up:+(s.lookUp||0).toFixed(4), mode:s.mode, tgt:s.tgt?(s.tgt.ch||'?'):null,
+      hold:Math.max(0,Math.round((s.tgtUntil||0)-now))})); },
     poseSoldier, buildSoldierRig, applySoldierGlb, SOLDIER_PARTS, autoRigSoldier, BODY_MAP, mergeMeshList, faceModelForward,
     get shots(){return fShots.length}, get missiles(){return missiles.length}, get fx(){return fx.length},
     get mother(){return mother}, get camera(){return camera}, get scene(){return scene},
