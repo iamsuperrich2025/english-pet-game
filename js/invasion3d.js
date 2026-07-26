@@ -687,6 +687,25 @@ const CSS=`
   box-shadow:0 4px 10px rgba(0,0,0,.5);background:linear-gradient(180deg,#3d6a94,#17324a)}
 #inv-extcam small{display:block;font-size:9.5px;margin-top:1px}
 #inv-extcam:active{transform:scale(.94)}
+/* ⌨️🚁 รอบ 582: ป้ายบอกปุ่มลูกศร "ขึ้น/ลง" ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์ (ผู้ใช้สั่ง)
+   โผล่เมื่อ: มีเมาส์/แป้นพิมพ์ (`.kbd`) + กำลังขับเฮลิ (`.fly` และไม่ใช่พลปืน `.gunner`) */
+#inv-keyhint{position:absolute;right:12px;top:52%;transform:translateY(-50%);z-index:6;display:none;
+  pointer-events:none;background:rgba(6,16,28,.74);border:1.5px solid rgba(120,220,255,.42);
+  border-radius:12px;padding:7px 9px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+#inv-wrap.kbd.fly:not(.gunner) #inv-keyhint{display:block}
+#inv-keyhint>b{display:block;font-size:10px;color:#9fd8ff;font-weight:800;margin-bottom:5px;
+  white-space:nowrap;text-align:center}
+#inv-keyhint .kh-row{display:flex;align-items:center;gap:7px;margin-top:4px}
+#inv-keyhint .kh-key{width:30px;height:30px;flex:none;border-radius:8px;display:flex;align-items:center;
+  justify-content:center;font-size:17px;font-weight:900;color:#0e2136;line-height:1;
+  background:linear-gradient(180deg,#eaf6ff,#a9d3f2);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+#inv-keyhint .kh-key.on{background:linear-gradient(180deg,#ffe9a8,#ffc44d);transform:translateY(2px);
+  box-shadow:0 0 9px rgba(255,200,90,.85)}
+#inv-keyhint .kh-tx{font-size:11.5px;color:#dff4ff;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #000}
+#inv-keyhint .kh-tx b{color:#ffd98a}
+@media (max-height:400px){ #inv-keyhint{padding:5px 7px;top:50%}
+  #inv-keyhint>b{font-size:9px;margin-bottom:3px} #inv-keyhint .kh-key{width:24px;height:24px;font-size:14px}
+  #inv-keyhint .kh-tx{font-size:10px} #inv-keyhint .kh-row{margin-top:3px;gap:5px} }
 /* 🎡 รอบ 531: สัญลักษณ์พวงมาลัยลอยเตือน "เข้าใกล้เฮลิ = แตะเพื่อขึ้นเครื่อง" (ผู้ใช้สั่ง) */
 #inv-wheel{position:absolute;left:50%;top:50%;z-index:8;border:none;background:none;cursor:pointer;
   display:none;flex-direction:column;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;
@@ -955,6 +974,10 @@ function buildDom(){
     <button id="inv-gunner">🎖️</button>
     <button id="inv-seat">👁️<small>มุมบิน</small></button>
     <button id="inv-extcam">🎬<small>ท้ายลำ</small></button>
+    <div id="inv-keyhint"><b>⌨️ เล่นด้วยคอมพิวเตอร์</b>
+      <div class="kh-row"><span class="kh-key" data-k="up">↑</span><span class="kh-tx">เอาเครื่อง<b>ขึ้น</b></span></div>
+      <div class="kh-row"><span class="kh-key" data-k="dn">↓</span><span class="kh-tx">เอาเครื่อง<b>ลง</b></span></div>
+    </div>
     <button id="inv-wheel"><span class="wh"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span><small>🚁 เดินเข้ามาขึ้นเครื่อง</small></button>
     <button id="inv-map">🗺️</button>
     <button id="inv-night">🌙</button>
@@ -1073,6 +1096,13 @@ function buildDom(){
     if(riding){ setRideView(!rideExt); return; }           // 🎖️ รอบ 539: พลปืน = สลับประตูลำ ↔ ภายนอก
     setSeatView(seatLv+1);
     if(heliReady){ state.heliSeat=seatLv; if(typeof saveState==='function') saveState(); } });
+  /* ⌨️🚁 รอบ 582: ป้ายปุ่มลูกศรค้างไว้ทางขวา — ติดคลาส `kbd` เฉพาะเครื่องที่มีเมาส์+แป้นพิมพ์จริง
+     ใช้ hover+pointer:fine (โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ก็ยังนับเป็นคอม) · เบราว์เซอร์เก่าไม่มี matchMedia = ดูจาก touch */
+  const hasKbd = window.matchMedia ? window.matchMedia('(hover:hover) and (pointer:fine)').matches
+                                   : !('ontouchstart' in window);
+  if(hasKbd) wrapEl.classList.add('kbd');
+  khUpEl=document.querySelector('#inv-keyhint .kh-key[data-k="up"]');
+  khDnEl=document.querySelector('#inv-keyhint .kh-key[data-k="dn"]');
   extBtn=document.getElementById('inv-extcam');            // 🎥 รอบ 537: วนมุมกล้องภายนอก
   extBtn.addEventListener('click',()=>{ cycleExtView(1);
     if(heliReady||riding){ state.heliExtView=extV; if(typeof saveState==='function') saveState(); } });
@@ -1223,6 +1253,20 @@ const Snd={
       const bg=c.createGain(); bg.gain.setValueAtTime(.05*near,st); bg.gain.exponentialRampToValueAtTime(.0008,st+.32);
       b.connect(bg); bg.connect(c.destination); b.start(st); b.stop(st+.34);
     }); },
+  /* 🛡️ รอบ 581: กระสุนกระทบ "เกราะพลังงาน" ของยานแม่ — ไม่ใช่เสียงโลหะ แต่เป็นเสียงพลังงานสั่น
+     ยานแม่อยู่ไกล 250 ม.+ → หาร 600 (ได้ยินไกลกว่าเสียงกระทบวัสดุมาก) · ยิ่งกระสุนแรง เสียงยิ่งต่ำ-หนัก */
+  shield(pow,dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    const p=Math.max(.8,Math.min(3.6,pow||1));
+    const near=Math.max(.12,1-(dist||0)/600);
+    const f0=1500/Math.sqrt(p), vol=Math.min(.14,.045*p)*near;
+    const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(f0,t);
+    o.frequency.exponentialRampToValueAtTime(f0*.28,t+.30*p);        // "วืบ" ลงต่ำ = คลื่นกระจายออก
+    const g=c.createGain(); g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+.34*p);
+    const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=f0*.8; bp.Q.value=6;
+    o.connect(bp); bp.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.36*p);
+    this.noise(t,.10,2600,.030*near*p);                              // แคร็กพลังงานตอนกระทบ
+    if(p>=1.8) this.noise(t+.09,.34,520,.030*near*p);                // กระสุนแรง = มีเสียงก้องตาม
+  },
   /* 🔔 รอบ 466: ปลอกกระสุนกระทบพื้น "กริ๊ง" — ดังตามระยะจากตัวเรา (ไกล = เบา+ทึบ) */
   shell(dist){ if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
     const near=Math.max(0,1-(dist||0)/9);                 // เกิน 9 เมตรแทบไม่ได้ยิน
@@ -1759,6 +1803,7 @@ let flareBtn=null, spikeEl=null;         // 🔥🛡️ รอบ 569: ปุ่
 let mapBtn=null, mapBoxEl=null, mapCv=null, mapNameEl=null, mapPick=null;   // 🗺️ เลือกจุดลงสนาม
 let coverEl=null, snipeIdx=-1;         // 🏠🎯 ป้ายที่กำบัง + จุดสูงข่มที่เลือกอยู่ (รอบ 431)
 let quizEl=null;                       // 🔎 รอบ 473: แถบโจทย์ "ยิงเป้าที่แปลว่า …"
+let khUpEl=null, khDnEl=null;          // ⌨️🚁 รอบ 582: ปุ่ม ↑/↓ บนป้ายบอกคีย์ (ไฮไลต์ตอนกดจริง)
 let seatBtn=null, startEl=null;        // 🚁 ปุ่มปรับมุมมองห้องนักบิน + ป้ายขั้นตอนสตาร์ท (รอบ 434)
 let extBtn=null;                       // 🎥 ปุ่มสลับมุมกล้องภายนอก (รอบ 537)
 let wheelBtn=null;                     // 🎡 รอบ 531: สัญลักษณ์พวงมาลัยเตือนเข้าใกล้เฮลิ
@@ -4905,7 +4950,10 @@ function tickFx(dt){
     if(k>=1){ scene.remove(f.o);
       if(f.o.material){ f.o.material.dispose&&f.o.material.dispose(); }
       if(f.o.geometry) f.o.geometry.dispose&&f.o.geometry.dispose();
+      if(f.sh) mshFx--;                     // 🛡️ รอบ 581: คืนโควตาเอฟเฟกต์เกราะยานแม่
       fx.splice(i,1); continue; }
+    /* 🛡️🔵 รอบ 581: วงคลื่นเกราะยานแม่ (มีหน่วงเวลาเป็นระลอก) — ดูโซน 🛡️🔵 ด้านล่าง */
+    if(f.sh && tickShieldFx(f,dt)) continue;
     if(f.kind==='ball'){ f.o.scale.setScalar(4*f.sc*(1+k*2.2)); f.o.material.opacity=1-k; }
     /* 🎆 รอบ 580: วาบแรก — โตเร็วแล้วดับไว (จางแบบยกกำลัง = ขอบไม่กระตุก) */
     else if(f.kind==='flash'){ f.o.scale.setScalar(f.sc*(1+k*1.5)); f.o.material.opacity=(f.a0||1)*Math.pow(1-k,1.8); }
@@ -4956,6 +5004,136 @@ function tickFx(dt){
       f.o.material.opacity=f.a0*(1-k)*(1-k);
     }
   }
+}
+
+/* ============================================================
+   🛡️🔵 รอบ 581 (ผู้ใช้สั่ง): "เกราะยานแม่ที่มองไม่เห็น"
+   เมื่อเกราะยังไม่เหลือ 0 → กระสุน**ทุกชนิด**ที่พุ่งไปหายานแม่ (ไรเฟิล · R93 · ปืนกลติดเฮลิ · จรวด)
+   ไปไม่ถึงตัวลำอีกแล้ว — กระทบ "โดมพลังงานใส" แล้ว **แตกเป็นวงกลมสีฟ้าซ้อนกันหลายวง**
+   ขนาดวง = ตามความรุนแรงของกระสุน (ไรเฟิล 1 → เล็ก · R93 5 → กลาง · จรวด 10 → ใหญ่มาก)
+
+   📐 ทรงเกราะ = "ทรงรีตามตัวลำ" (ellipsoid) — ลำเป็นแผ่นแบน: กว้าง MS_R รอบตัว สูงแค่ MS_R*MS_FLAT
+      ยิงเรย์ตัดทรงรีด้วยการ "ย่อแกน y" ให้กลายเป็นทรงกลมหน่วยเดียว แล้วแก้สมการกำลังสอง (ถูกมาก)
+      ⚠️ ลำหมุนรอบแกน y ตลอดเวลา (tickMother) — ทรงรีสมมาตรรอบแกน y จึงไม่ต้องสน rotation
+   🎯 ทำไมต้องมี: รอบ 556 เอาจุดอ่อนบนลำออก เด็กยิงยานแม่ตรง ๆ แล้ว "ไม่มีอะไรเกิดขึ้นเลย"
+      (กระสุนทะลุหายไปเงียบ ๆ) → ตอนนี้เห็นชัดว่า "ยิงโดนแต่ทะลุเกราะไม่ได้" + toast บอกวิธีที่ถูก
+   ============================================================ */
+const MSH_PAD=1.035;                  // เกราะใหญ่กว่าตัวลำกี่เท่า (ลอยพ้นผิวลำนิดเดียว)
+const MSH_COL=0x4fd2ff;               // สีฟ้าเกราะ (วงคลื่น)
+const MSH_CORE=0xe6faff;              // แกนกลางวาบ ขาวอมฟ้า
+const MSH_HINT_GAP=6000;              // เว้นกี่ ms ถึงเตือนวิธีเล่นซ้ำ (ไม่ให้ toast รก)
+const MSH_FX_MAX=30;                  // ชิ้นเอฟเฟกต์เกราะที่ลอยพร้อมกันได้ (กันยิงรัวแล้วมือถือกระตุก)
+let mshFx=0, mshHintAt=0, mshN=0, mshLast=null;   // mshN/mshLast = ตัวนับสำหรับเทสต์ (_t.shield)
+function msShieldOn(){ return !!mother && !msDead && msArmor>0.01; }
+/* 🔎 จุดนั้นอยู่ "ในเกราะ" ไหม (ใช้กับจรวดที่บินเข้ามาเอง) → คืนจุดบนผิวเกราะ + เวกเตอร์ตั้งฉาก */
+function msShieldPt(p){
+  if(!msShieldOn()) return null;
+  const c=mother.position, rx=MS_R*MSH_PAD, ry=MS_R*MS_FLAT*MSH_PAD;
+  const dx=(p.x-c.x)/rx, dy=(p.y-c.y)/ry, dz=(p.z-c.z)/rx;
+  const q=dx*dx+dy*dy+dz*dz;
+  if(q>1) return null;                                   // ยังไม่ถึงเกราะ
+  const k=Math.sqrt(q)||1e-6;                            // ดันกลับออกมาไว้ที่ผิวโดม
+  const s=new THREE.Vector3(c.x+dx/k*rx, c.y+dy/k*ry, c.z+dz/k*rx);
+  return {point:s, normal:new THREE.Vector3(dx/(rx*rx),dy/(ry*ry),dz/(rx*rx)).normalize(), dist:0};
+}
+/* 🎯 เรย์กระสุน (hitscan) ตัดโดมเกราะที่จุดไหน — คืน null ถ้าเล็งไม่โดน/ไกลเกิน maxD */
+function msShieldRay(origin,dir,maxD){
+  if(!msShieldOn()) return null;
+  const c=mother.position, rx=MS_R*MSH_PAD, ry=MS_R*MS_FLAT*MSH_PAD;
+  const ox=(origin.x-c.x)/rx, oy=(origin.y-c.y)/ry, oz=(origin.z-c.z)/rx;
+  const dx=dir.x/rx, dy=dir.y/ry, dz=dir.z/rx;
+  const a=dx*dx+dy*dy+dz*dz, b=2*(ox*dx+oy*dy+oz*dz), cc=ox*ox+oy*oy+oz*oz-1;
+  const disc=b*b-4*a*cc; if(disc<0||a<=0) return null;
+  const sq=Math.sqrt(disc);
+  let t=(-b-sq)/(2*a); if(t<0) t=(-b+sq)/(2*a);          // อยู่ในโดมอยู่แล้ว = เอาจุดออก
+  if(t<0||t>maxD) return null;
+  const P=origin.clone().addScaledVector(dir,t);
+  return {point:P, dist:t,
+          normal:new THREE.Vector3((P.x-c.x)/(rx*rx),(P.y-c.y)/(ry*ry),(P.z-c.z)/(rx*rx)).normalize()};
+}
+/* 💪 ความรุนแรง → ขนาดวง (ไรเฟิล dmg1 = 1.05 · ปืนกลเฮลิ 3 = 1.55 · R93 5 = 2.05 · จรวด 10 = 3.3) */
+function msShieldPow(dmg){ return Math.max(.8, Math.min(3.6, .8+(dmg||1)*.25)); }
+/* 💥🔵 วงระเบิดสีฟ้าที่เกราะ — วงคลื่นซ้อนกันหลายวง (แผ่ไปตามผิวโดม ไม่ใช่หันเข้ากล้อง)
+   + แผ่นเกราะเรืองขึ้นมาให้เห็นแวบหนึ่ง (สื่อว่า "มีเกราะอยู่ตรงนี้จริง") + แกนวาบ + เศษพลังงาน */
+function shieldBurst(s,pow,mine){
+  const p=Math.max(.8,Math.min(3.6,pow||1)), P=s.point;
+  mshN++; mshLast={p:+p.toFixed(2), y:+P.y.toFixed(1), d:+(camera?camera.position.distanceTo(P):0).toFixed(1)};
+  const n=s.normal||new THREE.Vector3().subVectors(camera.position,P).normalize();
+  const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,0,1),n);
+  const light=mshFx>MSH_FX_MAX;                        // ของลอยเยอะแล้ว = ลดชั้นลง (ยังเห็นวงอยู่)
+  const nRing=light?1:(p<1.4?2:3);
+  const colR=new THREE.Color(MSH_COL), colC=new THREE.Color(MSH_CORE);
+  /* ① แผ่นเกราะเรืองขึ้น — จานกลมทึบจาง ๆ แนบผิวโดม จางไวมาก */
+  if(!light){
+    const d0=4.6*p;
+    const disc=new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+      new THREE.MeshBasicMaterial({map:fxDisc(),color:colR,transparent:true,opacity:.30,
+        blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+    disc.position.copy(P).addScaledVector(n,.6); disc.quaternion.copy(q); disc.scale.set(d0,d0,1);
+    scene.add(disc); mshFx++;
+    fx.push({o:disc,t:0,life:.30,kind:'shglow',sc:d0,a0:.30,sh:1});
+  }
+  /* ② วงคลื่นซ้อน ๆ — วงแรกใหญ่สุด/สว่างสุด วงหลังตามมาทีหลังแล้วเล็กลง (แตกเป็นวง ๆ ๆ) */
+  for(let i=0;i<nRing;i++){
+    /* 📏 วัดจากภาพจริงรอบ 581: ยานอยู่ไกล ~260–300 ม. — ขนาดที่ "รู้สึกใหญ่" ต้องกว้างจริงราว 50 ม. ต่อกำลัง 1
+       (r0 × (1+gr) × 2 = เส้นผ่านศูนย์กลางเป็นเมตร) · จรวด p3.3 = ~160 ม. ≈ 40% ของความสูงจอ */
+    const r0=2.8*p*(1-i*.16);
+    const ring=new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+      new THREE.MeshBasicMaterial({map:fxRing(),color:i?colR:colC,transparent:true,opacity:1,
+        blending:THREE.AdditiveBlending,side:THREE.DoubleSide,depthWrite:false,fog:false}));
+    ring.position.copy(P).addScaledVector(n,.9+i*.35); ring.quaternion.copy(q); ring.scale.set(r0,r0,1);
+    scene.add(ring); mshFx++;
+    fx.push({o:ring,t:0,life:.55+.22*p+i*.10,kind:'shring',sc:r0,gr:7.0+1.5*p,
+             dl:i*(.11+.03*p), a0:i?.62:.95, sh:1});
+  }
+  /* ③ แกนวาบตรงจุดกระทบ — หันเข้ากล้องเสมอ (สไปรต์) จะได้เห็นแม้ยิงเฉียงมาก */
+  const f0=2.2*p;
+  const fl=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:colC,transparent:true,opacity:.85,
+    blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+  fl.position.copy(P).addScaledVector(n,1.2); fl.scale.setScalar(f0); scene.add(fl); mshFx++;
+  fx.push({o:fl,t:0,life:.20+.05*p,kind:'flash',sc:f0,a0:.85,sh:1});
+  /* ④ เศษพลังงานสะบัดออกไปตามผิวโดม (เฉพาะกระสุนแรง — ไรเฟิลรัว ๆ ไม่ต้องมี ไม่งั้นรก) */
+  if(p>=1.8&&!light){
+    const t1=new THREE.Vector3(0,1,0).cross(n); if(t1.lengthSq()<1e-4) t1.set(1,0,0); t1.normalize();
+    const t2=new THREE.Vector3().crossVectors(n,t1);
+    for(let i=0;i<4;i++){
+      const a=Math.random()*TAU, sp=rnd(9,20)*p;
+      const e=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:colR.clone(),transparent:true,opacity:1,
+        blending:THREE.AdditiveBlending,depthWrite:false,fog:false}));
+      e.position.copy(P).addScaledVector(n,1); e.scale.setScalar(.8*p); scene.add(e); mshFx++;
+      fx.push({o:e,t:0,life:rnd(.35,.6),kind:'ember',sc:e.scale.x,sh:1,
+        c1:colR.clone(), c2:new THREE.Color(0x0b3a5c),
+        v:t1.clone().multiplyScalar(Math.cos(a)*sp).addScaledVector(t2,Math.sin(a)*sp).addScaledVector(n,rnd(1,5))});
+    }
+  }
+  Snd.shield(p, camera?camera.position.distanceTo(P):400);
+  /* 📣 บอกวิธีที่ถูกต้องให้เด็กรู้ (คุมความถี่) — เฉพาะนัดที่ "เรายิงเอง" */
+  if(mine!==false){
+    const now=performance.now();
+    if(now-mshHintAt>MSH_HINT_GAP){ mshHintAt=now;
+      toastBan(`🛡️ <b>เกราะยานแม่กันไว้!</b> กระสุนทะลุไม่ได้<br><span class="ib-sub">ยิงยานลูก<b>ป้ายเขียว</b>ให้ครบทุกตัวอักษร เกราะถึงจะเหลือ 0%</span>`,1500);
+    }
+  }
+}
+/* 🔫 ปลายทางเดียวของทุกกระสุนที่ชนเกราะ (ปืน/จรวด/กระสุนที่เดินทางมาถึง) */
+function shieldHit(s,pow,mine){ if(!s) return; shieldBurst(s,pow,mine); }
+/* 🌊 เอฟเฟกต์เฉพาะของเกราะ (มีหน่วงเวลาให้วงตามกันเป็นระลอก) — ผูกใน tickFx */
+function tickShieldFx(f,dt){
+  if(f.kind==='shring'){
+    if(f.t<f.dl){ f.o.visible=false; return true; }
+    f.o.visible=true;
+    const u=Math.min(1,(f.t-f.dl)/Math.max(.001,f.life-f.dl));
+    const s=f.sc*(1+Math.sqrt(u)*f.gr);                 // พุ่งออกเร็วตอนแรกแล้วชะลอ = คลื่นจริง
+    f.o.scale.set(s,s,1);
+    f.o.material.opacity=f.a0*Math.pow(1-u,1.5);
+    return true;
+  }
+  if(f.kind==='shglow'){
+    f.o.scale.set(f.sc*(1+f.t/f.life*.8),f.sc*(1+f.t/f.life*.8),1);
+    f.o.material.opacity=f.a0*Math.pow(1-f.t/f.life,1.3);
+    return true;
+  }
+  return false;
 }
 
 /* ============================================================
@@ -5185,8 +5363,15 @@ function fireGun(now){
     let blk=hit?envHit(origin,dir,Math.min(hit.t,ENV_BLOCK_D)):null;
     /* 🧱 รอบ 580: กำแพง/ตึก/บ้านบังอยู่ = กระสุนจอดที่กำแพง (เดิมบังได้แค่ 'sand' กับเป้าฝึกยิง) */
     if(blk && blk.dist<hit.t-0.25 && (blk.kind==='wall'||hit.type==='trg')) hit=null; else blk=null;
+    /* 🛡️ รอบ 581: ปืนกลติดเฮลิก็ทะลุเกราะยานแม่ไม่ได้เหมือนกัน (ยิงทันที ไม่มีเวลาเดินทาง) */
+    let shd=null;
+    if(msShieldOn()){
+      const s=msShieldRay(origin,dir,900);
+      if(s && (!hit||s.dist<hit.t) && (!blk||s.dist<blk.dist)){ shd=s; hit=null; blk=null; }
+    }
     tracer(origin.clone().addScaledVector(dir,4),
-      hit?hit.point:(blk?blk.point:origin.clone().addScaledVector(dir,700)),0x9fe0ff,.07);
+      shd?shd.point:(hit?hit.point:(blk?blk.point:origin.clone().addScaledVector(dir,700))),0x9fe0ff,.07);
+    if(shd){ shieldHit(shd,msShieldPow(PH_GUN_DMG)); recPitch+=REC_DEFAULT.up*.45; recYaw+=rnd(-1,1)*REC_DEFAULT.side*.45; return; }
     if(blk){ sparkAt(blk.point); dustPuff(blk.point); }
     if(hit){
       if(hit.type==='trg') hitTarget(hit.obj,hit.point);        // 🎯 รอบ 471: ยิงเป้าจากบนเฮลิก็นับ
@@ -5235,7 +5420,14 @@ function fireGun(now){
     const blk=envHit(origin,dir,Math.min(hit.t,ENV_BLOCK_D));
     if(blk && blk.dist<hit.t-0.25 && (blk.kind==='wall'||hit.type==='trg')){ blocked=blk; hit=null; }
   }
-  const end=hit? hit.point : (blocked? blocked.point : origin.clone().addScaledVector(dir,W.mag?2500:700));
+  /* 🛡️ รอบ 581 (ผู้ใช้สั่ง): เกราะยานแม่ยังไม่หมด → กระสุนไปไม่ถึงลำ หยุดที่โดมเกราะแล้วแตกเป็นวงฟ้า
+     (เช็กหลังกำแพง/ยานลูก — อะไรอยู่ใกล้กว่าชนะ ยานลูกบินต่ำกว่าท้องลำอยู่แล้วจึงไม่แย่งกัน) */
+  let shd=null;
+  if(msShieldOn()){
+    const s=msShieldRay(origin,dir,W.mag?4000:900);
+    if(s && (!hit||s.dist<hit.t) && (!blocked||s.dist<blocked.dist)){ shd=s; hit=null; blocked=null; }
+  }
+  const end=shd? shd.point : (hit? hit.point : (blocked? blocked.point : origin.clone().addScaledVector(dir,W.mag?2500:700)));
   /* 🚀 รอบ 467: กระสุนไม่ถึงเป้าทันทีอีกแล้ว — วิถีถูกคำนวณตอนยิง (เล็งง่ายเหมือนเดิม)
      แต่ "ประกายโดน/ดาเมจ/เสียงโดน" มาถึงตามเวลาเดินทางจริง (ระยะ ÷ ความเร็วกระสุน)
      ยิงยานไกล 800 ม. ด้วย R93 = รอราว 1 วินาที → ได้ฟีลสไนเปอร์จริง โดยไม่ทำให้เด็กเล็งยากขึ้น */
@@ -5243,6 +5435,8 @@ function fireGun(now){
   const spd=W.mag?BULLET_SPD_R93:BULLET_SPD_RIFLE;
   const fly=Math.min(2.2, dist/spd);
   tracer(origin.clone().addScaledVector(dir,3),end,W.tracer,W.mag?.09:.05,fly);
+  /* 🛡️ รอบ 581: ถึงเกราะเมื่อไหร่ค่อยแตกเป็นวง (รอเวลาเดินทางจริงเหมือนกระสุนอื่น — ยานแม่ไกล 250 ม.+) */
+  if(shd){ bullets.push({at:now+fly*1000, shield:shd, pow:msShieldPow(W.dmg)}); return; }
   if(!hit){
     /* 🌍 รอบ 469: ไม่โดนยาน — ไปลงพื้น/กำแพง (มีเสียงตามวัสดุ + รอยกระสุนค้างไว้) */
     const e=blocked||envHit(origin,dir,W.mag?900:500);
@@ -5366,6 +5560,7 @@ function tickBullets(now){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i]; if(now<b.at) continue;
     bullets.splice(i,1);
+    if(b.shield){ shieldHit(b.shield,b.pow); continue; }   // 🛡️ รอบ 581: ถึงโดมเกราะยานแม่ = แตกเป็นวงฟ้า
     if(b.env){                                    // 🌍 กระสุนลงพื้น/กำแพง
       const e=b.env, d=camera.position.distanceTo(e.point);
       bulletHole(e.point,e.normal,e.kind);
@@ -5439,10 +5634,17 @@ function launchMissile(now,side,heli,tgt){
 }
 /* 🚀 มิสไซล์นำวิถี — ล็อกยานลูกที่อยู่ใกล้กลางจอสุด (ไม่มีก็พุ่งใส่ยานแม่)
    🚁 ตอนขับเฮลิ: ยิงเป็นชุดคู่ (2 ลูก) เติมเร็วกว่า */
+/* 🚀⌨️ รอบ 581 (ผู้ใช้สั่ง "กด R ให้ยิงจรวดได้ด้วย"): ปุ่ม R/🚀 ทำงานอยู่แล้ว แต่ตอนจรวดหมด/กำลังบรรจุ
+   มัน `return` เงียบ ๆ — ผู้เล่นกดแล้ว "ไม่มีอะไรเกิดขึ้นเลย" จึงนึกว่าปุ่มเสีย → บอกให้รู้ทุกครั้ง (คุมความถี่) */
+let misHintAt=0;
+function misBusyHint(msg){
+  const now=performance.now(); if(now-misHintAt<900) return; misHintAt=now;
+  toastBan(msg,1100);
+}
 function fireMissile(now){
   if(inHeli){
-    if(phMisLeft<=0) return;
-    if(misQ.length) return;                       // 🔒 รอบ 564: ชุดก่อนยังยิงไม่หมด รอให้จบก่อน
+    if(phMisLeft<=0){ misBusyHint(`🚀 <b>จรวดหมดชุด — กำลังบรรจุใหม่</b><br><span class="ib-sub">อีก ${Math.max(0,Math.ceil((phMisReloadAt-now)/1000))} วิ แล้วกด R / 🚀 ได้อีก</span>`); return; }
+    if(misQ.length){ misBusyHint('🚀 <b>ชุดก่อนยังยิงไม่หมด</b><br><span class="ib-sub">รอจรวดชุดนี้ออกให้ครบก่อนนะ</span>'); return; }   // 🔒 รอบ 564: ชุดก่อนยังยิงไม่หมด รอให้จบก่อน
     /* 🎯🔒 รอบ 564: มีเป้าที่ล็อกไว้ = ยิงรัวทีละชุด ชุดละ SALVO_PER_TGT ลูกต่อ 1 ลำ */
     const locked=rdrOn().filter(l=>!l.f.dead);
     if(locked.length){
@@ -5467,7 +5669,7 @@ function fireMissile(now){
     renderMissiles(); Snd.missile(); gunRecoil=1.2;
     return;
   }
-  if(misLeft<=0) return;
+  if(misLeft<=0){ misBusyHint(`🚀 <b>จรวดหมด — กำลังบรรจุใหม่</b><br><span class="ib-sub">อีก ${Math.max(0,Math.ceil((misReloadAt-now)/1000))} วิ แล้วกด R / 🚀 ได้อีก</span>`); return; }
   misLeft--; renderMissiles();
   if(misLeft===0) misReloadAt=now+MIS_RELOAD;
   Snd.missile(); gunRecoil=1.6;
@@ -7473,6 +7675,15 @@ function tickMissiles(dt,now){
       m.smokeAt=now;
       spawnSmoke(m.mesh.position.clone().addScaledVector(m.v.clone().normalize(),-1.0));
     }
+    /* 🛡️ รอบ 581: จรวดพุ่งชนโดมเกราะยานแม่ = ระเบิดเป็นวงฟ้าลูกใหญ่ตรงเกราะ (ไม่ใช่ระเบิดส้มปกติ)
+       เช็กก่อนเงื่อนไขชนอื่น — ถึงเกราะแล้วไม่มีทางไปต่อได้อยู่แล้ว */
+    const shd=msShieldPt(m.mesh.position);
+    if(shd){
+      shieldHit(shd, msShieldPow(m.dmg||MIS_DMG), !m.ally);
+      scene.remove(m.mesh); scene.remove(m.trail);
+      m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose();
+      missiles.splice(i,1); continue;
+    }
     /* ชนอะไรไหม */
     let hit=null;
     const prox=m.hard?6.6:5.4;                        // 🎯 รอบ 563: ลูกที่ล็อกเป้า จุดชนวนไวขึ้นนิด
@@ -9010,8 +9221,13 @@ function start(){
   };
   keydownFn=e=>{
     const c=codeOf(e);
-    if(c==='KeyW'||c==='ArrowUp') keys.w=true;
-    else if(c==='KeyS'||c==='ArrowDown') keys.s=true;
+    /* ⌨️🚁 รอบ 582 (ผู้ใช้สั่ง): แยก ↑/↓ ออกจาก W/S
+       เดินเท้า = ↑/↓ เดินหน้า-ถอยหลังเหมือนเดิม · อยู่บนเฮลิ = ↑/↓ กลายเป็น "คันเร่งขึ้น/ลง"
+       (Space/Shift ยังใช้ได้เหมือนเดิม · W/S ยังเป็นเดินหน้า-ถอยหลังของลำ) */
+    if(c==='KeyW') keys.w=true;
+    else if(c==='KeyS') keys.s=true;
+    else if(c==='ArrowUp') keys.up=true;
+    else if(c==='ArrowDown') keys.dn=true;
     else if(c==='KeyA'||c==='ArrowLeft') keys.a=true;
     else if(c==='KeyD'||c==='ArrowRight') keys.d=true;
     else if(c==='ShiftLeft'||c==='ShiftRight') keys.shift=true;
@@ -9123,6 +9339,19 @@ window.InvasionWorld={
       minx:+h.box.min.x.toFixed(1),maxx:+h.box.max.x.toFixed(1),
       minz:+h.box.min.z.toFixed(1),maxz:+h.box.max.z.toFixed(1)}:null); },
     cover(x,z){ return msbCoverAt(x,z); },
+    /* 🛡️🔵 รอบ 581: เกราะยานแม่ที่มองไม่เห็น */
+    get shield(){ return {on:msShieldOn(), armor:+msArmor.toFixed(2), fx:mshFx, n:mshN, last:mshLast,
+      rx:+(MS_R*MSH_PAD).toFixed(0), ry:+(MS_R*MS_FLAT*MSH_PAD).toFixed(0),
+      c:mother?{x:+mother.position.x.toFixed(0),y:+mother.position.y.toFixed(0),z:+mother.position.z.toFixed(0)}:null}; },
+    shieldRay(x,y,z,dx,dy,dz,maxD){ const s=msShieldRay(new THREE.Vector3(x,y,z),
+        new THREE.Vector3(dx,dy,dz).normalize(),maxD||4000);
+      return s?{dist:+s.dist.toFixed(1),p:[+s.point.x.toFixed(1),+s.point.y.toFixed(1),+s.point.z.toFixed(1)],
+                n:[+s.normal.x.toFixed(2),+s.normal.y.toFixed(2),+s.normal.z.toFixed(2)]}:null; },
+    shieldPow(dmg){ return +msShieldPow(dmg).toFixed(2); },
+    get bulletQ(){ return bullets.map(b=>({sh:!!b.shield, env:b.env?b.env.kind:null,
+      hit:b.hit?b.hit.type:null, in:+(b.at-performance.now()).toFixed(0)})); },
+    shieldBurstAt(x,y,z,pow){ const s=msShieldRay(new THREE.Vector3(x,y,z),
+        new THREE.Vector3(0,1,0),4000); if(s) shieldHit(s,pow||1); return !!s; },
     /* 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ */
     get msb(){return {state:msbState,stay:msbStay,lethal:msbLethal,dead:!!msbDeadAt,
       near:msbNear,fled:msbFled,hits:msbHits,cover:msbCover,covered:msbCovered,
