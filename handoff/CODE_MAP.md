@@ -538,9 +538,9 @@ VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · v
 vbSeen:49 · vbStats:62 · vbList:70 · vbReviewCat:81 · vbStartReview:95 · openVocabBook:106
 vbRender:148 · vbCardHTML:194
 
-## js/wordsearch.js (379 บรรทัด · 0 รายการ)
+## js/wordsearch.js (370 บรรทัด · 0 รายการ)
 
-## css/lobby.css (2,574 บรรทัด · 474 selector)
+## css/lobby.css (2,572 บรรทัด · 475 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-quiz:134,135,136,137(+4) · #quiz-choices:143,144 · .word-card:151 · .quiz-choice:152,153,154
@@ -618,8 +618,9 @@ vbRender:148 · vbCardHTML:194
 .ib-story-item:2407,2409,2416 · .ib-story-ava:2410 · .ib-story-on:2414 · .ib-world:2419,2422 · #btn-music:2427,2430,2431 · #ws-overlay:2446
 #ws-board:2449,2455,2457 · .ws-head:2460 · .ws-title:2461 · .ws-findbar:2464 · .ws-tip:2465 · .ws-grade:2467,2468
 .ws-body:2471 · .ws-gridwrap:2472 · #ws-grid:2475 · .ws-cell:2480,2485,2488,2491(+2) · .ws-flash:2497,2499 · .ws-coinpop:2503
-.ws-find:2515 · #ws-prog:2516 · #ws-words:2520,2524 · .ws-word:2526,2531,2532,2533(+2) · .ws-actions:2539,2540,2546,2548(+2) · .ws-sizes:2543
-.ws-sizes-lb:2545 · #ws-new:2552 · #ws-stash:2553 · #ws-clear:2554 · #ws-win:2555,2557 · .ws-win-in:2558,2561
+.ws-find:2515 · #ws-prog:2516 · #ws-words:2520,2524 · .ws-word:2526,2531,2532,2533(+2) · .ws-actions:2539,2540,2549 · .ws-sizes:2544
+.ws-sizes-lb:2546 · .ws-size-now:2547 · #ws-new:2550 · #ws-stash:2551 · #ws-clear:2552 · #ws-win:2553,2555
+.ws-win-in:2556,2559
 
 ## css/style.css (1,720 บรรทัด · 457 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
