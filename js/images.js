@@ -55,11 +55,14 @@ function petClipKey(p){
   return stage === 'egg' ? startImgKey(p.type) : `${p.type}_${stage}_normal`;
 }
 /* คืน URL คลิปที่ควรเล่นตอนนี้ · null = ให้ใช้ภาพนิ่ง
-   ป่วย/หลับ/หิว/ใส่ชุด = คงภาพนิ่งตามสถานะ (เด็กต้องเห็นอาการ) · ปิดเอฟเฟกต์เคลื่อนไหว = ไม่เล่นคลิป */
+   ป่วย/หลับ/หิว = คงภาพนิ่งตามสถานะ (เด็กต้องเห็นอาการของน้อง) · ปิดเอฟเฟกต์เคลื่อนไหว = ไม่เล่นคลิป
+   🎀 รอบ 609 (ผู้ใช้เจอเอง): "ใส่ชุด" ไม่บล็อกคลิปแล้ว — เด็กซื้อหมวกให้น้องแล้วคลิปหายไปเลยไม่สมเหตุผล
+      อยากดูชุดเมื่อไหร่กดปุ่มสลับบนเวที (state.psDress) หรือดูในหน้า "ข้อมูลน้อง" ซึ่งใช้ภาพใส่ชุดอยู่แล้ว */
 function petClipUrl(p){
   p = p || activePet(); if(!p) return null;
   if(state.noAnim || p.sick || p.sleeping) return null;
-  if(typeof petStateImg === 'function' && petStateImg(p)) return null;
+  if(typeof petHungry === 'function' && petHungry(p)) return null;
+  if(state.psDress && typeof equippedItem === 'function' && equippedItem(p)) return null;   // เด็กเลือก "ดูชุด" อยู่
   const k = petClipKey(p); if(!k) return null;
   if(CLIP_FILES[k] === null) return null;              // เคยลองแล้วไม่มีไฟล์
   return CLIP_FILES[k] || `clip/${k}.mp4`;

@@ -131,7 +131,7 @@ function petClipHint(p, clipUrl){
   if(p.sick)     return '🤒 น้องป่วยอยู่ — รักษาให้หายแล้วคลิปจะกลับมา';
   if(p.sleeping) return '💤 น้องหลับอยู่ — ตื่นแล้วคลิปจะกลับมา';
   if(typeof petHungry === 'function' && petHungry(p)) return '😫 น้องหิว — ป้อนข้าวให้อิ่มแล้วคลิปจะกลับมา';
-  if(typeof equippedItem === 'function' && equippedItem(p)) return '🎀 น้องใส่ชุดอยู่ — ถอดชุดแล้วคลิปจะกลับมา';
+  if(state.psDress && typeof equippedItem === 'function' && equippedItem(p)) return '';   // เลือกดูชุดเอง — ปุ่มสลับบอกอยู่แล้ว
   const k = petClipKey(p);
   if(k && CLIP_FILES[k] === null) return '🎬 ยังไม่มีคลิปของวัยนี้';
   return '';
@@ -179,6 +179,12 @@ function petShowHTML(p, clipUrl){
     <div class="ps-tag"><b>${escapeHTML(p.name)}</b> · ${PET_SHOW_STAGE[stage] || ''}</div>
     ${(()=>{ const h = petClipHint(p, clipUrl); return h ? `<div class="ps-hint">${h}</div>` : ''; })()}
     <button class="ps-play" type="button">▶️ แตะเพื่อเล่นคลิปน้อง</button>
+    ${(()=>{   // 🎀 รอบ 609: ใส่ชุดอยู่ = เลือกได้ว่าจะดูคลิป หรือดูน้องใส่ชุด
+      const worn = (typeof equippedItem === 'function') ? equippedItem(p) : null;
+      if(!worn || calm) return '';
+      return `<button class="ps-dress" type="button" title="สลับระหว่างคลิปน้องกับภาพน้องใส่ชุด">`
+        + (state.psDress ? `🎬 ดูคลิปน้อง` : `${worn.emoji || '🎀'} ดูน้องใส่ชุด`) + `</button>`;
+    })()}
   </div>`;
 }
 
@@ -3586,6 +3592,17 @@ function renderDashboard(){
         const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{});
       });
     }
+  }
+  /* 🎀 รอบ 609: ปุ่มสลับ "คลิปน้อง ↔ น้องใส่ชุด" (โผล่เฉพาะตอนน้องใส่ชุดอยู่) */
+  {
+    const dressBtn = card.querySelector('.ps-dress');
+    if(dressBtn) dressBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      state.psDress = !state.psDress;
+      saveState();
+      sfx.select();
+      renderDashboard();
+    });
   }
   /* เผื่อเบราว์เซอร์บล็อก autoplay (นโยบายบางเครื่อง/บางเบราว์เซอร์): แตะจอครั้งแรกแล้วคลิปเดินเอง
      ผูกครั้งเดียวตลอดอายุหน้า (renderDashboard ถูกเรียกบ่อยมาก ห้ามผูกซ้ำทุกรอบ) */
