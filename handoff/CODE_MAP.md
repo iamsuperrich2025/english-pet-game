@@ -186,7 +186,7 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (8,375 บรรทัด · 487 รายการ)
+## js/invasion3d.js (8,383 บรรทัด · 487 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 16-77 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 78-112 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -235,12 +235,12 @@ makeHappy:73 · currentPetImg:84
 - 6421-6745 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
 - 6746-6804 💨 ควันตามหลังมิสไซล์ (รอบ 531 — ผู้ใช้สั่ง) — สไปรต์ควันนุ่มปล่อยเป็นระยะ
 - 6805-6961 🔥🌀 รอบ 565 (ผู้ใช้สั่ง): ยานลูก "หลบมิสไซล์ที่ล็อกได้" — ปล่อยแฟลร์ + บิดหนี
-- 6962-7039 🔫↩️ รอบ 566 (ผู้ใช้สั่ง): ยานลูกที่ "ถูกเรดาร์ล็อก" ยิงสวนกลับใส่เฮลิผู้เล่น
-- 7040-7130 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
-- 7131-7306 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
-- 7307-7749 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
-- 7750-7818 🔁 ลูปหลัก
-- 7819-8375 ▶️ เข้า/ออกโลก
+- 6962-7041 🔫↩️ รอบ 568 (ผู้ใช้สั่ง): ยานลูกที่ "ถูกเรดาร์ล็อก" ยิงสวนกลับใส่เฮลิผู้เล่น
+- 7042-7132 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
+- 7133-7308 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
+- 7309-7751 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
+- 7752-7820 🔁 ลูปหลัก
+- 7821-8383 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:19 · WORD_TIME:21 · WORLD:22 · EYE:23 · FOV:24 · LOOK_SENS:25
 PITCH_MIN:26 · MS_Y:48 · MS_FLAT:57 · MS_BELLY:58 · MS_HP:59 · MS_DMG_GUN:60
@@ -312,18 +312,18 @@ EVA_SPD_MAX:6822 · EVA_ROLL:6825 · EVA_Y:6826 · FLARE_PODS:6827 · FLARE_COOL
 FLARE_LIFE:6830 · FLARE_TRAP:6831 · FLARE_CH:6832 · incomingMis:6837 · startEvade:6848 · dropFlares:6857
 tickEvade:6884 · clearFlares:6915 · tickMissiles:6916 · CTR_REACT:6976 · CTR_WARN:6977 · CTR_GAP:6978
 CTR_BURST:6982 · CTR_BURST_MS:6983 · CTR_SPD:6984 · CTR_DMG:6985 · CTR_MAX:6986 · CTR_SPREAD:6987
-CTR_LEAD:6988 · ctrAimPoint:6991 · ctrArming:6998 · counterFire:7002 · tickCounter:7007 · SQUAD_COVERS:7049
-squadCoverPool:7050 · pickSquadDest:7051 · tickSquadMove:7065 · tickSquad:7087 · CALL_DIST:7137 · CALL_NEAR:7138
-CALL_GAP_ALL:7139 · CALL_GAP_ONE:7140 · CALL_GAP_DIR:7141 · CALL_MS:7142 · CALL_LINES:7143 · CALL_SECTORS:7154
-bearingKey:7157 · clearSquadBubble:7165 · callSprite:7171 · squadShout:7183 · tickSquadCalls:7196 · CHAT_GAP_ALL:7223
-CHAT_LINES:7224 · tickSquadChatter:7230 · heliFireAt:7247 · nearestFighterTo:7259 · tickHelis:7265 · DAY:7314
-NIGHT:7316 · collectMsMats:7320 · CYCLE_MS:7331 · MODE_ICON:7333 · STORM_MS:7340 · buildStars:7347
-buildStreetLamps:7370 · glowTex:7388 · tickStreetLamps:7396 · beamPair:7413 · tickSearchBeams:7424 · buildBarrelFires:7461
-tickBarrels:7479 · tickShootingStar:7489 · buildMist:7514 · tickMist:7524 · tickNightSound:7567 · tickSneak:7576
-tickStorm:7587 · nvReady:7603 · nvEnter:7604 · nvExit:7610 · tickNvHint:7611 · dropGlowStick:7620
-tickGlowSticks:7637 · buildFlashlight:7646 · setNight:7651 · setDayMode:7652 · tickNight:7666 · applyNightLook:7698
-tickFlashlight:7738 · fit:7753 · tick:7759 · frame:7767 · build:7822 · start:7882
-exitWorld:7996
+CTR_LEAD:6988 · ctrAimPoint:6991 · ctrArming:6998 · counterFire:7002 · tickCounter:7007 · SQUAD_COVERS:7051
+squadCoverPool:7052 · pickSquadDest:7053 · tickSquadMove:7067 · tickSquad:7089 · CALL_DIST:7139 · CALL_NEAR:7140
+CALL_GAP_ALL:7141 · CALL_GAP_ONE:7142 · CALL_GAP_DIR:7143 · CALL_MS:7144 · CALL_LINES:7145 · CALL_SECTORS:7156
+bearingKey:7159 · clearSquadBubble:7167 · callSprite:7173 · squadShout:7185 · tickSquadCalls:7198 · CHAT_GAP_ALL:7225
+CHAT_LINES:7226 · tickSquadChatter:7232 · heliFireAt:7249 · nearestFighterTo:7261 · tickHelis:7267 · DAY:7316
+NIGHT:7318 · collectMsMats:7322 · CYCLE_MS:7333 · MODE_ICON:7335 · STORM_MS:7342 · buildStars:7349
+buildStreetLamps:7372 · glowTex:7390 · tickStreetLamps:7398 · beamPair:7415 · tickSearchBeams:7426 · buildBarrelFires:7463
+tickBarrels:7481 · tickShootingStar:7491 · buildMist:7516 · tickMist:7526 · tickNightSound:7569 · tickSneak:7578
+tickStorm:7589 · nvReady:7605 · nvEnter:7606 · nvExit:7612 · tickNvHint:7613 · dropGlowStick:7622
+tickGlowSticks:7639 · buildFlashlight:7648 · setNight:7653 · setDayMode:7654 · tickNight:7668 · applyNightLook:7700
+tickFlashlight:7740 · fit:7755 · tick:7761 · frame:7769 · build:7824 · start:7884
+exitWorld:7998
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
