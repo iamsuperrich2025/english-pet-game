@@ -3015,6 +3015,14 @@ const FUEL_WARN=.25, FUEL_LOW=.10;
 /* 🌡️ อุณหภูมิเครื่อง (0..1) — ร้อนตามรอบใบพัด+ดึงคันเร่ง · ลมปะทะตอนบินเร็วช่วยระบาย */
 const ENG_AMB=.16, ENG_RISE=.45, ENG_COOL=.22, ENG_WARN=.80, ENG_HOT=.92;
 let cpFuel=FUEL_MAX, cpEngT=ENG_AMB, cpFuelToastAt=0;
+/* 🔥 รอบ 560 (ผู้ใช้สั่ง): ไฟ "ร้อน" ดวงแดงมีผลกับการบินจริง — แดงค้างนาน = กำลังยกลด ต้องผ่อนคันเร่ง
+   cpHot 0..1 = "ความล้าจากความร้อน" · แดงค้าง → ไต่ขึ้นจนเต็มใน HOT_FULL วิ · กำลังยกเหลือ HOT_PWR_MIN
+   ♻️ กู้คืนต้อง "เย็นกว่าไฟเหลือง" (ENG_WARN) เท่านั้น — อยู่ช่วงเหลืองค้างไว้เท่าเดิม ไม่ดีขึ้น
+      (แตะผ่อนแป๊บเดียวไม่พอ ต้องผ่อนจริงจังให้เข็มลงพ้นโซนเหลือง = hysteresis)
+   🛡️ ปลอดภัยกับเด็ก: ลดเฉพาะ "แรงยกขาขึ้น" ไม่มีแรงกดลง → ผ่อนคันเร่งแล้วยังลอยนิ่งเหมือนเดิม ไม่ร่วงจากฟ้า */
+const HOT_FULL=8, HOT_RECOVER=6, HOT_PWR_MIN=.35, HOT_TOAST_AT=.12;
+let cpHot=0, cpHotToastAt=0, cpHotWarned=false;
+function heliLift(){ return 1-cpHot*(1-HOT_PWR_MIN); }      // ตัวคูณแรงยก 1 → HOT_PWR_MIN
 /* 🔧 รอบ 534: รอบใบพัด "เชิงกล" — เดิมเข็ม rpm (รอบ 532) อ่านจาก HeliSnd.rpm ซึ่งขยับเฉพาะตอน
    "เปิดเสียง + โหลดไฟล์เสียงเสร็จ" → คนปิดเสียงเห็นเข็มรอบค้าง 0 ตลอด (และเกจใหม่ก็จะตายตาม)
    จึงคำนวณรอบเองด้วยสูตรเดียวกับ HeliSnd.update แล้วใช้ค่านี้เป็นตัวสำรอง */
@@ -3119,7 +3127,23 @@ function tickHeliGauges(dt,col,now){
     cpFuelToastAt=now;
     toastBan('⛽ <b>เชื้อเพลิงเหลือน้อย</b><br><span class="ib-sub">ลงจอดสักครู่ ฐานจะเติมให้เอง (เครื่องไม่ดับกลางอากาศนะ)</span>',2400);
   }
+  tickHeliHot(dt,now);                                       // 🔥 รอบ 560: ร้อนแดงค้าง = กำลังยกตก
   tickHeliAlarm(now);                                        // 🚨🔊 รอบ 559: บี๊บตามไฟเตือนที่เพิ่งคำนวณเสร็จ
+}
+/* 🔥 รอบ 560: สะสม/คลาย "ความล้าจากความร้อน" + บอกผู้เล่นให้ผ่อนคันเร่ง (เรียกท้าย tickHeliGauges) */
+function tickHeliHot(dt,now){
+  const was=cpHot;
+  if(cpEngT>=ENG_HOT)       cpHot=Math.min(1,cpHot+dt/HOT_FULL);      // ไฟแดง = ล้าขึ้นเรื่อย ๆ
+  else if(cpEngT<ENG_WARN)  cpHot=Math.max(0,cpHot-dt/HOT_RECOVER);   // เย็นพ้นโซนเหลือง = ฟื้น
+  /* อยู่ระหว่าง WARN..HOT (ไฟเหลือง) = ค้างไว้เท่าเดิม ไม่ขึ้นไม่ลง */
+  if(cpHot>HOT_TOAST_AT && was<=HOT_TOAST_AT && now-cpHotToastAt>12000){
+    cpHotToastAt=now; cpHotWarned=true;
+    toastBan('🌡️ <b style="color:#ff8a65">เครื่องร้อนจัด — แรงยกกำลังตก!</b><br><span class="ib-sub">ผ่อนคันเร่งลง (ปล่อย ▲/Space หรือกด ▼/Shift) สักครู่ให้เข็มความร้อนลงพ้นโซนเหลือง แล้วแรงยกจะกลับมาเอง</span>',2800);
+  }
+  if(cpHot<=0 && was>0 && cpHotWarned){
+    cpHotWarned=false;
+    toastBan('✅ <b>เครื่องเย็นลงแล้ว</b><br><span class="ib-sub">กำลังยกกลับมาเต็ม 100% — ไต่ขึ้นได้ตามปกติ</span>',1800);
+  }
 }
 /* 🚨 รอบ 559: ระดับไฟเตือนแต่ละดวง (0 ดับ · 1 เหลือง · 2 แดง) — "แหล่งความจริงที่เดียว"
    ใช้ร่วมกัน 3 ที่: วาดไฟ cpLamps() · เสียงเตือน tickHeliAlarm() · `_t.heliGauges.lamps` (เทสต์)
@@ -3244,6 +3268,13 @@ function drawInvGauges(now){
   c.shadowColor='rgba(0,0,0,.85)'; c.shadowBlur=2;
   c.fillText('น้ำมัน',fg.x,fg.y+fg.r*1.05);       // ใต้ขอบหน้าปัดพอดี ไม่ทับเข็ม
   c.fillText('ความร้อน',tg.x,tg.y+tg.r*1.05);
+  /* 🔥 รอบ 560: ร้อนจนกำลังยกตก = โชว์ตัวเลข "ยก xx%" ใต้ป้ายความร้อน (เห็นผลตรง ๆ ว่ายังยกได้เท่าไร) */
+  if(cpHot>0){
+    const pw=Math.round(heliLift()*100);
+    c.font='700 7.5px system-ui,sans-serif';
+    c.fillStyle=cpHot>.5?'#ff6a5a':'#ffca28';
+    c.fillText('ยก '+pw+'%',tg.x,tg.y+tg.r*1.05+8);
+  }
   c.restore();
   cpLamps(c,now);                                                 // 🚨 ไฟเตือนบนสุด
 }
@@ -5816,6 +5847,7 @@ function enterHeli(){
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
   cpFuel=FUEL_MAX; cpEngT=ENG_AMB; cpFuelToastAt=0;         // ⛽🌡️ รอบ 534: ขึ้นเครื่องใหม่ = ถังเต็ม เครื่องเย็น
+  cpHot=0; cpHotToastAt=0; cpHotWarned=false;               // 🔥 รอบ 560: ลำใหม่ = กำลังยกเต็ม 100%
   resetHeliAlarm();                                         // 🚨🔊 รอบ 559: ขึ้นเครื่องใหม่ = เริ่มนับเสียงเตือนใหม่
   py=terrainH(px,pz)+HELI_SKID+1.8;                        // นั่งอยู่ในลำที่ยังจอดอยู่ (ยังไม่ลอย)
   hLanded=true;                                            // ต้องดันคันเร่งขึ้นเองหลังสตาร์ทเสร็จ
@@ -6012,12 +6044,15 @@ function tickHeliFlight(dt,now){
   yaw+=yawIn*HELI_YAWSP*dt;
 
   const sin=Math.sin(yaw), cos=Math.cos(yaw);
+  /* 🔥 รอบ 560: เครื่องร้อนแดงค้าง = แรงยก "ขาขึ้น" ตกตาม cpHot (ขาลง/ลอยนิ่งไม่ถูกแตะ — ไม่ร่วงจากฟ้า) */
+  const lift=heliLift(), colUp=col>0?col*lift:col;
+  if(cpHot>.3) shake=Math.max(shake,(cpHot-.3)*.30);       // เครื่องสั่นเตือนด้วยมือ ไม่ใช่แค่ไฟ/เสียง
   if(hLanded){
-    if(col>.25){ hLanded=false; phVel.y=2.5; }             // ดันคันเร่งขึ้น = เทคออฟ
+    if(col>.25){ hLanded=false; phVel.y=2.5*lift; }        // ดันคันเร่งขึ้น = เทคออฟ (ร้อนอยู่ = ทะยานเบาลง)
   }else{
     phVel.x+=(-sin*fw+cos*sd)*HELI_ACCEL*dt;
     phVel.z+=(-cos*fw-sin*sd)*HELI_ACCEL*dt;
-    phVel.y+=(col*HELI_CLIMB - phVel.y*HELI_DAMP)*dt;      // ไต่/ลดระดับนุ่มๆ auto-hover
+    phVel.y+=(colUp*HELI_CLIMB - phVel.y*HELI_DAMP)*dt;    // ไต่/ลดระดับนุ่มๆ auto-hover
     const drag=Math.max(0,1-HELI_DRAG*dt);
     phVel.x*=drag; phVel.z*=drag;
     const hs=Math.hypot(phVel.x,phVel.z);
@@ -7610,8 +7645,12 @@ window.InvasionWorld={
     /* ⛽🌡️🚨 รอบ 534: เกจเชื้อเพลิง/อุณหภูมิ + สถานะไฟเตือน */
     get heliGauges(){ const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow();
       return {fuel:+cpFuel.toFixed(2), fuelFrac:+fr.toFixed(3), eng:+cpEngT.toFixed(3), rpm:+rpm.toFixed(2),
-        lamps:heliLampLv()}; },                                   // 🚨 รอบ 559: อ่านจากแหล่งเดียวกับที่วาดไฟ/ที่เสียงใช้
+        lamps:heliLampLv(),                                       // 🚨 รอบ 559: อ่านจากแหล่งเดียวกับที่วาดไฟ/ที่เสียงใช้
+        hot:+cpHot.toFixed(3), lift:+heliLift().toFixed(3)}; },    // 🔥 รอบ 560: ความล้าจากความร้อน + ตัวคูณแรงยก
     setHeliGauges(f,t,r){ if(f!=null) cpFuel=f; if(t!=null) cpEngT=t; if(r!=null) cpRpm=r; },   // r = รอบเชิงกล (ใช้ตอนไม่มีเสียงใบพัดจริง)
+    /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
+    tickHeliHot, heliLift, setHeliHot(v){ cpHot=clamp(v,0,1); }, get heliHot(){ return {hot:+cpHot.toFixed(3),
+      lift:+heliLift().toFixed(3), warned:cpHotWarned, HOT_FULL, HOT_RECOVER, HOT_PWR_MIN}; },
     /* 🚨🔊 รอบ 559: เสียงเตือนตามไฟ — n=จำนวนชุดบี๊บที่ดังจริง · last=<ดวง><ระดับ> ครั้งล่าสุด */
     get heliAlarm(){ return {n:Snd.gaugeN, last:alarmLast, snd:Snd.gaugeLast,
       lv:Object.assign({},alarmLv), at:Object.assign({},alarmAt), gap:ALARM_GAP}; },
