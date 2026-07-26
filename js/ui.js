@@ -122,6 +122,21 @@ function petShowBgHTML(p){
    เดิมสลับเข้าโหมดคลิปทันทีที่วาดจอ (ทั้งที่ readyState=0) → เน็ตช้าเด็กเห็น "กรอบดำว่าง" นานหลายวินาที
    หรือค้างถาวรถ้าเน็ตหลุด · ตอนนี้: ยังโหลดไม่เสร็จ = โชว์ฉากการ์ตูน+ภาพน้องไปก่อน แล้วค่อยเฟดเข้าคลิป
    (โหลดสำเร็จรอบแรกแล้ว ครั้งต่อ ๆ ไปเข้าโหมดคลิปทันที — ไฟล์อยู่ในแคชเบราว์เซอร์ ไม่มีจอวูบ) */
+/* 💬 รอบ 608: "ทำไมคลิปไม่ขึ้น" — บอกเหตุผลบนจอเลย (ผู้ใช้แจ้งว่าไม่เห็นคลิป แต่เว็บจริงเทสต์แล้วเล่นได้
+   → เงื่อนไขที่ทำให้ไม่เล่นมีหลายทางและ "เงียบ" หมด เด็ก/ครูเลยไม่รู้ว่าต้องทำอะไร)
+   ป้ายนี้หายเองทันทีที่คลิปเล่นได้ (CSS ซ่อนใน .ps-clip-mode) */
+function petClipHint(p, clipUrl){
+  if(clipUrl) return '⏳ กำลังโหลดคลิปน้อง…';
+  if(state.noAnim) return '🎬 เปิด "เอฟเฟกต์เคลื่อนไหว" ในตั้งค่า ⚙️ เพื่อดูคลิปน้อง';
+  if(p.sick)     return '🤒 น้องป่วยอยู่ — รักษาให้หายแล้วคลิปจะกลับมา';
+  if(p.sleeping) return '💤 น้องหลับอยู่ — ตื่นแล้วคลิปจะกลับมา';
+  if(typeof petHungry === 'function' && petHungry(p)) return '😫 น้องหิว — ป้อนข้าวให้อิ่มแล้วคลิปจะกลับมา';
+  if(typeof equippedItem === 'function' && equippedItem(p)) return '🎀 น้องใส่ชุดอยู่ — ถอดชุดแล้วคลิปจะกลับมา';
+  const k = petClipKey(p);
+  if(k && CLIP_FILES[k] === null) return '🎬 ยังไม่มีคลิปของวัยนี้';
+  return '';
+}
+
 function __clipReady(p){
   const url = petClipUrl(p); if(!url) return false;
   const k = petClipKey(p);
@@ -162,6 +177,8 @@ function petShowHTML(p, clipUrl){
       </div>
     </div>
     <div class="ps-tag"><b>${escapeHTML(p.name)}</b> · ${PET_SHOW_STAGE[stage] || ''}</div>
+    ${(()=>{ const h = petClipHint(p, clipUrl); return h ? `<div class="ps-hint">${h}</div>` : ''; })()}
+    <button class="ps-play" type="button">▶️ แตะเพื่อเล่นคลิปน้อง</button>
   </div>`;
 }
 
@@ -3555,6 +3572,19 @@ function renderDashboard(){
       vid.addEventListener('canplay', goClip, {once:true});
       // ⚠️ เรียก play() ทันทีหลังตั้ง src มักโดน AbortError (ยังโหลดไม่ถึงเฟรมแรก) — ปล่อยให้ canplay สั่งแทน
       if(vid.readyState >= 3) goClip();
+      /* 🎬 รอบ 608: บางเครื่อง/บางโหมด (ประหยัดแบต, ประหยัดเน็ต, นโยบาย autoplay) บล็อกการเล่นเอง
+         → คลิปจะค้างเฟรมแรกเงียบ ๆ · ตรวจแล้วโชว์ปุ่ม "แตะเพื่อเล่น" ให้กดเองได้ */
+      const heroForBtn = heroEl;
+      vid.addEventListener('playing', ()=>{ if(heroForBtn) heroForBtn.classList.remove('ps-clip-blocked'); });
+      setTimeout(()=>{
+        if(document.body.contains(vid) && vid.paused && heroForBtn && heroForBtn.classList.contains('ps-clip-mode'))
+          heroForBtn.classList.add('ps-clip-blocked');
+      }, 1500);
+      const playBtn = card.querySelector('.ps-play');
+      if(playBtn) playBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{});
+      });
     }
   }
   /* เผื่อเบราว์เซอร์บล็อก autoplay (นโยบายบางเครื่อง/บางเบราว์เซอร์): แตะจอครั้งแรกแล้วคลิปเดินเอง

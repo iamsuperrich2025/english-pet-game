@@ -2999,7 +2999,10 @@ html.no-anim .pet-show .ps-emote{display:none;}
 .ps-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   border-radius:20px;z-index:1;pointer-events:none;background:#04060c;
   opacity:0;transition:opacity .45s ease;}
-.stage-hero.ps-clip-mode .ps-video{opacity:1;}
+/* 🩹 รอบ 608 (ผู้ใช้ตั้งข้อสงสัย "ภาพอยู่ทับวิดีโอหรือเปล่า"): ตอนเล่นคลิป ดัน video ขึ้นชั้นบนสุด
+   ปกติ .ps-pod (z1 + อยู่หลังใน DOM) วาดทับ video อยู่แล้ว — อาศัย opacity:0 อย่างเดียวไม่พอ
+   ถ้าเครื่องไหน opacity ไม่ทำงานตามคาด ภาพนิ่งจะบังคลิปทั้งใบแบบเงียบ ๆ → กันไว้ด้วย z-index ตรง ๆ */
+.stage-hero.ps-clip-mode .ps-video{opacity:1;z-index:2;}
 .pet-show-bg,.stage-hero.pet-show-mode .pet-show .ps-pod{transition:opacity .45s ease;}
 /* padding-bottom:22px ของเวที (ที่เผื่อไว้ให้เท้าน้องยืนบนเส้นพื้น) ทำให้คลิปเตี้ยกว่ากรอบ 22px
    → โหมดคลิปตัดออก ให้วิดีโอเต็มกรอบขอบมนพอดีทั้งใบ */
@@ -3009,6 +3012,21 @@ html.no-anim .pet-show .ps-emote{display:none;}
 .stage-hero.ps-clip-mode .pet-show-bg{opacity:0;}
 .stage-hero.ps-clip-mode .pet-show::before{opacity:0;}
 .stage-hero.ps-clip-mode .pet-show .ps-pod{opacity:0;}
+/* 💬 รอบ 608: ป้ายบอกเหตุผล "ทำไมคลิปยังไม่ขึ้น" (กำลังโหลด/ปิดเอฟเฟกต์/ป่วย/หิว/ใส่ชุด/ไม่มีไฟล์)
+   หายเองทันทีที่เข้าโหมดคลิป — ไม่ต้องมีใครมาปิด */
+.pet-show .ps-hint{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:3;
+  max-width:88%;text-align:center;background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.95);
+  border-radius:999px;padding:3px 12px;font-size:clamp(10px,2.1vh,12.5px);color:#28486f;line-height:1.45;
+  box-shadow:0 3px 10px rgba(20,50,90,.22);pointer-events:none;}
+.stage-hero.ps-clip-mode .ps-hint{display:none;}
+/* ปุ่มเล่นเอง — โผล่เฉพาะตอนเบราว์เซอร์บล็อก autoplay (คลิปพร้อมแล้วแต่ไม่ยอมเดิน) */
+.pet-show .ps-play{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
+  pointer-events:auto;cursor:pointer;font-family:inherit;font-size:clamp(11px,2.3vh,13.5px);
+  padding:6px 15px;border-radius:999px;border:1px solid rgba(255,255,255,.75);
+  background:linear-gradient(165deg,rgba(30,90,170,.92),rgba(12,40,90,.95));color:#eaf6ff;
+  box-shadow:0 4px 14px rgba(3,15,35,.5);}
+.pet-show .ps-play:active{transform:translateX(-50%) scale(.95);}
+.stage-hero.ps-clip-blocked .ps-play{display:block;}
 /* ขอบในเรืองแสงบาง ๆ ให้คลิปดูเป็น "จอ" ไม่ใช่รูสี่เหลี่ยมดำ */
 .stage-hero.ps-clip-mode .pet-show::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   border-radius:20px;box-shadow:inset 0 0 42px rgba(4,10,24,.75), inset 0 0 0 1px rgba(140,200,255,.16);}
