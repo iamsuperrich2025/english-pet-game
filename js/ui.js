@@ -1111,6 +1111,10 @@ function bindLbTabs(){
     if(typeof WsAward !== 'undefined') WsAward.open();
   });
 }
+/* 🥇 รอบ 594: การ์ดอันดับเล็กในคอลัมน์ขวาถูกถอดออก (ผู้ใช้สั่ง — บริเวณนั้นแออัด)
+   ฟังก์ชันนี้จึงไม่ทำงานแล้ว (เจอ #leaderboard-card ไม่เจอ = คืนทันที) แต่คงไว้ให้ผู้เรียกเดิม
+   (online.js / wsaward.js / wordsearch.js / renderDashboard) เรียกได้ปลอดภัย
+   ทางเข้าอันดับตอนนี้ = ปุ่ม #btn-rail-rank ในรางซ้าย → openLeaderboardFull() */
 function renderLeaderboardCard(){
   const el = document.getElementById('leaderboard-card');
   if(!el) return;
@@ -1219,6 +1223,8 @@ function openLeaderboardFull(){
     if(typeof toast === 'function') toast('📡 ต่ออินเทอร์เน็ตก่อนดูอันดับเต็มนะ');
     return;
   }
+  bindLbTabs();     // 🥇 รอบ 594: การ์ดเล็กถูกถอดแล้ว → ผูก listener .wsa-open (กระดานประกาศรางวัล) ที่นี่แทน
+  document.querySelectorAll('.lbf-overlay').forEach(o=>o.remove());   // กดปุ่มรางซ้ำ = แทนที่อันเก่า ไม่ซ้อนกัน
   __lbfTab = LB_TABS.indexOf(lbTab) >= 0 ? lbTab : 'coins';
   const ov = document.createElement('div'); ov.className = 'lbf-overlay';
   const close = ()=> ov.remove();

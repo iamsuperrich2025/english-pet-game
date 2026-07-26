@@ -60,6 +60,11 @@ document.getElementById('btn-cats').addEventListener('click', ()=>{ renderCats()
 document.getElementById('btn-stats').addEventListener('click', ()=>{ renderStats(); showScreen('screen-stats'); });
 document.getElementById('btn-rail-trophy').addEventListener('click', showProgressReport);   // 🏆 ปุ่มลัดดูตู้เข็มสะสม/ความก้าวหน้า (รอบ 107)
 document.getElementById('btn-rail-cure').addEventListener('click', railCureClick);   // ปุ่มรักษาด่วน (กดได้เฉพาะตอนมีน้องป่วย)
+// 🥇 รอบ 594: ปุ่มอันดับในราง (แทนกลุ่มอันดับที่เคยอยู่คอลัมน์ขวา) → เปิดกระดานเต็มจอเลย
+document.getElementById('btn-rail-rank').addEventListener('click', ()=>{
+  if(typeof closePanel === 'function') closePanel();
+  if(typeof openLeaderboardFull === 'function') openLeaderboardFull();
+});
 document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-stats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-quiz-back').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
@@ -123,9 +128,9 @@ function showQuizBackPay(){
   ov.className = 'rankup-overlay';
   ov.innerHTML = `
     <div class="rankup-rays" style="--rank-color:#ffd76a"></div>
-    <div class="rankup-content">
+    <div class="rankup-content qbp">
       <div class="rankup-title">🎁 ปรับเงินรางวัลใหม่ — จ่ายย้อนหลังให้ด้วย!</div>
-      <div style="font-size:56px;line-height:1">🪙</div>
+      <div class="qbp-coin">🪙</div>
       <div class="rankup-name" style="color:#ffb300">+${num(b.total)} เหรียญ 🪙</div>
       <p class="rankup-sub">ยินดีด้วย ${escapeHTML(name)}! 🎉<br>
         ตอนนี้ <b>สอบผ่าน 10 ข้อ รับ ${num(b.to)} เหรียญ</b> (เดิม ${num(b.from)} เหรียญ)<br>
@@ -134,13 +139,32 @@ function showQuizBackPay(){
         หมวดที่ยังไม่ได้สอบ ผ่านครั้งแรกรับ ${num(b.to)} เหรียญเลย 💪</small></p>
       <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
     </div>`;
+  const refit = ()=>fitQbp(ov.querySelector('.qbp'));   // หมุนจอ/ย่อหน้าต่าง = คำนวณใหม่ ไม่ให้ล้น
   ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
   });
   document.body.appendChild(ov);
+  fitQbp(ov.querySelector('.qbp'));      // 🔍 รอบ 595: ตัวใหญ่สุดเท่าที่จอรับไหว (ผู้ใหญ่สายตายาวอ่านชัด)
+  window.addEventListener('resize', refit);
   if(typeof feedEvent === 'function')
     feedEvent('coin', `รับเงินรางวัลย้อนหลัง +${num(b.total)} 🪙 (ปรับรางวัลสอบผ่านเป็น ${num(b.to)} เหรียญ)`);
+}
+
+/* 🔍 รอบ 595 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")
+   ขนาดทุกชิ้นในกล่องอิง em ของ --qbp-b → เริ่มจากใหญ่สุดแล้วลดทีละ 1px จนสูงพอดีจอ
+   ใช้ offsetHeight (ไม่โดน transform ของแอนิเมชัน popIn หลอกเหมือน getBoundingClientRect) */
+function fitQbp(box){
+  if(!box) return;
+  const MAX = 30, MIN = 13;                       // px · MIN = เพดานล่างจอเตี้ยสุด (มือถือแนวนอน)
+  const room = ()=> Math.round(window.innerHeight * 0.96);
+  let b = MAX;
+  box.style.setProperty('--qbp-b', b + 'px');
+  while(box.offsetHeight > room() && b > MIN){
+    b -= 1;
+    box.style.setProperty('--qbp-b', b + 'px');
+  }
 }
 
 /* เข้าเกมจริง — เรียกครั้งเดียวจาก authEnterGame (auth.js) หลัง login + sync เซฟเสร็จ
