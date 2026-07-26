@@ -1531,3 +1531,9 @@
 
 - **รอบ 549 (26 ก.ค.):** 🛸 **ย่อป้ายตัวอักษรบานหน้าต่างยานแม่ 4 เท่า** (ผู้ใช้ส่งภาพ: ป้าย "GRAVITY" บังจอ) — ต้นตอ: `BOARD_CELL=42` (ม.) วางใกล้ผู้เล่นแค่ 100ม. (`BOARD_Z=-100`) ทำให้แผ่นตัวอักษรจอเกือบเต็มจอ · แก้ `js/invasion3d.js` บรรทัด `BOARD_CELL` เหลือ `10.5` (÷4) เท่านั้น ไม่แตะ `BOARD_Y`/`BOARD_Z` (เคยจูนกันชนแผง HUD บนแล้ว)
   - **ยืนยัน:** preview เข้าโลกยานแม่ (mock ticket + `enterInvasion3D()`) → `InvasionWorld._t` ตั้งคำ "moon" + คำนวณขนาดป้ายจริงด้วย `camera.project()` บน mesh จริงในฉาก = สูง ~34px จากแคนวาส 720px (~4.7% จอ, เดิมจะ ~4 เท่า ≈19%) · `node --check` ผ่าน · screenshot ใช้ไม่ได้ (browser pane ปิดฝั่งผู้ใช้) ใช้ตัวเลข projection แทน
+
+
+## ⏬ ย้ายเมื่อ 2026-07-26 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 550 (26 ก.ค.):** 🛸 **ขยายยานแม่ 5 เท่า + ตัวอักษรพอดีหน้าต่างยาน** — `MS_R` 520→2600, `MS_Y` 360→1800, `MS_Z` -260→-1300 (ลำกว้าง 5,200ม. คลุมฟ้า 113% จอ) · `BOARD_CELL` 2.1→10.5 (×5 ตามลำ) ตำแหน่งแผงคงเดิม (y=198 z=-100 อ่านได้จาก pitch เริ่มต้น) · CORE คงเดิม (ต้องเล็งยิงได้) · แก้ z-offset ใน `buildWindowBar` จาก `MS_R*fraction` เป็น `cell*fraction` กัน z-fighting ที่ scale ใหญ่ · breathe ยาน 18→90 (สัดส่วนเดิม) แผง/แกนคงเดิม 3
+  - **ยืนยัน:** `node --check` ผ่าน · preview เข้าโลกยานแม่ projection วัดจริง: board screenY=126 (visible), cell 22px (2.4%H), row 17%W, mother screenY=29 (visible), core screenY=337 (visible) · console สะอาด · ล้างเซฟ+reload แล้ว
