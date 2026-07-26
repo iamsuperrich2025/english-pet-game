@@ -569,6 +569,31 @@ const CSS=`
 @keyframes invSpike{0%{opacity:1}50%{opacity:.45}100%{opacity:1}}
 @media (max-height:430px){ #inv-flare{width:56px;height:56px;font-size:20px;right:196px;bottom:96px}
   #inv-spike{top:12%;font-size:13px;padding:4px 12px} }
+/* 🔵💀 รอบ 576: แถบเตือน "ยานแม่เล็งลำแสง" (โทนฟ้า — คนละสีกับแถบถูกล็อกสีแดงของรอบ 569)
+   วางต่ำกว่า #inv-spike เล็กน้อย เผื่อขึ้นพร้อมกันแล้วไม่ทับกัน */
+#inv-msb{position:absolute;left:50%;top:23%;transform:translateX(-50%);z-index:8;display:none;
+  pointer-events:none;white-space:nowrap;border-radius:12px;padding:6px 16px;font-size:15px;font-weight:900;
+  color:#eaf9ff;background:rgba(10,52,86,.86);border:2px solid #6fe0ff;box-shadow:0 6px 20px rgba(0,0,0,.55)}
+#inv-msb b{color:#ffd166}
+#inv-msb .ib-sub{display:block;font-size:12px;font-weight:700;color:#bfe6f7;margin-top:2px}
+#inv-msb.on{display:block;animation:invMsb .8s ease-in-out infinite}
+#inv-msb.hot{background:rgba(140,18,30,.9);border-color:#ff9a8a;animation-duration:.4s}
+@keyframes invMsb{0%{opacity:1}50%{opacity:.5}100%{opacity:1}}
+/* ☠️ การ์ด "โดนลำแสงเต็ม ๆ" — เด้งออกจากโลกแล้วต้องกดเข้าใหม่ */
+#inv-dead{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;padding:12px;
+  background:radial-gradient(circle at 50% 45%,rgba(60,140,190,.30),rgba(2,6,12,.94))}
+#inv-dead.on{display:flex}
+#inv-dead .inv-card{border-color:#ff7a7a;max-width:min(560px,94vw)}
+#inv-dead h3{color:#ff9a9a}
+#inv-dead .msb-cd{font-size:13px;color:#9fd6ee;margin-top:6px}
+/* 📏 จอเตี้ย (กฎ #7): วัดจริงที่ 812×375 แล้วแถบเดิม (top 20% · 2 บรรทัด สูง 46px) ทับกล่อง toast #inv-ban
+   ที่กินช่วง y 88–166 พอดี → ช่องว่างจริงมีแค่ใต้แถบคำศัพท์ (จบ y63) ถึงหัว toast (88) = 25px
+   จึงย่อเหลือบรรทัดเดียว (ซ่อน .ib-sub — ข้อมูลเดียวกันอยู่ใน toast อยู่แล้ว)
+   ⚠️ top ที่นี่เป็นแค่ค่าเริ่มต้น — ตัวจริง msbBarPos() คำนวณเป็น px จากก้นแถบคำศัพท์ทุกเฟรม
+      เพราะ % ไล่ตามความสูงแถบคำศัพท์ไม่ทัน (วัดจริง: 812×375 ก้นแถบ y66 · 812×430 ก้นแถบ y84 — เลื่อนคนละอัตรากับจอ) */
+@media (max-height:430px){ #inv-msb{top:18%;font-size:11px;padding:1px 9px;border-width:1.5px}
+  #inv-msb .ib-sub{display:none}
+  #inv-dead .inv-card{padding:10px 16px} #inv-dead h3{font-size:19px} #inv-dead p{font-size:13px;margin-bottom:8px} }
 /* กระสุนในแม็ก */
 /* 🎯 รอบ 433 (ผู้ใช้สั่ง): ย้ายช่องกระสุนมาอยู่ "ถัดจากปุ่มออก" มุมบนซ้าย
    (เดิมอยู่ท้ายแผงสถานะ ทำให้แผงสูงจนชนปุ่ม/กระดานคะแนนบนจอเตี้ย) */
@@ -872,6 +897,7 @@ const CSS=`
 `;
 
 let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,fire2Btn,rocketBtn,runBtn;
+let msbEl,deadEl,deadTEl;      // 🔵💀 รอบ 576: แถบเตือนลำแสงยานแม่ + การ์ดตอนโดนเต็ม ๆ
 
 function buildDom(){
   const st=document.createElement('style'); st.id='inv-style'; st.textContent=CSS; document.head.appendChild(st);
@@ -930,7 +956,16 @@ function buildDom(){
     <canvas id="inv-radar" width="180" height="180"></canvas>
     <div id="inv-locks"></div>
     <div id="inv-spike"></div>
+    <div id="inv-msb"></div>
     <div id="inv-ban"></div>
+    <div id="inv-dead"><div class="inv-card">
+      <h3>☠️ โดนลำแสงยานแม่เต็ม ๆ!</h3>
+      <p>ยานแม่เตือนด้วยลำแสงสีฟ้าข้างตัวเรา <b>${MSB_MAX} ครั้ง</b> แล้วเราไม่ยอมวิ่งหนี —
+      ครั้งที่ ${MSB_MAX+1} มันเล็งมาที่ตัวเราเต็ม ๆ <b>พลังชีวิตหมดเกลี้ยง</b><br>
+      <b>ครั้งหน้าเห็นวงสีฟ้าบนพื้นเมื่อไหร่ ให้รีบวิ่งออกจากวงทันที!</b></p>
+      <button id="inv-dead-ok" class="inv-btn red">⬅️ กลับล็อบบี้</button>
+      <div class="msb-cd">ต้องกดเข้าโลกยานแม่ใหม่ถึงจะกลับมาเล่นได้ · ออกเองใน <b id="inv-dead-t">5</b> วิ</div>
+    </div></div>
     <div id="inv-intro"><div class="inv-card">
       <h3>🛸 ยานแม่บุกโลก!</h3>
       <p>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — <b>คำศัพท์สีเขียว</b>โชว์กลางจอบน<br>
@@ -1003,6 +1038,10 @@ function buildDom(){
   /* 🔥🛡️ รอบ 569: ปุ่มแฟลร์ + แถบเตือนถูกล็อก */
   flareBtn=document.getElementById('inv-flare'); spikeEl=document.getElementById('inv-spike');
   renderFlareBtn();
+  /* 🔵💀 รอบ 576: แถบเตือนลำแสงยานแม่ + การ์ดตอนโดนเต็ม ๆ */
+  msbEl=document.getElementById('inv-msb'); deadEl=document.getElementById('inv-dead');
+  deadTEl=document.getElementById('inv-dead-t');
+  document.getElementById('inv-dead-ok').addEventListener('click',()=>msbKickOut());
   /* 🎯📡 รอบ 563: จอเรดาร์ + กรอบล็อกเป้า */
   radarEl=document.getElementById('inv-radar'); radarCtx=radarEl?radarEl.getContext('2d'):null;
   /* 🎯🔒 รอบ 564: กรอบล็อกหลายใบ — สร้างล่วงหน้าเท่าโควตา RDR_MAX_LOCK แล้วเปิด/ปิดเอาตอนวาด */
@@ -8133,6 +8172,212 @@ function tickFlashlight(){
 }
 
 /* ============================================================
+   🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
+   สเปกที่ผู้ใช้สั่งตรง ๆ:
+     ① ยิงลำแสงสีฟ้าลงมา "ใกล้ ๆ" จุดที่ผู้เล่นยืน (ไม่ใช่ใส่ตัวเลย)
+     ② ผู้เล่นเคลื่อนที่หนี = ลำแสงลงเฉียด ๆ ตรงที่เดิม ไม่โดนตัว → นับใหม่ (msbStay=0)
+     ③ ยิงใกล้ตัวครบ MSB_MAX (3) ครั้งแล้วยังไม่หนี → ครั้งที่ 4 "ล็อกตัวเรา" ยิงโดนเต็ม ๆ
+        พลังชีวิตหมดเกลี้ยง + เด้งออกจากโลก ต้องกดเข้าโลกยานแม่ใหม่ถึงจะเล่นต่อได้
+   🧒 กันโหดเกินสำหรับเด็ก (ทางรอดต้องชัดเสมอ):
+     · มีช่วงเล็ง MSB_WARN 2.6 วิ ก่อนลำแสงลงทุกครั้ง — เห็น "วงสีฟ้าบนพื้น" + เสียงตุ๊บถี่ขึ้น + แถบบอกวินาที
+     · แถบเตือนบอกตัวเลขจริง: หนีไปแล้วกี่เมตร/ต้องหนีกี่เมตร · โดนเตือนมาแล้วกี่ครั้ง
+     · หนีสำเร็จ 1 ครั้ง = ล้างเคาน์เตอร์ทันที (ไม่สะสมข้ามครั้ง)
+     · ครั้งสังหารเตือนล่วงหน้านานกว่า (MSB_KILL_WARN) + แถบเปลี่ยนเป็นสีแดง + toast บอกว่า "ครั้งนี้โดนแน่"
+     · ขึ้นเฮลิ/เป็นพลปืน = ยกเลิกการเล็ง (นับว่าหนีสำเร็จ) · ยานแม่ตาย/ช่วงซ่อมตัว = ไม่ยิง
+   ⚠️ ตัวนี้เป็น "ทางตายทางเดียวของโลกนี้" — ดาเมจปกติยังไม่มีตาย (hurtPlayer ถอยไปตั้งหลักเหมือนเดิม)
+      จึงต้องฆ่าผ่าน msbKill() ตรง ๆ ไม่ผ่าน hurtPlayer และต้องกด lastHurt=now ทุกเฟรมระหว่างค้างจอ
+      ไม่งั้นสูตรฟื้นพลังเองใน tickPlayer (3.5 วิ) จะดันพลังกลับขึ้นระหว่างการ์ดตายค้างอยู่
+   🧪 เทสต์: `_t.msb` (สถานะ) · `_t.msbFire()` เร่งให้เล็งทันที · `_t.msbStay=3` ดันเข้าครั้งสังหาร
+   ============================================================ */
+const MSB_FIRST=15000;        // เข้าโลกแล้วกี่ ms ถึงเล็งครั้งแรก (ให้เด็กตั้งตัวก่อน)
+const MSB_GAP=10000;          // เว้นระหว่างการเล็งแต่ละครั้ง (ms · คูณสุ่ม .85–1.2)
+const MSB_WARN=2600;          // วงเล็งขึ้นค้างกี่ ms ก่อนลำแสงลง = เวลาที่ให้วิ่งหนี
+const MSB_KILL_WARN=3000;     // ครั้งสังหารเตือนนานกว่าอีกนิด (ให้ทันอ่านว่าเกิดอะไรขึ้น)
+const MSB_NEAR=[7,11];        // ยิงห่างจุดที่ผู้เล่นยืนกี่เมตร ("ใกล้ ๆ แต่ไม่โดน")
+const MSB_FLEE=10;            // ขยับออกจากจุดเดิมเกินกี่เมตร = ถือว่า "หนีทัน"
+const MSB_R=6.4;              // รัศมีวงเล็ง/ลำแสง (ม.) — เล็กกว่าระยะ MSB_NEAR = ยืนเฉย ๆ ก็ไม่โดนตัว
+const MSB_HOLD=560;           // ลำแสงค้างกี่ ms แล้วจาง
+const MSB_MAX=3;              // เตือนได้กี่ครั้งก่อนยิงโดนจริง
+const MSB_DEAD_MS=5000;       // การ์ด "โดนเต็ม ๆ" ค้างจอกี่ ms ก่อนเด้งออกจากโลกเอง
+const MSB_BEEP=[420,150];     // จังหวะเสียงเตือน (ms) — [เพิ่งขึ้นวง, ใกล้ลำแสงลง]
+let msbState='idle', msbAt=0, msbEndAt=0, msbTx=0, msbTz=0, msbHx=0, msbHz=0,
+    msbStay=0, msbLethal=false, msbBeepAt=0, msbDeadAt=0,
+    msbRing=null, msbDisc=null, msbCol=null,
+    msbNear=0, msbFled=0, msbHits=0;
+function msbEnsure(){
+  if(msbRing) return;
+  msbRing=new THREE.Mesh(new THREE.RingGeometry(MSB_R*.80,MSB_R,44),
+    new THREE.MeshBasicMaterial({color:0x6fe0ff,transparent:true,opacity:.9,side:THREE.DoubleSide,depthWrite:false}));
+  msbRing.rotation.x=-Math.PI/2; msbRing.visible=false; scene.add(msbRing);
+  msbDisc=new THREE.Mesh(new THREE.CircleGeometry(MSB_R*.80,40),
+    new THREE.MeshBasicMaterial({color:0x2aa8dd,transparent:true,opacity:.22,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending}));
+  msbDisc.rotation.x=-Math.PI/2; msbDisc.visible=false; scene.add(msbDisc);
+  /* ลำแสง = ทรงกระบอกเปิดหัวท้าย สูง 1 หน่วยแล้วค่อยสเกล (ยืดจากพื้นถึงท้องยาน MS_BELLY)
+     fog:false เพราะท้องยานอยู่สูง 335 ม. เกินหมอกฉาก — ไม่งั้นลำแสงท่อนบนกลืนหาย */
+  msbCol=new THREE.Mesh(new THREE.CylinderGeometry(1,1,1,20,1,true),
+    new THREE.MeshBasicMaterial({color:0x9be9ff,transparent:true,opacity:.2,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending,fog:false}));
+  msbCol.visible=false; scene.add(msbCol);
+}
+/* วางวง+ลำแสงที่พิกัดเป้า (rad = รัศมีลำแสงตอนนี้ · op = ความเข้ม) */
+function msbPlace(x,z,rad,op){
+  const gy=terrainH(x,z), h=Math.max(60,MS_BELLY-gy);
+  msbRing.position.set(x,gy+.14,z);
+  msbDisc.position.set(x,gy+.10,z);
+  msbCol.position.set(x,gy+h/2,z);
+  msbCol.scale.set(rad,h,rad);
+  msbCol.material.opacity=op;
+}
+/* 📏 จอเตี้ย: วางแถบเตือน "ใต้แถบคำศัพท์พอดี" เป็น px จริง (ดูเหตุผลในคอมเมนต์ CSS ของ #inv-msb) */
+function msbBarPos(){
+  if(!msbEl||!wordEl) return;
+  /* ⚠️ วัดจริงทุกขนาด: ตั้ง top เป็น % เท่าไหร่ก็ชนของเดิมสักจอ (1280×720 ชน toast · 812×430 ชนแถบคำศัพท์)
+     เพราะทั้งแถบคำศัพท์และ toast ขยับคนละอัตรากับความสูงจอ → เกาะ "ก้นแถบคำศัพท์" เป็น px ไปเลย */
+  const h=window.innerHeight;
+  msbEl.style.top=(wordEl.getBoundingClientRect().bottom+(h<=430?2:6))+'px';
+}
+function msbHide(){
+  if(msbRing){ msbRing.visible=false; msbDisc.visible=false; msbCol.visible=false; }
+  if(msbEl) msbEl.classList.remove('on','hot');
+}
+function resetMsBeam(){
+  msbState='idle'; msbStay=0; msbLethal=false; msbDeadAt=0; msbBeepAt=0;
+  msbNear=0; msbFled=0; msbHits=0;
+  msbAt=performance.now()+MSB_FIRST;
+  msbHide();
+  if(deadEl) deadEl.classList.remove('on');
+  if(hurtEl) hurtEl.classList.remove('on');     // กันขอบจอแดงค้างจากรอบที่โดนลำแสงตาย
+}
+/* 🎯 เริ่มเล็ง — จุดตกอยู่ "ข้างตัว" MSB_NEAR ม. (ครั้งสังหารเล็งที่ตัวเราแล้วตามติดจนยิง) */
+function msbBegin(now){
+  msbEnsure();
+  msbLethal = msbStay>=MSB_MAX;
+  msbHx=px; msbHz=pz;
+  if(msbLethal){ msbTx=px; msbTz=pz; }
+  else{
+    const a=Math.random()*TAU, r=rnd(MSB_NEAR[0],MSB_NEAR[1]), lim=WORLD*0.94;
+    msbTx=clamp(px+Math.cos(a)*r,-lim,lim);
+    msbTz=clamp(pz+Math.sin(a)*r,-lim,lim);
+  }
+  msbState='aim'; msbAt=now+(msbLethal?MSB_KILL_WARN:MSB_WARN); msbBeepAt=0;
+  msbRing.visible=true; msbDisc.visible=true; msbCol.visible=true;
+  msbRing.material.color.setHex(msbLethal?0xff5a6e:0x6fe0ff);
+  msbDisc.material.color.setHex(msbLethal?0xdd3a4a:0x2aa8dd);
+  msbCol.material.color.setHex(msbLethal?0xbfe9ff:0x9be9ff);
+  if(msbEl){ msbEl.classList.toggle('hot',msbLethal); msbEl.classList.add('on'); msbBarPos(); }
+  toastBan(msbLethal
+    ? `☠️ <b style="color:#ff8a7a">ครั้งสุดท้าย! ลำแสงล็อกตัวเราแล้ว</b><br><span class="ib-sub">เตือนมา ${MSB_MAX} ครั้งแล้วเราไม่ยอมหนี — ครั้งนี้หลบไม่ได้</span>`
+    : `🔵 <b>ยานแม่กำลังเล็งลำแสง!</b><br><span class="ib-sub">รีบวิ่งออกจาก<b>วงสีฟ้า</b>บนพื้นให้เกิน ${MSB_FLEE} เมตร</span>`, 2200);
+}
+function msbAim(dt,now){
+  if(msbLethal){ msbTx=px; msbTz=pz; }                 // ครั้งสังหารตามตัวเรา = หลบไม่ได้ตามสเปก
+  const span=msbLethal?MSB_KILL_WARN:MSB_WARN;
+  const left=Math.max(0,msbAt-now), k=clamp(1-left/span,0,1);
+  const s=1+Math.sin(now*.012)*.06;
+  msbRing.scale.set(s,s,1); msbDisc.scale.set(s,s,1);
+  msbRing.material.opacity=.55+.45*k;
+  msbDisc.material.opacity=.16+.24*k;
+  msbPlace(msbTx,msbTz, .10+.16*k, .05+.17*k);         // ลำแสงบางจาง ๆ ค่อยหนาขึ้นจนถึงเวลายิง
+  if(now>msbBeepAt){ const hot=k>.55; msbBeepAt=now+(hot?MSB_BEEP[1]:MSB_BEEP[0]); Snd.spike(hot?1:0); }
+  if(msbEl){
+    msbBarPos();                                       // แถบคำศัพท์สูงไม่เท่ากันทุกคำ/ทุกจอ → เกาะก้นมันทุกเฟรม
+    const away=Math.hypot(px-msbHx,pz-msbHz);
+    msbEl.innerHTML = msbLethal
+      ? `☠️ <b>ลำแสงล็อกตัวเรา!</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">เตือนครบ ${MSB_MAX} ครั้งแล้ว — ครั้งนี้พลังชีวิตหมดและต้องเข้าเกมใหม่</span>`
+      : `🔵 <b>ลำแสงกำลังลง!</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">หนีไปแล้ว ${away.toFixed(0)}/${MSB_FLEE} ม. · เตือนมาแล้ว ${msbStay}/${MSB_MAX} ครั้ง</span>`;
+  }
+  if(now>=msbAt) msbStrike(now);
+}
+function msbStrike(now){
+  const fled = !msbLethal && Math.hypot(px-msbHx,pz-msbHz)>=MSB_FLEE;
+  msbState='fire'; msbEndAt=now+MSB_HOLD;
+  if(msbEl) msbEl.classList.remove('on','hot');   // แถบนับถอยหลังหมดหน้าที่แล้ว — คืนพื้นที่ให้ toast สรุปผล
+  msbRing.scale.set(1,1,1); msbDisc.scale.set(1,1,1);
+  msbRing.material.opacity=1; msbDisc.material.opacity=.38;
+  /* ⚠️ วัดจริงรอบ 576 (บั๊กเดียวกับแฟลร์รอบ 569 — ของ "ใกล้เลนส์" ต้องเบากว่าที่คิดเสมอ):
+     ลำแสงกว้าง 12.8 ม. ตกห่างตัวแค่ ~8 ม. = เต็มจอพอดี · ครั้งแรกใส่ opacity .95 + boom sc 2.6 +
+     flashScreen พร้อมกัน → จอขาวโพลน (ขาวจัด 16–20% ค้างยาวเกินลำแสงหายไปแล้ว เพราะลูกไฟ boom
+     สเกล 1.5 = กว้าง ~19 ม. บังหน้าทั้งจอ) — ลดเหลือ opacity .55 + boom .55 (ลูกไฟ ~6 ม. พอดีรอยไหม้บนพื้น)
+     และเก็บ flashScreen ไว้เฉพาะ "ครั้งสังหาร" ที่ต้องการให้จอวาบจริง */
+  msbPlace(msbTx,msbTz,1,.55);
+  Snd.beam();
+  boom(new THREE.Vector3(msbTx,terrainH(msbTx,msbTz)+1.2,msbTz),msbLethal?1.0:.55,0x4fc8ff);
+  shake=Math.min(1.8,shake+(msbLethal?.75:.45));
+  if(msbLethal) flashScreen();
+  if(msbLethal){ msbKill(now); return; }
+  if(fled){
+    msbFled++; msbStay=0;
+    toastBan('💨 <b style="color:#8fe6ff">หนีทัน!</b> ลำแสงลงเฉียดตรงที่เราเพิ่งยืน<br>'+
+             '<span class="ib-sub">เก่งมาก — เห็นวงสีฟ้าเมื่อไหร่ให้วิ่งออกแบบนี้ทุกครั้ง</span>',2200);
+  }else{
+    msbStay++; msbNear++;
+    toastBan(msbStay>=MSB_MAX
+      ? `🚨 <b style="color:#ff8a7a">เตือนครบ ${MSB_MAX} ครั้งแล้ว!</b><br><span class="ib-sub">ครั้งหน้ายานแม่จะยิงมาที่ตัวเราเต็ม ๆ — ย้ายที่เดี๋ยวนี้!</span>`
+      : `⚠️ <b>ลำแสงลงข้างตัวเรา! (เตือนครั้งที่ ${msbStay}/${MSB_MAX})</b><br><span class="ib-sub">ยังไม่หนี ครั้งที่ ${MSB_MAX+1} จะโดนเต็ม ๆ แล้วต้องเข้าเกมใหม่</span>`,2600);
+  }
+}
+/* ☠️ โดนเต็ม ๆ — พลังหมดเกลี้ยง ค้างการ์ดไว้ให้อ่าน แล้วเด้งออกจากโลก */
+function msbKill(now){
+  hp=0; lastHurt=now; renderHp();
+  msbHits++; msbDeadAt=now;
+  keys={}; joy.id=null; joy.dx=0; joy.dy=0; firing=false; isRun=false;
+  if(runBtn) runBtn.classList.remove('on');
+  if(hurtEl) hurtEl.classList.add('on');
+  Snd.hit();
+  if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([90,60,240]);
+  unlockMouse();
+  if(msbEl) msbEl.classList.remove('on','hot');
+  if(deadTEl) deadTEl.textContent=Math.ceil(MSB_DEAD_MS/1000);
+  if(deadEl) deadEl.classList.add('on');
+}
+function msbKickOut(){
+  if(!msbDeadAt) return;
+  msbDeadAt=0;
+  if(deadEl) deadEl.classList.remove('on');
+  if(hurtEl) hurtEl.classList.remove('on');
+  msbHide();
+  exitWorld();
+  if(typeof toast==='function')
+    toast('☠️ ลำแสงยานแม่ยิงโดนเราเต็ม ๆ — กดเข้า "โลกยานแม่" ใหม่อีกครั้งเพื่อกลับไปสู้ต่อ');
+}
+function tickMsBeam(dt,now){
+  /* ค้างการ์ดตาย: ตรึงพลังไว้ที่ 0 (กันสูตรฟื้นเองใน tickPlayer) + ล็อกการบังคับ + นับถอยหลัง */
+  if(msbDeadAt){
+    lastHurt=now; hp=0;
+    keys={}; joy.dx=0; joy.dy=0; firing=false;
+    const left=Math.max(0,MSB_DEAD_MS-(now-msbDeadAt));
+    if(deadTEl) deadTEl.textContent=Math.ceil(left/1000);
+    if(left<=0) msbKickOut();
+    return;
+  }
+  if(!mother||msDead||msRecover){ if(msbState!=='idle'){ msbState='idle'; msbAt=now+MSB_GAP; msbHide(); } return; }
+  /* การ์ดวิธีเล่น/แผนที่จุดลง/กล่องออก เปิดค้างอยู่ = ยังไม่เริ่มจับเวลา */
+  if((introEl&&introEl.classList.contains('on'))||(mapBoxEl&&mapBoxEl.classList.contains('on'))||
+     (exitBox&&exitBox.classList.contains('on'))){
+    if(msbState==='idle') msbAt=now+MSB_FIRST;
+    return;
+  }
+  if(msbState==='aim'){
+    if(inHeli||riding){                                  // 🚁 ขึ้นเครื่องหนี = ยกเลิก + นับว่าหนีสำเร็จ
+      msbState='idle'; msbAt=now+MSB_GAP; msbStay=0; msbFled++; msbHide();
+      toastBan('🚁 <b>ขึ้นเครื่องหนีทัน!</b><br><span class="ib-sub">ยานแม่เลิกเล็งลำแสงแล้ว</span>',1600);
+      return;
+    }
+    msbAim(dt,now); return;
+  }
+  if(msbState==='fire'){
+    const k=Math.max(0,(msbEndAt-now)/MSB_HOLD);
+    msbCol.material.opacity=.55*k;
+    msbRing.material.opacity=k; msbDisc.material.opacity=.5*k;
+    if(now>=msbEndAt){ msbState='idle'; msbAt=now+MSB_GAP*rnd(.85,1.2); msbHide(); }
+    return;
+  }
+  if(inHeli||riding){ msbAt=now+MSB_GAP; return; }        // อยู่บนเครื่อง = ไม่ยิงลำแสงลงพื้นใส่
+  if(now>msbAt) msbBegin(now);
+}
+
+/* ============================================================
    🔁 ลูปหลัก
    ============================================================ */
 function fit(){
@@ -8175,6 +8420,7 @@ function frame(dt,now){
   tickMisQueue(now);                // 🚀🔒 รอบ 564: ปล่อยมิสไซล์ตามคิว "รัวทีละชุด"
   tickCounter(dt,now);              // 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา (ต้องมาหลัง tickRadar)
   tickSpike(dt,now);                // 🔥🛡️ รอบ 569: ถูกล็อก→เสียงเตือน→จรวดศัตรู + แฟลร์ของเรา (หลัง tickCounter)
+  tickMsBeam(dt,now);               // 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
   tickNight(dt,now);                // 🌙 รอบ 471/474: ไล่แสงกลางวัน↔กลางคืน + ไฟถนน + ไฟฉายติดปืน
@@ -8314,6 +8560,7 @@ function start(){
   swAmp=0; swPhase=0;                                      // 🤝 รอบ 501: เข้าโลกด้วยท่าถือนิ่ง ๆ
   swapAt=0; swapTo=null; swapSnd=0;
   msBeamAt=performance.now()+6000;
+  resetMsBeam();                       // 🔵💀 รอบ 576: เข้าโลกใหม่ = ล้างเคาน์เตอร์เตือน/การ์ดตาย
   renderHp(); renderHeat(); renderMissiles();
   fit();
   pickWord();
@@ -8393,7 +8640,10 @@ function exitWorld(){
   if(gpwsSpeakT){ clearTimeout(gpwsSpeakT); gpwsSpeakT=0; }                                   // 🔇 รอบ 558: เสียงพูด GPWS ที่ตั้งคิวไว้ ห้ามดังหลังออกจากโลก
   try{ speechSynthesis.cancel(); }catch(e){}
   squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
-  netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
+  msbState='idle'; msbDeadAt=0; msbHide();              // 🔵💀 รอบ 576: วงเล็ง/แถบเตือนต้องไม่ค้างหลังออกจากโลก
+  if(deadEl) deadEl.classList.remove('on');
+  if(hurtEl) hurtEl.classList.remove('on');
+  netLeave();                                       // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
   inHeli=false; riding=null; rideExt=false; rideHostP=null; rideSpd=0;
   setScoped(false); wrapEl.classList.remove('on','fly','gunner','gunext','scoped');
@@ -8427,6 +8677,16 @@ window.InvasionWorld={
     get coins(){return sessionCoins}, get words(){return sessionWords},
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
+    /* 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ */
+    get msb(){return {state:msbState,stay:msbStay,lethal:msbLethal,dead:!!msbDeadAt,
+      near:msbNear,fled:msbFled,hits:msbHits,
+      left:+Math.max(0,msbAt-performance.now()).toFixed(0),
+      tx:+msbTx.toFixed(1),tz:+msbTz.toFixed(1),
+      d:+Math.hypot(px-msbTx,pz-msbTz).toFixed(1),
+      moved:+Math.hypot(px-msbHx,pz-msbHz).toFixed(1),
+      vis:!!(msbRing&&msbRing.visible), bar:!!(msbEl&&msbEl.classList.contains('on')),
+      card:!!(deadEl&&deadEl.classList.contains('on'))}},
+    set msbStay(v){msbStay=v}, msbFire:()=>{ msbState='idle'; msbAt=0; }, msbKickOut,
     get squad(){return squad.length}, get helis(){return helis.length},
     get squad0(){return squad[0]||null},   /* 🔧 debug รอบ 519: ดึงทหารในหมู่ตัวแรกมา render ดูท่า */
     /* 🎯 รอบ 471: เป้าฝึกยิง */
