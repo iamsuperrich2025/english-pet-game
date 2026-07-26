@@ -379,7 +379,16 @@ const SQUAD_RUN=6.4, SQUAD_WALK=2.7;   // 🏃 รอบ 530: ความเร
    · ปกติ "ผู้เล่นขับเท่านั้น" ไม่มีบอท — ยกเว้นในแมพมีคนน้อยกว่า 2 คน จึงปล่อยบอท 1 ลำเป็นเพื่อน
    · การบังคับ "เหมือนโลกเฮลิคอปเตอร์ทุกประการ" → ค่าพวกนี้ก๊อปตรงจาก tickHeli ใน adventure3d.js */
 const HELI_MAX=5;                      // เพดานจำนวนเฮลิทั้งโลก
-const HELI_ACCEL=13, HELI_VMAX=17, HELI_CLIMB=9, HELI_DAMP=1.8, HELI_DRAG=1.4, HELI_YAWSP=1.5;
+/* 🚀 รอบ 587 (ผู้ใช้สั่ง: "ให้บินไวกว่านี้ 3 เท่า · ขับได้แรงกว่านี้"):
+   ความเร็วสูงสุด/อัตราเร่ง/อัตราไต่ = ×3 ของค่าเดิม (17 / 13 / 9) — ค่าเดิมคือชุดที่ก๊อปมาจากโลกเฮลิฯ
+   หมุนตัวเร็วขึ้นด้วย ไม่งั้นบินเร็วแล้วเลี้ยวตามไม่ทัน · เกจความเร็ว/อัตราไต่ถูกขยายสเกลตามด้านล่าง */
+const HELI_ACCEL=39, HELI_VMAX=51, HELI_CLIMB=27, HELI_DAMP=1.8, HELI_DRAG=1.4, HELI_YAWSP=1.9;
+/* ขาลงเต็มพิกัดตอนนี้ = −15 หน่วย/วิ (เดิม −5) → เกณฑ์ "กระแทกพื้นแรงจนเจ็บ" ต้องขยับตาม
+   ไม่งั้นแค่ลดระดับปกติก็กลายเป็นเจ็บ+เด้งทุกครั้ง (เดิม 7 กับไต่ 9 = แตะไม่ถึง จึงลงจอดนุ่มเสมอ) */
+const HELI_LAND_VY=16, HELI_TAKEOFF_VY=6;
+/* ความเร็วเดินทางจริง = จุดที่แรงเร่งเท่ากับแรงต้าน (HELI_VMAX เป็นแค่เพดานกันหลุด ไม่เคยแตะ)
+   ใช้เป็นตัวหารของ "ลมปะทะระบายความร้อน" ให้บินเต็มสปีด = ระบายเต็มที่พอดี */
+const HELI_CRUISE=HELI_ACCEL/HELI_DRAG;
 const HELI_SKID=1.35, HELI_CEIL=95;    // ความสูงตาคนขับเหนือคานลงจอด · เพดานบิน
 /* 🔫🚁 รอบ 564 (ผู้ใช้สั่ง): "กระสุนปืนจากเฮลิแรงกว่าปืนคนถือ 3 เท่า"
    → ปืนกลติดลำ = GUN_DMG × HELI_GUN_MUL (ยานลูก F_HP 20 → 7 นัดตก แทน 20 นัด) */
@@ -1520,7 +1529,16 @@ const Snd={
    สตาร์ทเครื่อง → crossfade เข้าลูปบิน · ปรับ rpm/ลม/หวอตามการบังคับทุกเฟรม · ไม่มีไฟล์ = เสียงสังเคราะห์
    ยกโครงมาจาก HeliSound ใน adventure3d.js (ตัดส่วนที่โลกนี้ไม่ใช้: assist/squelch/proximity/thud)
    ============================================================ */
-const HELI_XF=1.1, HELI_OD_RPM=1.25, HELI_OD_VOL=.08;
+/* 🚀 รอบ 587 (ผู้ใช้สั่ง "เร่งนิดเดียวก็ขึ้นรอบเครื่องเกิน — เพดานต่ำไปไม่สนุก"):
+   เดิมคันเร่งเต็ม = รอบ 1.45 แต่เส้นแดงอยู่แค่ 1.25 → เร่งเกิน 56% ของคันเร่งเมื่อไหร่ก็หวอทันที
+   (คนเล่นคอมกดลูกศร/Space = คันเร่ง 100% เต็มตลอด → หวอแทบทุกครั้งที่ไต่ขึ้น)
+   ใหม่ = เครื่องแรงขึ้น + ยก "เพดานรอบ" ให้พ้นการบินปกติทั้งหมด:
+     · คันเร่งเต็มเครื่องเย็น = รอบ 1.75 → ยังเขียว ไม่มีไฟ ไม่มีเสียงเตือนเลย
+     · ไฟ "รอบเกิน" ย้ายไปเป็น "ผลต่อเนื่องของการฝืนเครื่องร้อน" — ความล้าจากความร้อน (cpHot 0..1)
+       ดันรอบขึ้นอีกถึง +HELI_OD_HOT (คุมรอบไม่อยู่) → เหลืองที่ 1.80 · แดงที่ 1.88
+       = ต้องปล่อยให้ไฟ 🌡️ แดงค้างไว้นานจริง ๆ ถึงจะได้ยินหวอ ไม่ใช่แค่เร่งแรง */
+const HELI_XF=1.1, HELI_OD_VOL=.08, HELI_RPM_GAIN=.75, HELI_OD_HOT=.20;
+const HELI_OD_AMBER=1.80, HELI_OD_RPM=1.88;
 const HeliSnd={
   master:null, files:{start:null,rotor:null,high:null}, probed:false, loading:null,
   on:false, ready:false, rpm:0, startPlay:null, rotorPlay:null, highPlay:null,
@@ -1598,7 +1616,7 @@ const HeliSnd={
   update(col,landed,dt,env){ if(!this.on||!this.soundOn()) return;
     if(env) this.envUpdate(env,dt);
     if(!this.ready) return;
-    const target=landed?.55:(1+Math.max(0,col)*.45);
+    const target=landed?.55:(1+Math.max(0,col)*HELI_RPM_GAIN+cpHot*HELI_OD_HOT);   // 🚀 รอบ 587 (เดิม 1+col*.45)
     this.rpm+=(target-this.rpm)*Math.min(1,(dt||.016)*.9);
     const r=this.rpm; this.overspeed(r>=HELI_OD_RPM);
     const c=this.ctx(), t=c.currentTime, sm=.08;
@@ -1625,7 +1643,7 @@ const HeliSnd={
     const hi=Math.max(0,Math.min(1,(env.alt-8)/(55-8)));
     this.envG.gain.setTargetAtTime(1-hi*.42,t,sm);
     this.envLp.frequency.setTargetAtTime(20000-hi*(20000-1800),t,sm);
-    this.buildWind(); const sp=Math.max(0,Math.min(1,(env.spd||0)/26));
+    this.buildWind(); const sp=Math.max(0,Math.min(1,(env.spd||0)/40));   // 🚀 รอบ 587: บินเร็วขึ้น 3 เท่า → ขยายสเกลลม (เดิม 26) ไม่งั้นเสียงลมตันตั้งแต่ครึ่งทาง
     this.windG.gain.setTargetAtTime(sp*sp*.17,t,sm);
     this.windBp.frequency.setTargetAtTime(420+sp*900,t,sm);
   },
@@ -3321,7 +3339,11 @@ const CP_SEAT_FULL=.62;                 // ตำแหน่งแนวตั�
 const CP_ZOOM=1.12;                     // ซูมกรอบเต็มลำเล็กน้อย ให้ครอบจอทุกสัดส่วน
 const CP_DASH_OFF_Y=228;                // heli_dash.png ตัดมาจากกรอบเต็มที่ y นี้ (ต้องตรงกับ tools/cockpit_prep.py)
 const CP_DASH_DROP=[0,0,.3];            // มุมบินต่ำดันแผงลงอีก 30% ของความสูงแผง
-const CP_SHAKE_RPM=1.18;                // รอบใบพัดเกินนี้ = เข็มเริ่มสะบัด
+/* 🚀 รอบ 587: เครื่องแรงขึ้น → สเกลหน้าปัดต้องขยายตาม ไม่งั้นเข็มตันสุดตลอดเวลา
+   CP_RPM_MAX = ปลายสเกลรอบใบพัด (คันเร่งเต็ม 1.75 ต้องยังไม่ตัน) · CP_SPD_MAX = ปลายสเกลความเร็ว (km/h)
+   CP_VS_MAX  = ปลายสเกลอัตราไต่/ลด (±หน่วย/วินาที — ขาลงเต็มพิกัดตอนนี้ −15) */
+const CP_RPM_MAX=1.95, CP_SPD_MAX=200, CP_VS_MAX=18;
+const CP_SHAKE_RPM=1.80;                // รอบใบพัดเกินนี้ = เข็มเริ่มสะบัด (รอบ 587: เดิม 1.18 — รอบปกติสูงขึ้นแล้ว จึงเลื่อนไปเท่าโซนเหลือง)
 let cpNat=null, cpDashNat=null, cpMap=null, cpBox='';
 let cpEl=null, gaugeCanvasEl=null, gaugeCtx=null;
 let cpTiltS=0, cpTiltF=0;               // เอียงซ้ายขวา / ก้ม-เงย (ค่าหน่วง — ป้อนขอบฟ้าเทียม)
@@ -3401,15 +3423,20 @@ function cpRoundRect(c,x,y,w,h,r){    // เขียนเองแทน c.rou
 /* ⛽🌡️ รอบ 534: อัปเดตเชื้อเพลิง/อุณหภูมิทุกเฟรมที่อยู่ในเฮลิ (เรียกจาก tickHeliFlight ทั้ง 2 ช่วง)
    col = คันเร่ง −1..1 · ค่าพวกนี้เป็นตัวเลขบนหน้าปัดล้วน ๆ ไม่ไปยุ่งกับฟิสิกส์การบิน */
 function tickHeliGauges(dt,col,now){
-  const tRpm=heliReady?(hLanded?.55:(1+Math.max(0,col)*.45))          // สูตรเดียวกับ HeliSnd.update
+  const tRpm=heliReady?(hLanded?.55:(1+Math.max(0,col)*HELI_RPM_GAIN+cpHot*HELI_OD_HOT))  // สูตรเดียวกับ HeliSnd.update
                       :Math.min(.55,(now-heliStartAt)/START_MS*.55);  // ช่วงสตาร์ท = ไต่รอบขึ้นเรื่อยๆ
   cpRpm+=(tRpm-cpRpm)*Math.min(1,dt*.9);
   const rpm=cpRpmNow();
   const run=clamp((rpm-.55)/.7,0,1);                        // 0 = เครื่องดับ · 1 = รอบบินเต็ม
   if(hLanded&&heliReady&&col<=.1) cpFuel=Math.min(FUEL_MAX,cpFuel+FUEL_REFUEL*dt);   // จอดนิ่ง = ฐานเติมให้
   else cpFuel=Math.max(0,cpFuel-(FUEL_IDLE+FUEL_FLY*run+FUEL_PULL*Math.max(0,col)*run)*dt);
-  const air=Math.min(1,Math.hypot(phVel.x,phVel.z)/HELI_VMAX);   // ลมปะทะ = ระบายความร้อน
-  const tgt=ENG_AMB + run*.52 + Math.max(0,col)*.22*run + Math.max(0,rpm-HELI_OD_RPM)*.6 - air*.16;
+  const air=Math.min(1,Math.hypot(phVel.x,phVel.z)/HELI_CRUISE);   // ลมปะทะ = ระบายความร้อน (รอบ 587: หารด้วยความเร็วเดินทางจริง ไม่ใช่เพดานที่แตะไม่ถึง)
+  /* 🚀 รอบ 587: เดิมอัดคันเร่งเต็มค้างไว้ = ไฟแดงทุกกรณี (แม้บินเร็วสุด) → แรงยกตกเหลือ 35%
+     อัตราไต่จริงเลยเหลือ 1.75 หน่วย/วิ (ไต่ถึงเพดานใช้ 35 วิ!) = ต้นตอที่ผู้ใช้บอก "ไม่แรง ไม่สนุก"
+     ใหม่ = แยกให้ชัดว่า "ร้อน" ขึ้นกับลมปะทะ ไม่ใช่ขึ้นกับการเร่ง:
+       · บินเร็ว + คันเร่งเต็ม = เขียวสบาย ไม่มีบทลงโทษ (ลมระบายทัน — คูลลิ่ง .16→.26 เทียบกับความเร็วเดินทางจริง)
+       · อัดคันเร่งขึ้นตอนลอยนิ่ง/ไต่ชันนาน ๆ = ยังร้อนถึงไฟแดง แรงยกตก ต้องผ่อน (กลไกรอบ 560 อยู่ครบ) */
+  const tgt=ENG_AMB + run*.52 + Math.max(0,col)*.28*run + Math.max(0,rpm-HELI_OD_RPM)*.6 - air*.26;
   cpEngT+=(tgt-cpEngT)*Math.min(1,dt*(tgt>cpEngT?ENG_RISE:ENG_COOL));
   cpEngT=clamp(cpEngT,0,1.15);
   if(cpFuel/FUEL_MAX<FUEL_WARN && !hLanded && now-cpFuelToastAt>26000){     // เตือนเป็นคำพูดด้วย ไม่ใช่แค่ไฟ
@@ -3440,7 +3467,7 @@ function tickHeliHot(dt,now){
 function heliLampLv(){
   const fr=cpFuel/FUEL_MAX, rpm=cpRpmNow(), hpFr=hp/PLAYER_HP;
   return {fuel:fr<FUEL_LOW?2:fr<FUEL_WARN?1:0, tmp:cpEngT>=ENG_HOT?2:cpEngT>=ENG_WARN?1:0,
-          rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_RPM-.08?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0};
+          rpm:rpm>=HELI_OD_RPM?2:rpm>=HELI_OD_AMBER?1:0, dmg:hpFr<.22?2:hpFr<.42?1:0};
 }
 /* 🚨🔊 รอบ 559: เสียงบี๊บเตือนตามไฟบนแผง (น้ำมันต่ำ/เครื่องร้อน/รอบเกิน — ไฟ "เสียหาย" ไม่มีเสียง
    เพราะโดนยิงมีเสียง/ภาพเตือนอยู่แล้ว) · เรียกทุกเฟรมจาก tickHeliGauges = ดังเฉพาะตอนอยู่ในเฮลิ
@@ -3533,16 +3560,16 @@ function drawInvGauges(now){
   c.beginPath(); c.moveTo(ax+R*.5,ay); c.lineTo(ax+R*.16,ay); c.stroke();
   /* ── เข็มที่เหลือ: ค่าจริงจากฟิสิกส์การบิน (phVel/py/terrainH/HeliSnd) ── */
   const spd=Math.hypot(phVel.x,phVel.z)*3.6;                      // m/s → km/h
-  cpNeedle(c,CP_GAUGES.spd,spd/70,'#ffd9a0',{shake:sh,now,phase:0});
+  cpNeedle(c,CP_GAUGES.spd,spd/CP_SPD_MAX,'#ffd9a0',{shake:sh,now,phase:0});
   const alt=Math.max(0,py-terrainH(px,pz)-HELI_SKID);
   cpNeedle(c,CP_GAUGES.alt,alt/60,'#bfe6ff',{shake:sh,now,phase:1.7});
-  cpNeedle(c,CP_GAUGES.vs,(phVel.y+10)/20, phVel.y<-5?'#ff8a80':'#d6f5b0',{shake:sh,now,phase:3.4});
+  cpNeedle(c,CP_GAUGES.vs,(phVel.y+CP_VS_MAX)/(CP_VS_MAX*2), phVel.y<-9?'#ff8a80':'#d6f5b0',{shake:sh,now,phase:3.4});
   /* รอบใบพัด: แถบเขียว-เหลือง-แดงบางๆ บอกโซนปลอดภัย (ไม่ทึบ ไม่บังลายในภาพ) */
   const rg=CP_GAUGES.rpm;
-  [['#66bb6a',.35,1.0],['#ffd54f',1.0,1.25],['#ef5350',1.25,1.5]]
-    .forEach(([col,f1,f2])=>cpArc(c,rg,f1/1.5,f2/1.5,col));
+  [['#66bb6a',.35,HELI_OD_AMBER],['#ffd54f',HELI_OD_AMBER,HELI_OD_RPM],['#ef5350',HELI_OD_RPM,CP_RPM_MAX]]
+    .forEach(([col,f1,f2])=>cpArc(c,rg,f1/CP_RPM_MAX,f2/CP_RPM_MAX,col));
   const rv=cpRpmNow();
-  cpNeedle(c,rg,rv/1.5, rv>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
+  cpNeedle(c,rg,rv/CP_RPM_MAX, rv>=HELI_OD_RPM?'#ff7043':'#ffd9a0',{shake:sh,now,phase:5.1});
   /* ── ⛽ เชื้อเพลิง: โซนแดง = ช่วงต้องหาที่ลงจอด ── */
   const fg=CP_GAUGES.fuel, fr=cpFuel/FUEL_MAX;
   cpArc(c,fg,0,FUEL_WARN,'#ef5350'); cpArc(c,fg,FUEL_WARN,1,'#66bb6a',.32);
@@ -7042,7 +7069,7 @@ function tickHeliFlight(dt,now){
   const lift=heliLift(), colUp=col>0?col*lift:col;
   if(cpHot>.3) shake=Math.max(shake,(cpHot-.3)*.30);       // เครื่องสั่นเตือนด้วยมือ ไม่ใช่แค่ไฟ/เสียง
   if(hLanded){
-    if(col>.25){ hLanded=false; phVel.y=2.5*lift; }        // ดันคันเร่งขึ้น = เทคออฟ (ร้อนอยู่ = ทะยานเบาลง)
+    if(col>.25){ hLanded=false; phVel.y=HELI_TAKEOFF_VY*lift; }   // ดันคันเร่งขึ้น = เทคออฟ (ร้อนอยู่ = ทะยานเบาลง)
   }else{
     phVel.x+=(-sin*fw+cos*sd)*HELI_ACCEL*dt;
     phVel.z+=(-cos*fw-sin*sd)*HELI_ACCEL*dt;
@@ -7068,10 +7095,10 @@ function tickHeliFlight(dt,now){
   /* พื้น: แตะเบา = ลงจอด · กระแทกแรง = เจ็บแล้วเด้ง */
   const minY=terrainH(nx,nz)+HELI_SKID;
   if(ny<=minY){
-    if(phVel.y<-7 && now-lastHurt>1000){ hurtPlayer(18,now); ny=minY; phVel.y=2.2; }
+    if(phVel.y<-HELI_LAND_VY && now-lastHurt>1000){ hurtPlayer(18,now); ny=minY; phVel.y=2.2; }
     else{
       ny=minY;
-      if(!hLanded && Math.abs(phVel.y)<=7 && col<=.1){
+      if(!hLanded && Math.abs(phVel.y)<=HELI_LAND_VY && col<=.1){
         hLanded=true; phVel={x:0,y:0,z:0};
         toastBan('🛬 <b>ลงจอดแล้ว</b> — ลากนิ้วครึ่งขวาขึ้น (คอม: Space) เพื่อบินต่อ · 🪂 ลงจากเครื่อง',1800);
         if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
@@ -9540,6 +9567,14 @@ window.InvasionWorld={
         left:el.style.left, top:el.style.top, txt:lockTxtEls[i]?lockTxtEls[i].textContent:''})),
       radarShown:radarEl?getComputedStyle(radarEl).display:null,
       snd:{n:Snd.lockN,last:Snd.lockLast}, RDR_RANGE, RDR_LOCK_MS, RDR_MAX_LOCK}; },
+    /* 🚀 รอบ 587: ค่ากำลังเครื่อง/เพดานรอบ (ใช้ตรวจว่าเร่งได้ถึงกี่ % ก่อนไฟรอบเกินติด) */
+    get heliPower(){ return {vmax:HELI_VMAX, accel:HELI_ACCEL, climb:HELI_CLIMB, yawsp:HELI_YAWSP,
+      damp:HELI_DAMP, drag:HELI_DRAG, landVy:HELI_LAND_VY, takeoffVy:HELI_TAKEOFF_VY,
+      rpmGain:HELI_RPM_GAIN, odHot:HELI_OD_HOT, odAmber:HELI_OD_AMBER, odRpm:HELI_OD_RPM,
+      rpmMaxCool:1+HELI_RPM_GAIN, rpmMaxHot:1+HELI_RPM_GAIN+HELI_OD_HOT,
+      /* ความล้าจากความร้อน (cpHot) ที่ต้องสะสมถึง ไฟรอบเกินจึงติด — คันเร่งเต็มเครื่องเย็นต้องไม่ติดเลย */
+      hotAmber:+((HELI_OD_AMBER-1-HELI_RPM_GAIN)/HELI_OD_HOT).toFixed(3),
+      hotRed:+((HELI_OD_RPM-1-HELI_RPM_GAIN)/HELI_OD_HOT).toFixed(3) }; },
     /* 🔫🚁 รอบ 564: ปืนกลติดเฮลิแรงกว่าปืนคนถือ 3 เท่า */
     get heliGun(){ return {dmg:PH_GUN_DMG, gunDmg:GUN_DMG, mul:HELI_GUN_MUL, gap:PH_GUN_GAP}; },
     /* 🚀🔒 รอบ 564: คิวยิงรัว — in = อีกกี่ ms ลูกนั้นจะออก */
