@@ -7258,6 +7258,12 @@ function build(){
   skyTex.onload=()=>{ const t=new THREE.Texture(skyTex); t.needsUpdate=true;
     const dome=new THREE.Mesh(new THREE.SphereGeometry(WORLD*1.9,32,16),
       new THREE.MeshBasicMaterial({map:t,side:THREE.BackSide,fog:false}));
+    /* 🚨 รอบ 554 — บั๊กที่ทำให้ "ยานแม่หายทั้งลำ" (เสียเวลาตามหา 2 รอบ):
+       โดมนี้รัศมีแค่ WORLD*1.9 = 798 ม. แต่ยานแม่กว้าง 5,200 ม. วางไกล 1,200 ม.
+       → ตัวยานอยู่ "นอกโดม" และโดมเขียน depth ทับ = โดมบังยานมิดทั้งลำ (ฟ้าโล่ง)
+       แก้แบบ skybox มาตรฐาน: ไม่เขียน depth + วาดก่อนใครเสมอ → ทุกอย่างวาดทับโดมได้
+       ⚠️ ห้ามเอา 2 บรรทัดนี้ออก ไม่งั้นยานแม่ (และอะไรก็ตามที่ไกลเกิน 798 ม.) จะหายเงียบ ๆ */
+    dome.material.depthWrite=false; dome.renderOrder=-1;
     scene.add(dome); skyDome=dome; applyNightLook(nightK); };   // 🌙 รอบ 471: โดมมาทีหลัง ต้องหรี่ตามทันที
   skyTex.onerror=()=>{};
   skyTex.src='img/invasion/sky.png';
