@@ -7,6 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `wsAward` (รอบ 592 · รางวัลรายเดือน Top 10 แท็บ 🔎 ค้นหาคำ)** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/6f886d30-28c9-4951-ad61-d85795c35500 — `/wsAward/<YYYY-MM>` = `{at, w:{<uid>:{r:1-10, p:0-10000, n≤40, g≤20, s}}}` · **อ่านสาธารณะ** (ระดับเดียวกับ leaderboard) · **เขียนได้ครั้งเดียวเท่านั้น** (`auth != null && !data.exists()`) = เครื่องแรกที่เปิดเกมหลัง 00:01 ของวันที่ 1 เป็นคน "ตัดรอบ" แล้วใครก็เขียนทับไม่ได้ → ทุกคนเห็นอันดับ/รางวัลชุดเดียวกัน · `$m` ต้องตรง `^[0-9]{4}-[0-9]{2}$` · `at` ห้ามอนาคตเกิน 1 นาที
+  - **ยังไม่ publish = เกมไม่พัง:** `set` โดน deny → `js/wsaward.js` เงียบ ๆ ไม่จ่ายรางวัลเดือนนั้น (ลองใหม่รอบเช็กถัดไป) · แท็บ 🔎 ยังโชว์อันดับ + เงินรางวัลของแต่ละอันดับ + กระดานประกาศ ("ถ้าตัดรอบตอนนี้") ได้ปกติ
+  - **ความเสี่ยงที่ยอมรับ (ระดับเดียวกับ coins/`sales` ฝั่ง client):** client ที่ดัดแปลงเองอาจชิงเขียน snapshot ที่ยกอันดับตัวเอง — เหรียญเป็นฝั่ง client อยู่แล้ว และ snapshot เขียนได้ครั้งเดียวต่อเดือนจึงจำกัดผลกระทบ
 - ✅ **รอบ 590 (field `ws` ใน /leaderboard = แต้มสะสมเกมค้นหาคำ Word Search) — ผู้ใช้ publish แล้ว 26 ก.ค. 2026 · ตรวจ rules สดผ่านครบ:** อ่าน `/.settings/rules` สดด้วย token ของ firebase CLI → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 20 โซน** และมี `ws: {".validate":"newData.isNumber() && newData.val() >= 0"}` จริง · REST: GET /leaderboard = 200 (อ่านสาธารณะ) · PUT ไม่ล็อกอิน = 401 denied · **ผู้เล่นจริงเขียน `ws` ขึ้น DB ได้แล้ว** (พบ `ws:38` ใน /leaderboard) → แท็บ 🔎 ค้นหาคำ เห็นแต้มของเพื่อนได้เต็มระบบ · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/529eb9e8-b60b-4bc0-89e7-0e5699423745
 - ✅ **รอบ 362 (โซนใหม่ `ads` = เช่าป้ายโฆษณาเมืองเฮลิฯ) — ผู้ใช้ publish แล้ว 19 ก.ค. 2026 · ตรวจสดผ่านครบ:** REST GET /ads = 200 (อ่านสาธารณะ) · PUT ไม่ล็อกอิน = Permission denied · เทียบ rules สดทั้งไฟล์ (CLI `/.settings/rules`) กับก้อนใน RULES.md = **identical ครบ 20 โซน** + เงื่อนไข expiry/ts clamp/uid เข้าจริง · **โบนัส: ของที่ค้าง publish มาก่อน (รอบ 186 g≤20 · 187 typing · 241 chattheme · 255-256 ba+hs) ติดมากับก้อนนี้ครบแล้ว — ปิดค้างทั้งหมด** · เดิม: `/ads/<n 1-10>` = `{uid, n:ชื่อผู้เช่า ≤40, ts}` · อ่านสาธารณะ (ชื่อโชว์บนป้ายอยู่แล้ว — ระดับเดียวกับ leaderboard) · เขียนได้เมื่อ **ว่าง / หมดอายุ (ts เกิน 7 วัน = 604800000 ms) / ป้ายของตัวเอง** · `uid` ต้อง = auth.uid · `ts` ห้ามอนาคตเกิน 1 นาที (กันจองแช่ถาวร) · **ยังไม่ publish = เกมไม่พัง:** ปุ่ม 🪧 เช่าป้ายกดแล้วเขียนโดน deny → toast บอก "ระบบยังไม่เปิด" **ไม่หักเหรียญ** (หักหลังเขียนสำเร็จเท่านั้น) ป้ายโชว์ข้อความติดต่อโฆษณาเดิม · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/b22a7f09-1429-4645-86df-14a637750a15
 - ✅ **รอบ 325 (🐾 ทักทายน้องของเพื่อน) — ผู้ใช้ publish แล้ว 18 ก.ค. 2026 · ตรวจ rules สดผ่าน CLI token แล้ว:** `k` ของ `/gifts` รับ `'shop' | 'collect' | 'greet'` จริงบน server · **เทียบทั้งไฟล์กับก้อนใน RULES.md = ตรงกันเป๊ะทุกโซน (19 โซน identical)** ไม่มีโซนไหนหาย · ของที่เคยค้างมาก่อนติดมาครบด้วย (leaderboard `ba`+`hs` รอบ 255-256 · `chattheme` รอบ 241 · `typing` รอบ 187 · world enum `moto`) → **ปิดค้างทั้งหมด** · เดิม: แก้ **จุดเดียว** ใน `/gifts/$toUid/$fromUid/$giftKey/k` → เพิ่มค่า `'greet'` เข้า enum เดิม (เดิมรับแค่ `'shop'`/`'collect'`) · ไม่มีโซนใหม่ ไม่มี field ใหม่ (ใช้ `id` เก็บรหัสคำทัก เช่น `hi`/`hug`/`treat` ≤40 ตัวอักษรตาม validate เดิม) · **ยังไม่ publish = เกมไม่พัง:** ปุ่ม 🐾 ทักทายน้อง กดแล้วโดน deny → เด้ง toast บอกว่ายังอัปเดตกติกาไม่เสร็จ ส่วนของขวัญปกติ/แชท/ทุกอย่างอื่นทำงานเหมือนเดิมทั้งหมด · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอก:** https://claude.ai/code/artifact/b7b0dfb7-9e21-48bf-917f-0cdc6cce5136
@@ -286,6 +289,26 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "uid": { ".validate": "newData.isString() && newData.val() === auth.uid" },
         "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
         "ts":  { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "$other": { ".validate": false }
+      }
+    },
+    "wsAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
         "$other": { ".validate": false }
       }
     },
