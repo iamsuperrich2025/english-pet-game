@@ -8200,10 +8200,14 @@ const MSB_HOLD=560;           // ลำแสงค้างกี่ ms แล�
 const MSB_MAX=3;              // เตือนได้กี่ครั้งก่อนยิงโดนจริง
 const MSB_DEAD_MS=5000;       // การ์ด "โดนเต็ม ๆ" ค้างจอกี่ ms ก่อนเด้งออกจากโลกเอง
 const MSB_BEEP=[420,150];     // จังหวะเสียงเตือน (ms) — [เพิ่งขึ้นวง, ใกล้ลำแสงลง]
+/* 🧱 รอบ 578 (ผู้ใช้สั่ง): "วิ่งเข้าไปใกล้อาคาร/ยานพาหนะ/สิ่งของเพื่อเข้าที่กำบัง = ยิงไม่โดน ยิงแค่เฉียด ๆ"
+   → ที่กำบังเป็น "ทางรอดที่ 2" คู่กับการวิ่งหนี ใช้ได้แม้กับครั้งสังหาร (ครั้งที่ 4) */
+const MSB_COVER_R=3.4;        // เข้าใกล้ "ขอบ" ตึก/กำแพง/ซากรถ/ถังน้ำมันเท่านี้ (ม.) = อยู่ในที่กำบัง
+const MSB_PAD_R=9;            // เฮลิที่จอด (ยานพาหนะ) วัดจากจุดกลางลำ — ลำใหญ่กว่าสิ่งของทั่วไปมาก
 let msbState='idle', msbAt=0, msbEndAt=0, msbTx=0, msbTz=0, msbHx=0, msbHz=0,
     msbStay=0, msbLethal=false, msbBeepAt=0, msbDeadAt=0,
     msbRing=null, msbDisc=null, msbCol=null,
-    msbNear=0, msbFled=0, msbHits=0;
+    msbNear=0, msbFled=0, msbHits=0, msbCover=null, msbCovered=0;   // 🧱 รอบ 578
 function msbEnsure(){
   if(msbRing) return;
   msbRing=new THREE.Mesh(new THREE.RingGeometry(MSB_R*.80,MSB_R,44),
@@ -8243,23 +8247,46 @@ function msbHide(){
 }
 function resetMsBeam(){
   msbState='idle'; msbStay=0; msbLethal=false; msbDeadAt=0; msbBeepAt=0;
-  msbNear=0; msbFled=0; msbHits=0;
+  msbNear=0; msbFled=0; msbHits=0; msbCover=null; msbCovered=0;
   msbAt=performance.now()+MSB_FIRST;
   msbHide();
   if(deadEl) deadEl.classList.remove('on');
   if(hurtEl) hurtEl.classList.remove('on');     // กันขอบจอแดงค้างจากรอบที่โดนลำแสงตาย
+}
+/* 🧱 อยู่ในที่กำบังไหม — คืนชื่อชนิดที่กำบัง (ไทย) หรือ null
+   ใช้ของที่ฉากมีอยู่แล้วทั้งหมด ไม่ต้องวางอะไรใหม่:
+     · `houses` = บ้านที่เดินเข้าไปข้างในได้ (houseCover เดิมของรอบ 431)
+     · `solids` = ตึก/หอมินาเรต (กล่องหมุนได้ hw/hd) + ซากรถ/กระสอบ/ถัง (วงกลม r)
+     · `pads`   = เฮลิคอปเตอร์ที่จอด = "ยานพาหนะ" ตามที่ผู้ใช้ระบุ
+   ⚠️ วัดระยะถึง "ขอบ" ไม่ใช่จุดกลาง (ตึกกว้าง 20 ม. ถ้าวัดจุดกลางจะต้องยืนกลางตึกถึงนับ)
+   ⚠️ เขียนสูตรกล่องเองแทนการเรียก solidPushOut เพราะตัวนั้นสร้าง object ใหม่ทุกครั้ง — ตัวนี้ถูกเรียกทุกเฟรม */
+function msbCoverAt(x,z){
+  if(houses.length && houseCover(x,z)) return 'ในบ้าน';
+  const R2=MSB_COVER_R*MSB_COVER_R;
+  for(const o of solids){
+    if(o.hw!==undefined){
+      const dx=x-o.x, dz=z-o.z, th=o.rot||0, c=Math.cos(th), s=Math.sin(th);
+      const lx=Math.max(0,Math.abs(dx*c-dz*s)-o.hw), lz=Math.max(0,Math.abs(dx*s+dz*c)-o.hd);
+      if(lx*lx+lz*lz<R2) return 'ข้างอาคาร';
+    }else if(Math.hypot(x-o.x,z-o.z)<o.r+MSB_COVER_R) return 'หลังที่กำบัง';
+  }
+  for(const p of pads) if(Math.hypot(x-p.x,z-p.z)<MSB_PAD_R) return 'ข้างเฮลิคอปเตอร์';
+  return null;
+}
+/* จุดตกใหม่แบบ "เฉียด ๆ" รอบตัวผู้เล่น — ใช้ตอนเข้าที่กำบังแล้วต้องเบนลำแสงออกจากตัว */
+function msbAimBeside(){
+  const a=Math.random()*TAU, r=rnd(MSB_NEAR[0],MSB_NEAR[1]), lim=WORLD*0.94;
+  msbTx=clamp(px+Math.cos(a)*r,-lim,lim);
+  msbTz=clamp(pz+Math.sin(a)*r,-lim,lim);
 }
 /* 🎯 เริ่มเล็ง — จุดตกอยู่ "ข้างตัว" MSB_NEAR ม. (ครั้งสังหารเล็งที่ตัวเราแล้วตามติดจนยิง) */
 function msbBegin(now){
   msbEnsure();
   msbLethal = msbStay>=MSB_MAX;
   msbHx=px; msbHz=pz;
-  if(msbLethal){ msbTx=px; msbTz=pz; }
-  else{
-    const a=Math.random()*TAU, r=rnd(MSB_NEAR[0],MSB_NEAR[1]), lim=WORLD*0.94;
-    msbTx=clamp(px+Math.cos(a)*r,-lim,lim);
-    msbTz=clamp(pz+Math.sin(a)*r,-lim,lim);
-  }
+  msbCover=null;                                   // 🧱 รอบ 578: ให้เฟรมแรกของ msbAim รายงานสถานะกำบังเสมอ
+  if(msbLethal && !msbCoverAt(px,pz)){ msbTx=px; msbTz=pz; }
+  else msbAimBeside();
   msbState='aim'; msbAt=now+(msbLethal?MSB_KILL_WARN:MSB_WARN); msbBeepAt=0;
   msbRing.visible=true; msbDisc.visible=true; msbCol.visible=true;
   msbRing.material.color.setHex(msbLethal?0xff5a6e:0x6fe0ff);
@@ -8271,7 +8298,16 @@ function msbBegin(now){
     : `🔵 <b>ยานแม่กำลังเล็งลำแสง!</b><br><span class="ib-sub">รีบวิ่งออกจาก<b>วงสีฟ้า</b>บนพื้นให้เกิน ${MSB_FLEE} เมตร</span>`, 2200);
 }
 function msbAim(dt,now){
-  if(msbLethal){ msbTx=px; msbTz=pz; }                 // ครั้งสังหารตามตัวเรา = หลบไม่ได้ตามสเปก
+  /* 🧱 รอบ 578: เข้าที่กำบังแล้ว = เลิกล็อกตัวเรา เบนจุดตกออกไปข้าง ๆ ทันที (เห็นชัดว่า "ยิงเฉียด")
+     ออกจากกำบังเมื่อไหร่ ครั้งสังหารกลับมาตามตัวเหมือนเดิม */
+  const cov=msbCoverAt(px,pz);
+  if(cov!==msbCover){
+    msbCover=cov;
+    if(cov){ msbAimBeside();
+      toastBan(`🧱 <b style="color:#8fe6ff">เข้าที่กำบังแล้ว! (${cov})</b><br>`+
+               `<span class="ib-sub">ลำแสงยิงเฉียดข้าง ๆ ไม่โดนตัวเรา — อยู่ตรงนี้ไว้จนกว่าจะยิงจบ</span>`,1800); }
+  }
+  if(msbLethal&&!cov){ msbTx=px; msbTz=pz; }           // ครั้งสังหารตามตัวเรา = หลบไม่ได้ (ยกเว้นเข้าที่กำบัง)
   const span=msbLethal?MSB_KILL_WARN:MSB_WARN;
   const left=Math.max(0,msbAt-now), k=clamp(1-left/span,0,1);
   const s=1+Math.sin(now*.012)*.06;
@@ -8283,13 +8319,21 @@ function msbAim(dt,now){
   if(msbEl){
     msbBarPos();                                       // แถบคำศัพท์สูงไม่เท่ากันทุกคำ/ทุกจอ → เกาะก้นมันทุกเฟรม
     const away=Math.hypot(px-msbHx,pz-msbHz);
-    msbEl.innerHTML = msbLethal
-      ? `☠️ <b>ลำแสงล็อกตัวเรา!</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">เตือนครบ ${MSB_MAX} ครั้งแล้ว — ครั้งนี้พลังชีวิตหมดและต้องเข้าเกมใหม่</span>`
+    msbEl.innerHTML = cov
+      ? `🧱 <b>อยู่ในที่กำบัง — ปลอดภัย</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">${cov} · ลำแสงจะลงเฉียดข้าง ๆ ไม่โดนตัวเรา</span>`
+      : msbLethal
+      ? `☠️ <b>ลำแสงล็อกตัวเรา!</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">เตือนครบ ${MSB_MAX} ครั้งแล้ว — วิ่งเข้าที่กำบัง (ตึก/รถ/เฮลิ) หรือหนีให้พ้น!</span>`
       : `🔵 <b>ลำแสงกำลังลง!</b> ${(left/1000).toFixed(1)} วิ<span class="ib-sub">หนีไปแล้ว ${away.toFixed(0)}/${MSB_FLEE} ม. · เตือนมาแล้ว ${msbStay}/${MSB_MAX} ครั้ง</span>`;
   }
+  if(msbEl) msbEl.classList.toggle('hot', !!msbLethal && !cov);
   if(now>=msbAt) msbStrike(now);
 }
 function msbStrike(now){
+  /* 🧱 รอบ 578: เช็กที่กำบัง ณ วินาทีที่ยิงจริง (ไม่ใช่ตอนเริ่มเล็ง) — มุดเข้ากำบังวินาทีสุดท้ายก็รอด
+     อยู่ในกำบัง = ไม่ตายแม้เป็นครั้งสังหาร และต้องเบนจุดตกออกจากตัวก่อนวาด ไม่งั้นภาพจะดูเหมือนโดนแต่ไม่ตาย */
+  const cov = msbCoverAt(px,pz);
+  if(cov && Math.hypot(px-msbTx,pz-msbTz)<MSB_NEAR[0]) msbAimBeside();
+  const lethalHit = msbLethal && !cov;
   const fled = !msbLethal && Math.hypot(px-msbHx,pz-msbHz)>=MSB_FLEE;
   msbState='fire'; msbEndAt=now+MSB_HOLD;
   if(msbEl) msbEl.classList.remove('on','hot');   // แถบนับถอยหลังหมดหน้าที่แล้ว — คืนพื้นที่ให้ toast สรุปผล
@@ -8302,11 +8346,16 @@ function msbStrike(now){
      และเก็บ flashScreen ไว้เฉพาะ "ครั้งสังหาร" ที่ต้องการให้จอวาบจริง */
   msbPlace(msbTx,msbTz,1,.55);
   Snd.beam();
-  boom(new THREE.Vector3(msbTx,terrainH(msbTx,msbTz)+1.2,msbTz),msbLethal?1.0:.55,0x4fc8ff);
-  shake=Math.min(1.8,shake+(msbLethal?.75:.45));
-  if(msbLethal) flashScreen();
-  if(msbLethal){ msbKill(now); return; }
-  if(fled){
+  boom(new THREE.Vector3(msbTx,terrainH(msbTx,msbTz)+1.2,msbTz),lethalHit?1.0:.55,0x4fc8ff);
+  shake=Math.min(1.8,shake+(lethalHit?.75:.45));
+  if(lethalHit){ flashScreen(); msbKill(now); return; }
+  /* 🧱 เข้าที่กำบังได้ = รอดทุกกรณี (รวมครั้งสังหาร) + ล้างเคาน์เตอร์เหมือนวิ่งหนีสำเร็จ */
+  if(cov){
+    msbCovered++; msbStay=0;
+    toastBan(`🧱 <b style="color:#8fe6ff">รอดเพราะที่กำบัง!</b> ลำแสงลงเฉียดข้าง ๆ (${cov})<br>`+
+             `<span class="ib-sub">จำไว้นะ — วิ่งชิดตึก/รถ/เฮลิ แล้วยานแม่ยิงไม่โดนเรา</span>`,2400);
+  }
+  else if(fled){
     msbFled++; msbStay=0;
     toastBan('💨 <b style="color:#8fe6ff">หนีทัน!</b> ลำแสงลงเฉียดตรงที่เราเพิ่งยืน<br>'+
              '<span class="ib-sub">เก่งมาก — เห็นวงสีฟ้าเมื่อไหร่ให้วิ่งออกแบบนี้ทุกครั้ง</span>',2200);
@@ -8679,7 +8728,8 @@ window.InvasionWorld={
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     /* 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ */
     get msb(){return {state:msbState,stay:msbStay,lethal:msbLethal,dead:!!msbDeadAt,
-      near:msbNear,fled:msbFled,hits:msbHits,
+      near:msbNear,fled:msbFled,hits:msbHits,cover:msbCover,covered:msbCovered,
+      coverNow:msbCoverAt(px,pz),
       left:+Math.max(0,msbAt-performance.now()).toFixed(0),
       tx:+msbTx.toFixed(1),tz:+msbTz.toFixed(1),
       d:+Math.hypot(px-msbTx,pz-msbTz).toFixed(1),
