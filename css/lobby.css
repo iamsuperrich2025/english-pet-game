@@ -610,7 +610,7 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 /* ---------- ส่วนกลาง: เมนูซ้าย + เวทีสัตว์ + การ์ดสดขวา ---------- */
 .lobby-mid{flex:1;display:flex;gap:10px;min-height:0;}
 
-/* 🧭 รอบ 600: กล่องห่อรางเมนูซ้าย — ที่ยึดของป้ายบอกทาง ▲/▼ (ราง = ตัวเลื่อนอยู่ข้างใน) */
+/* 🧭 รอบ 602: กล่องห่อรางเมนูซ้าย — ที่ยึดของป้ายบอกทาง ▲/▼ (ราง = ตัวเลื่อนอยู่ข้างใน) */
 .rail-wrap{position:relative;display:flex;flex-direction:column;width:76px;flex-shrink:0;min-height:0;}
 .lobby-rail{display:flex;flex-direction:column;gap:7px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
 .rail-btn{
@@ -630,7 +630,7 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .rail-btn.cure-alert{background:rgba(168,32,44,.82);border-color:#ff9c9c;color:#fff;animation:cureBlink 1.1s ease-in-out infinite;}
 .rail-btn.cure-alert:hover{background:rgba(200,45,58,.9);}
 /* ============================================================
-   🧭 ป้ายบอกทางของราง (รอบ 600 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+   🧭 ป้ายบอกทางของราง (รอบ 602 · ผู้ใช้สั่ง 26 ก.ค. 2026)
    ปัญหา: ราง 21 ปุ่มยาวเกินจอ → เลื่อนแล้วปุ่มที่เคยเห็นหลุดออกนอกจอ
    ผู้ใช้ที่ไม่ชำนาญนึกว่า "ปุ่มหาย/เกมพัง"
    แก้: ขอบรางด้านที่ยังมีปุ่มซ่อนอยู่ = ไล่สีจาง + ปุ่ม ▲/▼ กระดึ๊บเรียกสายตา

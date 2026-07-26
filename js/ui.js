@@ -1154,7 +1154,11 @@ function rankUpCheck(rank, b, btn){
     rankUpSound(rank, up);
   }
   // ออฟไลน์/หลุดกระดานชั่วคราว (rank=0) ไม่ล้างความจำ — ไม่งั้นพอเน็ตกลับมาจะกลืนการไต่อันดับจริงไป
-  if(rank && rank !== prev){ state.rankSeen = rank; saveState(); }
+  let dirty = false;
+  if(rank && rank !== prev){ state.rankSeen = rank; dirty = true; }
+  // 🏅 รอบ 602: สถิติ "อันดับดีที่สุดที่เคยทำได้" — เก็บเลขน้อยสุดตลอดกาล อันดับตกแล้วไม่หาย
+  if(rank && (!state.rankBest || rank < state.rankBest)){ state.rankBest = rank; dirty = true; }
+  if(dirty) saveState();
 }
 /* 🔔 รอบ 600: เสียงตอนไต่อันดับ (ต่อยอดรอบ 599) — ใช้เสียงชุดเดิมของเกม ไม่สร้างเสียงใหม่
    ขึ้น 1-2 = กรุ๊งกริ๊งสั้น · 3-5 = กลาง · ≥6 = ยาว · ติด Top 3 = แฟนแฟร์ sfx.win (ก้าวใหญ่ ควรได้ฉลองเต็ม)
@@ -5570,6 +5574,43 @@ function railWorldClick(w){
   w.enter();                                                // มีตั๋ว + ไม่บาดเจ็บ → เข้าโลกเลย
 }
 
+/* ============================================================
+   🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+   ราง 21 ปุ่มยาวเกินจอ → เลื่อนแล้วปุ่มหลุดนอกจอ ผู้ใช้ที่ไม่ชำนาญนึกว่า "ปุ่มหาย"
+   ทางแก้: ด้านที่ยังมีปุ่มซ่อนอยู่ = โชว์ ▲/▼ + ขอบจาง · กดแล้วเลื่อนให้เอง
+   ============================================================ */
+function railScrollHint(){
+  const wrap = document.getElementById('rail-wrap');
+  const rail = document.getElementById('lobby-rail');
+  if(!wrap || !rail) return;
+  const max = rail.scrollHeight - rail.clientHeight;         // เลื่อนได้สุดเท่าไร
+  wrap.classList.toggle('more-up',   rail.scrollTop > 6);
+  wrap.classList.toggle('more-down', max > 6 && rail.scrollTop < max - 6);
+}
+function railScrollTop(){                                    // กลับเมนูบนสุด (ใช้ตอนกลับเข้าล็อบบี้ด้วย)
+  const rail = document.getElementById('lobby-rail');
+  if(rail) rail.scrollTop = 0;
+  railScrollHint();
+}
+function initRailScroll(){
+  if(initRailScroll.done) return;                            // ผูก listener ครั้งเดียวพอ
+  const rail = document.getElementById('lobby-rail');
+  if(!rail) return;
+  initRailScroll.done = true;
+  rail.addEventListener('scroll', railScrollHint, {passive:true});
+  window.addEventListener('resize', railScrollHint);
+  const up = document.getElementById('rail-nudge-up');
+  const dn = document.getElementById('rail-nudge-down');
+  /* เลื่อนแบบลื่น + กันเหนียว: ถ้าเบราว์เซอร์ไม่ทำ smooth ให้ (บางเครื่อง/ประหยัดแบต) ก็กระโดดไปเลย */
+  const glide = to=>{
+    const from = rail.scrollTop;
+    rail.scrollTo({top:to, behavior:'smooth'});
+    setTimeout(()=>{ if(rail.scrollTop === from) rail.scrollTop = to; railScrollHint(); }, 380);
+  };
+  if(up) up.addEventListener('click', ()=>{ sfx.select(); glide(0); });
+  if(dn) dn.addEventListener('click', ()=>{ sfx.select(); glide(rail.scrollTop + Math.max(60, rail.clientHeight*0.75)); });
+}
+
 /* สร้างปุ่มโลก 3D ในรางครั้งแรก แล้วอัปเดตสถานะล็อก/ปลดล็อกทุกครั้งที่ render */
 function renderRailWorlds(){
   const rail = document.querySelector('.lobby-rail');
@@ -5627,6 +5668,8 @@ function renderRailWorlds(){
       }
     }
   });
+  initRailScroll();                                           // 🧭 รอบ 601: ป้ายบอกทาง ▲/▼ (ปุ่มในรางเปลี่ยนความสูงได้ → อัปเดตทุก render)
+  railScrollHint();
 }
 
 /* ---------- คำเชิญเล่นด้วยกัน (เงินคืนคนละ TINV_CASHBACK เมื่อเจอกันใน map) ---------- */
@@ -7088,6 +7131,11 @@ function renderStats(){
         <span><b>${fmtNum(state.bestCombo||0)}</b> ครั้งติด</span></div>
       <div class="stats-row"><span>🏭 สินค้าที่ผลิตสำเร็จ</span><span><b>${fmtNum(state.producedCount)}</b> ชิ้น</span></div>
       <div class="stats-row"><span>🌐 โบนัสออนไลน์สะสม (เปิดเกมออนไลน์ = +${ONLINE_RATE}/วิ)</span><span><b>${fmtNum(state.onlineEarned||0)}</b> เหรียญ</span></div>
+      <!-- 🏅 รอบ 602: อันดับดีที่สุดที่เคยทำได้บนกระดานเหรียญ (เก็บใน state.rankBest · อันดับตกแล้วสถิตินี้ไม่หาย) -->
+      <div class="stats-row"><span>🥇 อันดับดีที่สุดที่เคยทำได้ (กระดานเหรียญ 🪙)</span>
+        <span>${state.rankBest
+          ? `<b style="color:#d99a12">อันดับ ${fmtNum(state.rankBest)}</b>${state.rankSeen ? ` · ตอนนี้อันดับ ${fmtNum(state.rankSeen)}` : ''}`
+          : 'ยังไม่เคยติดกระดาน — เก็บเหรียญเพิ่มอีกนิดนะ 💪'}</span></div>
     </div>
     <div class="stats-card"><h3 class="stats-title">🐾 สัตว์เลี้ยงของหนู</h3>${petRows}</div>
     <div class="stats-card"><h3 class="stats-title">📚 คะแนนสูงสุดรายหมวด (${gradeBand(s.grade).label})</h3>${catRows}</div>

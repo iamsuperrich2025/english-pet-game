@@ -126,7 +126,10 @@
     </header>
 
     <div class="lobby-mid">
-      <nav class="lobby-rail">
+      <!-- 🧭 รางเมนูซ้าย: ห่อด้วย .rail-wrap เพื่อวางป้ายบอกทาง ▲/▼ ทับขอบราง
+           (ผู้ใช้สั่ง 26 ก.ค. 2026 — เด็ก/ผู้ใหญ่ที่ไม่ชำนาญเลื่อนรางแล้วคิดว่า "ปุ่มหาย") -->
+      <div class="rail-wrap" id="rail-wrap">
+      <nav class="lobby-rail" id="lobby-rail">
         <!-- ปุ่มรักษาด่วน (ผู้ใช้สั่ง 8 ก.ค. 2026) — บนสุดของรางให้เห็นทันทีไม่ต้องเลื่อน ·
              กดได้เฉพาะตอนมีน้องป่วย (ปกติจางกดไม่ได้ · ป่วยกะพริบแดงเรียกสายตา) -->
         <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
@@ -144,6 +147,10 @@
         <button class="rail-btn" id="btn-stats"><span class="rail-ico">📊</span>สถิติ</button>
         <button class="rail-btn" id="btn-rail-trophy"><span class="rail-ico">🏆</span>ตู้เข็ม</button>
       </nav>
+        <!-- ป้ายบอกทาง: โผล่เฉพาะตอนยังมีปุ่มซ่อนอยู่ทางนั้นจริง ๆ · กดแล้วเลื่อนให้เอง -->
+        <button class="rail-nudge up" id="rail-nudge-up" title="ยังมีปุ่มอยู่ข้างบน — กดเพื่อกลับไปเมนูบนสุด">▲ บนสุด</button>
+        <button class="rail-nudge down" id="rail-nudge-down" title="ยังมีปุ่มอยู่ข้างล่างอีก — กดเพื่อเลื่อนลง">▼ มีอีก</button>
+      </div>
 
       <main class="lobby-stage">
         <!-- รอบ 160: ป้ายอากาศย้ายลง footer (หน้าปุ่มควิซอาหาร) · แท็บสัตว์ขึ้นบนสุด ชิดแนวขอบซ้าย rank chip (alignPetTabs ใน ui.js) -->

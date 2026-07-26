@@ -45,6 +45,8 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
+  // 🧭 รอบ 602: กลับเข้าล็อบบี้ = รางเมนูซ้ายเด้งกลับบนสุดเสมอ (ปุ่มอยู่ที่เดิมทุกครั้ง ไม่ต้องตามหา)
+  if(id === 'screen-dashboard' && typeof railScrollTop === 'function') railScrollTop();
 }
 
 /* ---------- FX ---------- */
