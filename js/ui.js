@@ -3562,11 +3562,18 @@ function renderDashboard(){
     if(vid){
       const heroEl = card.querySelector('.stage-hero');
       const key = petClipKey(p);
+      /* 🗜️ รอบ 611: เล่น "ตัวเล็ก" ใน clip/sm/ ก่อนเสมอ — ถ้าตัวเล็กมีปัญหา (ไฟล์หาย/เครื่องถอดรหัสไม่ได้)
+         ให้ถอยไปต้นฉบับ clip/<key>.mp4 อีก 1 ครั้งก่อน แล้วค่อยยอมแพ้กลับไปฉากการ์ตูน */
+      let triedOrig = false;
       vid.addEventListener('error', ()=>{
+        const orig = key ? `clip/${key}.mp4` : '';
+        if(orig && !triedOrig && vid.getAttribute('src') !== orig){
+          triedOrig = true; vid.setAttribute('src', orig); vid.load(); return;
+        }
         if(key) CLIP_FILES[key] = null;
         if(heroEl) heroEl.classList.remove('ps-clip-mode');
         vid.remove();
-      }, {once:true});
+      });
       const tryPlay = ()=>{ const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{}); };
       /* 🩹 รอบ 607: เปลี่ยนหน้าจอเป็นคลิป "ตอนเล่นได้จริง" เท่านั้น (canplay) — ระหว่างรอเน็ต
          เด็กยังเห็นฉากการ์ตูน+ตัวน้องตามปกติ ไม่มีกรอบดำว่าง · เฟดสลับด้วย CSS transition */

@@ -49,6 +49,44 @@ function probeHomeImages(){
    ตรวจแบบ "ลองเล่นก่อน" (ไม่ยิง HEAD ตอนบูต): มีไฟล์ = เล่นได้เลย · ไม่มี = video ยิง error
    → จำว่า null แล้วถอยไปใช้ฉากการ์ตูน CSS ของรอบ 604 (ครูวางคลิปเพิ่มทีหลังได้เลย ไม่ต้องแก้โค้ด) */
 const CLIP_FILES = {};
+
+/* 🗜️ รอบ 611: ไฟล์คลิป "ตัวเล็ก" ที่บีบไว้แล้วใน clip/sm/ (ต้นฉบับใน clip/ ยังอยู่ครบเป็นตัวสำรอง)
+   บล็อกข้างล่างเจนอัตโนมัติด้วย `bash tools/compress_clips.sh` — ⛔ ห้ามแก้มือ (โดนทับ)
+   ค่าแต่ละคลิป = รายชื่อไฟล์เรียง "เล็กสุดก่อน" → เกมหยิบตัวแรกที่เบราว์เซอร์นี้เล่นได้ */
+/* CLIP-SM-START */
+const CLIP_SM = {
+  cat_adult_normal: ['sm/cat_adult_normal.mp4','sm/cat_adult_normal.webm'],
+  cat_baby_normal: ['sm/cat_baby_normal.mp4','sm/cat_baby_normal.webm'],
+  cat_newborn: ['sm/cat_newborn.mp4','sm/cat_newborn.webm'],
+  dog_adult_normal: ['sm/dog_adult_normal.mp4','sm/dog_adult_normal.webm'],
+  dog_baby_normal: ['sm/dog_baby_normal.mp4','sm/dog_baby_normal.webm'],
+  dog_newborn: ['sm/dog_newborn.webm','sm/dog_newborn.mp4'],
+  dragon_adult_normal: ['sm/dragon_adult_normal.mp4','sm/dragon_adult_normal.webm'],
+  dragon_baby_normal: ['sm/dragon_baby_normal.mp4','sm/dragon_baby_normal.webm'],
+  dragon_egg: ['sm/dragon_egg.mp4','sm/dragon_egg.webm'],
+};
+/* CLIP-SM-END */
+
+/* เบราว์เซอร์นี้เล่น webm (VP9) ได้ไหม — ถามครั้งเดียวแล้วจำไว้
+   ตอบ '' = เล่นไม่ได้ · 'maybe'/'probably' = ได้ (Safari เก่า/iOS เก่าจะได้ '' → ข้ามไปใช้ mp4) */
+let __clipWebm = null;
+function clipCanWebm(){
+  if(__clipWebm === null){
+    try{ __clipWebm = !!document.createElement('video').canPlayType('video/webm; codecs="vp9"'); }
+    catch(e){ __clipWebm = false; }
+  }
+  return __clipWebm;
+}
+/* ไฟล์ที่ควรโหลดจริงของคลิปตัวหนึ่ง: เล็กสุดที่เล่นได้ก่อน · ไม่มีตัวเล็กก็ใช้ต้นฉบับ */
+function clipFileFor(k){
+  const list = CLIP_SM[k];
+  if(list) for(const f of list){
+    if(f.endsWith('.webm') && !clipCanWebm()) continue;
+    return `clip/${f}`;
+  }
+  return `clip/${k}.mp4`;
+}
+
 function petClipKey(p){
   p = p || activePet(); if(!p) return null;
   const stage = petStage(p);
@@ -65,7 +103,7 @@ function petClipUrl(p){
   if(state.psDress && typeof equippedItem === 'function' && equippedItem(p)) return null;   // เด็กเลือก "ดูชุด" อยู่
   const k = petClipKey(p); if(!k) return null;
   if(CLIP_FILES[k] === null) return null;              // เคยลองแล้วไม่มีไฟล์
-  return CLIP_FILES[k] || `clip/${k}.mp4`;
+  return CLIP_FILES[k] || clipFileFor(k);              // 🗜️ รอบ 611: ตัวเล็กที่เล่นได้ก่อน
 }
 
 /* ไอเทมที่สวมอยู่ของสัตว์ตัวหนึ่ง (ใส่ได้ทีละ 1 ชิ้น) */
