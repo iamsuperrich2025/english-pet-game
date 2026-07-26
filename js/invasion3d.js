@@ -1323,6 +1323,18 @@ const Snd={
     o.frequency.exponentialRampToValueAtTime(420,t+.30);
     const g=c.createGain(); g.gain.setValueAtTime(.075,t); g.gain.exponentialRampToValueAtTime(.0008,t+.32);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.34); },
+  /* 🔫↩️ รอบ 568: เสียงเตือน RWR — "ลำที่เราล็อกไว้กำลังหันมายิงสวน" (สองโทนสลับถี่ ๆ แบบไฟเตือนในเครื่องบินรบ)
+     ต้องต่างจาก Snd.lock ชัด ๆ: อันนั้น = "เรากำลังล็อกเขา" · อันนี้ = "เขากำลังจะยิงเรา" */
+  rwrN:0,
+  rwr(){ this.rwrN++;
+    if(!this.on()) return; const c=this.ac(); if(!c) return; const t=c.currentTime;
+    for(let i=0;i<3;i++){ const st=t+i*.13;
+      const o=c.createOscillator(); o.type='square'; o.frequency.setValueAtTime(i%2?900:1360,st);
+      const g=c.createGain(); g.gain.setValueAtTime(.0006,st);
+      g.gain.exponentialRampToValueAtTime(.052,st+.010);
+      g.gain.setValueAtTime(.052,st+.065);
+      g.gain.exponentialRampToValueAtTime(.0006,st+.095);
+      o.connect(g); g.connect(c.destination); o.start(st); o.stop(st+.11); } },
   noise(t,dur,freq,vol){ const c=this.ctx; if(!c) return;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -5131,6 +5143,7 @@ let radarEl=null, radarCtx=null, locksEl=null, lockEls=[], lockTxtEls=[];
 const LK_NUM=['①','②','③','④','⑤','⑥'];
 function rdrOn(){ return rdrLocks.filter(l=>l.on); }
 function resetRadar(){ rdrLocks=[]; rdrBeepAt=0; rdrAddAt=0; misQ=[];
+  ctrQ=[];                                                  // 🔫↩️ รอบ 568: กระสุนยิงสวนที่ค้างคิว = ยกเลิกด้วย
   lockEls.forEach(el=>{ el.style.display='none'; el.classList.remove('on'); });
   if(radarCtx&&radarEl) radarCtx.clearRect(0,0,radarEl.width,radarEl.height); }
 /* เป้าที่ "จ่ออยู่ตอนนี้" — ยานลูกที่ยังไม่ตาย อยู่ในระยะ+ในกรวย และใกล้กลางจอสุด
@@ -5199,8 +5212,11 @@ function drawLockBoxes(){
     el.classList.toggle('on',l.on);
     const dist=Math.round(l.f.grp.position.distanceTo(camera.position));
     /* 🌀 รอบ 565: ลำที่กำลังบิดหนีมิสไซล์ ขึ้นป้ายเตือน = ผู้เล่นรู้ว่าทำไมล็อกหลุด/จรวดพลาด */
-    const eva=performance.now()<(l.f.evaUntil||0)?' 🌀หนี!':'';
-    lockTxtEls[i].textContent=(l.on?'🔴 LOCK ':'🔶 จับเป้า ')+(LK_NUM[i]||'')+' '+l.f.ch.toUpperCase()+' · '+dist+' ม.'+eva;
+    const nowT=performance.now();
+    const eva=nowT<(l.f.evaUntil||0)?' 🌀หนี!':'';
+    /* 🔫↩️ รอบ 568: ลำที่รู้ตัวว่าโดนล็อกแล้วกำลังจะยิงสวน = เตือนบนป้ายก่อนกระสุนออกจริง */
+    const ctr=(!eva&&ctrArming(l,nowT))?' 🔫สวน!':'';
+    lockTxtEls[i].textContent=(l.on?'🔴 LOCK ':'🔶 จับเป้า ')+(LK_NUM[i]||'')+' '+l.f.ch.toUpperCase()+' · '+dist+' ม.'+eva+ctr;
   }
 }
 /* จอเรดาร์มุมซ้ายบน: หัวลำชี้ขึ้นเสมอ · จุดเขียว = ยานลูก · จุดแดงโต = เป้าที่ล็อก */
@@ -6699,8 +6715,9 @@ function tickMother(dt,now){
     spawnAlienShot(from,0xff5a8a,MS_BEAM_DMG,F_SHOT_SPD*.72,1.9);
   }
 }
-function spawnAlienShot(from,color,dmg,spd,scale){
-  const to=new THREE.Vector3(px+rnd(-6,6),py+rnd(-1,1),pz+rnd(-6,6));
+/* aim = จุดเล็งที่คำนวณมาแล้ว (🔫↩️ รอบ 568: ยิงสวนแบบเผื่อนำเป้า) — ไม่ใส่ = เล็งตัวผู้เล่นแบบสุ่มเยื้องเหมือนเดิม */
+function spawnAlienShot(from,color,dmg,spd,scale,aim){
+  const to=aim?aim.clone():new THREE.Vector3(px+rnd(-6,6),py+rnd(-1,1),pz+rnd(-6,6));
   const dir=to.sub(from).normalize();
   const sc=scale||1;
   const m=new THREE.Mesh(new THREE.CylinderGeometry(.30*sc,.30*sc,5.5*sc,6),
@@ -6940,6 +6957,85 @@ function tickMissiles(dt,now){
       m.mesh.geometry.dispose(); m.mesh.material.dispose(); m.trail.material.dispose();
       missiles.splice(i,1);
     }
+  }
+}
+/* ============================================================
+   🔫↩️ รอบ 568 (ผู้ใช้สั่ง): ยานลูกที่ "ถูกเรดาร์ล็อก" ยิงสวนกลับใส่เฮลิผู้เล่น
+   ต่อยอดเรดาร์ 563/564 + ระบบหลบมิสไซล์ 565 — เดิมการล็อกไม่มีต้นทุนเลย จ่อค้างนานแค่ไหนก็ได้
+   ใหม่: ลำที่ติด 🔴 LOCK รู้ตัวว่าโดนเรดาร์จับ (RWR) แล้ว "หันมายิงสวน" ใส่เฮลิเรา
+     ① ⏳ เตือนก่อนยิง — ป้ายกรอบล็อกขึ้น 🔫สวน! + เสียง Snd.rwr() + toast บอกวิธีแก้ (มีเวลา CTR_REACT)
+     ② 🎯 ยิงเป็นชุด CTR_BURST นัด แบบ "เผื่อนำ" ทิศที่เฮลิกำลังบิน (phVel) — บินตรงยาว ๆ = โดนแน่
+        หักเลี้ยว/ขึ้นลงกะทันหันหลังเห็นป้าย = รอด (นำเป้าแค่ CTR_LEAD ของจริง + กระจายกว้างตามระยะ)
+   ⚖️ กันยากเกินสำหรับเด็ก (ทางแก้มีเสมอ):
+     · ยิงสวนเฉพาะลำที่ล็อกจริง 🔴 — 🔶 กำลังจับยังไม่ยิง · สะบัดหัวให้ล็อกหลุด = หยุดยิงทันที
+     · พร้อมกันมากสุด CTR_MAX ลำ ต่อให้ล็อกครบ 4 (ไม่ใช่โดนรุมทั้งฝูง)
+     · ลำที่กำลังบิดหนีมิสไซล์อยู่ (รอบ 565) ยิงสวนไม่ได้ — ยิง 🚀 ใส่ก่อน = ปิดปากมันได้
+     · ดาเมจ CTR_DMG น้อยกว่ากระสุนปกติ (F_SHOT_DMG 9) + คูลดาวน์ CTR_GAP ต่อลำ + ยิ่งไกลยิ่งพลาด
+   ⚠️ ทดสอบ: `_t.counter` ดูสถานะ · `_t.setCounterAim(1)` = แม่นเป๊ะไม่มีกระจาย · `_t.counterFire(f,now)`
+   ============================================================ */
+const CTR_REACT=900;          // ล็อกติดแล้วอีกกี่ ms ถึงยิงสวนนัดแรก (ช่วงให้ผู้เล่นตัดสินใจ)
+const CTR_WARN=380;           // ขึ้นป้าย 🔫สวน! + เสียง RWR ตอนล็อกไปแล้วกี่ ms (ต้องน้อยกว่า CTR_REACT)
+const CTR_GAP=3000;           // คูลดาวน์ต่อลำ (ms) — ยิงชุดถัดไปได้เมื่อไหร่
+                              // ⚖️ วัดจริงรอบ 568 (ลอยนิ่งข้างฝูง ล็อก 4 ลำ): GAP 2600 + DMG 6 = เสียพลัง 45/6 วิ
+                              //    (เกือบทุกนัดเข้าเพราะระยะใกล้ 57 ม. กระจายแค่ 1.4 ม. < รัศมีโดน 2.6 ม.)
+                              //    ปรับเป็น 3000 + DMG 5 → ~28/6 วิ = ต้องลอยนิ่งโดนล็อกนานมากถึงจะถูกดันกลับแนวหลัง
+const CTR_BURST=3;            // กี่นัดต่อชุด
+const CTR_BURST_MS=140;       // ห่างระหว่างนัดในชุดเดียวกัน (ms)
+const CTR_SPD=64;             // ความเร็วกระสุนสวน (เร็วกว่ากระสุนปกติ F_SHOT_SPD 52 = หลบยากขึ้นนิด)
+const CTR_DMG=5;              // ดาเมจต่อนัด (เบากว่ากระสุนปกติ 9 · PLAYER_HP 120 + ฟื้นเองเมื่อไม่โดนยิง)
+const CTR_MAX=2;              // ยิงสวนพร้อมกันได้มากสุดกี่ลำ
+const CTR_SPREAD=0.10;        // ความกระจาย (เมตรต่อระยะ 1 ม.) — คูณกับ (1−CTR_LEAD) อีกที
+let CTR_LEAD=0.75;            // เผื่อนำเป้าแม่นแค่ไหน 0–1 (1 = เป๊ะ+ไม่กระจาย · เทสต์ผ่าน _t.setCounterAim)
+let ctrQ=[], ctrWarnAt=0, ctrShots=0;
+/* จุดเล็ง "เผื่อนำ" — เดาว่าอีก t วิ เฮลิเราจะไปอยู่ตรงไหน (px,py,pz + phVel) แล้วเบี่ยงพลาดตามระยะ */
+function ctrAimPoint(f){
+  const p=f.grp.position, d=Math.hypot(px-p.x,py-p.y,pz-p.z);
+  const t=Math.min(2.2,d/CTR_SPD)*CTR_LEAD;                 // เวลากระสุนเดินทาง × ความแม่น
+  const sp=d*CTR_SPREAD*(1-CTR_LEAD);                       // ยิ่งไกลยิ่งพลาดกว้าง (บินสูง/ไกล = ปลอดภัยกว่า)
+  return new THREE.Vector3(px+phVel.x*t+rnd(-sp,sp), py+phVel.y*t+rnd(-sp*.5,sp*.5), pz+phVel.z*t+rnd(-sp,sp));
+}
+/* ลำนี้ "กำลังจะยิงสวน" ไหม — ใช้ร่วมกันทั้งป้ายกรอบล็อก เสียงเตือน และตัวตัดสินใจยิง */
+function ctrArming(l,now){
+  return !!(l && l.on && l.f && !l.f.dead && now>=(l.f.evaUntil||0) && now-(l.at||0)>=CTR_WARN);
+}
+/* ยิงสวน 1 ชุด = เข้าคิวทีละนัด (ทยอยออกให้เห็นเป็นชุดกระสุน ไม่ใช่พรึ่บเดียว) */
+function counterFire(f,now){
+  f.ctrAt=now;
+  for(let i=0;i<CTR_BURST;i++) ctrQ.push({f,at:now+i*CTR_BURST_MS});
+}
+/* เรียกทุกเฟรม "หลัง tickRadar" (ต้องรู้ก่อนว่าเฟรมนี้ล็อกใครอยู่บ้าง) */
+function tickCounter(dt,now){
+  /* ① ปล่อยกระสุนที่ถึงคิว — เล็งใหม่ทุกนัดจากตำแหน่งลำ ณ ตอนนั้น (ลำขยับ กระสุนก็ตามไป) */
+  for(let i=ctrQ.length-1;i>=0;i--){
+    const q=ctrQ[i];
+    if(now<q.at) continue;
+    ctrQ.splice(i,1);
+    if(!heliPiloting()) continue;                           // ลงจากเครื่องกลางชุด = ยกเลิกที่เหลือ
+    if(q.f.dead||fighters.indexOf(q.f)<0) continue;         // ยิงตกกลางชุด = ไม่ต้องออกต่อ
+    ctrShots++;
+    /* ขนาด 1.45 เท่า: กระสุนพุ่งเข้าหน้าเรา = เห็นเป็น "จุด" เล็กมาก (วัดจริงรอบ 568 ที่ 73 ม.)
+       ต้องโตกว่ากระสุนปกติเพื่อให้เด็กเห็นทันว่ามีของวิ่งเข้ามาแล้วหักหลบ */
+    spawnAlienShot(q.f.grp.position.clone(),0xff5a6e,CTR_DMG,CTR_SPD,1.45,ctrAimPoint(q.f));
+  }
+  if(!heliPiloting()){ if(ctrQ.length) ctrQ=[]; return; }
+  /* ② ลำที่ล็อกอยู่ = ผู้ยิงสวน (คัดมากสุด CTR_MAX ลำตามลำดับที่ล็อกได้) */
+  let n=0;
+  for(const l of rdrLocks){
+    if(!l.on || l.f.dead) continue;                         // 🔶 กำลังจับ = ยังไม่ยิงสวน
+    if(now<(l.f.evaUntil||0)) continue;                     // 🌀 รอบ 565: กำลังบิดหนีมิสไซล์ = ยิงสวนไม่ได้
+    if(++n>CTR_MAX) break;
+    /* เตือนก่อนนัดแรก (ครั้งเดียวต่อการล็อก 1 ครั้ง) */
+    if(!l.warned && ctrArming(l,now)){
+      l.warned=true; Snd.rwr();
+      if(now-ctrWarnAt>3000){
+        ctrWarnAt=now;
+        toastBan('⚠️ <b style="color:#ff8a7a">ยานลูก '+l.f.ch.toUpperCase()+' รู้ตัวว่าโดนล็อก — ยิงสวน!</b><br>'+
+                 '<span class="ib-sub">ยิง 🚀 ให้ไวก่อนโดน · หรือสะบัดหัวออกให้ล็อกหลุด · บินหักเลี้ยว/ขึ้นลง = กระสุนพลาด</span>',1800);
+      }
+    }
+    if(now-(l.at||0)<CTR_REACT) continue;                   // ยังอยู่ในช่วงเตือน
+    if(now-(l.f.ctrAt||0)<CTR_GAP) continue;                // คูลดาวน์ของลำนั้น
+    counterFire(l.f,now);
   }
 }
 /* 👥 พันธมิตรภาคพื้น: ยิงกราดขึ้นฟ้าใส่ยานลูก (ทำดาเมจจริงแต่เบา — ผู้เล่นยังเป็นพระเอก) */
@@ -7694,6 +7790,7 @@ function frame(dt,now){
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
   tickRadar(now);                   // 🎯📡 รอบ 563: เรดาร์ล็อกเป้ามิสไซล์ (เฉพาะตอนขับเฮลิ)
   tickMisQueue(now);                // 🚀🔒 รอบ 564: ปล่อยมิสไซล์ตามคิว "รัวทีละชุด"
+  tickCounter(dt,now);              // 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา (ต้องมาหลัง tickRadar)
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
   tickNight(dt,now);                // 🌙 รอบ 471/474: ไล่แสงกลางวัน↔กลางคืน + ไฟถนน + ไฟฉายติดปืน
@@ -8063,6 +8160,22 @@ window.InvasionWorld={
         fighters:fighters.map(f=>({ch:f.ch, eva:t<(f.evaUntil||0), left:Math.max(0,Math.round((f.evaUntil||0)-t)),
           pods:f.flarePods, roll:+(f.roll||0).toFixed(2), y:+f.grp.position.y.toFixed(1), hp:f.hp,
           inc:(()=>{ const th=incomingMis(f); return th?+th.d.toFixed(1):null; })()})).filter(o=>o.eva||o.inc!=null||o.pods<FLARE_PODS)}; },
+    /* 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา */
+    tickCounter, counterFire, ctrAimPoint, ctrArming,
+    setCounterAim(v){ CTR_LEAD=v; },                             // เทสต์: 1 = เล็งเป๊ะไม่มีกระจาย · 0 = มั่วสุด
+    /* กระสุนสวนที่ลอยอยู่ + พิกัดบนจอ (ฉาก 3D ขยับตลอด เทียบพิกเซลรวมไม่ได้ → พิสูจน์ด้วยพิกัดฉายแทน) */
+    get ctrBolts(){ const W=wrapEl.clientWidth, H=wrapEl.clientHeight;
+      return fShots.filter(s=>s.dmg===CTR_DMG).map(s=>{ const p=s.mesh.position, q=p.clone().project(camera);
+        return {d:+p.distanceTo(camera.position).toFixed(1), front:q.z<1,
+          sx:Math.round((q.x*.5+.5)*W), sy:Math.round((-q.y*.5+.5)*H),
+          onScreen:q.z<1&&Math.abs(q.x)<=1&&Math.abs(q.y)<=1}; }); },
+    get counter(){ const t=performance.now();
+      return {shots:ctrShots, queued:ctrQ.length, snd:Snd.rwrN, lead:CTR_LEAD,
+        CTR_REACT, CTR_WARN, CTR_GAP, CTR_BURST, CTR_DMG, CTR_SPD, CTR_MAX,
+        bolts:fShots.filter(s=>s.dmg===CTR_DMG).length,          // กระสุนสวนที่ยังลอยอยู่กลางอากาศ
+        locks:rdrLocks.map(l=>({ch:l.f.ch, on:l.on, arming:ctrArming(l,t), warned:!!l.warned,
+          eva:t<(l.f.evaUntil||0), sinceLock:l.at?Math.round(t-l.at):null,
+          cool:Math.max(0,Math.round(CTR_GAP-(t-(l.f.ctrAt||-CTR_GAP))))}))}; },
     /* 🕹️ รอบ 562: ลากนิ้วขวา = คันเร่งขึ้น/ลง (แทนปุ่ม ▲▼ ที่ถอดออก) */
     heliPiloting, HELI_COL_SENS, get climb(){ return +phClimb.toFixed(3); },
     /* 🔥 รอบ 560: กำลังยกตกเมื่อร้อนแดงค้าง */
