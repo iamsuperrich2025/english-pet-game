@@ -1224,6 +1224,31 @@ const Snd={
     const o=c.createOscillator(); o.type='sine'; o.frequency.setValueAtTime(1500,t);
     const g=c.createGain(); g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.07);
     o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.08); },
+  /* 📢 รอบ 558: เสียง beep เตือนบินต่ำ (GPWS) — ชุดบี๊บแหลมจากแผงหน้าปัด ดังนำหน้าเสียงพูด "Terrain!"
+     urg 0→1 = ยิ่งใกล้พื้นยิ่ง "ถี่ขึ้น สูงขึ้น ดังขึ้น" (เด็กแยกออกว่าอันตรายแค่ไหนโดยไม่ต้องอ่านป้าย)
+     คืนค่า "ความยาวชุดบี๊บ (วินาที)" ให้ผู้เรียกหน่วงเสียงพูดตามหลังได้พอดี · นับไว้ที่ Snd.gpwsN (เทสต์: _t.gpws.n) */
+  gpwsN:0,
+  gpws(urg){ const k=Math.max(0,Math.min(1,urg||0));
+    const n=3+(k>=.6?1:0), gap=.16-.05*k;                 // ใกล้พื้นมาก = 4 ครั้งถี่ ๆ
+    if(!this.on()) return n*gap;
+    const c=this.ac(); if(!c) return n*gap; const t=c.currentTime;
+    const f=900+300*k, vol=.075+.045*k, dur=.07+.02*k;
+    for(let i=0;i<n;i++){
+      const st=t+i*gap;
+      const o=c.createOscillator(); o.type='square';
+      o.frequency.setValueAtTime(f,st); o.frequency.linearRampToValueAtTime(f*.94,st+dur);
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=f*3.2;   // กันเสียงเหลี่ยมบาดหู
+      const g=c.createGain(); g.gain.setValueAtTime(.0006,st);
+      g.gain.exponentialRampToValueAtTime(vol,st+.008);   // เข้าเร็ว = คมแบบเสียงแผงหน้าปัด
+      g.gain.setValueAtTime(vol,st+dur*.7);
+      g.gain.exponentialRampToValueAtTime(.0006,st+dur);
+      o.connect(lp); lp.connect(g); g.connect(c.destination); o.start(st); o.stop(st+dur+.02);
+      const h=c.createOscillator(); h.type='sine'; h.frequency.setValueAtTime(f*2,st);
+      const hg=c.createGain(); hg.gain.setValueAtTime(.0006,st);
+      hg.gain.exponentialRampToValueAtTime(vol*.35,st+.01); hg.gain.exponentialRampToValueAtTime(.0006,st+dur);
+      h.connect(hg); hg.connect(c.destination); h.start(st); h.stop(st+dur+.02);
+    }
+    this.gpwsN++; return n*gap; },
   noise(t,dur,freq,vol){ const c=this.ctx; if(!c) return;
     const n=c.createBufferSource(), buf=c.createBuffer(1,Math.floor(c.sampleRate*dur),c.sampleRate), d=buf.getChannelData(0);
     for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
@@ -5997,7 +6022,7 @@ function heliCrash(now){
 }
 /* 📢 รอบ 557 (ผู้ใช้สั่ง): GPWS เตือนบินใกล้พื้น — "Terrain! Terrain!" ทั้งเสียงพูด + ป้ายแดง
    เช็กทั้งความสูงตรงตัว และ "พื้นข้างหน้า 1.2 วิตามทิศบิน" (บินเข้าเนินก็เตือนทัน) · คูลดาวน์ 4 วิ */
-let gpwsAt=0;
+let gpwsAt=0, gpwsUrg=0, gpwsSpeakT=0;
 function tickGpws(x,z,y,now){
   if(!heliReady||hLanded) return;
   const alt=y-terrainH(x,z);
@@ -6005,11 +6030,18 @@ function tickGpws(x,z,y,now){
   if(alt>=12 && aheadAlt>=9) return;
   if(now<gpwsAt) return;
   gpwsAt=now+4000;
+  /* 🔊 รอบ 558: บี๊บก่อน แล้วเสียงพูดตามหลังพอดีชุดบี๊บจบ (ไม่ทับกันจนฟังไม่รู้เรื่อง)
+     ระดับอันตราย = เหลือระยะพ้นพื้นน้อยแค่ไหน เทียบเพดานเตือน 12 ม. */
+  gpwsUrg=Math.max(0,Math.min(1,1-Math.max(0,Math.min(alt,aheadAlt))/12));
+  const beepSec=Snd.gpws(gpwsUrg);
   toastBan('⚠️ <b style="color:#ff6a5a">TERRAIN! TERRAIN!</b><br><span class="ib-sub">บินต่ำเกินไป — ดึงคันเร่งขึ้น!</span>',1600);
-  try{
-    const u=new SpeechSynthesisUtterance('Terrain! Terrain! Pull up!');
-    u.lang='en-US'; u.rate=1.25; speechSynthesis.speak(u);
-  }catch(e){}
+  if(!Snd.on()) return;                                   // ปิดเสียงในเกม = ไม่พูดด้วย (เดิมพูดตลอด)
+  gpwsSpeakT=setTimeout(()=>{ gpwsSpeakT=0;
+    try{
+      const u=new SpeechSynthesisUtterance('Terrain! Terrain! Pull up!');
+      u.lang='en-US'; u.rate=1.25; speechSynthesis.speak(u);
+    }catch(e){}
+  }, Math.round(beepSec*1000)+40);
 }
 /* 🤖 บอทขับเฮลิ: ปกติไม่มีเลย (ผู้เล่นขับเท่านั้น) — ยกเว้นในแมพมีคนน้อยกว่า 2 คน ให้มี 1 ลำเป็นเพื่อน
    เรียกทุกครั้งที่จำนวนผู้เล่น/สถานะการบินเปลี่ยน */
@@ -7400,6 +7432,8 @@ function exitWorld(){
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
   Snd.stopHum(); Snd.stopRotor(); Snd.stopNightAir(); HeliSnd.stop(); HeliChorus.stopAll();   // 🔇 รอบ 477/531: กันเสียงลม+ใบพัด Bell + เสียงเฮลิรอบตัวค้างหลังออกจากโลก
+  if(gpwsSpeakT){ clearTimeout(gpwsSpeakT); gpwsSpeakT=0; }                                   // 🔇 รอบ 558: เสียงพูด GPWS ที่ตั้งคิวไว้ ห้ามดังหลังออกจากโลก
+  try{ speechSynthesis.cancel(); }catch(e){}
   squad.forEach(clearSquadBubble);                      // 📣 รอบ 471: ป้ายตะโกนไม่ค้างข้ามรอบ
   netLeave();                                         // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
@@ -7487,6 +7521,9 @@ window.InvasionWorld={
     /* 🚁 รอบ 434: เฮลิจอด */
     get pads(){return pads.map(p=>({x:+p.x.toFixed(1),z:+p.z.toFixed(1),rot:+p.rot.toFixed(2),ready:!!p.model,vis:p.grp.visible}))},
     get heliReady(){return heliReady}, get seat(){return seatLv}, setSeatView, padAt, get myPad(){return myPad?myPad.idx:null},
+    /* 📢🔊 รอบ 558: เสียงเตือนบินต่ำ — n=จำนวนครั้งที่บี๊บจริง · urg=ระดับอันตรายครั้งล่าสุด */
+    get gpws(){ return {n:Snd.gpwsN, urg:+gpwsUrg.toFixed(3), nextAt:+gpwsAt.toFixed(0), speakQ:!!gpwsSpeakT}; },
+    tickGpws,
     get startText(){return startEl?startEl.textContent:''}, get heliBtnShown(){return heliBtn&&heliBtn.style.display==='block'},
     /* 🎛️🎥 รอบ 532: ค็อกพิตภาพจริง + เกจเข็ม + มุมมองภายนอก */
     get cockpit(){ return {seat:seatLv, label:SEAT_VIEWS[seatLv].label, ext:!!SEAT_VIEWS[seatLv].ext,
