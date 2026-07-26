@@ -2478,7 +2478,9 @@ html.no-anim .hero-rank-bg .rank-floor{animation:none;}
 .side-sub{flex-shrink:0;font-size:10px;font-weight:700;color:#8ef0bd;margin:-1px 2px 3px 8px;
   text-shadow:0 1px 3px rgba(8,30,60,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .side-sub:empty{display:none;}
-/* 2 กล่องบนหดพอดีเนื้อหา — กล่องอันดับ (flex:1 เดิม) กินที่ที่เหลือ */
+/* 2 กล่องบนหดพอดีเนื้อหา — กล่องอันดับ (flex:1 เดิม) กินที่ที่เหลือ
+   ⚠️ รอบ 603: กล่องอันดับถูกถอดไปแล้ว (รอบ 594) → กล่องเพื่อนรับหน้าที่ "กินที่ที่เหลือ" แทน
+   (ค่า flex ของ .sec-online ถูกทับในบล็อกรอบ 603 ท้ายไฟล์) */
 .side-sec.sec-quest,.side-sec.sec-online{flex:0 0 auto;}
 .sec-quest .side-glass,.sec-online .side-glass{flex:0 0 auto;}
 #quest-card{height:auto;}
@@ -2728,4 +2730,26 @@ html.no-anim .ws-word{transition:none;}
   .ws-sizes{padding:3px 8px;gap:5px;}
   .ws-sizes-lb{font-size:11px;}
   .ws-size-now{font-size:12px;padding:1px 8px;}
+}
+
+/* ============================================================
+   🧩 รอบ 603: จัดพื้นที่คอลัมน์ขวา (lobby-side) หลังถอด "กลุ่มอันดับ" ออกไปรางซ้าย (รอบ 594)
+   เดิมกล่องอันดับเป็นตัว flex:1 กินที่ที่เหลือ → พอถอดออก คอลัมน์ว่าง ~64% ของความสูง
+   ตอนนี้: 🎯 ภารกิจ = สูงพอโชว์เต็มใบ (แถบความคืบหน้า+จุด — ui.js ถอดคลาส q-fit ให้เองเมื่อจอสูงพอ)
+           🧑‍🤝‍🧑 เพื่อนออนไลน์ = กินที่ที่เหลือทั้งหมด + 1 หน้าใส่เพื่อนได้หลายคน (ui.js หั่นหน้าตามที่วัดได้)
+   ============================================================ */
+.side-sec.sec-online{flex:1 1 auto;min-height:0;}
+/* min-height = 1 แถวเต็ม ๆ (46px + padding กระจก) — จอเตี้ยมาก (662×307) ห้ามบีบจนแถวโดนตัดครึ่ง */
+.sec-online .side-glass{flex:1 1 auto;min-height:64px;}
+#online-card{height:100%;}
+/* แถวน้อย = กระจายให้เต็มกล่อง (ไม่ให้ดูโล่งครึ่งใบ) แต่ระยะห่างมีเพดาน (ui.js ตั้ง gap ให้)
+   → จอสูงมาก ๆ แถวจะไม่ลอยห่างกันจนดูแปลก แต่จับกลุ่มไว้กลางกล่องแทน */
+#online-card .on-page{display:flex;flex-direction:column;justify-content:center;
+  height:100%;gap:1px;}
+#online-card .on-page .online-row,
+#online-card .on-page .inv-card{flex:0 0 auto;}
+/* จอเตี้ยสุด ๆ (เช่น 662×307): บีบขอบในกล่องกระจกแทนการบีบแถว — คอลัมน์ยังจบพอดีไม่ล้นออกนอกกรอบ */
+@media (max-height:340px){
+  .lobby-side .side-glass{padding:4px 6px;}
+  .sec-online .side-glass{min-height:56px;}
 }

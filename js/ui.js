@@ -728,10 +728,19 @@ function questGo(qid){                 // ปุ่ม 🚀 พาไปที�
   else if(qid === 'produce1'){ const b = document.querySelector('.lobby-rail [data-panel="panel-factory"]'); if(b) b.click(); }
 }
 
+/* 🆕 รอบ 603: คอลัมน์ขวาสูงพอ (กลุ่มอันดับถูกถอดรอบ 594) → การ์ดภารกิจโชว์เต็มใบได้
+   สูงกว่าเกณฑ์ = ถอด q-fit (โชว์แถบความคืบหน้า + จุดบอกใบ + บรรทัดโบนัส) · เตี้ยกว่า = หด 2 บรรทัดเหมือนเดิม
+   เกณฑ์ผูกกับ "ความสูงคอลัมน์" ไม่ใช่ "ที่ว่างที่เหลือ" — ที่ว่างเปลี่ยนตามคลาสนี้เอง จะสลับไปมาไม่จบ */
+const SIDE_TALL_MIN = 400;
+function sideIsTall(){
+  const s = document.querySelector('.lobby-side');
+  return !!s && s.clientHeight >= SIDE_TALL_MIN;
+}
+
 function qDeckDraw(el, flashId){
   const qs = questsToday();
   if(__qDeckIdx >= qs.length) __qDeckIdx = 0;
-  el.classList.add('q-fit');   // รอบ 178 (สเปกผู้ใช้): กล่องหดพอดี 2 บรรทัด (ชื่อ+แถวรางวัล) — ซ่อนแถบ/จุดใน CSS ฟอนต์ขนาดปกติ
+  el.classList.toggle('q-fit', !sideIsTall());   // รอบ 178 (สเปกผู้ใช้): จอเตี้ย = หดพอดี 2 บรรทัด (ชื่อ+แถวรางวัล) — ซ่อนแถบ/จุดใน CSS ฟอนต์ขนาดปกติ
   const q = qs[__qDeckIdx];
   const done = state.quests.done.includes(q.id);
   const prog = Math.min(q.target, state.quests.prog[q.id]||0);
@@ -835,12 +844,47 @@ const ONLINE_SWIPE_STEP = 34;         // ลากกี่ px = พลิก 1 
 let __onPages = [], __onPage = 0, __onHold = 0;
 let __onDownY = null, __onAcc = 0, __onSwiped = false;
 
+/* 🆕 รอบ 603: กล่องเพื่อนกินที่ว่างที่เหลือของคอลัมน์ (กลุ่มอันดับถูกถอดรอบ 594)
+   → 1 หน้าใส่เพื่อนได้หลายคนตามที่วัดได้จริง (จอเตี้ยก็ยังได้อย่างน้อย 1 คนเหมือนเดิม)
+   เด็กเห็นเพื่อนทั้งกลุ่มพร้อมกัน ไม่ต้องรอพลิกทีละคน · หน้าเดียวจบ = ไม่พลิกเลย */
+const ONLINE_ROW_H = 38;              // ความสูงสำรองของ 1 แถว (ชื่อ+กิจกรรม) ก่อนวัดของจริงได้
+let __onRowH = 0, __onBuiltPP = 0;    // ความสูงแถวที่วัดได้ · จำนวนแถวที่กล่อง "รับไหว" ตอนสร้างหน้าล่าสุด
+let __onRowsPP = 1;                   // จำนวนแถวจริงต่อหน้า (เกลี่ยแล้ว) — ใช้หาเลขหน้าตอนแฟลชเพื่อนใหม่
+function onPerPage(){
+  const el = document.getElementById('online-card');
+  const h = el ? el.clientHeight : 0;
+  if(!h) return __onBuiltPP || 1;     // กล่องถูกซ่อน (วัดไม่ได้) → คงค่าเดิม อย่าเพิ่งหั่นใหม่
+  return Math.max(1, Math.floor(h / (__onRowH || ONLINE_ROW_H)));
+}
+function onChunk(rows){               // หั่นลิสต์แถวเป็นหน้า ๆ ละเท่าที่ใส่ได้
+  const cap = onPerPage(), out = [];
+  __onBuiltPP = cap;
+  // เกลี่ยให้ทุกหน้ามีคนใกล้เคียงกัน (8 คน กล่องรับ 7 → 4+4 ไม่ใช่ 7+1 ที่หน้าหลังโล่ง)
+  const per = Math.max(1, Math.ceil(rows.length / Math.max(1, Math.ceil(rows.length / cap))));
+  __onRowsPP = per;
+  for(let i = 0; i < rows.length; i += per) out.push(rows.slice(i, i+per).join(''));
+  return out;
+}
+
+const ONLINE_GAP_MAX = 22;            // ระยะห่างสูงสุดระหว่างแถว (กันแถวลอยห่างกันบนจอสูงมาก)
+function onPageSpread(el){            // เกลี่ยแถวให้เต็มกล่องเท่าที่สวย — เหลือเกินเพดานก็จับกลุ่มไว้กลางกล่อง
+  const p = el.querySelector('.on-page');
+  if(!p || !p.children.length) return;
+  const kids = [...p.children];
+  const used = kids.reduce((a,c)=>a + c.getBoundingClientRect().height, 0);
+  const free = el.clientHeight - used;
+  p.style.gap = Math.max(1, Math.min(ONLINE_GAP_MAX, free/(kids.length + 1))).toFixed(1) + 'px';
+}
+
 function onPageDraw(cls){
   const el = document.getElementById('online-card');
   if(!el) return;
   if(!__onPages.length){ el.innerHTML = ''; return; }
   if(__onPage >= __onPages.length) __onPage = 0;
   el.innerHTML = `<div class="on-page${cls ? ' ' + cls : ''}">${__onPages[__onPage]}</div>`;
+  const row = el.querySelector('.online-row');            // วัดแถวจริง 1 ครั้ง (ใช้หั่นหน้ารอบถัดไป)
+  if(row){ const h = row.getBoundingClientRect().height; if(h > 8) __onRowH = h + 2; }
+  onPageSpread(el);
   if(cls) setTimeout(()=>{ const p = el.querySelector('.on-page'); if(p) p.classList.remove(cls); }, 320);
 }
 function onPageFlip(dir){
@@ -882,6 +926,8 @@ function bindOnlinePager(el){
   if(!window.__onFlipTimer) window.__onFlipTimer = setInterval(()=>{
     const box = document.getElementById('online-card');
     if(!box || !box.clientHeight) return;                  // จอถูกซ่อน
+    /* รอบ 603: ที่ว่างเปลี่ยน (เพิ่งเปิดล็อบบี้/หมุนจอ/ย่อหน้าต่าง) → หั่นหน้าใหม่ให้พอดีก่อนพลิก */
+    if(onPerPage() !== __onBuiltPP){ renderOnlineCard(); return; }
     if(Date.now() < __onHold) return;                      // ผู้ใช้กำลังแตะ/เพิ่งปล่อย
     onPageFlip(1);
   }, ONLINE_FLIP_MS);
@@ -954,15 +1000,18 @@ function renderOnlineCard(){
       </div>`;
     });
     bindInviteCards();
-    __onPages = [...invs, meRow, ...rows];
-    if(!rows.length) __onPages.push('<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>');
+    /* รอบ 603: การ์ดคำชวนยังหน้าละใบ (สำคัญ มีปุ่ม) · แถวเพื่อนหั่นหลายคนต่อหน้าตามที่ว่าง */
+    const bodyRows = [meRow, ...rows];
+    if(!rows.length) bodyRows.push('<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>');
+    const bodyPages = onChunk(bodyRows);
+    __onPages = [...invs, ...bodyPages];
     /* เพื่อนใหม่/คำชวนใหม่ → พลิกไปหน้านั้นเลย + ค้าง 5 วิ (แถวติด on-flash มาแล้ว) */
     if(flashInv !== null){
       const i = invEntries.findIndex(([fid])=>fid === flashInv);
       if(i >= 0){ __onPage = i; __onHold = Date.now() + QUEST_FLASH_HOLD; }
     }else if(flashFid !== null){
       const i = Online.friends.findIndex(f=>String(f.id||'') === flashFid);
-      if(i >= 0){ __onPage = invs.length + 1 + i; __onHold = Date.now() + QUEST_FLASH_HOLD; }
+      if(i >= 0){ __onPage = invs.length + Math.floor((1 + i) / (__onRowsPP || 1)); __onHold = Date.now() + QUEST_FLASH_HOLD; }
     }
     onPageDraw('');
     bindOnlinePager(el);
@@ -986,7 +1035,7 @@ function renderOnlineCard(){
       <span class="online-act">${idTag(f.n)} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
     </div>`);
   if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚`;
-  __onPages = [meRow, ...rows];
+  __onPages = onChunk([meRow, ...rows]);
   onPageDraw('');
   bindPlayerClicks();
   bindOnlinePager(el);
