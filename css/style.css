@@ -873,6 +873,18 @@ html.no-anim body.quake{animation:none;}
   margin-bottom:16px;font-size:13.5px;line-height:1.55;color:#8a5a1a;}
 .reg-safety b{color:#b5620d;}
 .reg-safety u{text-decoration-color:#e08a2a;text-underline-offset:2px;}
+/* 📰 รอบ 567: แจ้งค่าเริ่มต้น "เปิดเผยกิจกรรม" ในหน้าลงทะเบียน (โทนฟ้าให้ต่างจากคำเตือนสีส้ม · กะทัดรัดกันดันปุ่มเริ่มเกมตกจอ) */
+.reg-privacy{background:#eaf3ff;border:2px solid #a9d0ff;border-radius:12px;padding:7px 12px;
+  margin-bottom:6px;font-size:12px;line-height:1.4;color:#215a8a;}
+.reg-privacy b{color:#0f3d66;}
+.reg-privacy i{font-style:normal;opacity:.85;}
+/* 📰 รอบ 567: บีบระยะห่างเฉพาะหน้าลงทะเบียน (ไม่แตะ .login-card ที่ใช้คลาส register-card ร่วมกัน) กันฟอร์มยาวเกินจอเตี้ยหลังเพิ่มกล่องแจ้งด้านบน */
+#screen-register h1{margin:2px 0 0;}
+#screen-register .subtitle{margin:0 0 8px;font-size:14px;}
+#screen-register .register-card{padding:14px 16px;}
+#screen-register .register-card label{margin-bottom:9px;}
+#screen-register .reg-safety{margin-bottom:8px;padding:8px 12px;}
+#screen-register .register-card input,#screen-register .register-card select{padding:7px 14px;margin-top:2px;}
 .register-card input,.register-card select{
   display:block;width:100%;margin-top:4px;padding:10px 14px;font-family:inherit;font-size:17px;
   border:2px solid #e6d9f5;border-radius:14px;background:#fff;color:var(--ink);box-sizing:border-box;
