@@ -186,7 +186,7 @@ IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 
 probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · equippedItem:48 · petStateImg:58 · happyNow:72
 makeHappy:73 · currentPetImg:84
 
-## js/invasion3d.js (7,733 บรรทัด · 423 รายการ)
+## js/invasion3d.js (7,739 บรรทัด · 423 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 14-71 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 72-106 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -236,7 +236,7 @@ makeHappy:73 · currentPetImg:84
 - 6554-6735 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
 - 6736-7178 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
 - 7179-7242 🔁 ลูปหลัก
-- 7243-7733 ▶️ เข้า/ออกโลก
+- 7243-7739 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 REWARD:17 · WORLD:18 · EYE:19 · FOV:20 · LOOK_SENS:21 · PITCH_MIN:22
 MS_Y:44 · MS_FLAT:54 · MS_BELLY:55 · MS_HP:56 · MS_DMG_GUN:57 · BOARD_Y:60
@@ -308,7 +308,7 @@ tickSearchBeams:6853 · buildBarrelFires:6890 · tickBarrels:6908 · tickShootin
 tickNightSound:6996 · tickSneak:7005 · tickStorm:7016 · nvReady:7032 · nvEnter:7033 · nvExit:7039
 tickNvHint:7040 · dropGlowStick:7049 · tickGlowSticks:7066 · buildFlashlight:7075 · setNight:7080 · setDayMode:7081
 tickNight:7095 · applyNightLook:7127 · tickFlashlight:7167 · fit:7182 · tick:7188 · frame:7196
-build:7246 · start:7300 · exitWorld:7414
+build:7246 · start:7306 · exitWorld:7420
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:20 · closePanel:28
