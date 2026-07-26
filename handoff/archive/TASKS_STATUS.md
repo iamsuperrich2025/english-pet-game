@@ -1507,3 +1507,10 @@
 - **รอบ 545 (26 ก.ค.):** 🪓 **ผ่าไฟล์เฟส 2 — ดูด `INTRO` (data การ์ดวิธีเล่น 7 โลก · 66 บรรทัด 10410-10475) จาก `js/adventure3d.js` (10,959→10,894) เป็น `js/adv3d_intro.js` (`window.ADV3D_INTRO` data ล้วน)** · ไฟล์หลักเหลือ alias 1 บรรทัด · `loadAdv3d()` ใน `js/ui.js` เพิ่มโหลด part + `sw.js` precache
   - **ยืนยัน:** สแกนก้อนก่อนตัด ไม่มี `` ` ``/`${}`/`\` · JSON เก่า===ใหม่เป๊ะ (3,749B ทั้งคู่ ผ่าน node) · `node --check` ผ่าน 4 ไฟล์ · preview: การ์ด adv+heli ขึ้นถูก (h2/goal/3 แถวคีย์ตรง data · การ์ดอยู่ในจอเต็มใบ getBoundingClientRect) · ปุ่มเริ่มเล่น → `pvadv_intro_v1={"adv":1}` ถูก · console สะอาด · ล้างเซฟ+reload ปิดเสียงแล้ว
   - **เฟสถัดไป: 3 (tex) / 4 (sfx)** — ดูหัวข้อ "🪓 คิวผ่าไฟล์" (เปิดแชทใหม่ทีละเฟส)
+
+
+## ⏬ ย้ายเมื่อ 2026-07-26 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 546 (26 ก.ค.):** 🪓 **ผ่าไฟล์เฟส 3 — ดูดโซน Texture (letter/emoji/ผีไทย/ป้ายโฆษณา/ผนังตึก/ป้ายชื่อ peer) จาก `js/adventure3d.js` (10,894→10,694) เป็น `js/adv3d_tex.js` (225 บรรทัด IIFE `window.Adv3dTex`)** · ไฟล์หลักคง alias ชื่อเดิม + `Adv3dTex.bind({adRenterActive, adSeqBase})` inject ของ closure · `ghostGen`/`adRenters`/logic โฆษณา DB (adsFetch/adShop/flyby บรรทัด ~513-629) พัวพัน closure ไม่ย้าย · `loadAdv3d()` + `sw.js` precache เพิ่มไฟล์ใหม่
+  - **ยืนยัน:** สคริปต์ตัดเช็ก anchor ทุกช่วง+replacement ครบ 6 จุด+assert ไม่เหลือ closure ref · `node --check` ผ่าน · preview: เข้าโลกเฮลิฯ (facade หน้าต่าง+ป้าย "ติดต่อโฆษณา"+เลขป้ายขึ้นถูก — ภาพยืนยัน) + โลก adv (แผ่นตัวอักษรสี+ป้ายตั้งพื้น ringAds ขึ้นถูก — ภาพยืนยัน) · เช็กตัวเลข: cache hit / adTexDraws ครบ 10 ป้าย / FACADE_ROWS / peer sprite scale 1.7&2.4 ถูก · console สะอาด · ล้างเซฟ+reload ปิดเสียงแล้ว
+  - **เฟสถัดไป: 4 (sfx — ตรวจ coupling ก่อนลงมีด)** — ดูหัวข้อ "🪓 คิวผ่าไฟล์" (เปิดแชทใหม่)
