@@ -49,6 +49,19 @@ if ! python "$REPO/tools/check_undefined_calls.py" --path "$STAGE/public"; then
   exit 2
 fi
 
+# 🧵 ด่านที่ 3 (รอบ 585): backtick หลงในบล็อก template string เช่น `const CSS=`…``
+#    ต้นเหตุเว็บล่มรอบ 583 — คอมเมนต์ CSS ใส่ backtick ครอบชื่อคลาส สตริงขาดกลางคัน
+#    `node --check` ยัง "ผ่าน" แต่รันจริงโยน TypeError → InvasionWorld ไม่เกิด เกมค้างหน้าโหลด
+echo "🧵 ตรวจ backtick หลงในบล็อก template string (CSS) ก่อน deploy..."
+if ! python "$REPO/tools/check_template_backtick.py" --path "$STAGE/public"; then
+  echo ""
+  echo "❌ หยุด deploy: พบ backtick ที่ทำให้ template string ขาดกลางคัน (ดูรายการด้านบน)"
+  echo "   แก้โค้ด + commit ก่อน แล้วค่อย deploy ใหม่ — เคสนี้ทำเว็บล่มทั้งเกม (รอบ 583)"
+  echo "   (ถ้าพิสูจน์แล้วว่าเป็น false positive ให้เติม 'ไฟล์:บรรทัด' ลง ALLOW ใน tools/check_template_backtick.py)"
+  rm -rf "$STAGE"
+  exit 2
+fi
+
 cat > "$STAGE/firebase.json" <<'EOF'
 {
   "hosting": {
