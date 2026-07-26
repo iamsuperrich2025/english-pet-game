@@ -118,6 +118,16 @@ function petShowBgHTML(p){
   </div>`;
 }
 
+/* 🩹 รอบ 607: "เข้าโหมดคลิปได้หรือยัง" — เข้าเมื่อ **โหลดคลิปนั้นสำเร็จแล้วในหน้านี้** เท่านั้น
+   เดิมสลับเข้าโหมดคลิปทันทีที่วาดจอ (ทั้งที่ readyState=0) → เน็ตช้าเด็กเห็น "กรอบดำว่าง" นานหลายวินาที
+   หรือค้างถาวรถ้าเน็ตหลุด · ตอนนี้: ยังโหลดไม่เสร็จ = โชว์ฉากการ์ตูน+ภาพน้องไปก่อน แล้วค่อยเฟดเข้าคลิป
+   (โหลดสำเร็จรอบแรกแล้ว ครั้งต่อ ๆ ไปเข้าโหมดคลิปทันที — ไฟล์อยู่ในแคชเบราว์เซอร์ ไม่มีจอวูบ) */
+function __clipReady(p){
+  const url = petClipUrl(p); if(!url) return false;
+  const k = petClipKey(p);
+  return !!(k && CLIP_FILES[k]);
+}
+
 /* ตัวน้อง + ท่าเล่นในคลิป (คลาส .pet-stage / id #pet-tap คงเดิม —
    ระบบเก่ายังยึดไว้ใช้: applyPatRemindGlow, heartsFx, cureCelebrateFx, bindPetTap) */
 function petShowHTML(p, clipUrl){
@@ -3515,7 +3525,7 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero hero-side pet-show-mode${petClipUrl(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
+    <div class="stage-hero hero-side pet-show-mode${__clipReady(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
 
   document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
@@ -3535,9 +3545,16 @@ function renderDashboard(){
         vid.remove();
       }, {once:true});
       const tryPlay = ()=>{ const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{}); };
-      // ⚠️ เรียก play() ทันทีหลังตั้ง src มักโดน AbortError (ไฟล์ยังโหลดไม่ถึงเฟรมแรก) → สั่งซ้ำตอน loadeddata
-      vid.addEventListener('loadeddata', ()=>{ if(key) CLIP_FILES[key] = vid.getAttribute('src'); tryPlay(); }, {once:true});
-      tryPlay();
+      /* 🩹 รอบ 607: เปลี่ยนหน้าจอเป็นคลิป "ตอนเล่นได้จริง" เท่านั้น (canplay) — ระหว่างรอเน็ต
+         เด็กยังเห็นฉากการ์ตูน+ตัวน้องตามปกติ ไม่มีกรอบดำว่าง · เฟดสลับด้วย CSS transition */
+      const goClip = ()=>{
+        if(key) CLIP_FILES[key] = vid.getAttribute('src');
+        if(heroEl) heroEl.classList.add('ps-clip-mode');
+        tryPlay();
+      };
+      vid.addEventListener('canplay', goClip, {once:true});
+      // ⚠️ เรียก play() ทันทีหลังตั้ง src มักโดน AbortError (ยังโหลดไม่ถึงเฟรมแรก) — ปล่อยให้ canplay สั่งแทน
+      if(vid.readyState >= 3) goClip();
     }
   }
   /* เผื่อเบราว์เซอร์บล็อก autoplay (นโยบายบางเครื่อง/บางเบราว์เซอร์): แตะจอครั้งแรกแล้วคลิปเดินเอง

@@ -2994,12 +2994,16 @@ html.no-anim .pet-show .ps-emote{display:none;}
    คลิปมี "ฉากในตัวเอง" (พื้นหลังดำ + เงาใต้ตัว) → เล่นเต็มกรอบเวทีแบบโรงหนัง
    ฉากการ์ตูน CSS ของรอบ 604 ยังอยู่ใต้คลิป = ตัวสำรองเมื่อคลิปโหลดไม่ได้/ยังไม่มีไฟล์ชนิดนั้น
    ============================================================ */
+/* 🩹 รอบ 607: วิดีโออยู่ในหน้าเสมอ (ต้องอยู่ถึงจะโหลด) แต่โปร่งใสจนกว่าจะเล่นได้จริง →
+   เน็ตช้า/เน็ตหลุด เด็กเห็นฉากการ์ตูน+ตัวน้องไปก่อน ไม่มี "กรอบดำว่าง" · พร้อมแล้วค่อยเฟดเข้า */
 .ps-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  border-radius:20px;display:none;z-index:1;pointer-events:none;background:#04060c;}
+  border-radius:20px;z-index:1;pointer-events:none;background:#04060c;
+  opacity:0;transition:opacity .45s ease;}
+.stage-hero.ps-clip-mode .ps-video{opacity:1;}
+.pet-show-bg,.stage-hero.pet-show-mode .pet-show .ps-pod{transition:opacity .45s ease;}
 /* padding-bottom:22px ของเวที (ที่เผื่อไว้ให้เท้าน้องยืนบนเส้นพื้น) ทำให้คลิปเตี้ยกว่ากรอบ 22px
    → โหมดคลิปตัดออก ให้วิดีโอเต็มกรอบขอบมนพอดีทั้งใบ */
 .stage-hero.ps-clip-mode{background:#04060c;border-color:rgba(150,200,255,.45);padding-bottom:0;}
-.stage-hero.ps-clip-mode .ps-video{display:block;}
 /* โหมดคลิป: ซ่อนฉากการ์ตูน+ภาพนิ่ง แต่ไม่ถอดออกจากหน้า —
    .ps-pod ต้องยังกดได้ (แตะน้อง/หัวใจ/แสงชวนลูบยึด element นี้) จึงใช้ opacity ไม่ใช่ display */
 .stage-hero.ps-clip-mode .pet-show-bg{opacity:0;}
