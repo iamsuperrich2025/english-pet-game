@@ -505,6 +505,7 @@ const CSS=`
 #inv-wrap.fly #inv-run{display:none}
 /* 🎯📡 รอบ 563 (ผู้ใช้สั่ง): จอเรดาร์ + กรอบล็อกเป้ามิสไซล์ (สไตล์ Ace Combat) — โผล่เฉพาะตอนขับเฮลิ */
 #inv-radar{position:absolute;left:12px;top:58px;z-index:7;width:92px;height:92px;display:none;border-radius:50%;
+  pointer-events:none;                    /* 📡⬇️ รอบ 575: จอโชว์อย่างเดียว ห้ามกินสัมผัสของจอย/ปุ่ม */
   background:rgba(3,16,11,.52);box-shadow:0 3px 12px rgba(0,0,0,.5),inset 0 0 0 2px rgba(110,255,190,.34)}
 #inv-wrap.fly #inv-radar{display:block}
 /* 🎯🔒 รอบ 564: ล็อกได้หลายลำพร้อมกัน → กรอบล็อกเป็น "หลายใบ" (สร้างในโค้ดตอน init) */
@@ -5362,6 +5363,42 @@ function drawAMisMarks(c,cx,cy,R,now,sin,cos){
     c.restore();
   }
 }
+/* ============================================================
+   📡⬇️ รอบ 575 (ผู้ใช้สั่ง): เรดาร์ต้องไม่ทับ "แผงสถานะซ้าย" (พลังชีวิต/ความร้อนปืน/ลูกจรวด)
+   เดิม CSS ตรึง top:58px ทับแผงเต็ม ๆ (แผงจริงยาวถึง ~161px ตอนขับเฮลิ เพราะมีแถวลูกจรวด)
+   ใหม่: วัดของจริงแล้ววางใต้แผงเสมอ — ห้ามฮาร์ดโค้ดตัวเลข เพราะความสูงแผงเปลี่ยนตาม
+         media query (จอเตี้ย) + จำนวนลูกจรวดที่เหลือ (แถวเดียว/สองแถว)
+   ⚠️ จอเตี้ยช่องว่างระหว่างแผงกับ "จอยเดิน" เหลือน้อย → ย่อขนาดเรดาร์ลงแทนที่จะปล่อยให้ทับ
+      (กฎทองข้อ 7: ทุกอย่างต้องอยู่ในจอครบ ไม่ทับกัน แม้จอ 812×375)
+   ⚠️ เตี้ยมากจนย่อแล้วยังไม่พอ (เช่น 740×320 เหลือช่องแค่ 36px) → ย้ายไป "ขวาของแผงสถานะ" แทน
+      ไม่ปล่อยให้ทับจอยเด็ดขาด (จอยเป็นปุ่มกด ทับแล้วกดไม่ได้)
+   ⚠️ canvas ยังเป็น 180×180 เท่าเดิม — ย่อแค่ขนาดที่แสดงผล ภาพในเรดาร์เลยไม่ต้องคำนวณใหม่
+   ============================================================ */
+const RDR_GAP_TOP=8;          // เว้นจากแผงสถานะ (px)
+const RDR_GAP_JOY=8;          // เว้นจากจอยเดิน (px)
+const RDR_SIZE=92;            // ขนาดปกติ (เท่าเดิม)
+const RDR_SIZE_MIN=62;        // เล็กสุดที่ยังอ่านจุด/ลูกศรออก
+const RDR_SIZE_SIDE=80;       // ขนาดตอนหลบไปอยู่ "ขวาแผง" — เล็กกว่าปกติ กันชนป้าย #inv-start กลางจอบน
+function layoutRadar(){
+  if(!radarEl||!wrapEl) return;
+  const wr=wrapEl.getBoundingClientRect();
+  const stat=document.getElementById('inv-stat'), joy=document.getElementById('inv-joy');
+  const sr=stat?stat.getBoundingClientRect():null;
+  const jr=(joy&&getComputedStyle(joy).display!=='none')?joy.getBoundingClientRect():null;
+  let left=12, top=58;
+  if(sr&&sr.height>0) top=(sr.bottom-wr.top)+RDR_GAP_TOP;
+  const roomOf=t=>jr?((jr.top-wr.top)-RDR_GAP_JOY-t):1e4;
+  let size=Math.min(RDR_SIZE,Math.floor(roomOf(top)));
+  if(size<RDR_SIZE_MIN && sr){          // ใต้แผงไม่พอจริง ๆ → ไปอยู่ขวาแผงแทน (สูงเท่าแผง)
+    left=Math.round(sr.right-wr.left)+RDR_GAP_TOP;
+    top=Math.round(sr.top-wr.top);
+    size=Math.min(RDR_SIZE_SIDE,Math.floor(roomOf(top)));
+  }
+  size=Math.max(RDR_SIZE_MIN,size);
+  radarEl.style.left=Math.round(left)+'px';
+  radarEl.style.top=Math.round(top)+'px';
+  radarEl.style.width=radarEl.style.height=size+'px';
+}
 /* หายานลูกที่ใกล้กลางเป้าเล็งที่สุด (มุมไม่เกิน ~28°) */
 function lockTarget(){
   const dir=aimDir(); let best=null, bestDot=Math.cos(0.48);
@@ -5613,6 +5650,7 @@ function renderMissiles(){
   for(let i=0;i<max;i++) h+=`<i class="${i<left?'':'spent'}"></i>`;
   misEl.innerHTML=h;
   if(rocketBtn) rocketBtn.disabled=left<=0;
+  layoutRadar();          /* 📡⬇️ รอบ 575: แถวนี้เปลี่ยน = ความสูงแผงเปลี่ยน ต้องเลื่อนเรดาร์ตามทันที */
 }
 let banTimer=0;
 function toastBan(html,ms){
@@ -6094,6 +6132,7 @@ function setRideView(on){
 }
 function boardGunner(){
   if(inHeli||riding) return;
+  if(zoomBlocksBoard()) return;   // 🔭🚫 รอบ 575: ซูมค้างอยู่ = ยังขึ้นเป็นพลปืนไม่ได้
   const r=nearestRideable();
   if(!r){ toastBan('🎖️ <b>ไม่มีเฮลิใกล้ๆ</b><br><span class="ib-sub">เดินเข้าไปใกล้ลำที่กำลังบินก่อนนะ</span>',1800); return; }
   riding=r.key; setScoped(false);
@@ -6169,6 +6208,7 @@ let gunnerBtnAt=0;
 function updateGunnerBtn(now){
   if(!gunnerBtn || now-gunnerBtnAt<400) return;
   gunnerBtnAt=now;
+  layoutRadar();          // 📡⬇️ รอบ 575: วัดซ้ำเป็นระยะ — แผงสถานะสูงไม่เท่ากันตอนขึ้น/ลงเครื่อง
   const show=!inHeli && !riding && !!nearestRideable();
   gunnerBtn.style.display=show?'block':'none';
   /* 🚁 รอบ 434: ปุ่มเฮลิโผล่เฉพาะตอน "ยืนอยู่ข้างลำจริง" (หรือกำลังบิน/นั่งเป็นพลปืน = ใช้ลง) */
@@ -6187,6 +6227,7 @@ function tickAutoBoard(){
   let near=null,bd=AUTO_BOARD_DIST;
   for(const p of pads){ const d=Math.hypot(px-p.x,pz-p.z); if(d<bd){ bd=d; near=p; } }
   if(!near) return;
+  if(zoomBlocksBoard()) return;                      // 🔭🚫 รอบ 575: ซูมค้าง = ไม่เด้งขึ้นเอง (เช็กก่อนตั้งสลัก!)
   autoBoardLock=true;                                // กันเด้งขึ้นซ้ำตอนลงจากเครื่องแล้วยังยืนคาลำ
   enterHeli();
 }
@@ -6197,8 +6238,32 @@ function heliCount(){
   for(const uid in peers) if(peers[uid].kind==='heli') n++;
   return n+helis.length;
 }
+/* ============================================================
+   🔭🚫 รอบ 575 (ผู้ใช้สั่ง): "ซูมปืนค้างไว้ = ขึ้นเฮลิไม่ได้ ต้องเลิกซูมก่อน"
+   อาการที่ผู้ใช้เจอ (ส่งภาพมา): เล็งกล้องค้างแล้วเดินชนลำที่จอด → auto-board (รอบ 555)
+     พาขึ้นเครื่องทั้งที่ยังซูม → วงเลนส์ค้างทับห้องนักบิน
+   ต้นตอ: คลาส `scoped` บน #inv-wrap ถูกสลับใน tickAds เฉพาะตอนถือปืนเดินเท้า
+     พอขึ้นเครื่องบล็อกนั้นไม่ทำงาน คลาสเลยค้าง (#inv-wrap.scoped #inv-scopeov{display:block})
+   ทางแก้ตามที่ผู้ใช้สั่ง: กันไม่ให้ขึ้นเครื่องตั้งแต่แรก + บอกวิธีแก้ให้ชัด
+   ⚠️ ใช้ได้ "ทั้ง 2 กระบอก" — ทั้ง rifle และ r93 มี scope:true ใน WEAPONS จึงใช้ตัวแปร
+      `scoped` ตัวเดียวกัน (เช็ก adsRaw ด้วย = ยังเห็นวงเลนส์ค้างจอตอนภาพกำลังคลี่ออก)
+   ⚠️ ต้องกันทุกทางเข้า: ปุ่ม 🚁 / คีย์ H / ปุ่มพวงมาลัย / เดินชนลำ (tickAutoBoard) / นั่งพลปืน
+   ⚠️ tickAutoBoard ต้องเช็ก "ก่อน" ตั้ง autoBoardLock ไม่งั้นพอเลิกซูมแล้วยังขึ้นไม่ได้จนกว่าจะเดินออก
+   ============================================================ */
+let zoomBoardToastAt=0;
+function zoomBlocksBoard(){
+  if(!scoped && adsRaw<=0.05) return false;
+  const now=performance.now();
+  if(now-zoomBoardToastAt>1500){ zoomBoardToastAt=now;
+    toastBan('🔭 <b>เลิกซูมปืนก่อนถึงจะขึ้นเฮลิได้</b><br>'+
+             '<span class="ib-sub">กดปุ่ม 🔭 อีกครั้ง (หรือคลิกขวา) ให้เลนส์ปิด แล้วค่อยขึ้นเครื่อง</span>',1800);
+    if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
+  }
+  return true;
+}
 function enterHeli(){
   if(inHeli||riding) return;      // นั่งเป็นพลปืนอยู่ ต้องกระโดดลงก่อน
+  if(zoomBlocksBoard()) return;   // 🔭🚫 รอบ 575: ซูมค้างอยู่ = ยังขึ้นไม่ได้
   /* 🚁 รอบ 434: ขึ้นเครื่องได้เฉพาะตอน "เดินไปถึงลำจริง" เหมือนโลกเฮลิฯ (เดิมกดที่ไหนก็ขึ้นได้) */
   const pad=padAt(px,pz);
   if(!pad){
@@ -8310,7 +8375,7 @@ function start(){
     else if(c==='KeyQ') keys.q=false;
     else if(c==='KeyE') keys.e=false;
   };
-  resizeFn=()=>{ fit(); fitSpawnMap(); layoutScope(); };
+  resizeFn=()=>{ fit(); fitSpawnMap(); layoutScope(); layoutRadar(); };   // 📡⬇️ รอบ 575: เรดาร์วางใต้แผงสถานะเสมอ
   window.addEventListener('keydown',keydownFn);
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
