@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v177';  // v177: ยานแม่ต่ำสุด ท้องลำคลุมเมือง
+const CACHE_VERSION = 'pet-vocab-v178';  // v178: ตรึงยานแม่นิ่ง ไม่ลอยขึ้นลง
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
