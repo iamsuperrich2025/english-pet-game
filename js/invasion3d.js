@@ -690,7 +690,7 @@ const CSS=`
 /* ⌨️🚁 รอบ 582: ป้ายบอกปุ่มลูกศร "ขึ้น/ลง" ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์ (ผู้ใช้สั่ง)
    โผล่เมื่อ: มีเมาส์/แป้นพิมพ์ (คลาส kbd) + กำลังขับเฮลิ (คลาส fly และไม่ใช่พลปืน gunner)
    ⚠️ ทั้งบล็อก CSS นี้อยู่ใน template string — ห้ามใส่เครื่องหมาย backtick ในคอมเมนต์เด็ดขาด (พังทั้งไฟล์) */
-#inv-keyhint{position:absolute;right:12px;top:52%;transform:translateY(-50%);z-index:6;display:none;
+#inv-keyhint{position:absolute;right:12px;top:44%;transform:translateY(-50%);z-index:6;display:none;
   pointer-events:none;background:rgba(6,16,28,.74);border:1.5px solid rgba(120,220,255,.42);
   border-radius:12px;padding:7px 9px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
 #inv-wrap.kbd.fly:not(.gunner) #inv-keyhint{display:block}
@@ -704,9 +704,18 @@ const CSS=`
   box-shadow:0 0 9px rgba(255,200,90,.85)}
 #inv-keyhint .kh-tx{font-size:11.5px;color:#dff4ff;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #000}
 #inv-keyhint .kh-tx b{color:#ffd98a}
-@media (max-height:400px){ #inv-keyhint{padding:5px 7px;top:50%}
-  #inv-keyhint>b{font-size:9px;margin-bottom:3px} #inv-keyhint .kh-key{width:24px;height:24px;font-size:14px}
-  #inv-keyhint .kh-tx{font-size:10px} #inv-keyhint .kh-row{margin-top:3px;gap:5px} }
+/* 📏 จอเตี้ย (กฎ #7): คอลัมน์ขวามีของเรียงเต็มอยู่แล้ว — 🎯เกราะยานแม่(จบ y94) · 🪙เหรียญ(y84–104) ·
+   🏆กระดานคะแนน(y120–180) แล้วปุ่ม 🚁/👁️/🎬 ที่ยึดก้นจอ (หัวปุ่มบนสุด = H−296)
+   → ช่องว่างจริง = 180 ถึง H−296 · สูงพอวางแผงตั้ง 99px ได้เมื่อจอสูง ≥620 เท่านั้น
+   จอเตี้ยกว่านั้นจึงยุบเหลือ "แถบเดียวแนวนอน" ไม่มีหัวข้อ วางที่ y106 แล้วขยับซ้ายพ้นกระดานคะแนน
+   (วัดจริงทั้ง 812×375 และ 1280×500 = ไม่ทับอะไรเลย) */
+@media (max-height:619px){
+  #inv-wrap.kbd.fly:not(.gunner) #inv-keyhint{display:flex;align-items:center;gap:9px}
+  #inv-keyhint{right:136px;top:106px;transform:none;padding:4px 9px}
+  #inv-keyhint>b{display:none}
+  #inv-keyhint .kh-row{margin-top:0;gap:5px}
+  #inv-keyhint .kh-key{width:24px;height:24px;font-size:14px}
+  #inv-keyhint .kh-tx{font-size:10.5px} }
 /* 🎡 รอบ 531: สัญลักษณ์พวงมาลัยลอยเตือน "เข้าใกล้เฮลิ = แตะเพื่อขึ้นเครื่อง" (ผู้ใช้สั่ง) */
 #inv-wheel{position:absolute;left:50%;top:50%;z-index:8;border:none;background:none;cursor:pointer;
   display:none;flex-direction:column;align-items:center;gap:6px;-webkit-tap-highlight-color:transparent;
@@ -6355,7 +6364,7 @@ function solidPushOut(o,x,z,pad){
 }
 function tickPlayer(dt,now){
   let f=0,s=0;
-  if(keys.w) f+=1; if(keys.s) f-=1;
+  if(keys.w||keys.up) f+=1; if(keys.s||keys.dn) f-=1;      // ⌨️ รอบ 582: เดินเท้า ↑/↓ = เดินหน้า/ถอยหลังเหมือนเดิม
   if(keys.a) s-=1; if(keys.d) s+=1;
   f-=joy.dy; s+=joy.dx;
   const run=isRun||keys.shift;
@@ -7004,7 +7013,7 @@ function tickHeliFlight(dt,now){
       heliReady=true; setSeatView(state.heliSeat||1);
       pitch=0; phClimb=0;      // 🕹️ รอบ 562: สลับมาโหมด "ลากขวา = คันเร่ง" → ตั้งกล้องให้มองตรงก่อน (ไม่งั้นค้างมุมที่เงยไว้ตอนสตาร์ท)
       if(startEl) startEl.classList.remove('on');
-      toastBan('✅ <b>เครื่องพร้อมบิน!</b><br><span class="ib-sub"><b>ลากนิ้วครึ่งขวาของจอขึ้น</b> เพื่อทะยานขึ้นฟ้า (ปล่อยนิ้ว = ลอยนิ่ง · คอม: Space/Shift) · 👁️ ปรับมุมมอง · 🪂 ลงจากเครื่อง</span>',2600);
+      toastBan('✅ <b>เครื่องพร้อมบิน!</b><br><span class="ib-sub"><b>ลากนิ้วครึ่งขวาของจอขึ้น</b> เพื่อทะยานขึ้นฟ้า (ปล่อยนิ้ว = ลอยนิ่ง · คอม: ลูกศร ↑/↓ หรือ Space/Shift) · 👁️ ปรับมุมมอง · 🪂 ลงจากเครื่อง</span>',2600);
       if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
     }
     py=terrainH(px,pz)+HELI_SKID+1.8;
@@ -7021,7 +7030,9 @@ function tickHeliFlight(dt,now){
   if(keys.w) fw+=1; if(keys.s) fw-=1;
   if(keys.a) sd-=1; if(keys.d) sd+=1;
   if(keys.q) yawIn+=1; if(keys.e) yawIn-=1;
-  if(keys.space) col+=1; if(keys.shift||keys.ctrl) col-=1;
+  /* ⌨️🚁 รอบ 582 (ผู้ใช้สั่ง): บนเฮลิ ลูกศร ↑/↓ = เอาเครื่องขึ้น/ลง (คู่กับป้ายบอกคีย์ทางขวา `#inv-keyhint`) */
+  if(keys.space||keys.up) col+=1; if(keys.shift||keys.ctrl||keys.dn) col-=1;
+  if(khUpEl){ khUpEl.classList.toggle('on',!!(keys.up||keys.space)); khDnEl.classList.toggle('on',!!(keys.dn||keys.shift||keys.ctrl)); }
   if(joy.id!==null){ fw=-joy.dy; sd=joy.dx; }              // จอยมือถือ = เดินหน้า/สไลด์ เหมือนโลกเฮลิฯ
   col+=phClimb; col=clamp(col,-1,1);
   yaw+=yawIn*HELI_YAWSP*dt;
@@ -9255,8 +9266,10 @@ function start(){
   };
   keyupFn=e=>{
     const c=codeOf(e);
-    if(c==='KeyW'||c==='ArrowUp') keys.w=false;
-    else if(c==='KeyS'||c==='ArrowDown') keys.s=false;
+    if(c==='KeyW') keys.w=false;
+    else if(c==='KeyS') keys.s=false;
+    else if(c==='ArrowUp') keys.up=false;      // ⌨️🚁 รอบ 582
+    else if(c==='ArrowDown') keys.dn=false;
     else if(c==='KeyA'||c==='ArrowLeft') keys.a=false;
     else if(c==='KeyD'||c==='ArrowRight') keys.d=false;
     else if(c==='ShiftLeft'||c==='ShiftRight') keys.shift=false;
