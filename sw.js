@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v186';  // v186: รอบ 563: เรดาร์ล็อกเป้ายิงมิสไซล์ในเฮลิ
+const CACHE_VERSION = 'pet-vocab-v187';  // v187: รอบ 564: ล็อกหลายเป้า + ยิงรัวทีละชุด + ปืนเฮลิแรง 3 เท่า
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
