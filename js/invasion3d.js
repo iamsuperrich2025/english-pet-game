@@ -16,7 +16,7 @@
 /* ============================================================
    ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
    ============================================================ */
-const REWARD=100, LETTER_COIN=1, DONE_KEY='invasionDone';   // 🔤 รอบ 556: ยานแม่ตก=100 · ยานลูกตกลำละ 1
+const REWARD=500, LETTER_COIN=1, DONE_KEY='invasionDone';   // 🔤 รอบ 556/557: ยานแม่ตก=500 (ผู้ใช้ขยับจาก 100) · ยานลูกตกลำละ 1
 const AZ='abcdefghijklmnopqrstuvwxyz';   // 🔤 รอบ 556: ยานลูก 26 ลำประจำตัวอักษร a-z
 const WORD_TIME=90000;                   // ⏰ รอบ 556: เวลาต่อคำ 90 วิ — หมดแล้วเปลี่ยนคำ + ปล่อยยานลูกชุดใหม่
 const WORLD=420;                       // ครึ่งความกว้างแผนที่ทะเลทราย
@@ -56,7 +56,7 @@ const MS_Y=1000, MS_Z=-1200, MS_R=2600;   // ลำกว้าง 5,200 ม. (�
    ⚠️ ท้องลำต้องสูงกว่า: ยอดเนิน ~49 ม. · เพดานยานลูก F_Y_MAX=80 (ตอนนี้ 154 = เหลือ 74) */
 const MS_FLAT=0.325;                      // ครึ่งความสูงลำ ÷ MS_R (วัดจากโมเดลจริง: 1,692 ÷ 2 ÷ 2600)
 const MS_BELLY=MS_Y-MS_R*MS_FLAT;         // ท้องลำจริง = 335 ม. (เหนือแถวตัวอักษร 137 ม.)
-const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %)
+const MS_HP=100;                          // พลังเกราะยานแม่ (นับเป็น %) · ❤️ รอบ 557: = 5 เท่าของ F_HP (20) ตามผู้ใช้สั่ง
 const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 /* ❌ รอบ 556 (ผู้ใช้สั่ง "เอาแผงตัวอักษร 2 แผงออกให้หมด + เอาแกนพลังงานออก"):
    ถอดแผงหน้าต่างตัวอักษร (ค่า BOARD_ · buildWindowBar · layoutLetterPanels เดิม) และแกนพลังงาน (msCore/msGlow)
@@ -66,7 +66,9 @@ const MS_DMG_GUN=0.55, MS_DMG_MISSILE=7;
 const CORE_Y=150, CORE_Z=-170, CORE_R=45;
 
 /* 👾 ยานลูก */
-const F_HP=3, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=80, F_R=190;   // 441: เพดานบินต่ำลงนิด กันชนหนามใต้ท้องยานที่ใหญ่ขึ้น
+/* ❤️ รอบ 557 (ผู้ใช้สั่ง): ยานลูกอึดขึ้น — ปืนธรรมดา (GUN_DMG 1) ต้องยิง 20 นัด · มิสไซล์ (MIS_DMG 10) 2 นัด
+   · R93 สไนเปอร์ dmg 5 = 4 นัด (ยังแรงกว่าไรเฟิล 5 เท่า แต่ไม่วันช็อตแล้ว) · MS_HP 100 = 5 เท่าของ F_HP ตามสั่ง */
+const F_HP=20, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=80, F_R=190;   // 441: เพดานบินต่ำลงนิด กันชนหนามใต้ท้องยานที่ใหญ่ขึ้น
 const FIGHTER_SIZE=11.5;               // 📏 รอบ 432: ขนาดยานลูก = เท่าเฮลิคอปเตอร์ (เดิม 7 ม. เล็กจนมองไม่เห็น)
 const F_SHOT_GAP=2600, F_SHOT_SPD=52, F_SHOT_DMG=9;
 const MS_BEAM_GAP=5200, MS_BEAM_DMG=14;   // ยานแม่ยิงลำแสงหนักเป็นระยะ
@@ -82,7 +84,7 @@ const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
 const WEAPONS={
   rifle:{ key:'rifle', name:'KSR-77 จู่โจม', icon:'🔫', auto:true,  gap:GUN_GAP, dmg:GUN_DMG,   /* 🏷️ รอบ 520: เปลี่ยนชื่อโชว์ 'ไรเฟิลจู่โจม'→'KSR-77' (ผู้ใช้เลือก · key ยังเป็น 'rifle' คงค่าล็อก) */
           spread:GUN_SPREAD, hipSpread:GUN_SPREAD, heat:GUN_HEAT, mag:0, scope:true,   /* รอบ 463: ศูนย์เล็ง 2× */ tracer:0xffe08a, recoil:1 },
-  r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:3.2,
+  r93:  { key:'r93',   name:'R93 สไนเปอร์',  icon:'🎯', auto:false, gap:1200,    dmg:5,    /* ❤️ รอบ 557: 4 นัดต่อยานลูก */
           spread:0.0006, hipSpread:0.016, heat:0, mag:10, reload:2600, scope:true,   /* กำลังขยายเลือกได้ 3 ระดับ ดู SCOPE_MAGS */
           tracer:0xbfe6ff, recoil:2.6 },
 };
@@ -348,7 +350,7 @@ let swapAt=0, swapTo=null, swapSnd=0; const SWAP_MS=420;
 const PANT_FROM=2.6, PANT_FULL=6.5, PANT_GAP=980;
 let sprintTime=0, fatigue=0, pantAt=0;
 let recPitch=0, recYaw=0, boltAt=0;   // 💥 แรงถอยค้างอยู่ + เวลาที่เริ่มชักลูกเลื่อน
-const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=3;
+const MIS_MAX=6, MIS_RELOAD=9000, MIS_SPD=95, MIS_DMG=10;   // ❤️ รอบ 557: 2 นัดต่อยานลูก 1 ลำ (F_HP 20)
 const PLAYER_HP=120, HURT_IFRAME=700, SHIELD_REGEN=4.5;   // ฟื้นพลังเองเมื่อไม่โดนยิง (โลก 3D ไม่มีเกมโอเวอร์)
 
 /* 👥 พันธมิตร */
@@ -364,8 +366,8 @@ const SQUAD_RUN=6.4, SQUAD_WALK=2.7;   // 🏃 รอบ 530: ความเร
 const HELI_MAX=5;                      // เพดานจำนวนเฮลิทั้งโลก
 const HELI_ACCEL=13, HELI_VMAX=17, HELI_CLIMB=9, HELI_DAMP=1.8, HELI_DRAG=1.4, HELI_YAWSP=1.5;
 const HELI_SKID=1.35, HELI_CEIL=95;    // ความสูงตาคนขับเหนือคานลงจอด · เพดานบิน
-const PH_GUN_GAP=70, PH_GUN_DMG=1.1;                 // ปืนกลติดเฮลิ (รัวกว่าปืนมือ ไม่มีโอเวอร์ฮีต)
-const PH_MIS_MAX=12, PH_MIS_RELOAD=6000, PH_MIS_DMG=3.2;   // จรวดเฮลิ: ยิงเป็นชุดคู่ เติมเร็ว
+const PH_GUN_GAP=70, PH_GUN_DMG=1;                   // ปืนกลติดเฮลิ (รัวกว่าปืนมือ ไม่มีโอเวอร์ฮีต) · รอบ 557: 20 นัดเท่าปืนมือ
+const PH_MIS_MAX=12, PH_MIS_RELOAD=6000, PH_MIS_DMG=10;    // จรวดเฮลิ: ยิงเป็นชุดคู่ เติมเร็ว · รอบ 557: 2 นัดต่อลำ
 
 /* 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414 — ผู้ใช้สั่ง) — สไตล์ Roblox ผ่าน Firebase /world/invasion */
 const NET_SEND_MS=170;
@@ -895,13 +897,13 @@ function buildDom(){
     <div id="inv-intro"><div class="inv-card">
       <h3>🛸 ยานแม่บุกโลก!</h3>
       <p>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — <b>คำศัพท์สีเขียว</b>โชว์กลางจอบน<br>
-      👾 <b>ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด</b> — ยิงลำ<b>ป้ายเขียว</b>ที่ตรงกับตัวอักษรของคำ ช่องนั้นจะติด<br>
+      👾 <b>ยานลูก 26 ลำ = ตัวอักษร a-z ครบชุด</b> — ยิงลำ<b>ป้ายเขียว</b>ที่ตรงกับตัวอักษรของคำ ช่องนั้นจะติด · แต่ละลำมี<b>แถบพลัง</b> เขียว→เหลือง→แดงใกล้ตก<br>
       🛡️ ยิงติดครบทุกตัวอักษร = <b>เกราะยานแม่เหลือ 0 → ระเบิดทั้งลำ</b> = โบนัส 🪙${REWARD} · ยิงยานลูกตกลำละ 🪙${LETTER_COIN}<br>
       ⏰ <b>มีเวลา ${WORD_TIME/1000} วิต่อคำ</b> — หมดเวลายานแม่เปลี่ยนคำใหม่ + ปล่อยยานลูกชุดใหม่ 26 ลำ!<br>
       👥 <b>คุณไม่ได้สู้คนเดียว!</b> หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ + <b>เพื่อนออนไลน์</b>ที่อยู่ในสมรภูมิเดียวกัน ช่วยกันสู้!<br>
       🚁 <b>เฮลิคอปเตอร์จอดจริง 5 ลำ!</b> เดินไปที่ลำ (จุด 🚁 ในแผนที่) → กดปุ่ม 🚁 ขึ้นเครื่อง →
       <b>รอสตาร์ทเครื่องครบขั้น</b> → ดันคันเร่งขึ้นบินยิงจรวดจากฟ้า! · กด 👁️ ปรับมุมมองในห้องนักบินได้ 3 ระดับ<br>
-      🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัวเป้าใกล้ · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (ยานลูกดับนัดเดียว) แม็ก 10 นัด · กด 🔭 ส่องกล้อง (ในเลนส์ขยาย นอกเลนส์ยังเห็นรอบตัว) · ปุ่ม <b>4×/6×/8×</b> เลือกกำลังขยาย<br>
+      🎯 <b>ปืน 2 กระบอก!</b> กดปุ่ม 🎯/🔫 สลับได้ — <b>ไรเฟิลจู่โจม</b> ยิงรัว (ยานลูกตกใน 20 นัด) · <b>R93 สไนเปอร์</b> ยิงทีละนัดแรงมาก (4 นัดตก) แม็ก 10 นัด · 🚀 มิสไซล์ 2 นัดตก · กด 🔭 ส่องกล้อง (ในเลนส์ขยาย นอกเลนส์ยังเห็นรอบตัว) · ปุ่ม <b>4×/6×/8×</b> เลือกกำลังขยาย<br>
       🏠 <b>วิ่งเข้าไปหลบในบ้านได้!</b> บ้านร้างริมถนน (🏠 บนแผนที่) เข้าไปซุ่มยิงในนั้น <b>โดนยิงเบาลงมาก</b> ·
       ⛰️ <b>ยืนบนเนินสูง (🎯 จุดสูงข่ม) มองไกลกว่า</b> — วิ่งขึ้นเนินช้าลง ลงเนินไหลเร็วขึ้นนะ<br>
       🎖️ <b>ทีมเวิร์ก!</b> เดินเข้าใกล้เฮลิที่กำลังบิน แล้วกดปุ่ม 🎖️ = <b>ขึ้นเป็นพลปืนประจำประตู</b> —
@@ -1689,7 +1691,8 @@ function buildTown(){
     const base=baseLow(x,z,Math.max(w,d)*0.5);
     const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats[(Math.random()*mats.length)|0]);
     b.position.set(x,base+h/2,z); b.rotation.y=rnd(0,TAU); scene.add(b);
-    solids.push({x,z,r:Math.max(w,d)*0.55});
+    /* 🧱 รอบ 557: เก็บกล่องจริง (ครึ่งกว้าง/ลึก+มุมหมุน+ยอดตึก) — วงกลมเดิมคลุมไม่ถึงมุมตึก เดินทะลุมุมได้ */
+    solids.push({x,z,r:Math.max(w,d)*0.55, hw:w/2+.3, hd:d/2+.3, rot:b.rotation.y, top:base+h+.8, tall:true});
     const par=new THREE.Mesh(new THREE.BoxGeometry(w+.6,.7,d+.6),b.material);   // ขอบดาดฟ้า
     par.position.set(x,base+h+.35,z); par.rotation.y=b.rotation.y; scene.add(par);
     for(let k=0;k<2;k++){                                    // หน้าต่างเล็กด้านหน้า (เก็บเข้าคิว instance)
@@ -1711,7 +1714,7 @@ function buildTown(){
     bal.position.set(x,base+24,z); scene.add(bal);
     const cap=new THREE.Mesh(new THREE.ConeGeometry(2.6,5,12),domeMat);
     cap.position.set(x,base+32.5,z); scene.add(cap);
-    solids.push({x,z,r:3.4});
+    solids.push({x,z,r:3.4, top:base+35, tall:true});   // 🧱 รอบ 557: หอมินาเรตสูง 35 ม. เฮลิชน=ตก
   });
   const trunkM=new THREE.MeshLambertMaterial({color:0x8a6a45});
   const leafM=new THREE.MeshLambertMaterial({color:0x5f8a3a,side:THREE.DoubleSide});
@@ -1781,7 +1784,7 @@ function buildWarStreet(){
       const base=baseLow(x,z,Math.max(w,d)*0.5);
       const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallM[i%3]);
       b.position.set(x,base+h/2,z); scene.add(b);
-      solids.push({x,z,r:Math.max(w,d)*0.5});
+      solids.push({x,z,r:Math.max(w,d)*0.5, hw:w/2+.3, hd:d/2+.3, rot:0, top:base+h+.9, tall:true});   // 🧱 รอบ 557
       /* ขอบดาดฟ้า */
       const par=new THREE.Mesh(new THREE.BoxGeometry(w+.7,.8,d+.7),wallM[i%3]);
       par.position.set(x,base+h+.4,z); scene.add(par);
@@ -2131,6 +2134,11 @@ function makeFighter(letterIdx){
   const ch=AZ[letterIdx], need=word.en.includes(ch);
   const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(ch,need),transparent:true,depthTest:false}));
   lb.scale.setScalar(need?8.5:7.0); lb.position.y=FIGHTER_SIZE*0.78; grp.add(lb);   // ป้ายตัวอักษรลอยเหนือลำ อ่านออกแต่ไกล
+  /* ❤️ รอบ 557 (ผู้ใช้สั่ง): แถบพลังชีวิตใต้ป้ายตัวอักษร — เขียวเต็ม → เหลือง → แดงใกล้ตก */
+  const bcv=document.createElement('canvas'); bcv.width=64; bcv.height=10;
+  const btx=new THREE.CanvasTexture(bcv);
+  const bar=new THREE.Sprite(new THREE.SpriteMaterial({map:btx,transparent:true,depthTest:false}));
+  bar.scale.set(6.2,0.95,1); bar.position.y=FIGHTER_SIZE*0.78-2.4; grp.add(bar);
 
   /* 🤝 ตำแหน่งเกิดคำนวณจาก (เลขรอบ, ลำดับตัวอักษร) แบบสุ่มมีเมล็ด
      → ทุกเครื่องในห้องเห็นยานลูกอยู่ตำแหน่งเดียวกัน ไม่ใช่ต่างคนต่างสุ่ม */
@@ -2139,17 +2147,30 @@ function makeFighter(letterIdx){
   grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
   const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP,
+           bar:{spr:bar,cv:bcv,tx:btx},
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0};
+  drawFighterBar(f);
   fighters.push(f);
   /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — รอบ 556 มีพร้อมกัน 26 ลำ (a-z)
      ต้นฉบับ `alien_fighter.glb` ยังอยู่ครบ ไม่ได้แตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
   loadGlb('img/models/alien_fighter_lite.glb',(obj)=>{
     fitInto(obj,FIGHTER_SIZE);
-    grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng) grp.remove(c); });
+    grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng&&c!==bar) grp.remove(c); });
     grp.add(obj);
   });
   return f;
+}
+/* ❤️ รอบ 557: วาดแถบพลังยานลูก — เรียกเฉพาะตอน hp เปลี่ยน (ไม่วาดทุกเฟรม)
+   >60% เขียว · 30-60% เหลือง · ≤30% แดง (ตามผู้ใช้สั่ง) */
+function drawFighterBar(f){
+  const x=f.bar.cv.getContext('2d'), k=clamp(f.hp/F_HP,0,1);
+  x.clearRect(0,0,64,10);
+  x.fillStyle='rgba(6,14,24,.85)'; x.fillRect(0,0,64,10);            // พื้นหลังเข้ม
+  x.fillStyle=k>.6?'#3aff7a':(k>.3?'#ffd23a':'#ff4a3a');
+  x.fillRect(2,2,60*k,6);
+  x.strokeStyle='rgba(255,255,255,.55)'; x.lineWidth=1; x.strokeRect(.5,.5,63,9);
+  f.bar.tx.needsUpdate=true;
 }
 
 /* ============================================================
@@ -4906,7 +4927,7 @@ function raySphere(o,d,c,r){
 function damageFighter(f,dmg,now,byMe){
   if(f.dead) return;
   f.hp-=dmg; f.hitAt=now||performance.now();
-  if(f.hp>0) return;
+  if(f.hp>0){ drawFighterBar(f); return; }        // ❤️ รอบ 557: อัปเดตแถบพลังตอนโดนยิง
   dropFighter(f, byMe!==false);
 }
 /* 🔤 รอบ 556: ยิงยานลูกตก = +1 เหรียญทุกลำ · ถ้าตัวอักษรอยู่ในคำ → ติดทุกช่องที่ตรง (คำมีตัวซ้ำก็ติดพร้อมกัน
@@ -4916,6 +4937,7 @@ function dropFighter(f,mine){
   f.dead=true;
   boom(f.grp.position,1.35,0x8affc0);
   scene.remove(f.grp);
+  if(f.bar){ f.bar.tx.dispose(); f.bar.spr.material.dispose(); }   // ❤️ รอบ 557: คืนหน่วยความจำแถบพลัง
   const i=fighters.indexOf(f); if(i>=0) fighters.splice(i,1);
   if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าเรายิงลำนี้ → ส่งให้เพื่อนเห็นตรงกัน (บิต a-z)
   let match=false;
@@ -5244,6 +5266,25 @@ function unlockMouse(){ if(document.pointerLockElement) document.exitPointerLock
 /* ============================================================
    🚶 ผู้เล่น + AI + ลูป
    ============================================================ */
+/* 🧱 รอบ 557 (ผู้ใช้: "คนเดินทะลุตึกได้"): กันชนแบบกล่องหมุนได้ — วงกลมเดิม r=0.55·ด้านยาว
+   สั้นกว่าครึ่งเส้นทแยงมุม (0.5·√(w²+d²)) → เดินเฉียงเข้า "มุมตึก" แล้วทะลุเข้าไปได้
+   ตัวนี้แปลงจุดเข้าพิกัดกล่อง (หมุนกลับ) แล้วดันออกด้านที่จมน้อยสุด = ชนแล้วไถลตามผนังเอง
+   คืน {x,z} ตำแหน่งที่ดันออกแล้ว หรือ null ถ้าไม่ชน · ใช้ทั้งเดินเท้าและเฮลิ */
+function solidPushOut(o,x,z,pad){
+  const dx=x-o.x, dz=z-o.z;
+  if(o.hw!==undefined){
+    const th=o.rot||0, c=Math.cos(th), s=Math.sin(th);
+    let lx=dx*c-dz*s, lz=dx*s+dz*c;                       // world → local ของกล่อง (inverse ของ rotation.y)
+    const bw=o.hw+pad, bd=o.hd+pad;
+    if(Math.abs(lx)>=bw||Math.abs(lz)>=bd) return null;
+    if(bw-Math.abs(lx) < bd-Math.abs(lz)) lx=(lx<0?-bw:bw); else lz=(lz<0?-bd:bd);
+    return {x:o.x+lx*c+lz*s, z:o.z-lx*s+lz*c};            // local → world
+  }
+  const d=Math.hypot(dx,dz);
+  if(d>=o.r+pad) return null;
+  const k=(o.r+pad)/(d||.001);
+  return {x:o.x+dx*k, z:o.z+dz*k};
+}
 function tickPlayer(dt,now){
   let f=0,s=0;
   if(keys.w) f+=1; if(keys.s) f-=1;
@@ -5265,10 +5306,10 @@ function tickPlayer(dt,now){
   }
   let nx=px+dirX*spd*dt;
   let nz=pz+dirZ*spd*dt;
-  /* กันทะลุตึก */
+  /* กันทะลุตึก — 🧱 รอบ 557: กล่องหมุนได้ (มุมตึกก็ทะลุไม่ได้แล้ว) */
   for(const o of solids){
-    const dx=nx-o.x, dz=nz-o.z, d=Math.hypot(dx,dz);
-    if(d<o.r+.6){ const k=(o.r+.6)/(d||.001); nx=o.x+dx*k; nz=o.z+dz*k; }
+    const p=solidPushOut(o,nx,nz,.6);
+    if(p){ nx=p.x; nz=p.z; }
   }
   /* 🏠 ผนังบ้าน: ชนแล้ว "ไถลตามผนัง" (ลองแยกแกน) — ประตู/ช่องว่างเดินผ่านได้ตามปกติ */
   if(houses.length && houseBlocked(nx,nz)){
@@ -5900,15 +5941,15 @@ function tickHeliFlight(dt,now){
   let nx=clamp(px+phVel.x*dt,-lim,lim);
   let nz=clamp(pz+phVel.z*dt,-lim,lim);
   let ny=Math.min(HELI_CEIL,py+phVel.y*dt);
-  /* ชนตึก: บินต่ำกว่ายอดแล้วทะลุ footprint → เด้งออก + เจ็บ (เหมือนโลกเฮลิฯ) */
+  /* 💥 รอบ 557 (ผู้ใช้สั่ง "เครื่องบินชนตึก = ตาย"): บินต่ำกว่ายอดตึกจริง (o.top) แล้วทะลุ footprint
+     → เครื่องพังทันที (ระเบิด + ลงจากเครื่อง + ถอยไปตั้งหลัก) · เฉพาะสิ่งปลูกสร้างสูง (tall)
+     ของเตี้ย (กระสอบทราย/ซากรถ) ไม่นับ — เฮลิลอยพ้นอยู่แล้ว · เดิมแค่เด้งออก+เจ็บ 12 */
   for(const o of solids){
-    if(Math.hypot(nx-o.x,nz-o.z)<o.r+1.4 && ny<terrainH(o.x,o.z)+14){
-      const dx=nx-o.x, dz=nz-o.z, d=Math.hypot(dx,dz)||.001, k=(o.r+1.5)/d;
-      nx=o.x+dx*k; nz=o.z+dz*k; phVel.x*=-.25; phVel.z*=-.25;
-      if(now-lastHurt>1000) hurtPlayer(12,now);
-      break;
-    }
+    if(!o.tall) continue;
+    if(ny>=(o.top!==undefined?o.top:terrainH(o.x,o.z)+14)+1.2) continue;   // บินพ้นยอดตึก = ไม่ชน
+    if(solidPushOut(o,nx,nz,1.2)){ heliCrash(now); return; }
   }
+  tickGpws(nx,nz,ny,now);           // 📢 รอบ 557: เตือนบินใกล้พื้น "Terrain! Terrain!"
   /* พื้น: แตะเบา = ลงจอด · กระแทกแรง = เจ็บแล้วเด้ง */
   const minY=terrainH(nx,nz)+HELI_SKID;
   if(ny<=minY){
@@ -5944,6 +5985,31 @@ function tickHeliFlight(dt,now){
     let near=999; for(const o of solids){ const d=Math.hypot(px-o.x,pz-o.z)-o.r; if(d<near) near=d; }
     HeliSnd.update(col,hLanded,dt,{alt,spd,near:Math.max(0,near)}); }
   if(firing) fireGun(now);
+}
+/* 💥 รอบ 557: เฮลิชนตึก = เครื่องพัง — ระเบิดตรงจุดชน แล้วบังคับ "ตาย" ผ่านเส้นทางเดิมของเกม
+   (เกมนี้ไม่มีเกมโอเวอร์ — ตาย = ถอยไปตั้งหลักแนวหลัง พลังฟื้นเต็ม จึงลงจากเครื่องก่อนแล้วค่อยล้มพลัง) */
+function heliCrash(now){
+  boom(new THREE.Vector3(px,py,pz),2.4,0xffb347);
+  shake=Math.min(1.5,shake+1.2);
+  toastBan('💥 <b style="color:#ff6a5a">เฮลิคอปเตอร์ชนตึก!</b><br><span class="ib-sub">เครื่องพังทั้งลำ — ถอยไปตั้งหลักแนวหลัง</span>',2600);
+  exitHeli();
+  lastHurt=0; hurtPlayer(PLAYER_HP*3,now);
+}
+/* 📢 รอบ 557 (ผู้ใช้สั่ง): GPWS เตือนบินใกล้พื้น — "Terrain! Terrain!" ทั้งเสียงพูด + ป้ายแดง
+   เช็กทั้งความสูงตรงตัว และ "พื้นข้างหน้า 1.2 วิตามทิศบิน" (บินเข้าเนินก็เตือนทัน) · คูลดาวน์ 4 วิ */
+let gpwsAt=0;
+function tickGpws(x,z,y,now){
+  if(!heliReady||hLanded) return;
+  const alt=y-terrainH(x,z);
+  const aheadAlt=y-terrainH(x+phVel.x*1.2, z+phVel.z*1.2);
+  if(alt>=12 && aheadAlt>=9) return;
+  if(now<gpwsAt) return;
+  gpwsAt=now+4000;
+  toastBan('⚠️ <b style="color:#ff6a5a">TERRAIN! TERRAIN!</b><br><span class="ib-sub">บินต่ำเกินไป — ดึงคันเร่งขึ้น!</span>',1600);
+  try{
+    const u=new SpeechSynthesisUtterance('Terrain! Terrain! Pull up!');
+    u.lang='en-US'; u.rate=1.25; speechSynthesis.speak(u);
+  }catch(e){}
 }
 /* 🤖 บอทขับเฮลิ: ปกติไม่มีเลย (ผู้เล่นขับเท่านั้น) — ยกเว้นในแมพมีคนน้อยกว่า 2 คน ให้มี 1 ลำเป็นเพื่อน
    เรียกทุกครั้งที่จำนวนผู้เล่น/สถานะการบินเปลี่ยน */
@@ -6457,7 +6523,7 @@ function tickSquad(dt,now){
       const from=s.flash ? s.flash.getWorldPosition(new THREE.Vector3())
                          : s.grp.position.clone().add(new THREE.Vector3(0,s.crouch?1.0:1.4,0));
       tracer(from,aim.clone().add(new THREE.Vector3(rnd(-3,3),rnd(-3,3),rnd(-3,3))),0xfff0b0,.05);
-      if(Math.random()<0.35 && tgt) damageFighter(tgt,0.5,now);
+      if(Math.random()<0.35 && tgt) damageFighter(tgt,2,now);   /* ❤️ รอบ 557: สเกลตาม F_HP 20 (เดิม 0.5/HP3) */
     }
     if(s.flash) s.flash.material.opacity=(now<(s.flashUntil||0))?1:0;   // 🔥 รอบ 521
   });
@@ -6589,7 +6655,8 @@ function heliFireAt(from0,aim,tgt,now){
   const tr=new THREE.Sprite(new THREE.SpriteMaterial({color:0xffc46a,transparent:true,opacity:.85,
     blending:THREE.AdditiveBlending,depthWrite:false}));
   tr.scale.setScalar(1.6); scene.add(tr);
-  missiles.push({mesh:m,trail:tr,v:dir.multiplyScalar(MIS_SPD*.5),lock:tgt,born:now,ally:true,smokeAt:0,boostUntil:now+180});
+  /* ❤️ รอบ 557: จรวดพันธมิตร dmg 4 (5 นัด/ลำ) — อ่อนกว่าของผู้เล่น (10) ให้เด็กยังเป็นพระเอก */
+  missiles.push({mesh:m,trail:tr,v:dir.multiplyScalar(MIS_SPD*.5),lock:tgt,born:now,ally:true,dmg:4,smokeAt:0,boostUntil:now+180});
   Snd.missile();
 }
 function nearestFighterTo(pos){ let best=null,bd=1e9;
