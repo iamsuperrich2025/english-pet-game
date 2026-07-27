@@ -291,7 +291,6 @@ h1{color:var(--sky-d);text-shadow:none;}
   display:flex;align-items:center;justify-content:center;
   background:#2fa860;color:#fff;box-shadow:0 3px 0 #1c7644;transition:transform .1s;
 }
-.fr-call-btn.fr-call-vid{background:#7a5cd8;box-shadow:0 3px 0 #52398f;}
 .fr-call-btn:active{transform:scale(.94);}
 /* จอแคบ: ย่อปุ่มของขวัญ/แชทเหลือไอคอน จะได้มีที่ให้ปุ่มโทรครบทุกปุ่มในแถวเดียว */
 @media (max-width:520px){
@@ -470,49 +469,78 @@ html.no-anim .cr-ok{animation:none;}
 }
 .call-ov.bye{animation:fadeOut .4s forwards;}
 @keyframes fadeOut{to{opacity:0;}}
-.call-remote{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0b1524;display:none;
+/* 👥 รอบ 631: ทุกคนในสาย = "ช่อง" (.ctile) เหมือนกันหมด — เราเองอยู่ช่องสุดท้าย
+   สายเดี่ยว (.n2) = โชว์ช่องเพื่อนช่องเดียวกลางจอ (หน้าตาเดิมทุกอย่าง ชื่อ/เวลาอยู่แถบบน)
+   สายกลุ่ม (.n3) = แบ่งจอเท่า ๆ กัน 3 ช่อง ไม่มี scroll (กฎทองข้อ 7)
+   🔒 รอบ 631 ลบวิดีโอคอลออกแล้ว → ไม่มีจอวิดีโอ/จอเล็กมุมขวาล่าง/สลับจอ/โหมดแนวตั้งอีกต่อไป */
+.call-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.ctile{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;
+  min-width:0;min-height:0;color:#eaf4ff;text-align:center;
 }
-.call-ov.has-remote-video .call-remote{display:block;}
-.call-ov.has-remote-video .call-idle{display:none;}
-.call-idle{display:flex;flex-direction:column;align-items:center;gap:10px;}
-.ci-av{
-  width:clamp(92px,22vh,150px);height:clamp(92px,22vh,150px);border-radius:50%;
+.ct-face{
+  width:clamp(92px,22vh,150px);height:clamp(92px,22vh,150px);border-radius:50%;flex-shrink:0;
   background:linear-gradient(160deg,#4fc3f7,#1565c0);display:flex;align-items:center;justify-content:center;
   font-size:clamp(44px,11vh,74px);box-shadow:0 0 0 10px rgba(79,195,247,.12);animation:crPulse 2s infinite;
 }
-html.no-anim .ci-av{animation:none;}
-.call-top{
-  position:absolute;top:0;left:0;right:0;padding:14px 16px 26px;text-align:center;color:#fff;
-  background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);pointer-events:none;
+html.no-anim .ct-face{animation:none;}
+.ct-me .ct-face{background:linear-gradient(160deg,#ffd666,#f5a623);box-shadow:0 0 0 10px rgba(255,214,102,.14);}
+.ctile.ringing .ct-face{opacity:.6;}
+.ctile.mute .ct-face{filter:grayscale(.65) brightness(.85);}
+.ct-nm{
+  font-size:14.5px;font-weight:800;line-height:1.2;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 2px 6px rgba(0,0,0,.55);
 }
-.ct-name{font-size:19px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.6);word-break:break-word;}
-.ct-name small{font-size:12px;opacity:.8;font-weight:400;}
-.ct-time{font-size:14px;opacity:.9;margin-top:2px;font-variant-numeric:tabular-nums;}
-.call-note{
-  position:absolute;top:34%;left:50%;transform:translateX(-50%);width:min(90vw,380px);
-  background:rgba(255,214,102,.95);color:#5a4300;border-radius:14px;padding:10px 14px;
-  font-size:13.5px;line-height:1.45;text-align:center;box-shadow:0 8px 22px rgba(0,0,0,.35);
+.ct-nm small{font-size:11px;font-weight:400;opacity:.72;}
+.ct-sub{font-size:12px;opacity:.85;min-height:14px;}
+/* สายเดี่ยว: ชื่อ/สถานะอยู่แถบบนอยู่แล้ว — ในช่องเหลือแค่รูปวงกลมใหญ่ (เหมือนก่อนรอบ 631) */
+.call-ov.n2 .ctile.ct-me{display:none;}
+.call-ov.n2 .ct-nm,.call-ov.n2 .ct-sub{display:none;}
+/* 👥 สายกลุ่ม 3 คน */
+.call-ov.n3 .call-stage{
+  display:grid;gap:6px;align-items:stretch;
+  padding:calc(env(safe-area-inset-top,0px) + 62px) 8px calc(var(--bar-h) + 8px);
+  grid-template-columns:1fr 1fr;grid-auto-rows:1fr;
 }
-/* 🔄 รอบ 627: จอเล็ก = ปุ่มกดสลับจอ (แตะแล้วสลับใหญ่↔เล็ก) */
-.call-me{
-  position:absolute;right:12px;bottom:calc(var(--bar-h) + 10px);width:clamp(84px,16vw,124px);
-  aspect-ratio:3/4;padding:0;border-radius:14px;border:2px solid rgba(255,255,255,.6);
-  background:#12233b;box-shadow:0 6px 18px rgba(0,0,0,.45);overflow:hidden;
-  cursor:default;transition:transform .12s;
+.call-ov.n3 .ctile{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px;padding:6px;gap:5px;
 }
-.call-me video{width:100%;height:100%;object-fit:cover;display:block;transform:scaleX(-1);}
-.call-ov.swapped .call-me video{transform:none;}      /* จอเล็กเป็นภาพเพื่อน — ไม่กลับด้าน */
-.call-ov.swapped .call-remote{transform:scaleX(-1);}  /* จอใหญ่เป็นกล้องเรา — กลับด้านเหมือนส่องกระจก */
-.call-me .cm-swap{
-  position:absolute;right:4px;top:4px;display:none;font-size:12px;line-height:1;
-  background:rgba(8,20,36,.72);color:#fff;border-radius:7px;padding:3px 5px;
+.call-ov.n3 .ctile:nth-child(3){grid-column:1 / -1;}
+.call-ov.n3 .ct-face{
+  width:clamp(48px,15vh,104px);height:clamp(48px,15vh,104px);font-size:clamp(24px,7.5vh,50px);
+  box-shadow:0 0 0 6px rgba(79,195,247,.12);
 }
-.call-me.can-swap{cursor:pointer;}
-.call-me.can-swap .cm-swap{display:block;}
-.call-me.can-swap:active{transform:scale(.94);}
-.call-ov.cam-off:not(.swapped) .call-me video{filter:grayscale(1) brightness(.4);}
-.call-ov.cam-off.swapped .call-remote{filter:grayscale(1) brightness(.4);}
+.call-ov.n3 .ct-me .ct-face{box-shadow:0 0 0 6px rgba(255,214,102,.14);}
+@media (orientation:landscape){
+  .call-ov.n3 .call-stage{grid-template-columns:repeat(3,1fr);grid-auto-rows:1fr;}
+  .call-ov.n3 .ctile:nth-child(3){grid-column:auto;}
+}
+/* ➕ รอบ 631: แผงเลือกเพื่อนมาเข้าสายเป็นคนที่ 3 */
+.call-add{
+  position:absolute;left:50%;bottom:calc(var(--bar-h) + 10px);transform:translateX(-50%);z-index:3;
+  width:min(92vw,340px);max-height:min(62vh,360px);display:flex;flex-direction:column;
+  background:linear-gradient(165deg,#1f3557,#122238 70%);border:2px solid rgba(120,200,255,.42);
+  border-radius:18px;padding:10px;box-shadow:0 14px 40px rgba(0,0,0,.5);color:#eaf4ff;
+  animation:popIn .25s cubic-bezier(.2,1.5,.4,1);
+}
+.ca-head{font-size:14px;font-weight:800;text-align:center;margin-bottom:7px;}
+.ca-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;min-height:0;}
+.ca-row{
+  display:flex;align-items:center;gap:8px;width:100%;text-align:left;cursor:pointer;font-family:inherit;
+  background:rgba(255,255,255,.09);border:none;border-radius:11px;padding:7px 9px;color:#eaf4ff;font-size:13.5px;
+}
+.ca-row:active{transform:scale(.98);}
+.ca-dot{width:9px;height:9px;border-radius:50%;background:#5ce87f;flex-shrink:0;}
+.ca-dot.off{background:#7f8ea3;}
+.ca-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}
+.ca-nm small{font-weight:400;opacity:.7;}
+.ca-go{font-size:16px;flex-shrink:0;}
+.ca-empty{font-size:13px;opacity:.85;text-align:center;padding:16px 6px;}
+.ca-safe{font-size:11px;color:#8fb6dc;text-align:center;margin-top:7px;}
+.ca-close{
+  margin-top:7px;border:none;border-radius:10px;padding:7px;cursor:pointer;
+  background:rgba(255,255,255,.16);color:#fff;font-family:inherit;font-weight:700;font-size:13px;
+}
 .call-bar{
   position:absolute;left:0;right:0;bottom:0;display:flex;gap:clamp(8px,2.4vw,16px);
   align-items:center;justify-content:center;padding:10px 8px calc(10px + env(safe-area-inset-bottom,0px));
@@ -546,31 +574,14 @@ html.no-anim .ci-av{animation:none;}
   100%{opacity:0;transform:translateY(-48vh) scale(1);}
 }
 html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
-/* 📱 รอบ 626: วิดีโอคอล = แนวตั้ง (กล้องจับหน้าตรง สวยกว่าแนวนอน)
-   ระหว่างสาย html.vcall-portrait → ปิดป้าย "หมุนจอแนวนอน" ของเกมชั่วคราว */
-html.vcall-portrait #rotate-overlay{display:none !important;}
-.call-tip{display:none;}
-/* ล็อกจอเองไม่ได้ (iPhone) → ขึ้นคำแนะนำให้หมุนเอง
-   เฉพาะ "จอสัมผัส" (pointer:coarse) เท่านั้น — คอมพิวเตอร์หมุนจอไม่ได้ ไม่ต้องบอก */
-@media (orientation:landscape) and (pointer:coarse){
-  .call-ov[data-kind="video"] .call-tip{
-    display:block;position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);
-    background:rgba(255,214,102,.95);color:#5a4300;border-radius:999px;padding:6px 14px;
-    font-size:12.5px;font-weight:700;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.35);
-    animation:tipFade 6s forwards;pointer-events:none;
-  }
-  @keyframes tipFade{0%,72%{opacity:1;}100%{opacity:0;visibility:hidden;}}
-}
 /* แนวตั้ง: จอเพื่อนเต็มจอ · จอเราใหญ่ขึ้นหน่อยเพราะมีที่เหลือด้านข้างน้อย */
 @media (orientation:portrait){
   .call-ov{--cb-h:clamp(50px,7.5vh,60px);}
-  .call-me{width:clamp(96px,26vw,140px);}
   .call-top{padding:16px 16px 28px;}
 }
 /* จอเตี้ยมาก (มือถือแนวนอน): ย่อทุกอย่างให้อยู่ในจอ ไม่มี scrollbar */
 @media (max-height:430px){
   .call-ov{--bar-h:calc(var(--cb-h) + 12px);}
-  .call-me{width:clamp(66px,12vw,92px);right:8px;}
   .call-top{padding:8px 14px 18px;}
   .ct-name{font-size:16px;}
   .call-bar{gap:8px;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));}
@@ -2358,7 +2369,6 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(135deg,#4fd18a,#22a86a);color:#fff;box-shadow:0 3px 0 #148050;
 }
-.pl-call.pl-call-vid{background:linear-gradient(135deg,#a48bf0,#7a5cd8);box-shadow:0 3px 0 #52398f;}
 .pl-call:active{transform:scale(.94);}
 .pet-peek img{max-height:52vh;}                     /* เผื่อที่ให้ชื่อ+ชิปในจอเตี้ย ไม่ล้น */
 .pet-peek .pp-emoji{font-size:clamp(70px,20vh,130px);line-height:1.2;

@@ -1664,8 +1664,7 @@ function showPlayerCard(uid, name, grade){
       <button class="pl-close">✕</button>
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
         ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>
-        <button class="pl-call" data-k="voice" type="button" title="โทรด้วยเสียง">📞</button>
-        <button class="pl-call pl-call-vid" data-k="video" type="button" title="วิดีโอคอล">📹</button>` : ''}
+        <button class="pl-call" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>` : ''}
         ${(!me && typeof Online !== 'undefined' && Online.ready && typeof greetSend === 'function')
           ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 ทักทายน้อง</button>` : ''}
         ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
@@ -1747,7 +1746,7 @@ function showPlayerCard(uid, name, grade){
   if(chatBtn) chatBtn.addEventListener('click', ()=>{ sfx.select(); close(); openChat(myFriend); });
   /* 📞 รอบ 628: โทรหาเพื่อนตรงจากการ์ดโปรไฟล์ (ปิดการ์ดก่อน จอคุยจะได้ไม่ซ้อนของเก่า) */
   ov.querySelectorAll('.pl-call').forEach(b=>b.addEventListener('click', ()=>{
-    close(); startCall(myFriend, b.dataset.k);
+    close(); startCall(myFriend);
   }));
   const greetBtn = ov.querySelector('.pl-greet');   // 🐾 รอบ 325: ทักทายน้องของเพื่อน (ฟรี ไม่ต้องเป็นเพื่อนกันก็ทักได้)
   if(greetBtn) greetBtn.addEventListener('click', ()=>{ sfx.select(); openGreetPicker(uid, sp.name); });
@@ -2145,8 +2144,7 @@ function refreshFriendData(){
           <span class="online-dot${on ? '' : ' off'}"></span>
           <span class="fr-row-name">${escapeHTML(f.n)}<small> ${idTag(f.uid)}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
-          <button class="fr-call-btn" data-ci="${i}" data-k="voice" type="button" title="โทรด้วยเสียง">📞</button>
-          <button class="fr-call-btn fr-call-vid" data-ci="${i}" data-k="video" type="button" title="วิดีโอคอล">📹</button>
+          <button class="fr-call-btn" data-ci="${i}" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>
           <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
           <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
       }).join('');
@@ -2155,7 +2153,7 @@ function refreshFriendData(){
       }));
       /* 📞 รอบ 628: โทรตรงจากแถวรายชื่อเพื่อน (ไม่ต้องเปิดกล่องแชทก่อน) — เงื่อนไขทั้งหมดเช็กใน Call.start */
       listEl.querySelectorAll('.fr-call-btn').forEach(b=>b.addEventListener('click', ()=>{
-        startCall(Online.myFriends[+b.dataset.ci], b.dataset.k);
+        startCall(Online.myFriends[+b.dataset.ci]);
       }));
       listEl.querySelectorAll('.fr-gift-btn').forEach(b=>b.addEventListener('click', ()=>{
         openGiftPicker(Online.myFriends[+b.dataset.gi]);
@@ -2225,7 +2223,7 @@ function ibTimeStr(ts){
 }
 /* 📞 รอบ 628: ข้อความ "บันทึกผลสาย" ที่ Call.logChat (js/online.js) เขียนลงห้องแชท
    → แยกออกมาโชว์เป็นแท็บ "ประวัติการโทร" · เทียบข้อความเต็มรูปแบบ กันข้อความที่ผู้เล่นพิมพ์เองหลุดมาปน */
-const IB_CALL_RE = /^(📞|📹) (คุยสายกัน .+|สายที่ไม่ได้รับ|เพื่อนยังรับสายไม่ได้|เพื่อนติดสายอื่นอยู่|ยกเลิกสายไปแล้ว)$/;
+const IB_CALL_RE = /^(📞|📹) (คุยสายกัน .+|คุยกลุ่มกัน .+|สายที่ไม่ได้รับ|เพื่อนยังรับสายไม่ได้|เพื่อนติดสายอื่นอยู่|ยกเลิกสายไปแล้ว)$/;
 function ibCallInfo(t){
   const m = (typeof t === 'string') ? t.match(IB_CALL_RE) : null;
   if(!m) return null;
@@ -2368,7 +2366,7 @@ function openChatInbox(){
     function paintCalls(){
       if(!callList.length){
         listEl.innerHTML = `<div class="ib-empty">ยังไม่มีประวัติการโทร 📞<br>
-          กดปุ่ม 📞 หรือ 📹 ที่แถวรายชื่อเพื่อน (หรือในกล่องแชท) เพื่อโทรหากันได้เลย!</div>`;
+          กดปุ่ม 📞 ที่แถวรายชื่อเพื่อน (หรือในกล่องแชท) เพื่อโทรหากันได้เลย!</div>`;
         return;
       }
       listEl.innerHTML = callList.map((c,i)=>
@@ -2376,7 +2374,7 @@ function openChatInbox(){
           <span class="ib-ava ib-call-ava">${c.info.vid ? '📹' : '📞'}</span>
           <span class="ib-mid"><b class="ib-name">${escapeHTML(c.f.n)}</b><small class="ib-last">${c.out ? '↗️ โทรออก' : '↙️ สายเข้า'} · ${escapeHTML(c.info.txt)}</small></span>
           <span class="ib-meta"><small class="ib-time">${ibTimeStr(c.ts)}</small></span>
-          <button class="ib-world ib-cb" data-ci="${i}" data-k="${c.info.vid ? 'video' : 'voice'}" title="โทรกลับ" type="button">${c.info.vid ? '📹' : '📞'}</button>
+          <button class="ib-world ib-cb" data-ci="${i}" title="โทรกลับ" type="button">📞</button>
         </div>`).join('');
       listEl.querySelectorAll('.ib-call-row').forEach(r=>r.addEventListener('click', ()=>{
         const c = callList[+r.dataset.ci];
@@ -2385,7 +2383,7 @@ function openChatInbox(){
       listEl.querySelectorAll('.ib-cb').forEach(b=>b.addEventListener('click', e=>{
         e.stopPropagation();
         const c = callList[+b.dataset.ci];
-        if(c){ close(); startCall(c.f, b.dataset.k); }
+        if(c){ close(); startCall(c.f); }
       }));
     }
 
@@ -2412,7 +2410,6 @@ function openChat(friend){
     <div class="chat-head">
       <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
       <button class="chat-call-btn" id="chat-call-voice" type="button" title="โทรด้วยเสียง">📞</button>
-      <button class="chat-call-btn" id="chat-call-video" type="button" title="วิดีโอคอล">📹</button>
       <button class="chat-theme-btn" id="chat-theme-btn" type="button" title="เลือกธีม">🎨</button>
       <label class="chat-secret-tg" title="แชทลับ: อ่านแล้วข้อความหายใน 20 วินาที">
         <span class="cs-ic">🕵️</span>
@@ -2458,9 +2455,8 @@ function openChat(friend){
   overlay.querySelector('#chat-theme-btn').addEventListener('click', ()=>{
     themeStrip.style.display = themeStrip.style.display === 'none' ? '' : 'none';
   });
-  // 📞 รอบ 625: โทรด้วยเสียง / วิดีโอคอล จากหัวกล่องแชท (แบบ LINE)
-  overlay.querySelector('#chat-call-voice').addEventListener('click', ()=>startCall(friend, 'voice'));
-  overlay.querySelector('#chat-call-video').addEventListener('click', ()=>startCall(friend, 'video'));
+  // 📞 รอบ 625: ปุ่มโทรบนหัวกล่องแชท (รอบ 631: สายเสียงอย่างเดียว)
+  overlay.querySelector('#chat-call-voice').addEventListener('click', ()=>startCall(friend));
   overlay.querySelectorAll('.chat-theme-sw').forEach(b=>b.addEventListener('click', ()=>{
     applyTheme(b.dataset.th, false);
     themeStrip.style.display = 'none';
@@ -7608,11 +7604,14 @@ function showTeacherCard(){
 }
 
 /* ============================================================
-   📞 หน้าจอโทรหาเพื่อน — Voice call / Video call (รอบ 625)
+   📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
    เครื่องยนต์ (WebRTC + กริ่งผ่าน Firebase) อยู่ที่ `Call` ใน js/online.js
-   ไฟล์นี้ = หน้าจอล้วน: กริ่งสายเข้า / จอคุย / ปุ่มควบคุม / อิโมจิลอย
+   ไฟล์นี้ = หน้าจอล้วน: กริ่งสายเข้า / จอคุย / ปุ่มควบคุม / อิโมจิลอย / ➕ ชวนคนที่ 3
    ผูกกันด้วย object ชื่อ `callUI` (เครื่องยนต์เรียกผ่าน Call.ui('ชื่อ',...))
    🔒 โชว์ชื่อเล่น + 🆔 เท่านั้น (กติกาคุ้มครองเด็ก — ไม่มีชื่อจริง/ชั้นเรียน)
+   🔒 รอบ 631 (ผู้ใช้สั่ง — ป้องกันมิจฉาชีพ): ลบวิดีโอคอลออกทั้งระบบ เหลือ "สายเสียง" อย่างเดียว
+      ไม่มี <video> ไม่มีปุ่มกล้อง/สลับกล้อง ไม่ขอสิทธิ์กล้องจากเครื่องเลย (ดู Call.media ใน js/online.js)
+      ของเดิมที่ถูกลบไปพร้อมกัน: จอวิดีโอเต็มจอ+จอเล็ก (รอบ 625) · จอแนวตั้ง (รอบ 626) · สลับจอใหญ่-เล็ก (รอบ 627)
    ============================================================ */
 const CALL_REACT_EMOS = ['❤️','😆','👍','😮','🎉','😭','🐱','⭐'];
 
@@ -7671,48 +7670,23 @@ const callUI = {
   /* 🔒 อยู่ในโลก 3D เมาส์ถูกล็อกอยู่ (pointer lock) → ปลดก่อน ไม่งั้นกดปุ่มรับสายไม่ได้ */
   freeMouse(){ try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){} },
 
-  /* 📱 รอบ 626 (ผู้ใช้สั่ง): วิดีโอคอล = จอแนวตั้ง (แนวนอนกล้องจับหน้าด้านข้าง เห็นไม่สวย)
-     เกมทั้งเกมเป็นแนวนอน → ระหว่างสายวิดีโอต้อง "ยกเว้น" ให้ชั่วคราว แล้วคืนค่าเดิมตอนวางสาย
-     Android/Chrome ล็อกจอเองได้ (ต้อง fullscreen ก่อน) · iOS ล็อกไม่ได้ → ซ่อนป้าย "หมุนจอ"
-     แล้วขึ้นคำแนะนำให้หมุนเองแทน (ไม่มีทางล็อกได้จริงบน iOS — บอกผู้ใช้ตรง ๆ ดีกว่าเงียบ) */
-  _fsByUs:false,
-  async orient(on){
-    const html = document.documentElement;
-    if(on){
-      if(html.classList.contains('vcall-portrait')) return;
-      html.classList.add('vcall-portrait');                     // ปลดล็อก #rotate-overlay ทันที (กันจอดำ)
-      try{
-        if(!document.fullscreenElement && html.requestFullscreen){
-          await html.requestFullscreen({navigationUI:'hide'});
-          this._fsByUs = true;
-        }
-      }catch(e){}
-      try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait'); }catch(e){}
-    }else{
-      if(!html.classList.contains('vcall-portrait')) return;
-      try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
-      try{ if(this._fsByUs && document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
-      this._fsByUs = false;
-      html.classList.remove('vcall-portrait');                  // กลับไปโหมดแนวนอนของเกมตามเดิม
-    }
-  },
-
   /* 🔔 กริ่งสายเข้า — เด้งทับทุกหน้าในเกม (รวมโลก 3D) */
   incoming(){
     this.closeRing();
     this.freeMouse();
     const p = Call.peer || {uid:'', n:'เพื่อน'};
-    const vid = Call.kind === 'video';
+    const grp = (Call.roomG || []).length > 0;      // 👥 รอบ 631: ถูกชวนเข้า "สายกลุ่ม" ที่คุยกันอยู่แล้ว
     const d = document.createElement('div');
     d.className = 'call-ring';
     d.innerHTML = `<div class="cr-card">
-      <div class="cr-kind">${vid ? '📹 วิดีโอคอลเข้า' : '📞 สายเสียงเข้า'}</div>
+      <div class="cr-kind">${grp ? '👥 ชวนคุยกลุ่ม' : '📞 สายเสียงเข้า'}</div>
       <div class="cr-av"><span>🧒</span></div>
       <div class="cr-name">${escapeHTML(p.n)}</div>
       <div class="cr-id">${idTag(p.uid)}</div>
+      ${grp ? `<div class="cr-grp">มีเพื่อนคุยอยู่ในสายแล้ว ${(Call.roomG || []).length} คน</div>` : ''}
       <div class="cr-btns">
         <button class="cr-btn cr-no" type="button">✕<small>ไม่รับ</small></button>
-        <button class="cr-btn cr-ok" type="button">${vid ? '📹' : '📞'}<small>รับสาย</small></button>
+        <button class="cr-btn cr-ok" type="button">📞<small>รับสาย</small></button>
       </div>
       <div class="cr-safe">🔒 รับสายได้เฉพาะเพื่อนที่เพิ่มกันแล้ว</div>
     </div>`;
@@ -7724,37 +7698,30 @@ const callUI = {
   },
   closeRing(){ if(this.ring){ this.ring.remove(); this.ring = null; } },
 
-  /* ☎️ จอคุย (ใช้ทั้งตอนกำลังเรียกออกและตอนคุยจริง) */
+  /* ☎️ จอคุย (ใช้ทั้งตอนกำลังเรียกออกและตอนคุยจริง)
+     👥 รอบ 631: จอเดียวรองรับทั้งสายเดี่ยวและสายกลุ่ม 3 คน — ทุกคนเป็น "ช่อง" (.ctile) เหมือนกันหมด
+     สายเดี่ยว (n2) = โชว์ช่องของเพื่อนช่องเดียวเต็มจอ (หน้าตาเหมือนเดิมทุกอย่าง)
+     สายกลุ่ม (n3) = แบ่งจอเท่า ๆ กัน 3 ช่อง ไม่มี scroll (กฎทองข้อ 7) */
   open(){
     this.closeRing();
     this.freeMouse();
     if(this.ov) return;
-    const p = Call.peer || {uid:'', n:'เพื่อน'};
     const d = document.createElement('div');
-    d.className = 'call-ov';
-    d.dataset.kind = Call.kind;
-    d.innerHTML = `<video class="call-remote" id="call-remote" autoplay playsinline muted></video>
-      <audio id="call-audio" autoplay></audio>
-      <div class="call-idle" id="call-idle"><div class="ci-av"><span>🧒</span></div></div>
+    d.className = 'call-ov n2';
+    d.innerHTML = `<div class="call-stage" id="call-stage"></div>
       <div class="call-top">
-        <div class="ct-name">${escapeHTML(p.n)} <small>${idTag(p.uid)}</small></div>
+        <div class="ct-name"></div>
         <div class="ct-time" id="call-time">${Call.caller ? 'กำลังเรียก…' : 'กำลังต่อสาย…'}</div>
       </div>
       <div class="call-note" id="call-note" style="display:none"></div>
-      <button class="call-me" id="call-me" type="button" title="แตะเพื่อสลับจอใหญ่-จอเล็ก">
-        <video id="call-me-v" autoplay playsinline muted></video>
-        <span class="cm-swap">⤢</span>
-      </button>
       <div class="call-fx" id="call-fx"></div>
-      <div class="call-tip">📱 หมุนมือถือเป็น<b>แนวตั้ง</b> จะเห็นหน้ากันชัดกว่านะ</div>
       <div class="call-emos" id="call-emos" style="display:none">
         ${CALL_REACT_EMOS.map(e=>`<button class="call-emo" type="button">${e}</button>`).join('')}
       </div>
       <div class="call-bar" id="call-bar">
         <button class="cb-btn" data-a="emo" type="button" title="ส่งอิโมจิ">😀</button>
         <button class="cb-btn" data-a="mic" type="button" title="ไมค์">🎤</button>
-        <button class="cb-btn" data-a="cam" type="button" title="กล้อง">📹</button>
-        <button class="cb-btn" data-a="flip" type="button" title="สลับกล้องหน้า/หลัง">🔄</button>
+        <button class="cb-btn cb-add" data-a="add" type="button" title="ชวนเพื่อนเข้าสาย" style="display:none">➕</button>
         <button class="cb-btn" data-a="spk" type="button" title="ลำโพง">🔊</button>
         <button class="cb-btn cb-end" data-a="end" type="button" title="วางสาย">📞</button>
       </div>`;
@@ -7765,9 +7732,8 @@ const callUI = {
       const a = b.dataset.a;
       if(a === 'end')       { callRing.stop(); Call.hangup(); }
       else if(a === 'mic')  { Call.setMic(!Call.micOn); sfx.select(); }
-      else if(a === 'cam')  { if(Call.kind === 'video') Call.setCam(!Call.camOn); else Call.addVideo(); }
-      else if(a === 'flip') { Call.flipCam(); }
       else if(a === 'spk')  { Call.setSpk(!Call.spkOn); sfx.select(); }
+      else if(a === 'add')  { sfx.select(); this.openInvite(); }
       else if(a === 'emo')  {
         const box = d.querySelector('#call-emos');
         box.style.display = box.style.display === 'none' ? '' : 'none';
@@ -7777,13 +7743,64 @@ const callUI = {
       Call.sendReaction(b.textContent);
       d.querySelector('#call-emos').style.display = 'none';
     }));
-    d.querySelector('#call-me').addEventListener('click', ()=>this.swap());   // 🔄 แตะจอเล็ก = สลับจอ
 
-    this.swapped = false;
-    this.localTrack();
+    this.paint();
     this.btns();
-    this.orient(Call.kind === 'video');          // 📱 วิดีโอคอล → จอแนวตั้ง
     if(Call.caller && Call.st === 'out') callRing.start('out');
+  },
+
+  /* หัวจอ: สายเดี่ยว = ชื่อเพื่อน + 🆔 · สายกลุ่ม = "คุยกลุ่ม N คน" */
+  head(){
+    if(!this.ov) return;
+    const el = this.ov.querySelector('.ct-name');
+    if(!el) return;
+    const ps = Call.list();
+    if(ps.length > 1) el.innerHTML = '👥 คุยกลุ่ม ' + (ps.length + 1) + ' คน';
+    else if(ps[0])    el.innerHTML = escapeHTML(ps[0].n) + ' <small>' + idTag(ps[0].uid) + '</small>';
+  },
+
+  /* 🎨 วาดช่องของทุกคนในสาย (เรียกทุกครั้งที่คนเข้า/ออก/สถานะเปลี่ยน)
+     เสียงของแต่ละคนอยู่ที่ <audio> ของช่องนั้น ๆ — ปุ่ม 🔊 คุมทุกช่องพร้อมกัน */
+  paint(){
+    if(!this.ov) return;
+    const stage = this.ov.querySelector('#call-stage');
+    if(!stage) return;
+    const ps  = Call.list();
+    const ids = ps.map(p=>p.uid).concat('me');
+    this.ov.classList.toggle('n3', ids.length > 2);
+    this.ov.classList.toggle('n2', ids.length <= 2);
+    ids.forEach((uid, i)=>{
+      const me = uid === 'me';
+      const p  = me ? null : Call.peers[uid];
+      if(!me && !p) return;
+      let t = stage.querySelector('.ctile[data-uid="' + uid + '"]');
+      if(!t){
+        t = document.createElement('div');
+        t.className = 'ctile' + (me ? ' ct-me' : '');
+        t.dataset.uid = uid;
+        t.innerHTML = '<div class="ct-face"><span>' + (me ? '🙂' : '🧒') + '</span></div>' +
+                      '<div class="ct-nm"></div><div class="ct-sub"></div>' +
+                      (me ? '' : '<audio autoplay></audio>');
+      }
+      if(stage.children[i] !== t) stage.insertBefore(t, stage.children[i] || null);
+      const conn = !me && p.pc && p.pc.connectionState === 'connected';
+      t.querySelector('.ct-nm').innerHTML = me
+        ? 'ฉัน' : escapeHTML(p.n) + ' <small>' + idTag(uid) + '</small>';
+      t.querySelector('.ct-sub').textContent = me
+        ? (Call.micOn ? '' : '🔇 ปิดไมค์อยู่')
+        : (p.ring && !p.on ? 'กำลังเรียก…' : (conn ? '🟢 คุยอยู่' : 'กำลังต่อสาย…'));
+      t.classList.toggle('ringing', !!(!me && p.ring && !p.on));
+      t.classList.toggle('mute', !!(me && !Call.micOn));
+      if(!me){
+        const au = t.querySelector('audio');
+        if(au){
+          if(p.remote && au.srcObject !== p.remote){ au.srcObject = p.remote; au.play().catch(()=>{}); }
+          au.muted = !Call.spkOn;
+        }
+      }
+    });
+    Array.from(stage.children).forEach(el=>{ if(ids.indexOf(el.dataset.uid) < 0) el.remove(); });
+    this.head();
   },
 
   /* ต่อสายติดแล้ว → เริ่มจับเวลา + เปิดปุ่มอิโมจิ */
@@ -7801,9 +7818,10 @@ const callUI = {
     };
     upd();
     this.tick = setInterval(upd, 1000);
+    this.paint();
     this.btns();
+    if(!this.wasLive && typeof sfx !== 'undefined') sfx.callOn();
     this.wasLive = true;                         // ☎️ รอบ 630: จำไว้ว่าสายนี้ "ต่อติดจริง" → ตอนวางสายถึงมีเสียงปุ๊ก
-    if(typeof sfx !== 'undefined') sfx.callOn();
   },
 
   /* ป้ายบอกเหตุผลบนจอ (กฎทองข้อ 1 — ระบบต้องบอกเองว่าติดอะไร) */
@@ -7814,74 +7832,50 @@ const callUI = {
     n.style.display = html ? '' : 'none';
   },
 
-  /* 🔄 รอบ 627 (ผู้ใช้สั่ง): แตะจอเล็ก = สลับจอใหญ่↔จอเล็ก · แตะอีกครั้งสลับกลับ
-     เสียงของเพื่อนแยกไปอยู่ที่ <audio id="call-audio"> แล้ว → สลับภาพยังไงเสียงก็ไม่หาย
-     (จอทั้งสองใบ muted เสมอ — ถ้าปล่อยให้จอเล่นเสียงเองจะเกิดเสียงหอนตอนสลับ) */
-  swapped:false,
-  canSwap(){
-    return !!(Call.remote && Call.remote.getVideoTracks().length
-           && Call.local  && Call.local.getVideoTracks().length);
-  },
-  swap(){
-    if(!this.canSwap()){ toast('📹 สลับจอได้ตอนเปิดกล้องทั้งสองฝั่งนะ'); return; }
-    this.swapped = !this.swapped;
-    this.ov.classList.toggle('swapped', this.swapped);
-    this.paint();
-    if(typeof sfx !== 'undefined') sfx.select();
-  },
-  /* วางสตรีมลงจอใหญ่/จอเล็กตามสถานะสลับ (เรียกทุกครั้งที่ภาพเปลี่ยน) */
-  paint(){
-    if(!this.ov) return;
-    const bigEl = this.ov.querySelector('#call-remote');
-    const smEl  = this.ov.querySelector('#call-me-v');
-    const smBox = this.ov.querySelector('#call-me');
-    if(this.swapped && !this.canSwap()) this.swapped = false;      // อีกฝ่ายปิดกล้อง → เด้งกลับเอง
-    this.ov.classList.toggle('swapped', this.swapped);
-    const bigS = this.swapped ? Call.local  : Call.remote;
-    const smS  = this.swapped ? Call.remote : Call.local;
-    if(bigS && bigEl.srcObject !== bigS){ bigEl.srcObject = bigS; bigEl.play().catch(()=>{}); }
-    if(smS  && smEl.srcObject  !== smS ){ smEl.srcObject  = smS;  smEl.play().catch(()=>{}); }
-    this.ov.classList.toggle('has-remote-video', !!(bigS && bigS.getVideoTracks().length));
-    smBox.style.display = (smS && smS.getVideoTracks().length) ? '' : 'none';
-    smBox.classList.toggle('can-swap', this.canSwap());
-  },
-
-  /* ภาพ/เสียงของอีกฝ่ายมาถึง */
-  remote(stream){
-    if(!this.ov) return;
-    const a = this.ov.querySelector('#call-audio');
-    if(a.srcObject !== stream){ a.srcObject = stream; a.play().catch(()=>{}); }
-    a.muted = !Call.spkOn;
-    this.paint();
-  },
-
-  /* กล้องของเราเอง (จอเล็กมุมขวาล่าง) */
-  localTrack(){
-    if(!this.ov) return;
-    this.ov.dataset.kind = Call.kind;
-    this.paint();
-    this.orient(Call.kind === 'video');          // เปิดกล้องกลางสายเสียง → สลับเป็นแนวตั้งด้วย
-  },
-
-  /* สถานะปุ่ม (ปิดไมค์/ปิดกล้อง/ลำโพง) */
+  /* สถานะปุ่ม (ปิดไมค์/ลำโพง/ชวนเพื่อน) — ปุ่มกล้อง+สลับกล้องถูกลบไปแล้ว (รอบ 631 ลบวิดีโอคอล) */
   btns(){
     if(!this.ov) return;
-    const q = a=>this.ov.querySelector(`.cb-btn[data-a="${a}"]`);
-    const mic = q('mic'), cam = q('cam'), spk = q('spk'), flip = q('flip');
+    const q = a=>this.ov.querySelector('.cb-btn[data-a="' + a + '"]');
+    const mic = q('mic'), spk = q('spk'), add = q('add');
     mic.textContent = Call.micOn ? '🎤' : '🔇';
     mic.classList.toggle('off', !Call.micOn);
-    cam.textContent = (Call.kind === 'video' && Call.camOn) ? '📹' : '📷';
-    cam.classList.toggle('off', Call.kind === 'video' && !Call.camOn);
-    cam.title = Call.kind === 'video' ? 'ปิด/เปิดกล้อง' : 'เปิดกล้อง (เปลี่ยนเป็นวิดีโอคอล)';
     spk.textContent = Call.spkOn ? '🔊' : '🔈';
     spk.classList.toggle('off', !Call.spkOn);
-    flip.style.display = (Call.kind === 'video') ? '' : 'none';
-    const a = this.ov.querySelector('#call-audio');
-    if(a) a.muted = !Call.spkOn;                 // เสียงเพื่อนอยู่ที่ <audio> ไม่ใช่จอวิดีโอแล้ว
-    this.ov.classList.toggle('cam-off', Call.kind === 'video' && !Call.camOn);
+    add.style.display = (Call.st === 'live' && !Call.full()) ? '' : 'none';   // 👥 ชวนได้ตอนคุยกันแล้ว และยังไม่ครบ 3 คน
+    this.paint();
   },
 
-  /* 💛 อิโมจิลอย (ดีกว่า LINE: ส่งตรง P2P ระหว่างคุย เห็นพร้อมกันทั้งสองฝั่ง) */
+  /* ➕ รอบ 631: เลือกเพื่อนมาเข้าสายเป็นคนที่ 3 */
+  openInvite(){
+    if(!this.ov) return;
+    if(Call.st !== 'live'){ toast('รอเพื่อนรับสายก่อน แล้วค่อยชวนคนที่ 3 นะ ☎️'); return; }
+    if(Call.full()){ toast('📞 คุยกลุ่มพร้อมกันได้ ' + (CALL_MAX_PEERS + 1) + ' คนนะ'); return; }
+    const old = this.ov.querySelector('.call-add');
+    if(old){ old.remove(); return; }                    // กดซ้ำ = ปิด
+    const fr = (typeof Online !== 'undefined' ? (Online.myFriends || []) : []).filter(f=>!Call.peers[f.uid]);
+    const on = (typeof Online !== 'undefined' && Online.presenceMap) ? Online.presenceMap : {};
+    const box = document.createElement('div');
+    box.className = 'call-add';
+    box.innerHTML = `<div class="ca-head">➕ ชวนเพื่อนเข้าสาย</div>
+      <div class="ca-list">${
+        fr.length ? fr.map((f,i)=>`<button class="ca-row" data-i="${i}" type="button">
+            <span class="ca-dot${on[f.uid] ? '' : ' off'}"></span>
+            <span class="ca-nm">${escapeHTML(f.n)}<small> ${idTag(f.uid)}</small></span>
+            <span class="ca-go">📞</span>
+          </button>`).join('')
+        : '<div class="ca-empty">ยังไม่มีเพื่อนคนอื่นให้ชวนเลย 🐣</div>'}</div>
+      <div class="ca-safe">👫 เข้ากลุ่มได้เมื่อ<b>ทุกคนเป็นเพื่อนกันครบ</b> (เพื่อความปลอดภัย)</div>
+      <button class="ca-close" type="button">ปิด</button>`;
+    this.ov.appendChild(box);
+    box.querySelectorAll('.ca-row').forEach(b=>b.addEventListener('click', ()=>{
+      const f = fr[+b.dataset.i];
+      box.remove();
+      if(f) Call.invite(f);
+    }));
+    box.querySelector('.ca-close').addEventListener('click', ()=>box.remove());
+  },
+
+  /* 💛 อิโมจิลอย (ดีกว่า LINE: ส่งตรง P2P ระหว่างคุย เห็นพร้อมกันทุกคนในสาย) */
   reaction(emo, mine){
     if(!this.ov) return;
     const fx = this.ov.querySelector('#call-fx');
@@ -7902,10 +7896,9 @@ const callUI = {
        (เช็กที่ธงของตัวเองเพราะ Call.end() ล้าง startedAt ทิ้งก่อนเรียก close มาถึงตรงนี้) */
     if(this.wasLive && typeof sfx !== 'undefined') sfx.callOff();
     this.wasLive = false;
-    this.swapped = false;
-    this.orient(false);                          // 📱 วางสาย → คืนจอเป็นแนวนอนเหมือนเดิม
     if(this.ov){
       const ov = this.ov; this.ov = null;
+      ov.querySelectorAll('audio').forEach(a=>{ try{ a.pause(); a.srcObject = null; }catch(e){} });
       const t = ov.querySelector('#call-time');
       if(t && note) t.textContent = note;
       ov.classList.add('bye');
@@ -7915,8 +7908,8 @@ const callUI = {
 };
 
 /* 📞 เปิดสายจากที่ไหนก็ได้ในเกม (ใช้ในหัวกล่องแชท) */
-function startCall(friend, kind){
+function startCall(friend){
   if(typeof Call === 'undefined'){ toast('ระบบโทรยังไม่พร้อม ลองรีเฟรชหน้าเว็บนะ'); return; }
   sfx.select();
-  Call.start(friend, kind);
+  Call.start(friend);                 // 🔒 สายเสียงอย่างเดียว (ลบวิดีโอคอลแล้ว รอบ 631)
 }

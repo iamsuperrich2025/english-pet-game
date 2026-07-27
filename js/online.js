@@ -986,13 +986,24 @@ function fetchFollowers(uid){
 }
 
 /* ============================================================
-   📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625)
+   📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
    เสียง+ภาพวิ่งตรงระหว่างเครื่อง (WebRTC P2P) · Firebase ใช้แค่ "กริ่ง" + signaling
-   /calls/<toUid>/<fromUid> = {k, n, m, ts}
-     k = 'ring' เรียกเข้า | 'ok' รับสาย | 'no' ไม่รับ | 'busy' ติดสายอื่น | 'end' วางสาย
-     m = 'voice' | 'video' · n = ชื่อผู้โทร (โชว์บนกริ่ง)
+   /calls/<toUid>/<fromUid> = {k, n, m, ts, r, g}
+     k = 'ring' เรียกเข้า | 'ok' รับสาย/เข้าห้อง | 'no' ไม่รับ | 'busy' ติดสายอื่น
+         | 'nofr' ยังไม่ได้เป็นเพื่อนกันครบ (กลุ่ม) | 'full' ห้องเต็ม | 'end' วางสาย
+     n = ชื่อผู้โทร (โชว์บนกริ่ง) · m เลิกใช้แล้ว (เคยเป็น voice/video — รอบ 631 ลบวิดีโอคอลทิ้ง)
+     r = รหัสห้อง (= uid ของคนเปิดสาย · ทุกคนในสายเดียวกันใช้ค่าเดียวกัน)
+     g = uid ของคนที่อยู่ในห้องอยู่แล้ว คั่นด้วย ',' (ผู้ถูกชวนจะได้ต่อสายให้ครบทุกคน)
      ผู้โทรตั้ง onDisconnect().remove() → ปิดแท็บกลางคัน กริ่งฝั่งโน้นดับเอง
    /rtc/chat/<toUid>/<msgId> = {f,t,d,ts} — offer/answer/ice (โครงเดียวกับ voice chat ในโลก 3D)
+
+   👥 รอบ 631 — คุยกลุ่ม 3 คน (mesh):
+     • ทุกคนต่อสายตรงหากันครบทุกคู่ (3 คน = คนละ 2 เส้น) ไม่มีเซิร์ฟเวอร์กลาง
+     • กติกาว่าใครยิง offer: "คนที่อยู่ในห้องก่อน" เป็นฝ่ายยิงให้ "คนที่เพิ่งเข้า" (กัน glare)
+     • คนใดวางสาย = ตัดเฉพาะเส้นของคนนั้น คนที่เหลือคุยกันต่อได้ (สายไม่ล่มทั้งวง)
+     • 🔒 คุ้มครองเด็ก: เข้ากลุ่มได้ต่อเมื่อ "เป็นเพื่อนกันครบทุกคน" — ผู้ถูกชวนเช็กเองว่า
+       ทุก uid ในห้องอยู่ใน /friends ของตัวเอง ไม่ครบ = ตอบ 'nofr' แล้วไม่ต่อสาย
+       (อ่าน /friends ของคนอื่นไม่ได้ตาม rules → ต้องให้ปลายทางเป็นคนตรวจ)
    🔒 กติกาเด็ก: โทร/รับได้เฉพาะ "เพื่อนที่เพิ่มกันแล้ว" · กล้อง-ไมค์เปิดตอนกดรับเท่านั้น
       · วางสายแล้วคืนกล้อง/ไมค์ให้เครื่องทุกครั้ง (track.stop)
    ⚠️ ต้อง publish rules โซน /calls + เพิ่ม 'chat' ใน enum ของ /rtc ก่อนถึงใช้ได้จริง
@@ -1001,22 +1012,74 @@ function fetchFollowers(uid){
 const CALL_RTC_CFG = {iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
 const CALL_RING_MS = 35000;        // เรียกแล้วไม่มีคนรับ 35 วิ = สายไม่ได้รับ
 const CALL_MAX_MS  = 60*60*1000;   // กันสายค้างลืมวาง — ตัดที่ 60 นาที
+const CALL_MAX_PEERS = 2;          // 👥 รอบ 631: เรา + อีก 2 = คุยพร้อมกัน 3 คน (mesh คนละ 2 เส้น)
+/* 🔒 รอบ 631 (ผู้ใช้สั่ง — ป้องกันมิจฉาชีพ/ความปลอดภัยของเด็ก):
+   ลบระบบ "วิดีโอคอล" ออกทั้งหมด — เหลือเฉพาะ "สายเสียง" เท่านั้น (ไม่มีสวิตช์เปิดคืน)
+   getUserMedia ขอเฉพาะ audio → กล้องไม่มีทางติดระหว่างสายได้เลย · ปุ่ม 📹/กล้อง/สลับกล้อง ถอดออกหมด
+   เครื่องที่ยังใช้เวอร์ชันเก่าโทรวิดีโอเข้ามา = รับเป็นสายเสียง (เราไม่ส่งภาพออก ไม่แสดงภาพเขา) */
 
 const Call = {
   st:'idle',            // idle | out (กำลังเรียกออก) | in (มีสายเข้า) | live (คุยอยู่)
-  peer:null,            // {uid, n}
-  kind:'voice',         // ชนิดสายที่ตกลงกัน
-  caller:false,         // เราเป็นฝ่ายโทรออก (ฝ่ายนี้เป็นคนสร้าง offer + คนบันทึกผลลงแชท)
-  pc:null, dc:null, local:null, remote:null,
-  iceQ:[], haveRemote:false,
-  micOn:true, camOn:true, spkOn:true, facing:'user',
+  room:'',              // 👥 รหัสห้อง = uid คนเปิดสาย (สายเดี่ยวก็มี ไว้ยกระดับเป็นกลุ่มได้ทันที)
+  roomG:[],             // 👥 คนที่อยู่ในห้องแล้วตอนเราถูกชวน (ต่อ mesh ให้ครบตอนกดรับ)
+  peers:{},             // 👥 uid -> {uid,n,pc,dc,remote,iceQ,haveRemote,on,ring,offerer,t}
+  caller:false,         // เราเป็นฝ่ายเปิดสาย (เจ้าของห้อง — เป็นคนบันทึกผลลงแชท)
+  grouped:false,        // สายนี้เคยมี 3 คน (ใช้ตอนเขียนบันทึกลงห้องแชท)
+  local:null,
+  micOn:true, spkOn:true,
   startedAt:0, ringTimer:null, maxTimer:null,
   inRef:null, rtcRef:null, _last:{},
   rulesOk:true,         // false = เขียน /calls ไม่ผ่าน (ยังไม่ publish rules)
 
   busy(){ return this.st !== 'idle'; },
   isFriend(uid){ return (Online.myFriends || []).some(f=>f.uid === uid); },
+  friendName(uid){ const f = (Online.myFriends || []).find(f=>f.uid === uid); return (f && f.n) || 'เพื่อน'; },
   ui(fn, ...a){ if(typeof callUI !== 'undefined' && typeof callUI[fn] === 'function') callUI[fn](...a); },
+
+  /* ---------- 👥 รายชื่อคู่สาย (mesh) ---------- */
+  list(){ return Object.keys(this.peers).map(k=>this.peers[k]); },
+  get peer(){ return this.list()[0] || null; },       // สายเดี่ยว/กริ่งเข้า = มีคนเดียวเสมอ
+  full(){ return this.list().length >= CALL_MAX_PEERS; },
+  members(){ return this.list().map(p=>p.uid).join(','); },
+  addPeer(uid, n){
+    let p = this.peers[uid];
+    if(!p) p = this.peers[uid] = {uid, n:n || this.friendName(uid), pc:null, dc:null, remote:null,
+                                  iceQ:[], haveRemote:false, on:false, ring:false, offerer:false, t:null};
+    else if(n) p.n = n;
+    return p;
+  },
+  dropPeer(uid){
+    const p = this.peers[uid];
+    if(!p) return null;
+    clearTimeout(p.t);
+    if(p.pc){ try{ p.pc.close(); }catch(e){} }
+    delete this.peers[uid];
+    this.clearBox(uid);
+    this.ui('paint');
+    return p;
+  },
+  /* ลบกล่องสัญญาณของคู่นี้ทั้งสองฝั่ง (ของเราในกล่องเขา + ของเขาในกล่องเรา) */
+  clearBox(uid){
+    if(!Online.db || !Online.ready) return;
+    const mine = Online.db.ref('calls/' + uid + '/' + onlineKey());
+    try{ mine.onDisconnect().cancel(); }catch(e){}
+    mine.remove().catch(()=>{});
+    Online.db.ref('calls/' + onlineKey() + '/' + uid).remove().catch(()=>{});
+  },
+  /* คนหนึ่งหลุด/ปฏิเสธ → ยังมีคนอื่นในสาย = ตัดเฉพาะเส้นนั้น · เหลือคนเดียว = จบสาย */
+  gone(uid, note, log, silent){
+    const p = this.peers[uid];
+    if(p && this.list().length > 1){
+      /* 📝 เจ้าของห้องบันทึกลงห้องแชทของคนที่ออกไปก่อน (สายยังไม่จบ end() จึงยังไม่ได้บันทึกให้) */
+      if(this.caller && p.on && this.startedAt)
+        this.logChat(uid, 'done', Date.now() - this.startedAt, this.grouped);
+      this.dropPeer(uid);
+      if(typeof toast === 'function') toast('📞 ' + p.n + (note ? ' — ' + note : ' ออกจากสายแล้ว'));
+      this.ui('live');                      // อัปเดตหัวจอ "คุยกลุ่ม N คน"
+      return;
+    }
+    this.end(note, silent !== undefined ? silent : !note, log);
+  },
 
   /* ---------- เฝ้ากริ่ง + ท่อ signaling (ตั้งครั้งเดียวตอน onlineStart) ---------- */
   watch(){
@@ -1054,11 +1117,8 @@ const Call = {
   },
 
   /* ---------- ขอกล้อง/ไมค์จากเครื่อง ---------- */
-  media(kind){
-    const con = (kind === 'video')
-      ? {audio:true, video:{facingMode:this.facing, width:{ideal:640}, height:{ideal:480}}}
-      : {audio:true};
-    return navigator.mediaDevices.getUserMedia(con);
+  media(){
+    return navigator.mediaDevices.getUserMedia({audio:true});   // 🔒 ขอแค่ไมโครโฟน — ไม่ขอกล้องเด็ดขาด
   },
   mediaErr(e){
     const n = e && e.name || '';
@@ -1080,13 +1140,16 @@ const Call = {
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       toast('⚠️ เบราว์เซอร์นี้โทรไม่ได้ (ไม่รองรับกล้อง/ไมค์)'); return;
     }
-    this.kind = (kind === 'video') ? 'video' : 'voice';
-    this.micOn = true; this.camOn = true; this.spkOn = true; this.facing = 'user';
-    try{ this.local = await this.media(this.kind); }
+    this.micOn = true; this.spkOn = true;
+    try{ this.local = await this.media(); }
     catch(e){ sfx.wrong(); toast(this.mediaErr(e)); return; }
-    this.st = 'out'; this.caller = true; this.peer = {uid:friend.uid, n:friend.n || 'เพื่อน'};
+    this.st = 'out'; this.caller = true; this.grouped = false;
+    this.room = onlineKey(); this.roomG = [];        // 👥 เราเป็นเจ้าของห้อง (ชวนคนที่ 3 ทีหลังได้)
+    this.peers = {};
+    const p = this.addPeer(friend.uid, friend.n || 'เพื่อน');
+    p.ring = true;
     this.ui('open');
-    this.say(friend.uid, 'ring', {n: onlineDisplayName() || 'เพื่อน', m: this.kind})
+    this.say(friend.uid, 'ring', {n: onlineDisplayName() || 'เพื่อน', r: this.room})
       .then(()=>{
         Online.db.ref('calls/' + friend.uid + '/' + onlineKey()).onDisconnect().remove();
       })
@@ -1098,17 +1161,65 @@ const Call = {
     this.ringTimer = setTimeout(()=>{ if(this.st === 'out') this.end('ไม่มีคนรับสาย', false, 'miss'); }, CALL_RING_MS);
   },
 
+  /* ---------- ➕ ชวนคนที่ 3 เข้าสายที่คุยอยู่ (รอบ 631) ----------
+     ชวนได้เฉพาะตอน "คุยกันแล้วจริง" (st==='live') — ยังไม่มีใครรับสายแรกก็ยังไม่มีห้องให้เข้า
+     เราส่ง g = คนที่อยู่ในห้องแล้ว → ผู้ถูกชวนจะได้ต่อสายหาทุกคนให้ครบ ไม่ใช่แค่เรา */
+  invite(friend){
+    if(!friend || !friend.uid) return;
+    if(!Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะชวนได้นะ 📡'); return; }
+    if(this.st !== 'live'){ toast('รอเพื่อนรับสายก่อน แล้วค่อยชวนคนที่ 3 นะ ☎️'); return; }
+    if(this.peers[friend.uid]){ toast('เพื่อนคนนี้อยู่ในสายอยู่แล้วนะ 😊'); return; }
+    if(this.full()){ toast('📞 คุยกลุ่มพร้อมกันได้ ' + (CALL_MAX_PEERS + 1) + ' คนนะ'); return; }
+    if(!this.isFriend(friend.uid)){ toast('ชวนได้เฉพาะเพื่อนที่เพิ่มกันแล้วนะ 👫'); return; }
+    const g = this.members();                        // คนที่อยู่ในห้องก่อนหน้านี้
+    const p = this.addPeer(friend.uid, friend.n || 'เพื่อน');
+    p.ring = true;
+    this.ui('paint'); this.ui('live');
+    this.say(friend.uid, 'ring', {n: onlineDisplayName() || 'เพื่อน', r: this.room, g})
+      .then(()=>{ Online.db.ref('calls/' + friend.uid + '/' + onlineKey()).onDisconnect().remove(); })
+      .catch(()=>{
+        this.rulesOk = false;
+        this.ui('status', '⚠️ ชวนเข้ากลุ่มไม่สำเร็จ<br><small>ต้องอัปเดตกฎความปลอดภัย (Firebase rules) โซน /calls ก่อนนะ</small>');
+        this.dropPeer(friend.uid);
+      });
+    toast('📨 ชวน ' + (friend.n || 'เพื่อน') + ' เข้าสายแล้ว รอสักครู่นะ');
+    p.t = setTimeout(()=>{
+      const q = this.peers[friend.uid];
+      if(q && q.ring && !q.on){
+        this.say(friend.uid, 'end').catch(()=>{});
+        this.dropPeer(friend.uid);
+        toast('📞 ' + (friend.n || 'เพื่อน') + ' ไม่ได้รับสาย');
+        this.ui('live');
+      }
+    }, CALL_RING_MS);
+  },
+
   /* ---------- 📲 รับสาย ---------- */
   async accept(){
     if(this.st !== 'in' || !this.peer) return;
+    const from = this.peer.uid;
+    /* 🔒 คุ้มครองเด็ก: สายกลุ่มต้องเป็นเพื่อนกันครบทุกคน (คนแปลกหน้าห้ามคุยผ่านเพื่อนกลาง) */
+    const others = (this.roomG || []).filter(u=>u && u !== onlineKey() && u !== from);
+    const bad = others.filter(u=>!this.isFriend(u));
+    if(bad.length){
+      this.say(from, 'nofr').catch(()=>{});
+      toast('👫 เข้าคุยกลุ่มได้เมื่อเป็นเพื่อนกับทุกคนในสายก่อนนะ');
+      this.end('', true);
+      return;
+    }
     let s;
-    try{ s = await this.media(this.kind); }
+    try{ s = await this.media(); }
     catch(e){ sfx.wrong(); toast(this.mediaErr(e)); this.decline(); return; }
     if(this.st !== 'in'){ s.getTracks().forEach(t=>t.stop()); return; }   // สายถูกวางระหว่างขออนุญาต
     this.local = s;
     this.st = 'live'; this.startedAt = Date.now();
-    this.makePC();                                   // เตรียม pc ให้พร้อมก่อนบอก "รับสาย" (offer จะตามมา)
-    this.say(this.peer.uid, 'ok').catch(()=>{});
+    others.forEach(u=>this.addPeer(u));               // 👥 ต่อสายให้ครบทุกคนในห้อง
+    if(others.length) this.grouped = true;
+    this.list().forEach(p=>{
+      p.on = true; p.ring = false;
+      this.makePC(p.uid, false);                      // เตรียม pc ให้พร้อมก่อนบอก "รับสาย" (offer จะตามมา)
+      this.say(p.uid, 'ok', {r: this.room}).catch(()=>{});
+    });
     this.ui('open'); this.ui('live');
     this.armMax();
   },
@@ -1118,78 +1229,87 @@ const Call = {
     this.end('', true);
   },
   hangup(){
-    if(this.peer) this.say(this.peer.uid, 'end').catch(()=>{});
+    this.list().forEach(p=>this.say(p.uid, 'end').catch(()=>{}));
     const dur = this.startedAt ? Date.now() - this.startedAt : 0;
     this.end('', true, dur ? 'done' : (this.caller ? 'cancel' : ''));
   },
 
-  /* ---------- 🔌 WebRTC ---------- */
-  makePC(){
-    if(this.pc) return this.pc;
+  /* ---------- 🔌 WebRTC (mesh — หนึ่ง RTCPeerConnection ต่อคู่สาย) ---------- */
+  makePC(uid, offerer){
+    const p = this.peers[uid];
+    if(!p) return null;
+    if(p.pc) return p.pc;
     const pc = new RTCPeerConnection(CALL_RTC_CFG);
-    this.pc = pc; this.iceQ = []; this.haveRemote = false;
-    this.remote = new MediaStream();
+    p.pc = pc; p.iceQ = []; p.haveRemote = false; p.offerer = !!offerer;
+    p.remote = new MediaStream();
     if(this.local) this.local.getTracks().forEach(t=>pc.addTrack(t, this.local));
-    pc.onicecandidate = e=>{ if(e.candidate && this.peer) this.sig(this.peer.uid, 'ice', e.candidate.toJSON()); };
+    pc.onicecandidate = e=>{ if(e.candidate) this.sig(uid, 'ice', e.candidate.toJSON()); };
     pc.ontrack = e=>{
-      e.streams[0].getTracks().forEach(t=>{ if(!this.remote.getTracks().includes(t)) this.remote.addTrack(t); });
-      this.ui('remote', this.remote);
+      e.streams[0].getTracks().forEach(t=>{ if(!p.remote.getTracks().includes(t)) p.remote.addTrack(t); });
+      this.ui('paint');
     };
     pc.onconnectionstatechange = ()=>{
-      if(pc.connectionState === 'connected') this.ui('status', '');
-      if(pc.connectionState === 'failed') this.end('สายหลุด — สัญญาณเชื่อมต่อไม่ได้', true);
+      if(pc.connectionState === 'connected'){ this.ui('status', ''); this.ui('paint'); }
+      if(pc.connectionState === 'failed') this.gone(uid, 'สายหลุด — สัญญาณเชื่อมต่อไม่ได้', '', true);
     };
     /* 💛 ดีกว่า LINE: ช่องส่ง "อิโมจิลอย" ระหว่างคุย (วิ่ง P2P ไม่ผ่านเซิร์ฟเวอร์) */
-    if(this.caller){
-      this.dc = pc.createDataChannel('rx');
-      this.bindDC(this.dc);
+    if(offerer){
+      p.dc = pc.createDataChannel('rx');
+      this.bindDC(uid, p.dc);
     }else{
-      pc.ondatachannel = e=>{ this.dc = e.channel; this.bindDC(this.dc); };
+      pc.ondatachannel = e=>{ p.dc = e.channel; this.bindDC(uid, p.dc); };
     }
     return pc;
   },
-  bindDC(dc){
+  bindDC(uid, dc){
     dc.onmessage = e=>{
       const raw = String(e.data || '');
-      if(raw === 'neg'){ if(this.caller) this.offer(); return; }   // อีกฝ่ายเพิ่งเปิดกล้อง → เจรจา SDP ใหม่
+      const p = this.peers[uid];
+      if(raw === 'neg'){ if(p && p.offerer) this.offer(uid); return; }  // อีกฝ่ายเพิ่งเปิดกล้อง → เจรจา SDP ใหม่
       const t = raw.slice(0, 4);
       if(t) this.ui('reaction', t, false);
     };
   },
   sendReaction(emo){
     this.ui('reaction', emo, true);
-    try{ if(this.dc && this.dc.readyState === 'open') this.dc.send(emo); }catch(e){}
+    this.list().forEach(p=>{                          // 👥 กลุ่ม = ส่งให้ทุกคนในสาย
+      try{ if(p.dc && p.dc.readyState === 'open') p.dc.send(emo); }catch(e){}
+    });
   },
-  async offer(){
-    const pc = this.makePC();
+  async offer(uid){
+    const pc = this.makePC(uid, true);
+    if(!pc) return;
     try{
       const of = await pc.createOffer();
       await pc.setLocalDescription(of);
-      this.sig(this.peer.uid, 'offer', pc.localDescription.toJSON());
-    }catch(e){ this.end('ต่อสายไม่สำเร็จ ลองใหม่นะ', true); }
+      this.sig(uid, 'offer', pc.localDescription.toJSON());
+    }catch(e){ this.gone(uid, 'ต่อสายไม่สำเร็จ ลองใหม่นะ', '', true); }
   },
   async onRtc(m){
-    if(!this.peer || m.f !== this.peer.uid || this.st === 'idle') return;
+    if(this.st === 'idle') return;
+    const p = this.peers[m.f];
+    if(!p) return;
     let d; try{ d = JSON.parse(m.d); }catch(e){ return; }
     if(m.t === 'offer'){
-      const pc = this.makePC();
+      const pc = this.makePC(m.f, false);
+      if(!pc) return;
       try{
-        await pc.setRemoteDescription(d); this.haveRemote = true;
-        this.iceQ.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
+        await pc.setRemoteDescription(d); p.haveRemote = true;
+        p.iceQ.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
         const an = await pc.createAnswer();
         await pc.setLocalDescription(an);
         this.sig(m.f, 'answer', pc.localDescription.toJSON());
       }catch(e){}
     }else if(m.t === 'answer'){
-      if(!this.pc) return;
+      if(!p.pc) return;
       try{
-        await this.pc.setRemoteDescription(d); this.haveRemote = true;
-        this.iceQ.splice(0).forEach(c=>this.pc.addIceCandidate(c).catch(()=>{}));
+        await p.pc.setRemoteDescription(d); p.haveRemote = true;
+        p.iceQ.splice(0).forEach(c=>p.pc.addIceCandidate(c).catch(()=>{}));
       }catch(e){}
     }else if(m.t === 'ice'){
-      if(!this.pc) return;
-      if(this.haveRemote) this.pc.addIceCandidate(d).catch(()=>{});
-      else this.iceQ.push(d);
+      if(!p.pc) return;
+      if(p.haveRemote) p.pc.addIceCandidate(d).catch(()=>{});
+      else p.iceQ.push(d);
     }
   },
 
@@ -1206,29 +1326,52 @@ const Call = {
       // 🧹 กริ่งค้างเก่า (เครื่องผู้โทรดับกลางคัน onDisconnect ไม่ทัน) → ลบทิ้ง ไม่ปลุกทีหลัง
       if(typeof v.ts === 'number' && Date.now() - v.ts > CALL_RING_MS + 15000){ clear(); return; }
       if(this.busy()){ this.say(uid, 'busy').catch(()=>{}); clear(); return; }
-      this.kind = (v.m === 'video') ? 'video' : 'voice';
-      this.micOn = true; this.camOn = true; this.spkOn = true; this.facing = 'user';
+      this.micOn = true; this.spkOn = true;
       this.caller = false; this.st = 'in';
+      this.room = (typeof v.r === 'string' && v.r) ? v.r : uid;
+      this.roomG = (typeof v.g === 'string' && v.g)         // 👥 คนที่อยู่ในห้องอยู่ก่อนแล้ว
+        ? v.g.split(',').filter(Boolean).slice(0, CALL_MAX_PEERS) : [];
+      this.grouped = this.roomG.length > 0;
+      this.peers = {};
       const fr = (Online.myFriends || []).find(f=>f.uid === uid);
-      this.peer = {uid, n: (fr && fr.n) || (typeof v.n === 'string' ? v.n : 'เพื่อน')};
+      this.addPeer(uid, (fr && fr.n) || (typeof v.n === 'string' ? v.n : 'เพื่อน')).ring = true;
       this.ui('incoming');
       this.ringTimer = setTimeout(()=>{ if(this.st === 'in') this.end('', true); }, CALL_RING_MS);
       return;
     }
-    if(!this.peer || this.peer.uid !== uid) { clear(); return; }
-    if(v.k === 'ok'){                                   // อีกฝ่ายกดรับ → เราเป็นคนยิง offer
-      if(this.st !== 'out') return;
-      clearTimeout(this.ringTimer); this.ringTimer = null;
-      this.st = 'live'; this.startedAt = Date.now();
-      this.ui('live'); this.armMax();
-      this.offer();
-    }else if(v.k === 'no'){
-      this.end('ตอนนี้เพื่อนยังรับสายไม่ได้', false, 'reject');
+    if(v.k === 'ok'){
+      if(this.st === 'out' && this.peers[uid]){          // ☎️ สายเดี่ยว: อีกฝ่ายกดรับ → เรายิง offer
+        clearTimeout(this.ringTimer); this.ringTimer = null;
+        const p = this.peers[uid]; p.on = true; p.ring = false; clearTimeout(p.t);
+        this.st = 'live'; this.startedAt = Date.now();
+        this.ui('live'); this.armMax();
+        this.offer(uid);
+        return;
+      }
+      if(this.st === 'live'){                            // 👥 คนที่ 3 เข้าห้อง — คนที่อยู่ก่อนเป็นฝ่ายยิง offer
+        if(typeof v.r === 'string' && v.r && v.r !== this.room){ clear(); return; }
+        if(!this.isFriend(uid)){ clear(); return; }       // 🔒 คนที่ไม่ใช่เพื่อนเรา ห้ามเข้าสายเราเด็ดขาด
+        if(!this.peers[uid] && this.full()){ this.say(uid, 'full').catch(()=>{}); clear(); return; }
+        const p = this.addPeer(uid);
+        p.on = true; p.ring = false; clearTimeout(p.t);
+        this.grouped = true;
+        this.ui('live');
+        this.offer(uid);
+      }
+      return;
+    }
+    if(!this.peers[uid]){ clear(); return; }
+    if(v.k === 'no'){
+      this.gone(uid, 'ตอนนี้เพื่อนยังรับสายไม่ได้', 'reject', false);
     }else if(v.k === 'busy'){
-      this.end('เพื่อนกำลังติดสายอื่นอยู่', false, 'busy');
+      this.gone(uid, 'เพื่อนกำลังติดสายอื่นอยู่', 'busy', false);
+    }else if(v.k === 'nofr'){
+      this.gone(uid, 'เข้ากลุ่มไม่ได้ ต้องเป็นเพื่อนกันครบทุกคนก่อนนะ 👫', 'reject', false);
+    }else if(v.k === 'full'){
+      this.gone(uid, 'สายนั้นเต็มแล้ว (คุยพร้อมกันได้ ' + (CALL_MAX_PEERS + 1) + ' คน)', 'reject', false);
     }else if(v.k === 'end'){
       const dur = this.startedAt ? Date.now() - this.startedAt : 0;
-      this.end('', true, dur ? 'done' : '');
+      this.gone(uid, '', dur ? 'done' : '', true);
     }
   },
 
@@ -1243,76 +1386,39 @@ const Call = {
     if(this.local) this.local.getAudioTracks().forEach(t=>{ t.enabled = on; });
     this.ui('btns');
   },
-  setCam(on){
-    this.camOn = on;
-    if(this.local) this.local.getVideoTracks().forEach(t=>{ t.enabled = on; });
-    this.ui('btns');
-  },
   setSpk(on){ this.spkOn = on; this.ui('btns'); },
-  /* 🔄 สลับกล้องหน้า/หลัง (มือถือ) — เปลี่ยน track ในสายเดิม ไม่ต้องต่อสายใหม่ */
-  async flipCam(){
-    if(this.kind !== 'video' || !this.local) return;
-    this.facing = (this.facing === 'user') ? 'environment' : 'user';
-    try{
-      const ns = await navigator.mediaDevices.getUserMedia({video:{facingMode:this.facing}, audio:false});
-      const nt = ns.getVideoTracks()[0];
-      const old = this.local.getVideoTracks()[0];
-      if(this.pc){
-        const snd = this.pc.getSenders().find(s=>s.track && s.track.kind === 'video');
-        if(snd) await snd.replaceTrack(nt);
-      }
-      if(old){ this.local.removeTrack(old); old.stop(); }
-      this.local.addTrack(nt);
-      nt.enabled = this.camOn;
-      this.ui('localTrack');
-    }catch(e){ toast('🔄 สลับกล้องไม่สำเร็จ (เครื่องนี้มีกล้องเดียว)'); }
-  },
-  /* 📹 ชวนเปิดกล้องระหว่างสายเสียง (voice → video) — ขอ track ใหม่แล้วต่อสายเดิม */
-  async addVideo(){
-    if(this.st !== 'live' || this.kind === 'video' || !this.pc) return;
-    try{
-      const ns = await navigator.mediaDevices.getUserMedia({video:{facingMode:this.facing, width:{ideal:640}, height:{ideal:480}}, audio:false});
-      const nt = ns.getVideoTracks()[0];
-      this.local.addTrack(nt);
-      this.pc.addTrack(nt, this.local);
-      this.kind = 'video'; this.camOn = true;
-      this.ui('localTrack'); this.ui('btns');
-      if(this.caller) this.offer();                    // ฝ่ายโทรออกเป็นคนเจรจาใหม่ (กันชนกัน)
-      else this.sendRenegotiate();
-    }catch(e){ toast(this.mediaErr(e)); }
-  },
-  sendRenegotiate(){ try{ if(this.dc && this.dc.readyState === 'open') this.dc.send('neg'); }catch(e){} },
 
   /* ---------- วางสาย/เก็บกวาด ---------- */
   end(note, silent, log){
-    const peer = this.peer, caller = this.caller, kind = this.kind;
+    const mates = this.list(), caller = this.caller, grouped = this.grouped;
     const dur = this.startedAt ? Date.now() - this.startedAt : 0;
     clearTimeout(this.ringTimer); this.ringTimer = null;
     clearTimeout(this.maxTimer);  this.maxTimer = null;
-    if(this.pc){ try{ this.pc.close(); }catch(e){} }
-    this.pc = null; this.dc = null; this.iceQ = []; this.haveRemote = false;
-    if(this.local){ this.local.getTracks().forEach(t=>t.stop()); }    // 🎤 คืนกล้อง/ไมค์ให้เครื่อง
-    this.local = null; this.remote = null;
-    if(peer && Online.db && Online.ready){
-      const mine = Online.db.ref('calls/' + peer.uid + '/' + onlineKey());
-      try{ mine.onDisconnect().cancel(); }catch(e){}
-      mine.remove().catch(()=>{});
-      Online.db.ref('calls/' + onlineKey() + '/' + peer.uid).remove().catch(()=>{});
-    }
-    this.st = 'idle'; this.peer = null; this.startedAt = 0; this.caller = false; this._last = {};
+    mates.forEach(p=>{                                                // 👥 ปิดให้ครบทุกเส้นในกลุ่ม
+      clearTimeout(p.t);
+      if(p.pc){ try{ p.pc.close(); }catch(e){} }
+    });
+    if(this.local){ this.local.getTracks().forEach(t=>t.stop()); }    // 🎤 คืนไมค์ให้เครื่อง
+    this.local = null;
+    /* ⚠️ ต้อง "ล้างสถานะก่อน" แล้วค่อยลบกล่องบนเซิร์ฟเวอร์ — ลบกล่องแล้ว child_removed จะเด้งกลับเข้ามา
+       ถ้า st ยังเป็น 'in' อยู่ ตัวเฝ้ากริ่งจะเรียก end() ซ้ำวนไม่รู้จบ (เจอตอนเทสต์รอบ 631) */
+    this.peers = {}; this.roomG = []; this.room = '';
+    this.st = 'idle'; this.startedAt = 0; this.caller = false; this.grouped = false; this._last = {};
+    mates.forEach(p=>this.clearBox(p.uid));
     this.ui('close', note || '');
     if(note && !silent && typeof toast === 'function') toast('📞 ' + note);
-    if(log && caller && peer) this.logChat(peer.uid, log, kind, dur);
+    if(log && caller) mates.forEach(p=>this.logChat(p.uid, log, dur, grouped));
   },
-  /* 📝 บันทึกผลสายลงห้องแชท (ฝ่ายโทรออกเป็นคนบันทึก — ห้องแชทใช้ร่วมกันทั้งคู่ ไม่ซ้ำ) */
-  logChat(uid, kind, ctype, dur){
+  /* 📝 บันทึกผลสายลงห้องแชท (ฝ่ายเปิดสายเป็นคนบันทึก — ห้องแชทใช้ร่วมกันทั้งคู่ ไม่ซ้ำ)
+     👥 สายกลุ่ม: เจ้าของห้องเขียนลงห้องแชทของแต่ละคน คนละบรรทัด (ห้อง B-C ไม่มีใครเขียน จึงไม่ซ้ำ) */
+  logChat(uid, kind, dur, grouped){
     if(typeof chatSend !== 'function') return;
-    const ic = (ctype === 'video') ? '📹' : '📞';
+    const ic = '📞';                                  // 🔒 สายเสียงอย่างเดียวแล้ว (ไม่มี 📹 อีก)
     let txt = '';
     if(kind === 'done'){
       const s = Math.max(1, Math.round(dur/1000));
       const mm = Math.floor(s/60), ss = s%60;
-      txt = ic + ' คุยสายกัน ' + (mm ? mm + ' นาที ' : '') + ss + ' วินาที';
+      txt = ic + (grouped ? ' คุยกลุ่มกัน ' : ' คุยสายกัน ') + (mm ? mm + ' นาที ' : '') + ss + ' วินาที';
     }
     else if(kind === 'miss')   txt = ic + ' สายที่ไม่ได้รับ';
     else if(kind === 'reject') txt = ic + ' เพื่อนยังรับสายไม่ได้';
