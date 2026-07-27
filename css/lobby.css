@@ -2055,8 +2055,17 @@ html.no-anim .cs-big-img{animation:none}
 .pod.me .pod-base{outline:2px solid #7ad0ff;outline-offset:-2px;}
 .pod.me .pod-name{color:#7ad0ff;}
 /* ---- การ์ดผู้เล่นแบบกว้าง (รอบ 155): สถิติ | กิจกรรม + กริดทรัพย์สิน ---- */
-/* รอบ 617: ยืดกว้างขึ้น (860→1180) ให้ช่องทรัพย์สินกว้างเท่าการ์ดหน้าโรงงานที่จอเดียวกัน */
-.pl-card.pl-wide{width:min(96vw,1180px);max-height:94vh;display:flex;flex-direction:column;}
+/* รอบ 617→619: การ์ดโปรไฟล์กางเต็มจอเหมือนแผงโรงงาน/ตลาด (ช่องสินค้าจึงกว้างเท่ากันเป๊ะ)
+   --pl-row = ความสูงการ์ด 1 แถว (ล้อการ์ดโรงงาน: จอ 493→142 · 720→235) · --fc-n = จำนวนคอลัมน์ */
+.pl-card.pl-wide{
+  width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;border:0;border-radius:0;
+  display:flex;flex-direction:column;
+  --pl-row:clamp(110px,calc(41vh - 60px),260px);--fc-n:8;--pl-gap:9px;
+}
+@media (max-width:900px){.pl-card.pl-wide{--fc-n:6;}}
+@media (max-width:760px){.pl-card.pl-wide{--fc-n:5;}}
+@media (max-width:700px){.pl-card.pl-wide{--fc-n:4;}}
+@media (max-width:520px){.pl-card.pl-wide{--fc-n:3;}}
 .pl-wide .pl-body{
   overflow-y:auto;min-height:0;scrollbar-width:none;-ms-overflow-style:none;
 }
@@ -3432,7 +3441,6 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 /* รอบ 617: การ์ดขนาด "เท่าหน้าโรงงาน" — แถวสูงเท่าการ์ดโรงงานที่จอเดียวกัน (โรงงาน ≈ 29-33vh ต่อแถว)
    + หน้าตาชุดเดียวกับ .hq-card (หัวน้ำเงินชื่อสินค้า → ภาพใหญ่กลางการ์ด) */
 .pl-assets.strip-x{
-  --pl-row:clamp(110px,calc(41vh - 60px),260px);   /* ล้อความสูงการ์ดโรงงาน: จอ 493→142 · 720→235 */
   grid-template-columns:none;              /* ล้างกริด auto-fill เดิม ไม่งั้นชนะ grid-auto-columns */
   grid-template-rows:repeat(2,var(--pl-row));
   padding:9px;border-radius:16px;border:1px solid rgba(255,255,255,.16);box-sizing:border-box;
@@ -3461,3 +3469,44 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 /* ของน้อยกว่า 9 ชิ้น = แถวเดียวพอ (ไม่ต้องเหลือถาดว่างครึ่งล่าง) · เบราว์เซอร์เก่าไม่รู้จัก :has → คง 2 แถวตามเดิม */
 .pl-assets.strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--pl-row);}
 .mine-strip .strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--mine-row);}
+
+/* ============================================================
+   🐾 สัตว์เลี้ยงในโปรไฟล์ — ใช้การ์ดชุดเดียวกับทรัพย์สิน/แคตตาล็อกโรงงาน (รอบ 619)
+   ถาดน้ำเงินเข้ม + การ์ดกว้าง 1 คอลัมน์ สูงเท่ากันเป๊ะ (หัวน้ำเงินชื่อน้อง → รูปใหญ่)
+   ============================================================ */
+.pl-wide .pl-pets{
+  display:grid;grid-auto-flow:column;justify-content:start;
+  grid-auto-columns:calc((100% - (var(--fc-n) - 1) * var(--pl-gap)) / var(--fc-n));
+  gap:var(--pl-gap);padding:9px;border-radius:16px;box-sizing:border-box;
+  background:linear-gradient(180deg,#16385e,#0f2c4e);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);
+}
+.pl-wide .pl-pet{
+  width:auto;min-width:0;height:var(--pl-row);padding:0;gap:0;overflow:hidden;
+  background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;border-radius:14px;
+  box-shadow:0 4px 12px rgba(15,60,110,.22);transition:transform .12s,box-shadow .12s;
+}
+.pl-wide .pl-pet:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(10,45,90,.34);}
+.pl-wide .pl-pet img{
+  flex:1;min-height:0;width:100%;height:auto;padding:6px;object-fit:contain;
+  filter:drop-shadow(0 6px 10px rgba(20,60,110,.28));
+}
+.pl-wide .pl-pet .pl-asset-emoji{
+  flex:1;height:auto;display:flex;align-items:center;justify-content:center;font-size:min(46px,7vh);
+}
+/* ชื่อน้อง = หัวการ์ดน้ำเงินด้านบน (order:-1) เหมือนชื่อสินค้า */
+.pl-wide .pl-pet-nm{
+  order:-1;flex-shrink:0;width:100%;max-width:none;
+  background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;
+  font-size:11.5px;line-height:1.2;font-weight:600;padding:4px 5px;
+  text-shadow:0 1px 2px rgba(10,40,80,.4);
+  white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  overflow:hidden;min-height:calc(2.4em + 8px);
+}
+/* ขอบซ้าย-ขวาของเนื้อการ์ด = เผื่อให้ "ช่องสินค้า" กว้างเท่าการ์ดในแผงโรงงานเป๊ะ
+   (โรงงานมีกล่อง .shop-card ซ้อนอีกชั้น + ลูกศร 38px · โปรไฟล์ไม่มีกล่องซ้อน ลูกศร 34px) */
+.pl-wide .pl-body{padding:14px 35px 16px;}
+.pl-wide .pl-pets{margin:0 40px;}     /* เยื้องเท่าลูกศรของแถบทรัพย์สิน คอลัมน์จะตรงแนวกัน */
+/* ของน้อยจนลูกศรซ่อน: กันที่ลูกศรไว้เหมือนเดิม (visibility) ไม่งั้นการ์ดกว้างขึ้นจนไม่ตรงแนวแถวสัตว์เลี้ยง */
+.pl-assets-wrap .strip-wrap.no-x .strip-arrow{display:flex;visibility:hidden;}
