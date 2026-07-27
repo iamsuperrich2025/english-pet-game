@@ -51,6 +51,8 @@ const CFG = {
   VERIFY_MS:     2500,    // หลังเข้าสนามกี่ ms ค่อยตรวจว่าตัวเองมีสิทธิ์นั่งจริง (กันแห่เข้าพร้อมกัน)
   LEGACY_BRIDGE: true,    // เห็นเครื่องที่ยังไม่อัปเดตไหม (ปิดได้เมื่อพ้นช่วงเปลี่ยนผ่าน)
   LEGACY_WATCH:  8,       // สะพานเครื่องเก่า: ฟังมากสุดกี่คน (คุมทราฟฟิกให้มีเพดาน)
+  MEET_TRIES:    3,       // 🤝 นัดเจอเพื่อน: ตามหาเพื่อนที่ชวนกันซ้ำได้กี่ครั้งหลังเข้าสนามแล้ว
+  MEET_GAP_MS:   7000,    // เว้นกี่ ms ต่อครั้ง (เพื่อนอาจกดเข้าโลกช้ากว่าเราไม่กี่วินาที)
 };
 
 /* จำนวนสนามที่เปิดใช้จริง = คุมโดย WORLD_CAP (80/14 → 6 สนาม) */
@@ -83,6 +85,22 @@ function mergeBack(hot, cold){
   if(cold) for(const k in cold){ const o=COLD_BACK[k]; if(o!==undefined) d[o]=cold[k]; }
   if(hot)  for(const k in hot ){ const o=HOT_BACK[k];  if(o!==undefined) d[o]=hot[k];  }
   return d;
+}
+
+/* ── 🤝 ใครบ้างที่ "นัดกันเล่นโลกนี้" ──────────────────────────────
+   ใช้คำเชิญเล่นโลก 3D ที่มีอยู่แล้ว (`/tinv`) — ไม่ต้องเพิ่ม path ใหม่ ไม่ต้องแก้ rules
+     Online.tinv      = คำเชิญที่ "เพื่อนชวนเรา"  {uid:{map,n,ts}}
+     state.tinvSent   = คำเชิญที่ "เราชวนเพื่อน" {uid:{map,ts}}
+   นับทั้งสองทาง เพราะใครกดเข้าโลกก่อนก็ได้ */
+function metUids(map){
+  const out={};
+  try{
+    const inv=(typeof Online!=='undefined' && Online.tinv) || {};
+    for(const uid in inv) if(inv[uid] && inv[uid].map===map) out[uid]=inv[uid].n||'เพื่อน';
+    const sent=(typeof state!=='undefined' && state && state.tinvSent) || {};
+    for(const uid in sent) if(sent[uid] && sent[uid].map===map && !out[uid]) out[uid]='เพื่อน';
+  }catch(e){}
+  return out;
 }
 
 function dbOf(){ return (typeof Online!=='undefined' && Online.ready && Online.db) ? Online.db : null; }
@@ -120,7 +138,9 @@ function create(opt){
   let hRef=null, iRef=null, myHot=null, myInfo=null, lgRef=null;
   let lastHot='', lastCold='', lastHotAt=0, beatAt=0, seatWritten=false, myJoinAt=0;
   let retryAt=0, sweepAt=0, verifyAt=0, busy=false, everOk=false;
+  let meetLeft=0, meetAt=0, meetName='';        // 🤝 ตามหาเพื่อนที่นัดกันไว้
 
+  function esc(v){ return (typeof escapeHTML==='function') ? escapeHTML(String(v)) : String(v).replace(/[<>&]/g,''); }
   function rk(i){ return 'r'+i; }
   function hotRefOf(i){  return dbOf().ref('wroom/'+map+'/'+rk(i)); }
   function infoRefOf(i){ return dbOf().ref('winfo/'+map+'/'+rk(i)); }
@@ -268,7 +288,28 @@ function create(opt){
   function joinNow(first, from){
     if(busy || joined || !envReady()) return;
     busy=true; retryAt=performance.now(); myUid=onlineKey();
-    pickRoom(from).then(function(r){
+    /* 🤝 นัดกันไว้ = พาไปสนามเดียวกับเพื่อนเลย ไม่ต้องให้เด็กกด "ไปหาเพื่อน" เอง
+       (หาไม่เจอ/เต็ม → เข้าสนามปกติ แล้วค่อยตามอีกไม่กี่วินาที เผื่อเพื่อนกดเข้าช้ากว่า) */
+    const pre = (first && from===undefined) ? findMet() : Promise.resolve(null);
+    pre.catch(function(){ return null; }).then(function(met){
+      if(met && met.count<CFG.ROOM_MAX){
+        busy=false; meetLeft=0;
+        const was=full; full=false;
+        attach(met.room, met.count);
+        toast('🤝 <b>พาเข้าสนามเดียวกับ '+esc(met.n)+' แล้ว!</b>'+
+              '<br><span class="ib-sub">อยู่สนาม '+(met.room+1)+' ด้วยกัน เจอกันในนี้เลย</span>', 2600);
+        return null;
+      }
+      if(met){                                   // เจอเพื่อนแต่สนามเขาเต็ม — ห้ามเงียบ
+        meetName=met.n;
+        toast('🧯 <b>สนามของ '+esc(met.n)+' เต็มพอดี</b>'+
+              '<br><span class="ib-sub">พาเข้าสนามอื่นให้ก่อน · กด 👥 ไปหาเพื่อน ลองใหม่ได้เมื่อมีที่ว่าง</span>', 3000);
+      }else if(Object.keys(metUids(map)).length){
+        meetLeft=CFG.MEET_TRIES; meetAt=performance.now()+CFG.MEET_GAP_MS;   // เพื่อนยังไม่เข้าโลก — ตามต่ออีกหน่อย
+      }
+      return pickRoom(from);
+    }).then(function(r){
+      if(r===null && joined) return;             // เข้าสนามเพื่อนไปแล้ว
       busy=false;
       if(!r){                                        // ทุกสนามเต็ม → สนามฝึกส่วนตัว (เล่นต่อได้ครบทุกอย่าง)
         const was=full; full=true; joined=false; dropAll(); onStat();
@@ -395,6 +436,28 @@ function create(opt){
     if(!joined && !busy && now-retryAt>CFG.ROOM_RETRY_MS) joinNow(false);
     if(now>sweepAt){ sweepAt=now+2000; sweep(now); }
     if(verifyAt && now>verifyAt){ verifyAt=0; verifySeat(); }
+    if(meetLeft>0 && joined && !busy && now>meetAt) tickMeet(now);
+  }
+  /* 🤝 เพื่อนที่นัดกันเพิ่งกดเข้าโลกตามมา แต่ไปโผล่คนละสนาม → ย้ายไปหาเขา
+     ⚠️ ต้องมีฝ่ายเดียวที่ย้าย ไม่งั้นสลับที่กันไปมาแล้วไม่มีวันเจอกัน
+        → ใช้กติกาที่ทั้งสองเครื่องคิดได้ตรงกัน: **uid มากกว่าเป็นฝ่ายเดินไปหา** */
+  function tickMeet(now){
+    meetAt=now+CFG.MEET_GAP_MS; meetLeft--;
+    findMet().then(function(met){
+      if(!met) return;
+      meetLeft=0;
+      if(met.room===idx) return;                       // อยู่สนามเดียวกันอยู่แล้ว
+      if(!(myUid>met.uid)) return;                     // อีกฝ่ายเป็นคนเดินมาหาเรา
+      if(met.count>=CFG.ROOM_MAX){
+        toast('🧯 <b>สนามของ '+esc(met.n)+' เต็มพอดี</b>'+
+              '<br><span class="ib-sub">กด 👥 ไปหาเพื่อน ลองใหม่ได้เมื่อมีที่ว่าง</span>', 3000);
+        return;
+      }
+      goToRoom(met.room).then(function(r){
+        if(r.ok) toast('🤝 <b>ย้ายไปสนามเดียวกับ '+esc(met.n)+' แล้ว!</b>'+
+                       '<br><span class="ib-sub">อยู่สนาม '+(met.room+1)+' ด้วยกัน</span>', 2600);
+      });
+    }).catch(function(){});
   }
 
   /* ── 👥 หาว่าเพื่อนอยู่สนามไหน (อ่านตอนกดเท่านั้น ~1KB/สนาม) ── */
@@ -416,6 +479,33 @@ function create(opt){
           if(typeof t==='number' && now-t>CFG.ROOM_GHOST_MS) continue;
           out.push({uid:uid, n:(v[uid]&&v[uid].n)||ids[uid], room:at, here:(at===idx)});
         }
+        return step();
+      }).catch(function(){ return step(); });
+    }
+    return step();
+  }
+
+  /* ── 🤝 เพื่อนที่นัดกันไว้ อยู่สนามไหน (เจอคนแรกที่ยังไม่เต็ม พอ) ──
+     อ่าน node เย็นทีละสนามเท่าที่จำเป็น เจอแล้วหยุดทันที (~1KB/สนาม) */
+  function findMet(){
+    const want=metUids(map);
+    const keys=Object.keys(want);
+    if(!envReady() || legacy || !keys.length) return Promise.resolve(null);
+    const N=roomsAllowed(), now=Date.now();
+    let i=0;
+    function step(){
+      if(i>=N) return Promise.resolve(null);
+      const at=i++;
+      return infoRefOf(at).once('value').then(function(snap){
+        const v=snap.val()||{};
+        let n=0, hit=null;
+        for(const uid in v){
+          const t=v[uid] && v[uid].t;
+          if(typeof t==='number' && now-t>CFG.ROOM_GHOST_MS) continue;   // ผีค้างไม่นับ
+          if(uid!==myUid) n++;
+          if(want[uid] && !hit) hit={uid:uid, n:(v[uid]&&v[uid].n)||want[uid]};
+        }
+        if(hit) return {room:at, count:n, uid:hit.uid, n:hit.n};
         return step();
       }).catch(function(){ return step(); });
     }
@@ -573,6 +663,7 @@ function create(opt){
     detachRoom(); bridgeOff(); dropAll();
     idx=-1; count=0; full=false; legacy=false; joined=false; netOk=false;
     retryAt=0; sweepAt=0; verifyAt=0; busy=false; everOk=false; seatWritten=false;
+    meetLeft=0; meetAt=0; meetName='';
   }
 
   return {
@@ -588,7 +679,8 @@ function create(opt){
     get sendGap(){ return gap(); },
     /* ── test hooks (ใช้เฉพาะตอนเทสต์ preview) ── */
     _age(uid,ms){ if(peers[uid]) peers[uid].seen=performance.now()-ms; },
-    _verify:verifySeat, _count:countRoom, _pick:pickRoom,
+    _verify:verifySeat, _count:countRoom, _pick:pickRoom, _findMet:findMet, _met:metUids,
+    get _meetLeft(){ return meetLeft; }, _tickMeet:tickMeet,
   };
 }
 

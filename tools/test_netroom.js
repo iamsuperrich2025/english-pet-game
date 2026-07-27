@@ -45,6 +45,17 @@ function makePlayer(uid, map){
   r.join();
   return r;
 }
+/* ตั้งคำเชิญเล่นโลก 3D — เป็นที่มาของการ "นัดเจอกัน" (ไม่มี path ใหม่ ใช้ของเดิม) */
+function setInvite(fromUid, map, name){
+  window.Online=window.Online||{};
+  Online.tinv = fromUid ? {[fromUid]:{map:map, n:name||'เพื่อน', ts:Date.now()}} : {};
+}
+function setSent(toUid, map){
+  window.state=window.state||{};
+  state.tinvSent = toUid ? {[toUid]:{map:map, ts:Date.now()}} : {};
+}
+function clearInvites(){ setInvite(null); setSent(null); }
+
 function roomsOf(map){
   const t=FakeDB.get('winfo/'+map)||{};
   const out={};
@@ -282,13 +293,95 @@ T.legacyBridge=async function(){
   p.leave();
 };
 
+/* ── 9) 🤝 นัดกันแล้วได้สนามเดียวกันเอง (ไม่ต้องกด "ไปหาเพื่อน") ── */
+T.meetUp=async function(){
+  /* ก) เพื่อนอยู่สนาม 3 อยู่แล้ว (สนาม 1-2 เต็ม) → เราต้องไปโผล่สนาม 3 ไม่ใช่สนามแรกที่ว่าง */
+  FakeDB.reset(); clearInvites();
+  const now=Date.now();
+  for(let rm=0; rm<2; rm++)                                  // สนาม 1-2 เต็ม
+    for(let i=0;i<NetRoom.CFG.ROOM_MAX;i++)
+      FakeDB.seed('winfo/adv/r'+rm+'/pad'+rm+'_'+i, {n:'คนอื่น', t:now, j:now});
+  FakeDB.seed('winfo/adv/r2/buddyZ', {n:'น้องบีม', t:now, j:now});
+  setInvite('buddyZ','adv','น้องบีม');
+  let toasts=[];
+  window.onlineKey=function(){ return 'meA'; };
+  const me=NetRoom.create({map:'adv', sendMs:170,
+    push(){ me.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(h){ toasts.push(h.replace(/<[^>]+>/g,'')); }});
+  me.join(); await sleep(200);
+  ok('🤝 เพื่อนชวนไว้ → เข้าสนามเดียวกับเพื่อนเลย', me.room===2,
+     'ไปโผล่สนาม '+(me.room+1)+' (เพื่อนอยู่สนาม 3)');
+  ok('🤝 บอกเด็กบนจอว่าพาไปหาเพื่อนแล้ว', toasts.some(t=>/พาเข้าสนามเดียวกับ น้องบีม/.test(t)),
+     toasts.join(' | ').slice(0,110));
+  me.leave();
+
+  /* ข) สนามเพื่อนเต็มพอดี → ต้องบอกเหตุผล ไม่ใช่เงียบ แล้วยังเล่นได้ปกติ */
+  FakeDB.reset(); clearInvites();
+  for(let i=0;i<NetRoom.CFG.ROOM_MAX;i++)
+    FakeDB.seed('winfo/adv/r0/pad'+i, {n:'คนอื่น', t:Date.now(), j:Date.now()});
+  FakeDB.seed('winfo/adv/r0/buddyF', {n:'น้องปลื้ม', t:Date.now(), j:Date.now()});
+  setInvite('buddyF','adv','น้องปลื้ม');
+  toasts=[]; window.onlineKey=function(){ return 'meB'; };
+  const b=NetRoom.create({map:'adv', sendMs:170,
+    push(){ b.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(h){ toasts.push(h.replace(/<[^>]+>/g,'')); }});
+  b.join(); await sleep(200);
+  ok('🤝 สนามเพื่อนเต็ม → ขึ้นป้ายบอกเหตุผล (ห้ามเงียบ)',
+     toasts.some(t=>/สนามของ น้องปลื้ม เต็ม/.test(t)), toasts.join(' | ').slice(0,110));
+  ok('🤝 สนามเพื่อนเต็ม → ยังเข้าสนามอื่นเล่นได้ปกติ', b.joined && b.room!==0,
+     b.joined?('เข้าสนาม '+(b.room+1)):'เข้าไม่ได้ (ผิด)');
+  b.leave();
+
+  /* ค) เพื่อนกดเข้าโลกช้ากว่า → ตามไปหาทีหลัง และต้อง "ย้ายฝ่ายเดียว" ไม่สลับที่กันไปมา */
+  FakeDB.reset(); clearInvites();
+  setSent('zzFriend','adv');                                  // เราชวนเขา (uid เขามากกว่าเรา)
+  window.onlineKey=function(){ return 'aaMe'; };
+  const early=NetRoom.create({map:'adv', sendMs:170,
+    push(){ early.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(){}});
+  early.join(); await sleep(150);
+  const myRoom=early.room;
+  FakeDB.seed('winfo/adv/r4/zzFriend', {n:'น้องหนึ่ง', t:Date.now(), j:Date.now()});   // เพื่อนไปโผล่สนาม 5
+  early.tick(performance.now()+CFG_gap());
+  await sleep(200);
+  ok('🤝 uid น้อยกว่า = ไม่ย้ายตาม (ปล่อยให้อีกฝ่ายเดินมาหา ไม่สลับที่กันไปมา)',
+     early.room===myRoom, 'ยังอยู่สนาม '+(early.room+1)+' · เพื่อนอยู่สนาม 5');
+  early.leave();
+
+  FakeDB.reset(); clearInvites();
+  setSent('aaFriend','adv');                                  // คราวนี้ uid เรามากกว่า → เราเป็นฝ่ายเดิน
+  window.onlineKey=function(){ return 'zzMe'; };
+  let t2=[];
+  const late=NetRoom.create({map:'adv', sendMs:170,
+    push(){ late.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(h){ t2.push(h.replace(/<[^>]+>/g,'')); }});
+  late.join(); await sleep(150);
+  FakeDB.seed('winfo/adv/r4/aaFriend', {n:'น้องหนึ่ง', t:Date.now(), j:Date.now()});
+  late.tick(performance.now()+CFG_gap());
+  await sleep(250);
+  ok('🤝 uid มากกว่า = เดินไปหาเพื่อนที่เข้ามาทีหลัง', late.room===4,
+     'ย้ายไปสนาม '+(late.room+1)+' · '+t2.join(' | ').slice(0,80));
+  late.leave();
+
+  /* ง) ไม่ได้นัดใคร → พฤติกรรมเดิม (อัดสนามแรกก่อน) ต้องไม่เปลี่ยน */
+  FakeDB.reset(); clearInvites();
+  window.onlineKey=function(){ return 'plain1'; };
+  const plain=NetRoom.create({map:'adv', sendMs:170,
+    push(){ plain.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(){}});
+  plain.join(); await sleep(150);
+  ok('ไม่ได้นัดใคร → ยังเข้าสนามแรกตามเดิม', plain.room===0, 'สนาม '+(plain.room+1));
+  plain.leave(); clearInvites();
+};
+function CFG_gap(){ return NetRoom.CFG.MEET_GAP_MS+1000; }
+
 window.NRTest={
   ...T,
   async all(){
     log.length=0;
     if(!window.FakeDB) { console.error('ต้องโหลด tools/fakedb.js ก่อน'); return; }
     await FakeDB.install();
-    const names=['payload','scale500','worldCap','churn','ghost','friends','legacyFallback','legacyBridge'];
+    const names=['payload','scale500','worldCap','churn','ghost','friends','meetUp','legacyFallback','legacyBridge'];
     for(const n of names){
       console.log('\n── '+n+' ──');
       try{ await T[n](); }catch(e){ ok(n+' (ทำงานจนจบ)', false, e && e.message || e); }
