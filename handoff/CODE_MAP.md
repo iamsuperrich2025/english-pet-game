@@ -353,8 +353,8 @@ msbKickOut:8996 · tickMsBeam:9006 · TURBO_EVERY:9059 · TURBO_MS:9060 · TURBO
 TURBO_TRACK:9063 · resetTurbo:9065 · turboPick:9070 · turboBegin:9077 · tickTurbo:9089 · fit:9100
 tick:9106 · frame:9114 · build:9173 · start:9235 · exitWorld:9361
 
-## js/lobby.js (52 บรรทัด · 3 รายการ)
-PANEL_TITLES:9 · openPanel:20 · closePanel:28
+## js/lobby.js (54 บรรทัด · 3 รายการ)
+PANEL_TITLES:9 · openPanel:20 · closePanel:30
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
@@ -427,7 +427,7 @@ compTick:799 · ONLINE_RATE:813 · onlineEarnActive:814 · onlineEarnTick:818 ·
 addCraft:863 · ORDER_MAX:882 · ORDER_LIFE_MS:883 · ORDER_GAP_MIN_MS:884 · ORDER_GAP_SPAN_MS:885 · ORDER_TIER_WEIGHT:886
 newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · addRP:1014
 
-## js/ui.js (7,510 บรรทัด · 311 รายการ)
+## js/ui.js (7,517 บรรทัด · 311 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-268 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -473,11 +473,11 @@ newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · ad
 - 6213-6222 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
 - 6223-6245 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
 - 6246-6396 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 6397-7300 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 7301-7361 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 7362-7398 เลเวลอัพ (รายตัว)
-- 7399-7473 สถิติผลการเรียนรู้
-- 7474-7510 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 6397-7307 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 7308-7368 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 7369-7405 เลเวลอัพ (รายตัว)
+- 7406-7480 สถิติผลการเรียนรู้
+- 7481-7517 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:98 · petShowBgHTML:101 · petClipHint:128 · __clipReady:140 · petShowHTML:148 · lobbyBlk:194
@@ -528,9 +528,9 @@ carInteriorImg:6456 · carStatHtml:6458 · renderCarShowroom:6465 · csShowBig:6
 robotImg:6542 · renderRobotShop:6543 · rsShowBig:6565 · rsInit:6586 · buyRobot:6605 · enterMecha3D:6627
 pickMechaRobot:6648 · pickDriveCar:6680 · openCarBuyDialog:6723 · buyCarInsurance:6784 · payCarLoanMonthly:6803 · payCarLoanFull:6815
 carDriveBlock:6834 · gotoVehicleShop:6839 · gotoMyStock:6844 · showNeedCarDialog:6850 · craftDiscount:6862 · renderFactory:6865
-renderOrdersUI:6927 · startProduce:6946 · buyCollectible:6974 · cancelProduce:7002 · deliverOrder:7016 · renderOrderClock:7033
-renderCollectMine:7043 · openListDialog:7085 · cancelListing:7138 · buyMarketItem:7161 · showCollectReveal:7188 · buyAC:7226
-openHomeShop:7245 · renderPetShop:7304 · showLevelUp:7365 · renderStats:7402 · showTeacherCard:7478
+renderOrdersUI:6934 · startProduce:6953 · buyCollectible:6981 · cancelProduce:7009 · deliverOrder:7023 · renderOrderClock:7040
+renderCollectMine:7050 · openListDialog:7092 · cancelListing:7145 · buyMarketItem:7168 · showCollectReveal:7195 · buyAC:7233
+openHomeShop:7252 · renderPetShop:7311 · showLevelUp:7372 · renderStats:7409 · showTeacherCard:7485
 
 ## js/util.js (755 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
@@ -549,7 +549,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (241 บรรทัด · 0 รายการ)
 
-## css/lobby.css (3,244 บรรทัด · 518 selector)
+## css/lobby.css (3,388 บรรทัด · 519 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-quiz:134,135,136,137(+6) · #quiz-choices:146,147 · .word-card:154 · .quiz-choice:155,156,157
@@ -586,7 +586,7 @@ vbRender:148 · vbCardHTML:194
 .wsa-sec-h:1318,1319 · .wsa-msg:1320 · .wsa-msg-h:1323 · .wsa-msg-b:1324,1325 · .wsa-msg-none:1326 · .wsa-rules:1328,1329
 .wsa-list:1330 · .wsa-row:1331,1333 · .wsa-r:1334 · .wsa-n:1335 · .wsa-s:1336 · .wsa-p:1337
 .wsa-prizes:1338 · .wsa-pz:1339,1342 · .wsa-reveal-medal:1343 · .lobby-bottom:1353,1355 · .lobby-quiz-btn:1356 · .lobby-book-btn:1357,1358
-.lobby-foodquiz-btn:1359,1360 · .lobby-play-btn:1361,1365 · .lobby-exam-btn:1367,1368,1370 · .panel-overlay:1375,1380 · .panel-box:1381 · .panel-head:1388,1392
+.lobby-foodquiz-btn:1359,1360 · .lobby-play-btn:1361,1365 · .lobby-exam-btn:1367,1368,1370 · .panel-overlay:1375,1380,3252,3253(+1) · .panel-box:1381 · .panel-head:1388,1392
 .panel-close:1393,1398 · .panel-body:1399,1403,1404 · .panel-page:1401,1402 · .collect-sub:1408 · .mkt-empty:1409 · .craft-box:1410
 .mkt-listing:1411 · .mkt-filter:1412,1756 · .hq-grid:1419 · .hq-card:1420,1425,1449 · .hq-head:1426 · .hq-pic:1432,1434
 .hq-emoji:1436 · .hq-badge:1437 · .hq-stars:1441 · .hq-price:1442,1447,1448,1451(+6) · .craft-credit:1455,1457,1458 · .car-grid:1465,1467,1468
@@ -636,7 +636,7 @@ vbRender:148 · vbCardHTML:194
 .ws-sizes:2705 · .ws-sizes-lb:2707 · .ws-size-now:2708 · #ws-new:2711 · #ws-stash:2712 · #ws-clear:2713
 #ws-win:2714,2716 · .ws-win-in:2717,2720 · .sec-online:2743 · .rank-tab:2771,2772,2773,2774(+2) · .pet-show-bg:2801,2804,2808,2812(+14) · .pet-show:2863,2866,2878,2880(+15)
 .ps-video:2999 · .id-card:3053,3059,3063 · .id-chip:3076 · .clock-chip:3085,3086 · .coin-group:3101 · .cp-lb:3123
-.cp-v:3124 · .top-flex2:3240
+.cp-v:3124 · .top-flex2:3240 · #panel-factory:3259,3260,3264,3265(+39)
 
 ## css/style.css (1,742 บรรทัด · 458 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
