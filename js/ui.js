@@ -7564,6 +7564,32 @@ const callUI = {
   /* 🔒 อยู่ในโลก 3D เมาส์ถูกล็อกอยู่ (pointer lock) → ปลดก่อน ไม่งั้นกดปุ่มรับสายไม่ได้ */
   freeMouse(){ try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){} },
 
+  /* 📱 รอบ 626 (ผู้ใช้สั่ง): วิดีโอคอล = จอแนวตั้ง (แนวนอนกล้องจับหน้าด้านข้าง เห็นไม่สวย)
+     เกมทั้งเกมเป็นแนวนอน → ระหว่างสายวิดีโอต้อง "ยกเว้น" ให้ชั่วคราว แล้วคืนค่าเดิมตอนวางสาย
+     Android/Chrome ล็อกจอเองได้ (ต้อง fullscreen ก่อน) · iOS ล็อกไม่ได้ → ซ่อนป้าย "หมุนจอ"
+     แล้วขึ้นคำแนะนำให้หมุนเองแทน (ไม่มีทางล็อกได้จริงบน iOS — บอกผู้ใช้ตรง ๆ ดีกว่าเงียบ) */
+  _fsByUs:false,
+  async orient(on){
+    const html = document.documentElement;
+    if(on){
+      if(html.classList.contains('vcall-portrait')) return;
+      html.classList.add('vcall-portrait');                     // ปลดล็อก #rotate-overlay ทันที (กันจอดำ)
+      try{
+        if(!document.fullscreenElement && html.requestFullscreen){
+          await html.requestFullscreen({navigationUI:'hide'});
+          this._fsByUs = true;
+        }
+      }catch(e){}
+      try{ if(screen.orientation && screen.orientation.lock) await screen.orientation.lock('portrait'); }catch(e){}
+    }else{
+      if(!html.classList.contains('vcall-portrait')) return;
+      try{ if(screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); }catch(e){}
+      try{ if(this._fsByUs && document.fullscreenElement) await document.exitFullscreen(); }catch(e){}
+      this._fsByUs = false;
+      html.classList.remove('vcall-portrait');                  // กลับไปโหมดแนวนอนของเกมตามเดิม
+    }
+  },
+
   /* 🔔 กริ่งสายเข้า — เด้งทับทุกหน้าในเกม (รวมโลก 3D) */
   incoming(){
     this.closeRing();
@@ -7609,6 +7635,7 @@ const callUI = {
       <div class="call-note" id="call-note" style="display:none"></div>
       <video class="call-me" id="call-me" autoplay playsinline muted></video>
       <div class="call-fx" id="call-fx"></div>
+      <div class="call-tip">📱 หมุนมือถือเป็น<b>แนวตั้ง</b> จะเห็นหน้ากันชัดกว่านะ</div>
       <div class="call-emos" id="call-emos" style="display:none">
         ${CALL_REACT_EMOS.map(e=>`<button class="call-emo" type="button">${e}</button>`).join('')}
       </div>
@@ -7642,6 +7669,7 @@ const callUI = {
 
     this.localTrack();
     this.btns();
+    this.orient(Call.kind === 'video');          // 📱 วิดีโอคอล → จอแนวตั้ง
     if(Call.caller && Call.st === 'out') callRing.start('out');
   },
 
@@ -7691,6 +7719,7 @@ const callUI = {
     me.style.display = has ? '' : 'none';
     if(has && me.srcObject !== Call.local){ me.srcObject = Call.local; me.play().catch(()=>{}); }
     this.ov.dataset.kind = Call.kind;
+    this.orient(Call.kind === 'video');          // เปิดกล้องกลางสายเสียง → สลับเป็นแนวตั้งด้วย
   },
 
   /* สถานะปุ่ม (ปิดไมค์/ปิดกล้อง/ลำโพง) */
@@ -7728,6 +7757,7 @@ const callUI = {
     callRing.stop();
     clearInterval(this.tick); this.tick = null;
     this.closeRing();
+    this.orient(false);                          // 📱 วางสาย → คืนจอเป็นแนวนอนเหมือนเดิม
     if(this.ov){
       const ov = this.ov; this.ov = null;
       const t = ov.querySelector('#call-time');

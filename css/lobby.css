@@ -518,6 +518,27 @@ html.no-anim .ci-av{animation:none;}
   100%{opacity:0;transform:translateY(-48vh) scale(1);}
 }
 html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
+/* 📱 รอบ 626: วิดีโอคอล = แนวตั้ง (กล้องจับหน้าตรง สวยกว่าแนวนอน)
+   ระหว่างสาย html.vcall-portrait → ปิดป้าย "หมุนจอแนวนอน" ของเกมชั่วคราว */
+html.vcall-portrait #rotate-overlay{display:none !important;}
+.call-tip{display:none;}
+/* ล็อกจอเองไม่ได้ (iPhone) → ขึ้นคำแนะนำให้หมุนเอง
+   เฉพาะ "จอสัมผัส" (pointer:coarse) เท่านั้น — คอมพิวเตอร์หมุนจอไม่ได้ ไม่ต้องบอก */
+@media (orientation:landscape) and (pointer:coarse){
+  .call-ov[data-kind="video"] .call-tip{
+    display:block;position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);
+    background:rgba(255,214,102,.95);color:#5a4300;border-radius:999px;padding:6px 14px;
+    font-size:12.5px;font-weight:700;white-space:nowrap;box-shadow:0 6px 16px rgba(0,0,0,.35);
+    animation:tipFade 6s forwards;pointer-events:none;
+  }
+  @keyframes tipFade{0%,72%{opacity:1;}100%{opacity:0;visibility:hidden;}}
+}
+/* แนวตั้ง: จอเพื่อนเต็มจอ · จอเราใหญ่ขึ้นหน่อยเพราะมีที่เหลือด้านข้างน้อย */
+@media (orientation:portrait){
+  .call-ov{--cb-h:clamp(50px,7.5vh,60px);}
+  .call-me{width:clamp(96px,26vw,140px);}
+  .call-top{padding:16px 16px 28px;}
+}
 /* จอเตี้ยมาก (มือถือแนวนอน): ย่อทุกอย่างให้อยู่ในจอ ไม่มี scrollbar */
 @media (max-height:430px){
   .call-ov{--bar-h:calc(var(--cb-h) + 12px);}

@@ -1024,6 +1024,7 @@ const Call = {
     const me = onlineKey();
     this.inRef = Online.db.ref('calls/' + me);
     this.inRef.remove().catch(()=>{});                       // ล้างกริ่งค้างจากรอบก่อน
+    this.inRef.onDisconnect().remove();                      // 🧹 ปิดแท็บ/เน็ตหลุด = ล้างกล่องตัวเองให้เกลี้ยง
     this.inRef.on('child_added',   s=>this.onSignal(s.key, s.val()));
     this.inRef.on('child_changed', s=>this.onSignal(s.key, s.val()));
     this.inRef.on('child_removed', s=>{                      // ผู้โทรยกเลิก/ปิดแท็บ → กริ่งดับเอง
@@ -1031,6 +1032,7 @@ const Call = {
     });
     this.rtcRef = Online.db.ref('rtc/chat/' + me);
     this.rtcRef.remove().catch(()=>{});
+    this.rtcRef.onDisconnect().remove();                     // 🧹 SDP/ICE ที่ค้างในกล่องเรา ลบทิ้งตอนหลุด
     this.rtcRef.on('child_added', s=>{
       const m = s.val(); s.ref.remove().catch(()=>{});
       if(m) this.onRtc(m);
@@ -1201,6 +1203,8 @@ const Call = {
 
     if(v.k === 'ring'){
       if(!this.isFriend(uid)){ clear(); return; }      // 🔒 คนแปลกหน้าโทรเข้าไม่ได้
+      // 🧹 กริ่งค้างเก่า (เครื่องผู้โทรดับกลางคัน onDisconnect ไม่ทัน) → ลบทิ้ง ไม่ปลุกทีหลัง
+      if(typeof v.ts === 'number' && Date.now() - v.ts > CALL_RING_MS + 15000){ clear(); return; }
       if(this.busy()){ this.say(uid, 'busy').catch(()=>{}); clear(); return; }
       this.kind = (v.m === 'video') ? 'video' : 'voice';
       this.micOn = true; this.camOn = true; this.spkOn = true; this.facing = 'user';
