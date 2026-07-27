@@ -99,8 +99,57 @@ function metUids(map){
     for(const uid in inv) if(inv[uid] && inv[uid].map===map) out[uid]=inv[uid].n||'เพื่อน';
     const sent=(typeof state!=='undefined' && state && state.tinvSent) || {};
     for(const uid in sent) if(sent[uid] && sent[uid].map===map && !out[uid]) out[uid]='เพื่อน';
+    const a=aimGet(map);                       // 🎯 กด "ตามเข้าไป" จากแผงเพื่อนในล็อบบี้ = นัดเจอแบบหนึ่ง
+    if(a && !out[a.uid]) out[a.uid]=a.n;
   }catch(e){}
   return out;
+}
+
+/* ── 🎯 "ตามเพื่อนเข้าไป" จากล็อบบี้ (รอบ 642) ──────────────────────
+   แผงเพื่อนในล็อบบี้ (js/ui.js) รู้แล้วว่าเพื่อนอยู่โลกไหน/สนามไหน จาก whereFriends()
+   กดปุ่ม "ตามเข้าไป" = **ตั้งเป้าไว้เฉย ๆ** แล้วค่อยเข้าโลกตามปกติ
+   → ตอน join ระบบ "นัดเจอกัน" ของรอบ 641 (metUids → findMet) พาไปสนามเดียวกับเพื่อนให้เอง
+     ไม่ต้องเขียนทางเข้าสนามใหม่ · เพื่อนย้ายสนามระหว่างที่เรากำลังโหลดโลกก็ยังตามเจอ
+   เก็บในหน่วยความจำอย่างเดียว — ไม่มี path ใหม่ ไม่ต้องแก้ rules */
+const AIM_TTL_MS = 120000;      // ตั้งเป้าแล้วต้องเข้าโลกภายในเวลานี้ (โหลดโลก 3D ครั้งแรกกินเวลาหลายวินาที)
+let aim = null;                 // {map, room, uid, n, at}
+function aimAt(map, room, uid, n){
+  if(!map || !uid) return;
+  aim={map:map, room:(typeof room==='number'?room:0), uid:uid, n:n||'เพื่อน', at:Date.now()};
+}
+function aimGet(map){
+  if(!aim || (map && aim.map!==map) || Date.now()-aim.at>AIM_TTL_MS) return null;
+  return aim;
+}
+function aimClear(){ aim=null; }
+
+/* ── 🌍 เพื่อนคนไหนอยู่โลก 3D ไหน/สนามไหน (ล็อบบี้เรียกตอนเปิดแผงเพื่อน) ──
+   อ่าน node เย็น "โลกละ 1 ครั้ง" (rules ให้ `.read` ที่ระดับ $map อยู่แล้ว) = 9 อ่าน/ครั้ง
+   ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
+   คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
+const MAPS3D = ['adv','haunt','heli','drone','drive','soccer','moto','invasion','mecha'];
+function whereFriends(uids){
+  const db=dbOf(), ids=uids||{};
+  if(!db || !Object.keys(ids).length) return Promise.resolve({found:{}, denied:false});
+  const now=Date.now(), found={};
+  let denied=0;
+  return Promise.all(MAPS3D.map(function(map){
+    return db.ref('winfo/'+map).once('value').then(function(snap){
+      const rooms=snap.val()||{};
+      for(const rkey in rooms){
+        const r=parseInt(String(rkey).replace(/^r/,''),10);
+        const v=rooms[rkey]||{};
+        for(const uid in v){
+          if(!ids[uid] || !v[uid]) continue;
+          const t=(typeof v[uid].t==='number') ? v[uid].t : 0;
+          if(t && now-t>CFG.ROOM_GHOST_MS) continue;          // ผีค้าง (ปิดเครื่องดื้อ ๆ) ไม่นับว่าอยู่
+          const old=found[uid];
+          if(old && old.t>=t) continue;                        // โผล่หลายที่ = เชื่ออันที่สดกว่า
+          found[uid]={map:map, room:(isFinite(r)?r:0), n:v[uid].n||'', t:t};
+        }
+      }
+    }).catch(function(e){ if(isDenied(e)) denied++; });
+  })).then(function(){ return {found:found, denied:denied>0}; });
 }
 
 function dbOf(){ return (typeof Online!=='undefined' && Online.ready && Online.db) ? Online.db : null; }
@@ -447,7 +496,9 @@ function create(opt){
       if(!met) return;
       meetLeft=0;
       if(met.room===idx) return;                       // อยู่สนามเดียวกันอยู่แล้ว
-      if(!(myUid>met.uid)) return;                     // อีกฝ่ายเป็นคนเดินมาหาเรา
+      /* 🎯 เรากด "ตามเข้าไป" เอง = เราต้องเป็นฝ่ายเดินเสมอ (อีกฝ่ายไม่ได้กำลังตามเรา ไม่มีทางสลับที่กัน) */
+      const a=aimGet(map);
+      if(!(myUid>met.uid) && !(a && a.uid===met.uid)) return;   // ไม่งั้นอีกฝ่ายเป็นคนเดินมาหาเรา
       if(met.count>=CFG.ROOM_MAX){
         toast('🧯 <b>สนามของ '+esc(met.n)+' เต็มพอดี</b>'+
               '<br><span class="ib-sub">กด 👥 ไปหาเพื่อน ลองใหม่ได้เมื่อมีที่ว่าง</span>', 3000);
@@ -660,6 +711,7 @@ function create(opt){
   }
   function leave(){
     closeFriends();
+    if(aimGet(map)) aimClear();          // 🎯 ออกจากโลกแล้ว = เป้า "ตามเพื่อน" ของโลกนี้หมดหน้าที่
     detachRoom(); bridgeOff(); dropAll();
     idx=-1; count=0; full=false; legacy=false; joined=false; netOk=false;
     retryAt=0; sweepAt=0; verifyAt=0; busy=false; everOk=false; seatWritten=false;
@@ -713,5 +765,7 @@ function drawBudget(o){
 }
 
 window.NetRoom = { create:create, drawBudget:drawBudget, CFG:CFG, roomsAllowed:roomsAllowed,
+                   /* 🌍 ล็อบบี้ใช้: ดูว่าเพื่อนอยู่โลก/สนามไหน + ตั้งเป้า "ตามเข้าไป" (รอบ 642) */
+                   whereFriends:whereFriends, aimAt:aimAt, aimGet:aimGet, aimClear:aimClear, MAPS3D:MAPS3D,
                    _split:splitPayload, _merge:mergeBack };
 })();

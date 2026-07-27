@@ -2144,7 +2144,8 @@ function refreshFriendData(){
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
           <button class="fr-call-btn" data-ci="${i}" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>
           <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
-          <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
+          <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>
+          <div class="frw-slot" data-uid="${escapeHTML(f.uid)}" style="display:none"></div>`;   // 🌍 แถบ "อยู่โลกไหน" (รอบ 642) เติมทีหลังจาก frwPaint
       }).join('');
       listEl.querySelectorAll('.fr-chat-btn').forEach(b=>b.addEventListener('click', ()=>{
         openChat(Online.myFriends[+b.dataset.i]);
@@ -2157,7 +2158,105 @@ function refreshFriendData(){
         openGiftPicker(Online.myFriends[+b.dataset.gi]);
       }));
     }else listEl.innerHTML = `<div class="lb-empty">ยังไม่มีเพื่อน — บอกรหัสของหนูให้เพื่อน หรือค้นหารหัสเพื่อนด้านบนเพื่อเพิ่มกันนะ! 🤝</div>`;
+    frwPaint();      // 🌍 เติมแถบ "เพื่อนอยู่โลกไหน" จากข้อมูลที่สแกนไว้ (รอบ 642)
+    frwScan();       // ข้อมูลเก่าเกิน TTL แล้ว → สแกนใหม่ (คุมความถี่ในตัว)
   }
+}
+
+/* ============================================================
+   🌍 เพื่อนอยู่โลก 3D ไหน + ปุ่ม "ตามเข้าไป" (รอบ 642)
+   ต่อยอดรอบ 640-641: `js/netroom.js` รู้จัก `/winfo/<map>/<room>/<uid>` อยู่แล้ว
+   → ล็อบบี้แค่ขอสรุปผ่าน `NetRoom.whereFriends()` แล้ววาดใต้ชื่อเพื่อน
+   กด "ตามเข้าไป" = `NetRoom.aimAt()` ตั้งเป้า แล้วเข้าโลกตามปุ่มรางเมนูปกติ
+   (ตรวจตั๋ว/บาดเจ็บ/รถ ที่เดียวคือ railWorldClick) — ระบบนัดเจอของรอบ 641
+   จะพาลงสนามเดียวกับเพื่อนให้เอง ไม่ต้องมีทางเข้าสนามเส้นใหม่
+   💰 คุมทราฟฟิก: สแกนเฉพาะตอน "แผงเพื่อนเปิดอยู่จริง" + ห่างกันอย่างน้อย FRW_TTL_MS
+   🔒 คุ้มครองเด็ก: โชว์แค่ชื่อเล่น/โลก/เลขสนาม ไม่มีชื่อจริง/ชั้นเรียน
+   ============================================================ */
+const FRW_TTL_MS  = 20000;   // ข้อมูลเก่ากว่านี้ = สแกนใหม่ได้ (เพื่อนย้ายสนามไม่บ่อย)
+const FRW_MIN_GAP = 5000;    // เปิด-ปิดแผงรัว ๆ ก็ยิงถี่กว่านี้ไม่ได้
+let frwFound = {};           // uid → {map, room, n}
+let frwAt = 0, frwBusy = false, frwDenied = false, frwWasOpen = false;
+
+function frwWorldOf(map){ return WORLD3D.find(w => w.mode === map) || null; }
+
+/* แผงเพื่อนเปิดค้างอยู่จริงไหม (renderFriendPanel ถูกเรียกทุกครั้งที่ presence ขยับ แม้แผงปิดอยู่) */
+function frwPanelOpen(){
+  const el = document.getElementById('friend-card');
+  return !!(el && el.offsetParent !== null);
+}
+
+function frwScan(){
+  if(frwBusy || typeof NetRoom === 'undefined' || !NetRoom.whereFriends) return;
+  if(typeof Online === 'undefined' || !Online.ready) return;
+  if(!frwPanelOpen()){ frwWasOpen = false; return; }
+  /* เพิ่งเปิดแผง = อยากเห็นข้อมูลสดทันที (แต่ยังห้ามถี่กว่า FRW_MIN_GAP)
+     เปิดค้างไว้เฉย ๆ = รอครบ TTL ค่อยยิงใหม่ — ไม่งั้น presence ขยับทีไรก็สแกนใหม่ทุกที */
+  const justOpened = !frwWasOpen;
+  frwWasOpen = true;
+  const now = Date.now();
+  if(now - frwAt < (justOpened ? FRW_MIN_GAP : FRW_TTL_MS)) return;
+  const ids = {};
+  (Online.myFriends || []).forEach(f => { if(f.uid) ids[f.uid] = f.n || 'เพื่อน'; });
+  if(!Object.keys(ids).length){ frwFound = {}; return; }
+  frwBusy = true; frwAt = now;
+  NetRoom.whereFriends(ids).then(r => {
+    frwBusy = false;
+    frwFound = (r && r.found) || {};
+    frwDenied = !!(r && r.denied);
+    frwPaint();
+  }).catch(() => { frwBusy = false; });
+}
+
+function frwPaint(){
+  const listEl = document.getElementById('fr-list');
+  if(!listEl) return;
+  listEl.querySelectorAll('.frw-slot').forEach(slot => {
+    const uid = slot.dataset.uid, hit = frwFound[uid];
+    const w = hit ? frwWorldOf(hit.map) : null;
+    if(!hit || !w){ slot.innerHTML = ''; slot.style.cssText = 'display:none'; return; }
+    slot.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;'
+      + 'margin:-2px 0 6px 26px;font-size:.86em;line-height:1.35';
+    slot.innerHTML = `<span style="color:#8fe3ff">${w.ico} อยู่โลก${escapeHTML(w.label)} · สนาม ${hit.room + 1}</span>`
+      + `<button class="frw-go" data-uid="${escapeHTML(uid)}" type="button"
+           style="padding:2px 9px;border-radius:9px;border:0;background:#3a86c8;color:#fff;
+                  font-weight:800;font-size:.95em;cursor:pointer;white-space:nowrap">🏃 ตามเข้าไป</button>`;
+  });
+  listEl.querySelectorAll('.frw-go').forEach(b => {
+    b.onclick = () => frwFollow(b.dataset.uid);
+  });
+  frwPaintHint();
+}
+
+/* ❗ กฎทอง #1: ห้ามเงียบ — อ่าน /winfo ไม่ได้ (rules ยังไม่ publish) ต้องบอกบนจอว่าทำไมไม่มีแถบนี้ */
+function frwPaintHint(){
+  const listEl = document.getElementById('fr-list');
+  if(!listEl) return;
+  let hint = document.getElementById('frw-hint');
+  if(!frwDenied){ if(hint) hint.remove(); return; }
+  if(!hint){
+    hint = document.createElement('div');
+    hint.id = 'frw-hint';
+    hint.style.cssText = 'margin-top:6px;font-size:.85em;opacity:.75;line-height:1.4';
+    listEl.appendChild(hint);
+  }
+  hint.innerHTML = '🔒 ยังบอกไม่ได้ว่าเพื่อนอยู่โลกไหน — ระบบหลายสนามยังไม่เปิดใช้ (รอ publish rules)';
+}
+
+function frwFollow(uid){
+  const hit = frwFound[uid];
+  if(!hit) return;
+  const w = frwWorldOf(hit.map);
+  if(!w) return;
+  const fr = (Online.myFriends || []).find(f => f.uid === uid);
+  const name = (fr && fr.n) || hit.n || 'เพื่อน';
+  /* ยังไม่มีตั๋ว/บาดเจ็บ/ไม่มีรถ → ให้ railWorldClick อธิบาย+พาไปซื้อตามเดิม อย่าตั้งเป้าค้างไว้ */
+  const hasAccess = w.owned ? w.owned() : !!state[w.ticketKey];
+  if(!hasAccess || state.advHurt){ railWorldClick(w); return; }
+  NetRoom.aimAt(hit.map, hit.room, uid, name);
+  sfx.select();
+  toast(`${w.ico} กำลังพาไปหา ${escapeHTML(name)} ในโลก${w.label} สนาม ${hit.room + 1} — เจอกันในนั้นเลย!`);
+  railWorldClick(w);
 }
 
 /* ============================================================

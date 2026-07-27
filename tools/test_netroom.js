@@ -375,13 +375,80 @@ T.meetUp=async function(){
 };
 function CFG_gap(){ return NetRoom.CFG.MEET_GAP_MS+1000; }
 
+/* ── 🌍 แผงเพื่อนในล็อบบี้: "เพื่อนอยู่โลกไหน" + กดตามเข้าไป (รอบ 642) ── */
+T.followLobby=async function(){
+  FakeDB.reset(); clearInvites(); NetRoom.aimClear();
+  const now=Date.now();
+  FakeDB.seed('winfo/haunt/r2/frA', {n:'น้องเอ',  t:now, j:now});
+  FakeDB.seed('winfo/moto/r0/frB',  {n:'น้องบี',  t:now, j:now});
+  FakeDB.seed('winfo/adv/r1/frGhost',{n:'น้องผี', t:now-NetRoom.CFG.ROOM_GHOST_MS-5000, j:now});
+  FakeDB.seed('winfo/adv/r0/stranger',{n:'คนแปลกหน้า', t:now, j:now});
+  const ids={frA:'น้องเอ', frB:'น้องบี', frGhost:'น้องผี', frOffline:'น้องซี'};
+
+  const r=await NetRoom.whereFriends(ids);
+  ok('🌍 บอกได้ว่าเพื่อนอยู่โลกไหน/สนามไหน',
+     r.found.frA && r.found.frA.map==='haunt' && r.found.frA.room===2,
+     JSON.stringify(r.found.frA||null));
+  ok('🌍 อ่านครบทุกโลก ไม่ใช่แค่โลกแรก',
+     r.found.frB && r.found.frB.map==='moto' && r.found.frB.room===0,
+     JSON.stringify(r.found.frB||null));
+  ok('🌍 ผีค้าง (ปิดเครื่องดื้อ ๆ) ไม่นับว่าอยู่ในโลก', !r.found.frGhost, JSON.stringify(r.found.frGhost||null));
+  ok('🌍 เพื่อนที่ไม่ได้เล่นโลก 3D = ไม่มีแถบ', !r.found.frOffline, 'frOffline='+!!r.found.frOffline);
+  ok('🔒 คนที่ไม่ใช่เพื่อน ไม่หลุดมาในผลลัพธ์', !r.found.stranger && Object.keys(r.found).length===2,
+     'ได้ '+Object.keys(r.found).join(','));
+
+  /* rules ยังไม่ publish → ต้องรายงานว่าอ่านไม่ได้ (ล็อบบี้จะได้ขึ้นป้ายบอก ไม่เงียบ) */
+  const realRef=FakeDB.db.ref;
+  Online.db={ ref:function(p){
+    const rr=realRef(p);
+    if(String(p).indexOf('winfo/')===0)
+      return Object.assign({}, rr, {once:()=>Promise.reject({code:'PERMISSION_DENIED', message:'permission_denied'})});
+    return rr;
+  }};
+  const den=await NetRoom.whereFriends(ids);
+  ok('🔒 อ่าน /winfo ไม่ได้ → บอกว่า denied (ห้ามเงียบ)', den.denied===true && !Object.keys(den.found).length,
+     'denied='+den.denied);
+  Online.db=FakeDB.db;
+
+  /* ก) ตั้งเป้าจากล็อบบี้ → เข้าโลกแล้วลงสนามเดียวกับเพื่อนเลย (ไม่ใช่สนามแรกที่ว่าง) */
+  FakeDB.reset();
+  FakeDB.seed('winfo/adv/r3/frA', {n:'น้องเอ', t:Date.now(), j:Date.now()});
+  NetRoom.aimAt('adv', 3, 'frA', 'น้องเอ');
+  ok('🎯 เป้าของโลกอื่นต้องไม่ติดมาด้วย', !NetRoom.aimGet('moto'), JSON.stringify(NetRoom.aimGet('moto')));
+  let toasts=[];
+  window.onlineKey=function(){ return 'meFollow'; };
+  const me=NetRoom.create({map:'adv', sendMs:170,
+    push(){ me.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(h){ toasts.push(h.replace(/<[^>]+>/g,'')); }});
+  me.join(); await sleep(200);
+  ok('🏃 กดตามเข้าไป → ลงสนามเดียวกับเพื่อนทันที', me.room===3, 'ไปโผล่สนาม '+(me.room+1)+' (เพื่อนอยู่สนาม 4)');
+  ok('🏃 บอกเด็กบนจอว่าพาไปหาใคร', toasts.some(t=>/พาเข้าสนามเดียวกับ น้องเอ/.test(t)), toasts.join(' | ').slice(0,110));
+  me.leave();
+  ok('🎯 ออกจากโลกแล้วเป้าถูกล้าง (ไม่ค้างไปพาเข้ารอบหน้า)', !NetRoom.aimGet('adv'), JSON.stringify(NetRoom.aimGet('adv')));
+
+  /* ข) เรากดตามเอง = เราต้องเป็นฝ่ายเดิน แม้ uid เราจะน้อยกว่า (กติกา "uid มากกว่าเดิน" ใช้เฉพาะคำเชิญ) */
+  FakeDB.reset(); clearInvites();
+  NetRoom.aimAt('adv', 4, 'zzFriend2', 'น้องสอง');
+  window.onlineKey=function(){ return 'aaMeFollow'; };
+  const late=NetRoom.create({map:'adv', sendMs:170,
+    push(){ late.send({n:'ฉัน',x:0,z:0,yaw:0,av:'foot',w:0}, true); },
+    onPeer(){}, onPeerGone(){}, onStatus(){}, toast(){}});
+  late.join(); await sleep(150);
+  FakeDB.seed('winfo/adv/r4/zzFriend2', {n:'น้องสอง', t:Date.now(), j:Date.now()});   // เพื่อนย้ายสนามระหว่างเราโหลดโลก
+  late.tick(performance.now()+CFG_gap());
+  await sleep(250);
+  ok('🏃 เพื่อนย้ายสนามระหว่างเรากำลังเข้า → ยังตามไปเจอ (uid น้อยกว่าก็เดิน)', late.room===4,
+     'ไปโผล่สนาม '+(late.room+1));
+  late.leave(); NetRoom.aimClear();
+};
+
 window.NRTest={
   ...T,
   async all(){
     log.length=0;
     if(!window.FakeDB) { console.error('ต้องโหลด tools/fakedb.js ก่อน'); return; }
     await FakeDB.install();
-    const names=['payload','scale500','worldCap','churn','ghost','friends','meetUp','legacyFallback','legacyBridge'];
+    const names=['payload','scale500','worldCap','churn','ghost','friends','meetUp','followLobby','legacyFallback','legacyBridge'];
     for(const n of names){
       console.log('\n── '+n+' ──');
       try{ await T[n](); }catch(e){ ok(n+' (ทำงานจนจบ)', false, e && e.message || e); }
