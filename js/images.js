@@ -77,14 +77,19 @@ function clipCanWebm(){
   }
   return __clipWebm;
 }
+/* 🩹 รอบ 618: clip/*.mp4 ไม่ผ่าน sw.js cache (ปล่อยเบราว์เซอร์จัดการเอง — ดูคอมเมนต์ใน sw.js)
+   → ชื่อไฟล์เดิมตลอด แก้ "เนื้อ" วิดีโอในไฟล์เดิมแล้วเครื่องผู้เล่นเก่ายังติดแคช HTTP เดิมของเบราว์เซอร์/CDN
+   (เจอจริง: แก้พื้นหลังคลิปหมา/แมว/มังกร ผู้เล่นเห็นมังกรใหม่แต่หมา/แมวยังเป็นเวอร์ชันเก่า)
+   แก้แบบเดียวกับ moto3d.js (?v=) — บัมพ์เลขนี้ทุกครั้งที่แก้ "เนื้อ" ไฟล์ clip/*.mp4 (ไม่ใช่แค่เพิ่มคลิปใหม่) */
+const CLIP_ASSET_V = 618;
 /* ไฟล์ที่ควรโหลดจริงของคลิปตัวหนึ่ง: เล็กสุดที่เล่นได้ก่อน · ไม่มีตัวเล็กก็ใช้ต้นฉบับ */
 function clipFileFor(k){
   const list = CLIP_SM[k];
   if(list) for(const f of list){
     if(f.endsWith('.webm') && !clipCanWebm()) continue;
-    return `clip/${f}`;
+    return `clip/${f}?v=${CLIP_ASSET_V}`;
   }
-  return `clip/${k}.mp4`;
+  return `clip/${k}.mp4?v=${CLIP_ASSET_V}`;
 }
 
 function petClipKey(p){
