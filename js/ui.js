@@ -1946,10 +1946,8 @@ function openPetPeek(d, opts){
 /* จุดแดงแจ้งบิลค้างบนปุ่มเมนู — บ้าน (บำรุง/ไฟ/น้ำ/ขยะ) · ร้านค้า (เน็ต/ข้อมูล) */
 function updateBillBadges(){
   const homeDue = ['maint','elec','water','trash'].some(id => billOutstanding(id) > 0);
-  const shopDue = ['net','data'].some(id => billOutstanding(id) > 0);
   const set = (id, on)=>{ const b = document.getElementById(id); if(!b) return; if(on){ b.textContent = '!'; b.style.display = ''; } else b.style.display = 'none'; };
   set('home-bill-badge', homeDue);
-  set('shop-bill-badge', shopDue);
   updateSettingsBadge();
 }
 
@@ -1998,7 +1996,7 @@ function openAttentionSummary(){
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
   const rows = [];
   if(homeBills > 0)   rows.push({ico:'🏠', txt:`บิลบ้านค้าง ${homeBills} รายการ`, sub:`ค่าบำรุง/ไฟ/น้ำ/ขยะ · รวม 🪙${fmtNum(homeTotal)}`, panel:'panel-home'});
-  if(shopBills > 0)   rows.push({ico:'🛍️', txt:`บิลร้านค้าค้าง ${shopBills} รายการ`, sub:`ค่าเน็ต/ค่าบริการข้อมูล · รวม 🪙${fmtNum(shopTotal)}`, panel:'panel-shop'});
+  if(shopBills > 0)   rows.push({ico:'📡', txt:`บิลบริการค้าง ${shopBills} รายการ`, sub:`ค่าเน็ต/ค่าบริการข้อมูล · รวม 🪙${fmtNum(shopTotal)}`, panel:'panel-market'});
   if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
   if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
   if(state.playerSick)   rows.push({ico:'🤒', txt:'หนูป่วยเพราะไม่กินข้าวเย็น', sub:`ไปหาหมอ ค่ารักษา 🪙${fmtNum(CURE_COST)}`, act:'dinner'});
@@ -3036,12 +3034,11 @@ function bindPetPlateButtons(root){
   on('btn-wake', wakeAllPets);
   on('btn-detox', ()=>detoxPet(p));
   on('btn-pet-rename', ()=>renamePet(p));
-  on('btn-pi-dress', ()=>{           // รอบ 273: ปิด overlay แล้วเปิดร้านค้า & ห้องแต่งตัว (ซื้อ+สวมได้เลย)
+  on('btn-pi-dress', ()=>{           // รอบ 273: ปิด overlay แล้วเปิดห้องแต่งตัว (ซื้อ+สวมได้เลย)
     window.__piOverlay = null;
     const ov = root.closest ? (root.classList.contains('pi-overlay') ? root : root.closest('.pi-overlay')) : null;
     if(ov) ov.remove();
-    window.__dressFromPetInfo = true;   // รอบ 274: ซื้อ/สวมเสร็จ → เด้งกลับมาดูน้องใส่ชุดใหม่ (ล้างใน closePanel)
-    if(typeof openPanel === 'function') openPanel('panel-shop');
+    openDressUpBoard();
   });
 }
 
@@ -3673,7 +3670,7 @@ function renderDashboard(){
           ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
         </div>
       </div>` : ''}`;
-  /* รอบ 273 (สเปกผู้ใช้): ใต้รูปน้อง = คำบรรยายว่าทำไมถึงผอม/อ้วน/ล่ำ · ปุ่ม 🎀 แต่งตัว มุมบนขวา เปิดร้านค้าซื้อใส่ได้เลย */
+  /* รอบ 273 (สเปกผู้ใช้): ใต้รูปน้อง = คำบรรยายว่าทำไมถึงผอม/อ้วน/ล่ำ · ปุ่ม 🎀 แต่งตัว มุมบนขวา เปิดห้องแต่งตัวซื้อใส่ได้เลย (รอบ 635: แยกจากตลาดแล้ว) */
   const shapeWhy = {
     thin:  `🦴 <b>ผอมโซ</b> — เพราะอดข้าวบ่อย ปล่อยให้หิวจนป่วยติดกัน ${SHAPE_MISS_MEALS} มื้อ · กินให้อิ่มเต็มหลอดทุกมื้อ น้องจะค่อยๆ กลับมาแข็งแรง`,
     fat:   `🍩 <b>อ้วนกลม</b> — เพราะกินอาหารโทษ/ขนมติดกัน ${SHAPE_JUNK_MEALS} มื้อ · กลับมากินอาหารดีๆ เต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด จะหุ่นดีเหมือนเดิม`,
@@ -4336,10 +4333,34 @@ function openFoodQuiz(){
 }
 
 /* ============================================================
-   ร้านค้าไอเทมแต่งตัว (ล็อกช่วงแรกเกิด/ไข่ ตามกติกาใหม่)
+   🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
+   เปิดเฉพาะจากปุ่ม 🎀 แต่งตัวน้อง ในหน้าข้อมูลน้อง ไม่ใช่แผงกลางจอแล้ว)
+   ล็อกช่วงแรกเกิด/ไข่ ตามกติกาใหม่
    ============================================================ */
+function closeDressUpBoard(){
+  const ov = document.querySelector('.dress-overlay');
+  if(ov) ov.remove();
+}
+function openDressUpBoard(){
+  closeDressUpBoard();   // กันซ้อนถ้าเผลอเปิดซ้ำ
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay dress-overlay';
+  overlay.innerHTML = `<div class="levelup-box wl-box">
+    <div class="wl-head">
+      <h2>🎀 ห้องแต่งตัวน้อง</h2>
+      <button class="cf-ok" id="dress-done">เสร็จแล้ว ✅</button>
+    </div>
+    <div id="shop-grid-wrap"></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  renderShop();
+  document.getElementById('dress-done').addEventListener('click', closeDressUpBoard);
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) closeDressUpBoard(); });
+  sfx.select();
+}
 function renderShop(){
   const wrap = document.getElementById('shop-grid-wrap');
+  if(!wrap) return;   // ไม่ได้เปิดห้องแต่งตัวอยู่ (renderDashboard เรียกทุกรอบเฉย ๆ)
   const p = activePet();
   if(!p){
     wrap.innerHTML = `<div class="lock-banner">🔒 ยังไม่มีสัตว์เลี้ยง — รับน้องจากร้านสัตว์เลี้ยงก่อน แล้วค่อยมาช้อปกันนะ</div>`;
@@ -4391,10 +4412,8 @@ function renderShop(){
       }
       saveState();
       renderDashboard();
-      if(window.__dressFromPetInfo){   // รอบ 274: มาจากปุ่ม 🎀 ในหน้าข้อมูลน้อง → เด้งกลับไปเห็นน้องใส่ชุดใหม่ตัวใหญ่ทันที (ฟีลห้องลองชุด)
-        closePanel();                  // closePanel ล้าง __dressFromPetInfo ให้เอง
-        openPetInfoOverlay();
-      }
+      closeDressUpBoard();   // รอบ 635: ซื้อ/สวมเสร็จ → ปิดห้องแต่งตัว เด้งกลับไปเห็นน้องใส่ชุดใหม่ตัวใหญ่ทันที (ฟีลห้องลองชุด)
+      openPetInfoOverlay();
     });
   });
 }
@@ -5963,15 +5982,15 @@ function scrollShopCardIntoView(id){
 function railWorldClick(w){
   if(state.advHurt){                                        // บาดเจ็บ → รักษาก่อน (การ์ดร้านมีปุ่มรักษา)
     sfx.wrong(); toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D');
-    if(typeof openPanel === 'function') openPanel('panel-shop');
+    if(typeof openPanel === 'function') openPanel('panel-market');
     scrollShopCardIntoView(w.card); return;
   }
   const hasAccess = w.owned ? w.owned() : !!state[w.ticketKey];
   if(!hasAccess){                                           // ยังไม่มีตั๋ว/หุ่น → พาไปซื้อ
     sfx.select();
     if(w.mode === 'mecha'){ toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return; }
-    toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในร้านค้าก่อนนะ`);
-    if(typeof openPanel === 'function') openPanel('panel-shop');
+    toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในตลาดก่อนนะ`);
+    if(typeof openPanel === 'function') openPanel('panel-market');
     scrollShopCardIntoView(w.card); return;
   }
   if(w.mode === 'drive' && carDriveBlock()){                // 🔐 รอบ 131: มีตั๋วแต่ไม่มีรถ/ค้างงวด → กล่องพาไปหมวดยานพาหนะ

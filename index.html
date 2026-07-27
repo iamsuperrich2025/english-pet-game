@@ -148,7 +148,6 @@
              กดได้เฉพาะตอนมีน้องป่วย (ปกติจางกดไม่ได้ · ป่วยกะพริบแดงเรียกสายตา) -->
         <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน<span class="rail-badge" id="home-bill-badge" style="display:none"></span></button>
-        <button class="rail-btn" data-panel="panel-shop"><span class="rail-ico">🛍️</span>ร้านค้า<span class="rail-badge" id="shop-bill-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">🌳</span>ฟาร์ม</button>
         <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>
         <button class="rail-btn" id="btn-rail-wordsearch"><span class="rail-ico">🔎</span>ค้นหาคำ</button>
@@ -227,24 +226,6 @@
             <div class="shop-card" id="home-card"></div>
           </div>
 
-          <div class="panel-page" id="panel-shop">
-            <!-- ห้องแต่งตัวอยู่ติดกับน้อง (ผู้ใช้สั่ง 5 ก.ค. 2026) — ในโฉมใหม่คือแผงร้านค้า -->
-            <div class="shop-card">
-              <h3 class="shop-title">🛍️ ร้านค้า &amp; ห้องแต่งตัว</h3>
-              <div id="shop-grid-wrap"></div>
-            </div>
-            <div class="shop-card" id="phone-card"></div>
-            <div class="shop-card" id="computer-card"></div>
-            <div class="shop-card" id="ticket-card"></div>
-            <div class="shop-card" id="haunt-card"></div>
-            <div class="shop-card" id="heli-card"></div>
-            <div class="shop-card" id="drone-card"></div>
-            <div class="shop-card" id="drive-card"></div>
-            <div class="shop-card" id="soccer-card"></div>
-            <div class="shop-card" id="moto-card"></div>
-            <div class="shop-card" id="invasion-card"></div>
-          </div>
-
           <div class="panel-page" id="panel-farm">
             <div class="shop-card" id="farm-card"></div>
           </div>
@@ -253,7 +234,23 @@
             <div class="shop-card" id="factory-card"></div>
           </div>
 
+          <!-- รอบ 635: ย้ายบริการรายเดือน + ตั๋วโลก 3D เข้ามารวมกับตลาด (เดิมอยู่แผงร้านค้าที่ถูกถอดไปแล้ว) -->
           <div class="panel-page" id="panel-market">
+            <div class="mkt-group-head">📡 บริการรายเดือน</div>
+            <div class="shop-card" id="phone-card"></div>
+            <div class="shop-card" id="computer-card"></div>
+
+            <div class="mkt-group-head">🎫 ตั๋วเข้าโลกผจญภัย 3D</div>
+            <div class="shop-card" id="ticket-card"></div>
+            <div class="shop-card" id="haunt-card"></div>
+            <div class="shop-card" id="heli-card"></div>
+            <div class="shop-card" id="drone-card"></div>
+            <div class="shop-card" id="drive-card"></div>
+            <div class="shop-card" id="soccer-card"></div>
+            <div class="shop-card" id="moto-card"></div>
+            <div class="shop-card" id="invasion-card"></div>
+
+            <div class="mkt-group-head">🏪 ตลาดซื้อขายกับเพื่อน &amp; ยานพาหนะ</div>
             <div class="shop-card" id="market-card"></div>
           </div>
 

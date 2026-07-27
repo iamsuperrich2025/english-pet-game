@@ -290,6 +290,19 @@ html.no-anim .coin-pill.net{animation:none;}
   grid-auto-columns:118px;
 }
 @media (max-height:460px){.wl-grid{grid-template-rows:1fr;}}
+
+/* 🎀 รอบ 635: ห้องแต่งตัว — กล่อง .shop-grid ใช้สไตล์การ์ด "ร้านแต่งตัว" เดิม (lobby.css) อยู่แล้ว
+   auto-fill ปรับคอลัมน์เองตามความกว้าง · จอเตี้ย (แนวนอนมือถือ) ย่อการ์ดกันล้นกล่อง (กฎ 7 ห้าม scroll) */
+.dress-overlay .wl-box{padding:22px 26px;}
+@media (max-height:460px){
+  .dress-overlay .wl-box{padding:10px 14px;max-height:94vh;}
+  .dress-overlay .wl-head h2{font-size:18px;}
+  .dress-overlay .shop-grid{gap:6px;}
+  .dress-overlay .shop-item .it-emoji{font-size:24px;padding:6px 0 3px;}
+  .dress-overlay .shop-item .it-name{font-size:10px;padding:3px 3px;}
+  .dress-overlay .shop-item .it-price{font-size:10px;padding:4px 2px;}
+  .dress-overlay .shop-item .it-tag{margin:3px auto 5px;}
+}
 .wl-it{
   border:3px solid #e0e0e0;border-radius:12px;padding:6px 4px;cursor:pointer;background:#fbfcff;
   text-align:center;transition:transform .12s;
@@ -1634,6 +1647,14 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 }
 .cc-list-btn:active{transform:scale(.96);}
 .mkt-listhead{font-weight:bold;font-size:14px;color:#7a5ca8;margin:6px 0 8px;}
+/* 🏪 รอบ 635: หัวข้อคั่นหมวดในแผงตลาด (บริการรายเดือน/ตั๋วโลก 3D/ซื้อขายกับเพื่อน) */
+.mkt-group-head{
+  display:flex;align-items:center;gap:8px;color:#fff;font-weight:bold;font-size:15px;
+  background:linear-gradient(135deg,#b48af0,#8f6fe0);border-radius:999px;
+  padding:9px 20px;margin:20px 0 12px;box-shadow:0 3px 0 #6f52b8;text-align:center;
+  justify-content:center;
+}
+.mkt-group-head:first-child{margin-top:0;}
 .mkt-listing{
   display:flex;align-items:center;gap:10px;background:#fbf7ff;border:2px dashed var(--purple-d);
   border-radius:16px;padding:8px 10px;margin-bottom:8px;
