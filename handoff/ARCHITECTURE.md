@@ -59,7 +59,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/main.js** (222 บรรทัด) — ปุ่มหลัก + INIT
 - **js/moto3d.js** (2,012 บรรทัด) — 🏍️ moto3d.js — โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) · ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (js/data/moto_phosawat.js · OSM) · เล่นบน "เครื่องเกมพกพา" เต็มจอ — จอเกมอยู่ตรงกลางเครื่อง · สไลเดอร์ส้มซ้าย=เลี้ยว · ปุ่มฟ้าขวา=เร่ง · ปุ่มแดงบน=ปิดเครื่อง
 - **js/music.js** (157 บรรทัด) — music.js — ระบบเพลง (รอบ 181) · เพลงพื้นหลัง (instrument) เล่นวนทั้งเกม เริ่มหลัง gesture แรก (autoplay policy) · เข้าโลก 3D ใดๆ → พัก bg (โลกมี soundscape ของตัวเอง) · ออก → เล่นต่อ
-- **js/netroom.js** (625 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
+- **js/netroom.js** (717 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
 - **js/online.js** (1,678 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
 - **js/state.js** (1,018 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
 - **js/ui.js** (8,148 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
@@ -71,6 +71,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (1,763 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (105 บรรทัด) — Service Worker — Pet Vocab Adventure (PWA) · กลยุทธ์: · - โค้ดเกม (HTML/JS/CSS): network-first → ออนไลน์ได้โค้ดใหม่เสมอ (กันปัญหาโค้ดค้าง),
 <!-- AUTO-FILES:END -->
+
 
 
 

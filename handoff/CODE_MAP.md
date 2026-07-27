@@ -402,9 +402,10 @@ fit:1723 · tick:1731 · frame:1739 · start:1888 · exitWorld:1948
 
 ## js/music.js (157 บรรทัด · 0 รายการ)
 
-## js/netroom.js (625 บรรทัด · 12 รายการ)
-CFG:41 · roomsAllowed:57 · HOT_KEYS:64 · COLD_KEYS:65 · HOT_BACK:66 · splitPayload:70
-mergeBack:81 · dbOf:88 · envReady:89 · isDenied:92 · create:104 · drawBudget:600
+## js/netroom.js (717 บรรทัด · 13 รายการ)
+CFG:41 · roomsAllowed:59 · HOT_KEYS:66 · COLD_KEYS:67 · HOT_BACK:68 · splitPayload:72
+mergeBack:83 · metUids:95 · dbOf:106 · envReady:107 · isDenied:110 · create:122
+drawBudget:692
 
 ## js/online.js (1,678 บรรทัด · 89 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
