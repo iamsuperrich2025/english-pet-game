@@ -28,7 +28,16 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
     toast('เลือกตัวละครของหนูก่อนนะ 🦸');
     return;
   }
+  /* 🔒 รอบ 647: ต้องเลือกชั้นเอง (ไม่มี default แล้ว) — เปลี่ยนทีหลังได้เดือนละครั้งและลดลงไม่ได้ */
+  if(!grade){
+    sfx.wrong();
+    toast('เลือกระดับชั้นของหนูก่อนนะ 🎖️ (เปลี่ยนทีหลังได้เดือนละครั้ง และลดชั้นลงไม่ได้)', 3600);
+    return;
+  }
   state.student = {grade};
+  /* ตอนสมัครไม่นับเป็น "การเปลี่ยนชั้น" → gradeSetAt=0 (ยังขยับขึ้นได้ 1 ครั้งถ้าเลือกผิด) */
+  state.gradeSetAt = 0;
+  state.gradeHist  = [{g:grade, at:Date.now()}];
   state.profileName = nick.name;
   state.playerAvatar = regAvatar;      // ข้อ 4: ตัวละครผู้เลี้ยง
   state.playerFedDay = mealDayKey(Date.now());   // ข้อ 6: ผู้เล่นใหม่ถือว่าอิ่มมื้อล่าสุด (เริ่มนับมื้อหน้า กันป่วยตั้งแต่วันแรก)

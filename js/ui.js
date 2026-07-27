@@ -3634,10 +3634,20 @@ function renderDashboard(){
   }else chip.textContent = '';
   /* 🎖️ รอบ 643: บรรทัดระดับชั้นใต้แถวเหรียญ (ผู้ใช้สั่ง) — ข้อความ "ระดับชั้น" + สัญลักษณ์
      ยังไม่ลงทะเบียน/ไม่รู้ชั้น = ปล่อยว่าง (.grade-line:empty ซ่อนตัวเอง) */
+  /* 🔒 รอบ 647: ต่อท้ายด้วยปุ่มเปลี่ยนชั้น — ล็อกอยู่ = โชว์ "🔒 อีก N วัน" คาไว้บนแถบเลย
+     (ห้ามปิดเงียบ ตามกฎทอง #1) · กติกา/กล่องเปลี่ยนชั้นอยู่ใน js/gradelock.js ที่เดียว */
   const gl = document.getElementById('grade-line');
   if(gl){
     const mk = gradeMark(myPlGrade);
-    gl.innerHTML = mk ? `<span class="cp-lb">ระดับชั้น</span>${mk}` : '';
+    if(!mk) gl.innerHTML = '';
+    else{
+      const lk = (typeof gradeLocked === 'function') && gradeLocked();
+      gl.innerHTML = `<span class="cp-lb">ระดับชั้น</span>${mk}`
+        + (state.student ? `<button class="grade-edit${lk ? ' locked' : ''}" id="btn-grade-change"
+             title="${escapeHTML(gradeLockNote())}">${lk ? `🔒 อีก ${gradeLockLeftDays()} วัน` : '✏️'}</button>` : '');
+      const gb = document.getElementById('btn-grade-change');
+      if(gb) gb.addEventListener('click', openGradeChange);
+    }
   }
   /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า) */
   const pp = document.getElementById('pass-photo');

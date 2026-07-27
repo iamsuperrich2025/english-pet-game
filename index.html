@@ -65,15 +65,19 @@
         <button type="button" class="avatar-opt" data-av="female"><span class="av-face">🦸‍♀️</span>เด็กหญิง</button>
       </div>
       <label>ชั้น (คำศัพท์จะยาก-ง่ายตามระดับชั้น)
+        <!-- 🔒 รอบ 647: ไม่มีชั้นเลือกไว้ล่วงหน้าแล้ว — ต้องเลือกเอง เพราะเปลี่ยนทีหลังได้เดือนละครั้ง
+             และ "ลดชั้นลงไม่ได้" (เดิม default ป.5 → เด็ก ป.1 ที่กดผ่านจะติดชั้นสูงถาวร) -->
         <select id="reg-grade">
+          <option value="" selected disabled>— เลือกชั้นของหนู —</option>
           <option>ต่ำกว่าประถมศึกษา</option>
           <option>ป.1</option><option>ป.2</option><option>ป.3</option>
-          <option>ป.4</option><option selected>ป.5</option><option>ป.6</option>
+          <option>ป.4</option><option>ป.5</option><option>ป.6</option>
           <option>ม.1</option><option>ม.2</option><option>ม.3</option>
           <option>ม.4</option><option>ม.5</option><option>ม.6</option>
           <option>ปริญญาตรี</option><option>สูงกว่าปริญญาตรี</option>
         </select>
       </label>
+      <div class="reg-gradelock">🔒 <b>เลือกชั้นให้ตรงกับตัวเองนะ</b> — เปลี่ยนได้ <b>เดือนละ 1 ครั้ง</b> และเปลี่ยนได้เฉพาะ <b>ชั้นที่สูงขึ้น</b> เท่านั้น (ลดชั้นลงไม่ได้) เพื่อความยุติธรรมกับเพื่อน ๆ 🌟</div>
       <div class="reg-privacy">📰 <b>ค่าเริ่มต้น:</b> เปิดเผยความก้าวหน้า (เหรียญ/สอบผ่าน/ทรัพย์สิน) ให้เพื่อนเห็น — ช่วยสร้างแรงบันดาลใจให้เพื่อนๆ มีเป้าหมายฝึกคำศัพท์เพิ่มขึ้นด้วยกัน 🌟 <i>ปิดเองได้ทีหลังในตั้งค่า ⚙️</i></div>
       <button class="big-btn" id="btn-register">เริ่มผจญภัย! 🚀</button>
     </div>
@@ -361,6 +365,8 @@
 <script src="js/state.js"></script>
 <script src="js/images.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/gradelock.js"></script>  <!-- 🔒 รอบ 647: ล็อกเปลี่ยนระดับชั้น (เดือนละครั้ง · ขึ้นได้อย่างเดียว) — ต้องมาหลัง state.js/util.js -->
+
 <script src="js/lobby3d.js"></script>  <!-- โมเดล 3D ตัวละครหน้า lobby (idle + ปัดหมุน · รอบ 104) -->
 <script src="js/lobby.js"></script>  <!-- ระบบแผง Lobby แนวนอน (อัพเดท 5725691826) -->
 <script src="js/wordsearch.js"></script>  <!-- 🔎 เกม Word Search คำตามระดับชั้น (รอบ 194) -->
