@@ -397,6 +397,140 @@ html.no-anim .chat-bubble.vanish{animation:none;opacity:.85;}
 .chat-send:active{transform:scale(.94);}
 .chat-send:disabled{filter:grayscale(.5);opacity:.6;}
 
+/* ============================================================
+   📞 รอบ 625: โทรหาเพื่อน — Voice call / Video call (แบบ LINE)
+   ปุ่มบนหัวกล่องแชท + กริ่งสายเข้า + จอคุยเต็มจอ + อิโมจิลอย
+   ============================================================ */
+.chat-call-btn{
+  border:none;background:rgba(255,255,255,.22);color:#fff;border-radius:9px;
+  width:30px;height:30px;font-size:15px;cursor:pointer;flex-shrink:0;
+}
+.chat-call-btn:active{transform:scale(.9);}
+
+/* ---------- 🔔 กริ่งสายเข้า (เด้งทับทุกหน้า รวมโลก 3D) ---------- */
+.call-ring{
+  position:fixed;inset:0;z-index:9996;display:flex;align-items:center;justify-content:center;
+  background:rgba(6,16,34,.72);backdrop-filter:blur(4px);animation:fadeIn .2s;padding:10px;
+}
+.cr-card{
+  width:min(92vw,340px);max-height:96dvh;border-radius:24px;padding:18px 16px 16px;text-align:center;
+  background:linear-gradient(165deg,#1f3557,#122238 60%,#0d1a2c);
+  border:2px solid rgba(120,200,255,.45);box-shadow:0 18px 50px rgba(0,0,0,.55);color:#eaf4ff;
+  animation:popIn .35s cubic-bezier(.2,1.5,.4,1);
+}
+.cr-kind{font-size:13.5px;color:#9fd0ff;font-weight:700;letter-spacing:.3px;}
+.cr-av{
+  width:clamp(74px,17vh,104px);height:clamp(74px,17vh,104px);margin:12px auto 8px;border-radius:50%;
+  background:linear-gradient(160deg,#4fc3f7,#1976d2);display:flex;align-items:center;justify-content:center;
+  font-size:clamp(36px,8vh,52px);box-shadow:0 0 0 6px rgba(79,195,247,.18);animation:crPulse 1.5s infinite;
+}
+@keyframes crPulse{
+  0%,100%{box-shadow:0 0 0 6px rgba(79,195,247,.18);transform:scale(1);}
+  50%{box-shadow:0 0 0 16px rgba(79,195,247,.05);transform:scale(1.04);}
+}
+html.no-anim .cr-av{animation:none;}
+.cr-name{font-size:20px;font-weight:800;line-height:1.2;word-break:break-word;}
+.cr-id{font-size:12px;opacity:.75;margin-top:2px;}
+.cr-btns{display:flex;gap:22px;justify-content:center;margin-top:16px;}
+.cr-btn{
+  border:none;cursor:pointer;color:#fff;border-radius:50%;
+  width:clamp(58px,13vh,70px);height:clamp(58px,13vh,70px);font-size:clamp(22px,5vh,27px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);font-family:inherit;
+}
+.cr-btn small{font-size:10px;font-weight:700;}
+.cr-no{background:linear-gradient(180deg,#ff6b6b,#d32f2f);}
+.cr-ok{background:linear-gradient(180deg,#5ce87f,#2e9e4a);animation:crShake 1.6s infinite;}
+@keyframes crShake{0%,88%,100%{transform:rotate(0);}92%{transform:rotate(-11deg);}96%{transform:rotate(11deg);}}
+html.no-anim .cr-ok{animation:none;}
+.cr-btn:active{transform:scale(.92);}
+.cr-safe{margin-top:12px;font-size:11px;color:#8fb6dc;}
+
+/* ---------- ☎️ จอคุย (เต็มจอ ไม่มี scroll) ---------- */
+.call-ov{
+  /* --cb-h = ปุ่มแถวล่าง · --bar-h = ความสูงแถบปุ่มทั้งแถบ (จอเล็ก/หน้าต่างอื่นอิงค่านี้ ไม่ทับกัน) */
+  --cb-h:clamp(46px,10vh,58px); --bar-h:calc(var(--cb-h) + 20px);
+  position:fixed;inset:0;z-index:9994;overflow:hidden;background:#0b1524;
+  display:flex;align-items:center;justify-content:center;animation:fadeIn .22s;
+}
+.call-ov.bye{animation:fadeOut .4s forwards;}
+@keyframes fadeOut{to{opacity:0;}}
+.call-remote{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#0b1524;display:none;
+}
+.call-ov.has-remote-video .call-remote{display:block;}
+.call-ov.has-remote-video .call-idle{display:none;}
+.call-idle{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.ci-av{
+  width:clamp(92px,22vh,150px);height:clamp(92px,22vh,150px);border-radius:50%;
+  background:linear-gradient(160deg,#4fc3f7,#1565c0);display:flex;align-items:center;justify-content:center;
+  font-size:clamp(44px,11vh,74px);box-shadow:0 0 0 10px rgba(79,195,247,.12);animation:crPulse 2s infinite;
+}
+html.no-anim .ci-av{animation:none;}
+.call-top{
+  position:absolute;top:0;left:0;right:0;padding:14px 16px 26px;text-align:center;color:#fff;
+  background:linear-gradient(180deg,rgba(0,0,0,.55),transparent);pointer-events:none;
+}
+.ct-name{font-size:19px;font-weight:800;text-shadow:0 2px 6px rgba(0,0,0,.6);word-break:break-word;}
+.ct-name small{font-size:12px;opacity:.8;font-weight:400;}
+.ct-time{font-size:14px;opacity:.9;margin-top:2px;font-variant-numeric:tabular-nums;}
+.call-note{
+  position:absolute;top:34%;left:50%;transform:translateX(-50%);width:min(90vw,380px);
+  background:rgba(255,214,102,.95);color:#5a4300;border-radius:14px;padding:10px 14px;
+  font-size:13.5px;line-height:1.45;text-align:center;box-shadow:0 8px 22px rgba(0,0,0,.35);
+}
+.call-me{
+  position:absolute;right:12px;bottom:calc(var(--bar-h) + 10px);width:clamp(84px,16vw,124px);
+  aspect-ratio:3/4;object-fit:cover;border-radius:14px;border:2px solid rgba(255,255,255,.6);
+  background:#12233b;box-shadow:0 6px 18px rgba(0,0,0,.45);transform:scaleX(-1);
+}
+.call-ov.cam-off .call-me{filter:grayscale(1) brightness(.4);}
+.call-bar{
+  position:absolute;left:0;right:0;bottom:0;display:flex;gap:clamp(8px,2.4vw,16px);
+  align-items:center;justify-content:center;padding:10px 8px calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(0deg,rgba(0,0,0,.6),transparent);
+}
+.cb-btn{
+  border:none;cursor:pointer;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;
+  width:var(--cb-h);height:var(--cb-h);font-size:clamp(19px,4.4vh,24px);
+  backdrop-filter:blur(3px);flex-shrink:0;transition:transform .1s,background .15s;
+}
+.cb-btn:active{transform:scale(.9);}
+.cb-btn.off{background:rgba(255,255,255,.85);color:#22344d;}
+.cb-end{background:linear-gradient(180deg,#ff6b6b,#d32f2f);transform:rotate(133deg);}
+.cb-end:active{transform:rotate(133deg) scale(.9);}
+.call-emos{
+  position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--bar-h) + 12px);
+  display:flex;gap:4px;padding:7px 9px;border-radius:16px;background:rgba(12,26,44,.85);
+  border:1px solid rgba(255,255,255,.18);box-shadow:0 8px 22px rgba(0,0,0,.4);max-width:94vw;overflow-x:auto;
+}
+.call-emo{border:none;background:transparent;cursor:pointer;font-size:24px;line-height:1;padding:3px 4px;border-radius:9px;}
+.call-emo:active{background:rgba(255,255,255,.2);}
+/* 💛 อิโมจิลอยขึ้นระหว่างคุย (ส่งตรง P2P) */
+.call-fx{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.call-fx-emo{
+  position:absolute;bottom:14%;font-size:38px;animation:callFloat 2.6s ease-out forwards;
+  filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));
+}
+@keyframes callFloat{
+  0%{opacity:0;transform:translateY(0) scale(.5);}
+  15%{opacity:1;transform:translateY(-18px) scale(1.15);}
+  100%{opacity:0;transform:translateY(-48vh) scale(1);}
+}
+html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
+/* จอเตี้ยมาก (มือถือแนวนอน): ย่อทุกอย่างให้อยู่ในจอ ไม่มี scrollbar */
+@media (max-height:430px){
+  .call-ov{--bar-h:calc(var(--cb-h) + 12px);}
+  .call-me{width:clamp(66px,12vw,92px);right:8px;}
+  .call-top{padding:8px 14px 18px;}
+  .ct-name{font-size:16px;}
+  .call-bar{gap:8px;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));}
+  .cr-card{padding:12px 14px;}
+  .cr-av{margin:6px auto 4px;}
+  .cr-btns{margin-top:10px;gap:16px;}
+  .cr-safe{margin-top:7px;}
+}
+
 /* ---------- 🎨 รอบ 190: ธีมกล่องแชท (เพื่อน/แฟน/น่ารัก) ---------- */
 /* 💙 ฟ้าใส (ค่าเริ่มต้น) — ระบุชัดเพื่อให้ swatch พรีวิวถูกแม้กล่องใช้ธีมอื่น */
 .chat-box.ct-sky,.chat-theme-sw.ct-sky{

@@ -7,6 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `calls` + `'chat'` ใน enum ของ `/rtc` (รอบ 625 · 📞 โทรหาเพื่อน voice/video call แบบ LINE)** — `/calls/<toUid>/<fromUid>` = `{k, n, m, ts}` (k = `ring`/`ok`/`no`/`busy`/`end` · m = `voice`/`video` · n = ชื่อผู้โทร ≤40) · **อ่านได้เฉพาะเจ้าของกล่อง** (`auth.uid === $toUid`) · เขียนได้เฉพาะผู้โทร (node ชื่อ uid ตัวเอง) หรือเจ้าของกล่อง (ไว้ล้างกริ่งที่จัดการแล้ว) · **`/rtc`: เพิ่ม `$map === 'chat'`** (ท่อ SDP/ICE ของสาย ใช้โครงเดิมของ voice chat ในโลก 3D) + ขยาย `d` จาก 8000 → **20000 ตัวอักษร** (SDP ของวิดีโอยาวกว่าเสียงล้วน)
+  - **ยังไม่ publish = เกมไม่พัง:** กดปุ่ม 📞/📹 แล้วเขียนโดน deny → จอสายขึ้น **ป้ายเหลืองบอกตรง ๆ** ว่า "ระบบโทรยังไม่เปิดใช้งาน — ต้องอัปเดตกฎความปลอดภัยโซน /calls ก่อน" แล้ววางสายเองใน 3 วิ · แชท/ของขวัญ/ทุกระบบอื่นทำงานปกติ
+  - 🔒 **ความปลอดภัยเด็ก:** client รับสายเฉพาะ uid ที่อยู่ใน `/friends` ของตัวเอง (คนแปลกหน้าโทรเข้า = ลบกริ่งทิ้งเงียบ ๆ) · เสียง/ภาพวิ่ง P2P ไม่ผ่านเซิร์ฟเวอร์ · ไม่มีการอัดเก็บ
 - ⏳ **รอ publish: โซนใหม่ `wsAward` (รอบ 592 · รางวัลรายเดือน Top 10 แท็บ 🔎 ค้นหาคำ)** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/6f886d30-28c9-4951-ad61-d85795c35500 — `/wsAward/<YYYY-MM>` = `{at, w:{<uid>:{r:1-10, p:0-10000, n≤40, g≤20, s}}}` · **อ่านสาธารณะ** (ระดับเดียวกับ leaderboard) · **เขียนได้ครั้งเดียวเท่านั้น** (`auth != null && !data.exists()`) = เครื่องแรกที่เปิดเกมหลัง 00:01 ของวันที่ 1 เป็นคน "ตัดรอบ" แล้วใครก็เขียนทับไม่ได้ → ทุกคนเห็นอันดับ/รางวัลชุดเดียวกัน · `$m` ต้องตรง `^[0-9]{4}-[0-9]{2}$` · `at` ห้ามอนาคตเกิน 1 นาที
   - **ยังไม่ publish = เกมไม่พัง:** `set` โดน deny → `js/wsaward.js` เงียบ ๆ ไม่จ่ายรางวัลเดือนนั้น (ลองใหม่รอบเช็กถัดไป) · แท็บ 🔎 ยังโชว์อันดับ + เงินรางวัลของแต่ละอันดับ + กระดานประกาศ ("ถ้าตัดรอบตอนนี้") ได้ปกติ
   - **ความเสี่ยงที่ยอมรับ (ระดับเดียวกับ coins/`sales` ฝั่ง client):** client ที่ดัดแปลงเองอาจชิงเขียน snapshot ที่ยกอันดับตัวเอง — เหรียญเป็นฝั่ง client อยู่แล้ว และ snapshot เขียนได้ครั้งเดียวต่อเดือนจึงจำกัดผลกระทบ
@@ -207,13 +210,28 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && auth.uid === $toUid",
           "$msgId": {
             ".write": "auth != null && newData.child('f').val() === auth.uid",
-            ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive') && newData.hasChildren(['f','t','d','ts'])",
+            ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'chat') && newData.hasChildren(['f','t','d','ts'])",
             "f":  { ".validate": "newData.isString() && newData.val().length <= 128" },
             "t":  { ".validate": "newData.isString() && (newData.val() === 'offer' || newData.val() === 'answer' || newData.val() === 'ice')" },
-            "d":  { ".validate": "newData.isString() && newData.val().length <= 8000" },
+            "d":  { ".validate": "newData.isString() && newData.val().length <= 20000" },
             "ts": { ".validate": "newData.isNumber()" },
             "$other": { ".validate": false }
           }
+        }
+      }
+    },
+    "calls": {
+      "$toUid": {
+        ".read": "auth != null && auth.uid === $toUid",
+        ".write": "auth != null && auth.uid === $toUid",
+        "$fromUid": {
+          ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
+          ".validate": "newData.hasChildren(['k','ts'])",
+          "k":  { ".validate": "newData.isString() && (newData.val() === 'ring' || newData.val() === 'ok' || newData.val() === 'no' || newData.val() === 'busy' || newData.val() === 'end')" },
+          "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "m":  { ".validate": "newData.isString() && (newData.val() === 'voice' || newData.val() === 'video')" },
+          "ts": { ".validate": "newData.isNumber()" },
+          "$other": { ".validate": false }
         }
       }
     },
@@ -360,6 +378,13 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 ## หมายเหตุโครง /rtc (voice chat — รอบ 43)
 - `/rtc/<map>/<toUid>/<msgId> = {f:ผู้ส่ง, t:'offer'|'answer'|'ice', d:JSON(SDP/ICE ≤8000), ts}` — **signaling เท่านั้น เสียงจริงวิ่ง P2P (WebRTC) ไม่ผ่าน Firebase**
 - ผู้รับอ่าน+ลบกล่องตัวเอง (ประมวลผลแล้วลบทันที + ล้างตอน join) · คนอื่น push ได้เฉพาะข้อความที่ `f` = uid ตัวเอง
+- **`$map === 'chat'` (รอบ 625) = ท่อ signaling ของ "สายโทรหาเพื่อน" (voice/video call)** — ไม่ใช่แผนที่จริง ใช้ path เดียวกันเพื่อไม่ต้องเพิ่มโครงใหม่ · ฝั่งเกม = `Call` ใน `js/online.js`
+
+## หมายเหตุโครง /calls (📞 โทรหาเพื่อน — รอบ 625)
+- `/calls/<toUid>/<fromUid> = {k, n, m, ts}` — **กริ่ง + สถานะสายเท่านั้น** (เสียง/ภาพวิ่ง P2P ผ่าน WebRTC ไม่ผ่าน Firebase ไม่มีการอัดเก็บ)
+- ผู้โทรตั้ง `onDisconnect().remove()` บน node ของตัวเอง → ปิดแท็บ/เน็ตหลุดกลางกริ่ง สายฝั่งโน้นดับเอง · วางสายแล้วทั้งสองฝ่ายลบ node ของตัวเองในกล่องอีกฝ่าย
+- client กรอง "เฉพาะเพื่อนใน `/friends`" ก่อนเด้งกริ่ง (rules เปิดให้ auth ใดก็เขียนกล่องได้ เหมือน `/gifts`/`/friendReq` — กันสแปมที่ชั้น client + ไม่มีข้อมูลส่วนตัวใน node)
+
 - ฝั่งเกม: `Voice` ใน adventure3d.js — mesh ต่อสายเมื่อเจอกันใน map (uid น้อยกว่าเป็นผู้ offer) · STUN ของ Google ฟรี ไม่มี TURN (เน็ตมือถือบางเจ้าอาจต่อไม่ติด — ข้อจำกัดที่ยอมรับ) · ไมค์ default ปิดทุกครั้งที่เข้า
 
 ## หมายเหตุโครง /market + /msold (ตลาดออนไลน์จริง — รอบ 124 · item 2)

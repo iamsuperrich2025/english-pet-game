@@ -2331,6 +2331,8 @@ function openChat(friend){
   overlay.innerHTML = `<div class="chat-box ct-${theme}" id="chat-box">
     <div class="chat-head">
       <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
+      <button class="chat-call-btn" id="chat-call-voice" type="button" title="โทรด้วยเสียง">📞</button>
+      <button class="chat-call-btn" id="chat-call-video" type="button" title="วิดีโอคอล">📹</button>
       <button class="chat-theme-btn" id="chat-theme-btn" type="button" title="เลือกธีม">🎨</button>
       <label class="chat-secret-tg" title="แชทลับ: อ่านแล้วข้อความหายใน 20 วินาที">
         <span class="cs-ic">🕵️</span>
@@ -2376,6 +2378,9 @@ function openChat(friend){
   overlay.querySelector('#chat-theme-btn').addEventListener('click', ()=>{
     themeStrip.style.display = themeStrip.style.display === 'none' ? '' : 'none';
   });
+  // 📞 รอบ 625: โทรด้วยเสียง / วิดีโอคอล จากหัวกล่องแชท (แบบ LINE)
+  overlay.querySelector('#chat-call-voice').addEventListener('click', ()=>startCall(friend, 'voice'));
+  overlay.querySelector('#chat-call-video').addEventListener('click', ()=>startCall(friend, 'video'));
   overlay.querySelectorAll('.chat-theme-sw').forEach(b=>b.addEventListener('click', ()=>{
     applyTheme(b.dataset.th, false);
     themeStrip.style.display = 'none';
@@ -7520,4 +7525,222 @@ function showTeacherCard(){
   overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
   sfx.select();
+}
+
+/* ============================================================
+   📞 หน้าจอโทรหาเพื่อน — Voice call / Video call (รอบ 625)
+   เครื่องยนต์ (WebRTC + กริ่งผ่าน Firebase) อยู่ที่ `Call` ใน js/online.js
+   ไฟล์นี้ = หน้าจอล้วน: กริ่งสายเข้า / จอคุย / ปุ่มควบคุม / อิโมจิลอย
+   ผูกกันด้วย object ชื่อ `callUI` (เครื่องยนต์เรียกผ่าน Call.ui('ชื่อ',...))
+   🔒 โชว์ชื่อเล่น + 🆔 เท่านั้น (กติกาคุ้มครองเด็ก — ไม่มีชื่อจริง/ชั้นเรียน)
+   ============================================================ */
+const CALL_REACT_EMOS = ['❤️','😆','👍','😮','🎉','😭','🐱','⭐'];
+
+/* 🔔 เสียงกริ่ง: สายเข้า = 2 โน้ตซ้ำ + สั่น · เรียกออก = โน้ตต่ำเบา ๆ (ใช้ beep เดิม เคารพสวิตช์เสียง) */
+const callRing = {
+  t:null,
+  start(dir){
+    this.stop();
+    const tick = ()=>{
+      if(dir === 'in'){
+        beep(880,.18,0,'sine',.14); beep(660,.2,.24,'sine',.14);
+        if(state.haptic !== false && navigator.vibrate) navigator.vibrate([200,110,200]);
+      }else{
+        beep(420,.32,0,'sine',.06); beep(420,.32,.5,'sine',.06);
+      }
+    };
+    tick();
+    this.t = setInterval(tick, dir === 'in' ? 1600 : 2800);
+  },
+  stop(){
+    if(this.t){ clearInterval(this.t); this.t = null; }
+    if(navigator.vibrate) try{ navigator.vibrate(0); }catch(e){}
+  },
+};
+
+const callUI = {
+  ov:null, ring:null, tick:null,
+
+  /* 🔒 อยู่ในโลก 3D เมาส์ถูกล็อกอยู่ (pointer lock) → ปลดก่อน ไม่งั้นกดปุ่มรับสายไม่ได้ */
+  freeMouse(){ try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){} },
+
+  /* 🔔 กริ่งสายเข้า — เด้งทับทุกหน้าในเกม (รวมโลก 3D) */
+  incoming(){
+    this.closeRing();
+    this.freeMouse();
+    const p = Call.peer || {uid:'', n:'เพื่อน'};
+    const vid = Call.kind === 'video';
+    const d = document.createElement('div');
+    d.className = 'call-ring';
+    d.innerHTML = `<div class="cr-card">
+      <div class="cr-kind">${vid ? '📹 วิดีโอคอลเข้า' : '📞 สายเสียงเข้า'}</div>
+      <div class="cr-av"><span>🧒</span></div>
+      <div class="cr-name">${escapeHTML(p.n)}</div>
+      <div class="cr-id">${idTag(p.uid)}</div>
+      <div class="cr-btns">
+        <button class="cr-btn cr-no" type="button">✕<small>ไม่รับ</small></button>
+        <button class="cr-btn cr-ok" type="button">${vid ? '📹' : '📞'}<small>รับสาย</small></button>
+      </div>
+      <div class="cr-safe">🔒 รับสายได้เฉพาะเพื่อนที่เพิ่มกันแล้ว</div>
+    </div>`;
+    document.body.appendChild(d);
+    this.ring = d;
+    d.querySelector('.cr-ok').addEventListener('click', ()=>{ callRing.stop(); Call.accept(); });
+    d.querySelector('.cr-no').addEventListener('click', ()=>{ callRing.stop(); Call.decline(); });
+    callRing.start('in');
+  },
+  closeRing(){ if(this.ring){ this.ring.remove(); this.ring = null; } },
+
+  /* ☎️ จอคุย (ใช้ทั้งตอนกำลังเรียกออกและตอนคุยจริง) */
+  open(){
+    this.closeRing();
+    this.freeMouse();
+    if(this.ov) return;
+    const p = Call.peer || {uid:'', n:'เพื่อน'};
+    const d = document.createElement('div');
+    d.className = 'call-ov';
+    d.dataset.kind = Call.kind;
+    d.innerHTML = `<video class="call-remote" id="call-remote" autoplay playsinline></video>
+      <div class="call-idle" id="call-idle"><div class="ci-av"><span>🧒</span></div></div>
+      <div class="call-top">
+        <div class="ct-name">${escapeHTML(p.n)} <small>${idTag(p.uid)}</small></div>
+        <div class="ct-time" id="call-time">${Call.caller ? 'กำลังเรียก…' : 'กำลังต่อสาย…'}</div>
+      </div>
+      <div class="call-note" id="call-note" style="display:none"></div>
+      <video class="call-me" id="call-me" autoplay playsinline muted></video>
+      <div class="call-fx" id="call-fx"></div>
+      <div class="call-emos" id="call-emos" style="display:none">
+        ${CALL_REACT_EMOS.map(e=>`<button class="call-emo" type="button">${e}</button>`).join('')}
+      </div>
+      <div class="call-bar" id="call-bar">
+        <button class="cb-btn" data-a="emo" type="button" title="ส่งอิโมจิ">😀</button>
+        <button class="cb-btn" data-a="mic" type="button" title="ไมค์">🎤</button>
+        <button class="cb-btn" data-a="cam" type="button" title="กล้อง">📹</button>
+        <button class="cb-btn" data-a="flip" type="button" title="สลับกล้องหน้า/หลัง">🔄</button>
+        <button class="cb-btn" data-a="spk" type="button" title="ลำโพง">🔊</button>
+        <button class="cb-btn cb-end" data-a="end" type="button" title="วางสาย">📞</button>
+      </div>`;
+    document.body.appendChild(d);
+    this.ov = d;
+
+    d.querySelectorAll('.cb-btn').forEach(b=>b.addEventListener('click', ()=>{
+      const a = b.dataset.a;
+      if(a === 'end')       { callRing.stop(); Call.hangup(); }
+      else if(a === 'mic')  { Call.setMic(!Call.micOn); sfx.select(); }
+      else if(a === 'cam')  { if(Call.kind === 'video') Call.setCam(!Call.camOn); else Call.addVideo(); }
+      else if(a === 'flip') { Call.flipCam(); }
+      else if(a === 'spk')  { Call.setSpk(!Call.spkOn); sfx.select(); }
+      else if(a === 'emo')  {
+        const box = d.querySelector('#call-emos');
+        box.style.display = box.style.display === 'none' ? '' : 'none';
+      }
+    }));
+    d.querySelectorAll('.call-emo').forEach(b=>b.addEventListener('click', ()=>{
+      Call.sendReaction(b.textContent);
+      d.querySelector('#call-emos').style.display = 'none';
+    }));
+
+    this.localTrack();
+    this.btns();
+    if(Call.caller && Call.st === 'out') callRing.start('out');
+  },
+
+  /* ต่อสายติดแล้ว → เริ่มจับเวลา + เปิดปุ่มอิโมจิ */
+  live(){
+    callRing.stop();
+    if(!this.ov) this.open();
+    this.ov.classList.add('on');
+    this.status('');
+    clearInterval(this.tick);
+    const tEl = this.ov.querySelector('#call-time');
+    const upd = ()=>{
+      if(!Call.startedAt) return;
+      const s = Math.floor((Date.now() - Call.startedAt)/1000);
+      tEl.textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+    };
+    upd();
+    this.tick = setInterval(upd, 1000);
+    this.btns();
+    if(typeof sfx !== 'undefined') sfx.correct();
+  },
+
+  /* ป้ายบอกเหตุผลบนจอ (กฎทองข้อ 1 — ระบบต้องบอกเองว่าติดอะไร) */
+  status(html){
+    if(!this.ov) return;
+    const n = this.ov.querySelector('#call-note');
+    n.innerHTML = html || '';
+    n.style.display = html ? '' : 'none';
+  },
+
+  /* ภาพ/เสียงของอีกฝ่ายมาถึง */
+  remote(stream){
+    if(!this.ov) return;
+    const v = this.ov.querySelector('#call-remote');
+    if(v.srcObject !== stream) v.srcObject = stream;
+    v.muted = !Call.spkOn;
+    v.play().catch(()=>{});
+    const hasVideo = stream.getVideoTracks().length > 0;
+    this.ov.classList.toggle('has-remote-video', hasVideo);
+  },
+
+  /* กล้องของเราเอง (จอเล็กมุมขวาล่าง) */
+  localTrack(){
+    if(!this.ov) return;
+    const me = this.ov.querySelector('#call-me');
+    const has = !!(Call.local && Call.local.getVideoTracks().length);
+    me.style.display = has ? '' : 'none';
+    if(has && me.srcObject !== Call.local){ me.srcObject = Call.local; me.play().catch(()=>{}); }
+    this.ov.dataset.kind = Call.kind;
+  },
+
+  /* สถานะปุ่ม (ปิดไมค์/ปิดกล้อง/ลำโพง) */
+  btns(){
+    if(!this.ov) return;
+    const q = a=>this.ov.querySelector(`.cb-btn[data-a="${a}"]`);
+    const mic = q('mic'), cam = q('cam'), spk = q('spk'), flip = q('flip');
+    mic.textContent = Call.micOn ? '🎤' : '🔇';
+    mic.classList.toggle('off', !Call.micOn);
+    cam.textContent = (Call.kind === 'video' && Call.camOn) ? '📹' : '📷';
+    cam.classList.toggle('off', Call.kind === 'video' && !Call.camOn);
+    cam.title = Call.kind === 'video' ? 'ปิด/เปิดกล้อง' : 'เปิดกล้อง (เปลี่ยนเป็นวิดีโอคอล)';
+    spk.textContent = Call.spkOn ? '🔊' : '🔈';
+    spk.classList.toggle('off', !Call.spkOn);
+    flip.style.display = (Call.kind === 'video') ? '' : 'none';
+    const v = this.ov.querySelector('#call-remote');
+    if(v) v.muted = !Call.spkOn;
+    this.ov.classList.toggle('cam-off', Call.kind === 'video' && !Call.camOn);
+  },
+
+  /* 💛 อิโมจิลอย (ดีกว่า LINE: ส่งตรง P2P ระหว่างคุย เห็นพร้อมกันทั้งสองฝั่ง) */
+  reaction(emo, mine){
+    if(!this.ov) return;
+    const fx = this.ov.querySelector('#call-fx');
+    const s = document.createElement('span');
+    s.className = 'call-fx-emo' + (mine ? ' mine' : '');
+    s.textContent = emo;
+    s.style.left = (mine ? 55 : 15) + Math.random()*28 + '%';
+    fx.appendChild(s);
+    setTimeout(()=>s.remove(), 2600);
+    if(!mine && typeof sfx !== 'undefined') sfx.select();
+  },
+
+  close(note){
+    callRing.stop();
+    clearInterval(this.tick); this.tick = null;
+    this.closeRing();
+    if(this.ov){
+      const ov = this.ov; this.ov = null;
+      const t = ov.querySelector('#call-time');
+      if(t && note) t.textContent = note;
+      ov.classList.add('bye');
+      setTimeout(()=>ov.remove(), 420);
+    }
+  },
+};
+
+/* 📞 เปิดสายจากที่ไหนก็ได้ในเกม (ใช้ในหัวกล่องแชท) */
+function startCall(friend, kind){
+  if(typeof Call === 'undefined'){ toast('ระบบโทรยังไม่พร้อม ลองรีเฟรชหน้าเว็บนะ'); return; }
+  sfx.select();
+  Call.start(friend, kind);
 }

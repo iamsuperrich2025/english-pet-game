@@ -985,6 +985,339 @@ function fetchFollowers(uid){
   }).catch(()=>null);
 }
 
+/* ============================================================
+   📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625)
+   เสียง+ภาพวิ่งตรงระหว่างเครื่อง (WebRTC P2P) · Firebase ใช้แค่ "กริ่ง" + signaling
+   /calls/<toUid>/<fromUid> = {k, n, m, ts}
+     k = 'ring' เรียกเข้า | 'ok' รับสาย | 'no' ไม่รับ | 'busy' ติดสายอื่น | 'end' วางสาย
+     m = 'voice' | 'video' · n = ชื่อผู้โทร (โชว์บนกริ่ง)
+     ผู้โทรตั้ง onDisconnect().remove() → ปิดแท็บกลางคัน กริ่งฝั่งโน้นดับเอง
+   /rtc/chat/<toUid>/<msgId> = {f,t,d,ts} — offer/answer/ice (โครงเดียวกับ voice chat ในโลก 3D)
+   🔒 กติกาเด็ก: โทร/รับได้เฉพาะ "เพื่อนที่เพิ่มกันแล้ว" · กล้อง-ไมค์เปิดตอนกดรับเท่านั้น
+      · วางสายแล้วคืนกล้อง/ไมค์ให้เครื่องทุกครั้ง (track.stop)
+   ⚠️ ต้อง publish rules โซน /calls + เพิ่ม 'chat' ใน enum ของ /rtc ก่อนถึงใช้ได้จริง
+      (ยังไม่ publish = เขียนโดน deny → โค้ดบอกผู้ใช้บนจอเลยว่าติดตรงไหน ไม่เงียบ)
+   ============================================================ */
+const CALL_RTC_CFG = {iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]};
+const CALL_RING_MS = 35000;        // เรียกแล้วไม่มีคนรับ 35 วิ = สายไม่ได้รับ
+const CALL_MAX_MS  = 60*60*1000;   // กันสายค้างลืมวาง — ตัดที่ 60 นาที
+
+const Call = {
+  st:'idle',            // idle | out (กำลังเรียกออก) | in (มีสายเข้า) | live (คุยอยู่)
+  peer:null,            // {uid, n}
+  kind:'voice',         // ชนิดสายที่ตกลงกัน
+  caller:false,         // เราเป็นฝ่ายโทรออก (ฝ่ายนี้เป็นคนสร้าง offer + คนบันทึกผลลงแชท)
+  pc:null, dc:null, local:null, remote:null,
+  iceQ:[], haveRemote:false,
+  micOn:true, camOn:true, spkOn:true, facing:'user',
+  startedAt:0, ringTimer:null, maxTimer:null,
+  inRef:null, rtcRef:null, _last:{},
+  rulesOk:true,         // false = เขียน /calls ไม่ผ่าน (ยังไม่ publish rules)
+
+  busy(){ return this.st !== 'idle'; },
+  isFriend(uid){ return (Online.myFriends || []).some(f=>f.uid === uid); },
+  ui(fn, ...a){ if(typeof callUI !== 'undefined' && typeof callUI[fn] === 'function') callUI[fn](...a); },
+
+  /* ---------- เฝ้ากริ่ง + ท่อ signaling (ตั้งครั้งเดียวตอน onlineStart) ---------- */
+  watch(){
+    if(this.inRef || !Online.db) return;
+    const me = onlineKey();
+    this.inRef = Online.db.ref('calls/' + me);
+    this.inRef.remove().catch(()=>{});                       // ล้างกริ่งค้างจากรอบก่อน
+    this.inRef.on('child_added',   s=>this.onSignal(s.key, s.val()));
+    this.inRef.on('child_changed', s=>this.onSignal(s.key, s.val()));
+    this.inRef.on('child_removed', s=>{                      // ผู้โทรยกเลิก/ปิดแท็บ → กริ่งดับเอง
+      if(this.st === 'in' && this.peer && this.peer.uid === s.key) this.end('ผู้โทรวางสายไปแล้ว', true);
+    });
+    this.rtcRef = Online.db.ref('rtc/chat/' + me);
+    this.rtcRef.remove().catch(()=>{});
+    this.rtcRef.on('child_added', s=>{
+      const m = s.val(); s.ref.remove().catch(()=>{});
+      if(m) this.onRtc(m);
+    });
+  },
+
+  /* ---------- ส่งสัญญาณกริ่ง (สั้น ๆ ผ่าน /calls) ---------- */
+  say(uid, k, extra){
+    if(!Online.ready || !Online.db) return Promise.reject();
+    const box = Online.db.ref('calls/' + uid + '/' + onlineKey());
+    return box.set(Object.assign({k, ts: firebase.database.ServerValue.TIMESTAMP}, extra || {}));
+  },
+  /* ---------- ส่ง SDP/ICE (ผ่าน /rtc/chat — ก้อนใหญ่ ผู้รับอ่านแล้วลบทิ้ง) ---------- */
+  sig(uid, t, d){
+    if(!Online.ready || !Online.db) return;
+    Online.db.ref('rtc/chat/' + uid).push({
+      f: onlineKey(), t, d: JSON.stringify(d), ts: firebase.database.ServerValue.TIMESTAMP,
+    }).catch(()=>{ this.rulesOk = false; });
+  },
+
+  /* ---------- ขอกล้อง/ไมค์จากเครื่อง ---------- */
+  media(kind){
+    const con = (kind === 'video')
+      ? {audio:true, video:{facingMode:this.facing, width:{ideal:640}, height:{ideal:480}}}
+      : {audio:true};
+    return navigator.mediaDevices.getUserMedia(con);
+  },
+  mediaErr(e){
+    const n = e && e.name || '';
+    if(n === 'NotAllowedError' || n === 'SecurityError')
+      return '🎤 ต้องกด "อนุญาต" ไมโครโฟน/กล้อง ในเบราว์เซอร์ก่อนถึงจะโทรได้นะ';
+    if(n === 'NotFoundError' || n === 'OverconstrainedError')
+      return '📷 เครื่องนี้ไม่มีกล้องหรือไมโครโฟนให้ใช้';
+    if(n === 'NotReadableError')
+      return '⚠️ กล้อง/ไมค์ถูกโปรแกรมอื่นใช้อยู่ ปิดโปรแกรมนั้นก่อนนะ';
+    return '⚠️ เปิดกล้อง/ไมค์ไม่สำเร็จ ลองใหม่อีกครั้งนะ';
+  },
+
+  /* ---------- ☎️ โทรออก ---------- */
+  async start(friend, kind){
+    if(!friend || !friend.uid) return;
+    if(!Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะโทรได้นะ 📡'); return; }
+    if(this.busy()){ toast('📞 กำลังอยู่ในสายอยู่แล้วนะ'); return; }
+    if(!this.isFriend(friend.uid)){ toast('โทรได้เฉพาะเพื่อนที่เพิ่มกันแล้วนะ 👫'); return; }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      toast('⚠️ เบราว์เซอร์นี้โทรไม่ได้ (ไม่รองรับกล้อง/ไมค์)'); return;
+    }
+    this.kind = (kind === 'video') ? 'video' : 'voice';
+    this.micOn = true; this.camOn = true; this.spkOn = true; this.facing = 'user';
+    try{ this.local = await this.media(this.kind); }
+    catch(e){ sfx.wrong(); toast(this.mediaErr(e)); return; }
+    this.st = 'out'; this.caller = true; this.peer = {uid:friend.uid, n:friend.n || 'เพื่อน'};
+    this.ui('open');
+    this.say(friend.uid, 'ring', {n: onlineDisplayName() || 'เพื่อน', m: this.kind})
+      .then(()=>{
+        Online.db.ref('calls/' + friend.uid + '/' + onlineKey()).onDisconnect().remove();
+      })
+      .catch(()=>{                                   // rules ยังไม่เปิด = บอกบนจอเลย ไม่ปล่อยเงียบ
+        this.rulesOk = false;
+        this.ui('status', '⚠️ ระบบโทรยังไม่เปิดใช้งาน<br><small>ต้องอัปเดตกฎความปลอดภัย (Firebase rules) โซน /calls ก่อนนะ</small>');
+        setTimeout(()=>this.end('', true), 3200);
+      });
+    this.ringTimer = setTimeout(()=>{ if(this.st === 'out') this.end('ไม่มีคนรับสาย', false, 'miss'); }, CALL_RING_MS);
+  },
+
+  /* ---------- 📲 รับสาย ---------- */
+  async accept(){
+    if(this.st !== 'in' || !this.peer) return;
+    let s;
+    try{ s = await this.media(this.kind); }
+    catch(e){ sfx.wrong(); toast(this.mediaErr(e)); this.decline(); return; }
+    if(this.st !== 'in'){ s.getTracks().forEach(t=>t.stop()); return; }   // สายถูกวางระหว่างขออนุญาต
+    this.local = s;
+    this.st = 'live'; this.startedAt = Date.now();
+    this.makePC();                                   // เตรียม pc ให้พร้อมก่อนบอก "รับสาย" (offer จะตามมา)
+    this.say(this.peer.uid, 'ok').catch(()=>{});
+    this.ui('open'); this.ui('live');
+    this.armMax();
+  },
+  decline(){
+    if(!this.peer) return;
+    this.say(this.peer.uid, 'no').catch(()=>{});
+    this.end('', true);
+  },
+  hangup(){
+    if(this.peer) this.say(this.peer.uid, 'end').catch(()=>{});
+    const dur = this.startedAt ? Date.now() - this.startedAt : 0;
+    this.end('', true, dur ? 'done' : (this.caller ? 'cancel' : ''));
+  },
+
+  /* ---------- 🔌 WebRTC ---------- */
+  makePC(){
+    if(this.pc) return this.pc;
+    const pc = new RTCPeerConnection(CALL_RTC_CFG);
+    this.pc = pc; this.iceQ = []; this.haveRemote = false;
+    this.remote = new MediaStream();
+    if(this.local) this.local.getTracks().forEach(t=>pc.addTrack(t, this.local));
+    pc.onicecandidate = e=>{ if(e.candidate && this.peer) this.sig(this.peer.uid, 'ice', e.candidate.toJSON()); };
+    pc.ontrack = e=>{
+      e.streams[0].getTracks().forEach(t=>{ if(!this.remote.getTracks().includes(t)) this.remote.addTrack(t); });
+      this.ui('remote', this.remote);
+    };
+    pc.onconnectionstatechange = ()=>{
+      if(pc.connectionState === 'connected') this.ui('status', '');
+      if(pc.connectionState === 'failed') this.end('สายหลุด — สัญญาณเชื่อมต่อไม่ได้', true);
+    };
+    /* 💛 ดีกว่า LINE: ช่องส่ง "อิโมจิลอย" ระหว่างคุย (วิ่ง P2P ไม่ผ่านเซิร์ฟเวอร์) */
+    if(this.caller){
+      this.dc = pc.createDataChannel('rx');
+      this.bindDC(this.dc);
+    }else{
+      pc.ondatachannel = e=>{ this.dc = e.channel; this.bindDC(this.dc); };
+    }
+    return pc;
+  },
+  bindDC(dc){
+    dc.onmessage = e=>{
+      const raw = String(e.data || '');
+      if(raw === 'neg'){ if(this.caller) this.offer(); return; }   // อีกฝ่ายเพิ่งเปิดกล้อง → เจรจา SDP ใหม่
+      const t = raw.slice(0, 4);
+      if(t) this.ui('reaction', t, false);
+    };
+  },
+  sendReaction(emo){
+    this.ui('reaction', emo, true);
+    try{ if(this.dc && this.dc.readyState === 'open') this.dc.send(emo); }catch(e){}
+  },
+  async offer(){
+    const pc = this.makePC();
+    try{
+      const of = await pc.createOffer();
+      await pc.setLocalDescription(of);
+      this.sig(this.peer.uid, 'offer', pc.localDescription.toJSON());
+    }catch(e){ this.end('ต่อสายไม่สำเร็จ ลองใหม่นะ', true); }
+  },
+  async onRtc(m){
+    if(!this.peer || m.f !== this.peer.uid || this.st === 'idle') return;
+    let d; try{ d = JSON.parse(m.d); }catch(e){ return; }
+    if(m.t === 'offer'){
+      const pc = this.makePC();
+      try{
+        await pc.setRemoteDescription(d); this.haveRemote = true;
+        this.iceQ.splice(0).forEach(c=>pc.addIceCandidate(c).catch(()=>{}));
+        const an = await pc.createAnswer();
+        await pc.setLocalDescription(an);
+        this.sig(m.f, 'answer', pc.localDescription.toJSON());
+      }catch(e){}
+    }else if(m.t === 'answer'){
+      if(!this.pc) return;
+      try{
+        await this.pc.setRemoteDescription(d); this.haveRemote = true;
+        this.iceQ.splice(0).forEach(c=>this.pc.addIceCandidate(c).catch(()=>{}));
+      }catch(e){}
+    }else if(m.t === 'ice'){
+      if(!this.pc) return;
+      if(this.haveRemote) this.pc.addIceCandidate(d).catch(()=>{});
+      else this.iceQ.push(d);
+    }
+  },
+
+  /* ---------- 🔔 กริ่งเข้า/สถานะจากอีกฝ่าย ---------- */
+  onSignal(uid, v){
+    if(!v || typeof v.k !== 'string') return;
+    const sigId = v.k + '|' + (v.ts || 0);
+    if(this._last[uid] === sigId) return;              // กันประมวลผลซ้ำ (child_added + child_changed)
+    this._last[uid] = sigId;
+    const clear = ()=>{ if(Online.db) Online.db.ref('calls/' + onlineKey() + '/' + uid).remove().catch(()=>{}); };
+
+    if(v.k === 'ring'){
+      if(!this.isFriend(uid)){ clear(); return; }      // 🔒 คนแปลกหน้าโทรเข้าไม่ได้
+      if(this.busy()){ this.say(uid, 'busy').catch(()=>{}); clear(); return; }
+      this.kind = (v.m === 'video') ? 'video' : 'voice';
+      this.micOn = true; this.camOn = true; this.spkOn = true; this.facing = 'user';
+      this.caller = false; this.st = 'in';
+      const fr = (Online.myFriends || []).find(f=>f.uid === uid);
+      this.peer = {uid, n: (fr && fr.n) || (typeof v.n === 'string' ? v.n : 'เพื่อน')};
+      this.ui('incoming');
+      this.ringTimer = setTimeout(()=>{ if(this.st === 'in') this.end('', true); }, CALL_RING_MS);
+      return;
+    }
+    if(!this.peer || this.peer.uid !== uid) { clear(); return; }
+    if(v.k === 'ok'){                                   // อีกฝ่ายกดรับ → เราเป็นคนยิง offer
+      if(this.st !== 'out') return;
+      clearTimeout(this.ringTimer); this.ringTimer = null;
+      this.st = 'live'; this.startedAt = Date.now();
+      this.ui('live'); this.armMax();
+      this.offer();
+    }else if(v.k === 'no'){
+      this.end('ตอนนี้เพื่อนยังรับสายไม่ได้', false, 'reject');
+    }else if(v.k === 'busy'){
+      this.end('เพื่อนกำลังติดสายอื่นอยู่', false, 'busy');
+    }else if(v.k === 'end'){
+      const dur = this.startedAt ? Date.now() - this.startedAt : 0;
+      this.end('', true, dur ? 'done' : '');
+    }
+  },
+
+  armMax(){
+    clearTimeout(this.maxTimer);
+    this.maxTimer = setTimeout(()=>this.hangup(), CALL_MAX_MS);
+  },
+
+  /* ---------- ปุ่มระหว่างคุย ---------- */
+  setMic(on){
+    this.micOn = on;
+    if(this.local) this.local.getAudioTracks().forEach(t=>{ t.enabled = on; });
+    this.ui('btns');
+  },
+  setCam(on){
+    this.camOn = on;
+    if(this.local) this.local.getVideoTracks().forEach(t=>{ t.enabled = on; });
+    this.ui('btns');
+  },
+  setSpk(on){ this.spkOn = on; this.ui('btns'); },
+  /* 🔄 สลับกล้องหน้า/หลัง (มือถือ) — เปลี่ยน track ในสายเดิม ไม่ต้องต่อสายใหม่ */
+  async flipCam(){
+    if(this.kind !== 'video' || !this.local) return;
+    this.facing = (this.facing === 'user') ? 'environment' : 'user';
+    try{
+      const ns = await navigator.mediaDevices.getUserMedia({video:{facingMode:this.facing}, audio:false});
+      const nt = ns.getVideoTracks()[0];
+      const old = this.local.getVideoTracks()[0];
+      if(this.pc){
+        const snd = this.pc.getSenders().find(s=>s.track && s.track.kind === 'video');
+        if(snd) await snd.replaceTrack(nt);
+      }
+      if(old){ this.local.removeTrack(old); old.stop(); }
+      this.local.addTrack(nt);
+      nt.enabled = this.camOn;
+      this.ui('localTrack');
+    }catch(e){ toast('🔄 สลับกล้องไม่สำเร็จ (เครื่องนี้มีกล้องเดียว)'); }
+  },
+  /* 📹 ชวนเปิดกล้องระหว่างสายเสียง (voice → video) — ขอ track ใหม่แล้วต่อสายเดิม */
+  async addVideo(){
+    if(this.st !== 'live' || this.kind === 'video' || !this.pc) return;
+    try{
+      const ns = await navigator.mediaDevices.getUserMedia({video:{facingMode:this.facing, width:{ideal:640}, height:{ideal:480}}, audio:false});
+      const nt = ns.getVideoTracks()[0];
+      this.local.addTrack(nt);
+      this.pc.addTrack(nt, this.local);
+      this.kind = 'video'; this.camOn = true;
+      this.ui('localTrack'); this.ui('btns');
+      if(this.caller) this.offer();                    // ฝ่ายโทรออกเป็นคนเจรจาใหม่ (กันชนกัน)
+      else this.sendRenegotiate();
+    }catch(e){ toast(this.mediaErr(e)); }
+  },
+  sendRenegotiate(){ try{ if(this.dc && this.dc.readyState === 'open') this.dc.send('neg'); }catch(e){} },
+
+  /* ---------- วางสาย/เก็บกวาด ---------- */
+  end(note, silent, log){
+    const peer = this.peer, caller = this.caller, kind = this.kind;
+    const dur = this.startedAt ? Date.now() - this.startedAt : 0;
+    clearTimeout(this.ringTimer); this.ringTimer = null;
+    clearTimeout(this.maxTimer);  this.maxTimer = null;
+    if(this.pc){ try{ this.pc.close(); }catch(e){} }
+    this.pc = null; this.dc = null; this.iceQ = []; this.haveRemote = false;
+    if(this.local){ this.local.getTracks().forEach(t=>t.stop()); }    // 🎤 คืนกล้อง/ไมค์ให้เครื่อง
+    this.local = null; this.remote = null;
+    if(peer && Online.db && Online.ready){
+      const mine = Online.db.ref('calls/' + peer.uid + '/' + onlineKey());
+      try{ mine.onDisconnect().cancel(); }catch(e){}
+      mine.remove().catch(()=>{});
+      Online.db.ref('calls/' + onlineKey() + '/' + peer.uid).remove().catch(()=>{});
+    }
+    this.st = 'idle'; this.peer = null; this.startedAt = 0; this.caller = false; this._last = {};
+    this.ui('close', note || '');
+    if(note && !silent && typeof toast === 'function') toast('📞 ' + note);
+    if(log && caller && peer) this.logChat(peer.uid, log, kind, dur);
+  },
+  /* 📝 บันทึกผลสายลงห้องแชท (ฝ่ายโทรออกเป็นคนบันทึก — ห้องแชทใช้ร่วมกันทั้งคู่ ไม่ซ้ำ) */
+  logChat(uid, kind, ctype, dur){
+    if(typeof chatSend !== 'function') return;
+    const ic = (ctype === 'video') ? '📹' : '📞';
+    let txt = '';
+    if(kind === 'done'){
+      const s = Math.max(1, Math.round(dur/1000));
+      const mm = Math.floor(s/60), ss = s%60;
+      txt = ic + ' คุยสายกัน ' + (mm ? mm + ' นาที ' : '') + ss + ' วินาที';
+    }
+    else if(kind === 'miss')   txt = ic + ' สายที่ไม่ได้รับ';
+    else if(kind === 'reject') txt = ic + ' เพื่อนยังรับสายไม่ได้';
+    else if(kind === 'busy')   txt = ic + ' เพื่อนติดสายอื่นอยู่';
+    else if(kind === 'cancel') txt = ic + ' ยกเลิกสายไปแล้ว';
+    if(txt) chatSend(uid, txt).catch(()=>{});
+  },
+};
+
 function onlineStart(){
   if(Online.started) return;   // รอบ 267: กันรันซ้ำ (เรียกได้ทั้งจาก authEnterGame และ authLateSync หลังเล่นออฟไลน์)
   Online.started = true;
@@ -1076,6 +1409,9 @@ function onlineStart(){
 
   // ฟังคำเชิญเล่นโลก 3D ด้วยกัน (path คงที่ ตั้งครั้งเดียว)
   tinvWatch();
+
+  // 📞 รอบ 625: เฝ้ากริ่งโทรเข้า + ท่อ signaling ของสาย (ใช้ได้ทุกหน้าในเกม รวมโลก 3D)
+  Call.watch();
 
   // 🏪 ตลาดออนไลน์จริง (item 2): ฟังประกาศขายทั้งเซิร์ฟเวอร์ + ใบเสร็จของที่เราขายได้
   marketWatch();
