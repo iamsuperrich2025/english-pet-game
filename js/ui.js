@@ -7626,14 +7626,18 @@ const callUI = {
     const d = document.createElement('div');
     d.className = 'call-ov';
     d.dataset.kind = Call.kind;
-    d.innerHTML = `<video class="call-remote" id="call-remote" autoplay playsinline></video>
+    d.innerHTML = `<video class="call-remote" id="call-remote" autoplay playsinline muted></video>
+      <audio id="call-audio" autoplay></audio>
       <div class="call-idle" id="call-idle"><div class="ci-av"><span>🧒</span></div></div>
       <div class="call-top">
         <div class="ct-name">${escapeHTML(p.n)} <small>${idTag(p.uid)}</small></div>
         <div class="ct-time" id="call-time">${Call.caller ? 'กำลังเรียก…' : 'กำลังต่อสาย…'}</div>
       </div>
       <div class="call-note" id="call-note" style="display:none"></div>
-      <video class="call-me" id="call-me" autoplay playsinline muted></video>
+      <button class="call-me" id="call-me" type="button" title="แตะเพื่อสลับจอใหญ่-จอเล็ก">
+        <video id="call-me-v" autoplay playsinline muted></video>
+        <span class="cm-swap">⤢</span>
+      </button>
       <div class="call-fx" id="call-fx"></div>
       <div class="call-tip">📱 หมุนมือถือเป็น<b>แนวตั้ง</b> จะเห็นหน้ากันชัดกว่านะ</div>
       <div class="call-emos" id="call-emos" style="display:none">
@@ -7666,7 +7670,9 @@ const callUI = {
       Call.sendReaction(b.textContent);
       d.querySelector('#call-emos').style.display = 'none';
     }));
+    d.querySelector('#call-me').addEventListener('click', ()=>this.swap());   // 🔄 แตะจอเล็ก = สลับจอ
 
+    this.swapped = false;
     this.localTrack();
     this.btns();
     this.orient(Call.kind === 'video');          // 📱 วิดีโอคอล → จอแนวตั้ง
@@ -7700,25 +7706,52 @@ const callUI = {
     n.style.display = html ? '' : 'none';
   },
 
+  /* 🔄 รอบ 627 (ผู้ใช้สั่ง): แตะจอเล็ก = สลับจอใหญ่↔จอเล็ก · แตะอีกครั้งสลับกลับ
+     เสียงของเพื่อนแยกไปอยู่ที่ <audio id="call-audio"> แล้ว → สลับภาพยังไงเสียงก็ไม่หาย
+     (จอทั้งสองใบ muted เสมอ — ถ้าปล่อยให้จอเล่นเสียงเองจะเกิดเสียงหอนตอนสลับ) */
+  swapped:false,
+  canSwap(){
+    return !!(Call.remote && Call.remote.getVideoTracks().length
+           && Call.local  && Call.local.getVideoTracks().length);
+  },
+  swap(){
+    if(!this.canSwap()){ toast('📹 สลับจอได้ตอนเปิดกล้องทั้งสองฝั่งนะ'); return; }
+    this.swapped = !this.swapped;
+    this.ov.classList.toggle('swapped', this.swapped);
+    this.paint();
+    if(typeof sfx !== 'undefined') sfx.select();
+  },
+  /* วางสตรีมลงจอใหญ่/จอเล็กตามสถานะสลับ (เรียกทุกครั้งที่ภาพเปลี่ยน) */
+  paint(){
+    if(!this.ov) return;
+    const bigEl = this.ov.querySelector('#call-remote');
+    const smEl  = this.ov.querySelector('#call-me-v');
+    const smBox = this.ov.querySelector('#call-me');
+    if(this.swapped && !this.canSwap()) this.swapped = false;      // อีกฝ่ายปิดกล้อง → เด้งกลับเอง
+    this.ov.classList.toggle('swapped', this.swapped);
+    const bigS = this.swapped ? Call.local  : Call.remote;
+    const smS  = this.swapped ? Call.remote : Call.local;
+    if(bigS && bigEl.srcObject !== bigS){ bigEl.srcObject = bigS; bigEl.play().catch(()=>{}); }
+    if(smS  && smEl.srcObject  !== smS ){ smEl.srcObject  = smS;  smEl.play().catch(()=>{}); }
+    this.ov.classList.toggle('has-remote-video', !!(bigS && bigS.getVideoTracks().length));
+    smBox.style.display = (smS && smS.getVideoTracks().length) ? '' : 'none';
+    smBox.classList.toggle('can-swap', this.canSwap());
+  },
+
   /* ภาพ/เสียงของอีกฝ่ายมาถึง */
   remote(stream){
     if(!this.ov) return;
-    const v = this.ov.querySelector('#call-remote');
-    if(v.srcObject !== stream) v.srcObject = stream;
-    v.muted = !Call.spkOn;
-    v.play().catch(()=>{});
-    const hasVideo = stream.getVideoTracks().length > 0;
-    this.ov.classList.toggle('has-remote-video', hasVideo);
+    const a = this.ov.querySelector('#call-audio');
+    if(a.srcObject !== stream){ a.srcObject = stream; a.play().catch(()=>{}); }
+    a.muted = !Call.spkOn;
+    this.paint();
   },
 
   /* กล้องของเราเอง (จอเล็กมุมขวาล่าง) */
   localTrack(){
     if(!this.ov) return;
-    const me = this.ov.querySelector('#call-me');
-    const has = !!(Call.local && Call.local.getVideoTracks().length);
-    me.style.display = has ? '' : 'none';
-    if(has && me.srcObject !== Call.local){ me.srcObject = Call.local; me.play().catch(()=>{}); }
     this.ov.dataset.kind = Call.kind;
+    this.paint();
     this.orient(Call.kind === 'video');          // เปิดกล้องกลางสายเสียง → สลับเป็นแนวตั้งด้วย
   },
 
@@ -7735,8 +7768,8 @@ const callUI = {
     spk.textContent = Call.spkOn ? '🔊' : '🔈';
     spk.classList.toggle('off', !Call.spkOn);
     flip.style.display = (Call.kind === 'video') ? '' : 'none';
-    const v = this.ov.querySelector('#call-remote');
-    if(v) v.muted = !Call.spkOn;
+    const a = this.ov.querySelector('#call-audio');
+    if(a) a.muted = !Call.spkOn;                 // เสียงเพื่อนอยู่ที่ <audio> ไม่ใช่จอวิดีโอแล้ว
     this.ov.classList.toggle('cam-off', Call.kind === 'video' && !Call.camOn);
   },
 
@@ -7757,6 +7790,7 @@ const callUI = {
     callRing.stop();
     clearInterval(this.tick); this.tick = null;
     this.closeRing();
+    this.swapped = false;
     this.orient(false);                          // 📱 วางสาย → คืนจอเป็นแนวนอนเหมือนเดิม
     if(this.ov){
       const ov = this.ov; this.ov = null;
