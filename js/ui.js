@@ -1684,7 +1684,10 @@ function showPlayerCard(uid, name, grade){
         </div>
         <div class="pl-assets-wrap" style="display:none">
           <div class="pl-sec-title">🏆 ทรัพย์สินที่เปิดเผย</div>
-          <div class="pl-assets"></div>
+          <!-- รอบ 616: เรียงแบบเดียวกับแคตตาล็อกโรงงาน (2 แถว × 8 คอลัมน์ + ลูกศรเลื่อน) -->
+          <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+            <div class="strip-x pl-assets grid2x8"></div>
+            <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
         </div>
       </div>
     </div>`;
@@ -1814,10 +1817,12 @@ function showPlayerCard(uid, name, grade){
       const n = Math.max(1, Math.min(999, Math.round(counts[id])));
       return `<div class="pl-asset" title="${escapeHTML(c.name)}">
         ${img ? `<img src="${img}" alt="">` : `<span class="pl-asset-emoji">${c.emoji}</span>`}
+        <span class="pl-asset-nm">${escapeHTML(c.name)}</span>
         ${n > 1 ? `<span class="pl-asset-n">×${n}</span>` : ''}
       </div>`;
     }).join('');
     wrap.style.display = '';
+    bindStripArrows(wrap.querySelector('.strip-wrap'));   // ของน้อยกว่า 2 แถวเต็ม = ลูกศรซ่อนเอง (.no-x)
   });
 
   /* ---- 🐾 รอบ 195: สัตว์เลี้ยง (สูงสุด 3 ตัว) — ของตัวเองจาก state · คนอื่นจาก DB ถ้าเปิดเผย ---- */
@@ -6926,7 +6931,7 @@ function renderFactory(){
   return `<div class="fc-cols"><div class="fc-left">${jobUI}
       <div class="craft-toolbar">${creditChip}<select class="mkt-filter" id="factory-cat">${opts}</select></div></div>
     <div class="fc-right">${catHead}<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
-      <div class="strip-x" id="factory-list">${rows}</div>
+      <div class="strip-x grid2x8" id="factory-list">${rows}</div>
       <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div></div>`;
 }
 
@@ -7053,8 +7058,8 @@ function renderCollectMine(){
   const ids = COLLECTIBLES.map(c=>c.id).filter(id=>counts[id]);
   let ownedUI;
   if(ids.length){
-    /* การ์ดสินค้าสไตล์ Trade HQ เหมือนแคตตาล็อกโรงงาน — รอบ 292: แถบปัดแนวนอน */
-    ownedUI = `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x">` + ids.map(id=>{
+    /* การ์ดสินค้าสไตล์ Trade HQ เหมือนแคตตาล็อกโรงงาน — รอบ 292: แถบปัดแนวนอน · รอบ 616: 2 แถว × 8 คอลัมน์ */
+    ownedUI = `<div class="strip-wrap mine-strip"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x grid2x8">` + ids.map(id=>{
       const c = collectInfo(id), tier = COLLECT_TIERS[c.tier], img = collectImg(id);
       return `<div class="hq-card" style="border-color:${tier.color}">
         <div class="hq-head">${c.name}</div>
