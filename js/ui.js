@@ -1663,7 +1663,9 @@ function showPlayerCard(uid, name, grade){
   ov.innerHTML = `<div class="pl-card pl-wide">
       <button class="pl-close">✕</button>
       <div class="pl-head">👤 <span>${escapeHTML(sp.name)}</span>
-        ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>` : ''}
+        ${myFriend ? `<button class="pl-chat" title="ส่งข้อความหาเพื่อน">💬 แชท</button>
+        <button class="pl-call" data-k="voice" type="button" title="โทรด้วยเสียง">📞</button>
+        <button class="pl-call pl-call-vid" data-k="video" type="button" title="วิดีโอคอล">📹</button>` : ''}
         ${(!me && typeof Online !== 'undefined' && Online.ready && typeof greetSend === 'function')
           ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 ทักทายน้อง</button>` : ''}
         ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
@@ -1743,6 +1745,10 @@ function showPlayerCard(uid, name, grade){
   /* ---- 💬 รอบ 276: ปุ่มทักแชท → ปิดการ์ดแล้วเปิดกล่องแชทกับเพื่อนคนนี้เลย ---- */
   const chatBtn = ov.querySelector('.pl-chat');
   if(chatBtn) chatBtn.addEventListener('click', ()=>{ sfx.select(); close(); openChat(myFriend); });
+  /* 📞 รอบ 628: โทรหาเพื่อนตรงจากการ์ดโปรไฟล์ (ปิดการ์ดก่อน จอคุยจะได้ไม่ซ้อนของเก่า) */
+  ov.querySelectorAll('.pl-call').forEach(b=>b.addEventListener('click', ()=>{
+    close(); startCall(myFriend, b.dataset.k);
+  }));
   const greetBtn = ov.querySelector('.pl-greet');   // 🐾 รอบ 325: ทักทายน้องของเพื่อน (ฟรี ไม่ต้องเป็นเพื่อนกันก็ทักได้)
   if(greetBtn) greetBtn.addEventListener('click', ()=>{ sfx.select(); openGreetPicker(uid, sp.name); });
 
@@ -2139,11 +2145,17 @@ function refreshFriendData(){
           <span class="online-dot${on ? '' : ' off'}"></span>
           <span class="fr-row-name">${escapeHTML(f.n)}<small> ${idTag(f.uid)}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
+          <button class="fr-call-btn" data-ci="${i}" data-k="voice" type="button" title="โทรด้วยเสียง">📞</button>
+          <button class="fr-call-btn fr-call-vid" data-ci="${i}" data-k="video" type="button" title="วิดีโอคอล">📹</button>
           <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
           <button class="fr-chat-btn${unread ? ' has-unread' : ''}" data-i="${i}">💬 แชท${unread ? '<span class="fr-unread">ใหม่!</span>' : ''}</button></div>`;
       }).join('');
       listEl.querySelectorAll('.fr-chat-btn').forEach(b=>b.addEventListener('click', ()=>{
         openChat(Online.myFriends[+b.dataset.i]);
+      }));
+      /* 📞 รอบ 628: โทรตรงจากแถวรายชื่อเพื่อน (ไม่ต้องเปิดกล่องแชทก่อน) — เงื่อนไขทั้งหมดเช็กใน Call.start */
+      listEl.querySelectorAll('.fr-call-btn').forEach(b=>b.addEventListener('click', ()=>{
+        startCall(Online.myFriends[+b.dataset.ci], b.dataset.k);
       }));
       listEl.querySelectorAll('.fr-gift-btn').forEach(b=>b.addEventListener('click', ()=>{
         openGiftPicker(Online.myFriends[+b.dataset.gi]);
@@ -2211,6 +2223,14 @@ function ibTimeStr(ts){
   if(now - ts < 7*86400e3) return ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][d.getDay()];
   return `${d.getDate()}/${d.getMonth()+1}`;
 }
+/* 📞 รอบ 628: ข้อความ "บันทึกผลสาย" ที่ Call.logChat (js/online.js) เขียนลงห้องแชท
+   → แยกออกมาโชว์เป็นแท็บ "ประวัติการโทร" · เทียบข้อความเต็มรูปแบบ กันข้อความที่ผู้เล่นพิมพ์เองหลุดมาปน */
+const IB_CALL_RE = /^(📞|📹) (คุยสายกัน .+|สายที่ไม่ได้รับ|เพื่อนยังรับสายไม่ได้|เพื่อนติดสายอื่นอยู่|ยกเลิกสายไปแล้ว)$/;
+function ibCallInfo(t){
+  const m = (typeof t === 'string') ? t.match(IB_CALL_RE) : null;
+  if(!m) return null;
+  return {vid: m[1] === '📹', miss: m[2] === 'สายที่ไม่ได้รับ', txt: m[2]};
+}
 function openChatInbox(){
   sfx.select();
   if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะดูข้อความได้นะ 📡'); return; }
@@ -2219,7 +2239,10 @@ function openChatInbox(){
   const overlay = document.createElement('div');
   overlay.className = 'inbox-overlay';
   overlay.innerHTML = `<div class="ib-box">
-    <div class="ib-head"><span>💬 ข้อความ</span><button class="ib-close" type="button">✕</button></div>
+    <div class="ib-head"><span class="ib-tabs">
+        <button class="ib-tab on" data-t="chat" type="button">💬 แชท</button>
+        <button class="ib-tab" data-t="call" type="button">📞 การโทร<span class="ib-tab-dot" id="ib-miss" style="display:none"></span></button>
+      </span><button class="ib-close" type="button">✕</button></div>
     <div class="ib-story" id="ib-story"></div>
     <div class="ib-list" id="ib-list"><div class="ib-empty">กำลังโหลดข้อความ… 💬</div></div>
   </div>`;
@@ -2227,6 +2250,15 @@ function openChatInbox(){
   const close = ()=>overlay.remove();
   overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
   overlay.querySelector('.ib-close').addEventListener('click', ()=>{ sfx.select(); close(); });
+  /* 📞 รอบ 628: สลับแท็บ แชท ↔ ประวัติการโทร (ใช้ข้อมูลชุดเดียวกัน ไม่ยิง DB ซ้ำ)
+     — ผูกไว้ตั้งแต่ตอนนี้ ระหว่างที่ข้อมูลยังโหลด กดแท็บได้ แต่ยังไม่มีอะไรให้วาด (renderList ยังว่าง) */
+  let ibMode = 'chat', renderList = null;
+  overlay.querySelectorAll('.ib-tab').forEach(b=>b.addEventListener('click', ()=>{
+    if(ibMode === b.dataset.t) return;
+    ibMode = b.dataset.t; sfx.select();
+    overlay.querySelectorAll('.ib-tab').forEach(x=>x.classList.toggle('on', x.dataset.t === ibMode));
+    if(renderList) renderList();
+  }));
 
   // รอบ 185 (idea 2): แถบ "กำลังออนไลน์" แนวนอนบนสุด — วงกลมเพื่อนที่ออนไลน์ เลื่อนข้างได้ แบบ story row
   // รอบ 187 (A1): เติม badge เลขข้อความใหม่บนวงกลม (เติมหลังโหลดนับ unread)
@@ -2269,15 +2301,16 @@ function openChatInbox(){
   const badgeTxt = n => n > 20 ? '20+' : String(n);
   // รอบ 185 (idea 1) + 187 (A1): ดึงข้อความล่าสุด (limitToLast 20) → เรียงคนเพิ่งคุยขึ้นบน + นับข้อความใหม่ต่อคน
   Promise.all(friends.map(f=>
-    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(20).once('value')
+    // รอบ 628: ดึง 40 ข้อความ (เดิม 20) — เผื่อให้แท็บ "ประวัติการโทร" ย้อนได้ลึกขึ้น (CHAT_KEEP=100)
+    Online.db.ref('chats/' + chatPairId(f.uid)).orderByKey().limitToLast(40).once('value')
       .then(snap=>{
-        let last = null, unread = 0;
+        let last = null, unread = 0; const msgs = [];
         const seen = (typeof chatSeenTs === 'function') ? chatSeenTs(f.uid) : 0;
-        snap.forEach(ch=>{ const m = ch.val(); last = m;
+        snap.forEach(ch=>{ const m = ch.val(); last = m; if(m) msgs.push(m);
           if(m && m.f === f.uid && typeof m.ts === 'number' && m.ts > seen) unread++; });
-        return {f, last, unread};
+        return {f, last, unread, msgs, seen};
       })
-      .catch(()=>({f, last:null, unread:0}))
+      .catch(()=>({f, last:null, unread:0, msgs:[], seen:0}))
   )).then(items=>{
     if(!document.body.contains(overlay)) return;       // ผู้ใช้ปิดกล่องไปแล้ว
     // เรียง ts มากสุดบน · ไม่เคยคุย (ts 0) ตกลงล่างตามลำดับเพื่อนเดิม (sort เสถียร)
@@ -2289,28 +2322,75 @@ function openChatInbox(){
       const n = unreadByUid[b.dataset.uid] || 0;
       if(n > 0){ b.textContent = badgeTxt(n); b.style.display = ''; }
     });
-    listEl.innerHTML = items.map(({f,last,unread},i)=>{
-      let lastTxt, timeTxt = '';
-      if(last && typeof last.t === 'string'){
-        lastTxt = (last.f === meKey ? selfPronoun() + ': ' : '') + last.t;
-        if(last.ts) timeTxt = ibTimeStr(last.ts);
-      }else lastTxt = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
-      return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
-        <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
-        <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
-        <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? `<span class="ib-dot">${badgeTxt(unread)}</span>` : ''}</span>
-        <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
-      </div>`;
-    }).join('');
-    listEl.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
-      sfx.select(); close(); openChat(sorted[+r.dataset.i]);
-    }));
-    // รอบ 185 (idea 3): ปุ่ม 🌍 ท้ายแถว → เมนูชวนเล่นโลก 3D (tinv) — กันไม่ให้เด้ง openChat
-    listEl.querySelectorAll('.ib-world').forEach(b=>b.addEventListener('click', e=>{
-      e.stopPropagation();
-      const f = sorted[+b.dataset.i];
-      if(f) openFriendQuickMenu(f.uid, f.n, f.g);
-    }));
+
+    /* 📞 รอบ 628: รวมบันทึกผลสายจากทุกห้องแชท → เรียงใหม่สุดขึ้นบน (เก็บ 40 รายการล่าสุดพอ)
+       ทิศทาง: ข้อความที่ "เรา" เป็นคนส่ง = โทรออก (Call.logChat ให้ฝ่ายโทรออกเป็นคนบันทึก) */
+    const calls = [];
+    items.forEach(({f, msgs, seen})=>{
+      msgs.forEach(m=>{
+        const info = m && ibCallInfo(m.t);
+        if(!info || typeof m.ts !== 'number') return;
+        calls.push({f, ts:m.ts, out:(m.f === meKey), info, unseen:(m.f === f.uid && m.ts > seen)});
+      });
+    });
+    calls.sort((a,b)=>b.ts - a.ts);
+    const callList = calls.slice(0, 40);
+    const missN = callList.filter(c=>c.info.miss && !c.out && c.unseen).length;
+    const missEl = overlay.querySelector('#ib-miss');
+    if(missEl && missN){ missEl.textContent = badgeTxt(missN); missEl.style.display = ''; }
+
+    function paintChat(){
+      listEl.innerHTML = items.map(({f,last,unread},i)=>{
+        let lastTxt, timeTxt = '';
+        if(last && typeof last.t === 'string'){
+          lastTxt = (last.f === meKey ? selfPronoun() + ': ' : '') + last.t;
+          if(last.ts) timeTxt = ibTimeStr(last.ts);
+        }else lastTxt = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
+        return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
+          <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
+          <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
+          <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? `<span class="ib-dot">${badgeTxt(unread)}</span>` : ''}</span>
+          <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('.ib-row').forEach(r=>r.addEventListener('click', ()=>{
+        sfx.select(); close(); openChat(sorted[+r.dataset.i]);
+      }));
+      // รอบ 185 (idea 3): ปุ่ม 🌍 ท้ายแถว → เมนูชวนเล่นโลก 3D (tinv) — กันไม่ให้เด้ง openChat
+      listEl.querySelectorAll('.ib-world').forEach(b=>b.addEventListener('click', e=>{
+        e.stopPropagation();
+        const f = sorted[+b.dataset.i];
+        if(f) openFriendQuickMenu(f.uid, f.n, f.g);
+      }));
+    }
+
+    /* 📞 รอบ 628: แท็บประวัติการโทร — แตะแถว = เปิดแชท · ปุ่มท้ายแถว = โทรกลับแบบเดิม (เสียง/วิดีโอ) */
+    function paintCalls(){
+      if(!callList.length){
+        listEl.innerHTML = `<div class="ib-empty">ยังไม่มีประวัติการโทร 📞<br>
+          กดปุ่ม 📞 หรือ 📹 ที่แถวรายชื่อเพื่อน (หรือในกล่องแชท) เพื่อโทรหากันได้เลย!</div>`;
+        return;
+      }
+      listEl.innerHTML = callList.map((c,i)=>
+        `<div class="ib-row ib-call-row${(c.info.miss && !c.out) ? ' missed' : ''}" data-ci="${i}">
+          <span class="ib-ava ib-call-ava">${c.info.vid ? '📹' : '📞'}</span>
+          <span class="ib-mid"><b class="ib-name">${escapeHTML(c.f.n)}</b><small class="ib-last">${c.out ? '↗️ โทรออก' : '↙️ สายเข้า'} · ${escapeHTML(c.info.txt)}</small></span>
+          <span class="ib-meta"><small class="ib-time">${ibTimeStr(c.ts)}</small></span>
+          <button class="ib-world ib-cb" data-ci="${i}" data-k="${c.info.vid ? 'video' : 'voice'}" title="โทรกลับ" type="button">${c.info.vid ? '📹' : '📞'}</button>
+        </div>`).join('');
+      listEl.querySelectorAll('.ib-call-row').forEach(r=>r.addEventListener('click', ()=>{
+        const c = callList[+r.dataset.ci];
+        if(c){ sfx.select(); close(); openChat(c.f); }
+      }));
+      listEl.querySelectorAll('.ib-cb').forEach(b=>b.addEventListener('click', e=>{
+        e.stopPropagation();
+        const c = callList[+b.dataset.ci];
+        if(c){ close(); startCall(c.f, b.dataset.k); }
+      }));
+    }
+
+    renderList = ()=>{ (ibMode === 'call') ? paintCalls() : paintChat(); };
+    renderList();
   });
 }
 
