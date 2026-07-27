@@ -3422,20 +3422,22 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 }
 .panel-overlay[data-page="panel-market"] .panel-body{padding:12px 16px 16px;}
 .panel-overlay[data-page="panel-market"] #market-card{width:100%;max-width:none;}
-/* คลังของฉัน: การ์ด Trade HQ เรียง 2 แถว (สูงคงที่ เพราะหน้านี้เลื่อนแนวตั้งได้) */
-.mine-strip .strip-x{--mine-row:clamp(122px,20vh,168px);padding:9px;border-radius:16px;
+/* คลังของฉัน + 🌏 ชั้นวางของเพื่อน (รอบ 624): การ์ด Trade HQ เรียง 2 แถว (สูงคงที่ เพราะหน้านี้เลื่อนแนวตั้งได้) */
+.mine-strip .strip-x,.mb-strip .strip-x{--mine-row:clamp(122px,20vh,168px);padding:9px;border-radius:16px;
   grid-template-rows:repeat(2,var(--mine-row));border:1px solid rgba(255,255,255,.16);box-sizing:border-box;}
-.mine-strip .strip-x .hq-card{width:auto;height:100%;}
-.mine-strip .strip-x .hq-head{
+.mine-strip .strip-x .hq-card,.mb-strip .strip-x .hq-card{width:auto;height:100%;}
+.mine-strip .strip-x .hq-head,.mb-strip .strip-x .hq-head{
   font-size:11.5px;line-height:1.2;padding:4px 5px;flex-shrink:0;white-space:normal;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   min-height:calc(2.4em + 8px);
 }
-.mine-strip .strip-x .hq-pic{height:auto;flex:1;min-height:0;padding:5px;}
-.mine-strip .strip-x .hq-price{font-size:11.5px;padding:5px 3px;flex-shrink:0;}
+.mine-strip .strip-x .hq-pic,.mb-strip .strip-x .hq-pic{height:auto;flex:1;min-height:0;padding:5px;}
+.mine-strip .strip-x .hq-price,.mb-strip .strip-x .hq-price{font-size:11.5px;padding:5px 3px;flex-shrink:0;}
 .mine-strip .strip-x .hq-badge{font-size:10px;padding:0 6px;}
-.mine-strip .strip-x .hq-stars{font-size:10px;}
-.mine-strip .strip-x .hq-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(10,45,90,.34);}
+.mine-strip .strip-x .hq-stars,.mb-strip .strip-x .hq-stars{font-size:10px;}
+.mine-strip .strip-x .hq-card:hover,.mb-strip .strip-x .hq-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(10,45,90,.34);}
+/* ชื่อร้านเพื่อนใต้รูป — เตี้ยลงให้รูปสินค้ากินที่ได้มากที่สุด */
+.mb-strip .strip-x .mb-seller{flex-shrink:0;font-size:10px;margin:0 4px 2px;}
 
 /* ============================================================
    👤 ทรัพย์สินที่เปิดเผยในโปรไฟล์ — เรียงแบบเดียวกับแคตตาล็อกโรงงาน (รอบ 616)
@@ -3473,7 +3475,8 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 }
 /* ของน้อยกว่า 9 ชิ้น = แถวเดียวพอ (ไม่ต้องเหลือถาดว่างครึ่งล่าง) · เบราว์เซอร์เก่าไม่รู้จัก :has → คง 2 แถวตามเดิม */
 .pl-assets.strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--pl-row);}
-.mine-strip .strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--mine-row);}
+.mine-strip .strip-x:not(:has(> :nth-child(9))),
+.mb-strip .strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--mine-row);}
 
 /* ============================================================
    🐾 สัตว์เลี้ยงในโปรไฟล์ — ใช้การ์ดชุดเดียวกับทรัพย์สิน/แคตตาล็อกโรงงาน (รอบ 619)
@@ -3525,4 +3528,50 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 @media (max-height:420px){
   .pl-card.pl-wide{--pl-row:max(150px,calc(100vh - 197px));}   /* = 2 แถวเดิมรวมกัน (ช่องว่างระหว่างแถวด้วย) */
   .pl-assets.strip-x{grid-template-rows:var(--pl-row);}        /* บังคับแถวเดียวเหมือนแคตตาล็อกโรงงาน */
+}
+
+/* ============================================================
+   🚗🤖 รอบ 624: โชว์รูมรถ + โชว์รูมหุ่นรบ = แคตตาล็อก .grid2x8 (2 แถว × 8 คอลัมน์ + ลูกศรเลื่อน)
+   เดิมเป็น thumb คอลัมน์ซ้าย 38% เลื่อนขึ้นลง → เปลี่ยนเป็นผังเดียวกับแคตตาล็อกโรงงาน (รอบ 614):
+   จอโชว์เต็มความกว้างด้านบน + แถบแคตตาล็อกปัดซ้ายขวาด้านล่าง (ความสูงแถวคงที่ หน้าตลาดเลื่อนแนวตั้งได้)
+   ============================================================ */
+.cs-showroom,.rs-showroom{flex-direction:column;}
+.cs-showroom .strip-wrap,.rs-showroom .strip-wrap{margin-top:2px;}
+.cs-list.strip-x,.rs-list.strip-x{
+  flex:1 1 auto;max-width:none;max-height:none;overflow-y:hidden;padding:9px;border-radius:16px;
+  grid-template-columns:none;              /* ล้างกริด repeat(2,1fr) เดิม ไม่งั้นชนะ grid-auto-columns ของ .grid2x8 */
+  border:1px solid rgba(255,255,255,.16);box-sizing:border-box;align-content:stretch;
+}
+.cs-list.strip-x{--cs-row:clamp(118px,20vh,164px);grid-template-rows:repeat(2,var(--cs-row));}   /* การ์ดรถมีชื่อ+ราคา จึงสูงกว่าหุ่นเล็กน้อย */
+.rs-list.strip-x{--rs-row:clamp(120px,19vh,166px);grid-template-rows:repeat(2,var(--rs-row));}
+/* ของ ≤8 ชิ้น = แถวเดียวพอ (เบราว์เซอร์เก่าไม่รู้จัก :has → คง 2 แถว ไม่พัง) */
+.cs-list.strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--cs-row);}
+.rs-list.strip-x:not(:has(> :nth-child(9))){grid-template-rows:var(--rs-row);}
+/* การ์ด thumb ยืดเต็มช่อง: ชื่อบนสุด (order:-1 เหมือนหัวการ์ดโรงงาน) · รูปกินที่ว่างที่เหลือ · ราคาอยู่ล่างสุด */
+.cs-list.strip-x .cs-thumb,.rs-list.strip-x .rs-thumb{width:auto;height:100%;padding:5px 5px 6px;gap:1px;}
+.cs-list.strip-x .cs-thumb-pic,.rs-list.strip-x .rs-thumb-pic{height:auto;flex:1;min-height:0;}
+.cs-list.strip-x .cs-thumb-pic img,.rs-list.strip-x .rs-thumb-pic img{max-height:100%;max-width:100%;}
+.cs-list.strip-x .cs-thumb-name{order:-1;font-size:11px;line-height:1.15;flex-shrink:0;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cs-list.strip-x .cs-thumb-price,.rs-list.strip-x .rs-thumb-price{font-size:12px;flex-shrink:0;}
+.cs-list.strip-x .cs-thumb-own{font-size:9.5px;flex-shrink:0;}
+/* ป้าย "ขายไปแล้ว N ชิ้น" ดูที่จอใหญ่แทน — ในแคตตาล็อกเอาที่ไปให้รูปสินค้าใหญ่ขึ้น */
+.cs-list.strip-x .sold-badge,.rs-list.strip-x .sold-badge{display:none;}
+.cs-list.strip-x .car-emoji,.rs-list.strip-x .car-emoji{width:auto;height:auto;max-width:100%;}
+/* จอโชว์เต็มความกว้างแล้ว → ย่อความสูงลง ให้ "จอโชว์ + แคตตาล็อก" อยู่ในสายตาเดียวกัน
+   (แตะการ์ดล่างแล้วต้องเห็นตัวใหญ่ด้านบนเปลี่ยนทันที ไม่ต้องเลื่อนหา) */
+/* ⚠️ กับดัก: ผังคอลัมน์ทำให้ความสูง .rs-stage มาจากเนื้อหา → `max-height:100%` ของรูปหุ่นไม่มีฐานคำนวณ
+   รูปเลยกางเป็นขนาดจริง (1024×1536) ทะลุกล่อง · ต้องคุมด้วยหน่วย vh ตรง ๆ ที่ตัวรูป */
+.rs-showroom .rs-big{max-height:none;min-height:170px;}    /* padding คงเดิม 34px — .rs-elec/.rs-edge อิง inset นี้ */
+.rs-showroom .rs-big-img{max-height:34vh;}
+.cs-showroom .cs-big-img{max-height:25vh;}
+.cs-showroom .cs-inr-img{max-height:13vh;}
+/* ป้ายสมรรถนะเรียงแนวนอน 3 ช่อง (เดิมซ้อน 3 บรรทัด) — เตี้ยลง ~40px */
+.cs-showroom .cs-info .cs-stats{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:6px 16px;max-width:none;}
+.cs-showroom .cs-info .cs-stat{gap:6px;}
+/* จอเตี้ย (≤520px): 2 แถวจะเบียดจนรูปสินค้าเหลือ ~33px → สลับเป็น "แถวเดียวเต็มความสูง"
+   แบบเดียวกับที่แคตตาล็อกโรงงานทำที่ ≤420px (บทเรียนรอบ 623) · เลื่อนดูด้วยลูกศรเหมือนเดิม */
+@media (max-height:520px){
+  .cs-list.strip-x{--cs-row:clamp(112px,26vh,152px);grid-template-rows:var(--cs-row);}
+  .rs-list.strip-x{--rs-row:clamp(112px,26vh,152px);grid-template-rows:var(--rs-row);}
 }

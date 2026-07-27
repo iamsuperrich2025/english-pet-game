@@ -6381,7 +6381,7 @@ function renderMarketBrowse(){
   const me = (typeof onlineKey === 'function') ? onlineKey() : '';
   const items = (Online.market || []).filter(m=>m.sid !== me);
   const inner = items.length
-    ? `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x">` + items.map(m=>{
+    ? `<div class="strip-wrap mb-strip"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="strip-x grid2x8">` + items.map(m=>{
         const c = collectInfo(m.id), tier = COLLECT_TIERS[c.tier], img = collectImg(m.id);
         const afford = state.coins >= m.p;
         const wished = (state.wishlist || []).includes(m.id);   // 💖 ของที่เล็งไว้ — ขับให้เด่น
@@ -6483,13 +6483,14 @@ function renderCarShowroom(){
       ${soldBadge(c.id)}
     </button>`;
   }).join('');
+  /* รอบ 624: จอใหญ่เต็มความกว้างด้านบน + แคตตาล็อกรถ 2 แถว × 8 คอลัมน์ (.grid2x8 + ลูกศร) ด้านล่าง — ผังเดียวกับแคตตาล็อกโรงงาน */
   return `<div class="cs-showroom">
-    <div class="cs-list">${thumbs}</div>
     <div class="cs-stage" id="cs-stage">
       <div class="cs-big" id="cs-big"></div>
       <div class="cs-interior" id="cs-interior"></div>
       <div class="cs-info" id="cs-info"></div>
     </div>
+    <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="cs-list strip-x grid2x8">${thumbs}</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
   </div>`;
 }
 /* แสดงรถคันที่ i บนจอใหญ่ — ตัวรถ (mask ไฟฟ้าไล่ตัวสีประจำคัน) + ภาพภายในห้องโดยสาร + ป้ายข้อมูล/ปุ่มซื้อ */
@@ -6562,8 +6563,8 @@ function renderRobotShop(){
   return `<div class="mkt-listhead" id="mkt-robots">🤖 หุ่นยนต์นักรบ — โชว์รูมหุ่นรบ</div>
     <div class="gp-note">แตะหุ่นเพื่อดูตัวใหญ่ · ไม่แตะ = โชว์วนทีละตัว · <b>ซื้อกี่ตัวก็ได้</b> สะสมเป็นทรัพย์สินในแรงค์ · มี ≥1 ตัว = เข้า<b>โลกหุ่นยนต์นักรบ</b> ยิงเอเลี่ยน คำละ 🪙35</div>
     <div class="rs-showroom">
-      <div class="rs-list">${thumbs}</div>
       <div class="rs-stage"><div class="rs-big" id="rs-big"></div><div class="rs-info" id="rs-info"></div></div>
+      <div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button><div class="rs-list strip-x grid2x8">${thumbs}</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>
     </div>`;
 }
 /* แสดงหุ่นตัวที่ i บนจอใหญ่ + ไฟฟ้าไล่ตัว (mask ตามรูปหุ่น) + ป้ายข้อมูล/ปุ่มซื้อ */
