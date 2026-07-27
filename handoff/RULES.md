@@ -227,9 +227,11 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$fromUid": {
           ".write": "auth != null && (auth.uid === $fromUid || auth.uid === $toUid)",
           ".validate": "newData.hasChildren(['k','ts'])",
-          "k":  { ".validate": "newData.isString() && (newData.val() === 'ring' || newData.val() === 'ok' || newData.val() === 'no' || newData.val() === 'busy' || newData.val() === 'end')" },
+          "k":  { ".validate": "newData.isString() && (newData.val() === 'ring' || newData.val() === 'ok' || newData.val() === 'no' || newData.val() === 'busy' || newData.val() === 'end' || newData.val() === 'nofr' || newData.val() === 'full')" },
           "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
           "m":  { ".validate": "newData.isString() && (newData.val() === 'voice' || newData.val() === 'video')" },
+          "r":  { ".validate": "newData.isString() && newData.val().length <= 128" },
+          "g":  { ".validate": "newData.isString() && newData.val().length <= 400" },
           "ts": { ".validate": "newData.isNumber()" },
           "$other": { ".validate": false }
         }
@@ -380,8 +382,11 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - ผู้รับอ่าน+ลบกล่องตัวเอง (ประมวลผลแล้วลบทันที + ล้างตอน join) · คนอื่น push ได้เฉพาะข้อความที่ `f` = uid ตัวเอง
 - **`$map === 'chat'` (รอบ 625) = ท่อ signaling ของ "สายโทรหาเพื่อน" (voice/video call)** — ไม่ใช่แผนที่จริง ใช้ path เดียวกันเพื่อไม่ต้องเพิ่มโครงใหม่ · ฝั่งเกม = `Call` ใน `js/online.js`
 
-## หมายเหตุโครง /calls (📞 โทรหาเพื่อน — รอบ 625)
-- `/calls/<toUid>/<fromUid> = {k, n, m, ts}` — **กริ่ง + สถานะสายเท่านั้น** (เสียง/ภาพวิ่ง P2P ผ่าน WebRTC ไม่ผ่าน Firebase ไม่มีการอัดเก็บ)
+## หมายเหตุโครง /calls (📞 โทรหาเพื่อน — รอบ 625 · กลุ่ม 3 คน รอบ 631)
+- `/calls/<toUid>/<fromUid> = {k, n, m, ts, r, g}` — **กริ่ง + สถานะสายเท่านั้น** (เสียงวิ่ง P2P ผ่าน WebRTC ไม่ผ่าน Firebase ไม่มีการอัดเก็บ)
+- 👥 **รอบ 631 (คุยกลุ่ม 3 คน):** `r` = รหัสห้อง (uid คนเปิดสาย) · `g` = uid คนที่อยู่ในห้องแล้ว คั่นด้วย `,` (ผู้ถูกชวนต่อ mesh ให้ครบทุกคน) · `k` เพิ่ม `'nofr'` (ยังไม่ได้เป็นเพื่อนกันครบ) และ `'full'` (ห้องเต็ม)
+- 🔒 **รอบ 631 ลบวิดีโอคอลออกทั้งระบบ (ผู้ใช้สั่ง — ป้องกันมิจฉาชีพ):** เหลือสายเสียงล้วน · `m` ยังปล่อยผ่านใน rules เผื่อเครื่องที่เปิดค้างเวอร์ชันเก่ายังส่งมา (ฝั่งรับไม่สนใจค่านี้แล้ว)
+- 🔒 **เข้ากลุ่มได้เมื่อเป็นเพื่อนกันครบทุกคน** — อ่าน `/friends` ของคนอื่นไม่ได้ตาม rules → ผู้ถูกชวนเป็นคนตรวจเองว่าทุก uid ใน `g` อยู่ใน `/friends` ของตัวเอง ไม่ครบ = ตอบ `nofr` ไม่ต่อสาย (และไม่เปิดไมค์)
 - ผู้โทรตั้ง `onDisconnect().remove()` บน node ของตัวเอง → ปิดแท็บ/เน็ตหลุดกลางกริ่ง สายฝั่งโน้นดับเอง · วางสายแล้วทั้งสองฝ่ายลบ node ของตัวเองในกล่องอีกฝ่าย
 - client กรอง "เฉพาะเพื่อนใน `/friends`" ก่อนเด้งกริ่ง (rules เปิดให้ auth ใดก็เขียนกล่องได้ เหมือน `/gifts`/`/friendReq` — กันสแปมที่ชั้น client + ไม่มีข้อมูลส่วนตัวใน node)
 
