@@ -7666,6 +7666,7 @@ const callRing = {
 
 const callUI = {
   ov:null, ring:null, tick:null,
+  wasLive:false,        // ☎️ รอบ 630: สายนี้ต่อติดจริงหรือยัง (ใช้ตัดสินว่าตอนวางสายควรมีเสียง "ปุ๊ก" ไหม)
 
   /* 🔒 อยู่ในโลก 3D เมาส์ถูกล็อกอยู่ (pointer lock) → ปลดก่อน ไม่งั้นกดปุ่มรับสายไม่ได้ */
   freeMouse(){ try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(e){} },
@@ -7801,7 +7802,8 @@ const callUI = {
     upd();
     this.tick = setInterval(upd, 1000);
     this.btns();
-    if(typeof sfx !== 'undefined') sfx.correct();
+    this.wasLive = true;                         // ☎️ รอบ 630: จำไว้ว่าสายนี้ "ต่อติดจริง" → ตอนวางสายถึงมีเสียงปุ๊ก
+    if(typeof sfx !== 'undefined') sfx.callOn();
   },
 
   /* ป้ายบอกเหตุผลบนจอ (กฎทองข้อ 1 — ระบบต้องบอกเองว่าติดอะไร) */
@@ -7896,6 +7898,10 @@ const callUI = {
     callRing.stop();
     clearInterval(this.tick); this.tick = null;
     this.closeRing();
+    /* ☎️ รอบ 630: "ปุ๊ก" เฉพาะสายที่คุยกันจริงแล้ววาง — สายที่ไม่ได้รับ/ติดสาย/ยกเลิก มี toast บอกอยู่แล้ว
+       (เช็กที่ธงของตัวเองเพราะ Call.end() ล้าง startedAt ทิ้งก่อนเรียก close มาถึงตรงนี้) */
+    if(this.wasLive && typeof sfx !== 'undefined') sfx.callOff();
+    this.wasLive = false;
     this.swapped = false;
     this.orient(false);                          // 📱 วางสาย → คืนจอเป็นแนวนอนเหมือนเดิม
     if(this.ov){
