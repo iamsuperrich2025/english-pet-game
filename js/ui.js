@@ -7618,6 +7618,8 @@ const CALL_REACT_EMOS = ['❤️','😆','👍','😮','🎉','😭','🐱','⭐
    MIN = ดังเกินนี้ถือว่าพูดอยู่ (ต่ำกว่านี้คือเสียงลมหายใจ/เสียงห้อง) · HOLD = ค้างไฟหลังเงียบ กันกะพริบตามจังหวะคำ */
 const CALL_TALK_MIN  = .028;
 const CALL_TALK_HOLD = 420;
+/* 🗣️ รอบ 633: สลับตำแหน่งช่อง "คนพูดล่าสุด" ได้ไม่ถี่กว่านี้ (กันช่องเต้นตอนคุยสลับกันไว) */
+const CALL_ORDER_GAP = 1400;
 
 /* 🔔 เสียงกริ่ง (รอบ 629: ผู้ใช้ส่งไฟล์เสียงจริงมาให้ — สูตร 2 ชั้นเดียวกับ playCashier ใน util.js)
    ชั้น 1: ไฟล์จริงเล่นวน (loop) — ฝั่งผู้รับสาย IncomingCallTone · ฝั่งผู้โทร OutgoingCallTone
@@ -7807,6 +7809,7 @@ const callUI = {
     Array.from(stage.children).forEach(el=>{
       if(ids.indexOf(el.dataset.uid) < 0){ this.vuDrop(el.dataset.uid); el.remove(); }
     });
+    this.vuPlace();                                  // 🗣️ รอบ 633: ช่องคนพูดล่าสุดอยู่หน้าสุด
     this.head();
   },
 
@@ -7814,7 +7817,7 @@ const callUI = {
      วัดจากสตรีมจริงด้วย Web Audio — AudioContext ตัวเดียวทั้งสาย + analyser คนละตัวต่อคน
      🔇 analyser ต่อจาก source เฉย ๆ ไม่ต่อไป destination → ไม่มีเสียงงอกออกลำโพงซ้ำ
      เช็กราว 12 ครั้ง/วินาที (เบาพอสำหรับมือถือเด็ก) · ปิดไมค์ตัวเอง = ไฟไม่ติดถึงจะมีเสียงเข้าไมค์ */
-  vu:{ac:null, src:{}, an:{}, hold:{}, buf:null, timer:null},
+  vu:{ac:null, src:{}, an:{}, hold:{}, last:{}, buf:null, timer:null},
   vuTap(uid, stream){
     const V = this.vu;
     if(!stream || !stream.getAudioTracks().length) return;
@@ -7836,7 +7839,7 @@ const callUI = {
   vuDrop(uid){
     const V = this.vu;
     if(V.src[uid]){ try{ V.src[uid].node.disconnect(); }catch(e){} delete V.src[uid]; }
-    delete V.an[uid]; delete V.hold[uid];
+    delete V.an[uid]; delete V.hold[uid]; delete V.last[uid];
   },
   vuTick(){
     const V = this.vu;
@@ -7849,9 +7852,36 @@ const callUI = {
       for(let i = 0; i < buf.length; i++){ const d = (buf[i] - 128)/128; sum += d*d; }
       const loud = Math.sqrt(sum/buf.length) > CALL_TALK_MIN;
       const open = (uid === 'me') ? Call.micOn : true;           // ปิดไมค์แล้วห้ามโชว์ว่าพูดอยู่
-      if(loud && open) V.hold[uid] = now + CALL_TALK_HOLD;
+      if(loud && open){ V.hold[uid] = now + CALL_TALK_HOLD; V.last[uid] = now; }
       const t = this.ov.querySelector('.ctile[data-uid="' + uid + '"]');
       if(t) t.classList.toggle('talking', (V.hold[uid] || 0) > now);
+    });
+    this.vuOrder();
+  },
+
+  /* 🗣️ รอบ 633 (ผู้ใช้เลือกไอเดียต่อยอดข้อ 1 จากรอบ 632): คุยกลุ่มแล้วช่อง "คนพูดล่าสุด" ขึ้นก่อน
+     สลับด้วย CSS `order` ของ grid — **ไม่ย้าย DOM** เพราะย้าย <audio> ที่กำลังเล่นอยู่เสี่ยงเสียงสะดุด
+     (DOM ยังเรียง [เพื่อน, เพื่อน, ฉัน] เสมอ → กฎ :nth-child(3) ของผังแนวตั้งจึงยังชี้ช่อง "ฉัน" ถูกเหมือนเดิม)
+     ⏱️ หน่วง CALL_ORDER_GAP กันช่องเต้นตอนคุยสลับกันไว ๆ · ช่อง "ฉัน" อยู่ท้ายเสมอ (เด็กรู้อยู่แล้วว่าตัวเองพูด) */
+  vuLead:'', vuAt:0,
+  vuOrder(force){
+    if(!this.ov) return;
+    const ps = Call.list();
+    if(ps.length < 2){ if(this.vuLead){ this.vuLead = ''; this.vuPlace(); } return; }
+    let lead = this.vuLead, best = -1;
+    ps.forEach(p=>{ const t = this.vu.last[p.uid] || 0; if(t > best){ best = t; lead = p.uid; } });
+    if(lead === this.vuLead && !force) return;
+    const now = Date.now(), fresh = best <= 0;   // ยังไม่มีใครพูดเลย = แค่จัดลำดับตั้งต้น ไม่นับเป็นการสลับ
+    if(!force && !fresh && now - this.vuAt < CALL_ORDER_GAP) return;   // เพิ่งสลับไป รอให้ครบจังหวะก่อน
+    this.vuLead = lead; this.vuAt = fresh ? 0 : now;                   // → คนแรกที่พูดจริงขึ้นหน้าทันที ไม่ต้องรอ
+    this.vuPlace();
+  },
+  /* ใส่ลำดับจริงลงช่อง (เรียกตอนวาดใหม่ด้วย เผื่อมีช่องเพิ่งเกิด) */
+  vuPlace(){
+    if(!this.ov) return;
+    this.ov.querySelectorAll('.ctile').forEach(t=>{
+      const u = t.dataset.uid;
+      t.style.order = (u === 'me') ? 2 : (u === this.vuLead ? 0 : 1);
     });
   },
   vuStop(){
@@ -7859,7 +7889,8 @@ const callUI = {
     if(V.timer){ clearInterval(V.timer); V.timer = null; }
     Object.keys(V.src).forEach(u=>this.vuDrop(u));
     if(V.ac){ try{ V.ac.close(); }catch(e){} V.ac = null; }
-    V.hold = {}; V.buf = null;
+    V.hold = {}; V.last = {}; V.buf = null;
+    this.vuLead = ''; this.vuAt = 0;
   },
 
   /* ต่อสายติดแล้ว → เริ่มจับเวลา + เปิดปุ่มอิโมจิ */
