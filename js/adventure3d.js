@@ -464,7 +464,9 @@ let texCache={};
 
 /* ---------- multiplayer ---------- */
 let peers={};                     // uid → {spr, cur:{x,z}, tgt:{x,z}, n, av, bubble, lastCt}
-let worldRef=null, myRef=null, lastNetSend=0, lastSent=null;
+let room=null, lastNetSend=0, lastSent=null;   // 🏟️ รอบ 640: room = ตัวจัดการสนามจาก js/netroom.js (แทน worldRef/myRef เดิม)
+/* 🏟️ รอบ 640: "ออนไลน์อยู่จริงไหม" — เดิมเช็กด้วย `if(myRef)` กระจายอยู่ ~15 จุด */
+function netUp(){ return !!(room && room.online); }
 let lastSharedDone=null;          // 🤝 คำล่าสุดที่ประกอบเสร็จ — กันลูกทีมที่ทำเสร็จก่อนวนกลับไปรับคำเดิมของหัวหน้า
 /* แชทลอยหัวแบบ Roblox: พิมพ์สั้นๆ โชว์เหนือหัว BUBBLE_MS */
 const CHAT_MAX=60, BUBBLE_MS=5000;
@@ -2162,7 +2164,7 @@ function completeWord(i){
   const fresh=pickWords(1);                 // เติมคำใหม่ให้ครบ 10 (8.4)
   if(M.soccer){ fresh.forEach(nw=>words.push(nw)); soccerRetarget(); }   // ⚽ ป้ายคงที่ รีไซเคิลเอง (ไม่ spawn เพิ่ม)
   else{ fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); }); ensureCoverage(); }
-  if(myRef) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
+  if(netUp()) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
   // 🎖️ สตรีคนักบิน (รอบ 62): ประกอบคำในโลกเฮลิฯ +1 · ข้ามเส้น 5/15/30 → เข็มใหม่ (ไม่มีวันหลุด)
   if(M.heli){
     state.heliStreak=(state.heliStreak||0)+1;
@@ -2178,12 +2180,12 @@ function completeWord(i){
         celebrateBadge(tier[2], `ได้เข็มนักบิน${tier[3]}!`,
           `บิน ${tier[0]} คำติดโดยไม่ชนเลย — สุดยอดกัปตัน! เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
         if(typeof checkCrown === 'function') checkCrown();   // 👑 เช็กเข็มลับ (ครบ 4 สาย)
-        if(myRef) sendPos(true);            // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
+        if(netUp()) sendPos(true);            // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
       },2600);                              // รอ banner ฉลองคำจบก่อน
     }
   }
   saveState();
-  if(myRef) sendPos(true);                  // ประกาศคะแนนใหม่ขึ้นกระดานทุกเครื่องทันที
+  if(netUp()) sendPos(true);                  // ประกาศคะแนนใหม่ขึ้นกระดานทุกเครื่องทันที
   renderHudWords(); renderHudInv(); renderHudTop(); renderBoard();
 }
 
@@ -2622,25 +2624,29 @@ const HSound={
    ============================================================ */
 function netReady(){
   return typeof Online!=='undefined' && Online.ready && Online.db
-      && typeof Auth!=='undefined' && Auth.user;
+      && typeof Auth!=='undefined' && Auth.user && typeof NetRoom!=='undefined';
 }
+/* 🏟️ รอบ 640: เข้า-ออกสนาม/นับหัว/กันล้น/กวาดผี/ไปหาเพื่อน อยู่ใน js/netroom.js แล้ว (ใช้ร่วมทุกโลก 3D)
+   ทุกโหมดในไฟล์นี้ (adv/haunt/heli/drone/drive/soccer/mecha) ได้ระบบหลายสนามเหมือนกันหมด */
 function netJoin(){
   if(!netReady()) return;
-  const uid=onlineKey();
-  worldRef=Online.db.ref('world/'+mode);
-  myRef=worldRef.child(uid);
-  myRef.onDisconnect().remove();
-  lastSent=null; sendPos(true);
-  worldRef.on('child_added',onPeerData);
-  worldRef.on('child_changed',onPeerData);
-  worldRef.on('child_removed',s=>removePeer(s.key));
+  room=NetRoom.create({
+    map:mode, sendMs:NET_SEND_MS,
+    hotTs:true,                       // 🔴 โลกขับรถวัด "อัตราชะลอ" จาก ts ต่อแพ็กเก็ต = ไฟเบรกเพื่อน (ดู onPeerData)
+    legacyOptional:['tl','hp','cw'],  // โหมดเดิม: rules /world อาจยังไม่รับ 3 ตัวนี้ → NetRoom ตัดทิ้งแล้วส่งซ้ำให้เอง
+    push(){ lastSent=null; sendPos(true); },
+    onPeer:onPeerData, onPeerGone:removePeer,
+    onStatus(){ renderBoard(); },
+    toast(html,ms){ showBanner(html,ms); },
+  });
+  room.join();
   Voice.join();
   podiumJoin();
 }
 function sendPos(force){
-  if(!myRef) return;
+  if(!netUp()) return;
   const now=performance.now();
-  if(!force && now-lastNetSend<NET_SEND_MS) return;
+  if(!force && now-lastNetSend<room.sendGap) return;   // 🧯 คนยิ่งเยอะยิ่งส่งห่างลง (NetRoom คำนวณให้)
   // 👁️ รอบ 394: มุมมองที่ 3 กล้องลอยหลังรถ ~7m — ตำแหน่งที่ประกาศให้เพื่อนต้องเป็น "ตัวรถ" ไม่ใช่กล้อง
   const _px=(M.drive&&dCam3&&carSelfM)?carSelfM.position.x:camera.position.x,
         _pz=(M.drive&&dCam3&&carSelfM)?carSelfM.position.z:camera.position.z;
@@ -2656,7 +2662,8 @@ function sendPos(force){
       :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)
         ?state.blockAv+(M.drive?carAvCode():'')                                          // 🚙 รอบ 393: 'blk3c07' — เพื่อนเห็นโมเดลรถสีตรงคันเรา
         :(state.playerAvatar||'')),
-    x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP,
+    x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords,
+    /* 🏟️ รอบ 640: ts ใส่ให้เองโดย NetRoom (hotTs:true) · ชื่อ/คะแนน/แชท ย้ายไป node เย็นแล้ว ไม่ส่งซ้ำทุกเฟรม */
   };
   if(M.heli||M.drone) payload.y=Math.round(camera.position.y*10)/10;   // ความสูงบิน (โหมดเฮลิฯ/โดรน)
   // 🚦 รอบ 132: ไฟเลี้ยว (1=ซ้าย 2=ขวา) — ปิดไม่ส่ง field หายไปเอง (set ทับทั้ง node) · rules ต้องรับ tl ก่อน (RULES.md)
@@ -2674,13 +2681,8 @@ function sendPos(force){
   if(words[0] && Object.keys(peers).some(uid=>tinvLinked(uid))) payload.cw=words[0].en+'|'+words[0].th;
   // แนบแชทลอยหัวระหว่างยังสด (ct = Date.now คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า)
   if(myChat && Date.now()-myChat.ts<BUBBLE_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
-  myRef.set(payload).catch(()=>{
-    // 🚦🚁 rules ยังไม่รับ field tl/hp (ยังไม่ publish) → ตัดออกแล้วส่งซ้ำทันที กัน multiplayer พังทั้งก้อน
-    let retry=false;
-    if(payload.tl!==undefined){ netTlOk=false; delete payload.tl; retry=true; }
-    if(payload.hp!==undefined){ netHpOk=false; delete payload.hp; retry=true; }
-    if(retry) myRef.set(payload).catch(()=>{});
-  });
+  /* 🚦🚁 rules ยังไม่รับ field tl/hp → NetRoom ตัดออกแล้วส่งซ้ำให้เอง (legacyOptional) */
+  room.send(payload,force);
 }
 /* ส่งแชทลอยหัว: กรองคำหยาบ + echo ของตัวเองมุมล่าง */
 function sendChat(text){
@@ -2690,7 +2692,7 @@ function sendChat(text){
     sfx.wrong(); toast('⚠️ ข้อความมีคำไม่สุภาพ ลองพิมพ์ใหม่นะ'); return;
   }
   myChat={text, ts:Date.now()};
-  if(myRef) sendPos(true);
+  if(netUp()) sendPos(true);
   selfMsgEl.textContent='💬 '+text;
   selfMsgEl.classList.add('on');
   clearTimeout(selfMsgEl._tm);
@@ -2707,10 +2709,10 @@ function toggleChatBox(open){
     setTimeout(()=>chatInputEl.focus(),50);
   }
 }
-function onPeerData(snap){
-  const uid=snap.key;
+/* 🏟️ รอบ 640: NetRoom ส่ง (uid, payload ชื่อฟิลด์เดิม) มาให้ตรง ๆ — โค้ดข้างล่างไม่ต้องแก้ */
+function onPeerData(uid,d){
   if(typeof onlineKey==='function' && uid===onlineKey()) return;
-  const d=snap.val()||{};
+  d=d||{};
   if(typeof d.x!=='number' || typeof d.z!=='number') return;
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
@@ -2816,12 +2818,11 @@ function removePeer(uid){
 function netLeave(){
   podiumLeave();
   Voice.leave();
-  if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
-  if(myRef){ myRef.remove().catch(()=>{}); }
+  if(room){ room.leave(); room=null; }        // 🏟️ รอบ 640: ปิด listener + ลบตัวเองออกจากสนาม ครบในตัว
   Object.keys(peers).forEach(removePeer);
-  worldRef=null; myRef=null;
 }
 function tickPeers(dt,now){
+  if(room) room.tick(now);                    // 🏟️ รอบ 640: หาสนาม/ลองใหม่ตอนเต็ม/กวาดผีค้าง/ตรวจที่นั่ง
   Object.keys(peers).forEach(uid=>{
     const p=peers[uid];
     const k=Math.min(1,dt*6);                     // lerp นุ่มๆ ระหว่างแพ็กเก็ต
@@ -3089,7 +3090,7 @@ const Voice={
     this.mic=on;
     const track=on&&this.stream?this.stream.getAudioTracks()[0]:null;
     Object.values(this.pcs).forEach(en=>{ if(en.sender) en.sender.replaceTrack(track).catch(()=>{}); });
-    if(myRef) sendPos(true);                               // ประกาศสถานะไมค์ (ไอคอน 🎤 เหนือหัว) ทันที
+    if(netUp()) sendPos(true);                               // ประกาศสถานะไมค์ (ไอคอน 🎤 เหนือหัว) ทันที
     showBanner(on?'🎤 <b>เปิดไมค์แล้ว</b><br><small>เพื่อนใน map ได้ยินเสียงหนู</small>'
                  :'🎤 <b>ปิดไมค์แล้ว</b><br><small>ไม่มีใครได้ยินเสียงหนู</small>');
     updateVoiceBtns();
@@ -3171,7 +3172,7 @@ function showPodium(v){
   top.forEach((r,i)=>{ if(r && me && r.u===me) myBonus=PODIUM_BONUS[i]||0; });
   if(myBonus){ addCoins(myBonus); saveState(); sessionCoins+=myBonus; }
   sessionWords=0; sessionWordLog=[];                 // เริ่มรอบแข่งใหม่ทุกคน
-  if(myRef) sendPos(true);
+  if(netUp()) sendPos(true);
   renderBoard(); renderHudTop();
   const wasRunning=running;
   running=false;                                     // พักเกมระหว่างพิธี (ผีไม่แอบจับ)
@@ -3273,7 +3274,14 @@ function renderBoard(){
       html+=`<div class="adv-b-title" style="margin-top:6px">🎯 ท็อปนักผาดโผน</div>`+aceHtml;
     }
   }
-  hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html;
+  /* 🏟️ รอบ 640: ป้ายบอกสถานะสนาม — เด็กต้องรู้ว่าตัวเองอยู่สนามไหน มีกี่คน และมีทางไปหาเพื่อน */
+  const note=room ? room.statusText(innerHeight<430) : '';
+  hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html
+    +(note?`<div class="adv-b-room" style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.14);font-size:.82em;line-height:1.35;opacity:.93">${note}</div>`:'');
+  if(!hudBoardEl._nrWired){    // ดักคลิกปุ่ม "ไปหาเพื่อน" ครั้งเดียวพอ (innerHTML วาดใหม่ไม่ล้าง listener ที่ตัวแม่)
+    hudBoardEl._nrWired=true;
+    hudBoardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
+  }
 }
 /* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ (แตะ minimap เปิด) — north-up ครอบตัวอักษรทุกตัว+ผู้เล่น
    โลกขับรถวาดถนน/แม่น้ำจาก driveCell · ตัวอักษรที่ต้องเก็บของคำปัจจุบัน = เหลืองใหญ่ ตัวอื่นเทาเล็ก */
@@ -4252,7 +4260,7 @@ function awardGlass(){
       celebrateBadge(glassEmoji(tier[1]), `ได้${GLASS_TIER_UI[tier[1]]}!`,
         `ทุบกระจกตึกร้างครบ ${tier[0]} บาน — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
       if(typeof checkCrown === 'function') checkCrown();
-      if(myRef) sendPos(true);
+      if(netUp()) sendPos(true);
     }, 1200);
   }
   saveState();
@@ -4522,7 +4530,7 @@ function awardDaredevil(){
       celebrateBadge(daredevilEmoji(tier[1]), `ได้${DAREDEVIL_TIER_UI[tier[1]]}!`,
         `บินเฉียดสุดๆ ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
       if(typeof checkCrown === 'function') checkCrown();     // 👑 เช็กเข็มลับ (ครบ 4 สาย)
-      if(myRef) sendPos(true);                              // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
+      if(netUp()) sendPos(true);                              // อัปเดตชื่อ+เข็มบนหัวทุกเครื่อง
     }, 1400);
   }
   saveState();
@@ -4617,7 +4625,7 @@ function tlSet(v){
   if(rl) rl.classList.toggle('on',v===1);
   if(rr) rr.classList.toggle('on',v===2);
   tlDotY(v===1?-1:v===2?1:0);
-  if(myRef) sendPos(true);
+  if(netUp()) sendPos(true);
 }
 /* นับ "แขนถนน" รอบจุด — sample วงกลมรัศมี 12m 16 ทิศจาก road grid นับกลุ่มถนนที่ติดกัน
    ทางตรง/โค้ง = 2 แขน · สามแยกขึ้นไป >= 3 = ทางแยกที่ต้องให้สัญญาณไฟเลี้ยว */
@@ -5748,7 +5756,7 @@ function awardPerfLand(){
       celebrateBadge(softLandEmoji(tier[1]), `ได้${SOFTLAND_TIER_UI[tier[1]]}!`,
         `ลงจอดเพอร์เฟกต์ครบ ${tier[0]} ครั้ง — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
       if(typeof checkCrown === 'function') checkCrown();
-      if(myRef) sendPos(true);
+      if(netUp()) sendPos(true);
     }, 1200);
   }
   saveState();
@@ -6389,7 +6397,7 @@ function beginRide(){
   yaw=rideYaw-Math.PI/2;                            // มองออกหน้าต่างขวาเป็นมุมตั้งต้น (ลากมองรอบได้)
   pitch=-.08;
   showBanner('🚁 ออกบินชมเมือง! นั่งริมหน้าต่าง ลากจอมองวิวได้ · พร้อมเมื่อไหร่กด 🪂 โดดวิงสูท');
-  if(myRef) sendPos(true);                           // 💺 เพื่อนเห็นเราเป็นผู้โดยสารทันที
+  if(netUp()) sendPos(true);                           // 💺 เพื่อนเห็นเราเป็นผู้โดยสารทันที
   try{                                              // เสียงใบพัดเบาๆ ในห้องโดยสาร (มีไฟล์ค่อยเล่น)
     if(HeliSound.files.rotor){ HeliSound.ensureCtx(); paxSnd=HeliSound.playBuf(HeliSound.files.rotor,{loop:true,vol:.15}); }
   }catch(e){}
@@ -6402,7 +6410,7 @@ function endRide(backToRoof){
     hPhase='walk';
     camera.position.set(F.paxPos.x+2.3, termB.h+FOOT_EYE, F.paxPos.z+2.3);   // 📏 ลงข้างลำใหญ่ ไม่โผล่กลางลำ
     showBanner('🛬 จบทัวร์ กลับดาดฟ้าเทอร์มินัล');
-    if(myRef) sendPos(true);
+    if(netUp()) sendPos(true);
   }
 }
 function beginWing(fromRide){
@@ -6415,7 +6423,7 @@ function beginWing(fromRide){
   pitch=0;
   showBanner('🪂 วิงสูทกาง! W ก้มดิ่งเร่ง · S เชิดร่อน · A/D เลี้ยว · ลอดแหวนทอง 💫 ได้คอมโบ!');
   sfx.levelup();
-  if(myRef) sendPos(true);                           // 🚁💺 เพื่อนเห็นเราเปลี่ยนเป็นร่มทันที
+  if(netUp()) sendPos(true);                           // 🚁💺 เพื่อนเห็นเราเปลี่ยนเป็นร่มทันที
 }
 /* 🪂🎖️ นับตัวอักษรที่เก็บ "กลางอากาศ" (วิงสูท) → เข็มนักดิ่งพสุธา 25/60/120 (แพตเทิร์น awardGlass) */
 function awardAirLetter(){
@@ -6429,7 +6437,7 @@ function awardAirLetter(){
       celebrateBadge(airLetterEmoji(tier[1]), `ได้${AIRL_TIER_UI[tier[1]]}!`,
         `เก็บตัวอักษรกลางอากาศครบ ${tier[0]} ตัว — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกแล้ว 🎉`);
       if(typeof checkCrown === 'function') checkCrown();
-      if(myRef) sendPos(true);
+      if(netUp()) sendPos(true);
     }, 1200);
   }
   saveState();
@@ -6496,7 +6504,7 @@ function beginPilot(ship){
   layoutCockpit();
   dustBurst(P.x,P.y+.02,P.z,18);                     // 🌪️ ฝุ่นเริ่มฟุ้งตอนเครื่องติด
   showBanner(ship==='blue'?'🚁 ขึ้นขับลำสีฟ้า (ฟรี)! สตาร์ทเครื่องยนต์...':'🚁 ขึ้นนั่งที่นักบิน! สตาร์ทเครื่องยนต์...');
-  if(myRef) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน (ลำสีตรงกับที่ขับ)
+  if(netUp()) sendPos(true);                           // 🚁 เพื่อนเห็นเราเปลี่ยนเป็นนักบิน (ลำสีตรงกับที่ขับ)
 }
 /* 🚶 รอบ 375: ลงจากเฮลิฯ ตอนจอดสนิท (ผู้ใช้ขอ) — ลำแดงย้ายมาจอดตรงจุดนี้ ผู้เล่นเดินเล่น/
    ไปนั่งลำฟ้า แล้วเดินกลับมาใกล้ลำ = ขึ้นขับต่อจากที่เดิมได้ */
@@ -6521,7 +6529,7 @@ function endPilot(){
   setFootBtns(false,false);
   camera.position.set(px,fy+FOOT_EYE,pz); pitch=0;
   showBanner(`🚶 ลงจากเฮลิฯ แล้ว เดินเล่นได้เลย — อยากขับต่อ เดินกลับมาใกล้ลำสี${pilotShip==='blue'?'ฟ้า':'แดง'}`);
-  if(myRef) sendPos(true);                           // เพื่อนเห็นเรากลับเป็นคนเดิน
+  if(netUp()) sendPos(true);                           // เพื่อนเห็นเรากลับเป็นคนเดิน
 }
 /* วาดกรอบหน้าต่างห้องโดยสาร (เฟส ride) บน canvas เข็ม — เจาะช่องหน้าต่างมนตรงกลาง */
 function drawCabinWindow(){
@@ -6649,7 +6657,7 @@ function tickHeliFoot(dt,now){
       hPhase='walk'; pitch=0; ringCombo=0;
       if(wSpd>21){ damagePlayer(10); showBanner('🪂💥 ลงแรงไปหน่อย! เชิดหัว (S) ก่อนถึงพื้นนะ'); }
       else showBanner('🪂 ลงพื้นสวยงาม! เดินเก็บของต่อหรือหาทางขึ้นตึกใหม่ได้เลย');
-      if(myRef) sendPos(true);                       // 🚶 เพื่อนเห็นเรากลับเป็นคนเดิน
+      if(netUp()) sendPos(true);                       // 🚶 เพื่อนเห็นเรากลับเป็นคนเดิน
       return;
     }
     camera.position.set(nx,ny,nz);
@@ -6836,7 +6844,7 @@ function tickHeli(dt,now){
         ATC.say('Midair collision! Return to base immediately, captain.');
         nx=0; nz=0; ny=heliFloorAt(0,0)+HELI_SKID;                  // 🐣 เกิดใหม่ลานจอดกลาง เครื่องจอดสนิท
         hVel={x:0,y:0,z:0}; hLanded=true; hCol=0;
-        if(myRef) sendPos(true);                                    // เพื่อนเห็นลำเราวาร์ปกลับลานทันที
+        if(netUp()) sendPos(true);                                    // เพื่อนเห็นลำเราวาร์ปกลับลานทันที
         break;
       }
     }
@@ -10081,7 +10089,7 @@ function explodeAlien(a){
   else waveSpawnFill();                             // ยังไม่ครบ → เติมตัวใหม่คงจำนวนบนสนาม
   updateWaveHud();
   saveState(); renderHudTop(); renderBoard();
-  if(myRef) sendPos(true);
+  if(netUp()) sendPos(true);
 }
 function tickMecha(dt,now){
   // เดินหน้า-ถอย (โมเมนตัมหนักแบบหุ่น) + ◀▶ ขยับข้าง (สเตรฟ · รอบ 222 ผู้ใช้: ไม่ใช่หมุนตัว) · หมุน/เล็ง = ลากจอ
@@ -10506,6 +10514,12 @@ window.Adventure3D={
     get running(){return running}, set running(v){running=v},
     camera:()=>camera, damagePlayer, caught, spawnGhost, tinvCheck, onPeerData, exitWorld, sendChat, Voice, tinvLinked, showPodium, endRound,
     peersTick:(dt)=>tickPeers(dt||.016,performance.now()),   // 🚁 รอบ 376: เทสต์ลำเพื่อนตอนแท็บโดน throttle
+    /* 🏟️ รอบ 640: ระบบหลายสนาม (โหมดไหนก็ได้ในไฟล์นี้) */
+    netJoinAs(md){ if(md){ mode=md; M=MODES[md]||M; } netJoin(); }, netLeave, netUp,
+    get room(){ return room; },
+    get crowd(){ return {peers:Object.keys(peers).length, roomIdx:room?room.room:-1,
+      full:room?room.full:false, legacy:room?room.legacy:false, joined:room?room.joined:false,
+      gap:room?room.sendGap:0}; },
     showIntro, introSeen, get introEl(){return introEl}, get wordLog(){return sessionWordLog}, knockedOut,
     give(ch,n){ inv[ch]=(inv[ch]||0)+(n||1); renderHudInv(); renderHudWords(); tryCompleteWords(); },
     get heli(){ return {vel:hVel, landed:hLanded, col:hCol, buildings, floorAt:heliFloorAt,

@@ -79,7 +79,8 @@ let startX=0,startZ=0,startYaw=0;
 let vehicle='moto';                        // 🚗 รอบ 317: 'moto' = มอเตอร์ไซค์ (ตั๋วมอไซค์) · 'car' = ผู้เล่นโลกขับรถมาร่วมแผนที่นี้
 let selfCar=null;                          // โมเดลรถยนต์ของเราเอง (โหมด car — แทนสไปรต์มอไซค์)
 let coins=[], coinTex=null, specialDone=false, cleanWord=true;   // 🍀 cleanWord = คำนี้ยังไม่ชนอะไรเลย (ชนหมา/ลงหลุมแรง = false)   // 🪙 เหรียญที่วางอยู่ตอนนี้ (ผูกกับตัวอักษร) + วางเหรียญพิเศษของคำนี้แล้วหรือยัง
-let worldRef=null,myRef=null,peers={},lastNetSend=0,netOk=true,netAvOk=true,spawnFixAt=0;   // 🧑‍🤝‍🧑 เพื่อนในแผนที่เดียวกัน
+let room=null,peers={},lastNetSend=0,netAvOk=true,spawnFixAt=0;   // 🧑‍🤝‍🧑 เพื่อนในแผนที่เดียวกัน (🏟️ รอบ 640: room = ตัวจัดการสนามจาก js/netroom.js)
+let budgetAt=0;                            // 🏟️ รอบ 640: จังหวะคิดงบวาดตัวเพื่อน
 let boardEl=null,boardSig='';              // 🏆 รอบ 318: กระดานคะแนนสด (วาดใหม่เมื่อข้อมูลเปลี่ยนจริงเท่านั้น)
 let chatBtn=null,chatBarEl=null,selfMsgEl=null,myChat=null;   // 💬 รอบ 318: แชทลอยหัวข้อความสำเร็จรูป
 let keydownFn=null,keyupFn=null,resizeFn=null;
@@ -385,6 +386,8 @@ function buildDom(){
   introEl=document.getElementById('moto-intro'); exitBox=document.getElementById('moto-exitbox');
   /* 🏆💬 รอบ 318: กระดานคะแนน + แชทข้อความสำเร็จรูป */
   boardEl=document.getElementById('moto-board');
+  /* 🏟️ รอบ 640: ปุ่ม “ไปหาเพื่อน” ฝังในป้ายสถานะสนาม (NetRoom วาด HTML ให้) */
+  if(boardEl) boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
   chatBtn=document.getElementById('moto-chat'); chatBarEl=document.getElementById('moto-chatbar');
   selfMsgEl=document.getElementById('moto-selfmsg');
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button type="button">${escapeHTML(t)}</button>`).join('');
@@ -1306,36 +1309,35 @@ function mCarCode(){
    ============================================================ */
 function netReady(){
   return typeof Online!=='undefined' && Online.ready && Online.db
-      && typeof Auth!=='undefined' && Auth.user && typeof onlineKey==='function' && typeof firebase!=='undefined';
+      && typeof Auth!=='undefined' && Auth.user && typeof onlineKey==='function' && typeof firebase!=='undefined'
+      && typeof NetRoom!=='undefined';
 }
+/* 🏟️ รอบ 640: เข้า-ออกสนาม/นับหัว/กันล้น/กวาดผี อยู่ใน js/netroom.js แล้ว (ใช้ร่วมทุกโลก 3D) */
 function netJoin(){
   if(!netReady()) return;
-  try{
-    netOk=true; netAvOk=true;
-    worldRef=Online.db.ref('world/moto');
-    myRef=worldRef.child(onlineKey());
-    myRef.onDisconnect().remove();
-    lastNetSend=0; netSend(true);
-    worldRef.on('child_added',onPeer);
-    worldRef.on('child_changed',onPeer);
-    worldRef.on('child_removed',s=>dropPeer(s.key));
-  }catch(e){ worldRef=null; myRef=null; }
+  netAvOk=true;
+  room=NetRoom.create({
+    map:'moto', sendMs:NET_SEND_MS,
+    push(){ lastNetSend=0; netSend(true); },
+    onPeer:onPeer, onPeerGone:dropPeer,
+    onStatus(){ renderBoard(); },
+    toast(html,ms){ if(banEl){ banEl.innerHTML=html; banEl.classList.add('show');
+      clearTimeout(banEl._nrTm); banEl._nrTm=setTimeout(()=>banEl.classList.remove('show'),ms||2200); } },
+  });
+  room.join();
 }
 function netSend(force){
-  if(!myRef||!netOk) return;
+  if(!room||!room.online) return;
   const now=performance.now();
-  if(!force && now-lastNetSend<NET_SEND_MS) return;
+  if(!force && now-lastNetSend<room.sendGap) return;   // 🧯 คนยิ่งเยอะยิ่งส่งห่างลง (NetRoom คำนวณให้)
   lastNetSend=now;
   const payload={ n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ผู้เล่น'),
     x:Math.round(px*10)/10, z:Math.round(pz*10)/10, yaw:Math.round(yaw*100)/100,
-    w:sessionWords, ts:firebase.database.ServerValue.TIMESTAMP };
+    w:sessionWords };   /* 🏟️ รอบ 640: ไม่ต้องแนบ ts — NetRoom แยกร้อน/เย็นแล้วเต้นหัวใจให้เอง */
   if(netAvOk) payload.av=vehicle==='car'?('car'+mCarCode()):vehicle;   // 🚗 รอบ 394: 'carc05' — เพื่อนเห็นรถโมเดลสีตรงคันเรา
   /* 💬 รอบ 318: แนบข้อความลอยหัวระหว่างยังสด (ct คงที่ต่อข้อความ — ฝั่งรับใช้แยกข้อความใหม่/เก่า) */
   if(myChat && Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
-  myRef.set(payload).catch(()=>{
-    if(payload.av!==undefined){ netAvOk=false; delete payload.av; myRef.set(payload).catch(()=>{ netOk=false; }); }
-    else netOk=false;
-  });
+  room.send(payload,force);
 }
 /* 💬 ส่งข้อความสำเร็จรูป (ไม่ใช่ช่องพิมพ์ → ไม่มีคำหยาบให้กรอง) + โชว์ของตัวเองมุมล่างจอ */
 function sendChat(text){
@@ -1365,18 +1367,21 @@ function removePeerBubble(p){
 function renderBoard(){
   if(!boardEl) return;
   const uids=Object.keys(peers);
-  if(!uids.length){ boardEl.classList.remove('on'); boardSig=''; return; }
+  /* 🏟️ รอบ 640: ป้ายสถานะสนาม (เด็กต้องรู้ว่าตัวเองอยู่สนามไหน มีกี่คน) — โชว์แม้ยังไม่มีเพื่อน */
+  const note=room ? room.statusText(innerHeight<430,drawnPeers()) : '';
+  if(!uids.length&&!note){ boardEl.classList.remove('on'); boardSig=''; return; }
   const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ฉัน';
   const me={n:myName,w:sessionWords,me:true,v:vehicle};
   const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind}))
     .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
-  const sig=rows.map(r=>r.n+':'+r.w+':'+r.v).join('|');
+  const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.v).join('|');
   if(sig===boardSig){ boardEl.classList.add('on'); return; }
   boardSig=sig;
   boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
     `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
     `<span class="m-bd-n">${r.v==='car'?'🚗':'🏍️'} ${escapeHTML(r.n)}</span>`+
-    `<span class="m-bd-w">${r.w}</span></div>`).join('');
+    `<span class="m-bd-w">${r.w}</span></div>`).join('')
+    +(note?`<div class="m-bd-c" style="padding:4px 6px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
   boardEl.classList.add('on');
 }
 function peerColor(uid){
@@ -1404,10 +1409,10 @@ function buildPeer(uid,p,kind,cid){
   p.grp.position.set(p.cur.x,0,p.cur.z); p.grp.rotation.y=p.yawCur;
   scene.add(p.grp); p.kind=kind; p.cid=cid||null;
 }
-function onPeer(snap){
-  const uid=snap.key;
+/* 🏟️ รอบ 640: NetRoom ส่ง (uid, payload ชื่อฟิลด์เดิม) มาให้ตรง ๆ — โค้ดข้างล่างไม่ต้องแก้ */
+function onPeer(uid,d){
   if(typeof onlineKey==='function' && uid===onlineKey()) return;
-  const d=snap.val()||{};
+  d=d||{};
   if(typeof d.x!=='number'||typeof d.z!=='number') return;
   // 🚗 รอบ 394: av 'carc05' = รถยนต์+รุ่นรถ (ของเดิม 'car' เฉยๆ ก็ยังรองรับ)
   const av=String(d.av||'');
@@ -1418,12 +1423,15 @@ function onPeer(snap){
     p=peers[uid]={grp:null,kind:'',cur:{x:d.x,z:d.z},tgt:{x:d.x,z:d.z},
                   yawCur:(typeof d.yaw==='number'?d.yaw:0),yawTgt:(typeof d.yaw==='number'?d.yaw:0),
                   n:String(d.n||'เพื่อน').slice(0,24)};
-    buildPeer(uid,p,kind,cid);
-    if(banEl){
+    p.wantKind=kind; p.wantCid=cid||null; p.seen=performance.now();
+    if(drawSlotFree()) buildPeer(uid,p,kind,cid);   // 🏟️ รอบ 640: เกินงบวาด = เก็บแค่ข้อมูล (กระดานคะแนนยังเห็น)
+    if(banEl && Object.keys(peers).length<=JOIN_TOAST_MAX){
       banEl.innerHTML=`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> มาขับ${kind==='car'?'รถยนต์ 🚗':'มอเตอร์ไซค์ 🏍️'}ด้วย!`;
       banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),1900);
     }
-  }else if(p.kind!==kind||p.cid!==(cid||null)){ if(p.bubble) removePeerBubble(p); buildPeer(uid,p,kind,cid); }   // สลับพาหนะ/เปลี่ยนคันกลางทาง → เปลี่ยนโมเดล
+  }else if(p.wantKind!==kind||p.wantCid!==(cid||null)){ p.wantKind=kind; p.wantCid=cid||null;
+    if(p.grp){ if(p.bubble) removePeerBubble(p); buildPeer(uid,p,kind,cid); } }   // สลับพาหนะ/เปลี่ยนคันกลางทาง → เปลี่ยนโมเดล
+  p.seen=performance.now();
   p.tgt={x:d.x,z:d.z};
   if(typeof d.yaw==='number') p.yawTgt=d.yaw;
   /* 🏆 คะแนน (จำนวนคำรอบนี้) เปลี่ยน → วาดกระดานใหม่ */
@@ -1432,7 +1440,9 @@ function onPeer(snap){
   renderBoard();
   /* 💬 ct เปลี่ยน = ข้อความใหม่ (ct คงที่ต่อข้อความ ฝั่งส่งแนบซ้ำได้ไม่เด้งซ้ำ) */
   if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){
-    p.lastCt=d.ct; showPeerBubble(p,d.c);
+    p.lastCt=d.ct;
+    /* 🏟️ รอบ 640: คนที่ยังไม่ถูกวาด (เกินงบ) ไม่มี grp ให้แปะป้าย — เก็บไว้โผล่ตอนเข้าใกล้ */
+    if(p.grp) showPeerBubble(p,d.c); else { p.pendChat=d.c; p.pendAt=performance.now(); }
   }
 }
 function dropPeer(uid){
@@ -1443,12 +1453,14 @@ function dropPeer(uid){
   renderBoard();
 }
 function netLeave(){
-  if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
-  if(myRef){ try{ myRef.remove().catch(()=>{}); }catch(e){} }
+  if(room){ room.leave(); room=null; }        // 🏟️ รอบ 640: ปิด listener + ลบตัวเองออกจากสนาม ครบในตัว
   Object.keys(peers).forEach(dropPeer);
-  worldRef=null; myRef=null;
+  budgetAt=0;
 }
-function peerTick(dt){
+function peerTick(dt,now){
+  const t=now||performance.now();
+  if(room) room.tick(t);                                   // 🏟️ รอบ 640: หาสนาม/กวาดผี/ตรวจที่นั่ง
+  if(t>budgetAt){ budgetAt=t+900; tickDrawBudget(); }       // 🏟️ งบวาดตัวเพื่อน
   const k=Math.min(1,dt*6);
   for(const uid in peers){
     const p=peers[uid]; if(!p.grp) continue;
@@ -1467,6 +1479,33 @@ function peerTick(dt){
       cu.steerW.forEach(h=>{ h.rotation.y=p.stV; });
     }
   }
+}
+/* ============================================================
+   🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
+   รับข้อมูลครบทุกคน (กระดานคะแนนเห็นหมด) แต่วาดโมเดลรถ/มอไซค์ + ป้ายชื่อ
+   เฉพาะเพื่อนที่ใกล้ตัวที่สุด PEER_DRAW_MAX คน — กันเฟรมตกบนมือถือเด็กตอนสนามแน่น
+   ============================================================ */
+const PEER_DRAW_MAX=8, PEER_DRAW_SLACK=2, DRAW_SWAP_MARGIN=0.8, JOIN_TOAST_MAX=6;
+function drawnPeers(){ let n=0; for(const u in peers) if(peers[u].grp) n++; return n; }
+function drawSlotFree(){ return drawnPeers()<PEER_DRAW_MAX; }
+function showPeerAgain(uid,p){
+  /* ⚠️ peerTick ข้ามคนที่ไม่มี grp → p.cur ค้างจุดเก่า ถ้าไม่สแนปก่อนสร้าง รถเพื่อนจะ "ไถ" มาจากที่เดิม */
+  p.cur={x:p.tgt.x,z:p.tgt.z}; p.yawCur=p.yawTgt;
+  buildPeer(uid,p,p.wantKind||p.kind||'moto',p.wantCid||p.cid);
+  if(p.pendChat && performance.now()-(p.pendAt||0)<CHAT_MS) showPeerBubble(p,p.pendChat);
+  p.pendChat=null;
+}
+function hidePeer(p){
+  removePeerBubble(p);
+  if(p.grp) scene.remove(p.grp);
+  p.grp=null;
+}
+function tickDrawBudget(){
+  NetRoom.drawBudget({
+    peers, max:PEER_DRAW_MAX, slack:PEER_DRAW_SLACK, margin:DRAW_SWAP_MARGIN,
+    dist:(u,p)=>Math.hypot(p.tgt.x-px,p.tgt.z-pz),
+    isDrawn:p=>!!p.grp, show:showPeerAgain, hide:(u,p)=>hidePeer(p),
+  });
 }
 /* 🅿️ จุดเกิดหน้าโรงเรียน — เกิดใกล้กันแต่ห้ามซ้อนทับ (ไล่ช่องถอยหลังตามแนวถนน สลับซ้าย/ขวาเลน) */
 function spawnSlot(){
@@ -1800,7 +1839,7 @@ function frame(dt,now){
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
   collectTick(); relocTick(now); dogTick(dt,now); coinTick(dt,now); gpsTick(); miniTick();
-  peerTick(dt); netSend(false);                       // 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน
+  peerTick(dt,now); netSend(false);                       // 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน
   /* 🅿️ เช็กจุดเกิดซ้ำอีกรอบหลังรู้จักเพื่อนครบ (~1.2 วิ) — ถ้ายังไม่ออกรถแล้วมีคนทับ ขยับไปช่องว่าง */
   if(spawnFixAt && now>spawnFixAt){
     spawnFixAt=0;
@@ -1961,7 +2000,12 @@ window.MotoWorld={
     get coinTiers(){ const n=[0,0,0,0]; coins.forEach(c=>n[c.tier]++); return n; },
     placeSpecialCoin, get specialDone(){ return specialDone; },
     get myChat(){ return myChat; },
-    fakePeer(uid,x,z,kind,extra){ onPeer({key:uid,val:()=>Object.assign({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'},extra||{})}); return peers[uid]; },
+    fakePeer(uid,x,z,kind,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0,av:kind||'car'},extra||{})); return peers[uid]; },
+    /* 🏟️ รอบ 640: ระบบหลายสนาม */
+    netJoin, netLeave, drawnPeers, tickDrawBudget, get room(){ return room; },
+    get crowd(){ return {peers:Object.keys(peers).length, drawn:drawnPeers(),
+      roomIdx:room?room.room:-1, full:room?room.full:false, legacy:room?room.legacy:false,
+      joined:room?room.joined:false, gap:room?room.sendGap:0, drawMax:PEER_DRAW_MAX}; },
     get start(){ return {x:startX,z:startZ,yaw:startYaw}; },
   }
 };

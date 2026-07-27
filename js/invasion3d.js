@@ -1122,7 +1122,9 @@ function buildDom(){
     }
   }
   boardEl=document.getElementById('inv-board'); canopyEl=document.getElementById('inv-canopy');
-  loadCockpitImg();                                        // 🎛️ รอบ 532: ภาพห้องนักบินจริง + canvas เข็มเกจ
+  /* 🏟️ รอบ 640: ปุ่ม "ไปหาเพื่อน" ฝังอยู่ในป้ายสถานะสนาม (NetRoom วาด HTML ให้) — ดักคลิกครั้งเดียวพอ */
+  if(boardEl) boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
+  loadCockpitImg();                                      // 🎛️ รอบ 532: ภาพห้องนักบินจริง + canvas เข็มเกจ
   seatBtn=document.getElementById('inv-seat'); startEl=document.getElementById('inv-start');
   seatBtn.addEventListener('click',()=>{
     if(riding){ setRideView(!rideExt); return; }           // 🎖️ รอบ 539: พลปืน = สลับประตูลำ ↔ ภายนอก
@@ -1831,7 +1833,7 @@ let keydownFn,keyupFn,resizeFn;
 /* 🚁 สถานะขับเฮลิเอง */
 let inHeli=false, phVel={x:0,y:0,z:0}, phClimb=0, hLanded=false, phMisLeft=PH_MIS_MAX, phMisReloadAt=0;
 /* 🌐 ผู้เล่นออนไลน์ */
-let peers={}, worldRef=null, myRef=null, netOk=false, lastNetSend=0, myChat=null;
+let peers={}, room=null, lastNetSend=0, myChat=null;   // 🏟️ รอบ 640: room = ตัวจัดการสนามจาก js/netroom.js (แทน worldRef/myRef/netOk เดิม)
 /* 🤝 รอบ 417: สมรภูมิร่วม — ทุกคนสู้ "ยานแม่ลำเดียวกัน" เห็นตรงกันทุกเครื่อง
    วิธี (ไม่ต้องแก้ rules เลย ใช้ field เดิม cw/hp ที่อนุญาตอยู่แล้ว):
      · หัวหน้าห้อง (uid น้อยสุด) ประกาศคำ+เลขรอบใน `cw` = "en|th|round"
@@ -7193,33 +7195,25 @@ function syncBotHelis(){
    ============================================================ */
 function netReady(){
   return typeof Online!=='undefined' && Online.ready && Online.db
-      && typeof onlineKey==='function' && typeof firebase!=='undefined';
+      && typeof onlineKey==='function' && typeof firebase!=='undefined' && typeof NetRoom!=='undefined';
 }
+/* 🏟️ รอบ 640: การเข้า-ออกสนาม/นับหัว/กันล้น/กวาดผี ย้ายไปอยู่ js/netroom.js หมดแล้ว
+   ไฟล์นี้เหลือหน้าที่เดียว = "สร้าง payload ของโลกยานแม่ + วาดตัวเพื่อน" */
 function netJoin(){
   if(!netReady()) return;
-  try{
-    worldRef=Online.db.ref('world/invasion');
-    tryEnterRoom(true);            // 🧯 รอบ 637: นับหัวก่อน — เต็มแล้วไม่เข้าไปเบียด (ดูโซนกันคนล้น)
-  }catch(e){ worldRef=null; myRef=null; }
-}
-/* เข้าห้องจริง (ต่อ listener + เริ่มส่งตำแหน่ง) — เรียกจาก tryEnterRoom เท่านั้น */
-function roomAttach(){
-  if(!worldRef||myRef) return;
-  try{
-    netOk=true; roomFull=false;
-    myRef=worldRef.child(onlineKey());
-    myRef.onDisconnect().remove();
-    lastNetSend=0; netSend(true);
-    worldRef.on('child_added',onPeer);
-    worldRef.on('child_changed',onPeer);
-    worldRef.on('child_removed',s=>dropPeer(s.key));
-    renderBoard();                 // 🧯 รอบ 637: เข้าห้องได้แล้ว = ปลดป้าย "สนามเต็ม" ทันที ไม่ต้องรอเพื่อนคนแรกอัปเดต
-  }catch(e){ worldRef=null; myRef=null; }
+  room=NetRoom.create({
+    map:'invasion', sendMs:NET_SEND_MS,
+    push(){ lastNetSend=0; netSend(true); },
+    onPeer:onPeer, onPeerGone:dropPeer,
+    onStatus(){ renderBoard(); },      // เข้าสนาม/เต็ม/คนเปลี่ยน → ป้ายบนกระดานคะแนนอัปเดตทันที
+    toast(html,ms){ toastBan(html,ms); },
+  });
+  room.join();
 }
 function netSend(force){
-  if(!myRef||!netOk) return;
+  if(!room||!room.online) return;
   const now=performance.now();
-  if(!force && now-lastNetSend<netSendGap()) return;   // 🧯 รอบ 637: คนยิ่งเยอะยิ่งส่งห่างลง
+  if(!force && now-lastNetSend<room.sendGap) return;   // 🧯 คนยิ่งเยอะยิ่งส่งห่างลง (NetRoom คำนวณให้)
   lastNetSend=now;
   const payload={ n:((typeof onlineDisplayName==='function'&&onlineDisplayName())||'ผู้เล่น'),
     x:Math.round(px*10)/10, z:Math.round(pz*10)/10, y:Math.round(py*10)/10,
@@ -7228,14 +7222,15 @@ function netSend(force){
        รูปแบบ: foot|gun|heli + '-' + (r=ไรเฟิล / s=สไนเปอร์) + (f=กำลังยิง / .=ไม่ยิง)
        เครื่องรุ่นเก่าที่ยังไม่อัปเดตจะอ่านไม่ออก → ตกไปเป็น 'foot' ตามเดิม ไม่พัง */
     yaw:Math.round(yaw*100)/100, w:sessionWords,
-    av:(riding?'gun':(inHeli?'heli':'foot'))+'-'+(weapon==='r93'?'s':'r')+((firing||performance.now()-lastFire<180)?'f':'.'),
-    ts:firebase.database.ServerValue.TIMESTAMP };
+    av:(riding?'gun':(inHeli?'heli':'foot'))+'-'+(weapon==='r93'?'s':'r')+((firing||performance.now()-lastFire<180)?'f':'.') };
+  /* 🏟️ รอบ 640: ไม่ต้องแนบ ts แล้ว — NetRoom แยก "ร้อน/เย็น" ให้เอง แล้วเต้นหัวใจใน node เย็นทุก 20 วิ
+     (ชื่อเล่น/คะแนน/แชท จึงไม่ถูกส่งซ้ำทุก 170ms อีก = payload เบาลง 42%) */
   if(myChat && Date.now()-myChat.ts<CHAT_MS+1000){ payload.c=myChat.text; payload.ct=myChat.ts; }
   /* 🤝 สมรภูมิร่วม — ใช้ field เดิมที่ rules อนุญาตอยู่แล้ว (ไม่ต้อง publish rules ใหม่)
      cw = คำ+เลขรอบ (เฉพาะหัวหน้าห้องประกาศ) · hp = ผลงานเรา "รอบ|บิตยานลูก|ดาเมจยานแม่" (≤28 ตัวอักษร) */
   if(word && isLeader()) payload.cw=`${word.en}|${word.th}|${battleRound}`.slice(0,60);
   payload.hp=`${battleRound}|${myKill}|0`.slice(0,28);   // 🔤 รอบ 556: ช่องดาเมจเลิกใช้ (คงรูปแบบเดิมให้เครื่องเก่าอ่านได้)
-  myRef.set(payload).catch(()=>{ netOk=false; });
+  room.send(payload,force);
 }
 function peerColor(uid){ let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0; return PEER_COLORS[h%PEER_COLORS.length]; }
 /* ป้ายชื่อลอยหัว */
@@ -7311,10 +7306,11 @@ function buildPeer(uid,p,kind){
   p.grp.position.set(p.cur.x,p.cur.y,p.cur.z); p.grp.rotation.y=p.yawCur;
   scene.add(p.grp); p.kind=kind;
 }
-function onPeer(snap){
-  const uid=snap.key;
+/* 🏟️ รอบ 640: NetRoom ส่ง (uid, payload) มาให้ตรง ๆ — payload ใช้ "ชื่อฟิลด์เดิมทุกตัว"
+   (โมดูลย่อชื่อ/แยกร้อน-เย็นตอนส่งขึ้น DB แล้วประกอบคืนให้ก่อนเรียกที่นี่) โค้ดข้างล่างจึงไม่ต้องแก้เลย */
+function onPeer(uid,d){
   if(typeof onlineKey==='function' && uid===onlineKey()) return;
-  const d=snap.val()||{};
+  d=d||{};
   if(typeof d.x!=='number'||typeof d.z!=='number') return;
   /* 🔫 รอบ 439: av = "kind-<r|s><f|.>" (เครื่องเก่าส่งมาแค่ 'foot'/'gun'/'heli' ก็ยังอ่านได้) */
   const av=String(d.av||'foot');
@@ -7360,11 +7356,9 @@ function dropPeer(uid){
   syncBotHelis();                                     // 🚁 เหลือคนเดียว → ปล่อยบอท 1 ลำเป็นเพื่อน
 }
 function netLeave(){
-  if(worldRef){ worldRef.off('child_added'); worldRef.off('child_changed'); worldRef.off('child_removed'); }
-  if(myRef){ try{ myRef.remove().catch(()=>{}); }catch(e){} }
+  if(room){ room.leave(); room=null; }                // 🏟️ รอบ 640: ปิด listener/ลบตัวเองออกจากสนาม ครบในตัว
   Object.keys(peers).forEach(dropPeer);
-  worldRef=null; myRef=null;
-  resetCrowdGuard();                                  // 🧯 รอบ 637: ออกจากโลก = ไม่มีตัวจับเวลา/สถานะสนามเต็มค้าง
+  resetCrowdGuard();                                  // ล้างตัวจับเวลางบวาดของฝั่งเรนเดอร์
 }
 function peerTick(dt,now){
   const k=Math.min(1,dt*6);
@@ -7405,17 +7399,11 @@ let boardSig='';
 function renderBoard(){
   if(!boardEl) return;
   const uids=Object.keys(peers);
-  /* 🧯 รอบ 637: สนามเต็มอยู่ = ต้องโชว์กระดานทั้งที่ยังไม่มีเพื่อน (ป้ายบอกเหตุผลอยู่ในนั้น) */
-  if(!uids.length&&!roomFull){ boardEl.classList.remove('on'); boardSig=''; return; }
-  const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||'ฉัน';
-  /* 🧯 รอบ 637: บรรทัดล่างสุด = สถานะความหนาแน่นของสนาม (บอกเด็กตรง ๆ ว่าทำไมไม่เห็นเพื่อนครบ) */
-  const inField=uids.length+1, drawn=drawnPeers();
+  /* 🏟️ รอบ 640: อยู่สนามไหนก็ต้องโชว์ป้ายเสมอ (เด็กต้องรู้เลขสนามตัวเอง) — ไม่ใช่โชว์เฉพาะตอนมีเพื่อน */
   const shortScr=innerHeight<430;      // จอเตี้ย = ข้อความสั้นลง (ยาวไปกล่องยืดลงไปทับจอย)
-  const note=roomFull
-    ? (shortScr ? `🧯 สนามเต็ม ${roomCount}/${ROOM_MAX} · เล่นสนามฝึกก่อน`
-                : `🧯 สนามรวมเต็ม ${roomCount}/${ROOM_MAX} คน<br>เล่นสนามฝึกส่วนตัวไปก่อน · รอที่ว่างให้เอง`)
-    : (uids.length>drawn ? (shortScr ? `👥 ${inField} คน · เห็นใกล้ ๆ ${drawn}`
-                                     : `👥 ในสนาม ${inField} คน · เห็นตัวเพื่อนใกล้ ๆ ${drawn} คน`) : '');
+  const note=room ? room.statusText(shortScr,drawnPeers()) : '';
+  if(!uids.length&&!note){ boardEl.classList.remove('on'); boardSig=''; return; }
+  const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||'ฉัน';
   /* จอเตี้ยพื้นที่คอลัมน์ซ้ายจำกัด (อยู่ระหว่างแถบสถานะกับจอย) → โชว์แค่ 3 อันดับ
      🧯 รอบ 637: จอเตี้ย + มีบรรทัดสถานะ = เหลือ 2 อันดับ ไม่งั้นกล่องยาวลงไปทับจอย (วัดจริงที่ 812×375) */
   const maxRows=shortScr?(note?(innerHeight<370?1:2):3):5;
@@ -7450,74 +7438,22 @@ function removePeerBubble(p){
 }
 
 /* ============================================================
-   🧯👥 รอบ 637 (ผู้ใช้สั่ง): กัน "คนเข้าเล่นเยอะเกินกว่าระบบจะรับไหว" — 4 ชั้น ไม่ต้องแก้ rules เลย
-   ① เพดานห้อง ROOM_MAX — ก่อนเขียนตัวเองลง DB "นับหัวก่อน" (`once('value')` ครั้งเดียว ~2KB)
-      เต็ม = ไม่เข้าไปเบียด แต่เด็ก **เล่นต่อได้ทันที** แบบ "สนามฝึกส่วนตัว" (ไม่ส่ง/ไม่รับตำแหน่งใคร)
-      + ป้ายบอกเหตุผลบนกระดานคะแนน (กฎทอง #1) + ลองเข้าใหม่ให้เองทุก ROOM_RETRY_MS จนกว่าจะมีที่ว่าง
-   ② งบวาดตัวเพื่อน PEER_DRAW_MAX — มีกี่คนก็รับข้อมูลครบ (กระดานคะแนนเห็นทุกคน)
-      แต่ "โมเดล 3D + ป้ายชื่อ" วาดเฉพาะเพื่อนที่ใกล้ตัวที่สุด N คน — กันเฟรมตกบนมือถือเด็ก
-      (โมเดลทหาร baked 1 ตัว = GLB + texture · 20 ตัวพร้อมกันคือจุดที่เครื่องเริ่มกระตุก)
-   ③ จังหวะส่งตำแหน่งยืดตามจำนวนคน — ทุก ๆ CROWD_PER คนที่เพิ่มมา ส่งห่างขึ้น 1 เท่า (สูงสุด NET_GAP_MAX)
-      ทราฟฟิกที่ "แต่ละเครื่องต้องรับ" โตแบบ n²/เวลา ถ้าไม่ยืด — ยืดแล้วเพดานอยู่ที่ ~ROOM_MAX²/NET_GAP_MAX
-   ④ กวาด "ผีค้าง" — เครื่องดับ/แอปถูกฆ่าจน onDisconnect ไม่ทำงาน จะค้างเป็นหุ่นนิ่งกินสล็อต
-      ไม่มีอัปเดตเกิน PEER_STALE_MS = เอาออกจากจอเรา · ตอนนับหัวก็ไม่นับคนที่ ts เก่ากว่า ROOM_GHOST_MS
-      (ไม่ลบข้อมูลของคนอื่นบน DB — rules ไม่อนุญาตอยู่แล้ว และไม่ควรทำแทนเจ้าตัว)
+   🧯👥 กันผู้เล่นล้น — ฝั่งเรนเดอร์ของโลกนี้ (รอบ 637 · ยกส่วนกลางออกไป js/netroom.js รอบ 640)
+   ⚠️ ①เพดานสนาม ③จังหวะส่ง ④กวาดผีค้าง ย้ายไปอยู่ใน NetRoom หมดแล้ว — ห้ามเขียนซ้ำที่นี่
+   เหลือไว้ที่นี่แค่ ② "งบวาดตัวเพื่อน" เพราะผูกกับโมเดล 3D ของโลกนี้โดยตรง:
+     มีกี่คนก็รับข้อมูลครบ (กระดานคะแนนเห็นทุกคน) แต่วาดโมเดล+ป้ายชื่อเฉพาะเพื่อนใกล้ตัวที่สุด N คน
+     (โมเดลทหาร baked 1 ตัว = GLB + texture · 20 ตัวพร้อมกันคือจุดที่มือถือเด็กเริ่มกระตุก)
    ============================================================ */
-const ROOM_MAX=16;              // เพดานผู้เล่นจริงต่อสนาม (เกินนี้ = เข้าสนามฝึกส่วนตัวก่อน)
-const ROOM_GHOST_MS=90000;      // ตอนนับหัว: ts เก่ากว่านี้ = ผีค้าง ไม่นับ
-const ROOM_RETRY_MS=20000;      // สนามเต็ม → ลองเข้าใหม่ทุก 20 วิ
 const PEER_DRAW_MAX=8;          // วาดโมเดลเพื่อนพร้อมกันได้มากสุด (เลือกคนใกล้ตัวก่อน)
 const PEER_DRAW_SLACK=2;        // กันสร้าง/ลบสลับไปมาตอนระยะไล่เลี่ยกัน (hysteresis)
 const DRAW_SWAP_MARGIN=0.8;     // คนที่รออยู่ต้องใกล้กว่าคนไกลสุดที่วาดอยู่ ≥20% ถึงจะสลับ
-const PEER_STALE_MS=45000;      // เพื่อนหยุดส่งนานเกินนี้ = ผีค้าง เอาออกจากจอ
 const JOIN_TOAST_MAX=6;         // คนในสนามเยอะกว่านี้ = ไม่เด้ง toast "ใครเข้ามา" อีก
-const CROWD_PER=6, NET_GAP_MAX=3;
-let roomFull=false, roomTryAt=0, roomCount=0;
-let budgetAt=0, sweepAt=0;
+let budgetAt=0;
 
-function peerCount(){ return Object.keys(peers).length; }
 function drawnPeers(){ let n=0; for(const u in peers) if(peers[u].grp) n++; return n; }
 function drawSlotFree(){ return drawnPeers()<PEER_DRAW_MAX; }
-/* ③ จังหวะส่งตำแหน่ง: 1–5 คน=170ms · 6–11 คน=340ms · 12 คนขึ้นไป=510ms */
-function netSendGap(){ return NET_SEND_MS*Math.min(NET_GAP_MAX,1+Math.floor(peerCount()/CROWD_PER)); }
 
-/* ① นับหัวก่อนเข้า — อ่านไม่ได้/พัง = เข้าตามปกติ (ห้ามให้ระบบกันล้นทำให้เล่นออนไลน์ไม่ได้เลย) */
-function tryEnterRoom(first){
-  if(!worldRef||myRef) return;
-  roomTryAt=performance.now();
-  let done=false;
-  const fallback=()=>{ if(done||myRef) return; done=true; roomFull=false; roomAttach(); };
-  try{
-    worldRef.once('value').then(snap=>{
-      if(done||myRef) return;
-      const me=(typeof onlineKey==='function')?onlineKey():'';
-      const v=snap.val()||{}, now=Date.now();
-      let n=0;
-      for(const uid in v){
-        if(uid===me) continue;
-        const ts=v[uid]&&v[uid].ts;
-        if(typeof ts==='number' && now-ts>ROOM_GHOST_MS) continue;   // ผีค้างไม่นับเป็นคน
-        n++;
-      }
-      roomCount=n; done=true;
-      if(n>=ROOM_MAX) enterTrainingField(first);
-      else{
-        const was=roomFull; roomFull=false; roomAttach();
-        if(was) toastBan('✅ <b>มีที่ว่างแล้ว — เข้าสนามรวมให้อัตโนมัติ</b><br><span class="ib-sub">เห็นเพื่อนคนอื่นได้ตามปกติแล้ว</span>',2200);
-      }
-    }).catch(fallback);
-  }catch(e){ fallback(); }
-}
-/* สนามเต็ม → เล่นต่อได้ทันทีแบบส่วนตัว (ไม่เขียน DB = ไม่ไปเพิ่มภาระให้ห้องที่เต็มอยู่แล้ว) */
-function enterTrainingField(first){
-  roomFull=true; netOk=false; myRef=null;
-  Object.keys(peers).forEach(dropPeer);
-  renderBoard();
-  toastBan(`🧯 <b>สนามรวมเต็มแล้ว (${roomCount}/${ROOM_MAX} คน)</b><br><span class="ib-sub">`+
-    (first?'ตอนนี้เล่นใน <b>สนามฝึกส่วนตัว</b> ได้ครบทุกอย่าง แค่ยังไม่เห็นเพื่อน':'ยังไม่มีที่ว่าง — เล่นสนามฝึกส่วนตัวไปก่อน')+
-    ' · ระบบจะพาเข้าสนามรวมให้เองทันทีที่มีคนออก 👌</span>',3200);
-}
-/* ② วาดเฉพาะเพื่อนใกล้ตัว — 2 จังหวะ: เอาคนไกลเกินงบออกก่อน แล้วค่อยเติมคนใกล้ที่ยังไม่ได้วาด */
+/* วาดเฉพาะเพื่อนใกล้ตัว — ตรรกะจัดลำดับ/สลับอยู่ใน NetRoom.drawBudget (ใช้ร่วมทุกโลก) */
 function showPeerAgain(uid,p){
   /* ⚠️ peerTick ข้ามคนที่ไม่มี grp → p.cur ค้างอยู่จุดเก่า ถ้าไม่สแนปก่อนสร้าง ตัวเพื่อนจะ "ไถ" มาจากที่เดิม */
   p.cur={x:p.tgt.x,y:p.tgt.y,z:p.tgt.z}; p.yawCur=p.yawTgt;
@@ -7531,40 +7467,20 @@ function hidePeer(p){
   p.grp=null; p.anim=null;
 }
 function tickDrawBudget(){
-  const uids=Object.keys(peers);
-  if(!uids.length) return;
-  /* ใช้ p.tgt (ตำแหน่งสดจาก DB) ไม่ใช่ p.cur — คนที่ยังไม่ถูกวาดไม่ได้ถูก peerTick ขยับ p.cur เลย */
-  const rank=uids.map(u=>{ const p=peers[u];
-    return {u,p,d:Math.hypot(p.tgt.x-px,p.tgt.z-pz)+((riding&&riding===u)?-1e6:0)}; })   // 🎖️ ลำที่เรานั่งอยู่ = ใกล้ที่สุดเสมอ ห้ามซ่อน
-    .sort((a,b)=>a.d-b.d);
-  /* ก) ไกลเกินงบ+สแล็ก = ซ่อนแน่นอน */
-  for(let i=PEER_DRAW_MAX+PEER_DRAW_SLACK;i<rank.length;i++) if(rank[i].p.grp) hidePeer(rank[i].p);
-  /* ข) มีสล็อตว่าง = เติมคนใกล้สุดที่ยังไม่ได้วาด */
-  for(let i=0;i<rank.length&&drawSlotFree();i++) if(!rank[i].p.grp) showPeerAgain(rank[i].u,rank[i].p);
-  /* ค) เต็มสล็อตแต่มีคน "ใกล้กว่าอย่างมีนัย" รออยู่ → สลับได้ไม่เกิน 2 คนต่อรอบ
-     ใช้มาร์จินระยะ (ไม่ใช่แค่ลำดับ) กันสร้าง-ลบสลับไปมาตอนสองคนวิ่งเคียงกัน */
-  let swaps=0;
-  while(swaps<2){
-    const want=rank.find(r=>!r.p.grp);
-    let far=null; for(const r of rank) if(r.p.grp) far=r;      // rank เรียงใกล้→ไกล ตัวท้ายสุดที่วาดอยู่ = ไกลสุด
-    if(!want||!far||want.d>=far.d*DRAW_SWAP_MARGIN-2) break;
-    hidePeer(far.p); showPeerAgain(want.u,want.p); swaps++;
-  }
+  NetRoom.drawBudget({
+    peers, max:PEER_DRAW_MAX, slack:PEER_DRAW_SLACK, margin:DRAW_SWAP_MARGIN,
+    /* ใช้ p.tgt (ตำแหน่งสดจาก DB) ไม่ใช่ p.cur — คนที่ยังไม่ถูกวาดไม่ได้ถูก peerTick ขยับ p.cur เลย
+       🎖️ ลำที่เรานั่งอยู่ = ใกล้ที่สุดเสมอ ห้ามซ่อน */
+    dist:(u,p)=>Math.hypot(p.tgt.x-px,p.tgt.z-pz)+((riding&&riding===u)?-1e6:0),
+    isDrawn:p=>!!p.grp, show:showPeerAgain, hide:(u,p)=>hidePeer(p),
+  });
 }
-/* ④ กวาดผีค้าง (เครื่องดับกลางคัน — onDisconnect ไม่ทำงาน) */
-function sweepGhostPeers(now){
-  for(const uid in peers) if(now-(peers[uid].seen||0)>PEER_STALE_MS) dropPeer(uid);
-}
-/* เรียกทุกเฟรมจากลูปหลัก — งานจริงเดินตามจังหวะของตัวเอง (900ms / 2s / 20s) */
+/* เรียกทุกเฟรมจากลูปหลัก — NetRoom คุมจังหวะของตัวเอง ส่วนงบวาดเดินทุก 900ms */
 function tickCrowdGuard(now){
-  if(!worldRef) return;
-  if(roomFull && !myRef && now-roomTryAt>ROOM_RETRY_MS) tryEnterRoom(false);
-  if(now>sweepAt){ sweepAt=now+2000; sweepGhostPeers(now); }
+  if(room) room.tick(now);
   if(now>budgetAt){ budgetAt=now+900; tickDrawBudget(); }
 }
-function resetCrowdGuard(){
-  roomFull=false; roomTryAt=0; roomCount=0; budgetAt=0; sweepAt=0;
-}
+function resetCrowdGuard(){ budgetAt=0; }
 /* 👾 ยานลูก: บินวน + สุ่มดิ่ง + ยิงลำแสงนำหน้าผู้เล่นเล็กน้อย (หลบได้) */
 function tickFighters(dt,now){
   fighters.forEach(f=>{
@@ -10008,14 +9924,17 @@ window.InvasionWorld={
     get worldFlashInfo(){ return {i:+worldFlash.intensity.toFixed(2), d:+worldFlash.distance.toFixed(1)}; },
     dropPeer, netReady, sendChat, get board(){return boardEl?boardEl.innerText.replace(/\s+/g,' '):''},
     get flyClass(){return wrapEl.classList.contains('fly')},
-    /* 🧯👥 รอบ 637: ตัวช่วยเทสต์ระบบกันผู้เล่นล้น */
-    onPeer, tickCrowdGuard, tickDrawBudget, sweepGhostPeers, tryEnterRoom, resetCrowdGuard, netJoin, netLeave,
+    /* 🧯👥 รอบ 637 + 🏟️ รอบ 640: ตัวช่วยเทสต์ระบบกันล้น/หลายสนาม */
+    onPeer, tickCrowdGuard, tickDrawBudget, resetCrowdGuard, netJoin, netLeave,
     get allyBots(){return ALLY_BOTS}, get squadN(){return squad.length},
     get drawList(){ return Object.keys(peers).filter(u=>peers[u].grp); },
-    agePeer(uid,ms){ if(peers[uid]) peers[uid].seen=performance.now()-ms; },   /* จำลองผีค้าง */
-    get crowd(){ return {peers:peerCount(), drawn:drawnPeers(), full:roomFull, count:roomCount,
-      gap:netSendGap(), max:ROOM_MAX, drawMax:PEER_DRAW_MAX, joined:!!myRef, netOk:netOk}; },
-    get crowdCfg(){ return {ROOM_MAX,PEER_DRAW_MAX,PEER_DRAW_SLACK,PEER_STALE_MS,ROOM_RETRY_MS,ROOM_GHOST_MS}; },
+    agePeer(uid,ms){ if(peers[uid]) peers[uid].seen=performance.now()-ms; },   /* จำลองผีค้าง (ฝั่งเรนเดอร์) */
+    get room(){ return room; },
+    get crowd(){ return {peers:Object.keys(peers).length, drawn:drawnPeers(),
+      full:room?room.full:false, count:room?room.count:0, roomIdx:room?room.room:-1,
+      gap:room?room.sendGap:0, legacy:room?room.legacy:false, joined:room?room.joined:false,
+      max:NetRoom.CFG.ROOM_MAX, drawMax:PEER_DRAW_MAX}; },
+    get crowdCfg(){ return Object.assign({PEER_DRAW_MAX,PEER_DRAW_SLACK,DRAW_SWAP_MARGIN},NetRoom.CFG); },
   }
 };
 })();
