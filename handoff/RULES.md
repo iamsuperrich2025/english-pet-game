@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `wroom` + `winfo` (รอบ 640 · 🏟️ ระบบหลายสนาม room sharding ทุกโลก 3D)** — `/wroom/<map>/<room>/<uid>` = ตำแหน่งสด (ข้อมูลร้อน ส่งถี่) · `/winfo/<map>/<room>/<uid>` = ชื่อเล่น/คะแนน/แชท (ข้อมูลเย็น เขียนเฉพาะตอนเปลี่ยน + เต้นหัวใจ 20 วิ) — แยกสองชั้นเพื่อให้ “นับหัวก่อนเข้าสนาม” อ่านแค่ ~1KB ต่อสนาม และ payload เบาลง 42% · `$room` จำกัด `r0`–`r35` (36 สนาม × 14 คน = 504 คน) · enum `$map` เพิ่ม `soccer`/`mecha` ที่ของเดิมตกหล่น · ⚠️ **โซน `/world` เดิมห้ามลบ** — เครื่องที่ยังไม่อัปเดตใช้อยู่ · **ยังไม่ publish = เกมไม่พัง:** เขียน `/wroom` โดน deny → `goLegacy()` ตกกลับไปเล่น “สนามเดียว” บน `/world` แบบเดิมอัตโนมัติ (เพดาน 14 คน แบบรอบ 637) · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/935970e1-029a-49db-8902-ffe64616ca8c
 - ⏳ **รอ publish: โซนใหม่ `gfeed` (รอบ 639 · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์)** — `/gfeed/<postId>` = โพสต์กิจกรรมรวมทุกคน (ไม่ใช่แค่คนที่ follow) พร้อม `lk/<uid>` (ไลก์) และ `cm/<cid>` (คอมเมนต์) ซ้อนอยู่ใต้โพสต์เดียวกัน · **ไลก์/คอมเมนต์เขียนได้เฉพาะเจ้าของโพสต์เอง หรือคนที่เป็นเพื่อนกับเจ้าของโพสต์** (เช็กจาก `/friends` จริงฝั่ง rules ไม่ใช่แค่ client) — คนแปลกหน้าอ่านโพสต์ได้ปกติแต่กดไลก์/คอมเมนต์ไม่ได้ (ตามที่ผู้ใช้เลือก 28 ก.ค. 2026 เพื่อความปลอดภัยเด็ก) · `.indexOn:"u"` ไว้ให้ client กวาดโพสต์เก่าของตัวเองทิ้งเมื่อเกิน `GFEED_KEEP_ME`(10 โพสต์/คน) · **ยังไม่ publish = เกมไม่พัง:** เขียน/ไลก์/คอมเมนต์โดน deny เงียบๆ → หน้า Feed เปิดได้ปกติ (เห็น "ใครออนไลน์ทำอะไรอยู่" จาก `/presence` เดิมที่ publish แล้ว) แต่ยังไม่เห็นโพสต์กิจกรรมของคนอื่น/กดไลก์-คอมเมนต์ไม่ได้จนกว่าจะ publish · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/c0269b97-69dd-4677-9889-9c5d524383af
 - ✅ **รอบ 631 (👥 โทรกลุ่ม 3 คน: `/calls` เพิ่ม `r`/`g` + `k` รับ `nofr`/`full` · 🔒 ลบวิดีโอคอลทั้งระบบ) — ผู้ใช้ publish แล้ว 28 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว:** อ่าน `/.settings/rules` สด → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 22 โซน** · `r` ≤128 · `g` ≤400 · `k` enum มี `nofr`/`full` จริง → **ระบบโทรกลุ่มใช้งานได้เต็มระบบ** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/e018942d-52ae-4908-88c8-b8da6d604b22
 - ✅ **รอบ 625 (โซนใหม่ `calls` + `'chat'` ใน enum `/rtc` · 📞 โทรหาเพื่อน voice/video) — ผู้ใช้ publish แล้ว 27 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว:** อ่าน `/.settings/rules` สด → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 22 โซน** · มี `/calls` จริง · `$map === 'chat'` เข้า enum จริง · `d` ≤ 20000 จริง → **ระบบโทรใช้งานได้เต็มระบบแล้ว** (เหลือทดสอบจริง 2 บัญชี/2 เครื่อง) · เดิม: `/calls/<toUid>/<fromUid>` = `{k, n, m, ts}` (k = `ring`/`ok`/`no`/`busy`/`end` · m = `voice`/`video` · n = ชื่อผู้โทร ≤40) · **อ่านได้เฉพาะเจ้าของกล่อง** (`auth.uid === $toUid`) · เขียนได้เฉพาะผู้โทร (node ชื่อ uid ตัวเอง) หรือเจ้าของกล่อง (ไว้ล้างกริ่งที่จัดการแล้ว) · **`/rtc`: เพิ่ม `$map === 'chat'`** (ท่อ SDP/ICE ของสาย ใช้โครงเดิมของ voice chat ในโลก 3D) + ขยาย `d` จาก 8000 → **20000 ตัวอักษร** (SDP ของวิดีโอยาวกว่าเสียงล้วน)
@@ -189,6 +190,50 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "tl":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2" },
           "hp":  { ".validate": "newData.isString() && newData.val().length <= 28" },
           "$other": { ".validate": false }
+        }
+      }
+    },
+    "wroom": {
+      "$map": {
+        ".read": "auth != null",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha'",
+        "$room": {
+          ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['x','z'])",
+            "x":  { ".validate": "newData.isNumber()" },
+            "z":  { ".validate": "newData.isNumber()" },
+            "y":  { ".validate": "newData.isNumber()" },
+            "r":  { ".validate": "newData.isNumber()" },
+            "a":  { ".validate": "newData.isString() && newData.val().length <= 12" },
+            "m":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1" },
+            "l":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 2" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        }
+      }
+    },
+    "winfo": {
+      "$map": {
+        ".read": "auth != null",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha'",
+        "$room": {
+          ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.hasChildren(['t'])",
+            "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "w":  { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "c":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 60" },
+            "k":  { ".validate": "newData.isNumber()" },
+            "q":  { ".validate": "newData.isString() && newData.val().length <= 60" },
+            "h":  { ".validate": "newData.isString() && newData.val().length <= 28" },
+            "j":  { ".validate": "newData.isNumber()" },
+            "t":  { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
         }
       }
     },
