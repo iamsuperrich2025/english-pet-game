@@ -677,15 +677,20 @@ function randomRoadPoint(cx,cz,rMin,rMax){
 /* ============================================================
    ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
    ============================================================ */
-function makeTextSprite(text,bg,fg,emoji){
-  const cv=document.createElement('canvas'); cv.width=512; cv.height=128;
+/* 🎖️ รอบ 646: grade = ระดับชั้นเพื่อน → ดาว/เพชรใต้ชื่อ (ป้ายสูงขึ้น 48px · ผู้เรียกปรับ scale.y ด้วย TXT_SPR_H)
+   ป้ายอื่น (ป้ายโรงเรียน ฯลฯ) ไม่ส่ง grade มา = ผืนเท่าเดิมเป๊ะ */
+const TXT_SPR_H=(grade)=>((typeof gradeSymbol==='function' && gradeSymbol(grade))?176:128);
+function makeTextSprite(text,bg,fg,emoji,grade){
+  const H=TXT_SPR_H(grade), hasG=H>128;
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=H;
   const c=cv.getContext('2d');
   c.font='900 44px system-ui, sans-serif';
   const tw=Math.min(490,c.measureText((emoji?emoji+' ':'')+text).width+46);
-  c.beginPath(); c.roundRect((512-tw)/2,14,tw,100,44);
+  c.beginPath(); c.roundRect((512-tw)/2,14,tw,H-28,44);
   c.fillStyle=bg; c.fill(); c.lineWidth=7; c.strokeStyle='#ffffff'; c.stroke();
   c.fillStyle=fg; c.textAlign='center'; c.textBaseline='middle';
-  c.fillText((emoji?emoji+' ':'')+text,256,68,470);
+  c.fillText((emoji?emoji+' ':'')+text,256,hasG?62:68,470);
+  if(hasG) gradeMarkCanvas(c,grade,256,126,40);
   const t=new THREE.CanvasTexture(cv);
   const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));
   return sp;
@@ -1380,15 +1385,17 @@ function renderBoard(){
   const note=room ? room.statusText(innerHeight<430,drawnPeers()) : '';
   if(!uids.length&&!note){ boardEl.classList.remove('on'); boardSig=''; return; }
   const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ฉัน';
-  const me={n:myName,w:sessionWords,me:true,v:vehicle};
-  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind}))
+  /* 🎖️ รอบ 646: ระดับชั้นต่อท้ายชื่อในกระดาน (ใต้ชื่ออยู่ที่ป้ายลอยเหนือหัว — แถวนี้ nowrap) */
+  const me={n:myName,w:sessionWords,me:true,v:vehicle,g:(typeof state!=='undefined'&&state.student&&state.student.grade)||''};
+  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind,
+      g:peers[u].grade||((typeof gradeOf==='function')?gradeOf(u):'')}))
     .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
-  const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.v).join('|');
+  const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.v+':'+r.g).join('|');
   if(sig===boardSig){ boardEl.classList.add('on'); return; }
   boardSig=sig;
   boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
     `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
-    `<span class="m-bd-n">${r.v==='car'?'🚗':'🏍️'} ${escapeHTML(r.n)}</span>`+
+    `<span class="m-bd-n">${r.v==='car'?'🚗':'🏍️'} ${escapeHTML(r.n)}${gradeMark(r.g)}</span>`+
     `<span class="m-bd-w">${r.w}</span></div>`).join('')
     +(note?`<div class="m-bd-c" style="padding:4px 6px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
   boardEl.classList.add('on');
@@ -1413,8 +1420,10 @@ function buildPeer(uid,p,kind,cid){
       });
     }
   }
-  const nm=makeTextSprite(p.n,'rgba(16,26,44,.82)','#ffffff',kind==='car'?'🚗':'🏍️');
-  nm.scale.set(8,2,1); nm.position.y=kind==='car'?3.2:3.4; p.grp.add(nm);
+  const pg=(typeof gradeOf==='function')?gradeOf(uid,p.g):'';   // 🎖️ รอบ 646: ชั้นจาก presence ที่โหลดไว้แล้ว
+  const nm=makeTextSprite(p.n,'rgba(16,26,44,.82)','#ffffff',kind==='car'?'🚗':'🏍️',pg);
+  nm.scale.set(8,8*TXT_SPR_H(pg)/512,1); nm.position.y=kind==='car'?3.2:3.4; p.grp.add(nm);
+  p.grade=pg;
   p.grp.position.set(p.cur.x,0,p.cur.z); p.grp.rotation.y=p.yawCur;
   scene.add(p.grp); p.kind=kind; p.cid=cid||null;
 }

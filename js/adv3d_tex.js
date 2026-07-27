@@ -185,27 +185,31 @@ function buildingFacadeTexture(n){
 
 /* ป้ายผู้เล่นคนอื่น: ชื่อ + ภาพตัวละคร (player_male/female.png ถ้ามี · ไม่มีใช้อีโมจิ)
    โหมดเฮลิคอปเตอร์: เพื่อนเป็น 🚁 บินอยู่ (ตำแหน่ง+ความสูงจริงจาก /world) */
-function makePeerSprite(name, av, M){
+/* 🎖️ รอบ 644: grade = ระดับชั้นของเพื่อน → วาดดาว/เพชรใต้ชื่อในป้าย (กล่องยืดลง 16px ตอนมี) */
+function makePeerSprite(name, av, M, grade){
   const cv=document.createElement('canvas'); cv.width=128; cv.height=170;
   const tex=new THREE.CanvasTexture(cv);
   const flyMode=M.heli||M.drone;
+  const hasG=!!(typeof gradeSymbol==='function' && gradeSymbol(grade));
+  const boxH=hasG?46:30, bodyY=hasG?52:36;          // สูงกล่องป้าย · ตำแหน่งเริ่มรูป/อีโมจิใต้ป้าย
   const draw=(img)=>{
     const c=cv.getContext('2d');
     c.clearRect(0,0,128,170);
     c.fillStyle='rgba(0,0,0,.55)';
-    c.beginPath(); c.roundRect(4,2,120,30,12); c.fill();
+    c.beginPath(); c.roundRect(4,2,120,boxH,12); c.fill();
     c.fillStyle='#fff'; c.font='bold 19px Arial'; c.textAlign='center'; c.textBaseline='middle';
     let nm=(name||'เพื่อน'); if(nm.length>9) nm=nm.slice(0,8)+'…';
-    c.fillText(nm,64,18);
+    c.fillText(nm,64,hasG?16:18);
+    if(hasG) gradeMarkCanvas(c,grade,64,36,15);
     if(flyMode){
       // 🚁 รอบ 355: โลกเฮลิฯ อ่านเฟสของเพื่อนจาก av ('h_w'=เดิน 'h_r'=นั่งโดยสาร 'h_g'=วิงสูท 'h_p'=ขับ)
       // 🚁 รอบ 385: เฟสขับ/นั่ง (p/r) ไม่วาด emoji — tickPeers วาดลำโมเดล 3D จริงแทน เหลือแค่ป้ายชื่อลอยเหนือลำ
       const hm={w:'🚶',r:'',g:'🪂',p:'',b:''}, hc=av?av.charAt(2):'';   // b=ขับลำฟ้า (รอบ 392) — วาดลำ 3D แทน emoji
       const em=M.drone?'🛸':(av&&av.slice(0,2)==='h_'?(hc in hm?hm[hc]:'🚁'):'🚁');
-      if(em){ c.font='96px serif'; c.fillText(em,64,105); }
+      if(em){ c.font='96px serif'; c.fillText(em,64,bodyY+69); }
     }
-    else if(img){ c.drawImage(img,14,36,100,130); }
-    else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,105); }
+    else if(img){ c.drawImage(img,14,bodyY,100,166-bodyY); }
+    else{ c.font='90px serif'; c.fillText(av==='male'?'👦':'👧',64,bodyY+69); }
     tex.needsUpdate=true;
   };
   draw(null);

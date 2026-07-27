@@ -510,7 +510,7 @@ const ghostTexture=()=>Adv3dTex.ghostTexture(M.ghostEmoji), ghostScareSrc=Adv3dT
 const adBoardTexture=Adv3dTex.adBoardTexture, ringAds=Adv3dTex.ringAds;
 const _adTexDraws=Adv3dTex.adTexDraws, _adHasImg=Adv3dTex.adHasImg;
 const FACADE_ROWS=Adv3dTex.FACADE_ROWS, buildingFacadeTexture=Adv3dTex.buildingFacadeTexture;
-const makePeerSprite=(name,av)=>Adv3dTex.makePeerSprite(name,av,M);
+const makePeerSprite=(name,av,grade)=>Adv3dTex.makePeerSprite(name,av,M,grade);
 
 /* 🪧 รอบ 362: ระบบเช่าป้ายโฆษณาเมืองเฮลิฯ — จ่าย AD_RENT_COIN จองป้าย 1-10 ชื่อขึ้นบนตึก 7 วัน
    DB /ads/<n>={uid,n,ts} (rules: เขียนได้เมื่อ ว่าง/หมดอายุ/ป้ายตัวเอง — ดู handoff/RULES.md)
@@ -752,20 +752,24 @@ function makeBlockCar(id){
   return g;
 }
 /* ป้ายชื่อลอยหัว (ของเฉพาะ peer — dispose ตอนออก) */
-function blkNameSprite(name){
-  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+/* 🎖️ รอบ 644: grade = ระดับชั้นเพื่อน → ดาว/เพชรใต้ชื่อ (ป้ายสูงขึ้น 24px · scale ปรับตามสัดส่วนผืน) */
+function blkNameSprite(name,grade){
+  const hasG=!!(typeof gradeSymbol==='function' && gradeSymbol(grade));
+  const H=hasG?88:64;
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=H;
   const c=cv.getContext('2d');
-  c.fillStyle='rgba(0,0,0,.55)'; c.beginPath(); c.roundRect(8,6,240,52,20); c.fill();
+  c.fillStyle='rgba(0,0,0,.55)'; c.beginPath(); c.roundRect(8,6,240,H-12,20); c.fill();
   c.fillStyle='#fff'; c.font='bold 28px Arial'; c.textAlign='center'; c.textBaseline='middle';
   let nm=name||'เพื่อน'; if(nm.length>14) nm=nm.slice(0,13)+'…';
-  c.fillText(nm,128,32);
+  c.fillText(nm,128,hasG?30:32);
+  if(hasG) gradeMarkCanvas(c,grade,128,63,22);
   const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));
-  spr.scale.set(2.7,.68,1); spr.userData.own=true;
+  spr.scale.set(2.7,2.7*H/256,1); spr.userData.own=true;
   return spr;
 }
 /* เพื่อนในโลกขับรถ = โมเดลรถ GLB สีตรงคันที่เขาขับ (รอบ 393 · av='blk3c07') + ป้ายชื่อ
    ยังไม่รู้รุ่น/โหลดโมเดลไม่ทัน → รถบล็อก+หุ่นนั่งขับแบบเดิมก่อน แล้วสลับเมื่อโหลดเสร็จ */
-function makeBlockPeer(name, av, uid){
+function makeBlockPeer(name, av, uid, grade){
   const pm=/^(blk\d+)c(\d\d)$/.exec(av||'');
   const bav=pm?pm[1]:av, cid=pm?'car_'+pm[2]:null;
   const bid=BLOCK_AVATARS[bav]?bav:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
@@ -782,15 +786,15 @@ function makeBlockPeer(name, av, uid){
       const gl=carGlbBuild(cid); g.add(gl); setRefs(gl);
     });
   }
-  const label=blkNameSprite(name); label.position.set(0,2.85,0); g.add(label);
+  const label=blkNameSprite(name,grade); label.position.set(0,2.85,0); g.add(label);
   return g;
 }
 /* เพื่อนในโลกเดิน (adv/haunt) = หุ่นบล็อกเต็มตัวยืนบนพื้น เดินแกว่งแขน-ขาจริง + ป้ายชื่อ */
-function makeBlockWalkPeer(name, av, uid){
+function makeBlockWalkPeer(name, av, uid, grade){
   const bid=BLOCK_AVATARS[av]?av:'blk'+(1+String(uid||'').split('').reduce((h,ch)=>(h*31+ch.charCodeAt(0))>>>0,0)%8);
   const g=new THREE.Group();
   const fig=makeBlockFigure(bid,false); g.add(fig);
-  const label=blkNameSprite(name); label.position.set(0,2.25,0); g.add(label);
+  const label=blkNameSprite(name,grade); label.position.set(0,2.25,0); g.add(label);
   g.userData.limbs=fig.userData.limbs;      // ให้ tickPeers หมุนแกว่งได้ตรงๆ
   return g;
 }
@@ -2719,7 +2723,10 @@ function onPeerData(uid,d){
   const walkBlk=(mode==='adv'||mode==='haunt'||mode==='soccer');   // 🧱 โลกเดิน/สนามฟุตบอล: เพื่อน = หุ่นบล็อกเดินได้ (มาร่วมเตะในสนามเดียวกัน)
   if(!p){
     // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกเดิน = หุ่นบล็อกเดิน · เฮลิฯ/โดรนคง sprite เดิม
-    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid):walkBlk?makeBlockWalkPeer(d.n,d.av,uid):makePeerSprite(d.n,d.av),
+    /* 🎖️ รอบ 644: ระดับชั้นของเพื่อนอ่านจาก presence ที่โหลดไว้แล้ว (gradeOf) — ไม่มี field ใหม่ใน /winfo ไม่ต้องแก้ rules */
+    const pg=(typeof gradeOf==='function')?gradeOf(uid,d.g):'';
+    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid,pg):walkBlk?makeBlockWalkPeer(d.n,d.av,uid,pg):makePeerSprite(d.n,d.av,pg),
+                  grade:pg,
                   cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน',
                   blk:!!M.drive, walk:walkBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
     p.spr.position.set(d.x,(p.blk||p.walk)?0:py,d.z);
@@ -2731,13 +2738,13 @@ function onPeerData(uid,d){
   }else if((p.blk||p.walk) && d.av!==p.av){
     // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
     scene.remove(p.spr); disposeBlockPeer(p.spr);
-    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid):makeBlockWalkPeer(d.n,d.av,uid);
+    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid,p.grade):makeBlockWalkPeer(d.n,d.av,uid,p.grade);
     p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
   }else if(M.heli && d.av!==p.av){
     // 🚁 รอบ 355: เพื่อนเปลี่ยนเฟส (เดิน→นั่ง→วิงสูท→ขับ) → วาด sprite ใหม่ให้ตรงอิริยาบถ
     scene.remove(p.spr); p.spr.material.dispose();
-    p.av=d.av; p.spr=makePeerSprite(d.n,d.av);
+    p.av=d.av; p.spr=makePeerSprite(d.n,d.av,p.grade);
     p.spr.position.set(p.cur.x,p.cur.y,p.cur.z);
     scene.add(p.spr);
   }
@@ -3258,11 +3265,14 @@ function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.ind
 function renderBoard(){
   if(!hudBoardEl) return;
   const rows=[{n:(state.profileName||'หนู')+pilotEmoji(state.pilotBadge)+thunderEmoji(state.thunderBadge)+daredevilEmoji(state.daredevilBadge)+glassEmoji(state.glassBadge)+diligentEmoji(state.diligentBadge)+mechaBossEmoji(state.mechaBossBadge)+softLandEmoji(state.perfLandBadge)+airLetterEmoji(state.airLetterBadge), w:sessionWords, me:true}];
-  Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0}));
+  /* 🎖️ รอบ 644: ระดับชั้นต่อท้ายชื่อในกระดาน (แถวเป็น nowrap พื้นที่จำกัด — ใต้ชื่ออยู่ที่ป้ายลอยเหนือหัวแทน) */
+  rows[0].g=(state.student&&state.student.grade)||'';
+  Object.keys(peers).forEach(uid=>rows.push({n:peers[uid].n||'เพื่อน', w:peers[uid].w||0,
+    g:peers[uid].grade||((typeof gradeOf==='function')?gradeOf(uid):'')}));
   rows.sort((a,b)=>b.w-a.w);
   const meIdx=rows.findIndex(r=>r.me);
   const row=(r,i)=>`<div class="adv-b-row${r.me?' me':''}">
-    <span class="adv-b-nm">${i===0&&r.w>0?'👑':(i+1)+'.'} ${escapeHTML(r.n)}</span><b>${r.w}</b></div>`;
+    <span class="adv-b-nm">${i===0&&r.w>0?'👑':(i+1)+'.'} ${escapeHTML(r.n)}${gradeMark(r.g)}</span><b>${r.w}</b></div>`;
   let html=rows.slice(0,4).map(row).join('');
   if(meIdx>=4) html+=`<div class="adv-b-more">⋯</div>`+row(rows[meIdx],meIdx);   // เราหลุด top 4 → โชว์แถวตัวเองต่อท้าย
   // 🎯 ท็อปนักผาดโผนในสนาม (เฉพาะโลกบิน heli/drone · จัดอันดับตามระดับเข็มในชื่อที่ sync แล้ว)

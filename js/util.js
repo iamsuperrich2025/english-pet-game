@@ -56,6 +56,22 @@ function nameWithGrade(nameHTML, grade){
   const mk = gradeMark(grade);
   return mk ? `<span class="gm-stack">${nameHTML}${mk}</span>` : nameHTML;
 }
+/* 🖼️ รอบ 644: วาดสัญลักษณ์ลงบน canvas — ป้ายชื่อลอยเหนือหัวในโลก 3D (ไม่ใช่ DOM จึงใช้ CSS ไม่ได้)
+   คืน true เมื่อวาดจริง (ผู้เรียกใช้ตัดสินใจว่าจะขยายกล่องป้ายไหม) */
+function gradeMarkCanvas(c, grade, x, y, size){
+  const s = gradeSymbol(grade);
+  if(!s || !c) return false;
+  c.save();
+  c.font = 'bold ' + size + 'px system-ui,sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  if(s.cls === 'gm-gold'){ c.fillStyle = '#ffd451'; c.shadowColor = 'rgba(255,170,30,.95)'; }
+  else if(s.cls === 'gm-gem'){ c.fillStyle = '#9fe8ff'; c.shadowColor = 'rgba(120,225,255,.95)'; }
+  else { c.fillStyle = '#e8eef6'; c.shadowColor = 'rgba(130,175,225,.95)'; }
+  c.shadowBlur = size * .4;
+  c.fillText(s.sym, x, y);
+  c.restore();
+  return true;
+}
 /* หาระดับชั้นจาก uid เมื่อจุดที่เรียกไม่มีค่า g ติดมา (เพื่อนที่บันทึกไว้ตั้งแต่ก่อนมีฟิลด์ g)
    ไล่จาก: ค่าที่ส่งมา → ตัวเราเอง → กระดานอันดับ → คนออนไลน์ → รายชื่อเพื่อน */
 function gradeOf(uid, g){

@@ -7234,14 +7234,19 @@ function netSend(force){
 }
 function peerColor(uid){ let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0; return PEER_COLORS[h%PEER_COLORS.length]; }
 /* ป้ายชื่อลอยหัว */
-function nameSprite(name){
-  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+/* 🎖️ รอบ 644: grade = ระดับชั้นเพื่อน → ดาว/เพชรใต้ชื่อ (ป้ายชื่อเท่านั้น · ฟองแชท/คำตะโกนไม่ส่ง grade มา)
+   ผืนสูงขึ้น 24px → ผู้เรียกต้องขยาย scale.y ตามด้วย (ดู NAME_SPR_H) */
+const NAME_SPR_H=(grade)=>((typeof gradeSymbol==='function' && gradeSymbol(grade))?88:64);
+function nameSprite(name,grade){
+  const H=NAME_SPR_H(grade), hasG=H>64;
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=H;
   const x=cv.getContext('2d');
   x.fillStyle='rgba(8,16,28,.82)'; x.beginPath();
-  if(x.roundRect) x.roundRect(6,10,244,44,10); else x.rect(6,10,244,44);
+  if(x.roundRect) x.roundRect(6,10,244,H-20,10); else x.rect(6,10,244,H-20);
   x.fill();
   x.font='bold 30px system-ui,sans-serif'; x.textAlign='center'; x.textBaseline='middle';
-  x.fillStyle='#fff'; x.fillText(String(name).slice(0,14),128,34);
+  x.fillStyle='#fff'; x.fillText(String(name).slice(0,14),128,hasG?32:34);
+  if(hasG) gradeMarkCanvas(x,grade,128,66,24);
   return new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
 }
 /* ตัวเพื่อน: ทหารราบ (foot) หรือเฮลิคอปเตอร์ (heli) */
@@ -7301,7 +7306,9 @@ function buildPeer(uid,p,kind){
   if(p.grp) scene.remove(p.grp);
   p.grp=new THREE.Group();
   p.grp.add(peerBody(kind,peerColor(uid),p.weapon));   /* 🔫 รอบ 520: เลือกโมเดล baked ตามปืนที่ถือ */
-  const nm=nameSprite(p.n); nm.scale.set(7,1.75,1); nm.position.y=kind==='heli'?4.2:2.9; p.grp.add(nm);
+  const pg=(typeof gradeOf==='function')?gradeOf(uid,p.g):'';    // 🎖️ รอบ 644: ชั้นจาก presence ที่โหลดไว้แล้ว (ไม่มี field ใหม่ใน /winfo)
+  const nm=nameSprite(p.n,pg); nm.scale.set(7,7*NAME_SPR_H(pg)/256,1); nm.position.y=kind==='heli'?4.2:2.9; p.grp.add(nm);
+  p.grade=pg;
   if(kind==='gun') p.grp.rotation.x=-.12;      // 🎖️ พลปืนโน้มตัวออกนอกประตูเล็กน้อย
   p.grp.position.set(p.cur.x,p.cur.y,p.cur.z); p.grp.rotation.y=p.yawCur;
   scene.add(p.grp); p.kind=kind;
@@ -7407,14 +7414,17 @@ function renderBoard(){
   /* จอเตี้ยพื้นที่คอลัมน์ซ้ายจำกัด (อยู่ระหว่างแถบสถานะกับจอย) → โชว์แค่ 3 อันดับ
      🧯 รอบ 637: จอเตี้ย + มีบรรทัดสถานะ = เหลือ 2 อันดับ ไม่งั้นกล่องยาวลงไปทับจอย (วัดจริงที่ 812×375) */
   const maxRows=shortScr?(note?(innerHeight<370?1:2):3):5;
-  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,h:peers[u].kind}))
-    .concat([{n:myName,w:sessionWords,me:true,h:riding?'gun':(inHeli?'heli':'foot')}]).sort((a,b)=>b.w-a.w).slice(0,maxRows);
-  const sig=maxRows+'|'+note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.h+':'+r.me).join('|');
+  /* 🎖️ รอบ 644: ระดับชั้นต่อท้ายชื่อ (แถว nowrap จอเตี้ยพื้นที่จำกัด — ใต้ชื่ออยู่ที่ป้ายลอยเหนือหัว) */
+  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,h:peers[u].kind,
+      g:peers[u].grade||((typeof gradeOf==='function')?gradeOf(u):'')}))
+    .concat([{n:myName,w:sessionWords,me:true,h:riding?'gun':(inHeli?'heli':'foot'),
+      g:(typeof state!=='undefined'&&state.student&&state.student.grade)||''}]).sort((a,b)=>b.w-a.w).slice(0,maxRows);
+  const sig=maxRows+'|'+note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.h+':'+r.me+':'+r.g).join('|');
   if(sig===boardSig){ boardEl.classList.add('on'); return; }
   boardSig=sig;
   boardEl.innerHTML='<div class="bd-h">🏆 ปราบยานแม่รอบนี้</div>'+rows.map((r,i)=>
     `<div class="bd-r${r.me?' me':''}"><span>${['🥇','🥈','🥉','　','　'][i]}${r.h==='heli'?'🚁':(r.h==='gun'?'🎖️':'🔫')}</span>`+
-    `<span>${escapeHTML(r.n)}</span><span>${r.w}</span></div>`).join('')
+    `<span>${escapeHTML(r.n)}${gradeMark(r.g)}</span><span>${r.w}</span></div>`).join('')
     +(note?`<div class="bd-c">${note}</div>`:'');
   boardEl.classList.add('on');
 }
