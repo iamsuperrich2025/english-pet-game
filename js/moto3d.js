@@ -7,7 +7,7 @@
 const REWARD=45, DONE_KEY='motoDone';
 const ACCEL=13, DECEL=5.5, VMAX=55.6, VMAX_OFF=6.5, WHEEL_R=0.34;   // รอบ 312: VMAX 32→55.6 (=200 กม./ชม.) + ACCEL 10→13 ให้ไต่ถึงได้
 const DASH_LEN=4, DASH_GAP=5, DASH_W=0.28;  // 🛣️ รอบ 312: เส้นประกลางถนน — ยาวขีด/ช่องว่าง/ครึ่งกว้าง (m)
-const DOG_HIT_COIN=500, DOG_SPD=11, DOG_GAP_MS=9000;   // 🐕 รอบ 312: ชนหมาปรับ 500 · ความเร็ววิ่ง · เว้นระยะ spawn
+const DOG_HIT_COIN=100, DOG_SPD=11, DOG_GAP_MS=4000;   // 🐕 รอบ 312 · รอบ 643: ปรับชนหมา 500→100 + โผล่ถี่ขึ้น 9-15วิ→4-7วิ (ผู้ใช้ขอ)
 /* 🕳️⛰️ รอบ 315: หลุม/เนิน + เหิน + สปริง */
 const FEAT_SP=16, FEAT_FILL=0.10, FEAT_CELL=18;        // รอบ 316: โอกาสวาง 0.9→0.10 = หลุม/เนิน ~10% ของเส้นทาง (ผู้ใช้ขอ)
 const DECAL_N=48, DECAL_R=110;                         // 🖼️ รอบ 316: ภาพหลุม/เนินแปะถนน — จำนวน pool / รัศมีรอบผู้เล่น
@@ -19,7 +19,8 @@ const ROAD_TEX_S=16, GRASS_TEX_S=10;       // รอบ 302: ขนาดโล�
 const POST_N=400, POST_SP=42, POST_R=380;  // รอบ 303: หลักเขตทาง — จำนวน pool · ระยะห่างต่อหลัก (m) · รัศมีวางรอบผู้เล่น (m)
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
 const COLLECT_R=3.6;                       // รอบ 314: ระยะชนเก็บตัวอักษร (2.8→3.6 · ตัวอยู่เลนซ้าย+ใหญ่ขึ้น ขับในเลนซ้ายเก็บได้พอดี)
-const SPAWN_MIN=110, SPAWN_MAX=430, RELOC_D=800;   // ระยะวางตัวอักษรจากรถ + ไกลเกินย้ายใหม่
+const SPAWN_MIN=70, SPAWN_MAX=260, RELOC_D=800;   // รอบ 643: ระยะวางตัวอักษรจากรถ ลด 110-430→70-260 ให้โผล่ถี่ขึ้น (ผู้ใช้ขอ) + ไกลเกินย้ายใหม่
+const SCATTER_MS=2200, SCATTER_JIT=1400;   // 🪙 รอบ 643: เหรียญโบนัสแยกจากตัวอักษร โปรยตามถนนเป็นระยะ (ผู้ใช้ขอเหรียญเยอะขึ้น)
 const BUCKET=250;                          // ตารางแฮชถนน (เมตร/ช่อง)
 const TILE_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
 /* 🪙 รอบ 317: เหรียญบนถนน + โบนัสตัวอักษร (ผู้ใช้: เก็บตัวอักษรให้เหรียญด้วย + เหรียญบนถนนน้อยไป) */
@@ -62,6 +63,7 @@ let throttleCharge=0;                      // 💡 รอบ 309: ระดั�
 let smokeAcc=0, smokeSide=1;               // 💨 ควันท่อ (รอบ 305) — ตัวจับจังหวะ spawn + สลับท่อซ้าย/ขวา
 let postBody=null, postTop=null;           // 🚧 หลักเขตทางขาว-แดงริมถนน (รอบ 303 · instanced รีไซเคิลรอบผู้เล่น)
 let dog=null, dogNextAt=0;                  // 🐕 รอบ 312: หมาวิ่งตัดถนน {grp,vx,vz,life}
+let scatterNextAt=0;                        // 🪙 รอบ 643: จังหวะโปรยเหรียญโบนัสถัดไป
 let feats=[], featBuckets=new Map();        // 🕳️⛰️ รอบ 315: หลุม/เนิน {x,z,r,h} (h>0=เนิน h<0=หลุม) + แฮชค้นเร็ว
 let decalPool=[], potTex=null, bumpTex=null, decalAt=0;   // 🖼️ รอบ 316: ภาพแปะถนน
 let bikeY=0, bikeVY=0, airborne=false, prevFollowVY=0, suspY=0, suspV=0;   // ความสูงรถ/ความเร็วดิ่ง/สถานะเหิน/สปริงโช้ก
@@ -1008,7 +1010,7 @@ function scatterClouds(all){
 }
 
 /* ============================================================
-   🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 500 เหรียญ
+   🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
    ============================================================ */
 function makeDog(){
   const g=new THREE.Group();
@@ -1049,7 +1051,7 @@ function dogHit(){
 function dogTick(dt,now){
   if(!dog) return;
   if(!dog.grp.visible){
-    if(now>=dogNextAt && spd>6){ spawnDog(); dogNextAt=now+DOG_GAP_MS+Math.random()*6000; }
+    if(now>=dogNextAt && spd>6){ spawnDog(); dogNextAt=now+DOG_GAP_MS+Math.random()*3000; }
     return;
   }
   dog.grp.position.x+=dog.vx*dt; dog.grp.position.z+=dog.vz*dt; dog.life-=dt;
@@ -1161,6 +1163,13 @@ function coinTick(dt,now){
     c.spr.material.color.setScalar(shine);
     if(Math.hypot(p.x-px,p.z-pz)<COIN_PICK_R){ scene.remove(c.spr); coins.splice(i,1); grabCoin(c.tier); }
   }
+}
+/* 🪙 รอบ 643: เหรียญโบนัสแยกจากตัวอักษร — โปรยข้างถนนเป็นระยะตลอดทาง (ผู้ใช้ขอเหรียญเยอะขึ้นกว่าติดตัวอักษรอย่างเดียว) */
+function scatterCoinTick(now){
+  if(now<scatterNextAt) return;
+  scatterNextAt=now+SCATTER_MS+Math.random()*SCATTER_JIT;
+  const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX);
+  if(p) addFreeCoin(0,p.x,p.z);
 }
 /* 💎 เหรียญพิเศษหน้าตัวอักษร "ตัวสุดท้ายที่เหลือ" ของคำ — อยู่บนหลุม/เนิน = เพชร 🪙20 · ไม่งั้น = โค้ง 🪙5 */
 function placeSpecialCoin(){
@@ -1838,7 +1847,7 @@ function frame(dt,now){
   camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
-  collectTick(); relocTick(now); dogTick(dt,now); coinTick(dt,now); gpsTick(); miniTick();
+  collectTick(); relocTick(now); dogTick(dt,now); coinTick(dt,now); scatterCoinTick(now); gpsTick(); miniTick();
   peerTick(dt,now); netSend(false);                       // 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน
   /* 🅿️ เช็กจุดเกิดซ้ำอีกรอบหลังรู้จักเพื่อนครบ (~1.2 วิ) — ถ้ายังไม่ออกรถแล้วมีคนทับ ขยับไปช่องว่าง */
   if(spawnFixAt && now>spawnFixAt){
@@ -1916,6 +1925,7 @@ function start(opts){
   bikeY=0; bikeVY=0; airborne=false; prevFollowVY=0; suspY=0; suspV=0;   // 🕳️⛰️ รอบ 315
   decalAt=0;                                                             // 🖼️ รอบ 316
   if(dog) dog.grp.visible=false; dogNextAt=performance.now()+DOG_GAP_MS;   // 🐕 รอบ 312
+  scatterNextAt=performance.now()+SCATTER_MS;                              // 🪙 รอบ 643
   scatterTrees(true); scatterClouds(true);
   /* 🧑‍🤝‍🧑🅿️ รอบ 317: เข้าห้องแผนที่ก่อน แล้วเลือกช่องเกิดว่างหน้าโรงเรียน (ห้ามซ้อนทับกัน) */
   netJoin();
