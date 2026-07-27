@@ -7614,6 +7614,10 @@ function showTeacherCard(){
       ของเดิมที่ถูกลบไปพร้อมกัน: จอวิดีโอเต็มจอ+จอเล็ก (รอบ 625) · จอแนวตั้ง (รอบ 626) · สลับจอใหญ่-เล็ก (รอบ 627)
    ============================================================ */
 const CALL_REACT_EMOS = ['❤️','😆','👍','😮','🎉','😭','🐱','⭐'];
+/* 🟢 รอบ 632: ไฟเขียวรอบช่อง "คนที่กำลังพูด" — วัดระดับเสียงจากสตรีมจริง (Web Audio)
+   MIN = ดังเกินนี้ถือว่าพูดอยู่ (ต่ำกว่านี้คือเสียงลมหายใจ/เสียงห้อง) · HOLD = ค้างไฟหลังเงียบ กันกะพริบตามจังหวะคำ */
+const CALL_TALK_MIN  = .028;
+const CALL_TALK_HOLD = 420;
 
 /* 🔔 เสียงกริ่ง (รอบ 629: ผู้ใช้ส่งไฟล์เสียงจริงมาให้ — สูตร 2 ชั้นเดียวกับ playCashier ใน util.js)
    ชั้น 1: ไฟล์จริงเล่นวน (loop) — ฝั่งผู้รับสาย IncomingCallTone · ฝั่งผู้โทร OutgoingCallTone
@@ -7798,9 +7802,64 @@ const callUI = {
           au.muted = !Call.spkOn;
         }
       }
+      this.vuTap(uid, me ? Call.local : p.remote);     // 🟢 รอบ 632: เกาะสตรีมไว้ดูว่าใครกำลังพูด
     });
-    Array.from(stage.children).forEach(el=>{ if(ids.indexOf(el.dataset.uid) < 0) el.remove(); });
+    Array.from(stage.children).forEach(el=>{
+      if(ids.indexOf(el.dataset.uid) < 0){ this.vuDrop(el.dataset.uid); el.remove(); }
+    });
     this.head();
+  },
+
+  /* 🟢 รอบ 632 (ผู้ใช้เลือกไอเดียต่อยอดข้อ 1 จากรอบ 631): ไฟเขียวรอบช่องคนที่กำลังพูด
+     วัดจากสตรีมจริงด้วย Web Audio — AudioContext ตัวเดียวทั้งสาย + analyser คนละตัวต่อคน
+     🔇 analyser ต่อจาก source เฉย ๆ ไม่ต่อไป destination → ไม่มีเสียงงอกออกลำโพงซ้ำ
+     เช็กราว 12 ครั้ง/วินาที (เบาพอสำหรับมือถือเด็ก) · ปิดไมค์ตัวเอง = ไฟไม่ติดถึงจะมีเสียงเข้าไมค์ */
+  vu:{ac:null, src:{}, an:{}, hold:{}, buf:null, timer:null},
+  vuTap(uid, stream){
+    const V = this.vu;
+    if(!stream || !stream.getAudioTracks().length) return;
+    if(V.src[uid] && V.src[uid].stream === stream) return;      // เกาะสตรีมนี้อยู่แล้ว
+    this.vuDrop(uid);
+    if(!V.ac){
+      try{ V.ac = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ return; }
+      if(V.ac.state === 'suspended') V.ac.resume().catch(()=>{});
+    }
+    try{
+      const node = V.ac.createMediaStreamSource(stream);
+      const an = V.ac.createAnalyser();
+      an.fftSize = 256; an.smoothingTimeConstant = .45;
+      node.connect(an);
+      V.src[uid] = {node, stream}; V.an[uid] = an;
+    }catch(e){ return; }
+    if(!V.timer) V.timer = setInterval(()=>this.vuTick(), 85);
+  },
+  vuDrop(uid){
+    const V = this.vu;
+    if(V.src[uid]){ try{ V.src[uid].node.disconnect(); }catch(e){} delete V.src[uid]; }
+    delete V.an[uid]; delete V.hold[uid];
+  },
+  vuTick(){
+    const V = this.vu;
+    if(!this.ov) return this.vuStop();
+    const buf = V.buf || (V.buf = new Uint8Array(256));
+    const now = Date.now();
+    Object.keys(V.an).forEach(uid=>{
+      V.an[uid].getByteTimeDomainData(buf);
+      let sum = 0;
+      for(let i = 0; i < buf.length; i++){ const d = (buf[i] - 128)/128; sum += d*d; }
+      const loud = Math.sqrt(sum/buf.length) > CALL_TALK_MIN;
+      const open = (uid === 'me') ? Call.micOn : true;           // ปิดไมค์แล้วห้ามโชว์ว่าพูดอยู่
+      if(loud && open) V.hold[uid] = now + CALL_TALK_HOLD;
+      const t = this.ov.querySelector('.ctile[data-uid="' + uid + '"]');
+      if(t) t.classList.toggle('talking', (V.hold[uid] || 0) > now);
+    });
+  },
+  vuStop(){
+    const V = this.vu;
+    if(V.timer){ clearInterval(V.timer); V.timer = null; }
+    Object.keys(V.src).forEach(u=>this.vuDrop(u));
+    if(V.ac){ try{ V.ac.close(); }catch(e){} V.ac = null; }
+    V.hold = {}; V.buf = null;
   },
 
   /* ต่อสายติดแล้ว → เริ่มจับเวลา + เปิดปุ่มอิโมจิ */
@@ -7890,6 +7949,7 @@ const callUI = {
 
   close(note){
     callRing.stop();
+    this.vuStop();                               // 🟢 ปิดตัววัดเสียง + AudioContext ให้เกลี้ยง
     clearInterval(this.tick); this.tick = null;
     this.closeRing();
     /* ☎️ รอบ 630: "ปุ๊ก" เฉพาะสายที่คุยกันจริงแล้ววาง — สายที่ไม่ได้รับ/ติดสาย/ยกเลิก มี toast บอกอยู่แล้ว
