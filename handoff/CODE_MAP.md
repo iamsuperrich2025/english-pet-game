@@ -438,7 +438,7 @@ compTick:799 · ONLINE_RATE:813 · onlineEarnActive:814 · onlineEarnTick:818 ·
 addCraft:863 · ORDER_MAX:882 · ORDER_LIFE_MS:883 · ORDER_GAP_MIN_MS:884 · ORDER_GAP_SPAN_MS:885 · ORDER_TIER_WEIGHT:886
 newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · addRP:1014
 
-## js/ui.js (7,890 บรรทัด · 315 รายการ)
+## js/ui.js (7,916 บรรทัด · 316 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-268 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -489,7 +489,7 @@ newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · ad
 - 7460-7496 เลเวลอัพ (รายตัว)
 - 7497-7571 สถิติผลการเรียนรู้
 - 7572-7609 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 7610-7890 📞 หน้าจอโทรหาเพื่อน — Voice call / Video call (รอบ 625)
+- 7610-7916 📞 หน้าจอโทรหาเพื่อน — Voice call / Video call (รอบ 625)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:98 · petShowBgHTML:101 · petClipHint:128 · __clipReady:140 · petShowHTML:148 · lobbyBlk:194
@@ -543,7 +543,7 @@ payCarLoanMonthly:6894 · payCarLoanFull:6906 · carDriveBlock:6925 · gotoVehic
 craftDiscount:6953 · renderFactory:6956 · renderOrdersUI:7025 · startProduce:7044 · buyCollectible:7072 · cancelProduce:7100
 deliverOrder:7114 · renderOrderClock:7131 · renderCollectMine:7141 · openListDialog:7183 · cancelListing:7236 · buyMarketItem:7259
 showCollectReveal:7286 · buyAC:7324 · openHomeShop:7343 · renderPetShop:7402 · showLevelUp:7463 · renderStats:7500
-showTeacherCard:7576 · CALL_REACT_EMOS:7617 · startCall:7886
+showTeacherCard:7576 · CALL_REACT_EMOS:7617 · CALL_TONES:7623 · startCall:7912
 
 ## js/util.js (755 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
