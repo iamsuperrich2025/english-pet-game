@@ -438,7 +438,7 @@ compTick:799 · ONLINE_RATE:813 · onlineEarnActive:814 · onlineEarnTick:818 ·
 addCraft:863 · ORDER_MAX:882 · ORDER_LIFE_MS:883 · ORDER_GAP_MIN_MS:884 · ORDER_GAP_SPAN_MS:885 · ORDER_TIER_WEIGHT:886
 newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · addRP:1014
 
-## js/ui.js (7,975 บรรทัด · 318 รายการ)
+## js/ui.js (8,006 บรรทัด · 319 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-268 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -489,7 +489,7 @@ newOrder:887 · orderTick:900 · careTick:908 · expNeed:989 · addExp:994 · ad
 - 7456-7492 เลเวลอัพ (รายตัว)
 - 7493-7567 สถิติผลการเรียนรู้
 - 7568-7605 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 7606-7975 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7606-8006 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:98 · petShowBgHTML:101 · petClipHint:128 · __clipReady:140 · petShowHTML:148 · lobbyBlk:194
@@ -543,7 +543,8 @@ payCarLoanMonthly:6890 · payCarLoanFull:6902 · carDriveBlock:6921 · gotoVehic
 craftDiscount:6949 · renderFactory:6952 · renderOrdersUI:7021 · startProduce:7040 · buyCollectible:7068 · cancelProduce:7096
 deliverOrder:7110 · renderOrderClock:7127 · renderCollectMine:7137 · openListDialog:7179 · cancelListing:7232 · buyMarketItem:7255
 showCollectReveal:7282 · buyAC:7320 · openHomeShop:7339 · renderPetShop:7398 · showLevelUp:7459 · renderStats:7496
-showTeacherCard:7572 · CALL_REACT_EMOS:7616 · CALL_TALK_MIN:7619 · CALL_TALK_HOLD:7620 · CALL_TONES:7626 · startCall:7971
+showTeacherCard:7572 · CALL_REACT_EMOS:7616 · CALL_TALK_MIN:7619 · CALL_TALK_HOLD:7620 · CALL_ORDER_GAP:7622 · CALL_TONES:7628
+startCall:8002
 
 ## js/util.js (760 บรรทัด · 32 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · seededRand:25 · fmtThaiDT:35 · fmtThaiDate:39
