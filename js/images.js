@@ -60,7 +60,7 @@ const CLIP_SM = {
   cat_newborn: ['sm/cat_newborn.mp4','sm/cat_newborn.webm'],
   dog_adult_normal: ['sm/dog_adult_normal.mp4','sm/dog_adult_normal.webm'],
   dog_baby_normal: ['sm/dog_baby_normal.mp4','sm/dog_baby_normal.webm'],
-  dog_newborn: ['sm/dog_newborn.webm','sm/dog_newborn.mp4'],
+  dog_newborn: ['sm/dog_newborn.mp4','sm/dog_newborn.webm'],
   dragon_adult_normal: ['sm/dragon_adult_normal.mp4','sm/dragon_adult_normal.webm'],
   dragon_baby_normal: ['sm/dragon_baby_normal.mp4','sm/dragon_baby_normal.webm'],
   dragon_egg: ['sm/dragon_egg.mp4','sm/dragon_egg.webm'],
