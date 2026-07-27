@@ -8,7 +8,7 @@
 
 const PANEL_TITLES = {
   'panel-home'   : '🏠 บ้าน & ที่พัก',
-  'panel-farm'   : '🌳 สวนผลไม้',
+  'panel-farm'   : '📈 ลงทุน',
   'panel-factory': '🏭 โรงงานผลิตสินค้า',
   'panel-market' : '🏪 ตลาด',
   'panel-friends': '👥 เพื่อนของหนู',

@@ -148,7 +148,7 @@
              กดได้เฉพาะตอนมีน้องป่วย (ปกติจางกดไม่ได้ · ป่วยกะพริบแดงเรียกสายตา) -->
         <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน<span class="rail-badge" id="home-bill-badge" style="display:none"></span></button>
-        <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">🌳</span>ฟาร์ม</button>
+        <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">📈</span>ลงทุน</button>
         <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>
         <button class="rail-btn" id="btn-rail-wordsearch"><span class="rail-ico">🔎</span>ค้นหาคำ</button>
         <!-- 🥇 รอบ 594: ย้ายกลุ่มอันดับออกจากคอลัมน์ขวา (แออัด) มาเป็นปุ่มเดียวในราง → เปิดกระดานเต็มจอ
@@ -226,20 +226,20 @@
             <div class="shop-card" id="home-card"></div>
           </div>
 
+          <!-- รอบ 636: ปุ่ม "ฟาร์ม" → "ลงทุน" — รวมสวนผลไม้ + บริการรายเดือน (มือถือ/คอมพิวเตอร์) ไว้ด้วยกัน -->
           <div class="panel-page" id="panel-farm">
             <div class="shop-card" id="farm-card"></div>
+            <div class="mkt-group-head">📡 บริการรายเดือน</div>
+            <div class="shop-card" id="phone-card"></div>
+            <div class="shop-card" id="computer-card"></div>
           </div>
 
           <div class="panel-page" id="panel-factory">
             <div class="shop-card" id="factory-card"></div>
           </div>
 
-          <!-- รอบ 635: ย้ายบริการรายเดือน + ตั๋วโลก 3D เข้ามารวมกับตลาด (เดิมอยู่แผงร้านค้าที่ถูกถอดไปแล้ว) -->
+          <!-- รอบ 635: ย้ายตั๋วโลก 3D เข้ามารวมกับตลาด (เดิมอยู่แผงร้านค้าที่ถูกถอดไปแล้ว) -->
           <div class="panel-page" id="panel-market">
-            <div class="mkt-group-head">📡 บริการรายเดือน</div>
-            <div class="shop-card" id="phone-card"></div>
-            <div class="shop-card" id="computer-card"></div>
-
             <div class="mkt-group-head">🎫 ตั๋วเข้าโลกผจญภัย 3D</div>
             <div class="shop-card" id="ticket-card"></div>
             <div class="shop-card" id="haunt-card"></div>
