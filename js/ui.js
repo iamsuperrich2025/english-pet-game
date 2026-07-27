@@ -316,15 +316,15 @@ function renderNewWord(){
 /* จัดแบนเนอร์ให้ "กึ่งกลางตรงกับภาพ Rank ใหญ่กลางเวที" (ผู้ใช้สั่งรอบ 326)
    เวทีน้องอยู่คอลัมน์ขวาของการ์ด → กึ่งกลางเวทีไม่ใช่กึ่งกลางจอ ต้องวัดเอา
    (แพทเทิร์นเดียวกับ alignPetTabs — หารด้วย scale เผื่อหน้าเพจโดนย่อด้วย transform) */
+/* 📐 รอบ 613 (ผู้ใช้สั่ง): แบนเนอร์ชิดซ้ายตรงเส้นเดียวกับแถวเหรียญ/แถวแท็บสัตว์ และกว้างไม่เกินเวที
+   (เดิมรอบ 326 จัดกึ่งกลางให้ตรงเหรียญแรงค์ยักษ์กลางเวที — เหรียญนั้นถูกถอดไปตั้งแต่รอบ 604 แล้ว
+   การจัดกึ่งกลางจึงทำให้แบนเนอร์ยื่นล้ำออกซ้ายไปทับคอลัมน์ฟีดเพื่อน) */
 function alignNewWord(){
   const el = document.getElementById('newword-banner');
-  const stage = document.querySelector('.lobby-stage');
-  const hero = document.querySelector('.stage-hero');
-  if(!el || !stage || !hero || el.style.display === 'none') return;
-  const s = stage.getBoundingClientRect(), h = hero.getBoundingClientRect();
-  if(!s.width || !stage.offsetWidth) return;
-  const scale = s.width / stage.offsetWidth;
-  el.style.setProperty('--nw-left', ((h.left + h.width/2) - s.left) / scale + 'px');
+  const c = stageColLeft();
+  if(!el || !c || el.style.display === 'none') return;
+  el.style.setProperty('--nw-left', c.left + 'px');
+  el.style.setProperty('--nw-max', c.width + 'px');
 }
 
 /* นาฬิกาเปลี่ยนคำ — เช็กทุก 5 วินาที (ไม่ใช่ setTimeout 2 นาทีเดียว) เพื่อให้
@@ -3050,21 +3050,74 @@ function renderFeedCard(){
 /* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header
    (แท็บกับ chip อยู่คนละ container — คำนวณจาก rect จริง หารด้วย scale เผื่อเพจถูกย่อ)
    เรียกท้าย renderDashboard + ตอน resize */
+/* 📐 รอบ 613 (ผู้ใช้สั่ง 27 ก.ค. 2026): "ทั้ง 3 แถวห้ามล้ำเส้นแดง" —
+   เส้นแดงที่ผู้ใช้ขีด = ขอบซ้ายของเวทีน้อง (.stage-hero) · ทุกแถวขวามือ (เหรียญ/NEW/แท็บสัตว์)
+   ต้องเริ่มที่แนวเดียวกันนี้พอดี และกว้างไม่เกินเวที · วัดจาก rect จริงเสมอ (กฎทองข้อ 3)
+   เดิมแท็บสัตว์ยึดขอบป้ายชื่อบนหัว (รอบ 160/254) จึงยื่นล้ำมาทับคอลัมน์ซ้ายของการ์ด */
+function stageColLeft(){
+  const stage = document.querySelector('.lobby-stage');
+  const hero  = document.querySelector('.stage-hero');
+  if(!stage || !hero || !stage.offsetWidth) return null;
+  const s = stage.getBoundingClientRect(), h = hero.getBoundingClientRect();
+  if(!s.width || !h.width) return null;
+  const scale = s.width / stage.offsetWidth;   // เพจโดนย่อ (transform) → แปลงกลับเป็น layout px
+  return {left:Math.max(0,(h.left - s.left)/scale), width:h.width/scale, scale, s, h};
+}
 function alignPetTabs(){
   const tabs = document.getElementById('pet-tabs');
-  const rm = document.querySelector('.profile-plate');   // รอบ 254: rank-mini ถูกถอด → ยึดแนวป้ายชื่อแทน (อยู่ตำแหน่งเดิมของ rank-mini)
-  const stage = document.querySelector('.lobby-stage');
-  if(!tabs || !rm || !stage || tabs.style.display === 'none') return;
-  const s = stage.getBoundingClientRect(), r = rm.getBoundingClientRect();
-  if(!s.width || !stage.offsetWidth) return;
-  const scale = s.width / stage.offsetWidth;   // เพจโดนย่อ (transform) → แปลงกลับเป็น layout px
-  tabs.style.setProperty('--tabs-left', Math.max(0, (r.left - s.left) / scale) + 'px');
+  const c = stageColLeft();
+  if(!tabs || !c || tabs.style.display === 'none') return;
+  tabs.style.setProperty('--tabs-left', c.left + 'px');
+  tabs.style.setProperty('--tabs-w', c.width + 'px');
 }
+/* แถวบนสุด (เหรียญ) — ดัน .top-flex ให้กว้างพอดีจนขอบซ้ายกล่องเหรียญตรงเส้น
+   ส่วนปุ่มไอคอนยังชิดขวาสุดเหมือนเดิม (.top-flex2 กินที่ที่เหลือแทน) */
+function alignCoinGroup(){
+  const grp = document.querySelector('.coin-group'), top = document.querySelector('.lobby-top');
+  const sp  = document.querySelector('.top-flex'), sp2 = document.querySelector('.top-flex2');
+  const c = stageColLeft();
+  if(!grp || !top || !sp || !sp2 || !c) return;
+  const t = top.getBoundingClientRect();
+  const want = (c.h.left - t.left) / c.scale;             // ขอบซ้ายเวที (= เส้นแดง) ในพิกัดแถวบน
+  const cur  = (grp.getBoundingClientRect().left - t.left) / c.scale;
+  const w = Math.max(0, sp.getBoundingClientRect().width/c.scale + (want - cur));   // rect ไม่ปัดเศษ (offsetWidth ปัด → เพี้ยน 1px)
+  sp.style.flex = '0 0 auto'; sp.style.width = w + 'px';
+  sp2.style.flex = '1 1 auto';
+}
+/* คอลัมน์ซ้ายของการ์ด (เหลือฟีดเพื่อนอย่างเดียวแล้ว) — ยืดขึ้นไปชนขอบบนเวที
+   (ผู้ใช้สั่ง 27 ก.ค. 2026 "ยืดฟีดเพื่อนขึ้นไปให้แตะแนวเส้นเขียว" = แนวบนสุดของเวที) */
+function alignStageLeft(){
+  const stage = document.querySelector('.lobby-stage');
+  const left  = document.querySelector('.stage-left');
+  const card  = document.getElementById('pet-card');
+  if(!stage || !left || !card || !stage.offsetWidth) return;
+  const s = stage.getBoundingClientRect(), cd = card.getBoundingClientRect();
+  const scale = s.width / stage.offsetWidth;
+  if(!scale) return;
+  left.style.marginTop = -Math.max(0, (cd.top - s.top)/scale) + 'px';
+}
+/* 📐 รอบ 613: จัดทั้ง 3 แถว + คอลัมน์ฟีดในชุดเดียว — เรียกที่เดียวจบ ไม่ต้องไล่เรียกทีละตัว */
+function alignStageCols(){
+  alignPetTabs(); alignNewWord(); alignCoinGroup(); alignStageLeft();
+}
+/* ⚠️ ตอน resize ต้องรอ layout นิ่งก่อนค่อยวัด — วัดทันทีในตัว handler ได้ตำแหน่งเวทีของขนาดจอ "เดิม"
+   (เจอจริงรอบ 613: ย่อจอแล้วทั้ง 3 แถวค้างที่เส้นเก่า) → เลื่อนไปวัดใน rAF ซ้อน 2 ชั้น */
+let __alignRaf = 0;
 window.addEventListener('resize', ()=>{
-  if(typeof alignPetTabs === 'function') alignPetTabs();
   if(typeof alignCureBtn === 'function') alignCureBtn();
-  if(typeof alignNewWord === 'function') alignNewWord();   // รอบ 326: แบนเนอร์คำใหม่ต้องตรงกลางภาพ Rank เสมอ
+  if(__alignRaf) cancelAnimationFrame(__alignRaf);
+  __alignRaf = requestAnimationFrame(()=>{ __alignRaf = requestAnimationFrame(alignStageCols); });
 });
+/* 🔭 กันเหนียวกว่า resize: เฝ้าขนาดเวทีตรง ๆ — เวทีขยับเมื่อไหร่ (ย่อจอ/หมุนจอ/คอลัมน์ขวาเปลี่ยน)
+   ค่อยจัดแถวใหม่ ได้ค่าหลัง layout นิ่งเสมอ · ตัวจัดแถวไม่ไปเปลี่ยนขนาดเวทีกลับ จึงไม่วนลูป */
+let __heroRO = null;
+function watchStageCols(){
+  const hero = document.querySelector('.stage-hero');
+  if(!hero || typeof ResizeObserver === 'undefined') return;
+  if(!__heroRO) __heroRO = new ResizeObserver(()=>alignStageCols());
+  __heroRO.disconnect();
+  __heroRO.observe(hero);
+}
 
 /* รอบ 258 (ผู้ใช้สั่ง 17 ก.ค. 2026): ขยับแถบปุ่มซ้ายทั้งแถว — แนวบนปุ่ม 💊 รักษา ตรงกับขอบบนแถวชื่อสัตว์ (#pet-tabs)
    (เดิมรอบ 254 ยึดปุ่มข้อมูลน้อง — ผู้ใช้ขอเลื่อนขึ้นมาเสมอแนวชื่อสัตว์แทน) · ดัน margin-top ปุ่มแรกของราง ทั้งแถวเลื่อนตาม */
@@ -3298,7 +3351,13 @@ function renderDashboard(){
   const tabs = document.getElementById('pet-tabs');
   if(state.pets.length || state.playerSick || dinnerDue() || state.student){   // แถวแท็บน้อง (รอบ 321: ถอดกล่องค้นหาศัพท์ออกแล้ว)
     tabs.style.display = 'flex';
-    tabs.innerHTML = state.pets.map((p,i)=>{
+    /* 🐾 รอบ 613 (ผู้ใช้สั่ง): ปุ่ม "ข้อมูลน้อง" ย้ายจากคอลัมน์ซ้ายของการ์ด มาอยู่ "แถวเดียวกับชื่อสัตว์
+       และอยู่หน้าสุด" ขนาดเท่าแท็บชื่อสัตว์ · คอลัมน์ซ้ายที่ว่างลง = ฟีดเพื่อนยืดขึ้นไปเต็มความสูงเวที */
+    const ap0 = activePet();
+    const infoAlert = ap0 ? (ap0.sick ? ' <span class="pib-alert">🤒</span>'
+                          : (petHungry(ap0) ? ' <span class="pib-alert">😫</span>' : '')) : '';
+    tabs.innerHTML = (ap0 ? `<button class="pet-tab info" id="btn-pet-info" title="ข้อมูลน้อง &amp; การดูแล">🐾 ข้อมูลน้อง${infoAlert}</button>` : '')
+      + state.pets.map((p,i)=>{
       const stage = petStage(p);
       const face = stage === 'egg' ? (PETS[p.type].startKey==='egg'?'🥚':'🧺') : PETS[p.type][stage];
       const alert = p.sick ? ' 🤒' : (petHungry(p) ? ' 😫' : '');
@@ -3544,10 +3603,10 @@ function renderDashboard(){
       ${stage !== 'egg' ? patCalendarHTML() : ''}`,
     care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
   };
-  const petAlert = p.sick ? ' <span class="pib-alert">🤒</span>' : (petHungry(p) ? ' <span class="pib-alert">😫</span>' : '');
+  /* 🐾 รอบ 613: ปุ่ม "ข้อมูลน้อง" ย้ายไปอยู่แถวแท็บชื่อสัตว์แล้ว (สร้างใน renderDashboard ด้านบน)
+     → คอลัมน์ซ้ายเหลือฟีดเพื่อนอย่างเดียว ยืดขึ้นไปชนขอบบนเวทีด้วย alignStageLeft() */
   card.innerHTML = `
     <div class="stage-left">
-      <button class="pet-info-btn" id="btn-pet-info">🐾 ข้อมูลน้อง &amp; การดูแล${petAlert}</button>
       <div class="stage-plate feed-plate">
         <div class="plate-title">⬢ ฟีดเพื่อน 📰</div>
         <div class="feed-list" id="feed-list"></div>
@@ -3555,9 +3614,14 @@ function renderDashboard(){
     </div>
     <div class="stage-hero hero-side pet-show-mode${__clipReady(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
 
-  document.getElementById('btn-pet-info').addEventListener('click', openPetInfoOverlay);
+  const piBtn = document.getElementById('btn-pet-info');   // 🐾 รอบ 613: อยู่ในแถวแท็บแล้ว (สร้างก่อนการ์ดเสมอ)
+  if(piBtn) piBtn.addEventListener('click', openPetInfoOverlay);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
+  /* 📐 รอบ 613: วัดตำแหน่งจริง "หลังการ์ดถูกสร้าง" — เวที (.stage-hero) เพิ่งมีจริงตรงนี้
+     (เรียกตอนต้น renderDashboard ได้ค่าของการ์ดรอบก่อน → รอบแรกสุดยังไม่มีเวทีเลย) */
+  alignStageCols();
+  watchStageCols();   // เวทีถูกสร้างใหม่ทุก render → ย้ายตัวเฝ้าไปเกาะตัวใหม่
   /* 🎬 รอบ 604: เวทีกลาง = โชว์น้องน่ารัก (ไม่ใช่เหรียญแรงค์แล้ว) → คลิกเวทีไม่เปิดแผงแรงค์อีก
      ดูแรงค์ = แท็บเล็กใต้วันเดือนปีบนแถบบน (#rank-tab · renderRankTab) · แตะตัวน้องยังเปิดโปรไฟล์เหมือนเดิม */
   /* 🎬 รอบ 605: คลิปน้อง — โหลดไม่ได้ (ยังไม่มีไฟล์ของชนิด/วัยนั้น, ออฟไลน์, เบราว์เซอร์เล่นไม่ได้)

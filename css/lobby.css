@@ -3203,3 +3203,42 @@ html.no-anim .pet-show .ps-emote{display:none;}
 @media (max-height:400px){
   .profile-plate .rank-tab{width:auto;margin-top:0;}
 }
+
+/* ============================================================
+   📐 จัดคอลัมน์เวที (รอบ 613 · ผู้ใช้สั่ง 27 ก.ค. 2026)
+   ① ปุ่ม "ข้อมูลน้อง" ย้ายมาอยู่แถวเดียวกับชื่อสัตว์ (หน้าสุด) ขนาดเท่ากันเป๊ะ
+   ② 3 แถวขวา (เหรียญ · NEW · ข้อมูลน้อง+ชื่อสัตว์) เริ่มตรง "เส้นแดง" = ขอบซ้ายเวทีน้อง
+      และกว้างไม่เกินเวที — ค่าจริงวัดด้วย alignCoinGroup/alignNewWord/alignPetTabs ใน js/ui.js
+   ③ ฟีดเพื่อนยืดขึ้นไปชนขอบบนเวที ("เส้นเขียว") — alignStageLeft() ดันด้วย margin-top ติดลบ
+   ============================================================ */
+/* ① ปุ่มข้อมูลน้องในแถวแท็บ — โครงเดียวกับ .pet-tab แต่คงโทนฟ้าเรืองของปุ่มเดิมไว้ */
+.lobby-stage .pet-tab.info{
+  border-color:rgba(95,200,255,.55);color:#dff0ff;
+  background:linear-gradient(180deg,#1b4c86,#10294f);
+  box-shadow:0 4px 12px rgba(3,15,35,.35), inset 0 0 18px rgba(80,180,255,.10);
+  text-shadow:0 0 8px rgba(90,200,255,.45);
+}
+.lobby-stage .pet-tab.info:hover{background:linear-gradient(180deg,#24619f,#16386a);border-color:#5fc8ff;}
+.lobby-stage .pet-tab.info .pib-alert{display:inline-block;animation:pibBlink 1s ease-in-out infinite;}
+html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
+
+/* ② สามแถวเริ่มที่เส้นเดียวกัน + ไม่กว้างเกินเวที */
+.lobby-stage .pet-tabs{max-width:var(--tabs-w,100%);}
+.lobby-stage .newword-banner{
+  align-self:flex-start;margin-left:var(--nw-left,0px);transform:none;
+  max-width:var(--nw-max,96%);min-width:0;
+}
+/* แบนเนอร์เลิกจัดกึ่งกลางแล้ว → คีย์เฟรมสลับคำต้องไม่มี translateX(-50%) ค้าง */
+@keyframes nwSwap{
+  0%  {transform:scale(.94);box-shadow:0 0 26px rgba(255,214,90,.75);border-color:var(--gold);}
+  60% {transform:scale(1.03);}
+  100%{transform:scale(1);}
+}
+/* คำใบ้ยอมหดก่อนเพื่อน ถ้าเวทีแคบ — ตัวคำศัพท์ห้ามหาย */
+.nw-hint{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.nw-word{flex-shrink:0;}
+.top-flex2{flex:0 0 0px;}
+
+/* ③ ฟีดเพื่อนยืดชนขอบบนเวที (margin-top ติดลบตั้งจาก JS) */
+.stage-left{width:min(280px,28%);}
+.stage-plate.feed-plate{margin-top:0;}
