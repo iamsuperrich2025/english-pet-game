@@ -3037,3 +3037,169 @@ html.no-anim .pet-show .ps-emote{display:none;}
 /* ขอบในเรืองแสงบาง ๆ ให้คลิปดูเป็น "จอ" ไม่ใช่รูสี่เหลี่ยมดำ */
 .stage-hero.ps-clip-mode .pet-show::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
   border-radius:20px;box-shadow:inset 0 0 42px rgba(4,10,24,.75), inset 0 0 0 1px rgba(140,200,255,.16);}
+
+/* ============================================================
+   🎩 หัวล็อบบี้โปร (รอบ 612 · ผู้ใช้สั่ง "แถบบนดูไม่ Professional")
+   หลักที่ยึด — ทุกก้อนบนแถบบนใช้ภาษาออกแบบเดียวกัน:
+   ① กระจกน้ำเงินเข้มชุดเดียว ขอบบาง มุมมน · ไม่มี pill ขาวขอบหนาโดดออกมาอีก
+   ② สูงเท่ากันทุกก้อน (--top-h) เรียงแนวเดียวกัน ไม่เหลื่อมกัน 2-3 px แบบเดิม
+   ③ ตัวเลขทุกตัว tabular-nums = ไม่ขยับซ้ายขวาตอนวิ่ง · label ตัวเล็กจาง ค่าเด่น
+   ④ ลด emoji ที่ทำหน้าที่เป็น "ไอคอนระบบ" (📅 ⏰ 🌐 👆) เหลือเฉพาะที่เป็นตัวตนของเกม (🪙 🆔 สัตว์)
+   ⚠️ ทับของเดิมด้วย cascade ท้ายไฟล์ — ของเดิมยังอยู่ครบ ย้อนได้ด้วยการลบบล็อกนี้
+   ============================================================ */
+.lobby-top{--top-h:38px;align-items:center;gap:9px;}
+
+/* ---------- ① การ์ดประจำตัว: รูป + ชื่อ + 🆔 + วันเวลา + แรงค์ รวมเป็นใบเดียว ---------- */
+.id-card{
+  display:flex;align-items:center;gap:11px;min-width:0;flex-shrink:1;
+  background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
+  border:1px solid var(--glass-line);border-radius:16px;
+  padding:6px 15px 6px 6px;box-shadow:0 6px 18px rgba(3,15,35,.34);
+}
+.id-card .pass-photo{
+  width:44px;height:50px;border-radius:11px;border:1px solid rgba(165,210,255,.55);
+  box-shadow:0 2px 8px rgba(0,20,60,.35);
+}
+.id-card .profile-plate{
+  background:none;border:none;border-radius:0;padding:0;box-shadow:none;
+  max-width:min(42vw,380px);line-height:1.25;
+}
+.profile-plate .student-chip{font-size:15px;font-weight:600;letter-spacing:.1px;display:flex;align-items:center;gap:6px;}
+.profile-plate .student-chip b{font-weight:700;}
+.profile-plate .student-chip .pl-click{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;}
+.profile-plate .chip-edit{
+  flex-shrink:0;font-size:10px;line-height:1;padding:4px 5px;border-radius:7px;
+  background:rgba(255,255,255,.10);opacity:.72;transition:opacity .12s, background .12s;
+}
+.profile-plate .chip-edit:hover{opacity:1;background:rgba(255,255,255,.24);}
+/* 🆔 = ชิปของตัวเอง (เดิมต่อท้ายชื่อด้วย · จนอ่านรวมเป็นประโยคเดียวกัน) */
+.id-chip{
+  flex-shrink:0;font-size:10.5px;font-weight:600;letter-spacing:.6px;color:#a8cdf2;
+  background:rgba(255,255,255,.09);border:1px solid rgba(160,205,255,.24);
+  border-radius:7px;padding:2px 7px;white-space:nowrap;
+}
+/* วัน–เวลา: วันที่จาง เวลาเด่นกว่านิดเดียว คั่นด้วยเส้นบาง */
+.profile-plate .clock-chip{
+  font-size:11.5px;font-weight:500;color:#8db3da;display:flex;align-items:center;gap:7px;margin-top:2px;
+}
+.clock-chip .ck-date{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.clock-chip .ck-time{
+  font-variant-numeric:tabular-nums;letter-spacing:.4px;color:#cfe4fa;flex-shrink:0;
+  padding-left:8px;border-left:1px solid rgba(160,205,255,.22);
+}
+/* แท็บแรงค์: เต็มความกว้างป้ายชื่อ อ่านเป็น "แถบความคืบหน้า" ไม่ใช่ป้ายลอย */
+.profile-plate .rank-tab{
+  width:100%;margin-top:5px;gap:7px;border-radius:8px;padding:2px 9px 2px 4px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+  border-left:3px solid var(--rk-c,#e0a92e);font-size:11px;
+}
+.profile-plate .rank-tab .rk-name{flex:1;text-align:left;letter-spacing:.2px;}
+.profile-plate .rank-tab .rk-bar{width:46px;height:5px;background:rgba(255,255,255,.16);}
+.profile-plate .rank-tab:hover{background:rgba(255,255,255,.15);}
+
+/* ---------- ② แถบตัวเลข: 3 ช่องในกล่องเดียว มีเส้นคั่น ---------- */
+.coin-group{
+  display:flex;align-items:stretch;flex-shrink:0;height:var(--top-h);
+  background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
+  border:1px solid var(--glass-line);border-radius:14px;padding:0 4px;
+  box-shadow:0 6px 18px rgba(3,15,35,.34);
+}
+.lobby-top .coin-group .coin-pill{
+  display:flex;align-items:center;gap:5px;padding:0 12px;border:none;border-radius:10px;
+  background:none;box-shadow:none;font-variant-numeric:tabular-nums;white-space:nowrap;
+  align-self:center;height:calc(var(--top-h) - 10px);transition:background .12s;
+}
+.lobby-top .coin-group .coin-pill:hover{background:rgba(255,255,255,.09);}
+.lobby-top .coin-group .coin-pill + .coin-pill{
+  margin-left:1px;box-shadow:inset 1px 0 0 rgba(160,205,255,.22);
+}
+.lobby-top .coin-group .coin-pill:first-child{font-size:17px;font-weight:800;color:#ffd76a;
+  text-shadow:0 1px 6px rgba(255,190,60,.35);}
+.lobby-top .coin-group .coin-pill.today,
+.lobby-top .coin-group .coin-pill.net{font-size:13px;font-weight:700;padding:0 11px;}
+.lobby-top .coin-group .coin-pill.today{color:#7fe0a8;}
+.lobby-top .coin-group .coin-pill.net{color:#7fd0ff;animation:none;filter:none;}
+.lobby-top .coin-group .coin-pill.net.off{opacity:.45;}
+.cp-lb{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8db3da;}
+.cp-v{font-variant-numeric:tabular-nums;}
+.lobby-top .coin-group .coin-pill.offline{
+  background:rgba(255,255,255,.10);color:#ffd2a8;font-size:11.5px;font-weight:600;
+  border:1px solid rgba(255,190,120,.35);padding:0 10px;
+}
+/* เหรียญเด้งรับตอนได้เหรียญ — เดิมเป็นเงาเรืองรอบ pill ขาว ตอนนี้เป็นแสงในกล่อง */
+@keyframes coinPillPop{
+  0%,100%{transform:scale(1);background:none;}
+  35%    {transform:scale(1.14);background:rgba(255,214,90,.22);}
+}
+
+/* ---------- ③ ปุ่มไอคอนขวาสุด: สี่เหลี่ยมเท่ากันทุกปุ่ม ---------- */
+.lobby-top .icon-btn{
+  width:var(--top-h);height:var(--top-h);padding:0;display:inline-flex;
+  align-items:center;justify-content:center;font-size:17px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
+  border:1px solid var(--glass-line);box-shadow:0 6px 18px rgba(3,15,35,.28);
+  transition:background .12s, transform .12s;
+}
+.lobby-top .icon-btn:hover{background:rgba(30,70,130,.9);}
+.lobby-top .icon-btn:active{transform:scale(.93);}
+
+/* ---------- ④ แถบคำศัพท์ใหม่: ลำดับสายตาชัด (ป้าย → คำ → คำใบ้ | รางวัล | เวลา) ---------- */
+.newword-banner{
+  gap:11px;padding:5px 9px 6px 9px;border-radius:13px;
+  background:linear-gradient(180deg,rgba(12,36,74,.84),rgba(6,20,44,.88));
+  border:1px solid var(--glass-line);box-shadow:0 6px 18px rgba(3,15,35,.3);
+}
+.newword-banner:hover{border-color:rgba(255,214,90,.6);box-shadow:0 6px 22px rgba(255,190,60,.22);}
+.nw-tag{
+  font-size:9.5px;font-weight:800;letter-spacing:1.2px;padding:3px 8px;border-radius:6px;
+  background:#ff5a7a;animation:none;text-transform:uppercase;
+}
+.nw-word{font-size:clamp(18px,3.1vh,26px);font-weight:700;letter-spacing:.3px;}
+.nw-hint{font-size:11px;color:#8db3da;}
+.nw-coin{
+  font-size:11.5px;padding:3px 9px;border-radius:8px;animation:none;
+  background:rgba(255,214,90,.16);color:#ffd76a;border:1px solid rgba(255,214,90,.4);box-shadow:none;
+}
+.nw-coin.paid{background:rgba(255,255,255,.08);border-color:rgba(160,205,255,.22);color:#8db3da;}
+.nw-countdown{font-size:10.5px;color:#8db3da;opacity:1;padding-left:10px;
+  border-left:1px solid rgba(160,205,255,.22);}
+.nw-bar{left:9px;right:9px;bottom:2px;}
+
+/* ---------- ⑤ แท็บสัตว์: สูงเท่ากันทุกใบ · ตัวที่เลือกอยู่มีขีดทองใต้ชื่อ ---------- */
+.lobby-stage .pet-tabs{gap:7px;}
+.lobby-stage .pet-tab{
+  height:33px;display:inline-flex;align-items:center;gap:5px;padding:0 14px;border-radius:10px;
+  font-size:13.5px;font-weight:600;border:1px solid var(--glass-line);
+  background:linear-gradient(180deg,rgba(12,36,74,.7),rgba(6,20,44,.75));color:#cfe4fa;
+  transition:background .12s, border-color .12s;
+}
+.lobby-stage .pet-tab:hover{background:rgba(30,70,130,.85);}
+.lobby-stage .pet-tab.on{
+  background:linear-gradient(180deg,#ffffff,#eaf3ff);color:var(--ink2);font-weight:700;
+  border-color:rgba(255,214,90,.9);box-shadow:0 4px 12px rgba(3,15,35,.3), inset 0 -3px 0 var(--gold);
+}
+.lobby-stage .pet-tab.add{
+  width:33px;padding:0;justify-content:center;font-size:15px;color:#a8cdf2;
+  border-style:dashed;border-color:rgba(160,205,255,.45);background:rgba(7,25,52,.45);
+}
+.lobby-stage .pet-tab.add:hover{color:#fff;border-color:var(--gold);}
+.lobby-stage .pet-tab.dinner{width:33px;padding:0;justify-content:center;font-size:16px;
+  border-color:rgba(255,200,120,.6);background:rgba(60,38,10,.6);}
+
+/* 📱 จอเตี้ย: หัวยังต้องอยู่แถวเดียว ไม่กินเวทีน้อง (กฎทองข้อ 7) */
+@media (max-height:520px){
+  .lobby-top{--top-h:32px;}
+  .id-card{padding:4px 11px 4px 4px;gap:8px;border-radius:13px;}
+  .id-card .pass-photo{width:34px;height:39px;border-radius:9px;}
+  .profile-plate .student-chip{font-size:13px;}
+  .profile-plate .clock-chip{font-size:10.5px;margin-top:1px;}
+  .profile-plate .rank-tab{margin-top:3px;}
+  .lobby-top .coin-group .coin-pill:first-child{font-size:15px;}
+  .lobby-top .coin-group .coin-pill.today,
+  .lobby-top .coin-group .coin-pill.net{font-size:11.5px;}
+  .lobby-stage .pet-tab{height:29px;font-size:12.5px;padding:0 11px;}
+  .lobby-stage .pet-tab.add,.lobby-stage .pet-tab.dinner{width:29px;}
+}
+@media (max-height:400px){
+  .profile-plate .rank-tab{width:auto;margin-top:0;}
+}

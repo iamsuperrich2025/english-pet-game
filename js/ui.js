@@ -301,9 +301,9 @@ function renderNewWord(){
      รับไปแล้วเปลี่ยนเป็นเครื่องหมายถูก (ไม่ล่อให้กดรัวๆ โดยไม่ได้อะไร) */
   const paid = state.nwPaidAt === state.nwAt;
   el.innerHTML = `
-    <span class="nw-tag">🆕 New!</span>
+    <span class="nw-tag">NEW</span>
     <span class="nw-word">${en}</span>
-    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? 👆 <b>คลิก</b></span>
+    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? <b>แตะดูได้เลย</b></span>
     <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>
     <span class="nw-countdown" title="เวลาที่เหลือก่อนเปลี่ยนคำใหม่"></span>
     <i class="nw-bar"><i class="nw-bar-fill"></i></i>`;
@@ -354,7 +354,8 @@ function nwCountdownTick(){
   if(!cd) return;
   const left = Math.max(0, NEW_WORD_MS - (Date.now() - (state.nwAt || 0)));
   const s = Math.ceil(left / 1000);
-  cd.textContent = `⏳ ${Math.floor(s/60)}:${String(s % 60).padStart(2,'0')}`;
+  /* 🎩 รอบ 612: ตัด ⏳ ออก — มีแถบเวลาที่ขอบล่างแบนเนอร์บอกอยู่แล้ว เหลือตัวเลขล้วนอ่านง่ายกว่า */
+  cd.textContent = `อีก ${Math.floor(s/60)}:${String(s % 60).padStart(2,'0')}`;
   if(fill) fill.style.width = (100 * (1 - left / NEW_WORD_MS)).toFixed(1) + '%';
 }
 
@@ -599,9 +600,11 @@ function renderClock(){
   const el = document.getElementById('clock-chip');
   if(!el) return;
   const now = new Date(Date.now());
-  const dateTxt = now.toLocaleDateString('th-TH', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  /* 🎩 รอบ 612: วันที่แบบสั้น ("จ. 27 ก.ค. 2569") + เวลาแยกชิ้นเป็นตัวเลขเด่น
+     — เดิมเป็นประโยคยาว "📅 วันจันทร์ที่ 27 กรกฎาคม 2569 · ⏰ 16:36:19 น." กินพื้นที่จนป้ายชื่อดูแน่น */
+  const dateTxt = now.toLocaleDateString('th-TH', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
   const timeTxt = now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  el.textContent = `📅 ${dateTxt} · ⏰ ${timeTxt} น.`;
+  el.innerHTML = `<span class="ck-date">${dateTxt}</span><span class="ck-time">${timeTxt}</span>`;
   renderRainBar();                                   // แถบนับถอยหลังฝนเดินไปพร้อมนาฬิกา
   const compLive = document.getElementById('comp-live');
   if(compLive) compLive.textContent = compLiveTotal().toFixed(2);   // ตัวเลขรายได้คอมวิ่งทุกวินาที
@@ -3258,9 +3261,11 @@ function renderDashboard(){
   const myPlName = (state.profileName || 'ผู้เล่น') + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
   const myPlGrade = state.student ? (state.student.grade || '') : '';
   if(state.student){
-    chip.innerHTML = `<span class="pl-click" data-uid="${escapeHTML(myUid)}" data-n="${escapeHTML(myPlName)}" data-g="${escapeHTML(myPlGrade)}">${playerAvatarHTML()} <b>${escapeHTML(state.profileName || 'ผู้เล่น')}</b></span>`
+    /* 🎩 รอบ 612: ในแถบบนไม่ต้องมีรูปเล็กซ้ำ (รูป passport ใบใหญ่อยู่ติดกันแล้ว) ·
+       🆔 ห่อเป็นชิปของตัวเอง (.id-chip) แทนการต่อท้ายด้วย · ให้อ่านง่ายเป็นระเบียบ */
+    chip.innerHTML = `<span class="pl-click" data-uid="${escapeHTML(myUid)}" data-n="${escapeHTML(myPlName)}" data-g="${escapeHTML(myPlGrade)}"><b>${escapeHTML(state.profileName || 'ผู้เล่น')}</b></span>`
       + ` <button class="chip-edit" id="btn-edit-name" title="เปลี่ยนชื่อในเกม">✏️</button>`
-      + ` · ${idTag(myUid)}`;
+      + ` <span class="id-chip" title="รหัสประจำตัวของหนู — บอกเพื่อนเพื่อเพิ่มเป็นเพื่อนกันได้">${idTag(myUid)}</span>`;
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
     bindPlayerClicks();
   }else chip.textContent = '';

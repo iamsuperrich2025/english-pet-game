@@ -101,21 +101,29 @@
     <header class="lobby-top">
       <!-- รอบ 254: มุมซ้ายบน = รูปตัวละคร blk ครึ่งตัวสไตล์ passport (แทน rank เล็กที่ถอดออก —
            ดูแรงค์คลิกที่เหรียญแรงค์ใหญ่กลางเวทีแทน) · ชื่อ+เวลาเลื่อนมาแทนตำแหน่ง rank เดิม -->
-      <div class="pass-photo" id="pass-photo" title="ตัวละครของหนู"></div>
-      <div class="profile-plate">
-        <div class="student-chip" id="student-chip"></div>
-        <div class="student-chip clock-chip" id="clock-chip"></div>
-        <!-- 🎖️ รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026): แรงค์กลับมาเป็น "แท็บเล็ก" ใต้วันเดือนปี
-             (เดิมเป็นเหรียญยักษ์ฉากหลังเวที — เวทีเปลี่ยนเป็นโชว์น้องน่ารักแทน) · เติมโดย renderRankTab() -->
-        <button class="rank-tab" id="rank-tab" title="ดูแรงค์ของหนู"></button>
+      <!-- 🎩 รอบ 612 (ผู้ใช้สั่ง "แถบบนดูไม่ Professional"): จัดหัวล็อบบี้เป็น 2 ก้อนใหญ่ ภาษาออกแบบเดียวกัน
+           ① .id-card = รูป passport + ชื่อ + 🆔 + วันเวลา + แรงค์ (เดิมรูปลอยแยกจากป้ายชื่อ ดูกระจัดกระจาย)
+           ② .coin-group = แถบตัวเลข 3 ช่องสูงเท่ากัน มีเส้นคั่น (เดิมเป็น pill 3 อันคนละสี คนละสูง)
+           ⚠️ id ทุกตัวคงเดิม — ui.js/main.js/auth.js อ้างอิงอยู่ (closest('.coin-pill') ยังทำงานปกติ) -->
+      <div class="id-card">
+        <div class="pass-photo" id="pass-photo" title="ตัวละครของหนู"></div>
+        <div class="profile-plate">
+          <div class="student-chip" id="student-chip"></div>
+          <div class="student-chip clock-chip" id="clock-chip"></div>
+          <!-- 🎖️ รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026): แรงค์กลับมาเป็น "แท็บเล็ก" ใต้วันเดือนปี
+               (เดิมเป็นเหรียญยักษ์ฉากหลังเวที — เวทีเปลี่ยนเป็นโชว์น้องน่ารักแทน) · เติมโดย renderRankTab() -->
+          <button class="rank-tab" id="rank-tab" title="ดูแรงค์ของหนู"></button>
+        </div>
       </div>
       <div class="top-flex"></div>
-      <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="coin-count">0</span></div>
-      <div class="coin-pill today">📅 +<span id="coin-today">0</span></div>
-      <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
-      <div class="coin-pill net" id="net-pill" style="display:none">🌐 <span class="net-coin">🪙</span>+<span id="net-live">0.00</span></div>
-      <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
-      <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
+      <div class="coin-group">
+        <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="coin-count">0</span></div>
+        <div class="coin-pill today"><span class="cp-lb">วันนี้</span><span class="cp-v">+<span id="coin-today">0</span></span></div>
+        <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
+        <div class="coin-pill net" id="net-pill" style="display:none"><span class="cp-lb">ออนไลน์</span><span class="cp-v"><span class="net-coin">🪙</span>+<span id="net-live">0.00</span></span></div>
+        <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
+        <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
+      </div>
       <!-- รอบ 179: ปุ่มแชท (หน้ารวมข้อความแบบ Messenger ธีมฟ้า) แทนที่ปุ่มข้าวเย็นเดิม
            ปุ่มข้าวเย็น #btn-dinner ย้ายไปอยู่ข้างปุ่ม ➕ ในแถวแท็บสัตว์ (สร้างใน renderDashboard) -->
       <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
