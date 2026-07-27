@@ -181,7 +181,7 @@ currentBadgeScore:500 · rolloverBadgeWeek:504 · addDiligent:517 · celebrateBa
 newRound:601 · updateTimerBar:640 · updateComboPill:646 · pickCard:650 · checkMatch:662 · renderCats:776
 startQuiz:811 · renderQuizQuestion:827 · quizNext:890 · finishQuiz:903
 
-## js/gradelock.js (155 บรรทัด · 14 รายการ)
+## js/gradelock.js (158 บรรทัด · 14 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeHistList:33
 gradeLockLeftMs:43 · gradeLockLeftDays:50 · gradeUnlockAt:51 · gradeLocked:52 · gradeUpOptions:55 · gradeChangeTo:62
 gradeLockNote:86 · openGradeChange:94
@@ -367,23 +367,23 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (222 บรรทัด · 4 รายการ)
-syncMusicBtn:84 · showQuizBackPay:120 · fitQbp:162 · bootGame:176
+## js/main.js (231 บรรทัด · 4 รายการ)
+syncMusicBtn:93 · showQuizBackPay:129 · fitQbp:171 · bootGame:185
 
-## js/moto3d.js (2,022 บรรทัด · 115 รายการ)
+## js/moto3d.js (2,031 บรรทัด · 116 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
 - 147-435 DOM เครื่องเกมพกพา (สร้างครั้งเดียว · CSS ฉีดเอง ไม่แตะ style.css)
 - 436-676 ถนนจากแผนที่จริง → geometry + ตารางแฮชชนถนน
-- 677-1011 ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
-- 1012-1064 🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
-- 1065-1182 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
-- 1183-1215 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
-- 1216-1312 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
-- 1313-1491 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
-- 1492-1533 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
-- 1534-1676 คำศัพท์ + ตัวอักษรบนถนน
-- 1677-1893 สร้างโลกครั้งเดียว + ลูปเกม
-- 1894-2022 เข้า/ออกโลก
+- 677-1016 ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
+- 1017-1069 🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
+- 1070-1187 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
+- 1188-1220 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
+- 1221-1317 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
+- 1318-1500 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
+- 1501-1542 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
+- 1543-1685 คำศัพท์ + ตัวอักษรบนถนน
+- 1686-1902 สร้างโลกครั้งเดียว + ลูปเกม
+- 1903-2031 เข้า/ออกโลก
 ### รายการ js/moto3d.js
 REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
 GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
@@ -393,18 +393,18 @@ HARD_LAND:45 · COIN_CURVE_RAD:46 · NET_SEND_MS:48 · PEER_COLORS:49 · CHAT_MS
 ENG_FILES:95 · CSS:150 · buildDom:335 · segKey:439 · smoothPts:442 · featKey:458
 addFeat:459 · genFeatures:464 · terrainAt:483 · roadGroundY:496 · decalTex:504 · makeDecals:523
 decalTick:532 · buildRoads:549 · distToSeg:645 · roadInfo:650 · onRoad:656 · randomRoadPoint:657
-makeTextSprite:680 · letterTexture:693 · woodTileMat:708 · muralTexture:719 · buildSchool:731 · buildScenery:877
-scatterTrees:956 · postTick:976 · scatterClouds:1003 · makeDog:1015 · spawnDog:1030 · dogHit:1040
-dogTick:1051 · coinTexture:1069 · makeCoins:1080 · loadCoinImg:1086 · addCoin:1098 · clearCoins:1106
-addFreeCoin:1110 · coinTierAt:1118 · coinFx:1128 · grabCoin:1137 · coinTick:1154 · scatterCoinTick:1168
-placeSpecialCoin:1175 · makeVehicle:1187 · mCarSplitWheel:1224 · mCarEnsure:1250 · mCarMat:1267 · mCarBuild:1280
-mCarCode:1307 · netReady:1319 · netJoin:1325 · netSend:1338 · sendChat:1352 · showPeerBubble:1362
-removePeerBubble:1369 · renderBoard:1376 · peerColor:1396 · buildPeer:1400 · onPeer:1422 · dropPeer:1457
-netLeave:1464 · peerTick:1469 · PEER_DRAW_MAX:1497 · drawnPeers:1498 · drawSlotFree:1499 · showPeerAgain:1500
-hidePeer:1507 · tickDrawBudget:1512 · spawnSlot:1520 · pickWord:1537 · spawnLetters:1547 · renderWordHud:1562
-fitWord:1570 · collectTick:1577 · completeWord:1596 · relocTick:1621 · gpsTick:1636 · miniTick:1645
-build:1680 · applyVehicleUi:1714 · fit:1732 · tick:1740 · frame:1748 · start:1897
-exitWorld:1958
+TXT_SPR_H:682 · makeTextSprite:683 · letterTexture:698 · woodTileMat:713 · muralTexture:724 · buildSchool:736
+buildScenery:882 · scatterTrees:961 · postTick:981 · scatterClouds:1008 · makeDog:1020 · spawnDog:1035
+dogHit:1045 · dogTick:1056 · coinTexture:1074 · makeCoins:1085 · loadCoinImg:1091 · addCoin:1103
+clearCoins:1111 · addFreeCoin:1115 · coinTierAt:1123 · coinFx:1133 · grabCoin:1142 · coinTick:1159
+scatterCoinTick:1173 · placeSpecialCoin:1180 · makeVehicle:1192 · mCarSplitWheel:1229 · mCarEnsure:1255 · mCarMat:1272
+mCarBuild:1285 · mCarCode:1312 · netReady:1324 · netJoin:1330 · netSend:1343 · sendChat:1357
+showPeerBubble:1367 · removePeerBubble:1374 · renderBoard:1381 · peerColor:1403 · buildPeer:1407 · onPeer:1431
+dropPeer:1466 · netLeave:1473 · peerTick:1478 · PEER_DRAW_MAX:1506 · drawnPeers:1507 · drawSlotFree:1508
+showPeerAgain:1509 · hidePeer:1516 · tickDrawBudget:1521 · spawnSlot:1529 · pickWord:1546 · spawnLetters:1556
+renderWordHud:1571 · fitWord:1579 · collectTick:1586 · completeWord:1605 · relocTick:1630 · gpsTick:1645
+miniTick:1654 · build:1689 · applyVehicleUi:1723 · fit:1741 · tick:1749 · frame:1757
+start:1906 · exitWorld:1967
 
 ## js/music.js (157 บรรทัด · 0 รายการ)
 
@@ -588,7 +588,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (256 บรรทัด · 0 รายการ)
 
-## css/lobby.css (3,929 บรรทัด · 599 selector)
+## css/lobby.css (4,000 บรรทัด · 619 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-quiz:134,135,136,137(+6) · #quiz-choices:146,147 · .word-card:154 · .quiz-choice:155,156,157
@@ -688,7 +688,11 @@ vbRender:148 · vbCardHTML:194
 .ws-win-in:3029,3032 · .sec-online:3055 · .rank-tab:3083,3084,3085,3086(+2) · .pet-show-bg:3113,3116,3120,3124(+14) · .pet-show:3175,3178,3190,3192(+15) · .ps-video:3311
 .id-card:3365,3371,3375 · .id-chip:3388 · .clock-chip:3397,3398 · .coin-group:3413 · .cp-lb:3435 · .cp-v:3436
 .top-flex2:3552 · #panel-factory:3571,3572,3576,3577(+39) · .grid2x8:3700,3706 · .mine-strip:3724,3726,3727,3732(+4) · .mb-strip:3738,3777 · .gmark:3884,3888,3889,3890(+1)
-.gm-stack:3893,3897 · .gm-row:3899 · .lb-name:3901,3902,3903 · .coin-stack:3917 · .grade-line:3921,3928,3929
+.gm-stack:3893,3897 · .gm-row:3899 · .lb-name:3901,3902,3903 · .coin-stack:3917 · .grade-line:3921,3928,3929 · .grade-edit:3936,3941,3942
+.gradelock-box:3944,3960,3965,3967 · .gl-head:3945 · .gl-emoji:3946 · .gl-ht:3947 · .gl-cur:3948 · .gl-lock:3949,3954
+.gl-ok:3953 · .gl-lock-sub:3955 · .gl-why:3956 · .gl-pick-lb:3957 · .gl-opts:3958 · .gl-hist:3968
+.gl-hline:3969 · .gl-hg:3973 · .gl-hat:3974 · .gl-harr:3975 · .gl-foot:3976 · .gl-cf:3977
+.reg-gradelock:3997
 
 ## css/style.css (1,799 บรรทัด · 463 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
