@@ -72,6 +72,7 @@ const DEFAULT_STATE = {
   wsScore:0,                          // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (ขึ้นกระดานอันดับ field ws)
   wsWords:0,                          // 🔎 รอบ 590: จำนวนคำที่หาเจอทั้งหมด (โชว์ใต้ชื่อในกระดาน)
   wsBoards:0,                         // 🔎 รอบ 590: กระดานที่เล่นจบครบทุกคำ (โบนัสจบใบ WS_CLEAR_BONUS)
+  tpUsed:[],                          // ⌨️ รอบ 648: คำที่พิมพ์สำเร็จแล้วในเกมพิมพ์คำศัพท์ — กติกา "คำห้ามซ้ำ" (หมดคลัง = ล้างแล้ววนใหม่)
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
@@ -336,6 +337,7 @@ function loadState(){
       if(typeof s.wsScore !== 'number' || s.wsScore < 0) s.wsScore = 0;   // 🔎 รอบ 590: แต้มสะสม Word Search
       if(typeof s.wsWords !== 'number' || s.wsWords < 0) s.wsWords = 0;
       if(typeof s.wsBoards !== 'number' || s.wsBoards < 0) s.wsBoards = 0;
+      if(!Array.isArray(s.tpUsed)) s.tpUsed = [];   // ⌨️ รอบ 648: คำที่พิมพ์แล้วในเกมพิมพ์คำศัพท์ (กันคำซ้ำ)
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];

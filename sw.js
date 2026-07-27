@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v199';  // v199: คลิปน้องตามช่วงวัย (mp4 ไม่ผ่าน SW)
+const CACHE_VERSION = 'pet-vocab-v200';  // v200: รอบ 648: เกมพิมพ์คำศัพท์ (typing.js)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

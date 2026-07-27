@@ -226,6 +226,10 @@ const sfx = {
     [f, f*1.26, f*1.5].forEach((x,i)=>beep(x, .14, i*.05, 'triangle', .15));
     beep(f*2, .26, .16, 'sine', .09);
   },
+  /* ⌨️ รอบ 648: เสียงกดคีย์บอร์ดจริง (เกมพิมพ์คำศัพท์) — ต้องสั้นมากและไม่ล้า เพราะกดรัว ๆ ทีละสิบครั้ง
+     down (up=false) = กดลงสุด: ช็อตนอยส์ "แคร่ก" + ตุบต่ำตอนแป้นชนฐาน · up = ปล่อยเด้งขึ้น เบา/แหลมกว่า
+     bright=true (แป้นตัวถัดไปถูก) ปรับสีเสียงให้สดขึ้นเล็กน้อย ไม่ใช่เสียงคนละตัว */
+  keyTap : (up, bright)=>{ keyTapSynth(!!up, !!bright); },
   /* 🎉 รอบ 598: เก็บคำครบทั้งกระดาน (Word Search) — แฟนแฟร์ไต่ 4 ตัว + คอร์ดปิดค้าง
      (เดิม sfx.win ไม่มีจริง โค้ดเลยตกไปใช้ sfx.coin = จิ๊งเดียว ไม่สมกับการเก็บครบทั้งกระดาน) */
   win: ()=>{
@@ -393,6 +397,41 @@ function cashierSynth(){
     });
     // เศษเหรียญกรุ๊งกริ๊งตกท้ายเสียง
     [1568,1976,2637].forEach((fq,i)=>beep(fq,.08,.36+i*.06,'triangle',.07));
+  }catch(e){}
+}
+
+/* ---------- ⌨️ เสียงกดคีย์บอร์ด (รอบ 648 · เกมพิมพ์คำศัพท์ js/typing.js) ----------
+   คีย์บอร์ดจริงมี 2 เสียงต่อการกด 1 ครั้ง: "แคร่ก" ตอนกดลง + "แป๊ะ" เบา ๆ ตอนปล่อยเด้งขึ้น
+   ทำเป็นนอยส์สั้น 15-30 ms ผ่าน bandpass (เสียงพลาสติกกระทบ) + ตุบไซน์ต่ำเฉพาะจังหวะกดลง
+   ⚠️ ห้ามยาวกว่านี้ — เด็กกดรัวทีละสิบครั้ง เสียงยาว = ทับกันเละและล้าหู */
+function keyTapSynth(up, bright){
+  if(!state.sound) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const t = audioCtx.currentTime;
+    const dur = up ? .016 : .028;
+    const len = Math.ceil(audioCtx.sampleRate*dur);
+    const buf = audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len, 2.2);  // ซองจดหมายตกเร็ว = "คลิก" ไม่ใช่ "ซ่า"
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const bp = audioCtx.createBiquadFilter(); bp.type='bandpass';
+    bp.frequency.value = (up?3000:1900) * (bright?1.18:1); bp.Q.value = 1.2;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(up?.13:.24, t);
+    g.gain.exponentialRampToValueAtTime(.001, t+dur);
+    src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+    src.start(t); src.stop(t+dur);
+    if(!up){                       // แป้นชนฐาน = ตุบต่ำสั้น ๆ (ให้รู้สึกว่ามีน้ำหนัก)
+      const o = audioCtx.createOscillator(), og = audioCtx.createGain();
+      o.type='sine';
+      o.frequency.setValueAtTime(200, t);
+      o.frequency.exponentialRampToValueAtTime(92, t+.05);
+      og.gain.setValueAtTime(.15, t);
+      og.gain.exponentialRampToValueAtTime(.001, t+.06);
+      o.connect(og); og.connect(audioCtx.destination);
+      o.start(t); o.stop(t+.07);
+    }
   }catch(e){}
 }
 
