@@ -3130,6 +3130,127 @@ function renderFeedCard(){
   }
 }
 
+/* ============================================================
+   🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
+   เปิดจากปุ่ม "🌏 ดูทั้งหมด" ในกล่องฟีดเพื่อนเดิม · 2 ส่วน:
+   1) ใครออนไลน์ทำอะไรอยู่ตอนนี้ (จาก Online.friends/presence เดิม)
+   2) โพสต์กิจกรรมทุกคน (จาก /gfeed) — เพื่อนก่อนเสมอทั้ง 2 ส่วน แล้วค่อยคนอื่น
+   ไลก์/คอมเมนต์ทำได้เฉพาะเพื่อนของเจ้าของโพสต์ (rules เช็กจริง — คนอื่นดูอย่างเดียว)
+   ============================================================ */
+let __fdbOpenComments = {};   // postId → true = ช่องคอมเมนต์เปิดอยู่ (คงสถานะข้าม re-render)
+let __fdbDraft = {};          // postId → ข้อความคอมเมนต์ที่พิมพ์ค้างไว้ (กันหายตอน re-render จากคนอื่นไลก์/คอมเมนต์โพสต์อื่น)
+
+function openFeedBoard(){
+  sfx.select();
+  if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะดู Feed ได้นะ 📡'); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'fdb-overlay';
+  overlay.innerHTML = `<div class="fdb-box">
+    <div class="fdb-head"><span>📰 Feed ทุกคน</span><button class="fdb-close" type="button">✕</button></div>
+    <div class="fdb-live" id="fdb-live"></div>
+    <div class="fdb-list" id="fdb-list"><div class="fdb-empty">กำลังโหลด… 📰</div></div>
+  </div>`;
+  document.body.appendChild(overlay);
+  const close = ()=>{ overlay.remove(); gfeedWatchStop(); };
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+  overlay.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); close(); });
+  renderFeedBoardLive();
+  gfeedWatchStart();
+  renderFeedBoard();
+}
+
+/* ส่วนบน: ใครออนไลน์ทำอะไรอยู่ตอนนี้ — เพื่อนก่อนเสมอ แล้วค่อยคนอื่น
+   (Online.friends = ทุกคนที่ออนไลน์จริง ไม่ใช่แค่เพื่อนของเรา — presence /presence เดิมอ่านสาธารณะอยู่แล้ว) */
+function renderFeedBoardLive(){
+  const el = document.getElementById('fdb-live');
+  if(!el || typeof Online === 'undefined') return;
+  const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  const meRow = `<div class="fdb-live-row fdb-live-me"><span class="fdb-dot"></span>
+      <b>⭐ ${escapeHTML(state.profileName || (typeof selfTag === 'function' ? selfTag() : 'เรา'))}</b>
+      ${idTag(onlineKey())} · กำลังเล่นอยู่ตอนนี้</div>`;
+  const list = (Online.friends || []).slice().sort((a,b)=>(fset.has(a.id)?0:1) - (fset.has(b.id)?0:1));
+  const rows = list.map(f=>`<div class="fdb-live-row${fset.has(f.id) ? ' fdb-fr' : ''}">
+      <span class="fdb-dot"></span><b>${escapeHTML(f.n)}</b> ${idTag(f.id)} · ${escapeHTML(f.act)}</div>`).join('');
+  el.innerHTML = `<div class="fdb-live-title">🟢 ใครออนไลน์ทำอะไรอยู่ตอนนี้</div>
+    <div class="fdb-live-rows">${meRow}${rows}</div>`;
+}
+
+/* ส่วนล่าง: โพสต์กิจกรรมทุกคน (Online.gfeed เรียงเพื่อนก่อนแล้วจาก gfeedRebuild ใน online.js) */
+function renderFeedBoard(){
+  const el = document.getElementById('fdb-list');
+  if(!el) return;
+  const feed = (typeof Online !== 'undefined' && Online.gfeed) ? Online.gfeed : [];
+  if(!feed.length){
+    el.innerHTML = `<div class="fdb-empty">ยังไม่มีกิจกรรมให้อ่านตอนนี้ 😴<br>
+      <small>เล่นเกม/ทำภารกิจแล้วเปิดเผยไว้ในตั้งค่า ⚙️ กิจกรรมของทุกคนจะมาโชว์ที่นี่</small></div>`;
+    return;
+  }
+  const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  const me = onlineKey();
+  el.innerHTML = feed.map(it=>{
+    const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
+    const canReact = it.u === me || fset.has(it.u);
+    const open = !!__fdbOpenComments[it.key];
+    const cmHTML = !open ? '' : `
+      <div class="fdb-cm-list">${it.comments.length ? it.comments.map(c=>
+        `<div class="fdb-cm-row"><b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}</div>`).join('')
+        : '<div class="fdb-cm-empty">ยังไม่มีคอมเมนต์ — เป็นคนแรกสิ!</div>'}</div>
+      ${canReact
+        ? `<div class="fdb-cm-add"><input class="fdb-cm-input" data-key="${escapeHTML(it.key)}" maxlength="120" placeholder="คอมเมนต์…" value="${escapeHTML(__fdbDraft[it.key]||'')}">
+           <button class="fdb-cm-send" data-key="${escapeHTML(it.key)}" type="button">ส่ง</button></div>`
+        : `<div class="fdb-cm-locked">💬 คอมเมนต์ได้เฉพาะเพื่อนของเจ้าของโพสต์เท่านั้น</div>`}`;
+    return `<div class="fdb-row" data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g||'')}">
+      <div class="fdb-row-top"><span class="fdb-ico">${fc.e}</span>
+        <span class="fdb-txt"><b class="fdb-name">${escapeHTML(it.n)}</b> ${escapeHTML(it.tx)}
+        <small class="fdb-ago">· ${feedAgo(it.ts)}</small></span></div>
+      <div class="fdb-actions">
+        <button class="fdb-like${it.likedByMe?' on':''}" data-key="${escapeHTML(it.key)}" data-liked="${it.likedByMe?1:0}" type="button"${canReact?'':' disabled'}>
+          ${it.likedByMe?'❤️':'🤍'}${it.likeN>0?' '+it.likeN:''}</button>
+        <button class="fdb-cmt-toggle" data-key="${escapeHTML(it.key)}" type="button">💬${it.comments.length>0?' '+it.comments.length:''}</button>
+      </div>
+      ${cmHTML}
+    </div>`;
+  }).join('');
+  bindFeedBoardEvents(el);
+}
+
+function bindFeedBoardEvents(el){
+  el.querySelectorAll('.fdb-name').forEach(n=>n.addEventListener('click', ()=>{
+    const row = n.closest('.fdb-row');
+    if(!row) return;
+    sfx.select();
+    showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
+  }));
+  el.querySelectorAll('.fdb-like').forEach(b=>b.addEventListener('click', ()=>{
+    if(b.disabled) return;
+    sfx.select();
+    gfeedToggleLike(b.dataset.key, b.dataset.liked === '1');
+  }));
+  el.querySelectorAll('.fdb-cmt-toggle').forEach(b=>b.addEventListener('click', ()=>{
+    sfx.select();
+    __fdbOpenComments[b.dataset.key] = !__fdbOpenComments[b.dataset.key];
+    renderFeedBoard();
+  }));
+  el.querySelectorAll('.fdb-cm-input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{ __fdbDraft[inp.dataset.key] = inp.value; });
+    inp.addEventListener('keydown', e=>{
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      const btn = el.querySelector(`.fdb-cm-send[data-key="${CSS.escape(inp.dataset.key)}"]`);
+      if(btn) btn.click();
+    });
+  });
+  el.querySelectorAll('.fdb-cm-send').forEach(b=>b.addEventListener('click', ()=>{
+    const key = b.dataset.key;
+    const input = el.querySelector(`.fdb-cm-input[data-key="${CSS.escape(key)}"]`);
+    if(!input || !input.value.trim()) return;
+    const val = input.value;
+    gfeedAddComment(key, val).then(ok=>{
+      if(ok){ delete __fdbDraft[key]; sfx.select(); }
+    }).catch(msg=>{ toast(typeof msg === 'string' ? msg : 'ส่งคอมเมนต์ไม่สำเร็จ ลองใหม่นะ'); });
+  }));
+}
+
 /* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header
    (แท็บกับ chip อยู่คนละ container — คำนวณจาก rect จริง หารด้วย scale เผื่อเพจถูกย่อ)
    เรียกท้าย renderDashboard + ตอน resize */
@@ -3691,7 +3812,7 @@ function renderDashboard(){
   card.innerHTML = `
     <div class="stage-left">
       <div class="stage-plate feed-plate">
-        <div class="plate-title">⬢ ฟีดเพื่อน 📰</div>
+        <div class="plate-title">⬢ ฟีดเพื่อน 📰<button class="feed-all-btn" id="btn-feed-all" type="button">🌏 ดูทั้งหมด</button></div>
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
@@ -3699,6 +3820,8 @@ function renderDashboard(){
 
   const piBtn = document.getElementById('btn-pet-info');   // 🐾 รอบ 613: อยู่ในแถวแท็บแล้ว (สร้างก่อนการ์ดเสมอ)
   if(piBtn) piBtn.addEventListener('click', openPetInfoOverlay);
+  const feedAllBtn = document.getElementById('btn-feed-all');   // 🌍 รอบ 639: เปิดหน้า Feed เต็ม (ทุกคน + ไลก์/คอมเมนต์)
+  if(feedAllBtn) feedAllBtn.addEventListener('click', openFeedBoard);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
   /* 📐 รอบ 613: วัดตำแหน่งจริง "หลังการ์ดถูกสร้าง" — เวที (.stage-hero) เพิ่งมีจริงตรงนี้

@@ -101,6 +101,9 @@ function exitGame(){
   const earned = game.sessionCoins;
   const doExit = ()=>{ renderDashboard(); showScreen('screen-dashboard'); };
   if(earned <= 0){ doExit(); return; }   // ยังไม่ได้เก็บเหรียญเลย (แค่แวะเข้ามา) → ออกเลย ไม่ต้องมีการ์ด
+  // 📰 รอบ 639: สรุปเหรียญที่ได้จากจับคู่คำศัพท์รอบนี้ → ขึ้น Feed (สรุปตอนจบรอบ ไม่โพสต์ทุกคำ กันฟีดรก)
+  if(typeof feedEvent === 'function')
+    feedEvent('coin', `จับคู่คำศัพท์ได้ ${fmtNum(earned)} เหรียญ (${game.sessionMatches} คำ) 🎮`);
   const isRecord = earned > game.prevBest;             // เกินสถิติสัปดาห์เดิม = สถิติใหม่
   const allTime  = isRecord && earned > game.prevAllBest;   // เป็นสถิติสูงสุดตลอดกาลด้วยไหม
   const replay = ()=>{                                  // เล่นต่ออีกรอบโหมดเดิม (ไม่กลับหน้าเมือง) + นับสตรีค

@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `gfeed` (รอบ 639 · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์)** — `/gfeed/<postId>` = โพสต์กิจกรรมรวมทุกคน (ไม่ใช่แค่คนที่ follow) พร้อม `lk/<uid>` (ไลก์) และ `cm/<cid>` (คอมเมนต์) ซ้อนอยู่ใต้โพสต์เดียวกัน · **ไลก์/คอมเมนต์เขียนได้เฉพาะเจ้าของโพสต์เอง หรือคนที่เป็นเพื่อนกับเจ้าของโพสต์** (เช็กจาก `/friends` จริงฝั่ง rules ไม่ใช่แค่ client) — คนแปลกหน้าอ่านโพสต์ได้ปกติแต่กดไลก์/คอมเมนต์ไม่ได้ (ตามที่ผู้ใช้เลือก 28 ก.ค. 2026 เพื่อความปลอดภัยเด็ก) · `.indexOn:"u"` ไว้ให้ client กวาดโพสต์เก่าของตัวเองทิ้งเมื่อเกิน `GFEED_KEEP_ME`(10 โพสต์/คน) · **ยังไม่ publish = เกมไม่พัง:** เขียน/ไลก์/คอมเมนต์โดน deny เงียบๆ → หน้า Feed เปิดได้ปกติ (เห็น "ใครออนไลน์ทำอะไรอยู่" จาก `/presence` เดิมที่ publish แล้ว) แต่ยังไม่เห็นโพสต์กิจกรรมของคนอื่น/กดไลก์-คอมเมนต์ไม่ได้จนกว่าจะ publish · ก้อนเต็มด้านล่างอัปเดตแล้ว
 - ✅ **รอบ 631 (👥 โทรกลุ่ม 3 คน: `/calls` เพิ่ม `r`/`g` + `k` รับ `nofr`/`full` · 🔒 ลบวิดีโอคอลทั้งระบบ) — ผู้ใช้ publish แล้ว 28 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว:** อ่าน `/.settings/rules` สด → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 22 โซน** · `r` ≤128 · `g` ≤400 · `k` enum มี `nofr`/`full` จริง → **ระบบโทรกลุ่มใช้งานได้เต็มระบบ** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/e018942d-52ae-4908-88c8-b8da6d604b22
 - ✅ **รอบ 625 (โซนใหม่ `calls` + `'chat'` ใน enum `/rtc` · 📞 โทรหาเพื่อน voice/video) — ผู้ใช้ publish แล้ว 27 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว:** อ่าน `/.settings/rules` สด → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 22 โซน** · มี `/calls` จริง · `$map === 'chat'` เข้า enum จริง · `d` ≤ 20000 จริง → **ระบบโทรใช้งานได้เต็มระบบแล้ว** (เหลือทดสอบจริง 2 บัญชี/2 เครื่อง) · เดิม: `/calls/<toUid>/<fromUid>` = `{k, n, m, ts}` (k = `ring`/`ok`/`no`/`busy`/`end` · m = `voice`/`video` · n = ชื่อผู้โทร ≤40) · **อ่านได้เฉพาะเจ้าของกล่อง** (`auth.uid === $toUid`) · เขียนได้เฉพาะผู้โทร (node ชื่อ uid ตัวเอง) หรือเจ้าของกล่อง (ไว้ล้างกริ่งที่จัดการแล้ว) · **`/rtc`: เพิ่ม `$map === 'chat'`** (ท่อ SDP/ICE ของสาย ใช้โครงเดิมของ voice chat ในโลก 3D) + ขยาย `d` จาก 8000 → **20000 ตัวอักษร** (SDP ของวิดีโอยาวกว่าเสียงล้วน)
   - **ยังไม่ publish = เกมไม่พัง:** กดปุ่ม 📞/📹 แล้วเขียนโดน deny → จอสายขึ้น **ป้ายเหลืองบอกตรง ๆ** ว่า "ระบบโทรยังไม่เปิดใช้งาน — ต้องอัปเดตกฎความปลอดภัยโซน /calls ก่อน" แล้ววางสายเองใน 3 วิ · แชท/ของขวัญ/ทุกระบบอื่นทำงานปกติ
@@ -283,6 +284,38 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$other": { ".validate": false }
       }
     },
+    "gfeed": {
+      ".read": "auth != null",
+      ".indexOn": "u",
+      "$postId": {
+        ".write": "auth != null && ((!data.exists() && newData.child('u').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('u').val() === auth.uid))",
+        ".validate": "newData.hasChildren(['u','n','c','tx','ts'])",
+        "u":  { ".validate": "newData.isString() && newData.val().length <= 128" },
+        "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":  { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "c":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 12" },
+        "tx": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 120" },
+        "ts": { ".validate": "newData.isNumber()" },
+        "lk": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+            ".validate": "newData.isBoolean() && newData.val() === true"
+          }
+        },
+        "cm": {
+          "$cid": {
+            ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+            ".validate": "newData.hasChildren(['u','n','tx','ts'])",
+            "u":  { ".validate": "newData.isString() && newData.val().length <= 128" },
+            "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "tx": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 120" },
+            "ts": { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "follow": {
       "$uid": {
         ".read": "auth != null",
@@ -403,6 +436,14 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - `/feed/<uid>/a = JSON string {collectId:จำนวน} ≤4000` — คลังทรัพย์สินที่เปิดเผย (สวิตช์ "เปิดเผยทรัพย์สิน") · ปิดสวิตช์ = client ลบทิ้ง · หมวด c ที่ใช้ตอนนี้: coin/quiz/goods/other (ดู FEED_CATS ใน state.js — เผื่อ ≤12 ไว้ให้หมวดใหม่)
 - `/follow/<targetUid>/<followerUid> = {n:ชื่อผู้ติดตาม ≤40, ts}` — follow ทางเดียวแบบ TikTok ไม่ต้องอนุมัติ · ผู้ติดตามเขียน/ลบ node ตัวเองเท่านั้น · อ่านได้ทุกคนที่ login (ไว้นับยอดผู้ติดตามในหน้า profile)
 - ฝั่งเกม: `feedEvent/feedPrune/feedPurgeCat/feedPushAssets/followSet/followUnset/feedWatchSync/fetchPlayerFeed/fetchPlayerAssets/fetchFollowers` (online.js) · รายชื่อที่เรา follow เก็บใน `state.follows` (เซฟ cloud — DB ฝั่ง /follow ไว้โชว์ยอด/ให้เป้าหมายรู้) · ปิดหมวดในตั้งค่า = `feedPurgeCat` ลบโพสต์เก่าหมวดนั้นออกจาก DB ด้วย
+
+## หมายเหตุโครง /gfeed (🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ — รอบ 639)
+- `/gfeed/<postId> = {u:uid ผู้โพสต์, n:ชื่อ ≤40, g:ชั้น ≤20, c:หมวด ≤12, tx:ข้อความ ≤120, ts, lk?, cm?}` — โพสต์กิจกรรมของ**ทุกคน** (ต่างจาก `/feed/<uid>/p` เดิมที่เห็นเฉพาะคนที่ follow) · เขียนจาก `gfeedPush()` ทุกครั้งที่ `feedEvent()` ยิง (หมวดเดียวกับที่เปิดใน `state.feedShare`) · อ่านได้ทุกคนที่ login เดียว (หน้า Feed ดึงแค่ `limitToLast(GFEED_READ)` ~120 รายการล่าสุด ไม่ใช่ทั้งตาราง)
+- `lk/<uid> = true` (ไลก์) และ `cm/<pushKey> = {u,n,tx,ts}` (คอมเมนต์) **ซ้อนอยู่ใต้โพสต์เดียวกัน** — จอ Feed เปิดอยู่ฟังก์เดียว `.on('value')` ที่ `/gfeed` ก็ได้ครบทั้งโพสต์+ไลก์+คอมเมนต์ ไม่ต้องเปิด listener แยกรายโพสต์ (ประหยัด connection) · **watcher เปิดเฉพาะตอนหน้า Feed เปิดอยู่เท่านั้น** (`gfeedWatchStart`/`gfeedWatchStop`) ไม่ใช่ตลอดเวลาเหมือน presence/leaderboard — กันกิน bandwidth ตอนไม่ได้ดู
+- 🔒 **ไลก์/คอมเมนต์เขียนได้เฉพาะเจ้าของโพสต์เอง หรือคนที่เป็นเพื่อนกับเจ้าของโพสต์** (rules เช็กจริงผ่าน `root.child('friends').child(<uid เจ้าของโพสต์>).child(auth.uid).exists()` ไม่ใช่แค่ซ่อนปุ่มฝั่ง client) — คนแปลกหน้าเห็นโพสต์ปกติแต่กดไลก์/คอมเมนต์ไม่ได้ (ผู้ใช้เลือกไว้ 28 ก.ค. 2026 เพื่อความปลอดภัยเด็ก คล้ายกฎ `/calls` เดิม)
+- **กวาดโพสต์เก่าของตัวเองทิ้ง:** `gfeedPrune()` query `orderByChild('u').equalTo(onlineKey())` (ต้องมี `.indexOn:"u"`) เก็บไว้แค่ `GFEED_KEEP_ME` โพสต์ล่าสุดต่อคน (ลบเก่ากว่านั้น) — คุมขนาดตารางรวมไม่ให้บวมตามจำนวนผู้เล่น
+- ฝั่งเกม: `gfeedPush/gfeedPrune/gfeedWatchStart/gfeedWatchStop/gfeedRebuild/gfeedToggleLike/gfeedAddComment` (online.js) · เรียงแสดงผล **เพื่อนก่อนเสมอ แล้วค่อยคนอื่น** (ทำฝั่ง client ใน `gfeedRebuild` ไม่ใช่ rules) · หน้าจอเปิดจากปุ่ม "🌏 ดูทั้งหมด" ในกล่องฟีดเพื่อนเดิม → `openFeedBoard()` (ui.js) ยังโชว์ "ใครออนไลน์ทำอะไรอยู่ตอนนี้" จาก `/presence` เดิม (ไม่ต้องมีโซนใหม่) จัดเรียงเพื่อนก่อนแบบเดียวกัน
+- **ยังไม่ publish = เกมไม่พัง:** เขียนโพสต์/ไลก์/คอมเมนต์โดน deny เงียบๆ → หน้า Feed เปิดได้ปกติเห็นแค่ presence สด ส่วนโพสต์กิจกรรม/ไลก์/คอมเมนต์ว่างจนกว่าจะ publish
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

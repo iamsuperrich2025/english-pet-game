@@ -45,6 +45,10 @@ const Online = {
   feedRefs:{},      // uid → query ที่ .on ค้างอยู่ (ไว้ .off ตอนเลิก follow)
   lastAssetsSig:null, // JSON ทรัพย์สินล่าสุดที่ส่งขึ้น /feed/<me>/a (กันเขียนซ้ำ)
   lastPetsSig:null,   // JSON สัตว์เลี้ยง (สูงสุด 3 ตัว) ล่าสุดที่ส่งขึ้น /feed/<me>/pt (รอบ 195)
+  /* ---- 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639) ---- */
+  gfeedRaw:[],    // โพสต์ดิบจาก /gfeed ตามลำดับ DB (ยังไม่จัดเพื่อนก่อน)
+  gfeed:[],       // โพสต์พร้อมโชว์: เพื่อน(รวมตัวเอง)ก่อน เรียงใหม่→เก่า แล้วค่อยคนอื่นเรียงใหม่→เก่า
+  gfeedRef:null,  // query ที่ .on ค้างอยู่ตอนหน้า Feed เปิด (ไว้ .off ตอนปิด)
   /* ---- ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น" ทุกสินค้า ---- */
   sales:{},           // productId → จำนวนที่ขายไปแล้วทั้งเซิร์ฟเวอร์ (จาก /sales)
   salesOk:false,      // true = อ่าน/เขียน /sales ได้ (rules publish แล้ว)
@@ -791,10 +795,11 @@ function tinvWatch(){
 }
 
 /* ============================================================
-   📰 Follow + Feed กิจกรรม (รอบ 155)
+   📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
    /feed/<uid>/p/<pushKey> = {c:หมวด, tx:ข้อความ ≤120, ts} — เจ้าของเขียนเอง เก็บ 30 ล่าสุด
    /feed/<uid>/a           = JSON string {collectId:จำนวน} — คลังทรัพย์สิน (เฉพาะตอนเปิดเผย)
    /follow/<targetUid>/<followerUid> = {n:ชื่อผู้ติดตาม, ts} — follow ทางเดียวแบบ TikTok
+   /gfeed/<postId> = {u,n,g,c,tx,ts, lk, cm} — โพสต์เดียวกัน "ทุกคน" เห็น (ไม่ใช่แค่ follow)
    ยึดหลักเดิม "มีก็ใช้ ไม่มีก็ไม่พัง": rules ยังไม่ publish = เขียนโดน deny เงียบๆ เกมปกติ
    ============================================================ */
 const FEED_MAX = 30;   // เก็บย้อนหลังต่อคน (ผู้ใช้เคาะ 12 ก.ค. — ประหยัดโควตา DB ฟรี)
@@ -808,6 +813,7 @@ function feedEvent(cat, tx){
     ref.push({c:String(cat).slice(0,12), tx:String(tx).slice(0,120),
               ts:firebase.database.ServerValue.TIMESTAMP})
        .then(()=>feedPrune(ref)).catch(()=>{});
+    gfeedPush(cat, tx);   // 🌍 รอบ 639: ดันขึ้น /gfeed ด้วย (หน้า Feed ทุกคน — ไม่ใช่แค่คนที่ follow เรา)
   }catch(e){ /* feed ล่มห้ามพังเกม */ }
 }
 /* ตัดโพสต์เก่าเกิน FEED_MAX (push key เรียงตามเวลาอยู่แล้ว) */
@@ -983,6 +989,109 @@ function fetchFollowers(uid){
     s.forEach(()=>{ n++; });
     return n;
   }).catch(()=>null);
+}
+
+/* ============================================================
+   🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+   /gfeed/<postId> = {u,n,g,c,tx,ts, lk:{uid:true}, cm:{pushKey:{u,n,tx,ts}}}
+   ต่างจาก /feed/<uid>/p เดิม (เห็นเฉพาะคนที่ follow) — /gfeed เห็น "ทุกคน" เรียง
+   เพื่อนก่อนเสมอ (ทำฝั่ง client) แล้วค่อยคนอื่น · ไลก์/คอมเมนต์เขียนได้เฉพาะเจ้าของโพสต์
+   หรือเพื่อนของเจ้าของโพสต์ (rules เช็กจริงจาก /friends ไม่ใช่แค่ซ่อนปุ่ม)
+   watcher เปิดเฉพาะตอนหน้า Feed เปิดอยู่ (ไม่ใช่ตลอดเวลาแบบ presence/leaderboard)
+   ============================================================ */
+const GFEED_READ    = 120;   // ดึงล่าสุดกี่โพสต์ตอนเปิดหน้า Feed (คุม bandwidth ไม่ให้โตตามจำนวนผู้เล่น)
+const GFEED_KEEP_ME = 10;    // เก็บโพสต์ของ "ตัวเอง" ใน /gfeed ไว้กี่โพสต์ล่าสุด (เกิน = ลบเก่าทิ้ง)
+
+/* ดันโพสต์กิจกรรมขึ้น /gfeed — เรียกจาก feedEvent() ทุกครั้งที่หมวดนั้นเปิดเผยอยู่ */
+function gfeedPush(cat, tx){
+  try{
+    const bs = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
+    Online.db.ref('gfeed').push({
+      u:  onlineKey(),
+      n:  (onlineDisplayName() || 'เพื่อน').slice(0,40) + bs,
+      g:  (state.student && state.student.grade) || '',
+      c:  String(cat).slice(0,12),
+      tx: String(tx).slice(0,120),
+      ts: firebase.database.ServerValue.TIMESTAMP,
+    }).then(()=>gfeedPrune()).catch(()=>{});
+  }catch(e){ /* ล่มห้ามพังเกม */ }
+}
+/* กวาดโพสต์เก่าของ "ตัวเอง" ทิ้งเมื่อเกิน GFEED_KEEP_ME (query ผ่าน .indexOn:"u" — ทำงานได้ทุกเครื่องไม่ต้องพึ่งความจำในเซสชัน) */
+function gfeedPrune(){
+  if(!Online.db) return;
+  Online.db.ref('gfeed').orderByChild('u').equalTo(onlineKey()).once('value').then(snap=>{
+    const items = [];
+    snap.forEach(ch=>{ const v = ch.val(); items.push({key: ch.key, ts: (v && v.ts) || 0}); });
+    if(items.length <= GFEED_KEEP_ME) return;
+    items.sort((a,b)=>a.ts - b.ts);
+    const del = {};
+    items.slice(0, items.length - GFEED_KEEP_ME).forEach(it=>{ del['gfeed/' + it.key] = null; });
+    Online.db.ref().update(del).catch(()=>{});
+  }).catch(()=>{});
+}
+/* เริ่มฟัง /gfeed — เรียกตอนเปิดหน้า Feed เท่านั้น (openFeedBoard ใน ui.js) */
+function gfeedWatchStart(){
+  if(!Online.ready || !Online.db || Online.gfeedRef) return;
+  const q = Online.db.ref('gfeed').orderByKey().limitToLast(GFEED_READ);
+  Online.gfeedRef = q;
+  q.on('value', (snap)=>{
+    const out = [];
+    snap.forEach(ch=>{
+      const v = ch.val();
+      if(!v || typeof v.tx !== 'string' || typeof v.u !== 'string') return;
+      const lk = (v.lk && typeof v.lk === 'object') ? v.lk : {};
+      const cm = [];
+      if(v.cm && typeof v.cm === 'object'){
+        for(const cid in v.cm){
+          const c = v.cm[cid];
+          if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0});
+        }
+        cm.sort((a,b)=>a.ts - b.ts);
+      }
+      out.push({key: ch.key, u: v.u, n: v.n || 'เพื่อน', g: v.g || '', c: v.c || 'other', tx: v.tx, ts: v.ts || 0,
+                 likeN: Object.keys(lk).length, likedByMe: !!lk[onlineKey()], comments: cm});
+    });
+    Online.gfeedRaw = out;
+    gfeedRebuild();
+  }, ()=>{ /* อ่านโดน deny (rules ยังไม่ publish) — เงียบไว้ */ });
+}
+/* หยุดฟัง /gfeed — เรียกตอนปิดหน้า Feed (กัน bandwidth ค้างตอนไม่ได้ดู) */
+function gfeedWatchStop(){
+  if(Online.gfeedRef){ Online.gfeedRef.off(); Online.gfeedRef = null; }
+  Online.gfeedRaw = [];
+  Online.gfeed = [];
+}
+/* จัดลำดับ: เพื่อน (รวมตัวเอง) ก่อนเสมอ เรียงใหม่→เก่า แล้วค่อยคนอื่นเรียงใหม่→เก่า */
+function gfeedRebuild(){
+  const raw = Online.gfeedRaw || [];
+  const me = onlineKey();
+  const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  const mine = [], others = [];
+  for(const it of raw){ (it.u === me || fset.has(it.u) ? mine : others).push(it); }
+  mine.sort((a,b)=>b.ts - a.ts);
+  others.sort((a,b)=>b.ts - a.ts);
+  Online.gfeed = mine.concat(others);
+  if(typeof renderFeedBoard === 'function') renderFeedBoard();
+}
+/* กด/ถอนไลก์โพสต์ — rules เช็กจริงว่าเป็นเจ้าของโพสต์หรือเพื่อนของเจ้าของโพสต์ (deny เงียบถ้าไม่ใช่/ไม่ได้ publish) */
+function gfeedToggleLike(postId, likedNow){
+  if(!Online.ready || !postId) return;
+  const ref = Online.db.ref('gfeed/' + postId + '/lk/' + onlineKey());
+  (likedNow ? ref.remove() : ref.set(true)).catch(()=>{});
+}
+/* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท */
+function gfeedAddComment(postId, tx){
+  if(!Online.ready || !postId) return Promise.resolve(false);
+  const text = String(tx || '').trim().slice(0,120);
+  if(!text) return Promise.resolve(false);
+  if(typeof nameHasBadWord === 'function' && nameHasBadWord(text)) return Promise.reject('คอมเมนต์มีคำไม่สุภาพ ลองใหม่นะ');
+  const bs = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
+  return Online.db.ref('gfeed/' + postId + '/cm').push({
+    u:  onlineKey(),
+    n:  (onlineDisplayName() || 'เพื่อน').slice(0,40) + bs,
+    tx: text,
+    ts: firebase.database.ServerValue.TIMESTAMP,
+  }).then(()=>true).catch(()=>false);
 }
 
 /* ============================================================
@@ -1468,6 +1577,7 @@ function onlineStart(){
     Online.presenceMap = pmap;
     notifyFriendBadges(out);          // 🔔 เพื่อนเพิ่งได้เข็มใหม่ → เด้ง toast ให้กำลังใจแข่งสะสม
     onlineRerender();
+    if(typeof renderFeedBoardLive === 'function') renderFeedBoardLive();   // 🌍 รอบ 639: หน้า Feed เปิดอยู่ → รีเฟรช "ใครทำอะไรอยู่"
   });
 
   // ฟังคำขอเป็นเพื่อนที่ส่งมาหาเรา (ข้อ 0.3)
@@ -1494,6 +1604,7 @@ function onlineStart(){
     friendsHeal();                 // ซ่อมเพื่อนให้ครบสองฝ่ายอัตโนมัติ (self-heal)
     chatWatchSync();               // เพื่อนเปลี่ยน → ปรับ watcher ข้อความใหม่ให้ครบ (ข้อ 0.4)
     giftOutWatchSync();            // เพื่อนเปลี่ยน → ปรับ watcher สถานะของขวัญที่เราส่งไป (ข้อ 0.5)
+    if(typeof gfeedRebuild === 'function') gfeedRebuild();   // 🌍 รอบ 639: เพื่อนเปลี่ยน → จัดลำดับ Feed ใหม่ (ถ้าเปิดอยู่)
     onlineRerender();
   });
 
