@@ -442,21 +442,23 @@ fetchPlayerAssets:966 · fetchFollowers:985 · GFEED_READ:1002 · GFEED_KEEP_ME:
 gfeedWatchStart:1033 · gfeedWatchStop:1059 · gfeedRebuild:1065 · gfeedToggleLike:1077 · gfeedAddComment:1083 · CALL_RTC_CFG:1121
 CALL_RING_MS:1122 · CALL_MAX_MS:1123 · CALL_MAX_PEERS:1124 · onlineStart:1540 · onlineLoadSDK:1653
 
-## js/state.js (1,021 บรรทัด · 84 รายการ)
+## js/state.js (1,023 บรรทัด · 84 รายการ)
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
 SLEEP_FROM_HOUR:18 · SLEEP_SICK_HOUR:19 · WAKE_HOUR:20 · DINNER_COST:21 · TOXIN_FULL:23 · DETOX_COST:24
 FOODQUIZ_Q:26 · FOODQUIZ_COIN:27 · FOODQUIZ_BONUS:28 · SHAPE_JUNK_MEALS:30 · SHAPE_CLEAN_MEALS:31 · SHAPE_MISS_MEALS:32
-SHAPE_EXP_BONUS:33 · HEAT_SICK_MS:34 · THIRST_SICK_MS:35 · DEFAULT_STATE:37 · FEED_CATS:177 · SLOT_MS:188
-currentSlotStart:189 · nextSlotStart:195 · mealDayKey:197 · nightKeyOf:199 · newPet:205 · loadState:230
-saveState:469 · activePet:476 · petStage:477 · isAdult:482 · abilityOn:483 · hasPetType:484
-todayStr:487 · dailyTick:491 · addCoins:494 · QUEST_POOL:514 · QUEST_PER_DAY:524 · questsToday:525
-questTick:532 · questEvent:536 · assetValue:572 · netWorth:598 · assetCount:600 · refreshRank:617
-heatProtected:633 · rainProtected:637 · petHungry:640 · petShapeOf:644 · updatePetShape:650 · shapeMealDone:657
-heatPct:667 · ymStr:676 · billOutstanding:680 · UTILITIES:687 · HOME_UTILITIES:693 · homeDecayed:695
-billTick:698 · myCar:767 · carLoanDue:772 · carLoanOverdue:777 · carLoanPayable:782 · carLoanPay:789
-compTick:802 · ONLINE_RATE:816 · onlineEarnActive:817 · onlineEarnTick:821 · onlineEarnFlush:832 · marketTick:842
-addCraft:866 · ORDER_MAX:885 · ORDER_LIFE_MS:886 · ORDER_GAP_MIN_MS:887 · ORDER_GAP_SPAN_MS:888 · ORDER_TIER_WEIGHT:889
-newOrder:890 · orderTick:903 · careTick:911 · expNeed:992 · addExp:997 · addRP:1017
+SHAPE_EXP_BONUS:33 · HEAT_SICK_MS:34 · THIRST_SICK_MS:35 · DEFAULT_STATE:37 · FEED_CATS:178 · SLOT_MS:189
+currentSlotStart:190 · nextSlotStart:196 · mealDayKey:198 · nightKeyOf:200 · newPet:206 · loadState:231
+saveState:471 · activePet:478 · petStage:479 · isAdult:484 · abilityOn:485 · hasPetType:486
+todayStr:489 · dailyTick:493 · addCoins:496 · QUEST_POOL:516 · QUEST_PER_DAY:526 · questsToday:527
+questTick:534 · questEvent:538 · assetValue:574 · netWorth:600 · assetCount:602 · refreshRank:619
+heatProtected:635 · rainProtected:639 · petHungry:642 · petShapeOf:646 · updatePetShape:652 · shapeMealDone:659
+heatPct:669 · ymStr:678 · billOutstanding:682 · UTILITIES:689 · HOME_UTILITIES:695 · homeDecayed:697
+billTick:700 · myCar:769 · carLoanDue:774 · carLoanOverdue:779 · carLoanPayable:784 · carLoanPay:791
+compTick:804 · ONLINE_RATE:818 · onlineEarnActive:819 · onlineEarnTick:823 · onlineEarnFlush:834 · marketTick:844
+addCraft:868 · ORDER_MAX:887 · ORDER_LIFE_MS:888 · ORDER_GAP_MIN_MS:889 · ORDER_GAP_SPAN_MS:890 · ORDER_TIER_WEIGHT:891
+newOrder:892 · orderTick:905 · careTick:913 · expNeed:994 · addExp:999 · addRP:1019
+
+## js/typing.js (311 บรรทัด · 0 รายการ)
 
 ## js/ui.js (8,271 บรรทัด · 333 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
@@ -570,14 +572,14 @@ cancelListing:7497 · buyMarketItem:7520 · showCollectReveal:7547 · buyAC:7585
 showLevelUp:7724 · renderStats:7761 · showTeacherCard:7837 · CALL_REACT_EMOS:7881 · CALL_TALK_MIN:7884 · CALL_TALK_HOLD:7885
 CALL_ORDER_GAP:7887 · CALL_TONES:7893 · startCall:8267
 
-## js/util.js (827 บรรทัด · 37 รายการ)
+## js/util.js (866 บรรทัด · 38 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:102 · fmtThaiDate:106 · showScreen:111
-TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:176 · PET_MOOD:248
-petVoiceSynth:255 · sirenSynth:332 · playCashier:356 · cashierSynth:370 · playSpark:403 · sparkSynth:417
-thunderFx:452 · wordAudioFile:520 · speakWord:523 · speakLetter:543 · pickSpeakVoice:562 · speakWordTTS:573
-askNameDialog:593 · askConfirm:633 · alertBox:651 · applyNoAnim:671 · openSettings:676 · openHelp:782
-openTeacherGuide:808
+TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:176 · PET_MOOD:252
+petVoiceSynth:259 · sirenSynth:336 · playCashier:360 · cashierSynth:374 · keyTapSynth:407 · playSpark:442
+sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakWord:562 · speakLetter:582 · pickSpeakVoice:601
+speakWordTTS:612 · askNameDialog:632 · askConfirm:672 · alertBox:690 · applyNoAnim:710 · openSettings:715
+openHelp:821 · openTeacherGuide:847
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
@@ -588,7 +590,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (256 บรรทัด · 0 รายการ)
 
-## css/lobby.css (4,000 บรรทัด · 619 selector)
+## css/lobby.css (4,111 บรรทัด · 638 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-quiz:134,135,136,137(+6) · #quiz-choices:146,147 · .word-card:154 · .quiz-choice:155,156,157
@@ -600,7 +602,7 @@ vbRender:148 · vbCardHTML:194
 .online-dot:273 · .fr-chat-btn:274,279,281 · .fr-unread:282 · .fr-call-btn:288,294 · .chat-overlay:303 · .chat-box:307,608,615,622(+12)
 .chat-head:319 · .chat-theme-btn:324,328 · .chat-secret-tg:329,330 · .cs-switch:331,332,337,338 · .cs-slider:333,335 · .chat-secret-note:339
 .chat-theme-strip:342 · .chat-theme-sw:344,347,348,349(+1) · .chat-head-name:351,352 · .chat-close:353 · .chat-msgs:357 · .chat-empty:361
-.chat-typing:363 · .ct-dots:365,366,368,369 · .no-anim:371,384,445,459(+40) · .chat-bubble:372,377,382 · .chat-emoji:385 · .chat-emo:389,393
+.chat-typing:363 · .ct-dots:365,366,368,369 · .no-anim:371,384,445,459(+44) · .chat-bubble:372,377,382 · .chat-emoji:385 · .chat-emo:389,393
 .chat-input-row:394 · .chat-emoji-btn:398 · #chat-input:402 · .chat-send:406,411,412 · .chat-call-btn:418,422 · .call-ring:425
 .cr-card:429 · .cr-kind:435 · .cr-av:436 · .cr-name:446 · .cr-id:447 · .cr-btns:448
 .cr-btn:449,455,460 · .cr-no:456 · .cr-ok:457 · .cr-safe:461 · .call-ov:464,470,492,509(+6) · .call-stage:476
@@ -692,7 +694,10 @@ vbRender:148 · vbCardHTML:194
 .gradelock-box:3944,3960,3965,3967 · .gl-head:3945 · .gl-emoji:3946 · .gl-ht:3947 · .gl-cur:3948 · .gl-lock:3949,3954
 .gl-ok:3953 · .gl-lock-sub:3955 · .gl-why:3956 · .gl-pick-lb:3957 · .gl-opts:3958 · .gl-hist:3968
 .gl-hline:3969 · .gl-hg:3973 · .gl-hat:3974 · .gl-harr:3975 · .gl-foot:3976 · .gl-cf:3977
-.reg-gradelock:3997
+.reg-gradelock:3997 · #tp-overlay:4007 · #tp-board:4009,4013 · .tp-head:4017 · .tp-title:4018 · .tp-stat:4020,4022
+.tp-close:4024,4030,4031 · .tp-prompt:4034 · .tp-word:4036,4050,4051 · .tp-ch:4038,4043,4044,4046 · .tp-thai:4054 · .tp-hint:4056
+.tp-empty:4058 · .tp-keys:4061 · .tp-row:4063 · .tp-row-fn:4065,4098 · .tp-key:4069,4081,4083,4089(+2) · .tp-key-fn:4096
+.tp-fx:4102 · .tp-coinpop:4103
 
 ## css/style.css (1,799 บรรทัด · 463 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
