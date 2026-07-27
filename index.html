@@ -116,13 +116,19 @@
         </div>
       </div>
       <div class="top-flex"></div>
-      <div class="coin-group">
-        <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="coin-count">0</span></div>
-        <div class="coin-pill today"><span class="cp-lb">วันนี้</span><span class="cp-v">+<span id="coin-today">0</span></span></div>
-        <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
-        <div class="coin-pill net" id="net-pill" style="display:none"><span class="cp-lb">ออนไลน์</span><span class="cp-v"><span class="net-coin">🪙</span>+<span id="net-live">0.00</span></span></div>
-        <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
-        <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
+      <!-- 🎖️ รอบ 643 (ผู้ใช้สั่ง): แถวเหรียญยกขึ้นชนขอบบนของ .id-card (เดิมลอยกลาง)
+           แล้วเพิ่มบรรทัดล่าง = ระดับชั้นเป็นสัญลักษณ์ (ดาวเงิน=ประถม ดาวทอง=มัธยม 💎=ป.ตรี)
+           เติมข้อความโดย renderDashboard() ใน ui.js -->
+      <div class="coin-stack">
+        <div class="coin-group">
+          <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="coin-count">0</span></div>
+          <div class="coin-pill today"><span class="cp-lb">วันนี้</span><span class="cp-v">+<span id="coin-today">0</span></span></div>
+          <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
+          <div class="coin-pill net" id="net-pill" style="display:none"><span class="cp-lb">ออนไลน์</span><span class="cp-v"><span class="net-coin">🪙</span>+<span id="net-live">0.00</span></span></div>
+          <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
+          <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
+        </div>
+        <div class="grade-line" id="grade-line"></div>
       </div>
       <!-- 📐 รอบ 613: ตัวคั่นที่ 2 — alignCoinGroup() ให้มันกินที่ว่างแทน .top-flex
            เพื่อดันกล่องเหรียญมาเริ่มตรงแนวขอบซ้ายเวที ส่วนปุ่มไอคอนยังชิดขวาสุด -->
@@ -234,8 +240,10 @@
             </div>
             <div class="shop-card" id="farm-card"></div>
             <div class="mkt-group-head">📡 บริการรายเดือน</div>
-            <div class="shop-card" id="phone-card"></div>
-            <div class="shop-card" id="computer-card"></div>
+            <div class="mkt-two-col">
+              <div class="shop-card" id="phone-card"></div>
+              <div class="shop-card" id="computer-card"></div>
+            </div>
           </div>
 
           <div class="panel-page" id="panel-factory">

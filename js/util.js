@@ -21,6 +21,57 @@ function escapeHTML(s){
     .replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
+/* ============================================================
+   🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+   เหตุผล: กันปั๊มเหรียญด้วยการ "โกงระดับชั้น" (เลือกชั้นต่ำเพื่อทำคำง่าย ๆ)
+   → ทุกที่ที่มีชื่อผู้เล่นต้องเห็นระดับชั้นของเขาด้วย
+   กติกาสัญลักษณ์: ดาวเงิน ★ = ประถม · ดาวทอง ★ = มัธยม · จำนวนดาว = ชั้นปี
+                   💎 1 เม็ด = ปริญญาตรี (2 เม็ด = สูงกว่าปริญญาตรี) · ☆ = ต่ำกว่าประถม
+   ⚠️ ที่นี่ที่เดียวทั้งเกม — ui.js เรียกใช้ทุกจุด (ฟีด/โปรไฟล์/กระดานอันดับ/รายชื่อเพื่อน/แถบบน)
+   ============================================================ */
+function gradeSymbol(grade){
+  const g = String(grade == null ? '' : grade).trim();
+  if(!g) return null;
+  let m = /^ป\.([1-6])$/.exec(g);
+  if(m) return {cls:'gm-silver', sym:'★'.repeat(+m[1]),
+                title:`ระดับชั้น ${g} — ดาวเงิน ${m[1]} ดวง (ประถมศึกษาปีที่ ${m[1]})`};
+  m = /^ม\.([1-6])$/.exec(g);
+  if(m) return {cls:'gm-gold', sym:'★'.repeat(+m[1]),
+                title:`ระดับชั้น ${g} — ดาวทอง ${m[1]} ดวง (มัธยมศึกษาปีที่ ${m[1]})`};
+  if(g === 'ปริญญาตรี')        return {cls:'gm-gem', sym:'💎',   title:'ระดับชั้น ปริญญาตรี — เพชร 1 เม็ด'};
+  if(g === 'สูงกว่าปริญญาตรี') return {cls:'gm-gem', sym:'💎💎', title:'ระดับชั้น สูงกว่าปริญญาตรี — เพชร 2 เม็ด'};
+  if(g === 'ต่ำกว่าประถมศึกษา')return {cls:'gm-pre', sym:'☆',    title:'ระดับชั้น ต่ำกว่าประถมศึกษา — ดาวโปร่ง'};
+  return {cls:'gm-pre', sym:'☆', title:'ระดับชั้น ' + g};
+}
+/* HTML ป้ายสัญลักษณ์ (คืน '' ถ้าไม่รู้ชั้น — จุดที่เรียกไม่ต้องเช็กเอง) */
+function gradeMark(grade, extraCls){
+  const s = gradeSymbol(grade);
+  if(!s) return '';
+  return `<span class="gmark ${s.cls}${extraCls ? ' ' + extraCls : ''}" title="${escapeHTML(s.title)}"`
+       + ` aria-label="${escapeHTML(s.title)}">${s.sym}</span>`;
+}
+/* ชื่อ + สัญลักษณ์ "ใต้ชื่อ" เป็นก้อนเดียว (ใช้ในบรรทัดที่ข้อความไหลต่อท้ายชื่อ เช่น ฟีด)
+   nameHTML ต้อง escape มาแล้ว */
+function nameWithGrade(nameHTML, grade){
+  const mk = gradeMark(grade);
+  return mk ? `<span class="gm-stack">${nameHTML}${mk}</span>` : nameHTML;
+}
+/* หาระดับชั้นจาก uid เมื่อจุดที่เรียกไม่มีค่า g ติดมา (เพื่อนที่บันทึกไว้ตั้งแต่ก่อนมีฟิลด์ g)
+   ไล่จาก: ค่าที่ส่งมา → ตัวเราเอง → กระดานอันดับ → คนออนไลน์ → รายชื่อเพื่อน */
+function gradeOf(uid, g){
+  if(g) return g;
+  const id = String(uid || '');
+  if(!id) return '';
+  if(typeof onlineKey === 'function' && id === onlineKey() && typeof state !== 'undefined' && state.student)
+    return state.student.grade || '';
+  if(typeof Online === 'undefined') return '';
+  const pick = (arr, key)=>{
+    const r = (arr || []).find(x=> String(x[key] || '') === id);
+    return r && r.g ? r.g : '';
+  };
+  return pick(Online.board, 'id') || pick(Online.friends, 'id') || pick(Online.myFriends, 'uid') || '';
+}
+
 /* สุ่มแบบกำหนด seed ได้ (mulberry32) — ให้ทุกเครื่องเห็นผลเดียวกันในช่วงเวลาเดียวกัน */
 function seededRand(seed){
   let t = seed >>> 0;

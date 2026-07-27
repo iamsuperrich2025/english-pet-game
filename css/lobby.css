@@ -3873,3 +3873,57 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
   .cs-list.strip-x{--cs-row:clamp(112px,26vh,152px);grid-template-rows:var(--cs-row);}
   .rs-list.strip-x{--rs-row:clamp(112px,26vh,152px);grid-template-rows:var(--rs-row);}
 }
+
+/* ============================================================
+   🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026 — กันโกงชั้นเพื่อปั๊มเหรียญ)
+   ดาวเงิน = ประถม · ดาวทอง = มัธยม · จำนวนดาว = ชั้นปี · 💎 = ปริญญาตรี · ☆ = ต่ำกว่าประถม
+   HTML สร้างจาก gradeMark()/nameWithGrade() ใน js/util.js (ที่เดียวทั้งเกม)
+   ① .gmark = ตัวป้าย · ② .gm-stack = ชื่อ+ป้ายซ้อนกัน (บรรทัดที่ข้อความไหลต่อจากชื่อ)
+   ③ .gm-row = ป้ายกินเต็มบรรทัดถัดไป (แถวที่ flex-wrap อยู่แล้ว) · ④ .grade-line = แถบบนล็อบบี้
+   ============================================================ */
+.gmark{
+  display:inline-block;line-height:1;white-space:nowrap;letter-spacing:1.5px;
+  font-size:11px;vertical-align:.05em;cursor:help;
+}
+.gmark.gm-silver{color:#dfe8f2;text-shadow:0 0 3px rgba(120,160,205,.9),0 1px 1px rgba(20,40,70,.65);}
+.gmark.gm-gold{color:#ffd451;text-shadow:0 0 4px rgba(255,175,40,.75),0 1px 1px rgba(70,45,0,.5);}
+.gmark.gm-gem{letter-spacing:.5px;font-size:10.5px;filter:drop-shadow(0 0 3px rgba(120,225,255,.75));}
+.gmark.gm-pre{color:#b9c9dc;opacity:.85;}
+/* ชื่อ + ป้ายใต้ชื่อ เป็นก้อนเดียว — ข้อความอื่นยังไหลต่อจาก "บรรทัดชื่อ" ตามปกติ */
+.gm-stack{
+  display:inline-flex;flex-direction:column;align-items:flex-start;
+  vertical-align:-.62em;max-width:100%;min-width:0;line-height:1.2;
+}
+.gm-stack > .gmark{margin-top:1px;}
+/* แถวที่ห่อบรรทัดได้อยู่แล้ว (การ์ดเพื่อนออนไลน์) → ป้ายลงบรรทัดของตัวเอง เยื้องใต้ชื่อ */
+.gm-row{flex:0 0 100%;padding-left:17px;margin-top:-2px;}
+/* ป้ายในกระดานอันดับ/รายชื่อเพื่อน = ต่อท้ายบรรทัด 🆔 ที่อยู่ใต้ชื่อ (ไม่เพิ่มความสูงแถว) */
+.lb-name small .gmark,.fr-row-name small .gmark{margin-left:5px;}
+.lb-name small .gmark.gm-silver{color:#8e9db0;text-shadow:none;}
+.lb-name small .gmark.gm-gold,.fr-row-name small .gmark.gm-gold{color:#d79b12;text-shadow:none;}
+.fr-row-name small .gmark.gm-silver{color:#94a5b9;text-shadow:none;}
+/* โพเดียม Top 5: ป้ายอยู่ใต้ชื่อจริง ๆ (มีที่ว่างพอ) */
+.pod-label .gmark{margin:1px 0 0;}
+/* กริดอันดับ 6–100: แถวสูงแค่ ~2.3vh → ป้ายต่อท้ายชื่อในบรรทัดเดียวกัน ไม่งั้นล้นจอ (กฎทอง #7) */
+.lbf-cell .nm .gmark{margin-left:5px;}
+/* การ์ดโปรไฟล์ผู้เล่น 👤 — บรรทัดใต้ชื่อ (เดิมมีแค่ 🆔) */
+.pl-grade .gmark{font-size:13px;margin-left:4px;vertical-align:-.02em;}
+.pl-grade .pl-glabel{opacity:.8;margin-left:10px;}
+
+/* ---------- ④ แถบบนล็อบบี้: แถวเหรียญชนขอบบนการ์ดประจำตัว + บรรทัดระดับชั้นใต้แถวเหรียญ ---------- */
+/* ⚠️ ต้องยึด flex-start "ทั้งคู่" — ยึดข้างเดียวแล้วฝั่งที่สูงกว่าจะดันอีกฝั่งให้ลอยกลาง
+   (แถวบนเป็น align-items:center · กล่องเหรียญ 2 บรรทัดสูงใกล้เคียงการ์ดประจำตัวมาก) */
+.lobby-top .id-card{align-self:flex-start;}
+.coin-stack{
+  display:flex;flex-direction:column;align-items:stretch;gap:4px;
+  flex-shrink:0;align-self:flex-start;      /* ← ขอบบนเสมอกับ .id-card */
+}
+.grade-line{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  font-size:11px;font-weight:600;color:#8db3da;letter-spacing:.2px;white-space:nowrap;
+  background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
+  border:1px solid var(--glass-line);border-radius:11px;padding:3px 10px;
+  box-shadow:0 4px 12px rgba(3,15,35,.28);
+}
+.grade-line:empty{display:none;}
+.grade-line .gmark{font-size:12.5px;}

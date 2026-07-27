@@ -1066,6 +1066,7 @@ function renderOnlineCard(){
   const meRow = `<div class="online-row online-me">
       <span class="online-dot"></span>
       <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
+      ${gradeMark(meGrade, 'gm-row')}
       <span class="online-act">${idTag(meUid)} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
@@ -1099,6 +1100,7 @@ function renderOnlineCard(){
       return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
       <span class="online-dot"></span>
       <span class="online-name">${escapeHTML(f.n)}</span>
+      ${gradeMark(gradeOf(fid, f.g), 'gm-row')}
       <span class="online-act">${idTag(fid)} · ${escapeHTML(f.act)}</span>
     </div>`;
     });
@@ -1212,7 +1214,7 @@ function openFriendQuickMenu(uid, name, grade){
   overlay.className = 'fq-overlay';
   overlay.innerHTML = `<div class="fq-box">
     <div class="fq-head">
-      <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>${idTag(uid)}</small></span>
+      <span>🧑‍🤝‍🧑 ${escapeHTML(sp.name)}${escapeHTML(sp.badges)} <small>${idTag(uid)}</small>${gradeMark(gradeOf(uid, grade))}</span>
       <button class="fq-close" type="button">✕</button>
     </div>
     <div class="fq-sec">🤝 ชวนเล่นด้วยกัน — เจอกันใน map รับคนละ 🪙${fmtNum(TINV_CASHBACK)}</div>
@@ -1476,6 +1478,7 @@ function openLeaderboardFull(){
       return `<div class="pod pod-${rank}${r.me?' me':''}">
         <div class="pod-label">
           <span class="pod-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}</span>
+          ${gradeMark(gradeOf(r.uid, r.g))}
           <span class="pod-sc">${r.sc}${r.pz?` <span class="pod-pz">🎁 ${fmtNum(r.pz)}</span>`:''}</span>
         </div>
         <img class="pod-char" data-blk="${lbChar(r)}" src="img/blocks/${lbChar(r)}.png" alt="" onerror="this.style.display='none'">
@@ -1485,7 +1488,7 @@ function openLeaderboardFull(){
     const cells = rest.map((r,i)=>`
       <div class="lbf-cell${r.me ? ' me' : ''}">
         <span class="r">${i + 6}</span>
-        <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}</span>
+        <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
     const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
@@ -1540,7 +1543,7 @@ function lbCoinHtml(){
   const rows = Online.board.map((r,i)=>`
     <div class="lb-row${r.id === myId ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ${idTag(r.id)}</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g)}">${r.id === myId ? '⭐ ' : ''}${escapeHTML(r.n)}<small> ${idTag(r.id)}${gradeMark(gradeOf(r.id, r.g))}</small></span>
       <span class="lb-coins">🪙 ${fmtNum(r.coins)}</span>
     </div>`).join('');
   return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับที่ ${myIdx + 1} จาก ${Online.board.length} คน 🎯` : `เก็บเหรียญเพิ่มเพื่อไต่ขึ้นกระดานนะ 💪`}</div>
@@ -1567,7 +1570,7 @@ function lbBadgeHtml(){
   const list = rows.slice(0, LEADERBOARD_SIZE).map((r,i)=>`
     <div class="lb-row${r.me ? ' lb-me' : ''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.name + r.badges)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.name + r.badges)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}<small class="lb-badgeline">${r.badges} · ${r.score} แต้ม${gradeMark(gradeOf(r.id, r.g))}</small></span>
     </div>`).join('');
   return `<div class="online-count">${myIdx >= 0 ? `${selfPronoun()}อยู่อันดับเข็มที่ ${myIdx + 1} จาก ${rows.length} คน 🏅` : `ยังไม่มีเข็ม — เก็บเข็มแล้วมาไต่กระดานนะ 💪`}</div>
     <div class="lb-list">${list}</div>`;
@@ -1588,7 +1591,7 @@ function lbBossHtml(){
   const list = rows.slice(0, LEADERBOARD_SIZE).map((r,i)=>`
     <div class="lb-row${r.id===myId?' lb-me':''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small></span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}${gradeMark(gradeOf(r.id, r.g))}</small></span>
       <span class="lb-coins">👾 ${fmtNum(r.bk)}</span>
     </div>`).join('');
   return `<div class="online-count">${myIdx>=0?`${selfPronoun()}ล้มบอสไป ${rows[myIdx].bk} ตัว — อันดับ ${myIdx+1} จาก ${rows.length} คน 🤖`:`เข้าโลกหุ่นล้มบอสเพื่อขึ้นกระดานนะ 👾`}</div>
@@ -1614,7 +1617,7 @@ function lbWordSearchHtml(){
   const list = rows.map((r,i)=>`
     <div class="lb-row${r.id===myId?' lb-me':''}">
       <span class="lb-rank">${medal(i)}</span>
-      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}</small>${pz(i)?`<small class="lb-prize">🎁 ${fmtNum(pz(i))} เหรียญ</small>`:''}</span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}${gradeMark(gradeOf(r.id, r.g))}</small>${pz(i)?`<small class="lb-prize">🎁 ${fmtNum(pz(i))} เหรียญ</small>`:''}</span>
       <span class="lb-coins">🔎 ${fmtNum(r.ws)}</span>
     </div>`).join('');
   const meLine = myIdx >= 0
@@ -1669,7 +1672,10 @@ function showPlayerCard(uid, name, grade){
           ? `<button class="pl-greet" title="ส่งคำทักทายถึงสัตว์เลี้ยงของเพื่อน">🐾 ทักทายน้อง</button>` : ''}
         ${canFollow ? `<button class="pl-unfollow" style="display:none">Unfollow<small>เลิกติดตาม</small></button><button class="pl-follow"></button>` : ''}
       </div>
-      <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}<span class="pl-followers"></span></div>
+      <div class="pl-grade">${idTag(uid) || 'ผู้เล่น Vocab World'}${(()=>{   // 🎖️ รอบ 643: ระดับชั้นใต้ชื่อ (กันโกงชั้นปั๊มเหรียญ)
+          const mk = gradeMark(gradeOf(uid, grade));
+          return mk ? `<span class="pl-glabel">ระดับชั้น</span>${mk}` : '';
+        })()}<span class="pl-followers"></span></div>
       ${badgeRow}
       <div class="pl-body">
         <div class="pl-cols">
@@ -2094,7 +2100,7 @@ function friendDoSearch(){
   friendSearch(code).then(r=>{
     if(!r){ out.innerHTML = `<div class="fr-hint">😕 ไม่พบรหัสนี้ ลองเช็กอีกครั้งนะ</div>`; return; }
     if(r.self){ out.innerHTML = `<div class="fr-hint">😄 นี่คือรหัสของ${selfTag()}นะ!</div>`; return; }
-    const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}</small></span>`;
+    const nameHTML = `<span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}${gradeMark(gradeOf(r.uid, r.g))}</small></span>`;
     if(r.already){ out.innerHTML = `<div class="fr-found">${nameHTML}<span class="fr-hint">✅ เป็นเพื่อนกันแล้ว</span></div>`; return; }
     out.innerHTML = `<div class="fr-found">${nameHTML}<button class="fr-add-btn" id="fr-send-req">➕ ส่งคำขอเป็นเพื่อน</button></div>`;
     document.getElementById('fr-send-req').addEventListener('click', ()=>{
@@ -2115,7 +2121,7 @@ function refreshFriendData(){
     if(Online.reqs.length){
       reqEl.innerHTML = `<div class="fr-list-title">📨 คำขอเป็นเพื่อน (${Online.reqs.length})</div>` +
         Online.reqs.map(r=>`<div class="fr-row fr-req">
-          <span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}</small></span>
+          <span class="fr-row-name">${escapeHTML(r.n)}<small> ${idTag(r.uid)}${gradeMark(gradeOf(r.uid, r.g))}</small></span>
           <span class="fr-req-btns">
             <button class="fr-accept" data-uid="${escapeHTML(r.uid)}">✅ รับ</button>
             <button class="fr-decline" data-uid="${escapeHTML(r.uid)}">✕</button>
@@ -2140,7 +2146,7 @@ function refreshFriendData(){
         const unread = Online.chatUnread && Online.chatUnread[f.uid];
         return `<div class="fr-row">
           <span class="online-dot${on ? '' : ' off'}"></span>
-          <span class="fr-row-name">${escapeHTML(f.n)}<small> ${idTag(f.uid)}</small></span>
+          <span class="fr-row-name">${escapeHTML(f.n)}<small> ${idTag(f.uid)}${gradeMark(gradeOf(f.uid, f.g))}</small></span>
           <span class="fr-row-status">${on ? '💚' : '⚪'}</span>
           <button class="fr-call-btn" data-ci="${i}" type="button" title="โทรหาเพื่อนด้วยเสียง">📞</button>
           <button class="fr-gift-btn" data-gi="${i}">🎁 ส่งของขวัญ</button>
@@ -3200,7 +3206,7 @@ function renderFeedCard(){
     const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
     return `<div class="feed-row" data-fid="${escapeHTML(it.uid)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}" data-ts="${+it.ts || 0}">
       <span class="feed-ico">${fc.e}</span>
-      <span class="feed-txt"><b class="feed-name">${escapeHTML(it.n)}</b> ${escapeHTML(it.tx)}
+      <span class="feed-txt">${nameWithGrade(`<b class="feed-name">${escapeHTML(it.n)}</b>`, gradeOf(it.uid, it.g))} ${escapeHTML(it.tx)}
         <small class="feed-ago">· ${feedAgo(it.ts)}</small></span>
     </div>`;
   }).join('');
@@ -3264,12 +3270,13 @@ function renderFeedBoardLive(){
   const el = document.getElementById('fdb-live');
   if(!el || typeof Online === 'undefined') return;
   const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  const meG = state.student ? (state.student.grade || '') : '';
   const meRow = `<div class="fdb-live-row fdb-live-me"><span class="fdb-dot"></span>
-      <b>⭐ ${escapeHTML(state.profileName || (typeof selfTag === 'function' ? selfTag() : 'เรา'))}</b>
+      ${nameWithGrade(`<b>⭐ ${escapeHTML(state.profileName || (typeof selfTag === 'function' ? selfTag() : 'เรา'))}</b>`, meG)}
       ${idTag(onlineKey())} · กำลังเล่นอยู่ตอนนี้</div>`;
   const list = (Online.friends || []).slice().sort((a,b)=>(fset.has(a.id)?0:1) - (fset.has(b.id)?0:1));
   const rows = list.map(f=>`<div class="fdb-live-row${fset.has(f.id) ? ' fdb-fr' : ''}">
-      <span class="fdb-dot"></span><b>${escapeHTML(f.n)}</b> ${idTag(f.id)} · ${escapeHTML(f.act)}</div>`).join('');
+      <span class="fdb-dot"></span>${nameWithGrade(`<b>${escapeHTML(f.n)}</b>`, gradeOf(f.id, f.g))} ${idTag(f.id)} · ${escapeHTML(f.act)}</div>`).join('');
   el.innerHTML = `<div class="fdb-live-title">🟢 ใครออนไลน์ทำอะไรอยู่ตอนนี้</div>
     <div class="fdb-live-rows">${meRow}${rows}</div>`;
 }
@@ -3300,7 +3307,7 @@ function renderFeedBoard(){
         : `<div class="fdb-cm-locked">💬 คอมเมนต์ได้เฉพาะเพื่อนของเจ้าของโพสต์เท่านั้น</div>`}`;
     return `<div class="fdb-row" data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g||'')}">
       <div class="fdb-row-top"><span class="fdb-ico">${fc.e}</span>
-        <span class="fdb-txt"><b class="fdb-name">${escapeHTML(it.n)}</b> ${escapeHTML(it.tx)}
+        <span class="fdb-txt">${nameWithGrade(`<b class="fdb-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))} ${escapeHTML(it.tx)}
         <small class="fdb-ago">· ${feedAgo(it.ts)}</small></span></div>
       <div class="fdb-actions">
         <button class="fdb-like${it.likedByMe?' on':''}" data-key="${escapeHTML(it.key)}" data-liked="${it.likedByMe?1:0}" type="button"${canReact?'':' disabled'}>
@@ -3625,6 +3632,13 @@ function renderDashboard(){
     document.getElementById('btn-edit-name').addEventListener('click', authEditProfileName);
     bindPlayerClicks();
   }else chip.textContent = '';
+  /* 🎖️ รอบ 643: บรรทัดระดับชั้นใต้แถวเหรียญ (ผู้ใช้สั่ง) — ข้อความ "ระดับชั้น" + สัญลักษณ์
+     ยังไม่ลงทะเบียน/ไม่รู้ชั้น = ปล่อยว่าง (.grade-line:empty ซ่อนตัวเอง) */
+  const gl = document.getElementById('grade-line');
+  if(gl){
+    const mk = gradeMark(myPlGrade);
+    gl.innerHTML = mk ? `<span class="cp-lb">ระดับชั้น</span>${mk}` : '';
+  }
   /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า) */
   const pp = document.getElementById('pass-photo');
   if(pp){
