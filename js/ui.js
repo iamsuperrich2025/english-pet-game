@@ -6915,10 +6915,17 @@ function renderFactory(){
   }).join('');
   const creditChip = `<div class="craft-credit">🎟️ แต้มส่วนลด <b>${fmtNum(state.wordCredit||0)}</b> แต้ม
     <small>ตอบคำศัพท์ถูก 1 คำ = 1 แต้ม (สะสมจากทุกเกม) · ใช้เป็นส่วนลด 1 แต้ม = 🪙1 ลดได้สูงสุดครึ่งราคา</small></div>`;
-  /* .fc-cols: จอปกติซ้อนเป็นชั้น · จอเตี้ยแบ่ง 2 คอลัมน์ ซ้าย=สถานะ+เครื่องมือ ขวา=แคตตาล็อก (กฎ 7) */
+  /* .fc-cols: จอปกติซ้อนเป็นชั้น · จอเตี้ยแบ่ง 2 คอลัมน์ ซ้าย=สถานะ+เครื่องมือ ขวา=แคตตาล็อก (กฎ 7)
+     รอบ 614 (เต็มจอ): CSS พลิก .fc-cols เป็นแนวตั้ง → fc-left = แถบเครื่องมือบน · fc-right = แคตตาล็อกเต็มความกว้าง 2×8 */
+  const catName = factoryCat==='all' ? 'ทุกหมวด' : ((COLLECT_CATS.find(g=>g.id===factoryCat)||{}).name || '');
+  const catHead = `<div class="fc-cat-head">
+      <span class="fc-cat-title">📦 แคตตาล็อกสินค้า</span>
+      <span class="fc-cat-chip">${escapeHTML(catName)} · ${fmtNum(items.length)} ชนิด</span>
+      <span class="fc-cat-hint">ปัดแถบ หรือกดลูกศร ❮ ❯ เพื่อดูสินค้าถัดไป</span>
+    </div>`;
   return `<div class="fc-cols"><div class="fc-left">${jobUI}
       <div class="craft-toolbar">${creditChip}<select class="mkt-filter" id="factory-cat">${opts}</select></div></div>
-    <div class="fc-right"><div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+    <div class="fc-right">${catHead}<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
       <div class="strip-x" id="factory-list">${rows}</div>
       <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div></div></div>`;
 }

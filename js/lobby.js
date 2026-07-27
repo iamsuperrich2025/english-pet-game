@@ -20,7 +20,9 @@ const PANEL_TITLES = {
 function openPanel(id){
   document.querySelectorAll('.panel-page').forEach(p=>p.classList.toggle('on', p.id === id));
   document.getElementById('panel-title').textContent = PANEL_TITLES[id] || '';
-  document.getElementById('panel-overlay').classList.add('open');
+  const ov = document.getElementById('panel-overlay');
+  ov.dataset.page = id;              /* รอบ 614: CSS ใช้เลือกโหมดเต็มจอรายแผง (โรงงาน) */
+  ov.classList.add('open');
   document.querySelectorAll('.rail-btn[data-panel]').forEach(b=>b.classList.toggle('on', b.dataset.panel === id));
   sfx.select();
 }
