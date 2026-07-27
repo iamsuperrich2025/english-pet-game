@@ -7616,24 +7616,50 @@ function showTeacherCard(){
    ============================================================ */
 const CALL_REACT_EMOS = ['❤️','😆','👍','😮','🎉','😭','🐱','⭐'];
 
-/* 🔔 เสียงกริ่ง: สายเข้า = 2 โน้ตซ้ำ + สั่น · เรียกออก = โน้ตต่ำเบา ๆ (ใช้ beep เดิม เคารพสวิตช์เสียง) */
+/* 🔔 เสียงกริ่ง (รอบ 629: ผู้ใช้ส่งไฟล์เสียงจริงมาให้ — สูตร 2 ชั้นเดียวกับ playCashier ใน util.js)
+   ชั้น 1: ไฟล์จริงเล่นวน (loop) — ฝั่งผู้รับสาย IncomingCallTone · ฝั่งผู้โทร OutgoingCallTone
+   ชั้น 2: ไฟล์หาย/เบราว์เซอร์บล็อก autoplay → สลับเป็น beep สังเคราะห์แบบเดิมทันที (กริ่งต้องไม่เงียบ)
+   🔇 เคารพสวิตช์เสียง `state.sound` · การสั่นแยกสวิตช์ (`state.haptic`) ทำงานของมันเองไม่ว่าเสียงจะมาจากทางไหน */
+const CALL_TONES = {in:'sound/IncomingCallTone.mp3', out:'sound/OutgoingCallTone.mp3'};
 const callRing = {
-  t:null,
+  t:null, au:null, dir:null, cache:{}, miss:{in:false, out:false},
+  synth(){
+    if(this.dir === 'in'){ beep(880,.18,0,'sine',.14); beep(660,.2,.24,'sine',.14); }
+    else                 { beep(420,.32,0,'sine',.06); beep(420,.32,.5,'sine',.06); }
+  },
+  /* ไฟล์เล่นไม่ได้ → ปล่อยมือจากไฟล์ แล้วให้ตัวจับเวลาเดิมยิง beep แทน (เติมเสียงรอบนี้ให้ก่อน ไม่ต้องรอรอบถัดไป) */
+  toSynth(){
+    if(this.au){ try{ this.au.pause(); }catch(e){} this.au = null; }
+    if(this.t) this.synth();
+  },
   start(dir){
     this.stop();
+    this.dir = dir;
+    if(state.sound && !this.miss[dir]){
+      try{
+        const a = this.cache[dir] || (this.cache[dir] = new Audio(CALL_TONES[dir]));
+        a.loop = true; a.volume = (dir === 'in') ? .7 : .5;
+        a.onerror = ()=>{ this.miss[dir] = true; if(this.au === a) this.toSynth(); };
+        try{ a.currentTime = 0; }catch(e){}
+        const p = a.play();
+        if(p && p.catch) p.catch(()=>{ this.miss[dir] = true; if(this.au === a) this.toSynth(); });
+        this.au = a;
+      }catch(e){ this.miss[dir] = true; this.au = null; }
+    }
+    // จังหวะซ้ำ: ใช้ไฟล์ = เท่ากับความยาวไฟล์ (สั่นตรงหัวลูปทุกรอบ ไม่เลื่อนหนีกัน) · ใช้ beep = จังหวะเดิม
+    const period = ()=>(this.au && this.au.duration > .4)
+      ? Math.round(this.au.duration * 1000) : (dir === 'in' ? 1600 : 2800);
     const tick = ()=>{
-      if(dir === 'in'){
-        beep(880,.18,0,'sine',.14); beep(660,.2,.24,'sine',.14);
-        if(state.haptic !== false && navigator.vibrate) navigator.vibrate([200,110,200]);
-      }else{
-        beep(420,.32,0,'sine',.06); beep(420,.32,.5,'sine',.06);
-      }
+      if(dir === 'in' && state.haptic !== false && navigator.vibrate) navigator.vibrate([200,110,200]);
+      if(!this.au) this.synth();          // ใช้ไฟล์อยู่ = ไฟล์ loop เองแล้ว ตัวจับเวลาเหลือหน้าที่สั่นอย่างเดียว
+      this.t = setTimeout(tick, period());
     };
     tick();
-    this.t = setInterval(tick, dir === 'in' ? 1600 : 2800);
   },
   stop(){
-    if(this.t){ clearInterval(this.t); this.t = null; }
+    if(this.t){ clearTimeout(this.t); this.t = null; }
+    if(this.au){ try{ this.au.pause(); this.au.currentTime = 0; }catch(e){} this.au = null; }
+    this.dir = null;
     if(navigator.vibrate) try{ navigator.vibrate(0); }catch(e){}
   },
 };
