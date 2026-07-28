@@ -1339,7 +1339,9 @@ html.no-anim body.quake{animation:none;}
 
 /* 🎊 ฉลอง "ได้เข็มใหม่" กลางจอ (แบนเนอร์เด้ง + โปรยเหรียญ · ไม่บังการเล่น หายเอง) */
 .badge-celebrate-overlay{
-  position:fixed;inset:0;z-index:60;pointer-events:none;overflow:hidden;
+  /* ⌨️ รอบ 650: เดิม z-index 60 → แบนเนอร์เข็มโดนเกมเต็มจอบัง (#tp-overlay 93 · .wsa-overlay 95)
+     ยกขึ้น 96 ให้ลอยเหนือทุกเกม — ปลอดภัยเพราะ pointer-events:none และหายเองใน 2.6 วิ */
+  position:fixed;inset:0;z-index:96;pointer-events:none;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
 }
 .badge-celebrate{
@@ -1655,6 +1657,51 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
   justify-content:center;
 }
 .mkt-group-head:first-child{margin-top:0;}
+/* รอบ: มือถือ+คอมพิวเตอร์ อยู่แถวเดียวกัน 2 คอลัมน์ + ปรับให้ดูสวยขึ้น */
+.mkt-two-col{display:flex;gap:10px;align-items:stretch;}
+.mkt-two-col .shop-card{
+  flex:1;min-width:0;margin-bottom:0;padding:14px 12px 12px;
+  position:relative;overflow:hidden;border-radius:20px;
+}
+.mkt-two-col .shop-card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;}
+#phone-card.shop-card::before{background:linear-gradient(90deg,#a98af0,#6a4fc0);}
+#computer-card.shop-card::before{background:linear-gradient(90deg,#5fe0a0,#1f8f57);}
+/* 🎫 รอบ 652: แถบสีบนการ์ดตั๋วโลก 3D — แยกสีตามธีมแต่ละโลก ให้จำง่ายตอนเห็นเป็นคู่ 2 คอลัมน์ */
+#ticket-card.shop-card::before{background:linear-gradient(90deg,#8de08a,#3fa855);}
+#haunt-card.shop-card::before{background:linear-gradient(90deg,#ff9d4d,#7a3fb0);}
+#heli-card.shop-card::before{background:linear-gradient(90deg,#6fc3f0,#2a7fc9);}
+#drone-card.shop-card::before{background:linear-gradient(90deg,#4fe0d0,#1f9e94);}
+#drive-card.shop-card::before{background:linear-gradient(90deg,#ff8a65,#e64a2e);}
+#soccer-card.shop-card::before{background:linear-gradient(90deg,#7ed957,#2e8b3d);}
+#moto-card.shop-card::before{background:linear-gradient(90deg,#ffcc4d,#e0932a);}
+#invasion-card.shop-card::before{background:linear-gradient(90deg,#9d7fe8,#3a2a6e);}
+.mkt-two-col .shop-title{
+  font-size:15.5px;font-weight:800;letter-spacing:.2px;
+  padding-bottom:8px;margin-bottom:10px;text-align:left;
+  border-bottom:2px dashed rgba(122,92,168,.25);
+}
+#phone-card .shop-title{color:#5f3fb0;}
+#computer-card .shop-title{color:#1f8f57;border-bottom-color:rgba(31,143,87,.25);}
+/* กล่องสถานะ (มีของ/ยังไม่มี) — badge วงกลมไล่เฉด + การ์ดนุ่มขึ้น */
+.mkt-two-col .home-current{
+  background:linear-gradient(135deg,#f8f3ff,#ece0fb);
+  border:2px solid #ddc9f5;box-shadow:0 3px 10px rgba(122,92,168,.14);
+  border-radius:16px;
+}
+.mkt-two-col .home-current.none{
+  background:rgba(255,255,255,.55);border:2px dashed #cfc6de;box-shadow:none;
+}
+.mkt-two-col .home-current:not(.none) .home-emoji{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:24px;
+  background:linear-gradient(150deg,#fff,#e9defa);box-shadow:0 2px 6px rgba(122,92,168,.28);
+}
+.mkt-two-col .home-current.none .home-emoji{background:rgba(255,255,255,.6);box-shadow:none;opacity:.65;}
+/* ตั๋วบิล/โปรฟรีเดือนแรก — สไตล์ตั๋วนุ่มขึ้น */
+.mkt-two-col .bill-box{border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.mkt-two-col .bill-box.paid{background:linear-gradient(135deg,#effaf1,#dff5e6);}
+.mkt-two-col .comp-earn{border-radius:20px;}
+.mkt-two-col .home-btn{border-radius:16px;}
 .mkt-listing{
   display:flex;align-items:center;gap:10px;background:#fbf7ff;border:2px dashed var(--purple-d);
   border-radius:16px;padding:8px 10px;margin-bottom:8px;
