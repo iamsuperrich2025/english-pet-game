@@ -2310,3 +2310,10 @@
 - **รอบ 663 (28 ก.ค. · ผู้ใช้ขอ):** ⌨️ **เพิ่มความดังเสียงกดแป้นพิมพ์ (โหมดพิมพ์คำ) อีก 40%** — `keyTapSynth()` ใน `js/util.js` (เรียกจาก `sfx.keyTap` ใน `js/typing.js`)
   - `g.gain` (นอยส์คลิก): กดลง `.24→.336` · ปล่อยขึ้น `.13→.182` · `og.gain` (ตุบต่ำตอนกดลง): `.15→.21` — คูณ 1.4 ทุกค่า สัดส่วนเดิมคงเดิม
   - **ยืนยัน:** preview เปลี่ยนเลขในไฟล์ที่เสิร์ฟจริงถูก (fetch fresh) · เรียก `sfx.keyTap(false)`/`sfx.keyTap(true)` ตรงบนหน้าเว็บ ไม่มี error ใน console
+
+
+## ⏬ ย้ายเมื่อ 2026-07-28 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 664 (28 ก.ค. · ผู้ใช้เจอ):** 💪 **แก้ข้อความ "กินดีต่อเนื่อง x/3 มื้อ" ในหน้าข้อมูลน้องอ่านไม่ชัด** — ต้นตอ: `.shape-text.shape-progress`(style.css) กับ `.stage-plate .heat-text`(lobby.css) specificity เท่ากัน (2 คลาส) แต่ lobby.css โหลดทีหลังชนะเฉพาะ `color` ส่วน `background` ยังเป็นของ style.css (#e8f6ff) → ตัวหนังสือจาง #c9ddf3 บนพื้นจางเกือบมองไม่เห็น
+  - แก้ `css/lobby.css`: เพิ่ม `.stage-plate .shape-text.shape-progress/.shape-strong/.shape-fat/.shape-thin` ครบ 4 สถานะ (คู่สีเดียวกับ `.stage-plate .heat-text.safe` ที่มีอยู่แล้ว = อ่านชัดบนพื้นกรมท่าเวที)
+  - **ยืนยัน (จำลอง pet cleanMeals=2 เปิดข้อมูลน้อง วัด `getComputedStyle` ใน preview):** ก่อนแก้ color `#c9ddf3` บน bg `#e8f6ff` (แทบไม่มี contrast) → หลังแก้ color `#a8d4f5` บนพื้นโปร่งแสงทับกรมท่า (contrast สูงขึ้นชัดเจน) · ล้างเซฟทดสอบแล้ว

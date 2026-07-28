@@ -68,9 +68,6 @@
 - **รอบ 665 (28 ก.ค. · ผู้ใช้สั่ง):** 🏪 **ย้าย "🎁 คลังสินค้าของฉัน" ขึ้นบนสุดในหน้าตลาด** — `renderMarketCard()` (`js/ui.js`) สลับลำดับ `mkt-mystock`+`renderCollectMine()` มาไว้ต่อจากหัวข้อ/คำโปรย ก่อนปุ่มเล็งของ/ออเดอร์/ชั้นเพื่อน/โชว์รูมรถ
   - **ยืนยัน (preview จริง):** `getBoundingClientRect`+ลำดับ `innerText` ของ `#market-card` ยืนยันคลังสินค้าอยู่บรรทัดที่ 3 ต่อจากคำโปรยทันที
   - ⚠️ **commit เฉพาะ hunk นี้ด้วย `git apply --cached`** (ไม่ใช้ `git add -A`/`finish_round.sh`) เพราะมี session คู่ขนานแก้ `js/ui.js`/`js/images.js`/`js/game.js`/`index.html` ค้างอยู่ (ฟีเจอร์ซ้อนภาพชุดบนท่าโพส ยังไม่ commit) — **ยังไม่ deploy** รอ session นั้น commit งานเขาก่อน ไม่งั้น deploy จะดันงานที่เขายังทำไม่เสร็จขึ้นเว็บจริงไปด้วย
-- **รอบ 664 (28 ก.ค. · ผู้ใช้เจอ):** 💪 **แก้ข้อความ "กินดีต่อเนื่อง x/3 มื้อ" ในหน้าข้อมูลน้องอ่านไม่ชัด** — ต้นตอ: `.shape-text.shape-progress`(style.css) กับ `.stage-plate .heat-text`(lobby.css) specificity เท่ากัน (2 คลาส) แต่ lobby.css โหลดทีหลังชนะเฉพาะ `color` ส่วน `background` ยังเป็นของ style.css (#e8f6ff) → ตัวหนังสือจาง #c9ddf3 บนพื้นจางเกือบมองไม่เห็น
-  - แก้ `css/lobby.css`: เพิ่ม `.stage-plate .shape-text.shape-progress/.shape-strong/.shape-fat/.shape-thin` ครบ 4 สถานะ (คู่สีเดียวกับ `.stage-plate .heat-text.safe` ที่มีอยู่แล้ว = อ่านชัดบนพื้นกรมท่าเวที)
-  - **ยืนยัน (จำลอง pet cleanMeals=2 เปิดข้อมูลน้อง วัด `getComputedStyle` ใน preview):** ก่อนแก้ color `#c9ddf3` บน bg `#e8f6ff` (แทบไม่มี contrast) → หลังแก้ color `#a8d4f5` บนพื้นโปร่งแสงทับกรมท่า (contrast สูงขึ้นชัดเจน) · ล้างเซฟทดสอบแล้ว
 ### รอบ 640 — รายละเอียดระบบหลายสนาม (อ่านก่อนแตะ multiplayer โลก 3D)
 **🤝 นัดกันแล้วได้สนามเดียวกันเอง (รอบ 641 — ต่อยอดข้อ 3)**
 เด็กไม่ต้องกด "👥 ไปหาเพื่อน" เองแล้วเมื่อ **ชวนกันผ่านคำเชิญเล่นโลก 3D (`/tinv`) ไว้ก่อน** — ใช้ path เดิม ไม่ต้องแก้ rules
