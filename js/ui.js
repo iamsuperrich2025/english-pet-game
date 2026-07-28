@@ -186,6 +186,18 @@ function petShowHTML(p, clipUrl){
       return `<button class="ps-dress" type="button" title="สลับระหว่างคลิปน้องกับภาพน้องใส่ชุด">`
         + (state.psDress ? `🎬 ดูคลิปน้อง` : `${worn.emoji || '🎀'} ดูน้องใส่ชุด`) + `</button>`;
     })()}
+    ${(()=>{   /* 🎀 รอบ 662: ป้ายเล็ก "ชุดที่ใส่อยู่" กลางขวาเวที (แบบเดียวกับหน้าข้อมูลน้อง รอบ 661)
+                  โผล่ทุกครั้งที่ชุดถูกอย่างอื่นบัง (คลิป/ร่างล่ำ-อ้วน-ผอม/ป่วย/หิว) → เด็กเห็นว่าชุดยังอยู่ ไม่ต้องกดปุ่มก่อน */
+      if(stage === 'egg') return '';
+      const worn = (typeof equippedItem === 'function') ? equippedItem(p) : null;
+      if(!worn) return '';
+      const wornImg = IMG_FILES[`${p.type}_${stage}_${worn.id}`];
+      if(!wornImg || (!clipUrl && base === wornImg)) return '';        // ชุดโชว์ตัวใหญ่อยู่แล้ว ไม่ต้องมีป้าย
+      const canSwap = !calm && !petHungry(p);                          // ป่วย/หลับ/หิว กดแล้วภาพไม่เปลี่ยน = ป้ายเฉย ๆ
+      const tag = canSwap ? 'button' : 'div';
+      return `<${tag} class="ps-worn-pip"${canSwap ? ' type="button" title="กดดูน้องใส่ชุด"' : ''}>`
+        + `<img src="${wornImg}" alt=""><span>${worn.emoji || '🎀'} ยังใส่อยู่</span></${tag}>`;
+    })()}
   </div>`;
 }
 
@@ -4041,13 +4053,15 @@ function renderDashboard(){
   }
   /* 🎀 รอบ 609: ปุ่มสลับ "คลิปน้อง ↔ น้องใส่ชุด" (โผล่เฉพาะตอนน้องใส่ชุดอยู่) */
   {
-    const dressBtn = card.querySelector('.ps-dress');
-    if(dressBtn) dressBtn.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      state.psDress = !state.psDress;
-      saveState();
-      sfx.select();
-      renderDashboard();
+    /* 🎀 รอบ 662: ป้ายเล็ก "ชุดที่ใส่อยู่" (button.ps-worn-pip) กดแล้วสลับเหมือนกัน */
+    card.querySelectorAll('.ps-dress, button.ps-worn-pip').forEach(dressBtn=>{
+      dressBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        state.psDress = !state.psDress;
+        saveState();
+        sfx.select();
+        renderDashboard();
+      });
     });
   }
   /* เผื่อเบราว์เซอร์บล็อก autoplay (นโยบายบางเครื่อง/บางเบราว์เซอร์): แตะจอครั้งแรกแล้วคลิปเดินเอง
