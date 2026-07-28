@@ -173,6 +173,7 @@ function floatFx(text, color){
 
 /* ---------- SOUND (WebAudio — ไม่ต้องใช้ไฟล์เสียง) ---------- */
 let audioCtx = null;
+let keyTapComp = null;   // 🔊 limiter เฉพาะเสียงกดแป้น กัน clip ตอน gain สูง (รอบ)
 function beep(freq, dur, delay=0, type='sine', vol=0.15){
   if(!state.sound) return;
   try{
@@ -408,6 +409,12 @@ function keyTapSynth(up, bright){
   if(!state.sound) return;
   try{
     audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    if(!keyTapComp){   // 🔊 gain รวมตอนนี้ >1 (เสียงดังขึ้น 3 เท่าซ้อน) ต้องมี limiter กันเสียงแตก
+      keyTapComp = audioCtx.createDynamicsCompressor();
+      keyTapComp.threshold.value=-20; keyTapComp.knee.value=10; keyTapComp.ratio.value=10;
+      keyTapComp.attack.value=.001; keyTapComp.release.value=.05;
+      keyTapComp.connect(audioCtx.destination);
+    }
     const t = audioCtx.currentTime;
     const dur = up ? .016 : .028;
     const len = Math.ceil(audioCtx.sampleRate*dur);
@@ -418,18 +425,18 @@ function keyTapSynth(up, bright){
     const bp = audioCtx.createBiquadFilter(); bp.type='bandpass';
     bp.frequency.value = (up?3000:1900) * (bright?1.18:1); bp.Q.value = 1.2;
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(up?.237:.437, t);   // 🔊 +40%→+30% ซ้อน (รอบ)
+    g.gain.setValueAtTime(up?.711:1.311, t);   // 🔊 ×3 ซ้อนจากรอบก่อน (รอบ)
     g.gain.exponentialRampToValueAtTime(.001, t+dur);
-    src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+    src.connect(bp); bp.connect(g); g.connect(keyTapComp);
     src.start(t); src.stop(t+dur);
     if(!up){                       // แป้นชนฐาน = ตุบต่ำสั้น ๆ (ให้รู้สึกว่ามีน้ำหนัก)
       const o = audioCtx.createOscillator(), og = audioCtx.createGain();
       o.type='sine';
       o.frequency.setValueAtTime(200, t);
       o.frequency.exponentialRampToValueAtTime(92, t+.05);
-      og.gain.setValueAtTime(.273, t);   // 🔊 +40%→+30% ซ้อน (รอบ)
+      og.gain.setValueAtTime(.819, t);   // 🔊 ×3 ซ้อนจากรอบก่อน (รอบ)
       og.gain.exponentialRampToValueAtTime(.001, t+.06);
-      o.connect(og); og.connect(audioCtx.destination);
+      o.connect(og); og.connect(keyTapComp);
       o.start(t); o.stop(t+.07);
     }
   }catch(e){}

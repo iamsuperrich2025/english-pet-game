@@ -4146,7 +4146,7 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 html.no-anim #tp-board{transition:none;}
 
 /* ---- หัวแถบ: ชื่อเกม · สถิติ · ปุ่มปิดตัวใหญ่เห็นชัด (ผู้ใช้สั่ง "ปุ่มปิดที่เห็นชัดเจน") ---- */
-.tp-head{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;flex-shrink:0;}
+.tp-head{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;flex-shrink:0;}
 .tp-title{font-size:clamp(14px,2.1vw,20px);font-weight:800;color:#bfd6ff;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 0 12px rgba(110,160,255,.55);}
 .tp-stat{display:flex;align-items:center;gap:clamp(6px,1.2vw,14px);white-space:nowrap;
@@ -4166,6 +4166,20 @@ html.no-anim #tp-board{transition:none;}
   transition:transform .08s ease,box-shadow .08s ease,border-width .08s ease;}
 .tp-close:hover{filter:brightness(1.08);}
 .tp-close:active{transform:translateY(3px);border-bottom-width:1px;box-shadow:0 1px 5px rgba(224,52,75,.4);}
+
+/* 🔊 ปุ่มเลื่อนเปิด/ปิดเสียงกดแป้น — เฉพาะเสียงคลิกคีย์บอร์ด (state.tpKeySoundOff · js/typing.js) */
+.tp-snd{flex-shrink:0;display:flex;align-items:center;gap:6px;cursor:pointer;font-family:inherit;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:999px;
+  padding:6px 10px;color:#eaf6ff;transition:background .15s;}
+.tp-snd:hover{background:rgba(255,255,255,.14);}
+.tp-snd-ic{font-size:clamp(12px,1.6vw,15px);line-height:1;}
+.tp-snd-track{position:relative;width:30px;height:16px;border-radius:999px;flex-shrink:0;
+  background:rgba(120,255,180,.55);transition:background .15s;}
+.tp-snd-thumb{position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.4);transition:transform .15s ease;}
+.tp-snd.off .tp-snd-track{background:rgba(255,255,255,.22);}
+.tp-snd.off .tp-snd-thumb{transform:translateX(14px);}
+@media (max-width:640px){ .tp-snd-ic{display:none;} .tp-snd{padding:6px 8px;} }
 
 /* ---- คำศัพท์กลางจอด้านบน + คำแปลไทยใต้คำ ---- */
 .tp-prompt{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;

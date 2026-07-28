@@ -96,6 +96,9 @@
       <div class="tp-head">
         <span class="tp-title">⌨️ พิมพ์คำศัพท์ · Typing</span>
         <span class="tp-stat" id="tp-stat"></span>
+        <button class="tp-snd" id="tp-snd" type="button" title="เปิด/ปิดเสียงกดแป้น">
+          <span class="tp-snd-ic">🔊</span><span class="tp-snd-track"><span class="tp-snd-thumb"></span></span>
+        </button>
         <button class="tp-close" id="tp-close" type="button" title="ปิดเกม (หรือกด Esc)">✕ ปิดเกม</button>
       </div>
       <div class="tp-prompt">
@@ -115,6 +118,21 @@
     hintEl =overlay.querySelector('#tp-hint');
     fxEl   =overlay.querySelector('#tp-fx');
     overlay.querySelector('#tp-close').addEventListener('click', close);
+    /* 🔊 ปุ่มเลื่อนเปิด/ปิดเสียงกดแป้น (เฉพาะเสียงคลิกคีย์บอร์ด — ไม่กระทบเสียงเหรียญ/พูดคำ) */
+    const sndBtn=overlay.querySelector('#tp-snd');
+    const syncSndBtn=()=>{
+      const on=!(typeof state!=='undefined' && state.tpKeySoundOff);
+      sndBtn.classList.toggle('off', !on);
+      sndBtn.querySelector('.tp-snd-ic').textContent = on?'🔊':'🔇';
+    };
+    syncSndBtn();
+    sndBtn.addEventListener('click', ()=>{
+      if(typeof state!=='undefined'){
+        state.tpKeySoundOff=!state.tpKeySoundOff;
+        if(typeof saveState==='function') saveState();
+      }
+      syncSndBtn();
+    });
     /* 🏆 รอบ 649: กดแต้มบนหัวกระดาน → กระดานประกาศรางวัลรายเดือน (ผูกเองที่นี่ ไม่พึ่ง listener ของ ui.js
        เพราะเด็กอาจเปิดเกมพิมพ์คำก่อนเคยเปิดกระดานอันดับ) · .wsa-overlay z-index 95 > #tp-overlay 93 */
     statEl.addEventListener('click', e=>{
@@ -191,6 +209,12 @@
     if(el) el.classList.add('next');
   }
 
+  /* 🔊 เสียงคลิกคีย์บอร์ด — เช็กปุ่มเลื่อน tp-snd (state.tpKeySoundOff) ก่อนเรียก sfx.keyTap ทุกจุด */
+  function keyTap(up, bright){
+    if(typeof state!=='undefined' && state.tpKeySoundOff) return;
+    if(typeof sfx!=='undefined' && sfx.keyTap) sfx.keyTap(up, bright);
+  }
+
   /* 🎬 ปุ่มยุบลง-เด้งขึ้นทันทีเหมือนคีย์บอร์ดจริง (คลาส .down ติดสั้น ๆ แล้วถอด) */
   function pressFx(el, ms){
     if(!el) return;
@@ -198,7 +222,7 @@
     clearTimeout(el._tpUp);
     el._tpUp=setTimeout(()=>{
       el.classList.remove('down');
-      if(typeof sfx!=='undefined' && sfx.keyTap) sfx.keyTap(true);   // เสียงตอนแป้นเด้งขึ้น
+      keyTap(true);   // เสียงตอนแป้นเด้งขึ้น
     }, ms||90);
   }
 
@@ -229,24 +253,24 @@
   function hit(k, el){
     if(!k) return;
     if(k==='SPEAK'){ pressFx(el);
-      if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false);
+      keyTap(false);
       if(cur && typeof speakWord==='function') speakWord(cur.w.toLowerCase());
       return; }
     if(k==='SKIP'){ pressFx(el);
-      if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false);
+      keyTap(false);
       skip(); return; }
     if(locked || !cur) return;
 
     const want=cur.w[cur.typed.length];
     if(k==='BKSP'){
       pressFx(el);
-      if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false);
+      keyTap(false);
       if(cur.typed.length){ cur.typed=cur.typed.slice(0,-1); renderWord(); }
       return;
     }
     const ok=(k===want);
     pressFx(el);
-    if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false, ok);
+    keyTap(false, ok);
     if(!ok){                                   // พิมพ์ผิด = ไม่หักอะไร แค่บอกให้รู้ (เด็กจะได้ไม่ท้อ) · เสียแค่โบนัส "ไม่ผิดเลย"
       cur.miss++;
       if(el){ el.classList.add('bad'); setTimeout(()=>el.classList.remove('bad'), 260); }
@@ -322,7 +346,7 @@
   }
   function close(){
     if(!overlay) return;
-    if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false);
+    keyTap(false);
     boardEl.classList.remove('open');
     if(typeof saveState==='function') saveState();
     setTimeout(()=>{
