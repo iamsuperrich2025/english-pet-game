@@ -3250,6 +3250,37 @@ html.no-anim .pet-show-bg .ps-fall{display:none;}
   background:radial-gradient(ellipse 78% 74% at 50% 52%, transparent 46%, rgba(4,9,28,.46) 100%);}
 html.no-anim .pet-show-bg.ps-night::before{animation:none;opacity:.9;}
 
+/* ✨ รอบ 680: หิ่งห้อย + ดาวตก (เฉพาะกลางคืน · element เจนใน petShowBgHTML)
+   ⚠️ ระยะ/ขนาดใช้ % ของกรอบฉาก ไม่ใช่ px — .pet-show-bg อยู่นอก .hero-scene จึงใช้ cqw ไม่ได้
+      (cqw จะไปอิงคอนเทนเนอร์อื่น/viewport แล้วเพี้ยนบนจอเล็ก) */
+.ps-night-fx{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+/* 🪰 หิ่งห้อย: จุดเรืองแสงเหลืองอมเขียว ลอยเรี่ยพื้น/พุ่มไม้ กะพริบช้า ๆ ไม่พร้อมกัน */
+.ps-night-fx .ps-firefly{position:absolute;width:4px;height:4px;border-radius:50%;opacity:0;
+  background:radial-gradient(circle, #fffbc4 0%, #d6f56a 45%, rgba(190,255,90,0) 72%);
+  box-shadow:0 0 7px 2px rgba(203,255,120,.5);
+  animation-name:psFirefly;animation-timing-function:ease-in-out;animation-iteration-count:infinite;}
+@keyframes psFirefly{
+  0%,100%{opacity:0;transform:translate(0,0)}
+  14%{opacity:.95}
+  48%{opacity:.22;transform:translate(9px,-7px)}
+  74%{opacity:.9;transform:translate(14px,-2px)}
+  99%{opacity:0;transform:translate(19px,-6px)}}
+/* 🌠 ดาวตก: ขีดแสงพาดเฉียงลง โผล่แค่ ~1 วิ ในทุก ๆ 15/21 วิ (นาน ๆ ครั้ง ไม่รก)
+   ขยับด้วย left/top (%) เพราะ transform ถูกใช้ตรึงมุมเอียงไว้แล้ว */
+.ps-night-fx .ps-shoot{position:absolute;width:22%;height:2px;border-radius:2px;opacity:0;
+  transform:rotate(21deg);transform-origin:0 50%;
+  background:linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.95) 72%, rgba(255,255,255,0));
+  filter:drop-shadow(0 0 4px rgba(196,222,255,.85));
+  animation-name:psShoot;animation-timing-function:ease-in;animation-iteration-count:infinite;}
+.ps-night-fx .ps-shoot.s1{animation-duration:15s;animation-delay:-2s;}
+.ps-night-fx .ps-shoot.s2{animation-duration:21s;animation-delay:-13s;}
+@keyframes psShoot{
+  0%{opacity:0;left:4%;top:6%}
+  3%{opacity:.95}
+  10%{opacity:0;left:46%;top:33%}
+  100%{opacity:0;left:46%;top:33%}}
+html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์เคลื่อนไหว = ไม่มีหิ่งห้อย/ดาวตก (ฟ้ายังมืดปกติ) */
+
 /* ---------- ③ ตัวน้อง: คลิปสั้นวนลูป 9 วิ (หายใจ → กระโดด 2 ที → ดีใจ → หันกลับ) ---------- */
 .pet-show{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;
   padding-bottom:1%;pointer-events:none;}

@@ -212,6 +212,13 @@ function nightKeyOf(now){
   if(d.getHours() < WAKE_HOUR) d.setDate(d.getDate()-1);
   return d.toDateString();
 }
+/* 🌙 รอบ 680: ตอนนี้เป็น "กลางคืน" หรือยัง — ตามนาฬิกาเครื่องผู้เล่นจริง
+   ใช้ช่วงเดียวกับเวลานอนของน้อง (20:00–06:00) ฉากเวทีจะได้ตรงกับกติกานอนที่เด็กเห็นอยู่แล้ว
+   (ฉากสลับเองภายใน 1 นาที — renderDashboard ถูกเรียกจาก tick ใน js/main.js อยู่แล้ว ไม่ต้องมี timer ใหม่) */
+function isNightNow(now){
+  const h = new Date(now || Date.now()).getHours();
+  return h >= SLEEP_FROM_HOUR || h < WAKE_HOUR;
+}
 
 function newPet(type, name){
   return {type,

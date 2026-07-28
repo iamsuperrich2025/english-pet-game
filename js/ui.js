@@ -109,13 +109,28 @@ function petShowBgHTML(p){
       + `animation-delay:${(rnd()*9).toFixed(2)}s;animation-duration:${(7.5+rnd()*6).toFixed(2)}s">`
       + `${cf.fall[i % cf.fall.length]}</span>`;
   }
-  // 🌙 รอบ 678: น้องหลับ = ทั้งฉากเป็นกลางคืน (ฟ้ามืด/พระจันทร์/ดาว) — สีทั้งชุดสลับใน css/lobby.css
-  return `<div class="pet-show-bg ps-${p.type}${p.sleeping ? ' ps-night' : ''}">
+  /* 🌙 รอบ 678: ฉากกลางคืน (ฟ้ามืด/พระจันทร์/ดาว) — สีทั้งชุดสลับใน css/lobby.css
+     🕗 รอบ 680: กลางคืนตาม "นาฬิกาเครื่องผู้เล่นจริง" ด้วย (isNightNow() = 20:00-06:00 ช่วงเดียวกับเวลานอนน้อง)
+        → น้องหลับ **หรือ** ถึงเวลากลางคืน = ฉากมืด · สลับเองภายใน 1 นาที (tick เรียก renderDashboard อยู่แล้ว) */
+  const night = p.sleeping || (typeof isNightNow === 'function' && isNightNow());
+  /* ✨ รอบ 680: หิ่งห้อยเรี่ยพื้น + ดาวตกพาดฟ้าเป็นครั้งคราว (เฉพาะกลางคืน)
+     ใช้ rnd() ตัวเดิม = ตำแหน่งคงที่ต่อชนิดสัตว์ วาดใหม่แล้วไม่วูบวาบย้ายที่ */
+  let fx = '';
+  if(night){
+    for(let i=0;i<7;i++){
+      fx += `<span class="ps-firefly" style="left:${(6+rnd()*88).toFixed(1)}%;top:${(56+rnd()*30).toFixed(1)}%;`
+        + `animation-delay:-${(rnd()*9).toFixed(2)}s;animation-duration:${(7+rnd()*5).toFixed(2)}s"></span>`;
+    }
+    // ดาวตก 2 ดวง คนละมุมฟ้า + เหลื่อมเวลากันมาก → เห็นทีละดวง นาน ๆ ครั้ง
+    fx += `<span class="ps-shoot s1"></span><span class="ps-shoot s2"></span>`;
+  }
+  return `<div class="pet-show-bg ps-${p.type}${night ? ' ps-night' : ''}">
     <div class="ps-sun"></div>
     <div class="ps-cloud c1"></div><div class="ps-cloud c2"></div><div class="ps-cloud c3"></div>
     <div class="ps-hill h1"></div><div class="ps-hill h2"></div>
     <div class="ps-ground"></div>
     <div class="ps-fall">${fall}</div>
+    ${night ? `<div class="ps-night-fx">${fx}</div>` : ''}
     <div class="ps-vig"></div>
   </div>`;
 }
