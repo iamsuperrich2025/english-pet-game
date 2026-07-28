@@ -866,6 +866,7 @@ function renderQuizQuestion(){
     // ▶️ รอบ 593 (ผู้ใช้สั่ง): เลิกเด้งข้อถัดไปเอง — เด็กอ่านเฉลย/ประโยคตัวอย่างไม่ทัน กดปุ่มนี้เองเมื่อพร้อม
     + `<button type="button" class="quiz-next" id="quiz-next">${lastQ ? 'ดูผลสอบ' : 'Next'}<span class="qn-arrow">❯</span></button>`;
   wordEl.onclick = ()=>speakWord(q.en);             // 🔊 แตะการ์ดคำโจทย์ = อ่านออกเสียง
+  speakWord(q.en);                                  // ▶️ ข้อใหม่ = อ่านออกเสียงอัตโนมัติ 1 รอบ (กดซ้ำได้ที่การ์ด/ไอคอน)
   wordEl.querySelector('.quiz-next').addEventListener('click', e=>{
     e.stopPropagation();                            // อย่าให้ไปโดน onclick ของการ์ด (อ่านออกเสียง)
     quizNext();
