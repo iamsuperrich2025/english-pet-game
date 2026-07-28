@@ -568,7 +568,17 @@ function speakWord(word){
     const a = wordAudio[key] || new Audio(wordAudioFile(word));
     wordAudio[key] = a;
     let failed = false;
-    const fail = ()=>{ if(failed) return; failed = true; wordAudio[key] = 'miss'; speakWordTTS(word); };
+    const fail = (err)=>{
+      if(failed) return; failed = true;
+      /* 🚫 2 กรณีนี้ "ไม่ใช่ไฟล์หาย" — ห้ามจำเป็น 'miss' และห้ามให้ TTS พูดทับ (รอบ 669)
+         · AbortError     = play() โดน pause() ตัดกลางคัน — เกิดทุกครั้งที่ขึ้นข้อใหม่แล้วตัดเสียงคำเก่า
+                            (ถ้าไม่กันไว้: คำเก่าโดนหมายหัวเป็น 'miss' ใช้เสียงหุ่นยนต์ตลอดกาล
+                             + TTS ดังพูดคำเก่าทับคำใหม่ที่เพิ่งขึ้น)
+         · NotAllowedError = เบราว์เซอร์บล็อกเสียงอัตโนมัติ (ยังไม่มี user gesture) */
+      const n = err && err.name;
+      if(n === 'AbortError' || n === 'NotAllowedError') return;
+      wordAudio[key] = 'miss'; speakWordTTS(word);
+    };
     a.onerror = fail;
     wordAudioNow = a;
     a.currentTime = 0;
