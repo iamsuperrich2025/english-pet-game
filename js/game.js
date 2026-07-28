@@ -583,7 +583,7 @@ function celebrateBadge(emoji, title, sub){
   const overlay = document.createElement('div');
   overlay.className = 'badge-celebrate-overlay';
   overlay.innerHTML = `<div class="badge-celebrate">
-    <div class="bc-emoji">${emoji}</div>
+    <div class="bc-emoji">${(typeof badgeIcHTML==='function') ? badgeIcHTML(emoji,'bc-emoji-img') : emoji}</div>
     <div class="bc-title">🎉 ${escapeHTML(title)}</div>
     <div class="bc-sub">${escapeHTML(sub)}</div>
   </div>`;

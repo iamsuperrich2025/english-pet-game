@@ -7998,7 +7998,7 @@ function renderStats(){
       <div class="stats-row"><span>📝 คำที่พิมพ์สำเร็จสะสม (ตัดสินอันดับ)</span><span><b>${fmtNum(state.tpWords||0)}</b> คำ</span></div>
       <div class="stats-row"><span>🪙 เหรียญสะสมจากเกมนี้</span><span><b>${fmtNum(state.tpScore||0)}</b> เหรียญ</span></div>
       <div class="stats-row"><span>🎖️ เข็มนักพิมพ์</span>
-        <span>${tpBadge ? `<b>${typistEmoji(tpBadge)} ${TYPIST_TIER_UI[tpBadge]}</b>` : 'ยังไม่ได้เข็ม — พิมพ์ครบ 100 คำจะได้ ⌨️'}</span></div>
+        <span>${tpBadge ? `<b class="stat-badge-line">${(typeof badgeIcHTML==='function')?badgeIcHTML(typistEmoji(tpBadge),'stat-badge-ic'):typistEmoji(tpBadge)} ${escapeHTML((BADGE_META[typistEmoji(tpBadge)]||{}).n||'')}</b>` : 'ยังไม่ได้เข็ม — พิมพ์ครบ 100 คำจะได้ ⌨️'}</span></div>
       <div class="stats-row"><span>🥇 อันดับปัจจุบัน (กระดาน ⌨️ พิมพ์คำ)</span>
         <span>${tpRank
           ? `<b style="color:${tpInTop?'#d99a12':'#7a5ca8'}">อันดับ ${fmtNum(tpRank)}</b>${tpInTop?'':` <small>(นอก Top ${LB_TP_TOP})</small>`}`
