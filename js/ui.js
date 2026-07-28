@@ -7852,6 +7852,24 @@ function renderStats(){
         return `<div class="stats-row"><span>${face} ${escapeHTML(p.name)} <small>(${PETS[p.type].name})</small></span><span>Lv.${p.level}${p.sick?' 🤒':''}</span></div>`;
       }).join('')
     : '<div class="cat-info">ยังไม่มีสัตว์เลี้ยง</div>';
+  // ⌨️ รอบ 656: การ์ดสถิติเกม ⌨️ พิมพ์คำ — คำสะสม/เหรียญสะสม/เข็ม/อันดับปัจจุบันจากแท็บ tp + ประวัติรางวัลรายเดือน
+  const tpBadge = state.typistBadge || 0;
+  let tpRank = 0, tpInTop = false;
+  try{
+    if(typeof Online !== 'undefined' && Online.ready){
+      const myId = onlineKey();
+      const map = {};
+      (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, tw:r.tw||0, tp:r.tp||0}; });
+      map[myId] = {id:myId, tw:Math.round(state.tpWords||0), tp:Math.round(state.tpScore||0)};
+      const all = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp));
+      const idx = all.findIndex(r=>r.id===myId);
+      if(idx >= 0){ tpRank = idx + 1; tpInTop = tpRank <= LB_TP_TOP; }
+    }
+  }catch(e){}
+  const tpLog = (state.tpAwardLog || []).slice(0, 3).map(a=>`
+    <div class="stats-row"><span>🏆 ${(typeof TpAward !== 'undefined') ? TpAward.monthThai(a.m) : a.m} · อันดับ ${a.r}
+      <small>(${fmtNum(a.s||0)} คำ · ${fmtNum(a.s2||0)} เหรียญตอนตัดรอบ)</small></span>
+      <span><b style="color:#d99a12">+${fmtNum(a.p)}</b> เหรียญ</span></div>`).join('');
   document.getElementById('stats-body').innerHTML = `
     <div class="stats-card">
       <h3 class="stats-title">${playerAvatarHTML('👧')} ${escapeHTML(state.profileName || s.first || 'ผู้เล่น')} · ชั้น ${escapeHTML(s.grade||'-')} <small class="stats-nick">${idTag((typeof onlineKey==='function')?onlineKey():'')}</small></h3>
@@ -7882,6 +7900,19 @@ function renderStats(){
           : 'ยังไม่เคยติดกระดาน — เก็บเหรียญเพิ่มอีกนิดนะ 💪'}</span></div>
     </div>
     <div class="stats-card"><h3 class="stats-title">🐾 สัตว์เลี้ยงของหนู</h3>${petRows}</div>
+    <div class="stats-card">
+      <h3 class="stats-title">⌨️ สถิติเกมพิมพ์คำ</h3>
+      <div class="stats-row"><span>📝 คำที่พิมพ์สำเร็จสะสม (ตัดสินอันดับ)</span><span><b>${fmtNum(state.tpWords||0)}</b> คำ</span></div>
+      <div class="stats-row"><span>🪙 เหรียญสะสมจากเกมนี้</span><span><b>${fmtNum(state.tpScore||0)}</b> เหรียญ</span></div>
+      <div class="stats-row"><span>🎖️ เข็มนักพิมพ์</span>
+        <span>${tpBadge ? `<b>${typistEmoji(tpBadge)} ${TYPIST_TIER_UI[tpBadge]}</b>` : 'ยังไม่ได้เข็ม — พิมพ์ครบ 100 คำจะได้ ⌨️'}</span></div>
+      <div class="stats-row"><span>🥇 อันดับปัจจุบัน (กระดาน ⌨️ พิมพ์คำ)</span>
+        <span>${tpRank
+          ? `<b style="color:${tpInTop?'#d99a12':'#7a5ca8'}">อันดับ ${fmtNum(tpRank)}</b>${tpInTop?'':` <small>(นอก Top ${LB_TP_TOP})</small>`}`
+          : 'พิมพ์ให้ครบอย่างน้อย 1 คำก่อนถึงจะติดกระดาน'}</span></div>
+      <h3 class="stats-title" style="margin-top:10px">📜 ประวัติรางวัลรายเดือน ⌨️ พิมพ์คำ</h3>
+      ${tpLog || '<div class="cat-info">ยังไม่เคยได้รับรางวัลรายเดือน — ติด Top 10 ก่อนวันตัดรอบสิ!</div>'}
+    </div>
     <div class="stats-card"><h3 class="stats-title">📚 คะแนนสูงสุดรายหมวด (${gradeBand(s.grade).label})</h3>${catRows}</div>
     <div class="stats-card"><h3 class="stats-title">🕐 ประวัติการสอบล่าสุด</h3>
       ${logs || '<div class="cat-info">ยังไม่มีประวัติการสอบ — ไปลองสอบหมวดแรกกันเถอะ!</div>'}
