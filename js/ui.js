@@ -6672,13 +6672,13 @@ function renderMarketCard(){
 
   el.innerHTML = `<h3 class="shop-title">🏪 ตลาดขายสินค้า</h3>
     <p class="collect-sub">เอาสินค้าที่ผลิตจากโรงงานมาตั้งราคาขาย หรือส่งมอบออเดอร์พิเศษให้ลูกค้าทำกำไร 🌍</p>
+    <div class="mkt-listhead" id="mkt-mystock">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
+    ${renderCollectMine()}
     <button class="wl-open" id="btn-wishlist">💖 ของที่หนูเล็งไว้${state.wishlist && state.wishlist.length ? ` (${state.wishlist.length})` : ''} <small>มีคนลงขาย = แจ้งเตือนทันที</small></button>
     ${soldUI}
     ${renderOrdersUI()}
     ${renderMarketBrowse()}
-    ${renderVehicleShop()}
-    <div class="mkt-listhead" id="mkt-mystock">🎁 คลังสินค้าของฉัน${state.collection.length?` (${state.collection.length} ชิ้น)`:''}</div>
-    ${renderCollectMine()}`;
+    ${renderVehicleShop()}`;
 
   el.querySelectorAll('.strip-wrap').forEach(bindStripArrows);   // รอบ 292: ลูกศรแถบปัดแนวนอน (ชั้นเพื่อน+คลังของฉัน)
   const soldOk = document.getElementById('mkt-sold-ok');
