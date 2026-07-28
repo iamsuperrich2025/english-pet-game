@@ -134,6 +134,40 @@ function petStateImg(p){
   return null;
 }
 
+/* ============================================================
+   🎀 รอบ 666: ชั้น "ชุดที่ใส่" ซ้อนบนภาพน้องท่าอื่น — เห็นรูปร่าง+ชุดในภาพเดียว ไม่ต้องกดสลับ
+   ------------------------------------------------------------
+   ภาพใน img/ เจนแยกใบ (ท่าไม่ตรงกัน) จึงซ้อนภาพเต็มตัวทับกันไม่ได้
+   → tools/wearlab.py ตัดเฉพาะ "ตัวชุด" เป็น PNG โปร่งไว้ใน img/wear/ แล้วเก็บหมุดวางไว้ใน
+     js/data/wear.js (ยึด "เส้นตา"/"ยอดหัว" ของแต่ละภาพ ซึ่งวัดจากภาพจริงทุกใบ)
+   ค่าที่คืน = % ของกรอบภาพจัตุรัส → เอาไปใส่ style ของ <img> ชั้นบนได้ตรง ๆ ทุกขนาดจอ
+   ============================================================ */
+function petWearOverlay(p, src){
+  p = p || activePet();
+  if(!p || typeof WEAR_PIECE === 'undefined' || typeof WEAR_ANCHOR === 'undefined') return null;
+  const stage = petStage(p);
+  if(stage === 'egg') return null;
+  const worn = equippedItem(p);
+  if(!worn) return null;
+  src = src || currentPetImg(p);
+  if(!src || src === IMG_FILES[`${p.type}_${stage}_${worn.id}`]) return null;   // ภาพนี้ใส่ชุดอยู่แล้ว
+  const a = WEAR_ANCHOR[src.replace(/^img\//, '').replace(/\.png$/, '')];
+  const w = WEAR_PIECE[`${p.type}_${worn.id}`];
+  if(!a || !w) return null;
+  const ed = a.ed, ww = w.w * ed * w.k;
+  const head = w.s === 'head';                       // หมวก = ยึดยอดหัว · อื่น ๆ = ยึดเส้นตา
+  const left = head ? a.ex - ww / 2 + w.ox * ed : a.ex + (w.dx * w.k + w.ox) * ed;
+  const top  = head ? a.ht - w.h * ed * w.k * (1 - w.sk) + w.oy * ed
+                    : a.ey + (w.dy * w.k + w.oy) * ed;
+  return { f: w.f, left: +(left * 100).toFixed(2), top: +(top * 100).toFixed(2),
+           w: +(ww * 100).toFixed(2), item: worn };
+}
+/* <img> ชั้นชุด — ต้องอยู่ในกรอบ .pet-wear (จัตุรัส position:relative) เท่านั้น */
+function wearLayerHTML(ov, cls){
+  return ov ? `<img class="wear-layer${cls ? ' ' + cls : ''}" src="${ov.f}" alt="" aria-hidden="true"`
+            + ` style="left:${ov.left}%;top:${ov.top}%;width:${ov.w}%">` : '';
+}
+
 /* สถานะดีใจชั่วคราว (ตอนลูบตัว/หลังกินข้าว) */
 let happyUntil = 0;
 function happyNow(){ return Date.now() < happyUntil; }

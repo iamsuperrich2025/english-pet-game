@@ -149,13 +149,18 @@ function __clipReady(p){
 function petShowHTML(p, clipUrl){
   const stage = petStage(p);
   const base  = currentPetImg(p);                               // ภาพช่วงวัยจริงใน img/
+  /* 🎀 รอบ 666: ซ้อนชุดที่ใส่ลงบนภาพท่านี้ (รูปร่าง/ป่วย/หิว) — เห็นทั้งสองอย่างในภาพเดียว
+     ⚠️ ตอนซ้อนชุดต้องเหลือเฟรมเดียว: เฟรม "ดีใจ" เป็นคนละท่า หมุดชุดคนละที่ สลับแล้วชุดจะลอย */
+  const wearOv = petWearOverlay(p, base);
   // เฟรมที่ 2 ของคลิป = ภาพ "ดีใจ" ของวัยเดียวกัน (มีไฟล์ถึงใช้ · ไม่มีก็เล่นเฟรมเดียว)
-  const happy = (stage !== 'egg' && !p.sick && !p.sleeping) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
+  const happy = (!wearOv && stage !== 'egg' && !p.sick && !p.sleeping) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
   const calm  = !!(p.sick || p.sleeping || stage === 'egg');
   const badge = p.sick ? '🤒' : (p.sleeping ? '💤' : (petHungry(p) ? '😫' : ''));
   const core = base
-    ? `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
-      + (happy && happy !== base ? `<img class="pet-img ps-fr ps-f2" src="${happy}" alt="">` : '')
+    ? (wearOv
+        ? `<span class="pet-wear ps-fr"><img class="pet-img" src="${base}" alt="${escapeHTML(p.name)}">${wearLayerHTML(wearOv)}</span>`
+        : `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
+          + (happy && happy !== base ? `<img class="pet-img ps-fr ps-f2" src="${happy}" alt="">` : ''))
     : `<span class="pet-emoji">${(PETS[p.type] || {})[stage] || '🐾'}</span>`;
   /* 🎬 รอบ 605: มีคลิปวิดีโอของวัยนี้ = เล่นเต็มกรอบเวที (คลิปมีฉากในตัวเอง พื้นหลังดำ)
      ภาพนิ่ง+ฉากการ์ตูนยังวาดไว้ข้างใต้เสมอ — คลิปโหลดไม่ได้/ออฟไลน์ ถอด ps-clip-mode แล้วเห็นของเดิมทันที
@@ -186,7 +191,7 @@ function petShowHTML(p, clipUrl){
       return `<button class="ps-dress" type="button" title="สลับระหว่างคลิปน้องกับภาพน้องใส่ชุด">`
         + (state.psDress ? `🎬 ดูคลิปน้อง` : `${worn.emoji || '🎀'} ดูน้องใส่ชุด`) + `</button>`;
     })()}
-    ${(()=>{   /* 🎀 รอบ 662: ป้ายเล็ก "ชุดที่ใส่อยู่" กลางขวาเวที (แบบเดียวกับหน้าข้อมูลน้อง รอบ 661)
+    ${(()=>{   /* 🎀 รอบ 666: ป้ายเล็ก "ชุดที่ใส่อยู่" กลางขวาเวที (แบบเดียวกับหน้าข้อมูลน้อง รอบ 661)
                   โผล่ทุกครั้งที่ชุดถูกอย่างอื่นบัง (คลิป/ร่างล่ำ-อ้วน-ผอม/ป่วย/หิว) → เด็กเห็นว่าชุดยังอยู่ ไม่ต้องกดปุ่มก่อน */
       if(stage === 'egg') return '';
       const worn = (typeof equippedItem === 'function') ? equippedItem(p) : null;
@@ -224,7 +229,10 @@ function footAlign(scope){
   const imgs = (scope || document).querySelectorAll('.blk-char, .hero-scene .pet-img');
   imgs.forEach(img=>{
     const src = img.getAttribute('src'); if(!src) return;
-    const apply = f => { img.style.transform = `translateY(calc((1 - ${f}) * 100%))`; };
+    /* 🎀 รอบ 666: ถ้าภาพอยู่ในกรอบ .pet-wear (มีชั้นชุดซ้อนอยู่) ต้องเลื่อนทั้งกรอบ
+       ไม่ใช่เลื่อนแค่ภาพ ไม่งั้นชุดค้างที่เดิม (กรอบสูงเท่าภาพพอดี % จึงเท่ากัน) */
+    const mover = img.closest('.pet-wear') || img;
+    const apply = f => { mover.style.transform = `translateY(calc((1 - ${f}) * 100%))`; };
     if(__footFrac[src] != null){ apply(__footFrac[src]); return; }
     const probe = new Image();
     probe.onload = ()=>{
@@ -3956,12 +3964,15 @@ function renderDashboard(){
      รอบ 659 มีแต่ปุ่มสลับ ซึ่งต้องอ่านคำบรรยายก่อนถึงจะรู้ว่าชุดไม่ได้หาย */
   const piNowImg  = currentPetImg(p);
   const piWornImg = wornForShape ? IMG_FILES[`${p.type}_${stage}_${wornForShape.id}`] : null;
+  /* 🎀 รอบ 666: ถ้าซ้อนชุดลงบนภาพท่าปัจจุบันได้ = เห็นทั้งรูปร่างและชุดในภาพเดียว
+     → ไม่ต้องมีปุ่มสลับ (รอบ 659) และไม่ต้องมีป้ายภาพเล็ก (รอบ 661) อีก */
+  const piWear    = petWearOverlay(p, piNowImg);
   /* สลับได้เฉพาะเคสรูปร่างทับชุดจริง ๆ — ป่วย/หิว/ดีใจ ภาพถูกล็อกไว้ กดแล้วไม่เปลี่ยน = ปุ่มตาย
      → เคสนั้นให้ภาพเล็กเป็นป้ายบอกเฉย ๆ (และซ่อนปุ่มสลับในคำบรรยายด้วย) */
   const piCanSwap = hasShapeConflict && !p.sick && !(typeof petHungry === 'function' && petHungry(p))
                     && !(typeof happyNow === 'function' && happyNow());
   const piPipTag  = piCanSwap ? 'button' : 'div';
-  const dressPip  = (piWornImg && piNowImg && piWornImg !== piNowImg)
+  const dressPip  = (!piWear && piWornImg && piNowImg && piWornImg !== piNowImg)
     ? `<${piPipTag} class="pi-dress-pip"${piPipTag === 'button' ? ' id="btn-pi-dress-pip" type="button"' : ''}>
          <img src="${piWornImg}" alt="">
          <span>${wornForShape.emoji || '🎀'} ${escapeHTML(wornForShape.name)}<br>ยังใส่อยู่${piCanSwap ? ' — กดดูใหญ่' : ''}</span>
@@ -3972,8 +3983,13 @@ function renderDashboard(){
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       ${stage !== 'egg' ? `<button class="pi-dress-btn" id="btn-pi-dress">🎀 แต่งตัวน้อง</button>` : ''}
       ${dressPip}
-      ${piNowImg ? `<img class="pi-portrait" src="${piNowImg}" alt="${escapeHTML(p.name)}">` : ''}
-      ${stage !== 'egg' ? (piCanSwap
+      ${piNowImg ? (piWear
+        ? `<span class="pet-wear pi-portrait-wrap"><img class="pi-portrait" src="${piNowImg}" alt="${escapeHTML(p.name)}">${wearLayerHTML(piWear)}</span>`
+        : `<img class="pi-portrait" src="${piNowImg}" alt="${escapeHTML(p.name)}">`) : ''}
+      ${stage !== 'egg' && piWear
+        ? `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}
+            <div class="pi-wear-note">${piWear.item.emoji || '🎀'} ใส่<b>${escapeHTML(piWear.item.name)}</b>อยู่ — เห็นในรูปเลย ไม่ต้องกดสลับ</div></div>`
+        : stage !== 'egg' ? (piCanSwap
         ? (state.psDress
           ? `<div class="pi-shape-cap shape-cap-${p.shape}">${wornForShape.emoji || '🎀'} <b>ใส่${escapeHTML(wornForShape.name)}อยู่</b> — ชุดนี้ยังใส่ให้น้องตลอดนะ ไม่ได้หายไปไหน
               <button class="pi-shape-toggle-btn" id="btn-pi-shape-toggle" type="button">${SHAPE_UI[p.shape].icon} ดูรูปร่างล่าสุด</button></div>`
@@ -4053,7 +4069,7 @@ function renderDashboard(){
   }
   /* 🎀 รอบ 609: ปุ่มสลับ "คลิปน้อง ↔ น้องใส่ชุด" (โผล่เฉพาะตอนน้องใส่ชุดอยู่) */
   {
-    /* 🎀 รอบ 662: ป้ายเล็ก "ชุดที่ใส่อยู่" (button.ps-worn-pip) กดแล้วสลับเหมือนกัน */
+    /* 🎀 รอบ 666: ป้ายเล็ก "ชุดที่ใส่อยู่" (button.ps-worn-pip) กดแล้วสลับเหมือนกัน */
     card.querySelectorAll('.ps-dress, button.ps-worn-pip').forEach(dressBtn=>{
       dressBtn.addEventListener('click', (e)=>{
         e.stopPropagation();
