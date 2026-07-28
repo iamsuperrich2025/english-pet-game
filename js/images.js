@@ -18,6 +18,7 @@ function petImageKeys(pet){
   for(const stage of ['baby','adult']){
     for(const m of MOODS) keys.push(`${pet}_${stage}_${m}`);
     for(const it of ITEMS) keys.push(`${pet}_${stage}_${it.id}`);
+    keys.push(`${pet}_${stage}_normal_sleep`);   // 💤 ภาพหลับ (เฉพาะร่างเด็ก/โต — ไข่นอนไม่ได้)
   }
   // ข้อ 5.2: รูปร่างตามคุณภาพการกิน (เฉพาะโตเต็มวัย — prompt ใน PROMPTS_CHARACTERS.md)
   for(const s of ['fat','thin','strong']) keys.push(`${pet}_adult_${s}`);
@@ -119,7 +120,7 @@ function equippedItem(p){
   return ITEMS.find(i=>i.id === id) || null;
 }
 
-/* รอบ 186: ภาพสถานะที่ควร "แทนโมเดล 3D" บนเวที Lobby — ป่วย / หิว / ใส่เครื่องแต่งตัว
+/* รอบ 186: ภาพสถานะที่ควร "แทนโมเดล 3D" บนเวที Lobby — ป่วย / หลับ / หิว / ใส่เครื่องแต่งตัว
    คืน URL เฉพาะเมื่อมีภาพตรงสถานะจริงเท่านั้น (ไม่นับภาพ normal) → ผูกความรู้สึกกับสถานะน้อง
    ไม่มีภาพตรงสถานะ = null → เวทีใช้โมเดล 3D ปกติเหมือนเดิม (ไม่มีทางจอโล่ง) */
 function petStateImg(p){
@@ -128,6 +129,7 @@ function petStateImg(p){
   const pet = p.type, stage = petStage(p);
   if(stage === 'egg') return null;
   if(p.sick)       return IMG_FILES[`${pet}_${stage}_sick`]   || null;
+  if(p.sleeping)   return IMG_FILES[`${pet}_${stage}_normal_sleep`] || null;
   if(petHungry(p)) return IMG_FILES[`${pet}_${stage}_hungry`] || null;
   const worn = equippedItem(p);
   if(worn)         return IMG_FILES[`${pet}_${stage}_${worn.id}`] || null;
@@ -180,7 +182,7 @@ function makeHappy(ms){
   }, ms + 100);
 }
 
-/* เลือกภาพที่จะแสดง: ป่วย > หิว > ดีใจ > รูปร่าง (ข้อ 5.2) > ใส่ชุด > ปกติ
+/* เลือกภาพที่จะแสดง: ป่วย > 💤หลับ > หิว > ดีใจ > รูปร่าง (ข้อ 5.2) > ใส่ชุด > ปกติ
    (ร่างอ้วน/ผอมโซ/ล่ำ คือผลจากการกิน — สำคัญกว่าชุดเพื่อให้เด็กเห็นผลชัด ภาพไม่มีก็ตกไปชุด/ปกติ)
    🎀 รอบ 659: รูปร่างทับภาพใส่ชุดแล้วเด็กเข้าใจผิดว่าชุดที่ซื้อไว้หาย — ถ้ากดปุ่ม "ดูชุดที่ใส่อยู่"
    ไว้ (state.psDress) และมีทั้งรูปร่าง+ชุดพร้อมกัน ให้สลับมาโชว์ภาพชุดแทนแทนรูปร่าง (หน้าข้อมูลน้อง/เวที) */
@@ -193,6 +195,7 @@ function currentPetImg(p){
   const worn = equippedItem(p);
   const hasShape = stage === 'adult' && p.shape && p.shape !== 'normal';
   if(p.sick) candidates.push(`${pet}_${stage}_sick`);
+  else if(p.sleeping) candidates.push(`${pet}_${stage}_normal_sleep`);
   else if(petHungry(p)) candidates.push(`${pet}_${stage}_hungry`);
   else if(happyNow()) candidates.push(`${pet}_${stage}_happy`);
   else if(hasShape && worn && state.psDress){
