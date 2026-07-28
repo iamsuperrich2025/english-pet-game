@@ -577,14 +577,14 @@ cancelListing:7588 · buyMarketItem:7611 · showCollectReveal:7638 · buyAC:7676
 showLevelUp:7815 · renderStats:7852 · showTeacherCard:7959 · CALL_REACT_EMOS:8003 · CALL_TALK_MIN:8006 · CALL_TALK_HOLD:8007
 CALL_ORDER_GAP:8009 · CALL_TONES:8015 · startCall:8389
 
-## js/util.js (884 บรรทัด · 39 รายการ)
+## js/util.js (891 บรรทัด · 39 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:102 · fmtThaiDate:106 · showScreen:111
-TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:176 · PET_MOOD:252
-petVoiceSynth:259 · sirenSynth:336 · playCashier:360 · cashierSynth:374 · keyTapSynth:407 · playSpark:442
-sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakCutOff:568 · speakWord:572 · speakLetter:596
-pickSpeakVoice:619 · speakWordTTS:630 · askNameDialog:650 · askConfirm:690 · alertBox:708 · applyNoAnim:728
-openSettings:733 · openHelp:839 · openTeacherGuide:865
+TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:177 · PET_MOOD:253
+petVoiceSynth:260 · sirenSynth:337 · playCashier:361 · cashierSynth:375 · keyTapSynth:408 · playSpark:449
+sparkSynth:463 · thunderFx:498 · wordAudioFile:566 · speakCutOff:575 · speakWord:579 · speakLetter:603
+pickSpeakVoice:626 · speakWordTTS:637 · askNameDialog:657 · askConfirm:697 · alertBox:715 · applyNoAnim:735
+openSettings:740 · openHelp:846 · openTeacherGuide:872
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
@@ -595,7 +595,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/lobby.css (4,250 บรรทัด · 647 selector)
+## css/lobby.css (4,264 บรรทัด · 651 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-quiz:134,135,136,137(+6) · #quiz-choices:146,147 · .word-card:154 · .quiz-choice:155,156,157
@@ -701,9 +701,10 @@ vbRender:148 · vbCardHTML:194
 .gl-lock:4081,4086 · .gl-ok:4085 · .gl-lock-sub:4087 · .gl-why:4088 · .gl-pick-lb:4089 · .gl-opts:4090
 .gl-hist:4100 · .gl-hline:4101 · .gl-hg:4105 · .gl-hat:4106 · .gl-harr:4107 · .gl-foot:4108
 .gl-cf:4109 · .reg-gradelock:4129 · #tp-overlay:4139 · #tp-board:4141,4145 · .tp-head:4149 · .tp-title:4150
-.tp-stat:4152,4154 · .tp-pts:4156,4159 · .tp-close:4161,4167,4168 · .tp-prompt:4171 · .tp-word:4173,4187,4188 · .tp-ch:4175,4180,4181,4183
-.tp-thai:4191 · .tp-hint:4193 · .tp-empty:4195 · .tp-keys:4198 · .tp-row:4200 · .tp-row-fn:4202,4235
-.tp-key:4206,4218,4220,4226(+2) · .tp-key-fn:4233 · .tp-fx:4239 · .tp-coinpop:4240 · .tp-pop-pt:4245
+.tp-stat:4152,4154 · .tp-pts:4156,4159 · .tp-close:4161,4167,4168 · .tp-snd:4171,4174,4180,4181 · .tp-snd-ic:4175 · .tp-snd-track:4176
+.tp-snd-thumb:4178 · .tp-prompt:4185 · .tp-word:4187,4201,4202 · .tp-ch:4189,4194,4195,4197 · .tp-thai:4205 · .tp-hint:4207
+.tp-empty:4209 · .tp-keys:4212 · .tp-row:4214 · .tp-row-fn:4216,4249 · .tp-key:4220,4232,4234,4240(+2) · .tp-key-fn:4247
+.tp-fx:4253 · .tp-coinpop:4254 · .tp-pop-pt:4259
 
 ## css/style.css (1,810 บรรทัด · 471 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
