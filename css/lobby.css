@@ -1131,8 +1131,8 @@ html.no-anim .stage-hero::before{animation:none;}
 #lobby3d-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;cursor:grab;}
 #lobby3d-canvas:active{cursor:grabbing;}
 /* ฉาก 3D: ผู้เลี้ยง + น้อง ยืนคู่กันกลางจอ บนลานเรืองแสง (สไตล์ COD) */
-/* ขนาดน้อง/ผู้เลี้ยง คุมด้วยความสูง (vh) ที่ JS ตั้งตามระดับร่างยักษ์ (--pet-vh/--owner-vh/--hero-gap)
-   ปกติ: น้องเตี้ยกว่าผู้เลี้ยง · ยักษ์สุด: ผู้เลี้ยงสูงแค่เข่าน้อง */
+/* ขนาดน้อง/ผู้เลี้ยง คุมด้วยความสูง (vh) ที่ JS ตั้งค่าคงที่ให้ (--pet-vh/--owner-vh/--hero-gap)
+   🦣 รอบ 659: เดิมปรับตาม "โหมดขยายร่าง" ได้หลายระดับ — ถอดออกแล้ว เหลือค่าเดียว (น้องเตี้ยกว่าผู้เลี้ยง) */
 .hero-scene{position:relative;display:flex;align-items:flex-end;justify-content:center;
   container-type:inline-size;}   /* รอบ 245: เป็น container ให้ลูกใช้ cqw (1cqw = 1% ความกว้างกรอบ) — น้องเดินอิงกรอบ ปรับตามจอ */
 .hero-scene .pet-stage{
@@ -1298,20 +1298,6 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
 .stage-plate .ability-box.locked{background:rgba(255,255,255,.05);border-color:rgba(140,190,240,.2);color:#8fa9c6;}
 .stage-plate .ability-box small{color:#8fb3d8;}
 
-/* ร่างยักษ์ (รอบ 102) — อัพเกรดขยายน้องด้วยเหรียญ */
-.stage-plate .giant-box{margin-top:8px;padding:7px 9px;border-radius:10px;
-  background:rgba(126,92,224,.16);border:1px solid rgba(158,126,244,.42);}
-.stage-plate .giant-line{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#e8dfff;}
-.stage-plate .giant-line b{color:#fff;font-weight:600;}
-.stage-plate .giant-lvl{margin-left:auto;font-size:10.5px;color:#bcaaf0;}
-.stage-plate .giant-dots{display:flex;gap:4px;margin:5px 0 7px;}
-.stage-plate .giant-dots span{flex:1;height:4px;border-radius:3px;background:rgba(255,255,255,.16);}
-.stage-plate .giant-dots span.on{background:linear-gradient(90deg,#ab8dff,#7d5cff);box-shadow:0 0 6px rgba(140,110,255,.6);}
-.stage-plate .giant-btns{display:flex;flex-direction:column;gap:5px;}
-.stage-plate .giant-up{background:linear-gradient(180deg,#9a7bf0,#6f4fd8);color:#fff;box-shadow:0 3px 0 #4d36a6;}
-.stage-plate .giant-up b{font-weight:700;}
-.stage-plate .giant-reset{background:rgba(255,255,255,.12);color:#d9ccf7;font-size:11.5px;box-shadow:none;}
-.stage-plate .giant-max{font-size:11.5px;color:#cbbcf7;text-align:center;padding:3px 0;}
 
 .lobby-side{width:238px;flex-shrink:0;display:flex;flex-direction:column;gap:7px;min-height:0;}
 /* รอบ 149: หัวข้อเล็กอยู่นอกกล่อง (เหนือกล่อง) + กล่องกระจกฟ้า sci-fi โทนเดียวกับ .stage-plate
@@ -2239,6 +2225,11 @@ html.no-anim .cs-big-img{animation:none}
 .pi-shape-cap b{color:#ffe9a8;}
 .pi-shape-cap.shape-cap-thin,.pi-shape-cap.shape-cap-fat{border-color:#e8935a;color:#ffddc2;}
 .pi-shape-cap.shape-cap-strong{border-color:#5fcf85;color:#d8f7e2;}
+/* 🎀 รอบ 659: ปุ่มสลับ "รูปร่าง ↔ ชุด" ในคำบรรยายรูปร่าง — กันเด็กเข้าใจผิดว่าชุดที่ซื้อไว้หายไป */
+.pi-shape-toggle-btn{display:inline-block;margin:6px auto 0;border:none;border-radius:999px;
+  padding:5px 14px;font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;
+  background:linear-gradient(180deg,#ff8fb0,#ff5a7a);box-shadow:0 3px 0 #b8324f;}
+.pi-shape-toggle-btn:active{transform:translateY(2px);box-shadow:none;}
 /* 🐾 รอบ 325: แผงเลือกคำทักทายน้องของเพื่อน (เปิดจากปุ่ม 🐾 ในการ์ดโปรไฟล์)
    กริดยืดตามที่ว่าง + ตัวอักษร clamp → จอเตี้ย 812×375 เห็นครบทั้งใบ ไม่ต้องเลื่อน (กฎทอง #7) */
 .pl-head .pl-greet{margin-left:6px;padding:4px 10px;border-radius:999px;cursor:pointer;

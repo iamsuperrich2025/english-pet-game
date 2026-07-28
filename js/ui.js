@@ -94,8 +94,9 @@ const PET_SHOW = {
   dragon: { fall:['✨','🔥','💎','⭐'] },
 };
 const PET_SHOW_STAGE = {egg:'👶 แรกเกิด', baby:'🍼 ร่างเด็ก', adult:'🌟 ร่างโตเต็มวัย'};
-// ความสูงน้องบนเวทีโชว์ = % ของกรอบเวที ตามระดับร่างยักษ์ 0-4 (CSS ตัดด้วย 66cqw อีกชั้น กันล้นจอแคบ)
-const PET_SHOW_H = [64, 70, 75, 80, 85];
+// ความสูงน้องบนเวทีโชว์ = % ของกรอบเวที (CSS ตัดด้วย 66cqw อีกชั้น กันล้นจอแคบ)
+// 🦣 รอบ 659: เดิมมีหลายระดับตามโหมดขยายร่าง (ถอดออกแล้ว) — เหลือค่าเดียวคงที่
+const PET_SHOW_H = 64;
 
 /* ฉากหลังการ์ตูน (อยู่หลัง .hero-scene ทั้งใบ — ยังเห็นตอนเกมสะกดคำเปิดฉาก 3D ทับ) */
 function petShowBgHTML(p){
@@ -520,43 +521,6 @@ function showNewWordPopup(){
   speakWord(en);   // เปิดมาอ่านให้ฟังเลย (มีปุ่ม 🔊 ฟังซ้ำ)
 }
 
-/* ร่างยักษ์ (รอบ 102): อัพเกรดขยายน้องในหน้า lobby ด้วยเหรียญ
-   ระดับ 0=ปกติ (น้องเล็กกว่าผู้เลี้ยง) → GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่าของน้อง)
-   คุมขนาดจริงด้วยความสูงเป็น vh: น้องสูงขึ้น + ผู้เลี้ยงเตี้ยลงตามสัดส่วน */
-const GIANT_MAX = 4;
-const GIANT_COST     = [0, 2000, 4000, 8000, 16000];   // เหรียญที่จ่ายเพื่อ "ขึ้น" ไปแต่ละระดับ
-const GIANT_PET_VH   = [15, 42, 54, 64, 74];           // ความสูงน้อง (vh) — g0 = 15 (รอบ 161: ไม่เกินเอวคน ≈ 54% ของ 28vh)
-const GIANT_OWNER_VH = [28, 33, 30, 26, 22];           // ความสูงผู้เลี้ยง (vh) — g0 = 28 (คงเดิมรอบ 161) · g4: 22/74 ≈ 0.30 (ระดับเข่า)
-const GIANT_OWNER_X  = ['-56px','-54px','-42px','-27px','-14px']; // เยื้องผู้เลี้ยงจากกลางเวที (ลบ=ซ้าย): ปกติเยื้องซ้ายให้เห็นหน้าน้องด้านขวา · ยักษ์ยืนหน้าขาน้อง (หน้าน้องอยู่สูงเห็นอยู่แล้ว)
-const GIANT_NAMES    = ['ปกติ','ตัวโต','ยักษ์เล็ก','ยักษ์ใหญ่','ยักษ์อลังการ'];
-function giantLevel(p){ return Math.max(0, Math.min(GIANT_MAX, (p && p.giant) || 0)); }
-
-/* รอบ 189: ระดับร่างยักษ์สูงสุดที่ "เคยจ่ายปลดล็อกแล้ว" — ขยายถึงระดับนี้ซ้ำได้ฟรี
-   (รวม migration: ระดับปัจจุบันถือว่าจ่ายมาแล้วแน่นอน) */
-function giantUnlocked(p){ return Math.max((p && p.giantMax) || 0, (p && p.giant) || 0); }
-
-function upgradeGiant(p){
-  p = p || activePet();
-  if(!p) return;
-  const g = giantLevel(p);
-  if(g >= GIANT_MAX){ toast('น้องตัวใหญ่สุดแล้ว 🎉'); return; }
-  p.giantMax = giantUnlocked(p);                 // จำระดับที่ปลดล็อกแล้ว (รวมระดับปัจจุบัน)
-  const paid = p.giantMax >= g + 1;              // เคยจ่ายขึ้นระดับนี้แล้ว → ขยายฟรี
-  const cost = paid ? 0 : GIANT_COST[g+1];
-  if(cost > 0 && state.coins < cost){
-    toast(`🪙 เหรียญไม่พอ — ขยายร่างระดับถัดไปต้องใช้ ${fmtNum(cost)} (ขาดอีก ${fmtNum(cost - state.coins)})`);
-    return;
-  }
-  if(cost > 0) state.coins -= cost;              // จ่ายเฉพาะครั้งแรกของแต่ละระดับ
-  p.giant = g + 1;
-  if(p.giantMax < p.giant) p.giantMax = p.giant;
-  saveState();
-  sfx.select();
-  floatFx(cost > 0 ? `🦣 ตัวใหญ่ขึ้น! -🪙${fmtNum(cost)}` : `🦣 ตัวใหญ่ขึ้น! ฟรี 🆓`);
-  toast(`🦣 ${escapeHTML(p.name)} ร่าง${GIANT_NAMES[p.giant]}แล้ว!`);
-  renderDashboard();
-}
-
 /* เปลี่ยนชื่อน้อง (ใช้ทั้งปุ่ม ✏️ และคลิกซ้ำแท็บน้องที่กำลังแสดงอยู่ — รอบ 189) */
 function renamePet(p){
   p = p || activePet();
@@ -574,16 +538,6 @@ function renamePet(p){
     },
   });
 }
-function resetGiant(p){
-  p = p || activePet();
-  if(!p || giantLevel(p) === 0) return;
-  p.giant = 0;
-  saveState();
-  sfx.select();
-  toast(`↩️ ${escapeHTML(p.name)} กลับมาตัวปกติแล้ว (ไม่คืนเหรียญ)`);
-  renderDashboard();
-}
-
 /* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อเย็นวันละครั้ง 18:00 — ข้อ 2) ---------- */
 function mealLabel(ts){
   const d = new Date(ts), today = new Date();
@@ -3202,8 +3156,6 @@ function bindPetPlateButtons(root){
   const on = (id, fn)=>{ const b = root.querySelector('#' + id); if(b) b.addEventListener('click', fn); };
   on('btn-feed', feedPet);
   on('btn-cure', curePet);
-  on('btn-giant-up', ()=>upgradeGiant(p));
-  on('btn-giant-reset', ()=>resetGiant(p));
   on('btn-sleep', sleepAllPets);
   on('btn-wake', wakeAllPets);
   on('btn-detox', ()=>detoxPet(p));
@@ -3213,6 +3165,12 @@ function bindPetPlateButtons(root){
     const ov = root.closest ? (root.classList.contains('pi-overlay') ? root : root.closest('.pi-overlay')) : null;
     if(ov) ov.remove();
     openDressUpBoard();
+  });
+  on('btn-pi-shape-toggle', ()=>{    // 🎀 รอบ 659: สลับดูรูปร่าง ↔ ดูชุด (ตัวเดียวกับปุ่มบนเวที)
+    state.psDress = !state.psDress;
+    saveState();
+    sfx.select();
+    renderDashboard();
   });
 }
 
@@ -3946,10 +3904,8 @@ function renderDashboard(){
   }
 
   const sickGray = p.sick && stage!=='egg' && !IMG_FILES[`${p.type}_${stage}_sick`];
-  const g = giantLevel(p);   // รอบ 102: ระดับร่างยักษ์ → คุมความสูงน้อง/ผู้เลี้ยง
-  // 🎬 รอบ 604: --ps-h = ความสูงน้องบนเวทีโชว์ (% ของกรอบ) — ตารางแยกจาก --pet-vh
-  // (ค่าเดิมจูนไว้ให้กล้อง 3D · ใส่ตรง ๆ แล้วร่างยักษ์ทุกระดับชนเพดานกรอบเท่ากันหมด มองไม่ออกว่าขยายร่าง)
-  const heroVars = `--pet-vh:${GIANT_PET_VH[g]};--owner-vh:${GIANT_OWNER_VH[g]};--owner-x:${GIANT_OWNER_X[g]};--ps-h:${PET_SHOW_H[g]}`;
+  // 🦣 รอบ 659: ถอด "โหมดขยายร่าง" ออกแล้ว (ผู้ใช้สั่ง) — ขนาดน้อง/ผู้เลี้ยงคงที่เท่าร่างปกติเดิมเสมอ
+  const heroVars = `--pet-vh:15;--owner-vh:28;--owner-x:-56px;--ps-h:${PET_SHOW_H}`;
   card.className = 'pet-card ' + (stage==='egg' ? 'pet-egg-stage' : stage==='baby' ? 'pet-baby' : 'pet-adult')
                    + (sickGray ? ' pet-sick' : '') + (p.sleeping && !p.sick ? ' pet-asleep' : '');
   /* 📰 รอบ 155 (สเปกผู้ใช้): กล่อง "ข้อมูลน้อง"+"การดูแล" ย้ายไป overlay ใหญ่ (openPetInfoOverlay)
@@ -3971,19 +3927,7 @@ function renderDashboard(){
             ? `🤒 ป่วยอยู่ ใช้ความสามารถพิเศษไม่ได้<br><small>${conf.ability}</small>`
             : `<b>ความสามารถพิเศษ:</b> ${conf.ability}`}
       </div>
-      ${stage !== 'egg' ? `
-      <div class="giant-box">
-        <div class="giant-line">🦣 ร่างยักษ์: <b>${GIANT_NAMES[g]}</b><span class="giant-lvl">${g}/${GIANT_MAX}</span></div>
-        <div class="giant-dots">${[1,2,3,4].map(i=>`<span class="${i<=g?'on':''}"></span>`).join('')}</div>
-        <div class="giant-btns">
-          ${g < GIANT_MAX
-            ? (giantUnlocked(p) >= g+1
-                ? `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>ฟรี 🆓</b></button>`
-                : `<button class="care-btn giant-up" id="btn-giant-up">⬆️ ขยายร่าง <b>🪙${fmtNum(GIANT_COST[g+1])}</b></button>`)
-            : `<div class="giant-max">🎉 ยักษ์เต็มขั้นแล้ว!</div>`}
-          ${g > 0 ? `<button class="care-btn giant-reset" id="btn-giant-reset">↩️ ย่อกลับปกติ</button>` : ''}
-        </div>
-      </div>` : ''}`;
+      `;
   /* รอบ 273 (สเปกผู้ใช้): ใต้รูปน้อง = คำบรรยายว่าทำไมถึงผอม/อ้วน/ล่ำ · ปุ่ม 🎀 แต่งตัว มุมบนขวา เปิดห้องแต่งตัวซื้อใส่ได้เลย (รอบ 635: แยกจากตลาดแล้ว) */
   const shapeWhy = {
     thin:  `🦴 <b>ผอมโซ</b> — เพราะอดข้าวบ่อย ปล่อยให้หิวจนป่วยติดกัน ${SHAPE_MISS_MEALS} มื้อ · กินให้อิ่มเต็มหลอดทุกมื้อ น้องจะค่อยๆ กลับมาแข็งแรง`,
@@ -3991,12 +3935,20 @@ function renderDashboard(){
     strong:`💪 <b>ล่ำกำยำ</b> — เพราะกินอาหารดีเต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด · ได้โบนัส EXP +${SHAPE_EXP_BONUS} ทุกคำที่จับคู่ถูก`,
     normal:`😊 <b>หุ่นสมส่วน</b> — เพราะกินอิ่มสม่ำเสมอ ไม่อดข้าว ไม่กินของโทษบ่อย · กินดีเต็มหลอดครบ ${SHAPE_CLEAN_MEALS} มื้อติด จะล่ำกำยำได้โบนัส EXP`,
   };
+  const wornForShape = stage !== 'egg' ? equippedItem(p) : null;             // 🎀 รอบ 659
+  const hasShapeConflict = stage === 'adult' && p.shape && p.shape !== 'normal' && !!wornForShape;
   __petPlates = {
     info: `
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       ${stage !== 'egg' ? `<button class="pi-dress-btn" id="btn-pi-dress">🎀 แต่งตัวน้อง</button>` : ''}
       ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
-      ${stage !== 'egg' ? `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>` : ''}
+      ${stage !== 'egg' ? (hasShapeConflict
+        ? (state.psDress
+          ? `<div class="pi-shape-cap shape-cap-${p.shape}">${wornForShape.emoji || '🎀'} <b>ใส่${escapeHTML(wornForShape.name)}อยู่</b> — ชุดนี้ยังใส่ให้น้องตลอดนะ ไม่ได้หายไปไหน
+              <button class="pi-shape-toggle-btn" id="btn-pi-shape-toggle" type="button">${SHAPE_UI[p.shape].icon} ดูรูปร่างล่าสุด</button></div>`
+          : `<div class="pi-shape-cap shape-cap-${p.shape}">${shapeWhy[p.shape]}
+              <button class="pi-shape-toggle-btn" id="btn-pi-shape-toggle" type="button">${wornForShape.emoji || '🎀'} ดูชุดที่ใส่อยู่</button></div>`)
+        : `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>`) : ''}
       ${stage !== 'egg' ? patCalendarHTML() : ''}`,
     care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
   };
@@ -4102,7 +4054,7 @@ function renderDashboard(){
     const spelling = typeof Lobby3D !== 'undefined' && Lobby3D._debug && Lobby3D._debug().spell && Lobby3D._debug().spell.active;
     if(hero && spelling){ Lobby3D.attach(hero, {avatar:state.playerAvatar, petType:p.type, stage, giant:0}); }
     const scene = hero && hero.querySelector('.hero-scene');
-    const canSpell = !spelling && typeof Lobby3D !== 'undefined' && stage !== 'egg' && g === 0 && !(typeof petStateImg === 'function' && petStateImg(p));
+    const canSpell = !spelling && typeof Lobby3D !== 'undefined' && stage !== 'egg' && !(typeof petStateImg === 'function' && petStateImg(p));
     if(scene && canSpell && typeof Lobby3D.launchSpell === 'function'){
       const btn = document.createElement('button');
       btn.className = 'spell-btn'; btn.innerHTML = '🌀 สะกดคำ';

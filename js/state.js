@@ -112,6 +112,8 @@ const DEFAULT_STATE = {
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
   quizRewardVer:QUIZ_PASS_REWARD,     // 🎁 รอบ 593: รางวัลสอบผ่านที่เซฟนี้ "เคยได้จริง" ต่อหมวด — น้อยกว่าค่าปัจจุบัน = จ่ายส่วนต่างย้อนหลังตอนโหลด
   quizBackPay:null,                   // ใบแจ้งจ่ายย้อนหลังที่ยังไม่ได้โชว์ {n,per,total,from,to,ts} (bootGame เด้งป๊อปอัพแล้วล้าง)
+  giantRemoved:false,                 // 🦣 รอบ 659: เคยผ่าน migration ถอดโหมดขยายร่าง+คืนเงินแล้วหรือยัง (กันคืนซ้ำ)
+  giantRefund:null,                   // ใบแจ้งคืนเงินร่างยักษ์ที่ยังไม่ได้โชว์ {total,ts} (bootGame เด้งป๊อปอัพแล้วล้าง)
   rp:0,                               // Rank Points
   coins:0,
   daily:{date:'', coins:0},           // เหรียญที่หาได้ "วันนี้" (ไว้แคปส่งครู)
@@ -231,7 +233,6 @@ function newPet(type, name){
           sleepSickDay:null,// ข้อ 1: nightKey คืนที่ป่วยเพราะไม่นอนไปแล้ว (กันป่วยซ้ำคืนเดียวกัน)
           heatFrom:null,    // เริ่มนับความร้อนสะสมตั้งแต่เมื่อไหร่ (null = ไม่ร้อน)
           thirstFrom:null,  // เริ่มนับขาดน้ำสะสมตั้งแต่เมื่อไหร่ (null = น้ำปกติ)
-          giant:0,          // ร่างยักษ์ (รอบ 102): ระดับขยายร่างในหน้า lobby 0=ปกติ .. GIANT_MAX=ยักษ์ (ผู้เลี้ยงสูงแค่เข่า)
           patDay:null,      // รอบ 322: วันที่รับโบนัส "ลูบยาว" ไปแล้ว (todayStr) — วันละครั้งต่อตัว
           rainSickDay:null};// วันที่ป่วยเพราะฝนล่าสุด (กันป่วยซ้ำในฝนรอบเดียวกัน)
 }
@@ -302,10 +303,27 @@ function loadState(){
         if(p.sleepSickDay === undefined) p.sleepSickDay = null;
         if(p.heatFrom === undefined) p.heatFrom = null;
         if(p.thirstFrom === undefined) p.thirstFrom = null;
-        if(typeof p.giant !== 'number') p.giant = 0;   // รอบ 102: เซฟเก่าเริ่มร่างปกติ
         if(p.rainSickDay === undefined) p.rainSickDay = null;
         if(p.sickCause === undefined) p.sickCause = p.sick ? 'hunger' : null;
       }
+      /* 🦣 รอบ 659 (ผู้ใช้สั่ง): ถอด "โหมดขยายร่าง" ออกทั้งหมด — เซฟเก่าที่เคยจ่ายเหรียญปลดล็อกไว้
+         ได้คืนเงินเต็มจำนวนครั้งเดียว (ราคาที่เคยเก็บต่อระดับ 1-4: 2000/4000/8000/16000 — เก็บสำเนาไว้ที่นี่
+         เพื่อคำนวณคืนเงินให้ถูก แม้ระบบเดิมถูกลบไปแล้ว) → เด้งบอกผู้เล่นครั้งเดียวใน showGiantRefund (main.js) */
+      if(!s.giantRemoved){
+        const GIANT_COST_HIST = [0, 2000, 4000, 8000, 16000];
+        let giantRefundTotal = 0;
+        for(const p of s.pets){
+          const paidLv = Math.max((typeof p.giant === 'number' ? p.giant : 0), (typeof p.giantMax === 'number' ? p.giantMax : 0));
+          for(let i = 1; i <= paidLv; i++) giantRefundTotal += GIANT_COST_HIST[i] || 0;
+        }
+        if(giantRefundTotal > 0){
+          s.coins = (s.coins||0) + giantRefundTotal;
+          s.lifetimeCoins = (s.lifetimeCoins||0) + giantRefundTotal;
+          s.giantRefund = {total: giantRefundTotal, ts: Date.now()};
+        }
+        s.giantRemoved = true;
+      }
+      for(const p of s.pets){ delete p.giant; delete p.giantMax; }   // ฟิลด์เก่า ไม่ใช้แล้ว
       if(s.active >= s.pets.length) s.active = 0;
       if(!s.daily || typeof s.daily !== 'object') s.daily = {date:'', coins:0};
       if(!s.bills || typeof s.bills !== 'object') s.bills = {};

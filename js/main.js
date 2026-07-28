@@ -128,7 +128,7 @@ Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGi
    ============================================================ */
 function showQuizBackPay(){
   const b = state.quizBackPay;
-  if(!b || !b.total) return;
+  if(!b || !b.total){ showGiantRefund(); return; }
   state.quizBackPay = null; saveState();              // เด้งครั้งเดียวพอ (เหรียญเข้าไปแล้วตั้งแต่ตอนโหลด)
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -156,12 +156,53 @@ function showQuizBackPay(){
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    showGiantRefund();     // 🦣 รอบ 659: ต่อคิวแจ้งคืนเงินร่างยักษ์ (ถ้ามี) หลังกล่องนี้ปิด
   });
   document.body.appendChild(ov);
   fitQbp(ov.querySelector('.qbp'));      // 🔍 รอบ 596: ตัวใหญ่สุดเท่าที่จอรับไหว (ผู้ใหญ่สายตายาวอ่านชัด)
   window.addEventListener('resize', refit);
   if(typeof feedEvent === 'function')
     feedEvent('coin', `รับเงินรางวัลย้อนหลัง +${num(b.total)} 🪙 (ปรับรางวัลสอบผ่านเป็น ${num(b.to)} เหรียญ)`);
+}
+
+/* ============================================================
+   🦣 รอบ 659 (ผู้ใช้สั่ง): ถอด "โหมดขยายร่าง" ออกจากเกมทั้งหมด — คืนเงินเต็มจำนวนให้คนที่เคยจ่ายไปแล้ว
+   ยอดคืน + คำนวณไว้ตั้งแต่ตอนโหลด (loadState → state.giantRefund) ที่นี่ทำหน้าที่ "เด้งบอกครั้งเดียว"
+   ให้ชัดเจนว่าได้คืนเท่าไหร่ เพราะอะไร (ใช้กล่องแบบเดียวกับ showQuizBackPay)
+   ============================================================ */
+function showGiantRefund(){
+  const b = state.giantRefund;
+  if(!b || !b.total) return;
+  state.giantRefund = null; saveState();               // เด้งครั้งเดียวพอ (เหรียญเข้าไปแล้วตั้งแต่ตอนโหลด)
+  const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  const name = state.profileName || (state.student && state.student.first) || 'หนู';
+  if(typeof sfx !== 'undefined' && sfx.coinGet) sfx.coinGet();
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#ffd76a"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">🦣 ยกเลิกโหมดขยายร่างแล้ว — คืนเงินให้เต็มจำนวน!</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#ffb300">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">ยินดีด้วย ${escapeHTML(name)}! 🎉<br>
+        เกมเอาโหมด "ขยายร่างน้อง" ออกไปแล้ว (ปุ่มในหน้าข้อมูลน้องหายไป)<br>
+        <small>เหรียญที่หนูเคยจ่ายไปเพื่อขยายร่าง ระบบคืนให้เต็มจำนวน <b>${num(b.total)} เหรียญ</b> เข้ากระเป๋าเรียบร้อยแล้วนะ 🪙</small></p>
+      <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT);
+    window.removeEventListener('resize', refit);
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(ov);
+  fitQbp(ov.querySelector('.qbp'));
+  window.addEventListener('resize', refit);
+  if(typeof feedEvent === 'function')
+    feedEvent('coin', `ได้คืนเงินร่างยักษ์ +${num(b.total)} 🪙 (โหมดขยายร่างถูกถอดออกจากเกมแล้ว)`);
 }
 
 /* 🔍 รอบ 596 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")

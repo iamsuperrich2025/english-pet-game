@@ -147,7 +147,9 @@ function makeHappy(ms){
 }
 
 /* เลือกภาพที่จะแสดง: ป่วย > หิว > ดีใจ > รูปร่าง (ข้อ 5.2) > ใส่ชุด > ปกติ
-   (ร่างอ้วน/ผอมโซ/ล่ำ คือผลจากการกิน — สำคัญกว่าชุดเพื่อให้เด็กเห็นผลชัด ภาพไม่มีก็ตกไปชุด/ปกติ) */
+   (ร่างอ้วน/ผอมโซ/ล่ำ คือผลจากการกิน — สำคัญกว่าชุดเพื่อให้เด็กเห็นผลชัด ภาพไม่มีก็ตกไปชุด/ปกติ)
+   🎀 รอบ 659: รูปร่างทับภาพใส่ชุดแล้วเด็กเข้าใจผิดว่าชุดที่ซื้อไว้หาย — ถ้ากดปุ่ม "ดูชุดที่ใส่อยู่"
+   ไว้ (state.psDress) และมีทั้งรูปร่าง+ชุดพร้อมกัน ให้สลับมาโชว์ภาพชุดแทนแทนรูปร่าง (หน้าข้อมูลน้อง/เวที) */
 function currentPetImg(p){
   p = p || activePet();
   if(!p) return null;
@@ -155,11 +157,15 @@ function currentPetImg(p){
   if(stage === 'egg') return IMG_FILES[startImgKey(pet)] || null;
   const candidates = [];
   const worn = equippedItem(p);
+  const hasShape = stage === 'adult' && p.shape && p.shape !== 'normal';
   if(p.sick) candidates.push(`${pet}_${stage}_sick`);
   else if(petHungry(p)) candidates.push(`${pet}_${stage}_hungry`);
   else if(happyNow()) candidates.push(`${pet}_${stage}_happy`);
-  else{
-    if(stage === 'adult' && p.shape && p.shape !== 'normal') candidates.push(`${pet}_adult_${p.shape}`);
+  else if(hasShape && worn && state.psDress){
+    candidates.push(`${pet}_${stage}_${worn.id}`);
+    candidates.push(`${pet}_adult_${p.shape}`);
+  }else{
+    if(hasShape) candidates.push(`${pet}_adult_${p.shape}`);
     if(worn) candidates.push(`${pet}_${stage}_${worn.id}`);
   }
   candidates.push(`${pet}_${stage}_normal`);
