@@ -418,7 +418,7 @@ function keyTapSynth(up, bright){
     const bp = audioCtx.createBiquadFilter(); bp.type='bandpass';
     bp.frequency.value = (up?3000:1900) * (bright?1.18:1); bp.Q.value = 1.2;
     const g = audioCtx.createGain();
-    g.gain.setValueAtTime(up?.182:.336, t);   // 🔊 +40% (รอบ)
+    g.gain.setValueAtTime(up?.237:.437, t);   // 🔊 +40%→+30% ซ้อน (รอบ)
     g.gain.exponentialRampToValueAtTime(.001, t+dur);
     src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
     src.start(t); src.stop(t+dur);
@@ -427,7 +427,7 @@ function keyTapSynth(up, bright){
       o.type='sine';
       o.frequency.setValueAtTime(200, t);
       o.frequency.exponentialRampToValueAtTime(92, t+.05);
-      og.gain.setValueAtTime(.21, t);   // 🔊 +40% (รอบ)
+      og.gain.setValueAtTime(.273, t);   // 🔊 +40%→+30% ซ้อน (รอบ)
       og.gain.exponentialRampToValueAtTime(.001, t+.06);
       o.connect(og); og.connect(audioCtx.destination);
       o.start(t); o.stop(t+.07);
