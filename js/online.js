@@ -119,17 +119,20 @@ function onlinePushScore(){
   const ba    = (typeof lobbyBlk === 'function') ? lobbyBlk() : '';        // 🪪 รอบ 255: ตัวละคร blk ที่เลือก (โชว์เต็มตัวในการ์ดผู้เล่น)
   const hs    = Math.round(state.hauntSurviveBest || 0);                   // ⏱ รอบ 256: สถิติหนีผีรอดนานสุด (วินาที)
   const ws    = Math.round(state.wsScore || 0);                            // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ (กระดานแท็บค้นหาคำ)
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws;   // ค่าใดเปลี่ยน = re-push
-  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำไม่ขยับ ไม่ต้องเขียนซ้ำ
+  const tp    = Math.round(state.tpScore || 0);                            // ⌨️ รอบ 649: แต้มสะสมเกมพิมพ์คำ (กระดานแท็บพิมพ์คำ)
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp;   // ค่าใดเปลี่ยน = re-push
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
-  // (ws = รอบ 590 ยังรอ publish → ถอยไปก้อนเดิมที่มี ba/hs ก่อน แล้วค่อยถอยลงอีก)
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
-    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
-      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
-        Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+  // (tp = รอบ 649 ยังรอ publish → ถอยไปก้อนที่มี ws ก่อน แล้วค่อยถอยลงอีกทีละขั้น)
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp}, base)).catch(()=>{
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
+      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
+        Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+          Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+        });
       });
     });
   });
@@ -1618,7 +1621,8 @@ function onlineStart(){
                 av: typeof v.av === 'number' ? v.av : null,
                 ni: typeof v.ni === 'number' ? v.ni : null,
                 bk: typeof v.bk === 'number' ? v.bk : 0,     // 🤖 รอบ 228: บอสที่ล้ม (กระดานโลกหุ่น)
-                ws: typeof v.ws === 'number' ? v.ws : 0});   // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ
+                ws: typeof v.ws === 'number' ? v.ws : 0,     // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ
+                tp: typeof v.tp === 'number' ? v.tp : 0});   // ⌨️ รอบ 649: แต้มสะสมเกมพิมพ์คำ
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;

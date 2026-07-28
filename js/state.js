@@ -73,9 +73,14 @@ const DEFAULT_STATE = {
   wsWords:0,                          // 🔎 รอบ 590: จำนวนคำที่หาเจอทั้งหมด (โชว์ใต้ชื่อในกระดาน)
   wsBoards:0,                         // 🔎 รอบ 590: กระดานที่เล่นจบครบทุกคำ (โบนัสจบใบ WS_CLEAR_BONUS)
   tpUsed:[],                          // ⌨️ รอบ 648: คำที่พิมพ์สำเร็จแล้วในเกมพิมพ์คำศัพท์ — กติกา "คำห้ามซ้ำ" (หมดคลัง = ล้างแล้ววนใหม่)
+  tpScore:0,                          // ⌨️ รอบ 649: แต้มสะสมตลอดกาลเกมพิมพ์คำ (ขึ้นกระดานอันดับ field tp)
+  tpWords:0,                          // ⌨️ รอบ 649: จำนวนคำที่พิมพ์สำเร็จทั้งหมด (ไม่ล้างตอน tpUsed วนรอบใหม่)
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
+  tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
+  tpAwardPaid:[],
+  tpAwardLog:[],
   rankSeen:0,                         // 🥇 รอบ 599: อันดับเหรียญที่เห็นล่าสุด (0=ยังไม่เคยติดกระดาน) — เลขใหม่น้อยกว่า = ไต่ขึ้น → ป้ายบนปุ่มรางเด้งฉลอง
   rankBest:0,                         // 🏅 รอบ 602: อันดับดีที่สุดที่เคยทำได้ (เลขน้อยสุด · 0=ยังไม่เคยติด) — โชว์ในหน้าสถิติ ไม่ลดลงเมื่ออันดับตก
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
@@ -338,9 +343,17 @@ function loadState(){
       if(typeof s.wsWords !== 'number' || s.wsWords < 0) s.wsWords = 0;
       if(typeof s.wsBoards !== 'number' || s.wsBoards < 0) s.wsBoards = 0;
       if(!Array.isArray(s.tpUsed)) s.tpUsed = [];   // ⌨️ รอบ 648: คำที่พิมพ์แล้วในเกมพิมพ์คำศัพท์ (กันคำซ้ำ)
+      if(typeof s.tpScore !== 'number' || s.tpScore < 0) s.tpScore = 0;   // ⌨️ รอบ 649: แต้มสะสมเกมพิมพ์คำ
+      if(typeof s.tpWords !== 'number' || s.tpWords < 0) s.tpWords = 0;
+      // เซฟเก่าที่เล่นรอบ 648 มาแล้ว (มี tpUsed แต่ยังไม่มี tpScore) → นับคำที่เคยพิมพ์เป็นจำนวนคำตั้งต้น
+      // (ให้แต้มย้อนหลังไม่ได้เพราะไม่รู้ความยาว/ความแม่นของคำที่ลบไปแล้ว — เริ่มนับแต้มจาก 0 เท่ากันทุกคน)
+      if(!s.tpWords && s.tpUsed.length) s.tpWords = s.tpUsed.length;
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
+      if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
+      if(!Array.isArray(s.tpAwardPaid)) s.tpAwardPaid = [];
+      if(!Array.isArray(s.tpAwardLog)) s.tpAwardLog = [];
       /* 🎁 รอบ 593 (ผู้ใช้สั่ง): รางวัลสอบผ่าน 10 ข้อ 100 → 500 + "จ่ายย้อนหลัง" ให้คนที่สอบผ่านไปก่อนประกาศใหม่
          นับเฉพาะ id ที่เคยได้รางวัลเต็มเรตนี้จริง = หมวดคำศัพท์ตามชั้น (ALL_CATS) + ชุดคลังศัพท์ bandXsY
          (ตัด vbreview รางวัล 50 และสอบซ่อมรวม bandXretake รางวัล 0 ออก — คนละเรต ไม่ต้องชดเชย) */

@@ -5,6 +5,9 @@
    - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
    - เสียงกดเหมือนคีย์บอร์ดจริง (sfx.keyTap ใน js/util.js — กดลง/ปล่อยขึ้นคนละเสียง)
    - คำศัพท์อังกฤษกลางจอด้านบน + คำแปลไทยใต้คำ · พิมพ์ครบ 1 คำ = 🪙 5 เหรียญ + เสียงเงินเข้า
+   🏆 รอบ 649: แต้มสะสมตลอดกาล (state.tpScore/tpWords) → แท็บใหม่ "⌨️ พิมพ์คำ" ในกระดานอันดับ
+      + รางวัลรายเดือน Top 10 (10,000–1,000 เหรียญ) ผ่าน js/tpaward.js — กติกาเดียวกับ 🔎 ค้นหาคำ
+      แต้ม = ความยาวคำ × 2 · โบนัส +5 ถ้าพิมพ์คำนั้นไม่ผิดเลยสักตัว (PERFECT_BONUS)
    🔒 กฎเหล็ก 2 ข้อ:
      ① คำที่นำมาเล่น = คำตามระดับชั้นผู้เล่นเท่านั้น (vocabForStudent)
      ② คำห้ามซ้ำ — จำคำที่เล่นไปแล้วถาวรใน state.tpUsed จนหมดคลังจึงวนรอบใหม่
@@ -13,6 +16,8 @@
    ============================================================ */
 (function(){
   const COIN_PER_WORD = 5;              // 🪙 ผู้ใช้กำหนด: 1 คำ = 5 เหรียญ
+  const PT_PER_LETTER = 2;              // 🏆 รอบ 649: แต้มกระดาน = ความยาวคำ × 2 (เรตเดียวกับ 🔎 ค้นหาคำ)
+  const PERFECT_BONUS = 5;              // 🏆 รอบ 649: ไม่พิมพ์ผิดเลยทั้งคำ = โบนัสอีก 5 แต้ม
   const MINLEN = 2, MAXLEN = 14;
   /* แถวแป้นตามคีย์บอร์ดจริง · off = ระยะเหลื่อมหัวแถว (หน่วย = 1 แป้น) */
   const ROWS = [
@@ -78,7 +83,7 @@
     if(!queue.length && !refill(true)){ cur=null; return; }
     if(!queue.length){ cur=null; return; }
     const pick=queue.shift();
-    cur={ w:pick.w, th:pick.th, typed:'' };
+    cur={ w:pick.w, th:pick.th, typed:'', miss:0 };   // miss = พิมพ์ผิดกี่ครั้งในคำนี้ (0 = ได้โบนัส PERFECT_BONUS)
     renderWord();
   }
 
@@ -108,6 +113,12 @@
     hintEl =overlay.querySelector('#tp-hint');
     fxEl   =overlay.querySelector('#tp-fx');
     overlay.querySelector('#tp-close').addEventListener('click', close);
+    /* 🏆 รอบ 649: กดแต้มบนหัวกระดาน → กระดานประกาศรางวัลรายเดือน (ผูกเองที่นี่ ไม่พึ่ง listener ของ ui.js
+       เพราะเด็กอาจเปิดเกมพิมพ์คำก่อนเคยเปิดกระดานอันดับ) · .wsa-overlay z-index 95 > #tp-overlay 93 */
+    statEl.addEventListener('click', e=>{
+      if(!e.target.closest('.tpa-open')) return;
+      if(typeof TpAward!=='undefined') TpAward.open();
+    });
     buildKeys();
     bindKeys();
   }
@@ -157,9 +168,13 @@
   }
   function renderStat(){
     if(!statEl) return;
-    const done=(typeof state!=='undefined' && Array.isArray(state.tpUsed))?state.tpUsed.length:0;
-    const coins=(typeof state!=='undefined')?(state.coins||0):0;
-    statEl.innerHTML=`<b>🪙 ${coins.toLocaleString()}</b><span>พิมพ์สำเร็จ ${done.toLocaleString()} คำ</span><span>ระดับชั้น ${grade()}</span>`;
+    const st=(typeof state!=='undefined')?state:{};
+    const done=(st.tpWords||0) || (Array.isArray(st.tpUsed)?st.tpUsed.length:0);
+    const coins=st.coins||0, pts=Math.round(st.tpScore||0);
+    /* 🏆 รอบ 649: โชว์แต้มสะสม + ปุ่มเข้ากระดานประกาศรางวัล (เด็กจะได้รู้ว่าแต้มเอาไปทำอะไร) */
+    statEl.innerHTML=`<b>🪙 ${coins.toLocaleString()}</b>`
+      +`<span class="tp-pts tpa-open" role="button" tabindex="0" title="ดูอันดับ/รางวัลรายเดือน">🏆 ${pts.toLocaleString()} แต้ม</span>`
+      +`<span>พิมพ์สำเร็จ ${done.toLocaleString()} คำ</span><span>ระดับชั้น ${grade()}</span>`;
   }
   /* แป้นตัวถัดไปเรืองแสง — เด็กที่ยังหาแป้นไม่คล่องจะได้ไม่จนตรอก */
   function glowNext(){
@@ -194,6 +209,7 @@
     /* คีย์บอร์ดจริงของเครื่อง (คอม/แท็บเล็ตมีคีย์บอร์ด) — กดแล้วแป้นบนจอยุบตามด้วย */
     document.addEventListener('keydown', e=>{
       if(!overlay || overlay.style.display!=='flex') return;
+      if(document.querySelector('.wsa-overlay')) return;   // 🏆 รอบ 649: กระดานประกาศรางวัลเปิดทับอยู่ — ปล่อยให้มันจัดการคีย์เอง
       if(e.key==='Escape'){ close(); return; }
       if(e.repeat) return;
       let k=null;
@@ -227,7 +243,8 @@
     const ok=(k===want);
     pressFx(el);
     if(typeof sfx!=='undefined'&&sfx.keyTap) sfx.keyTap(false, ok);
-    if(!ok){                                   // พิมพ์ผิด = ไม่หักอะไร แค่บอกให้รู้ (เด็กจะได้ไม่ท้อ)
+    if(!ok){                                   // พิมพ์ผิด = ไม่หักอะไร แค่บอกให้รู้ (เด็กจะได้ไม่ท้อ) · เสียแค่โบนัส "ไม่ผิดเลย"
+      cur.miss++;
       if(el){ el.classList.add('bad'); setTimeout(()=>el.classList.remove('bad'), 260); }
       wordEl.classList.remove('shake'); void wordEl.offsetWidth; wordEl.classList.add('shake');
       return;
@@ -243,19 +260,30 @@
     nextWord();                                 // คำที่ข้ามยังไม่ถูก mark = กลับมาเจอใหม่ได้ในรอบถัดไป
   }
 
-  /* ✅ พิมพ์ครบคำ → 🪙 5 เหรียญ + เสียงเงินเข้าชัด ๆ + ลงสมุดคำศัพท์ + กันคำซ้ำ */
+  /* 🏆 รอบ 649: แต้มของคำนี้ = ความยาว×2 + โบนัสถ้าไม่พิมพ์ผิดเลย */
+  function wordPoints(word, miss){
+    return word.length*PT_PER_LETTER + (miss ? 0 : PERFECT_BONUS);
+  }
+  /* ✅ พิมพ์ครบคำ → 🪙 5 เหรียญ + แต้มสะสมกระดาน + เสียงเงินเข้าชัด ๆ + ลงสมุดคำศัพท์ + กันคำซ้ำ */
   function finishWord(){
     locked=true;
     const w=cur.w, th=cur.th;
+    const pts=wordPoints(w, cur.miss);
     markUsed(w);
     if(typeof addCoins==='function') addCoins(COIN_PER_WORD);
+    /* 🏆 แต้มสะสมตลอดกาล → กระดานอันดับแท็บ ⌨️ พิมพ์คำ (field tp) + รางวัลรายเดือน Top 10 */
+    if(typeof state!=='undefined'){
+      state.tpScore=Math.round((state.tpScore||0)+pts);
+      state.tpWords=(state.tpWords||0)+1;
+    }
+    if(typeof onlinePushScore==='function') onlinePushScore();   // ผลักแต้มขึ้นกระดานทันที (มี sig กันเขียนซ้ำ)
     if(typeof vbRecord==='function') vbRecord(w, th, true);      // 📒 ลงสมุดคำศัพท์ถาวร
     if(typeof saveState==='function') saveState();
     if(typeof sfx!=='undefined'){
       if(sfx.coinGetTier) sfx.coinGetTier(1); else if(sfx.coinGet) sfx.coinGet(); else if(sfx.coin) sfx.coin();
     }
     if(typeof speakWord==='function') speakWord(w.toLowerCase());
-    coinPop();
+    coinPop(pts, !cur.miss);
     wordEl.classList.add('done');
     renderStat();
     setTimeout(()=>{
@@ -264,11 +292,11 @@
       nextWord();
     }, 780);
   }
-  function coinPop(){
+  function coinPop(pts, perfect){
     if(!fxEl || document.documentElement.classList.contains('no-anim')) return;
     const p=document.createElement('div');
     p.className='tp-coinpop';
-    p.textContent=`+${COIN_PER_WORD} 🪙`;
+    p.innerHTML=`+${COIN_PER_WORD} 🪙 <span class="tp-pop-pt">+${pts||0} แต้ม${perfect?' ✨ ไม่ผิดเลย!':''}</span>`;
     fxEl.appendChild(p);
     setTimeout(()=>p.remove(), 1400);
   }
@@ -305,7 +333,7 @@
 
   window.TypeGame={ open, close, _t:{ get cur(){return cur;}, get queue(){return queue;},
     get locked(){return locked;}, set locked(v){locked=!!v;},   // ชุดทดสอบต้องข้ามช่วงหน่วงฉลอง 780ms ได้
-    pool, refill, nextWord, hit, fitKeys, skip, usedSet, markUsed,
-    COIN_PER_WORD, ROWS, KEY_MIN, KEY_MAX,
+    pool, refill, nextWord, hit, fitKeys, skip, usedSet, markUsed, wordPoints, renderStat,
+    COIN_PER_WORD, PT_PER_LETTER, PERFECT_BONUS, ROWS, KEY_MIN, KEY_MAX,
     get overlay(){return overlay;}, get keysEl(){return keysEl;} } };
 })();

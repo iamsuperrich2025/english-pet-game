@@ -7,6 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `tpAward` + field `tp` ใน /leaderboard (รอบ 649 · แต้มสะสม + รางวัลรายเดือน Top 10 แท็บ ⌨️ พิมพ์คำ)** — โครงเหมือน `wsAward`/`ws` ของรอบ 592/590 ทุกบรรทัด ต่างแค่ชื่อ (`/tpAward/<YYYY-MM>` = `{at, w:{<uid>:{r:1-10, p:0-10000, n≤40, g≤20, s}}}` · อ่านสาธารณะ · เขียนได้ครั้งเดียว `auth != null && !data.exists()`)
+  - **ยังไม่ publish = เกมไม่พัง:** เขียน `tp` โดน deny → `onlinePushScore()` ถอยไปก้อนเดิมที่มีแค่ `ws` อัตโนมัติ (แต้มพิมพ์คำของตัวเองยังเห็นครบเพราะแท็บอ่านจาก state สด แค่เพื่อนยังไม่เห็น) · `tpAward` set โดน deny → ไม่จ่ายรางวัลเดือนนั้น ลองใหม่รอบเช็กถัดไป · แท็บ ⌨️ ยังโชว์อันดับ/เงินรางวัล/กระดานประกาศ ("ถ้าตัดรอบตอนนี้") ได้ปกติ
+  - ⚠️ **publish ก้อนนี้ครั้งเดียวได้ทั้ง `wsAward` ที่ค้างมาตั้งแต่รอบ 592 ด้วย** (อยู่ในก้อนเต็มเดียวกัน)
 - ✅ **รอบ 640 (โซนใหม่ `wroom` + `winfo` · 🏟️ ระบบหลายสนาม room sharding ทุกโลก 3D) — ผู้ใช้ publish แล้ว 28 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว (`firebase database:get /.settings/rules`):** เทียบทั้งไฟล์กับก้อนใน RULES.md = **identical ครบ 25 โซน** (deep JSON compare) · REST: GET `/wroom.json` ไม่ล็อกอิน = 401 Permission denied ถูกต้อง → **ระบบหลายสนามใช้งานได้เต็มระบบ** · เดิม: `/wroom/<map>/<room>/<uid>` = ตำแหน่งสด (ข้อมูลร้อน ส่งถี่) · `/winfo/<map>/<room>/<uid>` = ชื่อเล่น/คะแนน/แชท (ข้อมูลเย็น เขียนเฉพาะตอนเปลี่ยน + เต้นหัวใจ 20 วิ) — แยกสองชั้นเพื่อให้ “นับหัวก่อนเข้าสนาม” อ่านแค่ ~1KB ต่อสนาม และ payload เบาลง 42% · `$room` จำกัด `r0`–`r35` (36 สนาม × 14 คน = 504 คน) · enum `$map` เพิ่ม `soccer`/`mecha` ที่ของเดิมตกหล่น · ⚠️ โซน `/world` เดิมยังอยู่ครบ (สะพานให้เครื่องเก่า) · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/935970e1-029a-49db-8902-ffe64616ca8c
 - ✅ **รอบ 639 (โซนใหม่ `gfeed` · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์) — ผู้ใช้ publish แล้ว 28 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว (`firebase database:get /.settings/rules`):** เทียบทั้งไฟล์กับก้อนใน RULES.md = **identical ครบ 25 โซน** (deep JSON compare รวมกับ `wroom`/`winfo` ของรอบ 640 ที่ publish มาด้วยกัน) · REST: GET `/gfeed.json` ไม่ล็อกอิน = 401 Permission denied ถูกต้อง (ต้อง login ถึงอ่านได้ตามที่ตั้งใจ) → **หน้า Feed ทุกคน + ไลก์/คอมเมนต์ใช้งานได้เต็มระบบ** · เดิม: `/gfeed/<postId>` = โพสต์กิจกรรมรวมทุกคน (ไม่ใช่แค่คนที่ follow) พร้อม `lk/<uid>` (ไลก์) และ `cm/<cid>` (คอมเมนต์) ซ้อนอยู่ใต้โพสต์เดียวกัน · **ไลก์/คอมเมนต์เขียนได้เฉพาะเจ้าของโพสต์เอง หรือคนที่เป็นเพื่อนกับเจ้าของโพสต์** (เช็กจาก `/friends` จริงฝั่ง rules ไม่ใช่แค่ client) — คนแปลกหน้าอ่านโพสต์ได้ปกติแต่กดไลก์/คอมเมนต์ไม่ได้ (ตามที่ผู้ใช้เลือก 28 ก.ค. 2026 เพื่อความปลอดภัยเด็ก) · `.indexOn:"u"` ไว้ให้ client กวาดโพสต์เก่าของตัวเองทิ้งเมื่อเกิน `GFEED_KEEP_ME`(10 โพสต์/คน) · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/c0269b97-69dd-4677-9889-9c5d524383af
 - ✅ **รอบ 631 (👥 โทรกลุ่ม 3 คน: `/calls` เพิ่ม `r`/`g` + `k` รับ `nofr`/`full` · 🔒 ลบวิดีโอคอลทั้งระบบ) — ผู้ใช้ publish แล้ว 28 ก.ค. 2026 · ตรวจสดผ่าน CLI แล้ว:** อ่าน `/.settings/rules` สด → **เทียบทั้งไฟล์กับก้อนใน RULES.md = identical ครบ 22 โซน** · `r` ≤128 · `g` ≤400 · `k` enum มี `nofr`/`full` จริง → **ระบบโทรกลุ่มใช้งานได้เต็มระบบ** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/e018942d-52ae-4908-88c8-b8da6d604b22
@@ -71,6 +74,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "ba":    { ".validate": "newData.isString() && newData.val().length <= 8" },
         "hs":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "ws":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "tp":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }
@@ -392,6 +396,26 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       }
     },
     "wsAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "tpAward": {
       ".read": true,
       "$m": {
         ".write": "auth != null && !data.exists()",
