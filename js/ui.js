@@ -3166,12 +3166,14 @@ function bindPetPlateButtons(root){
     if(ov) ov.remove();
     openDressUpBoard();
   });
-  on('btn-pi-shape-toggle', ()=>{    // 🎀 รอบ 659: สลับดูรูปร่าง ↔ ดูชุด (ตัวเดียวกับปุ่มบนเวที)
+  const shapeToggle = ()=>{          // 🎀 รอบ 659: สลับดูรูปร่าง ↔ ดูชุด (ตัวเดียวกับปุ่มบนเวที)
     state.psDress = !state.psDress;
     saveState();
     sfx.select();
     renderDashboard();
-  });
+  };
+  on('btn-pi-shape-toggle', shapeToggle);
+  on('btn-pi-dress-pip', shapeToggle);   // 🎀 รอบ 661: กดภาพเล็ก "ชุดที่ใส่อยู่" = สลับมาดูตัวใหญ่
 }
 
 /* overlay ใหญ่ ข้อมูลน้อง & การดูแล — 2 คอลัมน์ (ร่างไข่ = คอลัมน์เดียว) ไม่มี scrollbar
@@ -3937,12 +3939,29 @@ function renderDashboard(){
   };
   const wornForShape = stage !== 'egg' ? equippedItem(p) : null;             // 🎀 รอบ 659
   const hasShapeConflict = stage === 'adult' && p.shape && p.shape !== 'normal' && !!wornForShape;
+  /* 🎀 รอบ 661: ภาพเล็ก "ชุดที่ใส่อยู่" มุมซ้ายของรูปน้อง — โผล่ทุกครั้งที่ภาพชุดถูกภาพอื่นแทน
+     (ร่างล่ำ/อ้วน/ผอม/ป่วย/หิว/ดีใจ) เด็กเห็นด้วยตาทันทีว่าชุดที่ซื้อยังใส่อยู่ ไม่ต้องอ่าน/กดปุ่มก่อน
+     รอบ 659 มีแต่ปุ่มสลับ ซึ่งต้องอ่านคำบรรยายก่อนถึงจะรู้ว่าชุดไม่ได้หาย */
+  const piNowImg  = currentPetImg(p);
+  const piWornImg = wornForShape ? IMG_FILES[`${p.type}_${stage}_${wornForShape.id}`] : null;
+  /* สลับได้เฉพาะเคสรูปร่างทับชุดจริง ๆ — ป่วย/หิว/ดีใจ ภาพถูกล็อกไว้ กดแล้วไม่เปลี่ยน = ปุ่มตาย
+     → เคสนั้นให้ภาพเล็กเป็นป้ายบอกเฉย ๆ (และซ่อนปุ่มสลับในคำบรรยายด้วย) */
+  const piCanSwap = hasShapeConflict && !p.sick && !(typeof petHungry === 'function' && petHungry(p))
+                    && !(typeof happyNow === 'function' && happyNow());
+  const piPipTag  = piCanSwap ? 'button' : 'div';
+  const dressPip  = (piWornImg && piNowImg && piWornImg !== piNowImg)
+    ? `<${piPipTag} class="pi-dress-pip"${piPipTag === 'button' ? ' id="btn-pi-dress-pip" type="button"' : ''}>
+         <img src="${piWornImg}" alt="">
+         <span>${wornForShape.emoji || '🎀'} ${escapeHTML(wornForShape.name)}<br>ยังใส่อยู่${piCanSwap ? ' — กดดูใหญ่' : ''}</span>
+       </${piPipTag}>`
+    : '';
   __petPlates = {
     info: `
       <div class="plate-title">⬢ ข้อมูลน้อง</div>
       ${stage !== 'egg' ? `<button class="pi-dress-btn" id="btn-pi-dress">🎀 แต่งตัวน้อง</button>` : ''}
-      ${currentPetImg(p) ? `<img class="pi-portrait" src="${currentPetImg(p)}" alt="${escapeHTML(p.name)}">` : ''}
-      ${stage !== 'egg' ? (hasShapeConflict
+      ${dressPip}
+      ${piNowImg ? `<img class="pi-portrait" src="${piNowImg}" alt="${escapeHTML(p.name)}">` : ''}
+      ${stage !== 'egg' ? (piCanSwap
         ? (state.psDress
           ? `<div class="pi-shape-cap shape-cap-${p.shape}">${wornForShape.emoji || '🎀'} <b>ใส่${escapeHTML(wornForShape.name)}อยู่</b> — ชุดนี้ยังใส่ให้น้องตลอดนะ ไม่ได้หายไปไหน
               <button class="pi-shape-toggle-btn" id="btn-pi-shape-toggle" type="button">${SHAPE_UI[p.shape].icon} ดูรูปร่างล่าสุด</button></div>`

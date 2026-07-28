@@ -2230,6 +2230,16 @@ html.no-anim .cs-big-img{animation:none}
   padding:5px 14px;font-family:inherit;font-size:12.5px;font-weight:700;color:#fff;cursor:pointer;
   background:linear-gradient(180deg,#ff8fb0,#ff5a7a);box-shadow:0 3px 0 #b8324f;}
 .pi-shape-toggle-btn:active{transform:translateY(2px);box-shadow:none;}
+/* 🎀 รอบ 661: ภาพเล็ก "ชุดที่ใส่อยู่" มุมซ้ายของรูปน้อง (absolute → ไม่ดันเลย์เอาต์ ไม่ทำให้เกิด scroll) */
+.pi-dress-pip{position:absolute;top:52px;left:6px;z-index:5;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  width:clamp(56px,15%,92px);padding:4px 4px 5px;border-radius:12px;
+  background:rgba(7,25,52,.75);border:1px solid rgba(255,170,205,.6);
+  box-shadow:0 3px 10px rgba(0,0,0,.45);font-family:inherit;cursor:default;}
+button.pi-dress-pip{cursor:pointer;}
+button.pi-dress-pip:active{transform:scale(.94);}
+.pi-dress-pip img{width:100%;height:auto;max-height:min(20vh,120px);object-fit:contain;display:block;pointer-events:none;}
+.pi-dress-pip span{font-size:10px;line-height:1.25;font-weight:700;color:#ffd8e6;text-align:center;}
 /* 🐾 รอบ 325: แผงเลือกคำทักทายน้องของเพื่อน (เปิดจากปุ่ม 🐾 ในการ์ดโปรไฟล์)
    กริดยืดตามที่ว่าง + ตัวอักษร clamp → จอเตี้ย 812×375 เห็นครบทั้งใบ ไม่ต้องเลื่อน (กฎทอง #7) */
 .pl-head .pl-greet{margin-left:6px;padding:4px 10px;border-radius:999px;cursor:pointer;
