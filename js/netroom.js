@@ -55,9 +55,13 @@ const CFG = {
   MEET_GAP_MS:   7000,    // เว้นกี่ ms ต่อครั้ง (เพื่อนอาจกดเข้าโลกช้ากว่าเราไม่กี่วินาที)
 };
 
-/* จำนวนสนามที่เปิดใช้จริง = คุมโดย WORLD_CAP (80/14 → 6 สนาม) */
-function roomsAllowed(){
-  return Math.max(1, Math.min(CFG.ROOMS_MAX, Math.ceil(CFG.WORLD_CAP / CFG.ROOM_MAX)));
+/* จำนวนสนามที่เปิดใช้จริง = คุมโดย WORLD_CAP (80/14 → 6 สนาม)
+   cap = เพดานคนต่อสนามของ "โลกนั้น" (รอบ 685) — โลกที่จำกัดคนน้อย ต้องเปิดสนามเยอะขึ้น
+   ไม่งั้นโรงแรมผีสิง (2 คน/หลัง) จะรับได้แค่ 6×2=12 คนทั้งเกม แล้วคนที่ 13 ตกไปเล่นเดี่ยวทันที
+   2 คน/หลัง → ceil(80/2)=40 → ตัดที่เพดาน rules 36 หลัง = รับได้ 72 คน */
+function roomsAllowed(cap){
+  const per=Math.max(1, cap || CFG.ROOM_MAX);
+  return Math.max(1, Math.min(CFG.ROOMS_MAX, Math.ceil(CFG.WORLD_CAP / per)));
 }
 
 /* ── แผนที่ชื่อฟิลด์: ชื่อยาว (โลกใช้) ↔ ชื่อสั้น (สายส่งใช้) ──
@@ -217,7 +221,7 @@ function create(opt){
      ห้ามสุ่มกระจาย! เด็ก 2 คนกดเข้าโลกพร้อมกันต้องได้สนามเดียวกัน ไม่งั้นเพื่อนไม่มีวันเจอกัน
      ปกติอ่านแค่ 1 สนาม (~1KB) · แย่สุดเท่าจำนวนสนามที่เปิด */
   function pickRoom(from){
-    const N=roomsAllowed(), start=Math.max(0, Math.min(N-1, from||0));
+    const N=roomsAllowed(ROOM_MAX), start=Math.max(0, Math.min(N-1, from||0));
     let k=0;
     function step(){
       if(k>=N) return Promise.resolve(null);            // ทุกสนามเต็ม
@@ -520,7 +524,7 @@ function create(opt){
     const list=(typeof Online!=='undefined' && Online.friends) ? Online.friends : [];
     list.forEach(function(f){ if(f && f.id) ids[f.id]=f.n||'เพื่อน'; });
     if(!envReady() || legacy || !Object.keys(ids).length) return Promise.resolve([]);
-    const N=roomsAllowed(), out=[], now=Date.now();
+    const N=roomsAllowed(ROOM_MAX), out=[], now=Date.now();
     let i=0;
     function step(){
       if(i>=N) return Promise.resolve(out);
@@ -545,7 +549,7 @@ function create(opt){
     const want=metUids(map);
     const keys=Object.keys(want);
     if(!envReady() || legacy || !keys.length) return Promise.resolve(null);
-    const N=roomsAllowed(), now=Date.now();
+    const N=roomsAllowed(ROOM_MAX), now=Date.now();
     let i=0;
     function step(){
       if(i>=N) return Promise.resolve(null);
@@ -587,7 +591,7 @@ function create(opt){
   function statusText(short, drawn){
     const n=Object.keys(peers).length+1;
     if(full) return short ? wrap('🧯 สนามเต็ม · เล่นสนามฝึกก่อน'+goBtn(short), short)
-      : ('🧯 ทุกสนามเต็มตอนนี้ ('+roomsAllowed()+' สนาม)<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
+      : ('🧯 ทุกสนามเต็มตอนนี้ ('+roomsAllowed(ROOM_MAX)+' สนาม)<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
     if(!joined) return short ? '📡 กำลังหาสนาม…' : '📡 กำลังหาสนามที่ว่างให้…';
     /* โหมดเดิมมีสนามเดียว ห้ามใช้คำว่า "ในสนาม N คน" — เด็กอ่านสับสนว่าเป็น "สนามที่ N" */
     if(legacy)  return short ? ('👥 '+n+' คน') : ('👥 มีผู้เล่น '+n+' คน');
