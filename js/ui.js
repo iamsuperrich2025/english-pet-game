@@ -1428,6 +1428,34 @@ function lbRankRows(tab){
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
 
+const LB_BCAT_TOP = 5;   // แต่ละสายโชว์ Top กี่คน (กันหน้ายาวเกิน — 10 สาย × 5 คน)
+/* 🗂️ รอบ 677: แยกอันดับเข็มเป็นกระดานย่อยทีละสาย (ผู้ใช้ 28 ก.ค. 2026: แต้มรวมอย่างเดียวดูไม่ออกว่าใครเก่งด้านไหน)
+   คืน [{label,desc,rows:[{uid,name,g,dataN,me,emoji,tierLabel}]}] เฉพาะสายที่มีคนได้แล้ว ≥1 คน
+   (ข้อมูลอ้างอิงจาก badge tier baked ในชื่อ presence/leaderboard.n เหมือน lbRankRows tab='badges' — ไม่มีตัวเลขนับดิบของ
+   คนอื่นเก็บไว้ แยกได้แค่ระดับ 1-5 ต่อสาย ผูกเรียงด้วยแต้มรวมเป็น tiebreak) */
+function lbBadgeSections(){
+  if(typeof badgeScore !== 'function' || typeof BADGE_CATS === 'undefined') return [];
+  const myId = onlineKey();
+  const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู')
+               + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
+  const meG = state.student ? state.student.grade : '';
+  const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
+  map[myId] = {id:myId, n:meName, g:meG};
+  const players = Object.values(map).map(r=>{
+    const sp = splitNameBadges(r.n);
+    return {uid:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId};
+  }).filter(p=>p.score > 0);
+  return BADGE_CATS.map(cat=>{
+    const rows = players.map(p=>({...p, lvl:bcatLevel(p.badges, cat)})).filter(p=>p.lvl > 0)
+      .sort((a,b)=> b.lvl - a.lvl || b.score - a.score || a.name.localeCompare(b.name, 'th'))
+      .slice(0, LB_BCAT_TOP);
+    if(!rows.length) return null;
+    return { label:cat.label, desc:cat.desc,
+      rows: rows.map(r=>({uid:r.uid, name:r.name, g:r.g, dataN:r.name + r.badges, me:r.me,
+        emoji:cat.emojis[r.lvl-1], tierLabel:(BADGE_META[cat.emojis[r.lvl-1]]||{}).n || ''})) };
+  }).filter(Boolean);
+}
+
 /* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
    ไม่แตะ Firebase จริง เห็นเฉพาะเครื่องที่ใส่ param · **ลบทั้งบล็อกนี้ + บรรทัด __LBDEMO ใน lbRankRows/openLeaderboardFull หลังผู้ใช้ capture** */
 function lbDemoRows(tab){
@@ -1484,7 +1512,42 @@ function openLeaderboardFull(){
   __lbfTab = LB_TABS.indexOf(lbTab) >= 0 ? lbTab : 'coins';
   const ov = document.createElement('div'); ov.className = 'lbf-overlay';
   const close = ()=> ov.remove();
+  const tabsHtml = ()=> `
+          <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
+          <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
+          <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
+          <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
+          <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>`;
+  const closeHeadHtml = (title)=> `<div class="lbf-head">
+        <button class="pl-close lbf-close lbf-close-l">✕</button>
+        <span class="lbf-title">🏆 ${title}</span>
+        <span class="lbf-tabs">${tabsHtml()}</span>
+      </div>`;
+  const bindLbfChrome = ()=>{
+    ov.querySelectorAll('.lbf-close').forEach(b=> b.addEventListener('click', close));
+    ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
+  };
   const render = ()=>{
+    /* 🗂️ รอบ 677: แท็บเข็ม — แยกกระดานย่อยทีละสาย (ผู้ใช้ 28 ก.ค. 2026 ขอแยกดูทีละความสามารถ
+       แทนแต้มรวมอย่างเดียว) เนื้อหาต่างจากแท็บอื่นทั้งหมด (ไม่มีโพเดียม/กริดรวม) จบแล้ว return ทันที */
+    if(__lbfTab === 'badges'){
+      const secs = (typeof lbBadgeSections === 'function') ? lbBadgeSections() : [];
+      const body = secs.length ? `<div class="lbf-bcat-wrap">${secs.map(s=>`
+        <div class="lbf-bcat">
+          <div class="lbf-bcat-head"><b>${escapeHTML(s.label)}</b><small>${escapeHTML(s.desc)}</small></div>
+          <div class="lbf-bcat-rows">${s.rows.map((r,i)=>`
+            <div class="lbf-bcat-row${r.me ? ' me' : ''}">
+              <span class="bcr-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}</span>
+              <span class="bcr-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
+              <span class="bcr-tier">${(typeof badgeIcHTML==='function')?badgeIcHTML(r.emoji,'bcr-ic'):r.emoji} ${escapeHTML(r.tierLabel)}</span>
+            </div>`).join('')}</div>
+        </div>`).join('')}</div>`
+        : `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
+      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}${body}</div>`;
+      bindLbfChrome();
+      return;
+    }
+
     const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'tp' ? LB_TP_TOP : 100;   // 🔎 รอบ 590 / ⌨️ รอบ 649: Top 10 all time
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
@@ -1516,28 +1579,17 @@ function openLeaderboardFull(){
         <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
-    const title = __lbfTab === 'badges' ? '🏅 อันดับเข็ม' : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
+    const title = __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
                 : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ' : '🪙 อันดับเหรียญ';
     const allTime = (__lbfTab === 'ws' || __lbfTab === 'tp') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
-      <div class="lbf-head">
-        <button class="pl-close lbf-close lbf-close-l">✕</button>
-        <span class="lbf-title">🏆 ${title} · Top ${cap}${allTime}</span>
-        <span class="lbf-tabs">
-          <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
-          <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
-          <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
-          <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
-          <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
-        </span>
-      </div>
+      ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
       ${lbfAwardBarHtml(__lbfTab)}
       ${podHtml}
       ${rest.length ? `<div class="lbf-body"><div class="lbf-grid" style="grid-template-rows:repeat(${rpc},1fr);height:${Math.min(46, rpc*2.35).toFixed(1)}vh">${cells}</div></div>`
                     : (top.length ? '' : '<div class="lb-empty">ยังไม่มีใครขึ้นกระดาน — เล่นเก็บแต้มเป็นคนแรกเลย! 🥇</div>')}
     </div>`;
-    ov.querySelectorAll('.lbf-close').forEach(b=> b.addEventListener('click', close));
-    ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
+    bindLbfChrome();
     seatPodChars(ov);   // เท้าติดแท่น + ลดช่องเหนือหัว (ชดเชยขอบใสในรูป blk)
   };
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
@@ -1711,7 +1763,7 @@ function showPlayerCard(uid, name, grade){
   const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
   const arr = (typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : [];
   const badgeRow = arr.length
-    ? `<div class="pl-badges">${arr.map(e=>`<span class="pl-badge-chip"><b>${e}</b> ${escapeHTML((BADGE_META[e]||{}).n||'')}</span>`).join('')}</div>`
+    ? `<div class="pl-badges">${arr.map(e=>`<span class="pl-badge-chip">${(typeof badgeIcHTML==='function')?badgeIcHTML(e,'pl-badge-ic'):`<b>${e}</b>`} ${escapeHTML((BADGE_META[e]||{}).n||'')}</span>`).join('')}</div>`
     : '';
   // 📰 รอบ 155: การ์ดยืดกว้างเกือบเต็มจอ + ปุ่ม Follow + กิจกรรมล่าสุด + กริดทรัพย์สินที่เปิดเผย
   const me = (typeof onlineKey === 'function') && uid === onlineKey();
