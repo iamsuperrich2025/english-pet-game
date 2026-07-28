@@ -2979,6 +2979,10 @@ function netJoin(){
   room=NetRoom.create({
     map:mode, sendMs:NET_SEND_MS,
     roomMax:(mode==='haunt'?2:0),     // 🏨 รอบ 684: โรงแรมผีสิงเข้าได้ทีละ 2 คน (ผู้ใช้สั่งข้อ 7) · คนที่ 3 ไปสนามถัดไปเอง
+    // 🏨 รอบ 686: ป้ายสถานะบน HUD เรียก "โรงแรมหลังที่ N" แทน "สนาม N" ให้ตรงธีม (โลกอื่นยังเป็น "สนาม" เหมือนเดิม)
+    roomNoun:(mode==='haunt'?'โรงแรม':undefined),
+    roomIcon:(mode==='haunt'?'🏨':undefined),
+    roomFmt:(mode==='haunt'?function(i){ return 'หลังที่ '+i; }:undefined),
     hotTs:true,                       // 🔴 โลกขับรถวัด "อัตราชะลอ" จาก ts ต่อแพ็กเก็ต = ไฟเบรกเพื่อน (ดู onPeerData)
     legacyOptional:['tl','hp','cw'],  // โหมดเดิม: rules /world อาจยังไม่รับ 3 ตัวนี้ → NetRoom ตัดทิ้งแล้วส่งซ้ำให้เอง
     push(){ lastSent=null; sendPos(true); },
@@ -3631,6 +3635,9 @@ function renderBoard(){
   const note=room ? room.statusText(innerHeight<430) : '';
   hudBoardEl.innerHTML=`<div class="adv-b-title">🏆 ประกอบคำรอบนี้</div>`+html
     +(note?`<div class="adv-b-room" style="margin-top:5px;padding-top:5px;border-top:1px solid rgba(255,255,255,.14);font-size:.82em;line-height:1.35;opacity:.93">${note}</div>`:'');
+  /* 🏨 รอบ 686: ป้ายเวลาหนีผี (#adv-survive) เดิม top:78px ตายตัว — พอกระดานมีป้ายสถานะโรงแรม (2 คน) ต่อท้าย
+     กระดานสูงเกิน 78px ป้ายเวลาซ้อนทับกัน (วัดจริงที่ 812×375) → ให้ตามความสูงจริงของกระดานแทนทุกครั้งที่วาดใหม่ */
+  if(mode==='haunt' && hudSurvEl) hudSurvEl.style.top=(hudBoardEl.getBoundingClientRect().bottom+8)+'px';
   if(!hudBoardEl._nrWired){    // ดักคลิกปุ่ม "ไปหาเพื่อน" ครั้งเดียวพอ (innerHTML วาดใหม่ไม่ล้าง listener ที่ตัวแม่)
     hudBoardEl._nrWired=true;
     hudBoardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });

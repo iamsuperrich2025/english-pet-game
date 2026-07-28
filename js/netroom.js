@@ -53,6 +53,7 @@ const CFG = {
   LEGACY_WATCH:  8,       // สะพานเครื่องเก่า: ฟังมากสุดกี่คน (คุมทราฟฟิกให้มีเพดาน)
   MEET_TRIES:    3,       // 🤝 นัดเจอเพื่อน: ตามหาเพื่อนที่ชวนกันซ้ำได้กี่ครั้งหลังเข้าสนามแล้ว
   MEET_GAP_MS:   7000,    // เว้นกี่ ms ต่อครั้ง (เพื่อนอาจกดเข้าโลกช้ากว่าเราไม่กี่วินาที)
+  RESERVE_TTL_MS: 120000, // 🪑 กันที่ไว้ให้เพื่อนที่ชวนกัน (ยังไม่มาถึง) ได้นานสุดกี่ ms ก่อนปล่อยที่คืน
 };
 
 /* จำนวนสนามที่เปิดใช้จริง = คุมโดย WORLD_CAP (80/14 → 6 สนาม)
@@ -185,6 +186,11 @@ function create(opt){
   const hotTs   = !!opt.hotTs;
   /* ฟิลด์ที่ rules เก่าของ /world อาจยังไม่รับ (โหมด legacy เท่านั้น) — โดนปฏิเสธ = ตัดทิ้งแล้วส่งซ้ำ */
   const lgOpt   = opt.legacyOptional || [];
+  /* 🏨 รอบ 686: ป้ายสถานะเรียก "หน่วยสนาม" ของแต่ละโลกไม่เหมือนกัน — โรงแรมผีสิงไม่ใช่สนาม
+     ไม่ใส่ = ใช้คำเดิม "สนาม" ทุกที่เหมือนเดิม (โลกอื่นไม่กระทบ) */
+  const ROOM_NOUN = opt.roomNoun || 'สนาม';
+  const ROOM_ICON = opt.roomIcon || '🏟️';
+  const ROOM_FMT  = opt.roomFmt  || function(i){ return ROOM_NOUN+' '+i; };
   /* 🚦 รอบ 684: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมผีสิงส่ง 2 — ผู้ใช้สั่ง "เข้าได้ทีละ 2 คน")
      ไม่ใส่ = ใช้ค่ากลาง ROOM_MAX เหมือนเดิมทุกโลก · เกินเพดาน = ระบบพาไปสนามถัดไปให้เอง */
   const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
@@ -195,6 +201,7 @@ function create(opt){
   let lastHot='', lastCold='', lastHotAt=0, beatAt=0, seatWritten=false, myJoinAt=0;
   let retryAt=0, sweepAt=0, verifyAt=0, busy=false, everOk=false;
   let meetLeft=0, meetAt=0, meetName='';        // 🤝 ตามหาเพื่อนที่นัดกันไว้
+  let reserveSince=0;                            // 🪑 เริ่มกันที่ไว้ให้เพื่อนตั้งแต่เมื่อไร (0=ยังไม่เริ่ม)
 
   function esc(v){ return (typeof escapeHTML==='function') ? escapeHTML(String(v)) : String(v).replace(/[<>&]/g,''); }
   function rk(i){ return 'r'+i; }
@@ -202,16 +209,22 @@ function create(opt){
   function infoRefOf(i){ return dbOf().ref('winfo/'+map+'/'+rk(i)); }
   function legacyRefOf(){ return dbOf().ref('world/'+map); }
 
-  /* ── นับหัวแบบเบา: อ่านเฉพาะ node เย็นของ "สนามเดียว" (~1KB) ไม่ใช่ทั้งโลก ── */
-  function countRoom(i){
+  /* ── นับหัวแบบเบา: อ่านเฉพาะ node เย็นของ "สนามเดียว" (~1KB) ไม่ใช่ทั้งโลก ──
+     forPick=true (เฉพาะ pickRoom ตอนสุ่มหาสนามให้คนแปลกหน้า): คนที่กำลัง "กันที่ไว้ให้เพื่อน"
+     (ดู shouldReserve — ธง h==='RSV') นับเป็น 2 ที่นั่ง กันคนแปลกหน้าเข้ามายึดที่สุดท้ายก่อนเพื่อนจะมาถึง
+     goToRoom/findMet/findFriends ไม่ใช้ forPick — เพราะคนที่ถูกกันที่ไว้ให้ (หรือกด "ไปหา" เพื่อนตรง ๆ)
+     ต้องเข้าได้เสมอ ไม่ให้ธงกันที่ของตัวเองย้อนมาบล็อกตัวเอง */
+  function countRoom(i, forPick){
     return infoRefOf(i).once('value').then(function(snap){
       const v=snap.val()||{}, now=Date.now();
       let n=0;
       for(const uid in v){
         if(uid===myUid) continue;
-        const t=v[uid] && v[uid].t;
+        const rec=v[uid]||{};
+        const t=rec.t;
         if(typeof t==='number' && now-t>CFG.ROOM_GHOST_MS) continue;   // ผีค้างไม่นับ
         n++;
+        if(forPick && rec.h==='RSV') n++;
       }
       return n;
     });
@@ -226,17 +239,30 @@ function create(opt){
     function step(){
       if(k>=N) return Promise.resolve(null);            // ทุกสนามเต็ม
       const at=(start+k)%N; k++;                        // ไล่จาก start วนไปจนครบทุกสนาม
-      return countRoom(at).then(function(n){
+      return countRoom(at, true).then(function(n){       // forPick=true: เคารพที่กันไว้ให้เพื่อน (ห้ามแซง)
         return (n<ROOM_MAX) ? {idx:at,count:n} : step();
       });
     }
     return step();
   }
 
+  /* ── 🪑 รอบ 686: กันที่ไว้ให้ "เพื่อนที่ชวนกันไว้" (metUids) ที่ยังไม่มาถึง ──────────
+     ผู้ใช้สั่ง 29 ก.ค. 2026: เดิมตามเพื่อนได้ แต่ถ้าสนามเขาเต็มพอดี (คนแปลกหน้าแซงเข้าที่นั่งสุดท้าย
+     ก่อน) จะหลุดไปคนละสนาม → ให้กันที่ไว้จนกว่าเพื่อนจะมาถึงหรือรอนานเกินไป (RESERVE_TTL_MS)
+     ใช้ฟิลด์ hp/h ที่โลกนี้ไม่เคยใช้ (มีแต่โลกเฮลิฯ ใช้จริง) — ไม่ต้องแก้ Firebase rules เลย */
+  function shouldReserve(){
+    if(!joined || legacy) return false;
+    const want=metUids(map), keys=Object.keys(want);
+    if(!keys.length){ reserveSince=0; return false; }
+    if(keys.some(function(u){ return !!peers[u]; })){ reserveSince=0; return false; }   // เพื่อนมาถึงแล้ว
+    if(!reserveSince) reserveSince=Date.now();
+    return Date.now()-reserveSince<=CFG.RESERVE_TTL_MS;                                 // รอนานเกินไป → ปล่อยที่คืน
+  }
+
   /* ── เข้าสนาม i จริง (ต่อ listener + เริ่มส่ง) ───────────────── */
   function attach(i, n){
     idx=i; count=n; full=false; joined=true; netOk=true;
-    myJoinAt=Date.now(); seatWritten=false; lastHot=''; lastCold=''; lastHotAt=0; beatAt=0;
+    myJoinAt=Date.now(); seatWritten=false; lastHot=''; lastCold=''; lastHotAt=0; beatAt=0; reserveSince=0;
     hRef=hotRefOf(i); iRef=infoRefOf(i);
     myHot=hRef.child(myUid); myInfo=iRef.child(myUid);
     try{ myHot.onDisconnect().remove(); myInfo.onDisconnect().remove(); }catch(e){}
@@ -450,6 +476,8 @@ function create(opt){
       return;
     }
     const s=splitPayload(payload);
+    /* 🪑 รอบ 686: แปะธงกันที่ไว้ให้เพื่อน (ถ้าโลกยังไม่ได้ใช้ฟิลด์ hp เอง เช่น heli — ไม่ไปทับของจริง) */
+    if(s.cold.h===undefined && shouldReserve()) s.cold.h='RSV';
     /* 🧊 เย็น: เขียนเฉพาะตอนเนื้อหาเปลี่ยน + เต้นหัวใจทุก INFO_BEAT_MS
        (คนยืนนิ่งอ่านคำศัพท์ = ไม่ส่งตำแหน่งเลย แต่ยังไม่ถูกนับเป็นผี เพราะ t เดินอยู่) */
     const csig=JSON.stringify(s.cold);
@@ -590,12 +618,12 @@ function create(opt){
      drawn = จำนวนเพื่อนที่ "วาดตัวจริง" อยู่ (โลกเป็นคนรู้) · short = จอเตี้ยให้สั้นลง */
   function statusText(short, drawn){
     const n=Object.keys(peers).length+1;
-    if(full) return short ? wrap('🧯 สนามเต็ม · เล่นสนามฝึกก่อน'+goBtn(short), short)
-      : ('🧯 ทุกสนามเต็มตอนนี้ ('+roomsAllowed(ROOM_MAX)+' สนาม)<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
-    if(!joined) return short ? '📡 กำลังหาสนาม…' : '📡 กำลังหาสนามที่ว่างให้…';
+    if(full) return short ? wrap('🧯 '+ROOM_NOUN+'เต็ม · เล่นสนามฝึกก่อน'+goBtn(short), short)
+      : ('🧯 ทุก'+ROOM_NOUN+'เต็มตอนนี้ ('+roomsAllowed(ROOM_MAX)+' '+ROOM_NOUN+')<br>เล่นสนามฝึกส่วนตัวไปก่อน · มีที่ว่างเมื่อไหร่พาเข้าให้เอง'+goBtn(short));
+    if(!joined) return short ? '📡 กำลังหา'+ROOM_NOUN+'…' : '📡 กำลังหา'+ROOM_NOUN+'ที่ว่างให้…';
     /* โหมดเดิมมีสนามเดียว ห้ามใช้คำว่า "ในสนาม N คน" — เด็กอ่านสับสนว่าเป็น "สนามที่ N" */
     if(legacy)  return short ? ('👥 '+n+' คน') : ('👥 มีผู้เล่น '+n+' คน');
-    let s='🏟️ สนาม '+(idx+1)+' · '+n+' คน';
+    let s=ROOM_ICON+' '+ROOM_FMT(idx+1)+' · '+n+' คน';
     /* จอเตี้ยมาก (<370) ตัดวรรค "เห็นใกล้ ๆ N" ทิ้ง — กล่องกว้างแค่ ~120px ข้อความยาวจะตัดบรรทัดเพิ่ม
        แล้วชายกล่องเลื่อนลงไปทับจอย (กระดานยึดขอบบน โตลงล่าง) */
     if(typeof drawn==='number' && drawn < n-1 && innerHeight>=370)
@@ -722,7 +750,7 @@ function create(opt){
     detachRoom(); bridgeOff(); dropAll();
     idx=-1; count=0; full=false; legacy=false; joined=false; netOk=false;
     retryAt=0; sweepAt=0; verifyAt=0; busy=false; everOk=false; seatWritten=false;
-    meetLeft=0; meetAt=0; meetName='';
+    meetLeft=0; meetAt=0; meetName=''; reserveSince=0;
   }
 
   return {
@@ -739,6 +767,7 @@ function create(opt){
     /* ── test hooks (ใช้เฉพาะตอนเทสต์ preview) ── */
     _age(uid,ms){ if(peers[uid]) peers[uid].seen=performance.now()-ms; },
     _verify:verifySeat, _count:countRoom, _pick:pickRoom, _findMet:findMet, _met:metUids,
+    _reserve:shouldReserve,   // 🪑 รอบ 686: hook เทสต์ระบบกันที่ไว้ให้เพื่อน
     get _meetLeft(){ return meetLeft; }, _tickMeet:tickMeet,
   };
 }
