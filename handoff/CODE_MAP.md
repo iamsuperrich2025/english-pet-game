@@ -163,6 +163,9 @@ authPushSave:357 · authLogout:368
 
 ## js/award.js (271 บรรทัด · 0 รายการ)
 
+## js/bandadv.js (68 บรรทัด · 4 รายการ)
+BAND_ADV_REWARD:9 · bandAdvLoad:13 · bandAdvPlay:37 · bandAdvCardsHTML:46
+
 ## js/dictband.js (362 บรรทัด · 25 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandLoad:18 · bandShortTH:36 · bandCat:44
 bandSets:66 · bandSetId:75 · bandCheckComplete:78 · bandSetCat:92 · BAND_RETAKE_MAX:104 · bandTriedSets:105
@@ -170,7 +173,7 @@ bandRetakeCat:116 · bandShowRetakeSummary:150 · bandSetsPassed:178 · openBand
 bandLockToast:263 · bandExamLobby:269 · updateBandExamBtn:278 · bandLobbyTick:295 · bandPlay:306 · bandPlayLobby:319
 bandCardsHTML:331
 
-## js/game.js (1,016 บรรทัด · 70 รายการ)
+## js/game.js (1,017 บรรทัด · 70 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:135 · sprinkleConfetti:182 · VOCAB_PER_LEVEL:201
 VOCAB_RANK_NAMES:202 · vocabRankName:203 · showProgressReport:205 · THUNDER_MS:384 · THUNDER_TIERS:388 · THUNDER_TIER_UI:389
@@ -182,7 +185,7 @@ BFF_TIER_UI:454 · BFF_COIN:455 · bffEmoji:456 · badgeSuffix:461 · BADGE_META
 splitNameBadges:494 · badgeEmojis:500 · badgeScore:505 · BADGE_CATS:512 · bcatLevel:524 · checkCrown:531
 currentBadgeScore:547 · rolloverBadgeWeek:551 · addDiligent:564 · celebrateBadge:580 · addThunder:594 · startGame:608
 newRound:648 · updateTimerBar:687 · updateComboPill:693 · pickCard:697 · checkMatch:709 · renderCats:823
-startQuiz:858 · renderQuizQuestion:874 · quizNext:938 · finishQuiz:951
+startQuiz:859 · renderQuizQuestion:875 · quizNext:939 · finishQuiz:952
 
 ## js/gradelock.js (158 บรรทัด · 14 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeHistList:33

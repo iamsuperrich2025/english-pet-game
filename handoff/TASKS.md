@@ -21,6 +21,11 @@
 ✅ **รอบ 474 (เวลาเดินเอง + ไฟถนน) ขึ้นเว็บแล้วพร้อมรอบ 473 ใน deploy `.462`**
 
 ### 📌 สรุปสถานะล่าสุด (27-28 ก.ค.) — อ่านก่อน
+- **รอบ 681 (28 ก.ค. · เชื่อมเสียงคำ+ข้อมูล `js/data/band/` เข้าเกม ตามที่ค้างไว้ตั้งแต่ 17 ก.ค.):** 🎓 **คลังศัพท์ขั้นสูง (วิชาการ/ธุรกิจ) เล่นได้จริงในหน้าเลือกหมวดแล้ว พร้อมเสียงอ่านครบ**
+  - ใหม่: `tools/gen_band_adv_manifest.py` (สแกนไฟล์แยกช่วงคำใน `js/data/band/` → เจน `js/data/band/manifest.js` = `BAND_ADV_MANIFEST`) · `js/bandadv.js` (`bandAdvLoad` fetch+JSON ไฟล์ย่อยขี้เกียจ, **normalize คำอังกฤษเป็นตัวเล็กเสมอ** — business ต้นฉบับขึ้นต้นตัวใหญ่ทุกคำ ไม่ทำ = เทียบคำตอบพลาด, `bandAdvPlay`/`bandAdvCardsHTML` ต่อเข้า `startGame`/`startQuiz` เดิมตรงๆ ไม่มีชุดสอบย่อยแบบ dict_band เพราะ entry มีแค่ [en,th])
+  - แก้: `index.html` เพิ่ม script 2 บรรทัด (manifest+bandadv หลัง dictband.js) · `game.js` `renderCats()` เพิ่ม `bandAdvCardsHTML()` ต่อท้าย + คลิก handler เช็ก `dataset.badv` ก่อน `dataset.band`/`dataset.cat`
+  - **ยืนยัน (preview จริง 1000×640):** การ์ด 🎓ศัพท์วิชาการ(1,230→1,104 หลัง dedupe)/💼ศัพท์ธุรกิจ(399) โผล่ท้ายการ์ด band 1-5 · เล่นจับคู่โหลดคำถูก (`archaic` → `sound/words/archaic.mp3` 200 OK) · สอบ business คำตัวพิมพ์ใหญ่ (`Accountability`→`accountability`) normalize ถูก + เสียงคำ `counsel` โหลด 200 OK · ตอบครบ 10 ข้อ → ผ่าน + ได้ 500 🪙 + ขึ้น `state.quizPassed` จริง · console สะอาด ไม่มี error · ล้างเซฟแล้ว
+  - ค้าง: ไม่มี (feature ใช้งานได้ครบ) · เพิ่มหมวดใหม่ทีหลัง (นอกเหนือ academic/business) ต้องเพิ่ม label/emoji ใน `LABELS` ของ `tools/gen_band_adv_manifest.py` ก่อนรันสคริปต์ซ้ำ
 - **รอบ 680 (28 ก.ค. · ผู้ใช้สั่ง 2 อย่าง):** 🕗 **ฉากเวทีสลับกลางวัน-กลางคืนตามนาฬิกาเครื่องผู้เล่นจริง** + ✨ **หิ่งห้อย/ดาวตกตอนกลางคืน**
   - `isNightNow(now)` ตัวใหม่ใน `js/state.js` (วางข้าง `nightKeyOf`) = `h >= SLEEP_FROM_HOUR(20) || h < WAKE_HOUR(6)` — **ยืมช่วงเวลานอนของน้องมาใช้** ฉากจะได้ตรงกับกติกานอนที่เด็กเห็นอยู่แล้ว ไม่ต้องตั้งค่าคนละชุด
   - `petShowBgHTML()` (`js/ui.js`): `night = p.sleeping || isNightNow()` → น้องหลับ **หรือ** ถึงเวลากลางคืน = ฉากมืด (ของเดิมรอบ 678 มีแค่ตอนหลับ) · **ไม่ต้องเพิ่ม timer** — `js/main.js:256` มี tick เรียก `renderDashboard()` ทุก 1 นาทีอยู่แล้ว ฉากจึงสลับเองภายใน ≤1 นาที
@@ -69,9 +74,6 @@
     · **ก่อนแก้** TTS พูด `["C.","A.","T."]` ทับเสียงคำ + `letter:c/a/t` โดนหมายหัว 'miss' ถาวรทั้ง 3 ตัว
     · **หลังแก้** ตัวอักษร 3 ตัว = REJECTED:AbortError เงียบ ๆ · `words/cat.mp3` = **PLAYED** · TTS **ไม่พูดอะไรเลย** · ไม่มีตัวไหนโดนหมายหัว · กด `c` ซ้ำยัง PLAYED จากไฟล์จริง
   - **regression:** เส้นทางคำศัพท์ (รอบ 667/669) ยังถูก — tiger/horse โดนตัด=ไม่ poison ไม่มี TTS · คำมั่ว `zzzznotarealword`=NotSupportedError→'miss'+TTS ตามเดิม · unit `speakCutOff`: Abort/NotAllowed=true · NotSupported/Event(onerror)/undefined=false · console สะอาด · ล้างเซฟ+ปิดเสียงแล้ว
-- **รอบ 671 (28 ก.ค. · ผู้ใช้ส่งภาพหน้าจอมือถือ):** ⌨️ **กันแป้นพิมพ์มือถือเด้งพร้อมกล่องแชท + ลอยบังจอ** — เดิม `openChat()` (`js/ui.js`) สั่ง `input.focus()` หลังเปิด 60ms ทำให้คีย์บอร์ดเด้งทันทีบังกล่อง ทั้งที่ผู้ใช้ยังไม่ได้แตะช่องพิมพ์
-  - แก้ 2 จุด: (1) ลบ auto-focus ทิ้ง — คีย์บอร์ดขึ้นเฉพาะตอนผู้ใช้แตะช่อง "พิมพ์ข้อความ..." เอง (2) เพิ่ม `chatFitKeyboard()` ใช้ `visualViewport` เฝ้าตอนคีย์บอร์ดเปิด (`window.innerHeight - vv.height > 120`) → ใส่คลาส `.kb-open` ให้ `.chat-overlay` (`css/lobby.css`) ดันกล่องลงชิดขอบล่างพื้นที่จอจริง + จำกัด `max-height` กล่องไม่ให้ทะลุคีย์บอร์ด แทนลอยกลางจอเดิม
-  - **ยืนยัน (preview จริง):** เปิดแชทแล้ว `document.activeElement` ยังเป็น body ไม่ใช่ช่องพิมพ์ (ไม่ auto-focus) · จำลอง `visualViewport` หด (640→300) → overlay ได้คลาส `kb-open` + `height`/`max-height` ปรับตามพื้นที่จริงถูกต้อง · ปิดแชทแล้วไม่มี listener/error ค้าง console สะอาด
 ### รอบ 640 — รายละเอียดระบบหลายสนาม (อ่านก่อนแตะ multiplayer โลก 3D)
 **🤝 นัดกันแล้วได้สนามเดียวกันเอง (รอบ 641 — ต่อยอดข้อ 3)**
 เด็กไม่ต้องกด "👥 ไปหาเพื่อน" เองแล้วเมื่อ **ชวนกันผ่านคำเชิญเล่นโลก 3D (`/tinv`) ไว้ก่อน** — ใช้ path เดิม ไม่ต้องแก้ rules
