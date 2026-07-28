@@ -3371,7 +3371,27 @@ html.no-anim .pet-show .ps-emote{display:none;}
 /* 😴 รอบ 673: ท่า "หลับ" เป็นภาพนอนราบ ป้าย "น้องหลับอยู่..." ที่ขอบล่างเลยทับตัวน้อง
    ⛔ รอบ 670 เคยแก้ผิดทาง = ย่อ+ดันตัวน้องขึ้น (น้องลอย เล็กลง ผู้ใช้ไม่เอา) — ตัวน้องต้องอยู่ที่เดิม ขนาดเดิมเสมอ
    ✅ ย้าย "ป้าย" ขึ้นไปลอยบนท้องฟ้าแทน: ใต้ดวงอาทิตย์ เหนือยอดภูเขา (ยอดเขาสูงสุด = .ps-hill h1 อยู่ที่ bottom 49%) */
-.pet-show.ps-sleep .ps-hint{bottom:56%;}
+/* 🌙 รอบ 675: โทนกลางคืนให้เข้ากับบรรยากาศน้องนอน — ฟ้าเข้ม + ดาววิบวับ (ป้ายอื่นยังโทนสว่างเหมือนเดิม)
+   ดาวเล็กในพื้นป้าย = radial-gradient ในชั้น background (ไม่เพิ่ม element ใหม่) · ⭐ สองข้าง = ::before/::after
+   เว้นที่ให้ ⭐ ด้วย padding-inline ไม่ให้ทับตัวหนังสือ */
+.pet-show.ps-sleep .ps-hint{bottom:54%;
+  background:
+    radial-gradient(1.6px 1.6px at 15% 30%, rgba(255,255,255,.95), transparent 62%),
+    radial-gradient(1.3px 1.3px at 33% 72%, rgba(255,255,255,.7),  transparent 62%),
+    radial-gradient(1.5px 1.5px at 63% 26%, rgba(255,255,255,.88), transparent 62%),
+    radial-gradient(1.2px 1.2px at 82% 66%, rgba(255,255,255,.66), transparent 62%),
+    linear-gradient(165deg, rgba(40,57,116,.93), rgba(15,24,58,.96));
+  border-color:rgba(150,185,255,.5);color:#e6efff;padding-inline:18px;
+  box-shadow:0 3px 12px rgba(6,14,40,.45), inset 0 0 0 1px rgba(255,255,255,.07);}
+/* ⚠️ padding-inline เกิน 20px = ข้อความตัดบรรทัดเพิ่มบนจอแคบ (620×360) แล้วป้ายสูงจนชนป้ายชื่อน้องมุมบนขวา */
+.pet-show.ps-sleep .ps-hint::before,
+.pet-show.ps-sleep .ps-hint::after{content:'⭐';position:absolute;top:50%;translate:0 -50%;
+  font-size:.72em;animation:psStarTwinkle 2.8s ease-in-out infinite;}
+.pet-show.ps-sleep .ps-hint::before{left:5px;}
+.pet-show.ps-sleep .ps-hint::after{right:5px;animation-delay:1.4s;}
+@keyframes psStarTwinkle{0%,100%{opacity:.4;scale:.85}50%{opacity:1;scale:1.1}}
+html.no-anim .pet-show.ps-sleep .ps-hint::before,
+html.no-anim .pet-show.ps-sleep .ps-hint::after{animation:none;opacity:.9;}
 /* ปุ่มเล่นเอง — โผล่เฉพาะตอนเบราว์เซอร์บล็อก autoplay (คลิปพร้อมแล้วแต่ไม่ยอมเดิน) */
 .pet-show .ps-play{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
   pointer-events:auto;cursor:pointer;font-family:inherit;font-size:clamp(11px,2.3vh,13.5px);
