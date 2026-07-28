@@ -427,11 +427,11 @@ start:1906 · exitWorld:1967
 
 ## js/music.js (157 บรรทัด · 0 รายการ)
 
-## js/netroom.js (774 บรรทัด · 19 รายการ)
-CFG:41 · roomsAllowed:59 · HOT_KEYS:66 · COLD_KEYS:67 · HOT_BACK:68 · splitPayload:72
-mergeBack:83 · metUids:95 · AIM_TTL_MS:114 · aimAt:116 · aimGet:120 · aimClear:124
-MAPS3D:130 · whereFriends:131 · dbOf:155 · envReady:156 · isDenied:159 · create:171
-drawBudget:747
+## js/netroom.js (778 บรรทัด · 19 รายการ)
+CFG:41 · roomsAllowed:62 · HOT_KEYS:70 · COLD_KEYS:71 · HOT_BACK:72 · splitPayload:76
+mergeBack:87 · metUids:99 · AIM_TTL_MS:118 · aimAt:120 · aimGet:124 · aimClear:128
+MAPS3D:134 · whereFriends:135 · dbOf:159 · envReady:160 · isDenied:163 · create:175
+drawBudget:751
 
 ## js/online.js (1,684 บรรทัด · 89 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
