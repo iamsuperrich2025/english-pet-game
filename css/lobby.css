@@ -3145,6 +3145,9 @@ html.no-anim .rank-tab.rk-up{animation:none;}
 /* กรอบเวทีเดิมเป็นห้องนีออนมืด (ตะแกรง synthwave + เส้นฟ้า) → ปิดทั้งคู่ในโหมดโชว์น้อง */
 .stage-hero.pet-show-mode{background:#cfe8ff;border-color:rgba(255,255,255,.5);
   box-shadow:0 14px 34px rgba(3,15,35,.45), inset 0 0 26px rgba(255,255,255,.18);}
+/* 🌙 รอบ 678: กรอบเวทีตามฉากกลางคืนด้วย (ขอบขาวสว่างค้างจะดูหลุด) — :has() ไม่รองรับก็แค่ได้ขอบเดิม ไม่พัง */
+.stage-hero.pet-show-mode:has(.ps-night){background:#0b1230;border-color:rgba(158,188,255,.34);
+  box-shadow:0 14px 34px rgba(2,8,24,.55), inset 0 0 26px rgba(120,160,255,.12);}
 .stage-hero.pet-show-mode::before,
 .stage-hero.pet-show-mode::after{display:none !important;}
 .pet-show-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:20px;pointer-events:none;
@@ -3207,6 +3210,45 @@ html.no-anim .pet-show-bg .ps-sun,
 html.no-anim .pet-show-bg .ps-cloud,
 html.no-anim .pet-show-bg .ps-fall span{animation:none;}
 html.no-anim .pet-show-bg .ps-fall{display:none;}
+
+/* ============================================================
+   🌙 รอบ 678: น้องหลับ = ทั้งเวทีเป็น "กลางคืน" (ผู้ใช้สั่ง)
+   ------------------------------------------------------------
+   คลาส .ps-night มาจาก petShowBgHTML() (js/ui.js) เมื่อ p.sleeping
+   ทำงานด้วยการ "ทับค่าตัวแปรสี" ชุดเดิมของแต่ละสัตว์ → ไม่ต้องแตะโครงฉากเลย
+   ⚠️ ต้องอยู่ "หลัง" บล็อกสีของ .ps-dog/.ps-cat/.ps-dragon เสมอ ไม่งั้นโดนทับกลับ
+   ============================================================ */
+.pet-show-bg.ps-night{
+  --sky1:#080f2e;--sky2:#17214f;--sky3:#2b3b6d;--hill1:#243257;--hill2:#151d3f;
+  --gr1:#1e2a54;--gr2:#0d1330;--cloud:#46548c;--sun:rgba(233,241,255,.95);}
+/* ☀️→🌙 ดวงอาทิตย์กลายเป็นพระจันทร์: ตัดแฉกรัศมีที่หมุนทิ้ง เหลือดวงกลมเรืองแสงนุ่ม ๆ */
+.pet-show-bg.ps-night .ps-sun{
+  background:radial-gradient(circle at 50% 42%, var(--sun) 0%, var(--sun) 8%,
+    rgba(206,224,255,.34) 14%, rgba(140,175,255,.13) 25%, transparent 38%);
+  animation:none;}
+/* ⭐ ดาวเต็มฟ้า — จุดเล็กวาดด้วย radial-gradient ชั้นเดียว (ไม่เพิ่ม element)
+   จำกัดแค่ครึ่งบน (height 62%) ให้ไม่มีดาวไปโผล่บนภูเขา/พื้นหญ้า */
+.pet-show-bg.ps-night::before{content:'';position:absolute;left:0;right:0;top:0;height:62%;
+  pointer-events:none;
+  background:
+    radial-gradient(1.7px 1.7px at 11% 16%, #fff, transparent 62%),
+    radial-gradient(1.3px 1.3px at 23% 41%, rgba(255,255,255,.75), transparent 62%),
+    radial-gradient(1.5px 1.5px at 34% 12%, rgba(255,255,255,.9), transparent 62%),
+    radial-gradient(1.2px 1.2px at 45% 33%, rgba(255,255,255,.7), transparent 62%),
+    radial-gradient(1.6px 1.6px at 58% 20%, #fff, transparent 62%),
+    radial-gradient(1.2px 1.2px at 69% 45%, rgba(255,255,255,.72), transparent 62%),
+    radial-gradient(1.5px 1.5px at 79% 14%, rgba(255,255,255,.88), transparent 62%),
+    radial-gradient(1.3px 1.3px at 90% 36%, rgba(255,255,255,.78), transparent 62%),
+    radial-gradient(1.1px 1.1px at 16% 55%, rgba(255,255,255,.6), transparent 62%),
+    radial-gradient(1.1px 1.1px at 63% 58%, rgba(255,255,255,.58), transparent 62%);
+  animation:psNightStars 4.2s ease-in-out infinite;}
+@keyframes psNightStars{0%,100%{opacity:.6}50%{opacity:1}}
+/* กลีบดอกไม้/ประกายกลางวันไม่เข้ากับกลางคืน — ปิด แล้วให้ดาวทำหน้าที่แทน */
+.pet-show-bg.ps-night .ps-fall{display:none;}
+/* เงาขอบภาพเข้มขึ้นหน่อยให้ได้อารมณ์กลางคืน */
+.pet-show-bg.ps-night .ps-vig{
+  background:radial-gradient(ellipse 78% 74% at 50% 52%, transparent 46%, rgba(4,9,28,.46) 100%);}
+html.no-anim .pet-show-bg.ps-night::before{animation:none;opacity:.9;}
 
 /* ---------- ③ ตัวน้อง: คลิปสั้นวนลูป 9 วิ (หายใจ → กระโดด 2 ที → ดีใจ → หันกลับ) ---------- */
 .pet-show{position:absolute;inset:0;z-index:1;display:flex;align-items:flex-end;justify-content:center;
@@ -3368,13 +3410,22 @@ html.no-anim .pet-show .ps-emote{display:none;}
   border-radius:999px;padding:3px 12px;font-size:clamp(10px,2.1vh,12.5px);color:#28486f;line-height:1.45;
   box-shadow:0 3px 10px rgba(20,50,90,.22);pointer-events:none;}
 .stage-hero.ps-clip-mode .ps-hint{display:none;}
-/* 😴 รอบ 673: ท่า "หลับ" เป็นภาพนอนราบ ป้าย "น้องหลับอยู่..." ที่ขอบล่างเลยทับตัวน้อง
-   ⛔ รอบ 670 เคยแก้ผิดทาง = ย่อ+ดันตัวน้องขึ้น (น้องลอย เล็กลง ผู้ใช้ไม่เอา) — ตัวน้องต้องอยู่ที่เดิม ขนาดเดิมเสมอ
-   ✅ ย้าย "ป้าย" ขึ้นไปลอยบนท้องฟ้าแทน: ใต้ดวงอาทิตย์ เหนือยอดภูเขา (ยอดเขาสูงสุด = .ps-hill h1 อยู่ที่ bottom 49%) */
-/* 🌙 รอบ 675: โทนกลางคืนให้เข้ากับบรรยากาศน้องนอน — ฟ้าเข้ม + ดาววิบวับ (ป้ายอื่นยังโทนสว่างเหมือนเดิม)
-   ดาวเล็กในพื้นป้าย = radial-gradient ในชั้น background (ไม่เพิ่ม element ใหม่) · ⭐ สองข้าง = ::before/::after
-   เว้นที่ให้ ⭐ ด้วย padding-inline ไม่ให้ทับตัวหนังสือ */
-.pet-show.ps-sleep .ps-hint{bottom:54%;
+/* 😴 ป้าย "น้องหลับอยู่..." ท่าหลับ — ประวัติการแก้ (อ่านก่อนขยับ ไม่งั้นวนพลาดซ้ำ)
+   ⛔ รอบ 670 ผิดทาง = ย่อ+ดันตัวน้องขึ้นให้ป้ายมีที่ลง (น้องลอย เล็กลง ผู้ใช้ตีกลับ "เสียหาย!")
+      → **กฎ: ป้ายทับตัวละคร ให้ขยับ "ป้าย" เสมอ ห้ามย่อ/ขยับตัวละคร**
+   · รอบ 673-675 ย้ายป้ายไปลอยบนฟ้า (ใต้พระอาทิตย์ เหนือยอดเขา) + ทำโทนกลางคืน
+   ✅ รอบ 678 (ที่ใช้อยู่): ผู้ใช้ขอ **บรรทัดเดียว + ไปอยู่ใต้ตัวน้อง** → กลับลงขอบล่าง
+      แต่คราวนี้ป้ายเตี้ยพอ (บรรทัดเดียว) จึงลงไปอยู่บน "พื้นหญ้า" ใต้ตัวน้องได้จริงโดยไม่ทับ
+   🔑 กันตัดบรรทัด: white-space:nowrap + ตัวอักษรย่อตามความกว้างเวทีด้วย cqw
+      (vh อย่างเดียวไม่พอ — จอเตี้ยแต่แคบ เช่น 620×360 ตัวหนังสือใหญ่เกินความกว้างเวที)
+   🔑 ทำไม bottom ติดลบ: `.stage-hero` มี `padding-bottom:22px` คงที่ → `.hero-scene`/`.pet-show`
+      (กรอบที่ป้ายยึด) จบ "เหนือพื้นเวทีจริง 22px" และเท้าน้องอยู่ที่ก้นกรอบนั้นพอดี
+      → อยากให้ป้ายอยู่ "ใต้ตัวน้อง" บนพื้นหญ้า ต้องยื่นออกนอกกรอบลงมา (22px เป็น px คงที่ทุกจอ จึงใช้ค่าคงที่ได้)
+      ป้ายต้องเตี้ยด้วย (line-height 1.25 + padding-block 1px) ไม่งั้นสูงเกินแถบพื้นแล้วไปทับท้องน้อง
+   🌙 โทนกลางคืน: ดาวเล็กในพื้นป้าย = radial-gradient ในชั้น background · ⭐ สองข้าง = ::before/::after */
+.pet-show.ps-sleep .ps-hint{bottom:-20px;
+  white-space:nowrap;max-width:99%;font-size:clamp(8px,4.6cqw,11px);
+  line-height:1.25;padding-block:1px;
   background:
     radial-gradient(1.6px 1.6px at 15% 30%, rgba(255,255,255,.95), transparent 62%),
     radial-gradient(1.3px 1.3px at 33% 72%, rgba(255,255,255,.7),  transparent 62%),
@@ -3383,7 +3434,6 @@ html.no-anim .pet-show .ps-emote{display:none;}
     linear-gradient(165deg, rgba(40,57,116,.93), rgba(15,24,58,.96));
   border-color:rgba(150,185,255,.5);color:#e6efff;padding-inline:18px;
   box-shadow:0 3px 12px rgba(6,14,40,.45), inset 0 0 0 1px rgba(255,255,255,.07);}
-/* ⚠️ padding-inline เกิน 20px = ข้อความตัดบรรทัดเพิ่มบนจอแคบ (620×360) แล้วป้ายสูงจนชนป้ายชื่อน้องมุมบนขวา */
 .pet-show.ps-sleep .ps-hint::before,
 .pet-show.ps-sleep .ps-hint::after{content:'⭐';position:absolute;top:50%;translate:0 -50%;
   font-size:.72em;animation:psStarTwinkle 2.8s ease-in-out infinite;}

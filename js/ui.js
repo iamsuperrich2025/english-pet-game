@@ -109,7 +109,8 @@ function petShowBgHTML(p){
       + `animation-delay:${(rnd()*9).toFixed(2)}s;animation-duration:${(7.5+rnd()*6).toFixed(2)}s">`
       + `${cf.fall[i % cf.fall.length]}</span>`;
   }
-  return `<div class="pet-show-bg ps-${p.type}">
+  // 🌙 รอบ 678: น้องหลับ = ทั้งฉากเป็นกลางคืน (ฟ้ามืด/พระจันทร์/ดาว) — สีทั้งชุดสลับใน css/lobby.css
+  return `<div class="pet-show-bg ps-${p.type}${p.sleeping ? ' ps-night' : ''}">
     <div class="ps-sun"></div>
     <div class="ps-cloud c1"></div><div class="ps-cloud c2"></div><div class="ps-cloud c3"></div>
     <div class="ps-hill h1"></div><div class="ps-hill h2"></div>
