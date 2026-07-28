@@ -559,6 +559,16 @@ let wordAudioNow = null;
 function wordAudioFile(word){  // กติกาชื่อไฟล์ต้องตรงกับ word_key() ใน gen_word_audio.py
   return 'sound/words/' + word.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '.mp3';
 }
+/* 🚫 error 2 ตัวนี้ "ไม่ใช่ไฟล์เสียงหาย" — เจอแล้วต้องเงียบเฉย ๆ (รอบ 669/672)
+   · AbortError      = play() โดน pause() ตัดกลางคัน — เกิดประจำเวลาเสียงใหม่มาแทนเสียงเก่า
+                       (ขึ้นข้อสอบข้อใหม่ · เก็บตัวอักษรตัวถัดไป · เก็บตัวสุดท้ายครบคำแล้วเสียงอ่านทั้งคำมาตัด)
+   · NotAllowedError = เบราว์เซอร์บล็อกเสียงอัตโนมัติ (ยังไม่มี user gesture)
+   ถ้าเหมาว่าไฟล์หาย: คำ/ตัวอักษรนั้นโดนหมายหัว 'miss' ใช้เสียงหุ่นยนต์ถาวร (แม้กดฟังเองทีหลัง)
+   + TTS ดังพูดของเก่าทับของใหม่ที่เพิ่งขึ้น */
+function speakCutOff(err){
+  const n = err && err.name;
+  return n === 'AbortError' || n === 'NotAllowedError';
+}
 function speakWord(word){
   if(!state.sound || !word) return;
   try{
@@ -570,13 +580,7 @@ function speakWord(word){
     let failed = false;
     const fail = (err)=>{
       if(failed) return; failed = true;
-      /* 🚫 2 กรณีนี้ "ไม่ใช่ไฟล์หาย" — ห้ามจำเป็น 'miss' และห้ามให้ TTS พูดทับ (รอบ 669)
-         · AbortError     = play() โดน pause() ตัดกลางคัน — เกิดทุกครั้งที่ขึ้นข้อใหม่แล้วตัดเสียงคำเก่า
-                            (ถ้าไม่กันไว้: คำเก่าโดนหมายหัวเป็น 'miss' ใช้เสียงหุ่นยนต์ตลอดกาล
-                             + TTS ดังพูดคำเก่าทับคำใหม่ที่เพิ่งขึ้น)
-         · NotAllowedError = เบราว์เซอร์บล็อกเสียงอัตโนมัติ (ยังไม่มี user gesture) */
-      const n = err && err.name;
-      if(n === 'AbortError' || n === 'NotAllowedError') return;
+      if(speakCutOff(err)) return;                 // โดนตัด/ถูกบล็อก ไม่ใช่ไฟล์หาย (ดู speakCutOff)
       wordAudio[key] = 'miss'; speakWordTTS(word);
     };
     a.onerror = fail;
@@ -599,7 +603,11 @@ function speakLetter(ch){
     const a = wordAudio[key] || new Audio('sound/letters/' + ch + '.mp3');
     wordAudio[key] = a;
     let failed = false;
-    const fail = ()=>{ if(failed) return; failed = true; wordAudio[key] = 'miss'; speakWordTTS(ch.toUpperCase() + '.'); };
+    const fail = (err)=>{
+      if(failed) return; failed = true;
+      if(speakCutOff(err)) return;                 // เก็บตัวถัดไป/ครบคำแล้วเสียงคำมาตัด — ไม่ใช่ไฟล์หาย (รอบ 672)
+      wordAudio[key] = 'miss'; speakWordTTS(ch.toUpperCase() + '.');
+    };
     a.onerror = fail;
     wordAudioNow = a;
     a.currentTime = 0;
