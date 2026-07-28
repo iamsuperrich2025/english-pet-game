@@ -2279,3 +2279,10 @@
   - 🦣 ลบ `giantLevel/giantUnlocked/upgradeGiant/resetGiant` + ปุ่ม/กล่องขยายร่างในหน้าข้อมูลน้อง (`js/ui.js`+`css/lobby.css`) ทั้งหมด — ขนาดน้อง/ผู้เลี้ยงคงที่เท่าร่างปกติเดิม (ไม่กระทบภาพ/เลย์เอาต์คนที่ไม่เคยใช้ร่างยักษ์)
   - 💰 **คืนเงิน:** `loadState()` (`js/state.js`) migration ครั้งเดียว คำนวณจากราคาที่เคยจ่าย (2000/4000/8000/16000 ต่อระดับ 1-4) ของทุกตัว รวมเข้า `state.coins`+`lifetimeCoins` + ตั้ง `state.giantRefund` ให้ `showGiantRefund()` (`js/main.js`) เด้งกล่องแจ้งชัดเจนหลัง login (ต่อคิวหลัง `showQuizBackPay`) กันคืนซ้ำด้วย `state.giantRemoved`
   - **ยืนยัน (เบราว์เซอร์จริง):** ปุ่มสลับดูชุด/รูปร่าง เปลี่ยนภาพ+คำบรรยายถูกทั้ง 2 ทิศทาง · เซฟจำลอง giant:2/giantMax:3 → คืน 14,000 พอดี (2000+4000+8000) เข้า coins/lifetimeCoins ถูก + กล่อง "🦣 ยกเลิกโหมดขยายร่างแล้ว" ขึ้นครั้งเดียว โหลดซ้ำไม่คืนซ้ำ · ไม่มีปุ่ม/กล่องขยายร่างเหลือในหน้าข้อมูลน้อง · console สะอาด · ล้างเซฟแล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-07-28 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 660 (28 ก.ค. · ผู้ใช้เจอ):** 🖼️ **กันเมนู "Copy image/Download image/Share image" ของ Chrome เด้งตอนกดค้างรูปสัตว์** — ดูไม่มืออาชีพ + เด็กเซฟภาพออกนอกเกมได้
+  - `js/main.js`: เพิ่ม `document.addEventListener('contextmenu', ...)` ระดับ global กัน default เฉพาะ target ที่เป็น `<img>` ทั้งแอป (`-webkit-touch-callout:none` เดิมกันได้แค่ iOS Safari ไม่กัน Chrome)
+  - **ยืนยัน (เบราว์เซอร์จริง):** dispatch `contextmenu` บน `.pi-portrait` → `defaultPrevented=true` · dispatch บนปุ่มอื่น (`#btn-pi-dress`) → ยังเป็น default ปกติ (ไม่กระทบ UI อื่น) · console สะอาด · ล้างเซฟแล้ว
