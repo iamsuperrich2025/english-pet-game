@@ -126,6 +126,8 @@ const DEFAULT_STATE = {
   home:null,                          // 'basic' | 'medium' | 'castle'
   ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
   bills:{},                           // บิลรายเดือน: {maint:{month:'YYYY-MM', due, paid}, ...} (ค่าไฟ/น้ำ/เน็ต/ขยะ เสียบเพิ่มได้ · trash มี field fine สะสมค่าปรับ)
+  petFoodPaidMonth:'',                // 🍖 เดือนล่าสุด (YYYY-MM) ที่จ่ายเงินค่าอาหารสัตว์รายเดือนไปแล้ว (กันจ่ายซ้ำ)
+  petFoodWarnMonth:'',                // 🍖 เดือน (YYYY-MM ของวันที่ 1 ถัดไป) ที่เตือนล่วงหน้าไปแล้ว (กันเตือนซ้ำ)
   pendingRuin:null,                   // บ้านเพิ่งพัง (id บ้าน) — ให้ UI โชว์ฉากบ้านพังแล้วเคลียร์
   pendingCut:[],                      // บริการเพิ่งถูกตัด (['elec','water'...]) — ให้ UI เด้งกล่องเตือนแล้วเคลียร์
   powerCut:false,                     // ถูกตัดไฟ (ค้างค่าไฟข้ามเดือน) — บ้านมืด แอร์ใช้ไม่ได้
@@ -780,6 +782,36 @@ function billTick(now){
     }
   });
 }
+/* ============================================================
+   🍖 เงินค่าอาหารสัตว์รายเดือน — ทุกวันที่ 1 ของเดือน จ่ายตามจำนวนสัตว์ที่เลี้ยงอยู่
+   (ตัวละ 10,000 เหรียญ) + เตือนล่วงหน้า 1 วัน (วันสุดท้ายของเดือน) ก่อนเงินเข้าจริง
+   ============================================================ */
+const PET_FOOD_PER_PET = 10000;
+function petFoodTick(now){
+  const petCount = state.pets.length;
+  if(petCount <= 0) return;
+  const amt = petCount * PET_FOOD_PER_PET;
+  const d = new Date(now);
+  const ym = ymStr(now);
+  if(d.getDate() === 1 && state.petFoodPaidMonth !== ym){
+    state.coins += amt;
+    state.petFoodPaidMonth = ym;
+    if(typeof toast === 'function')
+      toast(`🍖 เงินค่าอาหารสัตว์เข้าแล้ว! เลี้ยง ${petCount} ตัว ได้ 🪙${fmtNum(amt)} เหรียญ`, 4200);
+    if(typeof sfx !== 'undefined' && sfx.coinGetTier) sfx.coinGetTier(petCount >= 3 ? 2 : petCount >= 2 ? 1 : 0);
+  }
+  // เตือนล่วงหน้า: วันนี้เป็นวันสุดท้ายของเดือน (พรุ่งนี้คือวันที่ 1) → บอกจำนวนที่จะได้รับ
+  const tomorrow = new Date(now); tomorrow.setDate(d.getDate() + 1);
+  if(tomorrow.getDate() === 1){
+    const warnYm = ymStr(tomorrow);
+    if(state.petFoodWarnMonth !== warnYm){
+      state.petFoodWarnMonth = warnYm;
+      if(typeof toast === 'function')
+        toast(`📅 พรุ่งนี้เงินค่าอาหารสัตว์เข้า! เลี้ยง ${petCount} ตัว จะได้ 🪙${fmtNum(amt)} เหรียญ`, 4200);
+    }
+  }
+}
+
 /* 🚗 รอบ 211: รถคันที่เลือกใช้ขับตอนนี้ (ไว้แทน state.car เดิม) */
 function myCar(){ return (state.cars && state.cars[state.carIdx]) || null; }
 
@@ -931,6 +963,7 @@ function careTick(){
   compTick(now);          // ตกรายได้ค้างก่อน แล้วค่อยเช็กบิล/ตัดบริการ
   onlineEarnTick(now);    // โบนัสออนไลน์ (item 8) — เดินเฉพาะตอนเปิดเกมออนไลน์อยู่จริง
   billTick(now);
+  petFoodTick(now);
   marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
   orderTick(now);         // ออเดอร์พิเศษหมดเวลา/เข้าใหม่
   const slot = currentSlotStart(now);
