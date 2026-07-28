@@ -370,8 +370,8 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (272 บรรทัด · 5 รายการ)
-syncMusicBtn:93 · showQuizBackPay:129 · showGiantRefund:173 · fitQbp:212 · bootGame:226
+## js/main.js (277 บรรทัด · 5 รายการ)
+syncMusicBtn:98 · showQuizBackPay:134 · showGiantRefund:178 · fitQbp:217 · bootGame:231
 
 ## js/moto3d.js (2,031 บรรทัด · 116 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
