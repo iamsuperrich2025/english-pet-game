@@ -4,6 +4,11 @@
    ============================================================ */
 if(typeof Music !== 'undefined') Music.init();   // 🎵 รอบ 181: probe เพลง + เริ่ม bg หลัง gesture แรก
 
+/* 🖼️ รอบ 660 (ผู้ใช้เจอ): กดค้างรูปสัตว์/ไอเทมใน Chrome (มือถือ/เดสก์ท็อป) เด้งเมนู "Copy image/Download
+   image/Share image" ของเบราว์เซอร์ — ดูไม่มืออาชีพ + ให้เด็กเซฟภาพออกไปนอกเกมได้
+   `-webkit-touch-callout:none` ใน style.css กันได้แค่ iOS Safari · Chrome ต้องกันที่ event contextmenu เอง */
+document.addEventListener('contextmenu', (e)=>{ if(e.target.tagName === 'IMG') e.preventDefault(); });
+
 /* ข้อ 4: เลือกตัวละครผู้เลี้ยง (ชาย/หญิง) ตอนลงทะเบียน — ไฮไลต์ตัวที่เลือก */
 let regAvatar = null;
 document.querySelectorAll('#reg-avatar .avatar-opt').forEach(btn=>{
