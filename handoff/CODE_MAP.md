@@ -189,11 +189,11 @@ GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:3
 gradeLockLeftMs:43 · gradeLockLeftDays:50 · gradeUnlockAt:51 · gradeLocked:52 · gradeUpOptions:55 · gradeChangeTo:62
 gradeLockNote:86 · openGradeChange:94
 
-## js/images.js (208 บรรทัด · 23 รายการ)
-IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:27 · probeRankImages:39
-probeCollectImages:40 · probeGiftImages:41 · probeHomeImages:42 · CLIP_FILES:51 · CLIP_SM:57 · clipCanWebm:73
-CLIP_ASSET_V:84 · clipFileFor:86 · petClipKey:95 · petClipUrl:104 · equippedItem:115 · petStateImg:125
-petWearOverlay:145 · wearLayerHTML:166 · happyNow:173 · makeHappy:174 · currentPetImg:187
+## js/images.js (211 บรรทัด · 23 รายการ)
+IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:28 · probeRankImages:40
+probeCollectImages:41 · probeGiftImages:42 · probeHomeImages:43 · CLIP_FILES:52 · CLIP_SM:58 · clipCanWebm:74
+CLIP_ASSET_V:85 · clipFileFor:87 · petClipKey:96 · petClipUrl:105 · equippedItem:116 · petStateImg:126
+petWearOverlay:147 · wearLayerHTML:168 · happyNow:175 · makeHappy:176 · currentPetImg:189
 
 ## js/invasion3d.js (9,950 บรรทัด · 612 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
@@ -577,14 +577,14 @@ buyMarketItem:7591 · showCollectReveal:7618 · buyAC:7656 · openHomeShop:7675 
 renderStats:7832 · showTeacherCard:7939 · CALL_REACT_EMOS:7983 · CALL_TALK_MIN:7986 · CALL_TALK_HOLD:7987 · CALL_ORDER_GAP:7989
 CALL_TONES:7995 · startCall:8369
 
-## js/util.js (866 บรรทัด · 38 รายการ)
+## js/util.js (872 บรรทัด · 38 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:102 · fmtThaiDate:106 · showScreen:111
 TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:176 · PET_MOOD:252
 petVoiceSynth:259 · sirenSynth:336 · playCashier:360 · cashierSynth:374 · keyTapSynth:407 · playSpark:442
-sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakWord:562 · speakLetter:582 · pickSpeakVoice:601
-speakWordTTS:612 · askNameDialog:632 · askConfirm:672 · alertBox:690 · applyNoAnim:710 · openSettings:715
-openHelp:821 · openTeacherGuide:847
+sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakWord:562 · speakLetter:588 · pickSpeakVoice:607
+speakWordTTS:618 · askNameDialog:638 · askConfirm:678 · alertBox:696 · applyNoAnim:716 · openSettings:721
+openHelp:827 · openTeacherGuide:853
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
