@@ -577,14 +577,14 @@ buyMarketItem:7591 · showCollectReveal:7618 · buyAC:7656 · openHomeShop:7675 
 renderStats:7832 · showTeacherCard:7939 · CALL_REACT_EMOS:7983 · CALL_TALK_MIN:7986 · CALL_TALK_HOLD:7987 · CALL_ORDER_GAP:7989
 CALL_TONES:7995 · startCall:8369
 
-## js/util.js (872 บรรทัด · 38 รายการ)
+## js/util.js (876 บรรทัด · 38 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:102 · fmtThaiDate:106 · showScreen:111
 TOAST_WARN_RE:121 · restackToasts:124 · toast:146 · floatFx:166 · beep:176 · PET_MOOD:252
 petVoiceSynth:259 · sirenSynth:336 · playCashier:360 · cashierSynth:374 · keyTapSynth:407 · playSpark:442
-sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakWord:562 · speakLetter:588 · pickSpeakVoice:607
-speakWordTTS:618 · askNameDialog:638 · askConfirm:678 · alertBox:696 · applyNoAnim:716 · openSettings:721
-openHelp:827 · openTeacherGuide:853
+sparkSynth:456 · thunderFx:491 · wordAudioFile:559 · speakWord:562 · speakLetter:592 · pickSpeakVoice:611
+speakWordTTS:622 · askNameDialog:642 · askConfirm:682 · alertBox:700 · applyNoAnim:720 · openSettings:725
+openHelp:831 · openTeacherGuide:857
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
