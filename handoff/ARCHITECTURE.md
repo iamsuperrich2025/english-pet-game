@@ -48,7 +48,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/adv3d_css.js** (1,076 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (72 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
 - **js/adv3d_tex.js** (229 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
-- **js/adventure3d.js** (11,109 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โลกผีสิงกลางคืน: 25🪙/คำ · ผี 8 ตัว โผล่ 20 วิแล้วย้ายที่
+- **js/adventure3d.js** (11,116 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โลกผีสิงกลางคืน: 25🪙/คำ · ผี 8 ตัว โผล่ 20 วิแล้วย้ายที่
 - **js/auth.js** (389 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
 - **js/award.js** (271 บรรทัด) — 🏆 award.js — เครื่องจ่าย "รางวัลรายเดือน Top 10" ใช้ร่วมทุกกระดาน (รอบ 649) · เดิมโค้ดก้อนนี้อยู่ใน js/wsaward.js เฉพาะแท็บ 🔎 ค้นหาคำ · รอบ 649 เพิ่มแท็บ ⌨️ พิมพ์คำ ที่ใช้กติกาเดียวกันเป๊ะ → ยกมาเป็นโรงงานกลาง
 - **js/bandadv.js** (68 บรรทัด) — BAND ADV — คลังศัพท์ขั้นสูงแยกหมวด (js/data/band/ · รอบ 681) · ต่างจาก js/dictband.js (DICT_BAND 1-5): ไม่ผูกชั้นเรียน เปิดเล่นได้ทุกคน · ไม่มี pos/ipa/ตัวอย่าง (entry แค่ [en, th]) จึงไม่มีชุดสอบย่อย/สอบซ่อม —
@@ -63,7 +63,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/main.js** (277 บรรทัด) — ปุ่มหลัก + INIT
 - **js/moto3d.js** (2,031 บรรทัด) — 🏍️ moto3d.js — โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) · ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (js/data/moto_phosawat.js · OSM) · เล่นบน "เครื่องเกมพกพา" เต็มจอ — จอเกมอยู่ตรงกลางเครื่อง · สไลเดอร์ส้มซ้าย=เลี้ยว · ปุ่มฟ้าขวา=เร่ง · ปุ่มแดงบน=ปิดเครื่อง
 - **js/music.js** (157 บรรทัด) — music.js — ระบบเพลง (รอบ 181) · เพลงพื้นหลัง (instrument) เล่นวนทั้งเกม เริ่มหลัง gesture แรก (autoplay policy) · เข้าโลก 3D ใดๆ → พัก bg (โลกมี soundscape ของตัวเอง) · ออก → เล่นต่อ
-- **js/netroom.js** (778 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
+- **js/netroom.js** (807 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
 - **js/online.js** (1,684 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
 - **js/state.js** (1,096 บรรทัด) — STATE + LocalStorage + กติกากลางของเกม · (แยกจากไฟล์ data — อัปเกรดคำศัพท์/สัตว์/ไอเทมได้โดยไม่กระทบเซฟ)
 - **js/tpaward.js** (41 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
@@ -77,6 +77,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (1,817 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (105 บรรทัด) — Service Worker — Pet Vocab Adventure (PWA) · กลยุทธ์: · - โค้ดเกม (HTML/JS/CSS): network-first → ออนไลน์ได้โค้ดใหม่เสมอ (กันปัญหาโค้ดค้าง),
 <!-- AUTO-FILES:END -->
+
 
 
 
