@@ -1054,7 +1054,7 @@ html.no-anim .pet-stage.pat-remind{animation:none;}
 #screen-dashboard .pet-card{
   position:relative;flex:1;min-height:0;width:100%;margin:0;padding:0;
   background:none;border:none;box-shadow:none;overflow:visible;
-  display:flex;flex-direction:row;align-items:stretch;gap:8px;
+  display:flex;flex-direction:row;align-items:stretch;gap:0;   /* 🔴 รอบ 657: 0 เพื่อให้ฟีดเพื่อน "ชนแนวเส้นแดง" (ขอบซ้ายเวที) พอดี ไม่มีรอยต่อ — ผู้ใช้สั่ง 28 ก.ค. 2026 */
 }
 .lobby-stage{overflow:visible;}
 .lobby-stage .pet-tabs{position:relative;z-index:3;}
@@ -2085,10 +2085,11 @@ html.no-anim .cs-big-img{animation:none}
    ซ้าย = ปุ่มเปิดแผงข้อมูลน้อง + ฟีดเพื่อน (แทนกล่องข้อมูลน้องเดิม กว้างขึ้น)
    เวทีน้องย้ายขวา · ข้อมูลน้อง+การดูแล = overlay ใหญ่ (.pi-overlay)
    ============================================================ */
-/* ---- คอลัมน์ซ้ายของ pet-card (รอบ 160: หดลงให้เวที hero กว้างขึ้น เหรียญ rank เด่น) ---- */
+/* ---- คอลัมน์ซ้ายของ pet-card (รอบ 160: หดลงให้เวที hero กว้างขึ้น เหรียญ rank เด่น
+   รอบ 657: ขยายกว้างขึ้นอีก 28%→34% ผู้ใช้สั่ง "ฟีดเพื่อนแคบไป" — ตัวเลขจริงตรงกับ .stage-left ที่ 3563) ---- */
 .stage-left{
   display:flex;flex-direction:column;gap:8px;z-index:2;
-  width:min(280px,28%);flex-shrink:0;align-self:stretch;min-height:0;
+  width:min(340px,34%);flex-shrink:0;align-self:stretch;min-height:0;
 }
 .pet-info-btn{
   flex-shrink:0;border:1px solid rgba(95,200,255,.5);border-radius:14px;cursor:pointer;
@@ -3482,6 +3483,14 @@ html.no-anim .pet-show .ps-emote{display:none;}
 .nw-coin.paid{background:rgba(255,255,255,.08);border-color:rgba(160,205,255,.22);color:#8db3da;}
 .nw-countdown{font-size:10.5px;color:#8db3da;opacity:1;padding-left:10px;
   border-left:1px solid rgba(160,205,255,.22);}
+
+/* 🔴 รอบ 657 (ผู้ใช้สั่ง 28 ก.ค. 2026): แยกเป็น 2 บรรทัด — บนคำศัพท์ (เด่น/ใหญ่กว่าเดิม) ล่างคำใบ้+เหรียญ+เวลา (เล็กกว่า)
+   เดิมทุกอย่างแถวเดียวกันหมด คำศัพท์ไม่เด่นเพราะแย่งสายตากับคำใบ้ที่อยู่บรรทัดเดียวกัน */
+.newword-banner{flex-direction:column;align-items:stretch;gap:2px;border-radius:16px;padding:6px 15px 10px;}
+.nw-row1{display:flex;align-items:baseline;justify-content:center;gap:9px;}
+.nw-row2{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.nw-tag{font-size:10.5px;padding:3px 9px;}
+.nw-word{font-size:clamp(22px,3.9vh,34px);}   /* ใหญ่ขึ้นจากเดิม clamp(18px,3.1vh,26px) ให้คำศัพท์เด่นชัด */
 .nw-bar{left:9px;right:9px;bottom:2px;}
 
 /* ---------- ⑤ แท็บสัตว์: สูงเท่ากันทุกใบ · ตัวที่เลือกอยู่มีขีดทองใต้ชื่อ ---------- */
@@ -3560,7 +3569,7 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 .top-flex2{flex:0 0 0px;}
 
 /* ③ ฟีดเพื่อนยืดชนขอบบนเวที (margin-top ติดลบตั้งจาก JS) */
-.stage-left{width:min(280px,28%);}
+.stage-left{width:min(340px,34%);}   /* 🔴 รอบ 657: ค่าเดียวกับ 2091 (ตัวนี้อยู่หลังไฟล์ จึงเป็นค่าที่ใช้จริง) */
 .stage-plate.feed-plate{margin-top:0;}
 
 /* ============================================================
