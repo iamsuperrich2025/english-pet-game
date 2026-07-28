@@ -20,6 +20,8 @@
      scoreOf ()=>number                       คะแนนสดของตัวเอง (จาก state)
      seenK/paidK/logK   ชื่อคีย์ใน state (กันจ่ายซ้ำ/ประกาศ)
      emoji   '🔎'                             · game  '🔎 ค้นหาคำ' (ชื่อเกมในข้อความ)
+     field2/scoreOf2/unit2  (ไม่บังคับ) คะแนนรองที่โชว์คู่กัน — ใช้ตัดสินเมื่อคะแนนหลักเท่ากัน
+     unit    หน่วยคะแนนหลัก ('แต้ม'/'คำ')     · role  คำเรียกผู้เล่น ('นักสะสมแต้มเกม')
      rules   [html, ...]                      บรรทัดกติกาในกระดานประกาศ
      empty   ข้อความตอนยังไม่มีใครมีแต้ม
    ============================================================ */
@@ -62,19 +64,25 @@
      โรงงาน: สร้างเครื่องจ่ายรางวัล 1 ตัวต่อ 1 กระดาน
      ============================================================ */
   function makeMonthAward(cfg){
-    const F = cfg.field;                        // ชื่อฟิลด์คะแนนบน /leaderboard
+    const F  = cfg.field;                       // ฟิลด์ที่ใช้ "จัดอันดับ" บน /leaderboard
+    const F2 = cfg.field2 || '';                // ฟิลด์รองที่โชว์คู่กัน (มีเฉพาะบางกระดาน)
+    const U  = cfg.unit || 'แต้ม', U2 = cfg.unit2 || '';
+    const ROLE = cfg.role || 'นักสะสมแต้มเกม';   // คำเรียกผู้เล่นในข้อความประกาศ
+    const second = (v2)=> F2 ? ` · ${(typeof fmtNum === 'function' ? fmtNum : String)(v2 || 0)} ${U2}` : '';
 
     /* ---------- อันดับสด (แหล่งเดียวกับแท็บในกระดานอันดับ) ---------- */
+    /* 🔢 รอบ 654: อันดับตัดสินด้วย F · คะแนนเท่ากันดูที่ F2 (เช่น พิมพ์คำ = จำนวนคำก่อน แล้วค่อยดูเหรียญ) */
     function liveTop(){
       if(typeof Online === 'undefined' || !Online.ready) return [];
       const myId = (typeof onlineKey === 'function') ? onlineKey() : '';
       const map = {};
-      (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n || '', g:r.g || '', v:r[F] || 0}; });
+      (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n || '', g:r.g || '', v:r[F] || 0, v2:F2 ? (r[F2] || 0) : 0}; });
       if(myId && typeof state !== 'undefined' && state.student){
         const nm = (state.profileName || state.student.first || 'หนู') + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
-        map[myId] = {id:myId, n:nm, g:state.student.grade || '', v:Math.round(cfg.scoreOf() || 0)};
+        map[myId] = {id:myId, n:nm, g:state.student.grade || '', v:Math.round(cfg.scoreOf() || 0),
+                     v2:F2 ? Math.round((cfg.scoreOf2 && cfg.scoreOf2()) || 0) : 0};
       }
-      return Object.values(map).filter(r=>r.v > 0).sort((a,b)=> b.v - a.v).slice(0, TOP);
+      return Object.values(map).filter(r=>r.v > 0).sort((a,b)=> (b.v - a.v) || (b.v2 - a.v2)).slice(0, TOP);
     }
 
     /* ---------- เครื่องจ่ายรางวัล ---------- */
@@ -102,6 +110,7 @@
           const w = {};
           rows.forEach((r, i)=>{
             w[r.id] = {r:i + 1, p:PRIZES[i], n:String(r.n).slice(0, 40), g:String(r.g || '').slice(0, 20), s:Math.round(r.v)};
+            if(F2) w[r.id].s2 = Math.round(r.v2 || 0);       // 🔢 รอบ 654: คะแนนรองตอนตัดรอบ (เช่น เหรียญสะสมของเกมพิมพ์คำ)
           });
           try{ await snapRef(m).set({at:firebase.database.ServerValue.TIMESTAMP, w}); }catch(e){}
           snap = await readSnap(m);                     // อ่านของจริง (เผื่อเครื่องอื่นชิงตัดรอบก่อน / rules ยังไม่ publish)
@@ -126,11 +135,11 @@
       if(mine && paid.indexOf(m) < 0){
         const prize = Math.min(PRIZES[0], Math.max(0, Math.round(mine.p || prizeFor(mine.r))));
         state[cfg.paidK] = paid.concat([m]).slice(-24);
-        state[cfg.logK]  = [{m, r:mine.r, p:prize, s:Math.round(mine.s || 0), at:Date.now()}]
+        state[cfg.logK]  = [{m, r:mine.r, p:prize, s:Math.round(mine.s || 0), s2:Math.round(mine.s2 || 0), at:Date.now()}]
                            .concat(state[cfg.logK] || []).slice(0, 24);
         if(typeof addCoins === 'function') addCoins(prize);
         if(typeof saveState === 'function') saveState();
-        showReveal({m, r:mine.r, p:prize, s:Math.round(mine.s || 0)});
+        showReveal({m, r:mine.r, p:prize, s:Math.round(mine.s || 0), s2:Math.round(mine.s2 || 0)});
         if(typeof renderLeaderboardCard === 'function') renderLeaderboardCard();
       }else if(typeof saveState === 'function') saveState();
     }
@@ -151,9 +160,9 @@
           <div class="wsa-reveal-medal">${medal}</div>
           <div class="rankup-name" style="color:#ffb300">+${num(a.p)} เหรียญ 🪙</div>
           <p class="rankup-sub">ยินดีด้วย ${esc(name)}! 🎉<br>
-            ได้เพราะอยู่ <b>อันดับ ${a.r} ของ Top ${TOP}</b> นักสะสมแต้มเกม ${cfg.game}<br>
-            <small>แต้มสะสมตอนตัดรอบ ${num(a.s)} แต้ม · ตัดรอบ ${cutText(a.m)}<br>
-            แต้มไม่ถูกล้าง เก็บสะสมต่อได้เลย เดือนหน้าลุ้นอีกรอบ 💪</small></p>
+            ได้เพราะอยู่ <b>อันดับ ${a.r} ของ Top ${TOP}</b> ${ROLE} ${cfg.game}<br>
+            <small>ตอนตัดรอบมี ${num(a.s)} ${U}${second(a.s2)} · ตัดรอบ ${cutText(a.m)}<br>
+            ยอดสะสมไม่ถูกล้าง เก็บต่อได้เลย เดือนหน้าลุ้นอีกรอบ 💪</small></p>
           <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
         </div>`;
       ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
@@ -179,9 +188,9 @@
       const mine = log.length ? log.map(a=>`
         <div class="wsa-msg">
           <div class="wsa-msg-h">🎉 ยินดีด้วย! ได้รับ <b>${num(a.p)} เหรียญ</b> 🪙</div>
-          <div class="wsa-msg-b">เพราะอยู่ <b>อันดับ ${a.r}</b> ของ Top ${TOP} นักสะสมแต้มเกม ${cfg.game}
+          <div class="wsa-msg-b">เพราะอยู่ <b>อันดับ ${a.r}</b> ของ Top ${TOP} ${ROLE} ${cfg.game}
             ประจำเดือน <b>${monthThai(a.m)}</b><br>
-            <small>แต้มตอนตัดรอบ ${num(a.s)} แต้ม · ตัดรอบ ${cutText(a.m)}</small></div>
+            <small>ตอนตัดรอบมี ${num(a.s)} ${U}${second(a.s2)} · ตัดรอบ ${cutText(a.m)}</small></div>
         </div>`).join('')
         : `<div class="wsa-msg wsa-msg-none">ยังไม่มีประกาศถึง${(typeof selfPronoun === 'function') ? selfPronoun() : 'หนู'}นะ —
             เก็บแต้มให้ติด <b>Top ${TOP}</b> ก่อนวันตัดรอบ แล้วเหรียญรางวัลจะเข้ามาเองเลย 💪</div>`;
@@ -196,7 +205,7 @@
           <div class="wsa-row${r.uid === myId ? ' me' : ''}">
             <span class="wsa-r">${r.r === 1 ? '🥇' : r.r === 2 ? '🥈' : r.r === 3 ? '🥉' : r.r}</span>
             <span class="wsa-n">${r.uid === myId ? '⭐ ' : ''}${esc((typeof splitNameBadges === 'function' ? splitNameBadges(r.n).name : r.n) || '')}</span>
-            <span class="wsa-s">${cfg.emoji} ${num(r.s || 0)}</span>
+            <span class="wsa-s">${cfg.emoji} ${num(r.s || 0)} ${U}${second(r.s2)}</span>
             <span class="wsa-p">🪙 ${num(r.p || prizeFor(r.r))}</span>
           </div>`).join('');
       }else{
@@ -206,7 +215,7 @@
           <div class="wsa-row${r.id === myId ? ' me' : ''}">
             <span class="wsa-r">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</span>
             <span class="wsa-n">${r.id === myId ? '⭐ ' : ''}${esc((typeof splitNameBadges === 'function' ? splitNameBadges(r.n).name : r.n) || '')}</span>
-            <span class="wsa-s">${cfg.emoji} ${num(r.v)}</span>
+            <span class="wsa-s">${cfg.emoji} ${num(r.v)} ${U}${second(r.v2)}</span>
             <span class="wsa-p">🪙 ${num(PRIZES[i])}</span>
           </div>`).join('')
           : `<div class="wsa-msg wsa-msg-none">${cfg.empty}</div>`;

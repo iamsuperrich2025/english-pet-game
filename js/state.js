@@ -78,6 +78,7 @@ const DEFAULT_STATE = {
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
+  typistBadge:0,                      // ⌨️ รอบ 654: เข็มนักพิมพ์สูงสุดที่เคยได้ 0=ไม่มี 1=⌨️(100 คำ) 2=🔠(500) 3=📜(1000) — ได้แล้วไม่หาย
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
   tpAwardPaid:[],
   tpAwardLog:[],
@@ -351,6 +352,7 @@ function loadState(){
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
+      if(typeof s.typistBadge !== 'number') s.typistBadge = 0;    // ⌨️ รอบ 654: เข็มนักพิมพ์
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
       if(!Array.isArray(s.tpAwardPaid)) s.tpAwardPaid = [];
       if(!Array.isArray(s.tpAwardLog)) s.tpAwardLog = [];

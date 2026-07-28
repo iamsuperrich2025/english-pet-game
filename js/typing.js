@@ -5,9 +5,11 @@
    - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
    - เสียงกดเหมือนคีย์บอร์ดจริง (sfx.keyTap ใน js/util.js — กดลง/ปล่อยขึ้นคนละเสียง)
    - คำศัพท์อังกฤษกลางจอด้านบน + คำแปลไทยใต้คำ · พิมพ์ครบ 1 คำ = 🪙 5 เหรียญ + เสียงเงินเข้า
-   🏆 รอบ 649: แต้มสะสมตลอดกาล (state.tpScore/tpWords) → แท็บใหม่ "⌨️ พิมพ์คำ" ในกระดานอันดับ
+   🏆 รอบ 649-650: ยอดสะสมตลอดกาล → แท็บใหม่ "⌨️ พิมพ์คำ" ในกระดานอันดับ
       + รางวัลรายเดือน Top 10 (10,000–1,000 เหรียญ) ผ่าน js/tpaward.js — กติกาเดียวกับ 🔎 ค้นหาคำ
-      แต้ม = ความยาวคำ × 2 · โบนัส +5 ถ้าพิมพ์คำนั้นไม่ผิดเลยสักตัว (PERFECT_BONUS)
+      **อันดับตัดสินที่ `state.tpWords` (จำนวนคำ) — "ใครพิมพ์ได้เยอะที่สุด" (ผู้ใช้กำหนดรอบ 654)**
+      `state.tpScore` = "เหรียญสะสม" (ความยาวคำ × 2 · +5 ถ้าไม่พิมพ์ผิดเลย) โชว์คู่กัน + ใช้ตัดสินตอนคำเท่ากัน
+      ⌨️ เข็มนักพิมพ์ปลดที่ 100/500/1000 คำ (checkTypistBadge ใน js/game.js)
    🔒 กฎเหล็ก 2 ข้อ:
      ① คำที่นำมาเล่น = คำตามระดับชั้นผู้เล่นเท่านั้น (vocabForStudent)
      ② คำห้ามซ้ำ — จำคำที่เล่นไปแล้วถาวรใน state.tpUsed จนหมดคลังจึงวนรอบใหม่
@@ -171,10 +173,12 @@
     const st=(typeof state!=='undefined')?state:{};
     const done=(st.tpWords||0) || (Array.isArray(st.tpUsed)?st.tpUsed.length:0);
     const coins=st.coins||0, pts=Math.round(st.tpScore||0);
-    /* 🏆 รอบ 649: โชว์แต้มสะสม + ปุ่มเข้ากระดานประกาศรางวัล (เด็กจะได้รู้ว่าแต้มเอาไปทำอะไร) */
+    /* 🏆 รอบ 654: ปุ่มเดียวโชว์ทั้ง "จำนวนคำ (ตัวตัดสินอันดับ)" และ "เหรียญสะสม" → กดเข้ากระดานประกาศรางวัล
+       (ผู้ใช้สั่งเรียกคะแนนสะสมว่า "เหรียญ" ไม่ใช่ "แต้ม" — เด็กเห็นค่ามากกว่า) */
     statEl.innerHTML=`<b>🪙 ${coins.toLocaleString()}</b>`
-      +`<span class="tp-pts tpa-open" role="button" tabindex="0" title="ดูอันดับ/รางวัลรายเดือน">🏆 ${pts.toLocaleString()} แต้ม</span>`
-      +`<span>พิมพ์สำเร็จ ${done.toLocaleString()} คำ</span><span>ระดับชั้น ${grade()}</span>`;
+      +`<span class="tp-pts tpa-open" role="button" tabindex="0" title="ดูอันดับ Top 10 / รางวัลรายเดือน">`
+      +`🏆 ${done.toLocaleString()} คำ · ${pts.toLocaleString()} เหรียญ</span>`
+      +`<span>ระดับชั้น ${grade()}</span>`;
   }
   /* แป้นตัวถัดไปเรืองแสง — เด็กที่ยังหาแป้นไม่คล่องจะได้ไม่จนตรอก */
   function glowNext(){
@@ -276,7 +280,9 @@
       state.tpScore=Math.round((state.tpScore||0)+pts);
       state.tpWords=(state.tpWords||0)+1;
     }
-    if(typeof onlinePushScore==='function') onlinePushScore();   // ผลักแต้มขึ้นกระดานทันที (มี sig กันเขียนซ้ำ)
+    /* ⌨️ รอบ 654: เข็มนักพิมพ์ (100/500/1000 คำ) — ต้องเช็กก่อน push เพราะเข็มถูก bake ไปกับชื่อบนกระดาน */
+    if(typeof checkTypistBadge==='function') checkTypistBadge();
+    if(typeof onlinePushScore==='function') onlinePushScore();   // ผลักคำ/เหรียญขึ้นกระดานทันที (มี sig กันเขียนซ้ำ)
     if(typeof vbRecord==='function') vbRecord(w, th, true);      // 📒 ลงสมุดคำศัพท์ถาวร
     if(typeof saveState==='function') saveState();
     if(typeof sfx!=='undefined'){
@@ -296,7 +302,7 @@
     if(!fxEl || document.documentElement.classList.contains('no-anim')) return;
     const p=document.createElement('div');
     p.className='tp-coinpop';
-    p.innerHTML=`+${COIN_PER_WORD} 🪙 <span class="tp-pop-pt">+${pts||0} แต้ม${perfect?' ✨ ไม่ผิดเลย!':''}</span>`;
+    p.innerHTML=`+${COIN_PER_WORD} 🪙 <span class="tp-pop-pt">+1 คำ · +${pts||0} เหรียญสะสม${perfect?' ✨ ไม่ผิดเลย!':''}</span>`;
     fxEl.appendChild(p);
     setTimeout(()=>p.remove(), 1400);
   }

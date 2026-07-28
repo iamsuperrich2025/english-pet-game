@@ -21,6 +21,7 @@ window.WsAward = window.makeMonthAward({
   paidK:   'wsAwardPaid',
   logK:    'wsAwardLog',
   emoji:   '🔎',
+  unit:    'แต้ม',
   game:    '🔎 ค้นหาคำ',
   empty:   'ยังไม่มีใครมีแต้มเลย — เล่น 🔎 ค้นหาคำ เป็นคนแรกสิ!',
   rules: [

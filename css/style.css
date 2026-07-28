@@ -1339,7 +1339,7 @@ html.no-anim body.quake{animation:none;}
 
 /* 🎊 ฉลอง "ได้เข็มใหม่" กลางจอ (แบนเนอร์เด้ง + โปรยเหรียญ · ไม่บังการเล่น หายเอง) */
 .badge-celebrate-overlay{
-  /* ⌨️ รอบ 650: เดิม z-index 60 → แบนเนอร์เข็มโดนเกมเต็มจอบัง (#tp-overlay 93 · .wsa-overlay 95)
+  /* ⌨️ รอบ 654: เดิม z-index 60 → แบนเนอร์เข็มโดนเกมเต็มจอบัง (#tp-overlay 93 · .wsa-overlay 95)
      ยกขึ้น 96 ให้ลอยเหนือทุกเกม — ปลอดภัยเพราะ pointer-events:none และหายเองใน 2.6 วิ */
   position:fixed;inset:0;z-index:96;pointer-events:none;overflow:hidden;
   display:flex;align-items:center;justify-content:center;

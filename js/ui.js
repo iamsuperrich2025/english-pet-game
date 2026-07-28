@@ -1422,11 +1422,12 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws,
       pz:(typeof WsAward !== 'undefined') ? WsAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
-  if(tab === 'tp'){   // ⌨️ รอบ 649: แต้มสะสมตลอดกาลเกมพิมพ์คำ (field tp) — โชว์แค่ Top 10 เหมือน 🔎
-    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tp:r.tp||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, tp:Math.round(state.tpScore||0)};
-    const rows = Object.values(map).filter(r=>r.tp > 0).sort((a,b)=> b.tp - a.tp).slice(0, LB_TP_TOP);
-    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`⌨️ ${fmtNum(r.tp)}`, val:r.tp,
+  if(tab === 'tp'){   // ⌨️ รอบ 649-650: เกมพิมพ์คำ — จัดอันดับด้วย "จำนวนคำ" (tw) · โชว์เหรียญสะสม (tp) คู่กัน
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tw:r.tw||0, tp:r.tp||0}; });
+    map[myId] = {id:myId, n:meName, g:meG, tw:Math.round(state.tpWords||0), tp:Math.round(state.tpScore||0)};
+    const rows = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp)).slice(0, LB_TP_TOP);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
+      sc:`⌨️ ${fmtNum(r.tw)} คำ<span class="sc-sub"> · ${fmtNum(r.tp)} เหรียญ</span>`, val:r.tw,
       pz:(typeof TpAward !== 'undefined') ? TpAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
@@ -1660,18 +1661,20 @@ function lbWordSearchHtml(){
     <div class="lb-list">${list}</div>`;
 }
 
-/* ⌨️ รอบ 649: เนื้อหาแท็บพิมพ์คำ — "10 อันดับผู้สะสมแต้มสูงสุด of all time" (เกม Typing)
-   แต้ม = ความยาวคำ×2 ต่อคำที่พิมพ์ครบ + โบนัสไม่พิมพ์ผิดเลย 5 (สะสมถาวรใน state.tpScore → /leaderboard field tp)
+/* ⌨️ รอบ 649 (กติกาอันดับแก้รอบ 654): เนื้อหาแท็บพิมพ์คำ — "10 อันดับ นักพิมพ์ตัวยง of all time"
+   🥇 **อันดับตัดสินที่จำนวนคำที่พิมพ์สำเร็จ** (`state.tpWords` → /leaderboard field `tw`) = "ใครพิมพ์ได้เยอะที่สุด"
+   🪙 โชว์ "เหรียญสะสม" คู่กัน (`state.tpScore` → field `tp` · ความยาวคำ×2 +5 ถ้าไม่ผิดเลย) และใช้ตัดสินตอนคำเท่ากัน
    โครงเหมือน lbWordSearchHtml() ทุกอย่าง ต่างแค่ field/อีโมจิ/ชื่อเกม/เครื่องจ่ายรางวัล */
 function lbTypingHtml(){
   const myId = onlineKey();
   const map = {};
-  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tp:r.tp||0}; });
+  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tw:r.tw||0, tp:r.tp||0}; });
   // แทนที่ตัวเราด้วยค่าสดจาก state (เห็นทันทีแม้ push ยังไม่ถึง / rules ยังไม่ publish)
   const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู') + ((typeof badgeSuffix==='function')?badgeSuffix():'');
-  map[myId] = {id:myId, n: meName, g:(state.student?state.student.grade:''), tp: Math.round(state.tpScore||0)};
-  const all = Object.values(map).filter(r=>r.tp > 0).sort((a,b)=> b.tp - a.tp);
-  if(!all.length) return `<div class="lb-empty">ยังไม่มีใครเก็บแต้มพิมพ์คำเลย — กด ⌨️ พิมพ์คำ ให้ครบคำ เป็นคนแรกบนกระดานสิ! 🥇</div>`;
+  map[myId] = {id:myId, n: meName, g:(state.student?state.student.grade:''),
+               tw: Math.round(state.tpWords||0), tp: Math.round(state.tpScore||0)};
+  const all = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp));
+  if(!all.length) return `<div class="lb-empty">ยังไม่มีใครพิมพ์สักคำเลย — กด ⌨️ พิมพ์คำ ให้ครบคำ เป็นคนแรกบนกระดานสิ! 🥇</div>`;
   const rows = all.slice(0, LB_TP_TOP);
   const myIdx = all.findIndex(r=>r.id===myId);
   const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
@@ -1680,12 +1683,12 @@ function lbTypingHtml(){
     <div class="lb-row${r.id===myId?' lb-me':''}">
       <span class="lb-rank">${medal(i)}</span>
       <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}${gradeMark(gradeOf(r.id, r.g))}</small>${pz(i)?`<small class="lb-prize">🎁 ${fmtNum(pz(i))} เหรียญ</small>`:''}</span>
-      <span class="lb-coins">⌨️ ${fmtNum(r.tp)}</span>
+      <span class="lb-coins">⌨️ ${fmtNum(r.tw)} คำ<small class="lb-sub">${fmtNum(r.tp)} เหรียญ</small></span>
     </div>`).join('');
   const meLine = myIdx >= 0
-    ? (myIdx < LB_TP_TOP ? `${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_TP_TOP} · ${fmtNum(map[myId].tp)} แต้ม ⌨️`
-                         : `${selfPronoun()}มี ${fmtNum(map[myId].tp)} แต้ม (อันดับ ${myIdx+1}) — เก็บอีกนิดก็ติด Top ${LB_TP_TOP} แล้ว 💪`)
-    : `เล่นเกม ⌨️ พิมพ์คำ เก็บแต้มเพื่อขึ้น Top ${LB_TP_TOP} นะ 💪`;
+    ? (myIdx < LB_TP_TOP ? `${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_TP_TOP} · พิมพ์แล้ว ${fmtNum(map[myId].tw)} คำ · ${fmtNum(map[myId].tp)} เหรียญ ⌨️`
+                         : `${selfPronoun()}พิมพ์แล้ว ${fmtNum(map[myId].tw)} คำ (อันดับ ${myIdx+1}) — พิมพ์อีกนิดก็ติด Top ${LB_TP_TOP} แล้ว 💪`)
+    : `เล่นเกม ⌨️ พิมพ์คำ ให้ได้หลาย ๆ คำ เพื่อขึ้น Top ${LB_TP_TOP} นะ 💪`;
   const when = (typeof TpAward !== 'undefined')
     ? `<div class="lb-award-bar tpa-open" role="button" tabindex="0">⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 เวลา 00:01 น.</b> เท่านั้น · ${TpAward.fmtLeft(TpAward.nextCutDate() - Date.now())}
          <span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>` : '';

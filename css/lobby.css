@@ -1482,6 +1482,11 @@ html.no-anim .q-bigcard{animation:none;}
    + แถบ "ตัดสินวันที่ 1 เวลา 00:01" ที่กดเข้ากระดานประกาศรางวัลได้
    ============================================================ */
 .lb-prize{display:block;color:#ffd76e !important;font-size:9.5px;font-weight:800;letter-spacing:-.2px;}
+/* ⌨️ รอบ 654: แท็บพิมพ์คำโชว์ 2 ค่า — "จำนวนคำ" (ตัวจัดอันดับ) บรรทัดบน · "เหรียญสะสม" ตัวเล็กใต้ลงมา
+   (จอเตี้ยแถวสูงจำกัด → ค่ารองต้องเล็กและไม่ดันความสูงแถว) */
+.lb-coins .lb-sub{display:block;font-size:9.5px;font-weight:700;color:#9fe6c2;line-height:1.1;letter-spacing:-.2px;}
+.lbf-cell .sc-sub,.pod-sc .sc-sub{font-size:.82em;opacity:.8;}
+@media (max-width:700px){ .lbf-cell .sc-sub{display:none;} }   /* จอแคบ: กริดอันดับ 6-100 โชว์แค่จำนวนคำ ไม่ให้ล้นช่อง */
 .lb-award-bar{
   margin:3px 0 5px;padding:4px 7px;border-radius:9px;cursor:pointer;
   font-size:10px;line-height:1.35;color:#dff0ff;
