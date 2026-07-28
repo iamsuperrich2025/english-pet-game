@@ -2538,6 +2538,24 @@ function openChatInbox(){
   });
 }
 
+/* 📱 กันแป้นพิมพ์มือถือดันกล่องแชทลอย — ใช้ visualViewport ล็อกกรอบ overlay ให้ตรงพื้นที่จอที่เห็นจริงเสมอ
+   (คีย์บอร์ดเด้งแล้วไม่ลด window.innerHeight บนมือถือหลายรุ่น ทำให้ overlay ที่จัดกลางด้วย vh ลอยเหนือคีย์บอร์ดไปเลย) */
+function chatFitKeyboard(overlay, box){
+  const vv = window.visualViewport;
+  if(!vv) return ()=>{};
+  const apply = ()=>{
+    overlay.style.height = vv.height + 'px';
+    overlay.style.top = vv.offsetTop + 'px';
+    const kbOpen = (window.innerHeight - vv.height) > 120;   // เผื่อแถบ address bar โผล่/หุบเล็กน้อย ไม่นับเป็นคีย์บอร์ด
+    overlay.classList.toggle('kb-open', kbOpen);
+    box.style.maxHeight = kbOpen ? (vv.height - 12) + 'px' : '';
+  };
+  apply();
+  vv.addEventListener('resize', apply);
+  vv.addEventListener('scroll', apply);
+  return ()=>{ vv.removeEventListener('resize', apply); vv.removeEventListener('scroll', apply); };
+}
+
 function openChat(friend){
   if(!friend) return;
   if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะแชทได้นะ 📡'); return; }
@@ -2587,6 +2605,7 @@ function openChat(friend){
   const input  = overlay.querySelector('#chat-input');
   const emojiPanel = overlay.querySelector('#chat-emoji');
   const box    = overlay.querySelector('#chat-box');
+  const stopFitKeyboard = chatFitKeyboard(overlay, box);
 
   // 🎨 เลือกธีม (แถบ swatch เปิด/ปิด) — รอบ 241: ธีม "ร่วมกันทั้งคู่" เปลี่ยนแล้วอีกฝ่ายเห็นตามผ่าน DB
   const themeStrip = overlay.querySelector('#chat-theme-strip');
@@ -2697,6 +2716,7 @@ function openChat(friend){
     if(chatUnsub){ chatUnsub(); chatUnsub = null; }
     stopTyping();
     stopTheme();
+    stopFitKeyboard();
     clearVanishTimers();
     if(typeof chatClearTyping === 'function') chatClearTyping(friend.uid);
     overlay.remove();
@@ -2721,7 +2741,6 @@ function openChat(friend){
     // เปิดกล่องอยู่ = อ่านแล้ว: จำ ts ล่าสุด กันเด้งแจ้งเตือนซ้ำ (ข้อ 0.4)
     if(typeof chatMarkSeen === 'function') chatMarkSeen(friend.uid, msgs[msgs.length - 1].ts || Date.now());
   });
-  setTimeout(()=>input.focus(), 60);
   sfx.select();
 }
 
