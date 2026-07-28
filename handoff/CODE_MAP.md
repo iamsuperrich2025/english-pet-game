@@ -170,19 +170,19 @@ bandRetakeCat:116 · bandShowRetakeSummary:150 · bandSetsPassed:178 · openBand
 bandLockToast:263 · bandExamLobby:269 · updateBandExamBtn:278 · bandLobbyTick:295 · bandPlay:306 · bandPlayLobby:319
 bandCardsHTML:331
 
-## js/game.js (988 บรรทัด · 68 รายการ)
+## js/game.js (995 บรรทัด · 68 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:135 · sprinkleConfetti:182 · VOCAB_PER_LEVEL:201
-VOCAB_RANK_NAMES:202 · vocabRankName:203 · showProgressReport:205 · THUNDER_MS:382 · THUNDER_TIERS:386 · THUNDER_TIER_UI:387
-thunderEmoji:388 · DAREDEVIL_TIERS:392 · DAREDEVIL_TIER_UI:393 · daredevilEmoji:394 · GLASS_TIERS:398 · GLASS_TIER_UI:399
-glassEmoji:400 · DILIGENT_TIERS:404 · DILIGENT_TIER_UI:405 · diligentEmoji:406 · SOFTLAND_TIERS:410 · SOFTLAND_TIER_UI:411
-softLandEmoji:412 · AIRL_TIERS:416 · AIRL_TIER_UI:417 · airLetterEmoji:418 · MECHABOSS_TIERS:422 · MECHABOSS_TIER_UI:423
-mechaBossEmoji:424 · TYPIST_TIERS:429 · TYPIST_TIER_UI:430 · typistEmoji:431 · checkTypistBadge:433 · BFF_TIERS:447
-BFF_TIER_UI:448 · BFF_COIN:449 · bffEmoji:450 · badgeSuffix:455 · BADGE_META:471 · NAME_BADGE_RE:486
-splitNameBadges:487 · badgeEmojis:493 · badgeScore:498 · checkCrown:504 · currentBadgeScore:520 · rolloverBadgeWeek:524
-addDiligent:537 · celebrateBadge:553 · addThunder:567 · startGame:581 · newRound:621 · updateTimerBar:660
-updateComboPill:666 · pickCard:670 · checkMatch:682 · renderCats:796 · startQuiz:831 · renderQuizQuestion:847
-quizNext:910 · finishQuiz:923
+VOCAB_RANK_NAMES:202 · vocabRankName:203 · showProgressReport:205 · THUNDER_MS:384 · THUNDER_TIERS:388 · THUNDER_TIER_UI:389
+thunderEmoji:390 · DAREDEVIL_TIERS:394 · DAREDEVIL_TIER_UI:395 · daredevilEmoji:396 · GLASS_TIERS:400 · GLASS_TIER_UI:401
+glassEmoji:402 · DILIGENT_TIERS:406 · DILIGENT_TIER_UI:407 · diligentEmoji:408 · SOFTLAND_TIERS:412 · SOFTLAND_TIER_UI:413
+softLandEmoji:414 · AIRL_TIERS:418 · AIRL_TIER_UI:419 · airLetterEmoji:420 · MECHABOSS_TIERS:424 · MECHABOSS_TIER_UI:425
+mechaBossEmoji:426 · TYPIST_TIERS:433 · TYPIST_TIER_UI:434 · typistEmoji:436 · checkTypistBadge:438 · BFF_TIERS:453
+BFF_TIER_UI:454 · BFF_COIN:455 · bffEmoji:456 · badgeSuffix:461 · BADGE_META:477 · NAME_BADGE_RE:493
+splitNameBadges:494 · badgeEmojis:500 · badgeScore:505 · checkCrown:511 · currentBadgeScore:527 · rolloverBadgeWeek:531
+addDiligent:544 · celebrateBadge:560 · addThunder:574 · startGame:588 · newRound:628 · updateTimerBar:667
+updateComboPill:673 · pickCard:677 · checkMatch:689 · renderCats:803 · startQuiz:838 · renderQuizQuestion:854
+quizNext:917 · finishQuiz:930
 
 ## js/gradelock.js (158 บรรทัด · 14 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeHistList:33
@@ -461,11 +461,11 @@ compTick:819 · ONLINE_RATE:833 · onlineEarnActive:834 · onlineEarnTick:838 ·
 addCraft:883 · ORDER_MAX:902 · ORDER_LIFE_MS:903 · ORDER_GAP_MIN_MS:904 · ORDER_GAP_SPAN_MS:905 · ORDER_TIER_WEIGHT:906
 newOrder:907 · orderTick:920 · careTick:928 · expNeed:1009 · addExp:1014 · addRP:1034
 
-## js/tpaward.js (40 บรรทัด · 0 รายการ)
+## js/tpaward.js (41 บรรทัด · 0 รายการ)
 
 ## js/typing.js (345 บรรทัด · 0 รายการ)
 
-## js/ui.js (8,336 บรรทัด · 336 รายการ)
+## js/ui.js (8,367 บรรทัด · 336 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-268 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -516,9 +516,9 @@ newOrder:907 · orderTick:920 · careTick:928 · expNeed:1009 · addExp:1014 · 
 - 6813-7724 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
 - 7725-7785 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
 - 7786-7822 เลเวลอัพ (รายตัว)
-- 7823-7897 สถิติผลการเรียนรู้
-- 7898-7935 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 7936-8336 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7823-7928 สถิติผลการเรียนรู้
+- 7929-7966 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 7967-8367 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:98 · petShowBgHTML:101 · petClipHint:128 · __clipReady:140 · petShowHTML:148 · lobbyBlk:194
@@ -574,8 +574,8 @@ enterMecha3D:7044 · pickMechaRobot:7065 · pickDriveCar:7097 · openCarBuyDialo
 payCarLoanFull:7232 · carDriveBlock:7251 · gotoVehicleShop:7256 · gotoMyStock:7261 · showNeedCarDialog:7267 · craftDiscount:7279
 renderFactory:7282 · renderOrdersUI:7351 · startProduce:7370 · buyCollectible:7398 · cancelProduce:7426 · deliverOrder:7440
 renderOrderClock:7457 · renderCollectMine:7467 · openListDialog:7509 · cancelListing:7562 · buyMarketItem:7585 · showCollectReveal:7612
-buyAC:7650 · openHomeShop:7669 · renderPetShop:7728 · showLevelUp:7789 · renderStats:7826 · showTeacherCard:7902
-CALL_REACT_EMOS:7946 · CALL_TALK_MIN:7949 · CALL_TALK_HOLD:7950 · CALL_ORDER_GAP:7952 · CALL_TONES:7958 · startCall:8332
+buyAC:7650 · openHomeShop:7669 · renderPetShop:7728 · showLevelUp:7789 · renderStats:7826 · showTeacherCard:7933
+CALL_REACT_EMOS:7977 · CALL_TALK_MIN:7980 · CALL_TALK_HOLD:7981 · CALL_ORDER_GAP:7983 · CALL_TONES:7989 · startCall:8363
 
 ## js/util.js (866 บรรทัด · 38 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
