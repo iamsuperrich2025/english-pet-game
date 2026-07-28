@@ -168,7 +168,7 @@ function petShowHTML(p, clipUrl){
   const video = clipUrl
     ? `<video class="ps-video" src="${clipUrl}" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>`
     : '';
-  return `<div class="pet-show${calm ? ' ps-calm' : ''}">
+  return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}">
     ${video}
     <div class="pet-stage ps-pod">
       <div class="ps-travel">

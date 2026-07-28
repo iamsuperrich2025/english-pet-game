@@ -3364,6 +3364,12 @@ html.no-anim .pet-show .ps-emote{display:none;}
   border-radius:999px;padding:3px 12px;font-size:clamp(10px,2.1vh,12.5px);color:#28486f;line-height:1.45;
   box-shadow:0 3px 10px rgba(20,50,90,.22);pointer-events:none;}
 .stage-hero.ps-clip-mode .ps-hint{display:none;}
+/* 😴 รอบ 669: ท่า "หลับ" เป็นภาพนอนราบกินพื้นที่กรอบเกือบเต็ม — ป้าย "น้องหลับอยู่..." เดิมทับตัวน้อง
+   ย่อกรอบน้อง + เผื่อขอบล่างเพิ่ม ให้มีแถบว่างจริงไว้วางป้ายด้านล่างสุด ไม่ทับตัว */
+.pet-show.ps-sleep{padding-bottom:16%;}
+.stage-hero.pet-show-mode .hero-scene .pet-show.ps-sleep .ps-pod{
+  height:max(46px, min(calc((var(--ps-h,64) - 10) * 1%), 56cqw));}
+.pet-show.ps-sleep .ps-hint{bottom:2px;}
 /* ปุ่มเล่นเอง — โผล่เฉพาะตอนเบราว์เซอร์บล็อก autoplay (คลิปพร้อมแล้วแต่ไม่ยอมเดิน) */
 .pet-show .ps-play{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
   pointer-events:auto;cursor:pointer;font-family:inherit;font-size:clamp(11px,2.3vh,13.5px);
