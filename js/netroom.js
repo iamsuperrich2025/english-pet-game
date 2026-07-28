@@ -181,6 +181,9 @@ function create(opt){
   const hotTs   = !!opt.hotTs;
   /* ฟิลด์ที่ rules เก่าของ /world อาจยังไม่รับ (โหมด legacy เท่านั้น) — โดนปฏิเสธ = ตัดทิ้งแล้วส่งซ้ำ */
   const lgOpt   = opt.legacyOptional || [];
+  /* 🚦 รอบ 684: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมผีสิงส่ง 2 — ผู้ใช้สั่ง "เข้าได้ทีละ 2 คน")
+     ไม่ใส่ = ใช้ค่ากลาง ROOM_MAX เหมือนเดิมทุกโลก · เกินเพดาน = ระบบพาไปสนามถัดไปให้เอง */
+  const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
 
   const peers = {};             // uid → {hot,cold,seen,legacy}
   let myUid='', idx=-1, count=0, full=false, legacy=false, joined=false, netOk=false;
@@ -220,7 +223,7 @@ function create(opt){
       if(k>=N) return Promise.resolve(null);            // ทุกสนามเต็ม
       const at=(start+k)%N; k++;                        // ไล่จาก start วนไปจนครบทุกสนาม
       return countRoom(at).then(function(n){
-        return (n<CFG.ROOM_MAX) ? {idx:at,count:n} : step();
+        return (n<ROOM_MAX) ? {idx:at,count:n} : step();
       });
     }
     return step();
@@ -321,12 +324,12 @@ function create(opt){
     arr.sort(function(a,b){ return (a.j-b.j) || (a.u<b.u?-1:1); });
     let rank=0; for(let i=0;i<arr.length;i++) if(arr[i].u===myUid){ rank=i; break; }
     count=arr.length-1;
-    if(rank>=CFG.ROOM_MAX){
+    if(rank>=ROOM_MAX){
       /* 🚦 คนแห่เข้าพร้อมกันเป็นร้อย → ทุกเครื่องอ่านเจอ "สนามยังว่าง" พร้อมกันหมดแล้วกระโดดลงสนามเดียวกัน
          ถ้าให้คนที่เกินไล่หาใหม่ตั้งแต่สนามแรก จะแห่ตามกันไปสนามถัดไปเป็นทอด ๆ (ช้าและแกว่ง)
          → ทุกเครื่องเรียงลำดับชุดเดียวกันอยู่แล้ว จึงคำนวณเองได้เลยว่า "ควรถอยไปสนามที่เท่าไร"
            hop = ลำดับตัวเอง ÷ เพดานสนาม → กระจาย 500 คนลงสนามถูกต้องภายในรอบเดียว */
-      const hop=Math.floor(rank/CFG.ROOM_MAX);
+      const hop=Math.floor(rank/ROOM_MAX);
       const want=idx+hop;
       detachRoom(); dropAll();
       joinNow(false, want);                          // ไปหาสนามที่ยังว่างจริง (เริ่มไล่จากสนามที่ควรอยู่)
@@ -341,7 +344,7 @@ function create(opt){
        (หาไม่เจอ/เต็ม → เข้าสนามปกติ แล้วค่อยตามอีกไม่กี่วินาที เผื่อเพื่อนกดเข้าช้ากว่า) */
     const pre = (first && from===undefined) ? findMet() : Promise.resolve(null);
     pre.catch(function(){ return null; }).then(function(met){
-      if(met && met.count<CFG.ROOM_MAX){
+      if(met && met.count<ROOM_MAX){
         busy=false; meetLeft=0;
         const was=full; full=false;
         attach(met.room, met.count);
@@ -398,9 +401,9 @@ function create(opt){
         n++;
       }
       count=n;
-      if(n>=CFG.ROOM_MAX){                            // ห้องเดียวเต็ม → สนามฝึกส่วนตัว
+      if(n>=ROOM_MAX){                            // ห้องเดียวเต็ม → สนามฝึกส่วนตัว
         full=true; joined=false; onStat();
-        toast('🧯 <b>สนามเต็มแล้ว ('+n+'/'+CFG.ROOM_MAX+' คน)</b><br>'+
+        toast('🧯 <b>สนามเต็มแล้ว ('+n+'/'+ROOM_MAX+' คน)</b><br>'+
           '<span class="ib-sub">เล่นสนามฝึกส่วนตัวไปก่อน · ระบบจะพาเข้าให้เองเมื่อมีที่ว่าง 👌</span>', 3200);
         return;
       }
@@ -499,7 +502,7 @@ function create(opt){
       /* 🎯 เรากด "ตามเข้าไป" เอง = เราต้องเป็นฝ่ายเดินเสมอ (อีกฝ่ายไม่ได้กำลังตามเรา ไม่มีทางสลับที่กัน) */
       const a=aimGet(map);
       if(!(myUid>met.uid) && !(a && a.uid===met.uid)) return;   // ไม่งั้นอีกฝ่ายเป็นคนเดินมาหาเรา
-      if(met.count>=CFG.ROOM_MAX){
+      if(met.count>=ROOM_MAX){
         toast('🧯 <b>สนามของ '+esc(met.n)+' เต็มพอดี</b>'+
               '<br><span class="ib-sub">กด 👥 ไปหาเพื่อน ลองใหม่ได้เมื่อมีที่ว่าง</span>', 3000);
         return;
@@ -572,7 +575,7 @@ function create(opt){
     busy=true;
     return countRoom(i).then(function(n){
       busy=false;
-      if(n>=CFG.ROOM_MAX) return {ok:false, reason:'full', count:n, room:i};
+      if(n>=ROOM_MAX) return {ok:false, reason:'full', count:n, room:i};
       detachRoom(); dropAll(); full=false;
       attach(i, n);
       return {ok:true, room:i};
@@ -689,7 +692,7 @@ function create(opt){
               /* ❗ ห้ามเงียบ — ต้องบอกเหตุผลบนจอเสมอ (กฎทอง #1) */
               if(note){ note.style.color='#ffb3a0';
                 note.innerHTML = (r.reason==='full')
-                  ? '🧯 <b>สนาม '+(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+CFG.ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
+                  ? '🧯 <b>สนาม '+(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
                     '<span style="opacity:.8">ลองใหม่อีกครั้งเมื่อมีคนออก หรือให้เพื่อนกด “ไปหา” มาที่สนามเราแทน</span>'
                   : '⚠️ ย้ายไม่สำเร็จตอนนี้ ลองใหม่อีกครั้งนะ';
               }

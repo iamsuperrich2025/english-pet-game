@@ -5468,6 +5468,7 @@ async function loadAdv3d(){
   await loadScriptOnce('js/adv3d_css.js');
   await loadScriptOnce('js/adv3d_intro.js');   // ❓ เฟส 2 รอบ 545: data การ์ดวิธีเล่น
   await loadScriptOnce('js/adv3d_tex.js');     // 🖼️ เฟส 3 รอบ 546: texture ตัวอักษร/emoji/ป้าย (window.Adv3dTex)
+  await loadScriptOnce('js/hotel3d.js');       // 🏨 รอบ 684: ตัวตึกโรงแรมผีสิง 5 ชั้น (window.HOTEL3D)
   await loadScriptOnce('js/adventure3d.js');
 }
 let advLoading = false;
@@ -5605,7 +5606,7 @@ function renderHauntCard(){
   let body;
   if(state.hauntTicket && state.advHurt){
     body = `
-      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
       <div class="ticket-owned">
         <div style="font-size:44px">🤕</div>
         <b>ยังบาดเจ็บอยู่!</b><br>
@@ -5614,13 +5615,14 @@ function renderHauntCard(){
       <button class="big-btn red home-btn" id="btn-haunt-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
   }else if(state.hauntTicket){
     body = `
-      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
       <div class="ticket-owned">
-        <div style="font-size:44px">👻🌙</div>
-        <b>ประตูโลกผีสิงเปิดแล้ว... กล้าเข้าไหม?</b><br>
-        <small>กลางคืนสุดหลอน เก็บตัวอักษรประกอบคำ คำละ 🪙25<br>
-        👻 ผีโผล่ทีละ 20 วิแล้วย้ายที่ · <b>สู้ไม่ได้ ต้องหนีอย่างเดียว!</b> โดนจับ = จบเกม รักษา 🪙${fmtNum(CURE_COST)}<br>
-        🧑‍🤝‍🧑 ผู้เล่นอื่นโผล่ใน map ให้เจอกัน (สไตล์ Roblox)</small>
+        <div style="font-size:44px">🏨👻</div>
+        <b>โรงแรมกำมะหยี่เปิดให้เข้าพักแล้ว... กล้าไหม?</b><br>
+        <small>เก็บตัวอักษรที่ซ่อนตามห้องพัก <b>ทั้ง 5 ชั้น</b> ประกอบคำ คำละ 🪙25<br>
+        🛗 มีลิฟต์กับบันไดขึ้นชั้นบน · ⏰ <b>อยู่ครบ 2 นาที ไฟทั้งโรงแรมจะดับ</b> ต้องกด <b>F</b> เปิดไฟฉาย<br>
+        👻 <b>ผีที่นี่ไม่ทำร้ายใครเลย</b> — โผล่มาหลอกให้ตกใจอย่างเดียว (ไม่มีเกมโอเวอร์)<br>
+        🧑‍🤝‍🧑 เข้าได้ทีละ <b>2 คน</b> ต่อโรงแรม</small>
       </div>
       ${tinvNoticeHTML('haunt')}
       <button class="big-btn purple home-btn" id="btn-enter-haunt">👻 เข้าโลกผีสิง 3D</button>
@@ -5628,16 +5630,16 @@ function renderHauntCard(){
         `<button class="big-btn blue home-btn" id="btn-inv-haunt">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
   }else if(!state.advTicket){
     body = `
-      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
       <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกผจญภัย 🎫</b>ก่อน ถึงจะกล้าเข้าโลกผีสิงกลางคืนได้นะ</div>`;
   }else{
     body = `
-      <h3 class="shop-title">🎃 ตั๋วโลกผีสิง</h3>
+      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
       <div class="home-desc">
-        <div style="font-size:44px">🎃</div>
-        <div><b>ตั๋วเข้าโลกผีสิงกลางคืน 3D</b><br>
-        <small>โลกมืดสุดหลอน รางวัลคำละ 🪙25 (มากกว่าโลกกลางวัน!)<br>
-        👻 ผีเยอะ สู้ไม่ได้ ต้องหนีอย่างเดียว · ใจไม่ถึงอย่าเข้า...<br>
+        <div style="font-size:44px">🏨</div>
+        <div><b>ตั๋วเข้าโรงแรมผีสิง 3D (5 ชั้น)</b><br>
+        <small>เดินหาตัวอักษรตามห้องพัก รางวัลคำละ 🪙25 (มากกว่าโลกกลางวัน!)<br>
+        ⏰ อยู่ครบ 2 นาทีไฟดับทั้งตึก ต้องใช้ 🔦 ไฟฉาย · 👻 ผีไม่ทำร้ายใคร แค่หลอกให้ตกใจ<br>
         ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
       </div>
       ${tinvNoticeHTML('haunt')}

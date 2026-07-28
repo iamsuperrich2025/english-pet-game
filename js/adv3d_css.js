@@ -50,6 +50,25 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     text-shadow:0 1px 4px #000;background:rgba(0,0,0,.5);border-radius:12px;padding:4px 14px;display:none;
     animation:advHuntPulse .6s infinite}
   @keyframes advHuntPulse{0%,100%{opacity:1}50%{opacity:.55}}
+  /* 🏨 รอบ 684: โรงแรมผีสิง — ป้าย "กด E", ป้ายสอนไฟฉาย 2 ภาษา, ปุ่มจอสัมผัส */
+  #adv-act{display:none;left:50%;transform:translateX(-50%);bottom:96px;color:#ffe9a8;font-weight:800;
+    font-size:clamp(12px,2.6vh,15px);background:rgba(0,0,0,.58);border:1px solid rgba(255,214,120,.5);
+    border-radius:12px;padding:5px 14px;pointer-events:none;text-shadow:0 1px 3px #000}
+  #adv-torchhint{display:none;left:50%;top:56%;transform:translateX(-50%);text-align:center;color:#fff;
+    font-weight:800;font-size:clamp(13px,3vh,19px);line-height:1.5;background:rgba(0,0,0,.55);
+    border:2px solid rgba(255,225,140,.6);border-radius:14px;padding:8px 18px;pointer-events:none;
+    text-shadow:0 2px 6px #000;animation:advTorchPulse 1.5s ease-in-out infinite}
+  #adv-torchhint i{opacity:.85;font-size:.86em}
+  @keyframes advTorchPulse{0%,100%{opacity:1;box-shadow:0 0 0 rgba(255,220,140,0)}50%{opacity:.72;box-shadow:0 0 22px rgba(255,220,140,.35)}}
+  #adv-torch,#adv-use{display:none;position:absolute;z-index:6;flex-direction:column;align-items:center;
+    justify-content:center;width:62px;height:62px;border-radius:50%;border:2px solid rgba(255,255,255,.7);
+    background:rgba(20,16,10,.6);color:#fff;font-size:22px;font-family:inherit;cursor:pointer;pointer-events:auto}
+  #adv-torch small,#adv-use small{font-size:9px;font-weight:800;line-height:1}
+  /* ⚠️ วางชิดล่างเสมอ — เคยตั้ง bottom:176px แล้วบนจอเตี้ย 812×375 ปุ่ม "ใช้" เลื่อนขึ้นไปทับปุ่ม 🚪 ออก */
+  #adv-torch{right:14px;bottom:20px}
+  #adv-use{right:14px;bottom:92px}
+  #adv-torch.on{background:rgba(255,214,120,.85);color:#2b1c00;border-color:#fff5d0;box-shadow:0 0 18px rgba(255,220,140,.7)}
+  .adv-touch.adv-haunt #adv-torch,.adv-touch.adv-haunt #adv-use{display:flex}
   #adv-inv{bottom:8px;left:50%;transform:translateX(-50%);max-width:70vw;background:rgba(0,0,0,.42);
     border-radius:12px;padding:5px 10px;display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
   .adv-inv-ch{color:#fff;font-weight:800;font-size:13px;background:rgba(255,255,255,.18);border-radius:6px;padding:1px 6px}
