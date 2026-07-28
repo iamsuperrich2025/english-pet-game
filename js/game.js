@@ -506,6 +506,26 @@ function badgeScore(str){                               // คะแนนรว
   return badgeEmojis(str).reduce((a,e)=>a + ((BADGE_META[e] && BADGE_META[e].p) || 0), 0);
 }
 
+/* 🗂️ รอบ 677 (ผู้ใช้ 28 ก.ค. 2026): จัดกลุ่มเข็ม 10 สาย (ไม่รวม 👑 ลับ) เป็นหมวด — ใช้แยกกระดานอันดับ
+   ย่อยทีละสายในหน้า "อันดับเข็มเต็มจอ" แทนแต้มรวมอย่างเดียว (เดิมดูไม่ออกว่าใครเก่งด้านไหน)
+   ชื่อระดับเต็มใช้ BADGE_META[emoji].n ตรงตัว ไม่เขียนซ้ำที่นี่ */
+const BADGE_CATS = [
+  {emojis:['🥉','🥈','🥇'], label:'นักบิน', desc:'ตอบคำติดไม่ชนสิ่งกีดขวาง (โลกเฮลิฯ)'},
+  {emojis:['⚡','🌩️','⛈️'], label:'สายฟ้าแลบ', desc:'เคลียร์คำศัพท์เร็วทันใจ'},
+  {emojis:['🎯','🌀','🔥'], label:'ผาดโผน', desc:'บินเฉียดสุดๆ (โลกเฮลิฯ/โดรน)'},
+  {emojis:['🏅','🎖️','🏆'], label:'นักเล่นขยัน', desc:'จำนวนรอบเล่นสะสมทั้งหมด'},
+  {emojis:['🪟','💥','🥽'], label:'ทุบกระจก', desc:'บานกระจกที่ทุบแตก (โลกโดรน)'},
+  {emojis:['⚔️','🛡️','🤖'], label:'นักล่าบอส', desc:'บอสที่ล้มสำเร็จ (โลกหุ่นยนต์)'},
+  {emojis:['🪶','🕊️','🦅'], label:'มือนุ่ม', desc:'ลงจอดนุ่มนวล (โลกเฮลิฯ)'},
+  {emojis:['🪂','🛫','🦸'], label:'นักดิ่งพสุธา', desc:'เก็บตัวอักษรกลางอากาศด้วยวิงสูท (โลกเฮลิฯ)'},
+  {emojis:['🐾','💞','🫶'], label:'เพื่อนซี้', desc:'ลูบน้องติดต่อกันหลายวัน'},
+  {emojis:['⌨️','🔠','📜','✒️','🦾'], label:'นักพิมพ์', desc:'พิมพ์คำสำเร็จสะสม (เกมพิมพ์คำ)'},
+];
+function bcatLevel(badges, cat){                        // ระดับของผู้เล่นในสายนี้ (0=ยังไม่ได้)
+  for(let i=cat.emojis.length-1;i>=0;i--) if(badges.indexOf(cat.emojis[i])>=0) return i+1;
+  return 0;
+}
+
 /* 👑 เข็มลับ "นักสะสมเข็ม" — ปลดเมื่อมีเข็มครบทั้ง 4 สาย (นักบิน+สายฟ้า+ผาดโผน+ขยัน อย่างละ ≥1)
    เรียกท้ายทุกครั้งที่ได้เข็มใหม่ + ตอนเข้าหน้าเมือง (ครอบผู้เล่นเดิมที่ครบอยู่แล้ว) · ฉลองครั้งเดียว */
 function checkCrown(){
@@ -825,11 +845,12 @@ function renderCats(){
       </div>
     </div>`;
   }).join('') + (typeof bandCardsHTML === 'function' ? bandCardsHTML() : '')
+    + (typeof bandAdvCardsHTML === 'function' ? bandAdvCardsHTML() : '')   // 🎓 คลังศัพท์ขั้นสูงแยกหมวด (รอบ 681)
     + (typeof vbCardHTML === 'function' ? vbCardHTML() : '');   // 📒 การ์ดสมุดคำศัพท์ท้ายรายการ
   list.querySelectorAll('.cat-btn.practice').forEach(b=>
-    b.addEventListener('click', ()=>b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
+    b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'game') : b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
   list.querySelectorAll('.cat-btn.quiz').forEach(b=>
-    b.addEventListener('click', ()=>b.dataset.band ? bandPlay(b.dataset.band, 'quiz') : startQuiz(findCat(b.dataset.cat))));
+    b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'quiz') : b.dataset.band ? bandPlay(b.dataset.band, 'quiz') : startQuiz(findCat(b.dataset.cat))));
 }
 
 const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
