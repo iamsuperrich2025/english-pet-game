@@ -3368,10 +3368,10 @@ html.no-anim .pet-show .ps-emote{display:none;}
   border-radius:999px;padding:3px 12px;font-size:clamp(10px,2.1vh,12.5px);color:#28486f;line-height:1.45;
   box-shadow:0 3px 10px rgba(20,50,90,.22);pointer-events:none;}
 .stage-hero.ps-clip-mode .ps-hint{display:none;}
-/* 😴 รอบ 671: ท่า "หลับ" เป็นภาพนอนราบ ป้าย "น้องหลับอยู่..." ที่ขอบล่างเลยทับตัวน้อง
+/* 😴 รอบ 673: ท่า "หลับ" เป็นภาพนอนราบ ป้าย "น้องหลับอยู่..." ที่ขอบล่างเลยทับตัวน้อง
    ⛔ รอบ 670 เคยแก้ผิดทาง = ย่อ+ดันตัวน้องขึ้น (น้องลอย เล็กลง ผู้ใช้ไม่เอา) — ตัวน้องต้องอยู่ที่เดิม ขนาดเดิมเสมอ
    ✅ ย้าย "ป้าย" ขึ้นไปลอยบนท้องฟ้าแทน: ใต้ดวงอาทิตย์ เหนือยอดภูเขา (ยอดเขาสูงสุด = .ps-hill h1 อยู่ที่ bottom 49%) */
-.pet-show.ps-sleep .ps-hint{bottom:53%;}
+.pet-show.ps-sleep .ps-hint{bottom:56%;}
 /* ปุ่มเล่นเอง — โผล่เฉพาะตอนเบราว์เซอร์บล็อก autoplay (คลิปพร้อมแล้วแต่ไม่ยอมเดิน) */
 .pet-show .ps-play{display:none;position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;
   pointer-events:auto;cursor:pointer;font-family:inherit;font-size:clamp(11px,2.3vh,13.5px);
