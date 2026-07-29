@@ -3508,7 +3508,6 @@ function fpostHTML(it, opt){
   return `<div class="fpost${opt.clone ? ' fp-clone' : ''}${opt.page ? ' fp-page' : ''}${cert ? ' fp-cert' : ''}" data-key="${k}"
       data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
     <div class="fp-head">
-      <span class="fp-ico">${fc.e}</span>
       ${(typeof photoMiniHTML === 'function') ? photoMiniHTML(it.u, 'fp-ava') : ''}
       <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}${nb.row}</span>
       <small class="fp-when">${feedAgo(it.ts)}</small>
@@ -3732,7 +3731,6 @@ function renderFeedComments(){
   const it = feedPostByKey(__fcmKey);
   if(!it){ closeFeedComments(); return; }
   const can = feedCanReact(it);
-  const fc  = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
   const draft = ov.querySelector('.fcm-input');
   const keep  = draft ? draft.value : '';
   const rxRows = Object.keys(it.rx).map(uid=>{
@@ -3742,7 +3740,7 @@ function renderFeedComments(){
   ov.innerHTML = `<div class="fcm-box">
     <div class="fdb-head"><span>💬 คอมเมนต์</span><button class="fdb-close" type="button">✕</button></div>
     <div class="fcm-post">
-      <div class="fp-head"><span class="fp-ico">${fc.e}</span>
+      <div class="fp-head">
         <span class="fp-who">${(()=>{ const nb = fpNameBadgesHTML(it.n);
           return `${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}${nb.row}`; })()}</span>
         <small class="fp-when">${feedAgo(it.ts)}</small></div>

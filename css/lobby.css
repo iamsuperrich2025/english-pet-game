@@ -2157,7 +2157,6 @@ html.no-anim .cs-big-img{animation:none}
   border-radius:12px;padding:7px 9px;
 }
 .fp-head{display:flex;align-items:flex-start;gap:6px;flex-shrink:0;}
-.fp-ico{font-size:15px;line-height:1.3;flex-shrink:0;}
 .fp-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
 .fp-name{color:#8fd4ff;font-weight:700;font-size:12px;cursor:pointer;}
 .fp-when{color:#7f9cc0;font-size:9.5px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
