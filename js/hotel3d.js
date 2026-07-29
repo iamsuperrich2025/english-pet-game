@@ -246,13 +246,22 @@ function build(THREE_,opt){
   for(let f=0;f<FLOORS;f++){
     const y=floorY(f);
     wall(A.struct,WEST-.35,WEST,-BZ,BZ,y,CEIL_H);                       // ตะวันตก
-    wall(A.struct,WEST,BX,-BZ-.35,-BZ,y,CEIL_H);                        // เหนือ
-    wall(A.struct,WEST,BX,BZ,BZ+.35,y,CEIL_H);                          // ใต้
-    if(f===0){                                                          // ตะวันออก: ชั้นล่างเว้นประตูหน้า
-      wall(A.struct,BX,BX+.35,-BZ,-ENTRY_HW,y,CEIL_H);
+    if(f===0){                                                          // ล็อบบี้โล่ง ไม่มีห้อง — ผนังทั้งเส้นเป็นวอลเปเปอร์ทางเดินเดิม
+      wall(A.struct,WEST,BX,-BZ-.35,-BZ,y,CEIL_H);                      // เหนือ
+      wall(A.struct,WEST,BX,BZ,BZ+.35,y,CEIL_H);                        // ใต้
+      wall(A.struct,BX,BX+.35,-BZ,-ENTRY_HW,y,CEIL_H);                  // ตะวันออก: เว้นประตูหน้า
       wall(A.struct,BX,BX+.35,ENTRY_HW,BZ,y,CEIL_H);
       wall(A.struct,BX,BX+.35,-ENTRY_HW,ENTRY_HW,y+2.6,CEIL_H-2.6,2.4,true);
-    }else wall(A.struct,BX,BX+.35,-BZ,BZ,y,CEIL_H);
+    }else{
+      /* 🩹 ชั้นห้องพัก: ฝั่งโถงบันได (WEST..CORE_E) ยังเป็นวอลเปเปอร์ทางเดิน tex_hotel_wall เดิม
+         ฝั่งห้องพัก (CORE_E..BX) = "ผนังนอกสุดของห้อง" เปลี่ยนเป็นวอลเปเปอร์ในห้อง tex_hotel_room
+         (เดิมทั้งเส้นใช้ A.struct เส้นเดียว ทำให้ tex_hotel_room ไม่เคยถูกวาดที่ไหนในตึกเลย) */
+      wall(A.struct,WEST,CORE_E,-BZ-.35,-BZ,y,CEIL_H);
+      wall(A.room,  CORE_E,BX,  -BZ-.35,-BZ,y,CEIL_H);
+      wall(A.struct,WEST,CORE_E,BZ,BZ+.35,y,CEIL_H);
+      wall(A.room,  CORE_E,BX,  BZ,BZ+.35,y,CEIL_H);
+      wall(A.room,BX,BX+.35,-BZ,BZ,y,CEIL_H);                          // ตะวันออก (ผนังท้ายห้องริมสุด)
+    }
   }
   /* เปลือกนอก + หน้าต่างสว่าง (มองจากข้างนอกให้เห็นเป็นโรงแรมหรู) */
   accBox(A.facade,(WEST+BX)/2,floorY(FLOORS-1)/2+CEIL_H/2,-BZ-.75,BX-WEST+1.6,FLOORS*FLOOR_H,.5,3.2);
@@ -305,7 +314,7 @@ function build(THREE_,opt){
         const x0=CORE_E+i*RW, x1=x0+RW, cx=(x0+x1)/2;
         const dx=cx+ (side==='n'?1.9:-1.9);                         // ประตูเยื้องจากกลางห้อง
         cut.push([dx-DOOR_W/2,dx+DOOR_W/2]);
-        if(i>0) wall(A.struct,x0,x0+.3,sgn<0?-BZ:CZ,sgn<0?-CZ:BZ,y,CEIL_H);   // ผนังกั้นห้อง
+        if(i>0) wall(A.room,x0,x0+.3,sgn<0?-BZ:CZ,sgn<0?-CZ:BZ,y,CEIL_H);   // ผนังกั้นห้อง (อยู่ในห้องล้วน → วอลเปเปอร์ห้อง)
         const R={f,side,i,x0,x1,cx,cz:sgn*((CZ+BZ)/2),y,rot:(side==='n'?0:Math.PI),
                  door:{x:dx,z:sgn*CZ}, key:roomKey(f,side,i)};
         H.rooms.push(R);
@@ -430,7 +439,9 @@ function build(THREE_,opt){
   const mirGeo=new T.BoxGeometry(.04,1.9,.9);
   const doorGeo=new T.BoxGeometry(.08,2.2,1.15);
   const wdDoorGeo=new T.BoxGeometry(.07,2.15,1.15);
-  const rmDoorGeo=new T.BoxGeometry(.09,2.3,DOOR_W-.1);
+  /* 🩹 บรรทัดนี้เดิม (.09,2.3,DOOR_W-.1) วางแกนยาว(DOOR_W-.1)ไปตามแกน Z ท้องถิ่น — ผิดแกน
+     (ช่องประตูบนผนังกว้างไปตาม X ไม่ใช่ Z) ทำให้บานประตูไม่เคยพาดผ่านช่องจริงเลย ต้องสลับเป็น (DOOR_W-.1,2.3,.09) */
+  const rmDoorGeo=new T.BoxGeometry(DOOR_W-.1,2.3,.09);
 
   H.rooms.forEach(R=>{
     const g=new T.Group();
@@ -457,11 +468,21 @@ function build(THREE_,opt){
              haunted:Math.random()<.42,
              x:R.cx+(R.rot?-1:1)*(-HX+.9), z:R.cz+(R.rot?-1:1)*(-HZ+2.0), y:R.y};
     H.wardrobes.push(W); R.wardrobe=W;
-    // ประตูห้องเปิดแง้ม (เดินเข้าออกได้ ไม่มีกล่องกันชน)
+    /* 🩹 ประตูห้องเปิดแง้ม (เดินเข้าออกได้ ไม่มีกล่องกันชน)
+       ผู้ใช้แจ้ง (ภาพ): "ประตูเปิดกลางห้อง" — เดิมวางบานประตูด้วยการเลื่อน x+.55/z+.5 แล้วหมุนลอย ๆ
+       ไม่มีบานพับยึดกับวงกบเลย บวกกับแกนกล่องผิด (ดูหมายเหตุ rmDoorGeo) ทำให้บานลอยกลางอากาศกลางทางเดิน/ห้อง
+       ไม่ติดผนังช่องประตูจริง → แก้เป็น "บานพับจริง": หมุนกลุ่ม (T.Group) ที่จุดหมุน = ขอบวงกบ
+       ฝั่งในสุด (ระนาบกลางความหนาผนัง) แล้วให้บานยื่นออกจากจุดหมุนไปเต็มความกว้างช่องประตู
+       ปิดสนิท = rotation 0 พอดีเต็มช่อง · แง้มเปิด = หมุนรอบจุดหมุนนั้นจริง ไม่ใช่เลื่อนลอย */
+    const doorHingeX=R.door.x-(DOOR_W-.1)/2;                 // ขอบวงกบฝั่งเดียวกันทุกห้อง (จุดหมุนบาน)
+    const doorZ=R.side==='n'?(-CZ-.15):(CZ+.15);             // กลางความหนาผนัง (ระนาบวงกบจริง)
+    const dHinge=new T.Group();
+    dHinge.position.set(doorHingeX,R.y+1.15,doorZ);
     const rd=new T.Mesh(rmDoorGeo,M.wood);
-    rd.position.set(R.door.x+(R.side==='n'?.55:-.55), R.y+1.15, R.door.z+(R.side==='n'?.5:-.5));
-    rd.rotation.y=(R.side==='n'?-.9:.9);
-    grp.add(rd);
+    rd.position.x=(DOOR_W-.1)/2;                              // แขวนจากบานพับ พาดเต็มช่องประตูตอนปิด
+    dHinge.add(rd);
+    dHinge.rotation.y=(R.side==='n'?-.9:.9);                  // แง้มเปิดสู่ทางเดิน (บานพับยังอยู่ที่วงกบเดิม)
+    grp.add(dHinge);
     // หน้าต่างในห้อง (มองออกไปเห็นฟ้ากลางคืน) — ติดผนังนอกของฝั่งนั้น
     const wz=(R.side==='n')?(-BZ+.18):(BZ-.18);
     const gw=new T.Mesh(new T.BoxGeometry(1.5,1.9,.06),M.glass);
