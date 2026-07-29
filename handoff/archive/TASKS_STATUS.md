@@ -2715,3 +2715,9 @@
 
 - **รอบ 722 (29 ก.ค. · ผู้ใช้: "ทำใบประกาศพิเศษเมื่อผ่านครบทุกชุดของระดับ ใบ Gold ต่างจากใบปกติ"):** 👑 เพิ่ม `certAwardGold(b, setsCount, wordsCount)` ใน `js/cert.js` ออกใบใหม่ id `bandgold<b>` (คนละใบกับใบสอบผ่านรายชุด) เก็บใน `state.certs` เหมือนใบปกติ · `certSVG` แตกสาขาตาม `c.gold`: หัว "CERTIFICATE OF EXCELLENCE" (ปกติ "...ACHIEVEMENT"), โทนสีแดงเลือดหมู+วงแหวนกรอบชั้นในเพิ่ม (ปกติน้ำเงิน/ทอง), ตราประทับ ♛ (ปกติ ★), เนื้อความ "completed the entire curriculum...mastering all N sets · M words" แทนคะแนนสอบ · `certChipHTML`/`certStripHTML` ติด 👑+class `cert-mini-gold`/`cert-chip-gold` ให้ใบทอง — `js/dictband.js` `bandCheckComplete()` เรียก `certAwardGold` ก่อน `saveState()` แล้วเพิ่มปุ่ม "ดูใบประกาศทอง 👑" (`extraBtn` ของ `alertBox`) เปิด `openCertBig` ได้ทันที
   - ยืนยัน (preview 1000×640, mock login, inject `state.quizPassed` ครบทุกชุด band 1 แล้วเรียก `bandCheckComplete(1)` ตรง): alertBox ขึ้นปุ่มทองครบ, `state.certs[0]` มี `gold:true` ถูกต้อง, กดปุ่ม → lightbox เปิดใบ "CERTIFICATE OF EXCELLENCE" จริง, seal gradient เปลี่ยนเป็นโทนแดง (ปกติทอง), `certStripHTML`/`certChipHTML` ติด 👑/class ถูกต้อง, console สะอาดตลอด, ใบสอบผ่านรายชุดปกติ (`certSVG` gold=false) เรนเดอร์เหมือนเดิมทุกจุดไม่มี regression · ล้างเซฟแล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-07-29 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 723 (29 ก.ค. · ผู้ใช้: "ฟีดเพื่อน ปรับเข็มให้ใหญ่/ชัดขึ้น + เรียงเต็มแนวก่อนขึ้นบรรทัดใหม่"):** `.fp-badge-ic` (แถวเข็ม/เหรียญใต้ชื่อในโพสต์ฟีด) 13px→22px + gap 3→5px + เพิ่ม `.fp-badges{width:100%}` กันแถวแคบเกินจนขึ้นบรรทัดก่อนเวลา — ไฟล์ `css/lobby.css`
+  - ยืนยัน: inject `.fpost` จำลอง 7 เข็มใน preview 1000×640 แล้ววัดจริงด้วย `getBoundingClientRect` — ไอคอน 22×22px ตรงตาม CSS, เรียงเต็มแถว 6 ตัวพอดีความกว้าง container (183px) ก่อนตัวที่ 7 ค่อยตัดขึ้นบรรทัดใหม่
