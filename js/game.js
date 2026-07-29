@@ -859,6 +859,33 @@ function renderCats(){
 const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
               qAt:0, fastAll:true};   // ⚡ สอบสายฟ้า: ถูกทุกข้อ + ข้อละไม่เกิน 5 วิ
 
+/* ⏱️ นาฬิกาจับเวลารวมของข้อสอบใหญ่ (รอบ 775) — เดินเฉพาะ cat.timed (bandAdvExamCat ใน js/bandadv.js)
+   เวลาที่ใช้ = ตัวชี้วัดความคล่อง เก็บลงใบประกาศ/quizLog ให้เด็กไล่ทำลายสถิติตัวเองได้
+   ⚠️ ต้องหยุดทุกทางออก (จบสอบ/กดออกจากข้อสอบ) ไม่งั้น interval ค้างกินแรงเครื่องทั้งเกม */
+let __quizTimer = null;
+function fmtMMSS(sec){
+  sec = Math.max(0, Math.round(sec));
+  return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;
+}
+function quizTimerStop(){
+  if(__quizTimer){ clearInterval(__quizTimer); __quizTimer = null; }
+  const p = document.getElementById('quiz-time-pill');
+  if(p) p.hidden = true;
+}
+function quizTimerStart(){
+  quizTimerStop();
+  const p = document.getElementById('quiz-time-pill');
+  if(!p) return;
+  p.hidden = false;
+  const tick = ()=>{ p.textContent = '⏱️ ' + fmtMMSS((Date.now() - quiz.startAt) / 1000); };
+  tick();
+  __quizTimer = setInterval(tick, 1000);
+}
+/* วินาทีที่ใช้สอบทั้งชุด (ไม่ได้จับเวลา = null) */
+function quizElapsed(){
+  return quiz.startAt ? Math.round((Date.now() - quiz.startAt) / 1000) : null;
+}
+
 function startQuiz(cat){
   // สุ่มข้อจากหมวด (ปกติ 10 · ชุด band = ทุกคำในชุด 10-19 ข้อ) + ช้อยส์ไทย 4 ตัวไม่ซ้ำข้อความ
   // ตัวลวง: หมวดปกติจากหมวดเดียวกัน · ชุด band จากทั้งระดับ (distractPool)
@@ -871,6 +898,8 @@ function startQuiz(cat){
   });
   quiz.cat = cat; quiz.idx = 0; quiz.correct = 0; quiz.fastAll = true;
   quiz.results = [];   // ผลรายข้อ {en, ok} — สอบซ่อมรวม band ใช้ตัดเกรดรายชุด (รอบ 270)
+  quiz.startAt = cat.timed ? Date.now() : 0;      // ⏱️ รอบ 777: จับเวลารวมเฉพาะข้อสอบใหญ่
+  if(cat.timed) quizTimerStart(); else quizTimerStop();
   renderQuizQuestion();
   showScreen('screen-quiz');
 }
@@ -955,7 +984,14 @@ document.addEventListener('keydown', e=>{
 function finishQuiz(){
   const qx = document.getElementById('quiz-extra');
   if(qx){ qx.classList.remove('show'); qx.innerHTML = ''; }
+  const secs = quizElapsed();                                    // ⏱️ รอบ 777: เวลาที่ใช้ทั้งชุด (null = ไม่ได้จับเวลา)
+  quizTimerStop();
   const cat = quiz.cat;
+  /* ⏱️ สถิติเวลาเดิม = เวลาบน "ใบประกาศ" ใบนี้ (อ่านก่อน certAward เขียนทับ)
+     ใช้ใบเป็นแหล่งเดียว ไม่สแกน quizLog เอง — ไม่งั้นรอบที่รีบตอบจนคะแนนตกจะกลายเป็น "สถิติใหม่"
+     ทั้งที่ใบไม่ได้อัปเดต (แผงเลือกระดับก็อ่านจากใบเหมือนกัน จะได้ไม่ขัดกัน) */
+  const prevBestSec = (secs && typeof state !== 'undefined' && Array.isArray(state.certs))
+    ? ((state.certs.find(c=>c.id === cat.id) || {}).sec || 0) : 0;
   const passMark = Math.ceil(quiz.questions.length * 0.8);       // เกณฑ์ผ่าน 80% (10 ข้อ = 8 เท่าเดิม · ชุดท้าย band 11-19 ข้อคิดตามสัดส่วน)
   const passed = quiz.correct >= passMark;
   const firstPass = passed && !state.quizPassed.includes(cat.id);
@@ -968,9 +1004,10 @@ function finishQuiz(){
     if(firstPass) state.quizPassed.push(cat.id);
     addCoins(coins);
     questEvent('quiz');                               // 🎯 Daily Quest: สอบผ่าน
-    if(typeof feedEvent === 'function') feedEvent('quiz', `สอบผ่านหมวด${cat.name} ${quiz.correct}/${quiz.questions.length} ข้อ 📝`);
+    if(typeof feedEvent === 'function') feedEvent('quiz',
+      `สอบผ่านหมวด${cat.name} ${quiz.correct}/${quiz.questions.length} ข้อ${secs ? ` ⏱️ ${fmtMMSS(secs)}` : ''} 📝`);
     // 🎖️ รอบ 712: ออกใบประกาศเก็บเข้าโปรไฟล์ (สอบซ้ำ = อัปเดตคะแนนดีที่สุดในใบเดิม)
-    if(typeof certAward === 'function') myCert = certAward(cat, quiz.correct, quiz.questions.length);
+    if(typeof certAward === 'function') myCert = certAward(cat, quiz.correct, quiz.questions.length, secs);
   }
   addRP(rp);
   // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)
@@ -979,7 +1016,11 @@ function finishQuiz(){
   const homeB = homeInfo(state.home);
   const homeBonus = homeB ? homeB.quizBonus : 0;
   if(homeBonus > 0) addCoins(homeBonus);
-  state.quizLog.push({cat:cat.id, score:quiz.correct, total:quiz.questions.length, passed, ts:Date.now()});
+  // ⏱️ สถิติใหม่ = ใบประกาศรับเวลาของรอบนี้ไปจริง (certAward ตัดสินให้แล้วว่าดีขึ้นไหม)
+  const newRecord = !!(secs && myCert && myCert.sec === secs && (!prevBestSec || secs < prevBestSec));
+  const logRow = {cat:cat.id, score:quiz.correct, total:quiz.questions.length, passed, ts:Date.now()};
+  if(secs) logRow.sec = secs;
+  state.quizLog.push(logRow);
   const p = activePet();
   if(exp && p && !p.sick) addExp(exp, p);
   saveState();
@@ -999,6 +1040,9 @@ function finishQuiz(){
       ${passed
         ? (firstPass ? `รับรางวัลพิเศษ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}! 🎁` : `ผ่านอีกครั้ง รับ +${coins} 🪙 +${rp} RP${exp?` +${exp} EXP`:''}`)
         : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก ${passMark} ข้อขึ้นไปถึงจะได้รางวัลพิเศษ ลองใหม่อีกครั้งนะ`}
+      ${secs ? `<br>⏱️ ใช้เวลา <b>${fmtMMSS(secs)}</b> (เฉลี่ยข้อละ ${(secs/quiz.questions.length).toFixed(1)} วิ)${
+        newRecord ? (prevBestSec ? ` — <b style="color:#e07b39">🏁 ทำลายสถิติเดิม ${fmtMMSS(prevBestSec)}!</b>` : ' — <b style="color:#e07b39">🏁 สถิติแรกของหมวดนี้!</b>')
+        : (prevBestSec ? ` · สถิติดีที่สุด ${fmtMMSS(prevBestSec)}` : '')}` : ''}
       ${homeBonus > 0 ? `<br>${homeB.emoji} โบนัสขยันจาก${homeB.name} <b>+${homeBonus} 🪙</b>` : ''}
       ${quiz.correct > 0 && made ? `<br>🏭 แต้มผลิต +${quiz.correct} — <b>ผลิตสำเร็จ!</b> 🎉` : ''}
       ${quiz.correct > 0 && !made && state.producing ? `<br>🏭 แต้มผลิต +${quiz.correct} (${collectInfo(state.producing.id).name} ${state.producing.progress}/${collectInfo(state.producing.id).words})` : ''}

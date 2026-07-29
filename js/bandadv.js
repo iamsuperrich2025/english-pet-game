@@ -82,6 +82,27 @@ function bandAdvExamId(id, k){ return 'badvx_' + id + '_' + k; }
 /* ชื่อไทยของหมวดสอบ — cert.js อ่านชื่อนี้ (ทั้งของเราและของเพื่อนในฟีด) แยกระดับใบ ห้ามเปลี่ยนรูปแบบเล่น ๆ */
 function bandAdvExamName(label, e){ return `${label} · สอบใหญ่ระดับ${e.lv}`; }
 
+/* ============================================================
+   👑 โบนัสสูงสุด (รอบ 775) — สอบใหญ่ระดับ "สูง" (badvx_<หมวด>_expert) ผ่านครบทุกหมวดใน
+   BAND_ADV_MANIFEST → ใบประกาศพิเศษ certAwardAdvSupreme (js/cert.js) + โบนัสเหรียญก้อนใหญ่
+   เรียกจาก onPass ของ cat ระดับ 'expert' เท่านั้น (bandAdvExamCat ด้านล่าง) — กันเช็กซ้ำทุกระดับเปล่า ๆ
+   ============================================================ */
+const BAND_ADV_SUPREME_BONUS = 5000;   // มากกว่ารางวัลระดับสูงเดี่ยว (3000) เพราะต้องผ่านทุกหมวด
+function bandAdvCheckSupreme(){
+  if(typeof BAND_ADV_MANIFEST === 'undefined' || typeof state === 'undefined') return;
+  if(state.bandAdvSupreme) return;
+  const ids = Object.keys(BAND_ADV_MANIFEST);
+  if(!ids.length || !ids.every(id=>state.quizPassed.includes(bandAdvExamId(id, 'expert')))) return;
+  state.bandAdvSupreme = true;
+  addCoins(BAND_ADV_SUPREME_BONUS);
+  const cert = (typeof certAwardAdvSupreme === 'function') ? certAwardAdvSupreme(ids.length) : null;
+  saveState();
+  setTimeout(()=>alertBox(`<div style="font-size:56px;line-height:1">👑</div>
+    <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#7d5fc0">สุดยอดที่สุด! สอบใหญ่ระดับสูงผ่านครบทุกหมวดคลังศัพท์ขั้นสูงแล้ว</div>
+    <div style="margin-top:8px;color:#6a5a78">ครบ ${ids.length} หมวด — รับโบนัสก้อนใหญ่ <b>+${fmtNum(BAND_ADV_SUPREME_BONUS)} 🪙</b>${cert ? '<br>👑 พร้อมใบประกาศ <b>Supreme</b> เก็บไว้ในโปรไฟล์แล้ว!' : ''}</div>`,
+    'เย้! 🎉', cert ? {text:'ดูใบประกาศ 👑', onClick:()=>openCertBig(cert)} : null), 900);
+}
+
 /* ล็อกไหม + เหตุผล (ระดับแรกต้องผ่านสอบ 10 ข้อของหมวดนั้นก่อน · ที่เหลือต้องผ่านระดับก่อนหน้า) */
 function bandAdvExamLock(id, i){
   const passed = (typeof state !== 'undefined' && state.quizPassed) ? state.quizPassed : [];
@@ -89,18 +110,27 @@ function bandAdvExamLock(id, i){
   const prev = BAND_ADV_EXAM[i-1];
   return passed.includes(bandAdvExamId(id, prev.k)) ? null : `ต้องผ่านสอบใหญ่ระดับ${prev.lv} (${prev.q} ข้อ) ก่อนนะ ${prev.emoji}`;
 }
-/* คะแนนสูงสุดที่เคยทำได้ของแต่ละระดับ (จาก state.quizLog) */
+/* คะแนนสูงสุด + ⏱️ เวลาของรอบที่ดีที่สุดในแต่ละระดับ
+   เวลาเอาจาก "ใบประกาศ" (แหล่งเดียวกับที่ finishQuiz ใช้ตัดสินสถิติ) — ไม่หาเองจาก quizLog
+   ไม่งั้นรอบที่รีบตอบจนคะแนนตกจะโชว์เป็นเวลาที่ดีที่สุด ทั้งที่ใบไม่ได้อัปเดต */
 function bandAdvExamBest(id, k){
   const eid = bandAdvExamId(id, k);
   let b = null;
   ((typeof state !== 'undefined' && state.quizLog) || []).forEach(l=>{
     if(l && l.cat === eid && (!b || l.score > b.s)) b = {s:l.score, t:l.total};
   });
+  if(b){
+    const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
+      ? state.certs.find(c=>c.id === eid) : null;
+    b.sec = (cert && cert.sec) || 0;   // ⏱️ รอบ 777
+  }
   return b;
 }
 function bandAdvExamCat(id, e, cat){
   return {id:bandAdvExamId(id, e.k), name:bandAdvExamName(cat.name, e), emoji:e.emoji,
-          reward:e.reward, words:cat.words, quizCount:e.q};
+          reward:e.reward, words:cat.words, quizCount:e.q, timed:true,   // ⏱️ รอบ 777: จับเวลารวมทั้งชุด
+          // 👑 รอบ 775: ผ่านระดับ "สูง" ทุกครั้ง → เช็กว่าครบทุกหมวดหรือยัง (bandAdvCheckSupreme เช็ก dedupe เอง)
+          onPass(){ if(e.k === 'expert' && typeof bandAdvCheckSupreme === 'function') bandAdvCheckSupreme(); }};
 }
 
 /* แผงเลือกระดับสอบใหญ่ — เห็นครบทั้ง 3 ระดับในจอเดียว ไม่มี scrollbar (กฎทองข้อ 7) */
@@ -132,10 +162,10 @@ function bandAdvExamOpen(id){
           <span class="bax-rw">${done ? '✅ ได้ใบประกาศแล้ว' : `🎁 ${fmtNum(e.reward)} 🪙`}</span>
           <span class="bax-best">${few ? `คลังต้องมี ${e.q} คำขึ้นไป`
             : lock ? escapeHTML(lock)
-            : best ? `คะแนนสูงสุด ${best.s}/${best.t}` : 'ยังไม่เคยสอบระดับนี้'}</span>
+            : best ? `คะแนนสูงสุด ${best.s}/${best.t}${best.sec ? ` · ⏱️ ${fmtMMSS(best.sec)}` : ''}` : 'ยังไม่เคยสอบระดับนี้'}</span>
         </button>`;
       }).join('')}</div>
-      <div class="bax-foot">ข้อสอบสุ่มใหม่ทุกครั้งจากทั้งคลัง · สอบซ้ำได้ไม่จำกัด (คะแนนดีขึ้น = ใบประกาศอัปเดตเอง) · ทำไม่ทันกดปุ่ม ⬅️ ออกได้ตลอด</div>
+      <div class="bax-foot">ข้อสอบสุ่มใหม่ทุกครั้งจากทั้งคลัง · ⏱️ จับเวลารวมไว้ให้ (ไม่มีหมดเวลา แค่ไว้ทำลายสถิติตัวเอง — เวลาขึ้นบนใบประกาศด้วย) · สอบซ้ำได้ไม่จำกัด คะแนนดีขึ้นหรือทำเวลาดีขึ้น = ใบอัปเดตเอง</div>
     </div>`;
     document.body.appendChild(ov);
     ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
@@ -156,9 +186,14 @@ function bandAdvExamOpen(id){
 /* การ์ดคลังศัพท์ขั้นสูงต่อท้ายหน้าเลือกหมวด (เรียกจาก renderCats ใน game.js) */
 function bandAdvCardsHTML(){
   if(typeof BAND_ADV_MANIFEST === 'undefined') return '';
+  // 👑 รอบ 775: แถบสรุปความคืบหน้าสู่ใบ Supreme (ครบทุกหมวด × สอบใหญ่ระดับสูง)
+  const advIds = Object.keys(BAND_ADV_MANIFEST);
+  const expertDone = advIds.filter(id=>state.quizPassed.includes(bandAdvExamId(id, 'expert'))).length;
   return `<div class="band-sec-head">🎓 คลังศัพท์ขั้นสูง
-      <small>ศัพท์เฉพาะทางแยกหมวด เปิดเล่นได้ทุกคน ไม่ผูกชั้นเรียน</small></div>`
-    + Object.keys(BAND_ADV_MANIFEST).map(id=>{
+      <small>${state.bandAdvSupreme
+        ? '👑 สอบใหญ่ระดับสูงผ่านครบทุกหมวดแล้ว — ได้ใบประกาศ Supreme + โบนัสก้อนใหญ่!'
+        : `ศัพท์เฉพาะทางแยกหมวด เปิดเล่นได้ทุกคน ไม่ผูกชั้นเรียน · 🏅 ระดับสูงผ่านแล้ว ${expertDone}/${advIds.length} หมวด`}</small></div>`
+    + advIds.map(id=>{
       const m = BAND_ADV_MANIFEST[id];
       const passed = state.quizPassed.includes('badv_' + id);
       // 🏅 รอบ 773: ผ่านสอบใหญ่ไปกี่ระดับแล้ว (ใบประกาศแยกใบต่อระดับ)

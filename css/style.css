@@ -1230,6 +1230,10 @@ html.no-anim body.quake{animation:none;}
 .quiz-choice.right{background:var(--green);color:#2e7d44;border-color:var(--green-d);}
 .quiz-choice.wrong{background:#ffd9d9;color:#c0392b;border-color:#ff8f8f;animation:shake .4s;}
 .quiz-score-pill{background:#fff;border:3px solid var(--purple-d);border-radius:999px;padding:4px 12px;font-size:15px;color:#7d5fc0;font-weight:bold;}
+/* ⏱️ นาฬิกาจับเวลาข้อสอบใหญ่ (รอบ 777) — โทนส้มแยกจากป้ายคะแนนสีม่วง ไม่สับสน */
+.quiz-time-pill{background:#fff;border:3px solid #f2a95e;border-radius:999px;padding:4px 12px;font-size:15px;
+  color:#b26a1e;font-weight:bold;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.quiz-time-pill[hidden]{display:none;}
 
 /* ---------- สถิติการเรียนรู้ ---------- */
 .stats-card{

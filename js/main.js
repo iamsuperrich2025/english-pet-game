@@ -81,7 +81,10 @@ document.getElementById('btn-rail-rank').addEventListener('click', ()=>{
 });
 document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-stats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
-document.getElementById('btn-quiz-back').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
+document.getElementById('btn-quiz-back').addEventListener('click', ()=>{
+  if(typeof quizTimerStop === 'function') quizTimerStop();   // ⏱️ รอบ 777: ออกกลางคัน = หยุดนาฬิกา ไม่ปล่อย interval ค้าง
+  renderCats(); showScreen('screen-cats');
+});
 document.getElementById('btn-petshop-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-petshop-play').addEventListener('click', ()=>startGame(null)); // ลิงก์ใต้เหรียญในร้านสัตว์เลี้ยง → เข้าเกมสะสมเหรียญ
 document.getElementById('btn-back').addEventListener('click', exitGame);   // ออกจากเกม + เด้งการ์ดสรุปถ้าทำสถิติใหม่ (exitGame ใน game.js)
