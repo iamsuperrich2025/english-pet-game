@@ -128,9 +128,45 @@ function bandAdvExamBest(id, k){
 }
 function bandAdvExamCat(id, e, cat){
   return {id:bandAdvExamId(id, e.k), name:bandAdvExamName(cat.name, e), emoji:e.emoji,
-          reward:e.reward, words:cat.words, quizCount:e.q, timed:true,   // ⏱️ รอบ 777: จับเวลารวมทั้งชุด
+          reward:e.reward, words:cat.words, quizCount:e.q, timed:true, examSummary:true,   // ⏱️ รอบ 777: จับเวลารวมทั้งชุด · 📝 รอบ 784: เด้งสรุปคำผิด
+          // 📝 รอบ 784: เก็บคำที่ตอบผิดจาก quiz.results คู่กับ quiz.questions ไว้โชว์หลังปิดกล่องผลสอบ (bandAdvShowExamSummary)
+          onFinish(){
+            const wrong = [];
+            quiz.questions.forEach((q, i)=>{ if(quiz.results[i] && !quiz.results[i].ok) wrong.push([q.en, q.correct]); });
+            __advExamSummaryLast = {score:quiz.correct, total:quiz.questions.length, wrong};
+          },
           // 👑 รอบ 779: ผ่านระดับ "สูง" ทุกครั้ง → เช็กว่าครบทุกหมวดหรือยัง (bandAdvCheckSupreme เช็ก dedupe เอง)
           onPass(){ if(e.k === 'expert' && typeof bandAdvCheckSupreme === 'function') bandAdvCheckSupreme(); }};
+}
+
+/* ---------- 📝 สรุปคำตอบผิดหลังสอบใหญ่ (รอบ 784): 30-50 ข้อไม่มีสรุป เด็กไม่รู้ว่าพลาดคำไหน
+   เด้งหลังปิดกล่องผลสอบ ทุกครั้งไม่ว่าผ่านหรือไม่ผ่าน (แบบเดียวกับ bandShowRetakeSummary ใน dictband.js)
+   แตะการ์ดคำ = ฟังเสียง — ใช้คลาส .rts-* ชุดเดียวกัน (สไตล์ generic พอ ไม่ผูกกับ retake) ---------- */
+let __advExamSummaryLast = null;
+function bandAdvShowExamSummary(){
+  const r = __advExamSummaryLast;
+  if(!r) return;
+  __advExamSummaryLast = null;
+  const ov = document.createElement('div');
+  ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="rts-box">
+    <button class="pl-close" id="axs-close">✕</button>
+    <div class="rts-head">📝 สรุปผลสอบใหญ่ · ถูก ${r.score}/${r.total} ข้อ</div>
+    ${r.wrong.length
+      ? `<div class="rts-sub">📖 คำที่ตอบผิด ${r.wrong.length} คำ — ทบทวนก่อนสอบใหม่ (แตะคำเพื่อฟังเสียง 🔊)</div>
+         <div class="rts-words">${r.wrong.map(w=>
+           `<button class="rts-word" data-w="${escapeHTML(w[0])}"><b>${escapeHTML(w[0])}</b> — ${escapeHTML(w[1])}</button>`).join('')}</div>`
+      : `<div class="rts-sub">🌟 ไม่มีคำตอบผิดเลย เก่งมาก!</div>`}
+    <div class="rts-foot"><button class="rts-okbtn" id="axs-ok">เข้าใจแล้ว ไปต่อ!</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
+  ov.querySelector('#axs-close').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#axs-ok').addEventListener('click', ()=>ov.remove());
+  ov.addEventListener('click', e=>{
+    const w = e.target.closest('.rts-word');
+    if(w && typeof speakWord === 'function') speakWord(w.dataset.w);
+  });
 }
 
 /* 🎓 รอบ 781: ป้ายความคืบหน้าเข็มนักสอบใหญ่ในหัวแผง (นิยามเข็มอยู่ js/game.js — ที่นี่แค่โชว์)
