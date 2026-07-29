@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v204';  // v204: รอบ 748: เหรียญเข็มเกียรติยศตรวจตำแหน่งจากภาพจริง ตัดเป๊ะ พื้นโปร่งใส ขนาดเท่ากันทุกใบ + ซ่อมริบบิ้น thunder_3 + บัมพ์ SW
+const CACHE_VERSION = 'pet-vocab-v205';  // v205: รอบ 755: resume AudioContext ใน beep()
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

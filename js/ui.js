@@ -5186,7 +5186,8 @@ function openFoodQuiz(){
         <div class="fq-pair"><span>${conf.adult}</span><span class="fq-q">${bad ? '🚫' : '✅'}</span><span>${q.f.emoji}</span></div>
         <div class="fq-ask"><b>${bad ? `ไม่ควรให้${conf.name}กิน${q.f.name}` : `${conf.name}กิน${q.f.name}ได้`}</b></div>
         <div class="fq-why">${escapeHTML(reason)}</div>
-        ${gain ? `<div class="feed-gain">ได้เหรียญ +${gain} 🪙</div>` : ''}
+        ${gain ? `<div class="feed-gain fq-gain">ได้เหรียญ +${gain} 🪙</div>` : ''}
+        <div class="fq-why fq-sndnote"></div>
         <div class="fq-btns"><button class="fq-next">${idx+1 < FOODQUIZ_Q ? 'ข้อต่อไป ➡️' : 'ดูผล 🏁'}</button></div>
       </div>`;
       // 🪙 ตอบถูก+ได้เหรียญ → ภาพเหรียญบินเข้ากระเป๋า + เสียงเงินเข้าชัดเจนทันที (ไม่ต้องรอจบรอบ)
@@ -5194,7 +5195,13 @@ function openFoodQuiz(){
         coinFlyFx(overlay.querySelector('.fq-pair'), gain);
         if(sfx.coinGet) sfx.coinGet();
         if(typeof renderDashboard === 'function') renderDashboard();   // ตัวเลขเหรียญบนแถบบนอัปเดตทันที ให้เห็นตรงกับภาพเหรียญที่บิน
-      } else if(correct) sfx.correct(); else sfx.wrong();
+        /* 🔎 กฎทองข้อ 1: เช็ก "หลัง" ลองเล่นเสียงจริงแล้ว (resume เป็น async — เช็กทันทีจะเตือนผิด
+           ทั้งที่เสียงกำลังจะดัง) → เงียบจริงเมื่อไหร่ ให้จอบอกเหตุผลเอง ไม่ต้องเดาข้ามเครื่อง */
+        setTimeout(()=>{
+          const note = overlay.querySelector('.fq-sndnote');
+          if(note && typeof soundStatus === 'function') note.textContent = soundStatus();
+        }, 400);
+      } else sfx.wrong();
       overlay.querySelector('.fq-next').addEventListener('click', ()=>{
         idx++;
         if(idx < FOODQUIZ_Q) renderQ(); else renderEnd();

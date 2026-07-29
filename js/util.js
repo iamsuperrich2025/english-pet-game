@@ -178,6 +178,11 @@ function beep(freq, dur, delay=0, type='sine', vol=0.15){
   if(!state.sound) return;
   try{
     audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    /* 🔊 รอบ 755: AudioContext ถูก "suspended" ได้หลายกรณี — เปิดหน้าเว็บมาก่อนแตะจอ (มือถือ/iOS
+       เข้มเรื่องนี้มาก), สลับแท็บ/ล็อกจอแล้วกลับมา, หรือเบราว์เซอร์พักเอง → beep() เดิม "สร้างโน้ตสำเร็จ
+       ไม่มี error แต่ไม่มีเสียงออกลำโพงเลย" = เงียบทั้งเกมแบบเงียบ ๆ หาไม่เจอ
+       โลก 3D/เพลง ทุกตัวมี resume ของตัวเองอยู่แล้ว แต่ beep() (เสียง UI ทั้งเกม) ไม่เคยมี — เติมที่นี่ที่เดียวจบ */
+    if(audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
     const t = audioCtx.currentTime + delay;
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
     o.type = type; o.frequency.value = freq;
@@ -186,6 +191,17 @@ function beep(freq, dur, delay=0, type='sine', vol=0.15){
     o.connect(g); g.connect(audioCtx.destination);
     o.start(t); o.stop(t + dur);
   }catch(e){}
+}
+/* 🔎 รอบ 755 (กฎทองข้อ 1 — ห้ามเดาข้ามเครื่อง): บอกบนจอเลยว่า "ทำไมไม่มีเสียง"
+   คืนข้อความสั้น ๆ เมื่อเสียงออกไม่ได้ · คืน '' เมื่อทุกอย่างปกติ (ไม่ต้องโชว์อะไร)
+   ใช้ที่จุดที่ผู้ใช้ "คาดหวังจะได้ยินเสียง" เช่น ตอบควิซถูกแล้วได้เหรียญ */
+function soundStatus(){
+  if(!state.sound) return '🔇 เสียงปิดอยู่ — เปิดที่ปุ่มลำโพงมุมบน';
+  try{
+    if(typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended')
+      return '🔇 เบราว์เซอร์ยังไม่อนุญาตให้เล่นเสียง — แตะหน้าจอ 1 ครั้งแล้วลองใหม่';
+  }catch(e){}
+  return '';
 }
 const sfx = {
   select : ()=>{ beep(660,.12); },
