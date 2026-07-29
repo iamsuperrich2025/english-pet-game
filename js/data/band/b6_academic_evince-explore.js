@@ -1,0 +1,20 @@
+[
+  ["evince", "แสดงให้เห็น"], ["eviscerate", "ควักไส้"], ["evoke", "กระตุ้น"], ["evolution", "วิวัฒนาการ"], ["evolve", "พัฒนา"],
+  ["ewe", "แกะตัวเมีย"], ["exacerbate", "ทำให้แย่ลง"], ["exact", "ถูกต้อง"], ["exacting", "เข้มงวด"], ["exalt", "ยกย่อง"],
+  ["exam", "การสอบ"], ["examine", "ตรวจสอบ"], ["example", "ตัวอย่าง"], ["exasperate", "ทำให้โกรธมาก"], ["excavate", "ขุดค้น"],
+  ["exceed", "เกิน"], ["excel", "เป็นเลิศ"], ["excellence", "ความเป็นเลิศ"], ["except", "ยกเว้น"], ["excerpt", "ตอนที่คัดมา"],
+  ["excess", "ความเกิน"], ["exchange", "แลกเปลี่ยน"], ["excise", "ภาษีสรรพสามิต"], ["excite", "ตื่นเต้น"], ["exclaim", "อุทาน"],
+  ["exclude", "ไม่รวม"], ["excommunicate", "ตัดออกจากศาสนา"], ["excoriate", "วิจารณ์รุนแรง"], ["excrescence", "สิ่งที่งอกผิดปกติ"], ["excrete", "ขับถ่าย"],
+  ["excruciating", "ทรมาน"], ["exculpate", "พิสูจน์ว่าบริสุทธิ์"], ["excursion", "การเที่ยว"], ["excusable", "ที่ให้อภัยได้"], ["excuse", "ข้อแก้ตัว"],
+  ["execrable", "เลวร้าย"], ["execute", "ดำเนินการ"], ["executive", "ผู้บริหาร"], ["executor", "ผู้จัดการมรดก"], ["exegesis", "การตีความ"],
+  ["exemplar", "ตัวอย่าง"], ["exemplify", "เป็นตัวอย่าง"], ["exempt", "ยกเว้น"], ["exert", "ออกแรง"], ["exhale", "หายใจออก"],
+  ["exhaust", "ทำให้เหนื่อย"], ["exhibit", "แสดง"], ["exhilarate", "ทำให้ร่าเริง"], ["exhort", "ตักเตือน"], ["exhume", "ขุดศพขึ้นมา"],
+  ["exigency", "สถานการณ์ฉุกเฉิน"], ["exiguous", "มีน้อย"], ["exile", "เนรเทศ"], ["exist", "มีอยู่"], ["exit", "ทางออก"],
+  ["exodus", "การอพยพ"], ["exonerate", "พ้นผิด"], ["exorbitant", "แพงเกินจริง"], ["exorcise", "ไล่ผี"], ["exotic", "แปลกตา"],
+  ["expand", "ขยาย"], ["expanse", "พื้นที่กว้าง"], ["expansion", "การขยายตัว"], ["expatiate", "อธิบายละเอียด"], ["expatriate", "คนต่างด้าว"],
+  ["expect", "คาดหวัง"], ["expedient", "สะดวก"], ["expedite", "เร่งรัด"], ["expedition", "การสำรวจ"], ["expel", "ขับไล่"],
+  ["expend", "ใช้จ่าย"], ["expense", "รายจ่าย"], ["experience", "ประสบการณ์"], ["experiment", "การทดลอง"], ["expert", "ผู้เชี่ยวชาญ"],
+  ["expiate", "ชดใช้บาป"], ["expiration", "วันหมดอายุ"], ["expire", "หมดอายุ"], ["explain", "อธิบาย"], ["expletive", "คำสบถ"],
+  ["explicable", "อธิบายได้"], ["explicate", "อธิบาย"], ["explicit", "ชัดเจน"], ["explode", "ระเบิด"], ["exploit", "ใช้ประโยชน์"],
+  ["explore", "สำรวจ"], ["explosion", "การระเบิด"], ["exponent", "เลขชี้กำลัง"], ["export", "ส่งออก"], ["expose", "เปิดเผย"]
+]

@@ -1,0 +1,21 @@
+[ 
+["contact", "การติดต่อ"], ["contaminate", "ปนเปื้อน"], ["contemplate", "พิจารณา"], ["contemporary", "ร่วมสมัย"], ["contend", "โต้แย้ง"],
+  ["content", "เนื้อหา"], ["contest", "การแข่งขัน"], ["context", "บริบท"], ["contiguous", "ที่อยู่ติดกัน"], ["continue", "ดำเนินการต่อ"],
+  ["contradict", "ขัดแย้ง"], ["contrary", "ตรงกันข้าม"], ["contrast", "ความแตกต่าง"], ["contribute", "สนับสนุน/ส่งผล"], ["contrive", "วางแผน"],
+  ["control", "ควบคุม"], ["controversy", "ข้อพิพาท"], ["convene", "ประชุม"], ["converge", "บรรจบกัน"], ["conversely", "ในทางกลับกัน"],
+  ["convert", "เปลี่ยน"], ["convict", "ตัดสินว่าผิด"], ["convince", "โน้มน้าว"], ["coordinate", "ประสานงาน"], ["copious", "มากมาย"],
+  ["core", "แกนหลัก"], ["corporate", "เกี่ยวกับองค์กร"], ["correlate", "มีความสัมพันธ์กัน"], ["correspond", "สอดคล้อง/ติดต่อ"], ["corroborate", "ยืนยันความถูกต้อง"],
+  ["corrupt", "ทุจริต"], ["cost", "ต้นทุน"], ["counsel", "คำแนะนำ"], ["counter", "โต้ตอบ"], ["counterpart", "ผู้ที่มีตำแหน่งเหมือนกัน"],
+  ["couple", "คู่"], ["course", "หลักสูตร"], ["courtesy", "ความสุภาพ"], ["covert", "ลับ"], ["create", "สร้าง"],
+  ["credible", "น่าเชื่อถือ"], ["credit", "เครดิต"], ["criteria", "เกณฑ์"], ["critic", "นักวิจารณ์"], ["critique", "การวิจารณ์"],
+  ["crucial", "สำคัญมาก"], ["crude", "หยาบ"], ["culture", "วัฒนธรรม"], ["cumulative", "สะสม"], ["curious", "อยากรู้อยากเห็น"],
+  ["current", "ปัจจุบัน"], ["curriculum", "หลักสูตร"], ["curtail", "ลดทอน"], ["cycle", "วงจร"], ["cynical", "มองโลกในแง่ร้าย"],
+  ["data", "ข้อมูล"], ["database", "ฐานข้อมูล"], ["debate", "การอภิปราย"], ["decade", "ทศวรรษ"], ["deceive", "หลอกลวง"],
+  ["decent", "เหมาะสม"], ["decide", "ตัดสินใจ"], ["decipher", "ถอดรหัส"], ["declare", "ประกาศ"], ["decline", "ลดลง"],
+  ["decode", "ถอดรหัส"], ["decompose", "ย่อยสลาย"], ["decorate", "ตกแต่ง"], ["decrease", "ลดลง"], ["dedicate", "อุทิศ"],
+  ["deduce", "อนุมาน"], ["defame", "ใส่ร้าย"], ["default", "ค่าเริ่มต้น"], ["defeat", "พ่ายแพ้"], ["defective", "มีตำหนิ"],
+  ["defend", "ป้องกัน"], ["defer", "เลื่อนออกไป"], ["defiance", "การท้าทาย"], ["deficiency", "ความบกพร่อง"], ["define", "นิยาม"],
+  ["definite", "ชัดเจน"], ["deflate", "ทำให้ลดลง"], ["deflect", "เบี่ยงเบน"], ["deform", "ทำให้เสียรูป"], ["defraud", "ฉ้อโกง"],
+  ["defray", "ชำระค่าใช้จ่าย"], ["defy", "ท้าทาย"], ["degenerate", "เสื่อมลง"], ["degrade", "ลดระดับ"], ["degree", "ระดับ/ปริญญา"],
+  ["dehydrate", "ขาดน้ำ"], ["deify", "ยกย่องเหมือนพระเจ้า"], ["deign", "ยอมลดตัว"], ["deject", "ทำให้เสียใจ"], ["delay", "ล่าช้า"]
+  ]
