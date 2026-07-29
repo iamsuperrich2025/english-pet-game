@@ -7,6 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish: โซนใหม่ `pphoto` (รอบ 709 · 📷 รูปโปรไฟล์ที่ผู้เล่นอัปโหลดเอง)** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/9056ef14-1220-4e31-aaa7-0fcee53e7f73 — `/pphoto/<uid>` = สตริง data URL ของรูป JPEG จัตุรัสก้อนเล็ก (ครอป+ย่อในเครื่องแล้ว) · **อ่านได้ทุกคนที่ login** (เพื่อนเห็นรูปในการ์ดโปรไฟล์) · **เขียน/ลบได้เฉพาะเจ้าของ** (`auth.uid === $uid`) · validate บังคับ 2 ชั้น: ต้องขึ้นต้น `data:image/jpeg;base64,` และ **ยาว ≤30000 ตัวอักษร** (client บีบให้ ≤28000 อยู่แล้ว — กันคนดัดแปลง client ยัดไฟล์ใหญ่ถล่มโควตา)
+  - **ยังไม่ publish = เกมไม่พัง:** เขียนโดน deny → รูปยังใช้ได้เต็มที่ในเครื่องตัวเอง (เก็บ localStorage) แต่เพื่อนยังไม่เห็น → **เกมเด้ง toast บอกตรง ๆ ว่าติดกฎ /pphoto** (กฎทอง #1 ห้ามปิดเงียบ) · ทุกระบบอื่นไม่กระทบ
+  - 🛡️ **ความปลอดภัยเด็ก:** รูปเป็นของสาธารณะระดับเดียวกับชื่อเล่น/leaderboard → กล่องอัปโหลดในเกมเตือน "ให้ผู้ปกครองช่วยเลือก · เลี่ยงรูปที่บอกชื่อจริง/โรงเรียน/ที่อยู่" และลบออกได้ตลอด (ลบ = หายทั้งเครื่องและ DB)
 - ⏳ **รอ publish: รีแอ็กชันฟีดแบบ Facebook (รอบ 701) · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/8cf2eb5b-e579-4d3f-aaaf-37249bab3b3b — แก้จุดเดียว: `/gfeed/$postId/lk/$uid` validate จาก "รับแค่ `true`" เป็น "รับ `true` หรือ string รหัสรีแอ็กชัน ≤8 ตัว"** (`like`/`love`/`haha`/`wow`/`star`/`care`) · สิทธิ์การเขียนเหมือนเดิมทุกอย่าง (เจ้าของโพสต์/เพื่อนของเจ้าของโพสต์เท่านั้น) ไม่มีโซนใหม่ · **ยังไม่ publish = เกมไม่พัง:** client เขียน string โดน deny → ถอยไปเขียน `true` (ไลก์ธรรมดา) อัตโนมัติ ทุกระบบอื่นปกติ · ก้อนเต็มด้านล่างอัปเดตแล้ว
 - ⏳ **รอ publish: โซนใหม่ `tpAward` + field `tp`/`tw` ใน /leaderboard (รอบ 649+654 · ยอดสะสม + รางวัลรายเดือน Top 10 แท็บ ⌨️ พิมพ์คำ)** · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/595d3eee-f3e9-4bc8-b1bf-33dc809f3188 — โครงเหมือน `wsAward`/`ws` ของรอบ 592/590 ทุกบรรทัด ต่างแค่ชื่อ (`/tpAward/<YYYY-MM>` = `{at, w:{<uid>:{r:1-10, p:0-10000, n≤40, g≤20, s=จำนวนคำ, s2=เหรียญสะสม}}}` · อ่านสาธารณะ · เขียนได้ครั้งเดียว `auth != null && !data.exists()`)
   - 🔢 **รอบ 654 (ผู้ใช้สั่งแก้กติกา):** อันดับตัดสินที่ **`tw` = จำนวนคำที่พิมพ์** (ไม่ใช่ `tp`) · `tp` = เหรียญสะสม โชว์คู่กันและใช้ตัดสินตอนคำเท่ากัน → snapshot จึงมี `s2` เพิ่ม
@@ -173,6 +176,13 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "profile": {
           "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" }
         }
+      }
+    },
+    "pphoto": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.isString() && newData.val().length <= 30000 && newData.val().beginsWith('data:image/jpeg;base64,')"
       }
     },
     "world": {
@@ -517,6 +527,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - **กวาดโพสต์เก่าของตัวเองทิ้ง:** `gfeedPrune()` query `orderByChild('u').equalTo(onlineKey())` (ต้องมี `.indexOn:"u"`) เก็บไว้แค่ `GFEED_KEEP_ME` โพสต์ล่าสุดต่อคน (ลบเก่ากว่านั้น) — คุมขนาดตารางรวมไม่ให้บวมตามจำนวนผู้เล่น
 - ฝั่งเกม: `gfeedPush/gfeedPrune/gfeedWatchStart/gfeedWatchStop/gfeedRebuild/gfeedToggleLike/gfeedAddComment` (online.js) · เรียงแสดงผล **เพื่อนก่อนเสมอ แล้วค่อยคนอื่น** (ทำฝั่ง client ใน `gfeedRebuild` ไม่ใช่ rules) · หน้าจอเปิดจากปุ่ม "🌏 ดูทั้งหมด" ในกล่องฟีดเพื่อนเดิม → `openFeedBoard()` (ui.js) ยังโชว์ "ใครออนไลน์ทำอะไรอยู่ตอนนี้" จาก `/presence` เดิม (ไม่ต้องมีโซนใหม่) จัดเรียงเพื่อนก่อนแบบเดียวกัน
 - **ยังไม่ publish = เกมไม่พัง:** เขียนโพสต์/ไลก์/คอมเมนต์โดน deny เงียบๆ → หน้า Feed เปิดได้ปกติเห็นแค่ presence สด ส่วนโพสต์กิจกรรม/ไลก์/คอมเมนต์ว่างจนกว่าจะ publish
+
+## หมายเหตุโครง /pphoto (📷 รูปโปรไฟล์อัปโหลดเอง — รอบ 709)
+- `/pphoto/<uid> = "data:image/jpeg;base64,..."` — รูปเดียวต่อคน · **แยก node ออกจาก `/leaderboard` โดยตั้งใจ**: รูป ~5–25KB ถ้าไปอยู่ใน leaderboard จะถูกดาวน์โหลดมาทั้งก้อนทุกครั้งที่โหลดกระดาน (limitToLast 20 คน = +500KB/ครั้ง) — แยกไว้แล้วอ่านเฉพาะตอนเปิดการ์ดโปรไฟล์คนนั้นจริง ๆ (มี cache ต่อ uid ใน memory)
+- **ไม่เก็บใน `state`** (จึงไม่ขึ้นไปกับเซฟ cloud `/users/<uid>/save`) — เก็บ localStorage แยกคีย์ `petVocabAdventure_photo` + DB · เข้าเกมเครื่องใหม่ `photoPullMine()` ดึงลงมาให้เอง · มีในเครื่องแต่ DB ว่าง = ส่งขึ้นให้เอง (self-heal)
+- ฝั่งเกม: `js/photo.js` (`photoGet/photoOf/photoFetch/photoSaveUrl/photoRemove/photoPullMine/openPhotoMenu/openPhotoCrop`) · ครอป/ย่อ/บีบด้วย canvas ในเครื่องก่อนเสมอ (256px จัตุรัส · ไล่ลดคุณภาพ 0.82→0.5 แล้วไล่ลดขนาด 256→160 จนกว่าจะ ≤28000 ตัวอักษร) — วัดจริงด้วยภาพ noise ล้วน (บีบยากสุด) ได้ 19,347 ตัวอักษร
+- จุดที่โชว์: รูป passport บนแถบล็อบบี้ (+ปุ่ม 📷 มุมขวาล่าง) · `playerAvatarHTML()` ทุกที่ (หน้าเกม/สถิติ/ใบรายงาน) · การ์ดโปรไฟล์ผู้เล่น (ของเราทันที · ของเพื่อนโหลดตามทีหลัง) · ไม่มีรูป = ตัวการ์ตูนบล็อกเหมือนเดิมทุกจุด
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`
