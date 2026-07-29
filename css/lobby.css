@@ -4433,58 +4433,62 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 }
 .grade-edit:hover{background:rgba(80,150,235,.42);}
 .grade-edit.locked{background:rgba(120,90,40,.32);color:#ffd9a0;border-color:rgba(255,190,110,.35);}
-/* กล่องเปลี่ยนชั้น — จอเตี้ย 812×375 ต้องเห็นครบทั้งใบ ไม่ต้องเลื่อน (กฎทอง #7) */
-.gradelock-box{max-width:430px;text-align:left;padding:16px 18px;}
-.gl-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
-.gl-emoji{font-size:30px;line-height:1;}
-.gl-ht h2{margin:0;font-size:18px;}
-.gl-cur{font-size:13px;color:#8db3da;font-weight:700;margin-top:2px;}
+/* กล่องเปลี่ยนชั้น — จอเตี้ย 812×375 ต้องเห็นครบทั้งใบ ไม่ต้องเลื่อน (กฎทอง #7)
+   🔠 รอบ 720: ผู้ใช้บอกตัวหนังสือเล็ก+จางเห็นไม่ชัด → ขยายฟอนต์ทั้งกล่อง + เข้มสีให้พอกับพื้นขาวของ .levelup-box
+   (สีพาสเทลเดิมออกแบบมาสำหรับพื้นเข้ม ตัดกับพื้นขาวจริงแล้วจางเกินไป) + ขยายกระดานกว้างขึ้นมาก */
+.gradelock-box{max-width:min(94vw,760px);text-align:left;padding:20px 26px;}
+.gl-head{display:flex;align-items:center;gap:14px;margin-bottom:12px;}
+.gl-emoji{font-size:40px;line-height:1;}
+.gl-ht h2{margin:0;font-size:26px;}
+.gl-cur{font-size:17px;color:#3f6d99;font-weight:700;margin-top:3px;}
 .gl-lock,.gl-ok{
-  display:block;border-radius:12px;padding:8px 11px;font-size:13px;line-height:1.45;
-  background:rgba(180,110,20,.18);border:1px solid rgba(255,190,110,.4);color:#ffdba6;
+  display:block;border-radius:14px;padding:11px 15px;font-size:16.5px;line-height:1.5;
+  background:rgba(255,196,120,.55);border:1.5px solid rgba(200,140,30,.55);color:#6b4103;
 }
-.gl-ok{background:rgba(40,150,90,.18);border-color:rgba(120,235,175,.38);color:#c6f5dc;}
-.gl-lock.gl-top{background:rgba(70,120,200,.18);border-color:rgba(150,200,255,.38);color:#d7e9ff;}
-.gl-lock-sub{display:block;font-size:11.5px;opacity:.92;margin-top:2px;font-weight:600;}
-.gl-why{font-size:11.5px;line-height:1.5;color:#a9c3e0;margin:8px 0 6px;}
-.gl-pick-lb{font-size:11px;font-weight:700;color:#8db3da;letter-spacing:.3px;margin:6px 0 4px;}
-.gl-opts{display:flex;flex-wrap:wrap;gap:6px;max-height:23vh;overflow:auto;}
+.gl-ok{background:rgba(140,235,180,.45);border-color:rgba(30,140,80,.55);color:#0f5c34;}
+.gl-lock.gl-top{background:rgba(150,200,255,.45);border-color:rgba(60,110,190,.55);color:#1c4a80;}
+.gl-lock-sub{display:block;font-size:14.5px;opacity:1;margin-top:3px;font-weight:600;}
+.gl-why{font-size:14.5px;line-height:1.55;color:#43617e;margin:10px 0 8px;}
+.gl-pick-lb{font-size:13.5px;font-weight:700;color:#3f6d99;letter-spacing:.3px;margin:8px 0 6px;}
+.gl-opts{display:flex;flex-wrap:wrap;gap:9px;max-height:30vh;overflow:auto;}
 /* ⚠️ ต้องนำหน้าด้วย .gradelock-box — ไม่งั้นแพ้ `.levelup-box button` ใน style.css (ปุ่มบวมเป็น 18px) */
 .gradelock-box .gl-opt{
-  display:inline-flex;align-items:center;gap:5px;cursor:pointer;margin-top:0;
-  background:rgba(30,80,150,.32);border:1px solid var(--glass-line);border-radius:10px;
-  color:#eaf3ff;font-size:12.5px;font-weight:700;padding:5px 9px;line-height:1;box-shadow:none;
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;margin-top:0;
+  background:rgba(30,80,150,.32);border:1px solid var(--glass-line);border-radius:12px;
+  color:#eaf3ff;font-size:16px;font-weight:700;padding:8px 15px;line-height:1;box-shadow:none;
 }
 .gradelock-box .gl-opt:hover{background:rgba(60,130,220,.46);}
 /* ปุ่มปิดท้ายกล่อง — ใช้ทรงเดียวกับกล่องอื่นแต่เตี้ยลงหน่อย */
-.gradelock-box .gl-foot button{margin-top:0;font-size:15px;padding:7px 22px;}
-.gl-hist{margin-top:8px;}
+.gradelock-box .gl-foot button{margin-top:0;font-size:18px;padding:9px 30px;}
+.gl-hist{margin-top:10px;}
 .gl-hline{
-  display:flex;flex-wrap:wrap;align-items:center;gap:5px 7px;
-  font-size:11.5px;color:#c3d6ec;line-height:1.25;
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px 10px;
+  font-size:14.5px;color:#43617e;line-height:1.3;
 }
-.gl-hg{font-weight:700;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;}
-.gl-hat{opacity:.72;font-size:10px;font-weight:600;white-space:nowrap;}
-.gl-harr{opacity:.55;font-size:11px;}
-.gl-foot{margin-top:12px;text-align:center;}
-.gl-cf{font-size:13px;line-height:1.6;margin:0;}
+.gl-hg{font-weight:700;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+.gl-hat{opacity:.85;font-size:12.5px;font-weight:600;white-space:nowrap;color:#5a6b82;}
+.gl-harr{opacity:.7;font-size:14px;}
+.gl-foot{margin-top:16px;text-align:center;}
+.gl-cf{font-size:16px;line-height:1.6;margin:0;}
 /* จอเตี้ย (มือถือแนวนอน 812×375) — บีบระยะให้เห็นครบทั้งใบ ไม่ต้องเลื่อนในกล่อง (กฎทอง #7) */
 @media (max-height:460px){
   /* กว้างขึ้น = ชิปชั้นเรียงได้แถวละหลายตัว → เตี้ยลง เห็นครบทั้งใบโดยไม่ต้องเลื่อน */
-  .gradelock-box{padding:9px 14px;max-width:min(94vw,620px);}
-  .gl-head{gap:9px;margin-bottom:5px;}
-  .gl-emoji{font-size:23px;}
-  .gl-ht h2{font-size:15.5px;}
-  .gl-cur{font-size:12px;}
-  .gl-lock,.gl-ok{padding:6px 10px;font-size:12px;line-height:1.35;}
-  .gl-why{font-size:10.5px;line-height:1.4;margin:5px 0 2px;}
-  .gl-pick-lb{margin:3px 0 3px;}
+  .gradelock-box{padding:8px 16px;max-width:min(96vw,760px);}
+  .gl-head{gap:8px;margin-bottom:4px;}
+  .gl-emoji{font-size:24px;}
+  .gl-ht h2{font-size:18px;}
+  .gl-cur{font-size:13.5px;}
+  .gl-lock,.gl-ok{padding:5px 10px;font-size:13.5px;line-height:1.3;}
+  .gl-lock-sub{font-size:12px;}
+  .gl-why{font-size:12px;line-height:1.35;margin:4px 0 2px;}
+  .gl-pick-lb{margin:3px 0 3px;font-size:12px;}
   .gl-opts{max-height:none;gap:5px;}
-  .gradelock-box .gl-opt{padding:4px 8px;font-size:12px;}
-  .gradelock-box .gl-foot button{font-size:14px;padding:6px 20px;}
-  .gl-hline{font-size:11px;gap:3px 6px;}
-  .gl-hist{margin-top:5px;}
-  .gl-foot{margin-top:4px;}
+  .gradelock-box .gl-opt{padding:4px 10px;font-size:13px;}
+  .gradelock-box .gl-foot button{font-size:15.5px;padding:6px 22px;}
+  .gl-hline{font-size:12px;gap:4px 7px;}
+  .gl-hat{font-size:11px;}
+  .gl-hist{margin-top:4px;}
+  .gl-foot{margin-top:3px;}
 }
 /* ป้ายกติกาในหน้าลงทะเบียน */
 .reg-gradelock{
