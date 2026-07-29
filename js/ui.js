@@ -1117,8 +1117,10 @@ function renderOnlineCard(){
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
   const meBadges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มของเราต่อท้ายชื่อ (โชว์ทันทีจาก state)
-  const meRow = `<div class="online-row online-me">
+  const meAv = (typeof photoMiniHTML === 'function') ? photoMiniHTML(meUid, 'online-ava') : '';
+  const meRow = `<div class="online-row online-me${meAv ? ' has-ava' : ''}">
       <span class="online-dot"></span>
+      ${meAv}
       <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
       ${gradeMark(meGrade, 'gm-row')}
       <span class="online-act">${idTag(meUid)} · กำลังเล่นอยู่ตอนนี้</span>
@@ -1151,8 +1153,10 @@ function renderOnlineCard(){
     /* รอบ 153: แถวเพื่อน = เมนูลัดทั้งแถว · รอบ 178: 1 แถว (2 บรรทัด) = 1 หน้าพลิก */
     const rows = Online.friends.map(f=>{
       const fid = String(f.id||'');
-      return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
+      const fAv = (typeof photoMiniHTML === 'function') ? photoMiniHTML(fid, 'online-ava') : '';
+      return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}${fAv ? ' has-ava' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
       <span class="online-dot"></span>
+      ${fAv}
       <span class="online-name">${escapeHTML(f.n)}</span>
       ${gradeMark(gradeOf(fid, f.g), 'gm-row')}
       <span class="online-act">${idTag(fid)} · ${escapeHTML(f.act)}</span>
@@ -2552,11 +2556,14 @@ function openChatInbox(){
   const storyEl = overlay.querySelector('#ib-story');
   const onlineFriends = friends.map((f,i)=>({f,i})).filter(x=>onlineIds.has(String(x.f.uid)));
   if(onlineFriends.length){
-    storyEl.innerHTML = onlineFriends.map(({f,i})=>
-      `<button class="ib-story-item" data-i="${i}" type="button" title="แตะ = แชท · กดค้าง = ดูโปรไฟล์">
-        <span class="ib-story-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}<i class="ib-story-on"></i><span class="ib-story-badge" data-uid="${escapeHTML(f.uid)}" style="display:none"></span></span>
+    storyEl.innerHTML = onlineFriends.map(({f,i})=>{
+      const ph = (typeof photoOf === 'function') ? photoOf(f.uid) : '';
+      const face = ph ? `<img src="${ph}" alt="">` : escapeHTML((f.n||'?').trim().charAt(0).toUpperCase());
+      return `<button class="ib-story-item" data-i="${i}" type="button" title="แตะ = แชท · กดค้าง = ดูโปรไฟล์">
+        <span class="ib-story-ava${ph ? ' ib-ava-photo' : ''}">${face}<i class="ib-story-on"></i><span class="ib-story-badge" data-uid="${escapeHTML(f.uid)}" style="display:none"></span></span>
         <small>${escapeHTML((f.n||'').trim().split(' ')[0])}</small>
-      </button>`).join('');
+      </button>`;
+    }).join('');
     /* รอบ 277: แตะ = แชท (เดิม) · กดค้าง ≥550ms = เปิดโปรไฟล์เพื่อนคนนั้น */
     storyEl.querySelectorAll('.ib-story-item').forEach(b=>{
       let lpTimer = null, lpFired = false;
@@ -2633,8 +2640,10 @@ function openChatInbox(){
           lastTxt = (last.f === meKey ? selfPronoun() + ': ' : '') + last.t;
           if(last.ts) timeTxt = ibTimeStr(last.ts);
         }else lastTxt = 'ยังไม่เคยคุยกัน — ทักเลย! 👋';
+        const ph = (typeof photoOf === 'function') ? photoOf(f.uid) : '';
+        const face = ph ? `<img src="${ph}" alt="">` : escapeHTML((f.n||'?').trim().charAt(0).toUpperCase());
         return `<div class="ib-row${unread ? ' unread' : ''}" data-i="${i}">
-          <span class="ib-ava">${escapeHTML((f.n||'?').trim().charAt(0).toUpperCase())}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
+          <span class="ib-ava${ph ? ' ib-ava-photo' : ''}">${face}${onlineIds.has(String(f.uid)) ? '<i class="ib-on"></i>' : ''}</span>
           <span class="ib-mid"><b class="ib-name">${escapeHTML(f.n)}</b><small class="ib-last">${escapeHTML(lastTxt)}</small></span>
           <span class="ib-meta"><small class="ib-time">${timeTxt}</small>${unread ? `<span class="ib-dot">${badgeTxt(unread)}</span>` : ''}</span>
           <button class="ib-world" data-i="${i}" title="ชวนเล่นโลก 3D" type="button">🌍</button>
@@ -2715,7 +2724,7 @@ function openChat(friend){
   overlay.className = 'chat-overlay';
   overlay.innerHTML = `<div class="chat-box ct-${theme}" id="chat-box">
     <div class="chat-head">
-      <span class="chat-head-name">💬 ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
+      <span class="chat-head-name">${((typeof photoMiniHTML === 'function') && photoMiniHTML(friend.uid, 'chat-head-ava')) || '💬'} ${escapeHTML(friend.n)}<small> ${idTag(friend.uid)}</small></span>
       <button class="chat-call-btn" id="chat-call-voice" type="button" title="โทรด้วยเสียง">📞</button>
       <button class="chat-theme-btn" id="chat-theme-btn" type="button" title="เลือกธีม">🎨</button>
       <label class="chat-secret-tg" title="แชทลับ: อ่านแล้วข้อความหายใน 20 วินาที">
@@ -3463,6 +3472,7 @@ function fpostHTML(it, opt){
       data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
     <div class="fp-head">
       <span class="fp-ico">${fc.e}</span>
+      ${(typeof photoMiniHTML === 'function') ? photoMiniHTML(it.u, 'fp-ava') : ''}
       <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))}</span>
       <small class="fp-when">${feedAgo(it.ts)}</small>
     </div>
