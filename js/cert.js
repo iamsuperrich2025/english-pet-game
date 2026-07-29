@@ -263,15 +263,24 @@ function certSVG(c, opt){
         font-weight="bold" fill="#fff8e4" letter-spacing="1.5">VW</text>
     </g>`;
 
-  /* ตราสัญลักษณ์เวกเตอร์ (ใต้ img/cert/logo.png — ไม่มีไฟล์ก็ยังสวย) */
+  /* ตราสัญลักษณ์เวกเตอร์ = โล่ (ใต้ img/cert/logo.png — ไม่มีไฟล์ก็ยังสวย)
+     รอบ 725 (ผู้ใช้: "เปลี่ยนจากวงกลมเป็นทรงโล่ เท่ ๆ สง่างาม"): โล่ heater shield
+     ขอบทองหนา + สนามน้ำเงินเข้ม + ดาว/ลูกโลก/หนังสือเปิด · สูงกว่ากว้าง = ดูสง่า */
   const emblem = (x, y, s)=>`
     <g transform="translate(${x},${y}) scale(${s})">
-      <circle r="46" fill="url(#${u}seal)" stroke="#a8801f" stroke-width="3"/>
-      <circle r="37" fill="#123a63" stroke="#f2dfa4" stroke-width="2"/>
-      <ellipse rx="26" ry="26" fill="none" stroke="#8fd4ff" stroke-width="2" opacity=".9"/>
-      <ellipse rx="12" ry="26" fill="none" stroke="#8fd4ff" stroke-width="2" opacity=".8"/>
-      <path d="M-26 0 H26 M-23 -13 H23 M-23 13 H23" stroke="#8fd4ff" stroke-width="1.6" opacity=".75"/>
-      <path d="M-27 22 q27 -11 27 0 q0 -11 27 0 v7 q-27 -11 -27 0 q0 -11 -27 0 z" fill="#f7e6b4" stroke="#a8801f" stroke-width="1.4"/>
+      <path d="M-56 -82 H56 A10 10 0 0 1 66 -72 V4 C66 54 20 80 0 94 C-20 80 -66 54 -66 4 V-72 A10 10 0 0 1 -56 -82 Z"
+        fill="url(#${u}gold)" stroke="#8a6a1f" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M-45 -69 H45 A8 8 0 0 1 53 -61 V2 C53 43 16 65 0 78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z"
+        fill="#123a63" stroke="#f2dfa4" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M-45 -69 H0 V78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z" fill="#ffffff" opacity=".07"/>
+      <text y="-38" text-anchor="middle" font-size="26" fill="#f2dfa4">★</text>
+      <g transform="translate(0,6)" fill="none" stroke="#8fd4ff" stroke-width="2.3">
+        <circle r="26"/>
+        <ellipse rx="12" ry="26"/>
+        <path d="M-26 0 H26 M-23.5 -12.5 H23.5 M-23.5 12.5 H23.5" stroke-width="1.7" opacity=".8"/>
+      </g>
+      <path d="M-29 45 q29 -12 29 0 q0 -12 29 0 v10 q-29 -12 -29 0 q0 -12 -29 0 z"
+        fill="#f7e6b4" stroke="#a8801f" stroke-width="1.5" stroke-linejoin="round"/>
     </g>`;
 
   const wordsN = certXML(typeof fmtNum === 'function' ? fmtNum(c.words || 0) : String(c.words || 0));
@@ -380,9 +389,9 @@ function certSVG(c, opt){
     ${frame}
     <image href="img/cert/paper.png" xlink:href="img/cert/paper.png" x="0" y="0"
       width="700" height="1000" preserveAspectRatio="none"/>
-    ${emblem(350, 158, 1.35)}
-    <image href="img/cert/logo.png" xlink:href="img/cert/logo.png" x="260" y="68"
-      width="180" height="180" preserveAspectRatio="xMidYMid meet"/>
+    ${emblem(350, 156, 1.12)}
+    <image href="img/cert/logo.png" xlink:href="img/cert/logo.png" x="262" y="58"
+      width="176" height="196" preserveAspectRatio="xMidYMid meet"/>
     <text x="350" y="308" text-anchor="middle" font-size="46" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="7">${CERT_ISSUER_EN}</text>
     <text x="350" y="350" text-anchor="middle" font-size="${full ? 24 : 26}" fill="${gold ? accent : '#7a6431'}"

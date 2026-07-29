@@ -6,7 +6,7 @@
 | ไฟล์ | ขนาด | หน้าที่ |
 |------|------|---------|
 | `img/cert/paper.png` | **700×1000 px แนวตั้ง** (7:10) | กระดาษ + กรอบทองทั้งใบ · **กลางใบต้องว่างเปล่า** ระบบพิมพ์ข้อความทับเอง |
-| `img/cert/logo.png`  | **512×512 px พื้นโปร่ง** | โลโก้ Vocab World วางกลางหัวใบ (พื้นที่จริงบนใบ 180×180 ที่ y=68–248) |
+| `img/cert/logo.png`  | **512×512 px พื้นโปร่ง** | โลโก้ Vocab World **ทรงโล่** วางกลางหัวใบ (พื้นที่จริงบนใบ 176×196 ที่ y=58–254) |
 
 ⚠️ **โซนห้ามมีลาย** (พิกัดบนผืน 700×1000): แถบข้อความ y≈280–960 · หัวโลโก้ y≈60–250
 กรอบ/ลายวางได้เฉพาะขอบนอก ~55px และมุมทั้ง 4 · ห้ามมีตัวหนังสือใด ๆ ในภาพ
@@ -25,19 +25,22 @@ Negative: text, letters, words, typography, signature, logo, seal in center, rib
 center, people, portrait, dark background, heavy shadows, clutter, watermark words.
 ```
 
-## 2) prompt โลโก้ (logo.png)
+## 2) prompt โลโก้ **ทรงโล่** (logo.png) — ผู้ใช้สั่งเปลี่ยนจากวงกลม รอบ 713
 ```
-Emblem logo for "Vocab World", an English vocabulary learning game for children.
-A circular badge: a globe drawn with clean latitude/longitude lines resting on an open book,
-enclosed by a polished gold rope-and-laurel ring, one small five-pointed star at the top.
-Colors: deep navy blue (#123a63) and royal gold (#c8a13c) with soft highlights.
-Modern flat vector style with subtle gradients, crisp edges, perfectly centered and
-symmetrical, transparent background, square 512x512, no text, still readable at 32 px,
-app-icon quality, premium and friendly - suitable for a school award certificate.
-Negative: text, letters, words, photo, realistic 3D render, drop shadow, busy details,
-gradient background, mascot character, cartoon face.
+Heraldic shield emblem logo for "Vocab World", an English vocabulary learning game.
+A classic heater shield (pointed at the bottom, rounded top shoulders) - taller than it is
+wide, standing upright and dignified. Thick polished gold beveled shield border with a fine
+inner rule; the shield field is deep navy blue (#123a63). Inside the field, centered from top
+to bottom: a small five-pointed gold star, a globe drawn with clean latitude/longitude lines,
+and an open book at the base. Royal gold (#c8a13c) and deep navy palette with soft metallic
+highlights on the gold. Crest / academic coat-of-arms feeling: elegant, prestigious, crisp.
+Modern flat vector style with subtle gradients, perfectly symmetrical, centered, transparent
+background, square 512x512 canvas with the shield fitted inside, no text, still readable at
+32 px, app-icon quality - suitable for a school award certificate.
+Negative: circle badge, round frame, text, letters, words, photo, realistic 3D render,
+drop shadow, busy details, gradient background, mascot character, cartoon face, sword, wings.
 ```
-> อยากได้ตัวมีอักษร: เติม `with the letters "VW" in an elegant serif monogram at the center of the globe`
+> อยากได้ตัวมีอักษร: เติม `with the letters "VW" in an elegant gold serif monogram on a small banner across the bottom of the shield`
 
 ## หลังได้ไฟล์
 1. วางที่ `img/cert/paper.png` และ `img/cert/logo.png` (สร้างโฟลเดอร์ `img/cert/` ก่อน)
