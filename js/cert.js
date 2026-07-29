@@ -47,7 +47,8 @@ const CERT_LEVEL_EN = {
 };
 /* คลังศัพท์ขั้นสูงแยกหมวด (BAND_ADV_MANIFEST[].label) → อังกฤษ */
 const CERT_ADV_EN = {'ศัพท์วิชาการ':'Academic Vocabulary', 'ศัพท์ธุรกิจ':'Business Vocabulary',
-  'ศัพท์วิทยาศาสตร์':'Science Vocabulary', 'ศัพท์ท่องเที่ยว':'Travel Vocabulary'};
+  'ศัพท์วิทยาศาสตร์':'Science Vocabulary', 'ศัพท์ท่องเที่ยว':'Travel Vocabulary',
+  'ศัพท์การแพทย์':'Medical Vocabulary'};
 /* 🏅 โหมดสอบใหญ่ (รอบ 773): ระดับสอบไทย → อังกฤษ · ใบประกาศคนละใบต่อระดับ (c.big = ชื่อระดับอังกฤษ) */
 const CERT_BIG_LV = {'ต้น':'Foundation', 'กลาง':'Intermediate', 'สูง':'Expert'};
 

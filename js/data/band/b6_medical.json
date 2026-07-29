@@ -1,0 +1,1594 @@
+[
+  [
+    "hospital",
+    "โรงพยาบาล"
+  ],
+  [
+    "clinic",
+    "คลินิก"
+  ],
+  [
+    "emergency room",
+    "ห้องฉุกเฉิน"
+  ],
+  [
+    "intensive care unit",
+    "หอผู้ป่วยวิกฤต"
+  ],
+  [
+    "outpatient department",
+    "แผนกผู้ป่วยนอก"
+  ],
+  [
+    "inpatient ward",
+    "หอผู้ป่วยใน"
+  ],
+  [
+    "operating room",
+    "ห้องผ่าตัด"
+  ],
+  [
+    "recovery room",
+    "ห้องพักฟื้น"
+  ],
+  [
+    "waiting room",
+    "ห้องรอตรวจ"
+  ],
+  [
+    "reception desk",
+    "เคาน์เตอร์ต้อนรับ"
+  ],
+  [
+    "doctor",
+    "แพทย์"
+  ],
+  [
+    "physician",
+    "อายุรแพทย์"
+  ],
+  [
+    "surgeon",
+    "ศัลยแพทย์"
+  ],
+  [
+    "pediatrician",
+    "กุมารแพทย์"
+  ],
+  [
+    "cardiologist",
+    "แพทย์หัวใจ"
+  ],
+  [
+    "dermatologist",
+    "แพทย์ผิวหนัง"
+  ],
+  [
+    "neurologist",
+    "แพทย์ระบบประสาท"
+  ],
+  [
+    "psychiatrist",
+    "จิตแพทย์"
+  ],
+  [
+    "ophthalmologist",
+    "จักษุแพทย์"
+  ],
+  [
+    "dentist",
+    "ทันตแพทย์"
+  ],
+  [
+    "nurse",
+    "พยาบาล"
+  ],
+  [
+    "head nurse",
+    "หัวหน้าพยาบาล"
+  ],
+  [
+    "paramedic",
+    "พนักงานฉุกเฉินการแพทย์"
+  ],
+  [
+    "pharmacist",
+    "เภสัชกร"
+  ],
+  [
+    "radiologist",
+    "รังสีแพทย์"
+  ],
+  [
+    "anesthesiologist",
+    "วิสัญญีแพทย์"
+  ],
+  [
+    "medical assistant",
+    "ผู้ช่วยแพทย์"
+  ],
+  [
+    "caregiver",
+    "ผู้ดูแลผู้ป่วย"
+  ],
+  [
+    "patient",
+    "ผู้ป่วย"
+  ],
+  [
+    "specialist",
+    "แพทย์เฉพาะทาง"
+  ],
+  [
+    "general practitioner",
+    "แพทย์ทั่วไป"
+  ],
+  [
+    "medical intern",
+    "แพทย์ฝึกหัด"
+  ],
+  [
+    "hospital administrator",
+    "ผู้บริหารโรงพยาบาล"
+  ],
+  [
+    "medical record clerk",
+    "เจ้าหน้าที่เวชระเบียน"
+  ],
+  [
+    "lab technician",
+    "นักเทคนิคการแพทย์"
+  ],
+  [
+    "physical therapist",
+    "นักกายภาพบำบัด"
+  ],
+  [
+    "midwife",
+    "ผดุงครรภ์"
+  ],
+  [
+    "surgical team",
+    "ทีมผ่าตัด"
+  ],
+  [
+    "medical school",
+    "คณะแพทยศาสตร์"
+  ],
+  [
+    "residency training",
+    "การฝึกแพทย์ประจำบ้าน"
+  ],
+  [
+    "ward round",
+    "การเยี่ยมตรวจผู้ป่วย"
+  ],
+  [
+    "nursing station",
+    "สถานีพยาบาล"
+  ],
+  [
+    "hospital bed",
+    "เตียงผู้ป่วย"
+  ],
+  [
+    "isolation ward",
+    "หอแยกโรค"
+  ],
+  [
+    "maternity ward",
+    "หอผู้ป่วยสูติกรรม"
+  ],
+  [
+    "symptom",
+    "อาการ"
+  ],
+  [
+    "fever",
+    "ไข้"
+  ],
+  [
+    "headache",
+    "ปวดหัว"
+  ],
+  [
+    "sore throat",
+    "เจ็บคอ"
+  ],
+  [
+    "cough",
+    "ไอ"
+  ],
+  [
+    "runny nose",
+    "น้ำมูกไหล"
+  ],
+  [
+    "nausea",
+    "คลื่นไส้"
+  ],
+  [
+    "vomiting",
+    "อาเจียน"
+  ],
+  [
+    "dizziness",
+    "เวียนศีรษะ"
+  ],
+  [
+    "fatigue",
+    "อ่อนเพลีย"
+  ],
+  [
+    "chills",
+    "หนาวสั่น"
+  ],
+  [
+    "rash",
+    "ผื่น"
+  ],
+  [
+    "swelling",
+    "บวม"
+  ],
+  [
+    "bruise",
+    "รอยฟกช้ำ"
+  ],
+  [
+    "abdominal pain",
+    "ปวดท้อง"
+  ],
+  [
+    "chest pain",
+    "เจ็บหน้าอก"
+  ],
+  [
+    "shortness of breath",
+    "หายใจถี่"
+  ],
+  [
+    "diarrhea",
+    "ท้องเสีย"
+  ],
+  [
+    "constipation",
+    "ท้องผูก"
+  ],
+  [
+    "loss of appetite",
+    "เบื่ออาหาร"
+  ],
+  [
+    "weight loss",
+    "น้ำหนักลด"
+  ],
+  [
+    "blurred vision",
+    "ตาพร่ามัว"
+  ],
+  [
+    "diagnosis",
+    "การวินิจฉัย"
+  ],
+  [
+    "medical examination",
+    "การตรวจร่างกาย"
+  ],
+  [
+    "physical checkup",
+    "การตรวจสุขภาพประจำปี"
+  ],
+  [
+    "blood test",
+    "การตรวจเลือด"
+  ],
+  [
+    "urine test",
+    "การตรวจปัสสาวะ"
+  ],
+  [
+    "x-ray",
+    "เอกซเรย์"
+  ],
+  [
+    "CT scan",
+    "การสแกนซีที"
+  ],
+  [
+    "MRI scan",
+    "การสแกนเอ็มอาร์ไอ"
+  ],
+  [
+    "ultrasound",
+    "อัลตราซาวนด์"
+  ],
+  [
+    "biopsy",
+    "การตัดชิ้นเนื้อตรวจ"
+  ],
+  [
+    "blood pressure",
+    "ความดันโลหิต"
+  ],
+  [
+    "pulse rate",
+    "อัตราชีพจร"
+  ],
+  [
+    "body temperature",
+    "อุณหภูมิร่างกาย"
+  ],
+  [
+    "vital signs",
+    "สัญญาณชีพ"
+  ],
+  [
+    "medical history",
+    "ประวัติการรักษา"
+  ],
+  [
+    "family history",
+    "ประวัติครอบครัว"
+  ],
+  [
+    "allergy test",
+    "การทดสอบภูมิแพ้"
+  ],
+  [
+    "screening test",
+    "การตรวจคัดกรอง"
+  ],
+  [
+    "differential diagnosis",
+    "การวินิจฉัยแยกโรค"
+  ],
+  [
+    "medical certificate",
+    "ใบรับรองแพทย์"
+  ],
+  [
+    "lab result",
+    "ผลตรวจทางห้องปฏิบัติการ"
+  ],
+  [
+    "second opinion",
+    "ความเห็นแพทย์ท่านที่สอง"
+  ],
+  [
+    "referral letter",
+    "หนังสือส่งตัว"
+  ],
+  [
+    "diabetes",
+    "เบาหวาน"
+  ],
+  [
+    "hypertension",
+    "ความดันโลหิตสูง"
+  ],
+  [
+    "asthma",
+    "หอบหืด"
+  ],
+  [
+    "arthritis",
+    "ข้ออักเสบ"
+  ],
+  [
+    "migraine",
+    "ไมเกรน"
+  ],
+  [
+    "infection",
+    "การติดเชื้อ"
+  ],
+  [
+    "fracture",
+    "กระดูกหัก"
+  ],
+  [
+    "stroke",
+    "โรคหลอดเลือดสมอง"
+  ],
+  [
+    "heart attack",
+    "หัวใจวาย"
+  ],
+  [
+    "heart disease",
+    "โรคหัวใจ"
+  ],
+  [
+    "cancer",
+    "มะเร็ง"
+  ],
+  [
+    "tumor",
+    "เนื้องอก"
+  ],
+  [
+    "anemia",
+    "โรคโลหิตจาง"
+  ],
+  [
+    "obesity",
+    "โรคอ้วน"
+  ],
+  [
+    "osteoporosis",
+    "โรคกระดูกพรุน"
+  ],
+  [
+    "cataract",
+    "ต้อกระจก"
+  ],
+  [
+    "glaucoma",
+    "ต้อหิน"
+  ],
+  [
+    "pneumonia",
+    "ปอดบวม"
+  ],
+  [
+    "bronchitis",
+    "หลอดลมอักเสบ"
+  ],
+  [
+    "tuberculosis",
+    "วัณโรค"
+  ],
+  [
+    "hepatitis",
+    "ตับอักเสบ"
+  ],
+  [
+    "kidney stone",
+    "นิ่วในไต"
+  ],
+  [
+    "kidney failure",
+    "ไตวาย"
+  ],
+  [
+    "ulcer",
+    "แผลในกระเพาะอาหาร"
+  ],
+  [
+    "hernia",
+    "ไส้เลื่อน"
+  ],
+  [
+    "appendicitis",
+    "ไส้ติ่งอักเสบ"
+  ],
+  [
+    "gallstone",
+    "นิ่วในถุงน้ำดี"
+  ],
+  [
+    "thyroid disorder",
+    "โรคต่อมไทรอยด์"
+  ],
+  [
+    "skin infection",
+    "การติดเชื้อที่ผิวหนัง"
+  ],
+  [
+    "eczema",
+    "ผื่นภูมิแพ้ผิวหนัง"
+  ],
+  [
+    "psoriasis",
+    "โรคสะเก็ดเงิน"
+  ],
+  [
+    "chronic illness",
+    "โรคเรื้อรัง"
+  ],
+  [
+    "autoimmune disease",
+    "โรคภูมิต้านตนเอง"
+  ],
+  [
+    "genetic disorder",
+    "โรคทางพันธุกรรม"
+  ],
+  [
+    "contagious disease",
+    "โรคติดต่อ"
+  ],
+  [
+    "sexually transmitted disease",
+    "โรคติดต่อทางเพศสัมพันธ์"
+  ],
+  [
+    "food poisoning",
+    "อาหารเป็นพิษ"
+  ],
+  [
+    "dehydration",
+    "ภาวะขาดน้ำ"
+  ],
+  [
+    "malnutrition",
+    "ภาวะทุพโภชนาการ"
+  ],
+  [
+    "sepsis",
+    "ภาวะติดเชื้อในกระแสเลือด"
+  ],
+  [
+    "coma",
+    "ภาวะโคม่า"
+  ],
+  [
+    "paralysis",
+    "อัมพาต"
+  ],
+  [
+    "seizure",
+    "อาการชัก"
+  ],
+  [
+    "concussion",
+    "สมองกระทบกระเทือน"
+  ],
+  [
+    "sprained ankle",
+    "ข้อเท้าแพลง"
+  ],
+  [
+    "prescription",
+    "ใบสั่งยา"
+  ],
+  [
+    "dosage",
+    "ขนาดยา"
+  ],
+  [
+    "tablet",
+    "ยาเม็ด"
+  ],
+  [
+    "capsule",
+    "ยาแคปซูล"
+  ],
+  [
+    "syrup",
+    "ยาน้ำ"
+  ],
+  [
+    "ointment",
+    "ยาขี้ผึ้ง"
+  ],
+  [
+    "injection",
+    "การฉีดยา"
+  ],
+  [
+    "vaccine",
+    "วัคซีน"
+  ],
+  [
+    "vaccination",
+    "การฉีดวัคซีน"
+  ],
+  [
+    "antibiotic",
+    "ยาปฏิชีวนะ"
+  ],
+  [
+    "painkiller",
+    "ยาแก้ปวด"
+  ],
+  [
+    "antihistamine",
+    "ยาแก้แพ้"
+  ],
+  [
+    "antiseptic",
+    "ยาฆ่าเชื้อ"
+  ],
+  [
+    "side effect",
+    "ผลข้างเคียง"
+  ],
+  [
+    "overdose",
+    "การใช้ยาเกินขนาด"
+  ],
+  [
+    "drug interaction",
+    "ปฏิกิริยาระหว่างยา"
+  ],
+  [
+    "surgery",
+    "การผ่าตัด"
+  ],
+  [
+    "therapy",
+    "การบำบัด"
+  ],
+  [
+    "physical therapy",
+    "กายภาพบำบัด"
+  ],
+  [
+    "chemotherapy",
+    "เคมีบำบัด"
+  ],
+  [
+    "radiation therapy",
+    "รังสีรักษา"
+  ],
+  [
+    "rehabilitation",
+    "การฟื้นฟูสมรรถภาพ"
+  ],
+  [
+    "blood transfusion",
+    "การถ่ายเลือด"
+  ],
+  [
+    "organ transplant",
+    "การปลูกถ่ายอวัยวะ"
+  ],
+  [
+    "dialysis",
+    "การฟอกไต"
+  ],
+  [
+    "anesthesia",
+    "การให้ยาสลบ"
+  ],
+  [
+    "local anesthesia",
+    "การให้ยาชาเฉพาะที่"
+  ],
+  [
+    "general anesthesia",
+    "การให้ยาสลบทั้งตัว"
+  ],
+  [
+    "stitches",
+    "การเย็บแผล"
+  ],
+  [
+    "cast",
+    "เฝือก"
+  ],
+  [
+    "splint",
+    "เฝือกดาม"
+  ],
+  [
+    "IV drip",
+    "การให้น้ำเกลือทางหลอดเลือด"
+  ],
+  [
+    "medication schedule",
+    "ตารางกินยา"
+  ],
+  [
+    "treatment plan",
+    "แผนการรักษา"
+  ],
+  [
+    "follow-up treatment",
+    "การรักษาต่อเนื่อง"
+  ],
+  [
+    "recovery period",
+    "ช่วงพักฟื้น"
+  ],
+  [
+    "discharge",
+    "การจำหน่ายผู้ป่วย"
+  ],
+  [
+    "hospitalization",
+    "การรับตัวไว้รักษาในโรงพยาบาล"
+  ],
+  [
+    "home care",
+    "การดูแลที่บ้าน"
+  ],
+  [
+    "herbal medicine",
+    "ยาสมุนไพร"
+  ],
+  [
+    "over-the-counter drug",
+    "ยาที่ซื้อได้โดยไม่ต้องมีใบสั่งแพทย์"
+  ],
+  [
+    "generic drug",
+    "ยาสามัญ"
+  ],
+  [
+    "expiration date",
+    "วันหมดอายุ"
+  ],
+  [
+    "drug allergy",
+    "การแพ้ยา"
+  ],
+  [
+    "stethoscope",
+    "หูฟังแพทย์"
+  ],
+  [
+    "thermometer",
+    "ปรอทวัดไข้"
+  ],
+  [
+    "syringe",
+    "เข็มฉีดยา"
+  ],
+  [
+    "wheelchair",
+    "รถเข็นผู้ป่วย"
+  ],
+  [
+    "crutches",
+    "ไม้ค้ำยัน"
+  ],
+  [
+    "walker",
+    "เครื่องช่วยเดิน"
+  ],
+  [
+    "bandage",
+    "ผ้าพันแผล"
+  ],
+  [
+    "gauze",
+    "ผ้าก๊อซ"
+  ],
+  [
+    "stretcher",
+    "เปลหาม"
+  ],
+  [
+    "gurney",
+    "เตียงเข็น"
+  ],
+  [
+    "ventilator",
+    "เครื่องช่วยหายใจ"
+  ],
+  [
+    "defibrillator",
+    "เครื่องกระตุกหัวใจไฟฟ้า"
+  ],
+  [
+    "scalpel",
+    "มีดผ่าตัด"
+  ],
+  [
+    "forceps",
+    "คีมคีบทางการแพทย์"
+  ],
+  [
+    "surgical mask",
+    "หน้ากากผ่าตัด"
+  ],
+  [
+    "surgical gloves",
+    "ถุงมือผ่าตัด"
+  ],
+  [
+    "hospital gown",
+    "ชุดผู้ป่วย"
+  ],
+  [
+    "blood pressure monitor",
+    "เครื่องวัดความดัน"
+  ],
+  [
+    "glucose meter",
+    "เครื่องวัดน้ำตาลในเลือด"
+  ],
+  [
+    "pulse oximeter",
+    "เครื่องวัดออกซิเจนในเลือด"
+  ],
+  [
+    "ECG machine",
+    "เครื่องตรวจคลื่นไฟฟ้าหัวใจ"
+  ],
+  [
+    "oxygen tank",
+    "ถังออกซิเจน"
+  ],
+  [
+    "oxygen mask",
+    "หน้ากากออกซิเจน"
+  ],
+  [
+    "IV pole",
+    "เสาน้ำเกลือ"
+  ],
+  [
+    "sling",
+    "ผ้าคล้องแขน"
+  ],
+  [
+    "hearing aid",
+    "เครื่องช่วยฟัง"
+  ],
+  [
+    "prosthetic limb",
+    "อวัยวะเทียม"
+  ],
+  [
+    "medical monitor",
+    "เครื่องติดตามสัญญาณชีพ"
+  ],
+  [
+    "surgical light",
+    "โคมไฟผ่าตัด"
+  ],
+  [
+    "sterilizer",
+    "เครื่องนึ่งฆ่าเชื้อ"
+  ],
+  [
+    "cotton swab",
+    "ไม้พันสำลี"
+  ],
+  [
+    "adhesive tape",
+    "เทปกาวทางการแพทย์"
+  ],
+  [
+    "sanitizer",
+    "เจลล้างมือฆ่าเชื้อ"
+  ],
+  [
+    "examination table",
+    "เตียงตรวจโรค"
+  ],
+  [
+    "incubator",
+    "ตู้อบเด็กแรกเกิด"
+  ],
+  [
+    "dialysis machine",
+    "เครื่องฟอกไต"
+  ],
+  [
+    "suture kit",
+    "ชุดเย็บแผล"
+  ],
+  [
+    "first aid kit",
+    "ชุดปฐมพยาบาล"
+  ],
+  [
+    "cotton ball",
+    "สำลีก้อน"
+  ],
+  [
+    "weighing scale",
+    "เครื่องชั่งน้ำหนัก"
+  ],
+  [
+    "toothache",
+    "ปวดฟัน"
+  ],
+  [
+    "cavity",
+    "รูฟันผุ"
+  ],
+  [
+    "tooth decay",
+    "ฟันผุ"
+  ],
+  [
+    "gum disease",
+    "โรคเหงือก"
+  ],
+  [
+    "gingivitis",
+    "เหงือกอักเสบ"
+  ],
+  [
+    "plaque",
+    "คราบพลัค"
+  ],
+  [
+    "tartar",
+    "หินปูน"
+  ],
+  [
+    "braces",
+    "เครื่องมือจัดฟัน"
+  ],
+  [
+    "dentures",
+    "ฟันปลอม"
+  ],
+  [
+    "root canal",
+    "การรักษารากฟัน"
+  ],
+  [
+    "tooth extraction",
+    "การถอนฟัน"
+  ],
+  [
+    "dental filling",
+    "การอุดฟัน"
+  ],
+  [
+    "dental crown",
+    "ครอบฟัน"
+  ],
+  [
+    "dental floss",
+    "ไหมขัดฟัน"
+  ],
+  [
+    "mouthwash",
+    "น้ำยาบ้วนปาก"
+  ],
+  [
+    "wisdom tooth",
+    "ฟันคุด"
+  ],
+  [
+    "dental checkup",
+    "การตรวจฟัน"
+  ],
+  [
+    "teeth whitening",
+    "การฟอกสีฟัน"
+  ],
+  [
+    "orthodontist",
+    "ทันตแพทย์จัดฟัน"
+  ],
+  [
+    "eye exam",
+    "การตรวจสายตา"
+  ],
+  [
+    "eyeglasses",
+    "แว่นตา"
+  ],
+  [
+    "contact lens",
+    "คอนแทคเลนส์"
+  ],
+  [
+    "nearsightedness",
+    "สายตาสั้น"
+  ],
+  [
+    "farsightedness",
+    "สายตายาว"
+  ],
+  [
+    "astigmatism",
+    "สายตาเอียง"
+  ],
+  [
+    "cataract surgery",
+    "การผ่าตัดต้อกระจก"
+  ],
+  [
+    "eye drops",
+    "ยาหยอดตา"
+  ],
+  [
+    "vision test",
+    "การทดสอบการมองเห็น"
+  ],
+  [
+    "color blindness",
+    "ตาบอดสี"
+  ],
+  [
+    "dry eyes",
+    "ตาแห้ง"
+  ],
+  [
+    "eye infection",
+    "การติดเชื้อที่ตา"
+  ],
+  [
+    "pink eye",
+    "เยื่อบุตาอักเสบ"
+  ],
+  [
+    "dental x-ray",
+    "เอกซเรย์ฟัน"
+  ],
+  [
+    "dental hygiene",
+    "สุขอนามัยช่องปาก"
+  ],
+  [
+    "sensitive teeth",
+    "ฟันเสียว"
+  ],
+  [
+    "mental health",
+    "สุขภาพจิต"
+  ],
+  [
+    "anxiety",
+    "ความวิตกกังวล"
+  ],
+  [
+    "depression",
+    "ภาวะซึมเศร้า"
+  ],
+  [
+    "stress",
+    "ความเครียด"
+  ],
+  [
+    "panic attack",
+    "อาการตื่นตระหนก"
+  ],
+  [
+    "insomnia",
+    "นอนไม่หลับ"
+  ],
+  [
+    "panic disorder",
+    "โรคตื่นตระหนก"
+  ],
+  [
+    "phobia",
+    "โรคกลัว"
+  ],
+  [
+    "trauma",
+    "บาดแผลทางใจ"
+  ],
+  [
+    "PTSD",
+    "โรคเครียดหลังเหตุการณ์สะเทือนใจ"
+  ],
+  [
+    "bipolar disorder",
+    "โรคอารมณ์สองขั้ว"
+  ],
+  [
+    "schizophrenia",
+    "โรคจิตเภท"
+  ],
+  [
+    "eating disorder",
+    "โรคการกินผิดปกติ"
+  ],
+  [
+    "addiction",
+    "การเสพติด"
+  ],
+  [
+    "counseling",
+    "การให้คำปรึกษา"
+  ],
+  [
+    "therapy session",
+    "เซสชันบำบัด"
+  ],
+  [
+    "support group",
+    "กลุ่มสนับสนุน"
+  ],
+  [
+    "self-harm",
+    "การทำร้ายตนเอง"
+  ],
+  [
+    "suicidal thoughts",
+    "ความคิดอยากฆ่าตัวตาย"
+  ],
+  [
+    "mood swing",
+    "อารมณ์แปรปรวน"
+  ],
+  [
+    "burnout",
+    "ภาวะหมดไฟ"
+  ],
+  [
+    "grief counseling",
+    "การให้คำปรึกษาเรื่องการสูญเสีย"
+  ],
+  [
+    "cognitive behavioral therapy",
+    "การบำบัดความคิดและพฤติกรรม"
+  ],
+  [
+    "mindfulness",
+    "การฝึกสติ"
+  ],
+  [
+    "relaxation technique",
+    "เทคนิคการผ่อนคลาย"
+  ],
+  [
+    "sleep disorder",
+    "โรคการนอนหลับผิดปกติ"
+  ],
+  [
+    "attention deficit disorder",
+    "โรคสมาธิสั้น"
+  ],
+  [
+    "autism spectrum disorder",
+    "โรคออทิสติกสเปกตรัม"
+  ],
+  [
+    "developmental delay",
+    "พัฒนาการล่าช้า"
+  ],
+  [
+    "emotional support",
+    "การสนับสนุนทางอารมณ์"
+  ],
+  [
+    "mental breakdown",
+    "ภาวะจิตใจล้มเหลว"
+  ],
+  [
+    "stress management",
+    "การจัดการความเครียด"
+  ],
+  [
+    "psychotherapy",
+    "จิตบำบัด"
+  ],
+  [
+    "hallucination",
+    "อาการประสาทหลอน"
+  ],
+  [
+    "delusion",
+    "อาการหลงผิด"
+  ],
+  [
+    "ambulance",
+    "รถพยาบาล"
+  ],
+  [
+    "CPR",
+    "การช่วยฟื้นคืนชีพ"
+  ],
+  [
+    "first aid",
+    "การปฐมพยาบาล"
+  ],
+  [
+    "emergency call",
+    "การโทรแจ้งเหตุฉุกเฉิน"
+  ],
+  [
+    "bleeding",
+    "เลือดออก"
+  ],
+  [
+    "choking",
+    "สำลัก"
+  ],
+  [
+    "burn",
+    "แผลไฟไหม้"
+  ],
+  [
+    "sprain",
+    "ข้อเคล็ด"
+  ],
+  [
+    "dislocation",
+    "ข้อเคลื่อน"
+  ],
+  [
+    "shock",
+    "ภาวะช็อก"
+  ],
+  [
+    "allergic reaction",
+    "ปฏิกิริยาแพ้"
+  ],
+  [
+    "anaphylaxis",
+    "ภาวะแพ้รุนแรง"
+  ],
+  [
+    "heatstroke",
+    "โรคลมแดด"
+  ],
+  [
+    "hypothermia",
+    "ภาวะตัวเย็นเกิน"
+  ],
+  [
+    "poisoning",
+    "การได้รับสารพิษ"
+  ],
+  [
+    "snake bite",
+    "งูกัด"
+  ],
+  [
+    "insect sting",
+    "แมลงต่อย"
+  ],
+  [
+    "drowning",
+    "การจมน้ำ"
+  ],
+  [
+    "electric shock",
+    "ไฟฟ้าดูด"
+  ],
+  [
+    "severe bleeding",
+    "เลือดออกรุนแรง"
+  ],
+  [
+    "tourniquet",
+    "สายรัดห้ามเลือด"
+  ],
+  [
+    "recovery position",
+    "ท่าพักฟื้น"
+  ],
+  [
+    "rescue breathing",
+    "การช่วยหายใจ"
+  ],
+  [
+    "trauma center",
+    "ศูนย์อุบัติเหตุ"
+  ],
+  [
+    "triage",
+    "การคัดแยกผู้ป่วย"
+  ],
+  [
+    "life support",
+    "การช่วยชีวิตขั้นสูง"
+  ],
+  [
+    "resuscitation",
+    "การกู้ชีพ"
+  ],
+  [
+    "medical evacuation",
+    "การเคลื่อนย้ายผู้ป่วยฉุกเฉิน"
+  ],
+  [
+    "urgent care",
+    "การดูแลเร่งด่วน"
+  ],
+  [
+    "wound care",
+    "การดูแลบาดแผล"
+  ],
+  [
+    "head injury",
+    "การบาดเจ็บที่ศีรษะ"
+  ],
+  [
+    "spinal injury",
+    "การบาดเจ็บที่กระดูกสันหลัง"
+  ],
+  [
+    "internal bleeding",
+    "เลือดออกภายใน"
+  ],
+  [
+    "emergency surgery",
+    "การผ่าตัดฉุกเฉิน"
+  ],
+  [
+    "panic response",
+    "การตอบสนองเมื่อตื่นตระหนก"
+  ],
+  [
+    "first responder",
+    "ผู้ปฐมพยาบาลคนแรก"
+  ],
+  [
+    "accident victim",
+    "ผู้ประสบอุบัติเหตุ"
+  ],
+  [
+    "safety helmet",
+    "หมวกนิรภัย"
+  ],
+  [
+    "seatbelt injury",
+    "การบาดเจ็บจากเข็มขัดนิรภัย"
+  ],
+  [
+    "pregnancy",
+    "การตั้งครรภ์"
+  ],
+  [
+    "prenatal checkup",
+    "การตรวจครรภ์"
+  ],
+  [
+    "ultrasound scan",
+    "การอัลตราซาวนด์ครรภ์"
+  ],
+  [
+    "due date",
+    "กำหนดคลอด"
+  ],
+  [
+    "labor",
+    "การเจ็บครรภ์คลอด"
+  ],
+  [
+    "delivery",
+    "การคลอดบุตร"
+  ],
+  [
+    "cesarean section",
+    "การผ่าคลอด"
+  ],
+  [
+    "natural birth",
+    "การคลอดธรรมชาติ"
+  ],
+  [
+    "newborn",
+    "ทารกแรกเกิด"
+  ],
+  [
+    "infant",
+    "ทารก"
+  ],
+  [
+    "breastfeeding",
+    "การให้นมบุตร"
+  ],
+  [
+    "postpartum care",
+    "การดูแลหลังคลอด"
+  ],
+  [
+    "miscarriage",
+    "การแท้งบุตร"
+  ],
+  [
+    "morning sickness",
+    "อาการแพ้ท้อง"
+  ],
+  [
+    "birth weight",
+    "น้ำหนักแรกเกิด"
+  ],
+  [
+    "vaccination schedule",
+    "ตารางการฉีดวัคซีน"
+  ],
+  [
+    "pediatric ward",
+    "หอผู้ป่วยเด็ก"
+  ],
+  [
+    "growth chart",
+    "กราฟการเจริญเติบโต"
+  ],
+  [
+    "developmental checkup",
+    "การตรวจพัฒนาการ"
+  ],
+  [
+    "child immunization",
+    "การสร้างภูมิคุ้มกันในเด็ก"
+  ],
+  [
+    "teething",
+    "การขึ้นฟันน้ำนม"
+  ],
+  [
+    "colic",
+    "อาการโคลิค"
+  ],
+  [
+    "jaundice",
+    "ดีซ่าน"
+  ],
+  [
+    "premature birth",
+    "การคลอดก่อนกำหนด"
+  ],
+  [
+    "NICU",
+    "หอผู้ป่วยวิกฤตทารกแรกเกิด"
+  ],
+  [
+    "umbilical cord",
+    "สายสะดือ"
+  ],
+  [
+    "amniotic fluid",
+    "น้ำคร่ำ"
+  ],
+  [
+    "fertility treatment",
+    "การรักษาภาวะมีบุตรยาก"
+  ],
+  [
+    "gynecologist",
+    "สูตินรีแพทย์"
+  ],
+  [
+    "obstetrician",
+    "สูติแพทย์"
+  ],
+  [
+    "contraception",
+    "การคุมกำเนิด"
+  ],
+  [
+    "genetic screening",
+    "การตรวจคัดกรองพันธุกรรม"
+  ],
+  [
+    "birth defect",
+    "ความพิการแต่กำเนิด"
+  ],
+  [
+    "child growth milestone",
+    "พัฒนาการตามวัยของเด็ก"
+  ],
+  [
+    "pediatric checkup",
+    "การตรวจสุขภาพเด็ก"
+  ],
+  [
+    "health insurance",
+    "ประกันสุขภาพ"
+  ],
+  [
+    "medical record",
+    "เวชระเบียน"
+  ],
+  [
+    "appointment",
+    "การนัดหมาย"
+  ],
+  [
+    "referral",
+    "การส่งตัวผู้ป่วย"
+  ],
+  [
+    "copayment",
+    "ค่าใช้จ่ายร่วม"
+  ],
+  [
+    "claim form",
+    "แบบฟอร์มเรียกร้องค่าสินไหม"
+  ],
+  [
+    "discharge summary",
+    "สรุปการจำหน่ายผู้ป่วย"
+  ],
+  [
+    "follow-up visit",
+    "การนัดตรวจติดตาม"
+  ],
+  [
+    "medical bill",
+    "ใบเรียกเก็บเงินค่ารักษา"
+  ],
+  [
+    "hospital fee",
+    "ค่าธรรมเนียมโรงพยาบาล"
+  ],
+  [
+    "patient consent",
+    "หนังสือยินยอมผู้ป่วย"
+  ],
+  [
+    "confidentiality",
+    "การรักษาความลับผู้ป่วย"
+  ],
+  [
+    "medical ethics",
+    "จริยธรรมทางการแพทย์"
+  ],
+  [
+    "patient rights",
+    "สิทธิผู้ป่วย"
+  ],
+  [
+    "universal healthcare",
+    "ระบบสุขภาพถ้วนหน้า"
+  ],
+  [
+    "health checkup package",
+    "แพ็กเกจตรวจสุขภาพ"
+  ],
+  [
+    "telemedicine",
+    "การแพทย์ทางไกล"
+  ],
+  [
+    "electronic health record",
+    "เวชระเบียนอิเล็กทรอนิกส์"
+  ],
+  [
+    "medical billing",
+    "การเรียกเก็บค่ารักษาพยาบาล"
+  ],
+  [
+    "deductible",
+    "ค่าลดหย่อนประกัน"
+  ],
+  [
+    "preexisting condition",
+    "โรคที่เป็นมาก่อน"
+  ],
+  [
+    "health card",
+    "บัตรประกันสุขภาพ"
+  ],
+  [
+    "patient ID",
+    "หมายเลขประจำตัวผู้ป่วย"
+  ],
+  [
+    "medical certificate request",
+    "การขอใบรับรองแพทย์"
+  ],
+  [
+    "waiting list",
+    "รายชื่อรอคิว"
+  ],
+  [
+    "queue number",
+    "หมายเลขคิว"
+  ],
+  [
+    "admission form",
+    "แบบฟอร์มรับตัวผู้ป่วย"
+  ],
+  [
+    "consent form",
+    "แบบฟอร์มยินยอม"
+  ],
+  [
+    "medical audit",
+    "การตรวจสอบทางการแพทย์"
+  ],
+  [
+    "quality of care",
+    "คุณภาพการดูแลรักษา"
+  ],
+  [
+    "healthcare provider",
+    "ผู้ให้บริการสุขภาพ"
+  ],
+  [
+    "medical staff meeting",
+    "การประชุมบุคลากรทางการแพทย์"
+  ],
+  [
+    "patient satisfaction",
+    "ความพึงพอใจของผู้ป่วย"
+  ],
+  [
+    "infection control",
+    "การควบคุมการติดเชื้อ"
+  ],
+  [
+    "hospital policy",
+    "นโยบายโรงพยาบาล"
+  ]
+]

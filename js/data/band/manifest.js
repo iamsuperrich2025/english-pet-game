@@ -97,6 +97,37 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
+  "medical": {
+    "label": "ศัพท์การแพทย์",
+    "emoji": "⚕️",
+    "count": 398,
+    "files": [
+      {
+        "f": "b6_medical_abdominalpain-cottonswab.js",
+        "n": 75
+      },
+      {
+        "f": "b6_medical_cough-gingivitis.js",
+        "n": 75
+      },
+      {
+        "f": "b6_medical_glaucoma-mentalhealth.js",
+        "n": 75
+      },
+      {
+        "f": "b6_medical_midwife-recoveryroom.js",
+        "n": 75
+      },
+      {
+        "f": "b6_medical_referral-ulcer.js",
+        "n": 75
+      },
+      {
+        "f": "b6_medical_ultrasound-xray.js",
+        "n": 23
+      }
+    ]
+  },
   "science": {
     "label": "ศัพท์วิทยาศาสตร์",
     "emoji": "🔬",
