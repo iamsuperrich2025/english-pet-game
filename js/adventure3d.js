@@ -1788,6 +1788,57 @@ function buildDriveCity(sc){
     if(lkEdge.length) sc.add(new THREE.Mesh(flatGeom(lkEdge,.045),new THREE.MeshBasicMaterial({color:0xf2f2f2})));    // ขอบขาว
     if(lkDash.length) sc.add(new THREE.Mesh(flatGeom(lkDash,.075),new THREE.MeshBasicMaterial({color:0xd8d8d2})));    // เส้นประกลางถนน
 
+    /* 🚸🛑 รอบ 799 (ผู้ใช้: "วาดทางม้าลาย+ป้ายหยุดตรงจุดบรรจบทั้ง 7 จุด") — ปลายแรกของ poly (poly[0]) = จุดบรรจบถนนหลัก
+       ทางม้าลาย: แถบขาวตัดขวางถนนเชื่อม ใช้สี/เลเยอร์ y เดียวกับขอบขาวเลนจักรยานด้านบน (0xf2f2f2 @ y=.045) ผ่าน flatGeom เดิม
+       ป้ายหยุด: ทรงกลม (เดียวกับ Sprite ป้ายชื่อ blkNameSprite) ยืนบนเสาข้างถนน หาจุดว่างด้วย navBlockedAt+grid สูตรเดียวกับ freeCell/buildTrafficLights */
+    const CROSS_STRIPE=0.5, CROSS_GAP=0.45, CROSS_N=5, CROSS_MARGIN=0.6, CROSS_START=0.3;   // ระยะ/จำนวนแถบทางม้าลาย
+    const crossTris=[];
+    let signSprMat=null;
+    const mkStopSignTex=()=>{                                  // ป้ายหยุดแปดเหลี่ยมแดง-ขาว (canvas เดียวกับเทคนิค blkNameSprite)
+      const cv=document.createElement('canvas'); cv.width=128; cv.height=128;
+      const c=cv.getContext('2d'), R=60, cx=64, cy=64, cut=R*0.414;
+      c.beginPath();
+      c.moveTo(cx-cut,cy-R); c.lineTo(cx+cut,cy-R); c.lineTo(cx+R,cy-cut); c.lineTo(cx+R,cy+cut);
+      c.lineTo(cx+cut,cy+R); c.lineTo(cx-cut,cy+R); c.lineTo(cx-R,cy+cut); c.lineTo(cx-R,cy-cut); c.closePath();
+      c.fillStyle='#c0392b'; c.fill(); c.lineWidth=6; c.strokeStyle='#fff'; c.stroke();
+      c.fillStyle='#fff'; c.textAlign='center'; c.textBaseline='middle';
+      c.font='bold 30px Arial'; c.fillText('STOP',cx,cy-12);
+      c.font='bold 22px Arial'; c.fillText('หยุด',cx,cy+18);
+      return new THREE.CanvasTexture(cv);
+    };
+    const signFree=(x,z)=>{                                    // จุดว่างข้างถนน (ไม่ใช่ถนน/น้ำ/ตึก) — สูตรเดียวกับ freeCell ด้านบน
+      const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+      if(gx<0||gz<0||gx>=GW||gz>=GW || grid[gz*GW+gx]===2) return false;
+      return grid[gz*GW+gx]===0 && !navBlockedAt(x,z);
+    };
+    for(const lg of linkLog){
+      if(lg.poly.length<2) continue;
+      const a=lg.poly[0], b=lg.poly[1];
+      const dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx,dz)||1e-6, ux=dx/L, uz=dz/L, nx=-uz, nz=ux;
+      const half=Math.max(0.5, LINK_W/2-CROSS_MARGIN);         // กว้างเท่าผิวถนนเชื่อม เว้นขอบทั้งสองฝั่ง
+      for(let s=0;s<CROSS_N;s++){                              // แถบขาวสลับช่องว่างตัดขวางถนน (ยาวตามขวาง=half*2 · หนา=CROSS_STRIPE ตามแนวถนน)
+        const t0=CROSS_START+s*(CROSS_STRIPE+CROSS_GAP), t1=t0+CROSS_STRIPE;
+        const ax0=a.x+ux*t0, az0=a.z+uz*t0, ax1=a.x+ux*t1, az1=a.z+uz*t1;
+        crossTris.push(ax0+nx*half,az0+nz*half, ax1+nx*half,az1+nz*half, ax1-nx*half,az1-nz*half,
+                       ax0+nx*half,az0+nz*half, ax1-nx*half,az1-nz*half, ax0-nx*half,az0-nz*half);
+      }
+      let px=null, pz=null;                                    // หาจุดปักเสาป้ายหยุด: กวาดข้างถนนทั้งสองฝั่งจากใกล้ไปไกล
+      // ⚠️ วัดจริงพบ 4/7 จุดอยู่ติดถนนหลักที่กว้างกว่าถนนเชื่อมมาก — ต้องกวาดไกลถึง ~32ม. ถึงพ้นผิวถนนหลัก (แคบกว่านี้หาไม่เจอ ป้ายหาย 4 จุด)
+      for(let off=LINK_W/2+2; off<=40 && !px; off+=2)
+        for(const sgn of [1,-1]){
+          const qx=a.x+nx*off*sgn, qz=a.z+nz*off*sgn;
+          if(signFree(qx,qz)){ px=qx; pz=qz; break; }
+        }
+      if(px==null) continue;                                  // โดนล้อมสนิทจริง — ข้ามป้าย (ทางม้าลาย/ถนนยังปกติ)
+      if(!signSprMat) signSprMat=new THREE.SpriteMaterial({map:mkStopSignTex(),transparent:true});
+      const poleG=new THREE.CylinderGeometry(.07,.09,2.3,8);
+      const pole=new THREE.Mesh(poleG,new THREE.MeshLambertMaterial({color:0x8a8f94}));
+      pole.position.set(px,1.15,pz); sc.add(pole);
+      const spr=new THREE.Sprite(signSprMat); spr.scale.set(1.1,1.1,1); spr.position.set(px,2.65,pz);
+      sc.add(spr);
+    }
+    if(crossTris.length) sc.add(new THREE.Mesh(flatGeom(crossTris,.045),new THREE.MeshBasicMaterial({color:0xf2f2f2})));
+
     recomp();                                                  // ก้อนใหม่หลังเชื่อม (เกาะควรถูกดูดเข้าก้อนหลัก)
   }
 
