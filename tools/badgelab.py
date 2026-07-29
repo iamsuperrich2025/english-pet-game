@@ -3,9 +3,16 @@
 
 ใช้ครั้งเดียว: python tools/badgelab.py
 - อ่าน badge_sheet.png อย่างเดียว ไม่แก้ไฟล์ต้นฉบับ (ผู้ใช้วางไว้เอง — ห้ามเขียนทับ)
-- เพดานพื้นหลัง = จุดที่แชนแนลสีสูงสุด < BG_MAX (กำมะหยี่ดำเข้มมาก แยกจากเหรียญโลหะ/ริบบิ้นได้ชัด)
 - มุมขวาบนมีตรา "AI-Generated" ของเครื่องมือเจนภาพทับอยู่ในช่องแรกของแถวบน (thunder_3) →
   ปิดทับด้วยสีพื้นหลังก่อนตัด (แค่ในหน่วยความจำ ไม่แก้ไฟล์ต้นฉบับ) กันไม่ให้หลุดติดไปในภาพที่ตัดออกมา
+
+รอบ 738 (ผู้ใช้สั่งแก้): เดิมใช้วิธี "หาเนื้อหาสว่าง" ในหน้าต่างขยาย ±SEARCH_PAD รอบเซล — พอเซลข้างเคียง
+มีเนื้อเหรียญ/ริบบิ้นอยู่ใกล้ขอบเซล (< 14px) กรอบที่หาได้จะเผลอกวาดเอาขอบเหรียญข้างเคียงติดมาด้วย
+(เห็นชัดตอนขยายภาพใหญ่ในการ์ดโปรไฟล์ — เหรียญข้างเคียงโผล่มาเป็นเสี้ยว/บางเหรียญถูกตัดจนแหว่ง)
+→ เปลี่ยนเป็น "ตัดตามช่องกริดตรงๆ" (fixed grid) + หด INSET เข้าด้านในเล็กน้อยกันเส้นแบ่งเซล/
+เศษขอบเหรียญข้างเคียงที่อาจล้ำมาไม่กี่พิกเซล — เรียบง่าย ทำนายผลได้ ไม่มีทางกวาดเนื้อเซลอื่นมาปนอีก
+เพราะไม่มีการขยายหน้าต่างค้นหาข้ามเซลเลย (ตรวจแล้วภาพเจนมาค่อนข้างสม่ำเสมอ เหรียญ+ริบบิ้นแต่ละอัน
+พอดีอยู่ในเซลตัวเองอยู่แล้ว ไม่ต้องพึ่งการค้นหาเนื้อหาแบบเดิม)
 """
 import os
 import sys
@@ -20,10 +27,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, 'img', 'badges', 'originals', 'badge_sheet.png')   # ต้นฉบับเต็ม — ไม่ขึ้น git (**/originals/)
 OUT_DIR = os.path.join(ROOT, 'img', 'badges')
 COLS, ROWS = 6, 6
-BG_MAX = 32          # เพดานความสว่าง = พื้นหลัง (วัดจริง: มุมภาพ <25 ทุกแชนแนล)
-PAD = 6              # ขอบเผื่อรอบกรอบที่ตัดจริง (กันเนื้อโลหะโดนตัดชิดเกิน)
-SEARCH_PAD = 14      # ขยายหน้าต่างค้นหานอกช่องปกติ (กันริบบิ้น/เหรียญเบี้ยวไม่พอดีเซล)
-WATERMARK_BOX = (795, 0, 1024, 53)   # (x0,y0,x1,y1) พิกัดจริงของตรา AI-Generated ที่วัดได้
+INSET = 6             # หดเข้าจากขอบเซลนอมินอลทุกด้าน (กันเส้นแบ่งเซล + เศษขอบเหรียญข้างเคียงล้ำเข้ามา)
+WATERMARK_BOX = (780, 0, 1024, 100)   # (x0,y0,x1,y1) รอบ 738: ขยายลงมาอีก (53→100) กันเศษแสง/คราบเบลอเดิมของตรา AI-Generated ที่ยังไม่หมดในเซล thunder_3
 
 # ชื่อไฟล์ตามลำดับเซลล์ในตาราง (แถวบนลงล่าง ซ้ายไปขวา) — ตรงกับลำดับ BADGE_CATS ใน js/game.js
 KEYS = [
@@ -42,11 +47,10 @@ def main():
     cw, ch = W / COLS, H / ROWS
 
     # ปิดตรา AI-Generated ด้วยสีพื้นหลังจริง (เฉลี่ยจากมุมภาพที่รู้ว่าเป็นพื้นหลังล้วน)
-    bg_fill = np.array([3, 5, 13], dtype=np.uint8)
+    bg_fill = (3, 5, 13)
     x0, y0, x1, y1 = WATERMARK_BOX
     a[y0:y1, x0:x1] = bg_fill
-
-    bright = a.max(axis=2)   # ใช้ค่าแชนแนลสูงสุดต่อพิกเซลตัดสินว่าเป็นพื้นหลังไหม
+    im = Image.fromarray(a)
 
     manifest = []
     idx = 0
@@ -57,16 +61,8 @@ def main():
             key = KEYS[idx]; idx += 1
             cx0, cy0 = c * cw, r * ch
             cx1, cy1 = cx0 + cw, cy0 + ch
-            sx0 = max(0, int(cx0 - SEARCH_PAD)); sy0 = max(0, int(cy0 - SEARCH_PAD))
-            sx1 = min(W, int(cx1 + SEARCH_PAD)); sy1 = min(H, int(cy1 + SEARCH_PAD))
-            win = bright[sy0:sy1, sx0:sx1]
-            mask = win > BG_MAX
-            ys, xs = np.where(mask)
-            if len(xs) == 0:
-                print(f'⚠️ {key}: ไม่เจอเนื้อหา (ข้าม)')
-                continue
-            bx0 = max(sx0, sx0 + xs.min() - PAD); by0 = max(sy0, sy0 + ys.min() - PAD)
-            bx1 = min(sx1, sx0 + xs.max() + PAD); by1 = min(sy1, sy0 + ys.max() + PAD)
+            bx0, by0 = round(cx0) + INSET, round(cy0) + INSET
+            bx1, by1 = round(cx1) - INSET, round(cy1) - INSET
             crop = im.crop((bx0, by0, bx1, by1))
             crop.save(os.path.join(OUT_DIR, key + '.png'))
             manifest.append((key, bx0, by0, bx1 - bx0, by1 - by0))
