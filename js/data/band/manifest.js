@@ -97,33 +97,6 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
-  "environment": {
-    "label": "ศัพท์สิ่งแวดล้อม",
-    "emoji": "🌍",
-    "count": 364,
-    "files": [
-      {
-        "f": "b6_environment_acidrain-constructionwaste.js",
-        "n": 75
-      },
-      {
-        "f": "b6_environment_contaminatedsite-globalwarmingpotential.js",
-        "n": 75
-      },
-      {
-        "f": "b6_environment_greenbuilding-oilrig.js",
-        "n": 75
-      },
-      {
-        "f": "b6_environment_oilspill-subsidyforrenewableenergy.js",
-        "n": 75
-      },
-      {
-        "f": "b6_environment_sulfurdioxide-zerowaste.js",
-        "n": 64
-      }
-    ]
-  },
   "it": {
     "label": "ศัพท์เทคโนโลยี-IT",
     "emoji": "💻",
