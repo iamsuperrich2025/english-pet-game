@@ -224,8 +224,11 @@ function petShowHTML(p, clipUrl){
 
 /* ตัวละครผู้เลี้ยงยืนเต็มตัวข้างน้อง (ฉาก lobby 3D สไตล์ COD — รอบ 86)
    มีภาพ player_male/female.png ใช้ภาพเต็มตัว · ยังไม่เลือก/ไม่มีภาพ = อีโมจิตัวโต */
-// 🧱 รอบ 238: ตัวละครในล็อบบี้ = ตัวบล็อก 2D (blk1..8 · ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย · เปลี่ยนได้ในตั้งค่า)
+// 🧱 รอบ 238: ตัวละครในล็อบบี้ = ตัวบล็อก 2D (เปลี่ยนได้ในตั้งค่า)
+// 🖼️ รอบ 750: เลือกได้ 88 ตัว — blk1..blk8 มีโมเดลในโลก 3D ด้วย (state.blockAv) · blk9..blk88 เป็นภาพ 2D อย่างเดียว (state.profAv)
+const PROF_AV_MAX = 88;
 function lobbyBlk(){
+  if(/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(state.profAv||'')) return state.profAv;
   if(/^blk[1-8]$/.test(state.blockAv||'')) return state.blockAv;
   return state.playerAvatar === 'female' ? 'blk6' : 'blk1';   // ค่าเริ่มต้นตามเพศตัวละครที่เลือกตอนสมัคร
 }
@@ -1110,8 +1113,8 @@ function renderOnlineCard(){
   if(!el) return;
   delete sideScrollSt[el.id];            // รอบ 178: เลิกเลื่อนวน — กัน ticker รอบ 149 มาห่อ ss-chunk
   const lab = document.getElementById('online-label');  // หัวข้อนอกกล่อง (รอบ 149) — ติดป้าย "ออนไลน์จริง" เมื่อต่อ Firebase สำเร็จ
-  if(lab) lab.innerHTML = `🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา${(typeof Online !== 'undefined' && Online.ready) ? ' <span class="online-live">🌏 ออนไลน์จริง</span>' : ''}`;
-  const sub = document.getElementById('online-sub');     // บรรทัดจำนวนเพื่อน — ย้ายออกนอกกล่อง ใต้หัวข้อ (สเปกผู้ใช้)
+  const sub = document.getElementById('online-sub');     // เลิกใช้แยกบรรทัด (รอบ N) — ยุบรวมกับ lab เป็นบรรทัดเดียว "กำลังออนไลน์ N คน"
+  if(sub) sub.textContent = '';                           // เคลียร์ของเก่าเสมอ (กันค้างจากโหมดก่อนหน้า)
   const meName = state.profileName || (state.student ? state.student.first : '') || selfTag();
   const meGrade = state.student ? state.student.grade : '';
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
@@ -1120,14 +1123,14 @@ function renderOnlineCard(){
   const meRow = `<div class="online-row online-me${meAv ? ' has-ava' : ''}">
       <span class="online-dot"></span>
       ${meAv}
-      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)}${meBadges} (${selfTag()})</span>
+      <span class="online-name pl-click" data-uid="${escapeHTML(meUid)}" data-n="${escapeHTML(meName + meBadges)}" data-g="${escapeHTML(meGrade)}">⭐ ${escapeHTML(meName)} (${selfTag()})</span>
       ${gradeMark(meGrade, 'gm-row')}
       <span class="online-act">${idTag(meUid)} · กำลังเล่นอยู่ตอนนี้</span>
     </div>`;
 
   /* ---- โหมดออนไลน์จริง ---- */
   if(typeof Online !== 'undefined' && Online.ready){
-    if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${Online.friends.length + 1} คน 💚`;
+    if(lab) lab.innerHTML = `🧑‍🤝‍🧑 กำลังออนไลน์ ${Online.friends.length + 1} คน 💚 <span class="online-live">🌏 ออนไลน์จริง</span>`;
     /* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → toast + หน้าแฟลชฟ้า (ชุดแรกตอนต่อสำเร็จไม่นับ กันสแปม) */
     const ids = Online.friends.map(f=>String(f.id||'')).filter(Boolean);
     if(__onSeen === null){
@@ -1153,10 +1156,11 @@ function renderOnlineCard(){
     const rows = Online.friends.map(f=>{
       const fid = String(f.id||'');
       const fAv = (typeof photoMiniHTML === 'function') ? photoMiniHTML(fid, 'online-ava') : '';
+      const fNameOnly = (typeof splitNameBadges === 'function') ? splitNameBadges(f.n).name : f.n;
       return `<div class="online-row${flashFid === fid ? ' on-flash' : ''}${fAv ? ' has-ava' : ''}" data-fid="${escapeHTML(fid)}" data-n="${escapeHTML(f.n)}" data-g="${escapeHTML(f.g)}">
       <span class="online-dot"></span>
       ${fAv}
-      <span class="online-name">${escapeHTML(f.n)}</span>
+      <span class="online-name">${escapeHTML(fNameOnly)}</span>
       ${gradeMark(gradeOf(fid, f.g), 'gm-row')}
       <span class="online-act">${idTag(fid)} · ${escapeHTML(f.act)}</span>
     </div>`;
@@ -1212,7 +1216,7 @@ function renderOnlineCard(){
       <span class="online-name">${f.n}</span>
       <span class="online-act">${idTag(f.n)} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
     </div>`);
-  if(sub) sub.textContent = `ตอนนี้มีเพื่อนออนไลน์ ${count + 1} คน 💚`;
+  if(lab) lab.innerHTML = `🧑‍🤝‍🧑 กำลังออนไลน์ ${count + 1} คน 💚`;
   __onPages = onChunk([meRow, ...rows]);
   onPageDraw('');
   bindPlayerClicks();
@@ -1669,9 +1673,15 @@ function openLeaderboardFull(){
    ดึงหัวขึ้น (margin-top ลบ = ครึ่งขอบบน) + ดึงแท่นขึ้นชนเท้า (margin-bottom ลบ = ขอบล่าง) */
 const BLK_PAD = {blk1:[.11,.25], blk2:[.14,.24], blk3:[.10,.22], blk4:[.04,.18],
                  blk5:[.17,.20], blk6:[.13,.20], blk7:[.12,.21], blk8:[.13,.22]};
+// 🖼️ รอบ 750: ชุดใหม่ blk9-blk88 ตัดจากแผ่นเดียวกัน กรอบเท่ากันทุกใบ (เท้าอยู่เส้นเดียวกัน = ขอบล่าง .223)
+// ตัวที่กว้างกว่าปกติ (ปีก/ไม้สกี) ถูกย่อตามความกว้าง หัวเลยต่ำลง → จดขอบบนจริงไว้เฉพาะตัวนั้น
+const BLK_PAD_NEW = [.125, .223];
+const BLK_TOP_FIX = {blk30:.191, blk45:.158, blk51:.164, blk56:.211, blk58:.166, blk62:.154, blk68:.266, blk83:.146};
 function seatPodChars(scope){
   (scope || document).querySelectorAll('.pod-char').forEach(img=>{
-    const p = BLK_PAD[img.getAttribute('data-blk')]; if(!p) return;
+    const key = img.getAttribute('data-blk');
+    const p = BLK_PAD[key] || (/^blk\d+$/.test(key||'') ? [BLK_TOP_FIX[key] || BLK_PAD_NEW[0], BLK_PAD_NEW[1]] : null);
+    if(!p) return;
     const h = img.offsetHeight; if(!h) return;                 // offsetHeight = สูงจาก CSS (ไม่โดน transform ย่อ)
     img.style.marginTop = (-(p[0]*h) + 4).toFixed(1) + 'px';   // ครอปขอบใสบน เหลือช่อง ~4px ให้หัวห่างชื่อ (ชื่ออยู่เหนือหัว)
     img.style.marginBottom = (-(p[1]*h) + 2).toFixed(1) + 'px';// ดึงแท่นขึ้นชนเท้า (+2 เท้าจมแท่นนิด ดูยืนจริง)
