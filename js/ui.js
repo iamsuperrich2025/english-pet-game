@@ -337,7 +337,7 @@ function renderNewWord(){
   /* รอบ 327: โชว์ป้าย 🪙+1 เมื่อคำนี้ยังไม่ได้รับเหรียญ — เด็กเห็นชัดว่ากดแล้วได้อะไร
      รับไปแล้วเปลี่ยนเป็นเครื่องหมายถูก (ไม่ล่อให้กดรัวๆ โดยไม่ได้อะไร) */
   const paid = state.nwPaidAt === state.nwAt;
-  /* 🔤 รอบ 699 (ผู้ใช้สั่ง 29 ก.ค. 2026): คำศัพท์ใหญ่ขึ้น+อยู่กึ่งกลางเวทีน้อง, คำใบ้ลงบรรทัดใต้คำศัพท์
+  /* 🔤 รอบ 700 (ผู้ใช้สั่ง 29 ก.ค. 2026): คำศัพท์ใหญ่ขึ้น+อยู่กึ่งกลางเวทีน้อง, คำใบ้ลงบรรทัดใต้คำศัพท์
      NEW ย้ายเป็นป้ายมุมซ้ายบน (ลอยเป็นริบบิ้น) กันไม่ให้เบียดคำศัพท์ตอนจัดกึ่งกลาง */
   el.innerHTML = `
     <span class="nw-tag">NEW</span>
@@ -357,7 +357,7 @@ function renderNewWord(){
 /* จัดแบนเนอร์ให้ "กึ่งกลางตรงกับภาพ Rank ใหญ่กลางเวที" (ผู้ใช้สั่งรอบ 326)
    เวทีน้องอยู่คอลัมน์ขวาของการ์ด → กึ่งกลางเวทีไม่ใช่กึ่งกลางจอ ต้องวัดเอา
    (แพทเทิร์นเดียวกับ alignPetTabs — หารด้วย scale เผื่อหน้าเพจโดนย่อด้วย transform) */
-/* 📐 รอบ 613 → 🔤 รอบ 699 (ผู้ใช้สั่งกลับ 29 ก.ค. 2026 "ขยายคำศัพท์+อยู่กึ่งกลางเวทีน้อง"):
+/* 📐 รอบ 613 → 🔤 รอบ 700 (ผู้ใช้สั่งกลับ 29 ก.ค. 2026 "ขยายคำศัพท์+อยู่กึ่งกลางเวทีน้อง"):
    กลับไปกึ่งกลางเวทีเหมือนรอบ 326 (เลิกชิดซ้ายตามเส้นแดง) — max-width ยังคุมไม่ให้กว้างเกินเวที
    เพราะกึ่งกลาง "ภายใน" เวที (ไม่เกิน c.width) จึงชนขอบซ้ายเวทีไม่ได้เหมือนที่เคยกลัวไว้รอบ 613 */
 function alignNewWord(){
@@ -3315,71 +3315,396 @@ function feedAgo(ts){
   return Math.floor(d/86400000) + ' วันก่อน';
 }
 
-/* วาดฟีดเพื่อน (แผงซ้าย lobby) — เลื่อนอ่านเองได้ ไม่มี scrollbar (ซ่อนใน CSS)
-   รอบ 169: รายการใหม่เข้าสด → แถวแฟลชฟ้า + เด้งกล่องไปโชว์ (แพทเทิร์นเดียวกับภารกิจรอบ 150/เพื่อนออนไลน์รอบ 152) */
-let __feedSeen = null;        // ts ใหม่สุดที่เห็นรอบก่อน (null = ยังไม่เคยเห็นฟีดจริง — ชุดแรกตอน login ไม่แฟลช)
-let __feedFlashPend = null;   // ts ของแถวที่รอแฟลช (มาใหม่ตอนกล่องถูกซ่อน เช่น อยู่หน้าเกม → กลับ lobby ค่อยแฟลช)
+/* ============================================================
+   📰 รอบ 700 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
+   ① โชว์ทีละ 1 โพสต์ ค้าง 10 วิ แล้วเลื่อนขึ้นเร็ว ๆ โพสต์ถัดไปดันขึ้นมาจากด้านล่าง วนไม่รู้จบ
+      (เลื่อนเองได้ตลอด → หยุดออโต้ 12 วิ แล้วกลับเข้ากระบวนการเดิม)
+   ② ชื่อ+ระดับชั้นอยู่บรรทัดบน · ข้อความรายงานลงบรรทัดของตัวเอง (ห้ามต่อแถวเดียวกัน)
+   ③ โพสต์ที่พูดถึงสินค้า → ดึงภาพสินค้ามาโชว์เกือบเต็มกรอบ พอดีจอไม่มี scrollbar
+      (จับชื่อสินค้าจากข้อความ — ไม่ต้องเพิ่ม field ใน DB = ไม่ต้องแก้ rules)
+   ④ ปุ่มถูกใจ + คอมเมนต์อยู่ล่างสุดของทุกโพสต์ · ⑥ กดค้าง = เลือกรีแอ็กชันได้เหมือน Facebook
+   ⑦ 🌟 ของที่เป็น "ตัวเรา": ทุกรีแอ็กชัน/คอมเมนต์ด่วนเป็น "คำอังกฤษ + คำแปลไทย"
+      เด็กได้คำศัพท์ติดตัวทุกครั้งที่ทักเพื่อน (ดู FEED_REACTIONS/FEED_QUICK_CM ใน js/state.js)
+   ข้อมูลใช้ /gfeed ชุดเดียวกับหน้า Feed เต็ม (การ์ดหน้าตาเดียวกันทั้งสองที่ = ฟังก์ชันวาดตัวเดียว)
+   ============================================================ */
+const FEED_DECK_MAX  = 15;      // เก็บกี่โพสต์ในวงหมุนของล็อบบี้
+const FEED_SLIDE_MS  = 10000;   // ค้างโพสต์ละกี่ ms (ผู้ใช้กำหนด 10 วินาที)
+const FEED_RESUME_MS = 12000;   // ผู้ใช้เลื่อนเอง → หยุดออโต้กี่ ms ก่อนวนต่อ
+let __fdIdx = 0, __fdAt = 0, __fdHold = 0, __fdTimer = 0;
 
+/* ---- ภาพสินค้าในโพสต์: จับชื่อสินค้า/ของขวัญจากข้อความโพสต์ ---- */
+let __fpImgIdx = null;
+function feedPostImgIndex(){
+  if(__fpImgIdx) return __fpImgIdx;
+  const out = [];
+  if(typeof COLLECTIBLES !== 'undefined')
+    for(const c of COLLECTIBLES) out.push({name:c.name, emoji:c.emoji, get:()=>collectImg(c.id)});
+  if(typeof GIFTS !== 'undefined')
+    for(const g of GIFTS) out.push({name:g.name, emoji:g.emoji, get:()=>giftImg(g.id)});
+  out.sort((a,b)=>b.name.length - a.name.length);   // ชื่อยาวก่อน ("เค้กสายรุ้งวันเกิด" ต้องชนะ "เค้กสายรุ้ง")
+  __fpImgIdx = out;
+  return out;
+}
+function feedPostImg(it){
+  if(!it || !it.tx) return null;
+  for(const e of feedPostImgIndex()){
+    if(it.tx.indexOf(e.name) < 0) continue;
+    const src = e.get();
+    return src ? {src, name:e.name} : {src:'', name:e.name, emoji:e.emoji};
+  }
+  return null;
+}
+function feedPostByKey(key){
+  return ((typeof Online !== 'undefined' && Online.gfeed) || []).find(it=>it.key === key) || null;
+}
+function feedCanReact(it){
+  if(typeof Online === 'undefined' || !it) return false;
+  return it.u === onlineKey() || (Online.myFriends || []).some(f=>f.uid === it.u);
+}
+/* สรุปรีแอ็กชัน: อีโมจิที่มีคนกด (มากสุดก่อน) + จำนวนรวม + คำอังกฤษของรีแอ็กชันยอดนิยม */
+function fpStatsHTML(it){
+  const cnt = {};
+  for(const uid in it.rx) cnt[it.rx[uid]] = (cnt[it.rx[uid]] || 0) + 1;
+  const ks = Object.keys(cnt).sort((a,b)=>cnt[b] - cnt[a]);
+  if(!ks.length && !it.comments.length)
+    return `<div class="fp-sum fp-sum-none">ยังไม่มีใครทัก — เป็นคนแรกสิ! ✨</div>`;
+  const top = ks.length ? feedRx(ks[0]) : null;
+  return `<div class="fp-sum">
+    ${ks.length ? `<span class="fp-sum-rx">${ks.slice(0,3).map(k=>feedRx(k).e).join('')}</span>
+      <b>${it.likeN}</b>${top ? `<i class="fp-en">${top.en}</i>` : ''}` : ''}
+    ${it.comments.length ? `<span class="fp-sum-cm">💬 ${it.comments.length} คอมเมนต์</span>` : ''}
+  </div>`;
+}
+/* การ์ดโพสต์ 1 ใบ — ใช้ทั้งวงหมุนล็อบบี้ (สูงเต็มกรอบ) และหน้า Feed เต็ม (สูงตามเนื้อหา) */
+function fpostHTML(it, opt){
+  opt = opt || {};
+  const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
+  const img = feedPostImg(it);
+  const my  = it.myRx ? feedRx(it.myRx) : null;
+  const can = feedCanReact(it);
+  const k   = escapeHTML(it.key);
+  return `<div class="fpost${opt.clone ? ' fp-clone' : ''}${opt.page ? ' fp-page' : ''}" data-key="${k}"
+      data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
+    <div class="fp-head">
+      <span class="fp-ico">${fc.e}</span>
+      <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))}</span>
+      <small class="fp-when">${feedAgo(it.ts)}</small>
+    </div>
+    <div class="fp-text">${escapeHTML(it.tx)}</div>
+    <div class="fp-media">${img && img.src
+      ? `<img class="fp-img" src="${img.src}" alt="${escapeHTML(img.name)}"><span class="fp-cap">${escapeHTML(img.name)}</span>`
+      : `<span class="fp-big">${img ? (img.emoji || fc.e) : fc.e}</span>`}</div>
+    ${fpStatsHTML(it)}
+    <div class="fp-bar">
+      <button class="fp-act fp-like${my ? ' on' : ''}" type="button" data-key="${k}"${can ? '' : ' disabled'}>
+        ${my ? `${my.e} <span class="fp-en">${my.en}</span>` : '👍 ถูกใจ'}</button>
+      <button class="fp-act fp-cmt" type="button" data-key="${k}">💬 คอมเมนต์</button>
+    </div>
+  </div>`;
+}
+
+/* ---- วงหมุนในล็อบบี้ ---- */
 function renderFeedCard(){
   const el = document.getElementById('feed-list');
+  renderFeedBell();
   if(!el) return;
-  const nFollow = Object.keys(state.follows || {}).length;
-  const feed = (typeof Online !== 'undefined' && Online.feed) ? Online.feed : [];
-  if(!nFollow){
-    el.innerHTML = `<div class="feed-empty">ยังไม่ได้ติดตามใครเลย 📰<br>
-      <small>แตะชื่อเพื่อนในกล่องขวาหรือกระดานอันดับ แล้วกด ➕ ติดตาม<br>กิจกรรมของเขาจะมาโชว์ที่นี่</small></div>`;
-    initSideScroll(el);    // เนื้อหาสั้น = รีเซ็ต __ssLoop กันสถานะวนค้างจากรอบก่อน
-    return;
-  }
+  delete sideScrollSt['feed-list'];          // เลิกใช้ตัวเลื่อนวนแบบเก่า (ไม่งั้นมันจะห่อ ss-chunk ทับเด็ค)
+  const online = (typeof Online !== 'undefined' && Online.ready);
+  const feed = ((typeof Online !== 'undefined' && Online.gfeed) || []).slice(0, FEED_DECK_MAX);
   if(!feed.length){
-    el.innerHTML = `<div class="feed-empty">ติดตามอยู่ ${nFollow} คน แต่ยังไม่มีกิจกรรมให้อ่าน 😴<br>
-      <small>เพื่อนต้องเปิดเผยกิจกรรมในตั้งค่า ⚙️ ของเขาก่อนนะ</small></div>`;
-    initSideScroll(el);
+    el.classList.remove('feed-deck');
+    el.__n = 0; el.__sig = '';
+    el.innerHTML = `<div class="feed-empty">${online
+      ? `ยังไม่มีกิจกรรมให้อ่านตอนนี้ 😴<br><small>เล่นเกม/ทำภารกิจ แล้วเปิดเผยกิจกรรมในตั้งค่า ⚙️<br>โพสต์ของทุกคนจะมาโชว์ทีละโพสต์ตรงนี้</small>`
+      : `ต้องต่ออินเทอร์เน็ตก่อนถึงจะเห็นฟีด 📡<br><small>กิจกรรมของเพื่อนจะไหลมาที่นี่ทีละโพสต์</small>`}</div>`;
     return;
   }
-  el.innerHTML = feed.map(it=>{
-    const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
-    return `<div class="feed-row" data-fid="${escapeHTML(it.uid)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}" data-ts="${+it.ts || 0}">
-      <span class="feed-ico">${fc.e}</span>
-      <span class="feed-txt">${nameWithGrade(`<b class="feed-name">${escapeHTML(it.n)}</b>`, gradeOf(it.uid, it.g))} ${escapeHTML(it.tx)}
-        <small class="feed-ago">· ${feedAgo(it.ts)}</small></span>
-    </div>`;
-  }).join('');
-  if(!el.dataset.bound){   // delegation ครั้งเดียวต่อ element (สร้างใหม่ทุก renderDashboard)
-    el.dataset.bound = '1';
-    el.addEventListener('click', (e)=>{
-      const row = e.target.closest('.feed-row');
-      if(!row) return;
-      sfx.select();
-      showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
-    });
+  const sig = feed.map(it=>`${it.key}:${it.likeN}:${it.myRx}:${it.comments.length}`).join('|');
+  if(el.__sig === sig && el.classList.contains('feed-deck')) return;   // ไม่มีอะไรเปลี่ยน = ไม่วาดใหม่ (กันตำแหน่งดีด)
+  const topWas = el.__top;
+  el.__sig = sig;
+  el.__top = feed[0].key;
+  el.classList.add('feed-deck');
+  el.innerHTML = feed.map(it=>fpostHTML(it)).join('')
+    + (feed.length > 1 ? fpostHTML(feed[0], {clone:true}) : '');      // โคลนใบแรกท้ายสุด = วนขึ้นได้ไม่มีสะดุด
+  el.__n = feed.length;
+  if(topWas !== el.__top) __fdIdx = 0;                                // มีโพสต์ใหม่แทรกขึ้นหัว → เด้งไปดูใบใหม่
+  __fdIdx = Math.min(__fdIdx, feed.length - 1);
+  if(el.clientHeight){ el.__prog = Date.now() + 400; el.scrollTop = __fdIdx * el.clientHeight; }
+  __fdAt = Date.now();
+  if(!el.__fdBound){
+    el.__fdBound = true;
+    const hold = ()=>{ __fdHold = Date.now() + FEED_RESUME_MS; };
+    el.addEventListener('pointerdown', hold);
+    el.addEventListener('touchstart', hold, {passive:true});
+    el.addEventListener('wheel', hold, {passive:true});
+    el.addEventListener('scroll', ()=>{ if(Date.now() > (el.__prog || 0)) hold(); }, {passive:true});
   }
-  // รอบ 169: หารายการที่ใหม่กว่ารอบก่อน (baseline null = ชุดแรกหลัง login ไม่นับ)
-  const maxTs = feed.reduce((m,it)=>Math.max(m, +it.ts || 0), 0);
-  if(__feedSeen !== null){
-    const fresh = feed.filter(it=>(+it.ts || 0) > __feedSeen).map(it=>+it.ts);
-    if(fresh.length) __feedFlashPend = fresh;
-  }
-  if(maxTs > (__feedSeen || 0)) __feedSeen = maxTs;
-  else if(__feedSeen === null) __feedSeen = 0;
-  initSideScroll(el);      // รอบ 168: ฟีดยาวเกินกล่อง → เลื่อนวนอัตโนมัติเหมือน 3 กล่อง aside ขวา (แตะ=หยุด)
-  if(__feedFlashPend && el.clientHeight){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = ค้างไว้รอกลับ lobby)
-    const sel = __feedFlashPend.map(t=>`.feed-row[data-ts="${t}"]`).join(',');
-    sideFlashRows(el, sel, 'feed-flash');
-    __feedFlashPend = null;
+  if(!__fdTimer) __fdTimer = setInterval(feedDeckTick, 200);
+}
+function feedDeckGo(el, i, smooth){
+  const h = el.clientHeight;
+  if(!h) return;
+  __fdIdx = i;
+  const top = i * h;
+  el.__prog = Date.now() + 1100;                      // ช่วงที่เราสั่งเลื่อนเอง ห้ามนับเป็น "ผู้ใช้เลื่อน"
+  el.scrollTo({top, behavior: smooth ? 'smooth' : 'auto'});
+  setTimeout(()=>{                                    // แท็บโดน throttle = smooth ไม่ขยับเลย → กระโดดตรงแทน
+    if(document.getElementById('feed-list') !== el) return;
+    if(Math.abs(el.scrollTop - top) > 4){ el.__prog = Date.now() + 300; el.scrollTop = top; }
+  }, 700);
+  if(i >= el.__n){                                    // ถึงใบโคลน → ตัดกลับใบแรกแบบไม่มีอนิเมชัน
+    setTimeout(()=>{
+      const cur = document.getElementById('feed-list');
+      if(cur !== el || !el.clientHeight) return;
+      __fdIdx = 0; el.__prog = Date.now() + 300;
+      el.scrollTo({top:0, behavior:'auto'});
+    }, 820);
   }
 }
+function feedDeckTick(){
+  const el  = document.getElementById('feed-list');
+  const bar = document.getElementById('fd-prog-bar');
+  if(!el || !el.classList.contains('feed-deck') || !el.clientHeight || (el.__n || 0) < 2){
+    if(bar) bar.style.width = '0%';
+    return;
+  }
+  const now = Date.now();
+  if(now < __fdHold || __fcmKey){                     // ผู้ใช้เลื่อนเอง/เปิดกล่องคอมเมนต์อยู่ = พัก
+    __fdIdx = Math.round(el.scrollTop / el.clientHeight);
+    __fdAt  = now;
+    if(bar) bar.style.width = '0%';
+    return;
+  }
+  const p = Math.min(1, (now - __fdAt) / FEED_SLIDE_MS);
+  if(bar) bar.style.width = (p * 100).toFixed(1) + '%';
+  if(p < 1) return;
+  __fdAt = now;
+  feedDeckGo(el, __fdIdx + 1, true);
+}
+
+/* ---- 🔔 กระดิ่งแจ้งเตือน (มีคนไลก์/คอมเมนต์โพสต์ของเรา) ---- */
+function renderFeedBell(){
+  const b = document.getElementById('btn-feed-bell');
+  if(!b) return;
+  const n = (typeof Online !== 'undefined' && Online.notifUnread) || 0;
+  b.innerHTML = `🔔${n ? `<b class="fb-n">${n > 9 ? '9+' : n}</b>` : ''}`;
+  b.classList.toggle('on', n > 0);
+}
+/* เรียกจาก online.js ทุกครั้งที่มีแจ้งเตือนใหม่เข้ามาสด */
+function feedNotifArrived(n){
+  renderFeedBell();
+  const who = n.n || 'เพื่อน';
+  if(n.t === 'rx'){ const r = feedRx(n.r); toast(`${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`); }
+  else toast(`💬 ${who} คอมเมนต์โพสต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
+  sfx.select();
+}
+function openFeedNotif(){
+  sfx.select();
+  const list = (typeof Online !== 'undefined' && Online.notif) || [];
+  if(typeof Online !== 'undefined'){ Online.notifUnread = 0; }
+  renderFeedBell();
+  const ov = document.createElement('div');
+  ov.className = 'fnt-overlay';
+  ov.innerHTML = `<div class="fnt-box">
+    <div class="fdb-head"><span>🔔 การแจ้งเตือน</span><button class="fdb-close" type="button">✕</button></div>
+    <div class="fnt-list">${list.length ? list.map(n=>{
+      const r = n.t === 'rx' ? feedRx(n.r) : null;
+      return `<div class="fnt-row" data-pid="${escapeHTML(n.pid)}">
+        <span class="fnt-ico">${r ? r.e : '💬'}</span>
+        <span class="fnt-tx"><b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
+          ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
+          : `คอมเมนต์ว่า “${escapeHTML(String(n.cm || ''))}”`}
+          <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small></span>
+      </div>`;
+    }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
+      <small>เมื่อเพื่อนกดถูกใจหรือคอมเมนต์โพสต์ของคุณ จะมาขึ้นที่นี่<br>
+      (แจ้งเฉพาะช่วงที่เปิดเกมอยู่)</small></div>`}</div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close = ()=>ov.remove();
+  ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
+  ov.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); close(); });
+  ov.querySelectorAll('.fnt-row').forEach(r=>r.addEventListener('click', ()=>{
+    close();
+    openFeedComments(r.dataset.pid);
+  }));
+}
+
+/* ---- 👍 ตัวเลือกรีแอ็กชัน (กดค้างที่ปุ่มถูกใจ) ---- */
+let __rxLpT = 0, __rxLpFired = false;
+function closeRxPicker(){
+  const b = document.getElementById('fp-rxbox');
+  if(b) b.remove();
+}
+function openRxPicker(btn, key){
+  closeRxPicker();
+  const box = document.createElement('div');
+  box.id = 'fp-rxbox';
+  box.className = 'fp-rxbox';
+  box.innerHTML = FEED_REACTIONS.map(r=>
+      `<button class="fp-rxb" type="button" data-rk="${r.k}"><span>${r.e}</span><i>${r.en}</i><u>${r.th}</u></button>`).join('')
+    + `<button class="fp-rxb fp-rxb-off" type="button" data-rk="">✖<i>ถอน</i></button>`;
+  document.body.appendChild(box);
+  const r = btn.getBoundingClientRect(), w = box.offsetWidth;
+  box.style.left = Math.max(6, Math.min(window.innerWidth - w - 6, r.left + r.width/2 - w/2)) + 'px';
+  box.style.top  = Math.max(6, r.top - box.offsetHeight - 8) + 'px';
+  box.querySelectorAll('.fp-rxb').forEach(b=>b.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    closeRxPicker();
+    feedPickRx(key, b.dataset.rk, btn);
+  }));
+  sfx.click ? sfx.click() : sfx.select();
+}
+/* คำอังกฤษลอยขึ้นตอนกด — ให้เด็กได้เห็นคำที่ตัวเองใช้ทุกครั้ง (จุดที่เป็น "ตัวเรา") */
+function feedFlyWord(anchor, r){
+  if(!anchor || !r) return;
+  const rc = anchor.getBoundingClientRect();
+  const fly = document.createElement('div');
+  fly.className = 'fp-fly';
+  fly.innerHTML = `${r.e} <b>${r.en}</b> <small>${r.th}</small>`;
+  document.body.appendChild(fly);
+  fly.style.left = Math.max(6, Math.min(window.innerWidth - fly.offsetWidth - 6, rc.left)) + 'px';
+  fly.style.top  = (rc.top - 6) + 'px';
+  setTimeout(()=>fly.remove(), 1300);
+}
+function feedPickRx(key, rk, anchor){
+  const it = feedPostByKey(key);
+  if(!it) return;
+  if(!feedCanReact(it)){ sfx.wrong(); toast('กดถูกใจได้เฉพาะโพสต์ของเพื่อนเรานะ — ไปเพิ่มเพื่อนกันก่อน 👋'); return; }
+  const next = (rk && rk === it.myRx) ? '' : rk;      // เลือกอันเดิมซ้ำ = ถอน
+  if(next){ sfx.select(); feedFlyWord(anchor, feedRx(next)); }
+  gfeedSetReaction(key, next).then(ok=>{
+    if(!ok) toast('ส่งความรู้สึกไม่สำเร็จ ลองใหม่อีกทีนะ');
+  });
+}
+
+/* ---- 💬 กล่องคอมเมนต์ (เปิดเป็นแผ่นเต็มจอ — การ์ดในวงหมุนเลยไม่ต้องมี scrollbar) ---- */
+let __fcmKey = '';
+function openFeedComments(key){
+  const it = feedPostByKey(key);
+  if(!it){ toast('โพสต์นี้ไม่อยู่ในฟีดแล้ว 😅'); return; }
+  sfx.select();
+  __fcmKey = key;
+  if(!document.getElementById('fcm-ov')){
+    const ov = document.createElement('div');
+    ov.id = 'fcm-ov';
+    ov.className = 'fcm-overlay';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', e=>{ if(e.target === ov) closeFeedComments(); });
+  }
+  renderFeedComments();
+}
+function closeFeedComments(){
+  __fcmKey = '';
+  const ov = document.getElementById('fcm-ov');
+  if(ov) ov.remove();
+  __fdAt = Date.now();                                 // กลับเข้าวงหมุนโดยเริ่มนับ 10 วิใหม่
+}
+function renderFeedComments(){
+  const ov = document.getElementById('fcm-ov');
+  if(!ov || !__fcmKey) return;
+  const it = feedPostByKey(__fcmKey);
+  if(!it){ closeFeedComments(); return; }
+  const can = feedCanReact(it);
+  const fc  = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
+  const draft = ov.querySelector('.fcm-input');
+  const keep  = draft ? draft.value : '';
+  const rxRows = Object.keys(it.rx).map(uid=>{
+    const r = feedRx(it.rx[uid]);
+    return `<span class="fcm-rx">${r.e} <i class="fp-en">${r.en}</i></span>`;
+  }).join('');
+  ov.innerHTML = `<div class="fcm-box">
+    <div class="fdb-head"><span>💬 คอมเมนต์</span><button class="fdb-close" type="button">✕</button></div>
+    <div class="fcm-post">
+      <div class="fp-head"><span class="fp-ico">${fc.e}</span>
+        <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))}</span>
+        <small class="fp-when">${feedAgo(it.ts)}</small></div>
+      <div class="fp-text">${escapeHTML(it.tx)}</div>
+      ${rxRows ? `<div class="fcm-rxs">${rxRows}</div>` : ''}
+    </div>
+    <div class="fcm-list">${it.comments.length
+      ? it.comments.map(c=>`<div class="fcm-row"><b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}
+          <small>${feedAgo(c.ts)}</small></div>`).join('')
+      : `<div class="fcm-none">ยังไม่มีคอมเมนต์ — เป็นคนแรกสิ! ✍️</div>`}</div>
+    ${can ? `<div class="fcm-quick">${FEED_QUICK_CM.map(q=>
+        `<button class="fcm-q" type="button" data-en="${escapeHTML(q.en)}">${escapeHTML(q.en)}<i>${escapeHTML(q.th)}</i></button>`).join('')}</div>
+      <div class="fcm-add"><input class="fcm-input" maxlength="120" placeholder="เขียนคอมเมนต์…" value="${escapeHTML(keep)}">
+        <button class="fcm-send" type="button">ส่ง</button></div>`
+      : `<div class="fcm-locked">💬 คอมเมนต์ได้เฉพาะเพื่อนของเจ้าของโพสต์เท่านั้น (เพื่อความปลอดภัยของเด็ก ๆ)</div>`}
+  </div>`;
+  ov.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); closeFeedComments(); });
+  const inp  = ov.querySelector('.fcm-input');
+  const send = ()=>{
+    if(!inp || !inp.value.trim()) return;
+    const val = inp.value;
+    inp.value = '';
+    gfeedAddComment(__fcmKey, val).then(ok=>{
+      if(ok) sfx.select();
+      else { inp.value = val; toast('ส่งคอมเมนต์ไม่สำเร็จ — ต้องเป็นเพื่อนกับเจ้าของโพสต์ก่อนนะ'); }
+    }).catch(msg=>{ inp.value = val; toast(typeof msg === 'string' ? msg : 'ส่งคอมเมนต์ไม่สำเร็จ ลองใหม่นะ'); });
+  };
+  if(inp){
+    inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); send(); } });
+    const s = ov.querySelector('.fcm-send');
+    if(s) s.addEventListener('click', send);
+  }
+  ov.querySelectorAll('.fcm-q').forEach(b=>b.addEventListener('click', ()=>{
+    if(!inp) return;
+    inp.value = (inp.value ? inp.value.trim() + ' ' : '') + b.dataset.en;
+    inp.focus();
+    sfx.click ? sfx.click() : sfx.select();
+  }));
+  const list = ov.querySelector('.fcm-list');
+  if(list) list.scrollTop = list.scrollHeight;
+}
+
+/* ---- ตัวรับเหตุการณ์กลางของการ์ดโพสต์ (ใช้ได้ทั้งวงหมุนล็อบบี้และหน้า Feed เต็ม) ---- */
+function bindFeedPostEvents(){
+  if(window.__fpBound) return;
+  window.__fpBound = true;
+  document.addEventListener('click', (e)=>{
+    const t = e.target;
+    if(!t || !t.closest) return;
+    if(t.closest('#fp-rxbox')) return;
+    closeRxPicker();
+    const like = t.closest('.fp-like');
+    if(like){
+      if(__rxLpFired){ __rxLpFired = false; return; }   // เพิ่งกดค้างเลือกรีแอ็กชันไป = ไม่ต้องสลับซ้ำ
+      if(like.disabled) return;
+      const it = feedPostByKey(like.dataset.key);
+      feedPickRx(like.dataset.key, it && it.myRx ? it.myRx : 'like', like);
+      return;
+    }
+    const cmt = t.closest('.fp-cmt');
+    if(cmt){ openFeedComments(cmt.dataset.key); return; }
+    const nm = t.closest('.fp-name');
+    if(nm){
+      const p = nm.closest('.fpost');
+      if(p){ sfx.select(); showPlayerCard(p.dataset.fid, p.dataset.n, p.dataset.g || ''); }
+    }
+  });
+  const lpEnd = ()=>clearTimeout(__rxLpT);
+  document.addEventListener('pointerdown', (e)=>{
+    const b = e.target.closest && e.target.closest('.fp-like');
+    if(!b || b.disabled) return;
+    __rxLpFired = false;
+    clearTimeout(__rxLpT);
+    __rxLpT = setTimeout(()=>{ __rxLpFired = true; openRxPicker(b, b.dataset.key); }, 420);
+  });
+  document.addEventListener('pointerup', lpEnd);
+  document.addEventListener('pointercancel', lpEnd);
+  document.addEventListener('scroll', lpEnd, true);
+  document.addEventListener('contextmenu', (e)=>{ if(e.target.closest && e.target.closest('.fp-like')) e.preventDefault(); });
+}
+bindFeedPostEvents();
 
 /* ============================================================
    🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
-   เปิดจากปุ่ม "🌏 ดูทั้งหมด" ในกล่องฟีดเพื่อนเดิม · 2 ส่วน:
-   1) ใครออนไลน์ทำอะไรอยู่ตอนนี้ (จาก Online.friends/presence เดิม)
-   2) โพสต์กิจกรรมทุกคน (จาก /gfeed) — เพื่อนก่อนเสมอทั้ง 2 ส่วน แล้วค่อยคนอื่น
-   ไลก์/คอมเมนต์ทำได้เฉพาะเพื่อนของเจ้าของโพสต์ (rules เช็กจริง — คนอื่นดูอย่างเดียว)
+   รอบ 700: การ์ดโพสต์ใช้ fpostHTML ชุดเดียวกับวงหมุนล็อบบี้ (กดค้าง = รีแอ็กชันด้วย)
+   ส่วน "ใครออนไลน์" ผู้ใช้สั่ง 29 ก.ค.: ให้ค่อย ๆ เลื่อนขึ้นเองเหมือนฟีดเพื่อนแบบเดิม
+   (initSideScroll — แตะ = หยุดอ่านเอง) · watcher /gfeed เปิดค้างอยู่แล้วตั้งแต่ login
    ============================================================ */
-let __fdbOpenComments = {};   // postId → true = ช่องคอมเมนต์เปิดอยู่ (คงสถานะข้าม re-render)
-let __fdbDraft = {};          // postId → ข้อความคอมเมนต์ที่พิมพ์ค้างไว้ (กันหายตอน re-render จากคนอื่นไลก์/คอมเมนต์โพสต์อื่น)
-
 function openFeedBoard(){
   sfx.select();
   if(typeof Online === 'undefined' || !Online.ready){ toast('ต้องต่ออินเทอร์เน็ตก่อนถึงจะดู Feed ได้นะ 📡'); return; }
@@ -3391,7 +3716,7 @@ function openFeedBoard(){
     <div class="fdb-list" id="fdb-list"><div class="fdb-empty">กำลังโหลด… 📰</div></div>
   </div>`;
   document.body.appendChild(overlay);
-  const close = ()=>{ overlay.remove(); gfeedWatchStop(); };
+  const close = ()=>{ overlay.remove(); };   // รอบ 700: ไม่ stop watcher แล้ว (ล็อบบี้ใช้ต่อ)
   overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
   overlay.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); close(); });
   renderFeedBoardLive();
@@ -3413,10 +3738,12 @@ function renderFeedBoardLive(){
   const rows = list.map(f=>`<div class="fdb-live-row${fset.has(f.id) ? ' fdb-fr' : ''}">
       <span class="fdb-dot"></span>${nameWithGrade(`<b>${escapeHTML(f.n)}</b>`, gradeOf(f.id, f.g))} ${idTag(f.id)} · ${escapeHTML(f.act)}</div>`).join('');
   el.innerHTML = `<div class="fdb-live-title">🟢 ใครออนไลน์ทำอะไรอยู่ตอนนี้</div>
-    <div class="fdb-live-rows">${meRow}${rows}</div>`;
+    <div class="fdb-live-rows" id="fdb-live-rows">${meRow}${rows}</div>`;
+  initSideScroll(document.getElementById('fdb-live-rows'));   // รอบ 700: เลื่อนขึ้นช้า ๆ วนเอง (แตะ = หยุด)
 }
 
-/* ส่วนล่าง: โพสต์กิจกรรมทุกคน (Online.gfeed เรียงเพื่อนก่อนแล้วจาก gfeedRebuild ใน online.js) */
+/* ส่วนล่าง: โพสต์กิจกรรมทุกคน (Online.gfeed เรียงเพื่อนก่อนแล้วจาก gfeedRebuild ใน online.js)
+   คลิกปุ่มถูกใจ/คอมเมนต์/ชื่อ = ตัวรับเหตุการณ์กลาง bindFeedPostEvents (delegation ทั้งเอกสาร) */
 function renderFeedBoard(){
   const el = document.getElementById('fdb-list');
   if(!el) return;
@@ -3426,70 +3753,7 @@ function renderFeedBoard(){
       <small>เล่นเกม/ทำภารกิจแล้วเปิดเผยไว้ในตั้งค่า ⚙️ กิจกรรมของทุกคนจะมาโชว์ที่นี่</small></div>`;
     return;
   }
-  const fset = new Set((Online.myFriends || []).map(f=>f.uid));
-  const me = onlineKey();
-  el.innerHTML = feed.map(it=>{
-    const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
-    const canReact = it.u === me || fset.has(it.u);
-    const open = !!__fdbOpenComments[it.key];
-    const cmHTML = !open ? '' : `
-      <div class="fdb-cm-list">${it.comments.length ? it.comments.map(c=>
-        `<div class="fdb-cm-row"><b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}</div>`).join('')
-        : '<div class="fdb-cm-empty">ยังไม่มีคอมเมนต์ — เป็นคนแรกสิ!</div>'}</div>
-      ${canReact
-        ? `<div class="fdb-cm-add"><input class="fdb-cm-input" data-key="${escapeHTML(it.key)}" maxlength="120" placeholder="คอมเมนต์…" value="${escapeHTML(__fdbDraft[it.key]||'')}">
-           <button class="fdb-cm-send" data-key="${escapeHTML(it.key)}" type="button">ส่ง</button></div>`
-        : `<div class="fdb-cm-locked">💬 คอมเมนต์ได้เฉพาะเพื่อนของเจ้าของโพสต์เท่านั้น</div>`}`;
-    return `<div class="fdb-row" data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g||'')}">
-      <div class="fdb-row-top"><span class="fdb-ico">${fc.e}</span>
-        <span class="fdb-txt">${nameWithGrade(`<b class="fdb-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))} ${escapeHTML(it.tx)}
-        <small class="fdb-ago">· ${feedAgo(it.ts)}</small></span></div>
-      <div class="fdb-actions">
-        <button class="fdb-like${it.likedByMe?' on':''}" data-key="${escapeHTML(it.key)}" data-liked="${it.likedByMe?1:0}" type="button"${canReact?'':' disabled'}>
-          ${it.likedByMe?'❤️':'🤍'}${it.likeN>0?' '+it.likeN:''}</button>
-        <button class="fdb-cmt-toggle" data-key="${escapeHTML(it.key)}" type="button">💬${it.comments.length>0?' '+it.comments.length:''}</button>
-      </div>
-      ${cmHTML}
-    </div>`;
-  }).join('');
-  bindFeedBoardEvents(el);
-}
-
-function bindFeedBoardEvents(el){
-  el.querySelectorAll('.fdb-name').forEach(n=>n.addEventListener('click', ()=>{
-    const row = n.closest('.fdb-row');
-    if(!row) return;
-    sfx.select();
-    showPlayerCard(row.dataset.fid, row.dataset.n, row.dataset.g || '');
-  }));
-  el.querySelectorAll('.fdb-like').forEach(b=>b.addEventListener('click', ()=>{
-    if(b.disabled) return;
-    sfx.select();
-    gfeedToggleLike(b.dataset.key, b.dataset.liked === '1');
-  }));
-  el.querySelectorAll('.fdb-cmt-toggle').forEach(b=>b.addEventListener('click', ()=>{
-    sfx.select();
-    __fdbOpenComments[b.dataset.key] = !__fdbOpenComments[b.dataset.key];
-    renderFeedBoard();
-  }));
-  el.querySelectorAll('.fdb-cm-input').forEach(inp=>{
-    inp.addEventListener('input', ()=>{ __fdbDraft[inp.dataset.key] = inp.value; });
-    inp.addEventListener('keydown', e=>{
-      if(e.key !== 'Enter') return;
-      e.preventDefault();
-      const btn = el.querySelector(`.fdb-cm-send[data-key="${CSS.escape(inp.dataset.key)}"]`);
-      if(btn) btn.click();
-    });
-  });
-  el.querySelectorAll('.fdb-cm-send').forEach(b=>b.addEventListener('click', ()=>{
-    const key = b.dataset.key;
-    const input = el.querySelector(`.fdb-cm-input[data-key="${CSS.escape(key)}"]`);
-    if(!input || !input.value.trim()) return;
-    const val = input.value;
-    gfeedAddComment(key, val).then(ok=>{
-      if(ok){ delete __fdbDraft[key]; sfx.select(); }
-    }).catch(msg=>{ toast(typeof msg === 'string' ? msg : 'ส่งคอมเมนต์ไม่สำเร็จ ลองใหม่นะ'); });
-  }));
+  el.innerHTML = feed.map(it=>fpostHTML(it, {page:true})).join('');
 }
 
 /* 📐 รอบ 160: จัดขอบซ้ายแท็บสัตว์ให้ตรงแนวขอบซ้ายของ rank chip บน header
@@ -3532,13 +3796,18 @@ function alignFeedPlate(){
 }
 /* 🪪 แผงผู้เล่น (วันที่/rank) — ยืดขอบขวาให้ตรงขอบขวาใหม่ของกล่องฟีดเพื่อนพอดี (ผู้ใช้ขอ) */
 function alignProfilePlate(){
-  const plate = document.querySelector('.profile-plate');
-  const feed  = document.querySelector('.stage-plate.feed-plate');
+  const idCard = document.querySelector('.id-card');
+  const plate  = document.querySelector('.profile-plate');
+  const feed   = document.querySelector('.stage-plate.feed-plate');
   const c = stageColLeft();
-  if(!plate || !feed || !c) return;
+  if(!idCard || !plate || !feed || !c) return;
+  /* 🩹 รอบ 700 (ผู้ใช้สั่ง 29 ก.ค. 2026 "การ์ดผู้เล่นเลยเส้นแดง"): ที่จริง .profile-plate ตรงกับ
+     ขอบขวากล่องฟีดพอดีอยู่แล้ว แต่กล่อง "สีฟ้าที่มองเห็น" คือ .id-card ซึ่งมี padding-right:15px
+     ห่อ .profile-plate อยู่อีกที — เลยเห็นกล่องยื่นเลยไป 15px ทุกครั้ง ต้องหักลบ padding นี้ออกด้วย */
+  const padR   = parseFloat(getComputedStyle(idCard).paddingRight) || 0;
   const pLeft  = plate.getBoundingClientRect().left;
   const fRight = feed.getBoundingClientRect().right;
-  plate.style.width = Math.max(0, (fRight - pLeft) / c.scale) + 'px';
+  plate.style.width = Math.max(0, (fRight - pLeft) / c.scale - padR) + 'px';
 }
 /* คอลัมน์ซ้ายของการ์ด (เหลือฟีดเพื่อนอย่างเดียวแล้ว) — ยืดขึ้นไปชนขอบบนเวที
    (ผู้ใช้สั่ง 27 ก.ค. 2026 "ยืดฟีดเพื่อนขึ้นไปให้แตะแนวเส้นเขียว" = แนวบนสุดของเวที) */
@@ -4102,7 +4371,8 @@ function renderDashboard(){
   card.innerHTML = `
     <div class="stage-left">
       <div class="stage-plate feed-plate">
-        <div class="plate-title">⬢ ฟีดเพื่อน 📰<button class="feed-all-btn" id="btn-feed-all" type="button">🌏 ดูทั้งหมด</button></div>
+        <div class="plate-title">⬢ ฟีดเพื่อน 📰<span class="fd-tools"><button class="feed-bell" id="btn-feed-bell" type="button">🔔</button><button class="feed-all-btn" id="btn-feed-all" type="button">🌏 ดูทั้งหมด</button></span></div>
+        <div class="fd-prog"><i id="fd-prog-bar"></i></div>
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
@@ -4112,6 +4382,8 @@ function renderDashboard(){
   if(piBtn) piBtn.addEventListener('click', openPetInfoOverlay);
   const feedAllBtn = document.getElementById('btn-feed-all');   // 🌍 รอบ 639: เปิดหน้า Feed เต็ม (ทุกคน + ไลก์/คอมเมนต์)
   if(feedAllBtn) feedAllBtn.addEventListener('click', openFeedBoard);
+  const feedBell = document.getElementById('btn-feed-bell');    // 🔔 รอบ 700: แจ้งเตือนไลก์/คอมเมนต์โพสต์ของเรา
+  if(feedBell) feedBell.addEventListener('click', openFeedNotif);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
   /* 📐 รอบ 613: วัดตำแหน่งจริง "หลังการ์ดถูกสร้าง" — เวที (.stage-hero) เพิ่งมีจริงตรงนี้
