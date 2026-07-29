@@ -666,8 +666,8 @@ function create(opt){
       '<div style="font-weight:800;font-size:clamp(14px,3.6vh,18px);margin-bottom:2px">👥 ไปหาเพื่อน</div>'+
       '<div id="nr-sub" style="opacity:.75;font-size:clamp(10px,2.4vh,12px);margin-bottom:8px">'+
         (innerHeight<430
-          ? 'เราอยู่ <b>สนาม '+(idx+1)+'</b> · แตะ “ไปหา” เพื่อย้ายไปสนามเดียวกัน'
-          : 'ตอนนี้เราอยู่ <b>สนาม '+(idx+1)+'</b> · เพื่อนที่อยู่คนละสนามจะไม่เห็นกัน แตะ “ไปหา” เพื่อย้ายไปสนามเดียวกัน')+'</div>'+
+          ? 'เราอยู่ <b>'+ROOM_NOUN+' '+(idx+1)+'</b> · แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน'
+          : 'ตอนนี้เราอยู่ <b>'+ROOM_NOUN+' '+(idx+1)+'</b> · เพื่อนที่อยู่คนละ'+ROOM_NOUN+'จะไม่เห็นกัน แตะ “ไปหา” เพื่อย้ายไป'+ROOM_NOUN+'เดียวกัน')+'</div>'+
       '<div id="nr-list" style="font-size:clamp(11px,2.7vh,14px)">⏳ กำลังหาเพื่อนในโลกนี้…</div>'+
       '<div id="nr-note" style="margin-top:8px;font-size:clamp(10px,2.4vh,12px);min-height:1em"></div>'+
       '<button id="nr-close" style="margin-top:10px;width:100%;padding:8px;border-radius:11px;border:0;'+
@@ -681,7 +681,7 @@ function create(opt){
       const box=ov.querySelector('#nr-list'); if(!box) return;
       if(!list.length){
         box.innerHTML='<div style="opacity:.8;line-height:1.5">ยังไม่มีเพื่อนอยู่ในโลกนี้ตอนนี้ 🙈<br>'+
-          '<span style="opacity:.7">ชวนเพื่อนเข้าโลกเดียวกันแล้วกดปุ่มนี้ใหม่ ระบบจะพาไปสนามเดียวกันให้เอง</span></div>';
+          '<span style="opacity:.7">ชวนเพื่อนเข้าโลกเดียวกันแล้วกดปุ่มนี้ใหม่ ระบบจะพาไป'+ROOM_NOUN+'เดียวกันให้เอง</span></div>';
         return;
       }
       const show=list.slice(0,LIST_MAX);
@@ -691,8 +691,8 @@ function create(opt){
         return '<div style="display:flex;align-items:center;gap:8px;padding:6px 4px;border-top:1px solid rgba(255,255,255,.09)">'+
           '<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+
             esc(f.n)+' <small style="opacity:.6">'+tag(f.uid)+'</small></span>'+
-          '<span style="opacity:.85;white-space:nowrap">สนาม '+(f.room+1)+'</span>'+
-          (f.here ? '<span style="color:#7ee39a;font-weight:700;white-space:nowrap">✅ สนามเดียวกัน</span>'
+          '<span style="opacity:.85;white-space:nowrap">'+ROOM_NOUN+' '+(f.room+1)+'</span>'+
+          (f.here ? '<span style="color:#7ee39a;font-weight:700;white-space:nowrap">✅ '+ROOM_NOUN+'เดียวกัน</span>'
                   : '<button data-room="'+f.room+'" class="nr-jump" style="padding:4px 10px;border-radius:9px;border:0;'+
                     'background:#3a86c8;color:#fff;font-weight:800;cursor:pointer;white-space:nowrap">ไปหา</button>')+
           '</div>';
@@ -717,15 +717,15 @@ function create(opt){
           b.disabled=true; b.textContent='กำลังย้าย…';
           goToRoom(to).then(function(r){
             if(r.ok){
-              if(note){ note.style.color='#7ee39a'; note.innerHTML='✅ ย้ายเข้า <b>สนาม '+(to+1)+'</b> แล้ว!'; }
+              if(note){ note.style.color='#7ee39a'; note.innerHTML='✅ ย้ายเข้า <b>'+ROOM_NOUN+' '+(to+1)+'</b> แล้ว!'; }
               setTimeout(closeFriends,900);
             }else{
               b.disabled=false; b.textContent='ไปหา';
               /* ❗ ห้ามเงียบ — ต้องบอกเหตุผลบนจอเสมอ (กฎทอง #1) */
               if(note){ note.style.color='#ffb3a0';
                 note.innerHTML = (r.reason==='full')
-                  ? '🧯 <b>สนาม '+(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
-                    '<span style="opacity:.8">ลองใหม่อีกครั้งเมื่อมีคนออก หรือให้เพื่อนกด “ไปหา” มาที่สนามเราแทน</span>'
+                  ? '🧯 <b>'+ROOM_NOUN+' '+(to+1)+' เต็มแล้ว</b> ('+r.count+'/'+ROOM_MAX+' คน) — ย้ายเข้าไม่ได้ตอนนี้<br>'+
+                    '<span style="opacity:.8">ลองใหม่อีกครั้งเมื่อมีคนออก หรือให้เพื่อนกด “ไปหา” มาที่'+ROOM_NOUN+'เราแทน</span>'
                   : '⚠️ ย้ายไม่สำเร็จตอนนี้ ลองใหม่อีกครั้งนะ';
               }
             }
