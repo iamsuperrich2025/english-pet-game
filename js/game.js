@@ -881,6 +881,9 @@ function renderCats(){
     b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'game') : b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
   list.querySelectorAll('.cat-btn.quiz').forEach(b=>
     b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'quiz') : b.dataset.band ? bandPlay(b.dataset.band, 'quiz') : startQuiz(findCat(b.dataset.cat))));
+  // 🔊 ปุ่มฟังเสียงคำศัพท์ — เล่นเสียง 5 คำสุ่มจากระดับ (ตัวอย่างคำศัพท์)
+  list.querySelectorAll('.cat-btn.speak').forEach(b=>
+    b.addEventListener('click', ()=>b.dataset.band ? bandSpeakSample(b.dataset.band) : b.dataset.badv ? bandAdvSpeakSample(b.dataset.badv) : null));
   // 🏅 รอบ 773: สอบใหญ่คลังขั้นสูง — เปิดแผงเลือกระดับ (30/40/50 ข้อ) ก่อน
   list.querySelectorAll('.cat-btn.bigexam').forEach(b=>
     b.addEventListener('click', ()=>bandAdvExamOpen(b.dataset.badv)));

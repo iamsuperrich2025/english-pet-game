@@ -342,6 +342,25 @@ function bandPlay(b, mode){
   });
 }
 
+/* ฟังก์ชันเล่นเสียงคำสุ่มจากระดับ band (ปุ่ม 🔊 บนการ์ด) */
+function bandSpeakSample(b){
+  if(!bandUnlocked(b)){ bandLockToast(b); return; }
+  if(!__bandLoading[b]) toast('⏳ กำลังโหลดคลังศัพท์...');
+  bandLoad(b).then(()=>{
+    const cat = bandCat(b);
+    if(!cat.words.length){ toast(bandFailMsg(b)); return; }
+    const samples = shuffle(cat.words).slice(0, 5);   // สุ่ม 5 คำ
+    let idx = 0;
+    const play = ()=>{
+      if(idx >= samples.length) return;
+      if(typeof speakWord === 'function') speakWord(samples[idx][0]);
+      idx++;
+      setTimeout(play, 600);   // delay 0.6 วิ ต่อคำ
+    };
+    play();
+  });
+}
+
 /* ปุ่มส้ม "เล่นเกมจับคู่คำศัพท์" หน้า lobby → คลังศัพท์ band ตามชั้นเรียนผู้เล่น
    (manifest หาย/โหลดไม่สำเร็จ = ถอยกลับคลังเดิม vocabForStudent ผ่าน startGame(null)) */
 function bandPlayLobby(){
@@ -383,6 +402,7 @@ function bandCardsHTML(){
           ? `<div class="cat-btns">
               <button class="cat-btn practice" data-band="${b}">🎮 ฝึกจับคู่</button>
               <button class="cat-btn quiz" data-band="${b}">📝 สอบเป็นชุด</button>
+              <button class="cat-btn speak" data-band="${b}">🔊 ฟังเสียง</button>
             </div>`
           : `<div class="band-lock">🔒 สอบผ่านครบทุกชุดของระดับ ${prev ? prev.label : 'ก่อนหน้า'} ก่อน จะปลดล็อกระดับนี้</div>`}
       </div>`;
