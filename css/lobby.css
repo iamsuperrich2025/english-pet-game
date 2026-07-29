@@ -124,9 +124,9 @@ h1{color:var(--sky-d);text-shadow:none;}
   #screen-game #en-grid{grid-area:en;align-self:start;}
   #screen-game #th-grid{grid-area:th;align-self:start;}
   #screen-game .hint-btn{grid-area:hint;}
-  /* รอบ 702: .game-endless-note/#btn-report ไม่มี grid-area เดิม → grid auto-place ดันไปคนละคอลัมน์ซ้อนกัน (ผู้ใช้เห็น "ตกขอบ") */
-  #screen-game .game-endless-note{grid-area:note;max-width:none;}
-  #screen-game #btn-report{grid-area:report;}
+  /* รอบ 703: .game-endless-note/#btn-report ไม่มี grid-area เดิม → grid auto-place ดันไปคนละคอลัมน์ซ้อนกัน (ผู้ใช้เห็น "ตกขอบ") */
+  #screen-game .game-endless-note{grid-area:note;max-width:none;margin-top:8px;}
+  #screen-game #btn-report{grid-area:report;margin-top:6px;}
   /* ร้านสัตว์เลี้ยง 3 ตัวเรียงแถวเดียว */
   .egg-grid{grid-template-columns:repeat(3,1fr);}
   .egg-grid > .egg-card:last-child:nth-child(odd){grid-column:auto;width:auto;margin:0;}
