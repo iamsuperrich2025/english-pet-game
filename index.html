@@ -18,8 +18,73 @@
 <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/lobby.css">
+<!-- 🛡️ รอบ 727: splash screen ธีมเดียวกับไอคอนแอป (โล่จาก emblem() ใน js/cert.js) —
+     inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
+     เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
+<style id="app-splash-style">
+#app-splash{position:fixed;inset:0;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:radial-gradient(ellipse at 50% 42%,#1c4a82 0%,#123a6b 40%,#0a1f3c 72%,#051224 100%);
+  transition:opacity .5s ease,visibility 0s linear .5s;}
+#app-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+#app-splash .as-shield{width:clamp(120px,26vw,200px);height:auto;
+  filter:drop-shadow(0 0 22px rgba(245,197,66,.45)) drop-shadow(0 10px 26px rgba(0,0,0,.5));
+  animation:asPulse 2.6s ease-in-out infinite;}
+#app-splash .as-title{font-family:'Kanit','Itim',sans-serif;font-weight:700;font-size:clamp(22px,5vw,34px);
+  letter-spacing:.14em;color:#ffe9a8;text-shadow:0 2px 10px rgba(0,0,0,.5);margin:0;}
+#app-splash .as-sub{font-family:'Itim','Kanit',sans-serif;font-size:clamp(13px,2.6vw,16px);color:#a9c7e6;margin:-6px 0 4px;text-align:center;}
+#app-splash .as-dots{display:flex;gap:7px;}
+#app-splash .as-dots i{width:8px;height:8px;border-radius:50%;background:#f5c542;opacity:.35;animation:asDot 1.2s ease-in-out infinite;}
+#app-splash .as-dots i:nth-child(2){animation-delay:.15s;}
+#app-splash .as-dots i:nth-child(3){animation-delay:.3s;}
+@keyframes asPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes asDot{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-5px);}}
+@media (prefers-reduced-motion:reduce){#app-splash .as-shield,#app-splash .as-dots i{animation:none;}}
+</style>
 </head>
 <body>
+
+<!-- 🛡️ รอบ 727: splash screen — โล่เดียวกับ img/icons/* (path/gradient ก๊อปจาก emblem() js/cert.js tier gold)
+     ซ่อนด้วย #app-splash.hide เมื่อ main.js เรียก showScreen ครั้งแรกสำเร็จ (ดูสคริปต์ท้าย body) -->
+<div id="app-splash" role="status" aria-label="กำลังโหลด Vocab World">
+  <svg class="as-shield" viewBox="-75 -90 150 195" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <linearGradient id="asShieldGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#f3dd9a"/><stop offset=".28" stop-color="#c8a13c"/>
+        <stop offset=".55" stop-color="#f7ecc4"/><stop offset=".78" stop-color="#b98f2c"/>
+        <stop offset="1" stop-color="#e8cd7e"/>
+      </linearGradient>
+    </defs>
+    <path d="M-56 -82 H56 A10 10 0 0 1 66 -72 V4 C66 54 20 80 0 94 C-20 80 -66 54 -66 4 V-72 A10 10 0 0 1 -56 -82 Z"
+      fill="url(#asShieldGrad)" stroke="#8a6a1f" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M-45 -69 H45 A8 8 0 0 1 53 -61 V2 C53 43 16 65 0 78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z"
+      fill="#123a63" stroke="#f2dfa4" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M-45 -69 H0 V78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z" fill="#ffffff" opacity=".07"/>
+    <text y="-38" text-anchor="middle" font-size="26" fill="#f2dfa4">★</text>
+    <g transform="translate(0,6)" fill="none" stroke="#8fd4ff" stroke-width="2.3">
+      <circle r="26"/>
+      <ellipse rx="12" ry="26"/>
+      <path d="M-26 0 H26 M-23.5 -12.5 H23.5 M-23.5 12.5 H23.5" stroke-width="1.7" opacity=".8"/>
+    </g>
+    <path d="M-29 45 q29 -12 29 0 q0 -12 29 0 v10 q-29 -12 -29 0 q0 -12 -29 0 z"
+      fill="#f7e6b4" stroke="#a8801f" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>
+  <p class="as-title">VOCAB WORLD</p>
+  <p class="as-sub">🌍 โลกคำศัพท์ภาษาอังกฤษ กำลังโหลด...</p>
+  <div class="as-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('app-splash');
+  if(!el) return;
+  var hidden = false;
+  window.__hideAppSplash = function(){
+    if(hidden) return; hidden = true;
+    el.classList.add('hide');
+    setTimeout(function(){ el.remove(); }, 550);
+  };
+  setTimeout(window.__hideAppSplash, 8000);   // กันค้าง — โหลดนานผิดปกติก็ยังเห็นเกมได้
+})();
+</script>
 
 <!-- จอตั้ง → ชวนหมุนจอ (เกมออกแบบเป็นแนวนอนอย่างเดียว — อัพเดท 5725691826) -->
 <div id="rotate-overlay">
@@ -404,6 +469,8 @@
 <script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
 <script src="js/music.js"></script>  <!-- ระบบเพลงพื้นหลัง + วิทยุในรถ (รอบ 181) -->
 <script src="js/main.js"></script>
+<!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash -->
+<script>if(window.__hideAppSplash) __hideAppSplash();</script>
 <!-- ลงทะเบียน Service Worker (PWA) — เฉพาะ https/localhost เท่านั้น (file:// ไม่รองรับ) -->
 <script>
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
