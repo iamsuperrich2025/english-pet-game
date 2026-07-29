@@ -1,0 +1,17 @@
+[
+  ["contaminated site", "พื้นที่ปนเปื้อนมลพิษ"], ["coral bleaching", "ปะการังฟอกขาว"], ["cover crop", "พืชคลุมดิน"], ["critically endangered", "ใกล้สูญพันธุ์อย่างยิ่ง"], ["crop rotation", "การปลูกพืชหมุนเวียน"],
+  ["crude oil", "น้ำมันดิบ"], ["cyclone", "พายุไซโคลน"], ["dam construction", "การสร้างเขื่อน"], ["decarbonization", "การลดการปล่อยคาร์บอน"], ["deforestation rate", "อัตราการตัดไม้ทำลายป่า"],
+  ["deposit refund scheme", "ระบบมัดจำคืนเงินบรรจุภัณฑ์"], ["desalination", "การผลิตน้ำจืดจากน้ำทะเล"], ["desertification", "การกลายเป็นทะเลทราย"], ["disaster preparedness", "การเตรียมพร้อมรับภัยพิบัติ"], ["drought-resistant crop", "พืชทนแล้ง"],
+  ["dust storm", "พายุฝุ่น"], ["e-waste", "ขยะอิเล็กทรอนิกส์"], ["early warning system", "ระบบเตือนภัยล่วงหน้า"], ["Earth Day", "วันคุ้มครองโลก"], ["eco-friendly product", "ผลิตภัณฑ์เป็นมิตรต่อสิ่งแวดล้อม"],
+  ["ecological balance", "สมดุลทางระบบนิเวศ"], ["electric vehicle", "ยานยนต์ไฟฟ้า"], ["emission trading", "การซื้อขายสิทธิ์การปล่อยมลพิษ"], ["endangered species", "สัตว์ใกล้สูญพันธุ์"], ["energy conservation", "การอนุรักษ์พลังงาน"],
+  ["energy efficiency", "ประสิทธิภาพการใช้พลังงาน"], ["energy poverty", "ความยากจนด้านพลังงาน"], ["energy transition", "การเปลี่ยนผ่านพลังงาน"], ["environmental activist", "นักเคลื่อนไหวด้านสิ่งแวดล้อม"], ["environmental awareness", "ความตระหนักด้านสิ่งแวดล้อม"],
+  ["environmental cleanup", "การฟื้นฟูสิ่งแวดล้อม"], ["environmental degradation", "ความเสื่อมโทรมของสิ่งแวดล้อม"], ["environmental disaster", "ภัยพิบัติด้านสิ่งแวดล้อม"], ["environmental education", "การศึกษาด้านสิ่งแวดล้อม"], ["environmental impact assessment", "การประเมินผลกระทบสิ่งแวดล้อม"],
+  ["environmental justice", "ความเป็นธรรมด้านสิ่งแวดล้อม"], ["environmental law", "กฎหมายสิ่งแวดล้อม"], ["environmental policy", "นโยบายสิ่งแวดล้อม"], ["environmental protection", "การคุ้มครองสิ่งแวดล้อม"], ["environmental regulation", "กฎระเบียบด้านสิ่งแวดล้อม"],
+  ["environmentalist", "นักอนุรักษ์สิ่งแวดล้อม"], ["eutrophication", "ภาวะยูโทรฟิเคชัน"], ["exhaust fumes", "ควันไอเสีย"], ["extended producer responsibility", "ความรับผิดชอบของผู้ผลิตต่อสินค้าตลอดวงจร"], ["extinct species", "สัตว์ที่สูญพันธุ์แล้ว"],
+  ["extreme weather", "สภาพอากาศสุดขั้ว"], ["feed-in tariff", "อัตรารับซื้อไฟฟ้าพลังงานหมุนเวียน"], ["fertilizer runoff", "ปุ๋ยไหลบ่าปนเปื้อนแหล่งน้ำ"], ["fine dust", "ฝุ่นละเอียด"], ["fish stock", "ปริมาณสัตว์น้ำ"],
+  ["fishing quota", "โควตาการจับปลา"], ["flagship species", "สิ่งมีชีวิตตัวแทนการอนุรักษ์"], ["flash flood", "น้ำท่วมฉับพลัน"], ["flood control", "การควบคุมน้ำท่วม"], ["flooding", "น้ำท่วม"],
+  ["food mile", "ระยะทางขนส่งอาหาร"], ["food security", "ความมั่นคงทางอาหาร"], ["food surplus", "อาหารส่วนเกิน"], ["food waste", "ขยะเศษอาหาร"], ["forest canopy", "เรือนยอดป่า"],
+  ["forest cover", "พื้นที่ปกคลุมของป่า"], ["forest degradation", "ความเสื่อมโทรมของป่า"], ["forest fire", "ไฟป่า"], ["forest ranger", "เจ้าหน้าที่พิทักษ์ป่า"], ["forest restoration", "การฟื้นฟูป่า"],
+  ["fossil fuel burning", "การเผาไหม้เชื้อเพลิงฟอสซิล"], ["freshwater resource", "แหล่งน้ำจืด"], ["fuel cell", "เซลล์เชื้อเพลิง"], ["garbage disposal", "การกำจัดขยะ"], ["genetic diversity", "ความหลากหลายทางพันธุกรรม"],
+  ["genetically modified crop", "พืชดัดแปลงพันธุกรรม"], ["geothermal energy", "พลังงานความร้อนใต้พิภพ"], ["glacier melting", "ธารน้ำแข็งละลาย"], ["global temperature rise", "อุณหภูมิโลกที่สูงขึ้น"], ["global warming potential", "ศักยภาพในการทำให้โลกร้อน"]
+]

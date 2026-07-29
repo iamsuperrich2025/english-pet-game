@@ -29,6 +29,8 @@ LABELS = {
     'b6_travel': {'label': 'ศัพท์ท่องเที่ยว', 'emoji': '✈️'},
     'b6_medical': {'label': 'ศัพท์การแพทย์', 'emoji': '⚕️'},
     'b6_legal': {'label': 'ศัพท์กฎหมาย', 'emoji': '⚖️'},
+    'b6_it': {'label': 'ศัพท์เทคโนโลยี-IT', 'emoji': '💻'},
+    'b6_environment': {'label': 'ศัพท์สิ่งแวดล้อม', 'emoji': '🌍'},
 }
 
 def main():

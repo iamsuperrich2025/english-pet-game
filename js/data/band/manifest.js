@@ -97,6 +97,60 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
+  "environment": {
+    "label": "ศัพท์สิ่งแวดล้อม",
+    "emoji": "🌍",
+    "count": 364,
+    "files": [
+      {
+        "f": "b6_environment_acidrain-constructionwaste.js",
+        "n": 75
+      },
+      {
+        "f": "b6_environment_contaminatedsite-globalwarmingpotential.js",
+        "n": 75
+      },
+      {
+        "f": "b6_environment_greenbuilding-oilrig.js",
+        "n": 75
+      },
+      {
+        "f": "b6_environment_oilspill-subsidyforrenewableenergy.js",
+        "n": 75
+      },
+      {
+        "f": "b6_environment_sulfurdioxide-zerowaste.js",
+        "n": 64
+      }
+    ]
+  },
+  "it": {
+    "label": "ศัพท์เทคโนโลยี-IT",
+    "emoji": "💻",
+    "count": 368,
+    "files": [
+      {
+        "f": "b6_it_accesscontrol-datamigration.js",
+        "n": 75
+      },
+      {
+        "f": "b6_it_datamining-identitytheft.js",
+        "n": 75
+      },
+      {
+        "f": "b6_it_imagerecognition-podcast.js",
+        "n": 75
+      },
+      {
+        "f": "b6_it_poweradapter-spamemail.js",
+        "n": 75
+      },
+      {
+        "f": "b6_it_spammessage-workflowautomation.js",
+        "n": 68
+      }
+    ]
+  },
   "legal": {
     "label": "ศัพท์กฎหมาย",
     "emoji": "⚖️",

@@ -1,0 +1,1474 @@
+[
+  [
+    "mainframe computer",
+    "เครื่องคอมพิวเตอร์เมนเฟรม"
+  ],
+  [
+    "laptop",
+    "แล็ปท็อป"
+  ],
+  [
+    "desktop computer",
+    "คอมพิวเตอร์ตั้งโต๊ะ"
+  ],
+  [
+    "motherboard",
+    "เมนบอร์ด"
+  ],
+  [
+    "microprocessor",
+    "ไมโครโปรเซสเซอร์"
+  ],
+  [
+    "central processing unit",
+    "หน่วยประมวลผลกลาง"
+  ],
+  [
+    "graphics card",
+    "การ์ดจอ"
+  ],
+  [
+    "random access memory",
+    "หน่วยความจำเข้าถึงโดยสุ่ม"
+  ],
+  [
+    "hard disk drive",
+    "ฮาร์ดดิสก์"
+  ],
+  [
+    "solid state drive",
+    "เอสเอสดี"
+  ],
+  [
+    "power supply unit",
+    "เพาเวอร์ซัพพลาย"
+  ],
+  [
+    "cooling fan",
+    "พัดลมระบายความร้อน"
+  ],
+  [
+    "heat sink",
+    "แผ่นระบายความร้อน"
+  ],
+  [
+    "computer monitor",
+    "จอมอนิเตอร์"
+  ],
+  [
+    "mechanical keyboard",
+    "คีย์บอร์ดเชิงกล"
+  ],
+  [
+    "computer mouse",
+    "เมาส์คอมพิวเตอร์"
+  ],
+  [
+    "webcam",
+    "เว็บแคม"
+  ],
+  [
+    "microphone",
+    "ไมโครโฟน"
+  ],
+  [
+    "computer speaker",
+    "ลำโพงคอมพิวเตอร์"
+  ],
+  [
+    "headset",
+    "หูฟังพร้อมไมค์"
+  ],
+  [
+    "printer",
+    "เครื่องพิมพ์"
+  ],
+  [
+    "scanner",
+    "เครื่องสแกน"
+  ],
+  [
+    "USB flash drive",
+    "แฟลชไดรฟ์ยูเอสบี"
+  ],
+  [
+    "memory card",
+    "การ์ดหน่วยความจำ"
+  ],
+  [
+    "external hard drive",
+    "ฮาร์ดดิสก์ภายนอก"
+  ],
+  [
+    "USB cable",
+    "สายยูเอสบี"
+  ],
+  [
+    "USB port",
+    "พอร์ตยูเอสบี"
+  ],
+  [
+    "power socket",
+    "ช่องเสียบปลั๊กไฟ"
+  ],
+  [
+    "circuit board",
+    "แผงวงจร"
+  ],
+  [
+    "microchip",
+    "ไมโครชิป"
+  ],
+  [
+    "semiconductor",
+    "สารกึ่งตัวนำ"
+  ],
+  [
+    "laptop battery",
+    "แบตเตอรี่แล็ปท็อป"
+  ],
+  [
+    "phone charger",
+    "เครื่องชาร์จโทรศัพท์"
+  ],
+  [
+    "power adapter",
+    "อะแดปเตอร์ไฟ"
+  ],
+  [
+    "docking station",
+    "แท่นเชื่อมต่อ"
+  ],
+  [
+    "projector",
+    "เครื่องฉายภาพ"
+  ],
+  [
+    "touchpad",
+    "ทัชแพด"
+  ],
+  [
+    "joystick",
+    "จอยสติ๊ก"
+  ],
+  [
+    "game controller",
+    "จอยเกม"
+  ],
+  [
+    "software package",
+    "ชุดซอฟต์แวร์"
+  ],
+  [
+    "operating system",
+    "ระบบปฏิบัติการ"
+  ],
+  [
+    "computer application",
+    "แอปพลิเคชันคอมพิวเตอร์"
+  ],
+  [
+    "computer program",
+    "โปรแกรมคอมพิวเตอร์"
+  ],
+  [
+    "install",
+    "ติดตั้ง"
+  ],
+  [
+    "uninstall",
+    "ถอนการติดตั้ง"
+  ],
+  [
+    "software update",
+    "อัปเดตซอฟต์แวร์"
+  ],
+  [
+    "software upgrade",
+    "อัปเกรดซอฟต์แวร์"
+  ],
+  [
+    "software patch",
+    "แพตช์ซอฟต์แวร์"
+  ],
+  [
+    "device driver",
+    "ไดรเวอร์อุปกรณ์"
+  ],
+  [
+    "firmware",
+    "เฟิร์มแวร์"
+  ],
+  [
+    "software license",
+    "ใบอนุญาตซอฟต์แวร์"
+  ],
+  [
+    "open source software",
+    "ซอฟต์แวร์โอเพนซอร์ส"
+  ],
+  [
+    "freeware",
+    "ซอฟต์แวร์ฟรี"
+  ],
+  [
+    "shareware",
+    "แชร์แวร์"
+  ],
+  [
+    "antivirus software",
+    "ซอฟต์แวร์ป้องกันไวรัส"
+  ],
+  [
+    "spreadsheet",
+    "สเปรดชีต"
+  ],
+  [
+    "word processor",
+    "โปรแกรมประมวลผลคำ"
+  ],
+  [
+    "file manager",
+    "ตัวจัดการไฟล์"
+  ],
+  [
+    "task manager",
+    "ตัวจัดการงาน"
+  ],
+  [
+    "control panel",
+    "แผงควบคุม"
+  ],
+  [
+    "settings menu",
+    "เมนูการตั้งค่า"
+  ],
+  [
+    "shortcut icon",
+    "ไอคอนทางลัด"
+  ],
+  [
+    "taskbar",
+    "แถบงาน"
+  ],
+  [
+    "desktop wallpaper",
+    "ภาพพื้นหลังหน้าจอ"
+  ],
+  [
+    "screen saver",
+    "สกรีนเซฟเวอร์"
+  ],
+  [
+    "user interface",
+    "ส่วนติดต่อผู้ใช้"
+  ],
+  [
+    "command line",
+    "บรรทัดคำสั่ง"
+  ],
+  [
+    "terminal window",
+    "หน้าต่างเทอร์มินัล"
+  ],
+  [
+    "boot up",
+    "เปิดเครื่อง"
+  ],
+  [
+    "shut down",
+    "ปิดเครื่อง"
+  ],
+  [
+    "restart",
+    "รีสตาร์ท"
+  ],
+  [
+    "system crash",
+    "ระบบล่ม"
+  ],
+  [
+    "computer freeze",
+    "เครื่องค้าง"
+  ],
+  [
+    "software bug",
+    "บั๊กซอฟต์แวร์"
+  ],
+  [
+    "glitch",
+    "ข้อผิดพลาดเล็กน้อย"
+  ],
+  [
+    "compatibility",
+    "ความเข้ากันได้"
+  ],
+  [
+    "file extension",
+    "นามสกุลไฟล์"
+  ],
+  [
+    "internet service provider",
+    "ผู้ให้บริการอินเทอร์เน็ต"
+  ],
+  [
+    "computer network",
+    "เครือข่ายคอมพิวเตอร์"
+  ],
+  [
+    "wireless network",
+    "เครือข่ายไร้สาย"
+  ],
+  [
+    "router",
+    "เราเตอร์"
+  ],
+  [
+    "modem",
+    "โมเด็ม"
+  ],
+  [
+    "bandwidth",
+    "แบนด์วิดท์"
+  ],
+  [
+    "IP address",
+    "ที่อยู่ไอพี"
+  ],
+  [
+    "server",
+    "เซิร์ฟเวอร์"
+  ],
+  [
+    "client computer",
+    "เครื่องลูกข่าย"
+  ],
+  [
+    "firewall",
+    "ไฟร์วอลล์"
+  ],
+  [
+    "virtual private network",
+    "เครือข่ายส่วนตัวเสมือน"
+  ],
+  [
+    "network protocol",
+    "โพรโทคอลเครือข่าย"
+  ],
+  [
+    "domain name",
+    "ชื่อโดเมน"
+  ],
+  [
+    "local area network",
+    "เครือข่ายท้องถิ่น"
+  ],
+  [
+    "wide area network",
+    "เครือข่ายบริเวณกว้าง"
+  ],
+  [
+    "wifi hotspot",
+    "จุดปล่อยสัญญาณไวไฟ"
+  ],
+  [
+    "ethernet cable",
+    "สายอีเทอร์เน็ต"
+  ],
+  [
+    "internet connection",
+    "การเชื่อมต่ออินเทอร์เน็ต"
+  ],
+  [
+    "signal strength",
+    "ความแรงสัญญาณ"
+  ],
+  [
+    "network latency",
+    "ความหน่วงเครือข่าย"
+  ],
+  [
+    "ping",
+    "ปิง"
+  ],
+  [
+    "upload speed",
+    "ความเร็วอัปโหลด"
+  ],
+  [
+    "download speed",
+    "ความเร็วดาวน์โหลด"
+  ],
+  [
+    "data usage",
+    "การใช้งานข้อมูล"
+  ],
+  [
+    "broadband",
+    "บรอดแบนด์"
+  ],
+  [
+    "fiber optic cable",
+    "สายใยแก้วนำแสง"
+  ],
+  [
+    "network security",
+    "ความปลอดภัยเครือข่าย"
+  ],
+  [
+    "access point",
+    "จุดเชื่อมต่อ"
+  ],
+  [
+    "network gateway",
+    "เกตเวย์เครือข่าย"
+  ],
+  [
+    "data packet",
+    "แพ็กเก็ตข้อมูล"
+  ],
+  [
+    "bit",
+    "บิต"
+  ],
+  [
+    "byte",
+    "ไบต์"
+  ],
+  [
+    "megabyte",
+    "เมกะไบต์"
+  ],
+  [
+    "gigabyte",
+    "กิกะไบต์"
+  ],
+  [
+    "terabyte",
+    "เทราไบต์"
+  ],
+  [
+    "cloud network",
+    "เครือข่ายคลาวด์"
+  ],
+  [
+    "network switch",
+    "สวิตช์เครือข่าย"
+  ],
+  [
+    "website",
+    "เว็บไซต์"
+  ],
+  [
+    "web browser",
+    "เว็บเบราว์เซอร์"
+  ],
+  [
+    "web page",
+    "หน้าเว็บ"
+  ],
+  [
+    "homepage",
+    "หน้าแรก"
+  ],
+  [
+    "hyperlink",
+    "ไฮเปอร์ลิงก์"
+  ],
+  [
+    "web address",
+    "ที่อยู่เว็บ"
+  ],
+  [
+    "search engine",
+    "เครื่องมือค้นหา"
+  ],
+  [
+    "bookmark",
+    "บุ๊กมาร์ก"
+  ],
+  [
+    "browser cookie",
+    "คุกกี้เบราว์เซอร์"
+  ],
+  [
+    "cache",
+    "แคช"
+  ],
+  [
+    "file upload",
+    "การอัปโหลดไฟล์"
+  ],
+  [
+    "file download",
+    "การดาวน์โหลดไฟล์"
+  ],
+  [
+    "video streaming",
+    "การสตรีมวิดีโอ"
+  ],
+  [
+    "live stream",
+    "ไลฟ์สด"
+  ],
+  [
+    "podcast",
+    "พอดแคสต์"
+  ],
+  [
+    "blog",
+    "บล็อก"
+  ],
+  [
+    "vlog",
+    "วล็อก"
+  ],
+  [
+    "social media",
+    "สื่อสังคมออนไลน์"
+  ],
+  [
+    "hashtag",
+    "แฮชแท็ก"
+  ],
+  [
+    "user profile",
+    "โปรไฟล์ผู้ใช้"
+  ],
+  [
+    "username",
+    "ชื่อผู้ใช้"
+  ],
+  [
+    "follower",
+    "ผู้ติดตาม"
+  ],
+  [
+    "like button",
+    "ปุ่มไลก์"
+  ],
+  [
+    "online comment",
+    "คอมเมนต์ออนไลน์"
+  ],
+  [
+    "share button",
+    "ปุ่มแชร์"
+  ],
+  [
+    "push notification",
+    "การแจ้งเตือน"
+  ],
+  [
+    "direct message",
+    "ข้อความส่วนตัว"
+  ],
+  [
+    "news feed",
+    "ฟีดข่าวสาร"
+  ],
+  [
+    "online chat",
+    "แชทออนไลน์"
+  ],
+  [
+    "video call",
+    "วิดีโอคอล"
+  ],
+  [
+    "email",
+    "อีเมล"
+  ],
+  [
+    "email attachment",
+    "ไฟล์แนบอีเมล"
+  ],
+  [
+    "spam message",
+    "ข้อความสแปม"
+  ],
+  [
+    "email inbox",
+    "กล่องข้อความอีเมล"
+  ],
+  [
+    "online subscription",
+    "การสมัครสมาชิกออนไลน์"
+  ],
+  [
+    "content creator",
+    "ผู้สร้างสรรค์เนื้อหา"
+  ],
+  [
+    "social media influencer",
+    "อินฟลูเอนเซอร์"
+  ],
+  [
+    "viral video",
+    "วิดีโอไวรัล"
+  ],
+  [
+    "programming language",
+    "ภาษาโปรแกรม"
+  ],
+  [
+    "source code",
+    "ซอร์สโค้ด"
+  ],
+  [
+    "coding",
+    "การเขียนโค้ด"
+  ],
+  [
+    "sorting algorithm",
+    "อัลกอริทึมการเรียงลำดับ"
+  ],
+  [
+    "compiler",
+    "ตัวแปลโปรแกรม"
+  ],
+  [
+    "interpreter",
+    "ตัวแปลคำสั่ง"
+  ],
+  [
+    "programming syntax",
+    "ไวยากรณ์โปรแกรม"
+  ],
+  [
+    "global variable",
+    "ตัวแปรสากล"
+  ],
+  [
+    "callback function",
+    "ฟังก์ชันคอลแบ็ก"
+  ],
+  [
+    "loop",
+    "ลูป"
+  ],
+  [
+    "array",
+    "อาร์เรย์"
+  ],
+  [
+    "relational database",
+    "ฐานข้อมูลเชิงสัมพันธ์"
+  ],
+  [
+    "database query",
+    "คำสั่งสืบค้นฐานข้อมูล"
+  ],
+  [
+    "application programming interface",
+    "เอพีไอ"
+  ],
+  [
+    "software framework",
+    "เฟรมเวิร์กซอฟต์แวร์"
+  ],
+  [
+    "code library",
+    "ไลบรารีโค้ด"
+  ],
+  [
+    "debugging",
+    "การดีบัก"
+  ],
+  [
+    "software developer",
+    "นักพัฒนาซอฟต์แวร์"
+  ],
+  [
+    "version control",
+    "การควบคุมเวอร์ชัน"
+  ],
+  [
+    "code repository",
+    "ที่เก็บโค้ด"
+  ],
+  [
+    "script",
+    "สคริปต์"
+  ],
+  [
+    "markup language",
+    "ภาษามาร์กอัป"
+  ],
+  [
+    "object-oriented programming",
+    "การเขียนโปรแกรมเชิงวัตถุ"
+  ],
+  [
+    "integrated development environment",
+    "สภาพแวดล้อมพัฒนาซอฟต์แวร์"
+  ],
+  [
+    "character string",
+    "สตริง"
+  ],
+  [
+    "integer",
+    "จำนวนเต็ม"
+  ],
+  [
+    "boolean",
+    "บูลีน"
+  ],
+  [
+    "programming class",
+    "คลาสโปรแกรม"
+  ],
+  [
+    "software object",
+    "ออบเจกต์"
+  ],
+  [
+    "code module",
+    "โมดูลโค้ด"
+  ],
+  [
+    "function parameter",
+    "พารามิเตอร์"
+  ],
+  [
+    "program execution",
+    "การทำงานของโปรแกรม"
+  ],
+  [
+    "runtime error",
+    "ข้อผิดพลาดขณะทำงาน"
+  ],
+  [
+    "syntax error",
+    "ข้อผิดพลาดทางไวยากรณ์"
+  ],
+  [
+    "program output",
+    "ผลลัพธ์โปรแกรม"
+  ],
+  [
+    "user input",
+    "ข้อมูลนำเข้า"
+  ],
+  [
+    "pseudocode",
+    "รหัสจำลอง"
+  ],
+  [
+    "cybersecurity",
+    "ความปลอดภัยไซเบอร์"
+  ],
+  [
+    "hacker",
+    "แฮกเกอร์"
+  ],
+  [
+    "computer hacking",
+    "การแฮ็กคอมพิวเตอร์"
+  ],
+  [
+    "computer virus",
+    "ไวรัสคอมพิวเตอร์"
+  ],
+  [
+    "malware",
+    "มัลแวร์"
+  ],
+  [
+    "spyware",
+    "สปายแวร์"
+  ],
+  [
+    "ransomware",
+    "แรนซัมแวร์"
+  ],
+  [
+    "phishing",
+    "ฟิชชิง"
+  ],
+  [
+    "spam email",
+    "อีเมลขยะ"
+  ],
+  [
+    "data encryption",
+    "การเข้ารหัสข้อมูล"
+  ],
+  [
+    "data decryption",
+    "การถอดรหัสข้อมูล"
+  ],
+  [
+    "password manager",
+    "โปรแกรมจัดการรหัสผ่าน"
+  ],
+  [
+    "passcode",
+    "รหัสเข้าใช้งาน"
+  ],
+  [
+    "two-factor authentication",
+    "การยืนยันตัวตนสองขั้นตอน"
+  ],
+  [
+    "biometric authentication",
+    "การยืนยันตัวตนด้วยชีวมิติ"
+  ],
+  [
+    "data breach",
+    "การรั่วไหลของข้อมูล"
+  ],
+  [
+    "identity theft",
+    "การขโมยข้อมูลระบุตัวตน"
+  ],
+  [
+    "cybercrime",
+    "อาชญากรรมไซเบอร์"
+  ],
+  [
+    "cyberattack",
+    "การโจมตีทางไซเบอร์"
+  ],
+  [
+    "denial of service attack",
+    "การโจมตีแบบปฏิเสธการให้บริการ"
+  ],
+  [
+    "trojan horse",
+    "ไวรัสโทรจัน"
+  ],
+  [
+    "computer worm",
+    "เวิร์มคอมพิวเตอร์"
+  ],
+  [
+    "keylogger",
+    "โปรแกรมดักคีย์บอร์ด"
+  ],
+  [
+    "security patch",
+    "แพตช์ความปลอดภัย"
+  ],
+  [
+    "security vulnerability",
+    "ช่องโหว่ความปลอดภัย"
+  ],
+  [
+    "data privacy",
+    "ความเป็นส่วนตัวของข้อมูล"
+  ],
+  [
+    "user permission",
+    "สิทธิ์การใช้งาน"
+  ],
+  [
+    "access control",
+    "การควบคุมการเข้าถึง"
+  ],
+  [
+    "digital certificate",
+    "ใบรับรองดิจิทัล"
+  ],
+  [
+    "secure connection",
+    "การเชื่อมต่อที่ปลอดภัย"
+  ],
+  [
+    "incognito mode",
+    "โหมดไม่ระบุตัวตน"
+  ],
+  [
+    "ad blocker",
+    "โปรแกรมบล็อกโฆษณา"
+  ],
+  [
+    "parental control",
+    "การควบคุมโดยผู้ปกครอง"
+  ],
+  [
+    "cyberbullying",
+    "การกลั่นแกล้งทางไซเบอร์"
+  ],
+  [
+    "online scam",
+    "การหลอกลวงออนไลน์"
+  ],
+  [
+    "data leak",
+    "ข้อมูลรั่วไหล"
+  ],
+  [
+    "data backup",
+    "การสำรองข้อมูล"
+  ],
+  [
+    "smartphone",
+    "สมาร์ทโฟน"
+  ],
+  [
+    "mobile phone",
+    "โทรศัพท์มือถือ"
+  ],
+  [
+    "tablet computer",
+    "แท็บเล็ต"
+  ],
+  [
+    "smartwatch",
+    "สมาร์ทวอทช์"
+  ],
+  [
+    "wearable device",
+    "อุปกรณ์สวมใส่"
+  ],
+  [
+    "mobile application",
+    "แอปพลิเคชันมือถือ"
+  ],
+  [
+    "home screen",
+    "หน้าจอหลัก"
+  ],
+  [
+    "lock screen",
+    "หน้าจอล็อก"
+  ],
+  [
+    "touchscreen",
+    "หน้าจอสัมผัส"
+  ],
+  [
+    "fingerprint sensor",
+    "เซนเซอร์สแกนลายนิ้วมือ"
+  ],
+  [
+    "facial recognition",
+    "การจดจำใบหน้า"
+  ],
+  [
+    "mobile data",
+    "เน็ตมือถือ"
+  ],
+  [
+    "wireless charging",
+    "การชาร์จไร้สาย"
+  ],
+  [
+    "power bank",
+    "พาวเวอร์แบงก์"
+  ],
+  [
+    "screen resolution",
+    "ความละเอียดหน้าจอ"
+  ],
+  [
+    "screen protector",
+    "ฟิล์มกันรอยหน้าจอ"
+  ],
+  [
+    "phone case",
+    "เคสโทรศัพท์"
+  ],
+  [
+    "ringtone",
+    "เสียงเรียกเข้า"
+  ],
+  [
+    "vibration mode",
+    "โหมดสั่น"
+  ],
+  [
+    "airplane mode",
+    "โหมดเครื่องบิน"
+  ],
+  [
+    "screenshot",
+    "ภาพหน้าจอ"
+  ],
+  [
+    "screen recording",
+    "การบันทึกหน้าจอ"
+  ],
+  [
+    "voice assistant",
+    "ผู้ช่วยเสียง"
+  ],
+  [
+    "smart speaker",
+    "ลำโพงอัจฉริยะ"
+  ],
+  [
+    "smart home device",
+    "อุปกรณ์บ้านอัจฉริยะ"
+  ],
+  [
+    "smart television",
+    "ทีวีอัจฉริยะ"
+  ],
+  [
+    "virtual keyboard",
+    "คีย์บอร์ดเสมือน"
+  ],
+  [
+    "battery life",
+    "อายุการใช้งานแบตเตอรี่"
+  ],
+  [
+    "storage capacity",
+    "ความจุพื้นที่จัดเก็บ"
+  ],
+  [
+    "memory card slot",
+    "ช่องใส่การ์ดหน่วยความจำ"
+  ],
+  [
+    "dual SIM",
+    "สองซิม"
+  ],
+  [
+    "near field communication",
+    "การสื่อสารระยะใกล้"
+  ],
+  [
+    "bluetooth",
+    "บลูทูธ"
+  ],
+  [
+    "global positioning system",
+    "ระบบระบุตำแหน่งจีพีเอส"
+  ],
+  [
+    "phone camera lens",
+    "เลนส์กล้องโทรศัพท์"
+  ],
+  [
+    "selfie",
+    "เซลฟี่"
+  ],
+  [
+    "mobile game",
+    "เกมมือถือ"
+  ],
+  [
+    "cloud computing",
+    "การประมวลผลแบบคลาวด์"
+  ],
+  [
+    "cloud storage",
+    "พื้นที่จัดเก็บข้อมูลบนคลาวด์"
+  ],
+  [
+    "data center",
+    "ศูนย์ข้อมูล"
+  ],
+  [
+    "server farm",
+    "ฟาร์มเซิร์ฟเวอร์"
+  ],
+  [
+    "big data",
+    "ข้อมูลขนาดใหญ่"
+  ],
+  [
+    "database management system",
+    "ระบบจัดการฐานข้อมูล"
+  ],
+  [
+    "data synchronization",
+    "การซิงค์ข้อมูล"
+  ],
+  [
+    "file sharing",
+    "การแชร์ไฟล์"
+  ],
+  [
+    "data migration",
+    "การย้ายข้อมูล"
+  ],
+  [
+    "data analysis",
+    "การวิเคราะห์ข้อมูล"
+  ],
+  [
+    "data visualization",
+    "การแสดงผลข้อมูล"
+  ],
+  [
+    "data entry",
+    "การป้อนข้อมูล"
+  ],
+  [
+    "information technology",
+    "เทคโนโลยีสารสนเทศ"
+  ],
+  [
+    "digital transformation",
+    "การเปลี่ยนผ่านสู่ดิจิทัล"
+  ],
+  [
+    "e-commerce platform",
+    "แพลตฟอร์มอีคอมเมิร์ซ"
+  ],
+  [
+    "online payment",
+    "การชำระเงินออนไลน์"
+  ],
+  [
+    "subscription service",
+    "บริการสมาชิกรายเดือน"
+  ],
+  [
+    "software as a service",
+    "ซอฟต์แวร์ในรูปแบบบริการ"
+  ],
+  [
+    "virtual machine",
+    "เครื่องเสมือน"
+  ],
+  [
+    "metadata",
+    "ข้อมูลกำกับ"
+  ],
+  [
+    "data mining",
+    "การทำเหมืองข้อมูล"
+  ],
+  [
+    "business intelligence",
+    "ระบบธุรกิจอัจฉริยะ"
+  ],
+  [
+    "data warehouse",
+    "คลังข้อมูล"
+  ],
+  [
+    "real-time data",
+    "ข้อมูลแบบเรียลไทม์"
+  ],
+  [
+    "remote server",
+    "เซิร์ฟเวอร์ระยะไกล"
+  ],
+  [
+    "edge computing",
+    "การประมวลผลแบบเอดจ์"
+  ],
+  [
+    "load balancing",
+    "การกระจายโหลด"
+  ],
+  [
+    "system uptime",
+    "เวลาที่ระบบทำงาน"
+  ],
+  [
+    "system downtime",
+    "เวลาที่ระบบหยุดทำงาน"
+  ],
+  [
+    "scalability",
+    "ความสามารถในการขยายระบบ"
+  ],
+  [
+    "data redundancy",
+    "ความซ้ำซ้อนของข้อมูล"
+  ],
+  [
+    "disaster recovery",
+    "การกู้คืนระบบจากภัยพิบัติ"
+  ],
+  [
+    "data compression",
+    "การบีบอัดข้อมูล"
+  ],
+  [
+    "artificial intelligence ethics",
+    "จริยธรรมปัญญาประดิษฐ์"
+  ],
+  [
+    "machine learning model",
+    "โมเดลการเรียนรู้ของเครื่อง"
+  ],
+  [
+    "deep learning",
+    "การเรียนรู้เชิงลึก"
+  ],
+  [
+    "neural network",
+    "โครงข่ายประสาทเทียม"
+  ],
+  [
+    "natural language processing",
+    "การประมวลผลภาษาธรรมชาติ"
+  ],
+  [
+    "computer vision",
+    "คอมพิวเตอร์วิทัศน์"
+  ],
+  [
+    "chatbot",
+    "แชตบอต"
+  ],
+  [
+    "virtual reality",
+    "ความเป็นจริงเสมือน"
+  ],
+  [
+    "augmented reality",
+    "ความเป็นจริงเสริม"
+  ],
+  [
+    "mixed reality",
+    "ความเป็นจริงผสม"
+  ],
+  [
+    "robotics",
+    "วิทยาการหุ่นยนต์"
+  ],
+  [
+    "industrial robot",
+    "หุ่นยนต์อุตสาหกรรม"
+  ],
+  [
+    "workflow automation",
+    "การทำงานอัตโนมัติของขั้นตอนงาน"
+  ],
+  [
+    "autonomous vehicle",
+    "ยานยนต์ไร้คนขับ"
+  ],
+  [
+    "delivery drone",
+    "โดรนส่งของ"
+  ],
+  [
+    "blockchain",
+    "บล็อกเชน"
+  ],
+  [
+    "cryptocurrency",
+    "สกุลเงินดิจิทัล"
+  ],
+  [
+    "digital wallet",
+    "กระเป๋าเงินดิจิทัล"
+  ],
+  [
+    "non-fungible token",
+    "โทเคนที่ไม่สามารถทดแทนกันได้"
+  ],
+  [
+    "quantum computing",
+    "การประมวลผลควอนตัม"
+  ],
+  [
+    "biometrics",
+    "ชีวมิติ"
+  ],
+  [
+    "voice recognition",
+    "การจดจำเสียง"
+  ],
+  [
+    "predictive analytics",
+    "การวิเคราะห์เชิงคาดการณ์"
+  ],
+  [
+    "smart sensor",
+    "เซนเซอร์อัจฉริยะ"
+  ],
+  [
+    "internet of things",
+    "อินเทอร์เน็ตของสรรพสิ่ง"
+  ],
+  [
+    "three-dimensional printing",
+    "การพิมพ์สามมิติ"
+  ],
+  [
+    "wearable technology",
+    "เทคโนโลยีสวมใส่"
+  ],
+  [
+    "humanoid robot",
+    "หุ่นยนต์คล้ายมนุษย์"
+  ],
+  [
+    "self-driving car",
+    "รถยนต์ขับเคลื่อนอัตโนมัติ"
+  ],
+  [
+    "digital twin",
+    "แฝดดิจิทัล"
+  ],
+  [
+    "generative artificial intelligence",
+    "ปัญญาประดิษฐ์เชิงสร้างสรรค์"
+  ],
+  [
+    "virtual assistant",
+    "ผู้ช่วยเสมือน"
+  ],
+  [
+    "speech synthesis",
+    "การสังเคราะห์เสียงพูด"
+  ],
+  [
+    "image recognition",
+    "การจดจำภาพ"
+  ],
+  [
+    "recommendation system",
+    "ระบบแนะนำ"
+  ],
+  [
+    "deepfake",
+    "ดีปเฟก"
+  ],
+  [
+    "computer programmer",
+    "โปรแกรมเมอร์"
+  ],
+  [
+    "software engineer",
+    "วิศวกรซอฟต์แวร์"
+  ],
+  [
+    "web developer",
+    "นักพัฒนาเว็บ"
+  ],
+  [
+    "web designer",
+    "นักออกแบบเว็บ"
+  ],
+  [
+    "system administrator",
+    "ผู้ดูแลระบบ"
+  ],
+  [
+    "network engineer",
+    "วิศวกรเครือข่าย"
+  ],
+  [
+    "database administrator",
+    "ผู้ดูแลฐานข้อมูล"
+  ],
+  [
+    "information technology support",
+    "ฝ่ายสนับสนุนไอที"
+  ],
+  [
+    "help desk",
+    "ศูนย์ช่วยเหลือ"
+  ],
+  [
+    "technical support",
+    "ฝ่ายสนับสนุนด้านเทคนิค"
+  ],
+  [
+    "quality assurance tester",
+    "ผู้ทดสอบคุณภาพซอฟต์แวร์"
+  ],
+  [
+    "project manager",
+    "ผู้จัดการโครงการ"
+  ],
+  [
+    "user experience designer",
+    "นักออกแบบประสบการณ์ผู้ใช้"
+  ],
+  [
+    "user interface designer",
+    "นักออกแบบส่วนติดต่อผู้ใช้"
+  ],
+  [
+    "digital marketing",
+    "การตลาดดิจิทัล"
+  ],
+  [
+    "content management system",
+    "ระบบจัดการเนื้อหา"
+  ],
+  [
+    "online shopping",
+    "การช้อปปิ้งออนไลน์"
+  ],
+  [
+    "digital payment",
+    "การชำระเงินดิจิทัล"
+  ],
+  [
+    "remote work",
+    "การทำงานทางไกล"
+  ],
+  [
+    "work from home",
+    "การทำงานจากบ้าน"
+  ],
+  [
+    "video conference",
+    "การประชุมทางวิดีโอ"
+  ],
+  [
+    "online meeting",
+    "การประชุมออนไลน์"
+  ],
+  [
+    "virtual classroom",
+    "ห้องเรียนเสมือนจริง"
+  ],
+  [
+    "e-learning",
+    "การเรียนออนไลน์"
+  ],
+  [
+    "online course",
+    "คอร์สเรียนออนไลน์"
+  ],
+  [
+    "freelancer",
+    "ฟรีแลนซ์"
+  ],
+  [
+    "startup company",
+    "บริษัทสตาร์ทอัพ"
+  ],
+  [
+    "tech company",
+    "บริษัทเทคโนโลยี"
+  ],
+  [
+    "chief technology officer",
+    "ประธานเจ้าหน้าที่ฝ่ายเทคโนโลยี"
+  ],
+  [
+    "information technology department",
+    "แผนกไอที"
+  ],
+  [
+    "digital literacy",
+    "ทักษะความเข้าใจดิจิทัล"
+  ],
+  [
+    "digital divide",
+    "ความเหลื่อมล้ำทางดิจิทัล"
+  ],
+  [
+    "digital footprint",
+    "ร่องรอยดิจิทัล"
+  ],
+  [
+    "online privacy",
+    "ความเป็นส่วนตัวออนไลน์"
+  ],
+  [
+    "terms of service",
+    "ข้อกำหนดการให้บริการ"
+  ],
+  [
+    "end user license agreement",
+    "ข้อตกลงสิทธิ์การใช้งานสำหรับผู้ใช้"
+  ]
+]

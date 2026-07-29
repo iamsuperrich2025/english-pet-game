@@ -1,0 +1,1458 @@
+[
+  [
+    "air pollution",
+    "มลพิษทางอากาศ"
+  ],
+  [
+    "air quality index",
+    "ดัชนีคุณภาพอากาศ"
+  ],
+  [
+    "air purifier",
+    "เครื่องฟอกอากาศ"
+  ],
+  [
+    "smog",
+    "หมอกควันพิษ"
+  ],
+  [
+    "haze",
+    "หมอกควัน"
+  ],
+  [
+    "particulate matter",
+    "ฝุ่นละอองขนาดเล็ก"
+  ],
+  [
+    "fine dust",
+    "ฝุ่นละเอียด"
+  ],
+  [
+    "carbon monoxide",
+    "แก๊สคาร์บอนมอนอกไซด์"
+  ],
+  [
+    "sulfur dioxide",
+    "แก๊สซัลเฟอร์ไดออกไซด์"
+  ],
+  [
+    "nitrogen oxide",
+    "แก๊สไนโตรเจนออกไซด์"
+  ],
+  [
+    "acid rain",
+    "ฝนกรด"
+  ],
+  [
+    "exhaust fumes",
+    "ควันไอเสีย"
+  ],
+  [
+    "carbon footprint",
+    "รอยเท้าคาร์บอน"
+  ],
+  [
+    "carbon emission",
+    "การปล่อยคาร์บอน"
+  ],
+  [
+    "carbon neutral",
+    "ความเป็นกลางทางคาร์บอน"
+  ],
+  [
+    "carbon offset",
+    "การชดเชยคาร์บอน"
+  ],
+  [
+    "ozone layer",
+    "ชั้นโอโซน"
+  ],
+  [
+    "ozone depletion",
+    "การทำลายชั้นโอโซน"
+  ],
+  [
+    "indoor air quality",
+    "คุณภาพอากาศภายในอาคาร"
+  ],
+  [
+    "respiratory illness",
+    "โรคระบบทางเดินหายใจ"
+  ],
+  [
+    "industrial emission",
+    "การปล่อยมลพิษจากอุตสาหกรรม"
+  ],
+  [
+    "vehicle emission",
+    "การปล่อยมลพิษจากยานพาหนะ"
+  ],
+  [
+    "chimney smoke",
+    "ควันจากปล่องไฟ"
+  ],
+  [
+    "air pollutant",
+    "สารมลพิษในอากาศ"
+  ],
+  [
+    "smog alert",
+    "การแจ้งเตือนหมอกควันพิษ"
+  ],
+  [
+    "clean air act",
+    "กฎหมายอากาศสะอาด"
+  ],
+  [
+    "air monitoring station",
+    "สถานีตรวจวัดคุณภาพอากาศ"
+  ],
+  [
+    "fossil fuel burning",
+    "การเผาไหม้เชื้อเพลิงฟอสซิล"
+  ],
+  [
+    "greenhouse gas emission",
+    "การปล่อยแก๊สเรือนกระจก"
+  ],
+  [
+    "methane leak",
+    "การรั่วไหลของแก๊สมีเทน"
+  ],
+  [
+    "photochemical smog",
+    "หมอกควันโฟโตเคมี"
+  ],
+  [
+    "volatile organic compound",
+    "สารประกอบอินทรีย์ระเหยง่าย"
+  ],
+  [
+    "black carbon",
+    "เขม่าคาร์บอนดำ"
+  ],
+  [
+    "lead poisoning",
+    "การได้รับพิษจากตะกั่ว"
+  ],
+  [
+    "asbestos",
+    "แร่ใยหิน"
+  ],
+  [
+    "dust storm",
+    "พายุฝุ่น"
+  ],
+  [
+    "secondhand smoke",
+    "ควันบุหรี่มือสอง"
+  ],
+  [
+    "catalytic converter",
+    "อุปกรณ์บำบัดไอเสียรถยนต์"
+  ],
+  [
+    "low emission zone",
+    "เขตปลอดมลพิษต่ำ"
+  ],
+  [
+    "air pollution monitoring",
+    "การตรวจวัดมลพิษทางอากาศ"
+  ],
+  [
+    "water pollution",
+    "มลพิษทางน้ำ"
+  ],
+  [
+    "soil pollution",
+    "มลพิษทางดิน"
+  ],
+  [
+    "soil contamination",
+    "การปนเปื้อนในดิน"
+  ],
+  [
+    "chemical runoff",
+    "สารเคมีไหลบ่า"
+  ],
+  [
+    "agricultural runoff",
+    "น้ำไหลบ่าจากพื้นที่เกษตร"
+  ],
+  [
+    "pesticide residue",
+    "สารพิษตกค้างจากยาฆ่าแมลง"
+  ],
+  [
+    "heavy metal contamination",
+    "การปนเปื้อนโลหะหนัก"
+  ],
+  [
+    "oil spill",
+    "น้ำมันรั่วไหล"
+  ],
+  [
+    "industrial waste water",
+    "น้ำเสียจากโรงงานอุตสาหกรรม"
+  ],
+  [
+    "sewage",
+    "น้ำเสียจากบ้านเรือน"
+  ],
+  [
+    "sewage treatment plant",
+    "โรงบำบัดน้ำเสีย"
+  ],
+  [
+    "toxic waste",
+    "ของเสียพิษ"
+  ],
+  [
+    "hazardous waste",
+    "ของเสียอันตราย"
+  ],
+  [
+    "landfill leachate",
+    "น้ำชะขยะจากบ่อฝังกลบ"
+  ],
+  [
+    "groundwater contamination",
+    "การปนเปื้อนของน้ำใต้ดิน"
+  ],
+  [
+    "eutrophication",
+    "ภาวะยูโทรฟิเคชัน"
+  ],
+  [
+    "algal bloom",
+    "สาหร่ายบานหรือแพลงก์ตอนบลูม"
+  ],
+  [
+    "soil degradation",
+    "ความเสื่อมโทรมของดิน"
+  ],
+  [
+    "soil erosion",
+    "การพังทลายของหน้าดิน"
+  ],
+  [
+    "desertification",
+    "การกลายเป็นทะเลทราย"
+  ],
+  [
+    "salinization",
+    "ภาวะดินเค็ม"
+  ],
+  [
+    "fertilizer runoff",
+    "ปุ๋ยไหลบ่าปนเปื้อนแหล่งน้ำ"
+  ],
+  [
+    "microplastic",
+    "ไมโครพลาสติก"
+  ],
+  [
+    "plastic pollution",
+    "มลพิษจากพลาสติก"
+  ],
+  [
+    "e-waste",
+    "ขยะอิเล็กทรอนิกส์"
+  ],
+  [
+    "radioactive contamination",
+    "การปนเปื้อนกัมมันตรังสี"
+  ],
+  [
+    "contaminated site",
+    "พื้นที่ปนเปื้อนมลพิษ"
+  ],
+  [
+    "polluter",
+    "ผู้ก่อมลพิษ"
+  ],
+  [
+    "pollution control",
+    "การควบคุมมลพิษ"
+  ],
+  [
+    "environmental cleanup",
+    "การฟื้นฟูสิ่งแวดล้อม"
+  ],
+  [
+    "mercury contamination",
+    "การปนเปื้อนสารปรอท"
+  ],
+  [
+    "arsenic contamination",
+    "การปนเปื้อนสารหนู"
+  ],
+  [
+    "industrial discharge",
+    "การปล่อยของเสียจากโรงงาน"
+  ],
+  [
+    "groundwater depletion",
+    "การพร่องของน้ำใต้ดิน"
+  ],
+  [
+    "brownfield site",
+    "พื้นที่ปนเปื้อนรอการฟื้นฟู"
+  ],
+  [
+    "bioaccumulation",
+    "การสะสมสารพิษในสิ่งมีชีวิต"
+  ],
+  [
+    "mining waste",
+    "ของเสียจากเหมืองแร่"
+  ],
+  [
+    "nitrate pollution",
+    "มลพิษจากไนเตรต"
+  ],
+  [
+    "global warming potential",
+    "ศักยภาพในการทำให้โลกร้อน"
+  ],
+  [
+    "climate crisis",
+    "วิกฤตสภาพภูมิอากาศ"
+  ],
+  [
+    "climate action",
+    "การรับมือการเปลี่ยนแปลงสภาพภูมิอากาศ"
+  ],
+  [
+    "climate refugee",
+    "ผู้ลี้ภัยจากสภาพภูมิอากาศ"
+  ],
+  [
+    "extreme weather",
+    "สภาพอากาศสุดขั้ว"
+  ],
+  [
+    "heatwave",
+    "คลื่นความร้อน"
+  ],
+  [
+    "rising sea level",
+    "ระดับน้ำทะเลที่สูงขึ้น"
+  ],
+  [
+    "polar ice cap",
+    "แผ่นน้ำแข็งขั้วโลก"
+  ],
+  [
+    "glacier melting",
+    "ธารน้ำแข็งละลาย"
+  ],
+  [
+    "permafrost",
+    "ชั้นดินเยือกแข็งถาวร"
+  ],
+  [
+    "thawing permafrost",
+    "ชั้นดินเยือกแข็งที่กำลังละลาย"
+  ],
+  [
+    "global temperature rise",
+    "อุณหภูมิโลกที่สูงขึ้น"
+  ],
+  [
+    "megadrought",
+    "ภัยแล้งรุนแรงยาวนาน"
+  ],
+  [
+    "flooding",
+    "น้ำท่วม"
+  ],
+  [
+    "climate model",
+    "แบบจำลองสภาพภูมิอากาศ"
+  ],
+  [
+    "climate adaptation",
+    "การปรับตัวต่อสภาพภูมิอากาศ"
+  ],
+  [
+    "climate mitigation",
+    "การบรรเทาผลกระทบสภาพภูมิอากาศ"
+  ],
+  [
+    "carbon sink",
+    "แหล่งดูดซับคาร์บอน"
+  ],
+  [
+    "carbon capture",
+    "การดักจับคาร์บอน"
+  ],
+  [
+    "ocean acidification",
+    "ภาวะกรดในมหาสมุทร"
+  ],
+  [
+    "coral bleaching",
+    "ปะการังฟอกขาว"
+  ],
+  [
+    "Paris Agreement",
+    "ความตกลงปารีส"
+  ],
+  [
+    "net zero",
+    "การปล่อยคาร์บอนสุทธิเป็นศูนย์"
+  ],
+  [
+    "climate change denial",
+    "การปฏิเสธการเปลี่ยนแปลงสภาพภูมิอากาศ"
+  ],
+  [
+    "weather pattern",
+    "รูปแบบสภาพอากาศ"
+  ],
+  [
+    "seasonal shift",
+    "การเปลี่ยนแปลงของฤดูกาล"
+  ],
+  [
+    "temperature anomaly",
+    "ความผิดปกติของอุณหภูมิ"
+  ],
+  [
+    "climate refugee crisis",
+    "วิกฤตผู้ลี้ภัยจากสภาพภูมิอากาศ"
+  ],
+  [
+    "carbon budget",
+    "งบประมาณคาร์บอนที่ปล่อยได้"
+  ],
+  [
+    "tipping point",
+    "จุดวิกฤตที่ไม่อาจย้อนกลับ"
+  ],
+  [
+    "climate resilience",
+    "ความสามารถในการฟื้นตัวจากสภาพภูมิอากาศ"
+  ],
+  [
+    "climate finance",
+    "เงินทุนด้านสภาพภูมิอากาศ"
+  ],
+  [
+    "climate vulnerability",
+    "ความเปราะบางต่อสภาพภูมิอากาศ"
+  ],
+  [
+    "climate variability",
+    "ความแปรปรวนของสภาพภูมิอากาศ"
+  ],
+  [
+    "renewable energy",
+    "พลังงานหมุนเวียน"
+  ],
+  [
+    "non-renewable resource",
+    "ทรัพยากรที่ใช้แล้วหมดไป"
+  ],
+  [
+    "peak oil",
+    "จุดสูงสุดของการผลิตน้ำมัน"
+  ],
+  [
+    "clean energy",
+    "พลังงานสะอาด"
+  ],
+  [
+    "green energy",
+    "พลังงานสีเขียว"
+  ],
+  [
+    "solar power",
+    "พลังงานแสงอาทิตย์"
+  ],
+  [
+    "solar panel",
+    "แผงโซลาร์เซลล์"
+  ],
+  [
+    "wind turbine",
+    "กังหันลม"
+  ],
+  [
+    "wind farm",
+    "ฟาร์มกังหันลม"
+  ],
+  [
+    "hydroelectric power",
+    "พลังงานไฟฟ้าพลังน้ำ"
+  ],
+  [
+    "geothermal energy",
+    "พลังงานความร้อนใต้พิภพ"
+  ],
+  [
+    "biomass energy",
+    "พลังงานชีวมวล"
+  ],
+  [
+    "biofuel",
+    "เชื้อเพลิงชีวภาพ"
+  ],
+  [
+    "biogas",
+    "แก๊สชีวภาพ"
+  ],
+  [
+    "tidal energy",
+    "พลังงานจากคลื่นน้ำขึ้นน้ำลง"
+  ],
+  [
+    "nuclear power",
+    "พลังงานนิวเคลียร์"
+  ],
+  [
+    "energy efficiency",
+    "ประสิทธิภาพการใช้พลังงาน"
+  ],
+  [
+    "energy conservation",
+    "การอนุรักษ์พลังงาน"
+  ],
+  [
+    "power grid",
+    "โครงข่ายไฟฟ้า"
+  ],
+  [
+    "electric vehicle",
+    "ยานยนต์ไฟฟ้า"
+  ],
+  [
+    "battery storage",
+    "การกักเก็บพลังงานด้วยแบตเตอรี่"
+  ],
+  [
+    "off-grid",
+    "ระบบไฟฟ้านอกโครงข่าย"
+  ],
+  [
+    "fuel cell",
+    "เซลล์เชื้อเพลิง"
+  ],
+  [
+    "hydrogen fuel",
+    "เชื้อเพลิงไฮโดรเจน"
+  ],
+  [
+    "coal-fired power plant",
+    "โรงไฟฟ้าถ่านหิน"
+  ],
+  [
+    "shale gas",
+    "แก๊สจากชั้นหินดินดาน"
+  ],
+  [
+    "crude oil",
+    "น้ำมันดิบ"
+  ],
+  [
+    "oil rig",
+    "แท่นขุดเจาะน้ำมัน"
+  ],
+  [
+    "energy transition",
+    "การเปลี่ยนผ่านพลังงาน"
+  ],
+  [
+    "smart grid",
+    "โครงข่ายไฟฟ้าอัจฉริยะ"
+  ],
+  [
+    "microgrid",
+    "โครงข่ายไฟฟ้าขนาดเล็ก"
+  ],
+  [
+    "decarbonization",
+    "การลดการปล่อยคาร์บอน"
+  ],
+  [
+    "energy poverty",
+    "ความยากจนด้านพลังงาน"
+  ],
+  [
+    "green hydrogen",
+    "ไฮโดรเจนสีเขียว"
+  ],
+  [
+    "feed-in tariff",
+    "อัตรารับซื้อไฟฟ้าพลังงานหมุนเวียน"
+  ],
+  [
+    "net metering",
+    "ระบบหักลบหน่วยไฟฟ้า"
+  ],
+  [
+    "waste management",
+    "การจัดการขยะ"
+  ],
+  [
+    "waste reduction",
+    "การลดปริมาณขยะ"
+  ],
+  [
+    "waste segregation",
+    "การคัดแยกขยะ"
+  ],
+  [
+    "recycling",
+    "การรีไซเคิล"
+  ],
+  [
+    "recyclable material",
+    "วัสดุที่นำกลับมาใช้ใหม่ได้"
+  ],
+  [
+    "recycling bin",
+    "ถังรีไซเคิล"
+  ],
+  [
+    "recycling center",
+    "ศูนย์รีไซเคิล"
+  ],
+  [
+    "composting",
+    "การทำปุ๋ยหมัก"
+  ],
+  [
+    "compost bin",
+    "ถังทำปุ๋ยหมัก"
+  ],
+  [
+    "compostable packaging",
+    "บรรจุภัณฑ์ย่อยสลายเป็นปุ๋ยได้"
+  ],
+  [
+    "non-biodegradable",
+    "ไม่ย่อยสลายทางชีวภาพ"
+  ],
+  [
+    "sanitary landfill",
+    "บ่อฝังกลบขยะถูกสุขลักษณะ"
+  ],
+  [
+    "landfill site",
+    "พื้นที่ฝังกลบขยะ"
+  ],
+  [
+    "incineration",
+    "การเผาทำลายขยะ"
+  ],
+  [
+    "waste-to-energy",
+    "การแปลงขยะเป็นพลังงาน"
+  ],
+  [
+    "single-use plastic",
+    "พลาสติกใช้ครั้งเดียวทิ้ง"
+  ],
+  [
+    "plastic bag ban",
+    "การห้ามใช้ถุงพลาสติก"
+  ],
+  [
+    "zero waste",
+    "ขยะเหลือศูนย์"
+  ],
+  [
+    "upcycling",
+    "การแปรรูปของเหลือใช้ให้มีมูลค่าเพิ่ม"
+  ],
+  [
+    "food waste",
+    "ขยะเศษอาหาร"
+  ],
+  [
+    "food surplus",
+    "อาหารส่วนเกิน"
+  ],
+  [
+    "packaging waste",
+    "ขยะจากบรรจุภัณฑ์"
+  ],
+  [
+    "hazardous material",
+    "วัสดุอันตราย"
+  ],
+  [
+    "industrial waste",
+    "ของเสียจากภาคอุตสาหกรรม"
+  ],
+  [
+    "garbage disposal",
+    "การกำจัดขยะ"
+  ],
+  [
+    "waste collection",
+    "การเก็บขนขยะ"
+  ],
+  [
+    "littering",
+    "การทิ้งขยะเกลื่อนกลาด"
+  ],
+  [
+    "marine debris",
+    "ขยะทะเล"
+  ],
+  [
+    "circular economy",
+    "เศรษฐกิจหมุนเวียน"
+  ],
+  [
+    "reuse",
+    "การนำกลับมาใช้ซ้ำ"
+  ],
+  [
+    "extended producer responsibility",
+    "ความรับผิดชอบของผู้ผลิตต่อสินค้าตลอดวงจร"
+  ],
+  [
+    "deposit refund scheme",
+    "ระบบมัดจำคืนเงินบรรจุภัณฑ์"
+  ],
+  [
+    "waste audit",
+    "การตรวจสอบปริมาณและประเภทขยะ"
+  ],
+  [
+    "material recovery facility",
+    "ศูนย์คัดแยกวัสดุรีไซเคิล"
+  ],
+  [
+    "anaerobic digestion",
+    "การย่อยสลายแบบไม่ใช้ออกซิเจน"
+  ],
+  [
+    "hazardous waste disposal",
+    "การกำจัดของเสียอันตราย"
+  ],
+  [
+    "construction waste",
+    "เศษวัสดุก่อสร้าง"
+  ],
+  [
+    "medical waste",
+    "ขยะติดเชื้อทางการแพทย์"
+  ],
+  [
+    "wildlife conservation",
+    "การอนุรักษ์สัตว์ป่า"
+  ],
+  [
+    "nature reserve",
+    "เขตอนุรักษ์ธรรมชาติ"
+  ],
+  [
+    "marine sanctuary",
+    "เขตรักษาพันธุ์สัตว์ทะเล"
+  ],
+  [
+    "UNESCO World Heritage Site",
+    "แหล่งมรดกโลกของยูเนสโก"
+  ],
+  [
+    "protected area",
+    "พื้นที่คุ้มครอง"
+  ],
+  [
+    "endangered species",
+    "สัตว์ใกล้สูญพันธุ์"
+  ],
+  [
+    "extinct species",
+    "สัตว์ที่สูญพันธุ์แล้ว"
+  ],
+  [
+    "critically endangered",
+    "ใกล้สูญพันธุ์อย่างยิ่ง"
+  ],
+  [
+    "poaching",
+    "การล่าสัตว์ผิดกฎหมาย"
+  ],
+  [
+    "wildlife trafficking",
+    "การค้าสัตว์ป่าผิดกฎหมาย"
+  ],
+  [
+    "invasive species",
+    "สิ่งมีชีวิตต่างถิ่นรุกราน"
+  ],
+  [
+    "native species",
+    "สิ่งมีชีวิตพื้นถิ่น"
+  ],
+  [
+    "natural habitat",
+    "ถิ่นที่อยู่ตามธรรมชาติ"
+  ],
+  [
+    "habitat loss",
+    "การสูญเสียถิ่นที่อยู่"
+  ],
+  [
+    "habitat fragmentation",
+    "การแตกกระจายของถิ่นที่อยู่"
+  ],
+  [
+    "ecological balance",
+    "สมดุลทางระบบนิเวศ"
+  ],
+  [
+    "biological corridor",
+    "แนวเชื่อมต่อทางชีวภาพ"
+  ],
+  [
+    "genetic diversity",
+    "ความหลากหลายทางพันธุกรรม"
+  ],
+  [
+    "conservation biology",
+    "ชีววิทยาการอนุรักษ์"
+  ],
+  [
+    "captive breeding",
+    "การเพาะพันธุ์ในกรงเลี้ยง"
+  ],
+  [
+    "reintroduction program",
+    "โครงการปล่อยคืนสู่ธรรมชาติ"
+  ],
+  [
+    "migratory bird",
+    "นกอพยพ"
+  ],
+  [
+    "keystone species",
+    "สิ่งมีชีวิตหลักของระบบนิเวศ"
+  ],
+  [
+    "sustainable tourism",
+    "การท่องเที่ยวอย่างยั่งยืน"
+  ],
+  [
+    "environmentalist",
+    "นักอนุรักษ์สิ่งแวดล้อม"
+  ],
+  [
+    "conservationist",
+    "นักอนุรักษ์"
+  ],
+  [
+    "park ranger",
+    "เจ้าหน้าที่พิทักษ์อุทยาน"
+  ],
+  [
+    "biosphere reserve",
+    "เขตสงวนชีวมณฑล"
+  ],
+  [
+    "red list",
+    "บัญชีแดงสิ่งมีชีวิตใกล้สูญพันธุ์"
+  ],
+  [
+    "flagship species",
+    "สิ่งมีชีวิตตัวแทนการอนุรักษ์"
+  ],
+  [
+    "trophic cascade",
+    "ปฏิกิริยาลูกโซ่ในห่วงโซ่อาหาร"
+  ],
+  [
+    "seed vault",
+    "คลังเมล็ดพันธุ์สำรอง"
+  ],
+  [
+    "wildlife corridor",
+    "แนวเชื่อมต่อถิ่นที่อยู่สัตว์ป่า"
+  ],
+  [
+    "camera trap",
+    "กล้องดักถ่ายสัตว์ป่า"
+  ],
+  [
+    "rewilding",
+    "การฟื้นฟูธรรมชาติให้กลับสู่สภาพป่า"
+  ],
+  [
+    "boreal forest",
+    "ป่าสนเขตหนาว"
+  ],
+  [
+    "tropical forest",
+    "ป่าเขตร้อน"
+  ],
+  [
+    "mangrove forest",
+    "ป่าชายเลน"
+  ],
+  [
+    "temperate forest",
+    "ป่าเขตอบอุ่น"
+  ],
+  [
+    "forest fire",
+    "ไฟป่า"
+  ],
+  [
+    "wildfire",
+    "ไฟป่าลุกลาม"
+  ],
+  [
+    "illegal logging",
+    "การลักลอบตัดไม้ทำลายป่า"
+  ],
+  [
+    "clear-cutting",
+    "การตัดไม้ทำลายป่าทั้งพื้นที่"
+  ],
+  [
+    "reforestation",
+    "การปลูกป่าทดแทน"
+  ],
+  [
+    "afforestation",
+    "การปลูกป่าในพื้นที่ใหม่"
+  ],
+  [
+    "tree planting",
+    "การปลูกต้นไม้"
+  ],
+  [
+    "logging industry",
+    "อุตสาหกรรมตัดไม้"
+  ],
+  [
+    "timber trade",
+    "การค้าไม้ซุง"
+  ],
+  [
+    "forest canopy",
+    "เรือนยอดป่า"
+  ],
+  [
+    "undergrowth",
+    "พืชพื้นล่างในป่า"
+  ],
+  [
+    "forest cover",
+    "พื้นที่ปกคลุมของป่า"
+  ],
+  [
+    "forest degradation",
+    "ความเสื่อมโทรมของป่า"
+  ],
+  [
+    "deforestation rate",
+    "อัตราการตัดไม้ทำลายป่า"
+  ],
+  [
+    "slash-and-burn",
+    "การถางป่าแล้วเผา"
+  ],
+  [
+    "watershed forest",
+    "ป่าต้นน้ำ"
+  ],
+  [
+    "community forest",
+    "ป่าชุมชน"
+  ],
+  [
+    "forest ranger",
+    "เจ้าหน้าที่พิทักษ์ป่า"
+  ],
+  [
+    "timber certification",
+    "การรับรองไม้อย่างยั่งยืน"
+  ],
+  [
+    "old-growth forest",
+    "ป่าดึกดำบรรพ์"
+  ],
+  [
+    "carbon sequestration",
+    "การกักเก็บคาร์บอนในต้นไม้"
+  ],
+  [
+    "logging ban",
+    "การห้ามตัดไม้"
+  ],
+  [
+    "forest restoration",
+    "การฟื้นฟูป่า"
+  ],
+  [
+    "biodiversity hotspot",
+    "พื้นที่ความหลากหลายทางชีวภาพสูง"
+  ],
+  [
+    "selective logging",
+    "การตัดไม้แบบเลือกต้น"
+  ],
+  [
+    "sustainable forestry",
+    "วนวัฒน์ยั่งยืน"
+  ],
+  [
+    "timber concession",
+    "สัมปทานทำไม้"
+  ],
+  [
+    "buffer zone",
+    "เขตกันชน"
+  ],
+  [
+    "peatland",
+    "พื้นที่พรุ"
+  ],
+  [
+    "peat fire",
+    "ไฟไหม้พื้นที่พรุ"
+  ],
+  [
+    "water scarcity",
+    "ภาวะขาดแคลนน้ำ"
+  ],
+  [
+    "water shortage",
+    "การขาดแคลนน้ำ"
+  ],
+  [
+    "water conservation",
+    "การอนุรักษ์น้ำ"
+  ],
+  [
+    "rainwater harvesting",
+    "การเก็บกักน้ำฝน"
+  ],
+  [
+    "water treatment plant",
+    "โรงบำบัดน้ำประปา"
+  ],
+  [
+    "desalination",
+    "การผลิตน้ำจืดจากน้ำทะเล"
+  ],
+  [
+    "freshwater resource",
+    "แหล่งน้ำจืด"
+  ],
+  [
+    "watershed",
+    "พื้นที่ลุ่มน้ำ"
+  ],
+  [
+    "wetland",
+    "พื้นที่ชุ่มน้ำ"
+  ],
+  [
+    "river delta",
+    "ดินดอนสามเหลี่ยมปากแม่น้ำ"
+  ],
+  [
+    "reservoir",
+    "อ่างเก็บน้ำ"
+  ],
+  [
+    "dam construction",
+    "การสร้างเขื่อน"
+  ],
+  [
+    "irrigation system",
+    "ระบบชลประทาน"
+  ],
+  [
+    "marine ecosystem",
+    "ระบบนิเวศทางทะเล"
+  ],
+  [
+    "seagrass meadow",
+    "แหล่งหญ้าทะเล"
+  ],
+  [
+    "overfishing",
+    "การจับปลาเกินขนาด"
+  ],
+  [
+    "sustainable fishing",
+    "การประมงอย่างยั่งยืน"
+  ],
+  [
+    "fishing quota",
+    "โควตาการจับปลา"
+  ],
+  [
+    "marine protected area",
+    "พื้นที่คุ้มครองทางทะเล"
+  ],
+  [
+    "fish stock",
+    "ปริมาณสัตว์น้ำ"
+  ],
+  [
+    "sea level rise",
+    "ระดับน้ำทะเลสูงขึ้น"
+  ],
+  [
+    "coastal erosion",
+    "การกัดเซาะชายฝั่ง"
+  ],
+  [
+    "ballast water",
+    "น้ำอับเฉาเรือ"
+  ],
+  [
+    "water pollution control",
+    "การควบคุมมลพิษทางน้ำ"
+  ],
+  [
+    "safe drinking water",
+    "น้ำดื่มที่ปลอดภัย"
+  ],
+  [
+    "water table",
+    "ระดับน้ำใต้ดิน"
+  ],
+  [
+    "drought-resistant crop",
+    "พืชทนแล้ง"
+  ],
+  [
+    "blue economy",
+    "เศรษฐกิจสีน้ำเงิน"
+  ],
+  [
+    "water footprint",
+    "รอยเท้าน้ำ"
+  ],
+  [
+    "transboundary water",
+    "แหล่งน้ำข้ามพรมแดน"
+  ],
+  [
+    "river basin management",
+    "การบริหารจัดการลุ่มน้ำ"
+  ],
+  [
+    "flood control",
+    "การควบคุมน้ำท่วม"
+  ],
+  [
+    "stormwater management",
+    "การจัดการน้ำฝนไหลบ่า"
+  ],
+  [
+    "groundwater recharge",
+    "การเติมน้ำใต้ดิน"
+  ],
+  [
+    "water rights",
+    "สิทธิการใช้น้ำ"
+  ],
+  [
+    "sustainable agriculture",
+    "เกษตรกรรมยั่งยืน"
+  ],
+  [
+    "organic farming",
+    "เกษตรอินทรีย์"
+  ],
+  [
+    "crop rotation",
+    "การปลูกพืชหมุนเวียน"
+  ],
+  [
+    "monoculture",
+    "การปลูกพืชเชิงเดี่ยว"
+  ],
+  [
+    "genetically modified crop",
+    "พืชดัดแปลงพันธุกรรม"
+  ],
+  [
+    "pesticide",
+    "ยาฆ่าแมลง"
+  ],
+  [
+    "herbicide",
+    "สารกำจัดวัชพืช"
+  ],
+  [
+    "chemical fertilizer",
+    "ปุ๋ยเคมี"
+  ],
+  [
+    "agroforestry",
+    "วนเกษตร"
+  ],
+  [
+    "permaculture",
+    "เกษตรกรรมถาวร"
+  ],
+  [
+    "urban farming",
+    "เกษตรกรรมในเมือง"
+  ],
+  [
+    "vertical farming",
+    "การเกษตรแนวตั้ง"
+  ],
+  [
+    "green building",
+    "อาคารสีเขียว"
+  ],
+  [
+    "green roof",
+    "หลังคาสีเขียว"
+  ],
+  [
+    "urban green space",
+    "พื้นที่สีเขียวในเมือง"
+  ],
+  [
+    "urban heat island",
+    "เกาะความร้อนในเมือง"
+  ],
+  [
+    "public transportation",
+    "ระบบขนส่งสาธารณะ"
+  ],
+  [
+    "carpooling",
+    "การใช้รถร่วมกัน"
+  ],
+  [
+    "bicycle lane",
+    "ช่องทางจักรยาน"
+  ],
+  [
+    "smart city",
+    "เมืองอัจฉริยะ"
+  ],
+  [
+    "eco-friendly product",
+    "ผลิตภัณฑ์เป็นมิตรต่อสิ่งแวดล้อม"
+  ],
+  [
+    "sustainable development",
+    "การพัฒนาอย่างยั่งยืน"
+  ],
+  [
+    "sustainable living",
+    "วิถีชีวิตแบบยั่งยืน"
+  ],
+  [
+    "urban sprawl",
+    "การขยายตัวของเมืองแบบไร้ระเบียบ"
+  ],
+  [
+    "land use planning",
+    "การวางผังการใช้ที่ดิน"
+  ],
+  [
+    "food security",
+    "ความมั่นคงทางอาหาร"
+  ],
+  [
+    "local produce",
+    "ผลผลิตท้องถิ่น"
+  ],
+  [
+    "climate-smart agriculture",
+    "เกษตรกรรมที่รับมือกับสภาพภูมิอากาศ"
+  ],
+  [
+    "regenerative agriculture",
+    "เกษตรฟื้นฟู"
+  ],
+  [
+    "no-till farming",
+    "การทำเกษตรแบบไม่ไถพรวน"
+  ],
+  [
+    "cover crop",
+    "พืชคลุมดิน"
+  ],
+  [
+    "seed bank",
+    "ธนาคารเมล็ดพันธุ์"
+  ],
+  [
+    "food mile",
+    "ระยะทางขนส่งอาหาร"
+  ],
+  [
+    "sustainable packaging",
+    "บรรจุภัณฑ์ที่ยั่งยืน"
+  ],
+  [
+    "walkable city",
+    "เมืองที่เดินได้สะดวก"
+  ],
+  [
+    "plant-based diet",
+    "อาหารที่เน้นพืชเป็นหลัก"
+  ],
+  [
+    "low-carbon lifestyle",
+    "วิถีชีวิตคาร์บอนต่ำ"
+  ],
+  [
+    "environmental disaster",
+    "ภัยพิบัติด้านสิ่งแวดล้อม"
+  ],
+  [
+    "natural resource",
+    "ทรัพยากรธรรมชาติ"
+  ],
+  [
+    "environmental impact assessment",
+    "การประเมินผลกระทบสิ่งแวดล้อม"
+  ],
+  [
+    "environmental policy",
+    "นโยบายสิ่งแวดล้อม"
+  ],
+  [
+    "environmental protection",
+    "การคุ้มครองสิ่งแวดล้อม"
+  ],
+  [
+    "environmental regulation",
+    "กฎระเบียบด้านสิ่งแวดล้อม"
+  ],
+  [
+    "environmental degradation",
+    "ความเสื่อมโทรมของสิ่งแวดล้อม"
+  ],
+  [
+    "environmental awareness",
+    "ความตระหนักด้านสิ่งแวดล้อม"
+  ],
+  [
+    "environmental education",
+    "การศึกษาด้านสิ่งแวดล้อม"
+  ],
+  [
+    "environmental activist",
+    "นักเคลื่อนไหวด้านสิ่งแวดล้อม"
+  ],
+  [
+    "non-governmental organization",
+    "องค์กรพัฒนาเอกชน"
+  ],
+  [
+    "carbon tax",
+    "ภาษีคาร์บอน"
+  ],
+  [
+    "cap and trade",
+    "ระบบซื้อขายสิทธิ์การปล่อยมลพิษ"
+  ],
+  [
+    "emission trading",
+    "การซื้อขายสิทธิ์การปล่อยมลพิษ"
+  ],
+  [
+    "sustainability report",
+    "รายงานความยั่งยืน"
+  ],
+  [
+    "greenwashing",
+    "การฟอกเขียว"
+  ],
+  [
+    "subsidy for renewable energy",
+    "เงินอุดหนุนพลังงานหมุนเวียน"
+  ],
+  [
+    "disaster preparedness",
+    "การเตรียมพร้อมรับภัยพิบัติ"
+  ],
+  [
+    "early warning system",
+    "ระบบเตือนภัยล่วงหน้า"
+  ],
+  [
+    "flash flood",
+    "น้ำท่วมฉับพลัน"
+  ],
+  [
+    "man-made disaster",
+    "ภัยพิบัติจากฝีมือมนุษย์"
+  ],
+  [
+    "landslide",
+    "ดินถล่ม"
+  ],
+  [
+    "volcanic eruption",
+    "ภูเขาไฟระเบิด"
+  ],
+  [
+    "cyclone",
+    "พายุไซโคลน"
+  ],
+  [
+    "typhoon",
+    "ไต้ฝุ่น"
+  ],
+  [
+    "storm surge",
+    "คลื่นพายุซัดฝั่ง"
+  ],
+  [
+    "climate summit",
+    "การประชุมสุดยอดด้านสภาพภูมิอากาศ"
+  ],
+  [
+    "United Nations Environment Programme",
+    "โครงการสิ่งแวดล้อมแห่งสหประชาชาติ"
+  ],
+  [
+    "environmental law",
+    "กฎหมายสิ่งแวดล้อม"
+  ],
+  [
+    "polluter pays principle",
+    "หลักการผู้ก่อมลพิษเป็นผู้จ่าย"
+  ],
+  [
+    "Kyoto Protocol",
+    "พิธีสารเกียวโต"
+  ],
+  [
+    "Intergovernmental Panel on Climate Change",
+    "คณะกรรมการระหว่างรัฐบาลว่าด้วยการเปลี่ยนแปลงสภาพภูมิอากาศ"
+  ],
+  [
+    "World Wildlife Fund",
+    "กองทุนสัตว์ป่าโลก"
+  ],
+  [
+    "environmental justice",
+    "ความเป็นธรรมด้านสิ่งแวดล้อม"
+  ],
+  [
+    "sustainable development goals",
+    "เป้าหมายการพัฒนาที่ยั่งยืน"
+  ],
+  [
+    "Earth Day",
+    "วันคุ้มครองโลก"
+  ],
+  [
+    "carbon border tax",
+    "ภาษีคาร์บอนข้ามพรมแดน"
+  ]
+]
