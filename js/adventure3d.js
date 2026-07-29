@@ -1788,7 +1788,7 @@ function buildDriveCity(sc){
     if(lkEdge.length) sc.add(new THREE.Mesh(flatGeom(lkEdge,.045),new THREE.MeshBasicMaterial({color:0xf2f2f2})));    // ขอบขาว
     if(lkDash.length) sc.add(new THREE.Mesh(flatGeom(lkDash,.075),new THREE.MeshBasicMaterial({color:0xd8d8d2})));    // เส้นประกลางถนน
 
-    /* 🚸🛑 รอบ 799 (ผู้ใช้: "วาดทางม้าลาย+ป้ายหยุดตรงจุดบรรจบทั้ง 7 จุด") — ปลายแรกของ poly (poly[0]) = จุดบรรจบถนนหลัก
+    /* 🚸🛑 รอบ 800 (ผู้ใช้: "วาดทางม้าลาย+ป้ายหยุดตรงจุดบรรจบทั้ง 7 จุด") — ปลายแรกของ poly (poly[0]) = จุดบรรจบถนนหลัก
        ทางม้าลาย: แถบขาวตัดขวางถนนเชื่อม ใช้สี/เลเยอร์ y เดียวกับขอบขาวเลนจักรยานด้านบน (0xf2f2f2 @ y=.045) ผ่าน flatGeom เดิม
        ป้ายหยุด: ทรงกลม (เดียวกับ Sprite ป้ายชื่อ blkNameSprite) ยืนบนเสาข้างถนน หาจุดว่างด้วย navBlockedAt+grid สูตรเดียวกับ freeCell/buildTrafficLights */
     const CROSS_STRIPE=0.5, CROSS_GAP=0.45, CROSS_N=5, CROSS_MARGIN=0.6, CROSS_START=0.3;   // ระยะ/จำนวนแถบทางม้าลาย
