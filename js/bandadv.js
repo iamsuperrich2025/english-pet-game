@@ -9,15 +9,39 @@
 const BAND_ADV_REWARD = 500;   // เท่ากับ BAND_SET_REWARD ใน dictband.js
 const __bandAdvLoading = {};
 const __bandAdvCats = {};
+const __bandAdvFail = {};   // id -> [{file, kind:'404'|'network'}] ไฟล์ที่โหลดพังของรอบล่าสุด (รอบ 768)
+
+/* แยกสาเหตุที่โหลดพัง: 404 = ไฟล์ยังไม่ขึ้นเว็บ (ต้อง deploy ใหม่) vs network = เน็ตหลุด/เชื่อมต่อไม่ได้
+   log ชื่อไฟล์ลง console กัน "ต้นตอ" หายไปกับ .catch เงียบ ๆ เหมือนรอบ 767 */
+function bandAdvFailMsg(id){
+  const fails = __bandAdvFail[id] || [];
+  if(!fails.length) return 'โหลดคลังศัพท์ไม่สำเร็จ ลองใหม่อีกครั้งนะ 😅';
+  if(fails.some(f=>f.kind === '404')) return 'คลังศัพท์นี้ยังไม่ขึ้นเว็บ แจ้งผู้ดูแลให้อัปเดตก่อนนะ 🙏';
+  return 'เน็ตหลุดระหว่างโหลดคลังศัพท์ ลองเช็กสัญญาณแล้วลองใหม่นะ 😅';
+}
 
 function bandAdvLoad(id){
   if(__bandAdvCats[id]) return Promise.resolve(__bandAdvCats[id]);
   if(__bandAdvLoading[id]) return __bandAdvLoading[id];
   const m = (typeof BAND_ADV_MANIFEST !== 'undefined') ? BAND_ADV_MANIFEST[id] : null;
   if(!m) return Promise.resolve(null);
-  __bandAdvLoading[id] = Promise.all(m.files.map(fi=>
-    fetch('js/data/band/' + fi.f).then(r=>r.json()).catch(()=>[])
-  )).then(chunks=>{
+  __bandAdvFail[id] = [];
+  __bandAdvLoading[id] = Promise.all(m.files.map(fi=>{
+    const url = 'js/data/band/' + fi.f;
+    return fetch(url).then(r=>{
+      if(!r.ok){
+        const kind = r.status === 404 ? '404' : 'http';
+        console.error(`[bandAdvLoad] โหลดไฟล์คำศัพท์ไม่สำเร็จ (สถานะ ${r.status}${kind === '404' ? ' — ไฟล์ไม่ขึ้นเว็บ' : ''}): ${url}`);
+        __bandAdvFail[id].push({file:fi.f, kind});
+        return [];
+      }
+      return r.json();
+    }).catch(err=>{
+      console.error(`[bandAdvLoad] โหลดไฟล์คำศัพท์ไม่สำเร็จ (เน็ตหลุด/เชื่อมต่อไม่ได้): ${url}`, err);
+      __bandAdvFail[id].push({file:fi.f, kind:'network'});
+      return [];
+    });
+  })).then(chunks=>{
     const seenEn = new Set(), seenTh = new Set(), words = [];
     chunks.forEach(arr=>(arr || []).forEach(pair=>{
       const en = String(pair && pair[0] || '').trim().toLowerCase();  // normalize ตัวเล็กเสมอ — business ขึ้นต้นตัวใหญ่ทุกคำ ไม่ทำ = เทียบคำตอบพลาด
@@ -37,7 +61,7 @@ function bandAdvLoad(id){
 function bandAdvPlay(id, mode){
   if(!__bandAdvLoading[id] && !__bandAdvCats[id]) toast('⏳ กำลังเปิดคลังศัพท์...');
   bandAdvLoad(id).then(cat=>{
-    if(!cat || !cat.words.length){ toast('โหลดคลังศัพท์ไม่สำเร็จ ลองใหม่อีกครั้งนะ 😅'); return; }
+    if(!cat || !cat.words.length){ toast(bandAdvFailMsg(id)); return; }
     if(mode === 'quiz') startQuiz(cat); else startGame(cat);
   });
 }

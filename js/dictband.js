@@ -14,18 +14,42 @@ const BAND_SET_REWARD  = 500;         // รางวัลสอบผ่าน
 const BAND_DONE_BONUS  = 500;         // โบนัสครั้งเดียวเมื่อผ่านครบทุกชุดของระดับ
 const __bandLoading = {};             // band -> Promise (โหลดชิ้นข้อมูลครั้งเดียว)
 const __bandCats = {};                // band -> cat object (สร้างครั้งเดียวหลังโหลด)
+const __bandFail = {};                // band -> [{file, kind:'404'|'network'}] ไฟล์ที่โหลดพังของรอบล่าสุด (รอบ 768)
+
+/* แยกสาเหตุที่โหลดพัง: 404 = ไฟล์ยังไม่ขึ้นเว็บ (ต้อง deploy ใหม่) vs network = เน็ตหลุด/เชื่อมต่อไม่ได้
+   log ชื่อไฟล์ลง console กัน "ต้นตอ" หายไปกับ .catch เงียบ ๆ เหมือนรอบ 767 */
+function bandFailMsg(b){
+  const fails = __bandFail[b] || [];
+  if(!fails.length) return 'โหลดคลังศัพท์ไม่สำเร็จ ลองใหม่อีกครั้งนะ 😅';
+  if(fails.some(f=>f.kind === '404')) return 'คลังศัพท์นี้ยังไม่ขึ้นเว็บ แจ้งผู้ดูแลให้อัปเดตก่อนนะ 🙏';
+  return 'เน็ตหลุดระหว่างโหลดคลังศัพท์ ลองเช็กสัญญาณแล้วลองใหม่นะ 😅';
+}
 
 function bandLoad(b){
   if(__bandLoading[b]) return __bandLoading[b];
   const m = (typeof DICT_BAND_MANIFEST !== 'undefined') ? DICT_BAND_MANIFEST[b] : null;
   if(!m) return Promise.resolve();
+  __bandFail[b] = [];
   __bandLoading[b] = new Promise(res=>{
     let done = 0;
     const fin = ()=>{ if(++done >= m.files.length) res(); };
     m.files.forEach(fi=>{
+      const url = 'js/data/dict_band/' + fi.f;
       const s = document.createElement('script');
-      s.src = 'js/data/dict_band/' + fi.f;
-      s.onload = fin; s.onerror = fin;
+      s.src = url;
+      s.onload = fin;
+      s.onerror = ()=>{
+        // <script onerror> ไม่บอกสถานะ HTTP → ยิง fetch ซ้ำเฉพาะตอนพังเพื่อแยก 404 จากเน็ตหลุด
+        // ⚠️ ต้อง fin() หลัง fetch นี้เสร็จเท่านั้น ไม่งั้น bandLoad() resolve ก่อน __bandFail ทันข้อมูล → bandFailMsg อ่านค่าว่างเก่า
+        fetch(url, {cache:'no-store'}).then(r=>{
+          const kind = r.status === 404 ? '404' : 'http';
+          console.error(`[bandLoad] โหลดไฟล์คำศัพท์ไม่สำเร็จ (สถานะ ${r.status}${kind === '404' ? ' — ไฟล์ไม่ขึ้นเว็บ' : ''}): ${url}`);
+          __bandFail[b].push({file:fi.f, kind});
+        }).catch(err=>{
+          console.error(`[bandLoad] โหลดไฟล์คำศัพท์ไม่สำเร็จ (เน็ตหลุด/เชื่อมต่อไม่ได้): ${url}`, err);
+          __bandFail[b].push({file:fi.f, kind:'network'});
+        }).then(fin);
+      };
       document.head.appendChild(s);
     });
   });
@@ -191,7 +215,7 @@ function openBandSetPicker(b){
   if(!__bandLoading[b]) toast('⏳ กำลังเปิดคลังศัพท์...');
   bandLoad(b).then(()=>{
     const cat = bandCat(b);
-    if(!cat.words.length){ toast('โหลดคลังศัพท์ไม่สำเร็จ ลองใหม่อีกครั้งนะ 😅'); return; }
+    if(!cat.words.length){ toast(bandFailMsg(b)); return; }
     const sets = bandSets(cat.words);
     const passedN = bandSetsPassed(b, sets.length);
     let ov = document.getElementById('bsp-overlay');
@@ -312,7 +336,7 @@ function bandPlay(b, mode){
   if(!__bandLoading[b]) toast('⏳ กำลังเปิดคลังศัพท์...');
   bandLoad(b).then(()=>{
     const cat = bandCat(b);
-    if(!cat.words.length){ toast('โหลดคลังศัพท์ไม่สำเร็จ ลองใหม่อีกครั้งนะ 😅'); return; }
+    if(!cat.words.length){ toast(bandFailMsg(b)); return; }
     startGame(cat);
   });
 }
