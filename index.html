@@ -199,7 +199,8 @@
                "เหรียญร่วงลงกระเป๋าตังค์" (.coin-flow) เห็นปุ๊บรู้ทันทีว่าเหรียญกำลังไหลเข้า -->
           <div class="coin-pill net" id="net-pill" style="display:none"><span class="cp-lb">ออนไลน์</span><span class="cp-v"><span class="coin-flow" aria-hidden="true"><i class="cf-c"></i><i class="cf-c"></i><i class="cf-c"></i><span class="cf-bag">👛</span></span>+<span id="net-live">0.00</span></span></div>
           <!-- 💻 รอบ 706: ช่องรายได้จากคอมพิวเตอร์ที่ซื้อในเกม — ยังไม่ซื้อ = จาง+ 🔒 คลิกแล้วมีกล่องอธิบาย+ปุ่มซื้อ -->
-          <div class="coin-pill comp" id="comp-pill" style="display:none"><span class="cp-lb">คอม</span><span class="cp-v"><span class="comp-ic">💻</span><span class="comp-plus">+</span><span id="comp-live-top">0.00</span></span></div>
+          <!-- รอบ 735 (ผู้ใช้: "ใส่ภาพเหรียญสีทองไว้บนเครื่องคอมด้วย จะได้รู้ว่าเงินเข้า"): เหรียญทองเล็กมุมจอคอม เด้งเบา ๆ ตอนกำลังทำเงิน -->
+          <div class="coin-pill comp" id="comp-pill" style="display:none"><span class="cp-lb">คอม</span><span class="cp-v"><span class="comp-ic-wrap"><span class="comp-ic">💻</span><span class="comp-coin" aria-hidden="true"></span></span><span class="comp-plus">+</span><span id="comp-live-top">0.00</span></span></div>
           <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
           <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
         </div>

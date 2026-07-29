@@ -3891,6 +3891,23 @@ html.no-anim .coin-pill.comp .comp-ic{animation:none;}
   0%,100%{filter:drop-shadow(0 0 1px rgba(120,200,255,.4));}
   50%    {filter:drop-shadow(0 0 6px rgba(140,215,255,.95)) brightness(1.15);}
 }
+/* รอบ 735 (ผู้ใช้: "ใส่ภาพเหรียญสีทองไว้บนเครื่องคอมด้วย จะได้รู้ว่าเงินเข้า"):
+   เหรียญทองจริง (ภาพเดียวกับ .coin-flow) แปะมุมบนขวาไอคอนจอคอม เด้งเบา ๆ เฉพาะตอนกำลังทำเงินจริง
+   ล็อก/ถูกตัดบริการ = ซ่อนเหรียญไปเลย กันสับสนว่ายังได้เงินอยู่ */
+.comp-ic-wrap{position:relative;display:inline-block;}
+.comp-coin{
+  position:absolute;top:-4px;right:-5px;width:9px;height:9px;border-radius:50%;
+  background:url('../img/coins/coin_gold.png') center/contain no-repeat,
+             radial-gradient(circle at 34% 30%,#fff3bd,#ffc93c 55%,#d8901a);
+  box-shadow:0 0 3px rgba(255,205,70,.85);
+  display:none;
+}
+.coin-pill.comp.on .comp-coin{display:block;animation:compCoinBounce 1.6s ease-in-out infinite;}
+html.no-anim .coin-pill.comp.on .comp-coin{animation:none;}
+@keyframes compCoinBounce{
+  0%,100%{transform:translateY(0) scale(1);}
+  50%    {transform:translateY(-2px) scale(1.12);}
+}
 /* ป้าย +1 ลอยขึ้นตอนเหรียญตกเข้ากระเป๋า — ต้องมี position:relative ที่ตัว pill */
 .lobby-top .coin-group .coin-pill{position:relative;}
 .cp-lb{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8db3da;}
