@@ -82,10 +82,13 @@ function bandCheckComplete(b){
   if(!allDone || state.bandComplete[b]) return;
   state.bandComplete[b] = true;
   addCoins(BAND_DONE_BONUS);
+  // 👑 ใบประกาศ Gold — ให้ครั้งเดียวตอนผ่านครบทุกชุดของระดับ (js/cert.js) ต่างจากใบสอบผ่านรายชุดปกติ
+  const goldCert = (typeof certAwardGold === 'function') ? certAwardGold(b, sets.length, cat.words.length) : null;
   saveState();
   setTimeout(()=>alertBox(`<div style="font-size:56px;line-height:1">🏆</div>
     <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#7d5fc0">สุดยอด! ผ่านครบทุกชุดของระดับ ${DICT_BAND_MANIFEST[b].label}</div>
-    <div style="margin-top:8px;color:#6a5a78">ทั้งหมด ${sets.length} ชุด ${fmtNum(cat.words.length)} คำ — รับโบนัสพิเศษ <b>+${BAND_DONE_BONUS} 🪙</b></div>`, 'เย้! 🎉'), 900);
+    <div style="margin-top:8px;color:#6a5a78">ทั้งหมด ${sets.length} ชุด ${fmtNum(cat.words.length)} คำ — รับโบนัสพิเศษ <b>+${BAND_DONE_BONUS} 🪙</b>${goldCert ? '<br>👑 พร้อมใบประกาศ <b>Gold</b> เก็บไว้ในโปรไฟล์แล้ว!' : ''}</div>`,
+    'เย้! 🎉', goldCert ? {text:'ดูใบประกาศทอง 👑', onClick:()=>openCertBig(goldCert)} : null), 900);
 }
 
 /* หมวดเสมือนของ "ชุดที่ i" — สอบทุกคำในชุด (10-19 ข้อ) ตัวลวงสุ่มจากทั้ง band */

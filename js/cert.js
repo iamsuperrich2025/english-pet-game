@@ -111,6 +111,26 @@ function certMine(){
   if(typeof state === 'undefined' || !Array.isArray(state.certs)) return [];
   return state.certs.slice().sort((a,b)=>(b.ts || 0) - (a.ts || 0));
 }
+/* ---------- 👑 ใบประกาศ Gold — ให้เมื่อผ่านครบ "ทุกชุด" ของระดับ (dictband.js bandCheckComplete)
+   คนละใบกับใบสอบผ่านรายชุด (id ต่างกัน) · c.gold=true ทำให้ certSVG วาดสไตล์ต่างออกไป
+   sc/tt = จำนวนชุดที่ผ่าน/ทั้งหมด (ครบเสมอตอนออกใบ) · words = จำนวนคำรวมทั้งระดับ ---------- */
+function certAwardGold(b, setsCount, wordsCount){
+  if(typeof state === 'undefined') return null;
+  if(!Array.isArray(state.certs)) state.certs = [];
+  const label = (typeof DICT_BAND_MANIFEST !== 'undefined' && DICT_BAND_MANIFEST[b]) ? DICT_BAND_MANIFEST[b].label : '';
+  const id = 'bandgold' + b;
+  const old = state.certs.find(x=>x.id === id);
+  if(old){                                            // ผ่านซ้ำ (แทบไม่เกิด แต่กันไว้) — แค่รีเฟรชวันที่
+    old.ts = Date.now();
+    return old;
+  }
+  const c = {id, th:label, t:'Complete Vocabulary Mastery',
+    lv:(CERT_LEVEL_EN[label] || label) + ' Level', sc:setsCount, tt:setsCount,
+    words:wordsCount, ts:Date.now(), n:1, gold:true};
+  state.certs.unshift(c);
+  if(state.certs.length > CERT_MAX) state.certs.length = CERT_MAX;
+  return c;
+}
 /* 🔁 เซฟเก่าที่สอบผ่านไปก่อนมีระบบนี้ → สร้างใบย้อนหลังจาก quizLog (เรียกครั้งเดียวตอนโหลด) */
 function certBackfill(){
   if(typeof state === 'undefined') return;
@@ -198,6 +218,7 @@ function certHolder(c){
 function certSVG(c, opt){
   opt = opt || {};
   const full = !!opt.full;
+  const gold = !!c.gold;                              // 👑 ใบครบทุกชุดของระดับ — โทนสี/ข้อความต่างจากใบสอบผ่านรายชุด
   const u = 'cw' + (++__certSeq);
   const h = certHolder(c);
   const name  = certXML(h.name);
@@ -207,12 +228,16 @@ function certSVG(c, opt){
   const perfect = c.tt && c.sc >= c.tt;
   const nameFs  = certFit(h.name, full ? 64 : 80, 560);
   const topicFs = certFit(c.t,    full ? 48 : 62, 600);
+  const accent  = gold ? '#7a1f2a' : '#123a63';       // สีชื่อ/ตัวเลขเด่น — Gold ใช้แดงเลือดหมูแทนน้ำเงิน
+  const ringClr = gold ? '#8a2331' : '#c8a13c';       // สีเส้นวงแหวนตราประทับ + กรอบชั้นใน
+  const crestGlyph = gold ? '♛' : '★';
 
   /* กรอบ/กระดาษแบบเวกเตอร์ = ตัวสำรองเมื่อยังไม่มี img/cert/paper.png (มีไฟล์แล้วภาพจะทับชั้นนี้) */
   const frame = `
     <rect width="700" height="1000" fill="url(#${u}pap)"/>
     <rect width="700" height="1000" fill="url(#${u}ray)" opacity=".55"/>
     <rect x="14" y="14" width="672" height="972" rx="6" fill="none" stroke="url(#${u}gold)" stroke-width="13"/>
+    ${gold ? `<rect x="24" y="24" width="652" height="952" rx="5" fill="none" stroke="${ringClr}" stroke-width="3" opacity=".85"/>` : ''}
     <rect x="27" y="27" width="646" height="946" rx="4" fill="none" stroke="#b9922f" stroke-width="1.6" opacity=".85"/>
     <rect x="38" y="38" width="624" height="924" rx="3" fill="none" stroke="#d9be6a" stroke-width="3.5" opacity=".9"/>
     ${[[38,38,1,1],[662,38,-1,1],[38,962,1,-1],[662,962,-1,-1]].map(p=>`
@@ -229,11 +254,11 @@ function certSVG(c, opt){
         const a = i * Math.PI / 12;
         return `<line x1="${(Math.cos(a)*r*0.86).toFixed(1)}" y1="${(Math.sin(a)*r*0.86).toFixed(1)}"
                  x2="${(Math.cos(a)*r*1.12).toFixed(1)}" y2="${(Math.sin(a)*r*1.12).toFixed(1)}"
-                 stroke="#c8a13c" stroke-width="${i % 2 ? 3 : 6}" stroke-linecap="round" opacity=".92"/>`;
+                 stroke="${ringClr}" stroke-width="${i % 2 ? 3 : 6}" stroke-linecap="round" opacity=".92"/>`;
       }).join('')}
-      <circle r="${r*0.9}" fill="url(#${u}seal)" stroke="#a8801f" stroke-width="2"/>
+      <circle r="${r*0.9}" fill="url(#${u}seal)" stroke="${gold ? '#5e1420' : '#a8801f'}" stroke-width="2"/>
       <circle r="${r*0.72}" fill="none" stroke="#fff6dc" stroke-width="1.6" opacity=".8"/>
-      <text y="${-r*0.16}" text-anchor="middle" font-size="${r*0.5}" fill="#fff8e4">★</text>
+      <text y="${-r*0.16}" text-anchor="middle" font-size="${r*0.5}" fill="#fff8e4">${crestGlyph}</text>
       <text y="${r*0.42}" text-anchor="middle" font-size="${r*0.27}" font-family="Georgia,serif"
         font-weight="bold" fill="#fff8e4" letter-spacing="1.5">VW</text>
     </g>`;
@@ -249,11 +274,38 @@ function certSVG(c, opt){
       <path d="M-27 22 q27 -11 27 0 q0 -11 27 0 v7 q-27 -11 -27 0 q0 -11 -27 0 z" fill="#f7e6b4" stroke="#a8801f" stroke-width="1.4"/>
     </g>`;
 
-  const body = full ? `
+  const wordsN = certXML(typeof fmtNum === 'function' ? fmtNum(c.words || 0) : String(c.words || 0));
+  const body = full ? (gold ? `
     <text x="350" y="432" text-anchor="middle" font-size="27" font-style="italic" fill="#5d4a2a"
       font-family="Georgia,'Times New Roman',serif">This is to certify that</text>
-    <text x="350" y="504" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="#123a63">${name}</text>
-    <line x1="150" y1="524" x2="550" y2="524" stroke="#c8a13c" stroke-width="1.6" opacity=".8"/>
+    <text x="350" y="504" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="${accent}">${name}</text>
+    <line x1="150" y1="524" x2="550" y2="524" stroke="${ringClr}" stroke-width="1.6" opacity=".8"/>
+    <text x="350" y="554" text-anchor="middle" font-size="22" fill="#6b5836"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${certXML(h.id)}${h.mark ? '  ·  ' + certXML(h.markTxt) + ' ' + certXML(h.mark) : ''}</text>
+    <text x="350" y="606" text-anchor="middle" font-size="22" fill="#5d4a2a"
+      font-family="Georgia,'Times New Roman',serif">has completed the entire vocabulary curriculum of</text>
+    <text x="350" y="672" text-anchor="middle" font-size="${topicFs}" font-weight="bold" fill="#8a6a1f"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
+    <text x="350" y="710" text-anchor="middle" font-size="25" fill="#6b5836">${th} Level</text>
+    <text x="350" y="772" text-anchor="middle" font-size="25" fill="#4a3f2a"
+      font-family="Georgia,'Times New Roman',serif">mastering all <tspan font-weight="bold" fill="${accent}">${c.tt}</tspan> sets · <tspan font-weight="bold" fill="${accent}">${wordsN}</tspan> words <tspan fill="#a8801f" font-weight="bold">— Perfect</tspan></text>
+    <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
+      font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}</text>
+    <text x="350" y="846" text-anchor="middle" font-size="17" fill="#8a7440"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1.2">Certificate No. ${certXML(certSerial(c, h.uid))}</text>
+    ${seal(148, 888, 52)}
+    <g>
+      <line x1="300" y1="912" x2="620" y2="912" stroke="#8a7440" stroke-width="1.6"/>
+      <text x="460" y="906" text-anchor="middle" font-size="26" fill="${accent}"
+        font-family="Georgia,'Times New Roman',serif" font-style="italic">Vocab World Academy</text>
+      <text x="460" y="938" text-anchor="middle" font-size="18" fill="#6b5836"
+        font-family="Georgia,'Times New Roman',serif">Head of Vocabulary Studies</text>
+    </g>
+  ` : `
+    <text x="350" y="432" text-anchor="middle" font-size="27" font-style="italic" fill="#5d4a2a"
+      font-family="Georgia,'Times New Roman',serif">This is to certify that</text>
+    <text x="350" y="504" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="${accent}">${name}</text>
+    <line x1="150" y1="524" x2="550" y2="524" stroke="${ringClr}" stroke-width="1.6" opacity=".8"/>
     <text x="350" y="554" text-anchor="middle" font-size="22" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${certXML(h.id)}${h.mark ? '  ·  ' + certXML(h.markTxt) + ' ' + certXML(h.mark) : ''}</text>
     <text x="350" y="606" text-anchor="middle" font-size="22" fill="#5d4a2a"
@@ -262,7 +314,7 @@ function certSVG(c, opt){
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="710" text-anchor="middle" font-size="25" fill="#6b5836">${th}</text>
     <text x="350" y="772" text-anchor="middle" font-size="26" fill="#4a3f2a"
-      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="#123a63">${c.sc}/${c.tt}</tspan> (${pct}%)${perfect ? ' <tspan fill="#a8801f" font-weight="bold">— Perfect</tspan>' : ''}</text>
+      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%)${perfect ? ' <tspan fill="#a8801f" font-weight="bold">— Perfect</tspan>' : ''}</text>
     <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}</text>
     <text x="350" y="846" text-anchor="middle" font-size="17" fill="#8a7440"
@@ -270,25 +322,38 @@ function certSVG(c, opt){
     ${seal(148, 888, 52)}
     <g>
       <line x1="300" y1="912" x2="620" y2="912" stroke="#8a7440" stroke-width="1.6"/>
-      <text x="460" y="906" text-anchor="middle" font-size="26" fill="#123a63"
+      <text x="460" y="906" text-anchor="middle" font-size="26" fill="${accent}"
         font-family="Georgia,'Times New Roman',serif" font-style="italic">Vocab World Academy</text>
       <text x="460" y="938" text-anchor="middle" font-size="18" fill="#6b5836"
         font-family="Georgia,'Times New Roman',serif">Head of Vocabulary Studies</text>
     </g>
+  `) : (gold ? `
+    <line x1="130" y1="386" x2="570" y2="386" stroke="${ringClr}" stroke-width="2" opacity=".75"/>
+    <text x="350" y="482" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="${accent}">${name}</text>
+    <text x="350" y="540" text-anchor="middle" font-size="24" fill="#6b5836"
+      font-family="Georgia,'Times New Roman',serif">has mastered the full curriculum of</text>
+    <text x="350" y="628" text-anchor="middle" font-size="${topicFs}" font-weight="bold" fill="#8a6a1f"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
+    <text x="350" y="676" text-anchor="middle" font-size="30" fill="#6b5836">${th} Level</text>
+    <text x="350" y="770" text-anchor="middle" font-size="34" font-weight="bold" fill="${accent}"
+      font-family="Georgia,'Times New Roman',serif">${c.tt} sets · ${wordsN} words</text>
+    <text x="350" y="828" text-anchor="middle" font-size="30" fill="#6b5836"
+      font-family="Georgia,'Times New Roman',serif">${certDateEN(c.ts)}</text>
+    ${seal(350, 912, 56)}
   ` : `
-    <line x1="130" y1="386" x2="570" y2="386" stroke="#c8a13c" stroke-width="2" opacity=".75"/>
-    <text x="350" y="482" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="#123a63">${name}</text>
+    <line x1="130" y1="386" x2="570" y2="386" stroke="${ringClr}" stroke-width="2" opacity=".75"/>
+    <text x="350" y="482" text-anchor="middle" font-size="${nameFs}" font-weight="bold" fill="${accent}">${name}</text>
     <text x="350" y="540" text-anchor="middle" font-size="27" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">has passed the examination in</text>
     <text x="350" y="628" text-anchor="middle" font-size="${topicFs}" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="676" text-anchor="middle" font-size="32" fill="#6b5836">${th}</text>
-    <text x="350" y="782" text-anchor="middle" font-size="52" font-weight="bold" fill="#123a63"
+    <text x="350" y="782" text-anchor="middle" font-size="52" font-weight="bold" fill="${accent}"
       font-family="Georgia,'Times New Roman',serif">${c.sc}/${c.tt}${perfect ? ' ★' : ''}</text>
     <text x="350" y="828" text-anchor="middle" font-size="30" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">${certDateEN(c.ts)}</text>
     ${seal(350, 912, 56)}
-  `;
+  `);
 
   return `<svg class="cert-svg" viewBox="0 0 700 1000" xmlns="http://www.w3.org/2000/svg"
       xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid meet" role="img"
@@ -304,8 +369,9 @@ function certSVG(c, opt){
         <stop offset="1" stop-color="#e8cd7e"/>
       </linearGradient>
       <radialGradient id="${u}seal" cx=".35" cy=".3">
-        <stop offset="0" stop-color="#f6e2a4"/><stop offset=".6" stop-color="#d5ab3f"/>
-        <stop offset="1" stop-color="#a8801f"/>
+        ${gold
+          ? `<stop offset="0" stop-color="#e8a6a0"/><stop offset=".6" stop-color="#a83a45"/><stop offset="1" stop-color="#6e1524"/>`
+          : `<stop offset="0" stop-color="#f6e2a4"/><stop offset=".6" stop-color="#d5ab3f"/><stop offset="1" stop-color="#a8801f"/>`}
       </radialGradient>
       <radialGradient id="${u}ray" cx=".5" cy=".42">
         <stop offset="0" stop-color="#fffefa"/><stop offset="1" stop-color="#efdcae"/>
@@ -319,8 +385,8 @@ function certSVG(c, opt){
       width="180" height="180" preserveAspectRatio="xMidYMid meet"/>
     <text x="350" y="308" text-anchor="middle" font-size="46" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="7">${CERT_ISSUER_EN}</text>
-    <text x="350" y="350" text-anchor="middle" font-size="${full ? 24 : 26}" fill="#7a6431"
-      font-family="Georgia,'Times New Roman',serif" letter-spacing="${full ? 3 : 2}">CERTIFICATE OF ACHIEVEMENT</text>
+    <text x="350" y="350" text-anchor="middle" font-size="${full ? 24 : 26}" fill="${gold ? accent : '#7a6431'}"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="${full ? 3 : 2}">${gold ? 'CERTIFICATE OF EXCELLENCE' : 'CERTIFICATE OF ACHIEVEMENT'}</text>
     ${body}
   </svg>`;
 }
@@ -329,6 +395,10 @@ function certSVG(c, opt){
    ย่อใบทั้งใบลงไปจะอ่านไม่ออก) · CSS สลับให้เองที่ @media (max-height:500px) */
 function certChipHTML(c){
   const perfect = c.tt && c.sc >= c.tt;
+  if(c.gold){
+    return `<span class="cert-chip-sm cert-chip-gold"><b>👑 ${certXML(c.t)}</b>
+      <small>${c.tt} sets · ${certXML(certDateEN(c.ts))}</small></span>`;
+  }
   return `<span class="cert-chip-sm"><b>🎖️ ${certXML(c.t)}</b>
     <small>${c.sc}/${c.tt}${perfect ? ' ★' : ''} · ${certXML(certDateEN(c.ts))}</small></span>`;
 }
@@ -364,10 +434,10 @@ function certStripHTML(list, me){
       ? 'ยังไม่มีใบประกาศ — สอบผ่านหมวดคำศัพท์ครั้งแรก รับใบประกาศใบแรกได้เลย 📝'
       : 'ยังไม่เห็นใบประกาศของผู้เล่นคนนี้ (เจ้าตัวต้องเปิดเผยกิจกรรม 📝 ในตั้งค่า)'}</div>`;
   }
-  return list.map((c, i)=>`<button class="cert-mini" type="button" data-ci="${i}"
+  return list.map((c, i)=>`<button class="cert-mini${c.gold ? ' cert-mini-gold' : ''}" type="button" data-ci="${i}"
       title="${certXML(c.t)} — แตะดูใบใหญ่">
       ${certSVG(c)}
-      <span class="cert-mini-cap">${certXML(c.t)}${c.n > 1 ? ` ×${c.n}` : ''}</span>
+      <span class="cert-mini-cap">${c.gold ? '👑 ' : ''}${certXML(c.t)}${c.n > 1 ? ` ×${c.n}` : ''}</span>
     </button>`).join('');
 }
 /* ผูกปุ่มใบประกาศทุกใบในกล่องหนึ่ง ๆ → แตะแล้วเปิดใบใหญ่ */
