@@ -1378,9 +1378,10 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
   50%{background:rgba(46,220,140,.32);box-shadow:0 0 12px rgba(46,220,140,.55);}
 }
 /* ============================================================
-   🎴 รอบ 170: กล่องภารกิจ = การ์ดใหญ่ทีละใบ พลิก 3D สลับทุก 6 วิ
-   (แทนลิสต์เลื่อนวน — อ่านง่าย เด็กเห็นทีละภารกิจชัดๆ) + ปุ่ม 🚀 ไปทำเลย */
-#quest-card{height:100%;overflow:hidden;perspective:420px;}
+   🎴 รอบ 708: กล่องภารกิจ = เด็ค scroll-snap ทีละใบ ค้าง 10 วิ แล้วเลื่อน เหมือนฟีดเพื่อน
+   (แทนพลิกการ์ด 3D รอบ 170 — สเปกผู้ใช้) + แถบนับเวลา #q-prog-bar + ปุ่ม 🚀 ไปทำเลย */
+#quest-card.q-deck{overflow-y:auto;scroll-snap-type:y mandatory;touch-action:pan-y;}
+#quest-card.q-deck .q-bigcard{scroll-snap-align:start;scroll-snap-stop:always;}
 .q-bigcard{display:flex;flex-direction:column;gap:clamp(3px,1.2vh,8px);height:100%;
   padding:4px 2px;cursor:pointer;}
 .qb-top{display:flex;align-items:center;gap:8px;min-height:0;}
@@ -1410,10 +1411,6 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
 #quest-card.q-mini .qb-bar,#quest-card.q-mini .q-dots{display:none;}
 #quest-card.q-mini .qb-row{font-size:9.5px;gap:6px;}
 #quest-card.q-mini .qb-go{font-size:9.5px;padding:1px 8px;}
-.q-bigcard.qflip-out{animation:qFlipOut .18s ease-in forwards;}
-.q-bigcard.qflip-in{animation:qFlipIn .26s ease-out;}
-@keyframes qFlipOut{to{transform:rotateY(86deg);opacity:.15;}}
-@keyframes qFlipIn{from{transform:rotateY(-86deg);opacity:.15;}to{transform:rotateY(0);opacity:1;}}
 .q-bigcard.q-flash{animation:qFlash 1.2s ease-in-out 3;border-radius:10px;}
 html.no-anim .q-bigcard{animation:none;}
 /* รอบ 152: เพื่อนใหม่เพิ่งออนไลน์ → แถวแฟลชฟ้า 3 จังหวะ (กล่องเด้งไปโชว์เหมือนภารกิจ)
@@ -2143,6 +2140,8 @@ html.no-anim .cs-big-img{animation:none}
 .fd-prog{flex-shrink:0;height:3px;border-radius:2px;background:rgba(255,255,255,.09);margin:3px 0 5px;overflow:hidden;}
 .fd-prog i{display:block;height:100%;width:0;border-radius:2px;
   background:linear-gradient(90deg,#43c6ff,#7af0c0);transition:width .2s linear;}
+/* รอบ 708: แถบเดียวกันใช้กับกล่องภารกิจ — อยู่นอกกล่องใต้หัวข้อ เลยขยับ margin ให้ตรงกับ .side-label */
+.side-sec.sec-quest .fd-prog.q-prog{margin:1px 8px 4px 8px;}
 /* โหมดวงหมุน: การ์ดสูงเท่ากล่องพอดี เลื่อนทีละใบด้วย scroll-snap */
 .feed-list.feed-deck{scroll-snap-type:y mandatory;}
 .feed-list.feed-deck .fpost{height:100%;scroll-snap-align:start;scroll-snap-stop:always;}
@@ -2993,8 +2992,8 @@ html.no-anim .hero-rank-bg .rank-floor{animation:none;}
    (ค่า flex ของ .sec-online ถูกทับในบล็อกรอบ 603 ท้ายไฟล์) */
 .side-sec.sec-quest,.side-sec.sec-online{flex:0 0 auto;}
 .sec-quest .side-glass,.sec-online .side-glass{flex:0 0 auto;}
-#quest-card{height:auto;}
-.q-bigcard{height:auto;}
+/* รอบ 708: ความสูงกล่อง/การ์ดตั้งจาก JS ตรง (el.style.height = สูงเท่า 1 ใบ) ไม่ใช้ auto อีกต่อไป
+   — auto จะทำให้การ์ดที่ซ้อนกันในเด็คโชว์พร้อมกันหมด ไม่ใช่ทีละใบ */
 /* q-fit: เหลือ 2 บรรทัด (ชื่อภารกิจ + แถวความคืบหน้า/รางวัล/ปุ่ม) ฟอนต์ขนาดปกติ */
 #quest-card.q-fit .qb-bar,#quest-card.q-fit .q-dots{display:none;}
 #quest-card.q-fit .q-bigcard{gap:3px;padding:2px;}

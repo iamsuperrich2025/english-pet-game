@@ -838,11 +838,12 @@ const QUEST_FLASH_HOLD = 5000;        // ms ค้างโชว์แถวท
 let __qDoneSeen = null;               // done ids ที่เห็นรอบก่อน (null = ยังไม่เคยเรนเดอร์ ไม่นับของเก่าตอน login)
 let __qFlashPend = null;              // ภารกิจรอแฟลช (สำเร็จตอนกล่องถูกซ่อน เช่น อยู่หน้าเกมจับคู่)
 
-/* รอบ 170 (สเปกผู้ใช้ "เลื่อนขึ้นเฉยๆ ไม่น่าสนใจ"): เลิกลิสต์เลื่อนวน →
-   การ์ดใหญ่ทีละใบ พลิก 3D สลับทุก 6 วิ + ปุ่ม 🚀 ไปทำเลย (deep-link) + จุดบอกตำแหน่ง 3 ใบ
-   แตะการ์ด = พลิกใบถัดไปทันที (พัก auto 8 วิ) · ภารกิจเพิ่งสำเร็จ = เด้งไปใบนั้น แฟลชเขียว ค้าง 5 วิ */
-const QUEST_DECK_FLIP_MS = 6000;
-let __qDeckIdx = 0, __qDeckHold = 0;   // ใบที่โชว์ · เวลาห้าม auto-flip ถึง (แตะเอง/เพิ่งสำเร็จ)
+/* รอบ 708 (สเปกผู้ใช้ "ทีละภารกิจ ค้างไว้ 10 วิ แล้วเลื่อน เหมือนฟีดเพื่อน"): เลิกพลิกการ์ด 3D →
+   เด้ค scroll-snap เหมือนฟีดเพื่อน (ดู fd-* ด้านบน) + แถบนับเวลา #q-prog-bar + ปุ่ม 🚀 ไปทำเลย + จุดบอกตำแหน่ง
+   แตะการ์ด = เลื่อนใบถัดไปทันที (พัก auto 8 วิ) · ภารกิจเพิ่งสำเร็จ = เด้งไปใบนั้น แฟลชเขียว ค้าง 5 วิ */
+const QUEST_SLIDE_MS  = 10000;   // ค้างภารกิจละกี่ ms ก่อนเลื่อนถัดไป (เท่าฟีดเพื่อน 10 วิ)
+const QUEST_RESUME_MS = 12000;   // แตะ/เลื่อนเอง → หยุดออโต้กี่ ms ก่อนวนต่อ (เท่าฟีดเพื่อน)
+let __qIdx = 0, __qAt = 0, __qHold = 0;   // ใบที่โชว์ · เวลาเริ่มนับรอบนี้ · เวลาห้าม auto-เลื่อนถึง
 
 function questGo(qid){                 // ปุ่ม 🚀 พาไปที่ที่ต้องทำ — คลิกปุ่ม/เรียก handler เดิม (guard ครบในตัว)
   sfx.select();
@@ -862,16 +863,13 @@ function sideIsTall(){
   return !!s && s.clientHeight >= SIDE_TALL_MIN;
 }
 
-function qDeckDraw(el, flashId){
-  const qs = questsToday();
-  if(__qDeckIdx >= qs.length) __qDeckIdx = 0;
-  el.classList.toggle('q-fit', !sideIsTall());   // รอบ 178 (สเปกผู้ใช้): จอเตี้ย = หดพอดี 2 บรรทัด (ชื่อ+แถวรางวัล) — ซ่อนแถบ/จุดใน CSS ฟอนต์ขนาดปกติ
-  const q = qs[__qDeckIdx];
+function qBigCardHTML(qs, idx, flashId, opt){
+  const q = qs[idx];
   const done = state.quests.done.includes(q.id);
   const prog = Math.min(q.target, state.quests.prog[q.id]||0);
   const pct = done ? 100 : Math.round(prog/q.target*100);
-  const dots = qs.map((x,i)=>`<span class="q-dot ${i===__qDeckIdx?'on':''} ${state.quests.done.includes(x.id)?'ok':''}"></span>`).join('');
-  el.innerHTML = `<div class="q-bigcard ${done?'done':''} ${flashId===q.id?'q-flash':''}" data-qid="${q.id}">
+  const dots = qs.map((x,i)=>`<span class="q-dot ${i===idx?'on':''} ${state.quests.done.includes(x.id)?'ok':''}"></span>`).join('');
+  return `<div class="q-bigcard${opt&&opt.clone?' q-clone':''} ${done?'done':''} ${flashId===q.id?'q-flash':''}" data-qid="${q.id}">
       <div class="qb-top"><span class="qb-emoji">${q.emoji}</span><div class="qb-name">${q.name}</div></div>
       <div class="qb-bar"><i style="width:${pct}%"></i></div>
       <div class="qb-row">
@@ -885,25 +883,52 @@ function qDeckDraw(el, flashId){
     </div>`;
 }
 
-function qDeckNext(animate){
-  const el = document.getElementById('quest-card');
-  if(!el) return;
-  __qDeckIdx = (__qDeckIdx + 1) % QUEST_PER_DAY;
-  const card = el.querySelector('.q-bigcard');
-  if(!animate || !card || document.documentElement.classList.contains('no-anim')){ qDeckDraw(el, null); return; }
-  card.classList.add('qflip-out');                       // พลิกครึ่งแรก → สลับเนื้อหา → พลิกเข้า
+function qDeckGo(el, i, animate){                        // เลื่อนไปใบที่ i (ตรรกะเดียวกับ feedDeckGo)
+  const h = el.clientHeight;
+  if(!h) return;
+  __qIdx = i;
+  const top = i * h;
+  el.__prog = Date.now() + 1100;                          // ช่วงที่เราสั่งเลื่อนเอง ห้ามนับเป็น "ผู้ใช้เลื่อน"
+  el.scrollTo({top, behavior: animate ? 'smooth' : 'auto'});
   setTimeout(()=>{
-    qDeckDraw(el, null);
-    const c2 = el.querySelector('.q-bigcard');
-    if(c2){ c2.classList.add('qflip-in'); setTimeout(()=>c2.classList.remove('qflip-in'), 300); }
-  }, 170);
+    if(document.getElementById('quest-card') !== el) return;
+    if(Math.abs(el.scrollTop - top) > 4){ el.__prog = Date.now() + 300; el.scrollTop = top; }
+  }, 700);
+  if(i >= el.__n){                                        // ถึงใบโคลน → ตัดกลับใบแรกแบบไม่มีอนิเมชัน
+    setTimeout(()=>{
+      const cur = document.getElementById('quest-card');
+      if(cur !== el || !el.clientHeight) return;
+      __qIdx = 0; el.__prog = Date.now() + 300;
+      el.scrollTo({top:0, behavior:'auto'});
+    }, 820);
+  }
+}
+function qDeckTick(){
+  const el  = document.getElementById('quest-card');
+  const bar = document.getElementById('q-prog-bar');
+  if(!el || !el.classList.contains('q-deck') || !el.clientHeight || (el.__n || 0) < 2){
+    if(bar) bar.style.width = '0%';
+    return;
+  }
+  const now = Date.now();
+  if(now < __qHold){                                      // ผู้ใช้เพิ่งแตะ/เลื่อนเอง = พัก
+    __qIdx = Math.round(el.scrollTop / el.clientHeight);
+    __qAt  = now;
+    if(bar) bar.style.width = '0%';
+    return;
+  }
+  const p = Math.min(1, (now - __qAt) / QUEST_SLIDE_MS);
+  if(bar) bar.style.width = (p * 100).toFixed(1) + '%';
+  if(p < 1) return;
+  __qAt = now;
+  qDeckGo(el, __qIdx + 1, true);
 }
 
 function renderQuestCard(){
   const el = document.getElementById('quest-card');
   if(!el || typeof state === 'undefined' || !state.student) return;
   questTick();
-  delete sideScrollSt[el.id];            // เด็คใบเดียวพอดีกล่อง — กัน ticker รอบ 149 มาห่อ ss-chunk ซ้อน
+  delete sideScrollSt[el.id];            // เด็คเลื่อนเอง — กัน ticker รอบ 149 มาห่อ ss-chunk ซ้อน
   const qs = questsToday();
   // ภารกิจที่เพิ่งสำเร็จ (ไม่นับชุดที่ done อยู่แล้วตอนเปิดเกม) → เด้งไปใบนั้น
   const doneNow = state.quests.done.slice();
@@ -912,27 +937,50 @@ function renderQuestCard(){
     if(fresh.length) __qFlashPend = fresh[fresh.length-1];
   }
   __qDoneSeen = doneNow;
-  let flashId = null;
-  if(__qFlashPend && el.clientHeight){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอรอบเรนเดอร์ตอนกลับ lobby)
+  const visible = el.offsetParent !== null;
+  if(!visible) el.__hSized = false;      // ซ่อนอยู่ (ไม่ได้อยู่หน้า lobby) → รอบหน้าที่โผล่มาต้องวัดสูงใหม่เสมอ กันค้างที่ 0px
+  let flashId = null, jumpIdx = -1;
+  if(__qFlashPend && visible){   // กล่องมองเห็นอยู่ค่อยแฟลช (ซ่อนอยู่ = รอรอบเรนเดอร์ตอนกลับ lobby)
     const i = qs.findIndex(q=>q.id === __qFlashPend);
-    if(i >= 0){ __qDeckIdx = i; __qDeckHold = Date.now() + QUEST_FLASH_HOLD; flashId = __qFlashPend; }
+    if(i >= 0){ jumpIdx = i; flashId = __qFlashPend; }
     __qFlashPend = null;
   }
-  qDeckDraw(el, flashId);
+  const sig = qs.map(q=>`${q.id}:${state.quests.prog[q.id]||0}:${state.quests.done.includes(q.id)}`).join('|') + `|${state.quests.allDone}`;
+  const fitOn = !sideIsTall();           // รอบ 178 (สเปกผู้ใช้): จอเตี้ย = หดพอดี 2 บรรทัด (ชื่อ+แถวรางวัล) — ซ่อนแถบ/จุดใน CSS ฟอนต์ขนาดปกติ
+  const fitChanged = el.classList.contains('q-fit') !== fitOn;
+  el.classList.toggle('q-fit', fitOn);
+  if(!(el.__sig === sig && el.classList.contains('q-deck') && !flashId)){
+    el.__sig = sig;
+    el.classList.add('q-deck');
+    el.innerHTML = qs.map((q,i)=>qBigCardHTML(qs, i, flashId)).join('')
+      + (qs.length > 1 ? qBigCardHTML(qs, 0, null, {clone:true}) : '');   // โคลนใบแรกท้ายสุด = วนขึ้นได้ไม่มีสะดุด
+    el.__n = qs.length;
+    if(jumpIdx >= 0) __qIdx = jumpIdx; else __qIdx = Math.min(__qIdx, qs.length - 1);
+    __qAt = Date.now();
+    if(jumpIdx >= 0) __qHold = Date.now() + QUEST_FLASH_HOLD;
+    el.__hSized = false;                 // เนื้อหาเปลี่ยน (ขนาดอาจเปลี่ยนตาม) → วัดสูงใหม่
+  }
+  if(visible && (!el.__hSized || fitChanged)){
+    el.style.height = 'auto';            // คลาย % ของการ์ดชั่วคราว ให้วัดความสูงตามเนื้อหาจริงได้ (กันวงกลม 0px)
+    const card = el.querySelector('.q-bigcard');
+    const h = card ? card.offsetHeight : 0;
+    if(h){ el.style.height = h + 'px'; el.__hSized = true; }   // กล่องหดพอดี "1 ใบ" (สูงเท่าใบแรก ทุกใบสูงเท่ากัน)
+  }
+  if(el.clientHeight) el.scrollTop = __qIdx * el.clientHeight;
   if(!el.dataset.bound){                 // element สร้างใหม่ทุก renderDashboard → ผูกใหม่ได้เสมอ
     el.dataset.bound = '1';
+    const hold = ()=>{ __qHold = Date.now() + QUEST_RESUME_MS; };
+    el.addEventListener('pointerdown', hold);
+    el.addEventListener('touchstart', hold, {passive:true});
+    el.addEventListener('wheel', hold, {passive:true});
+    el.addEventListener('scroll', ()=>{ if(Date.now() > (el.__prog || 0)) hold(); }, {passive:true});
     el.addEventListener('click', (e)=>{
       const go = e.target.closest('.qb-go');
       if(go){ questGo(go.dataset.qid); return; }
-      if(e.target.closest('.q-bigcard')){ sfx.select(); __qDeckHold = Date.now() + 8000; qDeckNext(true); }
+      if(e.target.closest('.q-bigcard')){ sfx.select(); __qHold = Date.now() + 8000; qDeckGo(el, __qIdx + 1, true); }
     });
   }
-  if(!window.__qDeckTimer) window.__qDeckTimer = setInterval(()=>{
-    const box = document.getElementById('quest-card');
-    if(!box || !box.clientHeight) return;                // จอถูกซ่อน/ยังไม่เข้าเกม
-    if(Date.now() < __qDeckHold) return;                 // ผู้ใช้เพิ่งแตะ/เพิ่งแฟลช
-    qDeckNext(true);
-  }, QUEST_DECK_FLIP_MS);
+  if(!window.__qDeckTimer) window.__qDeckTimer = setInterval(qDeckTick, 200);
 }
 
 /* helper ร่วม (รอบ 150/152): เลื่อนกล่อง aside ไปโชว์แถวที่ match sel + ติด class แฟลช
@@ -952,7 +1000,7 @@ function sideFlashRows(el, sel, cls){
   st.until = Date.now() + QUEST_FLASH_HOLD;
 }
 
-/* questFlashRow (รอบ 150) ถูกแทนด้วยเด็คการ์ดรอบ 170 — แฟลชผ่าน flashId ใน qDeckDraw แทน */
+/* questFlashRow (รอบ 150) ถูกแทนด้วยเด็คการ์ดรอบ 170/704 — แฟลชผ่าน flashId ใน qBigCardHTML แทน */
 
 /* รอบ 152: ตรวจเพื่อนใหม่เพิ่งออนไลน์ (เฉพาะโหมดออนไลน์จริง — เพื่อนจำลองไม่นับ) */
 const FRIEND_FLASH_GRACE = 8000;      // ms หลังต่อออนไลน์สำเร็จ ค่อยเริ่มนับเพื่อนใหม่ (กัน sync ชุดแรกสแปม)
@@ -1891,9 +1939,13 @@ function showPlayerCard(uid, name, grade){
     }
     const av = (d.av == null) ? '—' : fmtNum(d.av) + ' 🪙';
     const ni = (d.ni == null) ? '—' : fmtNum(d.ni) + ' ชิ้น';
-    /* 🪪 รอบ 255: ตัวละคร blk เต็มตัวใหญ่ใต้ชื่อ (ba จาก /leaderboard · เจ้าของการ์ดยังไม่อัปเดต = ไม่โชว์) */
-    const blkImg = (d.ba && /^blk[1-8]$/.test(d.ba))
-      ? `<div class="pl-blk-wrap"><img class="pl-blk" src="img/blocks/${d.ba}.png" alt="ตัวละคร"></div>` : '';
+    /* 🪪 รอบ 255: ตัวละคร blk เต็มตัวใหญ่ใต้ชื่อ (ba จาก /leaderboard · เจ้าของการ์ดยังไม่อัปเดต = ไม่โชว์)
+       📷 รอบ 708: ถ้าเจ้าของการ์ดอัปโหลดรูปตัวเองไว้ → ใช้รูปนั้นแทน (ของเรารู้ทันที · ของเพื่อนโหลดตามทีหลัง) */
+    const myPh = d.me && (typeof photoGet === 'function') ? photoGet() : '';
+    const blkImg = myPh
+      ? `<div class="pl-blk-wrap"><img class="pl-photo" src="${myPh}" alt="รูปโปรไฟล์"></div>`
+      : ((d.ba && /^blk[1-8]$/.test(d.ba))
+        ? `<div class="pl-blk-wrap"><img class="pl-blk" src="img/blocks/${d.ba}.png" alt="ตัวละคร"></div>` : '');
     body.innerHTML = `
       ${blkImg}
       ${d.me ? `<div class="pl-me-tag">⭐ นี่คือ${selfTag()}</div>` : ''}
@@ -1914,6 +1966,18 @@ function showPlayerCard(uid, name, grade){
         <span class="pl-val">${d.hs > 0 ? (d.hs >= 60 ? `${Math.floor(d.hs/60)} นาที ${d.hs%60} วิ` : `${d.hs} วิ`) : '—'}</span>
       </div>
       <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
+    /* 📷 รอบ 708: รูปโปรไฟล์ของ "เพื่อน" อ่านทีหลัง (/pphoto อยู่คนละ node กับ leaderboard
+       ตั้งใจแยก เพราะรูป ~20KB ถ้าอยู่ใน leaderboard จะถูกดึงมาทุกครั้งที่โหลดกระดาน)
+       ต้องเรียกหลัง body.innerHTML เสมอ ไม่งั้นรูปที่แทรกไว้จะถูกเขียนทับ */
+    if(!d.me && typeof photoFetch === 'function'){
+      photoFetch(uid).then(url=>{
+        if(!url || !ov.isConnected) return;
+        const wrap = ov.querySelector('.pl-blk-wrap');
+        const img  = `<img class="pl-photo" src="${url}" alt="รูปโปรไฟล์">`;
+        if(wrap) wrap.innerHTML = img;
+        else body.insertAdjacentHTML('afterbegin', `<div class="pl-blk-wrap">${img}</div>`);
+      });
+    }
   });
 
   /* ---- คอลัมน์ขวา: กิจกรรมล่าสุด (เห็นตามหมวดที่เจ้าตัวเปิดเผย — ไม่ต้อง follow ก็เห็น) ---- */
@@ -4078,11 +4142,22 @@ function renderDashboard(){
       if(gb) gb.addEventListener('click', openGradeChange);
     }
   }
-  /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า) */
+  /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า)
+     📷 รอบ 708: อัปโหลดรูปตัวเองทับได้ (js/photo.js) + ปุ่มกล้องมุมขวาล่างแบบ Facebook
+     lay = ลายเซ็นสิ่งที่วาดอยู่ (กันวาดซ้ำทุก render · รูปยาวมาก เทียบแค่ความยาว+หาง) */
   const pp = document.getElementById('pass-photo');
   if(pp){
-    const src = `img/blocks/${lobbyBlk()}.png`;
-    if(!pp.dataset.src || pp.dataset.src !== src){ pp.dataset.src = src; pp.innerHTML = `<img src="${src}" alt="">`; }
+    const myPh  = (typeof photoGet === 'function') ? photoGet() : '';
+    const src   = myPh || `img/blocks/${lobbyBlk()}.png`;
+    const canEd = !!state.student && typeof openPhotoMenu === 'function';
+    const lay   = (myPh ? 'ph' + myPh.length + myPh.slice(-16) : src) + '|' + (canEd ? 'e' : '');
+    if(pp.dataset.src !== lay){
+      pp.dataset.src = lay;
+      pp.innerHTML = `<img class="${myPh ? 'pp-photo' : ''}" src="${src}" alt="">`
+        + (canEd ? `<button class="pp-cam" type="button" title="เปลี่ยนรูปโปรไฟล์">📷</button>` : '');
+      const cam = pp.querySelector('.pp-cam');
+      if(cam) cam.addEventListener('click', e=>{ e.stopPropagation(); sfx.select(); openPhotoMenu(); });
+    }
     if(state.student){   // รอบ 274: คลิกรูป passport → การ์ดโปรไฟล์ตัวเองเช่นกัน
       pp.classList.add('pl-click');
       pp.dataset.uid = myUid; pp.dataset.n = myPlName; pp.dataset.g = myPlGrade;
@@ -4691,7 +4766,10 @@ function feedWith(p, food){
 const AVATAR_UI = {male:{emoji:'🦸‍♂️', name:'เด็กชาย'}, female:{emoji:'🦸‍♀️', name:'เด็กหญิง'}};
 // 🧱 รอบ 245: รูปโปรไฟล์หลัก = "ตัวละครในล็อบบี้" (blk1..8) ตัวเดียวกับที่ยืนข้างน้อง
 // (เลิกใช้ 🦸 ชาย/หญิง แยกต่างหาก — ผู้ใช้สั่ง 15 ก.ค. · เปลี่ยนตัวที่ ⚙️ ตั้งค่า)
+// 📷 รอบ 708: อัปโหลดรูปตัวเองได้แล้ว — มีรูปใช้รูป ไม่มีถอยไปตัวการ์ตูนบล็อกเหมือนเดิม
 function playerAvatarHTML(fallback){
+  const ph = (typeof photoGet === 'function') ? photoGet() : '';
+  if(ph) return `<img class="avatar-chip-img avatar-chip-photo" src="${ph}" alt="">`;
   if(typeof lobbyBlk === 'function') return `<img class="avatar-chip-img avatar-chip-blk" src="img/blocks/${lobbyBlk()}.png" alt="">`;
   return fallback !== undefined ? fallback : '📛';
 }
