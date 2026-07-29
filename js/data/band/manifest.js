@@ -139,5 +139,36 @@ const BAND_ADV_MANIFEST = {
         "n": 69
       }
     ]
+  },
+  "travel": {
+    "label": "ศัพท์ท่องเที่ยว",
+    "emoji": "✈️",
+    "count": 380,
+    "files": [
+      {
+        "f": "b6_travel_adventurepark-dehydration.js",
+        "n": 75
+      },
+      {
+        "f": "b6_travel_delay-historicsite.js",
+        "n": 75
+      },
+      {
+        "f": "b6_travel_hitchhiking-passportcontrol.js",
+        "n": 75
+      },
+      {
+        "f": "b6_travel_peakseason-streetfood.js",
+        "n": 75
+      },
+      {
+        "f": "b6_travel_streetperformer-windsurfing.js",
+        "n": 75
+      },
+      {
+        "f": "b6_travel_wiretransfer-zoo.js",
+        "n": 5
+      }
+    ]
   }
 };
