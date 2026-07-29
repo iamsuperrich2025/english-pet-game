@@ -171,8 +171,8 @@ authPushSave:357 · authLogout:368
 
 ## js/award.js (271 บรรทัด · 0 รายการ)
 
-## js/bandadv.js (68 บรรทัด · 4 รายการ)
-BAND_ADV_REWARD:9 · bandAdvLoad:13 · bandAdvPlay:37 · bandAdvCardsHTML:46
+## js/bandadv.js (92 บรรทัด · 5 รายการ)
+BAND_ADV_REWARD:9 · bandAdvFailMsg:16 · bandAdvLoad:23 · bandAdvPlay:61 · bandAdvCardsHTML:70
 
 ## js/cert.js (509 บรรทัด · 28 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
@@ -181,12 +181,12 @@ CERT_LOGO_SRC:107 · certAward:116 · certMine:132 · certAwardGold:139 · certB
 certFromPost:205 · certXML:220 · certFit:225 · certHolder:230 · certSVG:240 · certChipHTML:453
 openCertBig:464 · openCertMine:480 · certStripHTML:488 · certBindStrip:501
 
-## js/dictband.js (365 บรรทัด · 25 รายการ)
-BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandLoad:18 · bandShortTH:36 · bandCat:44
-bandSets:66 · bandSetId:75 · bandCheckComplete:78 · bandSetCat:95 · BAND_RETAKE_MAX:107 · bandTriedSets:108
-bandRetakeCat:119 · bandShowRetakeSummary:153 · bandSetsPassed:181 · openBandSetPicker:189 · bandMine:260 · bandUnlocked:261
-bandLockToast:266 · bandExamLobby:272 · updateBandExamBtn:281 · bandLobbyTick:298 · bandPlay:309 · bandPlayLobby:322
-bandCardsHTML:334
+## js/dictband.js (389 บรรทัด · 26 รายการ)
+BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
+bandCat:68 · bandSets:90 · bandSetId:99 · bandCheckComplete:102 · bandSetCat:119 · BAND_RETAKE_MAX:131
+bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsPassed:205 · openBandSetPicker:213 · bandMine:284
+bandUnlocked:285 · bandLockToast:290 · bandExamLobby:296 · updateBandExamBtn:305 · bandLobbyTick:322 · bandPlay:333
+bandPlayLobby:346 · bandCardsHTML:358
 
 ## js/game.js (1,027 บรรทัด · 70 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
@@ -207,14 +207,14 @@ GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:3
 gradeLockLeftMs:43 · gradeLockLeftDays:50 · gradeUnlockAt:51 · gradeLocked:52 · gradeUpOptions:55 · gradeChangeTo:62
 gradeLockNote:86 · openGradeChange:94
 
-## js/hotel3d.js (768 บรรทัด · 38 รายการ)
+## js/hotel3d.js (785 บรรทัด · 39 รายการ)
 TEX:25 · FLOOR_H:28 · WEST:31 · SHAFT_E:32 · CORE_E:33 · RZ0:34
 LZ0:35 · ROOM_N:36 · DOOR_W:39 · ENTRY_HW:40 · PLAYER_R:41 · floorY:42
 Acc:49 · accBox:50 · accGeo:66 · accMesh:74 · makeMats:85 · PORTRAIT_PHOTOS:130
-PORTRAIT_SKIN:131 · PORTRAIT_CLOTH:132 · portraitTexture:133 · signTexture:172 · build:186 · inRect:601
-insideHotel:602 · surfaceY:605 · collide:623 · roomAt:643 · floorOf:651 · setLights:656
-EYE_X0:669 · BLINK_DUR:670 · BLINK_MIN:671 · tick:673 · nearWardrobe:739 · inLift:750
-atLiftDoor:754 · randomHaunt:758
+EYE_R0:135 · PORTRAIT_EYE:136 · PORTRAIT_SKIN:144 · PORTRAIT_CLOTH:145 · portraitTexture:146 · signTexture:185
+build:199 · inRect:619 · insideHotel:620 · surfaceY:623 · collide:641 · roomAt:661
+floorOf:669 · setLights:674 · BLINK_DUR:687 · BLINK_MIN:688 · tick:690 · nearWardrobe:756
+inLift:767 · atLiftDoor:771 · randomHaunt:775
 
 ## js/images.js (211 บรรทัด · 23 รายการ)
 IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:28 · probeRankImages:40
