@@ -3287,8 +3287,15 @@ function renderRankCard(){
     : `💰 มูลค่ารวม ${fmtNum(worth)} (🪙${fmtNum(state.coins)} + ทรัพย์สิน ${fmtNum(assets)}) · แรงค์สูงสุดแล้ว! 👑`;
   el.style.borderColor = r.color;
   el.style.setProperty('--rank-c', r.color);
+  // แสงกรีดตามเหลี่ยม (.rank-beam/.rank-edge) mask ตามรูปทรงภาพจริง — ต้อง url() absolute (Chrome resolve เทียบไฟล์ CSS)
+  const badgeImgFile = IMG_FILES[`rank_${r.id}`];
+  const edgeFxHTML = badgeImgFile
+    ? `<div class="rank-beam"><i></i></div><div class="rank-edge"><i></i></div>`
+    : '';
   el.innerHTML = `
-    <div class="rank-badge-wrap"><div class="rank-badge-glow"></div>${rankBadgeHTML(r.id, r.emoji, 'rank-badge-img')}</div>
+    <div class="rank-badge-wrap" style="${badgeImgFile ? `--rank-img:url('${new URL(badgeImgFile, document.baseURI).href}')` : ''}">
+      <div class="rank-badge-glow"></div>${rankBadgeHTML(r.id, r.emoji, 'rank-badge-img')}${edgeFxHTML}
+    </div>
     <div class="rank-body">
       <div class="rank-name" style="color:${r.color}">${r.emoji} ${info.label}</div>
       <div class="rank-bar"><div class="rank-fill" style="width:${Math.round(info.prog*100)}%;background:${r.color}"></div></div>
