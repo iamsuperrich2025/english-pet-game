@@ -240,6 +240,7 @@ function openBandSetPicker(b){
       <div class="bsp-head">${cat.emoji} ข้อสอบ ${DICT_BAND_MANIFEST[b].label} · ${sets.length} ชุด
         <span class="bsp-prog">ผ่านแล้ว ${passedN}/${sets.length} ชุด</span>
         ${tried.length >= 2 ? `<button class="bsp-retake" id="bsp-retake">🔁 สอบซ่อมรวม ${rN} ชุด (${rW} ข้อ)</button>` : ''}</div>
+      <div class="bsp-info">📖 <b>สอบเลื่อนขั้นคำศัพท์</b> คือสอบผ่านคำศัพท์ระดับนี้ให้ครบทุกชุด เพื่อปลดล็อก "คลังคำศัพท์ระดับถัดไป" (ยากขึ้น) — ไม่ใช่การเลื่อนชั้นเรียนจริง ชั้นเรียนของหนูยังเป็น <b>${escapeHTML(state.student ? state.student.grade : '')}</b> เหมือนเดิม ✅</div>
       <div class="bsp-grid" id="bsp-grid">${sets.map((s, i)=>{
         const done = state.quizPassed.includes(bandSetId(b, i));
         const bs = best[i];
@@ -316,7 +317,7 @@ function updateBandExamBtn(){
   }else{
     sub = done ? `ผ่านแล้ว ${done} ชุด` : `ระดับ ${DICT_BAND_MANIFEST[b].label}`;
   }
-  btn.innerHTML = `📝 สอบเลื่อนขั้น <span class="exam-sub">${escapeHTML(sub)}</span>`;
+  btn.innerHTML = `📝 สอบเลื่อนขั้นคำศัพท์ <span class="exam-sub">${escapeHTML(sub)}</span>`;
 }
 /* เรียกจาก renderDashboard (ui.js) — อัปเดตป้ายปุ่ม + ป้ายออฟไลน์ + ตั้งพรีโหลดครั้งเดียว */
 function bandLobbyTick(){

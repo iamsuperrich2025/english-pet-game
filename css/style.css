@@ -1155,6 +1155,10 @@ html.no-anim body.quake{animation:none;}
   background:#ffe9d6;color:#b26a1e;border:2px solid #f2a95e;border-radius:999px;padding:2px 12px;
   white-space:nowrap;vertical-align:middle;}
 .bsp-retake:active{transform:scale(.95);}
+/* 📖 กระดานคำอธิบาย "สอบเลื่อนขั้นคำศัพท์" (เพิ่มตามคำขอ 30 ก.ค. 2026) — กันสับสนว่าเป็นการเลื่อนชั้นเรียนจริง */
+.bsp-info{font-size:clamp(10.5px,2vh,13px);line-height:1.4;color:#6a5a78;background:#f2ecff;
+  border:2px solid #e0d4f0;border-radius:12px;padding:6px 12px;margin:0 0 8px 2px;}
+.bsp-info b{color:#7d5fc0;}
 
 /* 🔁 สรุปผลสอบซ่อมละเอียด (รอบ 271) — รายชุด + คำที่ยังผิด · ฟิตจอเตี้ยไม่มี scrollbar */
 .rts-box{position:relative;display:flex;flex-direction:column;width:min(94vw,860px);max-height:92vh;
