@@ -2858,3 +2858,9 @@
 
 - **รอบ 760 (29 ก.ค. · ผู้ใช้: "ทำ logo_silver.png/logo_bronze.png จาก logo.png ต่อเข้า cert.js ให้ครบ 3 ระดับ"):** เดิมใบเงิน/ทองแดงใช้แค่โล่เวกเตอร์ `emblem()` (รอบ 726 ยังไม่มีภาพจริงแยกสี) → ตัดโทนจาก `img/cert/logo.png` ต้นฉบับด้วย `scratchpad/cert_logo_tone.py` (remap เฉพาะพิกเซล hue ทอง 20-75° เป็นเงิน/ทองแดง ด้วย HSV shift ผ่าน `colorsys` — พื้นน้ำเงิน/ไฮไลต์ขาว/เงาดำไม่โดนแตะเพราะกรองด้วย saturation) ได้ `img/cert/logo_silver.png`/`logo_bronze.png` (1024×1024 เหมือนต้นฉบับ) · `js/cert.js` เพิ่ม `CERT_LOGO_SRC` map ต่อ tier แล้วเลิก `if(tier==='gold')` เดิม ให้ `<image>` ใช้ path ตาม tier เสมอ
   - ยืนยัน (python http.server 8790 เอง เพราะ preview หลักติด session คู่ขนาน + mock login testkit): เรียก `certSVG()` ตรงกับ cert 3 คะแนน (10/10 gold, 9/10 silver, 7/10 bronze) เรนเดอร์ SVG จริงในเพจ → rasterize ผ่าน canvas + download มาดูภาพจริง เห็นโล่ 3 โทนตรงกับระดับ ขอบ/แสงเข้ากับโล่เวกเตอร์ด้านหลังพอดี ไม่มีภาพขาด · ลบไฟล์ทดสอบใน Downloads แล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-07-29 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 761 (29 ก.ค. · ผู้ใช้: "เอากลุ่ม 'ตั๋วเข้าโลกผจญภัย 3d' ทั้งหมด ไปอยู่ใต้กลุ่ม 'หุ่นยนต์'"):** `index.html` `#panel-market` สลับลำดับ 2 กลุ่มบล็อกบนสุด — ย้าย `<div id="market-card">` (ซึ่งท้ายสุดของมันคือโชว์รูมหุ่นยนต์ `mkt-robots` จาก `renderRobotShop()`) มาไว้ก่อน แล้วค่อยตามด้วยกลุ่ม "🎫 ตั๋วเข้าโลกผจญภัย 3D" (ticket/haunt/heli/drone/drive/soccer/moto/invasion) — ไม่แตะ JS เพราะทั้งสองกลุ่มแค่เติมเนื้อหาใน id เดิม ไม่ผูกกับลำดับ DOM
+  - ยืนยัน (preview 1000×640, mock login + newPet เติม pet, เรียก `openPanel('market')`): `[...panel-market.children]` ได้ HEAD "ตลาด&ยานพาหนะ" → market-card → HEAD "ตั๋วเข้าโลกผจญภัย 3D" → การ์ดตั๋ว 4 แถว ตรงตามที่สั่ง · เช็ก `mkt-robots.compareDocumentPosition(ticket-card)` = อยู่ก่อนจริง · console สะอาด ล้างเซฟแล้ว
