@@ -175,16 +175,16 @@ authPushSave:357 · authLogout:368
 
 ## js/award.js (271 บรรทัด · 0 รายการ)
 
-## js/bandadv.js (183 บรรทัด · 12 รายการ)
+## js/bandadv.js (186 บรรทัด · 12 รายการ)
 BAND_ADV_REWARD:9 · bandAdvFailMsg:16 · bandAdvLoad:23 · bandAdvPlay:61 · BAND_ADV_EXAM:76 · bandAdvExamId:81
-bandAdvExamName:83 · bandAdvExamLock:86 · bandAdvExamBest:93 · bandAdvExamCat:101 · bandAdvExamOpen:107 · bandAdvCardsHTML:157
+bandAdvExamName:83 · bandAdvExamLock:86 · bandAdvExamBest:93 · bandAdvExamCat:104 · bandAdvExamOpen:110 · bandAdvCardsHTML:160
 
-## js/cert.js (538 บรรทัด · 29 รายการ)
+## js/cert.js (549 บรรทัด · 29 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
 CERT_BIG_LV:52 · certThIndex:56 · certTitleOf:65 · certSerial:87 · certDateEN:95 · certTier:103
-CERT_TIER_META:110 · CERT_LOGO_SRC:116 · certAward:125 · certMine:142 · certAwardGold:149 · certBackfill:167
-certCatNameById:195 · certFromPost:220 · certXML:235 · certFit:240 · certHolder:245 · certSVG:255
-certChipHTML:481 · openCertBig:492 · openCertMine:508 · certStripHTML:516 · certBindStrip:530
+CERT_TIER_META:110 · CERT_LOGO_SRC:116 · certAward:125 · certMine:148 · certAwardGold:155 · certBackfill:173
+certCatNameById:201 · certFromPost:226 · certXML:244 · certFit:249 · certHolder:254 · certSVG:264
+certChipHTML:492 · openCertBig:503 · openCertMine:519 · certStripHTML:527 · certBindStrip:541
 
 ## js/dictband.js (389 บรรทัด · 26 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
@@ -193,7 +193,7 @@ bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsP
 bandUnlocked:285 · bandLockToast:290 · bandExamLobby:296 · updateBandExamBtn:305 · bandLobbyTick:322 · bandPlay:333
 bandPlayLobby:346 · bandCardsHTML:358
 
-## js/game.js (1,030 บรรทัด · 70 รายการ)
+## js/game.js (1,071 บรรทัด · 74 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:135 · sprinkleConfetti:182 · VOCAB_PER_LEVEL:201
 VOCAB_RANK_NAMES:202 · vocabRankName:203 · showProgressReport:205 · THUNDER_MS:384 · THUNDER_TIERS:388 · THUNDER_TIER_UI:389
@@ -205,7 +205,8 @@ BFF_TIER_UI:454 · BFF_COIN:455 · bffEmoji:456 · badgeSuffix:461 · BADGE_META
 splitNameBadges:494 · badgeEmojis:500 · badgeScore:505 · BADGE_CATS:512 · bcatLevel:524 · checkCrown:531
 currentBadgeScore:547 · rolloverBadgeWeek:551 · addDiligent:564 · celebrateBadge:580 · addThunder:594 · startGame:608
 newRound:648 · updateTimerBar:687 · updateComboPill:693 · pickCard:697 · checkMatch:709 · renderCats:823
-startQuiz:862 · renderQuizQuestion:878 · quizNext:942 · finishQuiz:955
+fmtMMSS:866 · quizTimerStop:870 · quizTimerStart:875 · quizElapsed:885 · startQuiz:889 · renderQuizQuestion:907
+quizNext:971 · finishQuiz:984
 
 ## js/gradelock.js (158 บรรทัด · 14 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeHistList:33
@@ -403,8 +404,8 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (279 บรรทัด · 5 รายการ)
-syncMusicBtn:99 · showQuizBackPay:135 · showGiantRefund:179 · fitQbp:218 · bootGame:232
+## js/main.js (282 บรรทัด · 5 รายการ)
+syncMusicBtn:102 · showQuizBackPay:138 · showGiantRefund:182 · fitQbp:221 · bootGame:235
 
 ## js/moto3d.js (2,031 บรรทัด · 116 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
