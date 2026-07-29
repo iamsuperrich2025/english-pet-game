@@ -1647,6 +1647,7 @@ function onlineStart(){
       feedWatchSync();               // 📰 รอบ 155: เริ่มฟัง feed ของคนที่เรา follow
       feedPushAssets();              // 📰 คลังทรัพย์สินที่เปิดเผย (เขียนเฉพาะตอนค่าเปลี่ยน)
       gfeedWatchStart();             // 📰 รอบ 701: ฟีดล็อบบี้ใช้ /gfeed แล้ว → เปิด watcher ค้างไว้เลย
+      if(typeof photoPullMine === 'function') photoPullMine();   // 📷 รอบ 709: ดึงรูปโปรไฟล์ของตัวเองลงเครื่องใหม่ (หรือส่งของเครื่องนี้ขึ้นถ้า DB ยังว่าง)
     }
     onlineRerender();
   });

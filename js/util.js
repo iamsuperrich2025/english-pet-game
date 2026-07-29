@@ -759,8 +759,13 @@ function openSettings(){
         <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
       <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
     </div>
+    <div class="set-row set-photo-row" id="set-photo">
+      <span class="set-lwrap"><span class="set-label">📷 รูปโปรไฟล์ของหนู</span>
+        <span class="set-desc">อัปโหลดรูปของหนูเองมาใช้เป็นรูปโปรไฟล์ได้ (ให้ผู้ปกครองช่วยเลือกนะ) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนข้างล่างแทน</span></span>
+      <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
+    </div>
     <div class="set-row set-blk-row" id="set-blk">
-      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · เป็นรูปโปรไฟล์ของหนูด้วย</small></span>
+      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง</small></span>
       <div class="blk-grid">
         ${['blk1','blk2','blk3','blk4','blk5','blk6','blk7','blk8'].map(b=>
           `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="${b}"></button>`).join('')}
@@ -790,6 +795,14 @@ function openSettings(){
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238 · ไฮไลต์ตัวที่เลือกอยู่
     overlay.querySelectorAll('.blk-mini').forEach(b=>b.classList.toggle('sel', curBlk === b.dataset.blk));
+    // 📷 รอบ 709: ปุ่มรูปโปรไฟล์ — มีรูปแล้วโชว์รูปย่อ ยังไม่มีโชว์เครื่องหมาย ＋
+    const phBtn = overlay.querySelector('#set-photo .ph-open');
+    if(phBtn){
+      const ph = (typeof photoGet === 'function') ? photoGet() : '';
+      phBtn.innerHTML = ph ? `<img class="ph-thumb" src="${ph}" alt=""><span>เปลี่ยนรูป</span>`
+                           : `<span class="ph-plus">＋</span><span>ใส่รูป</span>`;
+      phBtn.classList.toggle('has', !!ph);
+    }
     // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default เปิดทุกหมวดตั้งแต่รอบ 565)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
@@ -832,6 +845,12 @@ function openSettings(){
       }
       if(cat === 'assets' && typeof feedPushAssets === 'function') feedPushAssets();
     });
+  });
+  // 📷 รอบ 709: เปิดกล่องรูปโปรไฟล์ (js/photo.js) — ปิดกล่องแล้ว paint() ใหม่ ปุ่มจะโชว์รูปล่าสุด
+  const phOpen = overlay.querySelector('#set-photo .ph-open');
+  if(phOpen) phOpen.addEventListener('click', ()=>{
+    if(typeof openPhotoMenu !== 'function'){ toast('ระบบรูปโปรไฟล์ยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
+    sfx.select(); openPhotoMenu(paint);
   });
   overlay.querySelector('#set-help').addEventListener('click', openHelp);
   const tg = overlay.querySelector('#set-teacher');

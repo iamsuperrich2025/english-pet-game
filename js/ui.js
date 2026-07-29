@@ -1940,7 +1940,7 @@ function showPlayerCard(uid, name, grade){
     const av = (d.av == null) ? '—' : fmtNum(d.av) + ' 🪙';
     const ni = (d.ni == null) ? '—' : fmtNum(d.ni) + ' ชิ้น';
     /* 🪪 รอบ 255: ตัวละคร blk เต็มตัวใหญ่ใต้ชื่อ (ba จาก /leaderboard · เจ้าของการ์ดยังไม่อัปเดต = ไม่โชว์)
-       📷 รอบ 708: ถ้าเจ้าของการ์ดอัปโหลดรูปตัวเองไว้ → ใช้รูปนั้นแทน (ของเรารู้ทันที · ของเพื่อนโหลดตามทีหลัง) */
+       📷 รอบ 709: ถ้าเจ้าของการ์ดอัปโหลดรูปตัวเองไว้ → ใช้รูปนั้นแทน (ของเรารู้ทันที · ของเพื่อนโหลดตามทีหลัง) */
     const myPh = d.me && (typeof photoGet === 'function') ? photoGet() : '';
     const blkImg = myPh
       ? `<div class="pl-blk-wrap"><img class="pl-photo" src="${myPh}" alt="รูปโปรไฟล์"></div>`
@@ -1966,7 +1966,7 @@ function showPlayerCard(uid, name, grade){
         <span class="pl-val">${d.hs > 0 ? (d.hs >= 60 ? `${Math.floor(d.hs/60)} นาที ${d.hs%60} วิ` : `${d.hs} วิ`) : '—'}</span>
       </div>
       <div class="pl-tip">✨ ตั้งใจเล่น เก็บเงินและสะสมทรัพย์สินให้เยอะๆ นะ!</div>`;
-    /* 📷 รอบ 708: รูปโปรไฟล์ของ "เพื่อน" อ่านทีหลัง (/pphoto อยู่คนละ node กับ leaderboard
+    /* 📷 รอบ 709: รูปโปรไฟล์ของ "เพื่อน" อ่านทีหลัง (/pphoto อยู่คนละ node กับ leaderboard
        ตั้งใจแยก เพราะรูป ~20KB ถ้าอยู่ใน leaderboard จะถูกดึงมาทุกครั้งที่โหลดกระดาน)
        ต้องเรียกหลัง body.innerHTML เสมอ ไม่งั้นรูปที่แทรกไว้จะถูกเขียนทับ */
     if(!d.me && typeof photoFetch === 'function'){
@@ -4143,7 +4143,7 @@ function renderDashboard(){
     }
   }
   /* รอบ 254: รูปตัวละคร blk ครึ่งตัวสไตล์ passport มุมซ้ายบนสุด (ตัวที่ผู้เล่นเลือกในตั้งค่า)
-     📷 รอบ 708: อัปโหลดรูปตัวเองทับได้ (js/photo.js) + ปุ่มกล้องมุมขวาล่างแบบ Facebook
+     📷 รอบ 709: อัปโหลดรูปตัวเองทับได้ (js/photo.js) + ปุ่มกล้องมุมขวาล่างแบบ Facebook
      lay = ลายเซ็นสิ่งที่วาดอยู่ (กันวาดซ้ำทุก render · รูปยาวมาก เทียบแค่ความยาว+หาง) */
   const pp = document.getElementById('pass-photo');
   if(pp){
@@ -4766,7 +4766,7 @@ function feedWith(p, food){
 const AVATAR_UI = {male:{emoji:'🦸‍♂️', name:'เด็กชาย'}, female:{emoji:'🦸‍♀️', name:'เด็กหญิง'}};
 // 🧱 รอบ 245: รูปโปรไฟล์หลัก = "ตัวละครในล็อบบี้" (blk1..8) ตัวเดียวกับที่ยืนข้างน้อง
 // (เลิกใช้ 🦸 ชาย/หญิง แยกต่างหาก — ผู้ใช้สั่ง 15 ก.ค. · เปลี่ยนตัวที่ ⚙️ ตั้งค่า)
-// 📷 รอบ 708: อัปโหลดรูปตัวเองได้แล้ว — มีรูปใช้รูป ไม่มีถอยไปตัวการ์ตูนบล็อกเหมือนเดิม
+// 📷 รอบ 709: อัปโหลดรูปตัวเองได้แล้ว — มีรูปใช้รูป ไม่มีถอยไปตัวการ์ตูนบล็อกเหมือนเดิม
 function playerAvatarHTML(fallback){
   const ph = (typeof photoGet === 'function') ? photoGet() : '';
   if(ph) return `<img class="avatar-chip-img avatar-chip-photo" src="${ph}" alt="">`;
