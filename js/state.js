@@ -26,6 +26,7 @@ const DETOX_COST     = 1000;               // ค่าขับพิษ (ล�
 const FOODQUIZ_Q     = 5;                  // จำนวนข้อต่อรอบ
 const FOODQUIZ_COIN  = 10;                 // เหรียญต่อข้อที่ถูก (เท่าจับคู่ถูก 1 คำ)
 const FOODQUIZ_BONUS = 25;                 // โบนัสตอบถูกครบทุกข้อ
+const FOODQUIZ_MAX_PLAYS = 2;              // จำกัดจำนวนรอบที่เล่นได้ต่อวัน (รอบแรก=ได้รางวัล รอบสอง=ฝึกซ้อม)
 /* คิว 7725691507 ข้อ 5.2: รูปร่างสัตว์ตามคุณภาพการกิน (ภาพ <pet>_adult_fat/thin/strong.png) */
 const SHAPE_JUNK_MEALS  = 3;               // กินอาหารโทษติดกันกี่มื้อ → อ้วน
 const SHAPE_CLEAN_MEALS = 3;               // กินสะอาดเต็มหลอดติดกันกี่มื้อ → ล่ำกำยำ
@@ -174,6 +175,8 @@ const DEFAULT_STATE = {
   giftBox:[],                         // ของขวัญที่ "รับ" ไว้ (ข้อ 0.5): {k:'shop'|'collect', id, from, fn:ชื่อผู้ส่ง, ts} — ขายต่อ/ส่งต่อไม่ได้ ไม่รวม assetValue
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
   foodQuizDay:'',                     // ควิซอาหารปลอดภัย: วัน (toDateString) ที่รับรางวัลรอบแรกไปแล้ว (เล่นซ้ำได้แต่ไม่ได้เหรียญ)
+  foodQuizPlayDay:'',                  // ควิซอาหารปลอดภัย: วัน (toDateString) ที่นับจำนวนรอบที่เล่นอยู่
+  foodQuizPlayCount:0,                 // ควิซอาหารปลอดภัย: เล่นไปแล้วกี่รอบในวันนั้น (เพดาน FOODQUIZ_MAX_PLAYS)
   testerCoinDay:'',                   // 🧪 รอบ 163: วัน (toDateString) ที่เติมเหรียญผู้ทดสอบรอบวันนี้ไปแล้ว (เติมวันละครั้ง — ดู testerBoost ใน auth.js)
   spellDay:'',                        // 🌀 รอบ 174: วัน (toDateString) ของตัวนับเกมสะกดคำรายวัน
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
@@ -368,6 +371,8 @@ function loadState(){
       // คิว 7725691507 ข้อ 6: เซฟเก่ายังไม่มีระบบข้าวเย็นคน → ถือว่ากินมื้อล่าสุดแล้ว (เริ่มนับมื้อหน้า)
       if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
       if(typeof s.foodQuizDay !== 'string') s.foodQuizDay = '';
+      if(typeof s.foodQuizPlayDay !== 'string') s.foodQuizPlayDay = '';
+      if(typeof s.foodQuizPlayCount !== 'number') s.foodQuizPlayCount = 0;
       if(s.playerAvatar !== 'male' && s.playerAvatar !== 'female') s.playerAvatar = null;  // ข้อ 4: ผู้เล่นเดิมค่อยเลือกในตั้งค่า
       if(!/^blk[1-8]$/.test(s.blockAv||'')) s.blockAv = null;                              // 🧱 ตัวละครบล็อกโลก 3D
       if(!/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(s.profAv||'')) s.profAv = null;             // 🖼️ รูปโปรไฟล์/ตัวในล็อบบี้ blk1..blk88
