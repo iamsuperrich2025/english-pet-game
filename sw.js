@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v205';  // v205: รอบ 755: resume AudioContext ใน beep()
+const CACHE_VERSION = 'pet-vocab-v206';  // v206: รอบ 757: โลโก้ splash เป็นภาพจริง (เพิ่ม splash_logo.png เข้า SHELL)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -46,6 +46,7 @@ const SHELL = [
   './js/adventure3d.js',
   './img/icons/icon-192.png',
   './img/icons/icon-512.png',
+  './img/icons/splash_logo.png',   // รอบ 757: โลโก้ splash — ต้องมีในแคชไม่งั้นเปิดออฟไลน์แล้วจอโหลดว่างเปล่า
 ];
 
 self.addEventListener('install', (e)=>{
