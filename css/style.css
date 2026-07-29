@@ -1077,6 +1077,35 @@ html.no-anim body.quake{animation:none;}
 .band-sec-head{margin:20px 4px 10px;font-size:17px;font-weight:bold;color:#5a4a6e;}
 .band-sec-head small{display:block;font-size:12.5px;font-weight:normal;color:#9a8aac;margin-top:2px;}
 .cat-card.band-card.mine{border-color:var(--yellow-d);box-shadow:0 0 0 3px var(--yellow),var(--card-shadow);}
+
+/* ---------- 🏅 โหมดสอบใหญ่คลังขั้นสูง (bandadv.js · รอบ 773) ---------- */
+.cat-card.band-card .cat-btns{flex-wrap:wrap;}
+.cat-btn.bigexam{flex-basis:100%;margin-top:2px;font-weight:bold;color:#5c3d06;
+  background:linear-gradient(180deg,#ffdf9c,#f0a93c);box-shadow:0 3px 0 #c8801f;}
+/* แผงเลือกระดับ 3 ใบในจอเดียว ไม่มี scrollbar (กฎทองข้อ 7) */
+.bax-box{position:relative;display:flex;flex-direction:column;width:min(96vw,900px);max-height:92vh;
+  background:#fff;border:3px solid #fff;border-radius:20px;box-shadow:var(--card-shadow);padding:12px 14px;}
+.bax-box .pl-close{background:#e05252;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.bax-head{font-size:clamp(14px,3vh,19px);font-weight:bold;color:#5a4a6e;margin:0 34px 8px 2px;}
+.bax-sub{display:block;font-size:clamp(10.5px,2vh,13px);font-weight:normal;color:#9a8aac;margin-top:2px;}
+.bax-sub b{color:#b26a1e;}
+.bax-row{display:flex;gap:clamp(5px,1.4vh,10px);min-height:0;}
+.bax-lv{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(1px,.5vh,4px);font-family:inherit;cursor:pointer;padding:clamp(6px,1.6vh,14px) 4px;
+  background:#fff8ec;border:3px solid #f2c880;border-radius:16px;color:#6a5a78;}
+.bax-lv:active{transform:scale(.96);}
+.bax-lv.done{background:var(--green);border-color:var(--green-d);}
+.bax-lv.locked{background:#f2f0f5;border-color:#ddd6e4;filter:grayscale(.5);opacity:.85;}
+.bax-emoji{font-size:clamp(20px,5vh,34px);line-height:1;}
+.bax-name{font-size:clamp(13px,2.7vh,18px);font-weight:bold;color:#5a4a6e;}
+.bax-q{font-size:clamp(15px,3.2vh,22px);font-weight:bold;color:#b26a1e;}
+.bax-lv.done .bax-q{color:#2e7d44;}
+.bax-need,.bax-best{font-size:clamp(9.5px,1.9vh,12.5px);color:#9a8aac;text-align:center;line-height:1.25;}
+.bax-rw{font-size:clamp(10.5px,2vh,13.5px);font-weight:bold;color:#a8791a;background:var(--yellow);
+  border:2px solid var(--yellow-d);border-radius:999px;padding:1px 10px;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;}
+.bax-lv.done .bax-rw{background:#fff;color:#2e7d44;border-color:var(--green-d);}
+.bax-lv.locked .bax-rw{background:#e8e4ee;color:#8a8098;border-color:#d3cbdd;}
+.bax-foot{font-size:clamp(9.5px,1.9vh,12.5px);color:#9a8aac;margin-top:8px;text-align:center;}
 .band-mine-tag{font-size:11.5px;background:var(--yellow);color:#a8791a;border:2px solid var(--yellow-d);border-radius:999px;padding:1px 8px;white-space:nowrap;vertical-align:middle;}
 
 /* แผงเลือกชุดข้อสอบ band (รอบ 266) — เห็นครบทุกชุดในจอเดียว ไม่มี scrollbar (กฎข้อ 7) */

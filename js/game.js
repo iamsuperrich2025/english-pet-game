@@ -851,6 +851,9 @@ function renderCats(){
     b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'game') : b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
   list.querySelectorAll('.cat-btn.quiz').forEach(b=>
     b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'quiz') : b.dataset.band ? bandPlay(b.dataset.band, 'quiz') : startQuiz(findCat(b.dataset.cat))));
+  // 🏅 รอบ 773: สอบใหญ่คลังขั้นสูง — เปิดแผงเลือกระดับ (30/40/50 ข้อ) ก่อน
+  list.querySelectorAll('.cat-btn.bigexam').forEach(b=>
+    b.addEventListener('click', ()=>bandAdvExamOpen(b.dataset.badv)));
 }
 
 const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,
