@@ -6,6 +6,8 @@
      เปิดวิทยุ = bg เงียบอยู่แล้ว (พักตอนเข้าโลก) · ปิดวิทยุ = เงียบเฉยๆ จนออกจากโลก bg กลับมา
    • ไฟล์เพลง: sound/SongsInCar/rock_01..NN.mp3 (ผู้ใช้เตรียมไว้) — probe หาที่มีจริง
      (เพลงชุดเดียวใช้ทั้ง bg + วิทยุรถ · วาง sound/bgm/bgm_01.. เพิ่มภายหลัง = ใช้เป็น bg แทนได้)
+   • 🎀 รอบ 746: เพลงล็อบบี้เฉพาะ sound/bgm/lobby_01..NN.mp3 — มีไฟล์นี้เมื่อไหร่ = ใช้แทน bgm_* ทันที
+     (bgm_01..03 ยังอยู่ในระบบ ใช้เป็น "เพลงตามฉาก" ของโลกเฮลิฯ ต่อ) · เพลงเดียว = loop ในตัวไม่มีรอยต่อ
    • เอนจินเสียงล้วน — UI visualizer/รายการเพลงอยู่ใน adventure3d.js (เจ้าของหน้าปัด)
    ============================================================ */
 const Music = (function(){
@@ -13,11 +15,12 @@ const Music = (function(){
   const BG_DIR  = 'sound/bgm/';
   const CAR_NAMES = ['rock_01','rock_02','rock_03','rock_04','rock_05','rock_06','rock_07','rock_08','rock_09','rock_10'];
   const BG_NAMES  = ['bgm_01','bgm_02','bgm_03','bgm_04','bgm_05','bgm_06','bgm_07','bgm_08'];
+  const LOBBY_NAMES = ['lobby_01','lobby_02','lobby_03','lobby_04','lobby_05','lobby_06'];   // 🎀 รอบ 746
   const MODES = ['all','one','shuffle'];
   const BG_VOL = 0.30, CAR_VOL = 0.62;
 
-  let carTracks = [], bgTracks = [], probed = false;
-  let bg = null, bgIdx = 0, bgStarted = false, bgSuspended = false;
+  let carTracks = [], bgTracks = [], sceneTracks = [], probed = false;   // bgTracks = ชุดเพลงล็อบบี้ที่หมุนเล่น · sceneTracks = ทุกไฟล์ใน sound/bgm/ (ให้เพลงตามฉากค้นชื่อ)
+  let bg = null, bgIdx = 0, bgUrl = '', bgStarted = false, bgSuspended = false;
   let car = null, carIdx = 0, carOn = false;
   let audioCtx = null, analyser = null, srcNode = null, freq = null;
 
@@ -42,12 +45,16 @@ const Music = (function(){
   }
 
   // ---------- background ----------
+  function bgSrc(url, loop){
+    if(!bg){ bg = new Audio(); bg.volume = BG_VOL; bg.addEventListener('ended', ()=>{ if(!sceneName) bgPlay(bgIdx+1); }); }
+    bgUrl = url; bg.src = url; bg.loop = !!loop;
+    if(bgAllowed()) bg.play().catch(()=>{});
+  }
   function bgPlay(i){
     if(!bgTracks.length) return;
     bgIdx = (i % bgTracks.length + bgTracks.length) % bgTracks.length;
-    if(!bg){ bg = new Audio(); bg.volume = BG_VOL; bg.addEventListener('ended', ()=>bgPlay(bgIdx+1)); }
-    bg.src = bgTracks[bgIdx].url;
-    if(bgAllowed()) bg.play().catch(()=>{});
+    // 🎀 รอบ 746: เพลงเดียว = loop ในตัว (วนไม่มีรอยต่อ จนกว่าจะปิดเสียง/ปิดเพลง) · หลายเพลง = จบแล้วหมุนเพลงถัดไป
+    bgSrc(bgTracks[bgIdx].url, bgTracks.length === 1);
   }
   /* 🎬 รอบ 369: เพลงตามฉาก — โลก 3D ขอเพลงเฉพาะชื่อ (เช่น 'bgm_03') เล่นวนลูปจนกว่าจะปล่อย (null)
      ยังไม่ probe เสร็จ/ไม่มีไฟล์ = ไม่เก็บชื่อ → ฝั่งเกมเรียกซ้ำทุก tick จะติดเองเมื่อพร้อม */
@@ -56,11 +63,10 @@ const Music = (function(){
     name = name || null;
     if(name === sceneName) return;
     if(name){
-      const i = bgTracks.findIndex(t=>t.name===name);
-      if(i < 0) return;
+      const t = sceneTracks.find(x=>x.name===name);   // 🎀 รอบ 746: ค้นจากทุกไฟล์ใน sound/bgm/ (เพลงฉากอาจไม่อยู่ในชุดล็อบบี้แล้ว)
+      if(!t) return;
       sceneName = name;
-      bgStarted = true; bgPlay(i);
-      if(bg) bg.loop = true;
+      bgStarted = true; bgSrc(t.url, true);
     }else{
       sceneName = null;
       if(bg) bg.loop = false;          // เพลงปัจจุบันเล่นจบแล้วหมุนต่อตามปกติ
@@ -116,7 +122,11 @@ const Music = (function(){
   function suspendBg(){ bgSuspended = true; if(bg) bg.pause(); }
   function resumeBg(){
     bgSuspended = false; carOn = false; if(car) car.pause();
-    if(soundOn() && musicOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); }
+    if(!(soundOn() && musicOn())) return;
+    if(!bgStarted){ startBg(); return; }
+    // 🎀 รอบ 746: ออกจากโลกที่มีเพลงตามฉาก (เฮลิฯ) เพลงที่ค้างอยู่ไม่ใช่เพลงล็อบบี้ → เริ่มเพลงล็อบบี้ใหม่
+    if(!sceneName && bgTracks.length && !bgTracks.some(t=>t.url===bgUrl)){ bgPlay(bgIdx); return; }
+    if(bg) bg.play().catch(()=>{});    // โลกอื่น = เล่นต่อจากจุดที่พักไว้
   }
 
   // ---------- สลับเสียงในตั้งค่า ----------
@@ -136,9 +146,11 @@ const Music = (function(){
   function init(){
     if(probed) return;
     probed = true;
-    Promise.all([probeDir(CAR_DIR, CAR_NAMES), probeDir(BG_DIR, BG_NAMES)]).then(([cars, bgm])=>{
+    Promise.all([probeDir(CAR_DIR, CAR_NAMES), probeDir(BG_DIR, BG_NAMES), probeDir(BG_DIR, LOBBY_NAMES)]).then(([cars, bgm, lob])=>{
       carTracks = cars;
-      bgTracks = bgm.length ? bgm : cars;               // ไม่มีชุด bgm เฉพาะ → ใช้เพลงชุดรถเป็น bg ด้วย
+      sceneTracks = lob.concat(bgm);                    // เพลงตามฉากค้นชื่อจากทุกไฟล์ใน sound/bgm/
+      // 🎀 รอบ 746: มี lobby_*.mp3 = เพลงล็อบบี้ใหม่ (แทน bgm_* เดิม) · ไม่มี = พฤติกรรมเดิมทุกอย่าง
+      bgTracks = lob.length ? lob : (bgm.length ? bgm : cars);   // ไม่มีชุด bgm เฉพาะ → ใช้เพลงชุดรถเป็น bg ด้วย
       const go = ()=>{ if(soundOn() && !bgSuspended) startBg(); };
       window.addEventListener('pointerdown', go, {once:true});
       window.addEventListener('keydown', go, {once:true});
