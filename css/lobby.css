@@ -1407,8 +1407,6 @@ html.no-anim .q-bigcard{animation:none;}
   0%,100%{background:transparent;box-shadow:none;}
   50%{background:rgba(80,180,255,.30);box-shadow:0 0 12px rgba(80,180,255,.6);}
 }
-/* รอบ 169: ฟีดเพื่อน (แผงซ้าย) รายการใหม่เข้าสด → แถวแฟลชฟ้า + กล่องเด้งไปโชว์ก่อนวนต่อ */
-.feed-row.feed-flash{animation:onFlash 1.2s ease-in-out 3;}
 /* รอบ 154: การ์ดคำชวนค้างบนสุดกล่องเพื่อนออนไลน์ — 🚀 ไปเลย! / ไว้ก่อน */
 .inv-card{background:rgba(80,180,255,.12);border:1px solid rgba(120,210,255,.45);border-radius:10px;
   padding:6px 8px;margin-bottom:6px;}
@@ -2107,20 +2105,152 @@ html.no-anim .cs-big-img{animation:none}
   scrollbar-width:none;-ms-overflow-style:none;   /* ฟีล TikTok เลื่อนได้ ไม่มี scrollbar */
 }
 .feed-list::-webkit-scrollbar{display:none;width:0;}
-.feed-row{
-  display:flex;align-items:flex-start;gap:7px;cursor:pointer;
-  background:rgba(255,255,255,.06);border:1px solid rgba(140,200,255,.16);
-  border-radius:10px;padding:6px 8px;margin-bottom:6px;transition:background .12s;
-}
-.feed-row:active{background:rgba(120,200,255,.16);}
-.feed-ico{font-size:15px;line-height:1.3;flex-shrink:0;}
-.feed-txt{font-size:11.5px;color:#c9ddf3;line-height:1.45;min-width:0;}
-.feed-name{color:#8fd4ff;font-weight:600;}
-.feed-ago{color:#7f9cc0;font-size:10px;white-space:nowrap;}
 .feed-empty{
   text-align:center;color:#9fc3ea;font-size:12px;line-height:1.6;padding:14px 6px;
 }
 .feed-empty small{color:#7f9cc0;font-size:10.5px;}
+
+/* ============================================================
+   📰 รอบ 701: ฟีดล็อบบี้ทีละโพสต์ (สไตล์ Facebook) + รีแอ็กชัน + คอมเมนต์ + แจ้งเตือน
+   .fpost = การ์ดโพสต์ 1 ใบ (ใช้ร่วมวงหมุนล็อบบี้ + หน้า Feed เต็ม .fp-page)
+   ============================================================ */
+.fd-tools{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.feed-bell{position:relative;border:1px solid rgba(140,220,255,.4);background:rgba(80,180,255,.14);
+  color:#eaf7ff;border-radius:8px;padding:2px 7px;font-size:10px;cursor:pointer;font-family:inherit;text-shadow:none;}
+.feed-bell:active{transform:scale(.94);}
+.feed-bell.on{border-color:rgba(255,150,170,.65);background:rgba(255,110,140,.16);animation:pibBlink 1.2s ease-in-out infinite;}
+.feed-bell .fb-n{position:absolute;top:-7px;right:-7px;background:#ff5a78;color:#fff;
+  font-size:8.5px;font-weight:800;border-radius:9px;padding:1px 4px;line-height:1.3;
+  box-shadow:0 1px 4px rgba(180,30,60,.6);}
+/* แถบเวลานับถอยหลัง 10 วิของโพสต์ปัจจุบัน */
+.fd-prog{flex-shrink:0;height:3px;border-radius:2px;background:rgba(255,255,255,.09);margin:3px 0 5px;overflow:hidden;}
+.fd-prog i{display:block;height:100%;width:0;border-radius:2px;
+  background:linear-gradient(90deg,#43c6ff,#7af0c0);transition:width .2s linear;}
+/* โหมดวงหมุน: การ์ดสูงเท่ากล่องพอดี เลื่อนทีละใบด้วย scroll-snap */
+.feed-list.feed-deck{scroll-snap-type:y mandatory;}
+.feed-list.feed-deck .fpost{height:100%;scroll-snap-align:start;scroll-snap-stop:always;}
+.fpost{
+  display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  background:rgba(255,255,255,.06);border:1px solid rgba(140,200,255,.16);
+  border-radius:12px;padding:7px 9px;
+}
+.fp-head{display:flex;align-items:flex-start;gap:6px;flex-shrink:0;}
+.fp-ico{font-size:15px;line-height:1.3;flex-shrink:0;}
+.fp-who{flex:1;min-width:0;}
+.fp-name{color:#8fd4ff;font-weight:700;font-size:12px;cursor:pointer;}
+.fp-when{color:#7f9cc0;font-size:9.5px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+/* ② ข้อความรายงานอยู่บรรทัดของตัวเอง ใต้ชื่อ+ระดับชั้นเสมอ */
+.fp-text{flex-shrink:0;font-size:11.5px;color:#c9ddf3;line-height:1.45;margin-top:3px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+/* ③ ภาพสินค้าเกือบเต็มกรอบ — flex:1 กินพื้นที่กลางการ์ด ไม่ทำให้เกิด scrollbar */
+.fp-media{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;margin:4px 0;}
+.fp-img{max-width:94%;max-height:100%;min-height:0;object-fit:contain;
+  filter:drop-shadow(0 4px 10px rgba(10,30,70,.55));}
+.fp-cap{font-size:9.5px;color:#9fc3ea;flex-shrink:0;}
+.fp-big{font-size:clamp(26px,9vh,52px);line-height:1.1;filter:drop-shadow(0 4px 10px rgba(10,30,70,.5));}
+/* สรุปรีแอ็กชัน/คอมเมนต์เหนือปุ่ม */
+.fp-sum{flex-shrink:0;display:flex;align-items:center;gap:7px;font-size:10px;color:#9fc3ea;
+  padding:2px 1px 4px;}
+.fp-sum b{color:#cfe4fa;}
+.fp-sum-rx{letter-spacing:-2px;}
+.fp-sum-none{color:#7f9cc0;font-style:italic;}
+.fp-en{font-style:normal;font-weight:800;color:#7af0c0;margin-left:2px;}
+/* ④ แถบปุ่มล่างสุดเหมือน Facebook */
+.fp-bar{flex-shrink:0;display:flex;gap:6px;border-top:1px solid rgba(140,200,255,.18);padding-top:5px;}
+.fp-act{flex:1;border:1px solid rgba(140,220,255,.28);background:rgba(255,255,255,.05);
+  color:#bfe3ff;border-radius:9px;padding:4px 6px;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
+.fp-act:active{transform:scale(.95);}
+.fp-like.on{background:rgba(120,240,192,.13);border-color:rgba(120,240,192,.5);color:#bff5df;}
+.fp-act[disabled]{opacity:.45;cursor:default;}
+/* จอเตี้ย (มือถือแนวนอน 812×375): กล่องฟีดเหลือ ~160px — ตัดส่วนสรุป+บีบทุกช่องว่างให้การ์ดพอดีไม่มี scrollbar */
+@media (max-height:430px){
+  .feed-list.feed-deck .fp-sum{display:none;}
+  .feed-list.feed-deck .fp-text{-webkit-line-clamp:2;font-size:10.5px;margin-top:1px;}
+  .feed-list.feed-deck .fpost{padding:4px 7px;}
+  .feed-list.feed-deck .fp-media{margin:2px 0;}
+  .feed-list.feed-deck .fp-bar{padding-top:3px;}
+  .feed-list.feed-deck .fp-act{padding:2px 4px;font-size:10px;}
+}
+/* การ์ดในหน้า Feed เต็ม: สูงตามเนื้อหา + ภาพย่อลง */
+.fp-page{height:auto;margin-bottom:8px;}
+.fp-page .fp-media{flex:none;max-height:120px;}
+.fp-page .fp-img{max-height:106px;}
+.fp-page .fp-big{font-size:30px;}
+.fp-page .fp-text{-webkit-line-clamp:unset;display:block;}
+/* ⑥ กล่องเลือกรีแอ็กชัน (กดค้างปุ่มถูกใจ) — คำอังกฤษ+แปลไทยใต้ทุกอีโมจิ */
+.fp-rxbox{position:fixed;z-index:10500;display:flex;gap:2px;padding:5px 7px;border-radius:16px;
+  background:linear-gradient(165deg,#1a4a85 0%,#0d2550 100%);border:1px solid rgba(120,220,255,.5);
+  box-shadow:0 10px 28px rgba(3,15,35,.65), inset 0 0 16px rgba(80,180,255,.1);animation:rxPop .16s ease-out;}
+@keyframes rxPop{from{transform:scale(.6) translateY(8px);opacity:0;}to{transform:none;opacity:1;}}
+.fp-rxb{display:flex;flex-direction:column;align-items:center;gap:0;border:none;background:transparent;
+  cursor:pointer;font-family:inherit;padding:2px 5px;border-radius:10px;min-width:40px;}
+.fp-rxb span{font-size:19px;line-height:1.15;}
+.fp-rxb i{font-style:normal;font-size:8px;font-weight:800;color:#7af0c0;white-space:nowrap;}
+.fp-rxb u{text-decoration:none;font-size:7.5px;color:#8fb3d8;white-space:nowrap;}
+.fp-rxb:hover,.fp-rxb:active{background:rgba(120,200,255,.16);transform:scale(1.12);}
+.fp-rxb-off{color:#ff9db1;font-size:13px;}
+/* คำอังกฤษลอยขึ้นตอนกดรีแอ็กชัน */
+.fp-fly{position:fixed;z-index:10600;pointer-events:none;font-size:13px;color:#eaf7ff;
+  background:rgba(15,45,90,.92);border:1px solid rgba(120,240,192,.5);border-radius:12px;
+  padding:4px 10px;animation:fpFly 1.25s ease-out forwards;white-space:nowrap;}
+.fp-fly b{color:#7af0c0;}
+.fp-fly small{color:#9fc3ea;}
+@keyframes fpFly{0%{transform:translateY(0);opacity:0;}12%{opacity:1;}100%{transform:translateY(-46px);opacity:0;}}
+/* 💬 แผ่นคอมเมนต์เต็มจอ */
+.fcm-overlay{position:fixed;inset:0;z-index:9600;background:rgba(5,15,35,.6);
+  display:flex;align-items:center;justify-content:center;animation:fadeIn .18s;}
+.fcm-box{width:min(94vw,460px);max-height:min(90vh,540px);display:flex;flex-direction:column;
+  background:linear-gradient(165deg,#143c6e 0%,#0b1f42 100%);color:#dcebfb;
+  border:1px solid rgba(95,200,255,.45);border-radius:16px;overflow:hidden;
+  box-shadow:0 14px 40px rgba(3,15,35,.6), inset 0 0 26px rgba(80,180,255,.07);}
+.fcm-post{flex-shrink:0;padding:8px 12px 6px;border-bottom:1px solid rgba(95,200,255,.2);}
+.fcm-post .fp-text{-webkit-line-clamp:unset;display:block;}
+.fcm-rxs{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.fcm-rx{font-size:10px;color:#bfe3ff;background:rgba(255,255,255,.06);border-radius:8px;padding:2px 7px;}
+.fcm-list{flex:1;min-height:60px;overflow-y:auto;scrollbar-width:none;padding:8px 12px;
+  display:flex;flex-direction:column;gap:5px;}
+.fcm-list::-webkit-scrollbar{display:none;}
+.fcm-row{font-size:11.5px;color:#c9ddf3;background:rgba(255,255,255,.05);border-radius:9px;padding:5px 9px;line-height:1.4;}
+.fcm-row b{color:#8fd4ff;margin-right:3px;}
+.fcm-row small{color:#7f9cc0;font-size:9px;margin-left:4px;}
+.fcm-none{text-align:center;color:#7f9cc0;font-size:11px;padding:12px 0;}
+/* ⑦ คอมเมนต์ด่วนภาษาอังกฤษ (เอกลักษณ์ของเกมเรา — เด็กได้ประโยคจริงติดตัว) */
+.fcm-quick{flex-shrink:0;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;
+  padding:6px 12px 0;}
+.fcm-quick::-webkit-scrollbar{display:none;}
+.fcm-q{flex-shrink:0;display:flex;flex-direction:column;align-items:center;border:1px solid rgba(120,240,192,.35);
+  background:rgba(120,240,192,.08);color:#bff5df;border-radius:10px;padding:3px 9px;
+  font-size:10.5px;font-weight:800;cursor:pointer;font-family:inherit;line-height:1.25;}
+.fcm-q i{font-style:normal;font-size:8px;font-weight:400;color:#8fb3d8;}
+.fcm-q:active{transform:scale(.94);background:rgba(120,240,192,.2);}
+.fcm-add{flex-shrink:0;display:flex;gap:6px;padding:8px 12px 10px;}
+.fcm-input{flex:1;min-width:0;border:1px solid rgba(140,220,255,.3);background:rgba(255,255,255,.06);
+  color:#eaf7ff;border-radius:9px;padding:6px 10px;font-size:12px;font-family:inherit;}
+.fcm-input:focus{outline:none;border-color:rgba(140,220,255,.6);}
+.fcm-send{flex-shrink:0;border:1px solid rgba(140,220,255,.4);background:rgba(80,180,255,.16);
+  color:#eaf7ff;border-radius:9px;padding:6px 14px;font-size:12px;cursor:pointer;font-family:inherit;}
+.fcm-send:active{transform:scale(.94);}
+.fcm-locked{flex-shrink:0;font-size:10.5px;color:#7f9cc0;font-style:italic;padding:8px 12px 12px;}
+/* 🔔 กล่องแจ้งเตือน */
+.fnt-overlay{position:fixed;inset:0;z-index:9600;background:rgba(5,15,35,.55);
+  display:flex;align-items:center;justify-content:center;animation:fadeIn .18s;}
+.fnt-box{width:min(94vw,420px);max-height:min(88vh,480px);display:flex;flex-direction:column;
+  background:linear-gradient(165deg,#143c6e 0%,#0b1f42 100%);color:#dcebfb;
+  border:1px solid rgba(95,200,255,.45);border-radius:16px;overflow:hidden;
+  box-shadow:0 14px 40px rgba(3,15,35,.6);}
+.fnt-list{flex:1;min-height:60px;overflow-y:auto;scrollbar-width:none;padding:8px 10px;
+  display:flex;flex-direction:column;gap:6px;}
+.fnt-list::-webkit-scrollbar{display:none;}
+.fnt-row{display:flex;gap:8px;align-items:flex-start;cursor:pointer;
+  background:rgba(255,255,255,.06);border:1px solid rgba(140,200,255,.16);border-radius:10px;padding:7px 9px;}
+.fnt-row:active{background:rgba(120,200,255,.16);}
+.fnt-ico{font-size:16px;flex-shrink:0;line-height:1.3;}
+.fnt-tx{font-size:11.5px;color:#c9ddf3;line-height:1.45;min-width:0;}
+.fnt-tx b{color:#8fd4ff;}
+.fnt-sub{display:block;color:#7f9cc0;font-size:9.5px;margin-top:2px;}
 /* 🌍 รอบ 639: ปุ่ม "ดูทั้งหมด" มุมขวาหัวกล่องฟีดเพื่อนเดิม — เปิดหน้า Feed เต็ม */
 .feed-plate .plate-title{display:flex;align-items:center;justify-content:space-between;gap:6px;white-space:normal;}
 .feed-all-btn{
@@ -2146,11 +2276,13 @@ html.no-anim .cs-big-img{animation:none}
 .fdb-close{border:none;background:rgba(255,255,255,.1);color:#cfe4fa;border-radius:8px;
   padding:3px 10px;cursor:pointer;font-size:14px;font-family:inherit;}
 .fdb-close:active{transform:scale(.92);}
-.fdb-live{flex-shrink:0;padding:8px 12px;border-bottom:1px solid rgba(95,200,255,.18);
-  max-height:30vh;overflow-y:auto;scrollbar-width:none;}
-.fdb-live::-webkit-scrollbar{display:none;}
+.fdb-live{flex-shrink:0;padding:8px 12px;border-bottom:1px solid rgba(95,200,255,.18);}
 .fdb-live-title{font-size:10.5px;letter-spacing:.16em;color:#7fd4ff;font-weight:700;margin-bottom:5px;}
-.fdb-live-rows{display:flex;flex-direction:column;gap:3px;}
+/* รอบ 701: รายชื่อออนไลน์ค่อย ๆ เลื่อนขึ้นวนเอง (initSideScroll — แตะ = หยุด) → ตัวเลื่อนย้ายมาที่แถวรายชื่อ */
+.fdb-live-rows{display:flex;flex-direction:column;gap:3px;
+  max-height:min(24vh,150px);overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;}
+.fdb-live-rows::-webkit-scrollbar{display:none;}
+.fdb-live-rows > *{flex-shrink:0;}   /* ห้ามบีบแถวให้เตี้ยลง — ให้ล้นแล้วเลื่อนวนแทน */
 .fdb-live-row{font-size:11.5px;color:#a9c8e8;display:flex;align-items:center;gap:6px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .fdb-live-row b{color:#cfe4fa;font-weight:700;}
@@ -3672,7 +3804,7 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .nw-countdown{font-size:10.5px;color:#8db3da;opacity:1;padding-left:10px;
   border-left:1px solid rgba(160,205,255,.22);}
 
-/* 🔴 รอบ 657 → 🔁 รอบ 695 → 🧹 รอบ 698 → 🔤 รอบ 699 (ผู้ใช้สั่ง 29 ก.ค. 2026 "ขยายคำศัพท์ อยู่กึ่งกลางเวที
+/* 🔴 รอบ 657 → 🔁 รอบ 695 → 🧹 รอบ 698 → 🔤 รอบ 700 (ผู้ใช้สั่ง 29 ก.ค. 2026 "ขยายคำศัพท์ อยู่กึ่งกลางเวที
    คำใบ้ลงบรรทัดใต้คำศัพท์ NEW หาที่จัดวางใหม่"): คำศัพท์ใหญ่+เด่นสุด อยู่บรรทัดบน กึ่งกลาง
    คำใบ้+รางวัล+เวลา (.nw-sub) บรรทัดล่าง เล็กกว่า กึ่งกลางเหมือนกัน · NEW ลอยเป็นริบบิ้นมุมซ้ายบน
    ไม่เบียดคำศัพท์ (ก่อนหน้านี้ NEW อยู่หน้าคำศัพท์ในแถวเดียว ทำให้จุดกึ่งกลาง "ภาพ" เยื้องขวาไม่ตรงเวทีจริง) */
@@ -3746,9 +3878,9 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .lobby-stage .pet-tab.info .pib-alert{display:inline-block;animation:pibBlink 1s ease-in-out infinite;}
 html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 
-/* ② แท็บสัตว์เริ่มที่เส้นเดียวกับแถวเหรียญ + ไม่กว้างเกินเวที (แบนเนอร์คำใหม่แยกไปกึ่งกลางเองแล้ว รอบ 699) */
+/* ② แท็บสัตว์เริ่มที่เส้นเดียวกับแถวเหรียญ + ไม่กว้างเกินเวที (แบนเนอร์คำใหม่แยกไปกึ่งกลางเองแล้ว รอบ 700) */
 .lobby-stage .pet-tabs{max-width:var(--tabs-w,100%);}
-/* 🔤 รอบ 699 (ผู้ใช้สั่งกลับ "อยู่กึ่งกลางเวทีน้อง"): เลิก override ชิดซ้ายของรอบ 613 แล้ว
+/* 🔤 รอบ 700 (ผู้ใช้สั่งกลับ "อยู่กึ่งกลางเวทีน้อง"): เลิก override ชิดซ้ายของรอบ 613 แล้ว
    ปล่อยให้ใช้ base rule เดิม (บรรทัด ~938: margin-left:var(--nw-left,50%);transform:translateX(-50%))
    + คีย์เฟรม nwSwap ฐาน (บรรทัด ~941 มี translateX(-50%) อยู่แล้ว) กลับมาใช้งานจริงเอง ไม่ต้องประกาศซ้ำ
    max-width ยังคุมไม่ให้กว้างเกินเวทีเหมือนเดิม กันคำยาวดันล้นจอ */

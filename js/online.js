@@ -46,9 +46,15 @@ const Online = {
   lastAssetsSig:null, // JSON ทรัพย์สินล่าสุดที่ส่งขึ้น /feed/<me>/a (กันเขียนซ้ำ)
   lastPetsSig:null,   // JSON สัตว์เลี้ยง (สูงสุด 3 ตัว) ล่าสุดที่ส่งขึ้น /feed/<me>/pt (รอบ 195)
   /* ---- 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639) ---- */
-  gfeedRaw:[],    // โพสต์ดิบจาก /gfeed ตามลำดับ DB (ยังไม่จัดเพื่อนก่อน)
+  gfeedMap:{},    // postId → โพสต์ดิบที่แปลงแล้ว (รอบ 701: child_* แทน on('value') ทั้งก้อน)
   gfeed:[],       // โพสต์พร้อมโชว์: เพื่อน(รวมตัวเอง)ก่อน เรียงใหม่→เก่า แล้วค่อยคนอื่นเรียงใหม่→เก่า
-  gfeedRef:null,  // query ที่ .on ค้างอยู่ตอนหน้า Feed เปิด (ไว้ .off ตอนปิด)
+  gfeedRef:null,  // query ที่ .on ค้างอยู่ (รอบ 701: เปิดค้างตลอดที่ออนไลน์ — ล็อบบี้ใช้ด้วย)
+  gfeedBase:false,// true = โหลดชุดแรกครบแล้ว (ก่อนหน้านี้ห้ามเด้งแจ้งเตือน)
+  gfeedT:0,       // ตัวจับเวลา รวบวาดตอนโพสต์เข้ารัว
+  /* ---- 🔔 แจ้งเตือน "มีคนไลก์/คอมเมนต์โพสต์ของเรา" (รอบ 701 · คิดฝั่ง client ไม่ต้องมีโซน DB ใหม่) ---- */
+  notif:[],       // [{t:'rx'|'cm', pid, u, n, r|cm, tx, ts}] ใหม่สุดก่อน
+  notifUnread:0,  // จำนวนที่ยังไม่ได้เปิดอ่าน (โชว์เป็นตัวเลขแดงบนกระดิ่ง)
+  rxRulesOld:false, // true = rules ยังรับแค่ true → รีแอ็กชันถอยเป็นไลก์ธรรมดา
   /* ---- ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น" ทุกสินค้า ---- */
   sales:{},           // productId → จำนวนที่ขายไปแล้วทั้งเซิร์ฟเวอร์ (จาก /sales)
   salesOk:false,      // true = อ่าน/เขียน /sales ได้ (rules publish แล้ว)
@@ -1003,6 +1009,15 @@ function fetchFollowers(uid){
    หรือเพื่อนของเจ้าของโพสต์ (rules เช็กจริงจาก /friends ไม่ใช่แค่ซ่อนปุ่ม)
    watcher เปิดเฉพาะตอนหน้า Feed เปิดอยู่ (ไม่ใช่ตลอดเวลาแบบ presence/leaderboard)
    ============================================================ */
+/* ============================================================
+   📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
+   • watcher ย้ายมาเปิด "ตลอดเวลาที่ออนไลน์" (เดิมเปิดเฉพาะตอนหน้า Feed เปิด)
+     เพราะกล่องฟีดในล็อบบี้ใช้ข้อมูลชุดเดียวกันแล้ว (ไลก์/คอมเมนต์ต้องมี postId)
+   • เปลี่ยนจาก on('value') → child_added/changed/removed = ส่งเฉพาะโพสต์ที่เปลี่ยน
+     (เดิมทุกไลก์ของใครก็ตาม ยิงสแนปช็อตทั้ง 120 โพสต์กลับมาทุกเครื่อง)
+   • ตรวจ "มีคนไลก์/คอมเมนต์โพสต์ของเรา" จาก diff ฝั่ง client → แจ้งเตือนแบบ Facebook
+     โดยไม่ต้องเพิ่มโซน DB/แก้ rules เลย (แจ้งเฉพาะช่วงที่ออนไลน์อยู่)
+   ============================================================ */
 const GFEED_READ    = 120;   // ดึงล่าสุดกี่โพสต์ตอนเปิดหน้า Feed (คุม bandwidth ไม่ให้โตตามจำนวนผู้เล่น)
 const GFEED_KEEP_ME = 10;    // เก็บโพสต์ของ "ตัวเอง" ใน /gfeed ไว้กี่โพสต์ล่าสุด (เกิน = ลบเก่าทิ้ง)
 
@@ -1033,55 +1048,124 @@ function gfeedPrune(){
     Online.db.ref().update(del).catch(()=>{});
   }).catch(()=>{});
 }
-/* เริ่มฟัง /gfeed — เรียกตอนเปิดหน้า Feed เท่านั้น (openFeedBoard ใน ui.js) */
+/* แปลงโพสต์ดิบจาก DB → รูปแบบที่ UI ใช้ (lk รับได้ทั้ง true แบบเดิม และรหัสรีแอ็กชันแบบใหม่) */
+function gfeedParse(key, v){
+  if(!v || typeof v.tx !== 'string' || typeof v.u !== 'string') return null;
+  const lk = (v.lk && typeof v.lk === 'object') ? v.lk : {};
+  const rx = {};                                    // uid → รหัสรีแอ็กชัน ('like' เมื่อเป็น true แบบเดิม)
+  for(const uid in lk){
+    const val = lk[uid];
+    if(!val) continue;
+    rx[uid] = (typeof val === 'string' && typeof feedRx === 'function' && feedRx(val).k === val) ? val : 'like';
+  }
+  const cm = [];
+  if(v.cm && typeof v.cm === 'object'){
+    for(const cid in v.cm){
+      const c = v.cm[cid];
+      if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0});
+    }
+    cm.sort((a,b)=>a.ts - b.ts);
+  }
+  const me = onlineKey();
+  return {key, u: v.u, n: v.n || 'เพื่อน', g: v.g || '', c: v.c || 'other', tx: v.tx, ts: v.ts || 0,
+          rx, likeN: Object.keys(rx).length, myRx: rx[me] || '', likedByMe: !!rx[me], comments: cm};
+}
+/* เริ่มฟัง /gfeed — รอบ 701 เปิดค้างตลอดที่ออนไลน์ (กล่องฟีดล็อบบี้ใช้ข้อมูลชุดนี้แล้ว) */
 function gfeedWatchStart(){
   if(!Online.ready || !Online.db || Online.gfeedRef) return;
   const q = Online.db.ref('gfeed').orderByKey().limitToLast(GFEED_READ);
   Online.gfeedRef = q;
-  q.on('value', (snap)=>{
-    const out = [];
-    snap.forEach(ch=>{
-      const v = ch.val();
-      if(!v || typeof v.tx !== 'string' || typeof v.u !== 'string') return;
-      const lk = (v.lk && typeof v.lk === 'object') ? v.lk : {};
-      const cm = [];
-      if(v.cm && typeof v.cm === 'object'){
-        for(const cid in v.cm){
-          const c = v.cm[cid];
-          if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0});
-        }
-        cm.sort((a,b)=>a.ts - b.ts);
-      }
-      out.push({key: ch.key, u: v.u, n: v.n || 'เพื่อน', g: v.g || '', c: v.c || 'other', tx: v.tx, ts: v.ts || 0,
-                 likeN: Object.keys(lk).length, likedByMe: !!lk[onlineKey()], comments: cm});
-    });
-    Online.gfeedRaw = out;
-    gfeedRebuild();
-  }, ()=>{ /* อ่านโดน deny (rules ยังไม่ publish) — เงียบไว้ */ });
+  Online.gfeedMap = {};
+  Online.gfeedBase = false;                          // ชุดแรก = ของเดิมที่มีอยู่แล้ว ห้ามเด้งแจ้งเตือน
+  const bump = ()=>{
+    clearTimeout(Online.gfeedT);                     // โพสต์เข้ารัวตอนเปิด → รวบวาดครั้งเดียว
+    Online.gfeedT = setTimeout(gfeedRebuild, 60);
+  };
+  const err = ()=>{ /* อ่านโดน deny (rules ยังไม่ publish) — เงียบไว้ */ };
+  q.on('child_added', (ch)=>{
+    const it = gfeedParse(ch.key, ch.val());
+    if(it){ Online.gfeedMap[ch.key] = it; bump(); }
+  }, err);
+  q.on('child_changed', (ch)=>{
+    const it = gfeedParse(ch.key, ch.val());
+    if(!it) return;
+    const old = Online.gfeedMap[ch.key];
+    Online.gfeedMap[ch.key] = it;
+    if(Online.gfeedBase && old) gfeedNotifDiff(old, it);
+    bump();
+  }, err);
+  q.on('child_removed', (ch)=>{ delete Online.gfeedMap[ch.key]; bump(); }, err);
+  q.once('value', ()=>{ Online.gfeedBase = true; }, err);   // ยิงหลัง child_added ชุดแรกครบ
 }
-/* หยุดฟัง /gfeed — เรียกตอนปิดหน้า Feed (กัน bandwidth ค้างตอนไม่ได้ดู) */
+/* หยุดฟัง /gfeed (สำรองไว้ — ปกติเปิดค้างตลอดตั้งแต่รอบ 701) */
 function gfeedWatchStop(){
   if(Online.gfeedRef){ Online.gfeedRef.off(); Online.gfeedRef = null; }
-  Online.gfeedRaw = [];
+  Online.gfeedMap = {};
   Online.gfeed = [];
+  Online.gfeedBase = false;
+}
+/* 🔔 มีคนไลก์/คอมเมนต์ "โพสต์ของเรา" ระหว่างออนไลน์ → เก็บเข้ากล่องแจ้งเตือน + เด้งบอก
+   (ไม่มีโซน DB ใหม่ = ไม่ต้องแก้ rules · แจ้งเฉพาะช่วงที่เปิดเกมอยู่ ตามข้อจำกัดนี้) */
+function gfeedNotifDiff(old, now){
+  const me = onlineKey();
+  if(now.u !== me) return;
+  for(const uid in now.rx){
+    if(uid === me || old.rx[uid] === now.rx[uid]) continue;
+    gfeedNotifPush({t:'rx', pid: now.key, u: uid, n: uidDisplayName(uid), r: now.rx[uid], tx: now.tx, ts: Date.now()});
+  }
+  const seen = {};
+  for(const c of old.comments) seen[c.id] = true;
+  for(const c of now.comments){
+    if(seen[c.id] || c.u === me) continue;
+    gfeedNotifPush({t:'cm', pid: now.key, u: c.u, n: c.n, cm: c.tx, tx: now.tx, ts: c.ts || Date.now()});
+  }
+}
+function gfeedNotifPush(n){
+  Online.notif.unshift(n);
+  if(Online.notif.length > 40) Online.notif.length = 40;
+  Online.notifUnread++;
+  if(typeof feedNotifArrived === 'function') feedNotifArrived(n);
+}
+/* หาชื่อที่โชว์ได้ของ uid จากข้อมูลที่มีในเครื่องอยู่แล้ว (เพื่อน/คนออนไลน์/กระดานอันดับ/โพสต์เก่า) */
+function uidDisplayName(uid){
+  const f = (Online.myFriends || []).find(x=>x.uid === uid);
+  if(f) return f.n;
+  const o = (Online.friends || []).find(x=>x.id === uid);
+  if(o) return o.n;
+  const b = (Online.board || []).find(x=>x.id === uid);
+  if(b) return b.n;
+  for(const k in Online.gfeedMap){ if(Online.gfeedMap[k].u === uid) return Online.gfeedMap[k].n; }
+  return 'เพื่อนคนหนึ่ง';
 }
 /* จัดลำดับ: เพื่อน (รวมตัวเอง) ก่อนเสมอ เรียงใหม่→เก่า แล้วค่อยคนอื่นเรียงใหม่→เก่า */
 function gfeedRebuild(){
-  const raw = Online.gfeedRaw || [];
   const me = onlineKey();
   const fset = new Set((Online.myFriends || []).map(f=>f.uid));
+  const foll = state.follows || {};
   const mine = [], others = [];
-  for(const it of raw){ (it.u === me || fset.has(it.u) ? mine : others).push(it); }
+  for(const k in Online.gfeedMap){
+    const it = Online.gfeedMap[k];
+    (it.u === me || fset.has(it.u) || foll[it.u] ? mine : others).push(it);
+  }
   mine.sort((a,b)=>b.ts - a.ts);
   others.sort((a,b)=>b.ts - a.ts);
   Online.gfeed = mine.concat(others);
   if(typeof renderFeedBoard === 'function') renderFeedBoard();
+  if(typeof renderFeedCard  === 'function') renderFeedCard();       // 📰 รอบ 701: กล่องฟีดล็อบบี้ใช้ชุดเดียวกันแล้ว
+  if(typeof renderFeedComments === 'function') renderFeedComments(); // แผ่นคอมเมนต์เปิดอยู่ → รีเฟรชสด
 }
 /* กด/ถอนไลก์โพสต์ — rules เช็กจริงว่าเป็นเจ้าของโพสต์หรือเพื่อนของเจ้าของโพสต์ (deny เงียบถ้าไม่ใช่/ไม่ได้ publish) */
 function gfeedToggleLike(postId, likedNow){
-  if(!Online.ready || !postId) return;
+  return gfeedSetReaction(postId, likedNow ? '' : 'like');
+}
+/* 👍 รอบ 701: ตั้ง/ถอนรีแอ็กชัน — rk = '' คือถอน · เขียนรหัสรีแอ็กชันเป็น string
+   rules ชุดเก่ารับแค่ `true` → เขียนไม่ผ่านก็ถอยเป็นไลก์ธรรมดาอัตโนมัติ (เกมไม่พัง) */
+function gfeedSetReaction(postId, rk){
+  if(!Online.ready || !postId) return Promise.resolve(false);
   const ref = Online.db.ref('gfeed/' + postId + '/lk/' + onlineKey());
-  (likedNow ? ref.remove() : ref.set(true)).catch(()=>{});
+  if(!rk) return ref.remove().then(()=>true).catch(()=>false);
+  return ref.set(rk).then(()=>true)
+    .catch(()=>ref.set(true).then(()=>{ Online.rxRulesOld = true; return true; }).catch(()=>false));
 }
 /* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท */
 function gfeedAddComment(postId, tx){
@@ -1562,6 +1646,7 @@ function onlineStart(){
       Online.db.ref('friendCodes/' + Online.myCode).set(id).catch(()=>{});
       feedWatchSync();               // 📰 รอบ 155: เริ่มฟัง feed ของคนที่เรา follow
       feedPushAssets();              // 📰 คลังทรัพย์สินที่เปิดเผย (เขียนเฉพาะตอนค่าเปลี่ยน)
+      gfeedWatchStart();             // 📰 รอบ 701: ฟีดล็อบบี้ใช้ /gfeed แล้ว → เปิด watcher ค้างไว้เลย
     }
     onlineRerender();
   });

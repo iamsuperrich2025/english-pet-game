@@ -3316,7 +3316,7 @@ function feedAgo(ts){
 }
 
 /* ============================================================
-   📰 รอบ 700 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
+   📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
    ① โชว์ทีละ 1 โพสต์ ค้าง 10 วิ แล้วเลื่อนขึ้นเร็ว ๆ โพสต์ถัดไปดันขึ้นมาจากด้านล่าง วนไม่รู้จบ
       (เลื่อนเองได้ตลอด → หยุดออโต้ 12 วิ แล้วกลับเข้ากระบวนการเดิม)
    ② ชื่อ+ระดับชั้นอยู่บรรทัดบน · ข้อความรายงานลงบรรทัดของตัวเอง (ห้ามต่อแถวเดียวกัน)
@@ -3701,7 +3701,7 @@ bindFeedPostEvents();
 
 /* ============================================================
    🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
-   รอบ 700: การ์ดโพสต์ใช้ fpostHTML ชุดเดียวกับวงหมุนล็อบบี้ (กดค้าง = รีแอ็กชันด้วย)
+   รอบ 701: การ์ดโพสต์ใช้ fpostHTML ชุดเดียวกับวงหมุนล็อบบี้ (กดค้าง = รีแอ็กชันด้วย)
    ส่วน "ใครออนไลน์" ผู้ใช้สั่ง 29 ก.ค.: ให้ค่อย ๆ เลื่อนขึ้นเองเหมือนฟีดเพื่อนแบบเดิม
    (initSideScroll — แตะ = หยุดอ่านเอง) · watcher /gfeed เปิดค้างอยู่แล้วตั้งแต่ login
    ============================================================ */
@@ -3716,7 +3716,7 @@ function openFeedBoard(){
     <div class="fdb-list" id="fdb-list"><div class="fdb-empty">กำลังโหลด… 📰</div></div>
   </div>`;
   document.body.appendChild(overlay);
-  const close = ()=>{ overlay.remove(); };   // รอบ 700: ไม่ stop watcher แล้ว (ล็อบบี้ใช้ต่อ)
+  const close = ()=>{ overlay.remove(); };   // รอบ 701: ไม่ stop watcher แล้ว (ล็อบบี้ใช้ต่อ)
   overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
   overlay.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); close(); });
   renderFeedBoardLive();
@@ -3739,7 +3739,7 @@ function renderFeedBoardLive(){
       <span class="fdb-dot"></span>${nameWithGrade(`<b>${escapeHTML(f.n)}</b>`, gradeOf(f.id, f.g))} ${idTag(f.id)} · ${escapeHTML(f.act)}</div>`).join('');
   el.innerHTML = `<div class="fdb-live-title">🟢 ใครออนไลน์ทำอะไรอยู่ตอนนี้</div>
     <div class="fdb-live-rows" id="fdb-live-rows">${meRow}${rows}</div>`;
-  initSideScroll(document.getElementById('fdb-live-rows'));   // รอบ 700: เลื่อนขึ้นช้า ๆ วนเอง (แตะ = หยุด)
+  initSideScroll(document.getElementById('fdb-live-rows'));   // รอบ 701: เลื่อนขึ้นช้า ๆ วนเอง (แตะ = หยุด)
 }
 
 /* ส่วนล่าง: โพสต์กิจกรรมทุกคน (Online.gfeed เรียงเพื่อนก่อนแล้วจาก gfeedRebuild ใน online.js)
@@ -4382,7 +4382,7 @@ function renderDashboard(){
   if(piBtn) piBtn.addEventListener('click', openPetInfoOverlay);
   const feedAllBtn = document.getElementById('btn-feed-all');   // 🌍 รอบ 639: เปิดหน้า Feed เต็ม (ทุกคน + ไลก์/คอมเมนต์)
   if(feedAllBtn) feedAllBtn.addEventListener('click', openFeedBoard);
-  const feedBell = document.getElementById('btn-feed-bell');    // 🔔 รอบ 700: แจ้งเตือนไลก์/คอมเมนต์โพสต์ของเรา
+  const feedBell = document.getElementById('btn-feed-bell');    // 🔔 รอบ 701: แจ้งเตือนไลก์/คอมเมนต์โพสต์ของเรา
   if(feedBell) feedBell.addEventListener('click', openFeedNotif);
   renderFeedCard();
   alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
