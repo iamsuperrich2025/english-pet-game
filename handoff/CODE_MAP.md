@@ -207,14 +207,14 @@ GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:3
 gradeLockLeftMs:43 · gradeLockLeftDays:50 · gradeUnlockAt:51 · gradeLocked:52 · gradeUpOptions:55 · gradeChangeTo:62
 gradeLockNote:86 · openGradeChange:94
 
-## js/hotel3d.js (757 บรรทัด · 38 รายการ)
+## js/hotel3d.js (763 บรรทัด · 38 รายการ)
 TEX:25 · FLOOR_H:28 · WEST:31 · SHAFT_E:32 · CORE_E:33 · RZ0:34
 LZ0:35 · ROOM_N:36 · DOOR_W:39 · ENTRY_HW:40 · PLAYER_R:41 · floorY:42
-Acc:49 · accBox:50 · accGeo:66 · accMesh:74 · makeMats:85 · PORTRAIT_PHOTOS:126
-PORTRAIT_SKIN:127 · PORTRAIT_CLOTH:128 · portraitTexture:129 · signTexture:168 · build:182 · inRect:590
-insideHotel:591 · surfaceY:594 · collide:612 · roomAt:632 · floorOf:640 · setLights:645
-EYE_X0:658 · BLINK_DUR:659 · BLINK_MIN:660 · tick:662 · nearWardrobe:728 · inLift:739
-atLiftDoor:743 · randomHaunt:747
+Acc:49 · accBox:50 · accGeo:66 · accMesh:74 · makeMats:85 · PORTRAIT_PHOTOS:130
+PORTRAIT_SKIN:131 · PORTRAIT_CLOTH:132 · portraitTexture:133 · signTexture:172 · build:186 · inRect:596
+insideHotel:597 · surfaceY:600 · collide:618 · roomAt:638 · floorOf:646 · setLights:651
+EYE_X0:664 · BLINK_DUR:665 · BLINK_MIN:666 · tick:668 · nearWardrobe:734 · inLift:745
+atLiftDoor:749 · randomHaunt:753
 
 ## js/images.js (211 บรรทัด · 23 รายการ)
 IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:28 · probeRankImages:40
@@ -474,11 +474,12 @@ gfeedParse:1052 · gfeedWatchStart:1074 · gfeedWatchStop:1101 · gfeedNotifDiff
 gfeedRebuild:1141 · gfeedToggleLike:1158 · gfeedSetReaction:1163 · gfeedAddComment:1171 · CALL_RTC_CFG:1209 · CALL_RING_MS:1210
 CALL_MAX_MS:1211 · CALL_MAX_PEERS:1212 · onlineStart:1628 · onlineLoadSDK:1745
 
-## js/photo.js (330 บรรทัด · 24 รายการ)
+## js/photo.js (361 บรรทัด · 25 รายการ)
 PHOTO_LS_KEY:12 · PHOTO_MAX:13 · PHOTO_PREFIX:14 · PHOTO_SIZES:15 · PHOTO_QS:16 · PHOTO_ZMAX:17
 photoValid:25 · photoOnline:28 · photoGet:31 · photoHas:32 · photoIsMine:33 · photoOf:36
-photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoSaveUrl:77 · photoRemove:83 · photoPullMine:90
-photoBlkSrc:106 · photoMiniHTML:113 · openPhotoMenu:121 · photoLoadImgEl:172 · photoLoadFile:180 · openPhotoCrop:193
+photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoSaveUrl:93 · photoRemove:99
+photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
+openPhotoCrop:224
 
 ## js/state.js (1,128 บรรทัด · 91 รายการ)
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
@@ -762,7 +763,7 @@ vbRender:148 · vbCardHTML:194
 .tp-hint:4736 · .tp-empty:4738 · .tp-keys:4741 · .tp-row:4743 · .tp-row-fn:4745,4778 · .tp-key:4749,4761,4763,4769(+2)
 .tp-key-fn:4776 · .tp-fx:4782 · .tp-coinpop:4783 · .tp-pop-pt:4788
 
-## css/style.css (1,977 บรรทัด · 498 selector)
+## css/style.css (1,986 บรรทัด · 502 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
 .screen:38,39 · h1:42 · .subtitle:43 · .egg-grid:46,63 · .egg-card:47,52,53,54(+2) · .pet-price:57,61
 .egg:65,71,75 · .d1:76 · .basket:79,80,85,91(+5) · .basket-dog:89,102,103,104 · .basket-cat:90,105,106,107 · .egg-dragon:110
@@ -843,6 +844,7 @@ vbRender:148 · vbCardHTML:194
 .craft-bar:1810 · .craft-fill:1811 · .craft-text:1812 · .craft-btn-row:1813,1814 · .craft-go-btn:1816,1822,1823,1826 · .craft-cancel:1834,1838
 .mkt-catalog:1841,1842,1843 · .mkt-pager:1846 · .pg-btn:1847,1851,1852 · .pg-mid:1853 · .pg-dots:1854 · .pg-dot:1855,1856
 .order-head:1857 · .order-row:1858,1863,1865,1867 · .order-deliver:1868,1873 · .order-need:1874 · .avatar-chip-photo:1880 · .pass-photo:1881
-.pl-photo:1882 · .pp-cam:1887,1895 · .set-photo-row:1898,1904 · .ph-thumb:1905 · .ph-plus:1906 · .photo-box:1912,1913,1926,1930(+4)
-.ph-now:1914 · .ph-now-img:1915,1919 · .ph-now-cap:1920 · .ph-warn:1921 · .ph-btns:1925 · .ph-tip:1935
-.ph-stage:1937,1941 · .ph-cv:1942 · .ph-ring:1943,1948 · .ph-zoom:1952 · .ph-foot:1953 · .ph-crop-box:1954
+.pl-photo:1882 · .pp-cam:1887,1895 · .set-photo-row:1898,1904 · .ph-thumb:1905 · .ph-plus:1906 · .photo-box:1912,1913,1934,1938(+4)
+.ph-now:1914 · .ph-now-img:1915,1919 · .ph-now-cap:1920 · .ph-warn:1921 · .ph-sync:1926,1929 · .ph-sync-wait:1930
+.ph-sync-ok:1931 · .ph-sync-bad:1932 · .ph-btns:1933 · .ph-tip:1943 · .ph-stage:1945,1949 · .ph-cv:1950
+.ph-ring:1951,1956 · .ph-zoom:1960 · .ph-foot:1961 · .ph-crop-box:1962
