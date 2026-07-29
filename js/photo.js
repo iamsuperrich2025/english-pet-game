@@ -62,17 +62,33 @@ function photoAfterChange(){
   if(typeof onlineKey === 'function') PhotoCache[onlineKey()] = PhotoMine;
   if(typeof renderDashboard === 'function' && document.getElementById('screen-dashboard')) renderDashboard();
 }
-function photoPush(){
+function photoPush(quiet){
   if(!photoOnline()) return Promise.resolve(false);
   return Online.db.ref('pphoto/' + onlineKey()).set(PhotoMine).then(()=>{
     Photo.cloudOk = true; return true;
   }).catch(()=>{
     Photo.cloudOk = false;
     // ⚠️ กฎทอง #1: ห้ามปิดเงียบ — บอกผู้ใช้ตรง ๆ ว่ารูปยังไปไม่ถึงเพื่อน เพราะอะไร
-    if(typeof toast === 'function')
+    // (quiet = ผู้เรียกโชว์ป้ายบนจอเองแล้ว ไม่ต้องเด้ง toast ซ้ำ)
+    if(!quiet && typeof toast === 'function')
       toast('📷 เก็บรูปในเครื่องนี้แล้ว แต่ยังส่งขึ้นระบบไม่ได้ — ต้องอัปเดตกฎความปลอดภัยโซน /pphoto ก่อน เพื่อนถึงจะเห็น', 4600);
     return false;
   });
+}
+
+/* 🔎 รอบ 763: "เพื่อนเห็นรูปนี้จริงหรือยัง" — อ่านกลับจาก DB ตัวเดียวกับที่เพื่อนอ่าน
+   (ห้ามเชื่อแค่ว่าเซฟในเครื่องผ่าน — เคสจริง: rules โซน /pphoto ยังไม่ publish
+    → เขียนโดน deny เงียบ ๆ เจ้าตัวเห็นรูปใหม่ แต่เพื่อนยังเห็นตัวการ์ตูนเหมือนเดิม)
+   DB ไม่ตรงกับเครื่อง = ลองส่งซ้ำให้เองก่อน (self-heal) แล้วค่อยรายงานผลจริง */
+function photoVerify(){
+  if(!PhotoMine)     return Promise.resolve({k:'none', msg:'ตอนนี้ใช้ตัวการ์ตูนเป็นรูปโปรไฟล์ — เพื่อนเห็นตัวการ์ตูนนี้'});
+  if(!photoOnline()) return Promise.resolve({k:'wait', msg:'⏳ ยังต่อระบบออนไลน์ไม่ได้ — ตรวจไม่ได้ว่าเพื่อนเห็นรูปนี้แล้วหรือยัง'});
+  const bad = {k:'bad', msg:'⚠️ รูปนี้ยังอยู่แค่ในเครื่องนี้ — เพื่อนยังเห็นเป็นตัวการ์ตูนอยู่ (ต้องอัปเดตกฎความปลอดภัยโซน /pphoto ใน Firebase ก่อน)'};
+  return Online.db.ref('pphoto/' + onlineKey()).get().then(s=>{
+    const v = s && s.val();
+    if(photoValid(v) && v === PhotoMine) return {k:'ok', msg:'✅ ส่งขึ้นระบบแล้ว — เพื่อนเห็นรูปนี้'};
+    return photoPush(true).then(ok=> ok ? {k:'ok', msg:'✅ ส่งรูปขึ้นระบบเรียบร้อย — เพื่อนเห็นรูปนี้แล้ว'} : bad);
+  }).catch(()=> bad);
 }
 function photoSaveUrl(url){
   PhotoMine = url;
@@ -131,10 +147,25 @@ function openPhotoMenu(onDone){
          <div class="ph-now-cap">ตอนนี้ใช้ตัวการ์ตูนอยู่</div>`;
     const del = ov.querySelector('.ph-del');
     if(del) del.style.display = PhotoMine ? '' : 'none';
+    paintSync();
+  };
+  /* 🔎 รอบ 763: ป้ายบอกตรง ๆ ว่า "เพื่อนเห็นรูปนี้แล้วหรือยัง" (กฎทอง #1 — ห้ามให้ผู้ใช้เดาเอง) */
+  const paintSync = ()=>{
+    const el = ov.querySelector('.ph-sync');
+    if(!el) return;
+    el.className = 'ph-sync ph-sync-wait';
+    el.textContent = PhotoMine ? '⏳ กำลังตรวจว่าเพื่อนเห็นรูปนี้แล้วหรือยัง…' : '';
+    if(!PhotoMine) return;
+    photoVerify().then(r=>{
+      if(!ov.isConnected) return;
+      el.className = 'ph-sync ph-sync-' + r.k;
+      el.textContent = r.msg;
+    });
   };
   ov.innerHTML = `<div class="levelup-box photo-box">
     <h2 class="ph-h2">📷 รูปโปรไฟล์ของหนู</h2>
     <div class="ph-now"></div>
+    <div class="ph-sync"></div>
     <p class="ph-warn">👨‍👩‍👧 <b>ให้ผู้ปกครองช่วยเลือกรูปนะ</b> — เพื่อนในเกมมองเห็นรูปนี้ได้
       เลี่ยงรูปที่บอกชื่อจริง ชื่อโรงเรียน หรือที่อยู่ · เปลี่ยนหรือลบทีหลังได้ตลอด</p>
     <div class="ph-btns">
