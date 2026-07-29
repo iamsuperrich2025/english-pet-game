@@ -498,7 +498,7 @@ function splitNameBadges(full){                        // แยก "ชื่�
   return { name: badges ? full.slice(0, full.length - badges.length).trim() : full, badges };
 }
 function badgeEmojis(str){                              // แตกอิโมจิเข็มเป็นอาร์เรย์ตามลำดับที่พบ
-  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|⌨️|🔠|📜|✒️|🦾/gu; let x;
+  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸|⌨️|🔠|📜|✒️|🦾/gu; let x;
   while((x = re.exec(String(str || '')))) arr.push(x[0]);
   return arr;
 }
