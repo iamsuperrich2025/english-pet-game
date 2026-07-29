@@ -357,15 +357,26 @@ function renderNewWord(){
 /* จัดแบนเนอร์ให้ "กึ่งกลางตรงกับภาพ Rank ใหญ่กลางเวที" (ผู้ใช้สั่งรอบ 326)
    เวทีน้องอยู่คอลัมน์ขวาของการ์ด → กึ่งกลางเวทีไม่ใช่กึ่งกลางจอ ต้องวัดเอา
    (แพทเทิร์นเดียวกับ alignPetTabs — หารด้วย scale เผื่อหน้าเพจโดนย่อด้วย transform) */
-/* 📐 รอบ 613 → 🔤 รอบ 700 (ผู้ใช้สั่งกลับ 29 ก.ค. 2026 "ขยายคำศัพท์+อยู่กึ่งกลางเวทีน้อง"):
-   กลับไปกึ่งกลางเวทีเหมือนรอบ 326 (เลิกชิดซ้ายตามเส้นแดง) — max-width ยังคุมไม่ให้กว้างเกินเวที
-   เพราะกึ่งกลาง "ภายใน" เวที (ไม่เกิน c.width) จึงชนขอบซ้ายเวทีไม่ได้เหมือนที่เคยกลัวไว้รอบ 613 */
+/* 📐 รอบ 613 → 🔤 รอบ 699/700 → 📏 รอบ 702 (ผู้ใช้สั่ง 29 ก.ค. 2026):
+   ① "ยืดขอบซ้ายขวาให้เสมอกับกล่องเวทีน้อง" → เลิกกล่องลอยกึ่งกลาง (auto-width) เปลี่ยนเป็น
+      กว้างเท่าเวทีเป๊ะ (--nw-left = ขอบซ้ายเวที · --nw-w = ความกว้างเวที) เนื้อหาข้างในจัดกึ่งกลางเอง
+   ② "ดันขอบกล่องขึ้นไปทางระดับชั้น เว้นระยะสวยงามเท่าระยะซ้ายขวาของฟีดเพื่อน (= 5px)" →
+      ดึงขึ้นด้วย margin-top ติดลบ (--nw-top) ให้ขอบบนกล่องห่างใต้ชิประดับชั้นเท่ากับ NW_GAP พอดี
+   ⚠️ ต้องคิดจาก "ขอบบนเวที" (stageTop) กับ "ใต้ชิประดับชั้น" ซึ่งไม่ขึ้นกับตัวแบนเนอร์เอง —
+      ถ้าวัดจากขอบบนแบนเนอร์จะกลายเป็นอ้างอิงตัวเอง ค่าจะไหลเรื่อย ๆ ทุกครั้งที่ ResizeObserver ยิงซ้ำ */
+const NW_GAP = 5;   // = ระยะซ้าย/ขวาของกล่องฟีดเพื่อน (รอบ 695) ใช้เป็นมาตรฐานระยะห่างเดียวกันทั้งหน้า
 function alignNewWord(){
   const el = document.getElementById('newword-banner');
   const c = stageColLeft();
   if(!el || !c || el.style.display === 'none') return;
-  el.style.setProperty('--nw-left', (c.left + c.width / 2) + 'px');
-  el.style.setProperty('--nw-max', c.width + 'px');
+  el.style.setProperty('--nw-left', c.left + 'px');
+  el.style.setProperty('--nw-w', c.width + 'px');
+  const grade = document.querySelector('.coin-block .grade-pill');
+  const stage = document.querySelector('.lobby-stage');
+  if(grade && stage && grade.offsetWidth){
+    const gb = grade.getBoundingClientRect().bottom, st = stage.getBoundingClientRect().top;
+    el.style.setProperty('--nw-top', Math.min(0, (gb + NW_GAP - st) / c.scale) + 'px');
+  }else el.style.setProperty('--nw-top', '0px');
 }
 
 /* นาฬิกาเปลี่ยนคำ — เช็กทุก 5 วินาที (ไม่ใช่ setTimeout 2 นาทีเดียว) เพื่อให้

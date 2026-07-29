@@ -114,7 +114,7 @@ h1{color:var(--sky-d);text-shadow:none;}
      (:not(#id) นับ specificity เท่า id) — rule นี้อยู่ทีหลังเลยชนะ */
   #screen-game.screen.active{
     width:min(900px,96vw);display:grid;grid-template-columns:1fr 1fr;
-    grid-template-areas:"top top" "timer timer" "lblen lblth" "en th" "hint hint";
+    grid-template-areas:"top top" "timer timer" "lblen lblth" "en th" "hint hint" "note note" "report report";
     column-gap:18px;align-content:start;
   }
   #screen-game .game-top{grid-area:top;}
@@ -124,6 +124,9 @@ h1{color:var(--sky-d);text-shadow:none;}
   #screen-game #en-grid{grid-area:en;align-self:start;}
   #screen-game #th-grid{grid-area:th;align-self:start;}
   #screen-game .hint-btn{grid-area:hint;}
+  /* รอบ 702: .game-endless-note/#btn-report ไม่มี grid-area เดิม → grid auto-place ดันไปคนละคอลัมน์ซ้อนกัน (ผู้ใช้เห็น "ตกขอบ") */
+  #screen-game .game-endless-note{grid-area:note;max-width:none;}
+  #screen-game #btn-report{grid-area:report;}
   /* ร้านสัตว์เลี้ยง 3 ตัวเรียงแถวเดียว */
   .egg-grid{grid-template-columns:repeat(3,1fr);}
   .egg-grid > .egg-card:last-child:nth-child(odd){grid-column:auto;width:auto;margin:0;}
@@ -3809,13 +3812,15 @@ button.ps-worn-pip:active{transform:scale(.95);}
    คำใบ้+รางวัล+เวลา (.nw-sub) บรรทัดล่าง เล็กกว่า กึ่งกลางเหมือนกัน · NEW ลอยเป็นริบบิ้นมุมซ้ายบน
    ไม่เบียดคำศัพท์ (ก่อนหน้านี้ NEW อยู่หน้าคำศัพท์ในแถวเดียว ทำให้จุดกึ่งกลาง "ภาพ" เยื้องขวาไม่ตรงเวทีจริง) */
 .newword-banner{
-  flex-direction:column;align-items:center;justify-content:center;gap:2px;
-  position:relative;border-radius:16px;padding:9px 20px 8px;
+  flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  position:relative;border-radius:16px;padding:13px 20px 12px;
 }
 .nw-tag{
   position:absolute;top:-9px;left:14px;box-shadow:0 3px 8px rgba(0,0,0,.3);
 }
-.nw-word{font-size:clamp(24px,4.2vh,36px);}
+/* 📏 รอบ 702: ใหญ่ขึ้นจาก clamp(24px,4.2vh,36px) — ความสูงที่เพิ่มคือตัวที่ดันขอบบนกล่อง
+   ขึ้นไปหาชิประดับชั้นตามที่ผู้ใช้ขอ (คู่กับ margin-top ติดลบใน alignNewWord) */
+.nw-word{font-size:clamp(30px,5.6vh,48px);line-height:1.15;}
 .nw-sub{display:flex;align-items:center;justify-content:center;gap:8px;max-width:100%;min-width:0;}
 .nw-hint{white-space:nowrap;}
 .nw-bar{left:10px;right:10px;bottom:2px;}
@@ -3855,6 +3860,9 @@ button.ps-worn-pip:active{transform:scale(.95);}
   .lobby-top .coin-block .grade-pill{font-size:11.5px;}
   .lobby-stage .pet-tab{height:29px;font-size:12.5px;padding:0 11px;}
   .lobby-stage .pet-tab.add,.lobby-stage .pet-tab.dinner{width:29px;}
+  /* 📏 รอบ 702: จอเตี้ยไม่ต้องตามคำศัพท์ตัวใหญ่ของจอปกติ — ไม่งั้นกล่องกินที่จนเวทีน้องเหลือนิดเดียว */
+  .lobby-stage .newword-banner{padding:9px 16px 8px;}
+  .nw-word{font-size:clamp(22px,5.2vh,30px);}
 }
 @media (max-height:400px){
   .profile-plate .rank-tab{width:auto;margin-top:0;}
@@ -3880,11 +3888,20 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 
 /* ② แท็บสัตว์เริ่มที่เส้นเดียวกับแถวเหรียญ + ไม่กว้างเกินเวที (แบนเนอร์คำใหม่แยกไปกึ่งกลางเองแล้ว รอบ 700) */
 .lobby-stage .pet-tabs{max-width:var(--tabs-w,100%);}
-/* 🔤 รอบ 700 (ผู้ใช้สั่งกลับ "อยู่กึ่งกลางเวทีน้อง"): เลิก override ชิดซ้ายของรอบ 613 แล้ว
-   ปล่อยให้ใช้ base rule เดิม (บรรทัด ~938: margin-left:var(--nw-left,50%);transform:translateX(-50%))
-   + คีย์เฟรม nwSwap ฐาน (บรรทัด ~941 มี translateX(-50%) อยู่แล้ว) กลับมาใช้งานจริงเอง ไม่ต้องประกาศซ้ำ
-   max-width ยังคุมไม่ให้กว้างเกินเวทีเหมือนเดิม กันคำยาวดันล้นจอ */
-.lobby-stage .newword-banner{max-width:var(--nw-max,96%);min-width:0;}
+/* 📏 รอบ 702 (ผู้ใช้สั่ง "ยืดขอบซ้ายขวาเสมอกล่องเวทีน้อง + ดันขอบบนขึ้นไปทางระดับชั้น"):
+   กล่องกว้าง = ความกว้างเวทีเป๊ะ (ไม่ใช่กล่องลอยกึ่งกลางแบบรอบ 699/700 อีกแล้ว)
+   --nw-top = margin-top ติดลบจาก alignNewWord() ดึงขอบบนขึ้นไปห่างใต้ชิประดับชั้น 5px (เท่าระยะฟีดเพื่อน) */
+.lobby-stage .newword-banner{
+  align-self:flex-start;
+  margin-left:var(--nw-left,0px);margin-top:var(--nw-top,0px);
+  width:var(--nw-w,auto);max-width:none;min-width:0;transform:none;
+}
+/* กล่องไม่ลอยกึ่งกลางด้วย transform แล้ว → คีย์เฟรมสลับคำต้องไม่มี translateX(-50%) ค้าง */
+@keyframes nwSwap{
+  0%  {transform:scale(.94);box-shadow:0 0 26px rgba(255,214,90,.75);border-color:var(--gold);}
+  60% {transform:scale(1.03);}
+  100%{transform:scale(1);}
+}
 /* คำใบ้ยอมหดก่อนเพื่อน ถ้าเวทีแคบ — ตัวคำศัพท์ห้ามหาย */
 .nw-hint{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .nw-word{flex-shrink:0;}
