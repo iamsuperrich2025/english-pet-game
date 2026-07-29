@@ -3888,31 +3888,27 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .lobby-top .coin-group .coin-pill.comp.cut{color:#ffb9a8;}
 .coin-pill.comp .cp-v{display:inline-flex;align-items:center;gap:2px;}
 .coin-pill.comp .comp-ic{font-size:13px;line-height:1;}
-/* คอมทำงานอยู่ = ไอคอนมีจอสว่างวาบเบา ๆ (ปิดตาม no-anim / ตอนล็อก-ตอนถูกตัดบริการ) */
-.coin-pill.comp.on .comp-ic{animation:compGlow 2.4s ease-in-out infinite;}
+/* คอมทำงานอยู่ = ไอคอนมีจอสว่างวาบเบา ๆ (ปิดตาม no-anim / ตอนล็อก-ตอนถูกตัดบริการ — animation จริงรวมกับ cfBag อยู่ท้ายบล็อกรอบ 736 ด้านล่าง) */
 .coin-pill.comp.locked .comp-ic,.coin-pill.comp.cut .comp-ic,
 html.no-anim .coin-pill.comp .comp-ic{animation:none;}
 @keyframes compGlow{
   0%,100%{filter:drop-shadow(0 0 1px rgba(120,200,255,.4));}
   50%    {filter:drop-shadow(0 0 6px rgba(140,215,255,.95)) brightness(1.15);}
 }
-/* รอบ 735 (ผู้ใช้: "ใส่ภาพเหรียญสีทองไว้บนเครื่องคอมด้วย จะได้รู้ว่าเงินเข้า"):
-   เหรียญทองจริง (ภาพเดียวกับ .coin-flow) แปะมุมบนขวาไอคอนจอคอม เด้งเบา ๆ เฉพาะตอนกำลังทำเงินจริง
-   ล็อก/ถูกตัดบริการ = ซ่อนเหรียญไปเลย กันสับสนว่ายังได้เงินอยู่ */
-.comp-ic-wrap{position:relative;display:inline-block;}
-.comp-coin{
-  position:absolute;top:-4px;right:-5px;width:9px;height:9px;border-radius:50%;
-  background:url('../img/coins/coin_gold.png') center/contain no-repeat,
-             radial-gradient(circle at 34% 30%,#fff3bd,#ffc93c 55%,#d8901a);
-  box-shadow:0 0 3px rgba(255,205,70,.85);
-  display:none;
-}
-.coin-pill.comp.on .comp-coin{display:block;animation:compCoinBounce 1.6s ease-in-out infinite;}
-html.no-anim .coin-pill.comp.on .comp-coin{animation:none;}
-@keyframes compCoinBounce{
-  0%,100%{transform:translateY(0) scale(1);}
-  50%    {transform:translateY(-2px) scale(1.12);}
-}
+/* รอบ 736 (ผู้ใช้แก้รอบ 735: "ทำภาพเงินเข้าเหมือนออนไลน์สิ เพียงแต่เหรียญเข้าคอมแทนกระเป๋า"):
+   ใช้กลไก .coin-flow ตัวเดียวกับ pill ออนไลน์ตรง ๆ (เหรียญทองร่วงลงไม่ขาดสาย) แค่เปลี่ยน "จุดลงจอด"
+   จากกระเป๋า 👛 เป็นไอคอนคอม 💻 เอง (.cf-bag ใส่คลาส .comp-ic ด้วย) — ปิดกล้อง/หยุดร่วงตอนล็อก/ถูกตัดบริการ
+   เหมือนที่ .coin-pill.net.off ทำกับ pill ออนไลน์ทุกประการ */
+.coin-pill.comp.locked .comp-flow .cf-c,.coin-pill.comp.cut .comp-flow .cf-c,
+html.no-anim .coin-pill.comp .comp-flow .cf-c{transform:translateY(.05em);}
+.coin-pill.comp.locked .comp-flow .cf-c,.coin-pill.comp.cut .comp-flow .cf-c,
+.coin-pill.comp.locked .comp-flow .cf-bag,.coin-pill.comp.cut .comp-flow .cf-bag,
+html.no-anim .coin-pill.comp .comp-flow .cf-c,html.no-anim .coin-pill.comp .comp-flow .cf-bag{animation:none;}
+.coin-pill.comp.locked .comp-flow .cf-c:nth-of-type(2),.coin-pill.comp.locked .comp-flow .cf-c:nth-of-type(3),
+.coin-pill.comp.cut .comp-flow .cf-c:nth-of-type(2),.coin-pill.comp.cut .comp-flow .cf-c:nth-of-type(3),
+html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(2),html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(3){display:none;}
+/* คอมทำงานอยู่ = เหรียญร่วงลงเรื่อย ๆ + ไอคอนจอคอมสว่างวาบเบา ๆ ไปพร้อมกัน (bounce ของ cf-bag เดิม + glow ของ compGlow) */
+.coin-pill.comp.on .comp-ic{animation:cfBag 1.5s ease-in-out infinite,compGlow 2.4s ease-in-out infinite;}
 /* ป้าย +1 ลอยขึ้นตอนเหรียญตกเข้ากระเป๋า — ต้องมี position:relative ที่ตัว pill */
 .lobby-top .coin-group .coin-pill{position:relative;}
 .cp-lb{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8db3da;}
