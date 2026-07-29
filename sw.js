@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v202';  // v202: รอบ 712: เพิ่ม js/cert.js เข้า shell (ประกาศนียบัตร)
+const CACHE_VERSION = 'pet-vocab-v203';  // v203: รอบ730 บังคับล้าง cache ไอคอนเก่า (ค้างตั้งแต่รอบ712)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
