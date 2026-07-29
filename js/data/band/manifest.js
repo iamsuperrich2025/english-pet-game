@@ -97,6 +97,33 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
+  "legal": {
+    "label": "ศัพท์กฎหมาย",
+    "emoji": "⚖️",
+    "count": 355,
+    "files": [
+      {
+        "f": "b6_legal_accessory-conviction.js",
+        "n": 75
+      },
+      {
+        "f": "b6_legal_coroner-humanrights.js",
+        "n": 75
+      },
+      {
+        "f": "b6_legal_inhousecounsel-mugshot.js",
+        "n": 75
+      },
+      {
+        "f": "b6_legal_murder-settlement.js",
+        "n": 75
+      },
+      {
+        "f": "b6_legal_severancepay-zoning.js",
+        "n": 55
+      }
+    ]
+  },
   "medical": {
     "label": "ศัพท์การแพทย์",
     "emoji": "⚕️",
