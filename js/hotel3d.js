@@ -106,6 +106,10 @@ function makeMats(){
        ตึกเลยสว่างโพลนเหมือนกลางวันทั้งที่ฟ้ามืด (ต้นเหตุที่ผู้ใช้บอกว่าข้างนอกดูชุ่ย) */
     facade: L(0x7a6f61,'tex_hotel_facade',1,1,0x6d6a66),
     stone : L(0x6b665e),
+    /* 🩹 รอบ 764: ลานหินหน้าประตู เดิมใช้ M.stone = สีเทาล้วน วางแนบพื้นสนามพอดี
+       → เห็นเป็นแผ่นเทาโพลนทับภาพพื้นจริง (ผู้ใช้แจ้ง) · ให้ปูคอนกรีตจริงหม่นแบบกลางคืน
+       จะได้กลืนกับพื้นรอบ ๆ เหมือนทางเดินปูจริง ไม่ใช่แผ่นสีทับ */
+    porch : L(0x585349,'tex_concrete',1,1,0x565b62),
     leaf  : L(0x2c4a2e),
   };
   /* ไฟ/หน้าต่าง = MeshBasic (ไม่ง้อแสง) + fog:false → ยังเรืองแสงทะลุหมอกกลางคืน
@@ -192,7 +196,7 @@ function build(THREE_,opt){
   /* กำแพง: วางกล่อง + กันชนพร้อมกัน (thick = ความหนา) */
   const A={ struct:Acc(), room:Acc(), carpet:Acc(), marble:Acc(), wood:Acc(), ceil:Acc(),
             tile:Acc(), porc:Acc(), gold:Acc(), cloth:Acc(), sheet:Acc(), metal:Acc(),
-            facade:Acc(), stone:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc() };
+            facade:Acc(), stone:Acc(), porch:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc() };
   function wall(acc,x0,x1,z0,z1,y,h,uv,noSolid){
     if(x1<=x0||z1<=z0) return;
     accBox(acc,(x0+x1)/2,y+h/2,(z0+z1)/2,x1-x0,h,z1-z0,uv||2.4);
@@ -493,9 +497,10 @@ function build(THREE_,opt){
       const dm=new T.Mesh(doorGeo,M.wood);
       dm.position.set(BX+.5,1.1,d[0]); dm.rotation.y=d[1]; grp.add(dm);
     });
-    accBox(A.stone,BX+1.6,-.1,0,3.2,.2,9,3);
-    accBox(A.stone,BX+2.6,-.28,0,1.4,.24,10,3);
-    accBox(A.stone,BX+3.6,-.46,0,1.4,.24,11,3);
+    /* ลานหิน + ขั้นบันไดนอกหน้าประตู (uv 2.4 = ลายคอนกรีตประมาณ 2 ตารางเมตร/แผ่น) */
+    accBox(A.porch,BX+1.6,-.1,0,3.2,.2,9,2.4);
+    accBox(A.porch,BX+2.6,-.28,0,1.4,.24,10,2.4);
+    accBox(A.porch,BX+3.6,-.46,0,1.4,.24,11,2.4);
     [[BX+2.6,-4.2],[BX+2.6,4.2]].forEach(p=>{
       accBox(A.marble,p[0],1.8,p[1],.9,3.6,.9,2);
       solid(p[0]-.5,p[0]+.5,p[1]-.5,p[1]+.5,0,3.6,'col');
@@ -571,6 +576,7 @@ function build(THREE_,opt){
   accMesh(A.metal,M.metal,grp);
   accMesh(A.facade,M.facade,grp);
   accMesh(A.stone,M.stone,grp);
+  accMesh(A.porch,M.porch,grp);
   accMesh(A.leaf,M.leaf,grp);
   accMesh(A.glass,M.glass,grp);
   accMesh(A.win,M.win,grp);

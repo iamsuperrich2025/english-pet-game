@@ -1836,9 +1836,15 @@ function buildScene(md){
   }
   // (โหมด heli ใส่แสงของตัวเองในบล็อกเมืองด้านล่าง)
 
+  /* 🩹 รอบ 764: พื้นแผ่นนี้อยู่ y=0 พอดีกับ "ผิวบนสุด" ของหลายชิ้นที่วางแนบพื้น
+     (ลานหินหน้าประตูโรงแรม `accBox(A.stone,BX+1.6,-.1,...)` ผิวบน = 0 เป๊ะ · พื้นล็อบบี้ floorY(0)=0)
+     → ระนาบซ้อนกันสนิท = z-fighting เห็นเป็นพื้นสีเทากระพริบสลับกับภาพ texture
+     แก้ที่ต้นทางชั้นเดียว: ดัน "พื้น" ให้ถอยหลังในสมุดความลึกเล็กน้อย (polygonOffset)
+     → ของที่วางแนบพื้นชนะเสมอ ไม่ต้องขยับ geometry ทีละชิ้น (ไม่เกิดช่องลอยใต้พุ่มไม้/รั้ว) */
   const ground=new THREE.Mesh(
     new THREE.PlaneGeometry(HALF*2+20,HALF*2+20),
-    new THREE.MeshLambertMaterial({color:cfg.ground}));
+    new THREE.MeshLambertMaterial({color:cfg.ground,
+      polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1}));
   ground.rotation.x=-Math.PI/2; sc.add(ground);
   // 🧱 พื้นภาพจริงในโลกเมือง (โดรนใส่ในบล็อกตัวเอง) · โลกผีใช้ภาพเดียวกันแต่ tint หม่นให้เข้ากับกลางคืน
   if(md==='heli') applyTex(ground.material,'tex_ground',26,26);
