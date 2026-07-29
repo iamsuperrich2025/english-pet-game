@@ -25,6 +25,7 @@ SPLIT_RE = re.compile(r'^(?P<base>.+)_[^_]+-[^_]+\.js$')
 LABELS = {
     'b6_academic': {'label': 'ศัพท์วิชาการ', 'emoji': '🎓'},
     'b6_business': {'label': 'ศัพท์ธุรกิจ', 'emoji': '💼'},
+    'b6_science': {'label': 'ศัพท์วิทยาศาสตร์', 'emoji': '🔬'},
 }
 
 def main():

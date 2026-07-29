@@ -96,5 +96,40 @@ const BAND_ADV_MANIFEST = {
         "n": 24
       }
     ]
+  },
+  "science": {
+    "label": "ศัพท์วิทยาศาสตร์",
+    "emoji": "🔬",
+    "count": 519,
+    "files": [
+      {
+        "f": "b6_science_absorb-chloroplast.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_chromosome-embryo.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_emission-heat.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_helium-meteor.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_meteorology-processor.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_producer-species.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_spectrum-zinc.js",
+        "n": 69
+      }
+    ]
   }
 };

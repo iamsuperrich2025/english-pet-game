@@ -46,7 +46,8 @@ const CERT_LEVEL_EN = {
   'ม.1–ม.3':'Grade 7–9', 'ม.4–ม.6':'Grade 10–12',
 };
 /* คลังศัพท์ขั้นสูงแยกหมวด (BAND_ADV_MANIFEST[].label) → อังกฤษ */
-const CERT_ADV_EN = {'ศัพท์วิชาการ':'Academic Vocabulary', 'ศัพท์ธุรกิจ':'Business Vocabulary'};
+const CERT_ADV_EN = {'ศัพท์วิชาการ':'Academic Vocabulary', 'ศัพท์ธุรกิจ':'Business Vocabulary',
+  'ศัพท์วิทยาศาสตร์':'Science Vocabulary'};
 
 /* แผนที่ "ชื่อหมวดไทย → id" สร้างครั้งเดียวจาก VOCAB_BANDS (ใช้ตอนอ่านโพสต์ของเพื่อน) */
 let __certByTh = null;
