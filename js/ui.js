@@ -614,6 +614,7 @@ function renderClock(){
   const compLive = document.getElementById('comp-live');
   if(compLive) compLive.textContent = compLiveTotal().toFixed(2);   // ตัวเลขรายได้คอมวิ่งทุกวินาที
   renderOnlineEarnPill();                            // item 8: ตัวเลขโบนัสออนไลน์วิ่งทุกวินาที
+  renderCompEarnPill();                              // รอบ 706: ช่องรายได้คอมพิวเตอร์บนแถบบน (วิ่งทุกวินาทีเช่นกัน)
   renderFarmClock();                                 // นาฬิกานับถอยหลังต้นไม้เดินพร้อมนาฬิกา
   renderOrderClock();                                // นาฬิกานับถอยหลังออเดอร์พิเศษ
   renderDinnerChip();                                // ปุ่มข้าวเย็นผู้เล่น (ข้อ 6) โผล่/หายตามเวลา (อยู่แถวแท็บสัตว์ตั้งแต่รอบ 179)
@@ -5525,6 +5526,22 @@ function onlineLiveTotal(){   // โบนัสออนไลน์สะส�
   if(state.onlineSince != null) v += (Date.now() - state.onlineSince)/1000 * ONLINE_RATE;
   return v;
 }
+/* 💰 รอบ 706: เหรียญเต็มเพิ่งตกเข้ากระเป๋า → อัปยอดบน header ทันที + ป้าย "+n" ลอยขึ้นจากช่องนั้น
+   (ผู้ใช้สั่ง "ทำให้เด็กเห็นชัดว่าเหรียญกำลังไหลเข้า" — ตัวเลขวิ่งอย่างเดียวยังจับตาไม่ทัน) */
+function syncCoinHeader(){
+  const c = document.getElementById('coin-count'), t = document.getElementById('coin-today');
+  if(c) c.textContent = fmtNum(state.coins);         // อัปยอดใน header ทันที ไม่รอ render รอบหน้า
+  if(t) t.textContent = fmtNum(state.daily.coins);
+}
+function flashPillGain(pill, n){
+  if(!pill || document.documentElement.classList.contains('no-anim')) return;
+  const s = document.createElement('span');
+  s.className = 'pill-gain';
+  s.textContent = '+' + fmtNum(n);
+  pill.appendChild(s);
+  setTimeout(()=>s.remove(), 1000);
+}
+
 function renderOnlineEarnPill(){
   const pill = document.getElementById('net-pill');
   if(!pill || typeof state === 'undefined' || !state.student) return;
@@ -5532,9 +5549,8 @@ function renderOnlineEarnPill(){
   const dropped = typeof onlineEarnTick === 'function' ? onlineEarnTick(Date.now()) : 0;
   if(dropped > 0){
     saveState();
-    const c = document.getElementById('coin-count'), t = document.getElementById('coin-today');
-    if(c) c.textContent = fmtNum(state.coins);       // อัปยอดใน header ทันที ไม่รอ render รอบหน้า
-    if(t) t.textContent = fmtNum(state.daily.coins);
+    syncCoinHeader();
+    flashPillGain(pill, dropped);                    // รอบ 706: เห็นชัดว่าเหรียญเพิ่งเข้ากระเป๋าจริง
   }
   const on = typeof onlineEarnActive === 'function' && onlineEarnActive();
   if(!on && !(state.onlineEarned > 0)){ pill.style.display = 'none'; return; }
@@ -5544,6 +5560,42 @@ function renderOnlineEarnPill(){
                   : 'โบนัสออนไลน์หยุดพัก (ต้อง login ออนไลน์ถึงจะเดิน)';
   const live = document.getElementById('net-live');
   if(live) live.textContent = onlineLiveTotal().toFixed(2);
+}
+
+/* ============================================================
+   💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
+   ยังไม่ซื้อ = จาง + 🔒 (แตะ = กล่องบอกวิธีปลดล็อก + ปุ่มซื้อในกล่องเลย)
+   ซื้อแล้ว = ตัวเลขวิ่งสดทุกวินาที · ถูกตัดบริการข้อมูล = สีส้มแดง "หยุด"
+   ============================================================ */
+function renderCompEarnPill(){
+  const pill = document.getElementById('comp-pill');
+  if(!pill || typeof state === 'undefined' || !state.student) return;
+  pill.style.display = '';
+  const has = !!state.computer, cut = has && !!state.dataCut;
+  pill.classList.toggle('locked', !has);
+  pill.classList.toggle('cut', cut);
+  pill.classList.toggle('on', has && !cut);
+  const live = document.getElementById('comp-live-top');
+  const plus = pill.querySelector('.comp-plus');
+  if(!has){
+    if(plus) plus.textContent = '';
+    if(live) live.textContent = '🔒';
+    pill.title = `ยังไม่มีคอมพิวเตอร์ — ซื้อแล้วเหรียญเพิ่มเอง +${COMP_RATE}/วินาที (แตะเพื่อดูวิธี)`;
+    return;
+  }
+  // เดินเข็มถี่ทุกวินาทีเหมือนโบนัสออนไลน์ (careTick หลักเดินทุก 1 นาที) — เลขบนจอตรงกับเหรียญที่เข้ากระเป๋าจริง
+  const before = state.compEarned;
+  if(typeof compTick === 'function') compTick(Date.now());
+  const dropped = state.compEarned - before;
+  if(dropped > 0){
+    saveState();
+    syncCoinHeader();
+    flashPillGain(pill, dropped);
+  }
+  if(plus) plus.textContent = cut ? '' : '+';
+  if(live) live.textContent = cut ? 'หยุด' : compLiveTotal().toFixed(2);
+  pill.title = cut ? '📡 คอมถูกตัดบริการข้อมูล รายได้หยุดนิ่ง — แตะเพื่อจ่ายค่าบริการ'
+                   : `💻 คอมกำลังทำเงินให้ +${COMP_RATE} เหรียญ/วินาที (แตะเพื่อดูรายละเอียด)`;
 }
 
 /* 💡 รอบ 156: แตะ pill ตัวเลขบน header Lobby → หน้าต่างอธิบายว่าเลขนี้คือเลขอะไร
@@ -5576,6 +5628,37 @@ function openPillInfo(kind){
         📶 เมื่อไหร่ที่ต่อเน็ตได้ เกมจะส่งคะแนนขึ้นเซิร์ฟเวอร์<b>ให้เองอัตโนมัติ</b> (มีข้อความ ☁️ เด้งบอก) แล้วป้ายนี้ก็จะหายไปเอง — ไม่ต้องทำอะไรเพิ่มเลย 😊`,
     },
   };
+  /* 💻 รอบ 706: ช่องคอมพิวเตอร์ — เนื้อหาเปลี่ยนตามสถานะ 3 แบบ และมี "ปุ่มลงมือ" (inf.act) ในกล่องเลย
+     ยังไม่ซื้อ → บอกวิธีปลดล็อก + ปุ่มซื้อ · ถูกตัดบริการ → ปุ่มจ่ายบิล · ปกติ → สรุปรายได้ */
+  const perDay = Math.round(COMP_RATE * 86400);
+  if(!state.computer){
+    const need = Math.max(0, COMP_PRICE - state.coins);
+    infos.comp = {
+      emoji:'💻', title:'คอมพิวเตอร์ — ยังไม่ทำงาน', val:'🔒 ยังไม่มีคอม',
+      desc:`ช่องนี้จะ<b>สว่างขึ้นและเริ่มนับเหรียญเอง</b>เมื่อหนูมีคอมพิวเตอร์แล้ว 💡<br><br>
+        💰 มีคอม = เหรียญเพิ่มเองอัตโนมัติ <b>+${COMP_RATE} เหรียญ/วินาที</b> (≈ <b>${fmtNum(perDay)} เหรียญ/วัน</b>) แม้ตอนไม่ได้เล่น<br>
+        🛒 ราคา <b>🪙${fmtNum(COMP_PRICE)}</b> · ตอนนี้หนูมี 🪙${fmtNum(state.coins)} ${need > 0
+          ? `<b>(ขาดอีก 🪙${fmtNum(need)})</b> ไปเล่นเกมคำศัพท์เก็บเหรียญก่อนนะ 💪`
+          : '<b>— ซื้อได้เลย!</b> 🎉'}<br>
+        📡 ค่าบริการข้อมูล 🪙${fmtNum(DATA_FEE)}/เดือน (<b>เดือนแรกฟรี</b> · ค้างถึงสิ้นเดือน = ถูกตัด รายได้หยุด) · 💸 ขายคืนได้ 🪙${fmtNum(COMP_SELL)}`,
+      act:{label:`💻 ซื้อคอมพิวเตอร์ 🪙${fmtNum(COMP_PRICE)}`, cls:'blue', fn:buyComputer},
+    };
+  }else{
+    const due = (typeof billOutstanding === 'function') ? billOutstanding('data') : 0;
+    infos.comp = state.dataCut ? {
+      emoji:'📡', title:'คอมถูกตัดบริการข้อมูล', val:'⏸️ รายได้หยุดนิ่ง',
+      desc:`คอมยังอยู่ครบ แต่<b>ค่าบริการข้อมูลค้างจ่าย</b> เลยถูกตัดเน็ต — เหรียญจึงหยุดเดินชั่วคราว 😢<br><br>
+        📄 ยอดค้าง <b>🪙${fmtNum(due)}</b> · จ่ายครบเมื่อไหร่ รายได้ <b>+${COMP_RATE} เหรียญ/วินาที</b> กลับมาเดินทันที<br>
+        🪙 เหรียญที่คอมหามาได้แล้วทั้งหมด: <b>${compLiveTotal().toFixed(2)}</b>`,
+      act: due > 0 ? {label:`📡 จ่ายค่าบริการข้อมูล 🪙${fmtNum(due)}`, cls:'green', fn:()=>payUtility('data')} : null,
+    } : {
+      emoji:'💻', title:'รายได้จากคอมพิวเตอร์', val:`+${compLiveTotal().toFixed(2)} เหรียญ`,
+      desc:`คอมของหนู<b>กำลังทำเงินอยู่ตอนนี้</b> <b>+${COMP_RATE} เหรียญ/วินาที</b> (≈ <b>${fmtNum(perDay)} เหรียญ/วัน</b>) — เดินตลอดเวลาแม้ปิดเกมไปแล้ว 🎉<br><br>
+        ตัวเลขนี้ = เหรียญที่คอมหามาได้<b>ทั้งหมด</b>ตั้งแต่ซื้อมา (สะสมครบ 1 เหรียญเต็มเมื่อไหร่ ตกเข้ากระเป๋าเองทันที)<br>
+        📡 อย่าลืมจ่ายค่าบริการข้อมูล 🪙${fmtNum(DATA_FEE)} ทุกวันที่ 1 นะ ${due > 0 ? `— <b>ตอนนี้ค้างอยู่ 🪙${fmtNum(due)}</b>` : '— ตอนนี้ไม่มียอดค้าง ✅'}`,
+      act: due > 0 ? {label:`📡 จ่ายค่าบริการข้อมูล 🪙${fmtNum(due)}`, cls:'green', fn:()=>payUtility('data')} : null,
+    };
+  }
   const inf = infos[kind];
   if(!inf) return;
   sfx.select();
@@ -5588,9 +5671,14 @@ function openPillInfo(kind){
       <div class="plf-ht"><h2>${inf.title}</h2><div class="pillinfo-val">${inf.val}</div></div>
     </div>
     <p class="pillinfo-desc">${inf.desc}</p>
-    <div class="plf-foot"><button class="set-close">เข้าใจแล้ว!</button></div>
+    <div class="plf-foot">
+      ${inf.act ? `<button class="big-btn ${inf.act.cls || 'blue'} pill-act">${inf.act.label}</button>` : ''}
+      <button class="set-close">เข้าใจแล้ว!</button>
+    </div>
   </div>`;
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  const actBtn = overlay.querySelector('.pill-act');   // รอบ 706: ปุ่มลงมือ (ซื้อคอม/จ่ายบิล) — ปิดกล่องก่อนค่อยทำงาน
+  if(actBtn) actBtn.addEventListener('click', ()=>{ overlay.remove(); inf.act.fn(); });
   overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }

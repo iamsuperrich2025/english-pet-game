@@ -91,6 +91,7 @@ document.getElementById('btn-settings').addEventListener('click', openSettings);
 document.getElementById('coin-count').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('coins'));
 document.getElementById('coin-today').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('today'));
 document.getElementById('net-pill').addEventListener('click', ()=>openPillInfo('net'));
+document.getElementById('comp-pill').addEventListener('click', ()=>openPillInfo('comp'));   // 💻 รอบ 706: ช่องคอมพิวเตอร์ (ยังไม่ซื้อ = กล่องบอกวิธี + ปุ่มซื้อ)
 document.getElementById('offline-pill').addEventListener('click', ()=>openPillInfo('offline'));   // รอบ 269: แตะป้าย 📴 = กล่องอธิบาย
 // รอบ 179: ปุ่มแชท header → หน้ารวมข้อความ (ปุ่มข้าวเย็นย้ายไปแถวแท็บสัตว์ ผูก click ใน renderDashboard)
 document.getElementById('btn-chat').addEventListener('click', openChatInbox);

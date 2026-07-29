@@ -2716,6 +2716,9 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
 .plf-ht .pillinfo-val{margin-top:0;font-size:clamp(15px,4.4vh,22px);padding:2px 16px;}
 .pillinfo-desc{font-size:clamp(12px,3.4vh,14.5px);}
 .plf-foot{margin-top:clamp(8px,2.6vh,14px);}
+/* 💻 รอบ 706: กล่องอธิบายบาง pill มี "ปุ่มลงมือ" (ซื้อคอมพิวเตอร์/จ่ายค่าบริการ) วางคู่ปุ่มปิด */
+.plf-foot{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;}
+.plf-foot .pill-act{width:auto;margin:0;padding:8px 18px;font-size:clamp(13px,3.4vh,15px);}
 @media (max-height:520px){
   .pillinfo-box{padding:14px 20px;}
   .pillinfo-desc{margin-top:8px;line-height:1.5;}
@@ -3766,6 +3769,26 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .lobby-top .coin-group .coin-pill.today{color:#7fe0a8;}
 .lobby-top .coin-group .coin-pill.net{color:#7fd0ff;animation:none;filter:none;}
 .lobby-top .coin-group .coin-pill.net.off{opacity:.45;}
+/* 💻 รอบ 706: ช่องคอมพิวเตอร์ — สีฟ้าอมม่วงแยกจากช่องออนไลน์ · ยังไม่ซื้อ = จางลง มีแม่กุญแจแทนตัวเลข */
+.lobby-top .coin-group .coin-pill.comp{
+  font-size:13px;font-weight:700;padding:0 11px;color:#b9c6ff;
+  background:none;border:none;
+}
+.lobby-top .coin-group .coin-pill.comp.locked{opacity:.42;}
+.lobby-top .coin-group .coin-pill.comp.locked:hover{opacity:.72;background:rgba(255,255,255,.09);}
+.lobby-top .coin-group .coin-pill.comp.cut{color:#ffb9a8;}
+.coin-pill.comp .cp-v{display:inline-flex;align-items:center;gap:2px;}
+.coin-pill.comp .comp-ic{font-size:13px;line-height:1;}
+/* คอมทำงานอยู่ = ไอคอนมีจอสว่างวาบเบา ๆ (ปิดตาม no-anim / ตอนล็อก-ตอนถูกตัดบริการ) */
+.coin-pill.comp.on .comp-ic{animation:compGlow 2.4s ease-in-out infinite;}
+.coin-pill.comp.locked .comp-ic,.coin-pill.comp.cut .comp-ic,
+html.no-anim .coin-pill.comp .comp-ic{animation:none;}
+@keyframes compGlow{
+  0%,100%{filter:drop-shadow(0 0 1px rgba(120,200,255,.4));}
+  50%    {filter:drop-shadow(0 0 6px rgba(140,215,255,.95)) brightness(1.15);}
+}
+/* ป้าย +1 ลอยขึ้นตอนเหรียญตกเข้ากระเป๋า — ต้องมี position:relative ที่ตัว pill */
+.lobby-top .coin-group .coin-pill{position:relative;}
 .cp-lb{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8db3da;}
 .cp-v{font-variant-numeric:tabular-nums;}
 .lobby-top .coin-group .coin-pill.offline{
