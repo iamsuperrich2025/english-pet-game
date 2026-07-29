@@ -218,15 +218,15 @@ GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:3
 gradeLockLeftMs:43 · gradeLockLeftDays:50 · gradeUnlockAt:51 · gradeLocked:52 · gradeUpOptions:55 · gradeChangeTo:62
 gradeLockNote:86 · openGradeChange:94
 
-## js/hotel3d.js (843 บรรทัด · 44 รายการ)
+## js/hotel3d.js (849 บรรทัด · 44 รายการ)
 TEX:25 · FLOOR_H:28 · WEST:31 · SHAFT_E:32 · CORE_E:33 · RZ0:34
 LZ0:35 · STAIR_TOP_D:38 · STAIR_BOT_D:39 · RAMP_X0:40 · RAMP_X1:41 · RAMP_RUN:42
 ROOM_N:43 · DOOR_W:46 · ENTRY_HW:47 · PLAYER_R:48 · floorY:49 · Acc:56
 accBox:57 · accGeo:73 · accMesh:81 · makeMats:92 · PORTRAIT_PHOTOS:137 · EYE_R0:146
 PORTRAIT_EYE:147 · PORTRAIT_SKIN:155 · PORTRAIT_CLOTH:156 · portraitTexture:157 · signTexture:196 · build:210
-inRect:671 · insideHotel:672 · surfaceY:675 · collide:694 · roomAt:714 · floorOf:722
-setLights:727 · BLINK_DUR:740 · BLINK_MIN:741 · tick:743 · nearWardrobe:814 · inLift:825
-atLiftDoor:829 · randomHaunt:833
+inRect:677 · insideHotel:678 · surfaceY:681 · collide:700 · roomAt:720 · floorOf:728
+setLights:733 · BLINK_DUR:746 · BLINK_MIN:747 · tick:749 · nearWardrobe:820 · inLift:831
+atLiftDoor:835 · randomHaunt:839
 
 ## js/images.js (211 บรรทัด · 23 รายการ)
 IMG_FILES:11 · MOODS:12 · startImgKey:14 · petImageKeys:16 · probeImages:28 · probeRankImages:40
