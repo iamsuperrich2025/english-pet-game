@@ -133,6 +133,17 @@ function bandAdvExamCat(id, e, cat){
           onPass(){ if(e.k === 'expert' && typeof bandAdvCheckSupreme === 'function') bandAdvCheckSupreme(); }};
 }
 
+/* 🎓 รอบ 781: ป้ายความคืบหน้าเข็มนักสอบใหญ่ในหัวแผง (นิยามเข็มอยู่ js/game.js — ที่นี่แค่โชว์)
+   บอกให้เด็กเห็นเป้าหมายตรงจุดที่กำลังจะกดสอบ ไม่ต้องเข้าไปดูตู้เข็มก่อน */
+function bigExamBadgeNote(){
+  if(typeof BIGEXAM_TIERS === 'undefined') return '';
+  const n = bigExamCertCount();
+  const next = BIGEXAM_TIERS.find(t=>n < t[0]);
+  const cur = bigExamEmoji(state.bigExamBadge);
+  return `<br>${cur || '🎓'} ใบสอบใหญ่สะสม <b>${n}</b> ใบ · `
+    + (next ? `อีก <b>${next[0] - n}</b> ใบ = ${BIGEXAM_TIER_UI[next[1]]}` : 'ได้เข็มนักสอบใหญ่ครบทุกระดับแล้ว! 🏛️');
+}
+
 /* แผงเลือกระดับสอบใหญ่ — เห็นครบทั้ง 3 ระดับในจอเดียว ไม่มี scrollbar (กฎทองข้อ 7) */
 function bandAdvExamOpen(id){
   const m = (typeof BAND_ADV_MANIFEST !== 'undefined') ? BAND_ADV_MANIFEST[id] : null;
@@ -147,7 +158,8 @@ function bandAdvExamOpen(id){
     ov.innerHTML = `<div class="bax-box">
       <button class="pl-close" id="bax-close">✕</button>
       <div class="bax-head">🏅 สอบใหญ่ · ${m.emoji} ${escapeHTML(m.label)}
-        <span class="bax-sub">ข้อสอบยาวจากทั้งคลัง ${fmtNum(cat.words.length)} คำ · ผ่าน 80% ขึ้นไป รับ <b>ใบประกาศแยกใบตามระดับ</b> 🎖️</span></div>
+        <span class="bax-sub">ข้อสอบยาวจากทั้งคลัง ${fmtNum(cat.words.length)} คำ · ผ่าน 80% ขึ้นไป รับ <b>ใบประกาศแยกใบตามระดับ</b> 🎖️
+          ${bigExamBadgeNote()}</span></div>
       <div class="bax-row">${BAND_ADV_EXAM.map((e, i)=>{
         const done = state.quizPassed.includes(bandAdvExamId(id, e.k));
         const lock = bandAdvExamLock(id, i);

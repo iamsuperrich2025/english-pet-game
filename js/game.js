@@ -257,6 +257,8 @@ function showProgressReport(){
     {ic:'🏅', label:'เล่นต่ออีกรอบ', unit:'รอบ',  count:state.diligentCount||0,  tiers:DILIGENT_TIERS,  ui:DILIGENT_TIER_UI,  ef:diligentEmoji},
     // ⌨️ รอบ 655: เข็มนักพิมพ์เข้าตู้เข็มด้วย (5 ระดับ — สายเดียวที่ยาวกว่า 3 · แถบ % คิดจากช่วงเข็มปัจจุบันอยู่แล้ว)
     {ic:'⌨️', label:'พิมพ์คำศัพท์ (เกม ⌨️ พิมพ์คำ)', unit:'คำ', count:state.tpWords||0, tiers:TYPIST_TIERS, ui:TYPIST_TIER_UI, ef:typistEmoji},
+    // 🎓 รอบ 781: เข็มนักสอบใหญ่ — นับใบประกาศสอบใหญ่ (คลังศัพท์ขั้นสูง 30/40/50 ข้อ)
+    {ic:'🎓', label:'ใบประกาศสอบใหญ่ (คลังศัพท์ขั้นสูง)', unit:'ใบ', count:bigExamCertCount(), tiers:BIGEXAM_TIERS, ui:BIGEXAM_TIER_UI, ef:bigExamEmoji},
   ];
   const trophyHtml = trophyDefs.map(d=>{
     const reached = d.tiers.filter(t=>d.count>=t[0]).pop();       // เข็มสูงสุดที่ถึงแล้ว
@@ -447,6 +449,31 @@ function checkTypistBadge(){
   return false;
 }
 
+/* 🎓 รอบ 781: เข็มนักสอบใหญ่ — นับ "ใบประกาศสอบใหญ่" ของคลังศัพท์ขั้นสูง (id `badvx_<หมวด>_<ระดับ>`
+   30/40/50 ข้อ · รอบ 773) ครบ 3=🎓 · 6=🧠 · 10=🏛️ — ได้แล้วไม่หาย ติดท้ายชื่อให้เพื่อนเห็นทุกโลก
+   ⚠️ ตั้งใจไม่ทำ "เข็มสอบไว" แยกอีกสาย — ความเร็วมีเข็มสายฟ้า ⚡ ดูแลอยู่แล้ว (ข้อละ ≤5 วิ ทุกข้อ
+   = thunder ซึ่งข้อสอบใหญ่ก็เข้าเกณฑ์เดียวกัน) จะซ้ำสายกันเปล่า ๆ · เวลาที่ทำได้เอาไปโชว์ในคำฉลองแทน */
+const BIGEXAM_TIERS = [[3,1],[6,2],[10,3]];
+const BIGEXAM_TIER_UI = ['', '🎓 เข็มนักสอบใหญ่', '🧠 เข็มมันสมองคำศัพท์', '🏛️ เข็มปราชญ์คำศัพท์'];
+function bigExamEmoji(b){ return ['','🎓','🧠','🏛️'][b||0] || ''; }
+/* จำนวนใบสอบใหญ่ที่ได้แล้ว (ยึด state.quizPassed = รายการ "ผ่านครั้งแรก" แหล่งเดียวกับที่การ์ด/แผงใช้) */
+function bigExamCertCount(){
+  return (state.quizPassed || []).filter(id=>/^badvx_.+_(found|inter|expert)$/.test(id)).length;
+}
+/* เช็ก+มอบเข็มนักสอบใหญ่ — เรียกหลัง certAward ในกล่องผลสอบ (แพทเทิร์นเดียวกับ checkTypistBadge)
+   sec = เวลาที่ใช้รอบนี้ (วินาที · มีเฉพาะข้อสอบใหญ่) เอามาอวดในคำฉลอง */
+function checkBigExamBadge(sec){
+  const n = bigExamCertCount();
+  const tier = BIGEXAM_TIERS.filter(t=>n >= t[0]).pop();
+  if(tier && tier[1] > (state.bigExamBadge || 0)){
+    state.bigExamBadge = tier[1]; saveState();
+    setTimeout(()=>{ celebrateBadge(bigExamEmoji(tier[1]), `ได้${BIGEXAM_TIER_UI[tier[1]]}!`,
+      `สอบใหญ่ผ่านจนได้ใบประกาศครบ ${tier[0]} ใบ${sec ? ` (ใบล่าสุดใช้เวลา ${fmtMMSS(sec)})` : ''} — เข็มติดท้ายชื่อให้เพื่อนเห็นทุกโลกเลยนะ 🎉`); }, 1500);
+    return true;
+  }
+  return false;
+}
+
 /* 🐾 รอบ 323: เข็ม "เพื่อนซี้" — ลูบยาวน้อง (กดค้างบนตัวน้องในล็อบบี้) ติดต่อกันกี่วัน
    นับวันละครั้ง (state.patStreak / patStreakDay ใน ui.js longPatPet) · ขาดวัน = เริ่มนับใหม่จาก 1
    แต่ "เข็มที่ได้แล้วไม่หาย" เหมือนเข็มสายอื่น · โบนัสเหรียญให้ครั้งเดียวตอนแตะเส้นแต่ละระดับ */
@@ -469,7 +496,8 @@ function badgeSuffix(){
     + softLandEmoji(state.perfLandBadge)               // 🪶 รอบ 351: เข็มมือนุ่ม (Perfect landing โลกเฮลิฯ)
     + airLetterEmoji(state.airLetterBadge)             // 🪂 รอบ 355: เข็มนักดิ่งพสุธา (เก็บตัวอักษรกลางอากาศ)
     + bffEmoji(state.bffBadge)                         // 🐾 รอบ 323: เข็มเพื่อนซี้ (ลูบน้องติดกันหลายวัน)
-    + typistEmoji(state.typistBadge);                  // ⌨️ รอบ 654: เข็มนักพิมพ์ (พิมพ์คำสะสม 100/500/1000)
+    + typistEmoji(state.typistBadge)                   // ⌨️ รอบ 654: เข็มนักพิมพ์ (พิมพ์คำสะสม 100/500/1000)
+    + bigExamEmoji(state.bigExamBadge);                // 🎓 รอบ 781: เข็มนักสอบใหญ่ (ใบประกาศสอบใหญ่ 3/6/10 ใบ)
 }
 
 /* 🎖️ ข้อมูลเข็มแต่ละอิโมจิ: ชื่อ + แต้ม (ระดับ 1-3 · เข็มลับ 👑=5) — ใช้แตกเข็มจากชื่อที่ baked ไว้ใน
@@ -487,10 +515,11 @@ const BADGE_META = {
   '🪂':{n:'เข็มนักดิ่งพสุธา',p:1}, '🛫':{n:'เข็มเหินเวหา',p:2}, '🦸':{n:'เข็มฮีโร่เวหา',p:3},   // 🪂 รอบ 355: วิงสูทโลกเฮลิฯ
   '⌨️':{n:'เข็มนักพิมพ์',p:1}, '🔠':{n:'เข็มจอมสะกดคำ',p:2}, '📜':{n:'เข็มปรมาจารย์คีย์บอร์ด',p:3},   // ⌨️ รอบ 654: เกมพิมพ์คำ
   '✒️':{n:'เข็มปลายปากกาทอง',p:4}, '🦾':{n:'เข็มนิ้วเหล็กไม่มีวันเมื่อย',p:5},   // ⌨️ รอบ 655: ระดับ 4-5 (3,000 / 10,000 คำ)
+  '🎓':{n:'เข็มนักสอบใหญ่',p:1}, '🧠':{n:'เข็มมันสมองคำศัพท์',p:2}, '🏛️':{n:'เข็มปราชญ์คำศัพท์',p:3},   // 🎓 รอบ 781: ใบประกาศสอบใหญ่คลังขั้นสูง
 };
 /* ⚠️ regex นี้ต้องมีอิโมจิเข็ม "ครบทุกสาย" ไม่งั้นเข็มท้ายชื่อโดนมองเป็นส่วนหนึ่งของชื่อ
-   (รอบ 351: เติม 🪟💥🥽(รอบ337) · 🐾💞🫶(รอบ323) ที่ตกหล่น + 🪶🕊️🦅 · รอบ 355: 🪂🛫🦸 · รอบ 654: ⌨️🔠📜 · รอบ 655: ✒️🦾) */
-const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸|⌨️|🔠|📜|✒️|🦾)+$/u;
+   (รอบ 351: เติม 🪟💥🥽(รอบ337) · 🐾💞🫶(รอบ323) ที่ตกหล่น + 🪶🕊️🦅 · รอบ 355: 🪂🛫🦸 · รอบ 654: ⌨️🔠📜 · รอบ 655: ✒️🦾 · รอบ 781: 🎓🧠🏛️) */
+const NAME_BADGE_RE = /(?:👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸|⌨️|🔠|📜|✒️|🦾|🎓|🧠|🏛️)+$/u;
 function splitNameBadges(full){                        // แยก "ชื่อสะอาด" กับ "เข็มท้ายชื่อ"
   full = String(full || '');
   const m = full.match(NAME_BADGE_RE);
@@ -498,7 +527,7 @@ function splitNameBadges(full){                        // แยก "ชื่�
   return { name: badges ? full.slice(0, full.length - badges.length).trim() : full, badges };
 }
 function badgeEmojis(str){                              // แตกอิโมจิเข็มเป็นอาร์เรย์ตามลำดับที่พบ
-  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸|⌨️|🔠|📜|✒️|🦾/gu; let x;
+  const arr = [], re = /👑|🥉|🥈|🥇|⚡|🌩️|⛈️|🎯|🌀|🔥|🏅|🎖️|🏆|⚔️|🛡️|🤖|🪟|💥|🥽|🐾|💞|🫶|🪶|🕊️|🦅|🪂|🛫|🦸|⌨️|🔠|📜|✒️|🦾|🎓|🧠|🏛️/gu; let x;
   while((x = re.exec(String(str || '')))) arr.push(x[0]);
   return arr;
 }
@@ -520,6 +549,7 @@ const BADGE_CATS = [
   {emojis:['🪂','🛫','🦸'], label:'นักดิ่งพสุธา', desc:'เก็บตัวอักษรกลางอากาศด้วยวิงสูท (โลกเฮลิฯ)'},
   {emojis:['🐾','💞','🫶'], label:'เพื่อนซี้', desc:'ลูบน้องติดต่อกันหลายวัน'},
   {emojis:['⌨️','🔠','📜','✒️','🦾'], label:'นักพิมพ์', desc:'พิมพ์คำสำเร็จสะสม (เกมพิมพ์คำ)'},
+  {emojis:['🎓','🧠','🏛️'], label:'นักสอบใหญ่', desc:'ใบประกาศสอบใหญ่คลังศัพท์ขั้นสูง (30-50 ข้อ)'},
 ];
 function bcatLevel(badges, cat){                        // ระดับของผู้เล่นในสายนี้ (0=ยังไม่ได้)
   for(let i=cat.emojis.length-1;i>=0;i--) if(badges.indexOf(cat.emojis[i])>=0) return i+1;
@@ -1008,6 +1038,8 @@ function finishQuiz(){
       `สอบผ่านหมวด${cat.name} ${quiz.correct}/${quiz.questions.length} ข้อ${secs ? ` ⏱️ ${fmtMMSS(secs)}` : ''} 📝`);
     // 🎖️ รอบ 712: ออกใบประกาศเก็บเข้าโปรไฟล์ (สอบซ้ำ = อัปเดตคะแนนดีที่สุดในใบเดิม)
     if(typeof certAward === 'function') myCert = certAward(cat, quiz.correct, quiz.questions.length, secs);
+    // 🎓 รอบ 781: ได้ใบสอบใหญ่ใบใหม่ → เช็กเข็มนักสอบใหญ่ (firstPass เท่านั้น จำนวนใบถึงจะเพิ่ม)
+    if(firstPass && myCert && myCert.big) checkBigExamBadge(secs);
   }
   addRP(rp);
   // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)
