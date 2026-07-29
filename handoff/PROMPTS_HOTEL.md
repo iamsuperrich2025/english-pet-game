@@ -57,10 +57,15 @@ Full-body ghost of an old hotel bellboy, faded uniform with tarnished buttons, h
 
 ---
 
-## 🎨 ภาพโปรโมต/หน้าการ์ดตั๋ว (ไม่ต้อง seamless · ใช้โชว์เฉย ๆ)
+## 🎨 ภาพโปรโมต/หน้าการ์ดตั๋ว (ไม่ต้อง seamless · ยังไม่ผูกกับโค้ดจุดไหน — เตรียมไว้โชว์/ต่อยอดทีหลัง)
+> วางที่ `img/promo/` (โฟลเดอร์ใหม่ ยังไม่มีในโปรเจกต์ — สร้างเองตอนวางไฟล์ได้เลย)
+
+**โปร 1 — `img/promo/hotel_exterior.jpg`** (ตึกยามค่ำคืน มองจากหน้าโรงแรม)
 ```
 A grand but eerie old luxury hotel at night, five storeys, warm yellow light glowing from a few windows, grand portico with stone columns and red carpet steps, full moon behind, bare dead trees and trimmed hedges in the front garden, thin ground fog, cinematic wide shot, photorealistic, no text, no logo
 ```
+
+**โปร 2 — `img/promo/hotel_lobby.jpg`** (ล็อบบี้ในโรงแรม)
 ```
 Interior of a grand hotel lobby at night, marble floor, red carpet runner, brass chandelier, reception desk with key cabinet behind, tall columns, dim warm lighting, empty and unsettling, photorealistic, no people, no text
 ```
