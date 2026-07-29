@@ -2669,3 +2669,10 @@
 - **รอบ 710 (29 ก.ค. · ผู้ใช้: หน้าเกมจับคู่คำศัพท์จอกว้าง อยากได้กล่องขาว+ตัวหนังสือ+ปุ่มคำใหญ่ขึ้น):** 🔍 ขยาย `#screen-game.screen.active` จอกว้าง `width:min(900px,96vw)`→`min(1400px,97vw)` (เกือบเต็มจอ) column-gap 18→28px · เพิ่ม max ของ clamp: `.board-label` 15→19px, `.word-card` font 20→30px/min-height 64→92px/padding สูงสุด 16→22px, `.card-grid` gap สูงสุด 10→16px — `css/lobby.css` ~115-144 (min ของ clamp เดิมไม่แตะ กันจอเตี้ยสุด 812×375 ยังพอดีเหมือนรอบ 704)
   - ยืนยัน (preview 1280×720/1366×768/1920×1080/812×375, mock login+startGame): ไม่มี scrollbar ทุกจอ (scrollH=clientH ทุกขนาด) · การ์ดคำศัพท์ 1280×720 ได้ font 30px สูง 88px (เดิม 20px/64px) · 812×375 ยังพอดี (font 18px ไม่ล้น) · ล้างเซฟแล้ว
   - ⚠️ session คู่ขนานแก้ `css/lobby.css`/`js/ui.js` ฯลฯ พร้อมกัน (ฟีเจอร์ประกาศนียบัตร รอบ 708 + รูปโปรไฟล์ รอบ 709) — commit แยกเฉพาะ hunk ตัวเองด้วย `git apply --cached` ไม่แตะของเขา
+
+
+## ⏬ ย้ายเมื่อ 2026-07-29 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 711 (29 ก.ค. · ผู้ใช้: เอารูปโปรไฟล์จาก `js/photo.js` ไปโชว์เพิ่มในฟีด/คนออนไลน์/แชท):** 🖼️ เพิ่ม `photoMiniHTML(uid,cls)` ใน `js/photo.js` (มีรูป→`<img class="mini-av">` วงกลมเล็ก · ไม่มีรูป→คืน `''` จุดเรียกใช้ยังเป็นของเดิมอิโมจิ/ตัวอักษรย่อ ไม่เปลี่ยน) — ใส่ที่ `fpostHTML` (หัวโพสต์ฟีด), `renderOnlineCard` (แถวคนออนไลน์ ทั้งตัวเอง+เพื่อน), `openChatInbox` (วงกลม story บนสุด + แถว ib-ava), `openChat` (หัวห้องแชทแทน 💬) — CSS `.mini-av` ฐานร่วมใน `css/style.css` + ปรับขนาดต่อจุดใน `css/style.css`/`css/lobby.css`
+  - ยืนยัน (preview server แยกพอร์ต 8790 เพราะ 5 ช่อง preview เต็มจาก session คู่ขนาน, mock login + fake Online.db/friends/gfeed): เพื่อนมีรูป cache แล้ว → เห็นรูปวงกลมครบทั้ง 4 จุด · เพื่อนไม่มีรูป → กลับไปอิโมจิ/ตัวอักษรย่อเดิมทุกจุด ไม่มี regression · console สะอาด · ล้างเซฟแล้ว
+  - ⚠️ **session คู่ขนานกำลังทำฟีเจอร์ใบประกาศ (รอบ 708) + ขยาย pass-photo (รอบ 710) ค้างอยู่ใน `js/ui.js`/`css/lobby.css`/`js/game.js`/`js/main.js`/`js/state.js`/`index.html` ตอนเริ่มงานนี้ (ยังไม่ commit)** — commit รอบนี้แยกเฉพาะ hunk ของตัวเองด้วย `git apply --cached` (คำนวณเลขบรรทัด HEAD เองทีละ hunk) ไม่แตะของเขาเลย เขายังมีงานค้างให้ commit เองทีหลัง
