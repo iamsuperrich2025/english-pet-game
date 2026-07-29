@@ -1098,6 +1098,8 @@ function finishQuiz(){
     if(cat.vbook && typeof openVocabBook === 'function') openVocabBook();
     // สอบซ่อมรวม: สรุปละเอียดรายชุด + คำที่ยังผิด ทับแผง (รอบ 271)
     if(cat.retakeSets && typeof bandShowRetakeSummary === 'function') bandShowRetakeSummary();
+    // 📝 รอบ 784: สอบใหญ่ 30-50 ข้อ — สรุปคำที่ตอบผิด ทับแผง (แตะคำ = ฟังเสียง)
+    if(cat.examSummary && typeof bandAdvShowExamSummary === 'function') bandAdvShowExamSummary();
   });
   document.body.appendChild(overlay);
   if(passed && typeof cat.onPass === 'function') cat.onPass();   // โบนัสครบทุกชุดของระดับ (dictband.js)
