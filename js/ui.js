@@ -3515,14 +3515,11 @@ function fpStatsHTML(it){
   </div>`;
 }
 /* การ์ดโพสต์ 1 ใบ — ใช้ทั้งวงหมุนล็อบบี้ (สูงเต็มกรอบ) และหน้า Feed เต็ม (สูงตามเนื้อหา) */
-/* 🎖️ รอบ 715: ชื่อในฟีด (it.n) มีอิโมจิเข็ม baked ต่อท้าย — แยกออกมาโชว์เป็นแถวเหรียญ "ใต้ชื่อ"
-   แทนที่จะปล่อยให้ไหลต่อท้ายชื่อจนตัดบรรทัดมั่ว (ผู้ใช้แจ้งรอบ 715) */
+/* 🎖️ รอบ 715: ชื่อในฟีด (it.n) มีอิโมจิเข็ม baked ต่อท้าย — ตัดออกจากชื่อกันตัดบรรทัดมั่ว
+   (ผู้ใช้แจ้งรอบ 715) · รอบ N: เลิกโชว์แถวเข็มใต้ชื่อ (ผู้ใช้สั่งเอาออกทั้งฟีด) — เหลือแค่ตัดชื่อให้สะอาด */
 function fpNameBadgesHTML(fullName){
   const sp = splitNameBadges(fullName);
-  const icons = badgeEmojis(sp.badges);
-  const row = icons.length
-    ? `<span class="fp-badges">${icons.map(e=>badgeIcHTML(e, 'fp-badge-ic')).join('')}</span>` : '';
-  return { name: sp.name, row };
+  return { name: sp.name, row: '' };
 }
 function fpostHTML(it, opt){
   opt = opt || {};
