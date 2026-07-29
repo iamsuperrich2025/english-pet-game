@@ -1599,18 +1599,19 @@ function buildDriveCity(sc){
        · ติดธง fallback จริง + ป้ายบอกตรง ๆ ว่า "ไม่มีถนนไปถึง" (③) · เป้าขยับเกิน 12 ม. = คำนวณใหม่ (④)
      ============================================================ */
   const NAV_CLR=1.55;                                          // รัศมีรถ 1.15 + เผื่อขอบ (ต้องเท่ากับ CR ใน collideCar)
-  const navBlockedAt=(x,z)=>{                                  // ช่องนี้รถแทรกผ่านไม่ได้จริงไหม (เลขคณิตเดียวกับ collideCar)
+  const navBlockedAt=(x,z,pad)=>{                              // ช่องนี้รถแทรกผ่านไม่ได้จริงไหม (เลขคณิตเดียวกับ collideCar)
+    const R=NAV_CLR+(pad||0);                                  // pad = เผื่อเพิ่ม (รอบ 788: ถนนเชื่อมขอเลนกว้างกว่าตัวรถ)
     const list=solidGrid[Math.floor(x/SCELL)+','+Math.floor(z/SCELL)];
     if(!list) return false;
     for(const s of list){
-      if(s.t===2){ if(Math.hypot(x-s.x,z-s.z)<s.r+NAV_CLR) return true; }
+      if(s.t===2){ if(Math.hypot(x-s.x,z-s.z)<s.r+R) return true; }
       else if(s.t===0){
         const c=Math.cos(s.rot), si=Math.sin(s.rot), dx=x-s.x, dz=z-s.z;
-        if(Math.abs(dx*c-dz*si)<s.hx+NAV_CLR && Math.abs(dx*si+dz*c)<s.hz+NAV_CLR) return true;
+        if(Math.abs(dx*c-dz*si)<s.hx+R && Math.abs(dx*si+dz*c)<s.hz+R) return true;
       }else{
         const dx=s.x2-s.x1, dz=s.z2-s.z1, L2=dx*dx+dz*dz||1e-9;
         let t=((x-s.x1)*dx+(z-s.z1)*dz)/L2; t=t<0?0:(t>1?1:t);
-        if(Math.hypot(x-s.x1-dx*t, z-s.z1-dz*t)<NAV_CLR) return true;
+        if(Math.hypot(x-s.x1-dx*t, z-s.z1-dz*t)<R) return true;
       }
     }
     return false;
@@ -1621,26 +1622,135 @@ function buildDriveCity(sc){
     if(navBlockedAt(gx*GS-GOFF+GS/2, gz*GS-GOFF+GS/2)) ncost[k]=4;
   }
   /* ก้อนที่เชื่อมถึงกัน (flood fill กติกาเดียวกับ A*: 8 ทิศ + ห้ามตัดมุม · ข้ามช่องที่ติดตึก) */
-  const ncomp=new Int32Array(GW*GW).fill(-1), compSize=[];
+  const ncomp=new Int32Array(GW*GW);
   const navOpen=(gx,gz)=>gx>=0&&gz>=0&&gx<GW&&gz<GW&&ngrid[gz*GW+gx]===1&&ncost[gz*GW+gx]!==4;
   const NDIR=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
-  for(let k0=0;k0<ncomp.length;k0++){
-    if(ncomp[k0]>=0 || !navOpen(k0%GW,(k0/GW)|0)) continue;
-    const cid=compSize.length, q=[k0]; ncomp[k0]=cid; let n=0, head=0;
-    while(head<q.length){
-      const cur=q[head++]; n++;
-      const cgx=cur%GW, cgz=(cur/GW)|0;
-      for(const d of NDIR){
-        const nx=cgx+d[0], nz=cgz+d[1];
-        if(!navOpen(nx,nz)) continue;
-        if(d[0]&&d[1] && (!navOpen(cgx+d[0],cgz)||!navOpen(cgx,cgz+d[1]))) continue;
-        const ni=nz*GW+nx;
-        if(ncomp[ni]<0){ ncomp[ni]=cid; q.push(ni); }
+  let compSize=[], nmain=0;
+  const recomp=()=>{                                           // รอบ 788: เรียกซ้ำได้ (หลังปูถนนเชื่อม ก้อนเปลี่ยน)
+    ncomp.fill(-1); compSize=[];
+    for(let k0=0;k0<ncomp.length;k0++){
+      if(ncomp[k0]>=0 || !navOpen(k0%GW,(k0/GW)|0)) continue;
+      const cid=compSize.length, q=[k0]; ncomp[k0]=cid; let n=0, head=0;
+      while(head<q.length){
+        const cur=q[head++]; n++;
+        const cgx=cur%GW, cgz=(cur/GW)|0;
+        for(const d of NDIR){
+          const nx=cgx+d[0], nz=cgz+d[1];
+          if(!navOpen(nx,nz)) continue;
+          if(d[0]&&d[1] && (!navOpen(cgx+d[0],cgz)||!navOpen(cgx,cgz+d[1]))) continue;
+          const ni=nz*GW+nx;
+          if(ncomp[ni]<0){ ncomp[ni]=cid; q.push(ni); }
+        }
+      }
+      compSize.push(n);
+    }
+    nmain=0; for(let c=1;c<compSize.length;c++) if(compSize[c]>compSize[nmain]) nmain=c;
+  };
+  recomp();
+
+  /* ============================================================
+     🌉 รอบ 788 — ปูถนนเชื่อม "เกาะถนนโดดเดี่ยว" เข้าโครงข่ายหลัก
+     (ผู้ใช้: "หาว่าเกาะพวกนี้อยู่ตรงไหนของเมือง แล้วเชื่อมเข้ากับถนนหลักให้ขับถึงได้จริง")
+     รอบ 782 แค่ "กันไม่ให้ GPS ส่งไปเกาะ" (คัดจุดเกิดออก) — ถนนพวกนั้นยังขับไปไม่ถึงอยู่ดี
+     วัดตำแหน่งจริงในเบราว์เซอร์ (กริด 1262×1262 · GS 6 ม.) เจอเกาะ 7 ก้อน รวม 984 ช่อง:
+       ก้อน 872 ช่อง — ถนนสายเหนือแนวเฉียง NE→SW แถว (768,-2114) ปลายทางทิศตะวันตกจ่อ
+         ถนนกำแพงเพชรสายเหนือ แต่ขาดช่วงสุดท้าย ~90 ม. (ข้อมูลถนนต้นทางตัดจบก่อนถึงแยก)
+       ก้อน 71 / 27 / 12 ช่อง — ตอถนนย่านตะวันออก (ถนนราษฎร์รวมใจ) ที่ (2168,398)/(2215,126)/(2087,212) ขาด 8–38 ม.
+       ก้อน 1 ช่องอีก 3 จุด — (245,-643) / (-553,-601) / (1961,449) ติดก้อนหลักแบบ "แตะกันแค่มุมทแยง"
+         ซึ่งกฎห้ามตัดมุมของ A* ไม่ให้ผ่าน (ไม่ใช่ถนนขาดจริง)
+     วิธี: BFS จากทุกช่องของเกาะออกไป "ที่ว่างที่รถแทรกผ่านได้จริง" (ไม่ใช่ตึกด้วย navBlockedAt · ไม่ใช่น้ำ)
+       จนไปโดนก้อนหลัก → ย่อเส้นให้ตรงด้วย string pulling → ปูเป็นถนนจริงกว้าง 7 ม.
+       (ทั้ง mesh ที่มองเห็น + grid ฟิสิกส์ + ngrid/ncost ของ GPS) แล้วคำนวณก้อนใหม่
+     ⚠️ ปูแล้วต้องตีค่า ncost=4 ซ้ำที่ช่องซึ่งเฉี่ยวตึก — ngset ตั้ง 1/2 ทับค่า 4 เดิมได้
+     ============================================================ */
+  const LINK_W=7, LINK_SEEN_MAX=60000;                         // ถนนเชื่อมกว้าง 7 ม. · เพดานช่องที่ค้นต่อเกาะ (กันค้างถ้าเกาะโดนล้อมสนิท)
+  /* เผื่อระยะห่างตึกให้ถนนเชื่อม "กว้างกว่าตัวรถ" — ลองรอบแรกแบบสบาย ๆ ถ้าไม่มีทางค่อยลดเหลือพอดีตัว
+     (ทดสอบขับจริงแล้วเส้นที่เฉียดตึก 1.55 ม. รถครูดมุมตึกจนติดขัด แม้ "ผ่านได้" ตามคณิตศาสตร์) */
+  const LINK_PADS=[1.1,0];
+  const linkTris=[], linkCells=[], linkLog=[];
+  const cCtr=g=>g*GS-GOFF+GS/2;
+  const freeMemo=[new Map(),new Map()];                         // ช่องนี้รถแทรกผ่านได้ไหม (ไม่ใช่ตึก/ไม่ใช่น้ำ) — memo แยกตามระยะเผื่อ
+  let padI=0;
+  const freeCell=(gx,gz)=>{
+    if(gx<0||gz<0||gx>=GW||gz>=GW) return false;
+    const k=gz*GW+gx; if(grid[k]===2) return false;             // น้ำ (ไม่มีสะพาน = ไม่ปูข้าม)
+    let v=freeMemo[padI].get(k);
+    if(v===undefined){ v=!navBlockedAt(cCtr(gx),cCtr(gz),LINK_PADS[padI]); freeMemo[padI].set(k,v); }
+    return v;
+  };
+  const linkClear=(x1,z1,x2,z2)=>{                             // ลากตรงจากจุดหนึ่งไปอีกจุด รถผ่านได้ตลอดแนวไหม
+    const L=Math.hypot(x2-x1,z2-z1), st=Math.max(2,Math.ceil(L/2));
+    for(let i=0;i<=st;i++){
+      const x=x1+(x2-x1)*i/st, z=z1+(z2-z1)*i/st;
+      if(navBlockedAt(x,z,LINK_PADS[padI])) return false;
+      const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+      if(gx<0||gz<0||gx>=GW||gz>=GW || grid[gz*GW+gx]===2) return false;
+    }
+    return true;
+  };
+  const paveLink=(x1,z1,x2,z2)=>{                              // ปูถนนจริง 1 ท่อน (สูตรเดียวกับถนนปกติด้านบน)
+    const dx=x2-x1, dz=z2-z1, L=Math.hypot(dx,dz)||1e-6, ux=dx/L, uz=dz/L, w=LINK_W;
+    const ex=ux*w*.5, ez=uz*w*.5, ax=x1-ex,az=z1-ez, bx=x2+ex,bz=z2+ez, nx=-uz*w/2, nz=ux*w/2;
+    linkTris.push(ax+nx,az+nz,bx+nx,bz+nz,bx-nx,bz-nz, ax+nx,az+nz,bx-nx,bz-nz,ax-nx,az-nz);
+    const rr=Math.ceil((w/2+1.5)/GS), st=Math.max(1,Math.floor(L/GS*2)), nrad=Math.max(w/2+1,GS+0.1);
+    const sg={x1,z1,ux,uz,L,w};
+    for(let s2=0;s2<=st;s2++){
+      const x=x1+dx*s2/st, z=z1+dz*s2/st;
+      for(let ox=-rr;ox<=rr;ox++) for(let oz=-rr;oz<=rr;oz++){
+        gset(x+ox*GS,z+oz*GS,1);
+        if(Math.hypot(ox*GS,oz*GS)<=nrad){
+          ngset(x+ox*GS,z+oz*GS,sg);
+          const gx=Math.floor((x+ox*GS+GOFF)/GS), gz=Math.floor((z+oz*GS+GOFF)/GS);
+          if(gx>=0&&gz>=0&&gx<GW&&gz<GW) linkCells.push(gz*GW+gx);
+        }
       }
     }
-    compSize.push(n);
+  };
+  const islands={};
+  for(let k=0;k<ncomp.length;k++){ const c=ncomp[k]; if(c>=0&&c!==nmain) (islands[c]=islands[c]||[]).push(k); }
+  for(const cid in islands){
+    const seeds=islands[cid];
+    let prev=null, hit=-1, scan=0;
+    for(padI=0; padI<LINK_PADS.length && hit<0; padI++){        // ลองเลนกว้างก่อน ไม่มีทางค่อยยอมเลนพอดีตัว
+      prev=new Map(); const q=seeds.slice(); let head=0, seen=0;
+      for(const k of seeds) prev.set(k,-1);
+      while(head<q.length && seen++<LINK_SEEN_MAX){
+        const cur=q[head++], gx=cur%GW, gz=(cur/GW)|0;
+        if(ncomp[cur]===nmain){ hit=cur; break; }
+        for(const d of NDIR){
+          const nx=gx+d[0], nz=gz+d[1];
+          if(nx<0||nz<0||nx>=GW||nz>=GW) continue;
+          const ni=nz*GW+nx;
+          if(prev.has(ni)) continue;
+          if(ncomp[ni]!==nmain && !freeCell(nx,nz)) continue;
+          /* ห้ามตัดมุมเหมือน A* — ถ้าสองช่องข้าง ๆ เป็นตึก รถบีบผ่านมุมทแยงไม่ได้จริง
+             (ไม่เช็กข้อนี้ = ปูถนนเชื่อม 8 ม. ทิ้งไว้เฉย ๆ แล้วเกาะก็ยังไม่ต่อ — เจอที่ (2087,212)) */
+          if(d[0]&&d[1] && (!freeCell(gx+d[0],gz) || !freeCell(gx,gz+d[1]))) continue;
+          prev.set(ni,cur); q.push(ni);
+        }
+      }
+      scan+=seen;
+      if(hit>=0) padI--;                                       // เจอแล้ว: คงระยะเผื่อชุดนี้ไว้ให้ขั้นย่อเส้น (linkClear)
+    }
+    if(hit<0){ padI=0; continue; }                             // โดนล้อมสนิทจริง — ปล่อยไว้ (ตัวกรองจุดเกิดด้านล่างตัดออกเอง)
+    const path=[]; for(let cur=hit; cur>=0; cur=prev.get(cur)) path.push(cur);
+    const pAt=i=>({x:cCtr(path[i]%GW), z:cCtr((path[i]/GW)|0)});
+    let i=0, total=0; const poly=[pAt(0)];
+    while(i<path.length-1){                                    // ย่อเส้นให้ตรงที่สุดเท่าที่รถผ่านได้ แล้วปูทีละท่อน
+      let j=path.length-1;
+      while(j>i+1){ const a=pAt(i), b=pAt(j); if(linkClear(a.x,a.z,b.x,b.z)) break; j--; }
+      const a=pAt(i), b=pAt(j);
+      paveLink(a.x,a.z,b.x,b.z); total+=Math.hypot(b.x-a.x,b.z-a.z); poly.push(b); i=j;
+    }
+    linkLog.push({comp:+cid, cells:seeds.length, m:Math.round(total), pad:LINK_PADS[padI], scan, poly});   // poly = แนวถนนเชื่อม (ปลายแรก=ฝั่งโครงข่ายหลัก · ปลายท้าย=ฝั่งเกาะ)
+    padI=0;
   }
-  let nmain=0; for(let c=1;c<compSize.length;c++) if(compSize[c]>compSize[nmain]) nmain=c;
+  if(linkTris.length){
+    for(const k of linkCells) if(navBlockedAt(cCtr(k%GW), cCtr((k/GW)|0))) ncost[k]=4;   // ขอบถนนเชื่อมที่เฉี่ยวตึก = ห้าม A* ใช้
+    sc.add(new THREE.Mesh(flatGeom(linkTris,.06), new THREE.MeshLambertMaterial({color:0x41454c})));
+    recomp();                                                  // ก้อนใหม่หลังเชื่อม (เกาะควรถูกดูดเข้าก้อนหลัก)
+  }
+
   /* คัดจุดเกิดตัวอักษร: ต้องอยู่ในก้อนหลัก + ในรัศมีที่รถขับไปถึงได้ (หนีบที่ rad-25 → เผื่อ 60) */
   const REACH_R=RX-60, keptPts=[];
   for(let i=0;i<roadPts.length;i+=2){
@@ -1658,7 +1768,7 @@ function buildDriveCity(sc){
   if(keptPts.length>=200){ roadPts.length=0; for(const v of keptPts) roadPts.push(v); }   // กันพลาด: เหลือน้อยผิดปกติ = ใช้ของเดิม
 
   worlds.drive={scene:sc, trees:[], buildings:[],
-    d:{grid,ngrid,ncost,ncomp,nmain,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};   // ngrid = กริดนำทาง GPS (รอบ 284) · ncost/ncomp = รอบ 782
+    d:{grid,ngrid,ncost,ncomp,nmain,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX,links:linkLog}};   // ngrid = กริดนำทาง GPS (รอบ 284) · ncost/ncomp = รอบ 782 · links = ถนนเชื่อมเกาะ รอบ 788
   /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
      (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
   const junctions=[];
