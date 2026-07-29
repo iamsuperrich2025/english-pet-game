@@ -337,17 +337,16 @@ function renderNewWord(){
   /* รอบ 327: โชว์ป้าย 🪙+1 เมื่อคำนี้ยังไม่ได้รับเหรียญ — เด็กเห็นชัดว่ากดแล้วได้อะไร
      รับไปแล้วเปลี่ยนเป็นเครื่องหมายถูก (ไม่ล่อให้กดรัวๆ โดยไม่ได้อะไร) */
   const paid = state.nwPaidAt === state.nwAt;
-  /* 🔴 รอบ 657 (ผู้ใช้สั่ง): แยกเป็น 2 บรรทัด — บนคำศัพท์เด่น (ใหญ่) ล่างคำใบ้+เหรียญ+เวลา (เล็กกว่า) */
+  /* 🔴 รอบ 657 → 🧹 รอบ 698 (ผู้ใช้สั่งกลับ 29 ก.ค. 2026 "โย้เย้ไม่สวย"): เลิกซ้อน 2 แถวย่อยแล้ว
+     (รอบ 695 ถอด flex-direction:column ออกแต่ยังเหลือ .nw-row2{flex-wrap:wrap} จากยุคนั้น
+     พอคำยาว/จอแคบ ทำให้ row2 ห่อบรรทัดเองข้างในขณะ row1 ไม่ห่อ → เหลื่อมกันดูเบี้ยว)
+     คืนเป็นแถวเดียวแบนราบจริง — ตัวไหนพื้นที่ไม่พอ ให้ .nw-hint หดตัวเอง+จุดไข่ปลาก่อน (มี ellipsis อยู่แล้ว) */
   el.innerHTML = `
-    <div class="nw-row1">
-      <span class="nw-tag">NEW</span>
-      <span class="nw-word">${en}</span>
-    </div>
-    <div class="nw-row2">
-      <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? <b>แตะดูได้เลย</b></span>
-      <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>
-      <span class="nw-countdown" title="เวลาที่เหลือก่อนเปลี่ยนคำใหม่"></span>
-    </div>
+    <span class="nw-tag">NEW</span>
+    <span class="nw-word">${en}</span>
+    <span class="nw-hint">ไม่รู้ว่าแปลว่าอะไร? <b>แตะดูได้เลย</b></span>
+    <span class="nw-coin${paid ? ' paid' : ''}">${paid ? '✅' : `🪙 +${NEW_WORD_COIN}`}</span>
+    <span class="nw-countdown" title="เวลาที่เหลือก่อนเปลี่ยนคำใหม่"></span>
     <i class="nw-bar"><i class="nw-bar-fill"></i></i>`;
   nwCountdownTick();       // เติมเลขนับถอยหลังทันที ไม่ต้องรอ tick แรก
   el.onclick = showNewWordPopup;
