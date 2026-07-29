@@ -1412,7 +1412,10 @@ function buildDriveCity(sc){
       const x1=p[i],z1=p[i+1],x2=p[i+2],z2=p[i+3];
       const dx=x2-x1,dz=z2-z1,L=Math.hypot(dx,dz)||1e-6,ux=dx/L,uz=dz/L;
       const ex=ux*w*.5,ez=uz*w*.5, ax=x1-ex,az=z1-ez,bx=x2+ex,bz=z2+ez, pux=-uz,puz=ux;
-      const strip=(arr,d0,d1)=>{ for(const sgn of [1,-1]){ const e0=sgn*d0,e1=sgn*d1;
+      /* 🐛 รอบ 798: เดิม e0/e1 คูณ sgn ตรง ๆ → ฝั่ง +1 เป็นภาพกระจกของฝั่ง -1 "ลำดับจุดกลับด้าน" = หลังหันขึ้นฟ้า
+         ถูก back-face culling ตัดทิ้ง → ทั้งเมืองมีเลนจักรยาน/ทางเท้าโผล่แค่ข้างเดียวมาตั้งแต่รอบ 182
+         (วัดด้วย raycast ลงจากฟ้าตามแนวถนนใหญ่ 8 สาย: ฝั่งหนึ่ง 117/117 อีกฝั่ง 1/117) — สลับ d0/d1 ตอน sgn=+1 คืนลำดับจุดให้ถูก */
+      const strip=(arr,d0,d1)=>{ for(const sgn of [1,-1]){ const e0=sgn>0?d1:-d0, e1=sgn>0?d0:-d1;
         const a0x=ax+pux*e0,a0z=az+puz*e0,b0x=bx+pux*e0,b0z=bz+puz*e0,a1x=ax+pux*e1,a1z=az+puz*e1,b1x=bx+pux*e1,b1z=bz+puz*e1;
         arr.push(a0x,a0z,b0x,b0z,b1x,b1z, a0x,a0z,b1x,b1z,a1x,a1z); } };
       const r=w/2;
@@ -1748,6 +1751,43 @@ function buildDriveCity(sc){
   if(linkTris.length){
     for(const k of linkCells) if(navBlockedAt(cCtr(k%GW), cCtr((k/GW)|0))) ncost[k]=4;   // ขอบถนนเชื่อมที่เฉี่ยวตึก = ห้าม A* ใช้
     sc.add(new THREE.Mesh(flatGeom(linkTris,.06), new THREE.MeshLambertMaterial({color:0x41454c})));
+
+    /* 🚸 รอบ 798 (ผู้ใช้: "ถนนเชื่อมเกาะยังเป็นแถบยางมะตอยเปล่า") — แต่งเครื่องหมายจราจรให้เหมือนถนนปกติ
+       ใช้ค่าคงที่/ระดับ y ชุดเดียวกับถนนหลักด้านบนเป๊ะ (เส้นประทุก 9 ม. · เลนจักรยาน BIKE_W ขอบขาว LINE_W · ทางเท้า WALK_W)
+       + ใช้ walkMat ตัวเดิม → ภาพลาย img/city/sidewalk.png ที่ probe ไว้ปูทางเท้าถนนเชื่อมด้วยอัตโนมัติ
+       ⚠️ decal พื้นล้วน — ห้ามแตะ grid/ngrid/ncost/roadPts (ไม่งั้นกริดนำทางที่เพิ่งเชื่อมเสร็จเพี้ยน)
+       ⚠️ ข้ามฝั่งที่ล้นลงแม่น้ำ (grid==2) ไม่งั้นทางเท้า/เลนจักรยานลอยอยู่บนผิวน้ำ */
+    const lkDash=[], lkBike=[], lkEdge=[], lkWalk=[], LKR=LINK_W/2;
+    const wetAt=(x,z)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+      return gx>=0&&gz>=0&&gx<GW&&gz<GW && grid[gz*GW+gx]===2; };
+    for(const lg of linkLog) for(let i=0;i<lg.poly.length-1;i++){
+      const a=lg.poly[i], b=lg.poly[i+1];
+      const dx=b.x-a.x, dz=b.z-a.z, L=Math.hypot(dx,dz)||1e-6, ux=dx/L, uz=dz/L;
+      for(let t=5;t<L-2;t+=9){                                 // เส้นประกลางถนน (สูตรเดียวกับถนนใหญ่)
+        const cx=a.x+ux*t, cz=a.z+uz*t, hx=ux*1.3, hz=uz*1.3, mx=-uz*.18, mz=ux*.18;
+        lkDash.push(cx-hx+mx,cz-hz+mz,cx+hx+mx,cz+hz+mz,cx+hx-mx,cz+hz-mz,
+                    cx-hx+mx,cz-hz+mz,cx+hx-mx,cz+hz-mz,cx-hx-mx,cz-hz-mz);
+      }
+      const ex=ux*LINK_W*.5, ez=uz*LINK_W*.5;                  // ยืดปลายเท่าผิวถนนเชื่อม (paveLink) ให้ขอบเรียงกันพอดี
+      const ax=a.x-ex, az=a.z-ez, bx=b.x+ex, bz=b.z+ez, pux=-uz, puz=ux;
+      const strip=(arr,d0,d1,sgn)=>{ const e0=sgn>0?d1:-d0, e1=sgn>0?d0:-d1;   // ฝั่ง +1 สลับ d0/d1 กัน back-face (บั๊กเดิมรอบ 182 — ดูโน้ตที่ strip ของถนนหลัก)
+        const a0x=ax+pux*e0,a0z=az+puz*e0,b0x=bx+pux*e0,b0z=bz+puz*e0,a1x=ax+pux*e1,a1z=az+puz*e1,b1x=bx+pux*e1,b1z=bz+puz*e1;
+        arr.push(a0x,a0z,b0x,b0z,b1x,b1z, a0x,a0z,b1x,b1z,a1x,a1z); };
+      for(const sgn of [1,-1]){
+        const off=LKR+BIKE_W+WALK_W;
+        let wet=false; for(let s=0;s<=4&&!wet;s++){ const q=s/4; wet=wetAt(ax+(bx-ax)*q+pux*sgn*off, az+(bz-az)*q+puz*sgn*off); }
+        if(wet) continue;                                      // ฝั่งนี้ล้นลงน้ำ — ไม่ปู
+        strip(lkBike, LKR, LKR+BIKE_W, sgn);                   // เลนจักรยาน (ฟ้า)
+        strip(lkEdge, LKR, LKR+LINE_W, sgn);                   // เส้นขาวขอบใน (ชิดถนน)
+        strip(lkEdge, LKR+BIKE_W-LINE_W, LKR+BIKE_W, sgn);     // เส้นขาวขอบนอก (ชิดทางเท้า)
+        strip(lkWalk, LKR+BIKE_W, LKR+BIKE_W+WALK_W, sgn);     // ทางเท้า
+      }
+    }
+    if(lkWalk.length) sc.add(new THREE.Mesh(flatGeomUV(lkWalk,.028,3.2), walkMat));                                  // ทางเท้า (ต่ำสุด)
+    if(lkBike.length) sc.add(new THREE.Mesh(flatGeom(lkBike,.033),new THREE.MeshLambertMaterial({color:0x2f7fd0})));  // เลนฟ้า
+    if(lkEdge.length) sc.add(new THREE.Mesh(flatGeom(lkEdge,.045),new THREE.MeshBasicMaterial({color:0xf2f2f2})));    // ขอบขาว
+    if(lkDash.length) sc.add(new THREE.Mesh(flatGeom(lkDash,.075),new THREE.MeshBasicMaterial({color:0xd8d8d2})));    // เส้นประกลางถนน
+
     recomp();                                                  // ก้อนใหม่หลังเชื่อม (เกาะควรถูกดูดเข้าก้อนหลัก)
   }
 
