@@ -81,6 +81,7 @@ const DEFAULT_STATE = {
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
   typistBadge:0,                      // ⌨️ รอบ 654-655: เข็มนักพิมพ์สูงสุดที่เคยได้ 0=ไม่มี 1=⌨️(100 คำ) 2=🔠(500) 3=📜(1000) 4=✒️(3000) 5=🦾(10000) — ได้แล้วไม่หาย
+  bigExamBadge:0,                     // 🎓 รอบ 780: เข็มนักสอบใหญ่สูงสุดที่เคยได้ 0=ไม่มี 1=🎓(3 ใบ) 2=🧠(6) 3=🏛️(10) — นับ "ใบประกาศสอบใหญ่" คลังขั้นสูง ได้แล้วไม่หาย
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
   tpAwardPaid:[],
   tpAwardLog:[],
@@ -412,6 +413,7 @@ function loadState(){
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
       if(typeof s.typistBadge !== 'number') s.typistBadge = 0;    // ⌨️ รอบ 654: เข็มนักพิมพ์
+      if(typeof s.bigExamBadge !== 'number') s.bigExamBadge = 0;  // 🎓 รอบ 780: เข็มนักสอบใหญ่
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
       if(!Array.isArray(s.tpAwardPaid)) s.tpAwardPaid = [];
       if(!Array.isArray(s.tpAwardLog)) s.tpAwardLog = [];
@@ -594,7 +596,6 @@ const QUEST_POOL = [
   {id:'feed1',    ev:'feed',    target:1,  reward:80,  emoji:'🍽️', name:'ป้อนอาหารน้องจนอิ่มเต็มหลอด 1 มื้อ'},
   {id:'produce1', ev:'produce', target:1,  reward:120, emoji:'🏭', name:'ผลิตสินค้าในโรงงานสำเร็จ 1 ชิ้น'},
   {id:'replay2',  ev:'replay',  target:2,  reward:80,  emoji:'🔁', name:'กด "เล่นต่ออีกรอบ" 2 ครั้ง'},
-  {id:'dict5',    ev:'dict',    target:5,  reward:80,  emoji:'📖', name:'เปิดพจนานุกรมค้นคำ 5 คำ'},   // รอบ 285: นับเฉพาะคำใหม่ที่เจอผล (ไม่นับค้นคำเดิมซ้ำ)
   {id:'vbreview1',ev:'vbquiz',  target:1,  reward:120, emoji:'📒', name:'สอบทบทวนคำในสมุดของหนู 1 รอบ'},   // รอบ 291: นับตอนสอบทบทวนจบ (ผ่านหรือไม่ก็นับ — ให้กำลังใจความพยายาม)
 ];
 const QUEST_PER_DAY = 3, QUEST_ALL_BONUS = 150;
