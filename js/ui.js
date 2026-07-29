@@ -3516,19 +3516,30 @@ function alignPetTabs(){
   tabs.style.setProperty('--tabs-left', c.left + 'px');
   tabs.style.setProperty('--tabs-w', c.width + 'px');
 }
-/* แถวบนสุด (เหรียญ) — ดัน .top-flex ให้กว้างพอดีจนขอบซ้ายกล่องเหรียญตรงเส้น
-   ส่วนปุ่มไอคอนยังชิดขวาสุดเหมือนเดิม (.top-flex2 กินที่ที่เหลือแทน) */
-function alignCoinGroup(){
-  const grp = document.querySelector('.coin-group'), top = document.querySelector('.lobby-top');
-  const sp  = document.querySelector('.top-flex'), sp2 = document.querySelector('.top-flex2');
+/* 🪙 รอบ 695 (ผู้ใช้สั่ง 29 ก.ค. 2026): เลิกชิดซ้ายกับเส้นแดงแล้ว — ผู้ใช้ขอให้กล่องเหรียญ+ระดับชั้น
+   "อยู่กึ่งกลาง" แถวบนแทน → ปล่อย .top-flex/.top-flex2 ใช้ flex:1 เท่ากันตาม CSS ปกติ (ไม่ต้องคำนวณ JS)
+   ตัวคั่นสองข้างเท่ากัน = กล่องลอยกลางพื้นที่ว่างระหว่างการ์ดประจำตัวกับปุ่มไอคอนเองโดยอัตโนมัติ */
+/* ⬅ กล่องฟีดเพื่อน: อยู่กึ่งกลางระหว่างขอบรางเมนู (ปุ่มแนวตั้งซ้ายสุด) กับขอบซ้ายเวทีน้อง (เส้นแดงเดิม)
+   (ผู้ใช้ขีดเส้นแดง 2 เส้นในภาพ — เดิมกล่องชิดเวทีพอดี ไม่มีช่องว่างฝั่งขวาเลย ขยับเข้าซ้ายอีกนิดให้เท่ากันสองฝั่ง) */
+function alignFeedPlate(){
+  const rail  = document.querySelector('.rail-wrap');
+  const plate = document.querySelector('.stage-plate.feed-plate');
   const c = stageColLeft();
-  if(!grp || !top || !sp || !sp2 || !c) return;
-  const t = top.getBoundingClientRect();
-  const want = (c.h.left - t.left) / c.scale;             // ขอบซ้ายเวที (= เส้นแดง) ในพิกัดแถวบน
-  const cur  = (grp.getBoundingClientRect().left - t.left) / c.scale;
-  const w = Math.max(0, sp.getBoundingClientRect().width/c.scale + (want - cur));   // rect ไม่ปัดเศษ (offsetWidth ปัด → เพี้ยน 1px)
-  sp.style.flex = '0 0 auto'; sp.style.width = w + 'px';
-  sp2.style.flex = '1 1 auto';
+  if(!rail || !plate || !c) return;
+  const railRight  = rail.getBoundingClientRect().right;
+  const plateLeft0 = c.s.left;   // ขอบซ้ายเดิมของ .stage-left/.lobby-stage (ก่อนขยับ) = ขอบขวาเวทีคือขอบขวาเดิม
+  const shift = (railRight - plateLeft0) / (2 * c.scale);   // ลบ = ขยับซ้าย
+  plate.style.transform = shift ? `translateX(${shift}px)` : '';
+}
+/* 🪪 แผงผู้เล่น (วันที่/rank) — ยืดขอบขวาให้ตรงขอบขวาใหม่ของกล่องฟีดเพื่อนพอดี (ผู้ใช้ขอ) */
+function alignProfilePlate(){
+  const plate = document.querySelector('.profile-plate');
+  const feed  = document.querySelector('.stage-plate.feed-plate');
+  const c = stageColLeft();
+  if(!plate || !feed || !c) return;
+  const pLeft  = plate.getBoundingClientRect().left;
+  const fRight = feed.getBoundingClientRect().right;
+  plate.style.width = Math.max(0, (fRight - pLeft) / c.scale) + 'px';
 }
 /* คอลัมน์ซ้ายของการ์ด (เหลือฟีดเพื่อนอย่างเดียวแล้ว) — ยืดขึ้นไปชนขอบบนเวที
    (ผู้ใช้สั่ง 27 ก.ค. 2026 "ยืดฟีดเพื่อนขึ้นไปให้แตะแนวเส้นเขียว" = แนวบนสุดของเวที) */
@@ -3544,7 +3555,7 @@ function alignStageLeft(){
 }
 /* 📐 รอบ 613: จัดทั้ง 3 แถว + คอลัมน์ฟีดในชุดเดียว — เรียกที่เดียวจบ ไม่ต้องไล่เรียกทีละตัว */
 function alignStageCols(){
-  alignPetTabs(); alignNewWord(); alignCoinGroup(); alignStageLeft();
+  alignPetTabs(); alignNewWord(); alignFeedPlate(); alignProfilePlate(); alignStageLeft();
 }
 /* ⚠️ ตอน resize ต้องรอ layout นิ่งก่อนค่อยวัด — วัดทันทีในตัว handler ได้ตำแหน่งเวทีของขนาดจอ "เดิม"
    (เจอจริงรอบ 613: ย่อจอแล้วทั้ง 3 แถวค้างที่เส้นเก่า) → เลื่อนไปวัดใน rAF ซ้อน 2 ชั้น */

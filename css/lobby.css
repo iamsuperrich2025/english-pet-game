@@ -3593,6 +3593,8 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .profile-plate .rank-tab:hover{background:rgba(255,255,255,.15);}
 
 /* ---------- ② แถบตัวเลข: 3 ช่องในกล่องเดียว มีเส้นคั่น ---------- */
+/* 🪙 รอบ 695: ห่อ .coin-group + .grade-pill เป็นคอลัมน์เดียว (.coin-block) ให้ระดับชั้นตกลงมาอยู่แถวใต้ */
+.coin-block{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
 .coin-group{
   display:flex;align-items:stretch;flex-shrink:0;height:var(--top-h);
   background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
@@ -3611,11 +3613,9 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .lobby-top .coin-group .coin-pill:first-child{font-size:17px;font-weight:800;color:#ffd76a;
   text-shadow:0 1px 6px rgba(255,190,60,.35);}
 .lobby-top .coin-group .coin-pill.today,
-.lobby-top .coin-group .coin-pill.net,
-.lobby-top .coin-group .coin-pill.grade-pill{font-size:13px;font-weight:700;padding:0 11px;}
+.lobby-top .coin-group .coin-pill.net{font-size:13px;font-weight:700;padding:0 11px;}
 .lobby-top .coin-group .coin-pill.today{color:#7fe0a8;}
 .lobby-top .coin-group .coin-pill.net{color:#7fd0ff;animation:none;filter:none;}
-.lobby-top .coin-group .coin-pill.grade-pill{color:#dceaff;}
 .lobby-top .coin-group .coin-pill.net.off{opacity:.45;}
 .cp-lb{font-size:10px;font-weight:600;letter-spacing:.4px;color:#8db3da;}
 .cp-v{font-variant-numeric:tabular-nums;}
@@ -3623,6 +3623,15 @@ button.ps-worn-pip:active{transform:scale(.95);}
   background:rgba(255,255,255,.10);color:#ffd2a8;font-size:11.5px;font-weight:600;
   border:1px solid rgba(255,190,120,.35);padding:0 10px;
 }
+/* 🎖️ รอบ 695: ระดับชั้นแยกออกมาเป็นชิปของตัวเอง (เดิมอยู่ในแถวเหรียญ) — สไตล์เดียวกับ .coin-group */
+.lobby-top .coin-block .grade-pill{
+  display:flex;align-items:center;gap:5px;padding:2px 12px;border-radius:10px;
+  font-size:13px;font-weight:700;color:#dceaff;font-variant-numeric:tabular-nums;white-space:nowrap;
+  background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));
+  border:1px solid var(--glass-line);box-shadow:0 4px 10px rgba(3,15,35,.3);
+}
+.lobby-top .coin-block .grade-pill:empty{display:none;}
+.lobby-top .coin-block .grade-pill .gmark{font-size:13px;}
 /* เหรียญเด้งรับตอนได้เหรียญ — เดิมเป็นเงาเรืองรอบ pill ขาว ตอนนี้เป็นแสงในกล่อง */
 @keyframes coinPillPop{
   0%,100%{transform:scale(1);background:none;}
@@ -3661,14 +3670,11 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .nw-countdown{font-size:10.5px;color:#8db3da;opacity:1;padding-left:10px;
   border-left:1px solid rgba(160,205,255,.22);}
 
-/* 🔴 รอบ 657 (ผู้ใช้สั่ง 28 ก.ค. 2026): แยกเป็น 2 บรรทัด — บนคำศัพท์ (เด่น/ใหญ่กว่าเดิม) ล่างคำใบ้+เหรียญ+เวลา (เล็กกว่า)
-   เดิมทุกอย่างแถวเดียวกันหมด คำศัพท์ไม่เด่นเพราะแย่งสายตากับคำใบ้ที่อยู่บรรทัดเดียวกัน */
-.newword-banner{flex-direction:column;align-items:stretch;gap:2px;border-radius:16px;padding:6px 15px 10px;}
+/* 🔴 รอบ 657 → 🔁 รอบ 695 (ผู้ใช้สั่งกลับ 29 ก.ค. 2026): "มีบรรทัดเดียวเหมือนเดิม ขนาดเท่าเดิม"
+   ทดลองแยก 2 บรรทัด+คำใหญ่ขึ้นไปแล้ว ผู้ใช้ไม่เอา → คืน .newword-banner เป็น flex row เดิม (จาก base 928)
+   .nw-row1/.nw-row2 ยังคงไว้ (HTML ยังห่ออยู่) แต่กลายเป็น flex item วางเรียงข้างกันในแถวเดียวแทน */
 .nw-row1{display:flex;align-items:baseline;justify-content:center;gap:9px;}
 .nw-row2{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
-.nw-tag{font-size:10.5px;padding:3px 9px;}
-.nw-word{font-size:clamp(22px,3.9vh,34px);}   /* ใหญ่ขึ้นจากเดิม clamp(18px,3.1vh,26px) ให้คำศัพท์เด่นชัด */
-.nw-bar{left:9px;right:9px;bottom:2px;}
 
 /* ---------- ⑤ แท็บสัตว์: สูงเท่ากันทุกใบ · ตัวที่เลือกอยู่มีขีดทองใต้ชื่อ ---------- */
 .lobby-stage .pet-tabs{gap:7px;}
@@ -3701,8 +3707,8 @@ button.ps-worn-pip:active{transform:scale(.95);}
   .profile-plate .rank-tab{margin-top:3px;}
   .lobby-top .coin-group .coin-pill:first-child{font-size:15px;}
   .lobby-top .coin-group .coin-pill.today,
-  .lobby-top .coin-group .coin-pill.net,
-  .lobby-top .coin-group .coin-pill.grade-pill{font-size:11.5px;}
+  .lobby-top .coin-group .coin-pill.net{font-size:11.5px;}
+  .lobby-top .coin-block .grade-pill{font-size:11.5px;}
   .lobby-stage .pet-tab{height:29px;font-size:12.5px;padding:0 11px;}
   .lobby-stage .pet-tab.add,.lobby-stage .pet-tab.dinner{width:29px;}
 }
@@ -3743,7 +3749,9 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 /* คำใบ้ยอมหดก่อนเพื่อน ถ้าเวทีแคบ — ตัวคำศัพท์ห้ามหาย */
 .nw-hint{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .nw-word{flex-shrink:0;}
-.top-flex2{flex:0 0 0px;}
+/* 🪙 รอบ 695: เลิกใช้ alignCoinGroup() ชิดเส้นแดงแล้ว — .top-flex2 กลับไป flex:1 เท่ากับ .top-flex
+   (ตัวคั่นสองข้างเท่ากัน = กล่องเหรียญ+ระดับชั้นลอยกึ่งกลางพื้นที่ว่างเอง ตามที่ผู้ใช้ขอ) */
+.top-flex2{flex:1;}
 
 /* ③ ฟีดเพื่อนยืดชนขอบบนเวที (margin-top ติดลบตั้งจาก JS) */
 .stage-left{width:min(340px,34%);}   /* 🔴 รอบ 657: ค่าเดียวกับ 2091 (ตัวนี้อยู่หลังไฟล์ จึงเป็นค่าที่ใช้จริง) */
@@ -4074,7 +4082,7 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
    HTML สร้างจาก gradeMark()/nameWithGrade() ใน js/util.js (ที่เดียวทั้งเกม)
    ① .gmark = ตัวป้าย · ② .gm-stack = ชื่อ+ป้ายซ้อนกัน (บรรทัดที่ข้อความไหลต่อจากชื่อ)
    ③ .gm-row = ป้ายกินเต็มบรรทัดถัดไป (แถวที่ flex-wrap อยู่แล้ว)
-   ④ แถบบนล็อบบี้ = ช่อง `.coin-pill.grade-pill` ในกล่องเดียวกับเหรียญ (ย้ายกลับมารวมแถวรอบ 652 — ดูจุด "รอบ 652" ด้านล่าง)
+   ④ แถบบนล็อบบี้ = ชิป `.grade-pill` แยกแถวใต้กล่องเหรียญ ห่อรวมกันใน `.coin-block` (รอบ 695 — เดิมรอบ 652 อยู่แถวเดียวกับเหรียญ)
    ============================================================ */
 .gmark{
   display:inline-block;line-height:1;white-space:nowrap;letter-spacing:1.5px;
@@ -4109,12 +4117,7 @@ html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 /* ⚠️ ต้องยึด flex-start "ทั้งคู่" — ยึดข้างเดียวแล้วฝั่งที่สูงกว่าจะดันอีกฝั่งให้ลอยกลาง
    (แถวบนเป็น align-items:center · การ์ดประจำตัวสูงกว่าแถบเหรียญบรรทัดเดียวมาก) */
 .lobby-top .id-card{align-self:flex-start;}
-.lobby-top .coin-group{align-self:flex-start;}
-/* 🎖️ รอบ 652 (ผู้ใช้สั่ง): ระดับชั้นย้ายกลับมาต่อแถวเดียวกับเหรียญ/ออนไลน์ — เป็นช่อง .coin-pill
-   ปกติช่องหนึ่ง (ได้เส้นคั่นบางระหว่างช่องจาก .coin-pill + .coin-pill ที่มีอยู่แล้วโดยไม่ต้องเพิ่มกฎ)
-   กว้างเท่าเนื้อหาจริง (ไม่บังคับเท่าแถวบนเหมือนตอนแยกเป็นบรรทัดล่างของรอบ 643) */
-.lobby-top .coin-group .coin-pill.grade-pill:empty{display:none;}
-.lobby-top .coin-group .coin-pill.grade-pill .gmark{font-size:13px;}
+.lobby-top .coin-block{align-self:flex-start;}   /* 🪙 รอบ 695: ย้ายจาก .coin-group มาที่ห่อ .coin-block แทน */
 
 /* ============================================================
    🔒 รอบ 647: ล็อกการเปลี่ยนระดับชั้น (เดือนละ 1 ครั้ง · ขึ้นได้อย่างเดียว)
