@@ -833,6 +833,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 
 
 
+
 ## ไฟล์งานที่มอบ Sonnet / prompt ภาพ
 ```
 TASK_VOCAB_SONNET.md       งานคำศัพท์ (backlog ข้อ 9) — แยก vocab/ + POS + ≥2,000 คำ (🔶 ค้างครึ่งทาง มีแค่ band1.js untracked · ⚠️ เคยทำ production พัง)
