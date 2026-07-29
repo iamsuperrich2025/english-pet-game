@@ -961,8 +961,7 @@ function renderQuestCard(){
     el.__hSized = false;                 // เนื้อหาเปลี่ยน (ขนาดอาจเปลี่ยนตาม) → วัดสูงใหม่
   }
   if(visible && (!el.__hSized || fitChanged)){
-    el.style.height = 'auto';            // คลาย % ของการ์ดชั่วคราว ให้วัดความสูงตามเนื้อหาจริงได้ (กันวงกลม 0px)
-    const card = el.querySelector('.q-bigcard');
+    const card = el.querySelector('.q-bigcard');   // .q-bigcard เป็น height:auto (ไม่ใช่ %) วัดตรงได้เลย ไม่ต้องคลาย/รีเซ็ตอะไรก่อน
     const h = card ? card.offsetHeight : 0;
     if(h){ el.style.height = h + 'px'; el.__hSized = true; }   // กล่องหดพอดี "1 ใบ" (สูงเท่าใบแรก ทุกใบสูงเท่ากัน)
   }
@@ -1858,6 +1857,12 @@ function showPlayerCard(uid, name, grade){
             <div class="pl-sec-title">📰 กิจกรรมล่าสุด</div>
             <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div>
           </div>
+          <!-- 🎖️ รอบ 712: ตู้ใบประกาศ = คอลัมน์ที่ 3 (ไม่ดันการ์ดให้สูงขึ้น เห็นได้ทันทีไม่ต้องเลื่อน)
+               ของตัวเองอ่านจากเซฟครบทุกใบ · ของเพื่อนอ่านจากโพสต์สอบผ่านที่เขาเปิดเผย -->
+          <div class="pl-col pl-certs-wrap" style="display:none">
+            <div class="pl-sec-title">🎖️ ประกาศนียบัตร <small class="pl-sec-sub">แตะดูใบใหญ่</small></div>
+            <div class="pl-certs"></div>
+          </div>
         </div>
         <div class="pl-pets-wrap" style="display:none">
           <div class="pl-sec-title">🐾 สัตว์เลี้ยง</div>
@@ -1999,7 +2004,27 @@ function showPlayerCard(uid, name, grade){
       return `<div class="pl-feed-row"><span class="feed-ico">${fc.e}</span>
         <span class="feed-txt">${escapeHTML(it.tx)} <small class="feed-ago">· ${feedAgo(it.ts)}</small></span></div>`;
     }).join('');
+    if(!me) plCerts(list.map(it=>({...it, u:uid, n:sp.name, g:grade || ''})));   // 🎖️ ใบประกาศของเพื่อน = อ่านจากโพสต์สอบผ่านที่เขาเปิดเผย
   });
+
+  /* ---- 🎖️ รอบ 712: ตู้ใบประกาศ ---- */
+  const plCerts = (posts)=>{
+    if(typeof certStripHTML !== 'function') return;
+    const wrap = ov.querySelector('.pl-certs-wrap');
+    const box  = ov.querySelector('.pl-certs');
+    if(!wrap || !box) return;
+    const list = me
+      ? certMine()
+      : (posts || []).map(it=>certFromPost(it)).filter(Boolean)
+          .sort((a, b)=>(b.ts || 0) - (a.ts || 0));
+    if(!list.length && !me) return;                  // ของเพื่อนไม่มีใบ = ไม่ต้องโชว์หัวข้อเปล่า
+    box.innerHTML = certStripHTML(list, me);
+    certBindStrip(box, list);
+    wrap.style.display = '';
+    const cols = ov.querySelector('.pl-cols');
+    if(cols) cols.classList.add('has-certs');        // → กริดเปลี่ยนเป็น 3 คอลัมน์
+  };
+  if(me) plCerts(null);                              // ของตัวเองอ่านจากเซฟได้ทันที (ออฟไลน์ก็เห็น)
 
   /* ---- แถวล่าง: กริดทรัพย์สินที่เปิดเผย (ตารางแบบหน้าโรงงาน · ชิ้นซ้ำใส่เลขจำนวนซ้อนมุม) ---- */
   const assetsFn = (typeof fetchPlayerAssets === 'function') ? fetchPlayerAssets(uid) : Promise.resolve(null);
@@ -3461,6 +3486,15 @@ function fpStatsHTML(it){
   </div>`;
 }
 /* การ์ดโพสต์ 1 ใบ — ใช้ทั้งวงหมุนล็อบบี้ (สูงเต็มกรอบ) และหน้า Feed เต็ม (สูงตามเนื้อหา) */
+/* 🎖️ รอบ 715: ชื่อในฟีด (it.n) มีอิโมจิเข็ม baked ต่อท้าย — แยกออกมาโชว์เป็นแถวเหรียญ "ใต้ชื่อ"
+   แทนที่จะปล่อยให้ไหลต่อท้ายชื่อจนตัดบรรทัดมั่ว (ผู้ใช้แจ้งรอบ 715) */
+function fpNameBadgesHTML(fullName){
+  const sp = splitNameBadges(fullName);
+  const icons = badgeEmojis(sp.badges);
+  const row = icons.length
+    ? `<span class="fp-badges">${icons.map(e=>badgeIcHTML(e, 'fp-badge-ic')).join('')}</span>` : '';
+  return { name: sp.name, row };
+}
 function fpostHTML(it, opt){
   opt = opt || {};
   const fc = (typeof FEED_CATS !== 'undefined' && FEED_CATS[it.c]) || {e:'✨'};
@@ -3468,18 +3502,23 @@ function fpostHTML(it, opt){
   const my  = it.myRx ? feedRx(it.myRx) : null;
   const can = feedCanReact(it);
   const k   = escapeHTML(it.key);
-  return `<div class="fpost${opt.clone ? ' fp-clone' : ''}${opt.page ? ' fp-page' : ''}" data-key="${k}"
+  const nb  = fpNameBadgesHTML(it.n);
+  /* 🎖️ รอบ 712: โพสต์ "สอบผ่าน" โชว์ใบประกาศเต็มกรอบแทนอิโมจิ 📝 (แตะ = ใบใหญ่เต็มจอ) */
+  const cert = (typeof certFromPost === 'function') ? certFromPost(it) : null;
+  return `<div class="fpost${opt.clone ? ' fp-clone' : ''}${opt.page ? ' fp-page' : ''}${cert ? ' fp-cert' : ''}" data-key="${k}"
       data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
     <div class="fp-head">
       <span class="fp-ico">${fc.e}</span>
       ${(typeof photoMiniHTML === 'function') ? photoMiniHTML(it.u, 'fp-ava') : ''}
-      <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))}</span>
+      <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}${nb.row}</span>
       <small class="fp-when">${feedAgo(it.ts)}</small>
     </div>
     <div class="fp-text">${escapeHTML(it.tx)}</div>
-    <div class="fp-media">${img && img.src
-      ? `<img class="fp-img" src="${img.src}" alt="${escapeHTML(img.name)}"><span class="fp-cap">${escapeHTML(img.name)}</span>`
-      : `<span class="fp-big">${img ? (img.emoji || fc.e) : fc.e}</span>`}</div>
+    <div class="fp-media">${cert
+      ? `<button class="cert-tap" type="button" data-key="${k}" title="แตะดูใบประกาศใบใหญ่">${certChipHTML(cert)}${certSVG(cert)}</button>`
+      : (img && img.src
+        ? `<img class="fp-img" src="${img.src}" alt="${escapeHTML(img.name)}"><span class="fp-cap">${escapeHTML(img.name)}</span>`
+        : `<span class="fp-big">${img ? (img.emoji || fc.e) : fc.e}</span>`)}</div>
     ${fpStatsHTML(it)}
     <div class="fp-bar">
       <button class="fp-act fp-like${my ? ' on' : ''}" type="button" data-key="${k}"${can ? '' : ' disabled'}>
@@ -3704,7 +3743,8 @@ function renderFeedComments(){
     <div class="fdb-head"><span>💬 คอมเมนต์</span><button class="fdb-close" type="button">✕</button></div>
     <div class="fcm-post">
       <div class="fp-head"><span class="fp-ico">${fc.e}</span>
-        <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(it.n)}</b>`, gradeOf(it.u, it.g))}</span>
+        <span class="fp-who">${(()=>{ const nb = fpNameBadgesHTML(it.n);
+          return `${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}${nb.row}`; })()}</span>
         <small class="fp-when">${feedAgo(it.ts)}</small></div>
       <div class="fp-text">${escapeHTML(it.tx)}</div>
       ${rxRows ? `<div class="fcm-rxs">${rxRows}</div>` : ''}
@@ -3764,6 +3804,13 @@ function bindFeedPostEvents(){
     }
     const cmt = t.closest('.fp-cmt');
     if(cmt){ openFeedComments(cmt.dataset.key); return; }
+    /* 🎖️ รอบ 712: แตะใบประกาศในโพสต์ = เปิดใบใหญ่เต็มจอ (อ่านชื่อ/หัวข้อ/วันที่ได้ชัด) */
+    const cert = t.closest('.cert-tap');
+    if(cert){
+      const c = (typeof certFromPost === 'function') ? certFromPost(feedPostByKey(cert.dataset.key)) : null;
+      if(c) openCertBig(c);
+      return;
+    }
     const nm = t.closest('.fp-name');
     if(nm){
       const p = nm.closest('.fpost');

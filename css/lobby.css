@@ -1384,7 +1384,11 @@ html.no-anim .blk-rig.lively,html.no-anim .hero-scene .pet-stage .pet-wrap{anima
    (แทนพลิกการ์ด 3D รอบ 170 — สเปกผู้ใช้) + แถบนับเวลา #q-prog-bar + ปุ่ม 🚀 ไปทำเลย */
 #quest-card.q-deck{overflow-y:auto;scroll-snap-type:y mandatory;touch-action:pan-y;}
 #quest-card.q-deck .q-bigcard{scroll-snap-align:start;scroll-snap-stop:always;}
-.q-bigcard{display:flex;flex-direction:column;gap:clamp(3px,1.2vh,8px);height:100%;
+/* height:auto (ไม่ใช่ 100%) ตั้งใจ — ถ้าเป็น % จะเกิดวงกลม: #quest-card ยังไม่มีสูงตายตัว
+   ต้องพึ่งเนื้อหาลูกเพื่อคำนวณสูงตัวเอง แต่ลูกก็รอ % จากพ่อ → เบราว์เซอร์รวมสูง "ทุกใบที่ซ้อนกัน" ให้
+   (พังจริงตอนเปลี่ยนมาใช้เด็คนี้: กล่องบวมเป็น 4 เท่า ตัวการ์ดก็ยืดเป็น 4 เท่าตาม) เอา auto ตัดวงกลมให้ทุกใบ
+   สูงตามเนื้อหาตัวเองเท่านั้น แล้ว JS ตั้งสูง #quest-card ตายตัวเท่าใบเดียวทีหลัง (ดู renderQuestCard) */
+.q-bigcard{display:flex;flex-direction:column;gap:clamp(3px,1.2vh,8px);height:auto;
   padding:4px 2px;cursor:pointer;}
 .qb-top{display:flex;align-items:center;gap:8px;min-height:0;}
 .qb-emoji{font-size:clamp(17px,4.8vh,27px);line-height:1;flex-shrink:0;
@@ -2154,9 +2158,14 @@ html.no-anim .cs-big-img{animation:none}
 }
 .fp-head{display:flex;align-items:flex-start;gap:6px;flex-shrink:0;}
 .fp-ico{font-size:15px;line-height:1.3;flex-shrink:0;}
-.fp-who{flex:1;min-width:0;}
+.fp-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
 .fp-name{color:#8fd4ff;font-weight:700;font-size:12px;cursor:pointer;}
 .fp-when{color:#7f9cc0;font-size:9.5px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
+/* 🎖️ รอบ 715: แถวเหรียญ(เข็ม) ใต้ชื่อในฟีด — แยกจากชื่อไม่ให้ไหลต่อท้ายจนตัดบรรทัดมั่ว */
+.fp-badges{display:flex;flex-wrap:wrap;gap:3px;}
+.fp-badge-ic{width:13px;height:13px;object-fit:contain;display:block;flex:0 0 auto;
+  filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));}
+.fp-badges .badge-ic-fallback{font-size:11px;line-height:1;}
 /* ② ข้อความรายงานอยู่บรรทัดของตัวเอง ใต้ชื่อ+ระดับชั้นเสมอ */
 .fp-text{flex-shrink:0;font-size:11.5px;color:#c9ddf3;line-height:1.45;margin-top:3px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
@@ -2647,6 +2656,96 @@ button.pi-dress-pip:active{transform:scale(.94);}
   box-shadow:0 3px 12px rgba(0,0,0,.4);
 }
 html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none;}
+
+/* ============================================================
+   🎖️ รอบ 712: ประกาศนียบัตร (Certificate) — วาดด้วย SVG viewBox เดียว (js/cert.js)
+   ① ในโพสต์ฟีด: ใบเต็มกรอบสูงสุดเท่าที่การ์ดให้ได้ (โพสต์สอบผ่านซ่อนบรรทัดข้อความ
+      ในวงหมุนล็อบบี้ — เนื้อความอยู่บนใบครบแล้ว ได้พื้นที่คืนให้ใบใหญ่ขึ้นอีก)
+   ② ในโปรไฟล์: ตู้ใบประกาศเลื่อนแนวนอน · ③ แตะ = ใบใหญ่เต็มจอ
+   ============================================================ */
+.cert-svg{display:block;width:100%;height:100%;}
+.cert-tap{
+  flex:1;min-height:0;width:100%;align-self:stretch;padding:0;border:none;background:transparent;
+  cursor:zoom-in;display:block;font-family:inherit;
+  filter:drop-shadow(0 5px 14px rgba(6,20,50,.6));transition:transform .12s;
+}
+.cert-tap:active{transform:scale(.97);}
+/* จอเตี้ยมาก: ที่ว่างในการ์ดเหลือไม่ถึง ~50px → ย่อใบทั้งใบลงไปก็อ่านไม่ออก
+   สลับเป็นป้ายทองบรรทัดเดียวแทน (แตะแล้วยังเปิดใบใหญ่เต็มจอได้เหมือนเดิม) */
+.cert-chip-sm{display:none;}
+@media (max-height:500px){
+  .feed-list.feed-deck .cert-tap .cert-svg{display:none;}
+  .feed-list.feed-deck .cert-chip-sm{
+    display:flex;flex-direction:column;justify-content:center;gap:1px;height:100%;
+    border-radius:9px;padding:3px 8px;background:linear-gradient(135deg,#f7e6b4,#d9b356);
+    border:1px solid #a8801f;box-shadow:0 2px 6px rgba(4,16,40,.5);
+  }
+  .feed-list.feed-deck .cert-chip-sm b{color:#4a3608;font-size:11.5px;line-height:1.2;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .feed-list.feed-deck .cert-chip-sm small{color:#6b5010;font-size:9.5px;font-weight:700;}
+}
+/* โพสต์ใบประกาศ: บีบส่วนอื่นให้เล็กที่สุด เหลือพื้นที่ให้ใบมากที่สุด */
+.fpost.fp-cert .fp-media{margin:2px 0;}
+.feed-list.feed-deck .fp-cert .fp-text{display:none;}
+.fp-page.fp-cert .fp-media{flex:none;max-height:none;}
+.fp-page.fp-cert .cert-tap{flex:none;height:250px;width:175px;align-self:center;}
+/* ตู้ใบประกาศในโปรไฟล์ — ใบตั้ง (7:10) เป็นคอลัมน์ที่ 3 ของ .pl-cols
+   (ไม่ต่อท้ายให้การ์ดสูงขึ้น = เห็นใบประกาศทันทีไม่ต้องเลื่อน) · ใบเยอะ = เลื่อนในตู้เอง */
+.pl-cols.has-certs{grid-template-columns:1fr 1.15fr .9fr;}
+.pl-sec-sub{font-weight:normal;color:#7d93ad;font-size:10.5px;margin-left:6px;}
+.pl-certs{display:flex;flex-wrap:wrap;gap:9px 8px;align-content:flex-start;
+  max-height:min(300px,34vh);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.pl-certs::-webkit-scrollbar{display:none;width:0;}
+.cert-mini{
+  width:98px;padding:0;border:none;background:transparent;cursor:zoom-in;font-family:inherit;
+  display:flex;flex-direction:column;gap:3px;transition:transform .12s;
+}
+.cert-mini .cert-svg{width:98px;height:140px;border-radius:5px;
+  box-shadow:0 4px 12px rgba(4,16,40,.55);}
+.cert-mini:active{transform:scale(.96);}
+.cert-mini-cap{font-size:10px;color:#cfe4fa;font-weight:700;text-align:center;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:98px;}
+.cert-none{font-size:11.5px;}
+/* ปุ่ม "ดูใบประกาศ" ในกล่องผลสอบ */
+.lv-cert-row{margin:12px 0 0;font-size:14px;color:#6a5a78;display:flex;flex-direction:column;
+  align-items:center;gap:6px;}
+.lv-cert-row b{color:#8a6a1f;}
+.lv-cert-btn{
+  border:none;border-radius:999px;cursor:pointer;font-family:inherit;font-size:14px;font-weight:800;
+  padding:7px 18px;color:#4a3608;background:linear-gradient(135deg,#f7e6b4,#d9b356);
+  box-shadow:0 3px 0 #a8801f;
+}
+.lv-cert-btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a8801f;}
+/* ใบใหญ่เต็มจอ — ไม่มี scrollbar (กฎทองข้อ 7) */
+.cert-lightbox{
+  position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;
+  background:rgba(4,12,28,.88);opacity:0;transition:opacity .2s;padding:2vh 2vw;cursor:zoom-out;
+  -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+}
+.cert-lightbox.on{opacity:1;}
+.cert-lightbox .clb-inner{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  max-width:96vw;max-height:96vh;transform:scale(.93);transition:transform .24s cubic-bezier(.2,1.3,.4,1);
+}
+.cert-lightbox.on .clb-inner{transform:scale(1);}
+.cert-lightbox .clb-paper{
+  height:min(84vh, 900px);aspect-ratio:7/10;max-width:94vw;border-radius:10px;overflow:hidden;
+  box-shadow:0 14px 54px rgba(0,0,0,.65);
+}
+.cert-lightbox .clb-cap{margin-top:10px;color:#eaf6ff;font-size:clamp(12px,2.2vw,17px);
+  font-weight:800;text-shadow:0 2px 10px rgba(0,0,0,.6);text-align:center;}
+.cert-lightbox .clb-x{
+  position:absolute;top:-6px;right:-6px;width:36px;height:36px;border-radius:50%;border:none;
+  background:rgba(255,255,255,.92);color:#123a6b;font-size:17px;font-weight:800;cursor:pointer;
+  box-shadow:0 3px 12px rgba(0,0,0,.4);
+}
+html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:none;}
+@media (max-height:520px){
+  .cert-mini{width:74px;}
+  .cert-mini .cert-svg{width:74px;height:106px;}
+  .cert-mini-cap{max-width:74px;font-size:9px;}
+  .fp-page.fp-cert .cert-tap{height:190px;width:133px;}
+}
 /* 💬🐾 รอบ 276: ปุ่มแชทหัวการ์ดโปรไฟล์ + การ์ดข้อมูลน้องฉบับย่อ (คลิกน้องในโปรไฟล์) */
 .pl-chat{
   flex-shrink:0;border:none;border-radius:999px;cursor:pointer;font-family:inherit;
@@ -3707,8 +3806,9 @@ button.ps-worn-pip:active{transform:scale(.95);}
   border:1px solid var(--glass-line);border-radius:16px;
   padding:6px 15px 6px 6px;box-shadow:0 6px 18px rgba(3,15,35,.34);
 }
+/* 📷 รอบ 711 (ผู้ใช้: รูปเล็กไปเทียบปุ่มเมนูราง): ขยายให้สูงกว่าปุ่มเมนูราง (.rail-btn) เล็กน้อยทุกขนาดจอ */
 .id-card .pass-photo{
-  width:44px;height:50px;border-radius:11px;border:1px solid rgba(165,210,255,.55);
+  width:54px;height:62px;border-radius:13px;border:1px solid rgba(165,210,255,.55);
   box-shadow:0 2px 8px rgba(0,20,60,.35);
 }
 .id-card .profile-plate{
@@ -3891,7 +3991,7 @@ html.no-anim .coin-pill.comp .comp-ic{animation:none;}
 @media (max-height:520px){
   .lobby-top{--top-h:32px;}
   .id-card{padding:4px 11px 4px 4px;gap:8px;border-radius:13px;}
-  .id-card .pass-photo{width:34px;height:39px;border-radius:9px;}
+  .id-card .pass-photo{width:56px;height:64px;border-radius:12px;}   /* 📷 รอบ 711: ยังต้องสูงกว่า .rail-btn โซนนี้ (~61px) */
   .profile-plate .student-chip{font-size:13px;}
   .profile-plate .clock-chip{font-size:10.5px;margin-top:1px;}
   .profile-plate .rank-tab{margin-top:3px;}
@@ -3904,6 +4004,11 @@ html.no-anim .coin-pill.comp .comp-ic{animation:none;}
   /* 📏 รอบ 702: จอเตี้ยไม่ต้องตามคำศัพท์ตัวใหญ่ของจอปกติ — ไม่งั้นกล่องกินที่จนเวทีน้องเหลือนิดเดียว */
   .lobby-stage .newword-banner{padding:9px 16px 8px;}
   .nw-word{font-size:clamp(22px,5.2vh,30px);}
+}
+/* 📷 รอบ 711: จอเตี้ยมาก .rail-btn หดลงอีก (ดูกฎที่ @media max-height:430px ของ .rail-btn) —
+   ตามให้ pass-photo ยังใหญ่กว่าปุ่มรางเล็กน้อย (ต้องมาหลัง block ≤520px ด้านบนถึงจะชนะ cascade) */
+@media (max-height:430px){
+  .id-card .pass-photo{width:46px;height:53px;border-radius:10px;}
 }
 @media (max-height:400px){
   .profile-plate .rank-tab{width:auto;margin-top:0;}
