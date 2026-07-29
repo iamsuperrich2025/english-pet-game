@@ -2162,10 +2162,10 @@ html.no-anim .cs-big-img{animation:none}
 .fp-name{color:#8fd4ff;font-weight:700;font-size:12px;cursor:pointer;}
 .fp-when{color:#7f9cc0;font-size:9.5px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
 /* 🎖️ รอบ 715: แถวเหรียญ(เข็ม) ใต้ชื่อในฟีด — แยกจากชื่อไม่ให้ไหลต่อท้ายจนตัดบรรทัดมั่ว */
-.fp-badges{display:flex;flex-wrap:wrap;gap:3px;}
-.fp-badge-ic{width:13px;height:13px;object-fit:contain;display:block;flex:0 0 auto;
-  filter:drop-shadow(0 1px 1px rgba(0,0,0,.4));}
-.fp-badges .badge-ic-fallback{font-size:11px;line-height:1;}
+.fp-badges{display:flex;flex-wrap:wrap;gap:5px;width:100%;}
+.fp-badge-ic{width:22px;height:22px;object-fit:contain;display:block;flex:0 0 auto;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
+.fp-badges .badge-ic-fallback{font-size:18px;line-height:1;}
 /* ② ข้อความรายงานอยู่บรรทัดของตัวเอง ใต้ชื่อ+ระดับชั้นเสมอ */
 .fp-text{flex-shrink:0;font-size:11.5px;color:#c9ddf3;line-height:1.45;margin-top:3px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
