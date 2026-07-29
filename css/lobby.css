@@ -3672,10 +3672,21 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .nw-countdown{font-size:10.5px;color:#8db3da;opacity:1;padding-left:10px;
   border-left:1px solid rgba(160,205,255,.22);}
 
-/* 🔴 รอบ 657 → 🔁 รอบ 695 → 🧹 รอบ 698 (ผู้ใช้สั่ง 29 ก.ค. 2026 "โย้เย้ไม่สวย"): เลิกห่อ .nw-row1/.nw-row2
-   ทั้งคู่แล้ว (รอบ 695 ถอด flex-direction:column แต่ .nw-row2{flex-wrap:wrap} ของเดิมยังอยู่ —
-   คำยาว/จอแคบ ทำ row2 ห่อบรรทัดในตัวเองขณะ row1 ไม่ห่อ เลยเหลื่อมกันดูเบี้ยว) HTML รอบ 698 แบนราบจริงแล้ว
-   ไม่ต้องมี wrapper — ตัวเนื้อหาเป็น flex item ตรงของ .newword-banner (gap 11px จาก base ด้านบน) */
+/* 🔴 รอบ 657 → 🔁 รอบ 695 → 🧹 รอบ 698 → 🔤 รอบ 699 (ผู้ใช้สั่ง 29 ก.ค. 2026 "ขยายคำศัพท์ อยู่กึ่งกลางเวที
+   คำใบ้ลงบรรทัดใต้คำศัพท์ NEW หาที่จัดวางใหม่"): คำศัพท์ใหญ่+เด่นสุด อยู่บรรทัดบน กึ่งกลาง
+   คำใบ้+รางวัล+เวลา (.nw-sub) บรรทัดล่าง เล็กกว่า กึ่งกลางเหมือนกัน · NEW ลอยเป็นริบบิ้นมุมซ้ายบน
+   ไม่เบียดคำศัพท์ (ก่อนหน้านี้ NEW อยู่หน้าคำศัพท์ในแถวเดียว ทำให้จุดกึ่งกลาง "ภาพ" เยื้องขวาไม่ตรงเวทีจริง) */
+.newword-banner{
+  flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  position:relative;border-radius:16px;padding:9px 20px 8px;
+}
+.nw-tag{
+  position:absolute;top:-9px;left:14px;box-shadow:0 3px 8px rgba(0,0,0,.3);
+}
+.nw-word{font-size:clamp(24px,4.2vh,36px);}
+.nw-sub{display:flex;align-items:center;justify-content:center;gap:8px;max-width:100%;min-width:0;}
+.nw-hint{white-space:nowrap;}
+.nw-bar{left:10px;right:10px;bottom:2px;}
 
 /* ---------- ⑤ แท็บสัตว์: สูงเท่ากันทุกใบ · ตัวที่เลือกอยู่มีขีดทองใต้ชื่อ ---------- */
 .lobby-stage .pet-tabs{gap:7px;}
@@ -3735,18 +3746,13 @@ button.ps-worn-pip:active{transform:scale(.95);}
 .lobby-stage .pet-tab.info .pib-alert{display:inline-block;animation:pibBlink 1s ease-in-out infinite;}
 html.no-anim .lobby-stage .pet-tab.info .pib-alert{animation:none;}
 
-/* ② สามแถวเริ่มที่เส้นเดียวกัน + ไม่กว้างเกินเวที */
+/* ② แท็บสัตว์เริ่มที่เส้นเดียวกับแถวเหรียญ + ไม่กว้างเกินเวที (แบนเนอร์คำใหม่แยกไปกึ่งกลางเองแล้ว รอบ 699) */
 .lobby-stage .pet-tabs{max-width:var(--tabs-w,100%);}
-.lobby-stage .newword-banner{
-  align-self:flex-start;margin-left:var(--nw-left,0px);transform:none;
-  max-width:var(--nw-max,96%);min-width:0;
-}
-/* แบนเนอร์เลิกจัดกึ่งกลางแล้ว → คีย์เฟรมสลับคำต้องไม่มี translateX(-50%) ค้าง */
-@keyframes nwSwap{
-  0%  {transform:scale(.94);box-shadow:0 0 26px rgba(255,214,90,.75);border-color:var(--gold);}
-  60% {transform:scale(1.03);}
-  100%{transform:scale(1);}
-}
+/* 🔤 รอบ 699 (ผู้ใช้สั่งกลับ "อยู่กึ่งกลางเวทีน้อง"): เลิก override ชิดซ้ายของรอบ 613 แล้ว
+   ปล่อยให้ใช้ base rule เดิม (บรรทัด ~938: margin-left:var(--nw-left,50%);transform:translateX(-50%))
+   + คีย์เฟรม nwSwap ฐาน (บรรทัด ~941 มี translateX(-50%) อยู่แล้ว) กลับมาใช้งานจริงเอง ไม่ต้องประกาศซ้ำ
+   max-width ยังคุมไม่ให้กว้างเกินเวทีเหมือนเดิม กันคำยาวดันล้นจอ */
+.lobby-stage .newword-banner{max-width:var(--nw-max,96%);min-width:0;}
 /* คำใบ้ยอมหดก่อนเพื่อน ถ้าเวทีแคบ — ตัวคำศัพท์ห้ามหาย */
 .nw-hint{min-width:0;overflow:hidden;text-overflow:ellipsis;}
 .nw-word{flex-shrink:0;}
