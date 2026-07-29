@@ -174,18 +174,19 @@ authPushSave:357 · authLogout:368
 ## js/bandadv.js (68 บรรทัด · 4 รายการ)
 BAND_ADV_REWARD:9 · bandAdvLoad:13 · bandAdvPlay:37 · bandAdvCardsHTML:46
 
-## js/cert.js (382 บรรทัด · 24 รายการ)
+## js/cert.js (452 บรรทัด · 25 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
 certThIndex:53 · certTitleOf:62 · certSerial:78 · certDateEN:86 · certAward:94 · certMine:110
-certBackfill:115 · certCatNameById:143 · certFromPost:163 · certXML:178 · certFit:183 · certHolder:188
-certSVG:198 · certChipHTML:330 · openCertBig:337 · openCertMine:353 · certStripHTML:361 · certBindStrip:374
+certAwardGold:117 · certBackfill:135 · certCatNameById:163 · certFromPost:183 · certXML:198 · certFit:203
+certHolder:208 · certSVG:218 · certChipHTML:396 · openCertBig:407 · openCertMine:423 · certStripHTML:431
+certBindStrip:444
 
-## js/dictband.js (362 บรรทัด · 25 รายการ)
+## js/dictband.js (365 บรรทัด · 25 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandLoad:18 · bandShortTH:36 · bandCat:44
-bandSets:66 · bandSetId:75 · bandCheckComplete:78 · bandSetCat:92 · BAND_RETAKE_MAX:104 · bandTriedSets:105
-bandRetakeCat:116 · bandShowRetakeSummary:150 · bandSetsPassed:178 · openBandSetPicker:186 · bandMine:257 · bandUnlocked:258
-bandLockToast:263 · bandExamLobby:269 · updateBandExamBtn:278 · bandLobbyTick:295 · bandPlay:306 · bandPlayLobby:319
-bandCardsHTML:331
+bandSets:66 · bandSetId:75 · bandCheckComplete:78 · bandSetCat:95 · BAND_RETAKE_MAX:107 · bandTriedSets:108
+bandRetakeCat:119 · bandShowRetakeSummary:153 · bandSetsPassed:181 · openBandSetPicker:189 · bandMine:260 · bandUnlocked:261
+bandLockToast:266 · bandExamLobby:272 · updateBandExamBtn:281 · bandLobbyTick:298 · bandPlay:309 · bandPlayLobby:322
+bandCardsHTML:334
 
 ## js/game.js (1,027 บรรทัด · 70 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
@@ -636,7 +637,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/lobby.css (4,625 บรรทัด · 718 selector)
+## css/lobby.css (4,629 บรรทัด · 718 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
 .subtitle:42 · .shop-title:43 · #rotate-overlay:46 · .screen:68 · #screen-select:77,78,79,80(+5) · .egg-need:87
 .petshop-topright:89 · .petshop-play-link:90,95 · #screen-game:137,138,139,140(+7) · #screen-quiz:151,152,153,154(+6) · #quiz-choices:163,164 · .word-card:171
@@ -749,14 +750,14 @@ vbRender:148 · vbCardHTML:194
 .ps-worn-pip:3779,3780 · .id-card:3803,3810,3814 · .id-chip:3827 · .clock-chip:3836,3837 · .coin-block:3853 · .coin-group:3854
 .coin-pill:3884,3885,3887 · .cp-lb:3896 · .cp-v:3897 · .nw-sub:3965 · .top-flex2:4056 · #panel-factory:4075,4076,4080,4081(+39)
 .grid2x8:4204,4210 · .mine-strip:4228,4230,4231,4236(+4) · .mb-strip:4242,4281 · .gmark:4389,4393,4394,4395(+1) · .gm-stack:4398,4402 · .gm-row:4404
-.lb-name:4406,4407,4408 · .grade-edit:4429,4434,4435 · .gradelock-box:4437,4453,4458,4460 · .gl-head:4438 · .gl-emoji:4439 · .gl-ht:4440
-.gl-cur:4441 · .gl-lock:4442,4447 · .gl-ok:4446 · .gl-lock-sub:4448 · .gl-why:4449 · .gl-pick-lb:4450
-.gl-opts:4451 · .gl-hist:4461 · .gl-hline:4462 · .gl-hg:4466 · .gl-hat:4467 · .gl-harr:4468
-.gl-foot:4469 · .gl-cf:4470 · .reg-gradelock:4490 · #tp-overlay:4500 · #tp-board:4502,4506 · .tp-head:4510
-.tp-title:4511 · .tp-stat:4513,4515 · .tp-pts:4517,4520 · .tp-close:4522,4528,4529 · .tp-snd:4532,4535,4541,4542 · .tp-snd-ic:4536
-.tp-snd-track:4537 · .tp-snd-thumb:4539 · .tp-prompt:4546 · .tp-word:4548,4562,4563 · .tp-ch:4550,4555,4556,4558 · .tp-thai:4566
-.tp-hint:4568 · .tp-empty:4570 · .tp-keys:4573 · .tp-row:4575 · .tp-row-fn:4577,4610 · .tp-key:4581,4593,4595,4601(+2)
-.tp-key-fn:4608 · .tp-fx:4614 · .tp-coinpop:4615 · .tp-pop-pt:4620
+.lb-name:4406,4407,4408 · .grade-edit:4429,4434,4435 · .gradelock-box:4439,4455,4460,4462 · .gl-head:4440 · .gl-emoji:4441 · .gl-ht:4442
+.gl-cur:4443 · .gl-lock:4444,4449 · .gl-ok:4448 · .gl-lock-sub:4450 · .gl-why:4451 · .gl-pick-lb:4452
+.gl-opts:4453 · .gl-hist:4463 · .gl-hline:4464 · .gl-hg:4468 · .gl-hat:4469 · .gl-harr:4470
+.gl-foot:4471 · .gl-cf:4472 · .reg-gradelock:4494 · #tp-overlay:4504 · #tp-board:4506,4510 · .tp-head:4514
+.tp-title:4515 · .tp-stat:4517,4519 · .tp-pts:4521,4524 · .tp-close:4526,4532,4533 · .tp-snd:4536,4539,4545,4546 · .tp-snd-ic:4540
+.tp-snd-track:4541 · .tp-snd-thumb:4543 · .tp-prompt:4550 · .tp-word:4552,4566,4567 · .tp-ch:4554,4559,4560,4562 · .tp-thai:4570
+.tp-hint:4572 · .tp-empty:4574 · .tp-keys:4577 · .tp-row:4579 · .tp-row-fn:4581,4614 · .tp-key:4585,4597,4599,4605(+2)
+.tp-key-fn:4612 · .tp-fx:4618 · .tp-coinpop:4619 · .tp-pop-pt:4624
 
 ## css/style.css (1,973 บรรทัด · 498 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
