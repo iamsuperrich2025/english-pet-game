@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v201';  // v201: รอบ 684: โรงแรมผีสิง 5 ชั้น
+const CACHE_VERSION = 'pet-vocab-v202';  // v202: รอบ 712: เพิ่ม js/cert.js เข้า shell (ประกาศนียบัตร)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -34,6 +34,7 @@ const SHELL = [
   './js/ui.js',
   './js/lobby.js',
   './js/game.js',
+  './js/cert.js',
   './js/auth.js',
   './js/online.js',
   './js/wsaward.js',

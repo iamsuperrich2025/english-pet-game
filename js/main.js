@@ -237,6 +237,7 @@ function bootGame(){
     });
   }
   careTick();
+  if(typeof certBackfill === 'function') certBackfill();   // 🎖️ รอบ 712: ออกใบประกาศย้อนหลังให้เซฟที่เคยสอบผ่านก่อนมีระบบนี้
   if(!state.student){
     const acc = document.getElementById('reg-account');
     if(acc && Auth.user) acc.textContent = '☁️ บัญชี: ' + (Auth.user.email || '');

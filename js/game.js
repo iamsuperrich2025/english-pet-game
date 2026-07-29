@@ -957,6 +957,7 @@ function finishQuiz(){
   const passed = quiz.correct >= passMark;
   const firstPass = passed && !state.quizPassed.includes(cat.id);
   let coins = 0, exp = 0, rp = 5;                                // สอบไม่ผ่านก็ยังได้ +5 RP จากความพยายาม
+  let myCert = null;                                             // 🎖️ รอบ 712: ใบประกาศที่เพิ่งออกให้ (สอบผ่านเท่านั้น)
   if(passed){
     coins = firstPass ? cat.reward : 20;   // รางวัลใหญ่เฉพาะการผ่านครั้งแรกของหมวด
     exp   = firstPass ? 30 : 10;
@@ -965,6 +966,8 @@ function finishQuiz(){
     addCoins(coins);
     questEvent('quiz');                               // 🎯 Daily Quest: สอบผ่าน
     if(typeof feedEvent === 'function') feedEvent('quiz', `สอบผ่านหมวด${cat.name} ${quiz.correct}/${quiz.questions.length} ข้อ 📝`);
+    // 🎖️ รอบ 712: ออกใบประกาศเก็บเข้าโปรไฟล์ (สอบซ้ำ = อัปเดตคะแนนดีที่สุดในใบเดิม)
+    if(typeof certAward === 'function') myCert = certAward(cat, quiz.correct, quiz.questions.length);
   }
   addRP(rp);
   // แต้มผลิตโรงงาน: ตอบถูก 1 ข้อ = 1 แต้ม (ครบแล้วเปิดฉากผลิตสำเร็จหลังกล่องผลสอบ)
@@ -997,9 +1000,16 @@ function finishQuiz(){
       ${quiz.correct > 0 && made ? `<br>🏭 แต้มผลิต +${quiz.correct} — <b>ผลิตสำเร็จ!</b> 🎉` : ''}
       ${quiz.correct > 0 && !made && state.producing ? `<br>🏭 แต้มผลิต +${quiz.correct} (${collectInfo(state.producing.id).name} ${state.producing.progress}/${collectInfo(state.producing.id).words})` : ''}
     </p>
+    ${myCert ? `<div class="lv-cert-row">🎖️ ได้รับ <b>ใบประกาศ Vocab World</b> เก็บไว้ในโปรไฟล์แล้ว
+      <button class="lv-cert-btn" type="button">ดูใบประกาศ</button></div>` : ''}
     <button>ตกลง</button>
   </div>`;
-  overlay.querySelector('button').addEventListener('click', ()=>{
+  // 🎖️ รอบ 712: ปุ่มดูใบประกาศใบใหญ่ (ไม่ปิดกล่องผลสอบ — ปิดใบแล้วอ่านผลต่อได้)
+  if(myCert){
+    const cb = overlay.querySelector('.lv-cert-btn');
+    if(cb) cb.addEventListener('click', (e)=>{ e.stopPropagation(); openCertBig(myCert); });
+  }
+  overlay.querySelector('button:not(.lv-cert-btn)').addEventListener('click', ()=>{
     overlay.remove();
     renderCats();
     showScreen('screen-cats');

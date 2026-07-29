@@ -110,6 +110,8 @@ const DEFAULT_STATE = {
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
   vocabBook:{},                       // 📒 รอบ 288: สมุดคำศัพท์ของฉัน — {en:{th,c:ถูก,w:ผิด,t:เจอล่าสุด,lw:ล่าสุดผิด?}} เก็บจากเกมจับคู่+ข้อสอบทุกแบบ (เพดาน VB_MAX ใน vocabbook.js)
   quizPassed:[],                      // หมวดที่เคยผ่านแล้ว (รางวัลใหญ่ครั้งแรกครั้งเดียว)
+  certs:[],                           // 🎖️ รอบ 712: ใบประกาศที่ได้รับ {id,th,t,lv,sc,tt,ts,n} 1 ใบ/หมวด (ดู js/cert.js · เพดาน CERT_MAX)
+  certsFilled:false,                  // 🎖️ รอบ 712: ออกใบย้อนหลังจาก quizLog ให้เซฟเก่าไปแล้วหรือยัง (certBackfill)
   quizRewardVer:QUIZ_PASS_REWARD,     // 🎁 รอบ 593: รางวัลสอบผ่านที่เซฟนี้ "เคยได้จริง" ต่อหมวด — น้อยกว่าค่าปัจจุบัน = จ่ายส่วนต่างย้อนหลังตอนโหลด
   quizBackPay:null,                   // ใบแจ้งจ่ายย้อนหลังที่ยังไม่ได้โชว์ {n,per,total,from,to,ts} (bootGame เด้งป๊อปอัพแล้วล้าง)
   giantRemoved:false,                 // 🦣 รอบ 659: เคยผ่าน migration ถอดโหมดขยายร่าง+คืนเงินแล้วหรือยัง (กันคืนซ้ำ)
