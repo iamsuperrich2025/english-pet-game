@@ -2404,7 +2404,7 @@ function spawnGhost(){
   const holder=new THREE.Group();
   holder.visible=false;
   scene.add(holder);
-  const g={spr:holder, st:'lurk', at:0, showAt:0, vis:0, floorY:0, baseY:0, wailAt:0, mats:[], model:false};
+  const g={spr:holder, st:'lurk', at:0, showAt:0, vis:0, floorY:0, baseY:0, wailAt:0, mats:[], model:false, gait:0};
   const gen=ghostGen;      /* ⚠️ ต้องประกาศ "ก่อน" เรียก ghostGlbEnsure — ถ้าโมเดลโหลดเสร็จแล้ว
                               callback จะวิ่งทันทีแบบ sync แล้วชน TDZ ถ้าประกาศทีหลัง */
   ghostGlbEnsure(src=>{
@@ -2494,6 +2494,7 @@ function tickGhosts(dt,now){
     const dx=c.x-mp.x, dz=c.z-mp.z, d=Math.hypot(dx,dz)||.001;
     const sameFloor=Math.abs(g.floorY-hFootY)<1.9;
     const facing=(-dx*fx-dz*fz)/d;                 // >0 = ผีอยู่ในทิศที่เรามองอยู่
+    const wasStalking=g.st==='stalk';               // เดินตามอยู่ตอนต้นเฟรมนี้ → ให้ท่า "เดิน" ไม่ใช่ "ลอยนิ่ง"
     switch(g.st){
       case 'lurk':                                  // ข้อ 13/18: รอในห้อง ให้เห็นแว็บ ๆ
         g.vis=Math.max(0,g.vis-dt*2.5);
@@ -2524,7 +2525,16 @@ function tickGhosts(dt,now){
     }
     setGhostVis(g, g.vis);                         // จาง/ชัด + เรืองแสงตามสถานะไฟในตึก (ครอบทุก material ของโมเดล)
     faceGhostToPlayer(g);                          // โมเดล 3D ต้องหันหน้าเข้าหาเราเสมอ
-    mp.y=g.floorY+g.baseY+Math.sin(now/300+mp.x)*.09;   // ลอยขึ้นลงเบา ๆ (เท้าเฉียดพื้น)
+    /* 🚶 ท่า "เดินตาม" ราคาถูกที่สุด — ไม่มีโครงกระดูก/คลิปแอนิเมชันในโมเดล (ตัดตอนย่อไฟล์)
+       จึงปลอมท่าเดินด้วยการหมุน/โยกทั้งกลุ่มแทน: เอียงตัวส่าย (rotation.z) + ก้มหน้าเล็กน้อยตอนวิ่งไล่ (rotation.x)
+       เดินหน้าเร็วขึ้นเป็นจังหวะ (stepBob) เฉพาะตอน stalk เท่านั้น — ตอนอื่น (lurk/peek/behind) กลับไปนิ่งสนิทเหมือนเดิม */
+    if(wasStalking) g.gait+=dt*7.5;
+    const stepBob=(wasStalking && g.model)?Math.abs(Math.sin(g.gait))*.05:0;
+    if(g.model){
+      g.spr.rotation.z=wasStalking?Math.sin(g.gait)*.09:0;
+      g.spr.rotation.x=wasStalking?.06:0;
+    }
+    mp.y=g.floorY+g.baseY+Math.sin(now/300+mp.x)*.09+stepBob;   // ลอยขึ้นลงเบา ๆ + จังหวะก้าวตอนไล่ตาม
   }
   // สุ่มส่งผีออกมาเดินตามเป็นระยะ (ข้อ 9: สุ่มผี)
   if(now>ghostStalkAt){
