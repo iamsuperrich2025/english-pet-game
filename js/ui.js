@@ -1673,10 +1673,11 @@ function openLeaderboardFull(){
    ดึงหัวขึ้น (margin-top ลบ = ครึ่งขอบบน) + ดึงแท่นขึ้นชนเท้า (margin-bottom ลบ = ขอบล่าง) */
 const BLK_PAD = {blk1:[.11,.25], blk2:[.14,.24], blk3:[.10,.22], blk4:[.04,.18],
                  blk5:[.17,.20], blk6:[.13,.20], blk7:[.12,.21], blk8:[.13,.22]};
-// 🖼️ รอบ 751: ชุดใหม่ blk9-blk88 ตัดจากแผ่นเดียวกัน กรอบเท่ากันทุกใบ (เท้าอยู่เส้นเดียวกัน = ขอบล่าง .223)
+// 🖼️ รอบ 751/753: ชุดใหม่ blk9-blk88 ตัดจากแผ่นเดียวกัน กรอบเท่ากันทุกใบ (เท้าอยู่เส้นเดียวกัน = ขอบล่าง .223)
 // ตัวที่กว้างกว่าปกติ (ปีก/ไม้สกี) ถูกย่อตามความกว้าง หัวเลยต่ำลง → จดขอบบนจริงไว้เฉพาะตัวนั้น
+// (รอบ 753: เปลี่ยนไฟล์ต้นทางเป็นแผ่นพื้นโปร่งใสจริง (ผู้ใช้เตรียมมาให้เอง) แก้ฝ้าขาวเดิม — เลขวัดขยับนิดหน่อยจากรอบ 751 ไม่ใช่บั๊ก)
 const BLK_PAD_NEW = [.125, .223];
-const BLK_TOP_FIX = {blk30:.191, blk45:.158, blk51:.164, blk56:.211, blk58:.166, blk62:.154, blk68:.266, blk83:.146};
+const BLK_TOP_FIX = {blk30:.182, blk45:.146, blk51:.143, blk56:.225, blk58:.150, blk62:.168, blk68:.250, blk83:.135};
 function seatPodChars(scope){
   (scope || document).querySelectorAll('.pod-char').forEach(img=>{
     const key = img.getAttribute('data-blk');
@@ -5144,9 +5145,9 @@ function openFoodQuiz(){
     return;
   }
   state.foodQuizPlayCount++;
-  const rewarded = state.foodQuizDay === today;  // วันนี้รับรางวัลไปแล้ว (รอบนี้ไม่ใช่รอบแรก) → รอบฝึกซ้อม
-  if(!rewarded) state.foodQuizDay = today;        // รอบแรกของวัน = รอบได้รางวัล มาร์กทันทีกันเปิดซ้ำได้รางวัลไม่จำกัด
   saveState();
+  // 🪙 รอบ 753: เพดาน 2 รอบ/วัน (ด้านบน) คุมการฟาร์มเหรียญอยู่แล้ว → ทุกรอบที่เล่นได้ถือเป็นรอบได้รางวัลเท่ากันหมด
+  // (เดิมแยก "รอบแรก=ได้เหรียญ" vs "รอบซ้ำ=ฝึกซ้อมไม่ได้เหรียญ" ทำให้รอบสองไม่มีภาพ/เสียงเงินเข้าเลย ผู้ใช้แจ้งว่าไม่ชัดเจน)
   // สุ่มคู่ (สัตว์, อาหาร) ไม่ซ้ำกันในรอบ — คละให้มีทั้งข้อ "กินได้" และ "เป็นโทษ"
   const combos = [];
   for(const type of Object.keys(PETS)) for(const f of FOODS) combos.push({type, f});
@@ -5162,7 +5163,7 @@ function openFoodQuiz(){
     const conf = PETS[q.type];
     overlay.innerHTML = `<div class="levelup-box fq-box">
       <h2>🛡️ ควิซอาหารปลอดภัย</h2>
-      <p class="fq-progress">ข้อ ${idx+1}/${FOODQUIZ_Q} · ถูกแล้ว ${score} ข้อ${rewarded ? ' · <b>รอบฝึกซ้อม (รับเหรียญไปแล้ววันนี้)</b>' : ''}</p>
+      <p class="fq-progress">ข้อ ${idx+1}/${FOODQUIZ_Q} · ถูกแล้ว ${score} ข้อ</p>
       <div class="fq-pair"><span>${conf.adult}</span><span class="fq-q">❓</span><span>${q.f.emoji}</span></div>
       <div class="fq-ask">ให้<b>${conf.name}</b>กิน <b>${q.f.emoji} ${q.f.name}</b> (${q.f.en}) ได้ไหม?</div>
       <div class="fq-btns">
@@ -5175,8 +5176,8 @@ function openFoodQuiz(){
     const answer = saidYes=>{
       const bad = foodBadFor(q.f, q.type);
       const correct = saidYes !== bad;        // กินได้=ตอบใช่ถูกเมื่อไม่เป็นโทษ
-      const gain = (correct && !rewarded) ? FOODQUIZ_COIN : 0;   // รอบฝึกซ้อม (rewarded=true) ไม่ได้เหรียญ
-      if(correct){ score++; if(gain){ earned += gain; addCoins(gain); saveState(); } }
+      const gain = correct ? FOODQUIZ_COIN : 0;
+      if(correct){ score++; earned += gain; addCoins(gain); saveState(); }
       const reason = bad
         ? (foodWhy(q.f, q.type) || 'อาหารนี้เป็นโทษกับสัตว์ชนิดนี้')
         : (q.f.human ? `${q.f.name}เป็นอาหารคนก็จริง แต่${conf.name}กินได้ ไม่เป็นโทษ` : `${q.f.name}เป็นอาหารที่ปลอดภัยสำหรับสัตว์ทุกตัว`);
@@ -5205,9 +5206,9 @@ function openFoodQuiz(){
 
   const renderEnd = ()=>{
     let bonus = 0;
-    if(!rewarded && score === FOODQUIZ_Q){ bonus = FOODQUIZ_BONUS; addCoins(bonus); }
+    if(score === FOODQUIZ_Q){ bonus = FOODQUIZ_BONUS; addCoins(bonus); }
     const coins = earned + bonus;
-    if(coins > 0) saveState();
+    saveState();
     const playsLeft = FOODQUIZ_MAX_PLAYS - state.foodQuizPlayCount;
     if(score === FOODQUIZ_Q) sfx.levelup(); else sfx.select();
     overlay.innerHTML = `<div class="levelup-box fq-box">
@@ -5215,8 +5216,6 @@ function openFoodQuiz(){
       <div style="font-size:44px;margin:6px 0">${score === FOODQUIZ_Q ? '🛡️✨' : '🛡️'}</div>
       <div class="fq-ask">ตอบถูก <b>${score}/${FOODQUIZ_Q}</b> ข้อ</div>
       ${coins > 0 ? `<div class="feed-gain">ได้เหรียญรวม +${fmtNum(coins)} 🪙${bonus > 0 ? ` (รวมโบนัสครบทุกข้อ +${FOODQUIZ_BONUS}!)` : ''}</div>` : ''}
-      ${rewarded ? `<div class="fq-why">รอบฝึกซ้อม — พรุ่งนี้กลับมารับเหรียญได้อีกนะ</div>`
-                 : coins === 0 ? `<div class="fq-why">ยังไม่ได้เหรียญ — ลองใหม่ได้เลย รางวัลวันนี้ยังรออยู่!</div>` : ''}
       <div class="fq-btns">
         ${playsLeft > 0 ? `<button class="fq-again">เล่นอีกรอบ 🔁 (เหลือวันนี้ ${playsLeft})</button>` : ''}
         <button class="fq-next">ปิด</button>
