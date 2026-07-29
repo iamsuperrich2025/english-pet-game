@@ -15,6 +15,9 @@
   + 🎓 ไฟล์คลังศัพท์ขั้นสูงที่ `js/bandadv.js` fetch แบบขี้เกียจตามรายชื่อใน `js/data/band/manifest.js`
     (เกิดจากรอบ 767: ไฟล์คำ 20 ตัวไม่เคย commit — index.html ไม่ได้อ้างตรง ๆ จึงรอดด่านนี้ไป 12 วัน
      ผลคือกดการ์ด "ศัพท์วิชาการ/ธุรกิจ" แล้วขึ้น "โหลดคลังศัพท์ไม่สำเร็จ" บนเว็บจริง)
+  + 📖 ไฟล์คลังศัพท์ใหญ่ตามระดับที่ `js/dictband.js` โหลดขี้เกียจผ่าน `<script>` tag ตามรายชื่อใน
+    `js/data/dict_band/manifest.js` (รอบ 769: เผื่อช่องโหว่แบบเดียวกับ band adv — เนียนไปเหมือนกัน
+     เพราะไฟล์ db<band>_*.js ก็ไม่ได้ถูก index.html อ้างตรง ๆ เช่นกัน)
 ข้าม: URL ภายนอก (http/https//), data:, blob:, mailto:, #anchor, path ที่มีตัวแปร ${...}
 exit 2 = เจอไฟล์หาย → deploy_firebase.sh (set -e) หยุดทันที
 """
@@ -36,16 +39,22 @@ SKIP_PREFIX = ("http://", "https://", "//", "data:", "blob:", "mailto:", "#", "j
 def is_local(ref: str) -> bool:
     return not (ref.startswith(SKIP_PREFIX) or "${" in ref or ref.strip() == "")
 
-BAND_MANIFEST = "js/data/band/manifest.js"
 BAND_F_RE = re.compile(r'"f"\s*:\s*"([^"]+)"')
+LAZY_MANIFESTS = (
+    ("js/data/band/manifest.js", "js/data/band/"),             # bandadv.js (fetch+json)
+    ("js/data/dict_band/manifest.js", "js/data/dict_band/"),   # dictband.js (<script> tag)
+)
 
-def band_refs():
-    """ไฟล์คำศัพท์ที่ bandadv.js จะ fetch — อ้างผ่าน manifest ไม่ใช่ <script> ใน html"""
-    mf = ROOT / BAND_MANIFEST
-    if not mf.exists():
-        return []
-    src = mf.read_text(encoding="utf-8", errors="replace")
-    return [(BAND_MANIFEST, "js/data/band/" + f) for f in BAND_F_RE.findall(src)]
+def lazy_manifest_refs():
+    """ไฟล์คำศัพท์ที่โหลดขี้เกียจตาม manifest — ไม่ใช่ <script src> ตรง ๆ ใน html จึงต้องตามหาเอง"""
+    out = []
+    for manifest, prefix in LAZY_MANIFESTS:
+        mf = ROOT / manifest
+        if not mf.exists():
+            continue
+        src = mf.read_text(encoding="utf-8", errors="replace")
+        out += [(manifest, prefix + f) for f in BAND_F_RE.findall(src)]
+    return out
 
 def main():
     html_files = sorted(ROOT.glob("*.html"))
@@ -71,10 +80,10 @@ def main():
             elif GIT_MODE and rel not in tracked:
                 missing.append((hf.name, rel, "มีในเครื่องแต่ยังไม่ commit → deploy แล้วจะ 404"))
 
-    for src_name, rel in band_refs():
+    for src_name, rel in lazy_manifest_refs():
         checked += 1
         if not (ROOT / rel).exists():
-            missing.append((src_name, rel, "ไม่มีไฟล์ (คลังศัพท์ขั้นสูงจะโหลดไม่ขึ้น)"))
+            missing.append((src_name, rel, "ไม่มีไฟล์ (คลังศัพท์จะโหลดไม่ขึ้น)"))
         elif GIT_MODE and rel not in tracked:
             missing.append((src_name, rel, "มีในเครื่องแต่ยังไม่ commit → deploy แล้วจะ 404"))
 
