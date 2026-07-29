@@ -113,9 +113,9 @@ h1{color:var(--sky-d);text-shadow:none;}
   /* ต้องใช้ #id.screen.active ให้ specificity เท่ากับ .screen.active:not(#screen-dashboard)
      (:not(#id) นับ specificity เท่า id) — rule นี้อยู่ทีหลังเลยชนะ */
   #screen-game.screen.active{
-    width:min(900px,96vw);display:grid;grid-template-columns:1fr 1fr;
+    width:min(1400px,97vw);display:grid;grid-template-columns:1fr 1fr;
     grid-template-areas:"top top" "timer timer" "lblen lblth" "en th" "hint hint" "note note" "report report";
-    column-gap:18px;align-content:start;
+    column-gap:28px;align-content:start;
   }
   #screen-game .game-top{grid-area:top;}
   #screen-game .timer-wrap{grid-area:timer;}
@@ -139,9 +139,9 @@ h1{color:var(--sky-d);text-shadow:none;}
 #screen-game .back-btn{font-size:clamp(12px,3dvh,15px);padding:clamp(4px,1.2dvh,6px) clamp(9px,2.5dvh,14px);}
 #screen-game .combo-pill{font-size:clamp(12px,3dvh,15px);padding:clamp(2px,1dvh,4px) clamp(8px,2.4dvh,12px);min-width:70px;}
 #screen-game .timer-wrap{height:clamp(10px,2.6dvh,16px);margin-bottom:clamp(4px,1.5dvh,12px);}
-#screen-game .board-label{font-size:clamp(11px,2.8dvh,15px);margin:clamp(2px,0.8dvh,6px) 2px;}
-#screen-game .card-grid{gap:clamp(5px,1.6dvh,10px);margin-bottom:clamp(3px,1dvh,6px);}
-#screen-game .word-card{min-height:clamp(38px,9dvh,64px);padding:clamp(6px,2dvh,16px) 8px;font-size:clamp(13px,3.6dvh,20px);}
+#screen-game .board-label{font-size:clamp(11px,3.4dvh,19px);margin:clamp(2px,0.8dvh,8px) 2px;}
+#screen-game .card-grid{gap:clamp(5px,1.8dvh,16px);margin-bottom:clamp(3px,1dvh,8px);}
+#screen-game .word-card{min-height:clamp(38px,11dvh,92px);padding:clamp(6px,2.6dvh,22px) 10px;font-size:clamp(13px,4.8dvh,30px);}
 #screen-game .hint-btn{margin:clamp(4px,1.2dvh,8px) auto 0;padding:clamp(5px,1.8dvh,9px) clamp(12px,3.5dvh,22px);font-size:clamp(12px,3dvh,16px);}
 #screen-game .game-endless-note{margin-top:clamp(4px,1.5dvh,8px);padding:clamp(6px,1.8dvh,11px) 14px;font-size:clamp(11px,2.6dvh,14px);line-height:1.4;}
 #screen-game #btn-report{margin:clamp(4px,1.5dvh,6px) auto 2px;padding:clamp(5px,1.8dvh,9px) clamp(12px,3.5dvh,22px);font-size:clamp(11px,2.8dvh,15px);}
