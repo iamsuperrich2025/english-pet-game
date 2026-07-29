@@ -715,15 +715,6 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .pl-grade{background:var(--sky-d);color:#dcecff;padding:0 18px 12px;font-size:13.5px;}
-/* 🎖️ แถวเข็มในการ์ดผู้เล่น (ต่อจากแถบชั้น สีฟ้าเดียวกัน) */
-.pl-badges{background:var(--sky-d);padding:0 16px 14px;display:flex;flex-wrap:wrap;gap:6px;}
-.pl-badge-chip{
-  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);border-radius:999px;
-  padding:3px 10px;font-size:12px;color:#eaf3ff;font-weight:600;display:inline-flex;align-items:center;gap:4px;
-}
-.pl-badge-chip b{font-size:14.5px;line-height:1;}
-.pl-badge-ic{width:20px;height:20px;object-fit:contain;display:block;flex:0 0 auto;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));}
 .pl-body{padding:16px 16px 18px;}
 .pl-loading,.pl-none{text-align:center;color:#5a6b82;font-size:14.5px;padding:14px 6px;line-height:1.6;}
 .pl-none small{color:#8496ac;font-size:12.5px;}
@@ -2158,6 +2149,9 @@ html.no-anim .cs-big-img{animation:none}
 }
 .fp-head{display:flex;align-items:flex-start;gap:6px;flex-shrink:0;}
 .fp-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px;}
+/* 🎖️ รอบ 737: เวลาโพสต์ย้ายเข้ามาอยู่แถวเดียวกับชื่อ (แทนที่จะเป็นคอลัมน์แยกกินพื้นที่ทั้งความสูงการ์ด)
+   → แถวเหรียญด้านล่างได้ความกว้างเท่าแถวชื่อเต็ม ๆ ไม่ถูกเบียดแคบจนเหรียญเรียงเต็มแถวไม่ได้ (ผู้ใช้แจ้ง 29 ก.ค. 2026) */
+.fp-name-line{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;width:100%;}
 .fp-name{color:#8fd4ff;font-weight:700;font-size:12px;cursor:pointer;}
 .fp-when{color:#7f9cc0;font-size:9.5px;white-space:nowrap;flex-shrink:0;margin-top:2px;}
 /* 🎖️ รอบ 715: แถวเหรียญ(เข็ม) ใต้ชื่อในฟีด — แยกจากชื่อไม่ให้ไหลต่อท้ายจนตัดบรรทัดมั่ว */
@@ -2495,14 +2489,24 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .lbf-cell .sc{flex:0 0 auto;color:#9ec8e8;font-weight:700;white-space:nowrap;}
 
 /* 🗂️ รอบ 677: แท็บเข็มแยกกระดานย่อยทีละสาย — เนื้อหายาวกว่าแท็บอื่นมาก (10 สาย) จึงให้เลื่อนในตัว
-   scrollbar ซ่อน (แพทเทิร์นเดียวกับ .pl-feed/.pl-wide .pl-body) แทนการยัดทุกอย่างให้พอดีจอแบบแท็บอื่น */
+   scrollbar ซ่อน (แพทเทิร์นเดียวกับ .pl-feed/.pl-wide .pl-body) แทนการยัดทุกอย่างให้พอดีจอแบบแท็บอื่น
+   🗂️ รอบ 737 (ผู้ใช้: "จัดเป็นตาราง 4 คอลัมน์ใหญ่ เกิน 4 สายขึ้นบรรทัดใหม่"): เปลี่ยนจากคอลัมน์เดียวเรียงยาว
+   → grid 4 คอลัมน์เท่ากัน ล้นแถวเองอัตโนมัติ (สายที่ 5 ขึ้นไปตกไปแถวถัดไปโดย grid จัดให้เอง) */
 .lbf-bcat-wrap{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;
-  display:flex;flex-direction:column;gap:10px;padding-right:2px;}
+  display:grid;grid-template-columns:repeat(4,1fr);align-content:start;gap:10px;padding-right:2px;}
 .lbf-bcat-wrap::-webkit-scrollbar{display:none;width:0;}
-.lbf-bcat{background:rgba(255,255,255,.045);border-radius:12px;padding:8px 11px;flex:0 0 auto;}
-.lbf-bcat-head{display:flex;align-items:baseline;gap:7px;margin-bottom:6px;flex-wrap:wrap;}
+.lbf-bcat{background:rgba(255,255,255,.045);border-radius:12px;padding:8px 11px;min-width:0;}
+.lbf-bcat-head{display:flex;flex-direction:column;align-items:center;text-align:center;gap:1px;margin-bottom:4px;}
 .lbf-bcat-head b{color:#e6f2ff;font-size:clamp(12px,1.9vh,14px);font-weight:800;}
 .lbf-bcat-head small{color:#8fa8c8;font-size:clamp(9.5px,1.4vh,11px);}
+/* 🏅 รอบ 737 (ผู้ใช้: "ไม่ต้องเอาเหรียญใส่หลังชื่อผู้เล่น แต่ให้แต่ละประเภทโชว์เหรียญเดียวใหญ่ใต้ชื่อสาย
+   ใหญ่กว่าเดิม ~5 เท่า"): เหรียญตัวแทนสาย = เข็มระดับสูงสุดที่มีคนได้แล้ว (แถวอันดับ 1 ของสายนั้น)
+   ใช้ % ของการ์ด (ไม่ใช่ vh ตรงๆ) กันล้นออกนอกคอลัมน์เมื่อจอแคบ/คอลัมน์เล็กลง */
+.lbf-bcat-badge{display:flex;flex-direction:column;align-items:center;gap:3px;margin:2px 0 8px;}
+.lbcat-ic{width:clamp(90px,78%,210px);aspect-ratio:1/1;object-fit:contain;display:block;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.55)) drop-shadow(0 0 20px rgba(255,214,106,.45));}
+.lbf-bcat-badge .badge-ic-fallback{font-size:clamp(60px,14vh,140px);line-height:1;}
+.lbcat-ic-label{color:#ffd76a;font-weight:800;font-size:clamp(12px,2vh,15px);text-align:center;}
 .lbf-bcat-rows{display:flex;flex-direction:column;gap:2px;}
 .lbf-bcat-row{display:flex;align-items:center;gap:10px;padding:3px 7px;border-radius:7px;
   font-size:clamp(10.5px,1.6vh,12.5px);}
@@ -2511,13 +2515,6 @@ button.pi-dress-pip:active{transform:scale(.94);}
   font-size:clamp(17px,2.8vh,22px);}
 .lbf-bcat-row .bcr-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;color:#e6f2ff;cursor:pointer;}
-.lbf-bcat-row .bcr-tier{flex:0 0 auto;display:flex;align-items:center;gap:8px;
-  color:#9ec8e8;font-weight:700;white-space:nowrap;font-size:clamp(12.5px,2vh,15px);}
-/* รอบ 736 (ผู้ใช้: "อยากเห็นภาพเหรียญใหญ่ๆ ชัดๆ"): ขยายภาพเหรียญ ~2 เท่า + แสงทองนวลรอบเหรียญ
-   แถวสูงขึ้นได้เพราะ .lbf-bcat-wrap เลื่อนในตัวอยู่แล้ว (รอบ 677) — ลด padding แถวชดเชยเล็กน้อย */
-.bcr-ic{width:clamp(48px,9.5vh,76px);height:clamp(48px,9.5vh,76px);object-fit:contain;display:block;flex:0 0 auto;
-  filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)) drop-shadow(0 0 9px rgba(255,214,106,.3));}
-.badge-ic-fallback{font-size:clamp(38px,7.6vh,60px);line-height:1;}
 
 /* 🏆 รอบ 247: โพเดียม Top 5 — ตัวละครที่เลือกยืนลดหลั่นบนแท่น (เรียง L→R = 4,2,1,3,5) */
 .lbf-podium{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center;
@@ -2594,6 +2591,12 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .pl-cols{display:grid;grid-template-columns:1fr 1.15fr;gap:12px;align-items:start;}
 .pl-col{min-width:0;}
 .pl-sec-title{font-size:13px;font-weight:700;color:#3a5a86;margin:0 0 7px;}
+/* 🎖️ รอบ 737 (ผู้ใช้สั่ง): แถวบน = สถิติ + เข็มเกียรติยศใหญ่ (แทนที่กิจกรรม/ประกาศนียบัตรเดิม)
+   แถวล่าง = กิจกรรมล่าสุด + ประกาศนียบัตร ย้ายลงมา · เข็มกว้าง ≈ 2 คอลัมน์ล่างรวมกัน */
+.pl-cols.pl-cols-top{grid-template-columns:1fr 2.05fr;}
+.pl-cols.pl-cols-bottom{grid-template-columns:1fr;margin-top:14px;}
+.pl-cols.pl-cols-bottom.has-certs{grid-template-columns:1.15fr .9fr;}
+.pl-badges-col{min-width:0;}
 .pl-feed{
   max-height:210px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;
 }
@@ -2691,9 +2694,9 @@ html.no-anim .img-lightbox,html.no-anim .img-lightbox .ilb-inner{transition:none
 .feed-list.feed-deck .fp-cert .fp-text{display:none;}
 .fp-page.fp-cert .fp-media{flex:none;max-height:none;}
 .fp-page.fp-cert .cert-tap{flex:none;height:250px;width:175px;align-self:center;}
-/* ตู้ใบประกาศในโปรไฟล์ — ใบตั้ง (7:10) เป็นคอลัมน์ที่ 3 ของ .pl-cols
-   (ไม่ต่อท้ายให้การ์ดสูงขึ้น = เห็นใบประกาศทันทีไม่ต้องเลื่อน) · ใบเยอะ = เลื่อนในตู้เอง */
-.pl-cols.has-certs{grid-template-columns:1fr 1.15fr .9fr;}
+/* ตู้ใบประกาศในโปรไฟล์ — ใบตั้ง (7:10) เป็นคอลัมน์ที่ 2 ของแถวล่าง .pl-cols-bottom (รอบ 737)
+   (ไม่ต่อท้ายให้การ์ดสูงขึ้น = เห็นใบประกาศทันทีไม่ต้องเลื่อน) · ใบเยอะ = เลื่อนในตู้เอง
+   grid-template-columns ตอน has-certs กำหนดไว้ที่ .pl-cols.pl-cols-bottom.has-certs ด้านบนแล้ว */
 .pl-sec-sub{font-weight:normal;color:#7d93ad;font-size:10.5px;margin-left:6px;}
 .pl-certs{display:flex;flex-wrap:wrap;gap:9px 8px;align-content:flex-start;
   max-height:min(300px,34vh);overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;}
@@ -4326,6 +4329,48 @@ html.no-anim #panel-rank .rank-beam,html.no-anim #panel-rank .rank-edge{display:
 @media (max-width:760px){.grid2x8{--fc-n:5;}}
 @media (max-width:700px){.grid2x8{--fc-n:4;}}
 @media (max-width:520px){.grid2x8{--fc-n:3;}}
+
+/* ============================================================
+   🧩 กริด "1 แถว × 5 คอลัมน์" (รอบ 737) — แพทเทิร์นเดียวกับ .grid2x8 แต่แถวเดียว
+   ใช้ที่: เข็มเกียรติยศในการ์ดโปรไฟล์ 👤 (การ์ดใหญ่ 5 ใบต่อหน้าจอ เกิน 5 ปัดขวาเหมือนโรงงาน)
+   ตั้ง --fc-n:5 ตรงบนคลาสนี้เอง (ไม่พึ่งค่าที่สืบทอดจาก .pl-card.pl-wide ซึ่งเริ่มที่ 8) */
+.grid1x5{
+  --fc-n:5;--fc-gap:9px;
+  display:grid;grid-auto-flow:column;grid-template-rows:minmax(0,1fr);
+  grid-auto-columns:calc((100% - (var(--fc-n) - 1) * var(--fc-gap)) / var(--fc-n));
+  gap:var(--fc-gap);align-items:stretch;
+}
+.grid1x5>*{min-width:0;}
+@media (max-width:700px){.grid1x5{--fc-n:4;}}
+@media (max-width:520px){.grid1x5{--fc-n:3;}}
+
+/* 🎖️ การ์ดเข็มเกียรติยศใหญ่ในโปรไฟล์ (รอบ 737) — หน้าตาชุดเดียวกับ .pl-assets/.hq-card
+   (หัวน้ำเงินชื่อเข็ม → ภาพเหรียญใหญ่กลางการ์ด) ให้เห็นรายละเอียดชัดแทนชิปเล็กเดิม */
+.pl-badges-strip{
+  grid-template-rows:clamp(130px,28vh,210px);
+  padding:9px;border-radius:16px;border:1px solid rgba(255,255,255,.16);box-sizing:border-box;
+}
+.pl-badge-card{
+  width:auto;height:100%;padding:0;overflow:hidden;
+  background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;border-radius:14px;
+  box-shadow:0 4px 12px rgba(15,60,110,.22);transition:transform .12s,box-shadow .12s;
+  display:flex;flex-direction:column;text-align:center;
+}
+.pl-badge-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(10,45,90,.34);}
+.pl-badge-card-ic{
+  flex:1;min-height:0;width:100%;height:auto;padding:10px;object-fit:contain;display:block;
+  filter:drop-shadow(0 6px 10px rgba(20,60,110,.28));
+}
+.pl-badge-card-ic.badge-ic-fallback{display:flex;align-items:center;justify-content:center;font-size:min(56px,9vh);}
+.pl-badge-card-nm{
+  flex-shrink:0;width:100%;background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;
+  font-size:12px;line-height:1.2;font-weight:700;padding:6px 6px;text-shadow:0 1px 2px rgba(10,40,80,.4);
+  white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  min-height:calc(2.4em + 10px);
+}
+.pl-badges-empty{color:#3a5a86;font-size:13.5px;text-align:center;padding:22px 10px;line-height:1.6;
+  background:#fff;border:1px solid #cfe0f4;border-radius:14px;}
+.pl-badges-empty small{color:#7d93ad;font-size:11.5px;}
 
 /* ============================================================
    🏪 ตลาดขายสินค้าเต็มจอ + คลังของฉัน 2 แถว × 8 คอลัมน์ (รอบ 616 · ผู้ใช้สั่ง 27 ก.ค. 2026)

@@ -1594,16 +1594,22 @@ function openLeaderboardFull(){
        แทนแต้มรวมอย่างเดียว) เนื้อหาต่างจากแท็บอื่นทั้งหมด (ไม่มีโพเดียม/กริดรวม) จบแล้ว return ทันที */
     if(__lbfTab === 'badges'){
       const secs = (typeof lbBadgeSections === 'function') ? lbBadgeSections() : [];
-      const body = secs.length ? `<div class="lbf-bcat-wrap">${secs.map(s=>`
+      /* 🏅 รอบ 737 (ผู้ใช้: เอาเหรียญออกจากหลังชื่อผู้เล่น เหลือเหรียญเดียวใหญ่ใต้ชื่อสายแทน
+         + จัด grid 4 คอลัมน์ — ดู CSS .lbf-bcat-wrap/.lbf-bcat-badge): เหรียญตัวแทนสาย = เข็มระดับสูงสุด
+         ที่มีคนได้แล้ว (แถวอันดับ 1 หลัง sort desc ใน lbBadgeSections) */
+      const body = secs.length ? `<div class="lbf-bcat-wrap">${secs.map(s=>{
+        const top = s.rows[0];
+        return `
         <div class="lbf-bcat">
           <div class="lbf-bcat-head"><b>${escapeHTML(s.label)}</b><small>${escapeHTML(s.desc)}</small></div>
+          <div class="lbf-bcat-badge">${(typeof badgeIcHTML==='function')?badgeIcHTML(top.emoji,'lbcat-ic'):top.emoji}<span class="lbcat-ic-label">${escapeHTML(top.tierLabel)}</span></div>
           <div class="lbf-bcat-rows">${s.rows.map((r,i)=>`
             <div class="lbf-bcat-row${r.me ? ' me' : ''}">
               <span class="bcr-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}</span>
               <span class="bcr-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
-              <span class="bcr-tier">${(typeof badgeIcHTML==='function')?badgeIcHTML(r.emoji,'bcr-ic'):r.emoji} ${escapeHTML(r.tierLabel)}</span>
             </div>`).join('')}</div>
-        </div>`).join('')}</div>`
+        </div>`;
+      }).join('')}</div>`
         : `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}${body}</div>`;
       bindLbfChrome();
@@ -1821,12 +1827,20 @@ function bindPlayerClicks(){
 }
 
 function showPlayerCard(uid, name, grade){
-  // แยกเข็มออกจากชื่อ (เข็ม baked มากับชื่อจาก presence/leaderboard) → โชว์เป็นแถวเข็มสวยๆ
+  // แยกเข็มออกจากชื่อ (เข็ม baked มากับชื่อจาก presence/leaderboard) → การ์ดเข็มใหญ่แถวบน (รอบ 737)
   const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
   const arr = (typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : [];
-  const badgeRow = arr.length
-    ? `<div class="pl-badges">${arr.map(e=>`<span class="pl-badge-chip">${(typeof badgeIcHTML==='function')?badgeIcHTML(e,'pl-badge-ic'):`<b>${e}</b>`} ${escapeHTML((BADGE_META[e]||{}).n||'')}</span>`).join('')}</div>`
-    : '';
+  const badgesHTML = arr.length
+    ? `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+        <div class="strip-x pl-badges-strip grid1x5">${arr.map(e=>{
+          const nm = (BADGE_META[e]||{}).n || '';
+          return `<div class="pl-badge-card" title="${escapeHTML(nm)}">
+            ${(typeof badgeIcHTML==='function')?badgeIcHTML(e,'pl-badge-card-ic'):`<span class="pl-badge-card-ic badge-ic-fallback">${e}</span>`}
+            <span class="pl-badge-card-nm">${escapeHTML(nm)}</span>
+          </div>`;
+        }).join('')}</div>
+        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`
+    : `<div class="pl-badges-empty">ยังไม่มีเข็มเกียรติยศ 🎖️<br><small>เล่นเกม สอบผ่าน หรือทำภารกิจพิเศษเพื่อปลดเข็มแรก!</small></div>`;
   // 📰 รอบ 155: การ์ดยืดกว้างเกือบเต็มจอ + ปุ่ม Follow + กิจกรรมล่าสุด + กริดทรัพย์สินที่เปิดเผย
   const me = (typeof onlineKey === 'function') && uid === onlineKey();
   const canFollow = !!uid && !me && typeof followSet === 'function'
@@ -1849,15 +1863,21 @@ function showPlayerCard(uid, name, grade){
           const mk = gradeMark(gradeOf(uid, grade));
           return mk ? `<span class="pl-glabel">ระดับชั้น</span>${mk}` : '';
         })()}<span class="pl-followers"></span></div>
-      ${badgeRow}
       <div class="pl-body">
-        <div class="pl-cols">
+        <div class="pl-cols pl-cols-top">
           <div class="pl-col pl-stats-col"><div class="pl-loading">⏳ กำลังโหลดข้อมูล...</div></div>
+          <div class="pl-col pl-badges-col">
+            <div class="pl-sec-title">🎖️ เข็มเกียรติยศ</div>
+            ${badgesHTML}
+          </div>
+        </div>
+        <!-- 🔁 รอบ 737 (ผู้ใช้สั่ง): กิจกรรมล่าสุด+ประกาศนียบัตร ย้ายลงแถวล่าง ให้เข็มเกียรติยศขึ้นแทนแถวบน -->
+        <div class="pl-cols pl-cols-bottom">
           <div class="pl-col">
             <div class="pl-sec-title">📰 กิจกรรมล่าสุด</div>
             <div class="pl-feed"><div class="pl-loading">⏳ กำลังโหลด...</div></div>
           </div>
-          <!-- 🎖️ รอบ 712: ตู้ใบประกาศ = คอลัมน์ที่ 3 (ไม่ดันการ์ดให้สูงขึ้น เห็นได้ทันทีไม่ต้องเลื่อน)
+          <!-- 🎖️ รอบ 712: ตู้ใบประกาศ = คอลัมน์ที่ 2 ของแถวล่าง
                ของตัวเองอ่านจากเซฟครบทุกใบ · ของเพื่อนอ่านจากโพสต์สอบผ่านที่เขาเปิดเผย -->
           <div class="pl-col pl-certs-wrap" style="display:none">
             <div class="pl-sec-title">🎖️ ประกาศนียบัตร <small class="pl-sec-sub">แตะดูใบใหญ่</small></div>
@@ -1878,6 +1898,7 @@ function showPlayerCard(uid, name, grade){
       </div>
     </div>`;
   document.body.appendChild(ov);
+  bindStripArrows(ov.querySelector('.pl-badges-col .strip-wrap'));   // 🎖️ รอบ 737: เข็มใหญ่ 5 คอลัมน์ ปัดขวาถ้าเกิน
   const close = ()=>ov.remove();
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
   ov.querySelector('.pl-close').addEventListener('click', close);
@@ -2021,8 +2042,8 @@ function showPlayerCard(uid, name, grade){
     box.innerHTML = certStripHTML(list, me);
     certBindStrip(box, list);
     wrap.style.display = '';
-    const cols = ov.querySelector('.pl-cols');
-    if(cols) cols.classList.add('has-certs');        // → กริดเปลี่ยนเป็น 3 คอลัมน์
+    const cols = ov.querySelector('.pl-cols-bottom');   // 🔁 รอบ 737: certs อยู่แถวล่างแล้ว ไม่ใช่แถวบนที่มีเข็ม
+    if(cols) cols.classList.add('has-certs');        // → กริดแถวล่างเปลี่ยนเป็น 2 คอลัมน์ (feed+certs)
   };
   if(me) plCerts(null);                              // ของตัวเองอ่านจากเซฟได้ทันที (ออฟไลน์ก็เห็น)
 
@@ -3517,8 +3538,10 @@ function fpostHTML(it, opt){
       data-fid="${escapeHTML(it.u)}" data-n="${escapeHTML(it.n)}" data-g="${escapeHTML(it.g || '')}">
     <div class="fp-head">
       ${(typeof photoMiniHTML === 'function') ? photoMiniHTML(it.u, 'fp-ava') : ''}
-      <span class="fp-who">${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}${nb.row}</span>
-      <small class="fp-when">${feedAgo(it.ts)}</small>
+      <span class="fp-who">
+        <span class="fp-name-line">${nameWithGrade(`<b class="fp-name">${escapeHTML(nb.name)}</b>`, gradeOf(it.u, it.g))}<small class="fp-when">${feedAgo(it.ts)}</small></span>
+        ${nb.row}
+      </span>
     </div>
     <div class="fp-text">${escapeHTML(it.tx)}</div>
     <div class="fp-media">${cert
