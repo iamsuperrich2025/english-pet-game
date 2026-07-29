@@ -1106,6 +1106,41 @@ html.no-anim body.quake{animation:none;}
 .bax-lv.done .bax-rw{background:#fff;color:#2e7d44;border-color:var(--green-d);}
 .bax-lv.locked .bax-rw{background:#e8e4ee;color:#8a8098;border-color:#d3cbdd;}
 .bax-foot{font-size:clamp(9.5px,1.9vh,12.5px);color:#9a8aac;margin-top:8px;text-align:center;}
+.bax-rank{margin-left:8px;font-size:clamp(10px,1.9vh,13px);font-family:inherit;font-weight:bold;cursor:pointer;
+  background:#e9f3ff;color:#2f6ea8;border:2px solid #8fc0ea;border-radius:999px;padding:2px 12px;
+  white-space:nowrap;vertical-align:middle;}
+.bax-rank:active{transform:scale(.95);}
+
+/* 🏁 กระดานสอบใหญ่เร็วที่สุด (รอบ 786) — ทั้งกระดานอยู่ในจอเดียว ไม่มี scrollbar (กฎทองข้อ 7) */
+.bxr-box{position:relative;display:flex;flex-direction:column;width:min(96vw,860px);max-height:94vh;
+  background:#fff;border:3px solid #fff;border-radius:20px;box-shadow:var(--card-shadow);padding:12px 14px;}
+.bxr-box .pl-close{background:#e05252;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.bxr-head{font-size:clamp(14px,3vh,19px);font-weight:bold;color:#5a4a6e;margin:0 34px 6px 2px;}
+.bxr-sub{display:block;font-size:clamp(10px,1.9vh,12.5px);font-weight:normal;color:#9a8aac;margin-top:2px;}
+.bxr-body{flex:1;min-height:0;display:flex;flex-direction:column;}
+.bxr-pick{display:flex;flex-direction:column;gap:4px;margin-bottom:6px;}
+.bxr-cats,.bxr-lvs{display:flex;flex-wrap:wrap;gap:5px;}
+.bxr-chip{font-family:inherit;font-size:clamp(10px,1.9vh,13px);cursor:pointer;white-space:nowrap;
+  background:#f7f2ff;color:#7d5fc0;border:2px solid #e0d4f0;border-radius:999px;padding:3px 11px;}
+.bxr-chip.on{background:var(--purple,#c39df0);color:#fff;border-color:#7d5fc0;font-weight:bold;}
+.bxr-chip.lv{background:#fff8ec;color:#b26a1e;border-color:#f2c880;}
+.bxr-chip.lv.on{background:#f0a93c;color:#fff;border-color:#c8801f;font-weight:bold;}
+.bxr-chip:active{transform:scale(.95);}
+.bxr-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,5px);overflow:hidden;}
+.bxr-row{display:flex;align-items:center;gap:8px;background:#faf7ff;border:2px solid #eee3fb;border-radius:12px;
+  padding:clamp(3px,.9vh,7px) 10px;font-size:clamp(11px,2.1vh,14.5px);color:#6a5a78;}
+.bxr-row.me{background:var(--yellow);border-color:var(--yellow-d);color:#8a6a1a;font-weight:bold;}
+.bxr-rk{min-width:1.7em;text-align:center;font-weight:bold;color:#7d5fc0;}
+.bxr-row.me .bxr-rk{color:#a8791a;}
+.bxr-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bxr-nm small{font-size:.85em;}
+.bxr-sc{color:#9a8aac;font-variant-numeric:tabular-nums;}
+.bxr-row.me .bxr-sc{color:#a8791a;}
+.bxr-tm{font-weight:bold;color:#b26a1e;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.bxr-more{text-align:center;color:#c8bcd8;line-height:.9;}
+.bxr-none{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:clamp(11px,2.1vh,14px);color:#9a8aac;padding:10px;}
+.bxr-foot{font-size:clamp(9.5px,1.8vh,12px);color:#9a8aac;margin-top:8px;text-align:center;}
 .band-mine-tag{font-size:11.5px;background:var(--yellow);color:#a8791a;border:2px solid var(--yellow-d);border-radius:999px;padding:1px 8px;white-space:nowrap;vertical-align:middle;}
 
 /* แผงเลือกชุดข้อสอบ band (รอบ 266) — เห็นครบทุกชุดในจอเดียว ไม่มี scrollbar (กฎข้อ 7) */

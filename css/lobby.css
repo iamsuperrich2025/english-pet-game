@@ -2472,6 +2472,22 @@ button.pi-dress-pip:active{transform:scale(.94);}
 /* 🔎 รอบ 590: มี 4 แท็บแล้ว — .lb-tab เดิมเป็น flex:1 ทำให้ถูกบีบจนตัวหนังสือขึ้น 2 บรรทัด
    → ให้กว้างตามข้อความบรรทัดเดียว (แถวหัวห่อบรรทัดเองได้ถ้าจอแคบ) */
 .lbf-tabs .lb-tab{flex:0 0 auto;white-space:nowrap;padding:6px 11px;}
+/* 🏁 รอบ 786: แท็บสอบใหญ่เร็วที่สุด — ตัวกระดานใช้คลาส .bxr-* ร่วมกับแผงป๊อปอัป (css/style.css)
+   ที่นี่แค่ทาสีให้เข้าธีมกระดานเต็มจอ (พื้นน้ำเงินเข้ม) แทนโทนขาวของแผงในหน้าเลือกหมวด */
+.lbf-note{flex:0 0 auto;font-size:clamp(10px,1.9vh,12.5px);color:#8fb6e6;margin:-6px 0 8px;}
+.lbf-box .bxr-chip{background:#173154;color:#9fd0ff;border-color:#2f5c94;}
+.lbf-box .bxr-chip.on{background:#3a76d8;color:#fff;border-color:#8fd6ff;}
+.lbf-box .bxr-chip.lv{background:#3a2a17;color:#ffcf8a;border-color:#7a5a2a;}
+.lbf-box .bxr-chip.lv.on{background:#e0922f;color:#fff;border-color:#ffd9a0;}
+.lbf-box .bxr-row{background:#0f2444;border-color:#2a4e80;color:#cfe4ff;}
+.lbf-box .bxr-row.me{background:#3d3418;border-color:#e0b64a;color:#ffe6a8;}
+.lbf-box .bxr-rk{color:#8fd6ff;}
+.lbf-box .bxr-row.me .bxr-rk{color:#ffd451;}
+.lbf-box .bxr-sc{color:#8fb6e6;}
+.lbf-box .bxr-row.me .bxr-sc{color:#ffe6a8;}
+.lbf-box .bxr-tm{color:#ffcf8a;}
+.lbf-box .bxr-none,.lbf-box .bxr-foot{color:#8fb6e6;}
+.lbf-box .bxr-more{color:#456d9e;}
 /* ปุ่มปิดทั้งสอง: override .pl-close (absolute มุมขวา) → in-flow เรียงในแถวหัว ไม่ซ้อนกัน/ทับแท็บ
    ซ้าย(ก่อนหัวข้อ) · ขวา(หลังแท็บ) — รอบ 249 ผู้ใช้: เพิ่มปุ่มปิดซ้ายบน */
 .lbf-close{position:static;margin-left:8px;flex:0 0 auto;}

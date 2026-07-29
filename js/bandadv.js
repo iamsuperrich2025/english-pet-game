@@ -180,6 +180,131 @@ function bigExamBadgeNote(){
     + (next ? `อีก <b>${next[0] - n}</b> ใบ = ${BIGEXAM_TIER_UI[next[1]]}` : 'ได้เข็มนักสอบใหญ่ครบทุกระดับแล้ว! 🏛️');
 }
 
+/* ============================================================
+   🏁 กระดานอันดับ "สอบใหญ่เร็วที่สุด" (รอบ 786) — รายหมวด × รายระดับ
+   ⚠️ ไม่เพิ่มโซนใน DB / ไม่ต้อง publish rules ใหม่ — ใช้ข้อมูลที่มีอยู่แล้ว 2 ทาง:
+     ① เพื่อน = โพสต์ในฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม · โพสต์เขียนโดย feedEvent
+        รูปแบบ "สอบผ่านหมวด<หมวด> · สอบใหญ่ระดับ<x> <sc>/<tt> ข้อ ⏱️ m:ss 📝" — รอบ 777)
+     ② ตัวเรา = ใบประกาศในเซฟ (state.certs ที่มี .big + .sec) → เห็นเวลาตัวเองเสมอ
+        แม้โพสต์หลุด 120 โพสต์ล่าสุด หรือปิดเปิดเผยกิจกรรมไว้ (ข้อมูลไม่ได้ถูกส่งออกไปไหน)
+   ⇒ เป็นกระดาน "จากกิจกรรมล่าสุด" ไม่ใช่สถิติตลอดกาล — เขียนบอกเด็กตรง ๆ ในหน้าจอ ห้ามอวดเกินจริง
+   ============================================================ */
+const BXR_TOP = 8;                    // โชว์กี่แถวต่อกระดาน (พอดีจอเตี้ยไม่ต้องเลื่อน)
+const __BXR_POST_RE = /^สอบผ่านหมวด(.+?)\s*·\s*สอบใหญ่ระดับ(ต้น|กลาง|สูง)\s+(\d+)\s*\/\s*(\d+)\s*ข้อ\s*⏱️\s*(\d+):([0-5]\d)/;
+
+/* ชื่อหมวดไทย → id (จากมานิเฟสต์ · ทำใหม่ทุกครั้ง ราคาถูกและรองรับหมวดที่เพิ่มมาใหม่) */
+function bxrIdByLabel(label){
+  if(typeof BAND_ADV_MANIFEST === 'undefined') return '';
+  const th = String(label || '').trim();
+  return Object.keys(BAND_ADV_MANIFEST).find(id=>BAND_ADV_MANIFEST[id].label === th) || '';
+}
+/* แถวอันดับของ (หมวด, ระดับ) — เร็วสุดก่อน · 1 คนต่อ 1 แถว (เก็บเวลาดีสุด) */
+function bxRankRows(catId, lvKey){
+  const e = BAND_ADV_EXAM.find(x=>x.k === lvKey);
+  if(!e) return [];
+  const by = {};                       // uid → แถว
+  const put = (uid, row)=>{
+    const old = by[uid];
+    if(!old || row.sec < old.sec) by[uid] = Object.assign({}, old, row);
+  };
+  // ① จากฟีดรวม (เพื่อนทั้งเกม)
+  const posts = (typeof Online !== 'undefined' && Array.isArray(Online.gfeed)) ? Online.gfeed : [];
+  posts.forEach(p=>{
+    if(!p || p.c !== 'quiz') return;
+    const m = __BXR_POST_RE.exec(String(p.tx || '').trim());
+    if(!m || m[2] !== e.lv || bxrIdByLabel(m[1]) !== catId) return;
+    put(p.u, {uid:p.u, name:p.n || 'เพื่อน', g:p.g || '', sc:Number(m[3]), tt:Number(m[4]),
+              sec:Number(m[5]) * 60 + Number(m[6]), ts:p.ts || 0});
+  });
+  // ② ของเราจากใบประกาศ (ทับของฟีดถ้าดีกว่า — ใบเก็บเวลาที่ดีที่สุดไว้อยู่แล้ว)
+  const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
+  const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
+    ? state.certs.find(c=>c.id === bandAdvExamId(catId, lvKey) && c.sec) : null;
+  if(cert){
+    put(me, {uid:me, name:(typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || (state.student && state.student.name) || 'หนู',
+             g:(state.student && state.student.grade) || '', sc:cert.sc, tt:cert.tt, sec:cert.sec, ts:cert.ts || 0});
+  }
+  return Object.keys(by).map(u=>{
+    const r = by[u];
+    r.me = (u === me);
+    return r;
+  }).sort((a, b)=>(a.sec - b.sec) || (b.sc / b.tt - a.sc / a.tt));
+}
+
+/* แถว HTML เดียว (ชื่อเล่น + สัญลักษณ์ระดับชั้นเสมอ — กฎคุ้มครองเด็ก ห้ามชื่อจริง) */
+function bxrRowHTML(r, i){
+  const nm = (typeof splitNameBadges === 'function') ? splitNameBadges(r.name) : {name:r.name, badges:''};
+  const mark = (typeof gradeMark === 'function' && typeof gradeOf === 'function')
+    ? gradeMark(gradeOf(r.uid, r.g)) : '';
+  return `<div class="bxr-row${r.me ? ' me' : ''}">
+    <span class="bxr-rk">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1)}</span>
+    <span class="bxr-nm">${r.me ? '⭐ ' : ''}${escapeHTML(nm.name)}${mark}<small>${escapeHTML(nm.badges)}</small></span>
+    <span class="bxr-sc">${r.sc}/${r.tt}</span>
+    <span class="bxr-tm">⏱️ ${fmtMMSS(r.sec)}</span>
+  </div>`;
+}
+/* เนื้อกระดาน (ใช้ทั้งในแผงของตัวเอง และแท็บ 🏁 ในกระดานเต็มจอ) */
+function bxRankBodyHTML(catId, lvKey){
+  const rows = bxRankRows(catId, lvKey);
+  if(!rows.length){
+    return `<div class="bxr-none">ยังไม่มีใครทำเวลาระดับนี้ในกิจกรรมล่าสุดเลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
+  }
+  const top = rows.slice(0, BXR_TOP);
+  const meAt = rows.findIndex(r=>r.me);
+  return top.map(bxrRowHTML).join('')
+    + (meAt >= BXR_TOP ? `<div class="bxr-more">…</div>${bxrRowHTML(rows[meAt], meAt)}` : '');
+}
+
+/* 🏁 ตัวกระดาน (ชิปเลือกหมวด/ระดับ + รายชื่อ) — วาดลงกล่องไหนก็ได้ วาดใหม่เองเมื่อกดชิป
+   ใช้ 2 ที่: แผงป๊อปอัปจากปุ่มในแผงสอบใหญ่ · แท็บ 🏁 ในกระดานอันดับเต็มจอ (js/ui.js) */
+let __bxrCat = '', __bxrLv = 'found';
+function bxRankMount(box, catId){
+  if(!box || typeof BAND_ADV_MANIFEST === 'undefined') return;
+  const ids = Object.keys(BAND_ADV_MANIFEST);
+  if(!ids.length) return;
+  __bxrCat = (catId && BAND_ADV_MANIFEST[catId]) ? catId : (BAND_ADV_MANIFEST[__bxrCat] ? __bxrCat : ids[0]);
+  const draw = ()=>{
+    const m = BAND_ADV_MANIFEST[__bxrCat];
+    box.innerHTML = `
+      <div class="bxr-pick">
+        <div class="bxr-cats">${ids.map(id=>`<button class="bxr-chip${id === __bxrCat ? ' on' : ''}" data-cat="${id}">${BAND_ADV_MANIFEST[id].emoji} ${escapeHTML(BAND_ADV_MANIFEST[id].label)}</button>`).join('')}</div>
+        <div class="bxr-lvs">${BAND_ADV_EXAM.map(e=>`<button class="bxr-chip lv${e.k === __bxrLv ? ' on' : ''}" data-lv="${e.k}">${e.emoji} ระดับ${e.lv} · ${e.q} ข้อ</button>`).join('')}</div>
+      </div>
+      <div class="bxr-list">${bxRankBodyHTML(__bxrCat, __bxrLv)}</div>
+      <div class="bxr-foot">${m.emoji} ${escapeHTML(m.label)} · เวลาบนกระดาน = เวลาที่ดีที่สุดของแต่ละคน (ตัวเดียวกับที่พิมพ์บนใบประกาศ)</div>`;
+    box.querySelector('.bxr-pick').addEventListener('click', ev=>{
+      const b = ev.target.closest('.bxr-chip');
+      if(!b) return;
+      if(b.dataset.cat) __bxrCat = b.dataset.cat; else if(b.dataset.lv) __bxrLv = b.dataset.lv;
+      if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
+      draw();
+    });
+  };
+  draw();
+}
+/* คำอธิบายแหล่งข้อมูล — ต้องบอกตรง ๆ ว่าไม่ใช่อันดับตลอดกาล (ใช้ทั้ง 2 ทางเข้า) */
+function bxRankNote(){
+  return (typeof Online !== 'undefined' && Online.ready)
+    ? 'จากกิจกรรมล่าสุดในฟีดรวม + สถิติของหนูเอง (ไม่ใช่อันดับตลอดกาล) · ต้องสอบผ่านถึงขึ้นกระดาน'
+    : '📴 ตอนนี้ออฟไลน์ — เห็นเฉพาะสถิติของหนูเอง ต่อเน็ตแล้วจะเห็นของเพื่อนด้วย';
+}
+/* แผงป๊อปอัป (เปิดจากปุ่ม 🏁 ในแผงเลือกระดับสอบใหญ่) */
+function openBigExamRank(catId){
+  const old = document.getElementById('bxr-overlay');
+  if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'bxr-overlay'; ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="bxr-box">
+      <button class="pl-close" id="bxr-close">✕</button>
+      <div class="bxr-head">🏁 สอบใหญ่เร็วที่สุด<span class="bxr-sub">${bxRankNote()}</span></div>
+      <div class="bxr-body"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  bxRankMount(ov.querySelector('.bxr-body'), catId);
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
+  ov.querySelector('#bxr-close').addEventListener('click', ()=>ov.remove());
+}
+
 /* แผงเลือกระดับสอบใหญ่ — เห็นครบทั้ง 3 ระดับในจอเดียว ไม่มี scrollbar (กฎทองข้อ 7) */
 function bandAdvExamOpen(id){
   const m = (typeof BAND_ADV_MANIFEST !== 'undefined') ? BAND_ADV_MANIFEST[id] : null;
@@ -194,6 +319,7 @@ function bandAdvExamOpen(id){
     ov.innerHTML = `<div class="bax-box">
       <button class="pl-close" id="bax-close">✕</button>
       <div class="bax-head">🏅 สอบใหญ่ · ${m.emoji} ${escapeHTML(m.label)}
+        <button class="bax-rank" id="bax-rank">🏁 อันดับเร็วที่สุด</button>
         <span class="bax-sub">ข้อสอบยาวจากทั้งคลัง ${fmtNum(cat.words.length)} คำ · ผ่าน 80% ขึ้นไป รับ <b>ใบประกาศแยกใบตามระดับ</b> 🎖️
           ${bigExamBadgeNote()}</span></div>
       <div class="bax-row">${BAND_ADV_EXAM.map((e, i)=>{
@@ -218,6 +344,8 @@ function bandAdvExamOpen(id){
     document.body.appendChild(ov);
     ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
     ov.querySelector('#bax-close').addEventListener('click', ()=>ov.remove());
+    // 🏁 รอบ 786: กระดานเร็วที่สุดของหมวดนี้ (ไม่ปิดแผงสอบ — กดปิดกระดานแล้วเลือกระดับต่อได้เลย)
+    ov.querySelector('#bax-rank').addEventListener('click', ()=>openBigExamRank(id));
     ov.querySelector('.bax-row').addEventListener('click', ev=>{
       const b = ev.target.closest('.bax-lv');
       if(!b) return;

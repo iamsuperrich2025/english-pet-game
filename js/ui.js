@@ -1323,7 +1323,7 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','badges','boss','ws','tp'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649)
+const LB_TABS = ['coins','badges','boss','ws','tp','bx'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786)
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
@@ -1583,7 +1583,8 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
-          <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>`;
+          <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
+          <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>`;
   const closeHeadHtml = (title)=> `<div class="lbf-head">
         <button class="pl-close lbf-close lbf-close-l">✕</button>
         <span class="lbf-title">🏆 ${title}</span>
@@ -1594,6 +1595,16 @@ function openLeaderboardFull(){
     ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
   };
   const render = ()=>{
+    /* 🏁 รอบ 786: แท็บสอบใหญ่เร็วที่สุด — เนื้อกระดานอยู่ js/bandadv.js (bxRankMount วาด+ผูกปุ่มเอง)
+       ที่นี่แค่เตรียมกล่องให้ · ข้อมูลมาจากฟีดรวม + ใบประกาศของตัวเอง ไม่ต้องมีโซน DB ใหม่ */
+    if(__lbfTab === 'bx'){
+      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 สอบใหญ่เร็วที่สุด')}
+        <div class="lbf-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
+        <div class="bxr-body" id="lbf-bx"></div></div>`;
+      bindLbfChrome();
+      if(typeof bxRankMount === 'function') bxRankMount(ov.querySelector('#lbf-bx'));
+      return;
+    }
     /* 🗂️ รอบ 677: แท็บเข็ม — แยกกระดานย่อยทีละสาย (ผู้ใช้ 28 ก.ค. 2026 ขอแยกดูทีละความสามารถ
        แทนแต้มรวมอย่างเดียว) เนื้อหาต่างจากแท็บอื่นทั้งหมด (ไม่มีโพเดียม/กริดรวม) จบแล้ว return ทันที */
     if(__lbfTab === 'badges'){
