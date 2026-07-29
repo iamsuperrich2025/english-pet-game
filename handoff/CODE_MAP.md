@@ -190,14 +190,14 @@ CERT_TIER_META:113 · CERT_LOGO_SRC:119 · certAward:128 · certMine:151 · cert
 certBackfill:195 · certCatNameById:223 · certFromPost:248 · certXML:266 · certFit:271 · certHolder:276
 certSVG:286 · certChipHTML:558 · openCertBig:573 · openCertMine:589 · certStripHTML:597 · certBindStrip:611
 
-## js/dictband.js (390 บรรทัด · 26 รายการ)
+## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
 bandCat:68 · bandSets:90 · bandSetId:99 · bandCheckComplete:102 · bandSetCat:119 · BAND_RETAKE_MAX:131
 bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsPassed:205 · openBandSetPicker:213 · bandMine:285
 bandUnlocked:286 · bandLockToast:291 · bandExamLobby:297 · updateBandExamBtn:306 · bandLobbyTick:323 · bandPlay:334
-bandPlayLobby:347 · bandCardsHTML:359
+bandSpeakSample:346 · bandPlayLobby:366 · bandCardsHTML:378
 
-## js/game.js (1,108 บรรทัด · 79 รายการ)
+## js/game.js (1,111 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
 weekKeyStr:87 · rolloverWeekBest:93 · exitGame:99 · showSessionSummary:135 · sprinkleConfetti:182 · VOCAB_PER_LEVEL:201
 VOCAB_RANK_NAMES:202 · vocabRankName:203 · showProgressReport:205 · THUNDER_MS:386 · THUNDER_TIERS:390 · THUNDER_TIER_UI:391
@@ -209,9 +209,9 @@ BIGEXAM_TIER_UI:457 · bigExamEmoji:458 · bigExamCertCount:460 · checkBigExamB
 BFF_COIN:482 · bffEmoji:483 · badgeSuffix:488 · BADGE_META:505 · NAME_BADGE_RE:522 · splitNameBadges:523
 badgeEmojis:529 · badgeScore:534 · BADGE_CATS:541 · bcatLevel:554 · checkCrown:561 · currentBadgeScore:577
 rolloverBadgeWeek:581 · addDiligent:594 · celebrateBadge:610 · addThunder:624 · startGame:638 · newRound:678
-updateTimerBar:717 · updateComboPill:723 · pickCard:727 · checkMatch:739 · renderCats:853 · fmtMMSS:896
-quizTimerStop:900 · quizTimerStart:905 · quizElapsed:915 · startQuiz:919 · renderQuizQuestion:937 · quizNext:1001
-finishQuiz:1014
+updateTimerBar:717 · updateComboPill:723 · pickCard:727 · checkMatch:739 · renderCats:853 · fmtMMSS:899
+quizTimerStop:903 · quizTimerStart:908 · quizElapsed:918 · startQuiz:922 · renderQuizQuestion:940 · quizNext:1004
+finishQuiz:1017
 
 ## js/gradelock.js (158 บรรทัด · 14 รายการ)
 GRADES:21 · GRADE_LOCK_DAYS:25 · GRADE_LOCK_MS:26 · gradeRank:29 · myGrade:30 · gradeHistList:33
