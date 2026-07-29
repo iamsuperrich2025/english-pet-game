@@ -252,6 +252,33 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
+  "sports": {
+    "label": "ศัพท์กีฬา",
+    "emoji": "⚽",
+    "count": 364,
+    "files": [
+      {
+        "f": "b6_sports_aclinjury-dartboard.js",
+        "n": 75
+      },
+      {
+        "f": "b6_sports_decathlon-hurdles.js",
+        "n": 75
+      },
+      {
+        "f": "b6_sports_iceaxe-qualifyinground.js",
+        "n": 75
+      },
+      {
+        "f": "b6_sports_quarterfinal-substituteplayer.js",
+        "n": 75
+      },
+      {
+        "f": "b6_sports_swimcap-ziplining.js",
+        "n": 64
+      }
+    ]
+  },
   "travel": {
     "label": "ศัพท์ท่องเที่ยว",
     "emoji": "✈️",

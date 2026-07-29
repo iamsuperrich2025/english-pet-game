@@ -49,7 +49,8 @@ const CERT_LEVEL_EN = {
 const CERT_ADV_EN = {'ศัพท์วิชาการ':'Academic Vocabulary', 'ศัพท์ธุรกิจ':'Business Vocabulary',
   'ศัพท์วิทยาศาสตร์':'Science Vocabulary', 'ศัพท์ท่องเที่ยว':'Travel Vocabulary',
   'ศัพท์การแพทย์':'Medical Vocabulary', 'ศัพท์กฎหมาย':'Legal Vocabulary',
-  'ศัพท์เทคโนโลยี-IT':'Technology & IT Vocabulary', 'ศัพท์สิ่งแวดล้อม':'Environment Vocabulary'};
+  'ศัพท์เทคโนโลยี-IT':'Technology & IT Vocabulary', 'ศัพท์สิ่งแวดล้อม':'Environment Vocabulary',
+  'ศัพท์กีฬา':'Sports Vocabulary'};
 /* 🏅 โหมดสอบใหญ่ (รอบ 773): ระดับสอบไทย → อังกฤษ · ใบประกาศคนละใบต่อระดับ (c.big = ชื่อระดับอังกฤษ) */
 const CERT_BIG_LV = {'ต้น':'Foundation', 'กลาง':'Intermediate', 'สูง':'Expert'};
 
