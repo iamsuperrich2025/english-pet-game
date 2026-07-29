@@ -5189,7 +5189,9 @@ function openFoodQuiz(){
         ${gain ? `<div class="feed-gain fq-gain">ได้เหรียญ +${gain} 🪙</div>` : ''}
         <div class="fq-why fq-sndnote"></div>
         <div class="fq-btns"><button class="fq-next">${idx+1 < FOODQUIZ_Q ? 'ข้อต่อไป ➡️' : 'ดูผล 🏁'}</button></div>
+        <button class="food-cancel fq-quit">เลิกเล่น</button>
       </div>`;
+      overlay.querySelector('.fq-quit').addEventListener('click', ()=>overlay.remove());
       // 🪙 ตอบถูก+ได้เหรียญ → ภาพเหรียญบินเข้ากระเป๋า + เสียงเงินเข้าชัดเจนทันที (ไม่ต้องรอจบรอบ)
       if(gain){
         coinFlyFx(overlay.querySelector('.fq-pair'), gain);
