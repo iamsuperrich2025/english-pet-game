@@ -128,6 +128,19 @@ function makeMats(){
       และในภาพต้องเป็น "ตาขาวล้วน ไม่มีตาดำ" — ตาดำคือ mesh ที่เกมวางทับให้เอง
       prompt เต็มอยู่ handoff/PROMPTS_HOTEL.md */
 const PORTRAIT_PHOTOS=6;
+/* 🖼️ รอบ 768: ตำแหน่ง/ขนาดตาจริงของภาพถ่ายแต่ละใบ (วัดจากพิกเซลเบ้าตาขาวในไฟล์จริงแต่ละใบด้วย OpenCV)
+   เดิมใช้ EYE_X/EYE_Y ค่าเดียวคำนวณจากภาพวาด canvas (256×340, ตา 40.6%/59.4% กว้าง, 43.5% สูง) — ใช้ได้แค่ตอนไม่มีไฟล์จริง
+   ภาพถ่ายจริงแต่ละใบครอปตำแหน่งหน้า/ขนาดตาไม่เท่ากัน ใช้ค่าเดียวจึงตาเลื่อนไปอยู่แก้ม + ตาดำใหญ่เกินเบ้าตาจริง
+   lx/rx/y = ตำแหน่งตาซ้าย/ขวา/ระดับสูง (เมตร บนระนาบ 1.02×1.36) · r = รัศมีตาดำ (เมตร) ให้พอดีเบ้าตาขาว ไม่ใหญ่เกิน */
+const EYE_R0=.03;   // รัศมีฐานของ eyeGeo (ใช้คำนวณอัตราส่วน scale ต่อภาพ)
+const PORTRAIT_EYE=[
+  {lx:-.090,rx:.071,y:.231,r:.0123},
+  {lx:-.097,rx:.097,y:.176,r:.0118},
+  {lx:-.090,rx:.077,y:.267,r:.0101},
+  {lx:-.095,rx:.087,y:.218,r:.0171},
+  {lx:-.081,rx:.083,y:.223,r:.0105},
+  {lx:-.079,rx:.082,y:.259,r:.0132},
+];
 const PORTRAIT_SKIN=['#c9a98c','#b08e6e','#d8bfa3','#9d7a5c'];
 const PORTRAIT_CLOTH=['#2b2f45','#3d2430','#242c26','#3a3327'];
 function portraitTexture(seed){
@@ -524,8 +537,7 @@ function build(THREE_,opt){
   /* ---------- 🖼️ รูปคนบนผนัง — เฉพาะ "ลูกตา" ที่มองตามผู้เล่น ---------- */
   /* กรอบ+ภาพหันไปทาง local +Z เสมอ · face=+1 ติดผนังเหนือ (หันเข้าทางเดิน +Z) · face=-1 ผนังใต้
      ลูกตา = mesh วงกลม 2 อัน วางทับเบ้าตาที่วาดไว้ในภาพ แล้วเลื่อนตามผู้เล่นทุกเฟรม
-     (พิกัดตา: ภาพ 256×340px เบ้าตาอยู่ x=104/152 y=148 → แปลงเป็นเมตรบนระนาบ 1.02×1.36) */
-  const EYE_X=.096, EYE_Y=.088;
+     ตำแหน่ง/ขนาดตาต่อภาพ = PORTRAIT_EYE (บรรทัด ~131) วัดจากพิกเซลจริงของแต่ละไฟล์ */
   const frameGeo=new T.BoxGeometry(1.25,1.65,.1);
   const artGeo=new T.PlaneGeometry(1.02,1.36);
   const eyeGeo=new T.CircleGeometry(.03,12);
@@ -542,14 +554,20 @@ function build(THREE_,opt){
        แล้วค่อยโผล่ขึ้นมาตอนไฟฉายส่องโดน (นั่นคือจังหวะที่เด็กเห็นตากลอกตาม 😱) */
     const art=new T.Mesh(artGeo,new T.MeshPhongMaterial({map:portraitTexture(seed),shininess:6,specular:0x111111}));
     /* มีไฟล์ภาพเหมือนจริง = แปะทับภาพวาดทันที · ไม่มีไฟล์ = คงภาพวาดเดิม (เกมไม่พัง) */
-    TEX(art.material,'tex_hotel_portrait_'+(seed%PORTRAIT_PHOTOS+1),1,1,null,true);
+    const photoIdx=seed%PORTRAIT_PHOTOS;
+    TEX(art.material,'tex_hotel_portrait_'+(photoIdx+1),1,1,null,true);
+    const PE=PORTRAIT_EYE[photoIdx];
     seed++;
     art.position.z=.055; g.add(art);
     const e1=new T.Mesh(eyeGeo,eyeMat), e2=new T.Mesh(eyeGeo,eyeMat);
-    e1.position.set(-EYE_X,EYE_Y,.07); e2.position.set(EYE_X,EYE_Y,.07);
+    const er=PE.r/EYE_R0;
+    e1.position.set(PE.lx,PE.y,.07); e2.position.set(PE.rx,PE.y,.07);
+    e1.scale.set(er,er,1); e2.scale.set(er,er,1);
     g.add(e1,e2);
-    /* lat/ver = ตำแหน่งตาปัจจุบัน (หน่วงตามด้วย lerp) · blinkT/blinkAt = จังหวะกะพริบสุ่มต่อกรอบ */
-    H.portraits.push({g,e1,e2,face,on:false,px:x,py:y,pz:z,lat:0,ver:0,blinkT:0,blinkAt:0});
+    /* lat/ver = ตำแหน่งตาปัจจุบัน (หน่วงตามด้วย lerp) · blinkT/blinkAt = จังหวะกะพริบสุ่มต่อกรอบ
+       eyeLX/eyeRX/eyeY/eyeR = ตำแหน่ง/ขนาดฐานของภาพนี้ (per-photo ไม่ใช่ค่าคงที่เดียวเหมือนเดิม) */
+    H.portraits.push({g,e1,e2,face,on:false,px:x,py:y,pz:z,lat:0,ver:0,blinkT:0,blinkAt:0,
+      eyeLX:PE.lx,eyeRX:PE.rx,eyeY:PE.y,eyeR:er});
     grp.add(g);
   }
   for(let f=0;f<FLOORS;f++){
@@ -666,7 +684,6 @@ function setLights(H,on){
 /* ============================================================
    ⏱ อัปเดตทุกเฟรม: ลูกตาในรูปมองตาม · ลิฟต์วิ่ง · บานตู้เปิด
    ============================================================ */
-const EYE_X0=.096, EYE_Y0=.088;
 const BLINK_DUR=140;             // ms กะพริบ 1 ครั้ง (หลับ-ลืมเร็ว เหมือนกะพริบตาจริง)
 const BLINK_MIN=2200, BLINK_GAP=4200;   // ช่วงเวลาสุ่มระหว่างกะพริบ (ต่อกรอบ ไม่พร้อมกันหมด)
 /* 🔴 รอบ 697: ตอนไฟดับ ตาทุกกรอบทั้งโรงแรมแดงวาบพร้อมกัน (H.eyeMat ใช้ร่วมทั้ง 30 กรอบ ต้นทุนแทบเป็นศูนย์) */
@@ -685,9 +702,9 @@ function tick(H,dt,now,cam){
     const P=H.portraits[i];
     const dy=Math.abs(P.py-cam.y), d=Math.hypot(cam.x-P.px,cam.z-P.pz);
     if(dy>2.4 || d>9){                               // ไกล/คนละชั้น → ตากลับมาตรง
-      if(P.on){ P.e1.position.x=-EYE_X0; P.e2.position.x=EYE_X0;
-                P.e1.position.y=P.e2.position.y=EYE_Y0; P.on=false;
-                P.lat=0; P.ver=0; P.blinkT=0; P.e1.scale.y=P.e2.scale.y=1; }
+      if(P.on){ P.e1.position.x=P.eyeLX; P.e2.position.x=P.eyeRX;
+                P.e1.position.y=P.e2.position.y=P.eyeY; P.on=false;
+                P.lat=0; P.ver=0; P.blinkT=0; P.e1.scale.y=P.e2.scale.y=P.eyeR; }
       continue;
     }
     P.on=true;
@@ -695,13 +712,13 @@ function tick(H,dt,now,cam){
     const targetVer=Math.max(-.014,Math.min(.014,(cam.y-P.py)*.02));
     const k=Math.min(1,dt*4.5);                      // อัตราหน่วง (frame-independent)
     P.lat+=(targetLat-P.lat)*k; P.ver+=(targetVer-P.ver)*k;
-    P.e1.position.x=-EYE_X0+P.lat; P.e2.position.x=EYE_X0+P.lat;
-    P.e1.position.y=P.e2.position.y=EYE_Y0+P.ver;
+    P.e1.position.x=P.eyeLX+P.lat; P.e2.position.x=P.eyeRX+P.lat;
+    P.e1.position.y=P.e2.position.y=P.eyeY+P.ver;
     // 😑 กะพริบตา — สุ่มจังหวะต่อกรอบ ไม่พร้อมกันทุกใบ (ดูมีชีวิตกว่าตากระพริบยกชุด)
     if(P.blinkT>0){
       P.blinkT-=dt*1000;
       const t=1-P.blinkT/BLINK_DUR, close=Math.max(0,1-Math.abs(t-.5)*2);
-      P.e1.scale.y=P.e2.scale.y=1-close*.92;
+      P.e1.scale.y=P.e2.scale.y=P.eyeR*(1-close*.92);
     }else if(now>=P.blinkAt){
       P.blinkT=BLINK_DUR; P.blinkAt=now+BLINK_MIN+Math.random()*BLINK_GAP;
     }
