@@ -524,7 +524,11 @@ function build(THREE_,opt){
   const frameGeo=new T.BoxGeometry(1.25,1.65,.1);
   const artGeo=new T.PlaneGeometry(1.02,1.36);
   const eyeGeo=new T.CircleGeometry(.03,12);
+  /* ตาดำปกติ (ไฟติด) — ใช้วัสดุเดียวร่วมกันทั้ง 30 กรอบ (ไม่มีต้นทุนเพิ่ม)
+     🔴 รอบ 697: ตอนไฟดับ H.eyeMat จะถูกทำให้แดงวาบพร้อมกันทั้งโรงแรมใน tick() ด้านล่าง
+     (MeshBasicMaterial ไม่รับแสง → สีที่ตั้งคือสีที่เห็นตรง ๆ ทำหน้าที่เหมือน "เรืองแสง" อยู่แล้ว) */
   const eyeMat=new T.MeshBasicMaterial({color:0x0b0a09});
+  H.eyeMat=eyeMat;
   let seed=0;
   function addPortrait(x,y,z,face){
     const g=new T.Group(); g.position.set(x,y,z); g.rotation.y=(face>0?0:Math.PI);
@@ -539,7 +543,8 @@ function build(THREE_,opt){
     const e1=new T.Mesh(eyeGeo,eyeMat), e2=new T.Mesh(eyeGeo,eyeMat);
     e1.position.set(-EYE_X,EYE_Y,.07); e2.position.set(EYE_X,EYE_Y,.07);
     g.add(e1,e2);
-    H.portraits.push({g,e1,e2,face,on:false,px:x,py:y,pz:z});
+    /* lat/ver = ตำแหน่งตาปัจจุบัน (หน่วงตามด้วย lerp) · blinkT/blinkAt = จังหวะกะพริบสุ่มต่อกรอบ */
+    H.portraits.push({g,e1,e2,face,on:false,px:x,py:y,pz:z,lat:0,ver:0,blinkT:0,blinkAt:0});
     grp.add(g);
   }
   for(let f=0;f<FLOORS;f++){
@@ -651,22 +656,44 @@ function setLights(H,on){
    ⏱ อัปเดตทุกเฟรม: ลูกตาในรูปมองตาม · ลิฟต์วิ่ง · บานตู้เปิด
    ============================================================ */
 const EYE_X0=.096, EYE_Y0=.088;
+const BLINK_DUR=140;             // ms กะพริบ 1 ครั้ง (หลับ-ลืมเร็ว เหมือนกะพริบตาจริง)
+const BLINK_MIN=2200, BLINK_GAP=4200;   // ช่วงเวลาสุ่มระหว่างกะพริบ (ต่อกรอบ ไม่พร้อมกันหมด)
+/* 🔴 รอบ 697: ตอนไฟดับ ตาทุกกรอบทั้งโรงแรมแดงวาบพร้อมกัน (H.eyeMat ใช้ร่วมทั้ง 30 กรอบ ต้นทุนแทบเป็นศูนย์) */
 function tick(H,dt,now,cam){
+  if(!H.lightsOn){
+    const p=.5+.5*Math.sin(now*.0055);               // หายใจแดงช้า ๆ ไม่กะพริบถี่จนแสบตา
+    H.eyeMat.color.setRGB(.4+p*.55,.02,.03);
+    H._eyeDark=true;
+  }else if(H._eyeDark){
+    H.eyeMat.color.setHex(0x0b0a09); H._eyeDark=false;   // ไฟกลับมา = ตากลับดำเหมือนเดิม (ทำครั้งเดียวตอนสลับ)
+  }
   /* 🖼️ ลูกตามองตาม — เฉพาะรูปที่อยู่ใกล้และชั้นเดียวกัน (คุมงานต่อเฟรม)
-     รูปหันไป local +Z → ระยะเยื้องซ้าย-ขวาของผู้เล่นในแกนรูป = face*(camX - รูปX) */
+     รูปหันไป local +Z → ระยะเยื้องซ้าย-ขวาของผู้เล่นในแกนรูป = face*(camX - รูปX)
+     🐌 รอบ 697: เดิมตากระโดดไปตำแหน่งเป้าหมายทันที (สะดุดตา ดูเป็นกลไก) → lerp หน่วงให้เนียนเหมือนหันตามจริง */
   for(let i=0;i<H.portraits.length;i++){
     const P=H.portraits[i];
     const dy=Math.abs(P.py-cam.y), d=Math.hypot(cam.x-P.px,cam.z-P.pz);
     if(dy>2.4 || d>9){                               // ไกล/คนละชั้น → ตากลับมาตรง
       if(P.on){ P.e1.position.x=-EYE_X0; P.e2.position.x=EYE_X0;
-                P.e1.position.y=P.e2.position.y=EYE_Y0; P.on=false; }
+                P.e1.position.y=P.e2.position.y=EYE_Y0; P.on=false;
+                P.lat=0; P.ver=0; P.blinkT=0; P.e1.scale.y=P.e2.scale.y=1; }
       continue;
     }
     P.on=true;
-    const lat=Math.max(-.03,Math.min(.03,P.face*(cam.x-P.px)*.02));
-    const ver=Math.max(-.014,Math.min(.014,(cam.y-P.py)*.02));
-    P.e1.position.x=-EYE_X0+lat; P.e2.position.x=EYE_X0+lat;
-    P.e1.position.y=P.e2.position.y=EYE_Y0+ver;
+    const targetLat=Math.max(-.03,Math.min(.03,P.face*(cam.x-P.px)*.02));
+    const targetVer=Math.max(-.014,Math.min(.014,(cam.y-P.py)*.02));
+    const k=Math.min(1,dt*4.5);                      // อัตราหน่วง (frame-independent)
+    P.lat+=(targetLat-P.lat)*k; P.ver+=(targetVer-P.ver)*k;
+    P.e1.position.x=-EYE_X0+P.lat; P.e2.position.x=EYE_X0+P.lat;
+    P.e1.position.y=P.e2.position.y=EYE_Y0+P.ver;
+    // 😑 กะพริบตา — สุ่มจังหวะต่อกรอบ ไม่พร้อมกันทุกใบ (ดูมีชีวิตกว่าตากระพริบยกชุด)
+    if(P.blinkT>0){
+      P.blinkT-=dt*1000;
+      const t=1-P.blinkT/BLINK_DUR, close=Math.max(0,1-Math.abs(t-.5)*2);
+      P.e1.scale.y=P.e2.scale.y=1-close*.92;
+    }else if(now>=P.blinkAt){
+      P.blinkT=BLINK_DUR; P.blinkAt=now+BLINK_MIN+Math.random()*BLINK_GAP;
+    }
   }
   /* 🛗 ลิฟต์วิ่ง + ประตูเลื่อน */
   const L=H.lift, ty=floorY(L.target);
