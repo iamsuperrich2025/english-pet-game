@@ -332,14 +332,17 @@ function certSVG(c, opt){
       font-family="Georgia,'Times New Roman',serif">mastering all <tspan font-weight="bold" fill="${accent}">${c.tt}</tspan> sets · <tspan font-weight="bold" fill="${accent}">${wordsN}</tspan> words <tspan fill="#a8801f" font-weight="bold">— Perfect</tspan></text>
     <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}</text>
-    <text x="350" y="846" text-anchor="middle" font-size="17" fill="#8a7440"
+    <text x="350" y="838" text-anchor="middle" font-size="17" fill="#8a7440"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1.2">Certificate No. ${certXML(certSerial(c, h.uid))}</text>
     ${seal(148, 888, 52)}
+    <!-- 🩹 รอบ 733: ขยับลายเซ็นขึ้น+หดแคบลง — พิกัดเดิม (x=460 กว้างถึง x=620) คำนวณจากกรอบเวกเตอร์บางๆ
+         พอ img/cert/paper.png ของจริง (ลายกรอบทองหนา+ลายก้านม้วนมุมล่าง) โหลดได้แล้ว (แก้บั๊ก git add รอบ 729)
+         ข้อความเลยไปทับลายกรอบ/ลายมุมขวาล่างพอดี -->
     <g>
-      <line x1="300" y1="912" x2="620" y2="912" stroke="#8a7440" stroke-width="1.6"/>
-      <text x="460" y="906" text-anchor="middle" font-size="26" fill="${accent}"
+      <line x1="250" y1="874" x2="530" y2="874" stroke="#8a7440" stroke-width="1.6"/>
+      <text x="390" y="868" text-anchor="middle" font-size="26" fill="${accent}"
         font-family="Georgia,'Times New Roman',serif" font-style="italic">Vocab World Academy</text>
-      <text x="460" y="938" text-anchor="middle" font-size="18" fill="#6b5836"
+      <text x="390" y="900" text-anchor="middle" font-size="18" fill="#6b5836"
         font-family="Georgia,'Times New Roman',serif">Head of Vocabulary Studies</text>
     </g>
   ` : `
@@ -358,14 +361,17 @@ function certSVG(c, opt){
       font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%) <tspan font-weight="bold" fill="${ringClr}">${tm.emoji} ${tm.label}</tspan></text>
     <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}</text>
-    <text x="350" y="846" text-anchor="middle" font-size="17" fill="#8a7440"
+    <text x="350" y="838" text-anchor="middle" font-size="17" fill="#8a7440"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1.2">Certificate No. ${certXML(certSerial(c, h.uid))}</text>
     ${seal(148, 888, 52)}
+    <!-- 🩹 รอบ 733: ขยับลายเซ็นขึ้น+หดแคบลง — พิกัดเดิม (x=460 กว้างถึง x=620) คำนวณจากกรอบเวกเตอร์บางๆ
+         พอ img/cert/paper.png ของจริง (ลายกรอบทองหนา+ลายก้านม้วนมุมล่าง) โหลดได้แล้ว (แก้บั๊ก git add รอบ 729)
+         ข้อความเลยไปทับลายกรอบ/ลายมุมขวาล่างพอดี -->
     <g>
-      <line x1="300" y1="912" x2="620" y2="912" stroke="#8a7440" stroke-width="1.6"/>
-      <text x="460" y="906" text-anchor="middle" font-size="26" fill="${accent}"
+      <line x1="250" y1="874" x2="530" y2="874" stroke="#8a7440" stroke-width="1.6"/>
+      <text x="390" y="868" text-anchor="middle" font-size="26" fill="${accent}"
         font-family="Georgia,'Times New Roman',serif" font-style="italic">Vocab World Academy</text>
-      <text x="460" y="938" text-anchor="middle" font-size="18" fill="#6b5836"
+      <text x="390" y="900" text-anchor="middle" font-size="18" fill="#6b5836"
         font-family="Georgia,'Times New Roman',serif">Head of Vocabulary Studies</text>
     </g>
   `) : (gold ? `
