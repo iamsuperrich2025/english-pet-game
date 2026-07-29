@@ -103,6 +103,12 @@ const CERT_TIER_META = {
   silver:{label:'SILVER', emoji:'🥈'},
   bronze:{label:'BRONZE', emoji:'🥉'},
 };
+/* รอบ 759: ภาพโล่จริงแยกโทนโลหะต่อระดับ (ตัดโทนจาก logo.png ต้นฉบับ ด้วย scratchpad/cert_logo_tone.py) */
+const CERT_LOGO_SRC = {
+  gold:  'img/cert/logo.png',
+  silver:'img/cert/logo_silver.png',
+  bronze:'img/cert/logo_bronze.png',
+};
 
 /* ============================================================
    💾 คลังใบประกาศในเซฟ (state.certs) — 1 ใบต่อ 1 หมวด (สอบซ้ำ = อัปเดตคะแนนดีที่สุด)
@@ -431,10 +437,9 @@ function certSVG(c, opt){
     <image href="img/cert/paper.png" xlink:href="img/cert/paper.png" x="0" y="0"
       width="700" height="1000" preserveAspectRatio="none"/>
     ${emblem(350, 156, 1.12)}
-    <!-- 🥇 รอบ 726: ภาพจริง (logo.png) เป็นโล่สีทองล้วน — โชว์เฉพาะระดับทอง
-         ระดับเงิน/ทองแดงใช้โล่เวกเตอร์ด้านบนที่ระบายสีตามระดับแทน (ยังไม่มีภาพจริงแยกสี) -->
-    ${tier === 'gold' ? `<image href="img/cert/logo.png" xlink:href="img/cert/logo.png" x="262" y="58"
-      width="176" height="196" preserveAspectRatio="xMidYMid meet"/>` : ''}
+    <!-- 🥇 รอบ 726/759: ภาพจริงแทนโล่เวกเตอร์ — มีครบ 3 โทนแล้ว (logo.png ทอง · logo_silver.png · logo_bronze.png) -->
+    <image href="${CERT_LOGO_SRC[tier]}" xlink:href="${CERT_LOGO_SRC[tier]}" x="262" y="58"
+      width="176" height="196" preserveAspectRatio="xMidYMid meet"/>
     <text x="350" y="308" text-anchor="middle" font-size="46" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="7">${CERT_ISSUER_EN}</text>
     <text x="350" y="350" text-anchor="middle" font-size="${full ? 24 : 26}" fill="${gold ? accent : '#7a6431'}"
