@@ -174,12 +174,12 @@ authPushSave:357 · authLogout:368
 ## js/bandadv.js (92 บรรทัด · 5 รายการ)
 BAND_ADV_REWARD:9 · bandAdvFailMsg:16 · bandAdvLoad:23 · bandAdvPlay:61 · bandAdvCardsHTML:70
 
-## js/cert.js (509 บรรทัด · 28 รายการ)
+## js/cert.js (510 บรรทัด · 28 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
-certThIndex:53 · certTitleOf:62 · certSerial:78 · certDateEN:86 · certTier:94 · CERT_TIER_META:101
-CERT_LOGO_SRC:107 · certAward:116 · certMine:132 · certAwardGold:139 · certBackfill:157 · certCatNameById:185
-certFromPost:205 · certXML:220 · certFit:225 · certHolder:230 · certSVG:240 · certChipHTML:453
-openCertBig:464 · openCertMine:480 · certStripHTML:488 · certBindStrip:501
+certThIndex:54 · certTitleOf:63 · certSerial:79 · certDateEN:87 · certTier:95 · CERT_TIER_META:102
+CERT_LOGO_SRC:108 · certAward:117 · certMine:133 · certAwardGold:140 · certBackfill:158 · certCatNameById:186
+certFromPost:206 · certXML:221 · certFit:226 · certHolder:231 · certSVG:241 · certChipHTML:454
+openCertBig:465 · openCertMine:481 · certStripHTML:489 · certBindStrip:502
 
 ## js/dictband.js (389 บรรทัด · 26 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
