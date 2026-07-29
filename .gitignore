@@ -17,3 +17,7 @@ img/models/house_01.glb
 
 # ต้นฉบับเฮลิลายพรางจากผู้ใช้ 2.3MB (รอบ 561) — เกมใช้ heli_ca_lite.glb (446KB) ที่ลดโพลี/ย่อเทกซ์เจอร์แล้ว
 img/models/heli_ca.glb
+
+# ต้นฉบับโมเดลผีจาก Tripo 54MB (รอบ 689) — เกมใช้ ghost_lite.glb (510KB) ที่ลดโพลี/ย่อเทกซ์เจอร์แล้ว
+# เก็บต้นฉบับไว้ในเครื่องอย่างเดียว ห้ามขึ้น repo/deploy
+img/models/ghost.glb

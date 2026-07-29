@@ -2046,7 +2046,7 @@ function spawnLetter(ch){
     const p=hotelSpot();
     spr.position.set(p.x,p.y+1.15,p.z);
     spr.scale.set(1.4,1.4,1);
-    tintSprite(spr.material,false);              // เกิดตอนไฟดับแล้วก็ต้องหม่นเท่ากับตัวอื่น
+    tintSprite(spr.material);              // เกิดตอนไฟดับแล้วก็ต้องหม่นเท่ากับตัวอื่น
   }else{
     const p=randPos(10);
     spr.position.set(p.x,1.15,p.z);
@@ -2322,53 +2322,155 @@ function tickShots(dt){
    stalk  = โผล่ปลายทางเดิน เดินตามช้า ๆ แต่ **รักษาระยะ keepR ไว้เสมอ = ไม่มีวันตามทัน** (ข้อ 11)
    behind = วาร์ปไปยืนข้างหลังผู้เล่น + เสียง jump scare แล้วจางหายไป (ข้อ 10, 12)
    ============================================================ */
-function makeGhostSprite(){            // ใช้ทั้งผีเดินและผีนั่งในตู้เสื้อผ้า (hotel3d.js เรียกผ่าน opt)
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:1,depthWrite:false}));
-  spr.scale.set(1.7,1.7,1);
-  return spr;
+/* ============================================================
+   🧟 โมเดลผี 3D (รอบ 689 — ผู้ใช้สั่ง: "ภาพผีแบน ๆ ไม่สมจริง ไม่น่ากลัว ใช้โมเดลแทน")
+   ต้นฉบับ Tripo 54MB → ย่อด้วย `bash tools/lighten_glb.sh` เหลือ 510KB / 22.5k tris
+   (ดูสูตรใน tools/lighten_glb.sh + handoff/NOTES.md "🪶 ลดขนาดโมเดล .glb")
+   ⚠️ ไฟล์ผ่านขั้น unlit มาแล้ว (จำเป็นเพื่อให้ตัด NORMAL ทิ้งได้ ไม่งั้น simplify ตัน)
+      → ที่นี่จึง **ทับ material เองเป็น Phong** ให้ไฟฉายส่องโดนแล้วสว่างขึ้นจริง
+      + ใส่ emissive จาง ๆ ให้ยังเห็นเป็นเงาวิญญาณตอนมืดสนิท (ไม่งั้นผีหายไปเลยตอนไฟดับ)
+   ไม่มีไฟล์/โหลดไม่ได้ = ถอยไปใช้ภาพ sprite ชุดเดิมอัตโนมัติ (เกมไม่พัง)
+   ============================================================ */
+const GHOST_GLB_URL='img/models/ghost_lite.glb';
+const GHOST_MODEL_H=1.78;              // ความสูงตัวผีในโลกจริง (โมเดลสูง 1.0 หน่วย → scale ตรง ๆ)
+let ghostGlbSrc=null, ghostGlbFail=false, ghostGlbCbs=[];
+function ghostGlbEnsure(cb){
+  if(ghostGlbSrc) return cb(ghostGlbSrc);
+  if(ghostGlbFail) return cb(null);
+  ghostGlbCbs.push(cb);
+  if(ghostGlbCbs.length>1) return;
+  const fin=g=>{ ghostGlbSrc=g||null; ghostGlbFail=!g; ghostGlbCbs.splice(0).forEach(f=>f(ghostGlbSrc)); };
+  const load=()=>{ try{
+    new THREE.GLTFLoader().load(GHOST_GLB_URL,gl=>{
+      gl.scene.traverse(o=>{
+        if(!o.isMesh) return;
+        if(o.material&&o.material.map) o.material.map.encoding=THREE.LinearEncoding;
+        /* 🔑 กับดักที่เสียเวลาหาอยู่นาน: ไฟล์นี้ถูก "ตัด NORMAL ทิ้ง" ตอนย่อขนาด (จำเป็น ไม่งั้น simplify ตัน)
+           → พอเอามาใส่วัสดุที่ใช้แสง (Phong) ผีจะเป็นเงาดำทึบตลอด ปรับ color เท่าไรก็ไม่สว่างขึ้น
+             เพราะไม่มี normal ให้คำนวณแสงเลย (เหลือแต่ ambient + emissive)
+           → คำนวณ normal คืนตรงนี้ครั้งเดียว (geometry ใช้ร่วมทุกตัว) แล้วไฟฉายถึงส่องเห็นหน้าจริง */
+        if(o.geometry && !o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+      });
+      fin(gl.scene);
+    },undefined,()=>fin(null));
+  }catch(e){ fin(null); } };
+  if(THREE.GLTFLoader) load();
+  else{ const s=document.createElement('script'); s.src='js/vendor/GLTFLoader.js';
+    s.onload=load; s.onerror=()=>fin(null); document.head.appendChild(s); }
+}
+/* ประกอบผี 1 ตัวจากโมเดลที่โหลดไว้ — geometry ใช้ร่วมกัน (clone แค่ node) แต่ material แยกตัว
+   เพราะแต่ละตัวต้องจาง/ชัดคนละจังหวะ · คืน Group ที่ "เท้าอยู่ที่ y=0" วางบนพื้นได้ตรง ๆ */
+function buildGhostMesh(src){
+  const grp=new THREE.Group();
+  const body=src.clone(true);
+  body.traverse(o=>{
+    if(!o.isMesh) return;
+    const old=o.material;
+    /* ⚠️ emissive ต้อง **ไม่ใส่ emissiveMap** — เทกซ์เจอร์ผีเป็นโทนดำเกือบทั้งตัว (ผมยาว/ชุดขาด)
+       ถ้าคูณด้วยแมป แสงเรืองจะถูกกดจนมืดสนิท มองไม่เห็นอะไรเลยตอนไฟดับ
+       ใส่เป็นสีเรืองล้วน = ได้ "เงาวิญญาณ" เรืองจาง ๆ ทั้งตัวตอนมืด · พอไฟฉายส่องโดน ลาย map ค่อยเด่นขึ้นมา */
+    const m=new THREE.MeshPhongMaterial({
+      map:(old&&old.map)||null, color:0xffffff, shininess:2, specular:0x0a0a12,
+      emissive:0x9fb4d8, emissiveIntensity:.12,
+      transparent:true, opacity:1, depthWrite:false, side:THREE.DoubleSide, fog:true,
+    });
+    /* เทกซ์เจอร์ผีมืดมาก (ผมดำ/ชุดขาดสีเทาเข้ม) — ถ้าไม่คูณสีขึ้น จะเห็นเป็นเงาดำทึบ มองไม่ออกว่าหน้าตายังไง
+       three.js ยอมให้ color เกิน 1 ได้ (ไม่ได้เปิด tone mapping) = ดันความสว่างขึ้นตรง ๆ โดยไม่ต้องแก้ไฟล์ */
+    m.color.setScalar(1.4);
+    o.material=m; o.frustumCulled=false;    // ผีตัวใหญ่ใกล้กล้อง — กัน culling ตัดหายตอนวาร์ปมาข้างหลัง
+  });
+  grp.add(body);
+  return grp;
+}
+function makeGhostSprite(){   // ผีนั่งในตู้เสื้อผ้า (hotel3d.js เรียกผ่าน opt ตอน build ตึก — โมเดลอาจยังโหลดไม่เสร็จ)
+  const grp=new THREE.Group();
+  grp.scale.setScalar(1);
+  ghostGlbEnsure(src=>{
+    if(src){
+      const m=buildGhostMesh(src);
+      m.scale.setScalar(GHOST_MODEL_H*.62);   // นั่งยอง ๆ ในตู้ = เตี้ยกว่ายืน (~1.1 ม.)
+      /* hotel3d วางกลุ่มนี้ไว้ที่ y=0.95 ของห้อง แต่โมเดลมีเท้าอยู่ที่ y=0 ของตัวเอง
+         → ต้องดันลงมาเท่ากัน ไม่งั้นผีลอยกลางตู้ */
+      m.position.y=-0.95;
+      grp.add(m);
+    }else{                                     // ไม่มีโมเดล → ภาพ sprite ชุดเดิม (ตำแหน่งเดิมเป๊ะ)
+      const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:1,depthWrite:false}));
+      spr.scale.set(1.5,1.5,1); grp.add(spr);
+    }
+  });
+  return grp;
 }
 function spawnGhost(){
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:0,depthWrite:false}));
-  spr.scale.set(2.2,2.2,1);
-  scene.add(spr);
-  const g={spr,st:'lurk',at:0,showAt:0,vis:0,floorY:0,baseY:1.25,wailAt:0};
+  const holder=new THREE.Group();
+  holder.visible=false;
+  scene.add(holder);
+  const g={spr:holder, st:'lurk', at:0, showAt:0, vis:0, floorY:0, baseY:0, wailAt:0, mats:[], model:false};
+  const gen=ghostGen;      /* ⚠️ ต้องประกาศ "ก่อน" เรียก ghostGlbEnsure — ถ้าโมเดลโหลดเสร็จแล้ว
+                              callback จะวิ่งทันทีแบบ sync แล้วชน TDZ ถ้าประกาศทีหลัง */
+  ghostGlbEnsure(src=>{
+    if(gen!==ghostGen) return;                 // เปลี่ยนด่านระหว่างรอโหลด → ทิ้ง
+    if(src){
+      const m=buildGhostMesh(src);
+      holder.add(m); g.model=true;
+      m.traverse(o=>{ if(o.isMesh) g.mats.push(o.material); });
+    }else{                                     // ถอยไปใช้ sprite เดิม (เกมต้องมีผีเสมอ)
+      const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:ghostTexture(),transparent:true,opacity:1,depthWrite:false}));
+      spr.scale.set(2.6,2.6,1); spr.position.y=1.35; holder.add(spr);
+      g.mats.push(spr.material);
+    }
+    applyGhostSize(g);
+  });
   ghostGoLurk(g);
   monsters.push(g);
 }
-// สไตล์เฉพาะตัว (index=เลขไฟล์ ghost_N · ไม่มี = ใช้ค่า default) · h=ความสูงตัวในโลก · squeeze<1 = ผอมกว่าสัดส่วนจริง
-const GHOST_STYLE={ 2:{h:5.8, squeeze:.6} };   // เปรต ghost_2: สูงโย่งเท่าต้นตาล + ผอมพิเศษ (look ที่ผู้ใช้เลือก)
-const GHOST_H_DEFAULT=2.5;                      // ผีทั่วไปสูงเท่านี้ในโลกจริง
-function applyGhostSize(g){  // ฟิตสเกลอัตโนมัติจากสัดส่วนภาพจริง → ไม่บิดเบี้ยว(ภาพแนวตั้งไม่โดนบีบ) เท้าแตะพื้น ครอบภาพผีทุกตัว
-  const u=g.spr.material.map && g.spr.material.map.userData;
-  if(u && u.fhFrac){
-    const st=GHOST_STYLE[u.gi]||{}, Hf=st.h||GHOST_H_DEFAULT, sq=st.squeeze||1;
-    const sy=Hf/u.fhFrac, sx=sy*u.aspect*sq;   // sy จากความสูงตัวที่อยากได้ · sx รักษาสัดส่วนภาพจริง (×squeeze)
-    g.spr.scale.set(sx,sy,1);
-    g.baseY=sy*(0.5-u.belowFrac);              // ดันขอบล่างตัว (เท้า) ให้แตะพื้นพอดี
-  } else { g.spr.scale.set(2.6,2.6,1); g.baseY=1.35; }   // emoji / ยังวัดไม่เสร็จ → ค่าเดิม
+/* ขนาดตัว: โมเดลสูง 1.0 หน่วย → scale = ความสูงจริงที่อยากได้ · สุ่มนิดหน่อยให้แต่ละตัวไม่เท่ากันเป๊ะ
+   (เท้าอยู่ y=0 ของโมเดลอยู่แล้ว → baseY=0 ลอยเหนือพื้นนิดเดียวตอน bob) */
+function applyGhostSize(g){
+  if(g.model){
+    const h=GHOST_MODEL_H*(0.92+Math.random()*0.22);
+    g.spr.scale.setScalar(h);
+    g.baseY=0;
+  }else{
+    g.spr.scale.setScalar(1);
+    g.baseY=0;                                  // sprite ที่ใส่ไว้ยกขึ้น 1.35 ในตัวมันเองแล้ว
+  }
+}
+/* ผีต้องหันหน้าเข้าหาผู้เล่นเสมอ (โมเดล Tripo หันหน้าไปทาง +Z) */
+function faceGhostToPlayer(g){
+  if(!g.model) return;                          // sprite หันเองอยู่แล้ว
+  const c=camera.position, mp=g.spr.position;
+  g.spr.rotation.y=Math.atan2(c.x-mp.x, c.z-mp.z);
+}
+/* ตั้งความจาง/ความเรืองแสงของผีทั้งตัว (โมเดลมีหลาย material) */
+function setGhostVis(g, vis){
+  const op=vis*.95;
+  for(let i=0;i<g.mats.length;i++){
+    const m=g.mats[i];
+    m.opacity=op;
+    if(m.emissive) m.emissiveIntensity=blackedOut?(0.06+vis*0.18):(0.03+vis*0.06);   // มืดสนิท = เรืองจาง ๆ พอเห็นเป็นวิญญาณแต่ไกล (แรงกว่านี้ตัวจะขาวโพลนจนไม่เห็นลาย)
+  }
+  g.spr.visible=vis>.02;
 }
 /* ผีไปแอบรอในห้องพักสุ่มห้อง (ชั้นเดียวกับผู้เล่นบ่อยหน่อย จะได้เจอบ่อย) */
 function ghostGoLurk(g){
   if(!hotel){ g.st='lurk'; g.showAt=performance.now()+4000; return; }
-  if(ghostTex.length){ g.spr.material.map=ghostTexture(); g.spr.material.needsUpdate=true; }
-  applyGhostSize(g);
+  applyGhostSize(g);                               // สุ่มความสูงตัวใหม่ทุกครั้งที่ย้ายที่ (ไม่ซ้ำหน้าเดิมเป๊ะ)
   const myF=HOTEL3D.floorOf(hFootY);
   const spot=HOTEL3D.randomHaunt(hotel, Math.random()<.65?myF:undefined);
   g.floorY=spot.y;
-  g.spr.position.set(spot.x, spot.y+(g.baseY||1.25), spot.z);
+  g.spr.position.set(spot.x, spot.y+g.baseY, spot.z);
   g.st='lurk'; g.vis=0; g.at=performance.now();
   g.showAt=performance.now()+800+Math.random()*4000;
 }
 /* ส่งผีมาโผล่ปลายทางเดินชั้นเดียวกับผู้เล่น แล้วเดินตาม (ไม่มีวันทัน) */
 function ghostGoStalk(g){
   if(!hotel || !HOTEL3D.insideHotel(camera.position.x,camera.position.z)) return;
-  if(ghostTex.length){ g.spr.material.map=ghostTexture(); g.spr.material.needsUpdate=true; }
   applyGhostSize(g);
   const fy=HOTEL3D.floorY(HOTEL3D.floorOf(hFootY));
   const dir=(camera.position.x>3?-1:1);
   const x=Math.max(HOTEL3D.CORE_E+1.5, Math.min(HOTEL3D.BX-1.5, camera.position.x+dir*13));
   g.floorY=fy;
-  g.spr.position.set(x, fy+(g.baseY||1.25), (Math.random()*2-1)*1.2);
+  g.spr.position.set(x, fy+g.baseY, (Math.random()*2-1)*1.2);
   g.st='stalk'; g.at=performance.now(); g.vis=0; g.wailAt=0;
   HSound.whoosh();
 }
@@ -2376,8 +2478,9 @@ function ghostGoStalk(g){
 function ghostGoBehind(g){
   const c=camera.position;
   g.floorY=hFootY;
-  g.spr.position.set(c.x+Math.sin(yaw)*1.9, hFootY+(g.baseY||1.25), c.z+Math.cos(yaw)*1.9);
+  g.spr.position.set(c.x+Math.sin(yaw)*1.9, hFootY+g.baseY, c.z+Math.cos(yaw)*1.9);
   g.st='behind'; g.at=performance.now(); g.vis=1;
+  faceGhostToPlayer(g);                            // หันหน้าเข้าหาเราทันทีตอนวาร์ปมา (จังหวะ jump scare)
   hotelScare(false);
 }
 function tickGhosts(dt,now){
@@ -2419,10 +2522,9 @@ function tickGhosts(dt,now){
         g.vis=Math.max(0,g.vis-dt*1.8);
         if(g.vis<=0.01) ghostGoLurk(g);
     }
-    g.spr.material.opacity=g.vis*.95;
-    g.spr.visible=g.vis>.02;
-    tintSprite(g.spr.material,true);               // ไฟดับ = ผีเป็นเงาจาง ไม่ใช่ภาพสว่างจ้า
-    mp.y=g.floorY+(g.baseY||1.25)+Math.sin(now/300+mp.x)*.13;
+    setGhostVis(g, g.vis);                         // จาง/ชัด + เรืองแสงตามสถานะไฟในตึก (ครอบทุก material ของโมเดล)
+    faceGhostToPlayer(g);                          // โมเดล 3D ต้องหันหน้าเข้าหาเราเสมอ
+    mp.y=g.floorY+g.baseY+Math.sin(now/300+mp.x)*.09;   // ลอยขึ้นลงเบา ๆ (เท้าเฉียดพื้น)
   }
   // สุ่มส่งผีออกมาเดินตามเป็นระยะ (ข้อ 9: สุ่มผี)
   if(now>ghostStalkAt){
@@ -2524,10 +2626,11 @@ let torch=null, torchSpill=null, torchOn=false;   // 🔦 ไฟฉาย (ล�
 let ghostStalkAt=0, hKnockAt=0, hActEl=null, hTorchBtn=null, hTorchHintEl=null, hActNow=null;
 const BLACKOUT_MS=120000;                // 2 นาที (ผู้ใช้สั่งข้อ 4)
 const FLICKER_MS=8000;                   // ไฟกะพริบเตือนก่อนดับ
-/* 🌑 sprite (ตัวอักษร/ผี) เป็นวัสดุ "ไม่รับแสง" — ไฟดับแล้วจะยังสว่างจ้าผิดธรรมชาติ
-   จึงคูณสีให้หม่นลงตอนมืด: ตัวอักษรเหลือเรือง ๆ พอให้เด็กหาเจอ · ผีเป็นเงาจาง ๆ น่ากลัวกว่าเดิม */
-const DARK_LETTER=0xb9c4e0, DARK_GHOST=0x6d7488;
-function tintSprite(mat,isGhost){ if(mat) mat.color.setHex(blackedOut?(isGhost?DARK_GHOST:DARK_LETTER):0xffffff); }
+/* 🌑 sprite ตัวอักษรเป็นวัสดุ "ไม่รับแสง" — ไฟดับแล้วจะยังสว่างจ้าผิดธรรมชาติ
+   จึงคูณสีให้หม่นลงตอนมืด แต่ยังเรือง ๆ พอให้เด็กหาเจอ
+   (ผีไม่ใช้ทางนี้แล้วตั้งแต่รอบ 689 — เป็นโมเดล 3D คุมความสว่างด้วย emissive ใน setGhostVis) */
+const DARK_LETTER=0xb9c4e0;
+function tintSprite(mat){ if(mat) mat.color.setHex(blackedOut?DARK_LETTER:0xffffff); }
 
 /* ---------- เข้าโลกใหม่ทุกครั้ง: คืนไฟ/ล้างสถานะ ---------- */
 function hotelReset(){
@@ -2593,7 +2696,7 @@ function hotelBlackout(){
   if(hotelMoonL) hotelMoonL.intensity=.02;
   if(hotelAmb) hotelAmb.intensity=0;
   if(scene && scene.fog){ scene.fog.near=1.2; scene.fog.far=24; }
-  letters.forEach(l=>tintSprite(l.spr.material,false));      // ตัวอักษรที่วางอยู่แล้วก็ต้องหม่นลงด้วย
+  letters.forEach(l=>tintSprite(l.spr.material));      // ตัวอักษรที่วางอยู่แล้วก็ต้องหม่นลงด้วย
   HSound.powerDown();
   hotelScare(false);
   showBanner('💡💥 <b>ไฟทั้งโรงแรมดับหมด!!</b><br><small>🔦 <b>กด F เพื่อเปิดไฟฉาย</b><br><i>Press <b>F</b> to turn on the flashlight</i></small>',6500);
@@ -2729,8 +2832,13 @@ function openWardrobe(W){
   W.open=true; W.done=true; sfx.select();
   if(W.haunted){
     if(W.ghost){
-      if(ghostTex.length){ W.ghost.material.map=ghostTexture(); W.ghost.material.needsUpdate=true; }
-      tintSprite(W.ghost.material,true);
+      /* 🧟 รอบ 689: ผีในตู้เป็นโมเดล 3D — เร่งเรืองแสงให้เห็นชัดในตู้มืด แล้วหันหน้าออกมาหาเรา */
+      W.ghost.traverse(o=>{ if(o.isMesh&&o.material){ o.material.opacity=1;
+        if(o.material.emissive) o.material.emissiveIntensity=blackedOut?.28:.12; } });
+      /* ⚠️ ผีตัวนี้เป็นลูกของ "กลุ่มห้อง" ที่หมุนไว้แล้ว (ห้องฝั่งใต้หมุน 180°)
+         → ต้องลบมุมห้องออก ไม่งั้นห้องฝั่งใต้ผีจะหันหลังให้เรา */
+      const c=camera.position;
+      W.ghost.rotation.y=Math.atan2(c.x-W.x, c.z-W.z)-(W.room?W.room.rot:0);
       W.ghost.visible=true;
     }
     hotelScare(true);                              // ข้อ 17: เปิดเจอผีนั่งอยู่ + jump scare
@@ -10581,7 +10689,14 @@ function savePhoto(){
 function clearEntities(){
   ghostGen++;                                      // ออก/เปลี่ยนด่าน → ยกเลิก spawn ผีที่ยังรอภาพโหลดค้างอยู่
   while(letters.length) removeLetter(0);
-  monsters.forEach(m=>{ scene.remove(m.spr); m.spr.material.dispose(); }); monsters=[];
+  /* 🧟 รอบ 689: ผีโรงแรมเป็น Group ของโมเดล 3D (ไม่มี .material ของตัวเอง) — โลกอื่นยังเป็น Sprite
+     geometry ใช้ร่วมกับต้นฉบับที่ cache ไว้ ห้าม dispose (เดี๋ยวตัวถัดไปโหลดมาแล้วจอขาว) ทิ้งเฉพาะ material ที่ clone */
+  monsters.forEach(m=>{
+    scene.remove(m.spr);
+    if(m.spr.material) m.spr.material.dispose();
+    if(m.mats) m.mats.forEach(mt=>mt.dispose());
+  });
+  monsters=[];
   shots.forEach(s=>{ scene.remove(s.mesh); s.mesh.geometry.dispose(); s.mesh.material.dispose(); }); shots=[];
   aliens.forEach(a=>scene.remove(a.grp)); aliens=[];                          // 🤖 เอเลี่ยน
   mechaTracers.forEach(t=>{ scene.remove(t.line); }); mechaTracers=[];

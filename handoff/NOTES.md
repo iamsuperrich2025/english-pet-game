@@ -23,11 +23,15 @@
 - **ห้ามทำเซฟผู้เล่นเดิมพัง** — field ใหม่ทุกตัวต้องมี default ใน `loadState()` (migration)
 - state เซฟที่ localStorage key `petVocabAdventure_v1`
 
-## 🪶 ลดขนาดโมเดล .glb ที่หนักเกิน (สูตรรอบ 431 — ใช้ซ้ำได้ทุกโมเดล)
-โมเดลจาก Tripo/สแกน มักหนักเป็นสิบ MB (house_01 = 62MB / 1.88M tris) เอาลงเกมไม่ได้ · เครื่องมือลงไว้แล้ว:
-`export PATH="$HOME/bin/node:$PATH"` + `gltf-transform` (npm -g @gltf-transform/cli)
-- **⚠️ กุญแจสำคัญ: ต้อง "ตัด NORMAL ทิ้งก่อน weld+simplify"** ไม่งั้น simplify ตันอยู่ที่ ~15% ลดไม่ลง
-  (ทุก vertex มี normal ต่างกัน = weld รวมไม่ได้ · GLTFLoader คำนวณ normal ให้เองอยู่แล้วเมื่อไม่มี)
-- สคริปต์ตัวอย่าง `strip.mjs` (ใช้ @gltf-transform/core+functions+meshoptimizer): ลบ NORMAL/TANGENT → `weld()` → `simplify({ratio:0.02,error:0.35})`
-- แล้วต่อด้วย `gltf-transform resize <in> <out> --width 1024 --height 1024` → **`gltf-transform prune`** (ล้าง buffer ที่ไม่ใช้ — ขั้นนี้ตัดจาก 15MB เหลือ 1.1MB)
-- ผลจริง: 62MB/1.88M tris → **1.1MB/37.8k tris** หน้าตาในเกมยังใช้ได้ · เก็บต้นฉบับไว้ในเครื่อง (ใส่ .gitignore) ห้ามขึ้น repo
+## 🪶 ลดขนาดโมเดล .glb ที่หนักเกิน (สูตรรอบ 431 · ทำเป็นสคริปต์แล้วรอบ 689 — ใช้ซ้ำได้ทุกโมเดล)
+**ใช้เลย ไม่ต้องเขียนใหม่:** `bash tools/lighten_glb.sh <in.glb> <out.glb> [ratio=0.03] [error=0.2] [texSize=1024]`
+(ทำครบ 8 ขั้นในคำสั่งเดียว: unlit → prune ตัด NORMAL → weld → simplify → join → resize → prune+dedup → quantize)
+- **⚠️ กุญแจข้อ 1: ต้อง "ตัด NORMAL ทิ้งก่อน weld+simplify"** ไม่งั้น simplify ตันอยู่ที่ ~15% ลดไม่ลง
+  (ทุก vertex มี normal ต่างกัน = weld รวมไม่ได้) · ทำผ่าน CLI ล้วนได้ด้วย `unlit` → `prune --keep-attributes false`
+- **⚠️⚠️ กุญแจข้อ 2 (บทเรียนรอบ 689 — เสียเวลาหาอยู่นาน): พอตัด NORMAL แล้ว ต้อง `computeVertexNormals()` คืนตอนโหลดใน three.js**
+  ถ้าเอาไปใส่วัสดุที่ใช้แสง (Phong/Lambert/Standard) โดยไม่มี normal → **โมเดลจะเป็นเงาดำทึบตลอด**
+  ปรับ `color`/ความสว่างไฟเท่าไรก็ไม่ขึ้น (เหลือแต่ ambient+emissive) · ดูตัวอย่างที่ `ghostGlbEnsure()` ใน `js/adventure3d.js`
+- **วัดก่อนโทษโค้ด:** ถ้าโมเดลดูมืดผิดปกติ ให้วัดความสว่างเฉลี่ยของ texture จริงก่อน (วาดลง canvas แล้วเฉลี่ย RGB)
+  — ผีรอบ 689 วัดได้ **34/255** คือเทกซ์เจอร์มันมืดเองจริง ๆ ต้องคูณ `material.color.setScalar(1.4)` ช่วย (three.js ยอมให้เกิน 1)
+- ผลจริง: house_01 62MB/1.88M tris → **1.1MB/37.8k tris** · ghost 54MB/1.88M tris → **510KB/22.5k tris** (คุณภาพตายังคมเพราะรายละเอียดอยู่ที่ texture ไม่ใช่โพลี)
+- เก็บต้นฉบับไว้ในเครื่อง (ใส่ `.gitignore`) ห้ามขึ้น repo · ไฟล์ `_lite` ที่เกมใช้จริง commit ได้ปกติ
