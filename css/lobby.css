@@ -3632,6 +3632,8 @@ button.ps-worn-pip:active{transform:scale(.95);}
 }
 .lobby-top .coin-block .grade-pill:empty{display:none;}
 .lobby-top .coin-block .grade-pill .gmark{font-size:13px;}
+/* 🏫 รอบ 696 (ผู้ใช้สั่ง): ชื่อกลุ่มชั้นเต็ม (ประถมศึกษา/มัธยมศึกษา/ปริญญาตรี/สูงกว่าปริญญาตรี) หน้าสัญลักษณ์ */
+.lobby-top .coin-block .grade-pill .gp-cat{color:#dceaff;font-weight:700;}
 /* เหรียญเด้งรับตอนได้เหรียญ — เดิมเป็นเงาเรืองรอบ pill ขาว ตอนนี้เป็นแสงในกล่อง */
 @keyframes coinPillPop{
   0%,100%{transform:scale(1);background:none;}

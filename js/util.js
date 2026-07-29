@@ -33,15 +33,15 @@ function gradeSymbol(grade){
   const g = String(grade == null ? '' : grade).trim();
   if(!g) return null;
   let m = /^ป\.([1-6])$/.exec(g);
-  if(m) return {cls:'gm-silver', sym:'★'.repeat(+m[1]),
+  if(m) return {cls:'gm-silver', sym:'★'.repeat(+m[1]), cat:'ประถมศึกษา',
                 title:`ระดับชั้น ${g} — ดาวเงิน ${m[1]} ดวง (ประถมศึกษาปีที่ ${m[1]})`};
   m = /^ม\.([1-6])$/.exec(g);
-  if(m) return {cls:'gm-gold', sym:'★'.repeat(+m[1]),
+  if(m) return {cls:'gm-gold', sym:'★'.repeat(+m[1]), cat:'มัธยมศึกษา',
                 title:`ระดับชั้น ${g} — ดาวทอง ${m[1]} ดวง (มัธยมศึกษาปีที่ ${m[1]})`};
-  if(g === 'ปริญญาตรี')        return {cls:'gm-gem', sym:'💎',   title:'ระดับชั้น ปริญญาตรี — เพชร 1 เม็ด'};
-  if(g === 'สูงกว่าปริญญาตรี') return {cls:'gm-gem', sym:'💎💎', title:'ระดับชั้น สูงกว่าปริญญาตรี — เพชร 2 เม็ด'};
-  if(g === 'ต่ำกว่าประถมศึกษา')return {cls:'gm-pre', sym:'☆',    title:'ระดับชั้น ต่ำกว่าประถมศึกษา — ดาวโปร่ง'};
-  return {cls:'gm-pre', sym:'☆', title:'ระดับชั้น ' + g};
+  if(g === 'ปริญญาตรี')        return {cls:'gm-gem', sym:'💎',   cat:'ปริญญาตรี',        title:'ระดับชั้น ปริญญาตรี — เพชร 1 เม็ด'};
+  if(g === 'สูงกว่าปริญญาตรี') return {cls:'gm-gem', sym:'💎💎', cat:'สูงกว่าปริญญาตรี', title:'ระดับชั้น สูงกว่าปริญญาตรี — เพชร 2 เม็ด'};
+  if(g === 'ต่ำกว่าประถมศึกษา')return {cls:'gm-pre', sym:'☆',    cat:'ต่ำกว่าประถมศึกษา', title:'ระดับชั้น ต่ำกว่าประถมศึกษา — ดาวโปร่ง'};
+  return {cls:'gm-pre', sym:'☆', cat:g, title:'ระดับชั้น ' + g};
 }
 /* HTML ป้ายสัญลักษณ์ (คืน '' ถ้าไม่รู้ชั้น — จุดที่เรียกไม่ต้องเช็กเอง) */
 function gradeMark(grade, extraCls){

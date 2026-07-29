@@ -3790,7 +3790,8 @@ function renderDashboard(){
     if(!mk) gl.innerHTML = '';
     else{
       const lk = (typeof gradeLocked === 'function') && gradeLocked();
-      gl.innerHTML = `<span class="cp-lb">ระดับชั้น</span>${mk}`
+      const gs = gradeSymbol(myPlGrade);   // 🏫 รอบ 696 (ผู้ใช้สั่ง): โชว์ชื่อกลุ่มชั้น (ประถม/มัธยม/ป.ตรี/สูงกว่าป.ตรี) ก่อนสัญลักษณ์
+      gl.innerHTML = `<span class="cp-lb">ระดับชั้น</span><span class="gp-cat">${escapeHTML(gs.cat)}</span>${mk}`
         + (state.student ? `<button class="grade-edit${lk ? ' locked' : ''}" id="btn-grade-change"
              title="${escapeHTML(gradeLockNote())}">${lk ? `🔒 อีก ${gradeLockLeftDays()} วัน` : '✏️'}</button>` : '');
       const gb = document.getElementById('btn-grade-change');
