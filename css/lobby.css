@@ -2504,18 +2504,20 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .lbf-bcat-head b{color:#e6f2ff;font-size:clamp(12px,1.9vh,14px);font-weight:800;}
 .lbf-bcat-head small{color:#8fa8c8;font-size:clamp(9.5px,1.4vh,11px);}
 .lbf-bcat-rows{display:flex;flex-direction:column;gap:2px;}
-.lbf-bcat-row{display:flex;align-items:center;gap:10px;padding:6px 7px;border-radius:7px;
+.lbf-bcat-row{display:flex;align-items:center;gap:10px;padding:3px 7px;border-radius:7px;
   font-size:clamp(10.5px,1.6vh,12.5px);}
 .lbf-bcat-row.me{background:rgba(120,210,255,.16);outline:1px solid rgba(120,210,255,.4);}
 .lbf-bcat-row .bcr-rank{flex:0 0 auto;min-width:1.4em;text-align:center;font-weight:800;color:#ffd76a;
   font-size:clamp(17px,2.8vh,22px);}
 .lbf-bcat-row .bcr-name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;
   white-space:nowrap;color:#e6f2ff;cursor:pointer;}
-.lbf-bcat-row .bcr-tier{flex:0 0 auto;display:flex;align-items:center;gap:6px;
-  color:#9ec8e8;font-weight:700;white-space:nowrap;font-size:1.05em;}
-.bcr-ic{width:clamp(26px,4.4vh,34px);height:clamp(26px,4.4vh,34px);object-fit:contain;display:block;flex:0 0 auto;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,.5));}
-.badge-ic-fallback{font-size:clamp(21px,3.8vh,28px);line-height:1;}
+.lbf-bcat-row .bcr-tier{flex:0 0 auto;display:flex;align-items:center;gap:8px;
+  color:#9ec8e8;font-weight:700;white-space:nowrap;font-size:clamp(12.5px,2vh,15px);}
+/* รอบ 736 (ผู้ใช้: "อยากเห็นภาพเหรียญใหญ่ๆ ชัดๆ"): ขยายภาพเหรียญ ~2 เท่า + แสงทองนวลรอบเหรียญ
+   แถวสูงขึ้นได้เพราะ .lbf-bcat-wrap เลื่อนในตัวอยู่แล้ว (รอบ 677) — ลด padding แถวชดเชยเล็กน้อย */
+.bcr-ic{width:clamp(48px,9.5vh,76px);height:clamp(48px,9.5vh,76px);object-fit:contain;display:block;flex:0 0 auto;
+  filter:drop-shadow(0 2px 4px rgba(0,0,0,.55)) drop-shadow(0 0 9px rgba(255,214,106,.3));}
+.badge-ic-fallback{font-size:clamp(38px,7.6vh,60px);line-height:1;}
 
 /* 🏆 รอบ 247: โพเดียม Top 5 — ตัวละครที่เลือกยืนลดหลั่นบนแท่น (เรียง L→R = 4,2,1,3,5) */
 .lbf-podium{flex:0 0 auto;display:flex;align-items:flex-end;justify-content:center;
