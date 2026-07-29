@@ -169,7 +169,7 @@ function certAwardGold(b, setsCount, wordsCount){
   if(state.certs.length > CERT_MAX) state.certs.length = CERT_MAX;
   return c;
 }
-/* ---------- 👑 ใบประกาศ Supreme (รอบ 775) — ให้เมื่อสอบใหญ่ระดับ "สูง" (badvx_<หมวด>_expert)
+/* ---------- 👑 ใบประกาศ Supreme (รอบ 779) — ให้เมื่อสอบใหญ่ระดับ "สูง" (badvx_<หมวด>_expert)
    ผ่านครบทุกหมวดใน BAND_ADV_MANIFEST (bandAdvCheckSupreme ใน js/bandadv.js เรียกตอน onPass ของระดับสูง)
    คนละใบกับ certAwardGold (นั่นคือครบทุกชุดของ "1 ระดับชั้น DICT_BAND" — อันนี้คือครบทุก "หมวดคลังขั้นสูง")
    c.supreme=true ทำให้ certSVG วาดสไตล์พิเศษเหมือน gold (โทนแดง/มงกุฎ) แต่ข้อความคนละชุด ---------- */
@@ -284,7 +284,7 @@ function certSVG(c, opt){
   opt = opt || {};
   const full = !!opt.full;
   const gold = !!c.gold;                              // 👑 ใบครบทุกชุดของระดับ — โทนสี/ข้อความต่างจากใบสอบผ่านรายชุด
-  const supreme = !!c.supreme;                        // 👑 รอบ 775: ใบครบทุกหมวดสอบใหญ่ระดับสูง — โทนเดียวกับ gold แต่ข้อความคนละชุด
+  const supreme = !!c.supreme;                        // 👑 รอบ 779: ใบครบทุกหมวดสอบใหญ่ระดับสูง — โทนเดียวกับ gold แต่ข้อความคนละชุด
   const u = 'cw' + (++__certSeq);
   const h = certHolder(c);
   const name  = certXML(h.name);
@@ -303,7 +303,7 @@ function certSVG(c, opt){
   const sub     = certXML(subTxt);
   /* ⏱️ รอบ 777: เวลาที่ใช้สอบ — ต่อท้ายบรรทัดวันที่ (ไม่แทรกบรรทัดใหม่ ใบแน่นอยู่แล้ว) */
   const secTxt  = c.sec ? `${Math.floor(c.sec/60)}:${String(c.sec % 60).padStart(2,'0')}` : '';
-  /* 👑 รอบ 775: ใบ Supreme (c.supreme) — th เป็นข้อความอังกฤษยาวกว่าเดิม (gold ใช้ป้ายชั้นสั้น ๆ) หดด้วย certFit กันล้นกรอบ */
+  /* 👑 รอบ 779: ใบ Supreme (c.supreme) — th เป็นข้อความอังกฤษยาวกว่าเดิม (gold ใช้ป้ายชั้นสั้น ๆ) หดด้วย certFit กันล้นกรอบ */
   const thFs    = certFit(c.th, full ? 25 : 30, 580);
   const passLn  = big ? 'has passed the grand vocabulary examination in' : 'has passed the examination in';
   const passLnF = big ? 'has successfully passed the grand vocabulary examination in'

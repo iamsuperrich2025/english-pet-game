@@ -83,7 +83,7 @@ function bandAdvExamId(id, k){ return 'badvx_' + id + '_' + k; }
 function bandAdvExamName(label, e){ return `${label} · สอบใหญ่ระดับ${e.lv}`; }
 
 /* ============================================================
-   👑 โบนัสสูงสุด (รอบ 775) — สอบใหญ่ระดับ "สูง" (badvx_<หมวด>_expert) ผ่านครบทุกหมวดใน
+   👑 โบนัสสูงสุด (รอบ 779) — สอบใหญ่ระดับ "สูง" (badvx_<หมวด>_expert) ผ่านครบทุกหมวดใน
    BAND_ADV_MANIFEST → ใบประกาศพิเศษ certAwardAdvSupreme (js/cert.js) + โบนัสเหรียญก้อนใหญ่
    เรียกจาก onPass ของ cat ระดับ 'expert' เท่านั้น (bandAdvExamCat ด้านล่าง) — กันเช็กซ้ำทุกระดับเปล่า ๆ
    ============================================================ */
@@ -129,7 +129,7 @@ function bandAdvExamBest(id, k){
 function bandAdvExamCat(id, e, cat){
   return {id:bandAdvExamId(id, e.k), name:bandAdvExamName(cat.name, e), emoji:e.emoji,
           reward:e.reward, words:cat.words, quizCount:e.q, timed:true,   // ⏱️ รอบ 777: จับเวลารวมทั้งชุด
-          // 👑 รอบ 775: ผ่านระดับ "สูง" ทุกครั้ง → เช็กว่าครบทุกหมวดหรือยัง (bandAdvCheckSupreme เช็ก dedupe เอง)
+          // 👑 รอบ 779: ผ่านระดับ "สูง" ทุกครั้ง → เช็กว่าครบทุกหมวดหรือยัง (bandAdvCheckSupreme เช็ก dedupe เอง)
           onPass(){ if(e.k === 'expert' && typeof bandAdvCheckSupreme === 'function') bandAdvCheckSupreme(); }};
 }
 
@@ -186,7 +186,7 @@ function bandAdvExamOpen(id){
 /* การ์ดคลังศัพท์ขั้นสูงต่อท้ายหน้าเลือกหมวด (เรียกจาก renderCats ใน game.js) */
 function bandAdvCardsHTML(){
   if(typeof BAND_ADV_MANIFEST === 'undefined') return '';
-  // 👑 รอบ 775: แถบสรุปความคืบหน้าสู่ใบ Supreme (ครบทุกหมวด × สอบใหญ่ระดับสูง)
+  // 👑 รอบ 779: แถบสรุปความคืบหน้าสู่ใบ Supreme (ครบทุกหมวด × สอบใหญ่ระดับสูง)
   const advIds = Object.keys(BAND_ADV_MANIFEST);
   const expertDone = advIds.filter(id=>state.quizPassed.includes(bandAdvExamId(id, 'expert'))).length;
   return `<div class="band-sec-head">🎓 คลังศัพท์ขั้นสูง
