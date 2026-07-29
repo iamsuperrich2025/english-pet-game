@@ -88,6 +88,22 @@ function certDateEN(ts){
   return `${d.getDate()} ${CERT_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
+/* ---------- 🥇 ระดับใบตามเปอร์เซ็นต์คะแนน (รอบ 726 ผู้ใช้สั่ง) — เฉพาะใบสอบผ่านปกติ
+   ใบ mastery (c.gold ครบทุกชุด) คะแนนเต็มเสมออยู่แล้ว จึงตกเป็น 'gold' โดยธรรมชาติ ไม่ต้องคิดแยก
+   100% = ทอง · ≥90% = เงิน · ที่เหลือ (ผ่านขั้นต่ำ 80% ตาม passMark ใน finishQuiz) = ทองแดง ---------- */
+function certTier(c){
+  if(!c || !c.tt) return 'gold';
+  const pct = c.sc / c.tt;
+  if(pct >= 1) return 'gold';
+  if(pct >= 0.9) return 'silver';
+  return 'bronze';
+}
+const CERT_TIER_META = {
+  gold:  {label:'GOLD',   emoji:'🥇'},
+  silver:{label:'SILVER', emoji:'🥈'},
+  bronze:{label:'BRONZE', emoji:'🥉'},
+};
+
 /* ============================================================
    💾 คลังใบประกาศในเซฟ (state.certs) — 1 ใบต่อ 1 หมวด (สอบซ้ำ = อัปเดตคะแนนดีที่สุด)
    ============================================================ */
@@ -228,9 +244,23 @@ function certSVG(c, opt){
   const perfect = c.tt && c.sc >= c.tt;
   const nameFs  = certFit(h.name, full ? 64 : 80, 560);
   const topicFs = certFit(c.t,    full ? 48 : 62, 600);
-  const accent  = gold ? '#7a1f2a' : '#123a63';       // สีชื่อ/ตัวเลขเด่น — Gold ใช้แดงเลือดหมูแทนน้ำเงิน
-  const ringClr = gold ? '#8a2331' : '#c8a13c';       // สีเส้นวงแหวนตราประทับ + กรอบชั้นใน
+  const accent  = gold ? '#7a1f2a' : '#123a63';       // สีชื่อ/ตัวเลขเด่น — Gold(mastery) ใช้แดงเลือดหมูแทนน้ำเงิน
   const crestGlyph = gold ? '♛' : '★';
+  // 🥇 รอบ 726: ระดับใบ (ทอง/เงิน/ทองแดง) — เฉพาะใบสอบผ่านปกติ (mastery แดงมีโทนของตัวเองอยู่แล้ว)
+  const tier = gold ? 'gold' : certTier(c);
+  const tm = CERT_TIER_META[tier];
+  const ringClr = gold ? '#8a2331' : (tier === 'silver' ? '#8a93a0' : tier === 'bronze' ? '#a9672f' : '#c8a13c');
+  const sealStroke = gold ? '#5e1420' : (tier === 'silver' ? '#5a6169' : tier === 'bronze' ? '#5e3814' : '#a8801f');
+  const shieldStops = tier === 'silver'
+    ? `<stop offset="0" stop-color="#f4f5f7"/><stop offset=".28" stop-color="#b7bec7"/><stop offset=".55" stop-color="#ffffff"/><stop offset=".78" stop-color="#8b93a0"/><stop offset="1" stop-color="#d9dee4"/>`
+    : tier === 'bronze'
+    ? `<stop offset="0" stop-color="#e7b489"/><stop offset=".28" stop-color="#a86a35"/><stop offset=".55" stop-color="#f2caa0"/><stop offset=".78" stop-color="#8a5624"/><stop offset="1" stop-color="#c98a52"/>`
+    : `<stop offset="0" stop-color="#f3dd9a"/><stop offset=".28" stop-color="#c8a13c"/><stop offset=".55" stop-color="#f7ecc4"/><stop offset=".78" stop-color="#b98f2c"/><stop offset="1" stop-color="#e8cd7e"/>`;
+  const sealTierStops = tier === 'silver'
+    ? `<stop offset="0" stop-color="#eef0f3"/><stop offset=".6" stop-color="#aab0b8"/><stop offset="1" stop-color="#757b82"/>`
+    : tier === 'bronze'
+    ? `<stop offset="0" stop-color="#ecb98a"/><stop offset=".6" stop-color="#a86a35"/><stop offset="1" stop-color="#6e431c"/>`
+    : `<stop offset="0" stop-color="#f6e2a4"/><stop offset=".6" stop-color="#d5ab3f"/><stop offset="1" stop-color="#a8801f"/>`;
 
   /* กรอบ/กระดาษแบบเวกเตอร์ = ตัวสำรองเมื่อยังไม่มี img/cert/paper.png (มีไฟล์แล้วภาพจะทับชั้นนี้) */
   const frame = `
@@ -256,7 +286,7 @@ function certSVG(c, opt){
                  x2="${(Math.cos(a)*r*1.12).toFixed(1)}" y2="${(Math.sin(a)*r*1.12).toFixed(1)}"
                  stroke="${ringClr}" stroke-width="${i % 2 ? 3 : 6}" stroke-linecap="round" opacity=".92"/>`;
       }).join('')}
-      <circle r="${r*0.9}" fill="url(#${u}seal)" stroke="${gold ? '#5e1420' : '#a8801f'}" stroke-width="2"/>
+      <circle r="${r*0.9}" fill="url(#${u}seal)" stroke="${sealStroke}" stroke-width="2"/>
       <circle r="${r*0.72}" fill="none" stroke="#fff6dc" stroke-width="1.6" opacity=".8"/>
       <text y="${-r*0.16}" text-anchor="middle" font-size="${r*0.5}" fill="#fff8e4">${crestGlyph}</text>
       <text y="${r*0.42}" text-anchor="middle" font-size="${r*0.27}" font-family="Georgia,serif"
@@ -265,11 +295,13 @@ function certSVG(c, opt){
 
   /* ตราสัญลักษณ์เวกเตอร์ = โล่ (ใต้ img/cert/logo.png — ไม่มีไฟล์ก็ยังสวย)
      รอบ 725 (ผู้ใช้: "เปลี่ยนจากวงกลมเป็นทรงโล่ เท่ ๆ สง่างาม"): โล่ heater shield
-     ขอบทองหนา + สนามน้ำเงินเข้ม + ดาว/ลูกโลก/หนังสือเปิด · สูงกว่ากว้าง = ดูสง่า */
+     ขอบทองหนา + สนามน้ำเงินเข้ม + ดาว/ลูกโลก/หนังสือเปิด · สูงกว่ากว้าง = ดูสง่า
+     🥇 รอบ 726: ขอบโล่ใช้ ${u}shield (แยกจาก ${u}gold ของกรอบใบทั้งหน้า) → ระบายสีตามระดับ (ทอง/เงิน/ทองแดง)
+     โดยไม่กระทบกรอบใบ — กรอบใบยังทองเสมอทุกระดับ */
   const emblem = (x, y, s)=>`
     <g transform="translate(${x},${y}) scale(${s})">
       <path d="M-56 -82 H56 A10 10 0 0 1 66 -72 V4 C66 54 20 80 0 94 C-20 80 -66 54 -66 4 V-72 A10 10 0 0 1 -56 -82 Z"
-        fill="url(#${u}gold)" stroke="#8a6a1f" stroke-width="2.5" stroke-linejoin="round"/>
+        fill="url(#${u}shield)" stroke="#8a6a1f" stroke-width="2.5" stroke-linejoin="round"/>
       <path d="M-45 -69 H45 A8 8 0 0 1 53 -61 V2 C53 43 16 65 0 78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z"
         fill="#123a63" stroke="#f2dfa4" stroke-width="2" stroke-linejoin="round"/>
       <path d="M-45 -69 H0 V78 C-16 65 -53 43 -53 2 V-61 A8 8 0 0 1 -45 -69 Z" fill="#ffffff" opacity=".07"/>
@@ -322,8 +354,8 @@ function certSVG(c, opt){
     <text x="350" y="672" text-anchor="middle" font-size="${topicFs}" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="710" text-anchor="middle" font-size="25" fill="#6b5836">${th}</text>
-    <text x="350" y="772" text-anchor="middle" font-size="26" fill="#4a3f2a"
-      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%)${perfect ? ' <tspan fill="#a8801f" font-weight="bold">— Perfect</tspan>' : ''}</text>
+    <text x="350" y="772" text-anchor="middle" font-size="25" fill="#4a3f2a"
+      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%) <tspan font-weight="bold" fill="${ringClr}">${tm.emoji} ${tm.label}</tspan></text>
     <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}</text>
     <text x="350" y="846" text-anchor="middle" font-size="17" fill="#8a7440"
@@ -357,8 +389,10 @@ function certSVG(c, opt){
     <text x="350" y="628" text-anchor="middle" font-size="${topicFs}" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="676" text-anchor="middle" font-size="32" fill="#6b5836">${th}</text>
+    <text x="350" y="730" text-anchor="middle" font-size="26" font-weight="bold" fill="${ringClr}"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1.5">${tm.emoji} ${tm.label}</text>
     <text x="350" y="782" text-anchor="middle" font-size="52" font-weight="bold" fill="${accent}"
-      font-family="Georgia,'Times New Roman',serif">${c.sc}/${c.tt}${perfect ? ' ★' : ''}</text>
+      font-family="Georgia,'Times New Roman',serif">${c.sc}/${c.tt}</text>
     <text x="350" y="828" text-anchor="middle" font-size="30" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">${certDateEN(c.ts)}</text>
     ${seal(350, 912, 56)}
@@ -380,18 +414,21 @@ function certSVG(c, opt){
       <radialGradient id="${u}seal" cx=".35" cy=".3">
         ${gold
           ? `<stop offset="0" stop-color="#e8a6a0"/><stop offset=".6" stop-color="#a83a45"/><stop offset="1" stop-color="#6e1524"/>`
-          : `<stop offset="0" stop-color="#f6e2a4"/><stop offset=".6" stop-color="#d5ab3f"/><stop offset="1" stop-color="#a8801f"/>`}
+          : sealTierStops}
       </radialGradient>
       <radialGradient id="${u}ray" cx=".5" cy=".42">
         <stop offset="0" stop-color="#fffefa"/><stop offset="1" stop-color="#efdcae"/>
       </radialGradient>
+      <linearGradient id="${u}shield" x1="0" y1="0" x2="1" y2="1">${shieldStops}</linearGradient>
     </defs>
     ${frame}
     <image href="img/cert/paper.png" xlink:href="img/cert/paper.png" x="0" y="0"
       width="700" height="1000" preserveAspectRatio="none"/>
     ${emblem(350, 156, 1.12)}
-    <image href="img/cert/logo.png" xlink:href="img/cert/logo.png" x="262" y="58"
-      width="176" height="196" preserveAspectRatio="xMidYMid meet"/>
+    <!-- 🥇 รอบ 726: ภาพจริง (logo.png) เป็นโล่สีทองล้วน — โชว์เฉพาะระดับทอง
+         ระดับเงิน/ทองแดงใช้โล่เวกเตอร์ด้านบนที่ระบายสีตามระดับแทน (ยังไม่มีภาพจริงแยกสี) -->
+    ${tier === 'gold' ? `<image href="img/cert/logo.png" xlink:href="img/cert/logo.png" x="262" y="58"
+      width="176" height="196" preserveAspectRatio="xMidYMid meet"/>` : ''}
     <text x="350" y="308" text-anchor="middle" font-size="46" font-weight="bold" fill="#8a6a1f"
       font-family="Georgia,'Times New Roman',serif" letter-spacing="7">${CERT_ISSUER_EN}</text>
     <text x="350" y="350" text-anchor="middle" font-size="${full ? 24 : 26}" fill="${gold ? accent : '#7a6431'}"
@@ -403,13 +440,13 @@ function certSVG(c, opt){
 /* ป้ายทองบรรทัดเดียว — ใช้แทนใบเต็มเมื่อจอเตี้ยมาก (พื้นที่ในการ์ดเหลือ <~50px
    ย่อใบทั้งใบลงไปจะอ่านไม่ออก) · CSS สลับให้เองที่ @media (max-height:500px) */
 function certChipHTML(c){
-  const perfect = c.tt && c.sc >= c.tt;
   if(c.gold){
     return `<span class="cert-chip-sm cert-chip-gold"><b>👑 ${certXML(c.t)}</b>
       <small>${c.tt} sets · ${certXML(certDateEN(c.ts))}</small></span>`;
   }
-  return `<span class="cert-chip-sm"><b>🎖️ ${certXML(c.t)}</b>
-    <small>${c.sc}/${c.tt}${perfect ? ' ★' : ''} · ${certXML(certDateEN(c.ts))}</small></span>`;
+  const tm = CERT_TIER_META[certTier(c)];              // 🥇 รอบ 726: เหรียญตามระดับแทนดาว/ไอคอนกลาง ๆ
+  return `<span class="cert-chip-sm"><b>${tm.emoji} ${certXML(c.t)}</b>
+    <small>${c.sc}/${c.tt} · ${certXML(certDateEN(c.ts))}</small></span>`;
 }
 
 /* ---------- 🔍 ดูใบใหญ่เต็มจอ (แตะที่ไหนก็ปิด · ไม่มี scrollbar ตามกฎทองข้อ 7) ---------- */
@@ -446,7 +483,7 @@ function certStripHTML(list, me){
   return list.map((c, i)=>`<button class="cert-mini${c.gold ? ' cert-mini-gold' : ''}" type="button" data-ci="${i}"
       title="${certXML(c.t)} — แตะดูใบใหญ่">
       ${certSVG(c)}
-      <span class="cert-mini-cap">${c.gold ? '👑 ' : ''}${certXML(c.t)}${c.n > 1 ? ` ×${c.n}` : ''}</span>
+      <span class="cert-mini-cap">${c.gold ? '👑 ' : CERT_TIER_META[certTier(c)].emoji + ' '}${certXML(c.t)}${c.n > 1 ? ` ×${c.n}` : ''}</span>
     </button>`).join('');
 }
 /* ผูกปุ่มใบประกาศทุกใบในกล่องหนึ่ง ๆ → แตะแล้วเปิดใบใหญ่ */
