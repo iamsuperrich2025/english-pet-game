@@ -86,8 +86,9 @@ function makeMats(){
   /* ⚠️ ต้องเป็น Phong ไม่ใช่ Lambert — Lambert คิดแสง "ต่อจุดยอด" (Gouraud)
      ผนัง/พื้นของโรงแรมเป็นกล่องใหญ่ ๆ มีจุดยอดแค่ 8 จุด → ลำไฟฉายจะไม่ปรากฏบนผนังเลย
      Phong คิดแสงต่อพิกเซล ลำไฟฉายจึงสาดเป็นวงนุ่ม ๆ บนกำแพงจริง (หัวใจของโลกนี้) · shininess ต่ำ = ผิวด้าน */
-  const L=(c,key,rx,ry)=>{ const m=new T.MeshPhongMaterial({color:c,shininess:4,specular:0x0a0a0a});
-                           if(key) TEX(m,key,rx||1,ry||1); return m; };
+  /* tint = สีคูณทับภาพ · ไม่ใส่ = ภาพขึ้นเต็มความสว่างของไฟล์ (สว่างโพลนกลางคืนได้) */
+  const L=(c,key,rx,ry,tint)=>{ const m=new T.MeshPhongMaterial({color:c,shininess:4,specular:0x0a0a0a});
+                                if(key) TEX(m,key,rx||1,ry||1,tint); return m; };
   const M={
     wall  : L(0x6f5a45,'tex_hotel_wall',1,1),      // วอลเปเปอร์ทางเดิน
     room  : L(0x7d6a52,'tex_hotel_room',1,1),      // วอลเปเปอร์ในห้อง
@@ -101,7 +102,9 @@ function makeMats(){
     cloth : L(0x6d1622),                           // ผ้าคลุมเตียง/ม่าน
     sheet : L(0xd9d2c2),                           // ผ้าปูที่นอน
     metal : L(0x6a6f75),
-    facade: L(0x7a6f61,'tex_hotel_facade',1,1),    // เปลือกนอกอาคาร (สว่างพอให้เห็นตึกตอนกลางคืน)
+    /* 🌙 รอบ 694: เปลือกนอกต้อง "หม่นแบบกลางคืน" — เดิมแปะภาพแล้วสีคูณถูกรีเซ็ตเป็นขาว
+       ตึกเลยสว่างโพลนเหมือนกลางวันทั้งที่ฟ้ามืด (ต้นเหตุที่ผู้ใช้บอกว่าข้างนอกดูชุ่ย) */
+    facade: L(0x7a6f61,'tex_hotel_facade',1,1,0x6d6a66),
     stone : L(0x6b665e),
     leaf  : L(0x2c4a2e),
   };
@@ -114,7 +117,13 @@ function makeMats(){
   return M;
 }
 
-/* ---------- ภาพวาดในกรอบรูป (วาดเอง = ปลอดลิขสิทธิ์ 100%) ---------- */
+/* ---------- ภาพวาดในกรอบรูป (วาดเอง = ปลอดลิขสิทธิ์ 100%) ----------
+   🖼️ รอบ 694: ถ้ามีไฟล์ `img/tex/tex_hotel_portrait_1..6.png` (ภาพเหมือนจริง) จะแปะทับภาพวาดนี้อัตโนมัติ
+   ⚠️ ภาพต้องวาง "เบ้าตา" ตรงตำแหน่งเดิมเป๊ะ เพราะลูกตาเป็น mesh แยกวางทับ (จะได้กลอกตาตามได้):
+      ตาซ้าย/ขวาอยู่ที่ 40.6% / 59.4% ของความกว้าง · สูงจากขอบบน 43.5% · สัดส่วนภาพ 256:340 (3:4)
+      และในภาพต้องเป็น "ตาขาวล้วน ไม่มีตาดำ" — ตาดำคือ mesh ที่เกมวางทับให้เอง
+      prompt เต็มอยู่ handoff/PROMPTS_HOTEL.md */
+const PORTRAIT_PHOTOS=6;
 const PORTRAIT_SKIN=['#c9a98c','#b08e6e','#d8bfa3','#9d7a5c'];
 const PORTRAIT_CLOTH=['#2b2f45','#3d2430','#242c26','#3a3327'];
 function portraitTexture(seed){
@@ -522,7 +531,10 @@ function build(THREE_,opt){
     g.add(new T.Mesh(frameGeo,M.gold));
     /* ⚠️ ต้องเป็น Lambert ไม่ใช่ Basic — ไฟดับแล้วภาพในกรอบต้อง "มืดไปด้วย"
        แล้วค่อยโผล่ขึ้นมาตอนไฟฉายส่องโดน (นั่นคือจังหวะที่เด็กเห็นตากลอกตาม 😱) */
-    const art=new T.Mesh(artGeo,new T.MeshPhongMaterial({map:portraitTexture(seed++),shininess:6,specular:0x111111}));
+    const art=new T.Mesh(artGeo,new T.MeshPhongMaterial({map:portraitTexture(seed),shininess:6,specular:0x111111}));
+    /* มีไฟล์ภาพเหมือนจริง = แปะทับภาพวาดทันที · ไม่มีไฟล์ = คงภาพวาดเดิม (เกมไม่พัง) */
+    TEX(art.material,'tex_hotel_portrait_'+(seed%PORTRAIT_PHOTOS+1),1,1,null,true);
+    seed++;
     art.position.z=.055; g.add(art);
     const e1=new T.Mesh(eyeGeo,eyeMat), e2=new T.Mesh(eyeGeo,eyeMat);
     e1.position.set(-EYE_X,EYE_Y,.07); e2.position.set(EYE_X,EYE_Y,.07);

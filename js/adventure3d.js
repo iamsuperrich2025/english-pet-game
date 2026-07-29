@@ -1587,7 +1587,9 @@ function buildDriveCity(sc){
    วางไฟล์ img/sky/<key>.jpg (หรือ .png) → เกน background เป็นภาพจริงทันที · ไม่มีไฟล์ = คงสีพื้นเดิม
    prompt ภาพใน PROMPTS_SKY.md — 5 แบบใช้ครอบ 7 โลก
    ============================================================ */
-const SKY_IMG={ adv:'sky_day', haunt:'sky_night', heli:'sky_dawn', drone:'sky_storm', drive:'sky_day', soccer:'sky_day', mecha:'sky_alien' };
+/* ⚠️ รอบ 694: ถอด haunt ออกจากตารางนี้ — โลกโรงแรมใช้ "ท้องฟ้าวาดเอง" (buildHauntSky ด้านล่าง)
+   เพราะต้องหรี่/สว่างตามจังหวะไฟดับได้ ภาพ panorama นิ่ง ๆ ทำแบบนั้นไม่ได้ */
+const SKY_IMG={ adv:'sky_day', heli:'sky_dawn', drone:'sky_storm', drive:'sky_day', soccer:'sky_day', mecha:'sky_alien' };
 function applySky(sc, mode){
   const key=SKY_IMG[mode]; if(!key || !sc) return;
   const set=img=>{ const tex=new THREE.Texture(img); tex.needsUpdate=true;
@@ -1603,29 +1605,209 @@ function applySky(sc, mode){
    prompt ภาพใน PROMPTS_TEXTURE.md
    ============================================================ */
 const imgTexCache={};                                  // key -> Image ที่โหลดแล้ว | 'none' (ไม่มีไฟล์ ไม่ต้องลองซ้ำ)
+const imgTexPend={};                                   // key -> คิววัสดุที่รอภาพเดียวกันอยู่ (กันยิงซ้ำ)
 function applyTex(mat,key,rx,ry,tint,pngFirst){        // tint = สีคูณทับภาพ (โลกกลางคืนใช้ภาพเดียวกันแต่หม่นลง) · pngFirst = ภาพที่ต้องมีพื้นโปร่ง (หน้าต่าง/ประตู)
   if(!mat||!key) return;
   rx=rx||1; ry=ry||1;
-  const ext1=pngFirst?'.png':'.jpg', ext2=pngFirst?'.jpg':'.png';
-  const use=img=>{
+  const use=(m,img)=>{
     const t=new THREE.Texture(img); t.needsUpdate=true;
-    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(rx,ry);
-    if(mat.map && mat.map.dispose) mat.map.dispose();
-    mat.map=t; if(mat.color) mat.color.set(tint||0xffffff); mat.needsUpdate=true;
+    t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(m.rx,m.ry);
+    if(m.mat.map && m.mat.map.dispose) m.mat.map.dispose();
+    m.mat.map=t; if(m.mat.color) m.mat.color.set(m.tint||0xffffff); m.mat.needsUpdate=true;
   };
   const c=imgTexCache[key];
   if(c==='none') return;
-  if(c){ use(c); return; }
+  const job={mat,rx,ry,tint};
+  if(c){ use(job,c); return; }
+  /* 🔁 รอบ 694: วัสดุหลายชิ้นขอ key เดียวกันพร้อมกัน (รูปในกรอบ 30 ใบ ใช้ภาพ 6 แบบ)
+     เดิมจะยิง request ซ้ำใบละ 2 ครั้งก่อน cache จะทัน = 60 request → เข้าคิวรอภาพเดียวกันแทน */
+  if(imgTexPend[key]){ imgTexPend[key].push(job); return; }
+  imgTexPend[key]=[job];
+  const done=(img)=>{
+    imgTexCache[key]=img||'none';
+    if(img) imgTexPend[key].forEach(j=>use(j,img));
+    delete imgTexPend[key];
+  };
+  const ext1=pngFirst?'.png':'.jpg', ext2=pngFirst?'.jpg':'.png';
   const first=new Image();
-  first.onload=()=>{ imgTexCache[key]=first; use(first); };
+  first.onload=()=>done(first);
   first.onerror=()=>{
     const second=new Image();
-    second.onload=()=>{ imgTexCache[key]=second; use(second); };
-    second.onerror=()=>{ imgTexCache[key]='none'; };
+    second.onload=()=>done(second);
+    second.onerror=()=>done(null);
     second.src='img/tex/'+key+ext2;
   };
   first.src='img/tex/'+key+ext1;
 }
+/* ============================================================
+   🌌 ท้องฟ้ากลางคืนโรงแรมผีสิง (รอบ 694) — ผู้ใช้: "ข้างนอกโรงแรมยังไม่น่ากลัวพอ"
+   ของเดิม = สีพื้นเรียบสีเดียว + จันทร์แผ่นกลมขาวใบเดียว (แบนมาก ไม่มีมิติ)
+   ของใหม่ 5 ชั้นซ้อนกัน: ① โดมฟ้าไล่สี (ดำ→คราม→ม่วง→แดงหม่นที่ขอบฟ้า)
+   ② ดาว 3 ชั้นกะพริบคนละจังหวะ ③ จันทร์เต็มดวงมีหลุมอุกกาบาต+รัศมีฟุ้ง
+   ④ เมฆบางลอยผ่านหน้าจันทร์ ⑤ หมอกเลื้อยติดพื้นในสวน
+   ⚠️ ทุกชิ้นบนฟ้าเป็น fog:false (ไม่งั้นตอนไฟดับ fog far=24 จะกลืนหายหมด) แล้วคุมความสว่าง
+      เองด้วย opacity ใน tickHauntSky แทน — ไฟดับ = หรี่ฟ้าลง ไม่ให้สว่างทะลุหน้าต่างจนไม่มืด
+   💰 ต้นทุน: draw call ~16 · ไม่มี PointLight เพิ่มเลย (มือถือไม่ตก FPS)
+   ============================================================ */
+/* 🔑 บทเรียนรอบนี้ (เสียเวลาหาอยู่นาน): รัศมีโดมต้อง ≤ (camera.far 220) − (ระยะไกลสุดที่ผู้เล่นเดินไปได้
+   จากจุดกึ่งกลาง ≈ 85 ม. ที่มุมแผนที่) ไม่งั้นด้านไกลของโดม "เลย far plane" แล้วโดนตัดหาย
+   → เห็นเป็น **จานดำกลม ๆ ลอยกลางฟ้า** (ตอนแรกนึกว่าสีไล่เพี้ยน แก้สีอยู่ 2 รอบก็ไม่หาย
+   จนยิง raycast แล้วพบว่าโดนอยู่ที่ระยะ 246 ม. = เกิน far) */
+const HSKY_R=132;                          // รัศมีโดมฟ้า (132 + 85 = 217 < far 220 ✔)
+let hSky=null;                             // {dome,stars[],moon,halo,cloudGrp,mist[]}
+function hskyTex(w,h,draw){
+  const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  draw(cv.getContext('2d'),cv);
+  const t=new THREE.CanvasTexture(cv); t.needsUpdate=true; return t;
+}
+function buildHauntSky(sc){
+  /* ① โดมไล่สี — sphere uv: v=1 คือกลางฟ้า, v=.5 คือเส้นขอบฟ้า
+     → บนผืนผ้าใบ y=0 คือกลางฟ้า, y=ครึ่ง คือขอบฟ้า (ล่างกว่านั้นโดนพื้นบังอยู่แล้ว) */
+  /* ⚠️ บทเรียนตอนเทสต์รอบนี้: อย่าให้ยอดฟ้า "ดำสนิท" แล้วไล่สีเร็ว — sphere uv ไล่ตามมุมเงย
+     พอสีกระโดดในช่วงสั้น ๆ จะเห็นเป็น "จานดำกลม" ลอยอยู่กลางฟ้าชัดมาก (ภาพเทสต์แรกเป็นแบบนั้น)
+     ต้องใช้ stop ถี่ ๆ และเริ่มที่น้ำเงินเข้ม (ไม่ใช่ดำ) จึงจะเนียนเป็นฟ้ากลางคืนจริง */
+  const domeTex=hskyTex(8,512,c=>{
+    const g=c.createLinearGradient(0,0,0,512);
+    g.addColorStop(.00,'#070c1c');   // กลางฟ้า — น้ำเงินเข้มจัด (ดาวยังเด่น แต่ไม่เป็นรูโหว่ดำ)
+    g.addColorStop(.10,'#080f24');
+    g.addColorStop(.20,'#0b1430');
+    g.addColorStop(.30,'#141c3e');
+    g.addColorStop(.38,'#1f2249');   // คราม
+    g.addColorStop(.44,'#2e2451');   // ม่วง
+    g.addColorStop(.47,'#3a2742');
+    g.addColorStop(.49,'#4b2b3a');   // แสงหม่นสีเลือดจาง ๆ ที่ขอบฟ้า (แค่พอเห็นเงาตึกตัดขอบ)
+    g.addColorStop(.50,'#2a1a24');
+    g.addColorStop(.52,'#0a0a12');
+    g.addColorStop(1,'#05060e');     // ใต้ขอบฟ้า = สีเดียวกับหมอก (ไม่เห็นรอยต่อ)
+    c.fillStyle=g; c.fillRect(0,0,8,512);
+  });
+  const dome=new THREE.Mesh(new THREE.SphereGeometry(HSKY_R,32,24),
+    new THREE.MeshBasicMaterial({map:domeTex,side:THREE.BackSide,fog:false,
+      transparent:true,opacity:1,depthWrite:false}));
+  dome.renderOrder=-1; sc.add(dome);
+
+  /* ② ดาว 3 ชั้น — คนละขนาด/ความสว่าง แล้วให้แต่ละชั้นหายใจคนละจังหวะ = เห็นเป็นดาวกะพริบ
+     (PointsMaterial คุม opacity ต่อ "ชั้น" ไม่ได้ต่อดวง — 3 ชั้นก็พอหลอกตาแล้ว และถูกกว่าเชเดอร์เอง) */
+  const starLayer=(n,size,col,op)=>{
+    const pos=new Float32Array(n*3);
+    for(let i=0;i<n;i++){
+      const a=Math.random()*Math.PI*2, y=Math.pow(Math.random(),.62);   // เกาะครึ่งบนฟ้าเป็นหลัก
+      const r=Math.sqrt(Math.max(0,1-y*y));
+      pos[i*3]=Math.cos(a)*r*HSKY_R*.96; pos[i*3+1]=y*HSKY_R*.9+8; pos[i*3+2]=Math.sin(a)*r*HSKY_R*.96;
+    }
+    const g=new THREE.BufferGeometry();
+    g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+    const p=new THREE.Points(g,new THREE.PointsMaterial({color:col,size,transparent:true,
+      opacity:op,depthWrite:false,fog:false,sizeAttenuation:true}));
+    sc.add(p);
+    return {p,base:op,ph:Math.random()*6.28,sp:.45+Math.random()*.8};
+  };
+  const stars=[ starLayer(400,.95,0xdfe9ff,.85),   // ดาวเล็กเต็มฟ้า
+                starLayer(240,1.55,0xffffff,.62),  // ดาวกลาง
+                starLayer(110,2.3,0xcfe0ff,.44) ]; // ดาวดวงเด่น
+
+  /* ③ พระจันทร์เต็มดวง — วาดหลุมอุกกาบาต + ขอบมืดให้ดูกลมเป็นลูก ไม่ใช่แผ่นกระดาษ */
+  const moonTex=hskyTex(256,256,c=>{
+    const g=c.createRadialGradient(104,96,8,128,128,126);
+    g.addColorStop(0,'#fffdf0'); g.addColorStop(.55,'#f0e9d4');
+    g.addColorStop(.86,'#cec6ab'); g.addColorStop(1,'#a49b85');
+    c.beginPath(); c.arc(128,128,124,0,6.2832); c.fillStyle=g; c.fill();
+    [[92,104,26],[152,86,15],[168,152,22],[102,168,18],[132,124,10],[74,146,11],[186,112,9],[120,70,8]]
+      .forEach(([x,y,r])=>{
+        const rg=c.createRadialGradient(x-r*.3,y-r*.3,r*.12,x,y,r);
+        rg.addColorStop(0,'rgba(116,108,92,.44)'); rg.addColorStop(.7,'rgba(150,142,124,.22)');
+        rg.addColorStop(1,'rgba(190,183,163,0)');
+        c.fillStyle=rg; c.beginPath(); c.arc(x,y,r,0,6.2832); c.fill();
+      });
+    const lg=c.createRadialGradient(96,92,40,128,128,128);       // ขอบมืด (limb darkening)
+    lg.addColorStop(0,'rgba(0,0,0,0)'); lg.addColorStop(1,'rgba(8,10,22,.52)');
+    c.globalCompositeOperation='source-atop'; c.fillStyle=lg; c.fillRect(0,0,256,256);
+    c.globalCompositeOperation='source-over';
+  });
+  const MD=new THREE.Vector3(-.46,.44,-.77).normalize();          // ทิศของดวงจันทร์
+  const moonPos=MD.clone().multiplyScalar(HSKY_R*.87);
+  const moon=new THREE.Mesh(new THREE.PlaneGeometry(26,26),
+    new THREE.MeshBasicMaterial({map:moonTex,transparent:true,fog:false,depthWrite:false}));
+  moon.position.copy(moonPos); moon.lookAt(0,EYE_H,0); sc.add(moon);
+  const haloTex=hskyTex(128,128,c=>{
+    const g=c.createRadialGradient(64,64,4,64,64,64);
+    g.addColorStop(0,'rgba(210,226,255,.85)'); g.addColorStop(.30,'rgba(160,186,240,.30)');
+    g.addColorStop(.62,'rgba(120,150,220,.10)'); g.addColorStop(1,'rgba(120,150,220,0)');
+    c.fillStyle=g; c.fillRect(0,0,128,128);
+  });
+  const halo=new THREE.Mesh(new THREE.PlaneGeometry(72,72),
+    new THREE.MeshBasicMaterial({map:haloTex,transparent:true,fog:false,depthWrite:false,
+      blending:THREE.AdditiveBlending,opacity:.34}));
+  halo.position.copy(moonPos).multiplyScalar(.985); halo.lookAt(0,EYE_H,0); sc.add(halo);
+  /* แสงจันทร์ต้องมาจาก "ทางเดียวกับดวงจันทร์จริง" ไม่งั้นเงาตึกทอดผิดข้างจนดูปลอม */
+  if(hotelMoonL) hotelMoonL.position.copy(MD).multiplyScalar(90);
+
+  /* ④ เมฆบางลอยผ่านหน้าจันทร์ — แขวนไว้ในกลุ่มเดียวแล้วหมุนกลุ่มช้า ๆ (ถูกกว่าขยับทีละก้อน)
+     รัศมีน้อยกว่าจันทร์ → บางก้อนจะผ่าน "หน้า" ดวงจันทร์พอดี = จันทร์วูบมืดเป็นพัก ๆ */
+  const cloudTex=hskyTex(256,128,c=>{
+    for(let i=0;i<26;i++){
+      const x=44+Math.random()*168, y=64+(Math.random()*2-1)*26, r=14+Math.random()*30;
+      const g=c.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,'rgba(14,16,30,.52)'); g.addColorStop(1,'rgba(14,16,30,0)');
+      c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,6.2832); c.fill();
+    }
+  });
+  const cloudGrp=new THREE.Group(); sc.add(cloudGrp);
+  for(let i=0;i<6;i++){
+    const a=Math.random()*Math.PI*2, rad=HSKY_R*.70, y=HSKY_R*(.26+Math.random()*.30);
+    const cl=new THREE.Mesh(new THREE.PlaneGeometry(62+Math.random()*46,20+Math.random()*15),
+      new THREE.MeshBasicMaterial({map:cloudTex,transparent:true,fog:false,depthWrite:false,
+        opacity:.55+Math.random()*.3}));
+    cl.position.set(Math.cos(a)*rad,y,Math.sin(a)*rad);
+    cl.lookAt(0,y*.35,0); cloudGrp.add(cl);
+  }
+
+  /* ⑤ หมอกเลื้อยติดพื้นในสวนหน้าโรงแรม (อันนี้ "ให้โดนหมอกฉาก" ปกติ — มันอยู่ระดับพื้นจริง) */
+  const mistTex=hskyTex(128,128,c=>{
+    const g=c.createRadialGradient(64,64,6,64,64,62);
+    g.addColorStop(0,'rgba(198,210,232,.55)'); g.addColorStop(.5,'rgba(176,190,220,.24)');
+    g.addColorStop(1,'rgba(160,178,210,0)');
+    c.fillStyle=g; c.fillRect(0,0,128,128);
+  });
+  /* แผ่นหมอกเป็นแผ่นนอน มองที่ระดับสายตาจะเห็นเฉียงมาก → ต้องแผ่นใหญ่+ซ้อนหลายชั้นถึงจะเห็นจริง
+     (เทสต์รอบแรกวางแผ่นละ 22 ม. จาง .14 → มองจากพื้นแทบไม่เห็นอะไรเลย) */
+  const mist=[];
+  for(let i=0;i<11;i++){
+    let x=0,z=0;
+    for(let k=0;k<20;k++){                       // สุ่มจุดในสวน เลี่ยงตัวตึก
+      const a=Math.random()*Math.PI*2, d=20+Math.random()*32;
+      x=Math.cos(a)*d; z=Math.sin(a)*d;
+      if(!HOTEL3D.insideHotel(x,z)) break;
+    }
+    const m=new THREE.Mesh(new THREE.PlaneGeometry(34,34),
+      new THREE.MeshBasicMaterial({map:mistTex,transparent:true,opacity:.24,depthWrite:false}));
+    m.rotation.x=-Math.PI/2; m.rotation.z=Math.random()*6.28;
+    /* ⚠️ ต้องต่ำกว่าระดับตา (1.6 ม.) เสมอ — เทสต์แล้วถ้าแผ่นหมอกอยู่ระดับตาพอดี
+       จะเห็นเป็น "แผ่นเทาทึบพาดเต็มจอ" (มองแผ่นบางจากด้านข้าง) */
+    m.position.set(x,.25+Math.random()*.55,z); sc.add(m); mist.push(m);
+  }
+
+  hSky={dome,stars,moon,halo,cloudGrp,mist};
+}
+/* หายใจ/ลอย/หรี่ตอนไฟดับ — เรียกทุกเฟรมจาก tickHotelWorld */
+function tickHauntSky(dt,now){
+  if(!hSky) return;
+  const k=blackedOut?.5:1, t=now*.001;
+  for(let i=0;i<hSky.stars.length;i++){
+    const s=hSky.stars[i];
+    s.p.material.opacity=s.base*k*(.70+.30*Math.sin(t*s.sp+s.ph));
+  }
+  hSky.halo.material.opacity=(.30+.06*Math.sin(t*.6))*k;
+  hSky.moon.material.opacity=blackedOut?.62:1;
+  hSky.dome.material.opacity=blackedOut?.55:1;
+  hSky.cloudGrp.rotation.y+=dt*.0042;
+  for(let i=0;i<hSky.mist.length;i++){
+    const m=hSky.mist[i];
+    m.rotation.z+=dt*(.02+i*.005);
+    m.material.opacity=(.20+.07*Math.sin(t*.28+i))*k;
+  }
+}
+
 function buildScene(md){
   if(md==='drive'){
     const sc=new THREE.Scene();
@@ -1650,10 +1832,7 @@ function buildScene(md){
     /* 💡 แสงในอาคารตอนไฟยังติด — โคมไฟในตึกเป็นแค่ material เรืองแสง (ไม่ใช่ดวงไฟจริง เพราะ PointLight
        หลายสิบดวงมือถือไม่ไหว) จึงใช้ ambient อุ่น ๆ แทน "แสงจากโคมทั้งตึก" แล้วดับพร้อมกันตอนไฟดับ */
     hotelAmb=new THREE.AmbientLight(0xffe3bb,.62); sc.add(hotelAmb);
-    // พระจันทร์เต็มดวงสีซีด
-    const moon=new THREE.Mesh(new THREE.CircleGeometry(6,24),
-      new THREE.MeshBasicMaterial({color:0xf5f0d8,fog:false}));
-    moon.position.set(-45,38,-70); moon.lookAt(0,EYE_H,0); sc.add(moon);
+    buildHauntSky(sc);          // 🌌 รอบ 694: ฟ้าไล่สี+ดาว+จันทร์+เมฆ+หมอก (แทนจันทร์แผ่นแบนใบเดิม)
   }
   // (โหมด heli ใส่แสงของตัวเองในบล็อกเมืองด้านล่าง)
 
@@ -1663,7 +1842,9 @@ function buildScene(md){
   ground.rotation.x=-Math.PI/2; sc.add(ground);
   // 🧱 พื้นภาพจริงในโลกเมือง (โดรนใส่ในบล็อกตัวเอง) · โลกผีใช้ภาพเดียวกันแต่ tint หม่นให้เข้ากับกลางคืน
   if(md==='heli') applyTex(ground.material,'tex_ground',26,26);
-  else if(md==='haunt') applyTex(ground.material,'tex_ground',20,20,0x7d8490);
+  /* 🌑 รอบ 694: หม่นลงอีกจาก 0x7d8490 — พื้นสว่างโพลนทำให้สวนกลางคืนดูเหมือนกลางวัน
+     (ทั้งที่ฟ้ามืด) เป็นอีกต้นเหตุที่ผู้ใช้บอกว่า "ข้างนอกไม่น่ากลัว" */
+  else if(md==='haunt') applyTex(ground.material,'tex_ground',20,20,0x4d525c);
 
   // รั้วรอบแผนที่
   const fenceMat=new THREE.MeshLambertMaterial({color:md==='adv'?0xb98a5a:0x3a3a4a});
@@ -2779,6 +2960,7 @@ function tickHotelPlayer(dt,now){
 
 /* ---------- ⏱ จังหวะของโลก: เข้าตึก → ไฟกะพริบ → ไฟดับ · เสียงเคาะตู้ · ป้าย "กด E" ---------- */
 function tickHotelWorld(dt,now){
+  tickHauntSky(dt,now);                            // 🌌 ฟ้ากลางคืน (รอบ 694) — ทำงานแม้ตอนยังไม่เข้าตึก
   if(!hotel) return;
   HOTEL3D.tick(hotel,dt,now,camera.position);      // รูปตามอง + ลิฟต์ + บานตู้
   tickTorch();
