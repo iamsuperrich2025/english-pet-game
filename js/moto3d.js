@@ -87,6 +87,138 @@ let boardEl=null,boardSig='';              // 🏆 รอบ 318: กระด�
 let chatBtn=null,chatBarEl=null,selfMsgEl=null,myChat=null;   // 💬 รอบ 318: แชทลอยหัวข้อความสำเร็จรูป
 let keydownFn=null,keyupFn=null,resizeFn=null;
 
+/* ============================================================
+   🚗🏙️ รอบ 785: ยกการขับจาก "โลกขับรถเมืองกำแพงเพชร" มาทั้งชุด (เฉพาะ vehicle==='car')
+   ผู้ใช้: "ไม่เอาอย่างนี้ ให้แสดงผลเหมือนขับรถในเมืองทุกอย่าง รวมถึงเสียงเครื่องยนต์และการบังคับ
+           เหมือนยกการขับที่นั่นมาใส่ที่นี่เลย"
+   ยกมา 4 ชั้น (ค่าคงที่/สูตร copy ตรงจาก js/adventure3d.js โซน 🚗 โหมดขับรถเมืองกำแพงเพชร):
+   ① ฟิสิกส์ bicycle model — คันเร่ง/เบรก/ถอยหลัง/แรงต้าน/ไถลเข้าโค้ง (grip) แทนสูตรมอไซค์
+   ② เสียง CarSnd สังเคราะห์ (พอร์ตจาก CarSound) — ไดสตาร์ท/รอบเครื่อง/แตร/ติ๊ดถอย/ยางเอี๊ยด/ชน
+   ③ มุมมองในห้องคนขับ — หน้าปัดภาพจริง + พวงมาลัยหมุน + เข็มสปีด/วัดรอบวิ่งจริง (V สลับมุมที่ 3)
+   ④ ปุ่มบังคับครบชุดบนเครื่องเกม — พวงมาลัยเด้งคืนกลาง 🦶เบรก ⚙️เกียร์ถอย 📯แตร
+   ⚠️ โหมดมอเตอร์ไซค์ไม่ถูกแตะเลยสักบรรทัด (ทุกอย่างในโซนนี้ gate ด้วย vehicle==='car')
+   ============================================================ */
+const CAR_EYE=1.32;               // ความสูงตาคนขับ (เท่าโลกเมือง)
+const CAR_ACCEL=11, CAR_BRAKE=15; // m/s²
+const CAR_VMAX=55.6, CAR_VMAX_OFF=7, CAR_VREV=6.5;   // ท็อปสปีดบนถนน (~200 กม./ชม.) · นอกถนน · ถอยหลัง
+const CAR_WB=2.6, CAR_STEER_MAX=.52;                 // ระยะฐานล้อ · มุมเลี้ยวสูงสุด (rad) ตอนรถช้า
+let dSpeed=0, dSteer=0;           // ความเร็วลงชื่อ (ลบ=ถอย) · มุมพวงมาลัย smooth
+let dVelX=0, dVelZ=0;             // ทิศวิ่งจริง (ไถลตามหัวรถ = ฟีลดริฟต์)
+let dCamYaw=0, dRoll=0, dRollV=0; // กล้องหันตามหัวรถแบบหน่วง + ตัวถังโคลงตามแรง G
+let padBr=false, gearR=false, kBack=false;            // 🦶 เบรก (กดค้าง) · ⚙️ เกียร์ R · คีย์ S/ลูกศรลง
+let carRevBeepAt=0, carCam3=false;                   // จังหวะ "ติ๊ด" ถอยหลัง · มุมมองที่ 3 (คีย์ V)
+let dashEl=null, wheelBoxEl=null, gaugeCv=null, gaugeCtx=null;   // ห้องคนขับ
+let brakeEl=null, gearEl=null, hornEl=null;                      // ปุ่มบังคับเพิ่มบนเครื่องเกม
+
+/* 🔊 เสียงเครื่องยนต์รถยนต์สังเคราะห์ — พอร์ตจาก CarSound (adventure3d.js) ทั้งชุด
+   ต่างจากต้นทางแค่ "มี master gain" ตัวเดียวคุมทุกเสียง เพื่อปิดให้เกลี้ยงตอนออกจากโลก (กฎเสียง HANDOFF) */
+const CarSnd={ctx:null,master:null,osc:null,osc2:null,gain:null,lp:null,on:false,rpm:0,skidGain:null,skidBp:null,
+  ac(){ if(!this.ctx){ const C=window.AudioContext||window.webkitAudioContext; if(!C) return null;
+      this.ctx=new C(); this.master=this.ctx.createGain(); this.master.gain.value=1; this.master.connect(this.ctx.destination); }
+    if(this.ctx.state==='suspended') this.ctx.resume();
+    return this.ctx; },
+  start(){ if(this.on) return;
+    try{
+      const c=this.ac(); if(!c) return;
+      this.gain=c.createGain(); this.gain.gain.value=0;
+      this.lp=c.createBiquadFilter(); this.lp.type='lowpass'; this.lp.frequency.value=520;
+      this.osc=c.createOscillator(); this.osc.type='sawtooth'; this.osc.frequency.value=55;
+      this.osc2=c.createOscillator(); this.osc2.type='square'; this.osc2.frequency.value=28;
+      const g2=c.createGain(); g2.gain.value=.5;
+      this.osc.connect(this.lp); this.osc2.connect(g2); g2.connect(this.lp);
+      this.lp.connect(this.gain); this.gain.connect(this.master);
+      this.osc.start(); this.osc2.start(); this.on=true; this.rpm=0;
+    }catch(e){}
+  },
+  update(th,sp,dt){
+    if(!this.on) return;
+    const mute=(typeof state!=='undefined'&&state.sound===false)||!running;
+    if(this.master) this.master.gain.setTargetAtTime(mute?0:1,this.ctx.currentTime,.08);
+    const tgt=.18+Math.min(1,sp/CAR_VMAX)*.72+(th>0?.14:0);
+    this.rpm+=(tgt-this.rpm)*Math.min(1,dt*3);
+    this.osc.frequency.value=48+this.rpm*175;
+    this.osc2.frequency.value=24+this.rpm*88;
+    this.lp.frequency.value=360+this.rpm*950;
+    this.gain.gain.value=.03+this.rpm*.05;
+  },
+  /* 🛞 เสียงยางเสียดสีผิวถนน (ไถลเข้าโค้ง) — noise วนผ่าน bandpass · setSkid ต่อเฟรม 0=เงียบ 1=เอี๊ยดสุด */
+  skidStart(){ if(this.skidGain||!this.ctx) return;
+    try{
+      const c=this.ctx;
+      const nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0);
+      for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+      const src=c.createBufferSource(); src.buffer=nb; src.loop=true;
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1650; bp.Q.value=5.5;
+      const g=c.createGain(); g.gain.value=0;
+      src.connect(bp); bp.connect(g); g.connect(this.master); src.start();
+      this.skidGain=g; this.skidBp=bp;
+    }catch(e){}
+  },
+  setSkid(amt){
+    if(typeof state!=='undefined'&&state.sound===false){ if(this.skidGain) this.skidGain.gain.value=0; return; }
+    if(!this.ctx) return;
+    if(!this.skidGain) this.skidStart();
+    if(!this.skidGain) return;
+    const a=Math.max(0,Math.min(1,amt)), tgt=a*a*0.13;     // ยกกำลังสอง — เงียบตอนเลี้ยวเบา ดังชัดตอนไถลแรง
+    const g=this.skidGain.gain;
+    g.value+=(tgt-g.value)*0.35;
+    if(this.skidBp) this.skidBp.frequency.value=1350+a*900;
+  },
+  /* 🔑 ไดสตาร์ท "วี้ดๆๆ" ~0.7 วิ แล้วเครื่องติด รอบพุ่งก่อนลงเดินเบา */
+  ignite(){
+    try{
+      const c=this.ac(); if(!c) return;
+      const t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sawtooth'; o.frequency.setValueAtTime(72,t);
+      const lfo=c.createOscillator(), lg=c.createGain();
+      lfo.frequency.value=11; lg.gain.value=26; lfo.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(.07,t); g.gain.setValueAtTime(.07,t+.62); g.gain.exponentialRampToValueAtTime(.001,t+.8);
+      o.connect(g); g.connect(this.master);
+      o.start(t); o.stop(t+.85); lfo.start(t); lfo.stop(t+.85);
+      setTimeout(()=>{ this.start(); if(this.on) this.rpm=.95; },680);
+    }catch(e){}
+  },
+  revBeep(){ if(!this.ctx) return;                       // "ติ๊ด" ถอยหลัง (ทุก 600ms ตอนเกียร์ R/วิ่งถอย)
+    try{
+      const c=this.ctx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='square'; o.frequency.value=1000;
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=2600;
+      g.gain.setValueAtTime(.055,t); g.gain.setValueAtTime(.055,t+.16); g.gain.exponentialRampToValueAtTime(.001,t+.2);
+      o.connect(lp); lp.connect(g); g.connect(this.master); o.start(t); o.stop(t+.22);
+    }catch(e){}
+  },
+  horn(){
+    try{
+      const c=this.ac(); if(!c) return;
+      const t=c.currentTime;
+      [440,554].forEach(f=>{
+        const o=c.createOscillator(), g=c.createGain();
+        o.type='square'; o.frequency.value=f;
+        g.gain.setValueAtTime(.09,t); g.gain.exponentialRampToValueAtTime(.001,t+.42);
+        o.connect(g); g.connect(this.master); o.start(t); o.stop(t+.45);
+      });
+    }catch(e){}
+  },
+  thud(v){ if(!this.ctx||!this.master) return;            // ชน/ลงจากเนินแรง
+    try{
+      const c=this.ctx, t=c.currentTime;
+      const o=c.createOscillator(), g=c.createGain();
+      o.type='sine'; o.frequency.setValueAtTime(115,t); o.frequency.exponentialRampToValueAtTime(38,t+.16);
+      g.gain.setValueAtTime(Math.min(.85,v),t); g.gain.exponentialRampToValueAtTime(.001,t+.24);
+      o.connect(g); g.connect(this.master); o.start(t); o.stop(t+.26);
+    }catch(e){}
+  },
+  stop(){ if(this.skidGain) this.skidGain.gain.value=0;
+    if(this.master&&this.ctx) this.master.gain.setTargetAtTime(0,this.ctx.currentTime,.05); }
+};
+/* สตาร์ทเสียงตาม gesture แรกของผู้เล่น (นโยบาย autoplay) — รถใช้ CarSnd · มอไซค์ใช้ Eng เหมือนเดิม */
+function sndKick(){
+  if(vehicle==='car'){ if(!CarSnd.on) CarSnd.ignite(); }
+  else Eng.start();
+}
+
 /* ---------- 🔊 เสียงเครื่องยนต์จริง (รอบ 306 — ตัดจากเสียงอัดมอไซค์จริงของผู้ใช้ sound/MotorbikeSound.m4a)
    sound/moto/: eng_idle 5.6s ลูปเดินเบา (248.7s ในต้นฉบับ ช่วงนิ่งสุด) · eng_cruise 5.6s ลูปวิ่งไหล (129.2s)
    eng_accel 2.05s รอบกวาดขึ้น (รอบ 307: ย้าย 377.2s→93.65s · เดิม noise flatness 0.013 ผู้ใช้ได้ยิน → ใหม่ 0.0008 สะอาดเท่า idle) · eng_decel 3.5s รอบไหลลง (393.7s) — ทุกไฟล์กรอง 60Hz-7.5kHz ตัดลม/ซ่า
@@ -330,6 +462,49 @@ const CSS=`
 #moto-exit-yes{background:linear-gradient(180deg,#ef5350,#d32f2f)}
 #moto-exit-no{background:linear-gradient(180deg,#66bb6a,#2e7d32)}
 @media (orientation:portrait){ #moto-wrap .m-deco{display:none} }
+/* ============================================================
+   🚗🏙️ รอบ 785: ห้องคนขับ + ปุ่มบังคับชุดโลกเมือง (โผล่เฉพาะ .car — โหมดมอไซค์ไม่เห็นอะไรเลย)
+   สัดส่วนทุกชิ้นคิดเป็น % ของ "จอเกม" (ไม่ใช่ vh) → ย่อ/ขยายตามจอเครื่องเกมเองทุกอัตราส่วน
+   ============================================================ */
+#moto-cardash{position:absolute;left:-2%;right:-2%;bottom:-6%;height:38%;display:none;pointer-events:none;z-index:2}
+#moto-wrap.car.cockpit #moto-cardash{display:block}
+/* object-position 50% 65% = ตัดกระจกหน้าในภาพทิ้ง เหลือเฉพาะแผงหน้าปัด (สูตรเดียวกับโลกเมือง) */
+#moto-cardash img{width:100%;height:100%;display:block;object-fit:cover;object-position:50% 65%}
+#moto-cardash .cd-css{width:100%;height:100%;box-sizing:border-box;
+  background:linear-gradient(180deg,#262a31,#101216);border-top:.55vmin solid #343943;border-radius:2.6vmin 2.6vmin 0 0}
+/* เข็มสปีด/วัดรอบ — วาดสดทับตำแหน่งช่องเหนือดุมพวงมาลัย (drawCarGauge อิง offsetLeft/Top ของกล่องพวงมาลัย) */
+#moto-cargauge{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;display:none;z-index:2}
+#moto-wrap.car.cockpit #moto-cargauge{display:block}
+/* พวงมาลัยขวาแบบไทย โผล่จากขอบล่างขวา (left = จุดกึ่งกลางจริงเพราะ translateX(-50%)) */
+#moto-carwheel{position:absolute;left:76%;bottom:-34%;transform:translateX(-50%);height:52%;width:auto;aspect-ratio:1.5;
+  display:none;pointer-events:none;z-index:3;will-change:transform}
+#moto-wrap.car.cockpit #moto-carwheel{display:block}
+#moto-carwheel img{width:100%;height:100%;display:block;object-fit:contain}
+#moto-carwheel .cw-css{width:100%;height:100%;border-radius:50%;border:2.6% solid #23262c;box-sizing:border-box;
+  box-shadow:0 0 0 .5vmin #14161a inset,0 .5vmin 1.6vmin rgba(0,0,0,.55);position:relative;background:transparent}
+#moto-carwheel .cw-css:before{content:'';position:absolute;left:50%;top:50%;width:80%;height:11%;
+  background:#23262c;transform:translate(-50%,-50%);border-radius:.8vmin}
+#moto-carwheel .cw-css:after{content:'';position:absolute;left:50%;top:50%;width:11%;height:46%;
+  background:#23262c;transform:translateX(-50%);border-radius:.8vmin}
+/* HUD ที่เดิมอยู่ขอบล่างจอ ต้องยกขึ้นเหนือแผงหน้าปัด ไม่งั้นโดนบังหมด */
+#moto-wrap.car.cockpit #moto-speed{bottom:34%}
+#moto-wrap.car.cockpit #moto-mini{bottom:34%}
+#moto-wrap.car.cockpit #moto-chat{bottom:44%}
+#moto-wrap.car.cockpit #moto-chatbar{bottom:54%}
+#moto-wrap.car.cockpit #moto-selfmsg{bottom:36%}
+/* 🎛️ ปุ่มบังคับเพิ่ม (เบรก/เกียร์ถอย/แตร) — วางบนตัวเครื่องใต้จอ ไม่ทับสไลเดอร์(≤24.5%)/ปุ่มเร่ง(≥74.5%) */
+#moto-wrap .m-cbtn{position:absolute;top:83.5%;width:9%;height:11.5%;border:none;cursor:pointer;border-radius:50%;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:.2vmin;color:#fff;
+  font-weight:900;font-size:1.5vmin;text-shadow:0 1px 2px rgba(0,0,0,.8);
+  box-shadow:0 .35vmin .9vmin rgba(0,0,0,.55),inset 0 .25vmin .6vmin rgba(255,255,255,.28);
+  transition:transform .12s ease,filter .12s ease}
+#moto-wrap.car .m-cbtn{display:flex}
+#moto-wrap .m-cbtn .m-ci{font-size:2.7vmin;line-height:1}
+#moto-wrap .m-cbtn:active,#moto-wrap .m-cbtn.press{transform:scale(.9);filter:brightness(1.3)}
+#moto-brake{left:35.5%;background:linear-gradient(180deg,rgba(239,83,80,.92),rgba(183,28,28,.92))}
+#moto-gear{left:46.5%;background:linear-gradient(180deg,rgba(120,132,150,.9),rgba(60,68,82,.92))}
+#moto-gear.on{background:linear-gradient(180deg,rgba(255,213,79,.96),rgba(245,124,0,.96));color:#3b2400;text-shadow:none}
+#moto-horn{left:57.5%;background:linear-gradient(180deg,rgba(79,195,247,.92),rgba(2,119,189,.92))}
 `;
 
 function buildDom(){
@@ -341,6 +516,10 @@ function buildDom(){
     <div id="moto-screen">
       <canvas id="moto-cv"></canvas>
       <div id="moto-speedfx"></div>
+      <!-- 🚗 รอบ 785: ห้องคนขับชุดโลกเมือง (โผล่เฉพาะโหมดรถยนต์) -->
+      <div id="moto-cardash"></div>
+      <canvas id="moto-cargauge"></canvas>
+      <div id="moto-carwheel"></div>
       <div id="moto-shadow"></div>
       <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
         <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
@@ -368,6 +547,10 @@ function buildDom(){
     </div>
     <div id="moto-slider"><span class="m-arr">◀</span><div id="moto-knob"><span>เลี้ยว</span></div><span class="m-arr">▶</span></div>
     <button id="moto-throttle"><span class="m-ico">🏍️</span><span class="m-lb">เร่ง</span></button>
+    <!-- 🚗 รอบ 785: ปุ่มบังคับชุดรถยนต์ (เบรก/เกียร์ถอย/แตร) -->
+    <button id="moto-brake" class="m-cbtn" type="button"><span class="m-ci">🦶</span><span>เบรก</span></button>
+    <button id="moto-gear" class="m-cbtn" type="button"><span class="m-ci">D</span><span>เกียร์</span></button>
+    <button id="moto-horn" class="m-cbtn" type="button"><span class="m-ci">📯</span><span>แตร</span></button>
   </div>
   <div id="moto-exitbox"><div class="m-card">
     <h3>⏻ ปิดเครื่องเกม?</h3>
@@ -400,8 +583,19 @@ function buildDom(){
     e.preventDefault(); chatBarEl.classList.toggle('on');
     if(typeof sfx!=='undefined') sfx.select();
   });
+  /* 🚗 รอบ 785: ห้องคนขับ + ปุ่มบังคับชุดรถยนต์ */
+  dashEl=document.getElementById('moto-cardash'); wheelBoxEl=document.getElementById('moto-carwheel');
+  gaugeCv=document.getElementById('moto-cargauge'); gaugeCtx=gaugeCv?gaugeCv.getContext('2d'):null;
+  brakeEl=document.getElementById('moto-brake'); gearEl=document.getElementById('moto-gear');
+  hornEl=document.getElementById('moto-horn');
+  const brOn=e=>{ e.preventDefault(); padBr=true; brakeEl.classList.add('press'); sndKick(); };
+  const brOff=()=>{ padBr=false; brakeEl.classList.remove('press'); };
+  brakeEl.addEventListener('pointerdown',brOn);
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>brakeEl.addEventListener(ev,brOff));
+  gearEl.addEventListener('click',e=>{ e.preventDefault(); setGear(!gearR); });
+  hornEl.addEventListener('pointerdown',e=>{ e.preventDefault(); sndKick(); CarSnd.horn(); });
   /* ปุ่มเร่ง (กดค้าง) */
-  const thrOn=e=>{ e.preventDefault(); padThr=1; Eng.start();
+  const thrOn=e=>{ e.preventDefault(); padThr=1; sndKick();
     if(introEl&&introEl.style.display!=='none') introEl.style.display='none'; };
   const thrOff=()=>{ padThr=0; };
   thrEl.addEventListener('pointerdown',thrOn);
@@ -421,16 +615,116 @@ function buildDom(){
     if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(15);
     try{ sliderEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
   sliderEl.addEventListener('pointermove',e=>{ if(sliding) setSteer(e); });
-  const slEnd=()=>{ sliding=false; knobEl.classList.remove('grab'); };   // ค้างตำแหน่งที่ปล่อย
+  /* 🚗 รอบ 785: โหมดรถยนต์ = พวงมาลัยจริง "ปล่อยแล้วคืนกลางเอง" (เหมือนโลกเมือง) · มอไซค์ยังค้างองศาเดิม */
+  const slEnd=()=>{ sliding=false; knobEl.classList.remove('grab');
+    if(vehicle==='car'){ steerCtl=0; knobEl.style.left='50%'; } };
   sliderEl.addEventListener('pointerup',slEnd);
   sliderEl.addEventListener('pointercancel',slEnd);
   document.getElementById('moto-power').addEventListener('click',()=>{ exitBox.classList.add('on'); });
   document.getElementById('moto-exit-yes').addEventListener('click',exitWorld);
   document.getElementById('moto-exit-no').addEventListener('click',()=>exitBox.classList.remove('on'));
   document.getElementById('moto-go').addEventListener('click',()=>{
-    introEl.style.display='none'; Eng.start();
+    introEl.style.display='none'; sndKick();
     if(typeof sfx!=='undefined') sfx.select();
   });
+}
+
+/* ============================================================
+   🚗🏙️ รอบ 785: ห้องคนขับ (หน้าปัด/พวงมาลัย/เข็มเกจ) + ปุ่มเกียร์ — เฉพาะโหมดรถยนต์
+   ภาพชุดเดียวกับโลกเมือง: img/3d_car/3d_dash_<carId>.png → img/car/dash_<carId>.png → dash.png → แผง CSS
+   ============================================================ */
+let dashCid=null;                    // คันที่โหลดหน้าปัด/พวงมาลัยไว้แล้ว (เปลี่ยนรถ = โหลดใหม่)
+function loadCarDash(){
+  if(!dashEl) return;
+  const cid=(typeof myCar==='function'&&myCar())?myCar().id:null;
+  dashCid=cid;
+  const put=im=>{ dashEl.innerHTML=''; dashEl.appendChild(im); };
+  const css=()=>{ dashEl.innerHTML='<div class="cd-css"></div>'; };
+  const tryLoad=(src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
+  const legacy=()=> cid ? tryLoad('img/car/dash_'+cid+'.png',()=>tryLoad('img/car/dash.png',css))
+                        : tryLoad('img/car/dash.png',css);
+  if(cid) tryLoad('img/3d_car/3d_dash_'+cid+'.png',legacy); else legacy();
+  loadCarWheel();
+}
+function loadCarWheel(){
+  if(!wheelBoxEl) return;
+  const cid=(typeof myCar==='function'&&myCar())?myCar().id:null;
+  const num=cid?cid.replace('car_',''):null;                 // 'car_03' → '03'
+  const put=im=>{ wheelBoxEl.innerHTML=''; wheelBoxEl.appendChild(im); };
+  const css=()=>{ wheelBoxEl.innerHTML='<div class="cw-css"></div>'; };
+  const tryLoad=(src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
+  if(num) tryLoad('img/3d_car/3d_wheel_'+num+'.png',()=>tryLoad('img/car/wheel.png',css));
+  else tryLoad('img/car/wheel.png',css);
+}
+function setGear(rev){
+  if(gearR===rev) return;
+  gearR=rev; syncGearUi();
+  if(typeof sfx!=='undefined'&&sfx.select) sfx.select();
+}
+/* 👁️ สลับมุมกล้อง (คีย์ V เหมือนโลกเมือง): ในห้องคนขับ ⇄ มุมที่ 3 ตามหลังรถ */
+function setCam3(on){
+  if(vehicle!=='car') return;
+  carCam3=!!on;
+  if(wrapEl) wrapEl.classList.toggle('cockpit',!carCam3);
+  if(selfCar) selfCar.visible=carCam3;
+  camInit=false;
+}
+function syncGearUi(){
+  if(gearEl){
+    gearEl.classList.toggle('on',gearR);
+    const ci=gearEl.querySelector('.m-ci'); if(ci) ci.textContent=gearR?'R':'D';
+  }
+  const lb=thrEl&&thrEl.querySelector('.m-lb');
+  if(lb&&vehicle==='car') lb.textContent=gearR?'ถอย':'เร่ง';
+}
+/* 🎛️ เข็มหน้าปัดวิ่งจริง (สปีด 0-240 + วัดรอบ 0-8×1000) — สูตรวาดยกจาก drawCarDial ของโลกเมือง */
+function carDial(c,cx,cy,r,frac,max,step,redFrom){
+  const a0=Math.PI*.75, sweep=Math.PI*1.5;                  // กวาด 270° แบบเกจรถจริง
+  c.save(); c.translate(cx,cy);
+  c.fillStyle='rgba(9,12,17,.84)'; c.beginPath(); c.arc(0,0,r*1.05,0,7); c.fill();
+  c.lineWidth=Math.max(2,r*.06); c.strokeStyle='rgba(132,142,158,.82)'; c.beginPath(); c.arc(0,0,r*1.05,0,7); c.stroke();
+  c.strokeStyle='rgba(228,233,240,.9)'; c.fillStyle='rgba(222,228,236,.92)';
+  c.font='700 '+Math.max(7,r*.17)+'px sans-serif'; c.textAlign='center'; c.textBaseline='middle';
+  const n=Math.round(max/step);
+  for(let i=0;i<=n;i++){
+    const a=a0+sweep*i/n, co=Math.cos(a), si=Math.sin(a);
+    c.lineWidth=Math.max(1,r*.028);
+    c.beginPath(); c.moveTo(co*r*.88,si*r*.88); c.lineTo(co*r*.74,si*r*.74); c.stroke();
+    c.fillText(String(i*step),co*r*.56,si*r*.56);
+  }
+  if(redFrom!=null){
+    c.strokeStyle='rgba(255,64,58,.85)'; c.lineWidth=Math.max(2,r*.055);
+    c.beginPath(); c.arc(0,0,r*.81,a0+sweep*(redFrom/max),a0+sweep); c.stroke();
+  }
+  const a=a0+sweep*Math.max(0,Math.min(1,frac));
+  c.rotate(a);
+  c.shadowColor='rgba(0,0,0,.65)'; c.shadowBlur=r*.07;
+  c.fillStyle='#ff4433';
+  c.beginPath(); c.moveTo(-r*.17,0); c.lineTo(0,-r*.04); c.lineTo(r*.8,0); c.lineTo(0,r*.04);
+  c.closePath(); c.fill();
+  c.shadowBlur=0; c.rotate(-a);
+  c.fillStyle='#14171c'; c.beginPath(); c.arc(0,0,r*.12,0,7); c.fill();
+  c.strokeStyle='#454c56'; c.lineWidth=Math.max(1,r*.03); c.stroke();
+  c.restore();
+}
+/* เกจ 2 วงลอดช่องเหนือดุมพวงมาลัย — อิงตำแหน่ง "นิ่ง" (offsetLeft/Top ไม่รวม transform → พวงมาลัยหมุนแล้วเกจไม่สั่น) */
+function drawCarGauge(){
+  if(!gaugeCtx||vehicle!=='car'||carCam3||!wheelBoxEl) return;
+  const r0=screenEl.getBoundingClientRect();
+  const w=Math.max(1,Math.round(r0.width)), h=Math.max(1,Math.round(r0.height)), dpr=Math.min(devicePixelRatio||1,2);
+  if(gaugeCv.width!==Math.round(w*dpr)||gaugeCv.height!==Math.round(h*dpr)){
+    gaugeCv.width=Math.round(w*dpr); gaugeCv.height=Math.round(h*dpr);
+  }
+  const c=gaugeCtx;
+  c.setTransform(dpr,0,0,dpr,0,0);
+  c.clearRect(0,0,w,h);
+  const wh=wheelBoxEl.offsetHeight;
+  if(!wh) return;
+  const gcx=wheelBoxEl.offsetLeft;                          // translateX(-50%) → offsetLeft = กึ่งกลางแนวนอนจริง
+  const r=wh*0.125;                                         // โลกเมืองใช้ .105 — จอเครื่องเกมเล็กกว่ามาก ขยายนิดให้อ่านเลขออก
+  const gcy=Math.min(wheelBoxEl.offsetTop+wh*0.285, h-r*1.25);
+  carDial(c,gcx-r*1.30,gcy,r,Math.abs(dSpeed)*3.6/240,240,40,null);      // สปีด 0-240 (โลกนี้ไม่มีใบสั่ง = ไม่มีโซนแดง)
+  carDial(c,gcx+r*1.30,gcy,r,.1+(CarSnd.rpm||0)*.75,8,1,6.5);            // วัดรอบ ×1000 (idle ~0.8)
 }
 
 /* ============================================================
@@ -1724,18 +2018,29 @@ function applyVehicleUi(){
   const car=vehicle==='car';
   if(bikeEl) bikeEl.style.display=car?'none':'';
   if(shadowEl) shadowEl.style.display=car?'none':'';
-  if(selfCar) selfCar.visible=car;
+  if(selfCar) selfCar.visible=car&&carCam3;                 // 🚗 รอบ 785: มุมในรถ = ซ่อนตัวรถตัวเอง
+  /* 🚗 รอบ 785: เปิดชุดห้องคนขับ + ปุ่มบังคับรถ (คลาส car) · cockpit = กำลังนั่งในรถ (ไม่ใช่มุมกล้องที่ 3) */
+  wrapEl.classList.toggle('car',car);
+  wrapEl.classList.toggle('cockpit',car&&!carCam3);
+  const cid=(typeof myCar==='function'&&myCar())?myCar().id:null;
+  if(car&&dashEl&&(!dashEl.childElementCount||dashCid!==cid)) loadCarDash();   // เปลี่ยนคันที่ขับ = เปลี่ยนหน้าปัด/พวงมาลัยตาม
+  syncGearUi();
   const ico=thrEl&&thrEl.querySelector('.m-ico'); if(ico) ico.textContent=car?'🚗':'🏍️';
   const h3=wrapEl.querySelector('#moto-intro h3'), p=wrapEl.querySelector('#moto-intro p');
   if(h3) h3.textContent=car?'🚗 ขับรถยนต์ที่บ้านโพธิ์สวัสดิ์':'🏍️ มอเตอร์ไซค์บ้านโพธิ์สวัสดิ์';
   if(p) p.innerHTML=(car
-    ? `เอารถของคุณมาวิ่ง<b>ถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์</b> — ออกรถหน้าโรงเรียนพร้อมเพื่อนๆ!<br>`
+    ? `เอารถของคุณมาวิ่ง<b>ถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์</b> — <b>นั่งในห้องคนขับ ขับเหมือนโลกเมืองทุกอย่าง!</b><br>`
     : `ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b> — ถนนจริงรอบหมู่บ้าน รัศมี 30 กม.!<br>`)
-    + `🟠 สไลเดอร์ส้มซ้าย = ${car?'พวงมาลัย':'เอียงรถเลี้ยว'} <b>ค้างตำแหน่งที่ตั้งไว้</b> (เลื่อนกลับกลาง = วิ่งตรง) · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>`
+    + (car
+    ? `🟠 สไลเดอร์ส้มซ้าย = <b>พวงมาลัย</b> (ปล่อยนิ้วแล้วคืนตรงกลางเอง) · 🔵 ปุ่มฟ้าขวา = คันเร่ง (กดค้าง)<br>`
+      + `ปุ่มใต้จอ: <b>🦶 เบรก</b> · <b>D/R เกียร์ถอยหลัง</b> · <b>📯 แตร</b><br>`
+    : `🟠 สไลเดอร์ส้มซ้าย = เอียงรถเลี้ยว <b>ค้างตำแหน่งที่ตั้งไว้</b> (เลื่อนกลับกลาง = วิ่งตรง) · 🔵 ปุ่มฟ้าขวา = เร่งเครื่อง (กดค้าง)<br>`)
     + `ขับชน<b>ตัวอักษร</b>บนถนนให้ครบคำ = 🪙${REWARD} · <b>ตัวอักษรละแถม 🪙${LETTER_COIN}</b><br>`
     + `<b>★ เหรียญทอง 🪙${COIN_TIERS[0].val}</b> วางอยู่<b>ด้านหลังตัวอักษรทุกตัว</b> (ตัวละ 1 เหรียญ)<br>`
     + `<b>◆ ${COIN_TIERS[1].val} / 💎 ${COIN_TIERS[2].val} เหรียญพิเศษ</b> โผล่<b>ด้านหน้าตัวอักษรตัวสุดท้าย</b>ของคำ — เก็บให้ครบก่อนจบคำ!<br>`
-    + `<small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: W เร่ง · A/D เลี้ยว<br>`
+    + `<small>⏻ ปุ่มแดงบนเครื่อง = ปิดเครื่องกลับล็อบบี้ · คีย์บอร์ด: `
+    + (car?`W เร่ง · S เบรก/ถอย · A/D พวงมาลัย · H แตร · R เกียร์ · <b>V สลับมุมกล้อง</b><br>`
+          :`W เร่ง · A/D เลี้ยว<br>`)
     + `🧑‍🤝‍🧑 เห็นเพื่อนในแผนที่เดียวกันแบบสด · 🏆 กระดานคะแนนมุมขวา · 💬 ปุ่มซ้ายล่างส่งข้อความหาเพื่อน</small>`;
 }
 function fit(){
@@ -1754,29 +2059,84 @@ function tick(){
   if(dt>0.05) dt=0.05;
   frame(dt,now);
 }
+/* 🚗🏙️ รอบ 785: ฟิสิกส์รถยนต์ยกจากโลกเมือง (bicycle model + เบรก/ถอย + ไถลเข้าโค้ง)
+   อัปเดต dSpeed/dSteer/yaw/dVel/px/pz แล้วสรุปลง spd (บวกเสมอ) ให้ระบบเดิมของโลกนี้ใช้ต่อได้ */
+function carDrive(dt,now){
+  let sd=steerCtl;                                  // สไลเดอร์ (ปล่อยนิ้ว = คืนกลางเอง)
+  if(kL!==kR) sd=kR?1:-1;                           // คีย์ A/D กดค้าง = หักเต็ม · ปล่อย = คืนกลางทันที
+  let th=0;
+  if(padThr||kThr) th=gearR?-1:1;                   // คันเร่งกดค้าง · เกียร์ R = ถอยหลัง
+  if(kBack) th=-1;                                  // คีย์ S/ลูกศรลง = เบรกก่อน แล้วถอย (เหมือนโลกเมือง)
+  if(padBr) th=0;                                   // เบรกชนะคันเร่ง
+  // 🔊 "ติ๊ด ติ๊ด" ถอยหลัง ทุก 600ms
+  if((gearR||dSpeed<-.5)&&now-carRevBeepAt>600){ carRevBeepAt=now; CarSnd.revBeep(); }
+  const road=onRoad(px,pz);
+  const vmax=road?CAR_VMAX:CAR_VMAX_OFF;
+  if(th>0) dSpeed+=CAR_ACCEL*(road?1:.55)*th*dt;
+  else if(th<0){
+    if(dSpeed>.3) dSpeed=Math.max(0,dSpeed-CAR_BRAKE*dt);          // เบรกก่อน
+    else dSpeed=Math.max(-CAR_VREV,dSpeed+CAR_ACCEL*.7*th*dt);     // จอดแล้วกดค้าง = ถอยหลัง
+  }
+  if(padBr) dSpeed=dSpeed>0?Math.max(0,dSpeed-CAR_BRAKE*1.2*dt)    // 🦶 ปุ่มเบรก — หน่วงเข้าหา 0 ทั้ง 2 ทิศ
+                           :Math.min(0,dSpeed+CAR_BRAKE*1.2*dt);
+  dSpeed*=Math.max(0,1-(road?.16:1.15)*dt);                        // แรงต้าน
+  if(dSpeed>vmax) dSpeed=Math.max(vmax,dSpeed-CAR_BRAKE*.8*dt);
+  /* 🏁 พวงมาลัย: ไต่เข้าโค้งนุ่ม (attack ช้ากว่า release) + ลดองศาตามความเร็ว */
+  const tgt=sd*CAR_STEER_MAX/(1+Math.abs(dSpeed)*.045);
+  const ramp=Math.abs(tgt)>Math.abs(dSteer)?3.8:6.0;
+  dSteer+=(tgt-dSteer)*Math.min(1,dt*ramp);
+  const yawRate=(dSpeed/CAR_WB)*Math.tan(dSteer);
+  const maxYaw=1.9/(1+Math.abs(dSpeed)*.06);                       // ยิ่งเร็ว วงเลี้ยวยิ่งกว้าง
+  const yrApplied=Math.max(-maxYaw,Math.min(maxYaw,yawRate));
+  yaw-=yrApplied*dt;
+  /* ทิศวิ่งจริงไถลตามหัวรถ — grip ลดเมื่อเลี้ยวแรงตอนเร็ว = สไลด์เข้าโค้ง (ทิศหน้าโลกนี้ = +sin/+cos) */
+  const sin=Math.sin(yaw), cos=Math.cos(yaw);
+  const grip=Math.min(1, dt*(6.5-Math.min(3.8,Math.abs(dSteer)*Math.abs(dSpeed)*.38)));
+  dVelX+=(sin*dSpeed-dVelX)*grip;
+  dVelZ+=(cos*dSpeed-dVelZ)*grip;
+  px+=dVelX*dt; pz+=dVelZ*dt;
+  /* 🛞 เสียงยางเอี๊ยดตามแรงไถลด้านข้างจริง */
+  const vlen=Math.hypot(dVelX,dVelZ);
+  const slipPerp=(vlen>0.6&&road)?Math.abs(dVelX*cos-dVelZ*sin):0;
+  CarSnd.setSkid(Math.max(0,Math.min(1,(slipPerp-1.6)/6)));
+  /* 🏎️ ตัวถังโคลงตามแรง G ด้านข้าง (สปริงหน่วงต่ำ = โยกซ้ายขวาค้างนิดๆ) */
+  const latA=yrApplied*dSpeed;
+  const rollTgt=Math.max(-.12,Math.min(.12,latA*.008));
+  const sdt=Math.min(dt,.05);
+  dRollV+=((rollTgt-dRoll)*60-dRollV*9)*sdt;
+  dRoll+=dRollV*sdt;
+  steer=sd; lean=dRoll;                                            // ให้ระบบเดิม (ล้อหน้า/ไฟเลี้ยว/ตัวรถ) ใช้ค่าเดียวกัน
+  spd=Math.abs(dSpeed);
+  if(knobEl) knobEl.style.left=(50+sd*26)+'%';
+  CarSnd.update(th,spd,dt);
+}
 function frame(dt,now){
+  const isCar=vehicle==='car';
   /* คีย์บอร์ด A/D = ค่อยๆ ปรับองศาเอียง (ปล่อยคีย์ = ค้างองศาเดิม เหมือนสไลเดอร์) */
-  if(kL!==kR){
+  if(!isCar&&kL!==kR){
     steerCtl=Math.max(-1,Math.min(1, steerCtl+(kR?1:-1)*1.0*dt));   // รอบ 298: คีย์ปรับช้าลง
     knobEl.style.left=(50+steerCtl*26)+'%';
   }
-  steer=steerCtl;
-  thr=(padThr||kThr)?1:0;
+  if(!isCar) steer=steerCtl;
+  thr=(padThr||kThr)&&!(isCar&&(padBr||gearR))?1:0;                 // 🚗 รอบ 785: เบรก/เกียร์ R = ไม่นับว่าเร่ง
   if(thrEl){
     thrEl.classList.toggle('pressing',!!thr);           // 🔘 รอบ 308: ปุ่มเร่งยุบ/เด้งตามการกดจริง (แตะ+คีย์ W)
     throttleCharge=thr?Math.min(1,throttleCharge+dt/1.4):Math.max(0,throttleCharge-dt*3);  // 💡 รอบ 309: กดค้าง 1.4วิ เต็ม · ปล่อยคายเร็ว
     thrEl.style.setProperty('--charge',throttleCharge.toFixed(2));
     thrEl.classList.toggle('charged',throttleCharge>=1);
   }
-  const road=onRoad(px,pz);
-  const vmax=road?VMAX:VMAX_OFF;
-  if(thr){ spd+=ACCEL*dt; } else { spd-=DECEL*dt; }
-  if(spd>vmax) spd=Math.max(vmax,spd-14*dt);   // ออกนอกถนน = หน่วงแรง
-  if(spd<0) spd=0;
-  /* เลี้ยว: ต้องมีความเร็ว · วงเลี้ยวแคบตอนช้า (รอบ 298: ลดตัวคูณ 1.5→0.85 — ผู้ใช้บอกไวไป) */
-  const yr=steer*Math.min(spd,14)/(6.5+spd*0.42);
-  yaw-=yr*dt*0.85;
-  px+=Math.sin(yaw)*spd*dt; pz+=Math.cos(yaw)*spd*dt;
+  if(isCar) carDrive(dt,now);                  // 🚗 รอบ 785: รถยนต์ใช้ฟิสิกส์ชุดโลกเมืองทั้งดุ้น
+  else{
+    const road=onRoad(px,pz);
+    const vmax=road?VMAX:VMAX_OFF;
+    if(thr){ spd+=ACCEL*dt; } else { spd-=DECEL*dt; }
+    if(spd>vmax) spd=Math.max(vmax,spd-14*dt);   // ออกนอกถนน = หน่วงแรง
+    if(spd<0) spd=0;
+    /* เลี้ยว: ต้องมีความเร็ว · วงเลี้ยวแคบตอนช้า (รอบ 298: ลดตัวคูณ 1.5→0.85 — ผู้ใช้บอกไวไป) */
+    const yr=steer*Math.min(spd,14)/(6.5+spd*0.42);
+    yaw-=yr*dt*0.85;
+    px+=Math.sin(yaw)*spd*dt; pz+=Math.cos(yaw)*spd*dt;
+  }
   /* 🧱 รอบ 301: กำแพงขอบถนน — เกินขอบ (เผื่อ EDGE_M) ดันกลับเข้าถนน + ครูดขอบความเร็วลดนิดๆ */
   const info=roadInfo(px,pz);
   if(info.seg){
@@ -1787,7 +2147,9 @@ function frame(dt,now){
     if(ed>lim){
       const f=lim/(ed||1e-6);
       px=cx2+ex*f; pz=cz2+ez*f;
-      spd*=Math.max(0,1-1.5*dt);
+      const damp=Math.max(0,1-1.5*dt);
+      spd*=damp;
+      if(isCar){ dSpeed*=damp; dVelX*=damp; dVelZ*=damp; }   // 🚗 รอบ 785: ครูดขอบถนน = ความเร็วจริง+ทิศไถลลดตามด้วย
     }
   }
   /* 🕳️⛰️ รอบ 315: ฟิสิกส์แนวดิ่ง — ตกหลุม/ขึ้นเนิน/เหิน/ลงพื้นสปริง
@@ -1805,7 +2167,8 @@ function frame(dt,now){
       if(impact>IMPACT_MIN){
         suspV-=Math.min(impact,LAUNCH_VMAX)*SUSP_KICK;   // เตะโช้กยุบลง (สปริงยวบ)
         if(impact>HARD_LAND) cleanWord=false;            // 🍀 ลงพื้นแรงมาก = ถือว่าชน อดเหรียญมรกต
-        if(typeof Eng!=='undefined'&&Eng.thud) Eng.thud(Math.min(.85,impact*0.07));
+        if(isCar) CarSnd.thud(Math.min(.85,impact*0.07));   // 🚗 รอบ 785: รถใช้เสียงชนของ CarSnd
+        else if(typeof Eng!=='undefined'&&Eng.thud) Eng.thud(Math.min(.85,impact*0.07));
         if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(Math.min(60,impact*7|0));
       }
     }
@@ -1819,17 +2182,21 @@ function frame(dt,now){
   suspV+=(-SUSP_K*suspY - SUSP_D*suspV)*dt; suspY+=suspV*dt;   // สปริงโช้กคืนตัว (damped)
   /* 🏍️ เอียงเข้าโค้ง (รอบ 294) + รอบ 297: องศาเอียง = ค่าที่ผู้เล่นตั้งตรงๆ ไม่ผูกความเร็ว ไม่คืนกลางเอง
      เลี้ยวขวา (steer=+1) → มองจากท้ายรถ ตัวรถเทไปทางขวา = หมุนภาพตามเข็ม (องศาบวก) */
-  const leanTgt=steer*(vehicle==='car'?0.16:LEAN_MAX);   // 🚗 รอบ 317: รถยนต์เอียงแค่โคลงตัวถัง ไม่เทเข้าโค้งเหมือนมอไซค์
-  lean+=(leanTgt-lean)*(1-Math.exp(-3.5*dt)); // รอบ 301: เลิกสปริง (เด้งแบบตุ๊กตาหัวโยก ผู้ใช้ไม่เอา) → ไล่เข้าเป้าหนืดนิ่งแบบ Ride 4 ไม่ overshoot
-  /* 🚗 รอบ 317: โหมดรถยนต์ — รถ 3D จริงวิ่งอยู่หน้ากล้อง (แทนสไปรต์มอไซค์ DOM) */
-  if(vehicle==='car'&&selfCar){
+  if(!isCar){                                            // 🚗 รอบ 785: รถยนต์ใช้การโคลงตัวถังจากแรง G (dRoll) แทน
+    const leanTgt=steer*LEAN_MAX;
+    lean+=(leanTgt-lean)*(1-Math.exp(-3.5*dt)); // รอบ 301: เลิกสปริง (เด้งแบบตุ๊กตาหัวโยก ผู้ใช้ไม่เอา) → ไล่เข้าเป้าหนืดนิ่งแบบ Ride 4 ไม่ overshoot
+  }
+  /* 🚗 รอบ 317: โหมดรถยนต์ — รถ 3D จริงวิ่งอยู่หน้ากล้อง (แทนสไปรต์มอไซค์ DOM)
+     รอบ 785: นั่งในห้องคนขับแล้วต้องซ่อนตัวรถ (ไม่งั้นเห็นเบาะ/หลังคาทับกล้อง) — โชว์เฉพาะมุมกล้องที่ 3 (คีย์ V) */
+  if(isCar&&selfCar){
+    selfCar.visible=carCam3;
     selfCar.position.set(px,bikeY+suspY*.4,pz);
     selfCar.rotation.order='YZX';
-    selfCar.rotation.y=yaw; selfCar.rotation.z=-lean;
-    // 🚗 รอบ 394: รถ GLB ของเรา — ล้อหน้าหักตามสไลเดอร์พวงมาลัยจริง + ล้อหมุนตามความเร็ว
+    selfCar.rotation.y=yaw; selfCar.rotation.z=-dRoll*1.6;
+    // 🚗 รอบ 394: รถ GLB ของเรา — ล้อหน้าหักตามพวงมาลัยจริง + ล้อหมุนตามความเร็ว
     if(selfCar.userData&&selfCar.userData.steerW){
-      selfCar.userData.steerW.forEach(h=>{ h.rotation.y=-steer*.42; });   // steer>0=ขวา → yaw ลด → ล้อเบนทางเดียวกับหัวรถ
-      selfCar.userData.wheels.forEach(w=>{ w.rotation.x+=spd*dt/.5; });
+      selfCar.userData.steerW.forEach(h=>{ h.rotation.y=-dSteer; });      // dSteer>0=ขวา → yaw ลด → ล้อเบนทางเดียวกับหัวรถ
+      selfCar.userData.wheels.forEach(w=>{ w.rotation.x+=dSpeed*dt/.5; });
     }
   }
   if(bikeEl&&vehicle!=='car'){
@@ -1846,6 +2213,18 @@ function frame(dt,now){
   }
   /* กล้อง third-person ตามหลังนุ่มๆ (ภาพมอไซค์เป็นสไปรต์หน้าจอ — กล้องคือสายตาคนขี่ตามหลัง)
      รอบ 315: บวก bikeY (เหิน/ตกหลุมเห็นจริง) + suspY*.5 (ยวบตอนลง) เข้ากับความสูงกล้อง */
+  if(isCar&&!carCam3){
+    /* 🚗🏙️ รอบ 785: นั่งในห้องคนขับ — สูตรกล้องยกจากโลกเมืองทั้งชุด
+       (สั่นตามความเร็ว + กล้องหันตามหัวรถแบบหน่วง + ชายตามองเข้าโค้ง + ก้มนิดเห็นฝากระโปรง + โคลงตามแรง G)
+       ⚠️ ทิศหน้าโลกนี้ = (+sin,+cos) ต่างจากโลกเมือง (-sin,-cos) → rotateY ต้องบวก π */
+    dCamYaw+=(yaw-dCamYaw)*Math.min(1,dt*6.5);
+    camera.position.set(px, bikeY+suspY*.5+CAR_EYE+Math.sin(now/95)*Math.min(.045,Math.abs(dSpeed)*.002), pz);
+    camera.rotation.set(0,0,0);
+    camera.rotateY(dCamYaw+Math.PI-dSteer*.10*Math.min(1,Math.abs(dSpeed)/10));
+    camera.rotateX(-.02);
+    camera.rotateZ(dRoll);
+    camInit=false;                   // สลับกลับมุมที่ 3 แล้วให้กล้องเด้งเข้าที่ทันที ไม่ไถลจากตำแหน่งเก่า
+  }else{
   const cd=vehicle==='car'?8.4:6.2, ch=vehicle==='car'?3.2:2.6;   // 🚗 รถยนต์ตัวใหญ่กว่า → ถอยกล้องออก+ยกสูงนิด
   const tx=px-Math.sin(yaw)*cd, tz=pz-Math.cos(yaw)*cd;
   if(!camInit){ camX=tx; camY=ch; camZ=tz; camInit=true; }
@@ -1854,6 +2233,7 @@ function frame(dt,now){
   camera.position.set(camX, camY+bikeY+suspY*0.5, camZ);
   camera.lookAt(px+Math.sin(yaw)*4, 1.4+bikeY+suspY*0.5, pz+Math.cos(yaw)*4);
   camera.rotateZ(lean*.3);           // ขอบฟ้าเอียงสวนเล็กน้อย เพิ่มฟีลเทโค้ง
+  }
   if(skyDome) skyDome.position.set(px,0,pz);   // โดมฟ้าตามผู้เล่น (รัศมี 1400 < far 1600)
   /* เกม */
   collectTick(); relocTick(now); dogTick(dt,now); coinTick(dt,now); scatterCoinTick(now); gpsTick(); miniTick();
@@ -1895,8 +2275,12 @@ function frame(dt,now){
     const kmh=spd*3.6;
     speedFxEl.style.opacity=kmh>90?Math.min(.8,(kmh-90)/45).toFixed(2):0;
   }
-  spdEl.textContent=Math.round(spd*3.6)+' กม./ชม.';
-  Eng.tick();
+  spdEl.textContent=(isCar&&dSpeed<-.5?'↩ ':'')+Math.round(spd*3.6)+' กม./ชม.';
+  if(isCar){
+    // 🚗 รอบ 785: พวงมาลัยหมุนตามมุมเลี้ยวจริง (×440° เท่าโลกเมือง) + เข็มเกจวิ่งสด
+    if(wheelBoxEl) wheelBoxEl.style.transform='translateX(-50%) rotate('+(dSteer*440).toFixed(1)+'deg)';
+    drawCarGauge();
+  }else Eng.tick();
   renderer.render(scene,camera);
 }
 
@@ -1905,6 +2289,7 @@ function frame(dt,now){
    ============================================================ */
 function start(opts){
   vehicle=(opts&&opts.vehicle==='car')?'car':'moto';        // 🚗 รอบ 317: ผู้เล่นโลกขับรถเลือกแผนที่นี้ = มาด้วยรถยนต์
+  carCam3=false; gearR=false; padBr=false; kBack=false;     // 🚗 รอบ 785: เริ่มทุกครั้งที่มุมในรถ + เกียร์ D + ไม่เหยียบเบรก
   if(!built) build();
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
   wrapEl.classList.add('on');
@@ -1931,6 +2316,9 @@ function start(opts){
   px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; thr=0; padThr=0; kThr=false;
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;
+  /* 🚗 รอบ 785: ล้างสถานะการขับชุดรถยนต์ทุกครั้งที่เข้าโลก */
+  dSpeed=0; dSteer=0; dVelX=0; dVelZ=0; dRoll=0; dRollV=0; dCamYaw=yaw; carRevBeepAt=0;
+  syncGearUi();
   bikeY=0; bikeVY=0; airborne=false; prevFollowVY=0; suspY=0; suspV=0;   // 🕳️⛰️ รอบ 315
   decalAt=0;                                                             // 🖼️ รอบ 316
   if(dog) dog.grp.visible=false; dogNextAt=performance.now()+DOG_GAP_MS;   // 🐕 รอบ 312
@@ -1948,14 +2336,20 @@ function start(opts){
     const k=e.key.toLowerCase();
     if(k==='a'||k==='arrowleft') kL=true;
     else if(k==='d'||k==='arrowright') kR=true;
-    else if(k==='w'||k==='arrowup'||k===' '){ kThr=true; Eng.start(); if(introEl.style.display!=='none') introEl.style.display='none'; }
+    else if(k==='w'||k==='arrowup'||k===' '){ kThr=true; sndKick(); if(introEl.style.display!=='none') introEl.style.display='none'; }
     else if(k==='escape') exitBox.classList.add('on');
+    /* 🚗 รอบ 785: คีย์ชุดโลกเมือง (เฉพาะโหมดรถยนต์) — S เบรก/ถอย · H แตร · R เกียร์ · V สลับมุมกล้อง */
+    else if(vehicle==='car'&&(k==='s'||k==='arrowdown')){ kBack=true; sndKick(); }
+    else if(vehicle==='car'&&k==='h'){ sndKick(); CarSnd.horn(); }
+    else if(vehicle==='car'&&k==='r') setGear(!gearR);
+    else if(vehicle==='car'&&k==='v') setCam3(!carCam3);
   };
   keyupFn=e=>{
     const k=e.key.toLowerCase();
     if(k==='a'||k==='arrowleft') kL=false;
     else if(k==='d'||k==='arrowright') kR=false;
     else if(k==='w'||k==='arrowup'||k===' ') kThr=false;
+    else if(k==='s'||k==='arrowdown') kBack=false;
   };
   resizeFn=()=>fit();
   window.addEventListener('keydown',keydownFn);
@@ -1977,6 +2371,7 @@ function exitWorld(){
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
   Eng.stop();
+  CarSnd.stop();                                // 🚗🔇 รอบ 785: ปิดเสียงเครื่องยนต์รถให้เกลี้ยงทุกครั้งที่ออก
   wrapEl.classList.remove('on');
   exitBox.classList.remove('on');
   if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
@@ -2026,6 +2421,11 @@ window.MotoWorld={
       roomIdx:room?room.room:-1, full:room?room.full:false, legacy:room?room.legacy:false,
       joined:room?room.joined:false, gap:room?room.sendGap:0, drawMax:PEER_DRAW_MAX}; },
     get start(){ return {x:startX,z:startZ,yaw:startYaw}; },
+    /* 🚗🏙️ รอบ 785: การขับชุดโลกเมือง */
+    carSnd:CarSnd, setGear, setCam3, carDrive, drawCarGauge, loadCarDash,
+    get car(){ return {dSpeed,dSteer,dVelX,dVelZ,dRoll,dCamYaw,gearR,padBr,cam3:carCam3,rpm:CarSnd.rpm}; },
+    set carInput(v){ if('br' in v) padBr=!!v.br; if('back' in v) kBack=!!v.back;
+      if('gear' in v) setGear(!!v.gear); if('spd' in v) dSpeed=v.spd; if('steer' in v) steerCtl=v.steer; },
   }
 };
 })();
