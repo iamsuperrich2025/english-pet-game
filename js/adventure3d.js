@@ -161,7 +161,7 @@ let carPeerHits=0;                                    // 🛠️ รอบ 133: 
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 /* 🧭 รอบ 200-201: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง · เลี้ยวตามถนนจริง A* แบบ Google Maps)
-   🔇 รอบ 774: ตัด "เสียงพูดนำทาง" ออกตามคำสั่งผู้ใช้ — เหลือนำทางด้วยภาพอย่างเดียว */
+   🔇 รอบ 778: ตัด "เสียงพูดนำทาง" ออกตามคำสั่งผู้ใช้ — เหลือนำทางด้วยภาพอย่างเดียว */
 let gpsTarget=null;
 let gpsArrowEl=null, gpsDistEl=null, gpsTurnEl=null, gpsLetEl=null;
 let gpsRoute=null, gpsWpi=0, gpsRouteFor=null, gpsRouteAt=0;   // เส้นทางตามถนน (A*) + waypoint ปัจจุบัน
@@ -508,6 +508,8 @@ let adRenters={};
 function adRenterActive(n){ const r=adRenters[n]; return (r&&r.n&&Date.now()-r.ts<AD_RENT_MS)?r:null; }
 Adv3dTex.bind({adRenterActive, adSeqBase:AD_COUNT});   // inject ค่า closure ที่ฝั่ง tex ต้องใช้
 const letterTexture=Adv3dTex.letterTexture, emojiTexture=Adv3dTex.emojiTexture;
+const letterTextureDark=Adv3dTex.letterTextureDark;      // 🖤 รอบ 778: แผ่นดำ ใช้เฉพาะโลกโรงแรมผีสิง
+const letterTex=ch=>(M.hotel?letterTextureDark:letterTexture)(ch);
 const ghostTex=Adv3dTex.ghostTex, probeGhostImages=Adv3dTex.probeGhostImages, whenGhostsReady=Adv3dTex.whenGhostsReady;
 const ghostTexture=()=>Adv3dTex.ghostTexture(M.ghostEmoji), ghostScareSrc=Adv3dTex.ghostScareSrc;
 const adBoardTexture=Adv3dTex.adBoardTexture, ringAds=Adv3dTex.ringAds;
@@ -2196,18 +2198,58 @@ function randRoadPos(minD,maxD){
   }
   return {x:camera.position.x,z:camera.position.z+80};
 }
-/* 🏨 สุ่มจุดวางตัวอักษรในโรงแรม — กระจายทุกชั้น แต่ให้ชั้นที่ผู้เล่นอยู่มีลุ้นเยอะกว่า */
-function hotelSpot(){
+/* 🏨 สุ่มจุดวางตัวอักษรในโรงแรม — กระจายทุกชั้น แต่ให้ชั้นที่ผู้เล่นอยู่มีลุ้นเยอะกว่า
+   🩹 รอบ 778 (ผู้ใช้สั่งข้อ 3+5): เดิมสุ่มจุดอิสระ → ตัวอักษรหลายตัวลงห้องเดียวกันและกองชิดกันเป็นก้อน
+   ตอนนี้บังคับ 2 กติกา: **ห้องละไม่เกิน 2 ตัว** และ **ต้องห่างกันอย่างน้อย HOTEL_MIN_GAP เมตร** */
+const HOTEL_PER_ROOM=2;          // ตัวอักษรสูงสุดต่อห้อง (ผู้ใช้สั่ง)
+const HOTEL_MIN_GAP=3.4;         // ระยะห่างขั้นต่ำระหว่าง 2 ตัวที่อยู่ชั้นเดียวกัน (เมตร)
+function hotelSpot(self){
   const sp=hotel.spots;
-  if(!sp.length) return {x:0,y:0,z:0};
-  const myF=HOTEL3D.floorOf(hFootY);
-  const near=sp.filter(s=>Math.abs(s.y-HOTEL3D.floorY(myF))<.5);
-  const pool=(near.length && Math.random()<.55)?near:sp;
-  const s=pool[Math.floor(Math.random()*pool.length)];
-  return {x:s.x+(Math.random()*2-1)*.8, y:s.y, z:s.z+(Math.random()*2-1)*.8};
+  if(!sp.length) return {x:0,y:0,z:0,room:''};
+  const cnt={};                                       // นับตัวอักษรที่วางอยู่แล้วต่อห้อง (ไม่นับตัวที่กำลังย้ายเอง)
+  letters.forEach(l=>{ if(l!==self && l.room) cnt[l.room]=(cnt[l.room]||0)+1; });
+  const free=sp.filter(s=>(cnt[s.room]||0)<HOTEL_PER_ROOM);
+  const all=free.length?free:sp;                      // เต็มทุกห้องจริง ๆ ค่อยยอมให้ล้น (ไม่ให้ตัวอักษรหาย)
+  const near=all.filter(s=>Math.abs(s.y-HOTEL3D.floorY(HOTEL3D.floorOf(hFootY)))<.5);
+  const pool=(near.length && Math.random()<.55)?near:all;
+  const gap=p=>{                                      // ระยะถึงตัวอักษรที่ใกล้ที่สุดในชั้นเดียวกัน
+    let d=1e9;
+    for(let i=0;i<letters.length;i++){
+      const l=letters[i]; if(l===self) continue;
+      const lp=l.spr.position;
+      if(Math.abs(lp.y-(p.y+1.15))>1.6) continue;     // คนละชั้น ไม่ต้องนับระยะ
+      d=Math.min(d,Math.hypot(lp.x-p.x,lp.z-p.z));
+    }
+    return d;
+  };
+  for(let k=0;k<12;k++){                              // สุ่มก่อน — เจอจุดที่ห่างพอก็จบเลย (เร็ว + ตำแหน่งไม่ซ้ำซาก)
+    const s=pool[Math.floor(Math.random()*pool.length)];
+    const p={x:s.x+(Math.random()*2-1)*.5, y:s.y, z:s.z+(Math.random()*2-1)*.5, room:s.room};
+    if(gap(p)>=HOTEL_MIN_GAP) return p;
+  }
+  /* สุ่มไม่เจอ (ห้องว่างเหลือน้อย/ตัวอักษรเยอะผิดปกติ) → ไล่ดูทุกจุดที่เหลือแล้วเลือกจุดที่ห่างที่สุด
+     กันเคสเลวร้ายสุดคือ "กองติดกัน" ซึ่งเป็นอาการที่ผู้ใช้แจ้งมาพอดี (สุ่ม 12 ครั้งอย่างเดียวเคยเหลือคู่ห่าง 1.1 ม.) */
+  let best=null,bestD=-1;
+  for(let i=0;i<pool.length;i++){
+    const s=pool[i], p={x:s.x,y:s.y,z:s.z,room:s.room}, d=gap(p);
+    if(d>bestD){ bestD=d; best=p; }
+  }
+  return best||{x:0,y:0,z:0,room:''};
+}
+/* 🏨 รอบ 778 (ผู้ใช้สั่งข้อ 5): ในโรงแรมต้องมี "เฉพาะตัวอักษรของคำที่กำลังหาอยู่" (words[0]) เท่านั้น
+   → เก็บกวาดตัวที่ไม่ใช่ของคำนี้ (คำเก่า/ตัวหลอก) ออกจากโลกก่อนเติมตัวที่ยังขาด */
+function hotelPruneLetters(){
+  const need={};
+  if(words[0]) words[0].en.split('').forEach(ch=>need[ch]=(need[ch]||0)+1);
+  Object.keys(need).forEach(ch=>{ need[ch]=Math.max(0,need[ch]-(inv[ch]||0)); });  // ที่เก็บไว้ในมือแล้วไม่ต้องมีในโลก
+  for(let i=letters.length-1;i>=0;i--){
+    const ch=letters[i].ch;
+    if((need[ch]||0)>0) need[ch]--; else removeLetter(i);
+  }
 }
 function spawnLetter(ch){
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTex(ch),transparent:true}));
+  let hotelRoom='';
   if(M.drive){
     // โหมดขับรถ: ตัวอักษรลอยบนถนนจริง — ขับชนเพื่อเก็บ (ไม่ต้องจอด)
     const p=randRoadPos(60,450);
@@ -2235,20 +2277,24 @@ function spawnLetter(ch){
     spr.position.set(p.x,p.y+1.15,p.z);
     spr.scale.set(1.4,1.4,1);
     tintSprite(spr.material);              // เกิดตอนไฟดับแล้วก็ต้องหม่นเท่ากับตัวอื่น
+    hotelRoom=p.room;                      // จำห้องไว้ใช้นับ "ห้องละ 2 ตัว" (รอบ 778)
   }else{
     const p=randPos(10);
     spr.position.set(p.x,1.15,p.z);
     spr.scale.set(1.5,1.5,1);
   }
   scene.add(spr);
-  letters.push({ch,spr,born:performance.now(),baseY:spr.position.y});
+  letters.push({ch,spr,born:performance.now(),baseY:spr.position.y,room:hotelRoom});
 }
 function spawnLettersForWord(w){ w.en.split('').forEach(spawnLetter); }
 /* เติมตัวอักษรที่ยังขาด (ผู้เล่นอาจใช้ตัวอักษรของคำ A ไปประกอบคำ B) */
 function ensureCoverage(){
+  /* 🏨 รอบ 778: โรงแรมผีสิงคุมเข้ม — เอาเฉพาะคำที่กำลังหาอยู่ (words[0]) และกวาดตัวที่ไม่เกี่ยวทิ้งก่อน */
+  const tgtWords=M.hotel?words.slice(0,1):words;
+  if(M.hotel) hotelPruneLetters();
   const worldCnt={}; letters.forEach(l=>worldCnt[l.ch]=(worldCnt[l.ch]||0)+1);
   const haveCnt=Object.assign({},inv);
-  words.forEach(w=>{
+  tgtWords.forEach(w=>{
     const need={}; w.en.split('').forEach(ch=>need[ch]=(need[ch]||0)+1);
     Object.keys(need).forEach(ch=>{
       let miss=need[ch]-(haveCnt[ch]||0)-(worldCnt[ch]||0);
@@ -2275,8 +2321,9 @@ function relocateLetters(now){
         const p=soccerLetterPos();
         l.spr.position.set(p.x,p.y,p.z);
       }else if(M.hotel && hotel){
-        const p=hotelSpot();
+        const p=hotelSpot(l);                       // ส่งตัวเองไปด้วย จะได้ไม่นับตัวเองในโควตาห้องเดิม (รอบ 778)
         l.spr.position.set(p.x,p.y+1.15,p.z);
+        l.room=p.room;
       }else{
         const p=randPos(10);
         l.spr.position.set(p.x,1.15,p.z);
@@ -2380,6 +2427,9 @@ function completeWord(i){
   showBanner(`🎉 <b>${escapeHTML(w.en.toUpperCase())}</b> = ${escapeHTML(w.th)}<br><span class="adv-ban-coin">+${M.reward} 🪙</span>`);
   const fresh=pickWords(1);                 // เติมคำใหม่ให้ครบ 10 (8.4)
   if(M.soccer){ fresh.forEach(nw=>words.push(nw)); soccerRetarget(); }   // ⚽ ป้ายคงที่ รีไซเคิลเอง (ไม่ spawn เพิ่ม)
+  /* 🏨 รอบ 778: โรงแรมมีตัวอักษรของ "คำที่กำลังหา" คำเดียว → ไม่ spawn ตามคำที่เพิ่งเติมท้ายคิว
+     ปล่อยให้ ensureCoverage() กวาดของคำเก่าทิ้งแล้วเติมของคำใหม่ (words[0]) ให้เอง */
+  else if(M.hotel){ fresh.forEach(nw=>words.push(nw)); ensureCoverage(); }
   else{ fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); }); ensureCoverage(); }
   if(netUp()) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
   if(M.hotel) setTimeout(announceTarget,2800); // 🏨 ข้อ 14: ระบบบอกคำถัดไปที่ต้องประกอบ (รอ banner ฉลองคำเก่าจบก่อน)
@@ -2592,7 +2642,7 @@ function spawnGhost(){
   const holder=new THREE.Group();
   holder.visible=false;
   scene.add(holder);
-  const g={spr:holder, st:'lurk', at:0, showAt:0, vis:0, floorY:0, baseY:0, wailAt:0, mats:[], model:false, gait:0};
+  const g={spr:holder, st:'lurk', at:0, showAt:0, vis:0, floorY:0, baseY:0, wailAt:0, mats:[], model:false, gait:0, litT:0};
   const gen=ghostGen;      /* ⚠️ ต้องประกาศ "ก่อน" เรียก ghostGlbEnsure — ถ้าโมเดลโหลดเสร็จแล้ว
                               callback จะวิ่งทันทีแบบ sync แล้วชน TDZ ถ้าประกาศทีหลัง */
   ghostGlbEnsure(src=>{
@@ -2639,15 +2689,54 @@ function setGhostVis(g, vis){
   }
   g.spr.visible=vis>.02;
 }
-/* ผีไปแอบรอในห้องพักสุ่มห้อง (ชั้นเดียวกับผู้เล่นบ่อยหน่อย จะได้เจอบ่อย) */
+/* ============================================================
+   🔦👻 รอบ 778 (ผู้ใช้สั่งข้อ 4) — กติกาใหม่ของผีเดินเพ่นพ่านในโรงแรม
+   ① ออกมาได้ต่อเมื่อ **ไฟดับแล้ว** เท่านั้น (ไฟยังติด = ห้ามโผล่เด็ดขาด — เดิมเดินอยู่กลางล็อบบี้ตั้งแต่ไฟสว่าง)
+   ② ผู้เล่นต้องขึ้นถึง **ชั้น 2** ขึ้นไป (index 1 = ป้าย "ชั้น 2" บนจอ)
+   ③ โผล่ "บริเวณกลาง ๆ ทางเดิน" ของชั้นนั้น ไม่ใช่ซุ่มในห้องพักแบบเดิม
+   ④ ไฟฉายผู้เล่นส่องโดน → หายตัวภายใน 2 วินาที (ล็อกลำแสง .35 วิ + จางหาย 1.2 วิ = 1.55 วิ)
+   ============================================================ */
+const GHOST_MIN_FLOOR=1;         // index 1 = "ชั้น 2" ที่โชว์บนจอ
+const TORCH_LOCK_S=.35;          // ต้องส่องค้างเท่านี้ก่อน ผีถึงเริ่มหาย (กันสะบัดไฟฉายผ่านแล้วผีหายมั่ว)
+const BANISH_S=1.2;              // เวลาจางหายหลังโดนไฟฉังจับได้
+let hTorchWinAt=0;               // ครั้งล่าสุดที่ขึ้นป้ายสอน "ไฟฉายไล่ผีได้" (ไม่ให้เด้งรัว)
+function ghostsAllowed(){
+  return !!(hotel && blackedOut && HOTEL3D.floorOf(hFootY)>=GHOST_MIN_FLOOR
+            && HOTEL3D.insideHotel(camera.position.x,camera.position.z));
+}
+/* จุดกลางทางเดินของชั้นที่ผู้เล่นอยู่ ห่างจากตัวผู้เล่นอย่างน้อย minD (จะได้โผล่ "แต่ไกล" ไม่ใช่จ่อหน้า) */
+function hotelCorridorX(minD){
+  const c=camera.position, x0=HOTEL3D.CORE_E+3.5, x1=HOTEL3D.BX-3.5;
+  for(let i=0;i<14;i++){
+    const x=x0+Math.random()*(x1-x0);
+    if(Math.abs(x-c.x)>=minD) return x;
+  }
+  return (c.x>(x0+x1)/2)?x0:x1;
+}
+/* ลำไฟฉายจับตัวผีอยู่ไหม (กรวยรอบทิศที่กล้องมอง ~26° — ใกล้เคียง torch.angle .46 rad) */
+function torchHitsGhost(g){
+  const c=camera.position, mp=g.spr.position, cp=Math.cos(pitch);
+  const fx=-Math.sin(yaw)*cp, fy=Math.sin(pitch), fz=-Math.cos(yaw)*cp;
+  const gx=mp.x-c.x, gy=(g.floorY+.95)-c.y, gz=mp.z-c.z;
+  const gl=Math.hypot(gx,gy,gz)||.001;
+  return (gx*fx+gy*fy+gz*fz)/gl > .90;
+}
+function ghostBanish(g,now){
+  g.st='gone'; g.at=now; g.litT=0;
+  HSound.whoosh();
+  if(now-hTorchWinAt>15000){                       // ป้ายสอนเด็ก โผล่ห่าง ๆ พอ ไม่รกจอ
+    hTorchWinAt=now;
+    showBanner('🔦 <b>ไฟฉายส่องโดนผี!</b><br><small>ผีที่นี่<b>กลัวแสงไฟฉาย</b> — ส่องค้างไว้แป๊บเดียวมันจะหายตัวไปเอง 👻💨</small>',2400);
+  }
+}
+/* ผีไปรออยู่กลางทางเดินของชั้นที่ผู้เล่นอยู่ (รอบ 778 — เดิมซุ่มในห้องพักสุ่มห้อง) */
 function ghostGoLurk(g){
   if(!hotel){ g.st='lurk'; g.showAt=performance.now()+4000; return; }
   applyGhostSize(g);                               // สุ่มความสูงตัวใหม่ทุกครั้งที่ย้ายที่ (ไม่ซ้ำหน้าเดิมเป๊ะ)
-  const myF=HOTEL3D.floorOf(hFootY);
-  const spot=HOTEL3D.randomHaunt(hotel, Math.random()<.65?myF:undefined);
-  g.floorY=spot.y;
-  g.spr.position.set(spot.x, spot.y+g.baseY, spot.z);
-  g.st='lurk'; g.vis=0; g.at=performance.now();
+  const fy=HOTEL3D.floorY(HOTEL3D.floorOf(hFootY));
+  g.floorY=fy;
+  g.spr.position.set(hotelCorridorX(8), fy+g.baseY, (Math.random()*2-1)*.9);
+  g.st='lurk'; g.vis=0; g.at=performance.now(); g.litT=0;
   g.showAt=performance.now()+800+Math.random()*4000;
 }
 /* ส่งผีมาโผล่ปลายทางเดินชั้นเดียวกับผู้เล่น แล้วเดินตาม (ไม่มีวันทัน) */
@@ -2676,6 +2765,7 @@ function tickGhosts(dt,now){
   if(!hotel) return;
   const c=camera.position;
   const fx=-Math.sin(yaw), fz=-Math.cos(yaw);      // ทิศที่ผู้เล่นหันหน้า
+  const allowed=ghostsAllowed();                   // 🔦 รอบ 778: ไฟยังติด / ยังไม่ถึงชั้น 2 = ผีห้ามออก
   let stalking=false;
   for(let i=0;i<monsters.length;i++){
     const g=monsters[i], mp=g.spr.position;
@@ -2683,6 +2773,18 @@ function tickGhosts(dt,now){
     const sameFloor=Math.abs(g.floorY-hFootY)<1.9;
     const facing=(-dx*fx-dz*fz)/d;                 // >0 = ผีอยู่ในทิศที่เรามองอยู่
     const wasStalking=g.st==='stalk';               // เดินตามอยู่ตอนต้นเฟรมนี้ → ให้ท่า "เดิน" ไม่ใช่ "ลอยนิ่ง"
+    if(!allowed){                                   // เงื่อนไขยังไม่ครบ → จางหายแล้วไปหมอบรอเงียบ ๆ
+      if(g.vis>0){ g.vis=Math.max(0,g.vis-dt*3); setGhostVis(g,g.vis); }
+      else if(g.st!=='lurk'){ g.st='lurk'; g.vis=0; g.spr.visible=false; }
+      g.litT=0; g.showAt=now+2200;                  // ครบเงื่อนไขแล้วยังต้องรออีกหน่อย ไม่โผล่ปุ๊บปั๊บ
+      continue;
+    }
+    /* 🔦 ไฟฉายจับตัวผีค้างไว้ครบ TORCH_LOCK_S → สั่งให้หายตัว (รวมแล้วไม่เกิน 2 วิ ตามที่ผู้ใช้สั่ง) */
+    if(g.st!=='gone'){
+      if(torchOn && g.vis>.05 && sameFloor && d<20 && torchHitsGhost(g)) g.litT=(g.litT||0)+dt;
+      else g.litT=Math.max(0,(g.litT||0)-dt*1.5);
+      if(g.litT>=TORCH_LOCK_S) ghostBanish(g,now);
+    }
     switch(g.st){
       case 'lurk':                                  // ข้อ 13/18: รอในห้อง ให้เห็นแว็บ ๆ
         g.vis=Math.max(0,g.vis-dt*2.5);
@@ -2707,6 +2809,10 @@ function tickGhosts(dt,now){
         g.vis=1;
         if(now-g.at>1300){ g.st='fade'; g.at=now; }
         break;
+      case 'gone':                                  // 🔦 รอบ 778: โดนไฟฉายส่อง → จางหายภายใน BANISH_S
+        g.vis=Math.max(0,g.vis-dt/BANISH_S);
+        if(g.vis<=.01) ghostGoLurk(g);
+        break;
       default:                                      // fade
         g.vis=Math.max(0,g.vis-dt*1.8);
         if(g.vis<=0.01) ghostGoLurk(g);
@@ -2724,8 +2830,9 @@ function tickGhosts(dt,now){
     }
     mp.y=g.floorY+g.baseY+Math.sin(now/300+mp.x)*.09+stepBob;   // ลอยขึ้นลงเบา ๆ + จังหวะก้าวตอนไล่ตาม
   }
-  // สุ่มส่งผีออกมาเดินตามเป็นระยะ (ข้อ 9: สุ่มผี)
-  if(now>ghostStalkAt){
+  // สุ่มส่งผีออกมาเดินตามเป็นระยะ (ข้อ 9: สุ่มผี) — 🔦 รอบ 778: เฉพาะตอนเงื่อนไขครบเท่านั้น
+  if(!allowed) ghostStalkAt=now+8000;
+  else if(now>ghostStalkAt){
     ghostStalkAt=now+17000+Math.random()*15000;
     const cand=monsters.filter(g=>g.st==='lurk');
     if(cand.length) ghostGoStalk(cand[Math.floor(Math.random()*cand.length)]);
@@ -2834,7 +2941,7 @@ function tintSprite(mat){ if(mat) mat.color.setHex(blackedOut?DARK_LETTER:0xffff
 function hotelReset(){
   hotel=(worlds.haunt&&worlds.haunt.hotel)||null;
   hFootY=0; hotelInAt=0; blackedOut=false; hFlickerAt=0; hFlickerN=0;
-  ghostStalkAt=performance.now()+12000; hKnockAt=0; hActNow=null;
+  ghostStalkAt=performance.now()+12000; hKnockAt=0; hActNow=null; hTorchWinAt=0;
   setTorch(false);
   if(hotel){
     HOTEL3D.setLights(hotel,true);
@@ -5458,7 +5565,7 @@ function rlTick(px,pz,now){
   }
 }
 /* ============================================================
-   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) · นำทางด้วยภาพล้วน (ไม่มีเสียงพูด ตั้งแต่รอบ 774)
+   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) · นำทางด้วยภาพล้วน (ไม่มีเสียงพูด ตั้งแต่รอบ 778)
    ============================================================ */
 /* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
 /* 🧭 รอบ 284: เส้นทาง GPS ใช้ ngrid (ผิวถนนจริง) — grid ฟิสิกส์ทาเผื่อกว้าง ทำ A* หาเส้น/จุดเลี้ยวนอกถนน */
@@ -5549,7 +5656,7 @@ function pickGpsTarget(){
   });
   gpsTarget = bn||best;
 }
-/* 🔇 รอบ 774 (ผู้ใช้สั่ง): ลบ "เสียงพูดนำทาง GPS" ออกทั้งหมด — เดิมพูดอังกฤษ (Continue straight / Turn left…)
+/* 🔇 รอบ 778 (ผู้ใช้สั่ง): ลบ "เสียงพูดนำทาง GPS" ออกทั้งหมด — เดิมพูดอังกฤษ (Continue straight / Turn left…)
    ผ่าน speechSynthesis ซึ่งบอกทิศผิดบ่อยเมื่อถนนขาดตอน (เช่น "continue straight" ทั้งที่ข้างหน้าไม่มีถนนแล้ว)
    ป้ายนำทางบนจอ (ลูกศร/ระยะ/เลี้ยวซ้าย-ขวา) + เส้นฟ้าบนถนน ยังอยู่ครบเหมือนเดิม */
 /* 🧭 รอบ 286: เส้นนำทางสีฟ้าลอยบนถนน (แบบ Google Maps) — ribbon แบนตาม gpsRoute ที่ A* คำนวณ
@@ -5652,7 +5759,7 @@ function tickGps(now){
   // ป้ายคำสั่ง: ใกล้มาก (<16ม.) = "เลี้ยว…เลย" · ไกลกว่า = "เลี้ยว…" (เตือนล่วงหน้า) · ไม่มีเลี้ยว = ตรงไป
   const turnLabel = turning ? (turnDist<16 ? {left:'เลี้ยวซ้ายเลย',right:'เลี้ยวขวาเลย'}[turnDir] : {left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[turnDir]) : 'ตรงไป';
   if(gpsTurnEl) gpsTurnEl.textContent = turnLabel;
-  // 🔇 รอบ 774: เดิมตรงนี้เป็นบล็อก "เสียงนำทางแบบ Google Maps" — ผู้ใช้สั่งลบเสียงออก เหลือนำทางด้วยภาพล้วน
+  // 🔇 รอบ 778: เดิมตรงนี้เป็นบล็อก "เสียงนำทางแบบ Google Maps" — ผู้ใช้สั่งลบเสียงออก เหลือนำทางด้วยภาพล้วน
 }
 function tickDrive(dt,now){
   const D=worlds.drive.d;
@@ -11042,6 +11149,8 @@ function start(md,opt){
   words=pickWords(GUIDE_WORDS);
   if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
   else if(M.mecha){ startWave(1); }   // 🌊 รอบ 229: เริ่ม Endless Wave (เดิม spawn ALIEN_COUNT ตายตัว)
+  /* 🏨 รอบ 778 (ผู้ใช้สั่งข้อ 5): โรงแรมผีสิงวางเฉพาะตัวอักษรของคำที่กำลังหาอยู่ — ไม่มีตัวหลอก ไม่มีของคำอื่น */
+  else if(M.hotel){ ensureCoverage(); }
   else{
     words.forEach(spawnLettersForWord);
     for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);

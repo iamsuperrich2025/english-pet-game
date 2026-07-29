@@ -21,6 +21,22 @@ function letterTexture(ch){
   const t=new THREE.CanvasTexture(cv);
   texCache[key]=t; return t;
 }
+/* 🖤 รอบ 778 (ผู้ใช้สั่ง "เฉพาะโลกนี้เท่านั้น"): แผ่นตัวอักษรสีดำสำหรับโรงแรมผีสิง
+   แผ่นสีลูกกวาดของโลกอื่นสว่างจ้าจนกลืนบรรยากาศบ้านผีไม่ลง (และตอนไฟดับยิ่งโดดออกมาทั้งแถบ)
+   ดำสนิท+ขอบ/ตัวอักษรขาว = ยังอ่านง่ายในความมืด แต่กลมกลืนกับโลก · cache คนละคีย์ ('D') ไม่ชนของเดิม */
+function letterTextureDark(ch){
+  const key='D'+ch;
+  if(texCache[key]) return texCache[key];
+  const cv=document.createElement('canvas'); cv.width=cv.height=128;
+  const c=cv.getContext('2d');
+  c.beginPath(); c.roundRect(8,8,112,112,26);
+  c.fillStyle='#0b0b0e'; c.fill();
+  c.lineWidth=8; c.strokeStyle='rgba(236,240,255,.92)'; c.stroke();
+  c.fillStyle='#f2f5ff'; c.font='900 84px Arial'; c.textAlign='center'; c.textBaseline='middle';
+  c.fillText(ch.toUpperCase(),64,72);
+  const t=new THREE.CanvasTexture(cv);
+  texCache[key]=t; return t;
+}
 function emojiTexture(emo){
   const key='E'+emo;
   if(texCache[key]) return texCache[key];
@@ -223,7 +239,7 @@ function makePeerSprite(name, av, M, grade){
   return spr;
 }
 function bind(o){ if(o.adRenterActive)_hookRenter=o.adRenterActive; if(o.adSeqBase!=null)_adSeq=o.adSeqBase; }
-return {bind, letterTexture, emojiTexture, ghostTex, measureGhostBox, probeGhostImages, whenGhostsReady,
+return {bind, letterTexture, letterTextureDark, emojiTexture, ghostTex, measureGhostBox, probeGhostImages, whenGhostsReady,
   ghostTexture, ghostScareSrc, adBoardTexture, addAdBillboard, ringAds, adTexDraws:_adTexDraws, adHasImg:_adHasImg,
   FACADE_ROWS, buildingFacadeTexture, makePeerSprite};
 })();
