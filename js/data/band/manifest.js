@@ -100,10 +100,14 @@ const BAND_ADV_MANIFEST = {
   "science": {
     "label": "ศัพท์วิทยาศาสตร์",
     "emoji": "🔬",
-    "count": 519,
+    "count": 622,
     "files": [
       {
         "f": "b6_science_absorb-chloroplast.js",
+        "n": 75
+      },
+      {
+        "f": "b6_science_acute-prescription.js",
         "n": 75
       },
       {
@@ -125,6 +129,10 @@ const BAND_ADV_MANIFEST = {
       {
         "f": "b6_science_producer-species.js",
         "n": 75
+      },
+      {
+        "f": "b6_science_quarantine-xylem.js",
+        "n": 28
       },
       {
         "f": "b6_science_spectrum-zinc.js",
