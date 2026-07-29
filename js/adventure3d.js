@@ -160,8 +160,9 @@ let netHpOk=true;                                     // 🚁 รอบ 376: fie
 let carPeerHits=0;                                    // 🛠️ รอบ 133: นับ "เจตนาชน" รถเพื่อนรอบนี้ (ครบ 3 = ค่าซ่อม CAR_RAM_FEE)
 let rlChkAt=0, rlCoolAt=0, rlForce=null;              // 🚦 รอบ 133: ไฟแดง — จังหวะเช็ก + cooldown ใบสั่ง + testkit บังคับเฟสไฟ
 let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
-/* 🧭 รอบ 200-201: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง+เสียงอังกฤษ · เลี้ยวตามถนนจริง A* แบบ Google Maps) */
-let gpsTarget=null, gpsSpokeAt=0, gpsLastTurn='', gpsMile=0, gpsArrivedFor=null;
+/* 🧭 รอบ 200-201: GPS นำทางไปตัวอักษร (ลูกศร+ระยะทาง · เลี้ยวตามถนนจริง A* แบบ Google Maps)
+   🔇 รอบ 774: ตัด "เสียงพูดนำทาง" ออกตามคำสั่งผู้ใช้ — เหลือนำทางด้วยภาพอย่างเดียว */
+let gpsTarget=null;
 let gpsArrowEl=null, gpsDistEl=null, gpsTurnEl=null, gpsLetEl=null;
 let gpsRoute=null, gpsWpi=0, gpsRouteFor=null, gpsRouteAt=0;   // เส้นทางตามถนน (A*) + waypoint ปัจจุบัน
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
@@ -5457,7 +5458,7 @@ function rlTick(px,pz,now){
   }
 }
 /* ============================================================
-   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) + เสียงอังกฤษเลี้ยว
+   🧭 GPS นำทาง (โหมด drive) — เลือกตัวอักษรเป้าหมาย + เส้นทางตามถนนจริง (A*) · นำทางด้วยภาพล้วน (ไม่มีเสียงพูด ตั้งแต่รอบ 774)
    ============================================================ */
 /* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
 /* 🧭 รอบ 284: เส้นทาง GPS ใช้ ngrid (ผิวถนนจริง) — grid ฟิสิกส์ทาเผื่อกว้าง ทำ A* หาเส้น/จุดเลี้ยวนอกถนน */
@@ -5546,23 +5547,11 @@ function pickGpsTarget(){
     if(d<bestD){ bestD=d; best=l; }
     if((need[l.ch]||0)>0 && d<bnD){ bnD=d; bn=l; }
   });
-  gpsTarget = bn||best; gpsMile=0; gpsLastTurn=''; gpsArrivedFor=null;
+  gpsTarget = bn||best;
 }
-function gpsSpeak(text,force){
-  const now=performance.now();
-  if(!force && now-gpsSpokeAt<3200) return;
-  if(!state.sound || !('speechSynthesis' in window)) return;
-  try{
-    if(!force && speechSynthesis.speaking) return;
-    if(force) speechSynthesis.cancel();
-    gpsSpokeAt=now;
-    const u=new SpeechSynthesisUtterance(text);
-    u.lang='en-US'; u.rate=1.0; u.pitch=1.0; u.volume=.95;
-    let v=null; try{ if(typeof pickSpeakVoice==='function') v=pickSpeakVoice(); }catch(e){}
-    if(v) u.voice=v;
-    speechSynthesis.speak(u);
-  }catch(e){}
-}
+/* 🔇 รอบ 774 (ผู้ใช้สั่ง): ลบ "เสียงพูดนำทาง GPS" ออกทั้งหมด — เดิมพูดอังกฤษ (Continue straight / Turn left…)
+   ผ่าน speechSynthesis ซึ่งบอกทิศผิดบ่อยเมื่อถนนขาดตอน (เช่น "continue straight" ทั้งที่ข้างหน้าไม่มีถนนแล้ว)
+   ป้ายนำทางบนจอ (ลูกศร/ระยะ/เลี้ยวซ้าย-ขวา) + เส้นฟ้าบนถนน ยังอยู่ครบเหมือนเดิม */
 /* 🧭 รอบ 286: เส้นนำทางสีฟ้าลอยบนถนน (แบบ Google Maps) — ribbon แบนตาม gpsRoute ที่ A* คำนวณ
    วาดใหม่ทุกเฟรม (จุดเริ่ม = ตัวรถ เลื่อนตลอด) ลง buffer จองล่วงหน้า ไม่ alloc ซ้ำ · y=0.09 เหนือเส้นประถนน (.075)
    ข้อต่อใช้ perp เฉลี่ย (miter) เส้นเลยต่อเนื่องไม่มีรอยหักตรงมุมเลี้ยว · route fallback (เชื่อมถนนไม่ถึง) ไม่วาด */
@@ -5611,14 +5600,12 @@ function tickGps(now){
   // เป้าหมายหาย (เก็บได้/ย้าย) → เลือกใหม่ + ประกาศ + ล้างเส้นทางเก่า
   if(!gpsTarget || letters.indexOf(gpsTarget)<0){
     pickGpsTarget(); gpsRoute=null; gpsRouteFor=null;
-    if(gpsTarget) gpsSpeak('Next letter '+gpsTarget.ch.toUpperCase()+'.',true);
   }
   const box=gpsArrowEl?gpsArrowEl.parentElement.parentElement:null;
   if(!gpsTarget){ if(box) box.style.display='none'; return; }
   if(box) box.style.display='';
   const cx=camera.position.x, cz=camera.position.z;
   const tx=gpsTarget.spr.position.x, tz=gpsTarget.spr.position.z;
-  const finalDist=Math.hypot(tx-cx,tz-cz);
 
   // (re)route ตามถนนจริง — เปลี่ยนเป้า / ออกนอกเส้นทาง / ครบเวลา
   const strayed = gpsRoute && gpsWpi<gpsRoute.length &&
@@ -5665,22 +5652,7 @@ function tickGps(now){
   // ป้ายคำสั่ง: ใกล้มาก (<16ม.) = "เลี้ยว…เลย" · ไกลกว่า = "เลี้ยว…" (เตือนล่วงหน้า) · ไม่มีเลี้ยว = ตรงไป
   const turnLabel = turning ? (turnDist<16 ? {left:'เลี้ยวซ้ายเลย',right:'เลี้ยวขวาเลย'}[turnDir] : {left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[turnDir]) : 'ตรงไป';
   if(gpsTurnEl) gpsTurnEl.textContent = turnLabel;
-  // เสียงนำทางแบบ Google Maps
-  if(finalDist<9){
-    if(gpsArrivedFor!==gpsTarget){ gpsArrivedFor=gpsTarget; gpsSpeak('You have arrived at letter '+gpsTarget.ch.toUpperCase()+'.',true); }
-    return;
-  }
-  if(turnDir!=='straight'){
-    const mile = turnDist<20?20 : turnDist<45?45 : turnDist<95?95 : 0;
-    if(mile && (mile!==gpsMile || turnDir!==gpsLastTurn)){
-      gpsMile=mile; gpsLastTurn=turnDir;
-      gpsSpeak(mile<=20 ? 'Turn '+turnDir+' now.' : 'In '+mile+' meters, turn '+turnDir+'.');
-    }
-  }else{
-    const mile = remain<45?45 : remain<130?130 : 0;
-    if(mile && (mile!==gpsMile || gpsLastTurn!=='straight')){ gpsMile=mile; gpsLastTurn='straight';
-      gpsSpeak('Continue straight for '+mile+' meters.'); }
-  }
+  // 🔇 รอบ 774: เดิมตรงนี้เป็นบล็อก "เสียงนำทางแบบ Google Maps" — ผู้ใช้สั่งลบเสียงออก เหลือนำทางด้วยภาพล้วน
 }
 function tickDrive(dt,now){
   const D=worlds.drive.d;
@@ -11014,7 +10986,7 @@ function start(md,opt){
     (function(){ const cp=(typeof myCar==='function'&&myCar())?carInfo(myCar().id):null;
       const sp=(cp&&cp.spd)||3, ac=(cp&&cp.acc)||3, gr=(cp&&cp.grip)||3;
       drivePerf={ vmaxMul:0.82+sp*0.045, accMul:0.82+ac*0.045, steerMul:0.90+gr*0.025 }; })();
-    gpsTarget=null; gpsSpokeAt=0; gpsLastTurn=''; gpsMile=0; gpsArrivedFor=null; gpsRoute=null; gpsRouteFor=null;   // 🧭 รีเซ็ต GPS
+    gpsTarget=null; gpsRoute=null; gpsRouteFor=null;   // 🧭 รีเซ็ต GPS
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
     bobPitch=0; bobPitchV=0; _bobPrevSpd=0; _bobSkin=null;  // 🪆 รอบ 193: รีเซ็ตก้ม-เงย + บังคับใส่สกินใหม่
