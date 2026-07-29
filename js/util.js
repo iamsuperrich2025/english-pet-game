@@ -689,6 +689,9 @@ function askNameDialog(opt){
   const input = overlay.querySelector('#pf-name-input');
   const err   = overlay.querySelector('#pf-name-err');
   input.value = opt.value || '';
+  // 📱 กันแป้นพิมพ์มือถือบังกล่อง (ใช้ตัวช่วยตัวเดียวกับแชท — visualViewport ดันกล่องขึ้นเหนือคีย์บอร์ด)
+  const stopKbFit = (typeof chatFitKeyboard === 'function')
+    ? chatFitKeyboard(overlay, overlay.querySelector('.levelup-box')) : ()=>{};
   const submit = ()=>{
     const r = checkName(input.value, opt.min, opt.max);
     if(!r.ok){
@@ -696,6 +699,7 @@ function askNameDialog(opt){
       err.textContent = r.msg;
       return;
     }
+    stopKbFit();
     overlay.remove();
     opt.onOk(r.name);
   };
@@ -703,6 +707,7 @@ function askNameDialog(opt){
   input.addEventListener('keydown', e=>{ if(e.key === 'Enter') submit(); });
   const cancel = overlay.querySelector('#pf-name-cancel');
   if(cancel) cancel.addEventListener('click', ()=>{
+    stopKbFit();
     overlay.remove();
     if(opt.onCancel) opt.onCancel();
   });

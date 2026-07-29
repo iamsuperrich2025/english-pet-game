@@ -1559,6 +1559,10 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
   position:fixed;inset:0;background:rgba(120,90,160,.45);z-index:100;
   display:flex;align-items:center;justify-content:center;animation:fadeIn .3s;
 }
+/* 📱 คีย์บอร์ดมือถือเปิด (คลาสนี้ติดจาก chatFitKeyboard() ใน ui.js — กล่องมีช่อง input เช่น เปลี่ยนชื่อน้อง)
+   ดันกล่องขึ้นไปอยู่เหนือคีย์บอร์ดแทนที่จะอยู่กึ่งกลางจอเดิม (ซึ่งคีย์บอร์ดจะบังครึ่งล่าง) */
+.levelup-overlay.kb-open{align-items:flex-end;}
+.levelup-overlay.kb-open .levelup-box{margin-bottom:10px;}
 .levelup-box{
   background:#fff;border-radius:28px;padding:26px 30px;text-align:center;
   border:4px solid var(--yellow-d);box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:340px;
