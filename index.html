@@ -442,7 +442,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 <!-- 📜 รอบ 209: หน้ายอมรับข้อตกลง/กฎหมาย ก่อนเริ่มเล่น (EN + ไทย · ต้องกด "ยอมรับ") -->
 <script>
 (function(){
-  var KEY='pvad_terms_v1';
+  var KEY='pvad_terms_v2';
   try{ if(localStorage.getItem(KEY)) return; }catch(e){}
   var css=''
    +'#consent-gate{position:fixed;inset:0;z-index:100000;background:rgba(6,12,24,.92);backdrop-filter:blur(4px);'
@@ -476,7 +476,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
    +'<li>🎓 <b>เกมเพื่อการศึกษา:</b> ช่วยเด็กเรียนคำศัพท์ผ่านการเล่น · แนะนำให้ผู้ปกครองดูแลการเล่นของเด็ก</li>'
    +'<li>🔐 <b>ข้อมูลส่วนตัว:</b> เกมเก็บความคืบหน้าไว้ในเครื่องและบัญชี Google ของคุณ (ผ่าน Firebase) · ใช้อีเมลเพื่อเข้าสู่ระบบและบันทึกข้อมูลเท่านั้น · เราไม่ขายข้อมูล · ไม่เก็บชื่อจริงของเด็ก (ใช้ชื่อเล่น)</li>'
    +'<li>💬 <b>ฟีเจอร์ออนไลน์:</b> พบเพื่อนผู้เล่นและแชทได้ (มีตัวกรองคำหยาบ) · โปรดใช้ถ้อยคำสุภาพ และไม่เปิดเผยข้อมูลส่วนตัว</li>'
-   +'<li>🪙 <b>เหรียญในเกม:</b> เหรียญและสินค้าทั้งหมดเป็นของในเกม ไม่มีมูลค่าเป็นเงินจริง · ไม่มีการซื้อขายด้วยเงินจริง</li>'
+   +'<li>🪙 <b>เหรียญในเกม:</b> เหรียญและสินค้าทั้งหมดเป็นของในเกม ไม่มีมูลค่าเป็นเงินจริง · <b>ไม่สามารถเพิ่มเหรียญหรือซื้อสินค้าในเกมด้วยเงินจริงได้</b> เหรียญและสินค้าจะเพิ่มได้ด้วยความวิริยะอุตสาหะในการมุ่งมั่นพัฒนาตนเอง เรียนรู้คำศัพท์ และความสามารถในการบริหารจัดการเหรียญภายในเกมด้วยตัวผู้เล่นเองเท่านั้น (ผู้เล่นที่มีเหรียญเยอะ = ผู้เล่นที่มีความใฝ่รู้และมีความสามารถในการบริหารจัดการที่ดี)</li>'
    +'<li>⚠️ <b>ให้บริการ "ตามสภาพ":</b> พัฒนาอย่างตั้งใจแต่ไม่รับประกันว่าไร้ข้อผิดพลาด · ข้อมูลอาจสูญหายได้ แนะนำให้สำรองข้อมูลเป็นระยะ</li>'
    +'<li>✅ การกด "ยอมรับ" ถือว่าคุณหรือผู้ปกครองยอมรับเงื่อนไขและนโยบายความเป็นส่วนตัวนี้</li>'
    +'</ol>'
@@ -485,7 +485,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
    +'<li>🎓 <b>Educational game:</b> helps children learn vocabulary through play. Parental guidance is recommended.</li>'
    +'<li>🔐 <b>Privacy:</b> progress is stored on this device and in your Google account (via Firebase). Your email is used only for sign-in and saving data. We do not sell your data, and we do not collect children’s real names (nicknames only).</li>'
    +'<li>💬 <b>Online features:</b> you may meet other players and chat (with a profanity filter). Please be polite and never share personal information.</li>'
-   +'<li>🪙 <b>In-game coins:</b> all coins and items are virtual, with no real-world monetary value. No real-money purchases.</li>'
+   +'<li>🪙 <b>In-game coins:</b> all coins and items are virtual, with no real-world monetary value. <b>Coins and items can never be bought or topped up with real money.</b> They can only be earned through the player’s own diligence — staying committed to learning vocabulary and managing coins wisely within the game (players with more coins are players who are more studious and better at managing resources).</li>'
    +'<li>⚠️ <b>Provided “as is”:</b> built with care but not guaranteed error-free. Data may be lost — please back up periodically.</li>'
    +'<li>✅ By tapping “Accept”, you (or a parent/guardian) agree to these Terms and this Privacy notice.</li>'
    +'</ol>'
