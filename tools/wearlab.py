@@ -144,7 +144,11 @@ def all_keys():
 
 
 EYES_JSON = os.path.join(SCRATCH, 'eyes.json')
-MANUAL = {}   # ใส่ override มือได้: 'cat_adult_fat': [x1,y1,x2,y2]
+MANUAL = {    # ใส่ override มือได้: 'cat_adult_fat': [x1,y1,x2,y2]
+    # รอบ 758: หน้ายิ้มใหม่จาก happylab.py ตาหลิ่วเป็นเส้นโค้งบาง (กว้าง/สูง = 3.5) เกินเพดาน 3.4
+    # ของ detect_eyes เลยหาไม่เจอ — วัดจากก้อนสีเข้มในภาพจริงมาใส่ตรง ๆ
+    'cat_adult_happy': [259, 298, 409, 289],
+}
 
 
 def cmd_eyes():
