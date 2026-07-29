@@ -165,6 +165,7 @@ let carDashEl=null, carWheelEl=null, carHornAt=0, carNameAt=0, carStreet='';
 let gpsTarget=null;
 let gpsArrowEl=null, gpsDistEl=null, gpsTurnEl=null, gpsLetEl=null;
 let gpsRoute=null, gpsWpi=0, gpsRouteFor=null, gpsRouteAt=0;   // เส้นทางตามถนน (A*) + waypoint ปัจจุบัน
+let gpsRouteTo=null;    // 🧭 รอบ 782: จุดหมายที่ใช้คำนวณเส้นทางล่าสุด (ตัวอักษรย้ายที่ทุก 75 วิ → ต้องคำนวณใหม่)
 let carGaugeCv=null, carGaugeCtx=null, carDashImg=null;   // เข็มวิ่งจริงบนคลัสเตอร์ของภาพ dash.png
 let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;   // 🎵 วิทยุในรถ (รอบ 181)
 let carBobbleEl=null, carBobbleImg=null, bobAng=0, bobVel=0, _bobVW=0, _bobVH=0, _bobAv='';       // 🪆 ตุ๊กตาดุ๊กดิ๊ก (รอบ 191)
@@ -1341,10 +1342,19 @@ function buildDriveCity(sc){
   /* 🧭 รอบ 284: กริดนำทาง GPS แยกจากกริดฟิสิกส์ — grid เดิมทาเผื่อกว้าง (สี่เหลี่ยม ±rr ช่อง ไว้ให้ขับไหล่ทางไม่สะดุด)
      แต่ GPS ใช้แล้วได้เส้นทาง/จุดเลี้ยวนอกผิวถนนจริง → ngrid ทาเป็นวงกลมรัศมีครึ่งความกว้างถนนจริงเท่านั้น */
   const ngrid=new Uint8Array(GW*GW);
+  /* 🧭 รอบ 782: ncost = "ค่าผ่านทาง" ของแต่ละช่องนำทาง — A* ใช้ถ่วงน้ำหนักให้เกาะผิวถนนจริง
+     1 = มีผิวถนนอยู่ใต้ล้อจริง · 2 = ไหล่ทาง (กริดทาเผื่อ ผ่านได้แต่ไม่ใช่ถนน) · 4 = ติดตึก/กำแพง (รถชนผ่านไม่ได้) */
+  const ncost=new Uint8Array(GW*GW);
   const gset=(x,z,v)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
     if(gx>=0&&gz>=0&&gx<GW&&gz<GW){ const k=gz*GW+gx; if(v===1||!grid[k]) grid[k]=v; } };
-  const ngset=(x,z)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
-    if(gx>=0&&gz>=0&&gx<GW&&gz<GW) ngrid[gz*GW+gx]=1; };
+  const ngset=(x,z,sg)=>{ const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+    if(gx<0||gz<0||gx>=GW||gz>=GW) return;
+    const k=gz*GW+gx; ngrid[k]=1;
+    // ศูนย์กลางช่องอยู่ในผิวถนนของท่อนนี้ไหม (เทียบระยะตั้งฉากกับครึ่งความกว้างถนนจริง)
+    const ccx=gx*GS-GOFF+GS/2, ccz=gz*GS-GOFF+GS/2;
+    let t=(ccx-sg.x1)*sg.ux+(ccz-sg.z1)*sg.uz; t=t<0?0:(t>sg.L?sg.L:t);
+    if(Math.hypot(ccx-(sg.x1+sg.ux*t), ccz-(sg.z1+sg.uz*t))<=sg.w/2+0.6) ncost[k]=1;
+    else if(!ncost[k]) ncost[k]=2; };
   rivSegs.forEach(s=>{                                       // ทาสีน้ำลง grid ก่อน (ถนน=สะพาน ทาทับทีหลัง)
     const L=Math.hypot(s[2]-s[0],s[3]-s[1]), st=Math.max(1,Math.floor(L/GS*2));
     for(let i=0;i<=st;i++){
@@ -1374,11 +1384,12 @@ function buildDriveCity(sc){
       // 🧭 รอบ 284: nrad = รัศมีทาสีกริดนำทาง — ตามครึ่งความกว้างถนนจริง (+1ม. กันหลุดขอบ)
       //   ขั้นต่ำ GS+0.1 การันตีแสตมป์รูปกากบาท (±1 ช่องแนวตั้ง/นอน) ให้ถนนเฉียงต่อกันแบบ cardinal ผ่านกฎกันตัดมุมของ A*
       const nrad=Math.max(w/2+1, GS+0.1);
+      const sg={x1,z1,ux,uz,L,w};                              // ท่อนถนนปัจจุบัน (ngset ใช้ตัดสินว่าช่องมีผิวถนนจริงไหม)
       for(let s2=0;s2<=st;s2++){
         const x=x1+dx*s2/st, z=z1+dz*s2/st;
         for(let ox=-rr;ox<=rr;ox++) for(let oz=-rr;oz<=rr;oz++){
           gset(x+ox*GS,z+oz*GS,1);
-          if(Math.hypot(ox*GS,oz*GS)<=nrad) ngset(x+ox*GS,z+oz*GS);
+          if(Math.hypot(ox*GS,oz*GS)<=nrad) ngset(x+ox*GS,z+oz*GS,sg);
         }
       }
       if(w>=5) for(let t=0;t<L;t+=15) roadPts.push(x1+ux*t,z1+uz*t);  // จุด spawn ตัวอักษรบนถนน
@@ -1570,8 +1581,84 @@ function buildDriveCity(sc){
   });
   mc.fillStyle='#ffab40'; mc.beginPath(); mc.arc(M0,M0,3,0,7); mc.fill();   // หอนาฬิกา
 
+  /* ============================================================
+     🧭🕳️ รอบ 782 — ปิดช่องขาดของกริดถนน (ผู้ใช้: "GPS พาไปช่วงที่ถนนขาดตอน / ขับต่อไม่ได้")
+     วัดจากเมืองจริงในเบราว์เซอร์ (กริดนำทาง 86,012 ช่อง: ผิวถนนจริง 53,434 · ไหล่ทาง 27,931):
+       ① 4,647 ช่อง (5.4%) ตกอยู่ในตึก/ตึกแถว แต่ A* เดินผ่านได้ฟรี → string-pulling ลากเส้นตัดมุมทะลุตึก
+          วัดด้วย collideCar ของเกมเอง (85 เส้น ~56 กม.): 29 เส้นมีช่วงทับตึกยาวเกิน 4 ม. ยาวสุด 34 ม.
+          = จุดที่ผู้เล่นขับตามป้ายแล้ว "ไปต่อไม่ได้" เพราะโดนกำแพงดันออก
+       ② กริดนำทางแตกเป็น 8 ก้อน — ก้อนหลัก 80,380 ช่อง ที่เหลือเป็นเกาะโดดเดี่ยว (872/71/27/12/1/1/1 ช่อง)
+          ตัวอักษรที่เกิดบนเกาะพวกนี้ขับไปไม่ถึงเลย → routeGrid คืน null
+       ③ พอ routeGrid คืน null โค้ดเดิมทำ fallback เส้นตรงแต่ "ลืมติดธง fallback" → ป้ายขึ้น "ตรงไป"
+          พาขับทะลุทุ่ง/ตึก (ตรงกับภาพที่ผู้ใช้ส่งมารอบ 774) · navLineUpdate ก็เช็กธงนี้อยู่
+       ④ ตัวอักษรย้ายที่เองทุก 75 วิ (relocTick) โดยยังเป็นวัตถุเดิม → gpsRouteFor ไม่เปลี่ยน
+          เส้นทางเก่าค้าง GPS พาไปที่ที่ไม่มีอะไรแล้ว
+     แก้: ทำแผนที่ "ค่าผ่านทาง (ncost) + ก้อนที่เชื่อมถึงกัน (ncomp)" ตอนสร้างเมืองครั้งเดียว แล้ว
+       · A* ถ่วงน้ำหนักให้เกาะผิวถนนจริง + เลี่ยงช่องที่ติดตึก · losClear ห้ามลัดทะลุตึก (①)
+       · คัดจุดเกิดตัวอักษร + เป้า GPS ให้เหลือเฉพาะจุดที่ขับไปถึงได้จริง (②)
+       · ติดธง fallback จริง + ป้ายบอกตรง ๆ ว่า "ไม่มีถนนไปถึง" (③) · เป้าขยับเกิน 12 ม. = คำนวณใหม่ (④)
+     ============================================================ */
+  const NAV_CLR=1.55;                                          // รัศมีรถ 1.15 + เผื่อขอบ (ต้องเท่ากับ CR ใน collideCar)
+  const navBlockedAt=(x,z)=>{                                  // ช่องนี้รถแทรกผ่านไม่ได้จริงไหม (เลขคณิตเดียวกับ collideCar)
+    const list=solidGrid[Math.floor(x/SCELL)+','+Math.floor(z/SCELL)];
+    if(!list) return false;
+    for(const s of list){
+      if(s.t===2){ if(Math.hypot(x-s.x,z-s.z)<s.r+NAV_CLR) return true; }
+      else if(s.t===0){
+        const c=Math.cos(s.rot), si=Math.sin(s.rot), dx=x-s.x, dz=z-s.z;
+        if(Math.abs(dx*c-dz*si)<s.hx+NAV_CLR && Math.abs(dx*si+dz*c)<s.hz+NAV_CLR) return true;
+      }else{
+        const dx=s.x2-s.x1, dz=s.z2-s.z1, L2=dx*dx+dz*dz||1e-9;
+        let t=((x-s.x1)*dx+(z-s.z1)*dz)/L2; t=t<0?0:(t>1?1:t);
+        if(Math.hypot(x-s.x1-dx*t, z-s.z1-dz*t)<NAV_CLR) return true;
+      }
+    }
+    return false;
+  };
+  for(let k=0;k<ngrid.length;k++){
+    if(ngrid[k]!==1) continue;
+    const gx=k%GW, gz=(k/GW)|0;
+    if(navBlockedAt(gx*GS-GOFF+GS/2, gz*GS-GOFF+GS/2)) ncost[k]=4;
+  }
+  /* ก้อนที่เชื่อมถึงกัน (flood fill กติกาเดียวกับ A*: 8 ทิศ + ห้ามตัดมุม · ข้ามช่องที่ติดตึก) */
+  const ncomp=new Int32Array(GW*GW).fill(-1), compSize=[];
+  const navOpen=(gx,gz)=>gx>=0&&gz>=0&&gx<GW&&gz<GW&&ngrid[gz*GW+gx]===1&&ncost[gz*GW+gx]!==4;
+  const NDIR=[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+  for(let k0=0;k0<ncomp.length;k0++){
+    if(ncomp[k0]>=0 || !navOpen(k0%GW,(k0/GW)|0)) continue;
+    const cid=compSize.length, q=[k0]; ncomp[k0]=cid; let n=0, head=0;
+    while(head<q.length){
+      const cur=q[head++]; n++;
+      const cgx=cur%GW, cgz=(cur/GW)|0;
+      for(const d of NDIR){
+        const nx=cgx+d[0], nz=cgz+d[1];
+        if(!navOpen(nx,nz)) continue;
+        if(d[0]&&d[1] && (!navOpen(cgx+d[0],cgz)||!navOpen(cgx,cgz+d[1]))) continue;
+        const ni=nz*GW+nx;
+        if(ncomp[ni]<0){ ncomp[ni]=cid; q.push(ni); }
+      }
+    }
+    compSize.push(n);
+  }
+  let nmain=0; for(let c=1;c<compSize.length;c++) if(compSize[c]>compSize[nmain]) nmain=c;
+  /* คัดจุดเกิดตัวอักษร: ต้องอยู่ในก้อนหลัก + ในรัศมีที่รถขับไปถึงได้ (หนีบที่ rad-25 → เผื่อ 60) */
+  const REACH_R=RX-60, keptPts=[];
+  for(let i=0;i<roadPts.length;i+=2){
+    const x=roadPts[i], z=roadPts[i+1];
+    if(Math.hypot(x,z)>REACH_R) continue;
+    const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+    if(gx<0||gz<0||gx>=GW||gz>=GW) continue;
+    let ok=ncomp[gz*GW+gx]===nmain;
+    if(!ok) for(const d of NDIR){                              // เผื่อจุดตกร่องขอบช่อง — ดูช่องข้างเคียง 1 ช่อง
+      const nx=gx+d[0], nz=gz+d[1];
+      if(nx>=0&&nz>=0&&nx<GW&&nz<GW&&ncomp[nz*GW+nx]===nmain){ ok=true; break; }
+    }
+    if(ok) keptPts.push(x,z);
+  }
+  if(keptPts.length>=200){ roadPts.length=0; for(const v of keptPts) roadPts.push(v); }   // กันพลาด: เหลือน้อยผิดปกติ = ใช้ของเดิม
+
   worlds.drive={scene:sc, trees:[], buildings:[],
-    d:{grid,ngrid,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};   // ngrid = กริดนำทาง GPS (รอบ 284)
+    d:{grid,ngrid,ncost,ncomp,nmain,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX}};   // ngrid = กริดนำทาง GPS (รอบ 284) · ncost/ncomp = รอบ 782
   /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
      (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
   const junctions=[];
@@ -5570,7 +5657,26 @@ function rlTick(px,pz,now){
 /* เส้นทางแบบ Google Maps ใช้ "กริดถนนที่ขับได้" (D.grid · แข็งแรงกว่ากราฟ polyline เพราะเชื่อมทุกแยกอัตโนมัติ) */
 /* 🧭 รอบ 284: เส้นทาง GPS ใช้ ngrid (ผิวถนนจริง) — grid ฟิสิกส์ทาเผื่อกว้าง ทำ A* หาเส้น/จุดเลี้ยวนอกถนน */
 function cellDrivable(D,gx,gz){ return gx>=0&&gz>=0&&gx<D.GW&&gz<D.GW && (D.ngrid||D.grid)[gz*D.GW+gx]===1; }
+/* 🧭 รอบ 782: ค่าผ่านทางของช่อง (1=ผิวถนนจริง · 2=ไหล่ทาง · 4=ติดตึก) → น้ำหนักที่ A* ใช้
+   ไหล่ทางแพงกว่านิดเดียว (เส้นทางเกาะถนนจริงแต่ยังลัดผ่านไหล่ทางตรงแยกได้) · ติดตึกแพงมาก (ใช้เมื่อไม่มีทางอื่นจริง ๆ) */
+function cellWeight(D,gx,gz){
+  if(!D.ncost) return 1;
+  const c=D.ncost[gz*D.GW+gx];
+  return c===4?9:(c===2?1.35:1);
+}
+function cellBlocked(D,gx,gz){ return !!D.ncost && D.ncost[gz*D.GW+gx]===4; }
 function cellCenter(D,gx,gz){ return {x:gx*D.GS-D.GOFF+D.GS/2, z:gz*D.GS-D.GOFF+D.GS/2}; }
+/* ช่องนี้อยู่ในก้อนถนนหลักที่ "ขับไปถึงได้จริง" ไหม (รอบ 782) — ใช้คัดเป้า GPS ไม่ให้ชี้ไปที่ไปไม่ถึง */
+function posReachable(D,x,z){
+  if(!D.ncomp) return true;
+  const gx=Math.floor((x+D.GOFF)/D.GS), gz=Math.floor((z+D.GOFF)/D.GS);
+  for(let r=0;r<=3;r++) for(let ox=-r;ox<=r;ox++) for(let oz=-r;oz<=r;oz++){
+    if(r>0 && Math.abs(ox)!==r && Math.abs(oz)!==r) continue;
+    const nx=gx+ox, nz=gz+oz;
+    if(nx>=0&&nz>=0&&nx<D.GW&&nz<D.GW && D.ncomp[nz*D.GW+nx]===D.nmain) return true;
+  }
+  return false;
+}
 /* 🚗 รอบ 234: มองเห็นตรงๆบนถนนไหม (สุ่มจุดตามเส้นตรง a→b เช็กทุกช่องว่าเป็นถนน) — ใช้ string-pulling ตัด staircase ของกริด */
 function losClear(D,ax,az,bx,bz){
   const dx=bx-ax, dz=bz-az, dist=Math.hypot(dx,dz);
@@ -5579,16 +5685,20 @@ function losClear(D,ax,az,bx,bz){
     const t=i/steps, x=ax+dx*t, z=az+dz*t;
     const gx=Math.floor((x+D.GOFF)/D.GS), gz=Math.floor((z+D.GOFF)/D.GS);
     if(!cellDrivable(D,gx,gz)) return false;
+    if(cellBlocked(D,gx,gz)) return false;         // 🧭 รอบ 782: ห้ามลัดเส้นตรงตัดมุมทะลุตึก (เดิมตัดผ่านได้ รถไปติด)
   }
   return true;
 }
 function nearestDrivableCell(D,x,z){
   const cx=Math.floor((x+D.GOFF)/D.GS), cz=Math.floor((z+D.GOFF)/D.GS);
+  let alt=null;                                    // 🧭 รอบ 782: ช่องที่ติดตึกใช้เป็นตัวสำรอง (เลือกช่องโล่งก่อนเสมอ)
   for(let r=0;r<=12;r++) for(let ox=-r;ox<=r;ox++) for(let oz=-r;oz<=r;oz++){
     if(r>0 && Math.abs(ox)!==r && Math.abs(oz)!==r) continue;
-    if(cellDrivable(D,cx+ox,cz+oz)) return [cx+ox,cz+oz];
+    if(!cellDrivable(D,cx+ox,cz+oz)) continue;
+    if(!cellBlocked(D,cx+ox,cz+oz)) return [cx+ox,cz+oz];
+    if(!alt) alt=[cx+ox,cz+oz];
   }
-  return null;
+  return alt;
 }
 /* A* บนกริดถนน คืน array {x,z} (ย่อจุดที่อยู่แนวเดียวกันแล้ว) หรือ null */
 function routeGrid(D,sx,sz,tx,tz){
@@ -5614,7 +5724,7 @@ function routeGrid(D,sx,sz,tx,tz){
       const nx=cgx+d[0], nz=cgz+d[1]; if(!cellDrivable(D,nx,nz)) continue;
       if(d[0]&&d[1] && (!cellDrivable(D,cgx+d[0],cgz)||!cellDrivable(D,cgx,cgz+d[1]))) continue;  // กันตัดมุม
       const ni=nz*GW+nx; if(closed[ni]) continue;
-      const ng=gsc[cur]+d[2];
+      const ng=gsc[cur]+d[2]*cellWeight(D,nx,nz);   // 🧭 รอบ 782: ถ่วงน้ำหนัก — เกาะผิวถนนจริง เลี่ยงช่องที่ติดตึก
       if(ng<gsc[ni]){ gsc[ni]=ng; came[ni]=cur; push(ni, ng+Math.hypot(nx-ggx,nz-ggz)); }
     }
   }
@@ -5648,13 +5758,17 @@ function pickGpsTarget(){
   const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
   Object.keys(inv).forEach(c=>{ if(need[c]) need[c]-=(inv[c]||0); });
   const cx=camera.position.x, cz=camera.position.z;
-  let best=null,bestD=1e18, bn=null,bnD=1e18;
+  const D=worlds.drive&&worlds.drive.d;
+  let best=null,bestD=1e18, bn=null,bnD=1e18, any=null,anyD=1e18;
   letters.forEach(l=>{
     const d=Math.hypot(l.spr.position.x-cx,l.spr.position.z-cz);
+    if(d<anyD){ anyD=d; any=l; }
+    // 🧭 รอบ 782: ข้ามตัวอักษรที่ "ขับไปไม่ถึง" (นอกก้อนถนนหลัก) — เดิมเลือกมาแล้ว GPS ตก fallback เส้นตรงทะลุทุ่ง
+    if(D && !posReachable(D, l.spr.position.x, l.spr.position.z)) return;
     if(d<bestD){ bestD=d; best=l; }
     if((need[l.ch]||0)>0 && d<bnD){ bnD=d; bn=l; }
   });
-  gpsTarget = bn||best;
+  gpsTarget = bn||best||any;
 }
 /* 🔇 รอบ 778 (ผู้ใช้สั่ง): ลบ "เสียงพูดนำทาง GPS" ออกทั้งหมด — เดิมพูดอังกฤษ (Continue straight / Turn left…)
    ผ่าน speechSynthesis ซึ่งบอกทิศผิดบ่อยเมื่อถนนขาดตอน (เช่น "continue straight" ทั้งที่ข้างหน้าไม่มีถนนแล้ว)
@@ -5664,6 +5778,7 @@ function pickGpsTarget(){
    ข้อต่อใช้ perp เฉลี่ย (miter) เส้นเลยต่อเนื่องไม่มีรอยหักตรงมุมเลี้ยว · route fallback (เชื่อมถนนไม่ถึง) ไม่วาด */
 let navLineMesh=null, navLinePos=null;
 const NAVLINE_W=1.15, NAVLINE_MAXP=200;                     // ครึ่งกว้าง 1.15ม. · จุดสูงสุด/เส้น
+const NAVLINE_SKIP=9;                                       // 🧭 รอบ 782: เว้นหัวเส้นห่างรถ 9 ม. (ไม่งั้นบานเต็มจอ)
 function navLineEnsure(){
   if(navLineMesh) return;
   navLinePos=new Float32Array((NAVLINE_MAXP-1)*6*3);
@@ -5680,6 +5795,15 @@ function navLineUpdate(cx,cz){
   navLineEnsure();
   const pts=[{x:cx,z:cz}];
   for(let i=gpsWpi;i<gpsRoute.length;i++) pts.push(gpsRoute[i]);
+  /* 🧭 รอบ 782: เริ่มเส้น "ห่างจากรถ NAVLINE_SKIP ม." — เดิมเริ่มที่ตัวรถพอดี ริบบิ้นกว้าง 2.3 ม.
+     อยู่ใต้จมูกกล้อง เพอร์สเปกทีฟถ่างเป็นลิ่มสีฟ้าบานเต็มจอ (เห็นในภาพทดสอบ) · แอปนำทางจริงก็เว้นหัวเส้นแบบนี้ */
+  let skip=NAVLINE_SKIP;
+  while(pts.length>1 && skip>0){
+    const d=Math.hypot(pts[1].x-pts[0].x, pts[1].z-pts[0].z);
+    if(d>skip){ const t=skip/d;                              // ตัดกลางท่อน — เลื่อนจุดเริ่มไปตามแนวเส้น
+      pts[0]={x:pts[0].x+(pts[1].x-pts[0].x)*t, z:pts[0].z+(pts[1].z-pts[0].z)*t}; break; }
+    skip-=d; pts.shift();
+  }
   const P=[pts[0]];                                          // ตัดจุดชิดกัน (<0.6ม.) กัน perp เพี้ยน
   for(let i=1;i<pts.length;i++){ const q=P[P.length-1];
     if(Math.hypot(pts[i].x-q.x, pts[i].z-q.z)>0.6) P.push(pts[i]); }
@@ -5717,8 +5841,10 @@ function tickGps(now){
   // (re)route ตามถนนจริง — เปลี่ยนเป้า / ออกนอกเส้นทาง / ครบเวลา
   const strayed = gpsRoute && gpsWpi<gpsRoute.length &&
     Math.hypot(gpsRoute[Math.min(gpsWpi,gpsRoute.length-1)].x-cx, gpsRoute[Math.min(gpsWpi,gpsRoute.length-1)].z-cz)>28;
-  if(!gpsRoute || gpsRouteFor!==gpsTarget || (now-gpsRouteAt>1200 && strayed)){
-    gpsRouteAt=now; gpsRouteFor=gpsTarget;
+  // 🧭 รอบ 782: ตัวอักษรย้ายที่เอง (relocTick ทุก 75 วิ) โดยยังเป็นตัวเดิม → เส้นทางเก่าค้าง ชี้ไปที่ที่ไม่มีอะไรแล้ว
+  const moved = gpsRouteTo && Math.hypot(gpsRouteTo.x-tx, gpsRouteTo.z-tz)>12;
+  if(!gpsRoute || gpsRouteFor!==gpsTarget || moved || (now-gpsRouteAt>1200 && strayed)){
+    gpsRouteAt=now; gpsRouteFor=gpsTarget; gpsRouteTo={x:tx,z:tz};
     let path=routeGrid(D, cx,cz, tx,tz);
     if(path && path.length){
       path.push({x:tx,z:tz});                          // ต่อจุดสุดท้ายไปที่ตัวอักษรจริง
@@ -5733,7 +5859,10 @@ function tickGps(now){
         path[i].turn = Math.abs(d)<0.5?'straight':(d>0?'right':'left');
       }
       gpsRoute=path; gpsWpi=path.length>1?1:0;
-    } else { gpsRoute=[{x:tx,z:tz}]; gpsWpi=0; }        // fallback เส้นตรง (เชื่อมถนนไม่ถึง)
+    } else {                                            // fallback เส้นตรง (เชื่อมถนนไม่ถึง)
+      // 🧭 รอบ 782: ติดธง fallback จริง ๆ (เดิมลืมติด → navLineUpdate วาดเส้นฟ้าพาดทุ่ง/ตึกทั้งที่ตั้งใจให้ซ่อน)
+      gpsRoute=[{x:tx,z:tz}]; gpsRoute.fallback=true; gpsWpi=0;
+    }
   }
   // ผ่าน waypoint ที่ถึงแล้ว
   while(gpsWpi<gpsRoute.length-1 && Math.hypot(gpsRoute[gpsWpi].x-cx,gpsRoute[gpsWpi].z-cz)<9) gpsWpi++;
@@ -5757,9 +5886,16 @@ function tickGps(now){
   if(gpsDistEl) gpsDistEl.textContent = showDist>=1000?(showDist/1000).toFixed(1)+' กม.':Math.round(showDist)+' ม.';
   if(gpsLetEl) gpsLetEl.textContent = gpsTarget.ch.toUpperCase();
   // ป้ายคำสั่ง: ใกล้มาก (<16ม.) = "เลี้ยว…เลย" · ไกลกว่า = "เลี้ยว…" (เตือนล่วงหน้า) · ไม่มีเลี้ยว = ตรงไป
-  const turnLabel = turning ? (turnDist<16 ? {left:'เลี้ยวซ้ายเลย',right:'เลี้ยวขวาเลย'}[turnDir] : {left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[turnDir]) : 'ตรงไป';
+  // 🧭 รอบ 782 (กฎทอง #1 ป้ายบอกเหตุผล): หาเส้นทางตามถนนไม่ได้ = บอกตรง ๆ ห้ามขึ้น "ตรงไป" หลอกให้ขับชนตึก
+  const turnLabel = gpsRoute.fallback ? 'ไม่มีถนนไปถึง'
+    : turning ? (turnDist<16 ? {left:'เลี้ยวซ้ายเลย',right:'เลี้ยวขวาเลย'}[turnDir] : {left:'เลี้ยวซ้าย',right:'เลี้ยวขวา'}[turnDir]) : 'ตรงไป';
   if(gpsTurnEl) gpsTurnEl.textContent = turnLabel;
   // 🔇 รอบ 778: เดิมตรงนี้เป็นบล็อก "เสียงนำทางแบบ Google Maps" — ผู้ใช้สั่งลบเสียงออก เหลือนำทางด้วยภาพล้วน
+  /* 🧭 รอบ 782: เรียกเส้นนำทางสีฟ้าบนถนน — navLineUpdate เขียนไว้ตั้งแต่รอบ 286 แต่ "ไม่เคยถูกเรียกเลยสักครั้ง"
+     (ไล่ git ทุกคอมมิตตั้งแต่วันที่เพิ่ม เจอแค่ตัวนิยาม ไม่มีจุดเรียก) → ผู้เล่นมีแต่ลูกศร+ป้ายมาตลอด
+     ตอนนี้เส้นทางเชื่อถือได้แล้ว (เกาะผิวถนน + เลี่ยงตึก) จึงวาดให้เห็นจริง ๆ
+     เคส "ไม่มีถนนไปถึง" ธง fallback สั่งซ่อนเส้นเอง = ไม่มีทางวาดเส้นฟ้าพาดทุ่ง */
+  navLineUpdate(cx,cz);
 }
 function tickDrive(dt,now){
   const D=worlds.drive.d;
@@ -11093,7 +11229,7 @@ function start(md,opt){
     (function(){ const cp=(typeof myCar==='function'&&myCar())?carInfo(myCar().id):null;
       const sp=(cp&&cp.spd)||3, ac=(cp&&cp.acc)||3, gr=(cp&&cp.grip)||3;
       drivePerf={ vmaxMul:0.82+sp*0.045, accMul:0.82+ac*0.045, steerMul:0.90+gr*0.025 }; })();
-    gpsTarget=null; gpsRoute=null; gpsRouteFor=null;   // 🧭 รีเซ็ต GPS
+    gpsTarget=null; gpsRoute=null; gpsRouteFor=null; gpsRouteTo=null;   // 🧭 รีเซ็ต GPS
     dRoll=0; dRollV=0;                             // 🏎️ รอบ 142: ตัวถังเริ่มนิ่งตรง
     bobAng=0; bobVel=0; _bobVW=0;                   // 🪆 รอบ 191: ตุ๊กตาหน้ารถเริ่มนิ่ง + บังคับ relayout
     bobPitch=0; bobPitchV=0; _bobPrevSpd=0; _bobSkin=null;  // 🪆 รอบ 193: รีเซ็ตก้ม-เงย + บังคับใส่สกินใหม่
