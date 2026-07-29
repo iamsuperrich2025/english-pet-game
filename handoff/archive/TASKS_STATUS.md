@@ -2733,3 +2733,9 @@
 
 - **รอบ 725 (29 ก.ค. · ผู้ใช้: "logo ไม่สวยเลย ขอเปลี่ยนจากวงกลมเป็นทรงโล่ เท่ ๆ สง่างาม"):** 🛡️ ตราสัญลักษณ์บนใบประกาศ (`emblem()` ใน `js/cert.js`) เปลี่ยนจากเหรียญกลม → **โล่ heater shield** ไหล่มนมุมบน ปลายแหลม ขอบทองหนา + สนามน้ำเงิน #123a63 + ดาว/ลูกโลก/หนังสือเปิด (สูงกว่ากว้าง = ดูสง่า) · ช่องวาง `img/cert/logo.png` เปลี่ยนตาม 180×180 → **176×196** (y=58–254) · prompt โลโก้ใน `handoff/CERT_ART.md` เขียนใหม่เป็นทรงโล่ (negative: circle badge/round frame)
   - ยืนยัน: rasterize SVG → PNG ดูภาพจริงทั้งใบย่อ (171×244) และใบใหญ่ — โล่ไม่ชนหัวข้อ VOCAB WORLD (ล่างสุดโล่ y≈254 · หัวข้อ y=308) หนังสือไม่ล้นออกนอกสนามน้ำเงิน
+
+
+## ⏬ ย้ายเมื่อ 2026-07-29 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 726 (29 ก.ค. · ผู้ใช้: "เอาโล่จาก emblem() ไปใช้เป็นไอคอนแอป + favicon ให้ทั้งเกมแบรนด์เดียวกัน"):** 🛡️ สร้าง `icon.svg` (โล่ heater shield ก๊อปจาก `emblem()` ใน `js/cert.js` วางบนพื้นน้ำเงินไล่เฉด + glow) แล้ว rasterize ด้วย canvas เป็น PNG ทับ `img/icons/icon-192.png`/`icon-512.png`/`icon-maskable-512.png`/`apple-touch-icon.png` (เดิมเป็นโลโก้ลูกโลก+ABC คนละสไตล์) + เพิ่มไฟล์ใหม่ `favicon-32.png` + เพิ่ม `<link rel="icon">` ใน `index.html` (เดิมไม่มี favicon เลย มีแต่ apple-touch-icon)
+  - ยืนยัน: fetch ทุกไฟล์ผ่าน preview จริง (`english-pet-game` server) ได้ 200 ครบ, console สะอาด, ดูภาพ 192px และ 32px (favicon) ยังเห็นโล่/ดาว/ลูกโลกชัดไม่มั่ว · ไฟล์เก่าสำรองไว้ `img/icons/_bak_old_globe_icon/` (ไม่ commit)
