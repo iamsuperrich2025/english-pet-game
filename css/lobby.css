@@ -2881,8 +2881,16 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 /* 🦸 รอบ 243: แถวเลือกตัวละคร = เต็มความกว้างทุกคอลัมน์ · รูปใหญ่ 4 บน/4 ล่าง (ผู้ใช้สั่งให้ใช้พื้นที่เต็ม) */
 .settings-box .set-blk-row{grid-column:1/-1;display:block;}
 .settings-box .set-blk-row .set-label{display:block;margin:0 0 8px;text-align:left;}
-.settings-box .blk-grid{grid-template-columns:repeat(4,1fr);gap:10px;max-width:none;margin:0;justify-content:stretch;}
-.settings-box .blk-mini{padding:6px;border-radius:16px;}
+/* 🖼️ รอบ 751: ตัวละครมี 88 ตัว → กริด 4×2 เดิมกลายเป็น "หน้าละ 8 ตัว" ในแถบปัดขวาแบบโรงงาน
+   ⚠️ ต้องเขียน --fc-n ที่ .strip-x.blk-x (2 คลาส) เพราะ .grid2x8 (คลาสเดียว อยู่ท้ายไฟล์นี้) จะทับเป็น 8 */
+.settings-box .blk-strip{width:100%;}
+.settings-box .strip-x.blk-x{
+  --fc-n:4;--fc-gap:10px;padding:10px;
+  background:linear-gradient(180deg,#f8f3ff,#ece2ff);
+  box-shadow:inset 0 2px 8px rgba(90,60,140,.18), inset 0 -1px 0 rgba(255,255,255,.6);
+}
+.settings-box .strip-arrow{background:linear-gradient(180deg,#b18cf0,#8a5fd6);border-color:#e7dbff;}
+.settings-box .blk-mini{padding:6px;border-radius:16px;width:100%;}
 /* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด */
 .settings-box .blk-mini img{width:auto;height:clamp(96px,17vh,150px);aspect-ratio:341/512;}
 /* วิธีเล่น + คู่มือครู (ใช้ .help-box ร่วม): การ์ดหัวข้อเรียง 3 คอลัมน์ */

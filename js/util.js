@@ -739,6 +739,9 @@ function applyNoAnim(){
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
 function openSettings(){
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
+  // 🖼️ รอบ 751: ตัวละครให้เลือก 88 ตัว (blk1-8 = ตัวบล็อกเดิมที่มีโมเดลในโลก 3D · blk9-blk88 = ภาพ 2D ชุดใหม่)
+  const blkAvCount = (typeof PROF_AV_MAX === 'number') ? PROF_AV_MAX : 8;
+  const blkAvList = Array.from({length: blkAvCount}, (_, i)=> 'blk' + (i + 1));
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay settings-overlay';
   overlay.innerHTML = `<div class="levelup-box settings-box">
@@ -765,10 +768,15 @@ function openSettings(){
       <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
     </div>
     <div class="set-row set-blk-row" id="set-blk">
-      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง</small></span>
-      <div class="blk-grid">
-        ${['blk1','blk2','blk3','blk4','blk5','blk6','blk7','blk8'].map(b=>
-          `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="${b}"></button>`).join('')}
+      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
+        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์</small></span>
+      <div class="strip-wrap blk-strip">
+        <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+        <div class="strip-x blk-x grid2x8">
+          ${blkAvList.map(b=>
+            `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy"></button>`).join('')}
+        </div>
+        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
       </div>
     </div>
     <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
@@ -807,13 +815,18 @@ function openSettings(){
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
   };
-  // 🧱 รอบ 238/245: เลือก "ตัวละครของหนู" (บล็อก blk1..8) = ยืนข้างน้องในล็อบบี้ + เป็นรูปโปรไฟล์
-  //   (เก็บใน state.blockAv — ตัวเดียวกับที่ใช้ในโลกขับรถ/ผจญภัย)
+  // 🧱 รอบ 238/245: เลือก "ตัวละครของหนู" = ยืนข้างน้องในล็อบบี้ + เป็นรูปโปรไฟล์ (เก็บใน state.profAv)
+  // 🖼️ รอบ 751: blk1-8 มีโมเดลในโลก 3D ด้วย → ตั้ง state.blockAv ตามไปเลย (พฤติกรรมเดิม)
+  //   blk9+ ไม่มีโมเดล 3D → ไม่แตะ blockAv ตัวบล็อกในโลกขับรถยังเป็นตัวเดิมที่เลือกไว้
   overlay.querySelectorAll('.blk-mini').forEach(b=>b.addEventListener('click', ()=>{
-    state.blockAv = b.dataset.blk;
+    state.profAv = b.dataset.blk;
+    if(/^blk[1-8]$/.test(b.dataset.blk)) state.blockAv = b.dataset.blk;
     saveState(); sfx.select(); paint();
     if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ + ตัวในล็อบบี้ทันที
   }));
+  if(typeof bindStripArrows === 'function') bindStripArrows(overlay.querySelector('.blk-strip'));
+  // เปิดตั้งค่ามา = เลื่อนแถบไปตรงตัวที่เลือกอยู่เลย (ตัวที่ 88 จะได้ไม่ต้องกดลูกศรยาว ๆ)
+  setTimeout(()=>{ const s = overlay.querySelector('.blk-mini.sel'); if(s) s.scrollIntoView({block:'nearest', inline:'center'}); }, 0);
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
     if(typeof Music !== 'undefined') Music.onSound();          // รอบ 181: หยุด/เล่นเพลงตามสวิตช์เสียง
