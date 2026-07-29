@@ -2638,3 +2638,10 @@
 - **รอบ 704 (29 ก.ค. · ต่อยอดรอบ 703 "หน้าเกมจับคู่คำศัพท์จอเตี้ยมากยังล้นต้องเลื่อน scrollbar"):** 📐 เพิ่ม `#screen-game.screen.active` + clamp(px,dvh,px) บีบ padding/font/gap ของ game-top/board-label/word-card/hint-btn/game-endless-note/btn-report ตามความสูงจอ (แบบเดียวกับ screen-select/quiz) — `css/lobby.css` ~135-148
   - ยืนยัน (preview 812×375, mock login+startGame): scrollHeight=clientHeight=297 ไม่มี scrollbar แล้ว · จอปกติ 1280×720 ฟอนต์/ขนาดเท่าเดิม (ชน clamp max) ไม่มี regression · ล้างเซฟแล้ว
   - ⚠️ session คู่ขนานมีงานไม่ commit ค้างใน css/lobby.css/style.css/index.html/js/main.js/js/ui.js (ฟีเจอร์คอมพิวเตอร์+เด็คภารกิจ ใช้เลข "รอบ 704" ในคอมเมนต์เหมือนกันแต่ยังไม่ commit) — commit รอบนี้แยกเฉพาะ hunk ของตัวเองด้วย `git apply --cached` ไม่แตะของเขาเลย
+
+
+## ⏬ ย้ายเมื่อ 2026-07-29 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 708 (29 ก.ค. · ผู้ใช้: "ปรับภารกิจวันนี้ ให้แสดงทีละรายการ ค้างไว้ 10 วิ แล้วเลื่อน เหมือนฟีดเพื่อน"):** 🎯 กล่องภารกิจเลิกพลิกการ์ด 3D (รอบ 170) → เปลี่ยนเป็นเด็ค scroll-snap เลียนแบบฟีดเพื่อนเป๊ะ (`qDeckGo`/`qDeckTick` โครงเดียวกับ `feedDeckGo`/`feedDeckTick`) ค้างภารกิจละ 10 วิ (`QUEST_SLIDE_MS`) มีแถบนับเวลา `#q-prog-bar` เหนือกล่อง (`.q-prog` ใน index.html) · แตะการ์ด/เลื่อนเองพัก 8-12 วิ (`QUEST_RESUME_MS`) ก่อนวนต่อ · โคลนใบแรกท้ายเด็คให้วนลูปไม่สะดุด — แก้ `js/ui.js`(qBigCardHTML/qDeckGo/qDeckTick/renderQuestCard) + `css/lobby.css`(#quest-card.q-deck) + `index.html`
+  - 🔑 ความสูงกล่องเปลี่ยนจาก CSS `height:auto` เดิม → `el.style.height` วัดจากการ์ดจริงด้วย JS (เด็คมีการ์ดซ้อนกันหลายใบ ถ้าใช้ auto จะโชว์พร้อมกันหมดไม่ใช่ทีละใบ) วัดตอนคลาย `height:auto` ชั่วคราวกันวงกลม 0px + รีวัดใหม่ทุกครั้งที่กล่องซ่อนแล้วโผล่มาใหม่ (`el.__hSized`/`offsetParent`)
+  - ⚠️ **ยังไม่ได้ยืนยันผ่าน preview จริง** — วันนี้ session คู่ขนานจับ dev server เต็ม 5 ช่องพอดี (`preview_start` ฟ้อง "Maximum 5 dev servers") เช็กด้วยอ่านโค้ด/ตรรกะแทน ยังไม่เห็นภาพจริง — รอบหน้ามีช่อง preview ว่างค่อยยืนยัน 1280×720+812×375 (การ์ดสไลด์ขึ้น 10 วิ/แตะสไลด์เอง/ปุ่ม 🚀/แฟลชเขียวตอนภารกิจสำเร็จ) ก่อนถือว่าจบงานเต็มร้อย
