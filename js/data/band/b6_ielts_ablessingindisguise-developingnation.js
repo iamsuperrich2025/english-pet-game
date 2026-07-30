@@ -1,0 +1,17 @@
+[
+  ["a blessing in disguise", "โชคร้ายที่กลายเป็นดี"], ["a case in point", "ตัวอย่างที่ชัดเจน"], ["a communication gap", "ช่องว่างในการสื่อสาร"], ["a compelling argument", "ข้อโต้แย้งที่น่าเชื่อถือ"], ["a double-edged sword", "ดาบสองคม"],
+  ["a golden opportunity", "โอกาสทอง"], ["a growing trend", "แนวโน้มที่กำลังเพิ่มขึ้น"], ["a living income", "รายได้ที่เพียงพอต่อการดำรงชีพ"], ["a pressing concern", "ประเด็นเร่งด่วนที่ต้องใส่ใจ"], ["a rule of thumb", "กฎง่ายๆ ที่ใช้ประมาณการ"],
+  ["a scarce resource", "ทรัพยากรที่หายาก"], ["a shift in mindset", "การเปลี่ยนแปลงกรอบความคิด"], ["a valid point", "ประเด็นที่สมเหตุสมผล"], ["a widening gap", "ช่องว่างที่กว้างขึ้น"], ["academic module", "โมดูลวิชาการ"],
+  ["academic pressure", "ความกดดันทางการเรียน"], ["advertising strategy", "กลยุทธ์การโฆษณา"], ["advocate for", "สนับสนุนแนวคิด"], ["ageing population", "ประชากรสูงวัย"], ["altruism", "ความเสียสละเพื่อผู้อื่น"],
+  ["ambition", "ความทะเยอทะยาน"], ["an underlying cause", "สาเหตุที่แฝงอยู่"], ["anecdotal evidence", "หลักฐานเชิงเล่าสู่กันฟัง"], ["antisocial behavior", "พฤติกรรมต่อต้านสังคม"], ["arguably", "อาจกล่าวได้ว่า"],
+  ["artificial intelligence impact", "ผลกระทบของปัญญาประดิษฐ์"], ["as a consequence", "เป็นผลที่ตามมา"], ["assertiveness", "การกล้าแสดงออก"], ["assimilate into society", "หลอมรวมเข้ากับสังคม"], ["automation of labor", "การใช้ระบบอัตโนมัติแทนแรงงาน"],
+  ["balanced diet", "อาหารที่สมดุล"], ["band score", "คะแนนแบนด์"], ["basic necessities", "ปัจจัยพื้นฐานในการดำรงชีวิต"], ["bilingual education", "การศึกษาสองภาษา"], ["boarding school", "โรงเรียนประจำ"],
+  ["brain drain", "การไหลออกของบุคลากรที่มีความสามารถ"], ["by and large", "โดยทั่วไปแล้ว"], ["carbon-neutral policy", "นโยบายปลอดคาร์บอนสุทธิ"], ["career progression", "ความก้าวหน้าในอาชีพ"], ["case study analysis", "การวิเคราะห์กรณีศึกษา"],
+  ["ceremonial custom", "ธรรมเนียมพิธีกรรม"], ["civic responsibility", "ความรับผิดชอบต่อสังคม"], ["civil liberties", "เสรีภาพของพลเมือง"], ["coherence and cohesion", "ความสอดคล้องและความเชื่อมโยง"], ["collective memory", "ความทรงจำร่วมของสังคม"],
+  ["collective responsibility", "ความรับผิดชอบร่วมกัน"], ["community engagement", "การมีส่วนร่วมของชุมชน"], ["compassion", "ความเมตตากรุณา"], ["complacency", "ความพึงพอใจในสิ่งที่เป็นอยู่จนขาดความกระตือรือร้น"], ["comprehensive approach", "แนวทางที่ครอบคลุม"],
+  ["compulsory education", "การศึกษาภาคบังคับ"], ["concluding sentence", "ประโยคสรุป"], ["conflict resolution", "การแก้ไขความขัดแย้ง"], ["conservation efforts", "ความพยายามในการอนุรักษ์"], ["consumerism", "บริโภคนิยม"],
+  ["contend that", "ยืนยันว่า"], ["contentious debate", "การถกเถียงที่ขัดแย้งกัน"], ["controversial issue", "ประเด็นที่เป็นข้อถกเถียง"], ["conventional wisdom", "ความเชื่อดั้งเดิมที่ยอมรับกัน"], ["corporate responsibility", "ความรับผิดชอบขององค์กร"],
+  ["cost of living", "ค่าครองชีพ"], ["cost-effective solution", "วิธีแก้ปัญหาที่คุ้มค่า"], ["counterargument", "ข้อโต้แย้ง"], ["crime prevention", "การป้องกันอาชญากรรม"], ["critical thinking skills", "ทักษะการคิดวิเคราะห์"],
+  ["cue card", "การ์ดหัวข้อพูด"], ["cultural assimilation", "การกลืนกลายทางวัฒนธรรม"], ["cultural globalization", "โลกาภิวัตน์ทางวัฒนธรรม"], ["cultural heritage", "มรดกทางวัฒนธรรม"], ["cultural identity", "อัตลักษณ์ทางวัฒนธรรม"],
+  ["cultural norm", "บรรทัดฐานทางวัฒนธรรม"], ["cultural taboo", "ข้อห้ามทางวัฒนธรรม"], ["decision-making process", "กระบวนการตัดสินใจ"], ["developed nation", "ประเทศพัฒนาแล้ว"], ["developing nation", "ประเทศกำลังพัฒนา"]
+]

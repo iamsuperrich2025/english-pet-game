@@ -1,0 +1,1162 @@
+[
+  [
+    "band score",
+    "คะแนนแบนด์"
+  ],
+  [
+    "task achievement",
+    "ความสำเร็จของงานที่กำหนด"
+  ],
+  [
+    "task response",
+    "การตอบสนองต่อโจทย์"
+  ],
+  [
+    "coherence and cohesion",
+    "ความสอดคล้องและความเชื่อมโยง"
+  ],
+  [
+    "lexical resource",
+    "ความหลากหลายของคำศัพท์"
+  ],
+  [
+    "grammatical range",
+    "ความหลากหลายของไวยากรณ์"
+  ],
+  [
+    "skimming",
+    "การอ่านผ่านๆ จับใจความ"
+  ],
+  [
+    "scanning",
+    "การอ่านหาข้อมูลเฉพาะจุด"
+  ],
+  [
+    "paraphrasing",
+    "การเรียบเรียงคำใหม่"
+  ],
+  [
+    "cue card",
+    "การ์ดหัวข้อพูด"
+  ],
+  [
+    "matching headings",
+    "การจับคู่หัวข้อย่อย"
+  ],
+  [
+    "gap fill",
+    "การเติมคำในช่องว่าง"
+  ],
+  [
+    "academic module",
+    "โมดูลวิชาการ"
+  ],
+  [
+    "general training module",
+    "โมดูลฝึกทั่วไป"
+  ],
+  [
+    "invigilator",
+    "ผู้คุมสอบ"
+  ],
+  [
+    "word limit",
+    "จำนวนคำที่กำหนด"
+  ],
+  [
+    "sample answer",
+    "ตัวอย่างคำตอบ"
+  ],
+  [
+    "model essay",
+    "เรียงความตัวอย่าง"
+  ],
+  [
+    "speaking fluency",
+    "ความคล่องแคล่วในการพูด"
+  ],
+  [
+    "pronunciation clarity",
+    "ความชัดเจนของการออกเสียง"
+  ],
+  [
+    "listening transcript",
+    "บทถอดเสียงฟัง"
+  ],
+  [
+    "multiple matching",
+    "การจับคู่หลายรายการ"
+  ],
+  [
+    "topic sentence",
+    "ประโยคหัวข้อ"
+  ],
+  [
+    "supporting sentence",
+    "ประโยคสนับสนุน"
+  ],
+  [
+    "concluding sentence",
+    "ประโยคสรุป"
+  ],
+  [
+    "furthermore",
+    "นอกจากนี้"
+  ],
+  [
+    "nevertheless",
+    "กระนั้นก็ตาม"
+  ],
+  [
+    "arguably",
+    "อาจกล่าวได้ว่า"
+  ],
+  [
+    "a case in point",
+    "ตัวอย่างที่ชัดเจน"
+  ],
+  [
+    "to a certain extent",
+    "ในระดับหนึ่ง"
+  ],
+  [
+    "on balance",
+    "เมื่อพิจารณาโดยรวม"
+  ],
+  [
+    "counterargument",
+    "ข้อโต้แย้ง"
+  ],
+  [
+    "advocate for",
+    "สนับสนุนแนวคิด"
+  ],
+  [
+    "contend that",
+    "ยืนยันว่า"
+  ],
+  [
+    "refute",
+    "หักล้าง"
+  ],
+  [
+    "undermine",
+    "บั่นทอน"
+  ],
+  [
+    "lend credence to",
+    "เพิ่มความน่าเชื่อถือให้กับ"
+  ],
+  [
+    "elaborate on",
+    "อธิบายเพิ่มเติม"
+  ],
+  [
+    "substantiate",
+    "พิสูจน์ยืนยัน"
+  ],
+  [
+    "in light of",
+    "เมื่อพิจารณาจาก"
+  ],
+  [
+    "notwithstanding",
+    "แม้จะมี"
+  ],
+  [
+    "draw a conclusion",
+    "สรุปผล"
+  ],
+  [
+    "weigh up the pros and cons",
+    "ชั่งน้ำหนักข้อดีข้อเสีย"
+  ],
+  [
+    "a compelling argument",
+    "ข้อโต้แย้งที่น่าเชื่อถือ"
+  ],
+  [
+    "a valid point",
+    "ประเด็นที่สมเหตุสมผล"
+  ],
+  [
+    "play devil's advocate",
+    "แสดงความเห็นค้าน"
+  ],
+  [
+    "by and large",
+    "โดยทั่วไปแล้ว"
+  ],
+  [
+    "in stark contrast",
+    "ในทางตรงกันข้ามอย่างชัดเจน"
+  ],
+  [
+    "namely",
+    "กล่าวคือ"
+  ],
+  [
+    "henceforth",
+    "นับจากนี้ไป"
+  ],
+  [
+    "as a consequence",
+    "เป็นผลที่ตามมา"
+  ],
+  [
+    "it stands to reason",
+    "เป็นเหตุเป็นผล"
+  ],
+  [
+    "a double-edged sword",
+    "ดาบสองคม"
+  ],
+  [
+    "food for thought",
+    "ประเด็นให้ขบคิด"
+  ],
+  [
+    "a golden opportunity",
+    "โอกาสทอง"
+  ],
+  [
+    "in the same boat",
+    "อยู่ในสถานการณ์เดียวกัน"
+  ],
+  [
+    "a blessing in disguise",
+    "โชคร้ายที่กลายเป็นดี"
+  ],
+  [
+    "urbanization",
+    "การกลายเป็นเมือง"
+  ],
+  [
+    "social cohesion",
+    "ความสามัคคีในสังคม"
+  ],
+  [
+    "generation gap",
+    "ช่องว่างระหว่างวัย"
+  ],
+  [
+    "cultural heritage",
+    "มรดกทางวัฒนธรรม"
+  ],
+  [
+    "consumerism",
+    "บริโภคนิยม"
+  ],
+  [
+    "social mobility",
+    "การเลื่อนสถานะทางสังคม"
+  ],
+  [
+    "peer pressure",
+    "แรงกดดันจากเพื่อน"
+  ],
+  [
+    "nuclear family",
+    "ครอบครัวเดี่ยว"
+  ],
+  [
+    "extended family",
+    "ครอบครัวขยาย"
+  ],
+  [
+    "cultural assimilation",
+    "การกลืนกลายทางวัฒนธรรม"
+  ],
+  [
+    "cultural identity",
+    "อัตลักษณ์ทางวัฒนธรรม"
+  ],
+  [
+    "multiculturalism",
+    "พหุวัฒนธรรม"
+  ],
+  [
+    "traditional values",
+    "ค่านิยมดั้งเดิม"
+  ],
+  [
+    "societal norm",
+    "บรรทัดฐานทางสังคม"
+  ],
+  [
+    "income disparity",
+    "ความแตกต่างของรายได้"
+  ],
+  [
+    "ageing population",
+    "ประชากรสูงวัย"
+  ],
+  [
+    "gender equality",
+    "ความเท่าเทียมทางเพศ"
+  ],
+  [
+    "antisocial behavior",
+    "พฤติกรรมต่อต้านสังคม"
+  ],
+  [
+    "civic responsibility",
+    "ความรับผิดชอบต่อสังคม"
+  ],
+  [
+    "volunteer work",
+    "งานอาสาสมัคร"
+  ],
+  [
+    "community engagement",
+    "การมีส่วนร่วมของชุมชน"
+  ],
+  [
+    "philanthropy",
+    "การกุศล"
+  ],
+  [
+    "unchecked expansion",
+    "การขยายตัวที่ไร้การควบคุม"
+  ],
+  [
+    "rural exodus",
+    "การอพยพออกจากชนบท"
+  ],
+  [
+    "gentrification",
+    "การปรับปรุงย่านให้หรูขึ้น"
+  ],
+  [
+    "social stratification",
+    "การแบ่งชั้นทางสังคม"
+  ],
+  [
+    "quality of life",
+    "คุณภาพชีวิต"
+  ],
+  [
+    "standard of living",
+    "มาตรฐานการครองชีพ"
+  ],
+  [
+    "pedagogical approach",
+    "แนวทางการสอน"
+  ],
+  [
+    "rote learning",
+    "การท่องจำ"
+  ],
+  [
+    "higher education",
+    "การศึกษาระดับสูง"
+  ],
+  [
+    "distance learning",
+    "การเรียนทางไกล"
+  ],
+  [
+    "lifelong learning",
+    "การเรียนรู้ตลอดชีวิต"
+  ],
+  [
+    "vocational training",
+    "การฝึกอาชีพ"
+  ],
+  [
+    "compulsory education",
+    "การศึกษาภาคบังคับ"
+  ],
+  [
+    "extracurricular activities",
+    "กิจกรรมนอกหลักสูตร"
+  ],
+  [
+    "student-centered learning",
+    "การเรียนที่เน้นผู้เรียนเป็นศูนย์กลาง"
+  ],
+  [
+    "standardized testing",
+    "การทดสอบมาตรฐาน"
+  ],
+  [
+    "academic pressure",
+    "ความกดดันทางการเรียน"
+  ],
+  [
+    "dropout rate",
+    "อัตราการออกกลางคัน"
+  ],
+  [
+    "literacy rate",
+    "อัตราการรู้หนังสือ"
+  ],
+  [
+    "private tutoring",
+    "การติวเตอร์ส่วนตัว"
+  ],
+  [
+    "single-sex school",
+    "โรงเรียนแยกเพศ"
+  ],
+  [
+    "boarding school",
+    "โรงเรียนประจำ"
+  ],
+  [
+    "scholarship fund",
+    "กองทุนทุนการศึกษา"
+  ],
+  [
+    "exam-oriented education",
+    "การศึกษาที่เน้นการสอบ"
+  ],
+  [
+    "critical thinking skills",
+    "ทักษะการคิดวิเคราะห์"
+  ],
+  [
+    "problem-solving skills",
+    "ทักษะการแก้ปัญหา"
+  ],
+  [
+    "unemployment rate",
+    "อัตราการว่างงาน"
+  ],
+  [
+    "income inequality",
+    "ความเหลื่อมล้ำทางรายได้"
+  ],
+  [
+    "work-life balance",
+    "สมดุลระหว่างชีวิตกับงาน"
+  ],
+  [
+    "a living income",
+    "รายได้ที่เพียงพอต่อการดำรงชีพ"
+  ],
+  [
+    "outsourcing",
+    "การจ้างงานภายนอก"
+  ],
+  [
+    "gig economy",
+    "เศรษฐกิจงานอิสระ"
+  ],
+  [
+    "financial stability",
+    "ความมั่นคงทางการเงิน"
+  ],
+  [
+    "career progression",
+    "ความก้าวหน้าในอาชีพ"
+  ],
+  [
+    "remote working",
+    "การทำงานทางไกล"
+  ],
+  [
+    "economic downturn",
+    "ภาวะเศรษฐกิจถดถอย"
+  ],
+  [
+    "cost of living",
+    "ค่าครองชีพ"
+  ],
+  [
+    "economic disparity",
+    "ความเหลื่อมล้ำทางเศรษฐกิจ"
+  ],
+  [
+    "automation of labor",
+    "การใช้ระบบอัตโนมัติแทนแรงงาน"
+  ],
+  [
+    "brain drain",
+    "การไหลออกของบุคลากรที่มีความสามารถ"
+  ],
+  [
+    "entrepreneurship",
+    "การเป็นผู้ประกอบการ"
+  ],
+  [
+    "long-term viability",
+    "ความยั่งยืนในระยะยาว"
+  ],
+  [
+    "overpopulation",
+    "ปัญหาประชากรล้นเกิน"
+  ],
+  [
+    "unsustainable practice",
+    "แนวปฏิบัติที่ไม่ยั่งยืน"
+  ],
+  [
+    "renewable resources",
+    "ทรัพยากรหมุนเวียน"
+  ],
+  [
+    "the status quo",
+    "สภาพที่เป็นอยู่ในปัจจุบัน"
+  ],
+  [
+    "an underlying cause",
+    "สาเหตุที่แฝงอยู่"
+  ],
+  [
+    "conservation efforts",
+    "ความพยายามในการอนุรักษ์"
+  ],
+  [
+    "a pressing concern",
+    "ประเด็นเร่งด่วนที่ต้องใส่ใจ"
+  ],
+  [
+    "collective responsibility",
+    "ความรับผิดชอบร่วมกัน"
+  ],
+  [
+    "urban planning",
+    "การวางผังเมือง"
+  ],
+  [
+    "public transportation system",
+    "ระบบขนส่งสาธารณะ"
+  ],
+  [
+    "traffic congestion",
+    "การจราจรติดขัด"
+  ],
+  [
+    "infrastructure development",
+    "การพัฒนาโครงสร้างพื้นฐาน"
+  ],
+  [
+    "a widening gap",
+    "ช่องว่างที่กว้างขึ้น"
+  ],
+  [
+    "information overload",
+    "ภาวะข้อมูลล้นเกิน"
+  ],
+  [
+    "social media addiction",
+    "การเสพติดสื่อสังคมออนไลน์"
+  ],
+  [
+    "screen time",
+    "เวลาหน้าจอ"
+  ],
+  [
+    "personal autonomy",
+    "อิสระในการตัดสินใจส่วนบุคคล"
+  ],
+  [
+    "fake news",
+    "ข่าวปลอม"
+  ],
+  [
+    "media literacy",
+    "การรู้เท่าทันสื่อ"
+  ],
+  [
+    "restricted access",
+    "การเข้าถึงที่ถูกจำกัด"
+  ],
+  [
+    "civil liberties",
+    "เสรีภาพของพลเมือง"
+  ],
+  [
+    "public opinion",
+    "ความคิดเห็นสาธารณะ"
+  ],
+  [
+    "propaganda",
+    "การโฆษณาชวนเชื่อ"
+  ],
+  [
+    "sedentary lifestyle",
+    "วิถีชีวิตที่ไม่ค่อยเคลื่อนไหว"
+  ],
+  [
+    "obesity epidemic",
+    "โรคระบาดโรคอ้วน"
+  ],
+  [
+    "preventive healthcare",
+    "การดูแลสุขภาพเชิงป้องกัน"
+  ],
+  [
+    "mental well-being",
+    "สุขภาวะทางจิตใจ"
+  ],
+  [
+    "work-related stress",
+    "ความเครียดจากการทำงาน"
+  ],
+  [
+    "balanced diet",
+    "อาหารที่สมดุล"
+  ],
+  [
+    "life expectancy",
+    "อายุขัยเฉลี่ย"
+  ],
+  [
+    "public health campaign",
+    "การรณรงค์สุขภาพสาธารณะ"
+  ],
+  [
+    "genetic engineering",
+    "พันธุวิศวกรรม"
+  ],
+  [
+    "artificial intelligence impact",
+    "ผลกระทบของปัญญาประดิษฐ์"
+  ],
+  [
+    "space exploration",
+    "การสำรวจอวกาศ"
+  ],
+  [
+    "scientific breakthrough",
+    "ความก้าวหน้าทางวิทยาศาสตร์ครั้งสำคัญ"
+  ],
+  [
+    "technological innovation",
+    "นวัตกรรมทางเทคโนโลยี"
+  ],
+  [
+    "ethical dilemma",
+    "ประเด็นขัดแย้งทางจริยธรรม"
+  ],
+  [
+    "moral obligation",
+    "ข้อผูกพันทางศีลธรรม"
+  ],
+  [
+    "human rights violation",
+    "การละเมิดสิทธิมนุษยชน"
+  ],
+  [
+    "societal accountability",
+    "ความรับผิดชอบของสังคม"
+  ],
+  [
+    "rehabilitation program",
+    "โครงการฟื้นฟูผู้กระทำผิด"
+  ],
+  [
+    "crime prevention",
+    "การป้องกันอาชญากรรม"
+  ],
+  [
+    "law enforcement",
+    "การบังคับใช้กฎหมาย"
+  ],
+  [
+    "public safety",
+    "ความปลอดภัยสาธารณะ"
+  ],
+  [
+    "mutual understanding",
+    "ความเข้าใจซึ่งกันและกัน"
+  ],
+  [
+    "globalization",
+    "โลกาภิวัตน์"
+  ],
+  [
+    "cultural globalization",
+    "โลกาภิวัตน์ทางวัฒนธรรม"
+  ],
+  [
+    "indigenous culture",
+    "วัฒนธรรมพื้นเมือง"
+  ],
+  [
+    "heritage preservation",
+    "การอนุรักษ์มรดก"
+  ],
+  [
+    "tourism industry",
+    "อุตสาหกรรมการท่องเที่ยว"
+  ],
+  [
+    "mass tourism",
+    "การท่องเที่ยวเชิงมวลชน"
+  ],
+  [
+    "responsible consumption",
+    "การบริโภคอย่างมีความรับผิดชอบ"
+  ],
+  [
+    "migration pattern",
+    "รูปแบบการย้ายถิ่น"
+  ],
+  [
+    "refugee crisis",
+    "วิกฤตผู้ลี้ภัย"
+  ],
+  [
+    "assimilate into society",
+    "หลอมรวมเข้ากับสังคม"
+  ],
+  [
+    "a communication gap",
+    "ช่องว่างในการสื่อสาร"
+  ],
+  [
+    "bilingual education",
+    "การศึกษาสองภาษา"
+  ],
+  [
+    "mother tongue",
+    "ภาษาแม่"
+  ],
+  [
+    "linguistic diversity",
+    "ความหลากหลายทางภาษา"
+  ],
+  [
+    "endangered language",
+    "ภาษาใกล้สูญหาย"
+  ],
+  [
+    "nonverbal communication",
+    "การสื่อสารแบบไม่ใช้คำพูด"
+  ],
+  [
+    "assertiveness",
+    "การกล้าแสดงออก"
+  ],
+  [
+    "interpersonal skills",
+    "ทักษะการปฏิสัมพันธ์กับผู้อื่น"
+  ],
+  [
+    "conflict resolution",
+    "การแก้ไขความขัดแย้ง"
+  ],
+  [
+    "negotiation skills",
+    "ทักษะการเจรจาต่อรอง"
+  ],
+  [
+    "leadership qualities",
+    "คุณสมบัติความเป็นผู้นำ"
+  ],
+  [
+    "decision-making process",
+    "กระบวนการตัดสินใจ"
+  ],
+  [
+    "risk assessment",
+    "การประเมินความเสี่ยง"
+  ],
+  [
+    "time-consuming process",
+    "กระบวนการที่ใช้เวลานาน"
+  ],
+  [
+    "cost-effective solution",
+    "วิธีแก้ปัญหาที่คุ้มค่า"
+  ],
+  [
+    "long-term impact",
+    "ผลกระทบระยะยาว"
+  ],
+  [
+    "short-term benefit",
+    "ผลประโยชน์ระยะสั้น"
+  ],
+  [
+    "far-reaching consequence",
+    "ผลกระทบที่กว้างไกล"
+  ],
+  [
+    "unintended consequence",
+    "ผลที่ไม่ได้ตั้งใจ"
+  ],
+  [
+    "viable alternative",
+    "ทางเลือกที่เป็นไปได้จริง"
+  ],
+  [
+    "comprehensive approach",
+    "แนวทางที่ครอบคลุม"
+  ],
+  [
+    "holistic view",
+    "มุมมองแบบองค์รวม"
+  ],
+  [
+    "controversial issue",
+    "ประเด็นที่เป็นข้อถกเถียง"
+  ],
+  [
+    "contentious debate",
+    "การถกเถียงที่ขัดแย้งกัน"
+  ],
+  [
+    "polarizing topic",
+    "หัวข้อที่แบ่งขั้วความเห็น"
+  ],
+  [
+    "prevailing view",
+    "มุมมองที่แพร่หลาย"
+  ],
+  [
+    "conventional wisdom",
+    "ความเชื่อดั้งเดิมที่ยอมรับกัน"
+  ],
+  [
+    "stereotype",
+    "อคติเหมารวม"
+  ],
+  [
+    "prejudice",
+    "อคติ"
+  ],
+  [
+    "unequal treatment",
+    "การปฏิบัติที่ไม่เท่าเทียมกัน"
+  ],
+  [
+    "tolerance and acceptance",
+    "ความอดทนอดกลั้นและการยอมรับ"
+  ],
+  [
+    "compassion",
+    "ความเมตตากรุณา"
+  ],
+  [
+    "altruism",
+    "ความเสียสละเพื่อผู้อื่น"
+  ],
+  [
+    "self-sufficiency",
+    "การพึ่งพาตนเอง"
+  ],
+  [
+    "resilience",
+    "ความยืดหยุ่นในการรับมือ"
+  ],
+  [
+    "open-mindedness",
+    "การเปิดใจกว้าง"
+  ],
+  [
+    "work ethic",
+    "จรรยาบรรณในการทำงาน"
+  ],
+  [
+    "procrastination",
+    "การผัดวันประกันพรุ่ง"
+  ],
+  [
+    "perseverance",
+    "ความมุ่งมั่นไม่ย่อท้อ"
+  ],
+  [
+    "ambition",
+    "ความทะเยอทะยาน"
+  ],
+  [
+    "complacency",
+    "ความพึงพอใจในสิ่งที่เป็นอยู่จนขาดความกระตือรือร้น"
+  ],
+  [
+    "self-discipline",
+    "วินัยในตนเอง"
+  ],
+  [
+    "intrinsic motivation",
+    "แรงจูงใจภายใน"
+  ],
+  [
+    "extrinsic motivation",
+    "แรงจูงใจภายนอก"
+  ],
+  [
+    "upbringing",
+    "การเลี้ยงดู"
+  ],
+  [
+    "parenting style",
+    "รูปแบบการเลี้ยงดูบุตร"
+  ],
+  [
+    "disciplinary method",
+    "วิธีการลงโทษอบรม"
+  ],
+  [
+    "role model",
+    "แบบอย่างที่ดี"
+  ],
+  [
+    "formative years",
+    "ช่วงวัยที่หล่อหลอมบุคลิกภาพ"
+  ],
+  [
+    "social etiquette",
+    "มารยาททางสังคม"
+  ],
+  [
+    "cultural norm",
+    "บรรทัดฐานทางวัฒนธรรม"
+  ],
+  [
+    "taboo subject",
+    "หัวข้อต้องห้าม"
+  ],
+  [
+    "superstition",
+    "ความเชื่องมงาย"
+  ],
+  [
+    "collective memory",
+    "ความทรงจำร่วมของสังคม"
+  ],
+  [
+    "oral tradition",
+    "ประเพณีที่สืบทอดด้วยปากเปล่า"
+  ],
+  [
+    "ceremonial custom",
+    "ธรรมเนียมพิธีกรรม"
+  ],
+  [
+    "rite of passage",
+    "พิธีกรรมผ่านช่วงวัย"
+  ],
+  [
+    "cultural taboo",
+    "ข้อห้ามทางวัฒนธรรม"
+  ],
+  [
+    "hospitality industry",
+    "อุตสาหกรรมการบริการต้อนรับ"
+  ],
+  [
+    "mass production",
+    "การผลิตจำนวนมาก"
+  ],
+  [
+    "planned obsolescence",
+    "การออกแบบให้ล้าสมัยตามแผน"
+  ],
+  [
+    "disposable income",
+    "รายได้ที่ใช้จ่ายได้อย่างอิสระ"
+  ],
+  [
+    "purchasing power",
+    "อำนาจซื้อ"
+  ],
+  [
+    "advertising strategy",
+    "กลยุทธ์การโฆษณา"
+  ],
+  [
+    "societal expectation",
+    "ความคาดหวังของสังคม"
+  ],
+  [
+    "impulse buying",
+    "การซื้อโดยไม่ได้วางแผน"
+  ],
+  [
+    "planned economy",
+    "ระบบเศรษฐกิจแบบวางแผน"
+  ],
+  [
+    "free market economy",
+    "ระบบเศรษฐกิจแบบตลาดเสรี"
+  ],
+  [
+    "subsidize an industry",
+    "ให้เงินอุดหนุนอุตสาหกรรม"
+  ],
+  [
+    "trade deficit",
+    "การขาดดุลการค้า"
+  ],
+  [
+    "import restriction",
+    "ข้อจำกัดการนำเข้า"
+  ],
+  [
+    "export-driven growth",
+    "การเติบโตที่ขับเคลื่อนด้วยการส่งออก"
+  ],
+  [
+    "foreign direct investment",
+    "การลงทุนโดยตรงจากต่างประเทศ"
+  ],
+  [
+    "developing nation",
+    "ประเทศกำลังพัฒนา"
+  ],
+  [
+    "developed nation",
+    "ประเทศพัฒนาแล้ว"
+  ],
+  [
+    "socio-economic status",
+    "สถานะทางเศรษฐกิจและสังคม"
+  ],
+  [
+    "policy reform",
+    "การปฏิรูปนโยบาย"
+  ],
+  [
+    "government regulation",
+    "กฎระเบียบของรัฐบาล"
+  ],
+  [
+    "public expenditure",
+    "รายจ่ายภาครัฐ"
+  ],
+  [
+    "welfare state",
+    "รัฐสวัสดิการ"
+  ],
+  [
+    "taxation system",
+    "ระบบภาษี"
+  ],
+  [
+    "equal access to services",
+    "การเข้าถึงบริการอย่างเท่าเทียม"
+  ],
+  [
+    "pension scheme",
+    "ระบบบำนาญ"
+  ],
+  [
+    "retirement age",
+    "อายุเกษียณ"
+  ],
+  [
+    "digital nomad",
+    "คนทำงานเร่ร่อนดิจิทัล"
+  ],
+  [
+    "work from home arrangement",
+    "การจัดรูปแบบทำงานที่บ้าน"
+  ],
+  [
+    "flexible working hours",
+    "เวลาทำงานที่ยืดหยุ่น"
+  ],
+  [
+    "corporate responsibility",
+    "ความรับผิดชอบขององค์กร"
+  ],
+  [
+    "ethical consumerism",
+    "การบริโภคอย่างมีจริยธรรม"
+  ],
+  [
+    "fair trade product",
+    "สินค้าการค้าที่เป็นธรรม"
+  ],
+  [
+    "carbon-neutral policy",
+    "นโยบายปลอดคาร์บอนสุทธิ"
+  ],
+  [
+    "a growing trend",
+    "แนวโน้มที่กำลังเพิ่มขึ้น"
+  ],
+  [
+    "recyclable packaging",
+    "บรรจุภัณฑ์ที่นำกลับมาใช้ใหม่ได้"
+  ],
+  [
+    "a shift in mindset",
+    "การเปลี่ยนแปลงกรอบความคิด"
+  ],
+  [
+    "extreme weather event",
+    "เหตุการณ์สภาพอากาศสุดขั้ว"
+  ],
+  [
+    "natural disaster relief",
+    "การบรรเทาภัยพิบัติทางธรรมชาติ"
+  ],
+  [
+    "basic necessities",
+    "ปัจจัยพื้นฐานในการดำรงชีวิต"
+  ],
+  [
+    "a scarce resource",
+    "ทรัพยากรที่หายาก"
+  ],
+  [
+    "energy consumption",
+    "การใช้พลังงาน"
+  ],
+  [
+    "fossil fuel dependency",
+    "การพึ่งพาเชื้อเพลิงฟอสซิล"
+  ],
+  [
+    "renewable energy transition",
+    "การเปลี่ยนผ่านสู่พลังงานหมุนเวียน"
+  ],
+  [
+    "public awareness campaign",
+    "การรณรงค์สร้างความตระหนักในสาธารณะ"
+  ],
+  [
+    "grassroots movement",
+    "ขบวนการระดับรากหญ้า"
+  ],
+  [
+    "policy advocacy",
+    "การรณรงค์เชิงนโยบาย"
+  ],
+  [
+    "think tank",
+    "สถาบันคลังสมอง"
+  ],
+  [
+    "case study analysis",
+    "การวิเคราะห์กรณีศึกษา"
+  ],
+  [
+    "empirical evidence",
+    "หลักฐานเชิงประจักษ์"
+  ],
+  [
+    "anecdotal evidence",
+    "หลักฐานเชิงเล่าสู่กันฟัง"
+  ],
+  [
+    "statistical data",
+    "ข้อมูลเชิงสถิติ"
+  ],
+  [
+    "survey findings",
+    "ผลการสำรวจ"
+  ],
+  [
+    "a rule of thumb",
+    "กฎง่ายๆ ที่ใช้ประมาณการ"
+  ],
+  [
+    "qualitative research",
+    "การวิจัยเชิงคุณภาพ"
+  ],
+  [
+    "quantitative research",
+    "การวิจัยเชิงปริมาณ"
+  ],
+  [
+    "longitudinal study",
+    "การศึกษาระยะยาว"
+  ]
+]

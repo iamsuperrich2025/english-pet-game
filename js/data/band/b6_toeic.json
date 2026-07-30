@@ -1,0 +1,942 @@
+[
+  [
+    "memo",
+    "บันทึกข้อความภายใน"
+  ],
+  [
+    "roundtable discussion",
+    "การประชุมโต๊ะกลม"
+  ],
+  [
+    "minutes of meeting",
+    "รายงานการประชุม"
+  ],
+  [
+    "filing cabinet",
+    "ตู้เก็บเอกสาร"
+  ],
+  [
+    "office supplies",
+    "เครื่องใช้สำนักงาน"
+  ],
+  [
+    "photocopier",
+    "เครื่องถ่ายเอกสาร"
+  ],
+  [
+    "stationery",
+    "เครื่องเขียน"
+  ],
+  [
+    "staff directory",
+    "ทำเนียบพนักงาน"
+  ],
+  [
+    "organizational chart",
+    "ผังโครงสร้างองค์กร"
+  ],
+  [
+    "front office",
+    "แผนกต้อนรับส่วนหน้า"
+  ],
+  [
+    "conference room",
+    "ห้องประชุม"
+  ],
+  [
+    "break room",
+    "ห้องพักพนักงาน"
+  ],
+  [
+    "ID badge",
+    "บัตรพนักงาน"
+  ],
+  [
+    "workday schedule",
+    "ตารางเวลาทำงานในแต่ละวัน"
+  ],
+  [
+    "reschedule a meeting",
+    "เลื่อนการประชุม"
+  ],
+  [
+    "postpone",
+    "เลื่อนออกไป"
+  ],
+  [
+    "conference call",
+    "การประชุมทางโทรศัพท์"
+  ],
+  [
+    "video conferencing",
+    "การประชุมทางวิดีโอ"
+  ],
+  [
+    "attendee",
+    "ผู้เข้าร่วมประชุม"
+  ],
+  [
+    "venue",
+    "สถานที่จัดงาน"
+  ],
+  [
+    "itinerary",
+    "กำหนดการเดินทาง"
+  ],
+  [
+    "keynote speaker",
+    "วิทยากรหลัก"
+  ],
+  [
+    "seminar",
+    "การสัมมนา"
+  ],
+  [
+    "workshop session",
+    "ช่วงการอบรมเชิงปฏิบัติการ"
+  ],
+  [
+    "orientation program",
+    "โปรแกรมปฐมนิเทศ"
+  ],
+  [
+    "cc (carbon copy)",
+    "สำเนาถึง"
+  ],
+  [
+    "attachment",
+    "ไฟล์แนบ"
+  ],
+  [
+    "enclosure",
+    "เอกสารแนบ"
+  ],
+  [
+    "subject line",
+    "หัวเรื่องอีเมล"
+  ],
+  [
+    "formal letter",
+    "จดหมายทางการ"
+  ],
+  [
+    "out of office reply",
+    "ข้อความตอบกลับอัตโนมัติ"
+  ],
+  [
+    "business correspondence",
+    "จดหมายโต้ตอบทางธุรกิจ"
+  ],
+  [
+    "memorandum",
+    "บันทึกข้อความ"
+  ],
+  [
+    "letterhead",
+    "หัวกระดาษจดหมาย"
+  ],
+  [
+    "recipient",
+    "ผู้รับ"
+  ],
+  [
+    "job vacancy",
+    "ตำแหน่งงานว่าง"
+  ],
+  [
+    "cover letter",
+    "จดหมายสมัครงาน"
+  ],
+  [
+    "résumé",
+    "ประวัติย่อ"
+  ],
+  [
+    "interview panel",
+    "คณะกรรมการสัมภาษณ์"
+  ],
+  [
+    "probation period",
+    "ระยะเวลาทดลองงาน"
+  ],
+  [
+    "fringe benefit",
+    "สวัสดิการเสริม"
+  ],
+  [
+    "performance appraisal",
+    "การประเมินผลการปฏิบัติงาน"
+  ],
+  [
+    "job description",
+    "รายละเอียดงาน"
+  ],
+  [
+    "job applicant",
+    "ผู้สมัครงาน"
+  ],
+  [
+    "onboarding process",
+    "กระบวนการปฐมนิเทศพนักงานใหม่"
+  ],
+  [
+    "employee turnover",
+    "อัตราการลาออกของพนักงาน"
+  ],
+  [
+    "staff training",
+    "การฝึกอบรมพนักงาน"
+  ],
+  [
+    "annual leave",
+    "วันลาพักร้อนประจำปี"
+  ],
+  [
+    "sick leave",
+    "วันลาป่วย"
+  ],
+  [
+    "shift differential pay",
+    "ค่าตอบแทนพิเศษตามกะทำงาน"
+  ],
+  [
+    "severance package",
+    "แพ็กเกจชดเชยการเลิกจ้าง"
+  ],
+  [
+    "job promotion",
+    "การเลื่อนตำแหน่ง"
+  ],
+  [
+    "staff meeting",
+    "การประชุมพนักงาน"
+  ],
+  [
+    "team building activity",
+    "กิจกรรมสร้างทีม"
+  ],
+  [
+    "workplace diversity",
+    "ความหลากหลายในที่ทำงาน"
+  ],
+  [
+    "billing statement",
+    "ใบแจ้งยอดเรียกเก็บเงิน"
+  ],
+  [
+    "proof of purchase",
+    "หลักฐานการซื้อ"
+  ],
+  [
+    "purchase order",
+    "ใบสั่งซื้อ"
+  ],
+  [
+    "expense report",
+    "รายงานค่าใช้จ่าย"
+  ],
+  [
+    "budget forecast",
+    "การคาดการณ์งบประมาณ"
+  ],
+  [
+    "quarterly report",
+    "รายงานประจำไตรมาส"
+  ],
+  [
+    "annual revenue",
+    "รายได้ประจำปี"
+  ],
+  [
+    "profit margin",
+    "อัตรากำไร"
+  ],
+  [
+    "payment voucher",
+    "ใบสำคัญจ่ายเงิน"
+  ],
+  [
+    "revenue stream",
+    "ช่องทางรายได้"
+  ],
+  [
+    "accounts payable",
+    "เจ้าหนี้การค้า"
+  ],
+  [
+    "accounts receivable",
+    "ลูกหนี้การค้า"
+  ],
+  [
+    "tax deduction",
+    "การหักลดหย่อนภาษี"
+  ],
+  [
+    "financial statement",
+    "งบการเงิน"
+  ],
+  [
+    "bank transfer",
+    "การโอนเงินธนาคาร"
+  ],
+  [
+    "credit terms",
+    "เงื่อนไขการชำระเงินเชื่อ"
+  ],
+  [
+    "outstanding balance",
+    "ยอดค้างชำระ"
+  ],
+  [
+    "late payment fee",
+    "ค่าปรับชำระล่าช้า"
+  ],
+  [
+    "reimbursement",
+    "การเบิกจ่ายคืน"
+  ],
+  [
+    "petty cash",
+    "เงินสดย่อย"
+  ],
+  [
+    "shipment",
+    "การขนส่งสินค้า"
+  ],
+  [
+    "warehouse",
+    "คลังสินค้า"
+  ],
+  [
+    "stockroom",
+    "ห้องเก็บสินค้า"
+  ],
+  [
+    "supplier",
+    "ผู้จัดหาสินค้า"
+  ],
+  [
+    "delivery deadline",
+    "กำหนดส่งมอบสินค้า"
+  ],
+  [
+    "customs clearance",
+    "การผ่านพิธีการศุลกากร"
+  ],
+  [
+    "freight charge",
+    "ค่าขนส่งสินค้า"
+  ],
+  [
+    "bill of lading",
+    "ใบตราส่งสินค้า"
+  ],
+  [
+    "procurement process",
+    "กระบวนการจัดซื้อ"
+  ],
+  [
+    "backorder",
+    "สินค้าที่ค้างส่ง"
+  ],
+  [
+    "stock shortage",
+    "สินค้าขาดตลาด"
+  ],
+  [
+    "quality control inspection",
+    "การตรวจสอบควบคุมคุณภาพ"
+  ],
+  [
+    "packaging label",
+    "ฉลากบรรจุภัณฑ์"
+  ],
+  [
+    "distribution channel",
+    "ช่องทางการจัดจำหน่าย"
+  ],
+  [
+    "logistics coordinator",
+    "ผู้ประสานงานด้านโลจิสติกส์"
+  ],
+  [
+    "business partner",
+    "พันธมิตรทางธุรกิจ"
+  ],
+  [
+    "promotion campaign",
+    "แคมเปญส่งเสริมการขาย"
+  ],
+  [
+    "discount code",
+    "รหัสส่วนลด"
+  ],
+  [
+    "customer base",
+    "ฐานลูกค้า"
+  ],
+  [
+    "repeat customer",
+    "ลูกค้าประจำ"
+  ],
+  [
+    "customer feedback",
+    "ความคิดเห็นของลูกค้า"
+  ],
+  [
+    "sales target",
+    "เป้าหมายยอดขาย"
+  ],
+  [
+    "sales pitch",
+    "การนำเสนอขาย"
+  ],
+  [
+    "cold calling",
+    "การโทรหาลูกค้าโดยไม่ได้นัดหมาย"
+  ],
+  [
+    "customer retention",
+    "การรักษาฐานลูกค้า"
+  ],
+  [
+    "rewards card",
+    "บัตรสะสมคะแนน"
+  ],
+  [
+    "product launch",
+    "การเปิดตัวสินค้า"
+  ],
+  [
+    "market research",
+    "การวิจัยตลาด"
+  ],
+  [
+    "target audience",
+    "กลุ่มเป้าหมาย"
+  ],
+  [
+    "competitive pricing",
+    "การตั้งราคาแข่งขัน"
+  ],
+  [
+    "seat assignment",
+    "การจัดที่นั่ง"
+  ],
+  [
+    "check-in counter",
+    "เคาน์เตอร์เช็กอิน"
+  ],
+  [
+    "hotel reservation",
+    "การจองโรงแรม"
+  ],
+  [
+    "economy class upgrade",
+    "การอัปเกรดที่นั่งชั้นประหยัด"
+  ],
+  [
+    "gate change",
+    "การเปลี่ยนประตูขึ้นเครื่อง"
+  ],
+  [
+    "meal voucher",
+    "คูปองอาหาร"
+  ],
+  [
+    "expense claim",
+    "การเบิกค่าใช้จ่าย"
+  ],
+  [
+    "per diem allowance",
+    "เบี้ยเลี้ยงรายวัน"
+  ],
+  [
+    "conference badge",
+    "บัตรผู้เข้าร่วมงานประชุม"
+  ],
+  [
+    "airport shuttle",
+    "รถรับส่งสนามบิน"
+  ],
+  [
+    "luggage allowance",
+    "น้ำหนักกระเป๋าที่อนุญาต"
+  ],
+  [
+    "frequent flyer program",
+    "โปรแกรมสะสมไมล์"
+  ],
+  [
+    "visa application",
+    "การขอวีซ่า"
+  ],
+  [
+    "business trip",
+    "การเดินทางไปทำธุรกิจ"
+  ],
+  [
+    "corporate travel policy",
+    "นโยบายการเดินทางขององค์กร"
+  ],
+  [
+    "whiteboard marker",
+    "ปากกาไวท์บอร์ด"
+  ],
+  [
+    "laptop docking station",
+    "แท่นเชื่อมต่อแล็ปท็อป"
+  ],
+  [
+    "wireless printer",
+    "เครื่องพิมพ์ไร้สาย"
+  ],
+  [
+    "office intranet",
+    "ระบบเครือข่ายภายในสำนักงาน"
+  ],
+  [
+    "user account setup",
+    "การตั้งค่าบัญชีผู้ใช้งาน"
+  ],
+  [
+    "technical support desk",
+    "แผนกช่วยเหลือด้านเทคนิค"
+  ],
+  [
+    "password reset",
+    "การรีเซ็ตรหัสผ่าน"
+  ],
+  [
+    "cloud storage account",
+    "บัญชีพื้นที่จัดเก็บข้อมูลบนคลาวด์"
+  ],
+  [
+    "office renovation",
+    "การปรับปรุงสำนักงาน"
+  ],
+  [
+    "ergonomic chair",
+    "เก้าอี้เพื่อสุขภาพตามหลักสรีรศาสตร์"
+  ],
+  [
+    "contract renewal",
+    "การต่อสัญญา"
+  ],
+  [
+    "payment terms",
+    "เงื่อนไขการชำระเงิน"
+  ],
+  [
+    "vendor agreement",
+    "ข้อตกลงกับผู้จำหน่าย"
+  ],
+  [
+    "lease agreement",
+    "สัญญาเช่า"
+  ],
+  [
+    "contract amendment",
+    "การแก้ไขสัญญา"
+  ],
+  [
+    "compliance officer",
+    "เจ้าหน้าที่กำกับดูแลการปฏิบัติตามกฎ"
+  ],
+  [
+    "liability clause",
+    "ข้อกำหนดความรับผิด"
+  ],
+  [
+    "warranty period",
+    "ระยะเวลารับประกัน"
+  ],
+  [
+    "service level agreement",
+    "ข้อตกลงระดับการให้บริการ"
+  ],
+  [
+    "subcontractor",
+    "ผู้รับเหมาช่วง"
+  ],
+  [
+    "executive committee",
+    "คณะกรรมการบริหาร"
+  ],
+  [
+    "shareholder meeting",
+    "การประชุมผู้ถือหุ้น"
+  ],
+  [
+    "merger and acquisition",
+    "การควบรวมและซื้อกิจการ"
+  ],
+  [
+    "corporate restructuring",
+    "การปรับโครงสร้างองค์กร"
+  ],
+  [
+    "executive summary",
+    "บทสรุปผู้บริหาร"
+  ],
+  [
+    "managing director",
+    "กรรมการผู้จัดการ"
+  ],
+  [
+    "human resources department",
+    "แผนกทรัพยากรบุคคล"
+  ],
+  [
+    "department head",
+    "หัวหน้าแผนก"
+  ],
+  [
+    "direct supervisor",
+    "หัวหน้างานโดยตรง"
+  ],
+  [
+    "staff attrition",
+    "การขาดหายไปของบุคลากรในองค์กร"
+  ],
+  [
+    "company policy",
+    "นโยบายบริษัท"
+  ],
+  [
+    "code of conduct",
+    "จรรยาบรรณ"
+  ],
+  [
+    "confidentiality agreement",
+    "ข้อตกลงการรักษาความลับ"
+  ],
+  [
+    "workplace safety regulation",
+    "กฎระเบียบความปลอดภัยในที่ทำงาน"
+  ],
+  [
+    "fire drill",
+    "การฝึกซ้อมหนีไฟ"
+  ],
+  [
+    "public announcement",
+    "การประกาศต่อสาธารณะ"
+  ],
+  [
+    "press release",
+    "แถลงข่าว"
+  ],
+  [
+    "product recall",
+    "การเรียกคืนสินค้า"
+  ],
+  [
+    "customer complaint",
+    "ข้อร้องเรียนของลูกค้า"
+  ],
+  [
+    "customer satisfaction survey",
+    "แบบสำรวจความพึงพอใจลูกค้า"
+  ],
+  [
+    "service hotline",
+    "สายด่วนบริการลูกค้า"
+  ],
+  [
+    "warranty claim",
+    "การเคลมประกัน"
+  ],
+  [
+    "store credit",
+    "เครดิตร้านค้า"
+  ],
+  [
+    "exchange policy",
+    "นโยบายการเปลี่ยนสินค้า"
+  ],
+  [
+    "order confirmation",
+    "การยืนยันคำสั่งซื้อ"
+  ],
+  [
+    "subscription plan",
+    "แผนสมาชิก"
+  ],
+  [
+    "membership renewal",
+    "การต่ออายุสมาชิก"
+  ],
+  [
+    "billing cycle",
+    "รอบการเรียกเก็บเงิน"
+  ],
+  [
+    "utility bill",
+    "ค่าสาธารณูปโภค"
+  ],
+  [
+    "office lease",
+    "สัญญาเช่าสำนักงาน"
+  ],
+  [
+    "real estate agent",
+    "นายหน้าอสังหาริมทรัพย์"
+  ],
+  [
+    "property listing",
+    "รายการอสังหาริมทรัพย์"
+  ],
+  [
+    "down payment",
+    "เงินดาวน์"
+  ],
+  [
+    "mortgage loan",
+    "สินเชื่อบ้าน"
+  ],
+  [
+    "interest rate",
+    "อัตราดอกเบี้ย"
+  ],
+  [
+    "loan installment",
+    "งวดผ่อนชำระเงินกู้"
+  ],
+  [
+    "credit rating",
+    "อันดับความน่าเชื่อถือทางเครดิต"
+  ],
+  [
+    "bank statement",
+    "รายการเดินบัญชีธนาคาร"
+  ],
+  [
+    "automated teller machine",
+    "ตู้เอทีเอ็ม"
+  ],
+  [
+    "direct deposit",
+    "การโอนเงินเข้าบัญชีโดยตรง"
+  ],
+  [
+    "wire transfer fee",
+    "ค่าธรรมเนียมการโอนเงิน"
+  ],
+  [
+    "overdraft",
+    "การเบิกเงินเกินบัญชี"
+  ],
+  [
+    "fixed deposit account",
+    "บัญชีเงินฝากประจำ"
+  ],
+  [
+    "insurance premium",
+    "เบี้ยประกันภัย"
+  ],
+  [
+    "insurance policy",
+    "กรมธรรม์ประกันภัย"
+  ],
+  [
+    "claim adjuster",
+    "เจ้าหน้าที่ประเมินค่าสินไหม"
+  ],
+  [
+    "deductible amount",
+    "จำนวนเงินที่ต้องรับผิดชอบเอง"
+  ],
+  [
+    "coverage plan",
+    "แผนความคุ้มครอง"
+  ],
+  [
+    "risk management strategy",
+    "กลยุทธ์การบริหารความเสี่ยง"
+  ],
+  [
+    "asset allocation",
+    "การจัดสรรสินทรัพย์"
+  ],
+  [
+    "stock portfolio",
+    "พอร์ตหุ้น"
+  ],
+  [
+    "dividend payout",
+    "การจ่ายเงินปันผล"
+  ],
+  [
+    "market volatility",
+    "ความผันผวนของตลาด"
+  ],
+  [
+    "annual general meeting",
+    "การประชุมสามัญประจำปี"
+  ],
+  [
+    "quorum requirement",
+    "องค์ประชุมที่กำหนด"
+  ],
+  [
+    "service agreement",
+    "ข้อตกลงการให้บริการ"
+  ],
+  [
+    "letter of intent",
+    "หนังสือแสดงเจตจำนง"
+  ],
+  [
+    "business proposal",
+    "ข้อเสนอทางธุรกิจ"
+  ],
+  [
+    "feasibility study",
+    "การศึกษาความเป็นไปได้"
+  ],
+  [
+    "project timeline",
+    "กรอบเวลาโครงการ"
+  ],
+  [
+    "milestone deadline",
+    "กำหนดการที่สำคัญของโครงการ"
+  ],
+  [
+    "deliverable",
+    "ผลงานที่ต้องส่งมอบ"
+  ],
+  [
+    "progress report",
+    "รายงานความคืบหน้า"
+  ],
+  [
+    "stakeholder",
+    "ผู้มีส่วนได้ส่วนเสีย"
+  ],
+  [
+    "kickoff meeting",
+    "การประชุมเริ่มต้นโครงการ"
+  ],
+  [
+    "brainstorming session",
+    "การระดมความคิด"
+  ],
+  [
+    "action item",
+    "รายการงานที่ต้องดำเนินการ"
+  ],
+  [
+    "follow-up email",
+    "อีเมลติดตามผล"
+  ],
+  [
+    "deadline extension",
+    "การขยายกำหนดเวลา"
+  ],
+  [
+    "quality assurance",
+    "การประกันคุณภาพ"
+  ],
+  [
+    "customer service representative",
+    "พนักงานบริการลูกค้า"
+  ],
+  [
+    "call center agent",
+    "เจ้าหน้าที่ศูนย์บริการโทรศัพท์"
+  ],
+  [
+    "front desk officer",
+    "เจ้าหน้าที่แผนกต้อนรับ"
+  ],
+  [
+    "administrative assistant",
+    "ผู้ช่วยงานธุรการ"
+  ],
+  [
+    "office manager",
+    "ผู้จัดการสำนักงาน"
+  ],
+  [
+    "personal assistant",
+    "ผู้ช่วยส่วนตัว"
+  ],
+  [
+    "freelance contractor",
+    "ผู้รับจ้างอิสระ"
+  ],
+  [
+    "part-time employee",
+    "พนักงานพาร์ทไทม์"
+  ],
+  [
+    "full-time position",
+    "ตำแหน่งงานประจำ"
+  ],
+  [
+    "temporary staff",
+    "พนักงานชั่วคราว"
+  ],
+  [
+    "retail store manager",
+    "ผู้จัดการร้านค้าปลีก"
+  ],
+  [
+    "inventory clerk",
+    "เสมียนสินค้าคงคลัง"
+  ],
+  [
+    "shift schedule",
+    "ตารางกะการทำงาน"
+  ],
+  [
+    "punch in and out",
+    "การตอกบัตรเข้าออกงาน"
+  ],
+  [
+    "dress code policy",
+    "นโยบายการแต่งกาย"
+  ],
+  [
+    "employee handbook",
+    "คู่มือพนักงาน"
+  ],
+  [
+    "grievance procedure",
+    "ขั้นตอนการร้องทุกข์"
+  ],
+  [
+    "exit interview",
+    "การสัมภาษณ์พนักงานลาออก"
+  ],
+  [
+    "retirement plan",
+    "แผนเกษียณอายุ"
+  ],
+  [
+    "pay raise",
+    "การขึ้นเงินเดือน"
+  ],
+  [
+    "salary negotiation",
+    "การเจรจาต่อรองเงินเดือน"
+  ],
+  [
+    "bonus scheme",
+    "โครงการโบนัส"
+  ],
+  [
+    "commission-based pay",
+    "ค่าตอบแทนตามค่าคอมมิชชัน"
+  ],
+  [
+    "hourly wage",
+    "ค่าจ้างรายชั่วโมง"
+  ],
+  [
+    "payroll department",
+    "แผนกจ่ายเงินเดือน"
+  ]
+]

@@ -1,0 +1,17 @@
+[
+  ["essay question", "คำถามแบบเขียนเรียงความ"], ["evaluative judgment", "การตัดสินเชิงประเมินค่า"], ["exchange student", "นักศึกษาแลกเปลี่ยน"], ["experimental group", "กลุ่มทดลอง"], ["extra credit assignment", "งานเสริมคะแนนพิเศษ"],
+  ["extracurricular activity", "กิจกรรมนอกหลักสูตร"], ["faculty member", "อาจารย์ประจำ"], ["field research", "การวิจัยภาคสนาม"], ["field trip", "การทัศนศึกษา"], ["financial aid office", "สำนักงานทุนการศึกษา"],
+  ["flipped classroom", "ห้องเรียนกลับด้าน"], ["footnote", "เชิงอรรถ"], ["formal register", "ระดับภาษาที่เป็นทางการ"], ["freshman orientation", "ปฐมนิเทศนักศึกษาปีหนึ่ง"], ["glossary of terms", "อภิธานศัพท์"],
+  ["grade point average", "เกรดเฉลี่ยสะสม"], ["grading rubric", "เกณฑ์การให้คะแนน"], ["graduate assistant", "ผู้ช่วยสอนระดับบัณฑิตศึกษา"], ["graduation ceremony", "พิธีสำเร็จการศึกษา"], ["group discussion assignment", "งานมอบหมายแบบอภิปรายกลุ่ม"],
+  ["guest lecturer", "วิทยากรรับเชิญ"], ["hypothetical example", "ตัวอย่างสมมติ"], ["hypothetical scenario", "สถานการณ์สมมติ"], ["illustrate a point", "ยกตัวอย่างประกอบประเด็น"], ["independent study", "การศึกษาค้นคว้าอิสระ"],
+  ["independent task", "โจทย์แบบเดี่ยว"], ["independent variable", "ตัวแปรอิสระ"], ["individual assignment", "งานมอบหมายรายบุคคล"], ["inductive reasoning", "การให้เหตุผลแบบอุปนัย"], ["inference question", "คำถามเชิงอนุมาน"],
+  ["integrated task", "โจทย์แบบผสมทักษะ"], ["intellectual curiosity", "ความอยากรู้อยากเห็นเชิงปัญญา"], ["intellectual discourse", "การสนทนาเชิงปัญญา"], ["interdisciplinary studies", "การศึกษาแบบสหวิทยาการ"], ["international student advisor", "อาจารย์ที่ปรึกษานักศึกษาต่างชาติ"],
+  ["laboratory equipment", "อุปกรณ์ห้องปฏิบัติการ"], ["laboratory report", "รายงานผลปฏิบัติการ"], ["laboratory session", "ช่วงการเรียนในห้องปฏิบัติการ"], ["landmark study", "งานศึกษาที่เป็นจุดเปลี่ยนสำคัญ"], ["lecture comprehension", "ความเข้าใจการบรรยาย"],
+  ["lecture hall", "ห้องบรรยาย"], ["lecture notes", "บันทึกการบรรยาย"], ["literature review", "การทบทวนวรรณกรรม"], ["logical fallacy", "การให้เหตุผลที่ผิดพลาด"], ["longitudinal research", "งานวิจัยระยะยาว"],
+  ["main idea", "ใจความสำคัญ"], ["margin of error", "ค่าความคลาดเคลื่อน"], ["massive open online course", "หลักสูตรออนไลน์แบบเปิดสำหรับมวลชน"], ["meal plan", "แผนอาหารมหาวิทยาลัย"], ["metacognitive strategy", "กลยุทธ์การรู้คิดเหนือการรู้คิด"],
+  ["multiple-choice question", "คำถามแบบเลือกตอบ"], ["note-taking strategy", "กลยุทธ์การจดบันทึก"], ["nuanced argument", "ข้อโต้แย้งที่มีรายละเอียดปลีกย่อย"], ["objective viewpoint", "มุมมองที่เป็นกลาง"], ["office hours", "เวลาให้คำปรึกษาของอาจารย์"],
+  ["office of admissions", "สำนักงานรับสมัครนักศึกษา"], ["open-book test", "การสอบแบบเปิดตำรา"], ["oral defense", "การสอบป้องกันวิทยานิพนธ์"], ["oral presentation", "การนำเสนอด้วยปากเปล่า"], ["organizational pattern", "รูปแบบการจัดเรียงเนื้อหา"],
+  ["orientation week", "สัปดาห์ปฐมนิเทศ"], ["outline a plan", "ร่างโครงเรื่อง"], ["paradigm shift", "การเปลี่ยนกระบวนทัศน์"], ["paraphrase a sentence", "เรียบเรียงประโยคใหม่"], ["peer review", "การตรวจสอบโดยผู้เชี่ยวชาญร่วมสาขา"],
+  ["peer tutoring", "การติวโดยเพื่อนนักศึกษา"], ["peer-reviewed article", "บทความที่ผ่านการตรวจสอบโดยผู้เชี่ยวชาญ"], ["persuasive essay", "เรียงความโน้มน้าวใจ"], ["pilot study", "การศึกษานำร่อง"], ["plagiarism", "การลอกเลียนผลงาน"],
+  ["poster presentation", "การนำเสนอผลงานแบบโปสเตอร์"], ["postgraduate program", "หลักสูตรบัณฑิตศึกษา"], ["prerequisite course", "วิชาที่ต้องเรียนมาก่อน"], ["primary source", "แหล่งข้อมูลปฐมภูมิ"], ["prior knowledge", "ความรู้พื้นฐานเดิม"]
+]

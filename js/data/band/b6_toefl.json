@@ -1,0 +1,802 @@
+[
+  [
+    "campus dining hall",
+    "โรงอาหารในมหาวิทยาลัย"
+  ],
+  [
+    "academic advisor",
+    "อาจารย์ที่ปรึกษา"
+  ],
+  [
+    "registrar's office",
+    "สำนักทะเบียน"
+  ],
+  [
+    "tuition fee",
+    "ค่าเล่าเรียน"
+  ],
+  [
+    "financial aid office",
+    "สำนักงานทุนการศึกษา"
+  ],
+  [
+    "syllabus",
+    "ประมวลรายวิชา"
+  ],
+  [
+    "lecture hall",
+    "ห้องบรรยาย"
+  ],
+  [
+    "office hours",
+    "เวลาให้คำปรึกษาของอาจารย์"
+  ],
+  [
+    "academic transcript",
+    "ใบแสดงผลการศึกษา"
+  ],
+  [
+    "credit hours",
+    "หน่วยกิต"
+  ],
+  [
+    "prerequisite course",
+    "วิชาที่ต้องเรียนมาก่อน"
+  ],
+  [
+    "elective course",
+    "วิชาเลือก"
+  ],
+  [
+    "core curriculum",
+    "หลักสูตรแกนกลาง"
+  ],
+  [
+    "academic calendar",
+    "ปฏิทินการศึกษา"
+  ],
+  [
+    "freshman orientation",
+    "ปฐมนิเทศนักศึกษาปีหนึ่ง"
+  ],
+  [
+    "undergraduate program",
+    "หลักสูตรปริญญาตรี"
+  ],
+  [
+    "postgraduate program",
+    "หลักสูตรบัณฑิตศึกษา"
+  ],
+  [
+    "qualifying exam",
+    "การสอบวัดคุณสมบัติ"
+  ],
+  [
+    "faculty member",
+    "อาจารย์ประจำ"
+  ],
+  [
+    "tenure track",
+    "เส้นทางสู่ตำแหน่งประจำ"
+  ],
+  [
+    "academic probation",
+    "การถูกภาคทัณฑ์ทางวิชาการ"
+  ],
+  [
+    "grade point average",
+    "เกรดเฉลี่ยสะสม"
+  ],
+  [
+    "academic integrity",
+    "ความซื่อสัตย์ทางวิชาการ"
+  ],
+  [
+    "plagiarism",
+    "การลอกเลียนผลงาน"
+  ],
+  [
+    "citation format",
+    "รูปแบบการอ้างอิง"
+  ],
+  [
+    "thesis statement",
+    "ประโยคใจความหลักของวิทยานิพนธ์"
+  ],
+  [
+    "literature review",
+    "การทบทวนวรรณกรรม"
+  ],
+  [
+    "peer review",
+    "การตรวจสอบโดยผู้เชี่ยวชาญร่วมสาขา"
+  ],
+  [
+    "research methodology",
+    "ระเบียบวิธีวิจัย"
+  ],
+  [
+    "empirical study",
+    "การศึกษาเชิงประจักษ์"
+  ],
+  [
+    "correlation versus causation",
+    "ความสัมพันธ์เทียบกับความเป็นเหตุเป็นผล"
+  ],
+  [
+    "pilot study",
+    "การศึกษานำร่อง"
+  ],
+  [
+    "experimental group",
+    "กลุ่มทดลอง"
+  ],
+  [
+    "sample size",
+    "ขนาดกลุ่มตัวอย่าง"
+  ],
+  [
+    "survey instrument",
+    "เครื่องมือสำรวจข้อมูล"
+  ],
+  [
+    "academic journal",
+    "วารสารวิชาการ"
+  ],
+  [
+    "peer-reviewed article",
+    "บทความที่ผ่านการตรวจสอบโดยผู้เชี่ยวชาญ"
+  ],
+  [
+    "abstract of a paper",
+    "บทคัดย่อของบทความ"
+  ],
+  [
+    "footnote",
+    "เชิงอรรถ"
+  ],
+  [
+    "bibliography",
+    "บรรณานุกรม"
+  ],
+  [
+    "glossary of terms",
+    "อภิธานศัพท์"
+  ],
+  [
+    "academic rigor",
+    "ความเข้มงวดทางวิชาการ"
+  ],
+  [
+    "scholarly source",
+    "แหล่งข้อมูลเชิงวิชาการ"
+  ],
+  [
+    "primary source",
+    "แหล่งข้อมูลปฐมภูมิ"
+  ],
+  [
+    "secondary source",
+    "แหล่งข้อมูลทุติยภูมิ"
+  ],
+  [
+    "rhetorical question",
+    "คำถามเชิงวาทศิลป์"
+  ],
+  [
+    "digression",
+    "การพูดออกนอกเรื่อง"
+  ],
+  [
+    "hypothetical example",
+    "ตัวอย่างสมมติ"
+  ],
+  [
+    "illustrate a point",
+    "ยกตัวอย่างประกอบประเด็น"
+  ],
+  [
+    "hypothetical scenario",
+    "สถานการณ์สมมติ"
+  ],
+  [
+    "lecture notes",
+    "บันทึกการบรรยาย"
+  ],
+  [
+    "note-taking strategy",
+    "กลยุทธ์การจดบันทึก"
+  ],
+  [
+    "cramming for exams",
+    "การอ่านหนังสือเร่งด่วนก่อนสอบ"
+  ],
+  [
+    "study group",
+    "กลุ่มเพื่อนอ่านหนังสือ"
+  ],
+  [
+    "extracurricular activity",
+    "กิจกรรมนอกหลักสูตร"
+  ],
+  [
+    "interdisciplinary studies",
+    "การศึกษาแบบสหวิทยาการ"
+  ],
+  [
+    "academic discipline",
+    "สาขาวิชา"
+  ],
+  [
+    "subject matter expert",
+    "ผู้เชี่ยวชาญเฉพาะด้าน"
+  ],
+  [
+    "guest lecturer",
+    "วิทยากรรับเชิญ"
+  ],
+  [
+    "seminar discussion",
+    "การอภิปรายในสัมมนา"
+  ],
+  [
+    "integrated task",
+    "โจทย์แบบผสมทักษะ"
+  ],
+  [
+    "independent task",
+    "โจทย์แบบเดี่ยว"
+  ],
+  [
+    "skim for the gist",
+    "อ่านผ่านๆ จับใจความหลัก"
+  ],
+  [
+    "inference question",
+    "คำถามเชิงอนุมาน"
+  ],
+  [
+    "main idea",
+    "ใจความสำคัญ"
+  ],
+  [
+    "supporting detail",
+    "รายละเอียดสนับสนุน"
+  ],
+  [
+    "author's tone",
+    "น้ำเสียงของผู้เขียน"
+  ],
+  [
+    "author's purpose",
+    "จุดประสงค์ของผู้เขียน"
+  ],
+  [
+    "contextual clue",
+    "เบาะแสจากบริบท"
+  ],
+  [
+    "vocabulary in context",
+    "คำศัพท์ตามบริบท"
+  ],
+  [
+    "paraphrase a sentence",
+    "เรียบเรียงประโยคใหม่"
+  ],
+  [
+    "summarize a passage",
+    "สรุปเนื้อหาตอน"
+  ],
+  [
+    "transitional phrase",
+    "วลีเชื่อมความ"
+  ],
+  [
+    "organizational pattern",
+    "รูปแบบการจัดเรียงเนื้อหา"
+  ],
+  [
+    "chronological order",
+    "การเรียงตามลำดับเวลา"
+  ],
+  [
+    "cause and effect relationship",
+    "ความสัมพันธ์เหตุและผล"
+  ],
+  [
+    "compare and contrast essay",
+    "เรียงความเปรียบเทียบความเหมือนต่าง"
+  ],
+  [
+    "classification essay",
+    "เรียงความจำแนกประเภท"
+  ],
+  [
+    "persuasive essay",
+    "เรียงความโน้มน้าวใจ"
+  ],
+  [
+    "descriptive essay",
+    "เรียงความเชิงบรรยาย"
+  ],
+  [
+    "outline a plan",
+    "ร่างโครงเรื่อง"
+  ],
+  [
+    "draft a paper",
+    "ร่างบทความ"
+  ],
+  [
+    "revise a manuscript",
+    "แก้ไขต้นฉบับ"
+  ],
+  [
+    "proofread an essay",
+    "ตรวจทานเรียงความ"
+  ],
+  [
+    "academic vocabulary list",
+    "รายการคำศัพท์วิชาการ"
+  ],
+  [
+    "lecture comprehension",
+    "ความเข้าใจการบรรยาย"
+  ],
+  [
+    "campus facilities",
+    "สิ่งอำนวยความสะดวกในมหาวิทยาลัย"
+  ],
+  [
+    "student union",
+    "องค์กรนักศึกษา"
+  ],
+  [
+    "academic department",
+    "ภาควิชา"
+  ],
+  [
+    "graduate assistant",
+    "ผู้ช่วยสอนระดับบัณฑิตศึกษา"
+  ],
+  [
+    "teaching assistant",
+    "ผู้ช่วยสอน"
+  ],
+  [
+    "office of admissions",
+    "สำนักงานรับสมัครนักศึกษา"
+  ],
+  [
+    "entrance requirement",
+    "คุณสมบัติในการเข้าศึกษา"
+  ],
+  [
+    "standardized test score",
+    "คะแนนแบบทดสอบมาตรฐาน"
+  ],
+  [
+    "academic reference letter",
+    "จดหมายรับรองทางวิชาการ"
+  ],
+  [
+    "waitlisted applicant",
+    "ผู้สมัครในรายชื่อสำรอง"
+  ],
+  [
+    "deferred admission",
+    "การเลื่อนการรับเข้าศึกษา"
+  ],
+  [
+    "study abroad program",
+    "โครงการแลกเปลี่ยนศึกษาต่างประเทศ"
+  ],
+  [
+    "exchange student",
+    "นักศึกษาแลกเปลี่ยน"
+  ],
+  [
+    "international student advisor",
+    "อาจารย์ที่ปรึกษานักศึกษาต่างชาติ"
+  ],
+  [
+    "campus housing",
+    "ที่พักภายในมหาวิทยาลัย"
+  ],
+  [
+    "meal plan",
+    "แผนอาหารมหาวิทยาลัย"
+  ],
+  [
+    "student loan",
+    "เงินกู้ยืมเพื่อการศึกษา"
+  ],
+  [
+    "academic scholarship",
+    "ทุนการศึกษาทางวิชาการ"
+  ],
+  [
+    "work-study program",
+    "โครงการทำงานควบคู่การเรียน"
+  ],
+  [
+    "laboratory session",
+    "ช่วงการเรียนในห้องปฏิบัติการ"
+  ],
+  [
+    "field research",
+    "การวิจัยภาคสนาม"
+  ],
+  [
+    "academic conference",
+    "การประชุมวิชาการ"
+  ],
+  [
+    "poster presentation",
+    "การนำเสนอผลงานแบบโปสเตอร์"
+  ],
+  [
+    "oral presentation",
+    "การนำเสนอด้วยปากเปล่า"
+  ],
+  [
+    "group discussion assignment",
+    "งานมอบหมายแบบอภิปรายกลุ่ม"
+  ],
+  [
+    "collaborative project",
+    "โครงการที่ทำงานร่วมกัน"
+  ],
+  [
+    "individual assignment",
+    "งานมอบหมายรายบุคคล"
+  ],
+  [
+    "take-home exam",
+    "ข้อสอบให้กลับไปทำที่บ้าน"
+  ],
+  [
+    "open-book test",
+    "การสอบแบบเปิดตำรา"
+  ],
+  [
+    "multiple-choice question",
+    "คำถามแบบเลือกตอบ"
+  ],
+  [
+    "short-answer question",
+    "คำถามแบบตอบสั้น"
+  ],
+  [
+    "essay question",
+    "คำถามแบบเขียนเรียงความ"
+  ],
+  [
+    "grading rubric",
+    "เกณฑ์การให้คะแนน"
+  ],
+  [
+    "extra credit assignment",
+    "งานเสริมคะแนนพิเศษ"
+  ],
+  [
+    "academic honesty policy",
+    "นโยบายความซื่อสัตย์ทางวิชาการ"
+  ],
+  [
+    "disciplinary hearing",
+    "การไต่สวนทางวินัย"
+  ],
+  [
+    "course withdrawal",
+    "การถอนรายวิชา"
+  ],
+  [
+    "course audit",
+    "การลงทะเบียนเรียนแบบไม่นับหน่วยกิต"
+  ],
+  [
+    "independent study",
+    "การศึกษาค้นคว้าอิสระ"
+  ],
+  [
+    "capstone project",
+    "โครงงานจบการศึกษา"
+  ],
+  [
+    "comprehensive exam",
+    "การสอบประมวลความรู้"
+  ],
+  [
+    "oral defense",
+    "การสอบป้องกันวิทยานิพนธ์"
+  ],
+  [
+    "academic mentor",
+    "พี่เลี้ยงทางวิชาการ"
+  ],
+  [
+    "research grant",
+    "ทุนสนับสนุนงานวิจัย"
+  ],
+  [
+    "laboratory equipment",
+    "อุปกรณ์ห้องปฏิบัติการ"
+  ],
+  [
+    "scientific observation",
+    "การสังเกตทางวิทยาศาสตร์"
+  ],
+  [
+    "theoretical framework",
+    "กรอบแนวคิดเชิงทฤษฎี"
+  ],
+  [
+    "conceptual model",
+    "แบบจำลองเชิงแนวคิด"
+  ],
+  [
+    "academic argument",
+    "ข้อโต้แย้งเชิงวิชาการ"
+  ],
+  [
+    "logical fallacy",
+    "การให้เหตุผลที่ผิดพลาด"
+  ],
+  [
+    "deductive reasoning",
+    "การให้เหตุผลแบบนิรนัย"
+  ],
+  [
+    "inductive reasoning",
+    "การให้เหตุผลแบบอุปนัย"
+  ],
+  [
+    "critical analysis",
+    "การวิเคราะห์เชิงวิพากษ์"
+  ],
+  [
+    "evaluative judgment",
+    "การตัดสินเชิงประเมินค่า"
+  ],
+  [
+    "synthesize information",
+    "สังเคราะห์ข้อมูล"
+  ],
+  [
+    "draw an inference",
+    "สรุปอนุมาน"
+  ],
+  [
+    "contradict a claim",
+    "ขัดแย้งกับข้อกล่าวอ้าง"
+  ],
+  [
+    "substantiate a claim",
+    "ยืนยันข้อกล่าวอ้างด้วยหลักฐาน"
+  ],
+  [
+    "academic consensus",
+    "ข้อตกลงร่วมทางวิชาการ"
+  ],
+  [
+    "paradigm shift",
+    "การเปลี่ยนกระบวนทัศน์"
+  ],
+  [
+    "seminal work",
+    "ผลงานสำคัญที่มีอิทธิพล"
+  ],
+  [
+    "landmark study",
+    "งานศึกษาที่เป็นจุดเปลี่ยนสำคัญ"
+  ],
+  [
+    "longitudinal research",
+    "งานวิจัยระยะยาว"
+  ],
+  [
+    "cross-sectional study",
+    "การศึกษาแบบภาคตัดขวาง"
+  ],
+  [
+    "variable in an experiment",
+    "ตัวแปรในการทดลอง"
+  ],
+  [
+    "independent variable",
+    "ตัวแปรอิสระ"
+  ],
+  [
+    "dependent variable",
+    "ตัวแปรตาม"
+  ],
+  [
+    "statistical significance",
+    "นัยสำคัญทางสถิติ"
+  ],
+  [
+    "margin of error",
+    "ค่าความคลาดเคลื่อน"
+  ],
+  [
+    "academic discourse",
+    "วาทกรรมทางวิชาการ"
+  ],
+  [
+    "formal register",
+    "ระดับภาษาที่เป็นทางการ"
+  ],
+  [
+    "nuanced argument",
+    "ข้อโต้แย้งที่มีรายละเอียดปลีกย่อย"
+  ],
+  [
+    "objective viewpoint",
+    "มุมมองที่เป็นกลาง"
+  ],
+  [
+    "subjective interpretation",
+    "การตีความเชิงอัตวิสัย"
+  ],
+  [
+    "prior knowledge",
+    "ความรู้พื้นฐานเดิม"
+  ],
+  [
+    "background information",
+    "ข้อมูลพื้นฐาน"
+  ],
+  [
+    "conceptual understanding",
+    "ความเข้าใจเชิงแนวคิด"
+  ],
+  [
+    "cognitive skill",
+    "ทักษะทางปัญญา"
+  ],
+  [
+    "metacognitive strategy",
+    "กลยุทธ์การรู้คิดเหนือการรู้คิด"
+  ],
+  [
+    "active listening",
+    "การฟังอย่างตั้งใจ"
+  ],
+  [
+    "reading comprehension passage",
+    "บทอ่านเพื่อความเข้าใจ"
+  ],
+  [
+    "academic listening lecture",
+    "การบรรยายเพื่อการฟังเชิงวิชาการ"
+  ],
+  [
+    "campus tour guide",
+    "ผู้นำชมมหาวิทยาลัย"
+  ],
+  [
+    "orientation week",
+    "สัปดาห์ปฐมนิเทศ"
+  ],
+  [
+    "graduation ceremony",
+    "พิธีสำเร็จการศึกษา"
+  ],
+  [
+    "commencement speech",
+    "สุนทรพจน์ในพิธีสำเร็จการศึกษา"
+  ],
+  [
+    "diploma",
+    "ประกาศนียบัตร"
+  ],
+  [
+    "alumni network",
+    "เครือข่ายศิษย์เก่า"
+  ],
+  [
+    "academic reputation",
+    "ชื่อเสียงทางวิชาการ"
+  ],
+  [
+    "accreditation body",
+    "หน่วยงานรับรองมาตรฐานการศึกษา"
+  ],
+  [
+    "campus sustainability initiative",
+    "โครงการความยั่งยืนในมหาวิทยาลัย"
+  ],
+  [
+    "student council",
+    "สภานักศึกษา"
+  ],
+  [
+    "academic freedom",
+    "เสรีภาพทางวิชาการ"
+  ],
+  [
+    "intellectual curiosity",
+    "ความอยากรู้อยากเห็นเชิงปัญญา"
+  ],
+  [
+    "self-directed learning",
+    "การเรียนรู้ด้วยตนเอง"
+  ],
+  [
+    "blended learning",
+    "การเรียนรู้แบบผสมผสาน"
+  ],
+  [
+    "flipped classroom",
+    "ห้องเรียนกลับด้าน"
+  ],
+  [
+    "massive open online course",
+    "หลักสูตรออนไลน์แบบเปิดสำหรับมวลชน"
+  ],
+  [
+    "e-learning platform",
+    "แพลตฟอร์มการเรียนรู้ออนไลน์"
+  ],
+  [
+    "academic burnout",
+    "ภาวะหมดไฟทางการเรียน"
+  ],
+  [
+    "time management skill",
+    "ทักษะการบริหารเวลา"
+  ],
+  [
+    "procrastination habit",
+    "นิสัยผัดวันประกันพรุ่ง"
+  ],
+  [
+    "study habit",
+    "นิสัยการเรียน"
+  ],
+  [
+    "revision schedule",
+    "ตารางทบทวนบทเรียน"
+  ],
+  [
+    "academic setback",
+    "อุปสรรคทางการเรียน"
+  ],
+  [
+    "intellectual discourse",
+    "การสนทนาเชิงปัญญา"
+  ],
+  [
+    "scholarly debate",
+    "การถกเถียงเชิงวิชาการ"
+  ],
+  [
+    "academic mentorship program",
+    "โครงการที่ปรึกษาทางวิชาการ"
+  ],
+  [
+    "peer tutoring",
+    "การติวโดยเพื่อนนักศึกษา"
+  ],
+  [
+    "laboratory report",
+    "รายงานผลปฏิบัติการ"
+  ],
+  [
+    "field trip",
+    "การทัศนศึกษา"
+  ],
+  [
+    "case-based learning",
+    "การเรียนรู้จากกรณีศึกษา"
+  ],
+  [
+    "problem-based learning",
+    "การเรียนรู้จากปัญหาเป็นฐาน"
+  ],
+  [
+    "academic workshop",
+    "การอบรมเชิงวิชาการ"
+  ]
+]

@@ -124,6 +124,29 @@ const BAND_ADV_MANIFEST = {
       }
     ]
   },
+  "ielts": {
+    "label": "ศัพท์เตรียมสอบ IELTS",
+    "emoji": "📘",
+    "count": 290,
+    "files": [
+      {
+        "f": "b6_ielts_ablessingindisguise-developingnation.js",
+        "n": 75
+      },
+      {
+        "f": "b6_ielts_digitalnomad-longtermviability.js",
+        "n": 75
+      },
+      {
+        "f": "b6_ielts_longitudinalstudy-sampleanswer.js",
+        "n": 75
+      },
+      {
+        "f": "b6_ielts_scanning-workrelatedstress.js",
+        "n": 65
+      }
+    ]
+  },
   "it": {
     "label": "ศัพท์เทคโนโลยี-IT",
     "emoji": "💻",
@@ -276,6 +299,48 @@ const BAND_ADV_MANIFEST = {
       {
         "f": "b6_sports_swimcap-ziplining.js",
         "n": 64
+      }
+    ]
+  },
+  "toefl": {
+    "label": "ศัพท์เตรียมสอบ TOEFL",
+    "emoji": "📙",
+    "count": 200,
+    "files": [
+      {
+        "f": "b6_toefl_abstractofapaper-entrancerequirement.js",
+        "n": 75
+      },
+      {
+        "f": "b6_toefl_essayquestion-priorknowledge.js",
+        "n": 75
+      },
+      {
+        "f": "b6_toefl_problembasedlearning-workstudyprogram.js",
+        "n": 50
+      }
+    ]
+  },
+  "toeic": {
+    "label": "ศัพท์เตรียมสอบ TOEIC",
+    "emoji": "📗",
+    "count": 235,
+    "files": [
+      {
+        "f": "b6_toeic_accountspayable-executivecommittee.js",
+        "n": 75
+      },
+      {
+        "f": "b6_toeic_executivesummary-payrolldepartment.js",
+        "n": 75
+      },
+      {
+        "f": "b6_toeic_perdiemallowance-visaapplication.js",
+        "n": 75
+      },
+      {
+        "f": "b6_toeic_warehouse-workshopsession.js",
+        "n": 10
       }
     ]
   },
