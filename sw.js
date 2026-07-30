@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v213';  // v213: รอบ 812: ระบบข้อสอบจริงแบบมาตรฐาน (css/exam.css + js/examstd.js ใหม่)
+const CACHE_VERSION = 'pet-vocab-v214';  // v214: รอบ 813: ทางลัดเข้าข้อสอบจริงมาตรฐานจากรางเมนู (#btn-rail-examstd)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

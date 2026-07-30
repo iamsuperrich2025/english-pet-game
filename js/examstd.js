@@ -533,3 +533,49 @@ function examStdCardsHTML(){
       </div>`;
     }).join('');
 }
+
+/* ============================================================
+   🚪 รอบ 813: ทางลัดจากรางเมนูซ้าย (#btn-rail-examstd) — ก่อนหน้านี้ต้องกด
+   "หมวดคำศัพท์ & แบบทดสอบ" แล้วเลื่อนหาการ์ดท้ายรายการก่อนถึงจะเจอ 3 สนามสอบ
+   แผงเล็กนี้ข้ามขั้นตอนนั้น เลือกสนามสอบแล้วเปิด openExamStdPicker ตรง ๆ
+   ============================================================ */
+function openExamStdBoard(){
+  if(typeof EXAM_STD_MANIFEST === 'undefined') return;
+  const keys = Object.keys(EXAM_STD_MANIFEST);
+  if(!keys.length) return;
+  const old = document.getElementById('xsb-board');
+  if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'xsb-board'; ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="xsb-box">
+    <button class="pl-close" id="xsb-close">✕</button>
+    <div class="xsb-head">📋 ข้อสอบจริงแบบมาตรฐาน<span class="xsb-sub">โจทย์เลือกตอบแนวข้อสอบจริง ไวยากรณ์ + การอ่านจับใจความ พร้อมเฉลยละเอียดทุกข้อ</span></div>
+    <div class="xsb-grid">${keys.map(k=>{
+      const m = EXAM_STD_MANIFEST[k];
+      const nq = m.sets.reduce((n, s)=>n + s.q, 0);
+      const done = m.sets.filter(s=>state.quizPassed.includes(xsQuizId(s.id))).length;
+      return `<button class="xsb-card" data-ex="${k}">
+        <span class="xsb-emoji">${m.emoji}</span>
+        <span class="xsb-name">${escapeHTML(m.label)}</span>
+        <span class="xsb-info">${m.sets.length} ชุด · ${nq} ข้อ</span>
+        <span class="xsb-done">${done ? `✅ ผ่านแล้ว ${done}/${m.sets.length}` : `🎁 ${fmtNum(XS_REWARD)} 🪙`}</span>
+      </button>`;
+    }).join('')}</div>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
+  ov.querySelector('#xsb-close').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('.xsb-grid').addEventListener('click', ev=>{
+    const b = ev.target.closest('.xsb-card');
+    if(!b) return;
+    ov.remove();
+    openExamStdPicker(b.dataset.ex);
+  });
+}
+(function bindExamStdRail(){
+  const bind = ()=>{
+    const btn = document.getElementById('btn-rail-examstd');
+    if(btn) btn.addEventListener('click', ()=>{ if(typeof closePanel === 'function') closePanel(); openExamStdBoard(); });
+  };
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
