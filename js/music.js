@@ -7,14 +7,14 @@
    • ไฟล์เพลง: sound/SongsInCar/rock_01..NN.mp3 (ผู้ใช้เตรียมไว้) — probe หาที่มีจริง
      (เพลงชุดเดียวใช้ทั้ง bg + วิทยุรถ · วาง sound/bgm/bgm_01.. เพิ่มภายหลัง = ใช้เป็น bg แทนได้)
    • 🎀 รอบ 746: เพลงล็อบบี้เฉพาะ sound/bgm/lobby_01..NN.mp3 — มีไฟล์นี้เมื่อไหร่ = ใช้แทน bgm_* ทันที
-     (bgm_01..03 ยังอยู่ในระบบ ใช้เป็น "เพลงตามฉาก" ของโลกเฮลิฯ ต่อ) · เพลงเดียว = loop ในตัวไม่มีรอยต่อ
+     (🎵 รอบ 854: ผู้ใช้ลบ bgm_02/03 เหลือ bgm_01 เพลงเดียว → ฉากเฮลิฯ ที่เคยขอ bgm_02/03 หาไม่เจอ จะคงเพลงเดิมไว้เฉยๆ) · เพลงเดียว = loop ในตัวไม่มีรอยต่อ
    • เอนจินเสียงล้วน — UI visualizer/รายการเพลงอยู่ใน adventure3d.js (เจ้าของหน้าปัด)
    ============================================================ */
 const Music = (function(){
   const CAR_DIR = 'sound/SongsInCar/';
   const BG_DIR  = 'sound/bgm/';
   const CAR_NAMES = ['rock_01','rock_02','rock_03','rock_04','rock_05','rock_06','rock_07','rock_08','rock_09','rock_10'];
-  const BG_NAMES  = ['bgm_01','bgm_02','bgm_03','bgm_04','bgm_05','bgm_06','bgm_07','bgm_08'];
+  const BG_NAMES  = ['bgm_01'];
   const LOBBY_NAMES = ['lobby_01','lobby_02','lobby_03','lobby_04','lobby_05','lobby_06'];   // 🎀 รอบ 746
   const MODES = ['all','one','shuffle'];
   const BG_VOL = 0.30, CAR_VOL = 0.62;
