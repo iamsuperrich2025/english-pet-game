@@ -7,6 +7,10 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish (รอบ 827 · 30 ก.ค. 2026): โซนใหม่ `bandRank` = กระดานอันดับ "สอบใหญ่คลังศัพท์ขั้นสูง" ตลอดกาล** — `/bandRank/<catId>_<lvKey>/<uid> = {sc, tt, sec, n≤40, g≤20, ts}` (`catId` เช่น `academic`/`ielts` · `lvKey` = `found`|`inter`|`expert`) · **อ่านได้ทุกคนที่ login** (เหมือน `/examRank`) · **เขียนได้เฉพาะแถวของ uid ตัวเอง** และ `$setId` ต้องตรงรูปแบบ `^[a-z]+_(found|inter|expert)$` · **validate บังคับว่าต้อง "สอบผ่านจริง"**: `sc <= tt` และ `sc*10 >= tt*8` (เกณฑ์ผ่าน 80% ของสอบใหญ่ต่างจาก `/examRank` ที่ 70%) · `sec` ≤ 86400 · `ts` ห้ามอนาคตเกิน 1 นาที · `.indexOn:"sc"` ให้ client ดึงแค่ `orderByChild('sc').limitToLast(50)` ไม่ต้องโหลดทั้งตาราง — สูตรเดียวกับ `/examRank` (รอบ 825) เป๊ะ ต่างแค่คนละโซน/คนละเกณฑ์ผ่าน
+  - **ทำไมต้องมีโซนนี้:** เดิม (รอบ 786) กระดานอ่านจากฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม) → คนที่สอบผ่านนานแล้วโพสต์หลุดออก = หายจากกระดานของคนอื่น เป็นแค่ "อันดับจากกิจกรรมล่าสุด" · โซนนี้เก็บ **1 แถวต่อคนต่อ (หมวด,ระดับ)** จึงเป็นอันดับตลอดกาลจริง
+  - **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.bxrOk=false` → กระดานยังเห็น **สถิติของตัวเอง** (จากใบประกาศผ่าน `bandAdvExamBest`) และขึ้นป้ายบอกตรง ๆ ว่า "กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /bandRank ก่อน)" — `bxRankNote()` ใน `js/bandadv.js` (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ระบบสอบ/รางวัล/ใบประกาศ ทำงานปกติทุกอย่าง
+  - **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้):** https://claude.ai/code/artifact/854df926-f052-4fd5-bafc-a1fc491fed47
 - ⏳ **รอ publish (รอบ 825 · 30 ก.ค. 2026): โซนใหม่ `examRank` = กระดานอันดับข้อสอบมาตรฐาน "ตลอดกาล"** — `/examRank/<setId>/<uid> = {sc, tt, sec, n≤40, g≤20, ts}` (setId เช่น `ielts_1`, `toeic_3`) · **อ่านได้ทุกคนที่ login** (`auth != null` เหมือน `/gfeed`) · **เขียนได้เฉพาะแถวของ uid ตัวเอง** (`auth.uid === $uid`) และ `$setId` ต้องตรงรูปแบบ `^[a-z]+_[0-9]{1,2}$` · **validate บังคับว่าต้อง "สอบผ่านจริง"**: `sc <= tt` และ `sc*10 >= tt*7` (= เกณฑ์ผ่าน 70% ตาม `XS_PASS_PCT`) · `sec` ≤ 86400 · `ts` ห้ามอนาคตเกิน 1 นาที · `.indexOn:"sc"` ให้ client ดึงแค่ `orderByChild('sc').limitToLast(50)` ไม่ต้องโหลดทั้งตาราง
   - **ทำไมต้องมีโซนนี้:** เดิม (รอบ 817) กระดานอ่านจากฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม) → คนที่สอบผ่านนานแล้วโพสต์หลุดออก = หายจากกระดานของคนอื่น เป็นแค่ "อันดับจากกิจกรรมล่าสุด" · โซนนี้เก็บ **1 แถวต่อคนต่อชุด** (ฝั่งเขียนเทียบก่อนว่าดีกว่าเดิมไหม) จึงเป็นอันดับตลอดกาลจริง และขนาดตารางโตตามจำนวนผู้เล่น × ชุด ไม่โตตามจำนวนครั้งที่สอบ
   - **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.xrkOk=false` → กระดานยังเห็น **สถิติของตัวเอง** (จากใบประกาศ `state.certs`) และขึ้นป้ายบอกตรง ๆ ว่า "กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /examRank ก่อน)" — `xrkNote()` ใน `js/examstd.js` (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ระบบสอบ/รางวัล/ใบประกาศ/ฟีด ทำงานปกติทุกอย่าง
@@ -471,6 +475,23 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         }
       }
     },
+    "bandRank": {
+      "$setId": {
+        ".read": "auth != null",
+        ".indexOn": "sc",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && $setId.matches(/^[a-z]+_(found|inter|expert)$/)",
+          ".validate": "newData.hasChildren(['sc','tt','sec','n','ts']) && newData.child('sc').val() <= newData.child('tt').val() && newData.child('sc').val() * 10 >= newData.child('tt').val() * 8",
+          "sc":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 50" },
+          "tt":  { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 50" },
+          "sec": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400" },
+          "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "g":   { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "ts":  { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "class": {
       "$map": {
         ".read": "auth != null",
@@ -561,6 +582,15 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - อ่านด้วย `orderByChild('sc').limitToLast(50)` (ต้องมี `.indexOn:"sc"`) แล้ว **เรียงคะแนน→เวลาเองฝั่ง client** (RTDB เรียงได้ทีละคีย์เดียว) · cache ต่อชุดใน `__xrkCache` กดชิปสลับชุดไปมาไม่ยิงซ้ำ · สอบผ่านใหม่ = ล้าง cache ชุดนั้น
 - แถวของตัวเองมาจาก **2 ทางรวมกัน**: แถวใน DB + ใบประกาศ `state.certs` (เอาอันที่ดีกว่า) → ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเองเสมอ
 - ฝั่งเกม: `xrkSubmit/xrkFetch/xrkMerge/xrkBodyHTML/xrkMount/xrkNote/xrkNoteRefresh/openExamStdRank` (`js/examstd.js`) · หน้าตาแถวใช้ `bxrRowHTML`/`BXR_TOP` ของ `js/bandadv.js` ร่วมกัน (ไม่เขียนซ้ำ ไม่เพิ่ม CSS) · ⚠️ **ข้อความบอกแหล่งข้อมูลห้ามใช้ `bxRankNote()` ร่วมกัน** — กระดานสอบใหญ่ (รอบ 786) ยังเป็นแบบ "จากกิจกรรมล่าสุด" อยู่ กระดานนี้ใช้ `xrkNote()` ของตัวเอง
+
+## หมายเหตุโครง /bandRank (🏁 อันดับสอบใหญ่คลังศัพท์ขั้นสูงตลอดกาล — รอบ 827)
+- `/bandRank/<catId>_<lvKey>/<uid> = {sc, tt, sec, n, g, ts}` — **1 แถวต่อคนต่อ (หมวด,ระดับ)** (`catId` เช่น `academic`/`ielts` · `lvKey` = `found`|`inter`|`expert`) · เขียนจาก `bxrSubmit()` ใน `onPass()` ของ `bandAdvExamCat` (`js/bandadv.js`) เฉพาะตอน**สอบผ่าน**และเฉพาะเมื่อ**ดีกว่าแถวเดิม** (คะแนนก่อน แล้วเวลาตัดสิน — ตรงกับตรรกะที่ `bandAdvExamBest`/ใบประกาศใช้อยู่แล้ว) — อ่านแถวเดิม 1 ครั้งแล้ว `set()` ทับ ตรรกะ "เก็บที่ดีที่สุด" อยู่**ฝั่งเขียน**
+- อ่านด้วย `orderByChild('sc').limitToLast(50)` (ต้องมี `.indexOn:"sc"`) แล้ว **เรียงคะแนน→เวลาเองฝั่ง client** · cache ต่อ (หมวด,ระดับ) ใน `__bxrCache` กดชิปสลับไปมาไม่ยิงซ้ำ · สอบผ่านใหม่ = ล้าง cache ชุดนั้น
+- แถวของตัวเองมาจาก **2 ทางรวมกัน**: แถวใน DB + `bandAdvExamBest()` (อ่านจากใบประกาศ/quizLog) เอาอันที่ดีกว่า → ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเองเสมอ
+- **ทำไมต้องมีโซนนี้:** เดิม (รอบ 786) กระดานอ่านจากฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม) → คนที่สอบผ่านนานแล้วโพสต์หลุดออก = หายจากกระดานของคนอื่น เป็นแค่ "อันดับจากกิจกรรมล่าสุด" · โซนนี้เก็บ 1 แถวต่อคนต่อ (หมวด,ระดับ) จึงเป็นอันดับตลอดกาลจริง
+- **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.bxrOk=false` → กระดานยังเห็นสถิติของตัวเอง (จากใบประกาศ) และขึ้นป้ายบอกตรง ๆ "กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /bandRank ก่อน)" — `bxRankNote()` ใน `js/bandadv.js` (กฎทองข้อ 1) · ระบบสอบ/รางวัล/ใบประกาศ ทำงานปกติทุกอย่าง
+- ฝั่งเกม: `bxrSubmit/bxrFetch/bxrMerge/bxRankBodyHTML/bxRankMount/bxRankNote/bxRankNoteRefresh/openBigExamRank` (`js/bandadv.js`) · `bxrRowHTML`/`BXR_TOP` ใช้ร่วมกับ `/examRank` (`js/examstd.js`) ⚠️ **ป้ายบอกแหล่งข้อมูลห้ามใช้ `xrkNote()` ร่วมกัน** — คนละโซน DB (`/bandRank` vs `/examRank`) อาจติด deny คนละสถานะกัน
+- **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้):** ดูลิงก์ในหัวข้อ "สถานะการ publish" ด้านบน
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

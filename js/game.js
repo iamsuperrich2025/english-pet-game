@@ -1109,7 +1109,7 @@ function finishQuiz(){
     if(cat.examSummary && typeof bandAdvShowExamSummary === 'function') bandAdvShowExamSummary();
   });
   document.body.appendChild(overlay);
-  if(passed && typeof cat.onPass === 'function') cat.onPass();   // โบนัสครบทุกชุดของระดับ (dictband.js)
+  if(passed && typeof cat.onPass === 'function') cat.onPass(secs);   // โบนัสครบทุกชุดของระดับ (dictband.js) · 🏁 รอบ 827: bandAdvExamCat ใช้ secs ลงกระดานอันดับ
   if(made) setTimeout(()=>showCollectReveal(made, null, true), 600);
   if(passed) sfx.levelup(); else sfx.wrong();
 }

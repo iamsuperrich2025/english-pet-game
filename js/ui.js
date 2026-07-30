@@ -1596,20 +1596,21 @@ function openLeaderboardFull(){
     ov.querySelectorAll('.lbf-tabs .lb-tab').forEach(b=> b.addEventListener('click', ()=>{ __lbfTab = b.dataset.t; if(sfx&&sfx.click) sfx.click(); render(); }));
   };
   const render = ()=>{
-    /* 🏁 รอบ 786: แท็บสอบใหญ่เร็วที่สุด — เนื้อกระดานอยู่ js/bandadv.js (bxRankMount วาด+ผูกปุ่มเอง)
-       ที่นี่แค่เตรียมกล่องให้ · ข้อมูลมาจากฟีดรวม + ใบประกาศของตัวเอง ไม่ต้องมีโซน DB ใหม่ */
+    /* 🏁 รอบ 786: แท็บสอบใหญ่คะแนนสูงสุด/เร็วสุด — เนื้อกระดานอยู่ js/bandadv.js (bxRankMount วาด+ผูกปุ่มเอง)
+       ที่นี่แค่เตรียมกล่องให้ · ⚠️ รอบ 827: เปลี่ยนมาอ่านจากโซน DB ถาวร /bandRank แทนการพาร์สฟีดรวม
+       (สูตรเดียวกับแท็บ xr ด้านล่าง) · id ให้ bxRankNoteRefresh() เขียนทับได้หลังรู้ผลจาก DB */
     if(__lbfTab === 'bx'){
-      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 สอบใหญ่เร็วที่สุด')}
-        <div class="lbf-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
+      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 สอบใหญ่คะแนนสูงสุด/เร็วสุด')}
+        <div class="lbf-note" id="bxr-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
         <div class="bxr-body" id="lbf-bx"></div></div>`;
       bindLbfChrome();
       if(typeof bxRankMount === 'function') bxRankMount(ov.querySelector('#lbf-bx'));
       return;
     }
     /* 🏁 รอบ 815: แท็บข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด — เนื้อกระดานอยู่ js/examstd.js (xrkMount วาด+ผูกปุ่มเอง)
-       สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js
-       ⚠️ รอบ 825: ป้ายต้องใช้ xrkNote() ของกระดานนี้เอง (อันดับตลอดกาลจาก /examRank) ห้ามใช้ bxRankNote()
-          ร่วมกับแท็บ bx ด้านบน เพราะกระดานสอบใหญ่ยังเป็น "จากกิจกรรมล่าสุด" อยู่ · id ให้ xrkNoteRefresh() เขียนทับได้ */
+       สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ (ทั้งคู่เป็นอันดับตลอดกาลจริงตั้งแต่รอบ 825/827) ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js
+       ⚠️ ป้ายต้องใช้ xrkNote() ของกระดานนี้เอง ห้ามใช้ bxRankNote() ร่วมกับแท็บ bx — คนละโซน DB (/examRank vs /bandRank)
+          จึงอาจติด deny คนละสถานะกัน (rules publish แยกอิสระต่อกัน) · id ให้ xrkNoteRefresh() เขียนทับได้ */
     if(__lbfTab === 'xr'){
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 ข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด')}
         <div class="lbf-note" id="xrk-note"></div>
