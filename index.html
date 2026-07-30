@@ -366,12 +366,20 @@
   <!-- ===== 4) Vocabulary Categories ===== -->
   <section id="screen-cats" class="screen">
     <div class="game-top">
-      <button class="back-btn" id="btn-cats-back">⬅ กลับ</button>
+      <button class="back-btn tapglow" id="btn-cats-back">⬅ กลับ</button>
       <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="cats-coin-count">0</span></div>
     </div>
     <h1 style="font-size:22px" id="cats-level-label">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</h1>
     <p class="subtitle" style="font-size:14px">สอบให้ได้ 8 ข้อขึ้นไปจาก 10 ข้อ รับเงินรางวัลพิเศษของแต่ละหมวด!</p>
     <div id="cats-list"></div>
+    <!-- 🚀 รอบ 831: ปุ่มลัดเข้าสอบ IELTS/TOEIC/TOEFL ตรง ๆ + ปุ่มกลับซ้ำที่ท้ายหน้า
+         (ผู้ใช้สั่ง: ไม่อยากเลื่อนหาการ์ด 3 สนามสอบที่อยู่ท้ายรายการยาว ๆ ทุกครั้ง) -->
+    <div class="cats-quick-exam" id="cats-quick-exam">
+      <button class="quick-exam-btn tapglow" data-xstd="ielts">📘 IELTS</button>
+      <button class="quick-exam-btn tapglow" data-xstd="toeic">📗 TOEIC</button>
+      <button class="quick-exam-btn tapglow" data-xstd="toefl">📙 TOEFL</button>
+    </div>
+    <button class="back-btn tapglow cats-back-bottom" id="btn-cats-back-bottom">⬅ กลับ</button>
   </section>
 
   <!-- ===== 5) Quiz ===== -->

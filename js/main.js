@@ -80,6 +80,13 @@ document.getElementById('btn-rail-rank').addEventListener('click', ()=>{
   if(typeof openLeaderboardFull === 'function') openLeaderboardFull();
 });
 document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
+// 🚀 รอบ 831: ปุ่มกลับซ้ำท้ายหน้า + ปุ่มลัด IELTS/TOEIC/TOEFL (เปิด picker ตรง ไม่ต้องเลื่อนหาการ์ด)
+document.getElementById('btn-cats-back-bottom').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
+document.getElementById('cats-quick-exam').addEventListener('click', e=>{
+  const b = e.target.closest('.quick-exam-btn');
+  if(!b || typeof openExamStdPicker !== 'function') return;
+  openExamStdPicker(b.dataset.xstd);
+});
 document.getElementById('btn-stats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-quiz-back').addEventListener('click', ()=>{
   if(typeof quizTimerStop === 'function') quizTimerStop();   // ⏱️ รอบ 777: ออกกลางคัน = หยุดนาฬิกา ไม่ปล่อย interval ค้าง

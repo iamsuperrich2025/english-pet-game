@@ -995,3 +995,15 @@ function openTeacherGuide(){
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   document.body.appendChild(overlay);
 }
+
+/* ✨ รอบ 831: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — delegate ตัวเดียวจบทั้งเกม
+   ปุ่มไหนอยากได้ effect นี้ใส่ class "tapglow" ในมาร์กอัปได้เลย ไม่ต้องผูก JS ใหม่ทีละปุ่ม */
+document.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('.tapglow');
+  if(!b) return;
+  b.classList.remove('tapglow-on');
+  void b.offsetWidth;   // รีสตาร์ท animation ถ้ากดรัว ๆ
+  b.classList.add('tapglow-on');
+  clearTimeout(b.__tapglowT);
+  b.__tapglowT = setTimeout(()=>b.classList.remove('tapglow-on'), 550);
+});
