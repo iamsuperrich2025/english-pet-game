@@ -190,13 +190,13 @@ bandAdvExamName:83 · BAND_ADV_SUPREME_BONUS:90 · bandAdvCheckSupreme:91 · ban
 bandAdvShowExamSummary:146 · bigExamBadgeNote:174 · BXR_TOP:192 · bxrIdByLabel:196 · bxRankRows:202 · bxrRowHTML:235
 bxRankBodyHTML:247 · bxRankMount:261 · bxRankNote:286 · openBigExamRank:292 · bandAdvExamOpen:309 · bandAdvCardsHTML:363
 
-## js/cert.js (645 บรรทัด · 31 รายการ)
+## js/cert.js (638 บรรทัด · 31 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
 CERT_BIG_LV:56 · CERT_STD_EN:59 · certThIndex:67 · certTitleOf:76 · certSerial:102 · certDateEN:110
 certTier:118 · CERT_TIER_META:125 · CERT_LOGO_SRC:131 · certAward:140 · certMine:166 · certAwardGold:173
 certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPost:263 · certXML:281 · certFit:286
-certHolder:291 · certSVG:301 · certChipHTML:583 · openCertBig:599 · openCertMine:615 · certStripHTML:623
-certBindStrip:637
+certHolder:291 · certSVG:301 · certChipHTML:576 · openCertBig:592 · openCertMine:608 · certStripHTML:616
+certBindStrip:630
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
@@ -679,7 +679,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/exam.css (332 บรรทัด · 75 selector)
+## css/exam.css (333 บรรทัด · 75 selector)
 #xs-screen:8 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19,21,22 · .no-anim:24
 .xs-score:25 · .xs-quit:26 · .xs-nav:32 · .xs-dot:36,40,41,42(+1) · .xs-body:46 · .xs-pass:47,51,58
 .xs-ptitle:52 · .xs-para:53 · .xs-pn:54 · .xs-qside:59 · .xs-sec:63,64 · .xs-q:65
