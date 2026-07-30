@@ -22,7 +22,7 @@ echo "📦 เตรียมไฟล์จาก git HEAD → $STAGE"
 rm -rf "$STAGE" && mkdir -p "$STAGE/public"
 cd "$REPO"
 git archive HEAD | tar -x -C "$STAGE/public"
-rm -rf "$STAGE/public/handoff" "$STAGE/public/tools"
+rm -rf "$STAGE/public/handoff" "$STAGE/public/tools" "$STAGE/public/store"   # store/ = ภาพหน้าร้าน Play Store ไม่ใช่ของผู้เล่น
 rm -f  "$STAGE/public"/*.md              # PROMPTS_*.md / TASK_*.md ไม่ใช่ของผู้เล่น
 
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง

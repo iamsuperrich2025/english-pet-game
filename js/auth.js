@@ -219,11 +219,26 @@ function authLateSync(user){
 }
 
 /* ---------- ปุ่ม "เข้าสู่ระบบด้วย Google" ---------- */
+/* 📱 อยู่ในแอปที่ติดตั้งแล้วไหม (TWA จาก Play Store / PWA ที่ Add to Home screen)
+   ที่นั่น popup มักเปิดไม่ได้ → ใช้ signInWithRedirect ตรงๆ ปลอดภัยกว่า
+   ⚠️ เช็คเฉพาะ standalone + referrer android-app:// เท่านั้น ห้ามเช็ค display-mode:fullscreen
+      เพราะเกมสั่งเต็มจอเองผ่าน Fullscreen API ในเบราว์เซอร์ปกติด้วย (จะเข้าใจผิดว่าเป็นแอป) */
+function authIsAppMode(){
+  try{
+    if((document.referrer || '').indexOf('android-app://') === 0) return true;   // TWA บน Play Store
+    if(navigator.standalone === true) return true;                               // iOS home screen
+    return window.matchMedia('(display-mode: standalone)').matches;
+  }catch(e){ return false; }
+}
+/* error code ที่แปลว่า "popup ใช้ไม่ได้ในสภาพแวดล้อมนี้" → ต้อง redirect แทน */
+const AUTH_REDIRECT_CODES = ['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment',
+                             'auth/web-storage-unsupported', 'auth/cancelled-popup-request'];
 function authLoginClick(){
   const provider = new firebase.auth.GoogleAuthProvider();
   authSetStatus('connecting', 'กำลังเปิดหน้าต่างเข้าสู่ระบบ... ⏳');
+  if(authIsAppMode()){ firebase.auth().signInWithRedirect(provider); return; }
   firebase.auth().signInWithPopup(provider).catch(err=>{
-    if(err && err.code === 'auth/popup-blocked'){
+    if(err && AUTH_REDIRECT_CODES.indexOf(err.code) >= 0){
       firebase.auth().signInWithRedirect(provider);    // เบราว์เซอร์กัน popup → ใช้ redirect แทน
       return;
     }
