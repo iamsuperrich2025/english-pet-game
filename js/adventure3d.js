@@ -1858,8 +1858,28 @@ function buildDriveCity(sc){
   }
   if(keptPts.length>=200){ roadPts.length=0; for(const v of keptPts) roadPts.push(v); }   // กันพลาด: เหลือน้อยผิดปกติ = ใช้ของเดิม
 
+  /* ============================================================
+     🌳🚁 รอบ 811: จุด "พื้นที่สีเขียวข้างถนน" (greenPts) — สุ่มออกจากจุดบนถนนแต่ละจุด
+     จนเจอพื้นที่ว่าง (นอกถนน/ไม่ชนตึก/ไม่ใช่น้ำ) ไว้ให้ตัวอักษร+เหรียญโบนัสไปโผล่บนหญ้าได้
+     (เตรียมไว้สำหรับต่อยอด: เฮลิคอปเตอร์ลงจอดเก็บตัวอักษรบนพื้นที่สีเขียวนี้ในอนาคต)
+     ============================================================ */
+  const greenFree=(x,z)=>{
+    const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
+    if(gx<0||gz<0||gx>=GW||gz>=GW || grid[gz*GW+gx]===2) return false;
+    return grid[gz*GW+gx]===0 && !navBlockedAt(x,z);
+  };
+  const greenPts=[];
+  for(let i=0;i<roadPts.length;i+=2){
+    const x=roadPts[i], z=roadPts[i+1];
+    for(let tries=0;tries<8;tries++){
+      const ang=Math.random()*Math.PI*2, dist=9+Math.random()*16;   // 9-25 ม. จากถนน = พ้นทางเท้า เข้าเขตหญ้าจริง
+      const gx=x+Math.cos(ang)*dist, gz=z+Math.sin(ang)*dist;
+      if(greenFree(gx,gz)){ greenPts.push(gx,gz); break; }
+    }
+  }
+
   worlds.drive={scene:sc, trees:[], buildings:[],
-    d:{grid,ngrid,ncost,ncomp,nmain,GS,GW,GOFF,solidGrid,SCELL,roadPts,nameSegs,spawn,rad:RX,links:linkLog}};   // ngrid = กริดนำทาง GPS (รอบ 284) · ncost/ncomp = รอบ 782 · links = ถนนเชื่อมเกาะ รอบ 788
+    d:{grid,ngrid,ncost,ncomp,nmain,GS,GW,GOFF,solidGrid,SCELL,roadPts,greenPts,nameSegs,spawn,rad:RX,links:linkLog}};   // ngrid = กริดนำทาง GPS (รอบ 284) · ncost/ncomp = รอบ 782 · links = ถนนเชื่อมเกาะ รอบ 788 · greenPts = พื้นที่สีเขียวข้างถนน รอบ 811
   /* 🚦 รอบ 182: precompute รายการทางแยก (จุด arms>=3 ที่ cluster รวมกัน) — robust กว่า sample สด
      (โซน arms>=3 แคบระดับ sub-meter → เตือน/ปรับแบบ sample จุดเดียวพลาด · ใช้ระยะจากรายการแทน) */
   const junctions=[];
@@ -2486,6 +2506,20 @@ function randRoadPos(minD,maxD){
   }
   return {x:camera.position.x,z:camera.position.z+80};
 }
+/* 🌳🚁 รอบ 811: สุ่มจุดบนพื้นที่สีเขียวข้างถนนจริง ระยะ min–max จากผู้เล่น (โหมด drive)
+   ใช้คู่กับ randRoadPos — สลับกันวางตัวอักษร/เหรียญโบนัส ให้กระจายทั้งบนถนนและบนหญ้าข้างทาง */
+function randGreenPos(minD,maxD){
+  const D=worlds.drive&&worlds.drive.d;
+  if(!D||!D.greenPts||!D.greenPts.length) return randRoadPos(minD,maxD);
+  const pts=D.greenPts, n=pts.length/2;
+  for(let i=0;i<40;i++){
+    const j=Math.floor(Math.random()*n);
+    const x=pts[j*2], z=pts[j*2+1];
+    const d=Math.hypot(x-camera.position.x,z-camera.position.z);
+    if(d>=minD && d<=maxD) return {x,z};
+  }
+  return randRoadPos(minD,maxD);
+}
 /* 🏨 สุ่มจุดวางตัวอักษรในโรงแรม — กระจายทุกชั้น แต่ให้ชั้นที่ผู้เล่นอยู่มีลุ้นเยอะกว่า
    🩹 รอบ 778 (ผู้ใช้สั่งข้อ 3+5): เดิมสุ่มจุดอิสระ → ตัวอักษรหลายตัวลงห้องเดียวกันและกองชิดกันเป็นก้อน
    ตอนนี้บังคับ 2 กติกา: **ห้องละไม่เกิน 2 ตัว** และ **ต้องห่างกันอย่างน้อย HOTEL_MIN_GAP เมตร** */
@@ -2536,11 +2570,13 @@ function hotelPruneLetters(){
   }
 }
 function spawnLetter(ch){
-  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTex(ch),transparent:true}));
+  const isCoin=ch==='🪙';                         // 🪙 รอบ 811: เหรียญโบนัส (ไม่ใช่ตัวอักษรของคำ) ใช้เทกซ์เจอร์ emoji แทน
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:isCoin?emojiTexture('🪙'):letterTex(ch),transparent:true}));
   let hotelRoom='';
   if(M.drive){
-    // โหมดขับรถ: ตัวอักษรลอยบนถนนจริง — ขับชนเพื่อเก็บ (ไม่ต้องจอด)
-    const p=randRoadPos(60,450);
+    // โหมดขับรถ: ตัวอักษร/เหรียญลอยบนถนนจริง — ขับชนเพื่อเก็บ (ไม่ต้องจอด)
+    // 🌳 รอบ 811: สุ่มครึ่งหนึ่งไปโผล่บนพื้นที่สีเขียวข้างถนนแทน ให้กระจายทั้งถนน+สนามหญ้า
+    const p=Math.random()<.5?randGreenPos(60,450):randRoadPos(60,450);
     spr.position.set(p.x,1.7,p.z);
     spr.scale.set(3.4,3.4,1);                    // ใหญ่ มองเห็นแต่ไกลตอนขับ
   }else if(M.drone && buildings.length){
@@ -2572,7 +2608,7 @@ function spawnLetter(ch){
     spr.scale.set(1.5,1.5,1);
   }
   scene.add(spr);
-  letters.push({ch,spr,born:performance.now(),baseY:spr.position.y,room:hotelRoom});
+  letters.push({ch,spr,born:performance.now(),baseY:spr.position.y,room:hotelRoom,bonus:isCoin});
 }
 function spawnLettersForWord(w){ w.en.split('').forEach(spawnLetter); }
 /* เติมตัวอักษรที่ยังขาด (ผู้เล่นอาจใช้ตัวอักษรของคำ A ไปประกอบคำ B) */
@@ -2592,11 +2628,32 @@ function ensureCoverage(){
     });
   });
 }
+/* ============================================================
+   🌳🪙 รอบ 811: ความหนาแน่นเสริมเฉพาะโหมดขับรถ — ผู้ใช้: "เพิ่มตัวอักษรและเหรียญบนถนนและ
+   พื้นที่สีเขียวด้านข้างให้มากกว่านี้" (เตรียมรองรับเฮลิคอปเตอร์มาลงจอดเก็บบนพื้นที่สีเขียวในอนาคต)
+   ของเดิม ensureCoverage() ปล่อยแค่ "พอดีคำที่ต้องใช้" (มักแค่ 1 ตัวอักษรต่อชนิด) กระจายในเมืองที่ใหญ่มาก
+   จึงรู้สึกโล่ง — ฟังก์ชันนี้เพิ่มสำเนาตัวอักษรที่ต้องใช้อยู่แล้ว + เหรียญโบนัสล้วน (ไม่ผูกคำ)
+   ============================================================ */
+const DRIVE_LETTER_COPIES=3;      // แต่ละตัวอักษรที่ต้องใช้ ให้มีสำเนากระจายอยู่ในเมืองกี่จุด
+const DRIVE_BONUS_COINS=24;       // จำนวนเหรียญโบนัสที่คงไว้ตลอดเวลาในโหมดขับรถ
+function ensureDriveAmbience(){
+  if(!M.drive) return;
+  const need={};
+  words.forEach(w=>w.en.split('').forEach(ch=>need[ch]=true));
+  const worldCnt={}; let bonusCnt=0;
+  letters.forEach(l=>{ if(l.bonus) bonusCnt++; else worldCnt[l.ch]=(worldCnt[l.ch]||0)+1; });
+  Object.keys(need).forEach(ch=>{
+    while((worldCnt[ch]||0)<DRIVE_LETTER_COPIES && letters.length<90){
+      spawnLetter(ch); worldCnt[ch]=(worldCnt[ch]||0)+1;
+    }
+  });
+  while(bonusCnt<DRIVE_BONUS_COINS && letters.length<90){ spawnLetter('🪙'); bonusCnt++; }
+}
 function relocateLetters(now){
   letters.forEach(l=>{
     if(now-l.born>=RELOCATE_MS){
       if(M.drive){
-        const p=randRoadPos(60,450);
+        const p=Math.random()<.5?randGreenPos(60,450):randRoadPos(60,450);   // 🌳 รอบ 811: ย้ายที่ก็ยังสลับถนน/หญ้าข้างทาง
         l.spr.position.set(p.x,1.7,p.z);
       }else if(M.drone && buildings.length){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
@@ -2633,9 +2690,19 @@ function removeLetter(i){
    เดิมแต่ละโลกเขียนซ้ำกัน 4 ที่ ทำให้แก้ตกหล่นง่าย
    ============================================================ */
 const LETTER_COIN=1;                         // เหรียญต่อตัวอักษร 1 ตัว
+const BONUS_COIN_VAL=3;                      // 🪙 รอบ 811: เหรียญโบนัสข้างถนน/บนหญ้า ให้มากกว่าตัวอักษรธรรมดา (ไม่ผูกกับคำ)
 function pickUpLetter(i){
   const l=letters[i], ch=l.ch;
   const at=l.spr.position.clone();            // เก็บตำแหน่งไว้ก่อนลบ (ไว้เด้งป้ายตรงจุดนั้น)
+  if(l.bonus){                                // 🪙 รอบ 811: เหรียญโบนัสล้วน ๆ — ไม่เข้าคลังตัวอักษร ไม่นับคำ
+    addCoins(BONUS_COIN_VAL);
+    sessionCoins+=BONUS_COIN_VAL;
+    removeLetter(i);
+    letterPop(at,'🪙',BONUS_COIN_VAL);
+    sfx.coin();
+    renderHudTop();
+    return;
+  }
   inv[ch]=(inv[ch]||0)+1;
   addCoins(LETTER_COIN);
   sessionCoins+=LETTER_COIN;                  // ให้สรุปท้ายรอบตรงกับที่ได้จริง
@@ -2646,13 +2713,14 @@ function pickUpLetter(i){
   renderHudInv(); renderHudWords(); renderHudTop();   // renderHudTop = อัปเดตเลขเหรียญบนจอทันที
   tryCompleteWords();
 }
-/* ป้ายเด้ง "ตัวอักษร +1🪙" ที่ตำแหน่งตัวอักษรในโลก 3D */
-function letterPop(worldPos,ch){
+/* ป้ายเด้ง "ตัวอักษร +1🪙" ที่ตำแหน่งตัวอักษรในโลก 3D — ch==='🪙' (เหรียญโบนัส รอบ811) โชว์แบบไม่มีตัวอักษรกำกับ */
+function letterPop(worldPos,ch,amt){
   if(!coinPopEl || !camera) return;
+  amt=amt||LETTER_COIN;
   const v=worldPos.clone().project(camera);
   const el=document.createElement('div');
   el.className='sc-pop letter-pop';
-  el.innerHTML=`<b>${ch.toUpperCase()}</b> +${LETTER_COIN}🪙`;
+  el.innerHTML=ch==='🪙'?`🪙 +${amt}`:`<b>${ch.toUpperCase()}</b> +${amt}🪙`;
   const W=window.innerWidth, H=window.innerHeight;
   // เก็บตอนตัวอักษรอยู่ชิดตัว/หลังกล้อง (v.z>1) → เด้งกลางจอแทน ห้ามหายไปเฉยๆ
   const behind=v.z>1;
@@ -11305,7 +11373,7 @@ function loop(){
       if(now-lastSpawn>M.monSpawnMs){ lastSpawn=now; spawnMonster(); }
     }
   }
-  if(now-lastEnsure>5000 && !M.soccer){ lastEnsure=now; relocateLetters(now); ensureCoverage(); }
+  if(now-lastEnsure>5000 && !M.soccer){ lastEnsure=now; relocateLetters(now); ensureCoverage(); ensureDriveAmbience(); }
   tickPeers(dt,now);
   sendPos(false);
   drawMinimap();
@@ -11529,6 +11597,7 @@ function start(md,opt){
   else{
     words.forEach(spawnLettersForWord);
     for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
+    ensureDriveAmbience();   // 🌳🪙 รอบ 811: เข้าโหมดขับรถ (M.drive) ต้องมีสำเนาตัวอักษร+เหรียญโบนัสให้เก็บตั้งแต่แรกเข้า ไม่ต้องรอ 5 วิ
   }
   if(M.ghost){
     probeGhostImages();
