@@ -175,13 +175,13 @@ savePhoto:11705 · clearEntities:11717 · INTRO_KEY:11739 · introSeenObj:11740 
 INTRO:11743 · INTRO_MODE:11745 · showIntro:11747 · HELI_KPP_BANNER:11773 · closeIntro:11775 · beginPlay:11781
 start:11783 · exitWorld:12004 · mechaRecapLine:12073
 
-## js/auth.js (389 บรรทัด · 32 รายการ)
+## js/auth.js (404 บรรทัด · 34 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
 isTester:44 · testerBoost:48 · authSetStatus:74 · authShowLogin:86 · authGateOffline:90 · authSaveRef:97
 authFetchCloud:98 · authWriteCloud:99 · authDeleteCloud:100 · authWriteProfileName:101 · authPushProfile:108 · authApplyProfileName:116
 authAskProfileName:132 · authEditProfileName:143 · authStart:154 · updateOfflinePill:184 · authEnterOffline:189 · authLateSync:206
-authLoginClick:222 · authOnLogin:241 · authSyncOnLogin:254 · authFreshStart:283 · authAskLink:292 · authEnterGame:342
-authPushSave:357 · authLogout:368
+authIsAppMode:226 · AUTH_REDIRECT_CODES:234 · authLoginClick:236 · authOnLogin:256 · authSyncOnLogin:269 · authFreshStart:298
+authAskLink:307 · authEnterGame:357 · authPushSave:372 · authLogout:383
 
 ## js/award.js (271 บรรทัด · 0 รายการ)
 
