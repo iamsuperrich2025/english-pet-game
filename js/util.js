@@ -758,52 +758,53 @@ function applyNoAnim(){
 }
 
 /* 🏷️ รอบ 806: ชื่อ EN/TH ใต้ตัวละครโปรไฟล์ 88 ตัว (เสริมคำศัพท์) — blk1-8 = ชื่อมาสคอตเดิม (BLOCK_AVATARS)
-   blk9-48 = อาชีพจริง (ดูจากภาพ: นักบิน/หมอ/เชฟ/ตำรวจ ฯลฯ) · blk49-88 = คอสตูมสัตว์/แฟนตาซี/กิจกรรม */
+   blk9-48 = อาชีพจริง (ดูจากภาพ: นักบิน/หมอ/เชฟ/ตำรวจ ฯลฯ) · blk49-88 = คอสตูมสัตว์/แฟนตาซี/กิจกรรม
+   🔤 รอบ 808: เพิ่ม pron = คำอ่านเทียบเสียงไทย (เครื่องหมาย ' หลังพยางค์ที่ลงเสียงหนัก ตามสเปกผู้ใช้ เช่น doctor="ดอค'เถอะ") */
 const BLK_VOCAB = {
-  blk1:{en:'Red Racer',th:'เรซเซอร์แดง'}, blk2:{en:'Blue Captain',th:'กัปตันฟ้า'},
-  blk3:{en:'Green Tea',th:'ชาเขียว'}, blk4:{en:'Orange Sunny',th:'ซันนี่ส้ม'},
-  blk5:{en:'Purple Wizard',th:'วิซาร์ดม่วง'}, blk6:{en:'Pinky',th:'พิ้งกี้'},
-  blk7:{en:'Lemon',th:'เลม่อน'}, blk8:{en:'Minty',th:'มิ้นตี้'},
-  blk9:{en:'Superhero',th:'ซูเปอร์ฮีโร่'}, blk10:{en:'Pilot',th:'นักบิน'},
-  blk11:{en:'Explorer',th:'นักสำรวจ'}, blk12:{en:'Firefighter',th:'นักดับเพลิง'},
-  blk13:{en:'Astronaut',th:'นักบินอวกาศ'}, blk14:{en:'Doctor',th:'หมอ'},
-  blk15:{en:'Nurse',th:'พยาบาล'}, blk16:{en:'Chef',th:'เชฟ'},
-  blk17:{en:'Farmer',th:'ชาวนา'}, blk18:{en:'Artist',th:'ศิลปิน'},
-  blk19:{en:'Musician',th:'นักดนตรี'}, blk20:{en:'Skateboarder',th:'นักเล่นสเก็ตบอร์ด'},
-  blk21:{en:'Soccer Player',th:'นักฟุตบอล'}, blk22:{en:'Basketball Player',th:'นักบาสเกตบอล'},
-  blk23:{en:'Swimmer',th:'นักว่ายน้ำ'}, blk24:{en:'Cyclist',th:'นักปั่นจักรยาน'},
-  blk25:{en:'Police Officer',th:'ตำรวจ'}, blk26:{en:'Mail Carrier',th:'บุรุษไปรษณีย์'},
-  blk27:{en:'Conductor',th:'พนักงานรถไฟ'}, blk28:{en:'Construction Worker',th:'คนงานก่อสร้าง'},
-  blk29:{en:'Mechanic',th:'ช่างซ่อมรถ'}, blk30:{en:'Gardener',th:'คนสวน'},
-  blk31:{en:'Baker',th:'คนทำขนมปัง'}, blk32:{en:'Student',th:'นักเรียน'},
-  blk33:{en:'Hiker',th:'นักเดินป่า'}, blk34:{en:'Fisherman',th:'ชาวประมง'},
-  blk35:{en:'Sailor',th:'กะลาสีเรือ'}, blk36:{en:'Diver',th:'นักดำน้ำ'},
-  blk37:{en:'Backpacker',th:'นักท่องเที่ยวแบกเป้'}, blk38:{en:'Photographer',th:'ช่างภาพ'},
-  blk39:{en:'Detective',th:'นักสืบ'}, blk40:{en:'Reporter',th:'นักข่าว'},
-  blk41:{en:'Martial Artist',th:'นักศิลปะการต่อสู้'}, blk42:{en:'Boxer',th:'นักมวย'},
-  blk43:{en:'Ninja',th:'นินจา'}, blk44:{en:'Knight',th:'อัศวิน'},
-  blk45:{en:'Pirate',th:'โจรสลัด'}, blk46:{en:'Cowboy',th:'คาวบอย'},
-  blk47:{en:'Archer',th:'นักธนู'}, blk48:{en:'Race Car Driver',th:'นักแข่งรถ'},
-  blk49:{en:'Wizard',th:'พ่อมด'}, blk50:{en:'Witch',th:'แม่มด'},
-  blk51:{en:'Fairy',th:'นางฟ้า'}, blk52:{en:'Mermaid',th:'นางเงือก'},
-  blk53:{en:'Elf',th:'เอลฟ์'}, blk54:{en:'Dragon',th:'มังกร'},
-  blk55:{en:'Unicorn',th:'ยูนิคอร์น'}, blk56:{en:'Angel',th:'ทูตสวรรค์'},
-  blk57:{en:'Cat',th:'แมว'}, blk58:{en:'Dog',th:'สุนัข'},
-  blk59:{en:'Bunny',th:'กระต่าย'}, blk60:{en:'Bear',th:'หมี'},
-  blk61:{en:'Panda',th:'แพนด้า'}, blk62:{en:'Fox',th:'สุนัขจิ้งจอก'},
-  blk63:{en:'Penguin',th:'เพนกวิน'}, blk64:{en:'Frog',th:'กบ'},
-  blk65:{en:'Dinosaur',th:'ไดโนเสาร์'}, blk66:{en:'Shark',th:'ฉลาม'},
-  blk67:{en:'Bee',th:'ผึ้ง'}, blk68:{en:'Butterfly',th:'ผีเสื้อ'},
-  blk69:{en:'Ladybug',th:'เต่าทอง'}, blk70:{en:'Owl',th:'นกฮูก'},
-  blk71:{en:'Lion',th:'สิงโต'}, blk72:{en:'Turtle',th:'เต่า'},
-  blk73:{en:'Robot',th:'หุ่นยนต์'}, blk74:{en:'Alien',th:'มนุษย์ต่างดาว'},
-  blk75:{en:'Space Explorer',th:'นักสำรวจอวกาศ'}, blk76:{en:'Cyber Warrior',th:'นักรบไซเบอร์'},
-  blk77:{en:'Winter Kid',th:'เด็กหน้าหนาว'}, blk78:{en:'Rainy Day Kid',th:'เด็กวันฝนตก'},
-  blk79:{en:'Snorkeler',th:'นักดำน้ำตื้น'}, blk80:{en:'Cozy Kid',th:'เด็กใส่เสื้อกันหนาว'},
-  blk81:{en:'Party Kid',th:'เด็กในงานปาร์ตี้'}, blk82:{en:'Graduate',th:'บัณฑิตน้อย'},
-  blk83:{en:'Juggler',th:'นักเล่นกล'}, blk84:{en:'Magician',th:'นักมายากล'},
-  blk85:{en:'Ice Skater',th:'นักสเก็ตน้ำแข็ง'}, blk86:{en:'Skier',th:'นักเล่นสกี'},
-  blk87:{en:'Rock Star',th:'ร็อกสตาร์'}, blk88:{en:'Ballerina',th:'นักบัลเล่ต์'},
+  blk1:{en:'Red Racer',pron:"เรด เร'เซอะ",th:'เรซเซอร์แดง'}, blk2:{en:'Blue Captain',pron:"บลู แค็พ'เทิ่น",th:'กัปตันฟ้า'},
+  blk3:{en:'Green Tea',pron:'กรีน ที',th:'ชาเขียว'}, blk4:{en:'Orange Sunny',pron:"ออ'เรินจ์ ซัน'นี่",th:'ซันนี่ส้ม'},
+  blk5:{en:'Purple Wizard',pron:"เพอร์'เพิ่ล วิซ'เอิด",th:'วิซาร์ดม่วง'}, blk6:{en:'Pinky',pron:"พิง'กี้",th:'พิ้งกี้'},
+  blk7:{en:'Lemon',pron:"เล'เมิ่น",th:'เลม่อน'}, blk8:{en:'Minty',pron:"มิน'ที่",th:'มิ้นตี้'},
+  blk9:{en:'Superhero',pron:"ซู'เพอร์ฮีโร่",th:'ซูเปอร์ฮีโร่'}, blk10:{en:'Pilot',pron:"ไพ'เลิท",th:'นักบิน'},
+  blk11:{en:'Explorer',pron:"เอ็กซ์พลอ'เรอะ",th:'นักสำรวจ'}, blk12:{en:'Firefighter',pron:"ไฟ'เออร์ไฟเทอะ",th:'นักดับเพลิง'},
+  blk13:{en:'Astronaut',pron:"แอส'โทรนอท",th:'นักบินอวกาศ'}, blk14:{en:'Doctor',pron:"ดอค'เถอะ",th:'หมอ'},
+  blk15:{en:'Nurse',pron:'เนิร์ส',th:'พยาบาล'}, blk16:{en:'Chef',pron:'เชฟ',th:'เชฟ'},
+  blk17:{en:'Farmer',pron:"ฟาร์'เมอะ",th:'ชาวนา'}, blk18:{en:'Artist',pron:"อาร์'ทิสท์",th:'ศิลปิน'},
+  blk19:{en:'Musician',pron:"มิวซิ'เชิ่น",th:'นักดนตรี'}, blk20:{en:'Skateboarder',pron:"สเกท'บอร์เดอะ",th:'นักเล่นสเก็ตบอร์ด'},
+  blk21:{en:'Soccer Player',pron:"ซอค'เคอะ เพล'เยอะ",th:'นักฟุตบอล'}, blk22:{en:'Basketball Player',pron:"แบส'คิทบอล เพล'เยอะ",th:'นักบาสเกตบอล'},
+  blk23:{en:'Swimmer',pron:"สวิม'เมอะ",th:'นักว่ายน้ำ'}, blk24:{en:'Cyclist',pron:"ไซ'เคลิสท์",th:'นักปั่นจักรยาน'},
+  blk25:{en:'Police Officer',pron:"เพอะลีส' ออฟ'ฟิเซอะ",th:'ตำรวจ'}, blk26:{en:'Mail Carrier',pron:"เมล แค'เรียเออะ",th:'บุรุษไปรษณีย์'},
+  blk27:{en:'Conductor',pron:"เคินดัค'เทอะ",th:'พนักงานรถไฟ'}, blk28:{en:'Construction Worker',pron:"เคินสตรัค'เชิ่น เวอร์'เคอะ",th:'คนงานก่อสร้าง'},
+  blk29:{en:'Mechanic',pron:"เมอะแค'นิค",th:'ช่างซ่อมรถ'}, blk30:{en:'Gardener',pron:"การ์'เดิ่นเนอะ",th:'คนสวน'},
+  blk31:{en:'Baker',pron:"เบ'เคอะ",th:'คนทำขนมปัง'}, blk32:{en:'Student',pron:"สทู'เดิ่นท์",th:'นักเรียน'},
+  blk33:{en:'Hiker',pron:"ไฮ'เคอะ",th:'นักเดินป่า'}, blk34:{en:'Fisherman',pron:"ฟิช'เชอะเหมิ่น",th:'ชาวประมง'},
+  blk35:{en:'Sailor',pron:"เซ'เลอะ",th:'กะลาสีเรือ'}, blk36:{en:'Diver',pron:"ได'เวอะ",th:'นักดำน้ำ'},
+  blk37:{en:'Backpacker',pron:"แบค'แพคเคอะ",th:'นักท่องเที่ยวแบกเป้'}, blk38:{en:'Photographer',pron:"เฟอะทอก'กระเฟอะ",th:'ช่างภาพ'},
+  blk39:{en:'Detective',pron:"ดิเทค'ทิฟ",th:'นักสืบ'}, blk40:{en:'Reporter',pron:"ริพอร์'เทอะ",th:'นักข่าว'},
+  blk41:{en:'Martial Artist',pron:"มาร์'เชิ่ล อาร์'ทิสท์",th:'นักศิลปะการต่อสู้'}, blk42:{en:'Boxer',pron:"บ็อค'เซอะ",th:'นักมวย'},
+  blk43:{en:'Ninja',pron:"นิน'จะ",th:'นินจา'}, blk44:{en:'Knight',pron:'ไนท์',th:'อัศวิน'},
+  blk45:{en:'Pirate',pron:"ไพ'เริท",th:'โจรสลัด'}, blk46:{en:'Cowboy',pron:"เคา'บอย",th:'คาวบอย'},
+  blk47:{en:'Archer',pron:"อาร์'เชอะ",th:'นักธนู'}, blk48:{en:'Race Car Driver',pron:"เรส คาร์ ไดร'เวอะ",th:'นักแข่งรถ'},
+  blk49:{en:'Wizard',pron:"วิซ'เอิด",th:'พ่อมด'}, blk50:{en:'Witch',pron:'วิทช์',th:'แม่มด'},
+  blk51:{en:'Fairy',pron:"แฟ'รี่",th:'นางฟ้า'}, blk52:{en:'Mermaid',pron:"เมอร์'เมด",th:'นางเงือก'},
+  blk53:{en:'Elf',pron:'เอลฟ์',th:'เอลฟ์'}, blk54:{en:'Dragon',pron:"แดรก'เกิ่น",th:'มังกร'},
+  blk55:{en:'Unicorn',pron:"ยู'นิคอร์น",th:'ยูนิคอร์น'}, blk56:{en:'Angel',pron:"เอน'เจิ่ล",th:'ทูตสวรรค์'},
+  blk57:{en:'Cat',pron:'แคท',th:'แมว'}, blk58:{en:'Dog',pron:'ดอก',th:'สุนัข'},
+  blk59:{en:'Bunny',pron:"บัน'นี่",th:'กระต่าย'}, blk60:{en:'Bear',pron:'แบร์',th:'หมี'},
+  blk61:{en:'Panda',pron:"แพน'ดะ",th:'แพนด้า'}, blk62:{en:'Fox',pron:'ฟอกซ์',th:'สุนัขจิ้งจอก'},
+  blk63:{en:'Penguin',pron:"เพน'กวิน",th:'เพนกวิน'}, blk64:{en:'Frog',pron:'ฟรอก',th:'กบ'},
+  blk65:{en:'Dinosaur',pron:"ได'โนซอร์",th:'ไดโนเสาร์'}, blk66:{en:'Shark',pron:'ชาร์ค',th:'ฉลาม'},
+  blk67:{en:'Bee',pron:'บี',th:'ผึ้ง'}, blk68:{en:'Butterfly',pron:"บัท'เทอะฟลาย",th:'ผีเสื้อ'},
+  blk69:{en:'Ladybug',pron:"เล'ดี้บัก",th:'เต่าทอง'}, blk70:{en:'Owl',pron:'เอาล์',th:'นกฮูก'},
+  blk71:{en:'Lion',pron:"ไล'เอิ่น",th:'สิงโต'}, blk72:{en:'Turtle',pron:"เทอร์'เทิ่ล",th:'เต่า'},
+  blk73:{en:'Robot',pron:"โร'บอท",th:'หุ่นยนต์'}, blk74:{en:'Alien',pron:"เอ'เลี่ยน",th:'มนุษย์ต่างดาว'},
+  blk75:{en:'Space Explorer',pron:"สเปส เอ็กซ์พลอ'เรอะ",th:'นักสำรวจอวกาศ'}, blk76:{en:'Cyber Warrior',pron:"ไซ'เบอะ วอ'ริเออะ",th:'นักรบไซเบอร์'},
+  blk77:{en:'Winter Kid',pron:"วิน'เทอะ คิด",th:'เด็กหน้าหนาว'}, blk78:{en:'Rainy Day Kid',pron:"เร'นี่ เด คิด",th:'เด็กวันฝนตก'},
+  blk79:{en:'Snorkeler',pron:"สนอร์'เคเลอะ",th:'นักดำน้ำตื้น'}, blk80:{en:'Cozy Kid',pron:"โค'ซี่ คิด",th:'เด็กใส่เสื้อกันหนาว'},
+  blk81:{en:'Party Kid',pron:"พาร์'ที่ คิด",th:'เด็กในงานปาร์ตี้'}, blk82:{en:'Graduate',pron:"แกรด'จูเอท",th:'บัณฑิตน้อย'},
+  blk83:{en:'Juggler',pron:"จัก'เกลอะ",th:'นักเล่นกล'}, blk84:{en:'Magician',pron:"เมอะจิ'เชิ่น",th:'นักมายากล'},
+  blk85:{en:'Ice Skater',pron:"ไอซ์ สเก'เทอะ",th:'นักสเก็ตน้ำแข็ง'}, blk86:{en:'Skier',pron:"สกี'เออะ",th:'นักเล่นสกี'},
+  blk87:{en:'Rock Star',pron:'รอค สตาร์',th:'ร็อกสตาร์'}, blk88:{en:'Ballerina',pron:"แบลเลอะรี'น่า",th:'นักบัลเล่ต์'},
 };
 
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
@@ -839,14 +840,14 @@ function openSettings(){
     </div>
     <div class="set-row set-blk-row" id="set-blk">
       <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
-        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN/ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
+        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN + คำอ่าน + ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
       <div class="strip-wrap blk-strip">
         <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
         <div class="strip-x blk-x grid2x8">
           ${blkAvList.map(b=>{
-            const v = BLK_VOCAB[b] || {en:'', th:''};
+            const v = BLK_VOCAB[b] || {en:'', pron:'', th:''};
             return `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy">
-              <span class="blk-cap"><b class="blk-cap-en">${v.en}</b><span class="blk-cap-th">${v.th}</span></span></button>`;
+              <span class="blk-cap"><b class="blk-cap-en">${v.en}</b><span class="blk-cap-pron">${v.pron}</span><span class="blk-cap-th">${v.th}</span></span></button>`;
           }).join('')}
         </div>
         <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
