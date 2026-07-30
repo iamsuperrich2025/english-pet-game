@@ -7,6 +7,10 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอ publish (รอบ 825 · 30 ก.ค. 2026): โซนใหม่ `examRank` = กระดานอันดับข้อสอบมาตรฐาน "ตลอดกาล"** — `/examRank/<setId>/<uid> = {sc, tt, sec, n≤40, g≤20, ts}` (setId เช่น `ielts_1`, `toeic_3`) · **อ่านได้ทุกคนที่ login** (`auth != null` เหมือน `/gfeed`) · **เขียนได้เฉพาะแถวของ uid ตัวเอง** (`auth.uid === $uid`) และ `$setId` ต้องตรงรูปแบบ `^[a-z]+_[0-9]{1,2}$` · **validate บังคับว่าต้อง "สอบผ่านจริง"**: `sc <= tt` และ `sc*10 >= tt*7` (= เกณฑ์ผ่าน 70% ตาม `XS_PASS_PCT`) · `sec` ≤ 86400 · `ts` ห้ามอนาคตเกิน 1 นาที · `.indexOn:"sc"` ให้ client ดึงแค่ `orderByChild('sc').limitToLast(50)` ไม่ต้องโหลดทั้งตาราง
+  - **ทำไมต้องมีโซนนี้:** เดิม (รอบ 817) กระดานอ่านจากฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม) → คนที่สอบผ่านนานแล้วโพสต์หลุดออก = หายจากกระดานของคนอื่น เป็นแค่ "อันดับจากกิจกรรมล่าสุด" · โซนนี้เก็บ **1 แถวต่อคนต่อชุด** (ฝั่งเขียนเทียบก่อนว่าดีกว่าเดิมไหม) จึงเป็นอันดับตลอดกาลจริง และขนาดตารางโตตามจำนวนผู้เล่น × ชุด ไม่โตตามจำนวนครั้งที่สอบ
+  - **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.xrkOk=false` → กระดานยังเห็น **สถิติของตัวเอง** (จากใบประกาศ `state.certs`) และขึ้นป้ายบอกตรง ๆ ว่า "กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /examRank ก่อน)" — `xrkNote()` ใน `js/examstd.js` (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ระบบสอบ/รางวัล/ใบประกาศ/ฟีด ทำงานปกติทุกอย่าง
+  - **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้ · 28 โซน 450 บรรทัด):** https://claude.ai/code/artifact/79fa6a20-7c7f-4cfc-af4a-c3ab1c69e73b
 - ⏳ **รอ publish (ยืนยันสดรอบ 763 · 29 ก.ค. 2026): โซน `pphoto` เป็น "โซนเดียวในไฟล์ที่ยังไม่มีบน server"** — เทียบ `/.settings/rules` สดกับก้อนใน RULES.md แบบ deep flatten: ต่างกันแค่ 3 คีย์ (`/pphoto/$uid/.read|.write|.validate`) นอกนั้น identical ทั้งไฟล์ (แปลว่า `wsAward`/`tpAward`/รีแอ็กชัน `gfeed` ที่เขียนว่ารอ publish อยู่ **ขึ้น live ไปแล้ว**) · **อาการที่ผู้ใช้เจอ:** อัปโหลดรูปแล้วเพื่อนยังเห็นตัวการ์ตูน (เขียน `/pphoto` โดน deny) · **Artifact ปุ่มคัดลอกก้อนเต็มล่าสุด (ใช้ใบนี้):** https://claude.ai/code/artifact/fa6c6ee8-ca13-4004-8041-231b65ac11ba · (ใบเก่ารอบ 709: https://claude.ai/code/artifact/9056ef14-1220-4e31-aaa7-0fcee53e7f73) — `/pphoto/<uid>` = สตริง data URL ของรูป JPEG จัตุรัสก้อนเล็ก (ครอป+ย่อในเครื่องแล้ว) · **อ่านได้ทุกคนที่ login** (เพื่อนเห็นรูปในการ์ดโปรไฟล์) · **เขียน/ลบได้เฉพาะเจ้าของ** (`auth.uid === $uid`) · validate บังคับ 2 ชั้น: ต้องขึ้นต้น `data:image/jpeg;base64,` และ **ยาว ≤30000 ตัวอักษร** (client บีบให้ ≤28000 อยู่แล้ว — กันคนดัดแปลง client ยัดไฟล์ใหญ่ถล่มโควตา)
   - **ยังไม่ publish = เกมไม่พัง:** เขียนโดน deny → รูปยังใช้ได้เต็มที่ในเครื่องตัวเอง (เก็บ localStorage) แต่เพื่อนยังไม่เห็น → **เกมเด้ง toast บอกตรง ๆ ว่าติดกฎ /pphoto** (กฎทอง #1 ห้ามปิดเงียบ) · ทุกระบบอื่นไม่กระทบ
   - 🔎 **รอบ 763 เพิ่มป้ายถาวรในกล่องรูปโปรไฟล์** (`photoVerify()` ใน `js/photo.js`): อ่านกลับจาก `/pphoto/<uid>` ทุกครั้งที่เปิดกล่อง → "✅ เพื่อนเห็นรูปนี้แล้ว" / "⚠️ รูปนี้ยังอยู่แค่ในเครื่องนี้…" (toast เด้งครั้งเดียวตอนอัปโหลดแล้วหาย ผู้ใช้พลาดได้) · **DB ไม่ตรงกับเครื่อง = ส่งซ้ำให้เอง** → หลัง publish rules ผู้ใช้แค่เปิดกล่องอีกครั้ง ไม่ต้องอัปโหลดรูปใหม่
@@ -450,6 +454,23 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$other": { ".validate": false }
       }
     },
+    "examRank": {
+      "$setId": {
+        ".read": "auth != null",
+        ".indexOn": "sc",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid && $setId.matches(/^[a-z]+_[0-9]{1,2}$/)",
+          ".validate": "newData.hasChildren(['sc','tt','sec','n','ts']) && newData.child('sc').val() <= newData.child('tt').val() && newData.child('sc').val() * 10 >= newData.child('tt').val() * 7",
+          "sc":  { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 200" },
+          "tt":  { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 200" },
+          "sec": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 86400" },
+          "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+          "g":   { ".validate": "newData.isString() && newData.val().length <= 20" },
+          "ts":  { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "$other": { ".validate": false }
+        }
+      }
+    },
     "class": {
       "$map": {
         ".read": "auth != null",
@@ -534,6 +555,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - **ไม่เก็บใน `state`** (จึงไม่ขึ้นไปกับเซฟ cloud `/users/<uid>/save`) — เก็บ localStorage แยกคีย์ `petVocabAdventure_photo` + DB · เข้าเกมเครื่องใหม่ `photoPullMine()` ดึงลงมาให้เอง · มีในเครื่องแต่ DB ว่าง = ส่งขึ้นให้เอง (self-heal)
 - ฝั่งเกม: `js/photo.js` (`photoGet/photoOf/photoFetch/photoSaveUrl/photoRemove/photoPullMine/openPhotoMenu/openPhotoCrop`) · ครอป/ย่อ/บีบด้วย canvas ในเครื่องก่อนเสมอ (256px จัตุรัส · ไล่ลดคุณภาพ 0.82→0.5 แล้วไล่ลดขนาด 256→160 จนกว่าจะ ≤28000 ตัวอักษร) — วัดจริงด้วยภาพ noise ล้วน (บีบยากสุด) ได้ 19,347 ตัวอักษร
 - จุดที่โชว์: รูป passport บนแถบล็อบบี้ (+ปุ่ม 📷 มุมขวาล่าง) · `playerAvatarHTML()` ทุกที่ (หน้าเกม/สถิติ/ใบรายงาน) · การ์ดโปรไฟล์ผู้เล่น (ของเราทันที · ของเพื่อนโหลดตามทีหลัง) · ไม่มีรูป = ตัวการ์ตูนบล็อกเหมือนเดิมทุกจุด
+
+## หมายเหตุโครง /examRank (🏁 อันดับข้อสอบมาตรฐานตลอดกาล — รอบ 825)
+- `/examRank/<setId>/<uid> = {sc, tt, sec, n, g, ts}` — **1 แถวต่อคนต่อชุดข้อสอบ** (setId = `ielts_1`…`toefl_5`) · เขียนจาก `xrkSubmit()` ใน `xsFinish()` (`js/examstd.js`) เฉพาะตอน**สอบผ่าน** และเฉพาะเมื่อ**ดีกว่าแถวเดิม** (คะแนนก่อน แล้วเวลาตัดสิน) — อ่านแถวเดิม 1 ครั้งแล้ว `set()` ทับ ตรรกะ "เก็บที่ดีที่สุด" อยู่ **ฝั่งเขียน** ไม่ใช่ฝั่งอ่าน
+- อ่านด้วย `orderByChild('sc').limitToLast(50)` (ต้องมี `.indexOn:"sc"`) แล้ว **เรียงคะแนน→เวลาเองฝั่ง client** (RTDB เรียงได้ทีละคีย์เดียว) · cache ต่อชุดใน `__xrkCache` กดชิปสลับชุดไปมาไม่ยิงซ้ำ · สอบผ่านใหม่ = ล้าง cache ชุดนั้น
+- แถวของตัวเองมาจาก **2 ทางรวมกัน**: แถวใน DB + ใบประกาศ `state.certs` (เอาอันที่ดีกว่า) → ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเองเสมอ
+- ฝั่งเกม: `xrkSubmit/xrkFetch/xrkMerge/xrkBodyHTML/xrkMount/xrkNote/xrkNoteRefresh/openExamStdRank` (`js/examstd.js`) · หน้าตาแถวใช้ `bxrRowHTML`/`BXR_TOP` ของ `js/bandadv.js` ร่วมกัน (ไม่เขียนซ้ำ ไม่เพิ่ม CSS) · ⚠️ **ข้อความบอกแหล่งข้อมูลห้ามใช้ `bxRankNote()` ร่วมกัน** — กระดานสอบใหญ่ (รอบ 786) ยังเป็นแบบ "จากกิจกรรมล่าสุด" อยู่ กระดานนี้ใช้ `xrkNote()` ของตัวเอง
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`

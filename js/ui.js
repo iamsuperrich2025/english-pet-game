@@ -1608,7 +1608,7 @@ function openLeaderboardFull(){
     }
     /* 🏁 รอบ 815: แท็บข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด — เนื้อกระดานอยู่ js/examstd.js (xrkMount วาด+ผูกปุ่มเอง)
        สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js
-       ⚠️ รอบ 824: ป้ายต้องใช้ xrkNote() ของกระดานนี้เอง (อันดับตลอดกาลจาก /examRank) ห้ามใช้ bxRankNote()
+       ⚠️ รอบ 825: ป้ายต้องใช้ xrkNote() ของกระดานนี้เอง (อันดับตลอดกาลจาก /examRank) ห้ามใช้ bxRankNote()
           ร่วมกับแท็บ bx ด้านบน เพราะกระดานสอบใหญ่ยังเป็น "จากกิจกรรมล่าสุด" อยู่ · id ให้ xrkNoteRefresh() เขียนทับได้ */
     if(__lbfTab === 'xr'){
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 ข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด')}
@@ -4386,7 +4386,7 @@ function renderDashboard(){
     renderHomeCard();
     renderPhoneCard();
     renderComputerCard();
-    renderRailWorlds();   // 🎫→💰 รอบ 824: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
+    renderRailWorlds();   // 🎫→💰 รอบ 823: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -4720,7 +4720,7 @@ function renderDashboard(){
   renderHomeCard();
   renderPhoneCard();
   renderComputerCard();
-  renderRailWorlds();   // 🎫→💰 รอบ 824: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
+  renderRailWorlds();   // 🎫→💰 รอบ 823: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -6349,7 +6349,7 @@ async function enterInvasion3D(){
 
 /* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-   🎫→💰 รอบ 824 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
+   🎫→💰 รอบ 823 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
    (ไม่มีการ์ดตั๋วแยกในตลาดแล้ว) ราคาวันนี้เดียวกันทุกโลกจาก worldEntryInfo() (js/data/calendar.js — คิดวันหยุด/วันเด็ก)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคตแค่ "เพิ่ม 1 บรรทัด" ที่นี่แล้วปุ่มจะโผล่ในรางเอง
    prereq = ticketKey ของโลกก่อนหน้าที่ต้องปลดล็อกก่อน (null = ไม่มี เงื่อนไขพิเศษเช็กแยกใน railWorldClick) */
@@ -6408,7 +6408,7 @@ function railWorldClick(w){
   openWorldEntryDialog(w);
 }
 
-/* 🎫→💰 รอบ 824: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
+/* 🎫→💰 รอบ 823: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
    ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
 function openWorldEntryDialog(w){
   const info = worldEntryInfo();
@@ -6507,7 +6507,7 @@ function renderRailWorlds(){
     });
     rail.appendChild(box);
   }
-  const info = worldEntryInfo();   // 🎫→💰 รอบ 824: ราคาวันนี้เดียวกันทุกโลก (คิดวันหยุด/วันเด็กแล้ว)
+  const info = worldEntryInfo();   // 🎫→💰 รอบ 823: ราคาวันนี้เดียวกันทุกโลก (คิดวันหยุด/วันเด็กแล้ว)
   WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
@@ -6577,7 +6577,7 @@ function openTinvPicker(map){
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
   const friends = (Online.myFriends || []);
   if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
-  const w = (typeof TINV_WORLD_LABEL !== 'undefined' && TINV_WORLD_LABEL[map]) || 'โลกผจญภัย 🌍';   // 🤝 รอบ 824: ป้ายชื่อรวมทุกโลกจาก js/online.js
+  const w = (typeof TINV_WORLD_LABEL !== 'undefined' && TINV_WORLD_LABEL[map]) || 'โลกผจญภัย 🌍';   // 🤝 รอบ 823: ป้ายชื่อรวมทุกโลกจาก js/online.js
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">

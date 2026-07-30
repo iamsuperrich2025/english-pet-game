@@ -416,7 +416,8 @@ function xsFinish(){
     if(typeof questEvent === 'function') questEvent('quiz');
     if(typeof feedEvent === 'function') feedEvent('quiz',
       `สอบผ่านข้อสอบ ${p.label} ${correct}/${n} ข้อ ⏱️ ${xsFmt(secs)} 📋`);   // 🏁 รอบ 815: p.label (มีชื่อชุดต่อท้าย) ไม่ใช่ p.examMeta.label เดิม — กระดานอันดับต้องแยกเป็นรายชุด
-    if(typeof certAward === 'function') myCert = certAward(cat, correct, n, secs);
+    if(typeof certAward === 'function') myCert = certAward(cat, correct, n, secs, XS.mode === 'timed');
+    xrkSubmit(p.id, correct, n, secs);       // 🏁 รอบ 825: ลงกระดานอันดับตลอดกาล /examRank/<setId>/<uid> (เก็บเฉพาะสถิติที่ดีที่สุด)
   }
   addRP(rp);
   const made = (typeof addCraft === 'function') ? addCraft(correct) : null;
@@ -627,53 +628,94 @@ function openExamStdPicker(exam){
    ============================================================ */
 const __XRK_POST_RE = /^สอบผ่านข้อสอบ\s+(.+?)\s+(\d+)\s*\/\s*(\d+)\s*ข้อ\s*⏱️\s*(\d+):([0-5]\d)/;
 
-/* label เต็มของชุด (เช่น "IELTS Academic · ชุดที่ 1") → setId — หาใหม่ทุกครั้ง รองรับชุดที่เพิ่มมาใหม่ */
-function xrkIdByLabel(label){
-  if(typeof EXAM_STD_MANIFEST === 'undefined') return '';
-  const lb = String(label || '').trim();
-  for(const k in EXAM_STD_MANIFEST){
-    const s = EXAM_STD_MANIFEST[k].sets.find(x=>x.label === lb);
-    if(s) return s.id;
-  }
-  return '';
-}
-/* แถวอันดับของชุดข้อสอบเดียว (setId) — คะแนนสูงสุดก่อน เวลาเร็วสุดตัดสิน · 1 คนต่อ 1 แถว (เก็บแถวที่ดีที่สุด) */
-function xrkRows(setId){
-  const by = {};                       // uid → แถว
-  const put = (uid, row)=>{
-    const old = by[uid];
-    if(!old || row.sc / row.tt > old.sc / old.tt
-      || (row.sc / row.tt === old.sc / old.tt && row.sec < old.sec)) by[uid] = Object.assign({}, old, row);
+/* 📝 ฝั่งเขียน — เรียกตอนสอบผ่านใน xsFinish() · เก็บเฉพาะสถิติที่ดีที่สุด (คะแนนก่อน แล้วเวลา)
+   อ่านแถวเดิมของตัวเองก่อน 1 ครั้ง แล้วเขียนทับเมื่อดีกว่าเท่านั้น — DB จึงมี 1 แถว/คน/ชุดเสมอ */
+function xrkSubmit(setId, sc, tt, sec){
+  if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(false);
+  const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
+  if(!uid || !setId || !tt) return Promise.resolve(false);
+  const bs  = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อ เหมือน leaderboard
+  const row = {
+    sc, tt, sec,
+    n: (((typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || 'ผู้เล่น') + bs).slice(0, 40),
+    g: (state.student && state.student.grade) || '',
+    ts: Date.now(),
   };
-  // ① จากฟีดรวม (เพื่อนทั้งเกม)
-  const posts = (typeof Online !== 'undefined' && Array.isArray(Online.gfeed)) ? Online.gfeed : [];
-  posts.forEach(p=>{
-    if(!p || p.c !== 'quiz') return;
-    const m = __XRK_POST_RE.exec(String(p.tx || '').trim());
-    if(!m || xrkIdByLabel(m[1]) !== setId) return;
-    put(p.u, {uid:p.u, name:p.n || 'เพื่อน', g:p.g || '', sc:Number(m[2]), tt:Number(m[3]),
-              sec:Number(m[4]) * 60 + Number(m[5]), ts:p.ts || 0});
-  });
-  // ② ของเราจากใบประกาศ (ทับของฟีดถ้าดีกว่า)
-  const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
-  const cid = xsQuizId(setId);
-  const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
-    ? state.certs.find(c=>c.id === cid && c.sec) : null;
-  if(cert){
-    put(me, {uid:me, name:(typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || (state.student && state.student.name) || 'หนู',
-             g:(state.student && state.student.grade) || '', sc:cert.sc, tt:cert.tt, sec:cert.sec, ts:cert.ts || 0});
-  }
-  return Object.keys(by).map(u=>{
-    const r = by[u];
-    r.me = (u === me);
-    return r;
-  }).sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
+  const ref = Online.db.ref('examRank/' + setId + '/' + uid);
+  return ref.get().then(s=>{
+    const o = s && s.val();
+    if(o && typeof o.sc === 'number' && o.tt
+      && !(sc / tt > o.sc / o.tt || (sc / tt === o.sc / o.tt && sec < (o.sec || 0)))) return false;   // ของเดิมดีกว่า/เท่ากัน
+    return ref.set(row).then(()=>{
+      Online.xrkOk = true;
+      delete __xrkCache[setId];        // กระดานชุดนี้ต้องโหลดใหม่ (เห็นสถิติใหม่ของเราทันที)
+      return true;
+    });
+  }).catch(()=>{ Online.xrkOk = false; return false; });   // rules ยังไม่ publish / ออฟไลน์ → ป้ายบนกระดานบอกเอง
 }
+
+/* รวมแถวจาก DB กับใบประกาศของตัวเอง แล้วเรียงอันดับ
+   ใบประกาศ (state.certs) เก็บสถิติที่ดีที่สุดของเราอยู่แล้ว → เขียน DB ไม่ผ่าน/ออฟไลน์ ก็ยังเห็นแถวตัวเองเสมอ */
+function xrkMerge(setId, rows){
+  const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
+  const out = rows.filter(r=>r.uid !== me);
+  let my = rows.find(r=>r.uid === me) || null;
+  const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
+    ? state.certs.find(c=>c.id === xsQuizId(setId) && c.sec) : null;
+  if(cert && cert.tt){
+    const c = {uid:me, name:(typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || (state.student && state.student.name) || 'หนู',
+               g:(state.student && state.student.grade) || '', sc:cert.sc, tt:cert.tt, sec:cert.sec, ts:cert.ts || 0};
+    if(!my || c.sc / c.tt > my.sc / my.tt || (c.sc / c.tt === my.sc / my.tt && c.sec < my.sec)) my = c;
+  }
+  if(my){ my.me = true; out.push(my); }
+  return out.sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
+}
+
+/* 📖 ฝั่งอ่าน — query /examRank/<setId> เอา 50 คะแนนสูงสุด (ต้องมี ".indexOn":"sc" ใน rules)
+   แล้วเรียงคะแนน→เวลาเองฝั่ง client (RTDB เรียงได้ทีละคีย์เดียว) · cache ต่อชุด กดชิปสลับไปมาไม่ยิงซ้ำ */
+function xrkFetch(setId){
+  if(__xrkCache[setId]) return Promise.resolve(__xrkCache[setId]);
+  if(__xrkPend[setId])  return __xrkPend[setId];
+  const fin = rows=>{ __xrkCache[setId] = rows; delete __xrkPend[setId]; return rows; };
+  if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(fin(xrkMerge(setId, [])));
+  const p = Online.db.ref('examRank/' + setId).orderByChild('sc').limitToLast(XRK_READ).get().then(s=>{
+    const v = (s && s.val()) || {}, out = [];
+    Object.keys(v).forEach(u=>{
+      const r = v[u];
+      if(!r || typeof r.sc !== 'number' || !r.tt) return;
+      out.push({uid:u, name:r.n || 'เพื่อน', g:r.g || '', sc:r.sc, tt:r.tt, sec:Number(r.sec) || 0, ts:r.ts || 0});
+    });
+    Online.xrkOk = true;
+    return fin(xrkMerge(setId, out));
+  }).catch(()=>{ Online.xrkOk = false; return fin(xrkMerge(setId, [])); });
+  __xrkPend[setId] = p;
+  return p;
+}
+
+/* คำอธิบายแหล่งข้อมูลของกระดานนี้โดยเฉพาะ — ห้ามใช้ bxRankNote() ร่วมกับกระดานสอบใหญ่ (js/bandadv.js)
+   เพราะกระดานนั้นยังเป็น "จากกิจกรรมล่าสุด" อยู่ ส่วนกระดานนี้เป็นอันดับตลอดกาลจริงแล้ว (รอบ 825) */
+function xrkNote(){
+  if(typeof Online === 'undefined' || !Online.ready)
+    return '📴 ตอนนี้ออฟไลน์ — เห็นเฉพาะสถิติของหนูเอง ต่อเน็ตแล้วจะเห็นของเพื่อนด้วย';
+  if(Online.xrkOk === false)
+    return '⚠️ กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /examRank ก่อน) — ตอนนี้เห็นเฉพาะสถิติของหนูเอง';
+  return '🏆 อันดับตลอดกาลของชุดนี้ · เก็บสถิติที่ดีที่สุดของทุกคนที่เคยสอบผ่าน (ไม่หายไปตามเวลา)';
+}
+/* ป้ายบอกแหล่งข้อมูลอยู่ "นอก" กล่องที่ xrkMount วาด (หัวป๊อปอัป + .lbf-note ของแท็บเต็มจอ ใช้ id เดียวกัน
+   เพราะเปิดได้ทีละใบ) → อ่าน DB เสร็จค่อยรู้ว่าติด deny ไหม จึงต้องเขียนป้ายใหม่ตอนนั้น */
+function xrkNoteRefresh(){
+  /* `.lbf-note` = ทางถอย เผื่อ js/ui.js ที่ขึ้นเว็บอยู่ยังเป็นเวอร์ชันก่อนรอบ 825 (ยังไม่มี id="xrk-note")
+     — แท็บ xr เท่านั้นที่เรียก xrkMount จึงไม่ไปทับป้ายของแท็บอื่น */
+  const el = document.getElementById('xrk-note') || document.querySelector('.lbf-note');
+  if(el) el.textContent = xrkNote();
+}
+
 /* เนื้อกระดาน — วาดแถวด้วย bxrRowHTML ของ js/bandadv.js เลย (ฟอร์แมตเดียวกัน ไม่เขียนซ้ำ) */
 function xrkBodyHTML(setId){
-  const rows = xrkRows(setId);
+  const rows = __xrkCache[setId];
+  if(!rows) return `<div class="bxr-none">⏳ กำลังโหลดอันดับตลอดกาลของชุดนี้…</div>`;
   if(!rows.length){
-    return `<div class="bxr-none">ยังไม่มีใครสอบผ่านชุดนี้ในกิจกรรมล่าสุดเลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
+    return `<div class="bxr-none">ยังไม่มีใครสอบผ่านชุดนี้เลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
   }
   const top = rows.slice(0, (typeof BXR_TOP !== 'undefined') ? BXR_TOP : 8);
   const meAt = rows.findIndex(r=>r.me);
@@ -688,6 +730,7 @@ function xrkMount(box, exam){
   if(!keys.length) return;
   __xrkExam = (exam && EXAM_STD_MANIFEST[exam]) ? exam : (EXAM_STD_MANIFEST[__xrkExam] ? __xrkExam : keys[0]);
   if(!EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet)) __xrkSet = EXAM_STD_MANIFEST[__xrkExam].sets[0].id;
+  xrkNoteRefresh();                     // ป้ายแหล่งข้อมูลของกระดานนี้ (แก้ทับให้เองแม้ ui.js ยังเป็นเวอร์ชันเก่า)
   const draw = ()=>{
     const m = EXAM_STD_MANIFEST[__xrkExam];
     box.innerHTML = `
@@ -697,6 +740,11 @@ function xrkMount(box, exam){
       </div>
       <div class="bxr-list">${xrkBodyHTML(__xrkSet)}</div>
       <div class="bxr-foot">${m.emoji} ${escapeHTML(m.label)} · เรียงคะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน (เวลาบนกระดาน = ตัวเดียวกับที่พิมพ์บนใบประกาศ)</div>`;
+    /* ยังไม่มีข้อมูลชุดนี้ในเครื่อง → โหลดจาก DB แล้ววาดซ้ำ (กล่องต้องยังอยู่บนจอ + ยังเลือกชุดเดิมอยู่) */
+    if(!__xrkCache[__xrkSet]){
+      const want = __xrkSet;
+      xrkFetch(want).then(()=>{ xrkNoteRefresh(); if(__xrkSet === want && box.isConnected) draw(); });
+    }
     box.querySelector('.bxr-pick').addEventListener('click', ev=>{
       const b = ev.target.closest('.bxr-chip');
       if(!b) return;
@@ -716,7 +764,7 @@ function openExamStdRank(exam){
   ov.id = 'xrk-overlay'; ov.className = 'pl-overlay';
   ov.innerHTML = `<div class="bxr-box">
       <button class="pl-close" id="xrk-close">✕</button>
-      <div class="bxr-head">🏁 ข้อสอบจริงคะแนนสูงสุด/เร็วสุด<span class="bxr-sub">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</span></div>
+      <div class="bxr-head">🏁 ข้อสอบจริงคะแนนสูงสุด/เร็วสุด<span class="bxr-sub" id="xrk-note">${xrkNote()}</span></div>
       <div class="bxr-body"></div>
     </div>`;
   document.body.appendChild(ov);
