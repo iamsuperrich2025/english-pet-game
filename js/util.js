@@ -996,14 +996,48 @@ function openTeacherGuide(){
   document.body.appendChild(overlay);
 }
 
-/* ✨ รอบ 831: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — delegate ตัวเดียวจบทั้งเกม
-   ปุ่มไหนอยากได้ effect นี้ใส่ class "tapglow" ในมาร์กอัปได้เลย ไม่ต้องผูก JS ใหม่ทีละปุ่ม */
+/* ✨ รอบ 831/833: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — delegate ตัวเดียวจบทั้งเกม
+   ครอบทั้งปุ่มแนวตั้ง (รางเมนูซ้าย) และแนวนอน (แถบล่าง Lobby) โดยไม่ต้องแปะ class ทีละปุ่ม ·
+   ปุ่มอื่นที่อยากได้ effect นี้เพิ่ม ใส่ class "tapglow" ในมาร์กอัปได้เลย (CSS อยู่ท้าย css/style.css) */
+const TAPGLOW_SEL = '.tapglow, .rail-btn, .lobby-bottom .big-btn';
 document.addEventListener('pointerdown', e=>{
-  const b = e.target.closest('.tapglow');
-  if(!b) return;
+  const b = e.target.closest(TAPGLOW_SEL);
+  if(!b || b.disabled) return;
   b.classList.remove('tapglow-on');
   void b.offsetWidth;   // รีสตาร์ท animation ถ้ากดรัว ๆ
   b.classList.add('tapglow-on');
   clearTimeout(b.__tapglowT);
   b.__tapglowT = setTimeout(()=>b.classList.remove('tapglow-on'), 550);
 });
+
+/* ============================================================
+   🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+   ผู้ใช้เจอตอนเล่นโลกยานแม่บนมือถือ — กล่องนั้นเป็น UI ของเบราว์เซอร์เอง
+   โผล่ทุกครั้งที่หน้าเว็บเรียก requestPointerLock() (ล็อกเคอร์เซอร์แบบเกม FPS)
+   ต้นตอ: แตะจอ → เบราว์เซอร์ยิง mousedown "ปลอม" ตามหลัง touch → โลก 3D
+   เข้าใจผิดว่าเป็นเมาส์จริงแล้วสั่งล็อก · ปิดไม่ได้ที่ตัวกล่อง ต้องไม่ล็อกตั้งแต่ต้น
+   ตัวนี้เป็นด่านกลางของทุกโลก 3D: ล็อกเมาส์ให้ "เครื่องที่มีเมาส์จริง" เท่านั้น
+   ============================================================ */
+let TOUCH_INPUT_SEEN = !(window.matchMedia ? window.matchMedia('(hover:hover) and (pointer:fine)').matches
+                                           : !('ontouchstart' in window));
+window.addEventListener('touchstart', ()=>{ TOUCH_INPUT_SEEN = true; }, {passive:true, capture:true});
+window.addEventListener('pointerdown', e=>{
+  if(e.pointerType==='touch' || e.pointerType==='pen') TOUCH_INPUT_SEEN = true;
+}, {passive:true, capture:true});
+
+/* คืน true เฉพาะเมื่อควรล็อกเคอร์เซอร์จริง ๆ · e = MouseEvent ที่เป็นต้นเหตุ (ถ้ามี)
+   sourceCapabilities.firesTouchEvents = mouse event นี้เกิดจากนิ้วแตะ ไม่ใช่เมาส์ */
+function mouseLockOK(e){
+  if(TOUCH_INPUT_SEEN) return false;
+  if(e && e.sourceCapabilities && e.sourceCapabilities.firesTouchEvents) return false;
+  return true;
+}
+/* ล็อกเคอร์เซอร์แบบปลอดภัย — คืน true ถ้าสั่งล็อกไปจริง (โลก 3D ใช้ตัวนี้เท่านั้น) */
+function lockMouse3D(el, e){
+  if(!el || !mouseLockOK(e)){
+    try{ if(document.pointerLockElement) document.exitPointerLock(); }catch(_){}   // เผื่อค้างมาจากก่อนหน้า
+    return false;
+  }
+  try{ el.requestPointerLock && el.requestPointerLock(); }catch(_){ return false; }
+  return true;
+}

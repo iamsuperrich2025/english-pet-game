@@ -5307,10 +5307,10 @@ function bindInput(){
   document.addEventListener('keyup',e=>{ keys[e.code]=false; });
 
   if(!IS_TOUCH){
-    canvasEl.addEventListener('click',()=>{
+    canvasEl.addEventListener('click',e=>{
       if(M.soccer) return;                            // ⚽ ฟุตบอลใช้เมาส์กับปุ่ม HUD ไม่ล็อกเคอร์เซอร์
       if(document.pointerLockElement===canvasEl){ if(M.mecha) mechaFire(performance.now()); else shoot(); }
-      else canvasEl.requestPointerLock();
+      else lockMouse3D(canvasEl,e);                   // 🖱️🚫 รอบ 833: เครื่องสัมผัสไม่ล็อก (กันกล่องดำของเบราว์เซอร์) — js/util.js
     });
     document.addEventListener('mousemove',e=>{
       if(document.pointerLockElement!==canvasEl) return;

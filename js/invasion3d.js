@@ -6356,10 +6356,12 @@ function bindInput(){
     }
     chatBarEl.classList.toggle('on');
   });
-  /* คอม: คลิกจอ = ล็อกเมาส์ */
+  /* คอม: คลิกจอ = ล็อกเมาส์ · 🖱️🚫 รอบ 833: มือถือ/แท็บเล็ตห้ามล็อก (เบราว์เซอร์เด้งกล่องดำ
+     "To show your cursor…" ค้างบังจอ) — ตัดสินที่ `lockMouse3D`/`mouseLockOK` ใน js/util.js ที่เดียว */
   cvEl.addEventListener('mousedown',e=>{
     resumeAudio();
-    if(document.pointerLockElement!==cvEl){ cvEl.requestPointerLock&&cvEl.requestPointerLock(); return; }
+    if(!mouseLockOK(e)){ lockMouse3D(cvEl,e); return; }    // นิ้วแตะ → ไม่ล็อก + ปลดล็อกที่ค้างมา (ปล่อยให้ระบบ touch จัดการ)
+    if(document.pointerLockElement!==cvEl){ lockMouse3D(cvEl,e); return; }
     if(e.button===0) firing=true;
     else if(e.button===2){ if(WEAPONS[weapon].scope && !inHeli && !riding) setScoped(!scoped); else fireMissile(performance.now()); }
   });
