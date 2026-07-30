@@ -3361,3 +3361,10 @@
 
 - **รอบ 843 (30 ก.ค. · ผู้ใช้ขอขยายรูป+กรอบ profile หน้าล็อบบี้ ใหญ่กว่าเดิม 2 เท่า):** `css/lobby.css` — `.pass-photo` (base 52×62→104×124, border-radius 12→24, border 2→4px) + `.id-card .pass-photo` (override ที่ใช้งานจริง 54×62→108×124, border-radius 13→26, border 1→2px) · media query จอเตี้ย (≤520px/≤430px height) **ไม่แตะ** กันฝ่าฝืนกฎทองข้อ 7
   - ยืนยัน (server เอง :54415 · mock login+register ผ่าน UI → `showScreen('screen-dashboard')`): `getBoundingClientRect` วัด `#pass-photo` = 108×124 จริงที่จอ 1280×720 ไม่ล้น (`.lobby-top` สูงขึ้นเป็น 138px ยังพอดี stage เหลือ 495px) · ทดสอบซ้ำจอเตี้ย 812×375 (ขนาดเดิม 46×53 ตามเดิม) `dash.scrollHeight===clientHeight` ไม่มี scrollbar
+
+
+## ⏬ ย้ายเมื่อ 2026-07-30 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 844 (30 ก.ค. · ผู้ใช้ส่งภาพเมืองกำแพงเพชร: "ตึกยังแปะภาพไม่ครบ ห้ามเอาผนังไปเป็นหลังคา"):** 🏢 ต้นตอ: "ตึกจริง" 79 หลัง (ผัง OSM, `ExtrudeGeometry` ใน `js/adventure3d.js` `buildDriveCity`) มีแค่สีพาสเทลล้วน ไม่เคยแปะภาพผนังเลย (ตึกแถวข้างล่างมีอยู่แล้ว) → เพิ่ม material array `[capFlatM,wallM]` ใช้ `img/city/shop_4fl.png` ตามกฎเดิม "4 ชั้นขึ้นไป→shop_4fl" repeat ตาม z จริง(เมตร)
+  - ⚠️ ก่อนแก้ตรวจ `js/vendor/three.min.js` จริงก่อนว่า `ExtrudeGeometry.addGroup` ลำดับไหนคือผนัง/ฝา — พบว่า **materialIndex 0 = ฝาบน/ล่าง(cap) · 1 = ผนังข้าง(side)** (สลับกับที่คนทั่วไปเข้าใจ) ใส่ผิดลำดับจะเป็นบั๊กที่ผู้ใช้เตือน (ผนังไปโผล่เป็นหลังคา)
+  - ยืนยัน: เทสต์แยก (สี debug แดง/น้ำเงินคนละ index) ยืนยัน index0=cap,index1=side ตรงจริง 100% (`gl.readPixels` มุมบนตรงแดง มุมข้างตรงน้ำเงิน) + เข้าเกมจริง (server เอง :49677 · mock login+register ม.4 · `Adventure3D.start('heli',{map:'kpp',walkIn:true})`): `img/city/shop_4fl.png` โหลด 200 OK ไม่มี error คอนโซล · `node --check` ผ่าน · ปิด server แล้ว
