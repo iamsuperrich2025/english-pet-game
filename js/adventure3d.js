@@ -9937,11 +9937,17 @@ function letterNeeded(ch){
   let need=0; words.forEach(w=>{ for(const c of w.en) if(c===ch) need++; });
   return need > (inv[ch]||0);
 }
-/* multiset ตัวอักษรที่ยังต้องการ (เรียงตามลำดับคำ — คำแรกมาก่อน) */
+/* multiset ตัวอักษรที่ยังต้องการ (เรียงตามลำดับคำ — คำแรกมาก่อน)
+   🐛 รอบ 856 (ผู้ใช้: EDUCATION เก็บ E,D แล้ว ตัวถัดไปต้องเป็น U แต่ป้ายถอยกลับไป E):
+   เดิมหัก inv แบบ "นับรวมทุกคำ" แล้วค่อยไล่ตามตัวสะกด → E ที่เก็บไปถูกเครดิตให้ E ของคำท้าย ๆ
+   ตำแหน่ง E ของคำแรกเลยยังติดลำดับหัวคิวอยู่ · ใหม่: เดินตามตัวสะกดทีละตำแหน่ง (คำแรก-ตัวแรกก่อน)
+   แล้วเครดิตตัวที่เก็บแล้วให้ตำแหน่งแรกสุดก่อน → คิวเดินหน้าตามการสะกดคำจริงเสมอ */
 function soccerNeededSet(){
-  const need={}; words.forEach(w=>{ for(const c of w.en) need[c]=(need[c]||0)+1; });
-  Object.keys(inv).forEach(c=>{ if(need[c]) need[c]=Math.max(0,need[c]-(inv[c]||0)); });
-  const arr=[]; words.forEach(w=>{ for(const c of w.en){ if(need[c]>0){ arr.push(c); need[c]--; } } });
+  const have={}; Object.keys(inv).forEach(c=>{ have[c]=inv[c]; });
+  const arr=[];
+  words.forEach(w=>{ for(const c of w.en){
+    if((have[c]||0)>0) have[c]--; else arr.push(c);
+  }});
   return arr;
 }
 function soccerTileGeo(){ return _soccerTileGeo||(_soccerTileGeo=new THREE.PlaneGeometry(2.4,2.4)); }
@@ -9991,13 +9997,10 @@ function soccerBuildTargets(){
    (กันจุดซ้ำเดิม: ถ้าสุ่มได้ใกล้ที่เดิมมาก ให้สุ่มใหม่ ผู้เล่นจะได้ต้องเล็งใหม่ทุกครั้ง) */
 function soccerNextTile(l){
   const need=soccerNeededSet();
-  /* 🐛 รอบ 855 (ผู้ใช้: "ตัวอักษรใน goal ไม่ยอมเปลี่ยนสักที ทั้งที่ยิงโดนแล้ว"): เดิมเอา need[0] เสมอ
-     แต่ลำดับ need เรียงตามตัวสะกดของคำ → คำแบบ eye (e ซ้ำ 2) หรือ e ที่โผล่ในหลายคำ ทำให้ need[0]
-     เป็นตัวเดิมซ้ำติดกันหลายลูก ป้ายเลยดู "ไม่เปลี่ยน" ทั้งที่ระบบเก็บให้จริง
-     ใหม่: ถ้าตัวแรกซ้ำกับที่เพิ่งยิง ให้ข้ามไปตัวถัดไปที่ต่างออกไปก่อน (คำยังครบได้เหมือนเดิม —
-     tryCompleteWords นับจาก inv ไม่สนลำดับเก็บ) · ซ้ำได้เฉพาะกรณีเหลือตัวเดียวล้วนจริง ๆ */
-  let nextCh = need.length ? need[0] : l.ch;
-  if(nextCh===l.ch && need.length){ const alt=need.find(c=>c!==l.ch); if(alt) nextCh=alt; }
+  /* รอบ 856: เอา need[0] ตรง ๆ — soccerNeededSet เครดิตตัวที่เก็บแล้วให้ตำแหน่งแรกสุดแล้ว (แก้ที่ราก)
+     คิวจึงเดินตามตัวสะกดของคำแรกเป๊ะ · ตัวซ้ำติดกันเกิดได้เฉพาะคำที่สะกดซ้ำจริง (apple → p,p ถูกต้อง)
+     (ถอด hack รอบ 855 ที่ "ข้ามตัวซ้ำกับที่เพิ่งยิง" ทิ้ง — มันสลับลำดับสะกดของคำตัวซ้ำอย่าง apple) */
+  const nextCh = need.length ? need[0] : l.ch;
   const old=l.spr.position;
   let p=soccerLetterPos(), guard=0;
   while(guard++<8 && Math.hypot(p.x-old.x,p.y-old.y)<2.2) p=soccerLetterPos();
