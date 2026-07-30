@@ -1983,7 +1983,7 @@ function heliKppSpawn(){
    ============================================================ */
 /* ⚠️ รอบ 694: ถอด haunt ออกจากตารางนี้ — โลกโรงแรมใช้ "ท้องฟ้าวาดเอง" (buildHauntSky ด้านล่าง)
    เพราะต้องหรี่/สว่างตามจังหวะไฟดับได้ ภาพ panorama นิ่ง ๆ ทำแบบนั้นไม่ได้ */
-const SKY_IMG={ adv:'sky_day', heli:'sky_dawn', drone:'sky_storm', drive:'sky_day', soccer:'sky_day', mecha:'sky_alien' };
+const SKY_IMG={ adv:'sky_day', heli:'sky_dawn', drone:'sky_storm', drive:'sky_dawn', soccer:'sky_day', mecha:'sky_alien' };
 function applySky(sc, mode){
   const key=SKY_IMG[mode]; if(!key || !sc) return;
   const set=img=>{ const tex=new THREE.Texture(img); tex.needsUpdate=true;
