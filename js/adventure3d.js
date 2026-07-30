@@ -1455,6 +1455,20 @@ function buildDriveCity(sc){
   const CUTE_ROOF=[0xff8f87,0x66c2f0,0x7fd8a6,0xffce5c,0xc7a3f2,0xf59ac4,0xffb46b,0x5ad1c4];
   /* ---------- ตึกจริง 79 หลัง (ผัง footprint ตรงพิกัดจริง) + ป้ายชื่อสถานที่ ---------- */
   const tints=[0xffe0dd,0xdcefff,0xd9f5e2,0xfff2ce,0xe9dcff,0xd2f2ee,0xffe8cf,0xf7dcee];  // ผนังพาสเทลลูกกวาด
+  /* 🏢 รอบ 840 (ผู้ใช้: "ตึกยังแปะภาพไม่ครบ"): ตึกจริง (ExtrudeGeometry ผัง OSM) เดิมมีแค่สีพาสเทลล้วน
+     ไม่เคยแปะภาพผนังเลย (ตึกแถวข้างล่างมี แต่กลุ่มนี้ไม่มี) → ใช้ img/city/shop_4fl.png ตามกฎเดิม
+     "4 ชั้นขึ้นไป→shop_4fl" ใน PROMPTS_BUILDINGS_KPP.md · repeat ทุก ~13.2ม.(4 ชั้น) แนวตั้ง/10ม. แนวนอน
+     ตาม z จริง (เมตร ไม่ normalize) เพราะ UV เริ่มต้นของ ExtrudeGeometry ใช้พิกัดโลกดิบ
+     ⚠️ ตรวจจาก js/vendor/three.min.js จริง (addGroup): materialIndex 0 = ฝาบน/ล่าง(cap) ·
+        materialIndex 1 = ผนังด้านข้าง(side) — สลับกับที่คนทั่วไปเข้าใจ ผิดลำดับ = ภาพผนังไปโผล่เป็นหลังคาแทน (บั๊กเดิม) */
+  const towerWallMats=[];
+  const towerTex=new THREE.Texture();
+  towerTex.wrapS=towerTex.wrapT=THREE.RepeatWrapping;
+  towerTex.repeat.set(.1,1/13.2);
+  const towerImg=new Image();
+  towerImg.onload=()=>{ towerTex.image=towerImg; towerTex.needsUpdate=true;
+    towerWallMats.forEach(m=>{ m.map=towerTex; m.needsUpdate=true; }); };
+  towerImg.src='img/city/shop_4fl.png';
   C.b.forEach((b,bi)=>{
     const h=b[0], p=b[2];   // รอบ 183: เลิกใช้ชื่อ OSM (b[1]) — โชว์เฉพาะผู้ลงโฆษณา (SHOP_ADS)
     const shape=new THREE.Shape();
@@ -1462,7 +1476,10 @@ function buildDriveCity(sc){
     for(let i=2;i<p.length;i+=2) shape.lineTo(p[i],-p[i+1]);
     const g=new THREE.ExtrudeGeometry(shape,{depth:h,bevelEnabled:false});
     g.rotateX(-Math.PI/2);                                   // extrude → แกน y · shape.y=-z → z โลกตรงพิกัดจริง
-    sc.add(new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:tints[bi%tints.length],side:THREE.DoubleSide})));
+    const capFlatM=new THREE.MeshLambertMaterial({color:tints[bi%tints.length],side:THREE.DoubleSide});
+    const wallM=new THREE.MeshLambertMaterial({color:tints[bi%tints.length],side:THREE.DoubleSide});
+    towerWallMats.push(wallM);
+    sc.add(new THREE.Mesh(g,[capFlatM,wallM]));              // [0]=cap บน/ล่าง (สีล้วน ถูกฝาครอบยอดข้างล่างบังอยู่แล้ว) · [1]=ผนังข้าง (ภาพจริง)
     // 🏠 ฝาครอบยอดสีสด (roof cap) — ตึกจริงผังไม่สม่ำเสมอ ใช้แผ่นสีตามผังวางบนยอดแทนหลังคาจั่ว
     const cap=new THREE.ExtrudeGeometry(shape,{depth:1.4,bevelEnabled:false}); cap.rotateX(-Math.PI/2);
     const capM=new THREE.Mesh(cap,new THREE.MeshLambertMaterial({color:CUTE_ROOF[bi%CUTE_ROOF.length],side:THREE.DoubleSide}));
