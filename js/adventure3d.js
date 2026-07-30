@@ -69,7 +69,7 @@ const MODES = {
   drive: {
     label:'โลกขับรถกำแพงเพชร', emoji:'🚗', reward:40, doneKey:'driveDone',
     shoot:false, ghost:false, drive:true,
-    sky:0xaee0f7, fogN:120, fogF:650, ground:0x9cb968,
+    sky:0xaee0f7, fogN:120, fogF:650, ground:0x9a9a92,   // 🏙️ รอบ 831 (ผู้ใช้สั่ง): เดิมเขียวมะกอก-เหลือง → คอนกรีตเทาในเมือง
     intro:'🚗 <b>ขับรถเที่ยวเมืองกำแพงเพชร!</b><br><small>ถนนจริงทั้งเมืองจากแผนที่จริง — เริ่มที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b><br>ขับชนตัวอักษรบนถนนเพื่อเก็บ · ออกนอกถนนรถช้าลง · ระวังชนตึก!<br>🚔 <b>ขับเกิน 90 กม./ชม. = โดนใบสั่ง หักเหรียญจริง!</b></small>',
     hint:'W/S คันเร่ง-เบรก/ถอย · A/D เลี้ยวซ้าย-ขวา · H บีบแตร · เกิน 90 กม./ชม. โดนใบสั่ง! · 🚦 ไฟแดงต้องหยุด · เลี้ยวที่แยกเปิดไฟเลี้ยวด้วย',
     koTitle:'🚗💥 รถพังแล้ว!',
@@ -1317,9 +1317,15 @@ function buildDriveCity(sc){
   let RX=R;
   C.r.forEach(rd=>{ const p=rd[3]; for(let i=0;i<p.length;i+=2){ const r=Math.hypot(p[i],p[i+1]); if(r>RX)RX=r; } });
   RX=Math.ceil(RX)+80;                                       // เผื่อความกว้างถนน+กันชนขอบ
-  const ground=new THREE.Mesh(new THREE.PlaneGeometry(RX*2+500,RX*2+500),
-    new THREE.MeshLambertMaterial({color:MODES.drive.ground}));
+  const groundMat=new THREE.MeshLambertMaterial({color:MODES.drive.ground});
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(RX*2+500,RX*2+500),groundMat);
   ground.rotation.x=-Math.PI/2; ground.position.y=-.06; sc.add(ground);
+  /* 🏙️ รอบ 831 (ผู้ใช้สั่ง): probe ภาพพื้นคอนกรีตจริง เหมือนระบบทางเท้า/หน้าตึก — มีไฟล์ = ปูแทนทันที ไม่มี = สีเทาคอนกรีตเดิม */
+  const gndImg=new Image();
+  gndImg.onload=()=>{ const tx=new THREE.Texture(gndImg); tx.wrapS=tx.wrapT=THREE.RepeatWrapping;
+    const rep=Math.round((RX*2+500)/22); tx.repeat.set(rep,rep); tx.needsUpdate=true;
+    groundMat.map=tx; groundMat.color.setHex(0xffffff); groundMat.needsUpdate=true; };
+  gndImg.src='img/city/ground.png';
 
   /* ---------- แม่น้ำปิง (ribbon กว้าง 120m ตามแนวจริง) ---------- */
   const rivTris=[];
@@ -1864,17 +1870,40 @@ function buildDriveCity(sc){
      🌳🚁 รอบ 811: จุด "พื้นที่สีเขียวข้างถนน" (greenPts) — สุ่มออกจากจุดบนถนนแต่ละจุด
      จนเจอพื้นที่ว่าง (นอกถนน/ไม่ชนตึก/ไม่ใช่น้ำ) ไว้ให้ตัวอักษร+เหรียญโบนัสไปโผล่บนหญ้าได้
      (เตรียมไว้สำหรับต่อยอด: เฮลิคอปเตอร์ลงจอดเก็บตัวอักษรบนพื้นที่สีเขียวนี้ในอนาคต)
-     ============================================================ */
+     🩹 รอบ 831 (ผู้ใช้สั่ง): เดิมเช็กระยะห่างตึกแค่ NAV_CLR (~1.55ม. ระยะรถ) ตัวอักษรจึงลอยติดตึกได้
+     (มองจากฟ้าเห็นชัดว่า "อยู่ใกล้ตึก") → เพิ่ม pad ให้ต้องห่างตึกจริงถึงจะเรียกว่า "พื้นที่โล่ง"
+     ⚠️ ห้ามใช้ navBlockedAt ตรงๆ กับ pad ก้อนใหญ่นี้ — มันเช็กแค่ cell เดียว (SCELL=42ม.) พอสำหรับ
+     รัศมีรถ 1.55ม. แต่ 15.55ม. ข้าม cell ได้ง่าย ทำให้ "มองไม่เห็น" ตึกที่อยู่ cell ข้างๆ (วัดจริงพลาด
+     573/10,633 จุด — บางจุดห่างตึกแค่ 2.5ม.) → เขียนตัวเช็กแยกที่กวาด cell ข้างเคียงด้วย */
+  const GREEN_BLDG_CLR=14;   // เมตร — ต้องห่างขอบตึกอย่างน้อยเท่านี้ถึงนับเป็นจุดโล่งวางตัวอักษรได้
+  const greenBuildingClear=(x,z,R)=>{
+    const cx=Math.floor(x/SCELL), cz=Math.floor(z/SCELL);
+    for(let ox=-1;ox<=1;ox++) for(let oz=-1;oz<=1;oz++){
+      const list=solidGrid[(cx+ox)+','+(cz+oz)]; if(!list) continue;
+      for(const s of list){
+        if(s.t===2){ if(Math.hypot(x-s.x,z-s.z)<s.r+R) return false; }
+        else if(s.t===0){
+          const c=Math.cos(s.rot), si=Math.sin(s.rot), dx=x-s.x, dz=z-s.z;
+          if(Math.abs(dx*c-dz*si)<s.hx+R && Math.abs(dx*si+dz*c)<s.hz+R) return false;
+        }else{
+          const dx=s.x2-s.x1, dz=s.z2-s.z1, L2=dx*dx+dz*dz||1e-9;
+          let t=((x-s.x1)*dx+(z-s.z1)*dz)/L2; t=t<0?0:(t>1?1:t);
+          if(Math.hypot(x-s.x1-dx*t, z-s.z1-dz*t)<R) return false;
+        }
+      }
+    }
+    return true;
+  };
   const greenFree=(x,z)=>{
     const gx=Math.floor((x+GOFF)/GS), gz=Math.floor((z+GOFF)/GS);
     if(gx<0||gz<0||gx>=GW||gz>=GW || grid[gz*GW+gx]===2) return false;
-    return grid[gz*GW+gx]===0 && !navBlockedAt(x,z);
+    return grid[gz*GW+gx]===0 && greenBuildingClear(x,z,NAV_CLR+GREEN_BLDG_CLR);
   };
   const greenPts=[];
   for(let i=0;i<roadPts.length;i+=2){
     const x=roadPts[i], z=roadPts[i+1];
-    for(let tries=0;tries<8;tries++){
-      const ang=Math.random()*Math.PI*2, dist=9+Math.random()*16;   // 9-25 ม. จากถนน = พ้นทางเท้า เข้าเขตหญ้าจริง
+    for(let tries=0;tries<14;tries++){                              // 🩹 รอบ 831: tries 8→14 + ค้นไกลขึ้น ชดเชย pad ตึกที่เข้มขึ้น
+      const ang=Math.random()*Math.PI*2, dist=9+Math.random()*31;   // 9-40 ม. จากถนน = พ้นทางเท้า เข้าเขตหญ้า/ที่โล่งจริง
       const gx=x+Math.cos(ang)*dist, gz=z+Math.sin(ang)*dist;
       if(greenFree(gx,gz)){ greenPts.push(gx,gz); break; }
     }
