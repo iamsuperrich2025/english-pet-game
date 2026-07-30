@@ -757,6 +757,55 @@ function applyNoAnim(){
   document.documentElement.classList.toggle('no-anim', !!(typeof state !== 'undefined' && state.noAnim));
 }
 
+/* 🏷️ รอบ 806: ชื่อ EN/TH ใต้ตัวละครโปรไฟล์ 88 ตัว (เสริมคำศัพท์) — blk1-8 = ชื่อมาสคอตเดิม (BLOCK_AVATARS)
+   blk9-48 = อาชีพจริง (ดูจากภาพ: นักบิน/หมอ/เชฟ/ตำรวจ ฯลฯ) · blk49-88 = คอสตูมสัตว์/แฟนตาซี/กิจกรรม */
+const BLK_VOCAB = {
+  blk1:{en:'Red Racer',th:'เรซเซอร์แดง'}, blk2:{en:'Blue Captain',th:'กัปตันฟ้า'},
+  blk3:{en:'Green Tea',th:'ชาเขียว'}, blk4:{en:'Orange Sunny',th:'ซันนี่ส้ม'},
+  blk5:{en:'Purple Wizard',th:'วิซาร์ดม่วง'}, blk6:{en:'Pinky',th:'พิ้งกี้'},
+  blk7:{en:'Lemon',th:'เลม่อน'}, blk8:{en:'Minty',th:'มิ้นตี้'},
+  blk9:{en:'Superhero',th:'ซูเปอร์ฮีโร่'}, blk10:{en:'Pilot',th:'นักบิน'},
+  blk11:{en:'Explorer',th:'นักสำรวจ'}, blk12:{en:'Firefighter',th:'นักดับเพลิง'},
+  blk13:{en:'Astronaut',th:'นักบินอวกาศ'}, blk14:{en:'Doctor',th:'หมอ'},
+  blk15:{en:'Nurse',th:'พยาบาล'}, blk16:{en:'Chef',th:'เชฟ'},
+  blk17:{en:'Farmer',th:'ชาวนา'}, blk18:{en:'Artist',th:'ศิลปิน'},
+  blk19:{en:'Musician',th:'นักดนตรี'}, blk20:{en:'Skateboarder',th:'นักเล่นสเก็ตบอร์ด'},
+  blk21:{en:'Soccer Player',th:'นักฟุตบอล'}, blk22:{en:'Basketball Player',th:'นักบาสเกตบอล'},
+  blk23:{en:'Swimmer',th:'นักว่ายน้ำ'}, blk24:{en:'Cyclist',th:'นักปั่นจักรยาน'},
+  blk25:{en:'Police Officer',th:'ตำรวจ'}, blk26:{en:'Mail Carrier',th:'บุรุษไปรษณีย์'},
+  blk27:{en:'Conductor',th:'พนักงานรถไฟ'}, blk28:{en:'Construction Worker',th:'คนงานก่อสร้าง'},
+  blk29:{en:'Mechanic',th:'ช่างซ่อมรถ'}, blk30:{en:'Gardener',th:'คนสวน'},
+  blk31:{en:'Baker',th:'คนทำขนมปัง'}, blk32:{en:'Student',th:'นักเรียน'},
+  blk33:{en:'Hiker',th:'นักเดินป่า'}, blk34:{en:'Fisherman',th:'ชาวประมง'},
+  blk35:{en:'Sailor',th:'กะลาสีเรือ'}, blk36:{en:'Diver',th:'นักดำน้ำ'},
+  blk37:{en:'Backpacker',th:'นักท่องเที่ยวแบกเป้'}, blk38:{en:'Photographer',th:'ช่างภาพ'},
+  blk39:{en:'Detective',th:'นักสืบ'}, blk40:{en:'Reporter',th:'นักข่าว'},
+  blk41:{en:'Martial Artist',th:'นักศิลปะการต่อสู้'}, blk42:{en:'Boxer',th:'นักมวย'},
+  blk43:{en:'Ninja',th:'นินจา'}, blk44:{en:'Knight',th:'อัศวิน'},
+  blk45:{en:'Pirate',th:'โจรสลัด'}, blk46:{en:'Cowboy',th:'คาวบอย'},
+  blk47:{en:'Archer',th:'นักธนู'}, blk48:{en:'Race Car Driver',th:'นักแข่งรถ'},
+  blk49:{en:'Wizard',th:'พ่อมด'}, blk50:{en:'Witch',th:'แม่มด'},
+  blk51:{en:'Fairy',th:'นางฟ้า'}, blk52:{en:'Mermaid',th:'นางเงือก'},
+  blk53:{en:'Elf',th:'เอลฟ์'}, blk54:{en:'Dragon',th:'มังกร'},
+  blk55:{en:'Unicorn',th:'ยูนิคอร์น'}, blk56:{en:'Angel',th:'ทูตสวรรค์'},
+  blk57:{en:'Cat',th:'แมว'}, blk58:{en:'Dog',th:'สุนัข'},
+  blk59:{en:'Bunny',th:'กระต่าย'}, blk60:{en:'Bear',th:'หมี'},
+  blk61:{en:'Panda',th:'แพนด้า'}, blk62:{en:'Fox',th:'สุนัขจิ้งจอก'},
+  blk63:{en:'Penguin',th:'เพนกวิน'}, blk64:{en:'Frog',th:'กบ'},
+  blk65:{en:'Dinosaur',th:'ไดโนเสาร์'}, blk66:{en:'Shark',th:'ฉลาม'},
+  blk67:{en:'Bee',th:'ผึ้ง'}, blk68:{en:'Butterfly',th:'ผีเสื้อ'},
+  blk69:{en:'Ladybug',th:'เต่าทอง'}, blk70:{en:'Owl',th:'นกฮูก'},
+  blk71:{en:'Lion',th:'สิงโต'}, blk72:{en:'Turtle',th:'เต่า'},
+  blk73:{en:'Robot',th:'หุ่นยนต์'}, blk74:{en:'Alien',th:'มนุษย์ต่างดาว'},
+  blk75:{en:'Space Explorer',th:'นักสำรวจอวกาศ'}, blk76:{en:'Cyber Warrior',th:'นักรบไซเบอร์'},
+  blk77:{en:'Winter Kid',th:'เด็กหน้าหนาว'}, blk78:{en:'Rainy Day Kid',th:'เด็กวันฝนตก'},
+  blk79:{en:'Snorkeler',th:'นักดำน้ำตื้น'}, blk80:{en:'Cozy Kid',th:'เด็กใส่เสื้อกันหนาว'},
+  blk81:{en:'Party Kid',th:'เด็กในงานปาร์ตี้'}, blk82:{en:'Graduate',th:'บัณฑิตน้อย'},
+  blk83:{en:'Juggler',th:'นักเล่นกล'}, blk84:{en:'Magician',th:'นักมายากล'},
+  blk85:{en:'Ice Skater',th:'นักสเก็ตน้ำแข็ง'}, blk86:{en:'Skier',th:'นักเล่นสกี'},
+  blk87:{en:'Rock Star',th:'ร็อกสตาร์'}, blk88:{en:'Ballerina',th:'นักบัลเล่ต์'},
+};
+
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
 function openSettings(){
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
@@ -790,12 +839,15 @@ function openSettings(){
     </div>
     <div class="set-row set-blk-row" id="set-blk">
       <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
-        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์</small></span>
+        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN/ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
       <div class="strip-wrap blk-strip">
         <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
         <div class="strip-x blk-x grid2x8">
-          ${blkAvList.map(b=>
-            `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy"></button>`).join('')}
+          ${blkAvList.map(b=>{
+            const v = BLK_VOCAB[b] || {en:'', th:''};
+            return `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy">
+              <span class="blk-cap"><b class="blk-cap-en">${v.en}</b><span class="blk-cap-th">${v.th}</span></span></button>`;
+          }).join('')}
         </div>
         <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
       </div>

@@ -2873,8 +2873,10 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .attn-box{max-width:min(92vw,620px);}
 .nw-box{width:min(92vw,620px);}
 /* หน้าตั้งค่า: แถวสวิตช์เรียง 3 คอลัมน์ + แถวหนาแน่นขึ้น (หัวข้อ/ปุ่มยาวเต็มแถว) — เตี้ยลงมาก */
+/* 🐛 รอบ 806: เดิมใช้แค่ max-width → กล่องหด "shrink-to-fit" ตามแถวสวิตช์สั้น ๆ (จริง ๆ กว้างแค่ ~240px ไม่เคยแตะ 940px)
+   ทำให้แถวเลือกตัวละคร (เต็มความกว้างคอลัมน์ตามเจตนารอบ 243) แคบไปด้วย — เปลี่ยนเป็น width ให้กางเต็มจริง */
 .settings-box{
-  max-width:min(96vw,940px);display:grid;grid-template-columns:repeat(3,1fr);
+  width:min(96vw,940px);max-width:min(96vw,940px);display:grid;grid-template-columns:repeat(3,1fr);
   gap:6px 12px;align-items:stretch;padding:14px 22px 12px;
 }
 .settings-box h2,.settings-box .set-hint,.settings-box .set-feed-head,
@@ -2907,10 +2909,15 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 }
 .settings-box .strip-arrow{background:linear-gradient(180deg,#b18cf0,#8a5fd6);border-color:#e7dbff;}
 /* 🐛 รอบ 803: .levelup-box button (specificity 0,1,1) ทับ background ของ .blk-mini (0,1,0) กลายเป็นสีม่วงเข้มแทนการ์ดม่วงอ่อนที่ตั้งใจ — ประกาศ background ซ้ำที่นี่ (specificity 0,2,0 ชนะ) */
-.settings-box .blk-mini{padding:6px;border-radius:16px;width:100%;background:#f6f0ff;border:2px solid #e0d4f0;}
+.settings-box .blk-mini{padding:6px;border-radius:16px;width:100%;background:#f6f0ff;border:2px solid #e0d4f0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;}
 .settings-box .blk-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:#e0a020;}
-/* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด */
-.settings-box .blk-mini img{width:auto;height:clamp(96px,17vh,150px);aspect-ratio:341/512;}
+/* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด
+   🏷️ รอบ 806: ลด vh ลงจากเดิม (17→14) เผื่อที่ให้ป้ายชื่ออาชีพ EN/ไทย 2 บรรทัดด้านล่าง */
+.settings-box .blk-mini img{width:auto;height:clamp(80px,14vh,124px);aspect-ratio:341/512;}
+.settings-box .blk-mini .blk-cap{display:flex;flex-direction:column;align-items:center;line-height:1.15;width:100%;overflow:hidden;}
+.settings-box .blk-mini .blk-cap-en{font-size:clamp(9.5px,1.35vh,11.5px);color:#5a3f8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.settings-box .blk-mini .blk-cap-th{font-size:clamp(9px,1.25vh,10.5px);color:#8a72b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 /* วิธีเล่น + คู่มือครู (ใช้ .help-box ร่วม): การ์ดหัวข้อเรียง 3 คอลัมน์ */
 .help-box{max-width:min(96vw,980px);padding:16px 22px;}
 .help-box .help-body{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 12px;}
