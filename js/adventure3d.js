@@ -1523,7 +1523,8 @@ function buildDriveCity(sc){
   /* 🏠 รอบ 213: หลังคาทรงปิรามิดสีลูกกวาด (hip roof) คลุมยอดตึกแถวทุกหลัง — เมืองน่ารักแบบ toy town
      InstancedMesh ก้อนเดียว (1 draw call) · มุมหลังคาตรงมุมกล่องพอดี (cone 4 ด้าน หมุน 45°) · ชายคายื่นเล็กน้อย */
   const roofGeo=new THREE.ConeGeometry(Math.SQRT1_2,1,4); roofGeo.rotateY(Math.PI/4);
-  const roof=new THREE.InstancedMesh(roofGeo,new THREE.MeshLambertMaterial({color:0xffffff}),lots.length);
+  const roofMat=new THREE.MeshLambertMaterial({color:0xffffff});
+  const roof=new THREE.InstancedMesh(roofGeo,roofMat,lots.length);
   const rcol=new THREE.Color();
   for(let i=0;i<lots.length;i++){
     const L=lots[i], rh=Math.max(1.4,Math.min(L[3],L[4])*0.5);   // สูงหลังคาตามด้านแคบ (ไม่แหลมเกิน)
@@ -1535,6 +1536,12 @@ function buildDriveCity(sc){
   roof.instanceMatrix.needsUpdate=true;
   if(roof.instanceColor) roof.instanceColor.needsUpdate=true;
   sc.add(roof);
+  /* 🧱🏠 รอบ 839: ลายกระเบื้องมุงหลังคาจริง — เหมือนระบบ facade (probe ภาพจริง img/city/roof_tile.png)
+     ภาพต้องเป็นโทนขาว/เทาอ่อนเรียบๆ เพราะ CUTE_ROOF ยังคูณสีทับต่อหลังเหมือนเดิม (ภาพเข้ม = สีเพี้ยนทั้งเมือง) */
+  const rfImg=new Image();
+  rfImg.onload=()=>{ const tx=new THREE.Texture(rfImg); tx.wrapS=tx.wrapT=THREE.RepeatWrapping;
+    tx.repeat.set(2,2); tx.needsUpdate=true; roofMat.map=tx; roofMat.needsUpdate=true; };
+  rfImg.src='img/city/roof_tile.png';
 
   /* ---------- หอนาฬิกาวงเวียนต้นโพธิ์ (แลนด์มาร์กจุดเกิด 0,0) ---------- */
   const brick=new THREE.MeshLambertMaterial({color:0xa8542f});

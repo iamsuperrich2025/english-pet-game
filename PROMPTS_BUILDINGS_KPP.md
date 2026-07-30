@@ -66,8 +66,24 @@ photorealistic game texture, 1024x1024
 
 ---
 
+## 5) กระเบื้องมุงหลังคา (หลังคาปิรามิดตึกแถวทั้งเมือง) → `img/city/roof_tile.png`
+
+> ⚠️ ภาพนี้กติกาต่างจาก 4 ไฟล์บน — เกมเอาไปคูณกับสีลูกกวาด 8 สี (แดง/ฟ้า/เขียว/เหลือง/ม่วง/ชมพู/ส้ม/เขียวมิ้นต์) ต่อหลังอัตโนมัติ
+> **ต้องเป็นภาพขาว/เทาอ่อนล้วน** (ไม่มีสีของตัวเอง) ไม่งั้นสีที่คูณทับจะเพี้ยนทั้งเมือง
+
+```
+Seamless tileable texture of small overlapping clay roof tiles (Thai-style curved roof tiles),
+top-down flat lighting, repeating tile ridge pattern, uniform light grey and off-white tones only
+(no color, no red, no blue — must stay neutral so game code can tint it per building),
+subtle texture detail from tile ridges and shadows between rows,
+seamlessly tileable in all directions (edges match on all four sides),
+even flat lighting, no perspective, no sky, no people,
+photorealistic game texture, 1024x1024
+```
+
 ## การทำงานในเกม (โค้ดพร้อมแล้ว)
 - ตึก 1 ชั้น → `house_1fl` · 2 ชั้น → `shop_2fl` · 3 ชั้น → `shop_3fl` · 4 ชั้นขึ้นไป → `shop_4fl`
 - ภาพถูก tile ซ้ำแนวนอน ~2.5 รอบต่อหลัง (ตึกกว้างเห็นหลายคูหา) · ยืดตามสัดส่วนหลังเล็กน้อย
-- วางไฟล์แล้วเข้าโลกขับรถใหม่ = เห็นเลย (ไม่ต้องแก้โค้ด) · **อย่าลืม `git add img/city/...` ตอน push ไม่งั้น live 404** (บทเรียนรอบ 112)
+- **หลังคา** (`roof_tile.png`) แปะบนหลังคาปิรามิดตึกแถวทุกหลัง (`lots.length` หลัง) แล้วคูณสีลูกกวาด 8 สีทับต่อหลังอัตโนมัติ (`CUTE_ROOF`) — สีแดง/น้ำเงินที่ขอมีอยู่แล้วในชุดสีนี้ (`0xff8f87`/`0x66c2f0`) ภาพแค่เพิ่มลายกระเบื้องให้ดูสมจริงขึ้น
+- วางไฟล์แล้วเข้าโลกขับรถ/เฮลิฯ กำแพงเพชรใหม่ = เห็นเลย (ไม่ต้องแก้โค้ด) · **อย่าลืม `git add img/city/...` ตอน push ไม่งั้น live 404** (บทเรียนรอบ 112)
 - หมายเหตุ: ดาดฟ้าตึกจะเห็นลายเดียวกับผนัง (ข้อจำกัด texture เดียว/ตึก — มุมมองคนขับระดับถนนแทบไม่เห็นดาดฟ้า)
