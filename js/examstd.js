@@ -630,8 +630,11 @@ function openExamStdPicker(exam){
    ⇒ เรียง "คะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน" (ต่างจาก bxRankRows เดิมที่เรียงเวลาอย่างเดียว)
    ============================================================ */
 const XRK_READ    = 50;      // ดึงมากสุดกี่แถว/ชุด (โชว์ Top 8 + แถวเราเสมอ → 50 เหลือเฟือ ไม่ต้องโหลดทั้งตาราง)
-const __xrkCache  = {};      // setId → แถวที่เรียงแล้ว (null/ไม่มี = ยังไม่โหลด → กระดานขึ้น "กำลังโหลด")
+const XRK_ALL     = '_*';    // 🆕 รอบ 826: คีย์กระดาน "รวมทุกชุด" ของสนามสอบ (เช่น 'ielts_*') — ใช้ที่เดียวกับ setId ปกติทั้งระบบ
+const __xrkCache  = {};      // setId (หรือ <exam>_*) → แถวที่เรียงแล้ว (null/ไม่มี = ยังไม่โหลด → กระดานขึ้น "กำลังโหลด")
 const __xrkPend   = {};      // setId → Promise ที่โหลดค้างอยู่ (กันยิงซ้ำตอนกดชิปรัว)
+const xrkIsAll    = k=>String(k || '').endsWith(XRK_ALL);
+const xrkAllExam  = k=>String(k || '').slice(0, -XRK_ALL.length);
 
 /* 📝 ฝั่งเขียน — เรียกตอนสอบผ่านใน xsFinish() · เก็บเฉพาะสถิติที่ดีที่สุด (คะแนนก่อน แล้วเวลา)
    อ่านแถวเดิมของตัวเองก่อน 1 ครั้ง แล้วเขียนทับเมื่อดีกว่าเท่านั้น — DB จึงมี 1 แถว/คน/ชุดเสมอ */
@@ -654,6 +657,8 @@ function xrkSubmit(setId, sc, tt, sec){
     return ref.set(row).then(()=>{
       Online.xrkOk = true;
       delete __xrkCache[setId];        // กระดานชุดนี้ต้องโหลดใหม่ (เห็นสถิติใหม่ของเราทันที)
+      const f = xsFindSet(setId);
+      if(f) delete __xrkCache[f.exam + XRK_ALL];   // + กระดาน "รวมทุกชุด" ของสนามสอบนั้น
       return true;
     });
   }).catch(()=>{ Online.xrkOk = false; return false; });   // rules ยังไม่ publish / ออฟไลน์ → ป้ายบนกระดานบอกเอง
@@ -676,11 +681,36 @@ function xrkMerge(setId, rows){
   return out.sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
 }
 
+/* 🏅 รอบ 826: อันดับ "รวมทุกชุด" ของสนามสอบเดียว — รวมแถวรายชุดที่โหลดไว้แล้วมาบวกกัน (ไม่ยิง query ใหม่เกินจำเป็น
+   เพราะ xrkFetch รายชุดมี cache อยู่แล้ว) · 1 คน 1 แถว: ชุดที่ผ่าน / คะแนนรวม / เวลารวม
+   ⇒ เรียง **จำนวนชุดที่ผ่านมากก่อน** แล้วค่อยสัดส่วนคะแนนรวม แล้วเวลารวมน้อยสุด
+      (ถ้าเรียงสัดส่วนก่อน คนสอบผ่านชุดเดียวเต็ม 30/30 จะแซงคนที่ผ่าน 5 ชุด = ไม่ตรงความหมายของ "รวมทุกชุด") */
+function xrkAllRows(exam){
+  const m = (typeof EXAM_STD_MANIFEST !== 'undefined') ? EXAM_STD_MANIFEST[exam] : null;
+  if(!m) return Promise.resolve([]);
+  return Promise.all(m.sets.map(s=>xrkFetch(s.id))).then(lists=>{
+    const by = {};
+    lists.forEach(rows=>(rows || []).forEach(r=>{
+      const o = by[r.uid] || (by[r.uid] = {uid:r.uid, name:r.name, g:r.g, sc:0, tt:0, sec:0, ts:0, sets:0, me:!!r.me});
+      o.sc += r.sc; o.tt += r.tt; o.sec += r.sec; o.sets++;
+      if((r.ts || 0) >= o.ts){ o.ts = r.ts || 0; o.name = r.name; o.g = r.g; }   // ชื่อ/ชั้นเอาจากแถวล่าสุด
+    }));
+    return Object.keys(by).map(u=>by[u])
+      .sort((a, b)=>(b.sets - a.sets) || (b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
+  });
+}
+
 /* 📖 ฝั่งอ่าน — query /examRank/<setId> เอา 50 คะแนนสูงสุด (ต้องมี ".indexOn":"sc" ใน rules)
-   แล้วเรียงคะแนน→เวลาเองฝั่ง client (RTDB เรียงได้ทีละคีย์เดียว) · cache ต่อชุด กดชิปสลับไปมาไม่ยิงซ้ำ */
+   แล้วเรียงคะแนน→เวลาเองฝั่ง client (RTDB เรียงได้ทีละคีย์เดียว) · cache ต่อชุด กดชิปสลับไปมาไม่ยิงซ้ำ
+   คีย์ที่ลงท้าย XRK_ALL ('<exam>_*') = กระดานรวมทุกชุด (ประกอบจาก cache รายชุด ผ่าน xrkAllRows) */
 function xrkFetch(setId){
   if(__xrkCache[setId]) return Promise.resolve(__xrkCache[setId]);
   if(__xrkPend[setId])  return __xrkPend[setId];
+  if(xrkIsAll(setId)){
+    const pa = xrkAllRows(xrkAllExam(setId)).then(rows=>{ __xrkCache[setId] = rows; delete __xrkPend[setId]; return rows; });
+    __xrkPend[setId] = pa;
+    return pa;
+  }
   const fin = rows=>{ __xrkCache[setId] = rows; delete __xrkPend[setId]; return rows; };
   if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(fin(xrkMerge(setId, [])));
   const p = Online.db.ref('examRank/' + setId).orderByChild('sc').limitToLast(XRK_READ).get().then(s=>{
@@ -704,7 +734,9 @@ function xrkNote(){
     return '📴 ตอนนี้ออฟไลน์ — เห็นเฉพาะสถิติของหนูเอง ต่อเน็ตแล้วจะเห็นของเพื่อนด้วย';
   if(Online.xrkOk === false)
     return '⚠️ กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /examRank ก่อน) — ตอนนี้เห็นเฉพาะสถิติของหนูเอง';
-  return '🏆 อันดับตลอดกาลของชุดนี้ · เก็บสถิติที่ดีที่สุดของทุกคนที่เคยสอบผ่าน (ไม่หายไปตามเวลา)';
+  return xrkIsAll(__xrkSet)
+    ? '🏅 อันดับตลอดกาล "รวมทุกชุด" ของสนามสอบนี้ · ยิ่งสอบผ่านหลายชุดยิ่งได้อันดับดี'
+    : '🏆 อันดับตลอดกาลของชุดนี้ · เก็บสถิติที่ดีที่สุดของทุกคนที่เคยสอบผ่าน (ไม่หายไปตามเวลา)';
 }
 /* ป้ายบอกแหล่งข้อมูลอยู่ "นอก" กล่องที่ xrkMount วาด (หัวป๊อปอัป + .lbf-note ของแท็บเต็มจอ ใช้ id เดียวกัน
    เพราะเปิดได้ทีละใบ) → อ่าน DB เสร็จค่อยรู้ว่าติด deny ไหม จึงต้องเขียนป้ายใหม่ตอนนั้น */
@@ -715,17 +747,24 @@ function xrkNoteRefresh(){
   if(el) el.textContent = xrkNote();
 }
 
+/* แถวของกระดานรวมทุกชุด — ใช้ bxrRowHTML เดิมทั้งแถว (ชื่อเล่น+สัญลักษณ์ระดับชั้น = กฎคุ้มครองเด็ก เขียนที่เดียว)
+   แล้วแทรก "N ชุด ·" หน้าคะแนนรวมใน .bxr-sc เท่านั้น — ไม่เพิ่มคลาส/CSS ใหม่ */
+function xrkAllRowHTML(r, i){
+  return bxrRowHTML(r, i).replace('<span class="bxr-sc">', `<span class="bxr-sc">${r.sets} ชุด · `);
+}
 /* เนื้อกระดาน — วาดแถวด้วย bxrRowHTML ของ js/bandadv.js เลย (ฟอร์แมตเดียวกัน ไม่เขียนซ้ำ) */
 function xrkBodyHTML(setId){
   const rows = __xrkCache[setId];
-  if(!rows) return `<div class="bxr-none">⏳ กำลังโหลดอันดับตลอดกาลของชุดนี้…</div>`;
+  const all  = xrkIsAll(setId);
+  if(!rows) return `<div class="bxr-none">⏳ กำลังโหลดอันดับตลอดกาล${all ? 'รวมทุกชุดของสนามสอบนี้' : 'ของชุดนี้'}…</div>`;
   if(!rows.length){
-    return `<div class="bxr-none">ยังไม่มีใครสอบผ่านชุดนี้เลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
+    return `<div class="bxr-none">ยังไม่มีใครสอบผ่าน${all ? 'สนามสอบนี้' : 'ชุดนี้'}เลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
   }
-  const top = rows.slice(0, (typeof BXR_TOP !== 'undefined') ? BXR_TOP : 8);
+  const row  = all ? xrkAllRowHTML : bxrRowHTML;
+  const top  = rows.slice(0, (typeof BXR_TOP !== 'undefined') ? BXR_TOP : 8);
   const meAt = rows.findIndex(r=>r.me);
-  return top.map(bxrRowHTML).join('')
-    + (meAt >= top.length ? `<div class="bxr-more">…</div>${bxrRowHTML(rows[meAt], meAt)}` : '');
+  return top.map(row).join('')
+    + (meAt >= top.length ? `<div class="bxr-more">…</div>${row(rows[meAt], meAt)}` : '');
 }
 /* 🏁 ตัวกระดาน (ชิปเลือกสนามสอบ + ชุด + รายชื่อ) — ใช้คลาส .bxr-* ร่วมกับ js/bandadv.js ทั้งชุด */
 let __xrkExam = '', __xrkSet = '';
@@ -734,17 +773,21 @@ function xrkMount(box, exam){
   const keys = Object.keys(EXAM_STD_MANIFEST);
   if(!keys.length) return;
   __xrkExam = (exam && EXAM_STD_MANIFEST[exam]) ? exam : (EXAM_STD_MANIFEST[__xrkExam] ? __xrkExam : keys[0]);
-  if(!EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet)) __xrkSet = EXAM_STD_MANIFEST[__xrkExam].sets[0].id;
-  xrkNoteRefresh();                     // ป้ายแหล่งข้อมูลของกระดานนี้ (แก้ทับให้เองแม้ ui.js ยังเป็นเวอร์ชันเก่า)
+  if(__xrkSet !== __xrkExam + XRK_ALL && !EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet))
+    __xrkSet = __xrkExam + XRK_ALL;      // 🏅 รอบ 826: ค่าเริ่มต้น = กระดานรวมทุกชุดของสนามสอบนั้น
   const draw = ()=>{
     const m = EXAM_STD_MANIFEST[__xrkExam];
+    xrkNoteRefresh();                   // ป้ายแหล่งข้อมูล (แก้ทับให้เองแม้ ui.js ยังเป็นเวอร์ชันเก่า) — ต้องอัปเดตทุกครั้งที่วาด เพราะข้อความต่างกันระหว่าง "รวมทุกชุด" กับรายชุด
     box.innerHTML = `
       <div class="bxr-pick">
         <div class="bxr-cats">${keys.map(k=>`<button class="bxr-chip${k === __xrkExam ? ' on' : ''}" data-exam="${k}">${EXAM_STD_MANIFEST[k].emoji} ${escapeHTML(EXAM_STD_MANIFEST[k].label)}</button>`).join('')}</div>
-        <div class="bxr-lvs">${m.sets.map(s=>`<button class="bxr-chip lv${s.id === __xrkSet ? ' on' : ''}" data-set="${s.id}">${escapeHTML(s.label.split('·').pop().trim())}</button>`).join('')}</div>
+        <div class="bxr-lvs"><button class="bxr-chip lv${__xrkSet === __xrkExam + XRK_ALL ? ' on' : ''}" data-set="${__xrkExam}${XRK_ALL}">🏅 รวมทุกชุด</button>${
+          m.sets.map(s=>`<button class="bxr-chip lv${s.id === __xrkSet ? ' on' : ''}" data-set="${s.id}">${escapeHTML(s.label.split('·').pop().trim())}</button>`).join('')}</div>
       </div>
       <div class="bxr-list">${xrkBodyHTML(__xrkSet)}</div>
-      <div class="bxr-foot">${m.emoji} ${escapeHTML(m.label)} · เรียงคะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน (เวลาบนกระดาน = ตัวเดียวกับที่พิมพ์บนใบประกาศ)</div>`;
+      <div class="bxr-foot">${m.emoji} ${escapeHTML(m.label)} · ${xrkIsAll(__xrkSet)
+        ? `รวมทุกชุดที่เคยสอบผ่าน (${m.sets.length} ชุด × ${m.sets[0].q} ข้อ) · เรียง<b>จำนวนชุดที่ผ่านมากที่สุด</b> → คะแนนรวม → เวลารวมน้อยสุด`
+        : 'เรียงคะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน (เวลาบนกระดาน = ตัวเดียวกับที่พิมพ์บนใบประกาศ)'}</div>`;
     /* ยังไม่มีข้อมูลชุดนี้ในเครื่อง → โหลดจาก DB แล้ววาดซ้ำ (กล่องต้องยังอยู่บนจอ + ยังเลือกชุดเดิมอยู่) */
     if(!__xrkCache[__xrkSet]){
       const want = __xrkSet;
@@ -753,7 +796,7 @@ function xrkMount(box, exam){
     box.querySelector('.bxr-pick').addEventListener('click', ev=>{
       const b = ev.target.closest('.bxr-chip');
       if(!b) return;
-      if(b.dataset.exam){ __xrkExam = b.dataset.exam; __xrkSet = EXAM_STD_MANIFEST[__xrkExam].sets[0].id; }
+      if(b.dataset.exam){ __xrkExam = b.dataset.exam; __xrkSet = __xrkExam + XRK_ALL; }   // สลับสนามสอบ = กลับไปกระดานรวมทุกชุดของสนามนั้น
       else if(b.dataset.set) __xrkSet = b.dataset.set;
       if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
       draw();
