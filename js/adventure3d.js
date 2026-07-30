@@ -177,6 +177,7 @@ const HELI_SKID=1.35;             // ความสูงตาคนขับ�
 const HELI_CRASH_FINE=500;        // 💥 รอบ 389: ค่าปรับขับชนเฮลิฯ ผู้เล่นอื่นกลางอากาศ (ฝ่ายพุ่งชนจ่าย)
 const HELI_MESH_SCALE=1.6;        // 📏 รอบ 378: ขยายลำจอด/ลำเพื่อนเป็นสัดส่วนจริงเทียบคน (Bell 212)
 let hVel={x:0,y:0,z:0}, hCol=0, hLanded=true, hHitAt=0, hWarnLvl=0, hudInstEl=null, hudWarnEl=null, cockpitEl=null;
+let khUpEl=null, khDnEl=null;   // ⌨️🚁 รอบ 818: ป้ายบอกปุ่ม Space/Shift ขึ้น-ลง ค้างไว้ทางขวา (เฉพาะคนเล่นด้วยคอมพิวเตอร์)
 /* 🎯💡🏆 รอบ 350: ระบบช่วยจัดกึ่งกลางเป้า + ไฟส่องหมอก + โบนัสลงนุ่ม */
 const ASSIST_R=14, ASSIST_ALT=26, ASSIST_PAD=3.0;   // รัศมีเริ่มติ๊ด · สูงไม่เกิน · "ตรงเป้า" = ในวง helipad (ring 2.4-3.0)
 let assistTgt=null;                      // เป้าดาดฟ้าตัวอักษรที่ใกล้สุดตอนกำลังร่อนลง {x,z,y,d}
@@ -4693,6 +4694,11 @@ function buildDom(){
     <button id="adv-adshop">🪧<small>เช่าป้าย</small></button>
     <button id="adv-wiper">🌧️<small>ที่ปัดน้ำ</small></button>
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
+    <!-- ⌨️🚁 รอบ 818: ป้ายบอกปุ่ม Space/Shift ขึ้น-ลง ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์ (ผู้ใช้สั่ง) -->
+    <div id="adv-keyhint"><b>⌨️ เล่นด้วยคอมพิวเตอร์</b>
+      <div class="kh-row"><span class="kh-key" data-k="up">Space</span><span class="kh-tx">เอาเครื่อง<b>ขึ้น</b></span></div>
+      <div class="kh-row"><span class="kh-key" data-k="dn">Shift</span><span class="kh-tx">เอาเครื่อง<b>ลง</b></span></div>
+    </div>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
     <div id="adv-flash"></div>
@@ -5257,7 +5263,12 @@ function confirmExit(){
    Input — เมาส์+คีย์บอร์ด และจอสัมผัส (มือถือ landscape)
    ============================================================ */
 const IS_TOUCH='ontouchstart' in window;
+/* ⌨️🚁 รอบ 818: มีเมาส์+แป้นพิมพ์จริงไหม (โน้ตบุ๊กจอสัมผัสที่ต่อเมาส์ยังนับเป็นคอม) — ใช้เปิด #adv-keyhint */
+const HAS_KBD=window.matchMedia?window.matchMedia('(hover:hover) and (pointer:fine)').matches:!IS_TOUCH;
 function bindInput(){
+  if(HAS_KBD) overlayEl.classList.add('kbd');
+  khUpEl=overlayEl.querySelector('#adv-keyhint .kh-key[data-k="up"]');
+  khDnEl=overlayEl.querySelector('#adv-keyhint .kh-key[data-k="dn"]');
   document.addEventListener('keydown',e=>{
     if(!overlayEl.classList.contains('on')) return;
     if(e.target && e.target.tagName==='INPUT') return;     // กำลังพิมพ์แชท
@@ -8071,6 +8082,7 @@ function tickHeli(dt,now){
   let col=0;
   if(keys.Space) col+=1;
   if(keys.ShiftLeft||keys.ShiftRight||keys.KeyC) col-=1;
+  if(khUpEl){ khUpEl.classList.toggle('on',!!keys.Space); khDnEl.classList.toggle('on',!!(keys.ShiftLeft||keys.ShiftRight||keys.KeyC)); }   // ⌨️ รอบ 818
   if(joy.on){ fw=-joy.dy; sd=joy.dx; }
   col+=hCol;                                   // จากลากนิ้วครึ่งขวา (มือถือ)
   col=Math.max(-1,Math.min(1,col));

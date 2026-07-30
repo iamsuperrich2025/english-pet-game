@@ -225,6 +225,28 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-dismount small{display:block;font-size:9px;letter-spacing:.02em}
   #adv-dismount:active{background:rgba(57,255,178,.3)}
   .adv-heli.show-dismount #adv-dismount{display:block}
+  /* ⌨️🚁 รอบ 818 (ผู้ใช้สั่ง): ป้ายบอกปุ่ม Space/Shift ขึ้น-ลง ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์
+     โผล่เมื่อ: มีเมาส์/แป้นพิมพ์จริง (คลาส kbd จาก HAS_KBD) + กำลังขับเอง (ไม่ใช่เฟสเดิน/นั่ง/วิงสูท = ไม่มี .hfoot) */
+  #adv-keyhint{position:absolute;right:12px;top:44%;transform:translateY(-50%);z-index:6;display:none;
+    pointer-events:none;background:rgba(6,16,28,.74);border:1.5px solid rgba(120,220,255,.42);
+    border-radius:12px;padding:7px 9px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
+  .adv-heli.kbd:not(.hfoot) #adv-keyhint{display:block}
+  #adv-keyhint>b{display:block;font-size:10px;color:#9fd8ff;font-weight:800;margin-bottom:5px;
+    white-space:nowrap;text-align:center}
+  #adv-keyhint .kh-row{display:flex;align-items:center;gap:7px;margin-top:4px}
+  #adv-keyhint .kh-key{min-width:38px;height:22px;flex:none;border-radius:6px;display:flex;align-items:center;
+    justify-content:center;padding:0 6px;font-size:10.5px;font-weight:900;color:#0e2136;line-height:1;
+    background:linear-gradient(180deg,#eaf6ff,#a9d3f2);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+  #adv-keyhint .kh-key.on{background:linear-gradient(180deg,#ffe9a8,#ffc44d);transform:translateY(2px);
+    box-shadow:0 0 9px rgba(255,200,90,.85)}
+  #adv-keyhint .kh-tx{font-size:11.5px;color:#dff4ff;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #000}
+  #adv-keyhint .kh-tx b{color:#ffd98a}
+  @media (max-height:430px){
+    .adv-heli.kbd:not(.hfoot) #adv-keyhint{display:flex;align-items:center;gap:9px}
+    #adv-keyhint{right:12px;top:auto;bottom:66px;transform:none;padding:4px 8px}
+    #adv-keyhint>b{display:none}
+    #adv-keyhint .kh-row{margin-top:0;gap:5px}
+  }
   /* 🚶🪂 รอบ 354: เฟสเดินเท้าในโลกเฮลิฯ */
   #adv-wing,#adv-tour{position:absolute;bottom:10px;display:none;pointer-events:auto;z-index:7;
     width:64px;padding:6px 0 4px;border-radius:12px;border:1px solid rgba(255,213,79,.65);
