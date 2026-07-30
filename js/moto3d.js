@@ -7,7 +7,7 @@
 const REWARD=45, DONE_KEY='motoDone';
 const ACCEL=13, DECEL=5.5, VMAX=55.6, VMAX_OFF=6.5, WHEEL_R=0.34;   // รอบ 312: VMAX 32→55.6 (=200 กม./ชม.) + ACCEL 10→13 ให้ไต่ถึงได้
 const DASH_LEN=4, DASH_GAP=5, DASH_W=0.28;  // 🛣️ รอบ 312: เส้นประกลางถนน — ยาวขีด/ช่องว่าง/ครึ่งกว้าง (m)
-const DOG_HIT_COIN=10, DOG_SPD=11, DOG_GAP_MS=4000;   // 🐕 รอบ 312 · รอบ 643: ปรับชนหมา 500→100 · รอบ 830: 100→10 (ผู้ใช้ขอ)
+const DOG_HIT_COIN=50, DOG_SPD=11, DOG_GAP_MS=4000;   // 🐕 รอบ 312 · รอบ 643: ปรับชนหมา 500→100 · รอบ 830: 100→10 · รอบ 846: 10→50 (ผู้ใช้ขอ)
 /* 🕳️⛰️ รอบ 315: หลุม/เนิน + เหิน + สปริง */
 const FEAT_SP=16, FEAT_FILL=0.10, FEAT_CELL=18;        // รอบ 316: โอกาสวาง 0.9→0.10 = หลุม/เนิน ~10% ของเส้นทาง (ผู้ใช้ขอ)
 const DECAL_N=48, DECAL_R=110;                         // 🖼️ รอบ 316: ภาพหลุม/เนินแปะถนน — จำนวน pool / รัศมีรอบผู้เล่น
@@ -1666,12 +1666,25 @@ function coinTick(dt,now){
     if(Math.hypot(p.x-px,p.z-pz)<COIN_PICK_R){ scene.remove(c.spr); coins.splice(i,1); grabCoin(c.tier); }
   }
 }
-/* 🪙 รอบ 643: เหรียญโบนัสแยกจากตัวอักษร — โปรยข้างถนนเป็นระยะตลอดทาง (ผู้ใช้ขอเหรียญเยอะขึ้นกว่าติดตัวอักษรอย่างเดียว) */
+/* 🪙🔤 รอบ 643: เหรียญโบนัสโปรยข้างถนนเป็นระยะตลอดทาง (ผู้ใช้ขอเหรียญเยอะขึ้นกว่าติดตัวอักษรอย่างเดียว)
+   รอบ 846: ผู้ใช้ขอ "เหรียญห้ามอยู่เดี่ยวๆ" — เปลี่ยนจากเหรียญลอยอิสระ (addFreeCoin) เป็นก็อปปี้ตัวอักษรพิเศษ
+   (เลือกตัวที่ยังไม่เก็บของคำนี้) แล้วแปะเหรียญทองด้านหลังแบบเดียวกับ spawnLetters ทุกประการ */
 function scatterCoinTick(now){
   if(now<scatterNextAt) return;
   scatterNextAt=now+SCATTER_MS+Math.random()*SCATTER_JIT;
+  if(!word) return;
   const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX);
-  if(p) addFreeCoin(0,p.x,p.z);
+  if(!p) return;
+  const remain=word.en.split('').map((_,i)=>i).filter(i=>!word.got.includes(i));
+  if(!remain.length) return;
+  const idx=remain[Math.floor(Math.random()*remain.length)];
+  const ch=word.en[idx];
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
+  spr.scale.set(4.6,4.6,1); spr.position.set(p.x,2.3,p.z);
+  scene.add(spr);
+  const l={ch,idx,spr,fx:(p.fx||0),fz:(p.fz===undefined?1:p.fz)};
+  letters.push(l);
+  addCoin(l,0,+1);
 }
 /* 💎 เหรียญพิเศษหน้าตัวอักษร "ตัวสุดท้ายที่เหลือ" ของคำ — อยู่บนหลุม/เนิน = เพชร 🪙20 · ไม่งั้น = โค้ง 🪙5 */
 function placeSpecialCoin(){
