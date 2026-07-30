@@ -672,20 +672,20 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/exam.css (348 บรรทัด · 75 selector)
-#xs-screen:8 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19,21,22 · .no-anim:24
-.xs-score:25 · .xs-quit:26 · .xs-nav:32 · .xs-dot:36,40,41,42(+1) · .xs-body:46 · .xs-pass:47,51,58
-.xs-ptitle:52 · .xs-para:53 · .xs-pn:54 · .xs-qside:59 · .xs-sec:63,64 · .xs-q:65
-.xs-qno:66 · .xs-choices:70 · .xs-ch:71,76,77,82(+5) · .xs-ab:78 · .xs-ex:90,91,95 · .xs-exh:96
-.xs-exref:97 · .xs-foot:100 · .xs-count:104 · .xs-btn:105,109,110,111(+1) · .levelup-box:117 · .xs-result:118,119,120,121(+4)
-.xsr-box:138 · .xsr-head:143,144 · .xsr-tabs:145 · .xsr-tab:146,150 · .xsr-list:151 · .xsr-none:152
-.xsr-item:153,157 · .xsr-qh:158,159,160 · .xsr-q:164 · .xsr-ans:165 · .xsr-you:166,167,168 · .xsr-ex:169
-.xsr-ref:170 · .xst-wrap:172 · .xst-note:173 · .xst-row:176,177,178,186(+1) · .xst-h:179 · .xst-tag:180
-.xst-bar:182,185,188 · .xst-n:189 · .xst-sum:190 · .xsr-foot:194 · .xsr-ok:195 · .xsp-box:201
-.xsp-head:206,207 · .xsp-rows:208 · .xsp-set:209,210 · .xsp-name:211 · .xsp-tick:212 · .xsp-info:213
-.xsp-best-row:214 · .xsp-best:215 · .xsp-hist:217,218 · .xsp-hist-svg:219 · .xsp-btns:220 · .xsp-go:221,225,226,229(+1)
-.xsp-foot:231 · .xsb-box:246 · .xsb-head:251,252 · .xsb-grid:253 · .xsb-card:254,258 · .xsb-emoji:259
-.xsb-name:260 · .xsb-info:261 · .xsb-done:262
+## css/exam.css (352 บรรทัด · 75 selector)
+#xs-screen:8,33 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19,21,22 · .no-anim:24
+.xs-score:25 · .xs-quit:26 · .xs-nav:36 · .xs-dot:40,44,45,46(+1) · .xs-body:50 · .xs-pass:51,55,62
+.xs-ptitle:56 · .xs-para:57 · .xs-pn:58 · .xs-qside:63 · .xs-sec:67,68 · .xs-q:69
+.xs-qno:70 · .xs-choices:74 · .xs-ch:75,80,81,86(+5) · .xs-ab:82 · .xs-ex:94,95,99 · .xs-exh:100
+.xs-exref:101 · .xs-foot:104 · .xs-count:108 · .xs-btn:109,113,114,115(+1) · .levelup-box:121 · .xs-result:122,123,124,125(+4)
+.xsr-box:142 · .xsr-head:147,148 · .xsr-tabs:149 · .xsr-tab:150,154 · .xsr-list:155 · .xsr-none:156
+.xsr-item:157,161 · .xsr-qh:162,163,164 · .xsr-q:168 · .xsr-ans:169 · .xsr-you:170,171,172 · .xsr-ex:173
+.xsr-ref:174 · .xst-wrap:176 · .xst-note:177 · .xst-row:180,181,182,190(+1) · .xst-h:183 · .xst-tag:184
+.xst-bar:186,189,192 · .xst-n:193 · .xst-sum:194 · .xsr-foot:198 · .xsr-ok:199 · .xsp-box:205
+.xsp-head:210,211 · .xsp-rows:212 · .xsp-set:213,214 · .xsp-name:215 · .xsp-tick:216 · .xsp-info:217
+.xsp-best-row:218 · .xsp-best:219 · .xsp-hist:221,222 · .xsp-hist-svg:223 · .xsp-btns:224 · .xsp-go:225,229,230,233(+1)
+.xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
+.xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
 ## css/lobby.css (4,839 บรรทัด · 725 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
