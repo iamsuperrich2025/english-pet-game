@@ -231,6 +231,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     pointer-events:none;background:rgba(6,16,28,.74);border:1.5px solid rgba(120,220,255,.42);
     border-radius:12px;padding:7px 9px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
   .adv-heli.kbd:not(.hfoot) #adv-keyhint{display:block}
+  .adv-drone.kbd #adv-keyhint{display:block}   /* 🛸⌨️ รอบ 821: โดรน FPV บังคับขึ้น-ลงด้วย Space/Shift เหมือนกัน — ไม่มีเฟสเดินเท้าจึงไม่เช็ก .hfoot */
   #adv-keyhint>b{display:block;font-size:10px;color:#9fd8ff;font-weight:800;margin-bottom:5px;
     white-space:nowrap;text-align:center}
   #adv-keyhint .kh-row{display:flex;align-items:center;gap:7px;margin-top:4px}
@@ -242,7 +243,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-keyhint .kh-tx{font-size:11.5px;color:#dff4ff;font-weight:700;white-space:nowrap;text-shadow:0 1px 3px #000}
   #adv-keyhint .kh-tx b{color:#ffd98a}
   @media (max-height:430px){
-    .adv-heli.kbd:not(.hfoot) #adv-keyhint{display:flex;align-items:center;gap:9px}
+    .adv-heli.kbd:not(.hfoot) #adv-keyhint,.adv-drone.kbd #adv-keyhint{display:flex;align-items:center;gap:9px}
     #adv-keyhint{right:12px;top:auto;bottom:66px;transform:none;padding:4px 8px}
     #adv-keyhint>b{display:none}
     #adv-keyhint .kh-row{margin-top:0;gap:5px}

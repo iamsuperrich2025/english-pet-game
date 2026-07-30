@@ -4696,8 +4696,8 @@ function buildDom(){
     <button id="adv-seat">🎚️<small>มุมนั่ง</small></button>
     <!-- ⌨️🚁 รอบ 818: ป้ายบอกปุ่ม Space/Shift ขึ้น-ลง ค้างไว้ทางขวา — เฉพาะคนเล่นด้วยคอมพิวเตอร์ (ผู้ใช้สั่ง) -->
     <div id="adv-keyhint"><b>⌨️ เล่นด้วยคอมพิวเตอร์</b>
-      <div class="kh-row"><span class="kh-key" data-k="up">Space</span><span class="kh-tx">เอาเครื่อง<b>ขึ้น</b></span></div>
-      <div class="kh-row"><span class="kh-key" data-k="dn">Shift</span><span class="kh-tx">เอาเครื่อง<b>ลง</b></span></div>
+      <div class="kh-row"><span class="kh-key" data-k="up">↑</span><span class="kh-tx">เอาเครื่อง<b>ขึ้น</b></span></div>
+      <div class="kh-row"><span class="kh-key" data-k="dn">↓</span><span class="kh-tx">เอาเครื่อง<b>ลง</b></span></div>
     </div>
     <button id="adv-race">🏁<small>แข่งเวลา</small></button>
     <button id="adv-shot">📸<small>ถ่ายภาพ</small></button>
@@ -5587,6 +5587,7 @@ function tickDrone(dt,now){
   if(keys.KeyE) yawIn-=1;
   if(keys.Space) col+=1;
   if(keys.ShiftLeft||keys.ShiftRight||keys.KeyC) col-=1;
+  if(khUpEl){ khUpEl.classList.toggle('on',!!keys.Space); khDnEl.classList.toggle('on',!!(keys.ShiftLeft||keys.ShiftRight||keys.KeyC)); }   // ⌨️ รอบ 821
   if(joy.on){ fw=-joy.dy; sd=joy.dx; }
   col+=hCol; col=Math.max(-1,Math.min(1,col));
   yaw+=yawIn*DRONE_YAWSP*dt;
