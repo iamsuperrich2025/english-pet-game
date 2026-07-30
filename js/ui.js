@@ -1607,10 +1607,12 @@ function openLeaderboardFull(){
       return;
     }
     /* 🏁 รอบ 815: แท็บข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด — เนื้อกระดานอยู่ js/examstd.js (xrkMount วาด+ผูกปุ่มเอง)
-       สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js */
+       สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js
+       ⚠️ รอบ 822: ป้ายต้องใช้ xrkNote() ของกระดานนี้เอง (อันดับตลอดกาลจาก /examRank) ห้ามใช้ bxRankNote()
+          ร่วมกับแท็บ bx ด้านบน เพราะกระดานสอบใหญ่ยังเป็น "จากกิจกรรมล่าสุด" อยู่ · id ให้ xrkNoteRefresh() เขียนทับได้ */
     if(__lbfTab === 'xr'){
       ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 ข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด')}
-        <div class="lbf-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
+        <div class="lbf-note" id="xrk-note">${(typeof xrkNote === 'function') ? xrkNote() : ''}</div>
         <div class="bxr-body" id="lbf-xr"></div></div>`;
       bindLbfChrome();
       if(typeof xrkMount === 'function') xrkMount(ov.querySelector('#lbf-xr'));
@@ -4384,14 +4386,7 @@ function renderDashboard(){
     renderHomeCard();
     renderPhoneCard();
     renderComputerCard();
-    renderTicketCard();
-    renderHauntCard();
-    renderHeliCard();
-    renderDroneCard();
-    renderDriveCard();
-    renderSoccerCard();
-    renderMotoCard();
-    renderInvasionCard();
+    renderRailWorlds();   // 🎫→💰 รอบ 822: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
     renderFarmCard();
     renderFactoryCard();
     renderMarketCard();
@@ -4725,14 +4720,7 @@ function renderDashboard(){
   renderHomeCard();
   renderPhoneCard();
   renderComputerCard();
-  renderTicketCard();
-  renderHauntCard();
-  renderHeliCard();
-  renderDroneCard();
-  renderDriveCard();
-  renderSoccerCard();
-  renderMotoCard();
-  renderInvasionCard();
+  renderRailWorlds();   // 🎫→💰 รอบ 822: การ์ดตั๋วแยก 8 ใบถูกถอดออก — ราคา/ล็อกอยู่ในปุ่มรางเมนูซ้ายแทน
   renderFarmCard();
   renderFactoryCard();
   renderMarketCard();
@@ -6013,72 +6001,12 @@ function sellComputer(){
     });
 }
 
-/* ============================================================
-   🎫 การ์ดตั๋วโลกผจญภัย (คิว 7725691507 ข้อ 7)
-   ซื้อได้เมื่อมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัว — ยังไม่โต = ล็อก
-   ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · โลกผจญภัย 3D (ข้อ 8) กำลังก่อสร้าง
-   ============================================================ */
 /* 🛒 รอบ 208: ป้าย "ขายไปแล้ว N ชิ้น" — โชว์ยอดขายจริงทั้งเซิร์ฟเวอร์ (จาก Online.sales) ใต้สินค้าทุกชิ้น
-   ให้เห็นว่ามีคนซื้อจริง + ดูความนิยมได้ · ไม่ต่อเน็ต/ยังไม่มียอด = "ขายแล้ว 0 ชิ้น" */
+   ให้เห็นว่ามีคนซื้อจริง + ดูความนิยมได้ · ไม่ต่อเน็ต/ยังไม่มียอด = "ขายแล้ว 0 ชิ้น" (ยังใช้กับสินค้าตลาดอื่น) */
 function soldCount(id){ return (typeof Online !== 'undefined' && Online.sales && Online.sales[id]) ? Online.sales[id] : 0; }
 function soldBadge(id){
   const n = soldCount(id);
   return `<div class="sold-badge${n>0?' has':''}">🛒 ขายไปแล้ว <b>${fmtNum(n)}</b> ชิ้น</div>`;
-}
-
-function renderTicketCard(){
-  const el = document.getElementById('ticket-card');
-  if(!el) return;
-  const hasAdult = state.pets.some(p=>isAdult(p));
-  let body;
-  if(state.advTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>บาดเจ็บจากโลกผจญภัย!</b><br>
-        <small>พลังหมดตอนผจญภัย ต้องรักษาตัวก่อนถึงจะกลับเข้าโลก 3D ได้อีกครั้ง</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-adv-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.advTicket){
-    body = `
-      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🎫✨</div>
-        <b>ประตูโลกผจญภัยเปิดแล้ว!</b><br>
-        <small>เดินเก็บตัวอักษรมาประกอบคำศัพท์ คำละ 🪙15 · ระวัง monster 👾 ยิงสู้ได้<br>
-        พลังหมดต้องกลับมารักษา 🪙${fmtNum(CURE_COST)} · ออกจากโลกเมื่อไหร่ก็ได้<br>
-        🧑‍🤝‍🧑 ผู้เล่นอื่นที่อยู่ในโลกจะโผล่ใน map ให้เจอกัน (สไตล์ Roblox)</small>
-      </div>
-      ${tinvNoticeHTML('adv')}
-      <button class="big-btn green home-btn" id="btn-enter-adv">🌍 เข้าโลกผจญภัย 3D</button>
-      ${state.tinvClaimed.adv ? '' :
-        `<button class="big-btn blue home-btn" id="btn-inv-adv">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
-  }else if(!hasAdult){
-    body = `
-      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — เลี้ยงน้องให้<b>โตเต็มวัย (Lv.3)</b> อย่างน้อย 1 ตัวก่อน ถึงจะซื้อตั๋วเข้าโลกผจญภัย 3D ได้นะ</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🎫 ตั๋วโลกผจญภัย</h3>
-      <div class="home-desc">
-        <div style="font-size:44px">🎫</div>
-        <div><b>ตั๋วเข้าโลกผจญภัย 3D</b><br>
-        <small>ออกตามหาตัวอักษรมาประกอบคำศัพท์ในโลกกว้าง ได้เหรียญมากกว่าเกมจับคู่!<br>
-        ✅ ประตูเปิดแล้ว ซื้อตั๋วเข้าไปเล่นได้เลย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้</small></div>
-      </div>
-      ${tinvNoticeHTML('adv')}
-      <button class="big-btn blue home-btn" id="btn-buy-ticket">🎫 ซื้อตั๋ว 🪙${fmtNum(TICKET_PRICE)}</button>${soldBadge('tk_adv')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-ticket');
-  if(buy) buy.addEventListener('click', buyTicket);
-  const enter = document.getElementById('btn-enter-adv');
-  if(enter) enter.addEventListener('click', enterAdventure3D);
-  const heal = document.getElementById('btn-adv-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-  const inv = document.getElementById('btn-inv-adv');
-  if(inv) inv.addEventListener('click', ()=>openTinvPicker('adv'));
 }
 
 /* ---------- ข้อ 8: เข้าโลกผจญภัย 3D — โหลด engine เฉพาะตอนกดเข้า (กันหน้าหลักหนัก) ---------- */
@@ -6188,216 +6116,6 @@ async function enterHaunted3D(){
   Adventure3D.start('haunt');
 }
 
-/* พลังหมดในโลก 3D → บาดเจ็บ ต้องจ่ายค่ารักษาก่อนเข้าใหม่ (สเปก 8.5) */
-function advHealClick(){
-  if(!state.advHurt) return;
-  if(state.coins < CURE_COST){
-    sfx.wrong();
-    toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมจับคู่เก็บเหรียญก่อนนะ!`);
-    return;
-  }
-  askConfirm(`<h2>💊 รักษาตัว</h2>
-    <p style="font-size:15px;margin:6px 0">จ่ายค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b><br>
-    <small>หายดีแล้วกลับเข้าโลก 3D ได้ทันที (ทั้งโลกผจญภัยและโลกผีสิง)</small></p>`,
-    'รักษาเลย', ()=>{
-      state.coins -= CURE_COST;
-      state.advHurt = false;
-      sfx.buy();
-      toast('💪 หายดีแล้ว! กลับเข้าโลกผจญภัยได้เลย');
-      saveState();
-      renderDashboard();
-    });
-}
-
-function buyTicket(){
-  if(state.advTicket) return;
-  if(!state.pets.some(p=>isAdult(p))){ sfx.wrong(); toast('🔒 ต้องมีสัตว์โตเต็มวัย (Lv.3) ก่อนถึงจะซื้อตั๋วได้นะ'); return; }
-  if(state.coins < TICKET_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกผจญภัย 🪙${fmtNum(TICKET_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🎫 ซื้อตั๋วโลกผจญภัย</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(TICKET_PRICE)}</b><br>
-    ตั๋วเข้าโลกผจญภัย 3D — ตามหาตัวอักษรประกอบคำศัพท์ คำละ 🪙15<br>
-    <small>✅ ประตูเปิดแล้ว ซื้อแล้วเข้าเล่นได้ทันที<br>ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย!', ()=>{
-      state.coins -= TICKET_PRICE;
-      state.advTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_adv');
-      sfx.buy();
-      toast('🎫 ได้ตั๋วโลกผจญภัยแล้ว! กดปุ่มเขียวเข้าโลก 3D ได้เลย 🌍✨');
-      saveState();
-      renderDashboard();
-    });
-}
-
-/* ============================================================
-   🎃 การ์ดตั๋วโลกผีสิงกลางคืน (ต่อยอดข้อ 8 · ผู้ใช้เคาะ 7 ก.ค.)
-   ซื้อได้เมื่อมีตั๋วโลกผจญภัยก่อน · 25🪙/คำ · ผีสู้ไม่ได้ ต้องหนี
-   โดนจับ = game over + รักษา 1,000 (สถานะบาดเจ็บใช้ร่วมกับโลกกลางวัน)
-   ============================================================ */
-function renderHauntCard(){
-  const el = document.getElementById('haunt-card');
-  if(!el) return;
-  let body;
-  if(state.hauntTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อน (ปุ่มรักษาอยู่ที่การ์ดตั๋วโลกผจญภัย หรือกดที่นี่ก็ได้)</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-haunt-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.hauntTicket){
-    body = `
-      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🏨👻</div>
-        <b>โรงแรมกำมะหยี่เปิดให้เข้าพักแล้ว... กล้าไหม?</b><br>
-        <small>เก็บตัวอักษรที่ซ่อนตามห้องพัก <b>ทั้ง 5 ชั้น</b> ประกอบคำ คำละ 🪙25<br>
-        🛗 มีลิฟต์กับบันไดขึ้นชั้นบน · ⏰ <b>อยู่ครบ 2 นาที ไฟทั้งโรงแรมจะดับ</b> ต้องกด <b>F</b> เปิดไฟฉาย<br>
-        👻 <b>ผีที่นี่ไม่ทำร้ายใครเลย</b> — โผล่มาหลอกให้ตกใจอย่างเดียว (ไม่มีเกมโอเวอร์)<br>
-        🧑‍🤝‍🧑 <b>เข้าคนเดียวได้เลย ไม่ต้องรอเพื่อน</b> · โรงแรมหลังหนึ่งอยู่ด้วยกันได้ไม่เกิน 2 คน</small>
-      </div>
-      ${tinvNoticeHTML('haunt')}
-      <button class="big-btn purple home-btn" id="btn-enter-haunt">👻 เข้าโลกผีสิง 3D</button>
-      ${state.tinvClaimed.haunt ? '' :
-        `<button class="big-btn blue home-btn" id="btn-inv-haunt">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
-  }else if(!state.advTicket){
-    body = `
-      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกผจญภัย 🎫</b>ก่อน ถึงจะกล้าเข้าโลกผีสิงกลางคืนได้นะ</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🏨 ตั๋วโรงแรมผีสิง</h3>
-      <div class="home-desc">
-        <div style="font-size:44px">🏨</div>
-        <div><b>ตั๋วเข้าโรงแรมผีสิง 3D (5 ชั้น)</b><br>
-        <small>เดินหาตัวอักษรตามห้องพัก รางวัลคำละ 🪙25 (มากกว่าโลกกลางวัน!)<br>
-        ⏰ อยู่ครบ 2 นาทีไฟดับทั้งตึก ต้องใช้ 🔦 ไฟฉาย · 👻 ผีไม่ทำร้ายใคร แค่หลอกให้ตกใจ<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      </div>
-      ${tinvNoticeHTML('haunt')}
-      <button class="big-btn blue home-btn" id="btn-buy-haunt">🎃 ซื้อตั๋ว 🪙${fmtNum(HAUNT_PRICE)}</button>${soldBadge('tk_haunt')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-haunt');
-  if(buy) buy.addEventListener('click', buyHauntTicket);
-  const enter = document.getElementById('btn-enter-haunt');
-  if(enter) enter.addEventListener('click', enterHaunted3D);
-  const heal = document.getElementById('btn-haunt-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-  const inv = document.getElementById('btn-inv-haunt');
-  if(inv) inv.addEventListener('click', ()=>openTinvPicker('haunt'));
-}
-
-function buyHauntTicket(){
-  if(state.hauntTicket) return;
-  if(!state.advTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกผจญภัยก่อนถึงจะซื้อตั๋วโลกผีสิงได้นะ'); return; }
-  if(state.coins < HAUNT_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกผีสิง 🪙${fmtNum(HAUNT_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🏨 ซื้อตั๋วโรงแรมผีสิง</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(HAUNT_PRICE)}</b><br>
-    โรงแรมกำมะหยี่ 5 ชั้น สุดหลอน — เก็บตัวอักษรตามห้องพัก ประกอบคำ คำละ 🪙25<br>
-    <small>👻 ผีที่นี่ไม่ทำร้ายใครเลย แค่หลอกให้ตกใจ (ไม่มีเกมโอเวอร์) · ⏰ อยู่ครบ 2 นาทีไฟทั้งตึกจะดับ ต้องใช้ 🔦 ไฟฉาย<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'กล้าซื้อ! 👻', ()=>{
-      state.coins -= HAUNT_PRICE;
-      state.hauntTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_haunt');
-      sfx.buy();
-      toast('🎃 ได้ตั๋วโลกผีสิงแล้ว! กดปุ่มม่วงเข้าโลกกลางคืน... ถ้ากล้า 👻');
-      saveState();
-      renderDashboard();
-    });
-}
-
-/* ============================================================
-   🚁 การ์ดตั๋วโลกเฮลิคอปเตอร์ Bell (รอบ 52)
-   บิน cockpit view เก็บตัวอักษรบนยอดตึก ต้องลงจอดบนดาดฟ้า · 30🪙/คำ
-   ซื้อได้เมื่อมีตั๋วโลกผจญภัย (คู่ขนานกับโลกผี ไม่บังคับผ่านกันและกัน)
-   ============================================================ */
-function renderHeliCard(){
-  const el = document.getElementById('heli-card');
-  if(!el) return;
-  let body;
-  if(state.heliTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับขึ้นบินได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-heli-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.heliTicket){
-    body = `
-      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🚁🏙️</div>
-        <b>กัปตันพร้อมบิน!</b><br>
-        <small>มุมมอง cockpit เฮลิคอปเตอร์ Bell · ตัวอักษรอยู่บนยอดตึก คำละ 🪙30<br>
-        บินลอดระหว่างตึกแล้ว<b>ลงจอดเบาๆ บนดาดฟ้า</b>เพื่อเก็บ · ชนตึก/กระแทกแรง = เจ็บ เครื่องพังต้องรักษา 🪙${fmtNum(CURE_COST)}<br>
-        🧑‍🤝‍🧑 เห็นเพื่อนบิน 🚁 ในเมืองเดียวกันแบบสด</small>
-      </div>
-      <div class="tinv-note" style="border-color:#c9a227;background:#fffbe8">🎖️ <b>ใบอนุญาตนักบิน:</b>
-        ${['ยังไม่มีเข็ม — บิน 5 คำติดไม่ชนรับเข็มทองแดง 🥉','เข็มทองแดง 🥉 (เป้าถัดไป 15 คำ = เงิน 🥈)','เข็มเงิน 🥈 (เป้าถัดไป 30 คำ = ทอง 🥇)','เข็มทอง 🥇 — สุดยอดกัปตัน!'][state.pilotBadge||0]}
-        · สตรีคปัจจุบัน <b>${state.heliStreak||0}</b> คำ</div>
-      ${tinvNoticeHTML('heli')}
-      <button class="big-btn green home-btn" id="btn-enter-heli">🚁 ขึ้นบิน!</button>
-      ${state.tinvClaimed.heli ? '' :
-        `<button class="big-btn blue home-btn" id="btn-inv-heli">📨 ชวนเพื่อนบินด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
-  }else if(!state.advTicket){
-    body = `
-      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกผจญภัย 🎫</b>ก่อน ถึงจะสอบใบขับขี่เฮลิคอปเตอร์ได้นะ</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🚁 ตั๋วโลกเฮลิคอปเตอร์</h3>
-      <div class="home-desc">
-        <div style="font-size:44px">🚁</div>
-        <div><b>ตั๋วโลกเฮลิคอปเตอร์ Bell 3D</b><br>
-        <small>ขับเฮลิคอปเตอร์มุมมองห้องนักบิน! รางวัลสูงสุด <b>คำละ 🪙30</b><br>
-        ตัวอักษรอยู่บนยอดตึก — ต้องบินหลบตึกแล้วลงจอดบนดาดฟ้าให้นุ่ม 🛬<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      </div>
-      ${tinvNoticeHTML('heli')}
-      <button class="big-btn blue home-btn" id="btn-buy-heli">🚁 ซื้อตั๋ว 🪙${fmtNum(HELI_PRICE)}</button>${soldBadge('tk_heli')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-heli');
-  if(buy) buy.addEventListener('click', buyHeliTicket);
-  const enter = document.getElementById('btn-enter-heli');
-  if(enter) enter.addEventListener('click', enterHeli3D);
-  const heal = document.getElementById('btn-heli-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-  const inv = document.getElementById('btn-inv-heli');
-  if(inv) inv.addEventListener('click', ()=>openTinvPicker('heli'));
-}
-
-function buyHeliTicket(){
-  if(state.heliTicket) return;
-  if(!state.advTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกผจญภัยก่อนถึงจะซื้อตั๋วเฮลิคอปเตอร์ได้นะ'); return; }
-  if(state.coins < HELI_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกเฮลิคอปเตอร์ 🪙${fmtNum(HELI_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🚁 ซื้อตั๋วโลกเฮลิคอปเตอร์</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(HELI_PRICE)}</b><br>
-    ขับเฮลิคอปเตอร์ Bell เก็บตัวอักษรบนยอดตึก — คำละ 🪙30<br>
-    <small>🛬 ต้องลงจอดบนดาดฟ้าให้นุ่มถึงจะเก็บได้ · ชนตึกเครื่องพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย กัปตัน! 🚁', ()=>{
-      state.coins -= HELI_PRICE;
-      state.heliTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_heli');
-      sfx.buy();
-      toast('🚁 ได้ตั๋วโลกเฮลิคอปเตอร์แล้ว! กดปุ่มเขียว "ขึ้นบิน" ได้เลย กัปตัน ✈️');
-      saveState();
-      renderDashboard();
-    });
-}
-
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
   if(!state.heliTicket || state.advHurt || advLoading) return;
@@ -6460,87 +6178,6 @@ function pickHeliMap(){
   });
 }
 
-/* ============================================================
-   🛸 การ์ดตั๋วโลกโดรน FPV Racing (รอบ 85) — ซื้อได้เมื่อมีตั๋วเฮลิคอปเตอร์
-   บินโดรนเร็วมาก ลอดหน้าต่างเข้าไปในตึกร้างตามห้องต่างๆ เก็บตัวอักษร คำละ 🪙35
-   ============================================================ */
-function renderDroneCard(){
-  const el = document.getElementById('drone-card');
-  if(!el) return;
-  let body;
-  if(state.droneTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับขึ้นบินโดรนได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-drone-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.droneTicket){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🛸🏚️</div>
-        <b>นักบินโดรนพร้อมลุย!</b><br>
-        <small>มุมมอง FPV โดรนแข่ง เร็วสุดๆ · ตัวอักษรซ่อนอยู่<b>ในตึกร้าง</b> คำละ 🪙35<br>
-        บินลอดหน้าต่าง เข้าไปในห้องต่างๆ แล้วบินเฉียดเก็บ (ไม่ต้องจอด) · ระวังชนกำแพง!<br>
-        🧑‍🤝‍🧑 เห็นเพื่อนบินโดรน 🛸 ในเมืองร้างเดียวกันแบบสด</small>
-      </div>
-      ${tinvNoticeHTML('drone')}
-      <button class="big-btn green home-btn" id="btn-enter-drone">🛸 บินโดรน!</button>
-      ${state.tinvClaimed.drone ? '' :
-        `<button class="big-btn blue home-btn" id="btn-inv-drone">📨 ชวนเพื่อนบินด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
-  }else if(!state.heliTicket){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกเฮลิคอปเตอร์ 🚁</b>ก่อน (ผ่านการฝึกบินก่อน ถึงจะบินโดรนความเร็วสูงได้)</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกโดรน FPV</h3>
-      <div class="home-desc">
-        <div style="font-size:44px">🛸</div>
-        <div><b>ตั๋วโลกโดรน FPV Racing 3D</b><br>
-        <small>บินโดรน FPV มุมมองบุคคลที่หนึ่ง เร็วและคล่องกว่าเฮลิคอปเตอร์มาก! รางวัล <b>คำละ 🪙35</b><br>
-        เมืองตึกร้าง — ต้องบินลอดหน้าต่างเข้าไปในตึก เก็บตัวอักษรตามห้องต่างๆ 🏚️<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      </div>
-      ${tinvNoticeHTML('drone')}
-      <button class="big-btn blue home-btn" id="btn-buy-drone">🛸 ซื้อตั๋ว 🪙${fmtNum(DRONE_PRICE)}</button>${soldBadge('tk_drone')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-drone');
-  if(buy) buy.addEventListener('click', buyDroneTicket);
-  const enter = document.getElementById('btn-enter-drone');
-  if(enter) enter.addEventListener('click', enterDrone3D);
-  const heal = document.getElementById('btn-drone-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-  const inv = document.getElementById('btn-inv-drone');
-  if(inv) inv.addEventListener('click', ()=>openTinvPicker('drone'));
-}
-
-function buyDroneTicket(){
-  if(state.droneTicket) return;
-  if(!state.heliTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกเฮลิคอปเตอร์ก่อนถึงจะซื้อตั๋วโดรน FPV ได้นะ'); return; }
-  if(state.coins < DRONE_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกโดรน FPV 🪙${fmtNum(DRONE_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🛸 ซื้อตั๋วโลกโดรน FPV</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(DRONE_PRICE)}</b><br>
-    บินโดรน FPV เร็วสุดๆ เก็บตัวอักษรในตึกร้าง — คำละ 🪙35<br>
-    <small>🏚️ ต้องบินลอดหน้าต่างเข้าไปในตึก เก็บตามห้องต่างๆ · ชนกำแพงโดรนพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย! 🛸', ()=>{
-      state.coins -= DRONE_PRICE;
-      state.droneTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_drone');
-      sfx.buy();
-      toast('🛸 ได้ตั๋วโลกโดรน FPV แล้ว! กดปุ่มเขียว "บินโดรน" ได้เลย 🏙️');
-      saveState();
-      renderDashboard();
-    });
-}
-
 /* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
 async function enterDrone3D(){
   if(!state.droneTicket || state.advHurt || advLoading) return;
@@ -6558,107 +6195,6 @@ async function enterDrone3D(){
     advLoading = false;
   }
   Adventure3D.start('drone');
-}
-
-/* ============================================================
-   🚗 การ์ดตั๋วโลกขับรถกำแพงเพชร (รอบ 113) — ซื้อได้เมื่อมีตั๋วโดรน FPV
-   ขับรถ first-person ในเมืองกำแพงเพชรจริง (ถนน/ตึก/แม่น้ำปิงจาก OpenStreetMap
-   เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์) ขับชนตัวอักษรบนถนน คำละ 🪙40
-   ============================================================ */
-function renderDriveCard(){
-  const el = document.getElementById('drive-card');
-  if(!el) return;
-  let body;
-  if(state.driveTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับไปขับรถได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-drive-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.driveTicket && carDriveBlock()){
-    // 🔐 รอบ 131: มีตั๋วแต่ยังไม่มีรถ / ค้างค่างวด — ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ ต้องซื้อแยก
-    const why = carDriveBlock();
-    body = `
-      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
-      <div class="ticket-owned car-locked">
-        <div style="font-size:44px">🔐</div>
-        ${why==='nocar'
-          ? `<b>ต้องซื้อรถก่อน จึงจะขับรถได้</b><br>
-             <small>ตั๋ว = สิทธิ์เข้าเมืองกำแพงเพชร · <b>รถ = พาหนะ</b> ต้องมีก่อนออกถนน<br>
-             ไปเลือกรถคันแรกที่หมวด 🚗 ยานพาหนะ ในตลาดกันเลย!</small>`
-          : `<b>ค้างค่างวดรถ — ขับไม่ได้ชั่วคราว</b><br>
-             <small>จ่ายงวดที่ค้าง <b>🪙${fmtNum(carLoanOverdue())}</b> ที่หมวดยานพาหนะ แล้วกลับมาขับได้ทันที</small>`}
-      </div>
-      <button class="big-btn blue home-btn" id="btn-drive-tocar">🏪 ไปหมวดยานพาหนะ</button>`;
-  }else if(state.driveTicket){
-    body = `
-      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🚗🏙️</div>
-        <b>คนขับพร้อมออกรถ!</b><br>
-        <small>ขับรถเที่ยว<b>เมืองกำแพงเพชรของจริง</b> — ถนนทุกสายตรงตามแผนที่จริง<br>
-        เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · ขับชนตัวอักษรบนถนนเก็บมาประกอบคำ คำละ 🪙40<br>
-        ออกนอกถนนรถช้าลง · ชนตึกแรงๆ รถพัง ระวังด้วยนะ!<br>
-        🧑‍🤝‍🧑 เห็นเพื่อนขับรถในเมืองเดียวกันแบบสด<br>
-        🗺️ <b>ใหม่!</b> เลือกแผนที่ได้ — ไป<b>บ้านโพธิ์สวัสดิ์</b>ขับรถเล่นรวมกับเพื่อนที่ขี่มอเตอร์ไซค์ได้เลย</small>
-      </div>
-      ${tinvNoticeHTML('drive')}
-      <button class="big-btn green home-btn" id="btn-enter-drive">🚗 ออกรถ!</button>
-      ${state.tinvClaimed.drive ? '' :
-        `<button class="big-btn blue home-btn" id="btn-inv-drive">📨 ชวนเพื่อนขับด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>`}`;
-  }else if(!state.droneTicket){
-    body = `
-      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกโดรน FPV 🛸</b>ก่อน (ไต่ระดับโลก 3D ทีละใบ)</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🚗 ตั๋วโลกขับรถกำแพงเพชร</h3>
-      <div class="ticket-desc">
-        <div style="font-size:44px">🚗🕰️</div>
-        <b>ขับรถเที่ยวเมืองกำแพงเพชรของจริง!</b><br>
-        <small>เมืองจริงจากแผนที่จริง — ถนนทุกสาย ตึก แม่น้ำปิง ตรงตำแหน่งจริง<br>
-        ออกรถที่<b>หอนาฬิกาวงเวียนต้นโพธิ์</b> · ขับชนตัวอักษรบนถนน คำละ 🪙40<br>
-        ชนตึกแรงๆ รถพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      ${tinvNoticeHTML('drive')}
-      <button class="big-btn blue home-btn" id="btn-buy-drive">🚗 ซื้อตั๋ว 🪙${fmtNum(DRIVE_PRICE)}</button>${soldBadge('tk_drive')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-drive');
-  if(buy) buy.addEventListener('click', buyDriveTicket);
-  const enter = document.getElementById('btn-enter-drive');
-  if(enter) enter.addEventListener('click', enterDrive3D);
-  const heal = document.getElementById('btn-drive-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-  const inv = document.getElementById('btn-inv-drive');
-  if(inv) inv.addEventListener('click', ()=>openTinvPicker('drive'));
-  const tocar = document.getElementById('btn-drive-tocar');
-  if(tocar) tocar.addEventListener('click', gotoVehicleShop);
-}
-
-function buyDriveTicket(){
-  if(state.driveTicket) return;
-  if(!state.droneTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกโดรน FPV ก่อนถึงจะซื้อตั๋วขับรถได้นะ'); return; }
-  if(state.coins < DRIVE_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกขับรถกำแพงเพชร 🪙${fmtNum(DRIVE_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🚗 ซื้อตั๋วโลกขับรถกำแพงเพชร</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(DRIVE_PRICE)}</b><br>
-    ขับรถเที่ยวเมืองกำแพงเพชรจริง เก็บตัวอักษรบนถนน — คำละ 🪙40<br>
-    <small>🕰️ ถนน/ตึก/แม่น้ำตรงตามแผนที่จริง เริ่มที่หอนาฬิกาวงเวียนต้นโพธิ์ · ชนตึกแรงๆ รถพัง รักษา 🪙${fmtNum(CURE_COST)}<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย! 🚗', ()=>{
-      state.coins -= DRIVE_PRICE;
-      state.driveTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_drive');
-      sfx.buy();
-      toast('🚗 ได้ตั๋วโลกขับรถกำแพงเพชรแล้ว! กดปุ่มเขียว "ออกรถ" ได้เลย 🕰️');
-      saveState();
-      renderDashboard();
-    });
 }
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
@@ -6751,80 +6287,6 @@ async function enterMotoMapAsCar(){
   MotoWorld.start({vehicle:'car'});
 }
 
-/* ============================================================
-   ⚽ การ์ดตั๋วโลกสนามฟุตบอล (รอบ 196) — ซื้อได้เมื่อมีตั๋วขับรถ
-   เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษรลอยหน้าประตู ประกอบเป็นคำ · คำละ 🪙20
-   ============================================================ */
-function renderSoccerCard(){
-  const el = document.getElementById('soccer-card');
-  if(!el) return;
-  let body;
-  if(state.soccerTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับไปลงสนามได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-soccer-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.soccerTicket){
-    body = `
-      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">⚽🥅</div>
-        <b>นักเตะพร้อมลงสนาม!</b><br>
-        <small>เล็ง + <b>กดค้างเพื่อชาร์จพลัง</b> แล้วเตะบอลใส่ป้ายตัวอักษรที่ลอยหน้าประตู<br>
-        ประกอบเป็นคำ คำละ 🪙20 · เลือก<b>สีเสื้อ + เบอร์หลังเสื้อ</b> · มุมมองบุคคลที่ 1/3<br>
-        🧑‍🤝‍🧑 เห็นเพื่อนในสนามเดียวกันแบบสด</small>
-      </div>
-      <button class="big-btn green home-btn" id="btn-enter-soccer">⚽ ลงสนาม!</button>`;
-  }else if(!state.driveTicket){
-    body = `
-      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกขับรถกำแพงเพชร 🚗</b>ก่อน (ไต่ระดับโลก 3D ทีละใบ)</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">⚽ ตั๋วโลกสนามฟุตบอล</h3>
-      <div class="ticket-desc">
-        <div style="font-size:44px">⚽🏟️</div>
-        <b>ลงสนามฟุตบอล 3D!</b><br>
-        <small>เล็งแล้วเตะบอลใส่ป้ายตัวอักษรที่ลอยนิ่งหน้าประตู ให้ครบเป็นคำ — คำละ 🪙20<br>
-        กดปุ่มเตะค้างเพื่อเพิ่มพลัง · เลือกสีเสื้อ + เบอร์หลังเสื้อ · มุมมองบุคคลที่ 1/3<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      <button class="big-btn blue home-btn" id="btn-buy-soccer">⚽ ซื้อตั๋ว 🪙${fmtNum(SOCCER_PRICE)}</button>${soldBadge('tk_soccer')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-soccer');
-  if(buy) buy.addEventListener('click', buySoccerTicket);
-  const enter = document.getElementById('btn-enter-soccer');
-  if(enter) enter.addEventListener('click', enterSoccer3D);
-  const heal = document.getElementById('btn-soccer-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-}
-
-function buySoccerTicket(){
-  if(state.soccerTicket) return;
-  if(!state.driveTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนถึงจะซื้อตั๋วสนามฟุตบอลได้นะ'); return; }
-  if(state.coins < SOCCER_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกสนามฟุตบอล 🪙${fmtNum(SOCCER_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>⚽ ซื้อตั๋วโลกสนามฟุตบอล</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(SOCCER_PRICE)}</b><br>
-    เล็ง+ชาร์จพลังเตะบอลใส่ป้ายตัวอักษร ประกอบเป็นคำ — คำละ 🪙20<br>
-    <small>⚽ เลือกสีเสื้อ+เบอร์หลังเสื้อ · มุมมองบุคคลที่ 1/3<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย! ⚽', ()=>{
-      state.coins -= SOCCER_PRICE;
-      state.soccerTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_soccer');
-      sfx.buy();
-      toast('⚽ ได้ตั๋วโลกสนามฟุตบอลแล้ว! กดปุ่มเขียว "ลงสนาม" ได้เลย 🥅');
-      saveState();
-      renderDashboard();
-    });
-}
-
 /* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
 async function enterSoccer3D(){
   if(!state.soccerTicket || state.advHurt || advLoading) return;
@@ -6842,82 +6304,6 @@ async function enterSoccer3D(){
     advLoading = false;
   }
   Adventure3D.start('soccer');
-}
-
-/* ============================================================
-   🏍️ การ์ดตั๋วโลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) — ซื้อได้เมื่อมีตั๋วขับรถ
-   ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (OSM)
-   เล่นบน "เครื่องเกมพกพา" เต็มจอ · เก็บตัวอักษรบนถนนประกอบคำ คำละ 🪙45
-   ============================================================ */
-function renderMotoCard(){
-  const el = document.getElementById('moto-card');
-  if(!el) return;
-  let body;
-  if(state.motoTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับไปขี่มอเตอร์ไซค์ได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-moto-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.motoTicket){
-    body = `
-      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🏍️🎮</div>
-        <b>สตาร์ทเครื่องพร้อมซิ่ง!</b><br>
-        <small>ขี่มอเตอร์ไซค์บน<b>ถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์</b> รัศมี 30 กม.<br>
-        เล่นบนเครื่องเกมพกพาสุดน่ารัก — สไลเดอร์ส้มเลี้ยว · ปุ่มฟ้าเร่งเครื่อง<br>
-        ขับชนตัวอักษรบนถนนประกอบคำ คำละ 🪙45 · ลูกศรเขียวนำทาง</small>
-      </div>
-      <button class="big-btn green home-btn" id="btn-enter-moto">🏍️ ออกซิ่ง!</button>`;
-  }else if(!state.driveTicket){
-    body = `
-      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วโลกขับรถ 🚗</b>ก่อน (ขับรถเป็นแล้วค่อยซิ่งมอไซค์)</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🏍️ ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h3>
-      <div class="ticket-desc">
-        <div style="font-size:44px">🏍️🏫</div>
-        <b>ซิ่งมอเตอร์ไซค์รอบบ้านโพธิ์สวัสดิ์ของจริง!</b><br>
-        <small>ถนนจริง หมู่บ้านจริง จากแผนที่จริง รัศมี 30 กม. — ออกตัวหน้า<b>โรงเรียนบ้านโพธิ์สวัสดิ์</b><br>
-        เล่นบน<b>เครื่องเกมพกพา</b>สุดน่ารัก · เอียงรถเข้าโค้งเหมือนจริง<br>
-        เก็บตัวอักษรบนถนนประกอบคำ คำละ 🪙45 · มอเตอร์ไซค์แถมกับตั๋ว!<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      <button class="big-btn blue home-btn" id="btn-buy-moto">🏍️ ซื้อตั๋ว 🪙${fmtNum(MOTO_PRICE)}</button>${soldBadge('tk_moto')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-moto');
-  if(buy) buy.addEventListener('click', buyMotoTicket);
-  const enter = document.getElementById('btn-enter-moto');
-  if(enter) enter.addEventListener('click', enterMoto3D);
-  const heal = document.getElementById('btn-moto-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-}
-
-function buyMotoTicket(){
-  if(state.motoTicket) return;
-  if(!state.driveTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วโลกขับรถก่อนถึงจะซื้อตั๋วมอเตอร์ไซค์ได้นะ'); return; }
-  if(state.coins < MOTO_PRICE){
-    sfx.wrong(); toast(`ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ 🪙${fmtNum(MOTO_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🏍️ ซื้อตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(MOTO_PRICE)}</b><br>
-    ซิ่งมอเตอร์ไซค์บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. — คำละ 🪙45<br>
-    <small>🎮 เล่นบนเครื่องเกมพกพาสุดน่ารัก · เอียงรถเข้าโค้งเหมือนจริง · มอเตอร์ไซค์แถมกับตั๋ว<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย! 🏍️', ()=>{
-      state.coins -= MOTO_PRICE;
-      state.motoTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_moto');
-      sfx.buy();
-      toast('🏍️ ได้ตั๋วมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์แล้ว! กดปุ่มเขียว "ออกซิ่ง" ได้เลย 🎮');
-      saveState();
-      renderDashboard();
-    });
 }
 
 /* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
@@ -6940,83 +6326,6 @@ async function enterMoto3D(){
   MotoWorld.start();
 }
 
-/* ============================================================
-   🛸 การ์ดตั๋วโลก "ยานแม่บุกโลก" (Invasion · รอบ 413)
-   FPS ทะเลทราย — ยิงยานลูกให้ตกครบ แล้วถล่มยานแม่ที่โชว์คำศัพท์บนท้องยาน
-   ============================================================ */
-function renderInvasionCard(){
-  const el = document.getElementById('invasion-card');
-  if(!el) return;
-  let body;
-  if(state.invasionTicket && state.advHurt){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🤕</div>
-        <b>ยังบาดเจ็บอยู่!</b><br>
-        <small>ต้องรักษาตัวก่อนถึงจะกลับเข้าสมรภูมิได้</small>
-      </div>
-      <button class="big-btn red home-btn" id="btn-invasion-heal">💊 รักษาตัว 🪙${fmtNum(CURE_COST)}</button>`;
-  }else if(state.invasionTicket){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
-      <div class="ticket-owned">
-        <div style="font-size:44px">🛸🔫</div>
-        <b>สมรภูมิรออยู่!</b><br>
-        <small>ยานแม่ลำมหึมาลอยคลุมท้องฟ้าเมืองทะเลทราย — บนท้องยานมี<b>ช่องตัวอักษร</b>เป็นคำศัพท์<br>
-        ยิง<b>ยานลูก</b>ให้ตกครบทุกลำ → เกราะยานแม่เปิด → ถล่มด้วยปืนใหญ่+มิสไซล์ คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
-        👥 มีหน่วยรบภาคพื้น + เฮลิคอปเตอร์ติดมิสไซล์ ช่วยสู้เคียงข้าง</small>
-      </div>
-      <button class="big-btn green home-btn" id="btn-enter-invasion">⚔️ เข้าสมรภูมิ!</button>`;
-  }else if(!state.motoTicket){
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
-      <div class="lock-banner">🔒 การ์ดตั๋วถูกล็อก — ต้องมี<b>ตั๋วมอเตอร์ไซค์ 🏍️</b>ก่อน</div>`;
-  }else{
-    body = `
-      <h3 class="shop-title">🛸 ตั๋วโลกยานแม่บุกโลก</h3>
-      <div class="ticket-desc">
-        <div style="font-size:44px">🛸🏜️</div>
-        <b>เอเลี่ยนบุกโลกแล้ว — ออกไปสู้!</b><br>
-        <small>มุมมองบุคคลที่ 1 ถืออาวุธเอง ในเมืองทะเลทราย<br>
-        ยานแม่ลำมหึมาลอย<b>เกือบเต็มท้องฟ้า</b> โชว์คำศัพท์เป็นช่องตัวอักษรยักษ์<br>
-        ยิงยานลูกตก = ตัวอักษรกะพริบ · ครบทุกลำ = ถล่มยานแม่ให้ระเบิด คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
-        👥 พันธมิตรช่วยสู้: หน่วยรบภาคพื้น + ฝูงเฮลิคอปเตอร์ติดมิสไซล์<br>
-        ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></div>
-      <button class="big-btn blue home-btn" id="btn-buy-invasion">🛸 ซื้อตั๋ว 🪙${fmtNum(INVASION_PRICE)}</button>${soldBadge('tk_invasion')}`;
-  }
-  el.innerHTML = body;
-  const buy = document.getElementById('btn-buy-invasion');
-  if(buy) buy.addEventListener('click', buyInvasionTicket);
-  const enter = document.getElementById('btn-enter-invasion');
-  if(enter) enter.addEventListener('click', enterInvasion3D);
-  const heal = document.getElementById('btn-invasion-heal');
-  if(heal) heal.addEventListener('click', advHealClick);
-}
-const INVASION_REWARD = 10;   // 🪙 รอบ 570: ต้องตรงกับ WORD_COIN ใน js/invasion3d.js (โชว์ในการ์ดร้าน) — ครบคำ = ทุกคนในแมพได้คนละ 10
-
-function buyInvasionTicket(){
-  if(state.invasionTicket) return;
-  if(!state.motoTicket){ sfx.wrong(); toast('🔒 ต้องมีตั๋วมอเตอร์ไซค์ก่อนถึงจะซื้อตั๋วโลกยานแม่บุกโลกได้นะ'); return; }
-  if(state.coins < INVASION_PRICE){
-    sfx.wrong(); toast(`ตั๋วโลกยานแม่บุกโลก 🪙${fmtNum(INVASION_PRICE)} — เหรียญยังไม่พอ สู้ๆ!`); return;
-  }
-  askConfirm(`<h2>🛸 ซื้อตั๋วโลกยานแม่บุกโลก</h2>
-    <p style="font-size:15px;margin:6px 0">ราคา <b>🪙${fmtNum(INVASION_PRICE)}</b><br>
-    เกมยิงมุมมองบุคคลที่ 1 ในเมืองทะเลทราย — ยิงยานลูกให้ตกครบแล้วถล่มยานแม่ คำละ 🪙${fmtNum(INVASION_REWARD)}<br>
-    <small>🛸 ยานแม่ลอยเกือบเต็มท้องฟ้า โชว์คำศัพท์เป็นช่องตัวอักษรยักษ์<br>
-    👥 มีหน่วยรบภาคพื้น + เฮลิคอปเตอร์ติดมิสไซล์ ช่วยสู้เคียงข้าง<br>
-    ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้ · นับเป็นทรัพย์สินในแรงค์</small></p>`,
-    'ซื้อเลย! 🛸', ()=>{
-      state.coins -= INVASION_PRICE;
-      state.invasionTicket = true;
-      if(typeof sellInc==='function') sellInc('tk_invasion');
-      sfx.buy();
-      toast('🛸 ได้ตั๋วโลกยานแม่บุกโลกแล้ว! กดปุ่มเขียว "เข้าสมรภูมิ" ได้เลย ⚔️');
-      saveState();
-      renderDashboard();
-    });
-}
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
@@ -7040,47 +6349,102 @@ async function enterInvasion3D(){
 
 /* ============================================================
    🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-   ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคต
-   แค่ "เพิ่ม 1 บรรทัด" ที่นี่ (โหมด/ไอคอน/ชื่อ/คีย์ตั๋ว/การ์ดร้าน/ฟังก์ชันเข้า)
-   แล้วปุ่มจะโผล่ในรางเอง · มีตั๋ว = กดเข้าโลกเลย · ยังไม่มีตั๋ว = 🔒 พาไปการ์ดซื้อในร้านค้า
-   ============================================================ */
+   🎫→💰 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
+   (ไม่มีการ์ดตั๋วแยกในตลาดแล้ว) ราคาวันนี้เดียวกันทุกโลกจาก worldEntryInfo() (js/data/calendar.js — คิดวันหยุด/วันเด็ก)
+   ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคตแค่ "เพิ่ม 1 บรรทัด" ที่นี่แล้วปุ่มจะโผล่ในรางเอง
+   prereq = ticketKey ของโลกก่อนหน้าที่ต้องปลดล็อกก่อน (null = ไม่มี เงื่อนไขพิเศษเช็กแยกใน railWorldClick) */
 const WORLD3D = [
-  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   price:TICKET_PRICE, card:'ticket-card', enter:enterAdventure3D },
-  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', price:HAUNT_PRICE,  card:'haunt-card',  enter:enterHaunted3D },
-  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  price:HELI_PRICE,   card:'heli-card',   enter:enterHeli3D },
-  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', price:DRONE_PRICE,  card:'drone-card',  enter:enterDrone3D },
-  { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', price:DRIVE_PRICE,  card:'drive-card',  enter:enterDrive3D },
-  { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',price:SOCCER_PRICE, card:'soccer-card', enter:enterSoccer3D },
-  { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  price:MOTO_PRICE,   card:'moto-card',   enter:enterMoto3D },
-  { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',price:INVASION_PRICE, card:'invasion-card', enter:enterInvasion3D },
-  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, card:'mkt-robots', enter:enterMecha3D },
+  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   prereq:null,          enter:enterAdventure3D },
+  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', prereq:'advTicket',   enter:enterHaunted3D },
+  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  prereq:'advTicket',   enter:enterHeli3D },
+  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', prereq:'heliTicket',  enter:enterDrone3D },
+  { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', prereq:'droneTicket', enter:enterDrive3D },
+  { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',prereq:'driveTicket', enter:enterSoccer3D },
+  { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  prereq:'driveTicket', enter:enterMoto3D },
+  { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',prereq:'motoTicket', enter:enterInvasion3D },
+  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
 ];
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
   setTimeout(()=>{ const s = document.getElementById('mkt-robots'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
 }
 
-function scrollShopCardIntoView(id){
-  setTimeout(()=>{ const c = document.getElementById(id); if(c) c.scrollIntoView({behavior:'smooth', block:'center'}); }, 120);
-}
-function railWorldClick(w){
-  if(state.advHurt){                                        // บาดเจ็บ → รักษาก่อน (การ์ดร้านมีปุ่มรักษา)
-    sfx.wrong(); toast('🤕 ยังบาดเจ็บอยู่ ต้องรักษาตัวก่อนเข้าโลก 3D');
-    if(typeof openPanel === 'function') openPanel('panel-market');
-    scrollShopCardIntoView(w.card); return;
+/* 🤕 บาดเจ็บ/พลังหมดในโลก 3D (สเปก 8.5 — ใช้ร่วมทุกโลก) ต้องรักษาก่อนถึงจะเข้าโลกไหนก็ได้อีกครั้ง */
+function openHealDialog(){
+  if(state.coins < CURE_COST){
+    sfx.wrong(); toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ!`); return;
   }
-  const hasAccess = w.owned ? w.owned() : !!state[w.ticketKey];
-  if(!hasAccess){                                           // ยังไม่มีตั๋ว/หุ่น → พาไปซื้อ
+  askConfirm(`<h2>🤕 บาดเจ็บจากโลก 3D</h2>
+    <p style="font-size:15px;margin:6px 0">พลังหมด/โดนจับตอนผจญภัย ต้องรักษาตัวก่อนถึงจะกลับเข้าโลก 3D ได้อีกครั้ง<br>
+    ค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b></p>`,
+    '💊 รักษาเลย', ()=>{
+      state.coins -= CURE_COST;
+      state.advHurt = false;
+      sfx.buy();
+      toast('💪 หายดีแล้ว! กลับเข้าโลก 3D ได้เลย');
+      saveState();
+      renderDashboard();
+    });
+}
+
+function railWorldClick(w){
+  if(w.mode === 'mecha'){                                   // 🤖 หุ่นรบ: อยู่นอกระบบตั๋ว ไม่เปลี่ยน (ซื้อหุ่นแยกในตลาด)
+    if(!w.owned()){ sfx.select(); toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return; }
+    w.enter(); return;
+  }
+  if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
+  if(w.prereq && !state[w.prereq]){
     sfx.select();
-    if(w.mode === 'mecha'){ toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return; }
-    toast(`${w.ico} ยังไม่มีตั๋วโลก${w.label} — ไปซื้อตั๋วในตลาดก่อนนะ`);
-    if(typeof openPanel === 'function') openPanel('panel-market');
-    scrollShopCardIntoView(w.card); return;
+    const prevW = WORLD3D.find(x=>x.ticketKey===w.prereq);
+    toast(`${w.ico} ต้องปลดล็อกโลก${prevW?prevW.label:''}ก่อนถึงจะเข้าโลก${w.label}ได้นะ`);
+    return;
+  }
+  if(w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p))){
+    sfx.wrong(); toast('🔒 ต้องมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัวก่อนถึงจะเข้าโลกผจญภัยได้นะ'); return;
   }
   if(w.mode === 'drive' && carDriveBlock()){                // 🔐 รอบ 131: มีตั๋วแต่ไม่มีรถ/ค้างงวด → กล่องพาไปหมวดยานพาหนะ
     sfx.wrong(); showNeedCarDialog(carDriveBlock()); return;
   }
-  w.enter();                                                // มีตั๋ว + ไม่บาดเจ็บ → เข้าโลกเลย
+  openWorldEntryDialog(w);
+}
+
+/* 🎫→💰 รอบ 822: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
+   ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
+function openWorldEntryDialog(w){
+  const info = worldEntryInfo();
+  const unlocked = !!state[w.ticketKey];
+  const feeHTML = info.free
+    ? `<div style="font-size:14px;font-weight:700;color:#2e9e4a;margin:6px 0">🎉 ${escapeHTML(info.reason)}<br>เข้าฟรีวันนี้!</div>`
+    : info.discount
+      ? `<p style="font-size:14px;margin:6px 0">🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
+      : `<p style="font-size:14px;margin:6px 0">ค่าเข้า <b>🪙${fmtNum(info.fee)}</b></p>`;
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay';
+  overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
+    <h2 style="font-size:18px">${w.ico} เข้าโลก${w.label}</h2>
+    ${feeHTML}
+    ${!unlocked ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">ครั้งแรกในโลกนี้ — ปลดล็อกโลกถัดไปได้เลยหลังจ่าย (ครั้งต่อไปยังต้องจ่ายค่าเข้าเหมือนกันทุกครั้ง)</p>' : ''}
+    ${tinvNoticeHTML(w.mode)}
+    <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!'}</button>
+    <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
+    <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px">ยกเลิก</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
+  overlay.querySelector('#we-cancel').addEventListener('click', ()=>overlay.remove());
+  overlay.querySelector('#we-invite').addEventListener('click', ()=>openTinvPicker(w.mode));
+  overlay.querySelector('#we-enter').addEventListener('click', ()=>{
+    if(!info.free){
+      if(state.coins < info.fee){ sfx.wrong(); toast(`เหรียญยังไม่พอ ต้องมี 🪙${fmtNum(info.fee)}`); return; }
+      state.coins -= info.fee;
+    }
+    if(!unlocked){ state[w.ticketKey] = true; if(typeof sellInc==='function') sellInc('tk_'+w.mode); }
+    sfx.buy();
+    saveState();
+    renderRailWorlds();
+    overlay.remove();
+    w.enter();
+  });
 }
 
 /* ============================================================
@@ -7143,38 +6507,57 @@ function renderRailWorlds(){
     });
     rail.appendChild(box);
   }
+  const info = worldEntryInfo();   // 🎫→💰 รอบ 822: ราคาวันนี้เดียวกันทุกโลก (คิดวันหยุด/วันเด็กแล้ว)
   WORLD3D.forEach(w=>{
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
-    const locked = w.owned ? !w.owned() : !state[w.ticketKey];
-    const done   = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
-    const afford = state.coins >= w.price;
-    b.classList.toggle('locked', locked);
+    const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
     const lk = b.querySelector('.rail-lock');
     const cnt = b.querySelector('.rail-count');
     const pr  = b.querySelector('.rail-price');
-    if(locked){                                               // ยังไม่มีตั๋ว → 🔒 + ราคาตั๋ว (พอซื้อ=เขียว "พร้อม!")
+    if(w.mode === 'mecha'){                                   // 🤖 หุ่นรบ: อยู่นอกระบบตั๋ว ไม่เปลี่ยน
+      const locked = !w.owned();
+      const afford = state.coins >= w.price;
+      b.classList.toggle('locked', locked);
+      if(locked){
+        if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
+        if(cnt) cnt.style.display = 'none';
+        if(pr){ pr.style.display = ''; pr.textContent = '🪙' + fmtNum(w.price); pr.classList.toggle('afford', afford); pr.title = afford ? 'เหรียญพอซื้อแล้ว!' : ''; }
+      }else{
+        if(lk) lk.style.display = 'none';
+        if(pr) pr.style.display = 'none';
+        if(cnt){ cnt.style.display = done > 0 ? '' : 'none'; cnt.textContent = fmtNum(done); cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ'; }
+      }
+      return;
+    }
+    // ยังปลดล็อกไม่ได้ (ยังไม่ผ่านโลกก่อนหน้า / โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย) → 🔒 เฉยๆ ไม่โชว์ราคา (ยังเข้าไม่ได้จริง)
+    const advGate = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));
+    const locked = (w.prereq && !state[w.prereq]) || advGate;
+    b.classList.toggle('locked', locked);
+    if(locked){
       if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
       if(cnt) cnt.style.display = 'none';
-      if(pr){
-        pr.style.display = '';
-        pr.textContent = '🪙' + fmtNum(w.price);
-        pr.classList.toggle('afford', afford);
-        pr.title = afford ? 'เหรียญพอซื้อตั๋วแล้ว!' : '';
-      }
-    }else{                                                    // ปลดล็อกแล้ว → ซ่อนราคา · โชว์จำนวนคำที่พิชิต (ถ้ามี)
-      // 🔐 รอบ 131: โลกขับรถมีตั๋วแต่ยังไม่มีรถ/ค้างค่างวด → กุญแจเหลืองล็อกทับ (ซื้อรถแล้วหายถาวร)
-      const carBlock = w.mode === 'drive' ? carDriveBlock() : '';
-      if(lk){
-        lk.style.display = carBlock ? '' : 'none';
-        if(carBlock){ lk.textContent = '🔐'; lk.title = carBlock==='nocar' ? 'ต้องซื้อรถก่อน จึงจะขับรถได้' : 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
-      }
       if(pr) pr.style.display = 'none';
-      if(cnt){
-        cnt.style.display = (done > 0 && !carBlock) ? '' : 'none';
-        cnt.textContent = fmtNum(done);
-        cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ';
-      }
+      return;
+    }
+    // 🔐 รอบ 131: โลกขับรถปลดล็อกแล้วแต่ยังไม่มีรถ/ค้างค่างวด → กุญแจเหลืองล็อกทับ (ซื้อรถแล้วหายถาวร)
+    const carBlock = w.mode === 'drive' ? carDriveBlock() : '';
+    if(lk){
+      lk.style.display = carBlock ? '' : 'none';
+      if(carBlock){ lk.textContent = '🔐'; lk.title = carBlock==='nocar' ? 'ต้องซื้อรถก่อน จึงจะขับรถได้' : 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
+    }
+    // ปลดล็อกแล้ว (เข้าได้) → โชว์ราคาวันนี้เสมอ (จ่ายทุกครั้ง) + จำนวนคำที่พิชิต (ถ้ามี)
+    if(pr){
+      pr.style.display = '';
+      pr.textContent = info.free ? '🎉 ฟรี!' : '🪙' + fmtNum(info.fee);
+      const afford = info.free || state.coins >= info.fee;
+      pr.classList.toggle('afford', afford);
+      pr.title = info.free ? info.reason : (info.discount ? info.reason : (afford ? 'เหรียญพอเข้าได้แล้ว!' : ''));
+    }
+    if(cnt){
+      cnt.style.display = (done > 0 && !carBlock) ? '' : 'none';
+      cnt.textContent = fmtNum(done);
+      cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ';
     }
   });
   initRailScroll();                                           // 🧭 รอบ 601: ป้ายบอกทาง ▲/▼ (ปุ่มในรางเปลี่ยนความสูงได้ → อัปเดตทุก render)
@@ -7188,18 +6571,18 @@ function tinvNoticeHTML(map){
   const from = Object.values(Online.tinv).filter(v=>v.map===map);
   if(!from.length) return '';
   return `<div class="tinv-note">📨 <b>${escapeHTML(from[0].n)}</b> ชวนหนูไปเล่นด้วยกัน!
-    เข้าโลกให้เจอกันใน map แล้วรับเงินคืนคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
+    เข้าโลกไปเจอกัน แล้วเล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืนคนละ <b>🪙${fmtNum(TINV_CASHBACK)}</b></div>`;
 }
 function openTinvPicker(map){
   if(!(window.Online && Online.ready)){ sfx.wrong(); toast('⚠️ ยังไม่ได้เชื่อมต่อออนไลน์ — ลองใหม่อีกครั้งนะ'); return; }
   const friends = (Online.myFriends || []);
   if(!friends.length){ sfx.wrong(); toast('ยังไม่มีเพื่อนเลย — ไปเพิ่มเพื่อนที่เมนู 🧑‍🤝‍🧑 ก่อนนะ'); return; }
-  const w = map==='haunt' ? 'โลกผีสิง 👻' : map==='heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : map==='drone' ? 'โลกโดรน FPV 🛸' : 'โลกผจญภัย 🌍';
+  const w = (typeof TINV_WORLD_LABEL !== 'undefined' && TINV_WORLD_LABEL[map]) || 'โลกผจญภัย 🌍';   // 🤝 รอบ 822: ป้ายชื่อรวมทุกโลกจาก js/online.js
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
     <h2 style="font-size:18px">📨 ชวนเพื่อนไปเล่น${w}</h2>
-    <p style="font-size:13px;margin:4px 0">เล่นพร้อมกันใน map ครั้งแรก รับเงินคืน<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
+    <p style="font-size:13px;margin:4px 0">เล่นจบด้วยกัน (อยู่ด้วยกันต่อเนื่อง) รับเงินคืน<b>คนละ 🪙${fmtNum(TINV_CASHBACK)}</b></p>
     <div style="max-height:44vh;overflow-y:auto;margin:8px 0">
       ${friends.map(f=>{
         const on = Online.presenceMap && Online.presenceMap[f.uid];

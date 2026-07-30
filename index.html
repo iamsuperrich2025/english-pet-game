@@ -317,30 +317,11 @@
             <div class="shop-card" id="factory-card"></div>
           </div>
 
-          <!-- รอบ 635: ย้ายตั๋วโลก 3D เข้ามารวมกับตลาด (เดิมอยู่แผงร้านค้าที่ถูกถอดไปแล้ว)
-               🔀 ผู้ใช้สั่ง 29 ก.ค. 2026: ย้ายกลุ่ม "ตั๋วเข้าโลกผจญภัย 3D" ไปอยู่ใต้กลุ่ม "หุ่นยนต์"
-               (หุ่นยนต์ = mkt-robots ท้ายสุดของ market-card/renderVehicleShop) → สลับลำดับ 2 กลุ่มนี้ -->
+          <!-- 🎫→💰 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกการ์ดตั๋วโลก 3D แยก 8 ใบ — เปลี่ยนเป็นจ่ายค่าเข้า
+               ตอนกดปุ่มโลก 3D ในรางเมนูซ้ายแทน (railWorldClick → openWorldEntryDialog ใน js/ui.js) -->
           <div class="panel-page" id="panel-market">
             <div class="mkt-group-head">🏪 ตลาดซื้อขายกับเพื่อน &amp; ยานพาหนะ</div>
             <div class="shop-card" id="market-card"></div>
-
-            <div class="mkt-group-head">🎫 ตั๋วเข้าโลกผจญภัย 3D</div>
-            <div class="mkt-two-col">
-              <div class="shop-card" id="ticket-card"></div>
-              <div class="shop-card" id="haunt-card"></div>
-            </div>
-            <div class="mkt-two-col">
-              <div class="shop-card" id="heli-card"></div>
-              <div class="shop-card" id="drone-card"></div>
-            </div>
-            <div class="mkt-two-col">
-              <div class="shop-card" id="drive-card"></div>
-              <div class="shop-card" id="soccer-card"></div>
-            </div>
-            <div class="mkt-two-col">
-              <div class="shop-card" id="moto-card"></div>
-              <div class="shop-card" id="invasion-card"></div>
-            </div>
           </div>
 
           <div class="panel-page" id="panel-friends">
@@ -420,6 +401,7 @@
 <!-- ============ DATA (แก้เพิ่มคำศัพท์/สัตว์/ไอเทมที่นี่ ไม่กระทบเซฟผู้เล่น) ============ -->
 <script src="js/data/pets.js"></script>
 <script src="js/data/items.js"></script>
+<script src="js/data/calendar.js"></script>  <!-- 📅 รอบ 822: ปฏิทินวันสำคัญไทย → ราคาเข้าโลก 3D วันนี้ (worldEntryInfo) -->
 <!-- ⚠️ ห้ามชี้ไป js/data/vocab/band1-5.js จนกว่างานแยกไฟล์คำศัพท์ (TASK_VOCAB_SONNET.md)
      จะเสร็จครบทุกไฟล์และ commit พร้อมกัน — เคยหลุดขึ้น production แล้วเกมเปิดไม่ได้ทั้งเว็บ (5 ก.ค. 2026) -->
 <script src="js/data/vocab.js"></script>

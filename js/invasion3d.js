@@ -7354,6 +7354,11 @@ function onPeer(uid,d){
     p.lastCt=d.ct;
     if(p.grp) showPeerBubble(p,d.c); else { p.pendChat=d.c; p.pendAt=performance.now(); }
   }
+  /* 🤝 รอบ 822: ชวนเพื่อนสู้ยานแม่ด้วยกัน — อยู่ด้วยกันครบเวลาขั้นต่ำ = จบเกมด้วยกัน → เงินคืนคนละ TINV_CASHBACK */
+  if(typeof tinvPartyTick==='function' && tinvPartyTick('invasion',uid)){
+    sfx.rankup && sfx.rankup();
+    toastBan(`🎊 เล่นจบด้วยกับ <b>${escapeHTML(p.n)}</b> ตามคำชวน! รับเงินคืน +${fmtNum(TINV_CASHBACK)} 🪙`,2400);
+  }
 }
 function dropPeer(uid){
   const p=peers[uid]; if(!p) return;

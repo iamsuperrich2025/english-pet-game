@@ -138,6 +138,7 @@ Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGi
 function showQuizBackPay(){
   const b = state.quizBackPay;
   if(!b || !b.total){ showGiantRefund(); return; }
+  // (คิวการเด้ง: quizBackPay → giantRefund → ticketRefund — ต่อกันเป็นทอด ๆ ดูที่ showGiantRefund/showTicketRefund)
   state.quizBackPay = null; saveState();              // เด้งครั้งเดียวพอ (เหรียญเข้าไปแล้วตั้งแต่ตอนโหลด)
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -181,7 +182,7 @@ function showQuizBackPay(){
    ============================================================ */
 function showGiantRefund(){
   const b = state.giantRefund;
-  if(!b || !b.total) return;
+  if(!b || !b.total){ showTicketRefund(); return; }
   state.giantRefund = null; saveState();               // เด้งครั้งเดียวพอ (เหรียญเข้าไปแล้วตั้งแต่ตอนโหลด)
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -206,12 +207,54 @@ function showGiantRefund(){
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    showTicketRefund();     // 🎫→💰 รอบ 822: ต่อคิวแจ้งคืนเงินตั๋วโลก 3D เก่า (ถ้ามี) หลังกล่องนี้ปิด
   });
   document.body.appendChild(ov);
   fitQbp(ov.querySelector('.qbp'));
   window.addEventListener('resize', refit);
   if(typeof feedEvent === 'function')
     feedEvent('coin', `ได้คืนเงินร่างยักษ์ +${num(b.total)} 🪙 (โหมดขยายร่างถูกถอดออกจากเกมแล้ว)`);
+}
+
+/* ============================================================
+   🎫→💰 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วโลก 3D ราคาแพงจ่ายทีเดียว → จ่าย WORLD_ENTRY_FEE ทุกครั้งแทน
+   ยอดคืน + คำนวณไว้ตั้งแต่ตอนโหลด (loadState → state.ticketRefund) ที่นี่ทำหน้าที่ "เด้งบอกครั้งเดียว"
+   ใช้กล่องแบบเดียวกับ showGiantRefund
+   ============================================================ */
+function showTicketRefund(){
+  const b = state.ticketRefund;
+  if(!b || !b.total) return;
+  state.ticketRefund = null; saveState();
+  const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  const name = state.profileName || (state.student && state.student.first) || 'หนู';
+  if(typeof sfx !== 'undefined' && sfx.coinGet) sfx.coinGet();
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#6cc5ff"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">🎫 เปลี่ยนระบบตั๋วโลก 3D แล้ว — คืนเงินให้เต็มจำนวน!</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#ffb300">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">ยินดีด้วย ${escapeHTML(name)}! 🎉<br>
+        ตั๋วเข้าโลกผจญภัย 3D ที่เคยซื้อไว้ทีเดียวจ่ายแพง เปลี่ยนเป็น <b>จ่ายค่าเข้า 🪙${num(WORLD_ENTRY_FEE)} ทุกครั้งที่เข้าโลก</b> (เท่ากันทุกคน ทุกโลก)<br>
+        <small>เหรียญที่หนูเคยจ่ายซื้อตั๋วไปก่อนหน้านี้ ระบบคืนให้เต็มจำนวน <b>${num(b.total)} เหรียญ</b> เข้ากระเป๋าเรียบร้อยแล้วนะ 🪙<br>
+        โลกที่เคยปลดล็อกแล้วยังเข้าได้ตามลำดับเดิม ไม่ต้องปลดล็อกใหม่</small></p>
+      <button class="rankup-btn">เก็บเหรียญ! 🥳</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT);
+    window.removeEventListener('resize', refit);
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(ov);
+  fitQbp(ov.querySelector('.qbp'));
+  window.addEventListener('resize', refit);
+  if(typeof feedEvent === 'function')
+    feedEvent('coin', `ได้คืนเงินตั๋วโลก 3D เก่า +${num(b.total)} 🪙 (เปลี่ยนเป็นจ่ายค่าเข้า 500/ครั้งแล้ว)`);
 }
 
 /* 🔍 รอบ 596 (ผู้ใช้สั่ง: "ขยายตัวหนังสือให้ผู้ใหญ่สายตาไม่ดีอ่านชัด แต่ห้ามมี scrollbar")

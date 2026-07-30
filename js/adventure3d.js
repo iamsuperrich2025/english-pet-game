@@ -3924,7 +3924,6 @@ function onPeerData(uid,d){
     if(p.blk||p.walk) p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
-    tinvCheck(uid);
     Voice.onPeer(uid);
   }else if((p.blk||p.walk) && d.av!==p.av){
     // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
@@ -3991,6 +3990,7 @@ function onPeerData(uid,d){
     p.lastCt=d.ct;
     showPeerBubble(p, d.c);
   }
+  tinvCheck(uid);   // 🤝 รอบ 822: เช็กทุกครั้งที่มีอัปเดตตำแหน่งเข้ามา (ไม่ใช่แค่ตอนเจอครั้งแรก) — ต้องอยู่ด้วยกันต่อเนื่องครบเวลาถึงจ่าย
 }
 /* 🚁 รอบ 376: เก็บ mesh ลำเพื่อน — geometry/material สร้างต่อลำ dispose ได้ (texture ต่อ material ด้วย · ภาพต้นทางแชร์ใน imgTexCache ไม่โดนแตะ) */
 function disposeHeliMesh(h){
@@ -4402,21 +4402,15 @@ function showPodium(v){
   pd.addEventListener('click',close);
 }
 
-/* ---------- ส่วนลดชวนเพื่อน: เจอกันใน map จริง → เงินคืน (ครั้งเดียว/map) ---------- */
+/* ---------- ส่วนลดชวนเพื่อน: อยู่ด้วยกันครบ TINV_TOGETHER_MS = จบเกมด้วยกัน → เงินคืน (ครั้งเดียว/map)
+   🤝 รอบ 822: ตัวจับเวลา+จ่ายเงินย้ายไปที่ tinvPartyTick (js/online.js) ใช้ร่วมกับทุกโลก 3D — เรียกทุกครั้งที่มีข้อมูลเพื่อนเข้ามา (ไม่ใช่แค่ตอนเจอครั้งแรก) */
 function tinvCheck(uid){
-  if(state.tinvClaimed[mode]) return;
-  const sentRec=state.tinvSent && state.tinvSent[uid];
-  const inRec=(typeof Online!=='undefined' && Online.tinv) ? Online.tinv[uid] : null;
-  const match=(sentRec && sentRec.map===mode) || (inRec && inRec.map===mode);
-  if(!match) return;
-  state.tinvClaimed[mode]=true;
-  addCoins(TINV_CASHBACK);
+  if(typeof tinvPartyTick !== 'function' || !tinvPartyTick(mode, uid)) return;
   sessionCoins+=TINV_CASHBACK;
   sfx.rankup();
-  saveState(); renderHudTop();
+  renderHudTop();
   const nm=peers[uid]?peers[uid].n:'เพื่อน';
-  showBanner(`🎊 เล่นพร้อมกับ <b>${escapeHTML(nm)}</b> ตามคำชวน!<br><span class="adv-ban-coin">รับเงินคืน +${fmtNum(TINV_CASHBACK)} 🪙</span>`);
-  if(inRec && typeof tinvClear==='function') tinvClear(uid);   // เคลียร์คำเชิญฝั่งเรา (ฝั่งเพื่อนรับของเขาเอง)
+  showBanner(`🎊 เล่นจบด้วยกับ <b>${escapeHTML(nm)}</b> ตามคำชวน!<br><span class="adv-ban-coin">รับเงินคืน +${fmtNum(TINV_CASHBACK)} 🪙</span>`);
 }
 
 /* ============================================================

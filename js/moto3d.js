@@ -1958,6 +1958,14 @@ function onPeer(uid,d){
     /* 🏟️ รอบ 640: คนที่ยังไม่ถูกวาด (เกินงบ) ไม่มี grp ให้แปะป้าย — เก็บไว้โผล่ตอนเข้าใกล้ */
     if(p.grp) showPeerBubble(p,d.c); else { p.pendChat=d.c; p.pendAt=performance.now(); }
   }
+  /* 🤝 รอบ 822: ชวนเพื่อนขับด้วยกัน — อยู่ด้วยกันครบเวลาขั้นต่ำ = จบเกมด้วยกัน → เงินคืนคนละ TINV_CASHBACK */
+  if(typeof tinvPartyTick==='function' && tinvPartyTick('moto',uid)){
+    sfx.rankup && sfx.rankup();
+    if(banEl){
+      banEl.innerHTML=`🎊 เล่นจบด้วยกับ <b>${escapeHTML(p.n)}</b> ตามคำชวน! รับเงินคืน +${fmtNum(TINV_CASHBACK)} 🪙`;
+      banEl.classList.add('show'); setTimeout(()=>banEl.classList.remove('show'),2400);
+    }
+  }
 }
 function dropPeer(uid){
   const p=peers[uid]; if(!p) return;

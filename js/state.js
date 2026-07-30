@@ -106,8 +106,10 @@ const DEFAULT_STATE = {
   badgeWeekKey:'',                    // รอบ 109: คีย์สัปดาห์ (วันจันทร์) ที่เริ่มนับแต้มเข็มรายสัปดาห์
   badgeWeekStartScore:0,              // รอบ 109: แต้มเข็มรวมตอนต้นสัปดาห์นี้ (ไว้คิดว่าสัปดาห์นี้เก็บเพิ่มกี่แต้ม)
   badgeWeekHist:[],                   // รอบ 109: ประวัติแต้มเข็มที่เก็บเพิ่มรายสัปดาห์ [{wk,gain}] เก็บ 8 สัปดาห์ล่าสุด (กราฟในตู้เข็ม)
-  tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 2,000 ของ map นั้นไปแล้ว (ครั้งเดียว/map)
+  tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 🪙TINV_CASHBACK ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
+  tinvTogether:{},                    // 🤝 รอบ 822: {map:{uid,since}} — จับเวลาอยู่ด้วยกันต่อเนื่อง ครบ TINV_TOGETHER_MS ถึงจ่ายเงินคืน (กันเทเลพอร์ตเข้า-ออก)
+  ticketsReset:false,                 // 🎫→💰 รอบ 822: เคยผ่าน migration คืนเงินตั๋วเก่า+รีเซ็ตเป็นจ่าย 500/ครั้งแล้วหรือยัง (กันคืนซ้ำ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
   voiceMode:'all',                    // voice chat: 'all'=คุยทุกคนใน map · 'friends'=เฉพาะเพื่อนที่ invite กันใน map นั้น (ไมค์ไม่จำ — ปิดทุกครั้งที่เข้า เพื่อความปลอดภัยเด็ก)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
@@ -361,6 +363,22 @@ function loadState(){
         }
         s.giantRemoved = true;
       }
+      /* 🎫→💰 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วโลก 3D ราคาแพงจ่ายทีเดียว → จ่ายค่าเข้า WORLD_ENTRY_FEE ทุกครั้งแทน
+         ผู้เล่นที่ซื้อตั๋วเดิมไปแล้ว (ราคา 5,000-45,000) ได้คืนเหรียญเต็มจำนวนครั้งเดียว แล้วรีเซ็ตเป็นจ่าย 500/ครั้งเท่ากับทุกคน
+         (ผู้ใช้เลือก "คืนเหรียญเต็มจำนวนแล้วรีเซ็ตเป็นจ่ายครั้งละ 500 เท่ากันหมด") — แฟล็ก *Ticket ยังคงเป็น true ต่อไป
+         (แปลว่า "เคยปลดล็อกโลกนี้แล้ว" คุมลำดับการปลดล็อกโลกถัดไป ไม่ได้แปลว่าเข้าฟรีอีกต่อไป) */
+      if(!s.ticketsReset){
+        const TICKET_PRICE_HIST = {advTicket:5000, hauntTicket:10000, heliTicket:15000, droneTicket:20000,
+          driveTicket:25000, soccerTicket:30000, motoTicket:35000, invasionTicket:45000};
+        let ticketRefundTotal = 0;
+        for(const k in TICKET_PRICE_HIST) if(s[k]) ticketRefundTotal += TICKET_PRICE_HIST[k];
+        if(ticketRefundTotal > 0){
+          s.coins = (s.coins||0) + ticketRefundTotal;
+          s.lifetimeCoins = (s.lifetimeCoins||0) + ticketRefundTotal;
+          s.ticketRefund = {total: ticketRefundTotal, ts: Date.now()};
+        }
+        s.ticketsReset = true;
+      }
       for(const p of s.pets){ delete p.giant; delete p.giantMax; }   // ฟิลด์เก่า ไม่ใช้แล้ว
       if(s.active >= s.pets.length) s.active = 0;
       if(!s.daily || typeof s.daily !== 'object') s.daily = {date:'', coins:0};
@@ -478,6 +496,7 @@ function loadState(){
       if(!Array.isArray(s.badgeWeekHist)) s.badgeWeekHist = [];
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
+      if(!s.tinvTogether || typeof s.tinvTogether !== 'object') s.tinvTogether = {};   // 🤝 รอบ 822
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
       if(s.voiceMode !== 'all' && s.voiceMode !== 'friends') s.voiceMode = 'all';
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)
@@ -654,13 +673,7 @@ function assetValue(){
   for(const id of state.owned){ const it = ITEMS.find(i=>i.id === id); if(it) v += it.price; } // เสื้อผ้าในตู้
   if(state.phone) v += PHONE_PRICE;                                                        // มือถือ (ราคาเต็ม)
   if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
-  if(state.advTicket) v += TICKET_PRICE;                                                   // การ์ดตั๋วโลกผจญภัย (ข้อ 7)
-  if(state.hauntTicket) v += HAUNT_PRICE;                                                  // ตั๋วโลกผีสิงกลางคืน
-  if(state.heliTicket) v += HELI_PRICE;                                                    // ตั๋วโลกเฮลิคอปเตอร์
-  if(state.droneTicket) v += DRONE_PRICE;                                                  // ตั๋วโลกโดรน FPV (รอบ 85)
-  if(state.driveTicket) v += DRIVE_PRICE;                                                  // ตั๋วโลกขับรถกำแพงเพชร (รอบ 113)
-  if(state.soccerTicket) v += SOCCER_PRICE;                                                // ตั๋วโลกสนามฟุตบอล (รอบ 196)
-  if(state.invasionTicket && typeof INVASION_PRICE!=='undefined') v += INVASION_PRICE;     // 🛸 ตั๋วโลกยานแม่บุกโลก (รอบ 413)
+  // 🎫→💰 รอบ 822: ตั๋วโลก 3D ไม่ใช่ทรัพย์สินถาวรแล้ว (จ่าย WORLD_ENTRY_FEE เป็นค่าเข้าทุกครั้ง ไม่ใช่ของที่ถือครอง) — เลิกนับใน net worth
   if(Array.isArray(state.robots)) for(const rid of state.robots){ const r=(typeof ROBOTS!=='undefined')&&ROBOTS.find(x=>x.id===rid); if(r) v += r.price; }  // หุ่นยนต์นักรบ (รอบ 199)
   for(const car of (state.cars || [])){                                                    // 🚗 รอบ 211: รถทุกคัน+พ.ร.บ.+ประกัน (สะสมนับเป็นทรัพย์สินรวม)
     const c = carInfo(car.id);

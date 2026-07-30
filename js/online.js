@@ -58,6 +58,8 @@ const Online = {
   /* ---- ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น" ทุกสินค้า ---- */
   sales:{},           // productId → จำนวนที่ขายไปแล้วทั้งเซิร์ฟเวอร์ (จาก /sales)
   salesOk:false,      // true = อ่าน/เขียน /sales ได้ (rules publish แล้ว)
+  /* ---- 🏁 กระดานอันดับข้อสอบมาตรฐานตลอดกาล (รอบ 822 · /examRank) ---- */
+  xrkOk:undefined,    // true = อ่าน/เขียน /examRank ได้ · false = โดน deny (rules ยังไม่ publish) → กระดานขึ้นป้ายบอกเอง
 };
 
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
@@ -782,24 +784,51 @@ function tinvClear(fromUid){
   if(!Online.db) return;
   Online.db.ref('tinv/' + onlineKey() + '/' + fromUid).remove().catch(()=>{});
 }
+/* 🤝 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ระบบคืนเงิน "เล่นจบด้วยกัน" รวมทุกโลก 3D (เดิมมีแค่ 4 โลกในตัว adventure3d.js)
+   ต้องอยู่ด้วยกันต่อเนื่อง (ไม่หลุดจาก peers) ครบ TINV_TOGETHER_MS ก่อนถึงนับว่า "จบเกมด้วยกัน" — กันเทเลพอร์ตเข้า-ออกเก็บเงินไว
+   เรียกจากทุก engine โลก 3D (adventure3d.js/moto3d.js/invasion3d.js) ทุกครั้งที่มีข้อมูลตำแหน่งเพื่อนเข้ามา (onPeer/onPeerData)
+   คืน true เมื่อเพิ่งจ่ายเงินรอบนี้ — engine ที่เรียกโชว์ banner/sfx ของตัวเองต่อ */
+function tinvPartyTick(map, uid){
+  if(!state.tinvClaimed) state.tinvClaimed = {};
+  if(state.tinvClaimed[map]) return false;
+  const sentRec = state.tinvSent && state.tinvSent[uid];
+  const inRec = (Online.tinv || {})[uid];
+  const linked = (sentRec && sentRec.map === map) || (inRec && inRec.map === map);
+  if(!state.tinvTogether) state.tinvTogether = {};
+  if(!linked){
+    if(state.tinvTogether[map] && state.tinvTogether[map].uid === uid) delete state.tinvTogether[map];
+    return false;
+  }
+  const rec = state.tinvTogether[map];
+  if(!rec || rec.uid !== uid){ state.tinvTogether[map] = {uid, since: Date.now()}; return false; }
+  if(Date.now() - rec.since < TINV_TOGETHER_MS) return false;
+  state.tinvClaimed[map] = true;
+  delete state.tinvTogether[map];
+  addCoins(TINV_CASHBACK);
+  if(inRec && typeof tinvClear === 'function') tinvClear(uid);   // เคลียร์คำเชิญฝั่งเรา (ฝั่งเพื่อนรับของเขาเอง)
+  saveState();
+  return true;
+}
+/* 🤝 รอบ 822: ชื่อโลกไทยจาก map key — ใช้ร่วมทั้ง toast คำเชิญ + openTinvPicker + tinvNoticeHTML (เขียนที่เดียว) */
+const TINV_WORLD_LABEL = {
+  adv:'โลกผจญภัย 🌍', haunt:'โลกผีสิง 👻', heli:'โลกเฮลิคอปเตอร์ 🚁', drone:'โลกโดรน FPV 🛸',
+  drive:'โลกขับรถกำแพงเพชร 🚗', soccer:'โลกสนามฟุตบอล ⚽', moto:'โลกมอเตอร์ไซค์ 🏍️', invasion:'โลกยานแม่บุกโลก 🛸',
+};
 function tinvWatch(){
   Online.db.ref('tinv/' + onlineKey()).on('value', (snap)=>{
     const out = {};
     snap.forEach(ch=>{
       const v = ch.val();
-      if(v && (v.map === 'adv' || v.map === 'haunt' || v.map === 'heli')) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
+      if(v && TINV_WORLD_LABEL[v.map]) out[ch.key] = {map: v.map, n: v.n || 'เพื่อน', ts: v.ts || 0};
     });
     Online.tinv = out;
     Object.keys(out).forEach(uid=>{
       if(Online.tinvSeen[uid]) return;
       Online.tinvSeen[uid] = true;
-      const w = out[uid].map === 'haunt' ? 'โลกผีสิง 👻' : out[uid].map === 'heli' ? 'โลกเฮลิคอปเตอร์ 🚁' : 'โลกผจญภัย 🌍';
-      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${w}ด้วยกัน! เจอกันใน map รับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
+      toast(`📨 ${out[uid].n} ชวนหนูไปเล่น${TINV_WORLD_LABEL[out[uid].map]}ด้วยกัน! เล่นจบด้วยกันรับเงินคืน 🪙${fmtNum(TINV_CASHBACK)}`);
       window.__invFlashPend = uid;    // รอบ 154: การ์ดคำชวนในกล่องเพื่อน แฟลช+เด้งไปโชว์ (renderOnlineCard จัดการ)
     });
-    if(typeof renderTicketCard === 'function') renderTicketCard();
-    if(typeof renderHauntCard === 'function') renderHauntCard();
-    if(typeof renderHeliCard === 'function') renderHeliCard();
+    if(typeof renderRailWorlds === 'function') renderRailWorlds();   // 🎫→💰 รอบ 822: การ์ดตั๋วเดิมถูกถอดออก — ป้ายคำเชิญอยู่ในหน้าจ่ายค่าเข้าแทน
     if(typeof onlineRerender === 'function') onlineRerender();   // การ์ดคำชวนในกล่องเพื่อนโผล่/หายทันที
   });
 }
