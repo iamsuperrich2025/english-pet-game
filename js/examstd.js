@@ -112,6 +112,38 @@ function xsBest(setId){
   return b;
 }
 
+/* 📈 รอบ 820: ประวัติ "กี่ครั้งล่าสุด" ของชุดนี้ — เก่าสุดก่อน ใหม่สุดท้าย (อ่านวาดจากซ้ายไปขวา) · เก็บสูงสุด 5 ครั้ง */
+const XS_HIST_MAX = 5;
+function xsHistory(setId){
+  const id = xsQuizId(setId);
+  return ((typeof state !== 'undefined' && state.quizLog) || [])
+    .filter(l=>l && l.cat === id)
+    .sort((a, b)=>(a.ts || 0) - (b.ts || 0))
+    .slice(-XS_HIST_MAX);
+}
+/* กราฟพัฒนาการเล็ก ๆ ในแผงเลือกชุด — เส้นคะแนน (สูง=ดี) + จุดสี (เขียวผ่าน/แดงไม่ผ่าน) ต่อครั้ง
+   ต้องมี ≥2 ครั้งถึงจะมี "แนวโน้ม" ให้ดู (ครั้งเดียวมีแค่คะแนนสูงสุด ซึ่ง .xsp-best โชว์อยู่แล้ว) */
+function xsHistorySVG(setId){
+  const hist = xsHistory(setId);
+  if(hist.length < 2) return '';
+  const W = 132, H = 30, padX = 7, padY = 5;
+  const step = hist.length > 1 ? (W - padX * 2) / (hist.length - 1) : 0;
+  const yOf = h=>{
+    const pct = h.total ? h.score / h.total : 0;
+    return H - padY - pct * (H - padY * 2);
+  };
+  const pts = hist.map((h, i)=>({x:padX + step * i, y:yOf(h), h}));
+  const line = pts.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const dots = pts.map(p=>{
+    const t = p.h.sec ? xsFmt(p.h.sec) : '';
+    return `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.2" fill="${p.h.passed ? '#6cba57' : '#e6816c'}"
+      stroke="#fff" stroke-width="1"><title>${p.h.score}/${p.h.total}${t ? ' · ⏱ ' + t : ''}${p.h.mode === 'timed' ? ' (จับเวลาจริง)' : ''}</title></circle>`;
+  }).join('');
+  return `<svg class="xsp-hist-svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+    <polyline points="${line}" fill="none" stroke="#b79df0" stroke-width="1.8"/>${dots}
+  </svg>`;
+}
+
 /* ============================================================
    🖥️ จอสอบ (overlay เต็มจอเอง ไม่ใช้ screen-quiz เดิม)
    XS = สถานะรอบสอบปัจจุบัน · mode 'exam' = ตอบครบแล้วส่ง (ดูเฉลยทีเดียวตอนจบ เหมือนสนามสอบจริง)
@@ -458,13 +490,18 @@ function xsFinish(){
       ดูครบทุกส่วนที่แท็บ <b>⏱️ เวลาแต่ละส่วน</b> ในเฉลย</span></div>` : ''}
     ${myCert ? `<div class="lv-cert-row">🎖️ ได้รับ <b>ใบประกาศ Vocab World</b> เก็บไว้ในโปรไฟล์แล้ว
       <button class="lv-cert-btn" type="button">ดูใบประกาศ</button></div>` : ''}
-    <button>ดูเฉลยละเอียด 📖</button>
+    <div class="xs-actions">
+      ${passed ? `<button class="xs-rank-btn" type="button">🏁 ดูอันดับ</button>` : ''}
+      <button class="xs-review-btn" type="button">ดูเฉลยละเอียด 📖</button>
+    </div>
   </div>`;
   if(myCert){
     const cb = ov.querySelector('.lv-cert-btn');
     if(cb) cb.addEventListener('click', e=>{ e.stopPropagation(); openCertBig(myCert); });
   }
-  ov.querySelector('button:not(.lv-cert-btn)').addEventListener('click', ()=>{
+  const rankBtn = ov.querySelector('.xs-rank-btn');
+  if(rankBtn) rankBtn.addEventListener('click', ()=>{ ov.remove(); openExamStdRank(p.exam, p.id); });
+  ov.querySelector('.xs-review-btn').addEventListener('click', ()=>{
     ov.remove();
     xsShowReview();                      // เฉลยละเอียดทุกข้อ (จอสอบยังอยู่เบื้องหลังเป็นฉาก)
   });
@@ -585,11 +622,15 @@ function openExamStdPicker(exam){
     <div class="xsp-rows">${m.sets.map(s=>{
       const best = xsBest(s.id);
       const done = state.quizPassed.includes(xsQuizId(s.id));
+      const hist = xsHistorySVG(s.id);                  // 📈 รอบ 820: เห็นได้ก็ต่อเมื่อสอบชุดนี้ ≥2 ครั้ง
       return `<div class="xsp-set${done ? ' done' : ''}">
         <div class="xsp-name">${escapeHTML(s.label)}${done ? ' <span class="xsp-tick">✅ ผ่านแล้ว</span>' : ''}</div>
         <div class="xsp-info">${s.q} ข้อ · ${s.passages} บทอ่าน · ${s.secs.map(x=>`${escapeHTML(x.n.split('·').pop().trim())} ${x.q} ข้อ`).join(' · ')}</div>
-        <div class="xsp-best">${best ? `คะแนนสูงสุด <b>${best.s}/${best.t}</b>${best.sec ? ` · ⏱️ ${xsFmt(best.sec)}` : ''} · ผ่านที่ ${passMark(s)} ข้อ`
-          : `ยังไม่เคยสอบชุดนี้ · ผ่านที่ ${passMark(s)} ข้อ`}</div>
+        <div class="xsp-best-row">
+          <div class="xsp-best">${best ? `คะแนนสูงสุด <b>${best.s}/${best.t}</b>${best.sec ? ` · ⏱️ ${xsFmt(best.sec)}` : ''} · ผ่านที่ ${passMark(s)} ข้อ`
+            : `ยังไม่เคยสอบชุดนี้ · ผ่านที่ ${passMark(s)} ข้อ`}</div>
+          ${hist ? `<div class="xsp-hist" title="พัฒนาการคะแนน ${xsHistory(s.id).length} ครั้งล่าสุด (เก่า→ใหม่)">${hist}<small>📈 ${xsHistory(s.id).length} ครั้งล่าสุด</small></div>` : ''}
+        </div>
         <div class="xsp-btns">
           <button class="xsp-go exam" data-set="${s.id}" data-mode="exam">📋 สอบจริง (เฉลยตอนจบ)</button>
           <button class="xsp-go practice" data-set="${s.id}" data-mode="practice">🎓 โหมดฝึก (เฉลยทันทีทุกข้อ)</button>
@@ -768,12 +809,14 @@ function xrkBodyHTML(setId){
 }
 /* 🏁 ตัวกระดาน (ชิปเลือกสนามสอบ + ชุด + รายชื่อ) — ใช้คลาส .bxr-* ร่วมกับ js/bandadv.js ทั้งชุด */
 let __xrkExam = '', __xrkSet = '';
-function xrkMount(box, exam){
+function xrkMount(box, exam, initialSetId){
   if(!box || typeof EXAM_STD_MANIFEST === 'undefined') return;
   const keys = Object.keys(EXAM_STD_MANIFEST);
   if(!keys.length) return;
   __xrkExam = (exam && EXAM_STD_MANIFEST[exam]) ? exam : (EXAM_STD_MANIFEST[__xrkExam] ? __xrkExam : keys[0]);
-  if(__xrkSet !== __xrkExam + XRK_ALL && !EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet))
+  if(initialSetId && EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === initialSetId))
+    __xrkSet = initialSetId;              // 🏁 รอบ 827: ถ้าส่ง initialSetId มา (เช่น ชุดที่เพิ่งสอบ) ให้เปิดชุดนั้นแทน
+  else if(__xrkSet !== __xrkExam + XRK_ALL && !EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet))
     __xrkSet = __xrkExam + XRK_ALL;      // 🏅 รอบ 826: ค่าเริ่มต้น = กระดานรวมทุกชุดของสนามสอบนั้น
   const draw = ()=>{
     const m = EXAM_STD_MANIFEST[__xrkExam];
@@ -804,8 +847,8 @@ function xrkMount(box, exam){
   };
   draw();
 }
-/* แผงป๊อปอัป (เปิดจากปุ่ม 🏁 อันดับ ในแผงเลือกชุดข้อสอบ) — กล่อง/หัวใช้ .bxr-box/.bxr-head เดิมจาก css/style.css เลย ไม่เพิ่ม CSS ใหม่ */
-function openExamStdRank(exam){
+/* แผงป๊อปอัป (เปิดจากปุ่ม 🏁 อันดับ ในแผงเลือกชุดข้อสอบ หรือจากกล่องผลสอบ) — กล่อง/หัวใช้ .bxr-box/.bxr-head เดิมจาก css/style.css เลย ไม่เพิ่ม CSS ใหม่ */
+function openExamStdRank(exam, setId){
   const old = document.getElementById('xrk-overlay');
   if(old) old.remove();
   const ov = document.createElement('div');
@@ -816,7 +859,7 @@ function openExamStdRank(exam){
       <div class="bxr-body"></div>
     </div>`;
   document.body.appendChild(ov);
-  xrkMount(ov.querySelector('.bxr-body'), exam);
+  xrkMount(ov.querySelector('.bxr-body'), exam, setId);
   ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
   ov.querySelector('#xrk-close').addEventListener('click', ()=>ov.remove());
 }
