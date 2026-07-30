@@ -205,15 +205,15 @@ bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsP
 bandUnlocked:286 · bandLockToast:291 · bandExamLobby:297 · updateBandExamBtn:306 · bandLobbyTick:323 · bandPlay:334
 bandSpeakSample:346 · bandPlayLobby:366 · bandCardsHTML:378
 
-## js/examstd.js (889 บรรทัด · 46 รายการ)
+## js/examstd.js (892 บรรทัด · 46 รายการ)
 XS_PASS_PCT:15 · XS_REWARD:16 · XS_REWARD_AGAIN:17 · XS_TIME_HINT:21 · XS_TIME_FALLBACK:22 · xsLimitSec:23
 XS_SCALE:27 · xsScaleText:33 · xsFindSet:44 · examStdLoad:56 · xsFailMsg:91 · xsQuizId:99
 xsBest:101 · XS_HIST_MAX:116 · xsHistory:117 · xsHistorySVG:126 · xsIsPractice:158 · xsTimerStop:160
 xsElapsed:161 · xsFmt:162 · xsMark:169 · xsSecStats:175 · examStdStart:189 · xsBuildScreen:209
 xsTimeUp:281 · xsRender:290 · xsChoose:366 · xsGo:378 · xsQuitAsk:394 · xsClose:402
 xsSubmitAsk:408 · xsFinish:423 · xsTimeTableHTML:512 · xsShowReview:536 · openExamStdPicker:602 · XRK_READ:668
-xrkSubmit:674 · xrkMerge:700 · xrkFetch:717 · xrkNote:738 · xrkNoteRefresh:747 · xrkBodyHTML:753
-xrkMount:766 · openExamStdRank:798 · examStdCardsHTML:815 · openExamStdBoard:850
+xrkSubmit:674 · xrkMerge:700 · xrkFetch:717 · xrkNote:738 · xrkNoteRefresh:747 · xrkBodyHTML:755
+xrkMount:768 · openExamStdRank:801 · examStdCardsHTML:818 · openExamStdBoard:853
 
 ## js/game.js (1,115 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
