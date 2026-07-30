@@ -3207,16 +3207,18 @@ function ghostGoLurk(g){
   g.st='lurk'; g.vis=0; g.at=performance.now(); g.litT=0;
   g.showAt=performance.now()+800+Math.random()*4000;
 }
-/* ส่งผีมาโผล่ปลายทางเดินชั้นเดียวกับผู้เล่น แล้วเดินตาม (ไม่มีวันทัน) */
+/* ส่งผีมาเดินตาม "จากข้างหลัง" (รอบ 850 ผู้ใช้สั่ง: เน้นตามหลัง+เสียงฝีเท้า ไม่เน้นให้เห็นข้างหน้า)
+   โผล่ด้านหลังทิศที่ผู้เล่นหันอยู่ ~11 ม. แล้วเดินตาม (ไม่มีวันทัน) */
 function ghostGoStalk(g){
   if(!hotel || !HOTEL3D.insideHotel(camera.position.x,camera.position.z)) return;
   applyGhostSize(g);
   const fy=HOTEL3D.floorY(HOTEL3D.floorOf(hFootY));
-  const dir=(camera.position.x>3?-1:1);
-  const x=Math.max(HOTEL3D.CORE_E+1.5, Math.min(HOTEL3D.BX-1.5, camera.position.x+dir*13));
+  const c=camera.position;
+  const x=Math.max(HOTEL3D.CORE_E+1.5, Math.min(HOTEL3D.BX-1.5, c.x+Math.sin(yaw)*11));
+  const z=Math.max(-1.8, Math.min(1.8, c.z+Math.cos(yaw)*11));
   g.floorY=fy;
-  g.spr.position.set(x, fy+g.baseY, (Math.random()*2-1)*1.2);
-  g.st='stalk'; g.at=performance.now(); g.vis=0; g.wailAt=0;
+  g.spr.position.set(x, fy+g.baseY, z);
+  g.st='stalk'; g.at=performance.now(); g.vis=0; g.wailAt=0; g.seenT=0; g.stepAcc=0;
   HSound.whoosh();
 }
 /* วาร์ปไปยืนข้างหลังผู้เล่น + jump scare แล้วจางหาย (ข้อ 10 และ 12) */
@@ -3262,13 +3264,21 @@ function tickGhosts(dt,now){
       case 'peek':
         g.vis=Math.min(1,g.vis+dt*3.4);
         if(d<M.scareR){ ghostGoBehind(g); break; }   // ข้อ 12: เดินเข้าหาผี = มันวาร์ปไปข้างหลัง
-        if(now-g.at>1400){ g.st='fade'; g.at=now; }
+        if(now-g.at>650){ g.st='fade'; g.at=now; }   // รอบ 850: เห็นข้างหน้าได้แค่ "แว็บเดียว" แล้วหาย
         break;
       case 'stalk':                                 // ข้อ 11: เดินตามแต่ไม่มีวันทัน
-        g.vis=Math.min(1,g.vis+dt*1.5);
         if(!sameFloor){ g.st='fade'; g.at=now; break; }
+        /* 👀 รอบ 850: ผีตามหลังเป็นหลัก — หันไปมองได้ "แว็บเดียว" (.6 วิ พอให้ไฟฉายไล่ทัน)
+           มองค้างนานกว่านั้นมันเลือนหายจากสายตา (ยังตามอยู่ ได้ยินฝีเท้า) — คลาสสิกหนังผี */
+        if(facing>.25) g.seenT=(g.seenT||0)+dt;
+        else g.seenT=Math.max(0,(g.seenT||0)-dt*2);
+        if(g.seenT>.6) g.vis=Math.max(0,g.vis-dt*3.5);
+        else g.vis=Math.min(1,g.vis+dt*1.5);
         if(d>M.keepR){ mp.x+=dx/d*M.ghostSpeed*dt; mp.z+=dz/d*M.ghostSpeed*dt; }
         else if(d<M.keepR-.8){ mp.x-=dx/d*M.ghostSpeed*.9*dt; mp.z-=dz/d*M.ghostSpeed*.9*dt; }
+        /* 👣 เสียงฝีเท้าเดินตาม (รอบ 850) — จังหวะเท้าผูกกับ gait เดียวกับท่าโยกตัว ยิ่งใกล้ยิ่งดัง */
+        g.stepAcc=(g.stepAcc||0)+dt*7.5/Math.PI;      // ครบ 1 = ก้าวถัดไป (คาบเดียวกับ sin(g.gait))
+        if(g.stepAcc>=1){ g.stepAcc-=Math.floor(g.stepAcc); HSound.step(Math.max(.12,1-d/22)); }
         if(now-g.wailAt>3400){ g.wailAt=now; HSound.wail(); }
         if(d<M.scareR || now-g.at>13000) ghostGoBehind(g);
         stalking=true;
@@ -3301,7 +3311,7 @@ function tickGhosts(dt,now){
   // สุ่มส่งผีออกมาเดินตามเป็นระยะ (ข้อ 9: สุ่มผี) — 🔦 รอบ 778: เฉพาะตอนเงื่อนไขครบเท่านั้น
   if(!allowed) ghostStalkAt=now+8000;
   else if(now>ghostStalkAt){
-    ghostStalkAt=now+17000+Math.random()*15000;
+    ghostStalkAt=now+12000+Math.random()*12000;   // รอบ 850: ตามหลังบ่อยขึ้น — เป็นวิธีปรากฏตัวหลักของผี
     const cand=monsters.filter(g=>g.st==='lurk');
     if(cand.length) ghostGoStalk(cand[Math.floor(Math.random()*cand.length)]);
   }
@@ -3397,6 +3407,8 @@ let hotelInAt=0;                         // เวลาที่ก้าวเ
 let blackedOut=false, hFlickerAt=0, hFlickerN=0;
 let torch=null, torchSpill=null, torchOn=false;   // 🔦 ไฟฉาย (ลำแสง + แสงฟุ้งรอบตัว)
 let ghostStalkAt=0, hKnockAt=0, hActEl=null, hTorchBtn=null, hTorchHintEl=null, hActNow=null;
+/* 📷 รอบ 850: head bob เดินให้สมจริง — เฟสก้าวผูกกับ "ระยะที่ขยับได้จริง" (ติดกำแพง = ไม่โยก) */
+let hStepPh=0, hBobAmt=0, hYawVel=0, hPrevYaw=0;
 const BLACKOUT_MS=120000;                // 2 นาที (ผู้ใช้สั่งข้อ 4)
 const FLICKER_MS=8000;                   // ไฟกะพริบเตือนก่อนดับ
 /* 🌑 sprite ตัวอักษรเป็นวัสดุ "ไม่รับแสง" — ไฟดับแล้วจะยังสว่างจ้าผิดธรรมชาติ
@@ -3490,6 +3502,7 @@ function hotelFlicker(now){
 
 /* ---------- 🚶 เดินในโรงแรม: ชนกำแพงจริง + ขึ้นบันได/ลิฟต์ ---------- */
 function tickHotelPlayer(dt,now){
+  const px=camera.position.x, pz=camera.position.z;   // จำตำแหน่งก่อนขยับ — วัด "ระยะที่เดินได้จริง"
   let fw=0,sd=0;
   if(keys.KeyW||keys.ArrowUp) fw+=1;
   if(keys.KeyS||keys.ArrowDown) fw-=1;
@@ -3527,9 +3540,21 @@ function tickHotelPlayer(dt,now){
     hFootY += (want-hFootY)*Math.min(1,dt*10);
     if(Math.abs(want-hFootY)<.01) hFootY=want;
   }
-  camera.position.y=hFootY+EYE_H+(moving?Math.sin(now/180)*.045:0);
+  /* 📷 รอบ 850 (ผู้ใช้: "เดินดูลอย ไม่เป็นธรรมชาติ"): head bob แบบผูกกับระยะจริง
+     ▸ เฟสก้าวเดินหน้าเฉพาะเมื่อ "ขยับได้จริง" (ชนกำแพง = หยุดโยกทันที ไม่โยกฟรี)
+     ▸ ขึ้นลง 2 จังหวะ/รอบก้าว + เอียงซ้ายขวาสลับเท้า (roll) + เอนตัวเข้าโค้งตอนหันกล้อง */
+  const realSp=Math.hypot(camera.position.x-px,camera.position.z-pz)/Math.max(dt,1e-4);
+  hBobAmt+=(((moving&&realSp>.4)?1:0)-hBobAmt)*Math.min(1,dt*8);      // เข้า/ออกจังหวะโยกนุ่ม ๆ
+  hStepPh+=realSp*dt*3.6;                                             // rad ต่อเมตร (~3.4 ก้าว/วิ ที่ 6 m/s)
+  let dyaw=yaw-hPrevYaw; hPrevYaw=yaw;
+  if(dyaw>Math.PI) dyaw-=Math.PI*2; else if(dyaw<-Math.PI) dyaw+=Math.PI*2;
+  hYawVel+=(dyaw/Math.max(dt,1e-4)-hYawVel)*Math.min(1,dt*9);         // ความเร็วหันกล้อง (เกลี่ยแล้ว)
+  const bobY=Math.sin(hStepPh*2)*.05*hBobAmt;                         // ตัวขึ้นลง 2 ครั้ง/รอบ (ซ้าย-ขวา)
+  const roll=Math.sin(hStepPh)*.014*hBobAmt                           // ไหล่เอียงสลับข้างตามเท้า
+            +Math.max(-.045,Math.min(.045,-hYawVel*.055));            // เอนตัวเข้าโค้งตอนหัน
+  camera.position.y=hFootY+EYE_H+bobY;
   camera.rotation.set(0,0,0);
-  camera.rotateY(yaw); camera.rotateX(pitch);
+  camera.rotateY(yaw); camera.rotateX(pitch); camera.rotateZ(roll);
 
   // เก็บตัวอักษร — ต้องอยู่ชั้นเดียวกันด้วย (ไม่งั้นเก็บทะลุพื้นได้)
   for(let i=letters.length-1;i>=0;i--){
@@ -3712,6 +3737,26 @@ const HSound={
     g.gain.exponentialRampToValueAtTime(.001,this.ctx.currentTime+.95);
     o.connect(g); g.connect(this.master);
     o.start(); o.stop(this.ctx.currentTime+1);
+  },
+  step(vol){                                 // 👣 ฝีเท้าผีเดินตาม (รอบ 850) — เสียงทุ้มหนัก ๆ บนพื้นไม้ ยิ่งใกล้ยิ่งดัง
+    if(!state.sound) return;
+    this.ensure();
+    const t=this.ctx.currentTime, v=Math.min(.32,Math.max(.03,vol||.15));
+    const o=this.ctx.createOscillator(); o.type='sine';        // ตัวกระแทกทุ้ม (ส้นเท้าลงพื้น)
+    o.frequency.setValueAtTime(88+Math.random()*22,t);
+    o.frequency.exponentialRampToValueAtTime(42,t+.1);
+    const og=this.ctx.createGain();
+    og.gain.setValueAtTime(v,t);
+    og.gain.exponentialRampToValueAtTime(.001,t+.13);
+    o.connect(og); og.connect(this.master);
+    o.start(t); o.stop(t+.15);
+    const n=this.ctx.createBufferSource(); n.buffer=this.noiseBuf();   // เสียดสีพรม/ไม้ลั่นแผ่ว ๆ
+    const bp=this.ctx.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420+Math.random()*260; bp.Q.value=1.4;
+    const ng=this.ctx.createGain();
+    ng.gain.setValueAtTime(v*.4,t);
+    ng.gain.exponentialRampToValueAtTime(.001,t+.09);
+    n.connect(bp); bp.connect(ng); ng.connect(this.master);
+    n.start(t); n.stop(t+.1);
   },
   whoosh(){                                  // ผีโผล่ใกล้ (เตือนให้หนี)
     if(!state.sound) return;
@@ -11932,7 +11977,8 @@ window.Adventure3D={
             openWardrobe, announceTarget, setLights:(on)=>HOTEL3D.setLights(hotel,on),
             goStalk:()=>{ const g=monsters.find(x=>x.st==='lurk'); if(g) ghostGoStalk(g); return !!g; },
             goBehind:()=>{ const g=monsters[0]; if(g) ghostGoBehind(g); return !!g; },
-            teleport(f,x,z){ hFootY=HOTEL3D.floorY(f); camera.position.set(x,hFootY+EYE_H,z); } },
+            teleport(f,x,z){ hFootY=HOTEL3D.floorY(f); camera.position.set(x,hFootY+EYE_H,z); },
+            setYaw:(v)=>{yaw=v}, setPitch:(v)=>{pitch=v} },   // 📸 รอบ 850: หมุนกล้องตอนถ่าย Snap
     peersTick:(dt)=>tickPeers(dt||.016,performance.now()),   // 🚁 รอบ 376: เทสต์ลำเพื่อนตอนแท็บโดน throttle
     /* 🏟️ รอบ 640: ระบบหลายสนาม (โหมดไหนก็ได้ในไฟล์นี้) */
     netJoinAs(md){ if(md){ mode=md; M=MODES[md]||M; } netJoin(); }, netLeave, netUp,
