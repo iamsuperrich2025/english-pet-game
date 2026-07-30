@@ -203,12 +203,12 @@ bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsP
 bandUnlocked:286 · bandLockToast:291 · bandExamLobby:297 · updateBandExamBtn:306 · bandLobbyTick:323 · bandPlay:334
 bandSpeakSample:346 · bandPlayLobby:366 · bandCardsHTML:378
 
-## js/examstd.js (535 บรรทัด · 26 รายการ)
+## js/examstd.js (581 บรรทัด · 27 รายการ)
 XS_PASS_PCT:15 · XS_REWARD:16 · XS_REWARD_AGAIN:17 · XS_TIME_HINT:20 · XS_SCALE:24 · xsScaleText:30
 xsFindSet:41 · examStdLoad:53 · xsFailMsg:88 · xsQuizId:96 · xsBest:98 · xsTimerStop:120
 xsElapsed:121 · xsFmt:122 · examStdStart:127 · xsBuildScreen:142 · xsRender:201 · xsChoose:276
 xsGo:288 · xsQuitAsk:304 · xsClose:312 · xsSubmitAsk:318 · xsFinish:333 · xsShowReview:401
-openExamStdPicker:465 · examStdCardsHTML:507
+openExamStdPicker:465 · examStdCardsHTML:507 · openExamStdBoard:542
 
 ## js/game.js (1,115 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
@@ -675,7 +675,7 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/exam.css (215 บรรทัด · 54 selector)
+## css/exam.css (234 บรรทัด · 62 selector)
 #xs-screen:8 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19 · .xs-score:20
 .xs-quit:21 · .xs-nav:27 · .xs-dot:31,35,36,37(+1) · .xs-body:41 · .xs-pass:42,46,53 · .xs-ptitle:47
 .xs-para:48 · .xs-pn:49 · .xs-qside:54 · .xs-sec:58,59 · .xs-q:60 · .xs-qno:61
@@ -685,6 +685,8 @@ vbRender:148 · vbCardHTML:194
 .xsr-q:144 · .xsr-ans:145 · .xsr-you:146,147,148 · .xsr-ex:149 · .xsr-ref:150 · .xsr-foot:151
 .xsr-ok:152 · .xsp-box:158 · .xsp-head:163,164 · .xsp-rows:165 · .xsp-set:166,167 · .xsp-name:168
 .xsp-tick:169 · .xsp-info:170 · .xsp-best:171 · .xsp-btns:172 · .xsp-go:173,177,178 · .xsp-foot:179
+.xsb-box:182 · .xsb-head:187,188 · .xsb-grid:189 · .xsb-card:190,194 · .xsb-emoji:195 · .xsb-name:196
+.xsb-info:197 · .xsb-done:198
 
 ## css/lobby.css (4,820 บรรทัด · 725 selector)
 :root:6 · html:15 · body:16 · *:33,34,35,36 · #app:39 · h1:41
