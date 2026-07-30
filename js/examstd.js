@@ -482,8 +482,8 @@ function xsTimeTableHTML(){
   const tot = st.reduce((a, s)=>a + s.sec, 0);
   if(tot < 1) return `<div class="xsr-none">ยังไม่มีข้อมูลเวลาพอจะสรุปได้ (ทำข้อสอบเร็วมาก 😄)</div>`;
   return `<div class="xst-wrap">
-    <div class="xst-note">แถบสี = <b>สัดส่วนเวลา</b>ที่ใช้ในส่วนนั้น · ขีดตั้ง = <b>สัดส่วนจำนวนข้อ</b> ·
-      แถบยาวเลยขีดมาก = ส่วนนั้นกินเวลากว่าที่ควร ควรฝึกส่วนนั้นให้เร็วขึ้น</div>
+    <div class="xst-note">แถบสี = <b>สัดส่วนเวลา</b>ที่ใช้ในส่วนนั้น · ขีดตั้ง = <b>สัดส่วนจำนวนข้อ</b><span class="xst-tip"> ·
+      แถบยาวเลยขีดมาก = ส่วนนั้นกินเวลากว่าที่ควร ควรฝึกส่วนนั้นให้เร็วขึ้น</span></div>
     ${st.map(s=>{
       const tp = s.sec / tot * 100, qp = s.q / n * 100;
       const r  = tp / (qp || 1);

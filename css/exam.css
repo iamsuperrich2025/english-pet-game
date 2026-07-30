@@ -17,6 +17,11 @@
 .xs-mode{font-size:12px; background:rgba(255,255,255,.22); border-radius:11px; padding:2px 9px}
 .xs-time{font-size:13px; margin-left:auto; background:rgba(255,255,255,.18); border-radius:11px; padding:2px 9px}
 .xs-time.over{background:#ffb4a2; color:#7a2412; font-weight:600}
+/* ⏱️ โหมดจับเวลาจริง (รอบ 814): เหลือ ≤5 นาที = เหลือง · ≤1 นาที = แดงกะพริบ (เห็นแน่ ๆ ว่าต้องรีบ) */
+.xs-time.warn{background:#ffd76e; color:#7a5410; font-weight:600}
+.xs-time.crit{background:#ff6b52; color:#fff; font-weight:600; animation:xsTick 1s steps(2) infinite}
+@keyframes xsTick{50%{background:#c8341c}}
+.no-anim .xs-time.crit{animation:none}
 .xs-score{font-size:13px; background:#ffd76e; color:#8a6410; border-radius:11px; padding:2px 9px; font-weight:600}
 .xs-quit{
   border:0; border-radius:10px; padding:4px 10px; font-family:inherit; font-size:13px; cursor:pointer;
@@ -107,12 +112,27 @@
 .xs-btn[hidden]{display:none}
 
 /* ---------- กล่องผลสอบ ---------- */
+/* รอบ 814: กล่องนี้มีแถวเพิ่ม (หมดเวลา/ส่วนที่กินเวลา) → บีบหัวกล่องให้เนื้อหาทั้งใบยังพอในจอ 720px
+   (วัดจริง: ก่อนบีบ scrollHeight เกิน clientHeight 48px = ต้องเลื่อนในกล่อง) */
+.levelup-box.xs-result{padding:18px 24px}
+.xs-result .lv-emoji{font-size:42px; line-height:1.05}
+.xs-result h2{font-size:22px}
 .xs-result .xs-rscore{font-size:17px; margin:6px 0 4px; color:#3d3350; line-height:1.5}
 .xs-result .xs-rscale{
   background:#f4efff; border-radius:11px; padding:7px 10px; margin:6px 0; font-size:14.5px; color:#5a4487;
 }
 .xs-result .xs-rscale small{display:block; font-size:11.5px; color:#8a7f9c; margin-top:2px}
 .xs-result .xs-rrow{font-size:14.5px; color:#4a3f5c; margin:4px 0; line-height:1.55}
+/* ⏰ แถบแจ้งว่าหมดเวลาแล้วระบบส่งให้เอง (โหมดจับเวลาจริง · รอบ 814) */
+.xs-result .xs-rtimeup{
+  background:#ffe9e2; border:1.5px dashed #f0a294; border-radius:12px; padding:7px 10px; margin:6px 0;
+  font-size:14px; color:#8a3a26; line-height:1.5;
+}
+/* 🐢 ส่วนที่กินเวลาเกินสัดส่วน — ชี้ตรงนี้เลยว่าต้องไปฝึกส่วนไหนให้เร็วขึ้น */
+.xs-result .xs-rslow{
+  background:#fff6e2; border-radius:11px; padding:6px 9px; margin:5px 0; font-size:12.5px;
+  color:#7a5410; line-height:1.45;
+}
 
 /* ---------- แผงเฉลยละเอียดหลังสอบ ---------- */
 .xsr-box{
@@ -148,6 +168,29 @@
 .xsr-you.bad{background:#ffdfd8; color:#8a3a26}
 .xsr-ex{background:rgba(255,255,255,.75); border-radius:9px; padding:6px 9px; font-size:13.5px}
 .xsr-ref{margin-top:4px; font-size:12.5px; color:#7a6a92}
+/* ---------- แท็บ ⏱️ เวลาแต่ละส่วน (รอบ 814) ---------- */
+.xst-wrap{display:flex; flex-direction:column; gap:8px}
+.xst-note{
+  background:#f4efff; border-radius:11px; padding:7px 10px; font-size:12.5px; color:#5a4487; line-height:1.55;
+}
+.xst-row{border-radius:12px; padding:8px 11px; background:#f7f4ff; border-left:5px solid #b79df0}
+.xst-row.slow{background:#fff4e6; border-left-color:#f0a24a}   /* ช้ากว่าสัดส่วนข้อ */
+.xst-row.fast{background:#f2faef; border-left-color:#6cba57}   /* เร็วกว่าสัดส่วนข้อ */
+.xst-h{font-size:14px; color:#4a3a72; display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+.xst-tag{font-size:11.5px; background:#fff; border-radius:9px; padding:1px 8px; color:#6b5a88}
+/* แถบ = สัดส่วนเวลา · ขีดตั้ง (u) = สัดส่วนจำนวนข้อ → เทียบด้วยตาได้ทันทีว่าเกินไปเท่าไร */
+.xst-bar{
+  position:relative; height:12px; border-radius:7px; background:#e8e0f7; margin:5px 0 4px; overflow:hidden;
+}
+.xst-bar i{position:absolute; inset:0 auto 0 0; border-radius:7px; background:linear-gradient(90deg,#a98ce8,#7d5fc0)}
+.xst-row.slow .xst-bar i{background:linear-gradient(90deg,#f5b96a,#e5852c)}
+.xst-row.fast .xst-bar i{background:linear-gradient(90deg,#9ada8a,#5aab48)}
+.xst-bar u{position:absolute; top:-2px; bottom:-2px; width:2.5px; background:#3f3550; border-radius:2px}
+.xst-n{font-size:12.5px; color:#6b5a88; line-height:1.5}
+.xst-sum{
+  border-top:1px dashed #e2d6f7; padding-top:7px; font-size:13px; color:#5a4487; text-align:center;
+}
+
 .xsr-foot{flex:0 0 auto; text-align:center; padding-top:9px}
 .xsr-ok{
   border:0; border-radius:12px; padding:9px 24px; font-family:inherit; font-size:15px; cursor:pointer;
@@ -176,6 +219,10 @@
 }
 .xsp-go.exam{background:var(--purple-d,#7d5fc0); color:#fff}
 .xsp-go.practice{background:#ffd76e; color:#7a5410}
+/* ⏱️ โหมดที่ 3 (รอบ 814) — ป้ายยาวสุด ให้กินเต็มบรรทัดของตัวเอง ไม่บีบ 2 ปุ่มแรกให้ตัวหนังสือตก
+   จอเตี้ยสลับไปใช้ป้ายสั้น (.xsp-sm) แล้วยืนเรียงเดียวกับอีก 2 ปุ่ม — ดูกฎทองข้อ 7 ท้ายไฟล์ */
+.xsp-go.timed{flex:1 1 100%; background:linear-gradient(180deg,#ff9d7a,#ef6f3f); color:#fff; font-size:13.5px}
+.xsp-go .xsp-sm{display:none}
 .xsp-foot{flex:0 0 auto; font-size:11.5px; color:#8a7f9c; line-height:1.55; border-top:1px dashed #e2d6f7; padding-top:7px}
 
 /* ---------- แผงเลือกสนามสอบ (ทางลัดจากรางเมนู #btn-rail-examstd · รอบ 813) ---------- */
@@ -222,6 +269,42 @@
   .xs-foot{padding:4px 8px}
   .xs-btn{padding:5px 11px; font-size:12.5px}
   .xs-count{font-size:11px}
+  /* รอบ 814: แผงเลือกชุด 3 ปุ่ม + กล่องผลสอบที่มีแถวเวลาเพิ่ม ต้องยังอยู่ในจอเตี้ย
+     → 3 ปุ่มยืนเรียงเดียว (ป้ายสั้น) + ตัดบรรทัดรายละเอียดส่วน ทำให้ทั้งแผงไม่ต้องเลื่อน */
+  .xsp-go{padding:4px 8px; font-size:12px}
+  .xsp-go.timed{flex:1 1 auto; font-size:12px}
+  .xsp-go .xsp-lg{display:none}
+  .xsp-go .xsp-sm{display:inline}
+  .xsp-btns{gap:4px; margin-top:5px}
+  .xsp-set{padding:6px 9px}
+  .xsp-name{font-size:14px}
+  .xsp-info{display:none}                    /* รายละเอียดส่วน/บทอ่านดูได้ในจอสอบ ไม่ต้องกินที่ตรงนี้ */
+  .xsp-best{font-size:12px; margin-top:2px}
+  .xsp-head{font-size:15.5px}
+  .xsp-head .xsp-sub{font-size:11px; line-height:1.4}
+  .xsp-foot{font-size:10.5px; line-height:1.45; padding-top:5px}
+  .xsp-rows{margin:6px 0; gap:6px}
+  .levelup-box.xs-result{padding:10px 14px}
+  .xs-result h2{font-size:17px}
+  .xs-result .lv-emoji{font-size:22px}
+  .xs-result .xs-rslow-tip{display:none}      /* แท็บเวลาเห็นอยู่แล้วในหน้าเฉลย ไม่ต้องบอกซ้ำในจอเตี้ย */
+  .xs-result .xs-rtimeup, .xs-result .xs-rslow{font-size:11.5px; padding:5px 8px; margin:4px 0}
+  .xs-result .xs-rrow{font-size:12.5px; margin:3px 0}
+  .xs-result .xs-rscore{font-size:14px; margin:4px 0 3px}
+  .xs-result .xs-rscale{font-size:12.5px; padding:5px 8px; margin:4px 0}
+  .xs-result .xs-rscale small{display:none}   /* คำอธิบาย "ไม่ใช่คะแนนทางการ" อ่านได้ในจอปกติ */
+  .xs-result > button{margin-top:7px; padding:6px 18px; font-size:14px}
+  .xst-note{font-size:11px; padding:5px 8px; line-height:1.45}
+  .xst-n{font-size:11px; line-height:1.45}
+  .xst-row{padding:4px 8px}
+  .xst-h{font-size:12px; gap:5px}
+  .xst-tag{font-size:10.5px}
+  .xst-bar{height:7px; margin:3px 0 2px}
+  /* จอเตี้ยแต่กว้าง (มือถือแนวนอน): เรียงส่วนเป็น 2 คอลัมน์ ชุดที่มี 5 ส่วน (TOEIC) จึงยังเห็นครบไม่ต้องเลื่อน */
+  .xst-wrap{display:grid; grid-template-columns:1fr 1fr; gap:6px; align-content:start}
+  .xst-note, .xst-sum{grid-column:1/-1}
+  .xst-sum{font-size:11.5px; padding-top:5px}
+  .xst-note .xst-tip{display:none}           /* สรุปความหมายแถบไว้แค่ 2 ข้อแรกในจอเตี้ย */
 }
 /* ---------- จอแคบจริง (portrait/แท็บเล็ตเล็ก): บทอ่านขึ้นบน จำกัดความสูงไม่ให้เบียดคำถาม ---------- */
 @media (max-width:640px){
@@ -231,4 +314,14 @@
   .xs-q{font-size:14px}
   .xs-ch{font-size:13px; padding:6px 9px}
   .xsr-item, .xsr-q{font-size:13.5px}
+}
+/* ---------- จอเตี้ย: แผงเฉลย/สถิติเวลา — บีบหัว-แท็บ-ปุ่ม เพื่อคืนพื้นที่ให้รายการ (รอบ 814) ---------- */
+@media (max-height:470px){
+  .xsr-box{padding:9px 12px 8px; max-height:94vh}
+  .xsr-head{font-size:15px}
+  .xsr-head .xsr-sub{display:none}          /* คำแนะนำอ่านได้ในจอปกติ — จอเตี้ยเอาที่ไปให้เนื้อหา */
+  .xsr-tabs{margin:6px 0}
+  .xsr-tab{padding:3px 9px; font-size:12px}
+  .xsr-foot{padding-top:6px}
+  .xsr-ok{padding:6px 18px; font-size:13.5px}
 }

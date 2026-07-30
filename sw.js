@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v214';  // v214: รอบ 813: ทางลัดเข้าข้อสอบจริงมาตรฐานจากรางเมนู (#btn-rail-examstd)
+const CACHE_VERSION = 'pet-vocab-v215';  // v215: รอบ 819: โหมดสอบจับเวลาจริง + สถิติเวลาต่อส่วน
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
