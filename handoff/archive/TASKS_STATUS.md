@@ -3368,3 +3368,9 @@
 - **รอบ 844 (30 ก.ค. · ผู้ใช้ส่งภาพเมืองกำแพงเพชร: "ตึกยังแปะภาพไม่ครบ ห้ามเอาผนังไปเป็นหลังคา"):** 🏢 ต้นตอ: "ตึกจริง" 79 หลัง (ผัง OSM, `ExtrudeGeometry` ใน `js/adventure3d.js` `buildDriveCity`) มีแค่สีพาสเทลล้วน ไม่เคยแปะภาพผนังเลย (ตึกแถวข้างล่างมีอยู่แล้ว) → เพิ่ม material array `[capFlatM,wallM]` ใช้ `img/city/shop_4fl.png` ตามกฎเดิม "4 ชั้นขึ้นไป→shop_4fl" repeat ตาม z จริง(เมตร)
   - ⚠️ ก่อนแก้ตรวจ `js/vendor/three.min.js` จริงก่อนว่า `ExtrudeGeometry.addGroup` ลำดับไหนคือผนัง/ฝา — พบว่า **materialIndex 0 = ฝาบน/ล่าง(cap) · 1 = ผนังข้าง(side)** (สลับกับที่คนทั่วไปเข้าใจ) ใส่ผิดลำดับจะเป็นบั๊กที่ผู้ใช้เตือน (ผนังไปโผล่เป็นหลังคา)
   - ยืนยัน: เทสต์แยก (สี debug แดง/น้ำเงินคนละ index) ยืนยัน index0=cap,index1=side ตรงจริง 100% (`gl.readPixels` มุมบนตรงแดง มุมข้างตรงน้ำเงิน) + เข้าเกมจริง (server เอง :49677 · mock login+register ม.4 · `Adventure3D.start('heli',{map:'kpp',walkIn:true})`): `img/city/shop_4fl.png` โหลด 200 OK ไม่มี error คอนโซล · `node --check` ผ่าน · ปิด server แล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-07-30 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 845 (30 ก.ค. · ผู้ใช้: "เฮลิคอปเตอร์บินได้ช้าไป ปรับให้บินได้ไวกว่านี้ 2 เท่า"):** 🚁💨 `js/adventure3d.js:8144` `tickHeli()` — สูตรเดิม equilibrium speed = accel/drag (13/1.4≈9.3 m/s) ไม่ใช่เพดาน clamp 17 ที่แทบไม่ถึง (drag ดึงกลับก่อน) → เพิ่ม accel แนวราบ 13→26 + แนวดิ่ง 9→18 (drag คงเดิม 1.4/1.8) + ขยับเพดาน clamp 17→34 คู่กัน ให้ equilibrium ใหม่ ~18.6 (2 เท่าเป๊ะ) ไม่โดน clamp ตัด
+  - ยืนยัน (server เอง · mock login+register ม.4 · เข้าจริงผ่าน `enterHeli3D()`→kpp): ใช้ testkit `_t.step(dt,n)`/`_t.setKeys()`/`_t.col` จำลองไต่ระดับแล้วบินหน้าเต็มแรงจนถึง equilibrium วัดความเร็วจริงจาก camera position delta = **17.27 m/s (62.2 กม./ชม.)** ตรงกับสูตรคำนวณเป๊ะ (เทียบสูตรเดิมคำนวณได้ 8.64 m/s → อัตราส่วน 2.0 เท่าพอดี) · `node --check` ผ่าน · ล้างเซฟ+ปิด server แล้ว
