@@ -8141,13 +8141,15 @@ function tickHeli(dt,now){
   if(hLanded){
     if(col>.25 && HeliSound.ready){ hLanded=false; hVel.y=2.5; hAirAt=now; }  // เทคออฟได้เมื่อสตาร์ทเครื่องเสร็จ
   }else{
-    hVel.x+=(-sin*fw+cos*sd)*13*dt;
-    hVel.z+=(-cos*fw-sin*sd)*13*dt;
-    hVel.y+=(col*9 - hVel.y*1.8)*dt;           // ไต่/ลดระดับนุ่มๆ auto-hover
+    // 🚁💨 รอบ 845 (ผู้ใช้สั่ง): บินไวขึ้น 2 เท่า — เดิม equilibrium ~accel/drag (13/1.4≈9.3 m/s) แม้เพดาน clamp 17 ก็แทบไม่ถึง
+    //    เพิ่ม accel แนวราบ+ดิ่งเป็น 2 เท่า (drag เท่าเดิม) → equilibrium ใหม่ ~18.6 (2 เท่าเป๊ะ) แล้วขยับเพดาน clamp คู่กันกันโดนตัด
+    hVel.x+=(-sin*fw+cos*sd)*26*dt;
+    hVel.z+=(-cos*fw-sin*sd)*26*dt;
+    hVel.y+=(col*18 - hVel.y*1.8)*dt;          // ไต่/ลดระดับนุ่มๆ auto-hover
     const drag=Math.max(0,1-1.4*dt);
     hVel.x*=drag; hVel.z*=drag;
     const hs=Math.hypot(hVel.x,hVel.z);
-    if(hs>17){ hVel.x*=17/hs; hVel.z*=17/hs; }
+    if(hs>34){ hVel.x*=34/hs; hVel.z*=34/hs; }
   }
   let nx=camera.position.x+hVel.x*dt;
   let ny=camera.position.y+hVel.y*dt;
