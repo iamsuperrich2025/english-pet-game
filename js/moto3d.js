@@ -54,7 +54,7 @@ const CHAT_PRESETS=['สวัสดี! 👋','ตามมาเลย!','เ�
 
 let built=false, running=false, rafId=0, lastT=0;
 let renderer=null, scene=null, camera=null;
-let wrapEl,screenEl,cvEl,knobEl,sliderEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist,coinsEl,banEl,miniCv,miniCtx,introEl,exitBox;
+let wrapEl,screenEl,cvEl,knobEl,sliderEl,hitEl,thrEl,wordEl,spdEl,gpsEl,gpsArr,gpsDist,coinsEl,banEl,miniCv,miniCtx,introEl,exitBox;
 let segs=[], buckets=new Map();            // ถนน: เส้นย่อย + ตารางแฮช
 let bikeEl=null;                           // 🏍️ ภาพมอไซค์จริง (สไปรต์ DOM ล่างกึ่งกลางจอ — รอบ 294)
 let shadowEl=null;                         // 🌑 เงาวงรีใต้ล้อ (รอบ 303)
@@ -357,8 +357,10 @@ const CSS=`
 #moto-speedfx::after{right:0;-webkit-mask-image:linear-gradient(270deg,#000,transparent);mask-image:linear-gradient(270deg,#000,transparent)}
 @keyframes mspeed{to{background-position:0 27px}}
 #moto-slider{position:absolute;left:2.5%;top:45%;width:22%;height:24%;border-radius:999px;cursor:pointer;
-  background:transparent}
+  background:transparent;pointer-events:none}
 #moto-slider .m-arr{display:none}
+/* 🎯 รอบ 841: พื้นที่แตะจริงสูง 3 เท่าของภาพ (ขยายขึ้น-ลงด้านละ 1 ช่วงเดิม) — ภาพปุ่มเลี้ยวที่เห็นยังขนาดเดิมเป๊ะ (#moto-slider ด้านบนแค่โชว์ภาพ ไม่รับ touch แล้ว) */
+#moto-steerhit{position:absolute;left:2.5%;top:21%;width:22%;height:72%;background:transparent;cursor:pointer;touch-action:none;z-index:3}
 #moto-knob{position:absolute;left:50%;top:21%;height:56%;width:62%;transform:translate(-50%,0);border-radius:999px;
   background:linear-gradient(180deg,#ff7a45,#f04f16);pointer-events:none;
   box-shadow:0 3px 7px rgba(0,0,0,.5), inset 0 3px 5px rgba(255,200,160,.5);
@@ -628,6 +630,7 @@ function buildDom(){
       </div></div>
     </div>
     <div id="moto-slider"><span class="m-arr">◀</span><div id="moto-knob"><span>เลี้ยว</span></div><span class="m-arr">▶</span></div>
+    <div id="moto-steerhit"></div>
     <button id="moto-throttle"><span class="m-ico">🏍️</span><span class="m-lb">เร่ง</span></button>
     <!-- 🚗 รอบ 785: ปุ่มบังคับชุดรถยนต์ (เบรก/เกียร์ถอย/แตร) -->
     <button id="moto-brake" class="m-cbtn" type="button"><span class="m-ci">🦶</span><span>เบรก</span></button>
@@ -645,6 +648,7 @@ function buildDom(){
   wheelEl=wrapEl.querySelector('.m-wheel');
   speedFxEl=document.getElementById('moto-speedfx');
   sliderEl=document.getElementById('moto-slider'); knobEl=document.getElementById('moto-knob');
+  hitEl=document.getElementById('moto-steerhit');
   thrEl=document.getElementById('moto-throttle');
   wordEl=document.getElementById('moto-word'); spdEl=document.getElementById('moto-speed');
   gpsArr=document.getElementById('moto-gps-arr'); gpsDist=document.getElementById('moto-gps-d');
@@ -714,15 +718,15 @@ function buildDom(){
     steerCtl=Math.max(-1,Math.min(1,t));
     knobEl.style.left=(50+steerCtl*26)+'%';
   };
-  sliderEl.addEventListener('pointerdown',e=>{ sliding=true; knobEl.classList.add('grab');   // 🎛️ รอบ 309: ยกนูน+haptic ตอนจับ
+  hitEl.addEventListener('pointerdown',e=>{ sliding=true; knobEl.classList.add('grab');   // 🎛️ รอบ 309: ยกนูน+haptic ตอนจับ
     if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate(15);
-    try{ sliderEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
-  sliderEl.addEventListener('pointermove',e=>{ if(sliding) setSteer(e); });
+    try{ hitEl.setPointerCapture(e.pointerId); }catch(err){} setSteer(e); });
+  hitEl.addEventListener('pointermove',e=>{ if(sliding) setSteer(e); });
   /* 🚗 รอบ 785: โหมดรถยนต์ = พวงมาลัยจริง "ปล่อยแล้วคืนกลางเอง" (เหมือนโลกเมือง) · มอไซค์ยังค้างองศาเดิม */
   const slEnd=()=>{ sliding=false; knobEl.classList.remove('grab');
     if(vehicle==='car'){ steerCtl=0; knobEl.style.left='50%'; } };
-  sliderEl.addEventListener('pointerup',slEnd);
-  sliderEl.addEventListener('pointercancel',slEnd);
+  hitEl.addEventListener('pointerup',slEnd);
+  hitEl.addEventListener('pointercancel',slEnd);
   document.getElementById('moto-power').addEventListener('click',()=>{ exitBox.classList.add('on'); });
   document.getElementById('moto-exit-yes').addEventListener('click',exitWorld);
   document.getElementById('moto-exit-no').addEventListener('click',()=>exitBox.classList.remove('on'));
