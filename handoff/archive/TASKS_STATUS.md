@@ -3355,3 +3355,9 @@
 
 - **รอบ 842 (30 ก.ค. · ผู้ใช้ขอขยายพื้นที่แตะสไลเดอร์เลี้ยวโลกมอเตอร์ไซค์ ให้สูง 3 เท่า ภาพเท่าเดิม):** `js/moto3d.js` — เพิ่ม `#moto-steerhit` (div โปร่งใสซ้อนบน `#moto-slider`, สูง 72% = เดิม 24%×3, ขึ้น-ลงด้านละ 1 ช่วงเดิมเป๊ะ) แล้วย้าย pointer listener (`pointerdown/move/up/cancel`+capture) จาก `sliderEl`→`hitEl` ทั้งหมด · `#moto-slider` เดิมเหลือแค่โชว์ภาพ (`pointer-events:none`) ตำแหน่ง/ขนาดไม่แตะ → knob ภาพที่เห็นเท่าเดิมทุกพิกเซล ส่วน `setSteer()` ยังคำนวณองศาจาก `sliderEl.getBoundingClientRect()` เดิม (ความไวลากแนวนอนไม่เปลี่ยน)
   - ยืนยัน (server เอง :55751 · mock login+register ม.4 · `enterMoto3D()` จริงผ่าน UI): `getBoundingClientRect` วัดจริง — hit สูง 518px = slider(172.8px)×3 พอดี, ขอบบน/ล่างห่างจาก slider เดิมด้านละ 172.8px เป๊ะ (=1 ช่วงเดิม) · `document.elementFromPoint` จุดขอบบน/ล่างของโซนขยาย → ชี้ `moto-steerhit` (แตะติด) จุดถัดออกไปอีก 20px → ชี้ `moto-body` (พ้นโซนพอดี ไม่ล้น) · จำลอง `PointerEvent` แตะจุดเหนือกล่องเดิม 153px (อยู่ในโซนใหม่) → knob หมุนตอบสนองถูกทิศ · ตรวจแล้วไม่ทับปุ่ม/องค์ประกอบอื่นบนตัวเครื่อง (เร่ง/เบรก/เกียร์/แตร/power อยู่คนละแนว x) · `node --check` ผ่าน · console สะอาด
+
+
+## ⏬ ย้ายเมื่อ 2026-07-30 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 843 (30 ก.ค. · ผู้ใช้ขอขยายรูป+กรอบ profile หน้าล็อบบี้ ใหญ่กว่าเดิม 2 เท่า):** `css/lobby.css` — `.pass-photo` (base 52×62→104×124, border-radius 12→24, border 2→4px) + `.id-card .pass-photo` (override ที่ใช้งานจริง 54×62→108×124, border-radius 13→26, border 1→2px) · media query จอเตี้ย (≤520px/≤430px height) **ไม่แตะ** กันฝ่าฝืนกฎทองข้อ 7
+  - ยืนยัน (server เอง :54415 · mock login+register ผ่าน UI → `showScreen('screen-dashboard')`): `getBoundingClientRect` วัด `#pass-photo` = 108×124 จริงที่จอ 1280×720 ไม่ล้น (`.lobby-top` สูงขึ้นเป็น 138px ยังพอดี stage เหลือ 495px) · ทดสอบซ้ำจอเตี้ย 812×375 (ขนาดเดิม 46×53 ตามเดิม) `dash.scrollHeight===clientHeight` ไม่มี scrollbar
