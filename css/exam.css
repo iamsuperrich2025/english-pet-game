@@ -66,22 +66,22 @@
 }
 .xs-sec{font-size:12.5px; color:#7d5fc0; margin-bottom:6px}
 .xs-sec small{display:block; color:#8a7f9c; font-size:11.5px}
-.xs-q{font-size:16px; line-height:1.55; color:#33283f; margin-bottom:9px}
+.xs-q{font-size:20px; line-height:1.55; color:#33283f; margin-bottom:11px}
 .xs-qno{
   display:inline-block; background:var(--purple-d,#7d5fc0); color:#fff; border-radius:8px;
-  padding:1px 8px; font-size:12.5px; margin-right:5px; vertical-align:2px;
+  padding:2px 10px; font-size:14.5px; margin-right:6px; vertical-align:2px;
 }
-.xs-choices{display:flex; flex-direction:column; gap:6px}
+.xs-choices{display:flex; flex-direction:column; gap:8px}
 .xs-ch{
-  display:flex; align-items:flex-start; gap:8px; text-align:left; cursor:pointer;
-  border:1.5px solid #ddd0f5; background:#faf7ff; border-radius:11px; padding:8px 10px;
-  font-family:inherit; font-size:15px; color:#3d3350; line-height:1.45;
+  display:flex; align-items:flex-start; gap:10px; text-align:left; cursor:pointer;
+  border:1.5px solid #ddd0f5; background:#faf7ff; border-radius:11px; padding:11px 14px;
+  font-family:inherit; font-size:18px; color:#3d3350; line-height:1.45;
 }
 .xs-ch:hover:not(:disabled){border-color:#b79df0; background:#f3ecff}
 .xs-ch:disabled{cursor:default}
 .xs-ab{
-  flex:0 0 auto; width:22px; height:22px; border-radius:7px; background:#e7ddfa; color:#6b4ea8;
-  font-size:12.5px; font-weight:600; text-align:center; line-height:22px;
+  flex:0 0 auto; width:27px; height:27px; border-radius:7px; background:#e7ddfa; color:#6b4ea8;
+  font-size:14.5px; font-weight:600; text-align:center; line-height:27px;
 }
 .xs-ch.pick{border-color:var(--purple-d,#7d5fc0); background:#efe6ff}
 .xs-ch.pick .xs-ab{background:var(--purple-d,#7d5fc0); color:#fff}
@@ -105,9 +105,9 @@
   flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:6px 10px;
   background:#fff; border-top:1px solid #e6dcf7;
 }
-.xs-count{font-size:12.5px; color:#7a6a92; margin:0 auto}
+.xs-count{font-size:13.5px; color:#7a6a92; margin:0 auto}
 .xs-btn{
-  border:0; border-radius:11px; padding:8px 15px; font-family:inherit; font-size:14.5px; cursor:pointer;
+  border:0; border-radius:12px; padding:11px 22px; font-family:inherit; font-size:17px; cursor:pointer;
   background:#e7ddfa; color:#5a4487; font-weight:600;
 }
 .xs-btn:disabled{opacity:.4; cursor:default}
@@ -336,8 +336,8 @@
   .xs-body{flex-direction:column; gap:6px; padding:6px 8px}
   .xs-pass{flex:0 0 auto; max-height:30vh; font-size:13px; padding:8px 10px}
   .xs-qside{flex:1 1 auto; padding:8px 10px}
-  .xs-q{font-size:14px}
-  .xs-ch{font-size:13px; padding:6px 9px}
+  .xs-q{font-size:16.5px}
+  .xs-ch{font-size:15.5px; padding:8px 11px}
   .xsr-item, .xsr-q{font-size:13.5px}
 }
 /* ---------- จอเตี้ย: แผงเฉลย/สถิติเวลา — บีบหัว-แท็บ-ปุ่ม เพื่อคืนพื้นที่ให้รายการ (รอบ 814) ---------- */
