@@ -1126,7 +1126,8 @@ html.no-anim body.quake{animation:none;}
 .bxr-chip.lv{background:#fff8ec;color:#b26a1e;border-color:#f2c880;}
 .bxr-chip.lv.on{background:#f0a93c;color:#fff;border-color:#c8801f;font-weight:bold;}
 .bxr-chip:active{transform:scale(.95);}
-.bxr-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,5px);overflow:hidden;}
+/* 🐛 รอบ 815: เดิม overflow:hidden ตัดแถวทิ้งเงียบ ๆ เมื่อคนขึ้นกระดานเยอะ (จอเตี้ย+8แถว+…+ของเรา) — เปลี่ยนเป็นเลื่อนในกรอบตัวเอง (กรอบนอกยังไม่เลื่อน ตามกฎทองข้อ 7) */
+.bxr-list{flex:1;min-height:0;display:flex;flex-direction:column;gap:clamp(2px,.6vh,5px);overflow-y:auto;}
 .bxr-row{display:flex;align-items:center;gap:8px;background:#faf7ff;border:2px solid #eee3fb;border-radius:12px;
   padding:clamp(3px,.9vh,7px) 10px;font-size:clamp(11px,2.1vh,14.5px);color:#6a5a78;}
 .bxr-row.me{background:var(--yellow);border-color:var(--yellow-d);color:#8a6a1a;font-weight:bold;}

@@ -1323,7 +1323,7 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','badges','boss','ws','tp','bx'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786)
+const LB_TABS = ['coins','badges','boss','ws','tp','bx','xr'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786 · xr = 🏁 ข้อสอบมาตรฐาน รอบ 815)
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
@@ -1584,7 +1584,8 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
           <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
-          <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>`;
+          <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>
+          <button class="lb-tab${__lbfTab==='xr'?' active':''}" data-t="xr">🏁 ข้อสอบมาตรฐาน</button>`;
   const closeHeadHtml = (title)=> `<div class="lbf-head">
         <button class="pl-close lbf-close lbf-close-l">✕</button>
         <span class="lbf-title">🏆 ${title}</span>
@@ -1603,6 +1604,16 @@ function openLeaderboardFull(){
         <div class="bxr-body" id="lbf-bx"></div></div>`;
       bindLbfChrome();
       if(typeof bxRankMount === 'function') bxRankMount(ov.querySelector('#lbf-bx'));
+      return;
+    }
+    /* 🏁 รอบ 815: แท็บข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด — เนื้อกระดานอยู่ js/examstd.js (xrkMount วาด+ผูกปุ่มเอง)
+       สูตรเดียวกับแท็บ bx ด้านบนเป๊ะ ต่างแค่เรียกฟังก์ชันฝั่ง examstd.js */
+    if(__lbfTab === 'xr'){
+      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏁 ข้อสอบมาตรฐานคะแนนสูงสุด/เร็วสุด')}
+        <div class="lbf-note">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</div>
+        <div class="bxr-body" id="lbf-xr"></div></div>`;
+      bindLbfChrome();
+      if(typeof xrkMount === 'function') xrkMount(ov.querySelector('#lbf-xr'));
       return;
     }
     /* 🗂️ รอบ 677: แท็บเข็ม — แยกกระดานย่อยทีละสาย (ผู้ใช้ 28 ก.ค. 2026 ขอแยกดูทีละความสามารถ
@@ -6390,7 +6401,7 @@ function buyHeliTicket(){
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
   if(!state.heliTicket || state.advHurt || advLoading) return;
-  // 🗺️ รอบ 813 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
+  // 🗺️ รอบ 815 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
   const hmap = await pickHeliMap();
   if(!hmap) return;
   const needCity = hmap === 'kpp';                 // เมืองกำแพงเพชรใช้ข้อมูลแผนที่จริงชุดเดียวกับโลกขับรถ
@@ -6410,7 +6421,7 @@ async function enterHeli3D(){
   }
   Adventure3D.start('heli', {map:hmap});
 }
-/* 🗺️🚁 รอบ 813: หน้าเลือกแผนที่โลกเฮลิคอปเตอร์ (ผู้ใช้สั่ง — ให้เหมือน pickDriveMap ของโลกขับรถ)
+/* 🗺️🚁 รอบ 815: หน้าเลือกแผนที่โลกเฮลิคอปเตอร์ (ผู้ใช้สั่ง — ให้เหมือน pickDriveMap ของโลกขับรถ)
    คืน 'city' = เมืองเฮลิฯ เดิม (เดินเท้า/ลิฟต์/วิงสูท · ตัวอักษรบนดาดฟ้า)
        'kpp'  = เมืองกำแพงเพชรจริง (ขึ้นบินทันที · ลงจอดเก็บตัวอักษรบนพื้นที่สีเขียว) · null = ยกเลิก
    ใช้ CSS ชุด .dmap-* ร่วมกับหน้าเลือกแผนที่รถ (ไม่เพิ่ม CSS ใหม่) */

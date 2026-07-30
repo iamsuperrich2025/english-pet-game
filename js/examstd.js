@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812)
+   📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812 · โหมดจับเวลาจริง+สถิติต่อส่วน รอบ 814)
    คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th
    ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
    ทุกข้อมี "เฉลยละเอียด" อธิบายว่าทำไมข้อนั้นถูกและตัวลวงผิดเพราะอะไร
@@ -15,9 +15,12 @@
 const XS_PASS_PCT   = 0.7;          // เกณฑ์ผ่าน 70% (21/30) — ต่ำกว่าหมวดคำศัพท์ (80%) เพราะข้อสอบแนวนี้ยากกว่าจริง
 const XS_REWARD     = 900;          // ผ่านครั้งแรกของชุด (สอบซ้ำได้ 30)
 const XS_REWARD_AGAIN = 30;
-/* ⏱️ เวลาแนะนำต่อชุด (นาที) — เทียบสัดส่วนจากเวลาจริงของแต่ละสนามสอบ · ไม่มีการตัดจบอัตโนมัติ
-   (เด็ก/ผู้เริ่มต้นควรได้อ่านจนจบ แต่ต้องเห็นว่าถ้าสอบจริงเวลาประมาณนี้) */
+/* ⏱️ เวลาต่อชุด (นาที) — เทียบสัดส่วนจากเวลาจริงของแต่ละสนามสอบ
+   โหมด exam/practice = ใช้เป็น "เวลาแนะนำ" เท่านั้น ไม่ตัดจบ (เด็ก/ผู้เริ่มต้นควรได้อ่านจนจบ)
+   โหมด timed (รอบ 814) = ใช้เป็น "เวลาจริง" นับถอยหลัง หมดแล้วส่งคำตอบอัตโนมัติ */
 const XS_TIME_HINT  = {ielts:45, toeic:25, toefl:40};
+const XS_TIME_FALLBACK = 30;        // ถ้ามีสนามสอบใหม่ที่ยังไม่ตั้งเวลาไว้ (กันโหมดจับเวลาไม่มีลิมิต)
+function xsLimitSec(exam){ return (XS_TIME_HINT[exam] || XS_TIME_FALLBACK) * 60; }
 
 /* คะแนนเทียบโดยประมาณ (ไม่ใช่คะแนนทางการ — เขียนบอกบนจอทุกครั้ง)
    เก็บเป็น [คะแนนดิบขั้นต่ำ, ข้อความ] เรียงจากสูงไปต่ำ */
@@ -113,9 +116,14 @@ function xsBest(setId){
    🖥️ จอสอบ (overlay เต็มจอเอง ไม่ใช้ screen-quiz เดิม)
    XS = สถานะรอบสอบปัจจุบัน · mode 'exam' = ตอบครบแล้วส่ง (ดูเฉลยทีเดียวตอนจบ เหมือนสนามสอบจริง)
                               · mode 'practice' = เฉลยละเอียดทันทีทีละข้อ (โหมดฝึก)
+                              · mode 'timed'  = เหมือน exam แต่ "จับเวลาจริง" นับถอยหลังตาม XS_TIME_HINT
+                                                หมดเวลา = ส่งคำตอบอัตโนมัติทันที (รอบ 814)
+   ⏱️ secSpent[secI] = วินาทีที่ใช้ในแต่ละ "ส่วน" (Part/Section) — เก็บทุกโหมด ใช้ทำสถิติในหน้าเฉลย
    ============================================================ */
-const XS = {pack:null, mode:'exam', idx:0, ans:[], startAt:0, done:false};
+const XS = {pack:null, mode:'exam', idx:0, ans:[], startAt:0, done:false,
+            limit:0, timeUp:false, warned:{}, secSpent:[], curSec:-1, markAt:0};
 let __xsTimer = null;
+function xsIsPractice(){ return XS.mode === 'practice'; }   // อีก 2 โหมดพฤติกรรมเหมือนกัน (เฉลยตอนจบ)
 
 function xsTimerStop(){ if(__xsTimer){ clearInterval(__xsTimer); __xsTimer = null; } }
 function xsElapsed(){ return XS.startAt ? Math.round((Date.now() - XS.startAt) / 1000) : 0; }
@@ -124,17 +132,44 @@ function xsFmt(sec){
   return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`;
 }
 
+/* ⏱️ จับเวลาต่อ "ส่วน" — เรียกทุกครั้งที่วาดข้อ: โยนเวลาที่ผ่านมาเข้าส่วนก่อนหน้า แล้วเริ่มนับส่วนใหม่
+   (เรียกซ้ำในส่วนเดิมได้ ไม่เพี้ยน เพราะรีเซ็ต markAt ทุกครั้ง) */
+function xsMark(secI){
+  const now = Date.now();
+  if(XS.markAt && XS.curSec >= 0) XS.secSpent[XS.curSec] = (XS.secSpent[XS.curSec] || 0) + (now - XS.markAt) / 1000;
+  XS.curSec = secI; XS.markAt = now;
+}
+/* สรุปต่อส่วน: ชื่อ/จำนวนข้อ/ตอบถูก/เวลาที่ใช้ — ใช้ทั้งกล่องผลสอบและแท็บ "เวลาแต่ละส่วน" */
+function xsSecStats(){
+  const p = XS.pack;
+  if(!p) return [];
+  const g = [];
+  p.items.forEach((it, i)=>{
+    let s = g.find(x=>x.i === it.secI);
+    if(!s){ s = {i:it.secI, name:it.secName || `ส่วนที่ ${it.secI + 1}`, q:0, ok:0, sec:0}; g.push(s); }
+    s.q++;
+    if(XS.ans[i] === it.a) s.ok++;
+  });
+  g.forEach(s=>{ s.sec = XS.secSpent[s.i] || 0; });
+  return g;
+}
+
 function examStdStart(setId, mode){
   examStdLoad(setId).then(pack=>{
     if(!pack || !pack.items.length){ toast(xsFailMsg(setId)); return; }
     const ov = document.getElementById('xs-picker');
     if(ov) ov.remove();                       // ปิดแผงเลือกชุดก่อน ไม่ให้บังจอสอบ
-    XS.pack = pack; XS.mode = (mode === 'practice') ? 'practice' : 'exam';
+    XS.pack = pack;
+    XS.mode = (mode === 'practice' || mode === 'timed') ? mode : 'exam';
     XS.idx = 0; XS.ans = new Array(pack.items.length).fill(-1);
     XS.locked = new Array(pack.items.length).fill(false);   // โหมดฝึก: ตอบแล้วล็อก ไม่ให้แก้ย้อน
     XS.startAt = Date.now(); XS.done = false;
+    XS.limit = (XS.mode === 'timed') ? xsLimitSec(pack.exam) : 0;
+    XS.timeUp = false; XS.warned = {};
+    XS.secSpent = []; XS.curSec = -1; XS.markAt = 0;
     xsBuildScreen();
     xsRender();
+    if(XS.limit) toast(`⏱️ จับเวลาจริง ${Math.round(XS.limit / 60)} นาที — หมดเวลาระบบส่งคำตอบให้อัตโนมัติ`);
   });
 }
 
@@ -149,7 +184,8 @@ function xsBuildScreen(){
   ov.innerHTML = `
     <div class="xs-top">
       <span class="xs-badge">${p.examMeta.emoji} ${escapeHTML(p.label)}</span>
-      <span class="xs-mode">${XS.mode === 'exam' ? '📋 โหมดสอบจริง' : '🎓 โหมดฝึก (เฉลยทันที)'}</span>
+      <span class="xs-mode">${XS.mode === 'practice' ? '🎓 โหมดฝึก (เฉลยทันที)'
+        : XS.mode === 'timed' ? '⏱️ โหมดสอบจับเวลาจริง' : '📋 โหมดสอบจริง'}</span>
       <span class="xs-time" id="xs-time">⏱️ 0:00${hint ? ` / แนะนำ ${hint}:00` : ''}</span>
       <span class="xs-score" id="xs-score"></span>
       <button class="xs-quit" id="xs-quit">✕ ออก</button>
@@ -191,6 +227,17 @@ function xsBuildScreen(){
     const el = document.getElementById('xs-time');
     if(!el) return xsTimerStop();
     const s = xsElapsed();
+    if(XS.limit){                                       // 🕐 โหมดจับเวลาจริง: นับถอยหลัง + ตัดจบเอง
+      const left = XS.limit - s;
+      el.textContent = `⏳ เหลือ ${xsFmt(Math.max(0, left))} / ${xsFmt(XS.limit)}`;
+      el.classList.toggle('warn', left <= 300 && left > 60);
+      el.classList.toggle('crit', left <= 60);
+      // เตือนก่อนหมดเวลาให้ทันตั้งตัว (ครั้งเดียวต่อรอบ) — เด็กมักเพลินกับบทอ่านยาว
+      if(left <= 300 && left > 60 && !XS.warned.m5){ XS.warned.m5 = true; toast('⏳ เหลือเวลา 5 นาที!'); }
+      if(left <= 60 && left > 0 && !XS.warned.m1){ XS.warned.m1 = true; toast('⏳ เหลือเวลา 1 นาที — รีบตอบข้อที่เหลือ!'); }
+      if(left <= 0){ xsTimerStop(); xsTimeUp(); return; }
+      return;
+    }
     el.textContent = `⏱️ ${xsFmt(s)}${hint ? ` / แนะนำ ${hint}:00` : ''}`;
     el.classList.toggle('over', !!hint && s > hint * 60);
   };
@@ -198,10 +245,21 @@ function xsBuildScreen(){
   __xsTimer = setInterval(tick, 1000);
 }
 
+/* ⏰ หมดเวลา — ส่งคำตอบให้อัตโนมัติทันที เหมือนกดส่งเอง (ข้อที่ไม่ได้ตอบนับเป็นผิด) */
+function xsTimeUp(){
+  if(XS.done || !XS.pack) return;
+  XS.timeUp = true;
+  // ถ้ามีกล่องยืนยัน (ออก/ส่งไม่ครบ) ค้างอยู่ ต้องเก็บก่อน ไม่ให้ทับกล่องผลสอบ
+  document.querySelectorAll('.alert-overlay').forEach(o=>o.remove());
+  if(typeof toast === 'function') toast('⏰ หมดเวลาแล้ว ส่งคำตอบให้อัตโนมัติ');
+  xsFinish();
+}
+
 function xsRender(){
   const p = XS.pack, it = p.items[XS.idx], n = p.items.length;
   const picked = XS.ans[XS.idx], locked = XS.locked[XS.idx];
-  const reveal = (XS.mode === 'practice') && locked;      // โหมดฝึก: เฉลยโผล่ทันทีหลังตอบ
+  const reveal = xsIsPractice() && locked;                // โหมดฝึก: เฉลยโผล่ทันทีหลังตอบ
+  if(!XS.done) xsMark(it.secI);                           // ⏱️ ปิดยอดเวลาส่วนก่อนหน้า/เริ่มนับส่วนนี้
   /* บทอ่าน: วาดใหม่เฉพาะเมื่อเปลี่ยน "ส่วน" (ข้อในบทเดียวกันจะไม่รีเซ็ต scroll ที่อ่านค้างไว้) */
   const box = document.getElementById('xs-pass');
   if(box.dataset.sec !== String(it.secI)){
@@ -246,13 +304,13 @@ function xsRender(){
     let cls = 'xs-dot';
     if(i === XS.idx) cls += ' now';
     if(XS.ans[i] >= 0) cls += ' has';
-    if(XS.mode === 'practice' && XS.locked[i]) cls += (XS.ans[i] === x.a ? ' ok' : ' no');
+    if(xsIsPractice() && XS.locked[i]) cls += (XS.ans[i] === x.a ? ' ok' : ' no');
     return `<button class="${cls}" data-i="${i}">${i + 1}</button>`;
   }).join('');
   const left = XS.ans.filter(a=>a < 0).length;
   document.getElementById('xs-count').textContent =
     `ข้อ ${XS.idx + 1} / ${n}${left ? ` · ยังไม่ตอบ ${left} ข้อ` : ' · ตอบครบแล้ว'}`;
-  if(XS.mode === 'practice'){
+  if(xsIsPractice()){
     const done = XS.locked.filter(Boolean).length;
     const ok   = XS.locked.filter((l, i)=>l && XS.ans[i] === p.items[i].a).length;
     document.getElementById('xs-score').textContent = `ถูก ${ok}/${done} ข้อ`;
@@ -264,8 +322,8 @@ function xsRender(){
   document.getElementById('xs-next').hidden = lastQ;
   // ปุ่มส่ง: โหมดสอบเห็นตลอด (ส่งได้ทุกเมื่อ) · โหมดฝึกโผล่เฉพาะข้อสุดท้ายหลังตอบแล้ว
   const send = document.getElementById('xs-send');
-  send.hidden = (XS.mode === 'practice') && !(lastQ && locked);
-  send.textContent = (XS.mode === 'practice') ? '📊 ดูผลสอบ' : '📨 ส่งคำตอบ';
+  send.hidden = xsIsPractice() && !(lastQ && locked);
+  send.textContent = xsIsPractice() ? '📊 ดูผลสอบ' : '📨 ส่งคำตอบ';
   /* จอมือถือแนวนอนเตี้ย: กล่องเฉลยละเอียดยาวกว่ากรอบ → เลื่อนให้เห็นเฉลยทันทีที่ตอบ
      (ข้อใหม่ที่ยังไม่ตอบให้เริ่มที่บนสุดเสมอ) */
   const side = document.querySelector('.xs-qside');
@@ -276,7 +334,7 @@ function xsRender(){
 function xsChoose(i){
   if(XS.locked[XS.idx]) return;
   XS.ans[XS.idx] = i;
-  if(XS.mode === 'practice'){
+  if(xsIsPractice()){
     XS.locked[XS.idx] = true;
     const ok = i === XS.pack.items[XS.idx].a;
     if(typeof sfx !== 'undefined') (ok ? sfx.correct : sfx.wrong)();
@@ -313,11 +371,11 @@ function xsClose(){
   xsTimerStop();
   const ov = document.getElementById('xs-screen');
   if(ov) ov.remove();
-  XS.pack = null; XS.done = true;
+  XS.pack = null; XS.done = true; XS.limit = 0; XS.markAt = 0;
 }
 function xsSubmitAsk(){
   const left = XS.ans.filter(a=>a < 0).length;
-  if(left && XS.mode === 'exam'){
+  if(left && !xsIsPractice()){
     alertBox(`<div style="font-size:46px;line-height:1">📨</div>
       <div style="font-size:19px;font-weight:bold;margin-top:6px;color:#7d5fc0">ส่งคำตอบเลยไหม?</div>
       <div style="margin-top:6px;color:#6a5a78">ยังเหลือ <b>${left}</b> ข้อที่ไม่ได้ตอบ — ข้อที่ไม่ตอบจะนับเป็นผิดนะ</div>`,
@@ -334,7 +392,12 @@ function xsFinish(){
   if(XS.done) return;
   XS.done = true;
   xsTimerStop();
-  const p = XS.pack, n = p.items.length, secs = xsElapsed();
+  xsMark(XS.curSec);                       // ⏱️ ปิดยอดเวลาส่วนสุดท้ายก่อนสรุป
+  XS.markAt = 0;                           // หยุดนับ (เวลาที่นั่งอ่านเฉลยไม่นับเข้าส่วนไหน)
+  const p = XS.pack, n = p.items.length;
+  // โหมดจับเวลา: หมดเวลาแล้วใช้เวลาลิมิตเป๊ะ ๆ (กันเลขเกินลิมิตเพราะ tick คลาดวินาที)
+  const secs = (XS.timeUp && XS.limit) ? XS.limit : xsElapsed();
+  const unanswered = XS.ans.filter(a=>a < 0).length;
   const correct = p.items.filter((it, i)=>XS.ans[i] === it.a).length;
   const passMark = Math.ceil(n * XS_PASS_PCT);
   const passed = correct >= passMark;
@@ -352,33 +415,46 @@ function xsFinish(){
     addCoins(coins);
     if(typeof questEvent === 'function') questEvent('quiz');
     if(typeof feedEvent === 'function') feedEvent('quiz',
-      `สอบผ่านข้อสอบ ${p.examMeta.label} ${correct}/${n} ข้อ ⏱️ ${xsFmt(secs)} 📋`);
+      `สอบผ่านข้อสอบ ${p.label} ${correct}/${n} ข้อ ⏱️ ${xsFmt(secs)} 📋`);   // 🏁 รอบ 815: p.label (มีชื่อชุดต่อท้าย) ไม่ใช่ p.examMeta.label เดิม — กระดานอันดับต้องแยกเป็นรายชุด
     if(typeof certAward === 'function') myCert = certAward(cat, correct, n, secs);
   }
   addRP(rp);
   const made = (typeof addCraft === 'function') ? addCraft(correct) : null;
-  state.quizLog.push({cat:cid, score:correct, total:n, passed, ts:Date.now(), sec:secs});
+  state.quizLog.push({cat:cid, score:correct, total:n, passed, ts:Date.now(), sec:secs, mode:XS.mode});
   saveState();
   const newRecord = !!(myCert && myCert.sec === secs && (!prevBestSec || secs < prevBestSec));
 
   const pct = Math.round(correct / n * 100);
   const scale = xsScaleText(p.exam, correct);
+  /* ⏱️ ส่วนที่กินเวลาเกินสัดส่วนจำนวนข้อมากที่สุด — ชี้ให้เห็นตรงนี้เลยว่าต้องไปฝึกส่วนไหนให้เร็วขึ้น */
+  const stats = xsSecStats();
+  const totSec = stats.reduce((a, s)=>a + s.sec, 0);
+  let slow = null;
+  if(totSec > 5 && stats.length > 1){
+    slow = stats.slice().sort((a, b)=>(b.sec / b.q) - (a.sec / a.q))[0];
+    slow = {name:slow.name, tp:Math.round(slow.sec / totSec * 100), qp:Math.round(slow.q / n * 100)};
+  }
   const ov = document.createElement('div');
   ov.className = 'levelup-overlay';
   ov.innerHTML = `<div class="levelup-box xs-result">
-    <h2>${passed ? '🏆 สอบผ่าน เก่งมาก!' : '💪 ยังไม่ผ่าน แต่ใกล้แล้ว!'}</h2>
-    <div class="lv-emoji" style="font-size:52px">${passed ? '🎉' : '📖'}</div>
+    <h2>${XS.timeUp ? '⏰ หมดเวลาแล้ว!' : passed ? '🏆 สอบผ่าน เก่งมาก!' : '💪 ยังไม่ผ่าน แต่ใกล้แล้ว!'}</h2>
+    <div class="lv-emoji">${XS.timeUp ? '⏰' : passed ? '🎉' : '📖'}</div>
+    ${XS.timeUp ? `<div class="xs-rtimeup">ระบบ<b>ส่งคำตอบให้อัตโนมัติ</b>เมื่อหมดเวลา${
+      unanswered ? ` · ข้อที่ยังไม่ได้ตอบ ${unanswered} ข้อ นับเป็นผิด` : ' · ตอบครบทุกข้อก่อนหมดเวลา 👏'}</div>` : ''}
     <div class="xs-rscore">${p.examMeta.emoji} ${escapeHTML(p.label)}<br>
       ตอบถูก <b>${correct}/${n}</b> ข้อ (${pct}%)</div>
     ${scale ? `<div class="xs-rscale">📊 คะแนนเทียบโดยประมาณ: <b>${escapeHTML(scale)}</b>
       <small>เป็นการเทียบคร่าว ๆ จากชุดฝึกนี้เท่านั้น ไม่ใช่คะแนนทางการของสนามสอบ</small></div>` : ''}
-    <div class="xs-rrow">⏱️ ใช้เวลา <b>${xsFmt(secs)}</b> (เฉลี่ยข้อละ ${(secs / n).toFixed(1)} วิ)${
+    <div class="xs-rrow">⏱️ ใช้เวลา <b>${xsFmt(secs)}</b>${XS.limit ? ` / ${xsFmt(XS.limit)}` : ''} (เฉลี่ยข้อละ ${(secs / n).toFixed(1)} วิ)${
       newRecord ? (prevBestSec ? ` — <b style="color:#e07b39">🏁 ทำลายสถิติเดิม ${xsFmt(prevBestSec)}!</b>` : ' — <b style="color:#e07b39">🏁 สถิติแรกของชุดนี้!</b>')
       : (prevBestSec ? ` · สถิติดีที่สุด ${xsFmt(prevBestSec)}` : '')}</div>
     <div class="xs-rrow">${passed
       ? `รับ +${fmtNum(coins)} 🪙 +${rp} RP${firstPass ? ' 🎁 (ผ่านครั้งแรกของชุดนี้!)' : ''}`
       : `ได้กำลังใจ +${rp} RP 💪 ต้องตอบถูก <b>${passMark}</b> ข้อขึ้นไปถึงจะผ่าน — ลองใหม่ได้ไม่จำกัด`}
       ${made ? `<br>🏭 แต้มผลิต +${correct} — <b>ผลิตสำเร็จ!</b> 🎉` : ''}</div>
+    ${slow ? `<div class="xs-rslow">🐢 ส่วนที่กินเวลาที่สุด: <b>${escapeHTML(slow.name)}</b>
+      — ใช้ ${slow.tp}% ของเวลา แต่มีแค่ ${slow.qp}% ของข้อ<span class="xs-rslow-tip"> ·
+      ดูครบทุกส่วนที่แท็บ <b>⏱️ เวลาแต่ละส่วน</b> ในเฉลย</span></div>` : ''}
     ${myCert ? `<div class="lv-cert-row">🎖️ ได้รับ <b>ใบประกาศ Vocab World</b> เก็บไว้ในโปรไฟล์แล้ว
       <button class="lv-cert-btn" type="button">ดูใบประกาศ</button></div>` : ''}
     <button>ดูเฉลยละเอียด 📖</button>
@@ -398,11 +474,37 @@ function xsFinish(){
 
 /* 📖 เฉลยละเอียดหลังสอบ — ค่าเริ่มต้นโชว์ "ข้อที่ผิด" ก่อน (สิ่งที่ต้องทบทวนจริง) สลับดูทุกข้อได้
    ต้องมีเสมอไม่ว่าผ่านหรือไม่ผ่าน เพราะหัวใจของข้อสอบมาตรฐานคือเข้าใจว่าทำไมตัวลวงผิด */
+/* ⏱️ ตารางเวลาแต่ละส่วน — แถบสี = สัดส่วน "เวลา" ที่ใช้ · ขีด = สัดส่วน "จำนวนข้อ" ของส่วนนั้น
+   แถบยาวเกินขีด = ส่วนนั้นกินเวลากว่าที่ควร (คือส่วนที่ต้องฝึกให้เร็วขึ้น) */
+function xsTimeTableHTML(){
+  const p = XS.pack;
+  const st = xsSecStats(), n = p.items.length;
+  const tot = st.reduce((a, s)=>a + s.sec, 0);
+  if(tot < 1) return `<div class="xsr-none">ยังไม่มีข้อมูลเวลาพอจะสรุปได้ (ทำข้อสอบเร็วมาก 😄)</div>`;
+  return `<div class="xst-wrap">
+    <div class="xst-note">แถบสี = <b>สัดส่วนเวลา</b>ที่ใช้ในส่วนนั้น · ขีดตั้ง = <b>สัดส่วนจำนวนข้อ</b> ·
+      แถบยาวเลยขีดมาก = ส่วนนั้นกินเวลากว่าที่ควร ควรฝึกส่วนนั้นให้เร็วขึ้น</div>
+    ${st.map(s=>{
+      const tp = s.sec / tot * 100, qp = s.q / n * 100;
+      const r  = tp / (qp || 1);
+      const v  = r >= 1.25 ? ['slow','🐢 ช้ากว่าสัดส่วนข้อ'] : r <= 0.8 ? ['fast','⚡ เร็วกว่าสัดส่วนข้อ'] : ['even','✅ พอดีกับสัดส่วนข้อ'];
+      return `<div class="xst-row ${v[0]}">
+        <div class="xst-h"><b>${escapeHTML(s.name)}</b><span class="xst-tag">${v[1]}</span></div>
+        <div class="xst-bar"><i style="width:${Math.min(100, tp).toFixed(1)}%"></i><u style="left:${Math.min(99.5, qp).toFixed(1)}%"></u></div>
+        <div class="xst-n">⏱️ ${xsFmt(s.sec)} (${Math.round(tp)}% ของเวลา) · ${s.q} ข้อ (${Math.round(qp)}% ของข้อ) ·
+          ข้อละ ${(s.sec / s.q).toFixed(1)} วิ · ตอบถูก ${s.ok}/${s.q}</div>
+      </div>`;
+    }).join('')}
+    <div class="xst-sum">รวมเวลาทั้งชุด ⏱️ <b>${xsFmt(tot)}</b>${XS.limit ? ` จากเวลาที่ให้ ${xsFmt(XS.limit)}` : ''}
+      ${XS.timeUp ? ' · ⏰ รอบนี้หมดเวลาก่อนทำครบ' : ''}</div>
+  </div>`;
+}
+
 function xsShowReview(){
   const p = XS.pack;
   if(!p) return;
   const AB = ['A','B','C','D'];
-  let onlyWrong = true;
+  let tab = 'wrong';
   const ov = document.createElement('div');
   ov.id = 'xs-review'; ov.className = 'pl-overlay';
   ov.innerHTML = `<div class="xsr-box">
@@ -410,16 +512,18 @@ function xsShowReview(){
     <div class="xsr-head">📖 เฉลยละเอียด · ${escapeHTML(p.label)}
       <span class="xsr-sub">อ่านเฉลยให้ครบก่อนสอบรอบหน้า — ตัวลวงของข้อสอบมาตรฐานมักซ้ำรูปแบบเดิม</span></div>
     <div class="xsr-tabs">
-      <button class="xsr-tab on" data-w="1">❌ ข้อที่ตอบผิด</button>
-      <button class="xsr-tab" data-w="0">📋 ทุกข้อ (${p.items.length})</button>
+      <button class="xsr-tab on" data-t="wrong">❌ ข้อที่ตอบผิด</button>
+      <button class="xsr-tab" data-t="all">📋 ทุกข้อ (${p.items.length})</button>
+      <button class="xsr-tab" data-t="time">⏱️ เวลาแต่ละส่วน</button>
     </div>
     <div class="xsr-list" id="xsr-list"></div>
     <div class="xsr-foot"><button class="xsr-ok" id="xsr-ok">เข้าใจแล้ว ปิด</button></div>
   </div>`;
   const draw = ()=>{
-    const rows = p.items.map((it, i)=>({it, i, ok:XS.ans[i] === it.a}))
-                        .filter(r=>!onlyWrong || !r.ok);
     const list = ov.querySelector('#xsr-list');
+    if(tab === 'time'){ list.innerHTML = xsTimeTableHTML(); list.scrollTop = 0; return; }
+    const rows = p.items.map((it, i)=>({it, i, ok:XS.ans[i] === it.a}))
+                        .filter(r=>tab !== 'wrong' || !r.ok);
     if(!rows.length){
       list.innerHTML = `<div class="xsr-none">🌟 ไม่มีข้อผิดเลย เต็มทั้งชุด! กดแท็บ "ทุกข้อ" เพื่อทบทวนเฉลยได้</div>`;
       return;
@@ -444,7 +548,7 @@ function xsShowReview(){
   ov.querySelector('.xsr-tabs').addEventListener('click', ev=>{
     const b = ev.target.closest('.xsr-tab');
     if(!b) return;
-    onlyWrong = b.dataset.w === '1';
+    tab = b.dataset.t;
     ov.querySelectorAll('.xsr-tab').forEach(t=>t.classList.toggle('on', t === b));
     draw();
   });
@@ -473,8 +577,10 @@ function openExamStdPicker(exam){
   ov.innerHTML = `<div class="xsp-box">
     <button class="pl-close" id="xsp-close">✕</button>
     <div class="xsp-head">${m.emoji} ข้อสอบจริงแบบมาตรฐาน · ${escapeHTML(m.label)}
+      <button class="bax-rank" id="xsp-rank">🏁 อันดับ</button>
       <span class="xsp-sub">${escapeHTML(m.sub)} · ${m.sets.length} ชุด × ${m.sets[0].q} ข้อ · ทุกข้อมีเฉลยละเอียด
-        <br>⏱️ เวลาแนะนำ ${XS_TIME_HINT[exam] || '-'} นาที/ชุด · ผ่านที่ ${Math.round(XS_PASS_PCT * 100)}% ขึ้นไป รับ ${fmtNum(XS_REWARD)} 🪙 + ใบประกาศ 🎖️</span></div>
+        <br>⏱️ เวลาของสนามสอบนี้ ${Math.round(xsLimitSec(exam) / 60)} นาที/ชุด (2 โหมดแรกเป็นเวลาแนะนำ ไม่ตัดจบ · โหมดจับเวลาจริงตัดจบอัตโนมัติ) ·
+        ผ่านที่ ${Math.round(XS_PASS_PCT * 100)}% ขึ้นไป รับ ${fmtNum(XS_REWARD)} 🪙 + ใบประกาศ 🎖️</span></div>
     <div class="xsp-rows">${m.sets.map(s=>{
       const best = xsBest(s.id);
       const done = state.quizPassed.includes(xsQuizId(s.id));
@@ -484,8 +590,11 @@ function openExamStdPicker(exam){
         <div class="xsp-best">${best ? `คะแนนสูงสุด <b>${best.s}/${best.t}</b>${best.sec ? ` · ⏱️ ${xsFmt(best.sec)}` : ''} · ผ่านที่ ${passMark(s)} ข้อ`
           : `ยังไม่เคยสอบชุดนี้ · ผ่านที่ ${passMark(s)} ข้อ`}</div>
         <div class="xsp-btns">
-          <button class="xsp-go exam" data-set="${s.id}">📋 สอบจริง (เฉลยตอนจบ)</button>
-          <button class="xsp-go practice" data-set="${s.id}">🎓 โหมดฝึก (เฉลยทันทีทุกข้อ)</button>
+          <button class="xsp-go exam" data-set="${s.id}" data-mode="exam">📋 สอบจริง (เฉลยตอนจบ)</button>
+          <button class="xsp-go practice" data-set="${s.id}" data-mode="practice">🎓 โหมดฝึก (เฉลยทันทีทุกข้อ)</button>
+          <button class="xsp-go timed" data-set="${s.id}" data-mode="timed"
+            ><span class="xsp-lg">⏱️ สอบจับเวลาจริง ${Math.round(xsLimitSec(exam) / 60)} นาที · หมดเวลาส่งอัตโนมัติ + สถิติเวลาต่อส่วน</span
+            ><span class="xsp-sm">⏱️ จับเวลาจริง ${Math.round(xsLimitSec(exam) / 60)} นาที</span></button>
         </div>
       </div>`;
     }).join('')}</div>
@@ -495,12 +604,125 @@ function openExamStdPicker(exam){
   document.body.appendChild(ov);
   ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
   ov.querySelector('#xsp-close').addEventListener('click', ()=>ov.remove());
+  ov.querySelector('#xsp-rank').addEventListener('click', ()=>openExamStdRank(exam));
   ov.querySelector('.xsp-rows').addEventListener('click', ev=>{
     const b = ev.target.closest('.xsp-go');
     if(!b) return;
     toast('⏳ กำลังเปิดชุดข้อสอบ...');
-    examStdStart(b.dataset.set, b.classList.contains('practice') ? 'practice' : 'exam');
+    examStdStart(b.dataset.set, b.dataset.mode || 'exam');
   });
+}
+
+/* ============================================================
+   🏁 กระดานอันดับ "ข้อสอบจริงคะแนนสูงสุด/เร็วสุด" (รอบ 815) — รายชุดข้อสอบ (ielts_1, toeic_2 ฯลฯ)
+   สูตรเดียวกับ bxRankRows/bxRankMount/bxRankNote ในกระดาน "สอบใหญ่เร็วที่สุด" (js/bandadv.js รอบ 786)
+   — ใช้ bxrRowHTML/bxRankNote/BXR_TOP ร่วมกับ bandadv.js ตรง ๆ ไม่เขียนซ้ำ · คลาส CSS ก็ใช้ .bxr-* เดิม ไม่เพิ่ม CSS ใหม่
+   ⚠️ ไม่เพิ่มโซนใน DB / ไม่ publish rules ใหม่ — อ่านจากของที่มีอยู่แล้ว 2 ทาง:
+     ① เพื่อน = โพสต์ในฟีดรวม Online.gfeed (feedEvent ใน xsFinish ด้านบน เขียนว่า
+        "สอบผ่านข้อสอบ <p.label> <sc>/<tt> ข้อ ⏱️ m:ss 📋" — เปลี่ยนจาก p.examMeta.label เป็น p.label
+        รอบนี้เพื่อให้ label มีชื่อ "ชุดที่ N" ต่อท้าย แยกแต่ละชุดออกจากกันได้ — โพสต์เก่าก่อนรอบนี้จะไม่ถูกนับ)
+     ② ตัวเรา = ใบประกาศ state.certs (id = xsQuizId(setId)) → เห็นสถิติตัวเองเสมอแม้โพสต์หลุด/ออฟไลน์
+   ⇒ เรียง "คะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน" (โจทย์นี้ขอคะแนนก่อนเวลา
+     ต่างจาก bxRankRows เดิมที่เรียงเวลาก่อนอย่างเดียว — เก็บไว้เป็นสูตรที่ต่างกันของ 2 ระบบ)
+   ============================================================ */
+const __XRK_POST_RE = /^สอบผ่านข้อสอบ\s+(.+?)\s+(\d+)\s*\/\s*(\d+)\s*ข้อ\s*⏱️\s*(\d+):([0-5]\d)/;
+
+/* label เต็มของชุด (เช่น "IELTS Academic · ชุดที่ 1") → setId — หาใหม่ทุกครั้ง รองรับชุดที่เพิ่มมาใหม่ */
+function xrkIdByLabel(label){
+  if(typeof EXAM_STD_MANIFEST === 'undefined') return '';
+  const lb = String(label || '').trim();
+  for(const k in EXAM_STD_MANIFEST){
+    const s = EXAM_STD_MANIFEST[k].sets.find(x=>x.label === lb);
+    if(s) return s.id;
+  }
+  return '';
+}
+/* แถวอันดับของชุดข้อสอบเดียว (setId) — คะแนนสูงสุดก่อน เวลาเร็วสุดตัดสิน · 1 คนต่อ 1 แถว (เก็บแถวที่ดีที่สุด) */
+function xrkRows(setId){
+  const by = {};                       // uid → แถว
+  const put = (uid, row)=>{
+    const old = by[uid];
+    if(!old || row.sc / row.tt > old.sc / old.tt
+      || (row.sc / row.tt === old.sc / old.tt && row.sec < old.sec)) by[uid] = Object.assign({}, old, row);
+  };
+  // ① จากฟีดรวม (เพื่อนทั้งเกม)
+  const posts = (typeof Online !== 'undefined' && Array.isArray(Online.gfeed)) ? Online.gfeed : [];
+  posts.forEach(p=>{
+    if(!p || p.c !== 'quiz') return;
+    const m = __XRK_POST_RE.exec(String(p.tx || '').trim());
+    if(!m || xrkIdByLabel(m[1]) !== setId) return;
+    put(p.u, {uid:p.u, name:p.n || 'เพื่อน', g:p.g || '', sc:Number(m[2]), tt:Number(m[3]),
+              sec:Number(m[4]) * 60 + Number(m[5]), ts:p.ts || 0});
+  });
+  // ② ของเราจากใบประกาศ (ทับของฟีดถ้าดีกว่า)
+  const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
+  const cid = xsQuizId(setId);
+  const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
+    ? state.certs.find(c=>c.id === cid && c.sec) : null;
+  if(cert){
+    put(me, {uid:me, name:(typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || (state.student && state.student.name) || 'หนู',
+             g:(state.student && state.student.grade) || '', sc:cert.sc, tt:cert.tt, sec:cert.sec, ts:cert.ts || 0});
+  }
+  return Object.keys(by).map(u=>{
+    const r = by[u];
+    r.me = (u === me);
+    return r;
+  }).sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
+}
+/* เนื้อกระดาน — วาดแถวด้วย bxrRowHTML ของ js/bandadv.js เลย (ฟอร์แมตเดียวกัน ไม่เขียนซ้ำ) */
+function xrkBodyHTML(setId){
+  const rows = xrkRows(setId);
+  if(!rows.length){
+    return `<div class="bxr-none">ยังไม่มีใครสอบผ่านชุดนี้ในกิจกรรมล่าสุดเลย — สอบผ่านคนแรกแล้วขึ้นกระดานเลย! 🏁</div>`;
+  }
+  const top = rows.slice(0, (typeof BXR_TOP !== 'undefined') ? BXR_TOP : 8);
+  const meAt = rows.findIndex(r=>r.me);
+  return top.map(bxrRowHTML).join('')
+    + (meAt >= top.length ? `<div class="bxr-more">…</div>${bxrRowHTML(rows[meAt], meAt)}` : '');
+}
+/* 🏁 ตัวกระดาน (ชิปเลือกสนามสอบ + ชุด + รายชื่อ) — ใช้คลาส .bxr-* ร่วมกับ js/bandadv.js ทั้งชุด */
+let __xrkExam = '', __xrkSet = '';
+function xrkMount(box, exam){
+  if(!box || typeof EXAM_STD_MANIFEST === 'undefined') return;
+  const keys = Object.keys(EXAM_STD_MANIFEST);
+  if(!keys.length) return;
+  __xrkExam = (exam && EXAM_STD_MANIFEST[exam]) ? exam : (EXAM_STD_MANIFEST[__xrkExam] ? __xrkExam : keys[0]);
+  if(!EXAM_STD_MANIFEST[__xrkExam].sets.find(s=>s.id === __xrkSet)) __xrkSet = EXAM_STD_MANIFEST[__xrkExam].sets[0].id;
+  const draw = ()=>{
+    const m = EXAM_STD_MANIFEST[__xrkExam];
+    box.innerHTML = `
+      <div class="bxr-pick">
+        <div class="bxr-cats">${keys.map(k=>`<button class="bxr-chip${k === __xrkExam ? ' on' : ''}" data-exam="${k}">${EXAM_STD_MANIFEST[k].emoji} ${escapeHTML(EXAM_STD_MANIFEST[k].label)}</button>`).join('')}</div>
+        <div class="bxr-lvs">${m.sets.map(s=>`<button class="bxr-chip lv${s.id === __xrkSet ? ' on' : ''}" data-set="${s.id}">${escapeHTML(s.label.split('·').pop().trim())}</button>`).join('')}</div>
+      </div>
+      <div class="bxr-list">${xrkBodyHTML(__xrkSet)}</div>
+      <div class="bxr-foot">${m.emoji} ${escapeHTML(m.label)} · เรียงคะแนนสูงสุดก่อน แล้วเวลาเร็วสุดตัดสินเมื่อคะแนนเท่ากัน (เวลาบนกระดาน = ตัวเดียวกับที่พิมพ์บนใบประกาศ)</div>`;
+    box.querySelector('.bxr-pick').addEventListener('click', ev=>{
+      const b = ev.target.closest('.bxr-chip');
+      if(!b) return;
+      if(b.dataset.exam){ __xrkExam = b.dataset.exam; __xrkSet = EXAM_STD_MANIFEST[__xrkExam].sets[0].id; }
+      else if(b.dataset.set) __xrkSet = b.dataset.set;
+      if(typeof sfx !== 'undefined' && sfx.click) sfx.click();
+      draw();
+    });
+  };
+  draw();
+}
+/* แผงป๊อปอัป (เปิดจากปุ่ม 🏁 อันดับ ในแผงเลือกชุดข้อสอบ) — กล่อง/หัวใช้ .bxr-box/.bxr-head เดิมจาก css/style.css เลย ไม่เพิ่ม CSS ใหม่ */
+function openExamStdRank(exam){
+  const old = document.getElementById('xrk-overlay');
+  if(old) old.remove();
+  const ov = document.createElement('div');
+  ov.id = 'xrk-overlay'; ov.className = 'pl-overlay';
+  ov.innerHTML = `<div class="bxr-box">
+      <button class="pl-close" id="xrk-close">✕</button>
+      <div class="bxr-head">🏁 ข้อสอบจริงคะแนนสูงสุด/เร็วสุด<span class="bxr-sub">${(typeof bxRankNote === 'function') ? bxRankNote() : ''}</span></div>
+      <div class="bxr-body"></div>
+    </div>`;
+  document.body.appendChild(ov);
+  xrkMount(ov.querySelector('.bxr-body'), exam);
+  ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
+  ov.querySelector('#xrk-close').addEventListener('click', ()=>ov.remove());
 }
 
 /* การ์ด 3 สนามสอบ ต่อท้ายหน้า "หมวดคำศัพท์ & แบบทดสอบ" (เรียกจาก renderCats ใน game.js) */
@@ -513,7 +735,7 @@ function examStdCardsHTML(){
     .filter(s=>state.quizPassed.includes(xsQuizId(s.id))).length, 0);
   return `<div class="band-sec-head">📋 ข้อสอบจริงแบบมาตรฐาน
       <small>โจทย์เลือกตอบแนวข้อสอบจริง ไวยากรณ์ + การอ่านจับใจความ ${EXAM_STD_MANIFEST[keys[0]].sets[0].q} ข้อ/ชุด พร้อมเฉลยละเอียดทุกข้อ ·
-        ผ่านแล้ว ${passedN}/${allSets} ชุด</small></div>`
+        3 โหมด: สอบจริง / ฝึก (เฉลยทันที) / ⏱️ จับเวลาจริงตัดจบอัตโนมัติ · ผ่านแล้ว ${passedN}/${allSets} ชุด</small></div>`
     + keys.map(k=>{
       const m = EXAM_STD_MANIFEST[k];
       const nq = m.sets.reduce((n, s)=>n + s.q, 0);
