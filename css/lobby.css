@@ -1566,9 +1566,28 @@ html.no-anim .q-bigcard{animation:none;}
 }
 
 /* ---------- แถบล่าง: ปุ่มเล่นเกม ---------- */
-.lobby-bottom{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0;}
+/* 🔄 รอบ 834: ปุ่มเยอะขึ้น (เพิ่ม IELTS/TOEIC/TOEFL) → แถบเลื่อนแนวนอนได้เองเมื่อที่ไม่พอ
+   ⚠️ ห้ามใช้ justify-content:flex-end คู่กับ overflow-x (ปุ่มตัวแรกจะล้นออกซ้ายแล้วเลื่อนไปหาไม่ได้)
+      → ใช้ margin-left:auto ที่ปุ่มแรกแทน: มีที่เหลือ=ชิดขวาเหมือนเดิม · ไม่พอ=ยุบเป็น 0 เลื่อนได้ครบ
+   ⚠️ padding-bottom/margin-bottom หักล้างกัน = เผื่อที่ให้เงา 3 มิติใต้ปุ่ม (0 6px 0) ไม่โดน overflow ตัด
+      โดยความสูง footer เท่าเดิมเป๊ะ ไม่ไปเบียดเวทีสัตว์ (กฎทองข้อ 7 จอเตี้ย) */
+.lobby-bottom{display:flex;align-items:center;gap:10px;flex-shrink:0;
+  overflow-x:auto;overflow-y:hidden;padding-bottom:7px;margin-bottom:-7px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+.lobby-bottom::-webkit-scrollbar{display:none;}
+.lobby-bottom > :first-child{margin-left:auto;}
 /* ป้ายอากาศออกจาก footer แล้ว (ย้ายไปดูในการ์ดบ้าน) — ปุ่มห้ามตัด 2 บรรทัด */
-.lobby-bottom .big-btn{width:auto;display:inline-block;margin:0;white-space:nowrap;}
+.lobby-bottom .big-btn{width:auto;display:inline-block;margin:0;white-space:nowrap;flex:0 0 auto;}
+/* 📘📗📙 รอบ 834: ปุ่มลัดข้อสอบมาตรฐานแยกสนามสอบ — สีเดียวกับอิโมจิหนังสือของแต่ละสนาม
+   ⚠️ ต้องเขียน `.lobby-bottom .lobby-std-btn` (2 คลาส) ไม่ใช่ `.lobby-std-btn` เฉย ๆ —
+      `.lobby-quiz-btn{padding:… !important}` อยู่ท้ายกว่าในไฟล์ ถ้าเสมอกันมันชนะ padding จะไม่ลด */
+.lobby-bottom .lobby-std-btn{padding:9px 12px !important;}
+.lobby-bottom .lobby-std-btn.ielts{background:linear-gradient(180deg,#8fc7f7,#5b9fd6) !important;box-shadow:0 6px 0 #3d7fb5 !important;}
+.lobby-bottom .lobby-std-btn.ielts:active{box-shadow:0 2px 0 #3d7fb5 !important;}
+.lobby-bottom .lobby-std-btn.toeic{background:linear-gradient(180deg,#9ee0a8,#5fbf72) !important;box-shadow:0 6px 0 #358550 !important;}
+.lobby-bottom .lobby-std-btn.toeic:active{box-shadow:0 2px 0 #358550 !important;}
+.lobby-bottom .lobby-std-btn.toefl{background:linear-gradient(180deg,#ffc98f,#f0973c) !important;color:#5a3c05 !important;box-shadow:0 6px 0 #c8801f !important;}
+.lobby-bottom .lobby-std-btn.toefl:active{box-shadow:0 2px 0 #c8801f !important;}
 .lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
 .lobby-book-btn{padding:9px 13px !important;font-size:18px !important;background:linear-gradient(180deg,#f7bf8f,#e8945a);box-shadow:0 6px 0 #c06f33;}   /* 📒 สมุดคำศัพท์ — ไอคอนเดี่ยว ประหยัดที่แถบล่าง */
 .lobby-book-btn:active{box-shadow:0 2px 0 #c06f33;}

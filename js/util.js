@@ -996,7 +996,7 @@ function openTeacherGuide(){
   document.body.appendChild(overlay);
 }
 
-/* ✨ รอบ 831/833: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — delegate ตัวเดียวจบทั้งเกม
+/* ✨ รอบ 831/834: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — delegate ตัวเดียวจบทั้งเกม
    ครอบทั้งปุ่มแนวตั้ง (รางเมนูซ้าย) และแนวนอน (แถบล่าง Lobby) โดยไม่ต้องแปะ class ทีละปุ่ม ·
    ปุ่มอื่นที่อยากได้ effect นี้เพิ่ม ใส่ class "tapglow" ในมาร์กอัปได้เลย (CSS อยู่ท้าย css/style.css) */
 const TAPGLOW_SEL = '.tapglow, .rail-btn, .lobby-bottom .big-btn';

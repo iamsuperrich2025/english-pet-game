@@ -1073,28 +1073,29 @@ html.no-anim body.quake{animation:none;}
 .cat-btn.practice{background:linear-gradient(180deg,#8fc7f7,#5b9fd6);box-shadow:0 3px 0 #3d7fb5;}
 .cat-btn.quiz{background:linear-gradient(180deg,#c39df0,#9a6fdc);box-shadow:0 3px 0 #7d5fc0;}
 
-/* 🚀 รอบ 831: แถบปุ่มลัด IELTS/TOEIC/TOEFL ท้ายหน้าหมวดคำศัพท์ (เลื่อนแนวนอนได้ถ้าจอแคบ) + ปุ่มกลับซ้ำท้ายหน้า */
-.cats-quick-exam{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;margin-top:14px;-webkit-overflow-scrolling:touch;}
-.quick-exam-btn{flex:0 0 auto;border:none;border-radius:999px;padding:10px 18px;font-family:inherit;
-  font-size:14.5px;font-weight:bold;color:#fff;cursor:pointer;white-space:nowrap;}
-.quick-exam-btn[data-xstd="ielts"]{background:linear-gradient(180deg,#8fc7f7,#5b9fd6);box-shadow:0 3px 0 #3d7fb5;}
-.quick-exam-btn[data-xstd="toeic"]{background:linear-gradient(180deg,#9ee0a8,#5fbf72);box-shadow:0 3px 0 #358550;}
-.quick-exam-btn[data-xstd="toefl"]{background:linear-gradient(180deg,#ffc98f,#f0973c);box-shadow:0 3px 0 #c8801f;}
-.cats-back-bottom{display:block;margin:4px auto 18px;}
+/* ⬅️ รอบ 831: ปุ่มกลับซ้ำท้ายหน้าหมวดคำศัพท์ (รายการยาว ไม่ต้องเลื่อนขึ้นไปกดข้างบน) */
+.cats-back-bottom{display:block;margin:14px auto 18px;}
 
-/* ✨ รอบ 831: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง) — ปุ่มไหนอยากได้ effect นี้ใส่ class "tapglow"
-   ทำงานคู่กับตัวจับ pointerdown ท้าย js/util.js ไม่ต้องเขียน JS ใหม่ต่อปุ่ม */
-.tapglow{position:relative;}
-.tapglow::after{
-  content:"";position:absolute;left:10%;right:10%;bottom:-7px;height:12px;border-radius:50%;
-  background:radial-gradient(ellipse at center, rgba(255,225,140,.95) 0%, rgba(255,225,140,0) 72%);
-  opacity:0;pointer-events:none;filter:blur(1px);
+/* ✨ รอบ 831/834: แสงใต้ปุ่มโชว์แป๊บเดียวตอนกด (ผู้ใช้สั่ง — ทั้งปุ่มแนวตั้งในรางเมนูและแนวนอนแถบล่าง)
+   ปุ่มไหนอยากได้เพิ่มอีก แค่ใส่ class "tapglow" · รางเมนู (.rail-btn) กับแถบล่าง (.lobby-bottom .big-btn)
+   ได้อัตโนมัติทุกปุ่มโดยไม่ต้องแปะทีละตัว — ตัวจับ pointerdown อยู่ท้าย js/util.js */
+.tapglow,.rail-btn,.lobby-bottom .big-btn{position:relative;}
+.tapglow::after,.rail-btn::after,.lobby-bottom .big-btn::after{
+  content:"";position:absolute;left:8%;right:8%;bottom:-8px;height:14px;border-radius:50%;
+  background:radial-gradient(ellipse at center, rgba(255,231,150,.98) 0%, rgba(255,205,90,.55) 45%, rgba(255,205,90,0) 74%);
+  opacity:0;pointer-events:none;
 }
-.tapglow.tapglow-on::after{animation:tapglowFade .5s ease-out forwards;}
+/* ⚠️ แถบล่างติดขอบจอ → ใต้ปุ่มเหลือที่น้อยมาก ถ้าวางแสงต่ำเท่าปุ่มอื่นจะถูก overflow ของแถบตัดหาย
+   → ขยับให้คาบเกี่ยวขอบล่างปุ่ม (โผล่ใต้ปุ่มแค่ 5px ซึ่งยังอยู่ใน padding-bottom:7px ของแถบ) */
+.lobby-bottom .big-btn::after{bottom:-5px;height:14px;left:14%;right:14%;}
+.tapglow.tapglow-on::after,.rail-btn.tapglow-on::after,.lobby-bottom .big-btn.tapglow-on::after{
+  animation:tapglowFade .5s ease-out forwards;
+}
 @keyframes tapglowFade{
-  0%{opacity:1;transform:scale(.8);}
-  100%{opacity:0;transform:scale(1.25);}
+  0%{opacity:1;transform:scale(.75);}
+  100%{opacity:0;transform:scale(1.3);}
 }
+html.no-anim .tapglow-on::after{animation:none !important;}
 
 /* ---------- คลังศัพท์ใหญ่ band 1-5 (dictband.js · รอบ 264) ---------- */
 .band-sec-head{margin:20px 4px 10px;font-size:17px;font-weight:bold;color:#5a4a6e;}

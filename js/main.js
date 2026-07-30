@@ -80,10 +80,11 @@ document.getElementById('btn-rail-rank').addEventListener('click', ()=>{
   if(typeof openLeaderboardFull === 'function') openLeaderboardFull();
 });
 document.getElementById('btn-cats-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
-// 🚀 รอบ 831: ปุ่มกลับซ้ำท้ายหน้า + ปุ่มลัด IELTS/TOEIC/TOEFL (เปิด picker ตรง ไม่ต้องเลื่อนหาการ์ด)
+// ⬅️ รอบ 831: ปุ่มกลับซ้ำท้ายหน้าหมวดคำศัพท์ (รายการยาว ไม่ต้องเลื่อนขึ้นไปกดข้างบน)
 document.getElementById('btn-cats-back-bottom').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
-document.getElementById('cats-quick-exam').addEventListener('click', e=>{
-  const b = e.target.closest('.quick-exam-btn');
+// 📘📗📙 รอบ 834: ปุ่มลัด IELTS/TOEIC/TOEFL ในแถบล่าง Lobby → เปิดแผงเลือกชุดของสนามนั้นตรง ๆ
+document.getElementById('lobby-bottom').addEventListener('click', e=>{
+  const b = e.target.closest('.lobby-std-btn');
   if(!b || typeof openExamStdPicker !== 'function') return;
   openExamStdPicker(b.dataset.xstd);
 });
