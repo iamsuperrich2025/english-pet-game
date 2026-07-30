@@ -9991,7 +9991,13 @@ function soccerBuildTargets(){
    (กันจุดซ้ำเดิม: ถ้าสุ่มได้ใกล้ที่เดิมมาก ให้สุ่มใหม่ ผู้เล่นจะได้ต้องเล็งใหม่ทุกครั้ง) */
 function soccerNextTile(l){
   const need=soccerNeededSet();
-  const nextCh = need.length ? need[0] : l.ch;
+  /* 🐛 รอบ 855 (ผู้ใช้: "ตัวอักษรใน goal ไม่ยอมเปลี่ยนสักที ทั้งที่ยิงโดนแล้ว"): เดิมเอา need[0] เสมอ
+     แต่ลำดับ need เรียงตามตัวสะกดของคำ → คำแบบ eye (e ซ้ำ 2) หรือ e ที่โผล่ในหลายคำ ทำให้ need[0]
+     เป็นตัวเดิมซ้ำติดกันหลายลูก ป้ายเลยดู "ไม่เปลี่ยน" ทั้งที่ระบบเก็บให้จริง
+     ใหม่: ถ้าตัวแรกซ้ำกับที่เพิ่งยิง ให้ข้ามไปตัวถัดไปที่ต่างออกไปก่อน (คำยังครบได้เหมือนเดิม —
+     tryCompleteWords นับจาก inv ไม่สนลำดับเก็บ) · ซ้ำได้เฉพาะกรณีเหลือตัวเดียวล้วนจริง ๆ */
+  let nextCh = need.length ? need[0] : l.ch;
+  if(nextCh===l.ch && need.length){ const alt=need.find(c=>c!==l.ch); if(alt) nextCh=alt; }
   const old=l.spr.position;
   let p=soccerLetterPos(), guard=0;
   while(guard++<8 && Math.hypot(p.x-old.x,p.y-old.y)<2.2) p=soccerLetterPos();
@@ -12292,7 +12298,12 @@ window.Adventure3D={
       player:soccerPlayer?{x:+soccerPlayer.position.x.toFixed(3),z:+soccerPlayer.position.z.toFixed(3),
         ry:+soccerPlayer.rotation.y.toFixed(3),rx:+soccerPlayer.rotation.x.toFixed(3)}:null,
       base:{x:sBaseX,z:sBaseZ}, launch:kickLaunch, kick:soccerKick,
-      setAim(y,p){ aimYaw=y; if(p!=null) aimPitch=p; }, setCharge(v){ sChg=v; sCharging=v>0; } }; },
+      setAim(y,p){ aimYaw=y; if(p!=null) aimPitch=p; }, setCharge(v){ sChg=v; sCharging=v>0; },
+      // 🎯 รอบ 855: วาร์ปบอลไปชนป้ายตรง ๆ (ข้าม RNG การเล็ง — เทสต์ระบบป้ายเปลี่ยนตัวอักษร)
+      teleportBall(x,y,z,vx,vy,vz){ soccerBall.position.set(x,y,z); sbVel.x=vx||0; sbVel.y=vy||0; sbVel.z=vz==null?-8:vz;
+        sbLive=true; sbGoaled=true; sbKickAt=performance.now(); },
+      get wordsInfo(){ return words.map(w=>({en:w.en,done:w.done})); },
+      get invNow(){ return {...inv}; } }; },
   },
 };
 })();
