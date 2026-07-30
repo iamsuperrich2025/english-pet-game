@@ -109,6 +109,23 @@ let padBr=false, gearR=false, kBack=false;            // 🦶 เบรก (ก�
 let carRevBeepAt=0, carCam3=false;                   // จังหวะ "ติ๊ด" ถอยหลัง · มุมมองที่ 3 (คีย์ V)
 let dashEl=null, wheelBoxEl=null, gaugeCv=null, gaugeCtx=null;   // ห้องคนขับ
 let brakeEl=null, gearEl=null, hornEl=null;                      // ปุ่มบังคับเพิ่มบนเครื่องเกม
+/* 🪞📷 รอบ 810: กล้องกระจกมองหลัง/ข้าง — เลซี่สร้างครั้งแรกที่ใช้ (เหมือน bellyCam ของโลกเมือง) */
+let mirrorRearCam=null, mirrorLCam=null, mirrorRCam=null, scrW=0, scrH=0;
+const MIRROR_REAR={l:.33,t:.01,w:.34,h:.09}, MIRROR_L={l:.01,t:.01,w:.20,h:.09}, MIRROR_R={l:.79,t:.01,w:.20,h:.09};
+/* 🎵📻 รอบ 810: วิทยุในรถ — พิกัดจอ head-unit ต่อคัน (พิกเซลภาพ dash จริง 1536×1024)
+   ก็อปค่าจาก CAR_RADIO_RECT ของ adventure3d.js ตรงๆ (ภาพ dash ชุดเดียวกัน object-position 50% 65% เหมือนกันเป๊ะ
+   คนละไฟล์/คนละ IIFE เลยคัดลอกค่าคงที่มาแทนอ้างอิงข้ามไฟล์ — แก้ค่าต้องแก้ 2 ที่ถ้าเปลี่ยนพิกัดจอในภาพ dash ใหม่) */
+let dashImgEl=null;
+const RADIO_RECT=[560,514,835,606];
+const CAR_RADIO_RECT={
+  car_01:[555,456,856,606], car_02:[585,518,821,652], car_03:[555,524,787,645],
+  car_04:[506,471,789,591], car_05:[512,543,749,669], car_06:[550,500,788,606],
+  car_07:[563,580,782,685], car_08:[528,598,710,700], car_09:[550,501,786,592],
+  car_10:[521,520,808,669],
+};
+function carRadioRect(){ const c=(typeof myCar==='function'&&myCar())?myCar():null; return (c&&CAR_RADIO_RECT[c.id])||RADIO_RECT; }
+let radioScreenEl=null, radioVizCv=null, radioVizCtx=null, radioHintEl=null, radioListEl=null;
+let radioBars=new Float32Array(32);
 
 /* 🔊 เสียงเครื่องยนต์รถยนต์สังเคราะห์ — พอร์ตจาก CarSound (adventure3d.js) ทั้งชุด
    ต่างจากต้นทางแค่ "มี master gain" ตัวเดียวคุมทุกเสียง เพื่อปิดให้เกลี้ยงตอนออกจากโลก (กฎเสียง HANDOFF) */
@@ -492,6 +509,63 @@ const CSS=`
 #moto-wrap.car.cockpit #moto-chat{bottom:44%}
 #moto-wrap.car.cockpit #moto-chatbar{bottom:54%}
 #moto-wrap.car.cockpit #moto-selfmsg{bottom:36%}
+/* ============================================================
+   🪞📷 รอบ 810: กระจกมองหลัง+ข้าง (เฉพาะโหมดรถยนต์ในห้องคนขับ) — ภาพจริงจากกล้อง 3D ตัวที่ 2/3/4
+   เรนเดอร์ฉากเดิมซ้ำด้วยกล้องหันหลัง/เฉียงข้าง แล้วยัดลงแถบบนจอ (scissor) — สูตรเดียวกับ belly cam ของโลกเมือง (heli)
+   วางเป็นแถบบนสุด 3 ช่อง (ซ้าย-กลาง-ขวา) แล้วดัน GPS/เหรียญ/กระดานคะแนน/คำศัพท์ลงมาให้พ้นแถบ (คลาส car.cockpit เท่านั้น — มอไซค์ไม่กระทบ)
+   ============================================================ */
+#moto-wrap.car.cockpit #moto-gps{top:11.5%}
+#moto-wrap.car.cockpit #moto-coins{top:11.5%}
+#moto-wrap.car.cockpit #moto-board{top:19.5%}
+#moto-wrap.car.cockpit #moto-word{top:13%}
+.m-mirror{position:absolute;top:1%;height:9%;border-radius:.9vmin;pointer-events:none;z-index:1;display:none;
+  border:.35vmin solid rgba(18,20,24,.94);
+  box-shadow:0 .3vmin .8vmin rgba(0,0,0,.5), inset 0 0 1.6vmin rgba(0,0,0,.4)}
+#moto-wrap.car.cockpit .m-mirror{display:block}
+.m-mirror::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,0) 35%)}
+.m-mirror.rear{left:50%;transform:translateX(-50%);width:34%}
+.m-mirror.l{left:1%;width:20%}
+.m-mirror.r{right:1%;width:20%}
+/* 🎵📻 รอบ 810: วิทยุในรถ — จอ head-unit บนแดชบอร์ด (พอร์ตจาก adventure3d.js โลกเมือง ทั้งชุด) */
+#moto-radio-screen{position:absolute;display:none;z-index:5;cursor:pointer;overflow:hidden;
+  border-radius:3px;box-shadow:0 0 0 1px rgba(90,190,255,.25) inset,0 0 12px rgba(70,160,255,.22)}
+#moto-radio-viz{position:absolute;inset:0;width:100%;height:100%;display:block}
+#moto-radio-hint{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;text-align:center;pointer-events:none;line-height:1.1}
+#moto-radio-hint b{color:#8fe0ff;font-size:1.4vmin;letter-spacing:1px;
+  text-shadow:0 0 8px rgba(80,180,255,.8);animation:mradioPulse 1.8s ease-in-out infinite}
+#moto-radio-hint span{color:#bcd7f0;font-size:1.1vmin}
+@keyframes mradioPulse{0%,100%{opacity:.55}50%{opacity:1}}
+#moto-radio-screen.playing{box-shadow:0 0 0 1px rgba(120,220,255,.5) inset,0 0 18px rgba(80,190,255,.4)}
+#moto-radio-list{position:absolute;z-index:9;display:none;padding:9px 10px;
+  background:linear-gradient(165deg,rgba(18,44,80,.97),rgba(6,18,40,.98));
+  border:1px solid rgba(95,200,255,.5);border-radius:12px;color:#dcebfb;
+  box-shadow:0 10px 30px rgba(2,10,28,.7),inset 0 0 22px rgba(80,180,255,.08)}
+#moto-radio-list .rl-head{display:flex;align-items:center;justify-content:space-between;
+  font-size:12px;font-weight:800;color:#eaf7ff;margin-bottom:7px;letter-spacing:.5px}
+#moto-radio-list .rl-x{border:none;background:rgba(255,255,255,.1);color:#cfe4fa;border-radius:7px;
+  width:22px;height:22px;cursor:pointer;font-size:12px}
+#moto-radio-list .rl-tracks{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:9px;max-height:120px;overflow-y:auto;scrollbar-width:none}
+#moto-radio-list .rl-tracks::-webkit-scrollbar{display:none}
+#moto-radio-list .rl-track{display:flex;align-items:center;gap:5px;cursor:pointer;
+  padding:5px 11px;border-radius:8px;font-size:12px;font-weight:700;font-family:inherit;
+  background:rgba(11,31,66,.6);color:#bdd8f2;border:1px solid rgba(95,200,255,.28)}
+#moto-radio-list .rl-track .rl-eq{font-size:10px;color:#7fd0ff}
+#moto-radio-list .rl-track.on{background:linear-gradient(180deg,#2a7fd0,#1a5296);color:#fff;
+  border-color:rgba(150,225,255,.8);box-shadow:0 0 10px rgba(80,180,255,.5)}
+#moto-radio-list .rl-modes{display:flex;gap:6px;margin-bottom:8px}
+#moto-radio-list .rl-mode{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;
+  padding:6px 4px;border-radius:9px;font-size:11px;font-weight:800;font-family:inherit;line-height:1.1;
+  background:rgba(11,31,66,.55);color:#a9c8e8;border:1px solid rgba(95,200,255,.3)}
+#moto-radio-list .rl-mode small{font-size:9px;font-weight:600;color:#8fb3d8}
+#moto-radio-list .rl-mode.on{background:linear-gradient(180deg,#37b6ff,#2160c8);color:#fff;
+  border-color:rgba(150,225,255,.85);box-shadow:0 0 12px rgba(80,180,255,.55)}
+#moto-radio-list .rl-mode.on small{color:#dcefff}
+#moto-radio-list .rl-power{width:100%;cursor:pointer;padding:6px;border-radius:9px;
+  font-size:11.5px;font-weight:800;font-family:inherit;
+  background:rgba(70,20,32,.7);color:#ffc9cf;border:1px solid rgba(255,140,150,.5)}
+#moto-radio-list .rl-power:active,#moto-radio-list .rl-mode:active,#moto-radio-list .rl-track:active{transform:scale(.96)}
 /* 🎛️ ปุ่มบังคับเพิ่ม (เบรก/เกียร์ถอย/แตร) — วางบนตัวเครื่องใต้จอ ไม่ทับสไลเดอร์(≤24.5%)/ปุ่มเร่ง(≥74.5%) */
 #moto-wrap .m-cbtn{position:absolute;top:83.5%;width:9%;height:11.5%;border:none;cursor:pointer;border-radius:50%;
   display:none;flex-direction:column;align-items:center;justify-content:center;gap:.2vmin;color:#fff;
@@ -520,6 +594,13 @@ function buildDom(){
       <div id="moto-cardash"></div>
       <canvas id="moto-cargauge"></canvas>
       <div id="moto-carwheel"></div>
+      <!-- 🎵 รอบ 810: จอวิทยุ head-unit บนแดชบอร์ด (visualizer + แผงเลือกเพลง) -->
+      <div id="moto-radio-screen"><canvas id="moto-radio-viz"></canvas><div id="moto-radio-hint"></div></div>
+      <div id="moto-radio-list" style="display:none"></div>
+      <!-- 🪞 รอบ 810: กรอบกระจกมองหลัง/ข้าง (ภาพจริงมาจาก moto-cv ผ่าน scissor ใน drawCarMirrors) -->
+      <div class="m-mirror l"></div>
+      <div class="m-mirror rear"></div>
+      <div class="m-mirror r"></div>
       <div id="moto-shadow"></div>
       <div id="moto-bikewrap"><img id="moto-bike" src="img/moterbike/bike.webp?v=299" alt="">
         <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
@@ -588,6 +669,27 @@ function buildDom(){
   gaugeCv=document.getElementById('moto-cargauge'); gaugeCtx=gaugeCv?gaugeCv.getContext('2d'):null;
   brakeEl=document.getElementById('moto-brake'); gearEl=document.getElementById('moto-gear');
   hornEl=document.getElementById('moto-horn');
+  /* 🎵 รอบ806: วิทยุในรถ */
+  radioScreenEl=document.getElementById('moto-radio-screen');
+  radioVizCv=document.getElementById('moto-radio-viz');
+  radioVizCtx=radioVizCv?radioVizCv.getContext('2d'):null;
+  radioHintEl=document.getElementById('moto-radio-hint');
+  radioListEl=document.getElementById('moto-radio-list');
+  if(radioScreenEl){
+    radioScreenEl.addEventListener('click', ()=>{
+      if(typeof Music==='undefined' || !Music.ready()){ toast('🎵 ยังไม่มีไฟล์เพลงในรถ (วางใน sound/SongsInCar/)'); return; }
+      if(!Music.isCarOn()){ Music.carRadio(true); radioSetHint(); }   // ปิดอยู่ → เปิดวิทยุ
+      else radioToggleList();                                          // เปิดอยู่ → เปิด/ปิดรายการเพลง
+    });
+  }
+  if(radioListEl){
+    radioListEl.addEventListener('click', e=>{
+      const tr=e.target.closest('.rl-track'); if(tr){ Music.playCar(+tr.dataset.i); renderRadioList(); return; }
+      const md=e.target.closest('.rl-mode'); if(md){ Music.setMode(md.dataset.m); renderRadioList(); return; }
+      if(e.target.closest('.rl-power')){ Music.carRadio(false); radioListEl.style.display='none'; radioSetHint(); return; }
+      if(e.target.closest('.rl-x')){ radioListEl.style.display='none'; }
+    });
+  }
   const brOn=e=>{ e.preventDefault(); padBr=true; brakeEl.classList.add('press'); sndKick(); };
   const brOff=()=>{ padBr=false; brakeEl.classList.remove('press'); };
   brakeEl.addEventListener('pointerdown',brOn);
@@ -638,8 +740,8 @@ function loadCarDash(){
   if(!dashEl) return;
   const cid=(typeof myCar==='function'&&myCar())?myCar().id:null;
   dashCid=cid;
-  const put=im=>{ dashEl.innerHTML=''; dashEl.appendChild(im); };
-  const css=()=>{ dashEl.innerHTML='<div class="cd-css"></div>'; };
+  const put=im=>{ dashEl.innerHTML=''; dashEl.appendChild(im); dashImgEl=im; };   // 🎵 รอบ806: เก็บ <img> ไว้คำนวณตำแหน่งจอวิทยุ
+  const css=()=>{ dashEl.innerHTML='<div class="cd-css"></div>'; dashImgEl=null; };
   const tryLoad=(src,next)=>{ const im=new Image(); im.onload=()=>put(im); im.onerror=next; im.src=src; };
   const legacy=()=> cid ? tryLoad('img/car/dash_'+cid+'.png',()=>tryLoad('img/car/dash.png',css))
                         : tryLoad('img/car/dash.png',css);
@@ -725,6 +827,102 @@ function drawCarGauge(){
   const gcy=Math.min(wheelBoxEl.offsetTop+wh*0.285, h-r*1.25);
   carDial(c,gcx-r*1.30,gcy,r,Math.abs(dSpeed)*3.6/240,240,40,null);      // สปีด 0-240 (โลกนี้ไม่มีใบสั่ง = ไม่มีโซนแดง)
   carDial(c,gcx+r*1.30,gcy,r,.1+(CarSnd.rpm||0)*.75,8,1,6.5);            // วัดรอบ ×1000 (idle ~0.8)
+}
+/* ============================================================
+   🪞📷 รอบ 810: กระจกมองหลัง/ข้าง — เรนเดอร์ฉากเดิมซ้ำด้วยกล้องหันหลัง/เฉียงข้าง แล้วยัดลงแถบบนจอ (scissor)
+   สูตรเดียวกับ belly cam ของโลกเมือง (adventure3d.js drawBellyCam) — ไม่พลิกซ้าย-ขวา (แค่ "เห็นด้านหลัง/ข้างจริง"
+   ไม่ใช่ภาพสะท้อนกระจกเป๊ะ เพราะพลิกภาพกล้อง 3D ต้องกลับ winding order เสี่ยงบั๊กโมเดล — ผู้เล่นเด็กไม่กระทบการเล่น)
+   ============================================================ */
+function mirrorPass(rect,cam,yawOff){
+  if(scrW<2||scrH<2) return;
+  const w=Math.max(1,Math.round(scrW*rect.w)), h=Math.max(1,Math.round(scrH*rect.h));
+  if(w<2||h<2) return;
+  const x=Math.round(scrW*rect.l), yTop=Math.round(scrH*rect.t), gy=scrH-yTop-h;
+  cam.position.copy(camera.position);
+  cam.quaternion.copy(camera.quaternion);
+  cam.rotateY(yawOff);
+  cam.aspect=w/h; cam.updateProjectionMatrix();
+  renderer.setViewport(x,gy,w,h); renderer.setScissor(x,gy,w,h);
+  renderer.render(scene,cam);
+}
+function drawCarMirrors(){
+  if(vehicle!=='car'||carCam3||!renderer||!scene||!camera) return;
+  if(!mirrorRearCam) mirrorRearCam=new THREE.PerspectiveCamera(58,1,.4,1600);
+  if(!mirrorLCam) mirrorLCam=new THREE.PerspectiveCamera(58,1,.4,1600);
+  if(!mirrorRCam) mirrorRCam=new THREE.PerspectiveCamera(58,1,.4,1600);
+  renderer.setScissorTest(true);
+  mirrorPass(MIRROR_REAR,mirrorRearCam,Math.PI);
+  mirrorPass(MIRROR_L,mirrorLCam,Math.PI*0.72);
+  mirrorPass(MIRROR_R,mirrorRCam,-Math.PI*0.72);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0,0,scrW,scrH);   // ⚠️ คืนวิวพอร์ตเต็มจอ ไม่งั้นเฟรมถัดไป renderer.render(scene,camera) หลักจะเหลือแค่มุมเดิม
+}
+/* ============================================================
+   🎵📻 รอบ 810: วิทยุในรถ — จอ head-unit (visualizer + แผงเลือกเพลง) พอร์ตจาก adventure3d.js ทั้งชุด
+   ต่างจากต้นทางแค่ "ลบ offset ของ #moto-screen เอง" (คนละ containing block กับโลกเมืองที่แปะเต็มวิวพอร์ต)
+   ============================================================ */
+function radioLayout(){
+  if(!radioScreenEl) return;
+  if(vehicle!=='car'||!dashImgEl||!dashImgEl.parentNode){ radioScreenEl.style.display='none'; return; }
+  const box=dashImgEl.getBoundingClientRect();
+  if(!box.width){ radioScreenEl.style.display='none'; return; }
+  const scr=screenEl.getBoundingClientRect();
+  const s=box.width/1536, offY=Math.max(0,1024*s-box.height)*.65;
+  const gx=ix=>box.left+ix*s-scr.left, gy=iy=>box.top+iy*s-offY-scr.top;
+  const [X0,Y0,X1,Y1]=carRadioRect();
+  const L=gx(X0), T=gy(Y0), W=(X1-X0)*s, H=(Y1-Y0)*s;
+  radioScreenEl.style.display='block';
+  radioScreenEl.style.left=L+'px'; radioScreenEl.style.top=T+'px';
+  radioScreenEl.style.width=W+'px'; radioScreenEl.style.height=H+'px';
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  radioVizCv.width=Math.round(W*dpr); radioVizCv.height=Math.round(H*dpr);
+  radioVizCv.style.width=W+'px'; radioVizCv.style.height=H+'px';
+  if(radioListEl){                                          // แผงรายการวางเหนือจอ (กว้างกว่าจอ ~2.6 เท่า)
+    const lw=Math.max(W*2.6, 220);
+    let ll=L+W/2-lw/2; ll=Math.max(6, Math.min(ll, scr.width-lw-6));
+    radioListEl.style.left=ll+'px'; radioListEl.style.width=lw+'px';
+    radioListEl.style.bottom=(scr.height-T+8)+'px';
+  }
+  radioSetHint();
+}
+function radioSetHint(){
+  if(!radioHintEl||!radioScreenEl) return;
+  const on=typeof Music!=='undefined' && Music.isCarOn();
+  radioScreenEl.classList.toggle('playing', on);
+  radioHintEl.innerHTML = on ? '' : '<b>♪ MUSIC</b><span>แตะเพื่อเปิดเพลงในรถ</span>';
+}
+function renderRadioList(){
+  if(!radioListEl || typeof Music==='undefined') return;
+  const tracks=Music.carTracks(), cur=Music.curCar(), m=Music.mode();
+  const LBL={all:['REPEAT ALL','เล่นซ้ำทั้งหมด'],one:['REPEAT ONE','เล่นซ้ำเพลง'],shuffle:['SHUFFLE','สุ่มเล่น']};
+  radioListEl.innerHTML=`
+    <div class="rl-head"><span>🎵 CAR RADIO · เพลงในรถ</span><button class="rl-x" type="button">✕</button></div>
+    <div class="rl-tracks">${tracks.map((t,i)=>`<button class="rl-track${i===cur?' on':''}" data-i="${i}" type="button"><span class="rl-eq">${i===cur?'▶':'♪'}</span>Track ${i+1}</button>`).join('')}</div>
+    <div class="rl-modes">${['all','one','shuffle'].map(k=>`<button class="rl-mode${m===k?' on':''}" data-m="${k}" type="button">${LBL[k][0]}<small>${LBL[k][1]}</small></button>`).join('')}</div>
+    <button class="rl-power" type="button">⏻ TURN OFF · ปิดเพลง</button>`;
+}
+function radioToggleList(){
+  if(!radioListEl) return;
+  if(radioListEl.style.display==='block'){ radioListEl.style.display='none'; return; }
+  renderRadioList(); radioLayout(); radioListEl.style.display='block';
+}
+function drawRadioViz(){
+  if(!radioVizCtx||!radioScreenEl||radioScreenEl.style.display==='none') return;
+  const cv=radioVizCv, c=radioVizCtx, W=cv.width, H=cv.height;
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'rgba(10,28,52,.94)'); g.addColorStop(1,'rgba(3,10,24,.97)');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  const on=typeof Music!=='undefined' && Music.isCarOn();
+  if(!on) return;                                           // ปิด → จอมืด (ข้อความ hint HTML ทับ)
+  const data=Music.vizData(), n=radioBars.length, bw=W/n;
+  for(let i=0;i<n;i++){
+    const v=data?data[i]/255:0;
+    radioBars[i]= v>radioBars[i] ? v : radioBars[i]*0.85+v*0.15;   // ขึ้นเร็ว ตกช้า (นุ่มตา)
+    const bh=Math.max(H*0.05, radioBars[i]*H*0.92), x=i*bw, y=H-bh;
+    const bg=c.createLinearGradient(0,H,0,y);
+    bg.addColorStop(0,'#1668b8'); bg.addColorStop(.6,'#4fc3f7'); bg.addColorStop(1,'#b6f2ff');
+    c.fillStyle=bg; c.fillRect(x+bw*0.16, y, bw*0.68, bh);
+    c.fillStyle='rgba(190,242,255,.95)'; c.fillRect(x+bw*0.16, y, bw*0.68, Math.max(1,H*0.03));
+  }
 }
 
 /* ============================================================
@@ -2047,6 +2245,7 @@ function fit(){
   if(!renderer) return;
   const r=screenEl.getBoundingClientRect();
   const w=Math.max(64,Math.round(r.width)), h=Math.max(64,Math.round(r.height));
+  scrW=w; scrH=h;                    // 🪞 รอบ 810: แคชขนาดจอไว้ให้ drawCarMirrors ใช้ตั้ง viewport/scissor
   renderer.setSize(w,h,false);
   camera.aspect=w/h; camera.updateProjectionMatrix();
   fitWord();                         // 🔤 รอบ 311: จอเปลี่ยนขนาด → ย่อป้ายคำใหม่ให้พอดี
@@ -2280,8 +2479,10 @@ function frame(dt,now){
     // 🚗 รอบ 785: พวงมาลัยหมุนตามมุมเลี้ยวจริง (×440° เท่าโลกเมือง) + เข็มเกจวิ่งสด
     if(wheelBoxEl) wheelBoxEl.style.transform='translateX(-50%) rotate('+(dSteer*440).toFixed(1)+'deg)';
     drawCarGauge();
+    radioLayout(); drawRadioViz();   // 🎵 รอบ806: วิทยุในรถ (จอ head-unit + visualizer)
   }else Eng.tick();
   renderer.render(scene,camera);
+  if(isCar) drawCarMirrors();   // 🪞 รอบ 810: กระจกมองหลัง/ข้าง (เรนเดอร์ซ้ำทับมุมจอ — หลังกล้องหลักเสมอ)
 }
 
 /* ============================================================
@@ -2313,6 +2514,7 @@ function start(opts){
   if(boardEl){ boardEl.classList.remove('on'); boardEl.innerHTML=''; }
   if(chatBarEl) chatBarEl.classList.remove('on');
   if(selfMsgEl) selfMsgEl.classList.remove('on');
+  if(radioListEl) radioListEl.style.display='none';   // 🎵 รอบ806: กันแผงเพลงค้างเปิดข้ามรอบ (เช่น เข้ามอไซค์หลังปิดค้างไว้ตอนขับรถ)
   px=startX; pz=startZ; yaw=startYaw; spd=0; lean=0; thr=0; padThr=0; kThr=false;
   steerCtl=0; kL=false; kR=false; knobEl.style.left='50%';
   camInit=false;

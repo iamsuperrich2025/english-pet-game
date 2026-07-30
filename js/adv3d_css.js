@@ -36,6 +36,17 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   /* ⚽ รอบ 399 (ผู้ใช้ส่งภาพ): จอมือถือเตี้ย top:82px กลายเป็นกลางจอ = แผงคำบังป้ายตัวอักษรที่ต้องเตะพอดี
      → ย้ายลงล่างสุดตรงกลาง วางเหนือแถบตัวอักษรที่เก็บ (#adv-inv bottom:8px) + ย่อขนาดให้เป็นข้อมูลอ้างอิง
      กว้างไม่เกิน 66vw กันไปทับสติ๊กเล็งซ้ายล่าง/ปุ่มเตะขวาล่าง */
+  /* 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง ยึดที่เดิมของคำศัพท์ (top:82) → ดันคำศัพท์ลงมา (เฉพาะโหมดขับรถ โหมดอื่นไม่กระทบ) */
+  .adv-drive #adv-words{top:170px}
+  .adv-mirror{position:absolute;pointer-events:none;z-index:4;border-radius:6px;overflow:hidden;display:none;
+    border:3px solid rgba(18,20,24,.94);box-shadow:0 2px 8px rgba(0,0,0,.5),inset 0 0 14px rgba(0,0,0,.4)}
+  .adv-drive .adv-mirror{display:block}
+  .adv-drive.cam3 .adv-mirror{display:none}
+  .adv-mirror::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 35%)}
+  #adv-mirror-rear{left:50%;top:82px;transform:translateX(-50%);width:260px;height:74px}
+  #adv-mirror-l{left:8px;top:38%;width:130px;height:84px}
+  #adv-mirror-r{right:8px;top:38%;width:130px;height:84px}
   .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
   .adv-soccer #adv-words .adv-fch{font-size:clamp(15px,3.2vw,22px);min-width:22px;padding:2px 6px;border-radius:7px}
   .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}

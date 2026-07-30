@@ -4568,6 +4568,10 @@ function buildDom(){
     <div id="adv-radio-screen"><canvas id="adv-radio-viz"></canvas><div id="adv-radio-hint"></div></div>
     <div id="adv-radio-list" style="display:none"></div>
     <div id="adv-carwheel"></div>
+    <!-- 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง (ภาพจริงจาก adv-canvas ผ่าน scissor ใน drawCarMirrors) -->
+    <div class="adv-mirror" id="adv-mirror-l"></div>
+    <div class="adv-mirror" id="adv-mirror-rear"></div>
+    <div class="adv-mirror" id="adv-mirror-r"></div>
     <button id="adv-horn">📯</button>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
     <div id="adv-radio"></div>
@@ -6443,6 +6447,39 @@ function radioTick(){
     _radioVW=window.innerWidth; _radioVH=window.innerHeight; radioLayout();
   }
   drawRadioViz();
+}
+/* ============================================================
+   🪞📷 รอบ 810: กระจกมองหลัง/ข้าง — เรนเดอร์ฉากเดิมซ้ำด้วยกล้องหันหลัง/เฉียงข้าง แล้วยัดลงกรอบบนจอ (scissor)
+   สูตรเดียวกับ belly cam ของโลกนี้เอง (drawBellyCam ด้านบน) — คนละมุมกล้อง 3 ตัวแทน 1 · ไม่พลิกซ้าย-ขวา
+   (พลิกภาพกล้อง 3D จริงต้องกลับ winding order เสี่ยงบั๊กโมเดล — แค่ "เห็นด้านหลัง/ข้างจริง" ก็พอสำหรับเกมนี้)
+   #adv-overlay เต็มวิวพอร์ตพอดี (ต่างจาก moto3d.js ที่จอเล็กอยู่ในกรอบเครื่องเกม) → ใช้ window.innerWidth/Height ตรงๆ ได้เลย
+   ============================================================ */
+const MIRROR_REAR={l:.5,t:82,w:260,h:74,cx:true}, MIRROR_L={l:8,t:0,w:130,h:84,pctT:.38}, MIRROR_R={l:0,t:0,w:130,h:84,pctT:.38,right:8};
+let mirrorRearCam=null, mirrorLCam=null, mirrorRCam=null;
+function mirrorPass(rect,cam,yawOff,W,H){
+  const w=Math.max(1,Math.round(rect.w)), h=Math.max(1,Math.round(rect.h));
+  const x=Math.round(rect.right!=null?W-rect.right-w:(rect.cx?rect.l*W-w/2:rect.l));
+  const yTop=Math.round(rect.pctT!=null?rect.pctT*H:rect.t);
+  const gy=H-yTop-h;                                    // ⚠️ viewport ของ WebGL นับจาก "ล่างซ้าย"
+  cam.position.copy(camera.position);
+  cam.quaternion.copy(camera.quaternion);
+  cam.rotateY(yawOff);
+  cam.aspect=w/h; cam.updateProjectionMatrix();
+  renderer.setViewport(x,gy,w,h); renderer.setScissor(x,gy,w,h);
+  renderer.render(scene,cam);
+}
+function drawCarMirrors(){
+  if(!renderer||!scene||!camera||dCam3) return;
+  if(!mirrorRearCam) mirrorRearCam=new THREE.PerspectiveCamera(60,1,.1,220);
+  if(!mirrorLCam) mirrorLCam=new THREE.PerspectiveCamera(60,1,.1,220);
+  if(!mirrorRCam) mirrorRCam=new THREE.PerspectiveCamera(60,1,.1,220);
+  const W=window.innerWidth, H=window.innerHeight;
+  renderer.setScissorTest(true);
+  mirrorPass(MIRROR_REAR,mirrorRearCam,Math.PI,W,H);
+  mirrorPass(MIRROR_L,mirrorLCam,Math.PI*0.72,W,H);
+  mirrorPass(MIRROR_R,mirrorRCam,-Math.PI*0.72,W,H);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0,0,W,H);   // ⚠️ คืนวิวพอร์ตเต็มจอ ไม่งั้นเฟรมถัดไปกล้องหลักจะเหลือแค่มุมเดิม
 }
 /* ============================================================
    🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
@@ -11274,6 +11311,7 @@ function loop(){
   drawMinimap();
   renderer.render(scene,camera);
   if(M.heli&&hPhase==='pilot') drawBellyCam();   // 📹 กล้องใต้ท้อง — เฉพาะตอนขับเอง (เฟสเดิน/นั่ง/วิงสูทไม่มี)
+  if(M.drive&&!carStartOpen) drawCarMirrors();   // 🪞 รอบ 810: กระจกมองหลัง/ข้าง — เฉพาะตอนออกรถแล้วจริงๆ (ยังไม่ออกรถ = ไม่ต้องเรนเดอร์ซ้ำเปล่าๆ)
   if(shotWanted) grabShot();                       // 📸 ต้องอ่าน canvas ทันทีหลัง render (บัฟเฟอร์ไม่ถูกเก็บไว้)
 }
 /* 📸 เก็บภาพเฟรมที่เพิ่งเรนเดอร์ → เด้งการ์ดพรีวิว (บันทึกลงเครื่องได้) */
