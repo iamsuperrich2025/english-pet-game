@@ -1464,7 +1464,8 @@ function buildDriveCity(sc){
     for(let i=0;i<p.length;i+=2){ cx+=p[i]/n; cz+=p[i+1]/n; }
     for(let i=0;i<p.length;i+=2){                            // ขอบ polygon = กำแพง
       const x1=p[i],z1=p[i+1],x2=p[(i+2)%p.length],z2=p[(i+3)%p.length];
-      sAdd((x1+x2)/2,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)/2+3,{t:1,x1,z1,x2,z2});
+      // 🚁 รอบ 816: ติด h = ความสูงจริงของตึก (รถไม่สนใจ · เฮลิฯ ใช้ตัดสินว่าบินสูงพ้นยอดตึกนี้แล้วหรือยัง)
+      sAdd((x1+x2)/2,(z1+z2)/2,Math.hypot(x2-x1,z2-z1)/2+3,{t:1,x1,z1,x2,z2,h:h+1.4});
     }
     // ชื่อบนตึก: ผู้ลงโฆษณาก่อน (เรียงลงตึกเว้นระยะ) · ไม่มี = ป้ายเชิญลงโฆษณาห่างๆ · ไม่โชว์ชื่อจริง OSM
     let adName=null;
@@ -1484,7 +1485,7 @@ function buildDriveCity(sc){
   const grp={1:[],2:[],3:[],4:[]};
   lots.forEach(L=>{                                           // L = [x,z,rot,w,d,h]
     grp[Math.max(1,Math.min(4,Math.round(L[5]/3.3)))].push(L);
-    sAdd(L[0],L[1],Math.hypot(L[3],L[4])/2+2,{t:0,x:L[0],z:L[1],rot:L[2],hx:L[3]/2,hz:L[4]/2});
+    sAdd(L[0],L[1],Math.hypot(L[3],L[4])/2+2,{t:0,x:L[0],z:L[1],rot:L[2],hx:L[3]/2,hz:L[4]/2,h:L[5]+1.6});  // h = รอบ 816 (เฮลิฯ บินข้ามยอดได้)
   });
   Object.keys(grp).forEach(fl=>{
     const list=grp[fl]; if(!list.length) return;
@@ -1550,7 +1551,7 @@ function buildDriveCity(sc){
   });
   const spire=new THREE.Mesh(new THREE.ConeGeometry(1.1,3.6,8),new THREE.MeshLambertMaterial({color:0xd9b44a}));
   spire.position.y=23.2; sc.add(spire);
-  sAdd(0,0,15,{t:2,x:0,z:0,r:13.2});                          // เกาะกลางวงเวียน = วงกลมชนไม่ได้ (ตามเกาะจริง)
+  sAdd(0,0,15,{t:2,x:0,z:0,r:13.2,h:27});                     // เกาะกลางวงเวียน = วงกลมชนไม่ได้ (ตามเกาะจริง) · h=ยอดหอนาฬิกา+ยอดแหลม (รอบ 816)
 
   /* ---------- จุดเกิด: บนถนนวงแหวนรอบวงเวียนหอนาฬิกา (จุดถนนที่ใกล้หอสุด นอกเกาะกลาง r14) ---------- */
   let spawn={x:0,z:34,yaw:0}, bestD=1e9;
@@ -1891,6 +1892,58 @@ function buildDriveCity(sc){
     }
   }
   worlds.drive.d.junctions=junctions;
+}
+
+/* ============================================================
+   🚁🌳 รอบ 816 — บินเฮลิคอปเตอร์เหนือ "เมืองกำแพงเพชร" แล้วลงจอดเก็บตัวอักษรบนพื้นที่สีเขียว
+   (ผู้ใช้สั่ง 2 ข้อ: ① ทำระบบเฮลิฯ ลงจอดเก็บตัวอักษรบน greenPts ที่เตรียมไว้รอบ 811
+                     ② ปุ่มเข้าโลกเฮลิฯ ต้องมีหน้าเลือกแผนที่เหมือนโลกขับรถ)
+   วิธี: ไม่สร้างโหมดใหม่ (M.heli คุมโค้ดอยู่ ~40 จุด) — ใช้ "แผนที่ย่อย" ของโหมด heli แทน
+     heliMap='city' = เมืองเฮลิฯ เดิม (ตัวอักษรบนดาดฟ้า · มีเฟสเดินเท้า/ลิฟต์/วิงสูท)
+     heliMap='kpp'  = ยืมฉาก worlds.drive ทั้งก้อน (ถนน/ตึก/แม่น้ำจริง) แล้วขึ้นบินเลยตั้งแต่แรกเข้า
+   ⚠️ ฉาก drive ไม่มี buildings[] (รถชนด้วย solidGrid) → เฮลิฯ ต้องเช็กชนจาก solidGrid เอง
+      แต่ต้องมี "ความสูง" ด้วยไม่งั้นบินสูงแค่ไหนก็ยังชน → ติด h ให้ solid ทุกชิ้นตอนสร้างเมือง (ดูด้านบน)
+   ============================================================ */
+let heliMap='city';                          // 'city' | 'kpp' — ตั้งครั้งเดียวตอน start('heli',{map})
+const heliKpp=()=>!!(M&&M.heli&&heliMap==='kpp');
+const HELI_BODY_R=3.0;                       // รัศมีตัวเครื่อง (Bell 212 ลำจริง ~2.6 + เผื่อใบพัด)
+const HELI_KPP_CEIL=170;                     // เพดานบินเมืองจริง (สูงพอมองเห็นผังเมืองทั้งย่าน)
+/* เฮลิฯ ชนอะไรอยู่ไหมที่ (x,z) ระดับความสูง y — เลขคณิตชุดเดียวกับ collideCar แต่ข้ามชิ้นที่ "บินพ้นยอดแล้ว" */
+function heliKppBlocked(x,z,y){
+  const D=worlds.drive&&worlds.drive.d; if(!D) return false;
+  const list=D.solidGrid[Math.floor(x/D.SCELL)+','+Math.floor(z/D.SCELL)];
+  if(!list) return false;
+  for(const s of list){
+    if(y>=(s.h||0)) continue;                                  // บินสูงกว่ายอดชิ้นนี้ = ผ่านได้
+    if(s.t===2){ if(Math.hypot(x-s.x,z-s.z)<s.r+HELI_BODY_R) return true; }
+    else if(s.t===0){
+      const c=Math.cos(s.rot), si=Math.sin(s.rot), dx=x-s.x, dz=z-s.z;
+      if(Math.abs(dx*c-dz*si)<s.hx+HELI_BODY_R && Math.abs(dx*si+dz*c)<s.hz+HELI_BODY_R) return true;
+    }else{
+      const dx=s.x2-s.x1, dz=s.z2-s.z1, L2=dx*dx+dz*dz||1e-9;
+      let t=((x-s.x1)*dx+(z-s.z1)*dz)/L2; t=t<0?0:(t>1?1:t);
+      if(Math.hypot(x-s.x1-dx*t, z-s.z1-dz*t)<HELI_BODY_R) return true;
+    }
+  }
+  return false;
+}
+/* จุดเกิด/จุดเกิดใหม่ของเฮลิฯ ในเมืองกำแพงเพชร — พื้นที่สีเขียวที่ "โล่งพอให้ลำลงจอดได้จริง" ใกล้หอนาฬิกาสุด
+   (ลานกลางวงเวียน (0,0) เป็นเกาะหอนาฬิกา ลงจอดไม่ได้ · จุดเกิดของรถอยู่กลางถนน ใบพัดเฉี่ยวตึกแถว) */
+let _heliKppSpawn=null;
+function heliKppSpawn(){
+  if(_heliKppSpawn) return _heliKppSpawn;
+  const D=worlds.drive&&worlds.drive.d;
+  if(!D) return {x:0,z:60,yaw:0};
+  const G=D.greenPts||[];
+  let best=null, bestD=1e9;
+  for(let i=0;i<G.length;i+=2){
+    const x=G[i], z=G[i+1], d=Math.hypot(x,z);
+    if(d<25 || d>=bestD) continue;                             // เว้นเกาะวงเวียน · เอาที่ใกล้ใจกลางเมืองสุด
+    if(heliKppBlocked(x,z,0.5)) continue;                      // ต้องโล่งจริงระดับพื้น (เผื่อรัศมีลำ)
+    best={x,z,yaw:Math.atan2(-x,-z)}; bestD=d;                 // หันหน้าเข้าหอนาฬิกา — เห็นแลนด์มาร์กตั้งแต่เฟรมแรก
+  }
+  _heliKppSpawn=best||{x:D.spawn.x,z:D.spawn.z,yaw:D.spawn.yaw||0};
+  return _heliKppSpawn;
 }
 
 /* ============================================================
@@ -2507,18 +2560,29 @@ function randRoadPos(minD,maxD){
   return {x:camera.position.x,z:camera.position.z+80};
 }
 /* 🌳🚁 รอบ 811: สุ่มจุดบนพื้นที่สีเขียวข้างถนนจริง ระยะ min–max จากผู้เล่น (โหมด drive)
-   ใช้คู่กับ randRoadPos — สลับกันวางตัวอักษร/เหรียญโบนัส ให้กระจายทั้งบนถนนและบนหญ้าข้างทาง */
+   ใช้คู่กับ randRoadPos — สลับกันวางตัวอักษร/เหรียญโบนัส ให้กระจายทั้งบนถนนและบนหญ้าข้างทาง
+   🩹 รอบ 816: เดิมสุ่ม 40 ครั้งไม่เข้าช่วงระยะแล้ว "ตกไปใช้จุดบนถนน" ทันที — วัดจริงในโลกเฮลิฯ
+   ตกกลับ 18/55 จุด (33%) ตัวอักษรไปโผล่กลางถนนแทนหญ้า ซึ่งเฮลิฯ ลงจอดไม่ได้
+   → เพิ่มขั้นกลาง: กวาดหาจุดสีเขียวในช่วงระยะทั้งหมดแล้วสุ่มจากนั้น (9,692 จุด ไม่กี่แสน op ไม่หนัก)
+   ต่อด้วยจุดสีเขียวใดก็ได้ · ใช้ถนนเป็นทางออกสุดท้ายเฉพาะเมื่อไม่มี greenPts เลย */
 function randGreenPos(minD,maxD){
   const D=worlds.drive&&worlds.drive.d;
   if(!D||!D.greenPts||!D.greenPts.length) return randRoadPos(minD,maxD);
-  const pts=D.greenPts, n=pts.length/2;
-  for(let i=0;i<40;i++){
+  const pts=D.greenPts, n=pts.length/2, px=camera.position.x, pz=camera.position.z;
+  for(let i=0;i<40;i++){                                    // ① สุ่มเร็ว (ส่วนใหญ่จบที่นี่)
     const j=Math.floor(Math.random()*n);
     const x=pts[j*2], z=pts[j*2+1];
-    const d=Math.hypot(x-camera.position.x,z-camera.position.z);
+    const d=Math.hypot(x-px,z-pz);
     if(d>=minD && d<=maxD) return {x,z};
   }
-  return randRoadPos(minD,maxD);
+  const band=[];                                            // ② กวาดทั้งลิสต์ เอาทุกจุดที่อยู่ในช่วงระยะ
+  for(let j=0;j<n;j++){
+    const d=Math.hypot(pts[j*2]-px,pts[j*2+1]-pz);
+    if(d>=minD && d<=maxD) band.push(j);
+  }
+  const j2=band.length?band[Math.floor(Math.random()*band.length)]   // ③ ไม่มีในช่วงเลย = เอาจุดเขียวใดก็ได้
+                      :Math.floor(Math.random()*n);
+  return {x:pts[j2*2], z:pts[j2*2+1]};
 }
 /* 🏨 สุ่มจุดวางตัวอักษรในโรงแรม — กระจายทุกชั้น แต่ให้ชั้นที่ผู้เล่นอยู่มีลุ้นเยอะกว่า
    🩹 รอบ 778 (ผู้ใช้สั่งข้อ 3+5): เดิมสุ่มจุดอิสระ → ตัวอักษรหลายตัวลงห้องเดียวกันและกองชิดกันเป็นก้อน
@@ -2585,6 +2649,11 @@ function spawnLetter(ch){
     const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
     spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
     spr.scale.set(1.8,1.8,1);
+  }else if(heliKpp()){
+    // 🚁🌳 รอบ 816: เฮลิฯ เหนือเมืองกำแพงเพชร — ตัวอักษรวางบน "พื้นที่สีเขียวข้างถนน" ต้องร่อนลงจอดเก็บ
+    const p=randGreenPos(70,520);
+    spr.position.set(p.x,1.4,p.z);
+    spr.scale.set(3.4,3.4,1);                    // ใหญ่เท่าโหมดขับรถ — มองเห็นจากบนฟ้า
   }else if(M.heli && buildings.length){
     // โหมดเฮลิคอปเตอร์: ตัวอักษรอยู่บนยอดตึก (สุ่มตึก) — ต้องลงจอดเก็บ
     const b=buildings[Math.floor(Math.random()*buildings.length)];
@@ -2659,6 +2728,9 @@ function relocateLetters(now){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
         const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
         l.spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
+      }else if(heliKpp()){
+        const p=randGreenPos(70,520);            // 🚁🌳 รอบ 816: ย้ายที่ก็ยังอยู่บนพื้นที่สีเขียว
+        l.spr.position.set(p.x,1.4,p.z);
       }else if(M.heli && buildings.length){
         const b=buildings[Math.floor(Math.random()*buildings.length)];
         l.spr.position.set(b.x,b.h+1.3,b.z);
@@ -3747,7 +3819,8 @@ function netReady(){
 function netJoin(){
   if(!netReady()) return;
   room=NetRoom.create({
-    map:mode, sendMs:NET_SEND_MS,
+    // 🚁🌳 รอบ 816: เฮลิฯ เมืองกำแพงเพชรเป็น "แผนที่คนละใบ" กับเมืองเฮลิฯ → ห้องแยก ไม่งั้นเห็นเพื่อนลอยผิดที่
+    map:(heliKpp()?'helikpp':mode), sendMs:NET_SEND_MS,
     roomMax:(mode==='haunt'?2:0),     // 🏨 รอบ 684: โรงแรมผีสิงเข้าได้ทีละ 2 คน (ผู้ใช้สั่งข้อ 7) · คนที่ 3 ไปสนามถัดไปเอง
     // 🏨 รอบ 686: ป้ายสถานะบน HUD เรียก "โรงแรมหลังที่ N" แทน "สนาม N" ให้ตรงธีม (โลกอื่นยังเป็น "สนาม" เหมือนเดิม)
     roomNoun:(mode==='haunt'?'โรงแรม':undefined),
@@ -4485,11 +4558,12 @@ function closeBigMap(){
   clearInterval(bigMapTimer); bigMapTimer=0;
 }
 function drawMinimap(){
-  const S=mapCv.width, sc=M.drive? S/620 : S/(HALF*2+8);   // 🚗 เมืองจริงใหญ่ → ซูมเรดาร์ออก (~310m)
+  const inKpp=M.drive||heliKpp();                           // 🚁🌳 รอบ 816: เฮลิฯ เหนือเมืองกำแพงเพชรใช้เรดาร์ชุดเดียวกับรถ
+  const S=mapCv.width, sc=inKpp? S/620 : S/(HALF*2+8);      // 🚗 เมืองจริงใหญ่ → ซูมเรดาร์ออก (~310m)
   mapCtx.clearRect(0,0,S,S);
   mapCtx.fillStyle=mode==='haunt'?'rgba(18,14,34,.78)':'rgba(20,40,20,.72)';
   mapCtx.beginPath(); mapCtx.arc(S/2,S/2,S/2,0,7); mapCtx.fill();
-  if(M.drive && cityMapCv){
+  if(inKpp && cityMapCv){
     // วาดแผนที่ถนนจริง (bitmap เมืองวาดครั้งเดียว) หมุนแบบ heading-up ใต้จุดต่างๆ
     const MPX=.25, k=sc/MPX;
     mapCtx.save();
@@ -5124,7 +5198,7 @@ function buildDom(){
   });
   overlayEl.querySelector('#adv-photo-save').addEventListener('click',savePhoto);
   overlayEl.querySelector('#adv-photo-close').addEventListener('click',()=>photoEl.classList.remove('on'));
-  overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(mode,true));
+  overlayEl.querySelector('#adv-help').addEventListener('click',()=>showIntro(introKey(),true));   // รอบ 816: แผนที่ย่อย (helikpp) ได้การ์ดของตัวเอง
   // 🏨 รอบ 684: ปุ่มไฟฉาย/ใช้งาน สำหรับจอสัมผัส (คีย์บอร์ดใช้ F กับ E)
   hActEl=overlayEl.querySelector('#adv-act');
   hTorchHintEl=overlayEl.querySelector('#adv-torchhint');
@@ -7713,7 +7787,7 @@ function beginPilot(ship){
    ไปนั่งลำฟ้า แล้วเดินกลับมาใกล้ลำ = ขึ้นขับต่อจากที่เดิมได้ */
 function endPilot(){
   if(hPhase!=='pilot'||!hLanded) return;
-  const F=worlds.heli.foot; if(!F) return;
+  const F=worlds.heli&&worlds.heli.foot; if(!F) return;   // 🚁🌳 รอบ 816: แผนที่กำแพงเพชรไม่มีเฟสเดินเท้า/ลำจอด (worlds.heli อาจไม่เคยถูกสร้าง)
   wiperSndOff();                                     // 🔇 ลงจากเครื่อง = ปิดเสียงที่ปัดด้วย (รอบ 537)
   sunShade=1; sunBlocked=0; applyCockpitShade();     // 🏢 คืนความสว่างห้องนักบิน (ร.540)
   if(state.sound&&HeliSound.on) HeliSound.shutdown(); else HeliSound.stop();
@@ -7968,9 +8042,24 @@ function tickHeliFoot(dt,now){
   if(dPax>=3.6) paxChoiceHide();                     // 🔵💺 รอบ 392: เดินออกห่างลำฟ้า = กล่องเลือกปิดเอง
   setFootBtns(onRoof&&curFloor>6,false);             // บนดาดฟ้าสูงพอ = โชว์ปุ่มโดดวิงสูท
 }
+/* 🏢💸 รอบ 392: กฎห้ามบินชนตึก (ผู้ใช้สั่ง) — ชนสะสมครบทุก 10 ครั้ง หัก 100 เหรียญ (นับสะสมข้ามรอบเล่น)
+   🪓 รอบ 816: แยกออกมาเป็นฟังก์ชัน — ใช้ร่วมทั้งเมืองเฮลิฯ (buildings[]) และเมืองกำแพงเพชร (solidGrid) */
+function heliWallPenalty(now){
+  if(now-hHitAt<=1000) return;
+  hHitAt=now; damagePlayer(20); HeliSound.thud(); heliCrashSfx(true); nmCrashed=true; nmCombo=0;   // 🔩 รอบ 391: เสียงเหล็กกระทบ
+  state.heliWallHits=(state.heliWallHits||0)+1;
+  if(state.heliWallHits%10===0){
+    state.coins=Math.max(0,state.coins-100); renderHudTop(); sfx.wrong();
+    showBanner(`🏢💸 ชนตึกครบ ${state.heliWallHits} ครั้ง! หักค่าซ่อมเมือง <b>100🪙</b> — บินระวังขึ้นนะกัปตัน`);
+  }else if(state.heliWallHits%10>=7){
+    showBanner(`⚠️ ชนตึกสะสม ${state.heliWallHits%10}/10 ครั้ง — ครบ 10 โดนหัก 100🪙`);
+  }
+  saveState();
+}
 function tickHeli(dt,now){
   // 🚶 รอบ 375: จอดสนิท = โชว์ปุ่มลงจากเฮลิฯ (บินอยู่ซ่อน)
-  overlayEl.classList.toggle('show-dismount',!!hLanded);
+  // 🚁🌳 รอบ 816: แผนที่กำแพงเพชรไม่มีเฟสเดินเท้า (ไม่มีตึกเทอร์มินัล/ลิฟต์/ลำจอดโชว์) → ไม่โชว์ปุ่มลงจากเครื่อง
+  overlayEl.classList.toggle('show-dismount',!!hLanded && !heliKpp());
   // ---- อ่านอินพุต ----
   let fw=0,sd=0,yawIn=0;
   if(keys.KeyW||keys.ArrowUp) fw+=1;
@@ -8003,29 +8092,35 @@ function tickHeli(dt,now){
   let nx=camera.position.x+hVel.x*dt;
   let ny=camera.position.y+hVel.y*dt;
   let nz=camera.position.z+hVel.z*dt;
-  nx=Math.max(-HALF+2,Math.min(HALF-2,nx));
-  nz=Math.max(-HALF+2,Math.min(HALF-2,nz));
-  ny=Math.min(60,ny);
+  if(heliKpp()){
+    // 🚁🌳 รอบ 816: เมืองจริงเป็นวงกลมรัศมี D.rad (ไม่ใช่จัตุรัส HALF) → หนีบแบบรัศมีเหมือนโลกขับรถ
+    const R=(worlds.drive.d.rad||600)-25, dc=Math.hypot(nx,nz);
+    if(dc>R){ const f=R/dc; nx*=f; nz*=f; hVel.x*=.35; hVel.z*=.35; }
+    ny=Math.min(HELI_KPP_CEIL,ny);
+  }else{
+    nx=Math.max(-HALF+2,Math.min(HALF-2,nx));
+    nz=Math.max(-HALF+2,Math.min(HALF-2,nz));
+    ny=Math.min(60,ny);
+  }
 
   // ---- ชนตึกด้านข้าง: บินต่ำกว่ายอด + ทะลุ footprint → เด้งออก+เจ็บ ----
-  for(const b of buildings){
+  if(heliKpp()){
+    /* เมืองกำแพงเพชรใช้ solidGrid (ตึกจริง polygon + ตึกแถวกล่องหมุน + เกาะวงเวียน) ไม่มี buildings[]
+       ชนแล้ว "คืนตำแหน่งเดิม + เด้งกลับ" (สูตรเดียวกับที่โลกขับรถกันรถลงแม่น้ำ) — ไม่ต้องคำนวณทิศดันออก
+       ซึ่งกับ polygon หลายเหลี่ยมทำให้หลุดเข้าไปในตึกได้ */
+    if(heliKppBlocked(nx,nz,ny)){
+      nx=camera.position.x; nz=camera.position.z;
+      hVel.x*=-.25; hVel.z*=-.25;
+      heliWallPenalty(now);
+    }
+  }else for(const b of buildings){
     const inX=Math.abs(nx-b.x)<=b.w/2+.9, inZ=Math.abs(nz-b.z)<=b.d/2+.9;
     if(inX && inZ && ny<b.h-.5){
       const pushX=(nx>b.x?1:-1)*((b.w/2+1)-Math.abs(nx-b.x));
       const pushZ=(nz>b.z?1:-1)*((b.d/2+1)-Math.abs(nz-b.z));
       if(Math.abs(pushX)<Math.abs(pushZ)) nx+=pushX; else nz+=pushZ;
       hVel.x*=-.25; hVel.z*=-.25;
-      if(now-hHitAt>1000){ hHitAt=now; damagePlayer(20); HeliSound.thud(); heliCrashSfx(true); nmCrashed=true; nmCombo=0;   // 🔩 รอบ 391: เสียงเหล็กกระทบ
-        // 🏢💸 รอบ 392: กฎห้ามบินชนตึก (ผู้ใช้สั่ง) — ชนสะสมครบทุก 10 ครั้ง หัก 100 เหรียญ (นับสะสมข้ามรอบเล่น)
-        state.heliWallHits=(state.heliWallHits||0)+1;
-        if(state.heliWallHits%10===0){
-          state.coins=Math.max(0,state.coins-100); renderHudTop(); sfx.wrong();
-          showBanner(`🏢💸 ชนตึกครบ ${state.heliWallHits} ครั้ง! หักค่าซ่อมเมือง <b>100🪙</b> — บินระวังขึ้นนะกัปตัน`);
-        }else if(state.heliWallHits%10>=7){
-          showBanner(`⚠️ ชนตึกสะสม ${state.heliWallHits%10}/10 ครั้ง — ครบ 10 โดนหัก 100🪙`);
-        }
-        saveState();
-      }
+      heliWallPenalty(now);
       break;
     }
   }
@@ -8045,7 +8140,8 @@ function tickHeli(dt,now){
         nmCrashed=true; nmCombo=0;
         showBanner(`💥 ชนเฮลิคอปเตอร์ของ <b>${escapeHTML(peers[uid].n)}</b>! เสียค่าปรับ ${fine}🪙 · กลับไปเริ่มใหม่ที่ลานจอด`);
         ATC.say('Midair collision! Return to base immediately, captain.');
-        nx=0; nz=0; ny=heliFloorAt(0,0)+HELI_SKID;                  // 🐣 เกิดใหม่ลานจอดกลาง เครื่องจอดสนิท
+        const rs=heliKpp()?heliKppSpawn():{x:0,z:0};                // 🐣 เกิดใหม่ลานจอดกลาง เครื่องจอดสนิท (kpp = ลานหญ้าใกล้หอนาฬิกา รอบ 816)
+        nx=rs.x; nz=rs.z; ny=heliFloorAt(nx,nz)+HELI_SKID;
         hVel={x:0,y:0,z:0}; hLanded=true; hCol=0;
         if(netUp()) sendPos(true);                                    // เพื่อนเห็นลำเราวาร์ปกลับลานทันที
         break;
@@ -8094,10 +8190,12 @@ function tickHeli(dt,now){
   camera.rotateZ(-hTiltS*.09);
 
   // ---- เก็บตัวอักษร: ต้อง "ลงจอดแล้ว" บนดาดฟ้า/พื้นใกล้ตัวอักษร ----
+  // 🌳 รอบ 816: บนพื้นที่สีเขียวขยายรัศมีเป็น 5.2 ม. (ที่โล่งกว้าง ไม่มีขอบดาดฟ้าบังคับให้จอดเป๊ะ)
   if(hLanded){
+    const grabR=heliKpp()?5.2:3.6;
     for(let i=letters.length-1;i>=0;i--){
       const lp=letters[i].spr.position;
-      if(Math.hypot(lp.x-nx,lp.z-nz)<3.6 && Math.abs((letters[i].baseY-1.3)-floor)<2) pickUpLetter(i);
+      if(Math.hypot(lp.x-nx,lp.z-nz)<grabR && Math.abs((letters[i].baseY-1.3)-floor)<2) pickUpLetter(i);
     }
   }
   letters.forEach(l=>{ l.spr.position.y=(l.baseY||1.15)+Math.sin(now/400+l.spr.position.x*2)*.12; });
@@ -8404,9 +8502,11 @@ function fogUpdate(now){
   else if(h>=18.5)          n=(h-18.5)/1.5;
   else if(h<6)              n=1-(h-4.5)/1.5;
   heliNight=Math.max(0,Math.min(1,n));
-  scene.fog.near=HELI_FOG_N0*(1-.86*heliFog);    // 45 → ~6 (มองเห็นใกล้มาก)
-  scene.fog.far =HELI_FOG_F0*(1-.74*heliFog);    // 150 → ~39
-  _fogSky.set(MODES.heli.sky);
+  // 🚁🌳 รอบ 816: เมืองกำแพงเพชรกว้างมาก — ใช้ระยะหมอก/สีฟ้าชุดโลกขับรถ (45/150 ของเมืองเฮลิฯ จะบังทั้งเมือง)
+  const fogN0=heliKpp()?MODES.drive.fogN:HELI_FOG_N0, fogF0=heliKpp()?MODES.drive.fogF:HELI_FOG_F0;
+  scene.fog.near=fogN0*(1-.86*heliFog);          // 45 → ~6 (มองเห็นใกล้มาก)
+  scene.fog.far =fogF0*(1-.74*heliFog);          // 150 → ~39
+  _fogSky.set(heliKpp()?MODES.drive.sky:MODES.heli.sky);
   _fogCol.copy(_fogSky).lerp(_fogMist,heliFog*.8);   // ฟ้า → ขาวนวลอมเทา (หมอก)
   _fogCol.lerp(_nightSky,heliNight);                 // → มืดตามระดับกลางคืน
   scene.fog.color.copy(_fogCol);
@@ -11432,15 +11532,18 @@ function introSeenObj(){ try{ return JSON.parse(localStorage.getItem(INTRO_KEY))
 function introSeen(md){ return !!introSeenObj()[md]; }
 function markIntroSeen(md){ const o=introSeenObj(); o[md]=1; try{ localStorage.setItem(INTRO_KEY,JSON.stringify(o)); }catch(e){} }
 const INTRO=window.ADV3D_INTRO;   // ❓ data ย้ายไป js/adv3d_intro.js (ผ่าไฟล์เฟส 2 รอบ 545)
+/* 🚁🌳 รอบ 816: การ์ดวิธีเล่นบางใบเป็น "แผนที่ย่อย" ไม่ใช่ชื่อโหมดจริง → แม็ปกลับไปโหมดที่ยืม label/emoji/reward มาใช้ */
+const INTRO_MODE={helikpp:'heli'};
+const introKey=()=>heliKpp()?'helikpp':mode;
 function showIntro(md,reopen){
   if(!introEl) return;
   running=false;                                   // พักเกมระหว่างอ่าน (loop จะหยุดเฟรมถัดไป)
-  const m=MODES[md]||MODES.adv, info=INTRO[md]||INTRO.adv;
+  const m=MODES[md]||MODES[INTRO_MODE[md]]||MODES.adv, info=INTRO[md]||INTRO.adv;
   const rows=IS_TOUCH?info.touch:info.keys;
   introEl.innerHTML=`
     <div class="adv-intro-card">
       <div class="adv-intro-emoji">${m.emoji}</div>
-      <h2>วิธีเล่น${m.label}</h2>
+      <h2>วิธีเล่น${info.title||m.label}</h2>
       <div class="adv-intro-body">
         <div class="adv-intro-side">
           <p class="adv-intro-goal">🎯 ${info.goal}</p>
@@ -11457,17 +11560,22 @@ function showIntro(md,reopen){
   introEl.classList.add('on');
   introEl.querySelector('#adv-intro-go').addEventListener('click',()=>closeIntro(md));
 }
+/* 🚁🌳 รอบ 816: ป้ายเปิดฉาก — เมืองกำแพงเพชรของเฮลิฯ มีกติกาคนละแบบกับเมืองเฮลิฯ (ดาดฟ้า vs พื้นที่สีเขียว) */
+const HELI_KPP_BANNER='🚁🌳 <b>บินเหนือเมืองกำแพงเพชร!</b><br><small>ตัวอักษรวางอยู่บน<b>พื้นที่สีเขียวข้างถนน</b> — ต้อง<b>ร่อนลงจอดบนหญ้า</b>ให้เครื่องจอดสนิทจึงเก็บได้<br>🎯 วงเป้าบนจอชี้จุดที่ต้องไป (ใกล้แล้วเป็นสีเขียว) · 🏆 ลงนุ่มๆ ได้เหรียญโบนัส<br>⚠️ บินให้สูงกว่ายอดตึกไว้ก่อน แล้วค่อยหย่อนลงตรงลานหญ้า</small>';
+const modeIntro=()=>heliKpp()?HELI_KPP_BANNER:M.intro;
 function closeIntro(md){
   markIntroSeen(md);
   introEl.classList.remove('on');
   beginPlay();
-  showBanner(M.intro);
+  showBanner(modeIntro());
 }
 function beginPlay(){ clock.getDelta(); running=true; loop(); }   // เริ่ม/เล่นต่อ — ทิ้ง dt ที่ค้างช่วงพัก
 
 function start(md,opt){
   mode=(md==='haunt'||md==='heli'||md==='drone'||md==='drive'||md==='soccer'||md==='mecha')?md:'adv';
   M=MODES[mode];
+  // 🚁🌳 รอบ 816: แผนที่ย่อยของโหมดเฮลิฯ — 'kpp' = ยืมฉากเมืองกำแพงเพชรของโลกขับรถ (ต้องมี KPP_CITY โหลดแล้ว)
+  heliMap=(mode==='heli' && opt && opt.map==='kpp' && window.KPP_CITY)?'kpp':'city';
   if(mode==='adv' && !state.advTicket){ toast('🎫 ต้องมีตั๋วโลกผจญภัยก่อนนะ'); return; }
   if(mode==='haunt' && !state.hauntTicket){ toast('🏨 ต้องมีตั๋วโรงแรมผีสิงก่อนนะ'); return; }
   // 🗺️ รอบ 356: เข้าเมืองเฮลิฯ แบบ "เดินเท้า" ผ่านแผนที่โลกผจญภัยได้โดยไม่ต้องมีตั๋วเฮลิฯ
@@ -11490,17 +11598,21 @@ function start(md,opt){
     built=true;
   }
   if(scene) clearEntities();                       // ล้างของโหมดก่อนหน้า (ถ้าเคยเข้า)
-  if(!worlds[mode]) buildScene(mode);
-  scene=worlds[mode].scene; trees=worlds[mode].trees||[]; buildings=worlds[mode].buildings||[];
-  if(!worlds[mode]._sky){ worlds[mode]._sky=1; applySky(scene, mode); }   // 🌅 ท้องฟ้าภาพจริง (ครั้งเดียว/โลก · ไม่มีไฟล์=คงสีพื้น)
-  solids=worlds[mode].solids||[];
+  // 🚁🌳 รอบ 816: เฮลิฯ แผนที่ 'kpp' ใช้ฉากของโลกขับรถทั้งก้อน (worlds.drive) — ไม่สร้างฉากซ้ำ
+  const wk=heliKpp()?'drive':mode;
+  if(!worlds[wk]) buildScene(wk);
+  scene=worlds[wk].scene; trees=worlds[wk].trees||[]; buildings=worlds[wk].buildings||[];
+  if(!worlds[wk]._sky){ worlds[wk]._sky=1; applySky(scene, wk); }   // 🌅 ท้องฟ้าภาพจริง (ครั้งเดียว/โลก · ไม่มีไฟล์=คงสีพื้น)
+  solids=worlds[wk].solids||[];
 
   maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง
   hauntLives=HAUNT_LIVES; hurtUntil=0;                                 // 👻 รีเซ็ตหัวใจโลกผี
   hauntRunStart=performance.now(); hauntRecordShown=false;             // ⏱ รอบ 256: เริ่มจับเวลาหนีผีรอด
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
-    camera.position.set(0,HELI_SKID,0);            // เริ่มบนลานจอดกลางเมือง
+    // 🚁🌳 รอบ 816: kpp = ลงจอดบนลานหญ้าใกล้หอนาฬิกา (ลานจอดกลางเมืองเฮลิฯ คือ 0,0 ซึ่งที่นี่เป็นเกาะวงเวียน)
+    if(heliKpp()){ const s0=heliKppSpawn(); camera.position.set(s0.x,HELI_SKID,s0.z); yaw=s0.yaw; }
+    else camera.position.set(0,HELI_SKID,0);       // เริ่มบนลานจอดกลางเมือง
     hVel={x:0,y:0,z:0}; hCol=0; hLanded=true; hHitAt=0; hWarnLvl=0;
     hAtcCleared=false; ATC.reset();
     netHpOk=true;                                  // 🚁 รอบ 376: คืนสิทธิ์ส่ง hp เผื่อผู้ใช้เพิ่ง publish rules
@@ -11524,6 +11636,12 @@ function start(md,opt){
     if(hudInstEl) hudInstEl.classList.remove('bat-low');
     if(hudWarnEl) hudWarnEl.style.display='none';
   }else if(M.drive){
+    /* 🌫️🩹 รอบ 816: โหมดเฮลิฯ แผนที่ 'kpp' ใช้ฉากเดียวกันกับโลกขับรถ และ fogUpdate ของเฮลิฯ
+       ไป "เขียนทับ" หมอก/สีฟ้าของฉากนี้ตามเวลาจริง (กลางคืนมืด/หมอกเช้าใกล้) — โลกขับรถไม่มีระบบนั้น
+       จึงไม่มีใครตั้งค่าคืน → เข้าโลกขับรถหลังบินเฮลิฯ จะได้หมอกค้างของเฮลิฯ ต้องคืนค่าเองที่นี่ */
+    if(scene.fog){ scene.fog.near=MODES.drive.fogN; scene.fog.far=MODES.drive.fogF;
+                   scene.fog.color.setHex(MODES.drive.sky); }
+    if(scene.background&&scene.background.isColor) scene.background.setHex(MODES.drive.sky);
     const sp=worlds.drive.d.spawn;                 // เกิดบนถนนใหญ่ข้างวงเวียนหอนาฬิกา หันตามแนวถนน
     camera.position.set(sp.x,CAR_EYE,sp.z); yaw=sp.yaw;
     dSpeed=0; dSteer=0; dLook=0; hHitAt=0; carStreet=''; carNameAt=0;
@@ -11587,7 +11705,7 @@ function start(md,opt){
   }else{
     camera.position.set(0,EYE_H,0);
   }
-  camera.far=M.drive?800:(M.soccer?400:(M.mecha?320:220)); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล
+  camera.far=(M.drive||heliKpp())?800:(M.soccer?400:(M.mecha?320:220)); camera.updateProjectionMatrix();   // เมืองจริง/สนามใหญ่ต้องมองไกล (รอบ 816: เฮลิฯ เหนือเมืองจริงด้วย)
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   words=pickWords(GUIDE_WORDS);
   if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
@@ -11617,14 +11735,24 @@ function start(md,opt){
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
   if(mode==='heli'){
-    // 🚶 รอบ 354: เข้าโลกแล้ว "เริ่มเดินเท้า" — เครื่องยนต์ยังไม่สตาร์ท (beginPilot ค่อยสตาร์ทตอนเดินไปขึ้นเฮลิฯ แดง)
-    hPhase='walk';
-    termB=worlds.heli.foot.term;
-    worlds.heli.foot.pilotH.visible=true;                 // ลำที่จอดโชว์กลับมา (เผื่อรอบก่อนขับอยู่)
-    endRide(false);                                       // เฮลิฯ โดยสารกลับที่จอดดาดฟ้า + ตัดเสียงค้าง
-    overlayEl.classList.add('hfoot'); setFootBtns(false,false);
-    camera.position.set(1.5,FOOT_EYE,9);                  // เกิดริมลานกลาง มองเห็นเฮลิฯ แดง+เมือง
-    HeliSound.probe();                                    // โหลดไฟล์เสียงรอไว้ (ใช้ทั้งตอนขับและเสียงห้องโดยสาร)
+    if(heliKpp()){
+      /* 🚁🌳 รอบ 816: เมืองกำแพงเพชรไม่มีตึกเทอร์มินัล/ลิฟต์/ลำจอดโชว์ (ของพวกนั้นอยู่ใน worlds.heli.foot)
+         → ข้ามเฟสเดินเท้าไปเลย ขึ้นนั่งที่นักบินพร้อมสตาร์ทเครื่องตั้งแต่เฟรมแรก */
+      hPhase='pilot'; termB=null;
+      overlayEl.classList.remove('hfoot','show-adshop'); setFootBtns(false,false);
+      HeliSound.start();
+      hAtcCleared=false; ATC.reset();
+      dustBurst(camera.position.x,.05,camera.position.z,18);   // 🌪️ ฝุ่นหญ้าฟุ้งตอนใบพัดเริ่มหมุน
+    }else{
+      // 🚶 รอบ 354: เข้าโลกแล้ว "เริ่มเดินเท้า" — เครื่องยนต์ยังไม่สตาร์ท (beginPilot ค่อยสตาร์ทตอนเดินไปขึ้นเฮลิฯ แดง)
+      hPhase='walk';
+      termB=worlds.heli.foot.term;
+      worlds.heli.foot.pilotH.visible=true;               // ลำที่จอดโชว์กลับมา (เผื่อรอบก่อนขับอยู่)
+      endRide(false);                                     // เฮลิฯ โดยสารกลับที่จอดดาดฟ้า + ตัดเสียงค้าง
+      overlayEl.classList.add('hfoot'); setFootBtns(false,false);
+      camera.position.set(1.5,FOOT_EYE,9);                // เกิดริมลานกลาง มองเห็นเฮลิฯ แดง+เมือง
+      HeliSound.probe();                                  // โหลดไฟล์เสียงรอไว้ (ใช้ทั้งตอนขับและเสียงห้องโดยสาร)
+    }
     hViewSwitched=false;
     setSeat(0);                                           // 🎚️ ตอนสตาร์ทเครื่อง = มุมเต็มลำ (ได้อารมณ์อยู่ในห้องนักบิน)
     setWiper(0); setVisor(false); setHeliLight(false);    // 🌧️🕶️💡 เข้าโลกใหม่ = ที่ปัด/ม่าน/ไฟ ปิดเสมอ
@@ -11655,12 +11783,12 @@ function start(md,opt){
   if(mode==='soccer'){
     renderer.render(scene,camera);      // แสดงสนามไว้ข้างหลัง แล้วเด้งแผงเลือกชุดนักเตะก่อนเล่น
     soccerKitShow();                    // กด "เตะเลย!" → soccerKitGo() สร้างหุ่น + เข้าเกม/วิธีเล่น
-  }else if(introSeen(mode)){
+  }else if(introSeen(introKey())){
     beginPlay();
-    showBanner(M.intro);
+    showBanner(modeIntro());
   }else{
     renderer.render(scene,camera);      // แสดงฉากไว้ข้างหลังการ์ด (ยังไม่เดินลูป/พักเกม)
-    showIntro(mode,false);              // การ์ดวิธีเล่นครั้งแรก — กด "เริ่มเล่น" แล้วค่อย beginPlay
+    showIntro(introKey(),false);        // การ์ดวิธีเล่นครั้งแรก — กด "เริ่มเล่น" แล้วค่อย beginPlay (รอบ 816: แผนที่ย่อยจำแยกใบ)
   }
 }
 
@@ -11758,6 +11886,10 @@ window.Adventure3D={
     peersTick:(dt)=>tickPeers(dt||.016,performance.now()),   // 🚁 รอบ 376: เทสต์ลำเพื่อนตอนแท็บโดน throttle
     /* 🏟️ รอบ 640: ระบบหลายสนาม (โหมดไหนก็ได้ในไฟล์นี้) */
     netJoinAs(md){ if(md){ mode=md; M=MODES[md]||M; } netJoin(); }, netLeave, netUp,
+    // 🚁🌳 รอบ 816: testkit แผนที่ย่อยของโหมดเฮลิฯ (บนเมืองกำแพงเพชร)
+    get heliMap(){ return heliMap; }, get heliKpp(){ return heliKpp(); },
+    get heliPhase(){ return hPhase; }, get landed(){ return hLanded; },
+    heliKppSpawn, heliKppBlocked,
     get room(){ return room; },
     get crowd(){ return {peers:Object.keys(peers).length, roomIdx:room?room.room:-1,
       full:room?room.full:false, legacy:room?room.legacy:false, joined:room?room.joined:false,
