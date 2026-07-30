@@ -18,7 +18,7 @@
 
 /* ---------- ค่ากติกากลาง ---------- */
 const GUIDE_WORDS  = 10;        // จำนวนคำ guideline บนจอ (8.1)
-const RELOCATE_MS  = 75000;     // ตัวอักษรค้างครบเวลานี้ → สุ่มย้ายที่ (8.2)
+const LETTER_RESPAWN_MS = 60000; // 🔠⏱️ รอบ 847 (ผู้ใช้สั่ง): เก็บตัวอักษรแล้วหาย → เกิดใหม่ "ที่เดิม" หลังผ่านไปเท่านี้ (เดิมมีระบบสุ่มย้ายที่ทุก 75 วิ — เอาออกแล้ว ตัวอักษรที่ยังไม่ถูกเก็บจะอยู่นิ่งตลอด)
 const HALF         = 60;        // ครึ่งความกว้างแผนที่ (โลก 120×120)
 const PLAYER_SPEED = 6;         // m/s
 const HAUNT_LIVES  = 3;         // 👻 หัวใจโลกผี: โดนแตะเสีย 1 ดวง หมดเมื่อไรจบ (กันตายทีเดียว)
@@ -2772,42 +2772,26 @@ function ensureDriveAmbience(){
   });
   while(bonusCnt<DRIVE_BONUS_COINS && letters.length<90){ spawnLetter('🪙'); bonusCnt++; }
 }
-function relocateLetters(now){
-  letters.forEach(l=>{
-    if(now-l.born>=RELOCATE_MS){
-      if(M.drive){
-        const p=Math.random()<.5?randGreenPos(60,450):randRoadPos(60,450);   // 🌳 รอบ 811: ย้ายที่ก็ยังสลับถนน/หญ้าข้างทาง
-        l.spr.position.set(p.x,1.7,p.z);
-      }else if(M.drone && buildings.length){
-        const b=buildings[Math.floor(Math.random()*buildings.length)];
-        const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
-        l.spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
-      }else if(heliKpp()){
-        const p=randGreenPos(70,520);            // 🚁🌳 รอบ 816: ย้ายที่ก็ยังอยู่บนพื้นที่สีเขียว
-        l.spr.position.set(p.x,1.4,p.z);
-      }else if(M.heli && buildings.length){
-        const b=buildings[Math.floor(Math.random()*buildings.length)];
-        l.spr.position.set(b.x,b.h+1.3,b.z);
-      }else if(M.soccer){
-        const p=soccerLetterPos();
-        l.spr.position.set(p.x,p.y,p.z);
-      }else if(M.hotel && hotel){
-        const p=hotelSpot(l);                       // ส่งตัวเองไปด้วย จะได้ไม่นับตัวเองในโควตาห้องเดิม (รอบ 778)
-        l.spr.position.set(p.x,p.y+1.15,p.z);
-        l.room=p.room;
-      }else{
-        const p=randPos(10);
-        l.spr.position.set(p.x,1.15,p.z);
-      }
-      l.baseY=l.spr.position.y;
-      l.born=now;
-    }
-  });
-}
 function removeLetter(i){
   const l=letters[i];
   scene.remove(l.spr); l.spr.material.dispose();
   letters.splice(i,1);
+}
+/* 🔠⏱️ รอบ 847 (ผู้ใช้สั่ง): ตัวอักษรที่ถูกเก็บแล้ว เกิดใหม่ "ที่จุดเดิมเป๊ะ" หลัง LETTER_RESPAWN_MS (ไม่ใช่จุดสุ่มใหม่)
+   letterRespawns = คิวรอ [{ch,x,y,z,scale,room,at}] · เติมเข้าคิวตอนเก็บใน pickUpLetter() (ไม่ใช้กับ 🪙 เหรียญโบนัส — คนละระบบ ambient เดิม) */
+let letterRespawns=[];
+function spawnLetterAt(item){
+  const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTex(item.ch),transparent:true}));
+  spr.position.set(item.x,item.y,item.z);
+  spr.scale.set(item.scale,item.scale,1);
+  if(M.hotel) tintSprite(spr.material);          // ห้องมืด/ไฟดับ ต้องหม่นเท่าตัวอื่น (เหมือน spawnLetter)
+  scene.add(spr);
+  letters.push({ch:item.ch,spr,born:performance.now(),baseY:item.y,room:item.room,bonus:false});
+}
+function tickLetterRespawns(now){
+  for(let i=letterRespawns.length-1;i>=0;i--){
+    if(now>=letterRespawns[i].at){ spawnLetterAt(letterRespawns[i]); letterRespawns.splice(i,1); }
+  }
 }
 
 /* ============================================================
@@ -2832,6 +2816,8 @@ function pickUpLetter(i){
   inv[ch]=(inv[ch]||0)+1;
   addCoins(LETTER_COIN);
   sessionCoins+=LETTER_COIN;                  // ให้สรุปท้ายรอบตรงกับที่ได้จริง
+  // 🔠⏱️ รอบ 847: จำจุดเดิมไว้ — อีก LETTER_RESPAWN_MS ค่อยเกิดใหม่ "ที่นี่" (ไม่ใช่จุดสุ่มใหม่)
+  letterRespawns.push({ch,x:at.x,y:l.baseY,z:at.z,scale:l.spr.scale.x,room:l.room,at:performance.now()+LETTER_RESPAWN_MS});
   removeLetter(i);
   letterPop(at,ch);                           // 🅰️ ป้ายตัวอักษร +1🪙 เด้งตรงจุดที่เก็บ
   letterChime();                              // 🔔 เสียงเก็บตัวอักษร (คนละเสียงกับจบคำ)
@@ -11535,7 +11521,8 @@ function loop(){
       if(now-lastSpawn>M.monSpawnMs){ lastSpawn=now; spawnMonster(); }
     }
   }
-  if(now-lastEnsure>5000 && !M.soccer){ lastEnsure=now; relocateLetters(now); ensureCoverage(); ensureDriveAmbience(); }
+  if(now-lastEnsure>5000 && !M.soccer){ lastEnsure=now; ensureCoverage(); ensureDriveAmbience(); }
+  tickLetterRespawns(now);
   tickPeers(dt,now);
   sendPos(false);
   drawMinimap();
@@ -11571,6 +11558,7 @@ function savePhoto(){
 function clearEntities(){
   ghostGen++;                                      // ออก/เปลี่ยนด่าน → ยกเลิก spawn ผีที่ยังรอภาพโหลดค้างอยู่
   while(letters.length) removeLetter(0);
+  letterRespawns=[];                                // 🔠⏱️ รอบ 847: ออกโลก/เปลี่ยนด่าน = ล้างคิวรอเกิดใหม่ (กันตัวอักษรโลกเก่าโผล่ในโลกใหม่)
   /* 🧟 รอบ 689: ผีโรงแรมเป็น Group ของโมเดล 3D (ไม่มี .material ของตัวเอง) — โลกอื่นยังเป็น Sprite
      geometry ใช้ร่วมกับต้นฉบับที่ cache ไว้ ห้าม dispose (เดี๋ยวตัวถัดไปโหลดมาแล้วจอขาว) ทิ้งเฉพาะ material ที่ clone */
   monsters.forEach(m=>{
@@ -12139,10 +12127,14 @@ window.Adventure3D={
           tickPlayer(dt,now);
           if(M.ghost) tickGhosts(dt,now); else { tickMonsters(dt,now); tickShots(dt); }
         }
+        tickLetterRespawns(now);
         tickPeers(dt,now); drawMinimap(); renderer.render(scene,camera);
       }
     },
     renderNow(){ camera.updateMatrixWorld(); renderer.render(scene,camera); },   // เทสต์: เรนเดอร์เฟรมเดียวโดยไม่ขยับกล้อง
+    get letters(){ return letters.map(l=>({ch:l.ch,x:l.spr.position.x,y:l.spr.position.y,z:l.spr.position.z,bonus:!!l.bonus})); },   // 🔠 เทสต์: ดูตัวอักษรบนพื้นตอนนี้
+    get letterRespawns(){ return letterRespawns.map(r=>({...r})); },              // 🔠⏱️ เทสต์: ดูคิวรอเกิดใหม่
+    pickUp:(i)=>pickUpLetter(i),                                                 // 🔠 เทสต์: เก็บตัวอักษรตรง ๆ ไม่ต้องเดินชน
   },
 };
 })();
