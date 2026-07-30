@@ -432,7 +432,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 ## js/main.js (333 บรรทัด · 6 รายการ)
 syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefund:232 · fitQbp:272 · bootGame:286
 
-## js/moto3d.js (2,657 บรรทัด · 141 รายการ)
+## js/moto3d.js (2,670 บรรทัด · 141 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
 - 91-296 🚗🏙️ รอบ 785: ยกการขับจาก "โลกขับรถเมืองกำแพงเพชร" มาทั้งชุด (เฉพาะ vehicle==='car')
 - 297-484 DOM เครื่องเกมพกพา (สร้างครั้งเดียว · CSS ฉีดเอง ไม่แตะ style.css)
@@ -444,14 +444,14 @@ syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefu
 - 933-1173 ถนนจากแผนที่จริง → geometry + ตารางแฮชชนถนน
 - 1174-1513 ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
 - 1514-1566 🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
-- 1567-1687 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
-- 1688-1720 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
-- 1721-1817 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
-- 1818-2008 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
-- 2009-2050 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
-- 2051-2201 คำศัพท์ + ตัวอักษรบนถนน
-- 2202-2511 สร้างโลกครั้งเดียว + ลูปเกม
-- 2512-2657 เข้า/ออกโลก
+- 1567-1700 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
+- 1701-1733 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
+- 1734-1830 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
+- 1831-2021 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
+- 2022-2063 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
+- 2064-2214 คำศัพท์ + ตัวอักษรบนถนน
+- 2215-2524 สร้างโลกครั้งเดียว + ลูปเกม
+- 2525-2670 เข้า/ออกโลก
 ### รายการ js/moto3d.js
 REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
 GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
@@ -469,14 +469,14 @@ TXT_SPR_H:1179 · makeTextSprite:1180 · letterTexture:1195 · woodTileMat:1210 
 buildScenery:1379 · scatterTrees:1458 · postTick:1478 · scatterClouds:1505 · makeDog:1517 · spawnDog:1532
 dogHit:1542 · dogTick:1553 · coinTexture:1571 · makeCoins:1582 · loadCoinImg:1588 · addCoin:1600
 clearCoins:1608 · addFreeCoin:1612 · coinTierAt:1620 · coinFx:1630 · grabCoin:1639 · coinTick:1656
-scatterCoinTick:1670 · placeSpecialCoin:1677 · makeVehicle:1692 · mCarSplitWheel:1729 · mCarEnsure:1755 · mCarMat:1772
-mCarBuild:1785 · mCarCode:1812 · netReady:1824 · netJoin:1830 · netSend:1843 · sendChat:1857
-showPeerBubble:1867 · removePeerBubble:1874 · renderBoard:1881 · peerColor:1903 · buildPeer:1907 · onPeer:1931
-dropPeer:1974 · netLeave:1981 · peerTick:1986 · PEER_DRAW_MAX:2014 · drawnPeers:2015 · drawSlotFree:2016
-showPeerAgain:2017 · hidePeer:2024 · tickDrawBudget:2029 · spawnSlot:2037 · pickWord:2054 · spawnLetters:2064
-renderWordHud:2082 · fitWord:2090 · collectTick:2097 · completeWord:2121 · relocTick:2146 · gpsTick:2161
-miniTick:2170 · build:2205 · applyVehicleUi:2239 · fit:2268 · tick:2277 · carDrive:2287
-frame:2336 · start:2515 · exitWorld:2587
+scatterCoinTick:1672 · placeSpecialCoin:1690 · makeVehicle:1705 · mCarSplitWheel:1742 · mCarEnsure:1768 · mCarMat:1785
+mCarBuild:1798 · mCarCode:1825 · netReady:1837 · netJoin:1843 · netSend:1856 · sendChat:1870
+showPeerBubble:1880 · removePeerBubble:1887 · renderBoard:1894 · peerColor:1916 · buildPeer:1920 · onPeer:1944
+dropPeer:1987 · netLeave:1994 · peerTick:1999 · PEER_DRAW_MAX:2027 · drawnPeers:2028 · drawSlotFree:2029
+showPeerAgain:2030 · hidePeer:2037 · tickDrawBudget:2042 · spawnSlot:2050 · pickWord:2067 · spawnLetters:2077
+renderWordHud:2095 · fitWord:2103 · collectTick:2110 · completeWord:2134 · relocTick:2159 · gpsTick:2174
+miniTick:2183 · build:2218 · applyVehicleUi:2252 · fit:2281 · tick:2290 · carDrive:2300
+frame:2349 · start:2528 · exitWorld:2600
 
 ## js/music.js (169 บรรทัด · 0 รายการ)
 
