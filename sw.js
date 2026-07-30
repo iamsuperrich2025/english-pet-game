@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v211';  // v211: รอบ 777: นาฬิกาจับเวลาสอบใหญ่ + เวลาบนใบประกาศ
+const CACHE_VERSION = 'pet-vocab-v213';  // v213: รอบ 812: ระบบข้อสอบจริงแบบมาตรฐาน (css/exam.css + js/examstd.js ใหม่)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -15,6 +15,7 @@ const SHELL = [
   './manifest.json',
   './css/style.css',
   './css/lobby.css',
+  './css/exam.css',
   './js/data/pets.js',
   './js/data/items.js',
   './js/data/vocab.js',
@@ -26,6 +27,8 @@ const SHELL = [
   './js/data/badwords.js',
   './js/data/firebase-config.js',
   './js/data/dict_band/manifest.js',
+  './js/data/exam/manifest.js',
+  './js/examstd.js',
   './js/dictband.js',
   './js/vocabbook.js',
   './js/util.js',

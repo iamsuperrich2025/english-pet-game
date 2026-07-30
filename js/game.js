@@ -876,6 +876,7 @@ function renderCats(){
     </div>`;
   }).join('') + (typeof bandCardsHTML === 'function' ? bandCardsHTML() : '')
     + (typeof bandAdvCardsHTML === 'function' ? bandAdvCardsHTML() : '')   // 🎓 คลังศัพท์ขั้นสูงแยกหมวด (รอบ 681)
+    + (typeof examStdCardsHTML === 'function' ? examStdCardsHTML() : '')   // 📋 ข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812)
     + (typeof vbCardHTML === 'function' ? vbCardHTML() : '');   // 📒 การ์ดสมุดคำศัพท์ท้ายรายการ
   list.querySelectorAll('.cat-btn.practice').forEach(b=>
     b.addEventListener('click', ()=>b.dataset.badv ? bandAdvPlay(b.dataset.badv, 'game') : b.dataset.band ? bandPlay(b.dataset.band, 'game') : startGame(findCat(b.dataset.cat))));
@@ -887,6 +888,9 @@ function renderCats(){
   // 🏅 รอบ 773: สอบใหญ่คลังขั้นสูง — เปิดแผงเลือกระดับ (30/40/50 ข้อ) ก่อน
   list.querySelectorAll('.cat-btn.bigexam').forEach(b=>
     b.addEventListener('click', ()=>bandAdvExamOpen(b.dataset.badv)));
+  // 📋 รอบ 812: ข้อสอบจริงแบบมาตรฐาน — เปิดแผงเลือกชุด (สอบจริง/โหมดฝึก) ก่อน
+  list.querySelectorAll('.cat-btn.xstd').forEach(b=>
+    b.addEventListener('click', ()=>openExamStdPicker(b.dataset.xstd)));
 }
 
 const quiz = {cat:null, questions:[], idx:0, correct:0, answered:false,

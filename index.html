@@ -19,6 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/lobby.css">
+<link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
 <!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —
      inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
      เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
@@ -423,6 +424,8 @@
 <script src="js/dictband.js"></script>  <!-- คลังศัพท์ band → เกมจับคู่ + ข้อสอบ (ต่อเข้า game.js) -->
 <script src="js/data/band/manifest.js"></script>  <!-- 🎓 สารบัญคลังศัพท์ขั้นสูงแยกหมวด (รอบ 681) — เจนจาก tools/gen_band_adv_manifest.py -->
 <script src="js/bandadv.js"></script>  <!-- คลังศัพท์ขั้นสูง (js/data/band/) → เกมจับคู่ + ข้อสอบเดิม (รอบ 681) -->
+<script src="js/data/exam/manifest.js"></script>  <!-- 📋 รอบ 812: สารบัญชุดข้อสอบจริงแบบมาตรฐาน (เจนจาก tools/gen_exam_std_manifest.py) — ตัวข้อสอบ json โหลดขี้เกียจใน examstd.js -->
+<script src="js/examstd.js"></script>  <!-- 📋 รอบ 812: ข้อสอบจริง IELTS/TOEIC/TOEFL 30 ข้อ/ชุด (ไวยากรณ์+การอ่าน) พร้อมเฉลยละเอียด -->
 <script src="js/vocabbook.js"></script>  <!-- 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) -->
 <script src="js/data/word_new.js"></script>  <!-- 🆕 New Word หน้า Lobby (รอบ 116) — format ตรงสเปกพจนานุกรม -->
 <script src="js/data/ranks.js"></script>

@@ -1,0 +1,215 @@
+/* ============================================================
+   📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js)
+   กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง"
+   (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
+   ============================================================ */
+
+/* ---------- จอสอบเต็มจอ ---------- */
+#xs-screen{
+  position:fixed; inset:0; z-index:1400; display:flex; flex-direction:column;
+  background:linear-gradient(160deg,#f7f3ff 0%,#eef6ff 100%); font-family:'Kanit',sans-serif;
+}
+.xs-top{
+  flex:0 0 auto; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  padding:6px 10px; background:var(--purple-d,#7d5fc0); color:#fff; box-shadow:0 2px 8px rgba(80,50,140,.25);
+}
+.xs-badge{font-weight:600; font-size:15px}
+.xs-mode{font-size:12px; background:rgba(255,255,255,.22); border-radius:11px; padding:2px 9px}
+.xs-time{font-size:13px; margin-left:auto; background:rgba(255,255,255,.18); border-radius:11px; padding:2px 9px}
+.xs-time.over{background:#ffb4a2; color:#7a2412; font-weight:600}
+.xs-score{font-size:13px; background:#ffd76e; color:#8a6410; border-radius:11px; padding:2px 9px; font-weight:600}
+.xs-quit{
+  border:0; border-radius:10px; padding:4px 10px; font-family:inherit; font-size:13px; cursor:pointer;
+  background:rgba(255,255,255,.9); color:#6b4ea8; font-weight:600;
+}
+
+/* ---------- แถบกระดาษคำตอบ 30 ข้อ ---------- */
+.xs-nav{
+  flex:0 0 auto; display:flex; gap:3px; padding:5px 8px; overflow-x:auto; background:#fff;
+  border-bottom:1px solid #e6dcf7;
+}
+.xs-dot{
+  flex:0 0 auto; width:25px; height:25px; border-radius:7px; cursor:pointer;
+  border:1px solid #d9cdf0; background:#f7f3ff; color:#7a6a92; font-size:11px; font-family:inherit;
+}
+.xs-dot.has{background:#dcd0ff; color:#4a3a72; font-weight:600}
+.xs-dot.ok{background:#c9edc0; border-color:#8fce7f; color:#2f6b23}
+.xs-dot.no{background:#ffd2cb; border-color:#f0a294; color:#8a2f1e}
+.xs-dot.now{outline:2px solid var(--purple-d,#7d5fc0); outline-offset:1px; transform:scale(1.08)}
+
+/* ---------- ตัวข้อสอบ: บทอ่านซ้าย / คำถามขวา ---------- */
+.xs-body{flex:1 1 auto; display:flex; gap:10px; padding:8px 10px; min-height:0}
+.xs-pass{
+  flex:1 1 46%; min-width:0; overflow-y:auto; background:#fffdf6; border:1px solid #ecdfc4;
+  border-radius:12px; padding:10px 13px; font-size:14.5px; line-height:1.62; color:#3f3550;
+}
+.xs-pass[hidden]{display:none}
+.xs-ptitle{font-weight:600; font-size:16px; color:#8a6410; margin-bottom:6px}
+.xs-para{margin:0 0 9px; position:relative; padding-left:22px}
+.xs-pn{
+  position:absolute; left:0; top:2px; width:16px; height:16px; border-radius:5px; text-align:center;
+  background:#f0e6cf; color:#8a6410; font-size:10.5px; line-height:16px; font-weight:600;
+}
+.xs-pass .xs-para:not(:has(.xs-pn)){padding-left:0}
+.xs-qside{
+  flex:1 1 54%; min-width:0; overflow-y:auto; background:#fff; border:1px solid #e2d6f7;
+  border-radius:12px; padding:10px 13px;
+}
+.xs-sec{font-size:12.5px; color:#7d5fc0; margin-bottom:6px}
+.xs-sec small{display:block; color:#8a7f9c; font-size:11.5px}
+.xs-q{font-size:16px; line-height:1.55; color:#33283f; margin-bottom:9px}
+.xs-qno{
+  display:inline-block; background:var(--purple-d,#7d5fc0); color:#fff; border-radius:8px;
+  padding:1px 8px; font-size:12.5px; margin-right:5px; vertical-align:2px;
+}
+.xs-choices{display:flex; flex-direction:column; gap:6px}
+.xs-ch{
+  display:flex; align-items:flex-start; gap:8px; text-align:left; cursor:pointer;
+  border:1.5px solid #ddd0f5; background:#faf7ff; border-radius:11px; padding:8px 10px;
+  font-family:inherit; font-size:15px; color:#3d3350; line-height:1.45;
+}
+.xs-ch:hover:not(:disabled){border-color:#b79df0; background:#f3ecff}
+.xs-ch:disabled{cursor:default}
+.xs-ab{
+  flex:0 0 auto; width:22px; height:22px; border-radius:7px; background:#e7ddfa; color:#6b4ea8;
+  font-size:12.5px; font-weight:600; text-align:center; line-height:22px;
+}
+.xs-ch.pick{border-color:var(--purple-d,#7d5fc0); background:#efe6ff}
+.xs-ch.pick .xs-ab{background:var(--purple-d,#7d5fc0); color:#fff}
+.xs-ch.right{border-color:#6cba57; background:#eaf8e5}
+.xs-ch.right .xs-ab{background:#6cba57; color:#fff}
+.xs-ch.wrong{border-color:#e6816c; background:#fdeeea}
+.xs-ch.wrong .xs-ab{background:#e6816c; color:#fff}
+
+/* ---------- กล่องเฉลยละเอียด (โหมดฝึก) ---------- */
+.xs-ex{display:none}
+.xs-ex.show{
+  display:block; margin-top:9px; border-radius:11px; padding:9px 11px; font-size:14px; line-height:1.6;
+  border-left:5px solid #6cba57; background:#f2faef; color:#37452f;
+}
+.xs-ex.no{border-left-color:#e6816c; background:#fdf1ee; color:#4a352f}
+.xs-exh{font-weight:600; margin-bottom:3px}
+.xs-exref{margin-top:4px; font-size:12.5px; color:#7a6a92}
+
+/* ---------- แถบปุ่มล่าง ---------- */
+.xs-foot{
+  flex:0 0 auto; display:flex; align-items:center; gap:8px; padding:6px 10px;
+  background:#fff; border-top:1px solid #e6dcf7;
+}
+.xs-count{font-size:12.5px; color:#7a6a92; margin:0 auto}
+.xs-btn{
+  border:0; border-radius:11px; padding:8px 15px; font-family:inherit; font-size:14.5px; cursor:pointer;
+  background:#e7ddfa; color:#5a4487; font-weight:600;
+}
+.xs-btn:disabled{opacity:.4; cursor:default}
+.xs-btn.next{background:var(--purple-d,#7d5fc0); color:#fff}
+.xs-btn.send{background:linear-gradient(180deg,#ffd76e,#f5b93c); color:#7a5410}
+.xs-btn[hidden]{display:none}
+
+/* ---------- กล่องผลสอบ ---------- */
+.xs-result .xs-rscore{font-size:17px; margin:6px 0 4px; color:#3d3350; line-height:1.5}
+.xs-result .xs-rscale{
+  background:#f4efff; border-radius:11px; padding:7px 10px; margin:6px 0; font-size:14.5px; color:#5a4487;
+}
+.xs-result .xs-rscale small{display:block; font-size:11.5px; color:#8a7f9c; margin-top:2px}
+.xs-result .xs-rrow{font-size:14.5px; color:#4a3f5c; margin:4px 0; line-height:1.55}
+
+/* ---------- แผงเฉลยละเอียดหลังสอบ ---------- */
+.xsr-box{
+  position:relative; width:min(96vw,880px); max-height:92vh; display:flex; flex-direction:column;
+  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(60,35,110,.3);
+  font-family:'Kanit',sans-serif;
+}
+.xsr-head{font-size:18px; font-weight:600; color:#7d5fc0; padding-right:34px; line-height:1.35}
+.xsr-head .xsr-sub{display:block; font-size:12px; color:#8a7f9c; font-weight:400; margin-top:2px}
+.xsr-tabs{display:flex; gap:6px; margin:8px 0}
+.xsr-tab{
+  border:1.5px solid #ddd0f5; background:#faf7ff; color:#6b5a88; border-radius:11px; padding:5px 12px;
+  font-family:inherit; font-size:13.5px; cursor:pointer;
+}
+.xsr-tab.on{background:var(--purple-d,#7d5fc0); border-color:var(--purple-d,#7d5fc0); color:#fff; font-weight:600}
+.xsr-list{flex:1 1 auto; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:2px}
+.xsr-none{padding:22px 8px; text-align:center; color:#6a5a78; font-size:15px}
+.xsr-item{
+  border-radius:12px; padding:9px 11px; border-left:5px solid #e6816c; background:#fdf3f0;
+  font-size:14px; line-height:1.6; color:#3f3550;
+}
+.xsr-item.ok{border-left-color:#6cba57; background:#f3faf0}
+.xsr-qh{font-size:12.5px; color:#7d5fc0; margin-bottom:3px}
+.xsr-qh small{color:#8a7f9c; margin-left:4px}
+.xsr-qh em{
+  font-style:normal; background:#efe6ff; color:#6b4ea8; border-radius:8px; padding:0 7px;
+  font-size:11px; margin-left:4px;
+}
+.xsr-q{font-size:14.5px; color:#33283f; margin-bottom:4px}
+.xsr-ans{font-size:14px; margin-bottom:4px}
+.xsr-you{border-radius:9px; padding:1px 8px; font-size:12.5px; margin-left:6px}
+.xsr-you.good{background:#dff3d8; color:#3d6b2f}
+.xsr-you.bad{background:#ffdfd8; color:#8a3a26}
+.xsr-ex{background:rgba(255,255,255,.75); border-radius:9px; padding:6px 9px; font-size:13.5px}
+.xsr-ref{margin-top:4px; font-size:12.5px; color:#7a6a92}
+.xsr-foot{flex:0 0 auto; text-align:center; padding-top:9px}
+.xsr-ok{
+  border:0; border-radius:12px; padding:9px 24px; font-family:inherit; font-size:15px; cursor:pointer;
+  background:var(--purple-d,#7d5fc0); color:#fff; font-weight:600;
+}
+
+/* ---------- แผงเลือกชุดข้อสอบ ---------- */
+.xsp-box{
+  position:relative; width:min(96vw,760px); max-height:92vh; display:flex; flex-direction:column;
+  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(60,35,110,.3);
+  font-family:'Kanit',sans-serif;
+}
+.xsp-head{font-size:18px; font-weight:600; color:#7d5fc0; padding-right:34px; line-height:1.35}
+.xsp-head .xsp-sub{display:block; font-size:12px; color:#8a7f9c; font-weight:400; margin-top:3px; line-height:1.5}
+.xsp-rows{flex:1 1 auto; overflow-y:auto; display:flex; flex-direction:column; gap:8px; margin:9px 0}
+.xsp-set{border:1.5px solid #e2d6f7; border-radius:13px; padding:9px 11px; background:#faf7ff}
+.xsp-set.done{border-color:#8fce7f; background:#f4fbf1}
+.xsp-name{font-size:15.5px; font-weight:600; color:#4a3a72}
+.xsp-tick{font-size:12px; color:#3d6b2f; background:#dff3d8; border-radius:9px; padding:1px 8px; font-weight:400}
+.xsp-info{font-size:12px; color:#8a7f9c; margin-top:2px; line-height:1.5}
+.xsp-best{font-size:13px; color:#6b5a88; margin-top:3px}
+.xsp-btns{display:flex; gap:6px; flex-wrap:wrap; margin-top:7px}
+.xsp-go{
+  flex:1 1 auto; border:0; border-radius:11px; padding:8px 12px; font-family:inherit; font-size:14px;
+  cursor:pointer; font-weight:600;
+}
+.xsp-go.exam{background:var(--purple-d,#7d5fc0); color:#fff}
+.xsp-go.practice{background:#ffd76e; color:#7a5410}
+.xsp-foot{flex:0 0 auto; font-size:11.5px; color:#8a7f9c; line-height:1.55; border-top:1px dashed #e2d6f7; padding-top:7px}
+
+/* ---------- จอเตี้ย (มือถือแนวนอน ~812×375): คงสองคอลัมน์ไว้ เพราะถ้าเรียงบน-ล่างช่องคำถาม
+   จะเหลือสูงไม่ถึง 130px แล้วช้อยส์ D หลุดต้องเลื่อน (วัดจริงตอนเทสต์รอบ 812)
+   ทางแก้คือย่อทุกชิ้นให้เตี้ยลงแทน — คำถาม+4 ช้อยส์ต้องอยู่ในกรอบพร้อมกัน ---------- */
+@media (max-height:470px){
+  .xs-top{padding:3px 8px; gap:6px}
+  .xs-badge{font-size:13px}
+  .xs-mode{display:none}                    /* ป้ายโหมดตัดได้ — เห็นจากปุ่มล่าง/เฉลยอยู่แล้ว */
+  .xs-nav{padding:3px 6px; gap:2px}
+  .xs-dot{width:20px; height:20px; font-size:9.5px; border-radius:5px}
+  .xs-body{gap:7px; padding:5px 7px}
+  .xs-pass{font-size:12.5px; line-height:1.5; padding:7px 9px}
+  .xs-ptitle{font-size:13.5px; margin-bottom:4px}
+  .xs-para{margin-bottom:6px}
+  .xs-qside{padding:6px 9px}
+  .xs-sec{font-size:11px; margin-bottom:3px}
+  .xs-sec small{display:none}                /* คำสั่งของส่วนอ่านแล้วตอนเริ่ม ไม่ต้องกินที่ทุกข้อ */
+  .xs-q{font-size:13.5px; line-height:1.4; margin-bottom:6px}
+  .xs-qno{font-size:11px; padding:0 6px}
+  .xs-choices{gap:4px}
+  .xs-ch{font-size:12.5px; padding:4px 7px; line-height:1.35; border-radius:9px}
+  .xs-ab{width:18px; height:18px; line-height:18px; font-size:11px}
+  .xs-ex.show{font-size:12px; padding:6px 8px; margin-top:6px}
+  .xs-foot{padding:4px 8px}
+  .xs-btn{padding:5px 11px; font-size:12.5px}
+  .xs-count{font-size:11px}
+}
+/* ---------- จอแคบจริง (portrait/แท็บเล็ตเล็ก): บทอ่านขึ้นบน จำกัดความสูงไม่ให้เบียดคำถาม ---------- */
+@media (max-width:640px){
+  .xs-body{flex-direction:column; gap:6px; padding:6px 8px}
+  .xs-pass{flex:0 0 auto; max-height:30vh; font-size:13px; padding:8px 10px}
+  .xs-qside{flex:1 1 auto; padding:8px 10px}
+  .xs-q{font-size:14px}
+  .xs-ch{font-size:13px; padding:6px 9px}
+  .xsr-item, .xsr-q{font-size:13.5px}
+}

@@ -54,6 +54,13 @@ const CERT_ADV_EN = {'ศัพท์วิชาการ':'Academic Vocabulary
   'ศัพท์เตรียมสอบ TOEIC':'TOEIC Preparation Vocabulary', 'ศัพท์เตรียมสอบ TOEFL':'TOEFL Preparation Vocabulary'};
 /* 🏅 โหมดสอบใหญ่ (รอบ 773): ระดับสอบไทย → อังกฤษ · ใบประกาศคนละใบต่อระดับ (c.big = ชื่อระดับอังกฤษ) */
 const CERT_BIG_LV = {'ต้น':'Foundation', 'กลาง':'Intermediate', 'สูง':'Expert'};
+/* 📋 รอบ 812: ข้อสอบจริงแบบมาตรฐาน (js/examstd.js) — ชื่อชุดไทยคือ "<สนามสอบ> · ชุดที่ N"
+   คีย์ = EXAM_STD_MANIFEST[].label · ต้องเทียบก่อนกฎ "ชุดที่ N" ทั่วไปใน certTitleOf */
+const CERT_STD_EN = {
+  'IELTS Academic':'IELTS Academic Practice Test',
+  'TOEIC Reading':'TOEIC Reading Practice Test',
+  'TOEFL Structure & Reading':'TOEFL Structure & Reading Practice Test',
+};
 
 /* แผนที่ "ชื่อหมวดไทย → id" สร้างครั้งเดียวจาก VOCAB_BANDS (ใช้ตอนอ่านโพสต์ของเพื่อน) */
 let __certByTh = null;
@@ -70,7 +77,11 @@ function certTitleOf(thName){
   const th = String(thName || '').trim();
   const id = certThIndex()[th];
   if(id && CERT_TOPIC_EN[id]) return {t:CERT_TOPIC_EN[id], lv:'Vocabulary Examination'};
-  let m = th.match(/^(.+?)\s*ชุดที่\s*(\d+)$/);            // "ป.1–ป.2 ชุดที่ 11"
+  // 📋 รอบ 812: ข้อสอบจริงแบบมาตรฐาน "IELTS Academic · ชุดที่ 1" — ต้องมาก่อนกฎ "ชุดที่ N" ด้านล่าง
+  let m = th.match(/^(.+?)\s*·\s*ชุดที่\s*(\d+)$/);
+  if(m && CERT_STD_EN[m[1].trim()])
+    return {t:`${CERT_STD_EN[m[1].trim()]} ${m[2]}`, lv:'Standardised Test Practice', std:true};
+  m = th.match(/^(.+?)\s*ชุดที่\s*(\d+)$/);                 // "ป.1–ป.2 ชุดที่ 11"
   if(m) return {t:`Vocabulary Set ${m[2]}`, lv:(CERT_LEVEL_EN[m[1].trim()] || m[1].trim()) + ' Level'};
   m = th.match(/^(.+?)\s*สอบซ่อม\s*(\d+)\s*ชุด$/);         // "ป.3–ป.4 สอบซ่อม 3 ชุด"
   if(m) return {t:`Retake Examination · ${m[2]} Sets`, lv:(CERT_LEVEL_EN[m[1].trim()] || m[1].trim()) + ' Level'};
@@ -143,6 +154,7 @@ function certAward(cat, score, total, sec){
   }
   const c = {id:cat.id, th:cat.name, t:ti.t, lv:ti.lv, sc:score, tt:total, ts:Date.now(), n:1};
   if(ti.big) c.big = ti.big;                        // 🏅 ใบสอบใหญ่ — วาดต่างจากใบสอบ 10 ข้อ (certSVG)
+  if(ti.std) c.std = true;                          // 📋 รอบ 812: ใบข้อสอบมาตรฐาน — เปลี่ยนคำประกาศบนใบ (ไม่ใช่ข้อสอบคำศัพท์)
   if(sec) c.sec = sec;                              // ⏱️ รอบ 777: เวลาที่ใช้สอบ (วินาที) — พิมพ์บนใบ
   state.certs.unshift(c);
   if(state.certs.length > CERT_MAX) state.certs.length = CERT_MAX;
@@ -309,8 +321,11 @@ function certSVG(c, opt){
   const secTxt  = c.sec ? `${Math.floor(c.sec/60)}:${String(c.sec % 60).padStart(2,'0')}` : '';
   /* 👑 รอบ 779: ใบ Supreme (c.supreme) — th เป็นข้อความอังกฤษยาวกว่าเดิม (gold ใช้ป้ายชั้นสั้น ๆ) หดด้วย certFit กันล้นกรอบ */
   const thFs    = certFit(c.th, full ? 25 : 30, 580);
-  const passLn  = big ? 'has passed the grand vocabulary examination in' : 'has passed the examination in';
-  const passLnF = big ? 'has successfully passed the grand vocabulary examination in'
+  /* 📋 รอบ 812: ใบข้อสอบมาตรฐาน (c.std) เป็นข้อสอบไวยากรณ์+การอ่าน ไม่ใช่ข้อสอบคำศัพท์ จึงต้องเปลี่ยนคำประกาศ */
+  const passLn  = c.std ? 'has passed the standardised practice examination in'
+                        : big ? 'has passed the grand vocabulary examination in' : 'has passed the examination in';
+  const passLnF = c.std ? 'has successfully passed the standardised practice examination in'
+                      : big ? 'has successfully passed the grand vocabulary examination in'
                       : 'has successfully passed the vocabulary examination in';
   const accent  = (gold || supreme) ? '#7a1f2a' : '#123a63'; // สีชื่อ/ตัวเลขเด่น — Gold(mastery)/Supreme ใช้แดงเลือดหมูแทนน้ำเงิน
   const crestGlyph = (gold || supreme) ? '♛' : '★';
