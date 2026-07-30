@@ -1324,7 +1324,7 @@ function buildDriveCity(sc){
   const gndImg=new Image();
   gndImg.onload=()=>{ const tx=new THREE.Texture(gndImg); tx.wrapS=tx.wrapT=THREE.RepeatWrapping;
     const rep=Math.round((RX*2+500)/22); tx.repeat.set(rep,rep); tx.needsUpdate=true;
-    groundMat.map=tx; groundMat.color.setHex(0xffffff); groundMat.needsUpdate=true; };
+    groundMat.map=tx; groundMat.color.setHex(0x6e6e69); groundMat.needsUpdate=true; };
   gndImg.src='img/city/ground.png';
 
   /* ---------- แม่น้ำปิง (ribbon กว้าง 120m ตามแนวจริง) ---------- */
