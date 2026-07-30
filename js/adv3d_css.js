@@ -575,6 +575,17 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-mecha #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
   .adv-mecha #adv-tmute{top:46px;right:8px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}    /* ปุ่มครู/podium (โชว์เฉพาะบางกรณี) แถวสองริมขวา */
   .adv-mecha #adv-podbtn{top:46px;right:100px;font-size:11px;padding:4px 6px;min-width:0;z-index:6}
+  /* 👻 รอบ 851 (ผู้ใช้ส่งภาพ: ปุ่มขวามือซ้อนทับกัน) — ต้นตอ: คอลัมน์ปุ่มแชท/ไมค์/ลำโพง (ออก·?·แชท·ปิด·ปิด ขวา:8px top:118-282)
+     ไม่เคยมี override เฉพาะโลกผีสิงเหมือนโลกขับรถ/หุ่น → ลงมาชนปุ่มจอสัมผัส #adv-torch/#adv-use (ขวา:14px วางชิดล่างเสมอ)
+     บนจอเตี้ย (812×375 ทั่วไป) โซนล่างขวาไม่พอ 2 ระบบซ้อนกัน → ย้ายขึ้นแถวบนเดียวกันแบบโลกขับรถที่พิสูจน์แล้วไม่ทับกัน */
+  .adv-haunt #adv-exit{top:8px;right:8px;font-size:12.5px;padding:5px 9px}
+  .adv-haunt #adv-help{top:8px;right:74px;width:30px;height:30px;font-size:14px}
+  .adv-haunt #adv-chat-btn{top:8px;right:108px;font-size:12px;padding:5px 8px}
+  .adv-haunt #adv-mic{top:8px;right:172px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-haunt #adv-spk{top:8px;right:224px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-haunt #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-haunt #adv-tmute{top:52px;right:108px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-haunt #adv-podbtn{top:52px;right:200px;font-size:11px;padding:4px 6px;min-width:0}
   /* 🗺️ รอบ 144: แผนที่ขยายเกือบเต็มจอ — แตะ minimap เปิด · โชว์ตำแหน่งตัวอักษรชัดเจน + ปุ่มปิดใหญ่ */
   #adv-bigmap{position:absolute;inset:10px;z-index:60;display:none;flex-direction:column;pointer-events:auto;
     background:rgba(6,12,24,.96);border:2px solid #4fc3f7;border-radius:16px;
@@ -844,7 +855,8 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-touch.adv-soccer #adv-kick{display:flex}
   #adv-power{position:absolute;display:none;right:12px;top:50%;transform:translateY(-50%);width:20px;height:180px;
     z-index:6;background:rgba(0,0,0,.45);border:2px solid #fff;border-radius:12px;overflow:hidden;pointer-events:none}
-  .adv-soccer #adv-power{display:block}
+  /* 🧹 รอบ 851: แถบชาร์จย้ายลงข้างปุ่มเตะ (เดิมลอยกลางขอบขวา โดนคอลัมน์ปุ่มทับบนจอเตี้ย) */
+  .adv-soccer #adv-power{display:block;top:auto;transform:none;bottom:96px;right:132px;height:120px}
   #adv-power-fill{position:absolute;left:0;bottom:0;width:100%;height:0%;
     background:linear-gradient(0deg,#43a047,#ffd54f,#e53935);transition:height .04s linear}
   #adv-scam{position:absolute;display:none;top:56px;right:8px;z-index:6;pointer-events:auto;
@@ -881,24 +893,24 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     text-align:center;color:#fff;font:800 13px system-ui;text-shadow:0 1px 3px #000;
     background:rgba(20,40,20,.55);border-radius:9px;padding:2px 0}
   .adv-touch.adv-soccer #adv-curl.on{display:block}
-  #adv-pk{position:absolute;display:none;top:100px;right:8px;z-index:6;pointer-events:auto;
+  #adv-pk{position:absolute;display:none;top:88px;right:8px;z-index:6;pointer-events:auto;
     background:rgba(20,40,20,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;
     padding:6px 10px;font:700 13px system-ui;cursor:pointer}
   .adv-soccer #adv-pk{display:block}
   #adv-pk.on{background:rgba(200,60,30,.8)}
   /* 🧱 รอบ 402: ปุ่มโหมดฟรีคิก (ใต้ปุ่มจุดโทษ) */
-  #adv-fk{position:absolute;display:none;top:138px;right:8px;z-index:6;pointer-events:auto;
+  #adv-fk{position:absolute;display:none;top:128px;right:8px;z-index:6;pointer-events:auto;
     background:rgba(20,40,20,.62);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:10px;
     padding:6px 10px;font:700 13px system-ui;cursor:pointer}
   .adv-soccer #adv-fk{display:block}
   #adv-fk.on{background:rgba(200,60,30,.8)}
-  /* จอเตี้ย: ย่อปุ่มทั้งคู่แล้วเรียงต่อกัน (เดิม fk ที่ 126 ชน pk ที่จบ 131) */
+  /* จอเตี้ย: ย่อปุ่มลง (ตำแหน่ง top ใช้ชุดเดียวกับจอปกติ — รอบ 851 จัดคอลัมน์ให้ห่างพอแล้ว) */
   @media (max-height:400px){
     #adv-pk{padding:4px 8px;font-size:11px}
-    #adv-fk{top:130px;padding:4px 8px;font-size:11px}
+    #adv-fk{padding:4px 8px;font-size:11px}
   }
   /* ⚡ รอบ 412: ปุ่มซื้อพลังโอเวอร์ไดรฟ์ + แถบนับถอยหลัง */
-  #adv-aura{position:absolute;display:none;top:176px;right:8px;z-index:6;pointer-events:auto;
+  #adv-aura{position:absolute;display:none;top:168px;right:8px;z-index:6;pointer-events:auto;
     background:rgba(18,52,74,.72);color:#cdefff;border:1px solid rgba(120,220,255,.55);border-radius:10px;
     padding:6px 10px;font:700 13px system-ui;cursor:pointer}
   .adv-soccer #adv-aura{display:block}
@@ -912,8 +924,22 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     background:linear-gradient(90deg,#0a6ea8,#4fd8ff);transition:width .5s linear}
   #adv-aurabar .ab-txt{position:absolute;inset:0;text-align:center;line-height:17px;
     color:#eaffff;font:800 11px system-ui;text-shadow:0 1px 2px #000}
-  /* ⚠️ media query ของปุ่มพลังต้องอยู่ "หลัง" การประกาศด้านบน ไม่งั้นโดน top:176px เขียนทับ (specificity เท่ากัน = ตัวหลังชนะ) */
-  @media (max-height:400px){ #adv-aura{top:160px;padding:4px 8px;font-size:11px} }
+  /* ⚠️ media query ของปุ่มพลังต้องอยู่ "หลัง" การประกาศด้านบน ไม่งั้นโดน top เขียนทับ (specificity เท่ากัน = ตัวหลังชนะ) */
+  @media (max-height:400px){ #adv-aura{padding:4px 8px;font-size:11px} }
+  /* 🧹 รอบ 851 (ผู้ใช้ส่งภาพปุ่มทับกันมั่ว): จัดฝั่งขวาโลกฟุตบอลใหม่ทั้งชุด
+     เดิม exit(118)/แชท(160)/ไมค์(202..282) ตำแหน่ง global ทับ จุดโทษ(100)/ฟรีคิก(138)/พลัง(176) + แถบชาร์จกลางขวา
+     ใหม่: แถวบน = ปุ่มระบบ (ออก/?/แชท/ไมค์/ลำโพง/ทุกคน) แบบเดียวกับโลกขับรถ · คอลัมน์ขวา = ปุ่มโหมดฟุตบอลล้วน
+     (มุมกล้อง 48 → จุดโทษ 88 → ฟรีคิก 128 → พลัง 168) · แถบเหรียญ/HP ตรึงซ้ายถัดจากกระดาน เปิดทางแถวปุ่มบน */
+  .adv-soccer #adv-topbar{left:206px;transform:none}
+  .adv-soccer .adv-hp{width:80px}
+  .adv-soccer #adv-exit{top:8px;right:8px;font-size:12.5px;padding:5px 9px}
+  .adv-soccer #adv-help{top:8px;right:74px;width:30px;height:30px;font-size:14px}
+  .adv-soccer #adv-chat-btn{top:8px;right:108px;font-size:12px;padding:5px 8px}
+  .adv-soccer #adv-mic{top:8px;right:172px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-soccer #adv-spk{top:8px;right:224px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-soccer #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-soccer #adv-tmute{top:48px;right:108px;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-soccer #adv-scam{top:48px}
   /* 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — ซ่อนชิ้นส่วนห้องคนขับ (ปุ่มบังคับ/GPS คงอยู่) */
   .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
   .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,
