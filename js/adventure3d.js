@@ -260,8 +260,9 @@ let landRing=null, landPt=null;
    แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีฟ้ากลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์
    + 🚀 รอบ 852: บอลพุ่งเร็วขึ้น 20% (คูณใน kickLaunch — เส้นไกด์ใช้สูตรเดียวกันจึงตรงเสมอ) */
 const AURA_COST=100, AURA_MS=60*60*1000, AURA_SPD=1.2;
-/* 🔥💨 รอบ 852: ชาร์จถึง ≥30% ของหลอด = เปลวไฟล้อมบอล · เตะออกไป = ควันหางตามแบบ missile */
-const FIRE_CHG=30, SMOKE_MAX=90, SMOKE_LIFE=1.15, SMOKE_GAP=26;   // % ไฟติด · จำนวนก้อนควันสูงสุด · อายุควัน(วิ) · ช่วงพ่น(ms)
+/* 🔥💨 รอบ 852: ชาร์จถึง ≥30% ของหลอด = เปลวไฟล้อมบอล · เตะออกไป = ควันหางตามแบบ missile
+   (รอบ 853 ผู้ใช้: หางไฟ/ควันต้องยาวขึ้นเพราะแรงลมปะทะ + ควันต้องชัดกว่าเดิมมาก → พ่นถี่ขึ้น 2 เท่า อายุยาวขึ้น ก้อนใหญ่ทึบขึ้น) */
+const FIRE_CHG=30, SMOKE_MAX=180, SMOKE_LIFE=1.8, SMOKE_GAP=13;   // % ไฟติด · จำนวนก้อนควันสูงสุด · อายุควัน(วิ) · ช่วงพ่น(ms)
 let fireGrp=null, fireFlames=[], smokePool=[], smokeIdx=0, _smokeAt=0, sbFlame=false;
 let auraGrp=null, auraRings=[], auraSparks=[], auraCore=null, auraBarEl=null, auraBtnEl=null;
 let drillMesh=null, drillMat=null, drillPhase=0, _auraHudAt=0;
@@ -10781,20 +10782,20 @@ function ballFXTex(fire){
   const cv=document.createElement('canvas'); cv.width=cv.height=64;
   const c=cv.getContext('2d');
   const g=c.createRadialGradient(32,32,2,32,32,30);
-  if(fire){ g.addColorStop(0,'rgba(255,255,230,1)'); g.addColorStop(.25,'rgba(255,210,80,.95)');
-    g.addColorStop(.6,'rgba(255,110,20,.55)'); g.addColorStop(1,'rgba(255,60,0,0)'); }
-  else { g.addColorStop(0,'rgba(225,225,225,.65)'); g.addColorStop(.55,'rgba(175,175,175,.32)');
-    g.addColorStop(1,'rgba(140,140,140,0)'); }
+  if(fire){ g.addColorStop(0,'rgba(255,255,220,1)'); g.addColorStop(.3,'rgba(255,190,50,1)');   // รอบ 853: สีอิ่ม/ทึบขึ้น สู้แสงกลางวันได้
+    g.addColorStop(.65,'rgba(255,95,10,.8)'); g.addColorStop(1,'rgba(255,50,0,0)'); }
+  else { g.addColorStop(0,'rgba(235,235,235,.95)'); g.addColorStop(.5,'rgba(190,190,190,.6)');   // รอบ 853: ควันทึบชัดขึ้นมาก
+    g.addColorStop(1,'rgba(150,150,150,0)'); }
   c.fillStyle=g; c.fillRect(0,0,64,64);
   return new THREE.CanvasTexture(cv);
 }
 function buildBallFX(sc){
   const ft=ballFXTex(true), st=ballFXTex(false);
   fireGrp=new THREE.Group(); fireFlames=[];
-  for(let i=0;i<8;i++){
+  for(let i=0;i<14;i++){    // รอบ 853: 8→14 ดวง — พอยืดเป็นหางยาวแล้วต้องมีดวงถี่พอไม่ให้หางขาดเป็นช่วง
     const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,depthWrite:false,
       blending:THREE.AdditiveBlending,opacity:.9}));
-    fireGrp.add(sp); fireFlames.push({m:sp,a:i/8*Math.PI*2,sp:3+Math.random()*3,r:BALL_R*.66,ph:Math.random()*9});
+    fireGrp.add(sp); fireFlames.push({m:sp,a:i/14*Math.PI*2,sp:3+Math.random()*3,r:BALL_R*.66,ph:Math.random()*9});
   }
   fireGrp.visible=false; sc.add(fireGrp);
   smokePool=[]; smokeIdx=0;
@@ -10808,7 +10809,7 @@ function smokePuff(x,y,z,vx,vy,vz){
   const p=smokePool[smokeIdx++%SMOKE_MAX]; if(!p) return;
   p.max=p.life=SMOKE_LIFE*(.8+Math.random()*.4);
   p.vx=vx; p.vy=vy; p.vz=vz;
-  p.s0=.34+Math.random()*.2;
+  p.s0=.55+Math.random()*.3;   // รอบ 853: ก้อนใหญ่ขึ้น (เดิม .34 เล็กจนแทบมองไม่เห็น)
   p.m.position.set(x+(Math.random()-.5)*.14, Math.max(.12,y+(Math.random()-.5)*.14), z+(Math.random()-.5)*.14);
   p.m.visible=true;
 }
@@ -10822,21 +10823,27 @@ function ballFXTick(dt,now){
     const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
     let tx=0,ty=.5,tz=0;                                 // ทิศ "หาง" เปลว: บอลนิ่ง=ลู่ขึ้นแบบกองไฟ · บอลพุ่ง=สวนทางความเร็ว
     if(sbLive&&sp>2){ tx=-sbVel.x/sp; ty=-sbVel.y/sp; tz=-sbVel.z/sp; }
-    fireFlames.forEach(f=>{
+    const N=fireFlames.length;
+    fireFlames.forEach((f,i)=>{
       const a=f.a+now/1000*f.sp;
       const fl=.75+Math.sin(now/47+f.ph)*.25;            // เปลวเต้นถี่ (flicker)
-      f.m.position.set(Math.cos(a)*f.r+tx*fl*.35, Math.sin(a)*f.r*.4+ty*fl*.35+Math.sin(now/210+f.ph)*.08, Math.sin(a)*f.r+tz*fl*.35);
-      const s=BALL_R*1.9*fl;
+      // 💨 รอบ 853: เรียงเปลวเป็น "หาง" — ดวงแรกหุ้มบอล ดวงท้ายลากยาวสวนลม (บอลพุ่ง=ยืดถึง ~2.4m · นิ่ง=กองไฟสั้น)
+      const tt=i/(N-1);                                  // 0=หัว .. 1=ปลายหาง
+      const tail=(sbLive&&sp>2) ? (.3+tt*2.1)*(0.6+Math.min(1,sp/30)*.6) : .25+tt*.7;
+      const rr=f.r*(1-tt*.6);                            // ปลายหางวงแคบลง (โดนลมรีดเป็นทรงหยดน้ำ)
+      f.m.position.set(Math.cos(a)*rr+tx*tail*fl, Math.sin(a)*rr*.4+ty*tail*fl+Math.sin(now/210+f.ph)*.08, Math.sin(a)*rr+tz*tail*fl);
+      const s=BALL_R*(2.7-tt*1.5)*fl;                    // รอบ 853: หัวโตขึ้นอีก (เดิม 1.9 จมหายในแสงแดด)
       f.m.scale.set(s,s,1);
-      f.m.material.opacity=.5+fl*.4;
+      f.m.material.opacity=(.65+fl*.35)*(1-tt*.45);
     });
   }
   // 💨 พ่นควันทิ้งท้ายระหว่างลูกไฟพุ่ง — จุดเกิดถอยไปท้ายบอลตามทิศวิ่งเหมือนท่อท้ายจรวด
   if(!repOn&&sbLive&&sbFlame&&now-_smokeAt>SMOKE_GAP){
     _smokeAt=now;
     const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z)||1;
-    smokePuff(b.x-sbVel.x/sp*BALL_R*1.2, b.y-sbVel.y/sp*BALL_R*1.2, b.z-sbVel.z/sp*BALL_R*1.2,
-      -sbVel.x*.06+(Math.random()-.5)*.5, .5+Math.random()*.5, -sbVel.z*.06+(Math.random()-.5)*.5);
+    // รอบ 853: จุดพ่นถอยไปท้ายไกลขึ้น (พ้นหางไฟ) + ควันสืบทอดแรงถอยหลังมากขึ้น = หางลากยาวต่อจากไฟ
+    smokePuff(b.x-sbVel.x/sp*BALL_R*2.2, b.y-sbVel.y/sp*BALL_R*2.2, b.z-sbVel.z/sp*BALL_R*2.2,
+      -sbVel.x*.09+(Math.random()-.5)*.4, .55+Math.random()*.5, -sbVel.z*.09+(Math.random()-.5)*.4);
   }
   smokePool.forEach(p=>{
     if(p.life<=0) return;
@@ -10845,9 +10852,9 @@ function ballFXTick(dt,now){
     const t=1-p.life/p.max;                              // 0 เกิด → 1 สลาย
     p.m.position.x+=p.vx*dt; p.m.position.y+=p.vy*dt; p.m.position.z+=p.vz*dt;
     p.vy+=dt*.25;                                        // ควันร้อนลอยขึ้นเรื่อยๆ
-    const s=p.s0*(1+t*2.6);                              // พองโตตามเวลาแบบควันจริง
+    const s=p.s0*(1+t*3.0);                              // พองโตตามเวลาแบบควันจริง
     p.m.scale.set(s,s,1);
-    p.m.material.opacity=.5*(1-t)*(1-t*.3);
+    p.m.material.opacity=.88*(1-t*t);                    // รอบ 853: เกิดมาทึบชัดเลย ค่อยจางช่วงท้าย (เดิม .5 จางไว)
   });
 }
 /* 🎯 รอบ 402: วงจุดตกลูก — วงแหวนเรืองแสงบนพื้นตรงจุดที่บอลจะตกกระทบครั้งแรก (เต้นเบาๆ) */
