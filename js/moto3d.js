@@ -303,7 +303,7 @@ const CSS=`
 #moto-wrap.on{display:block}
 /* เครื่องเกมพกพา = ภาพจริงของผู้ใช้ (img/moterbike/console_crop.webp) ยืดเต็มจอ
    ตำแหน่งปุ่ม/จอ วัดจากพิกเซลภาพจริง (grid 10%): จอใน 25–69.6% x 18–71% · power กลาง 47% · knob ส้มซ้าย · บอลฟ้าขวา */
-#moto-body{position:absolute;inset:0;background:url('img/moterbike/console_crop.webp?v=295') center/100% 100% no-repeat}
+#moto-body{position:absolute;inset:0;background:url('img/moterbike/console_crop.webp?v=296') center/100% 100% no-repeat}
 /* ⚠️ ?v=295 จำเป็น: sw.js เก็บรูปแบบ cache-first — เปลี่ยนเนื้อไฟล์ใน URL เดิม เครื่องผู้เล่นเก่าจะติดรูปเก่าตลอด
    แก้ไฟล์รูปนี้ครั้งหน้าต้องบัมพ์เลข ?v= ตามรอบเสมอ (ตำแหน่งปุ่ม CSS ผูกกับรูปเป๊ะ) */
 #moto-power{position:absolute;left:45.5%;top:0.5%;width:8%;height:12.5%;border-radius:50%;
