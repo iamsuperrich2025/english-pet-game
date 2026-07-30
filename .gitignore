@@ -21,3 +21,7 @@ img/models/heli_ca.glb
 # ต้นฉบับโมเดลผีจาก Tripo 54MB (รอบ 689) — เกมใช้ ghost_lite.glb (510KB) ที่ลดโพลี/ย่อเทกซ์เจอร์แล้ว
 # เก็บต้นฉบับไว้ในเครื่องอย่างเดียว ห้ามขึ้น repo/deploy
 img/models/ghost.glb
+
+# 🔐 แพ็กเกจ Android + กุญแจ signing สำหรับ Play Store (รอบ 858) — ห้ามขึ้น repo สาธารณะเด็ดขาด
+# (signing.keystore + รหัสใน signing-key-info.txt = ใครได้ไปปลอมแอปเราได้)
+store/android/
