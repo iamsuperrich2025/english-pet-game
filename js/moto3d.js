@@ -20,7 +20,8 @@ const POST_N=400, POST_SP=42, POST_R=380;  // รอบ 303: หลักเข�
 const LEAN_MAX=0.52;                       // มุมเอียงตัวรถสูงสุด (rad) ตอนเลี้ยวเต็มคัน
 const COLLECT_R=3.6;                       // รอบ 314: ระยะชนเก็บตัวอักษร (2.8→3.6 · ตัวอยู่เลนซ้าย+ใหญ่ขึ้น ขับในเลนซ้ายเก็บได้พอดี)
 const SPAWN_MIN=70, SPAWN_MAX=260, RELOC_D=800;   // รอบ 643: ระยะวางตัวอักษรจากรถ ลด 110-430→70-260 ให้โผล่ถี่ขึ้น (ผู้ใช้ขอ) + ไกลเกินย้ายใหม่
-const SCATTER_MS=2200, SCATTER_JIT=1400;   // 🪙 รอบ 643: เหรียญโบนัสแยกจากตัวอักษร โปรยตามถนนเป็นระยะ (ผู้ใช้ขอเหรียญเยอะขึ้น)
+const SCATTER_MS=1200, SCATTER_JIT=800;   // 🪙 รอบ 814: โปรยเหรียญถี่ขึ้นอีก 2200→1200 (ผู้ใช้ขอเหรียญ+ตัวอักษรบนถนนเยอะกว่านี้)
+const LETTER_COPIES=2;   // 🔤 รอบ 814: ตัวอักษรที่ต้องเก็บแต่ละตัว วางซ้ำ 2 จุดบนถนน (เจอบ่อยขึ้น + เหรียญติดมาด้วยตัวละก็อปปี้)
 const BUCKET=250;                          // ตารางแฮชถนน (เมตร/ช่อง)
 const TILE_COLORS=['#ff8a65','#4fc3f7','#aed581','#ffd54f','#ba68c8','#f06292','#4dd0e1','#ff8a80'];
 /* 🪙 รอบ 317: เหรียญบนถนน + โบนัสตัวอักษร (ผู้ใช้: เก็บตัวอักษรให้เหรียญด้วย + เหรียญบนถนนน้อยไป) */
@@ -395,13 +396,13 @@ const CSS=`
 /* 🔤 รอบ 309-311: คำศัพท์ป้ายบิลบอร์ดกลางบนแนวท้องฟ้า — ตัวอักษรแถวเดียวเสมอ (nowrap ไม่ตกบรรทัด)
    คำแปลไทยอยู่บรรทัดล่าง · fitWord() ย่ออัตโนมัติถ้าคำยาวเกินจอ (รองรับคำยาวในอนาคต ไม่ดันตัวตก) */
 #moto-word{position:absolute;left:50%;top:8%;transform:translateX(-50%);transform-origin:top center;
-  display:flex;flex-direction:column;align-items:center;gap:.35vmin;
-  padding:.9vmin 1.6vmin;border-radius:1.8vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
-#moto-word .m-chips{display:flex;gap:.7vmin;align-items:center;flex-wrap:nowrap}
-#moto-word .m-th{color:#ffe9a8;font-size:3vmin;font-weight:800;white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;gap:.4vmin;
+  padding:1.2vmin 2vmin;border-radius:2.1vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
+#moto-word .m-chips{display:flex;gap:.8vmin;align-items:center;flex-wrap:nowrap}
+#moto-word .m-th{color:#ffe9a8;font-size:3.7vmin;font-weight:800;white-space:nowrap;
   text-shadow:0 2px 5px #000,0 0 2vmin rgba(0,0,0,.6)}
-.m-chip{width:5.2vmin;height:5.2vmin;flex:none;border-radius:1.2vmin;display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:3.3vmin;color:#fff;background:rgba(255,255,255,.2);border:.34vmin solid rgba(255,255,255,.7);
+.m-chip{width:6.3vmin;height:6.3vmin;flex:none;border-radius:1.4vmin;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:4vmin;color:#fff;background:rgba(255,255,255,.2);border:.34vmin solid rgba(255,255,255,.7);
   text-shadow:0 1px 3px rgba(0,0,0,.7);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .m-chip.got{background:#43d06c;border-color:#fff;box-shadow:0 0 1.6vmin rgba(90,255,140,.6)}
 #moto-coins{position:absolute;right:2%;top:2.5%;color:#ffd54f;font-weight:900;font-size:2.3vmin;text-shadow:0 1px 3px #000;
@@ -422,26 +423,26 @@ const CSS=`
 @keyframes mcring{0%{opacity:.9;transform:scale(.25)}100%{opacity:0;transform:scale(1.5)}}
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
 /* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข */
-#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;flex-direction:column;align-items:center;gap:.5vmin;
-  background:rgba(10,20,35,.6);border-radius:1.4vmin;padding:.7vmin 1.2vmin;color:#fff;max-width:26%}
-.m-gps-lb{font-size:1.5vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
-.m-gps-row{display:flex;align-items:center;gap:1.2vmin}
-#moto-gps-arr{display:inline-block;width:4.4vmin;height:5.1vmin;transition:transform .12s linear;
+#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;flex-direction:column;align-items:center;gap:.6vmin;
+  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:1vmin 1.6vmin;color:#fff;max-width:31%}
+.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
+.m-gps-row{display:flex;align-items:center;gap:1.4vmin}
+#moto-gps-arr{display:inline-block;width:5.3vmin;height:6.1vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
 #moto-gps-arr svg{display:block;width:100%;height:100%}
-#moto-gps-d{font-size:2.8vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
+#moto-gps-d{font-size:3.4vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
 /* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ) */
-#moto-board{position:absolute;right:2%;top:10.5%;min-width:17vmin;max-width:30vmin;display:none;flex-direction:column;gap:.25vmin;
-  background:rgba(10,20,35,.62);border-radius:1.2vmin;padding:.6vmin .9vmin;color:#fff;z-index:2}
+#moto-board{position:absolute;right:2%;top:10.5%;min-width:20vmin;max-width:34vmin;display:none;flex-direction:column;gap:.3vmin;
+  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.8vmin 1.1vmin;color:#fff;z-index:2}
 #moto-board.on{display:flex}
-.m-bd-h{font-size:1.35vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
-.m-bd-r{display:flex;align-items:center;gap:.6vmin;font-size:1.7vmin;font-weight:800;line-height:1.35}
+.m-bd-h{font-size:1.65vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
+.m-bd-r{display:flex;align-items:center;gap:.7vmin;font-size:2.05vmin;font-weight:800;line-height:1.35}
 .m-bd-r.me{color:#ffe082}
 .m-bd-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m-bd-w{font-variant-numeric:tabular-nums;color:#8dffb0}
 /* 💬 รอบ 318: ปุ่มแชท + แถบข้อความสำเร็จรูป + ข้อความของเราเองมุมล่าง */
 #moto-chat{position:absolute;left:2%;bottom:12%;z-index:4;border:none;cursor:pointer;border-radius:999px;
-  width:6.4vmin;height:6.4vmin;font-size:3vmin;color:#fff;background:rgba(20,40,70,.72);
+  width:7.4vmin;height:7.4vmin;font-size:3.4vmin;color:#fff;background:rgba(20,40,70,.72);
   box-shadow:0 2px 6px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
 #moto-chat:active{transform:scale(.92)}
 /* กว้างแบบ % ของ "จอเกม" (ไม่ใช่ vmin ของหน้าต่าง) — มินิแมพเป็น vmin จึงกินพื้นที่ต่างกันตามอัตราส่วนจอ
@@ -466,16 +467,16 @@ const CSS=`
 #moto-intro{position:absolute;inset:0;background:rgba(8,14,24,.86);display:flex;align-items:center;justify-content:center;z-index:5}
 #moto-intro .m-card{background:linear-gradient(180deg,#fff,#eef4ff);border-radius:2.4vmin;padding:2.4vmin 3.4vmin;text-align:center;
   max-width:82%;max-height:92%;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-#moto-intro h3{margin:0 0 1vmin;font-size:3.2vmin;color:#0d47a1}
-#moto-intro p{margin:0 0 1.6vmin;font-size:2.05vmin;line-height:1.55;color:#334}
-#moto-go{border:none;border-radius:999px;padding:1.2vmin 4vmin;font-size:2.6vmin;font-weight:900;color:#fff;cursor:pointer;
+#moto-intro h3{margin:0 0 1vmin;font-size:3.8vmin;color:#0d47a1}
+#moto-intro p{margin:0 0 1.6vmin;font-size:2.3vmin;line-height:1.55;color:#334}
+#moto-go{border:none;border-radius:999px;padding:1.4vmin 4.6vmin;font-size:3vmin;font-weight:900;color:#fff;cursor:pointer;
   background:linear-gradient(180deg,#42d77d,#1fa855);box-shadow:0 4px 10px rgba(20,150,70,.45)}
 #moto-exitbox{position:absolute;inset:0;background:rgba(10,15,25,.6);display:none;align-items:center;justify-content:center;z-index:6}
 #moto-exitbox.on{display:flex}
 #moto-exitbox .m-card{background:#fff;border-radius:2.4vmin;padding:2.6vmin 3.6vmin;text-align:center;max-width:70vmin}
-#moto-exitbox h3{margin:0 0 1.2vmin;font-size:3vmin;color:#c62828}
-#moto-exitbox .m-row{display:flex;gap:1.6vmin;justify-content:center}
-#moto-exitbox button{border:none;border-radius:999px;padding:1.1vmin 3.6vmin;font-size:2.4vmin;font-weight:900;color:#fff;cursor:pointer}
+#moto-exitbox h3{margin:0 0 1.4vmin;font-size:3.6vmin;color:#c62828}
+#moto-exitbox .m-row{display:flex;gap:2vmin;justify-content:center}
+#moto-exitbox button{border:none;border-radius:999px;padding:1.4vmin 4.4vmin;font-size:2.9vmin;font-weight:900;color:#fff;cursor:pointer}
 #moto-exit-yes{background:linear-gradient(180deg,#ef5350,#d32f2f)}
 #moto-exit-no{background:linear-gradient(180deg,#66bb6a,#2e7d32)}
 @media (orientation:portrait){ #moto-wrap .m-deco{display:none} }
@@ -1670,7 +1671,10 @@ function scatterCoinTick(now){
 }
 /* 💎 เหรียญพิเศษหน้าตัวอักษร "ตัวสุดท้ายที่เหลือ" ของคำ — อยู่บนหลุม/เนิน = เพชร 🪙20 · ไม่งั้น = โค้ง 🪙5 */
 function placeSpecialCoin(){
-  if(specialDone || letters.length!==1) return;
+  if(specialDone || !letters.length) return;
+  // 🔤 รอบ 814: ตัวอักษรมีหลายก็อปปี้ต่อ idx แล้ว — เช็ก "idx ไม่ซ้ำที่เหลือ" แทน letters.length ตรงๆ
+  const idx0=letters[0].idx;
+  if(!letters.every(l=>l.idx===idx0)) return;
   specialDone=true;
   const l=letters[0], p=l.spr.position;
   const fx=p.x-l.fx*COIN_GAP, fz=p.z-l.fz*COIN_GAP;
@@ -2050,13 +2054,16 @@ function spawnLetters(){
   letters=[];
   clearCoins(); specialDone=false; cleanWord=true;             // 🪙 รอบ 319: เหรียญคำก่อนออกหมด · 🍀 รอบ 340: เริ่มนับ "ไม่ชนเลย" ใหม่
   word.en.split('').forEach((ch,i)=>{
-    const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20,z:pz+30,fx:0,fz:1};
-    const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
-    spr.scale.set(4.6,4.6,1); spr.position.set(p.x,2.3,p.z);   // รอบ 314: ตัวใหญ่ขึ้น 3→4.6 + ยกสูงให้เห็นชัด
-    scene.add(spr);
-    const l={ch,idx:i,spr,fx:(p.fx||0),fz:(p.fz===undefined?1:p.fz)};
-    letters.push(l);
-    addCoin(l,0,+1);                                           // 🪙 เหรียญทองด้านหลังตัวอักษร ตัวละ 1 เหรียญ
+    // 🔤🪙 รอบ 814: วางตัวอักษรตัวเดียวกันซ้ำ LETTER_COPIES จุด — เจอบ่อยขึ้นตลอดเส้นทาง + เหรียญติดมาด้วยทุกก็อปปี้
+    for(let c=0;c<LETTER_COPIES;c++){
+      const p=randomRoadPoint(px,pz,SPAWN_MIN,SPAWN_MAX)||{x:px+30+i*20+c*15,z:pz+30,fx:0,fz:1};
+      const spr=new THREE.Sprite(new THREE.SpriteMaterial({map:letterTexture(ch),transparent:true}));
+      spr.scale.set(4.6,4.6,1); spr.position.set(p.x,2.3,p.z);   // รอบ 314: ตัวใหญ่ขึ้น 3→4.6 + ยกสูงให้เห็นชัด
+      scene.add(spr);
+      const l={ch,idx:i,spr,fx:(p.fx||0),fz:(p.fz===undefined?1:p.fz)};
+      letters.push(l);
+      addCoin(l,0,+1);                                         // 🪙 เหรียญทองด้านหลังตัวอักษร ทุกก็อปปี้
+    }
   });
   placeSpecialCoin();                                          // (คำ 1 ตัวอักษร — กันไว้)
 }
@@ -2076,23 +2083,28 @@ function fitWord(){
   wordEl.style.transform='translateX(-50%) scale('+k.toFixed(3)+')';
 }
 function collectTick(){
-  for(let i=letters.length-1;i>=0;i--){
-    const l=letters[i];
-    if(Math.hypot(l.spr.position.x-px,l.spr.position.z-pz)<COLLECT_R){
-      word.got.push(l.idx);
-      scene.remove(l.spr); letters.splice(i,1);
-      /* 🪙 รอบ 317: เก็บตัวอักษร = แถม 🪙1 ทันที + เสียง/ภาพชัด (ผู้ใช้ขอเพิ่มแรงจูงใจ) */
-      if(typeof addCoins==='function') addCoins(LETTER_COIN);
-      sessionCoins+=LETTER_COIN;
-      if(coinsEl) coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
-      coinFx(l.ch.toUpperCase()+'  +'+LETTER_COIN+' 🪙',true);
-      if(typeof sfx!=='undefined'){ sfx.select(); if(sfx.coin) setTimeout(()=>sfx.coin(),80); }
-      if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
-      renderWordHud();
-      placeSpecialCoin();                       // 💎 รอบ 319: เหลือตัวสุดท้าย → วางเหรียญพิเศษไว้ "ด้านหน้า" ตัวนั้น
-      if(!letters.length) completeWord();
-    }
+  // 🔤 รอบ 814: ตัวอักษรแต่ละตัวมีหลายก็อปปี้บนถนน (LETTER_COPIES) — ชนก็อปปี้ไหนก่อนก็นับว่า "เก็บตัวนั้นแล้ว"
+  //    ต้องเก็บ idx ที่ชนไว้ก่อน แล้วลบก็อปปี้ที่เหลือของ idx เดียวกันทิ้งทีเดียวหลังลูป กัน splice ระหว่างวนลูปพัง
+  const hitIdx=new Set();
+  for(const l of letters){
+    if(!hitIdx.has(l.idx) && Math.hypot(l.spr.position.x-px,l.spr.position.z-pz)<COLLECT_R) hitIdx.add(l.idx);
   }
+  if(!hitIdx.size) return;
+  hitIdx.forEach(idx=>{
+    word.got.push(idx);
+    const ch=word.en[idx];
+    /* 🪙 รอบ 317: เก็บตัวอักษร = แถม 🪙1 ทันที + เสียง/ภาพชัด (ผู้ใช้ขอเพิ่มแรงจูงใจ) */
+    if(typeof addCoins==='function') addCoins(LETTER_COIN);
+    sessionCoins+=LETTER_COIN;
+    coinFx(ch.toUpperCase()+'  +'+LETTER_COIN+' 🪙',true);
+    if(typeof sfx!=='undefined'){ sfx.select(); if(sfx.coin) setTimeout(()=>sfx.coin(),80); }
+    if(state.haptic!==false && navigator.vibrate) navigator.vibrate(30);
+  });
+  letters=letters.filter(l=>{ if(!hitIdx.has(l.idx)) return true; scene.remove(l.spr); return false; });
+  if(coinsEl) coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
+  renderWordHud();
+  placeSpecialCoin();                       // 💎 รอบ 319: เหลือตัวสุดท้าย → วางเหรียญพิเศษไว้ "ด้านหน้า" ตัวนั้น
+  if(!letters.length) completeWord();
 }
 function completeWord(){
   const w=word;
