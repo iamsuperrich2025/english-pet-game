@@ -225,6 +225,18 @@
 .xsp-go .xsp-sm{display:none}
 .xsp-foot{flex:0 0 auto; font-size:11.5px; color:#8a7f9c; line-height:1.55; border-top:1px dashed #e2d6f7; padding-top:7px}
 
+/* 📐 รอบ 822: จอกว้างพอ (≥760px) เรียง .xsp-rows เป็น 2 คอลัมน์ — พอมี 5 ชุด/สนาม (รอบ 820)
+   คอลัมน์เดียวต้องเลื่อนในกรอบ ขัดกฎทองข้อ 7 (กล่องทั้งใบต้องเห็นครบไม่มีเลื่อน) → กว้างพอก็แบ่ง 2 คอลัมน์แทน */
+@media (min-width:760px){
+  .xsp-box{width:min(96vw,1080px)}
+  .xsp-rows{display:grid; grid-template-columns:1fr 1fr; gap:7px 10px; align-content:start}
+  .xsp-set{padding:7px 10px}
+  /* บางสนาม (เช่น TOEIC) รายละเอียดส่วนยาวจนขึ้นหลายบรรทัด — clamp 1 บรรทัดพอ (รายละเอียดเต็มเห็นได้ตอนเข้าสอบจริง) */
+  .xsp-info{display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden}
+  .xsp-btns{margin-top:6px}
+  .xsp-go{padding:7px 12px; font-size:13.5px}
+}
+
 /* ---------- แผงเลือกสนามสอบ (ทางลัดจากรางเมนู #btn-rail-examstd · รอบ 813) ---------- */
 .xsb-box{
   position:relative; width:min(94vw,560px); max-height:88vh; display:flex; flex-direction:column;
@@ -277,6 +289,9 @@
   .xsp-go .xsp-sm{display:inline}
   .xsp-btns{gap:4px; margin-top:5px}
   .xsp-set{padding:6px 9px}
+  /* จอเตี้ย (ไม่ว่าจะกว้างแค่ไหน) กลับไปคอลัมน์เดียวเสมอ — ล้มกฎ 2 คอลัมน์ของ min-width:760px ด้านบน
+     เพราะที่สูงมีจำกัดกว่าที่กว้าง คอลัมน์เดียว+ย่อชิ้นส่วนยังพอสำหรับจอเตี้ยกว่า */
+  .xsp-rows{display:flex; flex-direction:column}
   .xsp-name{font-size:14px}
   .xsp-info{display:none}                    /* รายละเอียดส่วน/บทอ่านดูได้ในจอสอบ ไม่ต้องกินที่ตรงนี้ */
   .xsp-best{font-size:12px; margin-top:2px}
