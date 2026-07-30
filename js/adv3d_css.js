@@ -940,6 +940,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-soccer #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0}
   .adv-soccer #adv-tmute{top:48px;right:108px;font-size:11px;padding:4px 6px;min-width:0}
   .adv-soccer #adv-scam{top:48px}
+  .adv-soccer #adv-aurabar{top:40px}   /* หลบใต้แถวปุ่มบน (เดิม 34 เฉี่ยวปุ่ม 🌐 บนจอแคบ 2px) */
   /* 👁️ รอบ 394: มุมมองที่ 3 โลกขับรถ — ซ่อนชิ้นส่วนห้องคนขับ (ปุ่มบังคับ/GPS คงอยู่) */
   .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
   .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,

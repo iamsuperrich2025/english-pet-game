@@ -255,10 +255,14 @@ let guideRibbon=null, guideMat=null, _gPts=[];
 const FK_SPOT_Z=GOAL_Z+18, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก · ระยะกำแพงตามกติกาจริง · จำนวนคน
 const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/ความสูงคนในกำแพง (ใช้เช็กบอลชน)
 let landRing=null, landPt=null;
-/* ⚡ รอบ 412: "โหมดพลังโอเวอร์ไดรฟ์" — จ่าย 500 เหรียญ ได้ 60 นาที
+/* ⚡ รอบ 412: "โหมดพลังโอเวอร์ไดรฟ์" — จ่าย 100 เหรียญ (รอบ 852 ลดจาก 500) ได้ 60 นาที
    ปกติ (ร่างธรรมดา) = ไม่มีเส้นไกด์ ต้องกะระยะเอาแบบดั้งเดิม
-   แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีฟ้ากลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์ */
-const AURA_COST=500, AURA_MS=60*60*1000;
+   แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีฟ้ากลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์
+   + 🚀 รอบ 852: บอลพุ่งเร็วขึ้น 20% (คูณใน kickLaunch — เส้นไกด์ใช้สูตรเดียวกันจึงตรงเสมอ) */
+const AURA_COST=100, AURA_MS=60*60*1000, AURA_SPD=1.2;
+/* 🔥💨 รอบ 852: ชาร์จถึง ≥30% ของหลอด = เปลวไฟล้อมบอล · เตะออกไป = ควันหางตามแบบ missile */
+const FIRE_CHG=30, SMOKE_MAX=90, SMOKE_LIFE=1.15, SMOKE_GAP=26;   // % ไฟติด · จำนวนก้อนควันสูงสุด · อายุควัน(วิ) · ช่วงพ่น(ms)
+let fireGrp=null, fireFlames=[], smokePool=[], smokeIdx=0, _smokeAt=0, sbFlame=false;
 let auraGrp=null, auraRings=[], auraSparks=[], auraCore=null, auraBarEl=null, auraBtnEl=null;
 let drillMesh=null, drillMat=null, drillPhase=0, _auraHudAt=0;
 let fkOn=false, fkWall=null, fkMen=[];
@@ -2521,6 +2525,7 @@ function buildScene(md){
     buildGuideRibbon(sc);                      // 🎀 รอบ 401: เส้นไกด์ริบบิ้นแบนกว้าง (แทนจุดกลมเล็ก 14 จุดเดิม)
     buildLandRing(sc);                         // 🎯 รอบ 402: วงบอกจุดตกลูก
     buildAura(sc); buildDrill(sc);             // ⚡ รอบ 412: ออร่ารอบตัว + ลำแสงควงสว่าน
+    buildBallFX(sc);                           // 🔥💨 รอบ 852: ลูกไฟ (ชาร์จ ≥30%) + ควันหางมิสไซล์
     ringAds(sc, 6, 26, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer)
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
@@ -4878,7 +4883,7 @@ function buildDom(){
     <button id="adv-scam">👁️ มุมกล้อง</button>
     <button id="adv-pk">🎯 จุดโทษ</button>
     <button id="adv-fk">🧱 ฟรีคิก</button>
-    <button id="adv-aura">⚡ พลัง 500🪙</button>
+    <button id="adv-aura">⚡ พลัง 100🪙</button>
     <div id="adv-aurabar"><div class="ab-fill"></div><div class="ab-txt"></div></div>
     <div id="adv-coinpop"></div>
     <!-- 🤖 โหมดหุ่นยนต์นักรบ -->
@@ -10561,6 +10566,7 @@ function soccerNumTex(no){
 /* หุ่นนักเตะบล็อก: เสื้อสีเลือก + เบอร์หลังเสื้อ (หัน +Z = ด้านหลัง เห็นจากกล้องหลังบอล) · ขวา = ขาเตะ */
 function makeSoccerPlayer(shirtColor,no){
   const g=new THREE.Group();
+  g.rotation.order='YXZ';   // 🧍 รอบ 852: หมุน yaw ก่อนค่อยเอนตัว (rotation.x) — การเอนจึงสัมพัทธ์กับทิศที่หันเสมอ
   const skin=blkMat(0xffcf9e), shirt=blkMat(shirtColor), shorts=blkMat(0xffffff), hairM=blkMat(0x2b2320), boot=blkMat(0x232323);
   const legs=[];
   [-0.15,0.15].forEach(x=>{
@@ -10602,7 +10608,7 @@ function soccerResetBall(){
   soccerNewSpot();
   soccerBall.position.set(sBaseX,BALL_R,sBaseZ);
   sbVel.x=sbVel.y=sbVel.z=0; sbSpin.x=sbSpin.y=sbSpin.z=0; sbInNet=false; sbInGoal=false;
-  sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false;
+  sbLive=false; sbRestAt=0; sbGoaled=false; sChg=0; sCharging=false; sbFlame=false;   // 🔥 ดับไฟลูกเก่า (ควันที่ค้างกลางอากาศปล่อยจางเอง)
 }
 function soccerKick(power){
   if(repOn) return;                                  // 🎬 กำลังฉายรีเพลย์ = ห้ามเตะซ้อน (เดิมล้าง repTrace แล้วรีเพลย์พังทั้งโลก)
@@ -10614,6 +10620,7 @@ function soccerKick(power){
   sbSpin.y=L.wy;                                     // 🌀 ไซด์สปิน = ลูกโค้ง (ตั้งจากจุดสัมผัส/ปัดปุ่มเตะ)
   sCurl=0; sHit=0; renderCurl(); renderSpinPad();    // ตั้งใหม่ทุกลูกแบบ PES (ไม่ค้างข้ามลูกให้งง)
   sbInNet=false; sbInGoal=false; repTrace=[];          // 🎬 เริ่มบันทึกวิถีลูกนี้
+  sbFlame=power>=FIRE_CHG;                             // 🔥 รอบ 852: ชาร์จถึง 30% = ลูกไฟ + ควันหางมิสไซล์
   if(pkOn) pkKicks++;                                  // 🎯 นับลูกที่ดวล
   sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
   SoccerAudio.kick(power);
@@ -10671,7 +10678,7 @@ function buildAura(sc){
   }
   auraGrp.visible=false; sc.add(auraGrp);
 }
-/* 💰 ซื้อพลัง 500 เหรียญ = 60 นาที (ซื้อซ้ำได้ = ต่อเวลาเพิ่ม) */
+/* 💰 ซื้อพลัง 100 เหรียญ = 60 นาที (ซื้อซ้ำได้ = ต่อเวลาเพิ่ม) */
 function auraBuy(){
   if(state.coins<AURA_COST){ sfx.wrong(); toast('🪙 เหรียญไม่พอ — พลังโอเวอร์ไดรฟ์ราคา '+fmtNum(AURA_COST)+' เหรียญ'); return; }
   state.coins-=AURA_COST;
@@ -10687,21 +10694,22 @@ function auraRender(){
   const ms=auraLeftMs();
   if(ms<=0){
     auraBarEl.classList.remove('on');
-    if(auraBtnEl){ auraBtnEl.classList.remove('on'); auraBtnEl.innerHTML='⚡ พลัง 500🪙'; }
+    if(auraBtnEl){ auraBtnEl.classList.remove('on'); auraBtnEl.innerHTML='⚡ พลัง '+AURA_COST+'🪙'; }
     return;
   }
   auraBarEl.classList.add('on');
   const m=Math.floor(ms/60000), s=Math.floor(ms%60000/1000);
   auraBarEl.querySelector('.ab-fill').style.width=(ms/AURA_MS*100)+'%';
   auraBarEl.querySelector('.ab-txt').textContent=`⚡ โอเวอร์ไดรฟ์ ${m}:${String(s).padStart(2,'0')}`;
-  if(auraBtnEl){ auraBtnEl.classList.add('on'); auraBtnEl.innerHTML='⚡ ต่อเวลา 500🪙'; }
+  if(auraBtnEl){ auraBtnEl.classList.add('on'); auraBtnEl.innerHTML='⚡ ต่อเวลา '+AURA_COST+'🪙'; }
 }
 function auraTick(dt,now){
   if(!auraGrp) return;
   const on=auraActive();
   auraGrp.visible=on;
   if(!on) return;
-  auraGrp.position.set(sBaseX,0,sBaseZ);
+  if(soccerPlayer) auraGrp.position.copy(soccerPlayer.position);   // 🧍 รอบ 852: ออร่าตามตัวนักเตะ (ตัวถอยหลังบอลแล้ว ไม่ใช่จุดบอล)
+  else auraGrp.position.set(sBaseX,0,sBaseZ);
   auraRings.forEach(r=>{
     const t=((now/1400)+r.ph)%1;                            // 0→1 = ลอยขึ้นแล้ววนใหม่
     r.m.position.y=.12+t*2.0;
@@ -10765,6 +10773,83 @@ function drillTick(dt,now,charging,power){
   drillMesh.visible=true;
 }
 const _dUp=new THREE.Vector3(), _dRt=new THREE.Vector3(), _dTg=new THREE.Vector3();
+/* ==== 🔥💨 รอบ 852: ลูกไฟ + ควันหางมิสไซล์ ====
+   ชาร์จถึง ≥30% ของหลอด = เปลวไฟล้อมรอบบอล (สไปรต์ไฟเต้นวนรอบ additive)
+   เตะออกไป (ถ้าพลัง ≥30%) = ไฟหุ้มบอลลู่ไปข้างหลัง + พ่นก้อนควันทิ้งไว้ตามวิถีแบบจรวด
+   ควันแต่ละก้อนพองโต-ลอยขึ้น-จางหาย เหมือนควันจริง (pool วนใช้ซ้ำ ไม่สร้าง object ใหม่ระหว่างเล่น) */
+function ballFXTex(fire){
+  const cv=document.createElement('canvas'); cv.width=cv.height=64;
+  const c=cv.getContext('2d');
+  const g=c.createRadialGradient(32,32,2,32,32,30);
+  if(fire){ g.addColorStop(0,'rgba(255,255,230,1)'); g.addColorStop(.25,'rgba(255,210,80,.95)');
+    g.addColorStop(.6,'rgba(255,110,20,.55)'); g.addColorStop(1,'rgba(255,60,0,0)'); }
+  else { g.addColorStop(0,'rgba(225,225,225,.65)'); g.addColorStop(.55,'rgba(175,175,175,.32)');
+    g.addColorStop(1,'rgba(140,140,140,0)'); }
+  c.fillStyle=g; c.fillRect(0,0,64,64);
+  return new THREE.CanvasTexture(cv);
+}
+function buildBallFX(sc){
+  const ft=ballFXTex(true), st=ballFXTex(false);
+  fireGrp=new THREE.Group(); fireFlames=[];
+  for(let i=0;i<8;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,depthWrite:false,
+      blending:THREE.AdditiveBlending,opacity:.9}));
+    fireGrp.add(sp); fireFlames.push({m:sp,a:i/8*Math.PI*2,sp:3+Math.random()*3,r:BALL_R*.66,ph:Math.random()*9});
+  }
+  fireGrp.visible=false; sc.add(fireGrp);
+  smokePool=[]; smokeIdx=0;
+  for(let i=0;i<SMOKE_MAX;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:st,transparent:true,depthWrite:false,opacity:0}));
+    sp.visible=false; sc.add(sp);
+    smokePool.push({m:sp,life:0,max:1,vx:0,vy:0,vz:0,s0:.3});
+  }
+}
+function smokePuff(x,y,z,vx,vy,vz){
+  const p=smokePool[smokeIdx++%SMOKE_MAX]; if(!p) return;
+  p.max=p.life=SMOKE_LIFE*(.8+Math.random()*.4);
+  p.vx=vx; p.vy=vy; p.vz=vz;
+  p.s0=.34+Math.random()*.2;
+  p.m.position.set(x+(Math.random()-.5)*.14, Math.max(.12,y+(Math.random()-.5)*.14), z+(Math.random()-.5)*.14);
+  p.m.visible=true;
+}
+function ballFXTick(dt,now){
+  if(!fireGrp||!soccerBall) return;
+  const b=soccerBall.position;
+  const on=!repOn && ((sCharging&&!sbLive&&sChg>=FIRE_CHG)||(sbLive&&sbFlame));   // 🎬 ระหว่างรีเพลย์ซ่อนไฟ (บอลถูกฉายย้อน)
+  fireGrp.visible=on;
+  if(on){
+    fireGrp.position.copy(b);
+    const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
+    let tx=0,ty=.5,tz=0;                                 // ทิศ "หาง" เปลว: บอลนิ่ง=ลู่ขึ้นแบบกองไฟ · บอลพุ่ง=สวนทางความเร็ว
+    if(sbLive&&sp>2){ tx=-sbVel.x/sp; ty=-sbVel.y/sp; tz=-sbVel.z/sp; }
+    fireFlames.forEach(f=>{
+      const a=f.a+now/1000*f.sp;
+      const fl=.75+Math.sin(now/47+f.ph)*.25;            // เปลวเต้นถี่ (flicker)
+      f.m.position.set(Math.cos(a)*f.r+tx*fl*.35, Math.sin(a)*f.r*.4+ty*fl*.35+Math.sin(now/210+f.ph)*.08, Math.sin(a)*f.r+tz*fl*.35);
+      const s=BALL_R*1.9*fl;
+      f.m.scale.set(s,s,1);
+      f.m.material.opacity=.5+fl*.4;
+    });
+  }
+  // 💨 พ่นควันทิ้งท้ายระหว่างลูกไฟพุ่ง — จุดเกิดถอยไปท้ายบอลตามทิศวิ่งเหมือนท่อท้ายจรวด
+  if(!repOn&&sbLive&&sbFlame&&now-_smokeAt>SMOKE_GAP){
+    _smokeAt=now;
+    const sp=Math.hypot(sbVel.x,sbVel.y,sbVel.z)||1;
+    smokePuff(b.x-sbVel.x/sp*BALL_R*1.2, b.y-sbVel.y/sp*BALL_R*1.2, b.z-sbVel.z/sp*BALL_R*1.2,
+      -sbVel.x*.06+(Math.random()-.5)*.5, .5+Math.random()*.5, -sbVel.z*.06+(Math.random()-.5)*.5);
+  }
+  smokePool.forEach(p=>{
+    if(p.life<=0) return;
+    p.life-=dt;
+    if(p.life<=0){ p.m.visible=false; p.m.material.opacity=0; return; }
+    const t=1-p.life/p.max;                              // 0 เกิด → 1 สลาย
+    p.m.position.x+=p.vx*dt; p.m.position.y+=p.vy*dt; p.m.position.z+=p.vz*dt;
+    p.vy+=dt*.25;                                        // ควันร้อนลอยขึ้นเรื่อยๆ
+    const s=p.s0*(1+t*2.6);                              // พองโตตามเวลาแบบควันจริง
+    p.m.scale.set(s,s,1);
+    p.m.material.opacity=.5*(1-t)*(1-t*.3);
+  });
+}
 /* 🎯 รอบ 402: วงจุดตกลูก — วงแหวนเรืองแสงบนพื้นตรงจุดที่บอลจะตกกระทบครั้งแรก (เต้นเบาๆ) */
 function buildLandRing(sc){
   landRing=new THREE.Group();
@@ -10843,7 +10928,8 @@ function renderCurl(){
 }
 /* มุมยก + สปินตั้งต้นจาก "จุดสัมผัส" (ใช้ร่วมกันทั้งเส้นไกด์และตอนเตะจริง — เส้นไกด์จึงตรงกับของจริงเสมอ) */
 function kickLaunch(power){
-  const spd=KICK_SPD_MIN+(Math.max(6,power)/100)*(KICK_SPD_MAX-KICK_SPD_MIN);
+  // 🚀 รอบ 852: เติมพลังโอเวอร์ไดรฟ์แล้วบอลพุ่งเร็วขึ้น 20% (คูณที่นี่ที่เดียว เส้นไกด์จึงตรงกับของจริงเสมอ)
+  const spd=(KICK_SPD_MIN+(Math.max(6,power)/100)*(KICK_SPD_MAX-KICK_SPD_MIN))*(auraActive()?AURA_SPD:1);
   const pit=Math.max(.04,Math.min(1.2, aimPitch - sHit*HIT_LIFT));   // เตะใต้ลูก (sHit<0) = ยกสูงขึ้น
   return { spd, pit,
     wx: Math.sin(pit)*(3+spd*.12) - sHit*HIT_SPIN_X,                 // แบ็คสปิน(ยกลอย) / ท็อปสปิน(จิกลง)
@@ -10936,7 +11022,7 @@ function soccerCamera(dt,dx,dz){
   camera.lookAt(foc.x, foc.y+0.6, foc.z);
 }
 function tickSoccer(dt,now){
-  if(repOn){ repTick(dt,now); return; }                            // 🎬 รอบ 397: กำลังฉายรีเพลย์ — คุมบอล+กล้องเอง
+  if(repOn){ repTick(dt,now); ballFXTick(dt,now); return; }        // 🎬 รอบ 397: กำลังฉายรีเพลย์ — คุมบอล+กล้องเอง (ควันที่ค้างยังจางต่อ)
   if(repPendAt&&now>=repPendAt){ repPendAt=0; repTrace=repPendTrace||repTrace; repStart(); if(repOn) return; }
   soccerGKEnsure(); soccerGKTick(dt,now); pkTick(now);             // 🧤🎯 น้อง GK + นาฬิกาจุดโทษ
   if(guideMat&&guideMat.map) guideMat.map.offset.x=(guideMat.map.offset.x-dt*.55)%1;   // 🎀 ลายริบบิ้นวิ่งไหลไปทางประตู
@@ -10966,15 +11052,27 @@ function tickSoccer(dt,now){
   const dx=Math.sin(aimYaw), dz=-Math.cos(aimYaw);
 
   if(soccerPlayer){
-    soccerPlayer.rotation.y=aimYaw;
-    if(sLegSwing>0){ sLegSwing=Math.max(0,sLegSwing-dt*4);
-      const sw=Math.sin((1-sLegSwing)*Math.PI)*1.25;
-      if(soccerPlayer.userData.legs) soccerPlayer.userData.legs[1].rotation.x=-sw;
+    /* 🧍 รอบ 852: หันลำตัวตามมุมเล็งจริง — โมเดลหันหน้าไปทาง -Z จึงต้องหมุน -aimYaw
+       (เดิมใส่ +aimYaw = เล็งซ้ายตัวหันขวา สวนทางกัน) · หมุนแบบ smooth ไม่วืดทันที
+       + ยืนถอยหลังบอลเยื้องซ้ายนิด ให้ "ขาขวา" (ขาเตะ) อยู่แนวบอลแบบนักเตะจริง */
+    const ry=soccerPlayer.rotation.y;
+    soccerPlayer.rotation.y=ry+(-aimYaw-ry)*Math.min(1,dt*9);
+    soccerPlayer.position.set(sBaseX-dx*.55+dz*.13, 0, sBaseZ-dz*.55-dx*.13);
+    const leanT=(sCharging&&ready)?.05+sChg/100*.10:0;               // ชาร์จ = เอนตัวไปหลังง้างเตะตามพลัง
+    soccerPlayer.rotation.x+=(leanT-soccerPlayer.rotation.x)*Math.min(1,dt*7);
+    const legs=soccerPlayer.userData.legs;
+    if(legs){
+      if(sLegSwing>0){ sLegSwing=Math.max(0,sLegSwing-dt*4);
+        legs[1].rotation.x=-Math.sin((1-sLegSwing)*Math.PI)*1.25;    // เหวี่ยงขาไปหน้าตอนเตะ (ของเดิม)
+      }
+      else if(sCharging&&ready) legs[1].rotation.x+=((.25+sChg/100*.6)-legs[1].rotation.x)*Math.min(1,dt*8);   // ง้างขาไปหลังตามพลังชาร์จ
+      else legs[1].rotation.x*=Math.max(0,1-dt*6);                   // คืนท่ายืนปกติ
     }
   }
   updateSoccerGuide(ready,dx,dz);
   auraTick(dt,now);                                  // ⚡ รอบ 412: ออร่ารอบตัว (โชว์เฉพาะตอนแปลงร่าง)
   drillTick(dt,now,sCharging&&ready,sChg);           // 🌀 ลำแสงควงสว่านตอนกดชาร์จ
+  ballFXTick(dt,now);                                // 🔥💨 รอบ 852: เปลวไฟล้อมบอล + ควันหางมิสไซล์
   if(auraBarEl && now-_auraHudAt>500){ _auraHudAt=now; auraRender(); }   // อัปเดตนาฬิกาถอยหลังทุกครึ่งวินาที
 
   if(sbLive){
@@ -12181,6 +12279,13 @@ window.Adventure3D={
     get letters(){ return letters.map(l=>({ch:l.ch,x:l.spr.position.x,y:l.spr.position.y,z:l.spr.position.z,bonus:!!l.bonus})); },   // 🔠 เทสต์: ดูตัวอักษรบนพื้นตอนนี้
     get letterRespawns(){ return letterRespawns.map(r=>({...r})); },              // 🔠⏱️ เทสต์: ดูคิวรอเกิดใหม่
     pickUp:(i)=>pickUpLetter(i),                                                 // 🔠 เทสต์: เก็บตัวอักษรตรง ๆ ไม่ต้องเดินชน
+    // ⚽ รอบ 852: testkit โลกฟุตบอล — สถานะไฟ/ควัน/ท่าตัวนักเตะ + ยิงตรง ๆ (เทสต์ overdrive/ลูกไฟ)
+    get soccer(){ return { aimYaw, sChg, sCharging, sbLive, sbFlame, sbVel:{x:sbVel.x,y:sbVel.y,z:sbVel.z},
+      fireOn:fireGrp?fireGrp.visible:false, smokeLive:smokePool.filter(p=>p.life>0).length,
+      player:soccerPlayer?{x:+soccerPlayer.position.x.toFixed(3),z:+soccerPlayer.position.z.toFixed(3),
+        ry:+soccerPlayer.rotation.y.toFixed(3),rx:+soccerPlayer.rotation.x.toFixed(3)}:null,
+      base:{x:sBaseX,z:sBaseZ}, launch:kickLaunch, kick:soccerKick,
+      setAim(y,p){ aimYaw=y; if(p!=null) aimPitch=p; }, setCharge(v){ sChg=v; sCharging=v>0; } }; },
   },
 };
 })();
