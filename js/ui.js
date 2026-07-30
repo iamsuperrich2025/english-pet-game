@@ -2229,7 +2229,16 @@ function setBadge(el, n){
   return increased;
 }
 
-/* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด (attention รวมให้เห็นแต่ไกล) */
+/* จำนวนคำเชิญเล่นโลก 3D ด้วยกันที่ยังค้างอยู่ (ไม่นับที่กด "ไว้ก่อน" ซ่อนไปแล้วรอบนี้) */
+function tinvPendingCount(){
+  if(typeof Online === 'undefined' || !Online.tinv) return 0;
+  const hidden = Online.tinvHidden || {};
+  return Object.keys(Online.tinv).filter(fid=>!hidden[fid]).length;
+}
+
+/* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด + คำเชิญเล่นด้วยกัน (attention รวมให้เห็นแต่ไกล)
+   🚨 รอบ 814: คำเชิญ (tinv) เดิมพึ่งแค่ toast (หายไว) + การ์ดในกล่องเพื่อนบนล็อบบี้ (ต้องเปิดจอถูกจังหวะ) — พลาดง่ายมาก
+   เลยรวมเข้า badge ถาวรนี้ด้วย เห็นได้ทุกหน้าจอเหมือนของขวัญ/คำขอเพื่อน */
 function updateSettingsBadge(){
   const b = document.getElementById('settings-badge');
   if(!b) return;
@@ -2237,9 +2246,10 @@ function updateSettingsBadge(){
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  const invs  = tinvPendingCount();
   const meal  = (state.playerSick || dinnerDue()) ? 1 : 0;   // ข้อ 6: ข้าวเย็นคนยังไม่กิน/ป่วย
   // สั่นครั้งเดียวที่ badge รวม (แหล่งเดียว กันสั่นซ้ำกับ badge ย่อย) · badge ย่อยเด้งภาพพร้อมกันเอง
-  if(setBadge(b, bills + reqs + chats + gifts + meal)
+  if(setBadge(b, bills + reqs + chats + gifts + invs + meal)
      && typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
 }
 
@@ -2254,11 +2264,20 @@ function openAttentionSummary(){
   const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
   const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
   const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
+  const invEntries = (typeof Online !== 'undefined' && Online.tinv)
+    ? Object.entries(Online.tinv).filter(([fid])=>!(Online.tinvHidden && Online.tinvHidden[fid])) : [];
   const rows = [];
   if(homeBills > 0)   rows.push({ico:'🏠', txt:`บิลบ้านค้าง ${homeBills} รายการ`, sub:`ค่าบำรุง/ไฟ/น้ำ/ขยะ · รวม 🪙${fmtNum(homeTotal)}`, panel:'panel-home'});
   if(shopBills > 0)   rows.push({ico:'📡', txt:`บิลบริการค้าง ${shopBills} รายการ`, sub:`ค่าเน็ต/ค่าบริการข้อมูล · รวม 🪙${fmtNum(shopTotal)}`, panel:'panel-market'});
   if(reqs + chats > 0) rows.push({ico:'👥', txt:`คำขอเพื่อน/ข้อความใหม่ ${reqs + chats}`, sub:'ไปดูที่แผงเพื่อน', panel:'panel-friends'});
   if(gifts > 0)       rows.push({ico:'🎁', txt:`ของขวัญรอเปิด ${gifts}`, sub:'ไปเปิดของขวัญ', panel:'panel-gifts'});
+  if(invEntries.length > 0){
+    const TINV_LBL = {adv:'ผจญภัย 🌍', haunt:'ผีสิง 👻', heli:'เฮลิคอปเตอร์ 🚁', drone:'โดรน 🛸', drive:'ขับรถ 🚗'};
+    const [, firstInv] = invEntries[0];
+    const w = TINV_LBL[firstInv.map] || 'โลก 3D';
+    rows.push({ico:'📨', txt:`คำเชิญเล่นด้วยกัน ${invEntries.length} รายการ`,
+      sub:`${escapeHTML(firstInv.n)} ชวนไปเล่น${w} · แตะเพื่อไปเลย`, act:'tinv'});
+  }
   if(state.playerSick)   rows.push({ico:'🤒', txt:'หนูป่วยเพราะไม่กินข้าวเย็น', sub:`ไปหาหมอ ค่ารักษา 🪙${fmtNum(CURE_COST)}`, act:'dinner'});
   else if(dinnerDue())   rows.push({ico:'🍚', txt:'ยังไม่ได้กินข้าวเย็นของหนู', sub:`กินก่อน 20:00 ไม่งั้นป่วยนะ · 🪙${fmtNum(DINNER_COST)}`, act:'dinner'});
   if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
@@ -2279,6 +2298,13 @@ function openAttentionSummary(){
     btn.addEventListener('click', ()=>{
       overlay.remove();
       if(btn.dataset.act === 'dinner') dinnerClick();       // ข้าวเย็นคน (ข้อ 6) เปิดกล่องกิน/รักษา
+      else if(btn.dataset.act === 'tinv'){                  // คำเชิญเล่นด้วยกัน → พาเข้าโลกที่ถูกชวนเลย (เช็คตั๋ว/บาดเจ็บ/รถให้ครบทาง railWorldClick)
+        const entries = (typeof Online !== 'undefined' && Online.tinv)
+          ? Object.entries(Online.tinv).filter(([fid])=>!(Online.tinvHidden && Online.tinvHidden[fid])) : [];
+        const first = entries[0];
+        const w = (first && typeof WORLD3D !== 'undefined') ? WORLD3D.find(x=>x.mode === first[1].map) : null;
+        if(w) railWorldClick(w);
+      }
       else openPanel(btn.dataset.panel);
     });
   });
@@ -6364,11 +6390,16 @@ function buyHeliTicket(){
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
   if(!state.heliTicket || state.advHurt || advLoading) return;
-  if(!window.Adventure3D){
+  // 🗺️ รอบ 813 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
+  const hmap = await pickHeliMap();
+  if(!hmap) return;
+  const needCity = hmap === 'kpp';                 // เมืองกำแพงเพชรใช้ข้อมูลแผนที่จริงชุดเดียวกับโลกขับรถ
+  if(!window.Adventure3D || (needCity && !window.KPP_CITY)){
     advLoading = true;
-    toast('🚁 กำลังสตาร์ทเครื่องยนต์...');
+    toast(needCity ? '🚁 กำลังสตาร์ทเครื่องยนต์ + โหลดแผนที่เมืองกำแพงเพชร...' : '🚁 กำลังสตาร์ทเครื่องยนต์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
+      if(needCity) await loadScriptOnce('js/data/city_kpp.js');
       await loadAdv3d();
     }catch(e){
       advLoading = false;
@@ -6377,7 +6408,45 @@ async function enterHeli3D(){
     }
     advLoading = false;
   }
-  Adventure3D.start('heli');
+  Adventure3D.start('heli', {map:hmap});
+}
+/* 🗺️🚁 รอบ 813: หน้าเลือกแผนที่โลกเฮลิคอปเตอร์ (ผู้ใช้สั่ง — ให้เหมือน pickDriveMap ของโลกขับรถ)
+   คืน 'city' = เมืองเฮลิฯ เดิม (เดินเท้า/ลิฟต์/วิงสูท · ตัวอักษรบนดาดฟ้า)
+       'kpp'  = เมืองกำแพงเพชรจริง (ขึ้นบินทันที · ลงจอดเก็บตัวอักษรบนพื้นที่สีเขียว) · null = ยกเลิก
+   ใช้ CSS ชุด .dmap-* ร่วมกับหน้าเลือกแผนที่รถ (ไม่เพิ่ม CSS ใหม่) */
+function pickHeliMap(){
+  return new Promise(res=>{
+    let sel = state.heliMap === 'kpp' ? 'kpp' : 'city';
+    const ov = document.createElement('div');
+    ov.className = 'levelup-overlay';
+    ov.innerHTML = `<div class="levelup-box dmap-box">
+      <h2>🗺️ วันนี้จะไปบินที่ไหนดี?</h2>
+      <div class="dmap-grid">
+        <div class="dmap-card${sel==='city'?' sel':''}" data-m="city">
+          <div class="dmap-ico">🏙️🚁</div>
+          <b>เมืองเฮลิคอปเตอร์</b>
+          <small>เริ่มแบบเดินเท้า · ขับลำแดง 🔴 หรือนั่งลำฟ้า 🔵 ชมวิว · 🪂 โดดวิงสูท<br>เก็บตัวอักษร<b>บนดาดฟ้าตึก</b> คำละ 🪙30</small>
+        </div>
+        <div class="dmap-card${sel==='kpp'?' sel':''}" data-m="kpp">
+          <div class="dmap-ico">🌳🚁</div>
+          <b>เมืองกำแพงเพชร <span class="dmap-new">ใหม่!</span></b>
+          <small>บินเหนือเมืองจริง ถนน–ตึก–แม่น้ำปิง · <b>ขึ้นบินได้ทันที</b><br>
+          ตัวอักษรอยู่บน<b>พื้นที่สีเขียวข้างถนน</b> — ร่อนลงจอดบนหญ้าเพื่อเก็บ · คำละ 🪙30</small>
+        </div>
+      </div>
+      <div class="cb-btns"><button class="cb-x">ยังก่อน</button><button class="cf-ok" id="hmap-go">ไปเลย! 🚁</button></div>
+    </div>`;
+    ov.querySelectorAll('.dmap-card').forEach(el=>el.addEventListener('click',()=>{
+      sel = el.dataset.m; sfx.select();
+      ov.querySelectorAll('.dmap-card').forEach(e2=>e2.classList.toggle('sel', e2===el));
+    }));
+    ov.querySelector('.cb-x').addEventListener('click',()=>{ ov.remove(); res(null); });
+    ov.querySelector('#hmap-go').addEventListener('click',()=>{
+      state.heliMap = sel; saveState();
+      ov.remove(); res(sel);
+    });
+    document.body.appendChild(ov);
+  });
 }
 
 /* ============================================================
