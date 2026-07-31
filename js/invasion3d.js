@@ -9267,6 +9267,9 @@ function build(){
   buildDom();
   renderer=new THREE.WebGLRenderer({canvas:cvEl,antialias:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+  // 🚑 รอบ 859: การ์ดจอหลุด (หน่วยความจำ WebView เต็ม) ห้ามพังเงียบ — รายงานบนจอ (กฎทอง #1)
+  cvEl.addEventListener('webglcontextlost',ev=>{ ev.preventDefault();
+    if(typeof world3DFail==='function') world3DFail('โลกยานแม่','การ์ดจอหลุด (webglcontextlost) — หน่วยความจำกราฟิกเต็ม'); });
   scene=new THREE.Scene();
   /* ☀️ ท้องฟ้าทะเลทรายอบอ้าว + หมอกฝุ่นหนาแบบภาพอ้างอิง (ตึกไกลจมฝุ่น เห็นเป็นเงาซีด) */
   const SKY=0xd8c0a0;
@@ -9478,6 +9481,7 @@ function exitWorld(){
   if(camera){ camera.fov=FOV; camera.updateProjectionMatrix(); }
   exitBox.classList.remove('on');
   if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();
+  if(renderer) renderer.setSize(2,2,false);         // 🧹 รอบ 859: หด framebuffer คืนหน่วยความจำ GPU (start() เรียก fit() เต็มจอใหม่เสมอ)
   saveState();
   if(typeof renderDashboard==='function') renderDashboard();
   if(sessionWords>0||sessionCoins>0){

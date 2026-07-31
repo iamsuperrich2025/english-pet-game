@@ -24,15 +24,44 @@
      inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
      เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
 <style id="app-splash-style">
+/* 🎨 รอบ 859 (ผู้ใช้สั่ง): พื้นเรียบสีเดียว #0a1f3c เท่ากับ background_color ของแอพ (APK splash)
+   → เปลี่ยนจาก splash ระบบเข้ามาหน้านี้แบบกลมกลืน ไม่เห็นรอยต่อ/กรอบสี่เหลี่ยม */
 #app-splash{position:fixed;inset:0;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  background:radial-gradient(ellipse at 50% 42%,#1c4a82 0%,#123a6b 40%,#0a1f3c 72%,#051224 100%);
+  background:#0a1f3c;
   transition:opacity .5s ease,visibility 0s linear .5s;}
 #app-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
 /* รอบ 757: คุมด้วย "ความกว้าง" อย่างเดียว (35vh ≈ สูง 46vh เพราะโลโก้สูง 1.3 เท่าของกว้าง)
    — ห้ามใช้ max-height คู่กับ width เพราะเบราว์เซอร์คงความกว้างเดิมไว้ ภาพจะถูกบีบแบน */
-#app-splash .as-shield{width:min(clamp(120px,26vw,200px),35vh);height:auto;display:block;
+#app-splash .as-crest{position:relative;width:min(clamp(120px,26vw,200px),35vh);}
+#app-splash .as-shield{width:100%;height:auto;display:block;
   filter:drop-shadow(0 0 20px rgba(245,197,66,.38)) drop-shadow(0 10px 26px rgba(0,0,0,.5));
   animation:asPulse 2.6s ease-in-out infinite;}
+/* ✨ รอบ 859: แสงกรีดกวาดตามรูปโล่ (สูตรเดียวกับเหรียญ rank ใหญ่ .rank-beam/.rank-edge ใน lobby.css)
+   .as-beam กวาดทั้งโล่เบา ๆ · .as-edge สว่างกว่า เฉพาะแนวสันขอบทอง (mask 2 ชั้น xor เหลือวงขอบ) */
+#app-splash .as-beam,#app-splash .as-edge{position:absolute;inset:0;pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+  -webkit-mask-image:url('img/icons/splash_logo.png');mask-image:url('img/icons/splash_logo.png');
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain;animation:asPulse 2.6s ease-in-out infinite;}
+#app-splash .as-beam i,#app-splash .as-edge i{position:absolute;inset:-55%;display:block;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    transparent 0deg 8deg,
+    rgba(245,197,66,.95) 17deg,
+    rgba(255,255,255,.96) 22deg,
+    rgba(245,197,66,.95) 27deg,
+    transparent 36deg 176deg,
+    rgba(255,255,255,.40) 184deg,
+    transparent 192deg 360deg);
+  animation:asBeamSpin 5.5s linear infinite;}
+#app-splash .as-beam{opacity:.28;}
+#app-splash .as-edge{opacity:.95;
+  -webkit-mask-image:url('img/icons/splash_logo.png'),url('img/icons/splash_logo.png');
+  mask-image:url('img/icons/splash_logo.png'),url('img/icons/splash_logo.png');
+  -webkit-mask-size:contain,88%;mask-size:contain,88%;
+  -webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;
+  -webkit-mask-position:center,center;mask-position:center,center;
+  -webkit-mask-composite:xor;mask-composite:exclude;}
+#app-splash .as-edge i{animation-duration:3.2s;filter:blur(1px);}
+@keyframes asBeamSpin{to{transform:rotate(360deg);}}
 #app-splash .as-title{font-family:'Kanit','Itim',sans-serif;font-weight:700;font-size:clamp(22px,5vw,34px);
   letter-spacing:.14em;color:#ffe9a8;text-shadow:0 2px 10px rgba(0,0,0,.5);margin:0;}
 #app-splash .as-sub{font-family:'Itim','Kanit',sans-serif;font-size:clamp(13px,2.6vw,16px);color:#a9c7e6;margin:-6px 0 4px;text-align:center;}
@@ -42,7 +71,7 @@
 #app-splash .as-dots i:nth-child(3){animation-delay:.3s;}
 @keyframes asPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
 @keyframes asDot{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-5px);}}
-@media (prefers-reduced-motion:reduce){#app-splash .as-shield,#app-splash .as-dots i{animation:none;}}
+@media (prefers-reduced-motion:reduce){#app-splash .as-shield,#app-splash .as-dots i{animation:none;}#app-splash .as-beam,#app-splash .as-edge{display:none;}}
 </style>
 </head>
 <body>
@@ -51,7 +80,11 @@
      สัดส่วนเท่าโล่ SVG เดิม (0.77) จึงวางแทนที่ได้ตรง ๆ ไม่ต้องแก้ CSS · preload ไว้ใน <head> แล้ว
      ซ่อนด้วย #app-splash.hide เมื่อ main.js เรียก showScreen ครั้งแรกสำเร็จ (ดูสคริปต์ท้าย body) -->
 <div id="app-splash" role="status" aria-label="กำลังโหลด Vocab World">
-  <img class="as-shield" src="img/icons/splash_logo.png" alt="" aria-hidden="true" width="440" height="572">
+  <div class="as-crest" aria-hidden="true">
+    <img class="as-shield" src="img/icons/splash_logo.png" alt="" width="440" height="572">
+    <span class="as-beam"><i></i></span>
+    <span class="as-edge"><i></i></span>
+  </div>
   <p class="as-title">VOCAB WORLD</p>
   <p class="as-sub">🌍 โลกคำศัพท์ภาษาอังกฤษ กำลังโหลด...</p>
   <div class="as-dots" aria-hidden="true"><i></i><i></i><i></i></div>
@@ -81,12 +114,14 @@
 
 <div id="app">
 
-  <!-- ===== 00) Google Login (บังคับ login ก่อนเข้าเกม — ข้อ 0.1) ===== -->
+  <!-- ===== 00) Google Login (บังคับ login ก่อนเข้าเกม — ข้อ 0.1) =====
+       💎 รอบ 859 (ผู้ใช้สั่ง): ยกระดับเป็นธีมหรูน้ำเงิน-ทอง เดียวกับโล่ splash (ตราโล่จริงแทนอีโมจิสัตว์) -->
   <section id="screen-login" class="screen">
-    <h1>🌍 Vocab World</h1>
-    <p class="subtitle">โลกคำศัพท์ภาษาอังกฤษ — เลี้ยงสัตว์ สร้างตัว ออกผจญภัย ✨</p>
-    <div class="register-card login-card">
-      <div class="login-pets">🐶 🐱 🐲</div>
+    <div class="login-lux">
+      <img class="login-crest" src="img/icons/splash_logo.png" alt="" width="440" height="572">
+      <h1 class="login-word">VOCAB WORLD</h1>
+      <div class="login-rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>
+      <p class="login-tag">โลกคำศัพท์ภาษาอังกฤษ — เลี้ยงสัตว์ สร้างตัว ออกผจญภัย</p>
       <p class="login-status" id="login-status">กำลังเชื่อมต่อ... ⏳</p>
       <button class="google-btn" id="btn-google-login" style="display:none">
         <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.4 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
@@ -94,7 +129,7 @@
       </button>
       <button class="big-btn" id="btn-login-retry" style="display:none">🔄 ลองใหม่อีกครั้ง</button>
       <button class="big-btn offline-btn" id="btn-offline-play" style="display:none">📴 เล่นแบบออฟไลน์ไปก่อน</button>
-      <p class="login-note">เซฟเก็บไว้ในบัญชี Google ของหนู ☁️<br>เปิดเครื่องไหนก็เล่นต่อได้ · ครั้งแรกให้ผู้ปกครองช่วยเลือกบัญชีได้เลย</p>
+      <p class="login-note">🔒 เซฟเก็บไว้ในบัญชี Google ของหนู — เปิดเครื่องไหนก็เล่นต่อได้<br>ครั้งแรกให้ผู้ปกครองช่วยเลือกบัญชีได้เลย</p>
       <!-- ปุ่มติดตั้งเป็นแอพ (PWA) — โผล่เฉพาะตอนติดตั้งได้จริง (js ท้ายไฟล์คุมการแสดง) -->
       <button class="install-btn" id="btn-install" style="display:none">📲 ติดตั้งเป็นแอพ<span>เล่นเต็มจอ ลื่นกว่า ไม่มีแถบบัง 🎮</span></button>
     </div>

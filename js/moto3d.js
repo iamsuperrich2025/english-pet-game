@@ -2219,6 +2219,9 @@ function build(){
   buildDom();
   renderer=new THREE.WebGLRenderer({canvas:cvEl,antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  // 🚑 รอบ 859: การ์ดจอหลุด (หน่วยความจำ WebView เต็ม) ห้ามพังเงียบ — รายงานบนจอ (กฎทอง #1)
+  cvEl.addEventListener('webglcontextlost',ev=>{ ev.preventDefault();
+    if(typeof world3DFail==='function') world3DFail('โลกมอเตอร์ไซค์/รถ','การ์ดจอหลุด (webglcontextlost) — หน่วยความจำกราฟิกเต็ม'); });
   scene=new THREE.Scene();
   /* 🌤️ รอบ 302: ท้องฟ้าภาพจริง (sky.webp) ครอบโดมครึ่งทรงกลม · fog จูนเป็นสีขอบฟ้าในภาพ (ขาวฟ้าอ่อน) ให้พื้นจางกลืนเข้าขอบฟ้า */
   scene.background=new THREE.Color(0xcfe8f8);
@@ -2611,6 +2614,7 @@ function exitWorld(){
   window.removeEventListener('resize',resizeFn);
   Eng.stop();
   CarSnd.stop();                                // 🚗🔇 รอบ 785: ปิดเสียงเครื่องยนต์รถให้เกลี้ยงทุกครั้งที่ออก
+  if(renderer) renderer.setSize(2,2,false);     // 🧹 รอบ 859: หด framebuffer คืนหน่วยความจำ GPU (start() เรียก fit() เต็มจอใหม่เสมอ)
   wrapEl.classList.remove('on');
   exitBox.classList.remove('on');
   if(typeof Music!=='undefined'&&Music.resumeBg) Music.resumeBg();

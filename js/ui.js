@@ -6016,15 +6016,27 @@ function loadScriptOnce(src){
     let s = document.querySelector(`script[src="${src}"]`);
     if(s){
       if(s.dataset.loaded){ resolve(); return; }
-      s.addEventListener('load', resolve); s.addEventListener('error', reject);
-      return;
+      /* 🐛 รอบ 859 (ต้นตอ "เข้าไม่ได้ทุกโลก" บน APK): แท็กที่ "โหลดพังไปแล้ว" (error ยิงไปแล้ว)
+         จะไม่ยิง load/error ซ้ำอีก → promise ค้างตลอดกาล → advLoading ค้าง true → ทุกโลกเงียบถาวร
+         แก้: แท็กพัง = ถอดทิ้งแล้วสร้างใหม่ (ลองโหลดซ้ำจริง) · แท็กที่ยังโหลดอยู่ = รอ event ตามเดิม */
+      if(s.dataset.failed){ s.remove(); }
+      else{
+        s.addEventListener('load', resolve);
+        s.addEventListener('error', ()=>reject(new Error('โหลดไฟล์ไม่สำเร็จ: '+src)));
+        return;
+      }
     }
     s = document.createElement('script');
     s.src = src;
     s.addEventListener('load', ()=>{ s.dataset.loaded='1'; resolve(); });
-    s.addEventListener('error', reject);
+    s.addEventListener('error', ()=>{ s.dataset.failed='1'; reject(new Error('โหลดไฟล์ไม่สำเร็จ: '+src)); });
     document.head.appendChild(s);
   });
+}
+/* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ
+   (เงื่อนไขอื่น เช่น ไม่มีตั๋ว/บาดเจ็บ มีข้อความจากทางเข้าปกติอยู่แล้ว — เงียบเหมือนเดิม) */
+function advBusyMsg(){
+  if(advLoading) toast('⏳ โลก 3D กำลังโหลดอยู่ — รอสักครู่นะ ถ้ากดซ้ำแล้วขึ้นข้อความนี้ตลอด ให้ปิดเกมแล้วเปิดใหม่');
 }
 /* 🪓 รอบ 544: adventure3d.js ถูกผ่าเป็นไฟล์ part (data ล้วน) + ไฟล์หลัก
    ทุกจุดที่เคยโหลด js/adventure3d.js ตรงๆ ต้องเรียกตัวนี้แทน — part ก่อน หลักทีหลัง */
@@ -6037,7 +6049,7 @@ async function loadAdv3d(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
-  if(!state.advTicket || state.advHurt || advLoading) return;
+  if(!state.advTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.Adventure3D){
     advLoading = true;
     toast('🌍 กำลังเปิดประตูโลกผจญภัย...');
@@ -6097,7 +6109,7 @@ function pickAdvMap(){
 
 /* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
 async function enterHaunted3D(){
-  if(!state.hauntTicket || state.advHurt || advLoading) return;
+  if(!state.hauntTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.Adventure3D){
     advLoading = true;
     toast('👻 กำลังเปิดประตูโลกผีสิง...');
@@ -6119,7 +6131,7 @@ async function enterHaunted3D(){
 
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
-  if(!state.heliTicket || state.advHurt || advLoading) return;
+  if(!state.heliTicket || state.advHurt || advLoading) return advBusyMsg();
   // 🗺️ รอบ 815 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
   const hmap = await pickHeliMap();
   if(!hmap) return;
@@ -6181,7 +6193,7 @@ function pickHeliMap(){
 
 /* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
 async function enterDrone3D(){
-  if(!state.droneTicket || state.advHurt || advLoading) return;
+  if(!state.droneTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.Adventure3D){
     advLoading = true;
     toast('🛸 กำลังอาร์มโดรน...');
@@ -6200,7 +6212,7 @@ async function enterDrone3D(){
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
-  if(!state.driveTicket || state.advHurt || advLoading) return;
+  if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg();
   // 🔐 รอบ 131: ยังไม่มีรถเลย — ขับไม่ได้ พาไปหมวดยานพาหนะ (ค้างงวดตรวจหลังเลือกคัน)
   if(!(state.cars && state.cars.length)){ sfx.wrong(); showNeedCarDialog('nocar'); return; }
   if(!window.Adventure3D || !window.KPP_CITY){
@@ -6290,7 +6302,7 @@ async function enterMotoMapAsCar(){
 
 /* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
 async function enterSoccer3D(){
-  if(!state.soccerTicket || state.advHurt || advLoading) return;
+  if(!state.soccerTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.Adventure3D){
     advLoading = true;
     toast('⚽ กำลังเข้าสนาม...');
@@ -6309,7 +6321,7 @@ async function enterSoccer3D(){
 
 /* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
 async function enterMoto3D(){
-  if(!state.motoTicket || state.advHurt || advLoading) return;
+  if(!state.motoTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.MotoWorld || !window.MOTO_MAP){
     advLoading = true;
     toast('🏍️ กำลังสตาร์ทมอเตอร์ไซค์ + โหลดแผนที่บ้านโพธิ์สวัสดิ์...');
@@ -6330,7 +6342,7 @@ async function enterMoto3D(){
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
-  if(!state.invasionTicket || state.advHurt || advLoading) return;
+  if(!state.invasionTicket || state.advHurt || advLoading) return advBusyMsg();
   if(!window.InvasionWorld){
     advLoading = true;
     toast('🛸 กำลังเปิดสมรภูมิทะเลทราย...');
@@ -6363,7 +6375,7 @@ const WORLD3D = [
   { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',prereq:'driveTicket', enter:enterSoccer3D },
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  prereq:'driveTicket', enter:enterMoto3D },
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',prereq:'motoTicket', enter:enterInvasion3D },
-  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
+  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
 ];
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
@@ -6388,11 +6400,46 @@ function openHealDialog(){
     });
 }
 
+/* 🚑 รอบ 859: เปิดโลก 3D ล้มเหลวต้อง "บอกเหตุผลบนจอ" ห้ามเงียบ (กฎทอง #1 — เคสจริงบน APK:
+   เล่นมอไซค์→เปิดข้อสอบ TOEIC→กลับมาเข้าโลก 3D ไม่ได้ทุกโลกโดยไม่มีข้อความอะไรเลย)
+   กล่องนี้โชว์ error จริง + สถานะ WebGL + หน่วยความจำ ให้ผู้เล่นส่งภาพมาแล้ววินิจฉัยได้ทันที
+   + ปุ่มโหลดเกมใหม่ (ล้างหน่วยความจำ WebView — แก้อาการการ์ดจอ/แรมเต็มได้ เซฟไม่หาย) */
+function world3DFail(label, err){
+  advLoading = false;
+  console.error('world3DFail', label, err);
+  let glOk = false;
+  try{
+    const c = document.createElement('canvas');
+    const g = c.getContext('webgl') || c.getContext('experimental-webgl');
+    glOk = !!g;
+    const lose = g && g.getExtension('WEBGL_lose_context'); if(lose) lose.loseContext();   // คืน context ทดสอบทันที
+  }catch(e){}
+  const mem = (window.performance && performance.memory)
+    ? `${Math.round(performance.memory.usedJSHeapSize/1048576)}/${Math.round(performance.memory.jsHeapSizeLimit/1048576)} MB` : '';
+  const detail = err ? String((err && err.message) || err).slice(0,180) : '';
+  document.querySelectorAll('.w3f-overlay').forEach(el=>el.remove());   // ไม่ซ้อนหลายใบ
+  const ov = document.createElement('div');
+  ov.className = 'levelup-overlay w3f-overlay';
+  ov.innerHTML = `<div class="levelup-box" style="max-width:360px">
+    <h2 style="font-size:18px">⚠️ เปิด${escapeHTML(label)}ไม่สำเร็จ</h2>
+    <p style="font-size:13.5px;margin:6px 0">${glOk
+      ? 'เกิดข้อผิดพลาดตอนสร้างโลก 3D'
+      : 'หน่วยความจำกราฟิกของเครื่องเต็มชั่วคราว (WebGL ใช้งานไม่ได้)'}<br>กด <b>"โหลดเกมใหม่"</b> แล้วเข้าอีกครั้งได้เลย — เซฟไม่หายแน่นอน</p>
+    ${detail ? `<p style="font-size:11px;color:#8a7a9a;word-break:break-all;margin:4px 0">รายละเอียด: ${escapeHTML(detail)}</p>` : ''}
+    <p style="font-size:11px;color:#8a7a9a;margin:4px 0">WebGL: ${glOk?'✅ ปกติ':'❌ ใช้ไม่ได้'}${mem?` · RAM JS: ${mem}`:''}</p>
+    <button class="big-btn green home-btn" id="w3f-reload" style="width:100%;margin:6px 0 4px">🔄 โหลดเกมใหม่</button>
+    <button class="big-btn" id="w3f-close" style="width:100%;font-size:14px;padding:8px">ปิด</button>
+  </div>`;
+  document.body.appendChild(ov);
+  ov.querySelector('#w3f-reload').addEventListener('click', ()=>location.reload());
+  ov.querySelector('#w3f-close').addEventListener('click', ()=>ov.remove());
+}
+
 function railWorldClick(w){
-  if(w.mode === 'mecha'){                                   // 🤖 หุ่นรบ: อยู่นอกระบบตั๋ว ไม่เปลี่ยน (ซื้อหุ่นแยกในตลาด)
-    if(!w.owned()){ sfx.select(); toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return; }
-    w.enter(); return;
+  if(w.mode === 'mecha' && !w.owned()){                     // 🤖 หุ่นรบ: ต้องมีหุ่นก่อน (ซื้อแยกในตลาด)
+    sfx.select(); toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return;
   }
+  // 🤖 รอบ 859: มีหุ่นแล้วไหลเข้าระบบจ่ายค่าเข้าข้างล่างเหมือนโลกอื่น (เดิมกดแล้วเข้าเลย — ผู้ใช้แจ้งไม่เด้งหน้าค่าเข้า)
   if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
   if(w.prereq && !state[w.prereq]){
     sfx.select();
@@ -6424,7 +6471,7 @@ function openWorldEntryDialog(w){
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
     <h2 style="font-size:18px">${w.ico} เข้าโลก${w.label}</h2>
     ${feeHTML}
-    ${!unlocked ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">ครั้งแรกในโลกนี้ — ปลดล็อกโลกถัดไปได้เลยหลังจ่าย (ครั้งต่อไปยังต้องจ่ายค่าเข้าเหมือนกันทุกครั้ง)</p>' : ''}
+    ${!unlocked && w.mode !== 'mecha' ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">ครั้งแรกในโลกนี้ — ปลดล็อกโลกถัดไปได้เลยหลังจ่าย (ครั้งต่อไปยังต้องจ่ายค่าเข้าเหมือนกันทุกครั้ง)</p>' : ''}
     ${tinvNoticeHTML(w.mode)}
     <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!'}</button>
     <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
@@ -6444,7 +6491,11 @@ function openWorldEntryDialog(w){
     saveState();
     renderRailWorlds();
     overlay.remove();
-    w.enter();
+    // 🚑 รอบ 859: enter เป็น async — error ระหว่างสร้างโลก (เช่น WebGL พัง) ต้องโชว์กล่องบอกเหตุผล ไม่เงียบ
+    try{
+      const r = w.enter();
+      if(r && typeof r.catch === 'function') r.catch(err=>world3DFail('โลก'+w.label, err));
+    }catch(err){ world3DFail('โลก'+w.label, err); }
   });
 }
 
@@ -7199,7 +7250,7 @@ function buyRobot(id){
 
 /* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha */
 async function enterMecha3D(){
-  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return;
+  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return advBusyMsg();
   const chosen = await pickMechaRobot();
   if(!chosen) return;
   state.mechaRobot = chosen; saveState();

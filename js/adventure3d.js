@@ -1010,6 +1010,7 @@ function blkBuildThumbs(){
     sc.remove(fig);
   });
   rend.dispose();
+  rend.forceContextLoss();   // 🧹 รอบ 859: คืน WebGL context จริง (dispose เฉยๆ ค้างจน GC — มือถือ context มีโควตาจำกัด)
 }
 let blkPickEl=null, blkPickSel=null, blkPickRes=null;
 function blkBuildPicker(){
@@ -11802,6 +11803,9 @@ function start(md,opt){
     buildDom();
     renderer=new THREE.WebGLRenderer({canvas:canvasEl,antialias:false});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.6));
+    // 🚑 รอบ 859: การ์ดจอหลุด (หน่วยความจำ WebView เต็ม ฯลฯ) ห้ามพังเงียบ — รายงานบนจอ (กฎทอง #1)
+    canvasEl.addEventListener('webglcontextlost',ev=>{ ev.preventDefault();
+      if(typeof world3DFail==='function') world3DFail('โลก 3D','การ์ดจอหลุด (webglcontextlost) — หน่วยความจำกราฟิกเต็ม'); });
     camera=new THREE.PerspectiveCamera(72,window.innerWidth/window.innerHeight,.1,220);
     clock=new THREE.Clock();
     built=true;
@@ -12059,6 +12063,9 @@ function exitWorld(){
   banEl.classList.remove('show','stay'); banEl.innerHTML='';
   if(typeof Music!=='undefined') Music.resumeBg();   // 🎵 รอบ 181: ปิดวิทยุรถ + เล่นเพลงพื้นหลังต่อ
   const rl=document.getElementById('adv-radio-list'); if(rl) rl.style.display='none';
+  // 🧹 รอบ 859: หด framebuffer คืนหน่วยความจำ GPU ตอนออกโลก (start() setSize เต็มจอใหม่ทุกครั้งอยู่แล้ว)
+  //   เคสจริงบน APK: เล่นมอไซค์→เปิดข้อสอบ→หน่วยความจำ WebView ตึงจนเข้าโลก 3D ไม่ได้ทุกโลก
+  if(renderer) renderer.setSize(2,2,false);
   saveState();
   renderDashboard();
   if(M && M.mecha && (sessionWords>0 || mShotsFired>0))

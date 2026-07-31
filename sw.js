@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v216';  // v216: รอบ 823: เพิ่ม js/data/calendar.js เข้า SHELL cache
+const CACHE_VERSION = 'pet-vocab-v217';  // v217: รอบ 859: ไอคอนพื้นเรียบ icon-*-flat.png (แก้ splash APK เห็นกรอบสี่เหลี่ยม)
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [
@@ -48,8 +48,8 @@ const SHELL = [
   './js/adv3d_intro.js',
   './js/adv3d_tex.js',
   './js/adventure3d.js',
-  './img/icons/icon-192.png',
-  './img/icons/icon-512.png',
+  './img/icons/icon-192-flat.png',   // รอบ 859: ไอคอนพื้นเรียบสีเดียวกับ background_color (แก้ splash APK เห็นกรอบ)
+  './img/icons/icon-512-flat.png',
   './img/icons/splash_logo.png',   // รอบ 757: โลโก้ splash — ต้องมีในแคชไม่งั้นเปิดออฟไลน์แล้วจอโหลดว่างเปล่า
 ];
 

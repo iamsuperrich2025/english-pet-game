@@ -868,7 +868,7 @@ function petFoodTick(now){
     state.coins += amt;
     state.petFoodPaidMonth = ym;
     if(typeof toast === 'function')
-      toast(`🍖 เงินค่าอาหารสัตว์เข้าแล้ว! เลี้ยง ${petCount} ตัว ได้ 🪙${fmtNum(amt)} เหรียญ`, 4200);
+      toast(`🍖 เงินค่าอาหารสัตว์เข้าแล้ว! เลี้ยง ${petCount} ตัว ได้ 🪙${fmtNum(amt)} เหรียญ`, 0);   // 💰 รอบ 859: ค้างจนผู้เล่นกดปิดเอง (เดิมหายก่อนอ่านทัน)
     if(typeof sfx !== 'undefined' && sfx.coinGetTier) sfx.coinGetTier(petCount >= 3 ? 2 : petCount >= 2 ? 1 : 0);
   }
   // เตือนล่วงหน้า: วันนี้เป็นวันสุดท้ายของเดือน (พรุ่งนี้คือวันที่ 1) → บอกจำนวนที่จะได้รับ
@@ -878,7 +878,7 @@ function petFoodTick(now){
     if(state.petFoodWarnMonth !== warnYm){
       state.petFoodWarnMonth = warnYm;
       if(typeof toast === 'function')
-        toast(`📅 พรุ่งนี้เงินค่าอาหารสัตว์เข้า! เลี้ยง ${petCount} ตัว จะได้ 🪙${fmtNum(amt)} เหรียญ`, 4200);
+        toast(`📅 พรุ่งนี้เงินค่าอาหารสัตว์เข้า! เลี้ยง ${petCount} ตัว จะได้ 🪙${fmtNum(amt)} เหรียญ`, 0);   // 💰 รอบ 859: ค้างจนผู้เล่นกดปิดเอง
     }
   }
 }

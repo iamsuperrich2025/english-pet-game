@@ -24,8 +24,36 @@ def font(size):
     return ImageFont.truetype(TH_BOLD, size)
 
 
-# ---------- 1) ไอคอน 512×512 32-bit (แบนลงพื้นทึบ ไม่มีอัลฟา) ----------
-src = Image.open(ROOT / "img/icons/icon-512.png").convert("RGBA")
+# ---------- 0) ไอคอนแอปพื้นเรียบ (รอบ 859 — ผู้ใช้แจ้ง splash ของ APK เห็นกรอบสี่เหลี่ยม) ----------
+# ไอคอนเดิม img/icons/icon-512.png มีพื้น+ไล่เฉดในตัว พอ TWA เอาไปวางบน background_color สีเรียบ
+# (#0a1f3c) จึงเห็นขอบภาพเป็นสี่เหลี่ยม → เจนไอคอนใหม่จากโล่พื้นโปร่ง (splash_logo.png)
+# วางบนพื้นเรียบสีเดียวกับ background_color เป๊ะ + แสงนวลกลางที่จางหมดก่อนถึงขอบ (ขอบ=สีพื้นล้วน)
+shield_src = Image.open(ROOT / "img/icons/splash_logo.png").convert("RGBA")
+
+
+def flat_icon(size):
+    ic = Image.new("RGB", (size, size), NAVY_TOP)
+    glow = Image.new("L", (size, size), 0)                 # แสงนวลหลังโล่ — รัศมีสั้น จบก่อนขอบแน่นอน
+    gd = ImageDraw.Draw(glow)
+    r = int(size * 0.30)
+    gd.ellipse([size // 2 - r, size // 2 - r, size // 2 + r, size // 2 + r], fill=46)
+    glow = glow.filter(ImageFilter.GaussianBlur(size * 0.09))
+    ic = ImageChops.add(ic, Image.merge("RGB", [
+        glow.point(lambda v: v * k // 46) for k in (18, 31, 52)]))   # โทนฟ้า #1c4a82 อ่อนๆ
+    sh_h = int(size * 0.86)                                # โล่สูง 86% ของไอคอน เว้นขอบรอบตัว
+    sh_w = int(shield_src.width * sh_h / shield_src.height)
+    sh = shield_src.resize((sh_w, sh_h), Image.LANCZOS)
+    ic.paste(sh, ((size - sh_w) // 2, (size - sh_h) // 2), sh)
+    return ic
+
+
+for size in (192, 512):
+    p = ROOT / f"img/icons/icon-{size}-flat.png"
+    flat_icon(size).save(p)
+    print(f"✅ {p.relative_to(ROOT)}", size)
+
+# ---------- 1) ไอคอน 512×512 32-bit สำหรับหน้าร้าน Play (แบนลงพื้นทึบ ไม่มีอัลฟา) ----------
+src = Image.open(ROOT / "img/icons/icon-512-flat.png").convert("RGBA")   # รอบ 859: ใช้ไอคอนพื้นเรียบตัวเดียวกับในแอพ
 icon = Image.new("RGB", (512, 512), NAVY_TOP)
 icon.paste(src, (0, 0), src)
 icon.save(OUT / "icon-512.png")

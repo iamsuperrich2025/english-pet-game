@@ -118,6 +118,38 @@ const Music = (function(){
     else{ if(car) car.pause(); if(!bgSuspended && soundOn()){ bgStarted ? (bg && bg.play().catch(()=>{})) : startBg(); } }
   }
 
+  /* ---------- 🤫 รอบ 859 (ผู้ใช้สั่ง): เปิดหน้าสอบ/ควิซ/เกมจากแถบล่าง Lobby → เพลงค่อยๆ เฟดเงียบ
+     ปิดหน้านั้นแล้วเพลงค่อยๆ กลับมาดังเอง — ตรวจจับจาก DOM กลางทาง (ไม่ต้องไปฝัง hook ทุกจุดเปิด/ปิด)
+     ครอบคลุม: IELTS/TOEIC/TOEFL (#xs-picker/#xs-screen/#xs-review) · ควิซอาหาร (.fq-box)
+     · หมวดคำศัพท์+แบบทดสอบ (screen-cats/screen-quiz) · เกมจับคู่คำศัพท์ (screen-game) */
+  const DUCK_SEL = '#xs-picker,#xs-screen,#xs-review,.fq-box,#screen-cats.active,#screen-quiz.active,#screen-game.active';
+  let ducked = false, duckFadeT = 0;
+  function fadeBgTo(target, done){                     // ไล่ volume ทีละสเต็ปทุก 60ms (~0.85 วิเต็มช่วง)
+    clearInterval(duckFadeT);
+    if(!bg){ if(done) done(); return; }
+    const step = BG_VOL / 14;
+    duckFadeT = setInterval(()=>{
+      if(!bg){ clearInterval(duckFadeT); return; }
+      const v = bg.volume;
+      if(Math.abs(v - target) <= step){ bg.volume = target; clearInterval(duckFadeT); duckFadeT = 0; if(done) done(); }
+      else bg.volume = v + Math.sign(target - v) * step;
+    }, 60);
+  }
+  function duckTick(){
+    const quiet = !!document.querySelector(DUCK_SEL);
+    if(quiet){
+      // เฟดออกแล้วพัก · คืน volume เต็มไว้ตอนพัก กันทางเล่นเพลงอื่น (resumeBg/setMusic) เจอ volume 0 ค้าง
+      if(bg && !bg.paused && !duckFadeT) fadeBgTo(0, ()=>{ if(bg){ bg.pause(); bg.volume = BG_VOL; } });
+      ducked = true;
+    }else if(ducked){
+      ducked = false;
+      clearInterval(duckFadeT); duckFadeT = 0;
+      if(bg && bg.paused && bgStarted && bgAllowed()){ bg.volume = 0; bg.play().catch(()=>{}); fadeBgTo(BG_VOL); }
+      else if(bg) bg.volume = BG_VOL;
+    }
+  }
+  setInterval(duckTick, 250);
+
   // ---------- โลก 3D: พัก/คืน bg ----------
   function suspendBg(){ bgSuspended = true; if(bg) bg.pause(); }
   function resumeBg(){
@@ -165,5 +197,8 @@ const Music = (function(){
     sceneBg, curScene:()=>sceneName,             // 🎬 รอบ 369: เพลงตามฉากโลก 3D
     bgReady:()=>bgTracks.length>0,
     setMusic, isMusicOn, toggleMusic:()=>setMusic(!musicOn()),   // 🎵 รอบ 184: ปุ่มเปิด/ปิดเพลง Lobby
+    /* test hooks — ใช้เฉพาะตอนเทสต์ preview (🤫 รอบ 859: ตรวจการเฟดเพลงตอนเปิดหน้าสอบ) */
+    _t:{ get ducked(){ return ducked; }, get vol(){ return bg ? bg.volume : null; },
+         get paused(){ return bg ? bg.paused : null; }, get started(){ return bgStarted; }, duckTick },
   };
 })();

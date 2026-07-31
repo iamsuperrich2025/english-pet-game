@@ -145,7 +145,9 @@ function restackToasts(){
 }
 function toast(msg, ms=1800){
   const t = document.createElement('div');
-  if(TOAST_WARN_RE.test(msg)){
+  // 💰 รอบ 859 (ผู้ใช้สั่ง): ms=0 = บังคับค้างจนผู้เล่นกดปิดเอง (ใช้กับแจ้งเรื่องเงินตอนบูต — เดิมหายก่อนอ่านทัน)
+  const warn = TOAST_WARN_RE.test(msg);
+  if(warn || ms === 0){
     t.className = 'toast toast-warn';
     const span = document.createElement('span');
     span.className = 'toast-msg'; span.textContent = msg;
@@ -154,8 +156,10 @@ function toast(msg, ms=1800){
     x.onclick = ()=>{ t.remove(); restackToasts(); };
     t.appendChild(span); t.appendChild(x);
     document.body.appendChild(t);
-    if(nowMs() - lastWrongAt > 200 && typeof sfx !== 'undefined') sfx.wrong();  // เสียงเตือน (ไม่ซ้ำถ้าเพิ่งเล่นไป)
-    if(state.haptic !== false && navigator.vibrate) navigator.vibrate(50);      // สั่นเบาๆ (สวิตช์แยกจากเสียง)
+    if(warn){   // ข่าวเงินเข้า (ms=0 แต่ไม่ใช่คำเตือน) ไม่ต้องเล่นเสียงผิด/สั่น
+      if(nowMs() - lastWrongAt > 200 && typeof sfx !== 'undefined') sfx.wrong();  // เสียงเตือน (ไม่ซ้ำถ้าเพิ่งเล่นไป)
+      if(state.haptic !== false && navigator.vibrate) navigator.vibrate(50);      // สั่นเบาๆ (สวิตช์แยกจากเสียง)
+    }
     restackToasts();                       // ค้างไว้ ไม่ตั้ง setTimeout
     return;
   }
