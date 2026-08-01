@@ -200,7 +200,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (1,919 บรรทัด · 107 รายการ)
+## js/city3d.js (1,927 บรรทัด · 107 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -212,10 +212,10 @@ certStripHTML:633 · certBindStrip:647
 - 845-1136 🌆 ผังเมือง — อาคารทุกหลังผูก go=<key> (ตัวรับใน js/main.js)
 - 1137-1281 🎉 เทศกาลตามวันที่จริง — พลุปีใหม่ / สงกรานต์ / ลอยกระทง (รอบ 863)
 - 1282-1521 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
-- 1522-1640 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
-- 1641-1717 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
-- 1718-1815 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 1816-1919 🚀 BOOT
+- 1522-1648 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
+- 1649-1725 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+- 1726-1823 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
+- 1824-1927 🚀 BOOT
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
 hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
@@ -232,9 +232,9 @@ buildGreens:1007 · _glowTex:1052 · buildSky:1062 · buildAmbientTraffic:1124 �
 buildFireworks:1160 · buildSongkranDeco:1202 · buildLoiKrathongDeco:1234 · actBuilding:1296 · loadFirebase:1305 · liveStart:1313
 lbGet:1328 · watchPresence:1338 · spawnStander:1359 · WORLD_MAPS:1392 · pollWorlds:1399 · spawnVehicle:1450
 removeActor:1508 · markPickable:1518 · BUB_MS:1531 · BUB_FRESH:1532 · BUB_MAXCH:1533 · bubbleSprite:1535
-showBubble:1565 · flushBubble:1595 · watchFriendChats:1603 · spawnSelf:1621 · WALK_SPD:1647 · WALK_MIN:1648
-WALK_MAX:1649 · DOOR_GAP:1650 · doorSpotOf:1652 · walkPose:1659 · walkSelfTo:1671 · onTap:1721
-travelTo:1731 · sparkleAt:1754 · openProfile:1778 · setChip:1811 · boot:1819
+showBubble:1565 · flushBubble:1595 · watchFriendChats:1603 · spawnSelf:1624 · WALK_SPD:1655 · WALK_MIN:1656
+WALK_MAX:1657 · DOOR_GAP:1658 · doorSpotOf:1660 · walkPose:1667 · walkSelfTo:1679 · onTap:1729
+travelTo:1739 · sparkleAt:1762 · openProfile:1786 · setChip:1819 · boot:1827
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
