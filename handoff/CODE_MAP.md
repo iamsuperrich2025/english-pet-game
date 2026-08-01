@@ -200,7 +200,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (1,914 บรรทัด · 107 รายการ)
+## js/city3d.js (1,919 บรรทัด · 107 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -215,7 +215,7 @@ certStripHTML:633 · certBindStrip:647
 - 1522-1640 💬 รอบ 864: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
 - 1641-1717 🚶 รอบ 864: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
 - 1718-1815 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 1816-1914 🚀 BOOT
+- 1816-1919 🚀 BOOT
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
 hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
