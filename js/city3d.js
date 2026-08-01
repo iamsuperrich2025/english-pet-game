@@ -1397,9 +1397,9 @@ const WORLD_MAPS = [
   {map:'drone',   kind:'drone'},
 ];
 function pollWorlds(){
-  if(!Live.db) return;
+  if(!Live.db) return Promise.resolve();
   const fresh = {};    // uid → {kind, n, av, c, ct}
-  Promise.all(WORLD_MAPS.map(w=>
+  return Promise.all(WORLD_MAPS.map(w=>
     Promise.all([
       Live.db.ref('world/'+w.map).get().catch(()=>null),
       Live.db.ref('wroom/'+w.map).get().catch(()=>null),
@@ -1520,7 +1520,7 @@ function markPickable(g, info){
 }
 
 /* ============================================================
-   💬 รอบ 864: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
+   💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
    2 ท่อ (ทั้งคู่เป็นของจริงจาก RTDB · อ่านอย่างเดียว ไม่เขียนอะไรเลย):
      ① เพื่อนที่อยู่ในโลก 3D → `winfo/<map>/<room>/<uid>` field `c`(ข้อความ) + `k`(เวลา)
         = ข้อความลอยหัวชุดเดียวกับที่เขาพิมพ์ในโลกนั้น (โลกเขียนผ่าน js/netroom.js)
@@ -1536,7 +1536,7 @@ function bubbleSprite(text){
   const c = cvs(512, 268), g = c.getContext('2d');
   g.font = '600 42px system-ui, sans-serif';
   /* ตัดบรรทัดเอง (ไทยไม่มีเว้นวรรค → ตัดตามความกว้างทีละตัว) */
-  const lines=[], MAXW=430;
+  const lines=[], MAXW=396;              // เว้นขอบซ้าย-ขวาในกล่อง ~32px
   let cur='';
   String(text).slice(0,BUB_MAXCH).split(/(\s+)/).forEach(w=>{
     for(const ch of w){
@@ -1546,7 +1546,7 @@ function bubbleSprite(text){
   });
   if(cur.trim()) lines.push(cur);
   const L = Math.min(3, lines.length||1);
-  const bh = 34 + L*52, top = 200-bh;
+  const bh = 30 + L*54, top = 200-bh;      // แถวสูง 54 = ไทยมีสระบน/ล่างไม่ชนกัน
   g.fillStyle='rgba(255,255,255,.96)'; roundRect(g, 26, top, 460, bh, 26); g.fill();
   g.strokeStyle='rgba(66,120,190,.9)'; g.lineWidth=5; roundRect(g, 26, top, 460, bh, 26); g.stroke();
   g.beginPath();                                   // หางบับเบิลชี้ลงหัวเจ้าของ
@@ -1555,7 +1555,7 @@ function bubbleSprite(text){
   g.strokeStyle='rgba(66,120,190,.9)'; g.lineWidth=5;
   g.beginPath(); g.moveTo(232, 200); g.lineTo(256, 236); g.lineTo(288, 200); g.stroke();
   g.fillStyle='#16233d'; g.textAlign='center'; g.textBaseline='middle';
-  for(let i=0;i<L;i++) g.fillText(lines[i].trim(), 256, top+26+i*52, 440);
+  for(let i=0;i<L;i++) g.fillText(lines[i].trim(), 256, top+42+i*54, 416);
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(c), transparent:true, depthTest:false}));
   sp.scale.set(7.2, 3.77, 1);
   sp.renderOrder = 22;
@@ -1639,14 +1639,14 @@ function spawnSelf(){
 }
 
 /* ============================================================
-   🚶 รอบ 864: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+   🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
    เส้นทาง = พิกัดเชิงขั้ว (มุมก่อน-รัศมีทีหลัง) → ออกจากลานน้ำพุ เลี้ยวรอบวง แล้ววิ่งตรงเข้าประตู
    (ไม่ตัดผ่านกลางลาน/น้ำพุ เพราะรัศมีโตทีหลัง) · แตะซ้ำระหว่างเดิน = ข้ามไปเลย
    ไม่มีตัวละคร (ยังไม่เคยเซฟในเครื่องนี้) → ใช้ท่าเดิม: กล้องซูมลงตึกแล้วไป
    ============================================================ */
-const WALK_SPD  = 13;      // หน่วย/วินาที
-const WALK_MIN  = 1.0;     // เวลาเดินอย่างน้อย (วินาที) — ตึกใกล้ก็ยังเห็นว่าเดิน
-const WALK_MAX  = 3.4;     // เพดานเวลาเดิน
+const WALK_SPD  = 22;      // หน่วย/วินาที (วิ่งเหยาะ ๆ — เด็กกดแล้วต้องได้เข้าหน้านั้นไว)
+const WALK_MIN  = 0.9;     // เวลาเดินอย่างน้อย (วินาที) — ตึกใกล้ก็ยังเห็นว่าเดิน
+const WALK_MAX  = 2.4;     // เพดานเวลาเดิน (ตึกไกลสุดถึงหน้าประตูภายในเวลานี้)
 const DOOR_GAP  = 7.0;     // ยืนห่างจากใจกลางตึกเท่าไหร่ถึงเรียกว่า "หน้าประตู"
 
 function doorSpotOf(key){
@@ -1732,7 +1732,7 @@ function travelTo(b){
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
   if(travelTo.busy){ location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
   travelTo.busy = true;
-  /* 🚶 มีตัวละครของเรา → เดินไปหน้าประตูก่อน แล้วค่อยเข้า (รอบ 864) */
+  /* 🚶 มีตัวละครของเรา → เดินไปหน้าประตูก่อน แล้วค่อยเข้า (รอบ 866) */
   if(walkSelfTo(b, ()=>{
         setChip('🚪 เข้า '+b.label+' …');
         if(Live.self && Live.self.g) showBubble('__self', 'เข้า '+b.label+' '+b.ico, Date.now());
@@ -1894,14 +1894,19 @@ function boot(){
     fakeRide(){ spawnVehicle('tc1',{kind:'car',n:'นักซิ่ง',av:'blk3c02'}); spawnVehicle('tm1',{kind:'moto',n:'สายลม',av:'blk6'});
                 spawnVehicle('th1',{kind:'heli',n:'กัปตัน',av:'h_p'}); spawnVehicle('td1',{kind:'drone',n:'มือโดรน',av:''}); },
     clear(){ Object.keys(Live.actors).forEach(removeActor); },
-    /* 🚶 รอบ 864 */
-    self(){ return Live.self && Live.self.g ? {x:Live.self.g.position.x, z:Live.self.g.position.z,
-              ry:Live.self.g.rotation.y, walk:!!Live.self.walk, bub:!!(Live.self.bub)} : null; },
+    /* 🚶 รอบ 866 */
+    self(){ const S=Live.self; if(!S||!S.g) return null;
+            const lm=(S.g.userData.limbs||[]).map(p=>+p.rotation.x.toFixed(3));
+            return {x:S.g.position.x, z:S.g.position.z, y:S.g.position.y, ry:S.g.rotation.y,
+                    r:Math.hypot(S.g.position.x,S.g.position.z), walk:!!S.walk, bub:!!S.bub, limbs:lm}; },
     walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
                      return walkSelfTo(b, cb||function(){}); },
     door(key){ return doorSpotOf(key); },
-    /* 💬 รอบ 864 */
-    bubble(uid, txt){ showBubble(uid, txt, Date.now()); },
+    /* 💬 รอบ 866 */
+    bubble(uid, txt, ts){ showBubble(uid, txt, ts||Date.now()); },
+    fakeDb(db, uid){ Live.db=db; Live.uid=uid||'me'; },      // ยัด db จำลอง แล้วเรียก watchChats/poll เทสต์เส้นทาง RTDB
+    watchChats(){ watchFriendChats(); },
+    poll(){ return pollWorlds(); },
     bubbleAt(uid){ const A = uid==='__self'?Live.self:Live.actors[uid];
                    return A && A.bub ? {y:A.bub.position.y, op:A.bub.material.opacity} : null; },
   }};
