@@ -1,11 +1,11 @@
 "use strict";
 /* ============================================================
-   city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index2.html · รอบ 861)
+   city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863)
    ------------------------------------------------------------
    · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์)
    · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
      เมาส์: ลากซ้าย=เลื่อน · ลากขวา=หมุน/เอียง · ล้อ=ซูม
-   · อาคาร 28 หลังผูกลิงก์จริงของเกม → แตะแล้วเด้งไป index.html?go=<key>
+   · อาคาร 28 หลังผูกลิงก์จริงของเกม → แตะแล้วเด้งไป index_classic.html?go=<key>
      (ตัวรับอยู่ท้าย js/main.js — เปิดแผง/หน้า/โลก 3D ให้เองหลังบูต)
    · ผู้เล่นจริง: /presence = ใครออนไลน์+ทำอะไร → ยืนหน้าอาคารนั้น
      /world/<map> + /wroom/<map> = ใครอยู่โลกขับรถ/มอไซค์/เฮลิฯ/โดรน → รถวิ่ง/บินจริงในเมือง
@@ -954,6 +954,7 @@ function buildCity(){
   buildGreens();
   buildSky();
   buildAmbientTraffic();
+  buildFestival();
 }
 
 /* ⛲ ลานกลาง: น้ำพุ + ป้ายเมือง + ป้ายคำศัพท์วันนี้ */
@@ -1134,13 +1135,162 @@ function buildAmbientTraffic(){
 }
 
 /* ============================================================
+   🎉 เทศกาลตามวันที่จริง — พลุปีใหม่ / สงกรานต์ / ลอยกระทง (รอบ 863)
+   โซนตกแต่งล้วน ไม่แตะกล้อง/ผังเมือง/ระบบผู้เล่น — ปิดเงียบถ้าไม่ตรงช่วงเทศกาล
+   ============================================================ */
+const FESTIVAL = (()=>{
+  try{
+    const q = new URLSearchParams(location.search);
+    if(q.has('festival')) return q.get('festival');   // เทสต์: ?festival=newyear|songkran|loikrathong|none
+  }catch(e){}
+  const d = new Date(), mm = d.getMonth()+1, dd = d.getDate();
+  if((mm===12 && dd>=28) || (mm===1 && dd<=3)) return 'newyear';      // 🎆 ส่งท้ายปีเก่า-ต้อนรับปีใหม่
+  if(mm===4 && dd>=12 && dd<=16) return 'songkran';                   // 💦 สงกรานต์ (13-15 เม.ย. + วันก่อน-หลัง)
+  if(mm===11 && dd>=22 && dd<=26) return 'loikrathong';               // 🏮 ลอยกระทง (เต็มดวง 24 พ.ย. 2569)
+  return 'none';
+})();
+
+function buildFestival(){
+  if(FESTIVAL==='newyear') buildFireworks();
+  else if(FESTIVAL==='songkran') buildSongkranDeco();
+  else if(FESTIVAL==='loikrathong') buildLoiKrathongDeco();
+}
+
+/* 🎆 พลุปีใหม่ — ระเบิดสีสุ่มกลางฟ้า วนซ้ำเป็นจังหวะ */
+function buildFireworks(){
+  const SHELLS=4, PARTS=42, PERIOD=3.4;
+  for(let s=0; s<SHELLS; s++){
+    const pos = new Float32Array(PARTS*3), col = new Float32Array(PARTS*3);
+    const dirs = [];
+    for(let i=0;i<PARTS;i++){
+      const th=rnd(0,TAU), ph=Math.acos(rnd(-1,1));
+      dirs.push([Math.sin(ph)*Math.cos(th), Math.abs(Math.cos(ph))*0.85+0.35, Math.sin(ph)*Math.sin(th)]);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    geo.setAttribute('color', new THREE.BufferAttribute(col,3));
+    const pm = new THREE.PointsMaterial({size:1.7, vertexColors:true, transparent:true, opacity:1, depthWrite:false, sizeAttenuation:true});
+    const pts = new THREE.Points(geo, pm);
+    pts.visible = false;
+    scene.add(pts);
+    const offset = s*(PERIOD/SHELLS) + rnd(0,0.5);
+    let lastCycle = -1;
+    tickers.push((dt,t)=>{
+      const tt = t+offset, cycleIdx = Math.floor(tt/PERIOD), ph2 = tt/PERIOD - cycleIdx;
+      if(cycleIdx !== lastCycle){
+        lastCycle = cycleIdx;
+        const c = new THREE.Color().setHSL(rnd(0,1), 0.85, 0.62);
+        for(let i=0;i<PARTS;i++){ col[i*3]=c.r; col[i*3+1]=c.g; col[i*3+2]=c.b; }
+        geo.attributes.color.needsUpdate = true;
+        pts.position.set(rnd(-55,55), rnd(34,54), rnd(-55,55));
+      }
+      const burst = ph2 < 0.6;
+      pts.visible = burst;
+      if(!burst) return;
+      const bt = ph2/0.6, arr = geo.attributes.position.array;
+      for(let i=0;i<PARTS;i++){
+        const dxr=dirs[i], r=bt*7.5;
+        arr[i*3]=dxr[0]*r; arr[i*3+1]=dxr[1]*r-bt*bt*4.5; arr[i*3+2]=dxr[2]*r;
+      }
+      geo.attributes.position.needsUpdate = true;
+      pm.opacity = 1-bt*bt;
+    });
+  }
+}
+
+/* 💦 สงกรานต์ — พวงธงหลากสีรอบลานกลาง + จุดสาดน้ำเป็นจังหวะ */
+function buildSongkranDeco(){
+  const FLAG_COLS=[0xff5252,0xffca28,0x4fc3f7,0x66bb6a,0xff8a65,0xba68c8], N=20, R=15.5;
+  const garland = new THREE.Group();
+  for(let i=0;i<N;i++){
+    const a = i/N*TAU;
+    const flag = M(new THREE.ConeGeometry(0.34,0.55,3), mat(FLAG_COLS[i%FLAG_COLS.length]),
+      Math.cos(a)*R, 5.3+Math.sin(a*4)*0.2, Math.sin(a)*R);
+    flag.rotation.x = Math.PI; flag.rotation.y = -a; flag.userData.ph = i*0.7;
+    garland.add(flag);
+  }
+  scene.add(garland);
+  tickers.push((dt,t)=>garland.children.forEach(f=>{ f.rotation.z = Math.sin(t*2.6+f.userData.ph)*0.3; }));
+
+  for(let i=0;i<8;i++){
+    const a = i/8*TAU + 0.35, bx=Math.cos(a)*9.6, bz=Math.sin(a)*9.6;
+    const g = new THREE.Group(), drops=[];
+    for(let k=0;k<6;k++){
+      const d = M(new THREE.SphereGeometry(0.11,6,5), mat(0x40c4ff,{transparent:true,opacity:0.85}));
+      d.userData.ph = k/6; d.userData.dx = rnd(-0.9,0.9); d.userData.dz = rnd(-0.9,0.9);
+      g.add(d); drops.push(d);
+    }
+    g.position.set(bx,0,bz); scene.add(g);
+    const off = rnd(0,1);
+    tickers.push((dt,t)=>drops.forEach(d=>{
+      const k = (t*0.9+off+d.userData.ph)%1;
+      d.position.set(d.userData.dx*k*2.2, 0.25+2.4*k-2.6*k*k, d.userData.dz*k*2.2);
+      d.material.opacity = 0.85*(1-k);
+    }));
+  }
+}
+
+/* 🏮 ลอยกระทง — กระทงลอยรอบสระน้ำพุกลางลาน + โคมลอยขึ้นฟ้าทั่วเมือง */
+function buildLoiKrathongDeco(){
+  const N=8, R=2.6, petal = mat(0xffb74d);
+  for(let i=0;i<N;i++){
+    const a = i/N*TAU + rnd(-0.08,0.08);
+    const k = new THREE.Group();
+    k.add(M(new THREE.CylinderGeometry(0.32,0.28,0.09,10), mat(0x8d6e4a)));
+    for(let p=0;p<6;p++){
+      const pa = p/6*TAU;
+      const leaf = M(new THREE.ConeGeometry(0.14,0.22,4), petal, Math.cos(pa)*0.22, 0.06, Math.sin(pa)*0.22);
+      leaf.rotation.x = Math.PI*0.42; leaf.rotation.y = -pa;
+      k.add(leaf);
+    }
+    k.add(M(cyl(0.02,0.02,0.14,5), mat(0xfff3c4), 0, 0.14, 0));
+    const flame = M(new THREE.SphereGeometry(0.045,6,5), mat(0xffca28,{emissive:0xcc7700}), 0, 0.22, 0);
+    k.add(flame);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({map:_glowTex(), transparent:true, opacity:0.5, depthWrite:false}));
+    glow.scale.set(0.9,0.9,1); glow.position.y = 0.2; k.add(glow);
+    const rr = R + rnd(-0.3,0.3);
+    k.position.set(Math.cos(a)*rr, 0.78, Math.sin(a)*rr);
+    scene.add(k);
+    const ph = rnd(0,TAU);
+    tickers.push((dt,t)=>{
+      k.position.y = 0.78 + Math.sin(t*1.1+ph)*0.03;
+      k.rotation.y = Math.sin(t*0.4+ph)*0.15;
+      flame.scale.setScalar(1+Math.sin(t*9+ph)*0.25);
+    });
+  }
+
+  const LANT_N=14;
+  for(let i=0;i<LANT_N;i++){
+    const lant = new THREE.Group();
+    const body = M(new THREE.SphereGeometry(0.42,8,7), mat(0xffe0a3,{transparent:true,opacity:0.92,emissive:0xaa6a00}));
+    lant.add(body);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({map:_glowTex(), transparent:true, opacity:0.6, depthWrite:false}));
+    glow.scale.set(2.2,2.2,1); lant.add(glow);
+    const x=rnd(-70,70), z=rnd(-70,70), y0=rnd(2,8), speed=rnd(2.4,3.4), drift=rnd(-0.3,0.3), ph=rnd(0,TAU);
+    lant.position.set(x,y0,z);
+    scene.add(lant);
+    tickers.push((dt,t)=>{
+      const cyc=16, tt=(t*speed*0.06+i*1.7)%cyc, k=tt/cyc;
+      lant.position.y = y0 + k*55;
+      lant.position.x = x + Math.sin(t*0.3+ph)*1.4 + drift*k*20;
+      lant.position.z = z + Math.cos(t*0.26+ph)*1.4;
+      body.material.opacity = k<0.85 ? 0.92 : 0.92*(1-(k-0.85)/0.15);
+    });
+  }
+}
+
+/* ============================================================
    🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
    ============================================================ */
 const Live = {
   fb:null, db:null, uid:null,
-  actors:{},          // uid → {g:Group, kind, data, label}
+  actors:{},          // uid → {g:Group, kind, data, label, bubY}
   lbCache:{},         // uid → leaderboard node (โปรไฟล์+ตัวละคร)
   count:0,
+  self:null,          // 🙋 ตัวเรา {g, bubY, walk} — ใช้เดินไปหน้าตึก + รับบับเบิลแชทของเราเอง
+  bubPend:{},         // uid → {text, ts} ข้อความที่มาถึงก่อนตัวละครจะ spawn เสร็จ
+  bubSeen:{},         // uid → กันเด้งข้อความเดิมซ้ำ
+  chatWatch:{},       // uid เพื่อนที่ติดตั้ง listener แชทแล้ว
 };
 /* act (emoji ท้ายข้อความ) → อาคารที่ไปยืน */
 function actBuilding(act){
@@ -1169,6 +1319,7 @@ function liveStart(){
       Live.uid = u ? u.uid : null;
       if(!u){ setChip('🔑 ล็อกอินในเกมก่อน แล้วจะเห็นเพื่อนในเมือง'); return; }
       watchPresence();
+      watchFriendChats();          // 💬 บับเบิลแชทสดของเพื่อนที่ยืนอยู่ในเมือง
       pollWorlds();
       setInterval(pollWorlds, 10000);   // โลก 3D poll ทุก 10 วิ (on() จะโดนสแปมตำแหน่งถี่เกิน)
     });
@@ -1233,7 +1384,8 @@ function spawnStander(uid, v){
       g.rotation.y += Math.sin(t*0.35+ph)*0.0015;
     };
     tickers.push(tick);
-    Live.actors[uid] = {g, kind:'stand', bkey, data:v, tick, blk};
+    Live.actors[uid] = {g, kind:'stand', bkey, data:v, tick, blk, bubY:4.9};
+    flushBubble(uid);                            // มีข้อความรออยู่ตั้งแต่ก่อน spawn เสร็จ
   });
 }
 /* 🚗🏍️🚁🛸 โลก 3D: /world/<map> + /wroom/<map>/<room> → ยานวิ่ง/บินในเมือง */
@@ -1246,28 +1398,44 @@ const WORLD_MAPS = [
 ];
 function pollWorlds(){
   if(!Live.db) return;
-  const fresh = {};    // uid → {kind, n, av}
+  const fresh = {};    // uid → {kind, n, av, c, ct}
   Promise.all(WORLD_MAPS.map(w=>
     Promise.all([
       Live.db.ref('world/'+w.map).get().catch(()=>null),
       Live.db.ref('wroom/'+w.map).get().catch(()=>null),
-    ]).then(([legacy, rooms])=>{
+      /* node "เย็น" ของ js/netroom.js — ชื่อ(n) + แชทลอยหัว(c) + เวลาแชท(k) ของคนในสนามย่อย
+         (node ร้อน /wroom ส่งแค่พิกัด ไม่มีชื่อ/ข้อความ) */
+      Live.db.ref('winfo/'+w.map).get().catch(()=>null),
+    ]).then(([legacy, rooms, info])=>{
       const now=Date.now();
       const eat=(uid,v)=>{
         if(!v || uid===Live.uid) return;
         if(v.ts && now-v.ts > 60*1000) return;        // ค้างเกิน 1 นาที = ออกไปแล้ว
-        fresh[uid] = {kind:w.kind, n:v.n||'ผู้เล่น', av:v.av||''};
+        fresh[uid] = {kind:w.kind, n:v.n||'ผู้เล่น', av:v.av||'', c:v.c||'', ct:v.ct||0};
       };
       if(legacy && legacy.val()){ const o=legacy.val(); Object.keys(o).forEach(k=>eat(k,o[k])); }
       if(rooms && rooms.val()){
         const rs=rooms.val();
         Object.keys(rs).forEach(rk=>{ const r=rs[rk]||{}; Object.keys(r).forEach(k=>eat(k,r[k])); });
       }
+      if(info && info.val()){                          // เติมชื่อ/ข้อความให้คนที่มาจาก /wroom
+        const rs=info.val();
+        Object.keys(rs).forEach(rk=>{
+          const r=rs[rk]||{};
+          Object.keys(r).forEach(uid=>{
+            const cd=r[uid]||{}, f=fresh[uid];
+            if(!f) return;
+            if(cd.n) f.n = cd.n;
+            if(cd.c){ f.c = cd.c; f.ct = cd.k || f.ct; }
+          });
+        });
+      }
     })
   )).then(()=>{
     // สร้าง/อัปเดตยานของทุกคนที่อยู่ในโลก 3D
     Object.keys(fresh).forEach(uid=>{
       const f=fresh[uid], cur=Live.actors[uid];
+      if(f.c) showBubble(uid, f.c, f.ct);              // 💬 ข้อความที่เขาพิมพ์ในโลก 3D ลอยมาถึงเมืองด้วย
       if(cur && cur.kind===f.kind) return;
       if(cur) removeActor(uid);
       spawnVehicle(uid, f);
@@ -1333,7 +1501,8 @@ function spawnVehicle(uid, f){
                     heli:'กำลังบินเฮลิคอปเตอร์ 🚁', drone:'กำลังบังคับโดรน 🛸'}[f.kind];
     markPickable(g, {uid, name:f.n, grade:lb && lb.g, act:kindTh, blk:blkId});
     tickers.push(tick);
-    Live.actors[uid] = {g, kind:f.kind, tick, blk:blkId};
+    Live.actors[uid] = {g, kind:f.kind, tick, blk:blkId, bubY:label.position.y+1.9};
+    flushBubble(uid);
   });
 }
 function removeActor(uid){
@@ -1341,11 +1510,111 @@ function removeActor(uid){
   if(!a) return;
   scene.remove(a.g);
   const i = tickers.indexOf(a.tick); if(i>=0) tickers.splice(i,1);
+  if(a.bubTick){ const b=tickers.indexOf(a.bubTick); if(b>=0) tickers.splice(b,1); }   // 💬 บับเบิลค้างต้องถอดด้วย
+  delete Live.bubSeen[uid];
   a.g.traverse(o=>{ const j=actorPick.indexOf(o); if(j>=0) actorPick.splice(j,1); });
   delete Live.actors[uid];
 }
 function markPickable(g, info){
   g.traverse(o=>{ if(o.isMesh||o.isSprite){ o.userData.actor=info; actorPick.push(o); } });
+}
+
+/* ============================================================
+   💬 รอบ 864: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
+   2 ท่อ (ทั้งคู่เป็นของจริงจาก RTDB · อ่านอย่างเดียว ไม่เขียนอะไรเลย):
+     ① เพื่อนที่อยู่ในโลก 3D → `winfo/<map>/<room>/<uid>` field `c`(ข้อความ) + `k`(เวลา)
+        = ข้อความลอยหัวชุดเดียวกับที่เขาพิมพ์ในโลกนั้น (โลกเขียนผ่าน js/netroom.js)
+     ② เพื่อนที่ยืนอยู่ในเมือง (presence) → `chats/<pairId>` ข้อความล่าสุดของคู่เรา-เขา
+        (rules อ่านได้เฉพาะคู่สนทนา → เห็นเฉพาะแชทของเราเอง ไม่ใช่ของคนอื่น)
+   ข้อความเก่ากว่า BUB_FRESH ไม่เด้ง · ตัวละครยังไม่ spawn เก็บเข้า Live.bubPend รอ
+   ============================================================ */
+const BUB_MS    = 9000;          // บับเบิลลอยอยู่กี่มิลลิวินาที
+const BUB_FRESH = 3*60*1000;     // ข้อความสดกว่านี้ถึงเด้ง (กันข้อความค้างเมื่อวานโผล่)
+const BUB_MAXCH = 90;
+
+function bubbleSprite(text){
+  const c = cvs(512, 268), g = c.getContext('2d');
+  g.font = '600 42px system-ui, sans-serif';
+  /* ตัดบรรทัดเอง (ไทยไม่มีเว้นวรรค → ตัดตามความกว้างทีละตัว) */
+  const lines=[], MAXW=430;
+  let cur='';
+  String(text).slice(0,BUB_MAXCH).split(/(\s+)/).forEach(w=>{
+    for(const ch of w){
+      if(g.measureText(cur+ch).width > MAXW){ lines.push(cur); cur=''; }
+      cur += ch;
+    }
+  });
+  if(cur.trim()) lines.push(cur);
+  const L = Math.min(3, lines.length||1);
+  const bh = 34 + L*52, top = 200-bh;
+  g.fillStyle='rgba(255,255,255,.96)'; roundRect(g, 26, top, 460, bh, 26); g.fill();
+  g.strokeStyle='rgba(66,120,190,.9)'; g.lineWidth=5; roundRect(g, 26, top, 460, bh, 26); g.stroke();
+  g.beginPath();                                   // หางบับเบิลชี้ลงหัวเจ้าของ
+  g.moveTo(232, 200-2); g.lineTo(256, 236); g.lineTo(288, 200-2); g.closePath();
+  g.fillStyle='rgba(255,255,255,.96)'; g.fill();
+  g.strokeStyle='rgba(66,120,190,.9)'; g.lineWidth=5;
+  g.beginPath(); g.moveTo(232, 200); g.lineTo(256, 236); g.lineTo(288, 200); g.stroke();
+  g.fillStyle='#16233d'; g.textAlign='center'; g.textBaseline='middle';
+  for(let i=0;i<L;i++) g.fillText(lines[i].trim(), 256, top+26+i*52, 440);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(c), transparent:true, depthTest:false}));
+  sp.scale.set(7.2, 3.77, 1);
+  sp.renderOrder = 22;
+  return sp;
+}
+/* uid: uid จริง หรือ '__self' (ตัวเรา) */
+function showBubble(uid, text, ts){
+  const msg = String(text||'').trim();
+  if(!msg) return;
+  if(ts && Date.now()-ts > BUB_FRESH) return;
+  const sig = msg+'|'+(ts||0);
+  if(Live.bubSeen[uid]===sig) return;              // ข้อความเดิม (poll ซ้ำ/on ยิงซ้ำ) ไม่เด้งใหม่
+  const A = (uid==='__self') ? Live.self : Live.actors[uid];
+  if(!A || !A.g){ Live.bubPend[uid] = {text:msg, ts:ts||Date.now()}; return; }
+  Live.bubSeen[uid] = sig;
+  if(A.bub){ A.g.remove(A.bub); const i=tickers.indexOf(A.bubTick); if(i>=0) tickers.splice(i,1); A.bub=null; }
+  const sp = bubbleSprite(msg);
+  const y0 = (A.bubY || 4.6);
+  sp.position.y = y0;
+  A.g.add(sp);
+  const t0 = performance.now();
+  const tick = ()=>{
+    const el = performance.now()-t0;
+    if(el >= BUB_MS){                              // หมดเวลา → เก็บทิ้ง
+      A.g.remove(sp);
+      const i=tickers.indexOf(tick); if(i>=0) tickers.splice(i,1);
+      if(A.bub===sp){ A.bub=null; A.bubTick=null; }
+      return;
+    }
+    sp.position.y = y0 + Math.min(0.45, el/900*0.45) + Math.sin(el/420)*0.06;
+    sp.material.opacity = el<220 ? el/220 : (el>BUB_MS-900 ? (BUB_MS-el)/900 : 1);
+  };
+  A.bub = sp; A.bubTick = tick;
+  tickers.push(tick);
+}
+/* ตัวละครเพิ่ง spawn เสร็จ → ถ้ามีข้อความค้างรออยู่ เด้งเลย */
+function flushBubble(uid){
+  const p = Live.bubPend[uid];
+  if(!p) return;
+  delete Live.bubPend[uid];
+  if(Date.now()-p.ts > BUB_FRESH) return;
+  showBubble(uid, p.text, p.ts);
+}
+/* 💬 ท่อ ②: ข้อความล่าสุดของแชทเรา-เพื่อนแต่ละคน (rules: อ่านได้เฉพาะคู่ตัวเอง) */
+function watchFriendChats(){
+  if(!Live.db || !Live.uid) return;
+  Live.db.ref('friends/'+Live.uid).on('value', snap=>{
+    const v = snap.val() || {};
+    Object.keys(v).forEach(fu=>{
+      if(Live.chatWatch[fu]) return;
+      Live.chatWatch[fu] = true;
+      const pid = [Live.uid, fu].sort().join('_');
+      Live.db.ref('chats/'+pid).orderByKey().limitToLast(1).on('value', s=>{
+        let last=null; s.forEach(ch=>{ last=ch.val(); });
+        if(!last || !last.t || !last.ts) return;
+        showBubble(last.f===Live.uid ? '__self' : fu, last.t, last.ts);
+      }, ()=>{});
+    });
+  }, ()=>{});
 }
 
 /* 🙋 ตัวเราเอง: อ่านจากเซฟในเครื่อง (localStorage — โดเมนเดียวกับเกม) ยืนกลางพลาซ่า */
@@ -1364,7 +1633,86 @@ function spawnSelf(){
   markPickable(g, {uid:'__self', name:sv.profileName, grade:sv.student && sv.student.grade,
                    act:'กำลังชมเมือง Vocab City 🏙️', blk, self:true,
                    coins:Math.round(sv.coins||0)});
-  tickers.push((dt,t)=>{ g.position.y = Math.abs(Math.sin(t*2.1))*0.07; });
+  Live.self = {g, bubY:4.9, walk:false};              // 🚶 ตัวเดินไปหน้าตึก + 💬 รับบับเบิลแชทของเราเอง
+  tickers.push((dt,t)=>{ if(!Live.self.walk) g.position.y = Math.abs(Math.sin(t*2.1))*0.07; });
+  flushBubble('__self');
+}
+
+/* ============================================================
+   🚶 รอบ 864: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+   เส้นทาง = พิกัดเชิงขั้ว (มุมก่อน-รัศมีทีหลัง) → ออกจากลานน้ำพุ เลี้ยวรอบวง แล้ววิ่งตรงเข้าประตู
+   (ไม่ตัดผ่านกลางลาน/น้ำพุ เพราะรัศมีโตทีหลัง) · แตะซ้ำระหว่างเดิน = ข้ามไปเลย
+   ไม่มีตัวละคร (ยังไม่เคยเซฟในเครื่องนี้) → ใช้ท่าเดิม: กล้องซูมลงตึกแล้วไป
+   ============================================================ */
+const WALK_SPD  = 13;      // หน่วย/วินาที
+const WALK_MIN  = 1.0;     // เวลาเดินอย่างน้อย (วินาที) — ตึกใกล้ก็ยังเห็นว่าเดิน
+const WALK_MAX  = 3.4;     // เพดานเวลาเดิน
+const DOOR_GAP  = 7.0;     // ยืนห่างจากใจกลางตึกเท่าไหร่ถึงเรียกว่า "หน้าประตู"
+
+function doorSpotOf(key){
+  const s = BLD_AT[key] || {x:0, z:0};
+  const r = Math.hypot(s.x, s.z) || 1;
+  const k = Math.max(0, (r-DOOR_GAP)/r);
+  return {x:s.x*k, z:s.z*k, bx:s.x, bz:s.z};
+}
+/* ท่าเดิน: หุ่นบล็อก (blk1-8) แกว่งแขนขาจริง · ตัวป้ายภาพ (blk9-88) เด้ง+เอียงตัวแทน */
+function walkPose(g, ph, amp){
+  const limbs = g.userData.limbs;
+  if(limbs && limbs.length>=4){
+    const sw = Math.sin(ph)*0.78*amp;
+    limbs[0].rotation.x =  sw;  limbs[1].rotation.x = -sw;
+    limbs[2].rotation.x = -sw*0.85; limbs[3].rotation.x = sw*0.85;
+  }else{
+    g.rotation.z = Math.sin(ph)*0.07*amp;
+  }
+  g.position.y = Math.abs(Math.sin(ph))*0.11*amp;
+}
+/* เดินไปหน้าตึก b แล้วเรียก done() — คืน false ถ้าเดินไม่ได้ (ไม่มีตัวละคร) */
+function walkSelfTo(b, done){
+  const S = Live.self;
+  if(!S || !S.g || S.walk) return false;
+  const g = S.g, d = doorSpotOf(b.key);
+  const x0 = g.position.x, z0 = g.position.z;
+  const r0 = Math.max(2, Math.hypot(x0, z0)), r1 = Math.hypot(d.x, d.z) || 1;
+  let a0 = Math.atan2(z0, x0), a1 = Math.atan2(d.z, d.x);
+  while(a1-a0 >  Math.PI) a1 -= TAU;                 // เลี้ยวทางที่ใกล้กว่าเสมอ
+  while(a0-a1 >  Math.PI) a1 += TAU;
+  const path = Math.abs(a1-a0)*r0 + Math.abs(r1-r0);
+  const dur  = clamp(path/WALK_SPD, WALK_MIN, WALK_MAX);
+  S.walk = true;
+  setChip('🚶 กำลังเดินไป '+b.label+' …');
+  const d0cam = rig.dist, p0cam = rig.pitch;
+  const t0 = performance.now();
+  let ph = 0, fired = false;
+  const finish = ()=>{
+    if(fired) return; fired = true;
+    const i = tickers.indexOf(tick); if(i>=0) tickers.splice(i,1);
+    walkPose(g, 0, 0);
+    g.position.set(d.x, 0, d.z);
+    g.rotation.y = Math.atan2(d.bx-d.x, d.bz-d.z);   // หันหน้าเข้าตึก (โมเดลหันหน้า +Z)
+    S.walk = false;
+    done();
+  };
+  const tick = (dt)=>{
+    const k = clamp((performance.now()-t0)/(dur*1000), 0, 1);
+    const ea = 1-Math.pow(1-k, 2);                   // มุม: เลี้ยวเร็วตอนต้น
+    const er = k*k;                                  // รัศมี: ยืดออกทีหลัง (พ้นลานก่อนค่อยพุ่งเข้าตึก)
+    const a = a0 + (a1-a0)*ea, r = r0 + (r1-r0)*er;
+    const nx = Math.cos(a)*r, nz = Math.sin(a)*r;
+    const dx = nx-g.position.x, dz = nz-g.position.z;
+    if(dx*dx+dz*dz > 1e-6) g.rotation.y = Math.atan2(dx, dz);
+    g.position.x = nx; g.position.z = nz;
+    ph += dt*11;
+    walkPose(g, ph, k>0.94 ? (1-k)/0.06 : 1);        // ใกล้ถึงค่อย ๆ หยุดขา
+    rig.tx += (nx-rig.tx)*0.12; rig.tz += (nz-rig.tz)*0.12;   // กล้องตามหลังแบบนุ่ม
+    rig.dist  = d0cam + (40-d0cam)*ea;
+    rig.pitch = p0cam + (0.80-p0cam)*ea;
+    rig.apply();
+    if(k>=1) finish();
+  };
+  tickers.push(tick);
+  setTimeout(finish, dur*1000+900);                  // กันเหนียว: rAF สะดุด (แท็บพื้นหลัง) ก็ยังไปต่อ
+  return true;
 }
 
 /* ============================================================
@@ -1381,9 +1729,17 @@ function onTap(cx, cy){
   if(g && Math.hypot(g.x,g.z)<ISLAND_R) sparkleAt(g.x, g.z);
 }
 function travelTo(b){
-  if(travelTo.busy) return; travelTo.busy=true;
+  const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
+  if(travelTo.busy){ location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
+  travelTo.busy = true;
+  /* 🚶 มีตัวละครของเรา → เดินไปหน้าประตูก่อน แล้วค่อยเข้า (รอบ 864) */
+  if(walkSelfTo(b, ()=>{
+        setChip('🚪 เข้า '+b.label+' …');
+        if(Live.self && Live.self.g) showBubble('__self', 'เข้า '+b.label+' '+b.ico, Date.now());
+        setTimeout(()=>{ location.href=dest; }, 520);   // ให้เห็นตัวยืนหน้าประตูแป๊บนึงก่อนเปลี่ยนหน้า
+     })) return;
+  /* ไม่มีตัวละคร (ยังไม่เคยเซฟในเครื่องนี้) → ท่าเดิม: กล้องซูมลงตึกแล้วไป */
   const spot = BLD_AT[b.key];
-  const dest = 'index.html?go='+encodeURIComponent(b.go);
   const t0=performance.now(), d0=rig.dist, x0=rig.tx, z0=rig.tz;
   const anim=()=>{
     const k=Math.min(1,(performance.now()-t0)/520), e=1-Math.pow(1-k,3);
@@ -1538,11 +1894,21 @@ function boot(){
     fakeRide(){ spawnVehicle('tc1',{kind:'car',n:'นักซิ่ง',av:'blk3c02'}); spawnVehicle('tm1',{kind:'moto',n:'สายลม',av:'blk6'});
                 spawnVehicle('th1',{kind:'heli',n:'กัปตัน',av:'h_p'}); spawnVehicle('td1',{kind:'drone',n:'มือโดรน',av:''}); },
     clear(){ Object.keys(Live.actors).forEach(removeActor); },
+    /* 🚶 รอบ 864 */
+    self(){ return Live.self && Live.self.g ? {x:Live.self.g.position.x, z:Live.self.g.position.z,
+              ry:Live.self.g.rotation.y, walk:!!Live.self.walk, bub:!!(Live.self.bub)} : null; },
+    walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
+                     return walkSelfTo(b, cb||function(){}); },
+    door(key){ return doorSpotOf(key); },
+    /* 💬 รอบ 864 */
+    bubble(uid, txt){ showBubble(uid, txt, Date.now()); },
+    bubbleAt(uid){ const A = uid==='__self'?Live.self:Live.actors[uid];
+                   return A && A.bub ? {y:A.bub.position.y, op:A.bub.material.opacity} : null; },
   }};
 }
 
 if(typeof THREE==='undefined'){
-  document.body.innerHTML += '<div style="color:#fff;text-align:center;padding-top:40vh;font-family:system-ui">⚠️ โหลด three.js ไม่สำเร็จ — <a href="index.html" style="color:#8fd0ff">กลับหน้าเดิม</a></div>';
+  document.body.innerHTML += '<div style="color:#fff;text-align:center;padding-top:40vh;font-family:system-ui">⚠️ โหลด three.js ไม่สำเร็จ — <a href="index_classic.html" style="color:#8fd0ff">เข้าล็อบบี้แบบเดิม</a></div>';
 }else boot();
 
 })();

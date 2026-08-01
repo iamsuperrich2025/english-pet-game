@@ -48,7 +48,10 @@ if [[ $DRY -eq 1 ]]; then
 fi
 
 # ── 2) commit โค้ด (pin pathspec — hooks ตรวจ session คู่ขนานให้) ────────
-git add -- "${FILES[@]}"
+# รอบ 863: ไฟล์ที่ถูกลบ/rename (เช่น index2.html → index.html) ไม่มีในเวิร์กทรีแล้ว → `git add` จะ fatal
+#          ให้ add เฉพาะไฟล์ที่ยังมีจริง ส่วนการลบที่ stage ไว้แล้ว `git commit -- <path>` เก็บให้เองอยู่แล้ว
+ADD=(); for f in "${FILES[@]}"; do [[ -e "$f" ]] && ADD+=("$f"); done
+[[ ${#ADD[@]} -gt 0 ]] && git add -- "${ADD[@]}"
 git commit -m "$MSG" -m "Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>" -- "${FILES[@]}"
 
 # ── 3) deploy (rotate อยู่ในสคริปต์ deploy แล้ว) หรือ rotate เดี่ยว ─────

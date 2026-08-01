@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Vocab World 🌍 เกมคำศัพท์โลกกว้าง เลี้ยงสัตว์ สร้างตัว ผจญภัย 3D</title>
+<!-- PWA (ติดตั้งเป็นแอพบนมือถือได้) -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#123a6b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vocab World">
+<link rel="apple-touch-icon" href="img/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icons/icon-192.png">
+<link rel="preload" as="image" href="img/icons/splash_logo.png"><!-- 🛡️ รอบ 757: โลโก้ splash โหลดก่อนใคร -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/lobby.css">
+<link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
+<!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —
+     inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
+     เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
+<style id="app-splash-style">
+/* 🎨 รอบ 859 (ผู้ใช้สั่ง): พื้นเรียบสีเดียว #0a1f3c เท่ากับ background_color ของแอพ (APK splash)
+   → เปลี่ยนจาก splash ระบบเข้ามาหน้านี้แบบกลมกลืน ไม่เห็นรอยต่อ/กรอบสี่เหลี่ยม */
+#app-splash{position:fixed;inset:0;z-index:999999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:#0a1f3c;
+  transition:opacity .5s ease,visibility 0s linear .5s;}
+#app-splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+/* รอบ 757: คุมด้วย "ความกว้าง" อย่างเดียว (35vh ≈ สูง 46vh เพราะโลโก้สูง 1.3 เท่าของกว้าง)
+   — ห้ามใช้ max-height คู่กับ width เพราะเบราว์เซอร์คงความกว้างเดิมไว้ ภาพจะถูกบีบแบน */
+#app-splash .as-crest{position:relative;width:min(clamp(120px,26vw,200px),35vh);}
+#app-splash .as-shield{width:100%;height:auto;display:block;
+  filter:drop-shadow(0 0 20px rgba(245,197,66,.38)) drop-shadow(0 10px 26px rgba(0,0,0,.5));
+  animation:asPulse 2.6s ease-in-out infinite;}
+/* ✨ รอบ 859: แสงกรีดกวาดตามรูปโล่ (สูตรเดียวกับเหรียญ rank ใหญ่ .rank-beam/.rank-edge ใน lobby.css)
+   .as-beam กวาดทั้งโล่เบา ๆ · .as-edge สว่างกว่า เฉพาะแนวสันขอบทอง (mask 2 ชั้น xor เหลือวงขอบ) */
+#app-splash .as-beam,#app-splash .as-edge{position:absolute;inset:0;pointer-events:none;overflow:hidden;mix-blend-mode:screen;
+  -webkit-mask-image:url('img/icons/splash_logo.png');mask-image:url('img/icons/splash_logo.png');
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center;
+  -webkit-mask-size:contain;mask-size:contain;animation:asPulse 2.6s ease-in-out infinite;}
+#app-splash .as-beam i,#app-splash .as-edge i{position:absolute;inset:-55%;display:block;border-radius:50%;
+  background:conic-gradient(from 0deg,
+    transparent 0deg 8deg,
+    rgba(245,197,66,.95) 17deg,
+    rgba(255,255,255,.96) 22deg,
+    rgba(245,197,66,.95) 27deg,
+    transparent 36deg 176deg,
+    rgba(255,255,255,.40) 184deg,
+    transparent 192deg 360deg);
+  animation:asBeamSpin 5.5s linear infinite;}
+#app-splash .as-beam{opacity:.28;}
+#app-splash .as-edge{opacity:.95;
+  -webkit-mask-image:url('img/icons/splash_logo.png'),url('img/icons/splash_logo.png');
+  mask-image:url('img/icons/splash_logo.png'),url('img/icons/splash_logo.png');
+  -webkit-mask-size:contain,88%;mask-size:contain,88%;
+  -webkit-mask-repeat:no-repeat,no-repeat;mask-repeat:no-repeat,no-repeat;
+  -webkit-mask-position:center,center;mask-position:center,center;
+  -webkit-mask-composite:xor;mask-composite:exclude;}
+#app-splash .as-edge i{animation-duration:3.2s;filter:blur(1px);}
+@keyframes asBeamSpin{to{transform:rotate(360deg);}}
+#app-splash .as-title{font-family:'Kanit','Itim',sans-serif;font-weight:700;font-size:clamp(22px,5vw,34px);
+  letter-spacing:.14em;color:#ffe9a8;text-shadow:0 2px 10px rgba(0,0,0,.5);margin:0;}
+#app-splash .as-sub{font-family:'Itim','Kanit',sans-serif;font-size:clamp(13px,2.6vw,16px);color:#a9c7e6;margin:-6px 0 4px;text-align:center;}
+#app-splash .as-dots{display:flex;gap:7px;}
+#app-splash .as-dots i{width:8px;height:8px;border-radius:50%;background:#f5c542;opacity:.35;animation:asDot 1.2s ease-in-out infinite;}
+#app-splash .as-dots i:nth-child(2){animation-delay:.15s;}
+#app-splash .as-dots i:nth-child(3){animation-delay:.3s;}
+@keyframes asPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
+@keyframes asDot{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-5px);}}
+@media (prefers-reduced-motion:reduce){#app-splash .as-shield,#app-splash .as-dots i{animation:none;}#app-splash .as-beam,#app-splash .as-edge{display:none;}}
+</style>
+</head>
+<body>
+
+<!-- 🛡️ รอบ 757: splash screen — โลโก้ภาพจริง img/icons/splash_logo.png (ตัด+ย่อจาก img/cert/logo.png ที่ใช้บนประกาศนียบัตรทอง)
+     สัดส่วนเท่าโล่ SVG เดิม (0.77) จึงวางแทนที่ได้ตรง ๆ ไม่ต้องแก้ CSS · preload ไว้ใน <head> แล้ว
+     ซ่อนด้วย #app-splash.hide เมื่อ main.js เรียก showScreen ครั้งแรกสำเร็จ (ดูสคริปต์ท้าย body) -->
+<div id="app-splash" role="status" aria-label="กำลังโหลด Vocab World">
+  <div class="as-crest" aria-hidden="true">
+    <img class="as-shield" src="img/icons/splash_logo.png" alt="" width="440" height="572">
+    <span class="as-beam"><i></i></span>
+    <span class="as-edge"><i></i></span>
+  </div>
+  <p class="as-title">VOCAB WORLD</p>
+  <p class="as-sub">🌍 โลกคำศัพท์ภาษาอังกฤษ กำลังโหลด...</p>
+  <div class="as-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+</div>
+<script>
+(function(){
+  var el = document.getElementById('app-splash');
+  if(!el) return;
+  var hidden = false;
+  window.__hideAppSplash = function(){
+    if(hidden) return; hidden = true;
+    el.classList.add('hide');
+    setTimeout(function(){ el.remove(); }, 550);
+  };
+  setTimeout(window.__hideAppSplash, 8000);   // กันค้าง — โหลดนานผิดปกติก็ยังเห็นเกมได้
+})();
+</script>
+
+<!-- จอตั้ง → ชวนหมุนจอ (เกมออกแบบเป็นแนวนอนอย่างเดียว — อัพเดท 5725691826) -->
+<div id="rotate-overlay">
+  <div class="rotate-box">
+    <div class="rotate-phone">📱</div>
+    <p><b>หมุนจอเป็นแนวนอน</b><br>เพื่อเข้าสู่ Vocab World นะ! 🌍✨</p>
+    <p class="rotate-hint">💡 ถ้าหมุนจอเป็นแนวนอนไม่ได้<br>อย่าลืมเปิด <b>Auto Rotate (หมุนอัตโนมัติ)</b> ที่มือถือด้วยนะ</p>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ===== 00) Google Login (บังคับ login ก่อนเข้าเกม — ข้อ 0.1) =====
+       💎 รอบ 859 (ผู้ใช้สั่ง): ยกระดับเป็นธีมหรูน้ำเงิน-ทอง เดียวกับโล่ splash (ตราโล่จริงแทนอีโมจิสัตว์) -->
+  <section id="screen-login" class="screen">
+    <div class="login-lux">
+      <img class="login-crest" src="img/icons/splash_logo.png" alt="" width="440" height="572">
+      <h1 class="login-word">VOCAB WORLD</h1>
+      <div class="login-rule" aria-hidden="true"><i></i><span>✦</span><i></i></div>
+      <p class="login-tag">โลกคำศัพท์ภาษาอังกฤษ — เลี้ยงสัตว์ สร้างตัว ออกผจญภัย</p>
+      <p class="login-status" id="login-status">กำลังเชื่อมต่อ... ⏳</p>
+      <button class="google-btn" id="btn-google-login" style="display:none">
+        <svg width="22" height="22" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.1H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.3-.1-2.6-.4-3.9z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3l5.7-5.7C34.2 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.1H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C41 35.4 44 30.2 44 24c0-1.3-.1-2.6-.4-3.9z"/></svg>
+        เข้าสู่ระบบด้วย Google
+      </button>
+      <button class="big-btn" id="btn-login-retry" style="display:none">🔄 ลองใหม่อีกครั้ง</button>
+      <button class="big-btn offline-btn" id="btn-offline-play" style="display:none">📴 เล่นแบบออฟไลน์ไปก่อน</button>
+      <p class="login-note">🔒 เซฟเก็บไว้ในบัญชี Google ของหนู — เปิดเครื่องไหนก็เล่นต่อได้<br>ครั้งแรกให้ผู้ปกครองช่วยเลือกบัญชีได้เลย</p>
+      <!-- ปุ่มติดตั้งเป็นแอพ (PWA) — โผล่เฉพาะตอนติดตั้งได้จริง (js ท้ายไฟล์คุมการแสดง) -->
+      <button class="install-btn" id="btn-install" style="display:none">📲 ติดตั้งเป็นแอพ<span>เล่นเต็มจอ ลื่นกว่า ไม่มีแถบบัง 🎮</span></button>
+    </div>
+  </section>
+
+  <!-- ===== 0) Student Registration ===== -->
+  <section id="screen-register" class="screen">
+    <h1>🌍 Vocab World</h1>
+    <p class="subtitle">สวัสดีจ้า! กรอกข้อมูลนักเรียนก่อนเริ่มผจญภัย<br>เพื่อบันทึกผลการเรียนรู้ของหนูนะ ✨</p>
+    <p class="login-account" id="reg-account"></p>
+    <div class="register-card">
+      <div class="reg-safety">🛡️ <b>เพื่อความปลอดภัยของหนู</b> — <u>ห้ามใส่ชื่อจริง–นามสกุลจริง</u> ให้ตั้งเป็น “ชื่อเล่น” หรือชื่อสมมติเท่านั้นนะ (เพื่อนทั้งเกมจะเห็นชื่อนี้)</div>
+      <label>ชื่อเล่นในเกม (ไทย/อังกฤษ 2–20 ตัว · อย่าใช้ชื่อจริง)
+        <input id="reg-nick" placeholder="เช่น น้องบีม, Beam123" maxlength="20">
+      </label>
+      <label>ตัวละครของหนู (คิว 7725691507 ข้อ 4 — เลือก 1 ตัว)</label>
+      <div class="avatar-pick" id="reg-avatar">
+        <button type="button" class="avatar-opt" data-av="male"><span class="av-face">🦸‍♂️</span>เด็กชาย</button>
+        <button type="button" class="avatar-opt" data-av="female"><span class="av-face">🦸‍♀️</span>เด็กหญิง</button>
+      </div>
+      <label>ชั้น (คำศัพท์จะยาก-ง่ายตามระดับชั้น)
+        <!-- 🔒 รอบ 647: ไม่มีชั้นเลือกไว้ล่วงหน้าแล้ว — ต้องเลือกเอง เพราะเปลี่ยนทีหลังได้เดือนละครั้ง
+             และ "ลดชั้นลงไม่ได้" (เดิม default ป.5 → เด็ก ป.1 ที่กดผ่านจะติดชั้นสูงถาวร) -->
+        <select id="reg-grade">
+          <option value="" selected disabled>— เลือกชั้นของหนู —</option>
+          <option>ต่ำกว่าประถมศึกษา</option>
+          <option>ป.1</option><option>ป.2</option><option>ป.3</option>
+          <option>ป.4</option><option>ป.5</option><option>ป.6</option>
+          <option>ม.1</option><option>ม.2</option><option>ม.3</option>
+          <option>ม.4</option><option>ม.5</option><option>ม.6</option>
+          <option>ปริญญาตรี</option><option>สูงกว่าปริญญาตรี</option>
+        </select>
+      </label>
+      <div class="reg-gradelock">🔒 <b>เลือกชั้นให้ตรงกับตัวเองนะ</b> — เปลี่ยนได้ <b>เดือนละ 1 ครั้ง</b> และเปลี่ยนได้เฉพาะ <b>ชั้นที่สูงขึ้น</b> เท่านั้น (ลดชั้นลงไม่ได้) เพื่อความยุติธรรมกับเพื่อน ๆ 🌟</div>
+      <div class="reg-privacy">📰 <b>ค่าเริ่มต้น:</b> เปิดเผยความก้าวหน้า (เหรียญ/สอบผ่าน/ทรัพย์สิน) ให้เพื่อนเห็น — ช่วยสร้างแรงบันดาลใจให้เพื่อนๆ มีเป้าหมายฝึกคำศัพท์เพิ่มขึ้นด้วยกัน 🌟 <i>ปิดเองได้ทีหลังในตั้งค่า ⚙️</i></div>
+      <button class="big-btn" id="btn-register">เริ่มผจญภัย! 🚀</button>
+    </div>
+  </section>
+
+  <!-- ===== 1) Pet Shop (ร้านสัตว์เลี้ยง — ซื้อเพิ่มได้ ไม่ลบตัวเดิม) ===== -->
+  <section id="screen-select" class="screen">
+    <div class="game-top">
+      <button class="back-btn" id="btn-petshop-back">⬅ กลับ</button>
+      <div class="petshop-topright">
+        <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="petshop-coin-count">0</span></div>
+        <button class="petshop-play-link" id="btn-petshop-play">🎮 เข้าเล่นเกมสะสมเหรียญ</button>
+      </div>
+    </div>
+    <h1>🏪 ร้านสัตว์เลี้ยง</h1>
+    <p class="subtitle">สะสมเหรียญจากเกมคำศัพท์ แล้วรับน้องไปเลี้ยงได้เลย!<br>ซื้อเพิ่มได้ ตัวเดิมไม่หายไปไหน ✨</p>
+    <div class="egg-grid" id="egg-grid"></div>
+  </section>
+
+  <!-- ===== 2) Pet Dashboard — LOBBY แนวนอน (โฉมใหม่ "อัพเดท 5725691826") =====
+       สัตว์ active เด่นกลางจอ · เมนูไอคอนซ้าย · การ์ดสดขวา · แผงรายละเอียดกลางจอ
+       ⚠️ id ทุกตัวคงเดิมทั้งหมด — ฟังก์ชัน render ใน ui.js ใช้ต่อได้โดยไม่แก้ logic -->
+  <section id="screen-dashboard" class="screen">
+
+    <header class="lobby-top">
+      <!-- รอบ 254: มุมซ้ายบน = รูปตัวละคร blk ครึ่งตัวสไตล์ passport (แทน rank เล็กที่ถอดออก —
+           ดูแรงค์คลิกที่เหรียญแรงค์ใหญ่กลางเวทีแทน) · ชื่อ+เวลาเลื่อนมาแทนตำแหน่ง rank เดิม -->
+      <!-- 🎩 รอบ 612 (ผู้ใช้สั่ง "แถบบนดูไม่ Professional"): จัดหัวล็อบบี้เป็น 2 ก้อนใหญ่ ภาษาออกแบบเดียวกัน
+           ① .id-card = รูป passport + ชื่อ + 🆔 + วันเวลา + แรงค์ (เดิมรูปลอยแยกจากป้ายชื่อ ดูกระจัดกระจาย)
+           ② .coin-group = แถบตัวเลข 3 ช่องสูงเท่ากัน มีเส้นคั่น (เดิมเป็น pill 3 อันคนละสี คนละสูง)
+           ⚠️ id ทุกตัวคงเดิม — ui.js/main.js/auth.js อ้างอิงอยู่ (closest('.coin-pill') ยังทำงานปกติ) -->
+      <div class="id-card">
+        <div class="pass-photo" id="pass-photo" title="ตัวละครของหนู"></div>
+        <div class="profile-plate">
+          <div class="student-chip" id="student-chip"></div>
+          <div class="student-chip clock-chip" id="clock-chip"></div>
+          <!-- 🎖️ รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026): แรงค์กลับมาเป็น "แท็บเล็ก" ใต้วันเดือนปี
+               (เดิมเป็นเหรียญยักษ์ฉากหลังเวที — เวทีเปลี่ยนเป็นโชว์น้องน่ารักแทน) · เติมโดย renderRankTab() -->
+          <button class="rank-tab" id="rank-tab" title="ดูแรงค์ของหนู"></button>
+        </div>
+      </div>
+      <div class="top-flex"></div>
+      <!-- 🪙 รอบ 695 (ผู้ใช้สั่ง 29 ก.ค. 2026): "จัดแผงเหรียญรวม+ระดับชั้นให้อยู่กึ่งกลาง" —
+           ห่อด้วย .coin-block (คอลัมน์แนวตั้ง) ให้ .top-flex/.top-flex2 (flex:1 เท่ากันตาม CSS) ดันลอยกลาง
+           ระดับชั้นย้ายออกจาก .coin-group มาเป็นแถวของตัวเองใต้กล่องเหรียญ (เดิมรอบ 652 อยู่ในแถวเดียวกัน) -->
+      <div class="coin-block">
+        <div class="coin-group">
+          <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="coin-count">0</span></div>
+          <div class="coin-pill today"><span class="cp-lb">วันนี้</span><span class="cp-v">+<span id="coin-today">0</span></span></div>
+          <!-- item 8: โบนัสออนไลน์ +0.01/วิ ฟรีทุกคนที่เปิดเกมออนไลน์ — ตัวเลขวิ่งสดทุกวินาที (renderClock) -->
+          <!-- 💰 รอบ 706: ไอคอนเดิมเป็นเหรียญกะพริบเฉย ๆ เด็กไม่รู้ว่าแปลว่าอะไร → เปลี่ยนเป็น
+               "เหรียญร่วงลงกระเป๋าตังค์" (.coin-flow) เห็นปุ๊บรู้ทันทีว่าเหรียญกำลังไหลเข้า -->
+          <div class="coin-pill net" id="net-pill" style="display:none"><span class="cp-lb">ออนไลน์</span><span class="cp-v"><span class="coin-flow" aria-hidden="true"><i class="cf-c"></i><i class="cf-c"></i><i class="cf-c"></i><span class="cf-bag">👛</span></span>+<span id="net-live">0.00</span></span></div>
+          <!-- 💻 รอบ 706: ช่องรายได้จากคอมพิวเตอร์ที่ซื้อในเกม — ยังไม่ซื้อ = จาง+ 🔒 คลิกแล้วมีกล่องอธิบาย+ปุ่มซื้อ -->
+          <!-- รอบ 736 (ผู้ใช้แก้รอบ 735: "ทำภาพเงินเข้าเหมือนออนไลน์สิ เพียงแต่เหรียญเข้าคอมแทนกระเป๋า"): ใช้ .coin-flow ตัวเดียวกับ pill ออนไลน์ (เหรียญร่วง) แค่จุดลงจอดเปลี่ยนจากกระเป๋า 👛 เป็นไอคอนคอม 💻 -->
+          <div class="coin-pill comp" id="comp-pill" style="display:none"><span class="cp-lb">คอม</span><span class="cp-v"><span class="coin-flow comp-flow" aria-hidden="true"><i class="cf-c"></i><i class="cf-c"></i><i class="cf-c"></i><span class="cf-bag comp-ic">💻</span></span><span class="comp-plus">+</span><span id="comp-live-top">0.00</span></span></div>
+          <!-- รอบ 268: ป้ายบอกว่ากำลังเล่นออฟไลน์ คะแนนยังไม่ขึ้น server (auth.js คุมโชว์/ซ่อน) -->
+          <div class="coin-pill offline" id="offline-pill" style="display:none">📴 ออฟไลน์ · ยังไม่ sync</div>
+        </div>
+        <!-- 🎖️ รอบ 643/652/694: ระดับชั้นเป็นสัญลักษณ์ (ดาวเงิน=ประถม ดาวทอง=มัธยม 💎=ป.ตรี) + ปุ่มเปลี่ยนชั้น (รอบ 647)
+             รอบ 695 ย้ายมาเป็นแถวของตัวเองใต้กล่องเหรียญ (เดิมรอบ 652 ต่อท้ายในแถวเดียวกัน) -->
+        <div class="coin-pill grade-pill" id="grade-line"></div>
+      </div>
+      <div class="top-flex top-flex2"></div>
+      <!-- รอบ 179: ปุ่มแชท (หน้ารวมข้อความแบบ Messenger ธีมฟ้า) แทนที่ปุ่มข้าวเย็นเดิม
+           ปุ่มข้าวเย็น #btn-dinner ย้ายไปอยู่ข้างปุ่ม ➕ ในแถวแท็บสัตว์ (สร้างใน renderDashboard) -->
+      <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
+      <!-- รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง — ปิดเพลงได้แต่ยังมีเสียงเอฟเฟกต์) -->
+      <button class="icon-btn" id="btn-music" title="เปิด/ปิดเพลงพื้นหลัง">🎵</button>
+      <button class="icon-btn" id="btn-settings" title="ตั้งค่า (เสียง/สั่น)">⚙️<span class="rail-badge" id="settings-badge" style="display:none"></span></button>
+      <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
+      <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>
+      <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
+      <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
+    </header>
+
+    <div class="lobby-mid">
+      <!-- 🧭 รางเมนูซ้าย: ห่อด้วย .rail-wrap เพื่อวางป้ายบอกทาง ▲/▼ ทับขอบราง
+           (ผู้ใช้สั่ง 26 ก.ค. 2026 — เด็ก/ผู้ใหญ่ที่ไม่ชำนาญเลื่อนรางแล้วคิดว่า "ปุ่มหาย") -->
+      <div class="rail-wrap" id="rail-wrap">
+      <nav class="lobby-rail" id="lobby-rail">
+        <!-- ปุ่มรักษาด่วน (ผู้ใช้สั่ง 8 ก.ค. 2026) — บนสุดของรางให้เห็นทันทีไม่ต้องเลื่อน ·
+             กดได้เฉพาะตอนมีน้องป่วย (ปกติจางกดไม่ได้ · ป่วยกะพริบแดงเรียกสายตา) -->
+        <!-- 🏙️ รอบ 863: ทางกลับ "เมืองคำศัพท์ 3D" (หน้าหลักใหม่ index.html) — วางบนสุดให้เห็นทันทีไม่ต้องเลื่อนราง -->
+        <a class="rail-btn rail-city" id="btn-rail-city" href="index.html" title="กลับไปเมืองคำศัพท์ 3D (หน้าหลัก)"><span class="rail-ico">🏙️</span>เมือง 3D</a>
+        <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน<span class="rail-badge" id="home-bill-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">📈</span>ลงทุน</button>
+        <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>
+        <button class="rail-btn" id="btn-rail-wordsearch"><span class="rail-ico">🔎</span>ค้นหาคำ</button>
+        <!-- ⌨️ รอบ 648: เกมพิมพ์คำศัพท์ (แป้นพิมพ์ 3 มิติเต็มจอ) — วางคู่กับเกมค้นหาคำ -->
+        <button class="rail-btn" id="btn-rail-typing"><span class="rail-ico">⌨️</span>พิมพ์คำ</button>
+        <!-- 📋 รอบ 813: ทางลัดเข้าข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL ตรงจากรางเมนู
+             (เดิมต้องกด "หมวดคำศัพท์ & แบบทดสอบ" แล้วเลื่อนหาการ์ดท้ายรายการก่อน) -->
+        <button class="rail-btn" id="btn-rail-examstd"><span class="rail-ico">📋</span>ข้อสอบจริง</button>
+        <!-- 🥇 รอบ 594: ย้ายกลุ่มอันดับออกจากคอลัมน์ขวา (แออัด) มาเป็นปุ่มเดียวในราง → เปิดกระดานเต็มจอ
+             วางไว้ช่วงบนให้เห็นโดยไม่ต้องเลื่อนราง (รางยาวเกินจอตั้งแต่มีปุ่มโลก 3D) -->
+        <button class="rail-btn" id="btn-rail-rank"><span class="rail-ico">🥇</span>อันดับ<span class="rail-rank-num" id="rank-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-market"><span class="rail-ico">🏪</span>ตลาด<span class="rail-badge" id="mkt-wish-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-friends"><span class="rail-ico">👥</span>เพื่อน<span class="rail-badge" id="friend-badge" style="display:none"></span></button>
+        <button class="rail-btn" data-panel="panel-gifts"><span class="rail-ico">🎁</span>ของขวัญ<span class="rail-badge" id="gift-badge" style="display:none"></span></button>
+        <button class="rail-btn" id="btn-stats"><span class="rail-ico">📊</span>สถิติ</button>
+        <button class="rail-btn" id="btn-rail-trophy"><span class="rail-ico">🏆</span>ตู้เข็ม</button>
+      </nav>
+        <!-- ป้ายบอกทาง: โผล่เฉพาะตอนยังมีปุ่มซ่อนอยู่ทางนั้นจริง ๆ · กดแล้วเลื่อนให้เอง -->
+        <button class="rail-nudge up" id="rail-nudge-up" title="ยังมีปุ่มอยู่ข้างบน — กดเพื่อกลับไปเมนูบนสุด">▲ บนสุด</button>
+        <button class="rail-nudge down" id="rail-nudge-down" title="ยังมีปุ่มอยู่ข้างล่างอีก — กดเพื่อเลื่อนลง">▼ มีอีก</button>
+      </div>
+
+      <main class="lobby-stage">
+        <!-- รอบ 160: ป้ายอากาศย้ายลง footer (หน้าปุ่มควิซอาหาร) · แท็บสัตว์ขึ้นบนสุด ชิดแนวขอบซ้าย rank chip (alignPetTabs ใน ui.js) -->
+        <!-- 🆕 New Word (รอบ 116 · ย้ายขึ้นบนสุด+เปลี่ยนคำทุก 2 นาที รอบ 326 ตามคำสั่งผู้ใช้)
+             อยู่เหนือแถวชื่อสัตว์ · จัดกึ่งกลางให้ตรงกับภาพ Rank ใหญ่กลางเวที (alignNewWord ใน ui.js) -->
+        <div class="newword-banner" id="newword-banner" style="display:none"></div>
+        <div class="pet-tabs" id="pet-tabs" style="display:none"></div>
+        <div class="pet-card" id="pet-card">
+          <!-- filled by JS -->
+        </div>
+      </main>
+
+      <aside class="lobby-side">
+        <!-- รอบ 149: หัวข้อเล็กอยู่นอกกล่อง · กล่อง = กระจกฟ้า sci-fi เลื่อนวนอัตโนมัติ -->
+        <!-- item 3: ภารกิจรายวัน — ชุดเดียวกันทุกคน (seed จากวันที่) filled by renderQuestCard -->
+        <!-- รอบ 178: กล่องภารกิจ+เพื่อนออนไลน์หดพอดีเนื้อหา 2 บรรทัด (sec ไม่ยืด) · บรรทัดจำนวนเพื่อน
+             ย้ายออกนอกกล่อง (#online-sub ใต้หัวข้อ) · กล่องเพื่อน = พลิกหน้าทีละคน (ui.js onPageFlip) -->
+        <div class="side-sec sec-quest">
+          <div class="side-label" id="quest-label">🎯 ภารกิจวันนี้</div>
+          <!-- รอบ 708: แถบนับเวลา 10 วิ เหมือนฟีดเพื่อน — เต็ม = เลื่อนไปภารกิจถัดไป -->
+          <div class="fd-prog q-prog"><i id="q-prog-bar"></i></div>
+          <div class="side-glass">
+            <div class="shop-card side-card" id="quest-card">
+              <!-- filled by JS -->
+            </div>
+          </div>
+        </div>
+        <div class="side-sec sec-online">
+          <div class="side-label" id="online-label">🧑‍🤝‍🧑 คนที่กำลังทำการบ้านไปพร้อมๆ กับเรา</div>
+          <div class="side-sub" id="online-sub"></div>
+          <div class="side-glass">
+            <div class="shop-card side-card" id="online-card">
+              <!-- filled by JS -->
+            </div>
+          </div>
+        </div>
+        <!-- 🥇 รอบ 594: กลุ่มอันดับ (การ์ดเล็ก + แท็บ 🪙/🏅/🤖/🔎) ถูกถอดออกจากคอลัมน์ขวาเพราะแออัด
+             → ย้ายไปเป็นปุ่มเดียว #btn-rail-rank ในรางซ้าย กดแล้วเปิดกระดานเต็มจอ (openLeaderboardFull) -->
+      </aside>
+    </div>
+
+    <!-- 📘📗📙 รอบ 834: ปุ่มลัด IELTS/TOEIC/TOEFL แยกคนละปุ่มในแถบล่าง (ผู้ใช้สั่ง)
+         แถบนี้เลื่อนแนวนอนได้เองถ้าที่ไม่พอ (เหมือนรางเมนูซ้ายที่เลื่อนแนวตั้ง) -->
+    <footer class="lobby-bottom" id="lobby-bottom">
+      <button class="big-btn lobby-quiz-btn lobby-book-btn" id="btn-vocab-book" title="สมุดคำศัพท์ของฉัน">📒</button>
+      <button class="big-btn lobby-quiz-btn lobby-std-btn ielts" data-xstd="ielts">📘 IELTS</button>
+      <button class="big-btn lobby-quiz-btn lobby-std-btn toeic" data-xstd="toeic">📗 TOEIC</button>
+      <button class="big-btn lobby-quiz-btn lobby-std-btn toefl" data-xstd="toefl">📙 TOEFL</button>
+      <button class="big-btn lobby-quiz-btn lobby-foodquiz-btn" id="btn-foodquiz">🛡️ ควิซอาหารปลอดภัย</button>
+      <button class="big-btn purple lobby-quiz-btn" id="btn-cats">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</button>
+      <button class="big-btn lobby-play-btn" id="btn-play">🎮 เล่นเกมจับคู่คำศัพท์!</button>
+      <button class="big-btn lobby-quiz-btn lobby-exam-btn" id="btn-band-exam">📝 สอบเลื่อนขั้นคำศัพท์</button>
+    </footer>
+
+    <!-- ===== แผงรายละเอียดกลางจอ (เปิดจากเมนูซ้าย — logic ใน js/lobby.js) ===== -->
+    <div class="panel-overlay" id="panel-overlay">
+      <div class="panel-box">
+        <div class="panel-head">
+          <h3 id="panel-title"></h3>
+          <button class="panel-close" id="panel-close">✕</button>
+        </div>
+        <div class="panel-body">
+
+          <div class="panel-page" id="panel-home">
+            <!-- แถบเตือนฝนอยู่ติดกับการ์ดที่พัก (ผู้ใช้สั่ง 5 ก.ค. 2026) -->
+            <div class="rain-banner" id="rain-banner"></div>
+            <div class="shop-card" id="home-card"></div>
+          </div>
+
+          <!-- รอบ 636: ปุ่ม "ฟาร์ม" → "ลงทุน" — รวมสวนผลไม้ + บริการรายเดือน (มือถือ/คอมพิวเตอร์) ไว้ด้วยกัน -->
+          <div class="panel-page" id="panel-farm">
+            <div class="shop-card">
+              <h3 class="shop-title">📈 รายได้เสริมทั้งหมดของหนู</h3>
+              <p class="collect-sub">ปลูกผลไม้ขาย หรือซื้อมือถือ/คอมพิวเตอร์ไว้ช่วยหาเหรียญเพิ่มระหว่างวัน — เลือกลงทุนแบบไหนก็ได้ตามใจชอบ 🌱</p>
+            </div>
+            <div class="shop-card" id="farm-card"></div>
+            <div class="mkt-group-head">📡 บริการรายเดือน</div>
+            <div class="mkt-two-col">
+              <div class="shop-card" id="phone-card"></div>
+              <div class="shop-card" id="computer-card"></div>
+            </div>
+          </div>
+
+          <div class="panel-page" id="panel-factory">
+            <div class="shop-card" id="factory-card"></div>
+          </div>
+
+          <!-- 🎫→💰 รอบ 822 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกการ์ดตั๋วโลก 3D แยก 8 ใบ — เปลี่ยนเป็นจ่ายค่าเข้า
+               ตอนกดปุ่มโลก 3D ในรางเมนูซ้ายแทน (railWorldClick → openWorldEntryDialog ใน js/ui.js) -->
+          <div class="panel-page" id="panel-market">
+            <div class="mkt-group-head">🏪 ตลาดซื้อขายกับเพื่อน &amp; ยานพาหนะ</div>
+            <div class="shop-card" id="market-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-friends">
+            <div class="shop-card" id="friend-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-gifts">
+            <div class="shop-card" id="gift-card"></div>
+          </div>
+
+          <div class="panel-page" id="panel-rank">
+            <div class="rank-card" id="rank-card"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 3) Vocabulary Arena ===== -->
+  <section id="screen-game" class="screen">
+    <div class="game-top">
+      <button class="back-btn" id="btn-back">⬅ กลับ</button>
+      <!-- ตัวละครผู้เลี้ยงมาเชียร์ในฉากเกม (ข้อ 4 ต่อยอด) — เด้งดีใจตอนตอบถูก -->
+      <div class="game-avatar" id="game-avatar" title="ตัวละครของหนูมาเชียร์!"></div>
+      <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="game-coin-count">0</span></div>
+      <div class="combo-pill" id="combo-pill">Combo ×0</div>
+    </div>
+    <div class="timer-wrap"><div class="timer-fill" id="timer-fill"></div></div>
+
+    <p class="board-label">🇬🇧 คำศัพท์ภาษาอังกฤษ</p>
+    <div class="card-grid" id="en-grid"></div>
+    <p class="board-label">🇹🇭 คำแปลภาษาไทย</p>
+    <div class="card-grid" id="th-grid"></div>
+
+    <button class="hint-btn" id="hint-btn" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
+
+    <p class="game-endless-note">♾️ เล่นได้เรื่อยๆ ด่านไม่มีวันตัน — เล่นครั้งนี้หนูเก็บเหรียญไปแล้ว <b class="sess-coin" id="game-session-coins">0 🪙</b> เก่งมาก! สู้ๆ เก็บเพิ่มอีกนะ<span id="game-best-target" class="best-target"></span><br>เพลียเมื่อไหร่ กดปุ่ม <b>⬅ กลับ</b> มุมซ้ายบนพักได้เสมอ 😊</p>
+    <button class="report-btn" id="btn-report">📊 ดูความก้าวหน้าของหนู</button>
+  </section>
+
+  <!-- ===== 4) Vocabulary Categories ===== -->
+  <section id="screen-cats" class="screen">
+    <div class="game-top">
+      <button class="back-btn tapglow" id="btn-cats-back">⬅ กลับ</button>
+      <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="cats-coin-count">0</span></div>
+    </div>
+    <h1 style="font-size:22px" id="cats-level-label">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</h1>
+    <p class="subtitle" style="font-size:14px">สอบให้ได้ 8 ข้อขึ้นไปจาก 10 ข้อ รับเงินรางวัลพิเศษของแต่ละหมวด!</p>
+    <div id="cats-list"></div>
+    <!-- ⬅️ รอบ 831: ปุ่มกลับซ้ำท้ายหน้า (ผู้ใช้สั่ง — รายการยาว ไม่ต้องเลื่อนขึ้นไปกดข้างบน) -->
+    <button class="back-btn tapglow cats-back-bottom" id="btn-cats-back-bottom">⬅ กลับ</button>
+  </section>
+
+  <!-- ===== 5) Quiz ===== -->
+  <section id="screen-quiz" class="screen">
+    <div class="game-top">
+      <button class="back-btn" id="btn-quiz-back">⬅ ออกจากข้อสอบ</button>
+      <!-- ⏱️ รอบ 777: นาฬิกาจับเวลารวม — โผล่เฉพาะข้อสอบใหญ่ (cat.timed) -->
+      <div class="quiz-time-pill" id="quiz-time-pill" hidden>⏱️ 0:00</div>
+      <div class="quiz-score-pill" id="quiz-score-pill">ถูก 0 ข้อ</div>
+    </div>
+    <p class="quiz-progress" id="quiz-progress"></p>
+    <div class="quiz-word-card" id="quiz-word"></div>
+    <div id="quiz-choices"></div>
+  </section>
+
+  <!-- ===== 6) Learning Stats ===== -->
+  <section id="screen-stats" class="screen">
+    <div class="game-top">
+      <button class="back-btn" id="btn-stats-back">⬅ กลับหาน้อง</button>
+    </div>
+    <h1 style="font-size:22px">📊 ผลการเรียนรู้</h1>
+    <div id="stats-body"></div>
+  </section>
+
+</div>
+
+<!-- ============ DATA (แก้เพิ่มคำศัพท์/สัตว์/ไอเทมที่นี่ ไม่กระทบเซฟผู้เล่น) ============ -->
+<script src="js/data/pets.js"></script>
+<script src="js/data/items.js"></script>
+<script src="js/data/calendar.js"></script>  <!-- 📅 รอบ 822: ปฏิทินวันสำคัญไทย → ราคาเข้าโลก 3D วันนี้ (worldEntryInfo) -->
+<!-- ⚠️ ห้ามชี้ไป js/data/vocab/band1-5.js จนกว่างานแยกไฟล์คำศัพท์ (TASK_VOCAB_SONNET.md)
+     จะเสร็จครบทุกไฟล์และ commit พร้อมกัน — เคยหลุดขึ้น production แล้วเกมเปิดไม่ได้ทั้งเว็บ (5 ก.ค. 2026) -->
+<script src="js/data/vocab.js"></script>
+<script src="js/data/dict_band/manifest.js"></script>  <!-- 📖 สารบัญคลังศัพท์ band 1-5 (รอบ 264) — ชิ้นข้อมูล db*_*.js โหลดขี้เกียจใน dictband.js -->
+<script src="js/dictband.js"></script>  <!-- คลังศัพท์ band → เกมจับคู่ + ข้อสอบ (ต่อเข้า game.js) -->
+<script src="js/data/band/manifest.js"></script>  <!-- 🎓 สารบัญคลังศัพท์ขั้นสูงแยกหมวด (รอบ 681) — เจนจาก tools/gen_band_adv_manifest.py -->
+<script src="js/bandadv.js"></script>  <!-- คลังศัพท์ขั้นสูง (js/data/band/) → เกมจับคู่ + ข้อสอบเดิม (รอบ 681) -->
+<script src="js/data/exam/manifest.js"></script>  <!-- 📋 รอบ 812: สารบัญชุดข้อสอบจริงแบบมาตรฐาน (เจนจาก tools/gen_exam_std_manifest.py) — ตัวข้อสอบ json โหลดขี้เกียจใน examstd.js -->
+<script src="js/examstd.js"></script>  <!-- 📋 รอบ 812: ข้อสอบจริง IELTS/TOEIC/TOEFL 30 ข้อ/ชุด (ไวยากรณ์+การอ่าน) พร้อมเฉลยละเอียด -->
+<script src="js/vocabbook.js"></script>  <!-- 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) -->
+<script src="js/data/word_new.js"></script>  <!-- 🆕 New Word หน้า Lobby (รอบ 116) — format ตรงสเปกพจนานุกรม -->
+<script src="js/data/ranks.js"></script>
+<script src="js/data/homes.js"></script>
+<script src="js/data/fruits.js"></script>
+<script src="js/data/collectibles.js"></script>
+<script src="js/data/gifts.js"></script>  <!-- ของขวัญส่งเพื่อน (ข้อ 0.5) -->
+<script src="js/data/players.js"></script>
+<script src="js/data/badwords.js"></script>  <!-- ตัวกรองชื่อ+คำหยาบ (ข้อ 0.2 ชื่อผู้เล่น / ข้อ 7 ชื่อสัตว์) -->
+<script src="js/data/firebase-config.js"></script>
+<script src="js/data/wear.js"></script>  <!-- 🎀 รอบ 666: หมุดวาง "ชุดที่ใส่" ทับภาพน้องท่าอื่น (เจนด้วย tools/wearlab.py) -->
+<script src="js/data/badgeSprite.js"></script>  <!-- 🎖️ รอบ 677: ภาพเหรียญจริงแทนอิโมจิเข็ม (ตัดด้วย tools/badgelab.py) -->
+<!-- ============ ENGINE ============ -->
+<script src="js/util.js"></script>
+<script src="js/state.js"></script>
+<script src="js/images.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/gradelock.js"></script>  <!-- 🔒 รอบ 647: ล็อกเปลี่ยนระดับชั้น (เดือนละครั้ง · ขึ้นได้อย่างเดียว) — ต้องมาหลัง state.js/util.js -->
+
+<script src="js/lobby3d.js"></script>  <!-- โมเดล 3D ตัวละครหน้า lobby (idle + ปัดหมุน · รอบ 104) -->
+<script src="js/lobby.js"></script>  <!-- ระบบแผง Lobby แนวนอน (อัพเดท 5725691826) -->
+<script src="js/wordsearch.js"></script>  <!-- 🔎 เกม Word Search คำตามระดับชั้น (รอบ 194) -->
+<script src="js/award.js"></script>  <!-- 🏆 รอบ 649: โรงงานกลางรางวัลรายเดือน Top 10 (ต้องมาก่อน wsaward/tpaward) -->
+<script src="js/wsaward.js"></script>  <!-- 🏆 รางวัลรายเดือน Top 10 แท็บค้นหาคำ + กระดานประกาศ (รอบ 592) -->
+<script src="js/tpaward.js"></script>  <!-- 🏆 รอบ 649: รางวัลรายเดือน Top 10 แท็บพิมพ์คำ (กติกาเดียวกับค้นหาคำ) -->
+<script src="js/typing.js"></script>  <!-- ⌨️ รอบ 648: เกมพิมพ์คำศัพท์ แป้น 3 มิติเต็มจอ (5 เหรียญ/คำ · คำไม่ซ้ำ) -->
+<script src="js/game.js"></script>
+<script src="js/cert.js"></script>  <!-- 🎖️ รอบ 712: ประกาศนียบัตรสอบผ่าน (วาด SVG + ตู้เก็บในโปรไฟล์) -->
+<script src="js/photo.js"></script>  <!-- 📷 รอบ 709: รูปโปรไฟล์อัปโหลดเอง (ครอป/ย่อในเครื่อง → localStorage + /pphoto) -->
+<script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->
+<script src="js/online.js"></script>
+<script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
+<script src="js/music.js"></script>  <!-- ระบบเพลงพื้นหลัง + วิทยุในรถ (รอบ 181) -->
+<script src="js/main.js"></script>
+<!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash -->
+<script>if(window.__hideAppSplash) __hideAppSplash();</script>
+<!-- ลงทะเบียน Service Worker (PWA) — เฉพาะ https/localhost เท่านั้น (file:// ไม่รองรับ) -->
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+<!-- แจ้งเตือนเวอร์ชันใหม่: เทียบ version.json บน server กับเวอร์ชันที่กำลังรัน
+     ถ้าไม่ตรง = มีอัปเดต → เด้งแถบให้กดรีโหลด (ทำงานร่วมกับ network-first ใน sw.js)
+     ⚠️ เวลา deploy โค้ดใหม่ ให้บัมพ์เลข "v" ใน version.json ทุกครั้ง ผู้ใช้ถึงจะเห็นแถบนี้ -->
+<script>
+(function(){
+  if(!location.protocol.startsWith('http')) return;   // file:// ข้าม
+  var running = null;                                  // เวอร์ชันที่กำลังรันอยู่ (ตั้งจากการเช็กครั้งแรก)
+  function fetchVer(){
+    return fetch('version.json', {cache:'no-store'})   // no-store = ไม่เอาจาก HTTP cache (network-first ใน SW ดึงสดให้)
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(d){ return d && d.v != null ? String(d.v) : null; })
+      .catch(function(){ return null; });              // ออฟไลน์/ล้มเหลว → null (ไม่เด้งหลอก)
+  }
+  function showBanner(){
+    if(document.getElementById('update-banner')) return;   // โชว์อยู่แล้ว
+    var b = document.createElement('div');
+    b.id = 'update-banner'; b.className = 'update-banner';
+    b.innerHTML = '<span>✨ มีเกมเวอร์ชันใหม่!</span>'
+      + '<button id="update-reload">🔄 อัปเดตเลย</button>'
+      + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
+    document.body.appendChild(b);
+    b.querySelector('#update-reload').onclick = function(){ location.reload(); };
+    b.querySelector('#update-dismiss').onclick = function(){ b.remove(); };
+  }
+  function check(){
+    if(document.hidden) return;                        // อยู่แท็บอื่น → ข้าม
+    fetchVer().then(function(v){
+      if(!v) return;
+      if(running === null){ running = v; return; }     // ครั้งแรก = จำเวอร์ชันที่กำลังรัน (ไม่เด้ง)
+      if(v !== running) showBanner();                  // server เปลี่ยน → มีอัปเดต
+    });
+  }
+  window.addEventListener('load', check);
+  setInterval(check, 3 * 60 * 1000);                   // เช็กทุก 3 นาที
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) check(); });
+  window.addEventListener('online', check);            // กลับมาออนไลน์ → เช็กทันที
+})();
+</script>
+<!-- 📜 รอบ 209: หน้ายอมรับข้อตกลง/กฎหมาย ก่อนเริ่มเล่น (EN + ไทย · ต้องกด "ยอมรับ") -->
+<script>
+(function(){
+  var KEY='pvad_terms_v2';
+  try{ if(localStorage.getItem(KEY)) return; }catch(e){}
+  var css=''
+   +'#consent-gate{position:fixed;inset:0;z-index:100000;background:rgba(6,12,24,.92);backdrop-filter:blur(4px);'
+   +'display:flex;align-items:center;justify-content:center;padding:16px;font-family:system-ui,"Segoe UI",Roboto,sans-serif}'
+   +'#consent-gate .cg-box{width:min(560px,96vw);max-height:92vh;display:flex;flex-direction:column;'
+   +'background:linear-gradient(180deg,#122036,#0c1626);border:2px solid #3a5b86;border-radius:20px;'
+   +'box-shadow:0 24px 60px rgba(0,0,0,.6);color:#e6eefb;overflow:hidden}'
+   +'#consent-gate .cg-head{padding:16px 20px 10px;flex:0 0 auto}'
+   +'#consent-gate .cg-head h2{margin:0;font-size:20px;color:#8fd6ff}'
+   +'#consent-gate .cg-head p{margin:4px 0 0;font-size:12.5px;color:#9ec2e8}'
+   +'#consent-gate .cg-body{flex:1 1 auto;overflow-y:auto;padding:6px 20px 8px;font-size:13.5px;line-height:1.55}'
+   +'#consent-gate .cg-body h3{font-size:13px;color:#ffd76a;margin:14px 0 4px;letter-spacing:.02em}'
+   +'#consent-gate .cg-body ol{margin:4px 0 0;padding-left:20px}'
+   +'#consent-gate .cg-body li{margin:5px 0;color:#d6e4f6}'
+   +'#consent-gate .cg-body .cg-en li{color:#b9cbe2}'
+   +'#consent-gate .cg-foot{flex:0 0 auto;padding:12px 20px 16px;border-top:1px solid #23374f;background:rgba(8,16,30,.6)}'
+   +'#consent-gate .cg-accept{display:block;width:100%;background:linear-gradient(135deg,#43a047,#2e7d32);color:#fff;'
+   +'border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:17px;padding:13px;cursor:pointer}'
+   +'#consent-gate .cg-accept:active{transform:scale(.98)}'
+   +'#consent-gate .cg-note{margin:8px 0 0;text-align:center;font-size:11.5px;color:#8ea6c4}';
+  var s=document.createElement('style'); s.textContent=css; document.head.appendChild(s);
+
+  var o=document.createElement('div'); o.id='consent-gate';
+  o.innerHTML=''
+   +'<div class="cg-box">'
+   +'<div class="cg-head"><h2>📜 ข้อตกลงการใช้งาน · Terms of Use</h2>'
+   +'<p>Vocab World — เกมเรียนคำศัพท์สำหรับเด็ก · โปรดอ่านและยอมรับก่อนเริ่มเล่น</p></div>'
+   +'<div class="cg-body">'
+   +'<h3>🇹🇭 ภาษาไทย</h3>'
+   +'<ol>'
+   +'<li>🎓 <b>เกมเพื่อการศึกษา:</b> ช่วยเด็กเรียนคำศัพท์ผ่านการเล่น · แนะนำให้ผู้ปกครองดูแลการเล่นของเด็ก</li>'
+   +'<li>🔐 <b>ข้อมูลส่วนตัว:</b> เกมเก็บความคืบหน้าไว้ในเครื่องและบัญชี Google ของคุณ (ผ่าน Firebase) · ใช้อีเมลเพื่อเข้าสู่ระบบและบันทึกข้อมูลเท่านั้น · เราไม่ขายข้อมูล · ไม่เก็บชื่อจริงของเด็ก (ใช้ชื่อเล่น)</li>'
+   +'<li>💬 <b>ฟีเจอร์ออนไลน์:</b> พบเพื่อนผู้เล่นและแชทได้ (มีตัวกรองคำหยาบ) · โปรดใช้ถ้อยคำสุภาพ และไม่เปิดเผยข้อมูลส่วนตัว</li>'
+   +'<li>🪙 <b>เหรียญในเกม:</b> เหรียญและสินค้าทั้งหมดเป็นของในเกม ไม่มีมูลค่าเป็นเงินจริง · <b>ไม่สามารถเพิ่มเหรียญหรือซื้อสินค้าในเกมด้วยเงินจริงได้</b> เหรียญและสินค้าจะเพิ่มได้ด้วยความวิริยะอุตสาหะในการมุ่งมั่นพัฒนาตนเอง เรียนรู้คำศัพท์ และความสามารถในการบริหารจัดการเหรียญภายในเกมด้วยตัวผู้เล่นเองเท่านั้น (ผู้เล่นที่มีเหรียญเยอะ = ผู้เล่นที่มีความใฝ่รู้และมีความสามารถในการบริหารจัดการที่ดี)</li>'
+   +'<li>⚠️ <b>ให้บริการ "ตามสภาพ":</b> พัฒนาอย่างตั้งใจแต่ไม่รับประกันว่าไร้ข้อผิดพลาด · ข้อมูลอาจสูญหายได้ แนะนำให้สำรองข้อมูลเป็นระยะ</li>'
+   +'<li>✅ การกด "ยอมรับ" ถือว่าคุณหรือผู้ปกครองยอมรับเงื่อนไขและนโยบายความเป็นส่วนตัวนี้</li>'
+   +'</ol>'
+   +'<h3>🇬🇧 English</h3>'
+   +'<ol class="cg-en">'
+   +'<li>🎓 <b>Educational game:</b> helps children learn vocabulary through play. Parental guidance is recommended.</li>'
+   +'<li>🔐 <b>Privacy:</b> progress is stored on this device and in your Google account (via Firebase). Your email is used only for sign-in and saving data. We do not sell your data, and we do not collect children’s real names (nicknames only).</li>'
+   +'<li>💬 <b>Online features:</b> you may meet other players and chat (with a profanity filter). Please be polite and never share personal information.</li>'
+   +'<li>🪙 <b>In-game coins:</b> all coins and items are virtual, with no real-world monetary value. <b>Coins and items can never be bought or topped up with real money.</b> They can only be earned through the player’s own diligence — staying committed to learning vocabulary and managing coins wisely within the game (players with more coins are players who are more studious and better at managing resources).</li>'
+   +'<li>⚠️ <b>Provided “as is”:</b> built with care but not guaranteed error-free. Data may be lost — please back up periodically.</li>'
+   +'<li>✅ By tapping “Accept”, you (or a parent/guardian) agree to these Terms and this Privacy notice.</li>'
+   +'</ol>'
+   +'</div>'
+   +'<div class="cg-foot">'
+   +'<button class="cg-accept" type="button">✅ ยอมรับและเริ่มเล่น · Accept &amp; Play</button>'
+   +'<p class="cg-note">ต้องยอมรับก่อนจึงจะเริ่มเล่นได้ · You must accept to continue<br>'
+   +'<a href="privacy.html" target="_blank" rel="noopener" style="color:#9ad0ff">📄 อ่านนโยบายความเป็นส่วนตัวฉบับเต็ม · Full Privacy Policy</a></p>'
+   +'</div></div>';
+  function put(){ (document.body||document.documentElement).appendChild(o); }
+  if(document.body) put(); else document.addEventListener('DOMContentLoaded', put);
+  o.querySelector('.cg-accept').addEventListener('click', function(){
+    try{ localStorage.setItem(KEY, String(Date.now())); }catch(e){}
+    o.remove();
+  });
+})();
+</script>
+
+<!-- ปุ่มติดตั้งเป็นแอพ (PWA install) — Android ใช้ beforeinstallprompt · iOS โชว์วิธี manual -->
+<script>
+(function(){
+  if(!location.protocol.startsWith('http')) return;    // file:// ข้าม
+  function isStandalone(){                              // เปิดจากแอพที่ติดตั้งแล้วหรือยัง
+    return window.matchMedia('(display-mode: standalone)').matches
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.matchMedia('(display-mode: minimal-ui)').matches
+        || navigator.standalone === true;              // iOS
+  }
+  if(isStandalone()) return;                            // ติดตั้งแล้ว → ไม่ต้องเสนอ
+
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var deferredPrompt = null;
+  var btns = [document.getElementById('btn-install'), document.getElementById('btn-install-top')];
+  function show(){ btns.forEach(function(b){ if(b) b.style.display=''; }); }
+  function hide(){ btns.forEach(function(b){ if(b) b.style.display='none'; }); }
+
+  function guide(html){                                 // overlay สอนวิธีติดตั้ง
+    var o = document.createElement('div'); o.className = 'install-guide-overlay';
+    o.innerHTML = '<div class="install-guide">' + html
+      + '<button class="install-guide-close">เข้าใจแล้ว 👍</button></div>';
+    document.body.appendChild(o);
+    function close(){ o.remove(); }
+    o.querySelector('.install-guide-close').onclick = close;
+    o.onclick = function(e){ if(e.target === o) close(); };
+  }
+  function iosGuide(){
+    guide('<h3>📲 ติดตั้งลงหน้าจอโฮม</h3>'
+      + '<ol class="install-steps">'
+      + '<li>แตะปุ่ม <b>แชร์</b> (สี่เหลี่ยมมีลูกศรขึ้น ⬆️) ด้านล่างจอ Safari</li>'
+      + '<li>เลื่อนหา <b>“เพิ่มไปยังหน้าจอโฮม” (Add to Home Screen)</b> แล้วแตะ</li>'
+      + '<li>แตะ <b>เพิ่ม (Add)</b> มุมขวาบน</li>'
+      + '<li>เปิดเกมจาก <b>ไอคอนบนหน้าจอ</b> → เต็มจอไม่มีแถบบัง! 🎉</li>'
+      + '</ol><p class="ig-note">* ต้องเปิดด้วย <b>Safari</b> เท่านั้นนะ</p>');
+  }
+  function manualGuide(){
+    guide('<h3>📲 ติดตั้งเป็นแอพ</h3>'
+      + '<ol class="install-steps">'
+      + '<li>แตะเมนู <b>⋮</b> มุมขวาบนของเบราว์เซอร์</li>'
+      + '<li>เลือก <b>“ติดตั้งแอป”</b> หรือ <b>“เพิ่มลงในหน้าจอหลัก”</b></li>'
+      + '<li>เปิดเกมจากไอคอน → เต็มจอ! 🎉</li>'
+      + '</ol>');
+  }
+  function doInstall(){
+    if(deferredPrompt){                                 // Android/Chrome: เด้ง prompt ติดตั้งจริง
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(c){
+        if(c && c.outcome === 'accepted') hide();
+        deferredPrompt = null;
+      }).catch(function(){ deferredPrompt = null; });
+    } else if(isIOS){ iosGuide(); }                     // iOS: สอน manual
+    else { manualGuide(); }                             // อื่นๆ ที่ยังไม่มี prompt: สอน manual
+  }
+  btns.forEach(function(b){ if(b) b.onclick = doInstall; });
+
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault();                                 // คุมปุ่มเอง (กันแถบ default ของ Chrome)
+    deferredPrompt = e; show();
+  });
+  window.addEventListener('appinstalled', function(){ deferredPrompt = null; hide(); });
+
+  if(isIOS) show();                                     // iOS ไม่มี beforeinstallprompt → โชว์ปุ่มเลย
+})();
+</script>
+</body>
+</html>

@@ -887,6 +887,10 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
   padding:8px 2px;cursor:pointer;transition:background .15s, transform .12s;flex-shrink:0;
 }
 .rail-btn .rail-ico{font-size:21px;line-height:1.15;}
+/* 🏙️ รอบ 863: ปุ่ม "เมือง 3D" เป็น <a> (ลิงก์ไปหน้าหลัก index.html) — ต้องล้างขีดเส้นใต้/จัดกลางเหมือนปุ่มอื่น */
+a.rail-btn{text-decoration:none;text-align:center;}
+.rail-btn.rail-city{background:rgba(232,182,76,.18);border-color:rgba(232,182,76,.5);color:#ffe3a6;}
+.rail-btn.rail-city:hover{background:rgba(232,182,76,.3);}
 .rail-btn:hover{background:rgba(27,95,168,.85);}
 .rail-btn:active{transform:scale(.94);}
 .rail-btn.on{background:var(--sky);color:#fff;border-color:#7fc0f5;}
