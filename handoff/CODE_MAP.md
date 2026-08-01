@@ -200,6 +200,36 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
+## js/city3d.js (1,548 บรรทัด · 88 รายการ)
+### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
+- 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index2.html · รอบ 861)
+- 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
+- 89-188 📷 CAMERA RIG — 1 นิ้วเลื่อน · 2 นิ้วหมุน/เอียง/ซูม (รอบ 861)
+- 189-346 🖼️ CANVAS TEXTURE โรงงานผิวสัมผัส (พื้นเกาะ/หน้าต่างตึก/ป้าย)
+- 347-713 🏗️ BUILDERS — อาคารแต่ละแบบ (ห้ามกล่องเปล่าแปะ texture — มีชั้นเชิง/ระเบียง/หลังคา/ป้ายจริง)
+- 714-787 🚗🏍️🚁🛸 ยานพาหนะจิ๋ว (ผู้เล่นจริงจากโลก 3D จะขับ/บินสิ่งเหล่านี้ในเมือง)
+- 788-844 🧍 ตัวละครผู้เล่น — blk1-8 = หุ่นบล็อก 3D · blk9-88 = ป้ายภาพ 2D ตั้งในโลก
+- 845-1135 🌆 ผังเมือง — อาคารทุกหลังผูก go=<key> (ตัวรับใน js/main.js)
+- 1136-1369 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
+- 1370-1459 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
+- 1460-1548 🚀 BOOT
+### รายการ js/city3d.js
+ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
+hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
+gradeStars:56 · MAT:74 · mat:75 · GEO:79 · box:80 · cyl:81
+M:82 · groundAt:113 · setupInput:122 · twoState:181 · cvs:192 · ctex:193
+groundTexture:200 · wallTex:254 · wallMat:273 · shopSign:278 · roundRect:288 · iconSprite:295
+nameSprite:311 · blobShadow:333 · parapet:355 · roofProps:360 · doorAt:369 · awning:373
+bTower:385 · bShop:405 · bHouse:423 · bLibrary:439 · bFactory:457 · bArcade:484
+bObservatory:501 · bHallOfFame:515 · bHaunted:536 · bHeliport:554 · bGarage:571 · bStadium:590
+bMotoTrack:612 · bUfo:633 · bHangar:653 · bJungleGate:672 · bDronePad:694 · miniCar:717
+miniMoto:734 · miniHeli:754 · miniDrone:774 · makeBlockFigure:792 · makeSpriteFigure:828 · makeFigure:837
+pickBlk:840 · bld:848 · BUILDINGS:849 · BLD_AT:916 · buildCity:918 · buildPlaza:960
+buildGreens:1006 · _glowTex:1051 · buildSky:1061 · buildAmbientTraffic:1123 · actBuilding:1146 · loadFirebase:1155
+liveStart:1163 · lbGet:1177 · watchPresence:1187 · spawnStander:1208 · WORLD_MAPS:1240 · pollWorlds:1247
+spawnVehicle:1282 · removeActor:1339 · markPickable:1347 · spawnSelf:1352 · onTap:1373 · travelTo:1383
+sparkleAt:1398 · openProfile:1422 · setChip:1455 · boot:1463
+
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
 bandCat:68 · bandSets:90 · bandSetId:99 · bandCheckComplete:102 · bandSetCat:119 · BAND_RETAKE_MAX:131
@@ -430,7 +460,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (333 บรรทัด · 6 รายการ)
+## js/main.js (379 บรรทัด · 6 รายการ)
 syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefund:232 · fitQbp:272 · bootGame:286
 
 ## js/moto3d.js (2,674 บรรทัด · 141 รายการ)
