@@ -331,3 +331,49 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'hidden' && Auth.booted && typeof onlineEarnFlush === 'function')
     onlineEarnFlush(Date.now());
 });
+
+/* ============================================================
+   🏙️ รอบ 861: ทางเชื่อมจากเมือง 3D (index2.html) — ?go=<key>
+   แตะตึกในเมือง → มาลงหน้านี้พร้อม param → เปิดแผง/หน้า/โลก 3D นั้นให้เองหลังบูตถึงหน้า Lobby
+   ครอบ try ทั้งก้อน + ไม่มี param = ไม่ทำอะไรเลย → ไม่กระทบการเล่นปกติของ index.html
+   ============================================================ */
+(function(){
+  let go = null;
+  try{ go = new URLSearchParams(location.search).get('go'); }catch(e){}
+  if(!go) return;
+  /* ปุ่มจริงในหน้า (ผูก handler อยู่แล้ว) — คลิกแทนผู้เล่น */
+  const CLICK = {
+    home:'[data-panel="panel-home"]', farm:'[data-panel="panel-farm"]', factory:'[data-panel="panel-factory"]',
+    market:'[data-panel="panel-market"]', friends:'[data-panel="panel-friends"]', gifts:'[data-panel="panel-gifts"]',
+    rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy',
+    wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', examstd:'#btn-rail-examstd',
+    book:'#btn-vocab-book', cats:'#btn-cats', play:'#btn-play', bandexam:'#btn-band-exam',
+    foodquiz:'#btn-foodquiz', chat:'#btn-chat',
+    ielts:'[data-xstd="ielts"]', toeic:'[data-xstd="toeic"]', toefl:'[data-xstd="toefl"]',
+  };
+  const run = ()=>{
+    const m = /^w3d_(\w+)$/.exec(go);
+    if(m){                                    // โลก 3D → เข้าคิวจ่ายค่าเข้าตามระบบปกติ
+      if(typeof WORLD3D !== 'undefined' && typeof railWorldClick === 'function'){
+        const w = WORLD3D.find(x=>x.mode === m[1]);
+        if(w) railWorldClick(w);
+      }
+      return;
+    }
+    if(go === 'petshop'){                     // ร้านสัตว์เลี้ยง (ไม่มีปุ่มตรงในราง)
+      if(typeof renderPetShop === 'function'){ renderPetShop(); showScreen('screen-select'); }
+      return;
+    }
+    const sel = CLICK[go];
+    const btn = sel && document.querySelector(sel);
+    if(btn) btn.click();
+  };
+  const t = setInterval(()=>{
+    if(!(typeof Auth !== 'undefined' && Auth.booted)) return;
+    if(!document.getElementById('screen-dashboard').classList.contains('active')) return;   // รอถึง Lobby จริง (ผ่านหน้า register แล้ว)
+    clearInterval(t);
+    try{ history.replaceState(null, '', location.pathname); }catch(e){}   // ล้าง param — refresh แล้วไม่เด้งซ้ำ
+    setTimeout(()=>{ try{ run(); }catch(e){ console.warn('go-link', e); } }, 350);
+  }, 400);
+  setTimeout(()=>clearInterval(t), 180000);   // เกิน 3 นาทียังไม่ถึง Lobby (ค้าง login) = เลิกรอ
+})();
