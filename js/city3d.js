@@ -1617,22 +1617,30 @@ function watchFriendChats(){
   }, ()=>{});
 }
 
-/* 🙋 ตัวเราเอง: อ่านจากเซฟในเครื่อง (localStorage — โดเมนเดียวกับเกม) ยืนกลางพลาซ่า */
+/* 🙋 ตัวเราเอง: อ่านจากเซฟในเครื่อง (localStorage — โดเมนเดียวกับเกม) ยืนกลางพลาซ่า
+   🚶 รอบ 867: "ยังไม่มีเซฟในเครื่องนี้" ก็ต้องมีตัวเรา — ไม่งั้นแตะตึกแล้ว walkSelfTo() คืน false
+   เงียบ ๆ กลายเป็นเด้งเข้าหน้าเมนูทันที (เคสจริง: เปิดแอป/เครื่องใหม่ครั้งแรก ยังไม่เคยเข้าล็อบบี้)
+   ตัวแทนจะไม่มีป้ายชื่อ + ไม่มีการ์ดโปรไฟล์ (กฎคุ้มครองเด็ก: ไม่โชว์ชื่อ/ชั้นที่ไม่รู้จริง) */
 function spawnSelf(){
   let sv=null;
   try{ sv = JSON.parse(localStorage.getItem('petVocabAdventure_v1')||'null'); }catch(e){}
-  if(!sv || !sv.profileName) return;
-  const blk = /^blk\d+$/.test(sv.profAv||'') ? sv.profAv
-            : (/^blk\d+$/.test(sv.blockAv||'') ? sv.blockAv : pickBlk(null, sv.onlineId||sv.profileName));
+  const named = !!(sv && sv.profileName);            // มีเซฟ = รู้ว่าเราเป็นใคร (มีป้าย+การ์ด)
+  let blk = 'blk1';                                  // ตัวแทนใช้หุ่นบล็อก แขนขาแกว่งตอนเดินจริง
+  if(named){
+    blk = /^blk\d+$/.test(sv.profAv||'') ? sv.profAv
+        : (/^blk\d+$/.test(sv.blockAv||'') ? sv.blockAv : pickBlk(null, sv.onlineId||sv.profileName));
+  }
   const g = makeFigure(blk);
   g.position.set(3.2, 0, 8.6);
   g.rotation.y = Math.PI;
-  const label = nameSprite('⭐ '+sv.profileName, sv.student && sv.student.grade, 'rgba(255,215,90,.95)');
-  label.position.y = 3.4; g.add(label);
+  if(named){
+    const label = nameSprite('⭐ '+sv.profileName, sv.student && sv.student.grade, 'rgba(255,215,90,.95)');
+    label.position.y = 3.4; g.add(label);
+    markPickable(g, {uid:'__self', name:sv.profileName, grade:sv.student && sv.student.grade,
+                     act:'กำลังชมเมือง Vocab City 🏙️', blk, self:true,
+                     coins:Math.round(sv.coins||0)});
+  }
   scene.add(g);
-  markPickable(g, {uid:'__self', name:sv.profileName, grade:sv.student && sv.student.grade,
-                   act:'กำลังชมเมือง Vocab City 🏙️', blk, self:true,
-                   coins:Math.round(sv.coins||0)});
   Live.self = {g, bubY:4.9, walk:false};              // 🚶 ตัวเดินไปหน้าตึก + 💬 รับบับเบิลแชทของเราเอง
   tickers.push((dt,t)=>{ if(!Live.self.walk) g.position.y = Math.abs(Math.sin(t*2.1))*0.07; });
   flushBubble('__self');
