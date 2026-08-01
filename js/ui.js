@@ -6028,6 +6028,7 @@ function loadScriptOnce(src){
     }
     s = document.createElement('script');
     s.src = src;
+    s.dataset.lso = '1';   // ป้ายว่าสร้างโดย loadScriptOnce — ให้ advResetLoad ถอดตัวที่โหลดไม่จบได้
     s.addEventListener('load', ()=>{ s.dataset.loaded='1'; resolve(); });
     s.addEventListener('error', ()=>{ s.dataset.failed='1'; reject(new Error('โหลดไฟล์ไม่สำเร็จ: '+src)); });
     document.head.appendChild(s);
@@ -6035,8 +6036,21 @@ function loadScriptOnce(src){
 }
 /* 🚑 รอบ 859: guard ทางเข้าโลก 3D ห้ามเงียบ — ถ้ากดแล้วไม่เกิดอะไรเพราะ advLoading ค้าง ให้บอกผู้เล่นบนจอ
    (เงื่อนไขอื่น เช่น ไม่มีตั๋ว/บาดเจ็บ มีข้อความจากทางเข้าปกติอยู่แล้ว — เงียบเหมือนเดิม) */
-function advBusyMsg(){
-  if(advLoading) toast('⏳ โลก 3D กำลังโหลดอยู่ — รอสักครู่นะ ถ้ากดซ้ำแล้วขึ้นข้อความนี้ตลอด ให้ปิดเกมแล้วเปิดใหม่');
+function advBusyMsg(retry){
+  if(!advLoading) return;
+  /* 🔄 รอบ 860: ไม่บอกให้ผู้เล่น "ปิดเกมเปิดใหม่" อีกแล้ว — โหลดค้างเกิน 10 วิ = ระบบล้างสถานะ
+     + ถอดสคริปต์ที่โหลดไม่จบทิ้ง แล้วลองเข้าโลกเดิมให้ใหม่อัตโนมัติ (เทียบเท่าปิดเกมเปิดใหม่เฉพาะส่วนโหลด) */
+  if(Date.now() - advLoading > 10000){
+    advResetLoad();
+    toast('🔄 โหลดนานผิดปกติ — ล้างระบบให้ใหม่แล้ว กำลังลองเข้าอีกครั้งนะ');
+    if(retry) retry();
+    return;
+  }
+  toast('⏳ โลก 3D กำลังโหลดอยู่ — รอสักครู่นะ');
+}
+function advResetLoad(){
+  advLoading = false;
+  document.querySelectorAll('script[data-lso]:not([data-loaded])').forEach(s=>s.remove());
 }
 /* 🪓 รอบ 544: adventure3d.js ถูกผ่าเป็นไฟล์ part (data ล้วน) + ไฟล์หลัก
    ทุกจุดที่เคยโหลด js/adventure3d.js ตรงๆ ต้องเรียกตัวนี้แทน — part ก่อน หลักทีหลัง */
@@ -6049,9 +6063,9 @@ async function loadAdv3d(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
-  if(!state.advTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.advTicket || state.advHurt || advLoading) return advBusyMsg(enterAdventure3D);
   if(!window.Adventure3D){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🌍 กำลังเปิดประตูโลกผจญภัย...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6109,9 +6123,9 @@ function pickAdvMap(){
 
 /* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
 async function enterHaunted3D(){
-  if(!state.hauntTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.hauntTicket || state.advHurt || advLoading) return advBusyMsg(enterHaunted3D);
   if(!window.Adventure3D){
-    advLoading = true;
+    advLoading = Date.now();
     toast('👻 กำลังเปิดประตูโลกผีสิง...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6131,13 +6145,13 @@ async function enterHaunted3D(){
 
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
-  if(!state.heliTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.heliTicket || state.advHurt || advLoading) return advBusyMsg(enterHeli3D);
   // 🗺️ รอบ 815 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
   const hmap = await pickHeliMap();
   if(!hmap) return;
   const needCity = hmap === 'kpp';                 // เมืองกำแพงเพชรใช้ข้อมูลแผนที่จริงชุดเดียวกับโลกขับรถ
   if(!window.Adventure3D || (needCity && !window.KPP_CITY)){
-    advLoading = true;
+    advLoading = Date.now();
     toast(needCity ? '🚁 กำลังสตาร์ทเครื่องยนต์ + โหลดแผนที่เมืองกำแพงเพชร...' : '🚁 กำลังสตาร์ทเครื่องยนต์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6193,9 +6207,9 @@ function pickHeliMap(){
 
 /* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
 async function enterDrone3D(){
-  if(!state.droneTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.droneTicket || state.advHurt || advLoading) return advBusyMsg(enterDrone3D);
   if(!window.Adventure3D){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🛸 กำลังอาร์มโดรน...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6212,11 +6226,11 @@ async function enterDrone3D(){
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
-  if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg(enterDrive3D);
   // 🔐 รอบ 131: ยังไม่มีรถเลย — ขับไม่ได้ พาไปหมวดยานพาหนะ (ค้างงวดตรวจหลังเลือกคัน)
   if(!(state.cars && state.cars.length)){ sfx.wrong(); showNeedCarDialog('nocar'); return; }
   if(!window.Adventure3D || !window.KPP_CITY){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🚗 กำลังสตาร์ทรถ + โหลดแผนที่เมืองกำแพงเพชร...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6284,7 +6298,7 @@ function pickDriveMap(){
    ไม่ต้องมีตั๋วมอเตอร์ไซค์ — ตั๋วขับรถ + มีรถ ก็เข้าได้ (จุดประสงค์คือเล่นรวมกัน) */
 async function enterMotoMapAsCar(){
   if(!window.MotoWorld || !window.MOTO_MAP){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🚗 กำลังโหลดแผนที่บ้านโพธิ์สวัสดิ์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6302,9 +6316,9 @@ async function enterMotoMapAsCar(){
 
 /* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
 async function enterSoccer3D(){
-  if(!state.soccerTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.soccerTicket || state.advHurt || advLoading) return advBusyMsg(enterSoccer3D);
   if(!window.Adventure3D){
-    advLoading = true;
+    advLoading = Date.now();
     toast('⚽ กำลังเข้าสนาม...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6321,9 +6335,9 @@ async function enterSoccer3D(){
 
 /* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
 async function enterMoto3D(){
-  if(!state.motoTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.motoTicket || state.advHurt || advLoading) return advBusyMsg(enterMoto3D);
   if(!window.MotoWorld || !window.MOTO_MAP){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🏍️ กำลังสตาร์ทมอเตอร์ไซค์ + โหลดแผนที่บ้านโพธิ์สวัสดิ์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -6342,9 +6356,9 @@ async function enterMoto3D(){
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
-  if(!state.invasionTicket || state.advHurt || advLoading) return advBusyMsg();
+  if(!state.invasionTicket || state.advHurt || advLoading) return advBusyMsg(enterInvasion3D);
   if(!window.InvasionWorld){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🛸 กำลังเปิดสมรภูมิทะเลทราย...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
@@ -7250,12 +7264,12 @@ function buyRobot(id){
 
 /* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha */
 async function enterMecha3D(){
-  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return advBusyMsg();
+  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return advBusyMsg(enterMecha3D);
   const chosen = await pickMechaRobot();
   if(!chosen) return;
   state.mechaRobot = chosen; saveState();
   if(!window.Adventure3D){
-    advLoading = true;
+    advLoading = Date.now();
     toast('🤖 กำลังบูตระบบหุ่นยนต์...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
