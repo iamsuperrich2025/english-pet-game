@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v217';  // v217: รอบ 859: ไอคอนพื้นเรียบ icon-*-flat.png (แก้ splash APK เห็นกรอบสี่เหลี่ยม)
+const CACHE_VERSION = 'pet-vocab-v218';  // v218: เข็มเกียรติยศชุดใหม่คมชัด + texture โรงแรมผีสิง
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์ */
 const SHELL = [

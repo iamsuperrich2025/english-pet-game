@@ -1626,21 +1626,23 @@ function openLeaderboardFull(){
       /* 🏅 รอบ 737 (ผู้ใช้: เอาเหรียญออกจากหลังชื่อผู้เล่น เหลือเหรียญเดียวใหญ่ใต้ชื่อสายแทน
          + จัด grid 4 คอลัมน์ — ดู CSS .lbf-bcat-wrap/.lbf-bcat-badge): เหรียญตัวแทนสาย = เข็มระดับสูงสุด
          ที่มีคนได้แล้ว (แถวอันดับ 1 หลัง sort desc ใน lbBadgeSections) */
-      const body = secs.length ? `<div class="lbf-bcat-wrap">${secs.map(s=>{
+      const body = secs.length ? `<div class="lbf-bcat-wrap${secs.length<=4?' lbf-one-row':''}">${secs.map(s=>{
         const top = s.rows[0];
         return `
         <div class="lbf-bcat">
           <div class="lbf-bcat-head"><b>${escapeHTML(s.label)}</b><small>${escapeHTML(s.desc)}</small></div>
-          <div class="lbf-bcat-badge">${(typeof badgeIcHTML==='function')?badgeIcHTML(top.emoji,'lbcat-ic'):top.emoji}<span class="lbcat-ic-label">${escapeHTML(top.tierLabel)}</span></div>
-          <div class="lbf-bcat-rows">${s.rows.map((r,i)=>`
-            <div class="lbf-bcat-row${r.me ? ' me' : ''}">
-              <span class="bcr-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}</span>
-              <span class="bcr-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
-            </div>`).join('')}</div>
+          <div class="lbf-bcat-mid">
+            <div class="lbf-bcat-badge">${(typeof badgeIcHTML==='function')?badgeIcHTML(top.emoji,'lbcat-ic'):top.emoji}<span class="lbcat-ic-label">${escapeHTML(top.tierLabel)}</span></div>
+            <div class="lbf-bcat-rows">${s.rows.map((r,i)=>`
+              <div class="lbf-bcat-row${r.me ? ' me' : ''}">
+                <span class="bcr-rank">${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)}</span>
+                <span class="bcr-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
+              </div>`).join('')}</div>
+          </div>
         </div>`;
       }).join('')}</div>`
         : `<div class="lb-empty">ยังไม่มีใครได้เข็มเลย — เล่นเก่งๆ เก็บเข็มเป็นคนแรกเลย! 🏅</div>`;
-      ov.innerHTML = `<div class="lbf-box">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}${body}</div>`;
+      ov.innerHTML = `<div class="lbf-box lbf-box-bcat">${closeHeadHtml('🏅 อันดับเข็ม · แยกตามสาย')}${body}</div>`;
       bindLbfChrome();
       return;
     }
@@ -1868,7 +1870,7 @@ function showPlayerCard(uid, name, grade){
   const arr = (typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : [];
   const badgesHTML = arr.length
     ? `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
-        <div class="strip-x pl-badges-strip grid1x5">${arr.map(e=>{
+        <div class="strip-x pl-badges-strip grid1x5" style="--fc-n:${Math.min(Math.max(arr.length,1),5)}">${arr.map(e=>{
           const nm = (BADGE_META[e]||{}).n || '';
           return `<div class="pl-badge-card" title="${escapeHTML(nm)}">
             ${(typeof badgeIcHTML==='function')?badgeIcHTML(e,'pl-badge-card-ic'):`<span class="pl-badge-card-ic badge-ic-fallback">${e}</span>`}
