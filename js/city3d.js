@@ -23,11 +23,18 @@ const ISLAND_R = 95;              // รัศมีเกาะ
 const RING_IN  = 21,  RING_OUT = 48;   // รัศมีกลางถนนวงใน/วงนอก
 const BAND1_R  = 34,  BAND2_R  = 63;   // รัศมีแถวอาคารชั้นใน/ชั้นนอก
 const GROUND_TEX_PX = 2048, GROUND_SPAN = 200;   // canvas พื้น ↔ หน่วยโลก
-const NIGHT = (()=>{ // 🌙 กลางคืนตามเวลาจริงเครื่องเด็ก · override ได้ ?day / ?night (ไว้เทสต์+เล่นสนุก)
+const NIGHT = (()=>{ // 🌙 รอบ 887: ใช้สวิตช์เดียวกับล็อบบี้เดิม (localStorage vwNightUi — ตั้งเอง/ล้างเองใน NightUI ของ
+  // index_classic.html) กติกาเดียวกัน: อัตโนมัติ = 19:00-06:00 · override ?day / ?night (ไว้เทสต์+เล่นสนุก)
   try{ const q=new URLSearchParams(location.search);
        if(q.has('day')) return false; if(q.has('night')) return true; }catch(e){}
-  const h = new Date().getHours() + new Date().getMinutes()/60;
-  return (h < 6.25 || h >= 18.5); })();
+  const autoNight = ()=>{ const h=new Date().getHours(); return h>=19 || h<6; };
+  try{
+    const KEY='vwNightUi';
+    let s = localStorage.getItem(KEY), auto = autoNight();
+    if((s==='1')===auto && (s==='1'||s==='0')){ localStorage.removeItem(KEY); s=null; }
+    return s==='1' ? true : s==='0' ? false : auto;
+  }catch(e){ return autoNight(); }
+})();
 
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function hash(s){ let h=0; s=String(s||''); for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h; }
