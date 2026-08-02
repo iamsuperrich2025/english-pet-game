@@ -34,6 +34,15 @@ const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไ�
 const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
 const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
 const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
+/* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
+const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
+const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
+const OFFTRACK_S = 2;    // 🏜️ อยู่บนทรายต่อเนื่องกี่วิ = เกิดใหม่บนแทร็กบริเวณนั้น
+const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
+const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
+const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
+const FPW_H      = 0.80; //    ความสูงจุดกลางล้อ (ม.) — สูงกว่าจริง (0.34) จงใจ: ภาพอาร์ตวาดยางไว้ระดับข้างกระจก
+                         //    ยกให้ตรงช่องโปร่งของภาพ (จุดสัมผัสพื้นโดนบอดี้อาร์ตทึบบัง มองไม่เห็นว่าลอย)
 /* 🫨 กล้องสั่นมุมคนขับ บน kerb/ทราย (รอบ 907) */
 const SHAKE_KERB_AMP = 0.026;  // แอมพลิจูดสั่น (ม.) บน kerb ที่ความเร็วอ้างอิง SHAKE_SPD_REF
 const SHAKE_SAND_AMP = 0.016;  // บนทราย (พื้นนุ่มกว่า kerb แข็ง สั่นเบากว่า)
@@ -99,6 +108,7 @@ let keydownFn, keyupFn, resizeFn;
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
+let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 /* แทร็ก */
 let LINE=null, TOTAL=0, grid=null, sfIdx=0, myIdx=0, myLapDist=0, surfNow='track';
 /* จับเวลา */
@@ -931,6 +941,9 @@ const CSS=`
 #f1-map{position:absolute;left:10px;bottom:88px;width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
+/* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
+#f1-resp{position:absolute;top:42%;left:50%;transform:translateX(-50%);background:rgba(18,168,84,.92);color:#fff;
+  font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
 #f1-drs{position:absolute;right:10px;bottom:240px;z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
@@ -997,15 +1010,20 @@ const CSS=`
 #f1-selfmsg.on{display:block}
 #f1-exitbtn{position:absolute;left:10px;bottom:8px;z-index:7;background:rgba(216,26,26,.85);border:none;color:#fff;
   border-radius:12px;padding:8px 14px;font-size:14px;font-weight:800;font-family:inherit}
-#f1-steer{position:absolute;left:66px;bottom:8px;width:min(34vw,240px);height:64px;background:rgba(255,255,255,.10);
-  border:1px solid rgba(255,255,255,.22);border-radius:32px;z-index:7}
-#f1-knob{position:absolute;top:4px;left:50%;width:56px;height:56px;margin-left:-28px;border-radius:50%;
+/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) ตามที่ผู้ใช้ขอ + knob โตตาม · ขยับขวาพ้นปุ่ม 📷/🏁 ซ้ายล่าง */
+#f1-steer{position:absolute;left:118px;bottom:8px;width:min(38vw,270px);height:128px;background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.22);border-radius:64px;z-index:7}
+#f1-knob{position:absolute;top:5px;left:50%;width:116px;height:116px;margin-left:-58px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#ffb054,#e07800);box-shadow:0 2px 8px rgba(0,0,0,.5);
-  display:flex;align-items:center;justify-content:center;font-size:24px}
+  display:flex;align-items:center;justify-content:center;font-size:46px}
 #f1-pedals{position:absolute;right:10px;bottom:8px;display:flex;gap:10px;z-index:7}
 .f1-pedal{width:72px;height:72px;border-radius:50%;border:none;font-size:26px;font-family:inherit;font-weight:900;
   color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.5)}
 #f1-brake{background:radial-gradient(circle at 35% 30%,#ff6a6a,#b41414)}
+/* ⏪ รอบ 911: ปุ่มเกียร์ถอย — เล็กกว่าเบรก วางชิดล่างเสมอกัน */
+#f1-reverse{background:radial-gradient(circle at 35% 30%,#c9d2dc,#5a6470);width:56px;height:56px;
+  font-size:22px;align-self:flex-end}
+#f1-pedals{align-items:flex-end}
 #f1-throttle{background:radial-gradient(circle at 35% 30%,#68c6ff,#0a6ac0);width:86px;height:86px}
 .f1-pedal:active{transform:scale(.94)}
 #f1-intro{position:absolute;inset:0;background:rgba(4,8,18,.86);display:flex;align-items:center;justify-content:center;
@@ -1075,6 +1093,7 @@ function buildDom(){
     <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
     <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
+    <div id="f1-resp">🏁 กลับเข้าแทร็ก!</div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
     <button id="f1-chatbtn">💬</button>
@@ -1083,6 +1102,7 @@ function buildDom(){
     <button id="f1-exitbtn">🏁 ออก</button>
     <div id="f1-steer"><div id="f1-knob">🏎️</div></div>
     <div id="f1-pedals">
+      <button class="f1-pedal" id="f1-reverse">R</button>
       <button class="f1-pedal" id="f1-brake">🛑</button>
       <button class="f1-pedal" id="f1-throttle">⚡</button>
     </div>
@@ -1130,6 +1150,7 @@ function buildDom(){
   gearEl=wrapEl.querySelector('#f1-gear');
   lapEl=wrapEl.querySelector('#f1-laps');
   wrongEl=wrapEl.querySelector('#f1-wrong');
+  respEl=wrapEl.querySelector('#f1-resp');   // 🏜️ รอบ 911
   drsEl=wrapEl.querySelector('#f1-drs');
   /* 🛞 รอบ 905 */
   tyreEl=wrapEl.querySelector('#f1-tyre');
@@ -1164,13 +1185,18 @@ function buildDom(){
     const r=steerBox.getBoundingClientRect();
     const t=clamp((cx-r.left)/r.width*2-1,-1,1);
     steerCtl=t;
-    knobEl.style.left=(50+t*50*(1-56/r.width))+'%';
+    knobEl.style.left=(50+t*50*(1-(knobEl.offsetWidth||56)/r.width))+'%';   // 🔄 รอบ 911 — knob โตขึ้น อ่านขนาดจริง
   }
   steerBox.addEventListener('pointerdown',e=>{ sid=e.pointerId; steerBox.setPointerCapture(sid); steerTo(e.clientX); });
   steerBox.addEventListener('pointermove',e=>{ if(sid===e.pointerId) steerTo(e.clientX); });
   const sEnd=e=>{ if(sid===e.pointerId){ sid=null; steerCtl=0; knobEl.style.left='50%'; } };
   steerBox.addEventListener('pointerup',sEnd); steerBox.addEventListener('pointercancel',sEnd);
   /* คันเร่ง/เบรก */
+  /* ⏪ รอบ 911: ปุ่มเกียร์ถอยหลัง */
+  const revB=wrapEl.querySelector('#f1-reverse');
+  revB.addEventListener('pointerdown',e=>{ e.preventDefault(); padRev=true; Snd.start(); });
+  revB.addEventListener('pointerup',()=>padRev=false);
+  revB.addEventListener('pointercancel',()=>padRev=false);
   const thrB=wrapEl.querySelector('#f1-throttle'), brB=wrapEl.querySelector('#f1-brake');
   thrB.addEventListener('pointerdown',e=>{ e.preventDefault(); padThr=1; Snd.start();
     if(introEl.style.display!=='none') introEl.style.display='none';
@@ -1240,6 +1266,7 @@ function build(){
   scene.add(carGrp);
   attachDrsGlow(carGrp);                      // 🪽 รอบ 904 (รถเราคันเดียว — เพื่อนไม่ส่งสถานะ DRS)
   wheels=carGrp.userData.wheels||[]; steerParts=carGrp.userData.front||[];
+  fpWheels=buildFpWheels(); scene.add(fpWheels);   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
   makeCar(0xe10600,g=>{
     if(!g||g===carGrp) return;
     scene.remove(carGrp);
@@ -1682,10 +1709,24 @@ function botTick(dt){
 /* ============================================================
    🏁 ฟิสิกส์ + จับเวลา
    ============================================================ */
+/* 🏜️ รอบ 911: เกิดใหม่บนแทร็ก ณ จุดใกล้ที่หลุดออกไป — หันตามทิศแข่ง ความเร็ว 0 */
+function respawnOnTrack(){
+  sandT=0;
+  const i=nearIdx(px,pz,myIdx);
+  px=LINE.x[i]; pz=LINE.z[i];
+  yaw=Math.atan2(LINE.tx[i],LINE.tz[i]);
+  vx=vz=0; spd=0; steer=0; slide=0; myIdx=i; camInit=false;
+  if(respEl){
+    respEl.style.display='block';
+    clearTimeout(respawnOnTrack._tm);
+    respawnOnTrack._tm=setTimeout(()=>{respEl.style.display='none';},1500);
+  }
+}
 function physTick(dt){
   /* 🚦 รอบ 902: ก่อนไฟดับ คันเร่งไม่ทำงาน (เบรก/พวงมาลัยยังได้ — เร่งเครื่องรอได้ตามปกติ) */
   const thr=lightsLocked()?0:clamp(padThr+(kThr?1:0),0,1);
   const braking=padBr||kBack;
+  const reving=padRev&&!braking&&!lightsLocked();   // ⏪ รอบ 911 — เบรกชนะเกียร์ถอย · ก่อนไฟดับห้ามถอย
   /* พวงมาลัย: นิ่ม + ลิมิตตามความเร็ว */
   const sIn=clamp(steerCtl+(kL?-1:0)+(kR?1:0),-1,1);
   const sMax=lerp(STEER_MAX,STEER_HI,clamp(spd/85,0,1));
@@ -1709,13 +1750,15 @@ function physTick(dt){
   /* แรงตามยาว */
   let aF=0;
   if(thr>0) aF+=Math.min(ACC_CAP,PWR_A/Math.max(spd,6))*thr*(surf==='track'?1:sc.grip);
+  /* ⏪ รอบ 911: เกียร์ถอยหลัง — ยังไหลไปหน้าอยู่ให้หน่วงก่อน แล้วค่อยถอย (เร็วสุด REV_MAX) */
+  if(reving) aF-=vF>0.5?BRAKE_A*0.5:REV_A*(surf==='track'?1:sc.grip);
   if(braking) aF-=(BRAKE_A+BRAKE_DF*spd*spd)*(0.8+0.2*tyre)   // 🛞 ยางโทรม = เบรกจับน้อยลงนิด
     *Math.sign(vF||1)*(surf==='track'?1:sc.grip*0.9);
   aF-=DRAG_K*(drsOn?DRS_DRAG_K:1)*spd*spd*Math.sign(vF||0);   // 🪽 DRS เปิด = แรงต้านลด
   aF-=(ROLL_A+sc.drag)*Math.sign(vF||0)*(Math.abs(vF)>0.5?1:Math.abs(vF)*2);
   vF+=aF*dt;
   if(braking&&Math.abs(vF)<0.6&&thr===0) vF=0;
-  if(vF<-8) vF=-8;                                     // ถอยได้ช้าๆ พอ
+  if(vF<-REV_MAX) vF=-REV_MAX;                         // ถอยได้ช้าๆ พอ (⏪ รอบ 911 ย้ายเป็นค่าคงที่)
   /* 🚧 รอบ 905: ลิมิตเตอร์เลนพิท 80 กม./ชม. (อัตโนมัติเหมือนของจริง — เด็กไม่ต้องกดเอง) */
   pitLimited=false;
   if(pitLaneNow&&vF>PIT_LIMIT){
@@ -1724,7 +1767,9 @@ function physTick(dt){
   }
   /* เลี้ยว: yaw rate จากมุมล้อ + จำกัดด้วยกริป (โมเมนตัม!) */
   const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip*tyreGrip();   // 🛞 ยางสึก = กริปหด
-  let yawRate=Math.abs(vF)>0.4?(vF*Math.tan(steer)/WB):0;
+  /* 🔄 รอบ 911: ใส่ลบ — แกนจอ: หันหน้า +Z แล้ว "ขวามือ" คือ −X ดังนั้น steer บวก (ปุ่มขวา) ต้องลด yaw
+     (ของเดิมกดขวาแล้วรถเลี้ยวซ้าย — กลับด้านทุกมุมกล้องตั้งแต่รอบ 896) */
+  let yawRate=Math.abs(vF)>0.4?-(vF*Math.tan(steer)/WB):0;
   const latNeed=Math.abs(yawRate*vF);
   slide=0;
   if(latNeed>gripMax&&Math.abs(vF)>2){
@@ -1742,15 +1787,16 @@ function physTick(dt){
   vz=fz2*vF+(-fx2)*vL;
   px+=vx*dt; pz+=vz*dt;
   spd=Math.hypot(vx,vz);
+  revNow=vF<-0.3;                                      // ⏪ รอบ 911 — ให้ HUD โชว์เกียร์ R
   /* วางรถ */
   carGrp.position.set(px,0,pz);
   carGrp.rotation.y=yaw;
-  carGrp.rotation.z=lerp(carGrp.rotation.z,-steer*spd*0.012,clamp(dt*6,0,1));   // เอียงเข้าโค้งนิดๆ
+  carGrp.rotation.z=lerp(carGrp.rotation.z,steer*spd*0.012,clamp(dt*6,0,1));   // เอียงเข้าโค้งนิดๆ (พลิกเครื่องหมายตามทิศเลี้ยวใหม่ รอบ 911)
   carGrp.rotation.x=lerp(carGrp.rotation.x,surf==='kerb'?(Math.random()-0.5)*0.03:0,0.4);
   /* ล้อหมุน+เลี้ยว */
   const roll=spd*dt/0.46;
   for(const w of wheels) w.rotation.x+=roll;
-  for(const w of steerParts) w.rotation.y=steer*2.4;
+  for(const w of steerParts) w.rotation.y=-steer*2.4;   // 🔄 รอบ 911 — ล้อหน้าชี้ตามทิศเลี้ยวใหม่
   /* ไฟท้ายกะพริบตอนเก็บพลัง (เหมือน ERS) */
   if(carGrp.userData.tail) carGrp.userData.tail.material.color.setHex(
     (braking||thr<0.1)&&spd>10?((performance.now()/90|0)%2?0xff2020:0x550000):0x550000);
@@ -1760,6 +1806,9 @@ function physTick(dt){
   /* 🛞 รอบ 905: ยางสึก + ลูปพิท */
   tyreWear(dt,surf);
   pitTick(dt);
+  /* 🏜️ รอบ 911: หลุดสนามทั้งคัน (ผิวทราย) ต่อเนื่องครบ OFFTRACK_S วิ → เกิดใหม่บนแทร็กบริเวณนั้น */
+  if(surf==='sand') sandT+=dt; else sandT=0;
+  if(sandT>=OFFTRACK_S) respawnOnTrack();
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
@@ -2535,7 +2584,49 @@ function applyCamMode(){
   wrapEl.classList.toggle('fp',fp);
   if(camBtnEl) camBtnEl.textContent=fp?'📷 มุมรถ':'🪖 มุมคนขับ';
   if(carGrp) carGrp.visible=!fp;
+  if(fpWheels) fpWheels.visible=fp;   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
   camInit=false;
+}
+/* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
+   (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อให้ตาจับการหมุนได้) */
+function buildFpWheels(){
+  const g=new THREE.Group();
+  const tyreM=new THREE.MeshLambertMaterial({color:0x121417});
+  const rimM=new THREE.MeshLambertMaterial({color:0x2e3238});
+  const spokeM=new THREE.MeshLambertMaterial({color:0x5d646d});
+  const bandM=new THREE.MeshLambertMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
+  g.userData.spin=[];
+  for(const side of [-1,1]){
+    const wg=new THREE.Group(), sg=new THREE.Group();
+    /* ฝาทรงกระบอกเป็น "แผ่นเต็ม" — ซ้อนรัศมีลดหลั่น (กว้างขึ้นทีละนิดกัน z-fight) ให้หน้าล้ออ่านเป็น:
+       ยางดำหนา → แถบเหลืองบางขอบนอก (แบบยาง soft) → แก้มดำ → ดุมเทาเข้ม + ซี่ */
+    const ty=new THREE.Mesh(new THREE.CylinderGeometry(FPW_R,FPW_R,0.38,18),tyreM);
+    ty.rotation.z=Math.PI/2; sg.add(ty);
+    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.322,0.322,0.384,18),bandM);
+    band.rotation.z=Math.PI/2; sg.add(band);
+    const wall=new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.388,18),tyreM);
+    wall.rotation.z=Math.PI/2; sg.add(wall);
+    const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.185,0.185,0.392,12),rimM);
+    rim.rotation.z=Math.PI/2; sg.add(rim);
+    for(let k=0;k<3;k++){                     // แท่งซี่พาดหน้าดุม 3 แนว = 6 ซี่ (สีเข้ม แค่พอให้ตาจับการหมุน)
+      const sp=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.34,0.04),spokeM);
+      sp.rotation.x=k*Math.PI/3; sg.add(sp);
+    }
+    wg.add(sg); g.add(wg);
+    g.userData.spin.push({wg,sg,side});
+  }
+  g.visible=false;
+  return g;
+}
+function fpWheelTick(dt){
+  if(!fpWheels||!fpWheels.visible) return;
+  const fx=Math.sin(yaw), fz=Math.cos(yaw);              // ขวามือรถ = (-fz, fx)
+  const vF=vx*fx+vz*fz, rollD=vF*dt/FPW_R, sv=-steer*1.15;
+  for(const o of fpWheels.userData.spin){
+    o.wg.position.set(px+fx*FPW_F-fz*FPW_S*o.side, FPW_H, pz+fz*FPW_F+fx*FPW_S*o.side);
+    o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
+    o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
+  }
 }
 function camTick(dt){
   if(camMode==='cockpit'){
@@ -2578,7 +2669,7 @@ function camTick(dt){
 function hudTick(){
   const kmh=Math.round(spd*3.6);
   speedEl.innerHTML=kmh+'<small> กม./ชม.</small>';
-  const g=spd<0.6?'N':gearOf(spd);
+  const g=revNow?'R':(spd<0.6?'N':gearOf(spd));   // ⏪ รอบ 911 — ถอยอยู่โชว์เกียร์ R
   gearEl.textContent=g;
   /* 🚧 รอบ 905: ลิมิตเตอร์ทำงาน = เลขความเร็วเป็นสีเหลือง (บอกว่าไม่ใช่รถเสีย) */
   speedEl.style.color=pitLimited?'#ffd12e':'#fff';
@@ -2594,6 +2685,7 @@ function frame(dt,now){
   collectTick();
   peerTick(dt);
   smokeTick(dt);
+  fpWheelTick(dt);         // 🛞 รอบ 911 — ต้องมาหลัง physTick (ใช้ px/pz/yaw ล่าสุด)
   camTick(dt);
   hudTick();
   netSend(false);
@@ -2638,6 +2730,7 @@ function start(){
   pz=LINE.z[gi]+LINE.nz[gi]*side;
   yaw=Math.atan2(LINE.tx[gi],LINE.tz[gi]);
   vx=vz=spd=0; steer=0; slide=0; steerCtl=0; padThr=0; padBr=false;
+  padRev=false; revNow=false; sandT=0;   // ⏪🏜️ รอบ 911
   kL=kR=kThr=kBack=false;
   myIdx=gi; surfNow='track';
   drsOn=false; drsInZone=false; drsGap=0; drsFlapK=0; drsBrake=false;                // 🪽 รอบ 904
@@ -2663,6 +2756,7 @@ function start(){
       if(introEl.style.display!=='none') introEl.style.display='none';
       beginLights(); }
     else if(k==='s'||k==='arrowdown') kBack=true;
+    else if(k==='r') padRev=true;                       // ⏪ รอบ 911
     else if(k==='escape') exitBox.classList.add('on');
   };
   keyupFn=e=>{
@@ -2671,6 +2765,7 @@ function start(){
     else if(k==='d'||k==='arrowright') kR=false;
     else if(k==='w'||k==='arrowup'||k===' ') kThr=false;
     else if(k==='s'||k==='arrowdown') kBack=false;
+    else if(k==='r') padRev=false;                      // ⏪ รอบ 911
   };
   resizeFn=()=>fit();
   window.addEventListener('keydown',keydownFn);
