@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v228';  // v228: รอบ 917 เกมใหม่ยิงเป้าคำศัพท์ (shootword/sgaward + ภาพปืน webp)
+const CACHE_VERSION = 'pet-vocab-v229';  // v229: รอบ 920 คืนตัวล้าง SW cache ก่อนรีโหลดในปุ่มอัปเดตเวอร์ชัน
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)

@@ -670,7 +670,21 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
       + '<button id="update-reload">🔄 อัปเดตเลย</button>'
       + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
     document.body.appendChild(b);
-    b.querySelector('#update-reload').onclick = function(){ location.reload(); };
+    /* 🔄 รอบ 920: reload เฉยๆ ไม่พอ — service worker cache เก่ายังค้าง กดอัปเดตแล้วเห็นโค้ดเก่าเหมือนเดิม
+       (เคยแก้ไว้รอบ 876 แต่หลุดหายไปจากไฟล์นี้ ระหว่างมีหลาย session เขียนพร้อมกัน — คืนกลับให้ถาวร) */
+    b.querySelector('#update-reload').onclick = function(){
+      var btn = this;
+      btn.disabled = true; btn.textContent = '⏳ กำลังอัปเดต...';
+      var swClear = ('serviceWorker' in navigator)
+        ? navigator.serviceWorker.getRegistrations().then(function(rs){
+            return Promise.all(rs.map(function(r){ return r.unregister(); }));
+          })
+        : Promise.resolve();
+      var cacheClear = ('caches' in window)
+        ? caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })
+        : Promise.resolve();
+      Promise.all([swClear, cacheClear]).catch(function(){}).then(function(){ location.reload(); });
+    };
     b.querySelector('#update-dismiss').onclick = function(){ b.remove(); };
   }
   function check(){
