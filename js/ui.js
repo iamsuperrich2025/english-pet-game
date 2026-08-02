@@ -6092,9 +6092,9 @@ async function enterAdventure3D(){
 function pickAdvMap(){
   return new Promise(res=>{
     const ov=document.createElement('div');
-    ov.style.cssText='position:fixed;inset:0;z-index:2600;background:rgba(8,6,18,.82);display:flex;align-items:center;justify-content:center;padding:10px';
+    ov.style.cssText='position:fixed;inset:0;z-index:2600;background:rgba(47,53,141,.82);display:flex;align-items:center;justify-content:center;padding:10px';
     ov.innerHTML=`
-      <div style="background:linear-gradient(160deg,#241a3d,#161028);border:2px solid #6c5ce7;border-radius:18px;
+      <div style="background:linear-gradient(160deg,#3a39ab,#34359c);border:2px solid #6c5ce7;border-radius:18px;
                   padding:clamp(10px,2.6vh,18px) clamp(12px,2.6vw,22px);max-width:min(560px,96vw);width:100%;
                   max-height:94vh;display:flex;flex-direction:column;gap:clamp(6px,1.6vh,12px)">
         <div style="color:#ffd54f;font-weight:800;font-size:clamp(15px,3.4vh,19px);text-align:center">🗺️ วันนี้อยากไปเดินเล่นที่ไหน?</div>

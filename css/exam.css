@@ -141,7 +141,7 @@
 /* ---------- แผงเฉลยละเอียดหลังสอบ ---------- */
 .xsr-box{
   position:relative; width:min(96vw,880px); max-height:92vh; display:flex; flex-direction:column;
-  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(60,35,110,.3);
+  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(73,68,195,.3);
   font-family:'Kanit',sans-serif;
 }
 .xsr-head{font-size:18px; font-weight:600; color:#7d5fc0; padding-right:34px; line-height:1.35}
@@ -204,7 +204,7 @@
 /* ---------- แผงเลือกชุดข้อสอบ ---------- */
 .xsp-box{
   position:relative; width:min(96vw,760px); max-height:92vh; display:flex; flex-direction:column;
-  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(60,35,110,.3);
+  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(73,68,195,.3);
   font-family:'Kanit',sans-serif;
 }
 .xsp-head{font-size:18px; font-weight:600; color:#7d5fc0; padding-right:34px; line-height:1.35}
@@ -249,7 +249,7 @@
 /* ---------- แผงเลือกสนามสอบ (ทางลัดจากรางเมนู #btn-rail-examstd · รอบ 813) ---------- */
 .xsb-box{
   position:relative; width:min(94vw,560px); max-height:88vh; display:flex; flex-direction:column;
-  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(60,35,110,.3);
+  background:#fff; border-radius:18px; padding:14px 16px 12px; box-shadow:0 12px 40px rgba(73,68,195,.3);
   font-family:'Kanit',sans-serif;
 }
 .xsb-head{font-size:18px; font-weight:600; color:#7d5fc0; padding-right:34px; line-height:1.35}

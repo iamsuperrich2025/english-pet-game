@@ -227,7 +227,7 @@ html.no-anim .coin-flow .cf-c,.coin-pill.net.off .coin-flow .cf-c{transform:tran
 .tc-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;max-height:96vh;overflow-y:auto;}
 .tc-card{
   width:min(420px,92vw);box-sizing:border-box;background:#fff;border-radius:18px;overflow:hidden;
-  border:3px solid #6ec6ff;box-shadow:0 10px 34px rgba(20,60,120,.45);text-align:left;
+  border:3px solid #6ec6ff;box-shadow:0 10px 34px rgba(41,119,219,.45);text-align:left;
 }
 .tc-head{
   background:linear-gradient(135deg,#4fa8f5,#7c6bf0);color:#fff;text-align:center;
@@ -269,7 +269,7 @@ html.no-anim .coin-flow .cf-c,.coin-pill.net.off .coin-flow .cf-c{transform:tran
 .strip-x{
   display:flex;gap:10px;overflow-x:auto;overflow-y:hidden;flex:1;min-width:0;
   padding:10px;border-radius:14px;
-  background:linear-gradient(180deg,#16385e,#0f2c4e);
+  background:linear-gradient(180deg,#2f78c7,#256fc2);
   box-shadow:inset 0 2px 8px rgba(0,0,0,.35), inset 0 -1px 0 rgba(255,255,255,.08);
   scroll-snap-type:x proximity;scrollbar-width:none;
 }
@@ -279,7 +279,7 @@ html.no-anim .coin-flow .cf-c,.coin-pill.net.off .coin-flow .cf-c{transform:tran
   flex-shrink:0;width:34px;height:34px;border-radius:999px;cursor:pointer;
   background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;border:2px solid #cfe7fb;
   font-family:inherit;font-size:15px;font-weight:bold;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 2px 6px rgba(10,40,80,.35);transition:filter .12s;
+  box-shadow:0 2px 6px rgba(29,107,201,.35);transition:filter .12s;
 }
 .strip-arrow:hover{filter:brightness(1.1);}
 .strip-arrow:active{transform:scale(.92);}
@@ -777,7 +777,7 @@ html.no-anim body.quake{animation:none;}
 .fq-btns button:active{transform:translateY(2px);}
 .fq-yes,.fq-again{background:linear-gradient(180deg,#7ed49a,#4cb56d);box-shadow:0 4px 0 #368a50;}
 .fq-no{background:linear-gradient(180deg,#ff9a8f,#e8483f);box-shadow:0 4px 0 #b23028;}
-.fq-next{background:linear-gradient(180deg,#4f9de8,#2f7cc4);box-shadow:0 4px 0 #1f5c94;}
+.fq-next{background:linear-gradient(180deg,#4f9de8,#2f7cc4);box-shadow:0 4px 0 #4490d8;}
 .food-cancel{
   margin-top:12px;background:#efe8fa!important;color:#7a5ca8!important;
   box-shadow:0 4px 0 #cfc0e8!important;
@@ -915,7 +915,7 @@ html.no-anim body.quake{animation:none;}
 
 /* overlay สอนวิธีติดตั้ง (iOS / manual) */
 .install-guide-overlay{
-  position:fixed;inset:0;background:rgba(10,31,60,.55);z-index:130;
+  position:fixed;inset:0;background:rgba(31,100,186,.55);z-index:130;
   display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeIn .2s;
 }
 .install-guide{
@@ -1637,7 +1637,7 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 .update-banner{
   position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
   display:flex;align-items:center;gap:10px;
-  background:linear-gradient(135deg,#123a6b,#1e5aa8);color:#fff;
+  background:linear-gradient(135deg,#2478d7,#1e5aa8);color:#fff;
   padding:9px 12px 9px 18px;border-radius:999px;
   box-shadow:0 6px 20px rgba(0,0,0,.35);
   font-size:15px;white-space:nowrap;max-width:94vw;
@@ -1838,7 +1838,7 @@ html.no-anim *, html.no-anim *::before, html.no-anim *::after{
 #drive-card.shop-card::before{background:linear-gradient(90deg,#ff8a65,#e64a2e);}
 #soccer-card.shop-card::before{background:linear-gradient(90deg,#7ed957,#2e8b3d);}
 #moto-card.shop-card::before{background:linear-gradient(90deg,#ffcc4d,#e0932a);}
-#invasion-card.shop-card::before{background:linear-gradient(90deg,#9d7fe8,#3a2a6e);}
+#invasion-card.shop-card::before{background:linear-gradient(90deg,#9d7fe8,#494cc2);}
 .mkt-two-col .shop-title{
   font-size:15.5px;font-weight:800;letter-spacing:.2px;
   padding-bottom:8px;margin-bottom:10px;text-align:left;
@@ -1981,7 +1981,7 @@ html.no-anim .craft-go-btn::after{display:none;}
 .pass-photo img.pp-photo{width:100%;height:100%;margin:0;object-fit:cover;object-position:50% 45%;}
 .pl-photo{
   width:clamp(120px,22vh,180px);height:clamp(120px,22vh,180px);border-radius:50%;object-fit:cover;
-  border:4px solid #fff;box-shadow:0 6px 16px rgba(10,30,70,.35);background:#dfe9f7;
+  border:4px solid #fff;box-shadow:0 6px 16px rgba(28,93,195,.35);background:#dfe9f7;
 }
 /* ปุ่มกล้องมุมขวาล่างของรูป passport (สไตล์ Facebook) */
 .pp-cam{
@@ -1989,7 +1989,7 @@ html.no-anim .craft-go-btn::after{display:none;}
   position:absolute;right:2px;bottom:2px;width:18px;height:18px;padding:0;
   border:1.5px solid rgba(255,255,255,.85);border-radius:50%;cursor:pointer;
   background:linear-gradient(180deg,#4c9df0,#2f6fc4);color:#fff;
-  font-size:10px;line-height:1;box-shadow:0 2px 5px rgba(0,20,60,.45);
+  font-size:10px;line-height:1;box-shadow:0 2px 5px rgba(26,88,184,.45);
   display:flex;align-items:center;justify-content:center;
 }
 .pp-cam:active{transform:scale(.9);}
@@ -2044,14 +2044,14 @@ html.no-anim .craft-go-btn::after{display:none;}
 /* กรอบครอป: จัตุรัส ผูกกับ vh ด้วย — จอเตี้ย 812×375 ต้องยังพอดีไม่มี scrollbar (กฎทอง #7) */
 .ph-stage{
   position:relative;width:min(62vw,34vh,240px);height:min(62vw,34vh,240px);margin:0 auto;
-  border-radius:16px;overflow:hidden;background:#25304a;touch-action:none;cursor:grab;
+  border-radius:16px;overflow:hidden;background:#3d69b6;touch-action:none;cursor:grab;
 }
 .ph-stage:active{cursor:grabbing;}
 .ph-cv{display:block;width:100%;height:100%;}
 .ph-ring{
   position:absolute;inset:0;pointer-events:none;border-radius:16px;
   box-shadow:0 0 0 9999px rgba(0,0,0,0) inset;
-  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 49.5%, rgba(20,30,60,.42) 50%);
+  background:radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 49.5%, rgba(56,93,167,.42) 50%);
 }
 .ph-ring::after{
   content:'';position:absolute;inset:0;border-radius:50%;
