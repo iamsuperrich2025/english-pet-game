@@ -44,6 +44,24 @@ const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมก�
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
 const WHEEL_RATIO  = 2.2;    // อัตราทด: มุมล้อหน้าจริง (องศา) → องศาที่หมุนบนภาพ (สุดพวงมาลัย ~43°)
 const WHEEL_MAX_DEG= 44;     // เพดานองศา — เกินกว่านี้ภาพถ่ายมุมเดียวเริ่มดูบิดผิดรูป
+/* 🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย — ไฟในภาพถูก "ดับ" ไว้แล้วที่ img/f1/wheel_body.webp
+   เกมวาดดวงไฟจริงทับตรงตำแหน่งเดิมของภาพ (ตำแหน่งเป็น % เจนจาก tools/f1_split_leds.py)
+   ⚠️ เปลี่ยนภาพพวงมาลัยใหม่ = รันสคริปต์นั้นใหม่ แล้วเอาอาร์เรย์ F1_LEDS มาแทนของเดิม */
+const LED_GREEN_N  = 6;      // ดวงที่ 1-6 = เขียว (รอบต่ำ ยังลากได้อีก)
+const LED_AMBER_N  = 11;     // ดวงที่ 7-11 = เหลือง · ที่เหลือ = แดง (ใกล้เปลี่ยนเกียร์)
+const LED_SHIFT_R  = 0.93;   // วิ่งมาถึง 93% ของช่วงเกียร์นั้น = ติดเต็มแถบ+กะพริบ "เปลี่ยนเกียร์!"
+                             // วัดจากสัดส่วน "สด ๆ" ไม่ใช่ค่าหน่วง — ทุกเกียร์จึงเตือนเหมือนกัน (ค่าหน่วงทำให้เกียร์ต่ำ ๆ ไม่ทันกะพริบ)
+const LED_FLASH_HZ = 7;      // ความถี่กะพริบ (ครั้ง/วิ)
+const LED_K_LO     = 0.30;   // ⚙️ สเกลเดียวกับแถบรอบเครื่องบนจอ (รอบ 916) — ไฟดวงแรกติดตอนเริ่มมีภาระจริง
+const LED_K_SPAN   = 0.66;   //    ไฟบนขอบพวงมาลัยกับตัวเลข "รอบ/นาที" บนจอจึงวิ่งพร้อมกันเสมอ
+const LED_RPM_LERP = 8;      // ใช้เฉพาะกรณีจอวาดไม่ได้ (ถอยไปคิดรอบเครื่องเอง สูตรเดียวกับเสียงเครื่องยนต์)
+const F1_LEDS = [   // [left%, top%, width%, height%] ของภาพพวงมาลัย 1536×1024
+  [43.034,49.512,0.651,0.684],[43.750,49.316,0.521,0.879],[44.596,49.219,0.716,0.879],
+  [45.378,49.219,0.781,0.781],[46.354,49.219,0.781,0.781],[47.331,49.121,0.846,0.781],
+  [48.307,49.121,0.846,0.781],[49.349,49.121,0.846,0.781],[50.391,49.121,0.846,0.781],
+  [51.367,49.121,0.846,0.781],[52.409,49.121,0.846,0.781],[53.451,49.121,0.781,0.879],
+  [54.362,49.219,0.911,0.781],[55.208,49.121,0.781,0.977],[56.120,49.316,0.716,0.879]
+];
 /* 🔢 รอบ 916: จอบนพวงมาลัยเป็น "ของจริง" — วาดเกียร์/ความเร็ว/รอบเครื่องด้วย canvas ทับเลขที่ติดมาในภาพ
    พิกัดวัดจาก wheel.webp (1536×1024) ตรง ๆ แล้วแปลงเป็นสัดส่วนของกรอบภาพ → ทับตรงทุกขนาดจอ */
 const WHEEL_IMG_W = 1536, WHEEL_IMG_H = 1024;   // ขนาดจริงของ wheel.webp / cockpit_body.webp (เท่ากันเสมอ)
@@ -129,6 +147,7 @@ let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
 let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
+let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
 let wheelShakeOn=false;                                  // 🫨🎡 รอบ 914 — เฟรมก่อนหน้ามีการสั่นค้างไหม (กันสั่นค้างตอนกลับเข้าแทร็กเรียบ)
 let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
@@ -940,6 +959,14 @@ const CSS=`
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
 #f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
+/* 🚥 รอบ 918: ชั้นดวงไฟ LED บนพวงมาลัย — กรอบ/จุดหมุน/การหมุน ใช้ชุดเดียวกับ <img> พวงมาลัยเป๊ะ */
+#f1-leds{position:absolute;left:0;top:0;display:block;pointer-events:none;will-change:transform}
+#f1-leds i{position:absolute;border-radius:22%;opacity:0}
+#f1-leds i.on{opacity:1}
+#f1-leds i.g{background:#3dff72;box-shadow:0 0 5px 1px rgba(61,255,114,.9)}
+#f1-leds i.y{background:#ffd12e;box-shadow:0 0 5px 1px rgba(255,209,46,.9)}
+#f1-leds i.r{background:#ff3b2f;box-shadow:0 0 6px 2px rgba(255,59,47,.95)}
+#f1-leds i.f{background:#fff;box-shadow:0 0 8px 3px rgba(255,70,60,.95)}
 /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — วางทับเฉพาะ "กรอบจอ" แล้วหมุนไปพร้อมพวงมาลัย (transform เดียวกัน) */
 #f1-dash{z-index:1}
 /* จอกว้างเตี้ย (มือถือแนวนอน) — cover จะเอาค็อกพิทบังเต็มจอ: ตรึงขอบบน (halo อยู่ครบ) + สูง 128%
@@ -1115,7 +1142,7 @@ function buildDom(){
   wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
   wrapEl.innerHTML=`
     <canvas id="f1-cv"></canvas>
-    <div id="f1-cockpit"><img id="f1-wheel" alt=""><canvas id="f1-dash"></canvas></div>
+    <div id="f1-cockpit"><img id="f1-wheel" alt=""><div id="f1-leds"></div><canvas id="f1-dash"></canvas></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
     <div id="f1-topright">
@@ -1212,11 +1239,14 @@ function buildDom(){
   /* 🎡 รอบ 913: ชั้นพวงมาลัย — โหลดไม่ได้ = ถอยไปใช้ภาพเดิมที่มีพวงมาลัยติดมาในตัว (ไม่ให้เหลือค็อกพิทไม่มีพวงมาลัย) */
   wheelEl=wrapEl.querySelector('#f1-wheel');
   wheelEl.addEventListener('error',()=>{
-    wheelEl.style.display='none'; wheelEl=null;
+    /* 🚥 รอบ 918: ภาพไฟดับโหลดไม่ได้ → ถอยไป wheel.webp (ไฟติดตายในภาพ) แล้วเลิกวาดดวงไฟ */
+    if(wheelEl.src.indexOf('wheel_body')>=0){ ledsOff(); wheelEl.src='img/f1/wheel.webp'; return; }
+    wheelEl.style.display='none'; wheelEl=null; ledsOff();
     cockpitEl.style.backgroundImage="url('img/f1/cockpit.webp')";
   });
   wheelEl.addEventListener('load',layoutWheel);
-  wheelEl.src='img/f1/wheel.webp';
+  buildLeds();                         // 🚥 รอบ 918 — สร้างดวงไฟก่อนโหลดภาพ
+  wheelEl.src='img/f1/wheel_body.webp';   // 🚥 รอบ 918 — ภาพที่ไฟดับหมด (ไฟจริงเกมวาดเอง)
   /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — เครื่องที่ไม่มี canvas 2d ก็ปล่อยจอในภาพไปตามเดิม ไม่ให้ทั้งโลกพัง */
   dashEl=wrapEl.querySelector('#f1-dash');
   dashCtx=(dashEl&&dashEl.getContext)?dashEl.getContext('2d'):null;
@@ -2672,6 +2702,11 @@ function layoutWheel(){
   wheelEl.style.left=b.left+'px';
   wheelEl.style.top =b.top+'px';
   wheelEl.style.transformOrigin=WHEEL_HUB_X+'% '+WHEEL_HUB_Y+'%';
+  if(ledsEl){                    // 🚥 รอบ 918 — ชั้นดวงไฟใช้กรอบ/จุดหมุนเดียวกับพวงมาลัยเป๊ะ
+    ledsEl.style.width=wheelEl.style.width;  ledsEl.style.height=wheelEl.style.height;
+    ledsEl.style.left =wheelEl.style.left;   ledsEl.style.top   =wheelEl.style.top;
+    ledsEl.style.transformOrigin=wheelEl.style.transformOrigin;
+  }
   /* จอกว้างเตี้ยยืดภาพแนวตั้ง (100% 128%) — ถ้าหมุนตรง ๆ พวงมาลัยจะบิดผิดรูประหว่างหมุน
      จึง "คลายการยืด → หมุน → ยืดกลับ" ให้หมุนในสัดส่วนจริงของภาพ (cover = 1 พอดี ไม่มีผล) */
   wheelSy=b.sy;
@@ -2698,6 +2733,7 @@ function wheelTick(){
   const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
   wheelEl.style.transform=tr;
+  if(ledsEl) ledsEl.style.transform=wheelEl.style.transform;   // 🚥 รอบ 918 — ดวงไฟหมุนไปกับพวงมาลัย
   if(dashEl) dashEl.style.transform=tr;   // 🔢 รอบ 916 — จอตัวเลขติดไปกับพวงมาลัย (หมุน/สั่นก้อนเดียวกัน แกนเดียวกัน)
 }
 /* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
@@ -2802,20 +2838,11 @@ function drawDash(d){
   c.setTransform(dashK,0,0,dashK,0,0);
   c.clearRect(0,0,W,H);
   c.textBaseline='middle';
-  /* ── แถบไฟรอบเครื่องบนขอบพวงมาลัย (เขียว → แดง → น้ำเงินตอนตัดรอบ เหมือนรถแข่งจริง) ── */
-  c.fillStyle='#0b0e13';                                   // รางไฟทึบ — ต้องปูก่อน ไม่งั้นขีดสีส้มที่วาดติดมาในภาพโผล่ตามร่องระหว่างดวง
-  dashRR(c,7,2,212,11,2.5); c.fill();
-  const lx=9, lw=208, lh=8, ly=3.5, step=lw/DASH_LED_N;
-  for(let i=0;i<DASH_LED_N;i++){
-    const on=i<d.nLed;
-    let col='#191c22';
-    if(on) col=d.blink?'#eaf6ff':(i<5?'#2fe06a':(i<10?'#ff3131':'#4aa8ff'));
-    c.fillStyle=col;
-    dashRR(c,lx+i*step+1,ly,step-2,lh,1.5); c.fill();
-  }
+  /* ── 🚥 รอบ 918: แถบไฟรอบเครื่องเลิกวาดบน canvas แล้ว — ใช้ "ดวงไฟจริงของภาพ" (ledTick) แทน
+        โซนนี้ต้องปล่อยโปร่งไว้เสมอ ห้ามวาดทับ ไม่งั้นบังดวงไฟที่อยู่ชั้นล่าง ── */
   /* ── ตัวจอ LCD (ทึบ = ทับเลขที่ติดมากับภาพให้หมด) ── */
   c.fillStyle='#04070c';
-  dashRR(c,4,11,226,105,5); c.fill();
+  dashRR(c,4,14,226,102,5); c.fill();   // 🚥 รอบ 918 — ขอบบนหลบดวงไฟจริงที่อยู่เหนือจอ
   c.strokeStyle='rgba(150,175,200,.32)'; c.lineWidth=1; c.stroke();
   /* ── ครึ่งบน: เกียร์ (ใหญ่สุด เด็กอ่านง่าย) + ความเร็ว + เวลาต่อรอบ ── */
   c.textAlign='center';
@@ -2858,6 +2885,50 @@ function drawDash(d){
     c.restore();
   }
   c.strokeStyle='rgba(150,175,200,.22)'; dashRR(c,bx,by,bw,bh,3); c.stroke();
+}
+/* ============================================================
+   🚥 รอบ 918: แถบไฟ LED รอบเครื่องบนพวงมาลัย (เขียว → เหลือง → แดง ตอนใกล้เปลี่ยนเกียร์)
+   ภาพ img/f1/wheel_body.webp = พวงมาลัยที่ไฟดับหมด (หรี่ด้วย tools/f1_split_leds.py)
+   ดวงไฟจริงเป็น <i> วางทับตำแหน่งเดิมในภาพ → หมุน/ย่อ-ขยายไปกับพวงมาลัยเสมอ (layoutWheel/wheelTick)
+   ============================================================ */
+function buildLeds(){
+  ledsEl=wrapEl.querySelector('#f1-leds'); if(!ledsEl) return;
+  ledsEl.innerHTML=F1_LEDS.map(([x,y,w,h])=>
+    `<i style="left:${x}%;top:${y}%;width:${w}%;height:${h}%"></i>`).join('');
+  ledEls=[...ledsEl.querySelectorAll('i')];
+  ledN=-1;
+}
+/* ภาพ "ไฟดับ" ใช้ไม่ได้ → เลิกวาดดวงไฟ (ภาพสำรองมีไฟติดตายอยู่แล้ว วาดทับจะกลายเป็นไฟค้าง) */
+function ledsOff(){
+  if(ledsEl) ledsEl.style.display='none';
+  ledEls=[]; ledN=-1;
+}
+function ledTick(dt){
+  if(!ledsEl||!ledEls.length||camMode!=='cockpit') return;
+  /* รอบเครื่อง: ใช้ค่าเดียวกับจอบนพวงมาลัย (dashRpm รอบ 916 — คิดเร่งเครื่องตอนจอด/เกียร์ถอยไว้ให้แล้ว)
+     → ไฟบนขอบพวงมาลัยกับเลข "รอบ/นาที" บนจอ ตรงกันเสมอ ไม่มีทางเถียงกันเอง
+     ไม่มีจอ (canvas วาดไม่ได้) = ถอยไปคิดเองจากเกียร์+ความเร็ว สูตรเดียวกับเสียงเครื่องยนต์ */
+  if(dashCtx) ledRpm=dashRpm;
+  else{
+    const v=Math.abs(spd), g=gearOf(v), gLo=GEARS[g-1]||0, gHi=GEARS[g]||92;
+    ledRpm=lerp(ledRpm,0.25+clamp((v-gLo)/Math.max(1,gHi-gLo),0,1)*0.75,clamp(dt*LED_RPM_LERP,0,1));
+  }
+  const k=clamp((ledRpm-LED_K_LO)/LED_K_SPAN,0,1);    // 0 = ยังไม่มีภาระ · 1 = ถึงจุดตัดรอบ
+  /* "ใกล้เปลี่ยนเกียร์" วัดจากตำแหน่งในเกียร์แบบสด ๆ — ทุกเกียร์ต้องผ่านจุดนี้ก่อนขึ้นเกียร์เสมอ
+     (ถ้าวัดจากค่าหน่วง ไฟจะไม่ทันติดในเกียร์ต่ำที่รถกระชากขึ้นเกียร์เร็ว) */
+  const sv=Math.abs(spd), sg=gearOf(sv), sLo=GEARS[sg-1]||0, sHi=GEARS[sg]||92;
+  const shift=!revNow&&sv>=0.6&&clamp((sv-sLo)/Math.max(1,sHi-sLo),0,1)>=LED_SHIFT_R;
+  const n=shift?ledEls.length:Math.round(k*ledEls.length);
+  if(shift){ ledFlashT+=dt; const half=0.5/LED_FLASH_HZ; if(ledFlashT>=half){ ledFlashT-=half; ledFlash=!ledFlash; } }   // ลบทีละครึ่งคาบ ไม่ล้างทิ้ง — จังหวะกะพริบไม่เพี้ยนตามเฟรมเรต
+  else if(ledFlash||ledFlashT){ ledFlashT=0; ledFlash=false; }
+  const sig=n+'|'+(shift?(ledFlash?2:1):0);
+  if(sig===ledN) return;                              // ไม่มีอะไรเปลี่ยน = ไม่แตะ DOM (ทุกเฟรม)
+  ledN=sig;
+  for(let i=0;i<ledEls.length;i++){
+    ledEls[i].className = i>=n ? ''
+      : (shift ? (ledFlash?'on f':'on r')
+               : 'on '+(i<LED_GREEN_N?'g':(i<LED_AMBER_N?'y':'r')));
+  }
 }
 function camTick(dt){
   if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 915)
@@ -2922,6 +2993,7 @@ function frame(dt,now){
   camTick(dt);
   wheelTick();             // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
   dashTick(dt);            // 🔢 รอบ 916 — จอเกียร์/ความเร็ว/รอบเครื่องบนพวงมาลัย (ต้องมาหลัง wheelTick ให้ transform ตรงเฟรมเดียวกัน)
+  ledTick(dt);             // 🚥 รอบ 918 — ไฟบนขอบพวงมาลัย (ต้องมาหลัง dashTick: ใช้ dashRpm ก้อนเดียวกัน)
   hudTick();
   netSend(false);
   if(now-mapAt>200){ mapAt=now; drawMap(); }
@@ -3105,6 +3177,9 @@ window.F1World={
         bg:getComputedStyle(cockpitEl).backgroundImage,
         bs:getComputedStyle(cockpitEl).backgroundSize,bp:getComputedStyle(cockpitEl).backgroundPosition}; },
     layoutWheel, wheelTick,
+    ledTick, buildLeds, ledsOff,                                  // 🚥 รอบ 918
+    get ledSig(){return ledN;}, get ledRpm(){return ledRpm;},
+    get ledCls(){return ledEls.map(e=>e.className);},
     /* 🔢 รอบ 916 — จอตัวเลขบนพวงมาลัย */
     get dash(){ if(!dashEl) return {el:null};
       const r=dashEl.getBoundingClientRect();
