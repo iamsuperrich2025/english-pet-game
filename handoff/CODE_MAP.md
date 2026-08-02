@@ -200,7 +200,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (2,494 บรรทัด · 156 รายการ)
+## js/city3d.js (2,497 บรรทัด · 157 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -218,8 +218,8 @@ certStripHTML:633 · certBindStrip:647
 - 2007-2024 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
 - 2025-2186 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
 - 2187-2312 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 2313-2356 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
-- 2357-2494 🚀 BOOT
+- 2313-2359 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
+- 2360-2497 🚀 BOOT
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
 hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
@@ -246,7 +246,8 @@ rememberDoor:2018 · lastDoorKey:2019 · WALK_SPD:2031 · WALK_MIN:2032 · WALK_
 RECEPTION_SPOT:2038 · doorSpotOf:2039 · walkPose:2050 · footCtx:2065 · footStepSfx:2070 · footDustTexture:2091
 footDustPuff:2100 · footDustTick:2114 · FOOT_STEP_DIST:2129 · walkSelfTo:2131 · onTap:2190 · travelTo:2207
 sparkleAt:2241 · openProfile:2265 · refreshChip:2304 · setChip:2308 · BGM_KEY:2319 · bgmWant:2321
-bgmEnsure:2322 · bgmPlay:2329 · bgmRefreshBtn:2330 · bgmToggle:2337 · bgmSetup:2342 · boot:2360
+bgmEnsure:2322 · BGM_DEV:2331 · bgmPlay:2332 · bgmRefreshBtn:2333 · bgmToggle:2340 · bgmSetup:2345
+boot:2363
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
