@@ -20,6 +20,56 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/lobby.css">
 <link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
+<!-- 🌙 รอบ 882: โหมดกลางคืนล็อบบี้ (โทนอุ่นมืดลง) — วางไว้ตรงนี้ (ก่อน <body>) เพื่อใส่คลาส `night`
+     ตั้งแต่ก่อน paint แรก ไม่งั้นจอสว่างวาบก่อนแล้วค่อยมืด · หน้าตาทั้งหมดอยู่ใน css/lobby.css โซน 🌙 รอบ 882
+     กติกา: ค่าอัตโนมัติ = กลางคืนช่วง 19:00-06:00 · กดปุ่ม 🌙 = ตั้งเอง จำใน localStorage 'vwNightUi' ('1'/'0')
+     ค่าที่ตั้งเองจะถูกล้างทิ้งเองเมื่อ "นาฬิกาเดินมาตรงกับที่ตั้งไว้" (เช่นปิดกลางคืนตอน 2 ทุ่ม → พอ 6 โมงเช้า
+     ที่ระบบก็ว่ากลางวันอยู่แล้ว ถือว่าหมดหน้าที่ กลับเป็นอัตโนมัติ) — ปุ่มบอกสถานะนี้ใน title เสมอ (กฎทอง #1) -->
+<script>
+(function(){
+  var KEY='vwNightUi';
+  function autoNight(){ var h=new Date().getHours(); return h>=19 || h<6; }
+  function stored(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function paint(){
+    var s=stored(), auto=autoNight();
+    // ค่าที่ตั้งเองตรงกับอัตโนมัติแล้ว = หมดหน้าที่ ล้างกลับเป็นอัตโนมัติ
+    if((s==='1')===auto && (s==='1'||s==='0')){ try{ localStorage.removeItem(KEY); }catch(e){} s=null; }
+    var on = s==='1' ? true : s==='0' ? false : auto;
+    document.documentElement.classList.toggle('night', on);
+    var b=document.getElementById('btn-night');
+    if(b){
+      b.textContent = on ? '🌙' : '☀️';
+      b.title = (on ? 'ตอนนี้โหมดกลางคืน — แตะเพื่อกลับเป็นกลางวัน' : 'ตอนนี้โหมดกลางวัน — แตะเพื่อเป็นกลางคืน')
+              + ' · ปกติเปลี่ยนเองตอน 19:00-06:00'
+              + (s ? ' (ตอนนี้ตั้งเอง)' : ' (ตอนนี้อัตโนมัติ)');
+    }
+    return on;
+  }
+  window.NightUI={
+    paint:paint,
+    isNight:function(){ return document.documentElement.classList.contains('night'); },
+    toggle:function(){
+      var want=!document.documentElement.classList.contains('night');
+      try{ if(want===autoNight()) localStorage.removeItem(KEY); else localStorage.setItem(KEY, want?'1':'0'); }catch(e){}
+      return paint();
+    }
+  };
+  paint();
+  document.addEventListener('DOMContentLoaded', function(){
+    if(!document.getElementById('night-veil')){
+      var v=document.createElement('div'); v.id='night-veil'; document.body.appendChild(v);
+    }
+    var b=document.getElementById('btn-night');
+    if(b) b.addEventListener('click', function(){
+      window.NightUI.toggle();
+      if(typeof sfx!=='undefined' && sfx.select) sfx.select();
+    });
+    paint();
+  });
+  // อยู่โหมดอัตโนมัติ = พลิกให้เองตอน 19:00 / 06:00 ระหว่างที่เปิดเกมค้างไว้
+  setInterval(function(){ if(!stored()) paint(); }, 60000);
+})();
+</script>
 <!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —
      inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
      เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
@@ -233,6 +283,8 @@
       <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
       <!-- รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง — ปิดเพลงได้แต่ยังมีเสียงเอฟเฟกต์) -->
       <button class="icon-btn" id="btn-music" title="เปิด/ปิดเพลงพื้นหลัง">🎵</button>
+      <!-- 🌙 รอบ 882: ปุ่มสลับโหมดกลางคืน (ปกติเปลี่ยนเอง 19:00-06:00) — ตัวคุมอยู่ในสคริปต์ inline หัวไฟล์ -->
+      <button class="icon-btn" id="btn-night" title="โหมดกลางคืน">🌙</button>
       <button class="icon-btn" id="btn-settings" title="ตั้งค่า (เสียง/สั่น)">⚙️<span class="rail-badge" id="settings-badge" style="display:none"></span></button>
       <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
       <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>

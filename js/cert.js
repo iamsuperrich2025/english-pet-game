@@ -137,13 +137,14 @@ const CERT_LOGO_SRC = {
 /* ============================================================
    💾 คลังใบประกาศในเซฟ (state.certs) — 1 ใบต่อ 1 หมวด (สอบซ้ำ = อัปเดตคะแนนดีที่สุด)
    ============================================================ */
-function certAward(cat, score, total, sec){
+function certAward(cat, score, total, sec, timed){
   if(typeof state === 'undefined' || !cat) return null;
   if(!Array.isArray(state.certs)) state.certs = [];
   const ti = certTitleOf(cat.name);
   const old = state.certs.find(x=>x.id === cat.id);
   if(old){
     old.n = (old.n || 1) + 1;                       // สอบผ่านซ้ำกี่ครั้ง
+    if(timed) old.timed = true;                     // ⏱️ รอบ 820: เคยผ่านแบบจับเวลาจริงครั้งไหนก็ติดตราถาวร ไม่หายแม้รอบหลังผ่านด้วยโหมดอื่น
     if(score / total > old.sc / old.tt){
       old.sc = score; old.tt = total; old.ts = Date.now();
       if(sec) old.sec = sec;                        // ⏱️ คะแนนดีขึ้น = เวลาของรอบนั้นขึ้นใบด้วย
@@ -156,6 +157,7 @@ function certAward(cat, score, total, sec){
   if(ti.big) c.big = ti.big;                        // 🏅 ใบสอบใหญ่ — วาดต่างจากใบสอบ 10 ข้อ (certSVG)
   if(ti.std) c.std = true;                          // 📋 รอบ 812: ใบข้อสอบมาตรฐาน — เปลี่ยนคำประกาศบนใบ (ไม่ใช่ข้อสอบคำศัพท์)
   if(sec) c.sec = sec;                              // ⏱️ รอบ 777: เวลาที่ใช้สอบ (วินาที) — พิมพ์บนใบ
+  if(timed) c.timed = true;                         // ⏱️ รอบ 820: ผ่านครั้งแรกก็เป็นแบบจับเวลาจริงเลย — ติดตราตั้งแต่ใบแรก
   state.certs.unshift(c);
   if(state.certs.length > CERT_MAX) state.certs.length = CERT_MAX;
   return c;
@@ -285,6 +287,16 @@ function certFit(txt, base, maxW){
   const n = String(txt || '').length || 1;
   return Math.max(20, Math.min(base, Math.round(maxW / (n * 0.56))));
 }
+/* ⏱️ รอบ 820: บรรทัดที่มีอิโมจิ (🥇/⏱) วัดด้วยสูตรนับตัวอักษรของ certFit ไม่แม่น (อิโมจิกว้างกว่าตัวหนังสือปกติมาก
+   เจอจริงตอนเทสต์ — บรรทัด "TIMED EXAM" ล้นกรอบใบทั้งที่ certFit บอกว่าพอ) → วัดความกว้างจริงด้วย canvas แทน */
+function certFitMeasured(txt, base, maxW){
+  certFitMeasured.ctx = certFitMeasured.ctx || document.createElement('canvas').getContext('2d');
+  const ctx = certFitMeasured.ctx;
+  ctx.font = `${base}px Georgia,'Times New Roman',serif`;
+  const w = ctx.measureText(txt).width;
+  if(w <= maxW) return base;
+  return Math.max(16, Math.floor(base * maxW / w));
+}
 /* ผู้รับใบ: ชื่อเล่น + 🆔 + สัญลักษณ์ระดับชั้น (กฎคุ้มครองเด็ก — ไม่มีชื่อจริง/ตัวเลขชั้น) */
 function certHolder(c){
   const meUid = (typeof onlineKey === 'function') ? onlineKey() : '';
@@ -332,6 +344,13 @@ function certSVG(c, opt){
   // 🥇 รอบ 726: ระดับใบ (ทอง/เงิน/ทองแดง) — เฉพาะใบสอบผ่านปกติ (mastery/supreme แดงมีโทนของตัวเองอยู่แล้ว)
   const tier = (gold || supreme) ? 'gold' : certTier(c);
   const tm = CERT_TIER_META[tier];
+  /* ⏱️ รอบ 820: ตรา "TIMED" — เคยสอบผ่านชุดนี้ภายใต้เวลาจริงอย่างน้อยครั้งหนึ่ง (c.timed ติดถาวรใน certAward)
+     เฉพาะใบข้อสอบมาตรฐาน (c.std) เท่านั้น เพราะ 2 บรรทัดที่แทรกคำนี้ (สอบผ่านปกติ) ใช้ layout เดียวกับใบสอบคำศัพท์ */
+  const timedTag = !!(c.timed && c.std);
+  const scoreLnPlain = `with a score of ${c.sc}/${c.tt} (${pct}%) ${tm.emoji} ${tm.label}${timedTag ? ' · ⏱ TIMED EXAM' : ''}`;
+  const scoreLnFs = timedTag ? certFitMeasured(scoreLnPlain, 25, 560) : 25;
+  const tierLnPlain = `${tm.emoji} ${tm.label}${timedTag ? ' · ⏱ TIMED' : ''}`;
+  const tierLnFs = timedTag ? certFitMeasured(tierLnPlain, 26, 540) : 26;
   const ringClr = gold ? '#8a2331' : (tier === 'silver' ? '#8a93a0' : tier === 'bronze' ? '#a9672f' : '#c8a13c');
   const sealStroke = gold ? '#5e1420' : (tier === 'silver' ? '#5a6169' : tier === 'bronze' ? '#5e3814' : '#a8801f');
   const shieldStops = tier === 'silver'
@@ -468,8 +487,8 @@ function certSVG(c, opt){
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="710" text-anchor="middle" font-size="${subFs}" fill="#6b5836"
       font-family="${big ? "Georgia,'Times New Roman',serif" : 'inherit'}" letter-spacing="${big ? 1.5 : 0}">${sub}</text>
-    <text x="350" y="772" text-anchor="middle" font-size="25" fill="#4a3f2a"
-      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%) <tspan font-weight="bold" fill="${ringClr}">${tm.emoji} ${tm.label}</tspan></text>
+    <text x="350" y="772" text-anchor="middle" font-size="${scoreLnFs}" fill="#4a3f2a"
+      font-family="Georgia,'Times New Roman',serif">with a score of <tspan font-weight="bold" fill="${accent}">${c.sc}/${c.tt}</tspan> (${pct}%) <tspan font-weight="bold" fill="${ringClr}">${tm.emoji} ${tm.label}</tspan>${timedTag ? `<tspan font-weight="bold" fill="#c0562a"> · ⏱ TIMED EXAM</tspan>` : ''}</text>
     <text x="350" y="812" text-anchor="middle" font-size="23" fill="#6b5836"
       font-family="Georgia,'Times New Roman',serif">Awarded on ${certDateEN(c.ts)}${secTxt ? ` · completed in ${secTxt}` : ''}</text>
     <text x="350" y="838" text-anchor="middle" font-size="17" fill="#8a7440"
@@ -521,8 +540,8 @@ function certSVG(c, opt){
       font-family="Georgia,'Times New Roman',serif" letter-spacing="1">${topic}</text>
     <text x="350" y="676" text-anchor="middle" font-size="${subFs}" fill="#6b5836"
       font-family="${big ? "Georgia,'Times New Roman',serif" : 'inherit'}" letter-spacing="${big ? 1.5 : 0}">${sub}</text>
-    <text x="350" y="730" text-anchor="middle" font-size="26" font-weight="bold" fill="${ringClr}"
-      font-family="Georgia,'Times New Roman',serif" letter-spacing="1.5">${tm.emoji} ${tm.label}</text>
+    <text x="350" y="730" text-anchor="middle" font-size="${tierLnFs}" font-weight="bold" fill="${ringClr}"
+      font-family="Georgia,'Times New Roman',serif" letter-spacing="1.5">${tm.emoji} ${tm.label}${timedTag ? ' · ⏱ TIMED' : ''}</text>
     <text x="350" y="782" text-anchor="middle" font-size="52" font-weight="bold" fill="${accent}"
       font-family="Georgia,'Times New Roman',serif">${c.sc}/${c.tt}${secTxt ? `<tspan font-size="30" fill="#6b5836">   ⏱ ${secTxt}</tspan>` : ''}</text>
     <text x="350" y="828" text-anchor="middle" font-size="30" fill="#6b5836"
@@ -581,7 +600,8 @@ function certChipHTML(c){
       <small>${c.tt} sets · ${certXML(certDateEN(c.ts))}</small></span>`;
   }
   const tm = CERT_TIER_META[certTier(c)];              // 🥇 รอบ 726: เหรียญตามระดับแทนดาว/ไอคอนกลาง ๆ
-  return `<span class="cert-chip-sm"><b>${tm.emoji} ${certXML(c.t)}${c.big ? ' · ' + certXML(c.big) : ''}</b>
+  return `<span class="cert-chip-sm"><b>${tm.emoji} ${certXML(c.t)}${c.big ? ' · ' + certXML(c.big) : ''}${
+    (c.timed && c.std) ? ' ⏱' : ''}</b>
     <small>${c.sc}/${c.tt} · ${certXML(certDateEN(c.ts))}</small></span>`;
 }
 
@@ -620,7 +640,7 @@ function certStripHTML(list, me){
       title="${certXML(c.t)} — แตะดูใบใหญ่">
       ${certSVG(c)}
       <span class="cert-mini-cap">${(c.gold || c.supreme) ? '👑 ' : CERT_TIER_META[certTier(c)].emoji + ' '}${certXML(c.t)}${
-        c.big ? ' · ' + certXML(c.big) : ''}${c.n > 1 ? ` ×${c.n}` : ''}</span>
+        c.big ? ' · ' + certXML(c.big) : ''}${(c.timed && c.std) ? ' ⏱' : ''}${c.n > 1 ? ` ×${c.n}` : ''}</span>
     </button>`).join('');
 }
 /* ผูกปุ่มใบประกาศทุกใบในกล่องหนึ่ง ๆ → แตะแล้วเปิดใบใหญ่ */
