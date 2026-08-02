@@ -653,8 +653,13 @@ function glbEnsure(cb){
   if(glbTried||typeof THREE.GLTFLoader==='undefined') return cb(null);
   glbTried=true;
   try{
-    new THREE.GLTFLoader().load('img/models/f1_car.glb',
-      g=>{ glbSrc=g.scene; cb(glbSrc); }, undefined, ()=>cb(null));
+    const ld=new THREE.GLTFLoader();
+    /* รอบ 898: โหลดตัว lite ก่อน (1.7MB · tex 1K — gltf-transform weld+simplify .5+resize จากไฟล์ผู้ใช้)
+       ไม่มี/พัง → ตัวเต็ม f1_car.glb (3.4MB) → ไม่มีอีก = รถประกอบเอง */
+    ld.load('img/models/f1_car_lite.glb',
+      g=>{ glbSrc=g.scene; cb(glbSrc); }, undefined,
+      ()=>ld.load('img/models/f1_car.glb',
+        g=>{ glbSrc=g.scene; cb(glbSrc); }, undefined, ()=>cb(null)));
   }catch(e){ cb(null); }
 }
 function buildF1Car(color){
@@ -740,8 +745,9 @@ function makeCar(color,cb){
     const k=5.4/L; m.scale.setScalar(k);
     const b2=new THREE.Box3().setFromObject(m);
     m.position.y-=b2.min.y;
-    /* หันหน้า +Z (GLB ส่วนใหญ่หน้าคือ -Z → หมุนถ้ายาวตามแกน Z) */
-    if(size.z>=size.x) m.rotation.y=Math.PI;
+    /* ทิศหัวรถ: Tripo หันหน้า +Z ตรงกับแกนเกมอยู่แล้ว (พิสูจน์ด้วยภาพรอบ 898 — เดิมหมุน PI แล้วรถวิ่งถอยหลัง)
+       โมเดลที่ยาวตามแกน X (นอน横) ค่อยหมุนตั้งให้ */
+    if(size.x>size.z) m.rotation.y=Math.PI/2;
     g.add(m);
     g.userData.wheels=[]; g.userData.front=[];
     cb(g);
@@ -946,18 +952,22 @@ function build(){
   },128,64);
   /* texture หลัก — probe img/f1/*.jpg (ภาพผู้ใช้เจน) ก่อน · ไม่มี = canvas ที่วาดเอง */
   TexLib.asphalt=asphaltTex();
-  texProbe('asphalt.jpg',TexLib.asphalt,t=>{ t.repeat.set(1,1); applyTex('asphalt',t); });
+  texProbe('asphalt.jpg',TexLib.asphalt,t=>{ t.repeat.set(1,1); applyTex('asphalt',t);
+    /* ภาพถ่ายยางมะตอยมักสว่างกว่าสนามจริงตอนกลางคืน — tint เข้มลงด้วย material.color (คูณกับ map) */
+    (TexUsers.asphalt||[]).forEach(m=>m.color.setHex(0x87898d)); });
   TexLib.kerb=kerbTex();
   TexLib.sand=sandTex();
   texProbe('sand.jpg',TexLib.sand,t=>{ t.repeat.set(60,60); applyTex('sand',t); });
+  /* ⚠️ UV ของ ExtrudeGeometry (อัฒจันทร์/พิท/หลังคา) เป็น "หน่วยเมตร" — repeat ต้องเป็นเศษส่วน
+     ไม่งั้นภาพถ่ายจะถูกปูซ้ำทุก 1 เมตร กลายเป็นลายจุด (canvas fallback จงใจปูถี่ ไม่ต้องแก้) */
   TexLib.crowd=crowdTex();
-  texProbe('crowd.jpg',TexLib.crowd,t=>{ t.repeat.set(1,1); applyTex('crowd',t); });
+  texProbe('crowd.jpg',TexLib.crowd,t=>{ t.repeat.set(1/35,1/8.5); applyTex('crowd',t); });
   TexLib.garage=garageTex();
-  texProbe('pit.jpg',TexLib.garage,t=>{ t.repeat.set(1,1); applyTex('garage',t); });
+  texProbe('pit.jpg',TexLib.garage,t=>{ t.repeat.set(1/22,1/11); applyTex('garage',t); });
   TexLib.tower=towerTex();
   texProbe('tower.jpg',TexLib.tower,t=>{ t.repeat.set(3,1); applyTex('tower',t); });
   TexLib.tent=tentTex();
-  texProbe('tent.jpg',TexLib.tent,t=>{ t.repeat.set(1,1); applyTex('tent',t); });
+  texProbe('tent.jpg',TexLib.tent,t=>{ t.repeat.set(1/18,1/18); applyTex('tent',t); });
   TexLib.adGP=adTex('SAKHIR GRAND PRIX','#fff','#d81a1a');
   TexLib.adSakhir=adTex('BAHRAIN','#fff','#0a3b8c');
   TexLib.adVocab=adTex('VOCAB WORLD','#5c3500','#ffd12e');
