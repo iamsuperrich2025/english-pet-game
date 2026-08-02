@@ -279,7 +279,7 @@ XRK_ALL:674 · xrkSubmit:682 · xrkMerge:710 · xrkAllRows:729 · xrkFetch:747 �
 xrkNoteRefresh:784 · xrkAllRowHTML:793 · xrkBodyHTML:797 · xrkMount:812 · openExamStdRank:851 · examStdCardsHTML:868
 openExamStdBoard:903
 
-## js/f1_3d.js (3,116 บรรทัด · 242 รายการ)
+## js/f1_3d.js (3,130 บรรทัด · 242 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
 - 19-117 ⚙️ ค่าคงที่ (TUNE ZONE)
 - 118-160 📦 สถานะโลก
@@ -300,8 +300,8 @@ openExamStdBoard:903
 - 2394-2478 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
 - 2479-2628 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
 - 2629-2746 📷 กล้องไล่หลัง + ลูปเกม
-- 2747-2941 🔢 รอบ 915 — จอบนพวงมาลัยเป็น "ของจริง"
-- 2942-3116 🚪 เข้า/ออกโลก
+- 2747-2946 🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
+- 2947-3130 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:22 · LETTER_COIN:23 · LETTER_COPIES:24 · COLLECT_R:25 · DONE_KEY:26 · HALF_W:27
 KERB_W:28 · RUNOFF_W:29 · SAMPLE_M:30 · FP_EYE:32 · FP_FWD:33 · FP_LOOK:34
@@ -342,8 +342,8 @@ sendChat:2511 · peerColor:2518 · buildPeer:2522 · onPeer:2543 · showPeerBubb
 dropPeer:2576 · peerTick:2584 · netLeave:2604 · renderBoard:2608 · CAM_MODES:2634 · CAM_NEXT_LABEL:2635
 cycleCamMode:2636 · applyCamMode:2640 · buildFpWheels:2651 · fpWheelTick:2682 · cockpitBox:2695 · layoutWheel:2710
 wheelTick:2727 · DASH_FONT:2753 · layoutDash:2754 · dashRR:2768 · dashRpmTick:2775 · dashTick:2785
-drawDash:2800 · camTick:2858 · hudTick:2898 · frame:2909 · tick:2927 · fit:2934
-start:2945 · exitWorld:3009
+drawDash:2801 · camTick:2863 · hudTick:2903 · frame:2914 · tick:2932 · fit:2939
+start:2950 · exitWorld:3014
 
 ## js/game.js (1,115 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
@@ -653,7 +653,7 @@ openPhotoCrop:224
 
 ## js/sgaward.js (28 บรรทัด · 0 รายการ)
 
-## js/shootword.js (941 บรรทัด · 0 รายการ)
+## js/shootword.js (945 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,153 บรรทัด · 91 รายการ)
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
