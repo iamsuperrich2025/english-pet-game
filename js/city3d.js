@@ -2326,7 +2326,10 @@ function bgmEnsure(){
   }
   return bgmAudio;
 }
-function bgmPlay(){ if(bgmWant()) bgmEnsure().play().catch(()=>{}); }   // โดนบล็อก = เงียบไว้ รอ gesture
+/* 🔇 รอบ 876: บนเครื่อง dev (localhost) ไม่ autoplay — session ทดสอบหลายตัวเปิดพร้อมกันแล้วเพลงดังซ้อนกัน
+   รบกวนผู้ใช้จริง (เจอ 2 ส.ค.) · ผู้เล่นจริงบน vocabworld.web.app ไม่กระทบ ยังเล่นอัตโนมัติ · ปุ่ม 🎵 กดเล่นเองได้เสมอ */
+const BGM_DEV = /^(localhost|127\.)/.test(location.hostname);
+function bgmPlay(force){ if(bgmWant() && (!BGM_DEV || force)) bgmEnsure().play().catch(()=>{}); }   // โดนบล็อก = เงียบไว้ รอ gesture
 function bgmRefreshBtn(){
   if(!bgmBtn) return;
   const on = bgmWant();
@@ -2336,7 +2339,7 @@ function bgmRefreshBtn(){
 }
 function bgmToggle(){
   try{ localStorage.setItem(BGM_KEY, bgmWant()?'0':'1'); }catch(e){}
-  if(bgmWant()) bgmPlay(); else if(bgmAudio) bgmAudio.pause();
+  if(bgmWant()) bgmPlay(true); else if(bgmAudio) bgmAudio.pause();   // กดปุ่มเอง = เจตนาชัด เล่นได้แม้บน dev
   bgmRefreshBtn();
 }
 function bgmSetup(){

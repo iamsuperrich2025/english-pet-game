@@ -147,7 +147,7 @@
   <script src="js/data/firebase-config.js"></script>
   <!-- 🙊 รอบ 868: ตัวกรองคำหยาบชุดเดียวกับทั้งเกม (standalone ไม่พึ่งไฟล์อื่น) — ใช้ทั้งก่อนแสดงบับเบิลและก่อนส่ง -->
   <script src="js/data/badwords.js"></script>
-  <script src="js/city3d.js?v=873"></script>
+  <script src="js/city3d.js?v=876"></script>
   <script>
     setTimeout(()=>{ const h=document.getElementById('hint-chip'); if(h) h.classList.add('gone'); }, 12000);
     document.getElementById('profile-card').addEventListener('click', e=>{
@@ -158,6 +158,62 @@
     if('serviceWorker' in navigator && location.protocol.startsWith('http')){
       window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
     }
+  </script>
+
+  <!-- ✨ รอบ 876: แถบ "มีเกมเวอร์ชันใหม่" (ผู้ใช้สั่ง: เอาแบบล็อบบี้เดิมมาใส่เมือง 3D ด้วย)
+       ตรรกะเดียวกับ index_classic.html: เทียบ version.json ทุก 3 นาที · ครั้งแรกจำเวอร์ชันที่รัน (ไม่เด้งหลอก)
+       server เปลี่ยนเมื่อไหร่ → เด้งแถบให้กดรีโหลด · หน้านี้ไม่โหลด css/style.css เลยแนบ CSS หน้าตาเดิมมาในนี้ -->
+  <style>
+    .update-banner{
+      position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+      display:flex;align-items:center;gap:10px;
+      background:linear-gradient(135deg,#123a6b,#1e5aa8);color:#fff;
+      padding:9px 12px 9px 18px;border-radius:999px;
+      box-shadow:0 6px 20px rgba(0,0,0,.35);
+      font-size:15px;white-space:nowrap;max-width:94vw;
+      z-index:120;animation:ubFadeIn .3s;
+      font-family:system-ui,'Segoe UI',sans-serif}
+    .update-banner span{font-weight:bold}
+    .update-banner button{border:none;cursor:pointer;border-radius:999px;font-size:14px;font-family:inherit}
+    #update-reload{background:linear-gradient(135deg,#ffcf5c,#ffb01f);color:#5a3d00;font-weight:bold;padding:7px 14px}
+    #update-dismiss{background:rgba(255,255,255,.18);color:#fff;width:28px;height:28px;padding:0;line-height:1}
+    @keyframes ubFadeIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+  </style>
+  <script>
+  (function(){
+    if(!location.protocol.startsWith('http')) return;   // file:// ข้าม
+    var running = null;                                  // เวอร์ชันที่กำลังรันอยู่ (ตั้งจากการเช็กครั้งแรก)
+    function fetchVer(){
+      return fetch('version.json', {cache:'no-store'})   // no-store = ไม่เอาจาก HTTP cache (network-first ใน SW ดึงสดให้)
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(d){ return d && d.v != null ? String(d.v) : null; })
+        .catch(function(){ return null; });              // ออฟไลน์/ล้มเหลว → null (ไม่เด้งหลอก)
+    }
+    function showBanner(){
+      if(document.getElementById('update-banner')) return;   // โชว์อยู่แล้ว
+      var b = document.createElement('div');
+      b.id = 'update-banner'; b.className = 'update-banner';
+      b.innerHTML = '<span>✨ มีเกมเวอร์ชันใหม่!</span>'
+        + '<button id="update-reload">🔄 อัปเดตเลย</button>'
+        + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
+      document.body.appendChild(b);
+      b.querySelector('#update-reload').onclick = function(){ location.reload(); };
+      b.querySelector('#update-dismiss').onclick = function(){ b.remove(); };
+    }
+    function check(){
+      if(document.hidden) return;                        // อยู่แท็บอื่น → ข้าม
+      fetchVer().then(function(v){
+        if(!v) return;
+        if(running === null){ running = v; return; }     // ครั้งแรก = จำเวอร์ชันที่กำลังรัน (ไม่เด้ง)
+        if(v !== running) showBanner();                  // server เปลี่ยน → มีอัปเดต
+      });
+    }
+    window.addEventListener('load', check);
+    setInterval(check, 3 * 60 * 1000);                   // เช็กทุก 3 นาที
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden) check(); });
+    window.addEventListener('online', check);            // กลับมาออนไลน์ → เช็กทันที
+    window.__ubCheck = check;                            // 🧪 test hook (เรียกเช็กทันทีจาก eval)
+  })();
   </script>
 </body>
 </html>
