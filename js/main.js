@@ -414,6 +414,7 @@ document.addEventListener('visibilitychange', ()=>{
     clearInterval(t);
     try{ history.replaceState(null, '', location.pathname); }catch(e){}   // ล้าง param — refresh แล้วไม่เด้งซ้ำ
     bdShow();                                                             // 🖼️ รอบ 877: โชว์ตึกต่อเนื่องจากเมืองระหว่างรอเปิดหัวข้อ
+    if(window.__vwSplashPhoto && window.__hideAppSplash) window.__hideAppSplash();   // 🖼️ รอบ 883: จอเปิด(ภาพเดียวกัน)ครอส-เฟดเข้า city-backdrop ไม่มีรอยต่อ
     setTimeout(()=>{ try{ run(); }catch(e){ console.warn('go-link', e); } bdWatch(); }, 350);
   }, 400);
   setTimeout(()=>clearInterval(t), 180000);   // เกิน 3 นาทียังไม่ถึง Lobby (ค้าง login) = เลิกรอ

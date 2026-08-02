@@ -122,6 +122,18 @@
 @keyframes asPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.05);}}
 @keyframes asDot{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-5px);}}
 @media (prefers-reduced-motion:reduce){#app-splash .as-shield,#app-splash .as-dots i{animation:none;}#app-splash .as-beam,#app-splash .as-edge{display:none;}}
+
+/* 🖼️ รอบ 882: มาจากเมือง 3D (?go=) + มีภาพตึกฝากไว้ (sessionStorage vwCityShot) → จอเปิดใช้ภาพนั้นแทนพื้นน้ำเงินเปล่า
+   ค้างภาพยาวตลอดช่วงโหลด (ปกติซ่อนไวมาก) จนกว่า ?go= handler ท้าย js/main.js จะพร้อมเปิดหัวข้อที่ขอไว้ แล้วจาง
+   ครอส-เฟดเข้า #city-backdrop (ฟิลเตอร์เดียวกันเป๊ะ กันเห็นรอยต่อ) — โซนนั้นอยู่ท้าย css/lobby.css */
+#app-splash-photo{position:absolute;inset:0;background:#2959a4 center/cover no-repeat;
+  filter:blur(3px) brightness(.72);transform:scale(1.04);}
+#app-splash.photo .as-crest,#app-splash.photo .as-title{display:none;}
+#app-splash.photo::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(10,31,60,0) 45%,rgba(10,31,60,.7));}
+#app-splash.photo .as-sub{position:relative;color:#eaf3ff;background:rgba(10,26,54,.62);
+  border:1px solid rgba(120,190,255,.35);border-radius:999px;padding:6px 14px;backdrop-filter:blur(6px);}
+#app-splash.photo .as-dots{position:relative;}
 </style>
 </head>
 <body>
@@ -149,7 +161,26 @@
     el.classList.add('hide');
     setTimeout(function(){ el.remove(); }, 550);
   };
-  setTimeout(window.__hideAppSplash, 8000);   // กันค้าง — โหลดนานผิดปกติก็ยังเห็นเกมได้
+  /* 🖼️ รอบ 882: มาจากเมือง 3D (?go=) + มีภาพฝากไว้ → จอเปิดใช้ภาพนั้น ค้างไว้จน ?go= handler ท้าย js/main.js
+     สั่งจางเอง (ดูตรง bdShow ที่นั่น) — แค่ "แอบดู" sessionStorage ไม่ลบ (main.js เป็นคนลบครั้งเดียวตามเดิม) */
+  var photoMode = false;
+  try{
+    var go = new URLSearchParams(location.search).get('go');
+    var raw = go && sessionStorage.getItem('vwCityShot');
+    var s = raw && JSON.parse(raw);
+    if(go && s && s.k === go && s.img && Date.now()-s.ts < 5*60*1000){
+      photoMode = true;
+      var ph = document.createElement('div');
+      ph.id = 'app-splash-photo';
+      ph.style.backgroundImage = 'url("'+s.img+'")';
+      el.insertBefore(ph, el.firstChild);
+      el.classList.add('photo');
+      var sub = el.querySelector('.as-sub');
+      if(sub) sub.textContent = '🚪 กำลังเข้าเมนู…';
+      window.__vwSplashPhoto = true;   // main.js เช็กค่านี้ก่อนครอส-เฟดตอนหัวข้อพร้อม
+    }
+  }catch(e){}
+  setTimeout(window.__hideAppSplash, photoMode ? 20000 : 8000);   // กันค้าง — โหมดภาพรอนานกว่าเพราะรอเปิดหัวข้อด้วย
 })();
 </script>
 
@@ -541,8 +572,9 @@
 <script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
 <script src="js/music.js"></script>  <!-- ระบบเพลงพื้นหลัง + วิทยุในรถ (รอบ 181) -->
 <script src="js/main.js"></script>
-<!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash -->
-<script>if(window.__hideAppSplash) __hideAppSplash();</script>
+<!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash
+     🖼️ รอบ 882: โหมดภาพ (window.__vwSplashPhoto) ข้ามบรรทัดนี้ไปก่อน — ค้างจอเปิดไว้จน ?go= handler ท้าย js/main.js สั่งจางเอง -->
+<script>if(window.__hideAppSplash && !window.__vwSplashPhoto) __hideAppSplash();</script>
 <!-- ลงทะเบียน Service Worker (PWA) — เฉพาะ https/localhost เท่านั้น (file:// ไม่รองรับ) -->
 <script>
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
