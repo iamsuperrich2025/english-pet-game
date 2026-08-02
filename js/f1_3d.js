@@ -44,6 +44,13 @@ const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมก�
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
 const WHEEL_RATIO  = 2.2;    // อัตราทด: มุมล้อหน้าจริง (องศา) → องศาที่หมุนบนภาพ (สุดพวงมาลัย ~43°)
 const WHEEL_MAX_DEG= 44;     // เพดานองศา — เกินกว่านี้ภาพถ่ายมุมเดียวเริ่มดูบิดผิดรูป
+/* 🔢 รอบ 916: จอบนพวงมาลัยเป็น "ของจริง" — วาดเกียร์/ความเร็ว/รอบเครื่องด้วย canvas ทับเลขที่ติดมาในภาพ
+   พิกัดวัดจาก wheel.webp (1536×1024) ตรง ๆ แล้วแปลงเป็นสัดส่วนของกรอบภาพ → ทับตรงทุกขนาดจอ */
+const WHEEL_IMG_W = 1536, WHEEL_IMG_H = 1024;   // ขนาดจริงของ wheel.webp / cockpit_body.webp (เท่ากันเสมอ)
+const DASH_PX = {x:654, y:500, w:232, h:118};   // กรอบจอ (รวมแถบไฟรอบเครื่องด้านบน) เป็นพิกเซลของภาพต้นฉบับ
+const DASH_LED_N = 15;       // จำนวนดวงไฟรอบเครื่องบนขอบพวงมาลัย (ภาพต้นฉบับมี ~15 ขีด)
+const DASH_RPM_MIN = 3200;   // รอบเดินเบา (rpm) — ตัวเลขบนจอไล่จากนี่ถึง MAX ตามภาระเครื่องจริง
+const DASH_RPM_MAX = 15000;  // รอบสูงสุด (เครื่อง F1 จริงตัดที่ ~15,000)
 /* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
 const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
 const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
@@ -122,6 +129,7 @@ let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
 let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
+let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
 let wheelShakeOn=false;                                  // 🫨🎡 รอบ 914 — เฟรมก่อนหน้ามีการสั่นค้างไหม (กันสั่นค้างตอนกลับเข้าแทร็กเรียบ)
 let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 /* แทร็ก */
@@ -931,7 +939,9 @@ const CSS=`
 #f1-wrap.fp #f1-cockpit{display:block}
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
-#f1-cockpit img{position:absolute;left:0;top:0;display:block;will-change:transform}
+#f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
+/* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — วางทับเฉพาะ "กรอบจอ" แล้วหมุนไปพร้อมพวงมาลัย (transform เดียวกัน) */
+#f1-dash{z-index:1}
 /* จอกว้างเตี้ย (มือถือแนวนอน) — cover จะเอาค็อกพิทบังเต็มจอ: ตรึงขอบบน (halo อยู่ครบ) + สูง 128%
    ตัดหน้าปัด/ขอบล่างทิ้งใต้จอแทน · บีบแนวตั้ง ~10% ตามองไม่ออก แต่เปิดพื้นที่เห็นแทร็กเพิ่มมาก */
 @media (min-aspect-ratio: 9/5){
@@ -1105,7 +1115,7 @@ function buildDom(){
   wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
   wrapEl.innerHTML=`
     <canvas id="f1-cv"></canvas>
-    <div id="f1-cockpit"><img id="f1-wheel" alt=""></div>
+    <div id="f1-cockpit"><img id="f1-wheel" alt=""><canvas id="f1-dash"></canvas></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
     <div id="f1-topright">
@@ -1207,6 +1217,10 @@ function buildDom(){
   });
   wheelEl.addEventListener('load',layoutWheel);
   wheelEl.src='img/f1/wheel.webp';
+  /* 🔢 รอบ 916: จอตัวเลขจริงบนพวงมาลัย — เครื่องที่ไม่มี canvas 2d ก็ปล่อยจอในภาพไปตามเดิม ไม่ให้ทั้งโลกพัง */
+  dashEl=wrapEl.querySelector('#f1-dash');
+  dashCtx=(dashEl&&dashEl.getContext)?dashEl.getContext('2d'):null;
+  if(!dashCtx) dashEl=null;
   camBtnEl.addEventListener('click',cycleCamMode);   // 🛣️ รอบ 915 — วน 3 มุม
   /* แชท */
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button>${t}</button>`).join('');
@@ -2634,11 +2648,11 @@ function applyCamMode(){
 /* 🎡 รอบ 913: วาง <img> พวงมาลัยให้ทับ "กรอบภาพจริง" ของ background-image ใน #f1-cockpit เป๊ะ
    — อ่าน background-size/position ที่เบราว์เซอร์คำนวณแล้วมาใช้ตรง ๆ จึงเปลี่ยนตาม @media เองโดยไม่ต้องเขียนสูตรซ้ำ
    (ทับพอดี = จุดหมุน WHEEL_HUB_* ซึ่งเป็น % ของภาพ ตรงกับแกนพวงมาลัยจริงทุกขนาดจอ) */
-function layoutWheel(){
-  if(!wheelEl||!cockpitEl) return;
+function cockpitBox(){
+  if(!cockpitEl) return null;
   const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
-  const iw=wheelEl.naturalWidth, ih=wheelEl.naturalHeight;
-  if(!bw||!bh||!iw||!ih) return;
+  const iw=WHEEL_IMG_W, ih=WHEEL_IMG_H;
+  if(!bw||!bh) return null;
   const cs=getComputedStyle(cockpitEl);
   let w,h;
   const pc=cs.backgroundSize.match(/(-?[\d.]+)%\s+(-?[\d.]+)%/);
@@ -2647,13 +2661,20 @@ function layoutWheel(){
   const kw={left:0,top:0,center:50,right:100,bottom:100};
   const at=t=>t==null?50:(t in kw?kw[t]:(t.slice(-1)==='%'?parseFloat(t):50));
   const bp=cs.backgroundPosition.trim().split(/\s+/);
+  return {w,h,left:(bw-w)*at(bp[0])/100,top:(bh-h)*at(bp[1])/100,sy:h/(w*ih/iw)};
+}
+function layoutWheel(){
+  const b=cockpitBox(); if(!b) return;
+  layoutDash(b);                 // 🔢 รอบ 916 — จอตัวเลขวางได้แม้ภาพพวงมาลัยแยกชั้นจะโหลดไม่ขึ้น
+  if(!wheelEl||!wheelEl.naturalWidth) return;
+  const w=b.w, h=b.h;
   wheelEl.style.width=w+'px';  wheelEl.style.height=h+'px';
-  wheelEl.style.left=(bw-w)*at(bp[0])/100+'px';
-  wheelEl.style.top =(bh-h)*at(bp[1])/100+'px';
+  wheelEl.style.left=b.left+'px';
+  wheelEl.style.top =b.top+'px';
   wheelEl.style.transformOrigin=WHEEL_HUB_X+'% '+WHEEL_HUB_Y+'%';
   /* จอกว้างเตี้ยยืดภาพแนวตั้ง (100% 128%) — ถ้าหมุนตรง ๆ พวงมาลัยจะบิดผิดรูประหว่างหมุน
      จึง "คลายการยืด → หมุน → ยืดกลับ" ให้หมุนในสัดส่วนจริงของภาพ (cover = 1 พอดี ไม่มีผล) */
-  wheelSy=h/(w*ih/iw);
+  wheelSy=b.sy;
   wheelDeg=null;   // สั่งวาด transform ใหม่รอบหน้า (สูตรเปลี่ยนตามการยืด)
 }
 /* 🎡 รอบ 913: หมุนพวงมาลัยตามมุมล้อหน้าจริง (steer) — คูณอัตราทดให้เห็นชัดตอนความเร็วสูงที่ล้อขยับนิดเดียว
@@ -2674,8 +2695,10 @@ function wheelTick(){
     sy2=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
   }
   const r=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+deg.toFixed(2)+'deg)';
-  wheelEl.style.transform=Math.abs(wheelSy-1)<0.01?r
+  const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
+  wheelEl.style.transform=tr;
+  if(dashEl) dashEl.style.transform=tr;   // 🔢 รอบ 916 — จอตัวเลขติดไปกับพวงมาลัย (หมุน/สั่นก้อนเดียวกัน แกนเดียวกัน)
 }
 /* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
    (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อให้ตาจับการหมุนได้) */
@@ -2719,6 +2742,122 @@ function fpWheelTick(dt){
     o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
     o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
   }
+}
+/* ============================================================
+   🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
+   ภาพ wheel.webp มีจอ LCD + แถบไฟรอบเครื่องวาดตายตัวมาในตัว (เกียร์ 5 / เลข 12210 / แถบส้ม)
+   → ปู <canvas> ขนาดเท่า "กรอบจอ" (DASH_PX) ทับ แล้ววาดเกียร์/ความเร็ว/รอบเครื่องจากค่าจริงในเกม
+   หมุน+สั่นไปพร้อมพวงมาลัยเพราะใช้ transform และแกนหมุนชุดเดียวกัน (ดู wheelTick)
+   ============================================================ */
+const DASH_FONT="'Kanit','Segoe UI',sans-serif";
+function layoutDash(b){
+  if(!dashEl||!dashCtx) return;
+  const sx=b.w/WHEEL_IMG_W, sy=b.h/WHEEL_IMG_H;     // ภาพถูกย่อ/ยืดเท่าไหร่บนจอจริง (จอกว้างเตี้ยยืดแนวตั้ง)
+  const w=DASH_PX.w*sx, h=DASH_PX.h*sy;
+  dashEl.style.width=w+'px';  dashEl.style.height=h+'px';
+  dashEl.style.left=(b.left+DASH_PX.x*sx)+'px';
+  dashEl.style.top =(b.top +DASH_PX.y*sy)+'px';
+  /* หมุนรอบแกนพวงมาลัยจุดเดียวกับชั้นภาพ — origin ของ canvas นับจากมุมซ้ายบนของตัวเอง จึงลบระยะเยื้องออก */
+  dashEl.style.transformOrigin=(b.w*WHEEL_HUB_X/100-DASH_PX.x*sx)+'px '+(b.h*WHEEL_HUB_Y/100-DASH_PX.y*sy)+'px';
+  const k=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||1))*w/DASH_PX.w;  // วาดละเอียดกว่าจอจริง 1.5 เท่าเป็นอย่างน้อย = ตัวเลขคมไม่ฟุ้ง
+  const cw=Math.max(1,Math.round(DASH_PX.w*k)), ch=Math.max(1,Math.round(DASH_PX.h*k));
+  if(dashEl.width!==cw||dashEl.height!==ch){ dashEl.width=cw; dashEl.height=ch; }
+  dashK=k; dashSig='';        // ขนาดเปลี่ยน = ภาพในบัฟเฟอร์หาย ต้องวาดใหม่รอบหน้า
+}
+function dashRR(c,x,y,w,h,r){                       // สี่เหลี่ยมมุมมน (ไม่พึ่ง ctx.roundRect ที่เครื่องเก่าไม่มี)
+  c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+/* รอบเครื่อง: คิดจาก "เกียร์ + ความเร็วในเกียร์" สูตรเดียวกับเสียงเครื่องยนต์ (Snd.tick)
+   → เลขบนจอกับเสียงที่ได้ยินตรงกันเสมอ · ไล่ค่าแบบนุ่ม ๆ ไม่ให้ตัวเลขกระตุกตอนเปลี่ยนเกียร์ */
+function dashRpmTick(dt){
+  let t;
+  if(revNow)          t=0.22+clamp(spd/REV_MAX,0,1)*0.5;
+  else if(spd<0.6)    t=(padThr>0.05||kThr)?0.72:0.10;      // จอดอยู่: เหยียบคันเร่ง = เร่งเครื่องรอออกตัว
+  else{
+    const g=gearOf(spd), gLo=GEARS[g-1]||0, gHi=GEARS[g]||92;
+    t=0.25+clamp((spd-gLo)/Math.max(1,gHi-gLo),0,1)*0.75;
+  }
+  dashRpm=lerp(dashRpm,t,clamp(dt*8,0,1));
+}
+function dashTick(dt){
+  if(!dashCtx||camMode!=='cockpit') return;
+  dashRpmTick(dt);
+  const kmh=Math.round(spd*3.6);
+  const gear=revNow?'R':(spd<0.6?'N':String(gearOf(spd)));
+  const rp=Math.round((DASH_RPM_MIN+(DASH_RPM_MAX-DASH_RPM_MIN)*clamp(dashRpm,0,1))/50)*50;
+  const led=clamp((dashRpm-0.30)/0.66,0,1);                 // ไฟดวงแรกติดตอนเริ่มมีภาระจริง ไม่ใช่ตั้งแต่เดินเบา
+  const nLed=Math.round(led*DASH_LED_N);
+  const blink=led>=0.99?Math.floor(performance.now()/90)%2:0;   // ไฟตัดรอบกะพริบ = สัญญาณให้เปลี่ยนเกียร์
+  const lap=lapStartAt?fmtLap(lapNow):'--';
+  const sig=gear+'|'+kmh+'|'+rp+'|'+nLed+blink+'|'+lap+'|'+(pitLimited?1:0)+'|'+(lapBest?fmtLap(lapBest):'')
+           +'|'+Math.round(tyre*100);
+  if(sig===dashSig) return;                                 // ค่าไม่เปลี่ยน = ไม่ต้องวาดใหม่ (จอเล็กแต่วาดทุกเฟรมก็เปลืองเปล่า)
+  dashSig=sig;
+  drawDash({gear,kmh,rp,led,nLed,blink,lap});
+}
+function drawDash(d){
+  const c=dashCtx, W=DASH_PX.w, H=DASH_PX.h;
+  c.setTransform(dashK,0,0,dashK,0,0);
+  c.clearRect(0,0,W,H);
+  c.textBaseline='middle';
+  /* ── แถบไฟรอบเครื่องบนขอบพวงมาลัย (เขียว → แดง → น้ำเงินตอนตัดรอบ เหมือนรถแข่งจริง) ── */
+  c.fillStyle='#0b0e13';                                   // รางไฟทึบ — ต้องปูก่อน ไม่งั้นขีดสีส้มที่วาดติดมาในภาพโผล่ตามร่องระหว่างดวง
+  dashRR(c,7,2,212,11,2.5); c.fill();
+  const lx=9, lw=208, lh=8, ly=3.5, step=lw/DASH_LED_N;
+  for(let i=0;i<DASH_LED_N;i++){
+    const on=i<d.nLed;
+    let col='#191c22';
+    if(on) col=d.blink?'#eaf6ff':(i<5?'#2fe06a':(i<10?'#ff3131':'#4aa8ff'));
+    c.fillStyle=col;
+    dashRR(c,lx+i*step+1,ly,step-2,lh,1.5); c.fill();
+  }
+  /* ── ตัวจอ LCD (ทึบ = ทับเลขที่ติดมากับภาพให้หมด) ── */
+  c.fillStyle='#04070c';
+  dashRR(c,4,11,226,105,5); c.fill();
+  c.strokeStyle='rgba(150,175,200,.32)'; c.lineWidth=1; c.stroke();
+  /* ── ครึ่งบน: เกียร์ (ใหญ่สุด เด็กอ่านง่าย) + ความเร็ว + เวลาต่อรอบ ── */
+  c.textAlign='center';
+  c.fillStyle=d.gear==='R'?'#ff6a5a':(d.gear==='N'?'#8fa3b8':'#ffffff');
+  c.font='900 40px '+DASH_FONT;
+  c.fillText(d.gear,27,44);
+  c.font='700 8px '+DASH_FONT; c.fillStyle='#6d7f92';
+  c.fillText('เกียร์',27,64);
+  c.textAlign='right';
+  c.fillStyle=pitLimited?'#ffd12e':'#ffffff';               // 🚧 ลิมิตเตอร์เลนพิท = เหลือง (บอกว่าไม่ใช่รถเสีย)
+  c.font='900 34px '+DASH_FONT;
+  c.fillText(String(d.kmh),166,44);
+  c.textAlign='left';
+  c.font='700 10px '+DASH_FONT; c.fillStyle='#67d2ff';
+  c.fillText('กม./ชม.',172,33);
+  /* ยังไม่เริ่มจับเวลา = โชว์ยางแทน (ช่องนี้ต้องมีของจริงบอกเสมอ ไม่ปล่อยว่าง) */
+  if(d.lap!=='--'){ c.font='700 12px '+DASH_FONT; c.fillStyle='#dbe7f3'; c.fillText(d.lap,172,53); }
+  else{ c.font='700 11px '+DASH_FONT; c.fillStyle=tyre<0.3?'#ff6a5a':'#9fb3c6';
+        c.fillText('ยาง '+Math.round(tyre*100)+'%',172,53); }
+  c.strokeStyle='rgba(150,175,200,.25)'; c.beginPath(); c.moveTo(9,68); c.lineTo(225,68); c.stroke();
+  /* ── ครึ่งล่าง: รอบเครื่องเป็นตัวเลข + แถบไล่ระดับ (แทนแถบส้มที่วาดติดมาในภาพ) ── */
+  c.font='700 9px '+DASH_FONT; c.fillStyle='#7d8b99';
+  c.fillText('รอบ/นาที',10,78);
+  c.font='900 15px '+DASH_FONT; c.fillStyle=d.led>=0.99?'#ff6a5a':'#ffffff';
+  c.fillText(d.rp.toLocaleString('en-US'),10,91);
+  if(lapBest){
+    c.textAlign='right';
+    c.font='700 9px '+DASH_FONT; c.fillStyle='#7d8b99'; c.fillText('ดีที่สุด',222,78);
+    c.font='900 12px '+DASH_FONT; c.fillStyle='#7cf3a4'; c.fillText(fmtLap(lapBest),222,91);
+    c.textAlign='left';
+  }
+  const bx=10, by=100, bw=212, bh=10;
+  c.fillStyle='#0b0f15'; dashRR(c,bx,by,bw,bh,3); c.fill();
+  if(d.led>0){
+    const g=c.createLinearGradient(bx,0,bx+bw,0);
+    g.addColorStop(0,'#25d366'); g.addColorStop(0.6,'#ffd12e'); g.addColorStop(1,'#ff3b30');
+    c.save(); dashRR(c,bx,by,bw,bh,3); c.clip();
+    c.fillStyle=g; c.fillRect(bx,by,bw*d.led,bh);
+    if(d.blink){ c.fillStyle='rgba(255,255,255,.45)'; c.fillRect(bx,by,bw,bh); }
+    c.restore();
+  }
+  c.strokeStyle='rgba(150,175,200,.22)'; dashRR(c,bx,by,bw,bh,3); c.stroke();
 }
 function camTick(dt){
   if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 915)
@@ -2782,6 +2921,7 @@ function frame(dt,now){
   fpWheelTick(dt);         // 🛞 รอบ 911 — ต้องมาหลัง physTick (ใช้ px/pz/yaw ล่าสุด)
   camTick(dt);
   wheelTick();             // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
+  dashTick(dt);            // 🔢 รอบ 916 — จอเกียร์/ความเร็ว/รอบเครื่องบนพวงมาลัย (ต้องมาหลัง wheelTick ให้ transform ตรงเฟรมเดียวกัน)
   hudTick();
   netSend(false);
   if(now-mapAt>200){ mapAt=now; drawMap(); }
@@ -2965,6 +3105,15 @@ window.F1World={
         bg:getComputedStyle(cockpitEl).backgroundImage,
         bs:getComputedStyle(cockpitEl).backgroundSize,bp:getComputedStyle(cockpitEl).backgroundPosition}; },
     layoutWheel, wheelTick,
+    /* 🔢 รอบ 916 — จอตัวเลขบนพวงมาลัย */
+    get dash(){ if(!dashEl) return {el:null};
+      const r=dashEl.getBoundingClientRect();
+      return {el:true,rpm:dashRpm,sig:dashSig,k:dashK,cv:{w:dashEl.width,h:dashEl.height},
+        w:parseFloat(dashEl.style.width),h:parseFloat(dashEl.style.height),
+        left:parseFloat(dashEl.style.left),top:parseFloat(dashEl.style.top),
+        org:dashEl.style.transformOrigin,tf:dashEl.style.transform,
+        rect:{x:r.x,y:r.y,w:r.width,h:r.height}}; },
+    layoutDash:()=>layoutWheel(), dashTick, dashRpmTick, setDashRpm(v){ dashRpm=clamp(v,0,1); dashSig=''; },
     get surf(){return surfNow}, setSurf(v){ surfNow=v; },   // 🫨🎡 รอบ 914 — เทสต์มือสั่นโดยไม่ต้องขับจริงไปชน kerb
     get camMode(){return camMode}, setCamMode(v){ camMode=v; applyCamMode(); },
     get peers(){return peers},
