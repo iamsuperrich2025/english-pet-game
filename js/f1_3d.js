@@ -53,6 +53,9 @@ const SHAKE_KERB_AMP = 0.026;  // แอมพลิจูดสั่น (ม.)
 const SHAKE_SAND_AMP = 0.016;  // บนทราย (พื้นนุ่มกว่า kerb แข็ง สั่นเบากว่า)
 const SHAKE_SPD_REF  = 40;     // m/s ที่สั่นเต็มแอมพลิจูด — ช้ากว่าลดสัดส่วน เร็วกว่าไม่เพิ่มอีก
 const SHAKE_HZ        = 23;    // ความถี่สั่นหลัก (รอบ/วิ)
+/* 🫨🎡 รอบ 914: มือ (พวงมาลัย) สั่นตาม kerb/ทราย เหมือนกล้อง — ใช้จังหวะ shakeT/SHAKE_HZ ชุดเดียวกับรอบ 907 */
+const WHEEL_SHAKE_KERB_PX = 3.4;  // แอมพลิจูดสั่น (px จอ) บน kerb ที่ความเร็วอ้างอิง SHAKE_SPD_REF
+const WHEEL_SHAKE_SAND_PX = 2.0;  // บนทราย (เบากว่า kerb เหมือนกล้อง)
 /* ฟิสิกส์ (หน่วยเมตร/วินาที — 92 m/s = 331 กม./ชม.) */
 const PWR_A        = 950;     // กำลังเครื่อง: a = PWR_A / max(v,6)  (แรงมากตอนช้า ลดตามความเร็ว)
 const ACC_CAP      = 14.5;    // เพดานอัตราเร่ง (ล้อหมุนฟรี)
@@ -114,6 +117,7 @@ let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
 let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
+let wheelShakeOn=false;                                  // 🫨🎡 รอบ 914 — เฟรมก่อนหน้ามีการสั่นค้างไหม (กันสั่นค้างตอนกลับเข้าแทร็กเรียบ)
 let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 /* แทร็ก */
 let LINE=null, TOTAL=0, grid=null, sfIdx=0, myIdx=0, myLapDist=0, surfNow='track';
@@ -2630,13 +2634,24 @@ function layoutWheel(){
   wheelSy=h/(w*ih/iw);
   wheelDeg=null;   // สั่งวาด transform ใหม่รอบหน้า (สูตรเปลี่ยนตามการยืด)
 }
-/* 🎡 รอบ 913: หมุนพวงมาลัยตามมุมล้อหน้าจริง (steer) — คูณอัตราทดให้เห็นชัดตอนความเร็วสูงที่ล้อขยับนิดเดียว */
+/* 🎡 รอบ 913: หมุนพวงมาลัยตามมุมล้อหน้าจริง (steer) — คูณอัตราทดให้เห็นชัดตอนความเร็วสูงที่ล้อขยับนิดเดียว
+   🫨 รอบ 914: บวกอาการมือสั่นบน kerb/ทราย — ใช้ shakeT/SHAKE_HZ ตัวเดียวกับกล้อง (รอบ 907, อัปเดตใน camTick ก่อนหน้านี้แล้วในเฟรมเดียวกัน)
+   จึงสั่นจังหวะเดียวกับที่กล้อง/โลกสั่น ไม่ใช่คนละจังหวะที่ดูหลอน */
 function wheelTick(){
   if(!wheelEl||camMode!=='cockpit') return;
   const deg=clamp(steer*(180/Math.PI)*WHEEL_RATIO,-WHEEL_MAX_DEG,WHEEL_MAX_DEG);
-  if(wheelDeg!==null&&Math.abs(deg-wheelDeg)<0.05) return;
+  const shakeAmp=surfNow==='kerb'?WHEEL_SHAKE_KERB_PX:(surfNow==='sand'?WHEEL_SHAKE_SAND_PX:0);
+  const shaking=shakeAmp>0;
+  if(!shaking&&!wheelShakeOn&&wheelDeg!==null&&Math.abs(deg-wheelDeg)<0.05) return;
+  wheelShakeOn=shaking;
   wheelDeg=deg;
-  const r='rotate('+deg.toFixed(2)+'deg)';
+  let sx=0, sy2=0;
+  if(shaking){
+    const a=shakeAmp*clamp(spd/SHAKE_SPD_REF,0,1);
+    sx=Math.sin(shakeT*Math.PI*2*SHAKE_HZ)*a;
+    sy2=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
+  }
+  const r=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+deg.toFixed(2)+'deg)';
   wheelEl.style.transform=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
 }
@@ -2926,6 +2941,7 @@ window.F1World={
         bg:getComputedStyle(cockpitEl).backgroundImage,
         bs:getComputedStyle(cockpitEl).backgroundSize,bp:getComputedStyle(cockpitEl).backgroundPosition}; },
     layoutWheel, wheelTick,
+    get surf(){return surfNow}, setSurf(v){ surfNow=v; },   // 🫨🎡 รอบ 914 — เทสต์มือสั่นโดยไม่ต้องขับจริงไปชน kerb
     get camMode(){return camMode}, setCamMode(v){ camMode=v; applyCamMode(); },
     get peers(){return peers},
     fakePeer(uid,x,z,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0},extra||{})); return peers[uid]; },
