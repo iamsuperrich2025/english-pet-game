@@ -1291,6 +1291,13 @@ const Live = {
   bubPend:{},         // uid → {text, ts} ข้อความที่มาถึงก่อนตัวละครจะ spawn เสร็จ
   bubSeen:{},         // uid → กันเด้งข้อความเดิมซ้ำ
   chatWatch:{},       // uid เพื่อนที่ติดตั้ง listener แชทแล้ว
+  /* 🖊️ รอบ 868: ตอบแชทจากในเมือง */
+  friends:{},         // uid เพื่อน → {n,g,ts} จาก /friends/<me> (ชื่อ+ชั้นสำหรับหัวกล่อง + สิทธิ์ตอบ)
+  lastMsg:{},         // uid เพื่อน → ข้อความล่าสุดในคู่แชทนั้น {f,t,ts} (โชว์เป็นบริบทในกล่อง)
+  bubList:[],         // บับเบิลที่ลอยอยู่ตอนนี้ [{A}] เก่า→ใหม่ (เกิน BUB_MAX = ใบเก่าสุดหายก่อน)
+  chatWith:null,      // uid ที่กล่องพิมพ์กำลังเปิดคุยอยู่
+  off:[],             // ฟังก์ชันเลิกฟัง RTDB ทุกตัว (เรียกตอนออกจากหน้า — ไม่อ่านค้าง)
+  pollT:0,            // setInterval ของ pollWorlds
 };
 /* act (emoji ท้ายข้อความ) → อาคารที่ไปยืน */
 function actBuilding(act){
@@ -1321,7 +1328,7 @@ function liveStart(){
       watchPresence();
       watchFriendChats();          // 💬 บับเบิลแชทสดของเพื่อนที่ยืนอยู่ในเมือง
       pollWorlds();
-      setInterval(pollWorlds, 10000);   // โลก 3D poll ทุก 10 วิ (on() จะโดนสแปมตำแหน่งถี่เกิน)
+      Live.pollT = setInterval(pollWorlds, 10000);   // โลก 3D poll ทุก 10 วิ (on() จะโดนสแปมตำแหน่งถี่เกิน)
     });
   }).catch(()=>setChip('📴 โหมดชมเมือง (ออฟไลน์)'));
 }
@@ -1336,7 +1343,8 @@ function lbGet(uid){
 }
 /* 🧍 presence: ใครออนไลน์ กำลังทำอะไร → ยืนหน้าอาคารนั้น */
 function watchPresence(){
-  Live.db.ref('presence').on('value', snap=>{
+  const pref = Live.db.ref('presence');
+  const ph = pref.on('value', snap=>{
     const now=Date.now(), seen={};
     let n=0;
     snap.forEach(ch=>{
@@ -1355,6 +1363,7 @@ function watchPresence(){
       if(a.kind==='stand' && !seen[uid]) removeActor(uid);
     });
   }, ()=>setChip('🟢 เมืองพร้อม (อ่านเพื่อนไม่ได้)'));
+  Live.off.push(()=>pref.off('value', ph));      // 🧹 รอบ 868: ออกจากหน้าแล้วเลิกอ่าน
 }
 function spawnStander(uid, v){
   const cur = Live.actors[uid];
@@ -1501,7 +1510,8 @@ function spawnVehicle(uid, f){
                     heli:'กำลังบินเฮลิคอปเตอร์ 🚁', drone:'กำลังบังคับโดรน 🛸'}[f.kind];
     markPickable(g, {uid, name:f.n, grade:lb && lb.g, act:kindTh, blk:blkId});
     tickers.push(tick);
-    Live.actors[uid] = {g, kind:f.kind, tick, blk:blkId, bubY:label.position.y+1.9};
+    Live.actors[uid] = {g, kind:f.kind, tick, blk:blkId, bubY:label.position.y+1.9,
+                        data:{n:f.n, g:lb && lb.g, act:kindTh}};   // 🖊️ รอบ 868: ชื่อ+ชั้นไว้ทำหัวกล่องพิมพ์ตอบ
     flushBubble(uid);
   });
 }
@@ -1510,8 +1520,9 @@ function removeActor(uid){
   if(!a) return;
   scene.remove(a.g);
   const i = tickers.indexOf(a.tick); if(i>=0) tickers.splice(i,1);
-  if(a.bubTick){ const b=tickers.indexOf(a.bubTick); if(b>=0) tickers.splice(b,1); }   // 💬 บับเบิลค้างต้องถอดด้วย
+  killBubble(a);                       // 💬 บับเบิลค้างต้องถอดด้วย (รอบ 868: คืน texture + ถอดจุดแตะ + ออกจากคิว)
   delete Live.bubSeen[uid];
+  if(Live.chatWith===uid) closeChatBox();   // 🖊️ รอบ 868: คนที่เรากำลังพิมพ์คุยด้วยออกจากเมืองไปแล้ว
   a.g.traverse(o=>{ const j=actorPick.indexOf(o); if(j>=0) actorPick.splice(j,1); });
   delete Live.actors[uid];
 }
@@ -1531,8 +1542,40 @@ function markPickable(g, info){
 const BUB_MS    = 9000;          // บับเบิลลอยอยู่กี่มิลลิวินาที
 const BUB_FRESH = 3*60*1000;     // ข้อความสดกว่านี้ถึงเด้ง (กันข้อความค้างเมื่อวานโผล่)
 const BUB_MAXCH = 90;
+const BUB_MAX      = 5;          // 🖊️ รอบ 868: ลอยพร้อมกันได้ไม่เกินกี่ใบ (เกิน = ใบเก่าสุดหายก่อน) — กันเมืองรก/กระตุก
+const BUB_TEX_KEEP = 14;         // 🖊️ รอบ 868: เก็บ texture ไว้ใช้ซ้ำกี่ข้อความ (ข้อความเดิม = ไม่วาด canvas ใหม่)
 
+/* 🖊️ รอบ 868: คลัง texture ตามข้อความ (Map = LRU ในตัว — คีย์ที่แตะล่าสุดอยู่ท้ายเสมอ)
+   วาด canvas 512×268 ใหม่ทุกใบทำให้เมืองสะดุดตอนคุยกันรัว ๆ → ข้อความซ้ำ (เช่น "เข้า ตลาด 🏪",
+   "สวัสดี") ใช้ texture เดิมได้เลย · ใบที่ถูกไล่ออกจากคลังแต่ยังลอยอยู่ ค่อย dispose ตอนใบนั้นหาย */
+const bubTexCache = new Map();
+function bubTexture(text){
+  const hit = bubTexCache.get(text);
+  if(hit){ bubTexCache.delete(text); bubTexCache.set(text, hit); return hit; }   // แตะแล้วเลื่อนไปท้าย = ใหม่สุด
+  const tex = bubDraw(text);
+  bubTexCache.set(text, tex);
+  if(bubTexCache.size > BUB_TEX_KEEP){
+    const k = bubTexCache.keys().next().value, old = bubTexCache.get(k);
+    bubTexCache.delete(k);
+    if(old){ if(old.__use > 0) old.__dead = true; else old.dispose(); }          // ยังลอยอยู่ = ทิ้งทีหลัง
+  }
+  return tex;
+}
+function bubTexRelease(tex){
+  if(!tex) return;
+  tex.__use = Math.max(0, (tex.__use||1) - 1);
+  if(tex.__dead && tex.__use === 0) tex.dispose();      // คืน GPU memory จริงเมื่อไม่มีใครใช้แล้ว
+}
 function bubbleSprite(text){
+  const tex = bubTexture(text);
+  tex.__use = (tex.__use||0) + 1;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  sp.scale.set(7.2, 3.77, 1);
+  sp.renderOrder = 22;
+  sp.userData.tex = tex;
+  return sp;
+}
+function bubDraw(text){
   const c = cvs(512, 268), g = c.getContext('2d');
   g.font = '600 42px system-ui, sans-serif';
   /* ตัดบรรทัดเอง (ไทยไม่มีเว้นวรรค → ตัดตามความกว้างทีละตัว) */
@@ -1556,39 +1599,55 @@ function bubbleSprite(text){
   g.beginPath(); g.moveTo(232, 200); g.lineTo(256, 236); g.lineTo(288, 200); g.stroke();
   g.fillStyle='#16233d'; g.textAlign='center'; g.textBaseline='middle';
   for(let i=0;i<L;i++) g.fillText(lines[i].trim(), 256, top+42+i*54, 416);
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(c), transparent:true, depthTest:false}));
-  sp.scale.set(7.2, 3.77, 1);
-  sp.renderOrder = 22;
-  return sp;
+  return ctex(c);
+}
+/* 🖊️ รอบ 868: เก็บบับเบิลของคนนี้ทิ้งให้เกลี้ยง (sprite + ticker + จุดที่แตะได้ + คืน texture) */
+function killBubble(A){
+  if(!A || !A.bub) return;
+  const sp = A.bub;
+  A.g.remove(sp);
+  const i = tickers.indexOf(A.bubTick);   if(i>=0) tickers.splice(i,1);
+  const j = actorPick.indexOf(sp);        if(j>=0) actorPick.splice(j,1);
+  const b = Live.bubList.indexOf(A);      if(b>=0) Live.bubList.splice(b,1);
+  if(sp.material) sp.material.dispose();
+  bubTexRelease(sp.userData.tex);
+  A.bub = null; A.bubTick = null; A.bubTxt = '';
 }
 /* uid: uid จริง หรือ '__self' (ตัวเรา) */
 function showBubble(uid, text, ts){
-  const msg = String(text||'').trim();
-  if(!msg) return;
+  const raw = String(text||'').trim();
+  if(!raw) return;
   if(ts && Date.now()-ts > BUB_FRESH) return;
-  const sig = msg+'|'+(ts||0);
+  const sig = raw+'|'+(ts||0);
   if(Live.bubSeen[uid]===sig) return;              // ข้อความเดิม (poll ซ้ำ/on ยิงซ้ำ) ไม่เด้งใหม่
   const A = (uid==='__self') ? Live.self : Live.actors[uid];
-  if(!A || !A.g){ Live.bubPend[uid] = {text:msg, ts:ts||Date.now()}; return; }
+  if(!A || !A.g){ Live.bubPend[uid] = {text:raw, ts:ts||Date.now()}; return; }
   Live.bubSeen[uid] = sig;
-  if(A.bub){ A.g.remove(A.bub); const i=tickers.indexOf(A.bubTick); if(i>=0) tickers.splice(i,1); A.bub=null; }
+  /* 🖊️ รอบ 868: ข้อความเดียวกันมาจาก 2 ท่อ (winfo + chats) หรือของเราที่เด้งเองตอนกดส่งแล้ว
+     server ตอบ ts จริงกลับมาทีหลัง → อย่าเริ่มใบใหม่ทับ ปล่อยใบเดิมลอยต่อ */
+  if(A.bub && A.bubTxt===raw && performance.now()-A.bubAt < BUB_MS) return;
+  const msg = bubSafeText(raw);                    // 🙊 รอบ 868: กรองคำหยาบ "ก่อนแสดง" ด้วยตัวกรองเดิมของเกม
+  killBubble(A);                                   // ใบเดิมของคนนี้หายก่อน
+  while(Live.bubList.length >= BUB_MAX) killBubble(Live.bubList[0]);   // เต็มโควตา = ใบเก่าสุดหายก่อน
   const sp = bubbleSprite(msg);
   const y0 = (A.bubY || 4.6);
   sp.position.y = y0;
   A.g.add(sp);
+  /* 👆 รอบ 868: บับเบิลเองแตะได้ → เปิดกล่องพิมพ์ตอบคนนี้ทันที (ไม่ต้องเล็งตัวเล็ก ๆ) */
+  sp.userData.actor = Object.assign(actorInfo(uid), {bubble:true});
+  actorPick.push(sp);
   const t0 = performance.now();
   const tick = ()=>{
     const el = performance.now()-t0;
-    if(el >= BUB_MS){                              // หมดเวลา → เก็บทิ้ง
-      A.g.remove(sp);
-      const i=tickers.indexOf(tick); if(i>=0) tickers.splice(i,1);
-      if(A.bub===sp){ A.bub=null; A.bubTick=null; }
-      return;
-    }
+    if(el >= BUB_MS){ killBubble(A); return; }     // หมดเวลา → เก็บทิ้ง
     sp.position.y = y0 + Math.min(0.45, el/900*0.45) + Math.sin(el/420)*0.06;
     sp.material.opacity = el<220 ? el/220 : (el>BUB_MS-900 ? (BUB_MS-el)/900 : 1);
+    /* 🔍 รอบ 868: ซูมออกไกลแล้วยังอ่านออก — ขยายใบตามระยะกล้อง (คุมเพดานไว้ ไม่ให้บังเมือง) */
+    const k = clamp(rig.dist/88, 1, 2.1);
+    sp.scale.set(7.2*k, 3.77*k, 1);
   };
-  A.bub = sp; A.bubTick = tick;
+  A.bub = sp; A.bubTick = tick; A.bubTxt = raw; A.bubAt = performance.now();
+  Live.bubList.push(A);
   tickers.push(tick);
 }
 /* ตัวละครเพิ่ง spawn เสร็จ → ถ้ามีข้อความค้างรออยู่ เด้งเลย */
@@ -1602,20 +1661,155 @@ function flushBubble(uid){
 /* 💬 ท่อ ②: ข้อความล่าสุดของแชทเรา-เพื่อนแต่ละคน (rules: อ่านได้เฉพาะคู่ตัวเอง) */
 function watchFriendChats(){
   if(!Live.db || !Live.uid) return;
-  Live.db.ref('friends/'+Live.uid).on('value', snap=>{
+  const fref = Live.db.ref('friends/'+Live.uid);
+  const fh = fref.on('value', snap=>{
     const v = snap.val() || {};
     Object.keys(v).forEach(fu=>{
+      Live.friends[fu] = v[fu] || {};        // 🖊️ รอบ 868: จำชื่อ+ชั้นเพื่อน (หัวกล่องแชท + สิทธิ์พิมพ์ตอบ)
       if(Live.chatWatch[fu]) return;
       Live.chatWatch[fu] = true;
       const pid = [Live.uid, fu].sort().join('_');
-      Live.db.ref('chats/'+pid).orderByKey().limitToLast(1).on('value', s=>{
+      const q = Live.db.ref('chats/'+pid).orderByKey().limitToLast(1);
+      const h = q.on('value', s=>{
         let last=null; s.forEach(ch=>{ last=ch.val(); });
         if(!last || !last.t || !last.ts) return;
+        Live.lastMsg[fu] = last;             // 🖊️ รอบ 868: ข้อความล่าสุด — โชว์เป็นบริบทในกล่องพิมพ์ตอบ
         showBubble(last.f===Live.uid ? '__self' : fu, last.t, last.ts);
+        if(Live.chatWith===fu) chatBoxRefresh();
       }, ()=>{});
+      Live.off.push(()=>q.off('value', h));
     });
   }, ()=>{});
+  Live.off.push(()=>fref.off('value', fh));
 }
+
+/* ============================================================
+   🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
+   ------------------------------------------------------------
+   ต่อระบบแชทเดิมของเกมตรง ๆ ไม่มีระบบใหม่ซ้อน:
+     · path เดียวกับ js/online.js → /chats/<pairId>/<push> = {f:uid ผู้ส่ง, t:ข้อความ, ts:เวลา}
+     · pairId = [เรา, เขา].sort().join('_')  (สูตรเดียวกับ chatPairId())
+     · กติกาเดียวกับ chatSend(): ยุบช่องว่าง → ไม่เกิน 200 ตัว → ผ่าน nameHasBadWord()
+       (โหลด js/data/badwords.js ในหน้า index.html แล้ว — ไฟล์ standalone ไม่พึ่ง state/ui)
+     · ข้อความที่ส่งจากที่นี่ไปโผล่ในห้องแชทเดิมของ index_classic.html ทันที (คนละหน้า DB เดียวกัน)
+   ไม่ต้องแก้ Firebase rules: โซน /chats เดิมให้ทั้งคู่ใน pairId อ่าน/เขียนได้อยู่แล้ว
+   กันพังเมื่อยังไม่ล็อกอิน: ไม่มี Live.uid = กล่องยังเปิดดูได้ แต่ขึ้นป้ายบอกเหตุผล ไม่มีช่องพิมพ์
+   กฎคุ้มครองเด็ก: หัวกล่องโชว์เฉพาะ "ชื่อเล่น + สัญลักษณ์ระดับชั้น" (gradeStars ชุดเดียวกับป้ายในเมือง)
+   ============================================================ */
+const CITY_CHAT_MAX = 200;       // เท่า CHAT_MAX_LEN ใน js/online.js (rules ก็จำกัด 200 ตัวเหมือนกัน)
+
+/* 🙊 กรองก่อนแสดง: ข้อความหยาบ (เช่นส่งมาจากไคลเอนต์เก่า/แก้ DB ตรง) ไม่ขึ้นจอเด็ก */
+function bubSafeText(s){
+  const t = String(s||'');
+  return (typeof nameHasBadWord === 'function' && nameHasBadWord(t))
+       ? '🙊 ข้อความไม่สุภาพ ถูกซ่อนไว้' : t;
+}
+/* ชื่อ/ชั้น/ตัวละครของ uid หนึ่ง ๆ จากที่ไหนก็ได้ที่มีอยู่แล้ว (presence → /friends → leaderboard) */
+function actorInfo(uid){
+  if(uid === '__self') return {uid:'__self', name:'ตัวหนูเอง', self:true, blk:'blk1'};
+  const A  = Live.actors[uid], fr = Live.friends[uid], lb = Live.lbCache[uid];
+  const d  = (A && A.data) || {};
+  return {uid,
+    name : d.n || (fr && fr.n) || (lb && lb.n) || 'เพื่อน',
+    grade: d.g || (fr && fr.g) || (lb && lb.g) || '',
+    act  : d.act || '',
+    blk  : (A && A.blk) || 'blk1'};
+}
+function chatBoxCanSend(){
+  return !!(Live.uid && Live.db && Live.chatWith && Live.chatWith !== '__self' && Live.friends[Live.chatWith]);
+}
+/* ป้ายบอกเหตุผลบนจอจริง (กฎทอง #1) — ปิดฟีเจอร์เงียบ ๆ ไม่ได้ ต้องบอกว่าทำไม */
+function chatBoxWhy(){
+  if(!Live.uid)  return '🔑 ล็อกอินในเกมก่อน ถึงจะพิมพ์คุยกับเพื่อนได้นะ';
+  if(!Live.db)   return '📡 ยังต่ออินเทอร์เน็ตไม่ได้ ลองใหม่อีกครั้งนะ';
+  if(Live.chatWith && !Live.friends[Live.chatWith]) return '👋 ต้องเป็นเพื่อนกันก่อนถึงจะคุยกันได้นะ';
+  return '';
+}
+function chatBoxRefresh(){
+  const el = document.getElementById('chat-box');
+  if(!el || !Live.chatWith) return;
+  const info = actorInfo(Live.chatWith);
+  const gs   = gradeStars(info.grade);
+  const ok   = chatBoxCanSend();
+  const why  = ok ? '' : chatBoxWhy();
+  const lm   = Live.lastMsg[Live.chatWith];
+  const lastTxt = lm && lm.t
+    ? (lm.f === Live.uid ? 'หนู: ' : esc(info.name)+': ') + esc(bubSafeText(lm.t))
+    : 'ยังไม่มีข้อความในห้องนี้ — ทักก่อนได้เลย 😊';
+  el.innerHTML =
+    '<div class="cb-card">'
+    +'<button class="cb-x" id="cb-x">✕</button>'
+    +'<span class="cb-who">💬 คุยกับ '+esc(info.name)
+      +(gs ? ' <span style="color:'+gs.col+'">'+gs.sym+'</span>' : '')+'</span>'
+    +'<div class="cb-last">'+lastTxt+'</div>'
+    +(ok
+      ? '<div class="cb-row"><input id="cb-input" type="text" maxlength="'+CITY_CHAT_MAX+'" '
+        +'placeholder="พิมพ์ตอบเพื่อน…" autocomplete="off"><button id="cb-send">ส่ง</button></div>'
+      : '<a class="cb-go" href="index_classic.html?go=friends">🚪 ไปหน้าเพื่อนในล็อบบี้เดิม</a>')
+    +'<div class="cb-note" id="cb-note">'+esc(why)+'</div>'
+    +'</div>';
+  document.getElementById('cb-x').onclick = closeChatBox;
+  const send = document.getElementById('cb-send'), inp = document.getElementById('cb-input');
+  if(send) send.onclick = sendCityChat;
+  if(inp)  inp.onkeydown = e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendCityChat(); } };
+}
+function openChatBox(uid){
+  const el = document.getElementById('chat-box');
+  if(!el || !uid) return;
+  if(uid === '__self'){ setChip('⭐ นี่คือตัวหนูเอง — แตะบับเบิลของเพื่อนเพื่อตอบกลับนะ'); return; }
+  Live.chatWith = uid;
+  chatBoxRefresh();
+  el.style.display = 'flex';
+  const inp = document.getElementById('cb-input');
+  if(inp) setTimeout(()=>{ try{ inp.focus(); }catch(e){} }, 60);
+}
+function closeChatBox(){
+  const el = document.getElementById('chat-box');
+  if(el){ el.style.display = 'none'; el.innerHTML = ''; }
+  Live.chatWith = null;
+}
+function cbNote(msg){
+  const n = document.getElementById('cb-note');
+  if(n) n.textContent = msg;
+}
+/* ✉️ ส่งเข้าระบบแชทเดิม — ตรวจชุดเดียวกับ chatSend() ใน js/online.js ทุกข้อ */
+function sendCityChat(){
+  const uid = Live.chatWith, inp = document.getElementById('cb-input');
+  if(!uid || !inp) return;
+  const text = String(inp.value||'').replace(/\s+/g, ' ').trim();
+  if(!text)                     return cbNote('ยังไม่ได้พิมพ์ข้อความเลยนะ');
+  if(text.length > CITY_CHAT_MAX) return cbNote('ข้อความยาวเกินไป (ไม่เกิน '+CITY_CHAT_MAX+' ตัว)');
+  if(typeof nameHasBadWord === 'function' && nameHasBadWord(text))
+                                return cbNote('ข้อความมีคำไม่สุภาพอยู่ พิมพ์ใหม่นะ 😊');
+  if(!chatBoxCanSend())         return cbNote(chatBoxWhy());
+  const pid = [Live.uid, uid].sort().join('_');      // = chatPairId(uid)
+  const btn = document.getElementById('cb-send');
+  if(btn) btn.disabled = true;
+  cbNote('กำลังส่ง…');
+  Live.db.ref('chats/'+pid).push({
+    f : Live.uid,
+    t : text,
+    ts: Live.fb.database.ServerValue.TIMESTAMP,
+  }).then(()=>{
+    inp.value = '';
+    cbNote('ส่งแล้ว ✓ (อยู่ในห้องแชทเดิมของเพื่อนด้วย)');
+    showBubble('__self', text, Date.now());          // 💬 บับเบิลของตัวเราเองเด้งเหนือหัวทันที
+  }).catch(()=>{
+    cbNote('ส่งไม่สำเร็จ ลองใหม่อีกครั้งนะ 📡');
+  }).then(()=>{ if(btn) btn.disabled = false; });
+}
+/* 🧹 ออกจากหน้า/พับแท็บ = เลิกอ่าน RTDB ทุกท่อ + หยุด poll (ไม่กินเน็ต/แบตค้างเบื้องหลัง) */
+function cityStopLive(){
+  Live.off.splice(0).forEach(f=>{ try{ f(); }catch(e){} });
+  if(Live.pollT){ clearInterval(Live.pollT); Live.pollT = 0; }
+  Live.chatWatch = {};
+  closeChatBox();
+}
+addEventListener('pagehide', cityStopLive);
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden){ if(Live.pollT){ clearInterval(Live.pollT); Live.pollT = 0; } }
+  else if(Live.db && Live.uid && !Live.pollT){ pollWorlds(); Live.pollT = setInterval(pollWorlds, 10000); }
+});
 
 /* 🙋 ตัวเราเอง: อ่านจากเซฟในเครื่อง (localStorage — โดเมนเดียวกับเกม) ยืนกลางพลาซ่า
    🚶 รอบ 867: "ยังไม่มีเซฟในเครื่องนี้" ก็ต้องมีตัวเรา — ไม่งั้นแตะตึกแล้ว walkSelfTo() คืน false
@@ -1631,8 +1825,18 @@ function spawnSelf(){
         : (/^blk\d+$/.test(sv.blockAv||'') ? sv.blockAv : pickBlk(null, sv.onlineId||sv.profileName));
   }
   const g = makeFigure(blk);
-  g.position.set(3.2, 0, 8.6);
-  g.rotation.y = Math.PI;
+  /* 🚪 รอบ 870: เพิ่งกลับจากล็อบบี้เดิม → ยืนหน้าประตูตึกนั้น (ไม่ใช่กลางลานน้ำพุ) */
+  const back = lastDoorKey(), bs = back ? doorSpotOf(back) : null;
+  const backBld = back ? BUILDINGS.filter(b=>b.key===back)[0] : null;
+  if(bs){
+    g.position.set(bs.x, 0, bs.z);
+    g.rotation.y = Math.atan2(bs.x-bs.bx, bs.z-bs.bz);   // หันหน้าออกจากตึก = เพิ่งเดินออกมาจากประตู
+    rig.tx = bs.x; rig.tz = bs.z;                        // กล้องเล็งมาที่ตัวเรา (intro ปรับแค่ระยะ/มุมก้ม)
+    if(backBld) setChip('🚪 กลับมาจาก '+backBld.ico+' '+backBld.label+' แล้ว — ยืนอยู่หน้าประตู');
+  }else{
+    g.position.set(3.2, 0, 8.6);
+    g.rotation.y = Math.PI;
+  }
   if(named){
     const label = nameSprite('⭐ '+sv.profileName, sv.student && sv.student.grade, 'rgba(255,215,90,.95)');
     label.position.y = 3.4; g.add(label);
@@ -1641,9 +1845,29 @@ function spawnSelf(){
                      coins:Math.round(sv.coins||0)});
   }
   scene.add(g);
-  Live.self = {g, bubY:4.9, walk:false};              // 🚶 ตัวเดินไปหน้าตึก + 💬 รับบับเบิลแชทของเราเอง
+  Live.self = {g, bubY:4.9, walk:false, named};        // 🚶 ตัวเดินไปหน้าตึก + 💬 รับบับเบิลแชทของเราเอง · named=false → ยังไม่ล็อกอิน (รอบ 869)
   tickers.push((dt,t)=>{ if(!Live.self.walk) g.position.y = Math.abs(Math.sin(t*2.1))*0.07; });
   flushBubble('__self');
+  /* 🚪 รอบ 870: ป้ายบนหัวบอกว่าเพิ่งออกมาจากตึกไหน (แถบชิปโดนสถานะออนไลน์เขียนทับใน 1-2 วิ) */
+  if(backBld) showBubble('__self', '🚪 กลับมาจาก'+backBld.label+'แล้ว '+backBld.ico, Date.now());
+}
+
+/* ============================================================
+   🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
+   ------------------------------------------------------------
+   เดิม: กลับจาก index_classic.html ทีไร ตัวเราก็เกิดกลางลานน้ำพุเสมอ (เหมือนวาร์ปกลับจุดเกิด)
+        ทั้งที่เพิ่งเดินเข้าตึกไปเมื่อกี้ — เด็กต้องมองหาตัวเองใหม่ แล้วเดินย้อนกลับไปตึกเดิมอีกรอบ
+   ทำ: จำ key ตึกไว้ตอนกดเข้า → ตอน spawnSelf() วางตัวเราที่ doorSpotOf(key) หันหน้าออกจากตึก
+        (เหมือนเพิ่งเดินออกมาจากประตู) + เล็งกล้องมาที่จุดนั้นเลย
+        ไม่เล็งกล้อง = ตึกวงนอก (r=63) จะอยู่ริมจอ หาตัวเองไม่เจอเหมือนเดิม
+   เก็บใน sessionStorage = จำเฉพาะแท็บนี้ · ปิดแท็บ/เปิดแอปใหม่ = ลืม กลับไปเกิดกลางลานตามเดิม
+   ============================================================ */
+const DOOR_MEM = 'vwCityLastDoor';
+function rememberDoor(key){ try{ sessionStorage.setItem(DOOR_MEM, key); }catch(e){} }  // โหมดส่วนตัวบางรุ่นเขียนไม่ได้ = ข้ามไป ไม่พัง
+function lastDoorKey(){
+  let k = '';
+  try{ k = sessionStorage.getItem(DOOR_MEM) || ''; }catch(e){}
+  return BLD_AT[k] ? k : '';        // ตึกที่ไม่มีอยู่จริง (ผังเปลี่ยน/ค่าเพี้ยน) = ไม่ใช้ ปล่อยเกิดกลางลาน
 }
 
 /* ============================================================
@@ -1657,7 +1881,14 @@ const WALK_MIN  = 0.9;     // เวลาเดินอย่างน้อ�
 const WALK_MAX  = 2.4;     // เพดานเวลาเดิน (ตึกไกลสุดถึงหน้าประตูภายในเวลานี้)
 const DOOR_GAP  = 7.0;     // ยืนห่างจากใจกลางตึกเท่าไหร่ถึงเรียกว่า "หน้าประตู"
 
+/* 🔑 รอบ 869: ตัวแทน (ยังไม่ล็อกอิน/ไม่มีเซฟ) แตะตึกไหนก็เดินมาจุดนี้แทนเสมอ — จุดเดียวกันทุกครั้ง
+   กันสับสน "เดินไปตึกฟุตบอลแต่จอดันโผล่ล็อกอิน" ไม่เกี่ยวกับตึกที่แตะเลย */
+const RECEPTION_SPOT = {x:3.2, z:22};
 function doorSpotOf(key){
+  if(key==='__reception'){
+    const s = RECEPTION_SPOT;
+    return {x:s.x, z:s.z, bx:s.x, bz:s.z+5};
+  }
   const s = BLD_AT[key] || {x:0, z:0};
   const r = Math.hypot(s.x, s.z) || 1;
   const k = Math.max(0, (r-DOOR_GAP)/r);
@@ -1675,6 +1906,75 @@ function walkPose(g, ph, amp){
   }
   g.position.y = Math.abs(Math.sin(ph))*0.11*amp;
 }
+/* 👟🌫️ รอบ 870: เสียงฝีเท้า + ฝุ่นฟุ้งใต้เท้าตอน walkSelfTo() — ให้ตัวละครรู้สึกมีน้ำหนักเวลาเดิน
+   เสียง = สังเคราะห์เอง (city3d.js เป็นไฟล์ standalone ไม่มี state.sound/HeliSound ให้พึ่ง)
+   จังหวะเร่ง-ช้า = ยิงตามระยะทางที่เดินจริงต่อเฟรม (ไม่ใช่ตามเวลา) → ช่วงกลางเดินเร็ว(easing)ก้าวถี่ ต้น-ท้ายเดินช้าก้าวห่าง ตรงจังหวะเดินจริง */
+let _footCtx = null;
+function footCtx(){
+  if(_footCtx) return _footCtx;
+  try{ _footCtx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ _footCtx=null; }
+  return _footCtx;
+}
+function footStepSfx(vol){
+  const c = footCtx(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t=c.currentTime, v=Math.max(.25, Math.min(1, vol==null?1:vol));
+    const o=c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(105,t);
+    o.frequency.exponentialRampToValueAtTime(42,t+.09);
+    const g=c.createGain();
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.065*v,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.13);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.15);
+    const n=c.createBufferSource(), buf=c.createBuffer(1,800,c.sampleRate), d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2.5);
+    n.buffer=buf;
+    const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=850;
+    const ng=c.createGain(); ng.gain.value=.028*v;
+    n.connect(lp); lp.connect(ng); ng.connect(c.destination); n.start(t);
+  }catch(e){}
+}
+let footDusts=[], _footDustTex=null;
+function footDustTexture(){
+  if(_footDustTex) return _footDustTex;
+  const cv=document.createElement('canvas'); cv.width=cv.height=32;
+  const c=cv.getContext('2d');
+  const gr=c.createRadialGradient(16,16,2,16,16,15);
+  gr.addColorStop(0,'rgba(214,204,186,.7)'); gr.addColorStop(.6,'rgba(196,186,168,.32)'); gr.addColorStop(1,'rgba(180,172,156,0)');
+  c.fillStyle=gr; c.fillRect(0,0,32,32);
+  return _footDustTex=new THREE.CanvasTexture(cv);
+}
+function footDustPuff(x,z){
+  if(!scene) return;
+  for(let i=0;i<4;i++){
+    const a=Math.random()*Math.PI*2, r=.14+Math.random()*.34;
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:footDustTexture(),transparent:true,
+      opacity:.4+Math.random()*.2,depthWrite:false}));
+    const sc0=.35+Math.random()*.28;
+    s.scale.set(sc0,sc0,1);
+    s.position.set(x+Math.cos(a)*r, .06+Math.random()*.08, z+Math.sin(a)*r);
+    scene.add(s);
+    footDusts.push({s, vx:Math.cos(a)*(.5+Math.random()*.55), vz:Math.sin(a)*(.5+Math.random()*.55),
+                vy:.32+Math.random()*.28, life:.45+Math.random()*.22, t:0});
+  }
+}
+function footDustTick(dt){
+  for(let i=footDusts.length-1;i>=0;i--){
+    const d=footDusts[i];
+    d.t+=dt;
+    d.s.position.x+=d.vx*dt; d.s.position.z+=d.vz*dt; d.s.position.y+=d.vy*dt;
+    d.vx*=1-2*dt; d.vz*=1-2*dt;
+    d.s.scale.multiplyScalar(1+0.8*dt);
+    d.s.material.opacity*=1-(d.t/d.life)*dt*3.6;
+    if(d.t>=d.life||d.s.material.opacity<.03){
+      scene.remove(d.s); d.s.material.dispose();     // texture แชร์ cache ห้าม dispose map
+      footDusts.splice(i,1);
+    }
+  }
+}
+tickers.push((dt)=>footDustTick(dt));                // ระบบฝุ่นฝีเท้า ทำงานทุกเฟรมตลอด (ว่างเปล่า = ไม่มีอะไรให้ทำ)
+const FOOT_STEP_DIST = 3.3;    // ระยะเดินต่อก้าว (หน่วยโลก) — ยิงเสียง+ฝุ่นทุก ๆ ระยะนี้ ไม่ใช่ทุก ๆ เวลา
 /* เดินไปหน้าตึก b แล้วเรียก done() — คืน false ถ้าเดินไม่ได้ (ไม่มีตัวละคร) */
 function walkSelfTo(b, done){
   const S = Live.self;
@@ -1688,10 +1988,11 @@ function walkSelfTo(b, done){
   const path = Math.abs(a1-a0)*r0 + Math.abs(r1-r0);
   const dur  = clamp(path/WALK_SPD, WALK_MIN, WALK_MAX);
   S.walk = true;
+  footCtx();                                          // สร้าง/ปลุก AudioContext ตอนนี้เลย (ยังอยู่ใน call stack ของการแตะจริง)
   setChip('🚶 กำลังเดินไป '+b.label+' …');
   const d0cam = rig.dist, p0cam = rig.pitch;
   const t0 = performance.now();
-  let ph = 0, fired = false;
+  let ph = 0, fired = false, footDist = 0;
   const finish = ()=>{
     if(fired) return; fired = true;
     const i = tickers.indexOf(tick); if(i>=0) tickers.splice(i,1);
@@ -1709,7 +2010,15 @@ function walkSelfTo(b, done){
     const nx = Math.cos(a)*r, nz = Math.sin(a)*r;
     const dx = nx-g.position.x, dz = nz-g.position.z;
     if(dx*dx+dz*dz > 1e-6) g.rotation.y = Math.atan2(dx, dz);
+    const moved = Math.hypot(dx, dz);
     g.position.x = nx; g.position.z = nz;
+    /* 👟🌫️ ยิงตามระยะทางที่เดินจริง ไม่ใช่ตามเวลา → ช่วงกลาง(เดินไวตาม easing)ก้าวถี่ ต้น-ท้าย(เดินช้า)ก้าวห่าง = จังหวะเร่ง-ช้าตามการเดินจริง */
+    footDist += moved;
+    if(footDist >= FOOT_STEP_DIST){
+      footDist -= FOOT_STEP_DIST;
+      footStepSfx(clamp(moved/dt/WALK_SPD, .3, 1));
+      footDustPuff(nx, nz);
+    }
     ph += dt*11;
     walkPose(g, ph, k>0.94 ? (1-k)/0.06 : 1);        // ใกล้ถึงค่อย ๆ หยุดขา
     rig.tx += (nx-rig.tx)*0.12; rig.tz += (nz-rig.tz)*0.12;   // กล้องตามหลังแบบนุ่ม
@@ -1730,7 +2039,13 @@ function onTap(cx, cy){
   const nx=(cx/renderer.domElement.clientWidth)*2-1, ny=-(cy/renderer.domElement.clientHeight)*2+1;
   rayc.setFromCamera({x:nx,y:ny}, camera);
   const hitA = rayc.intersectObjects(actorPick, false)[0];
-  if(hitA){ openProfile(hitA.object.userData.actor); return; }
+  if(hitA){
+    const inf = hitA.object.userData.actor;
+    /* 🖊️ รอบ 868: แตะ "บับเบิล" = พิมพ์ตอบคนนั้นเลย · แตะ "ตัวละคร" = การ์ดโปรไฟล์ (มีปุ่มคุยด้วย) */
+    if(inf && inf.bubble) openChatBox(inf.uid);
+    else openProfile(inf);
+    return;
+  }
   const hitB = rayc.intersectObjects(clickables, false)[0];
   if(hitB){ travelTo(hitB.object.userData.bld); return; }
   const g = groundAt(cx, cy);
@@ -1740,7 +2055,18 @@ function travelTo(b){
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
   if(travelTo.busy){ location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
   travelTo.busy = true;
-  /* 🚶 มีตัวละครของเรา → เดินไปหน้าประตูก่อน แล้วค่อยเข้า (รอบ 866) */
+  /* 🔑 รอบ 869: ยังไม่ล็อกอิน (ไม่มีเซฟ) → แตะตึกไหนก็เดินไปจุดลงทะเบียนจุดเดียวกันเสมอ + ขึ้นป้ายบอกเหตุผล
+     แทนที่จะเดินไปตึกที่แตะจริง ๆ แล้วโผล่หน้าล็อกอินเงียบ ๆ (งง — ทำไมแตะฟุตบอลแล้วไม่ได้เข้า) */
+  if(Live.self && Live.self.g && !Live.self.named){
+    walkSelfTo({key:'__reception', label:'จุดลงทะเบียน'}, ()=>{
+      setChip('🔑 เข้าสู่ระบบก่อนเล่นนะ');
+      showBubble('__self', '🔑 เข้าสู่ระบบก่อนนะ', Date.now());
+      setTimeout(()=>{ location.href='index_classic.html'; }, 1600);   // ให้เวลาเด็กอ่านป้ายก่อนเปลี่ยนหน้า
+    });
+    return;
+  }
+  rememberDoor(b.key);   // 🚪 รอบ 870: กลับมาจากล็อบบี้เดิมเมื่อไหร่ ให้โผล่หน้าประตูตึกนี้
+  /* 🚶 มีตัวละครของเรา (ล็อกอินแล้ว) → เดินไปหน้าประตูตึกที่แตะก่อน แล้วค่อยเข้า (รอบ 866) */
   if(walkSelfTo(b, ()=>{
         setChip('🚪 เข้า '+b.label+' …');
         if(Live.self && Live.self.g) showBubble('__self', 'เข้า '+b.label+' '+b.ico, Date.now());
@@ -1808,8 +2134,13 @@ function openProfile(info){
       +'<div class="pc-act">'+esc(info.act||'กำลังเล่นอยู่ 🎮')+'</div>'
       +(rows.length? '<div class="pc-rows">'+rows.map(r=>'<div><span>'+r[0]+'</span><b>'+r[1]+'</b></div>').join('')+'</div>' : '')
       +(info.self?'<div class="pc-me">⭐ นี่คือตัวหนูเอง</div>':'')
+      /* 🖊️ รอบ 868: คุยกับเพื่อนได้จากในเมืองเลย (ปุ่มขึ้นทุกคนที่ไม่ใช่ตัวเรา — ถ้ายังไม่ใช่เพื่อน/ยังไม่ล็อกอิน
+         กล่องจะขึ้นป้ายบอกเหตุผล + ทางไปเพิ่มเพื่อน แทนที่จะเงียบหาย) */
+      +((!info.self && info.uid) ? '<button class="pc-chat" id="pc-chat">💬 พิมพ์คุยด้วย</button>' : '')
       +'</div>';
     el.style.display='flex';
+    const cb = document.getElementById('pc-chat');
+    if(cb) cb.onclick = ()=>{ el.style.display='none'; openChatBox(info.uid); };
   };
   fill(null);
   if(!info.self && info.uid) lbGet(info.uid).then(lb=>{ if(el.style.display!=='none') fill(lb); });
@@ -1906,17 +2237,37 @@ function boot(){
     self(){ const S=Live.self; if(!S||!S.g) return null;
             const lm=(S.g.userData.limbs||[]).map(p=>+p.rotation.x.toFixed(3));
             return {x:S.g.position.x, z:S.g.position.z, y:S.g.position.y, ry:S.g.rotation.y,
-                    r:Math.hypot(S.g.position.x,S.g.position.z), walk:!!S.walk, bub:!!S.bub, limbs:lm}; },
+                    r:Math.hypot(S.g.position.x,S.g.position.z), walk:!!S.walk, bub:!!S.bub, limbs:lm,
+                    named:!!S.named}; },
     walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
                      return walkSelfTo(b, cb||function(){}); },
     door(key){ return doorSpotOf(key); },
+    /* 🔑 รอบ 869: จำลองแตะตึกจริง (ผ่าน travelTo เต็มเส้นทาง — รวม guest-reroute ด้วย) */
+    tapBuilding(key){ travelTo.busy=false; const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false; travelTo(b); return true; },
     /* 💬 รอบ 866 */
     bubble(uid, txt, ts){ showBubble(uid, txt, ts||Date.now()); },
-    fakeDb(db, uid){ Live.db=db; Live.uid=uid||'me'; },      // ยัด db จำลอง แล้วเรียก watchChats/poll เทสต์เส้นทาง RTDB
+    fakeDb(db, uid){ Live.db=db; Live.uid=(uid===undefined?'me':uid); },   // ยัด db จำลอง แล้วเรียก watchChats/poll เทสต์เส้นทาง RTDB (uid=null = จำลอง "ยังไม่ล็อกอิน")
     watchChats(){ watchFriendChats(); },
+    watchPresence(){ watchPresence(); },     // 🖊️ รอบ 868: เทสต์เส้นทาง presence ด้วย db จำลอง (ไม่ต้อง login จริง)
     poll(){ return pollWorlds(); },
     bubbleAt(uid){ const A = uid==='__self'?Live.self:Live.actors[uid];
-                   return A && A.bub ? {y:A.bub.position.y, op:A.bub.material.opacity} : null; },
+                   return A && A.bub ? {y:A.bub.position.y, op:A.bub.material.opacity,
+                                        w:+A.bub.scale.x.toFixed(2), txt:A.bubTxt} : null; },
+    /* 🖊️ รอบ 868 */
+    bubCount(){ return {live:Live.bubList.length, pick:actorPick.filter(o=>o.userData.actor&&o.userData.actor.bubble).length,
+                        tex:bubTexCache.size, texKeys:[...bubTexCache.keys()]}; },
+    safe(t){ return bubSafeText(t); },        // ข้อความที่ "แสดงจริง" หลังผ่านตัวกรองคำหยาบ
+    tapBubble(uid){ const A = uid==='__self'?Live.self:Live.actors[uid];
+                    if(!A||!A.bub) return false; const inf=A.bub.userData.actor;
+                    if(inf&&inf.bubble) openChatBox(inf.uid); return true; },
+    openChat(uid){ openChatBox(uid); return !!Live.chatWith; },
+    chatState(){ return {with:Live.chatWith, canSend:chatBoxCanSend(), why:chatBoxWhy(),
+                         open:(document.getElementById('chat-box')||{style:{}}).style.display==='flex',
+                         note:(document.getElementById('cb-note')||{}).textContent||''}; },
+    type(txt){ const i=document.getElementById('cb-input'); if(!i) return false; i.value=txt; return true; },
+    send(){ sendCityChat(); },
+    friends(f){ Object.assign(Live.friends, f||{}); },
+    stopLive(){ const n=Live.off.length; cityStopLive(); return {closed:n, poll:Live.pollT}; },
   }};
 }
 
