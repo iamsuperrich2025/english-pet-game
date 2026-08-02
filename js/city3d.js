@@ -23,16 +23,22 @@ const ISLAND_R = 95;              // รัศมีเกาะ
 const RING_IN  = 21,  RING_OUT = 48;   // รัศมีกลางถนนวงใน/วงนอก
 const BAND1_R  = 34,  BAND2_R  = 63;   // รัศมีแถวอาคารชั้นใน/ชั้นนอก
 const GROUND_TEX_PX = 2048, GROUND_SPAN = 200;   // canvas พื้น ↔ หน่วยโลก
-const NIGHT = (()=>{ // 🌙 รอบ 887: ใช้สวิตช์เดียวกับล็อบบี้เดิม (localStorage vwNightUi — ตั้งเอง/ล้างเองใน NightUI ของ
-  // index_classic.html) กติกาเดียวกัน: อัตโนมัติ = 19:00-06:00 · override ?day / ?night (ไว้เทสต์+เล่นสนุก)
+const NIGHT = (()=>{ // 🌙 รอบ 891: อ่านสวิตช์เดียวกับล็อบบี้เดิม — ตรรกะ readMode() ของ NightUI ใน index_classic.html เป๊ะ
+  // 'vwNightMode' = ตัวตัดสินจริง ('day'/'night' · ไม่มีคีย์/ค่าอื่น = อัตโนมัติ 19:00-06:00)
+  // 'vwNightUi' ('1'/'0' คีย์เดิมรอบ 882) = ใช้เฉพาะผู้ใช้เก่าที่ยังไม่มีคีย์ใหม่
+  // ⛔ ห้ามเขียน/ล้าง localStorage ที่นี่ — กฎล้างค่าของรอบ 882 ทำให้การปักโหมดจากหน้า ⚙️ ตั้งค่า (รอบ 889)
+  //    หายเงียบ ๆ ทันทีที่เดินเข้าเมือง 3D (ปัก "กลางคืน" ตอน 2 ทุ่ม = ตรงกับอัตโนมัติพอดี → โดนล้าง)
+  // · override ?day / ?night (ไว้เทสต์+เล่นสนุก)
   try{ const q=new URLSearchParams(location.search);
        if(q.has('day')) return false; if(q.has('night')) return true; }catch(e){}
   const autoNight = ()=>{ const h=new Date().getHours(); return h>=19 || h<6; };
   try{
-    const KEY='vwNightUi';
-    let s = localStorage.getItem(KEY), auto = autoNight();
-    if((s==='1')===auto && (s==='1'||s==='0')){ localStorage.removeItem(KEY); s=null; }
-    return s==='1' ? true : s==='0' ? false : auto;
+    const m = localStorage.getItem('vwNightMode');
+    if(m==='day')   return false;
+    if(m==='night') return true;
+    if(m) return autoNight();                       // ค่าแปลก/'auto' = อัตโนมัติ (ไม่ตกไปอ่านคีย์เดิม)
+    const s = localStorage.getItem('vwNightUi');    // ผู้ใช้เก่า (มีแต่คีย์รอบ 882) → อ่านเป็นโหมดปักตามเดิม
+    return s==='1' ? true : s==='0' ? false : autoNight();
   }catch(e){ return autoNight(); }
 })();
 
@@ -386,10 +392,24 @@ function doorAt(g, z, col){
   hinge.add(M(box(DOOR_W,DOOR_H,0.18), mat(col||0x7a5230), DOOR_W/2, 1.25, 0));
   hinge.add(M(new THREE.SphereGeometry(0.1,8,6), mat(0xf5d97a), DOOR_W-0.26, 1.22, 0.13));  // ลูกบิดริมบาน (ดูออกว่าบานพับอยู่ฝั่งไหน)
   g.add(hinge);
-  // ช่องประตูมืดหลังบาน — เปิดแล้วเห็น "ทางเข้า" ไม่ใช่ผนังทึบ (เล็กกว่าบานเล็กน้อย ตอนปิดจึงถูกบานบังมิด)
-  g.add(M(box(DOOR_W-0.14, DOOR_H-0.14, 0.05), mat(NIGHT?0x2b2113:0x1e150d), 0, 1.25, z+0.03));
+  /* ช่องประตูหลังบาน — เปิดแล้วเห็น "ทางเข้า" ไม่ใช่ผนังทึบ (เล็กกว่าบานเล็กน้อย ตอนปิดจึงถูกบานบังมิด)
+     🌙 รอบ 891: กลางคืนเปลี่ยนเป็นแผ่นเรืองแสงอุ่น (MeshBasic = ไม่กินแสงฉาก สว่างเสมอ) = ไฟในตึกเปิดอยู่ */
+  g.add(M(box(DOOR_W-0.14, DOOR_H-0.14, 0.05),
+          NIGHT ? new THREE.MeshBasicMaterial({color:0xffc978}) : mat(0x1e150d), 0, 1.25, z+0.03));
   g.add(M(box(2.3,0.3,0.7), mat(0xffffff), 0, 0.15, z+0.25));   // ธรณีประตู
   _lastDoor = hinge;                                            // buildCity หยิบไปผูกกับ key ตึก
+  _lastSpill = null;
+  if(NIGHT){
+    /* 🔦 รอบ 891: ลำแสงอุ่นทาบพื้นหน้าประตู — ความเข้มผูกกับองศาที่บานเปิด (ปิดสนิท = ไม่มีเลย)
+       ระนาบนอนกับพื้น หมุน −90° รอบ X → ขอบ "สว่างสุด" (v=1 = แถวบนของ canvas) ไปอยู่ฝั่งติดประตูพอดี */
+    const sp = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_W*2.2, 4.6),
+      new THREE.MeshBasicMaterial({map:doorSpillTexture(), transparent:true, opacity:0,
+                                   depthWrite:false, blending:THREE.AdditiveBlending}));
+    sp.rotation.x = -Math.PI/2;
+    sp.position.set(0, 0.05, z+2.3);
+    g.add(sp);
+    _lastSpill = sp;
+  }
   return hinge;
 }
 function awning(g, w, y, z, col1, col2){
@@ -1394,6 +1414,7 @@ function watchPresence(){
       const a=Live.actors[uid];
       if(a.kind==='stand' && !seen[uid]) removeActor(uid);
     });
+    refreshDoorRest();     // 🚪👥 รอบ 891: ตึกไหนมีคนยืนอยู่ = แง้มประตูไว้ (ตัวที่เพิ่ง spawn ยังไม่เสร็จจะเรียกซ้ำเอง)
   }, ()=>setChip('🟢 เมืองพร้อม (อ่านเพื่อนไม่ได้)'));
   Live.off.push(()=>pref.off('value', ph));      // 🧹 รอบ 868: ออกจากหน้าแล้วเลิกอ่าน
 }
@@ -1426,7 +1447,8 @@ function spawnStander(uid, v){
     };
     tickers.push(tick);
     Live.actors[uid] = {g, kind:'stand', bkey, data:v, tick, blk, bubY:4.9};
-    flushBubble(uid);                            // มีข้อความรออยู่ตั้งแต่ก่อน spawn เสร็จ
+    refreshDoorRest();                           // 🚪👥 รอบ 891: lbGet เป็น async — ตัวจริงเพิ่งลงจอตอนนี้ ประตูค่อยแง้มตาม
+    flushBubble(uid);                          // มีข้อความรออยู่ตั้งแต่ก่อน spawn เสร็จ
     applyUnread(uid);                            // 💬🔴 รอบ 873: มีข้อความค้างอ่าน = ติดป้ายย้อนหลัง
   });
 }
@@ -1560,6 +1582,7 @@ function removeActor(uid){
   if(Live.chatWith===uid) closeChatBox();   // 🖊️ รอบ 868: คนที่เรากำลังพิมพ์คุยด้วยออกจากเมืองไปแล้ว
   a.g.traverse(o=>{ const j=actorPick.indexOf(o); if(j>=0) actorPick.splice(j,1); });
   delete Live.actors[uid];
+  if(a.kind==='stand') refreshDoorRest();   // 🚪👥 รอบ 891: คนสุดท้ายออกจากตึกนั้น = ปิดประตูตาม
 }
 function markPickable(g, info){
   g.traverse(o=>{ if(o.isMesh||o.isSprite){ o.userData.actor=info; actorPick.push(o); } });
@@ -2065,27 +2088,44 @@ function lastDoorKey(){
 const DOOR_SWING  = -1.85;   // เรเดียน (~106°) — ลบ = ผลักบานออกนอกตึก (ตึกหันหน้า +Z)
 const DOOR_OPEN_S = 0.42;    // วินาทีที่ใช้เปิดจนสุด
 const DOOR_SHUT_S = 0.62;    // ปิดช้ากว่าเปิด (บานหนัก ค่อย ๆ กลับเข้าวงกบ)
-const CityDoors = {};        // key ตึก → {h:บานพับ, k:0..1 (ตอนนี้), tgt:0|1 (เป้า)}
-let _lastDoor = null;        // บานที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
+/* 🚪👥 รอบ 891: "ประตูแง้ม" = ท่าพักของบาน เมื่อมีเพื่อนออนไลน์ยืนอยู่หน้าตึกนั้น
+   (ร้านเปิดอยู่ มีคนอยู่ข้างใน) · ปิดจากการเดินออกมาจึงกลับไปหยุดที่ท่าพัก ไม่ใช่ปิดสนิทเสมอ
+   🌙 กลางคืน: ช่องประตูเรืองแสง + ลำแสงทาบพื้น (doorAt) → แง้มไว้ก็เห็นไฟลอดออกมาแต่ไกล */
+const DOOR_AJAR = 0.13;      // ท่าพักตอนมีคนอยู่ — องศาจริงผ่าน ease แล้ว ≈ 25° (ไม่ใช่ 0.13×106° · แง้มพอเห็นแสงลอด ไม่ใช่เปิดอ้า)
+const AJAR_QUIET_MS = 4000;  // เงียบช่วงบูตแรก — presence ก้อนแรกมาทีเดียวหลายตึก ไม่งั้นเอี๊ยดรัวทั้งเมือง
+const CityDoors = {};        // key ตึก → {h:บานพับ, sp:ลำแสงพื้น, k:0..1 (ตอนนี้), tgt:เป้า, rest:ท่าพัก, held:ถูกสั่งเปิดค้างอยู่}
+let _lastDoor = null, _lastSpill = null;   // ของที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
 function registerDoor(key){
   if(!_lastDoor) return false;                  // ตึกแบบไม่มีประตู
-  CityDoors[key] = {h:_lastDoor, k:0, tgt:0};
-  _lastDoor = null;
+  CityDoors[key] = {h:_lastDoor, sp:_lastSpill, k:0, tgt:0, rest:0, held:false};
+  _lastDoor = _lastSpill = null;
   return true;
 }
+/* 🔦 ลำแสงลอดประตู: เรเดียลจากกึ่งกลาง "ขอบบน" ของ canvas = ฐานแสงอยู่ที่ธรณีประตู แล้วบานออกไปข้างหน้า */
+let _spillTex = null;
+function doorSpillTexture(){
+  if(_spillTex) return _spillTex;
+  const c = cvs(128,128), x = c.getContext('2d');
+  const gr = x.createRadialGradient(64,0,6, 64,0,124);
+  gr.addColorStop(0,'rgba(255,214,150,.85)');
+  gr.addColorStop(.45,'rgba(255,198,120,.34)');
+  gr.addColorStop(1,'rgba(255,190,110,0)');
+  x.fillStyle=gr; x.fillRect(0,0,128,128);
+  return _spillTex = ctex(c);
+}
 /* 🔊 บานพับเอี๊ยด — เปิด = ไล่ความถี่ขึ้น · ปิด = ไล่ลง (เบา ๆ ไม่แย่งเพลงประกอบ) */
-function doorCreakSfx(open){
+function doorCreakSfx(open, vol){
   const c = footCtx(); if(!c) return;
   try{
     if(c.state==='suspended') c.resume();
-    const t = c.currentTime, dur = open ? .40 : .52;
+    const t = c.currentTime, dur = open ? .40 : .52, v = vol==null ? 1 : vol;
     const o = c.createOscillator(); o.type='sawtooth';
     o.frequency.setValueAtTime(open?150:246, t);
     o.frequency.linearRampToValueAtTime(open?246:142, t+dur);
     const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=820; bp.Q.value=7.5;
     const g = c.createGain();
     g.gain.setValueAtTime(.0001,t);
-    g.gain.exponentialRampToValueAtTime(.05,t+.09);
+    g.gain.exponentialRampToValueAtTime(.05*v,t+.09);
     g.gain.exponentialRampToValueAtTime(.0001,t+dur);
     o.connect(bp); bp.connect(g); g.connect(c.destination);
     o.start(t); o.stop(t+dur+.02);
@@ -2111,12 +2151,14 @@ function doorLatchSfx(){
     n.connect(hp); hp.connect(ng); ng.connect(c.destination); n.start(t);
   }catch(e){}
 }
-/* สั่งบาน: open=true เปิด/false ปิด · snap=true สแนปทันทีแบบเงียบ (ใช้ตอนตั้งฉากขากลับ)
+/* สั่งบาน: open=true เปิด/false "ปล่อยกลับท่าพัก" (rest — ปิดสนิท หรือแง้มถ้ามีคนอยู่)
+   snap=true สแนปทันทีแบบเงียบ (ใช้ตอนตั้งฉากขากลับ)
    สั่งซ้ำเป้าเดิม = คืน false ไม่เล่นเสียงซ้ำ (walkSelfTo เรียกทุกเฟรมช่วงท้ายทาง) */
 function setCityDoor(key, open, snap){
   const d = CityDoors[key]; if(!d) return false;
-  const tgt = open ? 1 : 0;
-  if(snap){ d.tgt = d.k = tgt; d.h.rotation.y = tgt*DOOR_SWING; return true; }
+  const tgt = open ? 1 : d.rest;
+  d.held = !!open;
+  if(snap){ d.tgt = d.k = tgt; applyDoorPose(d); return true; }
   if(d.tgt === tgt) return false;
   d.tgt = tgt;
   doorCreakSfx(open);
@@ -2124,17 +2166,45 @@ function setCityDoor(key, open, snap){
 }
 function openCityDoor(key){ return setCityDoor(key, true); }
 function closeCityDoor(key){ return setCityDoor(key, false); }
+/* 🚪👥 ตั้งท่าพักของบาน (0 = ปิดสนิท · DOOR_AJAR = แง้ม) — บานที่ถูกสั่งเปิดค้างอยู่ไม่โดนแย่ง */
+function setDoorRest(key, ajar, quiet){
+  const d = CityDoors[key]; if(!d) return false;
+  const rest = ajar ? DOOR_AJAR : 0;
+  if(d.rest === rest) return false;
+  d.rest = rest;
+  if(d.held) return true;                       // กำลังเปิดรับเราเดินเข้าอยู่ — ค่อยไปใช้ตอนปล่อย
+  d.tgt = rest;
+  if(!quiet) doorCreakSfx(ajar, .45);           // เพื่อนเพิ่งเข้า/ออกตึกนั้น = เอี๊ยดเบา ๆ พอรู้
+  return true;
+}
+/* นับคนออนไลน์ที่ยืนอยู่หน้าตึกแต่ละหลัง → ตึกไหนมีคน บานแง้มไว้ */
+function refreshDoorRest(){
+  const cnt = {};
+  for(const uid in Live.actors){
+    const a = Live.actors[uid];
+    if(a.kind==='stand' && a.bkey) cnt[a.bkey] = (cnt[a.bkey]||0)+1;
+  }
+  const quiet = performance.now() < AJAR_QUIET_MS;   // ก้อน presence แรกตอนบูต = เงียบ
+  for(const key in CityDoors) setDoorRest(key, !!cnt[key], quiet);
+  return cnt;
+}
+function applyDoorPose(d){
+  const e = 1-(1-d.k)*(1-d.k);
+  /* องศาจริง = ไถแบบ ease-out ทั้งสองทาง → เปิด: ผลักแรงแล้วผ่อนตอนบานกางสุด
+     ปิด: ออกตัวช้า (บานหนัก) แล้วเร่งเข้าวงกบ = ตรงกับเสียงตึบตอนจบพอดี */
+  d.h.rotation.y = e*DOOR_SWING;
+  /* 🔦 รอบ 891: แสงลอดออกมาตามช่องที่เปิด — แง้มนิดเดียวก็เห็นลำแสง แต่จาง (ปิดสนิท = ดับสนิท) */
+  if(d.sp) d.sp.material.opacity = d.k<=0 ? 0 : (0.45+0.55*d.k)*0.9;
+}
 tickers.push((dt)=>{
   for(const key in CityDoors){
     const d = CityDoors[key];
     if(d.k === d.tgt) continue;
     const up = d.tgt > d.k;
     const step = dt/(up ? DOOR_OPEN_S : DOOR_SHUT_S);
-    d.k = up ? Math.min(1, d.k+step) : Math.max(0, d.k-step);
-    /* องศาจริง = ไถแบบ ease-out ทั้งสองทาง → เปิด: ผลักแรงแล้วผ่อนตอนบานกางสุด
-       ปิด: ออกตัวช้า (บานหนัก) แล้วเร่งเข้าวงกบ = ตรงกับเสียงตึบตอนจบพอดี */
-    d.h.rotation.y = (1-(1-d.k)*(1-d.k))*DOOR_SWING;
-    if(!up && d.k === 0) doorLatchSfx();        // ยิงตอนบานถึงวงกบจริง ไม่ใช่ตอนสั่งปิด
+    d.k = up ? Math.min(d.tgt, d.k+step) : Math.max(d.tgt, d.k-step);
+    applyDoorPose(d);
+    if(!up && d.k === 0) doorLatchSfx();        // ยิงตอนบานถึงวงกบจริง ไม่ใช่ตอนสั่งปิด (หยุดที่ท่าแง้ม = ไม่มีเสียงกลอน)
   }
 });
 
@@ -2748,8 +2818,13 @@ function boot(){
     /* 🚪🔊 รอบ 890: บานประตู — ดูสถานะ/สั่งเปิด-ปิดเอง */
     doorKeys(){ return Object.keys(CityDoors); },
     doorState(key){ const d=CityDoors[key];
-                    return d ? {k:+d.k.toFixed(3), tgt:d.tgt, ry:+d.h.rotation.y.toFixed(3)} : null; },
+                    return d ? {k:+d.k.toFixed(3), tgt:+d.tgt.toFixed(3), rest:d.rest, held:d.held,
+                                ry:+d.h.rotation.y.toFixed(3),
+                                spill:d.sp ? +d.sp.material.opacity.toFixed(3) : null} : null; },
     doorSet(key, open, snap){ return setCityDoor(key, !!open, !!snap); },
+    /* 🚪👥 รอบ 891: ประตูแง้มตามคนออนไลน์ */
+    doorRest(key, ajar, quiet){ return setDoorRest(key, !!ajar, !!quiet); },
+    doorRestScan(){ return refreshDoorRest(); },
     /* 🚪🚶 รอบ 886: เดินออกจากประตู — ดูสถานะ/สั่งเดินเอง (เทสต์ไม่ต้องรอ splash) */
     exit(){ const S=Live.self; return {key:ExitWalk.key, done:ExitWalk.done, spot:ExitWalk.spot,
                                        walk:!!(S&&S.walk), dusts:footDusts.length}; },
