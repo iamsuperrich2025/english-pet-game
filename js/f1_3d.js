@@ -1358,7 +1358,7 @@ const DRS_DRAG_K   = 0.7898;   // ลดแรงต้านอากาศ →
 const DRS_FLAP_SHUT= 0.5;      // องศา flap ตอนปิด (rad · เอียงกินลม)
 const DRS_FLAP_OPEN= 0.04;     // ตอนเปิด (แบนเกือบราบ)
 let drsZones=[], drsOn=false, drsInZone=false, drsGap=0, drsFlapK=0, drsBrake=false;
-let drsPrev=false, drsBoards=[];   // 🪽 รอบ 908: สถานะปีกรอบก่อน (ไว้ยิงเสียงตอนเปลี่ยน) + ป้ายเสาริมแทร็ก
+let drsPrev=false, drsBoards=[], drsMarkObjs=[];   // 🪽 รอบ 908: สถานะปีกรอบก่อน (ไว้ยิงเสียงตอนเปลี่ยน) + ป้ายเสาริมแทร็ก
 
 /* ไฟ DRS ท้ายรถ — ใช้ได้กับทุกโมเดล (GLB ของผู้ใช้ไม่มี flap แยกชิ้น จึงพึ่งการหมุนปีกอย่างเดียวไม่ได้) */
 function attachDrsGlow(g){
@@ -1427,7 +1427,9 @@ function drsSignTex(kind){
   return new THREE.CanvasTexture(c);
 }
 function buildDrsBoards(){
-  drsBoards=[];
+  /* เรียกซ้ำได้ — เก็บของเดิมออกจากฉากก่อน ไม่ให้ป้ายซ้อนทับกันเงียบ ๆ */
+  if(scene) drsMarkObjs.forEach(o=>scene.remove(o));
+  drsBoards=[]; drsMarkObjs=[];
   if(!scene||!drsZones.length) return;
   const poleMat=new THREE.MeshLambertMaterial({color:0x9aa3ad});
   for(let zi=0;zi<drsZones.length;zi++){
@@ -1449,7 +1451,7 @@ function buildDrsBoards(){
         gl.scale.set(7,3,1); gl.position.y=3.2; grp.add(gl);   // เรืองบางๆ ให้เห็นตอนกลางคืน (สนามนี้เป็น night race)
         grp.position.set(LINE.x[i]+LINE.nx[i]*off*side,0,LINE.z[i]+LINE.nz[i]*off*side);
         grp.rotation.y=Math.atan2(-LINE.tx[i],-LINE.tz[i])-0.25*side;
-        scene.add(grp);
+        scene.add(grp); drsMarkObjs.push(grp);
         drsBoards.push({kind,zone:zi,i,side,grp});
       }
       /* แถบสีพาดพื้นเต็มความกว้างแทร็ก (เหมือนเส้นทาสีของสนามจริง) */
@@ -1460,8 +1462,9 @@ function buildDrsBoards(){
       const geo=new THREE.BufferGeometry();
       geo.setAttribute('position',new THREE.Float32BufferAttribute(p,3));
       geo.setIndex([0,1,2,0,2,3]); geo.computeVertexNormals();
-      scene.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:new THREE.Color(col).getHex(),
-        transparent:true,opacity:0.75,side:THREE.DoubleSide})));
+      const stripe=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:new THREE.Color(col).getHex(),
+        transparent:true,opacity:0.75,side:THREE.DoubleSide}));
+      scene.add(stripe); drsMarkObjs.push(stripe);
     }
   }
 }

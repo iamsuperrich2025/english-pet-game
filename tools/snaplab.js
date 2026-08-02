@@ -27,7 +27,8 @@
    ถ้าไม่มีตัวเดินเฟรม จะคืน warn:'no stepper' และภาพอาจว่าง (readPixels ต้องอยู่ task เดียวกับ render)
    ============================================================ */
 window.Snap = (function(){
-  const tk = ()=> (window.InvasionWorld&&InvasionWorld._t) || (window.Adventure3D&&Adventure3D._t) || null;
+  const tk = ()=> (window.InvasionWorld&&InvasionWorld._t) || (window.Adventure3D&&Adventure3D._t)
+              || (window.F1World&&F1World._t) || (window.CITY&&window.CITY._t) || null;   // 🪽 รอบ 908: โลก F1/เมือง ใช้ได้ด้วย
   const stepper = ()=>{ const t=tk(); if(!t) return null;
     if(t.step)      return n=>t.step(1/60,n);
     if(t.stepFrame) return n=>{for(let i=0;i<n;i++)t.stepFrame(1/60);};
@@ -36,7 +37,12 @@ window.Snap = (function(){
 
   /* เฟรมปัจจุบัน → canvas 2D (โครงเดียวกับ GunLab.shot ที่ใช้งานจริงมาแล้ว) */
   function grab(){
-    const cv=document.querySelector('canvas');
+    /* 🪽 รอบ 908: เลือก canvas WebGL ใบใหญ่สุด — หลายโลกมี canvas 2D (มินิแมป/HUD) อยู่ก่อนในหน้า
+       querySelector('canvas') เฉย ๆ จะคว้าใบผิดแล้วได้ภาพว่าง */
+    const cvs=[...document.querySelectorAll('canvas')]
+      .filter(c=>{ try{ return !!(c.getContext('webgl2')||c.getContext('webgl')); }catch(e){ return false; } })
+      .sort((a,b)=>b.width*b.height-a.width*a.height);
+    const cv=cvs[0]||document.querySelector('canvas');
     const gl=cv.getContext('webgl2')||cv.getContext('webgl');
     const stepped=step(1);
     const W=cv.width,H=cv.height,buf=new Uint8Array(W*H*4);
