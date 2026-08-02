@@ -4911,3 +4911,19 @@ html.no-anim .tp-key{transition:none;}
   18%{opacity:1;transform:translate(-50%,-6px) scale(1.18);}
   32%{transform:translate(-50%,0) scale(1);}
   100%{opacity:0;transform:translate(-50%,-90px) scale(1);}}
+
+/* ============================================================
+   🖼️ รอบ 877: ฉากหลัง "ตึกจากเมือง 3D" ตอนเข้าหัวข้อผ่าน ?go=
+   div#city-backdrop สร้างจาก ?go= handler ท้าย js/main.js (ภาพ jpeg จาก city3d.js)
+   z=39 = ใต้ .panel-overlay(40) และ .levelup-overlay(100) → แผง/dialog ลอยทับภาพตึกพอดี
+   ซ่อน dashboard ทั้งจอด้วย visibility (ชิปบางตัว z 80-95 ไม่งั้นทะลุภาพ)
+   แต่คืน visibility ให้แผงหมวดที่เปิดอยู่ (อยู่ในเซกชัน dashboard)
+   ============================================================ */
+#city-backdrop{
+  position:fixed;inset:0;z-index:39;
+  background:#0a1428 center/cover no-repeat;
+  opacity:1;transition:opacity .5s ease;
+}
+#city-backdrop.out{opacity:0;}
+body.city-arrive #screen-dashboard{visibility:hidden;}
+body.city-arrive #panel-overlay.open{visibility:visible;}

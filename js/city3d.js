@@ -2204,9 +2204,23 @@ function onTap(cx, cy){
   const g = groundAt(cx, cy);
   if(g && Math.hypot(g.x,g.z)<ISLAND_R) sparkleAt(g.x, g.z);
 }
+/* 🖼️ รอบ 877: เก็บภาพตึกที่กำลังจะเข้า ฝากไว้ให้ล็อบบี้เดิมใช้เป็นฉากหลังตอนเปิดหัวข้อ (ตัวใช้ = ?go= handler ท้าย js/main.js)
+   วาดสด 1 เฟรมก่อนอ่าน (renderer ไม่ได้เปิด preserveDrawingBuffer — อ่านข้ามเฟรมได้บัฟเฟอร์เปล่า) */
+function captureCityShot(goKey){
+  if(captureCityShot.done) return;
+  captureCityShot.done = true;
+  try{
+    renderer.render(scene, camera);
+    const src = renderer.domElement;
+    const w = 960, h = Math.max(1, Math.round(w*src.height/src.width));
+    const c = document.createElement('canvas'); c.width=w; c.height=h;
+    c.getContext('2d').drawImage(src, 0, 0, w, h);
+    sessionStorage.setItem('vwCityShot', JSON.stringify({k:goKey, ts:Date.now(), img:c.toDataURL('image/jpeg',0.62)}));
+  }catch(e){}
+}
 function travelTo(b){
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
-  if(travelTo.busy){ location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
+  if(travelTo.busy){ captureCityShot(b.go); location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
   travelTo.busy = true;
   /* 🔑 รอบ 869: ยังไม่ล็อกอิน (ไม่มีเซฟ) → แตะตึกไหนก็เดินไปจุดลงทะเบียนจุดเดียวกันเสมอ + ขึ้นป้ายบอกเหตุผล
      แทนที่จะเดินไปตึกที่แตะจริง ๆ แล้วโผล่หน้าล็อกอินเงียบ ๆ (งง — ทำไมแตะฟุตบอลแล้วไม่ได้เข้า) */
@@ -2221,6 +2235,7 @@ function travelTo(b){
   rememberDoor(b.key);   // 🚪 รอบ 870: กลับมาจากล็อบบี้เดิมเมื่อไหร่ ให้โผล่หน้าประตูตึกนี้
   /* 🚶 มีตัวละครของเรา (ล็อกอินแล้ว) → เดินไปหน้าประตูตึกที่แตะก่อน แล้วค่อยเข้า (รอบ 866) */
   if(walkSelfTo(b, ()=>{
+        captureCityShot(b.go);   // 🖼️ รอบ 877: ยืนหน้าประตูพอดี = มุมภาพตึกสวยสุด เก็บก่อนบับเบิลขึ้น
         setChip('🚪 เข้า '+b.label+' …');
         if(Live.self && Live.self.g) showBubble('__self', 'เข้า '+b.label+' '+b.ico, Date.now());
         setTimeout(()=>{ location.href=dest; }, 520);   // ให้เห็นตัวยืนหน้าประตูแป๊บนึงก่อนเปลี่ยนหน้า
@@ -2233,10 +2248,10 @@ function travelTo(b){
     rig.tx=x0+(spot.x-x0)*e; rig.tz=z0+(spot.z-z0)*e; rig.dist=d0+(34-d0)*e;
     rig.apply();
     if(k<1) requestAnimationFrame(anim);
-    else location.href=dest;
+    else { captureCityShot(b.go); location.href=dest; }
   };
   anim();
-  setTimeout(()=>{ location.href=dest; }, 950);   // ตาข่ายกันเหนียว: rAF สะดุด (แท็บพื้นหลัง/จอค้าง) ก็ยังเดินทางแน่นอน
+  setTimeout(()=>{ captureCityShot(b.go); location.href=dest; }, 950);   // ตาข่ายกันเหนียว: rAF สะดุด (แท็บพื้นหลัง/จอค้าง) ก็ยังเดินทางแน่นอน
 }
 function sparkleAt(x,z){
   const g=new THREE.Group();

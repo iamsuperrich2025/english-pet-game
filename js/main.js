@@ -341,6 +341,46 @@ document.addEventListener('visibilitychange', ()=>{
   let go = null;
   try{ go = new URLSearchParams(location.search).get('go'); }catch(e){}
   if(!go) return;
+  /* 🖼️ รอบ 877: มาจากเมือง 3D → ฉากหลังตอนเปิดหัวข้อ = ภาพตึกที่เพิ่งเดินไปหา (city3d.js ฝากไว้ใน sessionStorage)
+     พื้นหลังล็อบบี้เดิมคงเห็นเฉพาะตอนเข้าหน้านี้ตรง ๆ (ผู้ใช้สั่ง 2 ส.ค. 2569) · CSS อยู่ท้าย css/lobby.css (#city-backdrop) */
+  let shotImg = null;
+  try{
+    const s = JSON.parse(sessionStorage.getItem('vwCityShot')||'null');
+    sessionStorage.removeItem('vwCityShot');                      // ใช้ครั้งเดียว — refresh แล้วไม่ค้าง
+    if(s && s.k === go && s.img && Date.now()-s.ts < 5*60*1000) shotImg = s.img;
+  }catch(e){}
+  let bd = null;
+  const bdShow = ()=>{
+    if(!shotImg) return;
+    bd = document.createElement('div');
+    bd.id = 'city-backdrop';
+    bd.style.backgroundImage = 'url("'+shotImg+'")';
+    document.body.appendChild(bd);
+    document.body.classList.add('city-arrive');                   // ซ่อน dashboard ทั้งจอ (กันชิป z สูงทะลุภาพ)
+  };
+  const bdHide = (fast)=>{
+    if(!bd) return;
+    const el = bd; bd = null;
+    document.body.classList.remove('city-arrive');
+    if(fast){ el.remove(); return; }
+    el.classList.add('out');                                      // จางออกเห็นล็อบบี้เดิมโผล่กลับมา
+    setTimeout(()=>el.remove(), 520);
+  };
+  const bdWatch = ()=>{                                           // หัวข้อปิดเมื่อไหร่ = คืนล็อบบี้เดิม
+    if(!bd) return;
+    let opened = false;
+    const t0 = Date.now();
+    const iv = setInterval(()=>{
+      if(!bd){ clearInterval(iv); return; }
+      if(!document.getElementById('screen-dashboard').classList.contains('active')){
+        clearInterval(iv); bdHide(true); return;                  // เปลี่ยนหน้าจอ/เข้าโลก 3D แล้ว — เลิกบังทันที
+      }
+      const pnl = document.getElementById('panel-overlay');
+      const open = document.querySelector('.levelup-overlay,.inbox-overlay') || (pnl && pnl.classList.contains('open'));
+      if(open){ opened = true; return; }
+      if(opened || Date.now()-t0 > 1500){ clearInterval(iv); bdHide(false); }
+    }, 300);
+  };
   /* ปุ่มจริงในหน้า (ผูก handler อยู่แล้ว) — คลิกแทนผู้เล่น */
   const CLICK = {
     home:'[data-panel="panel-home"]', farm:'[data-panel="panel-farm"]', factory:'[data-panel="panel-factory"]',
@@ -373,7 +413,8 @@ document.addEventListener('visibilitychange', ()=>{
     if(!document.getElementById('screen-dashboard').classList.contains('active')) return;   // รอถึง Lobby จริง (ผ่านหน้า register แล้ว)
     clearInterval(t);
     try{ history.replaceState(null, '', location.pathname); }catch(e){}   // ล้าง param — refresh แล้วไม่เด้งซ้ำ
-    setTimeout(()=>{ try{ run(); }catch(e){ console.warn('go-link', e); } }, 350);
+    bdShow();                                                             // 🖼️ รอบ 877: โชว์ตึกต่อเนื่องจากเมืองระหว่างรอเปิดหัวข้อ
+    setTimeout(()=>{ try{ run(); }catch(e){ console.warn('go-link', e); } bdWatch(); }, 350);
   }, 400);
   setTimeout(()=>clearInterval(t), 180000);   // เกิน 3 นาทียังไม่ถึง Lobby (ค้าง login) = เลิกรอ
 })();
