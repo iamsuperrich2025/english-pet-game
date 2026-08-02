@@ -2591,10 +2591,12 @@ function applyCamMode(){
    (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อให้ตาจับการหมุนได้) */
 function buildFpWheels(){
   const g=new THREE.Group();
-  const tyreM=new THREE.MeshLambertMaterial({color:0x121417});
-  const rimM=new THREE.MeshLambertMaterial({color:0x2e3238});
-  const spokeM=new THREE.MeshLambertMaterial({color:0x5d646d});
-  const bandM=new THREE.MeshLambertMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
+  /* 🛞 รอบ 912: เปลี่ยนเป็น MeshBasic (ไม่พึ่งแสง) — เดิม Lambert โดนไฟสนามข้างเดียว
+     หน้าล้อฝั่งซ้ายมืดจนก้าน/แถบเหลืองจมหาย (ผู้ใช้เห็นจากเครื่องจริง) · Basic = สองฝั่งชัดเท่ากันเสมอ */
+  const tyreM=new THREE.MeshBasicMaterial({color:0x101216});
+  const rimM=new THREE.MeshBasicMaterial({color:0x33383f});
+  const spokeM=new THREE.MeshBasicMaterial({color:0x99a2ac});
+  const bandM=new THREE.MeshBasicMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
   g.userData.spin=[];
   for(const side of [-1,1]){
     const wg=new THREE.Group(), sg=new THREE.Group();
