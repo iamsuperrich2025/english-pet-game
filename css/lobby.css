@@ -4922,6 +4922,7 @@ html.no-anim .tp-key{transition:none;}
 #city-backdrop{
   position:fixed;inset:0;z-index:39;
   background:#0a1428 center/cover no-repeat;
+  filter:blur(3px) brightness(.72);transform:scale(1.04);   /* เบลอ+หรี่เบา ๆ (ผู้ใช้สั่งรอบ 879) — scale กันขอบโปร่งจากการเบลอเกินจอ */
   opacity:1;transition:opacity .5s ease;
 }
 #city-backdrop.out{opacity:0;}
