@@ -32,6 +32,18 @@
     animation:ld 1.1s ease-in-out infinite}
   @keyframes ld{0%{margin-left:-40%}100%{margin-left:100%}}
 
+  /* 🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิด = ภาพเมืองใบที่เพิ่งเดินออกไป (แทนจอน้ำเงินเปล่า)
+     แล้วค่อยจางเข้าฉาก 3D จริง · ภาพ+มุมกล้องฝากมาจาก js/city3d.js (sessionStorage vwCityBack) */
+  #splash.photo{transition:opacity .9s;justify-content:flex-end;padding-bottom:9vh;gap:10px}
+  #splash-shot{position:absolute;inset:0;background-size:cover;background-position:center;background-repeat:no-repeat}
+  #splash.photo::after{content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(180deg,rgba(10,31,60,0) 40%,rgba(10,31,60,.75))}
+  #splash.photo .logo,#splash.photo .ttl{display:none}
+  #splash.photo .sub{position:relative;color:#eaf3ff;font-weight:800;font-size:14px;
+    background:rgba(10,26,54,.62);border:1px solid rgba(120,190,255,.35);
+    border-radius:999px;padding:6px 14px;backdrop-filter:blur(6px)}
+  #splash.photo .bar{position:relative}
+
   /* ── HUD ── */
   .chip{position:fixed;z-index:20;background:rgba(10,26,54,.78);color:#eaf3ff;border:1px solid rgba(120,190,255,.35);
     border-radius:999px;padding:7px 14px;font-size:13px;backdrop-filter:blur(6px);display:flex;gap:8px;align-items:center}
@@ -133,6 +145,33 @@
     <div class="sub">กำลังสร้างเมืองคำศัพท์ให้หนู…</div>
     <div class="bar"><i></i></div>
   </div>
+  <!-- 🎬 รอบ 880: จอเปิดตอน "กลับจากล็อบบี้เดิม" = ภาพเมืองใบที่ถ่ายไว้ตอนเดินเข้าตึก
+       วางไว้ตรงนี้ (ก่อนโหลด three.js/city3d.js) เพราะต้องขึ้นให้ทันแว้บแรกที่หน้าเปิด
+       ภาพฝากมาใน sessionStorage vwCityBack โดย captureCityShot() ใน js/city3d.js
+       โชว์เฉพาะ "เพิ่งออกมาจากตึกนั้นจริง ๆ" (bk ตรงกับ vwCityLastDoor ของรอบ 870) + ภาพสดไม่เกิน 5 นาที
+       ใช้ครั้งเดียวแล้วลบ — รีเฟรชเองทีหลังจะได้ไม่เจอภาพเก่าค้าง · ตัวจางออก/ตั้งกล้องอยู่ใน js/city3d.js -->
+  <script>
+    (function(){
+      try{
+        var raw = sessionStorage.getItem('vwCityBack');
+        if(!raw) return;
+        sessionStorage.removeItem('vwCityBack');
+        var s = JSON.parse(raw);
+        if(!s || !s.img || Date.now()-s.ts > 5*60*1000) return;
+        if(s.bk && s.bk !== sessionStorage.getItem('vwCityLastDoor')) return;   // ไม่ได้กลับมาจากตึกใบนั้น = ไม่ใช่ฉากเดียวกัน
+        var sp = document.getElementById('splash');
+        if(!sp) return;
+        var im = document.createElement('div');
+        im.id = 'splash-shot';
+        im.style.backgroundImage = 'url("'+s.img+'")';
+        sp.insertBefore(im, sp.firstChild);
+        sp.classList.add('photo');
+        var sub = sp.querySelector('.sub');
+        if(sub) sub.textContent = '🚪 กำลังกลับเข้าเมือง…';
+        window.__vwBackShot = s;        // js/city3d.js เอาไปตั้งมุมกล้องให้ตรงภาพ แล้วสั่งจางออก
+      }catch(e){}
+    })();
+  </script>
 
   <div class="chip" id="city-chip">🏙️ Vocab City <small>เมืองล็อบบี้ 3D</small></div>
   <div class="chip" id="online-chip">⏳ กำลังเชื่อมต่อ…</div>
@@ -147,7 +186,7 @@
   <script src="js/data/firebase-config.js"></script>
   <!-- 🙊 รอบ 868: ตัวกรองคำหยาบชุดเดียวกับทั้งเกม (standalone ไม่พึ่งไฟล์อื่น) — ใช้ทั้งก่อนแสดงบับเบิลและก่อนส่ง -->
   <script src="js/data/badwords.js"></script>
-  <script src="js/city3d.js?v=877"></script>
+  <script src="js/city3d.js?v=880"></script>
   <script>
     setTimeout(()=>{ const h=document.getElementById('hint-chip'); if(h) h.classList.add('gone'); }, 12000);
     document.getElementById('profile-card').addEventListener('click', e=>{

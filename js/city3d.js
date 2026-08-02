@@ -2206,21 +2206,42 @@ function onTap(cx, cy){
 }
 /* 🖼️ รอบ 877: เก็บภาพตึกที่กำลังจะเข้า ฝากไว้ให้ล็อบบี้เดิมใช้เป็นฉากหลังตอนเปิดหัวข้อ (ตัวใช้ = ?go= handler ท้าย js/main.js)
    วาดสด 1 เฟรมก่อนอ่าน (renderer ไม่ได้เปิด preserveDrawingBuffer — อ่านข้ามเฟรมได้บัฟเฟอร์เปล่า) */
-function captureCityShot(goKey){
+function captureCityShot(goKey, bldKey){
   if(captureCityShot.done) return;
   captureCityShot.done = true;
   try{
+    /* 🎥 รอบ 877: ดันกล้องชิดตึกหันเข้าประตูแค่เฟรมที่แคป (กันภาพไกล/มุมเพี้ยนตอนเครื่องช้าหรือกำลังเดินอยู่) แล้วคืนค่าเดิมทันที */
+    const save = {tx:rig.tx, tz:rig.tz, yaw:rig.yaw, dist:rig.dist};
+    const d = doorSpotOf(goKey);
+    if(d){
+      const dx = d.x-d.bx, dz = d.z-d.bz, m = Math.hypot(dx,dz)||1;
+      rig.tx = d.bx; rig.tz = d.bz;
+      rig.yaw = Math.atan2(dx/m, dz/m);
+      rig.dist = 30;
+      rig.apply();
+    }
     renderer.render(scene, camera);
     const src = renderer.domElement;
     const w = 960, h = Math.max(1, Math.round(w*src.height/src.width));
     const c = document.createElement('canvas'); c.width=w; c.height=h;
     c.getContext('2d').drawImage(src, 0, 0, w, h);
-    sessionStorage.setItem('vwCityShot', JSON.stringify({k:goKey, ts:Date.now(), img:c.toDataURL('image/jpeg',0.62)}));
+    const img = c.toDataURL('image/jpeg',0.62);
+    sessionStorage.setItem('vwCityShot', JSON.stringify({k:goKey, ts:Date.now(), img}));
+    /* 🎬 รอบ 880: ฝากภาพใบเดียวกันไว้อีกใบ ให้ "ขากลับ" ใช้เป็นจอเปิดของเมือง
+       (ใบบนถูกล็อบบี้เดิมลบทิ้งทันทีหลังใช้ — ดู ?go= handler ท้าย js/main.js จึงต้องแยกใบ)
+       เก็บมุมกล้อง "ของเฟรมที่แคปจริง" ไปด้วย (ตอนนี้ rig ยังเป็นมุมที่ดันชิดประตูอยู่)
+       → ขากลับตั้งกล้องตามค่านี้ ภาพกับฉาก 3D จะซ้อนกันพอดี จางแล้วไม่กระตุก */
+    sessionStorage.setItem('vwCityBack', JSON.stringify({
+      k:goKey, bk:bldKey||goKey, ts:Date.now(), img,
+      cam:{tx:rig.tx, tz:rig.tz, yaw:rig.yaw, pitch:rig.pitch, dist:rig.dist}
+    }));
+    Object.assign(rig, save); rig.apply();
+    renderer.render(scene, camera);
   }catch(e){}
 }
 function travelTo(b){
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
-  if(travelTo.busy){ captureCityShot(b.go); location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
+  if(travelTo.busy){ captureCityShot(b.go, b.key); location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
   travelTo.busy = true;
   /* 🔑 รอบ 869: ยังไม่ล็อกอิน (ไม่มีเซฟ) → แตะตึกไหนก็เดินไปจุดลงทะเบียนจุดเดียวกันเสมอ + ขึ้นป้ายบอกเหตุผล
      แทนที่จะเดินไปตึกที่แตะจริง ๆ แล้วโผล่หน้าล็อกอินเงียบ ๆ (งง — ทำไมแตะฟุตบอลแล้วไม่ได้เข้า) */
@@ -2235,7 +2256,7 @@ function travelTo(b){
   rememberDoor(b.key);   // 🚪 รอบ 870: กลับมาจากล็อบบี้เดิมเมื่อไหร่ ให้โผล่หน้าประตูตึกนี้
   /* 🚶 มีตัวละครของเรา (ล็อกอินแล้ว) → เดินไปหน้าประตูตึกที่แตะก่อน แล้วค่อยเข้า (รอบ 866) */
   if(walkSelfTo(b, ()=>{
-        captureCityShot(b.go);   // 🖼️ รอบ 877: ยืนหน้าประตูพอดี = มุมภาพตึกสวยสุด เก็บก่อนบับเบิลขึ้น
+        captureCityShot(b.go, b.key);   // 🖼️ รอบ 877: ยืนหน้าประตูพอดี = มุมภาพตึกสวยสุด เก็บก่อนบับเบิลขึ้น
         setChip('🚪 เข้า '+b.label+' …');
         if(Live.self && Live.self.g) showBubble('__self', 'เข้า '+b.label+' '+b.ico, Date.now());
         setTimeout(()=>{ location.href=dest; }, 520);   // ให้เห็นตัวยืนหน้าประตูแป๊บนึงก่อนเปลี่ยนหน้า
@@ -2248,10 +2269,10 @@ function travelTo(b){
     rig.tx=x0+(spot.x-x0)*e; rig.tz=z0+(spot.z-z0)*e; rig.dist=d0+(34-d0)*e;
     rig.apply();
     if(k<1) requestAnimationFrame(anim);
-    else { captureCityShot(b.go); location.href=dest; }
+    else { captureCityShot(b.go, b.key); location.href=dest; }
   };
   anim();
-  setTimeout(()=>{ captureCityShot(b.go); location.href=dest; }, 950);   // ตาข่ายกันเหนียว: rAF สะดุด (แท็บพื้นหลัง/จอค้าง) ก็ยังเดินทางแน่นอน
+  setTimeout(()=>{ captureCityShot(b.go, b.key); location.href=dest; }, 950);   // ตาข่ายกันเหนียว: rAF สะดุด (แท็บพื้นหลัง/จอค้าง) ก็ยังเดินทางแน่นอน
 }
 function sparkleAt(x,z){
   const g=new THREE.Group();
@@ -2408,15 +2429,51 @@ function boot(){
     rig.apply();
   });
 
-  // 🎬 เปิดฉาก: กล้องหมุนลงมาหาเมืองช้าๆ
+  /* ============================================================
+     🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิดคือ "ภาพเมืองใบที่เพิ่งเดินออกไป"
+     ------------------------------------------------------------
+     เดิม: กดปุ่ม "🏙️ เมือง 3D" แล้วเจอจอน้ำเงินเปล่า ๆ ค้างจนกว่าเมืองจะสร้างเสร็จ
+          (โหลด three + ปั้นตึกทั้งเมือง) — เด็กเห็นจอว่างนานเหมือนเกมค้าง
+     ทำ: เอาภาพที่ captureCityShot() ถ่ายไว้ตอนเดินเข้าตึก (sessionStorage vwCityBack)
+          มาเป็นฉากเปิดตั้งแต่แว้บแรก แล้วพอเมืองพร้อมค่อย "จาง" เข้าฉาก 3D จริง
+     ภาพถูกวางตั้งแต่ index.html (สคริปต์สั้นก่อนโหลด three.js — เห็นเร็วที่สุดเท่าที่ทำได้)
+          ที่นี่รับช่วงต่อ 2 อย่าง: ตั้งกล้องให้ตรงมุมในภาพ + สั่งจางภาพออกตอนวาดจริงแล้ว
+     ตั้งกล้องตรงมุมภาพ = ภาพจางลงไปทับฉากที่หน้าตาเหมือนกันเป๊ะ (ไม่ใช่วาร์ปคนละมุม)
+          จางเสร็จค่อยถอยกล้องกลับมามุมมองเมืองปกติช้า ๆ ให้เห็นว่าเป็น 3D จริง
+     ============================================================ */
+  const backShot = window.__vwBackShot;
   const t0=performance.now();
-  const intro=()=>{
-    const k=Math.min(1,(performance.now()-t0)/2200), e=1-Math.pow(1-k,3);
-    rig.dist = 150-(150-88)*e; rig.pitch = 1.5-(1.5-0.95)*e; rig.yaw = 0.6*(1-e);
+  let backPull = null;                         // 🧪 เทสต์เรียกด้วยเวลาจำลองได้ (แท็บพื้นหลัง rAF ไม่วิ่ง)
+  if(backShot && backShot.cam){
+    const c0 = backShot.cam;
+    /* ปลายทาง = มุมที่ spawnSelf() ตั้งไว้ให้แล้ว (เล็งตัวเราที่หน้าประตู — รอบ 870)
+       ภาพเล็งใจกลางตึก (รอบ 877 ดันกล้องชิดประตูตอนแคป) → ต้องไถกลับมาหาตัวเรา ไม่งั้นตัวเราค้างอยู่ริมจอ */
+    const aimX=rig.tx, aimZ=rig.tz;
+    rig.tx=c0.tx; rig.tz=c0.tz; rig.yaw=c0.yaw; rig.pitch=c0.pitch; rig.dist=c0.dist;
     rig.apply();
-    if(k<1) requestAnimationFrame(intro);
-  };
-  intro();
+    const PULL_WAIT = 900, PULL_DUR = 1700;   // รอภาพจางจบก่อน (จาง .9s) แล้วค่อยถอยกล้อง
+    backPull = (now)=>{
+      if(ptr.size) return;                     // เด็กแตะจอเอง = หยุดจัดกล้องให้ทันที ปล่อยเขาคุม
+      const sim = now!==undefined;
+      const k=clamp(((sim?now:performance.now())-t0-PULL_WAIT)/PULL_DUR,0,1), e=1-Math.pow(1-k,3);
+      rig.dist  = c0.dist  + (88  -c0.dist )*e;
+      rig.pitch = c0.pitch + (0.95-c0.pitch)*e;
+      rig.tx    = c0.tx    + (aimX-c0.tx   )*e;
+      rig.tz    = c0.tz    + (aimZ-c0.tz   )*e;
+      rig.apply();
+      if(k<1 && !sim) requestAnimationFrame(()=>backPull());
+    };
+    backPull();
+  }else{
+    // 🎬 เปิดฉาก (เข้าเมืองตรง ๆ): กล้องหมุนลงมาหาเมืองช้าๆ
+    const intro=()=>{
+      const k=Math.min(1,(performance.now()-t0)/2200), e=1-Math.pow(1-k,3);
+      rig.dist = 150-(150-88)*e; rig.pitch = 1.5-(1.5-0.95)*e; rig.yaw = 0.6*(1-e);
+      rig.apply();
+      if(k<1) requestAnimationFrame(intro);
+    };
+    intro();
+  }
 
   // 📐 กันจอ 0×0/หมุนจอ: บางเครื่อง (WebView/preview) โหลดตอนหน้าต่างยังไม่มีขนาด แล้ว resize ไม่ยิงซ้ำ
   let _lw=0, _lh=0;
@@ -2442,7 +2499,21 @@ function boot(){
   loop();
 
   const sp = document.getElementById('splash');
-  if(sp){ sp.classList.add('done'); setTimeout(()=>sp.remove(), 650); }
+  if(sp){
+    const fadeSplash = ()=>{
+      if(fadeSplash.done) return;
+      fadeSplash.done = true;
+      sp.classList.add('done');
+      setTimeout(()=>sp.remove(), backShot ? 1000 : 650);
+    };
+    /* 🎬 รอบ 880: โหมดภาพ = รอให้เมืองวาดจริงอย่างน้อย 1 เฟรมก่อนค่อยจาง
+       (ไม่งั้นภาพจางลงไปเจอ canvas เปล่า แล้วเมืองค่อยโผล่ = กระพริบ)
+       แท็บพื้นหลัง rAF ไม่วิ่ง → มีตาข่าย setTimeout กันภาพค้างจอ */
+    if(backShot){
+      requestAnimationFrame(()=>requestAnimationFrame(fadeSplash));
+      setTimeout(fadeSplash, 900);
+    }else fadeSplash();
+  }
 
   /* 🧪 test hooks (preview เท่านั้น — ไม่กระทบผู้เล่น) */
   let _simT = 1000;   // เวลาจำลองของ step (แยกจาก clock จริง — แท็บ preview ที่ rAF ไม่วิ่ง)
@@ -2463,6 +2534,12 @@ function boot(){
     walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
                      return walkSelfTo(b, cb||function(){}); },
     door(key){ return doorSpotOf(key); },
+    /* 🎬 รอบ 880: จอเปิดจากภาพเมือง — ดูโหมด/มุมกล้อง + ไล่กล้องถอยด้วยเวลาจำลอง (ms นับจากบูต) */
+    intro(){ return {photo:!!backShot, cam:backShot?backShot.cam:null,
+                     splash:(()=>{ const e=document.getElementById('splash'); return e?{cls:e.className, shot:!!document.getElementById('splash-shot')}:null; })(),
+                     rig:{tx:+rig.tx.toFixed(2), tz:+rig.tz.toFixed(2), yaw:+rig.yaw.toFixed(3), pitch:+rig.pitch.toFixed(3), dist:+rig.dist.toFixed(2)}}; },
+    introPull(ms){ if(!backPull) return null; backPull(t0+ms);
+                   return {dist:+rig.dist.toFixed(2), pitch:+rig.pitch.toFixed(3), tx:+rig.tx.toFixed(2), tz:+rig.tz.toFixed(2), yaw:+rig.yaw.toFixed(3)}; },
     /* 🔑 รอบ 869: จำลองแตะตึกจริง (ผ่าน travelTo เต็มเส้นทาง — รวม guest-reroute ด้วย) */
     tapBuilding(key){ travelTo.busy=false; const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false; travelTo(b); return true; },
     /* 🎵 รอบ 873: สถานะเพลง (เทสต์ปุ่ม/ระดับเสียง) */
