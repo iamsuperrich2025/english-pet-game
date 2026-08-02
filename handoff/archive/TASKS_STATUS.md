@@ -3559,3 +3559,10 @@
 
 - **รอบ 877 (2 ส.ค. · ผู้ใช้: "เข้าหัวข้อจากเมือง 3D → ฉากหลังหลัง dialog ต้องเป็นตึกนั้นในเมือง ไม่ใช่พื้นหลังล็อบบี้เดิม · พื้นหลังเดิมใช้เฉพาะเข้าหน้าเดิมตรง ๆ"):** 🖼️ `js/city3d.js` (`captureCityShot` ก่อน `travelTo`) เก็บภาพ jpeg 960px จาก canvas ตอนยืนหน้าประตู/ก่อนเด้งทุกทาง → ฝาก `sessionStorage vwCityShot {k,ts,img}` · ตัวรับ = ?go= handler ท้าย `js/main.js`: key ตรง+อายุ<5นาที → `#city-backdrop` (z=39 ใต้ panel(40)/dialog(100)) + `body.city-arrive` ซ่อน `#screen-dashboard` ด้วย visibility (ชิป z 80-95 ไม่งั้นทะลุ) ยกเว้น `#panel-overlay.open` คืน visible · ตัวเฝ้า 300ms: ปิดกล่อง/แผงเมื่อไหร่จางออก .5s คืนล็อบบี้เดิม เปลี่ยน screen = ถอดทันที ไม่เปิดอะไรใน 1.5s = ถอด · CSS ท้าย `css/lobby.css` · bust `city3d.js?v=877`
   - ยืนยัน (server เอง :8814 · 1000×640 + 812×375 · เดินจริง `CITY._t.tapBuilding('w3d_adv')` → เด้ง ?go=w3d_adv): shot ถูก key/ขนาด ~59KB ✓ dialog "🌍 เข้าโลกผจญภัย" ลอยบนภาพตึก (ภาพ+screenshot ยืนยันด้วยตา) ✓ ยกเลิก → backdrop จางออก คืน dashboard ✓ แผง market เปิดทับภาพได้ ปิดแล้วคืนใน ~760ms ✓ เข้าตรงไม่มี ?go = ไม่มี backdrop ✓ จอเตี้ยกล่องอยู่ครบไม่ scroll ✓ console ไม่มี error · `node --check` ผ่าน 2 ไฟล์ · ล้างเซฟ+ฆ่า server แล้ว · ⚠️ เทสต์ในแท็บซ่อน: interval โดน Chrome intensive throttling (นาทีละครั้ง) — อาการเฉพาะแท็บ hidden ไม่ใช่บั๊ก
+
+
+## ⏬ ย้ายเมื่อ 2026-08-02 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 879 (2 ส.ค. · ผู้ใช้ขอ: "เบลอ+หรี่ภาพตึกเบา ๆ ให้ตัวหนังสือใน dialog เด่นขึ้นอีก" — ต่อยอดฉากหลังตึกเมือง 3D ก่อนหน้า):** 🎨 แก้ CSS จุดเดียวใน `css/lobby.css` (`#city-backdrop`) เพิ่ม `filter:blur(3px) brightness(.72)` + `transform:scale(1.04)` (กันขอบโปร่งจากเบลอเกินจอ) — ไม่แตะ JS
+  - ยืนยัน (server เอง :8815 · 1000×640): computed style ตรง `blur(3px) brightness(0.72)` + `scale(1.04,1.04)` ✓ ภาพยืนยันด้วยตา (dialog "เข้าโลกผจญภัย" อ่านง่ายขึ้นชัดเจนเทียบก่อนแก้) ✓ ล้างเซฟ+ฆ่า server แล้ว
+  - ⚠️ **session คู่ขนานกำลังแก้ `js/city3d.js`+`index.html` พร้อมกัน** (ฟีเจอร์จอเปิด "ภาพเมืองย้อนกลับ" — ใช้เลข "รอบ 880" ในโค้ดที่ยังไม่ commit) รอบนี้แตะแค่ `css/lobby.css` จุดเดียว ไม่ชนไฟล์ ขยับเลขรอบตัวเองเป็น 879 กันชน
