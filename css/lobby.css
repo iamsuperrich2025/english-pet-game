@@ -4933,7 +4933,7 @@ body.city-arrive #screen-dashboard{visibility:hidden;}
 body.city-arrive #panel-overlay.open{visibility:visible;}
 
 /* ============================================================
-   🌙 รอบ 882 — โหมดกลางคืน UI ล็อบบี้ (โทนอุ่น มืดลง)
+   🌙 รอบ 885 — โหมดกลางคืน UI ล็อบบี้ (โทนอุ่น มืดลง)
    สวิตช์ = คลาส `night` บน <html> (ใส่ตั้งแต่ก่อน paint โดยสคริปต์ inline ใน index_classic.html
    → ไม่มีจอกะพริบขาวตอนเปิดเกมกลางคืน) · เปิดเอง 19:00-06:00 · ปุ่ม 🌙 ในแถบบนสลับเองได้
    ทำ 3 ชั้น:
@@ -4966,11 +4966,24 @@ html.night .lobby-top #btn-night{
   background:linear-gradient(180deg,#7a4a1e,#5e3616);
   box-shadow:0 0 0 1px rgba(255,209,102,.5),0 6px 18px rgba(20,10,4,.45);
 }
+/* ผ้าคลุม 2 ชั้น (ชั้นล่าง = div ที่สคริปต์สร้าง · ชั้นบน = body::after — ทั้งคู่ blend กับทั้งหน้า
+   เพราะอยู่ใน stacking context เดียวกัน (root) · ห้ามใช้ pseudo-element ของ #night-veil เอง
+   เพราะพ่อมี blend/opacity = สร้าง stacking context ใหม่ ลูกจะ blend แค่กับพื้นของพ่อ)
+   ① #night-veil = mix-blend-mode:color → ย้อม "สี" ให้อุ่นโดยคง "ความสว่าง" เดิมไว้
+      (สำคัญมาก: ตัวหนังสือกับพื้นยังต่างความสว่างเท่าเดิม = อ่านชัดเท่าเดิม ·
+       และกวาดสีฟ้าที่ hardcode ทั่วไฟล์ให้อุ่นตาม ไม่งั้น multiply อย่างเดียวจะได้ ฟ้า+ส้ม = ม่วง)
+   ② body::after = multiply น้ำตาลเข้ม → หรี่ทั้งจอลงให้เป็นกลางคืนจริง */
 #night-veil{
   position:fixed;inset:0;z-index:99998;pointer-events:none;
   opacity:0;transition:opacity .45s ease;
-  mix-blend-mode:multiply;
-  background:linear-gradient(180deg,#f3b478 0%,#eda766 55%,#e39a58 100%);
+  mix-blend-mode:color;background:#c9832f;
 }
-html.night #night-veil{opacity:.55;}
-html.no-anim #night-veil{transition:none;}
+html.night #night-veil{opacity:.52;}
+body::after{
+  content:'';position:fixed;inset:0;z-index:99999;pointer-events:none;
+  opacity:0;transition:opacity .45s ease;
+  mix-blend-mode:multiply;
+  background:linear-gradient(180deg,#6b4526 0%,#5b3820 60%,#3f2512 100%);
+}
+html.night body::after{opacity:.28;}
+html.no-anim #night-veil,html.no-anim body::after{transition:none;}
