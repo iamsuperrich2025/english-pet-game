@@ -6,6 +6,8 @@
      ยางมีลิมิตแรงเข้าโค้ง — เร็วเกิน = ไถล (understeer/drift) · ออกนอกแทร็ก = runoff → ทราย ลื่น+หน่วง
    · บรรยากาศ night race ใต้แสงไฟสปอตไลต์ (เอกลักษณ์สนามนี้) + ทะเลทราย + ต้นปาล์ม
    · เก็บตัวอักษรบนแทร็กประกอบคำ (REWARD 60🪙) + จับเวลาต่อรอบ / Best Lap (state.f1Best)
+   · 🚦 ออกสตาร์ทจริง (รอบ 902): ไฟแดง 5 ดวงบนซุ้มติดทีละดวง → ดับพร้อมกัน = ออกตัว (ล็อกคันเร่งก่อนไฟดับ)
+   · 👻 รถเงา (รอบ 902): บันทึกเส้นทาง Best Lap ลง localStorage แล้วปล่อยรถโปร่งแสงวิ่งซ้ำให้ไล่แข่งกับตัวเอง
    · multiplayer ผ่าน NetRoom map 'f1' (สนามละ 10 คน) — เห็นรถเพื่อน+ชื่อ+แชท+กระดานคำ
    · โมเดลรถ: โหลด img/models/f1_car.glb ถ้ามี (ผู้ใช้จะหามาวาง) — ไม่มี = รถ F1 ประกอบเอง (nose/ปีก/halo/ล้อหมุน)
    · texture จริง: probe img/f1/*.jpg (ผู้ใช้เจนภาพมาวางตาม PROMPTS_F1.md) — ไม่มี = canvas วาดเองทุกแผ่น
@@ -26,6 +28,12 @@ const HALF_W       = 7.5;     // ครึ่งความกว้างแ�
 const KERB_W       = 1.6;     // ความกว้างขอบ kerb
 const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแทร็ก (สไตล์ Bahrain)
 const SAMPLE_M     = 5;       // ระยะห่างจุด sample เส้นแทร็ก
+/* 🪖 มุมมองในห้องคนขับ (รอบ 901) — ภาพหลัก first-person + ปุ่ม 📷 สลับมุมเห็นทั้งคัน */
+const FP_EYE   = 1.04;   // ความสูงสายตาคนขับ (ม.)
+const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไปหน้ารถจากจุดกลาง (ม.)
+const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
+const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
+const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
 /* ฟิสิกส์ (หน่วยเมตร/วินาที — 92 m/s = 331 กม./ชม.) */
 const PWR_A        = 950;     // กำลังเครื่อง: a = PWR_A / max(v,6)  (แรงมากตอนช้า ลดตามความเร็ว)
 const ACC_CAP      = 14.5;    // เพดานอัตราเร่ง (ล้อหมุนฟรี)
@@ -47,6 +55,31 @@ const CHAT_MS      = 5000;
 const CHAT_PRESETS = ['เร็วจัด! 🔥','แซงสวยมาก! 🏎️','ระวังโค้งหน้านะ','สู้ๆ! 💪','ตามมาเลย!','GG 🏁','555+','เก่งมาก! ⭐'];
 const PEER_COLORS  = ['#e10600','#0090ff','#00d2be','#ff8700','#52e252','#ffd12e','#b96bff','#ff5ca8'];
 const GRID_N       = 20;      // ช่องกริดสตาร์ท
+/* 🚦 ลำดับออกสตาร์ท (รอบ 902) — ไฟแดง 5 ดวงบนซุ้ม ติดทีละดวง แล้วดับพร้อมกัน = ออกตัว */
+const LIGHT_LEAD_S = 1.4;     // หน่วงก่อนไฟดวงแรกติด (ให้ตั้งหลัก)
+const LIGHT_STEP_S = 1.0;     // เว้นระยะไฟแต่ละดวง
+const LIGHT_HOLD_MIN = 0.7;   // ไฟครบ 5 แล้วค้างสุ่ม 0.7-2.6 วิ (เหมือนจริง เดาไม่ได้)
+const LIGHT_HOLD_MAX = 2.6;
+const JUMP_PENALTY_S = 2.0;   // กดคันเร่ง "ใหม่" ตอนไฟครบ 5 = จั๊มพ์สตาร์ท โดนหน่วง
+/* 👻 รถเงา Best Lap (รอบ 902) */
+const GHOST_HZ     = 10;      // บันทึกเส้นทาง 10 จุด/วินาที
+const GHOST_MAX    = 3000;    // เพดานจุด (5 นาที) — ยาวกว่านี้ไม่บันทึก
+const GHOST_KEY    = 'vwF1Ghost';   // เก็บใน localStorage (ไม่ยัดลง state — กัน cloud save บวม)
+/* 🛞 ยางสึก + พิทสต็อป (รอบ 905) — จูนที่นี่ที่เดียว */
+const TYRE_W_SLIDE = 0.022;   // สึกต่อวินาที ตอนไถลเต็มที่ (slide=1) ที่ความเร็วสูง
+const TYRE_W_ROLL  = 0.000019;// สึกต่อเมตรที่วิ่ง (ขับสวย ๆ ก็สึก แต่ช้ามาก ~0.1/รอบ)
+const TYRE_W_KERB  = 0.010;   // สึกเพิ่มต่อวินาที ตอนขี่ kerb
+const TYRE_W_SAND  = 0.030;   // สึกเพิ่มต่อวินาที ตอนลงทราย/runoff (ทรายกัดยาง)
+const TYRE_GRIP_MIN= 0.62;    // ยางหมดสภาพ = กริปเหลือ 62% (ยังขับได้ แต่ไถลง่ายมาก)
+const TYRE_WARN    = 0.30;    // ต่ำกว่านี้ = เกจแดง + เตือนให้เข้าพิท
+const PIT_HALF_W   = 6;       // ครึ่งความกว้างเลนพิท (เมตร)
+const SURF_PIT     = {grip:1.0, drag:0.25};   // ผิวเลนพิท: ยึดเกาะเต็ม หน่วงนิดเดียว
+const PIT_LIMIT    = 22.2;    // จำกัดความเร็วในเลนพิท 80 กม./ชม. (ลิมิตเตอร์อัตโนมัติ)
+const PIT_BOX_AT   = 0.5;     // ตำแหน่งช่องจอด = สัดส่วนความยาวเลนพิท
+const PIT_BOX_R    = 6;       // รัศมีช่องจอด (กว้างหน่อย เด็กจอดง่าย)
+const PIT_STOP_V   = 1.6;     // ต้องช้ากว่านี้ถึงเริ่มนับ (m/s)
+const PIT_CANCEL_V = 3.0;     // ขยับเร็วกว่านี้ = ยกเลิก
+const PIT_STOP_S   = 3.0;     // เปลี่ยนยางกี่วินาที
 
 /* ============================================================
    📦 สถานะโลก
@@ -54,12 +87,13 @@ const GRID_N       = 20;      // ช่องกริดสตาร์ท
 let built=false, running=false, rafId=0, lastT=0;
 let scene, camera, renderer;
 let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, exitBox, boardEl, chatBarEl, selfMsgEl;
-let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl;
+let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
 let keydownFn, keyupFn, resizeFn;
 /* รถเรา */
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0;
+let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
 /* แทร็ก */
 let LINE=null, TOTAL=0, grid=null, sfIdx=0, myIdx=0, myLapDist=0, surfNow='track';
 /* จับเวลา */
@@ -68,6 +102,16 @@ let lapStartAt=0, lapNow=0, lapBest=0, lapCount=0, cpFlags=[false,false,false], 
 let word=null, letters=[], sessionCoins=0, sessionWords=0;
 /* เพื่อน */
 let peers={}, room=null, lastNetSend=0, myChat=null, boardSig='';
+/* 🚦 ไฟสตาร์ท + 👻 รถเงา (รอบ 902) */
+let startLights=[], lightPhase='wait', lightT=0, lightsLit=-1, holdS=1.5, penaltyT=0, jumped=false;
+let goAt=0, reactDone=false, thrPrev=false, heldAtGo=false, lightsEl=null, lightDots=[], lightNoteEl=null;
+let ghostGrp=null, ghostWheels=[], ghostRec=null, ghostBest=null, ghostAcc=0, ghostGap=0, gapCur=0, gapEl=null;
+let ghostLast=null, ghostShown=false;
+/* 🛞🔧 ยางสึก + พิทสต็อป (รอบ 905) */
+let tyre=1, tyreEl=null, tyreBarEl=null, tyrePcEl=null, pitEl=null;
+let PITL=null, pitBox=null, pitBoxMesh=null, pitSign=null, pitGlow=null;
+let inPit=false, pitLaneNow=false, pitLimited=false, pitT=0, pitDoneAt=0, pitStops=0;
+let lapPitted=false, pitWrenchAt=-1;
 /* เอฟเฟกต์ */
 let smokes=[], sparks=[];
 let glbSrc=null, glbTried=false;
@@ -133,12 +177,66 @@ const Snd=(function(){
     g.gain.exponentialRampToValueAtTime(0.001,a.currentTime+0.07);
     o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+0.08);
   }
+  /* 🔧 รอบ 898: ปืนลมขันน็อตล้อ (wheel gun) — noise สั่นเป็นพัลส์ผ่าน bandpass สูง + เนื้อโลหะ */
+  function wrench(dur){
+    const a=ctx(); if(!a||!started) return;
+    const t0=a.currentTime, d=dur||0.42;
+    const n=a.createBufferSource(); n.buffer=noiseBuf(a); n.loop=true;
+    const bp=a.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=2600; bp.Q.value=1.4;
+    const g=a.createGain(); g.gain.value=0;
+    n.connect(bp); bp.connect(g); g.connect(a.destination);
+    /* พัลส์ 22 ครั้ง/วิ = เสียงรัวของปืนลม */
+    for(let t=0;t<d;t+=1/22){
+      g.gain.setValueAtTime(0.001,t0+t);
+      g.gain.linearRampToValueAtTime(0.14,t0+t+0.008);
+      g.gain.exponentialRampToValueAtTime(0.004,t0+t+1/26);
+    }
+    g.gain.setValueAtTime(0.0001,t0+d);
+    n.start(t0); n.stop(t0+d+0.02);
+    /* เนื้อโลหะเบา ๆ ซ้อน */
+    const o=a.createOscillator(), og=a.createGain();
+    o.type='square'; o.frequency.setValueAtTime(150,t0);
+    o.frequency.linearRampToValueAtTime(210,t0+d);
+    og.gain.setValueAtTime(0.03,t0); og.gain.exponentialRampToValueAtTime(0.001,t0+d);
+    o.connect(og); og.connect(a.destination); o.start(t0); o.stop(t0+d);
+  }
+  /* 🛞 ยางใหม่พร้อม — ลมปล่อยแม่แรง + ระฆังสองโน้ต */
+  function tyreDone(){
+    const a=ctx(); if(!a||!started) return;
+    const t0=a.currentTime;
+    const n=a.createBufferSource(); n.buffer=noiseBuf(a);
+    const hp=a.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1800;
+    const g=a.createGain();
+    g.gain.setValueAtTime(0.16,t0); g.gain.exponentialRampToValueAtTime(0.001,t0+0.3);
+    n.connect(hp); hp.connect(g); g.connect(a.destination); n.start(t0); n.stop(t0+0.32);
+    [[660,0.05],[990,0.19]].forEach(([f,at])=>{
+      const o=a.createOscillator(), og=a.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      og.gain.setValueAtTime(0.0001,t0+at);
+      og.gain.linearRampToValueAtTime(0.1,t0+at+0.02);
+      og.gain.exponentialRampToValueAtTime(0.001,t0+at+0.36);
+      o.connect(og); og.connect(a.destination); o.start(t0+at); o.stop(t0+at+0.38);
+    });
+  }
+  /* 🚦 รอบ 902: เสียงไฟสตาร์ท — ตุ๊บทุ้มตอนไฟติดทีละดวง · ระฆังสูงคู่ตอนไฟดับ (ออกตัว) */
+  function blip(go){
+    const a=ctx(); if(!a||!started) return;
+    const t0=a.currentTime;
+    (go?[[880,0],[1320,0.09]]:[[440,0]]).forEach(([f,at])=>{
+      const o=a.createOscillator(), g=a.createGain();
+      o.type=go?'triangle':'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(0.0001,t0+at);
+      g.gain.linearRampToValueAtTime(go?0.2:0.13,t0+at+0.012);
+      g.gain.exponentialRampToValueAtTime(0.001,t0+at+(go?0.4:0.18));
+      o.connect(g); g.connect(a.destination); o.start(t0+at); o.stop(t0+at+(go?0.42:0.2));
+    });
+  }
   function stop(){
     if(!ac) return;
     try{ ac.close(); }catch(e){}
     ac=null; started=false; rpm=0;
   }
-  return {start,tick,kerb,stop,get rpm(){return rpm;},get on(){return started;}};
+  return {start,tick,kerb,wrench,tyreDone,blip,stop,get rpm(){return rpm;},get on(){return started;}};
 })();
 const GEARS=[0,13,21,30,40,52,65,79,93];      // ขอบบนความเร็วแต่ละเกียร์ (m/s)
 function gearOf(v){ for(let i=1;i<GEARS.length;i++){ if(v<=GEARS[i]) return i; } return 8; }
@@ -366,7 +464,7 @@ function nearIdx(x,z,hint){
   }
   return best;
 }
-/* ผิวใต้ล้อ: track / kerb / runoff / sand + ระยะเบี่ยงข้าง */
+/* ผิวใต้ล้อ: track / kerb / pit / runoff / sand + ระยะเบี่ยงข้าง */
 function surfAt(x,z,hint){
   const i=nearIdx(x,z,hint);
   const dx=x-LINE.x[i],dz=z-LINE.z[i];
@@ -375,6 +473,7 @@ function surfAt(x,z,hint){
   let s='sand';
   if(a<=HALF_W) s='track';
   else if(a<=HALF_W+KERB_W&&Math.abs(LINE.curv[i])>0.004) s='kerb';
+  else if(inPitLane(x,z,lat)) s='pit';                 // 🛞 รอบ 905 — เลนพิทมีผิวของตัวเอง
   else if(a<=HALF_W+RUNOFF_W) s='runoff';
   return {i,lat,surf:s};
 }
@@ -537,9 +636,15 @@ function buildTrackScene(){
     const leg=new THREE.Mesh(new THREE.BoxGeometry(1.2,8,1.6),gantMat);
     leg.position.set(s*(HALF_W+3.6),4,0); gant.add(leg);
   }
+  /* 🚦 รอบ 902: ไฟแดง 5 ดวงคุมได้จริง (ดวงเรืองซ้อนไว้ให้เห็นจากท้ายกริด ~100 ม.) */
+  startLights=[];
   for(let i=0;i<5;i++){
     const lt=new THREE.Mesh(new THREE.SphereGeometry(0.42,8,6),new THREE.MeshBasicMaterial({color:0x330000}));
     lt.position.set(-3.2+i*1.6,7.0,1.1); gant.add(lt);
+    const gl=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,color:0xff2a2a,transparent:true,
+      opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+    gl.position.set(-3.2+i*1.6,7.0,1.5); gl.scale.set(3.4,3.4,1); gant.add(gl);
+    startLights.push({m:lt,g:gl});
   }
   const adB=new THREE.Mesh(new THREE.PlaneGeometry(HALF_W*2+6,1.3),
     new THREE.MeshBasicMaterial({map:TexLib.adGP}));
@@ -632,7 +737,9 @@ function buildTrackScene(){
       const q=p[Math.min(i+1,p.length-1)],r=p[Math.max(i-1,0)];
       let dx=q[0]-r[0],dz=q[1]-r[1];
       const L=Math.hypot(dx,dz)||1e-6; dx/=L; dz/=L;
-      pos.push(p[i][0]+dz*5,0.015,p[i][1]-dx*5, p[i][0]-dz*5,0.015,p[i][1]+dx*5);
+      /* 🛞 รอบ 905: กว้างเท่า PIT_HALF_W พอดี — ที่เห็น = ที่ลิมิตเตอร์จับ */
+      pos.push(p[i][0]+dz*PIT_HALF_W,0.015,p[i][1]-dx*PIT_HALF_W,
+               p[i][0]-dz*PIT_HALF_W,0.015,p[i][1]+dx*PIT_HALF_W);
       uv.push(i,0,i,1);
     }
     for(let i=0;i<p.length-1;i++) idx.push(i*2,i*2+1,i*2+2, i*2+1,i*2+3,i*2+2);
@@ -641,6 +748,7 @@ function buildTrackScene(){
     geo.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));
     geo.setIndex(idx); geo.computeVertexNormals();
     scene.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x4a4e55})));
+    buildPitBox();                                     // 🛞 รอบ 905 — ช่องจอดเปลี่ยนยาง + เสาป้าย
   }
   scene.add(buildBuildings());
 }
@@ -699,9 +807,10 @@ function buildF1Car(color){
   /* คนขับ (หมวก) */
   const helm=new THREE.Mesh(new THREE.SphereGeometry(0.22,8,7),new THREE.MeshLambertMaterial({color:0xffd12e}));
   helm.position.set(0,0.98,0.3); g.add(helm);
-  /* ปีกหลัง + DRS */
+  /* ปีกหลัง + DRS (แผ่นบน = flap ที่เปิดได้ — รอบ 904) */
   const rw=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.08,0.5),wing);
-  rw.position.set(0,1.02,-1.95); g.add(rw);
+  rw.position.set(0,1.02,-1.95); rw.rotation.x=DRS_FLAP_SHUT; g.add(rw);
+  g.userData.drsFlap=rw;
   const rw2=new THREE.Mesh(new THREE.BoxGeometry(1.5,0.07,0.34),wing);
   rw2.position.set(0,0.86,-1.9); g.add(rw2);
   for(const s of [-1,1]){
@@ -762,6 +871,18 @@ const CSS=`
   -webkit-user-select:none;user-select:none;touch-action:none}
 #f1-wrap.on{display:block}
 #f1-cv{position:absolute;inset:0;width:100%;height:100%}
+/* 🪖 รอบ 901: ภาพห้องคนขับทับ canvas (ช่องมองโปร่งใส — เห็นโลก 3D ทะลุ) + ปุ่มสลับมุมมอง */
+#f1-cockpit{position:absolute;inset:0 0 -8% 0;z-index:5;pointer-events:none;display:none;
+  background:url('img/f1/cockpit.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
+#f1-wrap.fp #f1-cockpit{display:block}
+/* จอกว้างเตี้ย (มือถือแนวนอน) — cover จะเอาค็อกพิทบังเต็มจอ: ตรึงขอบบน (halo อยู่ครบ) + สูง 128%
+   ตัดหน้าปัด/ขอบล่างทิ้งใต้จอแทน · บีบแนวตั้ง ~10% ตามองไม่ออก แต่เปิดพื้นที่เห็นแทร็กเพิ่มมาก */
+@media (min-aspect-ratio: 9/5){
+  #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% 128%;background-position:center top}
+}
+#f1-cambtn{position:absolute;left:10px;bottom:50px;z-index:7;background:rgba(8,12,24,.78);
+  border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:800;font-size:13.5px;font-family:inherit;
+  border-radius:12px;padding:6px 11px}
 #f1-word{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
   background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:5px 12px;white-space:nowrap;z-index:6}
 #f1-word .f-chip{display:inline-block;min-width:24px;padding:2px 5px;margin:0 1px;border-radius:7px;background:#26304a;
@@ -781,6 +902,47 @@ const CSS=`
 #f1-map{position:absolute;left:10px;bottom:88px;width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
+/* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
+#f1-drs{position:absolute;right:10px;bottom:240px;z-index:6;pointer-events:none;display:none;text-align:right;
+  border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
+#f1-drs small{display:block;font-size:11px;font-weight:600;letter-spacing:0;opacity:.95}
+#f1-drs.wait{display:block;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.22);color:#9fb2d8}
+#f1-drs.on{display:block;background:rgba(22,190,90,.92);border:1px solid #7dffb0;color:#fff;
+  box-shadow:0 0 16px rgba(45,255,140,.6);animation:f1drs .5s ease-in-out infinite alternate}
+@keyframes f1drs{from{box-shadow:0 0 8px rgba(45,255,140,.35)}to{box-shadow:0 0 20px rgba(45,255,140,.75)}}
+/* 🚦 แถบไฟสตาร์ทบนจอ (รอบ 902) — ท้ายกริดห่างซุ้มเกือบ 100 ม. ไฟจริงเล็กมาก ต้องมีบนจอด้วย */
+#f1-lights{position:absolute;top:50px;left:50%;transform:translateX(-50%);z-index:7;display:none;
+  flex-direction:column;align-items:center;gap:5px;pointer-events:none}
+#f1-lights.on{display:flex}
+#f1-lights .row{display:flex;gap:9px;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;padding:7px 12px}
+#f1-lights i{width:20px;height:20px;border-radius:50%;background:#2a1010;border:1px solid rgba(255,255,255,.14);
+  transition:background .1s,box-shadow .1s}
+#f1-lights i.lit{background:radial-gradient(circle at 35% 30%,#ff8080,#e10600);box-shadow:0 0 14px rgba(225,6,0,.95)}
+#f1-lights b{background:rgba(8,12,24,.78);border-radius:10px;padding:3px 12px;color:#ffd12e;font-size:13.5px;font-weight:800}
+/* 👻 ป้ายต่างจากรถเงากี่วินาที (รอบ 902) */
+#f1-gap{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:6;display:none;pointer-events:none;
+  border-radius:12px;padding:3px 13px;font-weight:900;font-size:17px;background:rgba(8,12,24,.74)}
+#f1-gap.on{display:block}
+#f1-gap.fast{color:#7dffb0;border:1px solid rgba(125,255,176,.5)}
+#f1-gap.slow{color:#ff9a9a;border:1px solid rgba(255,120,120,.45)}
+/* 🛞 เกจยาง + ป้ายพิท (รอบ 905) */
+#f1-tyre{position:absolute;right:10px;top:46px;z-index:6;pointer-events:none;display:flex;align-items:center;gap:6px;
+  background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:4px 10px}
+#f1-tyre .t-lab{font-size:15px}
+#f1-tyre .t-bar{display:block;width:78px;height:9px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden}
+#f1-tyre .t-bar i{display:block;height:100%;width:100%;background:#2ecc55;border-radius:5px;transition:width .2s,background .3s}
+#f1-tyre .t-pc{font-size:13px;font-weight:800;color:#2ecc55;min-width:38px;text-align:right}
+#f1-tyre.low{animation:f1tyre .6s ease-in-out infinite alternate}
+@keyframes f1tyre{from{border-color:rgba(255,59,48,.35)}to{border-color:rgba(255,59,48,1);box-shadow:0 0 14px rgba(255,59,48,.6)}}
+#f1-pit{position:absolute;top:96px;left:50%;transform:translateX(-50%);z-index:7;display:none;pointer-events:none;
+  background:rgba(8,12,24,.82);border:1px solid rgba(255,209,46,.45);border-radius:12px;padding:5px 14px;
+  color:#ffd12e;font-weight:800;font-size:15px;text-align:center;max-width:90vw}
+#f1-pit.on{display:block}
+#f1-pit .pit-hd.warn{color:#ff9a9a}
+#f1-pit .pit-sub{color:#cfe0ff;font-weight:600;font-size:12.5px}
+#f1-pit .pit-bar{margin-top:4px;width:190px;height:8px;border-radius:5px;background:rgba(255,255,255,.16);overflow:hidden}
+#f1-pit .pit-bar i{display:block;height:100%;background:#2ecc55;border-radius:5px}
 #f1-ban{position:absolute;top:20%;left:50%;transform:translate(-50%,0) scale(.9);background:rgba(10,16,30,.92);
   border:1px solid rgba(255,209,46,.5);border-radius:16px;padding:12px 22px;color:#fff;font-size:19px;font-weight:800;
   text-align:center;opacity:0;pointer-events:none;transition:all .25s;z-index:8}
@@ -858,23 +1020,37 @@ const CSS=`
   #f1-map{width:96px;height:96px;bottom:104px}
   #f1-hud{bottom:104px}
   #f1-chatbtn{bottom:196px}
+  #f1-drs{bottom:246px;font-size:15px;padding:3px 9px}
+  #f1-drs small{font-size:10px}
+  /* จอเตี้ย: ต้องไม่ชนเหรียญ (สูงถึง y=44) และไม่ชนป้ายรถเงา (ถึง y=84) */
+  #f1-tyre{top:48px;padding:3px 8px}
+  #f1-tyre .t-bar{width:58px}
+  #f1-pit{top:90px;font-size:13.5px;padding:4px 11px}
+  #f1-pit .pit-bar{width:150px}
 }`;
 function buildDom(){
   const st=document.createElement('style'); st.textContent=CSS; document.head.appendChild(st);
   wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
   wrapEl.innerHTML=`
     <canvas id="f1-cv"></canvas>
+    <div id="f1-cockpit"></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
     <div id="f1-coins">🪙 +0</div>
     <div id="f1-board"></div>
     <canvas id="f1-map" width="260" height="260"></canvas>
     <div id="f1-hud"><div id="f1-speed">0<small> กม./ชม.</small></div><span id="f1-gear">N</span></div>
+    <div id="f1-drs"></div>
+    <div id="f1-tyre"><span class="t-lab">🛞</span><span class="t-bar"><i></i></span><span class="t-pc">100%</span></div>
+    <div id="f1-pit"></div>
+    <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
+    <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
     <button id="f1-chatbtn">💬</button>
     <div id="f1-chatbar"></div>
+    <button id="f1-cambtn">📷 มุมรถ</button>
     <button id="f1-exitbtn">🏁 ออก</button>
     <div id="f1-steer"><div id="f1-knob">🏎️</div></div>
     <div id="f1-pedals">
@@ -890,6 +1066,13 @@ function buildDom(){
           (คีย์บอร์ด: W เร่ง · S เบรก · A/D เลี้ยว)<br>
           🔤 เก็บตัวอักษรบนแทร็กประกอบคำ = <b style="color:#ffd12e">+${REWARD} 🪙</b><br>
           🏁 วิ่งครบรอบมีจับเวลา — ทำ Best Lap ให้ไวสุด!<br>
+      🚦 ออกสตาร์ทจริง: ไฟแดงติดทีละดวงจนครบ 5 แล้ว<b style="color:#ffd12e">ดับพร้อมกัน = ออกตัว</b> (คันเร่งล็อกก่อนไฟดับ)<br>
+      👻 ทำเวลาได้แล้วรอบถัดไปจะมี<b style="color:#67d8ff">รถเงาของตัวเอง</b>วิ่งให้ไล่แข่ง<br>
+          🪽 <b style="color:#2dff8c">DRS</b> = ทางตรง 2 ช่วง (เส้นเขียวบนแผนที่) ถ้าตามรถเพื่อนใกล้กว่า 25 ม.
+          ปีกหลังจะเปิดเอง วิ่งเร็วขึ้น 8% ไว้แซง!<br>
+          🛞 <b style="color:#ffd12e">ยางสึกได้!</b> ยิ่งไถล/ดริฟต์ ยางยิ่งหมดไว (ดูเกจ 🛞 มุมขวาบน)
+          — ยางโทรม = รถลื่นขึ้น เข้า<b style="color:#67d8ff">เลนพิท</b> (เส้นประบนแผนที่) จอดนิ่งในช่อง 3 วิ = ยางใหม่<br>
+          🪖 เริ่มที่<b style="color:#67d8ff">มุมคนขับในค็อกพิท</b> — ปุ่ม 📷 มุมซ้ายล่างสลับเป็นมุมเห็นรถทั้งคัน<br>
           ⚠️ ออกนอกแทร็กระวังทราย รถจะลื่นและช้าลงมาก
         </div>
         <div class="fi-rank" id="f1-rankbox">
@@ -918,12 +1101,27 @@ function buildDom(){
   gearEl=wrapEl.querySelector('#f1-gear');
   lapEl=wrapEl.querySelector('#f1-laps');
   wrongEl=wrapEl.querySelector('#f1-wrong');
+  drsEl=wrapEl.querySelector('#f1-drs');
+  /* 🛞 รอบ 905 */
+  tyreEl=wrapEl.querySelector('#f1-tyre');
+  tyreBarEl=tyreEl.querySelector('.t-bar i');
+  tyrePcEl=tyreEl.querySelector('.t-pc');
+  pitEl=wrapEl.querySelector('#f1-pit');
   knobEl=wrapEl.querySelector('#f1-knob');
+  /* 🚦👻 รอบ 902 */
+  lightsEl=wrapEl.querySelector('#f1-lights');
+  lightDots=[].slice.call(lightsEl.querySelectorAll('i'));
+  lightNoteEl=lightsEl.querySelector('b');
+  gapEl=wrapEl.querySelector('#f1-gap');
   mapCv=wrapEl.querySelector('#f1-map'); mapCtx=mapCv.getContext('2d');
-  wrapEl.querySelector('#f1-go').addEventListener('click',()=>{ introEl.style.display='none'; Snd.start(); });
+  wrapEl.querySelector('#f1-go').addEventListener('click',()=>{ introEl.style.display='none'; Snd.start(); beginLights(); });
   wrapEl.querySelector('#f1-exitbtn').addEventListener('click',()=>exitBox.classList.add('on'));
   wrapEl.querySelector('#f1-stay').addEventListener('click',()=>exitBox.classList.remove('on'));
   wrapEl.querySelector('#f1-leave').addEventListener('click',exitWorld);
+  /* 🪖 รอบ 901: ปุ่มสลับมุมมอง คนขับ ↔ เห็นรถทั้งคัน */
+  cockpitEl=wrapEl.querySelector('#f1-cockpit');
+  camBtnEl=wrapEl.querySelector('#f1-cambtn');
+  camBtnEl.addEventListener('click',()=>{ camMode=camMode==='cockpit'?'chase':'cockpit'; applyCamMode(); });
   /* แชท */
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button>${t}</button>`).join('');
   chatBarEl.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>{
@@ -946,7 +1144,8 @@ function buildDom(){
   /* คันเร่ง/เบรก */
   const thrB=wrapEl.querySelector('#f1-throttle'), brB=wrapEl.querySelector('#f1-brake');
   thrB.addEventListener('pointerdown',e=>{ e.preventDefault(); padThr=1; Snd.start();
-    if(introEl.style.display!=='none') introEl.style.display='none'; });
+    if(introEl.style.display!=='none') introEl.style.display='none';
+    beginLights(); });
   thrB.addEventListener('pointerup',()=>padThr=0);
   thrB.addEventListener('pointercancel',()=>padThr=0);
   brB.addEventListener('pointerdown',e=>{ e.preventDefault(); padBr=true; });
@@ -961,6 +1160,8 @@ function build(){
   built=true;
   buildDom();
   buildLine();
+  findDrsZones();          // 🪽 รอบ 904 — ต้องมาหลัง buildLine (ใช้ LINE.curv/cum)
+  buildPitLine();          // 🛞 รอบ 905 — ต้องมาหลัง buildLine (ใช้ nearIdx หาฝั่งโรงรถ) และก่อน buildTrackScene
   scene=new THREE.Scene();
   /* 🌆 พลบค่ำทะเลทราย (night race) */
   scene.background=new THREE.Color(0x0d1430);
@@ -1007,12 +1208,15 @@ function build(){
   /* รถเรา */
   carGrp=buildF1Car(0xe10600);
   scene.add(carGrp);
+  attachDrsGlow(carGrp);                      // 🪽 รอบ 904 (รถเราคันเดียว — เพื่อนไม่ส่งสถานะ DRS)
   wheels=carGrp.userData.wheels||[]; steerParts=carGrp.userData.front||[];
   makeCar(0xe10600,g=>{
     if(!g||g===carGrp) return;
     scene.remove(carGrp);
     carGrp=g; scene.add(carGrp);
+    attachDrsGlow(carGrp);
     wheels=g.userData.wheels||[]; steerParts=g.userData.front||[];
+    if(camMode==='cockpit') carGrp.visible=false;   // 🪖 รอบ 901 — GLB มาทีหลัง ต้องซ่อนตามโหมด
   });
   /* minimap พื้นหลัง */
   const mc=document.createElement('canvas'); mc.width=mc.height=260;
@@ -1025,6 +1229,35 @@ function build(){
     if(i===0) mg.moveTo(mx,my); else mg.lineTo(mx,my);
   }
   mg.closePath(); mg.stroke();
+  /* 🪽 ระบายโซน DRS ทับเส้นสนาม (รอบ 898) */
+  mg.strokeStyle='#2dff8c'; mg.lineWidth=5; mg.lineCap='round';
+  for(const z of drsZones){
+    const L=((z.b-z.a)%LINE.n+LINE.n)%LINE.n;
+    mg.beginPath();
+    for(let d=0;d<=L;d++){
+      const j=(z.a+d)%LINE.n;
+      const [mx,my]=mapXY(LINE.x[j],LINE.z[j],bb);
+      if(d===0) mg.moveTo(mx,my); else mg.lineTo(mx,my);
+    }
+    mg.stroke();
+  }
+  /* 🛞 รอบ 905: เลนพิท (เส้นประเทา) + ช่องเปลี่ยนยาง (จุดฟ้า) */
+  if(PITL){
+    mg.strokeStyle='rgba(180,196,224,.85)'; mg.lineWidth=3; mg.setLineDash([7,5]);
+    mg.beginPath();
+    for(let i=0;i<PITL.n;i+=2){
+      const [mx,my]=mapXY(PITL.x[i],PITL.z[i],bb);
+      if(i===0) mg.moveTo(mx,my); else mg.lineTo(mx,my);
+    }
+    mg.stroke(); mg.setLineDash([]);
+    if(pitBox){
+      const [bx,by]=mapXY(pitBox.x,pitBox.z,bb);
+      mg.fillStyle='#67d8ff'; mg.strokeStyle='#0b1220'; mg.lineWidth=2;
+      mg.beginPath(); mg.arc(bx,by,6,0,Math.PI*2); mg.fill(); mg.stroke();
+      mg.fillStyle='#0b1220'; mg.font='bold 9px sans-serif'; mg.textAlign='center';
+      mg.fillText('P',bx,by+3.2);
+    }
+  }
   const [sx,sy]=mapXY(LINE.x[sfIdx],LINE.z[sfIdx],bb);
   mg.fillStyle='#ffd12e'; mg.fillRect(sx-4,sy-4,8,8);
   mapBase=mc; mapBase._bb=bb;
@@ -1052,16 +1285,124 @@ function drawMap(){
     mapCtx.fillStyle=peerColor(uid);
     mapCtx.beginPath(); mapCtx.arc(x,y,5,0,Math.PI*2); mapCtx.fill();
   }
+  if(ghostShown&&ghostGrp){                     // 👻 รอบ 902 — จุดรถเงาบนแผนที่
+    const [gx,gy]=mapXY(ghostGrp.position.x,ghostGrp.position.z,bb);
+    mapCtx.fillStyle='rgba(103,216,255,.85)';
+    mapCtx.beginPath(); mapCtx.arc(gx,gy,5,0,Math.PI*2); mapCtx.fill();
+  }
   const [x,y]=mapXY(px,pz,bb);
   mapCtx.fillStyle='#7dffb0'; mapCtx.strokeStyle='#fff'; mapCtx.lineWidth=2;
   mapCtx.beginPath(); mapCtx.arc(x,y,6.5,0,Math.PI*2); mapCtx.fill(); mapCtx.stroke();
 }
 
 /* ============================================================
+   🪽 รอบ 904: DRS — ปีกหลังเปิดบนทางตรง (ตามรถเพื่อนใกล้ 25 ม.)
+   · โซนหาเอง ไม่ hardcode: ช่วง index ของ LINE ที่ |curv| ต่ำติดกัน "ยาวสุด 2 ช่วง"
+     = ทางตรงหน้าพิท (main straight) + ทางตรงหลัง T10 ของสนามซาเคียร์
+   · เปิดได้เมื่อ (เหมือนกติกาจริง): อยู่ในโซน + วิ่งตามทาง + ไม่เบรก + มีรถเพื่อนข้างหน้าใกล้กว่า 25 ม.
+   · เปิดแล้ว: แรงต้านอากาศลด → ท็อปสปีด +8% พอดี (v_top ∝ (PWR/DRAG)^⅓ → DRAG × 1/1.08³)
+   · ป้าย DRS บนจอบอกเหตุผลเสมอ (อยู่ในโซนแต่ยังเปิดไม่ได้ = บอกว่าต้องตามให้ใกล้เท่าไร)
+   ============================================================ */
+const DRS_ZONES_N  = 2;        // จำนวนโซน (ทางตรงยาวสุด 2 ช่วง)
+const DRS_CURV     = 0.0018;   // |rad/m| ต่ำกว่านี้ = นับเป็นทางตรง (kerb ใช้ 0.004)
+const DRS_GAP_MAX  = 4;        // sample โค้งแทรกสั้น ๆ ไม่ตัดช่วงตรงออกจากกัน
+const DRS_MIN_M    = 220;      // ทางตรงสั้นกว่านี้ไม่ตั้งเป็นโซน
+const DRS_ENTRY_M  = 55;       // จุดเปิดอยู่หลังพ้นโค้งเข้ามาแล้วเท่านี้ (ไม่ให้เปิดคาโค้ง)
+const DRS_NEAR_M   = 25;       // ตามเพื่อนใกล้กว่านี้ = เปิดได้
+const DRS_DRAG_K   = 0.7898;   // ลดแรงต้านอากาศ → ท็อปสปีด +8% พอดี (334→360.6 กม./ชม.)
+                               // (≈1/1.08³ ปรับชดเชยแรงต้านการหมุน ROLL_A ที่ไม่ขึ้นกับ v²)
+const DRS_FLAP_SHUT= 0.5;      // องศา flap ตอนปิด (rad · เอียงกินลม)
+const DRS_FLAP_OPEN= 0.04;     // ตอนเปิด (แบนเกือบราบ)
+let drsZones=[], drsOn=false, drsInZone=false, drsGap=0, drsFlapK=0, drsBrake=false;
+
+/* ไฟ DRS ท้ายรถ — ใช้ได้กับทุกโมเดล (GLB ของผู้ใช้ไม่มี flap แยกชิ้น จึงพึ่งการหมุนปีกอย่างเดียวไม่ได้) */
+function attachDrsGlow(g){
+  if(!g||g.userData.drsGlow) return null;
+  const bb=new THREE.Box3().setFromObject(g);          // ตอนเพิ่งสร้าง: local = world (ยังไม่ขยับ/หมุน)
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,color:0x2dff8c,transparent:true,
+    opacity:0,depthWrite:false,blending:THREE.AdditiveBlending}));
+  sp.scale.set(0.7,0.34,1);            // เล็กพอเป็น "ไฟ" ไม่ใช่ฉาบทั้งคัน (วัดด้วยภาพจริงรอบ 904)
+  sp.position.set(0,Math.max(0.75,bb.max.y*0.78),bb.min.z+0.3);   // ท้ายรถ (หน้ารถ = +Z)
+  g.add(sp); g.userData.drsGlow=sp;
+  return sp;
+}
+function findDrsZones(){
+  drsZones=[];
+  if(!LINE||!LINE.n) return;
+  const m=LINE.n, st=i=>Math.abs(LINE.curv[i])<=DRS_CURV;
+  /* เริ่มไล่จากจุดที่ "ไม่ตรง" → ช่วงที่คาบเกี่ยว index 0 ไม่ถูกตัดครึ่ง */
+  let z=-1;
+  for(let i=0;i<m;i++) if(!st(i)){ z=i; break; }
+  if(z<0) return;
+  const runs=[];
+  let a=-1, gap=0;
+  for(let k=0;k<m;k++){
+    const i=(z+k)%m;
+    if(st(i)){ if(a<0) a=i; gap=0; }
+    else if(a>=0&&++gap>DRS_GAP_MAX){ runs.push([a,(z+k-gap)%m]); a=-1; gap=0; }
+  }
+  if(a>=0) runs.push([a,(z+m-1-gap+m)%m]);
+  const lenOf=(p,q)=>((LINE.cum[q]-LINE.cum[p])%TOTAL+TOTAL)%TOTAL;
+  runs.sort((p,q)=>lenOf(q[0],q[1])-lenOf(p[0],p[1]));
+  for(const r of runs.slice(0,DRS_ZONES_N)){
+    const b=r[1];
+    if(lenOf(r[0],b)<DRS_MIN_M) continue;
+    let s=r[0];
+    while(lenOf(r[0],s)<DRS_ENTRY_M&&lenOf(s,b)>DRS_MIN_M*0.5) s=(s+1)%m;
+    drsZones.push({a:s,b,len:lenOf(s,b)});
+  }
+}
+function drsZoneAt(i){
+  const m=LINE.n;
+  for(const z of drsZones){
+    const d=((i-z.a)%m+m)%m, L=((z.b-z.a)%m+m)%m;
+    if(d<=L) return z;
+  }
+  return null;
+}
+/* ระยะรถเพื่อนที่อยู่ "ข้างหน้า" ใกล้สุด (0 = ไม่มีใครในระยะ) */
+function drsPeerGap(){
+  const fx=Math.sin(yaw),fz=Math.cos(yaw);
+  let best=0;
+  for(const uid in peers){
+    const p=peers[uid];
+    if(!p||!p.cur) continue;
+    const dx=p.cur.x-px, dz=p.cur.z-pz;
+    if(dx*fx+dz*fz<=0) continue;                    // อยู่ข้างหลัง = ไม่นับ
+    const d=Math.hypot(dx,dz);
+    if(d<=DRS_NEAR_M&&(!best||d<best)) best=d;
+  }
+  return best;
+}
+function drsTick(dt,braking){
+  const i=myIdx;
+  const fwd=vx*LINE.tx[i]+vz*LINE.tz[i];
+  /* ต้องวิ่งตามทางจริง · ไม่ใช่จมทราย · ไม่ใช่ในเลนพิท (เลนพิทเลียบทางตรงหน้าพิท index เดียวกับโซน 1
+     — กติกาจริงห้ามเปิด DRS ในพิท และรอบ 900 มีลิมิตเตอร์ 80 กม./ชม. อยู่แล้ว) */
+  drsInZone=!!drsZoneAt(i)&&fwd>2&&surfNow!=='sand'&&surfNow!=='pit';
+  drsGap=drsInZone?drsPeerGap():0;
+  drsBrake=drsInZone&&drsGap>0&&braking;               // ใกล้พอแล้วแต่ยังเบรกอยู่ (ป้ายบอกเหตุผล)
+  drsOn=drsInZone&&drsGap>0&&!braking;                 // แตะเบรก = ปีกปิดทันที (เหมือนจริง)
+  drsFlapK=lerp(drsFlapK,drsOn?1:0,clamp(dt*9,0,1));
+  const ud=carGrp&&carGrp.userData;
+  if(ud&&ud.drsFlap) ud.drsFlap.rotation.x=lerp(DRS_FLAP_SHUT,DRS_FLAP_OPEN,drsFlapK);   // รถประกอบเอง = ปีกกางจริง
+  if(ud&&ud.drsGlow) ud.drsGlow.material.opacity=drsFlapK*0.85;                          // ทุกโมเดล = ไฟเขียวท้ายรถ
+}
+function drsHud(){
+  if(!drsEl) return;
+  if(drsOn) drsEl.className='on', drsEl.innerHTML='DRS ⚡<small>ปีกเปิด · เร็วขึ้น 8%</small>';
+  else if(drsInZone) drsEl.className='wait', drsEl.innerHTML='DRS<small>'
+    +(drsBrake?'ปล่อยเบรกก่อน แล้วปีกจะเปิด'
+              :'ตามรถเพื่อนให้ใกล้กว่า '+DRS_NEAR_M+' ม.'+(drsGap?'':' (ตอนนี้ไม่มีใครอยู่ข้างหน้า)'))+'</small>';
+  else drsEl.className='';
+}
+
+/* ============================================================
    🏁 ฟิสิกส์ + จับเวลา
    ============================================================ */
 function physTick(dt){
-  const thr=clamp(padThr+(kThr?1:0),0,1);
+  /* 🚦 รอบ 902: ก่อนไฟดับ คันเร่งไม่ทำงาน (เบรก/พวงมาลัยยังได้ — เร่งเครื่องรอได้ตามปกติ) */
+  const thr=lightsLocked()?0:clamp(padThr+(kThr?1:0),0,1);
   const braking=padBr||kBack;
   /* พวงมาลัย: นิ่ม + ลิมิตตามความเร็ว */
   const sIn=clamp(steerCtl+(kL?-1:0)+(kR?1:0),-1,1);
@@ -1075,7 +1416,9 @@ function physTick(dt){
     if(surf==='kerb') Snd.kerb();
     surfNow=surf;
   }
-  const sc=surf==='sand'?SURF_SAND:(surf==='runoff'?SURF_RUNOFF:{grip:1,drag:0});
+  pitLaneNow=(surf==='pit');                           // 🛞 รอบ 905 (surfAt คำนวณให้แล้ว ไม่ต้องหาซ้ำ)
+  const sc=surf==='sand'?SURF_SAND:(surf==='runoff'?SURF_RUNOFF:(surf==='pit'?SURF_PIT:{grip:1,drag:0}));
+  drsTick(dt,braking);                                 // 🪽 รอบ 904 (ก่อนคิดแรงต้าน)
   /* แกนรถ */
   const fx=Math.sin(yaw),fz=Math.cos(yaw);
   const nx2=fz,nz2=-fx;
@@ -1084,14 +1427,21 @@ function physTick(dt){
   /* แรงตามยาว */
   let aF=0;
   if(thr>0) aF+=Math.min(ACC_CAP,PWR_A/Math.max(spd,6))*thr*(surf==='track'?1:sc.grip);
-  if(braking) aF-=(BRAKE_A+BRAKE_DF*spd*spd)*Math.sign(vF||1)*(surf==='track'?1:sc.grip*0.9);
-  aF-=DRAG_K*spd*spd*Math.sign(vF||0);
+  if(braking) aF-=(BRAKE_A+BRAKE_DF*spd*spd)*(0.8+0.2*tyre)   // 🛞 ยางโทรม = เบรกจับน้อยลงนิด
+    *Math.sign(vF||1)*(surf==='track'?1:sc.grip*0.9);
+  aF-=DRAG_K*(drsOn?DRS_DRAG_K:1)*spd*spd*Math.sign(vF||0);   // 🪽 DRS เปิด = แรงต้านลด
   aF-=(ROLL_A+sc.drag)*Math.sign(vF||0)*(Math.abs(vF)>0.5?1:Math.abs(vF)*2);
   vF+=aF*dt;
   if(braking&&Math.abs(vF)<0.6&&thr===0) vF=0;
   if(vF<-8) vF=-8;                                     // ถอยได้ช้าๆ พอ
+  /* 🚧 รอบ 905: ลิมิตเตอร์เลนพิท 80 กม./ชม. (อัตโนมัติเหมือนของจริง — เด็กไม่ต้องกดเอง) */
+  pitLimited=false;
+  if(pitLaneNow&&vF>PIT_LIMIT){
+    pitLimited=true;
+    vF=Math.max(PIT_LIMIT,vF-Math.max(16,(vF-PIT_LIMIT)*7)*dt);
+  }
   /* เลี้ยว: yaw rate จากมุมล้อ + จำกัดด้วยกริป (โมเมนตัม!) */
-  const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip;
+  const gripMax=Math.min(GRIP_CAP,(GRIP_BASE+GRIP_DF*spd*spd))*sc.grip*tyreGrip();   // 🛞 ยางสึก = กริปหด
   let yawRate=Math.abs(vF)>0.4?(vF*Math.tan(steer)/WB):0;
   const latNeed=Math.abs(yawRate*vF);
   slide=0;
@@ -1125,6 +1475,9 @@ function physTick(dt){
   /* ควันดริฟต์/ทราย */
   if((slide>0.35&&spd>14)||surf==='sand'&&spd>6) puffSmoke(surf==='sand');
   Snd.tick(spd,thr,slide>0.4&&spd>12,dt);
+  /* 🛞 รอบ 905: ยางสึก + ลูปพิท */
+  tyreWear(dt,surf);
+  pitTick(dt);
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
@@ -1145,11 +1498,17 @@ function progressTick(dt){
     lapNow=0; lapStartAt=performance.now();
     cpFlags=[false,false,false];
     let msg='🏁 LAP '+lapCount+' — '+fmtLap(t);
-    if(!lapBest||t<lapBest){
+    /* 🛞 รอบ 905: รอบที่แวะเลนพิท = ไม่นับสถิติ (กติกาจริง) แต่ยังได้เหรียญครบรอบ */
+    if(lapPitted){
+      msg+='<br><span style="color:#9fb2d8;font-size:14px">🔧 รอบเข้าพิท — ไม่นับสถิติ</span>';
+    }else if(!lapBest||t<lapBest){
       lapBest=t;
       if(!state.f1Best||t<state.f1Best){ state.f1Best=t; saveState(); frSubmit(t); }
       msg+='<br><span class="m-coin">⭐ BEST LAP!</span>';
     }
+    if(!lapPitted&&ghostKeep(t)) msg+='<br><span style="color:#67d8ff">👻 บันทึกรถเงาใหม่ — รอบหน้าไล่ตัวเองได้เลย</span>';
+    ghostReset();
+    lapPitted=inPit;                                  // ยังอยู่ในเลนพิทตอนข้ามเส้น = รอบใหม่ก็ยังไม่นับ
     const bonus=25;
     addCoins(bonus); sessionCoins+=bonus;
     coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
@@ -1160,8 +1519,11 @@ function progressTick(dt){
     renderBoard(); netSend(true);
   }else if(!lapStartAt&&prog<120&&spd>4){
     lapStartAt=performance.now(); cpFlags=[false,false,false];
+    lapPitted=inPit;                                // 🛞 รอบ 905
+    ghostReset();                                   // 👻 เริ่มบันทึกเส้นทางตอนข้ามเส้นเข้ารอบจับเวลา
   }
   lastProg=prog;
+  if(lapStartAt) ghostRecord(dt,prog);
   if(lapStartAt) lapNow=(performance.now()-lapStartAt)/1000;
   lapEl.innerHTML='⏱️ <b>'+fmtLap(lapNow)+'</b> · รอบ '+lapCount
     +(lapBest?'<br>⭐ Best '+fmtLap(lapBest):'')
@@ -1279,6 +1641,372 @@ function frMount(){
     if(!wrapEl||!wrapEl.classList.contains('on')) return;   // ออกจากโลกไปแล้วระหว่างรอโหลด
     listEl.innerHTML=frBodyHTML(); noteEl.textContent=frNote();
   });
+}
+
+/* ============================================================
+   🚦👻 รอบ 902: ลำดับออกสตาร์ท (ไฟแดง 5 ดวง) + รถเงาวิ่งตาม Best Lap
+   · ไฟบนซุ้ม (โซน 🏗️ สร้างฉาก) ติดทีละดวงทุก LIGHT_STEP_S → ครบ 5 → ค้างสุ่ม → "ดับพร้อมกัน" = ออกตัว
+     ล็อกคันเร่งจนกว่าไฟจะดับ (เบรก/พวงมาลัยยังทำได้) · แถบไฟบนจอด้วย เพราะท้ายกริดห่างซุ้มถึง ~100 ม.
+   · กดคันเร่ง "ใหม่" ตอนไฟครบ 5 = จั๊มพ์สตาร์ท โดนหน่วง JUMP_PENALTY_S (กดค้างมาแต่แรกไม่ผิด)
+   · ไฟดับแล้วปล่อย-กดครั้งแรก = จับเวลาปฏิกิริยาโชว์ให้ดู
+   · 👻 รถเงา: บันทึกตำแหน่ง GHOST_HZ จุด/วิ ตลอดรอบ · รอบไหนเร็วสุดเก็บเป็นรถเงา (localStorage)
+     รอบถัดไปรถเงาโปร่งแสงวิ่งซ้ำเส้นทางนั้นตามเวลาจริง + ป้ายบอกช้า/เร็วกว่าสถิติกี่วินาที
+   ============================================================ */
+function resetLights(){
+  lightPhase='wait'; lightT=0; lightsLit=-1; penaltyT=0; jumped=false;
+  goAt=0; reactDone=false; thrPrev=false; heldAtGo=false;
+  holdS=LIGHT_HOLD_MIN+Math.random()*(LIGHT_HOLD_MAX-LIGHT_HOLD_MIN);
+  paintLights(0);
+  if(lightsEl){ lightsEl.classList.add('on'); lightNoteEl.textContent='🚦 รอไฟดับก่อนออกตัว'; }
+}
+function beginLights(){ if(lightPhase==='wait'){ lightPhase='seq'; lightT=-LIGHT_LEAD_S; } }
+function lightsLocked(){ return lightPhase!=='go'||penaltyT>0; }
+function paintLights(n){
+  if(lightsLit===n) return;
+  lightsLit=n;
+  for(let i=0;i<startLights.length;i++){
+    const on=i<n;
+    startLights[i].m.material.color.setHex(on?0xff1e1e:0x330000);
+    startLights[i].g.material.opacity=on?0.9:0;
+  }
+  for(let i=0;i<lightDots.length;i++) lightDots[i].classList.toggle('lit',i<n);
+}
+function lightsTick(dt){
+  const thrNow=clamp(padThr+(kThr?1:0),0,1)>0.05;
+  if(lightPhase==='seq'){
+    lightT+=dt;
+    const lit=lightT<0?0:Math.min(5,Math.floor(lightT/LIGHT_STEP_S)+1);
+    if(lit>lightsLit){ paintLights(lit); Snd.blip(false); }
+    /* จั๊มพ์สตาร์ท = "กดใหม่" ตอนไฟครบ 5 เท่านั้น (เด็กที่กดค้างรอมาแต่ต้นไม่โดน) */
+    if(lit>=5&&thrNow&&!thrPrev&&!jumped){
+      jumped=true;
+      lightNoteEl.textContent='⛔ จั๊มพ์สตาร์ท! รอเพิ่ม '+JUMP_PENALTY_S.toFixed(0)+' วิ';
+      if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
+    }
+    if(lit>=5&&lightT>=4*LIGHT_STEP_S+holdS){
+      lightPhase='go'; goAt=performance.now(); heldAtGo=thrNow;
+      paintLights(0); Snd.blip(true);
+      if(jumped){
+        penaltyT=JUMP_PENALTY_S;
+      }else{
+        lightsEl.classList.remove('on');
+        banEl.innerHTML='🟢 <b>ไฟดับ — ออกตัว!</b>';
+        banEl.classList.add('show');
+        setTimeout(()=>banEl.classList.remove('show'),1100);
+      }
+    }
+  }else if(lightPhase==='go'){
+    if(penaltyT>0){
+      penaltyT-=dt;
+      lightNoteEl.textContent='⛔ จั๊มพ์สตาร์ท! รออีก '+Math.max(0,penaltyT).toFixed(1)+' วิ';
+      if(penaltyT<=0){
+        penaltyT=0; heldAtGo=thrNow; goAt=performance.now();
+        lightsEl.classList.remove('on'); Snd.blip(true);
+      }
+    }else if(!reactDone&&goAt){
+      /* เวลาปฏิกิริยา: ต้องเป็นการ "กดใหม่" หลังไฟดับ (กดค้างข้ามมาไม่นับ) */
+      if(!thrNow) heldAtGo=false;
+      else if(!heldAtGo&&!thrPrev){
+        reactDone=true;
+        const r=(performance.now()-goAt)/1000;
+        banEl.innerHTML='⚡ ปฏิกิริยา <b>'+r.toFixed(3)+'</b> วิ'
+          +(r<0.25?'<br><span class="m-coin">สุดยอด! เร็วระดับนักแข่งจริง</span>'
+           :r<0.45?'<br><span class="m-coin">ไวมาก!</span>':'');
+        banEl.classList.add('show');
+        setTimeout(()=>banEl.classList.remove('show'),1800);
+      }
+    }
+  }
+  thrPrev=thrNow;
+}
+/* ---------- 👻 รถเงา ---------- */
+function ghostEnsure(){
+  if(ghostGrp) return ghostGrp;
+  ghostGrp=buildF1Car(0x67d8ff);
+  ghostGrp.traverse(o=>{
+    if(!o.material||o.isSprite) return;
+    const m=o.material.clone?o.material.clone():o.material;
+    m.transparent=true; m.opacity=0.34; m.depthWrite=false;
+    o.material=m;
+  });
+  ghostWheels=ghostGrp.userData.wheels||[];
+  const tag=makeTextSprite('สถิติของหนู','rgba(20,120,190,.72)','#eaffff','👻');
+  tag.scale.set(6.4,1.6,1); tag.position.set(0,3.2,0);
+  ghostGrp.add(tag);
+  ghostGrp.visible=false;
+  scene.add(ghostGrp);
+  return ghostGrp;
+}
+function ghostHide(){
+  if(ghostGrp) ghostGrp.visible=false;
+  ghostShown=false; ghostLast=null;
+  if(gapEl) gapEl.classList.remove('on');
+}
+function ghostLoad(){
+  ghostBest=null;
+  try{
+    const d=JSON.parse(localStorage.getItem(GHOST_KEY)||'null');
+    if(!d||!d.x||!d.z||!d.y||!d.p||d.x.length<8||!d.t) return;
+    if(Math.abs((d.v||0)-Math.round(TOTAL))>3) return;      // แทร็กเปลี่ยนสูตร = เส้นทางเก่าใช้ไม่ได้
+    ghostBest=d;
+  }catch(e){}
+}
+function ghostSave(){
+  try{ localStorage.setItem(GHOST_KEY,JSON.stringify(ghostBest)); }catch(e){}
+}
+function ghostReset(){
+  ghostRec={t:0,v:Math.round(TOTAL),x:[],z:[],y:[],p:[]};
+  ghostAcc=1/GHOST_HZ; gapCur=0; ghostGap=0; ghostLast=null;
+}
+function ghostRecord(dt,prog){
+  if(!ghostRec||ghostRec.x.length>=GHOST_MAX) return;
+  ghostAcc+=dt;
+  if(ghostAcc<1/GHOST_HZ) return;
+  ghostAcc-=1/GHOST_HZ;
+  ghostRec.x.push(+px.toFixed(1)); ghostRec.z.push(+pz.toFixed(1));
+  ghostRec.y.push(+yaw.toFixed(3)); ghostRec.p.push(+prog.toFixed(1));
+}
+/* จบรอบเร็วกว่ารถเงาเดิม → เก็บเส้นทางรอบนี้เป็นรถเงาใหม่ */
+function ghostKeep(t){
+  if(!ghostRec||ghostRec.x.length<8||ghostRec.x.length>=GHOST_MAX) return false;
+  if(ghostBest&&t>=ghostBest.t) return false;
+  ghostRec.t=+t.toFixed(3); ghostBest=ghostRec; ghostSave();
+  return true;
+}
+/* ต่างกันกี่วินาที: หาเวลาที่รถเงาอยู่ "ระยะทางเดียวกัน" กับเรา */
+function ghostGapAt(prog){
+  const g=ghostBest, n=g.p.length;
+  while(gapCur<n-1&&g.p[gapCur+1]<=prog) gapCur++;
+  if(gapCur>=n-1) return lapNow-g.t;
+  const p0=g.p[gapCur],p1=g.p[gapCur+1];
+  const f=p1>p0?clamp((prog-p0)/(p1-p0),0,1):0;
+  return lapNow-(gapCur+f)/GHOST_HZ;
+}
+function ghostTick(dt){
+  if(!ghostBest||!lapStartAt||lightsLocked()){ ghostHide(); return; }
+  const g=ghostBest, n=g.x.length;
+  const idx=lapNow*GHOST_HZ, i=Math.floor(idx);
+  ghostGap=ghostGapAt(lastProg);
+  gapEl.textContent='👻 '+(ghostGap>=0?'+':'−')+Math.abs(ghostGap).toFixed(2)+' วิ';
+  gapEl.className=(ghostGap>=0?'slow':'fast')+' on';
+  if(i<0||i>=n-1){ if(ghostGrp) ghostGrp.visible=false; ghostShown=false; ghostLast=null; return; }
+  const f=idx-i;
+  const gx=lerp(g.x[i],g.x[i+1],f), gz=lerp(g.z[i],g.z[i+1],f);
+  let dy=g.y[i+1]-g.y[i];
+  while(dy>Math.PI) dy-=Math.PI*2;
+  while(dy<-Math.PI) dy+=Math.PI*2;
+  const gm=ghostEnsure();
+  gm.position.set(gx,0,gz);
+  gm.rotation.y=g.y[i]+dy*f;
+  gm.visible=true; ghostShown=true;
+  if(ghostLast){                                    // ล้อหมุนตามระยะที่รถเงาเคลื่อนจริง
+    const d=Math.hypot(gx-ghostLast.x,gz-ghostLast.z);
+    for(const w of ghostWheels) w.rotation.x+=d/0.46;
+  }
+  ghostLast={x:gx,z:gz};
+}
+
+/* ============================================================
+   🛞🔧 รอบ 905: ยางสึก + พิทสต็อปเปลี่ยนยาง
+   ─────────────────────────────────────────────
+   · ยางสึกจาก "การไถล" เป็นหลัก (สไลด์แรง+เร็ว = สึกไว) + สึกช้า ๆ ตามระยะทาง
+     + สึกเพิ่มบน kerb/ทราย · กริปลดตามยางที่เหลือ → ท้ายสตินต์รถลื่นขึ้นชัดเจน
+   · เลนพิท (F1_MAP.pit) กลายเป็น "ผิวที่ 5" — เดิมเลนพิทอยู่นอกแทร็กจึงถูกนับเป็น runoff
+     (ลื่น+หน่วง ขับไม่ได้จริง) ตอนนี้กริปเต็ม แต่มีลิมิตเตอร์ 80 กม./ชม. เหมือนของจริง
+   · จอดนิ่งในช่องพิท 3 วิ = ยางใหม่เต็ม (มีเสียงปืนลมขันน็อต + ป้ายเปลี่ยนสี)
+   · รอบที่แวะเลนพิท = ไม่นับสถิติ Best Lap (กติกาจริง) แต่ยังได้เหรียญครบรอบตามปกติ
+   ============================================================ */
+/* ---- เส้นกึ่งกลางเลนพิท: resample ทุก SAMPLE_M เมตร ---- */
+function buildPitLine(){
+  PITL=null; pitBox=null;
+  const src=(typeof F1_MAP!=='undefined'&&F1_MAP.pit)||null;
+  if(!src||src.length<3) return;
+  const pts=[];
+  for(let i=0;i<src.length-1;i++){
+    const a=src[i],b=src[i+1];
+    const L=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    const steps=Math.max(1,Math.round(L/SAMPLE_M));
+    for(let s=0;s<steps;s++){
+      const t=s/steps;
+      pts.push([a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t]);
+    }
+  }
+  pts.push(src[src.length-1].slice());
+  const m=pts.length;
+  PITL={x:new Float32Array(m),z:new Float32Array(m),tx:new Float32Array(m),tz:new Float32Array(m),
+        nx:new Float32Array(m),nz:new Float32Array(m),cum:new Float32Array(m),n:m,len:0};
+  let cum=0;
+  for(let i=0;i<m;i++){
+    const p=pts[i], q=pts[Math.min(i+1,m-1)], r=pts[Math.max(i-1,0)];
+    PITL.x[i]=p[0]; PITL.z[i]=p[1];
+    let dx=q[0]-r[0], dz=q[1]-r[1];
+    const L=Math.hypot(dx,dz)||1e-6; dx/=L; dz/=L;
+    PITL.tx[i]=dx; PITL.tz[i]=dz; PITL.nx[i]=-dz; PITL.nz[i]=dx;
+    PITL.cum[i]=cum;
+    if(i<m-1) cum+=Math.hypot(pts[i+1][0]-p[0],pts[i+1][1]-p[1]);
+  }
+  PITL.len=cum;
+  /* ช่องจอด: กึ่งกลางเลนพิท เยื้องไป "ฝั่งตรงข้ามแทร็ก" (ฝั่งโรงรถ) */
+  const bi=Math.max(2,Math.min(m-3,Math.round(m*PIT_BOX_AT)));
+  const ti=nearIdx(PITL.x[bi],PITL.z[bi]);
+  let ax=PITL.x[bi]-LINE.x[ti], az=PITL.z[bi]-LINE.z[ti];
+  const aL=Math.hypot(ax,az)||1e-6; ax/=aL; az/=aL;
+  const side=(ax*PITL.nx[bi]+az*PITL.nz[bi])>=0?1:-1;   // ด้านไหนของเลนพิทคือฝั่งไกลแทร็ก
+  pitBox={i:bi, side,
+    x:PITL.x[bi]+PITL.nx[bi]*2.0*side, z:PITL.z[bi]+PITL.nz[bi]*2.0*side,
+    yaw:Math.atan2(PITL.tx[bi],PITL.tz[bi])};
+}
+/* จุดใกล้สุดบนเลนพิท (เส้นสั้น ~155 จุด → ไล่ตรง ๆ เร็วพอ) */
+function pitAt(x,z){
+  if(!PITL) return null;
+  let bi=0,bd=1e18;
+  for(let i=0;i<PITL.n;i++){
+    const d=(PITL.x[i]-x)**2+(PITL.z[i]-z)**2;
+    if(d<bd){ bd=d; bi=i; }
+  }
+  const dx=x-PITL.x[bi], dz=z-PITL.z[bi];
+  return {i:bi, lat:dx*PITL.nx[bi]+dz*PITL.nz[bi], d:Math.sqrt(bd)};
+}
+/* อยู่ในเลนพิทไหม (ใช้ทั้ง surfAt และ pitTick — เลนพิทชนะเฉพาะตอนไม่ได้อยู่บนแทร็กจริง) */
+function inPitLane(x,z,lat){
+  if(!PITL) return false;
+  if(Math.abs(lat)<=HALF_W) return false;              // อยู่บนแทร็ก = ไม่ใช่เลนพิท (ปลายเลนซ้อนกัน)
+  const pa=pitAt(x,z);
+  return !!(pa&&Math.abs(pa.lat)<=PIT_HALF_W);
+}
+/* ---- ป้าย/พื้นช่องจอด (เรียกจาก buildTrackScene) ---- */
+function pitBoxTex(){
+  return texFromCanvas((g,w,h)=>{
+    /* แถบเตือนเฉียงรอบขอบ */
+    g.save(); g.beginPath(); g.rect(0,0,w,h); g.clip();
+    for(let i=-h;i<w;i+=26){
+      g.fillStyle=(((i+h)/26|0)%2)?'#ffd12e':'#171a1f';
+      g.beginPath(); g.moveTo(i,0); g.lineTo(i+13,0); g.lineTo(i+13+h,h); g.lineTo(i+h,h); g.fill();
+    }
+    g.restore();
+    /* พื้นในกรอบ */
+    g.fillStyle='#2a2e34'; g.fillRect(16,16,w-32,h-32);
+    g.strokeStyle='#ffffff'; g.lineWidth=5; g.strokeRect(16,16,w-32,h-32);
+    /* กากบาทจุดจอด + ข้อความ */
+    g.strokeStyle='rgba(255,255,255,.6)'; g.lineWidth=4;
+    g.beginPath(); g.moveTo(w/2,h*0.36); g.lineTo(w/2,h*0.64);
+    g.moveTo(w*0.37,h/2); g.lineTo(w*0.63,h/2); g.stroke();
+    g.textAlign='center';
+    g.fillStyle='#ffd12e'; g.font='bold 52px Kanit,sans-serif';
+    g.fillText('PIT',w/2,h*0.27);
+    g.fillStyle='#cfe0ff'; g.font='bold 26px Kanit,sans-serif';
+    g.fillText('จอดนิ่ง 3 วิ = ยางใหม่',w/2,h*0.87);
+  },256,256,1,1);
+}
+function buildPitBox(){
+  if(!pitBox) return;
+  /* พื้นช่องจอด */
+  pitBoxMesh=new THREE.Mesh(new THREE.PlaneGeometry(6.6,9.6),
+    new THREE.MeshBasicMaterial({map:pitBoxTex(),transparent:true}));
+  pitBoxMesh.rotation.x=-Math.PI/2;
+  pitBoxMesh.rotation.z=-pitBox.yaw;
+  pitBoxMesh.position.set(pitBox.x,0.035,pitBox.z);
+  scene.add(pitBoxMesh);
+  /* เสาป้ายข้างช่อง (lollipop) — จานเปลี่ยนสีตามสถานะ */
+  const grp=new THREE.Group();
+  const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.09,0.09,3.4,6),
+    new THREE.MeshLambertMaterial({color:0xdedede}));
+  pole.position.y=1.7; grp.add(pole);
+  pitSign=new THREE.Mesh(new THREE.CircleGeometry(0.95,20),
+    new THREE.MeshBasicMaterial({color:0x2ecc55,side:THREE.DoubleSide}));
+  pitSign.position.y=3.5; grp.add(pitSign);
+  const lab=makeTextSprite('🛞 PIT','#ffffff','rgba(10,16,30,.85)');
+  lab.scale.set(6,2.2,1); lab.position.y=5.3; grp.add(lab);
+  pitGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,transparent:true,
+    color:0x2ecc55,opacity:0.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+  pitGlow.scale.set(7,4.2,1); pitGlow.position.y=3.5; grp.add(pitGlow);
+  const s=pitBox.side;
+  grp.position.set(pitBox.x+PITL.nx[pitBox.i]*3.6*s, 0, pitBox.z+PITL.nz[pitBox.i]*3.6*s);
+  scene.add(grp);
+}
+function setPitSign(hex){
+  if(pitSign) pitSign.material.color.setHex(hex);
+  if(pitGlow) pitGlow.material.color.setHex(hex);
+}
+/* ---- ยางสึก ---- */
+function tyreWear(dt,surf){
+  const fast=clamp(spd/38,0,1.35);
+  let w=TYRE_W_ROLL*spd*dt;                            // ตามระยะทาง
+  w+=TYRE_W_SLIDE*slide*fast*dt;                       // ไถล = ตัวการหลัก
+  if(surf==='kerb') w+=TYRE_W_KERB*fast*dt;
+  else if(surf==='sand') w+=TYRE_W_SAND*fast*dt;
+  else if(surf==='runoff') w+=TYRE_W_SAND*0.5*fast*dt;
+  if(w>0) tyre=clamp(tyre-w,0,1);
+}
+function tyreGrip(){ return TYRE_GRIP_MIN+(1-TYRE_GRIP_MIN)*tyre; }
+/* ---- ลูปพิท (เรียกท้าย physTick) ---- */
+function pitTick(dt){
+  const was=inPit;
+  inPit=pitLaneNow;
+  if(inPit&&!was) lapPitted=true;                      // แตะเลนพิท = รอบนี้ไม่นับสถิติ
+  let d=1e9;
+  if(pitBox) d=Math.hypot(px-pitBox.x,pz-pitBox.z);
+  const inBox=inPit&&d<PIT_BOX_R;
+  const cooling=performance.now()-pitDoneAt<1500;
+  if(inBox&&!cooling&&spd<PIT_STOP_V&&tyre<0.999){
+    if(pitT===0) pitWrenchAt=-1;
+    pitT+=dt;
+    if(pitT-pitWrenchAt>0.62){ pitWrenchAt=pitT; Snd.wrench(0.42); }   // ปืนลมรัวเป็นช่วง
+    setPitSign(0xff3b30);
+    if(pitT>=PIT_STOP_S){
+      tyre=1; pitT=0; pitStops++; pitDoneAt=performance.now();
+      Snd.tyreDone();
+      banEl.innerHTML='🛞 <b>ยางใหม่! กริปเต็ม 100%</b>'
+        +'<br><span class="m-coin">พิทสต็อปที่ '+pitStops+' — ออกได้เลย!</span>';
+      banEl.classList.add('show');
+      setTimeout(()=>banEl.classList.remove('show'),1900);
+      setPitSign(0x2ecc55);
+    }
+  }else{
+    pitT=0;
+    /* เหลือง = "จอดตรงนี้แล้วเปลี่ยนยางได้" เท่านั้น · ยางเต็ม/เพิ่งเปลี่ยนเสร็จ = เขียว */
+    setPitSign((inBox&&tyre<0.999&&!cooling)?0xffd12e:0x2ecc55);
+  }
+  /* คิด cooling ใหม่ตรงนี้ — เปลี่ยนยางเสร็จในเฟรมนี้ก็ต้องขึ้น "ออกได้เลย" ทันที ไม่แวบข้อความผิด */
+  pitHud(d,inBox,performance.now()-pitDoneAt<1500);
+}
+function pitHud(d,inBox,cooling){
+  if(!pitEl) return;
+  let html='';
+  if(pitT>0){
+    const left=Math.max(0,PIT_STOP_S-pitT);
+    const pc=Math.round(clamp(pitT/PIT_STOP_S,0,1)*100);
+    html='<div class="pit-hd">🔧 กำลังเปลี่ยนยาง… '+left.toFixed(1)+' วิ</div>'
+      +'<div class="pit-bar"><i style="width:'+pc+'%"></i></div>';
+  }else if(inBox){
+    html='<div class="pit-hd">'+(cooling?'🛞 ยางใหม่แล้ว — ออกได้เลย!'
+      :(tyre>0.999?'🛞 ยางยังใหม่อยู่ ไม่ต้องเปลี่ยน':'🅿️ จอดให้นิ่งในช่อง แล้วรอ 3 วิ'))+'</div>';
+  }else if(inPit){
+    html='<div class="pit-hd">🚧 เลนพิท · จำกัด 80 กม./ชม.</div>'
+      +'<div class="pit-sub">ช่องเปลี่ยนยางอีก '+Math.round(d)+' ม.</div>';
+  }else if(tyre<TYRE_WARN){
+    html='<div class="pit-hd warn">⚠️ ยางใกล้หมดสภาพ — แวะพิทเปลี่ยนยาง</div>';
+  }
+  if(html!==pitEl.innerHTML) pitEl.innerHTML=html;
+  pitEl.classList.toggle('on',!!html);
+}
+/* ---- เกจยางบน HUD ---- */
+function tyreHud(){
+  if(!tyreBarEl) return;
+  const pc=Math.round(tyre*100);
+  const col=tyre>0.55?'#2ecc55':(tyre>TYRE_WARN?'#ffd12e':'#ff3b30');
+  tyreBarEl.style.width=pc+'%';
+  tyreBarEl.style.background=col;
+  tyrePcEl.textContent=pc+'%';
+  tyrePcEl.style.color=col;
+  tyreEl.classList.toggle('low',tyre<0.15);
+}
+function tyreReset(){
+  tyre=1; pitT=0; pitStops=0; pitDoneAt=0; inPit=false; pitLaneNow=false;
+  pitLimited=false; lapPitted=false; pitWrenchAt=-1;
+  setPitSign(0x2ecc55);
+  if(pitEl){ pitEl.innerHTML=''; pitEl.classList.remove('on'); }
+  tyreHud();
 }
 
 /* ============================================================
@@ -1512,7 +2240,25 @@ function renderBoard(){
 /* ============================================================
    📷 กล้องไล่หลัง + ลูปเกม
    ============================================================ */
+/* 🪖 รอบ 901: มุมคนขับ = ภาพหลัก (ภาพห้องคนขับทับจอ · ซ่อนรถตัวเอง) · 📷 = มุมไล่หลังเห็นทั้งคัน */
+function applyCamMode(){
+  const fp=camMode==='cockpit';
+  wrapEl.classList.toggle('fp',fp);
+  if(camBtnEl) camBtnEl.textContent=fp?'📷 มุมรถ':'🪖 มุมคนขับ';
+  if(carGrp) carGrp.visible=!fp;
+  camInit=false;
+}
 function camTick(dt){
+  if(camMode==='cockpit'){
+    /* หัวคนขับตรึงกับรถ — ห้ามหน่วง ไม่งั้นโลก 3D กับภาพห้องคนขับแยกจากกัน */
+    camYaw=yaw;
+    const fx=Math.sin(yaw), fz=Math.cos(yaw);
+    camera.position.set(px+fx*FP_FWD,FP_EYE,pz+fz*FP_FWD);
+    camera.lookAt(px+fx*(FP_FWD+FP_LOOK),FP_EYE-FP_DROP,pz+fz*(FP_FWD+FP_LOOK));
+    const fov=FP_FOV+clamp(spd/92,0,1)*12;
+    if(Math.abs(camera.fov-fov)>0.2){ camera.fov=fov; camera.updateProjectionMatrix(); }
+    return;
+  }
   const dist=9.5+spd*0.075, h=3.4+spd*0.012;
   const lookAhead=8+spd*0.28;
   /* กล้องหันตามทิศรถแบบหน่วง (เห็นรถไถลเวลาดริฟต์) */
@@ -1535,10 +2281,16 @@ function hudTick(){
   speedEl.innerHTML=kmh+'<small> กม./ชม.</small>';
   const g=spd<0.6?'N':gearOf(spd);
   gearEl.textContent=g;
+  /* 🚧 รอบ 905: ลิมิตเตอร์ทำงาน = เลขความเร็วเป็นสีเหลือง (บอกว่าไม่ใช่รถเสีย) */
+  speedEl.style.color=pitLimited?'#ffd12e':'#fff';
+  drsHud();
+  tyreHud();
 }
 let mapAt=0, relocAt=0;
 function frame(dt,now){
+  lightsTick(dt);          // 🚦 รอบ 902 — ต้องมาก่อน physTick (ล็อกคันเร่งจนไฟดับ)
   physTick(dt);
+  ghostTick(dt);           // 👻 รอบ 902
   collectTick();
   peerTick(dt);
   smokeTick(dt);
@@ -1588,8 +2340,14 @@ function start(){
   vx=vz=spd=0; steer=0; slide=0; steerCtl=0; padThr=0; padBr=false;
   kL=kR=kThr=kBack=false;
   myIdx=gi; surfNow='track';
+  drsOn=false; drsInZone=false; drsGap=0; drsFlapK=0; drsBrake=false;                // 🪽 รอบ 904
+  if(drsEl){ drsEl.className=''; drsEl.innerHTML=''; }
   lapStartAt=0; lapNow=0; lapBest=0; lapCount=0; cpFlags=[false,false,false]; lastProg=0;
   camInit=false; camYaw=yaw;
+  camMode='cockpit'; applyCamMode();   // 🪖 รอบ 901 — เข้าสนามเริ่มที่มุมคนขับเสมอ (ภาพหลัก)
+  tyreReset();              // 🛞 รอบ 905 — ยางใหม่ทุกครั้งที่เข้าสนาม
+  resetLights();            // 🚦 รอบ 902 — ตั้งลำดับไฟใหม่ทุกครั้งที่เข้าสนาม
+  ghostLoad(); ghostReset(); ghostHide();
   knobEl.style.left='50%';
   netJoin();
   fit();
@@ -1600,7 +2358,9 @@ function start(){
     const k=e.key.toLowerCase();
     if(k==='a'||k==='arrowleft') kL=true;
     else if(k==='d'||k==='arrowright') kR=true;
-    else if(k==='w'||k==='arrowup'||k===' '){ kThr=true; Snd.start(); if(introEl.style.display!=='none') introEl.style.display='none'; }
+    else if(k==='w'||k==='arrowup'||k===' '){ kThr=true; Snd.start();
+      if(introEl.style.display!=='none') introEl.style.display='none';
+      beginLights(); }
     else if(k==='s'||k==='arrowdown') kBack=true;
     else if(k==='escape') exitBox.classList.add('on');
   };
@@ -1628,6 +2388,8 @@ function exitWorld(){
   Snd.stop();
   letters.forEach(l=>scene.remove(l.spr)); letters=[]; word=null;
   smokes.forEach(s=>scene.remove(s.m)); smokes=[];
+  ghostHide(); paintLights(0);
+  if(lightsEl) lightsEl.classList.remove('on');
   if(renderer) renderer.setSize(2,2,false);
   wrapEl.classList.remove('on');
   exitBox.classList.remove('on');
@@ -1651,6 +2413,38 @@ window.F1World={
     get word(){return word}, get letters(){return letters},
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
     surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick,
+    /* 🪽 รอบ 904 */
+    get drs(){return {on:drsOn,inZone:drsInZone,gap:drsGap,flapK:drsFlapK,
+      zones:drsZones.map(z=>({a:z.a,b:z.b,len:z.len})),
+      flapRot:(carGrp&&carGrp.userData.drsFlap)?carGrp.userData.drsFlap.rotation.x:null,
+      glow:(carGrp&&carGrp.userData.drsGlow)?carGrp.userData.drsGlow.material.opacity:null,
+      hud:drsEl?{cls:drsEl.className,txt:drsEl.textContent}:null}},
+    /* 🚦👻 รอบ 902 */
+    get lights(){return {phase:lightPhase,lit:lightsLit,locked:lightsLocked(),t:lightT,hold:holdS,
+      pen:penaltyT,jumped,react:reactDone,held:heldAtGo,
+      dots:lightDots.filter(d=>d.classList.contains('lit')).length,
+      mesh:startLights.map(l=>({c:l.m.material.color.getHex(),o:l.g.material.opacity})),
+      note:lightNoteEl?lightNoteEl.textContent:null, on:lightsEl?lightsEl.classList.contains('on'):null}},
+    beginLights, resetLights,
+    setHold(v){ holdS=v; },
+    get ghost(){return {has:!!ghostBest,t:ghostBest?ghostBest.t:0,n:ghostBest?ghostBest.x.length:0,
+      rec:ghostRec?ghostRec.x.length:0,vis:ghostShown,gap:ghostGap,
+      pos:(ghostGrp&&ghostShown)?{x:ghostGrp.position.x,z:ghostGrp.position.z,yaw:ghostGrp.rotation.y}:null,
+      hud:gapEl?{cls:gapEl.className,txt:gapEl.textContent}:null}},
+    setGhost(d){ ghostBest=d; if(d) ghostSave(); else { try{localStorage.removeItem(GHOST_KEY);}catch(e){} } },
+    ghostLoad, ghostReset, ghostKeep, ghostTick,
+    /* 🛞🔧 รอบ 905 */
+    get tyre(){return {k:tyre,grip:tyreGrip(),
+      hud:tyreEl?{w:tyreBarEl.style.width,col:tyreBarEl.style.background,txt:tyrePcEl.textContent,
+        low:tyreEl.classList.contains('low')}:null}},
+    setTyre(v){ tyre=clamp(v,0,1); tyreHud(); },
+    get pit(){return {inPit,limited:pitLimited,t:pitT,stops:pitStops,lapPitted,
+      box:pitBox?{x:pitBox.x,z:pitBox.z,i:pitBox.i,side:pitBox.side}:null,
+      d:pitBox?Math.hypot(px-pitBox.x,pz-pitBox.z):null,
+      sign:pitSign?pitSign.material.color.getHex():null,
+      line:PITL?{n:PITL.n,len:PITL.len}:null,
+      hud:pitEl?{on:pitEl.classList.contains('on'),txt:pitEl.textContent}:null}},
+    pitAt, inPitLane, tyreWear, tyreGrip, pitTick, tyreReset,
     get peers(){return peers},
     fakePeer(uid,x,z,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0},extra||{})); return peers[uid]; },
     netJoin, netLeave, renderBoard, sendChat,
