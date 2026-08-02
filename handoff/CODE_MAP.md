@@ -277,7 +277,7 @@ XRK_ALL:674 · xrkSubmit:682 · xrkMerge:710 · xrkAllRows:729 · xrkFetch:747 �
 xrkNoteRefresh:784 · xrkAllRowHTML:793 · xrkBodyHTML:797 · xrkMount:812 · openExamStdRank:851 · examStdCardsHTML:868
 openExamStdBoard:903
 
-## js/f1_3d.js (1,533 บรรทัด · 97 รายการ)
+## js/f1_3d.js (1,534 บรรทัด · 97 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
 - 17-50 ⚙️ ค่าคงที่ (TUNE ZONE)
 - 51-78 📦 สถานะโลก
@@ -287,13 +287,13 @@ openExamStdBoard:903
 - 292-381 🛣️ เส้นแทร็ก: F1_MAP.track (จุดจริง OSM) → sample ทุก 5 ม.
 - 382-647 🏗️ สร้างฉาก: แทร็ก + kerb + runoff + อาคารจริง + ไฟ + ทะเลทราย
 - 648-750 🏎️ โมเดลรถ: GLB ผู้ใช้ (img/models/f1_car.glb) → ไม่มี = ประกอบเอง
-- 751-918 🖥️ DOM + CSS (เต็มจอ ไม่มีกรอบเครื่องเกม)
-- 919-1017 🌍 สร้างโลกครั้งเดียว
-- 1018-1153 🏁 ฟิสิกส์ + จับเวลา
-- 1154-1238 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
-- 1239-1381 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
-- 1382-1435 📷 กล้องไล่หลัง + ลูปเกม
-- 1436-1533 🚪 เข้า/ออกโลก
+- 751-919 🖥️ DOM + CSS (เต็มจอ ไม่มีกรอบเครื่องเกม)
+- 920-1018 🌍 สร้างโลกครั้งเดียว
+- 1019-1154 🏁 ฟิสิกส์ + จับเวลา
+- 1155-1239 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
+- 1240-1382 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
+- 1383-1436 📷 กล้องไล่หลัง + ลูปเกม
+- 1437-1534 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:20 · LETTER_COIN:21 · LETTER_COPIES:22 · COLLECT_R:23 · DONE_KEY:24 · HALF_W:25
 KERB_W:26 · RUNOFF_W:27 · SAMPLE_M:28 · PWR_A:30 · ACC_CAP:31 · DRAG_K:32
@@ -305,13 +305,13 @@ asphaltTex:187 · kerbTex:202 · sandTex:208 · crowdTex:217 · garageTex:228 ·
 adTex:248 · tentTex:255 · letterTexture:268 · makeTextSprite:278 · cr:296 · buildLine:300
 nearIdx:339 · surfAt:370 · ribbonGeo:385 · kerbStrips:406 · extrudeFootprint:441 · polyCentroid:452
 buildBuildings:456 · buildTrackScene:506 · glbEnsure:651 · buildF1Car:660 · makeCar:731 · CSS:754
-buildDom:833 · build:922 · mapBounds:990 · mapXY:998 · drawMap:1001 · physTick:1021
-progressTick:1089 · fmtLap:1128 · puffSmoke:1134 · smokeTick:1143 · trackPointAhead:1157 · pickWord:1163
-spawnLetters:1173 · renderWordHud:1186 · collectTick:1192 · completeWord:1210 · relocTick:1227 · netReady:1242
-netJoin:1247 · netSend:1260 · sendChat:1270 · peerColor:1277 · buildPeer:1281 · onPeer:1301
-showPeerBubble:1320 · removePeerBubble:1327 · dropPeer:1333 · peerTick:1341 · netLeave:1357 · renderBoard:1361
-camTick:1385 · hudTick:1403 · frame:1410 · tick:1422 · fit:1429 · start:1439
-exitWorld:1490
+buildDom:834 · build:923 · mapBounds:991 · mapXY:999 · drawMap:1002 · physTick:1022
+progressTick:1090 · fmtLap:1129 · puffSmoke:1135 · smokeTick:1144 · trackPointAhead:1158 · pickWord:1164
+spawnLetters:1174 · renderWordHud:1187 · collectTick:1193 · completeWord:1211 · relocTick:1228 · netReady:1243
+netJoin:1248 · netSend:1261 · sendChat:1271 · peerColor:1278 · buildPeer:1282 · onPeer:1302
+showPeerBubble:1321 · removePeerBubble:1328 · dropPeer:1334 · peerTick:1342 · netLeave:1358 · renderBoard:1362
+camTick:1386 · hudTick:1404 · frame:1411 · tick:1423 · fit:1430 · start:1440
+exitWorld:1491
 
 ## js/game.js (1,115 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
