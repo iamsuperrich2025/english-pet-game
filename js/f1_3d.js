@@ -34,6 +34,11 @@ const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไ�
 const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
 const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
 const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
+/* 🎡 พวงมาลัยหมุนตามการเลี้ยวจริง (รอบ 913) — ภาพแยกเป็น 2 ชั้น: cockpit_body.webp (ไม่มีพวงมาลัย) + wheel.webp */
+const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมกลางพวงมาลัย) คิดเป็น % ของภาพ — ได้จาก tools/f1_split_wheel.py
+const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
+const WHEEL_RATIO  = 2.2;    // อัตราทด: มุมล้อหน้าจริง (องศา) → องศาที่หมุนบนภาพ (สุดพวงมาลัย ~43°)
+const WHEEL_MAX_DEG= 44;     // เพดานองศา — เกินกว่านี้ภาพถ่ายมุมเดียวเริ่มดูบิดผิดรูป
 /* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
 const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
 const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
@@ -108,6 +113,7 @@ let keydownFn, keyupFn, resizeFn;
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
+let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
 let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 /* แทร็ก */
 let LINE=null, TOTAL=0, grid=null, sfIdx=0, myIdx=0, myLapDist=0, surfNow='track';
@@ -911,9 +917,12 @@ const CSS=`
 #f1-wrap.on{display:block}
 #f1-cv{position:absolute;inset:0;width:100%;height:100%}
 /* 🪖 รอบ 901: ภาพห้องคนขับทับ canvas (ช่องมองโปร่งใส — เห็นโลก 3D ทะลุ) + ปุ่มสลับมุมมอง */
-#f1-cockpit{position:absolute;inset:0 0 -8% 0;z-index:5;pointer-events:none;display:none;
-  background:url('img/f1/cockpit.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
+#f1-cockpit{position:absolute;inset:0 0 -8% 0;z-index:5;pointer-events:none;display:none;overflow:hidden;
+  background:url('img/f1/cockpit_body.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
 #f1-wrap.fp #f1-cockpit{display:block}
+/* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
+   (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
+#f1-cockpit img{position:absolute;left:0;top:0;display:block;will-change:transform}
 /* จอกว้างเตี้ย (มือถือแนวนอน) — cover จะเอาค็อกพิทบังเต็มจอ: ตรึงขอบบน (halo อยู่ครบ) + สูง 128%
    ตัดหน้าปัด/ขอบล่างทิ้งใต้จอแทน · บีบแนวตั้ง ~10% ตามองไม่ออก แต่เปิดพื้นที่เห็นแทร็กเพิ่มมาก */
 @media (min-aspect-ratio: 9/5){
@@ -1080,7 +1089,7 @@ function buildDom(){
   wrapEl=document.createElement('div'); wrapEl.id='f1-wrap';
   wrapEl.innerHTML=`
     <canvas id="f1-cv"></canvas>
-    <div id="f1-cockpit"></div>
+    <div id="f1-cockpit"><img id="f1-wheel" alt=""></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
     <div id="f1-coins">🪙 +0</div>
@@ -1171,6 +1180,14 @@ function buildDom(){
   /* 🪖 รอบ 901: ปุ่มสลับมุมมอง คนขับ ↔ เห็นรถทั้งคัน */
   cockpitEl=wrapEl.querySelector('#f1-cockpit');
   camBtnEl=wrapEl.querySelector('#f1-cambtn');
+  /* 🎡 รอบ 913: ชั้นพวงมาลัย — โหลดไม่ได้ = ถอยไปใช้ภาพเดิมที่มีพวงมาลัยติดมาในตัว (ไม่ให้เหลือค็อกพิทไม่มีพวงมาลัย) */
+  wheelEl=wrapEl.querySelector('#f1-wheel');
+  wheelEl.addEventListener('error',()=>{
+    wheelEl.style.display='none'; wheelEl=null;
+    cockpitEl.style.backgroundImage="url('img/f1/cockpit.webp')";
+  });
+  wheelEl.addEventListener('load',layoutWheel);
+  wheelEl.src='img/f1/wheel.webp';
   camBtnEl.addEventListener('click',()=>{ camMode=camMode==='cockpit'?'chase':'cockpit'; applyCamMode(); });
   /* แชท */
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button>${t}</button>`).join('');
@@ -2586,6 +2603,42 @@ function applyCamMode(){
   if(carGrp) carGrp.visible=!fp;
   if(fpWheels) fpWheels.visible=fp;   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
   camInit=false;
+  if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
+}
+/* 🎡 รอบ 913: วาง <img> พวงมาลัยให้ทับ "กรอบภาพจริง" ของ background-image ใน #f1-cockpit เป๊ะ
+   — อ่าน background-size/position ที่เบราว์เซอร์คำนวณแล้วมาใช้ตรง ๆ จึงเปลี่ยนตาม @media เองโดยไม่ต้องเขียนสูตรซ้ำ
+   (ทับพอดี = จุดหมุน WHEEL_HUB_* ซึ่งเป็น % ของภาพ ตรงกับแกนพวงมาลัยจริงทุกขนาดจอ) */
+function layoutWheel(){
+  if(!wheelEl||!cockpitEl) return;
+  const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
+  const iw=wheelEl.naturalWidth, ih=wheelEl.naturalHeight;
+  if(!bw||!bh||!iw||!ih) return;
+  const cs=getComputedStyle(cockpitEl);
+  let w,h;
+  const pc=cs.backgroundSize.match(/(-?[\d.]+)%\s+(-?[\d.]+)%/);
+  if(pc){ w=bw*parseFloat(pc[1])/100; h=bh*parseFloat(pc[2])/100; }
+  else { const k=Math.max(bw/iw,bh/ih); w=iw*k; h=ih*k; }        // cover
+  const kw={left:0,top:0,center:50,right:100,bottom:100};
+  const at=t=>t==null?50:(t in kw?kw[t]:(t.slice(-1)==='%'?parseFloat(t):50));
+  const bp=cs.backgroundPosition.trim().split(/\s+/);
+  wheelEl.style.width=w+'px';  wheelEl.style.height=h+'px';
+  wheelEl.style.left=(bw-w)*at(bp[0])/100+'px';
+  wheelEl.style.top =(bh-h)*at(bp[1])/100+'px';
+  wheelEl.style.transformOrigin=WHEEL_HUB_X+'% '+WHEEL_HUB_Y+'%';
+  /* จอกว้างเตี้ยยืดภาพแนวตั้ง (100% 128%) — ถ้าหมุนตรง ๆ พวงมาลัยจะบิดผิดรูประหว่างหมุน
+     จึง "คลายการยืด → หมุน → ยืดกลับ" ให้หมุนในสัดส่วนจริงของภาพ (cover = 1 พอดี ไม่มีผล) */
+  wheelSy=h/(w*ih/iw);
+  wheelDeg=null;   // สั่งวาด transform ใหม่รอบหน้า (สูตรเปลี่ยนตามการยืด)
+}
+/* 🎡 รอบ 913: หมุนพวงมาลัยตามมุมล้อหน้าจริง (steer) — คูณอัตราทดให้เห็นชัดตอนความเร็วสูงที่ล้อขยับนิดเดียว */
+function wheelTick(){
+  if(!wheelEl||camMode!=='cockpit') return;
+  const deg=clamp(steer*(180/Math.PI)*WHEEL_RATIO,-WHEEL_MAX_DEG,WHEEL_MAX_DEG);
+  if(wheelDeg!==null&&Math.abs(deg-wheelDeg)<0.05) return;
+  wheelDeg=deg;
+  const r='rotate('+deg.toFixed(2)+'deg)';
+  wheelEl.style.transform=Math.abs(wheelSy-1)<0.01?r
+    :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
 }
 /* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
    (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อให้ตาจับการหมุนได้) */
@@ -2689,6 +2742,7 @@ function frame(dt,now){
   smokeTick(dt);
   fpWheelTick(dt);         // 🛞 รอบ 911 — ต้องมาหลัง physTick (ใช้ px/pz/yaw ล่าสุด)
   camTick(dt);
+  wheelTick();             // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
   hudTick();
   netSend(false);
   if(now-mapAt>200){ mapAt=now; drawMap(); }
@@ -2707,6 +2761,7 @@ function fit(){
   renderer.setSize(w,h,false);
   camera.aspect=w/h;
   camera.updateProjectionMatrix();
+  layoutWheel();   // 🎡 รอบ 913 — หมุนจอ/ย่อขยาย = กรอบภาพค็อกพิทเปลี่ยน ต้องวางพวงมาลัยใหม่
 }
 
 /* ============================================================
@@ -2860,6 +2915,18 @@ window.F1World={
       line:PITL?{n:PITL.n,len:PITL.len}:null,
       hud:pitEl?{on:pitEl.classList.contains('on'),txt:pitEl.textContent}:null}},
     pitAt, inPitLane, tyreWear, tyreGrip, pitTick, tyreReset,
+    /* 🎡 รอบ 913 — พวงมาลัยแยกชั้น */
+    get wheel(){ if(!wheelEl) return {el:null};
+      const r=wheelEl.getBoundingClientRect(), c=cockpitEl.getBoundingClientRect();
+      return {el:true,deg:wheelDeg,sy:wheelSy,tf:wheelEl.style.transform,org:wheelEl.style.transformOrigin,
+        w:parseFloat(wheelEl.style.width),h:parseFloat(wheelEl.style.height),
+        left:parseFloat(wheelEl.style.left),top:parseFloat(wheelEl.style.top),
+        box:{w:cockpitEl.clientWidth,h:cockpitEl.clientHeight},rect:{x:r.x,y:r.y,w:r.width,h:r.height},
+        cock:{x:c.x,y:c.y,w:c.width,h:c.height},
+        bg:getComputedStyle(cockpitEl).backgroundImage,
+        bs:getComputedStyle(cockpitEl).backgroundSize,bp:getComputedStyle(cockpitEl).backgroundPosition}; },
+    layoutWheel, wheelTick,
+    get camMode(){return camMode}, setCamMode(v){ camMode=v; applyCamMode(); },
     get peers(){return peers},
     fakePeer(uid,x,z,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0},extra||{})); return peers[uid]; },
     netJoin, netLeave, renderBoard, sendChat,
