@@ -393,14 +393,14 @@ function doorAt(g, z, col){
   hinge.add(M(new THREE.SphereGeometry(0.1,8,6), mat(0xf5d97a), DOOR_W-0.26, 1.22, 0.13));  // ลูกบิดริมบาน (ดูออกว่าบานพับอยู่ฝั่งไหน)
   g.add(hinge);
   /* ช่องประตูหลังบาน — เปิดแล้วเห็น "ทางเข้า" ไม่ใช่ผนังทึบ (เล็กกว่าบานเล็กน้อย ตอนปิดจึงถูกบานบังมิด)
-     🌙 รอบ 891: กลางคืนเปลี่ยนเป็นแผ่นเรืองแสงอุ่น (MeshBasic = ไม่กินแสงฉาก สว่างเสมอ) = ไฟในตึกเปิดอยู่ */
+     🌙 รอบ 892: กลางคืนเปลี่ยนเป็นแผ่นเรืองแสงอุ่น (MeshBasic = ไม่กินแสงฉาก สว่างเสมอ) = ไฟในตึกเปิดอยู่ */
   g.add(M(box(DOOR_W-0.14, DOOR_H-0.14, 0.05),
           NIGHT ? new THREE.MeshBasicMaterial({color:0xffc978}) : mat(0x1e150d), 0, 1.25, z+0.03));
   g.add(M(box(2.3,0.3,0.7), mat(0xffffff), 0, 0.15, z+0.25));   // ธรณีประตู
   _lastDoor = hinge;                                            // buildCity หยิบไปผูกกับ key ตึก
-  _lastSpill = null;
+  _lastSpill = _lastGlow = null;
   if(NIGHT){
-    /* 🔦 รอบ 891: ลำแสงอุ่นทาบพื้นหน้าประตู — ความเข้มผูกกับองศาที่บานเปิด (ปิดสนิท = ไม่มีเลย)
+    /* 🔦 รอบ 892: ลำแสงอุ่นทาบพื้นหน้าประตู — ความเข้มผูกกับองศาที่บานเปิด (ปิดสนิท = ไม่มีเลย)
        ระนาบนอนกับพื้น หมุน −90° รอบ X → ขอบ "สว่างสุด" (v=1 = แถวบนของ canvas) ไปอยู่ฝั่งติดประตูพอดี */
     const sp = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_W*2.2, 4.6),
       new THREE.MeshBasicMaterial({map:doorSpillTexture(), transparent:true, opacity:0,
@@ -409,6 +409,13 @@ function doorAt(g, z, col){
     sp.position.set(0, 0.05, z+2.3);
     g.add(sp);
     _lastSpill = sp;
+    /* ดวงเรืองรอบช่องประตู — ตัวนี้แหละที่ทำให้ "ตึกที่มีคนอยู่" ดูออกตั้งแต่มุมมองทั้งเมือง
+       (แบบเดียวกับโคมไฟถนน · ลำแสงพื้นอย่างเดียวจางเกินไปเมื่อมองไกล) */
+    const gl = new THREE.Sprite(new THREE.SpriteMaterial({map:_glowTex(), transparent:true, opacity:0,
+                                                          depthWrite:false, blending:THREE.AdditiveBlending}));
+    gl.position.set(0, 1.35, z+0.4);
+    g.add(gl);
+    _lastGlow = gl;
   }
   return hinge;
 }
@@ -1414,7 +1421,7 @@ function watchPresence(){
       const a=Live.actors[uid];
       if(a.kind==='stand' && !seen[uid]) removeActor(uid);
     });
-    refreshDoorRest();     // 🚪👥 รอบ 891: ตึกไหนมีคนยืนอยู่ = แง้มประตูไว้ (ตัวที่เพิ่ง spawn ยังไม่เสร็จจะเรียกซ้ำเอง)
+    refreshDoorRest();     // 🚪👥 รอบ 892: ตึกไหนมีคนยืนอยู่ = แง้มประตูไว้ (ตัวที่เพิ่ง spawn ยังไม่เสร็จจะเรียกซ้ำเอง)
   }, ()=>setChip('🟢 เมืองพร้อม (อ่านเพื่อนไม่ได้)'));
   Live.off.push(()=>pref.off('value', ph));      // 🧹 รอบ 868: ออกจากหน้าแล้วเลิกอ่าน
 }
@@ -1447,7 +1454,7 @@ function spawnStander(uid, v){
     };
     tickers.push(tick);
     Live.actors[uid] = {g, kind:'stand', bkey, data:v, tick, blk, bubY:4.9};
-    refreshDoorRest();                           // 🚪👥 รอบ 891: lbGet เป็น async — ตัวจริงเพิ่งลงจอตอนนี้ ประตูค่อยแง้มตาม
+    refreshDoorRest();                           // 🚪👥 รอบ 892: lbGet เป็น async — ตัวจริงเพิ่งลงจอตอนนี้ ประตูค่อยแง้มตาม
     flushBubble(uid);                          // มีข้อความรออยู่ตั้งแต่ก่อน spawn เสร็จ
     applyUnread(uid);                            // 💬🔴 รอบ 873: มีข้อความค้างอ่าน = ติดป้ายย้อนหลัง
   });
@@ -1582,7 +1589,7 @@ function removeActor(uid){
   if(Live.chatWith===uid) closeChatBox();   // 🖊️ รอบ 868: คนที่เรากำลังพิมพ์คุยด้วยออกจากเมืองไปแล้ว
   a.g.traverse(o=>{ const j=actorPick.indexOf(o); if(j>=0) actorPick.splice(j,1); });
   delete Live.actors[uid];
-  if(a.kind==='stand') refreshDoorRest();   // 🚪👥 รอบ 891: คนสุดท้ายออกจากตึกนั้น = ปิดประตูตาม
+  if(a.kind==='stand') refreshDoorRest();   // 🚪👥 รอบ 892: คนสุดท้ายออกจากตึกนั้น = ปิดประตูตาม
 }
 function markPickable(g, info){
   g.traverse(o=>{ if(o.isMesh||o.isSprite){ o.userData.actor=info; actorPick.push(o); } });
@@ -2088,17 +2095,17 @@ function lastDoorKey(){
 const DOOR_SWING  = -1.85;   // เรเดียน (~106°) — ลบ = ผลักบานออกนอกตึก (ตึกหันหน้า +Z)
 const DOOR_OPEN_S = 0.42;    // วินาทีที่ใช้เปิดจนสุด
 const DOOR_SHUT_S = 0.62;    // ปิดช้ากว่าเปิด (บานหนัก ค่อย ๆ กลับเข้าวงกบ)
-/* 🚪👥 รอบ 891: "ประตูแง้ม" = ท่าพักของบาน เมื่อมีเพื่อนออนไลน์ยืนอยู่หน้าตึกนั้น
+/* 🚪👥 รอบ 892: "ประตูแง้ม" = ท่าพักของบาน เมื่อมีเพื่อนออนไลน์ยืนอยู่หน้าตึกนั้น
    (ร้านเปิดอยู่ มีคนอยู่ข้างใน) · ปิดจากการเดินออกมาจึงกลับไปหยุดที่ท่าพัก ไม่ใช่ปิดสนิทเสมอ
    🌙 กลางคืน: ช่องประตูเรืองแสง + ลำแสงทาบพื้น (doorAt) → แง้มไว้ก็เห็นไฟลอดออกมาแต่ไกล */
 const DOOR_AJAR = 0.13;      // ท่าพักตอนมีคนอยู่ — องศาจริงผ่าน ease แล้ว ≈ 25° (ไม่ใช่ 0.13×106° · แง้มพอเห็นแสงลอด ไม่ใช่เปิดอ้า)
 const AJAR_QUIET_MS = 4000;  // เงียบช่วงบูตแรก — presence ก้อนแรกมาทีเดียวหลายตึก ไม่งั้นเอี๊ยดรัวทั้งเมือง
-const CityDoors = {};        // key ตึก → {h:บานพับ, sp:ลำแสงพื้น, k:0..1 (ตอนนี้), tgt:เป้า, rest:ท่าพัก, held:ถูกสั่งเปิดค้างอยู่}
-let _lastDoor = null, _lastSpill = null;   // ของที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
+const CityDoors = {};        // key ตึก → {h:บานพับ, sp:ลำแสงพื้น, gl:ดวงเรืองที่ช่องประตู, k:0..1 (ตอนนี้), tgt:เป้า, rest:ท่าพัก, held:ถูกสั่งเปิดค้างอยู่}
+let _lastDoor = null, _lastSpill = null, _lastGlow = null;   // ของที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
 function registerDoor(key){
   if(!_lastDoor) return false;                  // ตึกแบบไม่มีประตู
-  CityDoors[key] = {h:_lastDoor, sp:_lastSpill, k:0, tgt:0, rest:0, held:false};
-  _lastDoor = _lastSpill = null;
+  CityDoors[key] = {h:_lastDoor, sp:_lastSpill, gl:_lastGlow, k:0, tgt:0, rest:0, held:false};
+  _lastDoor = _lastSpill = _lastGlow = null;
   return true;
 }
 /* 🔦 ลำแสงลอดประตู: เรเดียลจากกึ่งกลาง "ขอบบน" ของ canvas = ฐานแสงอยู่ที่ธรณีประตู แล้วบานออกไปข้างหน้า */
@@ -2193,8 +2200,12 @@ function applyDoorPose(d){
   /* องศาจริง = ไถแบบ ease-out ทั้งสองทาง → เปิด: ผลักแรงแล้วผ่อนตอนบานกางสุด
      ปิด: ออกตัวช้า (บานหนัก) แล้วเร่งเข้าวงกบ = ตรงกับเสียงตึบตอนจบพอดี */
   d.h.rotation.y = e*DOOR_SWING;
-  /* 🔦 รอบ 891: แสงลอดออกมาตามช่องที่เปิด — แง้มนิดเดียวก็เห็นลำแสง แต่จาง (ปิดสนิท = ดับสนิท) */
+  /* 🔦 รอบ 892: แสงลอดออกมาตามช่องที่เปิด — แง้มนิดเดียวก็เห็นลำแสง แต่จาง (ปิดสนิท = ดับสนิท) */
   if(d.sp) d.sp.material.opacity = d.k<=0 ? 0 : (0.45+0.55*d.k)*0.9;
+  if(d.gl){
+    d.gl.material.opacity = d.k<=0 ? 0 : (0.4+0.6*d.k)*0.8;
+    const s = 2.4+2.6*d.k; d.gl.scale.set(s, s, 1);          // เปิดกว้าง = ดวงไฟโตตาม
+  }
 }
 tickers.push((dt)=>{
   for(const key in CityDoors){
@@ -2822,7 +2833,7 @@ function boot(){
                                 ry:+d.h.rotation.y.toFixed(3),
                                 spill:d.sp ? +d.sp.material.opacity.toFixed(3) : null} : null; },
     doorSet(key, open, snap){ return setCityDoor(key, !!open, !!snap); },
-    /* 🚪👥 รอบ 891: ประตูแง้มตามคนออนไลน์ */
+    /* 🚪👥 รอบ 892: ประตูแง้มตามคนออนไลน์ */
     doorRest(key, ajar, quiet){ return setDoorRest(key, !!ajar, !!quiet); },
     doorRestScan(){ return refreshDoorRest(); },
     /* 🚪🚶 รอบ 886: เดินออกจากประตู — ดูสถานะ/สั่งเดินเอง (เทสต์ไม่ต้องรอ splash) */
