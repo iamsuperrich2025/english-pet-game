@@ -837,6 +837,15 @@ function openSettings(){
         <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
       <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
     </div>
+    ${(typeof NightUI!=='undefined') ? `<div class="set-row set-night-row" id="set-night">
+      <span class="set-lwrap"><span class="set-label">🌙 โหมดกลางคืน</span>
+        <span class="set-desc">สีล็อบบี้อุ่นตาสบายตอนกลางคืน — อัตโนมัติสลับเองตอน 19:00-06:00 หรือปักไว้เองก็ได้</span></span>
+      <div class="set-seg" role="group" aria-label="เลือกโหมดกลางคืน">
+        <button class="set-seg-btn" data-mode="auto">🕒<span>อัตโนมัติ</span></button>
+        <button class="set-seg-btn" data-mode="day">☀️<span>กลางวัน</span></button>
+        <button class="set-seg-btn" data-mode="night">🌙<span>กลางคืน</span></button>
+      </div>
+    </div>` : ''}
     <div class="set-row set-photo-row" id="set-photo">
       <span class="set-lwrap"><span class="set-label">📷 รูปโปรไฟล์ของหนู</span>
         <span class="set-desc">อัปโหลดรูปของหนูเองมาใช้เป็นรูปโปรไฟล์ได้ (ให้ผู้ปกครองช่วยเลือกนะ) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนข้างล่างแทน</span></span>
@@ -892,6 +901,12 @@ function openSettings(){
     // 📰 รอบ 155: สวิตช์เปิดเผยกิจกรรม (default เปิดทุกหมวดตั้งแต่รอบ 565)
     overlay.querySelectorAll('.set-feed-row').forEach(r=>
       setSwitch(r.querySelector('.set-switch'), !!(state.feedShare && state.feedShare[r.dataset.cat])));
+    // 🌙 รอบ 886: ไฮไลต์ปุ่มโหมดกลางคืนที่กำลังใช้อยู่ (อ่านสดจาก NightUI ทุกครั้งที่ paint กันหลุด sync กับปุ่ม 🌙 แถบบน)
+    const nightRow = overlay.querySelector('#set-night');
+    if(nightRow && typeof NightUI!=='undefined'){
+      const curMode = NightUI.getMode();
+      nightRow.querySelectorAll('.set-seg-btn').forEach(btn=>btn.classList.toggle('active', btn.dataset.mode===curMode));
+    }
   };
   // 🧱 รอบ 238/245: เลือก "ตัวละครของหนู" = ยืนข้างน้องในล็อบบี้ + เป็นรูปโปรไฟล์ (เก็บใน state.profAv)
   // 🖼️ รอบ 751: blk1-8 มีโมเดลในโลก 3D ด้วย → ตั้ง state.blockAv ตามไปเลย (พฤติกรรมเดิม)
@@ -916,6 +931,15 @@ function openSettings(){
   });
   overlay.querySelector('#set-anim .set-switch').addEventListener('click', ()=>{
     state.noAnim = !state.noAnim; saveState(); applyNoAnim(); paint();
+  });
+  // 🌙 รอบ 886: แตะปุ่มโหมดกลางคืน — ไม่มี state.* ให้เซฟ (NightUI คุม localStorage เอง แยกจากเซฟเกม)
+  const nightRow = overlay.querySelector('#set-night');
+  if(nightRow) nightRow.querySelectorAll('.set-seg-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(btn.classList.contains('active')) return;
+      NightUI.setMode(btn.dataset.mode);
+      sfx.select(); paint();
+    });
   });
   // 📰 รอบ 155: สลับการเปิดเผยกิจกรรมรายหมวด
   // เปิด = เริ่มรายงานหมวดนั้น · ปิด = หยุด + ลบโพสต์เก่าหมวดนั้นออกจาก DB (คนอื่นไม่เห็นของเก่าด้วย)

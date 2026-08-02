@@ -2994,6 +2994,8 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .settings-box > div:last-child{margin-top:0 !important;}
 /* 🦸 รอบ 243: แถวเลือกตัวละคร = เต็มความกว้างทุกคอลัมน์ · รูปใหญ่ 4 บน/4 ล่าง (ผู้ใช้สั่งให้ใช้พื้นที่เต็ม) */
 .settings-box .set-blk-row{grid-column:1/-1;display:block;}
+/* 🌙 รอบ 886: แถวโหมดกลางคืน เต็มความกว้างเหมือนแถวเลือกตัวละคร — 3 ปุ่ม segmented ต้องการที่มากกว่าคอลัมน์แคบปกติ */
+.settings-box .set-night-row{grid-column:1/-1;}
 .settings-box .set-blk-row .set-label{display:block;margin:0 0 8px;text-align:left;}
 /* 🖼️ รอบ 751: ตัวละครมี 88 ตัว → กริด 4×2 เดิมกลายเป็น "หน้าละ 8 ตัว" ในแถบปัดขวาแบบโรงงาน
    ⚠️ ต้องเขียน --fc-n ที่ .strip-x.blk-x (2 คลาส) เพราะ .grid2x8 (คลาสเดียว อยู่ท้ายไฟล์นี้) จะทับเป็น 8 */

@@ -1607,6 +1607,21 @@ html.no-anim .tapglow-on::after{animation:none !important;}
 }
 .set-switch.on .set-sw-txt{left:15px;}
 .set-switch.off .set-sw-txt{right:15px;}
+/* 🌙 รอบ 886: แถวโหมดกลางคืน — สวิตช์ 3 ทาง (segmented) แทน .set-switch เปิด/ปิด 2 ทาง เพราะมี 3 ตัวเลือกไม่ใช่ true/false
+   จัดเป็นแถวเต็มความกว้าง (grid-column:1/-1 ใน css/lobby.css .settings-box) เหมือน .set-blk-row —
+   ให้พอดีกับ 3 ปุ่ม + ป้าย/คำอธิบายในบรรทัดเดียวไม่ต้องหดเป็นคอลัมน์แคบเหมือนแถวสวิตช์ปกติ */
+.set-night-row{flex-wrap:wrap;}
+.set-seg{display:flex;gap:6px;background:#e7defa;border-radius:12px;padding:4px;flex:none;}
+/* ⚠️ ต้องนำหน้าด้วย .set-seg — ไม่งั้นแพ้ `.levelup-box button` (0,1,1) ที่ตั้งปุ่มม่วงกลม 18px (บทเรียนเดียวกับรอบ 803/กล่อง gradelock) */
+.set-seg .set-seg-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:62px;
+  margin-top:0;border:none;box-shadow:none;background:transparent;border-radius:9px;padding:7px 8px;
+  font-family:inherit;font-size:11.5px;font-weight:700;color:#7a6a8a;cursor:pointer;
+  transition:background .15s,color .15s;
+}
+.set-seg .set-seg-btn span{font-size:11px;line-height:1.1;}
+.set-seg .set-seg-btn.active{background:#fff;color:#5a4a6a;box-shadow:0 2px 6px rgba(90,74,106,.22);}
+.set-seg .set-seg-btn:active{transform:scale(.96);box-shadow:none;}
 .set-close{
   background:linear-gradient(135deg,#8a6fb0,#7358a0);box-shadow:0 4px 0 #5c467f;
   color:#fff;border:none;border-radius:999px;padding:10px 28px;

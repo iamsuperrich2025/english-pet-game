@@ -20,39 +20,73 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/lobby.css">
 <link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
-<!-- 🌙 รอบ 882: โหมดกลางคืนล็อบบี้ (โทนอุ่นมืดลง) — วางไว้ตรงนี้ (ก่อน <body>) เพื่อใส่คลาส `night`
+<!-- 🌙 รอบ 882/886: โหมดกลางคืนล็อบบี้ (โทนอุ่นมืดลง) — วางไว้ตรงนี้ (ก่อน <body>) เพื่อใส่คลาส `night`
      ตั้งแต่ก่อน paint แรก ไม่งั้นจอสว่างวาบก่อนแล้วค่อยมืด · หน้าตาทั้งหมดอยู่ใน css/lobby.css โซน 🌙 รอบ 882
-     กติกา: ค่าอัตโนมัติ = กลางคืนช่วง 19:00-06:00 · กดปุ่ม 🌙 = ตั้งเอง จำใน localStorage 'vwNightUi' ('1'/'0')
-     ค่าที่ตั้งเองจะถูกล้างทิ้งเองเมื่อ "นาฬิกาเดินมาตรงกับที่ตั้งไว้" (เช่นปิดกลางคืนตอน 2 ทุ่ม → พอ 6 โมงเช้า
-     ที่ระบบก็ว่ากลางวันอยู่แล้ว ถือว่าหมดหน้าที่ กลับเป็นอัตโนมัติ) — ปุ่มบอกสถานะนี้ใน title เสมอ (กฎทอง #1) -->
+     กติกา 3 โหมด (เลือกได้ในหน้า ⚙️ ตั้งค่า — set-night-row ใน js/util.js openSettings()):
+       'auto'  (ค่าเริ่มต้น) = กลางคืนอัตโนมัติช่วง 19:00-06:00
+       'day'   = กลางวันค้างไว้เสมอ ไม่สลับเองแม้ถึง 19:00
+       'night' = กลางคืนค้างไว้เสมอ ไม่สลับเองแม้ถึง 06:00
+     🔧 รอบ 889 (ผู้ใช้ขอ 3 ทาง): เดิม (รอบ 882) ค่าที่ตั้งเองจะ "ล้างตัวเองเมื่อนาฬิกาเดินมาตรงกับที่ตั้งไว้"
+     — ใช้ไม่ได้กับ 3 ทางแล้ว เพราะ "กลางคืนค้างไว้เสมอ" ที่เลือกตอนดึกจะโดนล้างทันที (ตรงกับอัตโนมัติพอดี)
+     แล้วพอถึงเช้าไหลตามอัตโนมัติกลายเป็นกลางวันทั้งที่ตั้งใจปักกลางคืนไว้ตลอด → ตอนนี้ตั้งแล้วค้างจริงจนกว่า
+     จะกลับไปกด "อัตโนมัติ" เอง (ปุ่ม 🌙/☀️ แถบบนยังกดสลับเร็วได้เหมือนเดิม แต่ไม่ใช่ทางเดียวอีกต่อไป)
+     🔑 2 คีย์ (รอบ 889): 'vwNightMode' = โหมดจริง ('day'/'night' · ไม่มีคีย์ = auto) — **ตัวตัดสินเพียงตัวเดียว**
+        'vwNightUi' = คีย์เดิมรอบ 882 ('1'/'0') เขียนตามให้ทุกครั้ง เพราะ js/city3d.js (เมือง 3D รอบ 887) อ่านตัวนี้
+        ต้องแยกคีย์เพราะ city3d.js ยังมีกฎ "ล้างค่าเมื่อตรงกับอัตโนมัติ" ของรอบ 882 อยู่ (บรรทัด ~34) — ถ้าใช้คีย์
+        เดียวกัน เดินเข้าเมือง 3D ทีเดียวการปัก "กลางคืนตลอด" จะหายเงียบ ๆ · ที่นี่ sync คืนให้ทุก paint = ซ่อมเอง -->
 <script>
 (function(){
-  var KEY='vwNightUi';
+  var KEY='vwNightUi', MKEY='vwNightMode';
   function autoNight(){ var h=new Date().getHours(); return h>=19 || h<6; }
-  function stored(){ try{ return localStorage.getItem(KEY); }catch(e){ return null; } }
+  function readMode(){
+    try{
+      var m=localStorage.getItem(MKEY);
+      if(m==='day'||m==='night') return m;
+      if(m) return 'auto';
+      var s=localStorage.getItem(KEY);            // ยังไม่มีคีย์ใหม่ = ของที่ตั้งไว้ตั้งแต่รอบ 882 → แปลงเป็นโหมด
+      return s==='1' ? 'night' : s==='0' ? 'day' : 'auto';
+    }catch(e){ return 'auto'; }
+  }
+  function syncLegacy(mode){                      // เขียนคีย์เดิมให้เมือง 3D อ่าน (และซ่อมถ้าถูกหน้าอื่นล้างทิ้ง)
+    try{
+      var want = mode==='night' ? '1' : mode==='day' ? '0' : null, cur = localStorage.getItem(KEY);
+      if(want===null){ if(cur!==null) localStorage.removeItem(KEY); }
+      else if(cur!==want) localStorage.setItem(KEY, want);
+    }catch(e){}
+  }
   function paint(){
-    var s=stored(), auto=autoNight();
-    // ค่าที่ตั้งเองตรงกับอัตโนมัติแล้ว = หมดหน้าที่ ล้างกลับเป็นอัตโนมัติ
-    if((s==='1')===auto && (s==='1'||s==='0')){ try{ localStorage.removeItem(KEY); }catch(e){} s=null; }
-    var on = s==='1' ? true : s==='0' ? false : auto;
+    var mode=readMode();
+    syncLegacy(mode);
+    var on = mode==='night' ? true : mode==='day' ? false : autoNight();
     document.documentElement.classList.toggle('night', on);
+    // แผง ⚙️ ตั้งค่าเปิดค้างอยู่ = ไฮไลต์ปุ่ม 3 ทางให้ตรงด้วย (กดปุ่ม 🌙 แถบบนแล้วแผงต้องขยับตาม ไม่ค้างอันเก่า)
+    var seg=document.getElementById('set-night');
+    if(seg) seg.querySelectorAll('.set-seg-btn').forEach(function(x){ x.classList.toggle('active', x.dataset.mode===mode); });
     var b=document.getElementById('btn-night');
     if(b){
       b.textContent = on ? '🌙' : '☀️';
       b.title = (on ? 'ตอนนี้โหมดกลางคืน — แตะเพื่อกลับเป็นกลางวัน' : 'ตอนนี้โหมดกลางวัน — แตะเพื่อเป็นกลางคืน')
               + ' · ปกติเปลี่ยนเองตอน 19:00-06:00'
-              + (s ? ' (ตอนนี้ตั้งเอง)' : ' (ตอนนี้อัตโนมัติ)');
+              + (mode==='auto' ? ' (ตอนนี้อัตโนมัติ)' : ' (ตอนนี้ตั้งเอง — เปลี่ยนเป็นอัตโนมัติได้ที่ ⚙️ ตั้งค่า)');
     }
     return on;
   }
   window.NightUI={
     paint:paint,
     isNight:function(){ return document.documentElement.classList.contains('night'); },
-    toggle:function(){
-      var want=!document.documentElement.classList.contains('night');
-      try{ if(want===autoNight()) localStorage.removeItem(KEY); else localStorage.setItem(KEY, want?'1':'0'); }catch(e){}
-      return paint();
-    }
+    // 'auto' | 'day' | 'night' — ใช้แสดงสถานะเลือกในหน้าตั้งค่า
+    getMode:readMode,
+    setMode:function(mode){
+      if(mode!=='day' && mode!=='night') mode='auto';
+      try{
+        // 'auto' ต้องล้าง "ทั้งสองคีย์" — ถ้าเหลือคีย์เดิมไว้ readMode จะยังอ่านเป็นโหมดปักอยู่ (ทางเดินขากลับของคนที่ตั้งไว้ตั้งแต่รอบ 882)
+        if(mode==='auto'){ localStorage.removeItem(MKEY); localStorage.removeItem(KEY); }
+        else localStorage.setItem(MKEY, mode);
+      }catch(e){}
+      return paint();                              // paint เขียนคีย์เดิมตามให้เอง (syncLegacy)
+    },
+    // ปุ่ม 🌙/☀️ แถบบน = ทางลัดพลิกสถานะปัจจุบัน (ปักโหมดตรงข้าม ไม่ใช่อัตโนมัติ)
+    toggle:function(){ return window.NightUI.setMode(document.documentElement.classList.contains('night') ? 'day' : 'night'); }
   };
   paint();
   document.addEventListener('DOMContentLoaded', function(){
@@ -66,8 +100,9 @@
     });
     paint();
   });
-  // อยู่โหมดอัตโนมัติ = พลิกให้เองตอน 19:00 / 06:00 ระหว่างที่เปิดเกมค้างไว้
-  setInterval(function(){ if(!stored()) paint(); }, 60000);
+  // เช็กทุกนาที: โหมดอัตโนมัติ = พลิกให้เองตอน 19:00 / 06:00 ระหว่างเปิดเกมค้างไว้ ·
+  // โหมดปัก = ไม่พลิก แต่ paint ยัง syncLegacy ซ่อมคีย์เดิมให้เมือง 3D (เผื่อโดนหน้าอื่นล้าง)
+  setInterval(paint, 60000);
 })();
 </script>
 <!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —
