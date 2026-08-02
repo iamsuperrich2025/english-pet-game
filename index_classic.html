@@ -37,7 +37,26 @@
 <script>
 (function(){
   var KEY='vwNightUi', MKEY='vwNightMode';
-  function autoNight(){ var h=new Date().getHours(); return h>=19 || h<6; }
+  /* 🌗 รอบ 893 — ความมืดไล่ระดับตามเวลาจริง (เดิมเป็นสวิตช์ขั้นเดียว เปิด/ปิด)
+     ค่าที่ได้ = k (0=กลางวันเต็ม · 1=กลางคืนเต็ม) ส่งออกเป็น CSS var `--night-k` บน <html>
+     แล้ว css/lobby.css เอาไปคูณกับ opacity ของผ้าคลุมทั้ง 2 ชั้น (#night-veil + body::after)
+     — จุดเดียวจบ ไม่ต้องไล่แก้สี hardcode ทีละที่
+       18:00 เริ่มอุ่นบาง ๆ → เข้มขึ้นเรื่อย ๆ → 21:00 เข้มสุด → ค้างทั้งคืน → 05:00-06:30 จางกลับเป็นกลางวัน
+     ใช้ smoothstep (u²(3−2u)) ทั้งขาขึ้น-ขาลง = ไม่มีหักมุมตรงหัว/ท้ายช่วง ตาไม่จับความเปลี่ยน
+     CLASS_K = จุดที่สลับคลาส `night` (พาเลตต์อุ่น + ฉากหลังพลบค่ำ ซึ่งเป็นสเต็ป ไม่ใช่ไล่ระดับ)
+       ตั้ง .25 เพราะบนเส้นโค้งนี้ตรงกับ ~19:00 ตอนเย็น และ ~05:58 ตอนเช้า = เกณฑ์เดิมรอบ 885 เป๊ะ
+       (ผู้ใช้เดิมจึงไม่รู้สึกว่าเวลาเปลี่ยนโหมดเลื่อน · ตอนสลับผ้าคลุมอุ่นมาแล้ว 1/4 = กระโดดน้อยกว่าเดิม) */
+  var DUSK_ST=18, DUSK_EN=21, DAWN_ST=5, DAWN_EN=6.5, CLASS_K=.25;
+  function smooth(u){ u = u<0?0 : u>1?1 : u; return u*u*(3-2*u); }
+  function nightK(d){                             // d = Date (ใส่เองได้ตอนเทสต์จำลองเวลา)
+    d = d || new Date();
+    var h = d.getHours() + d.getMinutes()/60 + d.getSeconds()/3600;
+    if(h < DAWN_ST)  return 1;                                        // 00:00-05:00 มืดค้างจากเมื่อคืน
+    if(h < DAWN_EN)  return 1 - smooth((h-DAWN_ST)/(DAWN_EN-DAWN_ST));// 05:00-06:30 จางกลับเป็นกลางวัน
+    if(h < DUSK_ST)  return 0;                                        // 06:30-18:00 กลางวันเต็ม
+    if(h < DUSK_EN)  return smooth((h-DUSK_ST)/(DUSK_EN-DUSK_ST));    // 18:00-21:00 ค่อย ๆ อุ่นแล้วมืดลง
+    return 1;                                                         // 21:00-24:00 เข้มสุด
+  }
   function readMode(){
     try{
       var m=localStorage.getItem(MKEY);
@@ -57,7 +76,10 @@
   function paint(){
     var mode=readMode();
     syncLegacy(mode);
-    var on = mode==='night' ? true : mode==='day' ? false : autoNight();
+    // 🌗 รอบ 893: ปักกลางวัน = k คงที่ 0 · ปักกลางคืน = k คงที่ 1 · อัตโนมัติ = ไล่ตามนาฬิกาจริง
+    var k = mode==='night' ? 1 : mode==='day' ? 0 : nightK();
+    var on = k >= CLASS_K;                        // คลาส `night` (พาเลตต์) ยังเป็นสวิตช์ 2 สถานะเหมือนเดิม
+    document.documentElement.style.setProperty('--night-k', k.toFixed(3));
     document.documentElement.classList.toggle('night', on);
     // แผง ⚙️ ตั้งค่าเปิดค้างอยู่ = ไฮไลต์ปุ่ม 3 ทางให้ตรงด้วย (กดปุ่ม 🌙 แถบบนแล้วแผงต้องขยับตาม ไม่ค้างอันเก่า)
     var seg=document.getElementById('set-night');
@@ -66,7 +88,7 @@
     if(b){
       b.textContent = on ? '🌙' : '☀️';
       b.title = (on ? 'ตอนนี้โหมดกลางคืน — แตะเพื่อกลับเป็นกลางวัน' : 'ตอนนี้โหมดกลางวัน — แตะเพื่อเป็นกลางคืน')
-              + ' · ปกติเปลี่ยนเองตอน 19:00-06:00'
+              + ' · ปกติค่อย ๆ มืดลงเองตั้งแต่ 18:00 เข้มสุด 21:00 แล้วจางกลับตอน 05:00-06:30'
               + (mode==='auto' ? ' (ตอนนี้อัตโนมัติ)' : ' (ตอนนี้ตั้งเอง — เปลี่ยนเป็นอัตโนมัติได้ที่ ⚙️ ตั้งค่า)');
     }
     return on;
@@ -74,6 +96,9 @@
   window.NightUI={
     paint:paint,
     isNight:function(){ return document.documentElement.classList.contains('night'); },
+    // 🌗 รอบ 893: ระดับความมืดที่ใช้อยู่จริง 0..1 (ปักกลางวัน=0 · ปักกลางคืน=1 · อัตโนมัติ=ตามเวลา)
+    getK:function(){ var m=readMode(); return m==='night' ? 1 : m==='day' ? 0 : nightK(); },
+    kAt:nightK,                                    // k ของเวลาที่ระบุ (ใช้จำลองเวลาตอนเทสต์)
     // 'auto' | 'day' | 'night' — ใช้แสดงสถานะเลือกในหน้าตั้งค่า
     getMode:readMode,
     setMode:function(mode){
@@ -100,9 +125,11 @@
     });
     paint();
   });
-  // เช็กทุกนาที: โหมดอัตโนมัติ = พลิกให้เองตอน 19:00 / 06:00 ระหว่างเปิดเกมค้างไว้ ·
-  // โหมดปัก = ไม่พลิก แต่ paint ยัง syncLegacy ซ่อมคีย์เดิมให้เมือง 3D (เผื่อโดนหน้าอื่นล้าง)
+  // เช็กทุกนาที: โหมดอัตโนมัติ = ไล่ระดับ --night-k ให้เองระหว่างเปิดเกมค้างไว้ (ช่วงไล่ 18:00-21:00 กินเวลา 3 ชม.
+  // = ขยับทีละ ~.006 ต่อนาที ตาไม่ทันจับ) · โหมดปัก = k ไม่ขยับ แต่ paint ยัง syncLegacy ซ่อมคีย์เดิมให้เมือง 3D
   setInterval(paint, 60000);
+  // เครื่องหลับ/สลับแท็บทิ้งไว้ = interval ถูกหน่วง → กลับมาดูเมื่อไหร่ทาสีใหม่ทันที ไม่ค้างความมืดของเมื่อกี้
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) paint(); });
 })();
 </script>
 <!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —

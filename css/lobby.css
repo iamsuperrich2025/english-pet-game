@@ -4937,7 +4937,9 @@ body.city-arrive #panel-overlay.open{visibility:visible;}
 /* ============================================================
    🌙 รอบ 885 — โหมดกลางคืน UI ล็อบบี้ (โทนอุ่น มืดลง)
    สวิตช์ = คลาส `night` บน <html> (ใส่ตั้งแต่ก่อน paint โดยสคริปต์ inline ใน index_classic.html
-   → ไม่มีจอกะพริบขาวตอนเปิดเกมกลางคืน) · เปิดเอง 19:00-06:00 · ปุ่ม 🌙 ในแถบบนสลับเองได้
+   → ไม่มีจอกะพริบขาวตอนเปิดเกมกลางคืน) · ปุ่ม 🌙 ในแถบบน + แผง ⚙️ ตั้งค่า สลับเองได้
+   🌗 รอบ 893: ความมืด "ไล่ระดับ" ตามเวลาจริงด้วย --night-k (0..1) ดูโซนท้ายบล็อกนี้ —
+   คลาส `night` (พาเลตต์/ฉากหลัง) ยังสลับเป็นสเต็ปที่ k≥.25 = ~19:00 และ ~05:58 เท่าเกณฑ์เดิม
    ทำ 3 ชั้น:
    ① ทับ CSS variables (:root) เป็นโทนอุ่นเข้ม — กรอบ/แผง/ตัวหนังสือเปลี่ยนตามทั้งเกม
    ② ฉากหลังเมืองมืดลงแบบพลบค่ำ (เปลี่ยนเฉพาะ gradient ชั้นบน ภาพเดิมไม่ต้องเจนใหม่)
@@ -4949,11 +4951,20 @@ html.night{
   --gold:#ffd166; --gold-d:#b8791d; --panel-bg:#f3e6d2; --ink2:#3a2a1c;
   --glass:rgba(74,45,24,.80); --glass-line:rgba(226,178,116,.34);
 }
-html.night body{
+/* 🌗 รอบ 893: ฉากหลังพลบค่ำ "ไล่ระดับ" ด้วย --night-k แทนการสลับ background-image ทั้งชุดตอน 19:00
+   (ฉากหลังกินพื้นที่ทั้งจอ = ตัวที่ทำให้เห็น "กระโดด" มากที่สุด) — วางชั้นพลบค่ำทับชั้น gradient
+   คุมคอนทราสต์เดิมของรอบ 882 แล้วไล่เฉพาะ "alpha" ตาม k · k=0 โปร่งสนิท = หน้าตากลางวันเดิมเป๊ะ
+   ⚠️ 4 ชั้นแล้ว → background-size/position ต้องมี 4 ค่าตามลำดับด้วย (ไม่งั้นภาพเมืองจะยืดผิด) */
+body{
   background-image:
-    linear-gradient(180deg, rgba(38,22,10,.74) 0%, rgba(48,28,12,.40) 30%, rgba(44,25,10,.52) 62%, rgba(24,13,5,.88) 100%),
+    linear-gradient(180deg,
+      rgba(38,22,10,calc(.74 * var(--night-k,0))) 0%,  rgba(48,28,12,calc(.40 * var(--night-k,0))) 30%,
+      rgba(44,25,10,calc(.52 * var(--night-k,0))) 62%, rgba(24,13,5,calc(.88 * var(--night-k,0))) 100%),
+    linear-gradient(180deg, rgba(31,100,186,.40) 0%, rgba(31,100,186,.05) 26%, rgba(31,100,186,.10) 58%, rgba(31,100,186,.62) 100%),
     url('../img/theme/theme_city_cod.png'),
     url('../img/theme/theme_bg_wide.png');
+  background-size:100% 100%, 100% 100%, cover, cover;
+  background-position:center, center, center bottom, center;
 }
 html.night *{scrollbar-color:#c79a63 transparent;}
 html.night *::-webkit-scrollbar-thumb{background:#c79a63;}
@@ -4975,17 +4986,21 @@ html.night .lobby-top #btn-night{
       (สำคัญมาก: ตัวหนังสือกับพื้นยังต่างความสว่างเท่าเดิม = อ่านชัดเท่าเดิม ·
        และกวาดสีฟ้าที่ hardcode ทั่วไฟล์ให้อุ่นตาม ไม่งั้น multiply อย่างเดียวจะได้ ฟ้า+ส้ม = ม่วง)
    ② body::after = multiply น้ำตาลเข้ม → หรี่ทั้งจอลงให้เป็นกลางคืนจริง */
+/* 🌗 รอบ 893 — ความมืดไล่ระดับตามเวลาจริง แทนสวิตช์ขั้นเดียว
+   --night-k (0..1) ตั้งจากสคริปต์ NightUI ใน index_classic.html ทุก 60 วิ · opacity ของผ้าคลุม
+   ทั้ง 2 ชั้นคูณค่านี้ → 18:00 อุ่นบาง ๆ ไล่เข้มถึงสุดตอน 21:00 · 05:00-06:30 จางกลับเป็นกลางวัน
+   (ค่าสูงสุด .52/.28 = ของเดิมรอบ 885 เป๊ะ · ปักกลางคืน = k คงที่ 1 จึงหน้าตาเท่าเดิมทุกประการ)
+   ตัวแปรตั้งไว้ที่ :root ด้วย เผื่อ CSS โหลดก่อนสคริปต์ทัน/หน้าอื่นที่ไม่มี NightUI = ได้กลางวันปกติ */
+:root{--night-k:0;}
 #night-veil{
   position:fixed;inset:0;z-index:99998;pointer-events:none;
-  opacity:0;transition:opacity .45s ease;
+  opacity:calc(.52 * var(--night-k,0));transition:opacity .45s ease;
   mix-blend-mode:color;background:#c9832f;
 }
-html.night #night-veil{opacity:.52;}
 body::after{
   content:'';position:fixed;inset:0;z-index:99999;pointer-events:none;
-  opacity:0;transition:opacity .45s ease;
+  opacity:calc(.28 * var(--night-k,0));transition:opacity .45s ease;
   mix-blend-mode:multiply;
   background:linear-gradient(180deg,#6b4526 0%,#5b3820 60%,#3f2512 100%);
 }
-html.night body::after{opacity:.28;}
 html.no-anim #night-veil,html.no-anim body::after{transition:none;}
