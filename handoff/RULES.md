@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 903 (2 ส.ค. 2026): โซนใหม่ `f1Rank` = กระดานอันดับ Best Lap ออนไลน์ของโลก F1 — รอผู้ใช้ publish:** `/f1Rank/<uid> = {sec, n, g, ts}` (1 แถวต่อคน สนามเดียว) เก็บเวลาต่อรอบที่ดีที่สุด · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นได้ปกติ กระดานหน้า intro เห็นแค่สถิติตัวเอง ขึ้นป้ายบอกตรง ๆ ว่ากระดานกลางยังไม่เปิด · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/ba9890de-eb86-4255-bed6-b322f0e4e688
 - ⏳ **รอบ 896 (2 ส.ค. 2026): โลกแข่งรถ F1 สนามซาเคียร์ — เพิ่ม `$map === 'f1'` ใน enum ของ `wroom` + `winfo` (2 จุด) — รอผู้ใช้ publish:** แบบเดียวกับตอนเพิ่ม `soccer`/`mecha` เป๊ะ ไม่มีโซนใหม่ ไม่มี field ใหม่ · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นคนเดียวได้ปกติ แค่ยังไม่เห็นเพื่อนในสนาม (NetRoom เขียนโดน deny → ปิดการส่งเงียบ ๆ) · ก้อนเต็มด้านล่างอัปเดตแล้ว
 - ✅ **รอบ 827 (30 ก.ค. 2026): โซนใหม่ `bandRank` = กระดานอันดับ "สอบใหญ่คลังศัพท์ขั้นสูง" ตลอดกาล — ผู้ใช้ publish แล้ว 30 ก.ค. 2026 · ตรวจสดผ่าน CLI+REST แล้ว:** เทียบ `/.settings/rules` สด (`firebase database:get`) กับก้อนใน RULES.md = **identical ทั้งไฟล์** (deep JSON compare) · REST: GET `/bandRank.json` + PUT ไม่ล็อกอิน = 401 Permission denied ถูกต้องทั้งคู่ → **กระดานใช้งานได้เต็มระบบ** — `/bandRank/<catId>_<lvKey>/<uid> = {sc, tt, sec, n≤40, g≤20, ts}` (`catId` เช่น `academic`/`ielts` · `lvKey` = `found`|`inter`|`expert`) · **อ่านได้ทุกคนที่ login** (เหมือน `/examRank`) · **เขียนได้เฉพาะแถวของ uid ตัวเอง** และ `$setId` ต้องตรงรูปแบบ `^[a-z]+_(found|inter|expert)$` · **validate บังคับว่าต้อง "สอบผ่านจริง"**: `sc <= tt` และ `sc*10 >= tt*8` (เกณฑ์ผ่าน 80% ของสอบใหญ่ต่างจาก `/examRank` ที่ 70%) · `sec` ≤ 86400 · `ts` ห้ามอนาคตเกิน 1 นาที · `.indexOn:"sc"` ให้ client ดึงแค่ `orderByChild('sc').limitToLast(50)` ไม่ต้องโหลดทั้งตาราง — สูตรเดียวกับ `/examRank` (รอบ 825) เป๊ะ ต่างแค่คนละโซน/คนละเกณฑ์ผ่าน
   - **ทำไมต้องมีโซนนี้:** เดิม (รอบ 786) กระดานอ่านจากฟีดรวม `Online.gfeed` (120 โพสต์ล่าสุดทั้งเกม) → คนที่สอบผ่านนานแล้วโพสต์หลุดออก = หายจากกระดานของคนอื่น เป็นแค่ "อันดับจากกิจกรรมล่าสุด" · โซนนี้เก็บ **1 แถวต่อคนต่อ (หมวด,ระดับ)** จึงเป็นอันดับตลอดกาลจริง
@@ -491,6 +492,19 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         }
       }
     },
+    "f1Rank": {
+      ".read": "auth != null",
+      ".indexOn": "sec",
+      "$uid": {
+        ".write": "auth != null && auth.uid === $uid",
+        ".validate": "newData.hasChildren(['sec','n','ts']) && (!data.exists() || newData.child('sec').val() < data.child('sec').val())",
+        "sec": { ".validate": "newData.isNumber() && newData.val() > 0 && newData.val() <= 3600" },
+        "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+        "g":   { ".validate": "newData.isString() && newData.val().length <= 20" },
+        "ts":  { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "$other": { ".validate": false }
+      }
+    },
     "class": {
       "$map": {
         ".read": "auth != null",
@@ -590,6 +604,15 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.bxrOk=false` → กระดานยังเห็นสถิติของตัวเอง (จากใบประกาศ) และขึ้นป้ายบอกตรง ๆ "กระดานกลางยังไม่เปิด (ต้องอัปเดตกฎความปลอดภัยโซน /bandRank ก่อน)" — `bxRankNote()` ใน `js/bandadv.js` (กฎทองข้อ 1) · ระบบสอบ/รางวัล/ใบประกาศ ทำงานปกติทุกอย่าง
 - ฝั่งเกม: `bxrSubmit/bxrFetch/bxrMerge/bxRankBodyHTML/bxRankMount/bxRankNote/bxRankNoteRefresh/openBigExamRank` (`js/bandadv.js`) · `bxrRowHTML`/`BXR_TOP` ใช้ร่วมกับ `/examRank` (`js/examstd.js`) ⚠️ **ป้ายบอกแหล่งข้อมูลห้ามใช้ `xrkNote()` ร่วมกัน** — คนละโซน DB (`/bandRank` vs `/examRank`) อาจติด deny คนละสถานะกัน
 - **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้):** ดูลิงก์ในหัวข้อ "สถานะการ publish" ด้านบน
+
+## หมายเหตุโครง /f1Rank (🏆 อันดับ Best Lap โลก F1 ตลอดกาล — รอบ 903)
+- `/f1Rank/<uid> = {sec, n, g, ts}` — **1 แถวต่อคน** (สนามเดียว ไม่แยก setId แบบ examRank/bandRank เพราะ F1 มีสนามเดียว) · เขียนจาก `frSubmit()` ใน `progressTick()` (`js/f1_3d.js`) เฉพาะตอนทำ **Best Lap ใหม่ของตัวเอง** (`state.f1Best` ดีขึ้น) — validate ฝั่ง rules บังคับว่า `sec` ใหม่ต้อง**น้อยกว่า**แถวเดิมเสมอ (ตรงข้ามกับ examRank ที่คะแนนมากกว่าคือดีกว่า) จึง `set()` ทับได้เลยไม่ต้องอ่านแถวเดิมก่อนเหมือน examRank
+- อ่านด้วย `orderByChild('sec').limitToFirst(50)` (ต้องมี `.indexOn:"sec"`) — **`limitToFirst` ไม่ใช่ `limitToLast`** เพราะเวลาน้อยสุดคือดีที่สุด แล้วเรียงเองฝั่ง client อีกชั้น (`sort((a,b)=>a.sec-b.sec)`) กันกรณีข้อมูลเท่ากัน · cache ใน `__frCache` ล้างเมื่อ submit สำเร็จ
+- แถวของตัวเองมาจาก **2 ทางรวมกัน**: แถวใน DB + `state.f1Best` (เอาอันที่ดีกว่า) → ออฟไลน์/rules ยังไม่ publish ก็ยังเห็นสถิติตัวเองเสมอ
+- โชว์ **ท็อป 10** ในกล่อง `#f1-rankbox` ของหน้า intro โลก F1 (เรียก `frMount()` ใน `start()`) — ไม่ใช่ป็อปอัปแยกแบบ examRank/bandRank
+- **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → `Online.frOk=false` → กระดานยังเห็นสถิติของตัวเอง (จาก `state.f1Best`) และขึ้นป้ายบอกตรง ๆ "กระดานกลางยังไม่เปิด (รออัปเดตกฎ /f1Rank)" — `frNote()` (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ระบบแข่ง/คำศัพท์/เหรียญทำงานปกติทุกอย่าง
+- ฝั่งเกม: `frSubmit/frMerge/frFetch/frRowHTML/frBodyHTML/frNote/frMount` (`js/f1_3d.js`) · แถว HTML ใช้ `gradeMark`/`gradeOf`/`splitNameBadges`/`escapeHTML` ร่วมกับระบบอื่น (ชื่อเล่น+สัญลักษณ์ระดับชั้นเสมอ — กฎคุ้มครองเด็ก)
+- **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้):** https://claude.ai/code/artifact/ba9890de-eb86-4255-bed6-b322f0e4e688
 
 ## หมายเหตุโครง /gifts (ข้อ 0.5)
 - `/gifts/<toUid>/<fromUid>/<giftKey> = {k:'shop'|'collect', id, fn:ชื่อผู้ส่ง, ts, st:'pending'|'accepted'|'declined'}`
