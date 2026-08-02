@@ -200,7 +200,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (2,589 บรรทัด · 158 รายการ)
+## js/city3d.js (2,684 บรรทัด · 164 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -214,13 +214,14 @@ certStripHTML:633 · certBindStrip:647
 - 1291-1546 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
 - 1547-1703 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
 - 1704-1860 🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
-- 1861-2006 💬🔴 รอบ 873: ไอคอน "มีข้อความค้าง ยังไม่ได้อ่าน" ลอยเหนือหัวเพื่อน
-- 2007-2024 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
-- 2025-2186 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
-- 2187-2348 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 2349-2395 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
-- 2396-2431 🚀 BOOT
-- 2432-2589 🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิดคือ "ภาพเมืองใบที่เพิ่งเดินออกไป"
+- 1861-2010 💬🔴 รอบ 873: ไอคอน "มีข้อความค้าง ยังไม่ได้อ่าน" ลอยเหนือหัวเพื่อน
+- 2011-2028 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
+- 2029-2190 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+- 2191-2267 🚪🚶 รอบ 883: กลับจากล็อบบี้เดิม → "เดินออกจากตึกมาหน้าประตู" (walkSelfTo ย้อนทาง)
+- 2268-2429 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
+- 2430-2476 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
+- 2477-2512 🚀 BOOT
+- 2513-2684 🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิดคือ "ภาพเมืองใบที่เพิ่งเดินออกไป"
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
 hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
@@ -242,13 +243,14 @@ showBubble:1632 · flushBubble:1670 · watchFriendChats:1678 · CITY_CHAT_MAX:17
 actorInfo:1728 · chatBoxCanSend:1738 · chatBoxWhy:1742 · chatBoxRefresh:1748 · openChatBox:1785 · closeChatBox:1797
 cbNote:1802 · sendCityChatText:1808 · sendCityChat:1838 · cityStopLive:1843 · SAVE_KEY:1872 · saveRead:1875
 pairIdOf:1878 · chatSeenTsCity:1880 · chatMarkSeenCity:1886 · unreadTexture:1899 · addUnreadBadge:1917 · removeUnreadBadge:1938
-setUnread:1948 · applyUnread:1954 · markReadCity:1956 · unreadCount:1964 · spawnSelf:1970 · DOOR_MEM:2017
-rememberDoor:2018 · lastDoorKey:2019 · WALK_SPD:2031 · WALK_MIN:2032 · WALK_MAX:2033 · DOOR_GAP:2034
-RECEPTION_SPOT:2038 · doorSpotOf:2039 · walkPose:2050 · footCtx:2065 · footStepSfx:2070 · footDustTexture:2091
-footDustPuff:2100 · footDustTick:2114 · FOOT_STEP_DIST:2129 · walkSelfTo:2131 · onTap:2190 · captureCityShot:2209
-travelTo:2242 · sparkleAt:2277 · openProfile:2301 · refreshChip:2340 · setChip:2344 · BGM_KEY:2355
-bgmWant:2357 · bgmEnsure:2358 · BGM_DEV:2367 · bgmPlay:2368 · bgmRefreshBtn:2369 · bgmToggle:2376
-bgmSetup:2381 · boot:2399
+setUnread:1948 · applyUnread:1954 · markReadCity:1956 · unreadCount:1964 · spawnSelf:1970 · DOOR_MEM:2021
+rememberDoor:2022 · lastDoorKey:2023 · WALK_SPD:2035 · WALK_MIN:2036 · WALK_MAX:2037 · DOOR_GAP:2038
+RECEPTION_SPOT:2042 · doorSpotOf:2043 · walkPose:2054 · footCtx:2069 · footStepSfx:2074 · footDustTexture:2095
+footDustPuff:2104 · footDustTick:2118 · FOOT_STEP_DIST:2133 · walkSelfTo:2135 · EXIT_BACK:2202 · EXIT_DUR:2203
+EXIT_STEP:2204 · EXIT_CLEAR:2205 · stageExitWalk:2208 · walkSelfOut:2216 · onTap:2271 · captureCityShot:2290
+travelTo:2323 · sparkleAt:2358 · openProfile:2382 · refreshChip:2421 · setChip:2425 · BGM_KEY:2436
+bgmWant:2438 · bgmEnsure:2439 · BGM_DEV:2448 · bgmPlay:2449 · bgmRefreshBtn:2450 · bgmToggle:2457
+bgmSetup:2462 · boot:2480
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
@@ -480,7 +482,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (420 บรรทัด · 6 รายการ)
+## js/main.js (421 บรรทัด · 6 รายการ)
 syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefund:232 · fitQbp:272 · bootGame:286
 
 ## js/moto3d.js (2,674 บรรทัด · 141 รายการ)
@@ -739,8 +741,8 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (4,976 บรรทัด · 738 selector)
-:root:6 · html:15 · body:16 · *:36,37,38,39 · #app:42 · h1:44
+## css/lobby.css (4,989 บรรทัด · 738 selector)
+:root:6 · html:15 · body:16,4982 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
 .login-rule:133,134,135 · .login-tag:136 · #screen-game:185,186,187,188(+7) · #screen-quiz:199,200,201,202(+6) · #quiz-choices:211,212 · .word-card:219
@@ -862,7 +864,7 @@ vbRender:148 · vbCardHTML:194
 .tp-pts:4808,4811 · .tp-close:4813,4819,4820 · .tp-snd:4823,4826,4832,4833 · .tp-snd-ic:4827 · .tp-snd-track:4828 · .tp-snd-thumb:4830
 .tp-prompt:4837 · .tp-word:4839,4853,4854 · .tp-ch:4841,4846,4847,4849 · .tp-thai:4857 · .tp-hint:4859 · .tp-empty:4861
 .tp-keys:4864 · .tp-row:4866 · .tp-row-fn:4868,4901 · .tp-key:4872,4884,4886,4892(+2) · .tp-key-fn:4899 · .tp-fx:4905
-.tp-coinpop:4906 · .tp-pop-pt:4911 · #city-backdrop:4925,4931 · .city-arrive:4932,4933 · .night:4945,4950,4956,4957(+4) · #night-veil:4969
+.tp-coinpop:4906 · .tp-pop-pt:4911 · #city-backdrop:4925,4931 · .city-arrive:4932,4933 · .night:4945,4950,4956,4957(+5) · #night-veil:4976
 
 ## css/style.css (2,086 บรรทัด · 536 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
