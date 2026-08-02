@@ -400,14 +400,16 @@ const CSS=`
 #moto-word{position:absolute;left:50%;top:8%;transform:translateX(-50%);transform-origin:top center;
   display:flex;flex-direction:column;align-items:center;gap:.4vmin;
   padding:1.2vmin 2vmin;border-radius:2.1vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
-#moto-word .m-chips{display:flex;gap:.8vmin;align-items:center;flex-wrap:nowrap}
+#moto-word .m-chips{display:flex;gap:.8vmin;align-items:center;flex-wrap:nowrap;justify-content:center}
+/* 🔤➡️ รอบ 919: คำยาวเกินช่องว่างกลางจอ → ตัดเป็น 2 แถวก่อน (ตัวอักษรยังใหญ่) ค่อยย่อทีหลัง */
+#moto-word.wrap2 .m-chips{flex-wrap:wrap}
 #moto-word .m-th{color:#ffe9a8;font-size:3.7vmin;font-weight:800;white-space:nowrap;
   text-shadow:0 2px 5px #000,0 0 2vmin rgba(0,0,0,.6)}
 .m-chip{width:6.3vmin;height:6.3vmin;flex:none;border-radius:1.4vmin;display:flex;align-items:center;justify-content:center;
   font-weight:900;font-size:4vmin;color:#fff;background:rgba(255,255,255,.2);border:.34vmin solid rgba(255,255,255,.7);
   text-shadow:0 1px 3px rgba(0,0,0,.7);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .m-chip.got{background:#43d06c;border-color:#fff;box-shadow:0 0 1.6vmin rgba(90,255,140,.6)}
-#moto-coins{position:absolute;right:2%;top:2.5%;color:#ffd54f;font-weight:900;font-size:2.3vmin;text-shadow:0 1px 3px #000;
+#moto-coins{position:absolute;right:.8%;top:2%;color:#ffd54f;font-weight:900;font-size:2.3vmin;text-shadow:0 1px 3px #000;
   transform-origin:100% 50%}
 /* 🪙 รอบ 317: ป้าย +เหรียญลอยขึ้นกลางจอทุกครั้งที่เก็บได้ (เห็นชัดว่าได้เงินจริง) + ตัวเลขมุมขวาเด้ง */
 .m-cfx{position:absolute;bottom:24%;transform:translate(-50%,0);color:#ffd54f;font-weight:900;font-size:3.1vmin;
@@ -424,24 +426,34 @@ const CSS=`
   border:.5vmin solid rgba(255,220,120,.95);pointer-events:none;z-index:3;animation:mcring .5s ease-out forwards}
 @keyframes mcring{0%{opacity:.9;transform:scale(.25)}100%{opacity:0;transform:scale(1.5)}}
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
-/* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข */
-#moto-gps{position:absolute;left:1.6%;top:2.5%;display:flex;flex-direction:column;align-items:center;gap:.6vmin;
-  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:1vmin 1.6vmin;color:#fff;max-width:31%}
+/* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข
+   🧭➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายกล่องออกไปทางซ้าย" — ชิดขอบซ้ายสุด + แคบลง (31%→24%)
+   เปิดทางกลางจอให้ป้ายคำศัพท์ (fitWord วัดช่องว่างจริงระหว่าง 2 กล่องนี้แล้วจัดขนาดเอง) */
+#moto-gps{position:absolute;left:.7%;top:2%;display:flex;flex-direction:column;align-items:center;gap:.5vmin;
+  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:.9vmin 1.2vmin;color:#fff;max-width:24%}
 .m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
 .m-gps-row{display:flex;align-items:center;gap:1.4vmin}
 #moto-gps-arr{display:inline-block;width:5.3vmin;height:6.1vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
 #moto-gps-arr svg{display:block;width:100%;height:100%}
 #moto-gps-d{font-size:3.4vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
-/* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ) */
-#moto-board{position:absolute;right:2%;top:10.5%;min-width:20vmin;max-width:34vmin;display:none;flex-direction:column;gap:.3vmin;
-  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.8vmin 1.1vmin;color:#fff;z-index:2}
+/* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ)
+   🏆➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายขึ้นไปมุมขวาบน" — ยกขึ้นชิดใต้เหรียญ + ชิดขอบขวา
+   ⚖️ กว้างเป็น % ของ "จอเกม" ไม่ใช่ vmin ของหน้าต่าง (34vmin เคยกินเกือบครึ่งจอเกมจนทับป้ายคำ)
+   📈 รองรับคนเยอะ: max-height คุมไม่ให้ยาวเกินจอ · จำนวนแถวตัดจริงใน renderBoard() */
+#moto-board{position:absolute;right:.7%;top:8.5%;min-width:17%;max-width:26%;display:none;flex-direction:column;gap:.25vmin;
+  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.7vmin 1vmin;color:#fff;z-index:2;
+  max-height:62%;overflow:hidden}
 #moto-board.on{display:flex}
 .m-bd-h{font-size:1.65vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
-.m-bd-r{display:flex;align-items:center;gap:.7vmin;font-size:2.05vmin;font-weight:800;line-height:1.35}
+.m-bd-r{display:flex;align-items:center;gap:.6vmin;font-size:2.05vmin;font-weight:800;line-height:1.3}
 .m-bd-r.me{color:#ffe082}
+.m-bd-p{flex:none;min-width:2.6vmin;text-align:center;font-size:1.8vmin;opacity:.95}
 .m-bd-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m-bd-w{font-variant-numeric:tabular-nums;color:#8dffb0}
+/* 📈 รอบ 919: แถวคั่น "…" ตอนอันดับเราหลุดท็อป + บรรทัดสรุปคนที่เหลือ (คนเยอะแค่ไหนกล่องก็ไม่ยาวขึ้น) */
+.m-bd-gap{text-align:center;font-size:1.5vmin;line-height:.9;color:#9fb8d4;opacity:.8}
+.m-bd-more{font-size:1.6vmin;font-weight:700;color:#a8c6e6;text-align:center;opacity:.9}
 /* 💬 รอบ 318: ปุ่มแชท + แถบข้อความสำเร็จรูป + ข้อความของเราเองมุมล่าง */
 #moto-chat{position:absolute;left:2%;bottom:12%;z-index:4;border:none;cursor:pointer;border-radius:999px;
   width:7.4vmin;height:7.4vmin;font-size:3.4vmin;color:#fff;background:rgba(20,40,70,.72);
@@ -1891,27 +1903,64 @@ function removePeerBubble(p){
     p.bubble.material.dispose(); p.bubble=null; }
 }
 /* 🏆 กระดานคะแนนสด — เรา + เพื่อนในแผนที่ เรียงตามจำนวนคำที่ประกอบได้รอบนี้ */
-function renderBoard(){
+/* 📈 รอบ 919: ออกแบบรองรับ "คนออนไลน์เยอะในอนาคต" (ผู้ใช้สั่งข้อ 2)
+   ① เรียงนิ่ง — คะแนนเท่ากันเรียงตามชื่อ (เดิมเรียงคะแนนอย่างเดียว คนเยอะ ๆ อันดับสลับไปมาจนกล่องกะพริบ)
+   ② จำนวนแถวคิดจากความสูงจอจริง แล้ววัดซ้ำหลังวาด ล้นเมื่อไหร่ลดแถวเอง (กฎทอง #7 ห้ามล้น/ห้าม scroll)
+   ③ เห็นตัวเองเสมอ แม้อันดับหลุดท็อป → แถว "⋯" คั่นแล้วต่อด้วยอันดับจริงของเรา (เดิม slice(0,5) = เด็กหาตัวเองไม่เจอ)
+   ④ คนที่เหลือยุบเป็นบรรทัดเดียว "+ อีก N คน" → คนมากแค่ไหนกล่องก็สูงเท่าเดิม
+   ⑤ วาดใหม่เฉพาะตอนข้อมูลเปลี่ยนจริง + หน่วงขั้นต่ำ BOARD_MS (คนเยอะ = แพ็กเกจเข้าถี่มาก ไม่งั้นวาดหลายสิบครั้ง/วินาที) */
+const BOARD_MS=220;
+let boardTm=0, boardLast=-1e9;
+function renderBoard(force){
   if(!boardEl) return;
+  const now=performance.now();
+  if(!force && now-boardLast<BOARD_MS){                       // ⑤ หน่วง — เก็บงานไว้ยิงรอบเดียวตอนครบเวลา
+    if(!boardTm) boardTm=setTimeout(function(){ boardTm=0; renderBoard(true); }, BOARD_MS-(now-boardLast));
+    return;
+  }
+  boardLast=now; if(boardTm){ clearTimeout(boardTm); boardTm=0; }
   const uids=Object.keys(peers);
   /* 🏟️ รอบ 640: ป้ายสถานะสนาม (เด็กต้องรู้ว่าตัวเองอยู่สนามไหน มีกี่คน) — โชว์แม้ยังไม่มีเพื่อน */
   const note=room ? room.statusText(innerHeight<430,drawnPeers()) : '';
-  if(!uids.length&&!note){ boardEl.classList.remove('on'); boardSig=''; return; }
+  if(!uids.length&&!note){ boardEl.classList.remove('on'); boardSig=''; fitWord(); return; }
   const myName=(typeof onlineDisplayName==='function'&&onlineDisplayName())||(typeof state!=='undefined'&&state.playerName)||'ฉัน';
   /* 🎖️ รอบ 646: ระดับชั้นต่อท้ายชื่อในกระดาน (ใต้ชื่ออยู่ที่ป้ายลอยเหนือหัว — แถวนี้ nowrap) */
   const me={n:myName,w:sessionWords,me:true,v:vehicle,g:(typeof state!=='undefined'&&state.student&&state.student.grade)||''};
-  const rows=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind,
+  const all=uids.map(u=>({n:peers[u].n,w:peers[u].w||0,me:false,v:peers[u].kind,
       g:peers[u].grade||((typeof gradeOf==='function')?gradeOf(u):'')}))
-    .concat([me]).sort((a,b)=>b.w-a.w).slice(0,5);
-  const sig=note+'|'+rows.map(r=>r.n+':'+r.w+':'+r.v+':'+r.g).join('|');
+    .concat([me])
+    .sort((a,b)=> (b.w-a.w) || String(a.n||'').localeCompare(String(b.n||''),'th'));   // ① เรียงนิ่ง
+  const myRank=all.findIndex(r=>r.me)+1;
+  /* ② เดาจำนวนแถวจากความสูงจอเกมก่อน (แถวละ ~2.7vmin + หัว + ป้ายสนาม) แล้วค่อยวัดจริง */
+  const sh=(screenEl&&screenEl.clientHeight)||innerHeight*0.6;
+  let maxRows=Math.max(3,Math.min(8,Math.round(sh/46)));
+  /* จอเปลี่ยนขนาดต้องวาดใหม่เสมอ (แถวที่พอดีจอเปลี่ยน) → ใส่ขนาดจอลงลายเซ็นด้วย */
+  const sig=note+'|'+Math.round(sh)+'x'+Math.round((screenEl&&screenEl.clientWidth)||0)+'|'+myRank+'/'+all.length+'|'+
+    all.slice(0,9).map(r=>r.n+':'+r.w+':'+r.v+':'+r.g).join('|')+'|me:'+me.w;
   if(sig===boardSig){ boardEl.classList.add('on'); return; }
   boardSig=sig;
-  boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+rows.map((r,i)=>
-    `<div class="m-bd-r${r.me?' me':''}"><span>${i===0?'🥇':i===1?'🥈':i===2?'🥉':'　'}</span>`+
+  const rowHtml=(r,rank)=>`<div class="m-bd-r${r.me?' me':''}">`+
+    `<span class="m-bd-p">${rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':rank+'.'}</span>`+
     `<span class="m-bd-n">${r.v==='car'?'🚗':'🏍️'} ${escapeHTML(r.n)}${gradeMark(r.g)}</span>`+
-    `<span class="m-bd-w">${r.w}</span></div>`).join('')
-    +(note?`<div class="m-bd-c" style="padding:4px 6px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
+    `<span class="m-bd-w">${r.w}</span></div>`;
+  const paint=n=>{
+    let list, shown;
+    if(all.length<=n){ list=all.map((r,i)=>rowHtml(r,i+1)); shown=all.length; }
+    else if(myRank<=n){ list=all.slice(0,n).map((r,i)=>rowHtml(r,i+1)); shown=n; }
+    else {                                                   // ③ เราหลุดท็อป — ยังต้องเห็นตัวเอง
+      list=all.slice(0,n-1).map((r,i)=>rowHtml(r,i+1));
+      list.push('<div class="m-bd-gap">⋯</div>', rowHtml(all[myRank-1],myRank)); shown=n;
+    }
+    const rest=all.length-shown;                             // ④ ที่เหลือสรุปบรรทัดเดียว
+    boardEl.innerHTML='<div class="m-bd-h">🏆 คำที่เก็บได้รอบนี้</div>'+list.join('')+
+      (rest>0?`<div class="m-bd-more">+ อีก ${rest} คน</div>`:'')+
+      (note?`<div class="m-bd-c" style="padding:4px 6px;font-size:.82em;line-height:1.35;opacity:.92">${note}</div>`:'');
+  };
+  paint(maxRows);
   boardEl.classList.add('on');
+  /* วัดจริง: ล้นกรอบ (max-height 62% ของจอ) เมื่อไหร่ลดแถวลงทีละ 1 จนพอดี — ไม่ปล่อยให้ overflow ตัดแถวเงียบ ๆ */
+  for(let i=0;i<6 && maxRows>2 && boardEl.scrollHeight>boardEl.clientHeight+1;i++) paint(--maxRows);
+  fitWord();                                                 // กล่องกว้าง/แคบลง → จัดป้ายคำศัพท์กลางจอใหม่
 }
 function peerColor(uid){
   let h=0; for(let i=0;i<uid.length;i++) h=(h*31+uid.charCodeAt(i))>>>0;
@@ -2100,11 +2149,35 @@ function renderWordHud(){
   fitWord();
 }
 /* 🔤 รอบ 311: ย่อป้ายคำอัตโนมัติถ้ากว้างเกินจอ — ตัวอักษรคงแถวเดียวเสมอ (คำยาวก็ไม่ตกบรรทัด) */
+/* 🔤🧭 รอบ 919: ป้ายคำศัพท์ต้อง "ไม่โดนกล่องซ้าย(GPS)/ขวา(กระดานคะแนน)ทับ" อีกต่อไป
+   วัดกรอบจริงของ 2 กล่องนั้นด้วย getBoundingClientRect → ได้ช่องว่างกลางจอ แล้ววางป้ายกึ่งกลางช่องนั้น
+   คำยาว: ตัดเป็น 2 แถวก่อน (ตัวอักษรยังใหญ่อ่านออก) ค่อยย่อถ้ายังไม่พอ · กล่องขวาโตขึ้นตอนคนเยอะ = ช่องแคบลงเอง */
+const WORD_MIN_K=0.5;
 function fitWord(){
   if(!wordEl||!screenEl) return;
-  wordEl.style.transform='translateX(-50%) scale(1)';
-  const avail=screenEl.clientWidth*0.96, w=wordEl.offsetWidth;
-  const k=w>avail?avail/w:1;
+  const sw=screenEl.clientWidth; if(!sw) return;
+  wordEl.classList.remove('wrap2'); wordEl.style.maxWidth='';
+  wordEl.style.left='50%'; wordEl.style.transform='translateX(-50%) scale(1)';
+  const sr=screenEl.getBoundingClientRect(), gap=Math.max(4,sw*0.012);
+  let L=sw*0.02, R=sw*0.98;
+  const gpsEl=document.getElementById('moto-gps');
+  if(gpsEl&&gpsEl.offsetWidth){ const r=gpsEl.getBoundingClientRect(); L=Math.max(L,r.right-sr.left+gap); }
+  if(boardEl&&boardEl.classList.contains('on')&&boardEl.offsetWidth){
+    const r=boardEl.getBoundingClientRect(); R=Math.min(R,r.left-sr.left-gap); }
+  if(R-L<sw*0.3){ const c=(L+R)/2; L=Math.max(0,c-sw*0.15); R=Math.min(sw,c+sw*0.15); }  // กันกล่องบวมผิดปกติจนไม่เหลือที่
+  const avail=Math.max(40,R-L);
+  const cs=getComputedStyle(wordEl), padX=(parseFloat(cs.paddingLeft)||0)+(parseFloat(cs.paddingRight)||0);
+  const natural=()=>{ let m=0; for(const c of wordEl.children) m=Math.max(m,c.scrollWidth,c.offsetWidth); return m+padX; };
+  if(natural()>avail){ wordEl.classList.add('wrap2'); wordEl.style.maxWidth=avail+'px'; }   // ① 2 แถว
+  const need=natural(); let k=need>avail?Math.max(WORD_MIN_K,avail/need):1;                 // ② ย่อเท่าที่จำเป็น
+  /* คำยาวมากตกหลายแถว = ป้ายสูงบังถนน → คุมความสูงไม่ให้เกิน 38% ของจอ (ย่อเพิ่ม ไม่ตัดข้อมูลทิ้ง) */
+  const hNeed=wordEl.offsetHeight, maxH=(screenEl.clientHeight||sw)*0.38;
+  if(hNeed*k>maxH) k=Math.max(WORD_MIN_K,maxH/hNeed);
+  /* ③ อยู่กลางจอไว้ก่อน (สวยที่สุด) — เบียดกล่องไหนค่อยเลื่อนหนีเท่าที่จำเป็น ไม่ใช่เด้งไปกลางช่องว่างทันที */
+  const half=need*k/2; let cx=sw/2;
+  if(cx-half<L) cx=L+half;
+  if(cx+half>R) cx=Math.max(half,R-half);
+  wordEl.style.left=cx.toFixed(1)+'px';
   wordEl.style.transform='translateX(-50%) scale('+k.toFixed(3)+')';
 }
 function collectTick(){
@@ -2288,6 +2361,7 @@ function fit(){
   scrW=w; scrH=h;                    // 🪞 รอบ 810: แคชขนาดจอไว้ให้ drawCarMirrors ใช้ตั้ง viewport/scissor
   renderer.setSize(w,h,false);
   camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderBoard(true);                 // 📈 รอบ 919: จอเปลี่ยนขนาด → คิดจำนวนแถวกระดานใหม่ (แล้วมันเรียก fitWord ต่อเอง)
   fitWord();                         // 🔤 รอบ 311: จอเปลี่ยนขนาด → ย่อป้ายคำใหม่ให้พอดี
 }
 function tick(){
@@ -2551,6 +2625,7 @@ function start(opts){
   clearCoins(); specialDone=false;                                       // 🪙 รอบ 319: ล้างเหรียญคำเก่า (วางใหม่พร้อมตัวอักษรใน pickWord)
   /* 🏆💬 รอบ 318: ล้างกระดาน/แชทจากรอบก่อน */
   myChat=null; boardSig='';
+  if(boardTm){ clearTimeout(boardTm); boardTm=0; }        // 📈 รอบ 919: กันงานวาดกระดานค้างข้ามรอบ
   if(boardEl){ boardEl.classList.remove('on'); boardEl.innerHTML=''; }
   if(chatBarEl) chatBarEl.classList.remove('on');
   if(selfMsgEl) selfMsgEl.classList.remove('on');
@@ -2605,6 +2680,7 @@ function exitWorld(){
   netLeave();                                   // 🧑‍🤝‍🧑 รอบ 317: ออกจากห้องแผนที่ + ลบตัวเองจาก DB
   clearCoins();
   myChat=null;                                  // 💬🏆 รอบ 318
+  if(boardTm){ clearTimeout(boardTm); boardTm=0; }   // 📈 รอบ 919: ออกโลกแล้วห้ามมีงานวาดค้าง
   if(boardEl) boardEl.classList.remove('on');
   if(chatBarEl) chatBarEl.classList.remove('on');
   if(selfMsgEl) selfMsgEl.classList.remove('on');
@@ -2652,7 +2728,8 @@ window.MotoWorld={
     get selfCar(){ return selfCar; },
     spawnSlot, coinTick, peerTick, makeVehicle, applyVehicleUi,
     /* 🏆💬💎 รอบ 318 */
-    sendChat, renderBoard, coinTierAt,
+    sendChat, coinTierAt,
+    renderBoard:function(){ return renderBoard(true); },   // 📈 รอบ 919: เทสต์ต้องได้ DOM ทันที ไม่ติดหน่วง BOARD_MS
     get board(){ return boardEl?boardEl.textContent:''; },
     get coinTiers(){ const n=[0,0,0,0]; coins.forEach(c=>n[c.tier]++); return n; },
     placeSpecialCoin, get specialDone(){ return specialDone; },
