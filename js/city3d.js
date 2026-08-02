@@ -376,9 +376,21 @@ function roofProps(g, w, d, y, seed){
   if(R()>0.5){ g.add(M(cyl(0.05,0.05,2.6,6), mat(0x616e78), w*0.05, y+1.3, -d*0.3));
                g.add(M(new THREE.SphereGeometry(0.16,8,6), mat(0xff5252), w*0.05, y+2.6, -d*0.3)); }
 }
+/* 🚪 รอบ 890: บานประตูแขวนบน "บานพับ" หมุนเปิดได้จริง (ตัวขับ+เสียงอยู่โซน 🚪🔊 รอบ 890)
+   ขนาด/ตำแหน่งบานคงเดิมเป๊ะ → ตอนปิดตึกทุกหลังหน้าตาเหมือนก่อนรอบนี้ทุกประการ
+   หมุนตัวบานเองไม่ได้ (จุดหมุนอยู่กลางบาน = บานจมทะลุผนัง) จึงต้องมี Group ที่ขอบซ้ายเป็นบานพับ */
+const DOOR_W = 1.8, DOOR_H = 2.5;
 function doorAt(g, z, col){
-  g.add(M(box(1.8,2.5,0.18), mat(col||0x7a5230), 0, 1.25, z));
+  const hinge = new THREE.Group();
+  hinge.position.set(-DOOR_W/2, 0, z+0.12);                     // บานพับ = ขอบซ้ายของช่องประตู
+  hinge.add(M(box(DOOR_W,DOOR_H,0.18), mat(col||0x7a5230), DOOR_W/2, 1.25, 0));
+  hinge.add(M(new THREE.SphereGeometry(0.1,8,6), mat(0xf5d97a), DOOR_W-0.26, 1.22, 0.13));  // ลูกบิดริมบาน (ดูออกว่าบานพับอยู่ฝั่งไหน)
+  g.add(hinge);
+  // ช่องประตูมืดหลังบาน — เปิดแล้วเห็น "ทางเข้า" ไม่ใช่ผนังทึบ (เล็กกว่าบานเล็กน้อย ตอนปิดจึงถูกบานบังมิด)
+  g.add(M(box(DOOR_W-0.14, DOOR_H-0.14, 0.05), mat(NIGHT?0x2b2113:0x1e150d), 0, 1.25, z+0.03));
   g.add(M(box(2.3,0.3,0.7), mat(0xffffff), 0, 0.15, z+0.25));   // ธรณีประตู
+  _lastDoor = hinge;                                            // buildCity หยิบไปผูกกับ key ตึก
+  return hinge;
 }
 function awning(g, w, y, z, col1, col2){
   const geo = new THREE.CylinderGeometry(1.1, 1.1, w, 12, 1, false, 0, Math.PI);
@@ -941,7 +953,9 @@ function buildCity(){
   BUILDINGS.forEach(b=>{
     const a = b.deg*Math.PI/180;
     const x = Math.cos(a)*b.r, z = -Math.sin(a)*b.r;
+    _lastDoor = null;                       // 🚪 รอบ 890: ล้างค้างจากตึกก่อนหน้าเสมอ
     const g = b.build();
+    registerDoor(b.key);                    // 🚪 รอบ 890: ตึกไหนมีบานประตู = จดทะเบียนไว้สั่งเปิด-ปิด
     g.position.set(x, 0, z);
     g.rotation.y = Math.atan2(-x, -z);      // หันหน้าเข้าลานกลาง
     scene.add(g);
@@ -2034,6 +2048,97 @@ function lastDoorKey(){
 }
 
 /* ============================================================
+   🚪🔊 รอบ 890: บานประตูตึกเปิด-ปิดจริง + เสียงประตูสังเคราะห์เอง
+   ------------------------------------------------------------
+   เดิม: เดินถึงหน้าประตู (รอบ 866) แล้วจอตัดไปหน้าอื่นทันที ประตูเป็นแผ่นไม้แปะผนังนิ่ง ๆ
+        ขากลับ (รอบ 886) ก็ "ก้าวออกมาจากผนังทึบ" — เด็กไม่เห็นว่ามันคือทางเข้า-ออกจริง
+   ทำ: doorAt() แขวนบานบนบานพับ (ดูโซน 🏗️ BUILDERS) · buildCity จดทะเบียน key ตึก → บานพับ
+        ตัวขับข้างล่างไถองศาเข้าหาเป้าทุกเฟรม (ไม่ใช่กระโดดทันที) พร้อมเสียงตามจังหวะจริง
+   จังหวะที่ใช้: ① ขาไป walkSelfTo เดินได้ 62% ของทาง = เริ่มผลักบาน → ถึงหน้าประตูบานเปิดสุดพอดี
+        ② ขากลับ stageExitWalk ตั้งบาน "เปิดค้าง" ทันที (ต่อเนื่องกับภาพจอเปิดรอบ 880 ที่แคปตอนบานเปิด
+        — สแนปไม่มีเสียง ไม่งั้นภาพจางมาแล้วบานกระตุกปิด) → walkSelfOut ก้าวพ้นผนัง ค่อยปิดตามหลัง
+   เสียง: สังเคราะห์เอง (ไฟล์นี้ standalone ไม่มี state.sound ให้พึ่ง — ใช้ AudioContext ตัวเดียวกับ
+        เสียงฝีเท้ารอบ 871) เอี๊ยด = sawtooth ไล่ความถี่ผ่าน bandpass Q สูง · ตึบ+กลอนคลิก = ยิงตอน
+        บาน "ถึงวงกบจริง" (ตัวขับเป็นคนยิง) ไม่ใช่ตอนสั่งปิด ไม่งั้นเสียงมาก่อนภาพครึ่งวินาที
+   ตึกที่ builder ไม่เรียก doorAt (สนามบอล/ลานยาน/โรงเก็บ/ประตูป่า ฯลฯ) = ไม่มีทะเบียน สั่งแล้วเงียบ ไม่พัง
+   ============================================================ */
+const DOOR_SWING  = -1.85;   // เรเดียน (~106°) — ลบ = ผลักบานออกนอกตึก (ตึกหันหน้า +Z)
+const DOOR_OPEN_S = 0.42;    // วินาทีที่ใช้เปิดจนสุด
+const DOOR_SHUT_S = 0.62;    // ปิดช้ากว่าเปิด (บานหนัก ค่อย ๆ กลับเข้าวงกบ)
+const CityDoors = {};        // key ตึก → {h:บานพับ, k:0..1 (ตอนนี้), tgt:0|1 (เป้า)}
+let _lastDoor = null;        // บานที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
+function registerDoor(key){
+  if(!_lastDoor) return false;                  // ตึกแบบไม่มีประตู
+  CityDoors[key] = {h:_lastDoor, k:0, tgt:0};
+  _lastDoor = null;
+  return true;
+}
+/* 🔊 บานพับเอี๊ยด — เปิด = ไล่ความถี่ขึ้น · ปิด = ไล่ลง (เบา ๆ ไม่แย่งเพลงประกอบ) */
+function doorCreakSfx(open){
+  const c = footCtx(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t = c.currentTime, dur = open ? .40 : .52;
+    const o = c.createOscillator(); o.type='sawtooth';
+    o.frequency.setValueAtTime(open?150:246, t);
+    o.frequency.linearRampToValueAtTime(open?246:142, t+dur);
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=820; bp.Q.value=7.5;
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(.05,t+.09);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(bp); bp.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t+dur+.02);
+  }catch(e){}
+}
+/* 🔊 บานกระทบวงกบ: ตึบ (sine ดิ่ง) + กลอนคลิก (noise สั้นผ่าน highpass) */
+function doorLatchSfx(){
+  const c = footCtx(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t = c.currentTime;
+    const o = c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(176,t); o.frequency.exponentialRampToValueAtTime(56,t+.12);
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.07,t+.01);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.18);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.2);
+    const n = c.createBufferSource(), buf = c.createBuffer(1,1100,c.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,6);
+    n.buffer = buf;
+    const hp = c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=2200;
+    const ng = c.createGain(); ng.gain.value=.045;
+    n.connect(hp); hp.connect(ng); ng.connect(c.destination); n.start(t);
+  }catch(e){}
+}
+/* สั่งบาน: open=true เปิด/false ปิด · snap=true สแนปทันทีแบบเงียบ (ใช้ตอนตั้งฉากขากลับ)
+   สั่งซ้ำเป้าเดิม = คืน false ไม่เล่นเสียงซ้ำ (walkSelfTo เรียกทุกเฟรมช่วงท้ายทาง) */
+function setCityDoor(key, open, snap){
+  const d = CityDoors[key]; if(!d) return false;
+  const tgt = open ? 1 : 0;
+  if(snap){ d.tgt = d.k = tgt; d.h.rotation.y = tgt*DOOR_SWING; return true; }
+  if(d.tgt === tgt) return false;
+  d.tgt = tgt;
+  doorCreakSfx(open);
+  return true;
+}
+function openCityDoor(key){ return setCityDoor(key, true); }
+function closeCityDoor(key){ return setCityDoor(key, false); }
+tickers.push((dt)=>{
+  for(const key in CityDoors){
+    const d = CityDoors[key];
+    if(d.k === d.tgt) continue;
+    const up = d.tgt > d.k;
+    const step = dt/(up ? DOOR_OPEN_S : DOOR_SHUT_S);
+    d.k = up ? Math.min(1, d.k+step) : Math.max(0, d.k-step);
+    /* องศาจริง = ไถแบบ ease-out ทั้งสองทาง → เปิด: ผลักแรงแล้วผ่อนตอนบานกางสุด
+       ปิด: ออกตัวช้า (บานหนัก) แล้วเร่งเข้าวงกบ = ตรงกับเสียงตึบตอนจบพอดี */
+    d.h.rotation.y = (1-(1-d.k)*(1-d.k))*DOOR_SWING;
+    if(!up && d.k === 0) doorLatchSfx();        // ยิงตอนบานถึงวงกบจริง ไม่ใช่ตอนสั่งปิด
+  }
+});
+
+/* ============================================================
    🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
    เส้นทาง = พิกัดเชิงขั้ว (มุมก่อน-รัศมีทีหลัง) → ออกจากลานน้ำพุ เลี้ยวรอบวง แล้ววิ่งตรงเข้าประตู
    (ไม่ตัดผ่านกลางลาน/น้ำพุ เพราะรัศมีโตทีหลัง) · แตะซ้ำระหว่างเดิน = ข้ามไปเลย
@@ -2138,6 +2243,7 @@ function footDustTick(dt){
 }
 tickers.push((dt)=>footDustTick(dt));                // ระบบฝุ่นฝีเท้า ทำงานทุกเฟรมตลอด (ว่างเปล่า = ไม่มีอะไรให้ทำ)
 const FOOT_STEP_DIST = 3.3;    // ระยะเดินต่อก้าว (หน่วยโลก) — ยิงเสียง+ฝุ่นทุก ๆ ระยะนี้ ไม่ใช่ทุก ๆ เวลา
+const DOOR_OPEN_AT   = 0.62;   // 🚪 รอบ 890: เดินได้กี่ส่วนของทางถึงเริ่มผลักประตู (0.62 + เปิด .42 วิ ≈ บานกางสุดพอดีตอนถึงหน้าประตู)
 /* เดินไปหน้าตึก b แล้วเรียก done() — คืน false ถ้าเดินไม่ได้ (ไม่มีตัวละคร) */
 function walkSelfTo(b, done){
   const S = Live.self;
@@ -2163,6 +2269,7 @@ function walkSelfTo(b, done){
     g.position.set(d.x, 0, d.z);
     g.rotation.y = Math.atan2(d.bx-d.x, d.bz-d.z);   // หันหน้าเข้าตึก (โมเดลหันหน้า +Z)
     S.walk = false;
+    openCityDoor(b.key);                             // 🚪 รอบ 890: มาทางตาข่าย setTimeout (rAF สะดุด) ก็ต้องเจอประตูเปิดรับ
     done();
   };
   const tick = (dt)=>{
@@ -2182,6 +2289,7 @@ function walkSelfTo(b, done){
       footStepSfx(clamp(moved/dt/WALK_SPD, .3, 1));
       footDustPuff(nx, nz);
     }
+    if(k >= DOOR_OPEN_AT) openCityDoor(b.key);       // 🚪 รอบ 890: ใกล้ถึงแล้ว ประตูเปิดรับ (สั่งซ้ำทุกเฟรมได้ ตัวสั่งกันเสียงซ้ำเอง)
     ph += dt*11;
     walkPose(g, ph, k>0.94 ? (1-k)/0.06 : 1);        // ใกล้ถึงค่อย ๆ หยุดขา
     rig.tx += (nx-rig.tx)*0.12; rig.tz += (nz-rig.tz)*0.12;   // กล้องตามหลังแบบนุ่ม
@@ -2210,6 +2318,7 @@ const EXIT_BACK  = 4.0;    // ตั้งต้นถอยเข้าไป�
 const EXIT_DUR   = 1.35;   // วินาที — ออกมาช้า ๆ ให้เด็กเห็นชัดว่าเดินออกมาเอง
 const EXIT_STEP  = 1.3;    // ระยะต่อก้าว (สั้นกว่า FOOT_STEP_DIST = ก้าวเนิบ ๆ ตอนออกจากประตู · วัดแล้วได้ 3 ก้าวพอดีกับจังหวะขาแกว่ง)
 const EXIT_CLEAR = 4.3;    // ห่างใจกลางตึกเกินนี้ถึงเริ่มมีเสียง/ฝุ่น (ก่อนหน้านี้ยังอยู่หลังผนัง)
+const EXIT_SHUT  = 5.6;    // 🚪 รอบ 890: ก้าวพ้นบานไปเท่านี้ ประตูค่อยปิดตามหลัง (ไม่ปิดหนีบตัวเราตอนยังอยู่ในกรอบประตู)
 const ExitWalk = {key:'', bld:null, spot:null, u:null, done:false};
 /* ตั้งต้น (เรียกจาก spawnSelf): วางตัวเราไว้ในประตู หันหน้าออก */
 function stageExitWalk(g, key, bld, spot){
@@ -2218,6 +2327,9 @@ function stageExitWalk(g, key, bld, spot){
   ExitWalk.u = {x:ux/m, z:uz/m};
   g.position.set(spot.x-ExitWalk.u.x*EXIT_BACK, 0, spot.z-ExitWalk.u.z*EXIT_BACK);
   g.rotation.y = Math.atan2(ExitWalk.u.x, ExitWalk.u.z);
+  /* 🚪 รอบ 890: ตั้งบานให้ "เปิดค้าง" ตั้งแต่เฟรมแรกแบบสแนป-เงียบ — ภาพจอเปิด (รอบ 880) แคปตอนบานเปิดอยู่
+     ถ้าปล่อยบานปิด ภาพจางมาแล้วประตูจะกระตุกปิดทันตา · ตัวเราก็จะเดินทะลุบานออกมา */
+  setCityDoor(key, true, true);
 }
 /* เดินออกมา — ทำงานครั้งเดียวเสมอ (ตัวเรียก: จอเปิดเริ่มจาง + ตาข่ายเวลาใน BOOT) */
 function walkSelfOut(){
@@ -2231,12 +2343,13 @@ function walkSelfOut(){
     g.position.set(spot.x, 0, spot.z);
     g.rotation.y = face;
     S.walk = false;
+    closeCityDoor(ExitWalk.key);                     // 🚪 รอบ 890: ยืนพ้นบานแล้วแน่นอน — ปิดตามหลัง (มาทางตาข่ายเวลาก็ไม่ทิ้งประตูเปิดค้าง)
     if(ExitWalk.bld){
       setChip('🚪 กลับมาจาก '+ExitWalk.bld.ico+' '+ExitWalk.bld.label+' แล้ว — ยืนอยู่หน้าประตู');
       showBubble('__self', '🚪 กลับมาจาก'+ExitWalk.bld.label+'แล้ว '+ExitWalk.bld.ico, Date.now());
     }
   };
-  if(S.walk) return false;                           // เด็กแตะตึกอื่นไปก่อนแล้ว = ปล่อยให้ walkSelfTo คุมต่อ ไม่กระตุก
+  if(S.walk){ closeCityDoor(ExitWalk.key); return false; }   // เด็กแตะตึกอื่นไปก่อนแล้ว = ปล่อยให้ walkSelfTo คุมต่อ ไม่กระตุก (แต่ต้องปิดประตูที่ตั้งเปิดค้างไว้ ไม่ทิ้งอ้าทั้งเมือง)
   const x0 = g.position.x, z0 = g.position.z;
   S.walk = true;
   footCtx();                                          // เตรียม AudioContext ไว้ล่วงหน้า (ยังไม่มี gesture ก็ไม่พัง แค่เงียบ)
@@ -2263,6 +2376,8 @@ function walkSelfOut(){
         footDustPuff(nx, nz);
       }
     }
+    /* 🚪 รอบ 890: ก้าวพ้นบานแล้วค่อยปิดตามหลัง (เสียงตึบ+กลอนดังตอนบานถึงวงกบ = ตอนเรายืนหน้าประตูพอดี) */
+    if(Math.hypot(nx-spot.bx, nz-spot.bz) > EXIT_SHUT) closeCityDoor(ExitWalk.key);
     ph += dt*7.5;                                     // ขาแกว่งช้ากว่าเดินไกล
     walkPose(g, ph, k>0.86 ? (1-k)/0.14 : 1);         // ใกล้ถึงค่อย ๆ หยุดขา
     if(k>=1) finish();
@@ -2350,6 +2465,7 @@ function travelTo(b){
         setTimeout(()=>{ location.href=dest; }, 520);   // ให้เห็นตัวยืนหน้าประตูแป๊บนึงก่อนเปลี่ยนหน้า
      })) return;
   /* ไม่มีตัวละคร (ยังไม่เคยเซฟในเครื่องนี้) → ท่าเดิม: กล้องซูมลงตึกแล้วไป */
+  openCityDoor(b.key);        // 🚪 รอบ 890: ไม่มีตัวเดินก็ยังเห็นประตูตึกเปิดรับตอนกล้องซูมลง
   const spot = BLD_AT[b.key];
   const t0=performance.now(), d0=rig.dist, x0=rig.tx, z0=rig.tz;
   const anim=()=>{
@@ -2629,6 +2745,11 @@ function boot(){
     walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
                      return walkSelfTo(b, cb||function(){}); },
     door(key){ return doorSpotOf(key); },
+    /* 🚪🔊 รอบ 890: บานประตู — ดูสถานะ/สั่งเปิด-ปิดเอง */
+    doorKeys(){ return Object.keys(CityDoors); },
+    doorState(key){ const d=CityDoors[key];
+                    return d ? {k:+d.k.toFixed(3), tgt:d.tgt, ry:+d.h.rotation.y.toFixed(3)} : null; },
+    doorSet(key, open, snap){ return setCityDoor(key, !!open, !!snap); },
     /* 🚪🚶 รอบ 886: เดินออกจากประตู — ดูสถานะ/สั่งเดินเอง (เทสต์ไม่ต้องรอ splash) */
     exit(){ const S=Live.self; return {key:ExitWalk.key, done:ExitWalk.done, spot:ExitWalk.spot,
                                        walk:!!(S&&S.walk), dusts:footDusts.length}; },
