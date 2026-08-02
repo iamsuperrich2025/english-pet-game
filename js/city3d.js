@@ -153,7 +153,10 @@ function setupInput(el){
       }
     }else if(ptr.size===2 && twoStart){  // ✌️ 2 นิ้ว = บิดหมุน + หนีบซูม + ลากตั้งเอียง
       const s = twoState();
-      rig.yaw   = twoStart.yaw   - (s.ang - twoStart.ang);
+      /* 🔄 รอบ 873: นิ้วบิดตามเข็ม = เมืองหมุนตามเข็ม (แบบ SimCity — เดิมกลับทิศ ผู้ใช้สั่งแก้)
+         + normalize มุมเข้า (-π,π] กันมุมนิ้ว atan2 ข้าม ±180° แล้วเมืองหมุนวูบเต็มรอบ (บั๊กแฝงเดิม) */
+      const dAng = s.ang - twoStart.ang;
+      rig.yaw   = twoStart.yaw   + Math.atan2(Math.sin(dAng), Math.cos(dAng));
       rig.dist  = clamp(twoStart.dist0 * (twoStart.len/Math.max(20,s.len)), rig.DIST_MIN, rig.DIST_MAX);
       rig.pitch = twoStart.pitch + (s.midY - twoStart.midY)*0.006;
       rig.apply();
@@ -941,7 +944,13 @@ function buildCity(){
     ic.userData.baseY = ic.position.y;
     ic.userData.ph = rnd(0, TAU);
     scene.add(ic);
-    tickers.push((dt,t)=>{ ic.position.y = ic.userData.baseY + Math.sin(t*1.8+ic.userData.ph)*0.45; });
+    tickers.push((dt,t)=>{
+      ic.position.y = ic.userData.baseY + Math.sin(t*1.8+ic.userData.ph)*0.45;
+      /* 🔍 รอบ 873: ซูมออกป้ายขยายตาม (ตัวหนังสือใหญ่อ่านง่ายเสมอ — เดิมไกลแล้วเล็กจนอ่านไม่ออก)
+         dist≤34 = ขนาดเดิม · ไกลกว่านั้นขยายเชิงเส้นถึง ~×2.9 ที่ dist 150 (ขนาดบนจอเกือบคงที่) */
+      const k = Math.max(1, rig.dist/52);
+      ic.scale.set(5.6*k, 6.55*k, 1);
+    });
     // hitbox ใหญ่กดง่าย (โปร่งใส)
     const hb = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 6.5, (g.userData.h||8)+4, 8),
       new THREE.MeshBasicMaterial({visible:false}));
@@ -1296,6 +1305,8 @@ const Live = {
   lastMsg:{},         // uid เพื่อน → ข้อความล่าสุดในคู่แชทนั้น {f,t,ts} (โชว์เป็นบริบทในกล่อง)
   bubList:[],         // บับเบิลที่ลอยอยู่ตอนนี้ [{A}] เก่า→ใหม่ (เกิน BUB_MAX = ใบเก่าสุดหายก่อน)
   chatWith:null,      // uid ที่กล่องพิมพ์กำลังเปิดคุยอยู่
+  unread:{},          // 💬🔴 รอบ 873: uid เพื่อน → ข้อความล่าสุดที่ยังไม่ได้อ่าน (ป้ายค้างเหนือหัว)
+  onlineN:0,          // จำนวนคนออนไลน์ล่าสุด (ไว้ประกอบข้อความบนชิปคู่กับจำนวนที่ค้างอ่าน)
   off:[],             // ฟังก์ชันเลิกฟัง RTDB ทุกตัว (เรียกตอนออกจากหน้า — ไม่อ่านค้าง)
   pollT:0,            // setInterval ของ pollWorlds
 };
@@ -1355,8 +1366,8 @@ function watchPresence(){
       seen[ch.key]=true;
       spawnStander(ch.key, v);
     });
-    Live.count=n;
-    setChip('🟢 ออนไลน์ '+n+' คน');
+    Live.count=n; Live.onlineN=n;
+    refreshChip();
     // คนหลุด → เก็บตัวละครออก (เฉพาะพวกยืน — ยานพาหนะจัดการใน pollWorlds)
     Object.keys(Live.actors).forEach(uid=>{
       const a=Live.actors[uid];
@@ -1395,6 +1406,7 @@ function spawnStander(uid, v){
     tickers.push(tick);
     Live.actors[uid] = {g, kind:'stand', bkey, data:v, tick, blk, bubY:4.9};
     flushBubble(uid);                            // มีข้อความรออยู่ตั้งแต่ก่อน spawn เสร็จ
+    applyUnread(uid);                            // 💬🔴 รอบ 873: มีข้อความค้างอ่าน = ติดป้ายย้อนหลัง
   });
 }
 /* 🚗🏍️🚁🛸 โลก 3D: /world/<map> + /wroom/<map>/<room> → ยานวิ่ง/บินในเมือง */
@@ -1513,6 +1525,7 @@ function spawnVehicle(uid, f){
     Live.actors[uid] = {g, kind:f.kind, tick, blk:blkId, bubY:label.position.y+1.9,
                         data:{n:f.n, g:lb && lb.g, act:kindTh}};   // 🖊️ รอบ 868: ชื่อ+ชั้นไว้ทำหัวกล่องพิมพ์ตอบ
     flushBubble(uid);
+    applyUnread(uid);                            // 💬🔴 รอบ 873: ป้ายค้างอ่านตามไปกับยานพาหนะด้วย
   });
 }
 function removeActor(uid){
@@ -1521,6 +1534,7 @@ function removeActor(uid){
   scene.remove(a.g);
   const i = tickers.indexOf(a.tick); if(i>=0) tickers.splice(i,1);
   killBubble(a);                       // 💬 บับเบิลค้างต้องถอดด้วย (รอบ 868: คืน texture + ถอดจุดแตะ + ออกจากคิว)
+  removeUnreadBadge(uid);              // 💬🔴 รอบ 873: ป้ายค้างอ่านถอดด้วย (ข้อมูลยังอยู่ใน Live.unread — กลับมาก็ติดใหม่)
   delete Live.bubSeen[uid];
   if(Live.chatWith===uid) closeChatBox();   // 🖊️ รอบ 868: คนที่เรากำลังพิมพ์คุยด้วยออกจากเมืองไปแล้ว
   a.g.traverse(o=>{ const j=actorPick.indexOf(o); if(j>=0) actorPick.splice(j,1); });
@@ -1611,6 +1625,7 @@ function killBubble(A){
   const b = Live.bubList.indexOf(A);      if(b>=0) Live.bubList.splice(b,1);
   if(sp.material) sp.material.dispose();
   bubTexRelease(sp.userData.tex);
+  if(A.badge) A.badge.visible = true;              // 💬🔴 รอบ 873: บับเบิลหายแล้ว ป้ายค้างอ่านโผล่คืน
   A.bub = null; A.bubTick = null; A.bubTxt = '';
 }
 /* uid: uid จริง หรือ '__self' (ตัวเรา) */
@@ -1646,6 +1661,7 @@ function showBubble(uid, text, ts){
     const k = clamp(rig.dist/88, 1, 2.1);
     sp.scale.set(7.2*k, 3.77*k, 1);
   };
+  if(A.badge) A.badge.visible = false;             // 💬🔴 รอบ 873: บับเบิลลอยอยู่ = ซ่อนป้ายค้างอ่านไว้ก่อน
   A.bub = sp; A.bubTick = tick; A.bubTxt = raw; A.bubAt = performance.now();
   Live.bubList.push(A);
   tickers.push(tick);
@@ -1675,7 +1691,9 @@ function watchFriendChats(){
         if(!last || !last.t || !last.ts) return;
         Live.lastMsg[fu] = last;             // 🖊️ รอบ 868: ข้อความล่าสุด — โชว์เป็นบริบทในกล่องพิมพ์ตอบ
         showBubble(last.f===Live.uid ? '__self' : fu, last.t, last.ts);
-        if(Live.chatWith===fu) chatBoxRefresh();
+        if(Live.chatWith===fu){ chatBoxRefresh(); markReadCity(fu); }   // เปิดกล่องคุยอยู่ = อ่านทันที
+        else setUnread(fu, last);            // 💬🔴 รอบ 873: ค้างอ่านไหม → ป้ายเหนือหัว
+        refreshChip();
       }, ()=>{});
       Live.off.push(()=>q.off('value', h));
     });
@@ -1697,6 +1715,8 @@ function watchFriendChats(){
    กฎคุ้มครองเด็ก: หัวกล่องโชว์เฉพาะ "ชื่อเล่น + สัญลักษณ์ระดับชั้น" (gradeStars ชุดเดียวกับป้ายในเมือง)
    ============================================================ */
 const CITY_CHAT_MAX = 200;       // เท่า CHAT_MAX_LEN ใน js/online.js (rules ก็จำกัด 200 ตัวเหมือนกัน)
+/* 🖊️💬 รอบ 872 ต่อยอด (2 ส.ค.): ปุ่มตอบด่วน — กดแล้วส่งทันทีผ่านกติกาเดียวกับพิมพ์เอง */
+const CITY_QUICK_REPLIES = ['👋 สวัสดี!','😄 เก่งมากเลย!','🎮 ไปเล่นด้วยกันไหม?','🙏 ขอบคุณนะ','👋 เจอกันพรุ่งนี้!'];
 
 /* 🙊 กรองก่อนแสดง: ข้อความหยาบ (เช่นส่งมาจากไคลเอนต์เก่า/แก้ DB ตรง) ไม่ขึ้นจอเด็ก */
 function bubSafeText(s){
@@ -1743,7 +1763,10 @@ function chatBoxRefresh(){
       +(gs ? ' <span style="color:'+gs.col+'">'+gs.sym+'</span>' : '')+'</span>'
     +'<div class="cb-last">'+lastTxt+'</div>'
     +(ok
-      ? '<div class="cb-row"><input id="cb-input" type="text" maxlength="'+CITY_CHAT_MAX+'" '
+      ? '<div class="cb-quick" id="cb-quick">'
+          +CITY_QUICK_REPLIES.map((q,i)=>'<button class="cb-qchip" type="button" data-i="'+i+'">'+esc(q)+'</button>').join('')
+        +'</div>'
+        +'<div class="cb-row"><input id="cb-input" type="text" maxlength="'+CITY_CHAT_MAX+'" '
         +'placeholder="พิมพ์ตอบเพื่อน…" autocomplete="off"><button id="cb-send">ส่ง</button></div>'
       : '<a class="cb-go" href="index_classic.html?go=friends">🚪 ไปหน้าเพื่อนในล็อบบี้เดิม</a>')
     +'<div class="cb-note" id="cb-note">'+esc(why)+'</div>'
@@ -1752,12 +1775,20 @@ function chatBoxRefresh(){
   const send = document.getElementById('cb-send'), inp = document.getElementById('cb-input');
   if(send) send.onclick = sendCityChat;
   if(inp)  inp.onkeydown = e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendCityChat(); } };
+  /* 🖊️💬 รอบ 872 ต่อยอด: ชิปตอบด่วน — กดแล้วส่งข้อความสำเร็จรูปทันทีผ่านกติกาเดียวกับพิมพ์เอง */
+  const quick = document.getElementById('cb-quick');
+  if(quick) quick.onclick = e=>{
+    const b = e.target.closest('.cb-qchip');
+    if(b && !b.disabled) sendCityChatText(CITY_QUICK_REPLIES[+b.dataset.i]);
+  };
 }
 function openChatBox(uid){
   const el = document.getElementById('chat-box');
   if(!el || !uid) return;
   if(uid === '__self'){ setChip('⭐ นี่คือตัวหนูเอง — แตะบับเบิลของเพื่อนเพื่อตอบกลับนะ'); return; }
   Live.chatWith = uid;
+  markReadCity(uid);                               // 💬🔴 รอบ 873: เปิดกล่องคุย = อ่านแล้ว (ป้ายหาย ล็อบบี้เดิมก็หายตาม)
+  refreshChip();
   chatBoxRefresh();
   el.style.display = 'flex';
   const inp = document.getElementById('cb-input');
@@ -1772,31 +1803,41 @@ function cbNote(msg){
   const n = document.getElementById('cb-note');
   if(n) n.textContent = msg;
 }
-/* ✉️ ส่งเข้าระบบแชทเดิม — ตรวจชุดเดียวกับ chatSend() ใน js/online.js ทุกข้อ */
-function sendCityChat(){
-  const uid = Live.chatWith, inp = document.getElementById('cb-input');
-  if(!uid || !inp) return;
-  const text = String(inp.value||'').replace(/\s+/g, ' ').trim();
+/* ✉️ ส่งเข้าระบบแชทเดิม — ตรวจชุดเดียวกับ chatSend() ใน js/online.js ทุกข้อ
+   ใช้ร่วมกันทั้งช่องพิมพ์เอง (sendCityChat) และชิปตอบด่วน (sendCityChatText โดยตรง) */
+function sendCityChatText(text){
+  const uid = Live.chatWith;
+  if(!uid) return;
+  text = String(text||'').replace(/\s+/g, ' ').trim();
   if(!text)                     return cbNote('ยังไม่ได้พิมพ์ข้อความเลยนะ');
   if(text.length > CITY_CHAT_MAX) return cbNote('ข้อความยาวเกินไป (ไม่เกิน '+CITY_CHAT_MAX+' ตัว)');
   if(typeof nameHasBadWord === 'function' && nameHasBadWord(text))
                                 return cbNote('ข้อความมีคำไม่สุภาพอยู่ พิมพ์ใหม่นะ 😊');
   if(!chatBoxCanSend())         return cbNote(chatBoxWhy());
   const pid = [Live.uid, uid].sort().join('_');      // = chatPairId(uid)
-  const btn = document.getElementById('cb-send');
+  const btn = document.getElementById('cb-send'), quick = document.getElementById('cb-quick');
   if(btn) btn.disabled = true;
+  if(quick) quick.querySelectorAll('button').forEach(b=>{ b.disabled = true; });
   cbNote('กำลังส่ง…');
   Live.db.ref('chats/'+pid).push({
     f : Live.uid,
     t : text,
     ts: Live.fb.database.ServerValue.TIMESTAMP,
   }).then(()=>{
-    inp.value = '';
+    const inp = document.getElementById('cb-input');
+    if(inp) inp.value = '';
     cbNote('ส่งแล้ว ✓ (อยู่ในห้องแชทเดิมของเพื่อนด้วย)');
     showBubble('__self', text, Date.now());          // 💬 บับเบิลของตัวเราเองเด้งเหนือหัวทันที
   }).catch(()=>{
     cbNote('ส่งไม่สำเร็จ ลองใหม่อีกครั้งนะ 📡');
-  }).then(()=>{ if(btn) btn.disabled = false; });
+  }).then(()=>{
+    if(btn) btn.disabled = false;
+    if(quick) quick.querySelectorAll('button').forEach(b=>{ b.disabled = false; });
+  });
+}
+function sendCityChat(){
+  const inp = document.getElementById('cb-input');
+  if(inp) sendCityChatText(inp.value);
 }
 /* 🧹 ออกจากหน้า/พับแท็บ = เลิกอ่าน RTDB ทุกท่อ + หยุด poll (ไม่กินเน็ต/แบตค้างเบื้องหลัง) */
 function cityStopLive(){
@@ -1816,6 +1857,111 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){ if(Live.pollT){ clearInterval(Live.pollT); Live.pollT = 0; } }
   else if(Live.db && Live.uid && !Live.pollT){ pollWorlds(); Live.pollT = setInterval(pollWorlds, 10000); }
 });
+
+/* ============================================================
+   💬🔴 รอบ 873: ไอคอน "มีข้อความค้าง ยังไม่ได้อ่าน" ลอยเหนือหัวเพื่อน
+   ------------------------------------------------------------
+   บับเบิล (รอบ 872) เด้งเฉพาะข้อความสด ≤3 นาที → เข้าเมืองช้ากว่านั้นไม่รู้เลยว่าเพื่อนทัก
+   ป้ายนี้จึง "ค้างอยู่จนกว่าจะอ่าน" ต่างจากบับเบิลที่จางหายเอง
+   ใช้ตัวชี้วัดเดียวกับล็อบบี้เดิม: `state.chatSeen[<pairId>]` ในเซฟ (js/online.js chatSeenTs/chatMarkSeen)
+     · ยังไม่อ่าน = ข้อความล่าสุดเป็นของเพื่อน และ ts ใหม่กว่าที่จำไว้
+     · เปิดกล่องคุยในเมือง = จำว่าอ่านแล้ว (เขียนกลับเซฟแบบ read-modify-write เฉพาะคีย์ chatSeen)
+       → ป้ายในล็อบบี้เดิมก็หายตามกัน ไม่ต้องอ่านซ้ำสองที่
+   texture ใบเดียวใช้ร่วมทุกคน (ไม่วาด canvas ใหม่ต่อคน) · ป้ายซ่อนตัวเองตอนบับเบิลของคนนั้นกำลังลอย
+   ============================================================ */
+const SAVE_KEY = 'petVocabAdventure_v1';
+let _unreadTex = null;
+
+function saveRead(){
+  try{ return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); }catch(e){ return null; }
+}
+function pairIdOf(uid){ return [Live.uid, uid].sort().join('_'); }
+/* อ่านถึง ts ไหนแล้ว (0 = ยังไม่เคยอ่าน) — คีย์เดียวกับล็อบบี้เดิมเป๊ะ */
+function chatSeenTsCity(uid){
+  const sv = saveRead();
+  const v = sv && sv.chatSeen && sv.chatSeen[pairIdOf(uid)];
+  return typeof v === 'number' ? v : 0;
+}
+/* จำว่าอ่านแล้ว — อ่านเซฟสด ๆ ก่อนเขียนเสมอ (session/แท็บอื่นอาจเพิ่งเซฟ) แตะแค่ chatSeen */
+function chatMarkSeenCity(uid, ts){
+  if(!Live.uid || !uid || uid === '__self') return;
+  const t = typeof ts === 'number' ? ts : Date.now();
+  try{
+    const sv = saveRead();
+    if(!sv) return;                                  // ยังไม่มีเซฟในเครื่อง = ไม่มีอะไรให้จำ
+    const pid = pairIdOf(uid);
+    if(!sv.chatSeen || typeof sv.chatSeen !== 'object') sv.chatSeen = {};
+    if((sv.chatSeen[pid] || 0) >= t) return;
+    sv.chatSeen[pid] = t;
+    localStorage.setItem(SAVE_KEY, JSON.stringify(sv));
+  }catch(e){}                                        // โควตาเต็ม/โหมดส่วนตัว = ข้ามไป ป้ายแค่ขึ้นซ้ำ ไม่พัง
+}
+function unreadTexture(){
+  if(_unreadTex) return _unreadTex;
+  const c = cvs(128, 128), g = c.getContext('2d');
+  g.fillStyle = 'rgba(255,255,255,.97)';
+  g.strokeStyle = 'rgba(66,120,190,.95)'; g.lineWidth = 7;
+  roundRect(g, 12, 14, 104, 78, 24); g.fill(); roundRect(g, 12, 14, 104, 78, 24); g.stroke();
+  g.beginPath(); g.moveTo(50, 90); g.lineTo(62, 116); g.lineTo(78, 90); g.closePath();   // หางชี้ลงหัว
+  g.fillStyle = 'rgba(255,255,255,.97)'; g.fill();
+  g.beginPath(); g.moveTo(50, 92); g.lineTo(62, 116); g.lineTo(78, 92); g.stroke();
+  g.fillStyle = '#2a3f66';                                                               // จุดสามจุด = ข้อความ
+  [40, 64, 88].forEach(x=>{ g.beginPath(); g.arc(x, 53, 8, 0, TAU); g.fill(); });
+  g.fillStyle = '#e53935';                                                               // จุดแดง = ยังไม่ได้อ่าน
+  g.beginPath(); g.arc(104, 24, 17, 0, TAU); g.fill();
+  g.strokeStyle = '#fff'; g.lineWidth = 5; g.beginPath(); g.arc(104, 24, 17, 0, TAU); g.stroke();
+  _unreadTex = ctex(c);
+  return _unreadTex;
+}
+/* ติดป้ายให้ตัวละครคนนี้ (ถ้ายังไม่มี) */
+function addUnreadBadge(uid){
+  const A = Live.actors[uid];
+  if(!A || !A.g || A.badge) return;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:unreadTexture(), transparent:true, depthTest:false}));
+  sp.scale.set(1.9, 1.9, 1);
+  sp.renderOrder = 21;
+  sp.position.y = (A.bubY || 4.6) + 0.5;             // เหนือป้ายชื่อพอดี ไม่ทับ (ป้ายชื่ออยู่ y 3.4 สูง ~2.2)
+  sp.visible = !A.bub;                                // มีบับเบิลลอยอยู่ = ซ่อนไว้ก่อน ไม่ซ้อนกัน
+  sp.userData.actor = Object.assign(actorInfo(uid), {badge:true});   // 👆 แตะป้าย = เปิดกล่องคุยเลย
+  A.g.add(sp);
+  actorPick.push(sp);
+  const y0 = sp.position.y, ph = hash(uid) % 100 / 100 * TAU;
+  const tick = (dt, t)=>{
+    sp.position.y = y0 + Math.sin(t*2.2 + ph) * 0.16;               // เด้งเบา ๆ เรียกสายตา
+    const k = clamp(rig.dist/88, 1, 2.1);                           // ซูมออกไกลก็ยังเห็น (สูตรเดียวกับบับเบิล)
+    sp.scale.set(1.9*k, 1.9*k, 1);
+    sp.material.opacity = 0.82 + Math.sin(t*3.1 + ph) * 0.18;
+  };
+  A.badge = sp; A.badgeTick = tick;
+  tickers.push(tick);
+}
+function removeUnreadBadge(uid){
+  const A = Live.actors[uid];
+  if(!A || !A.badge) return;
+  A.g.remove(A.badge);
+  const i = tickers.indexOf(A.badgeTick); if(i>=0) tickers.splice(i,1);
+  const j = actorPick.indexOf(A.badge);   if(j>=0) actorPick.splice(j,1);
+  if(A.badge.material) A.badge.material.dispose();   // texture ใช้ร่วมกัน ไม่ dispose
+  A.badge = null; A.badgeTick = null;
+}
+/* ข้อความล่าสุดของคู่นี้เปลี่ยน → ตัดสินว่ายังค้างอ่านไหม (เก็บไว้แม้ตัวละครยังไม่ spawn) */
+function setUnread(uid, last){
+  const un = !!(last && last.f !== Live.uid && (last.ts || 0) > chatSeenTsCity(uid));
+  if(un) Live.unread[uid] = last; else delete Live.unread[uid];
+  if(un) addUnreadBadge(uid); else removeUnreadBadge(uid);
+}
+/* ตัวละครเพิ่ง spawn → ติดป้ายย้อนหลังถ้ามีข้อความค้าง */
+function applyUnread(uid){ if(Live.unread[uid]) addUnreadBadge(uid); }
+/* อ่านแล้ว (เปิดกล่องคุย) → จำลง chatSeen + ถอดป้าย */
+function markReadCity(uid){
+  const last = Live.unread[uid] || Live.lastMsg[uid];
+  if(!Live.unread[uid]) return;
+  chatMarkSeenCity(uid, (last && last.ts) || Date.now());
+  delete Live.unread[uid];
+  removeUnreadBadge(uid);
+}
+/* กี่คนที่ยังค้างอ่าน — โชว์บนชิปมุมขวาบนคู่กับจำนวนคนออนไลน์ */
+function unreadCount(){ return Object.keys(Live.unread).length; }
 
 /* 🙋 ตัวเราเอง: อ่านจากเซฟในเครื่อง (localStorage — โดเมนเดียวกับเกม) ยืนกลางพลาซ่า
    🚶 รอบ 867: "ยังไม่มีเซฟในเครื่องนี้" ก็ต้องมีตัวเรา — ไม่งั้นแตะตึกแล้ว walkSelfTo() คืน false
@@ -2044,11 +2190,12 @@ function walkSelfTo(b, done){
 function onTap(cx, cy){
   const nx=(cx/renderer.domElement.clientWidth)*2-1, ny=-(cy/renderer.domElement.clientHeight)*2+1;
   rayc.setFromCamera({x:nx,y:ny}, camera);
-  const hitA = rayc.intersectObjects(actorPick, false)[0];
+  /* 💬🔴 รอบ 873: ข้ามชิ้นที่ซ่อนอยู่ (ป้ายค้างอ่านตอนมีบับเบิลทับ) — three raycast ไม่เช็ก visible ให้ */
+  const hitA = rayc.intersectObjects(actorPick, false).find(h=>h.object.visible !== false);
   if(hitA){
     const inf = hitA.object.userData.actor;
     /* 🖊️ รอบ 868: แตะ "บับเบิล" = พิมพ์ตอบคนนั้นเลย · แตะ "ตัวละคร" = การ์ดโปรไฟล์ (มีปุ่มคุยด้วย) */
-    if(inf && inf.bubble) openChatBox(inf.uid);
+    if(inf && (inf.bubble || inf.badge)) openChatBox(inf.uid);
     else openProfile(inf);
     return;
   }
@@ -2153,9 +2300,58 @@ function openProfile(info){
 }
 
 /* ---------- HUD ---------- */
+/* 💬🔴 รอบ 873: ชิปมุมขวาบน = จำนวนคนออนไลน์ + จำนวนเพื่อนที่ยังค้างอ่าน */
+function refreshChip(){
+  const n = unreadCount();
+  setChip('🟢 ออนไลน์ '+Live.onlineN+' คน' + (n ? ' · 💬 '+n : ''));
+}
 function setChip(txt){
   const el=document.getElementById('online-chip');
   if(el) el.textContent = txt;
+}
+
+/* ============================================================
+   🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
+   ค่าตั้งต้น = เปิดอัตโนมัติ · volume 0.6 (ลดจากความดังเดิม 40% — ผู้ใช้สั่ง)
+   browser บล็อก autoplay ก่อนมี gesture → ลองเล่นทันที + ซ้ำตอนแตะจอครั้งแรก
+   จำสถานะเปิด/ปิดใน localStorage (vwCityBgm) · ซ่อนแท็บ = หยุด กลับมา = เล่นต่อ
+   ============================================================ */
+const BGM_KEY='vwCityBgm', BGM_VOL=0.6, BGM_SRC='sound/bgm/bgm_01.mp3';
+let bgmAudio=null, bgmBtn=null;
+function bgmWant(){ try{ return localStorage.getItem(BGM_KEY)!=='0'; }catch(e){ return true; } }
+function bgmEnsure(){
+  if(!bgmAudio){
+    bgmAudio = new Audio(BGM_SRC);
+    bgmAudio.loop = true; bgmAudio.volume = BGM_VOL; bgmAudio.preload = 'auto';
+  }
+  return bgmAudio;
+}
+function bgmPlay(){ if(bgmWant()) bgmEnsure().play().catch(()=>{}); }   // โดนบล็อก = เงียบไว้ รอ gesture
+function bgmRefreshBtn(){
+  if(!bgmBtn) return;
+  const on = bgmWant();
+  bgmBtn.textContent = on ? '🎵' : '🔇';
+  bgmBtn.classList.toggle('off', !on);
+  bgmBtn.setAttribute('aria-label', on ? 'ปิดเพลง' : 'เปิดเพลง');
+}
+function bgmToggle(){
+  try{ localStorage.setItem(BGM_KEY, bgmWant()?'0':'1'); }catch(e){}
+  if(bgmWant()) bgmPlay(); else if(bgmAudio) bgmAudio.pause();
+  bgmRefreshBtn();
+}
+function bgmSetup(){
+  bgmBtn = document.createElement('button');
+  bgmBtn.id = 'bgm-btn'; bgmBtn.type = 'button';
+  bgmBtn.addEventListener('click', bgmToggle);
+  document.body.appendChild(bgmBtn);
+  bgmRefreshBtn();
+  bgmPlay();
+  const kick = ()=>{ bgmPlay(); removeEventListener('pointerdown', kick); };
+  addEventListener('pointerdown', kick);
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){ if(bgmAudio) bgmAudio.pause(); }
+    else bgmPlay();
+  });
 }
 
 /* ============================================================
@@ -2185,6 +2381,7 @@ function boot(){
   setupInput(renderer.domElement);
   rig.apply();
   liveStart();
+  bgmSetup();   // 🎵 รอบ 873: เพลงประกอบ + ปุ่มเปิด/ปิด
 
   addEventListener('resize', ()=>{
     camera.aspect = innerWidth/innerHeight;
@@ -2250,6 +2447,10 @@ function boot(){
     door(key){ return doorSpotOf(key); },
     /* 🔑 รอบ 869: จำลองแตะตึกจริง (ผ่าน travelTo เต็มเส้นทาง — รวม guest-reroute ด้วย) */
     tapBuilding(key){ travelTo.busy=false; const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false; travelTo(b); return true; },
+    /* 🎵 รอบ 873: สถานะเพลง (เทสต์ปุ่ม/ระดับเสียง) */
+    bgm(){ return { want:bgmWant(), btn:bgmBtn?bgmBtn.textContent:null,
+                    vol:bgmAudio?bgmAudio.volume:null, paused:bgmAudio?bgmAudio.paused:null,
+                    loop:bgmAudio?bgmAudio.loop:null }; },
     /* 💬 รอบ 866 */
     bubble(uid, txt, ts){ showBubble(uid, txt, ts||Date.now()); },
     fakeDb(db, uid){ Live.db=db; Live.uid=(uid===undefined?'me':uid); },   // ยัด db จำลอง แล้วเรียก watchChats/poll เทสต์เส้นทาง RTDB (uid=null = จำลอง "ยังไม่ล็อกอิน")
@@ -2268,6 +2469,13 @@ function boot(){
                     if(inf&&inf.bubble) openChatBox(inf.uid); return true; },
     openChat(uid){ openChatBox(uid); return !!Live.chatWith; },
     tap(x,y){ onTap(x,y); },                 // เรียกตรรกะแตะตรง ๆ (แยกจากชั้น pointer event)
+    /* 💬🔴 รอบ 873 */
+    unread(){ return {n:unreadCount(), uids:Object.keys(Live.unread), chip:(document.getElementById('online-chip')||{}).textContent}; },
+    badgeAt(uid){ const A=Live.actors[uid];
+                  return A && A.badge ? {y:+A.badge.position.y.toFixed(2), vis:A.badge.visible,
+                                         w:+A.badge.scale.x.toFixed(2), pick:actorPick.indexOf(A.badge)>=0} : null; },
+    seenTs(uid){ return chatSeenTsCity(uid); },
+    markRead(uid){ markReadCity(uid); refreshChip(); },
     ptrState(){ return {n:ptr.size, down:downInfo && {id:downInfo.id, b:downInfo.b}}; },
     chatState(){ return {with:Live.chatWith, canSend:chatBoxCanSend(), why:chatBoxWhy(),
                          open:(document.getElementById('chat-box')||{style:{}}).style.display==='flex',

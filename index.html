@@ -44,6 +44,17 @@
     transition:opacity .8s;white-space:nowrap;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
   #hint-chip.gone{opacity:0;pointer-events:none}
 
+  /* ── 🎵 ปุ่มเพลงประกอบ (รอบ 873) — กลมน่ารัก ลอยเด้งเบาๆ มุมขวาล่าง ── */
+  #bgm-btn{position:fixed;z-index:20;right:calc(10px + env(safe-area-inset-right));
+    bottom:calc(10px + env(safe-area-inset-bottom));width:52px;height:52px;border-radius:50%;
+    font-size:24px;line-height:1;border:3px solid #fff;cursor:pointer;padding:0;
+    background:linear-gradient(180deg,#ffe9a8,#ffb300);
+    box-shadow:0 4px 14px rgba(0,0,0,.35), inset 0 -3px 0 rgba(0,0,0,.12);
+    animation:bgmBob 2.6s ease-in-out infinite}
+  #bgm-btn:active{transform:scale(.88)}
+  #bgm-btn.off{background:linear-gradient(180deg,#e3eaf4,#9fb0c8);filter:saturate(.4);opacity:.85;animation:none}
+  @keyframes bgmBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
   /* ── การ์ดโปรไฟล์ผู้เล่น ── */
   #profile-card{position:fixed;inset:0;z-index:40;display:none;align-items:center;justify-content:center;
     background:rgba(4,10,24,.45)}
@@ -87,6 +98,13 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .cb-last{margin-top:5px;font-size:12.5px;color:#bcd6f4;background:rgba(255,255,255,.08);
     border-radius:10px;padding:6px 9px;max-height:3.4em;overflow:hidden}
+  /* 🖊️💬 รอบ 872 ต่อยอด: ปุ่มตอบด่วน — ห่อบรรทัดเอง ไม่ต้องเลื่อน (กฎทอง 7) */
+  .cb-quick{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .cb-qchip{border:1px solid rgba(255,215,100,.45);border-radius:999px;padding:5px 12px;
+    font-size:12.5px;font-weight:800;color:#ffe9ad;background:rgba(255,255,255,.09);
+    cursor:pointer;white-space:nowrap;font-family:inherit}
+  .cb-qchip:active{background:rgba(255,215,100,.3)}
+  .cb-qchip:disabled{filter:grayscale(.7);opacity:.55;cursor:default}
   .cb-row{display:flex;gap:7px;margin-top:8px}
   .cb-row input{flex:1;min-width:0;border-radius:11px;border:1px solid rgba(150,200,255,.35);
     background:rgba(255,255,255,.95);color:#12233f;font-size:15px;padding:9px 11px;font-family:inherit}
@@ -100,6 +118,8 @@
     .cb-card{padding:7px 10px 8px}
     .cb-who{font-size:13.5px}
     .cb-last{font-size:11.5px;padding:4px 8px;max-height:2.4em}
+    .cb-quick{gap:4px;margin-top:5px}
+    .cb-qchip{font-size:11px;padding:4px 10px}
     .cb-row{margin-top:5px}
     .cb-row input{font-size:13.5px;padding:6px 9px}
     .cb-note{font-size:11px}
@@ -127,7 +147,7 @@
   <script src="js/data/firebase-config.js"></script>
   <!-- 🙊 รอบ 868: ตัวกรองคำหยาบชุดเดียวกับทั้งเกม (standalone ไม่พึ่งไฟล์อื่น) — ใช้ทั้งก่อนแสดงบับเบิลและก่อนส่ง -->
   <script src="js/data/badwords.js"></script>
-  <script src="js/city3d.js?v=870"></script>
+  <script src="js/city3d.js?v=873"></script>
   <script>
     setTimeout(()=>{ const h=document.getElementById('hint-chip'); if(h) h.classList.add('gone'); }, 12000);
     document.getElementById('profile-card').addEventListener('click', e=>{
