@@ -1806,6 +1806,12 @@ function cityStopLive(){
   closeChatBox();
 }
 addEventListener('pagehide', cityStopLive);
+/* กลับเข้าหน้านี้จากแคชย้อนกลับ (กดปุ่ม Back จากล็อบบี้เดิม) → ต่อท่อคืน ไม่งั้นเมืองค้างข้อมูลเก่า */
+addEventListener('pageshow', e=>{
+  if(!e.persisted || !Live.db || !Live.uid || Live.off.length) return;
+  watchPresence(); watchFriendChats(); pollWorlds();
+  Live.pollT = setInterval(pollWorlds, 10000);
+});
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){ if(Live.pollT){ clearInterval(Live.pollT); Live.pollT = 0; } }
   else if(Live.db && Live.uid && !Live.pollT){ pollWorlds(); Live.pollT = setInterval(pollWorlds, 10000); }

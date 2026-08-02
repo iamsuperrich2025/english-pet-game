@@ -61,6 +61,8 @@
   .pc-rows div{display:flex;justify-content:space-between;gap:10px}
   .pc-rows span{color:#9fc3ea}
   .pc-me{margin-top:8px;font-size:12.5px;color:#ffd764;font-weight:700}
+  .pc-chat{margin-top:10px;width:100%;border:0;border-radius:12px;padding:10px 12px;cursor:pointer;
+    background:linear-gradient(180deg,#ffd764,#e0a731);color:#3a2606;font-weight:900;font-size:14px}
   /* จอเตี้ย (มือถือแนวนอน) — กฎทองข้อ 7: การ์ดทั้งใบต้องอยู่ในจอ ไม่มี scrollbar */
   @media (max-height:430px){
     .pc-box{padding:10px 14px 10px}
@@ -70,6 +72,37 @@
     .pc-act{font-size:11.5px;margin:3px 0 2px}
     .pc-rows{margin-top:4px;padding-top:4px;gap:2px;font-size:12px}
     .pc-me{margin-top:4px;font-size:11px}
+    .pc-chat{margin-top:6px;padding:7px 10px;font-size:13px}
+  }
+
+  /* ── 💬 รอบ 868: กล่องพิมพ์ตอบแชทจากในเมือง (แตะบับเบิล/ตัวละคร → เด้งขึ้นมาล่างจอ) ── */
+  #chat-box{position:fixed;left:0;right:0;bottom:0;z-index:45;display:none;justify-content:center;
+    padding:0 8px calc(8px + env(safe-area-inset-bottom))}
+  .cb-card{position:relative;width:min(460px,96vw);border-radius:18px 18px 12px 12px;
+    background:linear-gradient(180deg,#14315f,#0c1e3e);border:2px solid rgba(232,182,76,.6);
+    box-shadow:0 -8px 34px rgba(0,0,0,.5);padding:10px 12px 10px;color:#eaf3ff}
+  .cb-x{position:absolute;top:6px;right:8px;width:28px;height:28px;border-radius:50%;border:0;
+    background:rgba(255,255,255,.12);color:#fff;font-size:14px;cursor:pointer}
+  .cb-who{font-size:15px;font-weight:900;padding-right:34px;display:block;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cb-last{margin-top:5px;font-size:12.5px;color:#bcd6f4;background:rgba(255,255,255,.08);
+    border-radius:10px;padding:6px 9px;max-height:3.4em;overflow:hidden}
+  .cb-row{display:flex;gap:7px;margin-top:8px}
+  .cb-row input{flex:1;min-width:0;border-radius:11px;border:1px solid rgba(150,200,255,.35);
+    background:rgba(255,255,255,.95);color:#12233f;font-size:15px;padding:9px 11px;font-family:inherit}
+  .cb-row button{border:0;border-radius:11px;padding:0 16px;font-size:14px;font-weight:900;cursor:pointer;
+    background:linear-gradient(180deg,#ffd764,#e0a731);color:#3a2606}
+  .cb-row button:disabled{filter:grayscale(.7);opacity:.6;cursor:default}
+  .cb-note{margin-top:6px;font-size:12px;color:#ffd764;min-height:1.1em}
+  .cb-go{display:inline-block;margin-top:6px;font-size:12.5px;font-weight:800;text-decoration:none;
+    color:#0d1f40;background:#9fd0ff;border-radius:10px;padding:6px 11px}
+  @media (max-height:430px){
+    .cb-card{padding:7px 10px 8px}
+    .cb-who{font-size:13.5px}
+    .cb-last{font-size:11.5px;padding:4px 8px;max-height:2.4em}
+    .cb-row{margin-top:5px}
+    .cb-row input{font-size:13.5px;padding:6px 9px}
+    .cb-note{font-size:11px}
   }
 </style>
 </head>
@@ -87,10 +120,14 @@
   <div class="chip" id="hint-chip">🖐️ นิ้วเดียวลาก = เลื่อนเมือง · ✌️ สองนิ้วบิด/ลาก/หนีบ = หมุน·เอียง·ซูม · แตะตึกเพื่อเข้าเลย!</div>
 
   <div id="profile-card"></div>
+  <!-- 💬 รอบ 868: กล่องพิมพ์ตอบแชทในเมือง (เนื้อในเจนจาก js/city3d.js → chatBoxRefresh) -->
+  <div id="chat-box"></div>
 
   <script src="js/vendor/three.min.js"></script>
   <script src="js/data/firebase-config.js"></script>
-  <script src="js/city3d.js?v=867"></script>
+  <!-- 🙊 รอบ 868: ตัวกรองคำหยาบชุดเดียวกับทั้งเกม (standalone ไม่พึ่งไฟล์อื่น) — ใช้ทั้งก่อนแสดงบับเบิลและก่อนส่ง -->
+  <script src="js/data/badwords.js"></script>
+  <script src="js/city3d.js?v=870"></script>
   <script>
     setTimeout(()=>{ const h=document.getElementById('hint-chip'); if(h) h.classList.add('gone'); }, 12000);
     document.getElementById('profile-card').addEventListener('click', e=>{
