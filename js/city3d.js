@@ -2267,6 +2267,8 @@ function boot(){
                     if(!A||!A.bub) return false; const inf=A.bub.userData.actor;
                     if(inf&&inf.bubble) openChatBox(inf.uid); return true; },
     openChat(uid){ openChatBox(uid); return !!Live.chatWith; },
+    tap(x,y){ onTap(x,y); },                 // เรียกตรรกะแตะตรง ๆ (แยกจากชั้น pointer event)
+    ptrState(){ return {n:ptr.size, down:downInfo && {id:downInfo.id, b:downInfo.b}}; },
     chatState(){ return {with:Live.chatWith, canSend:chatBoxCanSend(), why:chatBoxWhy(),
                          open:(document.getElementById('chat-box')||{style:{}}).style.display==='flex',
                          note:(document.getElementById('cb-note')||{}).textContent||''}; },
