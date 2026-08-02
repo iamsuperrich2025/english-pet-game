@@ -560,26 +560,26 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 ## js/main.js (421 บรรทัด · 6 รายการ)
 syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefund:232 · fitQbp:272 · bootGame:286
 
-## js/moto3d.js (2,674 บรรทัด · 141 รายการ)
+## js/moto3d.js (2,751 บรรทัด · 143 รายการ)
 ### 🗂️ สารบัญโซน js/moto3d.js (Read/Edit เฉพาะช่วง)
 - 91-296 🚗🏙️ รอบ 785: ยกการขับจาก "โลกขับรถเมืองกำแพงเพชร" มาทั้งชุด (เฉพาะ vehicle==='car')
-- 297-484 DOM เครื่องเกมพกพา (สร้างครั้งเดียว · CSS ฉีดเอง ไม่แตะ style.css)
-- 485-514 🚗🏙️ รอบ 785: ห้องคนขับ + ปุ่มบังคับชุดโลกเมือง (โผล่เฉพาะ .car — โหมดมอไซค์ไม่เห็นอะไรเลย)
-- 515-738 🪞📷 รอบ 810: กระจกมองหลัง+ข้าง (เฉพาะโหมดรถยนต์ในห้องคนขับ) — ภาพจริงจากกล้อง 3D ตัวที่ 2/3/4
-- 739-835 🚗🏙️ รอบ 785: ห้องคนขับ (หน้าปัด/พวงมาลัย/เข็มเกจ) + ปุ่มเกียร์ — เฉพาะโหมดรถยนต์
-- 836-864 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง — เรนเดอร์ฉากเดิมซ้ำด้วยกล้องหันหลัง/เฉียงข้าง แล้วยัดลงแถบบนจอ (scissor)
-- 865-932 🎵📻 รอบ 810: วิทยุในรถ — จอ head-unit (visualizer + แผงเลือกเพลง) พอร์ตจาก adventure3d.js ทั้งชุด
-- 933-1173 ถนนจากแผนที่จริง → geometry + ตารางแฮชชนถนน
-- 1174-1513 ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
-- 1514-1566 🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
-- 1567-1700 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
-- 1701-1733 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
-- 1734-1830 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
-- 1831-2021 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
-- 2022-2063 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
-- 2064-2214 คำศัพท์ + ตัวอักษรบนถนน
-- 2215-2527 สร้างโลกครั้งเดียว + ลูปเกม
-- 2528-2674 เข้า/ออกโลก
+- 297-496 DOM เครื่องเกมพกพา (สร้างครั้งเดียว · CSS ฉีดเอง ไม่แตะ style.css)
+- 497-526 🚗🏙️ รอบ 785: ห้องคนขับ + ปุ่มบังคับชุดโลกเมือง (โผล่เฉพาะ .car — โหมดมอไซค์ไม่เห็นอะไรเลย)
+- 527-750 🪞📷 รอบ 810: กระจกมองหลัง+ข้าง (เฉพาะโหมดรถยนต์ในห้องคนขับ) — ภาพจริงจากกล้อง 3D ตัวที่ 2/3/4
+- 751-847 🚗🏙️ รอบ 785: ห้องคนขับ (หน้าปัด/พวงมาลัย/เข็มเกจ) + ปุ่มเกียร์ — เฉพาะโหมดรถยนต์
+- 848-876 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง — เรนเดอร์ฉากเดิมซ้ำด้วยกล้องหันหลัง/เฉียงข้าง แล้วยัดลงแถบบนจอ (scissor)
+- 877-944 🎵📻 รอบ 810: วิทยุในรถ — จอ head-unit (visualizer + แผงเลือกเพลง) พอร์ตจาก adventure3d.js ทั้งชุด
+- 945-1185 ถนนจากแผนที่จริง → geometry + ตารางแฮชชนถนน
+- 1186-1525 ฉาก: พื้น/โรงเรียน/ป้ายหมู่บ้าน/ต้นไม้/เมฆ/บ้านหมู่บ้าน
+- 1526-1578 🐕 รอบ 312: หมาวิ่งตัดถนน — โผล่ข้างถนนข้างหน้ารถ วิ่งตัดผ่านเร็ว · ชน = ปรับ 100 เหรียญ (รอบ 643: ลดจาก 500)
+- 1579-1712 🪙 รอบ 317: เหรียญบนถนน — pool ลอยเหนือเลนซ้าย รีไซเคิลรอบผู้เล่นตลอด
+- 1713-1745 🏍️🚗 รอบ 317: โมเดลยานพาหนะ 3D (ใช้ทั้งรถเราเองโหมด car และรถ/มอไซค์ของเพื่อน)
+- 1746-1842 🚗 รอบ 394: โมเดลรถจริง img/models/car_01.glb ในแผนที่บ้านโพธิ์สวัสดิ์
+- 1843-2070 🧑‍🤝‍🧑 รอบ 317: เพื่อนในแผนที่เดียวกัน (/world/moto/<uid>)
+- 2071-2112 🏟️👥 รอบ 640: งบวาดตัวเพื่อน (ใช้ NetRoom.drawBudget ร่วมกับโลกอื่น)
+- 2113-2287 คำศัพท์ + ตัวอักษรบนถนน
+- 2288-2601 สร้างโลกครั้งเดียว + ลูปเกม
+- 2602-2751 เข้า/ออกโลก
 ### รายการ js/moto3d.js
 REWARD:7 · ACCEL:8 · DASH_LEN:9 · DOG_HIT_COIN:10 · FEAT_SP:12 · DECAL_N:13
 GRAV:14 · SUSP_K:15 · ROAD_WIDE:16 · EDGE_M:17 · ROAD_TEX_S:18 · POST_N:19
@@ -588,23 +588,23 @@ TILE_COLORS:26 · LETTER_COIN:28 · COIN_VAL:32 · COIN_GAP:33 · COIN_SPIN_SPD:
 EMERALD_TIER:45 · HARD_LAND:46 · COIN_CURVE_RAD:47 · NET_SEND_MS:49 · PEER_COLORS:50 · CHAT_MS:52
 CHAT_PRESETS:53 · CAR_EYE:102 · CAR_ACCEL:103 · CAR_VMAX:104 · CAR_WB:105 · MIRROR_REAR:115
 RADIO_RECT:120 · CAR_RADIO_RECT:121 · carRadioRect:127 · sndKick:235 · ENG_FILES:245 · CSS:300
-buildDom:587 · loadCarDash:744 · loadCarWheel:756 · setGear:766 · setCam3:772 · syncGearUi:779
-carDial:788 · drawCarGauge:818 · mirrorPass:841 · drawCarMirrors:853 · radioLayout:869 · radioSetHint:893
-renderRadioList:899 · radioToggleList:909 · drawRadioViz:914 · segKey:936 · smoothPts:939 · featKey:955
-addFeat:956 · genFeatures:961 · terrainAt:980 · roadGroundY:993 · decalTex:1001 · makeDecals:1020
-decalTick:1029 · buildRoads:1046 · distToSeg:1142 · roadInfo:1147 · onRoad:1153 · randomRoadPoint:1154
-TXT_SPR_H:1179 · makeTextSprite:1180 · letterTexture:1195 · woodTileMat:1210 · muralTexture:1221 · buildSchool:1233
-buildScenery:1379 · scatterTrees:1458 · postTick:1478 · scatterClouds:1505 · makeDog:1517 · spawnDog:1532
-dogHit:1542 · dogTick:1553 · coinTexture:1571 · makeCoins:1582 · loadCoinImg:1588 · addCoin:1600
-clearCoins:1608 · addFreeCoin:1612 · coinTierAt:1620 · coinFx:1630 · grabCoin:1639 · coinTick:1656
-scatterCoinTick:1672 · placeSpecialCoin:1690 · makeVehicle:1705 · mCarSplitWheel:1742 · mCarEnsure:1768 · mCarMat:1785
-mCarBuild:1798 · mCarCode:1825 · netReady:1837 · netJoin:1843 · netSend:1856 · sendChat:1870
-showPeerBubble:1880 · removePeerBubble:1887 · renderBoard:1894 · peerColor:1916 · buildPeer:1920 · onPeer:1944
-dropPeer:1987 · netLeave:1994 · peerTick:1999 · PEER_DRAW_MAX:2027 · drawnPeers:2028 · drawSlotFree:2029
-showPeerAgain:2030 · hidePeer:2037 · tickDrawBudget:2042 · spawnSlot:2050 · pickWord:2067 · spawnLetters:2077
-renderWordHud:2095 · fitWord:2103 · collectTick:2110 · completeWord:2134 · relocTick:2159 · gpsTick:2174
-miniTick:2183 · build:2218 · applyVehicleUi:2255 · fit:2284 · tick:2293 · carDrive:2303
-frame:2352 · start:2531 · exitWorld:2603
+buildDom:599 · loadCarDash:756 · loadCarWheel:768 · setGear:778 · setCam3:784 · syncGearUi:791
+carDial:800 · drawCarGauge:830 · mirrorPass:853 · drawCarMirrors:865 · radioLayout:881 · radioSetHint:905
+renderRadioList:911 · radioToggleList:921 · drawRadioViz:926 · segKey:948 · smoothPts:951 · featKey:967
+addFeat:968 · genFeatures:973 · terrainAt:992 · roadGroundY:1005 · decalTex:1013 · makeDecals:1032
+decalTick:1041 · buildRoads:1058 · distToSeg:1154 · roadInfo:1159 · onRoad:1165 · randomRoadPoint:1166
+TXT_SPR_H:1191 · makeTextSprite:1192 · letterTexture:1207 · woodTileMat:1222 · muralTexture:1233 · buildSchool:1245
+buildScenery:1391 · scatterTrees:1470 · postTick:1490 · scatterClouds:1517 · makeDog:1529 · spawnDog:1544
+dogHit:1554 · dogTick:1565 · coinTexture:1583 · makeCoins:1594 · loadCoinImg:1600 · addCoin:1612
+clearCoins:1620 · addFreeCoin:1624 · coinTierAt:1632 · coinFx:1642 · grabCoin:1651 · coinTick:1668
+scatterCoinTick:1684 · placeSpecialCoin:1702 · makeVehicle:1717 · mCarSplitWheel:1754 · mCarEnsure:1780 · mCarMat:1797
+mCarBuild:1810 · mCarCode:1837 · netReady:1849 · netJoin:1855 · netSend:1868 · sendChat:1882
+showPeerBubble:1892 · removePeerBubble:1899 · BOARD_MS:1912 · renderBoard:1914 · peerColor:1965 · buildPeer:1969
+onPeer:1993 · dropPeer:2036 · netLeave:2043 · peerTick:2048 · PEER_DRAW_MAX:2076 · drawnPeers:2077
+drawSlotFree:2078 · showPeerAgain:2079 · hidePeer:2086 · tickDrawBudget:2091 · spawnSlot:2099 · pickWord:2116
+spawnLetters:2126 · renderWordHud:2144 · WORD_MIN_K:2155 · fitWord:2156 · collectTick:2183 · completeWord:2207
+relocTick:2232 · gpsTick:2247 · miniTick:2256 · build:2291 · applyVehicleUi:2328 · fit:2357
+tick:2367 · carDrive:2377 · frame:2426 · start:2605 · exitWorld:2678
 
 ## js/music.js (204 บรรทัด · 0 รายการ)
 
