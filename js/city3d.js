@@ -1984,7 +1984,10 @@ function spawnSelf(){
     g.position.set(bs.x, 0, bs.z);
     g.rotation.y = Math.atan2(bs.x-bs.bx, bs.z-bs.bz);   // หันหน้าออกจากตึก = เพิ่งเดินออกมาจากประตู
     rig.tx = bs.x; rig.tz = bs.z;                        // กล้องเล็งมาที่ตัวเรา (intro ปรับแค่ระยะ/มุมก้ม)
-    if(backBld) setChip('🚪 กลับมาจาก '+backBld.ico+' '+backBld.label+' แล้ว — ยืนอยู่หน้าประตู');
+    /* 🚪🚶 รอบ 886: ไม่ยืนนิ่งรอแล้ว — ถอยไปตั้งต้น "ในประตู" รอเดินออกมาตอนจอเปิดจาง (walkSelfOut)
+       ตาข่ายทุกทางพาตัวเรากลับมาจบที่ bs จุดเดิมเสมอ (กล้องรอบ 880 เล็งจุดนี้ไว้แล้ว) */
+    stageExitWalk(g, back, backBld, bs);
+    if(backBld) setChip('🚪 กำลังออกมาจาก '+backBld.ico+' '+backBld.label+' …');
   }else{
     g.position.set(3.2, 0, 8.6);
     g.rotation.y = Math.PI;
@@ -2000,8 +2003,9 @@ function spawnSelf(){
   Live.self = {g, bubY:4.9, walk:false, named};        // 🚶 ตัวเดินไปหน้าตึก + 💬 รับบับเบิลแชทของเราเอง · named=false → ยังไม่ล็อกอิน (รอบ 869)
   tickers.push((dt,t)=>{ if(!Live.self.walk) g.position.y = Math.abs(Math.sin(t*2.1))*0.07; });
   flushBubble('__self');
-  /* 🚪 รอบ 870: ป้ายบนหัวบอกว่าเพิ่งออกมาจากตึกไหน (แถบชิปโดนสถานะออนไลน์เขียนทับใน 1-2 วิ) */
-  if(backBld) showBubble('__self', '🚪 กลับมาจาก'+backBld.label+'แล้ว '+backBld.ico, Date.now());
+  /* 🚪 รอบ 870: ป้ายบนหัวบอกว่าเพิ่งออกมาจากตึกไหน (แถบชิปโดนสถานะออนไลน์เขียนทับใน 1-2 วิ)
+     🚶 รอบ 886: มีตัวเดินออกจากประตู → ย้ายไปขึ้นตอน "เดินออกมาถึงหน้าประตูแล้ว" (ไม่งั้นป้ายลอยอยู่หลังผนังตึก) */
+  if(backBld && !ExitWalk.spot) showBubble('__self', '🚪 กลับมาจาก'+backBld.label+'แล้ว '+backBld.ico, Date.now());
 }
 
 /* ============================================================
@@ -2181,6 +2185,83 @@ function walkSelfTo(b, done){
   };
   tickers.push(tick);
   setTimeout(finish, dur*1000+900);                  // กันเหนียว: rAF สะดุด (แท็บพื้นหลัง) ก็ยังไปต่อ
+  return true;
+}
+
+/* ============================================================
+   🚪🚶 รอบ 886: กลับจากล็อบบี้เดิม → "เดินออกจากตึกมาหน้าประตู" (walkSelfTo ย้อนทาง)
+   ------------------------------------------------------------
+   เดิม (รอบ 870/880): ขาไปเห็นตัวเราเดินเข้าประตูสวยงาม แต่ขากลับ "โผล่" ยืนนิ่งหน้าประตูทันที
+        เหมือนวาร์ปออกมา ไม่ต่อเนื่องกับภาพจอเปิด (รอบ 880) ที่เพิ่งจางไป
+   ทำ: spawnSelf() ตั้งต้นตัวเราไว้ในประตู (ถอยเข้าหาใจกลางตึก = ถูกผนังบัง) → พอจอเปิดจาง
+        ค่อยเดินออกมาหยุดที่จุดเดิม หันหน้าออกจากตึก ด้วยท่าเดิน+เสียงฝีเท้า+ฝุ่นชุดเดียวกับรอบ 871
+        (ก้าวถี่/เบา/ช้ากว่าขาไป — ระยะสั้นและเป็นการ "ก้าวออกมา" ไม่ใช่วิ่งข้ามเมือง)
+   ไม่แตะกล้องเลย: ปลายทางคือจุดที่ intro รอบ 880 เล็งไว้อยู่แล้ว (ไม่แย่งคุมกล้องกัน)
+   ตาข่าย: ทุกทางที่เดินไม่ได้ (ไม่มีตัวละคร/rAF ไม่วิ่ง/เด็กแตะตึกก่อน) = จบที่หน้าประตูเหมือนรอบ 870
+   ============================================================ */
+const EXIT_BACK  = 4.0;    // ตั้งต้นถอยเข้าไปในตึกกี่หน่วย (อยู่หลังผนัง แล้วก้าวออกมาทางประตู)
+const EXIT_DUR   = 1.35;   // วินาที — ออกมาช้า ๆ ให้เด็กเห็นชัดว่าเดินออกมาเอง
+const EXIT_STEP  = 1.3;    // ระยะต่อก้าว (สั้นกว่า FOOT_STEP_DIST = ก้าวเนิบ ๆ ตอนออกจากประตู · วัดแล้วได้ 3 ก้าวพอดีกับจังหวะขาแกว่ง)
+const EXIT_CLEAR = 4.3;    // ห่างใจกลางตึกเกินนี้ถึงเริ่มมีเสียง/ฝุ่น (ก่อนหน้านี้ยังอยู่หลังผนัง)
+const ExitWalk = {key:'', bld:null, spot:null, u:null, done:false};
+/* ตั้งต้น (เรียกจาก spawnSelf): วางตัวเราไว้ในประตู หันหน้าออก */
+function stageExitWalk(g, key, bld, spot){
+  const ux = spot.x-spot.bx, uz = spot.z-spot.bz, m = Math.hypot(ux,uz)||1;
+  ExitWalk.key = key; ExitWalk.bld = bld; ExitWalk.spot = spot;
+  ExitWalk.u = {x:ux/m, z:uz/m};
+  g.position.set(spot.x-ExitWalk.u.x*EXIT_BACK, 0, spot.z-ExitWalk.u.z*EXIT_BACK);
+  g.rotation.y = Math.atan2(ExitWalk.u.x, ExitWalk.u.z);
+}
+/* เดินออกมา — ทำงานครั้งเดียวเสมอ (ตัวเรียก: จอเปิดเริ่มจาง + ตาข่ายเวลาใน BOOT) */
+function walkSelfOut(){
+  if(ExitWalk.done) return false;
+  ExitWalk.done = true;                              // กันเรียกซ้ำจากทั้ง 2 ทาง
+  const S = Live.self, spot = ExitWalk.spot, u = ExitWalk.u;
+  if(!S || !S.g || !spot) return false;              // ไม่ได้กลับมาจากตึก (เกิดกลางลาน) = ไม่มีอะไรต้องทำ
+  const g = S.g, face = Math.atan2(u.x, u.z);
+  const arrive = ()=>{
+    walkPose(g, 0, 0);
+    g.position.set(spot.x, 0, spot.z);
+    g.rotation.y = face;
+    S.walk = false;
+    if(ExitWalk.bld){
+      setChip('🚪 กลับมาจาก '+ExitWalk.bld.ico+' '+ExitWalk.bld.label+' แล้ว — ยืนอยู่หน้าประตู');
+      showBubble('__self', '🚪 กลับมาจาก'+ExitWalk.bld.label+'แล้ว '+ExitWalk.bld.ico, Date.now());
+    }
+  };
+  if(S.walk) return false;                           // เด็กแตะตึกอื่นไปก่อนแล้ว = ปล่อยให้ walkSelfTo คุมต่อ ไม่กระตุก
+  const x0 = g.position.x, z0 = g.position.z;
+  S.walk = true;
+  footCtx();                                          // เตรียม AudioContext ไว้ล่วงหน้า (ยังไม่มี gesture ก็ไม่พัง แค่เงียบ)
+  const t0 = performance.now();
+  let ph = 0, footDist = 0, fired = false;
+  const finish = ()=>{
+    if(fired) return; fired = true;
+    const i = tickers.indexOf(tick); if(i>=0) tickers.splice(i,1);
+    arrive();
+  };
+  const tick = (dt)=>{
+    const k = clamp((performance.now()-t0)/(EXIT_DUR*1000), 0, 1);
+    const e = k*k*(3-2*k);                            // ออกตัวช้า (ดันประตู) → เร่ง → ผ่อนลงตอนถึงที่
+    const nx = x0+(spot.x-x0)*e, nz = z0+(spot.z-z0)*e;
+    const moved = Math.hypot(nx-g.position.x, nz-g.position.z);
+    g.position.x = nx; g.position.z = nz;
+    g.rotation.y = face;                              // เดินตรงออกจากประตู ไม่ต้องเลี้ยว
+    /* 👟🌫️ รอบ 871: ยิงตามระยะทางที่เดินจริง — แต่รอให้พ้นผนังก่อน ไม่งั้นเสียง/ฝุ่นดังอยู่ในตึก */
+    footDist += moved;
+    if(footDist >= EXIT_STEP){
+      footDist -= EXIT_STEP;
+      if(Math.hypot(nx-spot.bx, nz-spot.bz) > EXIT_CLEAR){
+        footStepSfx(clamp(moved/dt/WALK_SPD*2.2, .3, .8));   // เบากว่าขาไป (เดินออกมาเฉย ๆ ไม่ได้วิ่ง)
+        footDustPuff(nx, nz);
+      }
+    }
+    ph += dt*7.5;                                     // ขาแกว่งช้ากว่าเดินไกล
+    walkPose(g, ph, k>0.86 ? (1-k)/0.14 : 1);         // ใกล้ถึงค่อย ๆ หยุดขา
+    if(k>=1) finish();
+  };
+  tickers.push(tick);
+  setTimeout(finish, EXIT_DUR*1000+900);              // กันเหนียว: rAF สะดุด (แท็บพื้นหลัง) ก็ต้องมายืนหน้าประตู
   return true;
 }
 
@@ -2498,6 +2579,9 @@ function boot(){
   };
   loop();
 
+  /* 🚪🚶 รอบ 886: ตาข่ายกันเหนียว — ไม่มี #splash / จางไม่ทำงาน ก็ยังต้องได้เดินออกจากประตู (ทำงานครั้งเดียวเสมอ) */
+  setTimeout(walkSelfOut, 3000);
+
   const sp = document.getElementById('splash');
   if(sp){
     const fadeSplash = ()=>{
@@ -2505,6 +2589,10 @@ function boot(){
       fadeSplash.done = true;
       sp.classList.add('done');
       setTimeout(()=>sp.remove(), backShot ? 1000 : 650);
+      /* 🚪🚶 รอบ 886: จอเปิดเริ่มจาง = เห็นฉากจริงแล้ว → ให้ตัวเราก้าวออกจากประตูตอนนี้
+         โหมดภาพ (รอบ 880): รอภาพจางไปพอสมควรก่อน · เข้าตรง (ไม่มีภาพ): รอกล้อง intro ร่อนลงมาใกล้เมืองก่อน
+         ไม่งั้นตัวเรายังเป็นจุดเล็ก ๆ กลางจอ เดินออกมาแล้วเด็กไม่ทันเห็น */
+      setTimeout(walkSelfOut, backShot ? 300 : 700);
     };
     /* 🎬 รอบ 880: โหมดภาพ = รอให้เมืองวาดจริงอย่างน้อย 1 เฟรมก่อนค่อยจาง
        (ไม่งั้นภาพจางลงไปเจอ canvas เปล่า แล้วเมืองค่อยโผล่ = กระพริบ)
@@ -2534,6 +2622,13 @@ function boot(){
     walkTo(key, cb){ const b=BUILDINGS.filter(x=>x.key===key)[0]; if(!b) return false;
                      return walkSelfTo(b, cb||function(){}); },
     door(key){ return doorSpotOf(key); },
+    /* 🚪🚶 รอบ 886: เดินออกจากประตู — ดูสถานะ/สั่งเดินเอง (เทสต์ไม่ต้องรอ splash) */
+    exit(){ const S=Live.self; return {key:ExitWalk.key, done:ExitWalk.done, spot:ExitWalk.spot,
+                                       walk:!!(S&&S.walk), dusts:footDusts.length}; },
+    exitOut(){ return walkSelfOut(); },
+    exitReset(){ const S=Live.self; if(!S||!S.g||!ExitWalk.spot) return false;
+                 ExitWalk.done=false; S.walk=false;
+                 stageExitWalk(S.g, ExitWalk.key, ExitWalk.bld, ExitWalk.spot); return true; },   // ตั้งต้นใหม่ เทสต์ซ้ำในหน้าเดิม
     /* 🎬 รอบ 880: จอเปิดจากภาพเมือง — ดูโหมด/มุมกล้อง + ไล่กล้องถอยด้วยเวลาจำลอง (ms นับจากบูต) */
     intro(){ return {photo:!!backShot, cam:backShot?backShot.cam:null,
                      splash:(()=>{ const e=document.getElementById('splash'); return e?{cls:e.className, shot:!!document.getElementById('splash-shot')}:null; })(),
