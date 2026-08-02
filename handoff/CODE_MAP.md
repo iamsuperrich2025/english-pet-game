@@ -279,7 +279,7 @@ XRK_ALL:674 · xrkSubmit:682 · xrkMerge:710 · xrkAllRows:729 · xrkFetch:747 �
 xrkNoteRefresh:784 · xrkAllRowHTML:793 · xrkBodyHTML:797 · xrkMount:812 · openExamStdRank:851 · examStdCardsHTML:868
 openExamStdBoard:903
 
-## js/f1_3d.js (2,939 บรรทัด · 222 รายการ)
+## js/f1_3d.js (2,941 บรรทัด · 222 รายการ)
 ### 🗂️ สารบัญโซน js/f1_3d.js (Read/Edit เฉพาะช่วง)
 - 19-102 ⚙️ ค่าคงที่ (TUNE ZONE)
 - 103-143 📦 สถานะโลก
@@ -299,8 +299,8 @@ openExamStdBoard:903
 - 2158-2360 🛞🔧 รอบ 905: ยางสึก + พิทสต็อปเปลี่ยนยาง
 - 2361-2445 🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
 - 2446-2595 🧑‍🤝‍🧑 เพื่อนร่วมสนาม (NetRoom map 'f1')
-- 2596-2765 📷 กล้องไล่หลัง + ลูปเกม
-- 2766-2939 🚪 เข้า/ออกโลก
+- 2596-2767 📷 กล้องไล่หลัง + ลูปเกม
+- 2768-2941 🚪 เข้า/ออกโลก
 ### รายการ js/f1_3d.js
 REWARD:22 · LETTER_COIN:23 · LETTER_COPIES:24 · COLLECT_R:25 · DONE_KEY:26 · HALF_W:27
 KERB_W:28 · RUNOFF_W:29 · SAMPLE_M:30 · FP_EYE:32 · FP_FWD:33 · FP_LOOK:34
@@ -337,8 +337,8 @@ pitTick:2292 · pitHud:2322 · tyreHud:2343 · tyreReset:2353 · trackPointAhead
 spawnLetters:2380 · renderWordHud:2393 · collectTick:2399 · completeWord:2417 · relocTick:2434 · netReady:2449
 netJoin:2454 · netSend:2467 · sendChat:2478 · peerColor:2485 · buildPeer:2489 · onPeer:2510
 showPeerBubble:2530 · removePeerBubble:2537 · dropPeer:2543 · peerTick:2551 · netLeave:2571 · renderBoard:2575
-applyCamMode:2600 · buildFpWheels:2611 · fpWheelTick:2640 · layoutWheel:2653 · wheelTick:2676 · camTick:2685
-hudTick:2723 · frame:2734 · tick:2751 · fit:2758 · start:2769 · exitWorld:2833
+applyCamMode:2600 · buildFpWheels:2611 · fpWheelTick:2642 · layoutWheel:2655 · wheelTick:2678 · camTick:2687
+hudTick:2725 · frame:2736 · tick:2753 · fit:2760 · start:2771 · exitWorld:2835
 
 ## js/game.js (1,115 บรรทัด · 79 รายการ)
 REPLAY_BONUS_EVERY:23 · REPLAY_BONUS_TIERS:25 · replayBonusFor:26 · SESSION_MILESTONES:32 · addSessionCoins:35 · updateBestTarget:74
