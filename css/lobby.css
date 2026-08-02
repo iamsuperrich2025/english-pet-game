@@ -2968,52 +2968,57 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 }
 .attn-box{max-width:min(92vw,620px);}
 .nw-box{width:min(92vw,620px);}
-/* หน้าตั้งค่า: แถวสวิตช์เรียง 3 คอลัมน์ + แถวหนาแน่นขึ้น (หัวข้อ/ปุ่มยาวเต็มแถว) — เตี้ยลงมาก */
-/* 🐛 รอบ 806: เดิมใช้แค่ max-width → กล่องหด "shrink-to-fit" ตามแถวสวิตช์สั้น ๆ (จริง ๆ กว้างแค่ ~240px ไม่เคยแตะ 940px)
-   ทำให้แถวเลือกตัวละคร (เต็มความกว้างคอลัมน์ตามเจตนารอบ 243) แคบไปด้วย — เปลี่ยนเป็น width ให้กางเต็มจริง */
+/* หน้าตั้งค่า (รอบ 893): แท็บ 🔊ทั่วไป/🦸ตัวละคร/📰เปิดเผย โชว์ทีละแท็บ — กล่องเดียวรวมทุกแถวเคยสูงกว่าจอ 2-3 เท่า
+   ต้องเลื่อนในตัวเอง (ขัดกฎทอง #7) → แบ่งแท็บทำให้แต่ละหน้าเตี้ยพอในจอเดียว ไม่ต้องเลื่อนเลย ทดสอบ 1000×640 + 812×375 */
 .settings-box{
-  width:min(96vw,940px);max-width:min(96vw,940px);display:grid;grid-template-columns:repeat(3,1fr);
-  gap:6px 12px;align-items:stretch;padding:14px 22px 12px;
+  width:min(94vw,680px);max-width:min(94vw,680px);
+  max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
+  padding:clamp(10px,2.6vh,16px) clamp(16px,3vw,22px) clamp(8px,1.6vh,12px);
 }
-.settings-box h2,.settings-box .set-hint,.settings-box .set-feed-head,
-.settings-box .set-help,.settings-box > div:last-child{grid-column:1/-1;}
-.settings-box h2{margin:0;font-size:19px;}
-.settings-box .set-hint{margin:0;font-size:11.5px;}
-.settings-box .set-switch{width:84px;height:34px;}
-.settings-box .set-sw-knob{width:26px;height:26px;top:4px;}
-.settings-box .set-switch.on .set-sw-knob{left:54px;}
-.settings-box .set-switch:active .set-sw-knob{width:30px;}
-.settings-box .set-sw-txt{height:34px;font-size:12.5px;}
+.settings-box h2{margin:0;font-size:clamp(16px,3.4vh,19px);flex:0 0 auto;}
+.settings-box .set-hint{margin:0 0 clamp(4px,1vh,8px);font-size:clamp(10px,1.7vh,11.5px);flex:0 0 auto;}
+.set-tabs{display:flex;gap:6px;flex:0 0 auto;margin-bottom:clamp(6px,1.4vh,10px);}
+/* ⚠️ ต้อง .set-tabs .lb-tab (specificity 0,2,0) ไม่งั้นแพ้ .levelup-box button (0,1,1) เหมือนบทเรียนรอบ 803/886 */
+.set-tabs .lb-tab{flex:1;margin-top:0;padding:clamp(6px,1.5vh,9px) 4px;font-size:clamp(11.5px,2.4vh,13.5px);box-shadow:none;}
+.set-panels{flex:1 1 auto;min-height:0;overflow:hidden;}
+.set-panel{display:none;}
+.set-panel.active{display:flex;flex-direction:column;gap:clamp(6px,1.3vh,10px);height:100%;overflow:hidden;}
+.settings-box .set-switch{width:clamp(74px,14vh,92px);height:clamp(30px,5.8vh,36px);}
+.settings-box .set-sw-knob{width:clamp(22px,4.6vh,28px);height:clamp(22px,4.6vh,28px);top:4px;}
+.settings-box .set-switch.on .set-sw-knob{left:calc(100% - 4px - clamp(22px,4.6vh,28px));}
+.settings-box .set-switch:active .set-sw-knob{width:calc(clamp(22px,4.6vh,28px) + 4px);}
+.settings-box .set-sw-txt{height:clamp(30px,5.8vh,36px);font-size:clamp(11px,2.2vh,12.5px);}
 .settings-box .set-switch.on .set-sw-txt{left:12px;}
 .settings-box .set-switch.off .set-sw-txt{right:12px;}
-.settings-box .set-row,.settings-box .set-feed-row{margin-top:0;padding:8px 12px;}
-.settings-box .set-label{font-size:14.5px;}
-.settings-box .set-desc{font-size:11px;}
-.settings-box .set-feed-head{margin-top:6px;}
-.settings-box .set-help{margin-top:2px;padding:9px;}
-.settings-box > div:last-child{margin-top:0 !important;}
-/* 🦸 รอบ 243: แถวเลือกตัวละคร = เต็มความกว้างทุกคอลัมน์ · รูปใหญ่ 4 บน/4 ล่าง (ผู้ใช้สั่งให้ใช้พื้นที่เต็ม) */
-.settings-box .set-blk-row{grid-column:1/-1;display:block;}
-/* 🌙 รอบ 886: แถวโหมดกลางคืน เต็มความกว้างเหมือนแถวเลือกตัวละคร — 3 ปุ่ม segmented ต้องการที่มากกว่าคอลัมน์แคบปกติ */
-.settings-box .set-night-row{grid-column:1/-1;}
-.settings-box .set-blk-row .set-label{display:block;margin:0 0 8px;text-align:left;}
-/* 🖼️ รอบ 751: ตัวละครมี 88 ตัว → กริด 4×2 เดิมกลายเป็น "หน้าละ 8 ตัว" ในแถบปัดขวาแบบโรงงาน
-   ⚠️ ต้องเขียน --fc-n ที่ .strip-x.blk-x (2 คลาส) เพราะ .grid2x8 (คลาสเดียว อยู่ท้ายไฟล์นี้) จะทับเป็น 8 */
-.settings-box .blk-strip{width:100%;}
+.settings-box .set-row,.settings-box .set-feed-row{margin-top:0;padding:clamp(7px,1.6vh,11px) clamp(10px,2vw,14px);flex:0 0 auto;}
+.settings-box .set-label{font-size:clamp(13px,2.6vh,15px);}
+.settings-box .set-desc{font-size:clamp(10.5px,1.9vh,12px);}
+.settings-box .set-feed-head{margin-top:0;flex:0 0 auto;font-size:clamp(12px,2.2vh,14.5px);}
+.settings-box .set-feed-sub{font-size:clamp(9.5px,1.7vh,11px);}
+.settings-box .set-foot{
+  flex:0 0 auto;display:flex;flex-wrap:wrap;gap:8px;margin-top:clamp(6px,1.4vh,12px);
+}
+.settings-box .set-help{flex:1 1 160px;margin-top:0;padding:clamp(7px,1.6vh,10px);font-size:clamp(12px,2.3vh,14px);}
+.settings-box .set-close{flex:1 1 120px;margin-top:0;padding:clamp(7px,1.6vh,10px) 20px;font-size:clamp(13px,2.5vh,15px);}
+/* 🦸 รอบ 243/893: แถวเลือกตัวละคร — แท็บของตัวเองแล้ว ใช้พื้นที่เต็มความกว้างกล่อง */
+.settings-box .set-blk-row{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;min-height:0;flex:1 1 auto;}
+.settings-box .set-blk-row .set-label{display:block;margin:0 0 clamp(4px,1vh,8px);text-align:left;font-size:clamp(12.5px,2.2vh,14.5px);flex:0 0 auto;}
+.settings-box .set-blk-row .set-sub2{font-size:clamp(10px,1.6vh,11.5px);}
+/* 🖼️ รอบ 751/893: ตัวละครมี 88 ตัว → แถวเดียว (grid1x5 ท้ายไฟล์นี้) แทน 2 แถวเดิม ให้เตี้ยพอไม่ต้องเลื่อน */
+.settings-box .blk-strip{width:100%;flex:1 1 auto;min-height:0;display:flex;align-items:stretch;}
 .settings-box .strip-x.blk-x{
-  --fc-n:4;--fc-gap:10px;padding:10px;
+  --fc-gap:10px;padding:10px;flex:1;
   background:linear-gradient(180deg,#f8f3ff,#ece2ff);
   box-shadow:inset 0 2px 8px rgba(90,60,140,.18), inset 0 -1px 0 rgba(255,255,255,.6);
 }
 .settings-box .strip-arrow{background:linear-gradient(180deg,#b18cf0,#8a5fd6);border-color:#e7dbff;}
 /* 🐛 รอบ 803: .levelup-box button (specificity 0,1,1) ทับ background ของ .blk-mini (0,1,0) กลายเป็นสีม่วงเข้มแทนการ์ดม่วงอ่อนที่ตั้งใจ — ประกาศ background ซ้ำที่นี่ (specificity 0,2,0 ชนะ) */
 .settings-box .blk-mini{padding:6px;border-radius:16px;width:100%;background:#f6f0ff;border:2px solid #e0d4f0;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
 .settings-box .blk-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:#e0a020;}
 /* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด
-   🏷️ รอบ 806: ลด vh ลงจากเดิม (17→14) เผื่อที่ให้ป้ายชื่ออาชีพ EN/ไทย 2 บรรทัดด้านล่าง
-   🔤 รอบ 808: ลดอีกครั้ง (14→11) เผื่อที่บรรทัดคำอ่านเพิ่ม (รวมเป็น 3 บรรทัดใต้รูป) */
-.settings-box .blk-mini img{width:auto;height:clamp(64px,11vh,100px);aspect-ratio:341/512;}
+   🏷️ รอบ 893: อยู่แท็บเดี่ยว+แถวเดียวแล้ว มีที่สูงเหลือมากขึ้น ขยับช่วง vh ขึ้นจากเดิม (11→15) ให้รูปใหญ่ขึ้น */
+.settings-box .blk-mini img{width:auto;height:clamp(62px,15vh,120px);aspect-ratio:341/512;}
 .settings-box .blk-mini .blk-cap{display:flex;flex-direction:column;align-items:center;line-height:1.12;width:100%;overflow:hidden;}
 .settings-box .blk-mini .blk-cap-en{font-size:clamp(9px,1.25vh,11px);color:#5a3f8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .settings-box .blk-mini .blk-cap-pron{font-size:clamp(8px,1.1vh,9.5px);color:#b0791f;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -3024,13 +3029,10 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .help-box .help-item{margin-top:0;font-size:12.5px;line-height:1.45;padding:8px 10px;}
 /* จอแคบปานกลาง → 2 คอลัมน์ */
 @media (max-width:920px){
-  .settings-box{grid-template-columns:1fr 1fr;}
   .help-box .help-body{grid-template-columns:1fr 1fr;}
 }
 /* จอแคบมาก (portrait/มือถือจิ๋ว) → คอลัมน์เดียว อ่านง่ายกว่า */
 @media (max-width:680px){
-  .settings-box{display:block;}
-  .settings-box .set-row,.settings-box .set-feed-row{margin-top:12px;}
   .help-box .help-body{display:block;}
   .help-box .help-item{margin-top:10px;}
 }

@@ -819,66 +819,89 @@ function openSettings(){
   const blkAvList = Array.from({length: blkAvCount}, (_, i)=> 'blk' + (i + 1));
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay settings-overlay';
+  // 🗂️ รอบ 893: เดิมยัดทุกแถวในกล่องเดียว = เนื้อหาสูงกว่าจอ 2-3 เท่า ต้องเลื่อนในตัวเอง (ขัดกฎทอง #7)
+  //   → แบ่งเป็น 3 แท็บ (ทั่วไป/ตัวละคร/เปิดเผย) โชว์ทีละแท็บ ใช้ .lb-tab เดิม (โทนม่วงเดียวกับกระดานอันดับ)
   overlay.innerHTML = `<div class="levelup-box settings-box">
     <h2 style="margin:0 0 4px">⚙️ ตั้งค่า</h2>
     <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">เขียว = เปิดอยู่</b> · <b class="set-hint-off">เทา = ปิดอยู่</b></p>
-    <div class="set-row" id="set-sound">
-      <span class="set-lwrap"><span class="set-label">🔊 เสียงในเกม</span>
-        <span class="set-desc">เสียงเอฟเฟกต์ ปุ่มกด และอ่านออกเสียงคำศัพท์</span></span>
-      <button class="set-switch" aria-label="สลับเสียงในเกม"></button>
+    <div class="set-tabs">
+      <button class="lb-tab set-tab active" data-tab="general">🔊 ทั่วไป</button>
+      <button class="lb-tab set-tab" data-tab="avatar">🦸 ตัวละคร</button>
+      <button class="lb-tab set-tab" data-tab="feed">📰 เปิดเผย</button>
     </div>
-    ${hapticSupported ? `<div class="set-row" id="set-haptic">
-      <span class="set-lwrap"><span class="set-label">📳 สั่นเตือน</span>
-        <span class="set-desc">มือถือสั่นตอนโดนผีทำร้าย/ตอบถูก</span></span>
-      <button class="set-switch" aria-label="สลับสั่นเตือน"></button>
-    </div>` : ''}
-    <div class="set-row" id="set-anim">
-      <span class="set-lwrap"><span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
-        <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
-      <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
-    </div>
-    ${(typeof NightUI!=='undefined') ? `<div class="set-row set-night-row" id="set-night">
-      <span class="set-lwrap"><span class="set-label">🌙 โหมดกลางคืน</span>
-        <span class="set-desc">สีล็อบบี้อุ่นตาสบายตอนกลางคืน — อัตโนมัติสลับเองตอน 19:00-06:00 หรือปักไว้เองก็ได้</span></span>
-      <div class="set-seg" role="group" aria-label="เลือกโหมดกลางคืน">
-        <button class="set-seg-btn" data-mode="auto">🕒<span>อัตโนมัติ</span></button>
-        <button class="set-seg-btn" data-mode="day">☀️<span>กลางวัน</span></button>
-        <button class="set-seg-btn" data-mode="night">🌙<span>กลางคืน</span></button>
-      </div>
-    </div>` : ''}
-    <div class="set-row set-photo-row" id="set-photo">
-      <span class="set-lwrap"><span class="set-label">📷 รูปโปรไฟล์ของหนู</span>
-        <span class="set-desc">อัปโหลดรูปของหนูเองมาใช้เป็นรูปโปรไฟล์ได้ (ให้ผู้ปกครองช่วยเลือกนะ) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนข้างล่างแทน</span></span>
-      <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
-    </div>
-    <div class="set-row set-blk-row" id="set-blk">
-      <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
-        มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN + คำอ่าน + ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
-      <div class="strip-wrap blk-strip">
-        <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
-        <div class="strip-x blk-x grid2x8">
-          ${blkAvList.map(b=>{
-            const v = BLK_VOCAB[b] || {en:'', pron:'', th:''};
-            return `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy">
-              <span class="blk-cap"><b class="blk-cap-en">${v.en}</b><span class="blk-cap-pron">${v.pron}</span><span class="blk-cap-th">${v.th}</span></span></button>`;
-          }).join('')}
+    <div class="set-panels">
+      <div class="set-panel active" data-panel="general">
+        <div class="set-row" id="set-sound">
+          <span class="set-lwrap"><span class="set-label">🔊 เสียงในเกม</span>
+            <span class="set-desc">เสียงเอฟเฟกต์ ปุ่มกด และอ่านออกเสียงคำศัพท์</span></span>
+          <button class="set-switch" aria-label="สลับเสียงในเกม"></button>
         </div>
-        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
+        ${hapticSupported ? `<div class="set-row" id="set-haptic">
+          <span class="set-lwrap"><span class="set-label">📳 สั่นเตือน</span>
+            <span class="set-desc">มือถือสั่นตอนโดนผีทำร้าย/ตอบถูก</span></span>
+          <button class="set-switch" aria-label="สลับสั่นเตือน"></button>
+        </div>` : ''}
+        <div class="set-row" id="set-anim">
+          <span class="set-lwrap"><span class="set-label">✨ เอฟเฟกต์เคลื่อนไหว</span>
+            <span class="set-desc">ภาพเด้ง/เลื่อนไหวสวยงาม · ปิดได้ถ้าเครื่องช้าจะลื่นขึ้น</span></span>
+          <button class="set-switch" aria-label="สลับเอฟเฟกต์เคลื่อนไหว"></button>
+        </div>
+        ${(typeof NightUI!=='undefined') ? `<div class="set-row set-night-row" id="set-night">
+          <span class="set-lwrap"><span class="set-label">🌙 โหมดกลางคืน</span>
+            <span class="set-desc">สีล็อบบี้อุ่นตาตอนกลางคืน — อัตโนมัติ 19:00-06:00 หรือปักไว้เองก็ได้</span></span>
+          <div class="set-seg" role="group" aria-label="เลือกโหมดกลางคืน">
+            <button class="set-seg-btn" data-mode="auto">🕒<span>อัตโนมัติ</span></button>
+            <button class="set-seg-btn" data-mode="day">☀️<span>กลางวัน</span></button>
+            <button class="set-seg-btn" data-mode="night">🌙<span>กลางคืน</span></button>
+          </div>
+        </div>` : ''}
+        <div class="set-row set-photo-row" id="set-photo">
+          <span class="set-lwrap"><span class="set-label">📷 รูปโปรไฟล์ของหนู</span>
+            <span class="set-desc">อัปโหลดรูปของหนูเอง (ให้ผู้ปกครองช่วยเลือก) · ไม่ใส่ก็ได้ ใช้ตัวการ์ตูนแทน</span></span>
+          <button class="ph-open" type="button" aria-label="เปลี่ยนรูปโปรไฟล์"></button>
+        </div>
+      </div>
+      <div class="set-panel" data-panel="avatar">
+        <div class="set-row set-blk-row" id="set-blk">
+          <span class="set-label">🦸 ตัวละครของหนู<br><small class="set-sub2">แตะเลือกตัวที่จะยืนข้างน้อง · ใช้เป็นรูปโปรไฟล์เมื่อยังไม่ได้ใส่รูปจริง<br>
+            มี ${blkAvCount} ตัวให้เลือก — กด ❯ ดูตัวถัดไป · 8 ตัวแรกเป็นตัวบล็อกที่ใช้ในโลก 3D ด้วย ตัวอื่นใช้ในล็อบบี้/โปรไฟล์ · <b>ใต้ตัวละครมีชื่อ EN + คำอ่าน + ไทย เสริมคำศัพท์ให้หนูด้วยนะ 📚</b></small></span>
+          <div class="strip-wrap blk-strip">
+            <button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
+            <div class="strip-x blk-x grid1x5">
+              ${blkAvList.map(b=>{
+                const v = BLK_VOCAB[b] || {en:'', pron:'', th:''};
+                return `<button class="blk-mini" data-blk="${b}"><img src="img/blocks/${b}.png" alt="" loading="lazy">
+                  <span class="blk-cap"><b class="blk-cap-en">${v.en}</b><span class="blk-cap-pron">${v.pron}</span><span class="blk-cap-th">${v.th}</span></span></button>`;
+              }).join('')}
+            </div>
+            <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button>
+          </div>
+        </div>
+      </div>
+      <div class="set-panel" data-panel="feed">
+        <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
+          <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดเปิดมาตั้งแต่แรก ปิดเองได้ถ้าไม่อยากให้เห็น</span></div>
+        ${Object.keys(FEED_CATS).map(k=>`
+        <div class="set-row set-feed-row" data-cat="${k}">
+          <span class="set-lwrap"><span class="set-label">${FEED_CATS[k].e} ${FEED_CATS[k].n}</span>
+            <span class="set-desc">${FEED_CATS[k].d}</span></span>
+          <button class="set-switch" aria-label="สลับการเปิดเผย ${FEED_CATS[k].n}"></button>
+        </div>`).join('')}
       </div>
     </div>
-    <div class="set-feed-head">📰 การเปิดเผยกิจกรรมในโปรไฟล์
-      <span class="set-feed-sub">เลือกเองว่าให้เพื่อนเห็นอะไรบ้างในหน้าโปรไฟล์/ฟีด — ทุกหมวดเปิดมาตั้งแต่แรก ปิดเองได้ถ้าไม่อยากให้เห็น</span></div>
-    ${Object.keys(FEED_CATS).map(k=>`
-    <div class="set-row set-feed-row" data-cat="${k}">
-      <span class="set-lwrap"><span class="set-label">${FEED_CATS[k].e} ${FEED_CATS[k].n}</span>
-        <span class="set-desc">${FEED_CATS[k].d}</span></span>
-      <button class="set-switch" aria-label="สลับการเปิดเผย ${FEED_CATS[k].n}"></button>
-    </div>`).join('')}
-    <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
-    ${(typeof isTeacher==='function' && isTeacher()) ?
-      `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
-    <div style="margin-top:16px"><button class="set-close">เสร็จแล้ว</button></div>
+    <div class="set-foot">
+      <button class="set-help" id="set-help">📖 วิธีเล่นเกม</button>
+      ${(typeof isTeacher==='function' && isTeacher()) ?
+        `<button class="set-help" id="set-teacher">👩‍🏫 คู่มือครู (เครื่องมือคุมห้อง)</button>` : ''}
+      <button class="set-close">เสร็จแล้ว</button>
+    </div>
   </div>`;
+  overlay.querySelectorAll('.set-tab').forEach(tab=>tab.addEventListener('click', ()=>{
+    if(tab.classList.contains('active')) return;
+    overlay.querySelectorAll('.set-tab').forEach(t=>t.classList.toggle('active', t===tab));
+    overlay.querySelectorAll('.set-panel').forEach(p=>p.classList.toggle('active', p.dataset.panel===tab.dataset.tab));
+    sfx.select();
+  }));
   const setSwitch = (el, on)=>{   // แสดงสวิตช์เลื่อน: ลูกกลม + คำว่า เปิด/ปิด
     if(!el) return;
     el.className = 'set-switch ' + (on ? 'on' : 'off');
