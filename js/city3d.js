@@ -1034,6 +1034,18 @@ const BUILDINGS = [
   bld('w3d_moto',  '🏍️','โลกมอไซค์','w3d_moto',  312, BAND2_R, ()=>bMotoTrack()),
   bld('w3d_invasion','🛸','โลกยานแม่','w3d_invasion',333, BAND2_R, ()=>bUfo()),
   bld('w3d_mecha', '🤖','โลกหุ่นรบ','w3d_mecha',  354, BAND2_R, ()=>bHangar()),
+  // 🎯 รอบ 917: ซุ้มยิงเป้าคำศัพท์ (เกม 3D สวนสนุก) — ช่องว่างโค้งระหว่างโรงหุ่น (354°) กับหอเกียรติยศ (55°)
+  bld('shootword', '🎯','ยิงเป้าคำ','shootword',   20, BAND2_R, ()=>{
+    const g = bShop({col:'#fff3e0', roof:0xff7043, aw1:'#ff8a65', sign:'🎯 SHOOT WORD', signBg:'#fff3e0'});
+    const c = cvs(128,128), q = c.getContext('2d');           // เป้าวงกลมหมุนบนหลังคา
+    [['#ef5350',60],['#fff',47],['#ef5350',33],['#fff',19],['#ffb300',9]].forEach(([col,r])=>{
+      q.fillStyle=col; q.beginPath(); q.arc(64,64,r,0,7); q.fill(); });
+    const t = M(new THREE.PlaneGeometry(2.3,2.3),
+      new THREE.MeshBasicMaterial({map:ctex(c), side:THREE.DoubleSide, transparent:true}), 0, 6.4, 0);
+    g.add(t);
+    tickers.push((dt,tm)=>{ t.rotation.z = tm*0.8; });
+    return g;
+  }),
 ];
 const BLD_AT = {};   // key → {x,z,ry}
 

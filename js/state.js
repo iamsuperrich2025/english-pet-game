@@ -85,6 +85,12 @@ const DEFAULT_STATE = {
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
   tpAwardPaid:[],
   tpAwardLog:[],
+  sgScore:0,                          // 🎯 รอบ 917: แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (ขึ้นกระดานอันดับ field sg)
+  sgWords:0,                          // 🎯 รอบ 917: จำนวนคำที่ยิงสะกดครบทั้งหมด (โชว์คู่แต้มใน HUD)
+  sgIntro:0,                          // 🎯 รอบ 917: เคยเห็นการ์ดวิธีเล่นแล้ว (โชว์ครั้งแรกครั้งเดียว)
+  sgAwardSeen:'',                     // 🏆 รอบ 917: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน 🎯 ยิงเป้าคำ
+  sgAwardPaid:[],
+  sgAwardLog:[],
   rankSeen:0,                         // 🥇 รอบ 599: อันดับเหรียญที่เห็นล่าสุด (0=ยังไม่เคยติดกระดาน) — เลขใหม่น้อยกว่า = ไต่ขึ้น → ป้ายบนปุ่มรางเด้งฉลอง
   rankBest:0,                         // 🏅 รอบ 602: อันดับดีที่สุดที่เคยทำได้ (เลขน้อยสุด · 0=ยังไม่เคยติด) — โชว์ในหน้าสถิติ ไม่ลดลงเมื่ออันดับตก
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
@@ -435,6 +441,11 @@ function loadState(){
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
       if(!Array.isArray(s.tpAwardPaid)) s.tpAwardPaid = [];
       if(!Array.isArray(s.tpAwardLog)) s.tpAwardLog = [];
+      if(typeof s.sgScore !== 'number' || s.sgScore < 0) s.sgScore = 0;   // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำ
+      if(typeof s.sgWords !== 'number' || s.sgWords < 0) s.sgWords = 0;
+      if(typeof s.sgAwardSeen !== 'string') s.sgAwardSeen = '';   // 🏆 รอบ 917: รางวัลรายเดือนแท็บยิงเป้าคำ
+      if(!Array.isArray(s.sgAwardPaid)) s.sgAwardPaid = [];
+      if(!Array.isArray(s.sgAwardLog)) s.sgAwardLog = [];
       /* 🎁 รอบ 593 (ผู้ใช้สั่ง): รางวัลสอบผ่าน 10 ข้อ 100 → 500 + "จ่ายย้อนหลัง" ให้คนที่สอบผ่านไปก่อนประกาศใหม่
          นับเฉพาะ id ที่เคยได้รางวัลเต็มเรตนี้จริง = หมวดคำศัพท์ตามชั้น (ALL_CATS) + ชุดคลังศัพท์ bandXsY
          (ตัด vbreview รางวัล 50 และสอบซ่อมรวม bandXretake รางวัล 0 ออก — คนละเรต ไม่ต้องชดเชย) */

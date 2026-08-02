@@ -386,7 +386,7 @@ document.addEventListener('visibilitychange', ()=>{
     home:'[data-panel="panel-home"]', farm:'[data-panel="panel-farm"]', factory:'[data-panel="panel-factory"]',
     market:'[data-panel="panel-market"]', friends:'[data-panel="panel-friends"]', gifts:'[data-panel="panel-gifts"]',
     rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy',
-    wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', examstd:'#btn-rail-examstd',
+    wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', shootword:'#btn-rail-shootword', examstd:'#btn-rail-examstd',
     book:'#btn-vocab-book', cats:'#btn-cats', play:'#btn-play', bandexam:'#btn-band-exam',
     foodquiz:'#btn-foodquiz', chat:'#btn-chat',
     ielts:'[data-xstd="ielts"]', toeic:'[data-xstd="toeic"]', toefl:'[data-xstd="toefl"]',

@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 917 (2 ส.ค. 2026): โซนใหม่ `sgAward` + field `sg` ใน /leaderboard (เกมใหม่ 🎯 ยิงเป้าคำศัพท์ — แต้มสะสม + รางวัลรายเดือน Top 10) — รอผู้ใช้ publish:** สูตรเดียวกับ `wsAward`/field `ws` เป๊ะ (`/sgAward/<YYYY-MM>` = snapshot ตัดรอบเขียนได้ครั้งเดียว · `sg` = แต้มสะสมตลอดกาล validate ตัวเลข ≥0) · **ยังไม่ publish = เกมไม่พัง:** เล่นได้ปกติ เก็บแต้ม/เหรียญในเครื่องครบ — onlinePushScore ถอย fallback ทีละขั้น (ก้อนที่มี `sg` โดน deny → ส่งก้อน tp+tw แทน) กระดานเห็นแต้มตัวเองสดจาก state · กระดานประกาศรางวัลยังตัดรอบไม่ได้จนกว่าจะ publish · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม (31 โซน):** https://claude.ai/code/artifact/3bad17e9-4017-496a-af8e-2a55da92d1c9
 - ⏳ **รอบ 903 (2 ส.ค. 2026): โซนใหม่ `f1Rank` = กระดานอันดับ Best Lap ออนไลน์ของโลก F1 — รอผู้ใช้ publish:** `/f1Rank/<uid> = {sec, n, g, ts}` (1 แถวต่อคน สนามเดียว) เก็บเวลาต่อรอบที่ดีที่สุด · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นได้ปกติ กระดานหน้า intro เห็นแค่สถิติตัวเอง ขึ้นป้ายบอกตรง ๆ ว่ากระดานกลางยังไม่เปิด · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/ba9890de-eb86-4255-bed6-b322f0e4e688
 - ⏳ **รอบ 896 (2 ส.ค. 2026): โลกแข่งรถ F1 สนามซาเคียร์ — เพิ่ม `$map === 'f1'` ใน enum ของ `wroom` + `winfo` (2 จุด) — รอผู้ใช้ publish:** แบบเดียวกับตอนเพิ่ม `soccer`/`mecha` เป๊ะ ไม่มีโซนใหม่ ไม่มี field ใหม่ · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นคนเดียวได้ปกติ แค่ยังไม่เห็นเพื่อนในสนาม (NetRoom เขียนโดน deny → ปิดการส่งเงียบ ๆ) · ก้อนเต็มด้านล่างอัปเดตแล้ว
 - ✅ **รอบ 827 (30 ก.ค. 2026): โซนใหม่ `bandRank` = กระดานอันดับ "สอบใหญ่คลังศัพท์ขั้นสูง" ตลอดกาล — ผู้ใช้ publish แล้ว 30 ก.ค. 2026 · ตรวจสดผ่าน CLI+REST แล้ว:** เทียบ `/.settings/rules` สด (`firebase database:get`) กับก้อนใน RULES.md = **identical ทั้งไฟล์** (deep JSON compare) · REST: GET `/bandRank.json` + PUT ไม่ล็อกอิน = 401 Permission denied ถูกต้องทั้งคู่ → **กระดานใช้งานได้เต็มระบบ** — `/bandRank/<catId>_<lvKey>/<uid> = {sc, tt, sec, n≤40, g≤20, ts}` (`catId` เช่น `academic`/`ielts` · `lvKey` = `found`|`inter`|`expert`) · **อ่านได้ทุกคนที่ login** (เหมือน `/examRank`) · **เขียนได้เฉพาะแถวของ uid ตัวเอง** และ `$setId` ต้องตรงรูปแบบ `^[a-z]+_(found|inter|expert)$` · **validate บังคับว่าต้อง "สอบผ่านจริง"**: `sc <= tt` และ `sc*10 >= tt*8` (เกณฑ์ผ่าน 80% ของสอบใหญ่ต่างจาก `/examRank` ที่ 70%) · `sec` ≤ 86400 · `ts` ห้ามอนาคตเกิน 1 นาที · `.indexOn:"sc"` ให้ client ดึงแค่ `orderByChild('sc').limitToLast(50)` ไม่ต้องโหลดทั้งตาราง — สูตรเดียวกับ `/examRank` (รอบ 825) เป๊ะ ต่างแค่คนละโซน/คนละเกณฑ์ผ่าน
@@ -90,6 +91,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "ws":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "tp":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "tw":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "sg":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }
@@ -452,6 +454,26 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
             "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
             "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "s2": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "sgAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
             "$other": { ".validate": false }
           }
         },

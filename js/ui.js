@@ -1323,9 +1323,10 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','badges','boss','ws','tp','bx','xr'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786 · xr = 🏁 ข้อสอบมาตรฐาน รอบ 815)
+const LB_TABS = ['coins','badges','boss','ws','tp','sg','bx','xr'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · sg = 🎯 รอบ 917 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786 · xr = 🏁 ข้อสอบมาตรฐาน รอบ 815)
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
+const LB_SG_TOP = 10;                                  // 🎯 แท็บยิงเป้าคำโชว์ Top 10 all time (เรตเดียวกัน)
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
 function bindLbTabs(){
   if(window.__lbTabBound) return;                      // ผูก listener ครั้งเดียว (การ์ด re-render บ่อย)
@@ -1343,6 +1344,12 @@ function bindLbTabs(){
     if(e.target.closest('.tpa-open')){
       e.stopPropagation();
       if(typeof TpAward !== 'undefined') TpAward.open();
+      return;
+    }
+    // 🎯 รอบ 917: .sga-open = ของกระดาน 🎯 ยิงเป้าคำ (เครื่องจ่ายรางวัลตัวที่ 3 โรงงานเดียวกัน)
+    if(e.target.closest('.sga-open')){
+      e.stopPropagation();
+      if(typeof SgAward !== 'undefined') SgAward.open();
       return;
     }
     if(!e.target.closest('.wsa-open')) return;
@@ -1426,14 +1433,16 @@ function renderLeaderboardCard(){
     <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
     <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 บอส</button>
     <button class="lb-tab${lbTab==='ws' ? ' active' : ''}" data-tab="ws">🔎 ค้นหาคำ</button>
-    <button class="lb-tab${lbTab==='tp' ? ' active' : ''}" data-tab="tp">⌨️ พิมพ์คำ</button>`;
+    <button class="lb-tab${lbTab==='tp' ? ' active' : ''}" data-tab="tp">⌨️ พิมพ์คำ</button>
+    <button class="lb-tab${lbTab==='sg' ? ' active' : ''}" data-tab="sg">🎯 ยิงเป้าคำ</button>`;
   if(typeof Online === 'undefined' || !Online.ready){
     el.innerHTML = `<div class="lb-empty">📡 ต่ออินเทอร์เน็ตเพื่อดูอันดับผู้เล่นจากทุกโรงเรียนนะ!</div>`;
     initSideScroll(el);
     return;
   }
   el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml()
-                : lbTab === 'ws' ? lbWordSearchHtml() : lbTab === 'tp' ? lbTypingHtml() : lbCoinHtml());
+                : lbTab === 'ws' ? lbWordSearchHtml() : lbTab === 'tp' ? lbTypingHtml()
+                : lbTab === 'sg' ? lbShootHtml() : lbCoinHtml());
   bindPlayerClicks();
   initSideScroll(el);
   bindLbGroupOpen();
@@ -1444,7 +1453,7 @@ let __lbGroupBound = false;
 function bindLbGroupOpen(){
   if(__lbGroupBound) return; __lbGroupBound = true;
   // 🏆 รอบ 592: .wsa-open (แถบรางวัล) มี handler ของตัวเอง — ไม่ให้เปิดกระดานเต็มจอทับ
-  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open')) return; openLeaderboardFull(); };
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.sga-open')) return; openLeaderboardFull(); };
   const label = document.getElementById('lb-label');
   const card = document.getElementById('leaderboard-card');
   if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
@@ -1490,6 +1499,13 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
       sc:`⌨️ ${fmtNum(r.tw)} คำ<span class="sc-sub"> · ${fmtNum(r.tp)} เหรียญ</span>`, val:r.tw,
       pz:(typeof TpAward !== 'undefined') ? TpAward.prizeFor(i+1) : 0, me:r.id===myId}));
+  }
+  if(tab === 'sg'){   // 🎯 รอบ 917: แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (field sg) — โชว์แค่ Top 10
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, sg:r.sg||0}; });
+    map[myId] = {id:myId, n:meName, g:meG, sg:Math.round(state.sgScore||0)};
+    const rows = Object.values(map).filter(r=>r.sg > 0).sort((a,b)=> b.sg - a.sg).slice(0, LB_SG_TOP);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🎯 ${fmtNum(r.sg)}`, val:r.sg,
+      pz:(typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
@@ -1558,9 +1574,10 @@ function lbChar(r){
    เครื่องจ่ายรางวัลคนละตัว (WsAward / TpAward) แต่หน้าตาแถบเหมือนกันเป๊ะ */
 function lbfAwardBarHtml(tab){
   const A = tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
-          : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null) : null;
+          : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
+          : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'tp' ? 'tpa-open' : 'wsa-open';
+  const cls = tab === 'tp' ? 'tpa-open' : tab === 'sg' ? 'sga-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -1584,6 +1601,7 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
           <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
+          <button class="lb-tab${__lbfTab==='sg'?' active':''}" data-t="sg">🎯 ยิงเป้าคำ</button>
           <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>
           <button class="lb-tab${__lbfTab==='xr'?' active':''}" data-t="xr">🏁 ข้อสอบมาตรฐาน</button>`;
   const closeHeadHtml = (title)=> `<div class="lbf-head">
@@ -1647,7 +1665,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'tp' ? LB_TP_TOP : 100;   // 🔎 รอบ 590 / ⌨️ รอบ 649: Top 10 all time
+    const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;   // 🔎 รอบ 590 / ⌨️ รอบ 649 / 🎯 รอบ 917: Top 10 all time
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
@@ -1679,8 +1697,9 @@ function openLeaderboardFull(){
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
     const title = __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
-                : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ' : '🪙 อันดับเหรียญ';
-    const allTime = (__lbfTab === 'ws' || __lbfTab === 'tp') ? ' (all time)' : '';
+                : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ'
+                : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : '🪙 อันดับเหรียญ';
+    const allTime = (__lbfTab === 'ws' || __lbfTab === 'tp' || __lbfTab === 'sg') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
       ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
       ${lbfAwardBarHtml(__lbfTab)}
@@ -1844,6 +1863,39 @@ function lbTypingHtml(){
     : `เล่นเกม ⌨️ พิมพ์คำ ให้ได้หลาย ๆ คำ เพื่อขึ้น Top ${LB_TP_TOP} นะ 💪`;
   const when = (typeof TpAward !== 'undefined')
     ? `<div class="lb-award-bar tpa-open" role="button" tabindex="0">⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 เวลา 00:01 น.</b> เท่านั้น · ${TpAward.fmtLeft(TpAward.nextCutDate() - Date.now())}
+         <span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>` : '';
+  return `<div class="online-count">${meLine}</div>${when}
+    <div class="lb-list">${list}</div>`;
+}
+
+/* 🎯 รอบ 917: เนื้อหาแท็บยิงเป้าคำ — "10 อันดับนักแม่นปืนคำศัพท์ of all time" (เกม 3D สวนสนุก)
+   แต้ม = ความยาวคำ×2 ต่อคำที่ยิงสะกดครบ (+5 ไม่พลาดเลย) สะสมถาวรใน state.sgScore → /leaderboard field sg
+   โครงเหมือน lbWordSearchHtml() ทุกอย่าง ต่างแค่ field/อีโมจิ/ชื่อเกม/เครื่องจ่ายรางวัล (SgAward) */
+function lbShootHtml(){
+  const myId = onlineKey();
+  const map = {};
+  (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, sg:r.sg||0}; });
+  // แทนที่ตัวเราด้วยค่าสดจาก state (เห็นทันทีแม้ push ยังไม่ถึง / rules ยังไม่ publish)
+  const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู') + ((typeof badgeSuffix==='function')?badgeSuffix():'');
+  map[myId] = {id:myId, n: meName, g:(state.student?state.student.grade:''), sg: Math.round(state.sgScore||0)};
+  const all = Object.values(map).filter(r=>r.sg > 0).sort((a,b)=> b.sg - a.sg);
+  if(!all.length) return `<div class="lb-empty">ยังไม่มีใครเก็บแต้มยิงเป้าเลย — เข้าซุ้ม 🎯 ยิงสะกดคำแรก เป็นคนแรกบนกระดานสิ! 🥇</div>`;
+  const rows = all.slice(0, LB_SG_TOP);
+  const myIdx = all.findIndex(r=>r.id===myId);
+  const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const pz = (i)=> (typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0;
+  const list = rows.map((r,i)=>`
+    <div class="lb-row${r.id===myId?' lb-me':''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.id||'')}" data-n="${escapeHTML(r.n)}" data-g="${escapeHTML(r.g||'')}">${r.id===myId?'⭐ ':''}${escapeHTML(splitNameBadges(r.n).name)}<small> ${idTag(r.id)}${gradeMark(gradeOf(r.id, r.g))}</small>${pz(i)?`<small class="lb-prize">🎁 ${fmtNum(pz(i))} เหรียญ</small>`:''}</span>
+      <span class="lb-coins">🎯 ${fmtNum(r.sg)}</span>
+    </div>`).join('');
+  const meLine = myIdx >= 0
+    ? (myIdx < LB_SG_TOP ? `${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_SG_TOP} · ${fmtNum(map[myId].sg)} แต้ม 🎯`
+                         : `${selfPronoun()}มี ${fmtNum(map[myId].sg)} แต้ม (อันดับ ${myIdx+1}) — ยิงอีกนิดก็ติด Top ${LB_SG_TOP} แล้ว 💪`)
+    : `เข้าซุ้ม 🎯 ยิงเป้าคำศัพท์ เก็บแต้มเพื่อขึ้น Top ${LB_SG_TOP} นะ 💪`;
+  const when = (typeof SgAward !== 'undefined')
+    ? `<div class="lb-award-bar sga-open" role="button" tabindex="0">⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 เวลา 00:01 น.</b> เท่านั้น · ${SgAward.fmtLeft(SgAward.nextCutDate() - Date.now())}
          <span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>` : '';
   return `<div class="online-count">${meLine}</div>${when}
     <div class="lb-list">${list}</div>`;
