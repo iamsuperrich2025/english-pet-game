@@ -93,6 +93,10 @@ const DRAG_K       = 0.00112; // แรงต้านอากาศ a = k·v²
 const ROLL_A       = 0.6;     // แรงต้านการหมุน
 const BRAKE_A      = 30;      // เบรกพื้นฐาน + เพิ่มตาม downforce
 const BRAKE_DF     = 0.0022;  // เบรกส่วน downforce (·v²)
+/* 🛑 รอบ 921: ยกมือออกจากคันเร่ง = ค่อย ๆ เบรกเองอัตโนมัติ (เด็กไม่ต้องหาปุ่มเบรกให้ทัน)
+   เบากว่าเบรกจริง ~5 เท่า — ยังปล่อยไหลเข้าโค้งได้ ไม่ใช่หยุดผลึ่ง */
+const COAST_A      = 5.5;     // อัตราหน่วงเพิ่มตอนไม่แตะคันเร่ง (m/s²)
+const COAST_STOP   = 0.45;    // ต่ำกว่านี้ (m/s) ให้หยุดสนิท ไม่คืบต่อ
 const GRIP_BASE    = 17.5;    // ลิมิตแรงเข้าโค้งพื้นฐาน (m/s² ≈ 1.8g)
 const GRIP_DF      = 0.0035;  // downforce เพิ่มกริป (·v²) → 250กม./ชม. ≈ 4.5g เหมือนจริง
 const GRIP_CAP     = 46;      // เพดานกริป
@@ -988,7 +992,8 @@ const CSS=`
   color:#8fa2c8;font-weight:800;font-size:17px;text-align:center;text-transform:uppercase}
 #f1-word .f-chip.got{background:#ffd12e;color:#5c3500}
 #f1-word .f-th{color:#cfe0ff;font-size:14px}
-#f1-hud{position:absolute;right:10px;bottom:88px;text-align:right;z-index:6;pointer-events:none}
+/* 🎛️ รอบ 921: ผู้ใช้ขอย้าย "ความเร็ว กม./ชม." มากลางล่าง (เดิมมุมขวาล่าง ซึ่งตอนนี้เป็นที่ของปุ่มเร่งที่ยกขึ้นมา) */
+#f1-hud{position:absolute;left:50%;transform:translateX(-50%);bottom:6px;text-align:center;z-index:6;pointer-events:none}
 #f1-speed{font-size:44px;font-weight:900;color:#fff;line-height:1;text-shadow:0 2px 10px #000}
 #f1-speed small{font-size:14px;color:#9fb2d8}
 #f1-gear{display:inline-block;margin-top:2px;background:#e10600;color:#fff;font-weight:900;font-size:20px;
@@ -998,14 +1003,14 @@ const CSS=`
 #f1-laps b{color:#ffd12e}
 #f1-coins{position:absolute;right:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,209,46,.35);
   border-radius:12px;padding:6px 12px;color:#ffd12e;font-weight:800;font-size:15px;z-index:6}
-#f1-map{position:absolute;left:10px;bottom:146px;width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 915 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย */
+#f1-map{position:absolute;left:10px;bottom:calc(var(--f1-sh) + 16px);width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 915 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย · 🎛️ รอบ 921 — วัดจากความสูงแถบเลี้ยวเอง */
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
 #f1-resp{position:absolute;top:42%;left:50%;transform:translateX(-50%);background:rgba(18,168,84,.92);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
-#f1-drs{position:absolute;right:10px;bottom:240px;z-index:6;pointer-events:none;display:none;text-align:right;
+#f1-drs{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 150px);z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
 #f1-drs small{display:block;font-size:11px;font-weight:600;letter-spacing:0;opacity:.95}
 #f1-drs.wait{display:block;background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.22);color:#9fb2d8}
@@ -1058,23 +1063,32 @@ const CSS=`
 #f1-board .m-bd-r.me .m-bd-n{color:#7dffb0}
 #f1-board .m-bd-n{overflow:hidden;text-overflow:ellipsis;max-width:130px}
 #f1-board .m-bd-w{margin-left:auto;font-weight:800}
-#f1-chatbar{position:absolute;left:50%;transform:translateX(-50%);bottom:88px;display:none;gap:6px;z-index:7;
-  flex-wrap:wrap;justify-content:center;max-width:92vw}
+#f1-chatbar{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--f1-sh) + 16px);display:none;gap:6px;z-index:7;
+  flex-wrap:wrap;justify-content:center;max-width:92vw}   /* 🎛️ รอบ 921 — ยกขึ้นเหนือแถบเลี้ยว/ปุ่มเร่งที่ใหญ่ขึ้น (เดิมโดนทับจนกดไม่ได้) */
 #f1-chatbar.on{display:flex}
 #f1-chatbar button{background:rgba(14,22,40,.9);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:20px;
   padding:6px 12px;font-size:13px;font-family:inherit}
-#f1-chatbtn{position:absolute;right:10px;bottom:190px;width:44px;height:44px;border-radius:50%;z-index:7;
+#f1-chatbtn{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 98px);width:44px;height:44px;border-radius:50%;z-index:7;
   background:rgba(14,22,40,.85);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:20px}
 #f1-selfmsg{position:absolute;bottom:150px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);
   color:#12283f;border-radius:14px;padding:5px 14px;font-size:14px;font-weight:700;display:none;z-index:7}
 #f1-selfmsg.on{display:block}
-/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) · 🧭 รอบ 915: ชิดซ้ายสุด (ปุ่ม 📷/🏁 ย้ายขึ้นขวาบนแล้ว) */
-#f1-steer{position:absolute;left:8px;bottom:8px;width:min(38vw,270px);height:128px;background:rgba(255,255,255,.10);
-  border:1px solid rgba(255,255,255,.22);border-radius:64px;z-index:7}
-#f1-knob{position:absolute;top:5px;left:50%;width:116px;height:116px;margin-left:-58px;border-radius:50%;
+/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) · 🧭 รอบ 915: ชิดซ้ายสุด (ปุ่ม 📷/🏁 ย้ายขึ้นขวาบนแล้ว)
+   🎛️ รอบ 921 (ผู้ใช้ชี้จากเครื่องจริง): หนาขึ้นอีกเท่าตัว + ยกปุ่มเร่งขึ้นมาสูงเกือบครึ่งจอ
+   --f1-sh = ความสูงแถบเลี้ยว (เพดาน 44vh = สูงเกือบครึ่งจอพอดีตามที่ผู้ใช้ขีดเส้นไว้)
+   --f1-pedb = ระยะยกแถวคันเร่ง/เบรก ให้ "ขอบบนปุ่มเร่ง" เสมอกับขอบบนแถบเลี้ยวพอดี
+   ของอื่นที่เคยตรึงเป็น px (มินิแมป/ปุ่มแชท/ป้าย DRS) วัดต่อจาก 2 ตัวนี้ จะได้ขยับตามกันเองทุกขนาดจอ */
+#f1-wrap{--f1-sh:min(256px,44vh);--f1-sw:min(38vw,270px);--f1-pedb:max(8px,calc(var(--f1-sh) - 78px));
+  /* ลูกบิดต้อง "เตี้ยกว่าแถบ" และ "แคบกว่าแถบพอควร" ด้วย — ไม่งั้นลูกบิดกว้างเท่าแถบจนเลื่อนแทบไม่ขยับ
+     (สูตรเลื่อนใน steerTo คือ 1−ลูกบิด/แถบ · 55% ให้ระยะเลื่อน ±22.5% เห็นชัดว่าเลี้ยวมากน้อยแค่ไหน) */
+  --f1-kn:min(calc(var(--f1-sh) - 14px),calc(var(--f1-sw)*0.55))}
+#f1-steer{position:absolute;left:8px;bottom:8px;width:var(--f1-sw);height:var(--f1-sh);background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.22);border-radius:calc(var(--f1-sh)/2);z-index:7}
+#f1-knob{position:absolute;top:calc((var(--f1-sh) - var(--f1-kn))/2);left:50%;width:var(--f1-kn);height:var(--f1-kn);
+  margin-left:calc(var(--f1-kn)/-2);border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#ffb054,#e07800);box-shadow:0 2px 8px rgba(0,0,0,.5);
-  display:flex;align-items:center;justify-content:center;font-size:46px}
-#f1-pedals{position:absolute;right:10px;bottom:8px;display:flex;gap:10px;z-index:7}
+  display:flex;align-items:center;justify-content:center;font-size:min(46px,calc(var(--f1-kn)*0.34))}
+#f1-pedals{position:absolute;right:10px;bottom:var(--f1-pedb);display:flex;gap:10px;z-index:7}
 .f1-pedal{width:72px;height:72px;border-radius:50%;border:none;font-size:26px;font-family:inherit;font-weight:900;
   color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.5)}
 #f1-brake{background:radial-gradient(circle at 35% 30%,#ff6a6a,#b41414)}
@@ -1122,14 +1136,13 @@ const CSS=`
 #f1-leave{background:#d81a1a;color:#fff}
 @media (max-height:430px){
   #f1-speed{font-size:30px}
-  /* 🧭 รอบ 915: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน */
-  #f1-steer{height:100px;border-radius:50px;width:min(40vw,250px)}
-  #f1-knob{width:90px;height:90px;margin-left:-45px;font-size:36px}
+  /* 🧭 รอบ 915: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
+     🎛️ รอบ 921: ความสูง/ตำแหน่งย้ายไปคุมด้วย --f1-sh/--f1-pedb แล้ว (เพดาน 44vh คุมจอเตี้ยให้เอง)
+     เหลือแค่ "ความกว้าง" ที่ยังต่างจากจอใหญ่ */
+  #f1-wrap{--f1-sh:min(200px,44vh);--f1-sw:min(40vw,250px)}
   #f1-cambtn,#f1-exitbtn{font-size:12px;padding:4px 8px;border-radius:10px}
-  #f1-map{width:96px;height:96px;bottom:116px}
-  #f1-hud{bottom:104px}
-  #f1-chatbtn{bottom:196px}
-  #f1-drs{bottom:246px;font-size:15px;padding:3px 9px}
+  #f1-map{width:96px;height:96px}
+  #f1-drs{font-size:15px;padding:3px 9px}
   #f1-drs small{font-size:10px}
   /* จอเตี้ย: ต้องไม่ชนเหรียญ (สูงถึง y=44) และไม่ชนป้ายรถเงา (ถึง y=84) */
   #f1-tyre{top:48px;padding:3px 8px}
@@ -1836,8 +1849,13 @@ function physTick(dt){
     *Math.sign(vF||1)*(surf==='track'?1:sc.grip*0.9);
   aF-=DRAG_K*(drsOn?DRS_DRAG_K:1)*spd*spd*Math.sign(vF||0);   // 🪽 DRS เปิด = แรงต้านลด
   aF-=(ROLL_A+sc.drag)*Math.sign(vF||0)*(Math.abs(vF)>0.5?1:Math.abs(vF)*2);
+  /* 🛑 รอบ 921: ปล่อยคันเร่ง (ไม่เบรก ไม่ถอย) = หน่วงเพิ่มเองเบา ๆ จนหยุด — ผู้ใช้ขอ "ยกมือออกแล้วค่อย ๆ เบรก"
+     คิดหลังแรงต้านอากาศ/ยาง เพื่อให้บวกกันตรง ๆ · ผิวลื่น (ทราย/runoff) หน่วงได้น้อยลงตามกริป เหมือนเบรกจริง */
+  const coasting=thr===0&&!braking&&!reving;
+  if(coasting&&Math.abs(vF)>COAST_STOP) aF-=COAST_A*Math.sign(vF)*(surf==='track'?1:sc.grip);
   vF+=aF*dt;
   if(braking&&Math.abs(vF)<0.6&&thr===0) vF=0;
+  if(coasting&&Math.abs(vF)<=COAST_STOP) vF=0;   // 🛑 รอบ 921 — จอดสนิท ไม่คืบต่อเอง
   if(vF<-REV_MAX) vF=-REV_MAX;                         // ถอยได้ช้าๆ พอ (⏪ รอบ 911 ย้ายเป็นค่าคงที่)
   /* 🚧 รอบ 905: ลิมิตเตอร์เลนพิท 80 กม./ชม. (อัตโนมัติเหมือนของจริง — เด็กไม่ต้องกดเอง) */
   pitLimited=false;
