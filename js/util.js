@@ -940,7 +940,7 @@ function openSettings(){
     saveState(); sfx.select(); paint();
     if(typeof renderDashboard === 'function') renderDashboard();   // อัปเดตแถบโปรไฟล์ + ตัวในล็อบบี้ทันที
   }));
-  if(typeof bindStripArrows === 'function') bindStripArrows(overlay.querySelector('.blk-strip'));
+  if(typeof bindStripArrows === 'function') bindStripArrows(overlay.querySelector('.blk-strip'), {full:true});
   // เปิดตั้งค่ามา = เลื่อนแถบไปตรงตัวที่เลือกอยู่เลย (ตัวที่ 88 จะได้ไม่ต้องกดลูกศรยาว ๆ)
   setTimeout(()=>{ const s = overlay.querySelector('.blk-mini.sel'); if(s) s.scrollIntoView({block:'nearest', inline:'center'}); }, 0);
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{

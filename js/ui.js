@@ -6356,6 +6356,27 @@ async function enterMoto3D(){
 }
 
 
+/* 🏎️ รอบ 891: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
+   + ข้อมูลสนามจริงจาก OSM (js/data/f1_bahrain.js) + GLTFLoader เผื่อผู้ใช้วางโมเดล f1_car.glb */
+async function enterF1_3D(){
+  if(!state.f1Ticket || state.advHurt || advLoading) return advBusyMsg(enterF1_3D);
+  if(!window.F1World || !window.F1_MAP){
+    advLoading = Date.now();
+    toast('🏎️ กำลังเปิดสนามซาเคียร์ · บาห์เรน...');
+    try{
+      await loadScriptOnce('js/vendor/three.min.js');
+      await loadScriptOnce('js/vendor/GLTFLoader.js');
+      await loadScriptOnce('js/data/f1_bahrain.js');
+      await loadScriptOnce('js/f1_3d.js');
+    }catch(e){
+      world3DFail('โลกแข่งรถ F1', e);
+      return;
+    }
+    advLoading = false;
+  }
+  try{ F1World.start(); }catch(e){ world3DFail('โลกแข่งรถ F1', e); }
+}
+
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
   if(!state.invasionTicket || state.advHurt || advLoading) return advBusyMsg(enterInvasion3D);
@@ -6392,6 +6413,7 @@ const WORLD3D = [
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  prereq:'driveTicket', enter:enterMoto3D },
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',prereq:'motoTicket', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
+  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    prereq:'motoTicket',  enter:enterF1_3D },   // 🏎️ รอบ 891: สนามซาเคียร์ Bahrain
 ];
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
@@ -6999,10 +7021,12 @@ function openWishlistDialog(){
 
 /* ลูกศรเลื่อนแถบปัดแนวนอน (สไตล์ SimCity BuildIt) — wrap = .strip-wrap ที่มี .strip-x ข้างใน
    คลิกเลื่อนทีละ ~80% ของช่องมอง · เนื้อหาไม่ล้น = ซ่อนลูกศรเอง (เรียกซ้ำได้หลัง re-render) */
-function bindStripArrows(wrap){
+function bindStripArrows(wrap, opts){
   if(!wrap) return;
   const strip = wrap.querySelector('.strip-x');
-  const page = ()=> Math.max(120, strip.clientWidth * 0.8);
+  // 🦸 รอบ 895: blk-x (ตัวเลือกตัวละคร) ส่ง {full:true} มา — กระโดดเต็มหน้า (5 ตัว) แทนเลื่อนซ้อน 80% เดิม
+  //   ตัว strip อื่นทั้งหมด (โรงงาน/ตลาด/โชว์รูมรถ ฯลฯ) เรียกแบบไม่ใส่ opts → พฤติกรรม 0.8 เดิมเป๊ะ ไม่กระทบ
+  const page = ()=> Math.max(120, strip.clientWidth * (opts && opts.full ? 1 : 0.8));
   const l = wrap.querySelector('.sa-l'), r = wrap.querySelector('.sa-r');
   if(l && !l.dataset.bound){ l.dataset.bound = '1'; l.addEventListener('click', ()=>{ sfx.select(); strip.scrollBy({left:-page(), behavior:'smooth'}); }); }
   if(r && !r.dataset.bound){ r.dataset.bound = '1'; r.addEventListener('click', ()=>{ sfx.select(); strip.scrollBy({left: page(), behavior:'smooth'}); }); }
