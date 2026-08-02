@@ -19,6 +19,8 @@
      ])                                 // run เป็น async ได้ · หลัง run เดินเฟรมให้เอง (settle)
      Snap.grid(steps,{cols:2,w:960,settle:2,name:'grid.jpg'})
      Snap.step(3)                       // เดินเฟรมเกมเอง (แท็บถูกซ่อน rAF ไม่วิ่ง — ใช้ testkit step)
+     Snap.sink('http://127.0.0.1:8797') // 📮 แท็บที่ดาวน์โหลดไม่ลง Downloads: ส่งภาพให้ตัวรับเซฟแทน
+                                        //    รันตัวรับก่อน: python tools/shotsink.py 8797 <โฟลเดอร์ที่จะเซฟ>
      Snap.grab()                        // ได้ <canvas> 2D ของเฟรมปัจจุบัน (ต่อยอดวาดเองได้)
 
    หมายเหตุ: โลกยานแม่ (InvasionWorld) ใช้ได้ทันที · โลกอื่นต้องมี _t.step/_t.stepFrame
@@ -47,12 +49,21 @@ window.Snap = (function(){
     return big;
   }
 
+  /* 📮 รอบ 900: บางแท็บ preview กด <a download> แล้วไฟล์ไม่ลง Downloads เลย (เจอรอบ 890 ด้วย)
+     → ตั้ง Snap.sink('http://127.0.0.1:8797') แล้วภาพจะถูกส่งไปให้ tools/shotsink.py เซฟให้แทน
+     (เดิมต้องเขียนตัวรับ+ตัวส่งใหม่ทุกรอบ) · ไม่ตั้ง = ดาวน์โหลดปกติเหมือนเดิม */
+  let SINK = null;
+  function sink(url){ SINK = url ? String(url).replace(/\/$/,'') : null; return SINK; }
   function save(cnv,name,q){
     const b=cnv.toDataURL('image/jpeg',q).split(',')[1];
-    const a=document.createElement('a');
-    a.href='data:image/jpeg;base64,'+b; a.download=name;
-    document.body.appendChild(a); a.click(); a.remove();
-    const r={file:name, kb:Math.round(b.length*3/4/1024), w:cnv.width, h:cnv.height};
+    if(SINK){
+      fetch(SINK, {method:'POST', body:name+'|'+b}).catch(()=>{});
+    }else{
+      const a=document.createElement('a');
+      a.href='data:image/jpeg;base64,'+b; a.download=name;
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    const r={file:name, kb:Math.round(b.length*3/4/1024), w:cnv.width, h:cnv.height, sink:SINK||undefined};
     if(cnv._warn) r.warn=cnv._warn;
     return r;
   }
@@ -87,5 +98,5 @@ window.Snap = (function(){
     return save(g, o.name||('snapgrid_'+stamp()+'.jpg'), o.q||.5);
   }
 
-  return {shot, grid, grab, step};
+  return {shot, grid, grab, step, sink};
 })();

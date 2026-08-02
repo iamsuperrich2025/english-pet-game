@@ -818,11 +818,13 @@ function miniCar(color){
   g.add(M(box(2.4,0.62,1.2), mat(color), 0, 0.62, 0));
   const cab = M(box(1.35,0.55,1.05), mat(0xe3f2fd), -0.12, 1.18, 0); g.add(cab);
   g.add(M(box(2.5,0.16,1.26), mat(0x2d3238), 0, 0.34, 0));
+  const wheels = [];
   [[-0.8,0.55],[0.8,0.55],[-0.8,-0.55],[0.8,-0.55]].forEach(([x,z])=>{
     const w = M(cyl(0.3,0.3,0.22,10), mat(0x25292e), x, 0.3, z);
-    w.rotation.x = Math.PI/2; g.add(w);
+    w.rotation.x = Math.PI/2; g.add(w); wheels.push(w);
     w.add(M(cyl(0.14,0.14,0.24,8), mat(0xcfd8dc), 0, 0, 0));
   });
+  g.userData.wheels = wheels;   // 🚗 รอบ 900: ล้อหมุนตอนแล่นออกจากโรงรถ (rotation.y = แกนเพลา เพราะ rotation.x=90° ถูกใส่ทีหลัง)
   g.add(M(box(0.1,0.18,0.28), mat(0xfff59d,{emissive:0x666600}), 1.22, 0.68, 0.36));
   g.add(M(box(0.1,0.18,0.28), mat(0xfff59d,{emissive:0x666600}), 1.22, 0.68, -0.36));
   g.add(M(box(0.08,0.16,0.24), mat(0xef5350,{emissive:0x550000}), -1.22, 0.68, 0.34));
@@ -882,6 +884,27 @@ function miniDrone(color){
   });
   g.userData.props = props;
   return g;
+}
+/* 🤖 รอบ 900: หุ่นรบตัวเดินได้ — สัดส่วน/สีชุดเดียวกับหุ่นโชว์บนโรงเก็บ (bHangar) แต่ย่อให้ลอดประตูม้วนสูง 2.2 ม. ได้
+   ขาแขวนบน "กลุ่มสะโพก" (จุดหมุนอยู่ข้อสะโพก) → แกว่ง rotation.x แล้วเป็นท่าเดินจริง ไม่ใช่กล่องไถ */
+function miniMecha(color){
+  const g = new THREE.Group();
+  const legs = [];
+  [-0.3, 0.3].forEach(z=>{
+    const hip = new THREE.Group();
+    hip.position.set(0, 0.86, z);
+    hip.add(M(box(0.34,0.8,0.34), mat(0x37474f), 0, -0.4, 0));
+    hip.add(M(box(0.44,0.14,0.5), mat(0x546e7a), 0.04, -0.79, 0));   // ฝ่าเท้า
+    g.add(hip); legs.push(hip);
+  });
+  g.add(M(box(0.72,0.78,1.0), mat(color), 0, 1.26, 0));
+  [-1,1].forEach(s=>g.add(M(box(0.26,0.74,0.26), mat(0x3f51b5), 0, 1.22, s*0.63)));
+  g.add(M(box(0.46,0.36,0.5), mat(0x7986cb), 0.02, 1.83, 0));
+  [-1,1].forEach(s=>g.add(M(new THREE.SphereGeometry(0.07,6,5), mat(0x00e5ff,{emissive:0x006677}), 0.24, 1.86, s*0.13)));
+  g.add(M(box(0.2,0.2,0.5), mat(0x455a64), -0.2, 1.72, 0));          // เครื่องยนต์หลัง
+  g.add(blobShadow(0.8));
+  g.userData.legs = legs;
+  return g;   // หันหน้า +X (เหมือนยานคันอื่นในโซนนี้)
 }
 
 /* ============================================================
@@ -2172,10 +2195,11 @@ function registerDoor(key){
   _lastDoor = null; _lastKind = 'swing'; _lastSpill = []; _lastGlow = [];
   return true;
 }
-/* เวลาที่ประตูใช้เปิดจนสุด (วินาที) — walkSelfTo เอาไปเผื่อระยะให้ประตูม้วนที่ช้ากว่าบานหมุน · 0 = ไม่มีบาน/บานหมุน (ใช้ % เดิมรอบ 890) */
+/* เวลาที่ประตูใช้เปิดจนสุด (วินาที) — walkSelfTo เอาไปเผื่อระยะให้ประตูม้วนที่ช้ากว่าบานหมุน · 0 = ไม่มีบาน/บานหมุน (ใช้ % เดิมรอบ 890)
+   🚗 รอบ 900: ตึกที่มียานแล่นออกมา ต้องเผื่อเวลาของยานด้วย (บานยกเร็วขึ้นเท่านั้น — เดินถึงพอดีตอนยานจอดนิ่ง) */
 function doorLeadS(key){
   const d = CityDoors[key];
-  return (d && d.kind==='roll') ? d.os : 0;
+  return Math.max((d && d.kind==='roll') ? d.os : 0, rideLeadS(key));
 }
 /* 🔦 ลำแสงลอดประตู: เรเดียลจากกึ่งกลาง "ขอบบน" ของ canvas = ฐานแสงอยู่ที่ธรณีประตู แล้วบานออกไปข้างหน้า */
 let _spillTex = null;
@@ -2292,6 +2316,7 @@ function setCityDoor(key, open, snap){
   const d = CityDoors[key]; if(!d) return false;
   const tgt = open ? 1 : d.rest;
   d.held = !!open;
+  if(!open) releaseRide(key);          // 🚗 รอบ 900: บานกำลังกลับท่าพัก = ยานถอยกลับเข้าโรงก่อน ไม่ทิ้งค้างหน้าประตูปิด
   if(snap){ d.tgt = d.k = tgt; applyDoorPose(d); return true; }
   if(d.tgt === tgt) return false;
   d.tgt = tgt;
@@ -2357,6 +2382,138 @@ tickers.push((dt)=>{
       if(!up && d.k === 0) shutterClunkSfx(1);
       else if(up && d.k === 1) shutterClunkSfx(.5);
     }else if(!up && d.k === 0) doorLatchSfx();
+  }
+});
+
+/* ============================================================
+   🚗🤖🛸 รอบ 900: ยานพาหนะแล่นออกจากช่องประตูม้วนที่เพิ่งเปิด → จอดรอหน้าประตู
+   ------------------------------------------------------------
+   ต่อยอดรอบ 897: เดินเข้าโลกขับรถ/โลกหุ่นรบ/โลกโดรน แล้วประตูม้วนยกขึ้นเฉย ๆ ยังไม่รู้ว่า
+   ข้างในเก็บอะไร · ตอนนี้พอบานยกพ้นหัวยาน "ของข้างใน" แล่นออกมาจากช่องนั้นจริง ๆ
+   (รถออกจากอู่ · หุ่นเดินออกจากโรงเก็บ · โดรนบินออกจากตู้ชาร์จ) แล้วเลี้ยวไปจอดรอข้างทาง
+   ยืมของเดิมล้วน ไม่มีระบบใหม่:
+     · ทะเบียน CityDoors (รอบ 890/897) = ตัวบอกว่าบานยกไปถึงไหน (d.k) + ตัวสั่งเปิด/ปล่อย
+     · ตัวขับ = ticker ตัวเดียวของไฟล์ (เหมือนฝุ่นฝีเท้า/ประตู) · โมเดล miniCar/miniDrone/miniMecha (โซน 🚗🏍️🚁🛸)
+     · เสียงย่ำของหุ่น = footStepSfx ของรอบ 871 ตัวเดิม
+   🔑 พิกัดในตารางเป็น "ระบบพิกัดของตึกหลังนั้น" เพราะยานถูกใส่เป็นลูกของกลุ่มตึก (d.h.parent)
+      → +z = หันออกหาลานกลางเสมอ ไม่ต้องแปลงมุมเมืองเอง และย้ายตึกเมื่อไหร่ยานตามไปเอง
+   ⏱️ จังหวะ: doorLeadS() บวกเวลาที่ยานใช้เข้าไปด้วย (rideLeadS) → บานเริ่มยกเร็วขึ้นเท่านั้น
+      เราเดินถึงหน้าประตูพอดีตอนยานจอดนิ่ง = ภาพจอเปิดขากลับ (รอบ 880 แคปตอนถึง) ติดยานจอดรอด้วย
+   ============================================================ */
+const RIDE_GATE   = 0.5;    // บานม้วนยกได้กี่ส่วนถึงเริ่มออกตัว (ครึ่งช่อง — ถึงปากประตูตอนบานยกสุดพอดี)
+const RIDE_OUT_S  = 0.45;   // วินาที: ออกตัวตรง ๆ ลอดช่องประตูออกมา
+const RIDE_PARK_S = 0.55;   // วินาที: เลี้ยวออกข้างทางแล้วผ่อนเข้าจอด
+/* ยาน: x0,y0,z0 = จุดจอดในโรง (หลังบาน ผนังบังอยู่) · y1,z1 = พ้นปากประตู · px,py,pz = ที่จอดรอ
+   turn = องศาที่เลี้ยวตอนเข้าจอด (ลบ = ปาดไปทางซ้ายของตึก) · yaw = แก้หน้าโมเดล (ทุกตัวในไฟล์นี้หันหน้า +X) */
+const DOOR_RIDES = {
+  w3d_drive:{ make:()=>miniCar(0xd32f2f), yaw:-Math.PI/2, sfx:'engine', wheel:9,     // อู่รถ: ช่องซ้าย (bays[-2.2]) · z=3.5 คือผิวหน้าตึก
+              x0:-2.2, y0:0,    z0:1.4,  y1:0,    z1:5.2,  px:-3.7, py:0,   pz:6.5, turn:-0.55 },
+  w3d_mecha:{ make:()=>miniMecha(0x5c6bc0), yaw:-Math.PI/2, sfx:'step', step:6.6,    // โรงเก็บหุ่น: ช่องเดียวกลางซุ้ม · ฝาหน้า z=4.0
+              x0:0,    y0:0,    z0:2.0,  y1:0,    z1:5.9,  px:-2.8, py:0,   pz:6.6, turn:-0.5 },
+  w3d_drone:{ make:()=>miniDrone(0x26c6da), yaw:-Math.PI/2, sfx:'rotor', prop:26, sc:1.2, bob:0.09,
+              x0:-2.6, y0:0.74, z0:-2.5, y1:0.86, z1:0.4,  px:-1.9, py:1.9, pz:3.1, turn:-0.4 },
+};
+const Rides = {};           // key ตึก → {g, s:สเปก, u:0..2 (0-1 ออกจากประตู · 1-2 เข้าจอด), dir:1 ออก/-1 ถอยกลับ, ph:เฟสล้อ-ขา, go:ออกตัวแล้ว}
+/* เวลาที่ยานใช้ตั้งแต่ "บานเริ่มยก" จนจอดนิ่ง — walkSelfTo เอาไปเผื่อระยะเดิน (0 = ตึกนี้ไม่มียาน) */
+function rideLeadS(key){
+  return DOOR_RIDES[key] ? ROLL_OPEN_S*RIDE_GATE + RIDE_OUT_S + RIDE_PARK_S : 0;
+}
+/* 🔊 เสียงยานออกจากโรง — สังเคราะห์เองด้วย AudioContext ตัวเดียวกับเสียงฝีเท้า/ประตู
+   เครื่องยนต์ = ฟันเลื่อยเบส 2 ชั้นไล่รอบขึ้น (ติดเครื่อง→ออกตัว) · ใบพัด = คลื่นสามเหลี่ยมสูงหวีดขึ้นแล้วคงที่ */
+function rideSfx(kind, dur){
+  const c = footCtx(); if(!c || !kind || kind==='step') return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t = c.currentTime, D = Math.max(0.3, dur||1);
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001,t);
+    g.gain.exponentialRampToValueAtTime(kind==='rotor'?.030:.042, t+.18);
+    g.gain.setValueAtTime(kind==='rotor'?.030:.042, t+D*0.72);
+    g.gain.exponentialRampToValueAtTime(.0001, t+D);
+    const lp = c.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = kind==='rotor' ? 2600 : 340;
+    lp.connect(g); g.connect(c.destination);
+    const f0 = kind==='rotor' ? 190 : 58, f1 = kind==='rotor' ? 320 : 116;
+    (kind==='rotor' ? [1, 2.02] : [1, 1.51]).forEach((m,i)=>{
+      const o = c.createOscillator();
+      o.type = kind==='rotor' ? 'triangle' : 'sawtooth';
+      o.frequency.setValueAtTime(f0*m, t);
+      o.frequency.exponentialRampToValueAtTime(f1*m, t+D*0.55);
+      const og = c.createGain(); og.gain.value = i ? .45 : 1;
+      o.connect(og); og.connect(lp); o.start(t); o.stop(t+D+.05);
+    });
+  }catch(e){}
+}
+/* วางยานตามความคืบหน้า u (0 = ในโรง · 1 = พ้นปากประตู · 2 = จอดนิ่ง) */
+function ridePose(r, u){
+  const s = r.s;
+  let x, y, z, hd;
+  if(u <= 1){
+    const e = u*u;                                  // ออกตัวจากหยุดนิ่ง (ค่อย ๆ เร่ง)
+    x = s.x0; y = s.y0+(s.y1-s.y0)*e; z = s.z0+(s.z1-s.z0)*e; hd = 0;
+  }else{
+    const v = u-1, e = 1-(1-v)*(1-v);               // เข้าจอดแบบผ่อนความเร็ว
+    x = s.x0+(s.px-s.x0)*e; y = s.y1+(s.py-s.y1)*e; z = s.z1+(s.pz-s.z1)*e;
+    hd = s.turn*Math.sin(Math.PI*e);                // ปาดออกข้างแล้วคืนหน้าตรงตอนจอดนิ่ง
+  }
+  r.g.position.set(x, y, z);
+  r.g.rotation.y = (s.yaw||0) + hd;
+}
+/* เรียกตอนสั่งเปิดประตูรับเรา (walkSelfTo) — ตึกไม่มียาน/มีคันแล่นอยู่แล้ว = คืน false เงียบ ๆ
+   snap=true: โผล่มาจอดอยู่แล้วตั้งแต่เฟรมแรกแบบเงียบ (ขากลับ — ภาพจอเปิดรอบ 880 แคปตอนยานจอดรออยู่
+   ถ้าไม่ตั้งให้ตรงกัน ภาพจางมาแล้วยานจะหายวับต่อหน้า) */
+function launchRide(key, snap){
+  const s = DOOR_RIDES[key], d = CityDoors[key];
+  if(!s || !d || !d.h || !d.h.parent || Rides[key]) return false;
+  const g = s.make();
+  if(s.sc) g.scale.setScalar(s.sc);
+  const r = {g, s, u:snap?2:0, dir:1, ph:0, go:!!snap, key};
+  ridePose(r, r.u);
+  d.h.parent.add(g);                                 // ลูกของกลุ่มตึก → พิกัดในตารางเป็นของตึกตรง ๆ
+  Rides[key] = r;
+  return true;
+}
+/* ประตูกลับท่าพัก = ยานถอยกลับเข้าโรง แล้วเก็บทิ้งตอนถึงที่เดิม (geometry/material เป็น cache รวม ห้าม dispose) */
+function releaseRide(key){
+  const r = Rides[key];
+  if(!r || r.dir < 0) return false;
+  r.dir = -1;
+  if(r.go) rideSfx(r.s.sfx, (RIDE_OUT_S+RIDE_PARK_S)*Math.max(0.3, r.u/2));
+  return true;
+}
+tickers.push((dt)=>{
+  for(const key in Rides){
+    const r = Rides[key], s = r.s, d = CityDoors[key];
+    if(r.dir < 0 && r.u <= 0){                       // ถอยกลับถึงในโรงแล้ว (หรือถูกยกเลิกก่อนออกตัว) = เก็บทิ้ง
+      if(r.g.parent) r.g.parent.remove(r.g);
+      delete Rides[key];
+      continue;
+    }
+    if(!r.go){                                       // รอบานม้วนยกพ้นหัวยานก่อนค่อยออกตัว
+      if(r.dir > 0 && (!d || d.k < RIDE_GATE)) continue;
+      r.go = true;
+      if(r.dir > 0) rideSfx(s.sfx, RIDE_OUT_S+RIDE_PARK_S);
+    }
+    const moving = r.dir > 0 ? r.u < 2 : r.u > 0;
+    if(moving){
+      r.u = clamp(r.u + r.dir*dt/(r.u < 1 ? RIDE_OUT_S : RIDE_PARK_S), 0, 2);
+      ridePose(r, r.u);
+      r.ph += dt*(s.wheel || s.prop || s.step || 0);
+      if(s.wheel) for(let i=0;i<r.g.userData.wheels.length;i++) r.g.userData.wheels[i].rotation.y = r.ph;
+      if(s.prop)  r.g.userData.props.forEach(p=>p.rotation.y = r.ph);
+      if(s.step){                                    // 🦿 ขาแกว่งจริง + ย่ำหนึ่งครั้งต่อครึ่งรอบ (ใช้เสียงฝีเท้ารอบ 871)
+        const sw = (r.u>=2 || r.u<=0) ? 0 : Math.sin(r.ph)*0.55;   // ถึงที่จอด = ยืนตรงเท้าชิดพื้น ไม่ค้างท่าก้าว
+        r.g.userData.legs[0].rotation.x =  sw;
+        r.g.userData.legs[1].rotation.x = -sw;
+        r.g.position.y += Math.abs(sw)*0.09;         // ตัวเด้งตามจังหวะขา (ก้าวสุด = ตัวยกสุด)
+        const n = Math.floor(r.ph/Math.PI);
+        if(n !== r.stepN){ if(r.stepN != null) footStepSfx(1); r.stepN = n; }
+      }
+    }else if(s.bob){                                 // จอดนิ่งแล้ว: โดรนลอยตัวเบา ๆ + ใบพัดหมุนต่อ
+      r.ph += dt*(s.prop||0)*0.55;
+      r.g.userData.props.forEach(p=>p.rotation.y = r.ph);
+      r.g.position.y = s.py + Math.sin(r.ph*0.11)*s.bob;
+    }
   }
 });
 
@@ -2492,7 +2649,7 @@ function walkSelfTo(b, done){
     g.position.set(d.x, 0, d.z);
     g.rotation.y = Math.atan2(d.bx-d.x, d.bz-d.z);   // หันหน้าเข้าตึก (โมเดลหันหน้า +Z)
     S.walk = false;
-    openCityDoor(b.key);                             // 🚪 รอบ 890: มาทางตาข่าย setTimeout (rAF สะดุด) ก็ต้องเจอประตูเปิดรับ
+    if(openCityDoor(b.key)) launchRide(b.key);       // 🚪 รอบ 890: มาทางตาข่าย setTimeout (rAF สะดุด) ก็ต้องเจอประตูเปิดรับ (🚗 รอบ 900: ยานตามออกมาด้วย)
     done();
   };
   const tick = (dt)=>{
@@ -2512,7 +2669,9 @@ function walkSelfTo(b, done){
       footStepSfx(clamp(moved/dt/WALK_SPD, .3, 1));
       footDustPuff(nx, nz);
     }
-    if(lead ? (1-k)*dur <= lead : k >= DOOR_OPEN_AT) openCityDoor(b.key);   // 🚪 รอบ 890/897: ใกล้ถึงแล้ว ประตูเปิดรับ (สั่งซ้ำทุกเฟรมได้ ตัวสั่งกันเสียงซ้ำเอง)
+    /* 🚪 รอบ 890/897: ใกล้ถึงแล้ว ประตูเปิดรับ (สั่งซ้ำทุกเฟรมได้ ตัวสั่งกันเสียงซ้ำเอง)
+       🚗 รอบ 900: เฟรมที่บานเริ่มยกจริง ๆ = ปล่อยยานในโรงด้วย (ตัวมันรอบานยกครึ่งช่องก่อนค่อยออกตัวเอง) */
+    if(lead ? (1-k)*dur <= lead : k >= DOOR_OPEN_AT){ if(openCityDoor(b.key)) launchRide(b.key); }
     ph += dt*11;
     walkPose(g, ph, k>0.94 ? (1-k)/0.06 : 1);        // ใกล้ถึงค่อย ๆ หยุดขา
     rig.tx += (nx-rig.tx)*0.12; rig.tz += (nz-rig.tz)*0.12;   // กล้องตามหลังแบบนุ่ม
@@ -2553,6 +2712,7 @@ function stageExitWalk(g, key, bld, spot){
   /* 🚪 รอบ 890: ตั้งบานให้ "เปิดค้าง" ตั้งแต่เฟรมแรกแบบสแนป-เงียบ — ภาพจอเปิด (รอบ 880) แคปตอนบานเปิดอยู่
      ถ้าปล่อยบานปิด ภาพจางมาแล้วประตูจะกระตุกปิดทันตา · ตัวเราก็จะเดินทะลุบานออกมา */
   setCityDoor(key, true, true);
+  launchRide(key, true);   // 🚗 รอบ 900: ยานที่ขาไปแล่นออกมาจอดรอ ยังจอดอยู่ที่เดิมตอนเรากลับออกมา (ตรงกับภาพจอเปิด) — ปิดประตูตอนเดินพ้นแล้วมันค่อยถอยกลับเข้าโรงเอง
 }
 /* เดินออกมา — ทำงานครั้งเดียวเสมอ (ตัวเรียก: จอเปิดเริ่มจาง + ตาข่ายเวลาใน BOOT) */
 function walkSelfOut(){
@@ -2981,6 +3141,19 @@ function boot(){
     /* 🚪👥 รอบ 892: ประตูแง้มตามคนออนไลน์ */
     doorRest(key, ajar, quiet){ return setDoorRest(key, !!ajar, !!quiet); },
     doorRestScan(){ return refreshDoorRest(); },
+    /* 🚗 รอบ 900: ยานที่แล่นออกจากประตูม้วน — พิกัดที่รายงานเป็น "ของตึกหลังนั้น" (ยานเป็นลูกของกลุ่มตึก) */
+    rideKeys(){ return Object.keys(DOOR_RIDES); },
+    rideLaunch(key){ return launchRide(key); },
+    rideRelease(key){ return releaseRide(key); },
+    rideLead(key){ return +rideLeadS(key).toFixed(3); },
+    ride(key){ const r=Rides[key]; if(!r) return null;
+               const p=r.g.position;
+               return {u:+r.u.toFixed(3), dir:r.dir, go:r.go, sc:+r.g.scale.x.toFixed(2),
+                       x:+p.x.toFixed(2), y:+p.y.toFixed(2), z:+p.z.toFixed(2),
+                       ry:+r.g.rotation.y.toFixed(3), inScene:!!r.g.parent,
+                       wheel:r.g.userData.wheels?+r.g.userData.wheels[0].rotation.y.toFixed(2):null,
+                       leg:r.g.userData.legs?+r.g.userData.legs[0].rotation.x.toFixed(3):null,
+                       prop:r.g.userData.props?+r.g.userData.props[0].rotation.y.toFixed(2):null}; },
     /* 🚪🚶 รอบ 886: เดินออกจากประตู — ดูสถานะ/สั่งเดินเอง (เทสต์ไม่ต้องรอ splash) */
     exit(){ const S=Live.self; return {key:ExitWalk.key, done:ExitWalk.done, spot:ExitWalk.spot,
                                        walk:!!(S&&S.walk), dusts:footDusts.length}; },
