@@ -200,7 +200,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (2,278 บรรทัด · 134 รายการ)
+## js/city3d.js (2,284 บรรทัด · 134 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-88 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -213,11 +213,11 @@ certStripHTML:633 · certBindStrip:647
 - 1137-1281 🎉 เทศกาลตามวันที่จริง — พลุปีใหม่ / สงกรานต์ / ลอยกระทง (รอบ 863)
 - 1282-1532 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
 - 1533-1685 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
-- 1686-1854 🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
-- 1855-1872 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
-- 1873-2034 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
-- 2035-2154 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 2155-2278 🚀 BOOT
+- 1686-1860 🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
+- 1861-1878 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
+- 1879-2040 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+- 2041-2160 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
+- 2161-2284 🚀 BOOT
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:32
 hash:33 · rnd:34 · clamp:35 · TAU:36 · BLK8:40 · CAR_COL:51
@@ -237,11 +237,11 @@ removeActor:1518 · markPickable:1529 · BUB_MS:1542 · BUB_FRESH:1543 · BUB_MA
 BUB_TEX_KEEP:1546 · bubTexture:1552 · bubTexRelease:1564 · bubbleSprite:1569 · bubDraw:1578 · killBubble:1605
 showBubble:1617 · flushBubble:1654 · watchFriendChats:1662 · CITY_CHAT_MAX:1699 · bubSafeText:1702 · actorInfo:1708
 chatBoxCanSend:1718 · chatBoxWhy:1722 · chatBoxRefresh:1728 · openChatBox:1756 · closeChatBox:1766 · cbNote:1771
-sendCityChat:1776 · cityStopLive:1802 · spawnSelf:1818 · DOOR_MEM:1865 · rememberDoor:1866 · lastDoorKey:1867
-WALK_SPD:1879 · WALK_MIN:1880 · WALK_MAX:1881 · DOOR_GAP:1882 · RECEPTION_SPOT:1886 · doorSpotOf:1887
-walkPose:1898 · footCtx:1913 · footStepSfx:1918 · footDustTexture:1939 · footDustPuff:1948 · footDustTick:1962
-FOOT_STEP_DIST:1977 · walkSelfTo:1979 · onTap:2038 · travelTo:2054 · sparkleAt:2088 · openProfile:2112
-setChip:2150 · boot:2158
+sendCityChat:1776 · cityStopLive:1802 · spawnSelf:1824 · DOOR_MEM:1871 · rememberDoor:1872 · lastDoorKey:1873
+WALK_SPD:1885 · WALK_MIN:1886 · WALK_MAX:1887 · DOOR_GAP:1888 · RECEPTION_SPOT:1892 · doorSpotOf:1893
+walkPose:1904 · footCtx:1919 · footStepSfx:1924 · footDustTexture:1945 · footDustPuff:1954 · footDustTick:1968
+FOOT_STEP_DIST:1983 · walkSelfTo:1985 · onTap:2044 · travelTo:2060 · sparkleAt:2094 · openProfile:2118
+setChip:2156 · boot:2164
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60
