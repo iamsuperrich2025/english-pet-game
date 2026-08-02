@@ -34,6 +34,11 @@ const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไ�
 const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
 const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
 const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
+/* 🛣️ รอบ 915 — มุมที่ 3 "มุมถนน": ตำแหน่งเดียวกับคนขับ แต่ไม่มีค็อกพิท/ล้อ/รถบัง เห็นถนนล้วน
+   ยกสายตาสูงขึ้น + กดลงน้อยกว่า (ไม่ต้องเล็งผ่านช่องมองของภาพแล้ว) */
+const ROAD_EYE  = 1.45;
+const ROAD_DROP = 1.5;
+const ROAD_FOV  = 74;
 /* 🎡 พวงมาลัยหมุนตามการเลี้ยวจริง (รอบ 913) — ภาพแยกเป็น 2 ชั้น: cockpit_body.webp (ไม่มีพวงมาลัย) + wheel.webp */
 const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมกลางพวงมาลัย) คิดเป็น % ของภาพ — ได้จาก tools/f1_split_wheel.py
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
@@ -932,9 +937,14 @@ const CSS=`
 @media (min-aspect-ratio: 9/5){
   #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% 128%;background-position:center top}
 }
-#f1-cambtn{position:absolute;left:10px;bottom:50px;z-index:7;background:rgba(8,12,24,.78);
+/* 🧭 รอบ 915: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
+   เหรียญย้ายเข้ามาเป็นลูกของแถวนี้ด้วย จึงไม่ต้องเดาความกว้างเหรียญเวลาเลขยาว */
+#f1-topright{position:absolute;right:10px;top:8px;z-index:7;display:flex;align-items:center;gap:6px}
+#f1-cambtn,#f1-exitbtn{position:static;background:rgba(8,12,24,.78);
   border:1px solid rgba(255,255,255,.25);color:#fff;font-weight:800;font-size:13.5px;font-family:inherit;
-  border-radius:12px;padding:6px 11px}
+  border-radius:12px;padding:6px 11px;white-space:nowrap}
+#f1-exitbtn{background:rgba(216,26,26,.85);border-color:rgba(255,255,255,.25)}
+#f1-topright #f1-coins{position:static;right:auto;top:auto}
 #f1-word{position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
   background:rgba(8,12,24,.72);border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:5px 12px;white-space:nowrap;z-index:6}
 #f1-word .f-chip{display:inline-block;min-width:24px;padding:2px 5px;margin:0 1px;border-radius:7px;background:#26304a;
@@ -951,7 +961,7 @@ const CSS=`
 #f1-laps b{color:#ffd12e}
 #f1-coins{position:absolute;right:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,209,46,.35);
   border-radius:12px;padding:6px 12px;color:#ffd12e;font-weight:800;font-size:15px;z-index:6}
-#f1-map{position:absolute;left:10px;bottom:88px;width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}
+#f1-map{position:absolute;left:10px;bottom:146px;width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 915 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย */
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
@@ -1021,10 +1031,8 @@ const CSS=`
 #f1-selfmsg{position:absolute;bottom:150px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);
   color:#12283f;border-radius:14px;padding:5px 14px;font-size:14px;font-weight:700;display:none;z-index:7}
 #f1-selfmsg.on{display:block}
-#f1-exitbtn{position:absolute;left:10px;bottom:8px;z-index:7;background:rgba(216,26,26,.85);border:none;color:#fff;
-  border-radius:12px;padding:8px 14px;font-size:14px;font-weight:800;font-family:inherit}
-/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) ตามที่ผู้ใช้ขอ + knob โตตาม · ขยับขวาพ้นปุ่ม 📷/🏁 ซ้ายล่าง */
-#f1-steer{position:absolute;left:118px;bottom:8px;width:min(38vw,270px);height:128px;background:rgba(255,255,255,.10);
+/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) · 🧭 รอบ 915: ชิดซ้ายสุด (ปุ่ม 📷/🏁 ย้ายขึ้นขวาบนแล้ว) */
+#f1-steer{position:absolute;left:8px;bottom:8px;width:min(38vw,270px);height:128px;background:rgba(255,255,255,.10);
   border:1px solid rgba(255,255,255,.22);border-radius:64px;z-index:7}
 #f1-knob{position:absolute;top:5px;left:50%;width:116px;height:116px;margin-left:-58px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#ffb054,#e07800);box-shadow:0 2px 8px rgba(0,0,0,.5);
@@ -1077,7 +1085,11 @@ const CSS=`
 #f1-leave{background:#d81a1a;color:#fff}
 @media (max-height:430px){
   #f1-speed{font-size:30px}
-  #f1-map{width:96px;height:96px;bottom:104px}
+  /* 🧭 รอบ 915: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน */
+  #f1-steer{height:100px;border-radius:50px;width:min(40vw,250px)}
+  #f1-knob{width:90px;height:90px;margin-left:-45px;font-size:36px}
+  #f1-cambtn,#f1-exitbtn{font-size:12px;padding:4px 8px;border-radius:10px}
+  #f1-map{width:96px;height:96px;bottom:116px}
   #f1-hud{bottom:104px}
   #f1-chatbtn{bottom:196px}
   #f1-drs{bottom:246px;font-size:15px;padding:3px 9px}
@@ -1096,7 +1108,11 @@ function buildDom(){
     <div id="f1-cockpit"><img id="f1-wheel" alt=""></div>
     <div id="f1-word"></div>
     <div id="f1-laps"></div>
-    <div id="f1-coins">🪙 +0</div>
+    <div id="f1-topright">
+      <button id="f1-cambtn">📷 มุมรถ</button>
+      <button id="f1-exitbtn">🏁 ออก</button>
+      <div id="f1-coins">🪙 +0</div>
+    </div>
     <div id="f1-board"></div>
     <canvas id="f1-map" width="260" height="260"></canvas>
     <div id="f1-hud"><div id="f1-speed">0<small> กม./ชม.</small></div><span id="f1-gear">N</span></div>
@@ -1111,8 +1127,6 @@ function buildDom(){
     <div id="f1-selfmsg"></div>
     <button id="f1-chatbtn">💬</button>
     <div id="f1-chatbar"></div>
-    <button id="f1-cambtn">📷 มุมรถ</button>
-    <button id="f1-exitbtn">🏁 ออก</button>
     <div id="f1-steer"><div id="f1-knob">🏎️</div></div>
     <div id="f1-pedals">
       <button class="f1-pedal" id="f1-reverse">R</button>
@@ -1134,7 +1148,8 @@ function buildDom(){
           ปีกหลังจะเปิดเอง วิ่งเร็วขึ้น 8% ไว้แซง!<br>
           🛞 <b style="color:#ffd12e">ยางสึกได้!</b> ยิ่งไถล/ดริฟต์ ยางยิ่งหมดไว (ดูเกจ 🛞 มุมขวาบน)
           — ยางโทรม = รถลื่นขึ้น เข้า<b style="color:#67d8ff">เลนพิท</b> (เส้นประบนแผนที่) จอดนิ่งในช่อง 3 วิ = ยางใหม่<br>
-          🪖 เริ่มที่<b style="color:#67d8ff">มุมคนขับในค็อกพิท</b> — ปุ่ม 📷 มุมซ้ายล่างสลับเป็นมุมเห็นรถทั้งคัน<br>
+          🪖 เริ่มที่<b style="color:#67d8ff">มุมคนขับในค็อกพิท</b> — ปุ่มมุมขวาบนกดสลับได้ 3 มุม:
+          คนขับ → เห็นรถทั้งคัน → <b style="color:#67d8ff">มุมถนนล้วน</b> (ไม่มีอะไรบัง)<br>
           ⚠️ ออกนอกแทร็กระวังทราย รถจะลื่นและช้าลงมาก
         </div>
         <div class="fi-rank" id="f1-rankbox">
@@ -1192,7 +1207,7 @@ function buildDom(){
   });
   wheelEl.addEventListener('load',layoutWheel);
   wheelEl.src='img/f1/wheel.webp';
-  camBtnEl.addEventListener('click',()=>{ camMode=camMode==='cockpit'?'chase':'cockpit'; applyCamMode(); });
+  camBtnEl.addEventListener('click',cycleCamMode);   // 🛣️ รอบ 915 — วน 3 มุม
   /* แชท */
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button>${t}</button>`).join('');
   chatBarEl.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>{
@@ -2600,12 +2615,19 @@ function renderBoard(){
    📷 กล้องไล่หลัง + ลูปเกม
    ============================================================ */
 /* 🪖 รอบ 901: มุมคนขับ = ภาพหลัก (ภาพห้องคนขับทับจอ · ซ่อนรถตัวเอง) · 📷 = มุมไล่หลังเห็นทั้งคัน */
+/* 🛣️ รอบ 915: วน 3 มุม — 🪖 คนขับ → 📷 เห็นรถทั้งคัน → 🛣️ ถนนล้วน (ป้ายปุ่มบอก "มุมถัดไป" เสมอ) */
+const CAM_MODES=['cockpit','chase','road'];
+const CAM_NEXT_LABEL={cockpit:'📷 มุมรถ',chase:'🛣️ มุมถนน',road:'🪖 มุมคนขับ'};
+function cycleCamMode(){
+  camMode=CAM_MODES[(CAM_MODES.indexOf(camMode)+1)%CAM_MODES.length];
+  applyCamMode();
+}
 function applyCamMode(){
   const fp=camMode==='cockpit';
   wrapEl.classList.toggle('fp',fp);
-  if(camBtnEl) camBtnEl.textContent=fp?'📷 มุมรถ':'🪖 มุมคนขับ';
-  if(carGrp) carGrp.visible=!fp;
-  if(fpWheels) fpWheels.visible=fp;   // 🛞 รอบ 911 — ล้อหน้ามุมคนขับ
+  if(camBtnEl) camBtnEl.textContent=CAM_NEXT_LABEL[camMode]||'📷 มุมรถ';
+  if(carGrp) carGrp.visible=(camMode==='chase');   // 🛣️ มุมถนนก็ซ่อนรถ (นั่งในรถเหมือนกัน)
+  if(fpWheels) fpWheels.visible=fp;               // 🛞 ล้อหน้าโชว์เฉพาะมุมคนขับ
   camInit=false;
   if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
 }
@@ -2699,7 +2721,9 @@ function fpWheelTick(dt){
   }
 }
 function camTick(dt){
-  if(camMode==='cockpit'){
+  if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 915)
+    const road=camMode==='road';
+    const eyeH=road?ROAD_EYE:FP_EYE, dropH=road?ROAD_DROP:FP_DROP, fovBase=road?ROAD_FOV:FP_FOV;
     /* หัวคนขับตรึงกับรถ — ห้ามหน่วง ไม่งั้นโลก 3D กับภาพห้องคนขับแยกจากกัน */
     camYaw=yaw;
     const fx=Math.sin(yaw), fz=Math.cos(yaw);
@@ -2713,9 +2737,9 @@ function camTick(dt){
       oy=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
       ox=fz*sx; oz=-fx*sx;   // สั่นด้านข้างอิงทิศรถ (ตั้งฉากกับ fx,fz) ไม่ใช่แกนโลกตรง ๆ
     }
-    camera.position.set(px+fx*FP_FWD+ox,FP_EYE+oy,pz+fz*FP_FWD+oz);
-    camera.lookAt(px+fx*(FP_FWD+FP_LOOK)+ox,FP_EYE-FP_DROP+oy,pz+fz*(FP_FWD+FP_LOOK)+oz);
-    const fov=FP_FOV+clamp(spd/92,0,1)*12;
+    camera.position.set(px+fx*FP_FWD+ox,eyeH+oy,pz+fz*FP_FWD+oz);
+    camera.lookAt(px+fx*(FP_FWD+FP_LOOK)+ox,eyeH-dropH+oy,pz+fz*(FP_FWD+FP_LOOK)+oz);
+    const fov=fovBase+clamp(spd/92,0,1)*12;
     if(Math.abs(camera.fov-fov)>0.2){ camera.fov=fov; camera.updateProjectionMatrix(); }
     return;
   }
