@@ -6356,7 +6356,7 @@ async function enterMoto3D(){
 }
 
 
-/* 🏎️ รอบ 891: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
+/* 🏎️ รอบ 896: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
    + ข้อมูลสนามจริงจาก OSM (js/data/f1_bahrain.js) + GLTFLoader เผื่อผู้ใช้วางโมเดล f1_car.glb */
 async function enterF1_3D(){
   if(!state.f1Ticket || state.advHurt || advLoading) return advBusyMsg(enterF1_3D);
@@ -6413,7 +6413,7 @@ const WORLD3D = [
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  prereq:'driveTicket', enter:enterMoto3D },
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',prereq:'motoTicket', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
-  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    prereq:'motoTicket',  enter:enterF1_3D },   // 🏎️ รอบ 891: สนามซาเคียร์ Bahrain
+  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    prereq:'motoTicket',  enter:enterF1_3D },   // 🏎️ รอบ 896: สนามซาเคียร์ Bahrain
 ];
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
