@@ -386,6 +386,26 @@ function roofProps(g, w, d, y, seed){
    ขนาด/ตำแหน่งบานคงเดิมเป๊ะ → ตอนปิดตึกทุกหลังหน้าตาเหมือนก่อนรอบนี้ทุกประการ
    หมุนตัวบานเองไม่ได้ (จุดหมุนอยู่กลางบาน = บานจมทะลุผนัง) จึงต้องมี Group ที่ขอบซ้ายเป็นบานพับ */
 const DOOR_W = 1.8, DOOR_H = 2.5;
+/* 🔦 รอบ 892/897: ของกลางคืนหน้าประตู — ลำแสงทาบพื้น + ดวงเรืองที่ช่องประตู
+   แยกออกมาเป็นตัวเดียวใช้ร่วมกันทั้ง "บานหมุน" (doorAt) และ "ประตูม้วน" (rollAt)
+   กลางวันไม่สร้างวัตถุอะไรเลย · ความเข้ม/ขนาดถูกไถตามองศาที่บานเปิดใน applyDoorPose */
+function doorNightFx(g, x, y, z, w, reach){
+  if(!NIGHT) return;
+  /* ระนาบนอนกับพื้น หมุน −90° รอบ X → ขอบ "สว่างสุด" (แถวบนของ canvas) ไปอยู่ฝั่งติดธรณีประตูพอดี */
+  const sp = new THREE.Mesh(new THREE.PlaneGeometry(w*2.2, reach),
+    new THREE.MeshBasicMaterial({map:doorSpillTexture(), transparent:true, opacity:0,
+                                 depthWrite:false, blending:THREE.AdditiveBlending}));
+  sp.rotation.x = -Math.PI/2;
+  sp.position.set(x, 0.05, z+reach/2);
+  g.add(sp); _lastSpill.push(sp);
+  /* ดวงเรืองรอบช่องประตู — ตัวนี้แหละที่ทำให้ "ตึกที่มีคนอยู่" ดูออกตั้งแต่มุมมองทั้งเมือง
+     (แบบเดียวกับโคมไฟถนน · ลำแสงพื้นอย่างเดียวจางเกินไปเมื่อมองไกล) */
+  const gl = new THREE.Sprite(new THREE.SpriteMaterial({map:_glowTex(), transparent:true, opacity:0,
+                                                        depthWrite:false, blending:THREE.AdditiveBlending}));
+  gl.position.set(x, y, z+0.4);
+  gl.userData.gs = clamp(w/DOOR_W, 0.7, 1.6);     // ช่องกว้าง = ดวงไฟใหญ่ตาม (โรงรถ/hangar ไม่ใช่ประตูบ้าน)
+  g.add(gl); _lastGlow.push(gl);
+}
 function doorAt(g, z, col){
   const hinge = new THREE.Group();
   hinge.position.set(-DOOR_W/2, 0, z+0.12);                     // บานพับ = ขอบซ้ายของช่องประตู
@@ -397,27 +417,55 @@ function doorAt(g, z, col){
   g.add(M(box(DOOR_W-0.14, DOOR_H-0.14, 0.05),
           NIGHT ? new THREE.MeshBasicMaterial({color:0xffc978}) : mat(0x1e150d), 0, 1.25, z+0.03));
   g.add(M(box(2.3,0.3,0.7), mat(0xffffff), 0, 0.15, z+0.25));   // ธรณีประตู
-  _lastDoor = hinge;                                            // buildCity หยิบไปผูกกับ key ตึก
-  _lastSpill = _lastGlow = null;
-  if(NIGHT){
-    /* 🔦 รอบ 892: ลำแสงอุ่นทาบพื้นหน้าประตู — ความเข้มผูกกับองศาที่บานเปิด (ปิดสนิท = ไม่มีเลย)
-       ระนาบนอนกับพื้น หมุน −90° รอบ X → ขอบ "สว่างสุด" (v=1 = แถวบนของ canvas) ไปอยู่ฝั่งติดประตูพอดี */
-    const sp = new THREE.Mesh(new THREE.PlaneGeometry(DOOR_W*2.2, 4.6),
-      new THREE.MeshBasicMaterial({map:doorSpillTexture(), transparent:true, opacity:0,
-                                   depthWrite:false, blending:THREE.AdditiveBlending}));
-    sp.rotation.x = -Math.PI/2;
-    sp.position.set(0, 0.05, z+2.3);
-    g.add(sp);
-    _lastSpill = sp;
-    /* ดวงเรืองรอบช่องประตู — ตัวนี้แหละที่ทำให้ "ตึกที่มีคนอยู่" ดูออกตั้งแต่มุมมองทั้งเมือง
-       (แบบเดียวกับโคมไฟถนน · ลำแสงพื้นอย่างเดียวจางเกินไปเมื่อมองไกล) */
-    const gl = new THREE.Sprite(new THREE.SpriteMaterial({map:_glowTex(), transparent:true, opacity:0,
-                                                          depthWrite:false, blending:THREE.AdditiveBlending}));
-    gl.position.set(0, 1.35, z+0.4);
-    g.add(gl);
-    _lastGlow = gl;
-  }
+  _lastDoor = hinge; _lastKind = 'swing';                       // buildCity หยิบไปผูกกับ key ตึก
+  doorNightFx(g, 0, 1.35, z, DOOR_W, 4.6);                      // 🌙 รอบ 892: ไฟลอด/ลำแสงพื้น (กลางวันไม่สร้างอะไรเลย)
   return hinge;
+}
+/* ============================================================
+   🚪🌀 รอบ 897: ประตูม้วนเลื่อนขึ้น (โรงรถ/โรงเก็บยาน) — บานพับหมุนไม่ได้เพราะช่องกว้าง 3-5 เมตร
+   บาน = แผ่นสแลตเหล็กแขวนอยู่ "ใต้คานม้วน" ที่ขอบบนช่องประตู · เปิด = ย่อ scale.y ของกลุ่ม
+   ที่จุดยึดอยู่ขอบบน → บานหดขึ้นไปม้วนเก็บในคาน (ถ้าเลื่อนขึ้นเฉย ๆ บานจะโผล่ทะลุหลังคา)
+   o = {bays:[x ของแต่ละช่อง], w, h, z, hw:กว้างคานม้วน, col, rails:ราง 2 ข้าง, reach:ลำแสงพื้น}
+   ⚠️ z = "ระนาบผิวหน้าตึก" (ไม่ใช่ตำแหน่งบาน) — ทุกชิ้นถูกยกออกมา "หน้าผนัง" ตาม Z_* ข้างล่าง
+      เคยพลาด: วางช่องมืดไว้หลังบาน (z−0.07) = จมอยู่ในกล่องผนัง เปิดประตูแล้วเห็นผนังทึบเหมือนเดิม
+      (ยิง raycast ยืนยัน: โดนกล่องผนัง 9×3.6×7 ก่อนช่องมืด 0.03 หน่วยเสมอ) · โรงเก็บหุ่นหนักกว่านั้น
+      เพราะ CylinderGeometry(...,openEnded=false) ปิดหัวท้ายด้วยฝาครึ่งวงกลม = หน้า hangar เป็นผนังทึบ */
+const ROLL_Z_HOLE = 0.03, ROLL_Z_DOOR = 0.12, ROLL_Z_RAIL = 0.10, ROLL_Z_SILL = 0.20;
+
+let _slatT = null;
+function slatTexture(){
+  if(_slatT) return _slatT;
+  const c = cvs(64,64), x = c.getContext('2d');
+  x.fillStyle='#9aa7b0'; x.fillRect(0,0,64,64);
+  for(let y=0;y<64;y+=10){                       // สแลตแนวนอน: ร่องเงาบน + ไฮไลต์ล่าง = เห็นเป็นซี่ ๆ
+    x.fillStyle='#7c8a94'; x.fillRect(0,y,64,4);
+    x.fillStyle='#b8c4cc'; x.fillRect(0,y+4,64,2);
+  }
+  return _slatT = ctex(c);
+}
+function rollAt(g, o){
+  const bays = o.bays || [0], w = o.w || 3.0, h = o.h || 2.6, z = o.z || 0;
+  const hw = o.hw || (w+0.3);
+  const cont = new THREE.Group();
+  const slatMat = new THREE.MeshLambertMaterial({map:slatTexture(), color:o.col||0xffffff});
+  bays.forEach(x=>{
+    /* ช่องมืด "หน้าผนัง" (ไม่ใช่หลังผนัง) — ยกบานขึ้นแล้วเห็นเป็นทางเข้ามืด ๆ ไม่ใช่ผนังทึบ
+       เล็กกว่าบานทุกด้าน ตอนปิดจึงถูกบานบังมิด · 🌙 กลางคืนเป็นแผ่นเรืองแสงอุ่น (MeshBasic = ไม่กินแสงฉาก) */
+    g.add(M(box(w-0.12, h-0.06, 0.05),
+            NIGHT ? new THREE.MeshBasicMaterial({color:0xffc978}) : mat(0x18130d), x, (h-0.06)/2, z+ROLL_Z_HOLE));
+    g.add(M(box(hw, 0.36, 0.42), mat(o.house||0x8b98a2), x, h+0.10, z+ROLL_Z_RAIL));   // คานม้วน (บานหดหายเข้าไปในนี้)
+    if(o.rails !== false) [-1,1].forEach(s=>
+      g.add(M(box(0.12, h+0.06, 0.2), mat(0x78868f), x+s*(w/2+0.07), (h+0.06)/2, z+ROLL_Z_RAIL)));
+    g.add(M(box(w+0.3, 0.14, 0.5), mat(0xcfd8dc), x, 0.07, z+ROLL_Z_SILL));            // ธรณี/รางล่าง
+    const p = new THREE.Group();
+    p.position.set(x, h, z+ROLL_Z_DOOR);                                        // จุดยึด = ขอบบน → ย่อ scale.y แล้วบานหดขึ้น
+    p.add(M(new THREE.BoxGeometry(w, h, 0.1), slatMat, 0, -h/2, 0));
+    cont.add(p);
+    doorNightFx(g, x, h*0.55, z, w, o.reach || 4.2);
+  });
+  g.add(cont);
+  _lastDoor = cont; _lastKind = 'roll';
+  return cont;
 }
 function awning(g, w, y, z, col1, col2){
   const geo = new THREE.CylinderGeometry(1.1, 1.1, w, 12, 1, false, 0, Math.PI);
@@ -621,12 +669,8 @@ function bGarage(){
   const g = new THREE.Group();
   g.add(M(new THREE.BoxGeometry(9,3.6,7), wallMat('#ffe0b2','#c9dbe8',1,4), 0, 1.8, 0));
   g.add(M(box(9.6,0.5,7.6), mat(0xff8f00), 0, 3.85, 0));
-  [-2.2, 2.2].forEach(x=>{
-    const c=cvs(64,64), q=c.getContext('2d');
-    q.fillStyle='#9aa7b0'; q.fillRect(0,0,64,64);
-    q.fillStyle='#7c8a94'; for(let y=0;y<64;y+=10) q.fillRect(0,y,64,4);
-    g.add(M(new THREE.PlaneGeometry(3.1,2.6), new THREE.MeshLambertMaterial({map:ctex(c)}), x, 1.5, 3.52));
-  });
+  /* 🚪🌀 รอบ 897: 2 ช่องนี้เดิมเป็นแผ่นลายสแลตแปะผนังนิ่ง ๆ → เปลี่ยนเป็นประตูม้วนเลื่อนขึ้นจริง */
+  rollAt(g, {bays:[-2.2, 2.2], w:3.1, h:2.7, z:3.5, house:0xff8f00, reach:4.6});   // z = ผิวหน้ากล่องผนัง (d/2)
   [[-3.9,0.35],[-3.9,1.0]].forEach(([x,y])=>{
     const t = M(new THREE.TorusGeometry(0.55,0.22,8,14), mat(0x33383d), x, y, 3.2);
     t.rotation.x=Math.PI/2*0; g.add(t);
@@ -714,6 +758,10 @@ function bHangar(){
   [-1,1].forEach(s=>robot.add(M(box(0.5,1.6,0.6), mat(0x3f51b5), s*1.2, 4.5, 0)));
   robot.position.set(0, -1.4, -0.5); g.add(robot);
   tickers.push((dt,t)=>{ robot.position.y = -1.4+Math.sin(t*0.8)*0.15; });
+  /* 🚪🌀 รอบ 897: ประตูม้วนปิดหน้า hangar (ยกขึ้นแล้วหุ่นเดินออกได้)
+     กว้าง 4.4 × สูง 2.2 + คานม้วนกว้าง 4.6 → มุมทั้งหมดยังอยู่ในวงโค้ง r=3.4 ไม่โผล่พ้นซุ้ม
+     z=4 = ฝาครึ่งวงกลมด้านหน้าของ arch (CylinderGeometry ปิดหัวท้าย) — ประตูจึงติดบนผนังนั้น */
+  rollAt(g, {bays:[0], w:4.4, h:2.2, z:4.0, hw:4.6, house:0x78909c, reach:5.0});
   g.userData.h = 8.6;
   return g;
 }
@@ -749,6 +797,8 @@ function bDronePad(){
   q.beginPath(); q.moveTo(64,20); q.lineTo(64,108); q.moveTo(20,64); q.lineTo(108,64); q.stroke();
   g.children[0].material = new THREE.MeshLambertMaterial({map:ctex(c)});
   g.add(M(box(2.4,2.0,2.0), wallMat('#eceff1','#b0bec5',1,2), -2.6, 1.0, -2.4));
+  /* 🚪🌀 รอบ 897: โรงเก็บโดรนหลังเล็ก — ประตูม้วนช่องเดียวหันออกลานจอด */
+  rollAt(g, {bays:[-2.6], w:1.7, h:1.5, z:-1.4, house:0xffca28, reach:3.4});   // z = ผิวหน้ากล่องโรงเก็บ (-2.4+2/2)
   const dr = miniDrone(0x26c6da); dr.position.set(0.8, 2.6, 0.6); g.add(dr);
   tickers.push((dt,t)=>{
     dr.position.y = 2.6+Math.sin(t*1.9)*0.5;
@@ -980,7 +1030,7 @@ function buildCity(){
   BUILDINGS.forEach(b=>{
     const a = b.deg*Math.PI/180;
     const x = Math.cos(a)*b.r, z = -Math.sin(a)*b.r;
-    _lastDoor = null;                       // 🚪 รอบ 890: ล้างค้างจากตึกก่อนหน้าเสมอ
+    _lastDoor = null; _lastKind = 'swing'; _lastSpill = []; _lastGlow = [];   // 🚪 รอบ 890/897: ล้างค้างจากตึกก่อนหน้าเสมอ
     const g = b.build();
     registerDoor(b.key);                    // 🚪 รอบ 890: ตึกไหนมีบานประตู = จดทะเบียนไว้สั่งเปิด-ปิด
     g.position.set(x, 0, z);
@@ -2090,7 +2140,8 @@ function lastDoorKey(){
    เสียง: สังเคราะห์เอง (ไฟล์นี้ standalone ไม่มี state.sound ให้พึ่ง — ใช้ AudioContext ตัวเดียวกับ
         เสียงฝีเท้ารอบ 871) เอี๊ยด = sawtooth ไล่ความถี่ผ่าน bandpass Q สูง · ตึบ+กลอนคลิก = ยิงตอน
         บาน "ถึงวงกบจริง" (ตัวขับเป็นคนยิง) ไม่ใช่ตอนสั่งปิด ไม่งั้นเสียงมาก่อนภาพครึ่งวินาที
-   ตึกที่ builder ไม่เรียก doorAt (สนามบอล/ลานยาน/โรงเก็บ/ประตูป่า ฯลฯ) = ไม่มีทะเบียน สั่งแล้วเงียบ ไม่พัง
+   🌀 รอบ 897: เพิ่มชนิดที่ 2 "ประตูม้วนเลื่อนขึ้น" (rollAt) ให้อู่รถ/โรงเก็บหุ่น/โรงเก็บโดรน — ทะเบียนเดียวกัน
+   ตึกที่ builder ไม่เรียก doorAt/rollAt (สนามบอล/สนามมอไซค์/ลานยาน/ประตูป่า ฯลฯ) = ไม่มีทะเบียน สั่งแล้วเงียบ ไม่พัง
    ============================================================ */
 const DOOR_SWING  = -1.85;   // เรเดียน (~106°) — ลบ = ผลักบานออกนอกตึก (ตึกหันหน้า +Z)
 const DOOR_OPEN_S = 0.42;    // วินาทีที่ใช้เปิดจนสุด
@@ -2100,13 +2151,31 @@ const DOOR_SHUT_S = 0.62;    // ปิดช้ากว่าเปิด (บ�
    🌙 กลางคืน: ช่องประตูเรืองแสง + ลำแสงทาบพื้น (doorAt) → แง้มไว้ก็เห็นไฟลอดออกมาแต่ไกล */
 const DOOR_AJAR = 0.13;      // ท่าพักตอนมีคนอยู่ — องศาจริงผ่าน ease แล้ว ≈ 25° (ไม่ใช่ 0.13×106° · แง้มพอเห็นแสงลอด ไม่ใช่เปิดอ้า)
 const AJAR_QUIET_MS = 4000;  // เงียบช่วงบูตแรก — presence ก้อนแรกมาทีเดียวหลายตึก ไม่งั้นเอี๊ยดรัวทั้งเมือง
-const CityDoors = {};        // key ตึก → {h:บานพับ, sp:ลำแสงพื้น, gl:ดวงเรืองที่ช่องประตู, k:0..1 (ตอนนี้), tgt:เป้า, rest:ท่าพัก, held:ถูกสั่งเปิดค้างอยู่}
-let _lastDoor = null, _lastSpill = null, _lastGlow = null;   // ของที่ doorAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
+/* 🚪🌀 รอบ 897: ประตูชนิดที่ 2 = "ม้วนเลื่อนขึ้น" (โรงรถ/โรงเก็บยาน · ตัวบานสร้างที่ rollAt ในโซน 🏗️ BUILDERS)
+   ทะเบียน/ตัวสั่ง/ตัวขับ/ท่าพัก ใช้ตัวเดียวกับบานหมุนทั้งหมด — ต่างกันแค่ 3 อย่าง:
+   ① applyDoorPose ย่อ scale.y แทนหมุน rotation.y  ② เสียงเป็นครืดเหล็กยาว+กึกแทนเอี๊ยดไม้+กลอน
+   ③ ช้ากว่า (บานหนัก) จึงเริ่มเปิดตาม "เวลาที่เหลือของการเดิน" ไม่ใช่ % คงที่แบบบานหมุน */
+const ROLL_OPEN_S   = 0.85;  // ม้วนขึ้นจนสุด (ยาวกว่าบานหมุนเท่าตัว = เห็นเป็นประตูหนัก)
+const ROLL_SHUT_S   = 1.15;  // ลงช้ากว่าขึ้นอีก แล้วกึกตอนแตะพื้น
+const ROLL_LIFT     = 0.94;  // เปิดสุดเหลือบานโผล่ 6% = ขอบที่ม้วนอยู่ในคาน (0 = บานหายไปเฉย ๆ ดูปลอม)
+const ROLL_AJAR     = 0.15;  // ท่าแง้มของประตูม้วน — ผ่าน ease แล้วยกขึ้น ≈ 25% ของช่อง (ตรงสเปกรอบนี้)
+const CityDoors = {};        // key ตึก → {h:บานพับ/กลุ่มบานม้วน, kind:'swing'|'roll', sp:[ลำแสงพื้น], gl:[ดวงเรือง], k:0..1 (ตอนนี้), tgt:เป้า, rest:ท่าพัก, held:ถูกสั่งเปิดค้างอยู่}
+let _lastDoor = null, _lastKind = 'swing', _lastSpill = [], _lastGlow = [];   // ของที่ doorAt/rollAt เพิ่งสร้าง — buildCity หยิบไปผูก key แล้วล้าง
 function registerDoor(key){
-  if(!_lastDoor) return false;                  // ตึกแบบไม่มีประตู
-  CityDoors[key] = {h:_lastDoor, sp:_lastSpill, gl:_lastGlow, k:0, tgt:0, rest:0, held:false};
-  _lastDoor = _lastSpill = _lastGlow = null;
+  if(!_lastDoor){ _lastSpill = []; _lastGlow = []; return false; }   // ตึกแบบไม่มีประตู
+  const roll = _lastKind === 'roll';
+  CityDoors[key] = {h:_lastDoor, kind:_lastKind, sp:_lastSpill, gl:_lastGlow,
+                    k:0, tgt:0, rest:0, held:false,
+                    ajar: roll ? ROLL_AJAR   : DOOR_AJAR,
+                    os:   roll ? ROLL_OPEN_S : DOOR_OPEN_S,
+                    cs:   roll ? ROLL_SHUT_S : DOOR_SHUT_S};
+  _lastDoor = null; _lastKind = 'swing'; _lastSpill = []; _lastGlow = [];
   return true;
+}
+/* เวลาที่ประตูใช้เปิดจนสุด (วินาที) — walkSelfTo เอาไปเผื่อระยะให้ประตูม้วนที่ช้ากว่าบานหมุน · 0 = ไม่มีบาน/บานหมุน (ใช้ % เดิมรอบ 890) */
+function doorLeadS(key){
+  const d = CityDoors[key];
+  return (d && d.kind==='roll') ? d.os : 0;
 }
 /* 🔦 ลำแสงลอดประตู: เรเดียลจากกึ่งกลาง "ขอบบน" ของ canvas = ฐานแสงอยู่ที่ธรณีประตู แล้วบานออกไปข้างหน้า */
 let _spillTex = null;
@@ -2158,6 +2227,64 @@ function doorLatchSfx(){
     n.connect(hp); hp.connect(ng); ng.connect(c.destination); n.start(t);
   }catch(e){}
 }
+/* 🔊🌀 รอบ 897: ประตูม้วนเหล็ก = "ครืด…" ยาว ไม่ใช่ "เอี๊ยด" ของบานไม้
+   noise ขาว × พัลส์ 26 ครั้ง/วินาที (ซี่สแลตวิ่งผ่านราง = เม็ดกึกกัก) แล้วส่งผ่าน bandpass ที่ "กวาดความถี่"
+   ตามทิศทางที่บานวิ่ง (ขึ้น=ไล่สูง · ลง=ไล่ต่ำ) → หูได้ยินเป็นม้วนไหลไปทางเดียวจริง ๆ ไม่ใช่ซ่าอยู่กับที่
+   dur ผูกกับ "ระยะที่บานจะวิ่งจริง" → แค่ขยับไปท่าแง้มก็ครืดสั้น ๆ ไม่ใช่ยาวเท่าเปิดสุด */
+function shutterRollSfx(open, dur, vol){
+  const c = footCtx(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t = c.currentTime, D = Math.max(0.18, dur||ROLL_OPEN_S), v = vol==null ? 1 : vol;
+    const len = Math.max(64, Math.ceil(c.sampleRate*D));
+    const buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<len;i++){
+      const s = i/c.sampleRate;
+      const slat = 0.55 + 0.45*Math.pow(Math.abs(Math.sin(Math.PI*s*26)), 0.35);
+      d[i] = (Math.random()*2-1)*slat;
+    }
+    const n = c.createBufferSource(); n.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=1.35;
+    bp.frequency.setValueAtTime(open?520:1250, t);
+    bp.frequency.exponentialRampToValueAtTime(open?1250:520, t+D);
+    const hp = c.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=240;   // ตัดตูมเบสออก เหลือเนื้อโลหะ
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001, t);
+    g.gain.exponentialRampToValueAtTime(.055*v, t+.10);
+    g.gain.setValueAtTime(.055*v, t+D*0.75);
+    g.gain.exponentialRampToValueAtTime(.0001, t+D);
+    n.connect(bp); bp.connect(hp); hp.connect(g); g.connect(c.destination);
+    n.start(t); n.stop(t+D+.02);
+  }catch(e){}
+}
+/* 🔊🌀 บานม้วนถึงสุดทาง: กึก (ตึบต่ำ) + แผ่นเหล็กสั่นค้าง 2 ระดับ — ยิงจากตัวขับตอนถึงจริง ไม่ใช่ตอนสั่ง */
+function shutterClunkSfx(vol){
+  const c = footCtx(); if(!c) return;
+  try{
+    if(c.state==='suspended') c.resume();
+    const t = c.currentTime, v = vol==null ? 1 : vol;
+    const o = c.createOscillator(); o.type='sine';
+    o.frequency.setValueAtTime(132,t); o.frequency.exponentialRampToValueAtTime(44,t+.13);
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(.08*v,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.2);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+.22);
+    const rg = c.createGain();
+    rg.gain.setValueAtTime(.0001,t); rg.gain.exponentialRampToValueAtTime(.03*v,t+.012);
+    rg.gain.exponentialRampToValueAtTime(.0001,t+.3);
+    const rb = c.createBiquadFilter(); rb.type='bandpass'; rb.frequency.value=900; rb.Q.value=4;
+    rb.connect(rg); rg.connect(c.destination);
+    [332, 487].forEach(f=>{
+      const s = c.createOscillator(); s.type='triangle'; s.frequency.value=f;
+      s.connect(rb); s.start(t); s.stop(t+.32);
+    });
+  }catch(e){}
+}
+/* เลือกเสียงตามชนิดประตู — บานไม้เอี๊ยด · บานเหล็กครืด */
+function doorMoveSfx(d, open, span, vol){
+  if(d.kind === 'roll') shutterRollSfx(open, (open?d.os:d.cs)*Math.max(0.12, span), vol);
+  else doorCreakSfx(open, vol);
+}
 /* สั่งบาน: open=true เปิด/false "ปล่อยกลับท่าพัก" (rest — ปิดสนิท หรือแง้มถ้ามีคนอยู่)
    snap=true สแนปทันทีแบบเงียบ (ใช้ตอนตั้งฉากขากลับ)
    สั่งซ้ำเป้าเดิม = คืน false ไม่เล่นเสียงซ้ำ (walkSelfTo เรียกทุกเฟรมช่วงท้ายทาง) */
@@ -2168,7 +2295,7 @@ function setCityDoor(key, open, snap){
   if(snap){ d.tgt = d.k = tgt; applyDoorPose(d); return true; }
   if(d.tgt === tgt) return false;
   d.tgt = tgt;
-  doorCreakSfx(open);
+  doorMoveSfx(d, open, Math.abs(tgt-d.k));
   return true;
 }
 function openCityDoor(key){ return setCityDoor(key, true); }
@@ -2176,12 +2303,13 @@ function closeCityDoor(key){ return setCityDoor(key, false); }
 /* 🚪👥 ตั้งท่าพักของบาน (0 = ปิดสนิท · DOOR_AJAR = แง้ม) — บานที่ถูกสั่งเปิดค้างอยู่ไม่โดนแย่ง */
 function setDoorRest(key, ajar, quiet){
   const d = CityDoors[key]; if(!d) return false;
-  const rest = ajar ? DOOR_AJAR : 0;
+  const rest = ajar ? d.ajar : 0;               // 🌀 รอบ 897: ท่าแง้มของประตูม้วน = ยกขึ้น ~25% (คนละค่ากับบานหมุน)
   if(d.rest === rest) return false;
   d.rest = rest;
   if(d.held) return true;                       // กำลังเปิดรับเราเดินเข้าอยู่ — ค่อยไปใช้ตอนปล่อย
+  const span = Math.abs(rest-d.tgt);
   d.tgt = rest;
-  if(!quiet) doorCreakSfx(ajar, .45);           // เพื่อนเพิ่งเข้า/ออกตึกนั้น = เอี๊ยดเบา ๆ พอรู้
+  if(!quiet) doorMoveSfx(d, ajar, span, .45);   // เพื่อนเพิ่งเข้า/ออกตึกนั้น = เอี๊ยด/ครืดเบา ๆ พอรู้
   return true;
 }
 /* นับคนออนไลน์ที่ยืนอยู่หน้าตึกแต่ละหลัง → ตึกไหนมีคน บานแง้มไว้ */
@@ -2199,12 +2327,20 @@ function applyDoorPose(d){
   const e = 1-(1-d.k)*(1-d.k);
   /* องศาจริง = ไถแบบ ease-out ทั้งสองทาง → เปิด: ผลักแรงแล้วผ่อนตอนบานกางสุด
      ปิด: ออกตัวช้า (บานหนัก) แล้วเร่งเข้าวงกบ = ตรงกับเสียงตึบตอนจบพอดี */
-  d.h.rotation.y = e*DOOR_SWING;
+  if(d.kind === 'roll'){
+    /* 🌀 รอบ 897: จุดยึดของทุกบานอยู่ "ขอบบน" → ย่อ scale.y = บานหดขึ้นไปม้วนเก็บในคาน
+       (โรงรถมี 2 ช่อง จึงไถทุกบานในกลุ่มพร้อมกัน) */
+    const s = 1 - e*ROLL_LIFT;
+    for(let i=0;i<d.h.children.length;i++) d.h.children[i].scale.y = s;
+  }else{
+    d.h.rotation.y = e*DOOR_SWING;
+  }
   /* 🔦 รอบ 892: แสงลอดออกมาตามช่องที่เปิด — แง้มนิดเดียวก็เห็นลำแสง แต่จาง (ปิดสนิท = ดับสนิท) */
-  if(d.sp) d.sp.material.opacity = d.k<=0 ? 0 : (0.45+0.55*d.k)*0.9;
-  if(d.gl){
-    d.gl.material.opacity = d.k<=0 ? 0 : (0.4+0.6*d.k)*0.8;
-    const s = 2.4+2.6*d.k; d.gl.scale.set(s, s, 1);          // เปิดกว้าง = ดวงไฟโตตาม
+  for(let i=0;i<d.sp.length;i++) d.sp[i].material.opacity = d.k<=0 ? 0 : (0.45+0.55*d.k)*0.9;
+  for(let i=0;i<d.gl.length;i++){
+    const gl = d.gl[i];
+    gl.material.opacity = d.k<=0 ? 0 : (0.4+0.6*d.k)*0.8;
+    const s = (2.4+2.6*d.k)*(gl.userData.gs||1); gl.scale.set(s, s, 1);   // เปิดกว้าง = ดวงไฟโตตาม
   }
 }
 tickers.push((dt)=>{
@@ -2212,10 +2348,15 @@ tickers.push((dt)=>{
     const d = CityDoors[key];
     if(d.k === d.tgt) continue;
     const up = d.tgt > d.k;
-    const step = dt/(up ? DOOR_OPEN_S : DOOR_SHUT_S);
+    const step = dt/(up ? d.os : d.cs);
     d.k = up ? Math.min(d.tgt, d.k+step) : Math.max(d.tgt, d.k-step);
     applyDoorPose(d);
-    if(!up && d.k === 0) doorLatchSfx();        // ยิงตอนบานถึงวงกบจริง ไม่ใช่ตอนสั่งปิด (หยุดที่ท่าแง้ม = ไม่มีเสียงกลอน)
+    /* ยิงตอนบานถึงสุดทางจริง ไม่ใช่ตอนสั่งปิด (หยุดที่ท่าแง้ม = ไม่มีเสียงกลอน/กึก)
+       🌀 ประตูม้วนกึกทั้งสองปลาย (ลงสุดกระแทกพื้น · ขึ้นสุดชนตัวหยุดในคาน — เบากว่า) */
+    if(d.kind === 'roll'){
+      if(!up && d.k === 0) shutterClunkSfx(1);
+      else if(up && d.k === 1) shutterClunkSfx(.5);
+    }else if(!up && d.k === 0) doorLatchSfx();
   }
 });
 
@@ -2341,6 +2482,7 @@ function walkSelfTo(b, done){
   footCtx();                                          // สร้าง/ปลุก AudioContext ตอนนี้เลย (ยังอยู่ใน call stack ของการแตะจริง)
   setChip('🚶 กำลังเดินไป '+b.label+' …');
   const d0cam = rig.dist, p0cam = rig.pitch;
+  const lead = doorLeadS(b.key);                      // 🚪🌀 รอบ 897: ประตูม้วนช้ากว่าบานหมุน → เริ่มยกตาม "เวลาที่เหลือของทาง" (0 = บานหมุน ใช้ % เดิม)
   const t0 = performance.now();
   let ph = 0, fired = false, footDist = 0;
   const finish = ()=>{
@@ -2370,7 +2512,7 @@ function walkSelfTo(b, done){
       footStepSfx(clamp(moved/dt/WALK_SPD, .3, 1));
       footDustPuff(nx, nz);
     }
-    if(k >= DOOR_OPEN_AT) openCityDoor(b.key);       // 🚪 รอบ 890: ใกล้ถึงแล้ว ประตูเปิดรับ (สั่งซ้ำทุกเฟรมได้ ตัวสั่งกันเสียงซ้ำเอง)
+    if(lead ? (1-k)*dur <= lead : k >= DOOR_OPEN_AT) openCityDoor(b.key);   // 🚪 รอบ 890/897: ใกล้ถึงแล้ว ประตูเปิดรับ (สั่งซ้ำทุกเฟรมได้ ตัวสั่งกันเสียงซ้ำเอง)
     ph += dt*11;
     walkPose(g, ph, k>0.94 ? (1-k)/0.06 : 1);        // ใกล้ถึงค่อย ๆ หยุดขา
     rig.tx += (nx-rig.tx)*0.12; rig.tz += (nz-rig.tz)*0.12;   // กล้องตามหลังแบบนุ่ม
@@ -2829,9 +2971,12 @@ function boot(){
     /* 🚪🔊 รอบ 890: บานประตู — ดูสถานะ/สั่งเปิด-ปิดเอง */
     doorKeys(){ return Object.keys(CityDoors); },
     doorState(key){ const d=CityDoors[key];
-                    return d ? {k:+d.k.toFixed(3), tgt:+d.tgt.toFixed(3), rest:d.rest, held:d.held,
-                                ry:+d.h.rotation.y.toFixed(3),
-                                spill:d.sp ? +d.sp.material.opacity.toFixed(3) : null} : null; },
+                    /* 🌀 รอบ 897: บานหมุนดู ry (องศา) · ประตูม้วนดู lift (ยกขึ้นกี่ % ของช่อง) */
+                    return d ? {k:+d.k.toFixed(3), tgt:+d.tgt.toFixed(3), rest:d.rest, held:d.held, kind:d.kind,
+                                ry:+d.h.rotation.y.toFixed(3), bays:d.kind==='roll' ? d.h.children.length : null,
+                                lift:d.kind==='roll' ? +(1-d.h.children[0].scale.y).toFixed(3) : null,
+                                spill:d.sp.length ? +d.sp[0].material.opacity.toFixed(3) : null,
+                                glow:d.gl.length ? +d.gl[0].material.opacity.toFixed(3) : null} : null; },
     doorSet(key, open, snap){ return setCityDoor(key, !!open, !!snap); },
     /* 🚪👥 รอบ 892: ประตูแง้มตามคนออนไลน์ */
     doorRest(key, ajar, quiet){ return setDoorRest(key, !!ajar, !!quiet); },
