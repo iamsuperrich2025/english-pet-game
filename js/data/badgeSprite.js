@@ -16,8 +16,14 @@ const BADGE_IMG = {
   '✒️':'img/badges/typist_4.png', '🦾':'img/badges/typist_5.png',
   '👑':'img/badges/crown.png',
 };
+/* 🔄 รอบ 953: ท้าย URL ต้องมี ?v=<เลข> เสมอ — ผู้ใช้ยังเห็นเหรียญเวอร์ชันเก่า (พื้นหลังทึบ + เหรียญข้างเคียงติดมา)
+   ทั้งที่ไฟล์ในเครื่อง/บนเว็บถูกตัดใหม่แล้ว เพราะรูปโดน cache 2 ชั้น: Firebase Hosting ส่ง
+   `Cache-Control: public, max-age=604800` (7 วัน) + service worker เป็น cache-first สำหรับรูป
+   → URL เดิมเป๊ะ = เบราว์เซอร์ไม่ยิงขอใหม่เลย · เปลี่ยนเลขนี้ทุกครั้งที่ตัดไฟล์เหรียญใหม่ (บัมพ์ CACHE_VERSION ใน sw.js ด้วย) */
+const BADGE_IMG_V = '953';
 function badgeIcHTML(emoji, cls){
   const img = BADGE_IMG[emoji];
-  return img ? `<img class="${cls}" src="${img}" alt="" onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`
+  const src = img ? img + '?v=' + BADGE_IMG_V : '';
+  return img ? `<img class="${cls}" src="${src}" alt="" onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`
              : `<span class="${cls} badge-ic-fallback">${emoji}</span>`;
 }
