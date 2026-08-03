@@ -55,6 +55,14 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-mirror-rear{left:50%;top:52px;transform:translateX(-50%);width:260px;height:74px}   /* 🪞 รอบ 967: 82→52 (⚠️ ต้องตรงกับ MIRROR_REAR.t ใน adventure3d.js) */
   #adv-mirror-l{left:8px;top:38%;width:130px;height:84px}
   #adv-mirror-r{right:8px;top:38%;width:130px;height:84px}
+  /* 🔎 รอบ 969 (ผู้ใช้สั่ง): ปุ่มย่อ/ขยายกระจกมองหลัง มุมล่างขวาของกรอบกระจก
+     — ขนาด .mini ต้องตรงกับ MIRROR_REAR_MINI ใน adventure3d.js (สัดส่วนภาพ WebGL ที่เรนเดอร์จริง) */
+  #adv-mirror-rear.mini{width:150px;height:43px}
+  #adv-mirror-toggle{position:absolute;right:2px;bottom:2px;width:19px;height:19px;padding:0;
+    border-radius:5px;border:1px solid rgba(255,255,255,.55);background:rgba(10,10,14,.72);color:#fff;
+    font-size:12px;font-weight:900;line-height:1;font-family:inherit;display:flex;
+    align-items:center;justify-content:center;pointer-events:auto;z-index:1;cursor:pointer}
+  #adv-mirror-toggle:active{background:rgba(60,60,70,.85)}
   .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
   .adv-soccer #adv-words .adv-fch{font-size:clamp(15px,3.2vw,22px);min-width:22px;padding:2px 6px;border-radius:7px}
   .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}

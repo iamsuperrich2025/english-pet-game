@@ -4884,7 +4884,7 @@ function buildDom(){
     <div id="adv-carwheel"></div>
     <!-- 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง (ภาพจริงจาก adv-canvas ผ่าน scissor ใน drawCarMirrors) -->
     <div class="adv-mirror" id="adv-mirror-l"></div>
-    <div class="adv-mirror" id="adv-mirror-rear"></div>
+    <div class="adv-mirror" id="adv-mirror-rear"><button id="adv-mirror-toggle" aria-label="ย่อ/ขยายกระจก">－</button></div>
     <div class="adv-mirror" id="adv-mirror-r"></div>
     <button id="adv-horn">📯</button>
     <canvas id="adv-gauges" width="620" height="130"></canvas>
@@ -5400,6 +5400,7 @@ function buildDom(){
   overlayEl.querySelector('#adv-vmode').addEventListener('click',()=>Voice.setMode(Voice.vmode==='all'?'friends':'all'));
   overlayEl.querySelector('#adv-tmute').addEventListener('click',()=>Voice.toggleRoomMute());
   overlayEl.querySelector('#adv-podbtn').addEventListener('click',endRound);
+  overlayEl.querySelector('#adv-mirror-toggle').addEventListener('click',toggleMirrorMini);   // 🔎 รอบ 969
 
   overlayEl.querySelector('#adv-chat-btn').addEventListener('click',()=>toggleChatBox());
   overlayEl.querySelector('#adv-chat-send').addEventListener('click',()=>{
@@ -6788,7 +6789,10 @@ function radioTick(){
    (พลิกภาพกล้อง 3D จริงต้องกลับ winding order เสี่ยงบั๊กโมเดล — แค่ "เห็นด้านหลัง/ข้างจริง" ก็พอสำหรับเกมนี้)
    #adv-overlay เต็มวิวพอร์ตพอดี (ต่างจาก moto3d.js ที่จอเล็กอยู่ในกรอบเครื่องเกม) → ใช้ window.innerWidth/Height ตรงๆ ได้เลย
    ============================================================ */
-const MIRROR_REAR={l:.5,t:52,w:260,h:74,cx:true},   /* 🪞 รอบ 967: t 82→52 ขึ้นไปแทนที่ป้ายเตือน/ป้ายความเร็ว (ต้องตรงกับ #adv-mirror-rear ใน adv3d_css.js) */ MIRROR_L={l:8,t:0,w:130,h:84,pctT:.38}, MIRROR_R={l:0,t:0,w:130,h:84,pctT:.38,right:8};
+const MIRROR_REAR={l:.5,t:52,w:260,h:74,cx:true},   /* 🪞 รอบ 967: t 82→52 ขึ้นไปแทนที่ป้ายเตือน/ป้ายความเร็ว (ต้องตรงกับ #adv-mirror-rear ใน adv3d_css.js) */
+      MIRROR_REAR_MINI={l:.5,t:52,w:150,h:43,cx:true},   /* 🔎 รอบ 969: ขนาดย่อ (ปุ่มข้างกระจก) — สัดส่วนใกล้เคียงตัวเต็ม ต้องตรงกับ #adv-mirror-rear.mini ใน adv3d_css.js */
+      MIRROR_L={l:8,t:0,w:130,h:84,pctT:.38}, MIRROR_R={l:0,t:0,w:130,h:84,pctT:.38,right:8};
+function mirrorRearRect(){ return state.mirrorMin ? MIRROR_REAR_MINI : MIRROR_REAR; }   // 🔎 รอบ 969: ผู้เล่นเลือกย่อ/ขยายกระจกมองหลังเอง
 let mirrorRearCam=null, mirrorLCam=null, mirrorRCam=null;
 function mirrorPass(rect,cam,yawOff,W,H){
   const w=Math.max(1,Math.round(rect.w)), h=Math.max(1,Math.round(rect.h));
@@ -6802,6 +6806,14 @@ function mirrorPass(rect,cam,yawOff,W,H){
   renderer.setViewport(x,gy,w,h); renderer.setScissor(x,gy,w,h);
   renderer.render(scene,cam);
 }
+/* 🔎 รอบ 969 (ผู้ใช้สั่ง): ปุ่มเล็กมุมกระจกมองหลัง ย่อ/ขยายได้ — สำหรับจอมือถือเล็กที่กระจกบังทัศน์ */
+function toggleMirrorMini(){
+  state.mirrorMin=!state.mirrorMin; saveState();
+  const btn=overlayEl.querySelector('#adv-mirror-toggle');
+  if(btn){ btn.textContent=state.mirrorMin?'＋':'－'; btn.setAttribute('aria-label',state.mirrorMin?'ขยายกระจก':'ย่อกระจก'); }
+  const m=overlayEl.querySelector('#adv-mirror-rear');
+  if(m) m.classList.toggle('mini',!!state.mirrorMin);
+}
 function drawCarMirrors(){
   if(!renderer||!scene||!camera||dCam3) return;
   if(!mirrorRearCam) mirrorRearCam=new THREE.PerspectiveCamera(60,1,.1,220);
@@ -6809,7 +6821,7 @@ function drawCarMirrors(){
   if(!mirrorRCam) mirrorRCam=new THREE.PerspectiveCamera(60,1,.1,220);
   const W=window.innerWidth, H=window.innerHeight;
   renderer.setScissorTest(true);
-  mirrorPass(MIRROR_REAR,mirrorRearCam,Math.PI,W,H);
+  mirrorPass(mirrorRearRect(),mirrorRearCam,Math.PI,W,H);
   mirrorPass(MIRROR_L,mirrorLCam,Math.PI*0.72,W,H);
   mirrorPass(MIRROR_R,mirrorRCam,-Math.PI*0.72,W,H);
   renderer.setScissorTest(false);
@@ -12336,6 +12348,11 @@ function start(md,opt){
   overlayEl.classList.toggle('adv-heli',mode==='heli');
   overlayEl.classList.toggle('adv-drone',mode==='drone');
   overlayEl.classList.toggle('adv-drive',mode==='drive');
+  if(mode==='drive'){   // 🔎 รอบ 969: เข้าโหมดขับรถ → กระจก/ปุ่มตรงกับค่าที่จำไว้ (state.mirrorMin)
+    const mEl=overlayEl.querySelector('#adv-mirror-rear'), btn=overlayEl.querySelector('#adv-mirror-toggle');
+    if(mEl) mEl.classList.toggle('mini',!!state.mirrorMin);
+    if(btn){ btn.textContent=state.mirrorMin?'＋':'－'; btn.setAttribute('aria-label',state.mirrorMin?'ขยายกระจก':'ย่อกระจก'); }
+  }
   overlayEl.classList.toggle('adv-soccer',mode==='soccer');
   overlayEl.classList.toggle('adv-mecha',mode==='mecha');
   if(mode==='heli'){
