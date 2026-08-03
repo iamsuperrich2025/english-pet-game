@@ -85,6 +85,7 @@ function onlineDisplayName(){
 function onlineActivity(){
   const map = {
     'screen-game' : 'กำลังจับคู่คำศัพท์ 🎮',
+    'screen-picmatch': 'กำลังจับคู่ภาพสัตว์ 🖼️',   // 🖼️ รอบ 977
     'screen-quiz' : 'กำลังสอบคำศัพท์ 📝',
     'screen-cats' : 'กำลังอ่านหมวดคำศัพท์ 📚',
     'screen-stats': 'กำลังดูผลการเรียน 📊',

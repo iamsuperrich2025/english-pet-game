@@ -475,6 +475,8 @@
 <!-- 🛡️ รอบ 951: ปุ่ม "ควิซอาหารปลอดภัย" ย้ายไปอยู่ใต้ปุ่ม 🍽️ ให้อาหาร ในหน้าข้อมูลน้อง (ผู้ใช้สั่ง) -->
       <button class="big-btn purple lobby-quiz-btn" id="btn-cats">📚 หมวดคำศัพท์ &amp; แบบทดสอบ</button>
       <button class="big-btn lobby-play-btn" id="btn-play">🎮 เล่นเกมจับคู่คำศัพท์!</button>
+      <!-- 🖼️ รอบ 977: เกมจับคู่ภาพสัตว์ (ผู้ใช้สั่ง) — วางคู่กับปุ่มจับคู่คำศัพท์ -->
+      <button class="big-btn lobby-play-btn" id="btn-picmatch">🖼️ จับคู่ภาพ!</button>
       <button class="big-btn lobby-quiz-btn lobby-exam-btn" id="btn-band-exam">📝 สอบเลื่อนขั้นคำศัพท์</button>
     </footer>
 
@@ -609,6 +611,7 @@
 <script src="js/examstd.js"></script>  <!-- 📋 รอบ 812: ข้อสอบจริง IELTS/TOEIC/TOEFL 30 ข้อ/ชุด (ไวยากรณ์+การอ่าน) พร้อมเฉลยละเอียด -->
 <script src="js/vocabbook.js"></script>  <!-- 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) -->
 <script src="js/data/word_new.js"></script>  <!-- 🆕 New Word หน้า Lobby (รอบ 116) — format ตรงสเปกพจนานุกรม -->
+<script src="js/data/matchpics.js"></script>  <!-- 🖼️ รอบ 977: คลังภาพเกมจับคู่ภาพ (เจนจาก tools/slice_matching.py) -->
 <script src="js/data/ranks.js"></script>
 <script src="js/data/homes.js"></script>
 <script src="js/data/fruits.js"></script>
@@ -636,6 +639,7 @@
 <script src="js/typing.js"></script>  <!-- ⌨️ รอบ 648: เกมพิมพ์คำศัพท์ แป้น 3 มิติเต็มจอ (5 เหรียญ/คำ · คำไม่ซ้ำ) -->
 <script src="js/shootword.js"></script>  <!-- 🎯 รอบ 917: เกมยิงเป้าคำศัพท์ โลก 3D สวนสนุก (โหลด three.js ตอนกดปุ่มเท่านั้น) -->
 <script src="js/game.js"></script>
+<script src="js/picmatch.js"></script>  <!-- 🖼️ รอบ 977: เกมจับคู่ภาพสัตว์ (ใช้สูตรรางวัลชุดเดียวกับ game.js ต้องมาหลัง) -->
 <script src="js/cert.js"></script>  <!-- 🎖️ รอบ 712: ประกาศนียบัตรสอบผ่าน (วาด SVG + ตู้เก็บในโปรไฟล์) -->
 <script src="js/photo.js"></script>  <!-- 📷 รอบ 709: รูปโปรไฟล์อัปโหลดเอง (ครอป/ย่อในเครื่อง → localStorage + /pphoto) -->
 <script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->

@@ -25,3 +25,9 @@ img/models/ghost.glb
 # 🔐 แพ็กเกจ Android + กุญแจ signing สำหรับ Play Store (รอบ 858) — ห้ามขึ้น repo สาธารณะเด็ดขาด
 # (signing.keystore + รหัสใน signing-key-info.txt = ใครได้ไปปลอมแอปเราได้)
 store/android/
+
+# แผ่นภาพสัตว์ต้นฉบับจากผู้ใช้ 4.2MB (รอบ 977 · img/matching/animal1.png, animal2.png)
+# เกมใช้เฉพาะการ์ดที่ตัดแล้ว img/matching/cards/*.png (200px ต่อใบ) — ต้นฉบับเก็บในเครื่องอย่างเดียว
+# ตัดใหม่ได้ทุกเมื่อ: python tools/slice_matching.py
+img/matching/animal1.png
+img/matching/animal2.png

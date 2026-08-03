@@ -5208,3 +5208,40 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 @media (max-height:520px){
   .lobby-top .coin-block{--cf1:15px;--cf2:11.5px;}
 }
+
+/* ============================================================
+   🖼️ รอบ 977 — เกม "จับคู่ภาพ" (js/picmatch.js) เต็มจอ
+   แถวบน = ภาพชุดที่ 1 · แถวล่าง = สัตว์ตัวเดียวกันคนละลายเส้น (ชุดที่ 2)
+   กฎทองข้อ 7: ต้องอยู่ในจอครบทั้งใบ ไม่มี scroll แม้จอเตี้ย 812×375
+   ============================================================ */
+#screen-picmatch{--pmh:clamp(54px,25.5vh,150px);}
+#screen-picmatch .pm-label{margin:4px 2px 3px;text-align:center;}
+.pm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;justify-items:center;margin-bottom:2px;}
+.pm-card{position:relative;height:var(--pmh);aspect-ratio:1;width:auto;padding:0;cursor:pointer;
+  border:3px solid #fff;border-radius:16px;background:#fff;font-family:inherit;
+  box-shadow:0 3px 8px rgba(120,100,160,.18);transition:transform .16s, box-shadow .16s, border-color .16s, opacity .3s;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.pm-card .pm-img{width:100%;height:100%;object-fit:contain;pointer-events:none;user-select:none;}
+.pm-card .pm-name{position:absolute;left:2px;right:2px;bottom:2px;opacity:0;transition:opacity .25s;
+  font-size:clamp(8px,1.5vh,12px);font-weight:800;color:#2f7a45;background:rgba(255,255,255,.9);
+  border-radius:8px;padding:1px 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;}
+.pm-card:active{transform:scale(.95);}
+.pm-card.selected{transform:scale(1.05);border-color:var(--purple-d);box-shadow:0 0 0 4px rgba(169,139,236,.4);}
+.pm-card.matched{border-color:var(--green-d);background:var(--green);pointer-events:none;opacity:.92;}
+.pm-card.matched .pm-img{opacity:.55;}
+.pm-card.matched .pm-name{opacity:1;}
+.pm-card.hint-glow{border-color:var(--yellow-d);box-shadow:0 0 14px 4px rgba(245,197,66,.8);}
+.pm-card.shake{animation:shake .4s;}
+#screen-picmatch .pm-note{margin-top:4px;}
+#screen-picmatch .timer-wrap{margin-bottom:6px;}
+/* จอเตี้ย (มือถือแนวนอน) — บีบทุกชั้นให้กระดานทั้งใบยังอยู่ในจอ */
+@media (max-height:430px){
+  #screen-picmatch{--pmh:clamp(50px,22.5vh,150px);}
+  #screen-picmatch .game-top{margin-bottom:4px;}
+  #screen-picmatch .timer-wrap{height:11px;margin-bottom:4px;}
+  #screen-picmatch .pm-label{font-size:12px;margin:2px 2px 2px;}
+  #screen-picmatch .pm-note{font-size:11px;line-height:1.3;margin:4px auto 2px;padding:5px 12px;}
+  #screen-picmatch .pm-note .sess-coin{font-size:13px;}
+  #screen-picmatch .pm-n2{display:none;}   /* จอเตี้ย: เหลือบรรทัดเดียว (ปุ่ม ⬅ กลับ เห็นอยู่แล้วมุมซ้ายบน) */
+  .pm-grid{gap:6px;}
+}

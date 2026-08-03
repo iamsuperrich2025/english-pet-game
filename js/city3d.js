@@ -1019,6 +1019,25 @@ const BUILDINGS = [
   bld('rank',      '🥇','อันดับ','rank',           55, BAND2_R, ()=>bHallOfFame()),
   bld('trophy',    '🏆','ตู้เข็ม','trophy',       103, BAND2_R, ()=>bLibrary({w:9, d:7, col:'#fdf3da', domeCol:0xe8b64c, trim:0xd9a944})),
   bld('play',      '🎮','เกมจับคู่','play',       128, BAND2_R, ()=>bArcade({})),
+  /* 🖼️ รอบ 977: หอศิลป์ "จับคู่ภาพ" (เกมใหม่ js/picmatch.js) — ช่องว่างกว้างสุดของวงนอก
+     ระหว่างซุ้มควิซอาหาร (153°) กับประตูโลกผจญภัย (186°) */
+  bld('picmatch',  '🖼️','จับคู่ภาพ','picmatch',   169, BAND2_R, ()=>{
+    const g = bShop({col:'#ffe6f0', roof:0xba68c8, aw1:'#ce93d8', sign:'🖼️ PIC MATCH', signBg:'#f3e5f5'});
+    const c = cvs(128,64), q = c.getContext('2d');           // ป้ายภาพ 2 ใบเท่ากันบนหลังคา (โยกช้า ๆ)
+    q.fillStyle='#fff'; q.fillRect(0,0,128,64);
+    [[10,'#ffb74d'],[76,'#4fc3f7']].forEach(([x,col])=>{
+      q.fillStyle='#f3e5f5'; q.fillRect(x,8,42,48);
+      q.strokeStyle='#8e24aa'; q.lineWidth=3; q.strokeRect(x,8,42,48);
+      q.fillStyle=col; q.beginPath(); q.arc(x+21,34,13,0,7); q.fill();
+    });
+    q.fillStyle='#8e24aa'; q.font='700 24px system-ui'; q.textAlign='center'; q.textBaseline='middle';
+    q.fillText('=',64,33);
+    const bd = M(new THREE.PlaneGeometry(2.6,1.3),
+      new THREE.MeshBasicMaterial({map:ctex(c), side:THREE.DoubleSide, transparent:true}), 0, 6.4, 0);
+    g.add(bd);
+    tickers.push((dt,t)=>{ bd.rotation.y = Math.sin(t*0.9)*0.5; bd.position.y = 6.4+Math.sin(t*1.6)*0.12; });
+    return g;
+  }),
   bld('foodquiz',  '🛡️','ควิซอาหาร','foodquiz',  153, BAND2_R, ()=>{
     const g = bShop({col:'#fff3a6', roof:0xfbc02d, aw1:'#ffd54f', sign:'🛡️ FOOD SAFE', signBg:'#fffde7'});
     const ap = M(new THREE.SphereGeometry(0.6,10,8), mat(0xef5350), 0, 6.0, 0); g.add(ap);
@@ -1447,6 +1466,7 @@ const Live = {
 function actBuilding(act){
   const s = String(act||'');
   if(s.includes('🎮')) return 'play';
+  if(s.includes('🖼️')) return 'picmatch';   // 🖼️ รอบ 977: เพื่อนที่กำลังจับคู่ภาพ ไปยืนหน้าหอศิลป์
   if(s.includes('📝')) return 'academy';
   if(s.includes('📚')) return 'library';
   if(s.includes('📊')) return 'stats';
