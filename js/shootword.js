@@ -654,7 +654,8 @@
   box-shadow:0 4px 0 rgba(198,40,56,.5),0 6px 14px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
 .sg-shoot .ic{display:block;font-size:clamp(19px,4.8vh,28px)}
 .sg-shoot.down{transform:translateY(calc(-50% + 3px));box-shadow:0 1px 0 rgba(198,40,56,.5),0 3px 8px rgba(0,0,0,.2)}
-#sg-shoot-l{left:2vh}
+/* 🔫 รอบ 927: ผู้ใช้ส่งภาพวงกลม "1" — ปุ่มยิงฝั่งซ้ายเฉพาะตัวย้ายลงมาต่ำกว่าฝั่งขวา (ฝั่งขวายังอยู่ top:40% เดิม) */
+#sg-shoot-l{left:2vh;top:60%}
 #sg-shoot-r{right:2vh}
 /* ✛ กากบาทกึ่งกลางจอ — โผล่เฉพาะโหมดถือ (โหมดเล็งมีศูนย์ปืนจริงในภาพ aim.webp อยู่แล้ว ไม่ต้องซ้อน)
    บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
