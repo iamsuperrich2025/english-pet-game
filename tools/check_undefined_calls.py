@@ -204,6 +204,10 @@ def main():
             for name in CALL_RE.findall(line):
                 if name in known:
                     continue
+                # 🛡️ รอบ 941: การเรียกที่การ์ดด้วย typeof ในบรรทัดเดียวกัน ปลอดภัยตอนรันเสมอ
+                #    (`if(typeof X==='function') X()` — แพตเทิร์นข้ามไฟล์ที่ session คู่ขนานยังไม่ commit นิยาม)
+                if f"typeof {name}" in line or f"typeof({name})" in line:
+                    continue
                 hits.append((f, ln, name, line.strip()))
 
     # จัดกลุ่มตามชื่อ — ชื่อที่โผล่ครั้งเดียวคือกลุ่มที่น่าสงสัยที่สุด (พิมพ์ผิด/ลืมเขียนฟังก์ชัน)
