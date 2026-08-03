@@ -3990,3 +3990,9 @@
 
 - **รอบ 945 (3 ส.ค. · ผู้ใช้สั่ง: เพิ่มส่วนลดค่าเข้าโลก mecha/drive เมื่อผู้เล่นมีหุ่น/รถของตัวเอง):** 🤖🚗 `js/data/calendar.js`+`js/ui.js` — `worldEntryInfo(mode)` รับ mode เข้ามาแล้ว: มีหุ่นเอง (`state.robots.length`) เข้า mecha หรือมีรถเอง (`myCar()`) เข้า drive → ลดเพิ่ม 30% จากราคาวันนี้ (ทบกับส่วนลดวันหยุด/วันเด็ก ตามที่ผู้ใช้เลือก) · `openWorldEntryDialog`+`renderRailWorlds` โชว์เหตุผลส่วนลดทุกอันบนจอเสมอ (ห้ามลดเงียบๆ) ไม่มีของตัวเอง → เห็นโน้ตยืมฟรีเหมือนเดิม ไม่มีส่วนลดนี้
   - ยืนยัน (server เอง :8642 · mock login index_classic.html · เรียก `worldEntryInfo()`/`openWorldEntryDialog`/`renderRailWorlds` ตรง): ไม่มีหุ่น/รถ → 500 ปกติ ✓ มีหุ่นเอง mecha → 350 (ลด 30%) ✓ มีรถเอง drive → 350 ✓ ทบวันหยุด (จำลอง 12 ส.ค.): 500→250→175 ✓ dialog โชว์ข้อความส่วนลดครบ + ราคาขีดฆ่าเดิม ✓ rail price ต่อโลกถูกต้อง (mecha 350, drive 500 ตอนไม่มีรถ) ✓ console สะอาด · `node --check` ผ่าน 2 ไฟล์ · ล้าง storage แล้ว
+
+
+## ⏬ ย้ายเมื่อ 2026-08-03 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 946 (3 ส.ค. · ผู้ใช้สั่ง: โซนออร่าฟุตบอล เพิ่มสไปรต์ประกายเล็กไต่ผิวกรวยทอร์นาโด):** ✨ `js/adventure3d.js` `auraGlintTex`/`buildAura`/`auraTick` — เพิ่ม `auraGlints` 10 ชิ้น (สไปรต์กลม แกนขาว-ขอบทอง additive) ไต่ตามสูตรผิวกรวยเดียวกับ `auraCoilRibbon` (r=4.25×(1-t)^1.4, y จาก .1→2.15) มุมหมุน `-tS*12.6` เท่าเกลียว (ติดผิวกรวยไปด้วยกัน) · t ไต่วนซ้ำ 0→1 คนละจังหวะ (phase สุ่ม) + twinkle/fade ตามความสูง
+  - ยืนยัน (server เอง :8820 · mock login · `enterSoccer3D()`+`state.soccerAuraUntil` ตรง · ขับเฟรม `Adventure3D._t.step` · SnapLab `Snap.shot`+crop zoom): **ภาพยืนยันด้วยตา** — เห็นจุดประกายขาว-ทองเล็กลอยอยู่ติดผิวกรวยเกลียวส้มที่ความสูงต่างกัน ✓ console สะอาด · `node --check` ผ่าน · ล้าง storage + ฆ่า server แล้ว
