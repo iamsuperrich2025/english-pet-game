@@ -294,7 +294,7 @@ const AURA_COST=100, AURA_MS=60*60*1000, AURA_SPD=100/KICK_SPD_MAX;
    (รอบ 853 ผู้ใช้: หางไฟ/ควันต้องยาวขึ้นเพราะแรงลมปะทะ + ควันต้องชัดกว่าเดิมมาก → พ่นถี่ขึ้น 2 เท่า อายุยาวขึ้น ก้อนใหญ่ทึบขึ้น) */
 const FIRE_CHG=30, SMOKE_MAX=180, SMOKE_LIFE=1.8, SMOKE_GAP=13;   // % ไฟติด · จำนวนก้อนควันสูงสุด · อายุควัน(วิ) · ช่วงพ่น(ms)
 let fireGrp=null, fireFlames=[], smokePool=[], smokeIdx=0, _smokeAt=0, sbFlame=false;
-let auraGrp=null, auraRings=[], auraSparks=[], auraCoil=[], auraCore=null, auraBarEl=null, auraBtnEl=null;   // 🌀 รอบ 939: + เกลียวไฟส้ม
+let auraGrp=null, auraRings=[], auraSparks=[], auraCoil=[], auraGlints=[], auraCore=null, auraBarEl=null, auraBtnEl=null;   // ✨ รอบ 946: + ประกายไต่กรวย
 let drillMesh=null, drillMat=null, drillPhase=0, _auraHudAt=0;
 let fkOn=false, fkWall=null, fkMen=[];
 let sCurl=0, curlEl=null, _curlShown=null;                 // -1 โค้งซ้าย .. +1 โค้งขวา
@@ -10920,6 +10920,18 @@ function auraCoilRibbon(off){
   return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:auraCoilTex(),transparent:true,vertexColors:true,
     side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));
 }
+/* ✨ รอบ 946: ประกายเล็กไต่ผิวกรวยทอร์นาโด — จุดสว่างกลม แกนขาวกลาง ขอบทองจาง */
+function auraGlintTex(){
+  const S=32,cv=document.createElement('canvas'); cv.width=S; cv.height=S;
+  const c=cv.getContext('2d');
+  const g=c.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  g.addColorStop(0,'rgba(255,255,255,1)');
+  g.addColorStop(.35,'rgba(255,235,170,.9)');
+  g.addColorStop(.7,'rgba(255,170,40,.35)');
+  g.addColorStop(1,'rgba(255,120,0,0)');
+  c.fillStyle=g; c.fillRect(0,0,S,S);
+  return new THREE.CanvasTexture(cv);
+}
 function buildAura(sc){
   auraGrp=new THREE.Group(); auraRings=[]; auraSparks=[];
   const ft=auraFlameTex();
@@ -10949,6 +10961,17 @@ function buildAura(sc){
   for(let i=0;i<7;i++){                                     // ประกายลอยขึ้นจากเปลว (ember ฟ้า)
     const sp=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),sparkMat.clone());
     auraGrp.add(sp); auraSparks.push({m:sp,a:Math.random()*9,rr:.45+Math.random()*.3,sp:.55+Math.random()*.6});
+  }
+  // ✨ รอบ 946: ประกายเล็ก 10 ชิ้นไต่ผิวกรวยทอร์นาโด (สูตรรัศมี/ความสูงเดียวกับ auraCoilRibbon)
+  //    ความเร็วเชิงมุมเท่า rotation.y ของเกลียว (-12.6 rad/s) ให้ดูเหมือนติดผิวกรวยจริง ไม่ลอยสวนทาง
+  const glintTex=auraGlintTex();
+  auraGlints=[];
+  for(let i=0;i<10;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:glintTex,transparent:true,depthWrite:false,
+      blending:THREE.AdditiveBlending,opacity:.95}));
+    sp.scale.set(.16,.16,1);
+    auraGrp.add(sp);
+    auraGlints.push({m:sp, a:Math.random()*Math.PI*2, cl:.16+Math.random()*.12, ph:Math.random()});
   }
   auraGrp.visible=false; sc.add(auraGrp);
 }
@@ -11004,6 +11027,19 @@ function auraTick(dt,now){
     cl.m.material.opacity=.72+.2*Math.sin(tS*7+i*2.1);
     const p=1+.05*Math.sin(tS*5.3+i);                        // สูบ-พองเบา ๆ ให้มีชีวิต
     cl.m.scale.set(p,1,p);
+  });
+  // ✨ รอบ 946: ประกายไต่กรวย — r/y ใช้สูตรเดียวกับ auraCoilRibbon (R0=4.25,CH=2.15,exp 1.4)
+  //    มุมหมุน -tS*12.6 เท่าเกลียว (ติดผิวกรวยไปด้วยกัน) · t ไต่วนซ้ำ 0→1 คนละจังหวะ (ph สุ่ม)
+  auraGlints.forEach(g=>{
+    const t=(tS*g.cl+g.ph)%1;
+    const r=Math.max(.02,4.25*Math.pow(1-t,1.4));
+    const y=.1+t*(2.15-.1);
+    const ang=g.a-tS*12.6;
+    g.m.position.set(Math.cos(ang)*r, y, Math.sin(ang)*r);
+    const twinkle=.6+.4*Math.sin(tS*11+g.ph*13);
+    g.m.material.opacity=twinkle*(1-t*.5);
+    const sc3=.16*(1-t*.35);
+    g.m.scale.set(sc3,sc3,1);
   });
   auraSparks.forEach(s=>{                                    // ember ฟ้า: ลอยขึ้นตามเสาไฟแล้วจางหาย วนใหม่
     const t=(tS*s.sp+s.a)%1, a=s.a+tS*.7;
