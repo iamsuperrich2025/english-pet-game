@@ -10892,24 +10892,32 @@ function auraCoilTex(){
   }
   const t=new THREE.CanvasTexture(cv); t.wrapS=THREE.RepeatWrapping; return t;
 }
-/* เรขาคณิต helix คงที่ (96 ช่วง × 4 รอบ สูง 8.8m โคนกว้าง-ยอดสอบ) — หมุน rotation.y + เลื่อน texture = วนไม่รู้จบ */
+/* เรขาคณิต helix คงที่ — หมุน rotation.y + เลื่อน texture = วนไม่รู้จบ
+   🌪️ รอบ 944 (ผู้ใช้ 3 ข้อ): ทรง "ทอร์นาโดคว่ำ" — โคนกว้าง 4.25m (ใหญ่กว่าเดิม 5 เท่า: .85×5)
+   ค่อย ๆ สอบขึ้นจนแหลม (เลขชี้กำลัง 1.4: ช่วงล่างสอบช้า พ้นหัวสอบไว = มุมแหลม) · ยอดจบที่ 2.15m
+   ≈ หัวตัวละคร 1.72 + 1/4 ของความสูงตัว (.43) · จางลงตั้งแต่ระดับอก (~.95m) ขึ้นไป
+   ทำความจางด้วย vertex color (additive: สี→ดำ = ใสสนิท โดยไม่ต้อง shader) */
 function auraCoilRibbon(off){
-  const N=96, TURNS=4, CH=8.8, R0=.85, R1=.3, W0=.6, W1=.24;
-  const pos=new Float32Array((N+1)*2*3), uv=new Float32Array((N+1)*2*2), idx=[];
+  const N=96, TURNS=4, CH=2.15, R0=4.25, W0=1.0, W1=.06, CHEST=.95;
+  const pos=new Float32Array((N+1)*2*3), uv=new Float32Array((N+1)*2*2), col=new Float32Array((N+1)*2*3), idx=[];
   for(let i=0;i<=N;i++){
     const t=i/N, a=off + t*TURNS*Math.PI*2;
-    const r=R0+(R1-R0)*t, y=.12+t*CH, w=(W0+(W1-W0)*t)/2;
+    const r=Math.max(.02, R0*Math.pow(1-t,1.4));           // โคนใหญ่ → ยอดแหลม
+    const y=.1+t*(CH-.1), w=(W0+(W1-W0)*t)/2;
     const x=Math.cos(a)*r, z=Math.sin(a)*r, o=i*6, u=i*4;
     pos[o]=x; pos[o+1]=y-w; pos[o+2]=z;
     pos[o+3]=x; pos[o+4]=y+w; pos[o+5]=z;
     uv[u]=t*TURNS; uv[u+1]=0; uv[u+2]=t*TURNS; uv[u+3]=1;
+    const fade = y<=CHEST ? 1 : Math.max(.04, 1-(y-CHEST)/(CH-CHEST));   // ใต้อกทึบเต็ม → ยอดเกือบใส
+    col[o]=col[o+1]=col[o+2]=fade; col[o+3]=col[o+4]=col[o+5]=fade;
     if(i<N){ const k=i*2; idx.push(k,k+1,k+2, k+1,k+3,k+2); }
   }
   const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
   geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
   geo.setIndex(idx);
-  return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:auraCoilTex(),transparent:true,
+  return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:auraCoilTex(),transparent:true,vertexColors:true,
     side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));
 }
 function buildAura(sc){
@@ -10988,10 +10996,11 @@ function auraTick(dt,now){
     fl.m.scale.set(fl.w*(1.1-lick*.18), h, 1);
     fl.m.material.opacity=fl.op*(.8+.25*Math.sin(tS*9+fl.p2));
   });
-  // 🌀 รอบ 941: ริบบิ้นเกลียวส้ม — หมุนวนไม่รู้จบ + เทกซ์เจอร์ไหลตามเกลียว (เปลวไหลขึ้นตลอดเวลา)
+  // 🌪️ รอบ 944: ริบบิ้นเกลียวส้ม — กลับทิศหมุนเป็น "ไหลขึ้น" (ลบ = แพตเทิร์นเกลียวเลื่อนขึ้น
+  //    เพราะ helix พันทวนเข็มตามความสูง) + เร็วขึ้น 3 เท่า (4.2→12.6 rad/s) ตามผู้ใช้สั่ง
   auraCoil.forEach((cl,i)=>{
-    cl.m.rotation.y=tS*4.2;                                  // หมุนต่อเนื่องไม่มีหยุด (สายสองห่างครึ่งรอบใน geometry)
-    cl.m.material.map.offset.x=(-tS*1.15)%1;                 // เปลวไหลขึ้นตามแนวเกลียว
+    cl.m.rotation.y=-tS*12.6;                                // หมุนขึ้นต่อเนื่องไม่มีหยุด (สายสองห่างครึ่งรอบใน geometry)
+    cl.m.material.map.offset.x=(tS*3.45)%1;                  // เปลวไหลตามแนวเกลียวขาขึ้น (เร็ว ×3 เท่ากัน)
     cl.m.material.opacity=.72+.2*Math.sin(tS*7+i*2.1);
     const p=1+.05*Math.sin(tS*5.3+i);                        // สูบ-พองเบา ๆ ให้มีชีวิต
     cl.m.scale.set(p,1,p);
