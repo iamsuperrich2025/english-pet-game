@@ -21,9 +21,27 @@ const BADGE_IMG = {
    `Cache-Control: public, max-age=604800` (7 วัน) + service worker เป็น cache-first สำหรับรูป
    → URL เดิมเป๊ะ = เบราว์เซอร์ไม่ยิงขอใหม่เลย · เปลี่ยนเลขนี้ทุกครั้งที่ตัดไฟล์เหรียญใหม่ (บัมพ์ CACHE_VERSION ใน sw.js ด้วย) */
 const BADGE_IMG_V = '953';
-function badgeIcHTML(emoji, cls){
+/* ✨ รอบ 954 (ผู้ใช้: "แสงวิ่งผ่านหน้าเหรียญ" บนการ์ดเข็ม .lbcat-ic/.pl-badge-card-ic): <img> เป็น
+   replaced element วาดทับ background เสมอ ทำ overlay แสงบน ::after ตรง ๆ ไม่ได้ (สเปกไม่รองรับ
+   ::before/::after บน <img>) → ห่อด้วย span.badge-shine ให้ ::after ของ span วิ่งทับหน้าเหรียญแทน
+   (จำกัดเฉพาะ 2 คลาสนี้ตามที่ขอ — เหรียญเล็กในสถิตินักพิมพ์ยังเป็น <img> เดี่ยวเหมือนเดิม) */
+const BADGE_SHINE_CLS = {'lbcat-ic':1, 'pl-badge-card-ic':1};
+/* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาอย่างไร"): เพิ่มพารามิเตอร์ที่ 3
+   `clickable` (ค่าเริ่มต้น true) — ผูก onclick เรียก showBadgeInfo(emoji) (js/game.js) ที่ element
+   หลักเลย (ไม่ห่อ wrapper ใหม่ กันกระทบ CSS เดิมของทุกจุดที่เรียกอยู่แล้ว) · ใส่ false เฉพาะจุดที่ไม่ควร
+   กดได้ เช่น ป้ายฉลองเข็มใหม่ (overlay ปิด pointer-events ทั้งกล่องอยู่แล้ว เพื่อไม่บังการเล่น)
+   ⚠️ ไม่ผูก onclick ซ้ำใน fallback ของ onerror (โหลดรูปพัง) — ไฟล์เหรียญครบทุกไฟล์แล้วตั้งแต่รอบ 953
+   โอกาสเข้า path นี้แทบเป็นศูนย์ ไม่คุ้มความเสี่ยง escape ซ้อนชั้น (fallback string ใช้ single quote
+   ห่อทั้งก้อนอยู่แล้ว ใส่ onclick ที่มี '${emoji}' จะชนกัน) */
+function badgeIcHTML(emoji, cls, clickable){
+  if(clickable === undefined) clickable = true;
   const img = BADGE_IMG[emoji];
   const src = img ? img + '?v=' + BADGE_IMG_V : '';
-  return img ? `<img class="${cls}" src="${src}" alt="" onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`
-             : `<span class="${cls} badge-ic-fallback">${emoji}</span>`;
+  const onclickAttr = clickable ? ` onclick="event.stopPropagation();typeof showBadgeInfo==='function'&&showBadgeInfo('${emoji}')"` : '';
+  const ccls = clickable ? ' badge-clickable' : '';
+  if(!img) return `<span class="${cls}${ccls} badge-ic-fallback"${onclickAttr}>${emoji}</span>`;
+  if(BADGE_SHINE_CLS[cls]){
+    return `<span class="${cls} badge-shine${ccls}"${onclickAttr}><img class="badge-shine-img" src="${src}" alt="" onerror="this.parentElement.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'"></span>`;
+  }
+  return `<img class="${cls}${ccls}" src="${src}" alt=""${onclickAttr} onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`;
 }

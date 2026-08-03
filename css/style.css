@@ -1519,7 +1519,39 @@ html.no-anim .tapglow-on::after{animation:none !important;}
   animation:bcPop .55s cubic-bezier(.2,1.7,.4,1);position:relative;z-index:2;
 }
 .bc-emoji{font-size:64px;line-height:1;filter:drop-shadow(0 4px 10px rgba(180,120,10,.4));animation:bcSpin 2.4s ease-in-out;}
-.bc-emoji-img{width:64px;height:64px;object-fit:contain;display:inline-block;vertical-align:middle;}
+/* 🎖️✨ รอบ 954 (ผู้ใช้: "ตอนป้ายฉลองได้เข็มใหม่ ให้เหรียญเด้ง+วิ้ง 1 ครั้ง"): overlay ถูกสร้างใหม่ทุกครั้งที่
+   ฉลอง (createElement ใน celebrateBadge() js/game.js ไม่ใช่ toggle ซ่อน/โชว์) → animation เล่นครั้งเดียว
+   (ไม่ใส่ infinite) ทำงานเองทุกครั้งที่ป้ายโผล่โดยไม่ต้องแก้ JS · เด้ง = scale/translateY, วิ้ง = filter
+   brightness+drop-shadow แฟลชสว่างวาบตอนเหรียญเด้งสุดแล้วนิ่ง (ไม่ใช้ ::after เพราะ <img> เดี่ยวไม่มีกล่องห่อ) */
+.bc-emoji-img{width:64px;height:64px;object-fit:contain;display:inline-block;vertical-align:middle;
+  animation:bcImgBounceShine .85s cubic-bezier(.24,1.6,.4,1) 1;}
+@keyframes bcImgBounceShine{
+  0%{transform:scale(.65) translateY(14px);filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0));}
+  40%{transform:scale(1.24) translateY(-7px);filter:brightness(2) drop-shadow(0 0 12px rgba(255,255,255,.95));}
+  62%{transform:scale(.93) translateY(2px);filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,255,255,.4));}
+  82%{transform:scale(1.05) translateY(-1px);filter:brightness(1.03) drop-shadow(0 0 0 rgba(255,255,255,0));}
+  100%{transform:scale(1) translateY(0);filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0));}
+}
+
+/* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาได้อย่างไร") — badgeIcHTML() ผูก onclick
+   ให้ element เหรียญทุกจุดที่ clickable=true (ค่าเริ่มต้น) ใส่แค่ cursor+hover เบาๆ บอกใบ้ว่ากดได้
+   (ไม่ทำ wrapper ใหม่ กันกระทบ layout เดิมของแต่ละจุดที่เรียก badgeIcHTML อยู่ก่อนแล้ว) */
+.badge-clickable{cursor:pointer;transition:transform .12s,filter .12s;}
+.badge-clickable:hover{transform:scale(1.06);filter:brightness(1.08);}
+.badge-clickable:active{transform:scale(.97);}
+
+/* กล่อง "เหรียญนี้ได้มาอย่างไร" — ใช้โครง .levelup-overlay/.levelup-box เดิม (กฎทองข้อ 7:
+   max-height:86vh + overflow-y:auto อยู่ใน .levelup-box อยู่แล้ว ครอบจอเตี้ยได้โดยไม่ต้องเพิ่ม media query) */
+.badge-info-box{max-width:300px;padding:24px 26px 22px;}
+.bi-emoji{font-size:72px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 4px 10px rgba(180,120,10,.35));}
+.bi-emoji-img{width:72px;height:72px;object-fit:contain;display:inline-block;}
+.bi-title{font-size:19px;font-weight:900;color:#5a3d8a;margin-bottom:8px;}
+.bi-desc{font-size:14.5px;line-height:1.6;color:#6a5a78;margin-bottom:16px;}
+.bi-ok{
+  background:linear-gradient(135deg,#8a6fd8,#6d55c8);box-shadow:0 4px 0 #4f3a95;
+  color:#fff;border:none;border-radius:999px;padding:11px 30px;
+  font-family:inherit;font-size:16px;font-weight:bold;cursor:pointer;
+}
 .bc-emoji .badge-ic-fallback{font-size:64px;}   /* เข็มที่ยังไม่มีภาพ (🏁/📚 ฯลฯ) ถอยไปใช้อิโมจิขนาดเท่าเดิม */
 .bc-title{margin-top:6px;font-size:24px;font-weight:900;color:#a5750f;}
 .bc-sub{margin-top:5px;font-size:14.5px;font-weight:700;color:#7a6220;line-height:1.55;}
