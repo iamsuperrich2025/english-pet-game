@@ -721,7 +721,9 @@ function rainFxTick(){
   if(on && !fx){
     fx = document.createElement('div');
     fx.id = 'rain-fx';
-    fx.innerHTML = `<div class="rain-layer l1"></div><div class="rain-layer l2"></div><div class="rain-glass"></div>`;
+    /* 🌧️ รอบ 961: ถอด .rain-layer (เส้นสีขาวทแยงทั้งจอ) ออก — ผู้ใช้บอก "ดูไม่ professional"
+       เหลือเฉพาะหยดน้ำเกาะกระจกซึ่งเป็นภาพจริง ดูสมจริงกว่า */
+    fx.innerHTML = `<div class="rain-glass"></div>`;
     document.body.appendChild(fx);
     rainFxDrop(fx.querySelector('.rain-glass'));
   }else if(!on && fx){
@@ -746,7 +748,9 @@ function rainFxDrop(glass){
   img.style.left  = (2 + Math.random()*92).toFixed(1) + '%';
   img.style.top   = (streak ? 1 + Math.random()*38 : 2 + Math.random()*80).toFixed(1) + '%'; // เม็ดรูดเริ่มบนๆ จะได้มีที่ไหล
   img.style.width = size.toFixed(0) + 'px';
-  img.style.setProperty('--o', (0.4 + Math.random()*0.4).toFixed(2));      // ความทึบสูงสุด (จางแบบน้ำ)
+  /* 💧 รอบ 961: ผู้ใช้บอก "เห็นภาพเม็ดฝนชัดไป ไม่เหมือนของจริง" → ลดความทึบสูงสุด
+     จาก 0.40-0.80 เหลือ 0.13-0.28 (น้ำจริงเป็นแค่เลนส์บิดแสง แทบไม่มีสีของตัวเอง) */
+  img.style.setProperty('--o', (0.13 + Math.random()*0.15).toFixed(2));    // ความทึบสูงสุด (จางแบบน้ำ)
   img.style.setProperty('--r', (Math.random()*16 - 8).toFixed(1) + 'deg'); // เอียงเล็กน้อยไม่ให้เหมือนกันเป๊ะ
   img.style.setProperty('--fall', fall.toFixed(0) + 'px');
   img.style.animationDuration = dur.toFixed(2) + 's';
