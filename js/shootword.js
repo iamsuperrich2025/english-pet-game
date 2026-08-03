@@ -958,20 +958,26 @@
   }
   /* 🔫 รอบ 923: ปุ่มยิง 2 ตำแหน่งซ้าย-ขวาล่างจอ — ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง AIM_SX/AIM_SY = 50/50)
      pointerdown ไม่ใช่ click — ลดหน่วง เหมือนแป้นพิมพ์คำใน typing.js */
+  /* 🔫🔁 รอบ 958 (ผู้ใช้สั่ง "กดค้างรัวได้"): กดค้าง = ยิงรัวซ้ำทุก COOLDOWN ms (310ms/นัด — cooldown เดิม
+     กันเด็กรัวมั่วอยู่แล้ว ไม่ต้องคูลดาวน์เพิ่ม) · ใช้ setInterval ผูกกับปุ่มเดียว ไม่ใช่ตัวแปร global
+     กันกด 2 ปุ่มพร้อมกันแล้ว clear ของกันเอง */
   function bindShootBtns(){
     ['sg-shoot-l','sg-shoot-r'].forEach(id=>{
       const b=overlay.querySelector('#'+id); if(!b) return;
-      const up=()=> b.classList.remove('down');
+      let holdTimer=null;
+      const stop=()=>{ b.classList.remove('down'); if(holdTimer){ clearInterval(holdTimer); holdTimer=null; } };
       b.addEventListener('pointerdown', e=>{
         e.preventDefault();
         /* 🔫 รอบ 955: ยึดนิ้วไว้ที่ปุ่ม — นิ้วเด็กกดแล้วไถออกนอกวง จะไม่กลายเป็น "ลากจอ = กล้องเบน" */
         try{ b.setPointerCapture(e.pointerId); }catch(_){}
         b.classList.add('down');
         shoot(innerWidth*0.5, innerHeight*0.5);
+        if(holdTimer) clearInterval(holdTimer);
+        holdTimer=setInterval(()=> shoot(innerWidth*0.5, innerHeight*0.5), COOLDOWN);
       });
-      b.addEventListener('pointerup', up);
-      b.addEventListener('pointerleave', up);
-      b.addEventListener('pointercancel', up);
+      b.addEventListener('pointerup', stop);
+      b.addEventListener('pointerleave', stop);
+      b.addEventListener('pointercancel', stop);
     });
   }
   function onResize(){
