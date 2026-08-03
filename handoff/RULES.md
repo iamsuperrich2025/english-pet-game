@@ -7,6 +7,8 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 964 (3 ส.ค. 2026): field ใหม่ `p` ใต้ `/gfeed/$postId/cm/$cid` (💬 ตอบกลับใต้คอมเมนต์แบบ Facebook/TikTok) — รอผู้ใช้ publish:** `p` = รหัสคอมเมนต์แม่ (string ≤40) และ **validate บังคับว่าคอมเมนต์แม่ต้องมีอยู่จริงในโพสต์เดียวกัน** (`root.child('gfeed').child($postId).child('cm').child(newData.val()).exists()`) — กันยัดรหัสมั่ว/ข้ามโพสต์ · ไม่มีโซนใหม่ ไม่แตะสิทธิ์เขียนเดิม (ยังเป็นเพื่อนของเจ้าของโพสต์เท่านั้น) · **ต้องเพิ่มเพราะ `"$other": {".validate": false}` ใต้ `cm/$cid` ทำให้ field แปลกหน้าโดน deny ทั้งก้อน**
+  - **ยังไม่ publish = เกมไม่พัง:** `gfeedAddComment()` เขียนก้อนที่มี `p` โดน deny → **ถอยเป็นคอมเมนต์ธรรมดาที่ขึ้นต้น "↪ @ชื่อ" ให้อัตโนมัติ** (ข้อความไม่หาย) + ตั้งธง `Online.cmReplyRulesOld` → แผ่นคอมเมนต์ขึ้นป้ายเหลืองบอกตรง ๆ ว่ายังซ้อนใต้คอมเมนต์ไม่ได้จนกว่าจะอัปเดตกฎ (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ไลก์/รีแอ็กชัน/คอมเมนต์ปกติ ไม่กระทบ
 - ⏳ **รอบ 917 (2 ส.ค. 2026): โซนใหม่ `sgAward` + field `sg` ใน /leaderboard (เกมใหม่ 🎯 ยิงเป้าคำศัพท์ — แต้มสะสม + รางวัลรายเดือน Top 10) — รอผู้ใช้ publish:** สูตรเดียวกับ `wsAward`/field `ws` เป๊ะ (`/sgAward/<YYYY-MM>` = snapshot ตัดรอบเขียนได้ครั้งเดียว · `sg` = แต้มสะสมตลอดกาล validate ตัวเลข ≥0) · **ยังไม่ publish = เกมไม่พัง:** เล่นได้ปกติ เก็บแต้ม/เหรียญในเครื่องครบ — onlinePushScore ถอย fallback ทีละขั้น (ก้อนที่มี `sg` โดน deny → ส่งก้อน tp+tw แทน) กระดานเห็นแต้มตัวเองสดจาก state · กระดานประกาศรางวัลยังตัดรอบไม่ได้จนกว่าจะ publish · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม (31 โซน):** https://claude.ai/code/artifact/3bad17e9-4017-496a-af8e-2a55da92d1c9
 - ⏳ **รอบ 903 (2 ส.ค. 2026): โซนใหม่ `f1Rank` = กระดานอันดับ Best Lap ออนไลน์ของโลก F1 — รอผู้ใช้ publish:** `/f1Rank/<uid> = {sec, n, g, ts}` (1 แถวต่อคน สนามเดียว) เก็บเวลาต่อรอบที่ดีที่สุด · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นได้ปกติ กระดานหน้า intro เห็นแค่สถิติตัวเอง ขึ้นป้ายบอกตรง ๆ ว่ากระดานกลางยังไม่เปิด · ก้อนเต็มด้านล่างอัปเดตแล้ว · **Artifact ปุ่มคัดลอกก้อนเต็ม:** https://claude.ai/code/artifact/ba9890de-eb86-4255-bed6-b322f0e4e688
 - ⏳ **รอบ 896 (2 ส.ค. 2026): โลกแข่งรถ F1 สนามซาเคียร์ — เพิ่ม `$map === 'f1'` ใน enum ของ `wroom` + `winfo` (2 จุด) — รอผู้ใช้ publish:** แบบเดียวกับตอนเพิ่ม `soccer`/`mecha` เป๊ะ ไม่มีโซนใหม่ ไม่มี field ใหม่ · **ยังไม่ publish = เกมไม่พัง:** โลก F1 เล่นคนเดียวได้ปกติ แค่ยังไม่เห็นเพื่อนในสนาม (NetRoom เขียนโดน deny → ปิดการส่งเงียบ ๆ) · ก้อนเต็มด้านล่างอัปเดตแล้ว
@@ -383,6 +385,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
             "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
             "tx": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 120" },
             "ts": { ".validate": "newData.isNumber()" },
+            "p":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && root.child('gfeed').child($postId).child('cm').child(newData.val()).exists()" },
             "$other": { ".validate": false }
           }
         },

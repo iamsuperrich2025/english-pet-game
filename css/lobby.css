@@ -2318,6 +2318,22 @@ html.no-anim .cs-big-img{animation:none}
 .fcm-row b{color:#8fd4ff;margin-right:3px;}
 .fcm-row small{color:#7f9cc0;font-size:9px;margin-left:4px;}
 .fcm-none{text-align:center;color:#7f9cc0;font-size:11px;padding:12px 0;}
+/* ↩ รอบ 964: ตอบกลับใต้คอมเมนต์ (nested 1 ชั้น แบบ Facebook/TikTok) */
+.fcm-item{display:flex;flex-direction:column;gap:4px;}
+.fcm-reps{display:flex;flex-direction:column;gap:4px;margin-left:16px;
+  border-left:2px solid rgba(120,200,255,.22);padding-left:7px;}
+.fcm-rep{background:rgba(255,255,255,.035);font-size:11px;}
+.fcm-arrow{color:#6fa8dd;margin-right:3px;}
+.fcm-reply{border:0;background:transparent;color:#7af0c0;font-family:inherit;font-size:9.5px;
+  font-weight:800;cursor:pointer;padding:0 3px;margin-left:4px;}
+.fcm-reply:active{opacity:.6;}
+.fcm-repbar{flex-shrink:0;display:flex;align-items:center;gap:6px;margin:0 12px;padding:4px 9px;
+  background:rgba(120,240,192,.1);border:1px solid rgba(120,240,192,.3);border-radius:9px;
+  font-size:10.5px;color:#bff5df;}
+.fcm-repbar b{color:#7af0c0;}
+.fcm-repx{margin-left:auto;border:0;background:transparent;color:#bff5df;font-size:12px;
+  cursor:pointer;font-family:inherit;padding:0 2px;}
+.fcm-note{flex-shrink:0;margin:5px 12px 0;font-size:9.5px;line-height:1.35;color:#ffd9a0;}
 /* ⑦ คอมเมนต์ด่วนภาษาอังกฤษ (เอกลักษณ์ของเกมเรา — เด็กได้ประโยคจริงติดตัว) */
 .fcm-quick{flex-shrink:0;display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;
   padding:6px 12px 0;}

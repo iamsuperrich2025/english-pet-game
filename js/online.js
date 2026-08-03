@@ -1094,7 +1094,9 @@ function gfeedParse(key, v){
   if(v.cm && typeof v.cm === 'object'){
     for(const cid in v.cm){
       const c = v.cm[cid];
-      if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0});
+      /* p = รหัสคอมเมนต์แม่ (รอบ 964: ตอบกลับใต้คอมเมนต์แบบ Facebook/TikTok) — ไม่มี = คอมเมนต์ชั้นบนสุด */
+      if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0,
+                                                 p: (typeof c.p === 'string' ? c.p : '')});
     }
     cm.sort((a,b)=>a.ts - b.ts);
   }
@@ -1140,16 +1142,23 @@ function gfeedWatchStop(){
    (ไม่มีโซน DB ใหม่ = ไม่ต้องแก้ rules · แจ้งเฉพาะช่วงที่เปิดเกมอยู่ ตามข้อจำกัดนี้) */
 function gfeedNotifDiff(old, now){
   const me = onlineKey();
-  if(now.u !== me) return;
-  for(const uid in now.rx){
+  const mine = now.u === me;                       // โพสต์นี้เป็นของเราไหม
+  if(mine) for(const uid in now.rx){
     if(uid === me || old.rx[uid] === now.rx[uid]) continue;
     gfeedNotifPush({t:'rx', pid: now.key, u: uid, n: uidDisplayName(uid), r: now.rx[uid], tx: now.tx, ts: Date.now()});
   }
   const seen = {};
   for(const c of old.comments) seen[c.id] = true;
+  const byId = {};
+  for(const c of now.comments) byId[c.id] = c;
   for(const c of now.comments){
     if(seen[c.id] || c.u === me) continue;
-    gfeedNotifPush({t:'cm', pid: now.key, u: c.u, n: c.n, cm: c.tx, tx: now.tx, ts: c.ts || Date.now()});
+    /* รอบ 964: แจ้งเตือน 2 กรณี — คอมเมนต์ในโพสต์ของเรา · หรือ "ตอบกลับคอมเมนต์ของเรา" ในโพสต์ใครก็ได้ */
+    const par = c.p ? byId[c.p] : null;
+    const toMyComment = !!(par && par.u === me);
+    if(!mine && !toMyComment) continue;
+    gfeedNotifPush({t: toMyComment ? 'rp' : 'cm', pid: now.key, u: c.u, n: c.n, cm: c.tx,
+                    tx: toMyComment ? par.tx : now.tx, ts: c.ts || Date.now()});
   }
 }
 function gfeedNotifPush(n){
@@ -1199,19 +1208,28 @@ function gfeedSetReaction(postId, rk){
   return ref.set(rk).then(()=>true)
     .catch(()=>ref.set(true).then(()=>{ Online.rxRulesOld = true; return true; }).catch(()=>false));
 }
-/* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท */
-function gfeedAddComment(postId, tx){
+/* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท
+   รอบ 964: parentId = ตอบกลับใต้คอมเมนต์นั้น (เก็บเป็น field `p`)
+   ⚠️ rules ชุดเก่ามี `"$other": {".validate": false}` ใต้ cm/$cid → field `p` โดน deny ทั้งก้อน
+      → ถอยเป็นคอมเมนต์ธรรมดาที่ขึ้นต้น "↪ @ชื่อ" ให้อัตโนมัติ (เกมไม่พัง) แล้วตั้งธงให้ UI บอกผู้ใช้ตรง ๆ */
+function gfeedAddComment(postId, tx, parentId, parentName){
   if(!Online.ready || !postId) return Promise.resolve(false);
   const text = String(tx || '').trim().slice(0,120);
   if(!text) return Promise.resolve(false);
   if(typeof nameHasBadWord === 'function' && nameHasBadWord(text)) return Promise.reject('คอมเมนต์มีคำไม่สุภาพ ลองใหม่นะ');
   const bs = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
-  return Online.db.ref('gfeed/' + postId + '/cm').push({
-    u:  onlineKey(),
-    n:  (onlineDisplayName() || 'เพื่อน').slice(0,40) + bs,
-    tx: text,
-    ts: firebase.database.ServerValue.TIMESTAMP,
-  }).then(()=>true).catch(()=>false);
+  const who = (onlineDisplayName() || 'เพื่อน').slice(0,40) + bs;
+  const ref = Online.db.ref('gfeed/' + postId + '/cm');
+  const base = ()=>({ u: onlineKey(), n: who, ts: firebase.database.ServerValue.TIMESTAMP });
+  if(!parentId){
+    return ref.push(Object.assign(base(), {tx: text})).then(()=>true).catch(()=>false);
+  }
+  return ref.push(Object.assign(base(), {tx: text, p: String(parentId).slice(0,40)})).then(()=>true)
+    .catch(()=>{
+      const flat = ('↪ @' + String(parentName || 'เพื่อน').slice(0,20) + ' ' + text).slice(0,120);
+      return ref.push(Object.assign(base(), {tx: flat})).then(()=>{ Online.cmReplyRulesOld = true; return true; })
+                .catch(()=>false);
+    });
 }
 
 /* ============================================================

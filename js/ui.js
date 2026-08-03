@@ -3783,6 +3783,7 @@ function feedNotifArrived(n){
   renderFeedBell();
   const who = n.n || 'เพื่อน';
   if(n.t === 'rx'){ const r = feedRx(n.r); toast(`${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`); }
+  else if(n.t === 'rp') toast(`↩ ${who} ตอบกลับคอมเมนต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
   else toast(`💬 ${who} คอมเมนต์โพสต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
   sfx.select();
 }
@@ -3798,10 +3799,10 @@ function openFeedNotif(){
     <div class="fnt-list">${list.length ? list.map(n=>{
       const r = n.t === 'rx' ? feedRx(n.r) : null;
       return `<div class="fnt-row" data-pid="${escapeHTML(n.pid)}">
-        <span class="fnt-ico">${r ? r.e : '💬'}</span>
+        <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : '💬')}</span>
         <span class="fnt-tx"><b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
           ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
-          : `คอมเมนต์ว่า “${escapeHTML(String(n.cm || ''))}”`}
+          : `${n.t === 'rp' ? 'ตอบกลับคอมเมนต์ของคุณ' : 'คอมเมนต์'}ว่า “${escapeHTML(String(n.cm || ''))}”`}
           <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small></span>
       </div>`;
     }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
@@ -3867,7 +3868,7 @@ function feedPickRx(key, rk, anchor){
 }
 
 /* ---- 💬 กล่องคอมเมนต์ (เปิดเป็นแผ่นเต็มจอ — การ์ดในวงหมุนเลยไม่ต้องมี scrollbar)
-       รอบ 963: ตอบกลับใต้คอมเมนต์ได้ (nested 1 ชั้นแบบ Facebook/TikTok — ตอบใต้ตอบก็ยังอยู่สายเดียวกัน) ---- */
+       รอบ 964: ตอบกลับใต้คอมเมนต์ได้ (nested 1 ชั้นแบบ Facebook/TikTok — ตอบใต้ตอบก็ยังอยู่สายเดียวกัน) ---- */
 let __fcmKey = '', __fcmRep = null;   // __fcmRep = {cid: รหัสคอมเมนต์แม่, n: ชื่อคนที่กำลังตอบ}
 function openFeedComments(key){
   const it = feedPostByKey(key);
