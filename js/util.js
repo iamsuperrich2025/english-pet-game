@@ -122,7 +122,7 @@ const TOAST_WARN_RE = /ไม่สำเร็จ|ไม่พอ|ไม่ไ�
 let lastWrongAt = 0;                       // กันเสียงเตือนซ้ำ (call site เรียก sfx.wrong ก่อน toast อยู่แล้ว)
 const nowMs = ()=> (window.performance ? performance.now() : Date.now());
 function restackToasts(){
-  /* 🔗 รอบ 971: toast แบบมีลิงก์ (.toast-link) เข้ากองเดียวกับคำเตือน = ไม่ทับกันเวลามีหลายใบ
+  /* 🔗 รอบ 974: toast แบบมีลิงก์ (.toast-link) เข้ากองเดียวกับคำเตือน = ไม่ทับกันเวลามีหลายใบ
      แต่ clearWarnToasts ยังกวาดแค่ .toast-warn เหมือนเดิม (ลิงก์แจ้งเตือนไม่โดนล้างทิ้งกลางทาง) */
   const list = [...document.querySelectorAll('.toast-warn, .toast-link')];
   let b = 76;                              // ตรงกับ bottom ใน .toast (css)
@@ -175,7 +175,7 @@ function toast(msg, ms=1800){
   document.body.appendChild(t);
   setTimeout(()=>t.remove(), ms);
 }
-/* 🔗 รอบ 971 (ผู้ใช้สั่ง 3 ส.ค. 2026): แถบแจ้งเตือนที่พ่วง "ลิงก์ไปดูต้นเรื่อง"
+/* 🔗 รอบ 974 (ผู้ใช้สั่ง 3 ส.ค. 2026): แถบแจ้งเตือนที่พ่วง "ลิงก์ไปดูต้นเรื่อง"
    กติกาที่ผู้ใช้ย้ำ: ผู้ใช้ "เลือกได้" ว่าจะกดหรือไม่กด → ไม่กดก็หายเองตามเวลา ไม่บังคับ ไม่เด้งหน้าจอเอง
    อยู่ที่นี่ (util.js) เพราะ toast/restackToasts อยู่ที่นี่ — ใช้ซ้ำกับเรื่องอื่นที่มี "ต้นเรื่อง" ได้ */
 function toastLink(msg, label, fn, ms = 7000){

@@ -3787,7 +3787,7 @@ function feedNotifText(n){
   if(n.t === 'cl') return `💙 ${who} ถูกใจคอมเมนต์ของคุณ: "${cut}"`;
   return `💬 ${who} คอมเมนต์โพสต์ของคุณ: "${cut}"`;
 }
-/* 🔗 รอบ 971 (ผู้ใช้สั่ง): "ไปยังต้นเรื่อง" ของแจ้งเตือนใบนั้น
+/* 🔗 รอบ 974 (ผู้ใช้สั่ง): "ไปยังต้นเรื่อง" ของแจ้งเตือนใบนั้น
    - โพสต์ยังอยู่ในวงหมุนล็อบบี้ → เลื่อนเด็คไปหยุดที่โพสต์นั้นด้วย (ปิดแผ่นคอมเมนต์แล้วเห็นต้นเรื่องพอดี)
    - เปิดแผ่นคอมเมนต์ของโพสต์นั้น แล้ว "ไฮไลต์" ตัวที่เป็นต้นเรื่องจริง ๆ (คอมเมนต์ใบนั้น / ตัวโพสต์ถ้าเป็นการกดใจโพสต์)
    - โพสต์ถูกหมุนออกจากฟีดไปแล้ว → openFeedComments เดิมบอกผู้ใช้เองว่า "ไม่อยู่ในฟีดแล้ว" */
@@ -3804,7 +3804,7 @@ function feedNotifGo(n){
 /* เรียกจาก online.js ทุกครั้งที่มีแจ้งเตือนใหม่เข้ามาสด */
 function feedNotifArrived(n){
   renderFeedBell();
-  /* 🔗 รอบ 971: เดิมเป็น toast ข้อความเปล่า อ่านแล้วต้องไปหาโพสต์เอง → ตอนนี้มีปุ่มลิงก์ไปต้นเรื่องติดมาด้วย
+  /* 🔗 รอบ 974: เดิมเป็น toast ข้อความเปล่า อ่านแล้วต้องไปหาโพสต์เอง → ตอนนี้มีปุ่มลิงก์ไปต้นเรื่องติดมาด้วย
      ไม่กดก็ได้ (หายเองใน 7 วิ) และยังย้อนดูได้ทีหลังที่กระดิ่ง 🔔 เสมอ */
   toastLink(feedNotifText(n), '🔗 ไปดูต้นเรื่อง', ()=>feedNotifGo(n), 7000);
   sfx.select();
@@ -3818,16 +3818,20 @@ function openFeedNotif(){
   ov.className = 'fnt-overlay';
   ov.innerHTML = `<div class="fnt-box">
     <div class="fdb-head"><span>🔔 การแจ้งเตือน</span><button class="fdb-close" type="button">✕</button></div>
-    <div class="fnt-list">${list.length ? list.map(n=>{
+    ${list.length ? '<div class="fnt-hint">🔗 กด “ไปดูต้นเรื่อง” ถ้าอยากเข้าไปดูโพสต์/คอมเมนต์นั้น — ไม่กดก็ได้ รายการยังอยู่ที่นี่</div>' : ''}
+    <div class="fnt-list">${list.length ? list.map((n,i)=>{
       const r = n.t === 'rx' ? feedRx(n.r) : null;
-      return `<div class="fnt-row" data-pid="${escapeHTML(n.pid)}">
+      /* 🔗 รอบ 974: ทุกแถวมี "ลิงก์ไปต้นเรื่อง" เห็นชัดเป็นปุ่ม (เดิมกดแถวได้แต่ไม่มีอะไรบอกว่ากดได้)
+         data-i = ที่นั่งในรายการ Online.notif → ใช้ทั้ง cid (คอมเมนต์ต้นเรื่อง) และ pid ได้ครบ */
+      return `<div class="fnt-row" data-i="${i}" data-pid="${escapeHTML(n.pid)}">
         <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : n.t === 'cl' ? '💙' : '💬')}</span>
         <span class="fnt-tx"><b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
           ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
           : n.t === 'cl'
             ? `ถูกใจคอมเมนต์ของคุณ “${escapeHTML(String(n.cm || ''))}”`
             : `${n.t === 'rp' ? 'ตอบกลับคอมเมนต์ของคุณ' : 'คอมเมนต์'}ว่า “${escapeHTML(String(n.cm || ''))}”`}
-          <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small></span>
+          <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small>
+          <button class="fnt-go" type="button" data-i="${i}">🔗 ไปดูต้นเรื่อง</button></span>
       </div>`;
     }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
       <small>เมื่อเพื่อนกดถูกใจหรือคอมเมนต์โพสต์ของคุณ จะมาขึ้นที่นี่<br>
@@ -3835,12 +3839,14 @@ function openFeedNotif(){
   </div>`;
   document.body.appendChild(ov);
   const close = ()=>ov.remove();
+  const go = i=>{ close(); feedNotifGo(list[i]); };
   ov.addEventListener('click', e=>{ if(e.target === ov) close(); });
   ov.querySelector('.fdb-close').addEventListener('click', ()=>{ sfx.select(); close(); });
-  ov.querySelectorAll('.fnt-row').forEach(r=>r.addEventListener('click', ()=>{
-    close();
-    openFeedComments(r.dataset.pid);
+  ov.querySelectorAll('.fnt-go').forEach(b=>b.addEventListener('click', e=>{
+    e.stopPropagation();                                  // กันซ้อนกับคลิกทั้งแถว (ไม่งั้นเด้ง 2 ครั้ง)
+    go(+b.dataset.i);
   }));
+  ov.querySelectorAll('.fnt-row').forEach(r=>r.addEventListener('click', ()=>go(+r.dataset.i)));
 }
 
 /* ---- 👍 ตัวเลือกรีแอ็กชัน (กดค้างที่ปุ่มถูกใจ) ---- */
@@ -3896,13 +3902,21 @@ function feedPickRx(key, rk, anchor){
 let __fcmKey = '', __fcmRep = null;   // __fcmRep = {cid: รหัสคอมเมนต์แม่, n: ชื่อคนที่กำลังตอบ}
 let __fcmOpen = new Set();            // รอบ 965: รหัสคอมเมนต์แม่ที่ "ขยายดูการตอบกลับครบ" อยู่ (สายสั้น ไม่ต้องยุบ)
 const FCM_REP_SHOW = 2;               // สายตอบกลับยาวกว่านี้ → ยุบไว้ก่อน ต้องกดขยาย
-function openFeedComments(key){
+const FCM_FOCUS_POST = '@post';       // รอบ 974: ต้นเรื่องเป็น "ตัวโพสต์" (คนกดใจโพสต์) ไม่ใช่คอมเมนต์ใบไหน
+let __fcmFocus = '';                  // รอบ 974: cid ที่ต้องเลื่อนไปหา+ไฮไลต์รอบหน้าที่วาด (ใช้ครั้งเดียวแล้วล้าง)
+function openFeedComments(key, focusCid){
   const it = feedPostByKey(key);
-  if(!it){ toast('โพสต์นี้ไม่อยู่ในฟีดแล้ว 😅'); return; }
+  if(!it){ toast('โพสต์นี้ไม่อยู่ในฟีดแล้ว 😅 (อาจถูกหมุนออกจากฟีดแล้ว)'); return; }
   sfx.select();
   __fcmKey = key;
   __fcmRep = null;
   __fcmOpen = new Set();
+  __fcmFocus = focusCid || '';
+  /* 🔗 รอบ 974: ต้นเรื่องเป็น "การตอบกลับ" ที่อยู่ในสายที่ถูกยุบไว้ (รอบ 965) → กางสายนั้นให้ก่อน ไม่งั้นเลื่อนไปหาไม่เจอ */
+  if(__fcmFocus && __fcmFocus !== FCM_FOCUS_POST){
+    const c = it.comments.find(x=>x.id === __fcmFocus);
+    if(c && c.p) __fcmOpen.add(c.p);
+  }
   if(!document.getElementById('fcm-ov')){
     const ov = document.createElement('div');
     ov.id = 'fcm-ov';
@@ -3915,6 +3929,7 @@ function openFeedComments(key){
 function closeFeedComments(){
   __fcmKey = '';
   __fcmRep = null;
+  __fcmFocus = '';
   const ov = document.getElementById('fcm-ov');
   if(ov) ov.remove();
   __fdAt = Date.now();                                 // กลับเข้าวงหมุนโดยเริ่มนับ 10 วิใหม่
@@ -4097,6 +4112,24 @@ function renderFeedComments(){
   }));
   const list = ov.querySelector('.fcm-list');
   if(list) list.scrollTop = atEnd ? list.scrollHeight : oldTop;
+  /* 🔗 รอบ 974: มาจากลิงก์ "ไปดูต้นเรื่อง" → เลื่อนไปหยุดที่ต้นเรื่องนั้นแล้วกะพริบให้เห็นว่าอันไหน
+     ใช้ครั้งเดียวแล้วล้างธง (renderFeedComments ถูกเรียกซ้ำทุกครั้งที่ข้อมูลขยับ — ไม่ล้างจะกระโดดกลับตลอด) */
+  if(__fcmFocus){
+    const target = __fcmFocus === FCM_FOCUS_POST
+      ? ov.querySelector('.fcm-post')
+      : [...ov.querySelectorAll('.fcm-row')].find(r=>r.dataset.cid === __fcmFocus);   // เทียบค่าตรง ๆ ไม่ต้อง escape รหัสคอมเมนต์
+    __fcmFocus = '';
+    if(target){
+      /* ⚠️ ห้ามใช้ target.offsetTop คิดระยะ — offsetParent ของแถวคือกล่องแผ่น ไม่ใช่ .fcm-list (วัดได้ 295 ในลิสต์สูง 191)
+         วัดจาก getBoundingClientRect เทียบกันตรง ๆ แล้วบวกเข้า scrollTop เดิม = ไม่ต้องรู้ว่าซ้อนกันกี่ชั้น */
+      if(list && list.contains(target)){
+        const lr = list.getBoundingClientRect(), tr = target.getBoundingClientRect();
+        list.scrollTop += (tr.top - lr.top) - Math.max(0, (list.clientHeight - tr.height) / 2);
+      }
+      target.classList.add('fcm-hl');
+      setTimeout(()=>target.classList.remove('fcm-hl'), 2600);
+    }
+  }
 }
 
 /* ---- ตัวรับเหตุการณ์กลางของการ์ดโพสต์ (ใช้ได้ทั้งวงหมุนล็อบบี้และหน้า Feed เต็ม) ---- */

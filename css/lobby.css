@@ -2390,6 +2390,22 @@ html.no-anim .cs-big-img{animation:none}
 .fnt-tx{font-size:11.5px;color:#c9ddf3;line-height:1.45;min-width:0;}
 .fnt-tx b{color:#8fd4ff;}
 .fnt-sub{display:block;color:#7f9cc0;font-size:9.5px;margin-top:2px;}
+/* 🔗 รอบ 974: ลิงก์ "ไปดูต้นเรื่อง" ประจำแถว + คำอธิบายว่าไม่กดก็ได้ */
+.fnt-hint{flex:none;padding:6px 12px 0;font-size:10px;line-height:1.4;color:#a9c9ea;}
+.fnt-go{display:inline-block;margin-top:5px;border:1px solid rgba(150,215,255,.5);cursor:pointer;
+  background:rgba(140,210,255,.16);color:#cfe9ff;font-weight:bold;
+  padding:4px 10px;border-radius:999px;font-size:10.5px;line-height:1.2;white-space:nowrap;font-family:inherit;}
+.fnt-go:hover{background:rgba(160,220,255,.3);color:#fff;}
+.fnt-go:active{transform:translateY(1px);}
+.fnt-go:focus-visible{outline:2px solid #bfe4ff;outline-offset:2px;}
+/* ไฮไลต์ "ต้นเรื่อง" ที่ลิงก์พามา — กะพริบ 2 จังหวะแล้วจบ (โหมดลดแอนิเมชันใช้กรอบนิ่งแทน) */
+.fcm-hl{animation:fcmHl 1.3s ease-out 2;border-radius:10px;}
+@keyframes fcmHl{
+  0%{box-shadow:0 0 0 0 rgba(255,214,102,0);background:rgba(255,214,102,0);}
+  25%{box-shadow:0 0 0 3px rgba(255,214,102,.85);background:rgba(255,214,102,.22);}
+  100%{box-shadow:0 0 0 0 rgba(255,214,102,0);background:rgba(255,214,102,0);}
+}
+html.no-anim .fcm-hl{animation:none;box-shadow:0 0 0 2px rgba(255,214,102,.9);background:rgba(255,214,102,.18);}
 /* 🌍 รอบ 639: ปุ่ม "ดูทั้งหมด" มุมขวาหัวกล่องฟีดเพื่อนเดิม — เปิดหน้า Feed เต็ม */
 .feed-plate .plate-title{display:flex;align-items:center;justify-content:space-between;gap:6px;white-space:normal;}
 .feed-all-btn{

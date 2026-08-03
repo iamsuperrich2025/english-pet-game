@@ -1162,7 +1162,8 @@ function gfeedNotifDiff(old, now){
     const par = c.p ? byId[c.p] : null;
     const toMyComment = !!(par && par.u === me);
     if(!mine && !toMyComment) continue;
-    gfeedNotifPush({t: toMyComment ? 'rp' : 'cm', pid: now.key, u: c.u, n: c.n, cm: c.tx,
+    /* 🔗 รอบ 974: เก็บ cid ไปด้วย = "ลิงก์ไปต้นเรื่อง" พาไปหยุดตรงคอมเมนต์นั้นเป๊ะ (ไม่ใช่แค่เปิดโพสต์) */
+    gfeedNotifPush({t: toMyComment ? 'rp' : 'cm', pid: now.key, cid: c.id, u: c.u, n: c.n, cm: c.tx,
                     tx: toMyComment ? par.tx : now.tx, ts: c.ts || Date.now()});
   }
   /* 💙 รอบ 966: มีคนกดถูกใจ "คอมเมนต์ของเรา" (โพสต์ของใครก็ได้) → แจ้งเตือนชนิด 'cl' */
@@ -1173,7 +1174,7 @@ function gfeedNotifDiff(old, now){
     const was = (oldById[c.id] && oldById[c.id].clU) || [];
     for(const uid of (c.clU || [])){
       if(uid === me || was.indexOf(uid) >= 0) continue;
-      gfeedNotifPush({t:'cl', pid: now.key, u: uid, n: uidDisplayName(uid), cm: c.tx, tx: now.tx, ts: Date.now()});
+      gfeedNotifPush({t:'cl', pid: now.key, cid: c.id, u: uid, n: uidDisplayName(uid), cm: c.tx, tx: now.tx, ts: Date.now()});
     }
   }
 }
