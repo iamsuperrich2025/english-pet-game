@@ -680,7 +680,9 @@
 #sg-chip{cursor:pointer;border-color:#ffd54f;color:#ffe9a8}
 #sg-exit{position:absolute;top:1vh;right:1vh;background:rgba(29,32,58,.72);color:#ffb3c1;border:1.5px solid #ff80ab;
   border-radius:12px;padding:.5vh 12px;font:700 clamp(11px,2.8vh,15px) Kanit,system-ui;cursor:pointer}
-#sg-aimbtn{position:absolute;right:2vh;bottom:34vh;width:clamp(52px,11vh,72px);height:clamp(52px,11vh,72px);
+/* 🎯 รอบ 955: ปุ่มยิงโต 3 เท่าแล้วกินพื้นที่มุมล่างทั้งสองข้าง → ย้ายปุ่ม "เล็ง" ขึ้นมุมขวาบน (ใต้ปุ่มออก)
+   ไม่งั้นวงกลมยิงฝั่งขวาทับปุ่มนี้จนกดไม่ได้ */
+#sg-aimbtn{position:absolute;right:1.6vh;top:10vh;width:clamp(52px,11vh,72px);height:clamp(52px,11vh,72px);
   border-radius:50%;border:3px solid #ffd54f;background:rgba(29,32,58,.78);color:#ffe9a8;cursor:pointer;
   font:700 clamp(9px,2.2vh,12px) Kanit,system-ui;line-height:1.15;z-index:6}
 #sg-aimbtn .ic{display:block;font-size:clamp(16px,4vh,24px)}
@@ -688,18 +690,21 @@
 /* 🔫 รอบ 923: ปุ่มยิงเฉพาะ 2 ตำแหน่งซ้าย-ขวาล่างจอ (ผู้ใช้ขอ — เดิมมีแค่แตะจอสั้นๆ = ยิง)
    ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) · ต่อมารอบ 926: ผู้ใช้ส่งภาพวงกลม 1/2 — ย้ายขึ้นมากลางจอ
    (เดิมชิดขอบล่างสุด) top:40% translateY กึ่งกลางแนวตั้ง เว้นระยะพ้นปุ่ม 🎯 เล็งด้านล่าง · โปร่งใส 50% (.85→.5) */
-.sg-shoot{position:absolute;top:40%;transform:translateY(-50%);width:clamp(60px,14vh,92px);height:clamp(60px,14vh,92px);
-  border-radius:50%;border:3px solid #ffd54f;background:rgba(255,95,109,.5);color:#fff;cursor:pointer;
-  font:900 clamp(10px,2.3vh,13px) Kanit,system-ui;line-height:1.15;z-index:6;
-  box-shadow:0 4px 0 rgba(198,40,56,.5),0 6px 14px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
-.sg-shoot .ic{display:block;font-size:clamp(19px,4.8vh,28px)}
-.sg-shoot.down{transform:translateY(calc(-50% + 3px));box-shadow:0 1px 0 rgba(198,40,56,.5),0 3px 8px rgba(0,0,0,.2)}
-/* 🔫 รอบ 930: วัดพิกัดวงกลม "1" จากภาพผู้ใช้จริง (ภาพ 1052×491 · วงกลมกลางที่ x≈219 y≈285)
-   = 20.8% ของความกว้าง / 58% ของความสูง → **ต้องย้ายทั้ง 2 แกน** (รอบ 929 ย้ายแต่แนวตั้ง
-   ปุ่มเลยยังติดขอบซ้ายอยู่ ไม่ตรงภาพ) · ฝั่งขวาไม่แตะ คงเดิม top:40% ชิดขวา */
-#sg-shoot-l{left:21%;top:58%;transform:translate(-50%,-50%)}
-#sg-shoot-l.down{transform:translate(-50%,calc(-50% + 3px))}
-#sg-shoot-r{right:2vh}
+/* 🔫🔎 รอบ 955 (บั๊กผู้ใช้ "กดปุ่มยิงซ้ายแล้วปืนเบนแทนที่จะยิง"): วัดในเกมจริงแล้ว —
+   กดกลางปุ่มพอดี = ยิงออก กล้องนิ่ง (yaw 0.002) · **กดพลาดขอบปุ่มแค่ 20px = ไม่ยิง + กล้องเบน 0.28 rad (16°)**
+   เพราะนิ้วลงนอกปุ่ม → overlay นับเป็น "ลากนิ้ว = มองรอบซุ้ม" · ต้นตอ = ปุ่มเล็กเกินไป (14vh ≈ 86px)
+   แก้ 2 ชั้น: ① ผู้ใช้สั่งขยาย 3 เท่า → 40vh (≈ 3× ของเดิมทุกขนาดจอ) ย้ายไปมุมล่างซ้าย-ขวา (นิ้วโป้งทั้งสองข้างถึงพอดี
+   และวงใหญ่ขนาดนี้ถ้าลอยกลางจอจะบังเป้า) ② ::before ขยายพื้นที่รับสัมผัสล้นออกอีก 26px รอบวง (มองไม่เห็น)
+   = กดเฉียดขอบก็ยังยิง ไม่กลายเป็นลากจอ */
+.sg-shoot{position:absolute;bottom:1.6vh;width:clamp(150px,40vh,260px);height:clamp(150px,40vh,260px);
+  border-radius:50%;border:4px solid #ffd54f;background:rgba(255,95,109,.46);color:#fff;cursor:pointer;
+  font:900 clamp(15px,3.6vh,22px) Kanit,system-ui;line-height:1.15;z-index:6;
+  box-shadow:0 5px 0 rgba(198,40,56,.5),0 8px 18px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
+.sg-shoot::before{content:'';position:absolute;inset:-26px;border-radius:50%}   /* พื้นที่กดเผื่อ (ล่องหน) */
+.sg-shoot .ic{display:block;font-size:clamp(46px,12vh,80px)}
+.sg-shoot.down{transform:translateY(3px);box-shadow:0 2px 0 rgba(198,40,56,.5),0 4px 10px rgba(0,0,0,.2)}
+#sg-shoot-l{left:1.6vh}
+#sg-shoot-r{right:1.6vh}
 /* ✛ กากบาทกึ่งกลางจอ — บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
 #sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;pointer-events:none;z-index:4;opacity:.62}
 #sg-cross i{position:absolute;display:block;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.75)}
@@ -959,6 +964,8 @@
       const up=()=> b.classList.remove('down');
       b.addEventListener('pointerdown', e=>{
         e.preventDefault();
+        /* 🔫 รอบ 955: ยึดนิ้วไว้ที่ปุ่ม — นิ้วเด็กกดแล้วไถออกนอกวง จะไม่กลายเป็น "ลากจอ = กล้องเบน" */
+        try{ b.setPointerCapture(e.pointerId); }catch(_){}
         b.classList.add('down');
         shoot(innerWidth*0.5, innerHeight*0.5);
       });
