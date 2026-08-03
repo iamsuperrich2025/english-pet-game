@@ -3901,20 +3901,48 @@ function closeFeedComments(){
 /* จัดคอมเมนต์เป็นต้นไม้ 1 ชั้น: คอมเมนต์แม่ + การตอบกลับใต้มัน (ตอบใต้ "การตอบกลับ" เกาะแม่ตัวเดิม เหมือน Facebook) */
 function fcmRowHTML(c, can, isRep){
   const at = isRep ? (c.p || c.id) : c.id;           // ตอบกลับแล้วไปเกาะคอมเมนต์แม่เสมอ (ไม่ลึกเกิน 1 ชั้น)
-  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เพื่อนกดได้ · คนนอกเห็นแต่จำนวน (อ่านฟีดได้แต่กดไม่ได้ ตามกติกาเด็ก) */
+  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เพื่อนกดได้ · คนนอกเห็นแต่จำนวน (อ่านฟีดได้แต่กดไม่ได้ ตามกติกาเด็ก)
+     🆕 รอบ 970: แยกปุ่ม "ตัวเลข" ออกจากปุ่มหัวใจ (สลับไลก์) เป็นปุ่มของตัวเอง — กดตัวเลขเปิดรายชื่อคนถูกใจ
+     กดหัวใจสลับไลก์ ไม่ชนกัน */
   const n = c.clN || 0;
   const like = can
     ? `<button class="fcm-like${c.clMe ? ' on' : ''}" type="button" data-cid="${escapeHTML(c.id)}"
         data-on="${c.clMe ? 1 : 0}" aria-label="${c.clMe ? 'เลิกถูกใจคอมเมนต์นี้' : 'ถูกใจคอมเมนต์นี้'}"
-        >${c.clMe ? '💙' : '🤍'}${n ? ` <i>${n}</i>` : ''}</button>`
-    : (n ? `<span class="fcm-likec">💙 ${n}</span>` : '');
+        >${c.clMe ? '💙' : '🤍'}</button>`
+    : (n ? '<span class="fcm-likeic">💙</span>' : '');
+  const cnt = n
+    ? `<button class="fcm-cnt" type="button" data-cid="${escapeHTML(c.id)}"
+        aria-label="ดูว่าใครถูกใจคอมเมนต์นี้">${n}</button>` : '';
   return `<div class="fcm-row${isRep ? ' fcm-rep' : ''}" data-cid="${escapeHTML(c.id)}">
     ${isRep ? '<span class="fcm-arrow">↳</span>' : ''}<b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}
     <small>${feedAgo(c.ts)}</small>
-    ${like}
+    ${like}${cnt}
     ${can ? `<button class="fcm-reply" type="button" data-cid="${escapeHTML(at)}"
         data-n="${escapeHTML(c.n)}">↩ ตอบกลับ</button>` : ''}
   </div>`;
+}
+/* 💙 รอบ 970: กล่องรายชื่อคนถูกใจคอมเมนต์ (เปิดจากปุ่มตัวเลข) — ชื่อจากข้อมูลที่มีในเครื่องอยู่แล้ว (uidDisplayName เดิม) */
+function showCommentLikers(postId, cid){
+  const it = feedPostByKey(postId);
+  const c = it && it.comments.find(x=>x.id === cid);
+  const uids = (c && c.clU) || [];
+  sfx.select();
+  document.querySelectorAll('.fcm-likers-overlay').forEach(o=>o.remove());
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay fcm-likers-overlay';
+  const me = onlineKey();
+  const rows = uids.length
+    ? uids.map(uid=>`<div class="fcm-liker-row">💙 ${escapeHTML(uid === me ? 'คุณ' : uidDisplayName(uid))}</div>`).join('')
+    : `<div class="fcm-liker-row fcm-liker-none">ยังไม่มีใครถูกใจ</div>`;
+  overlay.innerHTML = `<div class="levelup-box fcm-likers-box">
+    <div class="bi-title">ถูกใจคอมเมนต์นี้ (${uids.length})</div>
+    <div class="fcm-likers-list">${rows}</div>
+    <button class="fcm-likers-ok">ปิด</button>
+  </div>`;
+  const close = ()=>overlay.remove();
+  overlay.querySelector('.fcm-likers-ok').addEventListener('click', close);
+  overlay.addEventListener('click', e=>{ if(e.target === overlay) close(); });
+  document.body.appendChild(overlay);
 }
 function fcmTreeHTML(cms, can){
   const ids  = new Set(cms.map(c=>c.id));
@@ -3923,6 +3951,9 @@ function fcmTreeHTML(cms, can){
     if(c.p && ids.has(c.p) && c.p !== c.id) (kids[c.p] = kids[c.p] || []).push(c);
     else tops.push(c);
   });
+  /* 💙 รอบ 970: "ความคิดเห็นยอดนิยม" แบบ Facebook — คอมเมนต์ชั้นบนสุดถูกใจเยอะขึ้นก่อน (เท่ากัน = เก่าก่อน)
+     การตอบกลับใต้แต่ละคอมเมนต์ (kids) ยังเรียงตามเวลาเดิม ไม่โดนสลับ */
+  tops.sort((a,b)=>(b.clN||0) - (a.clN||0) || a.ts - b.ts);
   return tops.map(c=>{
     const rep = kids[c.id] || [];
     if(!rep.length) return `<div class="fcm-item">${fcmRowHTML(c, can, false)}</div>`;
@@ -4011,21 +4042,23 @@ function renderFeedComments(){
     const i2 = ov.querySelector('.fcm-input');
     if(i2) i2.focus();
   }));
-  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เด้งสีทันที (optimistic) แล้วค่อยยืนยันกับ DB */
+  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เด้งสีทันที (optimistic) แล้วค่อยยืนยันกับ DB
+     🆕 รอบ 970: ตัวเลขแยกเป็นปุ่ม .fcm-cnt ต่างหากแล้ว — ปุ่มนี้สลับแค่ไอคอนหัวใจ ตัวเลขรอ renderFeedComments() จริงมาอัปเดต */
   ov.querySelectorAll('.fcm-like').forEach(b=>b.addEventListener('click', ()=>{
     if(b.disabled) return;
     const on = b.dataset.on === '1';
     b.disabled = true;
     b.classList.toggle('on', !on);
-    b.innerHTML = (!on ? '💙' : '🤍') + (()=>{ const i = b.querySelector('i');
-      const v = (i ? parseInt(i.textContent, 10) || 0 : 0) + (on ? -1 : 1);
-      return v > 0 ? ` <i>${v}</i>` : ''; })();
+    b.textContent = on ? '🤍' : '💙';
     sfx.click ? sfx.click() : sfx.select();
     gfeedToggleCommentLike(__fcmKey, b.dataset.cid, on).then(ok=>{
       /* ปุ่มนี้โผล่เฉพาะเพื่อนของเจ้าของโพสต์อยู่แล้ว → พังทีนี่คือ rules ยังไม่ publish เกือบทุกกรณี */
       if(!ok) toast('กดถูกใจคอมเมนต์ยังไม่ได้ 🔒 ต้องอัปเดตกฎความปลอดภัยโซน /gfeed ก่อนนะ');
       renderFeedComments();
     });
+  }));
+  ov.querySelectorAll('.fcm-cnt').forEach(b=>b.addEventListener('click', ()=>{
+    showCommentLikers(__fcmKey, b.dataset.cid);
   }));
   const rx = ov.querySelector('.fcm-repx');
   if(rx) rx.addEventListener('click', ()=>{ __fcmRep = null; sfx.select(); renderFeedComments(); });
@@ -4187,20 +4220,54 @@ function alignFeedPlate(){
   const shift = (railRight - plateLeft0) / (2 * c.scale);   // ลบ = ขยับซ้าย
   plate.style.transform = shift ? `translateX(${shift}px)` : '';
 }
-/* 🪪 แผงผู้เล่น (วันที่/rank) — ยืดขอบขวาให้ตรงขอบขวาใหม่ของกล่องฟีดเพื่อนพอดี (ผู้ใช้ขอ) */
+/* 🪪 แผงผู้เล่น (วันที่/rank) — ยืดขอบขวาให้ตรงขอบขวาใหม่ของกล่อง Global Feed พอดี (ผู้ใช้ขอ) */
+/* 📐 รอบ 968 (ผู้ใช้: "กล่องผู้เล่นสั้นกว่าแนวกล่องฟีด"): ย้ายจุดตั้งความกว้างจาก .profile-plate (ป้ายชื่อข้างใน)
+   มาไว้ที่ ".id-card" (กล่องสีฟ้าที่มองเห็นจริง) — ต้นตอเดิม: .id-card เป็น flex-shrink:1 พอแถวบนแน่น
+   (ตัวเลขเหรียญยาว เช่น ออนไลน์+คอมโผล่ครบ) การ์ดโดนบีบ ป้ายชื่อที่ตั้งความกว้างไว้หดตามไปด้วย
+   ขอบขวาเลยไม่เคยตรงกับกล่องฟีดจริงบนเครื่องผู้ใช้ · ตอนนี้ .id-card เป็น flex:0 0 auto (CSS ท้ายไฟล์)
+   → ความกว้างที่วัดได้คงอยู่เสมอ ไม่ขึ้นกับความยาวตัวเลขในแถวเหรียญ */
 function alignProfilePlate(){
   const idCard = document.querySelector('.id-card');
   const plate  = document.querySelector('.profile-plate');
   const feed   = document.querySelector('.stage-plate.feed-plate');
   const c = stageColLeft();
   if(!idCard || !plate || !feed || !c) return;
-  /* 🩹 รอบ 700 (ผู้ใช้สั่ง 29 ก.ค. 2026 "การ์ดผู้เล่นเลยเส้นแดง"): ที่จริง .profile-plate ตรงกับ
-     ขอบขวากล่องฟีดพอดีอยู่แล้ว แต่กล่อง "สีฟ้าที่มองเห็น" คือ .id-card ซึ่งมี padding-right:15px
-     ห่อ .profile-plate อยู่อีกที — เลยเห็นกล่องยื่นเลยไป 15px ทุกครั้ง ต้องหักลบ padding นี้ออกด้วย */
-  const padR   = parseFloat(getComputedStyle(idCard).paddingRight) || 0;
-  const pLeft  = plate.getBoundingClientRect().left;
+  plate.style.width = '';                                   // ป้ายชื่อยืดเองด้วย flex:1 ภายในการ์ด
+  const cLeft  = idCard.getBoundingClientRect().left;        // ขอบซ้ายการ์ดไม่ขึ้นกับความกว้างตัวเอง (ชิ้นแรกของแถว)
   const fRight = feed.getBoundingClientRect().right;
-  plate.style.width = Math.max(0, (fRight - pLeft) / c.scale - padR) + 'px';
+  idCard.style.width = Math.max(0, (fRight - cLeft) / c.scale) + 'px';   // box-sizing:border-box → รวมขอบ/padding แล้ว
+}
+/* 🪙 รอบ 968 (ผู้ใช้สั่ง 3 ส.ค. 2026): แถวเหรียญ+วันนี้+ออนไลน์+คอม ย้ายมาอยู่ "เลนเดียวกับกล่องแนะนำคำศัพท์"
+   = ขอบซ้าย/ขวาตรงกับ #newword-banner (ซึ่งกว้างเท่าเวทีน้องพอดีตั้งแต่รอบ 702)
+   ตัวเลขยาวจนเกินเลน → ย่อ font/padding ทั้งแถวพร้อมกันด้วย --coin-k (ไม่ตัดตัวเลขทิ้ง)
+   ⚠️ วัด "ความกว้างธรรมชาติ" ด้วยการปลด --coin-w เป็น auto ก่อน — .coin-block มี min-width:max-content
+      จึงไม่โดนแถวบนบีบตอนวัด (ถ้าวัดจากกล่องที่ถูกตรึงความกว้างไว้แล้ว จะได้ค่าของตัวเองกลับมา) */
+const COIN_K_MIN = 0.72;   // ย่อได้ต่ำสุด 72% ของขนาดปกติ — ต่ำกว่านี้ตัวเลขเล็กจนเด็กอ่านไม่ออก
+function alignCoinBlock(){
+  const block = document.querySelector('.coin-block');
+  const c = stageColLeft();
+  if(!block || !c || !c.h.width) return;
+  const lane = c.h.width / c.scale;              // = ความกว้างกล่องแนะนำคำศัพท์ (เลนเดียวกับเวทีน้อง)
+  let k = 1;
+  for(let pass = 0; pass < 3; pass++){           // ย่อ font แล้ววัดซ้ำ (ฟอนต์ย่อไม่เป็นเส้นตรงเป๊ะ ต้องไล่ 2-3 รอบ)
+    block.style.setProperty('--coin-k', k.toFixed(3));
+    block.style.setProperty('--coin-w', 'auto');
+    const natural = block.getBoundingClientRect().width / c.scale;
+    if(natural <= lane) break;
+    const next = Math.max(COIN_K_MIN, k * (lane - 1) / natural);
+    if(next >= k) break;                         // ย่อจนสุดเพดานแล้ว (ตัวเลขยาวมาก) — ยอมให้ล้นขวาดีกว่าเล็กจนอ่านไม่ออก
+    k = next;
+  }
+  block.style.setProperty('--coin-k', k.toFixed(3));
+  block.style.setProperty('--coin-w', lane + 'px');
+  block.style.setProperty('--coin-ml', '0px');
+  let ml = 0;                                                   // วัดหลังตรึงความกว้างแล้วค่อยเลื่อนให้ขอบซ้ายตรงกัน
+  for(let pass = 0; pass < 2; pass++){                          // วัดซ้ำ 1 รอบ เผื่อ layout ปัดเศษ
+    const d = (c.h.left - block.getBoundingClientRect().left) / c.scale;
+    if(Math.abs(d) < 0.2) break;
+    ml += d;
+    block.style.setProperty('--coin-ml', ml + 'px');
+  }
 }
 /* คอลัมน์ซ้ายของการ์ด (เหลือฟีดเพื่อนอย่างเดียวแล้ว) — ยืดขึ้นไปชนขอบบนเวที
    (ผู้ใช้สั่ง 27 ก.ค. 2026 "ยืดฟีดเพื่อนขึ้นไปให้แตะแนวเส้นเขียว" = แนวบนสุดของเวที) */
@@ -4216,7 +4283,7 @@ function alignStageLeft(){
 }
 /* 📐 รอบ 613: จัดทั้ง 3 แถว + คอลัมน์ฟีดในชุดเดียว — เรียกที่เดียวจบ ไม่ต้องไล่เรียกทีละตัว */
 function alignStageCols(){
-  alignPetTabs(); alignNewWord(); alignFeedPlate(); alignProfilePlate(); alignStageLeft();
+  alignPetTabs(); alignNewWord(); alignFeedPlate(); alignProfilePlate(); alignCoinBlock(); alignStageLeft();
 }
 /* ⚠️ ตอน resize ต้องรอ layout นิ่งก่อนค่อยวัด — วัดทันทีในตัว handler ได้ตำแหน่งเวทีของขนาดจอ "เดิม"
    (เจอจริงรอบ 613: ย่อจอแล้วทั้ง 3 แถวค้างที่เส้นเก่า) → เลื่อนไปวัดใน rAF ซ้อน 2 ชั้น */
@@ -4785,7 +4852,7 @@ function renderDashboard(){
   card.innerHTML = `
     <div class="stage-left">
       <div class="stage-plate feed-plate">
-        <div class="plate-title">⬢ ฟีดเพื่อน 📰<span class="fd-tools"><button class="feed-bell" id="btn-feed-bell" type="button">🔔</button><button class="feed-all-btn" id="btn-feed-all" type="button">🌏 ดูทั้งหมด</button></span></div>
+        <div class="plate-title">⬢ Global Feed 📰<span class="fd-tools"><button class="feed-bell" id="btn-feed-bell" type="button">🔔</button><button class="feed-all-btn" id="btn-feed-all" type="button">🌏 ดูทั้งหมด</button></span></div>
         <div class="fd-prog"><i id="fd-prog-bar"></i></div>
         <div class="feed-list" id="feed-list"></div>
       </div>
