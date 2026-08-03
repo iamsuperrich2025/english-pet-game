@@ -5154,27 +5154,26 @@ body::after{
 html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 
 /* ============================================================
-   🧭 หัวล็อบบี้ตรงแนวกล่องด้านล่าง (รอบ 968 · ผู้ใช้สั่ง 3 ส.ค. 2026)
+   🧭 หัวล็อบบี้ตรงแนวกล่องด้านล่าง (รอบ 971 · ผู้ใช้สั่ง 3 ส.ค. 2026)
    ① การ์ดผู้เล่น (.id-card) ต้องกว้างชนขอบขวากล่อง Global Feed เสมอ
       → ห้ามหดตามแถวบน (เดิม flex-shrink:1 พอตัวเลขเหรียญยาว การ์ดโดนบีบ ขอบขวาเลยสั้นกว่ากล่องฟีด)
       ความกว้างจริงตั้งจาก alignProfilePlate() ใน js/ui.js
    ② แถวเหรียญ (.coin-block) ย้ายมาอยู่เลนเดียวกับกล่องแนะนำคำศัพท์ (#newword-banner)
-      --coin-w = ความกว้างเลน · --coin-ml = เลื่อนให้ขอบซ้ายตรงกัน (ตั้งจาก alignCoinBlock())
-      --coin-k = ตัวย่อ font/padding ทั้งแถวพร้อมกันเมื่อตัวเลขยาวเกินเลน (ไม่ตัดตัวเลขทิ้ง)
-      min-width:max-content = กันตัวเลขโดนบีบจนล้นกล่อง (ถ้าย่อจนสุดแล้วยังไม่พอ ยอมให้ล้นขวาแทน)
+      --coin-ml = เลื่อนให้แกนกลางกล่องตรงแกนกลางเลน (ตั้งจาก alignCoinBlock())
+      --coin-k  = ตัวย่อ font/padding ทั้งแถวพร้อมกันเมื่อตัวเลขยาวเกินเลน → พอดีเลน = ขอบซ้าย/ขวาตรงกัน
+      min-width:max-content + flex:0 0 auto = ห้ามแถวบนบีบกล่อง (ขนาดคุมด้วย --coin-k ทางเดียว)
    ============================================================ */
-.lobby-top .id-card{flex:0 0 auto;}
-.lobby-top .id-card .profile-plate{flex:1 1 auto;min-width:0;max-width:none;}
+.lobby-top.coin-laned .id-card{flex:0 0 auto;}
+.lobby-top.coin-laned .id-card .profile-plate{flex:1 1 auto;min-width:0;max-width:none;}
 
-.lobby-top .coin-block{
-  --coin-k:1;--cf1:17px;--cf2:13px;
-  flex:0 0 auto;width:var(--coin-w,auto);min-width:max-content;margin-left:var(--coin-ml,0px);
+.lobby-top .coin-block{--coin-k:1;--cf1:17px;--cf2:13px;}
+.lobby-top.coin-laned .coin-block{
+  flex:0 0 auto;min-width:max-content;margin-left:var(--coin-ml,0px);
 }
 /* ⚠️ ตัวคั่นซ้ายต้องเป็น 0 ตายตัว — ถ้าปล่อย flex:1 ทั้งสองข้าง (ของรอบ 695) การเลื่อนด้วย margin-left
    จะถูกตัวคั่นสองข้างหารครึ่ง กล่องขยับได้แค่ครึ่งเดียวของที่สั่ง (เจอตอนวัดจริง: เหลื่อม 2px ทุกครั้ง) */
-.lobby-top .top-flex{flex:0 0 0px;}
-.lobby-top .top-flex2{flex:1 1 auto;}
-.lobby-top .coin-block .coin-group{width:100%;justify-content:space-between;}
+.lobby-top.coin-laned .top-flex{flex:0 0 0px;}
+.lobby-top.coin-laned .top-flex2{flex:1 1 auto;}
 .lobby-top .coin-group .coin-pill{padding:0 calc(12px * var(--coin-k,1));}
 .lobby-top .coin-group .coin-pill:first-child{font-size:calc(var(--cf1) * var(--coin-k,1));}
 .lobby-top .coin-group .coin-pill.today,

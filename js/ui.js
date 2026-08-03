@@ -3778,14 +3778,35 @@ function renderFeedBell(){
   b.innerHTML = `🔔${n ? `<b class="fb-n">${n > 9 ? '9+' : n}</b>` : ''}`;
   b.classList.toggle('on', n > 0);
 }
+/* ข้อความรายงาน 1 บรรทัดของแจ้งเตือนใบหนึ่ง (ใช้ทั้งแถบเด้งสดและกล่อง 🔔 ให้ตรงกันที่เดียว) */
+function feedNotifText(n){
+  const who = n.n || 'เพื่อน';
+  const cut = String(n.cm || '').slice(0,40);
+  if(n.t === 'rx'){ const r = feedRx(n.r); return `${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`; }
+  if(n.t === 'rp') return `↩ ${who} ตอบกลับคอมเมนต์ของคุณ: "${cut}"`;
+  if(n.t === 'cl') return `💙 ${who} ถูกใจคอมเมนต์ของคุณ: "${cut}"`;
+  return `💬 ${who} คอมเมนต์โพสต์ของคุณ: "${cut}"`;
+}
+/* 🔗 รอบ 971 (ผู้ใช้สั่ง): "ไปยังต้นเรื่อง" ของแจ้งเตือนใบนั้น
+   - โพสต์ยังอยู่ในวงหมุนล็อบบี้ → เลื่อนเด็คไปหยุดที่โพสต์นั้นด้วย (ปิดแผ่นคอมเมนต์แล้วเห็นต้นเรื่องพอดี)
+   - เปิดแผ่นคอมเมนต์ของโพสต์นั้น แล้ว "ไฮไลต์" ตัวที่เป็นต้นเรื่องจริง ๆ (คอมเมนต์ใบนั้น / ตัวโพสต์ถ้าเป็นการกดใจโพสต์)
+   - โพสต์ถูกหมุนออกจากฟีดไปแล้ว → openFeedComments เดิมบอกผู้ใช้เองว่า "ไม่อยู่ในฟีดแล้ว" */
+function feedNotifGo(n){
+  if(!n || !n.pid) return;
+  const el = document.getElementById('feed-list');
+  if(el && el.classList.contains('feed-deck')){
+    const feed = ((typeof Online !== 'undefined' && Online.gfeed) || []).slice(0, FEED_DECK_MAX);
+    const i = feed.findIndex(x=>x.key === n.pid);
+    if(i >= 0) feedDeckGo(el, i, true);
+  }
+  openFeedComments(n.pid, n.cid || FCM_FOCUS_POST);
+}
 /* เรียกจาก online.js ทุกครั้งที่มีแจ้งเตือนใหม่เข้ามาสด */
 function feedNotifArrived(n){
   renderFeedBell();
-  const who = n.n || 'เพื่อน';
-  if(n.t === 'rx'){ const r = feedRx(n.r); toast(`${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`); }
-  else if(n.t === 'rp') toast(`↩ ${who} ตอบกลับคอมเมนต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
-  else if(n.t === 'cl') toast(`💙 ${who} ถูกใจคอมเมนต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
-  else toast(`💬 ${who} คอมเมนต์โพสต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
+  /* 🔗 รอบ 971: เดิมเป็น toast ข้อความเปล่า อ่านแล้วต้องไปหาโพสต์เอง → ตอนนี้มีปุ่มลิงก์ไปต้นเรื่องติดมาด้วย
+     ไม่กดก็ได้ (หายเองใน 7 วิ) และยังย้อนดูได้ทีหลังที่กระดิ่ง 🔔 เสมอ */
+  toastLink(feedNotifText(n), '🔗 ไปดูต้นเรื่อง', ()=>feedNotifGo(n), 7000);
   sfx.select();
 }
 function openFeedNotif(){
@@ -4221,7 +4242,7 @@ function alignFeedPlate(){
   plate.style.transform = shift ? `translateX(${shift}px)` : '';
 }
 /* 🪪 แผงผู้เล่น (วันที่/rank) — ยืดขอบขวาให้ตรงขอบขวาใหม่ของกล่อง Global Feed พอดี (ผู้ใช้ขอ) */
-/* 📐 รอบ 968 (ผู้ใช้: "กล่องผู้เล่นสั้นกว่าแนวกล่องฟีด"): ย้ายจุดตั้งความกว้างจาก .profile-plate (ป้ายชื่อข้างใน)
+/* 📐 รอบ 971 (ผู้ใช้: "กล่องผู้เล่นสั้นกว่าแนวกล่องฟีด"): ย้ายจุดตั้งความกว้างจาก .profile-plate (ป้ายชื่อข้างใน)
    มาไว้ที่ ".id-card" (กล่องสีฟ้าที่มองเห็นจริง) — ต้นตอเดิม: .id-card เป็น flex-shrink:1 พอแถวบนแน่น
    (ตัวเลขเหรียญยาว เช่น ออนไลน์+คอมโผล่ครบ) การ์ดโดนบีบ ป้ายชื่อที่ตั้งความกว้างไว้หดตามไปด้วย
    ขอบขวาเลยไม่เคยตรงกับกล่องฟีดจริงบนเครื่องผู้ใช้ · ตอนนี้ .id-card เป็น flex:0 0 auto (CSS ท้ายไฟล์)
@@ -4237,11 +4258,13 @@ function alignProfilePlate(){
   const fRight = feed.getBoundingClientRect().right;
   idCard.style.width = Math.max(0, (fRight - cLeft) / c.scale) + 'px';   // box-sizing:border-box → รวมขอบ/padding แล้ว
 }
-/* 🪙 รอบ 968 (ผู้ใช้สั่ง 3 ส.ค. 2026): แถวเหรียญ+วันนี้+ออนไลน์+คอม ย้ายมาอยู่ "เลนเดียวกับกล่องแนะนำคำศัพท์"
-   = ขอบซ้าย/ขวาตรงกับ #newword-banner (ซึ่งกว้างเท่าเวทีน้องพอดีตั้งแต่รอบ 702)
-   ตัวเลขยาวจนเกินเลน → ย่อ font/padding ทั้งแถวพร้อมกันด้วย --coin-k (ไม่ตัดตัวเลขทิ้ง)
-   ⚠️ วัด "ความกว้างธรรมชาติ" ด้วยการปลด --coin-w เป็น auto ก่อน — .coin-block มี min-width:max-content
-      จึงไม่โดนแถวบนบีบตอนวัด (ถ้าวัดจากกล่องที่ถูกตรึงความกว้างไว้แล้ว จะได้ค่าของตัวเองกลับมา) */
+/* 🪙 รอบ 971 (ผู้ใช้สั่ง 3 ส.ค. 2026): แถวเหรียญ+วันนี้+ออนไลน์+คอม ย้ายมาอยู่ "เลนเดียวกับกล่องแนะนำคำศัพท์"
+   เลน = #newword-banner ซึ่งกว้างเท่าเวทีน้องพอดีตั้งแต่รอบ 702 → ยึดแกนกลางเลนเป็นหลัก
+   ① ตัวเลขยาวจนล้นเลน (เหรียญ 6 หลัก + ออนไลน์ + คอมครบ) → ย่อ font/padding ทั้งแถวพร้อมกันด้วย --coin-k
+      จนพอดีเลน = ขอบซ้าย/ขวาตรงกับกล่องคำศัพท์เป๊ะ (ไม่ตัด/ไม่ซ่อนตัวเลขทิ้ง)
+   ② ตัวเลขสั้น (จอกว้าง) → คงขนาดกล่องเดิม วางกึ่งกลางแกนเดียวกับกล่องคำศัพท์
+      (เคยลองยืดกล่องเต็มเลนแล้วกระจายด้วย space-between — จอ 1600px ช่องว่างระหว่างตัวเลขห่างถึง 300px ดูหลุด)
+   ⚠️ วัดความกว้างต้องให้ .coin-block เป็น flex:0 0 auto + min-width:max-content ก่อน ไม่งั้นแถวบนบีบกล่องตอนวัด */
 const COIN_K_MIN = 0.72;   // ย่อได้ต่ำสุด 72% ของขนาดปกติ — ต่ำกว่านี้ตัวเลขเล็กจนเด็กอ่านไม่ออก
 function alignCoinBlock(){
   const block = document.querySelector('.coin-block');
@@ -4249,21 +4272,21 @@ function alignCoinBlock(){
   if(!block || !c || !c.h.width) return;
   const lane = c.h.width / c.scale;              // = ความกว้างกล่องแนะนำคำศัพท์ (เลนเดียวกับเวทีน้อง)
   let k = 1;
-  for(let pass = 0; pass < 3; pass++){           // ย่อ font แล้ววัดซ้ำ (ฟอนต์ย่อไม่เป็นเส้นตรงเป๊ะ ต้องไล่ 2-3 รอบ)
+  for(let pass = 0; pass < 3; pass++){           // ย่อแล้ววัดซ้ำ (ฟอนต์ย่อไม่เป็นเส้นตรงเป๊ะ ต้องไล่ 2-3 รอบ)
     block.style.setProperty('--coin-k', k.toFixed(3));
-    block.style.setProperty('--coin-w', 'auto');
     const natural = block.getBoundingClientRect().width / c.scale;
     if(natural <= lane) break;
     const next = Math.max(COIN_K_MIN, k * (lane - 1) / natural);
-    if(next >= k) break;                         // ย่อจนสุดเพดานแล้ว (ตัวเลขยาวมาก) — ยอมให้ล้นขวาดีกว่าเล็กจนอ่านไม่ออก
+    if(next >= k) break;                         // ย่อจนสุดเพดานแล้ว — ยอมให้ล้นเลยเลนดีกว่าตัวเลขเล็กจนอ่านไม่ออก
     k = next;
   }
   block.style.setProperty('--coin-k', k.toFixed(3));
-  block.style.setProperty('--coin-w', lane + 'px');
   block.style.setProperty('--coin-ml', '0px');
-  let ml = 0;                                                   // วัดหลังตรึงความกว้างแล้วค่อยเลื่อนให้ขอบซ้ายตรงกัน
-  for(let pass = 0; pass < 2; pass++){                          // วัดซ้ำ 1 รอบ เผื่อ layout ปัดเศษ
-    const d = (c.h.left - block.getBoundingClientRect().left) / c.scale;
+  let ml = 0;
+  const laneMid = c.h.left + c.h.width / 2;
+  for(let pass = 0; pass < 2; pass++){            // เลื่อนให้แกนกลางกล่องตรงแกนกลางเลน (วัดซ้ำ 1 รอบ เผื่อปัดเศษ)
+    const r = block.getBoundingClientRect();
+    const d = (laneMid - (r.left + r.width / 2)) / c.scale;
     if(Math.abs(d) < 0.2) break;
     ml += d;
     block.style.setProperty('--coin-ml', ml + 'px');
@@ -4281,8 +4304,23 @@ function alignStageLeft(){
   if(!scale) return;
   left.style.marginTop = -Math.max(0, (cd.top - s.top)/scale) + 'px';
 }
+/* 🧭 รอบ 971: เปิด/ปิดโหมด "หัวล็อบบี้ตรงแนวกล่องล่าง" ที่เดียว — ต้องมีทั้งเวทีน้องและกล่องฟีดจริง
+   (หน้าที่ยังไม่มีสัตว์เลี้ยง ไม่มี .stage-hero/.feed-plate ให้อ้างอิง → ถอดคลาส กลับไปลอยกึ่งกลางแบบรอบ 695) */
+function laneModeOn(){
+  const top = document.querySelector('.lobby-top');
+  if(!top) return false;
+  const on = !!stageColLeft() && !!document.querySelector('.stage-plate.feed-plate');
+  top.classList.toggle('coin-laned', on);
+  if(!on){                                          // ล้างค่าที่ตรึงไว้ ไม่ให้ค้างข้ามสถานะ
+    const idCard = document.querySelector('.id-card'), block = document.querySelector('.coin-block');
+    if(idCard) idCard.style.width = '';
+    if(block) ['--coin-w','--coin-ml','--coin-k'].forEach(v=>block.style.removeProperty(v));
+  }
+  return on;
+}
 /* 📐 รอบ 613: จัดทั้ง 3 แถว + คอลัมน์ฟีดในชุดเดียว — เรียกที่เดียวจบ ไม่ต้องไล่เรียกทีละตัว */
 function alignStageCols(){
+  laneModeOn();   // 🧭 รอบ 971: ตั้งโหมดก่อนวัด — ตัวการ์ด/แถวเหรียญต้องหยุดหดก่อนถึงวัดได้ตรง
   alignPetTabs(); alignNewWord(); alignFeedPlate(); alignProfilePlate(); alignCoinBlock(); alignStageLeft();
 }
 /* ⚠️ ตอน resize ต้องรอ layout นิ่งก่อนค่อยวัด — วัดทันทีในตัว handler ได้ตำแหน่งเวทีของขนาดจอ "เดิม"
@@ -4635,6 +4673,7 @@ function renderDashboard(){
     renderFactoryCard();
     renderMarketCard();
     renderShop();
+    laneModeOn();   // 🧭 รอบ 971: ไม่มีเวที/กล่องฟีดให้อ้างอิงแล้ว → ถอดโหมดเลน + ล้างความกว้างที่ตรึงไว้
     return;
   }
 
