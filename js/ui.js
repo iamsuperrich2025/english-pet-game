@@ -3516,6 +3516,7 @@ function bindPetPlateButtons(root){
   on('btn-sleep', sleepAllPets);
   on('btn-wake', wakeAllPets);
   on('btn-detox', ()=>detoxPet(p));
+  on('btn-foodquiz', openFoodQuiz);   // 🛡️ รอบ 951: ควิซอาหารปลอดภัย (ย้ายมาจากแถบล่างล็อบบี้)
   on('btn-pet-rename', ()=>renamePet(p));
   on('btn-pi-dress', ()=>{           // รอบ 273: ปิด overlay แล้วเปิดห้องแต่งตัว (ซื้อ+สวมได้เลย)
     window.__piOverlay = null;
@@ -4639,7 +4640,12 @@ function renderDashboard(){
               <button class="pi-shape-toggle-btn" id="btn-pi-shape-toggle" type="button">${wornForShape.emoji || '🎀'} ดูชุดที่ใส่อยู่</button></div>`)
         : `<div class="pi-shape-cap shape-cap-${p.shape || 'normal'}">${shapeWhy[p.shape] || shapeWhy.normal}</div>`) : ''}
       ${stage !== 'egg' ? patCalendarHTML() : ''}`,
-    care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}`,
+    /* 🛡️ รอบ 951 (ผู้ใช้สั่ง): ปุ่ม "ควิซอาหารปลอดภัย" ย้ายจากแถบล่างล็อบบี้ มาต่อท้ายใต้ปุ่ม 🍽️ ให้อาหาร
+       อยู่นอกบล็อก hungerUI → ร่างไข่ (ยังไม่มีปุ่มให้อาหาร) ก็ยังกดเล่นควิซได้เหมือนเดิม */
+    care: `${infoText}${hungerUI ? `<div class="plate-title pi-care-title">⬢ การดูแล</div>${hungerUI}` : ''}
+      <div class="care-row care-row-quiz">
+        <button class="care-btn btn-foodquiz" id="btn-foodquiz">🛡️ ควิซอาหารปลอดภัย</button>
+      </div>`,
   };
   /* 🐾 รอบ 613: ปุ่ม "ข้อมูลน้อง" ย้ายไปอยู่แถวแท็บชื่อสัตว์แล้ว (สร้างใน renderDashboard ด้านบน)
      → คอลัมน์ซ้ายเหลือฟีดเพื่อนอย่างเดียว ยืดขึ้นไปชนขอบบนเวทีด้วย alignStageLeft() */

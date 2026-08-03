@@ -69,7 +69,7 @@ document.getElementById('btn-play').addEventListener('click', ()=>
 document.getElementById('btn-band-exam').addEventListener('click', ()=>{     // รอบ 267: สอบเลื่อนขั้น = แผงชุดข้อสอบระดับตัวเอง
   if(typeof bandExamLobby === 'function') bandExamLobby();
 });
-document.getElementById('btn-foodquiz').addEventListener('click', openFoodQuiz);   // ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
+// 🛡️ รอบ 951: ปุ่มควิซอาหารปลอดภัยย้ายเข้าไปในหน้าข้อมูลน้อง (ใต้ 🍽️ ให้อาหาร) — ผูก handler ที่ bindPetPlateButtons ใน ui.js
 document.getElementById('btn-cats').addEventListener('click', ()=>{ renderCats(); showScreen('screen-cats'); });
 document.getElementById('btn-stats').addEventListener('click', ()=>{ renderStats(); showScreen('screen-stats'); });
 document.getElementById('btn-rail-trophy').addEventListener('click', showProgressReport);   // 🏆 ปุ่มลัดดูตู้เข็มสะสม/ความก้าวหน้า (รอบ 107)
@@ -388,7 +388,7 @@ document.addEventListener('visibilitychange', ()=>{
     rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy',
     wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', shootword:'#btn-rail-shootword', examstd:'#btn-rail-examstd',
     book:'#btn-vocab-book', cats:'#btn-cats', play:'#btn-play', bandexam:'#btn-band-exam',
-    foodquiz:'#btn-foodquiz', chat:'#btn-chat',
+    chat:'#btn-chat',
     ielts:'[data-xstd="ielts"]', toeic:'[data-xstd="toeic"]', toefl:'[data-xstd="toefl"]',
   };
   const run = ()=>{
@@ -398,6 +398,10 @@ document.addEventListener('visibilitychange', ()=>{
         const w = WORLD3D.find(x=>x.mode === m[1]);
         if(w) railWorldClick(w);
       }
+      return;
+    }
+    if(go === 'foodquiz'){                    // 🛡️ รอบ 951: ปุ่มย้ายเข้าหน้าข้อมูลน้องแล้ว → เรียกฟังก์ชันตรง (ไม่มีปุ่มในล็อบบี้ให้คลิก)
+      if(typeof openFoodQuiz === 'function') openFoodQuiz();
       return;
     }
     if(go === 'petshop'){                     // ร้านสัตว์เลี้ยง (ไม่มีปุ่มตรงในราง)

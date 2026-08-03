@@ -699,6 +699,9 @@ html.no-anim body.quake{animation:none;}
 .care-btn:active{transform:translateY(2px);}
 .btn-feed{background:linear-gradient(180deg,#ffb45e,#f2994a);box-shadow:0 4px 0 #c97a2e;}
 .btn-cure{background:linear-gradient(180deg,#7ed49a,#4cb56d);box-shadow:0 4px 0 #368a50;}
+/* 🛡️ รอบ 951: ปุ่มควิซอาหารปลอดภัย (ย้ายจากแถบล่างล็อบบี้มาอยู่ใต้ปุ่มให้อาหารในหน้าข้อมูลน้อง) */
+.btn-foodquiz{background:linear-gradient(180deg,#7ed49a,#4cb56d);box-shadow:0 4px 0 #368a50;}
+.care-row-quiz{margin-top:8px;}
 .care-btn:disabled{opacity:.45;box-shadow:none;transform:none;}
 .sick-banner{
   margin-top:10px;background:#ffe3e3;border:2px dashed #ff8f8f;border-radius:16px;

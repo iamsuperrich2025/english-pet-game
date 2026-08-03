@@ -1652,8 +1652,7 @@ html.no-anim .q-bigcard{animation:none;}
 .lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
 .lobby-book-btn{padding:9px 13px !important;font-size:18px !important;background:linear-gradient(180deg,#f7bf8f,#e8945a);box-shadow:0 6px 0 #c06f33;}   /* 📒 สมุดคำศัพท์ — ไอคอนเดี่ยว ประหยัดที่แถบล่าง */
 .lobby-book-btn:active{box-shadow:0 2px 0 #c06f33;}
-.lobby-foodquiz-btn{background:linear-gradient(180deg,#7ed49a,#4cb56d) !important;box-shadow:0 6px 0 #368a50 !important;}
-.lobby-foodquiz-btn:active{box-shadow:0 2px 0 #368a50 !important;}
+/* 🛡️ รอบ 951: .lobby-foodquiz-btn ถูกถอดทิ้ง — ปุ่มควิซอาหารปลอดภัยย้ายไปหน้าข้อมูลน้อง (.btn-foodquiz ใน style.css) */
 .lobby-play-btn{
   background:linear-gradient(180deg,#ffd76e,#f5b93a) !important;color:#5a3c05 !important;
   box-shadow:0 5px 0 #cf9722 !important;font-size:18px !important;padding:11px 28px !important;
@@ -2536,6 +2535,16 @@ button.pi-dress-pip:active{transform:scale(.94);}
 .pi-dot.today{outline:1.5px solid #7fd0ff;outline-offset:1px;}
 .pi-streak-note{margin-top:clamp(2px,.8vh,5px);font-size:clamp(10px,2.2vh,11.5px);color:#9fc6ee;}
 .pi-care-title{margin-top:14px;}
+/* 🛡️ รอบ 951: ปุ่ม "ควิซอาหารปลอดภัย" ย้ายมาต่อท้ายใต้ปุ่มให้อาหาร (กฎทองข้อ 7 — ต้องพอดีใบไม่ต้องเลื่อน)
+   จอเตี้ยมาก + สถานะหนัก (ป่วย+หิว+พิษ = แบนเนอร์เยอะ) → บีบปุ่มดูแลทั้งกลุ่มให้เนื้อหาลงพอดี */
+@media (max-height:430px){
+  .pi-box .stage-plate.pi-plate .care-btn{font-size:11px;padding:5px 8px;}
+  .pi-box .stage-plate.pi-plate .care-row{margin-top:5px;gap:4px;}
+  .pi-box .stage-plate.pi-plate .pi-care-title{margin-top:9px;}
+  /* บีบ "ระยะขอบ/บรรทัด" ของแบนเนอร์ยาว — ไม่ลดขนาดตัวอักษร (เด็กต้องอ่านออกเหมือนเดิม) */
+  .pi-box .stage-plate.pi-plate .sick-banner{padding:4px 8px;margin-top:6px;line-height:1.3;}
+  .pi-box .stage-plate.pi-plate .ability-box{padding:4px 8px;line-height:1.3;}
+}
 
 /* 🏆 รอบ 246: กระดานอันดับเต็มจอ 5 คอลัมน์ Top 100 (คลิกกลุ่มอันดับเพื่อเปิด · ไม่ต้องเลื่อน) */
 .lbf-overlay{position:fixed;inset:0;z-index:90;background:rgba(30,90,178,.72);
