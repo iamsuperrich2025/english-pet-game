@@ -29,7 +29,11 @@ const BADGE_IMG_V = '953';
    ส่ง `--bsrc` (URL รูปเหรียญใบนั้นเอง) ลงไปกับ style ของ span ด้วย เพื่อให้ CSS เอาไป
    `mask-image` ตัดแสงให้อยู่ "เฉพาะในรูปทรงเหรียญ" (ไม่ล้นพื้นโปร่ง/กรอบสี่เหลี่ยม = ต้นตอที่ดูเหมือนพัง)
    ต้องส่งจากที่นี่เพราะ CSS ไม่รู้ว่าเหรียญใบไหนใช้ไฟล์อะไร · url() ไม่ต้องใส่ quote — path มาจาก
-   BADGE_IMG ของเราเอง ไม่มีช่องว่าง/อักขระพิเศษ (มีแค่ ?v= ซึ่ง url token รับได้) */
+   BADGE_IMG ของเราเอง ไม่มีช่องว่าง/อักขระพิเศษ (มีแค่ ?v= ซึ่ง url token รับได้)
+   ⚠️ **ต้องเป็น URL เต็ม (absolute) เท่านั้น** — เจอตอนเทสต์: ใส่ path สั้น `img/badges/x.png` แล้ว
+   เบราว์เซอร์ resolve relative กับ "ไฟล์ CSS ที่เรียก var()" (= css/lobby.css) ไม่ใช่กับหน้าเว็บ
+   → กลายเป็น `/css/img/badges/x.png` = 404 · แมสก์ที่โหลดไม่ได้ = โปร่งทั้งแผ่น = **แสงหายเงียบ ๆ
+   ไม่มี error ให้เห็นด้วย** จึงต้องแปลงเป็น absolute ด้วย document.baseURI ก่อนส่งเสมอ */
 const BADGE_SHINE_CLS = {'lbcat-ic':1, 'pl-badge-card-ic':1};
 /* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาอย่างไร"): เพิ่มพารามิเตอร์ที่ 3
    `clickable` (ค่าเริ่มต้น true) — ผูก onclick เรียก showBadgeInfo(emoji) (js/game.js) ที่ element
@@ -46,7 +50,9 @@ function badgeIcHTML(emoji, cls, clickable){
   const ccls = clickable ? ' badge-clickable' : '';
   if(!img) return `<span class="${cls}${ccls} badge-ic-fallback"${onclickAttr}>${emoji}</span>`;
   if(BADGE_SHINE_CLS[cls]){
-    return `<span class="${cls} badge-shine${ccls}" style="--bsrc:url(${src})"${onclickAttr}><img class="badge-shine-img" src="${src}" alt="" onerror="this.parentElement.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'"></span>`;
+    let maskSrc = src;
+    try{ maskSrc = new URL(src, document.baseURI).href; }catch(e){}
+    return `<span class="${cls} badge-shine${ccls}" style="--bsrc:url(${maskSrc})"${onclickAttr}><img class="badge-shine-img" src="${src}" alt="" onerror="this.parentElement.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'"></span>`;
   }
   return `<img class="${cls}${ccls}" src="${src}" alt=""${onclickAttr} onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`;
 }
