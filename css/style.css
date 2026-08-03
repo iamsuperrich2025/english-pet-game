@@ -1608,6 +1608,30 @@ html.no-anim .tapglow-on::after{animation:none !important;}
   font-size:14px;line-height:1;padding:0;
 }
 .toast-warn .toast-x:hover{background:rgba(255,255,255,.4);}
+/* 🔗 รอบ 971: แจ้งเตือนที่มี "ลิงก์ไปดูต้นเรื่อง" — สีน้ำเงินฟีด (ไม่ใช่สีคำเตือน) กดหรือไม่กดก็ได้ */
+.toast-link{
+  pointer-events:auto;cursor:default;
+  display:flex;align-items:center;gap:9px;
+  background:linear-gradient(135deg,#2f7ad4,#2360b6);
+  white-space:normal;max-width:88vw;line-height:1.35;
+  padding:10px 12px 10px 16px;transition:bottom .18s;
+}
+.toast-link .toast-msg{flex:1;text-align:left;font-size:14.5px;}
+.toast-link .toast-go{
+  flex:none;border:none;cursor:pointer;color:#123a68;font-weight:bold;
+  background:#bfe4ff;padding:7px 12px;border-radius:999px;
+  font-size:13px;line-height:1;white-space:nowrap;
+}
+.toast-link .toast-go:hover{background:#e2f3ff;}
+.toast-link .toast-go:active{transform:translateY(1px);}
+.toast-link .toast-go:focus-visible{outline:3px solid #fff;outline-offset:2px;}
+.toast-link .toast-x{
+  flex:none;border:none;cursor:pointer;color:#fff;
+  background:rgba(255,255,255,.22);
+  width:26px;height:26px;border-radius:999px;
+  font-size:13px;line-height:1;padding:0;
+}
+.toast-link .toast-x:hover{background:rgba(255,255,255,.4);}
 /* ปุ่มปิดทั้งหมด — โผล่เมื่อคำเตือนซ้อน ≥2 อัน */
 .toast-clear-all{
   position:fixed;left:50%;transform:translateX(-50%);
