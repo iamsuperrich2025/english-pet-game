@@ -656,7 +656,7 @@ openPhotoCrop:224
 
 ## js/sgaward.js (28 บรรทัด · 0 รายการ)
 
-## js/shootword.js (947 บรรทัด · 0 รายการ)
+## js/shootword.js (987 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,153 บรรทัด · 91 รายการ)
 STORAGE_KEY:6 · QUIZ_PASS_REWARD:11 · CURE_COST:13 · HUNGRY_SICK_MS:14 · MEAL_HOUR:16 · MEAL_FULL:17
