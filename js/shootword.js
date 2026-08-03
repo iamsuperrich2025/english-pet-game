@@ -820,9 +820,11 @@
       const dx=e.clientX-pd.x, dy=e.clientY-pd.y;
       if(Math.abs(dx)+Math.abs(dy)>9) pd.moved=true;
       if(pd.moved){
+        /* 🎯 รอบ 921: ทิศทางลากกลับด้าน — ลากซ้ายปืนเบนขวา/ลากลงปืนเงยขึ้น (ผู้ใช้เจอจริง)
+           ยาว/pitch เป็นมุมกล้องจริง (rotation.y/x) ไม่ใช่ทิศจอ ต้องลบ ไม่ใช่บวก ถึงจะลากซ้าย=มองซ้าย/ลากลง=มองลง */
         const s=(aimMode?0.0011:0.0024);
-        yaw   = clamp(yaw  + dx*s, -0.62, 0.62);
-        pitch = clamp(pitch+ dy*s*0.8, -0.06, 0.42);
+        yaw   = clamp(yaw  - dx*s, -0.62, 0.62);
+        pitch = clamp(pitch- dy*s*0.8, -0.06, 0.42);
         pd.x=e.clientX; pd.y=e.clientY;
       }
     });
