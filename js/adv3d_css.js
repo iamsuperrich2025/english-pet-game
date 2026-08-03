@@ -36,15 +36,23 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   /* ⚽ รอบ 399 (ผู้ใช้ส่งภาพ): จอมือถือเตี้ย top:82px กลายเป็นกลางจอ = แผงคำบังป้ายตัวอักษรที่ต้องเตะพอดี
      → ย้ายลงล่างสุดตรงกลาง วางเหนือแถบตัวอักษรที่เก็บ (#adv-inv bottom:8px) + ย่อขนาดให้เป็นข้อมูลอ้างอิง
      กว้างไม่เกิน 66vw กันไปทับสติ๊กเล็งซ้ายล่าง/ปุ่มเตะขวาล่าง */
-  /* 🪞📷 รอบ 810: กระจกมองหลัง/ข้าง ยึดที่เดิมของคำศัพท์ (top:82) → ดันคำศัพท์ลงมา (เฉพาะโหมดขับรถ โหมดอื่นไม่กระทบ) */
-  .adv-drive #adv-words{top:170px}
+  /* 🪞📝 รอบ 967 (ผู้ใช้ส่งภาพ): กระจกมองหลังเลื่อนขึ้นไปแทนที่ป้ายเตือน+ป้ายความเร็ว (top:82→52)
+     → ป้ายทั้ง 2 ลงมาเรียงใต้กระจกแบบไม่ซ้อนกัน (ดู .adv-drive #adv-inst/#adv-warn/#adv-junc/#adv-lawwarn ท้ายไฟล์)
+     → คำเป้าหมายย้ายไปช่องว่าง "ระหว่างกระจกมองหลังกับปุ่ม 👁️ มุมกล้อง" ย่อตัวอักษรให้พอดีช่อง ไม่ทับของอื่น
+     left = 50% + 130(ครึ่งกระจก) + 8 · right = 100(ปุ่มมุมกล้อง) + 16 → กว้าง 386px ที่จอ 1280 · 152px ที่จอ 812 */
+  .adv-drive #adv-words{top:48px;left:calc(50% + 138px);right:116px;transform:none;max-width:none;
+    width:fit-content;margin-left:auto;margin-right:auto;   /* กล่องหดพอดีคำ แล้วจัดกลางช่องว่าง (left+right+width:auto margins) */
+    box-sizing:border-box;padding:3px 7px;border-radius:12px}
+  .adv-drive #adv-words .adv-fword{gap:3px}
+  .adv-drive #adv-words .adv-fch{font-size:clamp(10px,1.6vw,16px);min-width:0;padding:1px 3px;border-radius:6px;line-height:1.25}
+  .adv-drive #adv-words .adv-fth{font-size:clamp(9px,1.4vw,12px);margin-top:2px;line-height:1.3}
   .adv-mirror{position:absolute;pointer-events:none;z-index:4;border-radius:6px;overflow:hidden;display:none;
     border:3px solid rgba(18,20,24,.94);box-shadow:0 2px 8px rgba(0,0,0,.5),inset 0 0 14px rgba(0,0,0,.4)}
   .adv-drive .adv-mirror{display:block}
   .adv-drive.cam3 .adv-mirror{display:none}
   .adv-mirror::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
     background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 35%)}
-  #adv-mirror-rear{left:50%;top:82px;transform:translateX(-50%);width:260px;height:74px}
+  #adv-mirror-rear{left:50%;top:52px;transform:translateX(-50%);width:260px;height:74px}   /* 🪞 รอบ 967: 82→52 (⚠️ ต้องตรงกับ MIRROR_REAR.t ใน adventure3d.js) */
   #adv-mirror-l{left:8px;top:38%;width:130px;height:84px}
   #adv-mirror-r{right:8px;top:38%;width:130px;height:84px}
   .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
@@ -557,9 +565,16 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-drive #adv-mic{top:8px;right:172px;font-size:11px;padding:4px 6px;min-width:0}
   .adv-drive #adv-spk{top:8px;right:224px;font-size:11px;padding:4px 6px;min-width:0}
   .adv-drive #adv-vmode{top:8px;right:276px;font-size:11px;padding:4px 6px;min-width:0}
-  .adv-drive #adv-inst{top:52px}
-  .adv-drive #adv-tmute{top:52px;right:108px;font-size:11px;padding:4px 6px;min-width:0}   /* ปุ่มครู แถวสอง (เลี่ยงก้านไฟเลี้ยว right:20) */
-  .adv-drive #adv-podbtn{top:52px;right:200px;font-size:11px;padding:4px 6px;min-width:0}
+  /* 🪧 รอบ 967 (ผู้ใช้ส่งภาพ): กระจกมองหลังยึด 52-126 แล้ว → ป้ายทุกใบเรียงลงมาใต้กระจก ห่างกันพอไม่ซ้อนกันเอง
+     ความสูงจริงที่วัดได้ (1280×720): ป้ายความเร็ว 21px · ป้ายเตือน 28px · ป้ายทางแยก 32px · ป้ายใบสั่ง ~2 บรรทัด */
+  .adv-drive #adv-inst{top:132px}
+  .adv-drive #adv-warn{top:158px}
+  .adv-drive #adv-junc{top:192px}
+  .adv-drive #adv-lawwarn{top:230px}
+  /* 👩‍🏫 ปุ่มครู/จบรอบแข่ง: รอบ 967 ย้ายจากแถวขวา (top:52 right:108/200) มาซ้อนใต้กระดานคะแนนฝั่งซ้าย
+     — ที่เดิมเป็นช่องว่างข้างกระจกมองหลังที่คำเป้าหมายย้ายมาอยู่ (จอ 812 ปุ่มเดิมยังทับตัวกระจกด้วย) */
+  .adv-drive #adv-tmute{top:62px;left:136px;right:auto;font-size:11px;padding:4px 6px;min-width:0}
+  .adv-drive #adv-podbtn{top:94px;left:136px;right:auto;font-size:11px;padding:4px 6px;min-width:0}
   /* 🤖 รอบ 216: HUD โลกหุ่น (mecha) — เลย์เอาต์เฉพาะที่ "พอดีจอมือถือแคบ" (568×320 ก็ไม่ทับ)
      ผู้ใช้รอบก่อนสั่งย้ายขึ้นบนเหมือนโลกขับรถ แต่แถวเดียวแบบ drive ยาวเกินจอแคบ → ปุ่มทับปุ่มยิง
      แก้: minimap บนซ้าย · HP+เหรียญ ต่อขวา map · ปุ่มยูทิลิตี้ 2 แถวมุมบนขวา (เหนือปุ่มยิงเสมอ) · ซ่อนกระดานคะแนน (จอแคบไม่พอ)

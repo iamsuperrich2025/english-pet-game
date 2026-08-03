@@ -6788,7 +6788,7 @@ function radioTick(){
    (พลิกภาพกล้อง 3D จริงต้องกลับ winding order เสี่ยงบั๊กโมเดล — แค่ "เห็นด้านหลัง/ข้างจริง" ก็พอสำหรับเกมนี้)
    #adv-overlay เต็มวิวพอร์ตพอดี (ต่างจาก moto3d.js ที่จอเล็กอยู่ในกรอบเครื่องเกม) → ใช้ window.innerWidth/Height ตรงๆ ได้เลย
    ============================================================ */
-const MIRROR_REAR={l:.5,t:82,w:260,h:74,cx:true}, MIRROR_L={l:8,t:0,w:130,h:84,pctT:.38}, MIRROR_R={l:0,t:0,w:130,h:84,pctT:.38,right:8};
+const MIRROR_REAR={l:.5,t:52,w:260,h:74,cx:true},   /* 🪞 รอบ 967: t 82→52 ขึ้นไปแทนที่ป้ายเตือน/ป้ายความเร็ว (ต้องตรงกับ #adv-mirror-rear ใน adv3d_css.js) */ MIRROR_L={l:8,t:0,w:130,h:84,pctT:.38}, MIRROR_R={l:0,t:0,w:130,h:84,pctT:.38,right:8};
 let mirrorRearCam=null, mirrorLCam=null, mirrorRCam=null;
 function mirrorPass(rect,cam,yawOff,W,H){
   const w=Math.max(1,Math.round(rect.w)), h=Math.max(1,Math.round(rect.h));
