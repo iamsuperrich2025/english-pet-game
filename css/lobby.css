@@ -249,25 +249,15 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 /* ---------- เอฟเฟกต์ฝนเต็มจอ (รอบยี่สิบ — ฝนตก+ไม่มีบ้านสภาพดี) ---------- */
 #rain-fx{position:fixed;inset:0;pointer-events:none;z-index:9000;overflow:hidden;}
-/* เส้นฝน: gradient แกน ~100deg → เส้น stripe เกือบตั้ง (เอียง ~10° เหมือนฝนจริง)
-   แล้วเลื่อน "ขนานกับเส้น" (translate x,y ตามสัดส่วน sin/cos) ให้ loop เนียนไม่กระตุก */
-.rain-layer{
-  position:absolute;inset:-15% -8%;
-  background:repeating-linear-gradient(100deg,
-    transparent 0 17px, rgba(190,220,255,.28) 17px 18.5px, transparent 18.5px 40px);
-  animation:rainfall .7s linear infinite;opacity:.5;
-}
-.rain-layer.l2{
-  background:repeating-linear-gradient(96deg,
-    transparent 0 26px, rgba(210,235,255,.18) 26px 27px, transparent 27px 58px);
-  animation-name:rainfall2;animation-duration:1.15s;opacity:.4;
-}
-@keyframes rainfall{from{transform:translate(-7px,-40px)}to{transform:translate(7px,40px)}}
-@keyframes rainfall2{from{transform:translate(-5px,-50px)}to{transform:translate(5px,50px)}}
+/* ❌ รอบ 961: ลบ .rain-layer (เส้นสีขาวทแยงทั้งจอ + @keyframes rainfall/rainfall2) ออกทั้งหมด
+   ผู้ใช้บอก "ดูไม่ professional" — ฝนตอนนี้เล่าด้วยหยดน้ำบนกระจกอย่างเดียว
+   (JS ก็เลิกสร้าง div .rain-layer แล้ว ดู rainFxTick ใน js/ui.js) */
 .rain-glass{position:absolute;inset:0;}
 .glass-drop{
   position:absolute;height:auto;pointer-events:none;
-  filter:drop-shadow(0 1px 2px rgba(20,50,90,.35));
+  /* 💧 รอบ 961: เงาจางลง (.35→.18) + เบลอนิด = หยดน้ำกลืนไปกับฉากหลังเหมือนน้ำจริง
+     ไม่ใช่ "รูปเม็ดฝนแปะทับจอ" */
+  filter:drop-shadow(0 1px 2px rgba(20,50,90,.18)) blur(.3px);
   animation:glassdrop 6s ease-in forwards;
 }
 /* --o = ความทึบสูงสุด, --r = องศาเอียง, --fall = ระยะไหลลง (สุ่มต่อเม็ดใน rainFxDrop)
@@ -2639,23 +2629,29 @@ button.pi-dress-pip:active{transform:scale(.94);}
    แก้ 3 ชั้นให้กลายเป็น "แสงกรีดตามสันนูน" จริง:
    ① `mask-image:var(--bsrc)` — ใช้ไฟล์เหรียญ "ใบนั้นเอง" (ส่งมาจาก badgeIcHTML) เป็นแมสก์
       แสงจึงโผล่เฉพาะในเนื้อเหรียญ ไม่ล้นพื้นโปร่ง/ขอบกรอบอีกเลย (นี่คือตัวแก้อาการ "ดูเหมือนพัง")
-   ② `mix-blend-mode:color-dodge` — dodge = ยิ่งพิกเซลข้างใต้สว่างอยู่แล้วยิ่งสว่างพุ่ง ส่วนที่มืด
-      (ร่องลึกของเหรียญ) แทบไม่ขยับ → แสงไปเกาะ "สันนูน/ขอบวงที่เป็นไฮไลต์อยู่แล้ว" ของเหรียญใบนั้น
-      โดยอัตโนมัติ ไม่ต้องทำแมสก์สันนูนแยกทีละใบ 33 ไฟล์ · ปลอดภัยเพราะ .lbcat-ic/.pl-badge-card-ic
-      มี `filter` อยู่แล้ว = สร้าง stacking context ครอบ blend ไว้ในกล่องตัวเอง ไม่เลอะทั้งหน้า
-   ③ แถบแคบลง/จางลงมาก (.46 จาก .9) + กวาดช้าลง (5.2s) → เป็นประกายไล้ผ่าน ไม่ใช่ไฟกระพริบ
+   ② `mask-mode:luminance` — **ตัวที่ทำให้ "แสงเกาะสันนูน" จริง**: แมสก์แบบ luminance คิดค่าจาก
+      ความสว่าง×alpha ของรูป → จุดที่เป็นสันนูน/ขอบวงลอเรล (สว่างอยู่แล้วในไฟล์) รับแสงเต็ม
+      ส่วนร่องลึก/พื้นมืดของเหรียญแทบไม่รับเลย = ได้ไฮไลต์ไล่ตามลายนูนของเหรียญ "แต่ละใบ" เอง
+      โดยไม่ต้องทำแมสก์สันนูนแยกทีละไฟล์ทั้ง 33 ใบ · เบราว์เซอร์เก่าที่ไม่รู้จัก mask-mode จะถอยไป
+      เป็นแมสก์ alpha = แสงยังอยู่ในรูปทรงเหรียญเหมือนเดิม (แค่ไม่ไล่สันนูน) ไม่กลับไปพังแบบเดิม
+   ③ `mix-blend-mode:screen` — บวกแสงตรงไปตรงมา ไม่เพี้ยนสี · **เคยลอง color-dodge แล้วไม่ผ่าน**
+      (จางจนแทบไม่เห็น แถมจุดที่ติดกลายเป็นจุดสีเขียว/เหลืองแปลก ๆ เพราะ dodge ตัดทีละแชนเนล)
+      ปลอดภัยเพราะ .lbcat-ic/.pl-badge-card-ic มี `filter` อยู่แล้ว = สร้าง stacking context
+      ครอบ blend ไว้ในกล่องตัวเอง ไม่เลอะทั้งหน้า
+   ④ กวาดช้าลง (5.2s ต่อรอบ กวาดจริง ~1.2 วิ ที่เหลือพัก) → เป็นประกายไล้ผ่าน ไม่ใช่ไฟกระพริบ
    inset ต้องเท่า padding ของกล่อง (ตัวแปร --bpad) ไม่งั้นแมสก์จะกินพื้นที่กรอบด้วย แสงจะเหลื่อมขอบเหรียญ */
 .badge-shine{position:relative;overflow:hidden;--bpad:5.5%;}
 .badge-shine::after{content:'';position:absolute;inset:var(--bpad);pointer-events:none;
   background:linear-gradient(107deg,
-    rgba(255,255,255,0) 40%,rgba(255,255,255,.14) 46%,rgba(255,255,255,.46) 50%,
-    rgba(255,255,255,.14) 54%,rgba(255,255,255,0) 60%);
+    rgba(255,255,255,0) 36%,rgba(255,255,255,.26) 45%,rgba(255,255,255,.85) 50%,
+    rgba(255,255,255,.26) 55%,rgba(255,255,255,0) 64%);
   background-size:300% 300%;background-position:-120% -120%;
   -webkit-mask-image:var(--bsrc);mask-image:var(--bsrc);
   -webkit-mask-size:contain;mask-size:contain;
   -webkit-mask-position:center;mask-position:center;
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
-  mix-blend-mode:color-dodge;
+  -webkit-mask-source-type:luminance;mask-mode:luminance;
+  mix-blend-mode:screen;
   animation:badgeShineSweep 5.2s cubic-bezier(.45,.05,.35,1) infinite;}
 .lbf-bcat:nth-child(2) .badge-shine::after{animation-delay:-.7s;}
 .lbf-bcat:nth-child(3) .badge-shine::after{animation-delay:-1.5s;}
@@ -4226,7 +4222,10 @@ html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(2),html.no-anim .coin-
 @media (max-height:520px){
   .lobby-top{--top-h:32px;}
   .id-card{padding:4px 11px 4px 4px;gap:8px;border-radius:13px;}
-  .id-card .pass-photo{width:56px;height:64px;border-radius:12px;}   /* 📷 รอบ 711: ยังต้องสูงกว่า .rail-btn โซนนี้ (~61px) */
+  /* 📷 รอบ 961 (ผู้ใช้: "รูป profile ในมือถือเล็กเกินไป ขอใหญ่กว่าปุ่มแนวตั้งเหมือนบนคอม")
+     เดิม 56×64 = แคบกว่าปุ่มราง (.rail-wrap 76px) เลยดูเล็กกว่าปุ่มทั้งที่สูงกว่า 3px
+     ใหม่ 86×99 = กว้าง/สูงกว่าปุ่มรางทั้งคู่ คงสัดส่วน 0.87 เท่าจอคอม (108×124 ต่อปุ่ม 76×61) */
+  .id-card .pass-photo{width:86px;height:99px;border-radius:18px;}
   .profile-plate .student-chip{font-size:13px;}
   .profile-plate .clock-chip{font-size:10.5px;margin-top:1px;}
   .profile-plate .rank-tab{margin-top:3px;}
@@ -4243,7 +4242,8 @@ html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(2),html.no-anim .coin-
 /* 📷 รอบ 711: จอเตี้ยมาก .rail-btn หดลงอีก (ดูกฎที่ @media max-height:430px ของ .rail-btn) —
    ตามให้ pass-photo ยังใหญ่กว่าปุ่มรางเล็กน้อย (ต้องมาหลัง block ≤520px ด้านบนถึงจะชนะ cascade) */
 @media (max-height:430px){
-  .id-card .pass-photo{width:46px;height:53px;border-radius:10px;}
+  /* 📷 รอบ 961: โซนนี้ .rail-wrap หด 66px / .rail-btn สูง ~48px → รูปต้องยังโตกว่าทั้ง 2 ด้าน */
+  .id-card .pass-photo{width:76px;height:87px;border-radius:16px;}
 }
 @media (max-height:400px){
   .profile-plate .rank-tab{width:auto;margin-top:0;}
