@@ -1083,6 +1083,7 @@ function gfeedPrune(){
 /* แปลงโพสต์ดิบจาก DB → รูปแบบที่ UI ใช้ (lk รับได้ทั้ง true แบบเดิม และรหัสรีแอ็กชันแบบใหม่) */
 function gfeedParse(key, v){
   if(!v || typeof v.tx !== 'string' || typeof v.u !== 'string') return null;
+  const me = onlineKey();
   const lk = (v.lk && typeof v.lk === 'object') ? v.lk : {};
   const rx = {};                                    // uid → รหัสรีแอ็กชัน ('like' เมื่อเป็น true แบบเดิม)
   for(const uid in lk){
@@ -1094,13 +1095,17 @@ function gfeedParse(key, v){
   if(v.cm && typeof v.cm === 'object'){
     for(const cid in v.cm){
       const c = v.cm[cid];
-      /* p = รหัสคอมเมนต์แม่ (รอบ 964: ตอบกลับใต้คอมเมนต์แบบ Facebook/TikTok) — ไม่มี = คอมเมนต์ชั้นบนสุด */
-      if(c && typeof c.tx === 'string') cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0,
-                                                 p: (typeof c.p === 'string' ? c.p : '')});
+      /* p = รหัสคอมเมนต์แม่ (รอบ 964: ตอบกลับใต้คอมเมนต์แบบ Facebook/TikTok) — ไม่มี = คอมเมนต์ชั้นบนสุด
+         cl/<uid> = ถูกใจ "รายคอมเมนต์" (รอบ 966) — ซ้อนใต้คอมเมนต์นั้นเลย ไม่ต้องเปิด listener ใหม่ */
+      if(!c || typeof c.tx !== 'string') continue;
+      const cl = (c.cl && typeof c.cl === 'object') ? c.cl : {};
+      const clu = Object.keys(cl).filter(uid=>!!cl[uid]);
+      cm.push({id: cid, u: c.u || '', n: c.n || 'เพื่อน', tx: c.tx, ts: c.ts || 0,
+               p: (typeof c.p === 'string' ? c.p : ''),
+               clU: clu, clN: clu.length, clMe: clu.indexOf(me) >= 0});
     }
     cm.sort((a,b)=>a.ts - b.ts);
   }
-  const me = onlineKey();
   return {key, u: v.u, n: v.n || 'เพื่อน', g: v.g || '', c: v.c || 'other', tx: v.tx, ts: v.ts || 0,
           rx, likeN: Object.keys(rx).length, myRx: rx[me] || '', likedByMe: !!rx[me], comments: cm};
 }
@@ -1160,6 +1165,17 @@ function gfeedNotifDiff(old, now){
     gfeedNotifPush({t: toMyComment ? 'rp' : 'cm', pid: now.key, u: c.u, n: c.n, cm: c.tx,
                     tx: toMyComment ? par.tx : now.tx, ts: c.ts || Date.now()});
   }
+  /* 💙 รอบ 966: มีคนกดถูกใจ "คอมเมนต์ของเรา" (โพสต์ของใครก็ได้) → แจ้งเตือนชนิด 'cl' */
+  const oldById = {};
+  for(const c of old.comments) oldById[c.id] = c;
+  for(const c of now.comments){
+    if(c.u !== me) continue;
+    const was = (oldById[c.id] && oldById[c.id].clU) || [];
+    for(const uid of (c.clU || [])){
+      if(uid === me || was.indexOf(uid) >= 0) continue;
+      gfeedNotifPush({t:'cl', pid: now.key, u: uid, n: uidDisplayName(uid), cm: c.tx, tx: now.tx, ts: Date.now()});
+    }
+  }
 }
 function gfeedNotifPush(n){
   Online.notif.unshift(n);
@@ -1207,6 +1223,16 @@ function gfeedSetReaction(postId, rk){
   if(!rk) return ref.remove().then(()=>true).catch(()=>false);
   return ref.set(rk).then(()=>true)
     .catch(()=>ref.set(true).then(()=>{ Online.rxRulesOld = true; return true; }).catch(()=>false));
+}
+/* 💙 รอบ 966: กด/ถอน "ถูกใจรายคอมเมนต์" — /gfeed/$postId/cm/$cid/cl/<uid> = true
+   สิทธิ์เขียนชุดเดียวกับไลก์โพสต์ (เจ้าของโพสต์ หรือเพื่อนของเจ้าของโพสต์)
+   ⚠️ rules ชุดเก่ายังไม่มีโซน `cl` → `"$other": {".validate": false}` ใต้ cm/$cid ทำให้โดน deny
+      → คืน false + ตั้งธง `Online.cmLikeRulesOld` ให้ UI ขึ้นป้ายบอกเหตุผลตรง ๆ (ห้ามเงียบ) */
+function gfeedToggleCommentLike(postId, cid, likedNow){
+  if(!Online.ready || !Online.db || !postId || !cid) return Promise.resolve(false);
+  const ref = Online.db.ref('gfeed/' + postId + '/cm/' + cid + '/cl/' + onlineKey());
+  const fail = ()=>{ Online.cmLikeRulesOld = true; return false; };
+  return (likedNow ? ref.remove() : ref.set(true)).then(()=>true).catch(fail);
 }
 /* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท
    รอบ 964: parentId = ตอบกลับใต้คอมเมนต์นั้น (เก็บเป็น field `p`)

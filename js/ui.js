@@ -3784,6 +3784,7 @@ function feedNotifArrived(n){
   const who = n.n || 'เพื่อน';
   if(n.t === 'rx'){ const r = feedRx(n.r); toast(`${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`); }
   else if(n.t === 'rp') toast(`↩ ${who} ตอบกลับคอมเมนต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
+  else if(n.t === 'cl') toast(`💙 ${who} ถูกใจคอมเมนต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
   else toast(`💬 ${who} คอมเมนต์โพสต์ของคุณ: "${String(n.cm || '').slice(0,40)}"`);
   sfx.select();
 }
@@ -3799,10 +3800,12 @@ function openFeedNotif(){
     <div class="fnt-list">${list.length ? list.map(n=>{
       const r = n.t === 'rx' ? feedRx(n.r) : null;
       return `<div class="fnt-row" data-pid="${escapeHTML(n.pid)}">
-        <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : '💬')}</span>
+        <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : n.t === 'cl' ? '💙' : '💬')}</span>
         <span class="fnt-tx"><b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
           ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
-          : `${n.t === 'rp' ? 'ตอบกลับคอมเมนต์ของคุณ' : 'คอมเมนต์'}ว่า “${escapeHTML(String(n.cm || ''))}”`}
+          : n.t === 'cl'
+            ? `ถูกใจคอมเมนต์ของคุณ “${escapeHTML(String(n.cm || ''))}”`
+            : `${n.t === 'rp' ? 'ตอบกลับคอมเมนต์ของคุณ' : 'คอมเมนต์'}ว่า “${escapeHTML(String(n.cm || ''))}”`}
           <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small></span>
       </div>`;
     }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
@@ -3898,9 +3901,17 @@ function closeFeedComments(){
 /* จัดคอมเมนต์เป็นต้นไม้ 1 ชั้น: คอมเมนต์แม่ + การตอบกลับใต้มัน (ตอบใต้ "การตอบกลับ" เกาะแม่ตัวเดิม เหมือน Facebook) */
 function fcmRowHTML(c, can, isRep){
   const at = isRep ? (c.p || c.id) : c.id;           // ตอบกลับแล้วไปเกาะคอมเมนต์แม่เสมอ (ไม่ลึกเกิน 1 ชั้น)
+  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เพื่อนกดได้ · คนนอกเห็นแต่จำนวน (อ่านฟีดได้แต่กดไม่ได้ ตามกติกาเด็ก) */
+  const n = c.clN || 0;
+  const like = can
+    ? `<button class="fcm-like${c.clMe ? ' on' : ''}" type="button" data-cid="${escapeHTML(c.id)}"
+        data-on="${c.clMe ? 1 : 0}" aria-label="${c.clMe ? 'เลิกถูกใจคอมเมนต์นี้' : 'ถูกใจคอมเมนต์นี้'}"
+        >${c.clMe ? '💙' : '🤍'}${n ? ` <i>${n}</i>` : ''}</button>`
+    : (n ? `<span class="fcm-likec">💙 ${n}</span>` : '');
   return `<div class="fcm-row${isRep ? ' fcm-rep' : ''}" data-cid="${escapeHTML(c.id)}">
     ${isRep ? '<span class="fcm-arrow">↳</span>' : ''}<b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}
     <small>${feedAgo(c.ts)}</small>
+    ${like}
     ${can ? `<button class="fcm-reply" type="button" data-cid="${escapeHTML(at)}"
         data-n="${escapeHTML(c.n)}">↩ ตอบกลับ</button>` : ''}
   </div>`;
@@ -3935,6 +3946,11 @@ function renderFeedComments(){
   const can = feedCanReact(it);
   const draft = ov.querySelector('.fcm-input');
   const keep  = draft ? draft.value : '';
+  /* รอบ 966: จำตำแหน่งเลื่อนไว้ — กดถูกใจคอมเมนต์บน ๆ แล้ววาดใหม่ ต้องไม่กระโดดลงล่างสุด
+     (ยังกระโดดลงล่างเหมือนเดิมถ้าผู้ใช้ดูอยู่ท้ายรายการ = มีคอมเมนต์ใหม่เข้ามา) */
+  const oldList = ov.querySelector('.fcm-list');
+  const oldTop  = oldList ? oldList.scrollTop : 0;
+  const atEnd   = !oldList || (oldList.scrollHeight - oldTop - oldList.clientHeight) < 24;
   const rxRows = Object.keys(it.rx).map(uid=>{
     const r = feedRx(it.rx[uid]);
     return `<span class="fcm-rx">${r.e} <i class="fp-en">${r.en}</i></span>`;
@@ -3957,6 +3973,9 @@ function renderFeedComments(){
       ${(typeof Online !== 'undefined' && Online.cmReplyRulesOld)
         ? `<div class="fcm-note">⚠️ ตอนนี้การตอบกลับจะขึ้นเป็น "คอมเมนต์ธรรมดา" ที่ขึ้นต้นด้วย ↪ @ชื่อ
              — ต้องอัปเดตกฎความปลอดภัยโซน /gfeed ก่อน ถึงจะซ้อนใต้คอมเมนต์ได้จริง</div>` : ''}
+      ${(typeof Online !== 'undefined' && Online.cmLikeRulesOld)
+        ? `<div class="fcm-note">⚠️ กดถูกใจรายคอมเมนต์ยังบันทึกไม่ได้ — ต้องอัปเดตกฎความปลอดภัยโซน /gfeed
+             (เพิ่มโซน <b>cl</b> ใต้คอมเมนต์) ก่อนนะ · ถูกใจ "ทั้งโพสต์" ยังใช้ได้ปกติ</div>` : ''}
       <div class="fcm-quick">${FEED_QUICK_CM.map(q=>
         `<button class="fcm-q" type="button" data-en="${escapeHTML(q.en)}">${escapeHTML(q.en)}<i>${escapeHTML(q.th)}</i></button>`).join('')}</div>
       <div class="fcm-add"><input class="fcm-input" maxlength="120" placeholder="${__fcmRep
@@ -3992,6 +4011,22 @@ function renderFeedComments(){
     const i2 = ov.querySelector('.fcm-input');
     if(i2) i2.focus();
   }));
+  /* 💙 รอบ 966: ถูกใจรายคอมเมนต์ — เด้งสีทันที (optimistic) แล้วค่อยยืนยันกับ DB */
+  ov.querySelectorAll('.fcm-like').forEach(b=>b.addEventListener('click', ()=>{
+    if(b.disabled) return;
+    const on = b.dataset.on === '1';
+    b.disabled = true;
+    b.classList.toggle('on', !on);
+    b.innerHTML = (!on ? '💙' : '🤍') + (()=>{ const i = b.querySelector('i');
+      const v = (i ? parseInt(i.textContent, 10) || 0 : 0) + (on ? -1 : 1);
+      return v > 0 ? ` <i>${v}</i>` : ''; })();
+    sfx.click ? sfx.click() : sfx.select();
+    gfeedToggleCommentLike(__fcmKey, b.dataset.cid, on).then(ok=>{
+      /* ปุ่มนี้โผล่เฉพาะเพื่อนของเจ้าของโพสต์อยู่แล้ว → พังทีนี่คือ rules ยังไม่ publish เกือบทุกกรณี */
+      if(!ok) toast('กดถูกใจคอมเมนต์ยังไม่ได้ 🔒 ต้องอัปเดตกฎความปลอดภัยโซน /gfeed ก่อนนะ');
+      renderFeedComments();
+    });
+  }));
   const rx = ov.querySelector('.fcm-repx');
   if(rx) rx.addEventListener('click', ()=>{ __fcmRep = null; sfx.select(); renderFeedComments(); });
   ov.querySelectorAll('.fcm-more').forEach(b=>b.addEventListener('click', ()=>{
@@ -4007,7 +4042,7 @@ function renderFeedComments(){
     sfx.click ? sfx.click() : sfx.select();
   }));
   const list = ov.querySelector('.fcm-list');
-  if(list) list.scrollTop = list.scrollHeight;
+  if(list) list.scrollTop = atEnd ? list.scrollHeight : oldTop;
 }
 
 /* ---- ตัวรับเหตุการณ์กลางของการ์ดโพสต์ (ใช้ได้ทั้งวงหมุนล็อบบี้และหน้า Feed เต็ม) ---- */
