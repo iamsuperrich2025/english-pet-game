@@ -82,10 +82,10 @@
         <div class="combo-pill" id="pm-combo">Combo ×0</div>
       </div>
       <div class="timer-wrap"><div class="timer-fill" id="pm-timer"></div></div>
-      <p class="board-label pm-label" id="pm-label-a">🖼️ เลือกภาพจากแถวบน 1 ภาพ</p>
+      <!-- 🔀 รอบ 985 (ผู้ใช้สั่ง): กระดานเดียว ภาพ 2 ชุดคละกันทั้งกระดาน (เลิกแยกแถวบน/แถวล่าง)
+           #pm-grid-b เก็บไว้เป็นกล่องเปล่า เผื่อโค้ดเก่า/เทสต์ยังอ้างถึง -->
       <div class="pm-grid" id="pm-grid-a"></div>
-      <p class="board-label pm-label" id="pm-label-b">🎨 แล้วหา <b>สัตว์ตัวเดียวกัน</b> ในแถวล่าง (คนละลายเส้น)</p>
-      <div class="pm-grid" id="pm-grid-b"></div>
+      <div class="pm-grid" id="pm-grid-b" hidden></div>
       <button class="hint-btn" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
       <p class="game-endless-note pm-note">♾️ เล่นได้เรื่อยๆ ไม่มีวันตัน — แตะภาพ/คำเพื่อ<b>ฟังเสียงอ่านภาษาอังกฤษ</b> · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>เพลียเมื่อไหร่ กดปุ่ม <b>⬅ กลับ</b> มุมซ้ายบนพักได้เสมอ 😊</span></p>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
@@ -104,15 +104,8 @@
     updateLabels();
     newRound();
   }
-  function updateLabels(){
-    const word = pm.mode === 'word';
+  function updateLabels(){    // รอบ 985: เหลือแค่ปุ่มโหมด — ป้ายบอกแถวบน/ล่างถูกถอดออก (กระดานคละกันแล้ว)
     $('pm-mode').textContent = MODE_LABEL[pm.mode];
-    $('pm-label-a').innerHTML = word
-      ? '🖼️ เลือก<b>ภาพสัตว์</b>จากแถวบน 1 ภาพ'
-      : '🖼️ เลือกภาพจากแถวบน 1 ภาพ';
-    $('pm-label-b').innerHTML = word
-      ? '🔤 แล้วหา <b>คำศัพท์ภาษาอังกฤษ</b> ที่ตรงกันในแถวล่าง'
-      : '🎨 แล้วหา <b>สัตว์ตัวเดียวกัน</b> ในแถวล่าง (คนละลายเส้น)';
   }
 
   /* ---------- เปิดเกม ---------- */
@@ -162,13 +155,15 @@
       `<button class="pm-card pm-wordcard" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="a2">
          <span class="pm-word-text">${it[1]}</span>
        </button>`;
-    if(pm.mode === 'word'){
-      $('pm-grid-a').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a1', it[3] || 'a1', it)).join('');
-      $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => wordCard(it)).join('');
-    }else{
-      $('pm-grid-a').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a1', 'a1', it)).join('');
-      $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a2', 'a2', it)).join('');
-    }
+    /* 🔀 รอบ 985 (ผู้ใช้สั่ง "เอาภาพ 2 ชุดมาผสมกันเลย เค้าต้องคละกัน"):
+       ทุกใบทั้ง 2 ชุดลงกริดเดียว สับไพ่รวมกันหมด — แตะใบไหนก่อนก็ได้ ขอแค่เป็นสัตว์ตัวเดียวกัน */
+    const all = [];
+    pm.pairs.forEach(it => {
+      all.push(imgCard('a1', pm.mode === 'word' ? (it[3] || 'a1') : 'a1', it));
+      all.push(pm.mode === 'word' ? wordCard(it) : imgCard('a2', 'a2', it));
+    });
+    $('pm-grid-a').innerHTML = shuffle(all).join('');
+    $('pm-grid-b').innerHTML = '';
     [...sec.querySelectorAll('.pm-card')].forEach(c => c.addEventListener('click', () => pick(c)));
     fitGrid();                       // 📐 ย่อ/ขยายช่องให้กระดานทั้งใบพอดีจอ (กระดานใหญ่ = ภาพเล็กลง)
 
@@ -195,14 +190,14 @@
     preload();   // โหลดภาพรอบถัดไปล่วงหน้า กันภาพขึ้นช้า
   }
 
-  /* ---------- 📐 จัดกริดให้พอดีจอ (รอบ 981) ----------
-     เลือก "จำนวนคอลัมน์" ที่ทำให้ช่องใหญ่ที่สุด โดยกระดานทั้ง 2 แถบยังอยู่ในจอครบ ไม่ต้องเลื่อน
+  /* ---------- 📐 จัดกริดให้พอดีจอ (รอบ 981 · กระดานเดียวคละกันตั้งแต่รอบ 985) ----------
+     เลือก "จำนวนคอลัมน์" ที่ทำให้ช่องใหญ่ที่สุด โดยการ์ดทั้งกระดานยังอยู่ในจอครบ ไม่ต้องเลื่อน
      กระดาน 40 คู่ (80 ภาพ) จึงย่อภาพลงเองแบบเกมจับคู่แนวนอน · ช่องเล็กกว่า NAME_MIN = ซ่อนป้ายชื่อ */
   function fitGrid(){
-    const n = pm.pairs.length;
+    const n = pm.pairs.length * 2;                       // รอบ 985: ทุกใบอยู่กริดเดียว = 2 เท่าของจำนวนคู่
     if(!n || !sec || !sec.classList.contains('active')) return;
     const gA = $('pm-grid-a');
-    sec.classList.toggle('big', n > 20);                 // กระดานใหญ่ = บีบป้ายล่างเหลือบรรทัดเดียว เอาที่ไปขยายช่อง
+    sec.classList.toggle('big', n > 40);                 // กระดานใหญ่ = บีบป้ายล่างเหลือบรรทัดเดียว เอาที่ไปขยายช่อง
     void gA.offsetWidth;                                 // บังคับ reflow ก่อนวัด (จอเต็มชั้น fixed — รอบ 984)
     const availW = gA.clientWidth;
     if(!availW) return;                                  // ยังไม่ได้โชว์จอ — เดี๋ยว open()/resize เรียกซ้ำ
@@ -210,8 +205,8 @@
     [...sec.children].forEach(el=>{
       if(!el.classList.contains('pm-grid') && el.offsetHeight) used += el.offsetHeight + 6;
     });
-    const availH = Math.max(60, (window.innerHeight - sec.getBoundingClientRect().top - used - 10) / 2);
-    const gap = n > 20 ? 4 : n > 8 ? 6 : 8;
+    const availH = Math.max(60, window.innerHeight - sec.getBoundingClientRect().top - used - 10);
+    const gap = n > 40 ? 4 : n > 16 ? 6 : 8;
     let best = 0, bestCols = n;
     for(let cols = 1; cols <= n; cols++){
       const rows = Math.ceil(n / cols);
@@ -238,7 +233,7 @@
     for(let i = 0; i < 6; i++){
       const over = lowest() - window.innerHeight;
       if(over <= 0 || side <= 24) break;
-      side = Math.max(24, side - Math.max(1, Math.ceil(over / (2 * rows))));
+      side = Math.max(24, side - Math.max(1, Math.ceil(over / rows)));
       apply(side);
     }
   }
@@ -275,16 +270,17 @@
   }
 
   /* ---------- แตะภาพ ---------- */
+  /* 🔀 รอบ 985: กระดานคละกันแล้ว → แตะใบไหนก่อนก็ได้ (เดิมต้องแถวบน 1 ใบ + แถวล่าง 1 ใบ)
+     ใบแรกที่แตะ = sel1 · ใบที่สอง = sel2 → ตรวจทันที · แตะใบเดิมซ้ำ = ยกเลิกการเลือก */
   function pick(c){
     if(pm.checking || c.classList.contains('matched')) return;
     if(typeof sfx !== 'undefined') sfx.select();
-    speakWord(c.dataset.en);                       // 🔊 เสียงอ่านชื่อสัตว์ภาษาอังกฤษ (ทุกภาพ ทั้ง 2 แถว)
-    const k = c.dataset.side === 'a1' ? 'sel1' : 'sel2';
-    if(pm[k]) pm[k].classList.remove('selected');
-    if(pm[k] === c){ pm[k] = null; return; }       // แตะซ้ำ = ยกเลิก
-    pm[k] = c;
+    speakWord(c.dataset.en);                       // 🔊 เสียงอ่านชื่อสัตว์ภาษาอังกฤษ (ทุกใบในกระดาน)
+    if(pm.sel1 === c){ c.classList.remove('selected'); pm.sel1 = null; return; }
+    if(!pm.sel1){ pm.sel1 = c; c.classList.add('selected'); return; }
+    pm.sel2 = c;
     c.classList.add('selected');
-    if(pm.sel1 && pm.sel2) check();
+    check();
   }
 
   /* ---------- ตรวจคู่ (สูตรรางวัลเดียวกับ checkMatch ใน js/game.js) ---------- */
@@ -390,10 +386,11 @@
   /* ---------- ตัดช้อยส์ (แมวโตเต็มวัย) — ไฮไลต์คู่ที่ถูก 1 คู่ ---------- */
   function hint(){
     if(pm.hintUsed) return;
-    const left = [...sec.querySelectorAll('#pm-grid-a .pm-card:not(.matched)')];
+    const left = [...sec.querySelectorAll('.pm-card:not(.matched)')];
     if(!left.length) return;
     const a = left[Math.floor(Math.random() * left.length)];
-    const b = sec.querySelector(`#pm-grid-b .pm-card[data-key="${a.dataset.key}"]`);
+    // รอบ 985: คู่ของมันอยู่ในกระดานเดียวกัน = ใบอื่นที่ key ตรงกัน
+    const b = left.find(c => c !== a && c.dataset.key === a.dataset.key);
     pm.hintUsed = true;
     const hb = $('pm-hint');
     hb.disabled = true; hb.textContent = '💡 ใช้ไปแล้วรอบนี้';
