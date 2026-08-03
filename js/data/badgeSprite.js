@@ -24,7 +24,12 @@ const BADGE_IMG_V = '953';
 /* ✨ รอบ 954 (ผู้ใช้: "แสงวิ่งผ่านหน้าเหรียญ" บนการ์ดเข็ม .lbcat-ic/.pl-badge-card-ic): <img> เป็น
    replaced element วาดทับ background เสมอ ทำ overlay แสงบน ::after ตรง ๆ ไม่ได้ (สเปกไม่รองรับ
    ::before/::after บน <img>) → ห่อด้วย span.badge-shine ให้ ::after ของ span วิ่งทับหน้าเหรียญแทน
-   (จำกัดเฉพาะ 2 คลาสนี้ตามที่ขอ — เหรียญเล็กในสถิตินักพิมพ์ยังเป็น <img> เดี่ยวเหมือนเดิม) */
+   (จำกัดเฉพาะ 2 คลาสนี้ตามที่ขอ — เหรียญเล็กในสถิตินักพิมพ์ยังเป็น <img> เดี่ยวเหมือนเดิม)
+   💡 รอบ 960 (ผู้ใช้: "แสงกระพริบทั้งแผ่นดูเหมือนไฟล์พัง — เอาแสงกรีดกรอบเหรียญตามสันนูนแทน"):
+   ส่ง `--bsrc` (URL รูปเหรียญใบนั้นเอง) ลงไปกับ style ของ span ด้วย เพื่อให้ CSS เอาไป
+   `mask-image` ตัดแสงให้อยู่ "เฉพาะในรูปทรงเหรียญ" (ไม่ล้นพื้นโปร่ง/กรอบสี่เหลี่ยม = ต้นตอที่ดูเหมือนพัง)
+   ต้องส่งจากที่นี่เพราะ CSS ไม่รู้ว่าเหรียญใบไหนใช้ไฟล์อะไร · url() ไม่ต้องใส่ quote — path มาจาก
+   BADGE_IMG ของเราเอง ไม่มีช่องว่าง/อักขระพิเศษ (มีแค่ ?v= ซึ่ง url token รับได้) */
 const BADGE_SHINE_CLS = {'lbcat-ic':1, 'pl-badge-card-ic':1};
 /* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาอย่างไร"): เพิ่มพารามิเตอร์ที่ 3
    `clickable` (ค่าเริ่มต้น true) — ผูก onclick เรียก showBadgeInfo(emoji) (js/game.js) ที่ element
@@ -41,7 +46,7 @@ function badgeIcHTML(emoji, cls, clickable){
   const ccls = clickable ? ' badge-clickable' : '';
   if(!img) return `<span class="${cls}${ccls} badge-ic-fallback"${onclickAttr}>${emoji}</span>`;
   if(BADGE_SHINE_CLS[cls]){
-    return `<span class="${cls} badge-shine${ccls}"${onclickAttr}><img class="badge-shine-img" src="${src}" alt="" onerror="this.parentElement.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'"></span>`;
+    return `<span class="${cls} badge-shine${ccls}" style="--bsrc:url(${src})"${onclickAttr}><img class="badge-shine-img" src="${src}" alt="" onerror="this.parentElement.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'"></span>`;
   }
   return `<img class="${cls}${ccls}" src="${src}" alt=""${onclickAttr} onerror="this.outerHTML='&lt;span class=&quot;${cls} badge-ic-fallback&quot;&gt;${emoji}&lt;/span&gt;'">`;
 }

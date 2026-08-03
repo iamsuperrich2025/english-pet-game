@@ -1521,16 +1521,20 @@ html.no-anim .tapglow-on::after{animation:none !important;}
 .bc-emoji{font-size:64px;line-height:1;filter:drop-shadow(0 4px 10px rgba(180,120,10,.4));animation:bcSpin 2.4s ease-in-out;}
 /* 🎖️✨ รอบ 954 (ผู้ใช้: "ตอนป้ายฉลองได้เข็มใหม่ ให้เหรียญเด้ง+วิ้ง 1 ครั้ง"): overlay ถูกสร้างใหม่ทุกครั้งที่
    ฉลอง (createElement ใน celebrateBadge() js/game.js ไม่ใช่ toggle ซ่อน/โชว์) → animation เล่นครั้งเดียว
-   (ไม่ใส่ infinite) ทำงานเองทุกครั้งที่ป้ายโผล่โดยไม่ต้องแก้ JS · เด้ง = scale/translateY, วิ้ง = filter
-   brightness+drop-shadow แฟลชสว่างวาบตอนเหรียญเด้งสุดแล้วนิ่ง (ไม่ใช้ ::after เพราะ <img> เดี่ยวไม่มีกล่องห่อ) */
+   (ไม่ใส่ infinite) ทำงานเองทุกครั้งที่ป้ายโผล่โดยไม่ต้องแก้ JS · เด้ง = scale/translateY
+   💡 รอบ 960: ผู้ใช้บอก "แสงวาบทั้งใบดูเหมือนไฟล์พัง" (พูดถึงเหรียญในการ์ดล็อบบี้ แต่ที่นี่เป็นอาการเดียวกัน)
+   → เดิม `brightness(2)` = ดันทั้งภาพขาวโพลนชั่วขณะ (แฟลชทั้งแผ่น) เปลี่ยนเป็น `brightness(1.28)` +
+   `saturate(1.25)` = เหรียญ "อมทองเข้มขึ้น" ตอนเด้งสุดแทน แล้วให้ความ "วิ้ง" มาจาก drop-shadow เรืองทอง
+   รอบตัวเหรียญ (ไล่ตามรูปทรงจริงเพราะ drop-shadow อ่าน alpha ของ PNG) = แสงเกาะขอบ/สันเหรียญ
+   ไม่ใช่แผ่นขาวทับหน้า · ป้ายนี้เป็น <img> เดี่ยวไม่มี span ห่อ จึงใช้ mask+blend แบบการ์ดล็อบบี้ไม่ได้ */
 .bc-emoji-img{width:64px;height:64px;object-fit:contain;display:inline-block;vertical-align:middle;
   animation:bcImgBounceShine .85s cubic-bezier(.24,1.6,.4,1) 1;}
 @keyframes bcImgBounceShine{
-  0%{transform:scale(.65) translateY(14px);filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0));}
-  40%{transform:scale(1.24) translateY(-7px);filter:brightness(2) drop-shadow(0 0 12px rgba(255,255,255,.95));}
-  62%{transform:scale(.93) translateY(2px);filter:brightness(1.15) drop-shadow(0 0 4px rgba(255,255,255,.4));}
-  82%{transform:scale(1.05) translateY(-1px);filter:brightness(1.03) drop-shadow(0 0 0 rgba(255,255,255,0));}
-  100%{transform:scale(1) translateY(0);filter:brightness(1) drop-shadow(0 0 0 rgba(255,255,255,0));}
+  0%{transform:scale(.65) translateY(14px);filter:brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,214,106,0));}
+  40%{transform:scale(1.24) translateY(-7px);filter:brightness(1.28) saturate(1.25) drop-shadow(0 0 10px rgba(255,226,150,.9));}
+  62%{transform:scale(.93) translateY(2px);filter:brightness(1.1) saturate(1.1) drop-shadow(0 0 5px rgba(255,226,150,.5));}
+  82%{transform:scale(1.05) translateY(-1px);filter:brightness(1.02) saturate(1.02) drop-shadow(0 0 2px rgba(255,226,150,.2));}
+  100%{transform:scale(1) translateY(0);filter:brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,214,106,0));}
 }
 
 /* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาได้อย่างไร") — badgeIcHTML() ผูก onclick

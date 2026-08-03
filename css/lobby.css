@@ -2633,24 +2633,41 @@ button.pi-dress-pip:active{transform:scale(.94);}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 4px 12px rgba(0,0,0,.4);
   filter:drop-shadow(0 3px 8px rgba(0,0,0,.5));}
 .badge-shine-img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
-/* ✨ แสงวิ่งผ่านหน้าเหรียญวนซ้ำเป็นจังหวะ (ไม่ใช่ค้างวิ่งตลอด — sweep เร็ว ~0.7s แล้วพักหายก่อนวนใหม่)
-   ต้องเป็น ::after ของ .badge-shine (span ห่อ) ไม่ใช่ของ .lbcat-ic/.pl-badge-card-ic เอง เพราะ 2 คลาสนั้น
-   มี overflow:hidden+position:relative อยู่แล้ว (ใช้ร่วมกับ .badge-shine เสมอจาก badgeIcHTML) */
-.badge-shine{position:relative;overflow:hidden;}
-.badge-shine::after{content:'';position:absolute;inset:-40%;pointer-events:none;
-  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.9) 50%,transparent 58%);
-  background-size:250% 250%;background-position:-160% -160%;
-  animation:badgeShineSweep 4.4s ease-in-out infinite;}
-.lbf-bcat:nth-child(2) .badge-shine::after{animation-delay:-.6s;}
-.lbf-bcat:nth-child(3) .badge-shine::after{animation-delay:-1.3s;}
-.lbf-bcat:nth-child(4) .badge-shine::after{animation-delay:-2.1s;}
-.lbf-bcat:nth-child(5) .badge-shine::after{animation-delay:-2.8s;}
-.lbf-bcat:nth-child(6) .badge-shine::after{animation-delay:-3.5s;}
-.lbf-bcat:nth-child(n+7) .badge-shine::after{animation-delay:-1.7s;}
+/* 💡 รอบ 960 (ผู้ใช้: "เหรียญกระพริบทั้งแผ่นดูเหมือนไฟล์พัง — เปลี่ยนเป็นแสงกรีดกรอบเหรียญ
+   ตามจุดที่เป็นสันนูนของแต่ละเหรียญ"): ของเดิม (รอบ 954) เป็นแถบขาวทึบ .9 กวาดทับ "ทั้งกล่องสี่เหลี่ยม"
+   รวมพื้นโปร่งรอบเหรียญด้วย → เห็นเป็นแผ่นสว่างวาบทั้งใบ = อ่านเป็นภาพเสีย/ไฟล์พัง ไม่ใช่แสงสะท้อนโลหะ
+   แก้ 3 ชั้นให้กลายเป็น "แสงกรีดตามสันนูน" จริง:
+   ① `mask-image:var(--bsrc)` — ใช้ไฟล์เหรียญ "ใบนั้นเอง" (ส่งมาจาก badgeIcHTML) เป็นแมสก์
+      แสงจึงโผล่เฉพาะในเนื้อเหรียญ ไม่ล้นพื้นโปร่ง/ขอบกรอบอีกเลย (นี่คือตัวแก้อาการ "ดูเหมือนพัง")
+   ② `mix-blend-mode:color-dodge` — dodge = ยิ่งพิกเซลข้างใต้สว่างอยู่แล้วยิ่งสว่างพุ่ง ส่วนที่มืด
+      (ร่องลึกของเหรียญ) แทบไม่ขยับ → แสงไปเกาะ "สันนูน/ขอบวงที่เป็นไฮไลต์อยู่แล้ว" ของเหรียญใบนั้น
+      โดยอัตโนมัติ ไม่ต้องทำแมสก์สันนูนแยกทีละใบ 33 ไฟล์ · ปลอดภัยเพราะ .lbcat-ic/.pl-badge-card-ic
+      มี `filter` อยู่แล้ว = สร้าง stacking context ครอบ blend ไว้ในกล่องตัวเอง ไม่เลอะทั้งหน้า
+   ③ แถบแคบลง/จางลงมาก (.46 จาก .9) + กวาดช้าลง (5.2s) → เป็นประกายไล้ผ่าน ไม่ใช่ไฟกระพริบ
+   inset ต้องเท่า padding ของกล่อง (ตัวแปร --bpad) ไม่งั้นแมสก์จะกินพื้นที่กรอบด้วย แสงจะเหลื่อมขอบเหรียญ */
+.badge-shine{position:relative;overflow:hidden;--bpad:5.5%;}
+.badge-shine::after{content:'';position:absolute;inset:var(--bpad);pointer-events:none;
+  background:linear-gradient(107deg,
+    rgba(255,255,255,0) 40%,rgba(255,255,255,.14) 46%,rgba(255,255,255,.46) 50%,
+    rgba(255,255,255,.14) 54%,rgba(255,255,255,0) 60%);
+  background-size:300% 300%;background-position:-120% -120%;
+  -webkit-mask-image:var(--bsrc);mask-image:var(--bsrc);
+  -webkit-mask-size:contain;mask-size:contain;
+  -webkit-mask-position:center;mask-position:center;
+  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
+  mix-blend-mode:color-dodge;
+  animation:badgeShineSweep 5.2s cubic-bezier(.45,.05,.35,1) infinite;}
+.lbf-bcat:nth-child(2) .badge-shine::after{animation-delay:-.7s;}
+.lbf-bcat:nth-child(3) .badge-shine::after{animation-delay:-1.5s;}
+.lbf-bcat:nth-child(4) .badge-shine::after{animation-delay:-2.4s;}
+.lbf-bcat:nth-child(5) .badge-shine::after{animation-delay:-3.3s;}
+.lbf-bcat:nth-child(6) .badge-shine::after{animation-delay:-4.1s;}
+.lbf-bcat:nth-child(n+7) .badge-shine::after{animation-delay:-2s;}
+/* กวาดจริงกินเวลา ~1.2 วิ (23% ของ 5.2s) ที่เหลือคือ "พัก" — เหรียญนิ่งสนิทเป็นส่วนใหญ่ ไม่กวนตา */
 @keyframes badgeShineSweep{
-  0%{background-position:-160% -160%;}
-  16%{background-position:160% 160%;}
-  100%{background-position:160% 160%;}
+  0%{background-position:-120% -120%;}
+  23%{background-position:120% 120%;}
+  100%{background-position:120% 120%;}
 }
 .lbf-bcat-badge .badge-ic-fallback{flex:0 1 auto;min-height:0;aspect-ratio:1;max-height:100%;
   display:flex;align-items:center;justify-content:center;font-size:clamp(40px,12vh,140px);line-height:1;}
@@ -4568,9 +4585,11 @@ html.no-anim #panel-rank .rank-beam,html.no-anim #panel-rank .rank-edge{display:
   filter:drop-shadow(0 3px 6px rgba(20,60,110,.26));
 }
 .pl-badge-card-ic.badge-ic-fallback{display:flex;align-items:center;justify-content:center;font-size:min(56px,9vh);}
-.pl-badge-card:nth-child(2) .badge-shine::after{animation-delay:-.9s;}
-.pl-badge-card:nth-child(3) .badge-shine::after{animation-delay:-1.8s;}
-.pl-badge-card:nth-child(n+4) .badge-shine::after{animation-delay:-2.6s;}
+/* 💡 รอบ 960: กล่องนี้ padding 5% (ไม่ใช่ 5.5% แบบ .lbcat-ic) → แจ้ง --bpad ให้แมสก์แสงตรงขอบเหรียญพอดี */
+.pl-badge-card-ic{--bpad:5%;}
+.pl-badge-card:nth-child(2) .badge-shine::after{animation-delay:-1.1s;}
+.pl-badge-card:nth-child(3) .badge-shine::after{animation-delay:-2.2s;}
+.pl-badge-card:nth-child(n+4) .badge-shine::after{animation-delay:-3.2s;}
 .pl-badge-card-nm{
   flex-shrink:0;width:100%;background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;
   font-size:12px;line-height:1.2;font-weight:700;padding:6px 6px;text-shadow:0 1px 2px rgba(10,40,80,.4);
