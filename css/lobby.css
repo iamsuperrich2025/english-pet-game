@@ -2397,6 +2397,13 @@ html.no-anim .cs-big-img{animation:none}
   padding:4px 10px;border-radius:999px;font-size:10.5px;line-height:1.2;white-space:nowrap;font-family:inherit;}
 .fnt-go:hover{background:rgba(160,220,255,.3);color:#fff;}
 .fnt-go:active{transform:translateY(1px);}
+/* 🔔📥 รอบ 976: แจ้งเตือนย้อนหลังจาก /gnotif — ป้าย "ใหม่" (ที่เข้ามาระหว่างไม่ได้เปิดกล่อง) + ป้ายบอกเมื่อ rules ยังไม่ publish */
+.fnt-row.fnt-new{background:rgba(120,200,255,.15);border-color:rgba(150,215,255,.42);}
+.fnt-tag{display:inline-block;margin-right:5px;padding:1px 6px;border-radius:999px;font-style:normal;
+  background:#ff5f7a;color:#fff;font-size:9px;font-weight:bold;vertical-align:1px;}
+.fnt-note{flex:none;margin:6px 10px 0;padding:6px 9px;border-radius:9px;
+  background:rgba(255,214,102,.14);border:1px solid rgba(255,214,102,.42);
+  color:#ffe9ab;font-size:10px;line-height:1.45;}
 .fnt-go:focus-visible{outline:2px solid #bfe4ff;outline-offset:2px;}
 /* ไฮไลต์ "ต้นเรื่อง" ที่ลิงก์พามา — กะพริบ 2 จังหวะแล้วจบ (โหมดลดแอนิเมชันใช้กรอบนิ่งแทน) */
 .fcm-hl{animation:fcmHl 1.3s ease-out 2;border-radius:10px;}

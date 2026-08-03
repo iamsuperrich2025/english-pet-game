@@ -3812,20 +3812,27 @@ function feedNotifArrived(n){
 function openFeedNotif(){
   sfx.select();
   const list = (typeof Online !== 'undefined' && Online.notif) || [];
-  if(typeof Online !== 'undefined'){ Online.notifUnread = 0; }
+  /* 🔔 รอบ 976: จำไว้ก่อนว่าใบไหน "ยังไม่ได้อ่าน" (จะได้ติดป้าย ใหม่ ให้เห็น) แล้วค่อยทำเครื่องหมายอ่านหมด
+     — gnotifMarkSeen จดรหัสใบล่าสุดลง /gnotif/<uid>/seen ด้วย = ปิดเกมแล้วกลับมาเลขไม่เด้งซ้ำ */
+  const fresh = list.map(n=>!n.rd);
+  if(typeof gnotifMarkSeen === 'function') gnotifMarkSeen();
+  else if(typeof Online !== 'undefined'){ Online.notifUnread = 0; }
   renderFeedBell();
+  const old = (typeof Online !== 'undefined' && Online.gnotifOk === false);   // rules /gnotif ยังไม่ publish
   const ov = document.createElement('div');
   ov.className = 'fnt-overlay';
   ov.innerHTML = `<div class="fnt-box">
     <div class="fdb-head"><span>🔔 การแจ้งเตือน</span><button class="fdb-close" type="button">✕</button></div>
     ${list.length ? '<div class="fnt-hint">🔗 กด “ไปดูต้นเรื่อง” ถ้าอยากเข้าไปดูโพสต์/คอมเมนต์นั้น — ไม่กดก็ได้ รายการยังอยู่ที่นี่</div>' : ''}
+    ${old ? `<div class="fnt-note">⚠️ ตอนนี้เก็บย้อนหลังไม่ได้ — ต้องอัปเดตกฎความปลอดภัยโซน <b>/gnotif</b> ก่อน
+         จึงจะเห็นแจ้งเตือนเก่าหลังปิดเกม (ระหว่างนี้เห็นเฉพาะที่เกิดตอนเปิดเกมอยู่)</div>` : ''}
     <div class="fnt-list">${list.length ? list.map((n,i)=>{
       const r = n.t === 'rx' ? feedRx(n.r) : null;
       /* 🔗 รอบ 974: ทุกแถวมี "ลิงก์ไปต้นเรื่อง" เห็นชัดเป็นปุ่ม (เดิมกดแถวได้แต่ไม่มีอะไรบอกว่ากดได้)
          data-i = ที่นั่งในรายการ Online.notif → ใช้ทั้ง cid (คอมเมนต์ต้นเรื่อง) และ pid ได้ครบ */
-      return `<div class="fnt-row" data-i="${i}" data-pid="${escapeHTML(n.pid)}">
+      return `<div class="fnt-row${fresh[i] ? ' fnt-new' : ''}" data-i="${i}" data-pid="${escapeHTML(n.pid)}">
         <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : n.t === 'cl' ? '💙' : '💬')}</span>
-        <span class="fnt-tx"><b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
+        <span class="fnt-tx">${fresh[i] ? '<i class="fnt-tag">ใหม่</i>' : ''}<b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
           ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
           : n.t === 'cl'
             ? `ถูกใจคอมเมนต์ของคุณ “${escapeHTML(String(n.cm || ''))}”`
@@ -3835,7 +3842,7 @@ function openFeedNotif(){
       </div>`;
     }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
       <small>เมื่อเพื่อนกดถูกใจหรือคอมเมนต์โพสต์ของคุณ จะมาขึ้นที่นี่<br>
-      (แจ้งเฉพาะช่วงที่เปิดเกมอยู่)</small></div>`}</div>
+      ${old ? '(ตอนนี้แจ้งเฉพาะช่วงที่เปิดเกมอยู่)' : 'เก็บย้อนหลังให้ด้วย — ปิดเกมไปแล้วกลับมาก็ยังอ่านได้'}</small></div>`}</div>
   </div>`;
   document.body.appendChild(ov);
   const close = ()=>ov.remove();

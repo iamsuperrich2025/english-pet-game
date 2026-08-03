@@ -51,9 +51,15 @@ const Online = {
   gfeedRef:null,  // query ที่ .on ค้างอยู่ (รอบ 701: เปิดค้างตลอดที่ออนไลน์ — ล็อบบี้ใช้ด้วย)
   gfeedBase:false,// true = โหลดชุดแรกครบแล้ว (ก่อนหน้านี้ห้ามเด้งแจ้งเตือน)
   gfeedT:0,       // ตัวจับเวลา รวบวาดตอนโพสต์เข้ารัว
-  /* ---- 🔔 แจ้งเตือน "มีคนไลก์/คอมเมนต์โพสต์ของเรา" (รอบ 701 · คิดฝั่ง client ไม่ต้องมีโซน DB ใหม่) ---- */
-  notif:[],       // [{t:'rx'|'cm', pid, u, n, r|cm, tx, ts}] ใหม่สุดก่อน
+  /* ---- 🔔 แจ้งเตือน "มีคนไลก์/คอมเมนต์โพสต์ของเรา" (รอบ 701 · คิดฝั่ง client)
+         🆕 รอบ 976: เก็บลง /gnotif/<uid> ด้วย = ปิดเกมไปแล้วกลับมายังเห็นย้อนหลัง + เลขค้างบนกระดิ่ง ---- */
+  notif:[],       // [{t:'rx'|'cm'|'rp'|'cl', pid, cid, u, n, r|cm, tx, ts, nk, rd}] ใหม่สุดก่อน
   notifUnread:0,  // จำนวนที่ยังไม่ได้เปิดอ่าน (โชว์เป็นตัวเลขแดงบนกระดิ่ง)
+  notifKeys:{},   // รอบ 976: กันซ้ำระหว่าง "ที่คิดเองสด (diff)" กับ "ที่อ่านมาจาก /gnotif" → key = t|pid|cid|u|r
+  notifSeen:'',   // รหัสแจ้งเตือนล่าสุดที่กดอ่านแล้ว (/gnotif/<uid>/seen) — ใหม่กว่านี้ = ยังไม่อ่าน
+  gnotifRef:null, // query /gnotif/<me>/n ที่ .on ค้างอยู่
+  gnotifBase:false, // true = โหลดของเก่าครบแล้ว (หลังจากนี้ที่เข้ามา = ของใหม่สด ให้เด้ง toast)
+  gnotifOk:undefined, // false = อ่าน/เขียน /gnotif โดน deny (rules ยังไม่ publish) → กล่อง 🔔 ขึ้นป้ายบอกเอง
   rxRulesOld:false, // true = rules ยังรับแค่ true → รีแอ็กชันถอยเป็นไลก์ธรรมดา
   /* ---- ยอดขายสินค้ารวมทั้งเซิร์ฟเวอร์ (รอบ 208) — โชว์ "ขายแล้ว N ชิ้น" ทุกสินค้า ---- */
   sales:{},           // productId → จำนวนที่ขายไปแล้วทั้งเซิร์ฟเวอร์ (จาก /sales)
@@ -1178,11 +1184,125 @@ function gfeedNotifDiff(old, now){
     }
   }
 }
+/* เข้ากล่องแจ้งเตือนสด (คิดเองจาก diff) — รอบ 976 ส่งต่อให้ gnotifAdd ตัวเดียวกับที่อ่านจาก DB
+   เพื่อไม่ให้ "ใบเดียวกัน" โผล่ 2 ครั้ง (ครั้งหนึ่งจาก diff อีกครั้งจาก /gnotif ของคนกด) */
 function gfeedNotifPush(n){
-  Online.notif.unshift(n);
-  if(Online.notif.length > 40) Online.notif.length = 40;
-  Online.notifUnread++;
-  if(typeof feedNotifArrived === 'function') feedNotifArrived(n);
+  gnotifAdd(n, true);
+}
+
+/* ============================================================
+   🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
+   (ผู้ใช้สั่ง: "ปิดเกมไปแล้วกลับมาต้องยังเห็นย้อนหลัง + มีเลขค้างบนกระดิ่ง")
+
+   • เดิม (รอบ 701) แจ้งเตือนคิดฝั่ง client จาก diff ของ /gfeed → เห็นเฉพาะ "ตอนเปิดเกมค้างอยู่"
+     ปิดเกม/รีเฟรชแล้วหายเกลี้ยง และเลขบนกระดิ่งเริ่มนับ 0 ใหม่ทุกครั้ง
+   • ตอนนี้ "คนที่กด" เป็นฝ่ายเขียนใบแจ้งเตือนฝากไว้ในกล่องของเจ้าของเรื่อง:
+       /gnotif/<ผู้รับ>/n/<nid> = {t,pid,cid,u,n,r,cm,tx,ts}   (t = rx|cm|rp|cl)
+       /gnotif/<ผู้รับ>/seen    = <nid ล่าสุดที่กดอ่านแล้ว>     (ใหม่กว่านี้ = ยังไม่อ่าน)
+     → เจ้าของกล่องอ่านย้อนหลังได้ทุกเมื่อ · เลขค้างบนกระดิ่งข้ามเครื่อง/ข้ามวันได้จริง
+   • diff เดิมยังอยู่ (สำรองกรณีคนกดใช้เกมเวอร์ชันเก่าที่ยังไม่เขียน /gnotif) — กันซ้ำด้วย
+     `Online.notifKeys` (t|pid|cid|u|r) ใบไหนมาทีหลังจะไม่เด้งซ้ำ แค่ผูก nid ให้ใบเดิม
+   • ยังไม่ publish rules = เกมไม่พัง: เขียน/อ่านโดน deny → กลับไปทำงานแบบรอบ 701 เป๊ะ
+     (เห็นเฉพาะตอนเปิดเกมอยู่) + ตั้งธง Online.gnotifOk=false ให้กล่อง 🔔 ขึ้นป้ายบอกเหตุผลตรง ๆ
+   ============================================================ */
+const GNOTIF_KEEP = 40;      // เก็บแจ้งเตือนย้อนหลังกี่ใบ (เจ้าของกล่องกวาดของเก่าทิ้งเอง)
+
+/* รหัสประจำใบ ใช้กันซ้ำระหว่าง diff สด กับใบที่อ่านมาจาก DB */
+function gnotifKeyOf(n){
+  return [n.t || '', n.pid || '', n.cid || '', n.u || '', n.r || ''].join('|');
+}
+/* ✉️ "คนที่กด" ฝากใบแจ้งเตือนไว้ในกล่องของเจ้าของเรื่อง (ไม่ส่งหาตัวเอง) */
+function gnotifSend(toUid, n){
+  if(!Online.ready || !Online.db || !toUid || toUid === onlineKey()) return;
+  const bs  = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
+  const row = {t: n.t, u: onlineKey(), n: ((onlineDisplayName() || 'เพื่อน') + bs).slice(0,40), ts: Date.now()};
+  if(n.pid) row.pid = String(n.pid).slice(0,40);
+  if(n.cid) row.cid = String(n.cid).slice(0,40);
+  if(n.r)   row.r   = String(n.r).slice(0,8);
+  if(n.cm)  row.cm  = String(n.cm).slice(0,120);
+  if(n.tx)  row.tx  = String(n.tx).slice(0,120);
+  Online.db.ref('gnotif/' + toUid + '/n').push(row).catch(()=>{ Online.gnotifOk = false; });
+}
+/* เข้ากล่องในเครื่อง — ทางเข้าเดียวของทั้ง diff สดและใบที่อ่านจาก DB (กันซ้ำที่นี่ที่เดียว)
+   live = ให้เด้งแถบบอกทันที (ของใหม่จริง) · false = ของเก่าที่โหลดย้อนหลังมา */
+function gnotifAdd(n, live){
+  const k   = gnotifKeyOf(n);
+  const old = Online.notifKeys[k];
+  if(old){                                   // ใบเดิมมาแล้ว — แค่ผูกรหัสจาก DB ให้ (ไว้ทำเครื่องหมายอ่านแล้ว)
+    if(n.nk && !old.nk) old.nk = n.nk;        // สถานะอ่าน/ยังไม่อ่าน ยึดของใบเดิมเสมอ (ห้ามเด้งซ้ำ)
+    gnotifRecount();
+    return;
+  }
+  n.rd = !!n.rd;
+  Online.notifKeys[k] = n;
+  Online.notif.push(n);
+  Online.notif.sort((a,b)=>(b.ts || 0) - (a.ts || 0));
+  if(Online.notif.length > GNOTIF_KEEP){     // ตัดท้าย + ถอนรหัสของใบที่ตัดออกจากสารบัญกันซ้ำ
+    Online.notif.splice(GNOTIF_KEEP).forEach(x=>{ delete Online.notifKeys[gnotifKeyOf(x)]; });
+  }
+  gnotifRecount();
+  if(live && typeof feedNotifArrived === 'function') feedNotifArrived(n);
+  else if(typeof renderFeedBell === 'function') renderFeedBell();
+}
+/* นับใบที่ยังไม่ได้อ่าน แล้วอัปเดตเลขบนกระดิ่ง */
+function gnotifRecount(){
+  Online.notifUnread = Online.notif.filter(x=>!x.rd).length;
+  if(typeof renderFeedBell === 'function') renderFeedBell();
+}
+/* 📖 กดเปิดกล่อง 🔔 = อ่านหมดแล้ว — จำ nid ล่าสุดไว้ใน DB (กลับมาใหม่เลขไม่เด้งซ้ำ) */
+function gnotifMarkSeen(){
+  Online.notif.forEach(x=>{ x.rd = true; });
+  Online.notifUnread = 0;
+  if(typeof renderFeedBell === 'function') renderFeedBell();
+  let top = Online.notifSeen || '';
+  for(const x of Online.notif){ if(x.nk && x.nk > top) top = x.nk; }
+  if(!top || top === Online.notifSeen || !Online.ready || !Online.db) return;
+  Online.notifSeen = top;
+  Online.db.ref('gnotif/' + onlineKey() + '/seen').set(top).catch(()=>{ Online.gnotifOk = false; });
+}
+/* เริ่มฟังกล่องแจ้งเตือนของตัวเอง — อ่าน "อ่านถึงไหนแล้ว" ก่อน แล้วค่อยไล่ใบย้อนหลัง */
+function gnotifWatchStart(){
+  if(!Online.ready || !Online.db || Online.gnotifRef) return;
+  const me = onlineKey();
+  Online.db.ref('gnotif/' + me + '/seen').once('value').then(s=>{
+    const v = s.val();
+    Online.notifSeen = (typeof v === 'string') ? v : '';
+    gnotifListen(me);
+  }).catch(()=>{ Online.gnotifOk = false; });     // อ่านไม่ได้ = rules ยังไม่ publish → ใช้ diff แบบเดิมต่อไป
+}
+function gnotifListen(me){
+  if(Online.gnotifRef) return;
+  const q = Online.db.ref('gnotif/' + me + '/n').orderByKey().limitToLast(GNOTIF_KEEP);
+  Online.gnotifRef  = q;
+  Online.gnotifBase = false;
+  const err = ()=>{ Online.gnotifOk = false; };
+  q.on('child_added', ch=>{
+    const v = ch.val();
+    if(!v || typeof v.t !== 'string') return;
+    Online.gnotifOk = true;
+    gnotifAdd({t: v.t, pid: v.pid || '', cid: v.cid || '', u: v.u || '', n: v.n || 'เพื่อน',
+               r: v.r || '', cm: v.cm || '', tx: v.tx || '', ts: v.ts || 0,
+               nk: ch.key, rd: !!(Online.notifSeen && ch.key <= Online.notifSeen)},
+              Online.gnotifBase);                 // ชุดแรก = ของเก่า ห้ามเด้ง toast รัว ๆ ตอนเปิดเกม
+  }, err);
+  q.once('value', ()=>{ Online.gnotifBase = true; Online.gnotifOk = true; gnotifPrune(); }, err);
+}
+function gnotifWatchStop(){
+  if(Online.gnotifRef){ Online.gnotifRef.off(); Online.gnotifRef = null; }
+  Online.gnotifBase = false;
+}
+/* กวาดใบเก่าของตัวเองทิ้งเมื่อเกิน GNOTIF_KEEP (เจ้าของกล่องเท่านั้นที่ลบได้) */
+function gnotifPrune(){
+  if(!Online.ready || !Online.db) return;
+  const me = onlineKey();
+  Online.db.ref('gnotif/' + me + '/n').orderByKey().once('value').then(snap=>{
+    const keys = [];
+    snap.forEach(ch=>{ keys.push(ch.key); });
+    if(keys.length <= GNOTIF_KEEP) return;
+    const del = {};
+    keys.slice(0, keys.length - GNOTIF_KEEP).forEach(k=>{ del['gnotif/' + me + '/n/' + k] = null; });
+    Online.db.ref().update(del).catch(()=>{});
+  }).catch(()=>{});
 }
 /* หาชื่อที่โชว์ได้ของ uid จากข้อมูลที่มีในเครื่องอยู่แล้ว (เพื่อน/คนออนไลน์/กระดานอันดับ/โพสต์เก่า) */
 function uidDisplayName(uid){
@@ -1222,8 +1342,13 @@ function gfeedSetReaction(postId, rk){
   if(!Online.ready || !postId) return Promise.resolve(false);
   const ref = Online.db.ref('gfeed/' + postId + '/lk/' + onlineKey());
   if(!rk) return ref.remove().then(()=>true).catch(()=>false);
-  return ref.set(rk).then(()=>true)
-    .catch(()=>ref.set(true).then(()=>{ Online.rxRulesOld = true; return true; }).catch(()=>false));
+  /* 🔔 รอบ 976: กดแล้วฝากใบแจ้งเตือนไว้ในกล่องของเจ้าของโพสต์ (ถอนไลก์ไม่ต้องแจ้ง) */
+  const tell = ()=>{
+    const p = Online.gfeedMap[postId];
+    if(p) gnotifSend(p.u, {t:'rx', pid: postId, r: rk, tx: p.tx});
+  };
+  return ref.set(rk).then(()=>{ tell(); return true; })
+    .catch(()=>ref.set(true).then(()=>{ Online.rxRulesOld = true; tell(); return true; }).catch(()=>false));
 }
 /* 💙 รอบ 966: กด/ถอน "ถูกใจรายคอมเมนต์" — /gfeed/$postId/cm/$cid/cl/<uid> = true
    สิทธิ์เขียนชุดเดียวกับไลก์โพสต์ (เจ้าของโพสต์ หรือเพื่อนของเจ้าของโพสต์)
@@ -1233,7 +1358,27 @@ function gfeedToggleCommentLike(postId, cid, likedNow){
   if(!Online.ready || !Online.db || !postId || !cid) return Promise.resolve(false);
   const ref = Online.db.ref('gfeed/' + postId + '/cm/' + cid + '/cl/' + onlineKey());
   const fail = ()=>{ Online.cmLikeRulesOld = true; return false; };
-  return (likedNow ? ref.remove() : ref.set(true)).then(()=>true).catch(fail);
+  return (likedNow ? ref.remove() : ref.set(true)).then(()=>{
+    /* 🔔 รอบ 976: ถูกใจคอมเมนต์ → ฝากใบแจ้งเตือนไว้ในกล่องของเจ้าของคอมเมนต์ (ถอนไม่แจ้ง) */
+    if(!likedNow){
+      const p = Online.gfeedMap[postId];
+      const c = p && (p.comments || []).find(x=>x.id === cid);
+      if(c) gnotifSend(c.u, {t:'cl', pid: postId, cid, cm: c.tx, tx: p.tx});
+    }
+    return true;
+  }).catch(fail);
+}
+/* 🔔 รอบ 976: คอมเมนต์/ตอบกลับสำเร็จ → ฝากใบแจ้งเตือนให้ "เจ้าของเรื่อง" ทุกคนที่เกี่ยวข้อง
+   • เจ้าของคอมเมนต์แม่ (ถ้าตอบกลับคนอื่น) = 'rp'
+   • เจ้าของโพสต์ = 'cm' — เว้นแต่เขาคือเจ้าของคอมเมนต์แม่อยู่แล้ว (จะได้ 'rp' ใบเดียวพอ ไม่ซ้ำ)
+   ตรงกับที่ diff ฝั่งผู้รับเคยคิดเองทุกกรณี (รอบ 964) */
+function gnotifTellComment(postId, cid, text, parentId){
+  const p = Online.gfeedMap[postId];
+  if(!p) return;
+  const me  = onlineKey();
+  const par = parentId ? (p.comments || []).find(x=>x.id === parentId) : null;
+  if(par && par.u && par.u !== me) gnotifSend(par.u, {t:'rp', pid: postId, cid, cm: text, tx: par.tx});
+  if(p.u && p.u !== me && !(par && par.u === p.u)) gnotifSend(p.u, {t:'cm', pid: postId, cid, cm: text, tx: p.tx});
 }
 /* ส่งคอมเมนต์ — เฉพาะเพื่อนของเจ้าของโพสต์เขียนได้ (เหมือนไลก์) · กรองคำหยาบก่อนส่งแบบเดียวกับแชท
    รอบ 964: parentId = ตอบกลับใต้คอมเมนต์นั้น (เก็บเป็น field `p`)
@@ -1249,13 +1394,17 @@ function gfeedAddComment(postId, tx, parentId, parentName){
   const ref = Online.db.ref('gfeed/' + postId + '/cm');
   const base = ()=>({ u: onlineKey(), n: who, ts: firebase.database.ServerValue.TIMESTAMP });
   if(!parentId){
-    return ref.push(Object.assign(base(), {tx: text})).then(()=>true).catch(()=>false);
+    const r1 = ref.push(Object.assign(base(), {tx: text}));
+    return r1.then(()=>{ gnotifTellComment(postId, r1.key, text, ''); return true; }).catch(()=>false);
   }
-  return ref.push(Object.assign(base(), {tx: text, p: String(parentId).slice(0,40)})).then(()=>true)
+  const r2 = ref.push(Object.assign(base(), {tx: text, p: String(parentId).slice(0,40)}));
+  return r2.then(()=>{ gnotifTellComment(postId, r2.key, text, parentId); return true; })
     .catch(()=>{
       const flat = ('↪ @' + String(parentName || 'เพื่อน').slice(0,20) + ' ' + text).slice(0,120);
-      return ref.push(Object.assign(base(), {tx: flat})).then(()=>{ Online.cmReplyRulesOld = true; return true; })
-                .catch(()=>false);
+      const r3 = ref.push(Object.assign(base(), {tx: flat}));
+      return r3.then(()=>{ Online.cmReplyRulesOld = true;
+                           gnotifTellComment(postId, r3.key, flat, parentId); return true; })
+               .catch(()=>false);
     });
 }
 
@@ -1724,6 +1873,7 @@ function onlineStart(){
       feedWatchSync();               // 📰 รอบ 155: เริ่มฟัง feed ของคนที่เรา follow
       feedPushAssets();              // 📰 คลังทรัพย์สินที่เปิดเผย (เขียนเฉพาะตอนค่าเปลี่ยน)
       gfeedWatchStart();             // 📰 รอบ 701: ฟีดล็อบบี้ใช้ /gfeed แล้ว → เปิด watcher ค้างไว้เลย
+      gnotifWatchStart();            // 🔔 รอบ 976: ดึงแจ้งเตือนย้อนหลังจาก /gnotif/<me> + ฟังใบใหม่
       if(typeof photoPullMine === 'function') photoPullMine();   // 📷 รอบ 709: ดึงรูปโปรไฟล์ของตัวเองลงเครื่องใหม่ (หรือส่งของเครื่องนี้ขึ้นถ้า DB ยังว่าง)
     }
     onlineRerender();
