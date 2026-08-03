@@ -607,21 +607,71 @@ function addDiligent(){                                 // เรียกทุ
   checkCrown();                                        // 👑 เช็กเข็มลับ (ครบ 4 สาย)
 }
 
-/* 🎊 ฉลอง "ได้เข็มใหม่" อลังกลางจอ — แบนเนอร์เด้ง + โปรยเหรียญ + เสียง (reuse sprinkleConfetti)
-   ใช้กับเข็มนักเล่นขยัน (ต่อยอดได้กับเข็มอื่น) · pointer-events:none = ไม่บังการเล่น หายเองใน ~3 วิ */
+/* ============================================================
+   🎊🪙 รอบ 985: ฉลอง "ได้เข็มใหม่" + รางวัลเงินก้อน (ผู้ใช้สั่ง 3 ส.ค. 2026)
+   "ทุกเข็ม — ได้รับเมื่อไหร่ + เงิน 10,000 เหรียญทันที พร้อมข้อความแสดงความยินดี
+    ห้ามขึ้นมาแล้วหายไป ให้ผู้ใช้กดปิดเอง (ยืนยันว่าอ่านทัน)"
+   ============================================================ */
+const BADGE_COIN = 10000;                              // 🪙 รางวัลต่อ 1 เข็มใหม่ (ทุกสาย ทุกระดับ เท่ากันหมด)
+
+/* จ่ายรางวัลเข็ม — คืนจำนวนเหรียญที่จ่ายจริง (0 = ไม่ใช่เข็ม หรือเข็มนี้จ่ายไปแล้ว)
+   ⚠️ "เข็มจริง" ตัดสินจาก BADGE_META[emoji] เท่านั้น — celebrateBadge ถูกยืมไปฉลองเรื่องอื่นด้วย
+      (🏁 จบสนามแข่ง adventure3d.js · 📚 อ่านครบ 10 คำวันนี้ ui.js) พวกนี้ไม่ใช่เข็ม ไม่ได้เงินก้อนนี้
+      → เข็มสายใหม่ในอนาคตได้รางวัลอัตโนมัติ เพราะต้องลง BADGE_META อยู่แล้วถึงจะโชว์ได้
+   🛡️ state.badgeCoinGot = รายชื่ออิโมจิเข็มที่จ่ายไปแล้ว → จ่ายเข็มละครั้งเดียวตลอดกาล
+      (กันเคสฉลองซ้ำ/โหลดเซฟเก่าทับแล้ว checkXxxBadge ยิงใหม่) */
+function awardBadgeCoin(emoji){
+  if(!emoji || typeof BADGE_META === 'undefined' || !BADGE_META[emoji]) return 0;
+  if(!Array.isArray(state.badgeCoinGot)) state.badgeCoinGot = [];
+  if(state.badgeCoinGot.indexOf(emoji) >= 0) return 0;
+  state.badgeCoinGot.push(emoji);
+  addCoins(BADGE_COIN);
+  saveState();
+  try{ if(typeof renderDashboard === 'function') renderDashboard(); }catch(e){}   // ตัวเลขเหรียญบนแถบบนขยับทันที
+  return BADGE_COIN;
+}
+
+/* 🎫 คิวป้ายฉลองเข็ม — ป้ายเข็มค้างรอผู้ใช้กดปิด ถ้าได้เข็มที่ 2 ในจังหวะใกล้กัน
+   (เช่น เข็มสายที่ 4 แล้วต่อด้วย 👑 เข็มลับใน 3.6 วิ) ป้ายจะซ้อนทับกันกลางจอพอดีจนอ่านไม่ออก
+   → เก็บเข้าคิว โชว์ทีละใบ · "เงินจ่ายทันทีตั้งแต่ตอนได้เข็ม" ไม่รอคิว (ผู้ใช้ย้ำว่าได้เข็ม=ได้เงินทันที) */
+const BC_QUEUE = [];
 function celebrateBadge(emoji, title, sub){
+  const coin = awardBadgeCoin(emoji);
+  const isBadge = !!(typeof BADGE_META !== 'undefined' && BADGE_META[emoji]);
+  if(isBadge && document.querySelector('.badge-celebrate-overlay.bc-hold')){
+    BC_QUEUE.push([emoji, title, sub, coin]);
+    return;
+  }
+  bcShow(emoji, title, sub, coin, isBadge);
+}
+
+/* แบนเนอร์เด้งกลางจอ + โปรยเหรียญ + เสียง (reuse sprinkleConfetti)
+   sticky=true (เข็มจริง) → ค้างจนกดปุ่ม "เยี่ยมมาก!" · sticky=false (🏁/📚) → หายเองใน ~2.6 วิ เหมือนเดิม
+   ⚠️ ตัว overlay ยังเป็น pointer-events:none เสมอ — เปิดรับคลิกเฉพาะ "กล่อง" (.bc-hold ใน style.css)
+      เพราะเข็มหลายสายได้กลางอากาศในโลก 3D ที่เกมยังวิ่งอยู่ ถ้าบังทั้งจอผู้เล่นจะบังคับเครื่องไม่ได้/ตก */
+function bcShow(emoji, title, sub, coin, sticky){
   if(typeof sfx !== 'undefined') sfx.rankup();
   if(state.haptic !== false && navigator.vibrate) navigator.vibrate([40,50,40,50,90]);
+  const nf = (n)=> (typeof fmtNum === 'function') ? fmtNum(n) : String(n);
   const overlay = document.createElement('div');
-  overlay.className = 'badge-celebrate-overlay';
-  overlay.innerHTML = `<div class="badge-celebrate">
+  overlay.className = 'badge-celebrate-overlay' + (sticky ? ' bc-hold' : '');
+  overlay.innerHTML = `<div class="badge-celebrate${sticky ? ' bc-sticky' : ''}">
     <div class="bc-emoji">${(typeof badgeIcHTML==='function') ? badgeIcHTML(emoji,'bc-emoji-img',false) : emoji}</div>
     <div class="bc-title">🎉 ${escapeHTML(title)}</div>
     <div class="bc-sub">${escapeHTML(sub)}</div>
+    ${coin ? `<div class="bc-coin">🪙 รับรางวัลเข็มใหม่ <b>${nf(coin)}</b> เหรียญ เข้ากระเป๋าแล้ว!</div>` : ''}
+    ${sticky ? `<button class="bc-ok">เยี่ยมมาก! 🎉</button>` : ''}
   </div>`;
   document.body.appendChild(overlay);
   sprinkleConfetti(overlay);                           // โปรยเหรียญ/ดาวบนแบนเนอร์
-  setTimeout(()=>{ overlay.classList.add('bc-out'); setTimeout(()=>overlay.remove(), 400); }, 2600);
+  const close = ()=>{
+    overlay.classList.add('bc-out');
+    setTimeout(()=>overlay.remove(), 400);
+    const nx = BC_QUEUE.shift();                       // มีเข็มใบถัดไปรออยู่ → โชว์ต่อหลังใบนี้เฟดจบ
+    if(nx) setTimeout(()=>bcShow(nx[0], nx[1], nx[2], nx[3], true), 460);
+  };
+  if(sticky) overlay.querySelector('.bc-ok').addEventListener('click', close);
+  else setTimeout(close, 2600);
 }
 
 /* 🖱️ รอบ 957 (ผู้ใช้: "คลิกเหรียญแต่ละเหรียญ ให้ขึ้นข้อความอธิบายว่าได้มาได้อย่างไร"):

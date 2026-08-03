@@ -1560,6 +1560,38 @@ html.no-anim .tapglow-on::after{animation:none !important;}
 .bc-title{margin-top:6px;font-size:24px;font-weight:900;color:#a5750f;}
 .bc-sub{margin-top:5px;font-size:14.5px;font-weight:700;color:#7a6220;line-height:1.55;}
 .badge-celebrate-overlay.bc-out{animation:bcFade .4s ease forwards;}
+
+/* 🪙🎊 รอบ 985 (ผู้ใช้สั่ง 3 ส.ค. 2026: "ทุกเข็ม ได้เมื่อไหร่ +10,000 เหรียญทันที พร้อมข้อความ
+   แสดงความยินดี ห้ามขึ้นมาแล้วหายไป ให้ผู้ใช้กดปิดเอง เพื่อยืนยันว่าผู้ใช้อ่านทัน")
+   ⚠️ overlay ยัง pointer-events:none เหมือนเดิม — เปิดรับคลิกเฉพาะ "กล่อง" เท่านั้น
+      เพราะเข็มหลายสาย (นักบิน/ผาดโผน/มือนุ่ม/นักดิ่ง/ทุบกระจก/นักล่าบอส) เด้งกลางอากาศตอนโลก 3D
+      ยังวิ่งอยู่ ถ้าคลุมทั้งจอผู้เล่นจะบังคับเครื่องไม่ได้แล้วตกทันที (แต่ป้ายยังค้างจนกว่าจะกดปิด)
+   กฎทองข้อ 7 (ต้องเห็นครบทั้งใบ ไม่มี scroll): กล่องมีปุ่มเพิ่มมา 1 แถว → จอเตี้ยย่อเหรียญ/ตัวอักษรลง */
+.badge-celebrate-overlay.bc-hold .badge-celebrate{pointer-events:auto;}
+.bc-sticky{max-height:94vh;overflow-y:auto;}
+.bc-coin{
+  margin-top:11px;background:linear-gradient(135deg,#fff3c4,#ffe28a);
+  border:2px solid #eab308;border-radius:14px;padding:8px 16px;
+  font-size:15px;font-weight:800;color:#8a5a00;line-height:1.45;
+}
+.bc-coin b{font-size:19px;color:#a5460f;}
+.bc-ok{
+  margin-top:14px;background:linear-gradient(135deg,#f5b731,#e08c17);box-shadow:0 4px 0 #a5620a;
+  color:#fff;border:none;border-radius:999px;padding:11px 32px;
+  font-family:inherit;font-size:17px;font-weight:900;cursor:pointer;
+}
+.bc-ok:active{transform:translateY(3px);box-shadow:0 1px 0 #a5620a;}
+@media (max-height:460px){
+  .bc-sticky{padding:12px 22px;}
+  .bc-sticky .bc-emoji{font-size:42px;}
+  .bc-sticky .bc-emoji-img{width:42px;height:42px;}
+  .bc-sticky .bc-emoji .badge-ic-fallback{font-size:42px;}
+  .bc-sticky .bc-title{font-size:19px;}
+  .bc-sticky .bc-sub{font-size:13px;}
+  .bc-sticky .bc-coin{margin-top:7px;padding:5px 12px;font-size:13px;}
+  .bc-sticky .bc-coin b{font-size:16px;}
+  .bc-sticky .bc-ok{margin-top:9px;padding:8px 26px;font-size:15px;}
+}
 @keyframes bcPop{from{transform:scale(0) rotate(-14deg);opacity:0;}to{transform:scale(1) rotate(0);opacity:1;}}
 @keyframes bcSpin{0%{transform:rotate(-18deg) scale(.7);}55%{transform:rotate(12deg) scale(1.15);}100%{transform:rotate(0) scale(1);}}
 @keyframes bcFade{to{opacity:0;transform:scale(.92);}}
