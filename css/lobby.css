@@ -2620,15 +2620,38 @@ button.pi-dress-pip:active{transform:scale(.94);}
   align-items:center;justify-content:center;gap:3px;}
 /* 🖼️ รอบ 953 (ผู้ใช้: "ใส่เข็มให้อยู่ในกรอบ ให้สวยงาม"): เดิม `flex:1 1 0` บังคับให้กล่องรูปสูงเต็มคอลัมน์
    (เช่น 100×199) แล้ว object-fit ค่อยวางเหรียญจัตุรัสลอยกลางช่องว่าง = เหรียญเล็ก ลอย ไม่มีกรอบ
-   ใหม่: ปล่อยให้ <img> หดตามสัดส่วนจริงของไฟล์ (256×256) ด้วย max-width/max-height + width/height:auto
-   → กล่องรูป "พอดีเหรียญ" เป๊ะ จึงเอา border/พื้นหลังใส่บน <img> ตรง ๆ ได้เลย = กรอบรัดรูปเหรียญพอดีทุกใบ
-   (ไม่ต้องเพิ่ม element ใหม่ใน ui.js — กรอบมาจาก padding+border ของตัว img เอง box-sizing:border-box) */
-.lbcat-ic{flex:0 1 auto;min-height:0;max-width:100%;max-height:100%;width:auto;height:auto;
-  object-fit:contain;display:block;box-sizing:border-box;padding:5.5%;border-radius:16%;
+   ใหม่: ปล่อยให้กล่องหดตามสัดส่วนจริง (ไฟล์เหรียญตัดมาจัตุรัส 256×256 เสมอ) → กล่อง "พอดีเหรียญ" เป๊ะ
+   จึงใส่ border/พื้นหลังบนกล่องนี้ตรง ๆ ได้เลย = กรอบรัดรูปเหรียญพอดีทุกใบ
+   🖼️✨ รอบ 954 (ผู้ใช้ขอ "แสงวิ่งผ่านหน้าเหรียญ"): ต้องมี element ห่อรูปไว้ให้ ::after ของแสงวิ่งทับหน้าเหรียญได้
+   (<img> วาดทับ background เสมอ ทำ overlay ตรง ๆ บน img ไม่ได้) → คลาสนี้ย้ายไปอยู่บน <span> ห่อ
+   (`js/data/badgeSprite.js`) แทน <img> เดิม ใช้ `width/height:fit-content` แทน auto (span ไม่มีสัดส่วนในตัว
+   เหมือน img แต่ fit-content หดตามเนื้อในได้เหมือนกัน) ส่วน <img> ข้างในใช้คลาส `.badge-shine-img` เต็มกล่องแทน */
+.lbcat-ic{flex:0 1 auto;min-height:0;max-width:100%;max-height:100%;width:fit-content;height:fit-content;
+  display:flex;position:relative;overflow:hidden;box-sizing:border-box;padding:5.5%;border-radius:16%;
   border:1px solid rgba(255,214,106,.42);
   background:radial-gradient(circle at 50% 36%,rgba(255,214,106,.18),rgba(7,22,48,.66) 72%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 4px 12px rgba(0,0,0,.4);
   filter:drop-shadow(0 3px 8px rgba(0,0,0,.5));}
+.badge-shine-img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
+/* ✨ แสงวิ่งผ่านหน้าเหรียญวนซ้ำเป็นจังหวะ (ไม่ใช่ค้างวิ่งตลอด — sweep เร็ว ~0.7s แล้วพักหายก่อนวนใหม่)
+   ต้องเป็น ::after ของ .badge-shine (span ห่อ) ไม่ใช่ของ .lbcat-ic/.pl-badge-card-ic เอง เพราะ 2 คลาสนั้น
+   มี overflow:hidden+position:relative อยู่แล้ว (ใช้ร่วมกับ .badge-shine เสมอจาก badgeIcHTML) */
+.badge-shine{position:relative;overflow:hidden;}
+.badge-shine::after{content:'';position:absolute;inset:-40%;pointer-events:none;
+  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.9) 50%,transparent 58%);
+  background-size:250% 250%;background-position:-160% -160%;
+  animation:badgeShineSweep 4.4s ease-in-out infinite;}
+.lbf-bcat:nth-child(2) .badge-shine::after{animation-delay:-.6s;}
+.lbf-bcat:nth-child(3) .badge-shine::after{animation-delay:-1.3s;}
+.lbf-bcat:nth-child(4) .badge-shine::after{animation-delay:-2.1s;}
+.lbf-bcat:nth-child(5) .badge-shine::after{animation-delay:-2.8s;}
+.lbf-bcat:nth-child(6) .badge-shine::after{animation-delay:-3.5s;}
+.lbf-bcat:nth-child(n+7) .badge-shine::after{animation-delay:-1.7s;}
+@keyframes badgeShineSweep{
+  0%{background-position:-160% -160%;}
+  16%{background-position:160% 160%;}
+  100%{background-position:160% 160%;}
+}
 .lbf-bcat-badge .badge-ic-fallback{flex:0 1 auto;min-height:0;aspect-ratio:1;max-height:100%;
   display:flex;align-items:center;justify-content:center;font-size:clamp(40px,12vh,140px);line-height:1;}
 .lbcat-ic-label{flex:0 0 auto;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
@@ -2997,10 +3020,24 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .nw-box{width:min(92vw,620px);}
 /* หน้าตั้งค่า (รอบ 893): แท็บ 🔊ทั่วไป/🦸ตัวละคร/📰เปิดเผย โชว์ทีละแท็บ — กล่องเดียวรวมทุกแถวเคยสูงกว่าจอ 2-3 เท่า
    ต้องเลื่อนในตัวเอง (ขัดกฎทอง #7) → แบ่งแท็บทำให้แต่ละหน้าเตี้ยพอในจอเดียว ไม่ต้องเลื่อนเลย ทดสอบ 1000×640 + 812×375 */
-.settings-box{
-  width:min(94vw,680px);max-width:min(94vw,680px);
-  max-height:92vh;display:flex;flex-direction:column;overflow:hidden;
-  padding:clamp(10px,2.6vh,16px) clamp(16px,3vw,22px) clamp(8px,1.6vh,12px);
+.settings-box.settings-box{
+  position:fixed;inset:0;width:auto;max-width:none;height:auto;max-height:none;
+  display:flex;flex-direction:column;overflow:hidden;
+  border-radius:0;border:none;box-shadow:none;
+  padding:calc(clamp(10px,2.6vh,16px) + env(safe-area-inset-top,0px))
+          calc(clamp(16px,3vw,22px) + env(safe-area-inset-right,0px))
+          calc(clamp(8px,1.6vh,12px) + env(safe-area-inset-bottom,0px))
+          calc(clamp(16px,3vw,22px) + env(safe-area-inset-left,0px));
+}
+/* ✕ ปิดมุมขวาบน เด่นชัด แยกจากปุ่ม "เสร็จแล้ว" ท้ายกล่อง — กันเด็กหาปุ่มปิดไม่เจอตอนแผงเต็มจอ
+   -webkit-appearance/appearance:none จำเป็น ไม่งั้น <button> เนทีฟบังคับ width ขั้นต่ำ ทำให้วงกลมเบี้ยว */
+.settings-box .set-x{
+  position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px));
+  -webkit-appearance:none;appearance:none;
+  width:40px;height:40px;border-radius:50%;border:2px solid #fff;
+  background:#e05252;color:#fff;font-size:18px;font-weight:bold;line-height:1;padding:0;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 3px 8px rgba(0,0,0,.3);z-index:2;
 }
 .settings-box h2{margin:0;font-size:clamp(16px,3.4vh,19px);flex:0 0 auto;}
 .settings-box .set-hint{margin:0 0 clamp(4px,1vh,8px);font-size:clamp(10px,1.7vh,11.5px);flex:0 0 auto;}
@@ -4517,17 +4554,23 @@ html.no-anim #panel-rank .rank-beam,html.no-anim #panel-rank .rank-edge{display:
 }
 .pl-badge-card:hover{transform:translateY(-3px);box-shadow:0 8px 18px rgba(29,111,206,.34);}
 /* 🖼️ รอบ 953: ใส่ "กรอบเข็ม" ให้เหรียญนั่งอยู่ในแผ่นป้ายชัดเจน แทนที่จะลอยบนพื้นการ์ดเปล่า ๆ
-   (ขนาด/การจัดวางเดิมไม่เปลี่ยน — flex:1 + object-fit:contain เหมือนเดิม เพิ่มแค่ margin/พื้นหลัง/ขอบ) */
+   (ขนาด/การจัดวางเดิมไม่เปลี่ยน — flex:1 + object-fit:contain เหมือนเดิม เพิ่มแค่ margin/พื้นหลัง/ขอบ)
+   ✨ รอบ 954: คลาสนี้ย้ายไปอยู่บน <span> ห่อ (badgeIcHTML) แทน <img> เดิม เพื่อให้ ::after ของ
+   .badge-shine วิ่งทับหน้าเหรียญได้ (ดูเหตุผลเต็มที่ .lbcat-ic ใน css/lobby.css) — <img> ข้างในใช้
+   `.badge-shine-img` (มีกฎ max-width/height 100% + object-fit:contain ประกาศรวมไว้ที่ .lbcat-ic แล้ว) */
 .pl-badge-card-ic{
   flex:1;min-height:0;align-self:center;aspect-ratio:1;width:auto;height:auto;max-width:calc(100% - 14px);
   margin:7px auto 5px;padding:5%;box-sizing:border-box;
-  object-fit:contain;display:block;border-radius:14%;
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;border-radius:14%;
   border:1px solid rgba(31,122,220,.34);
   background:radial-gradient(circle at 50% 34%,#ffffff,#d7eafb 74%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.95),0 3px 9px rgba(20,60,110,.2);
   filter:drop-shadow(0 3px 6px rgba(20,60,110,.26));
 }
 .pl-badge-card-ic.badge-ic-fallback{display:flex;align-items:center;justify-content:center;font-size:min(56px,9vh);}
+.pl-badge-card:nth-child(2) .badge-shine::after{animation-delay:-.9s;}
+.pl-badge-card:nth-child(3) .badge-shine::after{animation-delay:-1.8s;}
+.pl-badge-card:nth-child(n+4) .badge-shine::after{animation-delay:-2.6s;}
 .pl-badge-card-nm{
   flex-shrink:0;width:100%;background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;
   font-size:12px;line-height:1.2;font-weight:700;padding:6px 6px;text-shadow:0 1px 2px rgba(10,40,80,.4);

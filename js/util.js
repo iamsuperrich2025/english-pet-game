@@ -828,6 +828,7 @@ function openSettings(){
   // 🗂️ รอบ 893: เดิมยัดทุกแถวในกล่องเดียว = เนื้อหาสูงกว่าจอ 2-3 เท่า ต้องเลื่อนในตัวเอง (ขัดกฎทอง #7)
   //   → แบ่งเป็น 3 แท็บ (ทั่วไป/ตัวละคร/เปิดเผย) โชว์ทีละแท็บ ใช้ .lb-tab เดิม (โทนม่วงเดียวกับกระดานอันดับ)
   overlay.innerHTML = `<div class="levelup-box settings-box">
+    <button class="set-x" id="set-x" type="button" aria-label="ปิด">✕</button>
     <h2 style="margin:0 0 4px">⚙️ ตั้งค่า</h2>
     <p class="set-hint">แตะสวิตช์เพื่อสลับ — <b class="set-hint-on">เขียว = เปิดอยู่</b> · <b class="set-hint-off">เทา = ปิดอยู่</b></p>
     <div class="set-tabs">
@@ -1000,6 +1001,7 @@ function openSettings(){
   const tg = overlay.querySelector('#set-teacher');
   if(tg) tg.addEventListener('click', openTeacherGuide);
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
+  overlay.querySelector('.set-x').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   paint();
   document.body.appendChild(overlay);
