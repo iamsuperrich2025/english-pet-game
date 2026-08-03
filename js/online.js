@@ -266,7 +266,7 @@ function friendRequest(toUid){
   return Online.db.ref('friendReq/' + toUid + '/' + onlineKey()).set({
     n: onlineDisplayName(), g: state.student.grade,
     ts: firebase.database.ServerValue.TIMESTAMP,
-  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "คำขอเป็นเพื่อน" ไว้ในกล่อง 🔔 ของผู้รับด้วย
+  /* 🔔 รอบ 983: ฝากใบแจ้งเตือน "คำขอเป็นเพื่อน" ไว้ในกล่อง 🔔 ของผู้รับด้วย
      → รับ/ปฏิเสธไปแล้วก็ยังย้อนดูได้ว่าใครเคยส่งมาเมื่อไหร่ (คำขอตัวจริงใน /friendReq ถูกลบทิ้งตอนตอบ) */
   }).then(()=>{ gnotifSend(toUid, {t:'fr'}); });
 }
@@ -523,7 +523,7 @@ function giftSend(toUid, kind, id){
     k: kind, id: id, fn: name, st: 'pending',
     ts: firebase.database.ServerValue.TIMESTAMP,
   });
-  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "ของขวัญ" ไว้ในกล่อง 🔔 ของผู้รับด้วย (cid = รหัสของขวัญใบนั้น กันนับซ้ำ)
+  /* 🔔 รอบ 983: ฝากใบแจ้งเตือน "ของขวัญ" ไว้ในกล่อง 🔔 ของผู้รับด้วย (cid = รหัสของขวัญใบนั้น กันนับซ้ำ)
      ของขวัญตัวจริงหายจากกล่อง 🎁 ทันทีที่กดรับ/ไม่รับ → กล่อง 🔔 คือที่เดียวที่ย้อนดูได้ว่าใครส่งอะไรมาเมื่อไหร่
      ⚠️ ห้ามให้ใบแจ้งเตือนทำให้การส่งของขวัญล้ม — gnotifSend กลืน error เองอยู่แล้ว (rules ยังไม่ publish ก็ส่งของได้ปกติ) */
   return p.then(()=>{ gnotifSend(toUid, {t:'gf', cid: p.key, r: kind, cm: id}); return p; });
@@ -541,7 +541,7 @@ function greetSend(toUid, greetId){
     k: 'greet', id: greetId, fn: name, st: 'pending',
     ts: firebase.database.ServerValue.TIMESTAMP,
   });
-  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "ทักทายน้อง" ไว้ในกล่อง 🔔 ของผู้รับด้วย (แบบเดียวกับของขวัญ) */
+  /* 🔔 รอบ 983: ฝากใบแจ้งเตือน "ทักทายน้อง" ไว้ในกล่อง 🔔 ของผู้รับด้วย (แบบเดียวกับของขวัญ) */
   return p.then(()=>{ gnotifSend(toUid, {t:'gr', cid: p.key, cm: greetId}); return p; });
 }
 
@@ -1217,7 +1217,7 @@ function gfeedNotifPush(n){
    • ยังไม่ publish rules = เกมไม่พัง: เขียน/อ่านโดน deny → กลับไปทำงานแบบรอบ 701 เป๊ะ
      (เห็นเฉพาะตอนเปิดเกมอยู่) + ตั้งธง Online.gnotifOk=false ให้กล่อง 🔔 ขึ้นป้ายบอกเหตุผลตรง ๆ
 
-   🆕 รอบ 980 (ผู้ใช้สั่ง): กล่อง 🔔 ใบเดียวเก็บ "เรื่องที่เพื่อนทำกับเรา" ให้ครบ ไม่ใช่แค่ไลก์/คอมเมนต์
+   🆕 รอบ 983 (ผู้ใช้สั่ง): กล่อง 🔔 ใบเดียวเก็บ "เรื่องที่เพื่อนทำกับเรา" ให้ครบ ไม่ใช่แค่ไลก์/คอมเมนต์
        t='gf' ของขวัญ (r = shop|collect · cm = id ของขวัญ · cid = รหัสของขวัญใบนั้น)
        t='gr' ทักทายน้อง (cm = รหัสคำทัก · cid = รหัสใบในกล่องของขวัญ)
        t='fr' คำขอเป็นเพื่อน (ไม่มีฟิลด์เสริม)
@@ -1233,7 +1233,7 @@ const GNOTIF_QUIET = {gf: 1, gr: 1};
 /* รหัสประจำใบ ใช้กันซ้ำระหว่าง diff สด กับใบที่อ่านมาจาก DB */
 function gnotifKeyOf(n){
   const base = [n.t || '', n.pid || '', n.cid || '', n.u || '', n.r || ''].join('|');
-  /* 🔔 รอบ 980: คำขอเป็นเพื่อนจากคนเดิม "ซ้ำได้จริง" (ถูกปฏิเสธแล้วส่งใหม่) และไม่มี diff ให้จับคู่
+  /* 🔔 รอบ 983: คำขอเป็นเพื่อนจากคนเดิม "ซ้ำได้จริง" (ถูกปฏิเสธแล้วส่งใหม่) และไม่มี diff ให้จับคู่
      → ต่อรหัสใบเข้าไปด้วย ไม่งั้นใบที่ 2 จะถูกมองว่าเป็นใบเดิมแล้วหายไป (ของขวัญ/คำทักมี cid ต่างกันอยู่แล้ว) */
   return n.t === 'fr' ? base + '|' + (n.nk || n.ts || '') : base;
 }
@@ -1310,7 +1310,7 @@ function gnotifListen(me){
                r: v.r || '', cm: v.cm || '', tx: v.tx || '', ts: v.ts || 0,
                nk: ch.key, rd: !!(Online.notifSeen && ch.key <= Online.notifSeen)},
               Online.gnotifBase && !GNOTIF_QUIET[v.t]);   // ชุดแรก = ของเก่า ห้ามเด้ง toast รัว ๆ ตอนเปิดเกม
-                                                         // · รอบ 980: ของขวัญ/คำทัก กล่อง 🎁 เด้งให้แล้ว ไม่เด้งซ้ำ
+                                                         // · รอบ 983: ของขวัญ/คำทัก กล่อง 🎁 เด้งให้แล้ว ไม่เด้งซ้ำ
   }, err);
   q.once('value', ()=>{ Online.gnotifBase = true; Online.gnotifOk = true; gnotifPrune(); }, err);
 }
