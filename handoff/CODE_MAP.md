@@ -164,8 +164,8 @@ fkBuildWall:10550 · fkToggle:10565 · fkHitTest:10581 · pkHud:10600 · pkStart
 pkTick:10638 · repQualify:10645 · repEnsureEl:10648 · repStart:10659 · repTick:10666 · soccerNumTex:10691
 ssSec:10703 · ssPaintPattern:10708 · soccerShirtTex:10721 · makeSoccerPlayer:10743 · soccerNewSpot:10779 · soccerResetBall:10791
 soccerKick:10798 · soccerCheer:10816 · guideTexture:10819 · auraActive:10843 · auraLeftMs:10844 · auraFlameTex:10852
-auraCoilTex:10876 · auraCoilRibbon:10900 · auraGlintTex:10924 · buildAura:10935 · auraBuy:10979 · auraRender:10989
-auraTick:11003 · buildDrill:11053 · drillTick:11066 · ballFXTex:11106 · buildBallFX:11117 · smokePuff:11133
+auraCoilTex:10876 · auraCoilRibbon:10900 · auraGlintTex:10924 · buildAura:10935 · auraBuy:10978 · auraRender:10988
+auraTick:11002 · buildDrill:11053 · drillTick:11066 · ballFXTex:11106 · buildBallFX:11117 · smokePuff:11133
 ballFXTick:11141 · buildLandRing:11187 · buildGuideRibbon:11197 · renderSpinPad:11222 · spinPadToggle:11234 · spinPadPick:11240
 renderCurl:11252 · kickLaunch:11263 · updateSoccerGuide:11272 · soccerCamera:11336 · tickSoccer:11359 · ssShirtPath:11553
 ssShortsPath:11561 · ssPaintSwatchShirt:11566 · ssPaintSwatchShorts:11571 · ssPreviewDraw:11578 · soccerKitShow:11607 · soccerKitGo:11636
