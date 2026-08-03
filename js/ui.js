@@ -3104,6 +3104,8 @@ function openGreetPicker(uid, name){
   ov.querySelectorAll('.greet-opt').forEach(b=>b.addEventListener('click', ()=>{
     const gr = greetInfo(b.dataset.g);
     if(!gr) return;
+    /* 🚫 รอบ 952: 🍪 "ฝากขนมให้น้อง" เป็นของกิน — ป่วยเพราะหิวอยู่ส่งไม่ได้ (คำทักอื่นส่งได้ปกติ) */
+    if(foodGiftBlocked('greet', gr.id)){ sfx.wrong(); toast(hungerSickMsg('ขนมฝากให้น้องเพื่อน')); return; }
     b.disabled = true;
     greetSend(uid, gr.id)
       .then(()=>{
@@ -3129,6 +3131,14 @@ function giftItemPic(k, id){
     return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${g ? g.emoji : '🎁'}</span>`; }
   const c = collectInfo(id), img = collectImg(id);
   return img ? `<img src="${img}" alt="">` : `<span class="hq-emoji">${c ? c.emoji : '📦'}</span>`;
+}
+/* 🚫🍰 รอบ 952 (ผู้ใช้สั่ง): ของขวัญชิ้นนี้เป็น "ของกิน" และตอนนี้ป่วยเพราะหิวอยู่ไหม (true = ห้ามส่ง)
+   ครอบทั้ง 🍪 คำทัก "ฝากขนมให้น้อง" · 🎂 เค้กจากร้านของขวัญ · ของสะสมหมวดอาหาร */
+function foodGiftBlocked(k, id){
+  if(typeof hungerSickLock !== 'function' || !hungerSickLock()) return false;
+  if(k === 'greet') return id === 'treat';
+  if(k === 'shop')  return ((giftInfo(id) || {}).cat === 'cake');
+  return ((collectInfo(id) || {}).cat === 'food');
 }
 function giftItemName(k, id){
   if(k === 'greet'){ const gr = greetInfo(id); return gr ? gr.t : 'คำทักทายน้อง'; }
@@ -3358,6 +3368,8 @@ function openGiftPicker(friend){
 /* กล่องยืนยันก่อนส่ง — เช็กเหรียญ/ของในคลัง */
 function confirmSendGift(friend, k, id, onDone){
   const name = giftItemName(k, id);
+  /* 🚫 รอบ 952: ของขวัญที่เป็น "ของกิน" (เค้กจากร้าน · ของสะสมหมวดอาหาร) ส่งไม่ได้ตอนป่วยเพราะหิว */
+  if(foodGiftBlocked(k, id)){ sfx.wrong(); toast(hungerSickMsg(name)); return; }
   const img  = k === 'shop' ? giftImg(id) : collectImg(id);
   const emo  = k === 'shop' ? ((giftInfo(id) || {}).emoji || '🎁') : ((collectInfo(id) || {}).emoji || '📦');
   const pic  = img ? `<img src="${img}" alt="">` : `<span>${emo}</span>`;
@@ -3381,6 +3393,8 @@ function confirmSendGift(friend, k, id, onDone){
 
 /* ส่งจริง: ตัดของ/หักเหรียญทันที (escrow) → เขียน DB · ส่งไม่สำเร็จคืนให้ */
 function doSendGift(friend, k, id){
+  /* 🚫 รอบ 952: ด่านสุดท้ายกันของกินหลุดไป (เผื่อมีทางเข้าอื่นในอนาคต) */
+  if(foodGiftBlocked(k, id)){ sfx.wrong(); toast(hungerSickMsg(giftItemName(k, id))); return; }
   if(k === 'shop'){
     const g = giftInfo(id); if(!g) return;
     if(state.coins < g.price){ toast('เหรียญไม่พอนะ'); return; }
@@ -4464,7 +4478,9 @@ function renderDashboard(){
     const hungry = petHungry(p);
     let hungerStatus, barPct, barCls = '';
     if(p.sick){
-      hungerStatus = '🤒 ป่วยอยู่... ต้องรักษาก่อนถึงจะกินได้';
+      /* 🚫 รอบ 952: บอกตรงนี้เลยว่า "ซื้อของกินไม่ได้" — ปุ่มถูกปิดต้องมีเหตุผลบนจอ (กฎทองข้อ 1)
+         เขียนทับบรรทัดเดิม ไม่เพิ่มบรรทัดใหม่ (แผงนี้ยาวชิดขอบจอเตี้ยอยู่แล้ว) */
+      hungerStatus = '🤒 ป่วยอยู่... <b>ซื้อของกินไม่ได้</b> ต้องรักษาให้หายก่อนนะ';
       barPct = 0;
     }else if(p.sleeping){
       hungerStatus = `😴 กำลังหลับปุ๋ย... ตื่นเองตอน ${String(WAKE_HOUR).padStart(2,'0')}:00 น.`;
@@ -4549,6 +4565,15 @@ function renderDashboard(){
       shapeUI = `<div class="heat-text shape-text shape-progress">💪 กินดีต่อเนื่อง ${p.cleanMeals}/${SHAPE_CLEAN_MEALS} มื้อ — ครบแล้ว${escapeHTML(p.name)}จะล่ำกำยำ ได้โบนัส EXP!</div>`;
     }
 
+    /* 🚫 รอบ 952 (ผู้ใช้สั่ง): ป่วยเพราะหิว — คนหรือสัตว์ก็ตาม — ซื้อของกินไม่ได้จนกว่าจะรักษา
+       กฎทองข้อ 1: ปุ่มถูกปิดต้อง "บอกเหตุผลบนจอ" เสมอ ไม่ปิดเงียบ ๆ */
+    const foodLock = (typeof hungerSickLock === 'function') ? hungerSickLock() : null;
+    /* น้องป่วย = บรรทัดสถานะความอิ่มบอกอยู่แล้วว่าซื้อของกินไม่ได้ (ไม่เพิ่มบรรทัดซ้ำ กันแผงล้นจอเตี้ย กฎทองข้อ 7)
+       ป่วยเฉพาะ "คน" = น้องไม่ป่วย ไม่มีที่บอก → โชว์ป้ายเล็กเหนือปุ่มดูแลแทน */
+    const foodLockNote = (!p.sick && foodLock)
+      ? `<div class="food-lock-note">🚫🍽️ <b>ซื้อของกินไม่ได้ตอนนี้</b> — ${escapeHTML(foodLock.why)} · ${escapeHTML(foodLock.fix)} แล้วซื้อได้ทันที</div>`
+      : '';
+
     hungerUI = `
       <div class="level-row">
         <span class="level-badge" style="background:var(--orange-d)">🍖 อิ่ม</span>
@@ -4561,8 +4586,9 @@ function renderDashboard(){
       ${shapeUI}
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       ${sleepHintHTML(p, now)}
+      ${foodLockNote}
       <div class="care-row">
-        <button class="care-btn btn-feed" id="btn-feed" ${(p.sick || p.sleeping)?'disabled':''}>🍽️ ให้อาหาร</button>
+        <button class="care-btn btn-feed" id="btn-feed" ${(p.sick || p.sleeping || state.playerSick)?'disabled':''}>🍽️ ให้อาหาร</button>
         ${sleepBtnHTML(p, now)}
         ${p.sick ? `<button class="care-btn btn-cure" id="btn-cure">💊 รักษา 🪙${fmtNum(CURE_COST)}</button>` : ''}
       </div>`;
@@ -4841,6 +4867,11 @@ function feedPet(){
   if(p.sick){ alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">น้องป่วยอยู่นะ</div><div class="ab-desc">กินไม่ลงเลย... ต้องพาไป <b>รักษา</b> ก่อน น้องถึงจะหายแล้วกลับมากินได้ 🩺</div>', 'ไว้ก่อน',
       {text:`🩺 รักษาเลย (🪙${fmtNum(CURE_COST)})`, onClick:curePet}); return; }
   if(p.sleeping){ sfx.wrong(); toast('😴 น้องหลับอยู่ อย่าเพิ่งปลุกมากินข้าวเลยนะ'); return; }
+  /* 🚫 รอบ 952: คนป่วยเพราะไม่ได้กินข้าวเย็น = ซื้อของกินไม่ได้ (กติกาเดียวกับน้องป่วยเพราะหิว) */
+  if(state.playerSick){
+    alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">หนูป่วยเพราะไม่ได้กินข้าวเย็น</div><div class="ab-desc">ตอนป่วยเพราะหิว <b>ซื้อของกินไม่ได้</b> นะ — ไปหาหมอรักษาให้หายก่อน แล้วค่อยกลับมาซื้ออาหารให้น้อง 🩺</div>', 'ไว้ก่อน',
+      {text:`🩺 ไปรักษา (🪙${fmtNum(CURE_COST)})`, onClick:dinnerClick}); return;
+  }
   const hungry = petHungry(p);
   const canFeast = p.fedUpTo < nextSlotStart(Date.now());
   if(!hungry && !canFeast){
@@ -4850,6 +4881,8 @@ function feedPet(){
 }
 
 function openFoodMenu(p, hungry){
+  /* 🚫 รอบ 952: กันทุกทางเข้า — ป่วยเพราะหิว (คนหรือน้อง) ห้ามเปิดเมนูซื้ออาหาร */
+  if(p.sick || state.playerSick){ sfx.wrong(); toast(hungerSickMsg('ของกิน') || '🤒 ป่วยอยู่ ต้องรักษาก่อนถึงจะซื้อของกินได้นะ'); return; }
   sfx.select();
   const fav = Object.assign({id:'favorite'}, PETS[p.type].favFood);
   /* ข้อ 5.1: แยกเมนู 2 ชุด — ชุดอาหารสัตว์ (fav+ปลอดภัย) กับชุดอาหารคน (บางอย่างเป็นโทษ) */
@@ -7705,6 +7738,8 @@ function startProduce(id, goGame){
 function buyCollectible(id){
   const c = collectInfo(id);
   if(!c) return;
+  /* 🚫 รอบ 952: ของสะสมหมวดอาหาร 🍰🍩🧋 ก็คือ "ของกิน" — ป่วยเพราะหิวอยู่ซื้อไม่ได้ ต้องรักษาก่อน */
+  if(c.cat === 'food' && hungerSickLock()){ sfx.wrong(); toast(hungerSickMsg(c.name)); return; }
   const disc = craftDiscount(c.price), pay = c.price - disc;
   if(state.coins < pay){
     sfx.wrong(); toast(`เหรียญไม่พอ — ${c.name} ราคา 🪙${fmtNum(pay)} เล่นเกมเก็บแต้มผลิตเองได้ฟรีนะ!`);
@@ -7895,6 +7930,8 @@ function buyMarketItem(key){
   if(!item || typeof marketBuy !== 'function') return;
   const c = collectInfo(item.id);
   if(!c) return;
+  /* 🚫 รอบ 952: ซื้อของกินจากตลาดเพื่อนก็ล็อกเหมือนกัน ตอนป่วยเพราะหิว */
+  if(c.cat === 'food' && hungerSickLock()){ sfx.wrong(); toast(hungerSickMsg(c.name)); return; }
   if(item.sid === (typeof onlineKey === 'function' ? onlineKey() : '')) return;   // ของตัวเอง
   if(state.coins < item.p){ sfx.wrong(); toast(`เหรียญไม่พอ (ต้องมี 🪙${fmtNum(item.p)}) สู้ๆ!`); return; }
   mktBuying = true;
