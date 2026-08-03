@@ -389,11 +389,16 @@
       <!-- 🧭 รางเมนูซ้าย: ห่อด้วย .rail-wrap เพื่อวางป้ายบอกทาง ▲/▼ ทับขอบราง
            (ผู้ใช้สั่ง 26 ก.ค. 2026 — เด็ก/ผู้ใหญ่ที่ไม่ชำนาญเลื่อนรางแล้วคิดว่า "ปุ่มหาย") -->
       <div class="rail-wrap" id="rail-wrap">
+        <!-- 🏙️ รอบ 863: ทางกลับ "เมืองคำศัพท์ 3D" (หน้าหลักใหม่ index.html)
+             📌 รอบ 949 (ผู้ใช้สั่ง "ให้มีปุ่มตลอด ไม่ใช่เดี๋ยวมีเดี๋ยวไม่มี"):
+             เดิมเป็นปุ่มแรก "ข้างใน" รางที่เลื่อนได้ → พอเลื่อนรางหาปุ่มอื่น ปุ่มนี้หลุดออกนอกจอ
+             → ย้ายออกมาปักหมุดนอกโซนเลื่อน (เป็นลูกของ .rail-wrap) = เห็นตลอดเวลาทุกตำแหน่งเลื่อน -->
+        <a class="rail-btn rail-city" id="btn-rail-city" href="index.html" title="กลับไปเมืองคำศัพท์ 3D (หน้าหลัก)"><span class="rail-ico">🏙️</span>เมือง 3D</a>
+        <!-- โซนเลื่อน: ราง + ป้ายบอกทาง ▲/▼ (ป้ายอ้างอิงกล่องนี้ ไม่ใช่ทั้ง rail-wrap — ไม่งั้น ▲ ไปทับปุ่มเมือง 3D) -->
+        <div class="rail-scroll" id="rail-scroll">
       <nav class="lobby-rail" id="lobby-rail">
         <!-- ปุ่มรักษาด่วน (ผู้ใช้สั่ง 8 ก.ค. 2026) — บนสุดของรางให้เห็นทันทีไม่ต้องเลื่อน ·
              กดได้เฉพาะตอนมีน้องป่วย (ปกติจางกดไม่ได้ · ป่วยกะพริบแดงเรียกสายตา) -->
-        <!-- 🏙️ รอบ 863: ทางกลับ "เมืองคำศัพท์ 3D" (หน้าหลักใหม่ index.html) — วางบนสุดให้เห็นทันทีไม่ต้องเลื่อนราง -->
-        <a class="rail-btn rail-city" id="btn-rail-city" href="index.html" title="กลับไปเมืองคำศัพท์ 3D (หน้าหลัก)"><span class="rail-ico">🏙️</span>เมือง 3D</a>
         <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน<span class="rail-badge" id="home-bill-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">📈</span>ลงทุน</button>
@@ -418,6 +423,7 @@
         <!-- ป้ายบอกทาง: โผล่เฉพาะตอนยังมีปุ่มซ่อนอยู่ทางนั้นจริง ๆ · กดแล้วเลื่อนให้เอง -->
         <button class="rail-nudge up" id="rail-nudge-up" title="ยังมีปุ่มอยู่ข้างบน — กดเพื่อกลับไปเมนูบนสุด">▲ บนสุด</button>
         <button class="rail-nudge down" id="rail-nudge-down" title="ยังมีปุ่มอยู่ข้างล่างอีก — กดเพื่อเลื่อนลง">▼ มีอีก</button>
+        </div>
       </div>
 
       <main class="lobby-stage">
