@@ -366,13 +366,13 @@ function build(THREE_,opt){
     for(let s=0;s<5;s++){
       const x0=ST_XW+s*(ST_RUN/5), x1=x0+ST_RUN/5, tm=(ST_XE-(x0+x1)/2)/ST_RUN;
       const yl=y+stepY(tm), yh=y+ST_RISE+stepY(1-tm);
-      accBox(A.metal,(x0+x1)/2,(yl+yh+1.05)/2,ST_ZMID,x1-x0,yh+1.05-yl,.12,0);
+      accBox(A.wood,(x0+x1)/2,(yl+yh+1.05)/2,ST_ZMID,x1-x0,yh+1.05-yl,.12,0);                // 🩹 เดิม A.metal สีเทาแบนไม่มีลาย ผู้ใช้เห็นแล้วนึกว่าเป็นช่องว่าง/รูโหว่ → ไม้เข้มทึบตัน (tex_hotel_wood) ดูหรูขึ้น
       accBox(A.wood,(x0+x1)/2,yh+1.12,ST_ZMID,x1-x0,.09,.2,0);                             // ราวจับไม้
     }
     /* ราวจับด้านนอกช่วงแรก (ขอบติดเลนชานพักหน้าบันได z=RZ1) — บันไดจริงต้องมีราวสองฝั่ง */
     for(let s=0;s<5;s++){
       const x0=ST_XW+s*(ST_RUN/5), x1=x0+ST_RUN/5, ry=y+stepY((ST_XE-(x0+x1)/2)/ST_RUN);
-      accBox(A.metal,(x0+x1)/2,ry+.55,RZ1,x1-x0,1.1,.12,0);
+      accBox(A.wood,(x0+x1)/2,ry+.55,RZ1,x1-x0,1.1,.12,0);                                 // 🩹 เดิม A.metal สีเทาแบน → ไม้เข้มทึบให้เข้าชุดกับแผงราวช่องกลาง
       accBox(A.wood,(x0+x1)/2,ry+1.14,RZ1,x1-x0,.09,.2,0);
       solid(x0,x1,RZ1-.16,RZ1+.16,ry-.2,ry+1.15,'rail');
     }
