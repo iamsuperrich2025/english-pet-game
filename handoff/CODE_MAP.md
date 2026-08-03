@@ -621,7 +621,7 @@ mergeBack:88 · metUids:100 · AIM_TTL_MS:119 · aimAt:121 · aimGet:125 · aimC
 MAPS3D:135 · whereFriends:136 · dbOf:160 · envReady:161 · isDenied:164 · create:176
 drawBudget:780
 
-## js/online.js (1,803 บรรทัด · 96 รายการ)
+## js/online.js (1,821 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
 - 2-206 ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
 - 207-300 ระบบเพื่อน (ข้อ 0.3): รหัสเพื่อน + ค้นหา + ส่ง/รับคำขอ
@@ -631,8 +631,8 @@ drawBudget:780
 - 774-838 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
 - 839-1035 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
 - 1036-1043 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1044-1216 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
-- 1217-1803 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
+- 1044-1234 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
+- 1235-1821 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
 ### รายการ js/online.js
 ONLINE_STALE_MS:65 · ONLINE_BEAT_MS:66 · LEADERBOARD_SIZE:67 · onlineDisplayName:71 · onlineActivity:79 · ensureOnlineId:95
 onlineKey:105 · onlinePushPresence:110 · onlinePushScore:120 · fetchPlayerStats:157 · onlineRerender:179 · notifyFriendBadges:191
@@ -647,9 +647,9 @@ marketBuy:737 · marketSoldWatch:750 · tinvSend:779 · tinvClear:786 · tinvPar
 tinvWatch:820 · FEED_MAX:847 · feedEvent:850 · feedPrune:862 · feedPurgeCat:873 · feedPushAssets:884
 petDescriptor:902 · feedPushPets:908 · fetchPlayerPets:922 · followSet:938 · followUnset:949 · feedRebuild:956
 feedWatchSync:968 · fetchPlayerFeed:995 · fetchPlayerAssets:1008 · fetchFollowers:1027 · GFEED_READ:1053 · GFEED_KEEP_ME:1054
-gfeedPush:1057 · gfeedPrune:1071 · gfeedParse:1084 · gfeedWatchStart:1106 · gfeedWatchStop:1133 · gfeedNotifDiff:1141
-gfeedNotifPush:1155 · uidDisplayName:1162 · gfeedRebuild:1173 · gfeedToggleLike:1190 · gfeedSetReaction:1195 · gfeedAddComment:1203
-CALL_RTC_CFG:1241 · CALL_RING_MS:1242 · CALL_MAX_MS:1243 · CALL_MAX_PEERS:1244 · onlineStart:1660 · onlineLoadSDK:1778
+gfeedPush:1057 · gfeedPrune:1071 · gfeedParse:1084 · gfeedWatchStart:1108 · gfeedWatchStop:1135 · gfeedNotifDiff:1143
+gfeedNotifPush:1164 · uidDisplayName:1171 · gfeedRebuild:1182 · gfeedToggleLike:1199 · gfeedSetReaction:1204 · gfeedAddComment:1215
+CALL_RTC_CFG:1259 · CALL_RING_MS:1260 · CALL_MAX_MS:1261 · CALL_MAX_PEERS:1262 · onlineStart:1678 · onlineLoadSDK:1796
 
 ## js/photo.js (361 บรรทัด · 25 รายการ)
 PHOTO_LS_KEY:12 · PHOTO_MAX:13 · PHOTO_PREFIX:14 · PHOTO_SIZES:15 · PHOTO_QS:16 · PHOTO_ZMAX:17
@@ -684,7 +684,7 @@ expNeed:1148 · addExp:1153 · addRP:1173
 
 ## js/typing.js (369 บรรทัด · 0 รายการ)
 
-## js/ui.js (8,719 บรรทัด · 353 รายการ)
+## js/ui.js (8,764 บรรทัด · 355 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-308 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -707,31 +707,31 @@ expNeed:1148 · addExp:1153 · addRP:1173
 - 3426-3518 RANK CARD + ฉากเลื่อนแรงค์
 - 3519-3521 PET DASHBOARD
 - 3522-3591 📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
-- 3592-3995 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
-- 3996-4155 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
-- 4156-4824 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
-- 4825-4868 การนอน (คิว 7725691507 ข้อ 1)
-- 4869-5257 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
-- 5258-5376 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
-- 5377-5462 🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
-- 5463-5650 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
-- 5651-5768 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
-- 5769-5851 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
-- 5852-5862 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
-- 5863-5907 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
-- 5908-6501 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 6502-6641 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 6642-6795 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 6796-6965 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 6966-6975 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 6976-6998 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 6999-7151 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 7152-8076 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 8077-8137 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 8138-8174 เลเวลอัพ (รายตัว)
-- 8175-8280 สถิติผลการเรียนรู้
-- 8281-8318 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 8319-8719 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 3592-4040 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
+- 4041-4200 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
+- 4201-4869 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
+- 4870-4913 การนอน (คิว 7725691507 ข้อ 1)
+- 4914-5302 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
+- 5303-5421 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
+- 5422-5507 🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
+- 5508-5695 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
+- 5696-5813 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
+- 5814-5896 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
+- 5897-5907 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
+- 5908-5952 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
+- 5953-6546 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
+- 6547-6686 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 6687-6840 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 6841-7010 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 7011-7020 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 7021-7043 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 7044-7196 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 7197-8121 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 8122-8182 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 8183-8219 เลเวลอัพ (รายตัว)
+- 8220-8325 สถิติผลการเรียนรู้
+- 8326-8363 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 8364-8764 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petClipHint:145 · __clipReady:157 · petShowHTML:165 · PROF_AV_MAX:229
@@ -763,35 +763,36 @@ rankBadgeHTML:3429 · renderRankCard:3434 · renderRankTab:3468 · showRankUp:34
 feedAgo:3584 · FEED_DECK_MAX:3604 · FEED_SLIDE_MS:3605 · FEED_RESUME_MS:3606 · feedPostImgIndex:3611 · feedPostImg:3622
 feedPostByKey:3631 · feedCanReact:3634 · fpStatsHTML:3639 · fpNameBadgesHTML:3655 · fpostHTML:3659 · renderFeedCard:3694
 feedDeckGo:3732 · feedDeckTick:3752 · renderFeedBell:3774 · feedNotifArrived:3782 · openFeedNotif:3789 · closeRxPicker:3823
-openRxPicker:3827 · feedFlyWord:3847 · feedPickRx:3858 · openFeedComments:3871 · closeFeedComments:3885 · renderFeedComments:3891
-bindFeedPostEvents:3950 · openFeedBoard:4002 · renderFeedBoardLive:4023 · renderFeedBoard:4041 · stageColLeft:4060 · alignPetTabs:4069
-alignFeedPlate:4081 · alignProfilePlate:4092 · alignStageLeft:4108 · alignStageCols:4119 · watchStageCols:4133 · alignCureBtn:4143
-dictRecordLookup:4167 · DICT_FILE_COUNT:4178 · loadDict:4179 · dictSearch:4194 · dictTapWords:4209 · dictEntryHTML:4213
-openDictOverlay:4224 · renderDashboard:4308 · sleepBtnHTML:4830 · sleepHintHTML:4837 · sleepAllPets:4848 · wakeAllPets:4861
-feedPet:4872 · openFoodMenu:4891 · feedWith:4964 · AVATAR_UI:4994 · playerAvatarHTML:4998 · SHAPE_UI:5006
-showFeedResult:5015 · curePet:5056 · heartsFx:5079 · PAT_HOLD_MS:5102 · PAT_EXP:5103 · bindPetTap:5104
-petBounce:5122 · petMood:5128 · shortPatPet:5135 · longPatPet:5143 · patCalendarHTML:5163 · patStreakTick:5191
-cureCelebrateFx:5217 · railCureClick:5228 · detoxPet:5240 · openFoodQuiz:5263 · closeDressUpBoard:5382 · openDressUpBoard:5386
-renderShop:5403 · homeVisualHTML:5466 · showHomeRuined:5480 · showCutNotice:5501 · renderHomeCard:5519 · payMaint:5603
-trashBillUI:5619 · payTrash:5636 · UTILITY_UI:5655 · utilityBillUI:5704 · payUtility:5729 · buyUtilityFix:5755
-renderPhoneCard:5773 · buyPhone:5813 · sellPhone:5835 · compLiveTotal:5856 · onlineLiveTotal:5867 · syncCoinHeader:5874
-flashPillGain:5879 · renderOnlineEarnPill:5888 · renderCompEarnPill:5913 · openPillInfo:5946 · renderComputerCard:6029 · buyComputer:6064
-sellComputer:6087 · soldCount:6108 · soldBadge:6109 · loadScriptOnce:6115 · advBusyMsg:6140 · advResetLoad:6152
-loadAdv3d:6158 · enterAdventure3D:6166 · pickAdvMap:6191 · enterHaunted3D:6226 · enterHeli3D:6248 · pickHeliMap:6274
-enterDrone3D:6310 · enterDrive3D:6329 · pickDriveMap:6367 · enterMotoMapAsCar:6403 · enterSoccer3D:6422 · enterMoto3D:6441
-enterF1_3D:6463 · enterInvasion3D:6483 · WORLD3D:6509 · gotoRobotShop:6521 · openHealDialog:6527 · world3DFail:6548
-railWorldClick:6579 · openWorldEntryDialog:6594 · railScrollHint:6647 · railScrollTop:6655 · initRailScroll:6660 · renderRailWorlds:6680
-tinvNoticeHTML:6749 · openTinvPicker:6757 · fruitCountdown:6801 · renderFarmCard:6813 · renderFarmClock:6888 · buyFruit:6904
-sellFruit:6924 · sellAllFruit:6945 · collectImg:6974 · renderFactoryCard:6980 · renderMarketCard:7003 · updateWishBadge:7059
-openWishlistDialog:7070 · bindStripArrows:7115 · renderMarketBrowse:7129 · carImg:7158 · renderVehicleShop:7159 · CS_CYCLE_MS:7210
-carInteriorImg:7211 · carStatHtml:7213 · renderCarShowroom:7220 · csShowBig:7247 · csInit:7274 · RS_CYCLE_MS:7297
-robotImg:7298 · renderRobotShop:7299 · rsShowBig:7321 · rsInit:7342 · buyRobot:7361 · enterMecha3D:7386
-pickMechaRobot:7413 · pickDriveCar:7445 · openCarBuyDialog:7488 · buyCarInsurance:7549 · payCarLoanMonthly:7568 · payCarLoanFull:7580
-carDriveBlock:7599 · gotoVehicleShop:7604 · gotoMyStock:7609 · showNeedCarDialog:7615 · craftDiscount:7627 · renderFactory:7630
-renderOrdersUI:7699 · startProduce:7718 · buyCollectible:7746 · cancelProduce:7776 · deliverOrder:7790 · renderOrderClock:7807
-renderCollectMine:7817 · openListDialog:7859 · cancelListing:7912 · buyMarketItem:7935 · showCollectReveal:7964 · buyAC:8002
-openHomeShop:8021 · renderPetShop:8080 · showLevelUp:8141 · renderStats:8178 · showTeacherCard:8285 · CALL_REACT_EMOS:8329
-CALL_TALK_MIN:8332 · CALL_TALK_HOLD:8333 · CALL_ORDER_GAP:8335 · CALL_TONES:8341 · startCall:8715
+openRxPicker:3827 · feedFlyWord:3847 · feedPickRx:3858 · openFeedComments:3872 · closeFeedComments:3887 · fcmRowHTML:3895
+fcmTreeHTML:3904 · renderFeedComments:3917 · bindFeedPostEvents:3995 · openFeedBoard:4047 · renderFeedBoardLive:4068 · renderFeedBoard:4086
+stageColLeft:4105 · alignPetTabs:4114 · alignFeedPlate:4126 · alignProfilePlate:4137 · alignStageLeft:4153 · alignStageCols:4164
+watchStageCols:4178 · alignCureBtn:4188 · dictRecordLookup:4212 · DICT_FILE_COUNT:4223 · loadDict:4224 · dictSearch:4239
+dictTapWords:4254 · dictEntryHTML:4258 · openDictOverlay:4269 · renderDashboard:4353 · sleepBtnHTML:4875 · sleepHintHTML:4882
+sleepAllPets:4893 · wakeAllPets:4906 · feedPet:4917 · openFoodMenu:4936 · feedWith:5009 · AVATAR_UI:5039
+playerAvatarHTML:5043 · SHAPE_UI:5051 · showFeedResult:5060 · curePet:5101 · heartsFx:5124 · PAT_HOLD_MS:5147
+PAT_EXP:5148 · bindPetTap:5149 · petBounce:5167 · petMood:5173 · shortPatPet:5180 · longPatPet:5188
+patCalendarHTML:5208 · patStreakTick:5236 · cureCelebrateFx:5262 · railCureClick:5273 · detoxPet:5285 · openFoodQuiz:5308
+closeDressUpBoard:5427 · openDressUpBoard:5431 · renderShop:5448 · homeVisualHTML:5511 · showHomeRuined:5525 · showCutNotice:5546
+renderHomeCard:5564 · payMaint:5648 · trashBillUI:5664 · payTrash:5681 · UTILITY_UI:5700 · utilityBillUI:5749
+payUtility:5774 · buyUtilityFix:5800 · renderPhoneCard:5818 · buyPhone:5858 · sellPhone:5880 · compLiveTotal:5901
+onlineLiveTotal:5912 · syncCoinHeader:5919 · flashPillGain:5924 · renderOnlineEarnPill:5933 · renderCompEarnPill:5958 · openPillInfo:5991
+renderComputerCard:6074 · buyComputer:6109 · sellComputer:6132 · soldCount:6153 · soldBadge:6154 · loadScriptOnce:6160
+advBusyMsg:6185 · advResetLoad:6197 · loadAdv3d:6203 · enterAdventure3D:6211 · pickAdvMap:6236 · enterHaunted3D:6271
+enterHeli3D:6293 · pickHeliMap:6319 · enterDrone3D:6355 · enterDrive3D:6374 · pickDriveMap:6412 · enterMotoMapAsCar:6448
+enterSoccer3D:6467 · enterMoto3D:6486 · enterF1_3D:6508 · enterInvasion3D:6528 · WORLD3D:6554 · gotoRobotShop:6566
+openHealDialog:6572 · world3DFail:6593 · railWorldClick:6624 · openWorldEntryDialog:6639 · railScrollHint:6692 · railScrollTop:6700
+initRailScroll:6705 · renderRailWorlds:6725 · tinvNoticeHTML:6794 · openTinvPicker:6802 · fruitCountdown:6846 · renderFarmCard:6858
+renderFarmClock:6933 · buyFruit:6949 · sellFruit:6969 · sellAllFruit:6990 · collectImg:7019 · renderFactoryCard:7025
+renderMarketCard:7048 · updateWishBadge:7104 · openWishlistDialog:7115 · bindStripArrows:7160 · renderMarketBrowse:7174 · carImg:7203
+renderVehicleShop:7204 · CS_CYCLE_MS:7255 · carInteriorImg:7256 · carStatHtml:7258 · renderCarShowroom:7265 · csShowBig:7292
+csInit:7319 · RS_CYCLE_MS:7342 · robotImg:7343 · renderRobotShop:7344 · rsShowBig:7366 · rsInit:7387
+buyRobot:7406 · enterMecha3D:7431 · pickMechaRobot:7458 · pickDriveCar:7490 · openCarBuyDialog:7533 · buyCarInsurance:7594
+payCarLoanMonthly:7613 · payCarLoanFull:7625 · carDriveBlock:7644 · gotoVehicleShop:7649 · gotoMyStock:7654 · showNeedCarDialog:7660
+craftDiscount:7672 · renderFactory:7675 · renderOrdersUI:7744 · startProduce:7763 · buyCollectible:7791 · cancelProduce:7821
+deliverOrder:7835 · renderOrderClock:7852 · renderCollectMine:7862 · openListDialog:7904 · cancelListing:7957 · buyMarketItem:7980
+showCollectReveal:8009 · buyAC:8047 · openHomeShop:8066 · renderPetShop:8125 · showLevelUp:8186 · renderStats:8223
+showTeacherCard:8330 · CALL_REACT_EMOS:8374 · CALL_TALK_MIN:8377 · CALL_TALK_HOLD:8378 · CALL_ORDER_GAP:8380 · CALL_TONES:8386
+startCall:8760
 
 ## js/util.js (1,157 บรรทัด · 46 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
