@@ -5214,9 +5214,12 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
    แถวบน = ภาพชุดที่ 1 · แถวล่าง = สัตว์ตัวเดียวกันคนละลายเส้น (ชุดที่ 2)
    กฎทองข้อ 7: ต้องอยู่ในจอครบทั้งใบ ไม่มี scroll แม้จอเตี้ย 812×375
    ============================================================ */
-#screen-picmatch{--pmh:clamp(54px,25.5vh,150px);}
+/* 📐 รอบ 981: ขนาดกระดานตามระดับชั้น (4/10/40 คู่) — จำนวนคอลัมน์ --pmc + ขนาดช่อง --pmh
+   คำนวณจาก fitGrid() ใน js/picmatch.js ทุกครั้งที่ขึ้นรอบใหม่/หมุนจอ (ค่าล่างนี้เป็นแค่ค่าตั้งต้น) */
+#screen-picmatch{--pmh:clamp(54px,25.5vh,150px);--pmc:4;--pmg:8px;}
 #screen-picmatch .pm-label{margin:4px 2px 3px;text-align:center;}
-.pm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;justify-items:center;margin-bottom:2px;}
+.pm-grid{display:grid;grid-template-columns:repeat(var(--pmc),var(--pmh));gap:var(--pmg);
+  justify-content:center;justify-items:center;margin-bottom:2px;}
 .pm-card{position:relative;height:var(--pmh);aspect-ratio:1;width:auto;padding:0;cursor:pointer;
   border:3px solid #fff;border-radius:16px;background:#fff;font-family:inherit;
   box-shadow:0 3px 8px rgba(120,100,160,.18);transition:transform .16s, box-shadow .16s, border-color .16s, opacity .3s;
@@ -5234,6 +5237,13 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 .pm-card.shake{animation:shake .4s;}
 #screen-picmatch .pm-note{margin-top:4px;}
 #screen-picmatch .timer-wrap{margin-bottom:6px;}
+/* รอบ 981 · กระดานใหญ่ — กางกริดเต็มความกว้างจอ (หน้าล็อบบี้ปกติกว้าง 780px ช่องจะเล็กเกินจำเป็น) */
+#screen-picmatch.wide .pm-grid{width:100vw;margin-left:calc(50% - 50vw);}
+/* 🔎 กระดานใหญ่ (ช่องเล็กกว่า 68px) — ขอบ/มุมบางลงให้เห็นภาพเต็มช่อง + ไม่มีที่พอโชว์ป้ายชื่อ */
+#screen-picmatch.tiny .pm-card{border-width:2px;border-radius:9px;box-shadow:0 2px 4px rgba(120,100,160,.16);}
+#screen-picmatch.tiny .pm-card .pm-name{display:none;}
+#screen-picmatch.tiny .pm-card.selected{box-shadow:0 0 0 3px rgba(169,139,236,.5);}
+#screen-picmatch.tiny .pm-wordcard .pm-word-text{font-size:max(8px,calc(var(--pmh)*.17));padding:1px;line-height:1.05;}
 
 /* 🔤 รอบ 978 — โหมด "ภาพ-คำ": ปุ่มสลับโหมดบนกระดาน + การ์ดคำศัพท์ (แทนภาพ) ในแถวล่าง */
 .pm-mode-btn{background:#fff;border:3px solid var(--purple-d);border-radius:999px;padding:4px 10px;

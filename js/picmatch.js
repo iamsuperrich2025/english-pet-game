@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · ผู้ใช้สั่ง 3 ส.ค. · โหมดภาพ-คำ รอบ 978)
+   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · ผู้ใช้สั่ง 3 ส.ค. · โหมดภาพ-คำ รอบ 978 · กรองตามระดับชั้น รอบ 980)
    2 โหมด สลับด้วยปุ่มบนกระดาน:
    · "pic"  = แถวบน ภาพสัตว์ชุดที่ 1 ↔ แถวล่าง สัตว์ตัวเดียวกันคนละลายเส้น (ชุดที่ 2) — เฉพาะ 46 ตัวที่มีภาพครบ 2 แผ่น
    · "word" = แถวบน ภาพสัตว์ (แผ่นเดียว) ↔ แถวล่าง คำศัพท์ภาษาอังกฤษ — ครบทั้ง 104 ตัวที่มีภาพอย่างน้อย 1 แผ่น
@@ -9,10 +9,26 @@
    แตะภาพ/คำไหน = อ่านออกเสียงชื่อสัตว์เป็นภาษาอังกฤษ (speakWord → sound/words/<word>.mp3 · ไม่มีไฟล์ค่อย TTS)
    ภาพ: img/matching/cards/a1_<key>.png / a2_<key>.png (ตัดจากแผ่นของผู้ใช้ด้วย tools/slice_matching.py)
    คลังคำ: js/data/matchpics.js (โหมด pic · 46 ตัวครบ 2 แผ่น) · js/data/matchwords.js (โหมด word · 104 ตัว + sheet)
+   ระดับชั้น: js/data/animalgrade.js (key→tier 1-3 เจนจาก tools/gen_animalgrade.py) — bank() กรองสะสมตาม gradeTier()
    ============================================================ */
 (function(){
-  const PAIRS = 4;                 // จำนวนคู่ต่อรอบ (เท่าเกมจับคู่คำศัพท์)
-  const SEC = 60;                  // เวลาต่อรอบ (+20 วิ ถ้าเลี้ยงสุนัขโตเต็มวัยไม่ป่วย — กติกาเดียวกัน)
+  /* 🎚️ รอบ 981 (ผู้ใช้สั่ง): ขนาดกระดานตามระดับชั้น — ยิ่งโตยิ่งเยอะ ภาพยิ่งย่อ (แบบเกม onet แนวนอน)
+     [จำนวนคู่, วินาทีต่อรอบ] · เวลา = คู่ละ 15 วิ (กระดานใหญ่ลดเหลือคู่ละ 12 วิ ไม่งั้นนานเกินไป) */
+  const SIZE_LOW  = [4,  60];      // ต่ำกว่าประถม · ป.1-2  → 8 ภาพ
+  const SIZE_MID  = [10, 150];     // ป.3-4                → 20 ภาพ
+  const SIZE_HIGH = [40, 480];     // ป.5 ขึ้นไป           → 80 ภาพ
+  const NAME_MIN  = 80;            // ช่องเล็กกว่านี้ = ไม่โชว์ป้ายชื่อใต้ภาพ (ตัวหนังสือจะเล็กจนอ่านไม่ออก)
+
+  /* ระดับชั้นผู้เล่น → ระดับ 1(ป.1-2)/2(ป.3-4)/3(ป.5 ขึ้นไป) — ใช้คุมทั้งขนาดกระดานและกรองคลังสัตว์ (รอบ 980)
+     คุมความยาก: ตรรกะเดียวกับ defaultSize ของเกมค้นหาคำ */
+  function gradeTier(){
+    const g = String((typeof state !== 'undefined' && state.student) ? state.student.grade : 'ป.1');
+    if(g.indexOf('ต่ำกว่าประถม') === 0) return 1;
+    const m = /^ป\.(\d)/.exec(g);
+    if(m) return (+m[1] <= 2) ? 1 : (+m[1] <= 4) ? 2 : 3;
+    return 3;                       // ม.1-ม.6 · ปริญญาตรี · สูงกว่าปริญญาตรี
+  }
+  function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
 
   let queue = [], qi = 0;          // คิวสัตว์สุ่มไม่ซ้ำจนกว่าจะครบคลัง (คลังคนละชุดต่อโหมด)
@@ -20,7 +36,7 @@
   const pm = {
     mode:'pic',                    // 'pic' = จับคู่ภาพกับภาพ (เดิม) · 'word' = จับคู่ภาพกับคำอังกฤษ
     pairs:[], sel1:null, sel2:null, matched:0, checking:false,
-    timerId:0, timeLeft:0, total:SEC, roundAt:0, clean:true, hintUsed:false,
+    timerId:0, timeLeft:0, total:60, roundAt:0, clean:true, hintUsed:false,
   };
 
   const $  = id => document.getElementById(id);
@@ -30,14 +46,19 @@
     const arr = pm.mode === 'word'
       ? (typeof MATCH_WORDS !== 'undefined' ? MATCH_WORDS : [])
       : (typeof MATCH_PICS !== 'undefined' ? MATCH_PICS : []);
-    return arr;
+    if(typeof ANIMAL_GRADE === 'undefined') return arr;      // ไฟล์กรองยังไม่โหลด — เล่นได้ครบคลังเดิม (กันพัง)
+    const tier = gradeTier();
+    // 🎓 รอบ 980: กรองสัตว์ตามระดับชั้นผู้เล่นแบบสะสม (tier สูง = เห็นของ tier ต่ำด้วยเสมอ ไม่มีวันเห็นน้อยลง)
+    const filtered = arr.filter(it => (ANIMAL_GRADE[it[0]] || 3) <= tier);
+    return filtered.length ? filtered : arr;                // กันคลังว่าง (เผื่อคีย์ไม่ตรงตารางในอนาคต)
   };
   const imgSrc = (sheet, key) => `img/matching/cards/${sheet}_${key}.png`;
 
   /* ---------- คิวสัตว์: สุ่มทั้งคลังแล้วจ่ายทีละรอบ ครบคลังค่อยสับใหม่ (เห็นภาพหลากหลาย ไม่วนซ้ำ) ---------- */
   function take(n){
     const out = [];
-    while(out.length < n){
+    n = Math.min(n, bank().length);   // 🛡️ รอบ 981: คลัง (หลังกรองตามชั้น) เล็กกว่าที่ขอ = เอาเท่าที่มี
+    while(out.length < n){            //    ไม่งั้นลูปหาตัวไม่ซ้ำไปเรื่อย ๆ ไม่มีวันจบ = เกมค้าง
       if(qi >= queue.length){ queue = shuffle(bank().slice()); qi = 0; }
       if(!queue.length) break;                       // คลังว่าง (ไฟล์ข้อมูลไม่โหลด) — กันลูปไม่รู้จบ
       const it = queue[qi++];
@@ -118,12 +139,16 @@
     $('pm-hint').style.display = (p && p.type === 'cat' && has('abilityOn') && abilityOn(p)) ? 'block' : 'none';
     newRound();
     showScreen('screen-picmatch');
+    fitGrid();          // ตอน newRound จอยังไม่ active (วัดขนาดไม่ได้) — วัดจริงหลังโชว์จอ
   }
 
   /* ---------- รอบใหม่ ---------- */
   function newRound(){
     clearInterval(pm.timerId);
-    pm.pairs = take(PAIRS);
+    let size = sizeForGrade();
+    // 🔤 โหมดภาพ-คำ: ตัวหนังสือต้องอ่านออก → กระดานใหญ่สุด 20 คู่ (40 คู่ = ช่องเล็กจนคำยาวโดนตัด)
+    if(pm.mode === 'word' && size[0] > 20) size = [20, 300];
+    pm.pairs = take(size[0]);
     pm.sel1 = pm.sel2 = null;
     pm.matched = 0; pm.checking = false; pm.hintUsed = false;
     pm.roundAt = Date.now(); pm.clean = true;
@@ -145,12 +170,14 @@
       $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a2', 'a2', it)).join('');
     }
     [...sec.querySelectorAll('.pm-card')].forEach(c => c.addEventListener('click', () => pick(c)));
+    fitGrid();                       // 📐 ย่อ/ขยายช่องให้กระดานทั้งใบพอดีจอ (กระดานใหญ่ = ภาพเล็กลง)
 
     const hb = $('pm-hint');
     hb.disabled = false; hb.textContent = '💡 น้องแมวช่วยตัดช้อยส์!';
 
     const p = has('activePet') ? activePet() : null;
-    pm.total = SEC + ((p && p.type === 'dog' && has('abilityOn') && abilityOn(p)) ? 20 : 0);
+    // เวลา: ตามขนาดกระดาน (+20 วิ ถ้าเลี้ยงสุนัขโตเต็มวัยไม่ป่วย — กติกาเดียวกับเกมจับคู่คำศัพท์)
+    pm.total = size[1] + ((p && p.type === 'dog' && has('abilityOn') && abilityOn(p)) ? 20 : 0);
     pm.timeLeft = pm.total;
     tickBar();
     pm.timerId = setInterval(()=>{
@@ -168,9 +195,57 @@
     preload();   // โหลดภาพรอบถัดไปล่วงหน้า กันภาพขึ้นช้า
   }
 
+  /* ---------- 📐 จัดกริดให้พอดีจอ (รอบ 981) ----------
+     เลือก "จำนวนคอลัมน์" ที่ทำให้ช่องใหญ่ที่สุด โดยกระดานทั้ง 2 แถบยังอยู่ในจอครบ ไม่ต้องเลื่อน
+     กระดาน 40 คู่ (80 ภาพ) จึงย่อภาพลงเองแบบเกมจับคู่แนวนอน · ช่องเล็กกว่า NAME_MIN = ซ่อนป้ายชื่อ */
+  function fitGrid(){
+    const n = pm.pairs.length;
+    if(!n || !sec || !sec.classList.contains('active')) return;
+    const gA = $('pm-grid-a');
+    sec.classList.toggle('wide', n > 8);                 // กระดานใหญ่ = กางกริดเต็มความกว้างจอ (ล็อบบี้ปกติกว้าง 780)
+    void gA.offsetWidth;                                 // บังคับ reflow ก่อนวัด ไม่งั้นได้ความกว้างก่อนกาง
+    const availW = gA.clientWidth;
+    if(!availW) return;                                  // ยังไม่ได้โชว์จอ — เดี๋ยว open()/resize เรียกซ้ำ
+    let used = 0;                                        // ความสูงของทุกอย่างที่ไม่ใช่กริด (หัว/แถบเวลา/ป้าย/โน้ต)
+    [...sec.children].forEach(el=>{
+      if(!el.classList.contains('pm-grid') && el.offsetHeight) used += el.offsetHeight + 6;
+    });
+    const availH = Math.max(60, (window.innerHeight - sec.getBoundingClientRect().top - used - 10) / 2);
+    const gap = n > 20 ? 4 : n > 8 ? 6 : 8;
+    let best = 0, bestCols = n;
+    for(let cols = 1; cols <= n; cols++){
+      const rows = Math.ceil(n / cols);
+      const s = Math.min((availW - gap*(cols-1)) / cols, (availH - gap*(rows-1)) / rows);
+      if(s > best){ best = s; bestCols = cols; }
+    }
+    let side = Math.max(24, Math.min(150, Math.floor(best)));
+    const rows = Math.ceil(n / bestCols);
+    const apply = s => {
+      sec.style.setProperty('--pmh', s + 'px');
+      sec.style.setProperty('--pmc', bestCols);
+      sec.style.setProperty('--pmg', gap + 'px');
+      sec.classList.toggle('tiny', s < NAME_MIN);
+    };
+    apply(side);
+    /* คำนวณมาร์จิน/ขอบของแต่ละจอไม่ตรงเป๊ะเสมอ → วัดของจริงแล้วหดจนกระดานอยู่ในจอครบ (กฎทองข้อ 7)
+       ⚠️ วัดจาก "ลูกใบล่างสุด" ไม่ใช่ตัว section — ป้ายล่างล้นออกนอก section ได้ (rect ของ section ไม่รวมส่วนที่ล้น) */
+    const lowest = ()=>{
+      let b = 0;
+      [...sec.children].forEach(el=>{ const r = el.getBoundingClientRect(); if(r.height && r.bottom > b) b = r.bottom; });
+      return b;
+    };
+    for(let i = 0; i < 6; i++){
+      const over = lowest() - window.innerHeight;
+      if(over <= 0 || side <= 24) break;
+      side = Math.max(24, side - Math.max(1, Math.ceil(over / (2 * rows))));
+      apply(side);
+    }
+  }
+  window.addEventListener('resize', ()=>{ if(sec && sec.classList.contains('active')) fitGrid(); });
+
   let preImgs = [];
   function preload(){
-    const nx = queue.slice(qi, qi + PAIRS);
+    const nx = queue.slice(qi, qi + pm.pairs.length);
     preImgs = [];
     if(pm.mode === 'word'){
       nx.forEach(it => { const i = new Image(); i.src = imgSrc(it[3] || 'a1', it[0]); preImgs.push(i); });
@@ -236,7 +311,12 @@
 
     if(typeof game !== 'undefined'){ game.combo++; game.sessionMatches++; }
     pm.matched++;
-    if(typeof state !== 'undefined') state.totalMatches++;
+    if(typeof state !== 'undefined'){
+      state.totalMatches++;
+      // 🖼️ รอบ 979: แต้มสะสมตลอดกาล (state.pmScore/pmPairs/pmBoards) → แท็บใหม่ "🖼️ จับคู่ภาพ" (สูตรเดียวกับ wsScore)
+      state.pmPairs = (state.pmPairs || 0) + 1;
+      state.pmScore = Math.round((state.pmScore || 0) + 2);
+    }
     if(has('questEvent')) questEvent('match');
     if(has('vbRecord')) vbRecord(A.dataset.en, A.dataset.th, true);
 
@@ -276,15 +356,22 @@
     A.classList.add('matched'); B.classList.add('matched');
     pm.sel1 = pm.sel2 = null; pm.checking = false;
 
-    if(pm.matched === PAIRS){
+    if(pm.matched === pm.pairs.length){
       clearInterval(pm.timerId);
-      if(has('addCoins')) addCoins(20);
-      setSess(20);
-      if(has('addRP')) addRP(5);
+      // โบนัสเคลียร์รอบคิดตามขนาดกระดาน (4 คู่ = +20🪙 +5RP เท่าเกมจับคู่คำศัพท์เดิม · 40 คู่ = +200🪙 +50RP)
+      const bCoin = pm.pairs.length * 5, bRp = Math.round(pm.pairs.length * 1.25);
+      if(has('addCoins')) addCoins(bCoin);
+      setSess(bCoin);
+      if(has('addRP')) addRP(bRp);
+      if(typeof state !== 'undefined'){   // 🖼️ รอบ 979: เคลียร์รอบ = โบนัสแต้มกระดานอันดับ (สูตรเดียวกับ WS_CLEAR_BONUS)
+        state.pmBoards = (state.pmBoards || 0) + 1;
+        state.pmScore = Math.round((state.pmScore || 0) + 10);
+      }
       if(has('saveState')) saveState();
       $('pm-coin').textContent = has('fmtNum') ? fmtNum(state.coins) : state.coins;
-      // ⚡ สายฟ้าแลบ: เคลียร์ครบไม่พลาดเลยภายในเวลาที่กำหนด (เกณฑ์เดียวกับเกมจับคู่คำศัพท์)
-      const thunder = pm.clean && typeof THUNDER_MS !== 'undefined' && (Date.now() - pm.roundAt) <= THUNDER_MS;
+      // ⚡ สายฟ้าแลบ: เคลียร์ครบไม่พลาดเลยภายในเวลาที่กำหนด (เกณฑ์เดียวกับเกมจับคู่คำศัพท์ · คิดตามขนาดกระดาน)
+      const thunder = pm.clean && typeof THUNDER_MS !== 'undefined'
+                   && (Date.now() - pm.roundAt) <= THUNDER_MS * (pm.pairs.length / 4);
       if(thunder){
         if(has('thunderFx')) thunderFx();
         if(typeof sfx !== 'undefined') sfx.spark();
@@ -293,7 +380,7 @@
       }
       setTimeout(()=>{
         if(typeof sfx !== 'undefined') sfx.levelup();
-        if(has('floatFx')) floatFx('🎉 เก่งมาก! โบนัส +20 🪙 +5 RP', '#5fc46a');
+        if(has('floatFx')) floatFx(`🎉 เก่งมาก! โบนัส +${bCoin} 🪙 +${bRp} RP`, '#5fc46a');
       }, thunder ? 900 : 400);
       setTimeout(newRound, thunder ? 2100 : 1600);
     }
