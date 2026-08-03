@@ -563,7 +563,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (421 บรรทัด · 6 รายการ)
+## js/main.js (425 บรรทัด · 6 รายการ)
 syncMusicBtn:110 · showQuizBackPay:146 · showGiantRefund:191 · showTicketRefund:232 · fitQbp:272 · bootGame:286
 
 ## js/moto3d.js (2,758 บรรทัด · 143 รายการ)
@@ -683,7 +683,7 @@ addRP:1149
 
 ## js/typing.js (369 บรรทัด · 0 รายการ)
 
-## js/ui.js (8,668 บรรทัด · 352 รายการ)
+## js/ui.js (8,674 บรรทัด · 352 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-308 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -705,32 +705,32 @@ addRP:1149
 - 3057-3403 ระบบส่งของขวัญ (ข้อ 0.5) — ห้องของขวัญ + กล่องเลือกส่ง + ฉากเปิด
 - 3404-3496 RANK CARD + ฉากเลื่อนแรงค์
 - 3497-3499 PET DASHBOARD
-- 3500-3568 📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
-- 3569-3972 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
-- 3973-4132 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
-- 4133-4784 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
-- 4785-4828 การนอน (คิว 7725691507 ข้อ 1)
-- 4829-5210 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
-- 5211-5329 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
-- 5330-5415 🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
-- 5416-5603 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
-- 5604-5721 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
-- 5722-5804 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
-- 5805-5815 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
-- 5816-5860 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
-- 5861-6454 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
-- 6455-6594 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
-- 6595-6748 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
-- 6749-6918 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
-- 6919-6928 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
-- 6929-6951 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
-- 6952-7104 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 7105-8025 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 8026-8086 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 8087-8123 เลเวลอัพ (รายตัว)
-- 8124-8229 สถิติผลการเรียนรู้
-- 8230-8267 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 8268-8668 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 3500-3569 📰 รอบ 155: overlay ข้อมูลน้อง & การดูแล + ฟีดกิจกรรมเพื่อน
+- 3570-3973 📰 รอบ 701 — ฟีดล็อบบี้ "ทีละโพสต์" แบบ Facebook (ผู้ใช้สั่ง 29 ก.ค. 2026)
+- 3974-4133 🌍 รอบ 639: หน้า Feed เต็มจอ — ทุกคน (ไม่ใช่แค่ follow) + ไลก์/คอมเมนต์
+- 4134-4790 📖 Dictionary ค้นหาคำศัพท์ (รอบ 254 ผู้ใช้สั่ง 16 ก.ค. 2026)
+- 4791-4834 การนอน (คิว 7725691507 ข้อ 1)
+- 4835-5216 ให้อาหาร (ระบบมื้อเย็น 18:00 + ความอิ่มสะสม — ข้อ 2+3)
+- 5217-5335 🛡️ ควิซอาหารปลอดภัย (ต่อยอดข้อ 5.1)
+- 5336-5421 🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
+- 5422-5609 ที่พัก (หลบแดด/หลบฝน) + เครื่องปรับอากาศ
+- 5610-5727 บิลสาธารณูปโภค (ค่าไฟ/ค่าน้ำ — เครื่องยนต์อยู่ใน state.js: UTILITIES/billTick)
+- 5728-5810 การ์ดมือถือ (ข้อ 7): ซื้อ 10,000 ขายคืน 6,000
+- 5811-5821 การ์ดคอมพิวเตอร์ (ข้อ 11): ซื้อ 50,000 ขายคืน 30,000
+- 5822-5866 item 8: โบนัสออนไลน์ +0.01 เหรียญ/วิ ฟรีทุกคนที่เปิดเกมออนไลน์อยู่
+- 5867-6460 💻 รอบ 706 (ผู้ใช้สั่ง 29 ก.ค. 2026): ช่องรายได้คอมพิวเตอร์บนแถบบนล็อบบี้
+- 6461-6600 🌍 ปุ่มลัดเข้าโลก 3D ในรางเมนูซ้าย (ผู้ใช้สั่ง 9 ก.ค. 2026)
+- 6601-6754 🧭 ป้ายบอกทางของรางเมนูซ้าย (รอบ 601 · ผู้ใช้สั่ง 26 ก.ค. 2026)
+- 6755-6924 การ์ดสวนผลไม้ (ข้อ 12): ซื้อต้นไม้ปลูกได้ไม่จำกัด แต่ละต้นออกผล
+- 6925-6934 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
+- 6935-6957 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
+- 6958-7110 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
+- 7111-8031 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 8032-8092 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 8093-8129 เลเวลอัพ (รายตัว)
+- 8130-8235 สถิติผลการเรียนรู้
+- 8236-8273 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 8274-8674 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petClipHint:145 · __clipReady:157 · petShowHTML:165 · PROF_AV_MAX:229
@@ -758,39 +758,39 @@ ibTimeStr:2668 · IB_CALL_RE:2677 · ibCallInfo:2678 · openChatInbox:2683 · ch
 giftImg:3060 · giftDateStr:3062 · GREETS:3070 · GREET_EXP:3078 · greetInfo:3079 · openGreetPicker:3083
 giftItemPic:3125 · giftItemName:3133 · updateGiftBadge:3139 · renderGiftPanel:3148 · acceptGift:3206 · declineGift:3229
 showGreetReveal:3238 · showGiftReveal:3265 · openGiftPicker:3291 · confirmSendGift:3359 · doSendGift:3383 · rankBadgeHTML:3407
-renderRankCard:3412 · renderRankTab:3446 · showRankUp:3474 · bindPetPlateButtons:3509 · openPetInfoOverlay:3538 · feedAgo:3561
-FEED_DECK_MAX:3581 · FEED_SLIDE_MS:3582 · FEED_RESUME_MS:3583 · feedPostImgIndex:3588 · feedPostImg:3599 · feedPostByKey:3608
-feedCanReact:3611 · fpStatsHTML:3616 · fpNameBadgesHTML:3632 · fpostHTML:3636 · renderFeedCard:3671 · feedDeckGo:3709
-feedDeckTick:3729 · renderFeedBell:3751 · feedNotifArrived:3759 · openFeedNotif:3766 · closeRxPicker:3800 · openRxPicker:3804
-feedFlyWord:3824 · feedPickRx:3835 · openFeedComments:3848 · closeFeedComments:3862 · renderFeedComments:3868 · bindFeedPostEvents:3927
-openFeedBoard:3979 · renderFeedBoardLive:4000 · renderFeedBoard:4018 · stageColLeft:4037 · alignPetTabs:4046 · alignFeedPlate:4058
-alignProfilePlate:4069 · alignStageLeft:4085 · alignStageCols:4096 · watchStageCols:4110 · alignCureBtn:4120 · dictRecordLookup:4144
-DICT_FILE_COUNT:4155 · loadDict:4156 · dictSearch:4171 · dictTapWords:4186 · dictEntryHTML:4190 · openDictOverlay:4201
-renderDashboard:4285 · sleepBtnHTML:4790 · sleepHintHTML:4797 · sleepAllPets:4808 · wakeAllPets:4821 · feedPet:4832
-openFoodMenu:4846 · feedWith:4917 · AVATAR_UI:4947 · playerAvatarHTML:4951 · SHAPE_UI:4959 · showFeedResult:4968
-curePet:5009 · heartsFx:5032 · PAT_HOLD_MS:5055 · PAT_EXP:5056 · bindPetTap:5057 · petBounce:5075
-petMood:5081 · shortPatPet:5088 · longPatPet:5096 · patCalendarHTML:5116 · patStreakTick:5144 · cureCelebrateFx:5170
-railCureClick:5181 · detoxPet:5193 · openFoodQuiz:5216 · closeDressUpBoard:5335 · openDressUpBoard:5339 · renderShop:5356
-homeVisualHTML:5419 · showHomeRuined:5433 · showCutNotice:5454 · renderHomeCard:5472 · payMaint:5556 · trashBillUI:5572
-payTrash:5589 · UTILITY_UI:5608 · utilityBillUI:5657 · payUtility:5682 · buyUtilityFix:5708 · renderPhoneCard:5726
-buyPhone:5766 · sellPhone:5788 · compLiveTotal:5809 · onlineLiveTotal:5820 · syncCoinHeader:5827 · flashPillGain:5832
-renderOnlineEarnPill:5841 · renderCompEarnPill:5866 · openPillInfo:5899 · renderComputerCard:5982 · buyComputer:6017 · sellComputer:6040
-soldCount:6061 · soldBadge:6062 · loadScriptOnce:6068 · advBusyMsg:6093 · advResetLoad:6105 · loadAdv3d:6111
-enterAdventure3D:6119 · pickAdvMap:6144 · enterHaunted3D:6179 · enterHeli3D:6201 · pickHeliMap:6227 · enterDrone3D:6263
-enterDrive3D:6282 · pickDriveMap:6320 · enterMotoMapAsCar:6356 · enterSoccer3D:6375 · enterMoto3D:6394 · enterF1_3D:6416
-enterInvasion3D:6436 · WORLD3D:6462 · gotoRobotShop:6474 · openHealDialog:6480 · world3DFail:6501 · railWorldClick:6532
-openWorldEntryDialog:6547 · railScrollHint:6600 · railScrollTop:6608 · initRailScroll:6613 · renderRailWorlds:6633 · tinvNoticeHTML:6702
-openTinvPicker:6710 · fruitCountdown:6754 · renderFarmCard:6766 · renderFarmClock:6841 · buyFruit:6857 · sellFruit:6877
-sellAllFruit:6898 · collectImg:6927 · renderFactoryCard:6933 · renderMarketCard:6956 · updateWishBadge:7012 · openWishlistDialog:7023
-bindStripArrows:7068 · renderMarketBrowse:7082 · carImg:7111 · renderVehicleShop:7112 · CS_CYCLE_MS:7163 · carInteriorImg:7164
-carStatHtml:7166 · renderCarShowroom:7173 · csShowBig:7200 · csInit:7227 · RS_CYCLE_MS:7250 · robotImg:7251
-renderRobotShop:7252 · rsShowBig:7274 · rsInit:7295 · buyRobot:7314 · enterMecha3D:7339 · pickMechaRobot:7366
-pickDriveCar:7398 · openCarBuyDialog:7441 · buyCarInsurance:7502 · payCarLoanMonthly:7521 · payCarLoanFull:7533 · carDriveBlock:7552
-gotoVehicleShop:7557 · gotoMyStock:7562 · showNeedCarDialog:7568 · craftDiscount:7580 · renderFactory:7583 · renderOrdersUI:7652
-startProduce:7671 · buyCollectible:7699 · cancelProduce:7727 · deliverOrder:7741 · renderOrderClock:7758 · renderCollectMine:7768
-openListDialog:7810 · cancelListing:7863 · buyMarketItem:7886 · showCollectReveal:7913 · buyAC:7951 · openHomeShop:7970
-renderPetShop:8029 · showLevelUp:8090 · renderStats:8127 · showTeacherCard:8234 · CALL_REACT_EMOS:8278 · CALL_TALK_MIN:8281
-CALL_TALK_HOLD:8282 · CALL_ORDER_GAP:8284 · CALL_TONES:8290 · startCall:8664
+renderRankCard:3412 · renderRankTab:3446 · showRankUp:3474 · bindPetPlateButtons:3509 · openPetInfoOverlay:3539 · feedAgo:3562
+FEED_DECK_MAX:3582 · FEED_SLIDE_MS:3583 · FEED_RESUME_MS:3584 · feedPostImgIndex:3589 · feedPostImg:3600 · feedPostByKey:3609
+feedCanReact:3612 · fpStatsHTML:3617 · fpNameBadgesHTML:3633 · fpostHTML:3637 · renderFeedCard:3672 · feedDeckGo:3710
+feedDeckTick:3730 · renderFeedBell:3752 · feedNotifArrived:3760 · openFeedNotif:3767 · closeRxPicker:3801 · openRxPicker:3805
+feedFlyWord:3825 · feedPickRx:3836 · openFeedComments:3849 · closeFeedComments:3863 · renderFeedComments:3869 · bindFeedPostEvents:3928
+openFeedBoard:3980 · renderFeedBoardLive:4001 · renderFeedBoard:4019 · stageColLeft:4038 · alignPetTabs:4047 · alignFeedPlate:4059
+alignProfilePlate:4070 · alignStageLeft:4086 · alignStageCols:4097 · watchStageCols:4111 · alignCureBtn:4121 · dictRecordLookup:4145
+DICT_FILE_COUNT:4156 · loadDict:4157 · dictSearch:4172 · dictTapWords:4187 · dictEntryHTML:4191 · openDictOverlay:4202
+renderDashboard:4286 · sleepBtnHTML:4796 · sleepHintHTML:4803 · sleepAllPets:4814 · wakeAllPets:4827 · feedPet:4838
+openFoodMenu:4852 · feedWith:4923 · AVATAR_UI:4953 · playerAvatarHTML:4957 · SHAPE_UI:4965 · showFeedResult:4974
+curePet:5015 · heartsFx:5038 · PAT_HOLD_MS:5061 · PAT_EXP:5062 · bindPetTap:5063 · petBounce:5081
+petMood:5087 · shortPatPet:5094 · longPatPet:5102 · patCalendarHTML:5122 · patStreakTick:5150 · cureCelebrateFx:5176
+railCureClick:5187 · detoxPet:5199 · openFoodQuiz:5222 · closeDressUpBoard:5341 · openDressUpBoard:5345 · renderShop:5362
+homeVisualHTML:5425 · showHomeRuined:5439 · showCutNotice:5460 · renderHomeCard:5478 · payMaint:5562 · trashBillUI:5578
+payTrash:5595 · UTILITY_UI:5614 · utilityBillUI:5663 · payUtility:5688 · buyUtilityFix:5714 · renderPhoneCard:5732
+buyPhone:5772 · sellPhone:5794 · compLiveTotal:5815 · onlineLiveTotal:5826 · syncCoinHeader:5833 · flashPillGain:5838
+renderOnlineEarnPill:5847 · renderCompEarnPill:5872 · openPillInfo:5905 · renderComputerCard:5988 · buyComputer:6023 · sellComputer:6046
+soldCount:6067 · soldBadge:6068 · loadScriptOnce:6074 · advBusyMsg:6099 · advResetLoad:6111 · loadAdv3d:6117
+enterAdventure3D:6125 · pickAdvMap:6150 · enterHaunted3D:6185 · enterHeli3D:6207 · pickHeliMap:6233 · enterDrone3D:6269
+enterDrive3D:6288 · pickDriveMap:6326 · enterMotoMapAsCar:6362 · enterSoccer3D:6381 · enterMoto3D:6400 · enterF1_3D:6422
+enterInvasion3D:6442 · WORLD3D:6468 · gotoRobotShop:6480 · openHealDialog:6486 · world3DFail:6507 · railWorldClick:6538
+openWorldEntryDialog:6553 · railScrollHint:6606 · railScrollTop:6614 · initRailScroll:6619 · renderRailWorlds:6639 · tinvNoticeHTML:6708
+openTinvPicker:6716 · fruitCountdown:6760 · renderFarmCard:6772 · renderFarmClock:6847 · buyFruit:6863 · sellFruit:6883
+sellAllFruit:6904 · collectImg:6933 · renderFactoryCard:6939 · renderMarketCard:6962 · updateWishBadge:7018 · openWishlistDialog:7029
+bindStripArrows:7074 · renderMarketBrowse:7088 · carImg:7117 · renderVehicleShop:7118 · CS_CYCLE_MS:7169 · carInteriorImg:7170
+carStatHtml:7172 · renderCarShowroom:7179 · csShowBig:7206 · csInit:7233 · RS_CYCLE_MS:7256 · robotImg:7257
+renderRobotShop:7258 · rsShowBig:7280 · rsInit:7301 · buyRobot:7320 · enterMecha3D:7345 · pickMechaRobot:7372
+pickDriveCar:7404 · openCarBuyDialog:7447 · buyCarInsurance:7508 · payCarLoanMonthly:7527 · payCarLoanFull:7539 · carDriveBlock:7558
+gotoVehicleShop:7563 · gotoMyStock:7568 · showNeedCarDialog:7574 · craftDiscount:7586 · renderFactory:7589 · renderOrdersUI:7658
+startProduce:7677 · buyCollectible:7705 · cancelProduce:7733 · deliverOrder:7747 · renderOrderClock:7764 · renderCollectMine:7774
+openListDialog:7816 · cancelListing:7869 · buyMarketItem:7892 · showCollectReveal:7919 · buyAC:7957 · openHomeShop:7976
+renderPetShop:8035 · showLevelUp:8096 · renderStats:8133 · showTeacherCard:8240 · CALL_REACT_EMOS:8284 · CALL_TALK_MIN:8287
+CALL_TALK_HOLD:8288 · CALL_ORDER_GAP:8290 · CALL_TONES:8296 · startCall:8670
 
 ## js/util.js (1,100 บรรทัด · 46 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
@@ -826,16 +826,16 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,017 บรรทัด · 743 selector)
-:root:6,5005 · html:15 · body:16,4969,5011 · *:36,37,38,39 · #app:42 · h1:44
+## css/lobby.css (5,026 บรรทัด · 742 selector)
+:root:6,5014 · html:15 · body:16,4978,5020 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
 .login-rule:133,134,135 · .login-tag:136 · #screen-game:185,186,187,188(+7) · #screen-quiz:199,200,201,202(+6) · #quiz-choices:211,212 · .word-card:219
-.quiz-choice:220,221,222 · .big-btn:225,226,227,228 · #screen-dashboard:233,1131,1139 · .lobby-top:240,873,874,875(+27) · .top-flex:241 · .profile-plate:242,246,794,3542(+12)
+.quiz-choice:220,221,222 · .big-btn:225,226,227,228 · #screen-dashboard:233,1131,1139 · .lobby-top:240,873,874,875(+27) · .top-flex:241 · .profile-plate:242,246,794,3551(+12)
 #rain-fx:251 · .rain-layer:254,260 · .rain-glass:267 · .glass-drop:268 · .rail-btn:283,889,895,897(+19) · .rail-badge:284
 .fr-code-box:289 · .fr-code-label:293 · .fr-code-row:294 · .fr-code:295 · .fr-copy-btn:300,304,309,310 · .fr-search-btn:305
 .fr-add-btn:306 · .fr-accept:307 · .fr-decline:308 · #fr-search-input:311 · #fr-search-result:315 · .fr-found:316
-.fr-hint:320 · .fr-list-title:321 · .fr-row:322 · .fr-req:326 · .fr-row-name:328,332,4709 · .fr-row-status:336
+.fr-hint:320 · .fr-list-title:321 · .fr-row:322 · .fr-req:326 · .fr-row-name:328,332,4718 · .fr-row-status:336
 .fr-req-btns:337 · .online-dot:338 · .fr-chat-btn:339,344,346 · .fr-unread:347 · .fr-call-btn:353,359 · .chat-overlay:368,374,375
 .chat-box:376,679,686,693(+12) · .chat-head:388 · .chat-theme-btn:393,397 · .chat-secret-tg:398,399 · .cs-switch:400,401,406,407 · .cs-slider:402,404
 .chat-secret-note:408 · .chat-theme-strip:411 · .chat-theme-sw:413,416,417,418(+1) · .chat-head-name:420,423 · .chat-head-ava:422 · .chat-close:424
@@ -847,112 +847,112 @@ vbRender:148 · vbCardHTML:194
 .ct-sub:578 · .call-add:602 · .ca-head:609 · .ca-list:610 · .ca-row:611,615 · .ca-dot:616,617
 .ca-nm:618,619 · .ca-go:620 · .ca-empty:621 · .ca-safe:622 · .ca-close:623 · .call-bar:627
 .cb-btn:632,637,638 · .cb-end:639,640 · .call-emos:641 · .call-emo:646,647 · .call-fx:649 · .call-fx-emo:650
-.pl-click:742,744,745 · .pl-overlay:746 · .pl-card:750,2676 · .pl-close:756 · .pl-head:760,2509,2512 · .pl-grade:765,4715,4716
+.pl-click:742,744,745 · .pl-overlay:746 · .pl-card:750,2685 · .pl-close:756 · .pl-head:760,2508,2511 · .pl-grade:765,4724,4725
 .pl-body:766 · .pl-loading:767 · .pl-none:768 · .pl-me-tag:769 · .pl-blk-wrap:771 · .pl-blk:772
 .pl-stat:773 · .pl-lbl:778 · .pl-val:779,780 · .pl-tip:781 · .chip-edit:787,792,793 · .rank-mini:799,805,806,807
 .pass-photo:809,814 · .pet-tabs:816 · .dict-box:817,821,822,823(+1) · .dict-card:829,834,838,839(+2) · .dict-head:835,836 · .dict-trail:843,847
 .dt-c:848,852,853 · .dt-sep:854 · .dict-today:855 · .di-w:857,858,859 · .dict-list:860 · .dict-item:861,865,866,867(+5)
 .lobby-mid:881 · .rail-wrap:884,928,939,940 · .rail-scroll:887,922,926,927 · .lobby-rail:888 · .rail-pinned:902,903 · .rail-nudge:929,937,938,941(+1)
-.rail-worlds:948 · .rail-div:949 · .lobby-stage:991,993,1009,1136(+13) · .newword-banner:999,1006,1011,4094(+2) · .coin-fly:1022,1025 · .coin-plus:1031
+.rail-worlds:948 · .rail-div:949 · .lobby-stage:991,993,1009,1136(+13) · .newword-banner:999,1006,1011,4103(+2) · .coin-fly:1022,1025 · .coin-plus:1031
 .nw-pop-coin:1046,1048,1049 · .nw-pop-goal:1052,1053,1057,1061 · .nw-goal-head:1054,1056,1058 · .nw-goal-bar:1059 · .nw-goal-fill:1060 · .nw-pop-book:1062,1063
-.nw-tag:1084,4100,4122 · .nw-word:1089,4104,4127,4216 · .nw-hint:1091,1092,4105,4129(+1) · .nw-coin:1094,1097,4106,4110 · .nw-countdown:1102,4111 · .nw-bar:1104,4130
-.nw-bar-fill:1106 · .pet-stage:1109,2970 · .nw-box:1116,2979 · .nw-pop-word:1117 · .nw-speak:1118 · .nw-pop-phon:1119
-.nw-ipa:1120 · .nw-pop-sent:1121 · .nw-pop-mean:1122 · .pet-tab:1123,1124,1125,3348 · .stage-hero:1146,1161,1169,1314(+22) · .hero-ground:1183,1303,1309
+.nw-tag:1084,4109,4131 · .nw-word:1089,4113,4136,4225 · .nw-hint:1091,1092,4114,4138(+1) · .nw-coin:1094,1097,4115,4119 · .nw-countdown:1102,4120 · .nw-bar:1104,4139
+.nw-bar-fill:1106 · .pet-stage:1109,2979 · .nw-box:1116,2988 · .nw-pop-word:1117 · .nw-speak:1118 · .nw-pop-phon:1119
+.nw-ipa:1120 · .nw-pop-sent:1121 · .nw-pop-mean:1122 · .pet-tab:1123,1124,1125,3357 · .stage-hero:1146,1161,1169,1314(+22) · .hero-ground:1183,1303,1309
 .hero-rank-bg:1185,1188,1191,1195(+18) · #lobby3d-canvas:1208,1209 · .hero-scene:1213,1215,1222,1223(+8) · .caretaker-fig:1262 · .caretaker-img:1265 · .caretaker-emoji:1267
-.blk-rig:1274,1275,1276 · .stage-plate:1336,1344,1355,1356(+23) · .plate-title:1350 · .lobby-side:1383,1419,1424,1427(+22) · .side-sec:1386,2221,3244,3520 · .side-label:1387,1392
+.blk-rig:1274,1275,1276 · .stage-plate:1336,1344,1355,1356(+23) · .plate-title:1350 · .lobby-side:1383,1419,1424,1427(+22) · .side-sec:1386,2220,3253,3529 · .side-label:1387,1392
 .side-label-row:1395,1396 · .lb-tabs-out:1397,1398,1402 · .side-glass:1406,1413 · .side-card:1425,1536 · #quest-card:1437,1438,1466,1467(+6) · .q-bigcard:1443,1472
 .qb-top:1445 · .qb-emoji:1446 · .qb-name:1448 · .qb-bar:1449,1450 · .qb-row:1452 · .qb-prog:1453
 .qb-reward:1454 · .qb-go:1455,1459 · .q-dots:1460 · .q-dot:1461,1462,1463 · .q-bonus:1464 · .inv-card:1483,1485,1486
-.inv-btns:1487 · .inv-go:1488,1490 · .inv-x:1491 · #online-card:1495,3252,3253,3254(+4) · .fq-overlay:1496 · .fq-box:1498,3058
+.inv-btns:1487 · .inv-go:1488,1490 · .inv-x:1491 · #online-card:1495,3261,3262,3263(+4) · .fq-overlay:1496 · .fq-box:1498,3067
 .fq-head:1502,1504 · .fq-close:1505 · .fq-sec:1507 · .fq-worlds:1508 · .fq-world:1509,1511 · .fq-acts:1512
-.fq-act:1513,1516,1517 · .lb-prize:1550 · .lb-coins:1553 · .lbf-cell:1554,2578,2581,2582(+3) · .lb-award-bar:1556,1562,1563 · .lb-award-go:1564
+.fq-act:1513,1516,1517 · .lb-prize:1550 · .lb-coins:1553 · .lbf-cell:1554,2587,2590,2591(+3) · .lb-award-bar:1556,1562,1563 · .lb-award-go:1564
 .lbf-award:1566,1572,1573,1574 · .pod-pz:1575 · .wsa-overlay:1578 · .wsa-box:1580 · .wsa-head:1585 · .wsa-title:1586
 .wsa-when:1587,1588 · .wsa-close:1589,1592 · .wsa-cols:1593 · .wsa-col:1594 · .wsa-sec-h:1595,1596 · .wsa-msg:1597
 .wsa-msg-h:1600 · .wsa-msg-b:1601,1602 · .wsa-msg-none:1603 · .wsa-rules:1605,1606 · .wsa-list:1607 · .wsa-row:1608,1610
 .wsa-r:1611 · .wsa-n:1612 · .wsa-s:1613 · .wsa-p:1614 · .wsa-prizes:1615 · .wsa-pz:1616,1619
-.wsa-reveal-medal:1620 · .lobby-bottom:1635,1638,1639,1641(+7) · .lobby-quiz-btn:1652 · .lobby-book-btn:1653,1654 · .lobby-foodquiz-btn:1655,1656 · .lobby-play-btn:1657,1661
-.lobby-exam-btn:1663,1664,1666 · .panel-overlay:1671,1676,4231,4232(+8) · .panel-box:1677 · .panel-head:1684,1688 · .panel-close:1689,1694 · .panel-body:1695,1699,1700
-.panel-page:1697,1698 · .collect-sub:1704 · .mkt-empty:1705 · .craft-box:1706 · .mkt-listing:1707 · .mkt-filter:1708,2052
-.hq-grid:1715 · .hq-card:1716,1721,1745 · .hq-head:1722 · .hq-pic:1728,1730 · .hq-emoji:1732 · .hq-badge:1733
-.hq-stars:1737 · .hq-price:1738,1743,1744,1747(+6) · .craft-credit:1751,1753,1754 · .car-grid:1761,1763,1764 · .robot-weap:1765 · .dmap-box:1768,1769
-.dmap-grid:1775 · .dmap-card:1777,1780,1781,1782(+2) · .dmap-ico:1784 · .dmap-new:1787 · .dcp-grid:1789 · .dcp-card:1791,1794,1795,1796(+10)
-.levelup-box:1813,2933,2934,3055 · .dcp-box:1816,1817,1821,1822(+6) · .dcp-lock:1830 · .sold-badge:1834,1836,1837 · .rs-showroom:1839,4667,4668 · .rs-list:1840,1842,4648,4651
-.rs-thumb:1843,1845,1846,1847(+1) · .rs-thumb-pic:1848,1849 · .rs-thumb-price:1850 · .rs-stage:1852 · .rs-big:1855 · .rs-big-img:1856
-.rs-elec:1860,1864,1869 · .rs-edge:1870,1876 · .rs-info:1879,1880,1881,1882(+1) · .rs-buy:1884,1886,1887 · .cs-showroom:1891,4640,4641,4669(+3) · .cs-list:1892,1894,4642,4647(+9)
-.cs-thumb:1895,1897,1898,1899(+1) · .cs-thumb-pic:1900,1901 · .cs-thumb-name:1902 · .cs-thumb-price:1903 · .cs-thumb-own:1904 · .cs-stage:1906
-.cs-big:1909 · .cs-big-img:1910 · .cs-elec:1914,1918,1922 · .cs-edge:1923,1929 · .cs-interior:1932 · .cs-inr-label:1933,1934
-.cs-inr-img:1935 · .cs-info:1937,1938,1939,1940(+6) · .cs-buy:1948,1950,1951,1952 · .car-emoji:1954 · .car-mine:1960 · .car-mine-pic:1965
-.car-mine-info:1966 · .car-loan:1967,1968 · .car-mine-btns:1969,1970,1971 · .car-locked:1973 · .car-mine-head:1975 · .car-pick-list:1976,1977
-.car-pick:1978,1980,1981 · .car-pick-pic:1982,1983 · .car-pick-name:1984,1985 · .car-pick-od:1986 · .car-buy-box:1988,3062 · .cb-pic:1989,1990,1991
-.cb-lines:1992 · .cb-li:1993,1997,1998 · .cb-ins:1999,2003,2004 · .cb-plan:2005 · .cb-pl:2006,2011,2013,2017(+1) · .cb-total:2024
-.cb-btns:2025,2030 · .cb-x:2026 · .shop-grid:2033 · .shop-item:2034,2039,2044,2045(+3) · .mkt-tab:2053,2054 · .pg-btn:2055,2056,2057
-.pg-dot:2058 · .fr-gift-btn:2081,2086 · .gift-sec-title:2089 · .gift-in-row:2091 · .gift-out-row:2095 · .gift-in-pic:2096,2098,2099
-.gift-in-info:2100,2101 · .gift-in-btns:2102 · .gift-accept:2103,2107,2109 · .gift-decline:2108 · .gift-box-card:2110 · .gift-box-from:2111,2112
-.gift-note:2113 · .gift-pick-overlay:2116 · .gift-pick-box:2120 · .gift-pick-head:2126,2130 · .gift-pick-close:2131 · .gift-pick-tabs:2133
-.gp-tab:2134,2138 · .gift-pick-body:2139 · .gp-chips:2140 · .gp-chip:2141,2145 · .gp-card:2146,2147 · .gp-price:2148
-.gp-note:2149 · .gift-cf-pic:2150 · .chat-emoji-cats:2155 · .chat-emoji-cat:2159,2163,2164 · .chat-emoji-wrap:2165,2166 · .stage-left:2175,4222
-.pet-info-btn:2179,2186,2187 · .feed-list:2194,2198,2223,2224(+1) · .feed-empty:2199,2202 · .fd-tools:2208 · .feed-bell:2209,2211,2212,2213 · .fd-prog:2217,2218
-.fpost:2225,2815 · .fp-head:2230 · .fp-who:2231 · .fp-name-line:2234 · .fp-name:2235 · .fp-when:2236
-.fp-badges:2238,2241 · .fp-badge-ic:2239 · .fp-text:2243 · .fp-media:2246 · .fp-img:2248 · .fp-cap:2250
-.fp-big:2251 · .fp-sum:2253,2255 · .fp-sum-rx:2256 · .fp-sum-none:2257 · .fp-en:2258 · .fp-bar:2260
-.fp-act:2261,2265,2267 · .fp-like:2266 · .fp-page:2278,2279,2280,2281(+3) · .fp-rxbox:2284 · .fp-rxb:2288,2290,2291,2292(+1) · .fp-rxb-off:2294
-.fp-fly:2296,2299,2300 · .fcm-overlay:2303 · .fcm-box:2305 · .fcm-post:2309,2310 · .fcm-rxs:2311 · .fcm-rx:2312
-.fcm-list:2313,2315 · .fcm-row:2316,2317,2318 · .fcm-none:2319 · .fcm-quick:2321,2323 · .fcm-q:2324,2327,2328 · .fcm-add:2329
-.fcm-input:2330,2332 · .fcm-send:2333,2335 · .fcm-locked:2336 · .fnt-overlay:2338 · .fnt-box:2340 · .fnt-list:2344,2346
-.fnt-row:2347,2349 · .fnt-ico:2350 · .fnt-tx:2351,2352 · .fnt-sub:2353 · .feed-plate:2355 · .feed-all-btn:2356,2361
-.fdb-overlay:2366 · .fdb-box:2368 · .fdb-head:2372 · .fdb-close:2376,2378 · .fdb-live:2379 · .fdb-live-title:2380
-.fdb-live-rows:2382,2384,2385 · .fdb-live-row:2386,2388,2389,2390 · .fdb-dot:2391 · .fdb-list:2393,2394 · .fdb-empty:2395 · .fdb-row:2396
-.fdb-row-top:2398 · .fdb-ico:2399 · .fdb-txt:2400 · .fdb-name:2401 · .fdb-ago:2402 · .fdb-actions:2403
-.fdb-like:2404,2407,2408,2409 · .fdb-cm-list:2410 · .fdb-cm-row:2411,2413 · .fdb-cm-empty:2414 · .fdb-cm-add:2415 · .fdb-cm-input:2416,2418
-.fdb-cm-send:2419,2421 · .fdb-cm-locked:2422 · .pi-overlay:2425 · .pi-box:2429,2434,2435,2439(+3) · .pi-close:2441,2446,2447 · .pi-close-left:2449
-.pi-portrait:2451 · .pet-wear:2458,2461,2463 · .pi-portrait-wrap:2466,2468 · .pi-dress-btn:2476,2480,2481 · .pi-shape-cap:2482,2485,2486,2487 · .pi-shape-toggle-btn:2489,2492
-.pi-dress-pip:2494,2499,2500,2501(+1) · .pi-wear-note:2504,2506 · .greet-card:2513 · .greet-sub:2514 · .greet-grid:2515 · .greet-opt:2516,2519,2520,2521
-.greet-e:2522 · .pi-streak:2526 · .pi-streak-head:2528,2530 · .pi-streak-best:2531 · .pi-dots:2532 · .pi-dot:2534,2535,2536
-.pi-streak-note:2537 · .pi-care-title:2538 · .lbf-overlay:2541 · .lbf-box:2544,2558,2559,2560(+10) · .lbf-head:2549 · .lbf-title:2550
-.lbf-tabs:2551,2554 · .lbf-note:2557 · .lbf-close:2573 · .lbf-close-l:2574 · .lbf-body:2575 · .lbf-grid:2576
-.lbf-box-bcat:2595 · .lbf-bcat-wrap:2596 · .lbf-bcat:2598 · .lbf-bcat-head:2600,2601,2602 · .lbf-bcat-mid:2609 · .lbf-bcat-badge:2610,2614
-.lbcat-ic:2612 · .lbcat-ic-label:2616 · .lbf-bcat-rows:2618 · .lbf-one-row:2622,2623,2624 · .lbf-bcat-row:2625,2627,2628,2630 · .lbf-podium:2642
-.pod:2644,2671,2672 · .pod-char:2646 · .pod-base:2648 · .pod-rank:2650 · .pod-label:2652,4711 · .pod-name:2654
-.pod-sc:2656 · .pod-1:2661,2662 · .pod-2:2663,2664 · .pod-3:2665,2666 · .pod-4:2667,2668 · .pod-5:2669,2670
-.pl-wide:2689,2692,2693,2694(+8) · .pl-follow:2695,2700,2702 · .pl-unfollow:2704,2710,2711 · .pl-followers:2712 · .pl-cols:2713,2718,2719,2720 · .pl-col:2714
-.pl-sec-title:2715 · .pl-badges-col:2721 · .pl-feed:2722,2725,2732 · .pl-feed-row:2726,2730,2731 · .pl-assets-wrap:2734,4548,4623 · .pl-assets:2735,4551,4556,4562(+4)
-.pl-asset:2738,2742,2749 · .pl-asset-emoji:2743 · .pl-asset-n:2744 · .pl-pets-wrap:2751 · .pl-pets:2752 · .pl-pet:2753,2758,2760
-.pl-pet-nm:2761 · .img-lightbox:2764,2769,2770,2774(+3) · .cert-svg:2793 · .cert-tap:2794,2799 · .cert-chip-sm:2802 · .pl-sec-sub:2822
-.pl-certs:2823,2825 · .cert-mini:2826,2830,2832 · .cert-mini-cap:2833 · .cert-none:2835 · .lv-cert-row:2837,2839 · .lv-cert-btn:2840,2845
-.cert-lightbox:2847,2852,2853,2857(+3) · .pl-chat:2877,2882 · .pl-call:2884,2890 · .pet-peek:2891,2892 · .pp-chips:2894 · .pp-chip:2895
-.pp-gift:2900,2906 · .settings-box:2908,2909,2982,2987(+29) · .set-feed-head:2910 · .set-feed-sub:2914 · .set-feed-row:2915 · .pillinfo-val:2920
-.pillinfo-desc:2925,2944 · .pillinfo-box:2936 · .plf-head:2939 · .plf-emoji:2940 · .plf-ht:2941,2942,2943 · .plf-foot:2945,2947,2948
-.alert-box:2953,2955 · .ab-emoji:2956 · .ab-title:2957 · .ab-desc:2958 · .ab-btns:2959,2960,2961 · .heal-heart:2963
-.attn-box:2978 · .set-tabs:2989,2991 · .set-panels:2992 · .set-panel:2993,2994 · .help-box:3036,3037,3038 · .wl-box:3056
-.food-box:3057 · .home-shop-box:3059 · .summary-box:3060 · .report-box:3061 · .wl-grid:3064 · .tc-wrap:3066
-.spell-btn:3072,3077 · .sp-hud:3078 · .sp-word:3080 · .sp-ch:3081,3086 · .sp-th:3088 · .sp-hint:3090
-.sp-exit:3093,3097 · .sp-banner:3098 · .sp-big:3103 · .sp-thb:3105 · .sp-coin:3106 · #spell-confetti:3111
-.sp-rb:3112 · .sp-day:3122 · .sp-perfect:3124 · .sp-late:3126 · #spell-coinpop:3129 · .side-sub:3238,3240
-.sec-quest:3245 · .on-page:3256,3257,3258,3259 · .inbox-overlay:3269 · .ib-box:3271 · .ib-head:3275 · .ib-close:3279,3281
-.ib-list:3282,3283 · .ib-row:3284,3285,3286,3287 · .ib-ava:3288,3293,3294 · .ib-on:3295 · .ib-mid:3297 · .ib-name:3298
-.ib-last:3299 · .ib-meta:3300 · .ib-time:3301 · .ib-dot:3303 · .ib-story-badge:3306 · .ib-empty:3310
-.ib-story:3312,3314 · .ib-story-item:3315,3317,3324 · .ib-story-ava:3318 · .ib-story-on:3322 · .ib-world:3327,3330 · .ib-tabs:3332
-.ib-tab:3333,3336,3338 · .ib-tab-dot:3339 · .ib-call-ava:3343 · .ib-call-row:3344,3345 · #btn-music:3351,3354,3355 · #ws-overlay:3370
-#ws-board:3373,3379,3381 · .ws-head:3384 · .ws-title:3385 · .ws-findbar:3388 · .ws-tip:3389 · .ws-grade:3391,3392
-.ws-body:3395 · .ws-gridwrap:3396 · #ws-grid:3399 · .ws-cell:3404,3409,3412,3415(+2) · .ws-flash:3421,3423 · .ws-coinpop:3427,3451
-.ws-combo:3438,3442,3443,3444 · .ws-find:3455 · #ws-prog:3456 · #ws-words:3460,3464 · .ws-word:3466,3471,3472,3473(+2) · .ws-actions:3479,3480,3489
-.ws-sizes:3484 · .ws-sizes-lb:3486 · .ws-size-now:3487 · #ws-new:3490 · #ws-stash:3491 · #ws-clear:3492
-#ws-win:3493,3495 · .ws-win-in:3496,3499 · .sec-online:3522 · .rank-tab:3550,3551,3552,3553(+2) · .pet-show-bg:3583,3586,3590,3594(+19) · .ps-night-fx:3686,3688,3700,3705(+1)
-.pet-show:3715,3718,3730,3732(+22) · .ps-video:3851 · .ps-worn-pip:3929,3930 · .id-card:3953,3960,3964 · .id-chip:3977 · .clock-chip:3986,3987
-.coin-block:4003 · .coin-group:4004 · .coin-pill:4034,4035,4056 · .cp-lb:4059 · .cp-v:4060 · .nw-sub:4128
-.top-flex2:4219 · #panel-factory:4238,4239,4243,4244(+39) · #panel-rank:4379,4380,4386,4391(+11) · .grid2x8:4462,4468 · .grid1x5:4478,4484 · .pl-badges-strip:4490
-.pl-badge-card:4494,4500 · .pl-badge-card-ic:4501,4505 · .pl-badge-card-nm:4506 · .pl-badges-empty:4512,4514 · .mine-strip:4528,4530,4531,4536(+4) · .mb-strip:4542,4581
-.gmark:4689,4693,4694,4695(+1) · .gm-stack:4698,4702 · .gm-row:4704 · .lb-name:4706,4707,4708 · .grade-edit:4729,4734,4735 · .gradelock-box:4739,4755,4760,4762
-.gl-head:4740 · .gl-emoji:4741 · .gl-ht:4742 · .gl-cur:4743 · .gl-lock:4744,4749 · .gl-ok:4748
-.gl-lock-sub:4750 · .gl-why:4751 · .gl-pick-lb:4752 · .gl-opts:4753 · .gl-hist:4763 · .gl-hline:4764
-.gl-hg:4768 · .gl-hat:4769 · .gl-harr:4770 · .gl-foot:4771 · .gl-cf:4772 · .reg-gradelock:4794
-#tp-overlay:4804 · #tp-board:4806,4810 · .tp-head:4814 · .tp-title:4815 · .tp-stat:4817,4819 · .tp-pts:4821,4824
-.tp-close:4826,4832,4833 · .tp-snd:4836,4839,4845,4846 · .tp-snd-ic:4840 · .tp-snd-track:4841 · .tp-snd-thumb:4843 · .tp-prompt:4850
-.tp-word:4852,4866,4867 · .tp-ch:4854,4859,4860,4862 · .tp-thai:4870 · .tp-hint:4872 · .tp-empty:4874 · .tp-keys:4877
-.tp-row:4879 · .tp-row-fn:4881,4914 · .tp-key:4885,4897,4899,4905(+2) · .tp-key-fn:4912 · .tp-fx:4918 · .tp-coinpop:4919
-.tp-pop-pt:4924 · #city-backdrop:4938,4944 · .city-arrive:4945,4946 · .night:4960,4980,4981,4983(+2) · #night-veil:5006
+.wsa-reveal-medal:1620 · .lobby-bottom:1635,1638,1639,1641(+7) · .lobby-quiz-btn:1652 · .lobby-book-btn:1653,1654 · .lobby-play-btn:1656,1660 · .lobby-exam-btn:1662,1663,1665
+.panel-overlay:1670,1675,4240,4241(+8) · .panel-box:1676 · .panel-head:1683,1687 · .panel-close:1688,1693 · .panel-body:1694,1698,1699 · .panel-page:1696,1697
+.collect-sub:1703 · .mkt-empty:1704 · .craft-box:1705 · .mkt-listing:1706 · .mkt-filter:1707,2051 · .hq-grid:1714
+.hq-card:1715,1720,1744 · .hq-head:1721 · .hq-pic:1727,1729 · .hq-emoji:1731 · .hq-badge:1732 · .hq-stars:1736
+.hq-price:1737,1742,1743,1746(+6) · .craft-credit:1750,1752,1753 · .car-grid:1760,1762,1763 · .robot-weap:1764 · .dmap-box:1767,1768 · .dmap-grid:1774
+.dmap-card:1776,1779,1780,1781(+2) · .dmap-ico:1783 · .dmap-new:1786 · .dcp-grid:1788 · .dcp-card:1790,1793,1794,1795(+10) · .levelup-box:1812,2942,2943,3064
+.dcp-box:1815,1816,1820,1821(+6) · .dcp-lock:1829 · .sold-badge:1833,1835,1836 · .rs-showroom:1838,4676,4677 · .rs-list:1839,1841,4657,4660 · .rs-thumb:1842,1844,1845,1846(+1)
+.rs-thumb-pic:1847,1848 · .rs-thumb-price:1849 · .rs-stage:1851 · .rs-big:1854 · .rs-big-img:1855 · .rs-elec:1859,1863,1868
+.rs-edge:1869,1875 · .rs-info:1878,1879,1880,1881(+1) · .rs-buy:1883,1885,1886 · .cs-showroom:1890,4649,4650,4678(+3) · .cs-list:1891,1893,4651,4656(+9) · .cs-thumb:1894,1896,1897,1898(+1)
+.cs-thumb-pic:1899,1900 · .cs-thumb-name:1901 · .cs-thumb-price:1902 · .cs-thumb-own:1903 · .cs-stage:1905 · .cs-big:1908
+.cs-big-img:1909 · .cs-elec:1913,1917,1921 · .cs-edge:1922,1928 · .cs-interior:1931 · .cs-inr-label:1932,1933 · .cs-inr-img:1934
+.cs-info:1936,1937,1938,1939(+6) · .cs-buy:1947,1949,1950,1951 · .car-emoji:1953 · .car-mine:1959 · .car-mine-pic:1964 · .car-mine-info:1965
+.car-loan:1966,1967 · .car-mine-btns:1968,1969,1970 · .car-locked:1972 · .car-mine-head:1974 · .car-pick-list:1975,1976 · .car-pick:1977,1979,1980
+.car-pick-pic:1981,1982 · .car-pick-name:1983,1984 · .car-pick-od:1985 · .car-buy-box:1987,3071 · .cb-pic:1988,1989,1990 · .cb-lines:1991
+.cb-li:1992,1996,1997 · .cb-ins:1998,2002,2003 · .cb-plan:2004 · .cb-pl:2005,2010,2012,2016(+1) · .cb-total:2023 · .cb-btns:2024,2029
+.cb-x:2025 · .shop-grid:2032 · .shop-item:2033,2038,2043,2044(+3) · .mkt-tab:2052,2053 · .pg-btn:2054,2055,2056 · .pg-dot:2057
+.fr-gift-btn:2080,2085 · .gift-sec-title:2088 · .gift-in-row:2090 · .gift-out-row:2094 · .gift-in-pic:2095,2097,2098 · .gift-in-info:2099,2100
+.gift-in-btns:2101 · .gift-accept:2102,2106,2108 · .gift-decline:2107 · .gift-box-card:2109 · .gift-box-from:2110,2111 · .gift-note:2112
+.gift-pick-overlay:2115 · .gift-pick-box:2119 · .gift-pick-head:2125,2129 · .gift-pick-close:2130 · .gift-pick-tabs:2132 · .gp-tab:2133,2137
+.gift-pick-body:2138 · .gp-chips:2139 · .gp-chip:2140,2144 · .gp-card:2145,2146 · .gp-price:2147 · .gp-note:2148
+.gift-cf-pic:2149 · .chat-emoji-cats:2154 · .chat-emoji-cat:2158,2162,2163 · .chat-emoji-wrap:2164,2165 · .stage-left:2174,4231 · .pet-info-btn:2178,2185,2186
+.feed-list:2193,2197,2222,2223(+1) · .feed-empty:2198,2201 · .fd-tools:2207 · .feed-bell:2208,2210,2211,2212 · .fd-prog:2216,2217 · .fpost:2224,2824
+.fp-head:2229 · .fp-who:2230 · .fp-name-line:2233 · .fp-name:2234 · .fp-when:2235 · .fp-badges:2237,2240
+.fp-badge-ic:2238 · .fp-text:2242 · .fp-media:2245 · .fp-img:2247 · .fp-cap:2249 · .fp-big:2250
+.fp-sum:2252,2254 · .fp-sum-rx:2255 · .fp-sum-none:2256 · .fp-en:2257 · .fp-bar:2259 · .fp-act:2260,2264,2266
+.fp-like:2265 · .fp-page:2277,2278,2279,2280(+3) · .fp-rxbox:2283 · .fp-rxb:2287,2289,2290,2291(+1) · .fp-rxb-off:2293 · .fp-fly:2295,2298,2299
+.fcm-overlay:2302 · .fcm-box:2304 · .fcm-post:2308,2309 · .fcm-rxs:2310 · .fcm-rx:2311 · .fcm-list:2312,2314
+.fcm-row:2315,2316,2317 · .fcm-none:2318 · .fcm-quick:2320,2322 · .fcm-q:2323,2326,2327 · .fcm-add:2328 · .fcm-input:2329,2331
+.fcm-send:2332,2334 · .fcm-locked:2335 · .fnt-overlay:2337 · .fnt-box:2339 · .fnt-list:2343,2345 · .fnt-row:2346,2348
+.fnt-ico:2349 · .fnt-tx:2350,2351 · .fnt-sub:2352 · .feed-plate:2354 · .feed-all-btn:2355,2360 · .fdb-overlay:2365
+.fdb-box:2367 · .fdb-head:2371 · .fdb-close:2375,2377 · .fdb-live:2378 · .fdb-live-title:2379 · .fdb-live-rows:2381,2383,2384
+.fdb-live-row:2385,2387,2388,2389 · .fdb-dot:2390 · .fdb-list:2392,2393 · .fdb-empty:2394 · .fdb-row:2395 · .fdb-row-top:2397
+.fdb-ico:2398 · .fdb-txt:2399 · .fdb-name:2400 · .fdb-ago:2401 · .fdb-actions:2402 · .fdb-like:2403,2406,2407,2408
+.fdb-cm-list:2409 · .fdb-cm-row:2410,2412 · .fdb-cm-empty:2413 · .fdb-cm-add:2414 · .fdb-cm-input:2415,2417 · .fdb-cm-send:2418,2420
+.fdb-cm-locked:2421 · .pi-overlay:2424 · .pi-box:2428,2433,2434,2438(+3) · .pi-close:2440,2445,2446 · .pi-close-left:2448 · .pi-portrait:2450
+.pet-wear:2457,2460,2462 · .pi-portrait-wrap:2465,2467 · .pi-dress-btn:2475,2479,2480 · .pi-shape-cap:2481,2484,2485,2486 · .pi-shape-toggle-btn:2488,2491 · .pi-dress-pip:2493,2498,2499,2500(+1)
+.pi-wear-note:2503,2505 · .greet-card:2512 · .greet-sub:2513 · .greet-grid:2514 · .greet-opt:2515,2518,2519,2520 · .greet-e:2521
+.pi-streak:2525 · .pi-streak-head:2527,2529 · .pi-streak-best:2530 · .pi-dots:2531 · .pi-dot:2533,2534,2535 · .pi-streak-note:2536
+.pi-care-title:2537 · .lbf-overlay:2550 · .lbf-box:2553,2567,2568,2569(+10) · .lbf-head:2558 · .lbf-title:2559 · .lbf-tabs:2560,2563
+.lbf-note:2566 · .lbf-close:2582 · .lbf-close-l:2583 · .lbf-body:2584 · .lbf-grid:2585 · .lbf-box-bcat:2604
+.lbf-bcat-wrap:2605 · .lbf-bcat:2607 · .lbf-bcat-head:2609,2610,2611 · .lbf-bcat-mid:2618 · .lbf-bcat-badge:2619,2623 · .lbcat-ic:2621
+.lbcat-ic-label:2625 · .lbf-bcat-rows:2627 · .lbf-one-row:2631,2632,2633 · .lbf-bcat-row:2634,2636,2637,2639 · .lbf-podium:2651 · .pod:2653,2680,2681
+.pod-char:2655 · .pod-base:2657 · .pod-rank:2659 · .pod-label:2661,4720 · .pod-name:2663 · .pod-sc:2665
+.pod-1:2670,2671 · .pod-2:2672,2673 · .pod-3:2674,2675 · .pod-4:2676,2677 · .pod-5:2678,2679 · .pl-wide:2698,2701,2702,2703(+8)
+.pl-follow:2704,2709,2711 · .pl-unfollow:2713,2719,2720 · .pl-followers:2721 · .pl-cols:2722,2727,2728,2729 · .pl-col:2723 · .pl-sec-title:2724
+.pl-badges-col:2730 · .pl-feed:2731,2734,2741 · .pl-feed-row:2735,2739,2740 · .pl-assets-wrap:2743,4557,4632 · .pl-assets:2744,4560,4565,4571(+4) · .pl-asset:2747,2751,2758
+.pl-asset-emoji:2752 · .pl-asset-n:2753 · .pl-pets-wrap:2760 · .pl-pets:2761 · .pl-pet:2762,2767,2769 · .pl-pet-nm:2770
+.img-lightbox:2773,2778,2779,2783(+3) · .cert-svg:2802 · .cert-tap:2803,2808 · .cert-chip-sm:2811 · .pl-sec-sub:2831 · .pl-certs:2832,2834
+.cert-mini:2835,2839,2841 · .cert-mini-cap:2842 · .cert-none:2844 · .lv-cert-row:2846,2848 · .lv-cert-btn:2849,2854 · .cert-lightbox:2856,2861,2862,2866(+3)
+.pl-chat:2886,2891 · .pl-call:2893,2899 · .pet-peek:2900,2901 · .pp-chips:2903 · .pp-chip:2904 · .pp-gift:2909,2915
+.settings-box:2917,2918,2991,2996(+29) · .set-feed-head:2919 · .set-feed-sub:2923 · .set-feed-row:2924 · .pillinfo-val:2929 · .pillinfo-desc:2934,2953
+.pillinfo-box:2945 · .plf-head:2948 · .plf-emoji:2949 · .plf-ht:2950,2951,2952 · .plf-foot:2954,2956,2957 · .alert-box:2962,2964
+.ab-emoji:2965 · .ab-title:2966 · .ab-desc:2967 · .ab-btns:2968,2969,2970 · .heal-heart:2972 · .attn-box:2987
+.set-tabs:2998,3000 · .set-panels:3001 · .set-panel:3002,3003 · .help-box:3045,3046,3047 · .wl-box:3065 · .food-box:3066
+.home-shop-box:3068 · .summary-box:3069 · .report-box:3070 · .wl-grid:3073 · .tc-wrap:3075 · .spell-btn:3081,3086
+.sp-hud:3087 · .sp-word:3089 · .sp-ch:3090,3095 · .sp-th:3097 · .sp-hint:3099 · .sp-exit:3102,3106
+.sp-banner:3107 · .sp-big:3112 · .sp-thb:3114 · .sp-coin:3115 · #spell-confetti:3120 · .sp-rb:3121
+.sp-day:3131 · .sp-perfect:3133 · .sp-late:3135 · #spell-coinpop:3138 · .side-sub:3247,3249 · .sec-quest:3254
+.on-page:3265,3266,3267,3268 · .inbox-overlay:3278 · .ib-box:3280 · .ib-head:3284 · .ib-close:3288,3290 · .ib-list:3291,3292
+.ib-row:3293,3294,3295,3296 · .ib-ava:3297,3302,3303 · .ib-on:3304 · .ib-mid:3306 · .ib-name:3307 · .ib-last:3308
+.ib-meta:3309 · .ib-time:3310 · .ib-dot:3312 · .ib-story-badge:3315 · .ib-empty:3319 · .ib-story:3321,3323
+.ib-story-item:3324,3326,3333 · .ib-story-ava:3327 · .ib-story-on:3331 · .ib-world:3336,3339 · .ib-tabs:3341 · .ib-tab:3342,3345,3347
+.ib-tab-dot:3348 · .ib-call-ava:3352 · .ib-call-row:3353,3354 · #btn-music:3360,3363,3364 · #ws-overlay:3379 · #ws-board:3382,3388,3390
+.ws-head:3393 · .ws-title:3394 · .ws-findbar:3397 · .ws-tip:3398 · .ws-grade:3400,3401 · .ws-body:3404
+.ws-gridwrap:3405 · #ws-grid:3408 · .ws-cell:3413,3418,3421,3424(+2) · .ws-flash:3430,3432 · .ws-coinpop:3436,3460 · .ws-combo:3447,3451,3452,3453
+.ws-find:3464 · #ws-prog:3465 · #ws-words:3469,3473 · .ws-word:3475,3480,3481,3482(+2) · .ws-actions:3488,3489,3498 · .ws-sizes:3493
+.ws-sizes-lb:3495 · .ws-size-now:3496 · #ws-new:3499 · #ws-stash:3500 · #ws-clear:3501 · #ws-win:3502,3504
+.ws-win-in:3505,3508 · .sec-online:3531 · .rank-tab:3559,3560,3561,3562(+2) · .pet-show-bg:3592,3595,3599,3603(+19) · .ps-night-fx:3695,3697,3709,3714(+1) · .pet-show:3724,3727,3739,3741(+22)
+.ps-video:3860 · .ps-worn-pip:3938,3939 · .id-card:3962,3969,3973 · .id-chip:3986 · .clock-chip:3995,3996 · .coin-block:4012
+.coin-group:4013 · .coin-pill:4043,4044,4065 · .cp-lb:4068 · .cp-v:4069 · .nw-sub:4137 · .top-flex2:4228
+#panel-factory:4247,4248,4252,4253(+39) · #panel-rank:4388,4389,4395,4400(+11) · .grid2x8:4471,4477 · .grid1x5:4487,4493 · .pl-badges-strip:4499 · .pl-badge-card:4503,4509
+.pl-badge-card-ic:4510,4514 · .pl-badge-card-nm:4515 · .pl-badges-empty:4521,4523 · .mine-strip:4537,4539,4540,4545(+4) · .mb-strip:4551,4590 · .gmark:4698,4702,4703,4704(+1)
+.gm-stack:4707,4711 · .gm-row:4713 · .lb-name:4715,4716,4717 · .grade-edit:4738,4743,4744 · .gradelock-box:4748,4764,4769,4771 · .gl-head:4749
+.gl-emoji:4750 · .gl-ht:4751 · .gl-cur:4752 · .gl-lock:4753,4758 · .gl-ok:4757 · .gl-lock-sub:4759
+.gl-why:4760 · .gl-pick-lb:4761 · .gl-opts:4762 · .gl-hist:4772 · .gl-hline:4773 · .gl-hg:4777
+.gl-hat:4778 · .gl-harr:4779 · .gl-foot:4780 · .gl-cf:4781 · .reg-gradelock:4803 · #tp-overlay:4813
+#tp-board:4815,4819 · .tp-head:4823 · .tp-title:4824 · .tp-stat:4826,4828 · .tp-pts:4830,4833 · .tp-close:4835,4841,4842
+.tp-snd:4845,4848,4854,4855 · .tp-snd-ic:4849 · .tp-snd-track:4850 · .tp-snd-thumb:4852 · .tp-prompt:4859 · .tp-word:4861,4875,4876
+.tp-ch:4863,4868,4869,4871 · .tp-thai:4879 · .tp-hint:4881 · .tp-empty:4883 · .tp-keys:4886 · .tp-row:4888
+.tp-row-fn:4890,4923 · .tp-key:4894,4906,4908,4914(+2) · .tp-key-fn:4921 · .tp-fx:4927 · .tp-coinpop:4928 · .tp-pop-pt:4933
+#city-backdrop:4947,4953 · .city-arrive:4954,4955 · .night:4969,4989,4990,4992(+2) · #night-veil:5015
 
-## css/style.css (2,101 บรรทัด · 538 selector)
+## css/style.css (2,104 บรรทัด · 540 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
 .screen:38,39 · h1:42 · .subtitle:43 · .egg-grid:46,63 · .egg-card:47,52,53,54(+2) · .pet-price:57,61
 .egg:65,71,75 · .d1:76 · .basket:79,80,85,91(+5) · .basket-dog:89,102,103,104 · .basket-cat:90,105,106,107 · .egg-dragon:110
@@ -974,72 +974,72 @@ vbRender:148 · vbCardHTML:194
 .rankup-title:546 · .rankup-badge:551,564 · .rankup-badge-img:563 · .rankup-name:565 · .rankup-en:569 · .rankup-sub:573
 .rankup-btn:574,581,582 · .qbp:586,587,588,589(+4) · .cr-btn-row:595 · .rankup-btn-2:596,597 · .thunder-fx:600 · .quake:601
 .pet-tabs:613 · .pet-tab:614,620,621 · .pet-card:623 · .pet-stage:628 · .aura:629,635 · .sp1:636
-.pet-wrap:639 · .pet-emoji:640 · .pet-img:641 · .egg-img:642 · .feed-pet:643,789 · .pet-baby:644
+.pet-wrap:639 · .pet-emoji:640 · .pet-img:641 · .egg-img:642 · .feed-pet:643,792 · .pet-baby:644
 .pet-adult:645 · .pet-egg-stage:647 · .wear:649 · .wear-head:650 · .wear-face:651 · .wear-neck:652
 .pet-name:654 · .stage-label:655 · .level-row:656 · .level-badge:657 · .exp-bar:661 · .exp-fill:662
-.exp-text:663 · .ability-box:665,669 · .hunger-bar:672 · .hunger-fill:673,674,675 · .food-item:681,723,727,728(+6) · .hunger-text:685
-.heat-bar:688 · .heat-fill:689 · .heat-text:690,691,692 · .care-row:694 · .care-btn:695,699,702 · .btn-feed:700
-.btn-cure:701 · .sick-banner:703 · .pet-sick:707 · .pet-asleep:710 · .sleep-badge:711 · .btn-sleep:713
-.dinner-btn:716 · .food-box:720,721 · .food-grid:722 · .fav-tag:742 · .fd-exp:746 · .food-sec:748
-.food-sec-human:752 · .bad-tag:754 · .fd-toxin:758 · .fd-safe:759 · .fq-box:762,763 · .fq-progress:764
-.fq-pair:765,766 · .fq-ask:767 · .fq-why:768 · .fq-btns:772,773,777 · .fq-yes:778 · .fq-no:779
-.fq-next:780 · .food-cancel:781 · .feed-box:787,788 · .feed-gain:790 · .sick-badge:794 · .big-btn:800,806,1042,1043(+6)
-.shop-card:809 · .shop-title:813 · .shop-grid:814 · .shop-item:815,819,820,821(+4) · .it-tag:826 · .tag-wear:827
-.lock-banner:829 · .home-current:835,840,841 · .home-img:842 · .home-emoji:843 · .home-btn:844,866 · .home-layout:846
-.home-pic-col:847,853 · .home-img-big:851 · .home-info-col:854,856,859,860 · .home-name-row:857 · .home-desc-row:858 · .home-shop-box:868,869
-.home-list:870 · .home-option:871,875,876,877(+1) · .home-opt-img:878 · .home-opt-body:880,881 · .home-price:882 · .reset-link:887
-.login-card:893 · .login-pets:894 · .login-status:895 · .google-btn:896,902,903 · .login-note:904 · .install-btn:907,913,914
-.install-guide-overlay:917 · .install-guide:921,925,928 · .install-steps:926,927 · .install-guide-close:929 · .login-account:934 · .register-card:937,941,959,963
-.reg-safety:943,945,946 · .reg-privacy:948,950,951 · #screen-register:953,954,955,956(+2) · .student-chip:964 · .clock-chip:968 · .online-count:974
-.online-row:981,985,986,1005 · .online-dot:990 · .online-name:995 · .online-act:999 · .online-ava:1004 · .online-live:1006
-.online-note:1010 · .lb-empty:1013 · .lb-list:1014 · .lb-row:1015,1019,1020 · .lb-rank:1024 · .lb-name:1026,1030
-.lb-coins:1034 · .lb-hint:1036 · .lb-badgeline:1037 · .lb-tabs:1039 · .lb-tab:1040,1041 · .tinv-note:1052
-.cat-card:1058,1103,1106,1254(+1) · .cat-head:1062 · .cat-emoji:1063 · .cat-name:1064 · .cat-pass:1065 · .cat-info:1066
-.cat-btns:1067 · .cat-btn:1068,1072,1073,1074(+3) · .cats-back-bottom:1077 · .tapglow:1082,1083,1091 · .lobby-bottom:1090 · .band-sec-head:1101,1102
-.bax-box:1110,1112 · .bax-head:1113 · .bax-sub:1114,1115 · .bax-row:1116 · .bax-lv:1117,1120,1121,1122(+3) · .bax-emoji:1123
-.bax-name:1124 · .bax-q:1125 · .bax-need:1127 · .bax-rw:1128 · .bax-foot:1132 · .bax-rank:1133,1136
-.bxr-box:1139,1141 · .bxr-head:1142 · .bxr-sub:1143 · .bxr-body:1144 · .bxr-pick:1145 · .bxr-cats:1146
-.bxr-chip:1147,1149,1150,1151(+1) · .bxr-list:1154 · .bxr-row:1155,1157,1159,1163 · .bxr-rk:1158 · .bxr-nm:1160,1161 · .bxr-sc:1162
-.bxr-tm:1164 · .bxr-more:1165 · .bxr-none:1166 · .bxr-foot:1168 · .band-mine-tag:1169 · .bsp-box:1172,1175
-.bsp-head:1176 · .bsp-prog:1177 · .bsp-retake:1179,1182 · .bsp-info:1184,1186 · .rts-box:1189 · .rts-head:1191
-.rts-sets:1192 · .rts-set:1193,1194,1195 · .rts-sub:1196 · .rts-words:1197 · .rts-word:1198,1200,1201 · .rts-foot:1202
-.rts-okbtn:1203,1205 · .bsp-grid:1206 · .bsp-chip:1207,1210,1211,1212(+1) · .bsp-num:1214 · .bsp-best:1215 · .bsp-tick:1216
-.bsp-foot:1217 · .vb-box:1220,1222 · .xsp-box:1225 · .vb-head:1226 · .vb-total:1227 · .vb-quizbtn:1228,1230
-.vb-tabs:1231 · .vb-tab:1232,1234,1235 · .vb-words:1236 · .vb-word:1237,1240,1241,1242(+3) · .vb-empty:1246 · .vb-foot:1247
-.vb-pg:1248,1250 · #vb-pginfo:1251 · .vb-hint:1252 · .band-lock:1260 · .offline-btn:1261,1262 · .quiz-progress:1267
-.quiz-phon:1268 · #quiz-extra:1269,1271,1272,1273 · .quiz-word-card:1274 · .quiz-next:1280,1286,1287,1288(+1) · .quiz-choice:1291,1296,1297,1298 · .quiz-score-pill:1299
-.quiz-time-pill:1301,1303 · .stats-card:1306 · .stats-title:1310,1774 · .stats-row:1311,1312,1313,1314 · .stat-badge-line:1316,1319 · .stat-badge-ic:1317
-.game-top:1322 · .back-btn:1323 · .combo-pill:1327 · .timer-wrap:1331 · .timer-fill:1332,1333 · .board-label:1335
-.card-grid:1336 · .word-card:1337,1343,1344,1345(+3) · .hint-btn:1351,1356 · .game-endless-note:1359,1364,1366,1370(+6) · .report-btn:1391,1396 · .report-box:1399
-.report-close:1400 · .rp-head:1404 · .rp-avatar:1405,1406 · .rp-title:1407 · .rp-sub:1408 · .rp-levelcard:1410
-.rp-level-top:1414 · .rp-bar:1415 · .rp-bar-fill:1416 · .rp-level-note:1417,1418 · .rp-grid:1420 · .rp-stat:1421
-.rp-ic:1424 · .rp-num:1425 · .rp-lbl:1426 · .rp-section:1428 · .rp-h3:1429 · .rp-badge-mini:1430
-.rp-row:1431,1432,1433 · .rp-empty:1434 · .rp-badges:1435 · .rp-badge:1436 · .rp-tline:1439 · .rp-tl-head:1440,1441
-.rp-tl-ems:1442 · .rp-em:1443,1444 · .rp-tl-note:1445,1446 · .rp-crown:1448,1449 · .rp-wtitle:1451 · .rp-wnow:1452,1453
-.rp-wgraph:1454 · .rp-wcol:1455 · .rp-wval:1456 · .rp-wbar:1457,1458 · .rp-wlbl:1459 · .rp-cheer:1461
-.report-ok:1465 · .summary-box:1468,1523,1527,1528(+2) · .sm-burst:1469 · .sm-title:1471 · .sm-line:1472 · .sm-coin:1473
-.sm-matches:1479,1480 · .confetti:1482 · .sm-badge:1489 · .sm-badge-all:1493 · .badge-celebrate-overlay:1496,1513 · .badge-celebrate:1502
-.bc-emoji:1508,1510 · .bc-emoji-img:1509 · .bc-title:1511 · .bc-sub:1512 · .sm-cheer:1517 · .sm-streak:1518,1519
-.sm-sick:1520 · .sm-btns:1521 · .float-fx:1533 · .toast:1540 · .toast-warn:1547,1554,1555,1561 · .toast-clear-all:1563,1570
-.alert-box:1572 · .alert-ok:1573,1578 · .settings-box:1580 · .set-row:1581 · .set-hint:1585 · .set-hint-on:1586
-.set-hint-off:1587 · .set-lwrap:1588 · .set-label:1589 · .set-desc:1590 · .set-switch:1591,1595,1596,1601(+4) · .set-sw-knob:1597
-.set-sw-txt:1604 · .set-night-row:1613 · .set-seg:1614,1616,1622,1623(+1) · .set-close:1625,1630 · .set-help:1631,1636 · .help-box:1638,1639,1644
-.help-item:1640 · .update-banner:1652,1661,1662 · #update-reload:1663 · #update-dismiss:1667 · .levelup-overlay:1673,1679,1680 · .levelup-box:1681,1688,1689,1690(+4)
-.bill-box:1696,1700,1701 · .tag-off:1702 · .home-decayed-img:1703 · .home-dark-img:1704 · .thirst-fill:1705 · .thirst-text:1706,1707
-.toxin-fill:1710 · .toxin-text:1711,1712 · .detox-btn:1713,1718 · .shape-text:1721,1722,1723,1724(+1) · .avatar-pick:1728 · .avatar-opt:1729,1733,1734,1735
-.avatar-chip-img:1739 · .mini-av:1741 · .fp-ava:1742 · .avatar-chip-blk:1744 · .set-avatar-btns:1745 · .avatar-mini:1746,1750
-.set-blk-row:1752 · .set-sub2:1753 · .blk-grid:1755 · .blk-mini:1756,1759,1760,1761 · .game-avatar:1764,1765,1766 · .stats-nick:1775
-.ticket-owned:1778,1782 · .collect-sub:1787 · .mkt-tabs:1788 · .mkt-tab:1789,1793 · .mkt-filter:1794 · .mkt-row:1798
-.mkt-emoji:1802,1803 · .mkt-info:1804,1805 · .mkt-tier-stars:1806 · .mkt-buy:1807,1812,1813 · .mkt-price-lo:1814 · .mkt-price-hi:1815
-.mkt-empty:1816 · .collect-grid:1819 · .collect-cell:1820 · .cc-emoji:1821,1822 · .cc-name:1823 · .cc-count:1824
-.cc-list-btn:1825,1829 · .mkt-listhead:1830 · .mkt-group-head:1832,1838 · .mkt-two-col:1840,1841,1845,1857(+8) · #phone-card:1846,1862 · #computer-card:1847,1863
-#ticket-card:1849 · #haunt-card:1850 · #heli-card:1851 · #drone-card:1852 · #drive-card:1853 · #soccer-card:1854
-#moto-card:1855 · #invasion-card:1856 · .mkt-listing:1884 · .ml-cancel:1888 · .mkt-sold:1894,1895,1896 · .list-dialog:1903,1904,1909
-.list-hint:1908 · .collect-reveal-frame:1912,1919 · .collect-reveal-img:1918 · .collect-reveal-stars:1920 · .craft-box:1923 · .craft-head:1924
-.craft-bar:1925 · .craft-fill:1926 · .craft-text:1927 · .craft-btn-row:1928,1929 · .craft-go-btn:1931,1937,1938,1941 · .craft-cancel:1949,1953
-.mkt-catalog:1956,1957,1958 · .mkt-pager:1961 · .pg-btn:1962,1966,1967 · .pg-mid:1968 · .pg-dots:1969 · .pg-dot:1970,1971
-.order-head:1972 · .order-row:1973,1978,1980,1982 · .order-deliver:1983,1988 · .order-need:1989 · .avatar-chip-photo:1995 · .pass-photo:1996
-.pl-photo:1997 · .pp-cam:2002,2010 · .set-photo-row:2013,2019 · .ph-thumb:2020 · .ph-plus:2021 · .photo-box:2027,2028,2049,2053(+4)
-.ph-now:2029 · .ph-now-img:2030,2034 · .ph-now-cap:2035 · .ph-warn:2036 · .ph-sync:2041,2044 · .ph-sync-wait:2045
-.ph-sync-ok:2046 · .ph-sync-bad:2047 · .ph-btns:2048 · .ph-tip:2058 · .ph-stage:2060,2064 · .ph-cv:2065
-.ph-ring:2066,2071 · .ph-zoom:2075 · .ph-foot:2076 · .ph-crop-box:2077
+.exp-text:663 · .ability-box:665,669 · .hunger-bar:672 · .hunger-fill:673,674,675 · .food-item:681,726,730,731(+6) · .hunger-text:685
+.heat-bar:688 · .heat-fill:689 · .heat-text:690,691,692 · .care-row:694 · .care-btn:695,699,705 · .btn-feed:700
+.btn-cure:701 · .btn-foodquiz:703 · .care-row-quiz:704 · .sick-banner:706 · .pet-sick:710 · .pet-asleep:713
+.sleep-badge:714 · .btn-sleep:716 · .dinner-btn:719 · .food-box:723,724 · .food-grid:725 · .fav-tag:745
+.fd-exp:749 · .food-sec:751 · .food-sec-human:755 · .bad-tag:757 · .fd-toxin:761 · .fd-safe:762
+.fq-box:765,766 · .fq-progress:767 · .fq-pair:768,769 · .fq-ask:770 · .fq-why:771 · .fq-btns:775,776,780
+.fq-yes:781 · .fq-no:782 · .fq-next:783 · .food-cancel:784 · .feed-box:790,791 · .feed-gain:793
+.sick-badge:797 · .big-btn:803,809,1045,1046(+6) · .shop-card:812 · .shop-title:816 · .shop-grid:817 · .shop-item:818,822,823,824(+4)
+.it-tag:829 · .tag-wear:830 · .lock-banner:832 · .home-current:838,843,844 · .home-img:845 · .home-emoji:846
+.home-btn:847,869 · .home-layout:849 · .home-pic-col:850,856 · .home-img-big:854 · .home-info-col:857,859,862,863 · .home-name-row:860
+.home-desc-row:861 · .home-shop-box:871,872 · .home-list:873 · .home-option:874,878,879,880(+1) · .home-opt-img:881 · .home-opt-body:883,884
+.home-price:885 · .reset-link:890 · .login-card:896 · .login-pets:897 · .login-status:898 · .google-btn:899,905,906
+.login-note:907 · .install-btn:910,916,917 · .install-guide-overlay:920 · .install-guide:924,928,931 · .install-steps:929,930 · .install-guide-close:932
+.login-account:937 · .register-card:940,944,962,966 · .reg-safety:946,948,949 · .reg-privacy:951,953,954 · #screen-register:956,957,958,959(+2) · .student-chip:967
+.clock-chip:971 · .online-count:977 · .online-row:984,988,989,1008 · .online-dot:993 · .online-name:998 · .online-act:1002
+.online-ava:1007 · .online-live:1009 · .online-note:1013 · .lb-empty:1016 · .lb-list:1017 · .lb-row:1018,1022,1023
+.lb-rank:1027 · .lb-name:1029,1033 · .lb-coins:1037 · .lb-hint:1039 · .lb-badgeline:1040 · .lb-tabs:1042
+.lb-tab:1043,1044 · .tinv-note:1055 · .cat-card:1061,1106,1109,1257(+1) · .cat-head:1065 · .cat-emoji:1066 · .cat-name:1067
+.cat-pass:1068 · .cat-info:1069 · .cat-btns:1070 · .cat-btn:1071,1075,1076,1077(+3) · .cats-back-bottom:1080 · .tapglow:1085,1086,1094
+.lobby-bottom:1093 · .band-sec-head:1104,1105 · .bax-box:1113,1115 · .bax-head:1116 · .bax-sub:1117,1118 · .bax-row:1119
+.bax-lv:1120,1123,1124,1125(+3) · .bax-emoji:1126 · .bax-name:1127 · .bax-q:1128 · .bax-need:1130 · .bax-rw:1131
+.bax-foot:1135 · .bax-rank:1136,1139 · .bxr-box:1142,1144 · .bxr-head:1145 · .bxr-sub:1146 · .bxr-body:1147
+.bxr-pick:1148 · .bxr-cats:1149 · .bxr-chip:1150,1152,1153,1154(+1) · .bxr-list:1157 · .bxr-row:1158,1160,1162,1166 · .bxr-rk:1161
+.bxr-nm:1163,1164 · .bxr-sc:1165 · .bxr-tm:1167 · .bxr-more:1168 · .bxr-none:1169 · .bxr-foot:1171
+.band-mine-tag:1172 · .bsp-box:1175,1178 · .bsp-head:1179 · .bsp-prog:1180 · .bsp-retake:1182,1185 · .bsp-info:1187,1189
+.rts-box:1192 · .rts-head:1194 · .rts-sets:1195 · .rts-set:1196,1197,1198 · .rts-sub:1199 · .rts-words:1200
+.rts-word:1201,1203,1204 · .rts-foot:1205 · .rts-okbtn:1206,1208 · .bsp-grid:1209 · .bsp-chip:1210,1213,1214,1215(+1) · .bsp-num:1217
+.bsp-best:1218 · .bsp-tick:1219 · .bsp-foot:1220 · .vb-box:1223,1225 · .xsp-box:1228 · .vb-head:1229
+.vb-total:1230 · .vb-quizbtn:1231,1233 · .vb-tabs:1234 · .vb-tab:1235,1237,1238 · .vb-words:1239 · .vb-word:1240,1243,1244,1245(+3)
+.vb-empty:1249 · .vb-foot:1250 · .vb-pg:1251,1253 · #vb-pginfo:1254 · .vb-hint:1255 · .band-lock:1263
+.offline-btn:1264,1265 · .quiz-progress:1270 · .quiz-phon:1271 · #quiz-extra:1272,1274,1275,1276 · .quiz-word-card:1277 · .quiz-next:1283,1289,1290,1291(+1)
+.quiz-choice:1294,1299,1300,1301 · .quiz-score-pill:1302 · .quiz-time-pill:1304,1306 · .stats-card:1309 · .stats-title:1313,1777 · .stats-row:1314,1315,1316,1317
+.stat-badge-line:1319,1322 · .stat-badge-ic:1320 · .game-top:1325 · .back-btn:1326 · .combo-pill:1330 · .timer-wrap:1334
+.timer-fill:1335,1336 · .board-label:1338 · .card-grid:1339 · .word-card:1340,1346,1347,1348(+3) · .hint-btn:1354,1359 · .game-endless-note:1362,1367,1369,1373(+6)
+.report-btn:1394,1399 · .report-box:1402 · .report-close:1403 · .rp-head:1407 · .rp-avatar:1408,1409 · .rp-title:1410
+.rp-sub:1411 · .rp-levelcard:1413 · .rp-level-top:1417 · .rp-bar:1418 · .rp-bar-fill:1419 · .rp-level-note:1420,1421
+.rp-grid:1423 · .rp-stat:1424 · .rp-ic:1427 · .rp-num:1428 · .rp-lbl:1429 · .rp-section:1431
+.rp-h3:1432 · .rp-badge-mini:1433 · .rp-row:1434,1435,1436 · .rp-empty:1437 · .rp-badges:1438 · .rp-badge:1439
+.rp-tline:1442 · .rp-tl-head:1443,1444 · .rp-tl-ems:1445 · .rp-em:1446,1447 · .rp-tl-note:1448,1449 · .rp-crown:1451,1452
+.rp-wtitle:1454 · .rp-wnow:1455,1456 · .rp-wgraph:1457 · .rp-wcol:1458 · .rp-wval:1459 · .rp-wbar:1460,1461
+.rp-wlbl:1462 · .rp-cheer:1464 · .report-ok:1468 · .summary-box:1471,1526,1530,1531(+2) · .sm-burst:1472 · .sm-title:1474
+.sm-line:1475 · .sm-coin:1476 · .sm-matches:1482,1483 · .confetti:1485 · .sm-badge:1492 · .sm-badge-all:1496
+.badge-celebrate-overlay:1499,1516 · .badge-celebrate:1505 · .bc-emoji:1511,1513 · .bc-emoji-img:1512 · .bc-title:1514 · .bc-sub:1515
+.sm-cheer:1520 · .sm-streak:1521,1522 · .sm-sick:1523 · .sm-btns:1524 · .float-fx:1536 · .toast:1543
+.toast-warn:1550,1557,1558,1564 · .toast-clear-all:1566,1573 · .alert-box:1575 · .alert-ok:1576,1581 · .settings-box:1583 · .set-row:1584
+.set-hint:1588 · .set-hint-on:1589 · .set-hint-off:1590 · .set-lwrap:1591 · .set-label:1592 · .set-desc:1593
+.set-switch:1594,1598,1599,1604(+4) · .set-sw-knob:1600 · .set-sw-txt:1607 · .set-night-row:1616 · .set-seg:1617,1619,1625,1626(+1) · .set-close:1628,1633
+.set-help:1634,1639 · .help-box:1641,1642,1647 · .help-item:1643 · .update-banner:1655,1664,1665 · #update-reload:1666 · #update-dismiss:1670
+.levelup-overlay:1676,1682,1683 · .levelup-box:1684,1691,1692,1693(+4) · .bill-box:1699,1703,1704 · .tag-off:1705 · .home-decayed-img:1706 · .home-dark-img:1707
+.thirst-fill:1708 · .thirst-text:1709,1710 · .toxin-fill:1713 · .toxin-text:1714,1715 · .detox-btn:1716,1721 · .shape-text:1724,1725,1726,1727(+1)
+.avatar-pick:1731 · .avatar-opt:1732,1736,1737,1738 · .avatar-chip-img:1742 · .mini-av:1744 · .fp-ava:1745 · .avatar-chip-blk:1747
+.set-avatar-btns:1748 · .avatar-mini:1749,1753 · .set-blk-row:1755 · .set-sub2:1756 · .blk-grid:1758 · .blk-mini:1759,1762,1763,1764
+.game-avatar:1767,1768,1769 · .stats-nick:1778 · .ticket-owned:1781,1785 · .collect-sub:1790 · .mkt-tabs:1791 · .mkt-tab:1792,1796
+.mkt-filter:1797 · .mkt-row:1801 · .mkt-emoji:1805,1806 · .mkt-info:1807,1808 · .mkt-tier-stars:1809 · .mkt-buy:1810,1815,1816
+.mkt-price-lo:1817 · .mkt-price-hi:1818 · .mkt-empty:1819 · .collect-grid:1822 · .collect-cell:1823 · .cc-emoji:1824,1825
+.cc-name:1826 · .cc-count:1827 · .cc-list-btn:1828,1832 · .mkt-listhead:1833 · .mkt-group-head:1835,1841 · .mkt-two-col:1843,1844,1848,1860(+8)
+#phone-card:1849,1865 · #computer-card:1850,1866 · #ticket-card:1852 · #haunt-card:1853 · #heli-card:1854 · #drone-card:1855
+#drive-card:1856 · #soccer-card:1857 · #moto-card:1858 · #invasion-card:1859 · .mkt-listing:1887 · .ml-cancel:1891
+.mkt-sold:1897,1898,1899 · .list-dialog:1906,1907,1912 · .list-hint:1911 · .collect-reveal-frame:1915,1922 · .collect-reveal-img:1921 · .collect-reveal-stars:1923
+.craft-box:1926 · .craft-head:1927 · .craft-bar:1928 · .craft-fill:1929 · .craft-text:1930 · .craft-btn-row:1931,1932
+.craft-go-btn:1934,1940,1941,1944 · .craft-cancel:1952,1956 · .mkt-catalog:1959,1960,1961 · .mkt-pager:1964 · .pg-btn:1965,1969,1970 · .pg-mid:1971
+.pg-dots:1972 · .pg-dot:1973,1974 · .order-head:1975 · .order-row:1976,1981,1983,1985 · .order-deliver:1986,1991 · .order-need:1992
+.avatar-chip-photo:1998 · .pass-photo:1999 · .pl-photo:2000 · .pp-cam:2005,2013 · .set-photo-row:2016,2022 · .ph-thumb:2023
+.ph-plus:2024 · .photo-box:2030,2031,2052,2056(+4) · .ph-now:2032 · .ph-now-img:2033,2037 · .ph-now-cap:2038 · .ph-warn:2039
+.ph-sync:2044,2047 · .ph-sync-wait:2048 · .ph-sync-ok:2049 · .ph-sync-bad:2050 · .ph-btns:2051 · .ph-tip:2061
+.ph-stage:2063,2067 · .ph-cv:2068 · .ph-ring:2069,2074 · .ph-zoom:2078 · .ph-foot:2079 · .ph-crop-box:2080
