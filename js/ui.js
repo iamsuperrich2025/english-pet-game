@@ -6281,8 +6281,9 @@ async function enterDrone3D(){
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
   if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg(enterDrive3D);
-  // 🔐 รอบ 131: ยังไม่มีรถเลย — ขับไม่ได้ พาไปหมวดยานพาหนะ (ค้างงวดตรวจหลังเลือกคัน)
-  if(!(state.cars && state.cars.length)){ sfx.wrong(); showNeedCarDialog('nocar'); return; }
+  // 🔓 รอบ 942: ไม่มีรถไม่บล็อกแล้ว — ระบบให้ยืมรถขับฟรีสำหรับรอบนั้น (myCar()=null → โมเดล car_01 + สมรรถนะกลาง 3/3/3)
+  const loanCar = !(state.cars && state.cars.length);
+  if(loanCar) toast('🚗 รอบนี้ยืมรถของระบบขับฟรี — อยากได้คันของตัวเอง ซื้อที่หมวดยานพาหนะนะ');
   if(!window.Adventure3D || !window.KPP_CITY){
     advLoading = Date.now();
     toast('🚗 กำลังสตาร์ทรถ + โหลดแผนที่เมืองกำแพงเพชร...');
@@ -6301,10 +6302,12 @@ async function enterDrive3D(){
   const map = await pickDriveMap();
   if(!map) return;
   // 🚗 รอบ 233: เลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — ตั้ง state.carIdx → สมรรถนะ (drivePerf) + ภายในรถ (loadCarDash) ตามคันที่เลือก
-  const gotCar = await pickDriveCar();
-  if(!gotCar) return;
-  // 🔐 คันที่เลือกค้างค่างวด → ขับไม่ได้ (เลือกคันอื่นได้)
-  if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
+  if(!loanCar){
+    const gotCar = await pickDriveCar();
+    if(!gotCar) return;
+    // 🔐 คันที่เลือกค้างค่างวด → ขับไม่ได้ (เลือกคันอื่นได้)
+    if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
+  }
   if(map === 'phosawat'){ await enterMotoMapAsCar(); return; }   // 🏫 ไปแผนที่บ้านโพธิ์สวัสดิ์ด้วยรถยนต์
   // 🧱 เลือกตัวละครบล็อกก่อนออกรถ (จำตัวล่าสุดไว้ · เพื่อนใน map เห็นเป็นตัวที่เลือก) — กดยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar();
@@ -6454,18 +6457,19 @@ async function enterInvasion3D(){
    🎫→💰 รอบ 823 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
    (ไม่มีการ์ดตั๋วแยกในตลาดแล้ว) ราคาวันนี้เดียวกันทุกโลกจาก worldEntryInfo() (js/data/calendar.js — คิดวันหยุด/วันเด็ก)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคตแค่ "เพิ่ม 1 บรรทัด" ที่นี่แล้วปุ่มจะโผล่ในรางเอง
-   prereq = ticketKey ของโลกก่อนหน้าที่ต้องปลดล็อกก่อน (null = ไม่มี เงื่อนไขพิเศษเช็กแยกใน railWorldClick) */
+   🔓 รอบ 942 (ผู้ใช้สั่ง 3 ส.ค. 2026): ยกเลิกลำดับปลดล็อกโลก (prereq) — จ่ายค่าเข้า 500 เข้าโลกไหนก็ได้ทันที
+   ไม่มีหุ่น/รถของตัวเอง = ระบบให้ยืมฟรีสำหรับรอบนั้น (ดู enterMecha3D / enterDrive3D) */
 const WORLD3D = [
-  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   prereq:null,          enter:enterAdventure3D },
-  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', prereq:'advTicket',   enter:enterHaunted3D },
-  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  prereq:'advTicket',   enter:enterHeli3D },
-  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', prereq:'heliTicket',  enter:enterDrone3D },
-  { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', prereq:'droneTicket', enter:enterDrive3D },
-  { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',prereq:'driveTicket', enter:enterSoccer3D },
-  { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  prereq:'driveTicket', enter:enterMoto3D },
-  { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone',prereq:'motoTicket', enter:enterInvasion3D },
-  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', owned:()=>!!(state.robots&&state.robots.length), doneKey:'mechaDone', price:ROBOTS[0].price, enter:enterMecha3D },
-  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    prereq:'motoTicket',  enter:enterF1_3D },   // 🏎️ รอบ 896: สนามซาเคียร์ Bahrain
+  { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   enter:enterAdventure3D },
+  { mode:'haunt', ico:'👻', label:'ผีสิง',  ticketKey:'hauntTicket', doneKey:'hauntDone', enter:enterHaunted3D },
+  { mode:'heli',  ico:'🚁', label:'เฮลิ',   ticketKey:'heliTicket',  doneKey:'heliDone',  enter:enterHeli3D },
+  { mode:'drone', ico:'🛸', label:'โดรน',   ticketKey:'droneTicket', doneKey:'droneDone', enter:enterDrone3D },
+  { mode:'drive', ico:'🚗', label:'ขับรถ',  ticketKey:'driveTicket', doneKey:'driveDone', enter:enterDrive3D },
+  { mode:'soccer',ico:'⚽', label:'ฟุตบอล', ticketKey:'soccerTicket',doneKey:'soccerDone',enter:enterSoccer3D },
+  { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  enter:enterMoto3D },
+  { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone', enter:enterInvasion3D },
+  { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', doneKey:'mechaDone', enter:enterMecha3D },
+  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // 🏎️ รอบ 896: สนามซาเคียร์ Bahrain
 ];
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
@@ -6526,22 +6530,14 @@ function world3DFail(label, err){
 }
 
 function railWorldClick(w){
-  if(w.mode === 'mecha' && !w.owned()){                     // 🤖 หุ่นรบ: ต้องมีหุ่นก่อน (ซื้อแยกในตลาด)
-    sfx.select(); toast('🤖 ยังไม่มีหุ่นยนต์ — ไปซื้อที่หมวดยานพาหนะก่อนนะ'); gotoRobotShop(); return;
-  }
-  // 🤖 รอบ 859: มีหุ่นแล้วไหลเข้าระบบจ่ายค่าเข้าข้างล่างเหมือนโลกอื่น (เดิมกดแล้วเข้าเลย — ผู้ใช้แจ้งไม่เด้งหน้าค่าเข้า)
+  /* 🔓 รอบ 942: ยกเลิกด่าน "ต้องปลดล็อกโลกก่อนหน้า" + ด่าน "ต้องมีหุ่น/รถก่อน" — จ่ายค่าเข้าแล้วเข้าได้ทุกโลก
+     ไม่มีหุ่น/รถ = ระบบให้ยืมฟรีสำหรับรอบนั้น (enterMecha3D / enterDrive3D จัดการ) */
   if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
-  if(w.prereq && !state[w.prereq]){
-    sfx.select();
-    const prevW = WORLD3D.find(x=>x.ticketKey===w.prereq);
-    toast(`${w.ico} ต้องปลดล็อกโลก${prevW?prevW.label:''}ก่อนถึงจะเข้าโลก${w.label}ได้นะ`);
-    return;
-  }
   if(w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p))){
     sfx.wrong(); toast('🔒 ต้องมีสัตว์โตเต็มวัย (Lv.3) อย่างน้อย 1 ตัวก่อนถึงจะเข้าโลกผจญภัยได้นะ'); return;
   }
-  if(w.mode === 'drive' && carDriveBlock()){                // 🔐 รอบ 131: มีตั๋วแต่ไม่มีรถ/ค้างงวด → กล่องพาไปหมวดยานพาหนะ
-    sfx.wrong(); showNeedCarDialog(carDriveBlock()); return;
+  if(w.mode === 'drive' && carDriveBlock() === 'overdue'){  // 🔐 ค้างงวดรถ = ขับไม่ได้จนกว่าจะจ่าย (ไม่มีรถไม่บล็อกแล้ว — ยืมรถระบบ)
+    sfx.wrong(); showNeedCarDialog('overdue'); return;
   }
   openWorldEntryDialog(w);
 }
@@ -6556,12 +6552,18 @@ function openWorldEntryDialog(w){
     : info.discount
       ? `<p style="font-size:14px;margin:6px 0">🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
       : `<p style="font-size:14px;margin:6px 0">ค่าเข้า <b>🪙${fmtNum(info.fee)}</b></p>`;
+  /* 🔓 รอบ 942: โน้ต "ปลดล็อกโลกถัดไป" เลิกใช้ (ไม่มีลำดับโลกแล้ว) → แจ้งเรื่องยืมหุ่น/รถฟรีแทนเมื่อยังไม่มีของตัวเอง */
+  const loanNote = (w.mode === 'drive' && !myCar())
+    ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">🚗 ยังไม่มีรถของตัวเอง — รอบนี้ระบบให้ยืมรถขับฟรี 1 คัน (อยากได้คันเก่งกว่า ซื้อได้ที่หมวดยานพาหนะ)</p>'
+    : (w.mode === 'mecha' && !(state.robots && state.robots.length))
+      ? `<p style="font-size:12px;color:#8a7a9a;margin:4px 0">🤖 ยังไม่มีหุ่นของตัวเอง — รอบนี้ระบบให้ยืมหุ่น ${escapeHTML(ROBOTS[0].name)} ฟรี 1 ตัว (ซื้อหุ่นของตัวเองได้ที่ตลาด)</p>`
+      : '';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
     <h2 style="font-size:18px">${w.ico} เข้าโลก${w.label}</h2>
     ${feeHTML}
-    ${!unlocked && w.mode !== 'mecha' ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">ครั้งแรกในโลกนี้ — ปลดล็อกโลกถัดไปได้เลยหลังจ่าย (ครั้งต่อไปยังต้องจ่ายค่าเข้าเหมือนกันทุกครั้ง)</p>' : ''}
+    ${loanNote}
     ${tinvNoticeHTML(w.mode)}
     <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!'}</button>
     <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
@@ -6657,24 +6659,9 @@ function renderRailWorlds(){
     const lk = b.querySelector('.rail-lock');
     const cnt = b.querySelector('.rail-count');
     const pr  = b.querySelector('.rail-price');
-    if(w.mode === 'mecha'){                                   // 🤖 หุ่นรบ: อยู่นอกระบบตั๋ว ไม่เปลี่ยน
-      const locked = !w.owned();
-      const afford = state.coins >= w.price;
-      b.classList.toggle('locked', locked);
-      if(locked){
-        if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
-        if(cnt) cnt.style.display = 'none';
-        if(pr){ pr.style.display = ''; pr.textContent = '🪙' + fmtNum(w.price); pr.classList.toggle('afford', afford); pr.title = afford ? 'เหรียญพอซื้อแล้ว!' : ''; }
-      }else{
-        if(lk) lk.style.display = 'none';
-        if(pr) pr.style.display = 'none';
-        if(cnt){ cnt.style.display = done > 0 ? '' : 'none'; cnt.textContent = fmtNum(done); cnt.title = 'พิชิตไปแล้ว ' + fmtNum(done) + ' คำ'; }
-      }
-      return;
-    }
-    // ยังปลดล็อกไม่ได้ (ยังไม่ผ่านโลกก่อนหน้า / โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย) → 🔒 เฉยๆ ไม่โชว์ราคา (ยังเข้าไม่ได้จริง)
-    const advGate = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));
-    const locked = (w.prereq && !state[w.prereq]) || advGate;
+    /* 🔓 รอบ 942: ยกเลิกลำดับปลดล็อกโลก (prereq) + หุ่นรบเข้าระบบค่าเข้าเดียวกับโลกอื่น (ไม่มีหุ่น=ยืมฟรี)
+       ล็อก 🔒 เหลือเคสเดียว: โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย */
+    const locked = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));
     b.classList.toggle('locked', locked);
     if(locked){
       if(lk){ lk.style.display = ''; lk.textContent = '🔒'; }
@@ -6682,11 +6669,11 @@ function renderRailWorlds(){
       if(pr) pr.style.display = 'none';
       return;
     }
-    // 🔐 รอบ 131: โลกขับรถปลดล็อกแล้วแต่ยังไม่มีรถ/ค้างค่างวด → กุญแจเหลืองล็อกทับ (ซื้อรถแล้วหายถาวร)
-    const carBlock = w.mode === 'drive' ? carDriveBlock() : '';
+    // 🔐 ค้างค่างวดรถ → กุญแจเหลืองล็อกทับ (ไม่มีรถไม่ล็อกแล้ว — ระบบให้ยืมรถฟรี)
+    const carBlock = (w.mode === 'drive' && carDriveBlock() === 'overdue') ? 'overdue' : '';
     if(lk){
       lk.style.display = carBlock ? '' : 'none';
-      if(carBlock){ lk.textContent = '🔐'; lk.title = carBlock==='nocar' ? 'ต้องซื้อรถก่อน จึงจะขับรถได้' : 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
+      if(carBlock){ lk.textContent = '🔐'; lk.title = 'ค้างค่างวดรถ — จ่ายก่อนถึงขับได้'; }
     }
     // ปลดล็อกแล้ว (เข้าได้) → โชว์ราคาวันนี้เสมอ (จ่ายทุกครั้ง) + จำนวนคำที่พิชิต (ถ้ามี)
     if(pr){
@@ -7334,6 +7321,8 @@ function buyRobot(id){
       if(!state.mechaRobot) state.mechaRobot = id;
       if(typeof sellInc==='function') sellInc(r.id);      // 🛒 นับยอดขาย
       sfx.buy();
+      // 🧹 รอบ 941: ป้ายเตือน "ยังไม่มีหุ่นยนต์" เป็นแบบค้างจนกดปิด — ซื้อแล้วต้องหายเอง (ผู้ใช้เจอป้ายเก่าลอยทับทั้งที่มีหุ่นแล้ว)
+      if(typeof clearWarnToasts==='function') clearWarnToasts(/หุ่นยนต์/);
       toast(`🤖 ได้หุ่น ${r.name} แล้ว! เข้าโลกหุ่นยนต์นักรบได้เลย 💥`);
       saveState();
       renderDashboard();

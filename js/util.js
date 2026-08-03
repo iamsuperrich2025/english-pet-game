@@ -143,6 +143,12 @@ function restackToasts(){
     clr.remove();
   }
 }
+/* 🧹 รอบ 941: ล้าง toast คำเตือนที่ค้างอยู่ (toast-warn ค้างจนกดปิดเอง) — เรียกเมื่อเงื่อนไขที่เตือนถูกแก้แล้ว
+   re = กรองเฉพาะข้อความที่เข้า pattern · ไม่ส่ง = ล้างทั้งหมด (เช่น ตอนเข้าโลก 3D ป้ายเตือนของล็อบบี้ถือว่าหมดหน้าที่) */
+function clearWarnToasts(re){
+  document.querySelectorAll('.toast-warn').forEach(t=>{ if(!re || re.test(t.textContent)) t.remove(); });
+  restackToasts();
+}
 function toast(msg, ms=1800){
   const t = document.createElement('div');
   // 💰 รอบ 859 (ผู้ใช้สั่ง): ms=0 = บังคับค้างจนผู้เล่นกดปิดเอง (ใช้กับแจ้งเรื่องเงินตอนบูต — เดิมหายก่อนอ่านทัน)
