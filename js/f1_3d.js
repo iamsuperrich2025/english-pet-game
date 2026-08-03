@@ -34,11 +34,20 @@ const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไ�
 const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
 const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
 const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
-/* 🛣️ รอบ 915 — มุมที่ 3 "มุมถนน": ตำแหน่งเดียวกับคนขับ แต่ไม่มีค็อกพิท/ล้อ/รถบัง เห็นถนนล้วน
+/* 🛣️ รอบ 914 — มุมที่ 3 "มุมถนน": ตำแหน่งเดียวกับคนขับ แต่ไม่มีค็อกพิท/ล้อ/รถบัง เห็นถนนล้วน
    ยกสายตาสูงขึ้น + กดลงน้อยกว่า (ไม่ต้องเล็งผ่านช่องมองของภาพแล้ว) */
 const ROAD_EYE  = 1.45;
 const ROAD_DROP = 1.5;
 const ROAD_FOV  = 74;
+/* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
+const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
+const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
+const OFFTRACK_S = 2;    // 🏜️ อยู่บนทรายต่อเนื่องกี่วิ = เกิดใหม่บนแทร็กบริเวณนั้น
+const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
+const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
+const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
+const FPW_H      = 0.80; //    ความสูงจุดกลางล้อ (ม.) — สูงกว่าจริง (0.34) จงใจ: ภาพอาร์ตวาดยางไว้ระดับข้างกระจก
+                         //    ยกให้ตรงช่องโปร่งของภาพ (จุดสัมผัสพื้นโดนบอดี้อาร์ตทึบบัง มองไม่เห็นว่าลอย)
 /* 🎡 พวงมาลัยหมุนตามการเลี้ยวจริง (รอบ 913) — ภาพแยกเป็น 2 ชั้น: cockpit_body.webp (ไม่มีพวงมาลัย) + wheel.webp */
 const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมกลางพวงมาลัย) คิดเป็น % ของภาพ — ได้จาก tools/f1_split_wheel.py
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
@@ -69,15 +78,6 @@ const DASH_PX = {x:654, y:500, w:232, h:118};   // กรอบจอ (รวม
 const DASH_LED_N = 15;       // จำนวนดวงไฟรอบเครื่องบนขอบพวงมาลัย (ภาพต้นฉบับมี ~15 ขีด)
 const DASH_RPM_MIN = 3200;   // รอบเดินเบา (rpm) — ตัวเลขบนจอไล่จากนี่ถึง MAX ตามภาระเครื่องจริง
 const DASH_RPM_MAX = 15000;  // รอบสูงสุด (เครื่อง F1 จริงตัดที่ ~15,000)
-/* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
-const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
-const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
-const OFFTRACK_S = 2;    // 🏜️ อยู่บนทรายต่อเนื่องกี่วิ = เกิดใหม่บนแทร็กบริเวณนั้น
-const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
-const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
-const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
-const FPW_H      = 0.80; //    ความสูงจุดกลางล้อ (ม.) — สูงกว่าจริง (0.34) จงใจ: ภาพอาร์ตวาดยางไว้ระดับข้างกระจก
-                         //    ยกให้ตรงช่องโปร่งของภาพ (จุดสัมผัสพื้นโดนบอดี้อาร์ตทึบบัง มองไม่เห็นว่าลอย)
 /* 🫨 กล้องสั่นมุมคนขับ บน kerb/ทราย (รอบ 907) */
 const SHAKE_KERB_AMP = 0.026;  // แอมพลิจูดสั่น (ม.) บน kerb ที่ความเร็วอ้างอิง SHAKE_SPD_REF
 const SHAKE_SAND_AMP = 0.016;  // บนทราย (พื้นนุ่มกว่า kerb แข็ง สั่นเบากว่า)
@@ -150,11 +150,11 @@ let keydownFn, keyupFn, resizeFn;
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
+let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 let wheelEl=null, wheelDeg=null, wheelSy=1;             // 🎡 รอบ 913 — ชั้นพวงมาลัยที่หมุนได้ (sy = อัตราภาพถูกยืดแนวตั้ง)
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
 let wheelShakeOn=false;                                  // 🫨🎡 รอบ 914 — เฟรมก่อนหน้ามีการสั่นค้างไหม (กันสั่นค้างตอนกลับเข้าแทร็กเรียบ)
-let padRev=false, revNow=false, sandT=0, respEl=null, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 /* แทร็ก */
 let LINE=null, TOTAL=0, grid=null, sfIdx=0, myIdx=0, myLapDist=0, surfNow='track';
 /* จับเวลา */
@@ -978,7 +978,7 @@ const CSS=`
 @media (min-aspect-ratio: 9/5){
   #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% 128%;background-position:center top}
 }
-/* 🧭 รอบ 915: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
+/* 🧭 รอบ 914: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
    เหรียญย้ายเข้ามาเป็นลูกของแถวนี้ด้วย จึงไม่ต้องเดาความกว้างเหรียญเวลาเลขยาว */
 #f1-topright{position:absolute;right:10px;top:8px;z-index:7;display:flex;align-items:center;gap:6px}
 #f1-cambtn,#f1-exitbtn{position:static;background:rgba(8,12,24,.78);
@@ -1003,7 +1003,7 @@ const CSS=`
 #f1-laps b{color:#ffd12e}
 #f1-coins{position:absolute;right:10px;top:8px;background:rgba(8,12,24,.72);border:1px solid rgba(255,209,46,.35);
   border-radius:12px;padding:6px 12px;color:#ffd12e;font-weight:800;font-size:15px;z-index:6}
-#f1-map{position:absolute;left:10px;bottom:calc(var(--f1-sh) + 16px);width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 915 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย · 🎛️ รอบ 921 — วัดจากความสูงแถบเลี้ยวเอง */
+#f1-map{position:absolute;left:10px;bottom:calc(var(--f1-sh) + 16px);width:130px;height:130px;z-index:6;opacity:.92;pointer-events:none}  /* 🧭 รอบ 914 — ยกพ้นแถบเลี้ยวที่ย้ายมาชิดซ้าย · 🎛️ รอบ 921 — วัดจากความสูงแถบเลี้ยวเอง */
 #f1-wrong{position:absolute;top:34%;left:50%;transform:translateX(-50%);background:rgba(216,26,26,.9);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
@@ -1073,7 +1073,7 @@ const CSS=`
 #f1-selfmsg{position:absolute;bottom:150px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.92);
   color:#12283f;border-radius:14px;padding:5px 14px;font-size:14px;font-weight:700;display:none;z-index:7}
 #f1-selfmsg.on{display:block}
-/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) · 🧭 รอบ 915: ชิดซ้ายสุด (ปุ่ม 📷/🏁 ย้ายขึ้นขวาบนแล้ว)
+/* 🔄 รอบ 911: แถบเลี้ยวหนาขึ้น 2 เท่า (64→128) · 🧭 รอบ 914: ชิดซ้ายสุด (ปุ่ม 📷/🏁 ย้ายขึ้นขวาบนแล้ว)
    🎛️ รอบ 921 (ผู้ใช้ชี้จากเครื่องจริง): หนาขึ้นอีกเท่าตัว + ยกปุ่มเร่งขึ้นมาสูงเกือบครึ่งจอ
    --f1-sh = ความสูงแถบเลี้ยว (เพดาน 44vh = สูงเกือบครึ่งจอพอดีตามที่ผู้ใช้ขีดเส้นไว้)
    --f1-pedb = ระยะยกแถวคันเร่ง/เบรก ให้ "ขอบบนปุ่มเร่ง" เสมอกับขอบบนแถบเลี้ยวพอดี
@@ -1108,7 +1108,8 @@ const CSS=`
   font-size:clamp(13px,2.8vh,17px);font-weight:800;font-family:inherit;margin-top:8px;align-self:center}
 /* 🏆 กระดานอันดับ Best Lap ในหน้า intro (รอบ 903) */
 #f1-intro .fi-cols{display:flex;gap:14px;text-align:left;margin-top:2px;min-height:0}
-#f1-intro .fi-rules{flex:1.15;min-width:0}
+/* 👥 รอบ 939: บีบระยะบรรทัดคอลัมน์กติกา (1.55→1.4) — เพิ่มข้อมูล "เล่นกับเพื่อน" แล้วต้องยังพอดีจอ ไม่มี scroll (กฎทอง #7) */
+#f1-intro .fi-rules{flex:1.15;min-width:0;line-height:1.4}
 #f1-intro .fi-rank{flex:1;min-width:0;background:rgba(255,255,255,.06);border-radius:12px;padding:6px 9px;
   display:flex;flex-direction:column;min-height:0}
 #f1-intro .fi-rank-h{font-weight:800;color:#ffd12e;margin-bottom:3px;font-size:clamp(11px,2.4vh,13px);flex:none}
@@ -1136,7 +1137,7 @@ const CSS=`
 #f1-leave{background:#d81a1a;color:#fff}
 @media (max-height:430px){
   #f1-speed{font-size:30px}
-  /* 🧭 รอบ 915: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
+  /* 🧭 รอบ 914: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
      🎛️ รอบ 921: ความสูง/ตำแหน่งย้ายไปคุมด้วย --f1-sh/--f1-pedb แล้ว (เพดาน 44vh คุมจอเตี้ยให้เอง)
      เหลือแค่ "ความกว้าง" ที่ยังต่างจากจอใหญ่ */
   #f1-wrap{--f1-sh:min(200px,44vh);--f1-sw:min(40vw,250px)}
@@ -1187,20 +1188,19 @@ function buildDom(){
       <h2>🏎️ สนามซาเคียร์ · บาห์เรน กรังด์ปรีซ์</h2>
       <div class="fi-cols">
         <div class="fi-rules">
-          สนามจริง 5.4 กม. 15 โค้ง แข่งกลางทะเลทรายใต้แสงไฟ!<br>
-          ⚡ = คันเร่ง · 🛑 = เบรก · ลูกบิดส้ม = พวงมาลัย<br>
-          (คีย์บอร์ด: W เร่ง · S เบรก · A/D เลี้ยว)<br>
+          สนามจริง 5.4 กม. 15 โค้ง กลางทะเลทรายใต้แสงไฟ!<br>
+          ⚡ คันเร่ง · 🛑 เบรก · ลูกบิดส้ม = พวงมาลัย (คีย์บอร์ด W/S เร่ง-เบรก · A/D เลี้ยว)<br>
           🔤 เก็บตัวอักษรบนแทร็กประกอบคำ = <b style="color:#ffd12e">+${REWARD} 🪙</b><br>
-          🏁 วิ่งครบรอบมีจับเวลา — ทำ Best Lap ให้ไวสุด!<br>
-      🚦 ออกสตาร์ทจริง: ไฟแดงติดทีละดวงจนครบ 5 แล้ว<b style="color:#ffd12e">ดับพร้อมกัน = ออกตัว</b> (คันเร่งล็อกก่อนไฟดับ)<br>
-      👻 ทำเวลาได้แล้วรอบถัดไปจะมี<b style="color:#67d8ff">รถเงาของตัวเอง</b>วิ่งให้ไล่แข่ง<br>
-          🪽 <b style="color:#2dff8c">DRS</b> = ทางตรง 2 ช่วง (เส้นเขียวบนแผนที่) ถ้าตามรถเพื่อนใกล้กว่า 25 ม.
-          ปีกหลังจะเปิดเอง วิ่งเร็วขึ้น 8% ไว้แซง!<br>
-          🛞 <b style="color:#ffd12e">ยางสึกได้!</b> ยิ่งไถล/ดริฟต์ ยางยิ่งหมดไว (ดูเกจ 🛞 มุมขวาบน)
-          — ยางโทรม = รถลื่นขึ้น เข้า<b style="color:#67d8ff">เลนพิท</b> (เส้นประบนแผนที่) จอดนิ่งในช่อง 3 วิ = ยางใหม่<br>
-          🪖 เริ่มที่<b style="color:#67d8ff">มุมคนขับในค็อกพิท</b> — ปุ่มมุมขวาบนกดสลับได้ 3 มุม:
-          คนขับ → เห็นรถทั้งคัน → <b style="color:#67d8ff">มุมถนนล้วน</b> (ไม่มีอะไรบัง)<br>
-          ⚠️ ออกนอกแทร็กระวังทราย รถจะลื่นและช้าลงมาก
+          🏁 จับเวลาทุกรอบ — ทำ Best Lap ให้ไวสุด! 🚦 สตาร์ทจริง: ไฟแดง 5 ดวง<b style="color:#ffd12e">ดับพร้อมกัน = ออกตัว</b><br>
+      👻 ทำเวลาแล้ว รอบถัดไปมี<b style="color:#67d8ff">รถเงาของตัวเอง</b>ให้ไล่แข่ง<br>
+          🪽 <b style="color:#2dff8c">DRS</b> = ทางตรง 2 ช่วง (เส้นเขียว) ตามรถคันหน้าใกล้ 25 ม. ปีกหลังเปิดเอง เร็วขึ้น 8%<br>
+          🛞 <b style="color:#ffd12e">ยางสึกได้!</b> ดริฟต์มากยางหมดไว (เกจขวาบน) ยางโทรม = ลื่น
+          เข้า<b style="color:#67d8ff">เลนพิท</b> (เส้นประ) จอดนิ่ง 3 วิ = ยางใหม่<br>
+          🪖 ปุ่มขวาบนสลับ 3 มุมกล้อง: คนขับ → รถทั้งคัน → <b style="color:#67d8ff">ถนนล้วน</b><br>
+          🧑‍🤝‍🧑 <b style="color:#2dff8c">เล่นกับเพื่อนพร้อมกันได้!</b> ต่อเน็ตเข้ามา = อยู่สนามเดียวกันเอง คุยกันได้ ·
+          <b style="color:#ffd12e">สนามละไม่เกิน ${ROOM_MAX} คน</b> เต็มแล้วเปิดสนามใหม่ให้เอง ·
+          กด <b style="color:#67d8ff">👥 ไปหาเพื่อน</b> บนกระดาน = ไปสนามเดียวกับเพื่อน<br>
+          ⚠️ ออกนอกแทร็ก ทรายลื่นและช้าลงมาก
         </div>
         <div class="fi-rank" id="f1-rankbox">
           <div class="fi-rank-h">🏆 อันดับ Best Lap</div>
@@ -1222,6 +1222,8 @@ function buildDom(){
   introEl=wrapEl.querySelector('#f1-intro');
   exitBox=wrapEl.querySelector('#f1-exitbox');
   boardEl=wrapEl.querySelector('#f1-board');
+  /* 👥 รอบ 939: ปุ่ม "ไปหาเพื่อน" ที่ NetRoom ฝังมากับป้ายสถานะ — เดิม F1 วาดปุ่มแต่ไม่ได้ดักคลิก (กดแล้วเงียบ) */
+  boardEl.addEventListener('click',e=>{ if(e.target.closest('.nr-go')&&room) room.openFriends(); });
   chatBarEl=wrapEl.querySelector('#f1-chatbar');
   selfMsgEl=wrapEl.querySelector('#f1-selfmsg');
   speedEl=wrapEl.querySelector('#f1-speed');
@@ -1264,7 +1266,7 @@ function buildDom(){
   dashEl=wrapEl.querySelector('#f1-dash');
   dashCtx=(dashEl&&dashEl.getContext)?dashEl.getContext('2d'):null;
   if(!dashCtx) dashEl=null;
-  camBtnEl.addEventListener('click',cycleCamMode);   // 🛣️ รอบ 915 — วน 3 มุม
+  camBtnEl.addEventListener('click',cycleCamMode);   // 🛣️ รอบ 914 — วน 3 มุม
   /* แชท */
   chatBarEl.innerHTML=CHAT_PRESETS.map(t=>`<button>${t}</button>`).join('');
   chatBarEl.querySelectorAll('button').forEach((b,i)=>b.addEventListener('click',()=>{
@@ -1443,7 +1445,7 @@ function drawMap(){
     mapCtx.fillStyle=peerColor(uid);
     mapCtx.beginPath(); mapCtx.arc(x,y,5,0,Math.PI*2); mapCtx.fill();
   }
-  for(const b of bots){                         // 🤖 รอบ 909 — จุดรถบอตบนแผนที่ (สีเดียวกับตัวรถ)
+  for(const b of bots){                         // 🤖 รอบ 912 — จุดรถบอตบนแผนที่ (สีเดียวกับตัวรถ)
     if(!b.grp||!b.grp.visible) continue;
     const [bx,by]=mapXY(b.x,b.z,bb);
     mapCtx.fillStyle='#'+b.col.toString(16).padStart(6,'0');
@@ -1608,7 +1610,7 @@ function drsPeerGap(){
     const d=Math.hypot(dx,dz);
     if(d<=DRS_NEAR_M&&(!best||d<best)) best=d;
   }
-  /* 🤖 รอบ 909: รถบอตนับเป็น "รถข้างหน้า" ด้วย → เล่นคนเดียวก็เปิด DRS ได้ (เดิมต้องมีเพื่อนออนไลน์) */
+  /* 🤖 รอบ 912: รถบอตนับเป็น "รถข้างหน้า" ด้วย → เล่นคนเดียวก็เปิด DRS ได้ (เดิมต้องมีเพื่อนออนไลน์) */
   for(const b of bots){
     if(!b.grp||!b.grp.visible) continue;
     const dx=b.x-px, dz=b.z-pz;
@@ -1639,12 +1641,12 @@ function drsHud(){
   else if(drsInZone) drsEl.className='wait', drsEl.innerHTML='DRS<small>'
     +(drsBrake?'ปล่อยเบรกก่อน แล้วปีกจะเปิด'
               :'ตามรถคันหน้าให้ใกล้กว่า '+DRS_NEAR_M+' ม.'+(drsGap?'':' (ตอนนี้ไม่มีใครอยู่ข้างหน้า)'))+'</small>';
-              /* 🤖 รอบ 909: "รถคันหน้า" = เพื่อนออนไลน์ หรือรถบอต (เดิมเขียนว่า "รถเพื่อน" อย่างเดียว) */
+              /* 🤖 รอบ 912: "รถคันหน้า" = เพื่อนออนไลน์ หรือรถบอต (เดิมเขียนว่า "รถเพื่อน" อย่างเดียว) */
   else drsEl.className='';
 }
 
 /* ============================================================
-   🤖🏎️ รอบ 909: รถบอต 4 คันวิ่งตามเส้น LINE — ให้ผู้เล่นไล่แซง + นับเป็น "รถข้างหน้า" ของ DRS (รอบ 904)
+   🤖🏎️ รอบ 912: รถบอต 4 คันวิ่งตามเส้น LINE — ให้ผู้เล่นไล่แซง + นับเป็น "รถข้างหน้า" ของ DRS (รอบ 904)
    · ฟิสิกส์ง่าย ๆ แต่ได้จังหวะจริง: ไม่จำลองล้อ/พวงมาลัยรายคัน แต่คิด "โปรไฟล์ความเร็วของแทร็ก"
      ไว้ล่วงหน้าครั้งเดียว = ลิมิตโค้งจาก |LINE.curv| (สูตร downforce ชุดเดียวกับรถผู้เล่น)
      → ไล่ถอยหลังใส่ระยะเบรก → ไล่หน้าใส่อัตราเร่ง  (บอทจึงเบรกก่อนโค้งและออกโค้งเหมือนคนขับจริง)
@@ -1701,15 +1703,13 @@ function botProfileBuild(){
 function botEnsure(b,i){
   if(b.grp) return b.grp;
   const g=new THREE.Group();
+  /* ตั้งใจใช้ "รถประกอบเอง" ไม่ใช่ GLB ของผู้ใช้: GLB มีลายเดียว (แดง) — บอท 4 คัน + เพื่อน + รถเรา
+     จะเหมือนกันหมดจนเด็กแยกไม่ออกว่ากำลังแซงใคร · รถประกอบเองทาสีตามคันได้ + เบากว่ามาก (โคลน GLB 4 คัน
+     บนเครื่องเด็กหนักเกินจำเป็น) · ล้อก็หมุนได้เพราะ buildF1Car เก็บ userData.wheels ให้เสมอ */
   const car=buildF1Car(b.col);
   g.add(car);
   b.wheels=car.userData.wheels||[];
-  attachDrsGlow(g);                    // 🪽 เผื่อโมเดลถูกสลับเป็น GLB ทีหลัง (ติดกับกลุ่ม ไม่ใช่ตัวรถ)
-  makeCar(b.col,m=>{                   // มี GLB ของผู้ใช้ = สลับให้เหมือนรถเพื่อน
-    if(!g.children.length||!m||!glbSrc) return;
-    g.remove(g.children[0]); g.add(m);
-    b.wheels=m.userData.wheels||[];
-  });
+  attachDrsGlow(g);                    // 🪽 ไฟ DRS ติดกับ "กลุ่ม" แบบเดียวกับรถเพื่อน (รอบ 907)
   const tag=makeTextSprite(b.name,'rgba(24,18,40,.85)','#ffffff','🤖');
   tag.scale.set(7,1.8,1); tag.position.y=3.0;
   g.add(tag);
@@ -1781,15 +1781,18 @@ function botTick(dt){
   for(const b of bots){
     if(!b.grp) botPlace(b);
     if(locked){ b.v=0; b.wait=b.wait0; continue; }         // 🚦 รอบ 902 — บอทก็ออกตัวไม่ได้จนไฟดับ
-    if(b.wait>0){ b.wait-=dt; continue; }                  // เวลาปฏิกิริยาของบอทคันนั้น
-    b.wob+=dt*0.55;
-    const tgt=botProf[b.i]*b.k*(1+BOT_WOB*Math.sin(b.wob));
-    if(b.v<tgt) b.v=Math.min(tgt,b.v+Math.min(ACC_CAP,PWR_A/Math.max(b.v,6))*BOT_ACC_K*dt);
-    else        b.v=Math.max(tgt,b.v-BOT_BRAKE*dt);
-    b.s=(b.s+b.v*dt)%TOTAL;
-    botPlace(b);
-    for(const w of b.wheels) w.rotation.x+=b.v*dt/0.46;
-    /* แซงกันหรือยัง — เทียบระยะบนเส้น (ทั้งคู่ต้องอยู่ใกล้กันจริง ไม่ใช่ห่างกันครึ่งสนาม) */
+    if(b.wait>0){ b.wait-=dt; }                            // เวลาปฏิกิริยาของบอทคันนั้น (ยังไม่ออกตัว)
+    else{
+      b.wob+=dt*0.55;
+      const tgt=botProf[b.i]*b.k*(1+BOT_WOB*Math.sin(b.wob));
+      if(b.v<tgt) b.v=Math.min(tgt,b.v+Math.min(ACC_CAP,PWR_A/Math.max(b.v,6))*BOT_ACC_K*dt);
+      else        b.v=Math.max(tgt,b.v-BOT_BRAKE*dt);
+      b.s=(b.s+b.v*dt)%TOTAL;
+      botPlace(b);
+      for(const w of b.wheels) w.rotation.x+=b.v*dt/0.46;
+    }
+    /* แซงกันหรือยัง — เทียบระยะบนเส้น (ทั้งคู่ต้องอยู่ใกล้กันจริง ไม่ใช่ห่างกันครึ่งสนาม)
+       เช็กแม้บอทยังไม่ออกตัว — ผู้เล่นจั๊มพ์สตาร์ทแล้วแซงตอนบอทยังจอด ก็ต้องขึ้นป้าย */
     const rel=botRel(b);
     if(b.rel!==undefined&&Math.abs(rel)<BOT_PASS_R&&Math.abs(b.rel)<BOT_PASS_R&&lapStartAt){
       if(b.rel>0&&rel<=0) botBanner('<span style="color:#7dffb0">🏎️ แซง '+b.name+' ได้แล้ว!</span>');
@@ -2677,7 +2680,7 @@ function renderBoard(){
    📷 กล้องไล่หลัง + ลูปเกม
    ============================================================ */
 /* 🪖 รอบ 901: มุมคนขับ = ภาพหลัก (ภาพห้องคนขับทับจอ · ซ่อนรถตัวเอง) · 📷 = มุมไล่หลังเห็นทั้งคัน */
-/* 🛣️ รอบ 915: วน 3 มุม — 🪖 คนขับ → 📷 เห็นรถทั้งคัน → 🛣️ ถนนล้วน (ป้ายปุ่มบอก "มุมถัดไป" เสมอ) */
+/* 🛣️ รอบ 914: วน 3 มุม — 🪖 คนขับ → 📷 เห็นรถทั้งคัน → 🛣️ ถนนล้วน (ป้ายปุ่มบอก "มุมถัดไป" เสมอ) */
 const CAM_MODES=['cockpit','chase','road'];
 const CAM_NEXT_LABEL={cockpit:'📷 มุมรถ',chase:'🛣️ มุมถนน',road:'🪖 มุมคนขับ'};
 function cycleCamMode(){
@@ -2692,6 +2695,49 @@ function applyCamMode(){
   if(fpWheels) fpWheels.visible=fp;               // 🛞 ล้อหน้าโชว์เฉพาะมุมคนขับ
   camInit=false;
   if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
+}
+/* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
+   (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อสว่างให้ตาจับการหมุนได้) */
+function buildFpWheels(){
+  const g=new THREE.Group();
+  /* 🛞 รอบ 912: เปลี่ยนเป็น MeshBasic (ไม่พึ่งแสง) — เดิม Lambert โดนไฟสนามข้างเดียว
+     หน้าล้อฝั่งซ้ายมืดจนก้าน/แถบเหลืองจมหาย (ผู้ใช้เห็นจากเครื่องจริง) · Basic = สองฝั่งชัดเท่ากันเสมอ */
+  const tyreM=new THREE.MeshBasicMaterial({color:0x101216});
+  const rimM=new THREE.MeshBasicMaterial({color:0x33383f});
+  const spokeM=new THREE.MeshBasicMaterial({color:0x99a2ac});
+  const bandM=new THREE.MeshBasicMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
+  g.userData.spin=[];
+  for(const side of [-1,1]){
+    const wg=new THREE.Group(), sg=new THREE.Group();
+    /* ฝาทรงกระบอกเป็น "แผ่นเต็ม" — ซ้อนรัศมีลดหลั่น (กว้างขึ้นทีละนิดกัน z-fight) ให้หน้าล้ออ่านเป็น:
+       ยางดำหนา → แถบเหลืองบางขอบนอก (แบบยาง soft) → แก้มดำ → ดุมเทาเข้ม + ซี่ */
+    const ty=new THREE.Mesh(new THREE.CylinderGeometry(FPW_R,FPW_R,0.38,18),tyreM);
+    ty.rotation.z=Math.PI/2; sg.add(ty);
+    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.322,0.322,0.384,18),bandM);
+    band.rotation.z=Math.PI/2; sg.add(band);
+    const wall=new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.388,18),tyreM);
+    wall.rotation.z=Math.PI/2; sg.add(wall);
+    const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.185,0.185,0.392,12),rimM);
+    rim.rotation.z=Math.PI/2; sg.add(rim);
+    for(let k=0;k<3;k++){                     // แท่งซี่พาดหน้าดุม 3 แนว = 6 ซี่ (สีเข้ม แค่พอให้ตาจับการหมุน)
+      const sp=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.34,0.04),spokeM);
+      sp.rotation.x=k*Math.PI/3; sg.add(sp);
+    }
+    wg.add(sg); g.add(wg);
+    g.userData.spin.push({wg,sg,side});
+  }
+  g.visible=false;
+  return g;
+}
+function fpWheelTick(dt){
+  if(!fpWheels||!fpWheels.visible) return;
+  const fx=Math.sin(yaw), fz=Math.cos(yaw);              // ขวามือรถ = (-fz, fx)
+  const vF=vx*fx+vz*fz, rollD=vF*dt/FPW_R, sv=-steer*1.15;
+  for(const o of fpWheels.userData.spin){
+    o.wg.position.set(px+fx*FPW_F-fz*FPW_S*o.side, FPW_H, pz+fz*FPW_F+fx*FPW_S*o.side);
+    o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
+    o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
+  }
 }
 /* 🎡 รอบ 913: วาง <img> พวงมาลัยให้ทับ "กรอบภาพจริง" ของ background-image ใน #f1-cockpit เป๊ะ
    — อ่าน background-size/position ที่เบราว์เซอร์คำนวณแล้วมาใช้ตรง ๆ จึงเปลี่ยนตาม @media เองโดยไม่ต้องเขียนสูตรซ้ำ
@@ -2753,49 +2799,6 @@ function wheelTick(){
   wheelEl.style.transform=tr;
   if(ledsEl) ledsEl.style.transform=wheelEl.style.transform;   // 🚥 รอบ 918 — ดวงไฟหมุนไปกับพวงมาลัย
   if(dashEl) dashEl.style.transform=tr;   // 🔢 รอบ 916 — จอตัวเลขติดไปกับพวงมาลัย (หมุน/สั่นก้อนเดียวกัน แกนเดียวกัน)
-}
-/* 🛞🪖 รอบ 911: ล้อหน้าจริงในมุมคนขับ — carGrp ถูกซ่อน แต่คนขับ F1 ต้องเห็นล้อหน้าดำ ๆ หมุน/เลี้ยวข้างตัว
-   (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อให้ตาจับการหมุนได้) */
-function buildFpWheels(){
-  const g=new THREE.Group();
-  /* 🛞 รอบ 912: เปลี่ยนเป็น MeshBasic (ไม่พึ่งแสง) — เดิม Lambert โดนไฟสนามข้างเดียว
-     หน้าล้อฝั่งซ้ายมืดจนก้าน/แถบเหลืองจมหาย (ผู้ใช้เห็นจากเครื่องจริง) · Basic = สองฝั่งชัดเท่ากันเสมอ */
-  const tyreM=new THREE.MeshBasicMaterial({color:0x101216});
-  const rimM=new THREE.MeshBasicMaterial({color:0x33383f});
-  const spokeM=new THREE.MeshBasicMaterial({color:0x99a2ac});
-  const bandM=new THREE.MeshBasicMaterial({color:0xd9c400});   // แถบเหลืองแก้มยางแบบ soft
-  g.userData.spin=[];
-  for(const side of [-1,1]){
-    const wg=new THREE.Group(), sg=new THREE.Group();
-    /* ฝาทรงกระบอกเป็น "แผ่นเต็ม" — ซ้อนรัศมีลดหลั่น (กว้างขึ้นทีละนิดกัน z-fight) ให้หน้าล้ออ่านเป็น:
-       ยางดำหนา → แถบเหลืองบางขอบนอก (แบบยาง soft) → แก้มดำ → ดุมเทาเข้ม + ซี่ */
-    const ty=new THREE.Mesh(new THREE.CylinderGeometry(FPW_R,FPW_R,0.38,18),tyreM);
-    ty.rotation.z=Math.PI/2; sg.add(ty);
-    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.322,0.322,0.384,18),bandM);
-    band.rotation.z=Math.PI/2; sg.add(band);
-    const wall=new THREE.Mesh(new THREE.CylinderGeometry(0.285,0.285,0.388,18),tyreM);
-    wall.rotation.z=Math.PI/2; sg.add(wall);
-    const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.185,0.185,0.392,12),rimM);
-    rim.rotation.z=Math.PI/2; sg.add(rim);
-    for(let k=0;k<3;k++){                     // แท่งซี่พาดหน้าดุม 3 แนว = 6 ซี่ (สีเข้ม แค่พอให้ตาจับการหมุน)
-      const sp=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.34,0.04),spokeM);
-      sp.rotation.x=k*Math.PI/3; sg.add(sp);
-    }
-    wg.add(sg); g.add(wg);
-    g.userData.spin.push({wg,sg,side});
-  }
-  g.visible=false;
-  return g;
-}
-function fpWheelTick(dt){
-  if(!fpWheels||!fpWheels.visible) return;
-  const fx=Math.sin(yaw), fz=Math.cos(yaw);              // ขวามือรถ = (-fz, fx)
-  const vF=vx*fx+vz*fz, rollD=vF*dt/FPW_R, sv=-steer*1.15;
-  for(const o of fpWheels.userData.spin){
-    o.wg.position.set(px+fx*FPW_F-fz*FPW_S*o.side, FPW_H, pz+fz*FPW_F+fx*FPW_S*o.side);
-    o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
-    o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
-  }
 }
 /* ============================================================
    🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
@@ -2949,7 +2952,7 @@ function ledTick(dt){
   }
 }
 function camTick(dt){
-  if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 915)
+  if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 914)
     const road=camMode==='road';
     const eyeH=road?ROAD_EYE:FP_EYE, dropH=road?ROAD_DROP:FP_DROP, fovBase=road?ROAD_FOV:FP_FOV;
     /* หัวคนขับตรึงกับรถ — ห้ามหน่วง ไม่งั้นโลก 3D กับภาพห้องคนขับแยกจากกัน */
@@ -3001,7 +3004,7 @@ function hudTick(){
 let mapAt=0, relocAt=0;
 function frame(dt,now){
   lightsTick(dt);          // 🚦 รอบ 902 — ต้องมาก่อน physTick (ล็อกคันเร่งจนไฟดับ)
-  botTick(dt);             // 🤖 รอบ 909 — ต้องมาก่อน physTick ด้วย (DRS ในนั้นวัดระยะรถบอตคันหน้า)
+  botTick(dt);             // 🤖 รอบ 912 — ต้องมาก่อน physTick ด้วย (DRS ในนั้นวัดระยะรถบอตคันหน้า)
   physTick(dt);
   ghostTick(dt);           // 👻 รอบ 902
   collectTick();
@@ -3067,7 +3070,7 @@ function start(){
   tyreReset();              // 🛞 รอบ 905 — ยางใหม่ทุกครั้งที่เข้าสนาม
   resetLights();            // 🚦 รอบ 902 — ตั้งลำดับไฟใหม่ทุกครั้งที่เข้าสนาม
   ghostLoad(); ghostReset(); ghostHide();
-  botReset();               // 🤖 รอบ 909 — ตั้งรถบอต 4 คันบนกริดข้างหน้าเราใหม่ทุกครั้ง
+  botReset();               // 🤖 รอบ 912 — ตั้งรถบอต 4 คันบนกริดข้างหน้าเราใหม่ทุกครั้ง
   knobEl.style.left='50%';
   netJoin();
   fit();
@@ -3110,7 +3113,7 @@ function exitWorld(){
   Snd.stop();
   letters.forEach(l=>scene.remove(l.spr)); letters=[]; word=null;
   smokes.forEach(s=>scene.remove(s.m)); smokes=[];
-  ghostHide(); botHide(); paintLights(0);   // 🤖 รอบ 909 — เก็บรถบอตออกจากจอตอนออกจากสนาม
+  ghostHide(); botHide(); paintLights(0);   // 🤖 รอบ 912 — เก็บรถบอตออกจากจอตอนออกจากสนาม
   if(lightsEl) lightsEl.classList.remove('on');
   if(renderer) renderer.setSize(2,2,false);
   wrapEl.classList.remove('on');
@@ -3133,6 +3136,8 @@ window.F1World={
     get line(){return LINE}, get total(){return TOTAL}, get sfIdx(){return sfIdx},
     get lap(){return {now:lapNow,best:lapBest,count:lapCount,cp:cpFlags.slice(),startAt:lapStartAt}},
     get word(){return word}, get letters(){return letters},
+    /* 👥 รอบ 939 — เทสต์ปุ่ม "ไปหาเพื่อน" บนกระดาน (ยัด room ปลอมได้โดยไม่ต้องต่อ Firebase จริง) */
+    get room(){return room}, set room(v){room=v}, renderBoard,
     give(){ letters.slice().forEach(l=>{ word.got.push(l.idx); scene.remove(l.spr); }); letters=[]; completeWord(); },
     surfAt, nearIdx, trackPointAhead, pickWord, collectTick, physTick,
     /* 🪽 รอบ 904 */
@@ -3160,7 +3165,7 @@ window.F1World={
       hud:gapEl?{cls:gapEl.className,txt:gapEl.textContent}:null}},
     setGhost(d){ ghostBest=d; if(d) ghostSave(); else { try{localStorage.removeItem(GHOST_KEY);}catch(e){} } },
     ghostLoad, ghostReset, ghostKeep, ghostTick,
-    /* 🤖 รอบ 909 — รถบอต */
+    /* 🤖 รอบ 912 — รถบอต */
     get bots(){return bots.map((b,i)=>({i,name:b.name,k:b.k,lane:b.lane,s:b.s,v:b.v,idx:b.i,
       wait:b.wait,rel:b.rel,x:b.x,z:b.z,yaw:b.yaw,vis:!!(b.grp&&b.grp.visible)}))},
     get botProf(){return botProf?{n:botProf.length,min:Math.min.apply(null,botProf),
