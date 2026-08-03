@@ -897,9 +897,10 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
 a.rail-btn{text-decoration:none;text-align:center;}
 .rail-btn.rail-city{background:rgba(232,182,76,.18);border-color:rgba(232,182,76,.5);color:#ffe3a6;}
 .rail-btn.rail-city:hover{background:rgba(232,182,76,.3);}
-/* 📌 รอบ 949 (ผู้ใช้สั่ง "ปุ่มเมือง 3D ต้องมีตลอด"): ปักหมุดนอกโซนเลื่อน — ลูกตรงของ .rail-wrap
-   → ไม่มี gap ของรางมาช่วยแล้ว ต้องเว้นระยะเอง + กันโดนบีบตอนจอเตี้ย */
-.rail-wrap > .rail-city{flex:0 0 auto;margin-bottom:7px;z-index:5;}
+/* 📌 รอบ 949/950 (ผู้ใช้สั่ง "ปุ่มต้องมีตลอด"): กล่องปักหมุดนอกโซนเลื่อน — ลูกตรงของ .rail-wrap
+   → ไม่มี gap ของรางมาช่วยแล้ว ต้องเว้นระยะเอง (gap ระหว่างปุ่มปักหมุด + margin ก่อนโซนเลื่อน) */
+.rail-pinned{display:flex;flex-direction:column;gap:7px;flex:0 0 auto;margin-bottom:7px;z-index:5;}
+.rail-pinned .rail-btn{flex-shrink:0;}
 .rail-btn:hover{background:rgba(27,95,168,.85);}
 .rail-btn:active{transform:scale(.94);}
 .rail-btn.on{background:var(--sky);color:#fff;border-color:#7fc0f5;}
