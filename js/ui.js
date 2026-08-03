@@ -722,12 +722,16 @@ function rainFxTick(){
     fx = document.createElement('div');
     fx.id = 'rain-fx';
     /* 🌧️ รอบ 961: ถอด .rain-layer (เส้นสีขาวทแยงทั้งจอ) ออก — ผู้ใช้บอก "ดูไม่ professional"
-       เหลือเฉพาะหยดน้ำเกาะกระจกซึ่งเป็นภาพจริง ดูสมจริงกว่า */
-    fx.innerHTML = `<div class="rain-glass"></div>`;
+       เหลือเฉพาะหยดน้ำเกาะกระจกซึ่งเป็นภาพจริง ดูสมจริงกว่า
+       🌫️ รอบ 962: เพิ่ม .rain-vignette (ละอองฝนเบลอขอบจอ) แทนเส้นที่ถอดไป — ผู้ใช้ขอ
+       "ให้รู้สึกว่าฝนตกโดยไม่ต้องมีเส้น" */
+    fx.innerHTML = `<div class="rain-glass"></div><div class="rain-vignette"></div>`;
     document.body.appendChild(fx);
     rainFxDrop(fx.querySelector('.rain-glass'));
+    if(typeof RainSound !== 'undefined') RainSound.start();   // 🌧️ เสียงฝนวนลูป
   }else if(!on && fx){
     fx.remove();                       // ฝนหยุด/ซื้อบ้านแล้ว → เอฟเฟกต์หาย
+    if(typeof RainSound !== 'undefined') RainSound.stop();
   }
 }
 /* หยดน้ำเกาะกระจก: ภาพเม็ดฝนจริง 5 แบบ (img/fx/) สุ่มแบบ/ขนาด/ตำแหน่ง/

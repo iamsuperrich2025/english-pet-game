@@ -312,16 +312,21 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   /* 🌧️ ฝนบนเลนส์กล้อง FPV — ริ้วฝนเฉียงวิ่งลง + หยดน้ำเกาะเลนส์ (CSS ล้วน · เปิดตอนพายุเท่านั้น) */
   #adv-rain{position:absolute;inset:0;pointer-events:none;z-index:6;opacity:0;transition:opacity 1.4s ease}
   #adv-rain.on{opacity:1}
-  #adv-rain:before{content:'';position:absolute;inset:-20% -10%;
-    background:repeating-linear-gradient(74deg,rgba(255,255,255,0) 0 9px,rgba(198,222,240,.30) 9px 10.5px,rgba(255,255,255,0) 10.5px 22px);
-    animation:advRain .55s linear infinite}
-  @keyframes advRain{to{transform:translate3d(-42px,150px,0)}}
+  /* 🌧️ รอบ 962 (ผู้ใช้: ฝนล็อบบี้เส้นขาวดูไม่ professional → ให้แก้ระบบฝนโลกโดรนแบบเดียวกันด้วย):
+     ถอด stripe ทแยงขาว (repeating-linear-gradient + @keyframes advRain) ออกทั้งหมด
+     แทนด้วยละอองฝนเบลอขอบจอ (vignette) — สื่อว่าฝนตกโดยไม่ต้องมีเส้น */
+  #adv-rain:before{content:'';position:absolute;inset:-4%;
+    background:radial-gradient(ellipse at 50% 50%,transparent 54%,rgba(160,195,230,.26) 100%);
+    filter:blur(9px);animation:advVignette 5s ease-in-out infinite}
+  @keyframes advVignette{0%,100%{opacity:.7}50%{opacity:1}}
+  /* 💧 รอบ 962: ลดความทึบหยดน้ำ ~2.5 เท่า (.62/.28/.10→.24/.11/.04 · เงา .45/.28→.18/.12 · keyframe .85/.7→.32/.26)
+     ให้เหมือนหยดน้ำจริงที่แค่บิดแสงเบา ๆ ไม่ใช่จุดขาวทึบแปะเลนส์ (สอดคล้องกับฝนในล็อบบี้ รอบ 961) */
   #adv-rain i{position:absolute;display:block;border-radius:52% 48% 46% 54%;
-    background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.62),rgba(190,215,235,.28) 58%,rgba(120,150,175,.10));
-    box-shadow:inset 0 -1px 2px rgba(255,255,255,.45),0 1px 3px rgba(0,0,0,.28);
+    background:radial-gradient(circle at 34% 30%,rgba(255,255,255,.24),rgba(190,215,235,.11) 58%,rgba(120,150,175,.04));
+    box-shadow:inset 0 -1px 2px rgba(255,255,255,.18),0 1px 3px rgba(0,0,0,.12);
     backdrop-filter:blur(1px);animation:advDrop 3s ease-in infinite}
-  @keyframes advDrop{0%{transform:translateY(0) scale(1);opacity:.85}
-    72%{transform:translateY(16px) scale(1.04);opacity:.7}
+  @keyframes advDrop{0%{transform:translateY(0) scale(1);opacity:.32}
+    72%{transform:translateY(16px) scale(1.04);opacity:.26}
     100%{transform:translateY(46px) scale(.7);opacity:0}}
   html.no-anim #adv-rain:before,html.no-anim #adv-rain i{animation:none}
   /* ⛈ ฟ้าแลบ — วาบ 2 จังหวะแบบสายฟ้าจริง (ขาวอมฟ้า ไม่ใช่ขาวล้วนแบบแฟลชกล้อง) */
