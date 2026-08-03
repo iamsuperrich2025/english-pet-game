@@ -6828,6 +6828,86 @@ function drawCarMirrors(){
   renderer.setViewport(0,0,W,H);   // ⚠️ คืนวิวพอร์ตเต็มจอ ไม่งั้นเฟรมถัดไปกล้องหลักจะเหลือแค่มุมเดิม
 }
 /* ============================================================
+   🪞🧑‍🤝‍🧑 รอบ 973: เพื่อนที่ขับตามมา "เห็นในกระจกมองหลัง" + ป้ายชื่อลอยเหนือรถเขา
+   ตัวรถเพื่อนอยู่ในภาพกระจกอยู่แล้ว (mirrorPass เรนเดอร์ scene เดิมทั้งฉาก คนละมุมกล้อง)
+   แต่ป้ายชื่อ 3D (blkNameSprite กว้าง 2.7m) พอย่อลงกรอบ 260×74 แล้วเหลือ ~20px = อ่านไม่ออก
+   → วางป้าย DOM ทับกรอบกระจกแทน โดยฉายพิกัดเพื่อนผ่าน mirrorRearCam "ตัวเดิมที่เพิ่งเรนเดอร์"
+     (matrixWorldInverse/projectionMatrix ของเฟรมนั้นเป๊ะ ป้ายจึงเกาะหลังคารถจริง ไม่หลุด)
+   ⚠️ ต้องเรียก "หลัง" drawCarMirrors() เสมอ · กรอบ DOM วางด้วยพิกัดสูตรเดียวกับ mirrorPass
+     (ไม่เกาะ #adv-mirror-rear เพราะกรอบนั้นมี border 3px = ขอบเหลื่อมกับภาพ WebGL จริง)
+   ============================================================ */
+const MTAG_MAX_D=95,     // ไกลกว่านี้ไม่ขึ้นป้าย (รถเป็นจุดจิ๋วในกระจกแล้ว)
+      MTAG_MAX_N=3,      // ป้ายพร้อมกันสูงสุด — กรอบกระจกแคบ เอา "คันใกล้สุด" ก่อน
+      MTAG_Y=3.15;       // ความสูงป้ายในโลก (เหนือหลังคารถบล็อก ~2.8m)
+let mirrorTagWrap=null, mirrorTagEls=[], _mtagBox='', _mtagV=null;
+function mirrorTagsHide(){ if(mirrorTagWrap) mirrorTagWrap.style.display='none'; }
+function mirrorTagName(n){ n=String(n||'เพื่อน'); return n.length>9?n.slice(0,8)+'…':n; }   // กระจกแคบ ชื่อยาวกินที่จนบังถนน
+function mirrorTagsTick(){
+  if(!M.drive||!renderer||!camera||!mirrorRearCam||dCam3||carStartOpen||!overlayEl){ mirrorTagsHide(); return; }
+  const uids=Object.keys(peers);
+  if(!uids.length){ mirrorTagsHide(); return; }
+  /* กรอบเดียวกับที่ drawCarMirrors ยัดภาพลงไป (ย่อ/ขยายตามปุ่มมุมกระจกอัตโนมัติ) */
+  const rect=(typeof mirrorRearRect==='function')?mirrorRearRect():MIRROR_REAR;
+  const W=window.innerWidth, H=window.innerHeight;
+  const w=Math.max(1,Math.round(rect.w)), h=Math.max(1,Math.round(rect.h));
+  const bx=Math.round(rect.cx?rect.l*W-w/2:rect.l), by=Math.round(rect.pctT!=null?rect.pctT*H:rect.t);
+  if(!mirrorTagWrap||!mirrorTagWrap.isConnected){
+    mirrorTagWrap=document.createElement('div'); mirrorTagWrap.id='adv-mirror-tags';
+    overlayEl.appendChild(mirrorTagWrap); mirrorTagEls=[]; _mtagBox='';
+  }
+  const box=bx+','+by+','+w+','+h;
+  if(_mtagBox!==box){
+    _mtagBox=box;
+    mirrorTagWrap.style.left=bx+'px'; mirrorTagWrap.style.top=by+'px';
+    mirrorTagWrap.style.width=w+'px'; mirrorTagWrap.style.height=h+'px';
+    mirrorTagWrap.classList.toggle('mini',w<200);      // กระจกย่อ = ป้ายเล็กลงตาม
+  }
+  const cam=mirrorRearCam, v=_mtagV||(_mtagV=new THREE.Vector3()), seen=[];
+  uids.forEach(uid=>{
+    const p=peers[uid];
+    if(!p||!p.spr||!p.spr.visible) return;
+    const d=Math.hypot(p.cur.x-camera.position.x,p.cur.z-camera.position.z);
+    if(d>MTAG_MAX_D||d<1.2) return;
+    v.set(p.cur.x,MTAG_Y,p.cur.z).applyMatrix4(cam.matrixWorldInverse);
+    if(v.z>-.8) return;                                // อยู่หลังกล้องกระจก = คันที่แซงขึ้นหน้าไปแล้ว ไม่เห็นในกระจก
+    v.applyMatrix4(cam.projectionMatrix);              // หน้ากล้องแน่แล้ว → applyMatrix4 หาร w ให้เอง = NDC
+    const nx=(v.x*.5+.5)*w, ny=(-v.y*.5+.5)*h;
+    if(nx<-26||nx>w+26||ny<-20||ny>h+16) return;       // หลุดขอบกระจก (เผื่อขอบให้ป้ายโผล่ครึ่งใบได้)
+    seen.push({p,d,nx,ny});
+  });
+  seen.sort((a,b)=>a.d-b.d);
+  const show=seen.slice(0,MTAG_MAX_N);
+  while(mirrorTagEls.length<show.length){
+    const el=document.createElement('div'); el.className='adv-mtag';
+    mirrorTagWrap.appendChild(el); mirrorTagEls.push(el);
+  }
+  /* ⚠️ บทเรียนตอนทดสอบ: เพื่อนที่ขับ "เรียงกันในเลนเดียว" ฉายลงกระจกแล้วมากองตรงเส้นขอบฟ้าเกือบจุดเดียวกัน
+     (คันใกล้อยู่สูงกว่าเพราะมองเห็นเป็นมุมชันกว่า · คันไกลไหลลงมาหาเส้นขอบฟ้า) → ป้ายทับกันอ่านไม่ออกทั้งกอง
+     จึงวางป้ายทีละใบเรียงจากคันใกล้สุด ชนใครก็ "ดันลงล่าง" ทีละชั้นจนว่าง (แกน x ยังตรงคันเดิม = ยังรู้ว่าป้ายของใคร) */
+  const placed=[];
+  mirrorTagEls.forEach((el,i)=>{
+    const s=show[i];
+    if(!s){ el.style.display='none'; return; }
+    /* 🎖️ ระดับชั้นติดท้ายชื่อเสมอ (กฎเด็กปลอดภัย — ชื่อเล่น+ดาว/เพชร ไม่มีชื่อจริง) */
+    const html=escapeHTML(mirrorTagName(s.p.n))
+      +(typeof gradeMark==='function'?gradeMark(s.p.grade):'')
+      +'<i>'+Math.round(s.d)+'ม.</i>';
+    el.style.display='block';
+    if(el._h!==html){                                  // วัดขนาดเฉพาะตอนข้อความเปลี่ยน (เลี่ยง reflow ทุกเฟรม)
+      el._h=html; el.innerHTML=html;
+      el._w=el.offsetWidth; el._hh=el.offsetHeight;
+    }
+    const tw=el._w||60, th=el._hh||15;
+    let y=s.ny;                                        // ป้ายลอย "เหนือ" จุดยึด → กล่อง = [y-th, y]
+    for(let k=0;k<MTAG_MAX_N&&placed.some(b=>s.nx-tw/2<b.x1&&s.nx+tw/2>b.x0&&y-th<b.y1&&y>b.y0);k++) y+=th+2;
+    y=Math.max(th+1,Math.min(h-1,y));                  // ไม่ให้หลุดขอบบน/ล่างของกรอบกระจก
+    placed.push({x0:s.nx-tw/2,x1:s.nx+tw/2,y0:y-th,y1:y});
+    el.style.transform='translate(-50%,-100%) translate('+s.nx.toFixed(1)+'px,'+y.toFixed(1)+'px)';
+    el.style.opacity=s.d>70?'.55':s.d>45?'.78':'1';
+  });
+  mirrorTagWrap.style.display=show.length?'block':'none';
+}
+/* ============================================================
    🪆 รอบ 191: ตุ๊กตาดุ๊กดิ๊กหน้ารถ — รูปตัวละครที่ผู้เล่นเลือก (blkN.png)
    ยืนบนแผงหน้าปัดตรงลูกศร · "หัว" ส่ายซ้าย-ขวาตามแรงเลี้ยว (สปริงหน่วงต่ำ)
    ตำแหน่งเท้า = พิกัดภาพ dash.png (BOBBLE_FOOT) map สูตรเดียวกับจอวิทยุ/เข็มเกจ
@@ -12088,7 +12168,8 @@ function loop(){
   drawMinimap();
   renderer.render(scene,camera);
   if(M.heli&&hPhase==='pilot') drawBellyCam();   // 📹 กล้องใต้ท้อง — เฉพาะตอนขับเอง (เฟสเดิน/นั่ง/วิงสูทไม่มี)
-  if(M.drive&&!carStartOpen) drawCarMirrors();   // 🪞 รอบ 810: กระจกมองหลัง/ข้าง — เฉพาะตอนออกรถแล้วจริงๆ (ยังไม่ออกรถ = ไม่ต้องเรนเดอร์ซ้ำเปล่าๆ)
+  if(M.drive&&!carStartOpen){ drawCarMirrors(); mirrorTagsTick(); }   // 🪞 รอบ 810: กระจกมองหลัง/ข้าง — เฉพาะตอนออกรถแล้วจริงๆ (ยังไม่ออกรถ = ไม่ต้องเรนเดอร์ซ้ำเปล่าๆ) · 🧑‍🤝‍🧑 รอบ 973: ป้ายชื่อเพื่อนในกระจก (ต้องหลัง drawCarMirrors)
+  else mirrorTagsHide();                          // ออกจากโหมดขับรถ/เปิดแผงออกรถ = ป้ายในกระจกต้องหายด้วย (overlay ตัวเดียวใช้ทุกโลก)
   if(shotWanted) grabShot();                       // 📸 ต้องอ่าน canvas ทันทีหลัง render (บัฟเฟอร์ไม่ถูกเก็บไว้)
 }
 /* 📸 เก็บภาพเฟรมที่เพิ่งเรนเดอร์ → เด้งการ์ดพรีวิว (บันทึกลงเครื่องได้) */
@@ -12704,6 +12785,7 @@ window.Adventure3D={
         }
         tickLetterRespawns(now);
         tickPeers(dt,now); drawMinimap(); renderer.render(scene,camera);
+        if(M.drive&&!carStartOpen){ drawCarMirrors(); mirrorTagsTick(); }   // 🪞 เทสต์กระจกมองหลัง/ป้ายชื่อเพื่อนได้ด้วย step() (เดิม step ข้ามกระจกไป)
       }
     },
     renderNow(){ camera.updateMatrixWorld(); renderer.render(scene,camera); },   // เทสต์: เรนเดอร์เฟรมเดียวโดยไม่ขยับกล้อง

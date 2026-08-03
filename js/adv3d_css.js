@@ -63,6 +63,21 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     font-size:12px;font-weight:900;line-height:1;font-family:inherit;display:flex;
     align-items:center;justify-content:center;pointer-events:auto;z-index:1;cursor:pointer}
   #adv-mirror-toggle:active{background:rgba(60,60,70,.85)}
+  /* 🪞🧑‍🤝‍🧑 รอบ 973: ป้ายชื่อเพื่อนที่ขับตามมา — ลอยเหนือรถเขาในกระจกมองหลัง
+     กรอบนี้ JS ตั้ง left/top/width/height เอง (สูตรเดียวกับ scissor ของ mirrorPass) จึงทับภาพกระจกพอดี
+     ไม่เกาะ #adv-mirror-rear เพราะกรอบนั้นมี border 3px = ขอบเหลื่อมภาพ WebGL จริง */
+  #adv-mirror-tags{position:absolute;z-index:4;display:none;overflow:hidden;pointer-events:none;border-radius:6px}   /* z เท่ากรอบกระจกแต่ต่อท้าย DOM = อยู่เหนือกระจก · ยังต่ำกว่าแถบแจ้งเตือน #adv-banner(5) ที่พาดผ่านตอนจอเตี้ย */
+  .adv-drive.cam3 #adv-mirror-tags{display:none!important}
+  /* ⚠️ ป้ายต้อง "เล็กจริง" — กรอบกระจกสูงแค่ 74px ป้ายอ้วนบังถนนหลังรถจนดูกระจกไม่ได้ (เจอตอนทดสอบรอบนี้)
+     พื้นหลังกึ่งโปร่ง + ดาวระดับชั้นบีบชิด = อ่านชื่อออกแต่ยังมองทะลุเห็นรถที่ตามมา */
+  .adv-mtag{position:absolute;left:0;top:0;white-space:nowrap;pointer-events:none;
+    font-size:8px;font-weight:800;line-height:1.25;color:#fff;padding:0 4px;border-radius:6px;
+    background:rgba(8,10,14,.58);border:1px solid rgba(255,255,255,.26);
+    text-shadow:0 1px 2px rgba(0,0,0,.95);box-shadow:0 1px 3px rgba(0,0,0,.5)}
+  .adv-mtag i{font-style:normal;opacity:.78;margin-left:2px;font-size:7px;font-weight:700}
+  .adv-mtag .gmark{font-size:6px;margin-left:2px;letter-spacing:-1px;vertical-align:1px;opacity:.95}
+  #adv-mirror-tags.mini .adv-mtag{font-size:7px;padding:0 3px;border-radius:5px}
+  #adv-mirror-tags.mini .adv-mtag i{display:none}
   .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
   .adv-soccer #adv-words .adv-fch{font-size:clamp(15px,3.2vw,22px);min-width:22px;padding:2px 6px;border-radius:7px}
   .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}
@@ -562,7 +577,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   /* 🗺️ รอบ 144 (สเปกผู้ใช้จาก screenshot จริง): minimap ไปบนซ้ายสุด · กระดานคะแนนขยับขวาต่อจาก map ·
      ปุ่มออกแทนที่ปุ่มแชทเดิม (top:8 right:140) · ปุ่มบนขวาจัดกริด 2 คอลัมน์แถวละ 50px เป็นระเบียบ · ? ไปมุมขวาสุด */
   .adv-drive #adv-map{left:8px;right:auto}
-  .adv-drive #adv-board{left:136px;max-width:120px}
+  .adv-drive #adv-board{left:136px;max-width:120px;min-width:0}   /* 🩹 รอบ N: min-width:132 ของ base rule ชนะ max-width:120 (สเปก CSS ให้ min ชนะ) ทำให้กระดานกว้างเกิน ทับ topbar/กระจกหลังอยู่ก่อนแล้วทุกจอ */
   .adv-drive #adv-topbar{left:276px;transform:none}  /* ตรึงลงช่องว่างระหว่างกระดาน (จบ 268) กับปุ่มแชท (เริ่ม ~489) */
   .adv-drive .adv-hp{width:80px}   /* รอบ 147: ย่ออีกขั้น เปิดทางแถวปุ่มเดียวด้านขวา */
   /* รอบ 147 (สเปกผู้ใช้): ปุ่มขวาบนแถวเดียวทั้งหมด ย่อขนาดให้พอดี — ซ้าย→ขวา: ทุกคน·ปิด·ปิด·แชท·?·ออก(ริมขวาสุด)
@@ -583,6 +598,18 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
      — ที่เดิมเป็นช่องว่างข้างกระจกมองหลังที่คำเป้าหมายย้ายมาอยู่ (จอ 812 ปุ่มเดิมยังทับตัวกระจกด้วย) */
   .adv-drive #adv-tmute{top:62px;left:136px;right:auto;font-size:11px;padding:4px 6px;min-width:0}
   .adv-drive #adv-podbtn{top:94px;left:136px;right:auto;font-size:11px;padding:4px 6px;min-width:0}
+  /* 📱 รอบ 972 (ต่อยอดรอบ 967 — ผู้ใช้ชี้จุดเดิม "ป้ายทางแยก/ใบสั่งยังเฉี่ยวแป้นเบรก/เกียร์ถอยบนจอ 812×375"):
+     วัด getBoundingClientRect ไล่ทุกคู่ทั้ง HUD โลกขับรถ (28 element) แล้วแก้ 3 จุดเฉพาะจอเตี้ย (ไม่กระทบจอปกติ):
+     ① ย่อป้าย junc/lawwarn (padding/font/line-height เล็กลง) + ขยับสต็อกป้ายให้แน่นขึ้น
+     ② ดันแป้นเบรก/เกียร์ถอยลงชิดขอบล่างอีก (bottom offset เฉพาะจอเตี้ย)
+     ③ ซ่อนกระจกข้าง/ขวา (mirror-l/r) — top:38% ไม่ปรับตามจอเตี้ย เดิมทับปุ่มบังคับซ้าย-ขวาทั้งชุด + GPS อยู่แล้ว (มีกระจกหลังพอ)
+     ⚠️ เหลือค้าง: ป้าย junc/lawwarn ยังเฉี่ยวแป้นบังคับซ้าย #adv-steerpad เล็กน้อย (พวงมาลัยกว้างเกือบ 40% จอ ไม่มีที่ให้หลบทั้ง 2 ฝั่งพร้อมกัน) — pointer-events:none ป้ายไม่บังกดปุ่ม ไม่ได้แก้รอบนี้ */
+  @media (max-height:430px){
+    .adv-drive #adv-junc{top:190px;padding:3px 12px;font-size:12px}
+    .adv-drive #adv-lawwarn{top:220px;padding:5px 12px;line-height:1.2;font-size:clamp(10.5px,2.1vw,12.5px)}
+    .adv-touch.adv-drive #adv-brakepad,.adv-touch.adv-drive #adv-gearrev{bottom:6px}
+    .adv-drive #adv-mirror-l,.adv-drive #adv-mirror-r{display:none}
+  }
   /* 🤖 รอบ 216: HUD โลกหุ่น (mecha) — เลย์เอาต์เฉพาะที่ "พอดีจอมือถือแคบ" (568×320 ก็ไม่ทับ)
      ผู้ใช้รอบก่อนสั่งย้ายขึ้นบนเหมือนโลกขับรถ แต่แถวเดียวแบบ drive ยาวเกินจอแคบ → ปุ่มทับปุ่มยิง
      แก้: minimap บนซ้าย · HP+เหรียญ ต่อขวา map · ปุ่มยูทิลิตี้ 2 แถวมุมบนขวา (เหนือปุ่มยิงเสมอ) · ซ่อนกระดานคะแนน (จอแคบไม่พอ)
