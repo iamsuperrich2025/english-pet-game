@@ -10642,7 +10642,7 @@ function soccerKick(power){
   sbSpin.y=L.wy;                                     // 🌀 ไซด์สปิน = ลูกโค้ง (ตั้งจากจุดสัมผัส/ปัดปุ่มเตะ)
   sCurl=0; sHit=0; renderCurl(); renderSpinPad();    // ตั้งใหม่ทุกลูกแบบ PES (ไม่ค้างข้ามลูกให้งง)
   sbInNet=false; sbInGoal=false; repTrace=[];          // 🎬 เริ่มบันทึกวิถีลูกนี้
-  sbFlame=power>=FIRE_CHG;                             // 🔥 รอบ 852: ชาร์จถึง 30% = ลูกไฟ + ควันหางมิสไซล์
+  sbFlame=auraActive()&&power>=FIRE_CHG;               // 🔥 รอบ 852: ชาร์จถึง 30% = ลูกไฟ + ควันหางมิสไซล์ · รอบ 933: เฉพาะร่างพลัง (ร่างธรรมดาไม่มีไฟ/ควัน)
   if(pkOn) pkKicks++;                                  // 🎯 นับลูกที่ดวล
   sbLive=true; sbRestAt=0; sbKickAt=performance.now(); sbGoaled=false; sLegSwing=1;
   SoccerAudio.kick(power);
@@ -10837,7 +10837,8 @@ function smokePuff(x,y,z,vx,vy,vz){
 function ballFXTick(dt,now){
   if(!fireGrp||!soccerBall) return;
   const b=soccerBall.position;
-  const on=!repOn && ((sCharging&&!sbLive&&sChg>=FIRE_CHG)||(sbLive&&sbFlame));   // 🎬 ระหว่างรีเพลย์ซ่อนไฟ (บอลถูกฉายย้อน)
+  // 🎬 ระหว่างรีเพลย์ซ่อนไฟ (บอลถูกฉายย้อน) · 🔥 รอบ 933 (ผู้ใช้): ไฟตอนชาร์จก็ต้องเป็นร่างพลังเท่านั้น
+  const on=!repOn && ((sCharging&&!sbLive&&sChg>=FIRE_CHG&&auraActive())||(sbLive&&sbFlame));
   fireGrp.visible=on;
   if(on){
     fireGrp.position.copy(b);
