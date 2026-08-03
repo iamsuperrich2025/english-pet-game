@@ -425,11 +425,11 @@ function build(THREE_,opt){
   const furnSolids=[];
   const fs=(x0,x1,z0,z1,h)=>furnSolids.push({x0,x1,z0,z1,h});
   // ห้องน้ำมุมซ้ายติดทางเดิน (ผนังกระเบื้อง เว้นช่องเข้า)
-  accBox(F.tile,-HX+1.8,1.5,HZ-2.6,.16,3,5.2,2);                     // ผนังยาว (แกน Z)
+  accBox(F.room,-HX+1.8,1.5,HZ-2.6,.16,3,5.2,2);                     // 🩹 ผนังยาว (แกน Z) หันหน้าเข้าห้อง: เดิมกระเบื้องห้องน้ำ (tex_hotel_tile) — ผู้ใช้เห็นจากในห้อง/ทางเดินแล้วดูไม่หรู เปลี่ยนเป็นวอลเปเปอร์ห้อง (tex_hotel_room) แทน (ยืนยันด้วยการเรนเดอร์แยกตรงจุดนี้เทียบภาพผู้ใช้แล้ว)
   fs(-HX+1.72,-HX+1.88,HZ-5.2,HZ,3);
-  accBox(F.tile,-HX+.55,1.5,HZ-5.2,2.5,3,.16,2);                     // ผนังขวาง เว้นช่องประตู
+  accBox(F.tile,-HX+.55,1.5,HZ-5.2,2.5,3,.16,2);                     // ผนังขวาง เว้นช่องประตู (อยู่ในห้องน้ำเอง ไม่ได้หันหน้าออกห้อง — คงกระเบื้องเดิม)
   fs(-HX,-HX+1.8,HZ-5.28,HZ-5.12,3);
-  accBox(F.tile,-HX+.02,1.2,HZ-2.6,.06,2.4,5.2,2);                   // กระเบื้องผนังนอก
+  accBox(F.tile,-HX+.02,1.2,HZ-2.6,.06,2.4,5.2,2);                   // กระเบื้องผนังนอก (แนบชิดผนังโครงสร้างเดิมอยู่แล้ว มองไม่เห็น — คงเดิม)
   accBox(F.porc,-HX+.6,.32,HZ-1.1,1.1,.64,.6,0);                     // อ่างล้างหน้า
   accBox(F.porc,-HX+.6,.62,HZ-1.1,.9,.1,.5,0);
   accBox(F.gold,-HX+.6,1.55,HZ-1.05,1.0,.9,.05,0);                   // กระจกเหนืออ่าง
@@ -460,7 +460,7 @@ function build(THREE_,opt){
   accBox(F.cloth,-2.2,2.15,-HZ+.06,1.1,2.0,.1,0);
   accBox(F.cloth, 2.2,2.15,-HZ+.06,1.1,2.0,.1,0);
   const furnMesh={ wood:accGeo(F.wood), cloth:accGeo(F.cloth), sheet:accGeo(F.sheet),
-                   tile:accGeo(F.tile), porc:accGeo(F.porc), gold:accGeo(F.gold) };
+                   tile:accGeo(F.tile), porc:accGeo(F.porc), gold:accGeo(F.gold), room:accGeo(F.room) };
   const lampGeo=new T.BoxGeometry(.9,.1,.9);
   const mirGeo=new T.BoxGeometry(.04,1.9,.9);
   const doorGeo=new T.BoxGeometry(.08,2.2,1.15);
@@ -472,7 +472,7 @@ function build(THREE_,opt){
   H.rooms.forEach(R=>{
     const g=new T.Group();
     g.position.set(R.cx,R.y,R.cz); g.rotation.y=R.rot;
-    ['wood','cloth','sheet','tile','porc','gold'].forEach(k=>{
+    ['wood','cloth','sheet','tile','porc','gold','room'].forEach(k=>{
       g.add(new T.Mesh(furnMesh[k],M[k==='wood'?'wood':k]));
     });
     // ไฟเพดานห้อง
