@@ -7,6 +7,9 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 966 (3 ส.ค. 2026): โซนใหม่ `cl` ใต้ `/gfeed/$postId/cm/$cid` (💙 ถูกใจรายคอมเมนต์) — รอผู้ใช้ publish (ก้อนเดียวกับรอบ 964 ด้านล่าง — publish ครั้งเดียวได้ทั้งคู่):** `cl/<uid> = true` · **`.write` ชุดเดียวกับไลก์โพสต์เป๊ะ** (`auth.uid === $uid` และต้องเป็นเจ้าของโพสต์หรือเพื่อนของเจ้าของโพสต์ เช็กจาก `/friends` จริงฝั่ง rules) · `.validate` รับเฉพาะ `true` (boolean) — ยัดข้อความ/ตัวเลขไม่ได้ · **ต้องประกาศเป็นโซนชื่อจริง** เพราะ `"$other": {".validate": false}` ใต้ `cm/$cid` จะ deny ลูกที่ไม่มีชื่อในกฎ · ไม่แตะสิทธิ์เดิมของคอมเมนต์/ไลก์โพสต์เลย
+  - **ยังไม่ publish = เกมไม่พัง:** `gfeedToggleCommentLike()` เขียนโดน deny → คืน `false` + ตั้งธง `Online.cmLikeRulesOld` → แผ่นคอมเมนต์ขึ้นป้ายเหลืองบอกตรง ๆ ว่ายังกดถูกใจรายคอมเมนต์ไม่ได้ (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ถูกใจ "ทั้งโพสต์"/คอมเมนต์/ตอบกลับ ไม่กระทบ
+  - **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้ล่าสุด — รวม `p` ของรอบ 964 + `cl` ของรอบ 966 · 31 โซน 508 บรรทัด · ไฮไลต์เขียวบรรทัด 324–330):** https://claude.ai/code/artifact/250a1f4e-5979-4877-9a6b-750636826af8
 - ⏳ **รอบ 964 (3 ส.ค. 2026): field ใหม่ `p` ใต้ `/gfeed/$postId/cm/$cid` (💬 ตอบกลับใต้คอมเมนต์แบบ Facebook/TikTok) — รอผู้ใช้ publish:** `p` = รหัสคอมเมนต์แม่ (string ≤40) และ **validate บังคับว่าคอมเมนต์แม่ต้องมีอยู่จริงในโพสต์เดียวกัน** (`root.child('gfeed').child($postId).child('cm').child(newData.val()).exists()`) — กันยัดรหัสมั่ว/ข้ามโพสต์ · ไม่มีโซนใหม่ ไม่แตะสิทธิ์เขียนเดิม (ยังเป็นเพื่อนของเจ้าของโพสต์เท่านั้น) · **ต้องเพิ่มเพราะ `"$other": {".validate": false}` ใต้ `cm/$cid` ทำให้ field แปลกหน้าโดน deny ทั้งก้อน**
   - **ยังไม่ publish = เกมไม่พัง:** `gfeedAddComment()` เขียนก้อนที่มี `p` โดน deny → **ถอยเป็นคอมเมนต์ธรรมดาที่ขึ้นต้น "↪ @ชื่อ" ให้อัตโนมัติ** (ข้อความไม่หาย) + ตั้งธง `Online.cmReplyRulesOld` → แผ่นคอมเมนต์ขึ้นป้ายเหลืองบอกตรง ๆ ว่ายังซ้อนใต้คอมเมนต์ไม่ได้จนกว่าจะอัปเดตกฎ (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ไลก์/รีแอ็กชัน/คอมเมนต์ปกติ ไม่กระทบ
   - **Artifact ปุ่มคัดลอกก้อนเต็ม (ใช้ใบนี้ · 31 โซน 502 บรรทัด · ไฮไลต์บรรทัดที่เพิ่ม):** https://claude.ai/code/artifact/753590e0-05ef-4f36-8306-4261325ee4fe
@@ -387,6 +390,12 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
             "tx": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 120" },
             "ts": { ".validate": "newData.isNumber()" },
             "p":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && root.child('gfeed').child($postId).child('cm').child(newData.val()).exists()" },
+            "cl": {
+              "$uid": {
+                ".write": "auth != null && auth.uid === $uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+                ".validate": "newData.isBoolean() && newData.val() === true"
+              }
+            },
             "$other": { ".validate": false }
           }
         },
