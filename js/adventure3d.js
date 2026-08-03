@@ -4048,6 +4048,17 @@ function sendPos(force){
   /* 🚦🚁 rules ยังไม่รับ field tl/hp → NetRoom ตัดออกแล้วส่งซ้ำให้เอง (legacyOptional) */
   room.send(payload,force);
 }
+/* 📯 รอบ 975: บีบแตร = เพื่อนเห็น "แชทลอยหัว 📯" (ช่อง c/ct เดิม rules อนุญาตอยู่แล้ว)
+   ตั้งใจไม่เพิ่มฟิลด์ DB ใหม่ — /wroom เขียนทั้งก้อนด้วย .set() ต่อเฟรม ถ้าใส่ฟิลด์ที่ rules ยังไม่รู้จัก (ไม่มีใน
+   whitelist "$other":false) ทั้งก้อนจะถูกปฏิเสธ (Firebase validate ล้มทั้ง write ไม่ใช่แค่ฟิลด์เดียว) ซึ่งฝั่ง
+   netroom.js เส้นทางใหม่ไม่มีตัวลอกฟิลด์ทิ้งแล้วส่งซ้ำเหมือนโหมด legacy (ดู netroom.js:onFail) —
+   ถ้าเผลอส่งฟิลด์แปลกใหม่จะ "หยุดซิงก์ตำแหน่งเพื่อนทั้งชุด" เงียบๆ ทันทีที่โดนปฏิเสธครั้งแรก เสี่ยงเกินไปสำหรับ
+   ของแค่กะพริบป้าย จึงยืมช่องแชทที่พิสูจน์แล้วว่าใช้ได้จริงแทน */
+function netHonk(){
+  if(!netUp()) return;
+  myChat={text:'📯', ts:Date.now()};
+  sendPos(true);
+}
 /* ส่งแชทลอยหัว: กรองคำหยาบ + echo ของตัวเองมุมล่าง */
 function sendChat(text){
   text=String(text||'').trim().slice(0,CHAT_MAX);
@@ -4159,6 +4170,7 @@ function onPeerData(uid,d){
   if(typeof d.ct==='number' && typeof d.c==='string' && d.c && p.lastCt!==d.ct){
     p.lastCt=d.ct;
     showPeerBubble(p, d.c);
+    if(d.c==='📯') p.hornAt=performance.now();   // 📯 รอบ 975: จำเวลาไว้ให้ป้ายในกระจกกะพริบ (mirrorTagsTick)
   }
   tinvCheck(uid);   // 🤝 รอบ 822: เช็กทุกครั้งที่มีอัปเดตตำแหน่งเข้ามา (ไม่ใช่แค่ตอนเจอครั้งแรก) — ต้องอยู่ด้วยกันต่อเนื่องครบเวลาถึงจ่าย
 }
@@ -5114,8 +5126,8 @@ function buildDom(){
     });
   }
   const hornBtn=overlayEl.querySelector('#adv-horn');
-  hornBtn.addEventListener('touchstart',e=>{ e.preventDefault(); CarSound.horn(); },{passive:false});
-  hornBtn.addEventListener('click',e=>{ e.preventDefault(); CarSound.horn(); });
+  hornBtn.addEventListener('touchstart',e=>{ e.preventDefault(); CarSound.horn(); netHonk(); },{passive:false});   // 📯 รอบ 975: เพื่อนเห็น/ได้ยินว่าเราบีบแตร
+  hornBtn.addEventListener('click',e=>{ e.preventDefault(); CarSound.horn(); netHonk(); });
 
   /* 🎛️ รอบ 127: ปุ่มคอนโซลโหมดขับรถ — ซ้าย=พวงมาลัย (แตะ/ลากในแถบ = องศาตามตำแหน่งนิ้ว)
      ขวา=คันเร่งกดค้าง ปล่อยแล้วรถชลอจนหยุดเอง (แรงต้านใน tickDrive)
@@ -6449,7 +6461,7 @@ function tickDrive(dt,now){
   if(padTh) th=gearR?-1:1;                   // คันเร่งกดค้าง · เกียร์ R = ถอยหลัง (รอบ 139) · ปล่อย = แรงต้านชลอจนหยุดเอง
   if(padBr) th=0;                            // 🦶 รอบ 139: เบรคชนะคันเร่ง (เบรคอย่างเดียว ไม่สลับไปถอย)
   if(!carEngineOn || carStartOpen) th=0;     // 🚔 รอบ 128: เครื่องยังไม่ติด/ยังไม่กดออกรถ → คันเร่งไม่ทำงาน
-  if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); }
+  if(keys.KeyH && now-carHornAt>500){ carHornAt=now; CarSound.horn(); netHonk(); }   // 📯 รอบ 975
   // 👁️ รอบ 394: คีย์ V สลับมุมมอง (แบบ soccer) + คืนกล้องมายืนที่ตัวรถก่อนคิดฟิสิกส์ (ฟิสิกส์ยึด camera.position)
   if(keys.KeyV && !dPrevV) driveCamToggle();
   dPrevV=!!keys.KeyV;
@@ -6888,8 +6900,11 @@ function mirrorTagsTick(){
   mirrorTagEls.forEach((el,i)=>{
     const s=show[i];
     if(!s){ el.style.display='none'; return; }
+    /* 📯🚦 รอบ 975: ไฟเลี้ยว/แตรเพื่อน — ไฟเลี้ยว (p.tl) ต่อหน้าชื่อ (blink ด้วย CSS) · แตรเป็น class แยก
+       (ไม่ใส่ในข้อความ กัน el._h เปลี่ยนทุกเฟรมช่วง 900ms ตอนบีบแตร ซึ่งจะบังคับวัด offsetWidth/Height ใหม่รัวๆ) */
+    const turnArrow=s.p.tl===1?'<b class="mt-turn l">◀</b>':s.p.tl===2?'<b class="mt-turn r">▶</b>':'';
     /* 🎖️ ระดับชั้นติดท้ายชื่อเสมอ (กฎเด็กปลอดภัย — ชื่อเล่น+ดาว/เพชร ไม่มีชื่อจริง) */
-    const html=escapeHTML(mirrorTagName(s.p.n))
+    const html=turnArrow+escapeHTML(mirrorTagName(s.p.n))
       +(typeof gradeMark==='function'?gradeMark(s.p.grade):'')
       +'<i>'+Math.round(s.d)+'ม.</i>';
     el.style.display='block';
@@ -6897,6 +6912,7 @@ function mirrorTagsTick(){
       el._h=html; el.innerHTML=html;
       el._w=el.offsetWidth; el._hh=el.offsetHeight;
     }
+    el.classList.toggle('honk',(performance.now()-(s.p.hornAt||0))<900);   // 📯 เพิ่งบีบแตร ~0.9 วิ = ป้ายกะพริบ/เด้ง
     const tw=el._w||60, th=el._hh||15;
     let y=s.ny;                                        // ป้ายลอย "เหนือ" จุดยึด → กล่อง = [y-th, y]
     for(let k=0;k<MTAG_MAX_N&&placed.some(b=>s.nx-tw/2<b.x1&&s.nx+tw/2>b.x0&&y-th<b.y1&&y>b.y0);k++) y+=th+2;

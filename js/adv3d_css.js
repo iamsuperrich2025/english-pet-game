@@ -78,6 +78,18 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-mtag .gmark{font-size:6px;margin-left:2px;letter-spacing:-1px;vertical-align:1px;opacity:.95}
   #adv-mirror-tags.mini .adv-mtag{font-size:7px;padding:0 3px;border-radius:5px}
   #adv-mirror-tags.mini .adv-mtag i{display:none}
+  /* 📯🚦 รอบ 975: ไฟเลี้ยว/แตรของเพื่อนที่ตามมา — ทั้งคู่ยืมช่องเน็ตที่มีอยู่แล้ว (tl/แชทลอยหัว) ไม่ต้องแก้ rules
+     ไฟเลี้ยว: ลูกศรกะพริบหน้าชื่อ (เรตใกล้เคียงไฟเลี้ยวจริง ~0.5s) · แตร: ป้ายทั้งใบเรืองส้ม+เด้งสั้นๆ ตอนกด */
+  .mt-turn{display:inline-block;margin-right:2px;color:#ffb020;text-shadow:0 0 3px rgba(255,176,32,.9);
+    animation:mtagTurnBlink .5s steps(1) infinite}
+  @keyframes mtagTurnBlink{0%,49%{opacity:1}50%,100%{opacity:.15}}
+  /* ⚠️ ห้ามใส่ transform ใน keyframe นี้ — ตัว .adv-mtag ใช้ inline style transform:translate(...) วางตำแหน่งจาก JS
+     ทุกเฟรมอยู่แล้ว (mirrorTagsTick) ถ้า animation ไปแตะ transform ด้วยจะ "แย่งชนะ" inline style แล้วป้ายกระโดดไปมุมจอ */
+  .adv-mtag.honk{animation:mtagHonk .5s ease-in-out infinite;
+    background:rgba(255,140,20,.65)!important;border-color:rgba(255,200,90,.85)!important;
+    box-shadow:0 0 7px rgba(255,150,30,.85)!important}
+  @keyframes mtagHonk{0%,100%{filter:brightness(1)}50%{filter:brightness(1.5)}}
+  html.no-anim .mt-turn,html.no-anim .adv-mtag.honk{animation:none}   /* โหมดลดแอนิเมชัน */
   .adv-soccer #adv-words{top:auto;bottom:38px;max-width:66vw;padding:4px 12px}
   .adv-soccer #adv-words .adv-fch{font-size:clamp(15px,3.2vw,22px);min-width:22px;padding:2px 6px;border-radius:7px}
   .adv-soccer #adv-words .adv-fth{font-size:clamp(11px,2.4vw,14px);margin-top:2px}
