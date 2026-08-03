@@ -3870,12 +3870,15 @@ function feedPickRx(key, rk, anchor){
 /* ---- 💬 กล่องคอมเมนต์ (เปิดเป็นแผ่นเต็มจอ — การ์ดในวงหมุนเลยไม่ต้องมี scrollbar)
        รอบ 964: ตอบกลับใต้คอมเมนต์ได้ (nested 1 ชั้นแบบ Facebook/TikTok — ตอบใต้ตอบก็ยังอยู่สายเดียวกัน) ---- */
 let __fcmKey = '', __fcmRep = null;   // __fcmRep = {cid: รหัสคอมเมนต์แม่, n: ชื่อคนที่กำลังตอบ}
+let __fcmOpen = new Set();            // รอบ 965: รหัสคอมเมนต์แม่ที่ "ขยายดูการตอบกลับครบ" อยู่ (สายสั้น ไม่ต้องยุบ)
+const FCM_REP_SHOW = 2;               // สายตอบกลับยาวกว่านี้ → ยุบไว้ก่อน ต้องกดขยาย
 function openFeedComments(key){
   const it = feedPostByKey(key);
   if(!it){ toast('โพสต์นี้ไม่อยู่ในฟีดแล้ว 😅'); return; }
   sfx.select();
   __fcmKey = key;
   __fcmRep = null;
+  __fcmOpen = new Set();
   if(!document.getElementById('fcm-ov')){
     const ov = document.createElement('div');
     ov.id = 'fcm-ov';
@@ -3911,8 +3914,17 @@ function fcmTreeHTML(cms, can){
   });
   return tops.map(c=>{
     const rep = kids[c.id] || [];
-    return `<div class="fcm-item">${fcmRowHTML(c, can, false)}${rep.length
-      ? `<div class="fcm-reps">${rep.map(r=>fcmRowHTML(r, can, true)).join('')}</div>` : ''}</div>`;
+    if(!rep.length) return `<div class="fcm-item">${fcmRowHTML(c, can, false)}</div>`;
+    const open = __fcmOpen.has(c.id) || rep.length <= FCM_REP_SHOW;
+    const shown = open ? rep : rep.slice(0, FCM_REP_SHOW);
+    const hidden = rep.length - shown.length;
+    /* รอบ 965: สายตอบกลับยาว > FCM_REP_SHOW → ยุบไว้ก่อน กดปุ่มถึงกางครบ (กันแผ่นคอมเมนต์ยาวจนหาไม่เจอ) */
+    const toggle = hidden > 0
+      ? `<button class="fcm-more" type="button" data-cid="${escapeHTML(c.id)}">▾ ดูการตอบกลับอีก ${hidden} รายการ</button>`
+      : (open && rep.length > FCM_REP_SHOW
+          ? `<button class="fcm-more" type="button" data-cid="${escapeHTML(c.id)}">▴ ย่อการตอบกลับ</button>` : '');
+    return `<div class="fcm-item">${fcmRowHTML(c, can, false)}
+      <div class="fcm-reps">${shown.map(r=>fcmRowHTML(r, can, true)).join('')}${toggle}</div></div>`;
   }).join('');
 }
 function renderFeedComments(){
@@ -3982,6 +3994,12 @@ function renderFeedComments(){
   }));
   const rx = ov.querySelector('.fcm-repx');
   if(rx) rx.addEventListener('click', ()=>{ __fcmRep = null; sfx.select(); renderFeedComments(); });
+  ov.querySelectorAll('.fcm-more').forEach(b=>b.addEventListener('click', ()=>{
+    const cid = b.dataset.cid;
+    if(__fcmOpen.has(cid)) __fcmOpen.delete(cid); else __fcmOpen.add(cid);
+    sfx.click ? sfx.click() : sfx.select();
+    renderFeedComments();
+  }));
   ov.querySelectorAll('.fcm-q').forEach(b=>b.addEventListener('click', ()=>{
     if(!inp) return;
     inp.value = (inp.value ? inp.value.trim() + ' ' : '') + b.dataset.en;

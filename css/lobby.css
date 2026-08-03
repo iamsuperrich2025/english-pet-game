@@ -2323,6 +2323,10 @@ html.no-anim .cs-big-img{animation:none}
 .fcm-reps{display:flex;flex-direction:column;gap:4px;margin-left:16px;
   border-left:2px solid rgba(120,200,255,.22);padding-left:7px;}
 .fcm-rep{background:rgba(255,255,255,.035);font-size:11px;}
+/* ▾ รอบ 965: ปุ่มยุบ/ขยายสายตอบกลับยาว */
+.fcm-more{align-self:flex-start;border:0;background:transparent;color:#8fd4ff;font-family:inherit;
+  font-size:10.5px;font-weight:800;cursor:pointer;padding:3px 4px;}
+.fcm-more:active{opacity:.6;}
 .fcm-arrow{color:#6fa8dd;margin-right:3px;}
 .fcm-reply{border:0;background:rgba(120,240,192,.1);border-radius:7px;color:#7af0c0;font-family:inherit;
   font-size:10px;font-weight:800;cursor:pointer;padding:4px 8px;margin-left:5px;}   /* นิ้วเด็กกดง่าย ≥22px */
