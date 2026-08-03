@@ -646,13 +646,14 @@
 #sg-aimbtn .ic{display:block;font-size:clamp(16px,4vh,24px)}
 #sg-aimbtn.on{background:#ffd54f;color:#5a4300;border-color:#fff}
 /* 🔫 รอบ 923: ปุ่มยิงเฉพาะ 2 ตำแหน่งซ้าย-ขวาล่างจอ (ผู้ใช้ขอ — เดิมมีแค่แตะจอสั้นๆ = ยิง)
-   ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) ต่ำกว่าปุ่ม 🎯 เล็ง พ้นแถบคำ/คำใบ้ */
-.sg-shoot{position:absolute;bottom:8vh;width:clamp(60px,14vh,92px);height:clamp(60px,14vh,92px);
-  border-radius:50%;border:3px solid #ffd54f;background:rgba(255,95,109,.85);color:#fff;cursor:pointer;
+   ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) · ต่อมารอบ 926: ผู้ใช้ส่งภาพวงกลม 1/2 — ย้ายขึ้นมากลางจอ
+   (เดิมชิดขอบล่างสุด) top:40% translateY กึ่งกลางแนวตั้ง เว้นระยะพ้นปุ่ม 🎯 เล็งด้านล่าง · โปร่งใส 50% (.85→.5) */
+.sg-shoot{position:absolute;top:40%;transform:translateY(-50%);width:clamp(60px,14vh,92px);height:clamp(60px,14vh,92px);
+  border-radius:50%;border:3px solid #ffd54f;background:rgba(255,95,109,.5);color:#fff;cursor:pointer;
   font:900 clamp(10px,2.3vh,13px) Kanit,system-ui;line-height:1.15;z-index:6;
-  box-shadow:0 4px 0 #c62838,0 6px 14px rgba(0,0,0,.35);-webkit-tap-highlight-color:transparent}
+  box-shadow:0 4px 0 rgba(198,40,56,.5),0 6px 14px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
 .sg-shoot .ic{display:block;font-size:clamp(19px,4.8vh,28px)}
-.sg-shoot.down{transform:translateY(3px);box-shadow:0 1px 0 #c62838,0 3px 8px rgba(0,0,0,.3)}
+.sg-shoot.down{transform:translateY(calc(-50% + 3px));box-shadow:0 1px 0 rgba(198,40,56,.5),0 3px 8px rgba(0,0,0,.2)}
 #sg-shoot-l{left:2vh}
 #sg-shoot-r{right:2vh}
 /* ✛ กากบาทกึ่งกลางจอ — โผล่เฉพาะโหมดถือ (โหมดเล็งมีศูนย์ปืนจริงในภาพ aim.webp อยู่แล้ว ไม่ต้องซ้อน)
