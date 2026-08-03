@@ -843,6 +843,53 @@ function makeBlockWalkPeer(name, av, uid, grade){
 function disposeBlockPeer(g){
   g.traverse(o=>{ if(o.userData&&o.userData.own){ if(o.material.map)o.material.map.dispose(); o.material.dispose(); } });
 }
+/* 🤖 รอบ 941: เพื่อนในโลกหุ่นยนต์ = หุ่นรบ 3D ตัวที่เขาเลือก (av='m_01'..'m_10' จาก state.mechaRobot ฝั่งส่ง)
+   สูง ~4.7m เท่าสเกลหุ่นเรา (MECHA_EYE 5.0) · สีลำตัว = สีประจำหุ่น (ROBOTS) · ตา/ปืน/ช่องอก = สีอาวุธ (MECHA_WEAPONS)
+   geometry/material ใช้ cache บล็อกร่วม (_blkGeo/_blkMat ไม่ dispose) · เดินแกว่งขาผ่าน userData.limbs เหมือนหุ่นบล็อก */
+const _mechGlow={};
+function mechGlowMat(color){ return _mechGlow[color]||(_mechGlow[color]=new THREE.MeshLambertMaterial({color:0x11151a,emissive:color})); }
+function makeMechaFigure(rid){
+  const r=(typeof ROBOTS!=='undefined')&&ROBOTS.find(x=>x.id===rid);
+  const body=blkMat(r?parseInt(r.c.slice(1),16):0x8e99a8);
+  const dark=blkMat(0x37474f), mid=blkMat(0x546e7a);
+  const glow=mechGlowMat((MECHA_WEAPONS[rid]&&MECHA_WEAPONS[rid].color)||0x37b6ff);
+  const g=new THREE.Group();
+  g.userData.limbs=[];                        // [ขาซ้าย, ขาขวา, แขนซ้าย, แขนขวา] — tickPeers แกว่ง rotation.x
+  [-0.55,0.55].forEach(x=>{
+    const piv=new THREE.Group(); piv.position.set(x,2.35,0);
+    const thigh=new THREE.Mesh(blkGeo(.55,1.05,.6),mid);  thigh.position.y=-.55;         piv.add(thigh);
+    const shin =new THREE.Mesh(blkGeo(.45,1.1,.5),dark);  shin.position.y=-1.6;          piv.add(shin);
+    const foot =new THREE.Mesh(blkGeo(.62,.25,.95),dark); foot.position.set(0,-2.22,-.08); piv.add(foot);
+    g.add(piv); g.userData.limbs.push(piv);
+  });
+  const pelvis=new THREE.Mesh(blkGeo(1.35,.5,.85),dark); pelvis.position.y=2.45; g.add(pelvis);
+  const torso=new THREE.Mesh(blkGeo(1.8,1.35,1.0),body); torso.position.y=3.35; g.add(torso);
+  const vent=new THREE.Mesh(blkGeo(.9,.3,.08),glow); vent.position.set(0,3.45,-.52); g.add(vent);   // ช่องพลังงานหน้าอก
+  [-1,1].forEach(s=>{
+    const pad=new THREE.Mesh(blkGeo(.62,.55,.75),body); pad.position.set(s*1.25,3.98,0); g.add(pad); // บ่า
+    const piv=new THREE.Group(); piv.position.set(s*1.25,3.75,0);
+    const ua=new THREE.Mesh(blkGeo(.4,.95,.5),mid);   ua.position.y=-.5;  piv.add(ua);
+    const fa=new THREE.Mesh(blkGeo(.36,.85,.44),dark); fa.position.y=-1.3; piv.add(fa);
+    if(s>0){ const gun=new THREE.Mesh(blkCyl(.14,.9),glow); gun.rotation.x=Math.PI/2; gun.position.set(0,-1.55,-.55); piv.add(gun); }  // ปืนแขนขวา ชี้ -Z
+    g.add(piv); g.userData.limbs.push(piv);
+  });
+  const head=new THREE.Mesh(blkGeo(.8,.62,.72),dark); head.position.y=4.32; g.add(head);
+  const visor=new THREE.Mesh(blkGeo(.56,.16,.08),glow); visor.position.set(0,4.36,-.38); g.add(visor); // ตาเรืองแสง
+  const pack=new THREE.Mesh(blkGeo(1.2,.95,.4),mid); pack.position.set(0,3.45,.66); g.add(pack);       // เครื่องยนต์หลัง
+  return g;                                   // หันหน้า -Z (convention เดียวกับหุ่นบล็อก)
+}
+function makeMechaPeer(name, av, uid, grade){
+  const mm=/^m_(\d\d)$/.exec(av||'');
+  const rid=(mm&&MECHA_WEAPONS['robot_'+mm[1]])?'robot_'+mm[1]:'robot_01';
+  const g=new THREE.Group();
+  const fig=makeMechaFigure(rid); g.add(fig);
+  const label=blkNameSprite(name,grade);
+  label.position.set(0,5.35,0);
+  label.scale.multiplyScalar(1.7);            // หุ่นสูง 4.7m — ป้ายต้องใหญ่ขึ้นถึงอ่านออกจากระยะไกล
+  g.add(label);
+  g.userData.limbs=fig.userData.limbs;        // ให้ tickPeers แกว่งเดินตรงๆ
+  return g;
+}
 
 /* ============================================================
    🚙 รอบ 393: รถเพื่อนในโลกขับรถ = โมเดลจริง img/models/car_01.glb (ผู้ใช้สั่ง)
@@ -3975,9 +4022,10 @@ function sendPos(force){
     // 🧱 โลกขับรถ+โลกเดินส่งรหัสตัวบล็อก · 🚁 รอบ 355: โลกเฮลิฯ ยัดเฟสเดินเท้าลง av แทน ('h_w/r/g/p' ≤8 ผ่าน rules เดิม ไม่ต้อง publish — makePeerSprite ฝั่งรับไม่เคยใช้ av ในโหมดบินอยู่แล้ว)
     av:M.heli?('h_'+(hPhase==='pilot'?(pilotShip==='blue'?'b':'p')                      // 🔵 รอบ 392: ขับลำฟ้า='h_b' เพื่อนเห็นลำฟ้า
       :({walk:'w',lift:'w',ride:'r',wing:'g'}[hPhase]||'p')))
+      :(mode==='mecha'?('m_'+String(state.mechaRobot||'robot_01').slice(-2))             // 🤖 รอบ 941: 'm_01'..'m_10' (≤8 ผ่าน rules เดิม) — เพื่อนเห็นหุ่นตัวที่เราเลือก
       :(((M.drive||mode==='adv'||mode==='haunt')&&state.blockAv)
         ?state.blockAv+(M.drive?carAvCode():'')                                          // 🚙 รอบ 393: 'blk3c07' — เพื่อนเห็นโมเดลรถสีตรงคันเรา
-        :(state.playerAvatar||'')),
+        :(state.playerAvatar||''))),
     x, z, yaw:y, m:Voice.mic?1:0, w:sessionWords,
     /* 🏟️ รอบ 640: ts ใส่ให้เองโดย NetRoom (hotTs:true) · ชื่อ/คะแนน/แชท ย้ายไป node เย็นแล้ว ไม่ส่งซ้ำทุกเฟรม */
   };
@@ -4033,23 +4081,24 @@ function onPeerData(uid,d){
   const py=(typeof d.y==='number')?d.y:1.5;
   let p=peers[uid];
   const walkBlk=(mode==='adv'||mode==='haunt'||mode==='soccer');   // 🧱 โลกเดิน/สนามฟุตบอล: เพื่อน = หุ่นบล็อกเดินได้ (มาร่วมเตะในสนามเดียวกัน)
+  const mechBlk=(mode==='mecha');                                  // 🤖 รอบ 941: โลกหุ่นยนต์: เพื่อน = หุ่นรบ 3D ตัวที่เขาเลือก (เดิมเป็น sprite รูปโปรไฟล์ — ผู้ใช้ทัก)
   if(!p){
     // 🧱 โลกขับรถ: เพื่อน = รถบล็อก+หุ่นบล็อก 3D หมุนตาม yaw · โลกเดิน = หุ่นบล็อกเดิน · เฮลิฯ/โดรนคง sprite เดิม
     /* 🎖️ รอบ 644: ระดับชั้นของเพื่อนอ่านจาก presence ที่โหลดไว้แล้ว (gradeOf) — ไม่มี field ใหม่ใน /winfo ไม่ต้องแก้ rules */
     const pg=(typeof gradeOf==='function')?gradeOf(uid,d.g):'';
-    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid,pg):walkBlk?makeBlockWalkPeer(d.n,d.av,uid,pg):makePeerSprite(d.n,d.av,pg),
+    p=peers[uid]={spr:M.drive?makeBlockPeer(d.n,d.av,uid,pg):mechBlk?makeMechaPeer(d.n,d.av,uid,pg):walkBlk?makeBlockWalkPeer(d.n,d.av,uid,pg):makePeerSprite(d.n,d.av,pg),
                   grade:pg,
                   cur:{x:d.x,z:d.z,y:py}, tgt:{x:d.x,z:d.z,y:py}, n:d.n||'เพื่อน',
-                  blk:!!M.drive, walk:walkBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
-    p.spr.position.set(d.x,(p.blk||p.walk)?0:py,d.z);
-    if(p.blk||p.walk) p.spr.rotation.y=p.yawCur;
+                  blk:!!M.drive, walk:walkBlk, mech:mechBlk, av:d.av, yawCur:d.yaw||0, yawTgt:d.yaw||0, stride:0, swing:0};
+    p.spr.position.set(d.x,(p.blk||p.walk||p.mech)?0:py,d.z);
+    if(p.blk||p.walk||p.mech) p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
     showBanner(`🧑‍🤝‍🧑 <b>${escapeHTML(p.n)}</b> อยู่ในโลกนี้ด้วย!`);
     Voice.onPeer(uid);
-  }else if((p.blk||p.walk) && d.av!==p.av){
-    // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อกอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
+  }else if((p.blk||p.walk||p.mech) && d.av!==p.av){
+    // เพื่อนออก-เข้าใหม่ด้วยตัวบล็อก/หุ่นตัวอื่น (child_changed) → สร้างตัวใหม่ตามที่เลือก
     scene.remove(p.spr); disposeBlockPeer(p.spr);
-    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid,p.grade):makeBlockWalkPeer(d.n,d.av,uid,p.grade);
+    p.av=d.av; p.spr=p.blk?makeBlockPeer(d.n,d.av,uid,p.grade):p.mech?makeMechaPeer(d.n,d.av,uid,p.grade):makeBlockWalkPeer(d.n,d.av,uid,p.grade);
     p.spr.position.set(p.cur.x,0,p.cur.z); p.spr.rotation.y=p.yawCur;
     scene.add(p.spr);
   }else if(M.heli && d.av!==p.av){
@@ -4129,7 +4178,7 @@ function removePeer(uid){
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
   scene.remove(p.spr);
-  if(p.blk||p.walk) disposeBlockPeer(p.spr);                      // 🧱 geometry/material แชร์ — dispose เฉพาะป้ายชื่อ
+  if(p.blk||p.walk||p.mech) disposeBlockPeer(p.spr);              // 🧱🤖 geometry/material แชร์ — dispose เฉพาะป้ายชื่อ
   else{ p.spr.material.map.dispose(); p.spr.material.dispose(); }
   delete peers[uid];
   renderBoard();
@@ -4183,16 +4232,18 @@ function tickPeers(dt,now){
       // 🔴 รอบ 141: ไฟเบรคแดง — ตรวจจับใน onPeerData (วัดจากแพ็กเก็ตตรงๆ สะอาดกว่า lerp รายเฟรม) · ที่นี่แค่นับถอยหลัง+โชว์
       p.brkT=Math.max(0,(p.brkT||0)-dt);
       (p.spr.userData.brks||[]).forEach(m=>{ m.visible=p.brkT>0; });
-    }else if(p.walk){
+    }else if(p.walk||p.mech){
       // 🧱 หุ่นบล็อกเดิน: หันตาม yaw (lerp ทางสั้น) + แกว่งแขน-ขาตามระยะที่เดินจริง · หยุด=ลู่คืนท่ายืน
+      // 🤖 รอบ 941: หุ่นรบเพื่อน (p.mech) ใช้ท่อนี้ด้วย — ตัวสูง ~4.7m ก้าวยาวกว่า จังหวะแกว่งช้าลง (freq 1.3 vs 3.4) + วิ่งเร็วสุด MECHA_VMAX
       const moved=Math.hypot(p.tgt.x-p.cur.x,p.tgt.z-p.cur.z)*k;
       p.stride=(p.stride||0)+moved;
-      const speedN=Math.min(1,(moved/Math.max(dt,.001))/3);        // 0..1 ตามความเร็วจริง (เต็มที่ ~3 m/s)
+      const fq=p.mech?1.3:3.4, vTop=p.mech?MECHA_VMAX:3;
+      const speedN=Math.min(1,(moved/Math.max(dt,.001))/vTop);     // 0..1 ตามความเร็วจริง
       p.swing=(p.swing||0)+(speedN-(p.swing||0))*Math.min(1,dt*8);
-      const a=Math.sin(p.stride*3.4)*.6*p.swing;
+      const a=Math.sin(p.stride*fq)*(p.mech?.5:.6)*p.swing;
       const L=p.spr.userData.limbs||[];
       if(L.length===4){ L[0].rotation.x=a; L[1].rotation.x=-a; L[2].rotation.x=-a*.8; L[3].rotation.x=a*.8; }
-      p.spr.position.set(p.cur.x,Math.abs(Math.sin(p.stride*3.4))*.045*p.swing,p.cur.z);   // เด้งก้าวเล็กๆ
+      p.spr.position.set(p.cur.x,Math.abs(Math.sin(p.stride*fq))*(p.mech?.1:.045)*p.swing,p.cur.z);   // เด้งก้าว (หุ่นย่ำหนักกว่า)
       let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
       p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
     }else{
@@ -4200,9 +4251,9 @@ function tickPeers(dt,now){
     }
     if(p.bubble){
       if(now>p.bubble.until) removePeerBubble(p);
-      else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:p.walk?2.8:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก: พ้นป้ายชื่อ)
+      else p.bubble.spr.position.set(p.cur.x,p.blk?3.65:p.mech?6.15:p.walk?2.8:baseY+1.6,p.cur.z);   // ลอยตามหัว (ตัวบล็อก/หุ่นรบ: พ้นป้ายชื่อ)
     }
-    if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:p.walk?2.55:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
+    if(p.micSpr) p.micSpr.position.set(p.cur.x,(p.blk?3.35:p.mech?5.75:p.walk?2.55:baseY+1.22)+Math.sin(now/300)*.06,p.cur.z);
     // 🚁 รอบ 376: วาด/ย้าย/เก็บลำแดงที่เพื่อนจอดทิ้งไว้ (field hp) — สร้าง mesh ครั้งเดียว ขยับเฉพาะค่าเปลี่ยน
     if(M.heli){
       if(p.hp && !p.heliSpr){ p.heliSpr=heliMeshBuild(0xd8342e); scene.add(p.heliSpr); p._hpLast=null; }
@@ -10806,7 +10857,7 @@ function auraFlameTex(){
     const g=c.createRadialGradient(32,y,0,32,y,r);
     const col = t<.55 ? [(40+t/.55*60)|0,(90+t/.55*110)|0,255]        // โคน: น้ำเงินเข้ม → ฟ้าสด
                       : [(120+(t-.55)/.45*40)|0,(150-(t-.55)/.45*30)|0,255]; // ปลาย: ฟ้าอมม่วงจาง
-    g.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${.16*(1-t*.5)})`);
+    g.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${.3*(1-t*.45)})`);   // รอบ 941: .16→.3 — ยืดเป็นเสา 9m แล้วเนื้อน้ำเงินจางเกิน
     g.addColorStop(1,'rgba(20,40,180,0)');
     c.fillStyle=g; c.fillRect(0,0,W,H);
   }
@@ -10820,29 +10871,67 @@ function auraFlameTex(){
   }
   return new THREE.CanvasTexture(cv);
 }
+/* 🌀 รอบ 941: ริบบิ้นเกลียวไฟส้ม — แถบเปลวต่อเนื่องทั้งเส้นพันรอบเสาไฟจากโคนถึงยอด
+   เทกซ์เจอร์: แกนเหลืองขาวสว่าง ขอบส้มจางแบบเปลวจริง + ลิ้นไฟย่อยตามยาว · wrapS ซ้ำ = เลื่อนไหลได้ไม่รู้จบ */
+function auraCoilTex(){
+  const W=256,H=64,cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const c=cv.getContext('2d');
+  const g=c.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'rgba(255,60,0,0)');
+  g.addColorStop(.25,'rgba(255,120,10,.55)');
+  g.addColorStop(.5,'rgba(255,235,170,.95)');
+  g.addColorStop(.75,'rgba(255,120,10,.55)');
+  g.addColorStop(1,'rgba(255,60,0,0)');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  c.globalCompositeOperation='lighter';
+  for(let i=0;i<26;i++){                                   // ลิ้นไฟย่อยไล่ตามยาว — ให้เป็น "เปลว" ไม่ใช่แถบเรียบ
+    const x=Math.random()*W, w=8+Math.random()*22, hh=H*(.3+Math.random()*.5);
+    const fg=c.createRadialGradient(x,H/2,1,x,H/2,w);
+    fg.addColorStop(0,'rgba(255,240,190,.5)'); fg.addColorStop(1,'rgba(255,120,0,0)');
+    c.fillStyle=fg; c.beginPath(); c.ellipse(x,H/2,w,hh/2,0,0,7); c.fill();
+  }
+  const t=new THREE.CanvasTexture(cv); t.wrapS=THREE.RepeatWrapping; return t;
+}
+/* เรขาคณิต helix คงที่ (96 ช่วง × 4 รอบ สูง 8.8m โคนกว้าง-ยอดสอบ) — หมุน rotation.y + เลื่อน texture = วนไม่รู้จบ */
+function auraCoilRibbon(off){
+  const N=96, TURNS=4, CH=8.8, R0=.85, R1=.3, W0=.6, W1=.24;
+  const pos=new Float32Array((N+1)*2*3), uv=new Float32Array((N+1)*2*2), idx=[];
+  for(let i=0;i<=N;i++){
+    const t=i/N, a=off + t*TURNS*Math.PI*2;
+    const r=R0+(R1-R0)*t, y=.12+t*CH, w=(W0+(W1-W0)*t)/2;
+    const x=Math.cos(a)*r, z=Math.sin(a)*r, o=i*6, u=i*4;
+    pos[o]=x; pos[o+1]=y-w; pos[o+2]=z;
+    pos[o+3]=x; pos[o+4]=y+w; pos[o+5]=z;
+    uv[u]=t*TURNS; uv[u+1]=0; uv[u+2]=t*TURNS; uv[u+3]=1;
+    if(i<N){ const k=i*2; idx.push(k,k+1,k+2, k+1,k+3,k+2); }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('uv',new THREE.BufferAttribute(uv,2));
+  geo.setIndex(idx);
+  return new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:auraCoilTex(),transparent:true,
+    side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending,opacity:.9}));
+}
 function buildAura(sc){
   auraGrp=new THREE.Group(); auraRings=[]; auraSparks=[];
   const ft=auraFlameTex();
-  const mkFlame=(r,w,h)=>{                                 // ลิ้นเปลว 1 ลิ้น (sprite additive หันเข้ากล้องเอง)
+  // 🔥 รอบ 941 (ผู้ใช้: "ไฟฟ้าไม่ใช่คนละก้อน — เป็นก้อนใหญ่ก้อนเดียว ใหญ่กว่าตัวผู้เล่น สูงท่วมหัว ×5"):
+  //    เลิกวงลิ้นแยก 18 ลิ้น → สไปรต์เปลวใหญ่ 4 ชั้น "ซ้อนแกนเดียวกัน" กลางตัวผู้เล่น
+  //    additive รวมแสงเป็นเนื้อไฟก้อนเดียว: เปลือกนอกกว้าง 2.6m (ตัวกว้าง .58) → แกนในสว่างแคบ
+  //    สูง ~9.5m (หัวหุ่น 1.6m = ท่วมหัวหลายเท่า) · ทุกชั้นเอนไปทางเดียวกัน = ก้อนเดียวโยกทั้งก้อน
+  [ {w:2.6,h:9.5,op:.5}, {w:2.1,h:8.8,op:.55}, {w:1.55,h:7.6,op:.6}, {w:1.05,h:6.2,op:.62} ]   // จูนหลังดูภาพ 2 รอบ: เนื้อน้ำเงินมาจากเทกซ์เจอร์ (alpha .3) — ชั้น op กลาง ๆ กันขาวโพลน
+  .forEach((L,i)=>{
     const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,depthWrite:false,
-      blending:THREE.AdditiveBlending,opacity:.8}));
+      blending:THREE.AdditiveBlending,opacity:L.op}));
     auraGrp.add(sp);
-    auraRings.push({m:sp, a:Math.random()*Math.PI*2, r:r, w:w, h:h,
-      p1:Math.random()*9, p2:Math.random()*9, p3:Math.random()*9,
-      f1:4.5+Math.random()*2.5, f2:7.5+Math.random()*4, fs:.8+Math.random()*.6});
-  };
-  // 🔥 รอบ 939 (ผู้ใช้): เปลว "สูงท่วมหัว" — ลิ้นในยืดถึง ~2.1-3.2m (หัวหุ่นอยู่ ~1.6m) · วงนอกก็สูงขึ้นตาม
-  for(let i=0;i<12;i++) mkFlame(.52+Math.random()*.14, .42+Math.random()*.14, 1.15+Math.random()*.45); // วงนอก
-  for(let i=0;i<6;i++)  mkFlame(.26+Math.random()*.10, .56+Math.random()*.14, 2.1+Math.random()*.55);  // ลิ้นในท่วมหัว
-  // 🌀 รอบ 939 (ผู้ใช้): เกลียวเปลวไฟ "สีส้ม" 2 สาย พันรอบจากโคนถึงปลาย หมุนเร็วดูมีพลัง
+    auraRings.push({m:sp, w:L.w, h:L.h, op:L.op,
+      p1:Math.random()*9, p2:Math.random()*9, f1:3.8+i*.7, f2:7.2+i*1.1});
+  });
+  // 🌀 รอบ 941 (ผู้ใช้: "ไม่ใช่ลูกเล็ก ๆ — เปลวยาวหมุนเป็นเกลียวจากล่างขึ้นบน วนไม่รู้จบ"):
+  //    เปลี่ยนจากสไปรต์เม็ด ๆ เป็น "ริบบิ้นเกลียว" ต่อเนื่องทั้งเส้น 2 สาย (เรขาคณิต helix คงที่
+  //    แล้วหมุน rotation.y ไม่หยุด + เลื่อนเทกซ์เจอร์ให้เปลวไหลขึ้นตามเกลียวตลอดเวลา = วนไม่รู้จบจริง)
   auraCoil=[];
-  const coilTex=ballFXTex(true);                              // ใช้สไปรต์ไฟส้มตัวเดียวกับลูกไฟ (โทนส้มจริงอยู่แล้ว)
-  for(let i=0;i<26;i++){
-    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:coilTex,transparent:true,depthWrite:false,
-      blending:THREE.AdditiveBlending,opacity:.85}));
-    auraGrp.add(sp);
-    auraCoil.push({m:sp, t:i/25, st:i%2});                    // t=ตำแหน่งบนเกลียว 0โคน..1ปลาย · st=สายที่ 1/2 (เฟสห่างครึ่งรอบ)
-  }
+  [0,Math.PI].forEach(off=>{ const m=auraCoilRibbon(off); auraGrp.add(m); auraCoil.push({m}); });
   auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.5,.66,1.9,14,1,true),     // เปลวนอกเกือบใส (ข้อ ②)
     new THREE.MeshBasicMaterial({color:0x5548ff,transparent:true,opacity:.04,side:THREE.DoubleSide,
       depthWrite:false,blending:THREE.AdditiveBlending}));   // จูนหลังดูภาพ: .07 เห็นเป็น "กล่องแก้ว" สี่เหลี่ยม (silhouette ทรงกระบอก) — ลดจนแค่เรือง
@@ -10887,34 +10976,29 @@ function auraTick(dt,now){
   if(!on) return;
   if(soccerPlayer) auraGrp.position.copy(soccerPlayer.position);   // 🧍 รอบ 852: ออร่าตามตัวนักเตะ (ตัวถอยหลังบอลแล้ว ไม่ใช่จุดบอล)
   else auraGrp.position.set(sBaseX,0,sBaseZ);
-  // 🔵🔥 รอบ 935: ลิ้นเปลว "เลีย" ด้วยไซน์ 3 ความถี่ไม่ลงตัว (ไม่วนซ้ำเป็นแพตเทิร์น)
-  // 💥 รอบ 939 (ผู้ใช้): แรงขึ้น — ขยับเร็วขึ้น 1.35 เท่า · ช่วงยืดกว้างขึ้น (.5-1.24) · ส่ายแรงขึ้นเกือบเท่าตัว
+  // 🔥 รอบ 941: เปลวก้อนเดียว — sway "ร่วมกันทุกชั้น" ทั้งก้อนจึงเอนไปทางเดียวกันเหมือนไฟจริง
+  //    แต่ละชั้นกระเพื่อมต่างเฟสเล็กน้อย = เนื้อไฟขยับภายในก้อน · ยืดสูง=เรียวลง
   const tS=now/1000;
+  const swayX=.26*Math.sin(tS*3.4)+.14*Math.sin(tS*7.3+1.7);
+  const swayZ=.20*Math.sin(tS*2.9+.8)+.12*Math.sin(tS*6.1);
   auraRings.forEach(fl=>{
-    const lick=.82+.22*Math.sin(tS*fl.f1*1.35+fl.p1)+.14*Math.sin(tS*fl.f2*1.35+fl.p2)+.06*Math.sin(tS*2.3+fl.p3);
-    const sway=.10*Math.sin(tS*fl.f1*.8+fl.p2)+.07*Math.sin(tS*4.2+fl.p1);   // ปลายส่ายแรง
-    const a=fl.a+tS*.4*fl.fs;                               // วงเปลวไหลรอบตัวเร็วขึ้น
+    const lick=.86+.17*Math.sin(tS*fl.f1+fl.p1)+.10*Math.sin(tS*fl.f2+fl.p2);
     const h=fl.h*lick;
-    fl.m.position.set(Math.cos(a)*fl.r+sway, h*.5+.06, Math.sin(a)*fl.r);
-    fl.m.scale.set(fl.w*(1.12-lick*.25), h, 1);             // ยิ่งยืดสูงยิ่งเรียว (เปลวจริงโดนอากาศรีด)
-    fl.m.material.opacity=.6+.35*Math.max(0,Math.min(1,(lick-.6)/.5));
+    fl.m.position.set(swayX*(h/9), h*.5+.05, swayZ*(h/9));   // ชั้นสูงกว่าเอนมากกว่า = ก้อนโค้งลู่ลมทั้งแท่ง
+    fl.m.scale.set(fl.w*(1.1-lick*.18), h, 1);
+    fl.m.material.opacity=fl.op*(.8+.25*Math.sin(tS*9+fl.p2));
   });
-  // 🌀 รอบ 939: เกลียวไฟส้ม 2 สายพันขึ้นจากโคนถึงปลาย — หมุนเร็ว 5.5 rad/s + คลื่นความสูงตามจังหวะเปลว
-  {
-    const coilH=2.4+.35*Math.sin(tS*3.7)+.2*Math.sin(tS*7.1);   // ยอดเกลียวเต้นตามพลัง (~2-2.95m ท่วมหัว)
-    auraCoil.forEach(cl=>{
-      const t=cl.t;
-      const a=tS*5.5 + t*Math.PI*4 + cl.st*Math.PI;             // หมุนไว + พัน 2 รอบจากโคนถึงยอด · 2 สายห่างครึ่งรอบ
-      const r=.6-(t*.38) + .04*Math.sin(tS*9+t*12);             // โคนกว้าง-ยอดสอบ + สั่นรัศมีถี่ (ดุดัน)
-      cl.m.position.set(Math.cos(a)*r, .12+t*coilH, Math.sin(a)*r);
-      const s=.34*(1-t*.45)*(1+.25*Math.sin(tS*11+t*9));        // ก้อนไฟเต้นถี่
-      cl.m.scale.set(s,s,1);
-      cl.m.material.opacity=(.9-t*.35)*(0.75+.25*Math.sin(tS*13+t*7));
-    });
-  }
-  auraSparks.forEach(s=>{                                    // ember ฟ้า: ลอยขึ้นจากกองเปลวแล้วจางหาย วนใหม่
+  // 🌀 รอบ 941: ริบบิ้นเกลียวส้ม — หมุนวนไม่รู้จบ + เทกซ์เจอร์ไหลตามเกลียว (เปลวไหลขึ้นตลอดเวลา)
+  auraCoil.forEach((cl,i)=>{
+    cl.m.rotation.y=tS*4.2;                                  // หมุนต่อเนื่องไม่มีหยุด (สายสองห่างครึ่งรอบใน geometry)
+    cl.m.material.map.offset.x=(-tS*1.15)%1;                 // เปลวไหลขึ้นตามแนวเกลียว
+    cl.m.material.opacity=.72+.2*Math.sin(tS*7+i*2.1);
+    const p=1+.05*Math.sin(tS*5.3+i);                        // สูบ-พองเบา ๆ ให้มีชีวิต
+    cl.m.scale.set(p,1,p);
+  });
+  auraSparks.forEach(s=>{                                    // ember ฟ้า: ลอยขึ้นตามเสาไฟแล้วจางหาย วนใหม่
     const t=(tS*s.sp+s.a)%1, a=s.a+tS*.7;
-    s.m.position.set(Math.cos(a)*s.rr*(1-t*.35), .25+t*1.9, Math.sin(a)*s.rr*(1-t*.35));
+    s.m.position.set(Math.cos(a)*s.rr*(1-t*.35), .3+t*6.5, Math.sin(a)*s.rr*(1-t*.35));
     s.m.material.opacity=.85*(1-t)*(1-t);
     const sc2=.05*(1-t*.5); s.m.scale.setScalar(Math.max(.3,sc2/.05));
   });
@@ -12056,6 +12140,9 @@ function start(md,opt){
   if(mode==='mecha' && !(state.robots&&state.robots.length)){ toast('🤖 ต้องมีหุ่นยนต์อย่างน้อย 1 ตัวก่อนนะ'); return; }
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   /* รอบ 255: เลิกระบบบาดเจ็บล็อกเข้าโลก (advHurt) — โลก 3D ไม่มีตาย/เกมโอเวอร์แล้ว เข้าได้เสมอ */
+  // 🧹 รอบ 941: ผ่านด่านเช็กทุกข้อ = เข้าโลกจริง → ล้าง toast เตือนค้างของล็อบบี้ (เช่น "ยังไม่มีหุ่นยนต์" ก่อนซื้อ)
+  //    ป้ายพวกนี้ค้างจนกดปิดเอง — ผู้ใช้ซื้อหุ่นแล้วเข้าโลกได้ แต่ป้ายเก่ายังลอยทับ HUD ดูเหมือนเกมยังหาว่าไม่มีหุ่น
+  if(typeof clearWarnToasts==='function') clearWarnToasts();
   if(typeof Music!=='undefined') Music.suspendBg();   // 🎵 รอบ 181: พักเพลงพื้นหลัง (โลก 3D มี soundscape เอง)
 
   if(!built){
