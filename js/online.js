@@ -137,21 +137,24 @@ function onlinePushScore(){
   const tp    = Math.round(state.tpScore || 0);                            // ⌨️ รอบ 649: เหรียญสะสมเกมพิมพ์คำ (โชว์คู่ในกระดาน)
   const tw    = Math.round(state.tpWords || 0);                            // ⌨️ รอบ 654: จำนวนคำที่พิมพ์สำเร็จ — **ตัวจัดอันดับแท็บพิมพ์คำ**
   const sg    = Math.round(state.sgScore || 0);                            // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์ (กระดานแท็บยิงเป้าคำ)
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg;   // ค่าใดเปลี่ยน = re-push
-  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำไม่ขยับ ไม่ต้องเขียนซ้ำ
+  const pm    = Math.round(state.pmScore || 0);                            // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ (กระดานแท็บจับคู่ภาพ)
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm;   // ค่าใดเปลี่ยน = re-push
+  if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำ/ยิงเป้าคำ/จับคู่ภาพไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
-  // (sg = รอบ 917 รอ publish → ถอยไปก้อน tp+tw ก่อน แล้วค่อยถอยลงอีกทีละขั้น)
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
-   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
-    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
+  // (pm = รอบ 979 รอ publish → ถอยไปก้อน sg+tp+tw ก่อน แล้วค่อยถอยลงอีกทีละขั้น)
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
+   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
+     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
-        Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
-          Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
-        });
+       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+        Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+       });
       });
+     });
     });
    });
   });
@@ -263,7 +266,9 @@ function friendRequest(toUid){
   return Online.db.ref('friendReq/' + toUid + '/' + onlineKey()).set({
     n: onlineDisplayName(), g: state.student.grade,
     ts: firebase.database.ServerValue.TIMESTAMP,
-  });
+  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "คำขอเป็นเพื่อน" ไว้ในกล่อง 🔔 ของผู้รับด้วย
+     → รับ/ปฏิเสธไปแล้วก็ยังย้อนดูได้ว่าใครเคยส่งมาเมื่อไหร่ (คำขอตัวจริงใน /friendReq ถูกลบทิ้งตอนตอบ) */
+  }).then(()=>{ gnotifSend(toUid, {t:'fr'}); });
 }
 
 /* รับคำขอ: เขียนเพื่อนทั้งสองฝั่ง แล้วลบคำขอออกจากกล่องเรา */
@@ -514,10 +519,14 @@ function giftSend(toUid, kind, id){
   const name = onlineDisplayName();
   if(!name) return Promise.reject('ตั้งชื่อในเกมก่อนถึงจะส่งของขวัญได้นะ');
   if(kind !== 'shop' && kind !== 'collect') return Promise.reject('ของขวัญไม่ถูกต้อง');
-  return Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
+  const p = Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
     k: kind, id: id, fn: name, st: 'pending',
     ts: firebase.database.ServerValue.TIMESTAMP,
   });
+  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "ของขวัญ" ไว้ในกล่อง 🔔 ของผู้รับด้วย (cid = รหัสของขวัญใบนั้น กันนับซ้ำ)
+     ของขวัญตัวจริงหายจากกล่อง 🎁 ทันทีที่กดรับ/ไม่รับ → กล่อง 🔔 คือที่เดียวที่ย้อนดูได้ว่าใครส่งอะไรมาเมื่อไหร่
+     ⚠️ ห้ามให้ใบแจ้งเตือนทำให้การส่งของขวัญล้ม — gnotifSend กลืน error เองอยู่แล้ว (rules ยังไม่ publish ก็ส่งของได้ปกติ) */
+  return p.then(()=>{ gnotifSend(toUid, {t:'gf', cid: p.key, r: kind, cm: id}); return p; });
 }
 
 /* 🐾 รอบ 325: "ทักทายน้อง" — ส่งคำทักถึงสัตว์เลี้ยงของเพื่อน (ไม่เสียของ ไม่เสียเหรียญ)
@@ -528,10 +537,12 @@ function greetSend(toUid, greetId){
   const name = onlineDisplayName();
   if(!name) return Promise.reject('ตั้งชื่อในเกมก่อนนะ');
   if(typeof greetId !== 'string' || greetId.length > 20) return Promise.reject('คำทักไม่ถูกต้อง');
-  return Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
+  const p = Online.db.ref('gifts/' + toUid + '/' + onlineKey()).push({
     k: 'greet', id: greetId, fn: name, st: 'pending',
     ts: firebase.database.ServerValue.TIMESTAMP,
   });
+  /* 🔔 รอบ 980: ฝากใบแจ้งเตือน "ทักทายน้อง" ไว้ในกล่อง 🔔 ของผู้รับด้วย (แบบเดียวกับของขวัญ) */
+  return p.then(()=>{ gnotifSend(toUid, {t:'gr', cid: p.key, cm: greetId}); return p; });
 }
 
 /* ผู้รับกด "รับ": จำของเข้าห้องของขวัญ (ผู้เรียกทำ) + ตั้งสถานะ accepted ให้ผู้ส่งเห็น */
@@ -1205,12 +1216,26 @@ function gfeedNotifPush(n){
      `Online.notifKeys` (t|pid|cid|u|r) ใบไหนมาทีหลังจะไม่เด้งซ้ำ แค่ผูก nid ให้ใบเดิม
    • ยังไม่ publish rules = เกมไม่พัง: เขียน/อ่านโดน deny → กลับไปทำงานแบบรอบ 701 เป๊ะ
      (เห็นเฉพาะตอนเปิดเกมอยู่) + ตั้งธง Online.gnotifOk=false ให้กล่อง 🔔 ขึ้นป้ายบอกเหตุผลตรง ๆ
+
+   🆕 รอบ 980 (ผู้ใช้สั่ง): กล่อง 🔔 ใบเดียวเก็บ "เรื่องที่เพื่อนทำกับเรา" ให้ครบ ไม่ใช่แค่ไลก์/คอมเมนต์
+       t='gf' ของขวัญ (r = shop|collect · cm = id ของขวัญ · cid = รหัสของขวัญใบนั้น)
+       t='gr' ทักทายน้อง (cm = รหัสคำทัก · cid = รหัสใบในกล่องของขวัญ)
+       t='fr' คำขอเป็นเพื่อน (ไม่มีฟิลด์เสริม)
+     • ทำไมต้องเก็บ: ของขวัญ/คำทักหายจากกล่อง 🎁 ทันทีที่กดรับ/ไม่รับ · คำขอเป็นเพื่อนถูกลบทิ้งตอนตอบ
+       → เดิมไม่มีที่ไหนย้อนดูได้เลยว่า "ใครส่งอะไรมาเมื่อไหร่" ตอนนี้กล่อง 🔔 เก็บให้ 40 ใบล่าสุด
+     • ใบพวกนี้ "ไม่มี pid" (ไม่ได้มาจากโพสต์) → rules มีทางเขียนแยกที่เช็ก /gifts, /friendReq แทน
+     • ของขวัญ/คำทักมีแถบเด้งของกล่อง 🎁 อยู่แล้ว → GNOTIF_QUIET กันเด้งซ้ำสองแถบ (ยังนับเลขกระดิ่งปกติ)
    ============================================================ */
 const GNOTIF_KEEP = 40;      // เก็บแจ้งเตือนย้อนหลังกี่ใบ (เจ้าของกล่องกวาดของเก่าทิ้งเอง)
+/* ชนิดที่ "มีคนอื่นเด้งแถบให้แล้ว" — เข้ากล่อง 🔔 + นับเลขกระดิ่ง แต่ไม่เด้งแถบซ้ำ */
+const GNOTIF_QUIET = {gf: 1, gr: 1};
 
 /* รหัสประจำใบ ใช้กันซ้ำระหว่าง diff สด กับใบที่อ่านมาจาก DB */
 function gnotifKeyOf(n){
-  return [n.t || '', n.pid || '', n.cid || '', n.u || '', n.r || ''].join('|');
+  const base = [n.t || '', n.pid || '', n.cid || '', n.u || '', n.r || ''].join('|');
+  /* 🔔 รอบ 980: คำขอเป็นเพื่อนจากคนเดิม "ซ้ำได้จริง" (ถูกปฏิเสธแล้วส่งใหม่) และไม่มี diff ให้จับคู่
+     → ต่อรหัสใบเข้าไปด้วย ไม่งั้นใบที่ 2 จะถูกมองว่าเป็นใบเดิมแล้วหายไป (ของขวัญ/คำทักมี cid ต่างกันอยู่แล้ว) */
+  return n.t === 'fr' ? base + '|' + (n.nk || n.ts || '') : base;
 }
 /* ✉️ "คนที่กด" ฝากใบแจ้งเตือนไว้ในกล่องของเจ้าของเรื่อง (ไม่ส่งหาตัวเอง) */
 function gnotifSend(toUid, n){
@@ -1284,7 +1309,8 @@ function gnotifListen(me){
     gnotifAdd({t: v.t, pid: v.pid || '', cid: v.cid || '', u: v.u || '', n: v.n || 'เพื่อน',
                r: v.r || '', cm: v.cm || '', tx: v.tx || '', ts: v.ts || 0,
                nk: ch.key, rd: !!(Online.notifSeen && ch.key <= Online.notifSeen)},
-              Online.gnotifBase);                 // ชุดแรก = ของเก่า ห้ามเด้ง toast รัว ๆ ตอนเปิดเกม
+              Online.gnotifBase && !GNOTIF_QUIET[v.t]);   // ชุดแรก = ของเก่า ห้ามเด้ง toast รัว ๆ ตอนเปิดเกม
+                                                         // · รอบ 980: ของขวัญ/คำทัก กล่อง 🎁 เด้งให้แล้ว ไม่เด้งซ้ำ
   }, err);
   q.once('value', ()=>{ Online.gnotifBase = true; Online.gnotifOk = true; gnotifPrune(); }, err);
 }
@@ -1939,7 +1965,8 @@ function onlineStart(){
                 ws: typeof v.ws === 'number' ? v.ws : 0,     // 🔎 รอบ 590: แต้มสะสมเกมค้นหาคำ
                 tp: typeof v.tp === 'number' ? v.tp : 0,     // ⌨️ รอบ 649: เหรียญสะสมเกมพิมพ์คำ
                 tw: typeof v.tw === 'number' ? v.tw : 0,     // ⌨️ รอบ 654: จำนวนคำที่พิมพ์ (ตัวจัดอันดับ)
-                sg: typeof v.sg === 'number' ? v.sg : 0});   // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์
+                sg: typeof v.sg === 'number' ? v.sg : 0,     // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์
+                pm: typeof v.pm === 'number' ? v.pm : 0});   // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;

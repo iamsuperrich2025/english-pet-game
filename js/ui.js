@@ -1331,8 +1331,9 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','badges','boss','ws','tp','sg','bx','xr'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · tp = ⌨️ รอบ 649 · sg = 🎯 รอบ 917 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786 · xr = 🏁 ข้อสอบมาตรฐาน รอบ 815)
+const LB_TABS = ['coins','badges','boss','ws','pm','tp','sg','bx','xr'];   // แท็บทั้งหมด (ws = 🔎 รอบ 590 · pm = 🖼️ รอบ 979 · tp = ⌨️ รอบ 649 · sg = 🎯 รอบ 917 · bx = 🏁 สอบใหญ่เร็วที่สุด รอบ 786 · xr = 🏁 ข้อสอบมาตรฐาน รอบ 815)
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
+const LB_PM_TOP = 10;                                  // 🖼️ แท็บจับคู่ภาพโชว์ Top 10 all time (เรตเดียวกัน)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
 const LB_SG_TOP = 10;                                  // 🎯 แท็บยิงเป้าคำโชว์ Top 10 all time (เรตเดียวกัน)
 let lbTab = 'coins';                                   // แท็บกระดานที่เปิดอยู่
@@ -1358,6 +1359,12 @@ function bindLbTabs(){
     if(e.target.closest('.sga-open')){
       e.stopPropagation();
       if(typeof SgAward !== 'undefined') SgAward.open();
+      return;
+    }
+    // 🖼️ รอบ 979: .pma-open = ของกระดาน 🖼️ จับคู่ภาพ (เครื่องจ่ายรางวัลตัวที่ 4 โรงงานเดียวกัน)
+    if(e.target.closest('.pma-open')){
+      e.stopPropagation();
+      if(typeof PmAward !== 'undefined') PmAward.open();
       return;
     }
     if(!e.target.closest('.wsa-open')) return;
@@ -1515,6 +1522,13 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🎯 ${fmtNum(r.sg)}`, val:r.sg,
       pz:(typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
+  if(tab === 'pm'){   // 🖼️ รอบ 979: แต้มสะสมตลอดกาลเกมจับคู่ภาพ (field pm) — โชว์แค่ Top 10
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, pm:r.pm||0}; });
+    map[myId] = {id:myId, n:meName, g:meG, pm:Math.round(state.pmScore||0)};
+    const rows = Object.values(map).filter(r=>r.pm > 0).sort((a,b)=> b.pm - a.pm).slice(0, LB_PM_TOP);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🖼️ ${fmtNum(r.pm)}`, val:r.pm,
+      pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
+  }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
 }
 
@@ -1583,9 +1597,10 @@ function lbChar(r){
 function lbfAwardBarHtml(tab){
   const A = tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
           : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
-          : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null) : null;
+          : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null)
+          : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'tp' ? 'tpa-open' : tab === 'sg' ? 'sga-open' : 'wsa-open';
+  const cls = tab === 'tp' ? 'tpa-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -1608,6 +1623,7 @@ function openLeaderboardFull(){
           <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
+          <button class="lb-tab${__lbfTab==='pm'?' active':''}" data-t="pm">🖼️ จับคู่ภาพ</button>
           <button class="lb-tab${__lbfTab==='tp'?' active':''}" data-t="tp">⌨️ พิมพ์คำ</button>
           <button class="lb-tab${__lbfTab==='sg'?' active':''}" data-t="sg">🎯 ยิงเป้าคำ</button>
           <button class="lb-tab${__lbfTab==='bx'?' active':''}" data-t="bx">🏁 สอบใหญ่</button>
@@ -1673,7 +1689,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;   // 🔎 รอบ 590 / ⌨️ รอบ 649 / 🎯 รอบ 917: Top 10 all time
+    const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;   // 🔎 รอบ 590 / 🖼️ รอบ 979 / ⌨️ รอบ 649 / 🎯 รอบ 917: Top 10 all time
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
@@ -1705,9 +1721,9 @@ function openLeaderboardFull(){
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
     const title = __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
-                : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ'
+                : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'pm' ? '🖼️ อันดับจับคู่ภาพ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ'
                 : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : '🪙 อันดับเหรียญ';
-    const allTime = (__lbfTab === 'ws' || __lbfTab === 'tp' || __lbfTab === 'sg') ? ' (all time)' : '';
+    const allTime = (__lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'sg') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
       ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
       ${lbfAwardBarHtml(__lbfTab)}
@@ -3778,10 +3794,24 @@ function renderFeedBell(){
   b.innerHTML = `🔔${n ? `<b class="fb-n">${n > 9 ? '9+' : n}</b>` : ''}`;
   b.classList.toggle('on', n > 0);
 }
+/* 🎁🐾👋 รอบ 980: แจ้งเตือนที่ "ไม่ได้มาจากโพสต์" — ของขวัญ / ทักทายน้อง / คำขอเป็นเพื่อน
+   ต้นเรื่องอยู่คนละกล่องกับฟีด → ปุ่มในแถวพาไปที่กล่องต้นทางแทน "ไปดูต้นเรื่อง" */
+const FNT_JUMP = {
+  gf: {ico:'🎁', go:'🎁 ไปห้องของขวัญ', panel:'panel-gifts'},
+  gr: {ico:'🐾', go:'🎁 ไปห้องของขวัญ', panel:'panel-gifts'},
+  fr: {ico:'👋', go:'👥 ไปแผงเพื่อน',   panel:'panel-friends'},
+};
+/* ชื่อของขวัญ/คำทักของใบนั้น — แปลจาก id ฝั่งผู้รับเอง (ไม่ต้องฝากข้อความยาวมากับใบแจ้งเตือน) */
+function fntGiftName(n){
+  return giftItemName(n.t === 'gr' ? 'greet' : (n.r === 'collect' ? 'collect' : 'shop'), n.cm || '');
+}
 /* ข้อความรายงาน 1 บรรทัดของแจ้งเตือนใบหนึ่ง (ใช้ทั้งแถบเด้งสดและกล่อง 🔔 ให้ตรงกันที่เดียว) */
 function feedNotifText(n){
   const who = n.n || 'เพื่อน';
   const cut = String(n.cm || '').slice(0,40);
+  if(n.t === 'gf') return `🎁 ${who} ส่ง${fntGiftName(n)}มาให้คุณ`;
+  if(n.t === 'gr') return `🐾 ${who} ทักทายน้องของคุณ: "${fntGiftName(n)}"`;
+  if(n.t === 'fr') return `👋 ${who} ส่งคำขอเป็นเพื่อนมาหาคุณ`;
   if(n.t === 'rx'){ const r = feedRx(n.r); return `${r.e} ${who} กด ${r.en} (${r.th}) ให้โพสต์ของคุณ`; }
   if(n.t === 'rp') return `↩ ${who} ตอบกลับคอมเมนต์ของคุณ: "${cut}"`;
   if(n.t === 'cl') return `💙 ${who} ถูกใจคอมเมนต์ของคุณ: "${cut}"`;
@@ -3792,7 +3822,11 @@ function feedNotifText(n){
    - เปิดแผ่นคอมเมนต์ของโพสต์นั้น แล้ว "ไฮไลต์" ตัวที่เป็นต้นเรื่องจริง ๆ (คอมเมนต์ใบนั้น / ตัวโพสต์ถ้าเป็นการกดใจโพสต์)
    - โพสต์ถูกหมุนออกจากฟีดไปแล้ว → openFeedComments เดิมบอกผู้ใช้เองว่า "ไม่อยู่ในฟีดแล้ว" */
 function feedNotifGo(n){
-  if(!n || !n.pid) return;
+  if(!n) return;
+  /* 🎁🐾👋 รอบ 980: ใบที่ไม่ได้มาจากโพสต์ → เปิดกล่องต้นทาง (ห้องของขวัญ / แผงเพื่อน) แทน */
+  const j = FNT_JUMP[n.t];
+  if(j){ if(typeof openPanel === 'function') openPanel(j.panel); return; }
+  if(!n.pid) return;
   const el = document.getElementById('feed-list');
   if(el && el.classList.contains('feed-deck')){
     const feed = ((typeof Online !== 'undefined' && Online.gfeed) || []).slice(0, FEED_DECK_MAX);
@@ -3806,7 +3840,7 @@ function feedNotifArrived(n){
   renderFeedBell();
   /* 🔗 รอบ 974: เดิมเป็น toast ข้อความเปล่า อ่านแล้วต้องไปหาโพสต์เอง → ตอนนี้มีปุ่มลิงก์ไปต้นเรื่องติดมาด้วย
      ไม่กดก็ได้ (หายเองใน 7 วิ) และยังย้อนดูได้ทีหลังที่กระดิ่ง 🔔 เสมอ */
-  toastLink(feedNotifText(n), '🔗 ไปดูต้นเรื่อง', ()=>feedNotifGo(n), 7000);
+  toastLink(feedNotifText(n), (FNT_JUMP[n.t] || {}).go || '🔗 ไปดูต้นเรื่อง', ()=>feedNotifGo(n), 7000);
   sfx.select();
 }
 function openFeedNotif(){
@@ -3823,25 +3857,31 @@ function openFeedNotif(){
   ov.className = 'fnt-overlay';
   ov.innerHTML = `<div class="fnt-box">
     <div class="fdb-head"><span>🔔 การแจ้งเตือน</span><button class="fdb-close" type="button">✕</button></div>
-    ${list.length ? '<div class="fnt-hint">🔗 กด “ไปดูต้นเรื่อง” ถ้าอยากเข้าไปดูโพสต์/คอมเมนต์นั้น — ไม่กดก็ได้ รายการยังอยู่ที่นี่</div>' : ''}
+    ${list.length ? '<div class="fnt-hint">🔗 กดปุ่มท้ายแถวถ้าอยากเข้าไปดูต้นเรื่อง (โพสต์/คอมเมนต์ · ห้องของขวัญ 🎁 · แผงเพื่อน 👥) — ไม่กดก็ได้ รายการยังอยู่ที่นี่</div>' : ''}
     ${old ? `<div class="fnt-note">⚠️ ตอนนี้เก็บย้อนหลังไม่ได้ — ต้องอัปเดตกฎความปลอดภัยโซน <b>/gnotif</b> ก่อน
-         จึงจะเห็นแจ้งเตือนเก่าหลังปิดเกม (ระหว่างนี้เห็นเฉพาะที่เกิดตอนเปิดเกมอยู่)</div>` : ''}
+         จึงจะเห็นแจ้งเตือนเก่าหลังปิดเกม (ระหว่างนี้เห็นเฉพาะไลก์/คอมเมนต์ที่เกิดตอนเปิดเกมอยู่ —
+         ของขวัญ 🎁 · ทักทายน้อง 🐾 · คำขอเป็นเพื่อน 👋 จะยังไม่มาขึ้นที่นี่เลย ต้องดูที่กล่องของมันเอง)</div>` : ''}
     <div class="fnt-list">${list.length ? list.map((n,i)=>{
       const r = n.t === 'rx' ? feedRx(n.r) : null;
+      const j = FNT_JUMP[n.t];        // 🎁🐾👋 รอบ 980: ใบของขวัญ/ทักทายน้อง/คำขอเป็นเพื่อน (ไม่มีโพสต์ต้นเรื่อง)
       /* 🔗 รอบ 974: ทุกแถวมี "ลิงก์ไปต้นเรื่อง" เห็นชัดเป็นปุ่ม (เดิมกดแถวได้แต่ไม่มีอะไรบอกว่ากดได้)
          data-i = ที่นั่งในรายการ Online.notif → ใช้ทั้ง cid (คอมเมนต์ต้นเรื่อง) และ pid ได้ครบ */
-      return `<div class="fnt-row${fresh[i] ? ' fnt-new' : ''}" data-i="${i}" data-pid="${escapeHTML(n.pid)}">
-        <span class="fnt-ico">${r ? r.e : (n.t === 'rp' ? '↩' : n.t === 'cl' ? '💙' : '💬')}</span>
-        <span class="fnt-tx">${fresh[i] ? '<i class="fnt-tag">ใหม่</i>' : ''}<b>${escapeHTML(n.n || 'เพื่อน')}</b> ${r
+      return `<div class="fnt-row${fresh[i] ? ' fnt-new' : ''}" data-i="${i}" data-pid="${escapeHTML(n.pid || '')}">
+        <span class="fnt-ico">${j ? j.ico : (r ? r.e : (n.t === 'rp' ? '↩' : n.t === 'cl' ? '💙' : '💬'))}</span>
+        <span class="fnt-tx">${fresh[i] ? '<i class="fnt-tag">ใหม่</i>' : ''}<b>${escapeHTML(n.n || 'เพื่อน')}</b> ${j
+          ? (n.t === 'gf' ? `ส่ง <b>${escapeHTML(fntGiftName(n))}</b> มาให้คุณ`
+           : n.t === 'gr' ? `ทักทายน้องของคุณ “${escapeHTML(fntGiftName(n))}”`
+           : 'ส่งคำขอเป็นเพื่อนมาหาคุณ')
+          : r
           ? `กด <i class="fp-en">${r.en}</i> (${r.th}) ให้โพสต์ของคุณ`
           : n.t === 'cl'
             ? `ถูกใจคอมเมนต์ของคุณ “${escapeHTML(String(n.cm || ''))}”`
             : `${n.t === 'rp' ? 'ตอบกลับคอมเมนต์ของคุณ' : 'คอมเมนต์'}ว่า “${escapeHTML(String(n.cm || ''))}”`}
-          <small class="fnt-sub">${escapeHTML(String(n.tx || '').slice(0,50))} · ${feedAgo(n.ts)}</small>
-          <button class="fnt-go" type="button" data-i="${i}">🔗 ไปดูต้นเรื่อง</button></span>
+          <small class="fnt-sub">${j ? '' : escapeHTML(String(n.tx || '').slice(0,50)) + ' · '}${feedAgo(n.ts)}</small>
+          <button class="fnt-go" type="button" data-i="${i}">${j ? j.go : '🔗 ไปดูต้นเรื่อง'}</button></span>
       </div>`;
     }).join('') : `<div class="fdb-empty">ยังไม่มีการแจ้งเตือน 🔕<br>
-      <small>เมื่อเพื่อนกดถูกใจหรือคอมเมนต์โพสต์ของคุณ จะมาขึ้นที่นี่<br>
+      <small>เพื่อนกดถูกใจ/คอมเมนต์โพสต์ · ส่งของขวัญ 🎁 · ทักทายน้อง 🐾 · ขอเป็นเพื่อน 👋 จะมาขึ้นที่นี่<br>
       ${old ? '(ตอนนี้แจ้งเฉพาะช่วงที่เปิดเกมอยู่)' : 'เก็บย้อนหลังให้ด้วย — ปิดเกมไปแล้วกลับมาก็ยังอ่านได้'}</small></div>`}</div>
   </div>`;
   document.body.appendChild(ov);
