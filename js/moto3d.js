@@ -400,7 +400,7 @@ const CSS=`
 #moto-word{position:absolute;left:50%;top:8%;transform:translateX(-50%);transform-origin:top center;
   display:flex;flex-direction:column;align-items:center;gap:.4vmin;
   padding:1.2vmin 2vmin;border-radius:2.1vmin;background:rgba(6,14,26,.32);backdrop-filter:blur(1px)}
-#moto-word .m-chips{display:flex;gap:.8vmin;align-items:center;flex-wrap:nowrap;justify-content:center}
+#moto-word .m-chips{display:flex;gap:2vmin;align-items:center;flex-wrap:nowrap;justify-content:center}
 /* 🔤➡️ รอบ 919: คำยาวเกินช่องว่างกลางจอ → ตัดเป็น 2 แถวก่อน (ตัวอักษรยังใหญ่) ค่อยย่อทีหลัง */
 #moto-word.wrap2 .m-chips{flex-wrap:wrap}
 #moto-word .m-th{color:#ffe9a8;font-size:3.7vmin;font-weight:800;white-space:nowrap;
@@ -428,10 +428,11 @@ const CSS=`
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
 /* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข
    🧭➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายกล่องออกไปทางซ้าย" — ชิดขอบซ้ายสุด + แคบลง (31%→24%)
+   🧭➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องนี้ไปชิดซ้ายเพิ่ม" — ลด left/padding อีกชั้น + เนื้อหาชิดซ้าย (เดิมจัดกลางกล่อง ดูเหมือนลอยห่างขอบ)
    เปิดทางกลางจอให้ป้ายคำศัพท์ (fitWord วัดช่องว่างจริงระหว่าง 2 กล่องนี้แล้วจัดขนาดเอง) */
-#moto-gps{position:absolute;left:.7%;top:2%;display:flex;flex-direction:column;align-items:center;gap:.5vmin;
-  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:.9vmin 1.2vmin;color:#fff;max-width:24%}
-.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
+#moto-gps{position:absolute;left:.2%;top:2%;display:flex;flex-direction:column;align-items:flex-start;gap:.5vmin;
+  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:.8vmin .9vmin;color:#fff;max-width:24%}
+.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:left;color:#dbe8f5}
 .m-gps-row{display:flex;align-items:center;gap:1.4vmin}
 #moto-gps-arr{display:inline-block;width:5.3vmin;height:6.1vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
@@ -439,10 +440,11 @@ const CSS=`
 #moto-gps-d{font-size:3.4vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
 /* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ)
    🏆➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายขึ้นไปมุมขวาบน" — ยกขึ้นชิดใต้เหรียญ + ชิดขอบขวา
+   🏆➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องสนาม/ไปหาเพื่อนไปชิดขวาเพิ่ม" — ลด right/padding อีกชั้น
    ⚖️ กว้างเป็น % ของ "จอเกม" ไม่ใช่ vmin ของหน้าต่าง (34vmin เคยกินเกือบครึ่งจอเกมจนทับป้ายคำ)
    📈 รองรับคนเยอะ: max-height คุมไม่ให้ยาวเกินจอ · จำนวนแถวตัดจริงใน renderBoard() */
-#moto-board{position:absolute;right:.7%;top:8.5%;min-width:17%;max-width:26%;display:none;flex-direction:column;gap:.25vmin;
-  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.7vmin 1vmin;color:#fff;z-index:2;
+#moto-board{position:absolute;right:.2%;top:8.5%;min-width:17%;max-width:26%;display:none;flex-direction:column;gap:.25vmin;
+  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.6vmin .8vmin;color:#fff;z-index:2;
   max-height:62%;overflow:hidden}
 #moto-board.on{display:flex}
 .m-bd-h{font-size:1.65vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
@@ -1556,6 +1558,11 @@ function dogHit(){
   const have=(typeof state!=='undefined'&&typeof state.coins==='number')?state.coins:0;
   const pen=Math.min(DOG_HIT_COIN,have);
   if(typeof addCoins==='function'&&pen>0) addCoins(-pen);
+  /* 🐕🪙 รอบ 927: ผู้ใช้ชี้เลขเหรียญที่ได้รอบนี้ (มุมขวาบน) ต้อง "ลบ/อัปเดตทันที" ตอนชนหมา
+     เดิมหักแค่ state.coins (ยอดรวมทั้งบัญชี) แต่ #moto-coins โชว์ sessionCoins (ยอดได้เฉพาะทริปนี้) แยกตัวแปรกัน
+     → เลขมุมขวาบนไม่ขยับตอนชนหมาเลย ดูเหมือนบั๊ก ต้องหักตัวนี้ด้วยแล้ววาดใหม่ทันที */
+  sessionCoins=Math.max(0,sessionCoins-pen);
+  if(coinsEl) coinsEl.textContent='🪙 +'+fmtNum(sessionCoins);
   if((typeof state==='undefined'||state.haptic!==false)&&navigator.vibrate) navigator.vibrate([50,40,50]);
   if(typeof sfx!=='undefined'&&sfx.wrong) sfx.wrong();
   banEl.innerHTML=`🐕💥 ชนหมา!<br><span class="m-coin" style="color:#ff9a9a">−${fmtNum(pen)} 🪙</span>`;
