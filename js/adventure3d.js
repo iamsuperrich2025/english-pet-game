@@ -10084,6 +10084,34 @@ function soccerTurfGrade(c,S){
     for(let x=0;x<S;x++){ const k=(y*S+x)*4;
       p[k]=Math.min(255,p[k]*f); p[k+1]=Math.min(255,p[k+1]*f); p[k+2]=Math.min(255,p[k+2]*f); }
   }
+  /* 🏟️ รอบ 935 (ผู้ใช้ชี้ 3 จุดบนสนาม: "เอาร่องรอยสีที่ไม่สม่ำเสมอออก"):
+     ภาพถ่ายหญ้ามีแสง/สีเป็นหย่อม (บล็อบ) — พอปู MirroredRepeat ทั้งสนาม หย่อมพวกนี้กลายเป็นลายด่างซ้ำ ๆ
+     แก้ด้วย flat-field ต่อช่องสี: เฉลี่ยเป็นบล็อก 32px → bilinear คืนต่อพิกเซล → ปรับทุกจุดเข้าค่าเฉลี่ยรวม
+     (การรีดรายแถวข้างบนแก้เฉพาะแถบแนวนอน แต่บล็อบ 2 มิติยังอยู่ — นี่คือชั้นที่ขาด) */
+  {
+    const B=32, nb=S/B, cnt=B*B;
+    const mean=[new Float32Array(nb*nb),new Float32Array(nb*nb),new Float32Array(nb*nb)], glob=[0,0,0];
+    for(let by=0;by<nb;by++) for(let bx=0;bx<nb;bx++){
+      let r=0,g=0,b=0;
+      for(let y=0;y<B;y++){ let k=((by*B+y)*S+bx*B)*4;
+        for(let x=0;x<B;x++,k+=4){ r+=p[k]; g+=p[k+1]; b+=p[k+2]; } }
+      const i=by*nb+bx; mean[0][i]=r/cnt; mean[1][i]=g/cnt; mean[2][i]=b/cnt;
+    }
+    for(let ch=0;ch<3;ch++){ let s=0; for(let i=0;i<nb*nb;i++) s+=mean[ch][i]; glob[ch]=s/(nb*nb); }
+    const at=(ch,bx,by)=>mean[ch][Math.min(nb-1,Math.max(0,by))*nb+Math.min(nb-1,Math.max(0,bx))];
+    for(let y=0;y<S;y++){
+      const fy=(y-B/2)/B, y0=Math.floor(fy), ty=fy-y0;
+      for(let x=0;x<S;x++){
+        const fx=(x-B/2)/B, x0=Math.floor(fx), tx=fx-x0, k=(y*S+x)*4;
+        for(let ch=0;ch<3;ch++){
+          const m=(at(ch,x0,y0)*(1-tx)+at(ch,x0+1,y0)*tx)*(1-ty)
+                 +(at(ch,x0,y0+1)*(1-tx)+at(ch,x0+1,y0+1)*tx)*ty;
+          const f=Math.min(1.4,Math.max(.7, glob[ch]/Math.max(1,m)));   // clamp กันขยาย noise ในโซนมืด
+          p[k+ch]=Math.min(255,p[k+ch]*f);
+        }
+      }
+    }
+  }
   const SAT=.62, BRI=.74;                        // ② ลดความอิ่มสี+หรี่ลง = เขียวสนามจริง ไม่ใช่เขียวนีออน
   for(let i=0;i<p.length;i+=4){
     const l=p[i]*.299+p[i+1]*.587+p[i+2]*.114;
@@ -10680,23 +10708,56 @@ function guideTexture(){
 function auraActive(){ return (state.soccerAuraUntil||0) > Date.now(); }
 function auraLeftMs(){ return Math.max(0,(state.soccerAuraUntil||0)-Date.now()); }
 /* ออร่าออกแบบเอง: วงแหวนพลังลอยขึ้น + แกนแสงเย็น + ประกายโคจร (โทนฟ้า-ขาว ไม่ใช่เปลวทองแบบการ์ตูนดัง) */
+/* 🔵🔥 รอบ 935 (ผู้ใช้: "ปรับพลังรอบตัวให้เหมือนเปลวไฟสีน้ำเงินของจริง + คลื่นไหวธรรมชาติ"):
+   อ้างอิงเปลวแก๊สจริง (Bunsen/LPG — ดู elgas.com.au, britannica.com "Bunsen burner"):
+   ① กรวยใน = สว่างสุด ขาวอมฟ้า (จุดร้อนสุด ~1,500-1,960°C อยู่เหนือยอดกรวยใน)
+   ② เปลวนอก = น้ำเงินอมม่วงจาง เกือบใส · โคนสีเข้มกว่าปลาย
+   ③ เปลวฟ้า (เผาไหม้สมบูรณ์) "เลีย" ขึ้นเป็นคลื่น ไม่กระพือรุนแรงแบบเปลวเหลือง
+   เทกซ์เจอร์ลิ้นเปลว: หยดน้ำคว่ำ โคนกว้าง-ปลายแหลม + แกนในสว่าง (คู่สีตามข้อ ①②) */
+function auraFlameTex(){
+  const W=64,H=128,cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const c=cv.getContext('2d');
+  for(let i=0;i<=20;i++){                                  // เปลวนอก: วงไล่สีซ้อนตามแกนตั้ง
+    const t=i/20, y=112-t*96, r=20*(1-t*.88)+2;
+    const g=c.createRadialGradient(32,y,0,32,y,r);
+    const col = t<.55 ? [(40+t/.55*60)|0,(90+t/.55*110)|0,255]        // โคน: น้ำเงินเข้ม → ฟ้าสด
+                      : [(120+(t-.55)/.45*40)|0,(150-(t-.55)/.45*30)|0,255]; // ปลาย: ฟ้าอมม่วงจาง
+    g.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${.16*(1-t*.5)})`);
+    g.addColorStop(1,'rgba(20,40,180,0)');
+    c.fillStyle=g; c.fillRect(0,0,W,H);
+  }
+  for(let i=0;i<=10;i++){                                  // กรวยใน: สว่างสุด ขาวอมฟ้า (ครึ่งล่างของลิ้น)
+    const t=i/10, y=112-t*54, r=9*(1-t*.85)+1.5;
+    const g=c.createRadialGradient(32,y,0,32,y,r);
+    g.addColorStop(0,`rgba(225,250,255,${.5*(1-t*.35)})`);
+    g.addColorStop(.6,`rgba(120,210,255,${.28*(1-t*.4)})`);
+    g.addColorStop(1,'rgba(60,140,255,0)');
+    c.fillStyle=g; c.fillRect(0,0,W,H);
+  }
+  return new THREE.CanvasTexture(cv);
+}
 function buildAura(sc){
   auraGrp=new THREE.Group(); auraRings=[]; auraSparks=[];
-  const ringMat=()=>new THREE.MeshBasicMaterial({color:0x6fe4ff,transparent:true,opacity:.5,
-    side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
-  for(let i=0;i<3;i++){                                    // วงแหวนไหลขึ้นต่อเนื่อง (เฟสต่างกัน)
-    const r=new THREE.Mesh(new THREE.TorusGeometry(.62,.045,6,26),ringMat());
-    r.rotation.x=Math.PI/2; auraGrp.add(r); auraRings.push({m:r,ph:i/3});
-  }
-  auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.46,.72,2.1,14,1,true),
-    new THREE.MeshBasicMaterial({color:0x2fb9ff,transparent:true,opacity:.16,side:THREE.DoubleSide,
-      depthWrite:false,blending:THREE.AdditiveBlending}));
-  auraCore.position.y=1.05; auraGrp.add(auraCore);
-  const sparkMat=new THREE.MeshBasicMaterial({color:0xd8f6ff,transparent:true,opacity:.9,
+  const ft=auraFlameTex();
+  const mkFlame=(r,w,h)=>{                                 // ลิ้นเปลว 1 ลิ้น (sprite additive หันเข้ากล้องเอง)
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:ft,transparent:true,depthWrite:false,
+      blending:THREE.AdditiveBlending,opacity:.8}));
+    auraGrp.add(sp);
+    auraRings.push({m:sp, a:Math.random()*Math.PI*2, r:r, w:w, h:h,
+      p1:Math.random()*9, p2:Math.random()*9, p3:Math.random()*9,
+      f1:4.5+Math.random()*2.5, f2:7.5+Math.random()*4, fs:.8+Math.random()*.6});
+  };
+  for(let i=0;i<12;i++) mkFlame(.52+Math.random()*.14, .38+Math.random()*.14, .9+Math.random()*.4);   // วงนอกเตี้ย
+  for(let i=0;i<6;i++)  mkFlame(.28+Math.random()*.10, .5+Math.random()*.12, 1.5+Math.random()*.5);   // ลิ้นในสูงถึงลำตัว
+  auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.5,.66,1.9,14,1,true),     // เปลวนอกเกือบใส (ข้อ ②)
+    new THREE.MeshBasicMaterial({color:0x5548ff,transparent:true,opacity:.04,side:THREE.DoubleSide,
+      depthWrite:false,blending:THREE.AdditiveBlending}));   // จูนหลังดูภาพ: .07 เห็นเป็น "กล่องแก้ว" สี่เหลี่ยม (silhouette ทรงกระบอก) — ลดจนแค่เรือง
+  auraCore.position.y=.95; auraGrp.add(auraCore);
+  const sparkMat=new THREE.MeshBasicMaterial({color:0xcfeaff,transparent:true,opacity:.9,
     depthWrite:false,blending:THREE.AdditiveBlending});
-  for(let i=0;i<7;i++){                                     // ประกายโคจรรอบตัว
-    const sp=new THREE.Mesh(new THREE.SphereGeometry(.075,6,5),sparkMat);
-    auraGrp.add(sp); auraSparks.push({m:sp,a:i/7*Math.PI*2,rr:.55+Math.random()*.35,yy:.3+Math.random()*1.5,sp:1.2+Math.random()*1.4});
+  for(let i=0;i<7;i++){                                     // ประกายลอยขึ้นจากเปลว (ember ฟ้า)
+    const sp=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),sparkMat.clone());
+    auraGrp.add(sp); auraSparks.push({m:sp,a:Math.random()*9,rr:.45+Math.random()*.3,sp:.55+Math.random()*.6});
   }
   auraGrp.visible=false; sc.add(auraGrp);
 }
@@ -10732,18 +10793,24 @@ function auraTick(dt,now){
   if(!on) return;
   if(soccerPlayer) auraGrp.position.copy(soccerPlayer.position);   // 🧍 รอบ 852: ออร่าตามตัวนักเตะ (ตัวถอยหลังบอลแล้ว ไม่ใช่จุดบอล)
   else auraGrp.position.set(sBaseX,0,sBaseZ);
-  auraRings.forEach(r=>{
-    const t=((now/1400)+r.ph)%1;                            // 0→1 = ลอยขึ้นแล้ววนใหม่
-    r.m.position.y=.12+t*2.0;
-    const s=.7+t*1.1; r.m.scale.set(s,s,s);
-    r.m.material.opacity=.55*(1-t)*(1-t);
-    r.m.rotation.z=now/900;
+  // 🔵🔥 รอบ 935: ลิ้นเปลว "เลีย" ด้วยไซน์ 3 ความถี่ไม่ลงตัว (ไม่วนซ้ำเป็นแพตเทิร์น) — เปลวฟ้าจริงไหวนุ่ม ไม่กระตุก
+  const tS=now/1000;
+  auraRings.forEach(fl=>{
+    const lick=.78+.16*Math.sin(tS*fl.f1+fl.p1)+.10*Math.sin(tS*fl.f2+fl.p2)+.06*Math.sin(tS*2.3+fl.p3);
+    const sway=.06*Math.sin(tS*fl.f1*.6+fl.p2)+.04*Math.sin(tS*3.1+fl.p1);   // ปลายส่ายเบา ๆ
+    const a=fl.a+tS*.25*fl.fs;                              // วงเปลวไหลรอบตัวช้า ๆ
+    const h=fl.h*lick;
+    fl.m.position.set(Math.cos(a)*fl.r+sway, h*.5+.06, Math.sin(a)*fl.r);
+    fl.m.scale.set(fl.w*(1.12-lick*.25), h, 1);             // ยิ่งยืดสูงยิ่งเรียว (เปลวจริงโดนอากาศรีด)
+    fl.m.material.opacity=.6+.35*Math.max(0,Math.min(1,(lick-.6)/.5));   // จูนหลังดูภาพ: .45 จางสู้แดดกลางวันไม่ไหว
   });
-  auraSparks.forEach(s=>{
-    const a=s.a+now/1000*s.sp;
-    s.m.position.set(Math.cos(a)*s.rr, s.yy+Math.sin(now/700+s.a)*.22, Math.sin(a)*s.rr);
+  auraSparks.forEach(s=>{                                    // ember ฟ้า: ลอยขึ้นจากกองเปลวแล้วจางหาย วนใหม่
+    const t=(tS*s.sp+s.a)%1, a=s.a+tS*.7;
+    s.m.position.set(Math.cos(a)*s.rr*(1-t*.35), .25+t*1.9, Math.sin(a)*s.rr*(1-t*.35));
+    s.m.material.opacity=.85*(1-t)*(1-t);
+    const sc2=.05*(1-t*.5); s.m.scale.setScalar(Math.max(.3,sc2/.05));
   });
-  if(auraCore){ auraCore.rotation.y=now/1600; auraCore.material.opacity=.13+Math.sin(now/380)*.05; }
+  if(auraCore){ auraCore.rotation.y=now/1600; auraCore.material.opacity=.03+Math.sin(now/420)*.012; }
 }
 /* 🌀 ลำแสงควงสว่าน: พันรอบเส้นไกด์เดิม หมุนตลอด + มีหัวสว่างวิ่งจากต้นทางไปปลายทาง (ตอนกดชาร์จ) */
 function buildDrill(sc){
