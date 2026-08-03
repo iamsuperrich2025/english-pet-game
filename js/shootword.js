@@ -25,7 +25,8 @@
     AIM_H: 122,                 // สูงภาพเล็ง (vh)
     AIM_CX: 0.507, AIM_CY: 0.425, // จุดกึ่งกลางรูศูนย์เล็งบนภาพ (วัดจาก alpha จริงด้วย sight.py)
     AIM_SX: 50, AIM_SY: 50,     // จุดบนจอที่รูศูนย์ทาบ (% กว้าง / % สูง) = จุดที่กระสุนออก
-  };
+    SNAP_R: 0.045,              // 🎯 รอบ 932: รัศมีช่วยเล็ง (สัดส่วนด้านสั้นของจอ) ~22px ที่จอสูง 491
+  };                            //    ครึ่งหนึ่งของระยะห่างระหว่างแผ่น (~24px) → เล็งใกล้ใบไหนโดนใบนั้น ไม่ข้ามไปใบอื่น
   const MINLEN=3, MAXLEN=10;
   const PT_PER_LETTER=2, PERFECT_BONUS=5;      // เรตเดียวกับ 🔎 ค้นหาคำ / ⌨️ พิมพ์คำ
   const DUCK_COIN=3;                           // 🦆 โบนัสเป็ด (เหรียญล้วน ไม่เข้าแต้มอันดับ)
@@ -43,7 +44,10 @@
   /* ---------- สถานะเกม ---------- */
   let three=false, built=false, running=false, opening=false;
   let overlay=null, renderer=null, scene=null, camera=null, clock=0, lastT=0;
-  let yaw=0, pitch=0.1, aimMode=false, lastShot=0, boardLock=0;
+  /* 🎯 รอบ 932 (บั๊กผู้ใช้ "ยิงตัวอักษรแล้วไม่มีอะไรเกิดขึ้น"): pitch เริ่มต้นเดิม 0.10 ตั้งไว้ตอนเป้ายังอยู่ใกล้
+     พอรอบ 923 ขยายระยะเป้า 3 เท่า มุมมองไปยังหิ้งแบนลงเหลือ ~0.00-0.06 rad → กล้องเงยสูงข้ามหัวแผ่นตลอด
+     กากบาท/ปุ่มยิง (ยิงกลางจอเสมอ) จึงพุ่งไปโดนฉากหลัง ไม่โดนแผ่นสักที · 0.04 = กลางกลุ่มเป้าทั้ง 3 แถว */
+  let yaw=0, pitch=0.04, aimMode=false, lastShot=0, boardLock=0;
   let word=null, pos=0, misses=0, streak=0;    // คำปัจจุบัน {w,th} · ตำแหน่งตัวถัดไป · ยิงพลาดในคำนี้
   let queue=[], qGrade=null;                   // คิวคำไม่ซ้ำจนหมดคลัง (สูตรเดียวกับ ws)
   let plates=[], ducks=[], balloons=[], clouds=[], bulbs=[], tickers=[];
@@ -491,13 +495,34 @@
         if(D && D.st!=='run') return false;              // 🦆 เป็ดที่ล้มแล้ว — แผ่นใส quad ห้ามบังกระสุน
         let o=h.object; while(o){ if(o.userData.noHit) return false; o=o.parent; } return true;
       });
-    if(!hits.length){ SND.thud(); return; }
     const h=hits[0];
-    impactFx(h.point);
-    const P=h.object.userData.plate, D=h.object.userData.duck;
+    if(h) impactFx(h.point);
+    const P=h&&h.object.userData.plate, D=h&&h.object.userData.duck;
     if(P && P.st==='up'){ hitPlate(P); return; }
     if(D && D.st==='run'){ hitDuck(D); return; }
+    /* 🎯 รอบ 932 — ช่วยเล็ง (จำเป็น ไม่ใช่ของแถม): หลังขยายระยะ 3 เท่า แผ่นเหลือแค่ ~12×12 px บนจอ
+       และแต่ละแถวมี 6 ใบวางสมมาตร → **กึ่งกลางจอตรงกับ "ช่องว่างระหว่างแผ่น" พอดีทุกแถว**
+       ปุ่มยิง/กากบาทที่ยิงกลางจอเสมอจึงลอดช่องไปโดนฉากหลังตลอด = "ยิงแล้วไม่มีอะไรเกิดขึ้น"
+       → เล็งพลาดในรัศมีแคบ ๆ ให้ snap เข้าแผ่นที่ใกล้จุดเล็งที่สุด (ยังต้องเล็งใกล้ ไม่ใช่ยิงมั่วก็โดน) */
+    const S=nearestPlate(px,py);
+    if(S){ hitPlate(S); return; }
     SND.thud();
+  }
+  /* หาแผ่นที่ "ตั้งอยู่" ซึ่งอยู่ใกล้จุดเล็งบนจอที่สุด ภายในรัศมี TUNE.SNAP_R (สัดส่วนของด้านสั้นของจอ) */
+  function nearestPlate(px,py){
+    if(!camera) return null;
+    const R=Math.min(innerWidth,innerHeight)*TUNE.SNAP_R;
+    let best=null, bestD=R;
+    const v=new THREE.Vector3();
+    plates.forEach(P=>{
+      if(P.st!=='up') return;
+      P.mesh.getWorldPosition(v); v.project(camera);
+      if(v.z>1) return;                                   // อยู่หลังกล้อง
+      const sx=(v.x*0.5+0.5)*innerWidth, sy=(-v.y*0.5+0.5)*innerHeight;
+      const d=Math.hypot(sx-px, sy-py);
+      if(d<bestD){ bestD=d; best=P; }
+    });
+    return best;
   }
   function hitPlate(P){
     const need=word?word.w[pos]:null;
