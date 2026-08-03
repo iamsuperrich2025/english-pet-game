@@ -6545,12 +6545,13 @@ function railWorldClick(w){
 /* 🎫→💰 รอบ 823: หน้าจ่ายค่าเข้าโลก 3D กลาง — แทนที่การ์ดตั๋วแยก 8 ใบเดิม
    ราคาวันนี้ (worldEntryInfo) + ปุ่มชวนเพื่อนเล่นด้วยกัน (openTinvPicker) รวมอยู่ในหน้าเดียว */
 function openWorldEntryDialog(w){
-  const info = worldEntryInfo();
+  const info = worldEntryInfo(w.mode);
   const unlocked = !!state[w.ticketKey];
+  // 🤖🚗 รอบ 945: ส่วนลดเจ้าของหุ่น/รถทบกับส่วนลดวันหยุดได้ — โชว์ทุกเหตุผลที่ลด ห้ามลดเงียบๆ
   const feeHTML = info.free
     ? `<div style="font-size:14px;font-weight:700;color:#2e9e4a;margin:6px 0">🎉 ${escapeHTML(info.reason)}<br>เข้าฟรีวันนี้!</div>`
-    : info.discount
-      ? `<p style="font-size:14px;margin:6px 0">🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
+    : (info.discount || info.ownerDiscount)
+      ? `<p style="font-size:14px;margin:6px 0">${info.discount ? `🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>` : ''}${info.ownerDiscount ? `${escapeHTML(info.ownerReason)}<br>` : ''}ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
       : `<p style="font-size:14px;margin:6px 0">ค่าเข้า <b>🪙${fmtNum(info.fee)}</b></p>`;
   /* 🔓 รอบ 943: โน้ต "ปลดล็อกโลกถัดไป" เลิกใช้ (ไม่มีลำดับโลกแล้ว) → แจ้งเรื่องยืมหุ่น/รถฟรีแทนเมื่อยังไม่มีของตัวเอง */
   const loanNote = (w.mode === 'drive' && !myCar())
@@ -6651,8 +6652,9 @@ function renderRailWorlds(){
     });
     rail.appendChild(box);
   }
-  const info = worldEntryInfo();   // 🎫→💰 รอบ 823: ราคาวันนี้เดียวกันทุกโลก (คิดวันหยุด/วันเด็กแล้ว)
+  // 🎫→💰 รอบ 823: ราคาวันนี้ (คิดวันหยุด/วันเด็กแล้ว) · 🤖🚗 รอบ 945: mecha/drive ราคาต่างกันได้ถ้ามีของตัวเอง → คำนวณแยกต่อโลก
   WORLD3D.forEach(w=>{
+    const info = worldEntryInfo(w.mode);
     const b = document.getElementById('btn-world-' + w.mode);
     if(!b) return;
     const done = Array.isArray(state[w.doneKey]) ? state[w.doneKey].length : 0;
@@ -6681,7 +6683,10 @@ function renderRailWorlds(){
       pr.textContent = info.free ? '🎉 ฟรี!' : '🪙' + fmtNum(info.fee);
       const afford = info.free || state.coins >= info.fee;
       pr.classList.toggle('afford', afford);
-      pr.title = info.free ? info.reason : (info.discount ? info.reason : (afford ? 'เหรียญพอเข้าได้แล้ว!' : ''));
+      pr.title = info.free ? info.reason
+        : info.ownerDiscount ? (info.discount ? info.reason + ' + ' : '') + info.ownerReason
+        : info.discount ? info.reason
+        : (afford ? 'เหรียญพอเข้าได้แล้ว!' : '');
     }
     if(cnt){
       cnt.style.display = (done > 0 && !carBlock) ? '' : 'none';

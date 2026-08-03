@@ -33,20 +33,37 @@ const THAI_HOLIDAYS = {
 };
 const CHILDREN_DAY = '2026-01-10';   // 🧒 เสาร์ที่ 2 ของเดือนมกราคม 2569
 
+/* 🤖🚗 รอบ 945 (ผู้ใช้สั่ง 3 ส.ค. 2026): ส่วนลดค่าเข้าโลก mecha/drive เมื่อมีหุ่น/รถของตัวเอง
+   ลด 30% จากราคาวันนี้ (ทบกับส่วนลดวันหยุด/วันเด็ก — คิดต่อจากราคาที่ลดแล้ว) */
+const OWNER_DISCOUNT_RATE = 0.3;
+
 function todayYMD(){
   const d = new Date();
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 const YOUNG_GRADES = ['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];
 
-/* ราคาเข้าโลก 3D ของ "วันนี้" — {fee, free, discount, reason}
-   reason = ชื่อวันสำคัญ (โชว์บนหน้าจ่ายค่าเข้า ตามกฎ "ห้ามลดราคา/ฟรีเงียบๆ") */
-function worldEntryInfo(){
+/* ราคาเข้าโลก 3D ของ "วันนี้" — {fee, free, discount, reason, ownerDiscount, ownerReason}
+   mode (optional) = w.mode จาก WORLD3D — ใช้เช็กส่วนลดเจ้าของหุ่น/รถเท่านั้น ไม่ใส่ = ไม่มีส่วนลดนี้
+   reason/ownerReason = โชว์บนหน้าจ่ายค่าเข้าเสมอ ตามกฎ "ห้ามลดราคา/ฟรีเงียบๆ" */
+function worldEntryInfo(mode){
   const today = todayYMD();
   if(today === CHILDREN_DAY && YOUNG_GRADES.includes(typeof myGrade==='function' ? myGrade() : '')){
-    return {fee:0, free:true, discount:false, reason:'🧒 วันเด็กแห่งชาติ — นักเรียน ป.1-ป.6 เล่นฟรี!'};
+    return {fee:0, free:true, discount:false, reason:'🧒 วันเด็กแห่งชาติ — นักเรียน ป.1-ป.6 เล่นฟรี!', ownerDiscount:false, ownerReason:''};
   }
   const label = THAI_HOLIDAYS[today];
-  if(label) return {fee:Math.round(WORLD_ENTRY_FEE/2), free:false, discount:true, reason:label};
-  return {fee:WORLD_ENTRY_FEE, free:false, discount:false, reason:''};
+  let fee = label ? Math.round(WORLD_ENTRY_FEE/2) : WORLD_ENTRY_FEE;
+  const discount = !!label;
+  const reason = label || '';
+
+  // 🤖🚗 รอบ 945: มีหุ่น/รถของตัวเอง (ไม่ใช่ของยืม) → ลดเพิ่ม 30% จากราคาข้างบน
+  const hasOwnRobot = mode === 'mecha' && typeof state !== 'undefined' && !!(state.robots && state.robots.length);
+  const hasOwnCar   = mode === 'drive' && typeof myCar === 'function' && !!myCar();
+  let ownerDiscount = false, ownerReason = '';
+  if(hasOwnRobot || hasOwnCar){
+    fee = Math.round(fee * (1 - OWNER_DISCOUNT_RATE));
+    ownerDiscount = true;
+    ownerReason = hasOwnRobot ? '🤖 มีหุ่นยนต์ของตัวเอง — ลดเพิ่ม 30%' : '🚗 มีรถของตัวเอง — ลดเพิ่ม 30%';
+  }
+  return {fee, free:false, discount, reason, ownerDiscount, ownerReason};
 }
