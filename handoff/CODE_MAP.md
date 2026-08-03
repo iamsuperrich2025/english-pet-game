@@ -663,7 +663,7 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picmatch.js (298 บรรทัด · 0 รายการ)
+## js/picmatch.js (341 บรรทัด · 0 รายการ)
 
 ## js/sgaward.js (28 บรรทัด · 0 รายการ)
 
@@ -836,7 +836,7 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,247 บรรทัด · 768 selector)
+## css/lobby.css (5,260 บรรทัด · 770 selector)
 :root:6,5165 · html:15 · body:16,5129,5171 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
@@ -965,6 +965,7 @@ vbRender:148 · vbCardHTML:194
 .tp-thai:5030 · .tp-hint:5032 · .tp-empty:5034 · .tp-keys:5037 · .tp-row:5039 · .tp-row-fn:5041,5074
 .tp-key:5045,5057,5059,5065(+2) · .tp-key-fn:5072 · .tp-fx:5078 · .tp-coinpop:5079 · .tp-pop-pt:5084 · #city-backdrop:5098,5104
 .city-arrive:5105,5106 · .night:5120,5140,5141,5143(+2) · #night-veil:5166 · #screen-picmatch:5217,5218,5235,5236 · .pm-grid:5219 · .pm-card:5220,5224,5225,5228(+6)
+.pm-mode-btn:5239,5242 · .pm-wordcard:5243,5244,5246
 
 ## css/style.css (2,174 บรรทัด · 549 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
