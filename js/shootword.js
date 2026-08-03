@@ -31,9 +31,11 @@
   const DUCK_COIN=3;                           // 🦆 โบนัสเป็ด (เหรียญล้วน ไม่เข้าแต้มอันดับ)
   const COOLDOWN=310;                          // ms ต่อนัด (ปืนอัดลมต้องปั๊มลม)
   const ROWS=[                                 // หิ้ง 3 ชั้นไล่ระดับแบบอัฒจันทร์ — ไกลขึ้น สูงขึ้น แผ่นใหญ่ขึ้น
-    {z:-9,   y:1.05, n:6, w:8.6,  size:0.95},  // (ตอนวัดจริง ชั้นเท่ากันจะบังกันหมด — ต้องยกชั้นหลังพ้นหัวแผ่นชั้นหน้า)
-    {z:-13.5,y:2.35, n:6, w:11.2, size:1.12},
-    {z:-18,  y:4.35, n:6, w:13.8, size:1.32},
+    /* 🎯 รอบ 923: ผู้ใช้สั่งขยายระยะเป้าออกไปอีก 3 เท่า — คูณ z อย่างเดียว (สูง/กว้าง/ขนาดแผ่นเท่าเดิม)
+       ยิงยากขึ้นตามระยะจริง (raycaster แม่นทุกระยะอยู่แล้ว) โหมดเล็งซูม FOV แคบลงช่วยชดเชยความไกล */
+    {z:-27,  y:1.05, n:6, w:8.6,  size:0.95},  // (ตอนวัดจริง ชั้นเท่ากันจะบังกันหมด — ต้องยกชั้นหลังพ้นหัวแผ่นชั้นหน้า)
+    {z:-40.5,y:2.35, n:6, w:11.2, size:1.12},
+    {z:-54,  y:4.35, n:6, w:13.8, size:1.32},
   ];
   const AZ='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const PASTEL=['#ff8a80','#ffd180','#ffff8d','#ccff90','#80d8ff','#b388ff','#ff80ab','#a7ffeb'];
@@ -230,7 +232,7 @@
 
   function buildScene(){
     scene=new THREE.Scene();
-    scene.fog=new THREE.Fog(0xcfeaff, 30, 110);
+    scene.fog=new THREE.Fog(0xcfeaff, 30, 180);   // 🎯 รอบ 923: ดันไกลออกตามระยะเป้าใหม่ ไม่งั้นหิ้งไกลสุดหายในหมอก
     camera=new THREE.PerspectiveCamera(TUNE.FOV, innerWidth/innerHeight, 0.1, 300);
     camera.position.set(0,1.6,0); camera.rotation.order='YXZ';
     raycaster=new THREE.Raycaster();
@@ -316,7 +318,7 @@
     // ฉากหลังไกล — เส้นพื้นในภาพ (ขอบล่าง canvas) ต้องทาบ y=0 พอดี ไม่งั้นรั้ว/ต้นไม้จมดิน
     const bd=new THREE.Mesh(new THREE.PlaneGeometry(120,14),
       new THREE.MeshBasicMaterial({map:backdropTex(), transparent:true}));
-    bd.position.set(0,7,-46); scene.add(bd);
+    bd.position.set(0,7,-76); scene.add(bd);   // 🎯 รอบ 923: ถอยตามหิ้งไกลสุด (-54) ไม่งั้นฉากหลังโผล่มาบังหิ้งชั้น 3
   }
 
   /* แผ่นตัวอักษร 1 แผ่น — บานพับที่ฐาน พับถอยหลังแล้วเด้งกลับ (สเปกผู้ใช้ข้อ 4) */
@@ -425,7 +427,7 @@
   /* 🦆 เป้าเป็ดวิ่ง — โบนัส +3 เหรียญ (ของแถมสไตล์งานวัด ไม่เข้าแต้มอันดับ) */
   function buildDucks(){
     const t=duckTex();
-    [{z:-11.2,y:2.3,dir:1,sp:1.7},{z:-15.7,y:3.95,dir:-1,sp:2.2}].forEach(cfg=>{   // สูงพอโผล่พ้นหัวแผ่นชั้นหน้า
+    [{z:-33.6,y:2.3,dir:1,sp:1.7},{z:-47.1,y:3.95,dir:-1,sp:2.2}].forEach(cfg=>{   // สูงพอโผล่พ้นหัวแผ่นชั้นหน้า (z ×3 รอบ 923 ตามหิ้ง)
       const g=new THREE.Group();
       const pl=new THREE.Mesh(new THREE.PlaneGeometry(0.85,0.85),
         new THREE.MeshBasicMaterial({map:t, transparent:true, side:THREE.DoubleSide}));
@@ -643,6 +645,23 @@
   font:700 clamp(9px,2.2vh,12px) Kanit,system-ui;line-height:1.15;z-index:6}
 #sg-aimbtn .ic{display:block;font-size:clamp(16px,4vh,24px)}
 #sg-aimbtn.on{background:#ffd54f;color:#5a4300;border-color:#fff}
+/* 🔫 รอบ 923: ปุ่มยิงเฉพาะ 2 ตำแหน่งซ้าย-ขวาล่างจอ (ผู้ใช้ขอ — เดิมมีแค่แตะจอสั้นๆ = ยิง)
+   ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง) ต่ำกว่าปุ่ม 🎯 เล็ง พ้นแถบคำ/คำใบ้ */
+.sg-shoot{position:absolute;bottom:8vh;width:clamp(60px,14vh,92px);height:clamp(60px,14vh,92px);
+  border-radius:50%;border:3px solid #ffd54f;background:rgba(255,95,109,.85);color:#fff;cursor:pointer;
+  font:900 clamp(10px,2.3vh,13px) Kanit,system-ui;line-height:1.15;z-index:6;
+  box-shadow:0 4px 0 #c62838,0 6px 14px rgba(0,0,0,.35);-webkit-tap-highlight-color:transparent}
+.sg-shoot .ic{display:block;font-size:clamp(19px,4.8vh,28px)}
+.sg-shoot.down{transform:translateY(3px);box-shadow:0 1px 0 #c62838,0 3px 8px rgba(0,0,0,.3)}
+#sg-shoot-l{left:2vh}
+#sg-shoot-r{right:2vh}
+/* ✛ กากบาทกึ่งกลางจอ — โผล่เฉพาะโหมดถือ (โหมดเล็งมีศูนย์ปืนจริงในภาพ aim.webp อยู่แล้ว ไม่ต้องซ้อน)
+   บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
+#sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;pointer-events:none;z-index:4;opacity:.62}
+#sg-overlay.aim #sg-cross{display:none}
+#sg-cross i{position:absolute;display:block;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.75)}
+#sg-cross i:nth-child(1){left:50%;top:2px;bottom:2px;width:2px;margin-left:-1px}
+#sg-cross i:nth-child(2){top:50%;left:2px;right:2px;height:2px;margin-top:-1px}
 #sg-hint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);color:#fff;
   background:rgba(29,32,58,.6);border-radius:10px;padding:.4vh 12px;font-size:clamp(10px,2.4vh,13px);
   white-space:nowrap;transition:opacity .6s}
@@ -687,13 +706,16 @@
       <img id="sg-gun-hold" src="img/gun/hold.webp" alt="">
       <img id="sg-gun-aim" src="img/gun/aim.webp" alt="">
       <div id="sg-muzzle"></div>
+      <div id="sg-cross"><i></i><i></i></div>
       <div id="sg-hud">
         <div id="sg-word"></div>
         <div id="sg-tl"><b id="sg-coins"></b><span id="sg-chip" class="sga-open" role="button" title="ดูอันดับ Top 10 / รางวัลรายเดือน"></span></div>
         <button id="sg-exit" type="button">✕ ออก</button>
         <button id="sg-aimbtn" type="button"><span class="ic">🎯</span>เล็ง</button>
+        <button id="sg-shoot-l" class="sg-shoot" type="button"><span class="ic">🔫</span>ยิง</button>
+        <button id="sg-shoot-r" class="sg-shoot" type="button"><span class="ic">🔫</span>ยิง</button>
         <div id="sg-streak"></div>
-        <div id="sg-hint">👆 แตะแผ่นตัวอักษร = ยิง · ลากนิ้ว = มองรอบซุ้ม · แตะคำบนป้าย = ฟังเสียง+ใบ้</div>
+        <div id="sg-hint">👆 แตะแผ่น/กดปุ่ม 🔫 = ยิง · ลากนิ้ว = มองรอบซุ้ม · แตะคำบนป้าย = ฟังเสียง+ใบ้</div>
         <div id="sg-banner"></div>
         <div id="sg-fx"></div>
       </div>`;
@@ -706,6 +728,7 @@
     streakEl=overlay.querySelector('#sg-streak');
     overlay.querySelector('#sg-exit').addEventListener('click', close);
     overlay.querySelector('#sg-aimbtn').addEventListener('click', toggleAim);
+    bindShootBtns();
     /* 🏆 กดแต้ม → กระดานประกาศรางวัล (ผูกเองแบบ typing.js — เผื่อยังไม่เคยเปิดกระดานอันดับ) */
     hudChip.addEventListener('click', ()=>{ if(typeof SgAward!=='undefined') SgAward.open(); });
     /* 🔊 แตะป้ายคำ = อ่านออกเสียง + ใบ้ (แผ่นเป้าหมายเต้น 1.4 วิ — บอกใบ้ไม่บอกเลย เด็กยังต้องเล็งเอง) */
@@ -848,7 +871,23 @@
     b.innerHTML=aimMode?'<span class="ic">👁</span>มุมกว้าง':'<span class="ic">🎯</span>เล็ง';
     camera.fov=aimMode?TUNE.FOV_AIM:TUNE.FOV; camera.updateProjectionMatrix();
     SND.thud();
-    if(hintEl) hintEl.textContent=aimMode?'🎯 ลากนิ้วเลื่อนศูนย์ให้ทาบแผ่น แล้วแตะจอเพื่อยิง':'👆 แตะแผ่นตัวอักษร = ยิง · ลากนิ้ว = มองรอบซุ้ม';
+    if(hintEl) hintEl.textContent=aimMode?'🎯 ลากนิ้วเลื่อนศูนย์ให้ทาบแผ่น แล้วแตะจอ/กดปุ่ม 🔫 เพื่อยิง':'👆 แตะแผ่น/กดปุ่ม 🔫 = ยิง · ลากนิ้ว = มองรอบซุ้ม';
+  }
+  /* 🔫 รอบ 923: ปุ่มยิง 2 ตำแหน่งซ้าย-ขวาล่างจอ — ยิงตรงกึ่งกลางจอเสมอ (จุดเดียวกับรูศูนย์เล็ง AIM_SX/AIM_SY = 50/50)
+     pointerdown ไม่ใช่ click — ลดหน่วง เหมือนแป้นพิมพ์คำใน typing.js */
+  function bindShootBtns(){
+    ['sg-shoot-l','sg-shoot-r'].forEach(id=>{
+      const b=overlay.querySelector('#'+id); if(!b) return;
+      const up=()=> b.classList.remove('down');
+      b.addEventListener('pointerdown', e=>{
+        e.preventDefault();
+        b.classList.add('down');
+        shoot(innerWidth*0.5, innerHeight*0.5);
+      });
+      b.addEventListener('pointerup', up);
+      b.addEventListener('pointerleave', up);
+      b.addEventListener('pointercancel', up);
+    });
   }
   function onResize(){
     if(!renderer) return;
@@ -864,6 +903,7 @@
       <h2>🎯 ยิงเป้าคำศัพท์ · สวนสนุก</h2>
       <p>ยิงแผ่นตัวอักษรให้<b>สะกดตรงตามคำบนป้าย</b> ทีละตัว<br>
       👆 แตะแผ่น = ยิง · ลากนิ้ว = มองรอบซุ้ม · ปุ่ม 🎯 = เล็งซูมผ่านศูนย์ปืน<br>
+      🔫 ปุ่มยิงซ้าย-ขวาล่างจอ = ยิงตรงกึ่งกลางจอเสมอ<br>
       ครบคำได้ <b>ความยาว × 2 เหรียญ+แต้ม</b> · ไม่พลาดเลย <b>+${PERFECT_BONUS}</b> · เจอเป็ด 🦆 ยิงได้ +${DUCK_COIN} 🪙</p>
       <p style="font-size:.85em;opacity:.8">แต้มสะสมขึ้นกระดานอันดับ 🎯 — Top 10 รับรางวัลทุกวันที่ 1 (10,000–1,000 🪙)</p>
       <button type="button">🎯 เริ่มเลย!</button>
