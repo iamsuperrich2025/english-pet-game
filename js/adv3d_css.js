@@ -945,24 +945,38 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-drive.cam3 #adv-cardash,.adv-drive.cam3 #adv-carwheel,.adv-drive.cam3 #adv-cargauges,
   .adv-drive.cam3 #adv-bobble,.adv-drive.cam3 #adv-tlglow-l,.adv-drive.cam3 #adv-tlglow-r,
   .adv-drive.cam3 #adv-tlreflect-l,.adv-drive.cam3 #adv-tlreflect-r{display:none}
-  #adv-soccerstart{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:none;z-index:8;
-    width:min(420px,92vw);box-sizing:border-box;background:rgba(10,30,20,.95);border:2px solid #43d17a;
-    border-radius:20px;padding:16px 20px 18px;color:#e6fff0;pointer-events:auto;
-    box-shadow:0 0 30px rgba(67,209,122,.4)}
-  #adv-soccerstart.on{display:block}
-  #adv-soccerstart h3{margin:0 0 12px;text-align:center;font-size:20px;color:#8fffc0}
-  #adv-soccerstart .ss-lab{font-size:13.5px;font-weight:700;color:#a9e8c4;margin:8px 0 6px}
-  #adv-soccerstart .ss-shirts{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}
-  #adv-soccerstart .ss-shirt{width:40px;height:40px;border-radius:10px;border:3px solid rgba(255,255,255,.35);
-    cursor:pointer;padding:0}
-  #adv-soccerstart .ss-shirt.sel{border-color:#fff;box-shadow:0 0 12px rgba(255,255,255,.7);transform:scale(1.08)}
-  #adv-soccerstart .ss-num{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:4px}
-  #adv-soccerstart .ss-num button{width:44px;height:44px;border-radius:12px;border:2px solid #43d17a;
-    background:rgba(67,209,122,.16);color:#c9ffdf;font-size:24px;font-weight:900;font-family:inherit;cursor:pointer}
+  /* 👕 รอบ 939: ห้องแต่งตัวนักเตะเต็มจอ — ทุกอย่างต้องเห็นครบไม่มี scroll แม้จอเตี้ย 812×375 (กฎทอง #7) */
+  #adv-soccerstart{position:absolute;inset:2vh 2vw;display:none;z-index:8;box-sizing:border-box;
+    background:linear-gradient(160deg,rgba(6,38,22,.97),rgba(3,16,10,.98) 55%,rgba(10,26,40,.97));
+    border:2px solid #e8c35a;border-radius:22px;padding:1vh 1.6vw;color:#e6fff0;pointer-events:auto;
+    box-shadow:0 0 44px rgba(232,195,90,.35), inset 0 0 90px rgba(67,209,122,.10)}
+  #adv-soccerstart.on{display:flex;flex-direction:column}
+  #adv-soccerstart h3{margin:.2vh 0 .8vh;text-align:center;font-size:clamp(16px,3.6vh,26px);color:#ffe08a;
+    text-shadow:0 0 14px rgba(255,215,120,.55);letter-spacing:.5px}
+  #adv-soccerstart .ss-body{flex:1;display:flex;gap:1.6vw;min-height:0}
+  #adv-soccerstart .ss-left{flex:0 0 clamp(110px,23vw,230px);display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(67,209,122,.16),rgba(0,0,0,.28) 75%);
+    border:1px solid rgba(232,195,90,.4);border-radius:16px;padding:.6vh .4vw}
+  #adv-soccerstart #ss-prev{width:auto;height:min(78%,44vh);max-width:100%}
+  #adv-soccerstart .ss-patname{font-size:clamp(11px,2.2vh,15px);font-weight:800;color:#ffe08a;margin-top:.4vh;text-align:center}
+  #adv-soccerstart .ss-right{flex:1;display:flex;flex-direction:column;justify-content:space-evenly;min-width:0}
+  #adv-soccerstart .ss-lab{font-size:clamp(11px,2.4vh,15px);font-weight:800;color:#a9e8c4;margin:0 0 .4vh}
+  #adv-soccerstart .ss-shirts{display:flex;flex-wrap:wrap;gap:clamp(4px,.9vw,10px);align-items:center}
+  #adv-soccerstart .ss-shirt{width:clamp(30px,6.4vh,46px);height:clamp(26px,5.6vh,40px);border-radius:8px;
+    border:2px solid rgba(255,255,255,.28);cursor:pointer;padding:1px;background:rgba(255,255,255,.06);line-height:0}
+  #adv-soccerstart .ss-shirt svg{width:100%;height:100%}
+  #adv-soccerstart .ss-shirt.sel{border-color:#ffe08a;box-shadow:0 0 12px rgba(255,224,138,.8);transform:scale(1.1)}
+  #adv-soccerstart .ss-row{display:flex;align-items:center;gap:clamp(8px,1.6vw,20px);flex-wrap:nowrap}
+  #adv-soccerstart .ss-num{display:flex;align-items:center;gap:clamp(6px,1vw,14px)}
+  #adv-soccerstart .ss-num button{width:clamp(30px,6vh,44px);height:clamp(30px,6vh,44px);border-radius:10px;
+    border:2px solid #43d17a;background:rgba(67,209,122,.16);color:#c9ffdf;
+    font-size:clamp(16px,3.4vh,24px);font-weight:900;font-family:inherit;cursor:pointer}
   #adv-soccerstart .ss-num button:active{transform:scale(.92)}
-  #adv-soccerstart #ss-no{font-size:30px;font-weight:900;color:#fff;min-width:56px;text-align:center}
-  #adv-soccerstart #ss-go{display:block;margin:16px auto 0;background:linear-gradient(135deg,#43a047,#2e7d32);
-    color:#fff;border:0;border-radius:14px;font-family:inherit;font-weight:800;font-size:18px;padding:11px 34px;cursor:pointer}
+  #adv-soccerstart #ss-no{font-size:clamp(18px,4.2vh,30px);font-weight:900;color:#fff;min-width:1.6em;text-align:center}
+  #adv-soccerstart #ss-go{margin-left:auto;background:linear-gradient(135deg,#f6c026,#e8940a);
+    color:#3a2400;border:0;border-radius:14px;font-family:inherit;font-weight:900;
+    font-size:clamp(14px,3.4vh,20px);padding:clamp(6px,1.4vh,12px) clamp(16px,3vw,36px);cursor:pointer;
+    box-shadow:0 3px 14px rgba(246,192,38,.45)}
   #adv-soccerstart #ss-go:active{transform:scale(.96)}
   /* 🪙 ป๊อปเหรียญตอนเตะโดนตัวอักษรที่ประกอบคำได้ — เด้งใหญ่แล้วลอยขึ้นจาง (หวือหวาเหมือนจับคู่คำศัพท์) */
   #adv-coinpop{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden}

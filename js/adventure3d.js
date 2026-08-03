@@ -225,6 +225,25 @@ const SOCCER_SHIRTS=[
   {n:'ส้ม',c:0xef6c00},{n:'ม่วง',c:0x8e24aa},{n:'ฟ้า',c:0x29b6f6},{n:'ชมพู',c:0xec407a},
   {n:'ขาว',c:0xf0f0f0},{n:'ดำ',c:0x2b2f36},
 ];
+/* 👕 รอบ 939 (ผู้ใช้ 6 ข้อ): ชุดแข่งเต็มระบบ — กางเกงอีก 1 ชุดสี + ลายเสื้อสไตล์ทีมระดับโลก
+   ลายอ้างอิงชุดจริงที่คุ้นตา (ไม่ใช้ชื่อ/ตราสโมสรจริง เลี่ยงลิขสิทธิ์ · โลโก้เสื้อ = VOCAB WORLD ทุกตัว):
+   ริ้วตั้ง=บาร์ซ่า/ยูเว่ · ริ้วขวาง=เซลติก · สายสะพาย=เปรู/ริเวอร์เพลต · ครึ่งอก=อินเตอร์แบบผ่า ·
+   หัวลูกศร=คลาสสิก · แขนต่างสี=ชุดเยือนยุค 90 · ไล่เฉด=ชุดโมเดิร์น */
+const SOCCER_SHORTS=[
+  {n:'ขาว',c:0xf4f4f4},{n:'ดำ',c:0x23262c},{n:'กรมท่า',c:0x1a2a55},{n:'แดง',c:0xc62828},
+  {n:'น้ำเงิน',c:0x1e59d0},{n:'เขียว',c:0x1e7d3c},{n:'เหลือง',c:0xf0b41e},{n:'ฟ้า',c:0x3fb3f6},
+  {n:'เลือดหมู',c:0x7b1f2b},{n:'เทา',c:0x8a919c},
+];
+const SOCCER_PATTERNS=[
+  {k:'plain',   n:'เรียบคลาสสิก'},
+  {k:'stripes', n:'ริ้วแนวตั้ง'},
+  {k:'hoops',   n:'ริ้วแนวขวาง'},
+  {k:'sash',    n:'สายสะพาย'},
+  {k:'half',    n:'ครึ่งอกสองสี'},
+  {k:'chevron', n:'หัวลูกศร'},
+  {k:'sleeves', n:'แขนต่างสี'},
+  {k:'grad',    n:'ไล่เฉดโมเดิร์น'},
+];
 /* 🏟️ รอบ 928 (ผู้ใช้: "สนามใหญ่ขึ้น 2 เท่า" — ขยายทั้งสนามจริง ระยะเตะไกลขึ้นด้วย):
    สนาม 44×64 → 88×128 · ประตู -19 → -38 · จุดยืนสุ่มไกลสุด ~58m (เดิม ~29m)
    ประตู/บอล/GK ขนาดเท่าเดิม (ของจริงไม่ขยายตามสนาม) · KICK_SPD_MAX 44→52 จากการจำลองฟิสิกส์:
@@ -245,7 +264,7 @@ let sbVel={x:0,y:0,z:0}, sbLive=false, sbRestAt=0, sbKickAt=0, sbGoaled=false;
 let sbInGoal=false;                                        // ⚽ รอบ 405: ลูกนี้ "ผ่านเส้นประตูในกรอบจริง" แล้วหรือยัง (ตาข่ายจะอุ้มเฉพาะลูกที่เข้า)
 let aimYaw=0, aimPitch=0.34, sChg=0, sCharging=false, sKickHeld=false, sPrevV=false, sLegSwing=0;
 let soccerCam1=false;                                      // true=มุมมองบุคคลที่ 1
-let sKitShirt=0xe53935, sKitNo='10';
+let sKitShirt=0xe53935, sKitNo='10', sKitShort=0xf4f4f4, sKitPat='plain';   // 👕 รอบ 939: + กางเกง/ลายเสื้อ
 const AIM_STICK=1.35;                                      // 🕹️ รอบ 398: ตัวคูณความไวสติ๊กเล็ง (มือถือ · ดันสุด=เร็วกว่าปุ่มเดิม)
 /* 🌀 รอบ 400: ลูกปั่นโค้ง "ตั้งก่อนเตะ" แบบ PES — ปัดปุ่มเตะซ้าย/ขวา (หรือ Q/E) ตั้งความโค้ง
    แล้ว "เส้นประวิถีโค้งตามให้เห็นก่อนเตะจริง" (เดิมมีแต่ฟิสิกส์ แต่เส้นประวาดตรงตลอด ผู้เล่นเลยไม่รู้ว่าปั่นได้) */
@@ -275,7 +294,7 @@ const AURA_COST=100, AURA_MS=60*60*1000, AURA_SPD=100/KICK_SPD_MAX;
    (รอบ 853 ผู้ใช้: หางไฟ/ควันต้องยาวขึ้นเพราะแรงลมปะทะ + ควันต้องชัดกว่าเดิมมาก → พ่นถี่ขึ้น 2 เท่า อายุยาวขึ้น ก้อนใหญ่ทึบขึ้น) */
 const FIRE_CHG=30, SMOKE_MAX=180, SMOKE_LIFE=1.8, SMOKE_GAP=13;   // % ไฟติด · จำนวนก้อนควันสูงสุด · อายุควัน(วิ) · ช่วงพ่น(ms)
 let fireGrp=null, fireFlames=[], smokePool=[], smokeIdx=0, _smokeAt=0, sbFlame=false;
-let auraGrp=null, auraRings=[], auraSparks=[], auraCore=null, auraBarEl=null, auraBtnEl=null;
+let auraGrp=null, auraRings=[], auraSparks=[], auraCoil=[], auraCore=null, auraBarEl=null, auraBtnEl=null;   // 🌀 รอบ 939: + เกลียวไฟส้ม
 let drillMesh=null, drillMat=null, drillPhase=0, _auraHudAt=0;
 let fkOn=false, fkWall=null, fkMen=[];
 let sCurl=0, curlEl=null, _curlShown=null;                 // -1 โค้งซ้าย .. +1 โค้งขวา
@@ -4924,13 +4943,27 @@ function buildDom(){
     <div class="mecha-btn" id="mecha-right">▶</div>
     <div class="mecha-btn" id="mecha-fire">🔫</div>
     <div class="mecha-btn" id="mecha-fire2">🔫</div>
-    <div id="adv-soccerstart">
-      <h3>⚽ เลือกชุดนักเตะ</h3>
-      <div class="ss-lab">สีเสื้อ</div>
-      <div class="ss-shirts" id="ss-shirts"></div>
-      <div class="ss-lab">เบอร์หลังเสื้อ</div>
-      <div class="ss-num"><button id="ss-minus" type="button">−</button><span id="ss-no">10</span><button id="ss-plus" type="button">+</button></div>
-      <button id="ss-go" type="button">⚽ เตะเลย!</button>
+    <div id="adv-soccerstart"><!-- 👕 รอบ 939: ห้องแต่งตัวนักเตะเต็มจอ — พรีวิวสด + เสื้อ/กางเกง/ลาย/เบอร์ -->
+      <h3>⚽ ห้องแต่งตัวนักเตะ ⚽</h3>
+      <div class="ss-body">
+        <div class="ss-left">
+          <canvas id="ss-prev" width="300" height="380"></canvas>
+          <div class="ss-patname" id="ss-patname"></div>
+        </div>
+        <div class="ss-right">
+          <div class="ss-lab">👕 สีเสื้อ</div>
+          <div class="ss-shirts" id="ss-shirts"></div>
+          <div class="ss-lab">🩳 สีกางเกง</div>
+          <div class="ss-shirts" id="ss-shorts"></div>
+          <div class="ss-lab">✨ ลายเสื้อ (สไตล์นักเตะระดับโลก)</div>
+          <div class="ss-shirts" id="ss-pats"></div>
+          <div class="ss-row">
+            <div class="ss-lab" style="margin:0">🔢 เบอร์</div>
+            <div class="ss-num"><button id="ss-minus" type="button">−</button><span id="ss-no">10</span><button id="ss-plus" type="button">+</button></div>
+            <button id="ss-go" type="button">⚽ ลงสนาม!</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="adv-hud" id="adv-hint"></div>
     <div id="adv-intro"></div>`;
@@ -5237,8 +5270,8 @@ function buildDom(){
   auraBtnEl=overlayEl.querySelector('#adv-aura');
   auraBarEl=overlayEl.querySelector('#adv-aurabar');
   auraBtnEl.addEventListener('click',e=>{ e.preventDefault(); e.stopPropagation(); auraBuy(); });
-  overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
-  overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; sfx.select(); });
+  overlayEl.querySelector('#ss-minus').addEventListener('click',()=>{ let n=Math.max(1,(+sKitNo||10)-1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; if(soccerStartEl&&soccerStartEl._ssPaint) soccerStartEl._ssPaint(); sfx.select(); });
+  overlayEl.querySelector('#ss-plus').addEventListener('click',()=>{ let n=Math.min(99,(+sKitNo||10)+1); sKitNo=String(n); overlayEl.querySelector('#ss-no').textContent=sKitNo; if(soccerStartEl&&soccerStartEl._ssPaint) soccerStartEl._ssPaint(); sfx.select(); });
   overlayEl.querySelector('#ss-go').addEventListener('click',()=>{ sfx.select(); soccerKitGo(); });
 
   // 🤖 ปุ่มบังคับหุ่นยนต์ (กดค้าง)
@@ -10613,11 +10646,54 @@ function soccerNumTex(no){
   c.fillStyle='#fff'; c.fillText(s,64,66);
   return new THREE.CanvasTexture(cv);
 }
-/* หุ่นนักเตะบล็อก: เสื้อสีเลือก + เบอร์หลังเสื้อ (หัน +Z = ด้านหลัง เห็นจากกล้องหลังบอล) · ขวา = ขาเตะ */
-function makeSoccerPlayer(shirtColor,no){
+/* ==== 👕 รอบ 939: ระบบชุดแข่ง — ลายเสื้อ + โลโก้ VOCAB WORLD + กางเกงเลือกสี ==== */
+const ssCss=c=>'#'+('000000'+c.toString(16)).slice(-6);
+/* สีรอง (ลายริ้ว/สายสะพาย): เสื้อเข้ม→ขาว · เสื้อสว่าง→กรมท่าเข้ม (คู่สีชุดแข่งจริงส่วนใหญ่) */
+function ssSec(c){
+  const r=(c>>16)&255,g=(c>>8)&255,b=c&255;
+  return (r*.299+g*.587+b*.114)>150 ? 0x1d2440 : 0xf4f6fa;
+}
+/* วาด "ลายเสื้อ" ลงพื้นที่ w×h — ใช้ร่วมกัน 3 ที่: เทกซ์เจอร์ตัวหุ่น · พรีวิวใหญ่ · ชิปเลือกลาย */
+function ssPaintPattern(c,w,h,col,pat){
+  const sec=ssCss(ssSec(col));
+  c.fillStyle=ssCss(col); c.fillRect(0,0,w,h);
+  c.fillStyle=sec;
+  if(pat==='stripes'){ const n=5,sw=w/(n*2-1); for(let i=0;i<n;i++) c.fillRect(i*2*sw,0,sw,h); }
+  else if(pat==='hoops'){ const n=4,sh=h/(n*2); for(let i=0;i<n;i++) c.fillRect(0,(i*2+1)*sh,w,sh); }
+  else if(pat==='sash'){ c.beginPath(); c.moveTo(0,0); c.lineTo(w*.34,0); c.lineTo(w,h*.72); c.lineTo(w,h); c.lineTo(w*.72,h); c.lineTo(0,h*.30); c.closePath(); c.fill(); }
+  else if(pat==='half'){ c.fillRect(0,0,w/2,h); }
+  else if(pat==='chevron'){ c.beginPath(); c.moveTo(0,h*.18); c.lineTo(w/2,h*.44); c.lineTo(w,h*.18); c.lineTo(w,h*.40); c.lineTo(w/2,h*.66); c.lineTo(0,h*.40); c.closePath(); c.fill(); }
+  else if(pat==='sleeves'){ c.fillRect(0,0,w,h*.10); }           // ตัวเสื้อ: แถบบ่าบาง (แขนต่างสีไปทาที่แขนจริง)
+  else if(pat==='grad'){ const g=c.createLinearGradient(0,0,0,h); g.addColorStop(0,ssCss(col)); g.addColorStop(1,sec); c.fillStyle=g; c.fillRect(0,0,w,h); }
+}
+/* เทกซ์เจอร์หน้าอก/หลัง/ข้างลำตัว — โลโก้ "VOCAB WORLD" ทุกตัว (ผู้ใช้สั่งข้อ 4) */
+function soccerShirtTex(col,pat,face){
+  const S=256, cv=document.createElement('canvas'); cv.width=cv.height=S;
+  const c=cv.getContext('2d');
+  ssPaintPattern(c,S,S,col,pat);
+  const g=c.createLinearGradient(0,0,S,0);                       // แสงเงาผ้านุ่ม ๆ ให้ดูมีมิติ
+  g.addColorStop(0,'rgba(0,0,0,.16)'); g.addColorStop(.25,'rgba(255,255,255,.05)');
+  g.addColorStop(.75,'rgba(255,255,255,.05)'); g.addColorStop(1,'rgba(0,0,0,.16)');
+  c.fillStyle=g; c.fillRect(0,0,S,S);
+  if(face!=='side'){
+    const lum=((col>>16)&255)*.299+((col>>8)&255)*.587+(col&255)*.114;
+    const ink=lum>150?'#1d2440':'#ffffff', edge=lum>150?'rgba(255,255,255,.6)':'rgba(0,0,0,.45)';
+    c.textAlign='center'; c.lineWidth=5; c.strokeStyle=edge; c.fillStyle=ink;
+    if(face==='chest'){                                          // อก: โลโก้ใหญ่ 2 บรรทัดแบบสปอนเซอร์
+      c.font='900 44px Arial'; c.strokeText('VOCAB',S/2,108); c.fillText('VOCAB',S/2,108);
+      c.strokeText('WORLD',S/2,158); c.fillText('WORLD',S/2,158);
+    } else {                                                     // หลัง: โลโก้เหนือเบอร์ (เบอร์เป็น plane แยกทับกลาง)
+      c.font='900 30px Arial'; c.strokeText('VOCAB WORLD',S/2,44); c.fillText('VOCAB WORLD',S/2,44);
+    }
+  }
+  const t=new THREE.CanvasTexture(cv); t.anisotropy=4; return t;
+}
+/* หุ่นนักเตะบล็อก: เสื้อลาย+โลโก้ · กางเกงเลือกสี · เบอร์หลังเสื้อ (หัน +Z = ด้านหลัง เห็นจากกล้องหลังบอล) · ขวา = ขาเตะ */
+function makeSoccerPlayer(shirtColor,no,shortColor,pat){
+  shortColor=shortColor==null?0xf4f4f4:shortColor; pat=pat||'plain';
   const g=new THREE.Group();
   g.rotation.order='YXZ';   // 🧍 รอบ 852: หมุน yaw ก่อนค่อยเอนตัว (rotation.x) — การเอนจึงสัมพัทธ์กับทิศที่หันเสมอ
-  const skin=blkMat(0xffcf9e), shirt=blkMat(shirtColor), shorts=blkMat(0xffffff), hairM=blkMat(0x2b2320), boot=blkMat(0x232323);
+  const skin=blkMat(0xffcf9e), shorts=blkMat(shortColor), hairM=blkMat(0x2b2320), boot=blkMat(0x232323);
   const legs=[];
   [-0.15,0.15].forEach(x=>{
     const piv=new THREE.Group(); piv.position.set(x,.5,0);
@@ -10626,12 +10702,20 @@ function makeSoccerPlayer(shirtColor,no){
     const bt=new THREE.Mesh(blkGeo(.22,.14,.34),boot); bt.position.set(0,-.62,.05); piv.add(bt);
     g.add(piv); legs.push(piv);
   });
-  const torso=new THREE.Mesh(blkGeo(.58,.62,.34),shirt); torso.position.y=.82; g.add(torso);
+  // 👕 รอบ 939: ลำตัว 6 หน้า — อก(-z)/หลัง(+z) มีลาย+โลโก้ · ข้างลำตัวลายล้วน · บน-ล่างสีพื้น
+  const mSide=new THREE.MeshLambertMaterial({map:soccerShirtTex(shirtColor,pat,'side')});
+  const mChest=new THREE.MeshLambertMaterial({map:soccerShirtTex(shirtColor,pat,'chest')});
+  const mBack=new THREE.MeshLambertMaterial({map:soccerShirtTex(shirtColor,pat,'back')});
+  const mPlainT=blkMat(shirtColor);
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(.58,.62,.34),
+    [mSide,mSide,mPlainT,mPlainT,mBack,mChest]);   // [+x,-x,+y,-y,+z(หลัง),-z(อก)]
+  torso.position.y=.82; g.add(torso);
   const num=new THREE.Mesh(new THREE.PlaneGeometry(.4,.4),
     new THREE.MeshBasicMaterial({map:soccerNumTex(no),transparent:true}));
-  num.position.set(0,.9,.18); g.add(num);                        // ด้าน +Z (หลัง)
+  num.position.set(0,.86,.18); g.add(num);                       // ด้าน +Z (หลัง) — ขยับลงหลบโลโก้บนหลัง
+  const armC = pat==='sleeves' ? ssSec(shirtColor) : shirtColor; // ✨ ลาย "แขนต่างสี"
   [-1,1].forEach(s=>{
-    const arm=new THREE.Mesh(blkGeo(.15,.5,.2),shirt); arm.position.set(s*.4,.82,0); arm.rotation.z=s*-.08; g.add(arm);
+    const arm=new THREE.Mesh(blkGeo(.15,.5,.2),blkMat(armC)); arm.position.set(s*.4,.82,0); arm.rotation.z=s*-.08; g.add(arm);
     const hand=new THREE.Mesh(blkGeo(.14,.14,.16),skin); hand.position.set(s*.44,.53,0); g.add(hand);
   });
   const head=new THREE.Mesh(blkGeo(.44,.44,.44),skin); head.position.y=1.32; g.add(head);
@@ -10747,8 +10831,18 @@ function buildAura(sc){
       p1:Math.random()*9, p2:Math.random()*9, p3:Math.random()*9,
       f1:4.5+Math.random()*2.5, f2:7.5+Math.random()*4, fs:.8+Math.random()*.6});
   };
-  for(let i=0;i<12;i++) mkFlame(.52+Math.random()*.14, .38+Math.random()*.14, .9+Math.random()*.4);   // วงนอกเตี้ย
-  for(let i=0;i<6;i++)  mkFlame(.28+Math.random()*.10, .5+Math.random()*.12, 1.5+Math.random()*.5);   // ลิ้นในสูงถึงลำตัว
+  // 🔥 รอบ 939 (ผู้ใช้): เปลว "สูงท่วมหัว" — ลิ้นในยืดถึง ~2.1-3.2m (หัวหุ่นอยู่ ~1.6m) · วงนอกก็สูงขึ้นตาม
+  for(let i=0;i<12;i++) mkFlame(.52+Math.random()*.14, .42+Math.random()*.14, 1.15+Math.random()*.45); // วงนอก
+  for(let i=0;i<6;i++)  mkFlame(.26+Math.random()*.10, .56+Math.random()*.14, 2.1+Math.random()*.55);  // ลิ้นในท่วมหัว
+  // 🌀 รอบ 939 (ผู้ใช้): เกลียวเปลวไฟ "สีส้ม" 2 สาย พันรอบจากโคนถึงปลาย หมุนเร็วดูมีพลัง
+  auraCoil=[];
+  const coilTex=ballFXTex(true);                              // ใช้สไปรต์ไฟส้มตัวเดียวกับลูกไฟ (โทนส้มจริงอยู่แล้ว)
+  for(let i=0;i<26;i++){
+    const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:coilTex,transparent:true,depthWrite:false,
+      blending:THREE.AdditiveBlending,opacity:.85}));
+    auraGrp.add(sp);
+    auraCoil.push({m:sp, t:i/25, st:i%2});                    // t=ตำแหน่งบนเกลียว 0โคน..1ปลาย · st=สายที่ 1/2 (เฟสห่างครึ่งรอบ)
+  }
   auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.5,.66,1.9,14,1,true),     // เปลวนอกเกือบใส (ข้อ ②)
     new THREE.MeshBasicMaterial({color:0x5548ff,transparent:true,opacity:.04,side:THREE.DoubleSide,
       depthWrite:false,blending:THREE.AdditiveBlending}));   // จูนหลังดูภาพ: .07 เห็นเป็น "กล่องแก้ว" สี่เหลี่ยม (silhouette ทรงกระบอก) — ลดจนแค่เรือง
@@ -10793,17 +10887,31 @@ function auraTick(dt,now){
   if(!on) return;
   if(soccerPlayer) auraGrp.position.copy(soccerPlayer.position);   // 🧍 รอบ 852: ออร่าตามตัวนักเตะ (ตัวถอยหลังบอลแล้ว ไม่ใช่จุดบอล)
   else auraGrp.position.set(sBaseX,0,sBaseZ);
-  // 🔵🔥 รอบ 935: ลิ้นเปลว "เลีย" ด้วยไซน์ 3 ความถี่ไม่ลงตัว (ไม่วนซ้ำเป็นแพตเทิร์น) — เปลวฟ้าจริงไหวนุ่ม ไม่กระตุก
+  // 🔵🔥 รอบ 935: ลิ้นเปลว "เลีย" ด้วยไซน์ 3 ความถี่ไม่ลงตัว (ไม่วนซ้ำเป็นแพตเทิร์น)
+  // 💥 รอบ 939 (ผู้ใช้): แรงขึ้น — ขยับเร็วขึ้น 1.35 เท่า · ช่วงยืดกว้างขึ้น (.5-1.24) · ส่ายแรงขึ้นเกือบเท่าตัว
   const tS=now/1000;
   auraRings.forEach(fl=>{
-    const lick=.78+.16*Math.sin(tS*fl.f1+fl.p1)+.10*Math.sin(tS*fl.f2+fl.p2)+.06*Math.sin(tS*2.3+fl.p3);
-    const sway=.06*Math.sin(tS*fl.f1*.6+fl.p2)+.04*Math.sin(tS*3.1+fl.p1);   // ปลายส่ายเบา ๆ
-    const a=fl.a+tS*.25*fl.fs;                              // วงเปลวไหลรอบตัวช้า ๆ
+    const lick=.82+.22*Math.sin(tS*fl.f1*1.35+fl.p1)+.14*Math.sin(tS*fl.f2*1.35+fl.p2)+.06*Math.sin(tS*2.3+fl.p3);
+    const sway=.10*Math.sin(tS*fl.f1*.8+fl.p2)+.07*Math.sin(tS*4.2+fl.p1);   // ปลายส่ายแรง
+    const a=fl.a+tS*.4*fl.fs;                               // วงเปลวไหลรอบตัวเร็วขึ้น
     const h=fl.h*lick;
     fl.m.position.set(Math.cos(a)*fl.r+sway, h*.5+.06, Math.sin(a)*fl.r);
     fl.m.scale.set(fl.w*(1.12-lick*.25), h, 1);             // ยิ่งยืดสูงยิ่งเรียว (เปลวจริงโดนอากาศรีด)
-    fl.m.material.opacity=.6+.35*Math.max(0,Math.min(1,(lick-.6)/.5));   // จูนหลังดูภาพ: .45 จางสู้แดดกลางวันไม่ไหว
+    fl.m.material.opacity=.6+.35*Math.max(0,Math.min(1,(lick-.6)/.5));
   });
+  // 🌀 รอบ 939: เกลียวไฟส้ม 2 สายพันขึ้นจากโคนถึงปลาย — หมุนเร็ว 5.5 rad/s + คลื่นความสูงตามจังหวะเปลว
+  {
+    const coilH=2.4+.35*Math.sin(tS*3.7)+.2*Math.sin(tS*7.1);   // ยอดเกลียวเต้นตามพลัง (~2-2.95m ท่วมหัว)
+    auraCoil.forEach(cl=>{
+      const t=cl.t;
+      const a=tS*5.5 + t*Math.PI*4 + cl.st*Math.PI;             // หมุนไว + พัน 2 รอบจากโคนถึงยอด · 2 สายห่างครึ่งรอบ
+      const r=.6-(t*.38) + .04*Math.sin(tS*9+t*12);             // โคนกว้าง-ยอดสอบ + สั่นรัศมีถี่ (ดุดัน)
+      cl.m.position.set(Math.cos(a)*r, .12+t*coilH, Math.sin(a)*r);
+      const s=.34*(1-t*.45)*(1+.25*Math.sin(tS*11+t*9));        // ก้อนไฟเต้นถี่
+      cl.m.scale.set(s,s,1);
+      cl.m.material.opacity=(.9-t*.35)*(0.75+.25*Math.sin(tS*13+t*7));
+    });
+  }
   auraSparks.forEach(s=>{                                    // ember ฟ้า: ลอยขึ้นจากกองเปลวแล้วจางหาย วนใหม่
     const t=(tS*s.sp+s.a)%1, a=s.a+tS*.7;
     s.m.position.set(Math.cos(a)*s.rr*(1-t*.35), .25+t*1.9, Math.sin(a)*s.rr*(1-t*.35));
@@ -11104,8 +11212,10 @@ function soccerCamera(dt,dx,dz){
     camera.lookAt(sBaseX+dx*12,1.55+Math.sin(aimPitch)*7,sBaseZ+dz*12);
     return;
   }
+  // 📷 รอบ 939 (ผู้ใช้): กล้องหลังนักเตะต่ำลง+ใกล้ขึ้น (ยืนเล็ง 8m/สูง 4.8 → 5.2m/สูง 3.1) · ตอนบอลพุ่งคงเดิม
   const foc = sbLive? b : {x:sBaseX,y:1.1,z:sBaseZ-1.5};
-  const cx=foc.x - dx*8, cz=foc.z - dz*8, cy=(sbLive?b.y:1.4)+3.4;
+  const camD = sbLive?8:5.2, camH = sbLive?3.4:1.7;
+  const cx=foc.x - dx*camD, cz=foc.z - dz*camD, cy=(sbLive?b.y:1.4)+camH;
   camera.position.x+=(cx-camera.position.x)*k;
   camera.position.y+=(cy-camera.position.y)*k;
   camera.position.z+=(cz-camera.position.z)*k;
@@ -11310,26 +11420,95 @@ function tickSoccer(dt,now){
     }
   });
 }
+/* 👕 รอบ 939: รูปทรงเสื้อ/กางเกงบน canvas (ใช้ทั้งสวอตช์เล็ก + พรีวิวใหญ่ — ที่เดียวเปลี่ยนทุกที่ตาม) */
+function ssShirtPath(c,w,h){
+  const px=x=>x/44*w, py=y=>y/40*h;
+  c.beginPath();
+  c.moveTo(px(14),py(3)); c.lineTo(px(18),py(1)); c.quadraticCurveTo(px(22),py(6),px(26),py(1));
+  c.lineTo(px(30),py(3)); c.lineTo(px(42),py(9)); c.lineTo(px(38),py(17)); c.lineTo(px(31),py(14));
+  c.lineTo(px(31),py(39)); c.lineTo(px(13),py(39)); c.lineTo(px(13),py(14)); c.lineTo(px(6),py(17));
+  c.lineTo(px(2),py(9)); c.closePath();
+}
+function ssShortsPath(c,w,h){
+  const px=x=>x/44*w, py=y=>y/40*h;
+  c.beginPath(); c.moveTo(px(8),py(6)); c.lineTo(px(36),py(6)); c.lineTo(px(40),py(34));
+  c.lineTo(px(25),py(34)); c.lineTo(px(22),py(21)); c.lineTo(px(19),py(34)); c.lineTo(px(4),py(34)); c.closePath();
+}
+function ssPaintSwatchShirt(cv,col,pat){
+  const c=cv.getContext('2d'), w=cv.width, h=cv.height; c.clearRect(0,0,w,h);
+  c.save(); ssShirtPath(c,w,h); c.clip(); ssPaintPattern(c,w,h,col,pat||'plain'); c.restore();
+  ssShirtPath(c,w,h); c.lineWidth=Math.max(1.5,w*.05); c.strokeStyle='rgba(255,255,255,.8)'; c.stroke();
+}
+function ssPaintSwatchShorts(cv,col){
+  const c=cv.getContext('2d'), w=cv.width, h=cv.height; c.clearRect(0,0,w,h);
+  c.save(); ssShortsPath(c,w,h); c.clip(); c.fillStyle=ssCss(col); c.fillRect(0,0,w,h);
+  c.fillStyle='rgba(255,255,255,.25)'; c.fillRect(0,h*.15,w,h*.06); c.restore();   // ขอบเอวจาง
+  ssShortsPath(c,w,h); c.lineWidth=Math.max(1.5,w*.05); c.strokeStyle='rgba(255,255,255,.8)'; c.stroke();
+}
+/* พรีวิวใหญ่: เสื้อลาย+โลโก้ VOCAB WORLD + กางเกง+เบอร์ที่ขา — เห็นชุดจริงก่อนลงสนาม */
+function ssPreviewDraw(cv){
+  const c=cv.getContext('2d'), W=cv.width, H=cv.height; c.clearRect(0,0,W,H);
+  const glow=c.createRadialGradient(W/2,H*.4,20,W/2,H*.4,W*.75);       // แสงสปอตไลต์หลังชุด
+  glow.addColorStop(0,'rgba(255,224,138,.28)'); glow.addColorStop(1,'rgba(0,0,0,0)');
+  c.fillStyle=glow; c.fillRect(0,0,W,H);
+  c.save(); c.translate(W*.033,H*.02);                                  // 👕 เสื้อ
+  const sw=W*.934, sh=H*.55;
+  c.save(); ssShirtPath(c,sw,sh); c.clip(); ssPaintPattern(c,sw,sh,sKitShirt,sKitPat);
+  const lum=((sKitShirt>>16)&255)*.299+((sKitShirt>>8)&255)*.587+(sKitShirt&255)*.114;
+  const ink=lum>150?'#1d2440':'#ffffff', edge=lum>150?'rgba(255,255,255,.6)':'rgba(0,0,0,.45)';
+  c.textAlign='center'; c.font='900 '+(sw*.1)+'px Arial'; c.lineWidth=sw*.016; c.strokeStyle=edge; c.fillStyle=ink;
+  c.strokeText('VOCAB',sw/2,sh*.5); c.fillText('VOCAB',sw/2,sh*.5);      // .14 ล้นขอบอกเสื้อ (โดน clip เหลือ OCAI)
+  c.strokeText('WORLD',sw/2,sh*.66); c.fillText('WORLD',sw/2,sh*.66);
+  c.restore();
+  ssShirtPath(c,sw,sh); c.lineWidth=3; c.strokeStyle='rgba(255,255,255,.85)'; c.stroke();
+  c.restore();
+  c.save(); c.translate(W*.18,H*.58);                                   // 🩳 กางเกง
+  const qw=W*.64, qh=H*.34;
+  c.save(); ssShortsPath(c,qw,qh); c.clip(); c.fillStyle=ssCss(sKitShort); c.fillRect(0,0,qw,qh);
+  c.fillStyle='rgba(255,255,255,.22)'; c.fillRect(0,qh*.15,qw,qh*.05);
+  const slum=((sKitShort>>16)&255)*.299+((sKitShort>>8)&255)*.587+(sKitShort&255)*.114;
+  c.textAlign='center'; c.font='900 '+(qh*.34)+'px Arial';
+  c.lineWidth=qh*.05; c.strokeStyle=slum>150?'rgba(255,255,255,.7)':'rgba(0,0,0,.5)';
+  c.fillStyle=slum>150?'#1d2440':'#fff';
+  c.strokeText(sKitNo,qw*.72,qh*.62); c.fillText(sKitNo,qw*.72,qh*.62); // เบอร์ที่ขากางเกงแบบชุดจริง
+  c.restore();
+  ssShortsPath(c,qw,qh); c.lineWidth=3; c.strokeStyle='rgba(255,255,255,.85)'; c.stroke();
+  c.restore();
+}
 function soccerKitShow(){
   if(!soccerStartEl) return;
   running=false;
   sKitShirt=state.soccerShirt||SOCCER_SHIRTS[0].c;
   sKitNo=String(state.soccerNo||'10');
-  const grid=soccerStartEl.querySelector('#ss-shirts');
-  grid.innerHTML=SOCCER_SHIRTS.map(s=>
-    `<button class="ss-shirt${s.c===sKitShirt?' sel':''}" data-c="${s.c}" title="${s.n}" style="background:#${('000000'+s.c.toString(16)).slice(-6)}"></button>`).join('');
-  grid.querySelectorAll('.ss-shirt').forEach(b=>b.addEventListener('click',()=>{
-    sKitShirt=+b.dataset.c; sfx.select();
-    grid.querySelectorAll('.ss-shirt').forEach(x=>x.classList.toggle('sel',x===b));
-  }));
+  sKitShort=state.soccerShort==null?SOCCER_SHORTS[0].c:state.soccerShort;
+  sKitPat=state.soccerPat||'plain';
+  const prev=soccerStartEl.querySelector('#ss-prev');
+  const gS=soccerStartEl.querySelector('#ss-shirts'), gQ=soccerStartEl.querySelector('#ss-shorts'), gP=soccerStartEl.querySelector('#ss-pats');
+  const repaintPats=()=>gP.querySelectorAll('.ss-shirt').forEach(b=>ssPaintSwatchShirt(b.firstChild,sKitShirt,b.dataset.k));
+  const paint=()=>{ ssPreviewDraw(prev);
+    soccerStartEl.querySelector('#ss-patname').textContent='✨ '+((SOCCER_PATTERNS.find(p=>p.k===sKitPat)||{}).n||'');
+    repaintPats(); };
+  soccerStartEl._ssPaint=paint;                                  // ให้ปุ่ม +/- เบอร์ (handler static) เรียกวาดซ้ำได้
+  gS.innerHTML=SOCCER_SHIRTS.map(s=>`<button class="ss-shirt${s.c===sKitShirt?' sel':''}" data-c="${s.c}" title="${s.n}"><canvas width="44" height="40"></canvas></button>`).join('');
+  gS.querySelectorAll('.ss-shirt').forEach(b=>{ ssPaintSwatchShirt(b.firstChild,+b.dataset.c,'plain');
+    b.addEventListener('click',()=>{ sKitShirt=+b.dataset.c; sfx.select();
+      gS.querySelectorAll('.ss-shirt').forEach(x=>x.classList.toggle('sel',x===b)); paint(); }); });
+  gQ.innerHTML=SOCCER_SHORTS.map(s=>`<button class="ss-shirt${s.c===sKitShort?' sel':''}" data-c="${s.c}" title="${s.n}"><canvas width="44" height="40"></canvas></button>`).join('');
+  gQ.querySelectorAll('.ss-shirt').forEach(b=>{ ssPaintSwatchShorts(b.firstChild,+b.dataset.c);
+    b.addEventListener('click',()=>{ sKitShort=+b.dataset.c; sfx.select();
+      gQ.querySelectorAll('.ss-shirt').forEach(x=>x.classList.toggle('sel',x===b)); paint(); }); });
+  gP.innerHTML=SOCCER_PATTERNS.map(p=>`<button class="ss-shirt${p.k===sKitPat?' sel':''}" data-k="${p.k}" title="${p.n}"><canvas width="44" height="40"></canvas></button>`).join('');
+  gP.querySelectorAll('.ss-shirt').forEach(b=>{ b.addEventListener('click',()=>{ sKitPat=b.dataset.k; sfx.select();
+      gP.querySelectorAll('.ss-shirt').forEach(x=>x.classList.toggle('sel',x===b)); paint(); }); });
   soccerStartEl.querySelector('#ss-no').textContent=sKitNo;
+  paint();
   soccerStartEl.classList.add('on');
 }
 function soccerKitGo(){
-  state.soccerShirt=sKitShirt; state.soccerNo=sKitNo; saveState();
+  state.soccerShirt=sKitShirt; state.soccerNo=sKitNo; state.soccerShort=sKitShort; state.soccerPat=sKitPat; saveState();
   soccerStartEl.classList.remove('on');
   if(soccerPlayer && scene) scene.remove(soccerPlayer);
-  soccerPlayer=makeSoccerPlayer(sKitShirt,sKitNo);
+  soccerPlayer=makeSoccerPlayer(sKitShirt,sKitNo,sKitShort,sKitPat);
   soccerPlayer.position.set(sBaseX,0,sBaseZ); scene.add(soccerPlayer);
   SoccerAudio.amb();                                   // 🔊 รอบ 396: ฮัมฝูงชน (เริ่มหลัง gesture กดปุ่มลงสนาม)
   soccerGKEnsure();                                    // 🧤 รอบ 397: น้องตัว active มายืนเฝ้าประตู
