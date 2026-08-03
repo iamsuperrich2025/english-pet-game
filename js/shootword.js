@@ -508,10 +508,14 @@
     if(S){ hitPlate(S); return; }
     SND.thud();
   }
-  /* หาแผ่นที่ "ตั้งอยู่" ซึ่งอยู่ใกล้จุดเล็งบนจอที่สุด ภายในรัศมี TUNE.SNAP_R (สัดส่วนของด้านสั้นของจอ) */
+  /* หาแผ่นที่ "ตั้งอยู่" ซึ่งอยู่ใกล้จุดเล็งบนจอที่สุด ภายในรัศมี TUNE.SNAP_R (สัดส่วนของด้านสั้นของจอ)
+     🎯 รอบ 936 (ผู้ใช้เล็ง B ผ่านศูนย์แล้วยังไม่โดน — วัดจากภาพ: B ห่างจุดยิง 31px แต่รัศมีมีแค่ 27px):
+     โหมดเล็งซูม ~1.9 เท่า (FOV 58→30) ทุกอย่างบนจอโตขึ้นแต่รัศมีเดิมเป็น px คงที่ = ช่วยเล็งเข้มงวดขึ้น
+     เกือบเท่าตัวโดยไม่ตั้งใจ → คูณรัศมีตามอัตราซูมจริงของกล้อง (โหมดปกติ zoom=1 ไม่เปลี่ยน) */
   function nearestPlate(px,py){
     if(!camera) return null;
-    const R=Math.min(innerWidth,innerHeight)*TUNE.SNAP_R;
+    const zoom=TUNE.FOV/(camera.fov||TUNE.FOV);
+    const R=Math.min(innerWidth,innerHeight)*TUNE.SNAP_R*zoom;
     let best=null, bestD=R;
     const v=new THREE.Vector3();
     plates.forEach(P=>{
@@ -685,13 +689,17 @@
 #sg-shoot-l{left:21%;top:58%;transform:translate(-50%,-50%)}
 #sg-shoot-l.down{transform:translate(-50%,calc(-50% + 3px))}
 #sg-shoot-r{right:2vh}
-/* ✛ กากบาทกึ่งกลางจอ — โผล่เฉพาะโหมดถือ (โหมดเล็งมีศูนย์ปืนจริงในภาพ aim.webp อยู่แล้ว ไม่ต้องซ้อน)
-   บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
+/* ✛ กากบาทกึ่งกลางจอ — บอกเด็กว่ากดปุ่มยิงแล้วกระสุนจะไปตรงไหน */
 #sg-cross{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px;pointer-events:none;z-index:4;opacity:.62}
-#sg-overlay.aim #sg-cross{display:none}
 #sg-cross i{position:absolute;display:block;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.75)}
 #sg-cross i:nth-child(1){left:50%;top:2px;bottom:2px;width:2px;margin-left:-1px}
 #sg-cross i:nth-child(2){top:50%;left:2px;right:2px;height:2px;margin-top:-1px}
+/* 🔴 รอบ 936: โหมดเล็ง เดิมซ่อนกากบาททิ้งทั้งอัน (นึกว่าศูนย์ปืนในภาพพอ) — ผู้ใช้เล็ง B "อยู่ในวงศูนย์แล้ว"
+   แต่จุดยิงจริงอยู่ต่ำกว่านั้น ~30px เลยยิงลอดช่องว่าง → เปลี่ยนเป็นจุดแดงเล็กตรงจุดยิงจริงเป๊ะ ๆ แทน
+   (เอาแผ่นตัวอักษรมาทาบจุดแดง = โดนแน่) */
+#sg-overlay.aim #sg-cross{width:9px;height:9px;opacity:.92;border-radius:50%;
+  background:rgba(255,64,64,.9);box-shadow:0 0 0 1.5px #fff,0 0 6px rgba(0,0,0,.55)}
+#sg-overlay.aim #sg-cross i{display:none}
 #sg-hint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);color:#fff;
   background:rgba(29,32,58,.6);border-radius:10px;padding:.4vh 12px;font-size:clamp(10px,2.4vh,13px);
   white-space:nowrap;transition:opacity .6s}
@@ -871,7 +879,9 @@
     overlay.addEventListener('pointermove', e=>{
       if(!pd) return;
       const dx=e.clientX-pd.x, dy=e.clientY-pd.y;
-      if(Math.abs(dx)+Math.abs(dy)>9) pd.moved=true;
+      /* 🎯 รอบ 936: เกณฑ์ "ถือว่าลาก" 9px ไวไป — นิ้วเด็กแตะจอสั่นเล็กน้อยก็โดนนับเป็นลาก
+         แล้วปล่อยนิ้ว = ไม่ยิง (เงียบ ไม่มีเสียงด้วย) เป็นอีกสาเหตุของ "ยิงแล้วไม่มีอะไรเกิดขึ้น" */
+      if(Math.abs(dx)+Math.abs(dy)>16) pd.moved=true;
       if(pd.moved){
         /* 🎯 รอบ 921: ทิศทางลากกลับด้าน — ลากซ้ายปืนเบนขวา/ลากลงปืนเงยขึ้น (ผู้ใช้เจอจริง)
            ยาว/pitch เป็นมุมกล้องจริง (rotation.y/x) ไม่ใช่ทิศจอ ต้องลบ ไม่ใช่บวก ถึงจะลากซ้าย=มองซ้าย/ลากลง=มองลง */
