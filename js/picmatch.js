@@ -202,8 +202,8 @@
     const n = pm.pairs.length;
     if(!n || !sec || !sec.classList.contains('active')) return;
     const gA = $('pm-grid-a');
-    sec.classList.toggle('wide', n > 8);                 // กระดานใหญ่ = กางกริดเต็มความกว้างจอ (ล็อบบี้ปกติกว้าง 780)
-    void gA.offsetWidth;                                 // บังคับ reflow ก่อนวัด ไม่งั้นได้ความกว้างก่อนกาง
+    sec.classList.toggle('big', n > 20);                 // กระดานใหญ่ = บีบป้ายล่างเหลือบรรทัดเดียว เอาที่ไปขยายช่อง
+    void gA.offsetWidth;                                 // บังคับ reflow ก่อนวัด (จอเต็มชั้น fixed — รอบ 984)
     const availW = gA.clientWidth;
     if(!availW) return;                                  // ยังไม่ได้โชว์จอ — เดี๋ยว open()/resize เรียกซ้ำ
     let used = 0;                                        // ความสูงของทุกอย่างที่ไม่ใช่กริด (หัว/แถบเวลา/ป้าย/โน้ต)
@@ -216,7 +216,8 @@
     for(let cols = 1; cols <= n; cols++){
       const rows = Math.ceil(n / cols);
       const s = Math.min((availW - gap*(cols-1)) / cols, (availH - gap*(rows-1)) / rows);
-      if(s > best){ best = s; bestCols = cols; }
+      // `>=` = ช่องใหญ่เท่ากันให้เลือกแบบที่คอลัมน์เยอะกว่า (กระดานกางเต็มความกว้างจอสวยกว่า แถวน้อยลง)
+      if(s >= best){ best = s; bestCols = cols; }
     }
     let side = Math.max(24, Math.min(150, Math.floor(best)));
     const rows = Math.ceil(n / bestCols);
