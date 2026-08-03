@@ -11,6 +11,11 @@
 const IMG_FILES = {};                 // เช่น {'cat_baby_normal':'img/cat_baby_normal.png'}
 const MOODS = ['normal','happy','hungry','sick'];
 
+/* 🔄 รอบ 954: img/collectibles/ + img/gifts/ เคยถูกตัดไฟล์ใหม่ (resize+quantize) ทำให้ player เห็นรูปเก่าจากแคช
+   ใช้ ?v= query string ป้องกันแคช 7 วัน ของ Firebase Hosting + cache-first ของ service worker (เช่นเดียวกับ badge) */
+const COLLECTIBLES_IMG_V = '954';
+const GIFTS_IMG_V = '954';
+
 function startImgKey(pet){ return `${pet}_${PETS[pet].startKey}`; }
 
 function petImageKeys(pet){
@@ -25,12 +30,12 @@ function petImageKeys(pet){
   return keys;
 }
 
-function probeImages(keys, dir='img'){
+function probeImages(keys, dir='img', version=''){
   return Promise.all(keys.map(k=>{
     if(IMG_FILES[k] !== undefined) return Promise.resolve();   // เคยตรวจแล้ว
     return new Promise(done=>{
       const im = new Image();
-      const path = `${dir}/${k}.png`;
+      const path = `${dir}/${k}.png` + (version ? `?v=${version}` : '');
       im.onload  = ()=>{ IMG_FILES[k] = path; done(); };
       im.onerror = ()=>{ IMG_FILES[k] = null; done(); };
       im.src = path;
@@ -38,8 +43,8 @@ function probeImages(keys, dir='img'){
   }));
 }
 function probeRankImages(){ return probeImages(RANKS.map(r=>`rank_${r.id}`), 'img/rank'); }
-function probeCollectImages(){ return probeImages(COLLECTIBLES.map(c=>`collect_${c.id}`), 'img/collectibles'); }
-function probeGiftImages(){ return probeImages(GIFTS.map(g=>`gift_${g.id}`), 'img/gifts'); }
+function probeCollectImages(){ return probeImages(COLLECTIBLES.map(c=>`collect_${c.id}`), 'img/collectibles', COLLECTIBLES_IMG_V); }
+function probeGiftImages(){ return probeImages(GIFTS.map(g=>`gift_${g.id}`), 'img/gifts', GIFTS_IMG_V); }
 function probeHomeImages(){
   // ภาพบ้านปกติ + เสื่อมสภาพ (ค้างค่าบำรุง) + พัง (ฉากแจ้งเตือน) + มืด (ถูกตัดไฟ) + แห้ง (ถูกตัดน้ำ)
   return probeImages(HOMES.flatMap(h=>[`home_${h.id}`, `home_${h.id}_decayed`, `home_${h.id}_ruined`, `home_${h.id}_dark`, `home_${h.id}_nowater`]), 'img/home');
