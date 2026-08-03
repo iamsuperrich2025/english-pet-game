@@ -1,20 +1,24 @@
 "use strict";
 /* ============================================================
-   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · ผู้ใช้สั่ง 3 ส.ค.)
-   กระดานเต็มจอ: แถวบน = ภาพสัตว์ชุดที่ 1 · แถวล่าง = สัตว์ตัวเดียวกันแต่คนละลายเส้น (ชุดที่ 2)
-   จับคู่ถูก = ได้เหรียญ/EXP/RP/คอมโบ/แต้มโรงงาน "สูตรเดียวกับเกมจับคู่คำศัพท์ทุกประการ"
+   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · ผู้ใช้สั่ง 3 ส.ค. · โหมดภาพ-คำ รอบ 978)
+   2 โหมด สลับด้วยปุ่มบนกระดาน:
+   · "pic"  = แถวบน ภาพสัตว์ชุดที่ 1 ↔ แถวล่าง สัตว์ตัวเดียวกันคนละลายเส้น (ชุดที่ 2) — เฉพาะ 46 ตัวที่มีภาพครบ 2 แผ่น
+   · "word" = แถวบน ภาพสัตว์ (แผ่นเดียว) ↔ แถวล่าง คำศัพท์ภาษาอังกฤษ — ครบทั้ง 104 ตัวที่มีภาพอย่างน้อย 1 แผ่น
+   จับคู่ถูก = ได้เหรียญ/EXP/RP/คอมโบ/แต้มโรงงาน "สูตรเดียวกับเกมจับคู่คำศัพท์ทุกประการ" (ทั้ง 2 โหมด)
    (ใช้ตัวนับ game.* + addSessionCoins + showSessionSummary ชุดเดียวกับ js/game.js)
-   แตะภาพไหน = อ่านออกเสียงชื่อสัตว์เป็นภาษาอังกฤษ (speakWord → sound/words/<word>.mp3 · ไม่มีไฟล์ค่อย TTS)
+   แตะภาพ/คำไหน = อ่านออกเสียงชื่อสัตว์เป็นภาษาอังกฤษ (speakWord → sound/words/<word>.mp3 · ไม่มีไฟล์ค่อย TTS)
    ภาพ: img/matching/cards/a1_<key>.png / a2_<key>.png (ตัดจากแผ่นของผู้ใช้ด้วย tools/slice_matching.py)
-   คลังคำ: js/data/matchpics.js (MATCH_PICS = [key, English, ไทย] เฉพาะสัตว์ที่มีครบทั้ง 2 แผ่น)
+   คลังคำ: js/data/matchpics.js (โหมด pic · 46 ตัวครบ 2 แผ่น) · js/data/matchwords.js (โหมด word · 104 ตัว + sheet)
    ============================================================ */
 (function(){
   const PAIRS = 4;                 // จำนวนคู่ต่อรอบ (เท่าเกมจับคู่คำศัพท์)
   const SEC = 60;                  // เวลาต่อรอบ (+20 วิ ถ้าเลี้ยงสุนัขโตเต็มวัยไม่ป่วย — กติกาเดียวกัน)
+  const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
 
-  let queue = [], qi = 0;          // คิวสัตว์สุ่มไม่ซ้ำจนกว่าจะครบคลัง
+  let queue = [], qi = 0;          // คิวสัตว์สุ่มไม่ซ้ำจนกว่าจะครบคลัง (คลังคนละชุดต่อโหมด)
   let sec = null;                  // <section id="screen-picmatch">
   const pm = {
+    mode:'pic',                    // 'pic' = จับคู่ภาพกับภาพ (เดิม) · 'word' = จับคู่ภาพกับคำอังกฤษ
     pairs:[], sel1:null, sel2:null, matched:0, checking:false,
     timerId:0, timeLeft:0, total:SEC, roundAt:0, clean:true, hintUsed:false,
   };
@@ -22,7 +26,12 @@
   const $  = id => document.getElementById(id);
   const has = f => typeof window[f] === 'function';
   const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-  const bank = () => (typeof MATCH_PICS !== 'undefined' && MATCH_PICS.length) ? MATCH_PICS : [];
+  const bank = () => {
+    const arr = pm.mode === 'word'
+      ? (typeof MATCH_WORDS !== 'undefined' ? MATCH_WORDS : [])
+      : (typeof MATCH_PICS !== 'undefined' ? MATCH_PICS : []);
+    return arr;
+  };
   const imgSrc = (sheet, key) => `img/matching/cards/${sheet}_${key}.png`;
 
   /* ---------- คิวสัตว์: สุ่มทั้งคลังแล้วจ่ายทีละรอบ ครบคลังค่อยสับใหม่ (เห็นภาพหลากหลาย ไม่วนซ้ำ) ---------- */
@@ -47,21 +56,42 @@
       <div class="game-top">
         <button class="back-btn" id="pm-back">⬅ กลับ</button>
         <div class="game-avatar" id="pm-avatar" title="ตัวละครของหนูมาเชียร์!"></div>
+        <button class="pm-mode-btn" id="pm-mode" title="สลับโหมดเกม">🖼️ ภาพ-ภาพ</button>
         <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="pm-coin">0</span></div>
         <div class="combo-pill" id="pm-combo">Combo ×0</div>
       </div>
       <div class="timer-wrap"><div class="timer-fill" id="pm-timer"></div></div>
-      <p class="board-label pm-label">🖼️ เลือกภาพจากแถวบน 1 ภาพ</p>
+      <p class="board-label pm-label" id="pm-label-a">🖼️ เลือกภาพจากแถวบน 1 ภาพ</p>
       <div class="pm-grid" id="pm-grid-a"></div>
-      <p class="board-label pm-label">🎨 แล้วหา <b>สัตว์ตัวเดียวกัน</b> ในแถวล่าง (คนละลายเส้น)</p>
+      <p class="board-label pm-label" id="pm-label-b">🎨 แล้วหา <b>สัตว์ตัวเดียวกัน</b> ในแถวล่าง (คนละลายเส้น)</p>
       <div class="pm-grid" id="pm-grid-b"></div>
       <button class="hint-btn" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
-      <p class="game-endless-note pm-note">♾️ เล่นได้เรื่อยๆ ไม่มีวันตัน — แตะภาพเพื่อ<b>ฟังเสียงอ่านภาษาอังกฤษ</b> · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>เพลียเมื่อไหร่ กดปุ่ม <b>⬅ กลับ</b> มุมซ้ายบนพักได้เสมอ 😊</span></p>`;
+      <p class="game-endless-note pm-note">♾️ เล่นได้เรื่อยๆ ไม่มีวันตัน — แตะภาพ/คำเพื่อ<b>ฟังเสียงอ่านภาษาอังกฤษ</b> · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>เพลียเมื่อไหร่ กดปุ่ม <b>⬅ กลับ</b> มุมซ้ายบนพักได้เสมอ 😊</span></p>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pm-back').addEventListener('click', exit);
     $('pm-hint').addEventListener('click', hint);
+    $('pm-mode').addEventListener('click', toggleMode);
     return sec;
+  }
+
+  /* ---------- สลับโหมด: ภาพ-ภาพ ↔ ภาพ-คำ (คลังคำคนละชุด ต้องสับคิวใหม่) ---------- */
+  function toggleMode(){
+    if(typeof sfx !== 'undefined') sfx.select();
+    pm.mode = pm.mode === 'pic' ? 'word' : 'pic';
+    queue = []; qi = 0;
+    updateLabels();
+    newRound();
+  }
+  function updateLabels(){
+    const word = pm.mode === 'word';
+    $('pm-mode').textContent = MODE_LABEL[pm.mode];
+    $('pm-label-a').innerHTML = word
+      ? '🖼️ เลือก<b>ภาพสัตว์</b>จากแถวบน 1 ภาพ'
+      : '🖼️ เลือกภาพจากแถวบน 1 ภาพ';
+    $('pm-label-b').innerHTML = word
+      ? '🔤 แล้วหา <b>คำศัพท์ภาษาอังกฤษ</b> ที่ตรงกันในแถวล่าง'
+      : '🎨 แล้วหา <b>สัตว์ตัวเดียวกัน</b> ในแถวล่าง (คนละลายเส้น)';
   }
 
   /* ---------- เปิดเกม ---------- */
@@ -98,13 +128,22 @@
     pm.matched = 0; pm.checking = false; pm.hintUsed = false;
     pm.roundAt = Date.now(); pm.clean = true;
 
-    const card = (sheet, it) =>
-      `<button class="pm-card" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="${sheet}">
-         <img class="pm-img" src="${imgSrc(sheet, it[0])}" alt="${it[1]}" draggable="false">
+    const imgCard = (side, sheetFile, it) =>
+      `<button class="pm-card" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="${side}">
+         <img class="pm-img" src="${imgSrc(sheetFile, it[0])}" alt="${it[1]}" draggable="false">
          <span class="pm-name">${it[1]} · ${it[2]}</span>
        </button>`;
-    $('pm-grid-a').innerHTML = shuffle(pm.pairs.slice()).map(it => card('a1', it)).join('');
-    $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => card('a2', it)).join('');
+    const wordCard = it =>
+      `<button class="pm-card pm-wordcard" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="a2">
+         <span class="pm-word-text">${it[1]}</span>
+       </button>`;
+    if(pm.mode === 'word'){
+      $('pm-grid-a').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a1', it[3] || 'a1', it)).join('');
+      $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => wordCard(it)).join('');
+    }else{
+      $('pm-grid-a').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a1', 'a1', it)).join('');
+      $('pm-grid-b').innerHTML = shuffle(pm.pairs.slice()).map(it => imgCard('a2', 'a2', it)).join('');
+    }
     [...sec.querySelectorAll('.pm-card')].forEach(c => c.addEventListener('click', () => pick(c)));
 
     const hb = $('pm-hint');
@@ -133,7 +172,11 @@
   function preload(){
     const nx = queue.slice(qi, qi + PAIRS);
     preImgs = [];
-    nx.forEach(it => ['a1','a2'].forEach(s => { const i = new Image(); i.src = imgSrc(s, it[0]); preImgs.push(i); }));
+    if(pm.mode === 'word'){
+      nx.forEach(it => { const i = new Image(); i.src = imgSrc(it[3] || 'a1', it[0]); preImgs.push(i); });
+    }else{
+      nx.forEach(it => ['a1','a2'].forEach(s => { const i = new Image(); i.src = imgSrc(s, it[0]); preImgs.push(i); }));
+    }
   }
 
   function tickBar(){

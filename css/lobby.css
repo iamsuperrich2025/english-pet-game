@@ -5234,6 +5234,17 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 .pm-card.shake{animation:shake .4s;}
 #screen-picmatch .pm-note{margin-top:4px;}
 #screen-picmatch .timer-wrap{margin-bottom:6px;}
+
+/* 🔤 รอบ 978 — โหมด "ภาพ-คำ": ปุ่มสลับโหมดบนกระดาน + การ์ดคำศัพท์ (แทนภาพ) ในแถวล่าง */
+.pm-mode-btn{background:#fff;border:3px solid var(--purple-d);border-radius:999px;padding:4px 10px;
+  font-family:inherit;font-size:13px;color:#7a5cc4;font-weight:700;cursor:pointer;
+  box-shadow:var(--card-shadow);white-space:nowrap;flex:0 0 auto;}
+.pm-mode-btn:active{transform:scale(.95);}
+.pm-wordcard{background:var(--blue);}
+.pm-wordcard .pm-word-text{font-weight:800;color:#2f6ea5;font-size:clamp(11px,2.1vh,17px);
+  text-align:center;padding:4px;line-height:1.15;word-break:break-word;}
+.pm-wordcard.matched .pm-word-text{color:var(--green-d);}
+
 /* จอเตี้ย (มือถือแนวนอน) — บีบทุกชั้นให้กระดานทั้งใบยังอยู่ในจอ */
 @media (max-height:430px){
   #screen-picmatch{--pmh:clamp(50px,22.5vh,150px);}
@@ -5244,4 +5255,6 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
   #screen-picmatch .pm-note .sess-coin{font-size:13px;}
   #screen-picmatch .pm-n2{display:none;}   /* จอเตี้ย: เหลือบรรทัดเดียว (ปุ่ม ⬅ กลับ เห็นอยู่แล้วมุมซ้ายบน) */
   .pm-grid{gap:6px;}
+  .pm-mode-btn{font-size:11px;padding:3px 8px;}
+  .pm-wordcard .pm-word-text{font-size:clamp(10px,1.9vh,14px);}
 }
