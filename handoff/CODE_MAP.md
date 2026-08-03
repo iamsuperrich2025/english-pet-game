@@ -683,7 +683,7 @@ addRP:1149
 
 ## js/typing.js (369 บรรทัด · 0 รายการ)
 
-## js/ui.js (8,656 บรรทัด · 352 รายการ)
+## js/ui.js (8,663 บรรทัด · 352 รายการ)
 ### 🗂️ สารบัญโซน js/ui.js (Read/Edit เฉพาะช่วง)
 - 2-77 UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
 - 78-308 🎬 เวทีน้องน่ารัก (Cute Pet Show) — รอบ 604 (ผู้ใช้สั่ง 26 ก.ค. 2026)
@@ -725,12 +725,12 @@ addRP:1149
 - 6914-6923 โรงงานผลิตสินค้า 🏭 + ตลาดขายต่อ (แนวคิดใหม่ 5 ก.ค. 2026)
 - 6924-6946 โรงงานผลิต (แผง 🏭) — แยกออกจากตลาด (ผู้ใช้สั่ง 6 ก.ค. 2026)
 - 6947-7099 ตลาดขายสินค้า (แผง 🏪) — แยกออกจากโรงงาน
-- 7100-8013 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
-- 8014-8074 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
-- 8075-8111 เลเวลอัพ (รายตัว)
-- 8112-8217 สถิติผลการเรียนรู้
-- 8218-8255 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
-- 8256-8656 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
+- 7100-8020 🚗 รอบ 131: หมวดยานพาหนะ — โชว์รูมรถ 10 คัน (แคตตาล็อก 5 ช่อง/แถว)
+- 8021-8081 ร้านสัตว์เลี้ยง (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
+- 8082-8118 เลเวลอัพ (รายตัว)
+- 8119-8224 สถิติผลการเรียนรู้
+- 8225-8262 item 4: การ์ดสรุปส่งครู — ใบเดียวจบ ชื่อ/วัน-เวลา/เหรียญวันนี้/แรงค์/สอบล่าสุด
+- 8263-8663 📞 หน้าจอโทรหาเพื่อน — สายเสียง (รอบ 625 · กลุ่ม 3 คน + ปิดวิดีโอ รอบ 631)
 ### รายการ js/ui.js
 startHTML:10 · PET_ANIM:30 · petAnimHTML:35 · petVisualHTML:50 · PET_SHOW:91 · PET_SHOW_STAGE:96
 PET_SHOW_H:99 · petShowBgHTML:102 · petClipHint:145 · __clipReady:157 · petShowHTML:165 · PROF_AV_MAX:229
@@ -784,13 +784,13 @@ openTinvPicker:6705 · fruitCountdown:6749 · renderFarmCard:6761 · renderFarmC
 sellAllFruit:6893 · collectImg:6922 · renderFactoryCard:6928 · renderMarketCard:6951 · updateWishBadge:7007 · openWishlistDialog:7018
 bindStripArrows:7063 · renderMarketBrowse:7077 · carImg:7106 · renderVehicleShop:7107 · CS_CYCLE_MS:7158 · carInteriorImg:7159
 carStatHtml:7161 · renderCarShowroom:7168 · csShowBig:7195 · csInit:7222 · RS_CYCLE_MS:7245 · robotImg:7246
-renderRobotShop:7247 · rsShowBig:7269 · rsInit:7290 · buyRobot:7309 · enterMecha3D:7333 · pickMechaRobot:7354
-pickDriveCar:7386 · openCarBuyDialog:7429 · buyCarInsurance:7490 · payCarLoanMonthly:7509 · payCarLoanFull:7521 · carDriveBlock:7540
-gotoVehicleShop:7545 · gotoMyStock:7550 · showNeedCarDialog:7556 · craftDiscount:7568 · renderFactory:7571 · renderOrdersUI:7640
-startProduce:7659 · buyCollectible:7687 · cancelProduce:7715 · deliverOrder:7729 · renderOrderClock:7746 · renderCollectMine:7756
-openListDialog:7798 · cancelListing:7851 · buyMarketItem:7874 · showCollectReveal:7901 · buyAC:7939 · openHomeShop:7958
-renderPetShop:8017 · showLevelUp:8078 · renderStats:8115 · showTeacherCard:8222 · CALL_REACT_EMOS:8266 · CALL_TALK_MIN:8269
-CALL_TALK_HOLD:8270 · CALL_ORDER_GAP:8272 · CALL_TONES:8278 · startCall:8652
+renderRobotShop:7247 · rsShowBig:7269 · rsInit:7290 · buyRobot:7309 · enterMecha3D:7334 · pickMechaRobot:7361
+pickDriveCar:7393 · openCarBuyDialog:7436 · buyCarInsurance:7497 · payCarLoanMonthly:7516 · payCarLoanFull:7528 · carDriveBlock:7547
+gotoVehicleShop:7552 · gotoMyStock:7557 · showNeedCarDialog:7563 · craftDiscount:7575 · renderFactory:7578 · renderOrdersUI:7647
+startProduce:7666 · buyCollectible:7694 · cancelProduce:7722 · deliverOrder:7736 · renderOrderClock:7753 · renderCollectMine:7763
+openListDialog:7805 · cancelListing:7858 · buyMarketItem:7881 · showCollectReveal:7908 · buyAC:7946 · openHomeShop:7965
+renderPetShop:8024 · showLevelUp:8085 · renderStats:8122 · showTeacherCard:8229 · CALL_REACT_EMOS:8273 · CALL_TALK_MIN:8276
+CALL_TALK_HOLD:8277 · CALL_ORDER_GAP:8279 · CALL_TONES:8285 · startCall:8659
 
 ## js/util.js (1,100 บรรทัด · 46 รายการ)
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
