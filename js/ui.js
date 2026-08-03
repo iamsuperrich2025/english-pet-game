@@ -3866,13 +3866,15 @@ function feedPickRx(key, rk, anchor){
   });
 }
 
-/* ---- 💬 กล่องคอมเมนต์ (เปิดเป็นแผ่นเต็มจอ — การ์ดในวงหมุนเลยไม่ต้องมี scrollbar) ---- */
-let __fcmKey = '';
+/* ---- 💬 กล่องคอมเมนต์ (เปิดเป็นแผ่นเต็มจอ — การ์ดในวงหมุนเลยไม่ต้องมี scrollbar)
+       รอบ 963: ตอบกลับใต้คอมเมนต์ได้ (nested 1 ชั้นแบบ Facebook/TikTok — ตอบใต้ตอบก็ยังอยู่สายเดียวกัน) ---- */
+let __fcmKey = '', __fcmRep = null;   // __fcmRep = {cid: รหัสคอมเมนต์แม่, n: ชื่อคนที่กำลังตอบ}
 function openFeedComments(key){
   const it = feedPostByKey(key);
   if(!it){ toast('โพสต์นี้ไม่อยู่ในฟีดแล้ว 😅'); return; }
   sfx.select();
   __fcmKey = key;
+  __fcmRep = null;
   if(!document.getElementById('fcm-ov')){
     const ov = document.createElement('div');
     ov.id = 'fcm-ov';
@@ -3884,9 +3886,33 @@ function openFeedComments(key){
 }
 function closeFeedComments(){
   __fcmKey = '';
+  __fcmRep = null;
   const ov = document.getElementById('fcm-ov');
   if(ov) ov.remove();
   __fdAt = Date.now();                                 // กลับเข้าวงหมุนโดยเริ่มนับ 10 วิใหม่
+}
+/* จัดคอมเมนต์เป็นต้นไม้ 1 ชั้น: คอมเมนต์แม่ + การตอบกลับใต้มัน (ตอบใต้ "การตอบกลับ" เกาะแม่ตัวเดิม เหมือน Facebook) */
+function fcmRowHTML(c, can, isRep){
+  const at = isRep ? (c.p || c.id) : c.id;           // ตอบกลับแล้วไปเกาะคอมเมนต์แม่เสมอ (ไม่ลึกเกิน 1 ชั้น)
+  return `<div class="fcm-row${isRep ? ' fcm-rep' : ''}" data-cid="${escapeHTML(c.id)}">
+    ${isRep ? '<span class="fcm-arrow">↳</span>' : ''}<b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}
+    <small>${feedAgo(c.ts)}</small>
+    ${can ? `<button class="fcm-reply" type="button" data-cid="${escapeHTML(at)}"
+        data-n="${escapeHTML(c.n)}">↩ ตอบกลับ</button>` : ''}
+  </div>`;
+}
+function fcmTreeHTML(cms, can){
+  const ids  = new Set(cms.map(c=>c.id));
+  const kids = {}, tops = [];
+  cms.forEach(c=>{                                    // p ชี้ไปคอมเมนต์ที่ถูกลบ/หลุดไปแล้ว = ถือเป็นคอมเมนต์ชั้นบน
+    if(c.p && ids.has(c.p) && c.p !== c.id) (kids[c.p] = kids[c.p] || []).push(c);
+    else tops.push(c);
+  });
+  return tops.map(c=>{
+    const rep = kids[c.id] || [];
+    return `<div class="fcm-item">${fcmRowHTML(c, can, false)}${rep.length
+      ? `<div class="fcm-reps">${rep.map(r=>fcmRowHTML(r, can, true)).join('')}</div>` : ''}</div>`;
+  }).join('');
 }
 function renderFeedComments(){
   const ov = document.getElementById('fcm-ov');
@@ -3911,12 +3937,17 @@ function renderFeedComments(){
       ${rxRows ? `<div class="fcm-rxs">${rxRows}</div>` : ''}
     </div>
     <div class="fcm-list">${it.comments.length
-      ? it.comments.map(c=>`<div class="fcm-row"><b>${escapeHTML(c.n)}</b> ${escapeHTML(c.tx)}
-          <small>${feedAgo(c.ts)}</small></div>`).join('')
+      ? fcmTreeHTML(it.comments, can)
       : `<div class="fcm-none">ยังไม่มีคอมเมนต์ — เป็นคนแรกสิ! ✍️</div>`}</div>
-    ${can ? `<div class="fcm-quick">${FEED_QUICK_CM.map(q=>
+    ${can ? `${__fcmRep ? `<div class="fcm-repbar">↩ กำลังตอบ <b>@${escapeHTML(__fcmRep.n)}</b>
+        <button class="fcm-repx" type="button" aria-label="ยกเลิกการตอบกลับ">✕</button></div>` : ''}
+      ${(typeof Online !== 'undefined' && Online.cmReplyRulesOld)
+        ? `<div class="fcm-note">⚠️ ตอนนี้การตอบกลับจะขึ้นเป็น "คอมเมนต์ธรรมดา" ที่ขึ้นต้นด้วย ↪ @ชื่อ
+             — ต้องอัปเดตกฎความปลอดภัยโซน /gfeed ก่อน ถึงจะซ้อนใต้คอมเมนต์ได้จริง</div>` : ''}
+      <div class="fcm-quick">${FEED_QUICK_CM.map(q=>
         `<button class="fcm-q" type="button" data-en="${escapeHTML(q.en)}">${escapeHTML(q.en)}<i>${escapeHTML(q.th)}</i></button>`).join('')}</div>
-      <div class="fcm-add"><input class="fcm-input" maxlength="120" placeholder="เขียนคอมเมนต์…" value="${escapeHTML(keep)}">
+      <div class="fcm-add"><input class="fcm-input" maxlength="120" placeholder="${__fcmRep
+          ? `ตอบกลับ @${escapeHTML(__fcmRep.n)}…` : 'เขียนคอมเมนต์…'}" value="${escapeHTML(keep)}">
         <button class="fcm-send" type="button">ส่ง</button></div>`
       : `<div class="fcm-locked">💬 คอมเมนต์ได้เฉพาะเพื่อนของเจ้าของโพสต์เท่านั้น (เพื่อความปลอดภัยของเด็ก ๆ)</div>`}
   </div>`;
@@ -3925,17 +3956,31 @@ function renderFeedComments(){
   const send = ()=>{
     if(!inp || !inp.value.trim()) return;
     const val = inp.value;
+    const rep = __fcmRep;                              // ตอบกลับใคร (null = คอมเมนต์ใต้โพสต์ตามปกติ)
     inp.value = '';
-    gfeedAddComment(__fcmKey, val).then(ok=>{
+    __fcmRep = null;
+    gfeedAddComment(__fcmKey, val, rep && rep.cid, rep && rep.n).then(ok=>{
       if(ok) sfx.select();
-      else { inp.value = val; toast('ส่งคอมเมนต์ไม่สำเร็จ — ต้องเป็นเพื่อนกับเจ้าของโพสต์ก่อนนะ'); }
-    }).catch(msg=>{ inp.value = val; toast(typeof msg === 'string' ? msg : 'ส่งคอมเมนต์ไม่สำเร็จ ลองใหม่นะ'); });
+      else { inp.value = val; __fcmRep = rep; toast('ส่งคอมเมนต์ไม่สำเร็จ — ต้องเป็นเพื่อนกับเจ้าของโพสต์ก่อนนะ'); }
+      renderFeedComments();
+    }).catch(msg=>{ inp.value = val; __fcmRep = rep;
+      toast(typeof msg === 'string' ? msg : 'ส่งคอมเมนต์ไม่สำเร็จ ลองใหม่นะ'); });
   };
   if(inp){
     inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); send(); } });
     const s = ov.querySelector('.fcm-send');
     if(s) s.addEventListener('click', send);
   }
+  /* ↩ ตอบกลับ: จำคอมเมนต์แม่ไว้ แล้ววาดแถบ "กำลังตอบ @ชื่อ" เหนือช่องพิมพ์ */
+  ov.querySelectorAll('.fcm-reply').forEach(b=>b.addEventListener('click', ()=>{
+    __fcmRep = {cid: b.dataset.cid, n: b.dataset.n || 'เพื่อน'};
+    sfx.select();
+    renderFeedComments();
+    const i2 = ov.querySelector('.fcm-input');
+    if(i2) i2.focus();
+  }));
+  const rx = ov.querySelector('.fcm-repx');
+  if(rx) rx.addEventListener('click', ()=>{ __fcmRep = null; sfx.select(); renderFeedComments(); });
   ov.querySelectorAll('.fcm-q').forEach(b=>b.addEventListener('click', ()=>{
     if(!inp) return;
     inp.value = (inp.value ? inp.value.trim() + ' ' : '') + b.dataset.en;

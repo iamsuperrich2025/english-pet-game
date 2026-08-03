@@ -266,6 +266,48 @@ const sfx = {
   },
 };
 
+/* ---------- 🌧️ เสียงฝนตกเบาๆ วนลูป (รอบ 963) ----------
+   สังเคราะห์ล้วนด้วย WebAudio ไม่ใช้ไฟล์เสียง: white noise ผ่าน lowpass ตัดความถี่สูงออก
+   เหลือเสียง "ซ่าาา" นุ่มๆ + LFO ไล่ความดังช้าๆ กันฟังดูราบเรียบจนน่าเบื่อ
+   เริ่ม/หยุดตาม rainFxTick() (ui.js) — ตราบใดที่เอฟเฟกต์ฝนเต็มจอกำลังแสดงอยู่
+   มีสวิตช์แยกของตัวเอง (state.rainSound) นอกเหนือจากสวิตช์เสียงหลัก (state.sound) */
+const RainSound = {
+  src: null, lp: null, gain: null, lfo: null, lfoGain: null,
+  start(){
+    if(this.src || !state.sound || state.rainSound === false) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      const c = audioCtx;
+      if(c.state === 'suspended') c.resume().catch(()=>{});
+      const len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);
+      for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+      const src = c.createBufferSource(); src.buffer = buf; src.loop = true;
+      const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2600; lp.Q.value = 0.4;
+      const g = c.createGain(); g.gain.value = 0;
+      const lfo = c.createOscillator(); lfo.frequency.value = 0.11;      // ความดังไหวช้าๆ เหมือนลมพัดฝนโชย
+      const lfoGain = c.createGain(); lfoGain.gain.value = 0.018;
+      lfo.connect(lfoGain); lfoGain.connect(g.gain);
+      src.connect(lp); lp.connect(g); g.connect(c.destination);
+      src.start(); lfo.start();
+      g.gain.setTargetAtTime(0.055, c.currentTime, 1.2);                 // ค่อยๆ ดังขึ้น ไม่โผล่มาทันที
+      this.src = src; this.lp = lp; this.gain = g; this.lfo = lfo; this.lfoGain = lfoGain;
+    }catch(e){}
+  },
+  stop(){
+    if(!this.src) return;
+    const {src, lfo, gain} = this;
+    try{
+      gain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.5);
+      setTimeout(()=>{ try{ src.stop(); lfo.stop(); }catch(e){} try{ gain.disconnect(); }catch(e){} }, 900);
+    }catch(e){}
+    this.src = null; this.lp = null; this.gain = null; this.lfo = null; this.lfoGain = null;
+  },
+  refresh(){    // เรียกตอนสลับสวิตช์เสียง/สวิตช์ฝนในหน้าตั้งค่า — ปิดทันทีถ้าปิดสวิตช์ใดสวิตช์หนึ่ง
+    if(!state.sound || state.rainSound === false) this.stop();
+    else if(document.getElementById('rain-fx')) this.start();
+  },
+};
+
 /* ---------- 🐾 เสียงร้องของน้องตามชนิด + อารมณ์ (รอบ 322 · ปรับตามอารมณ์รอบ 323) ----------
    ชนิด: แมว = เหมียว (สระไต่ขึ้นแล้วตกยาว + lowpass ปิดลง) · หมา = โฮ่ง 2 พัลส์ + noise
          มังกร = คำรามต่ำ (saw ต่ำ + noise) · ชนิดใหม่ที่ยังไม่มีเสียงเฉพาะ = จิ๊บสั้นเป็นกลาง
@@ -843,6 +885,11 @@ function openSettings(){
             <span class="set-desc">เสียงเอฟเฟกต์ ปุ่มกด และอ่านออกเสียงคำศัพท์</span></span>
           <button class="set-switch" aria-label="สลับเสียงในเกม"></button>
         </div>
+        <div class="set-row" id="set-rainsound">
+          <span class="set-lwrap"><span class="set-label">🌧️ เสียงฝนตก</span>
+            <span class="set-desc">เสียงฝนเบาๆ วนลูป ตอนฝนตกเต็มจอ (19:00-20:00 ยังไม่มีบ้านสภาพดี)</span></span>
+          <button class="set-switch" aria-label="สลับเสียงฝนตก"></button>
+        </div>
         ${hapticSupported ? `<div class="set-row" id="set-haptic">
           <span class="set-lwrap"><span class="set-label">📳 สั่นเตือน</span>
             <span class="set-desc">มือถือสั่นตอนโดนผีทำร้าย/ตอบถูก</span></span>
@@ -916,6 +963,7 @@ function openSettings(){
   };
   const paint = ()=>{
     setSwitch(overlay.querySelector('#set-sound .set-switch'), state.sound);
+    setSwitch(overlay.querySelector('#set-rainsound .set-switch'), state.rainSound !== false);
     setSwitch(overlay.querySelector('#set-haptic .set-switch'), state.haptic !== false);
     setSwitch(overlay.querySelector('#set-anim .set-switch'), !state.noAnim);   // "เปิด" = มีเอฟเฟกต์ · "ปิด" = ปิดเพื่อความลื่น
     const curBlk = (typeof lobbyBlk === 'function') ? lobbyBlk() : (state.blockAv || 'blk1');   // 🧱 รอบ 238 · ไฮไลต์ตัวที่เลือกอยู่
@@ -953,6 +1001,13 @@ function openSettings(){
   overlay.querySelector('#set-sound .set-switch').addEventListener('click', ()=>{
     state.sound = !state.sound; saveState(); paint(); if(state.sound) sfx.select();
     if(typeof Music !== 'undefined') Music.onSound();          // รอบ 181: หยุด/เล่นเพลงตามสวิตช์เสียง
+    if(typeof RainSound !== 'undefined') RainSound.refresh();
+  });
+  const rsSwitch = overlay.querySelector('#set-rainsound .set-switch');
+  if(rsSwitch) rsSwitch.addEventListener('click', ()=>{
+    state.rainSound = (state.rainSound === false);   // undefined/true → false → true
+    saveState(); paint(); if(state.rainSound !== false) sfx.select();
+    if(typeof RainSound !== 'undefined') RainSound.refresh();
   });
   const hSwitch = overlay.querySelector('#set-haptic .set-switch');
   if(hSwitch) hSwitch.addEventListener('click', ()=>{
