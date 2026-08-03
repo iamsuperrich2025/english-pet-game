@@ -7,6 +7,11 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+- ⏳ **รอบ 976 (3 ส.ค. 2026): โซนใหม่ `gnotif` (🔔 เก็บแจ้งเตือนไลก์/คอมเมนต์ย้อนหลัง — ปิดเกมแล้วกลับมายังเห็น + เลขค้างบนกระดิ่ง) — รอผู้ใช้ publish:** `/gnotif/<ผู้รับ>/n/<nid>` = `{t,pid,cid,u,n,r,cm,tx,ts}` (`t` = `rx`|`cm`|`rp`|`cl`) · `/gnotif/<ผู้รับ>/seen` = nid ล่าสุดที่กดอ่านแล้ว (string ≤40) · **อ่านได้เฉพาะเจ้าของกล่อง** (`auth.uid === $uid` — แจ้งเตือนเป็นเรื่องส่วนตัว ไม่ใช่ของสาธารณะแบบ /gfeed) · **เขียนได้ 2 ทาง:** ① เจ้าของกล่องเอง (ไว้ตั้ง `seen` + กวาดใบเก่าทิ้งเมื่อเกิน 40) ② **คนที่กด** สร้างใบใหม่ได้เท่านั้น (`!data.exists()`) และต้อง `u === auth.uid` (ปลอมชื่อคนกดไม่ได้) **บวกเงื่อนไขว่าต้องมีสิทธิ์ยุ่งกับโพสต์ `pid` นั้นจริง** = เป็นเจ้าของโพสต์หรือเพื่อนของเจ้าของโพสต์ (สูตรเดียวกับสิทธิ์ไลก์/คอมเมนต์ของ `/gfeed` เป๊ะ) → คนแปลกหน้ายัดแจ้งเตือนใส่กล่องเด็กไม่ได้ · แก้/ลบใบที่มีอยู่แล้วได้เฉพาะเจ้าของกล่อง
+  - **ยังไม่ publish = เกมไม่พัง:** เขียน/อ่านโดน deny → ระบบถอยกลับไปทำงานแบบรอบ 701 เป๊ะ (แจ้งเตือนคิดเองจาก diff ของ `/gfeed` เห็นเฉพาะช่วงที่เปิดเกมค้างอยู่) + ตั้งธง `Online.gnotifOk=false` → **กล่อง 🔔 ขึ้นป้ายเหลืองบอกตรง ๆ** ว่ายังเก็บย้อนหลังไม่ได้เพราะกฎโซน `/gnotif` (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ไลก์/คอมเมนต์/ตอบกลับ/ถูกใจคอมเมนต์ ไม่กระทบเลย
+  - **publish ก้อนนี้ได้ `cl` ของรอบ 966 ที่ยังค้างไปพร้อมกันด้วย** (อยู่ในก้อนเต็มเดียวกัน)
+  - **Artifact ปุ่มคัดลอกก้อนเต็ม — 🆕 ใช้ใบนี้ (รอบ 976 · 32 โซน 534 บรรทัด · ไฮไลต์เหลือง 26 บรรทัด = โซน `gnotif`):** https://claude.ai/code/artifact/b655958d-c995-4100-96ed-71b191dc43ed
+  - 🛠️ **เจนด้วย `python tools/gen_rules_artifact.py <out.html> --round N --zone <ชื่อโซน>` (เครื่องมือใหม่รอบ 976)** — อ่านก้อนจาก RULES.md ตรง ๆ + `json.loads` ก่อนเขียนเสมอ ไม่ก๊อปมือ (เดิมทุกรอบเขียนสคริปต์ชั่วคราวใหม่ = เปลือง token) · ยืนยันแล้ว: `textContent` ของ `<pre>` (= ข้อความที่ปุ่มคัดลอกส่งเข้าคลิปบอร์ด) ตรงกับก้อนใน RULES.md **ทุกตัวอักษร 28,218 ตัว** · parse ผ่าน 32 โซน · `<mark>` ไม่ปนเข้าข้อความที่คัดลอก
 - ⏳ **รอบ 966 (3 ส.ค. 2026): โซนใหม่ `cl` ใต้ `/gfeed/$postId/cm/$cid` (💙 ถูกใจรายคอมเมนต์) — รอผู้ใช้ publish (ก้อนเดียวกับรอบ 964 ด้านล่าง — publish ครั้งเดียวได้ทั้งคู่):** `cl/<uid> = true` · **`.write` ชุดเดียวกับไลก์โพสต์เป๊ะ** (`auth.uid === $uid` และต้องเป็นเจ้าของโพสต์หรือเพื่อนของเจ้าของโพสต์ เช็กจาก `/friends` จริงฝั่ง rules) · `.validate` รับเฉพาะ `true` (boolean) — ยัดข้อความ/ตัวเลขไม่ได้ · **ต้องประกาศเป็นโซนชื่อจริง** เพราะ `"$other": {".validate": false}` ใต้ `cm/$cid` จะ deny ลูกที่ไม่มีชื่อในกฎ · ไม่แตะสิทธิ์เดิมของคอมเมนต์/ไลก์โพสต์เลย
   - **ยังไม่ publish = เกมไม่พัง:** `gfeedToggleCommentLike()` เขียนโดน deny → คืน `false` + ตั้งธง `Online.cmLikeRulesOld` → แผ่นคอมเมนต์ขึ้นป้ายเหลืองบอกตรง ๆ ว่ายังกดถูกใจรายคอมเมนต์ไม่ได้ (กฎทองข้อ 1 ห้ามปิดฟีเจอร์เงียบ) · ถูกใจ "ทั้งโพสต์"/คอมเมนต์/ตอบกลับ ไม่กระทบ
   - **Artifact ปุ่มคัดลอกก้อนเต็ม — 🆕 ใช้ใบนี้ (รอบ 968 · 31 โซน 508 บรรทัด · ไฮไลต์เหลืองบรรทัด 325–330 = โซน `cl`):** https://claude.ai/code/artifact/b0837383-ac74-4259-bf9a-2a8d657cc425 · (ใบเก่ารอบ 966 เนื้อหาเหมือนกัน: https://claude.ai/code/artifact/250a1f4e-5979-4877-9a6b-750636826af8)
@@ -403,6 +408,32 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "$other": { ".validate": false }
       }
     },
+    "gnotif": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        "seen": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val().length <= 40"
+        },
+        "n": {
+          "$nid": {
+            ".write": "auth != null && (auth.uid === $uid || (!data.exists() && newData.child('u').val() === auth.uid && (root.child('gfeed').child(newData.child('pid').val()).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child(newData.child('pid').val()).child('u').val()).child(auth.uid).exists())))",
+            ".validate": "newData.hasChildren(['t','pid','u','n','ts'])",
+            "t":   { ".validate": "newData.isString() && (newData.val() === 'rx' || newData.val() === 'cm' || newData.val() === 'rp' || newData.val() === 'cl')" },
+            "pid": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "cid": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "u":   { ".validate": "newData.isString() && newData.val().length <= 128" },
+            "n":   { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "r":   { ".validate": "newData.isString() && newData.val().length <= 8" },
+            "cm":  { ".validate": "newData.isString() && newData.val().length <= 120" },
+            "tx":  { ".validate": "newData.isString() && newData.val().length <= 120" },
+            "ts":  { ".validate": "newData.isNumber()" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
     "follow": {
       "$uid": {
         ".read": "auth != null",
@@ -619,6 +650,14 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
 - **กวาดโพสต์เก่าของตัวเองทิ้ง:** `gfeedPrune()` query `orderByChild('u').equalTo(onlineKey())` (ต้องมี `.indexOn:"u"`) เก็บไว้แค่ `GFEED_KEEP_ME` โพสต์ล่าสุดต่อคน (ลบเก่ากว่านั้น) — คุมขนาดตารางรวมไม่ให้บวมตามจำนวนผู้เล่น
 - ฝั่งเกม: `gfeedPush/gfeedPrune/gfeedWatchStart/gfeedWatchStop/gfeedRebuild/gfeedToggleLike/gfeedAddComment` (online.js) · เรียงแสดงผล **เพื่อนก่อนเสมอ แล้วค่อยคนอื่น** (ทำฝั่ง client ใน `gfeedRebuild` ไม่ใช่ rules) · หน้าจอเปิดจากปุ่ม "🌏 ดูทั้งหมด" ในกล่องฟีดเพื่อนเดิม → `openFeedBoard()` (ui.js) ยังโชว์ "ใครออนไลน์ทำอะไรอยู่ตอนนี้" จาก `/presence` เดิม (ไม่ต้องมีโซนใหม่) จัดเรียงเพื่อนก่อนแบบเดียวกัน
 - **ยังไม่ publish = เกมไม่พัง:** เขียนโพสต์/ไลก์/คอมเมนต์โดน deny เงียบๆ → หน้า Feed เปิดได้ปกติเห็นแค่ presence สด ส่วนโพสต์กิจกรรม/ไลก์/คอมเมนต์ว่างจนกว่าจะ publish
+
+## หมายเหตุโครง /gnotif (🔔 กล่องแจ้งเตือนย้อนหลัง — รอบ 976)
+- `/gnotif/<ผู้รับ>/n/<nid> = {t, pid, cid?, u, n, r?, cm?, tx?, ts}` — 1 ใบต่อเหตุการณ์ · `t` = `rx`(กดใจโพสต์) `cm`(คอมเมนต์โพสต์เรา) `rp`(ตอบกลับคอมเมนต์เรา) `cl`(ถูกใจคอมเมนต์เรา) · `pid`/`cid` = ต้นเรื่อง (ใช้กับปุ่ม 🔗 ไปดูต้นเรื่องของรอบ 974) · `u`/`n` = uid+ชื่อคนกด · `r` = รหัสรีแอ็กชัน · `cm` = ข้อความคอมเมนต์ · `tx` = ข้อความต้นเรื่อง
+- `/gnotif/<ผู้รับ>/seen = "<nid ล่าสุดที่กดอ่านแล้ว>"` — เทียบด้วยรหัส push key (เรียงตามเวลาในตัว) **ไม่ใช่ timestamp** เพราะนาฬิกาเครื่องคนกดเชื่อไม่ได้ → เลขค้างบนกระดิ่งถูกต้องข้ามเครื่อง
+- 🔄 **"คนที่กด" เป็นฝ่ายเขียน** (ผู้รับอาจไม่ได้เปิดเกมอยู่) — เดิมรอบ 701 ผู้รับคิดเองจาก diff ของ `/gfeed` จึงเห็นเฉพาะตอนเปิดเกมค้าง · diff เดิมยังอยู่เป็นตัวสำรอง (คนกดใช้เกมเวอร์ชันเก่า) กันซ้ำด้วย `Online.notifKeys` (`t|pid|cid|u|r`)
+- 🔒 **คนแปลกหน้ายัดใส่กล่องเด็กไม่ได้:** rules บังคับ `u === auth.uid` + ต้องมีสิทธิ์ยุ่งกับโพสต์ `pid` นั้นจริง (เจ้าของโพสต์/เพื่อนของเจ้าของโพสต์ — สูตรเดียวกับสิทธิ์ไลก์-คอมเมนต์ `/gfeed`) + สร้างได้อย่างเดียว แก้/ลบเฉพาะเจ้าของกล่อง · อ่านได้เฉพาะเจ้าของกล่อง
+- **คุมขนาด:** เก็บ `GNOTIF_KEEP`(40) ใบล่าสุด — เจ้าของกล่องกวาดของเก่าทิ้งเองหลังโหลดครบ (`gnotifPrune`)
+- ฝั่งเกม: `gnotifSend/gnotifAdd/gnotifRecount/gnotifMarkSeen/gnotifWatchStart/gnotifListen/gnotifWatchStop/gnotifPrune/gnotifTellComment` (online.js) · `openFeedNotif`/`renderFeedBell` (ui.js) · ป้าย "ใหม่" + ป้ายเหลืองตอน rules ยังไม่ publish อยู่ใน `css/lobby.css` โซน `.fnt-*`
 
 ## หมายเหตุโครง /pphoto (📷 รูปโปรไฟล์อัปโหลดเอง — รอบ 709)
 - `/pphoto/<uid> = "data:image/jpeg;base64,..."` — รูปเดียวต่อคน · **แยก node ออกจาก `/leaderboard` โดยตั้งใจ**: รูป ~5–25KB ถ้าไปอยู่ใน leaderboard จะถูกดาวน์โหลดมาทั้งก้อนทุกครั้งที่โหลดกระดาน (limitToLast 20 คน = +500KB/ครั้ง) — แยกไว้แล้วอ่านเฉพาะตอนเปิดการ์ดโปรไฟล์คนนั้นจริง ๆ (มี cache ต่อ uid ใน memory)
