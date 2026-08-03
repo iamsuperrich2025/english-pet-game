@@ -78,7 +78,7 @@ const MODES = {
     label:'สนามฟุตบอล', emoji:'⚽', reward:20, doneKey:'soccerDone',
     shoot:false, ghost:false, soccer:true,
     sky:0x8fd0f5, fogN:80, fogF:360, ground:0x3f9d43,
-    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎯 <b>ยิงแบบกะระยะเอง</b> (ไม่มีเส้นช่วย) — อยากได้เส้นนำทาง กดปุ่ม <b>⚡ พลัง 500🪙</b> แปลงร่าง 60 นาที: มีออร่ารอบตัว + เส้นไกด์สีฟ้า + ลำแสงควงสว่านตอนชาร์จ<br>🧱 กด <b>ฟรีคิก</b> มีกำแพงคนมาขวาง ต้องปั่นอ้อมหรือเตะข้ามหัว!<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
+    intro:'⚽ <b>สนามฟุตบอล!</b><br><small>เตะบอลใส่ป้ายตัวอักษร<b>สีทอง</b> (ประกอบคำได้) = ได้เหรียญ 🪙 · ป้ายหงายหลังแล้วเด้งกลับให้เตะอีกได้<br>🕹️ <b>บังคับแบบ PES:</b> สติ๊กมือซ้าย = เล็ง · ปุ่ม ⚽ มือขวากด<b>ค้าง</b> = ชาร์จพลัง ปล่อย = เตะ · ครบคำ +20🪙<br>🎱 <b>เลือกจุดเตะบนลูกบอลได้!</b> กดปุ่ม <b>🎱 จุดสัมผัส</b> เปิดหน้าต่างซูม แล้วลากเลือกจุด — เตะข้างลูก = <b>ลูกโค้ง</b> · เตะใต้ลูก = <b>ลอยโด่ง</b> · เตะบนลูก = <b>พุ่งจิก</b><br>🎯 <b>ยิงแบบกะระยะเอง</b> (ไม่มีเส้นช่วย) — อยากได้เส้นนำทาง กดปุ่ม <b>⚡ พลัง 500🪙</b> แปลงร่าง 60 นาที: มีออร่ารอบตัว + เส้นไกด์สีเหลืองทอง + ลำแสงควงสว่านตอนชาร์จ<br>🧱 กด <b>ฟรีคิก</b> มีกำแพงคนมาขวาง ต้องปั่นอ้อมหรือเตะข้ามหัว!<br>🧤 <b>น้องมาเฝ้าประตู!</b> ยิงมุมเสา/โด่งข้ามหัวให้พ้นมือ · ปุ่ม 🎯 = ดวลจุดโทษ 60 วิ · ยิงเข้ามุมสวยมี<b>รีเพลย์</b> 🎬</small>',
     hint:'🕹️ สติ๊กมือซ้าย = เล็ง · ⚽ ปุ่มขวากดค้าง = ชาร์จพลัง ปล่อย = เตะ · 🎱 ปุ่ม "จุดสัมผัส" = เปิดหน้าต่างซูมเลือกจุดเตะบนลูกบอล (ซ้าย-ขวา = ลูกโค้ง · ล่าง = ลอยโด่ง · บน = พุ่งจิก) ดูริบบิ้นทองบอกวิถีก่อนเตะ! · คอม: A/D W/S · Q/E โค้ง · เว้นวรรค เตะ · V มุมกล้อง',
     koTitle:'⚽ หมดเวลา!',
   },
@@ -285,7 +285,7 @@ const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/�
 let landRing=null, landPt=null;
 /* ⚡ รอบ 412: "โหมดพลังโอเวอร์ไดรฟ์" — จ่าย 100 เหรียญ (รอบ 852 ลดจาก 500) ได้ 60 นาที
    ปกติ (ร่างธรรมดา) = ไม่มีเส้นไกด์ ต้องกะระยะเอาแบบดั้งเดิม
-   แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีฟ้ากลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์
+   แปลงร่างแล้ว = มีออร่ารอบตัว + เส้นไกด์สีเหลืองทองกลับมา + ตอนชาร์จมีลำแสงควงสว่านวนรอบเส้นไกด์
    + 🚀 รอบ 852: บอลพุ่งเร็วขึ้น 20% (คูณใน kickLaunch — เส้นไกด์ใช้สูตรเดียวกันจึงตรงเสมอ)
    🚀 รอบ 932 (ผู้ใช้: "ร่างปกติ 65 m/s · ร่างพลัง 100 m/s"): AURA_SPD เปลี่ยนจากคูณ 1.2 คงที่
    เป็น 100/KICK_SPD_MAX ให้ร่างพลังเต็มแรงตรง 100 m/s เป๊ะเสมอ แม้ KICK_SPD_MAX จะถูกจูนอีกในอนาคต */
@@ -10855,18 +10855,18 @@ function auraFlameTex(){
   for(let i=0;i<=20;i++){                                  // เปลวนอก: วงไล่สีซ้อนตามแกนตั้ง
     const t=i/20, y=112-t*96, r=20*(1-t*.88)+2;
     const g=c.createRadialGradient(32,y,0,32,y,r);
-    const col = t<.55 ? [(40+t/.55*60)|0,(90+t/.55*110)|0,255]        // โคน: น้ำเงินเข้ม → ฟ้าสด
-                      : [(120+(t-.55)/.45*40)|0,(150-(t-.55)/.45*30)|0,255]; // ปลาย: ฟ้าอมม่วงจาง
+    const col = t<.55 ? [(110+t/.55*60)|0,(40+t/.55*50)|0,255]        // รอบ 948: โคนม่วงเข้ม → ม่วงสด (ผู้ใช้เปลี่ยนจากฟ้า)
+                      : [(190+(t-.55)/.45*20)|0,(140+(t-.55)/.45*30)|0,255]; // ปลาย: ม่วงลาเวนเดอร์จาง
     g.addColorStop(0,`rgba(${col[0]},${col[1]},${col[2]},${.3*(1-t*.45)})`);   // รอบ 941: .16→.3 — ยืดเป็นเสา 9m แล้วเนื้อน้ำเงินจางเกิน
-    g.addColorStop(1,'rgba(20,40,180,0)');
+    g.addColorStop(1,'rgba(70,20,160,0)');
     c.fillStyle=g; c.fillRect(0,0,W,H);
   }
   for(let i=0;i<=10;i++){                                  // กรวยใน: สว่างสุด ขาวอมฟ้า (ครึ่งล่างของลิ้น)
     const t=i/10, y=112-t*54, r=9*(1-t*.85)+1.5;
     const g=c.createRadialGradient(32,y,0,32,y,r);
-    g.addColorStop(0,`rgba(225,250,255,${.5*(1-t*.35)})`);
-    g.addColorStop(.6,`rgba(120,210,255,${.28*(1-t*.4)})`);
-    g.addColorStop(1,'rgba(60,140,255,0)');
+    g.addColorStop(0,`rgba(245,230,255,${.5*(1-t*.35)})`);   // รอบ 948: แกนในขาวอมม่วง
+    g.addColorStop(.6,`rgba(200,140,255,${.28*(1-t*.4)})`);
+    g.addColorStop(1,'rgba(150,70,255,0)');
     c.fillStyle=g; c.fillRect(0,0,W,H);
   }
   return new THREE.CanvasTexture(cv);
@@ -10895,10 +10895,10 @@ function auraCoilTex(){
 /* เรขาคณิต helix คงที่ — หมุน rotation.y + เลื่อน texture = วนไม่รู้จบ
    🌪️ รอบ 944: ทรง "ทอร์นาโดคว่ำ" สอบขึ้นจนแหลม (เลขชี้กำลัง 1.4) · ยอด 2.15m ≈ หัว 1.72 + 1/4 ตัว
    จางตั้งแต่ระดับอก (~.95m) ด้วย vertex color (additive: สี→ดำ = ใสสนิท ไม่ต้อง shader)
-   📏 รอบ 947 (ผู้ใช้): โคนเล็กลง — กว้างกว่าตัวละคร (.58m) ราว 1/5 ของความสูงตัว (1.72/5≈.34)
-   = เส้นผ่านศูนย์กลางโคน ~.96m → R0=.48 (เดิม 4.25 ใหญ่เกิน) · แถบริบบิ้นย่อตาม 1.0→.3 */
+   📏 รอบ 948 (ผู้ใช้): โคนกว้างกว่าตัวละคร (.58m) ราว 3/5 ของความสูงตัว (1.72×3/5≈1.03)
+   = เส้นผ่านศูนย์กลางโคน ~1.6m → R0=.8 · แถบริบบิ้น .38 */
 function auraCoilRibbon(off){
-  const N=96, TURNS=4, CH=2.15, R0=.48, W0=.38, W1=.04, CHEST=.95;
+  const N=96, TURNS=4, CH=2.15, R0=.8, W0=.38, W1=.04, CHEST=.95;   // รอบ 948: R0 .48→.8 — โคนกว้างกว่าตัวราว 3/5 ของความสูงตัว (Ø≈1.6m)
   const pos=new Float32Array((N+1)*2*3), uv=new Float32Array((N+1)*2*2), col=new Float32Array((N+1)*2*3), idx=[];
   for(let i=0;i<=N;i++){
     const t=i/N, a=off + t*TURNS*Math.PI*2;
@@ -10952,10 +10952,10 @@ function buildAura(sc){
   auraCoil=[];
   [0,Math.PI].forEach(off=>{ const m=auraCoilRibbon(off); auraGrp.add(m); auraCoil.push({m}); });
   auraCore=new THREE.Mesh(new THREE.CylinderGeometry(.5,.66,1.9,14,1,true),     // เปลวนอกเกือบใส (ข้อ ②)
-    new THREE.MeshBasicMaterial({color:0x5548ff,transparent:true,opacity:.04,side:THREE.DoubleSide,
+    new THREE.MeshBasicMaterial({color:0x7a3fff,transparent:true,opacity:.04,side:THREE.DoubleSide,
       depthWrite:false,blending:THREE.AdditiveBlending}));   // จูนหลังดูภาพ: .07 เห็นเป็น "กล่องแก้ว" สี่เหลี่ยม (silhouette ทรงกระบอก) — ลดจนแค่เรือง
   auraCore.position.y=.95; auraGrp.add(auraCore);
-  const sparkMat=new THREE.MeshBasicMaterial({color:0xcfeaff,transparent:true,opacity:.9,
+  const sparkMat=new THREE.MeshBasicMaterial({color:0xe6ccff,transparent:true,opacity:.9,
     depthWrite:false,blending:THREE.AdditiveBlending});
   for(let i=0;i<7;i++){                                     // ประกายลอยขึ้นจากเปลว (ember ฟ้า)
     const sp=new THREE.Mesh(new THREE.SphereGeometry(.05,6,5),sparkMat.clone());
@@ -10982,7 +10982,7 @@ function auraBuy(){
   state.soccerAuraUntil=base+AURA_MS;
   saveState(); renderHudTop(); auraRender();
   sfx.levelup(); SoccerAudio.goal();
-  showBanner('⚡ <b>โอเวอร์ไดรฟ์!</b> พลังล้อมรอบตัว 60 นาที<br><small>เส้นไกด์สีฟ้ากลับมาแล้ว · กดชาร์จจะมีลำแสงควงสว่านพันรอบ</small>');
+  showBanner('⚡ <b>โอเวอร์ไดรฟ์!</b> พลังล้อมรอบตัว 60 นาที<br><small>เส้นไกด์สีเหลืองทองกลับมาแล้ว · กดชาร์จจะมีลำแสงควงสว่านพันรอบ</small>');
 }
 /* แถบนับถอยหลัง + สถานะปุ่ม */
 function auraRender(){
@@ -11032,7 +11032,7 @@ function auraTick(dt,now){
   //    รอบ 947: R0 4.25→.48 + ทิศหมุน ตามกรวยที่ย่อ/กลับทิศ (เดิม hardcode แล้วกรวยจริงย่อไป = ไต่กรวยล่องหน)
   auraGlints.forEach(g=>{
     const t=(tS*g.cl+g.ph)%1;
-    const r=Math.max(.02,.48*Math.pow(1-t,1.4));
+    const r=Math.max(.02,.8*Math.pow(1-t,1.4));   // รอบ 948: ตามโคนกรวยใหม่ .8
     const y=.1+t*(2.15-.1);
     const ang=g.a+tS*12.6;
     g.m.position.set(Math.cos(ang)*r, y, Math.sin(ang)*r);
@@ -11200,7 +11200,7 @@ function buildGuideRibbon(sc){
   const col=new Float32Array(GUIDE_N*2*3);
   // 💙 รอบ 404 (ผู้ใช้): แสงสีฟ้าไล่ "เข้ม→อ่อน" ตามระยะ — ต้นทางน้ำเงินเข้ม ปลายทางฟ้าอ่อนเกือบขาว
   //    ใช้ vertex color เพราะไล่ตามความยาวริบบิ้น (material.color เดียวทำไม่ได้)
-  const near=new THREE.Color(0x0b3fd6), far=new THREE.Color(0xb6ecff), tmp=new THREE.Color();
+  const near=new THREE.Color(0xb8860b), far=new THREE.Color(0xffe27a), tmp=new THREE.Color();   // รอบ 948: ฟ้า→เหลืองเข้มไล่ทอง (ผู้ใช้สั่ง)
   for(let i=0;i<GUIDE_N;i++){
     const t=i/(GUIDE_N-1);
     tmp.copy(near).lerp(far, Math.pow(t,0.7));
@@ -11328,8 +11328,8 @@ function updateSoccerGuide(ready,dx,dz){
       const s=1+Math.sin(performance.now()/220)*.07;
       landRing.scale.setScalar(s);
       const ud=landRing.userData;                    // 💙 วงจุดตกใช้โทนฟ้าปลายริบบิ้น (จุดตก=ปลายทาง)
-      ud.outer.material.color.setRGB(0.62,0.90,1);
-      ud.inner.material.color.setRGB(0.62,0.90,1);
+      ud.outer.material.color.setRGB(1,0.85,0.35);   // รอบ 948: วงจุดตกโทนเหลืองทองตามริบบิ้น
+      ud.inner.material.color.setRGB(1,0.85,0.35);
     } else landRing.visible=false;
   }
 }
