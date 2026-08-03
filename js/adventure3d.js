@@ -12137,7 +12137,7 @@ function start(md,opt){
   if(mode==='drone' && !state.droneTicket){ toast('🛸 ต้องมีตั๋วโลกโดรน FPV ก่อนนะ'); return; }
   if(mode==='drive' && !state.driveTicket){ toast('🚗 ต้องมีตั๋วโลกขับรถกำแพงเพชรก่อนนะ'); return; }
   if(mode==='soccer' && !state.soccerTicket){ toast('⚽ ต้องมีตั๋วโลกสนามฟุตบอลก่อนนะ'); return; }
-  if(mode==='mecha' && !(state.robots&&state.robots.length)){ toast('🤖 ต้องมีหุ่นยนต์อย่างน้อย 1 ตัวก่อนนะ'); return; }
+  if(mode==='mecha' && !state.mechaTicket && !(state.robots&&state.robots.length)){ toast('🤖 ต้องจ่ายค่าเข้าโลกหุ่นรบก่อนนะ'); return; }   // 🔓 รอบ 943: ไม่มีหุ่น=ยืมระบบฟรี (จ่ายค่าเข้าแล้วเข้าได้)
   if(mode==='drive' && !window.KPP_CITY){ toast('🗺️ แผนที่เมืองยังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
   /* รอบ 255: เลิกระบบบาดเจ็บล็อกเข้าโลก (advHurt) — โลก 3D ไม่มีตาย/เกมโอเวอร์แล้ว เข้าได้เสมอ */
   // 🧹 รอบ 941: ผ่านด่านเช็กทุกข้อ = เข้าโลกจริง → ล้าง toast เตือนค้างของล็อบบี้ (เช่น "ยังไม่มีหุ่นยนต์" ก่อนซื้อ)

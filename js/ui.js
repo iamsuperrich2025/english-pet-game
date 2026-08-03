@@ -6281,7 +6281,7 @@ async function enterDrone3D(){
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
   if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg(enterDrive3D);
-  // 🔓 รอบ 942: ไม่มีรถไม่บล็อกแล้ว — ระบบให้ยืมรถขับฟรีสำหรับรอบนั้น (myCar()=null → โมเดล car_01 + สมรรถนะกลาง 3/3/3)
+  // 🔓 รอบ 943: ไม่มีรถไม่บล็อกแล้ว — ระบบให้ยืมรถขับฟรีสำหรับรอบนั้น (myCar()=null → โมเดล car_01 + สมรรถนะกลาง 3/3/3)
   const loanCar = !(state.cars && state.cars.length);
   if(loanCar) toast('🚗 รอบนี้ยืมรถของระบบขับฟรี — อยากได้คันของตัวเอง ซื้อที่หมวดยานพาหนะนะ');
   if(!window.Adventure3D || !window.KPP_CITY){
@@ -6457,7 +6457,7 @@ async function enterInvasion3D(){
    🎫→💰 รอบ 823 (ผู้ใช้สั่ง 30 ก.ค. 2026): ยกเลิกตั๋วราคาแพงจ่ายทีเดียว — กดปุ่มเข้าโลกเด้งหน้าจ่ายค่าเข้าทันที
    (ไม่มีการ์ดตั๋วแยกในตลาดแล้ว) ราคาวันนี้เดียวกันทุกโลกจาก worldEntryInfo() (js/data/calendar.js — คิดวันหยุด/วันเด็ก)
    ปุ่มทุกใบสร้างจาก WORLD3D ก้อนเดียว → มีโลก 3D ใหม่ในอนาคตแค่ "เพิ่ม 1 บรรทัด" ที่นี่แล้วปุ่มจะโผล่ในรางเอง
-   🔓 รอบ 942 (ผู้ใช้สั่ง 3 ส.ค. 2026): ยกเลิกลำดับปลดล็อกโลก (prereq) — จ่ายค่าเข้า 500 เข้าโลกไหนก็ได้ทันที
+   🔓 รอบ 943 (ผู้ใช้สั่ง 3 ส.ค. 2026): ยกเลิกลำดับปลดล็อกโลก (prereq) — จ่ายค่าเข้า 500 เข้าโลกไหนก็ได้ทันที
    ไม่มีหุ่น/รถของตัวเอง = ระบบให้ยืมฟรีสำหรับรอบนั้น (ดู enterMecha3D / enterDrive3D) */
 const WORLD3D = [
   { mode:'adv',   ico:'🌍', label:'ผจญภัย', ticketKey:'advTicket',   doneKey:'advDone',   enter:enterAdventure3D },
@@ -6530,7 +6530,7 @@ function world3DFail(label, err){
 }
 
 function railWorldClick(w){
-  /* 🔓 รอบ 942: ยกเลิกด่าน "ต้องปลดล็อกโลกก่อนหน้า" + ด่าน "ต้องมีหุ่น/รถก่อน" — จ่ายค่าเข้าแล้วเข้าได้ทุกโลก
+  /* 🔓 รอบ 943: ยกเลิกด่าน "ต้องปลดล็อกโลกก่อนหน้า" + ด่าน "ต้องมีหุ่น/รถก่อน" — จ่ายค่าเข้าแล้วเข้าได้ทุกโลก
      ไม่มีหุ่น/รถ = ระบบให้ยืมฟรีสำหรับรอบนั้น (enterMecha3D / enterDrive3D จัดการ) */
   if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
   if(w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p))){
@@ -6552,7 +6552,7 @@ function openWorldEntryDialog(w){
     : info.discount
       ? `<p style="font-size:14px;margin:6px 0">🎊 ${escapeHTML(info.reason)} — ลดครึ่งราคา!<br>ค่าเข้าวันนี้ <b>🪙${fmtNum(info.fee)}</b> <s style="opacity:.55">🪙${fmtNum(WORLD_ENTRY_FEE)}</s></p>`
       : `<p style="font-size:14px;margin:6px 0">ค่าเข้า <b>🪙${fmtNum(info.fee)}</b></p>`;
-  /* 🔓 รอบ 942: โน้ต "ปลดล็อกโลกถัดไป" เลิกใช้ (ไม่มีลำดับโลกแล้ว) → แจ้งเรื่องยืมหุ่น/รถฟรีแทนเมื่อยังไม่มีของตัวเอง */
+  /* 🔓 รอบ 943: โน้ต "ปลดล็อกโลกถัดไป" เลิกใช้ (ไม่มีลำดับโลกแล้ว) → แจ้งเรื่องยืมหุ่น/รถฟรีแทนเมื่อยังไม่มีของตัวเอง */
   const loanNote = (w.mode === 'drive' && !myCar())
     ? '<p style="font-size:12px;color:#8a7a9a;margin:4px 0">🚗 ยังไม่มีรถของตัวเอง — รอบนี้ระบบให้ยืมรถขับฟรี 1 คัน (อยากได้คันเก่งกว่า ซื้อได้ที่หมวดยานพาหนะ)</p>'
     : (w.mode === 'mecha' && !(state.robots && state.robots.length))
@@ -6560,14 +6560,14 @@ function openWorldEntryDialog(w){
       : '';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
-  overlay.innerHTML = `<div class="levelup-box" style="max-width:340px">
+  overlay.innerHTML = `<div class="levelup-box" style="max-width:340px;padding:20px 24px">
     <h2 style="font-size:18px">${w.ico} เข้าโลก${w.label}</h2>
     ${feeHTML}
     ${loanNote}
     ${tinvNoticeHTML(w.mode)}
     <button class="big-btn green home-btn" id="we-enter" style="width:100%;margin:4px 0">${info.free?'🚪 เข้าเลย!':'🪙 จ่ายแล้วเข้าเลย!'}</button>
     <button class="big-btn blue home-btn" id="we-invite" style="width:100%;margin:4px 0">📨 ชวนเพื่อนเล่นด้วยกัน (เงินคืนคนละ 🪙${fmtNum(TINV_CASHBACK)})</button>
-    <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px">ยกเลิก</button>
+    <button class="big-btn" id="we-cancel" style="width:100%;font-size:14px;padding:8px;margin:4px 0 0">ยกเลิก</button>
   </div>`;
   document.body.appendChild(overlay);
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
@@ -6659,7 +6659,7 @@ function renderRailWorlds(){
     const lk = b.querySelector('.rail-lock');
     const cnt = b.querySelector('.rail-count');
     const pr  = b.querySelector('.rail-price');
-    /* 🔓 รอบ 942: ยกเลิกลำดับปลดล็อกโลก (prereq) + หุ่นรบเข้าระบบค่าเข้าเดียวกับโลกอื่น (ไม่มีหุ่น=ยืมฟรี)
+    /* 🔓 รอบ 943: ยกเลิกลำดับปลดล็อกโลก (prereq) + หุ่นรบเข้าระบบค่าเข้าเดียวกับโลกอื่น (ไม่มีหุ่น=ยืมฟรี)
        ล็อก 🔒 เหลือเคสเดียว: โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย */
     const locked = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));
     b.classList.toggle('locked', locked);
@@ -7329,11 +7329,18 @@ function buyRobot(id){
     });
 }
 
-/* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha */
+/* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha
+   🔓 รอบ 943: ไม่มีหุ่นของตัวเอง = ระบบให้ยืมหุ่นตัวแรก (robot_01) ฟรีสำหรับรอบนั้น — ไม่บันทึกเป็นทรัพย์สิน */
 async function enterMecha3D(){
-  if(!(state.robots && state.robots.length) || state.advHurt || advLoading) return advBusyMsg(enterMecha3D);
-  const chosen = await pickMechaRobot();
-  if(!chosen) return;
+  if(state.advHurt || advLoading) return advBusyMsg(enterMecha3D);
+  let chosen;
+  if(state.robots && state.robots.length){
+    chosen = await pickMechaRobot();
+    if(!chosen) return;
+  }else{
+    chosen = ROBOTS[0].id;
+    toast(`🤖 รอบนี้ยืมหุ่น ${ROBOTS[0].name} ของระบบออกรบฟรี — ซื้อหุ่นของตัวเองได้ที่ตลาดนะ`);
+  }
   state.mechaRobot = chosen; saveState();
   if(!window.Adventure3D){
     advLoading = Date.now();
