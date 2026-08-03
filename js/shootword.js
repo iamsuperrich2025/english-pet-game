@@ -31,6 +31,7 @@
   const PT_PER_LETTER=2, PERFECT_BONUS=5;      // เรตเดียวกับ 🔎 ค้นหาคำ / ⌨️ พิมพ์คำ
   const DUCK_COIN=3;                           // 🦆 โบนัสเป็ด (เหรียญล้วน ไม่เข้าแต้มอันดับ)
   const COOLDOWN=310;                          // ms ต่อนัด (ปืนอัดลมต้องปั๊มลม)
+  const FOLD_ANGLE=1.78, FOLD_DUR=0.13;        // 🎯 รอบ 937: ยิงโดน → แผ่นพับแรง+ไวขึ้น (เดิม 1.5rad/0.2s) ให้รู้สึกหนักหน่วงชัดเจน
   const ROWS=[                                 // หิ้ง 3 ชั้นไล่ระดับแบบอัฒจันทร์ — ไกลขึ้น สูงขึ้น แผ่นใหญ่ขึ้น
     /* 🎯 รอบ 923: ผู้ใช้สั่งขยายระยะเป้าออกไปอีก 3 เท่า — คูณ z อย่างเดียว (สูง/กว้าง/ขนาดแผ่นเท่าเดิม)
        ยิงยากขึ้นตามระยะจริง (raycaster แม่นทุกระยะอยู่แล้ว) โหมดเล็งซูม FOV แคบลงช่วยชดเชยความไกล */
@@ -120,10 +121,11 @@
       puffN(c,t+0.17,0.05,'bandpass',700,2,0.14);        // ปั๊มลม chk-
       puffN(c,t+0.24,0.05,'bandpass',560,2,0.12);        // -chk
     },
-    plink(){ const c=ac(); if(!c)return; const t=c.currentTime;   // โดนแผ่นโลหะ/ไม้ "ติ๊ง+ก๊อก"
-      tone(c,t,0.1,'triangle',2050,1450,0.2);
-      puffN(c,t,0.03,'highpass',3200,1,0.15);
-      tone(c,t+0.01,0.07,'sine',240,140,0.22);           // ก๊อกไม้
+    plink(){ const c=ac(); if(!c)return; const t=c.currentTime;   // โดนแผ่นโลหะ/ไม้ "ติ๊ง+ก๊อก" (รอบ 937: ดังขึ้น)
+      tone(c,t,0.12,'triangle',2050,1450,0.34);
+      tone(c,t,0.1,'sine',2900,2300,0.14);                // ประกายเสียงแหลมเสริมให้ "ติ๊ง" เด่นขึ้น
+      puffN(c,t,0.03,'highpass',3200,1,0.24);
+      tone(c,t+0.01,0.08,'sine',240,140,0.36);            // ก๊อกไม้
     },
     spring(){ const c=ac(); if(!c)return; const t=c.currentTime;  // 🪀 แผ่นเด้งกลับ "ดึ๋ง"
       const o=c.createOscillator(), g=c.createGain(); o.type='sine';
@@ -529,6 +531,7 @@
     return best;
   }
   function hitPlate(P){
+    const v=new THREE.Vector3(); P.mesh.getWorldPosition(v); sparkBurst(v);
     const need=word?word.w[pos]:null;
     if(need && P.letter===need){
       pos++; streak++; misses+=0;
@@ -589,8 +592,8 @@
     if(boardLock>0) boardLock-=dt;
     plates.forEach(P=>{
       if(P.st==='fall'){
-        P.t+=dt; const k=Math.min(1,P.t/0.2);
-        P.hinge.rotation.x=-1.5*easeIn(k);
+        P.t+=dt; const k=Math.min(1,P.t/FOLD_DUR);
+        P.hinge.rotation.x=-FOLD_ANGLE*easeIn(k);
         if(k>=1){ P.st='down'; P.t=0;
           if(P.pend){ setPlateLetter(P,P.pend); P.pend=null; } }
       }else if(P.st==='down'){
@@ -598,7 +601,7 @@
         if(P.t>0.42){ P.st='rise'; P.t=0; SND.spring(); }
       }else if(P.st==='rise'){
         P.t+=dt; const k=Math.min(1,P.t/0.72);
-        P.hinge.rotation.x=-1.5*(1-easeOutElastic(k));
+        P.hinge.rotation.x=-FOLD_ANGLE*(1-easeOutElastic(k));
         if(k>=1){ P.st='up'; P.hinge.rotation.x=0; }
       }
       if(P.glow>0){                          // ✨ ใบ้: แผ่นเป้าหมายเต้นตุ้บ ๆ
@@ -866,6 +869,33 @@
       if(k>=1){ scene.remove(sp); tickers.splice(tickers.indexOf(fade),1); return; }
       sp.scale.setScalar(0.12+k*0.5); sp.material.opacity=0.95*(1-k);
     });
+  }
+  /* ✨ ประกายกระเด็น ณ จุดที่ยิงโดนแผ่น — เสริม impactFx ให้รู้สึก "โดนหนักขึ้น" (รอบ 937) */
+  let sparkTex=null;
+  function sparkBurst(point){
+    if(!sparkTex){
+      const c=cv(16,16), q=c.getContext('2d');
+      const g=q.createRadialGradient(8,8,0,8,8,8);
+      g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.35,'rgba(255,221,110,.95)'); g.addColorStop(1,'rgba(255,221,110,0)');
+      q.fillStyle=g; q.beginPath(); q.arc(8,8,8,0,7); q.fill();
+      sparkTex=tex(c);
+    }
+    const N=10;
+    for(let i=0;i<N;i++){
+      const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:sparkTex, transparent:true, opacity:1, depthTest:false, blending:THREE.AdditiveBlending}));
+      const ang=Math.random()*Math.PI*2, spd=1.8+Math.random()*2.6, vy0=1+Math.random()*2;
+      sp.position.copy(point); sp.scale.setScalar(0.06+Math.random()*0.06);
+      scene.add(sp);
+      const vx=Math.cos(ang)*spd, vz=Math.sin(ang)*spd;
+      const t0=clock, life=0.28+Math.random()*0.16;
+      tickers.push(function fly(dt){
+        const age=clock-t0, k=age/life;
+        if(k>=1){ scene.remove(sp); tickers.splice(tickers.indexOf(fly),1); return; }
+        sp.position.x+=vx*dt; sp.position.z+=vz*dt;
+        sp.position.y+=(vy0-age*7)*dt;                    // แรงโน้มถ่วงเบา ๆ ดึงประกายตกลง
+        sp.material.opacity=1-k;
+      });
+    }
   }
 
   /* ---------- อินพุต: ลาก = มองรอบ · แตะสั้น = ยิง ---------- */
