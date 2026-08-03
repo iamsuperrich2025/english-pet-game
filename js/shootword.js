@@ -45,6 +45,7 @@
   /* ---------- สถานะเกม ---------- */
   let three=false, built=false, running=false, opening=false;
   let overlay=null, renderer=null, scene=null, camera=null, clock=0, lastT=0;
+  let shakeMag=0;                              // 🎥 รอบ 938: screen shake ตอนโดนแผ่น (ดูฟังก์ชัน shakeCam)
   /* 🎯 รอบ 932 (บั๊กผู้ใช้ "ยิงตัวอักษรแล้วไม่มีอะไรเกิดขึ้น"): pitch เริ่มต้นเดิม 0.10 ตั้งไว้ตอนเป้ายังอยู่ใกล้
      พอรอบ 923 ขยายระยะเป้า 3 เท่า มุมมองไปยังหิ้งแบนลงเหลือ ~0.00-0.06 rad → กล้องเงยสูงข้ามหัวแผ่นตลอด
      กากบาท/ปุ่มยิง (ยิงกลางจอเสมอ) จึงพุ่งไปโดนฉากหลัง ไม่โดนแผ่นสักที · 0.04 = กลางกลุ่มเป้าทั้ง 3 แถว */
@@ -530,12 +531,15 @@
     });
     return best;
   }
+  /* 🎥 รอบ 938: กระตุ้นสั่นกล้อง (screen shake) — เรียกซ้ำได้ เอาค่ามากสุดไว้ ไม่บวกทบจนสั่นเกิน */
+  function shakeCam(amt){ shakeMag=Math.max(shakeMag,amt); }
   function hitPlate(P){
     const v=new THREE.Vector3(); P.mesh.getWorldPosition(v); sparkBurst(v);
     const need=word?word.w[pos]:null;
     if(need && P.letter===need){
       pos++; streak++; misses+=0;
       SND.plink(); setTimeout(()=>SND.fly(),90);
+      shakeCam(0.032);                                   // โดนตัวถูก = สั่นแรงหน่อย ให้รู้สึกหนักหน่วงสมใจ
       flyLetter(P);
       flipPlate(P, AZ[Math.floor(Math.random()*26)]);   // เด้งกลับมาพร้อมตัวอักษรใหม่ (หมุนป้ายแบบงานวัด)
       showStreak();
@@ -544,6 +548,7 @@
     }else{
       misses++; streak=0;
       SND.plink(); SND.miss();
+      shakeCam(0.017);                                   // โดนตัวผิด = สั่นเบากว่า (ยังรู้สึกกระแทกแต่ไม่ฉลอง)
       flipPlate(P,null);                                 // แผ่นผิด: พับแล้วเด้งกลับตัวเดิม
       showStreak();
     }
@@ -615,8 +620,11 @@
     tickers.forEach(f=>f(dt,clock));
     // กล้องแกว่งหายใจเบา ๆ ตอนเล็ง (สมจริงขึ้นนิดเดียว ไม่ให้เด็กเวียนหัว)
     const sway=aimMode?0.0016:0.0006;
-    camera.rotation.y=yaw+Math.sin(clock*1.1)*sway;
-    camera.rotation.x=pitch+Math.cos(clock*0.9)*sway;
+    if(shakeMag>0) shakeMag=Math.max(0,shakeMag-dt*shakeMag*9-dt*0.01);   // 🎥 รอบ 938: หน่วงเร็ว ~0.15-0.25s ไม่ทิ้งค้างจนเด็กเวียนหัว
+    const shx=shakeMag? Math.sin(clock*53.1)*shakeMag : 0;
+    const shy=shakeMag? Math.sin(clock*41.7+1.7)*shakeMag*0.7 : 0;
+    camera.rotation.y=yaw+Math.sin(clock*1.1)*sway+shx;
+    camera.rotation.x=pitch+Math.cos(clock*0.9)*sway+shy;
   }
   function loop(t){
     if(!running) return;
@@ -1048,6 +1056,7 @@
     get plates(){return plates;}, get ducks(){return ducks;}, get queue(){return queue;},
     get camera(){return camera;}, get scene(){return scene;}, get renderer(){return renderer;},
     get aimMode(){return aimMode;}, get boardLock(){return boardLock;},
+    get shakeMag(){return shakeMag;},
     set boardLock(v){boardLock=v;}, set lastShot(v){lastShot=v;},
     step(dt){ tick(dt||0.016); if(renderer)renderer.render(scene,camera); },
     shoot, hitPlate, hitDuck, nextWord, dealBoard, pool, takeWord, toggleAim,
