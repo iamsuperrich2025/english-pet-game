@@ -225,9 +225,13 @@ const SOCCER_SHIRTS=[
   {n:'ส้ม',c:0xef6c00},{n:'ม่วง',c:0x8e24aa},{n:'ฟ้า',c:0x29b6f6},{n:'ชมพู',c:0xec407a},
   {n:'ขาว',c:0xf0f0f0},{n:'ดำ',c:0x2b2f36},
 ];
-const BALL_R=0.34, BALL_G=17, PLAYER_Z=8, GOAL_Z=-19;      // รัศมีบอล · แรงโน้มถ่วง · จุดยืน/ประตู (แกน z)
+/* 🏟️ รอบ 928 (ผู้ใช้: "สนามใหญ่ขึ้น 2 เท่า" — ขยายทั้งสนามจริง ระยะเตะไกลขึ้นด้วย):
+   สนาม 44×64 → 88×128 · ประตู -19 → -38 · จุดยืนสุ่มไกลสุด ~58m (เดิม ~29m)
+   ประตู/บอล/GK ขนาดเท่าเดิม (ของจริงไม่ขยายตามสนาม) · KICK_SPD_MAX 44→52 จากการจำลองฟิสิกส์:
+   ที่ 44 ลอยตรงถึงแค่ 56m ไม่ถึงจุดไกลสุด · ที่ 52 ลอยถึง 66m + เด้ง/กลิ้งถึง 94m */
+const BALL_R=0.34, BALL_G=17, PLAYER_Z=16, GOAL_Z=-38;     // รัศมีบอล · แรงโน้มถ่วง · จุดยืน/ประตู (แกน z)
 const GOAL_HW=4, GOAL_H=3;                                 // ครึ่งกว้างประตู · ความสูงคาน
-const KICK_SPD_MIN=9, KICK_SPD_MAX=44, CHARGE_RATE=78;     // ความเร็วเตะต่ำ-สูง (m/s · รอบ 401 เพิ่ม 32→44 ให้ซัดเต็มแรงแล้วสะใจ) · พลังชาร์จ/วินาที
+const KICK_SPD_MIN=9, KICK_SPD_MAX=52, CHARGE_RATE=78;     // ความเร็วเตะต่ำ-สูง (m/s · รอบ 928 เพิ่ม 44→52 ตามสนามใหญ่ 2 เท่า) · พลังชาร์จ/วินาที
 const AIM_YAW_SP=0.9, AIM_PITCH_SP=0.7, SOCCER_COLLECT=1.7;// ความไวเล็ง + ระยะบอลชนป้าย
 const SOCCER_TILES=1, SOCCER_LETTER_COIN=5;               // รอบ 404: เหลือป้ายเดียว โผล่ทีละตัวในกรอบประตู · เหรียญ/ตัวอักษรที่ประกอบคำได้
 let soccerBall=null, soccerPlayer=null;                    // ลูกบอล · หุ่นนักเตะ (รอบ 401: จุดพรีวิวเดิม → ริบบิ้น guideRibbon)
@@ -246,13 +250,13 @@ const CURL_SPIN=3.5;                                       // สปินตอ
    จุดสัมผัสแนวนอน = ไซด์สปิน (ฟิสิกส์จริง: เตะขวาของลูก → บอลโค้งซ้าย)
    จุดสัมผัสแนวตั้ง  = เตะใต้ลูก(แบ็คสปิน ลอยโด่ง) / เตะบนลูก(ท็อปสปิน พุ่งต่ำจิก) */
 const HIT_LIFT=0.20, HIT_SPIN_X=2.6;                       // เตะใต้ลูกสุด = เพิ่มมุมยกกี่ rad · แบ็ค/ท็อปสปินสูงสุดจากจุดสัมผัส
-const GUIDE_N=44, GUIDE_W=0.62;                            // จำนวนจุดจำลองริบบิ้น · ความกว้างริบบิ้น (เมตร)
+const GUIDE_N=56, GUIDE_W=0.62;                            // จำนวนจุดจำลองริบบิ้น (รอบ 928: 44→56 ≈2.7วิ ให้เห็นถึงประตูที่ไกลขึ้น) · ความกว้างริบบิ้น (เมตร)
 let sHit=0;                                                // -1 เตะใต้ลูก .. +1 เตะบนลูก
 let sKickPunch=0;                                          // 💥 แรงกระตุกกล้องตอนเตะ (จางเองทุกเฟรม)
 let spinPadEl=null, spinDotEl=null, spinLblEl=null, spinOpen=false;
 let guideRibbon=null, guideMat=null, _gPts=[];
 /* 🎨🎯🧱 รอบ 402: ริบบิ้นไล่สีตามพลัง · วงจุดตก · กำแพงคนฟรีคิก */
-const FK_SPOT_Z=GOAL_Z+18, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก · ระยะกำแพงตามกติกาจริง · จำนวนคน
+const FK_SPOT_Z=GOAL_Z+27, FK_WALL_GAP=9.15, FK_WALL_N=5;  // จุดตั้งเตะฟรีคิก (รอบ 928: 18→27m — เขตโทษใหม่ลึก ~19m ต้องพ้นกรอบ) · ระยะกำแพงตามกติกาจริง · จำนวนคน
 const FK_MAN_R=0.42, FK_MAN_H=1.92;                        // รัศมี/ความสูงคนในกำแพง (ใช้เช็กบอลชน)
 let landRing=null, landPt=null;
 /* ⚡ รอบ 412: "โหมดพลังโอเวอร์ไดรฟ์" — จ่าย 100 เหรียญ (รอบ 852 ลดจาก 500) ได้ 60 นาที
@@ -279,7 +283,7 @@ const _sbAxis=new THREE.Vector3();                         // ตัวแปร
 const GK_Z=GOAL_Z+0.9, GK_SPEED=3.4, GK_REACH_X=0.9, GK_REACH_Y=2.0;  // แนวยืน GK · ความเร็ววิ่ง · ระยะปัด (กว้าง/สูง)
 const GK_SPRITES={ cat:{f:'pet_cat_walk.webp',fw:172,fh:172,fps:14}, dog:{f:'pet_dog_walk.webp',fw:127,fh:165,fps:14},
                    dragon:{f:'pet_dragon_idle.webp',fw:147,fh:139,fps:12} };
-const PK_TIME=60, PK_COIN=2, PK_SPOT_Z=GOAL_Z+7;           // วินาทีต่อรอบจุดโทษ · เหรียญ/ประตู · จุดโทษ (7m หน้าประตู)
+const PK_TIME=60, PK_COIN=2, PK_SPOT_Z=GOAL_Z+13;          // วินาทีต่อรอบจุดโทษ · เหรียญ/ประตู · จุดโทษ (รอบ 928: 7→13m ให้ตรงจุดโทษที่วาด 11m×K บนสนามใหญ่)
 let gkMesh=null, gkX=0, gkType='', gkSaveAt=0, gkCoolAt=0;
 let sBaseZ=PLAYER_Z, sBaseX=0;                             // จุดยืนเตะปัจจุบัน (โหมดปกติ=สุ่ม · จุดโทษ=PK_SPOT_Z · ฟรีคิก=FK_SPOT_Z)
 let pkOn=false, pkEndAt=0, pkGoals=0, pkKicks=0, pkBest=0, pkHudEl=null;
@@ -2500,7 +2504,7 @@ function buildScene(md){
     sc.add(new THREE.HemisphereLight(0xffffff,0x4f8f43,.80));
     const sun=new THREE.DirectionalLight(0xfff4d0,.95); sun.position.set(24,55,32); sc.add(sun);
     const fill=new THREE.DirectionalLight(0xdfe8ff,.20); fill.position.set(-30,40,-20); sc.add(fill);
-    const fieldW=44, fieldL=64;
+    const fieldW=88, fieldL=128;               // 🏟️ รอบ 928: สนามใหญ่ขึ้น 2 เท่า (เดิม 44×64)
     // 🌿 รอบ 403: Phong + normal map = แสงจับใบหญ้าเป็นร่องเงา (เดิม Lambert เรียบแบนเหมือนกระดาษ)
     // 🌿 รอบ 410: ใช้ soccerTurfTexture (ภาพจริงรีดแถบออก+ลดสีจัด ปูถี่ 24×30) แทน applyTex ที่ปูแค่ 3×2
     const grassM=new THREE.MeshPhongMaterial({map:soccerTurfTexture(),normalMap:grassNormalTexture(),
@@ -2528,7 +2532,7 @@ function buildScene(md){
     buildLandRing(sc);                         // 🎯 รอบ 402: วงบอกจุดตกลูก
     buildAura(sc); buildDrill(sc);             // ⚡ รอบ 412: ออร่ารอบตัว + ลำแสงควงสว่าน
     buildBallFX(sc);                           // 🔥💨 รอบ 852: ลูกไฟ (ชาร์จ ≥30%) + ควันหางมิสไซล์
-    ringAds(sc, 6, 26, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer)
+    ringAds(sc, 6, 52, 0, null);               // 📢 ป้ายโฆษณาริมสนามฟุตบอล (soccer · รอบ 928: รัศมี 26→52 ตามสนาม 2 เท่า)
     worlds[md]={scene:sc, trees:[], buildings:[]};
     return;
   }else if(md==='mecha'){
@@ -10093,7 +10097,7 @@ function soccerTurfTexture(){
   }
   const t=new THREE.CanvasTexture(cv);
   t.wrapS=t.wrapT=THREE.MirroredRepeatWrapping;             // สะท้อนขอบ = ต่อไร้รอย
-  t.repeat.set(24,30);                                      // 1 กระเบื้อง ≈ 2.9×3.0 m (ใบหญ้าขนาดจริง)
+  t.repeat.set(39,51);                                      // 1 กระเบื้อง ≈ 2.9×3.0 m (ใบหญ้าขนาดจริง · รอบ 928: ผืน 70×90→114×154 ปรับ repeat คงขนาดใบ)
   const img=new Image();
   img.onload=()=>{ c.clearRect(0,0,S,S); c.drawImage(img,0,0,S,S); soccerTurfGrade(c,S); t.needsUpdate=true; };
   img.src='img/tex/soccer_grass.jpg';
@@ -10124,7 +10128,7 @@ function grassNormalTexture(){
   }
   c.putImageData(img,0,0);
   const t=new THREE.CanvasTexture(cv);
-  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(26,34);   // ถี่กว่าลายตัด = เห็นเนื้อหญ้าละเอียด
+  t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(42,58);   // ถี่กว่าลายตัด = เห็นเนื้อหญ้าละเอียด (รอบ 928: ปรับตามผืนใหญ่ 2 เท่า)
   return t;
 }
 /* 🌿 กอหญ้า 3D จริง — แผ่นไขว้กากบาทติดเทกซ์เจอร์ใบหญ้าโปร่ง รวมเป็น mesh เดียว (draw call เดียว เบามาก) */
@@ -10136,7 +10140,7 @@ function soccerLinesTexture(){
   /* 🌿 รอบ 410: แถบตัดหญ้าย้ายมาวาดที่ชั้นนี้ (แยกจากเทกซ์เจอร์ใบหญ้า จึงคุมขนาดจริงได้อิสระ)
      วางเป็นแถบ "แนวเดียวกับทิศเตะ" (แปรตามแกน x) → มองจากหลังผู้เตะเห็นแถบพุ่งเข้าหาประตู เหมือนภาพตัวอย่าง
      ขอบแถบไล่จางแบบรอยล้อรถตัดหญ้าจริง ไม่ใช่เส้นตัดคม */
-  const NB=10;                                     // 10 แถบบนความกว้างสนาม 44m = แถบละ 4.4m (มาตรฐานจริง)
+  const NB=20;                                     // 20 แถบบนความกว้างสนาม 88m = แถบละ 4.4m (มาตรฐานจริง · รอบ 928: สนาม 2 เท่า)
   for(let i=0;i<NB;i+=2){
     const x0=i*1024/NB, w=1024/NB;
     const g=c.createLinearGradient(x0,0,x0+w,0);
@@ -10148,10 +10152,10 @@ function soccerLinesTexture(){
   /* ⚽📐 รอบ 411 (ผู้ใช้ทัก 3 ข้อ): เดิมวาดสนาม "เกือบจัตุรัส" กว้าง 40 × ยาวแค่ 38m ทั้งที่สนามจริงยาว/กว้าง ≈ 1.54
      ผลคือทุกอย่างอัดกันจนโค้งเขตโทษเกือบชนวงกลมกลาง + มีเส้นเขตโทษ "ฝั่งตรงข้าม" โผล่มาพาดใกล้วงกลมกลาง
      แก้: วาดเป็น "ครึ่งสนามจริง" ย่อส่วนตามมาตรฐาน FIFA (105×68) — เล่นยิงประตูเดียวอยู่แล้ว ไม่ต้องมีฝั่งตรงข้าม */
-  const W=44,L=64, PX=x=>(x+W/2)/W*1024, PY=z=>(z+L/2)/L*1024;  // เมตร→พิกเซล (แกน z: บนผืนผ้า=ฝั่งประตู -z)
+  const W=88,L=128, PX=x=>(x+W/2)/W*1024, PY=z=>(z+L/2)/L*1024;  // เมตร→พิกเซล (แกน z: บนผืนผ้า=ฝั่งประตู -z · รอบ 928: 44×64→88×128)
   const RX=m=>m/W*1024, RY=m=>m/L*1024;
-  c.strokeStyle='rgba(255,255,255,.95)'; c.fillStyle='rgba(255,255,255,.95)'; c.lineWidth=4;
-  const PW=40, K=PW/68;                       // กว้าง 40m · ตัวคูณย่อส่วนจากสนามจริง 68m
+  c.strokeStyle='rgba(255,255,255,.95)'; c.fillStyle='rgba(255,255,255,.95)'; c.lineWidth=2.5;  // รอบ 928: 4→2.5px — px/เมตรลดครึ่ง เส้นเดิมจะหนาเป็น 34cm
+  const PW=80, K=PW/68;                       // กว้าง 80m · ตัวคูณขยายจากสนามจริง 68m (รอบ 928: เดิม 40)
   const X0=-PW/2, X1=PW/2;
   const GL=GOAL_Z;                            // เส้นประตู (-19)
   const HALF=GL+52.5*K;                       // เส้นกลางสนาม = ครึ่งความยาวจริง 52.5m ย่อส่วน → z ≈ +11.9
@@ -10604,14 +10608,14 @@ function makeSoccerPlayer(shirtColor,no){
    (โหมดจุดโทษ/ฟรีคิกมีจุดตายตัวของตัวเอง ไม่สุ่ม) · หันหน้าเข้าประตูให้อัตโนมัติ ไม่งั้นเด็กงงว่าประตูอยู่ไหน */
 function soccerNewSpot(){
   if(pkOn||fkOn) return;
-  // 🎲 รอบ 411 (ผู้ใช้): จุดเกิดต้องอยู่ใน "ครึ่งสนามฝั่งที่ยิงประตู" เสมอ — เส้นกลางสนามอยู่ที่ z≈+11.9
-  //    ช่วง z −4..+10 = พ้นเขตโทษ (จบที่ −9.3) และไม่ล้ำเส้นกลาง · ระยะยิง 15–29m กำลังท้าทาย
-  sBaseX=(Math.random()*2-1)*13;                     // ซ้าย-ขวา ±13m (อยู่ในสนามกว้าง ±20)
-  sBaseZ=-4+Math.random()*14;
+  // 🎲 รอบ 411 (ผู้ใช้): จุดเกิดต้องอยู่ใน "ครึ่งสนามฝั่งที่ยิงประตู" เสมอ — รอบ 928 สนาม 2 เท่า: เส้นกลางอยู่ที่ z≈+23.8
+  //    ช่วง z −8..+20 = พ้นเขตโทษ (จบที่ −18.6) และไม่ล้ำเส้นกลาง · ระยะยิง 30–58m (KICK_SPD_MAX 52 ลอยถึง 66m)
+  sBaseX=(Math.random()*2-1)*26;                     // ซ้าย-ขวา ±26m (อยู่ในสนามกว้าง ±40)
+  sBaseZ=-8+Math.random()*28;
   aimYaw=Math.atan2(-sBaseX, sBaseZ-GOAL_Z);        // เล็งไปกลางประตูเป็นค่าตั้งต้น
-  // มุมยกตั้งต้นตามระยะ: ยิ่งไกลยิ่งต้องยิงราบ (วัดจริง ระยะ ~30m ต้อง ~0.12 ไม่งั้นข้ามคานตลอด)
+  // มุมยกตั้งต้นตามระยะ: ยิ่งไกลยิ่งต้องยิงราบ (รอบ 928: ระยะคูณ 2 → หารสัมประสิทธิ์ครึ่ง คงพฤติกรรมเดิม)
   const dist=Math.hypot(sBaseX, sBaseZ-GOAL_Z);
-  aimPitch=Math.max(.10, Math.min(.30, .30-dist*.006));
+  aimPitch=Math.max(.10, Math.min(.30, .30-dist*.003));
   if(soccerPlayer) soccerPlayer.position.set(sBaseX,0,sBaseZ);
 }
 function soccerResetBall(){
@@ -10974,7 +10978,7 @@ function updateSoccerGuide(ready,dx,dz){
   let prevX=px, prevZ=pz;
   let wx=L.wx, wy=L.wy;                              // สปินจางลงระหว่างทางเหมือนของจริง
   for(let i=0;i<GUIDE_N;i++){
-    for(let k=0;k<3;k++){      // 44 จุด × 3 สเต็ป × .016 ≈ 2.1 วินาที (ยาวพอเห็นถึงประตู)
+    for(let k=0;k<3;k++){      // 56 จุด × 3 สเต็ป × .016 ≈ 2.7 วินาที (รอบ 928: ยาวพอเห็นถึงประตูที่ไกลขึ้น 2 เท่า)
       // ⚠️ ลอกตรรกะ tickSoccer มาทุกบรรทัด — ไม่งั้นเส้นไกด์หลอกตา (เคยคลาด .8m เพราะไม่ได้จำลองช่วงบอลติดพื้น)
       const air=py>BALL_R+.05;
       if(air){ const sp=Math.hypot(vx,vy,vz), dr=Math.max(0,1-SB_DRAG*sp*h); vx*=dr; vy*=dr; vz*=dr; }
@@ -11189,11 +11193,12 @@ function tickSoccer(dt,now){
       }
     }
     const spd=Math.hypot(sbVel.x,sbVel.y,sbVel.z);
-    const oob=Math.abs(b.x)>30||b.z<GOAL_Z-7||b.z>Math.max(PLAYER_Z,sBaseZ)+9||b.y>28;   // 🎲 รอบ 404: จุดยืนสุ่มไปได้ถึง z≈16 ต้องเผื่อขอบ
-    if((b.y<=BALL_R+.02 && spd<1.1) || oob || now-sbKickAt>4500){
+    const oob=Math.abs(b.x)>60||b.z<GOAL_Z-7||b.z>Math.max(PLAYER_Z,sBaseZ)+9||b.y>28;   // 🎲 รอบ 928: สนามกว้าง ±44 เผื่อขอบเป็น ±60 · จุดยืนสุ่มไปได้ถึง z≈20
+    if((b.y<=BALL_R+.02 && spd<1.1) || oob || now-sbKickAt>6500){
       if(!sbRestAt) sbRestAt=now;
       if(now-sbRestAt>350 || oob) soccerResetBall();
     } else sbRestAt=0;
+    // (เพดานเวลาบินอยู่ในเงื่อนไขบน: now-sbKickAt — รอบ 928 ขยาย 4500→6500ms ลูกไกล 58m เด้ง/กลิ้งเข้าประตูใช้เวลานานขึ้น)
   }
   // 🎨 รอบ 396: บอลหมุนตามความเร็วจริง + เงาบอลตามความสูง + ตาข่ายกระเพื่อมหลังโดนบอล
   {
@@ -12308,6 +12313,9 @@ window.Adventure3D={
       player:soccerPlayer?{x:+soccerPlayer.position.x.toFixed(3),z:+soccerPlayer.position.z.toFixed(3),
         ry:+soccerPlayer.rotation.y.toFixed(3),rx:+soccerPlayer.rotation.x.toFixed(3)}:null,
       base:{x:sBaseX,z:sBaseZ}, launch:kickLaunch, kick:soccerKick,
+      // 🏟️ รอบ 928: ตำแหน่งบอลจริง + สถานะประตู (เทสต์ระยะเตะบนสนามใหญ่ 2 เท่า)
+      ball:soccerBall?{x:+soccerBall.position.x.toFixed(2),y:+soccerBall.position.y.toFixed(2),z:+soccerBall.position.z.toFixed(2)}:null,
+      sbGoaled, sbInGoal,
       setAim(y,p){ aimYaw=y; if(p!=null) aimPitch=p; }, setCharge(v){ sChg=v; sCharging=v>0; },
       // 🎯 รอบ 855: วาร์ปบอลไปชนป้ายตรง ๆ (ข้าม RNG การเล็ง — เทสต์ระบบป้ายเปลี่ยนตัวอักษร)
       teleportBall(x,y,z,vx,vy,vz){ soccerBall.position.set(x,y,z); sbVel.x=vx||0; sbVel.y=vy||0; sbVel.z=vz==null?-8:vz;
