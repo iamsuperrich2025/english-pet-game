@@ -1055,6 +1055,10 @@ const BUILDINGS = [
   bld('w3d_invasion','🛸','โลกยานแม่','w3d_invasion',333, BAND2_R, ()=>bUfo()),
   bld('w3d_mecha', '🤖','โลกหุ่นรบ','w3d_mecha',  354, BAND2_R, ()=>bHangar()),
   // 🎯 รอบ 917: ซุ้มยิงเป้าคำศัพท์ (เกม 3D สวนสนุก) — ช่องว่างโค้งระหว่างโรงหุ่น (354°) กับหอเกียรติยศ (55°)
+  /* 📖 รอบ 992: ร้านหนังสือ "Picture Dictionary" — ช่องว่างวงนอกระหว่าง
+     ยิงเป้าคำ (20°) กับหออันดับ (55°) · แตะ → ?go=picdict → เปิดหนังสือในล็อบบี้เดิม */
+  bld('picdict',   '📖','พจนานุกรมภาพ','picdict',  37, BAND2_R, ()=>
+    bShop({col:'#fff3d6', roof:0xd9a944, aw1:'#ffd54f', sign:'📖 PICTURE DICT', signBg:'#fff8e1'})),
   bld('shootword', '🎯','ยิงเป้าคำ','shootword',   20, BAND2_R, ()=>{
     const g = bShop({col:'#fff3e0', roof:0xff7043, aw1:'#ff8a65', sign:'🎯 SHOOT WORD', signBg:'#fff3e0'});
     const c = cvs(128,128), q = c.getContext('2d');           // เป้าวงกลมหมุนบนหลังคา
@@ -1468,6 +1472,7 @@ function actBuilding(act){
   const s = String(act||'');
   if(s.includes('🎮')) return 'play';
   if(s.includes('🖼️')) return 'picmatch';   // 🖼️ รอบ 977: เพื่อนที่กำลังจับคู่ภาพ ไปยืนหน้าหอศิลป์
+  if(s.includes('📖')) return 'picdict';    // 📖 รอบ 992: เพื่อนที่กำลังอ่านพจนานุกรมภาพ ไปยืนหน้าร้านหนังสือ
   if(s.includes('📝')) return 'academy';
   if(s.includes('📚')) return 'library';
   if(s.includes('📊')) return 'stats';
