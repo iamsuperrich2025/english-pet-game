@@ -433,40 +433,45 @@ const CSS=`
      → ย้าย DOM ออกจาก #moto-screen มาเป็นลูกของ #moto-body (จออยู่ overflow:hidden ตัดทิ้งหมด) แล้ว % คิดจากตัวเครื่องแทน
      ที่วาง = แถบดำว่างระหว่างป้ายดาว/โน้ต (จบ ~18%) กับปุ่มเลี้ยวส้ม (เริ่ม ~48%) วัดจากพิกเซล console_crop.webp
      ⚠️ pointer-events:none บังคับ — ทับพื้นที่แตะพวงมาลัย #moto-steerhit (left 2.5% top 21% h 72%) ห้ามแย่งนิ้วเด็ก
-     กลางจอเกมจึงว่างเต็มความกว้างให้ป้ายคำศัพท์ (fitWord วัดกรอบจริง เจอกล่องอยู่นอกจอก็ไม่หักช่องให้เอง) */
-#moto-gps{position:absolute;left:2.4%;top:19.5%;width:21.6%;display:flex;flex-direction:column;align-items:center;
-  gap:.5vmin;pointer-events:none;box-sizing:border-box;
+     กลางจอเกมจึงว่างเต็มความกว้างให้ป้ายคำศัพท์ (fitWord วัดกรอบจริง เจอกล่องอยู่นอกจอก็ไม่หักช่องให้เอง)
+   🧭📐 รอบ 1016: ผู้ใช้ส่งภาพขีดกรอบแดงสั่ง "ขยายให้กว้างเท่ากรอบแดง" — กล่องเดิมดูเล็กจิ๋วเทียบกับพื้นที่ว่างจริง
+     ⚠️ กว้างสุดได้แค่ ~22.8% ก่อนชนขอบจอเกม (จอเริ่ม left 25.2% ของตัวเครื่อง — เคยลืมจุดนี้ตอนแรกทำ 30% ทับจอ)
+     → กว้างขึ้นเท่าที่พื้นที่มี (21.6%→22.5%) + โตขึ้นจริงด้วยตัวอักษร/ลูกศร/ตัวเลขระยะทางใหญ่ขึ้นทั้งชุด (~40%) → กล่องสูงขึ้นเองตามเนื้อหา */
+#moto-gps{position:absolute;left:2.4%;top:19.5%;width:22.5%;display:flex;flex-direction:column;align-items:center;
+  gap:.7vmin;pointer-events:none;box-sizing:border-box;
   background:linear-gradient(180deg,rgba(14,26,42,.92),rgba(6,12,22,.94));
-  border:.28vmin solid rgba(120,160,200,.28);border-radius:1.7vmin;padding:.9vmin 1vmin;color:#fff;
+  border:.3vmin solid rgba(120,160,200,.28);border-radius:1.9vmin;padding:1.3vmin 1.4vmin;color:#fff;
   box-shadow:inset 0 0 1.4vmin rgba(0,0,0,.75),0 .3vmin .8vmin rgba(0,0,0,.5)}
-.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
-.m-gps-row{display:flex;align-items:center;gap:1.4vmin}
-#moto-gps-arr{display:inline-block;width:5.3vmin;height:6.1vmin;transition:transform .12s linear;
+.m-gps-lb{font-size:2.6vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
+.m-gps-row{display:flex;align-items:center;gap:1.8vmin}
+#moto-gps-arr{display:inline-block;width:7.4vmin;height:8.5vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
 #moto-gps-arr svg{display:block;width:100%;height:100%}
-#moto-gps-d{font-size:3.4vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
+#moto-gps-d{font-size:4.7vmin;font-weight:900;color:#eaffef;text-shadow:0 1px 3px #000}
 /* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ)
    🏆➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายขึ้นไปมุมขวาบน" — ยกขึ้นชิดใต้เหรียญ + ชิดขอบขวา
    🏆➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องสนาม/ไปหาเพื่อนไปชิดขวาเพิ่ม" — ลด right/padding อีกชั้น
    🏆🚪 รอบ 1014: ผู้ใช้ชี้ภาพสั่ง "ย้ายกล่อง 3 ไปตำแหน่ง 4" = **ออกไปนอกจอเกม** มุมบนขวาของตัวเครื่อง
      → ย้าย DOM ออกมาเป็นลูกของ #moto-body เหมือนกล่อง GPS · % คิดจากตัวเครื่อง
      ที่วาง = แถบดำเหนือลูกบอลฟ้า (บอลเริ่ม ~35%) ขวาของจอ (จอจบ 71.6%) — ยังกดปุ่ม "ไปหาเพื่อน" ได้ปกติ (ไม่ปิด pointer-events)
+   🏆📐 รอบ 1016: ผู้ใช้ส่งภาพขีดกรอบแดงสั่ง "ขยายให้กว้างเท่ากรอบแดง" — กว้างขึ้นเท่าที่พื้นที่มี (23%→24.5%) + ตัวอักษรทุกแถวใหญ่ขึ้น (~35%)
+     ⚠️ กว้างสุดได้แค่ ~25% ก่อนชนขอบจอเกม (จอจบ right 71.6% ของตัวเครื่อง = เหลือช่องขวา 71.6→98% แค่ 26.4%)
    ⚖️ กว้างเป็น % ของ "ตัวเครื่อง" · 📈 คนเยอะ: max-height คุมความสูง · จำนวนแถวตัดจริงใน renderBoard() (วัด scrollHeight เอง) */
-#moto-board{position:absolute;right:4%;top:4.5%;min-width:19%;max-width:23%;display:none;flex-direction:column;gap:.25vmin;
+#moto-board{position:absolute;right:2%;top:3%;min-width:20%;max-width:24.5%;display:none;flex-direction:column;gap:.4vmin;
   background:linear-gradient(180deg,rgba(14,26,42,.92),rgba(6,12,22,.94));
-  border:.28vmin solid rgba(120,160,200,.28);border-radius:1.4vmin;padding:.6vmin .8vmin;color:#fff;z-index:4;
+  border:.3vmin solid rgba(120,160,200,.28);border-radius:1.7vmin;padding:1vmin 1.2vmin;color:#fff;z-index:4;
   box-shadow:inset 0 0 1.4vmin rgba(0,0,0,.75),0 .3vmin .8vmin rgba(0,0,0,.5);
-  max-height:28%;overflow:hidden}
+  max-height:34%;overflow:hidden}
 #moto-board.on{display:flex}
-.m-bd-h{font-size:1.65vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
-.m-bd-r{display:flex;align-items:center;gap:.6vmin;font-size:2.05vmin;font-weight:800;line-height:1.3}
+.m-bd-h{font-size:2.2vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
+.m-bd-r{display:flex;align-items:center;gap:.9vmin;font-size:2.75vmin;font-weight:800;line-height:1.3}
 .m-bd-r.me{color:#ffe082}
-.m-bd-p{flex:none;min-width:2.6vmin;text-align:center;font-size:1.8vmin;opacity:.95}
+.m-bd-p{flex:none;min-width:3.4vmin;text-align:center;font-size:2.4vmin;opacity:.95}
 .m-bd-n{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .m-bd-w{font-variant-numeric:tabular-nums;color:#8dffb0}
 /* 📈 รอบ 919: แถวคั่น "…" ตอนอันดับเราหลุดท็อป + บรรทัดสรุปคนที่เหลือ (คนเยอะแค่ไหนกล่องก็ไม่ยาวขึ้น) */
-.m-bd-gap{text-align:center;font-size:1.5vmin;line-height:.9;color:#9fb8d4;opacity:.8}
-.m-bd-more{font-size:1.6vmin;font-weight:700;color:#a8c6e6;text-align:center;opacity:.9}
+.m-bd-gap{text-align:center;font-size:2vmin;line-height:.9;color:#9fb8d4;opacity:.8}
+.m-bd-more{font-size:2.15vmin;font-weight:700;color:#a8c6e6;text-align:center;opacity:.9}
 /* 💬 รอบ 318: ปุ่มแชท + แถบข้อความสำเร็จรูป + ข้อความของเราเองมุมล่าง */
 #moto-chat{position:absolute;left:2%;bottom:12%;z-index:4;border:none;cursor:pointer;border-radius:999px;
   width:7.4vmin;height:7.4vmin;font-size:3.4vmin;color:#fff;background:rgba(20,40,70,.72);
