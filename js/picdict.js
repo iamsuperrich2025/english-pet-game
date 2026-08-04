@@ -15,6 +15,13 @@
   const has = f => typeof window[f] === 'function';
   const esc = s => (has('escapeHTML') ? escapeHTML(s) : s);
 
+  /* 🗜️ รอบ 993: หน้าหนังสือใช้ "แผ่นย่อ" img/matching/web/<ชื่อ>.webp (2MB → ~250KB ต่อแผ่น
+     เจนด้วย tools/shrink_matching.py) — ต้นฉบับ .png 91MB เป็นไฟล์ untracked จึงไม่ขึ้นเว็บเลย
+     (deploy เอาไฟล์จาก git HEAD) ทำให้หน้าหนังสือบนเว็บจริงภาพ 404 ทั้งเล่ม
+     onerror → ถอยไปใช้ .png ต้นฉบับ (เครื่องผู้ใช้ที่ยังไม่ได้รันสคริปต์ย่อก็ยังเห็นภาพ) */
+  const sheetSrc  = file => 'img/matching/web/' + encodeURIComponent(file.replace(/\.png$/i,'') + '.webp');
+  const sheetOrig = file => 'img/matching/' + encodeURIComponent(file);
+
   let sec = null;            // <section id="screen-picdict">
   const pd = {
     pages:[],                // รายการหน้า: {type:'toc',part}|{type:'sheet',file,en,th,icon,num}
@@ -154,7 +161,8 @@
     return `
       <div class="pd-ph">${pg.icon} <b>${esc(pg.th)}</b><span>${esc(pg.en)}</span></div>
       <div class="pd-imgbox">
-        <img src="img/matching/${encodeURIComponent(pg.file)}" alt="${esc(pg.en)}" draggable="false">
+        <img src="${sheetSrc(pg.file)}" alt="${esc(pg.en)}" draggable="false"
+             onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='${sheetOrig(pg.file)}';}">
         ${W ? '<div class="pd-cells"></div>' : ''}
       </div>
       <div class="pd-pno">${W ? '🔊 แตะการ์ดเพื่อฟังเสียง · ' : ''}หน้า ${pg.num} / ${pd.total}</div>`;
@@ -243,7 +251,7 @@
       if(s < 0 || s > maxSpread()) continue;
       [s*2, s*2+1].forEach(i=>{
         const pg = pd.pages[i];
-        if(pg && pg.type === 'sheet'){ const im = new Image(); im.src = 'img/matching/' + encodeURIComponent(pg.file); }
+        if(pg && pg.type === 'sheet'){ const im = new Image(); im.src = sheetSrc(pg.file); }
       });
     }
   }

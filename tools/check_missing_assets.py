@@ -45,6 +45,20 @@ LAZY_MANIFESTS = (
     ("js/data/dict_band/manifest.js", "js/data/dict_band/"),   # dictband.js (<script> tag)
 )
 
+PICDICT_RE = re.compile(r"""['"]([^'"/]+\.png)['"]""")
+
+def picdict_refs():
+    """📖 แผ่นหนังสือ Picture Dictionary (รอบ 993) — js/picdict.js ประกอบ src เองจากสารบัญ
+    js/data/picdict.js จึงไม่มี src= ใน html ให้ด่านหลักเห็น · ต้นฉบับ .png 91MB เป็น untracked
+    ตลอด (ห้ามขึ้น repo) เกมจึงใช้แผ่นย่อ img/matching/web/*.webp — ตัวที่ต้องขึ้นเว็บคือ .webp
+    (รอบ 992 หลุดด่านนี้ไป: หนังสือขึ้นเว็บแล้วภาพ 404 ทั้งเล่ม เจอตอน curl เช็กเอง)"""
+    mf = ROOT / "js/data/picdict.js"
+    if not mf.exists():
+        return []
+    src = mf.read_text(encoding="utf-8", errors="replace")
+    return [("js/data/picdict.js", "img/matching/web/" + f[:-4] + ".webp")
+            for f in PICDICT_RE.findall(src)]
+
 def lazy_manifest_refs():
     """ไฟล์คำศัพท์ที่โหลดขี้เกียจตาม manifest — ไม่ใช่ <script src> ตรง ๆ ใน html จึงต้องตามหาเอง"""
     out = []
@@ -80,7 +94,7 @@ def main():
             elif GIT_MODE and rel not in tracked:
                 missing.append((hf.name, rel, "มีในเครื่องแต่ยังไม่ commit → deploy แล้วจะ 404"))
 
-    for src_name, rel in lazy_manifest_refs():
+    for src_name, rel in lazy_manifest_refs() + picdict_refs():
         checked += 1
         if not (ROOT / rel).exists():
             missing.append((src_name, rel, "ไม่มีไฟล์ (คลังศัพท์จะโหลดไม่ขึ้น)"))
