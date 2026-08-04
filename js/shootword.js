@@ -23,8 +23,10 @@
     HOLD_R: -2, HOLD_B: -4,     // ชดเชยขอบขวา/ล่าง (vh — ติดลบ = ล้นขอบเล็กน้อย)
     MUZ_X: 0.14, MUZ_Y: 0.06,   // จุดปลายกระบอก (สัดส่วนบนภาพ hold — ไว้วางแฟลชอัดลม)
     AIM_H: 122,                 // สูงภาพเล็ง (vh)
-    AIM_CX: 0.507, AIM_CY: 0.425, // จุดกึ่งกลางรูศูนย์เล็งบนภาพ (วัดจาก alpha จริงด้วย sight.py)
-    AIM_SX: 50, AIM_SY: 50,     // จุดบนจอที่รูศูนย์ทาบ (% กว้าง / % สูง) = จุดที่กระสุนออก
+    AIM_CX: 0.507, AIM_CY: 0.425, // จุดกึ่งกลางรูศูนย์เล็งบนภาพ (วัดจาก alpha จริงด้วย sight.py) — ห้ามแก้ค่านี้ (ค่าวัดจริง)
+    AIM_SX: 50, AIM_SY: 50,     // จุดบนจอที่รูศูนย์ทาบ (% กว้าง / % สูง) = จุดที่กระสุนออก (ห้ามแก้ — ต้องตรงกับความแม่นจริง)
+    AIM_DOT_GAP: 6.25,          // 🎯 รอบ 956: ผู้ใช้ขอให้จุดแดงลอยอยู่ "เหนือ" แท่นศูนย์ยิงปลายปืน (ไม่ใช่ทับพอดี)
+                                 //    ขยับภาพปืนลง (ไม่ใช่ขยับจุดแดง!) ผ่าน translateY เพิ่ม — จุดยิงจริงยังอยู่กึ่งกลางจอเป๊ะ ไม่กระทบความแม่น
     SNAP_R: 0.045,              // 🎯 รอบ 932: รัศมีช่วยเล็ง (สัดส่วนด้านสั้นของจอ) ~22px ที่จอสูง 491
   };                            //    ครึ่งหนึ่งของระยะห่างระหว่างแผ่น (~24px) → เล็งใกล้ใบไหนโดนใบนั้น ไม่ข้ามไปใบอื่น
   const MINLEN=3, MAXLEN=10;
@@ -649,12 +651,12 @@
   filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));transition:transform .09s ease-out}
 #sg-gun-aim{position:absolute;pointer-events:none;z-index:3;display:none;
   height:${TUNE.AIM_H}vh;left:${TUNE.AIM_SX}vw;top:${TUNE.AIM_SY}vh;
-  transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,-${(TUNE.AIM_CY*100).toFixed(1)}%);
+  transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + ${TUNE.AIM_DOT_GAP}vh));
   transition:transform .07s ease-out}
 #sg-overlay.aim #sg-gun-hold{display:none}
 #sg-overlay.aim #sg-gun-aim{display:block}
 #sg-gun-hold.kick{transform:translate(6px,14px) rotate(1.6deg)}
-#sg-gun-aim.kick{transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + 12px))}
+#sg-gun-aim.kick{transform:translate(-${(TUNE.AIM_CX*100).toFixed(1)}%,calc(-${(TUNE.AIM_CY*100).toFixed(1)}% + ${TUNE.AIM_DOT_GAP}vh + 12px))}
 #sg-muzzle{position:absolute;width:60px;height:60px;margin:-30px;border-radius:50%;pointer-events:none;z-index:4;opacity:0;
   background:radial-gradient(circle,rgba(255,255,255,.95),rgba(255,240,190,.55) 45%,transparent 70%)}
 #sg-muzzle.on{animation:sgMuz .14s ease-out}
