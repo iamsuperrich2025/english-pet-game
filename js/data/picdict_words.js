@@ -350,3 +350,75 @@ PICDICT_WORDS['Sports.png'] = {cols:8, rows:7, words:[
   ["Dunk","ดังค์"],["Kick","เตะ"],["Throw","ขว้าง"],["Catch","จับ"],["Dribble","เลี้ยงลูก"],["Shoot","ยิง"],["Pass","ส่งลูก"],["Tackle","แท็กเกิล"],
   ["Slide","สไลด์"],["Jump","กระโดด"],["Balance","ทรงตัว"],["Stretch","ยืดเหยียด"],["Win","ชนะ"],["Lose","แพ้"],["Practice","ฝึกซ้อม"],["Rest","พักผ่อน"],
 ]};
+
+PICDICT_WORDS['Time.png'] = {cols:8, rows:7, words:[
+  ["time","เวลา"],["clock","นาฬิกา"],["hour","ชั่วโมง"],["minute","นาที"],["second","วินาที"],["day","วัน"],["night","กลางคืน"],["morning","ตอนเช้า"],
+  ["afternoon","ตอนบ่าย"],["evening","ตอนเย็น"],["today","วันนี้"],["tomorrow","พรุ่งนี้"],["yesterday","เมื่อวาน"],["a.m.","ก่อนเที่ยง"],["p.m.","หลังเที่ยง"],["watch","นาฬิกาข้อมือ"],
+  ["o'clock","นาฬิกาตรง"],["half past","ครึ่งชั่วโมง"],["quarter past","บ่ายหนึ่งสี่"],["quarter to","อีกหนึ่งสี่"],["five past","ห้านาทีผ่าน"],["ten past","สิบนาทีผ่าน"],["five to","อีกห้านาที"],["ten to","อีกสิบนาที"],
+  ["early","เร็ว"],["on time","ตรงเวลา"],["late","สาย"],["schedule","ตารางเวลา"],["appointment","นัดหมาย"],["countdown","นับถอยหลัง"],["now","ตอนนี้"],["date","วันที่"],
+  ["week","สัปดาห์"],["month","เดือน"],["year","ปี"],["season","ฤดูกาล"],["daytime","เวลากลางวัน"],["bedtime","เวลาเข้านอน"],["sunrise","พระอาทิตย์ขึ้น"],["sunset","พระอาทิตย์ตก"],
+  ["holiday","วันหยุด"],["birthday","วันเกิด"],["celebration","การเฉลิมฉลอง"],["daylight saving time","เวลาฤดูร้อน"],["standard time","เวลามาตรฐาน"],["period","ช่วงเวลา"],["time management","การจัดการเวลา"],["free time","เวลาว่าง"],
+  ["wait","รอ"],["mealtime","เวลาอาหาร"],["class time","เวลาเรียน"],["sleep time","เวลานอน"],["travel time","เวลาเดินทาง"],["movie time","เวลาดูหนัง"],["game time","เวลาเล่นเกม"],["time flies","เวลาผ่านไปเร็ว"],
+]};
+
+PICDICT_WORDS['Tools.png'] = {cols:8, rows:8, words:[
+  ["Hammer","ค้อน"],["Screwdriver","ไขควง"],["Wrench","ประแจ"],["Pliers","คีม"],["Saw","เลื่อย"],["Tape Measure","ตลับเมตร"],["Utility Knife","คัตเตอร์"],["Chisel","สิ่ว"],
+  ["Scissors","กรรไกร"],["Ruler","ไม้บรรทัด"],["Set Square","ฉาก"],["Level","ระดับน้ำ"],["Pencil","ดินสอ"],["Eraser","ยางลบ"],["Sharpener","กบเหลาดินสอ"],["Paintbrush","พู่กัน"],
+  ["Paint Roller","ลูกกลิ้งทาสี"],["Shovel","พลั่ว"],["Spade","จอบ"],["Trowel","เกรียง"],["Hoe","จอบถาก"],["Rake","คราด"],["Pickaxe","ชวานขุด"],["Wheelbarrow","รถเข็น"],
+  ["Plunger","ที่ปั๊มท่อ"],["Adjustable Wrench","ประแจเลื่อน"],["Pipe Wrench","ประแจจับท่อ"],["Clamp","แคลมป์"],["Vise","ปากกาจับชิ้นงาน"],["Drill","สว่าน"],["Drill Bit","ดอกสว่าน"],["Nail","ตะปู"],
+  ["Screw","สกรู"],["Bolt and Nut","โบลต์และน็อต"],["Gear","เฟือง"],["Chain","โซ่"],["Padlock","แม่กุญแจ"],["Key","กุญแจ"],["Measuring Cup","ถ้วยตวง"],["Funnel","กรวย"],
+  ["Flashlight","ไฟฉาย"],["Wire Cutters","คีมตัดลวด"],["Allen Key","ประแจหกเหลี่ยม"],["Soldering Iron","หัวแร้ง"],["Hot Glue Gun","ปืนกาว"],["Tape","เทปกาว"],["Rope","เชือก"],["Carabiner","คาราบิเนอร์"],
+  ["Garden Shears","กรรไกรตัดกิ่งไม้"],["Watering Can","บัวรดน้ำ"],["Pruning Shears","กรรไกรตัดแต่งกิ่ง"],["Axe","ขวาน"],["Sickle","เคียว"],["Lantern","ตะเกียง"],["Thermometer","เทอร์โมมิเตอร์"],["Magnifying Glass","แว่นขยาย"],
+  ["Clock","นาฬิกา"],["Calculator","เครื่องคิดเลข"],["Stapler","เครื่องเย็บกระดาษ"],["Hole Punch","เครื่องเจาะกระดาษ"],["Clipboard","แผ่นรองเขียน"],["Toolbox","กล่องเครื่องมือ"],["Safety Gloves","ถุงมือเซฟตี้"],["Safety Goggles","แว่นตานิรภัย"],
+]};
+
+PICDICT_WORDS['Toys.png'] = {cols:8, rows:8, words:[
+  ["Teddy Bear","ตุ๊กตาหมี"],["Doll","ตุ๊กตา"],["Toy Car","รถของเล่น"],["Toy Train","รถไฟของเล่น"],["Kite","ว่าว"],["Ball","ลูกบอล"],["Building Blocks","บล็อกต่อสร้าง"],["Puzzle","จิ๊กซอว์"],
+  ["Robot","หุ่นยนต์"],["Airplane","เครื่องบินของเล่น"],["Top","ลูกข่าง"],["Yo-Yo","โยโย่"],["Rubber Duck","เป็ดยาง"],["Stuffed Animal","ตุ๊กตาสัตว์"],["Stacking Rings","ห่วงเรียงซ้อน"],["Xylophone","ไซโลโฟนของเล่น"],
+  ["Sand Toys","ของเล่นในทราย"],["Water Gun","ปืนฉีดน้ำ"],["Toy Boat","เรือของเล่น"],["Drawing Board","กระดานวาดเขียน"],["Marbles","ลูกแก้ว"],["Pull Toy","ของเล่นลากจูง"],["Tambourine","แทมบูรีน"],["Toy Camera","กล้องของเล่น"],
+  ["Remote Control","รีโมทควบคุม"],["Dinosaur","ไดโนเสาร์ของเล่น"],["Tea Set","ชุดน้ำชา"],["Kitchen Set","ชุดครัวของเล่น"],["Toy Phone","โทรศัพท์ของเล่น"],["Elephant Toy","ตุ๊กตาช้าง"],["Race Track","รางรถแข่ง"],["Pogo Stick","ไม้กระโดด"],
+  ["Slime","สไลม์"],["Bubbles","สบู่เป่าฟอง"],["Pinwheel","กังหันลม"],["Cash Register","เครื่องคิดเงินของเล่น"],["Doctor Kit","ชุดคุณหมอ"],["Tool Set","ชุดเครื่องมือ"],["Walkie Talkie","วอล์กกี้ทอล์กกี้"],["Magic Wand","ไม้กายสิทธิ์"],
+  ["Basketball Set","ชุดบาสเกตบอล"],["Soccer Goal","ประตูฟุตบอล"],["Bowling Set","ชุดโบว์ลิ่ง"],["Fishing Game","เกมตกปลา"],["Ring Toss","เกมโยนห่วง"],["Foosball","โต๊ะฟุตบอล"],["Mini Golf","มินิกอล์ฟ"],["Pounding Bench","ของเล่นตอกหมุด"],
+  ["Rocking Horse","ม้าโยก"],["Swing","ชิงช้า"],["Slide","สไลเดอร์"],["Play Tent","เต็นท์ของเล่น"],["Toy Truck","รถบรรทุกของเล่น"],["Fire Truck","รถดับเพลิงของเล่น"],["Police Car","รถตำรวจของเล่น"],["Helicopter","เฮลิคอปเตอร์ของเล่น"],
+]};
+
+PICDICT_WORDS['Transportation.png'] = {cols:8, rows:8, words:[
+  ["Car","รถยนต์"],["Bus","รถบัส"],["Truck","รถบรรทุก"],["Motorcycle","รถจักรยานยนต์"],["Bicycle","จักรยาน"],["Taxi","แท็กซี่"],["Van","รถตู้"],["Ambulance","รถพยาบาล"],
+  ["Fire Truck","รถดับเพลิง"],["Police Car","รถตำรวจ"],["Train","รถไฟ"],["Subway","รถไฟใต้ดิน"],["Tram","รถราง"],["Monorail","รถไฟโมโนเรล"],["High-Speed Train","รถไฟความเร็วสูง"],["Cable Car","กระเช้าไฟฟ้า"],
+  ["Airplane","เครื่องบิน"],["Helicopter","เฮลิคอปเตอร์"],["Hot Air Balloon","บอลลูน"],["Rocket","จรวด"],["Spaceship","ยานอวกาศ"],["Boat","เรือ"],["Ship","เรือใหญ่"],["Ferry","เรือเฟอร์รี่"],
+  ["Speedboat","เรือเร็ว"],["Yacht","เรือยอชต์"],["Sailboat","เรือใบ"],["Submarine","เรือดำน้ำ"],["Hovercraft","โฮเวอร์คราฟต์"],["Jet Ski","เจ็ตสกี"],["Canoe","เรือแคนู"],["Kayak","เรือคายัค"],
+  ["Bulldozer","รถปราบดิน"],["Excavator","รถขุด"],["Crane","รถเครน"],["Forklift","รถยก"],["Concrete Mixer","รถผสมปูน"],["Dump Truck","รถดัมพ์"],["Tractor","รถแทรกเตอร์"],["Harvester","รถเกี่ยวข้าว"],
+  ["Scooter","สกู๊ตเตอร์"],["Rickshaw","รถตุ๊กตุ๊ก"],["Jeep","รถจี๊ป"],["Pickup Truck","รถกระบะ"],["Minibus","รถมินิบัส"],["RV (Camper)","รถบ้าน"],["Tour Bus","รถทัวร์"],["Limousine","ลีมูซีน"],
+  ["Wheelchair","รถเข็น"],["Stroller","รถเข็นเด็ก"],["Handcart","รถเข็นของ"],["Horse Cart","รถม้า"],["Elephant Taxi","รถช้าง"],["Camel Caravan","อูฐพาหนะ"],["Donkey Cart","รถลา"],["Barge","เรือบาร์จ"],
+]};
+
+PICDICT_WORDS['Trees.png'] = {cols:8, rows:7, words:[
+  ["Oak","ต้นโอ๊ก"],["Maple","ต้นเมเปิล"],["Pine","ต้นสน"],["Coconut","ต้นมะพร้าว"],["Banyan","ต้นไทร"],["Willow","ต้นหลิว"],["Cherry Blossom","ต้นซากุระ"],["Apple","ต้นแอปเปิล"],
+  ["Mango","ต้นมะม่วง"],["Banana","ต้นกล้วย"],["Orange","ต้นส้ม"],["Lemon","ต้นเลมอน"],["Guava","ต้นฝรั่ง"],["Papaya","ต้นมะละกอ"],["Litchi","ต้นลิ้นจี่"],["Longan","ต้นลำไย"],
+  ["Durian","ต้นทุเรียน"],["Jackfruit","ต้นขนุน"],["Palm","ต้นปาล์ม"],["Date Palm","ต้นอินทผลัม"],["Bamboo","ต้นไผ่"],["Acacia","ต้นกระถิน"],["Birch","ต้นเบิร์ช"],["Cedar","ต้นซีดาร์"],
+  ["Teak","ต้นสัก"],["Mahogany","ต้นมะฮอกกานี"],["Eucalyptus","ต้นยูคาลิปตัส"],["Rubber Tree","ต้นยางพารา"],["Rosewood","ต้นพะยูง"],["Casuarina","ต้นสนทะเล"],["Rain Tree","ต้นจามจุรี"],["Flame Tree","ต้นหางนกยูง"],
+  ["Royal Poinciana","ต้นหางนกยูงฝรั่ง"],["Frangipani","ต้นลีลาวดี"],["Gulmohar","ต้นหางนกยูงอินเดีย"],["Ipe","ต้นตาเบบูยา"],["Silver Oak","ต้นโอ๊กเงิน"],["Bottle Tree","ต้นขวด"],["Baobab","ต้นเบาบับ"],["Dragon Tree","ต้นเลือดมังกร"],
+  ["Alder","ต้นเอลเดอร์"],["Ash","ต้นแอช"],["Beech","ต้นบีช"],["Chestnut","ต้นเกาลัด"],["Hazel","ต้นเฮเซล"],["Hornbeam","ต้นฮอร์นบีม"],["Linden","ต้นลินเดน"],["Sycamore","ต้นไซคามอร์"],
+  ["Balsa","ต้นบัลซา"],["Cypress","ต้นไซเปรส"],["Juniper","ต้นจูนิเปอร์"],["Magnolia","ต้นแมกโนเลีย"],["Sweet Gum","ต้นสวีทกัม"],["Norfolk Pine","ต้นสนแกะนอร์ฟอล์ก"],["Weeping Fig","ต้นไทรร้องไห้"],["Money Tree","ต้นเงินต้นทอง"],
+]};
+
+PICDICT_WORDS['Vegetables.png'] = {cols:8, rows:8, words:[
+  ["Carrot","แครอท"],["Broccoli","บรอกโคลี"],["Cabbage","กะหล่ำปลี"],["Spinach","ผักโขม"],["Lettuce","ผักกาดหอม"],["Tomato","มะเขือเทศ"],["Cucumber","แตงกวา"],["Eggplant","มะเขือม่วง"],
+  ["Potato","มันฝรั่ง"],["Sweet Potato","มันเทศ"],["Onion","หอมหัวใหญ่"],["Garlic","กระเทียม"],["Ginger","ขิง"],["Bell Pepper","พริกหวาน"],["Red Pepper","พริกแดง"],["Yellow Pepper","พริกเหลือง"],
+  ["Chili","พริก"],["Green Beans","ถั่วฝักยาว"],["Peas","ถั่วลันเตา"],["Corn","ข้าวโพด"],["Cauliflower","กะหล่ำดอก"],["Radish","หัวไชเท้า"],["Daikon","ไชเท้า"],["Beetroot","บีทรูท"],
+  ["Bok Choy","ผักกวางตุ้ง"],["Kale","คะน้าใบหยิก"],["Celery","ขึ้นฉ่าย"],["Leek","ต้นหอมญี่ปุ่น"],["Scallion","ต้นหอม"],["Mustard Green","ผักกาดเขียว"],["Water Spinach","ผักบุ้ง"],["Kangkong","ผักบุ้งจีน"],
+  ["Bamboo Shoot","หน่อไม้"],["Baby Corn","ข้าวโพดอ่อน"],["Okra","กระเจี๊ยบ"],["Pumpkin","ฟักทอง"],["Kabocha","ฟักญี่ปุ่น"],["Winter Melon","ฟักเขียว"],["Bitter Melon","มะระ"],["Chayote","ฟักแฟง"],
+  ["Lotus Root","รากบัว"],["Burdock Root","รากโกโบ"],["Taro","เผือก"],["Yam","มันแกว"],["Jicama","มันฝรั่งแก้ว"],["Green Papaya","มะละกอดิบ"],["Asparagus","หน่อไม้ฝรั่ง"],["Brussels Sprout","กะหล่ำดาว"],
+  ["Romaine Lettuce","ผักกาดโรเมน"],["Endive","ผักเอนดีฟ"],["Arugula","ร็อกเก็ต"],["Fennel","ยี่หร่า"],["Seaweed","สาหร่าย"],["Shiitake Mushroom","เห็ดชิตาเกะ"],["Enoki Mushroom","เห็ดเข็มทอง"],["Straw Mushroom","เห็ดฟาง"],
+]};
+
+PICDICT_WORDS['Weather.png'] = {cols:8, rows:8, words:[
+  ["Sunny","แดดออก"],["Partly Cloudy","แดดบางส่วน"],["Cloudy","มีเมฆมาก"],["Clear","ท้องฟ้าโปร่ง"],["Rainbow","สายรุ้ง"],["Overcast","เมฆปกคลุม"],["Hazy","มีหมอกควัน"],["Windy","มีลมแรง"],
+  ["Breezy","ลมพัดเบาๆ"],["Rainy","ฝนตก"],["Heavy Rain","ฝนตกหนัก"],["Drizzle","ฝนปรอยๆ"],["Thunderstorm","พายุฝนฟ้าคะนอง"],["Lightning","ฟ้าแลบ"],["Thunder","ฟ้าร้อง"],["Tornado","พายุทอร์นาโด"],
+  ["Snowy","หิมะตก"],["Heavy Snow","หิมะตกหนัก"],["Hail","ลูกเห็บ"],["Sleet","ฝนปนหิมะ"],["Snow","หิมะ"],["Icy","น้ำแข็งเกาะ"],["Frosty","น้ำค้างแข็ง"],["Cold","หนาว"],
+  ["Hot","ร้อน"],["Warm","อุ่น"],["Cool","เย็นสบาย"],["Freezing","หนาวจัด"],["Fog","หมอก"],["Mist","ละอองหมอก"],["Dewy","มีน้ำค้าง"],["Humid","อากาศชื้น"],
+  ["Dry","อากาศแห้ง"],["Drought","ภัยแล้ง"],["Wet","เปียก"],["Rough","คลื่นลมแรง"],["Calm","สงบ"],["Gusty","ลมกระโชกแรง"],["Squall","พายุฝนกระหน่ำ"],["Stormy","มีพายุ"],
+  ["Sunrise","พระอาทิตย์ขึ้น"],["Sunset","พระอาทิตย์ตก"],["Night","กลางคืน"],["Midnight","เที่ยงคืน"],["Morning","เช้า"],["Afternoon","บ่าย"],["Evening","เย็น"],["Starry","ท้องฟ้าเต็มไปด้วยดาว"],
+  ["Moonlit","แสงจันทร์"],["Full Moon","พระจันทร์เต็มดวง"],["New Moon","พระจันทร์ดับ"],["Light Cloud","เมฆบาง"],["Cumulus","เมฆก้อน"],["Cirrus","เมฆซีร์รัส"],["Stratus","เมฆชั้น"],["Nimbus","เมฆฝน"],
+  ["Moderate","ปานกลาง"],["Sunny UV","แสงยูวีแรง"],["Umbrella","ร่ม"],["Raincoat","เสื้อกันฝน"],["Rain Boots","รองเท้าบูท"],["Sunglasses","แว่นกันแดด"],["Comfortable","อากาศสบาย"],["Changeable","อากาศแปรปรวน"],
+]};
