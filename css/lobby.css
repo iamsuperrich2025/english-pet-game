@@ -5235,6 +5235,8 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 .pm-card.matched .pm-name{opacity:1;}
 .pm-card.hint-glow{border-color:var(--yellow-d);box-shadow:0 0 14px 4px rgba(245,197,66,.8);}
 .pm-card.shake{animation:shake .4s;}
+/* 🫥 รอบ 990 (ผู้ใช้สั่ง "จับคู่ได้แล้วให้หายไปจากกระดาน ไม่ขวางตัวที่เหลือ"): หด+จางก่อนถูกลบออกจาก DOM จริง (js เรียก .remove() ต่อ) */
+.pm-card.gone{opacity:0;transform:scale(.35);}
 #screen-picmatch .pm-note{margin-top:4px;}
 #screen-picmatch .timer-wrap{margin-bottom:6px;}
 /* 🔊 รอบ 989 (ผู้ใช้สั่ง "ย้ายยอดเหรียญไปข้าง Combo แล้วเอาที่ว่างตรงกลางใส่เสียงอ่าน+ความหมายไทย"):

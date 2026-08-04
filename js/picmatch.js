@@ -199,20 +199,24 @@
      เลือก "จำนวนคอลัมน์" ที่ทำให้ช่องใหญ่ที่สุด โดยการ์ดทั้งกระดานยังอยู่ในจอครบ ไม่ต้องเลื่อน
      กระดาน 40 คู่ (80 ภาพ) จึงย่อภาพลงเองแบบเกมจับคู่แนวนอน · ช่องเล็กกว่า NAME_MIN = ซ่อนป้ายชื่อ */
   function fitGrid(){
-    const n = pm.pairs.length * 2;                       // รอบ 985: ทุกใบอยู่กริดเดียว = 2 เท่าของจำนวนคู่
-    if(!n || !sec || !sec.classList.contains('active')) return;
+    const totalN = pm.pairs.length * 2;                  // รอบ 985: ขนาด "รอบ" ทั้งหมด (คงที่ทั้งรอบ ไม่ผันตามใบที่หายไป)
+    if(!totalN || !sec || !sec.classList.contains('active')) return;
     const gA = $('pm-grid-a');
-    sec.classList.toggle('big', n > 40);                 // กระดานใหญ่ = บีบป้ายล่างเหลือบรรทัดเดียว เอาที่ไปขยายช่อง
+    sec.classList.toggle('big', totalN > 40);            // กระดานใหญ่ = บีบป้ายล่างเหลือบรรทัดเดียว เอาที่ไปขยายช่อง
     void gA.offsetWidth;                                 // บังคับ reflow ก่อนวัด (จอเต็มชั้น fixed — รอบ 984)
     const availW = gA.clientWidth;
     if(!availW) return;                                  // ยังไม่ได้โชว์จอ — เดี๋ยว open()/resize เรียกซ้ำ
+    // 🫥 รอบ 990 (ผู้ใช้สั่ง "ใบที่จับคู่ได้แล้วให้หายไป จะได้ไม่ขวางใบที่เหลือ"): ใบที่จับคู่แล้วถูกลบออกจาก DOM จริง
+    // → คิดจำนวนคอลัมน์/ขนาดช่องจาก "ใบที่เหลืออยู่จริง" ไม่ใช่ totalN ทั้งรอบ ใบที่เหลือจะได้ขยายมาเต็มพื้นที่ว่าง
+    const n = gA.children.length;
+    if(!n) return;                                       // กระดานว่าง (เคลียร์ครบ รอ newRound ตั้งกระดานใหม่) — ข้ามคำนวณรอบนี้
     let used = 0;                                        // ความสูงของทุกอย่างที่ไม่ใช่กริด (หัว/แถบเวลา/ป้าย/โน้ต)
     [...sec.children].forEach(el=>{
       // 🐱 ปุ่มน้องแมวลอยมุมล่างขวา (position:absolute) ไม่กิน flow แล้ว → ไม่นับความสูงมาจอง
       if(!el.classList.contains('pm-grid') && el.offsetHeight && getComputedStyle(el).position !== 'absolute') used += el.offsetHeight + 6;
     });
     const availH = Math.max(60, window.innerHeight - sec.getBoundingClientRect().top - used - 10);
-    const gap = n > 40 ? 4 : n > 16 ? 6 : 8;
+    const gap = totalN > 40 ? 4 : totalN > 16 ? 6 : 8;    // gap อิงขนาดรอบเดิม กันช่องกระโดดตอนใบเหลือน้อยใกล้จบ
     let best = 0, bestCols = n;
     for(let cols = 1; cols <= n; cols++){
       const rows = Math.ceil(n / cols);
@@ -376,6 +380,13 @@
     A.classList.remove('selected'); B.classList.remove('selected');
     A.classList.add('matched'); B.classList.add('matched');
     pm.sel1 = pm.sel2 = null; pm.checking = false;
+
+    // 🫥 รอบ 990 (ผู้ใช้สั่ง "คำที่จับคู่ได้แล้วให้หายไปจากกระดาน จะได้ไม่ขวางตัวที่เหลือ"):
+    // โชว์กรอบเขียว "matched" สักครู่ก่อน แล้วค่อยหด+หายไปจาก DOM จริง → fitGrid() คำนวณใหม่ ใบที่เหลือขยายมาเต็มพื้นที่ว่าง
+    setTimeout(()=>{
+      A.classList.add('gone'); B.classList.add('gone');
+      setTimeout(()=>{ A.remove(); B.remove(); fitGrid(); }, 220);
+    }, 500);
 
     if(pm.matched === pm.pairs.length){
       clearInterval(pm.timerId);
