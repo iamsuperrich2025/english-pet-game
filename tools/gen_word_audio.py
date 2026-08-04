@@ -32,6 +32,7 @@ RATE  = "-15%"                # ช้าลงนิดให้เด็กฟ
 ROOT  = Path(__file__).resolve().parent.parent
 VOCAB = ROOT / "js" / "data" / "vocab.js"
 BAND  = ROOT / "js" / "data" / "band"      # คลังศัพท์ใหญ่ (ไฟล์ย่อยแยกช่วงคำ *.js)
+PICDICT = ROOT / "js" / "data" / "picdict_words.js"   # 📖 คำบนการ์ดในหนังสือ Picture Dictionary (รอบ 992+)
 OUT   = ROOT / "sound" / "words"
 OUT_LETTERS = ROOT / "sound" / "letters"   # ชื่อตัวอักษร A-Z (เก็บตัวอักษรในโลก 3D)
 CONCURRENCY = 6
@@ -66,7 +67,9 @@ def extract_words() -> list[str]:
     for f in sorted(BAND.glob("*.js")):
         n_band += add(words_in(f.read_text(encoding="utf-8")))
         n_files += 1
-    print(f"คำจาก vocab.js: {n_vocab} · จาก band/ ({n_files} ไฟล์): {n_band} · รวมไม่ซ้ำ {len(out)}")
+    # 📖 คำบนการ์ดในหนังสือ Picture Dictionary — รูปแบบ ["English","ไทย"] ตรงกับ PAIR_RE อยู่แล้ว
+    n_pd = add(words_in(PICDICT.read_text(encoding="utf-8"))) if PICDICT.exists() else 0
+    print(f"คำจาก vocab.js: {n_vocab} · จาก band/ ({n_files} ไฟล์): {n_band} · จากหนังสือภาพ: {n_pd} · รวมไม่ซ้ำ {len(out)}")
     if n_files and not n_band:
         print("  ⚠️ อ่าน band/ ได้ 0 คำ — รูปแบบไฟล์เปลี่ยนไปแล้ว? ตรวจ PAIR_RE ก่อนเจน", file=sys.stderr)
         sys.exit(1)
