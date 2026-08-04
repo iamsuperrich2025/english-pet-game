@@ -619,7 +619,7 @@ const AD_FLYBY_COIN=2, AD_FLYBY_CAP=10;
 let _adFlybyNear={}, _adFlybyAt={};
 function adFlybyTick(now){
   const A=worlds.heli&&worlds.heli.ads; if(!A||!A.length) return;
-  const day=new Date().toISOString().slice(0,10);
+  const day=thDayKey();                          // 🇹🇭 รอบ 988: โควตารายวันตัดตามวันไทย (เดิมใช้วัน UTC = ตัดตอน 7 โมงเช้า)
   if(!state.adFlyby||state.adFlyby.d!==day) state.adFlyby={d:day,n:0};
   const me=onlineKey();
   for(const a of A){
@@ -7478,7 +7478,7 @@ let ringCombo=0;
 /* 🎨 สีลำพิเศษตามเทศกาล (รอบ 357) — ตัดสินตอน buildScene จากวันที่จริงของเครื่องผู้เล่น
    ปีใหม่ 20 ธ.ค.–5 ม.ค. = ทอง-แดงมงคล · สงกรานต์ 11–16 เม.ย. = ฟ้าน้ำ-ชมพูดอกไม้ */
 function festivalPaint(d){
-  d=d||new Date();
+  d=d?thDate(d):thDate();                        // 🇹🇭 รอบ 988: วันไทย
   const mo=d.getMonth()+1, day=d.getDate();
   if((mo===12&&day>=20)||(mo===1&&day<=5))
     return {name:'ปีใหม่', emoji:'🎊', pilot:0xd4a017, pilotAcc:0xc62828, pax:0xb8860b, paxAcc:0xe53935};
@@ -8775,7 +8775,7 @@ function rotorChop(now){
 /* 🌅 ดวงอาทิตย์ตามเวลาจริงของเครื่องผู้เล่น — เช้าตะวันออก เที่ยงสูง เย็นตะวันตก
    06:00 → ทิศ -1.6 rad (ซ้าย) · 12:00 → 0 (ตรงหน้า สูง) · 18:00 → +1.6 (ขวา) */
 function sunUpdate(){
-  const h=new Date().getHours()+new Date().getMinutes()/60;
+  const h=thHourF();                             // 🇹🇭 รอบ 988: เวลาไทย (js/thaitime.js) ไม่ใช่นาฬิกาเครื่อง
   const t=Math.max(0,Math.min(1,(h-6)/12));      // 0 = 6 โมงเช้า · 1 = 6 โมงเย็น
   sunDir=(t-.5)*3.2;
   sunHi=Math.sin(t*Math.PI);                     // สูงสุดตอนเที่ยง
@@ -8793,7 +8793,7 @@ function fogUpdate(now){
   if(!scene||!scene.fog) return;
   if(now-_fogAt<800) return;                      // เวลาเปลี่ยนช้า — คำนวณใหม่ทุก ~0.8 วิพอ (กัน GC)
   _fogAt=now;
-  const h=new Date().getHours()+new Date().getMinutes()/60;
+  const h=thHourF();                             // 🇹🇭 รอบ 988: เวลาไทย
   let f=0;
   if(h>=4 && h<=9)          f=1-Math.abs(h-5.8)/2.7;          // หมอกเช้า (หนาสุด 05:48)
   else if(h>=17.5 && h<=20) f=(1-Math.abs(h-18.6)/2)*.5;      // พลบค่ำบางๆ

@@ -115,7 +115,7 @@ function openGradeChange(){
 
   /* ประวัติชั้นเดิม — เขียนเป็น "โซ่" บรรทัดเดียว (เก่า→ใหม่) แทนตาราง
      เพราะจอเตี้ย 812×375 ต้องเห็นครบทั้งใบโดยไม่ต้องเลื่อน (กฎทอง #7) */
-  const shortDate = ts => ts ? new Date(ts).toLocaleDateString('th-TH',{day:'numeric',month:'short'}) : 'ตอนสมัคร';
+  const shortDate = ts => ts ? new Date(ts).toLocaleDateString('th-TH',thLocaleOpt({day:'numeric',month:'short'})) : 'ตอนสมัคร';   // 🇹🇭 รอบ 988
   const histMax   = window.innerHeight < 460 ? 4 : 6;   // จอเตี้ย = โซ่สั้นลง กล่องจึงไม่ล้นจอ
   const histChain = hist.slice(-histMax).map((h,i,a)=>`<span class="gl-hg">${escapeHTML(h.g)}${gradeMark(h.g)}
       <small class="gl-hat">${(i === a.length-1 && a.length > 1) ? 'ตอนนี้' : shortDate(h.at)}</small></span>`)

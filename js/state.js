@@ -237,25 +237,25 @@ const FEED_QUICK_CM = [
    feast เต็มหลอด + fedUpTo = มื้อพรุ่งนี้ (ตุนข้ามมื้อ) ---------- */
 const SLOT_MS = 24*60*60*1000;
 function currentSlotStart(now){
-  const d = new Date(now);
-  d.setHours(MEAL_HOUR,0,0,0);
-  if(d.getTime() > now) d.setDate(d.getDate()-1);   // ก่อน 18:00 → มื้อล่าสุดคือเมื่อวาน
-  return d.getTime();
+  // 🇹🇭 รอบ 988: 18:00 "เวลาไทย" ของวันนั้น (thAtHour คืน timestamp จริง) ไม่ใช่ 18:00 ตามโซนเครื่อง
+  let t = thAtHour(now, MEAL_HOUR);
+  if(t > now) t -= TH_DAY_MS;                       // ก่อน 18:00 → มื้อล่าสุดคือเมื่อวาน
+  return t;
 }
 function nextSlotStart(now){ return currentSlotStart(now) + SLOT_MS; }
 /* key ประจำมื้อ (วันที่ของเวลา 18:00 มื้อล่าสุด) — ใช้กับข้าวเย็นคน (ข้อ 6) */
-function mealDayKey(now){ return new Date(currentSlotStart(now)).toDateString(); }
+function mealDayKey(now){ return thDayKey(currentSlotStart(now)); }
 /* key ประจำคืน (ข้อ 1): คืนนี้เริ่ม 20:00 ถึงเช้า 06:00 — หลังเที่ยงคืนยังนับเป็นคืนของเมื่อวาน */
 function nightKeyOf(now){
-  const d = new Date(now);
-  if(d.getHours() < WAKE_HOUR) d.setDate(d.getDate()-1);
-  return d.toDateString();
+  // 🇹🇭 รอบ 988: วัน/ชั่วโมงตามเวลาไทย (ถอยไปเมื่อวานด้วยการลบ 1 วันจาก timestamp จริง)
+  const t = (now == null ? Date.now() : +now);
+  return thDayKey(thHour(t) < WAKE_HOUR ? t - TH_DAY_MS : t);
 }
 /* 🌙 รอบ 680: ตอนนี้เป็น "กลางคืน" หรือยัง — ตามนาฬิกาเครื่องผู้เล่นจริง
    ใช้ช่วงเดียวกับเวลานอนของน้อง (20:00–06:00) ฉากเวทีจะได้ตรงกับกติกานอนที่เด็กเห็นอยู่แล้ว
    (ฉากสลับเองภายใน 1 นาที — renderDashboard ถูกเรียกจาก tick ใน js/main.js อยู่แล้ว ไม่ต้องมี timer ใหม่) */
 function isNightNow(now){
-  const h = new Date(now || Date.now()).getHours();
+  const h = thHour(now || Date.now());     // 🇹🇭 รอบ 988: เวลาไทย ไม่ใช่นาฬิกาเครื่อง
   return h >= SLEEP_FROM_HOUR || h < WAKE_HOUR;
 }
 
@@ -593,7 +593,7 @@ function hasPetType(type){ return state.pets.some(p=>p.type === type); }
 
 /* ---------- เหรียญ: สะสมทั้งหมด + ที่หาได้วันนี้ ---------- */
 function todayStr(){
-  const d = new Date();
+  const d = thDate();      // 🇹🇭 รอบ 988: "วันนี้" ตามวันไทย — วันใหม่เปลี่ยนตอนเที่ยงคืนบ้านเราเสมอ
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 function dailyTick(){
@@ -799,7 +799,7 @@ function heatPct(p){
    state.bills[id] = {month:'YYYY-MM', due, paid}
    ============================================================ */
 function ymStr(now){
-  const d = new Date(now);
+  const d = thDate(now);   // 🇹🇭 รอบ 988: เดือนตามปฏิทินไทย
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
 }
 function billOutstanding(id){
@@ -818,7 +818,7 @@ const UTILITIES = {
 const HOME_UTILITIES = ['elec','water'];   // ชนิดที่แสดงในการ์ดบ้าน (เน็ตอยู่การ์ดมือถือ)
 /* บ้านเสื่อมสภาพ = ค้างค่าบำรุงตั้งแต่วันที่ 5 ของเดือนเป็นต้นไป (คำนวณสด ไม่ต้องเซฟ) */
 function homeDecayed(){
-  return !!state.home && billOutstanding('maint') > 0 && new Date(Date.now()).getDate() >= DECAY_DAY;
+  return !!state.home && billOutstanding('maint') > 0 && thDate().getDate() >= DECAY_DAY;   // 🇹🇭 รอบ 988: วันที่ไทย
 }
 function billTick(now){
   const ym = ymStr(now);
@@ -897,7 +897,7 @@ function petFoodTick(now){
   const petCount = state.pets.length;
   if(petCount <= 0) return;
   const amt = petCount * PET_FOOD_PER_PET;
-  const d = new Date(now);
+  const d = thDate(now);                       // 🇹🇭 รอบ 988: วันที่ 1 ตามปฏิทินไทย
   const ym = ymStr(now);
   if(d.getDate() === 1 && state.petFoodPaidMonth !== ym){
     state.coins += amt;
@@ -907,8 +907,8 @@ function petFoodTick(now){
     if(typeof sfx !== 'undefined' && sfx.coinGetTier) sfx.coinGetTier(petCount >= 3 ? 2 : petCount >= 2 ? 1 : 0);
   }
   // เตือนล่วงหน้า: วันนี้เป็นวันสุดท้ายของเดือน (พรุ่งนี้คือวันที่ 1) → บอกจำนวนที่จะได้รับ
-  const tomorrow = new Date(now); tomorrow.setDate(d.getDate() + 1);
-  if(tomorrow.getDate() === 1){
+  const tomorrow = (now == null ? Date.now() : +now) + TH_DAY_MS;   // 🇹🇭 รอบ 988: พรุ่งนี้ = +1 วันไทย
+  if(thDate(tomorrow).getDate() === 1){
     const warnYm = ymStr(tomorrow);
     if(state.petFoodWarnMonth !== warnYm){
       state.petFoodWarnMonth = warnYm;
@@ -1073,7 +1073,7 @@ function careTick(){
   marketTick(now);        // ลูกค้ามาซื้อสินค้าที่เราลงขาย (net worth ขยับก่อน refreshRank)
   orderTick(now);         // ออเดอร์พิเศษหมดเวลา/เข้าใหม่
   const slot = currentSlotStart(now);
-  const hourNow = new Date(now).getHours();
+  const hourNow = thHour(now);         // 🇹🇭 รอบ 988: ชั่วโมงไทย
   for(const p of state.pets){
     if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
     // ข้อ 3: ขึ้นมื้อใหม่ (18:00) แล้วยังไม่อิ่มครอบมื้อนี้ → เริ่มนับความอิ่มสะสมใหม่จาก 0
@@ -1107,7 +1107,7 @@ function careTick(){
     }
     // ฝนตกประจำวัน 19:00: ไม่มีบ้านสภาพดี → เปียกจนป่วยทันที (ป่วยครั้งเดียวต่อฝน 1 รอบ)
     if(rainNow(now) && !rainProtected()){
-      const rainKey = new Date(now).toDateString();
+      const rainKey = thDayKey(now);   // 🇹🇭 รอบ 988: คีย์วันไทย
       if(!p.sick && p.rainSickDay !== rainKey){
         p.sick = true; p.sickCause = 'rain';
         p.rainSickDay = rainKey;

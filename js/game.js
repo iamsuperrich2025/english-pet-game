@@ -85,10 +85,11 @@ function updateBestTarget(){
 
 /* 🗓️ คีย์สัปดาห์ = วันจันทร์ของสัปดาห์นั้น (YYYY-MM-DD) — ใช้ตัดสินว่าถึงเวลารีเซ็ตสถิติรายสัปดาห์ */
 function weekKeyStr(d){
-  d = d ? new Date(d) : new Date();
-  const mon = (d.getDay() + 6) % 7;           // จันทร์=0 ... อาทิตย์=6
-  d.setDate(d.getDate() - mon); d.setHours(0,0,0,0);
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  // 🇹🇭 รอบ 988: สัปดาห์ตามวันไทย (thaitime.js) — เดิมใช้โซนเครื่อง วันจันทร์เลื่อนได้ถ้าตั้งไทม์โซนต่างประเทศ
+  const t = d == null ? Date.now() : +d;
+  const mon = (thDate(t).getDay() + 6) % 7;   // จันทร์=0 ... อาทิตย์=6
+  const w = thDate(t - mon*TH_DAY_MS);
+  return w.getFullYear() + '-' + String(w.getMonth()+1).padStart(2,'0') + '-' + String(w.getDate()).padStart(2,'0');
 }
 function rolloverWeekBest(){   // ถ้าข้ามสัปดาห์แล้ว → ล้างสถิติสัปดาห์ เริ่มนับใหม่
   const wk = weekKeyStr();

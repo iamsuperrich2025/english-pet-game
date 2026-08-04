@@ -537,7 +537,7 @@ const Lobby3D = (function(){
   // นับโควตารางวัลเต็มรายวัน (แพทเทิร์น toDateString แบบ foodQuizDay/testerCoinDay) — คืนจำนวนคำเต็มที่เหลือวันนี้
   function spellDayLeft(){
     if(typeof state==='undefined') return SPELL_FULL_PER_DAY;
-    const day=new Date().toDateString();
+    const day=thDayKey();                      // 🇹🇭 รอบ 988: วันไทย
     if(state.spellDay!==day){ state.spellDay=day; state.spellWords=0; }
     return Math.max(0, SPELL_FULL_PER_DAY-(state.spellWords||0));
   }

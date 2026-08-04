@@ -38,7 +38,7 @@ const CHILDREN_DAY = '2026-01-10';   // 🧒 เสาร์ที่ 2 ขอ�
 const OWNER_DISCOUNT_RATE = 0.3;
 
 function todayYMD(){
-  const d = new Date();
+  const d = thDate();      // 🇹🇭 รอบ 988: วันไทย (js/thaitime.js) — วันสำคัญ/ราคาเข้าโลกต้องตรงปฏิทินบ้านเรา
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
 const YOUNG_GRADES = ['ป.1','ป.2','ป.3','ป.4','ป.5','ป.6'];

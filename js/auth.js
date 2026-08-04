@@ -49,7 +49,7 @@ function testerBoost(){
   if(!isTester()) return;
   const got = [];
   // เติมเหรียญวันละครั้ง (toDateString แบบเดียวกับ foodQuizDay) — วันใหม่ + เหรียญต่ำกว่าเพดาน = เติมเต็ม
-  const day = new Date().toDateString();
+  const day = thDayKey();                      // 🇹🇭 รอบ 988: วันไทย
   if(state.coins < TESTER_COINS && state.testerCoinDay !== day){
     state.testerCoinDay = day;
     addCoins(TESTER_COINS - state.coins);

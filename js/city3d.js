@@ -31,7 +31,8 @@ const NIGHT = (()=>{ // 🌙 รอบ 891: อ่านสวิตช์เด
   // · override ?day / ?night (ไว้เทสต์+เล่นสนุก)
   try{ const q=new URLSearchParams(location.search);
        if(q.has('day')) return false; if(q.has('night')) return true; }catch(e){}
-  const autoNight = ()=>{ const h=new Date().getHours(); return h>=19 || h<6; };
+  // 🇹🇭 รอบ 988: อ่านเวลาไทย (thaitime.js) ไม่ใช่นาฬิกาเครื่อง — เครื่องตั้งโซนต่างประเทศเคยได้กลางคืนกลางวันแสก ๆ
+  const autoNight = ()=>{ const h = (typeof thHour==='function' ? thHour() : new Date().getHours()); return h>=19 || h<6; };
   try{
     const m = localStorage.getItem('vwNightMode');
     if(m==='day')   return false;
@@ -1304,7 +1305,7 @@ const FESTIVAL = (()=>{
     const q = new URLSearchParams(location.search);
     if(q.has('festival')) return q.get('festival');   // เทสต์: ?festival=newyear|songkran|loikrathong|none
   }catch(e){}
-  const d = new Date(), mm = d.getMonth()+1, dd = d.getDate();
+  const d = thDate(), mm = d.getMonth()+1, dd = d.getDate();   // 🇹🇭 รอบ 988: วันไทย
   if((mm===12 && dd>=28) || (mm===1 && dd<=3)) return 'newyear';      // 🎆 ส่งท้ายปีเก่า-ต้อนรับปีใหม่
   if(mm===4 && dd>=12 && dd<=16) return 'songkran';                   // 💦 สงกรานต์ (13-15 เม.ย. + วันก่อน-หลัง)
   if(mm===11 && dd>=22 && dd<=26) return 'loikrathong';               // 🏮 ลอยกระทง (เต็มดวง 24 พ.ย. 2569)

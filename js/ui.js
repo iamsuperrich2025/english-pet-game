@@ -422,7 +422,7 @@ const PAT_REMIND_HOUR = 17;
 function patRemindTick(){
   const day = todayStr();
   if(state.patRemindDay === day) return;                       // เตือนไปแล้ววันนี้
-  if(new Date().getHours() < PAT_REMIND_HOUR) return;          // ยังไม่ถึงเวลาเย็น
+  if(thHour() < PAT_REMIND_HOUR) return;                       // ยังไม่ถึงเวลาเย็น (🇹🇭 รอบ 988: เวลาไทย)
   if(!state.pets || !state.pets.length) return;
   if(Array.isArray(state.patDays) && state.patDays.includes(day)) return;   // ลูบไปแล้ววันนี้
   state.patRemindDay = day;
@@ -445,7 +445,7 @@ function applyPatRemindGlow(){
   if(!stage) return;
   const day = todayStr();
   const need = (state.pets || []).length
-    && new Date().getHours() >= PAT_REMIND_HOUR
+    && thHour() >= PAT_REMIND_HOUR                             // 🇹🇭 รอบ 988: เวลาไทย
     && !(Array.isArray(state.patDays) && state.patDays.includes(day));
   stage.classList.toggle('pat-remind', !!need);
 }
@@ -589,11 +589,10 @@ function renamePet(p){
 }
 /* ---------- เวลามื้ออาหารเป็นข้อความไทย (มื้อเย็นวันละครั้ง 18:00 — ข้อ 2) ---------- */
 function mealLabel(ts){
-  const d = new Date(ts), today = new Date();
-  today.setHours(0,0,0,0);
-  const dayDiff = Math.round((new Date(ts).setHours(0,0,0,0) - today.getTime())/86400000);
+  // 🇹🇭 รอบ 988: เทียบ "วันไทย" กับ "วันไทยของวันนี้" (thDayStart คืน timestamp จริงของเที่ยงคืนไทย)
+  const dayDiff = Math.round((thDayStart(ts) - thDayStart(Date.now()))/TH_DAY_MS);
   const day = dayDiff >= 2 ? 'มะรืนนี้ ' : dayDiff === 1 ? 'พรุ่งนี้ ' : '';
-  return `${day}${String(d.getHours()).padStart(2,'0')}:00 น.`;
+  return `${day}${String(thHour(ts)).padStart(2,'0')}:00 น.`;
 }
 function fmtMins(ms){
   const totalMin = Math.max(0, Math.ceil(ms/60000));
@@ -610,8 +609,9 @@ function renderClock(){
   const now = new Date(Date.now());
   /* 🎩 รอบ 612: วันที่แบบสั้น ("จ. 27 ก.ค. 2569") + เวลาแยกชิ้นเป็นตัวเลขเด่น
      — เดิมเป็นประโยคยาว "📅 วันจันทร์ที่ 27 กรกฎาคม 2569 · ⏰ 16:36:19 น." กินพื้นที่จนป้ายชื่อดูแน่น */
-  const dateTxt = now.toLocaleDateString('th-TH', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
-  const timeTxt = now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  // 🇹🇭 รอบ 988: ผูกโซน Asia/Bangkok — เครื่องที่ตั้งไทม์โซนต่างประเทศก็เห็นวัน/เวลาบ้านเรา
+  const dateTxt = now.toLocaleDateString('th-TH', thLocaleOpt({weekday:'short', day:'numeric', month:'short', year:'numeric'}));
+  const timeTxt = now.toLocaleTimeString('th-TH', thLocaleOpt({hour:'2-digit', minute:'2-digit', second:'2-digit'}));
   el.innerHTML = `<span class="ck-date">${dateTxt}</span><span class="ck-time">${timeTxt}</span>`;
   renderRainBar();                                   // แถบนับถอยหลังฝนเดินไปพร้อมนาฬิกา
   const compLive = document.getElementById('comp-live');
@@ -632,7 +632,7 @@ function renderClock(){
    ============================================================ */
 function dinnerDue(now){
   now = now || Date.now();
-  const h = new Date(now).getHours();
+  const h = thHour(now);                                       // 🇹🇭 รอบ 988: เวลาไทย
   return (h >= MEAL_HOUR || h < WAKE_HOUR) && state.playerFedDay !== mealDayKey(now);
 }
 function renderDinnerChip(){
@@ -1212,7 +1212,7 @@ function renderOnlineCard(){
   /* ---- โหมดออฟไลน์: เพื่อนจำลองเดิม ---- */
   const seed = Math.floor(Date.now()/(5*60*1000));      // ชุดรายชื่อเปลี่ยนทุก 5 นาที
   const rnd = seededRand(seed * 7919);
-  const count = Math.min(ONLINE_NAMES.length, onlineBaseCount(new Date().getHours()) + Math.floor(rnd()*3));
+  const count = Math.min(ONLINE_NAMES.length, onlineBaseCount(thHour()) + Math.floor(rnd()*3));   // 🇹🇭 รอบ 988
   const pool = ONLINE_NAMES.slice();
   for(let i=pool.length-1;i>0;i--){                     // สับไพ่แบบ deterministic
     const j = Math.floor(rnd()*(i+1));
@@ -2690,8 +2690,8 @@ function chatBadgeSync(){
   if(n) b.textContent = n;
 }
 function ibTimeStr(ts){
-  const d = new Date(ts), now = new Date();
-  if(d.toDateString() === now.toDateString())
+  const d = thDate(ts), now = Date.now();                      // 🇹🇭 รอบ 988: หน้าปัดไทย
+  if(d.toDateString() === thDayKey(now))
     return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   if(now - ts < 7*86400e3) return ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][d.getDay()];
   return `${d.getDate()}/${d.getMonth()+1}`;
@@ -3085,7 +3085,7 @@ function giftImg(id){ return IMG_FILES[`gift_${id}`] || null; }
 
 function giftDateStr(ts){
   if(!ts) return '';
-  try{ return new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'}); }
+  try{ return new Date(ts).toLocaleDateString('th-TH', thLocaleOpt({day:'numeric', month:'short', year:'2-digit'})); }   // 🇹🇭 รอบ 988
   catch(e){ return ''; }
 }
 
@@ -5113,25 +5113,25 @@ function renderDashboard(){
    ปุ่มเดียวพาสัตว์ทุกตัว (Lv.2 ขึ้นไป) เข้านอนพร้อมกัน
    ============================================================ */
 function sleepBtnHTML(p, now){
-  const h = new Date(now).getHours();
+  const h = thHour(now);                                       // 🇹🇭 รอบ 988: เวลาไทย
   if(p.sleeping) return `<button class="care-btn btn-sleep" id="btn-wake">⏰ ปลุกน้อง</button>`;
   if(h >= SLEEP_FROM_HOUR || h < WAKE_HOUR)
     return `<button class="care-btn btn-sleep" id="btn-sleep">🌙 พาเข้านอน</button>`;
   return '';
 }
 function sleepHintHTML(p, now){
-  const h = new Date(now).getHours();
+  const h = thHour(now);                                       // 🇹🇭 รอบ 988: เวลาไทย
   if(p.sick || p.sleeping) return '';
   if(h >= SLEEP_FROM_HOUR && h < SLEEP_SICK_HOUR){
-    const deadline = new Date(now); deadline.setHours(SLEEP_SICK_HOUR,0,0,0);
-    return `<div class="heat-text">🌙 ได้เวลาเตรียมนอนแล้ว — พาน้องเข้านอนก่อน <b>${SLEEP_SICK_HOUR}:00 น.</b> (อีก ${fmtMins(deadline.getTime() - now)}) ไม่งั้นน้องจะป่วยนะ</div>`;
+    const deadline = thAtHour(now, SLEEP_SICK_HOUR);           // 23:00 เวลาไทยของวันนั้น (timestamp จริง)
+    return `<div class="heat-text">🌙 ได้เวลาเตรียมนอนแล้ว — พาน้องเข้านอนก่อน <b>${SLEEP_SICK_HOUR}:00 น.</b> (อีก ${fmtMins(deadline - now)}) ไม่งั้นน้องจะป่วยนะ</div>`;
   }
   if(h >= SLEEP_SICK_HOUR || h < WAKE_HOUR)
     return `<div class="heat-text">🌙 ดึกมากแล้ว รีบพาน้องเข้านอนเถอะ!</div>`;
   return '';
 }
 function sleepAllPets(){
-  const h = new Date(Date.now()).getHours();
+  const h = thHour();                                          // 🇹🇭 รอบ 988: เวลาไทย
   if(h < SLEEP_FROM_HOUR && h >= WAKE_HOUR){
     sfx.wrong(); toast(`🌙 ยังไม่ถึงเวลานอน — พาเข้านอนได้ตั้งแต่ ${SLEEP_FROM_HOUR}:00 น. นะ`); return;
   }
@@ -5450,8 +5450,7 @@ function patCalendarHTML(){
   const today = todayStr();
   const cells = [];
   for(let i = 29; i >= 0; i--){
-    const d = new Date();
-    d.setDate(d.getDate() - i);
+    const d = thDate(Date.now() - i*TH_DAY_MS);   // 🇹🇭 รอบ 988: ย้อนวันไทย (คีย์ต้องตรงกับ todayStr)
     const key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     const cls = (days.has(key) ? ' on' : '') + (key === today ? ' today' : '');
     cells.push(`<span class="pi-dot${cls}" title="${key}"></span>`);
@@ -5475,8 +5474,7 @@ function patCalendarHTML(){
    คืนจำนวนวันสตรีคปัจจุบัน (null = วันนี้นับไปแล้ว) */
 function patStreakTick(day){
   if(state.patStreakDay === day) return null;                 // ลูบตัวที่ 2 ของวันเดียวกัน — ไม่นับซ้ำ
-  const yd = new Date();
-  yd.setDate(yd.getDate() - 1);
+  const yd = thDate(Date.now() - TH_DAY_MS);      // 🇹🇭 รอบ 988: เมื่อวานตามวันไทย
   const yesterday = yd.getFullYear() + '-' + String(yd.getMonth()+1).padStart(2,'0') + '-' + String(yd.getDate()).padStart(2,'0');
   state.patStreak = (state.patStreakDay === yesterday) ? (state.patStreak || 0) + 1 : 1;
   state.patStreakDay = day;
@@ -5547,7 +5545,7 @@ function detoxPet(p){
    ============================================================ */
 function openFoodQuiz(){
   sfx.select();
-  const today = new Date(Date.now()).toDateString();
+  const today = thDayKey();                    // 🇹🇭 รอบ 988: วันไทย
   if(state.foodQuizPlayDay !== today){ state.foodQuizPlayDay = today; state.foodQuizPlayCount = 0; }
   if(state.foodQuizPlayCount >= FOODQUIZ_MAX_PLAYS){
     const full = document.createElement('div');
@@ -5828,7 +5826,7 @@ function renderHomeCard(){
     /* ---- บิลค่าบำรุงรายเดือน (0.5% ของราคาบ้าน ออกทุกวันที่ 1) ---- */
     const due = billOutstanding('maint');
     const decayed = homeDecayed();
-    const nowD = new Date(Date.now());
+    const nowD = thDate();                        // 🇹🇭 รอบ 988: เดือนตามปฏิทินไทย
     const lastDay = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
     let billUI;
     if(due > 0 && decayed){
@@ -6071,7 +6069,7 @@ function renderPhoneCard(){
       </div>
       <button class="big-btn blue home-btn" id="btn-buy-phone">📱 ซื้อมือถือ 🪙${fmtNum(PHONE_PRICE)}</button>${soldBadge('phone')}`;
   }else{
-    const nowD = new Date(Date.now());
+    const nowD = thDate();                        // 🇹🇭 รอบ 988: เดือนตามปฏิทินไทย
     const lastDay = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
     const bonusState = state.netCut
       ? `<span class="it-tag tag-off">ถูกตัดเน็ต</span> โบนัส +${PHONE_BONUS}/ข้อ ถูกระงับ 📵`
@@ -6327,7 +6325,7 @@ function renderComputerCard(){
       </div>
       <button class="big-btn blue home-btn" id="btn-buy-comp">💻 ซื้อคอมพิวเตอร์ 🪙${fmtNum(COMP_PRICE)}</button>${soldBadge('computer')}`;
   }else{
-    const nowD = new Date(Date.now());
+    const nowD = thDate();                        // 🇹🇭 รอบ 988: เดือนตามปฏิทินไทย
     const lastDay = new Date(nowD.getFullYear(), nowD.getMonth()+1, 0).getDate();
     body = `
       <div class="comp-earn ${state.dataCut ? 'off' : ''}">
@@ -8574,8 +8572,8 @@ function showTeacherCard(){
   const last = state.quizLog.length ? state.quizLog[state.quizLog.length-1] : null;
   const lastCat = last ? findCat(last.cat) : null;
   const now = new Date();
-  const dateTxt = now.toLocaleDateString('th-TH', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  const timeTxt = now.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+  const dateTxt = now.toLocaleDateString('th-TH', thLocaleOpt({weekday:'long', day:'numeric', month:'long', year:'numeric'}));   // 🇹🇭 รอบ 988
+  const timeTxt = now.toLocaleTimeString('th-TH', thLocaleOpt({hour:'2-digit', minute:'2-digit'}));
   const badges = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';

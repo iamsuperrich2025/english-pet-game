@@ -99,12 +99,14 @@ function seededRand(seed){
   };
 }
 
+/* 🇹🇭 รอบ 988: ผูกโซน Asia/Bangkok (thLocaleOpt ใน js/thaitime.js) — เครื่องที่ตั้งไทม์โซนต่างประเทศ
+   เคยเห็นวัน/เวลาผิดไปเป็นชั่วโมง/ข้ามวัน ทั้งที่ข้อความเขียนว่า "น." */
 function fmtThaiDT(ts){
   return new Date(ts).toLocaleString('th-TH',
-    {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) + ' น.';
+    thLocaleOpt({day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'})) + ' น.';
 }
 function fmtThaiDate(ts){
-  return new Date(ts).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'numeric'});
+  return new Date(ts).toLocaleDateString('th-TH', thLocaleOpt({day:'numeric', month:'short', year:'numeric'}));
 }
 
 /* ---------- screen navigation ---------- */

@@ -35,17 +35,20 @@
   const TH_MON = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
   /* ---------- เวลา/เดือน (ใช้ร่วมทุกกระดาน) ---------- */
+  /* 🇹🇭 รอบ 988: เดือน/จุดตัดคิดเป็น "เวลาไทย" ทั้งหมด (js/thaitime.js)
+     — เดิมใช้นาฬิกาเครื่อง ผู้เล่นที่ตั้งไทม์โซนต่างประเทศจะตัดรอบคนละเวลากับคนอื่น */
   function monthKey(d){                        // → '2026-07'
-    const t = d || new Date();
+    const t = thDate(d);
     return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0');
   }
   function monthParts(m){ const p = String(m || '').split('-'); return [+p[0] || 0, +p[1] || 1]; }
   function monthThai(m){ const [y, mo] = monthParts(m); return (TH_MON[mo - 1] || '') + ' ' + y; }
-  function cutDate(m){ const [y, mo] = monthParts(m); return new Date(y, mo - 1, 1, CUT_HOUR, CUT_MIN, 0, 0); }
+  // จุดตัด = วันที่ 1 เวลา 00:01 น. เวลาไทย → timestamp จริง (ทุกเครื่องทั่วโลกตัดพร้อมกันเป๊ะ)
+  function cutDate(m){ const [y, mo] = monthParts(m); return new Date(thTs(y, mo - 1, 1, CUT_HOUR, CUT_MIN)); }
   function pastCut(m){ return Date.now() >= cutDate(m).getTime(); }
-  function nextCutDate(){                      // จุดตัดรอบครั้งถัดไป (วันที่ 1 เดือนหน้า 00:01)
-    const n = new Date();
-    return new Date(n.getFullYear(), n.getMonth() + 1, 1, CUT_HOUR, CUT_MIN, 0, 0);
+  function nextCutDate(){                      // จุดตัดรอบครั้งถัดไป (วันที่ 1 เดือนหน้า 00:01 น. ไทย)
+    const n = thDate();
+    return new Date(thTs(n.getFullYear(), n.getMonth() + 1, 1, CUT_HOUR, CUT_MIN));
   }
   function fmtLeft(ms){
     if(ms <= 0) return 'อีกไม่ถึงนาที';
@@ -55,7 +58,7 @@
     return `อีก ${mi} นาที`;
   }
   function cutText(m){
-    const c = cutDate(m);
+    const c = thDate(cutDate(m));              // 🇹🇭 รอบ 988: อ่านหน้าปัดไทย
     return `${c.getDate()} ${TH_MON[c.getMonth()]} ${c.getFullYear()} เวลา 00:01 น.`;
   }
   const prizeFor = (rank)=> (rank >= 1 && rank <= TOP) ? PRIZES[rank - 1] : 0;

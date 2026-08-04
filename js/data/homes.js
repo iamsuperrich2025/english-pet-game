@@ -69,9 +69,7 @@ function trashCost(homeId){
 const RAIN_HOUR   = 19;
 const RAIN_DUR_MS = 60*60*1000;
 function rainStartToday(now){
-  const d = new Date(now);
-  d.setHours(RAIN_HOUR,0,0,0);
-  return d.getTime();
+  return thAtHour(now, RAIN_HOUR);   // 🇹🇭 รอบ 988: 19:00 "เวลาไทย" ของวันนั้น (js/thaitime.js)
 }
 function rainNow(now){
   const s = rainStartToday(now);
