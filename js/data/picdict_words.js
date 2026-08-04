@@ -372,7 +372,7 @@ PICDICT_WORDS['Tools.png'] = {cols:8, rows:8, words:[
   ["Clock","นาฬิกา"],["Calculator","เครื่องคิดเลข"],["Stapler","เครื่องเย็บกระดาษ"],["Hole Punch","เครื่องเจาะกระดาษ"],["Clipboard","แผ่นรองเขียน"],["Toolbox","กล่องเครื่องมือ"],["Safety Gloves","ถุงมือเซฟตี้"],["Safety Goggles","แว่นตานิรภัย"],
 ]};
 
-PICDICT_WORDS['Toys.png'] = {cols:8, rows:8, words:[
+PICDICT_WORDS['Toys.png'] = {cols:8, rows:7, words:[
   ["Teddy Bear","ตุ๊กตาหมี"],["Doll","ตุ๊กตา"],["Toy Car","รถของเล่น"],["Toy Train","รถไฟของเล่น"],["Kite","ว่าว"],["Ball","ลูกบอล"],["Building Blocks","บล็อกต่อสร้าง"],["Puzzle","จิ๊กซอว์"],
   ["Robot","หุ่นยนต์"],["Airplane","เครื่องบินของเล่น"],["Top","ลูกข่าง"],["Yo-Yo","โยโย่"],["Rubber Duck","เป็ดยาง"],["Stuffed Animal","ตุ๊กตาสัตว์"],["Stacking Rings","ห่วงเรียงซ้อน"],["Xylophone","ไซโลโฟนของเล่น"],
   ["Sand Toys","ของเล่นในทราย"],["Water Gun","ปืนฉีดน้ำ"],["Toy Boat","เรือของเล่น"],["Drawing Board","กระดานวาดเขียน"],["Marbles","ลูกแก้ว"],["Pull Toy","ของเล่นลากจูง"],["Tambourine","แทมบูรีน"],["Toy Camera","กล้องของเล่น"],
@@ -382,7 +382,7 @@ PICDICT_WORDS['Toys.png'] = {cols:8, rows:8, words:[
   ["Rocking Horse","ม้าโยก"],["Swing","ชิงช้า"],["Slide","สไลเดอร์"],["Play Tent","เต็นท์ของเล่น"],["Toy Truck","รถบรรทุกของเล่น"],["Fire Truck","รถดับเพลิงของเล่น"],["Police Car","รถตำรวจของเล่น"],["Helicopter","เฮลิคอปเตอร์ของเล่น"],
 ]};
 
-PICDICT_WORDS['Transportation.png'] = {cols:8, rows:8, words:[
+PICDICT_WORDS['Transportation.png'] = {cols:8, rows:7, words:[
   ["Car","รถยนต์"],["Bus","รถบัส"],["Truck","รถบรรทุก"],["Motorcycle","รถจักรยานยนต์"],["Bicycle","จักรยาน"],["Taxi","แท็กซี่"],["Van","รถตู้"],["Ambulance","รถพยาบาล"],
   ["Fire Truck","รถดับเพลิง"],["Police Car","รถตำรวจ"],["Train","รถไฟ"],["Subway","รถไฟใต้ดิน"],["Tram","รถราง"],["Monorail","รถไฟโมโนเรล"],["High-Speed Train","รถไฟความเร็วสูง"],["Cable Car","กระเช้าไฟฟ้า"],
   ["Airplane","เครื่องบิน"],["Helicopter","เฮลิคอปเตอร์"],["Hot Air Balloon","บอลลูน"],["Rocket","จรวด"],["Spaceship","ยานอวกาศ"],["Boat","เรือ"],["Ship","เรือใหญ่"],["Ferry","เรือเฟอร์รี่"],
@@ -410,6 +410,17 @@ PICDICT_WORDS['Vegetables.png'] = {cols:8, rows:7, words:[
   ["Bamboo Shoot","หน่อไม้"],["Baby Corn","ข้าวโพดอ่อน"],["Okra","กระเจี๊ยบ"],["Pumpkin","ฟักทอง"],["Kabocha","ฟักญี่ปุ่น"],["Winter Melon","ฟักเขียว"],["Bitter Melon","มะระ"],["Chayote","ฟักแฟง"],
   ["Lotus Root","รากบัว"],["Burdock Root","รากโกโบ"],["Taro","เผือก"],["Yam","มันแกว"],["Jicama","มันฝรั่งแก้ว"],["Green Papaya","มะละกอดิบ"],["Asparagus","หน่อไม้ฝรั่ง"],["Brussels Sprout","กะหล่ำดาว"],
   ["Romaine Lettuce","ผักกาดโรเมน"],["Endive","ผักเอนดีฟ"],["Arugula","ร็อกเก็ต"],["Fennel","ยี่หร่า"],["Seaweed","สาหร่าย"],["Shiitake Mushroom","เห็ดชิตาเกะ"],["Enoki Mushroom","เห็ดเข็มทอง"],["Straw Mushroom","เห็ดฟาง"],
+]};
+
+PICDICT_WORDS['food.png'] = {cols:8, rows:8, words:[
+  ["Rice","ข้าว"],["Bread","ขนมปัง"],["Egg","ไข่"],["Milk","นม"],["Cheese","ชีส"],["Yogurt","โยเกิร์ต"],["Butter","เนย"],["Oil","น้ำมัน"],
+  ["Chicken","ไก่"],["Beef","เนื้อวัว"],["Fish","ปลา"],["Shrimp","กุ้ง"],["Pork","เนื้อหมู"],["Tofu","เต้าหู้"],["Sausage","ไส้กรอก"],["Ham","แฮม"],
+  ["Hamburger","แฮมเบอร์เกอร์"],["Pizza","พิซซ่า"],["Sandwich","แซนด์วิช"],["Hot Dog","ฮ็อตด็อก"],["Spaghetti","สปาเก็ตตี้"],["Fried Rice","ข้าวผัด"],["Noodle","ก๋วยเตี๋ยว"],["Sushi","ซูชิ"],
+  ["Salad","สลัด"],["Soup","ซุป"],["Corn","ข้าวโพด"],["French Fries","เฟรนช์ฟรายส์"],["Mashed Potato","มันบด"],["Baked Potato","มันฝรั่งอบ"],["Sweet Potato","มันเทศ"],["Onion Rings","หอมหัวใหญ่ทอด"],
+  ["Pancake","แพนเค้ก"],["Waffle","วาฟเฟิล"],["Toast","ขนมปังปิ้ง"],["Cereal","ซีเรียล"],["Oatmeal","ข้าวโอ๊ต"],["Chocolate","ช็อกโกแลต"],["Candy","ลูกอม"],["Ice Cream","ไอศกรีม"],
+  ["Cake","เค้ก"],["Donut","โดนัท"],["Cookie","คุกกี้"],["Pudding","พุดดิ้ง"],["Jelly","เจลลี่"],["Cupcake","คัพเค้ก"],["Pie","พาย"],["Cheesecake","ชีสเค้ก"],
+  ["Apple","แอปเปิล"],["Banana","กล้วย"],["Orange","ส้ม"],["Grape","องุ่น"],["Strawberry","สตรอว์เบอร์รี่"],["Watermelon","แตงโม"],["Mango","มะม่วง"],["Pineapple","สับปะรด"],
+  ["Carrot","แครอท"],["Tomato","มะเขือเทศ"],["Cucumber","แตงกวา"],["Lettuce","ผักกาดหอม"],["Broccoli","บรอกโคลี"],["Bell Pepper","พริกหวาน"],["Potato","มันฝรั่ง"],["Garlic","กระเทียม"],
 ]};
 
 PICDICT_WORDS['Weather.png'] = {cols:8, rows:8, words:[
