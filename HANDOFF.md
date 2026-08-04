@@ -54,6 +54,12 @@ authOnLogin({uid:'test1',email:'t@test.com'});        // → เข้าหน�
 - **force cache แล้วยังได้ของเก่า + ไฟล์ขนาดผิดปกติ = dev server ตายไปแล้ว** (เจอรอบ 167: sw.js เสิร์ฟ cache แบบ offline เงียบๆ เกมยังเดินเหมือนปกติ!) → `preview_start` ใหม่ + `navigator.serviceWorker.getRegistrations().then(rs=>rs.map(r=>r.unregister()))` แล้ว reload · เช็กเร็ว: `fetch('js/ui.js?bust='+Date.now()).then(r=>r.text())` ดูว่ามีโค้ดที่เพิ่งแก้ไหม
 - **Pages build หน่วง 2–5 นาที** หลัง push → เช็ก live ก่อนบอกผู้ใช้: `curl -s ".../version.json?t=$(date +%s)"`
 
+## 🚀 ship.sh — ให้ผู้ใช้ส่งงานเองได้ตอน Claude ติดลิมิท (รอบ 1021)
+AI ตัวอื่น (Codex ฯลฯ) เขียนไฟล์ลงเครื่องได้ แต่ sandbox ห้ามรัน git → ผู้ใช้ต้องกด commit/deploy เอง
+- **ผู้ใช้รัน:** ดับเบิลคลิก `ship.bat` หรือ `bash tools/ship.sh` → เดาให้ครบ (เลขรอบ/ข้อความ/ไฟล์/ออปชัน) เหลือกด `y`
+- **AI ที่ commit เองไม่ได้ ให้ทำ 2 อย่างก่อนจบ:** ① เขียนบันทึกรอบใน `handoff/TASKS.md` ② เขียน `handoff/SHIP.txt` บรรทัดเดียว = ข้อความ commit (ship.sh อ่านแล้วลบให้) แล้วบอกผู้ใช้ว่า "ดับเบิลคลิก ship.bat"
+- **ด่านกันพลาดที่มีอยู่แล้ว (อย่าถอด):** หยิบเฉพาะไฟล์ที่ git ติดตาม (asset untracked หลุดไม่ได้) · ไฟล์เก่ากว่าไฟล์ล่าสุด >2 ชม. = เตือนว่าเป็นงานค้าง session อื่นแล้วข้าม · `js/data/vocab*` บล็อกตาย · asset/ไฟล์เก่า `-y` ข้ามคำถามไม่ได้
+
 ## 💾 commit / deploy
 - git identity = iamsuperrich2025 / freddommun@gmail.com · push HTTPS credential ในเครื่องใช้ได้ (ไม่มี gh CLI)
 - **`git add` เฉพาะไฟล์ที่แก้ · ห้าม `git add -A`** (มี `js/data/vocab/` untracked ของงาน Sonnet ค้าง — ห้ามแตะ)
