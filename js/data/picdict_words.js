@@ -469,3 +469,13 @@ PICDICT_WORDS['animal2.png'] = {cols:8, rows:12, words:[
   ["Shark","ฉลาม"],["Dolphin","โลมา"],["Whale","วาฬ"],["Orca","วาฬเพชฌฆาต"],["Seal","แมวน้ำ"],["Sea Lion","สิงโตทะเล"],["Octopus","ปลาหมึกยักษ์"],["Squid","ปลาหมึก"],
   ["Starfish","ปลาดาว"],["Jellyfish","แมงกะพรุน"],["Clownfish","ปลาการ์ตูน"],["Seahorse","ม้าน้ำ"],["Oyster","หอยตลับ"],["Angelfish","ปลานางฟ้า"],["Goldfish","ปลาทอง"],["Stingray","ปลากระเบน"],
 ]};
+
+PICDICT_WORDS['fruit.png'] = {cols:8, rows:7, words:[
+  ["Apple","แอปเปิล"],["Banana","กล้วย"],["Orange","ส้ม"],["Grapes","องุ่น"],["Strawberry","สตรอว์เบอร์รี่"],["Watermelon","แตงโม"],["Mango","มะม่วง"],["Pineapple","สับปะรด"],
+  ["Mangosteen","มังคุด"],["Dragon Fruit","แก้วมังกร"],["Guava","ฝรั่ง"],["Papaya","มะละกอ"],["Kiwi","กีวี"],["Peach","พีช"],["Pear","ลูกแพร์"],["Cherry","เชอร์รี่"],
+  ["Blueberry","บลูเบอร์รี่"],["Raspberry","ราสป์เบอร์รี่"],["Blackberry","แบล็กเบอร์รี่"],["Lemon","เลมอน"],["Lime","มะนาว"],["Coconut","มะพร้าว"],["Pomegranate","ทับทิม"],["Apricot","แอปริคอต"],
+  ["Plum","พลัม"],["Nectarine","เนคทารีน"],["Passion Fruit","เสาวรส"],["Lychee","ลิ้นจี่"],["Longan","ลำไย"],["Durian","ทุเรียน"],["Starfruit","มะเฟือง"],["Jackfruit","ขนุน"],
+  ["Rambutan","เงาะ"],["Salak","สละ"],["Rose Apple","ชมพู่"],["Persimmon","ลูกพลับ"],["Mulberry","หม่อน"],["Fig","มะเดื่อ"],["Quince","ลูกตูม"],["Date","อินทผลัม"],
+  ["Soursop","น้อยหน่า"],["Custard Apple","น้อยหน่า"],["Tangerine","แมนดาริน"],["Pomelo","ส้มโอ"],["Honeydew","เมลอนน้ำผึ้ง"],["Cantaloupe","แคนตาลูป"],["Blackcurrant","แบล็กเคอร์แรนท์"],["Cranberry","แครนเบอร์รี่"],
+  ["Avocado","อะโวคาโด"],["Coconut","มะพร้าว"],["Indian Fig","แก้วมังกรฝรั่ง"],["Blood Orange","ส้มเลือด"],["Jujube","พุทรา"],["Breadfruit","ขนุนฝรั่ง"],["Bilberry","บิลเบอร์รี่"],["Gooseberry","มะยมฝรั่ง"],
+]};
