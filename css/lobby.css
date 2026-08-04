@@ -5203,37 +5203,47 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
    ⚠️ บทเรียนรอบ 998/999 (อย่าทำซ้ำ): "เข้ม" ไม่เท่ากับ "สวย" — ต้นฉบับสวยเพราะ **คอนทราสต์**
       (กรอบ/ปุ่มกรมท่าเข้ม แต่ฉากหลังยังสว่างโชว์ภาพเมือง gradient ตรงกลางแค่ .14/.20)
       รอบ 999 ไปเพิ่มความทึบ gradient เป็น .42/.48 ทับอีกชั้น → ภาพเมืองจมหมด ทั้งจอมืดเรียบ = ที่ผู้ใช้บอกว่าไม่สวย
-   emerald/plum = ทางเลือกเสริม ทับตัวแปร + ผ้าคลุม mix-blend-mode:color (ย้อมเฉดโดยคงความสว่างเดิม
-   ซึ่งใช้ได้ดีเพราะพื้นเป็นกรมท่าเข้มอยู่แล้ว) · opacity ไล่จางตาม 1-var(--night-k) กันซ้อนสีกับโหมดกลางคืน
+   emerald/plum = ทางเลือกเสริม — ⚠️ รอบ 1004 (ผู้ใช้: "ธีมเขียว/ม่วงไม่คมชัดเหมือนกรมท่าต้นฉบับ"):
+   **เลิกใช้ผ้าคลุม #theme-veil โดยสิ้นเชิง** (mix-blend-mode ย้อมทั้งจอ = ต้นเหตุภาพมัว — บทเรียนเดียว
+   กับที่ทำให้รอบ 997-999 พลาด) → เปลี่ยนเป็น "ทับสีตรงเฉพาะแถบป้าย" ครบทั้ง 7 ชิ้นที่ฮาร์ดโค้ดกรมท่าไว้
+   (.id-card / .coin-group / .grade-pill / .icon-btn / .newword-banner / .pet-tab / ขอบจางราง)
+   สูตร alpha ลอกของต้นฉบับเป๊ะ (.82/.86 · .7/.75 · .84/.88) แค่เปลี่ยน hue → ความคมชัด/คอนทราสต์เท่าต้นฉบับ
+   · ฉากหลัง/ความสว่างไม่แตะเลยทุกธีม (กฎล็อกสีใน handoff/TASKS.md)
    ============================================================ */
 html.theme-emerald{
   --navy:#0a2e26; --navy-2:#12503f; --sky:#2fb98c; --sky-d:#12795b;
   --panel-bg:#ecf7f2; --ink2:#1e3a31;
   --glass:rgba(5,30,24,.78); --glass-line:rgba(130,200,175,.35);
-  --tint1:rgba(4,30,24,.58); --tint2:rgba(4,30,24,.14); --tint3:rgba(4,30,24,.20); --tint4:rgba(4,30,24,.72);
 }
 html.theme-plum{
   --navy:#24123a; --navy-2:#3a2258; --sky:#8a7fe0; --sky-d:#5a4fbe;
   --panel-bg:#f3eefa; --ink2:#2e2540;
   --glass:rgba(26,12,40,.78); --glass-line:rgba(180,155,215,.35);
-  --tint1:rgba(26,12,40,.58); --tint2:rgba(26,12,40,.14); --tint3:rgba(26,12,40,.20); --tint4:rgba(26,12,40,.72);
 }
-/* ทับสีตรงเฉพาะ emerald/plum — จุดที่ฮาร์ดโค้ดกรมท่าไว้ ผ้าคลุมย้อมเฉดได้แต่ไม่ครบทุกที่ */
-html.theme-emerald .lobby-top .icon-btn, html.theme-plum .lobby-top .icon-btn,
-html.theme-emerald .lobby-top .coin-block .grade-pill, html.theme-plum .lobby-top .coin-block .grade-pill,
-html.theme-emerald .newword-banner, html.theme-plum .newword-banner{
-  background:linear-gradient(180deg, var(--navy-2), var(--navy));
+/* แถบป้ายหลัก: gradient สูตรต้นฉบับ rgba(12,36,74,.82)→rgba(6,20,44,.86) เปลี่ยนเฉพาะ hue */
+html.theme-emerald .id-card, html.theme-emerald .lobby-top .coin-group,
+html.theme-emerald .lobby-top .coin-block .grade-pill, html.theme-emerald .lobby-top .icon-btn{
+  background:linear-gradient(180deg,rgba(9,54,43,.82),rgba(4,28,22,.86));
 }
-html.theme-emerald .lobby-top .icon-btn:hover, html.theme-plum .lobby-top .icon-btn:hover{background:var(--sky-d);}
+html.theme-plum .id-card, html.theme-plum .lobby-top .coin-group,
+html.theme-plum .lobby-top .coin-block .grade-pill, html.theme-plum .lobby-top .icon-btn{
+  background:linear-gradient(180deg,rgba(43,24,70,.82),rgba(22,11,38,.86));
+}
+html.theme-emerald .newword-banner{background:linear-gradient(180deg,rgba(9,54,43,.84),rgba(4,28,22,.88));}
+html.theme-plum .newword-banner{background:linear-gradient(180deg,rgba(43,24,70,.84),rgba(22,11,38,.88));}
+/* :not(.dinner):not(.on) — ปุ่มข้าวเย็น 🍚 พื้นโปร่ง และแท็บที่เลือกอยู่พื้นขาว ต้องคงหน้าตาต้นฉบับ */
+html.theme-emerald .lobby-stage .pet-tab:not(.dinner):not(.on){background:linear-gradient(180deg,rgba(9,54,43,.7),rgba(4,28,22,.75));}
+html.theme-plum .lobby-stage .pet-tab:not(.dinner):not(.on){background:linear-gradient(180deg,rgba(43,24,70,.7),rgba(22,11,38,.75));}
+html.theme-emerald .lobby-stage .pet-tab:not(.dinner):not(.on):hover{background:rgba(18,80,63,.85);}
+html.theme-plum .lobby-stage .pet-tab:not(.dinner):not(.on):hover{background:rgba(58,34,88,.85);}
+html.theme-emerald .lobby-top .icon-btn:hover, html.theme-plum .lobby-top .icon-btn:hover{background:var(--navy-2);}
 html.theme-emerald .rail-btn:hover, html.theme-plum .rail-btn:hover{background:var(--navy-2);}
-#theme-veil{
-  position:fixed;inset:0;z-index:99997;pointer-events:none;
-  mix-blend-mode:color;transition:opacity .45s ease;
-  opacity:0;                                   /* navy (ต้นฉบับ) = ไม่มีผ้าคลุมเลย */
-}
-html.theme-emerald #theme-veil{background:#0f6e56;opacity:calc(.55 * (1 - var(--night-k,0)));}
-html.theme-plum #theme-veil{background:#4a2f66;opacity:calc(.55 * (1 - var(--night-k,0)));}
-html.no-anim #theme-veil{transition:none;}
+html.theme-emerald .rail-scroll::before{background:linear-gradient(to bottom,rgba(4,28,22,.9),rgba(4,28,22,0));}
+html.theme-emerald .rail-scroll::after{background:linear-gradient(to top,rgba(4,28,22,.9),rgba(4,28,22,0));}
+html.theme-plum .rail-scroll::before{background:linear-gradient(to bottom,rgba(22,11,38,.9),rgba(22,11,38,0));}
+html.theme-plum .rail-scroll::after{background:linear-gradient(to top,rgba(22,11,38,.9),rgba(22,11,38,0));}
+/* 🚫 รอบ 1004: ผ้าคลุมเกษียณถาวร — เหลือกฎกันเหนียวไว้กรณี div ยังถูกสร้างจากสคริปต์เก่า/แคช */
+#theme-veil{display:none!important;}
 
 /* ============================================================
    🧭 หัวล็อบบี้ตรงแนวกล่องด้านล่าง (รอบ 971 · ผู้ใช้สั่ง 3 ส.ค. 2026)
