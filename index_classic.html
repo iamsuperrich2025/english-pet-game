@@ -138,6 +138,47 @@
   document.addEventListener('visibilitychange', function(){ if(!document.hidden) paint(); });
 })();
 </script>
+<!-- 🎨 รอบ 996: ธีมสีล็อบบี้ 3 แบบ (เนวี่/เขียวมรกต/ม่วงเบอร์กันดี้ — เข้มขึ้น+ทอง แทนฟ้าสว่างเดิม)
+     ใช้กลไกเดียวกับ NightUI ด้านบน (คลาสบน <html> ก่อน paint แรก + ผ้าคลุม mix-blend-mode:color
+     กวาดสี hardcode ทั่วไฟล์ทีเดียว) — ค่าเริ่มต้น = navy จนกว่าผู้ใช้จะกดสลับเอง (จำไว้ใน localStorage) -->
+<script>
+(function(){
+  var KEY='vwColorTheme', THEMES=['navy','emerald','plum'], DEFAULT='navy';
+  function readTheme(){
+    try{ var t=localStorage.getItem(KEY); return THEMES.indexOf(t)>=0 ? t : DEFAULT; }catch(e){ return DEFAULT; }
+  }
+  function paint(){
+    var t=readTheme();
+    THEMES.forEach(function(x){ document.documentElement.classList.toggle('theme-'+x, x===t); });
+    var row=document.getElementById('theme-row');
+    if(row) row.querySelectorAll('.theme-swatch').forEach(function(b){ b.classList.toggle('active', b.dataset.theme===t); });
+    return t;
+  }
+  window.ThemeUI={
+    paint:paint,
+    get:readTheme,
+    set:function(t){
+      if(THEMES.indexOf(t)<0) t=DEFAULT;
+      try{ localStorage.setItem(KEY, t); }catch(e){}
+      return paint();
+    }
+  };
+  paint();
+  document.addEventListener('DOMContentLoaded', function(){
+    if(!document.getElementById('theme-veil')){
+      var v=document.createElement('div'); v.id='theme-veil'; document.body.appendChild(v);
+    }
+    var row=document.getElementById('theme-row');
+    if(row) row.querySelectorAll('.theme-swatch').forEach(function(b){
+      b.addEventListener('click', function(){
+        window.ThemeUI.set(b.dataset.theme);
+        if(typeof sfx!=='undefined' && sfx.select) sfx.select();
+      });
+    });
+    paint();
+  });
+})();
+</script>
 <!-- 🛡️ รอบ 727/757: splash screen ธีมเดียวกับไอคอนแอป (รอบ 757 เปลี่ยนโล่ SVG เป็นภาพจริง splash_logo.png) —
      inline style ไม่รอโหลด css ภายนอก โผล่ทันทีตั้งแต่ parse HTML เพื่อบังช่วงว่างก่อน main.js
      เรียก showScreen ครั้งแรก (หลายสิบ <script> ด้านล่างโหลด/รันตามลำดับ กว่าจะถึงบรรทัดนั้น) -->
@@ -377,18 +418,32 @@
         <div class="coin-pill grade-pill" id="grade-line"></div>
       </div>
       <div class="top-flex top-flex2"></div>
-      <!-- รอบ 179: ปุ่มแชท (หน้ารวมข้อความแบบ Messenger ธีมฟ้า) แทนที่ปุ่มข้าวเย็นเดิม
-           ปุ่มข้าวเย็น #btn-dinner ย้ายไปอยู่ข้างปุ่ม ➕ ในแถวแท็บสัตว์ (สร้างใน renderDashboard) -->
-      <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
-      <!-- รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง — ปิดเพลงได้แต่ยังมีเสียงเอฟเฟกต์) -->
-      <button class="icon-btn" id="btn-music" title="เปิด/ปิดเพลงพื้นหลัง">🎵</button>
-      <!-- 🌙 รอบ 882: ปุ่มสลับโหมดกลางคืน (ปกติเปลี่ยนเอง 19:00-06:00) — ตัวคุมอยู่ในสคริปต์ inline หัวไฟล์ -->
-      <button class="icon-btn" id="btn-night" title="โหมดกลางคืน">🌙</button>
-      <button class="icon-btn" id="btn-settings" title="ตั้งค่า (เสียง/สั่น)">⚙️<span class="rail-badge" id="settings-badge" style="display:none"></span></button>
-      <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
-      <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>
-      <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
-      <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
+      <!-- 🎨 รอบ 996 (ผู้ใช้สั่ง "ย้ายกลุ่มปุ่มขึ้นแนวเดียวกับแถวเหรียญรวม + เพิ่มปุ่มเปลี่ยนธีมสี 3 แบบ"):
+           ห่อปุ่มไอคอนเดิมทั้งหมด + แถวปุ่มธีมใหม่ไว้ใน .topbar-icons (คอลัมน์) แล้วปัก align-self:flex-start
+           ให้ทั้งก้อนชิดขอบบนของ header เท่ากับแถว .coin-group (เดิมลอยกลางความสูง header เพราะ .coin-block สูง 2 แถว) -->
+      <div class="topbar-icons">
+        <div class="topbar-icons-row">
+          <!-- รอบ 179: ปุ่มแชท (หน้ารวมข้อความแบบ Messenger ธีมฟ้า) แทนที่ปุ่มข้าวเย็นเดิม
+               ปุ่มข้าวเย็น #btn-dinner ย้ายไปอยู่ข้างปุ่ม ➕ ในแถวแท็บสัตว์ (สร้างใน renderDashboard) -->
+          <button class="icon-btn" id="btn-chat" title="ข้อความ">💬<span class="rail-badge" id="chat-badge" style="display:none"></span></button>
+          <!-- รอบ 184: ปุ่มเปิด/ปิดเพลงพื้นหลัง (แยกจากสวิตช์เสียง — ปิดเพลงได้แต่ยังมีเสียงเอฟเฟกต์) -->
+          <button class="icon-btn" id="btn-music" title="เปิด/ปิดเพลงพื้นหลัง">🎵</button>
+          <!-- 🌙 รอบ 882: ปุ่มสลับโหมดกลางคืน (ปกติเปลี่ยนเอง 19:00-06:00) — ตัวคุมอยู่ในสคริปต์ inline หัวไฟล์ -->
+          <button class="icon-btn" id="btn-night" title="โหมดกลางคืน">🌙</button>
+          <button class="icon-btn" id="btn-settings" title="ตั้งค่า (เสียง/สั่น)">⚙️<span class="rail-badge" id="settings-badge" style="display:none"></span></button>
+          <!-- ปุ่มติดตั้งเป็นแอพ (สำหรับคนที่ auto-login ข้ามหน้า login) — โผล่เฉพาะตอนติดตั้งได้ -->
+          <button class="icon-btn" id="btn-install-top" title="ติดตั้งเป็นแอพ (เล่นเต็มจอ)" style="display:none">📲</button>
+          <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
+          <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
+        </div>
+        <!-- 🎨 รอบ 996: ปุ่มสลับธีมสีล็อบบี้ 3 แบบ (เนวี่เข้ม/เขียวมรกตเข้ม/ม่วงเบอร์กันดี้เข้ม — ทองเหมือนกันทุกแบบ)
+             ตัวคุมอยู่ใน ThemeUI (สคริปต์ inline หัวไฟล์ คู่กับ NightUI) — ค่าเริ่มต้น = navy -->
+        <div class="topbar-icons-row topbar-theme-row" id="theme-row" title="เปลี่ยนธีมสี">
+          <button class="theme-swatch" id="theme-navy" data-theme="navy" title="เนวี่เข้ม + ทอง"></button>
+          <button class="theme-swatch" id="theme-emerald" data-theme="emerald" title="เขียวมรกตเข้ม + ทอง"></button>
+          <button class="theme-swatch" id="theme-plum" data-theme="plum" title="ม่วงเบอร์กันดี้เข้ม + ทอง"></button>
+        </div>
+      </div>
     </header>
 
     <div class="lobby-mid">

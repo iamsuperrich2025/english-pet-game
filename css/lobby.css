@@ -4231,6 +4231,23 @@ html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(2),html.no-anim .coin-
 .lobby-top .icon-btn:hover{background:rgba(62,127,210,.9);}
 .lobby-top .icon-btn:active{transform:scale(.93);}
 
+/* 🎨 รอบ 996 (ผู้ใช้สั่ง "ย้ายกลุ่มปุ่มขึ้นแนวเดียวกับแถวเหรียญรวม"): ห่อปุ่มไอคอนเดิม + แถวปุ่มธีมใหม่
+   เป็นคอลัมน์เดียว (.topbar-icons) แล้วปัก align-self:flex-start — เดิมปุ่มลอยกลางความสูง header
+   เพราะ .lobby-top ใช้ align-items:center ทั้งที่ .coin-block สูง 2 แถว (เหรียญ+ระดับชั้น) */
+.topbar-icons{display:flex;flex-direction:column;align-items:flex-end;gap:6px;align-self:flex-start;}
+.topbar-icons-row{display:flex;gap:8px;}
+.topbar-theme-row{gap:8px;}
+.theme-swatch{
+  width:22px;height:22px;padding:0;border-radius:50%;cursor:pointer;
+  border:2px solid var(--glass-line);box-shadow:0 3px 8px rgba(10,20,40,.35);
+  transition:transform .12s, border-color .12s;
+}
+.theme-swatch:hover{transform:scale(1.12);}
+.theme-swatch.active{border-color:var(--gold);box-shadow:0 0 0 2px rgba(245,197,66,.5),0 3px 8px rgba(10,20,40,.35);}
+#theme-navy{background:linear-gradient(135deg,#12335e,#2d6bb0);}
+#theme-emerald{background:linear-gradient(135deg,#0e2e28,#1d9e75);}
+#theme-plum{background:linear-gradient(135deg,#2a1a3d,#7f77dd);}
+
 /* ---------- ④ แถบคำศัพท์ใหม่: ลำดับสายตาชัด (ป้าย → คำ → คำใบ้ | รางวัล | เวลา) ---------- */
 .newword-banner{
   gap:11px;padding:5px 9px 6px 9px;border-radius:13px;
@@ -5175,6 +5192,41 @@ body::after{
   background:linear-gradient(180deg,#6b4526 0%,#5b3820 60%,#3f2512 100%);
 }
 html.no-anim #night-veil,html.no-anim body::after{transition:none;}
+
+/* ============================================================
+   🎨 รอบ 996 (ผู้ใช้สั่ง "เดิมสว่างแสบตา ขอสีสบายตากว่านี้แต่ยังหรูหรา"): 3 ธีมสีล็อบบี้เลือกได้
+   สลับ = คลาส html.theme-navy/emerald/plum (ตั้งจาก ThemeUI ใน index_classic.html ก่อน paint แรก
+   เหมือน NightUI) ทำ 2 ชั้นเหมือนกลไกกลางคืนทุกประการ:
+   ① ทับ :root variables (--navy/--sky/--panel-bg/--ink2/...) ให้ชิ้นที่อ้างตัวแปรเปลี่ยนสีตาม
+   ② #theme-veil ผ้าคลุม mix-blend-mode:color กวาดสีฟ้าที่ hardcode ไว้ทั่วไฟล์ (ปุ่มไอคอน/แถบคำศัพท์ ฯลฯ
+      หลายร้อยจุด) ให้เข้ากับธีมทีเดียว ไม่ต้องไล่แก้กฎทีละจุด — โทนเข้มขึ้น = สบายตากว่าฟ้าสว่างเดิม
+   ค่าเริ่มต้น = navy (แทนที่ฟ้าสว่างเดิมไปเลย) · ทองยังเหมือนเดิมทุกธีม (ไม่ใช่จุดที่ผู้ใช้บ่น)
+   opacity ผ้าคลุมไล่จาง (1 - --night-k) — ใกล้ค่ำ/กลางคืนให้ผ้าคลุมกลางคืนอุ่นเข้าครองแทน ไม่ผสม 2 สีซ้อนกันมั่ว
+   ============================================================ */
+html.theme-navy{
+  --navy:#12335e; --navy-2:#1c4a85; --sky:#2d6bb0; --sky-d:#123a6b;
+  --panel-bg:#e7edf5; --ink2:#1c2b3f;
+  --glass:rgba(14,36,68,.82); --glass-line:rgba(140,175,220,.32);
+}
+html.theme-emerald{
+  --navy:#0e2e28; --navy-2:#154238; --sky:#1d9e75; --sky-d:#0f6e56;
+  --panel-bg:#e8f3ee; --ink2:#1c2f29;
+  --glass:rgba(10,40,32,.82); --glass-line:rgba(130,200,175,.32);
+}
+html.theme-plum{
+  --navy:#2a1a3d; --navy-2:#3a2354; --sky:#7f77dd; --sky-d:#534ab7;
+  --panel-bg:#efe9f5; --ink2:#2a2035;
+  --glass:rgba(38,20,58,.82); --glass-line:rgba(180,155,215,.32);
+}
+#theme-veil{
+  position:fixed;inset:0;z-index:99997;pointer-events:none;
+  mix-blend-mode:color;transition:opacity .45s ease;
+  opacity:calc(.4 * (1 - var(--night-k,0)));
+}
+html.theme-navy #theme-veil{background:#12335e;}
+html.theme-emerald #theme-veil{background:#0f6e56;}
+html.theme-plum #theme-veil{background:#4a2f66;}
+html.no-anim #theme-veil{transition:none;}
 
 /* ============================================================
    🧭 หัวล็อบบี้ตรงแนวกล่องด้านล่าง (รอบ 971 · ผู้ใช้สั่ง 3 ส.ค. 2026)
