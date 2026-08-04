@@ -915,14 +915,18 @@
 
   /* ---------- อินพุต: ลาก = มองรอบ · แตะสั้น = ยิง ---------- */
   function bindInput(){
-    let pd=null;
+    /* 👆👆 รอบ 1006: เดิมจำนิ้วลากได้ตัวเดียว (pd) และไม่เช็ค pointerId — เด็กใช้สองมือ
+       (นิ้วหนึ่งลาก อีกนิ้วแตะยิง/มือพาดจอ) pointerup ของ "นิ้วไหนก็ได้" จะล้าง pd ทิ้ง
+       → นิ้วที่ยังลากอยู่กลายเป็น "ลากแล้วจอไม่หัน" จนกว่าจะยกแล้วแตะใหม่ (อาการหน่วง/ค้างเป็นพัก ๆ)
+       แก้เป็น Map ต่อ pointerId — นิ้วใครนิ้วมัน ลาก/ยิงไม่แย่งสถานะกัน */
+    const pts=new Map();
     overlay.addEventListener('pointerdown', e=>{
       if(e.target.closest('button')||e.target.closest('#sg-word')||e.target.closest('#sg-chip')) return;
-      pd={x:e.clientX, y:e.clientY, t:performance.now(), moved:false};
+      pts.set(e.pointerId, {x:e.clientX, y:e.clientY, t:performance.now(), moved:false});
       overlay.setPointerCapture&&overlay.setPointerCapture(e.pointerId);
     });
     overlay.addEventListener('pointermove', e=>{
-      if(!pd) return;
+      const pd=pts.get(e.pointerId); if(!pd) return;
       const dx=e.clientX-pd.x, dy=e.clientY-pd.y;
       /* 🎯 รอบ 936: เกณฑ์ "ถือว่าลาก" 9px ไวไป — นิ้วเด็กแตะจอสั่นเล็กน้อยก็โดนนับเป็นลาก
          แล้วปล่อยนิ้ว = ไม่ยิง (เงียบ ไม่มีเสียงด้วย) เป็นอีกสาเหตุของ "ยิงแล้วไม่มีอะไรเกิดขึ้น" */
@@ -937,15 +941,15 @@
       }
     });
     overlay.addEventListener('pointerup', e=>{
-      if(!pd) return;
+      const pd=pts.get(e.pointerId); if(!pd) return;
       const quick=performance.now()-pd.t<420;
       if(!pd.moved && quick){
         if(aimMode) shoot(innerWidth*TUNE.AIM_SX/100, innerHeight*TUNE.AIM_SY/100);  // โหมดเล็ง: ยิงตรงรูศูนย์เสมอ
         else shoot(e.clientX, e.clientY);                                            // โหมดถือ: ยิงตรงจุดที่แตะ
       }
-      pd=null;
+      pts.delete(e.pointerId);
     });
-    overlay.addEventListener('pointercancel', ()=>{ pd=null; });
+    overlay.addEventListener('pointercancel', e=>{ pts.delete(e.pointerId); });
     window.addEventListener('resize', onResize);
   }
   function toggleAim(){
