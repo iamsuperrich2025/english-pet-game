@@ -428,11 +428,18 @@ const CSS=`
 #moto-speed{position:absolute;left:2%;bottom:3%;color:#bfeaff;font-weight:900;font-size:2.4vmin;text-shadow:0 1px 3px #000}
 /* 🧭 รอบ 312: ป้าย GPS — บรรทัดบนบอกความหมาย + แถวล่างลูกศร(ชัด SVG)+ตัวเลข
    🧭➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายกล่องออกไปทางซ้าย" — ชิดขอบซ้ายสุด + แคบลง (31%→24%)
-   🧭➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องนี้ไปชิดซ้ายเพิ่ม" — ลด left/padding อีกชั้น + เนื้อหาชิดซ้าย (เดิมจัดกลางกล่อง ดูเหมือนลอยห่างขอบ)
-   เปิดทางกลางจอให้ป้ายคำศัพท์ (fitWord วัดช่องว่างจริงระหว่าง 2 กล่องนี้แล้วจัดขนาดเอง) */
-#moto-gps{position:absolute;left:.2%;top:2%;display:flex;flex-direction:column;align-items:flex-start;gap:.5vmin;
-  background:rgba(10,20,35,.6);border-radius:1.7vmin;padding:.8vmin .9vmin;color:#fff;max-width:24%}
-.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:left;color:#dbe8f5}
+   🧭➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องนี้ไปชิดซ้ายเพิ่ม" — ลด left/padding อีกชั้น + เนื้อหาชิดซ้าย
+   🧭🚪 รอบ 1014: ผู้ใช้ชี้ภาพสั่ง "ย้ายกล่อง 1 ไปตำแหน่ง 2" = **ออกไปนอกจอเกม** วางบนตัวเครื่องฝั่งซ้าย
+     → ย้าย DOM ออกจาก #moto-screen มาเป็นลูกของ #moto-body (จออยู่ overflow:hidden ตัดทิ้งหมด) แล้ว % คิดจากตัวเครื่องแทน
+     ที่วาง = แถบดำว่างระหว่างป้ายดาว/โน้ต (จบ ~18%) กับปุ่มเลี้ยวส้ม (เริ่ม ~48%) วัดจากพิกเซล console_crop.webp
+     ⚠️ pointer-events:none บังคับ — ทับพื้นที่แตะพวงมาลัย #moto-steerhit (left 2.5% top 21% h 72%) ห้ามแย่งนิ้วเด็ก
+     กลางจอเกมจึงว่างเต็มความกว้างให้ป้ายคำศัพท์ (fitWord วัดกรอบจริง เจอกล่องอยู่นอกจอก็ไม่หักช่องให้เอง) */
+#moto-gps{position:absolute;left:2.4%;top:19.5%;width:21.6%;display:flex;flex-direction:column;align-items:center;
+  gap:.5vmin;pointer-events:none;box-sizing:border-box;
+  background:linear-gradient(180deg,rgba(14,26,42,.92),rgba(6,12,22,.94));
+  border:.28vmin solid rgba(120,160,200,.28);border-radius:1.7vmin;padding:.9vmin 1vmin;color:#fff;
+  box-shadow:inset 0 0 1.4vmin rgba(0,0,0,.75),0 .3vmin .8vmin rgba(0,0,0,.5)}
+.m-gps-lb{font-size:1.9vmin;font-weight:700;line-height:1.25;text-align:center;color:#dbe8f5}
 .m-gps-row{display:flex;align-items:center;gap:1.4vmin}
 #moto-gps-arr{display:inline-block;width:5.3vmin;height:6.1vmin;transition:transform .12s linear;
   filter:drop-shadow(0 0 .7vmin rgba(90,255,140,.9))}
@@ -441,11 +448,15 @@ const CSS=`
 /* 🏆 รอบ 318: กระดานคะแนนสด — ใครเก็บได้กี่คำในรอบนี้ (ขวาบน ใต้ตัวเลขเหรียญ)
    🏆➡️ รอบ 919: ผู้ใช้ชี้ลูกศร "ย้ายขึ้นไปมุมขวาบน" — ยกขึ้นชิดใต้เหรียญ + ชิดขอบขวา
    🏆➡️➡️ รอบ 927: ผู้ใช้ชี้ลูกศรอีกครั้ง "ย้ายกล่องสนาม/ไปหาเพื่อนไปชิดขวาเพิ่ม" — ลด right/padding อีกชั้น
-   ⚖️ กว้างเป็น % ของ "จอเกม" ไม่ใช่ vmin ของหน้าต่าง (34vmin เคยกินเกือบครึ่งจอเกมจนทับป้ายคำ)
-   📈 รองรับคนเยอะ: max-height คุมไม่ให้ยาวเกินจอ · จำนวนแถวตัดจริงใน renderBoard() */
-#moto-board{position:absolute;right:.2%;top:8.5%;min-width:17%;max-width:26%;display:none;flex-direction:column;gap:.25vmin;
-  background:rgba(10,20,35,.62);border-radius:1.4vmin;padding:.6vmin .8vmin;color:#fff;z-index:2;
-  max-height:62%;overflow:hidden}
+   🏆🚪 รอบ 1014: ผู้ใช้ชี้ภาพสั่ง "ย้ายกล่อง 3 ไปตำแหน่ง 4" = **ออกไปนอกจอเกม** มุมบนขวาของตัวเครื่อง
+     → ย้าย DOM ออกมาเป็นลูกของ #moto-body เหมือนกล่อง GPS · % คิดจากตัวเครื่อง
+     ที่วาง = แถบดำเหนือลูกบอลฟ้า (บอลเริ่ม ~35%) ขวาของจอ (จอจบ 71.6%) — ยังกดปุ่ม "ไปหาเพื่อน" ได้ปกติ (ไม่ปิด pointer-events)
+   ⚖️ กว้างเป็น % ของ "ตัวเครื่อง" · 📈 คนเยอะ: max-height คุมความสูง · จำนวนแถวตัดจริงใน renderBoard() (วัด scrollHeight เอง) */
+#moto-board{position:absolute;right:4%;top:4.5%;min-width:19%;max-width:23%;display:none;flex-direction:column;gap:.25vmin;
+  background:linear-gradient(180deg,rgba(14,26,42,.92),rgba(6,12,22,.94));
+  border:.28vmin solid rgba(120,160,200,.28);border-radius:1.4vmin;padding:.6vmin .8vmin;color:#fff;z-index:4;
+  box-shadow:inset 0 0 1.4vmin rgba(0,0,0,.75),0 .3vmin .8vmin rgba(0,0,0,.5);
+  max-height:28%;overflow:hidden}
 #moto-board.on{display:flex}
 .m-bd-h{font-size:1.65vmin;font-weight:800;letter-spacing:.04em;color:#cfe4ff;text-align:center;opacity:.9}
 .m-bd-r{display:flex;align-items:center;gap:.6vmin;font-size:2.05vmin;font-weight:800;line-height:1.3}
@@ -623,11 +634,6 @@ function buildDom(){
         <span class="m-tl l"></span><span class="m-tl r"></span><span class="m-wheel"></span></div>
       <div id="moto-word"></div>
       <div id="moto-coins">🪙 +0</div>
-      <div id="moto-gps">
-        <div class="m-gps-lb">ตอนนี้คุณอยู่ห่างจากตัวอักษรที่จะต้องเก็บ เป็นระยะทาง</div>
-        <div class="m-gps-row"><span id="moto-gps-arr"><svg viewBox="0 0 24 28"><path d="M12 1 L22 13 L15.5 13 L15.5 27 L8.5 27 L8.5 13 L2 13 Z" fill="#5ef08a" stroke="#083" stroke-width="1.3" stroke-linejoin="round"/></svg></span><span id="moto-gps-d">--</span></div>
-      </div>
-      <div id="moto-board"></div>
       <button id="moto-chat">💬</button>
       <div id="moto-chatbar"></div>
       <div id="moto-selfmsg"></div>
@@ -643,6 +649,13 @@ function buildDom(){
         <button id="moto-go">🏁 สตาร์ทเครื่อง!</button>
       </div></div>
     </div>
+    <!-- 🧭🏆 รอบ 1014: 2 กล่องนี้อยู่ "นอกจอเกม" บนตัวเครื่อง (ผู้ใช้สั่งจากภาพ) — ต้องเป็นลูกของ #moto-body เท่านั้น
+         ถ้าย้ายกลับเข้า #moto-screen เมื่อไหร่จะโดน overflow:hidden ของจอตัดหายทันที -->
+    <div id="moto-gps">
+      <div class="m-gps-lb">ตอนนี้คุณอยู่ห่างจากตัวอักษรที่จะต้องเก็บ เป็นระยะทาง</div>
+      <div class="m-gps-row"><span id="moto-gps-arr"><svg viewBox="0 0 24 28"><path d="M12 1 L22 13 L15.5 13 L15.5 27 L8.5 27 L8.5 13 L2 13 Z" fill="#5ef08a" stroke="#083" stroke-width="1.3" stroke-linejoin="round"/></svg></span><span id="moto-gps-d">--</span></div>
+    </div>
+    <div id="moto-board"></div>
     <div id="moto-slider"><span class="m-arr">◀</span><div id="moto-knob"><span>เลี้ยว</span></div><span class="m-arr">▶</span></div>
     <div id="moto-steerhit"></div>
     <button id="moto-throttle"><span class="m-ico">🏍️</span><span class="m-lb">เร่ง</span></button>
