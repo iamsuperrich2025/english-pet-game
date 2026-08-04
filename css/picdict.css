@@ -27,8 +27,11 @@ body #screen-picdict.screen.active{
 
 /* ── 📕 หนังสือปิด (หน้าปก) ── */
 #screen-picdict .pd-closed{perspective:1600px;}
+/* 👈 รอบ 997: เปิดปกด้วยการ "ปัดขวาไปซ้าย" แทนแตะ — touch-action:none กันเบราว์เซอร์แย่งท่าทาง
+   (เลื่อนจอ/ย้อนกลับหน้าเว็บ) ระหว่างลาก */
 #screen-picdict .pd-cover{
-  position:relative;height:min(80vh,470px);aspect-ratio:2/3;cursor:pointer;border-radius:8px 16px 16px 8px;
+  position:relative;height:min(80vh,470px);aspect-ratio:2/3;cursor:grab;border-radius:8px 16px 16px 8px;
+  touch-action:none;user-select:none;-webkit-user-drag:none;
   background:linear-gradient(135deg,#e8536b 0%,#d63e5c 45%,#b92746 100%);
   box-shadow:inset 0 0 0 4px rgba(255,255,255,.12), inset 10px 0 18px rgba(0,0,0,.28),
              0 18px 40px rgba(0,0,0,.5);
@@ -180,6 +183,32 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-endpage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a08b5a;}
 #screen-picdict .pd-endpage span{font-size:40px;}
 
+/* ── 🔍 ป๊อปอัปซูมการ์ดที่แตะ (รอบ 998) ── */
+#screen-picdict .pd-zoom{
+  position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;
+  background:rgba(20,12,4,.6);opacity:0;transition:opacity .18s;cursor:pointer;padding:10px;
+}
+#screen-picdict .pd-zoom.show{opacity:1;}
+#screen-picdict .pd-zoom-card{
+  position:relative;background:#fffdf4;border-radius:18px;padding:14px 20px 12px;
+  box-shadow:0 14px 36px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:8px;
+  border:3px solid #ffd54f;max-width:min(440px,86vw);transform:scale(.85);transition:transform .18s;
+}
+#screen-picdict .pd-zoom.show .pd-zoom-card{transform:scale(1);}
+#screen-picdict .pd-zoom-canvas{
+  display:block;width:auto;height:auto;max-width:100%;max-height:min(52vh,320px);
+  border-radius:12px;background:#f6efd8;box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+#screen-picdict .pd-zoom-label{text-align:center;}
+#screen-picdict .pd-zoom-label b{display:block;font-size:clamp(19px,4.4vh,28px);color:#c2185b;}
+#screen-picdict .pd-zoom-label span{display:block;font-size:clamp(13px,3vh,18px);color:#7a5a22;margin-top:2px;}
+#screen-picdict .pd-zoom-close{
+  position:absolute;top:-12px;right:-12px;width:32px;height:32px;border-radius:50%;border:none;
+  background:#e53935;color:#fff;font-size:16px;font-weight:800;cursor:pointer;
+  box-shadow:0 3px 8px rgba(0,0,0,.35);
+}
+#screen-picdict .pd-zoom-close:active{transform:scale(.9);}
+
 /* ── บอลลูนคำที่แตะ ── */
 #screen-picdict .pd-balloon{
   position:absolute;z-index:20;transform:translate(-50%,-100%);pointer-events:none;
@@ -255,4 +284,7 @@ body #screen-picdict.screen.active{
   #screen-picdict .pd-page,#screen-picdict .pd-face{padding:5px 6px 2px;}
   #screen-picdict .pd-hint{bottom:4px;padding:4px 12px;}
   #screen-picdict .pd-corner{width:34px;height:34px;}
+  #screen-picdict .pd-zoom-card{padding:10px 14px 8px;gap:5px;}
+  #screen-picdict .pd-zoom-canvas{max-height:44vh;}
+  #screen-picdict .pd-zoom-close{width:26px;height:26px;font-size:13px;top:-9px;right:-9px;}
 }

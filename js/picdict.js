@@ -116,7 +116,7 @@
               <div class="pd-cover-book">📖</div>
               <h1>Picture<br>Dictionary</h1>
               <p>พจนานุกรมภาพ แตะแล้วออกเสียงได้</p>
-              <span class="pd-cover-hint">👆 แตะเพื่อเปิดหนังสือ</span>
+              <span class="pd-cover-hint">👈 ปัดจากขวาไปซ้าย เพื่อเปิดหนังสือ</span>
             </div>
           </div>
         </div>
@@ -139,17 +139,27 @@
         </div>
         <div class="pd-balloon" id="pd-balloon" hidden></div>
         <div class="pd-hint" id="pd-hint" hidden>👆 ปัดซ้าย–ขวา เพื่อพลิกหน้า</div>
+        <!-- 🔍 รอบ 998: ป๊อปอัปซูมการ์ดที่แตะให้ใหญ่ชัด -->
+        <div class="pd-zoom" id="pd-zoom" hidden>
+          <div class="pd-zoom-card">
+            <button class="pd-zoom-close" id="pd-zoom-close" title="ปิด">✕</button>
+            <canvas id="pd-zoom-canvas"></canvas>
+            <div class="pd-zoom-label"><b id="pd-zoom-en"></b><span id="pd-zoom-th"></span></div>
+          </div>
+        </div>
       </div>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pd-back').addEventListener('click', exit);
-    $('pd-cover').addEventListener('click', openBook);
+    bindCoverSwipe();
     $('pd-cr').addEventListener('click', ()=>step(1));
     $('pd-cl').addEventListener('click', ()=>step(-1));
     $('pd-tocbtn').addEventListener('click', ()=>{ if(pd.opened) goTo(0); });
     $('pd-quizbtn').addEventListener('click', qzStart);
     $('pd-qquit').addEventListener('click', ()=>qzStop(true));
     $('pd-qreplay').addEventListener('click', qzReplay);
+    $('pd-zoom').addEventListener('click', closeZoom);        // 🔍 แตะพื้นหลัง/การ์ด/ปุ่ม ✕ = ปิดซูม
+    $('pd-zoom-close').addEventListener('click', ev=>{ ev.stopPropagation(); closeZoom(); });
     /* จอเปลี่ยนขนาด/หมุนจอ → ตารางช่องคลิกต้องวางใหม่ให้ตรงภาพ
        ใช้ ResizeObserver เกาะตัวหนังสือ (อีเวนต์ resize ของ window มาไม่ถึงในบางเบราว์เซอร์/preview) */
     let rzT = 0;
@@ -327,6 +337,41 @@
     if(has('speakWord')) speakWord(en);
     cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
     showBalloon(cell, en, th);
+    zoomCell(cell, en, th);
+  }
+
+  /* ---------- 🔍 แตะการ์ด = ป๊อปอัปซูมรูปนั้นให้ใหญ่ชัด (รอบ 998) ----------
+     ครอปเฉพาะส่วนของภาพแผ่นที่ตรงกับช่องนั้นด้วย canvas แล้ววาดขยายในป๊อปอัป
+     (ภาพเป็น object-fit:fill → กล่อง .pd-imgbox แมปตรงกับพิกเซลจริงของภาพ 1:1 ตามสัดส่วน) */
+  function zoomCell(cell, en, th){
+    const box = cell.closest('.pd-imgbox');
+    const img = box && box.querySelector('img');
+    const zoom = $('pd-zoom'), canvas = $('pd-zoom-canvas');
+    if(!box || !img || !img.naturalWidth || !zoom || !canvas) return;
+    const br = box.getBoundingClientRect(), cr = cell.getBoundingClientRect();
+    if(!br.width || !br.height) return;
+    const padX = cr.width * 0.16, padY = cr.height * 0.16;   // เผื่อขอบรอบไอคอน/ตัวหนังสือใต้ช่อง
+    const sx = Math.max(0, (cr.left - br.left - padX) / br.width  * img.naturalWidth);
+    const sy = Math.max(0, (cr.top  - br.top  - padY) / br.height * img.naturalHeight);
+    const sw = Math.min(img.naturalWidth  - sx, (cr.width  + padX*2) / br.width  * img.naturalWidth);
+    const sh = Math.min(img.naturalHeight - sy, (cr.height + padY*2) / br.height * img.naturalHeight);
+    if(sw <= 0 || sh <= 0) return;
+    const outW = 480, outH = Math.max(1, Math.round(outW * sh / sw));
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, outW, outH);
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+    $('pd-zoom-en').textContent = en;
+    $('pd-zoom-th').textContent = th;
+    zoom.hidden = false;
+    void zoom.offsetWidth;
+    zoom.classList.add('show');
+  }
+  function closeZoom(){
+    const zoom = $('pd-zoom');
+    if(!zoom || zoom.hidden) return;
+    zoom.classList.remove('show');
+    setTimeout(()=>{ if(!zoom.classList.contains('show')) zoom.hidden = true; }, 180);
   }
   function showBalloon(cell, en, th){
     const b = $('pd-balloon'), st = $('pd-stage');
@@ -355,6 +400,7 @@
     });
   }
   function renderSpread(){
+    closeZoom();     // 🔍 พลิกหน้า/จัดเลย์เอาต์ใหม่ = ป๊อปอัปซูมค้างไว้ไม่ตรงกับภาพแล้ว ต้องปิดก่อน
     renderInto($('pd-pl'), pd.s*2);
     renderInto($('pd-pr'), pd.s*2+1);
     relayout();
@@ -541,6 +587,7 @@
       return;
     }
     if(qz.on) return;
+    closeZoom();
     qz.on = true; qz.asked = 0; qz.right = 0;
     /* ตัวนับ "ครั้งนี้" ชุดเดียวกับเกมจับคู่คำศัพท์/จับคู่ภาพ (สถิติสัปดาห์+ตลอดกาลนับรวมกัน) */
     if(typeof game !== 'undefined'){
@@ -693,6 +740,79 @@
     }, 560);
   }
 
+  /* ============================================================
+     👈 ปัดปกจากขวาไปซ้ายเพื่อเปิดหนังสือ (รอบ 997 · ผู้ใช้สั่ง "เปลี่ยนจากแตะ เป็นปัด เพื่อความสมจริง")
+     ปกหมุนตามนิ้วระหว่างลาก (เหมือนพลิกหน้าแรกของหนังสือจริง) ปล่อยเกินเกณฑ์ = เปิดต่อจนสุด
+     ปล่อยไม่ถึง = ไหลกลับปิดเหมือนเดิม — ใช้กลไกเดียวกับการปัดพลิกหน้าในเล่มที่กางอยู่
+     ============================================================ */
+  const cvg = { id:null, x0:0, on:false, prog:0 };
+  function setCoverTilt(prog){
+    const cov = $('pd-cover');
+    cov.style.transformOrigin = 'left center';
+    cov.style.transform = `rotateY(${-6 - 102*prog}deg)`;
+    cov.style.opacity = String(1 - prog*0.6);
+  }
+  function coverDown(e){
+    if(pd.opened || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    cvg.id = e.pointerId; cvg.x0 = e.clientX; cvg.on = false; cvg.prog = 0;
+  }
+  function coverMove(e){
+    if(cvg.id === null || e.pointerId !== cvg.id) return;
+    const dx = e.clientX - cvg.x0;
+    const cov = $('pd-cover');
+    if(!cvg.on){
+      if(dx > -10) return;              // รอให้ลากไปทางซ้ายชัดเจนก่อน (กันชนกับการเลื่อนจอแนวตั้ง)
+      cvg.on = true;
+      cov.style.transition = 'none';
+      cov.style.animationPlayState = 'paused';
+      try{ cov.setPointerCapture(e.pointerId); }catch(_){}
+    }
+    const w = cov.getBoundingClientRect().width || 300;
+    cvg.prog = Math.min(1, Math.max(0, -dx / (w*0.55)));
+    setCoverTilt(cvg.prog);
+    e.preventDefault();
+  }
+  function coverUp(e){
+    if(cvg.id === null || (e && e.pointerId !== cvg.id)) return;
+    cvg.id = null;
+    if(!cvg.on) return;
+    cvg.on = false;
+    const cov = $('pd-cover');
+    if(cvg.prog > 0.32){
+      /* คืนอินไลน์ทั้งหมดในจังหวะเดียวกับที่สั่งเปิด — transition ของ .opening (คลาสเดิม)
+         จะรับช่วงต่อจากมุมที่ลากค้างไว้ให้เอง ไม่กระตุก (ไม่มีการวาดเฟรมคั่นกลาง) */
+      cov.style.transition = '';
+      cov.style.animationPlayState = '';
+      cov.style.transform = '';
+      cov.style.opacity = '';
+      cov.style.transformOrigin = '';
+      openBook();
+    }else{
+      /* ไหลกลับปิด — เคลียร์ค่าจริงทันทีในจังหวะเดียวกับตั้ง transition (ไม่พึ่ง requestAnimationFrame
+         ซึ่งไม่ยิงตอนแท็บถูกซ่อน/พับ — พึ่งแล้วเคยเจอปกค้างกลางทางถาวรตอนเทสต์) ยังลื่นเหมือนเดิมเพราะ
+         เอนจิน transition เทียบจากเฟรมที่วาดจริงล่าสุด (มุมที่ลากค้าง) ไปยังค่าใหม่อยู่ดี */
+      cov.style.transition = 'transform .32s ease, opacity .32s ease';
+      cov.style.transform = '';
+      cov.style.opacity = '';
+      let done = false;
+      const cleanup = ()=>{
+        if(done) return; done = true;
+        cov.style.transition = ''; cov.style.transformOrigin = ''; cov.style.animationPlayState = '';
+        cov.removeEventListener('transitionend', cleanup);
+      };
+      cov.addEventListener('transitionend', cleanup);
+      setTimeout(cleanup, 420);
+    }
+  }
+  function bindCoverSwipe(){
+    const cov = $('pd-cover');
+    cov.addEventListener('pointerdown', coverDown);
+    cov.addEventListener('pointermove', coverMove);
+    cov.addEventListener('pointerup', coverUp);
+    cov.addEventListener('pointercancel', coverUp);
+    cov.addEventListener('dragstart', e=>e.preventDefault());
+  }
+
   /* ---------- เข้า/ออก ---------- */
   function open(){
     build();
@@ -704,6 +824,7 @@
     if(pd.opened){ renderSpread(); showHint(); } else preload();
   }
   function exit(){
+    closeZoom();
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     const back = ()=>{
       if(has('renderDashboard')) renderDashboard();
@@ -753,6 +874,6 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, dg, flipTo, goTo, step, sayCell, buildPages,
-                                      renderSpread, fitBook, qzStart, qzStop, qzAsk, qzCells } };
+  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, dg, cvg, flipTo, goTo, step, sayCell, buildPages,
+                                      renderSpread, fitBook, openBook, qzStart, qzStop, qzAsk, qzCells } };
 })();
