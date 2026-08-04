@@ -55,7 +55,7 @@ PICDICT_WORDS['<ชื่อไฟล์.png>'] = {cols:<จำนวนคอ�
 
 | สถานะ | แผ่น |
 |---|---|
-| ✅ เสร็จแล้ว (รอบ 993 · Sonnet) | Colors.png (ตรวจซ้ำแล้ว ถูกต้องตรงภาพ ไม่ต้องแก้) · Action Verbs.png · Adjectives.png · Bathroom.png · Bedroom.png · Birds.png · BodyParts.png · Classroom Objects.png · Clothes.png |
-| ⬜ คิวถัดไป (เรียงตามนี้) | DailyRoutines.png · Drinks.png · Family.png · FarmAnimals.png · Feelings.png · Flowers.png · Furniture.png · Hobbies.png · Holidays.png · House.png · Insects.png · Jobs.png · Kitchen.png · MusicalInstruments.png · Nature.png · Opposites.png · Places.png · Prepositions.png · Safety Signs.png · School.png · SeaAnimals.png · Seasons.png · Shapes.png · Space.png · Sports.png · Time.png · Tools.png · Toys.png · Transportation.png · Trees.png · Vegetables.png · Weather.png · WildAnimals.png · animal1.png · animal2.png · food.png · fruit.png |
+| ✅ เสร็จแล้ว (รอบ 993 · Sonnet) | Colors.png (ตรวจซ้ำแล้ว ถูกต้องตรงภาพ ไม่ต้องแก้) · Action Verbs.png · Adjectives.png · Bathroom.png · Bedroom.png · Birds.png · BodyParts.png · Classroom Objects.png · Clothes.png · DailyRoutines.png · Drinks.png · Family.png · FarmAnimals.png · Feelings.png · Flowers.png · Furniture.png · Hobbies.png · Holidays.png · House.png |
+| ⬜ คิวถัดไป (เรียงตามนี้) | Insects.png · Jobs.png · Kitchen.png · MusicalInstruments.png · Nature.png · Opposites.png · Places.png · Prepositions.png · Safety Signs.png · School.png · SeaAnimals.png · Seasons.png · Shapes.png · Space.png · Sports.png · Time.png · Tools.png · Toys.png · Transportation.png · Trees.png · Vegetables.png · Weather.png · WildAnimals.png · animal1.png · animal2.png · food.png · fruit.png |
 | 🚫 ข้าม (ผังไม่สม่ำเสมอ) | — |
 | 📝 หมายเหตุ | Bathroom.png แถว7 คอลัมน์1 ("Hair Dryer") ตัวหนังสือบนภาพต้นฉบับเพี้ยน/อ่านไม่ออก (ภาพชี้ไดร์เป่าผมชัดเจน) — ใส่เป็น Hair Dryer/ไดร์เป่าผม ซ้ำกับแถว8 ตามภาพที่ตั้งใจสื่อ |

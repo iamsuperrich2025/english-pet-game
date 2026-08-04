@@ -105,3 +105,97 @@ PICDICT_WORDS['Clothes.png'] = {cols:8, rows:8, words:[
   ["Thai Costume","ชุดไทย"],["Graduation Gown","ชุดครุย"],["Chef Outfit","ชุดเชฟ"],["Doctor Coat","เสื้อกาวน์"],["Nurse Uniform","ชุดพยาบาล"],["Firefighter Suit","ชุดนักผจญเพลิง"],["Astronaut Suit","ชุดนักบินอวกาศ"],["Police Uniform","ชุดตำรวจ"],
   ["Pirate Costume","ชุดโจรสลัด"],["Princess Dress","ชุดเจ้าหญิง"],["Superhero Costume","ชุดซูเปอร์ฮีโร่"],["Skeleton Costume","ชุดโครงกระดูก"],["Clown Costume","ชุดตัวตลก"],["Fairy Costume","ชุดนางฟ้า"],["Cowboy Outfit","ชุดคาวบอย"],["Native Costume","ชุดชนพื้นเมือง"],
 ]};
+
+PICDICT_WORDS['DailyRoutines.png'] = {cols:8, rows:5, words:[
+  ["wake up","ตื่นนอน"],["wash face","ล้างหน้า"],["brush teeth","แปรงฟัน"],["take a shower","อาบน้ำ"],["comb hair","หวีผม"],["get dressed","แต่งตัว"],["have breakfast","ทานอาหารเช้า"],["go to school","ไปโรงเรียน"],
+  ["study","เรียนหนังสือ"],["attend class","เข้าเรียน"],["do homework","ทำการบ้าน"],["have lunch","ทานอาหารกลางวัน"],["read a book","อ่านหนังสือ"],["take a nap","งีบหลับ"],["play sports","เล่นกีฬา"],["play","เล่น"],
+  ["practice an instrument","ฝึกเครื่องดนตรี"],["draw","วาดรูป"],["use the computer","ใช้คอมพิวเตอร์"],["help at home","ช่วยงานบ้าน"],["do laundry","ซักผ้า"],["water the plants","รดน้ำต้นไม้"],["go for a walk","เดินเล่น"],["have a snack","ทานของว่าง"],
+  ["ride a bike","ขี่จักรยาน"],["watch TV","ดูทีวี"],["listen to music","ฟังเพลง"],["cook","ทำอาหาร"],["set the table","จัดโต๊ะอาหาร"],["wash dishes","ล้างจาน"],["take out the trash","ทิ้งขยะ"],["take care of pets","ดูแลสัตว์เลี้ยง"],
+  ["talk with family","พูดคุยกับครอบครัว"],["pray","สวดมนต์"],["meditate","นั่งสมาธิ"],["plan the day","วางแผนวัน"],["pack my bag","เตรียมกระเป๋า"],["say good night","บอกราตรีสวัสดิ์"],["get ready for bed","เตรียมตัวนอน"],["go to bed","เข้านอน"],
+]};
+
+PICDICT_WORDS['Drinks.png'] = {cols:8, rows:7, words:[
+  ["Water","น้ำเปล่า"],["Milk","นม"],["Orange Juice","น้ำส้ม"],["Apple Juice","น้ำแอปเปิ้ล"],["Grape Juice","น้ำองุ่น"],["Pineapple Juice","น้ำสับปะรด"],["Lemonade","น้ำมะนาว"],["Lime Juice","น้ำมะนาว"],
+  ["Strawberry Smoothie","สมูทตี้สตรอว์เบอร์รี่"],["Banana Smoothie","สมูทตี้กล้วย"],["Mango Smoothie","สมูทตี้มะม่วง"],["Chocolate Milk","นมช็อกโกแลต"],["Soy Milk","นมถั่วเหลือง"],["Almond Milk","นมอัลมอนด์"],["Coconut Water","น้ำมะพร้าว"],["Iced Tea","ชาเย็น"],
+  ["Tea","ชา"],["Green Tea","ชาเขียว"],["Black Tea","ชาดำ"],["Coffee","กาแฟ"],["Iced Coffee","กาแฟเย็น"],["Cappuccino","คาปูชิโน"],["Latte","ลาเต้"],["Mocha","มอคค่า"],
+  ["Hot Chocolate","ช็อกโกแลตร้อน"],["Cocoa","โกโก้"],["Milkshake","มิลค์เชค"],["Soda","โซดา"],["Cola","โคล่า"],["Sprite","สไปรท์"],["Fanta","แฟนต้า"],["Root Beer","รูทเบียร์"],
+  ["Energy Drink","เครื่องดื่มชูกำลัง"],["Sports Drink","เครื่องดื่มเกลือแร่"],["Yakult","ยาคูลท์"],["Berry Smoothie","สมูทตี้เบอร์รี่"],["Carrot Juice","น้ำแครอท"],["Beetroot Juice","น้ำบีทรูท"],["Celery Juice","น้ำขึ้นฉ่าย"],["Tomato Juice","น้ำมะเขือเทศ"],
+  ["Bubble Tea","ชานมไข่มุก"],["Thai Milk Tea","ชาไทย"],["Matcha Latte","มัทฉะลาเต้"],["Taro Milk","นมเผือก"],["Honey Lemon Tea","ชาน้ำผึ้งมะนาว"],["Ginger Tea","ชาขิง"],["Chrysanthemum Tea","ชาดอกเก๊กฮวย"],["Peppermint Tea","ชามินต์"],
+  ["Bael Fruit Drink","น้ำมะตูม"],["Roselle Drink","น้ำกระเจี๊ยบ"],["Longan Drink","น้ำลำไย"],["Sugarcane Juice","น้ำอ้อย"],["Coconut Milk","นมมะพร้าว"],["Rice Milk","น้ำนมข้าว"],["Ovaltine","โอวัลติน"],["Fresh Water","น้ำดื่ม"],
+]};
+
+PICDICT_WORDS['Family.png'] = {cols:8, rows:7, words:[
+  ["Father","พ่อ"],["Mother","แม่"],["Son","ลูกชาย"],["Daughter","ลูกสาว"],["Grandfather","ปู่ / ตา"],["Grandmother","ย่า / ยาย"],["Brother","พี่ชาย / น้องชาย"],["Sister","พี่สาว / น้องสาว"],
+  ["Baby","ทารก / เด็กเล็ก"],["Uncle","ลุง"],["Aunt","ป้า"],["Cousin","ลูกพี่ลูกน้อง"],["Nephew","หลานชาย"],["Niece","หลานสาว"],["Husband","สามี"],["Wife","ภรรยา"],
+  ["Parents","พ่อแม่"],["Family","ครอบครัว"],["Twin","แฝด"],["Stepfather","พ่อเลี้ยง"],["Stepmother","แม่เลี้ยง"],["Half-brother","พี่/น้องชายต่างแม่"],["Half-sister","พี่/น้องสาวต่างแม่"],["Relative","ญาติ / เครือญาติ"],
+  ["Grandson","หลานชาย"],["Granddaughter","หลานสาว"],["Father-in-law","พ่อสามี"],["Mother-in-law","แม่สามี"],["Son-in-law","ลูกเขย"],["Daughter-in-law","สะใภ้"],["Older brother","พี่ชาย"],["Older sister","พี่สาว"],
+  ["Younger brother","น้องชาย"],["Younger sister","น้องสาว"],["Big family","ครอบครัวใหญ่"],["Nuclear family","ครอบครัวพ่อแม่ลูก"],["Adopted child","ลูกบุญธรรม"],["Foster child","ลูกอุปการะ"],["Guardian","ผู้ปกครอง"],["Pet","สัตว์เลี้ยง"],
+  ["Father figure","เหมือนพ่อ"],["Mother figure","เหมือนแม่"],["Family member","สมาชิกในครอบครัว"],["Home","บ้าน"],["Love","ความรัก"],["Care","ความดูแล"],["Support","การสนับสนุน"],["Together","อยู่ด้วยกัน"],
+  ["Ancestor","บรรพบุรุษ"],["Family tree","ต้นไม้ครอบครัว"],["Generation","รุ่น / ช่วงอายุคน"],["Bond","ความผูกพัน"],["Happiness","ความสุข"],["Relatives","ญาติพี่น้อง"],["Meeting","การพบกัน"],["Memories","ความทรงจำ"],
+]};
+
+PICDICT_WORDS['FarmAnimals.png'] = {cols:8, rows:8, words:[
+  ["Cow","วัว"],["Bull","กระทิง"],["Calf","ลูกวัว"],["Buffalo","ควาย"],["Water Buffalo","ควายปลัก"],["Ox","วัวใช้แรงงาน"],["Goat","แพะ"],["Kid","ลูกแพะ"],
+  ["Sheep","แกะ"],["Lamb","ลูกแกะ"],["Pig","หมู"],["Piglet","ลูกหมู"],["Horse","ม้า"],["Foal","ลูกม้า"],["Donkey","ลา"],["Mule","ลูกผสมม้าและลา"],
+  ["Chicken","ไก่"],["Rooster","ไก่ตัวผู้"],["Hen","แม่ไก่"],["Chick","ลูกเจี๊ยบ"],["Duck","เป็ด"],["Drake","เป็ดตัวผู้"],["Goose","ห่าน"],["Gosling","ลูกห่าน"],
+  ["Turkey","ไก่งวง"],["Tom","ไก่งวงตัวผู้"],["Hen Turkey","ไก่งวงตัวเมีย"],["Rabbit","กระต่าย"],["Bunny","ลูกกระต่าย"],["Guinea Pig","หนูตะเภา"],["Quail","นกกระทา"],["Pigeon","นกพิราบ"],
+  ["Peacock","นกยูง"],["Peahen","นกยูงตัวเมีย"],["Pheasant","ไก่ฟ้า"],["Partridge","นกคุ่ม"],["Ostrich","นกกระจอกเทศ"],["Emu","อีมู"],["Cattle","โคเนื้อ"],["Dairy Cow","วัวนม"],
+  ["Llama","ลามา"],["Alpaca","อัลปากา"],["Shetland Pony","โพนี่เชตแลนด์"],["Dog","สุนัขเฝ้าฟาร์ม"],["Cat","แมว"],["Barn Cat","แมวในฟาร์ม"],["Muscovy Duck","เป็ดเทศ"],["Geese","ฝูงห่าน"],
+  ["Bee","ผึ้ง"],["Honeybee","ผึ้งน้ำผึ้ง"],["Earthworm","ไส้เดือน"],["Mole","ตัวตุ่น"],["Frog","กบ"],["Tortoise","เต่า"],["Snail","หอยทาก"],["Ladybug","เต่าทอง"],
+  ["Farm Rat","หนูในฟาร์ม"],["Field Mouse","หนูทุ่ง"],["Hay","หญ้าแห้ง"],["Hay Bale","ก้อนหญ้าแห้ง"],["Egg","ไข่"],["Milk","นม"],["Wool","ขนแกะ"],["Feathers","ขนไก่"],
+]};
+
+PICDICT_WORDS['Feelings.png'] = {cols:8, rows:6, words:[
+  ["Happy","มีความสุข"],["Excited","ตื่นเต้น"],["Proud","ภูมิใจ"],["Loved","ถูกรัก"],["Confident","มั่นใจ"],["Energetic","กระฉับกระเฉง"],["Cheerful","ร่าเริง"],["Grateful","ขอบคุณ"],
+  ["Laughing","หัวเราะ"],["Shy","อาย"],["Curious","อยากรู้"],["Surprised","ประหลาดใจ"],["Scared","กลัว"],["Worried","กังวล"],["Nervous","ประหม่า"],["Afraid","หวาดกลัว"],
+  ["Sad","เศร้า"],["Angry","โกรธ"],["Annoyed","หงุดหงิด"],["Disappointed","ผิดหวัง"],["Jealous","อิจฉา"],["Embarrassed","เขินอาย"],["Guilty","รู้สึกผิด"],["Lonely","เหงา"],
+  ["Tired","เหนื่อย"],["Sleepy","ง่วงนอน"],["Relaxed","ผ่อนคลาย"],["Calm","สงบ"],["Focused","จดจ่อ"],["Inspired","มีแรงบันดาลใจ"],["Amazed","ทึ่ง"],["Blessed","รู้สึกโชคดี"],
+  ["Hopeful","มีความหวัง"],["Satisfied","พอใจ"],["Determined","มุ่งมั่น"],["Brave","กล้าหาญ"],["Peaceful","สงบสุข"],["Friendly","เป็นมิตร"],["Playful","ขี้เล่น"],["Thoughtful","มีน้ำใจ"],
+  ["Compassionate","มีเมตตา"],["Relieved","โล่งใจ"],["Interested","สนใจ"],["Bored","เบื่อ"],["Overwhelmed","รู้สึกกดดัน"],["Heartbroken","เสียใจมาก"],["Confused","สับสน"],["Content","พอใจในสิ่งที่เป็น"],
+]};
+
+PICDICT_WORDS['Flowers.png'] = {cols:8, rows:6, words:[
+  ["Rose","กุหลาบ"],["Sunflower","ทานตะวัน"],["Lily","ลิลลี่"],["Tulip","ทิวลิป"],["Daffodil","แดฟโฟดิล"],["Daisy","เดซี่"],["Lotus","ดอกบัว"],["Lavender","ลาเวนเดอร์"],
+  ["Carnation","คาร์เนชั่น"],["Hibiscus","ชบา"],["Marigold","ดาวเรือง"],["Peony","พีโอนี"],["Poinsettia","พอยน์เซ็ตเทีย"],["Orchid","กล้วยไม้"],["Jasmine","มะลิ"],["Plumeria","ลีลาวดี"],
+  ["Water Lily","บัวสาย"],["Iris","ไอริส"],["Poppy","ป๊อปปี้"],["Baby's Breath","ยิปโซ"],["Hydrangea","ไฮเดรนเยีย"],["Cherry Blossom","ซากุระ"],["Magnolia","แมกโนเลีย"],["Morning Glory","ผักบุ้งฝรั่ง"],
+  ["Gerbera","เยอบีร่า"],["Sweet Pea","สวีทพี"],["Cornflower","คอร์นฟลาวเวอร์"],["Violet","ไวโอเลต"],["Buttercup","บัตเตอร์คัพ"],["Bluebell","บลูเบลล์"],["Anthurium","หน้าวัว"],["Cockscomb","หงอนไก่"],
+  ["Camellia","คามิเลีย"],["Calla Lily","คาล่าลิลลี่"],["Clematis","เคลมาติส"],["Freesia","ฟรีเซีย"],["Anemone","อนีโมนี"],["Cosmos","คอสมอส"],["Narcissus","นาร์ซิสซัส"],["Gazania","กาซาเนีย"],
+  ["Foxglove","ฟอกซ์โกลฟ"],["Astilbe","แอสทิลบี"],["Tiger Lily","ลิลลี่เสือ"],["Tuberose","ซ่อนกลิ่น"],["Salvia","ซัลเวีย"],["Zinnia","ซินเนีย"],["Mimosa","มิโมซา"],["Forget-me-not","อย่าลืมฉัน"],
+]};
+
+PICDICT_WORDS['Furniture.png'] = {cols:8, rows:8, words:[
+  ["Sofa","โซฟา"],["Armchair","เก้าอี้นวม"],["Chair","เก้าอี้"],["Stool","เก้าอี้สตูล"],["Table","โต๊ะ"],["Coffee Table","โต๊ะกาแฟ"],["TV Stand","ชั้นวางทีวี"],["Bookshelf","ชั้นหนังสือ"],
+  ["Wardrobe","ตู้เสื้อผ้า"],["Dresser","โต๊ะเครื่องแป้ง"],["Chest of Drawers","ตู้ลิ้นชัก"],["Bedside Table","โต๊ะข้างเตียง"],["Bed","เตียง"],["Mattress","ที่นอน"],["Headboard","หัวเตียง"],["Footboard","ท้ายเตียง"],
+  ["Dining Table","โต๊ะอาหาร"],["Dining Chair","เก้าอี้ทานอาหาร"],["Bar Stool","เก้าอี้บาร์"],["Side Table","โต๊ะข้าง"],["Console Table","โต๊ะคอนโซล"],["Desk","โต๊ะทำงาน"],["Office Chair","เก้าอี้สำนักงาน"],["Filing Cabinet","ตู้เก็บเอกสาร"],
+  ["Vanity Table","โต๊ะเครื่องแป้ง"],["Dressing Stool","เก้าอี้แต่งหน้า"],["Mirror","กระจก"],["Shoe Rack","ชั้นวางรองเท้า"],["Coat Rack","ไม้แขวนเสื้อ"],["Hall Tree","ชั้นวางพร้อมที่แขวน"],["Storage Bench","ม้านั่งเก็บของ"],["Trunk","หีบ"],
+  ["Rocking Chair","เก้าอี้โยก"],["Recliner","เก้าอี้ปรับเอน"],["Bean Bag","เบาะนั่งบีนแบ็ก"],["Chaise Lounge","เก้าอี้เลานจ์"],["Bench","ม้านั่ง"],["Ottoman","ออตโตมัน"],["Footstool","ที่วางเท้า"],["Pouf","พัฟ"],
+  ["Cabinet","ตู้เก็บของ"],["Display Cabinet","ตู้โชว์"],["Cupboard","ตู้กับข้าว"],["Sideboard","ตู้เตี้ย"],["Hutch","ตู้ลอย"],["Media Console","ชั้นวางสื่อบันเทิง"],["Nightstand","โต๊ะหัวเตียง"],["Plant Stand","ชั้นวางต้นไม้"],
+  ["Picnic Table","โต๊ะปิกนิก"],["Folding Chair","เก้าอี้พับ"],["Folding Table","โต๊ะพับ"],["Garden Bench","ม้านั่งสนาม"],["Hammock","เปลญวน"],["Patio Set","ชุดโต๊ะสนาม"],["Swing Chair","เก้าอี้แขวน"],["Storage Box","กล่องเก็บของ"],
+  ["Crib","เตียงเด็กอ่อน"],["High Chair","เก้าอี้เด็ก"],["Changing Table","โต๊ะเปลี่ยนผ้าอ้อม"],["Bookcase","ชั้นหนังสือ"],["Wall Shelf","ชั้นติดผนัง"],["Floating Shelf","ชั้นลอยติดผนัง"],["Filing Shelf","ชั้นวางเอกสาร"],["Room Divider","ฉากกั้นห้อง"],
+]};
+
+PICDICT_WORDS['Hobbies.png'] = {cols:7, rows:4, words:[
+  ["Reading","การอ่าน"],["Drawing","การวาดภาพ"],["Painting","การวาดภาพระบายสี"],["Cooking","การทำอาหาร"],["Baking","การอบขนม"],["Gardening","การทำสวน"],["Camping","การตั้งแคมป์"],
+  ["Hiking","การเดินป่า"],["Photography","การถ่ายภาพ"],["Knitting","การถักไหมพรม"],["Sewing","การเย็บผ้า"],["Collecting Stamps","การสะสมแสตมป์"],["Collecting Coins","การสะสมเหรียญ"],["Playing Cards","การเล่นหมากรุก"],
+  ["Watching Movies","การดูหนัง"],["Listening to Music","การฟังเพลง"],["Singing","การร้องเพลง"],["Dancing","การเต้น"],["Writing","การเขียน"],["Blogging","การเขียนบล็อก"],["Bird Watching","การดูนก"],
+  ["Cycling","การปั่นจักรยาน"],["Running","การวิ่ง"],["Yoga","การเล่นโยคะ"],["Meditation","การทำสมาธิ"],["Puzzle Solving","การต่อจิ๊กซอว์"],["DIY Crafts","งานประดิษฐ์"],
+]};
+
+PICDICT_WORDS['Holidays.png'] = {cols:8, rows:5, words:[
+  ["New Year's Day","วันปีใหม่"],["Valentine's Day","วันวาเลนไทน์"],["Easter","วันอีสเตอร์"],["Family Day","วันครอบครัว"],["Songkran Festival","เทศกาลสงกรานต์"],["Labour Day","วันแรงงาน"],["Mother's Day","วันแม่"],["Father's Day","วันพ่อ"],
+  ["Independence Day","วันชาติอเมริกา"],["Buddha Day","วันวิสาขบูชา"],["Halloween","วันฮาโลวีน"],["Loy Krathong","วันลอยกระทง"],["Thanksgiving Day","วันขอบคุณพระเจ้า"],["Christmas Day","วันคริสต์มาส"],["Boxing Day","วันบ็อกซิ่งเดย์"],["New Year's Eve","วันสิ้นปี"],
+  ["Chinese New Year","วันตรุษจีน"],["Mid-Autumn Festival","เทศกาลไหว้พระจันทร์"],["Holi Festival","เทศกาลโฮลี"],["Carnival","เทศกาลคาร์นิวัล"],["Diwali","เทศกาลดีวาลี"],["Ramadan","รอมฎอน"],["Eid al-Fitr","อีดิลฟิตรี"],["Eid al-Adha","อีดิลอัฎฮา"],
+  ["Children's Day","วันเด็ก"],["Teacher's Day","วันครู"],["Nurses Day","วันพยาบาล"],["Earth Day","วันคุ้มครองโลก"],["Environment Day","วันสิ่งแวดล้อม"],["Peace Day","วันสันติภาพ"],["Human Rights Day","วันสิทธิมนุษยชน"],["Women's Day","วันสตรีสากล"],
+  ["Palm Sunday","วันปาล์มซันเดย์"],["Good Friday","วันศุกร์ประเสริฐ"],["Easter Sunday","วันอีสเตอร์ซันเดย์"],["Hanukkah","ฮานุกกะห์"],["Kwanzaa","ควานซา"],["Bastille Day","วันบาสตีย์"],["Oktoberfest","เทศกาลเบียร์"],["St. Patrick's Day","วันเซนต์แพทริก"],
+]};
+
+PICDICT_WORDS['House.png'] = {cols:8, rows:8, words:[
+  ["House","บ้าน"],["Living Room","ห้องนั่งเล่น"],["Kitchen","ห้องครัว"],["Bedroom","ห้องนอน"],["Bathroom","ห้องน้ำ"],["Dining Room","ห้องอาหาร"],["Garage","โรงรถ"],["Garden","สวน"],
+  ["Door","ประตู"],["Window","หน้าต่าง"],["Roof","หลังคา"],["Wall","ผนัง"],["Floor","พื้น"],["Ceiling","เพดาน"],["Stairs","บันได"],["Balcony","ระเบียง"],
+  ["Sofa","โซฟา"],["Armchair","เก้าอี้นวม"],["Table","โต๊ะ"],["Chair","เก้าอี้"],["Bed","เตียง"],["Wardrobe","ตู้เสื้อผ้า"],["Dresser","โต๊ะเครื่องแป้ง"],["Bookshelf","ชั้นหนังสือ"],
+  ["Television","โทรทัศน์"],["Air Conditioner","เครื่องปรับอากาศ"],["Fan","พัดลม"],["Lamp","โคมไฟ"],["Clock","นาฬิกา"],["Picture","รูปภาพ"],["Mirror","กระจก"],["Rug","พรม"],
+  ["Refrigerator","ตู้เย็น"],["Stove","เตา"],["Microwave","ไมโครเวฟ"],["Sink","อ่างล้างจาน"],["Cabinet","ตู้เก็บของ"],["Dishwasher","เครื่องล้างจาน"],["Kettle","กาต้มน้ำ"],["Toaster","เครื่องปิ้งขนมปัง"],
+  ["Washing Machine","เครื่องซักผ้า"],["Vacuum Cleaner","เครื่องดูดฝุ่น"],["Iron","เตารีด"],["Hanger","ไม้แขวนเสื้อ"],["Laundry Basket","ตะกร้าผ้า"],["Trash Bin","ถังขยะ"],["Broom","ไม้กวาด"],["Dustpan","ที่ตักผง"],
+  ["Toilet","โถส้วม"],["Sink","อ่างล้างหน้า"],["Shower","ฝักบัว"],["Bathtub","อ่างอาบน้ำ"],["Towel","ผ้าเช็ดตัว"],["Soap","สบู่"],["Toothbrush","แปรงสีฟัน"],["Toilet Paper","กระดาษชำระ"],
+  ["Front Door","ประตูหน้า"],["Back Door","ประตูหลัง"],["Mailbox","ตู้จดหมาย"],["Doorbell","กริ่งประตู"],["Curtain","ผ้าม่าน"],["Doormat","พรมเช็ดเท้า"],["Key","กุญแจ"],["Lock","แม่กุญแจ"],
+]};
