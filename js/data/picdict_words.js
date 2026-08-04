@@ -309,3 +309,44 @@ PICDICT_WORDS['SeaAnimals.png'] = {cols:8, rows:7, words:[
   ["Marlin","ปลามาร์ลิน"],["Mahi Mahi","ปลาหางนกยูง"],["Grouper","ปลากะพง"],["Snapper","ปลากะพงแดง"],["Barracuda","ปลากุเลา"],["Flying Fish","ปลาบิน"],["Seadragon","มังกรทะเล"],["Sea Cucumber","ปลิงทะเล"],
   ["Manta Ray","ปลากระเบนราหู"],["Whale Shark","ฉลามวาฬ"],["Dugong","พะยูน"],["Orca","วาฬเพชฌฆาต"],["Beluga","วาฬเบลูก้า"],["Harp Seal","แมวน้ำ"],["Sea Lion","สิงโตทะเล"],["Walrus","วอลรัส"],
 ]};
+
+PICDICT_WORDS['Seasons.png'] = {cols:8, rows:7, words:[
+  ["Spring","ฤดูใบไม้ผลิ"],["Summer","ฤดูร้อน"],["Autumn","ฤดูใบไม้ร่วง"],["Winter","ฤดูหนาว"],["Seasons","ฤดูกาล"],["Season","ฤดู"],["All Seasons","ทุกฤดูกาล"],["Year","ปี"],
+  ["Blossom","ดอกไม้บาน"],["Growth","การเติบโต"],["Flowers","ดอกไม้"],["Bee","ผึ้ง"],["Butterfly","ผีเสื้อ"],["Bird","นก"],["Nest","รังนก"],["Spring Rain","ฝนฤดูใบไม้ผลิ"],
+  ["Hot","ร้อน"],["Beach","ชายหาด"],["Ice Cream","ไอศกรีม"],["Watermelon","แตงโม"],["Sunflower","ทานตะวัน"],["Sunglasses","แว่นกันแดด"],["Fan","พัดลม"],["Cold Drink","เครื่องดื่มเย็น"],
+  ["Falling Leaves","ใบไม้ร่วง"],["Pumpkin","ฟักทอง"],["Harvest","เก็บเกี่ยว"],["Scarecrow","หุ่นไล่กา"],["Acorn","ลูกโอ๊ก"],["Squirrel","กระรอก"],["Rake","คราด"],["Cool","อากาศเย็น"],
+  ["Snowman","ตุ๊กตาหิมะ"],["Snowflake","เกล็ดหิมะ"],["Hat","หมวก"],["Mittens","ถุงมือ"],["Coat","เสื้อโค้ท"],["Boots","รองเท้าบูท"],["Fireplace","เตาผิง"],["Hot Chocolate","ช็อกโกแลตร้อน"],
+  ["Rainbow","สายรุ้ง"],["Cloudy","มีเมฆมาก"],["Partly Cloudy","มีเมฆบางส่วน"],["Windy","มีลมแรง"],["Cold","หนาว"],["Warm","อบอุ่น"],["Hot Weather","อากาศร้อน"],["Cold Weather","อากาศหนาว"],
+  ["Kite Flying","เล่นว่าว"],["Gardening","ทำสวน"],["Swimming","ว่ายน้ำ"],["Hiking","เดินป่า"],["Ice Skating","เล่นสเก็ตน้ำแข็ง"],["Christmas","คริสต์มาส"],["Halloween","ฮาโลวีน"],["Easter","อีสเตอร์"],
+]};
+
+PICDICT_WORDS['Shapes.png'] = {cols:8, rows:8, words:[
+  ["Circle","วงกลม"],["Oval","วงรี"],["Triangle","สามเหลี่ยม"],["Square","สี่เหลี่ยมจัตุรัส"],["Rectangle","สี่เหลี่ยมผืนผ้า"],["Diamond","รูปเพชร"],["Star","ดาว"],["Heart","รูปหัวใจ"],
+  ["Pentagon","ห้าเหลี่ยม"],["Hexagon","หกเหลี่ยม"],["Heptagon","เจ็ดเหลี่ยม"],["Octagon","แปดเหลี่ยม"],["Nonagon","เก้าเหลี่ยม"],["Decagon","สิบเหลี่ยม"],["Semicircle","ครึ่งวงกลม"],["Quarter Circle","หนึ่งในสี่วงกลม"],
+  ["Crescent","เสี้ยวพระจันทร์"],["Cross","กากบาท"],["Parallelogram","สี่เหลี่ยมด้านขนาน"],["Trapezoid","สี่เหลี่ยมคางหมู"],["Kite","ว่าว"],["Arrow","ลูกศร"],["Chevron","รูปเขฟรอน"],["Concave","เว้าเข้า"],
+  ["Cone","กรวย"],["Cube","ลูกบาศก์"],["Cylinder","ทรงกระบอก"],["Sphere","ทรงกลม"],["Pyramid","พีระมิด"],["Cuboid","ทรงสี่เหลี่ยมมุฉาก"],["Triangular Prism","ปริซึมสามเหลี่ยม"],["Five Point Star","ดาวห้าแฉก"],
+  ["Ellipse","วงรี"],["Ring","วงแหวน"],["Annulus","วงแหวน"],["Arc","ส่วนโค้ง"],["Sector","ภาคของวงกลม"],["Segment","ส่วนของวงกลม"],["Chord","เส้นคอร์ด"],["Tangent","เส้นสัมผัส"],
+  ["Angle","มุม"],["Right Angle","มุมฉาก"],["Acute Angle","มุมแหลม"],["Obtuse Angle","มุมป้าน"],["Straight Angle","มุมตรง"],["Reflex Angle","มุมกลับ"],["Equilateral Triangle","สามเหลี่ยมด้านเท่า"],["Isosceles Triangle","สามเหลี่ยมหน้าจั่ว"],
+  ["Scalene Triangle","สามเหลี่ยมด้านไม่เท่า"],["Isosceles Right Triangle","สามเหลี่ยมมุมฉากหน้าจั่ว"],["Right Triangle","สามเหลี่ยมมุมฉาก"],["Acute Triangle","สามเหลี่ยมมุมแหลม"],["Obtuse Triangle","สามเหลี่ยมมุมป้าน"],["Equiangular Triangle","สามเหลี่ยมมุมเท่า"],["Six Point Star","ดาวหกแฉก"],["Eight Point Star","ดาวแปดแฉก"],
+  ["Flower Shape","รูปดอกไม้"],["Cloud Shape","รูปร่างเมฆ"],["Clover Shape","รูปโคลเวอร์"],["Leaf Shape","รูปใบไม้"],["Lightning Shape","รูปร่างสายฟ้า"],["Drop Shape","รูปร่างหยดน้ำ"],["Speech Bubble","รูปกล่องข้อความ"],["Shield Shape","รูปร่างโล่"],
+]};
+
+PICDICT_WORDS['Space.png'] = {cols:8, rows:7, words:[
+  ["Sun","ดวงอาทิตย์"],["Moon","ดวงจันทร์"],["Earth","โลก"],["Mars","ดาวอังคาร"],["Venus","ดาวศุกร์"],["Jupiter","ดาวพฤหัสบดี"],["Saturn","ดาวเสาร์"],["Uranus","ดาวยูเรนัส"],
+  ["Neptune","ดาวเนปจูน"],["Mercury","ดาวพุธ"],["Asteroid","ดาวเคราะห์น้อย"],["Comet","ดาวหาง"],["Meteor","สะเก็ดดาว"],["Galaxy","กาแล็กซี"],["Stars","ดวงดาว"],["Constellation","กลุ่มดาว"],
+  ["Rocket","จรวด"],["Astronaut","นักบินอวกาศ"],["Space Shuttle","กระสวยอวกาศ"],["Satellite","ดาวเทียม"],["Space Station","สถานีอวกาศ"],["Telescope","กล้องโทรทรรศน์"],["UFO","ยานอวกาศ"],["Alien","เอเลียน"],
+  ["Black Hole","หลุมดำ"],["Nebula","เนบิวลา"],["Ring","วงแหวน"],["Crater","หลุมอุกกาบาต"],["Atmosphere","บรรยากาศ"],["Aurora","แสงออโรรา"],["Solar System","ระบบสุริยะ"],["Milky Way","ทางช้างเผือก"],
+  ["Star","ดาวฤกษ์"],["Surface","พื้นผิว"],["Gravity","แรงโน้มถ่วง"],["Eclipse","จันทรุปราคา"],["Rover","ยานสำรวจ"],["Lander","ยานลงจอด"],["Probe","ยานสำรวจอวกาศ"],["Booster","ตัวเร่งดัน"],
+  ["Capsule","แคปซูล"],["Spacesuit","ชุดอวกาศ"],["Oxygen","ออกซิเจน"],["Solar Panel","แผงโซลาร์เซลล์"],["Antenna","เสาอากาศ"],["Control Panel","แผงควบคุม"],["Launch Pad","แท่นปล่อยจรวด"],["Countdown","นับถอยหลัง"],
+  ["Orbit","วงโคจร"],["Rotation","การหมุนรอบตัวเอง"],["Revolution","การโคจรรอบดวงอาทิตย์"],["Lunar Phase","ข้างขึ้นข้างแรม"],["Light Year","ปีแสง"],["Space Dust","ฝุ่นอวกาศ"],["Cosmic Ray","รังสีคอสมิก"],["Big Bang","บิ๊กแบง"],
+]};
+
+PICDICT_WORDS['Sports.png'] = {cols:8, rows:7, words:[
+  ["Soccer","ฟุตบอล"],["Basketball","บาสเกตบอล"],["Volleyball","วอลเลย์บอล"],["American Football","อเมริกันฟุตบอล"],["Baseball","เบสบอล"],["Softball","ซอฟต์บอล"],["Table Tennis","ปิงปอง"],["Badminton","แบดมินตัน"],
+  ["Tennis","เทนนิส"],["Golf","กอล์ฟ"],["Running","วิ่ง"],["Swimming","ว่ายน้ำ"],["Cycling","ปั่นจักรยาน"],["Boxing","มวย"],["Karate","คาราเต้"],["Taekwondo","เทควันโด"],
+  ["Archery","ยิงธนู"],["Fencing","ฟันดาบ"],["Gymnastics","ยิมนาสติก"],["Weightlifting","ยกน้ำหนัก"],["Wrestling","มวยปล้ำ"],["Judo","ยูโด"],["Rugby","รักบี้"],["Hockey","ฮอกกี้"],
+  ["Roller Skating","สเก็ตโรลแลอร์"],["Skateboarding","สเก็ตบอร์ด"],["Surfing","โต้คลื่น"],["Rock Climbing","ปีนผา"],["Sailing","แล่นเรือใบ"],["Kayaking","พายเรือคายัค"],["Canoeing","พายเรือแคนู"],["Windsurfing","วินด์เซิร์ฟ"],
+  ["Equestrian","ขี่ม้า"],["Cricket","คริกเก็ต"],["Field Hockey","ฮอกกี้สนาม"],["Squash","สควอช"],["Racquetball","แร็กเก็ตบอล"],["Pickleball","พิคเคิลบอล"],["Padel","พาเดล"],["Beach Volleyball","วอลเลย์บอลชายหาด"],
+  ["Dunk","ดังค์"],["Kick","เตะ"],["Throw","ขว้าง"],["Catch","จับ"],["Dribble","เลี้ยงลูก"],["Shoot","ยิง"],["Pass","ส่งลูก"],["Tackle","แท็กเกิล"],
+  ["Slide","สไลด์"],["Jump","กระโดด"],["Balance","ทรงตัว"],["Stretch","ยืดเหยียด"],["Win","ชนะ"],["Lose","แพ้"],["Practice","ฝึกซ้อม"],["Rest","พักผ่อน"],
+]};
