@@ -9,6 +9,9 @@
      (ตำแหน่งช่องมาจาก PICDICT_WORDS ใน js/data/picdict_words.js — แผ่นที่ยัง
       ไม่ถูกถอดคำ เปิดดูได้ปกติ แค่ยังไม่มีเสียง)
    · เข้า: ปุ่ม 📖 ล่างล็อบบี้เดิม (#btn-picdict) + ตึกในเมือง 3D (?go=picdict)
+   🆕 รอบ 995: กางเล่มเต็มจอ+กึ่งกลางเป๊ะด้วย fitBook() (วัดจอจริง ไม่ใช้ aspect-ratio ตายตัว)
+      · ภาพเต็มหน้ากระดาษ (object-fit:fill ยืดได้ไม่เกิน PD_STRETCH)
+      · ถอดปุ่มลูกศร ‹ › ออก — พลิกหน้าด้วยการ "ปัดซ้าย/ขวา" ลากตามนิ้วแบบหนังสือจริง
    ============================================================ */
 (function(){
   const $   = id => document.getElementById(id);
@@ -102,7 +105,6 @@
         </div>
         <!-- 📖 หนังสือกางอยู่ -->
         <div class="pd-bookwrap" id="pd-bookwrap" hidden>
-          <button class="pd-arrow pd-arr-l" id="pd-prev" title="ย้อนหน้า">‹</button>
           <div class="pd-book" id="pd-book">
             <div class="pd-stack pd-stack-l" id="pd-stack-l"></div>
             <div class="pd-stack pd-stack-r" id="pd-stack-r"></div>
@@ -117,16 +119,14 @@
             <div class="pd-corner pd-corner-l" id="pd-cl" title="พลิกกลับ"></div>
             <div class="pd-corner pd-corner-r" id="pd-cr" title="พลิกไป"></div>
           </div>
-          <button class="pd-arrow pd-arr-r" id="pd-next" title="หน้าถัดไป">›</button>
         </div>
         <div class="pd-balloon" id="pd-balloon" hidden></div>
+        <div class="pd-hint" id="pd-hint" hidden>👆 ปัดซ้าย–ขวา เพื่อพลิกหน้า</div>
       </div>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pd-back').addEventListener('click', exit);
     $('pd-cover').addEventListener('click', openBook);
-    $('pd-next').addEventListener('click', ()=>step(1));
-    $('pd-prev').addEventListener('click', ()=>step(-1));
     $('pd-cr').addEventListener('click', ()=>step(1));
     $('pd-cl').addEventListener('click', ()=>step(-1));
     $('pd-tocbtn').addEventListener('click', ()=>{ if(pd.opened) goTo(0); });
@@ -144,9 +144,92 @@
     window.addEventListener('resize', refit);
     if(window.ResizeObserver){
       const ro = new ResizeObserver(refit);
-      ro.observe($('pd-book'));
+      ro.observe($('pd-stage'));      // เกาะ "เวที" ไม่ใช่ตัวเล่ม — fitBook เปลี่ยนขนาดเล่มเองจะวนไม่จบ
     }
+    bindDrag();
     return sec;
+  }
+
+  /* ============================================================
+     📐 fitBook — วัดจอจริงแล้วกางหนังสือให้ "เต็มความกว้าง + กึ่งกลางเป๊ะ" (รอบ 995)
+     แผ่นภาพเป็นแนวตั้ง 2:3 → กางคู่ได้ 4:3 ซึ่งเตี้ยกว่าจอกว้าง ทำให้เล่มลอยแคบกลางจอ
+     จึงยอมให้ "ยืดแนวนอน" ได้ถึง PD_STRETCH เท่า เพื่อกินความกว้างที่เหลือ (ภาพจึงดูกว้างขึ้นด้วย)
+     ห้ามยืดเกินนี้ ไม่งั้นการ์ด/ตัวหนังสือบนแผ่นจะบิด
+     ============================================================ */
+  /* 1.45 = ค่าที่วัดจากภาพที่ผู้ใช้ขีดเส้นแดงไว้ (จอ 1062×493 → อยากได้เล่มกว้าง ~820px)
+     เทียบภาพจริงแล้วการ์ด/ตัวหนังสือบนแผ่นยังอ่านง่าย ไม่บิด — เกินกว่านี้เริ่มแบน */
+  const PD_STRETCH = 1.45;   // ยืดแนวนอนได้มากสุด (1 = ไม่ยืดเลย) — ปรับที่นี่ที่เดียว
+  const GAP_X = 16;          // เว้นซ้าย-ขวาให้ "ขอบตั้งกระดาษ" ที่ยื่นออกนอกเล่ม
+  const GAP_T = 6, GAP_B = 8;
+
+  /* เขตหวงห้ามของปุ่มลอย ⬅ กลับ / 📑 สารบัญ / 🎧 ครูถาม (วัดจากปุ่มจริง ไม่ใช้ค่าคงที่
+     — ขนาด/ตำแหน่งปุ่มเปลี่ยนตามฟอนต์และจอเตี้ย) คืน {side, bottom} เทียบขอบเวที */
+  function btnBox(){
+    const st = $('pd-stage');
+    const out = { side:0, bottom:0 };
+    if(!st) return out;
+    const sr = st.getBoundingClientRect();
+    ['pd-back','pd-tocbtn','pd-quizbtn'].forEach(id=>{
+      const el = $(id);
+      if(!el || el.hidden || !el.offsetParent) return;
+      const r = el.getBoundingClientRect();
+      if(!r.width) return;
+      /* ปุ่มเกาะขอบไหน ให้วัดจากขอบนั้น (วัดผิดข้าง = ได้เขตเกือบเต็มจอ หนังสือหดฟรี) */
+      const left = (r.left + r.right)/2 < (sr.left + sr.right)/2;
+      out.side   = Math.max(out.side, (left ? r.right - sr.left : sr.right - r.left) + 6);
+      out.bottom = Math.max(out.bottom, r.bottom - sr.top + 6);
+    });
+    out.side = Math.round(out.side); out.bottom = Math.round(out.bottom);
+    return out;
+  }
+
+  function fitBook(){
+    const st = $('pd-stage'), book = $('pd-book'), wrap = $('pd-bookwrap');
+    if(!st || !book || !wrap || wrap.hidden) return;
+    const sw = st.clientWidth, sh = st.clientHeight;
+    if(!sw || !sh) return;
+    const pad   = window.innerHeight <= 430 ? 12 : 20;   // padding ซ้าย+ขวาในหน้ากระดาษ (css)
+    const chrome = pd.chrome != null ? pd.chrome : (window.innerHeight <= 430 ? 30 : 46);
+    /* คิดขนาดเล่มจาก "ความสูงที่มี" + เพดานความกว้าง (maxW) */
+    const calc = (topPad, maxW) => {
+      let H = Math.max(140, sh - topPad - GAP_B);
+      const imgH = Math.max(40, H - chrome);
+      const natW = (imgH*2/3 + pad) * 2;                       // กว้างที่ภาพพอดีไม่ยืด
+      let W = Math.min(maxW, (imgH*2/3*PD_STRETCH + pad) * 2);
+      if(W < natW){                                            // จอแคบ/สูง → ลดความสูงลงแทน (ไม่บีบภาพ)
+        H = Math.max(120, (W/2 - pad) * 1.5 + chrome);
+      }
+      return { W:Math.round(W), H:Math.round(H), topPad };
+    };
+    const fullW = Math.max(160, sw - GAP_X*2);
+    const btn   = btnBox();
+    let r = calc(GAP_T, fullW);
+    if((sw - r.W)/2 < btn.side){
+      /* เล่มกว้างจนลอดใต้ปุ่มมุมบน — เลือกทางที่ได้ "หน้ากระดาษใหญ่กว่า" ระหว่าง
+         ① หลบด้านข้าง: สูงเต็ม แต่กว้างไม่เกินขอบเขตปุ่ม  ② ถอยลงล่างปุ่ม: กางเต็มกว้าง แต่เตี้ยลง */
+      const a = calc(GAP_T, Math.max(240, sw - btn.side*2));
+      const b = calc(Math.max(GAP_T, btn.bottom), fullW);
+      r = (a.W*a.H >= b.W*b.H) ? a : b;
+    }
+    wrap.style.padding = `${r.topPad}px 0 ${GAP_B}px`;
+    book.style.width  = r.W + 'px';
+    book.style.height = r.H + 'px';
+  }
+  /* กางเล่มใหม่ + วางช่องคลิกตาม — เรียกทุกครั้งที่ "พื้นที่เวทีเปลี่ยน"
+     (เปลี่ยนหน้า / หมุนจอ / เปิด-ปิดแถบครูถามศัพท์ ซึ่งกินความสูงเวทีไป ~34px)
+     ⚠️ ResizeObserver ไม่ยิงตอนแท็บถูกซ่อน จึงต้องเรียกตรงจุดที่รู้ว่าเลย์เอาต์เปลี่ยนด้วย */
+  function relayout(){
+    fitBook();
+    if(measChrome()) fitBook();          // รู้ความสูงหัวเรื่อง/เลขหน้าจริงแล้ว กางใหม่ให้พอดี
+    refitCells();                        // ช่องคลิกต้องวางตามขนาดเล่มที่เพิ่งคำนวณ
+  }
+  /* chrome = ส่วนของหน้ากระดาษที่ไม่ใช่ภาพ (หัวเรื่อง + เลขหน้า + padding บน-ล่าง) */
+  function measChrome(){
+    const pl = $('pd-pl'), box = pl && pl.querySelector('.pd-imgbox');
+    if(!box) return false;
+    const c = Math.round(pl.clientHeight - box.clientHeight);
+    if(c > 0 && Math.abs(c - (pd.chrome || 0)) > 1){ pd.chrome = c; return true; }
+    return false;
   }
 
   /* ---------- เนื้อหาหน้า ---------- */
@@ -184,6 +267,7 @@
 
   /* วางตารางช่องคลิกทับภาพ (ตำแหน่ง = สัดส่วนภาพที่ contain อยู่ในกล่อง) */
   function placeCells(pageEl, idx){
+    pageEl._fitCells = null;                       // หน้าเพิ่งถูกเรนเดอร์ใหม่ ตัวจัดช่องเก่าใช้ไม่ได้แล้ว
     const pg = pd.pages[idx];
     if(!pg || pg.type !== 'sheet') return;
     const W = (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[pg.file]) || null;
@@ -191,13 +275,12 @@
           ov  = pageEl.querySelector('.pd-cells');
     if(!W || !box || !img || !ov) return;
     const fit = ()=>{
-      if(!img.naturalWidth) return;
-      const bw = box.clientWidth, bh = box.clientHeight;
-      const sc = Math.min(bw/img.naturalWidth, bh/img.naturalHeight);
-      const iw = img.naturalWidth*sc, ih = img.naturalHeight*sc;
+      /* 🖼️ รอบ 995: ภาพเป็น object-fit:fill → เต็มกล่องพอดี ไม่มีขอบว่างให้ชดเชยอีก */
+      const iw = box.clientWidth, ih = box.clientHeight;
+      if(!iw || !ih) return;
       const [pt,pr,pb,pl] = W.pad || [0,0,0,0];   // % ระยะขอบแผ่นก่อนถึงตารางการ์ด
-      ov.style.left   = ((bw-iw)/2 + iw*pl/100) + 'px';
-      ov.style.top    = ((bh-ih)/2 + ih*pt/100) + 'px';
+      ov.style.left   = (iw*pl/100) + 'px';
+      ov.style.top    = (ih*pt/100) + 'px';
       ov.style.width  = (iw*(100-pl-pr)/100) + 'px';
       ov.style.height = (ih*(100-pt-pb)/100) + 'px';
       ov.style.gridTemplateColumns = `repeat(${W.cols},1fr)`;
@@ -212,12 +295,17 @@
         });
       }
     };
+    pageEl._fitCells = fit;              // เรียกซ้ำได้หลัง fitBook เปลี่ยนขนาดเล่ม
     if(img.complete) fit(); else img.addEventListener('load', fit, {once:true});
   }
+  const refitCells = ()=> [$('pd-pl'), $('pd-pr')].forEach(el=>{ if(el && el._fitCells) el._fitCells(); });
 
   /* ---------- 🔊 แตะการ์ด = อ่านออกเสียง + บอลลูนคำ ---------- */
   let balloonT = 0;
   function sayCell(cell, en, th){
+    /* เพิ่งปล่อยนิ้วจากการปัดพลิกหน้า → คลิกที่ตามมาไม่ใช่ "ตั้งใจแตะการ์ด" */
+    const now = (performance && performance.now) ? performance.now() : Date.now();
+    if(dg.endAt && now - dg.endAt < 350) return;
     if(qz.on){ qzAnswer(cell, en, th); return; }   // 🎧 โหมดครูถามศัพท์ — แตะ = ตอบคำถาม
     if(has('speakWord')) speakWord(en);
     cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
@@ -252,6 +340,7 @@
   function renderSpread(){
     renderInto($('pd-pl'), pd.s*2);
     renderInto($('pd-pr'), pd.s*2+1);
+    relayout();
     updateStacks();
     preload();
     // 🎧 พลิกหน้าระหว่างโหมดครูถาม = ถามคำใหม่จากหน้าที่เห็นตอนนี้ (รอภาพวางช่องเสร็จก่อน)
@@ -263,8 +352,8 @@
     const w = frac => Math.round(3 + 11*frac);       // 3–14px ตามสัดส่วนหน้าที่อ่านไป/เหลือ
     if(l) l.style.width = w(m ? pd.s/m : 0) + 'px';
     if(r) r.style.width = w(m ? (m-pd.s)/m : 0) + 'px';
-    $('pd-prev').style.visibility = $('pd-cl').style.visibility = pd.s <= 0 ? 'hidden' : '';
-    $('pd-next').style.visibility = $('pd-cr').style.visibility = pd.s >= m ? 'hidden' : '';
+    $('pd-cl').style.visibility = pd.s <= 0 ? 'hidden' : '';
+    $('pd-cr').style.visibility = pd.s >= m ? 'hidden' : '';
   }
   function preload(){
     for(const d of [1,-1,2]){
@@ -281,9 +370,8 @@
      ไปหน้า (dir=1): แผ่นพลิก = หน้าขวาปัจจุบัน (หงายหลังเป็นหน้าซ้ายใหม่)
        หมุน rotateY 0 → -180 รอบสันหนังสือ · หน้าขวานิ่งข้างใต้เปลี่ยนเป็นหน้าขวาใหม่ตั้งแต่ต้น
      ย้อนหน้า (dir=-1): กลับด้านกัน · เงา 2 ชั้น: บนตัวแผ่นพลิก + ทาบหน้านิ่งฝั่งปลายทาง */
-  function flipTo(target, dir){
-    if(pd.busy || target < 0 || target > maxSpread() || target === pd.s) return;
-    pd.busy = true;
+  /* เตรียมแผ่นพลิก (ใช้ร่วมกันทั้งพลิกอัตโนมัติและลากตามนิ้ว) */
+  function prepFaces(target, dir){
     const turn = $('pd-turn'), ff = $('pd-ff'), fb = $('pd-fb'),
           pl = $('pd-pl'), pr = $('pd-pr'), book = $('pd-book');
     turn.classList.toggle('back', dir < 0);
@@ -298,22 +386,119 @@
       renderInto(pl, target*2);        // ใต้แผ่น: หน้าซ้ายใหม่โผล่รอ
     }
     turn.hidden = false;
+  }
+  /* พลิกจบ = ย้ายไปหน้าปลายทางจริง แล้วเก็บแผ่นพลิกกลับที่ */
+  function finishFlip(target){
+    const turn = $('pd-turn'), book = $('pd-book');
+    pd.s = target;
+    renderSpread();                                          // เรนเดอร์จริงทั้งคู่ (รวม overlay ช่องคลิก)
+    turn.hidden = true;
+    turn.style.transition = 'none';
+    turn.style.transform = 'rotateY(0deg)';
+    book.classList.remove('fwd','bwd','dragging','settle');
+    book.style.removeProperty('--pdp');
+    pd.busy = false;
+  }
+  function cancelFlip(){                                      // ลากแล้วปล่อยกลางทาง = คืนหน้าเดิม
+    const turn = $('pd-turn'), book = $('pd-book');
+    turn.hidden = true;
+    turn.style.transition = 'none';
+    turn.style.transform = 'rotateY(0deg)';
+    book.classList.remove('fwd','bwd','dragging','settle');
+    book.style.removeProperty('--pdp');
+    pd.busy = false;
+    renderSpread();
+  }
+
+  function flipTo(target, dir){
+    if(pd.busy || target < 0 || target > maxSpread() || target === pd.s) return;
+    pd.busy = true;
+    prepFaces(target, dir);
+    const turn = $('pd-turn');
     turn.style.transition = 'none';
     turn.style.transform = 'rotateY(0deg)';
     void turn.offsetWidth;                                   // force reflow ก่อนเริ่ม transition
     turn.style.transition = 'transform .75s cubic-bezier(.35,.06,.28,.99)';
     turn.style.transform = `rotateY(${dir>0?-180:180}deg)`;
     flipSfx();
+    let fin = false;
     const done = ()=>{
+      if(fin) return; fin = true;
       turn.removeEventListener('transitionend', done);
-      pd.s = target;
-      renderSpread();                                        // เรนเดอร์จริงทั้งคู่ (รวม overlay ช่องคลิก)
-      turn.hidden = true;
-      book.classList.remove('fwd','bwd');
-      pd.busy = false;
+      finishFlip(target);
     };
     turn.addEventListener('transitionend', done);
-    setTimeout(()=>{ if(pd.busy) done(); }, 950);            // กันเหตุ transitionend หาย (แท็บพับ ฯลฯ)
+    setTimeout(done, 950);                                    // กันเหตุ transitionend หาย (แท็บพับ ฯลฯ)
+  }
+
+  /* ============================================================
+     👆 ปัด/ลากพลิกหน้า (รอบ 995 · ผู้ใช้สั่ง "เอาปุ่ม next/back ออก ใช้ปัดแทน")
+     แผ่นกระดาษหมุนตามนิ้วทีละองศาแบบหนังสือจริง (fliphtml5): ลากไปครึ่งทางแล้วเปลี่ยนใจ
+     ลากกลับได้ · ปล่อยเกินครึ่ง (หรือปัดเร็ว ๆ) = พลิกต่อจนสุด · ไม่ถึง = ไหลกลับที่เดิม
+     ============================================================ */
+  const dg = { id:null, x0:0, y0:0, on:false, dir:0, target:0, prog:0, t0:0, endAt:0 };
+  const halfW = ()=> Math.max(60, $('pd-book').clientWidth/2);
+
+  function setTurn(prog){
+    const turn = $('pd-turn'), book = $('pd-book');
+    turn.style.transform = `rotateY(${(dg.dir > 0 ? -180 : 180) * prog}deg)`;
+    book.style.setProperty('--pdp', Math.sin(Math.min(prog,1)*Math.PI).toFixed(3));
+  }
+  function dragDown(e){
+    if(pd.busy || !pd.opened || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    dg.id = e.pointerId; dg.x0 = e.clientX; dg.y0 = e.clientY;
+    dg.on = false; dg.prog = 0; dg.t0 = (performance && performance.now) ? performance.now() : Date.now();
+  }
+  function dragMove(e){
+    if(dg.id === null || e.pointerId !== dg.id) return;
+    const dx = e.clientX - dg.x0, dy = e.clientY - dg.y0;
+    if(!dg.on){
+      if(Math.abs(dx) < 12 || Math.abs(dx) <= Math.abs(dy)) return;   // ยังไม่ชัดว่าปัดแนวนอน
+      const dir = dx < 0 ? 1 : -1, target = pd.s + dir;
+      if(pd.busy || target < 0 || target > maxSpread()){ dg.id = null; return; }   // สุดเล่มแล้ว
+      pd.busy = true; dg.on = true; dg.dir = dir; dg.target = target;
+      prepFaces(target, dir);
+      const turn = $('pd-turn'), book = $('pd-book');
+      turn.style.transition = 'none';
+      book.classList.add('dragging'); book.classList.remove('settle');
+      try{ book.setPointerCapture(e.pointerId); }catch(_){}
+    }
+    dg.prog = Math.min(1, Math.max(0, (dg.dir > 0 ? -dx : dx) / halfW()));
+    setTurn(dg.prog);
+    e.preventDefault();
+  }
+  function dragUp(e){
+    if(dg.id === null || (e && e.pointerId !== dg.id)) return;
+    dg.id = null;
+    if(!dg.on) return;
+    dg.on = false;
+    const turn = $('pd-turn'), book = $('pd-book');
+    const dt = ((performance && performance.now) ? performance.now() : Date.now()) - dg.t0;
+    const go = dg.prog > 0.42 || (dg.prog > 0.1 && dt < 340);        // ปัดเร็วสั้น ๆ ก็ให้พลิก
+    const to = go ? 1 : 0, dur = Math.max(200, Math.round(640*Math.abs(to - dg.prog)));
+    book.classList.add('settle');
+    turn.style.transition = `transform ${dur}ms cubic-bezier(.25,.6,.3,1)`;
+    requestAnimationFrame(()=>{ setTurn(to); });
+    if(go) flipSfx();
+    dg.endAt = (performance && performance.now) ? performance.now() : Date.now();
+    let fin = false, tm = 0;
+    const end = ()=>{
+      if(fin) return; fin = true;
+      clearTimeout(tm);
+      turn.removeEventListener('transitionend', end);
+      dg.endAt = (performance && performance.now) ? performance.now() : Date.now();
+      if(go) finishFlip(dg.target); else cancelFlip();
+    };
+    turn.addEventListener('transitionend', end);
+    tm = setTimeout(end, dur + 260);
+  }
+  function bindDrag(){
+    const book = $('pd-book');
+    book.addEventListener('pointerdown', dragDown);
+    book.addEventListener('pointermove', dragMove);
+    book.addEventListener('pointerup', dragUp);
+    book.addEventListener('pointercancel', dragUp);
+    book.addEventListener('dragstart', e=>e.preventDefault());
   }
   const step = dir => flipTo(pd.s + dir, dir);
   const goTo = s   => flipTo(s, s > pd.s ? 1 : -1);
@@ -351,6 +536,7 @@
     sec.classList.add('quiz');
     $('pd-qbar').hidden = false;
     $('pd-quizbtn').hidden = true;
+    relayout();                      // แถบคำถามกินความสูงเวที → หนังสือต้องหดให้พอดีทันที
     qzScore();
     if(typeof sfx !== 'undefined') sfx.select();
     qzAsk();
@@ -364,6 +550,7 @@
     sec.classList.remove('quiz');
     $('pd-qbar').hidden = true;
     $('pd-quizbtn').hidden = false;
+    relayout();                      // แถบคำถามหายไป → คืนพื้นที่ให้หนังสือกางเต็มเหมือนเดิม
     qzCells().forEach(c=>c.classList.remove('qz-target','qz-ok','qz-no'));
     const earned = (typeof game !== 'undefined') ? game.sessionCoins : 0;
     if(!summary || earned <= 0 || !has('showSessionSummary')) return false;
@@ -466,6 +653,15 @@
   }
 
   /* ---------- เปิด/ปิดปก ---------- */
+  let hintT = 0;
+  function showHint(){                       // ไม่มีปุ่มลูกศรแล้ว ต้องบอกเด็กว่าพลิกยังไง
+    const h = $('pd-hint');
+    if(!h) return;
+    h.hidden = false;
+    h.style.animation = 'none'; void h.offsetWidth; h.style.animation = '';
+    clearTimeout(hintT);
+    hintT = setTimeout(()=>{ h.hidden = true; }, 2900);
+  }
   function openBook(){
     if(pd.opened) return;
     pd.opened = true;
@@ -476,6 +672,7 @@
       cl.hidden = true; cl.classList.remove('opening');
       bw.hidden = false;
       renderSpread();
+      showHint();
     }, 560);
   }
 
@@ -487,7 +684,7 @@
     if(pd.opened){ $('pd-closed').hidden = true; $('pd-bookwrap').hidden = false; }
     else         { $('pd-closed').hidden = false; $('pd-bookwrap').hidden = true; }
     if(has('showScreen')) showScreen('screen-picdict');
-    if(pd.opened) renderSpread(); else preload();
+    if(pd.opened){ renderSpread(); showHint(); } else preload();
   }
   function exit(){
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
@@ -539,6 +736,6 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, flipTo, goTo, sayCell, buildPages, renderSpread,
-                                      qzStart, qzStop, qzAsk, qzCells } };
+  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, dg, flipTo, goTo, step, sayCell, buildPages,
+                                      renderSpread, fitBook, qzStart, qzStop, qzAsk, qzCells } };
 })();

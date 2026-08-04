@@ -61,12 +61,12 @@ body #screen-picdict.screen.active{
 @keyframes pd-hint{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 #screen-picdict .pd-closed.opening .pd-cover{transform:rotateY(-108deg);opacity:0;transform-origin:left center;}
 
-/* ── 📖 หนังสือกาง ── */
-#screen-picdict .pd-bookwrap{display:flex;align-items:center;gap:6px;width:100%;height:100%;justify-content:center;padding:34px 4px 10px;}
+/* ── 📖 หนังสือกาง ──
+   ⚠️ ขนาดเล่ม (width/height) + ระยะขอบบน-ล่าง คำนวณด้วย fitBook() ใน js/picdict.js
+   (วัดจากจอจริงทุกครั้ง → กางเต็มความกว้าง + อยู่กึ่งกลางเป๊ะ) ห้ามตั้ง aspect-ratio ทับที่นี่ */
+#screen-picdict .pd-bookwrap{display:flex;align-items:center;gap:0;width:100%;height:100%;justify-content:center;padding:6px 0 8px;}
 #screen-picdict .pd-book{
-  position:relative;perspective:2400px;
-  height:min(100%, calc((100vw - 120px) * .75));   /* หน้าคู่สัดส่วน 4:3 (หน้าเดี่ยว 2:3) */
-  aspect-ratio:4/3;max-width:calc(100vw - 116px);
+  position:relative;perspective:2400px;touch-action:none;   /* ปัดพลิกหน้าได้ ไม่ให้เบราว์เซอร์แย่งท่าทาง */
   filter:drop-shadow(0 16px 30px rgba(0,0,0,.45));
 }
 /* กระดาษ: พื้นครีม + เงาโค้งเข้าหาสันหนังสือ */
@@ -115,18 +115,28 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-book.bwd .pd-cast{right:0;background:linear-gradient(90deg,rgba(50,30,5,.35),transparent 70%);animation:pd-cast .75s ease-in;}
 @keyframes pd-cast{0%{opacity:0}55%{opacity:0}80%{opacity:1}100%{opacity:0}}
 
-/* ── มุมพับกระดาษ (จุดกดพลิก) + ปุ่มลูกศร ── */
+/* 👆 รอบ 995: ลากพลิกตามนิ้ว (drag-follow) — เงาต้องเดินตามองศาที่ลากจริง ไม่ใช่ keyframes
+   --pdp = ความคืบหน้าการพลิก 0..1 (js ตั้งทุกเฟรม) */
+#screen-picdict .pd-book.dragging .pd-face::after{animation:none;opacity:calc(var(--pdp,0) * .85);}
+#screen-picdict .pd-book.dragging .pd-cast{animation:none;opacity:calc(var(--pdp,0) * .75);}
+#screen-picdict .pd-book.dragging.settle .pd-face::after,
+#screen-picdict .pd-book.dragging.settle .pd-cast{transition:opacity .3s linear;}
+
+/* ── มุมพับกระดาษ (จุดกดพลิก) ── */
 #screen-picdict .pd-corner{position:absolute;bottom:0;width:46px;height:46px;z-index:7;cursor:pointer;}
 #screen-picdict .pd-corner-r{right:0;background:linear-gradient(315deg,#e9dfc2 0 12px,transparent 12px);border-radius:0 0 10px 0;}
 #screen-picdict .pd-corner-l{left:0;background:linear-gradient(45deg,#e9dfc2 0 12px,transparent 12px);border-radius:0 0 0 10px;}
 #screen-picdict .pd-corner-r:hover{background:linear-gradient(315deg,#d9cba0 0 18px,transparent 18px);}
 #screen-picdict .pd-corner-l:hover{background:linear-gradient(45deg,#d9cba0 0 18px,transparent 18px);}
-#screen-picdict .pd-arrow{
-  flex:0 0 auto;width:44px;height:44px;border:none;border-radius:50%;cursor:pointer;z-index:8;
-  font-size:26px;line-height:1;font-weight:900;color:#6d4c1b;background:#ffe9b0;
-  box-shadow:0 3px 8px rgba(0,0,0,.35);
+/* 👆 ป้ายบอกวิธีพลิก (ขึ้นตอนเปิดหนังสือ แล้วหายเอง — ปุ่มลูกศรถูกถอดออกรอบ 995) */
+#screen-picdict .pd-hint{
+  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:12;pointer-events:none;
+  background:rgba(40,24,8,.72);color:#ffe9b0;border-radius:99px;padding:6px 16px;
+  font-size:clamp(12px,2.6vh,15px);font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.35);
+  animation:pd-hintfade 2.8s ease forwards;
 }
-#screen-picdict .pd-arrow:active{transform:scale(.92);}
+@keyframes pd-hintfade{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}
+                       75%{opacity:1}100%{opacity:0}}
 
 /* ── เนื้อหาหน้า: หัวเรื่อง + ภาพแผ่น + เลขหน้า ── */
 #screen-picdict .pd-ph{
@@ -136,8 +146,11 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-ph b{font-size:1.05em;}
 #screen-picdict .pd-ph span{font-size:.82em;color:#a08b5a;}
 #screen-picdict .pd-imgbox{position:relative;flex:1;min-height:0;}
+/* 🖼️ รอบ 995: แผ่นภาพ "เต็มหน้ากระดาษ" (object-fit:fill) — fitBook() คุมไม่ให้ยืดเกิน
+   PD_STRETCH (ดู js/picdict.js) จึงไม่บิดเบี้ยว · เดิม contain ทำให้เหลือขอบว่างข้างละ ~30px
+   ภาพเลยดูบีบแคบกว่าหน้ากระดาษจริง */
 #screen-picdict .pd-imgbox img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+  position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
   -webkit-user-drag:none;user-select:none;
 }
 #screen-picdict .pd-pno{
@@ -184,8 +197,10 @@ body #screen-picdict.screen.active{
    🎧 โหมดครูถามศัพท์ (รอบ 994)
    แถบคำถามอยู่บนสุด · ตัวหนังสือกางอยู่ใต้แถบตามเดิม (แถบไม่ทับหนังสือ — pd-stage ยืดตาม)
    ============================================================ */
+/* 🆕 รอบ 995: ย้ายมา "ซ้อนใต้ปุ่มสารบัญ" แทนการวางเรียงข้างกัน — เรียงข้างกันกินความกว้าง
+   มุมบนขวาไปเกือบ 220px ทำให้ fitBook ต้องหดหนังสือลงเยอะ (ปุ่มห้ามทับหน้ากระดาษ) */
 #screen-picdict .pd-quiz-btn{
-  position:absolute;top:8px;right:112px;z-index:9;border:none;border-radius:12px;
+  position:absolute;top:50px;right:8px;z-index:9;border:none;border-radius:12px;
   padding:8px 13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
   background:#2e7d32;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.28);
 }
@@ -232,13 +247,12 @@ body #screen-picdict.screen.active{
 
 /* ── จอเตี้ย (มือถือแนวนอน 812×375) ── */
 @media (max-height:430px){
-  #screen-picdict .pd-quiz-btn{top:4px;right:88px;padding:5px 9px;font-size:12px;}
+  #screen-picdict .pd-quiz-btn{top:36px;right:6px;padding:5px 9px;font-size:12px;}
   #screen-picdict .pd-qbar{margin:3px 6px 0 78px;padding:4px 8px;gap:6px;}
   #screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:4px 9px;}
   #screen-picdict .pd-q-coin,#screen-picdict .pd-q-combo{padding:3px 8px;}
-  #screen-picdict .pd-bookwrap{padding-top:6px;}
   #screen-picdict .back-btn,#screen-picdict .pd-toc-btn{top:4px;padding:5px 9px;font-size:12px;}
-  #screen-picdict .pd-arrow{width:34px;height:34px;font-size:20px;}
   #screen-picdict .pd-page,#screen-picdict .pd-face{padding:5px 6px 2px;}
+  #screen-picdict .pd-hint{bottom:4px;padding:4px 12px;}
   #screen-picdict .pd-corner{width:34px;height:34px;}
 }
