@@ -203,7 +203,8 @@
     if(!availW) return;                                  // ยังไม่ได้โชว์จอ — เดี๋ยว open()/resize เรียกซ้ำ
     let used = 0;                                        // ความสูงของทุกอย่างที่ไม่ใช่กริด (หัว/แถบเวลา/ป้าย/โน้ต)
     [...sec.children].forEach(el=>{
-      if(!el.classList.contains('pm-grid') && el.offsetHeight) used += el.offsetHeight + 6;
+      // 🐱 ปุ่มน้องแมวลอยมุมล่างขวา (position:absolute) ไม่กิน flow แล้ว → ไม่นับความสูงมาจอง
+      if(!el.classList.contains('pm-grid') && el.offsetHeight && getComputedStyle(el).position !== 'absolute') used += el.offsetHeight + 6;
     });
     const availH = Math.max(60, window.innerHeight - sec.getBoundingClientRect().top - used - 10);
     const gap = n > 40 ? 4 : n > 16 ? 6 : 8;
