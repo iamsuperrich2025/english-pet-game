@@ -272,3 +272,40 @@ PICDICT_WORDS['Places.png'] = {cols:8, rows:8, words:[
   ["Farm","ฟาร์ม"],["Greenhouse","เรือนกระจก"],["Swimming Pool","สระว่ายน้ำ"],["Gym","ยิม"],["Stadium","สนามกีฬา"],["Golf Course","สนามกอล์ฟ"],["Tennis Court","สนามเทนนิส"],["Skate Park","สเกตพาร์ก"],
   ["Church","โบสถ์"],["Temple","วัด"],["Mosque","มัสยิด"],["Shrine","ศาลเจ้า"],["Cemetery","สุสาน"],["Lighthouse","ประภาคาร"],["Lookout Point","จุดชมวิว"],["Observatory","หอดูดาว"],
 ]};
+
+PICDICT_WORDS['Prepositions.png'] = {cols:8, rows:5, words:[
+  ["in","ใน"],["on","บน"],["under","ใต้"],["next to","ข้างๆ"],["between","ระหว่าง"],["in front of","หน้าของ"],["behind","ข้างหลัง"],["at","ที่"],
+  ["above","เหนือ"],["below","ใต้"],["up","ขึ้น"],["down","ลง"],["inside","ข้างใน"],["outside","ข้างนอก"],["over","เหนือ"],["under","ใต้"],
+  ["before","ก่อน"],["after","หลัง"],["for","สำหรับ"],["to","ถึง"],["of","ของ"],["with","กับ"],["without","โดยไม่มี"],["like","เหมือน"],
+  ["into","เข้าไปใน"],["out of","ออกจาก"],["near","ใกล้"],["far","ไกล"],["close to","ใกล้กับ"],["far from","ไกลจาก"],["through","ผ่าน"],["throughout","ทั่วทั้ง"],
+  ["on top of","บนสุดของ"],["underneath","ใต้สุดของ"],["against","ชิดกับ"],["beside","ข้างๆ"],["across","ข้าม"],["along","ตามแนว"],["around","รอบๆ"],["toward","ไปทาง"],
+]};
+
+PICDICT_WORDS['Safety Signs.png'] = {cols:8, rows:5, words:[
+  ["No Smoking","ห้ามสูบบุหรี่"],["No Open Flame","ห้ามก่อไฟ"],["No Eating or Drinking","ห้ามกินหรือดื่ม"],["Do Not Enter","ห้ามเข้า"],["Do Not Touch","ห้ามจับ"],["Warning","คำเตือน"],["High Voltage","ไฟฟ้าแรงสูง"],["Slippery Floor","พื้นลื่น"],
+  ["Falling Objects","ระวังวัตถุตก"],["Fire Hazard","อันตรายจากไฟ"],["Toxic Hazard","อันตรายสารพิษ"],["Corrosive Material","สารกัดกร่อน"],["Explosive Material","วัตถุระเบิด"],["Biohazard","อันตรายชีวภาพ"],["Radiation Hazard","อันตรายรังสี"],["Beware of Dog","ระวังสุนัข"],
+  ["First Aid","ปฐมพยาบาล"],["Emergency Exit","ทางออกฉุกเฉิน"],["Exit","ทางออก"],["Assembly Point","จุดรวมพล"],["Emergency Shower","ฝักบัวฉุกเฉิน"],["Eye Wash","ล้างตาฉุกเฉิน"],["Wear Helmet","สวมหมวกนิรภัย"],["Wear Goggles","สวมแว่นตา"],
+  ["Wear Ear Protection","สวมที่ปิดหู"],["Wear Mask","สวมหน้ากาก"],["Wear Gloves","สวมถุงมือ"],["Wear Safety Shoes","สวมรองเท้านิรภัย"],["Wear Vest","สวมเสื้อสะท้อนแสง"],["Wear Safety Harness","สวมเข็มขัดนิรภัย"],["Wash Hands","ล้างมือ"],["Fasten Seat Belt","คาดเข็มขัดนิรภัย"],
+  ["Fire Extinguisher","ถังดับเพลิง"],["Fire Hose Reel","สายฉีดน้ำดับเพลิง"],["Fire Alarm","สัญญาณเตือนอัคคีภัย"],["Emergency Phone","โทรศัพท์ฉุกเฉิน"],["Fire Exit","ทางหนีไฟ"],["Fire Ladder","บันไดหนีไฟ"],["Push Bar to Open","ผลักเพื่อเปิด"],["Push Button in Emergency","กดปุ่มในกรณีฉุกเฉิน"],
+]};
+
+PICDICT_WORDS['School.png'] = {cols:8, rows:8, words:[
+  ["Backpack","กระเป๋าเป้"],["Pencil","ดินสอ"],["Pen","ปากกา"],["Eraser","ยางลบ"],["Sharpener","กบเหลาดินสอ"],["Ruler","ไม้บรรทัด"],["Notebook","สมุดโน้ต"],["Book","หนังสือ"],
+  ["Crayons","สีเทียน"],["Colored Pencils","ดินสอสี"],["Highlighter","ปากกาเน้นข้อความ"],["Scissors","กรรไกร"],["Glue Stick","กาวแท่ง"],["Glue","กาว"],["Tape","เทปใส"],["Calculator","เครื่องคิดเลข"],
+  ["Folder","แฟ้มเอกสาร"],["Clipboard","แผ่นรองเขียน"],["Pencil Case","กล่องดินสอ"],["Lunch Box","กล่องข้าว"],["Water Bottle","ขวดน้ำ"],["Apple","แอปเปิล"],["Chalkboard","กระดานดำ"],["Whiteboard","กระดานไวท์บอร์ด"],
+  ["Teacher","ครู"],["Student","นักเรียน"],["Desk","โต๊ะเรียน"],["Chair","เก้าอี้"],["School","โรงเรียน"],["Classroom","ห้องเรียน"],["Library","ห้องสมุด"],["Computer","คอมพิวเตอร์"],
+  ["Globe","ลูกโลก"],["Microscope","กล้องจุลทรรศน์"],["Science","วิทยาศาสตร์"],["Ball","ลูกบอล"],["Paint","สี"],["Art","ศิลปะ"],["Music","ดนตรี"],["Magnifying Glass","แว่นขยาย"],
+  ["Map","แผนที่"],["Compass","เข็มทิศ"],["Protractor","โปรแทรกเตอร์"],["Set Square","ฉากสามเหลี่ยม"],["Chart","แผนภูมิ"],["Sticky Notes","กระดาษโน้ต"],["Binder Clip","คลิปหนีบกระดาษ"],["Paper Clip","ลวดเสียบกระดาษ"],
+  ["Push Pin","หมุด"],["Stapler","เครื่องเย็บกระดาษ"],["Stamp","ตราประทับ"],["Name Tag","ป้ายชื่อ"],["Attendance","การมาเรียน"],["Homework","การบ้าน"],["Test","แบบทดสอบ"],["Certificate","เกียรติบัตร"],
+  ["Bell","กระดิ่ง"],["Clock","นาฬิกา"],["Agenda","สมุดวางแผน"],["Calendar","ปฏิทิน"],["Uniform","ชุดนักเรียน"],["Cafeteria","โรงอาหาร"],["School Bus","รถโรงเรียน"],["Playground","สนามเด็กเล่น"],
+]};
+
+PICDICT_WORDS['SeaAnimals.png'] = {cols:8, rows:7, words:[
+  ["Whale","วาฬ"],["Dolphin","โลมา"],["Sea Turtle","เต่าทะเล"],["Shark","ฉลาม"],["Ray","กระเบน"],["Octopus","ปลาหมึกยักษ์"],["Squid","ปลาหมึก"],["Jellyfish","แมงกะพรุน"],
+  ["Seahorse","ม้าน้ำ"],["Clownfish","ปลาการ์ตูน"],["Blue Tang","ปลาบลูแทง"],["Pufferfish","ปลาปักเป้า"],["Starfish","ปลาดาว"],["Sea Urchin","เม่นทะเล"],["Sand Dollar","เหรียญทะเล"],["Seashell","เปลือกหอย"],
+  ["Crab","ปู"],["Lobster","กุ้งมังกร"],["Shrimp","กุ้ง"],["Prawn","กุ้งแชบ๊วย"],["Hermit Crab","ปูเสฉวน"],["Sea Snail","หอยทากทะเล"],["Conch","หอยสังข์"],["Mussel","หอยแมลงภู่"],
+  ["Oyster","หอยนางรม"],["Scallop","หอยเชลล์"],["Clam","หอยตลับ"],["Abalone","หอยเป๋าฮื้อ"],["Nudibranch","ทากทะเล"],["Cuttlefish","หมึกกระดอง"],["Sea Anemone","ดอกไม้ทะเล"],["Coral","ปะการัง"],
+  ["Lionfish","ปลาสิงโต"],["Angelfish","ปลาเทวดา"],["Butterflyfish","ปลาผีเสื้อ"],["Parrotfish","ปลานกแก้ว"],["Moray Eel","ปลาไหลมอเรย์"],["Tuna","ปลาทูน่า"],["Swordfish","ปลากระโทงร่ม"],["Sailfish","ปลากระโทงเกง"],
+  ["Marlin","ปลามาร์ลิน"],["Mahi Mahi","ปลาหางนกยูง"],["Grouper","ปลากะพง"],["Snapper","ปลากะพงแดง"],["Barracuda","ปลากุเลา"],["Flying Fish","ปลาบิน"],["Seadragon","มังกรทะเล"],["Sea Cucumber","ปลิงทะเล"],
+  ["Manta Ray","ปลากระเบนราหู"],["Whale Shark","ฉลามวาฬ"],["Dugong","พะยูน"],["Orca","วาฬเพชฌฆาต"],["Beluga","วาฬเบลูก้า"],["Harp Seal","แมวน้ำ"],["Sea Lion","สิงโตทะเล"],["Walrus","วอลรัส"],
+]};
