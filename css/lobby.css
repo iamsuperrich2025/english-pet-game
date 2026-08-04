@@ -2265,7 +2265,7 @@ html.no-anim .cs-big-img{animation:none}
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
 .fp-act:active{transform:scale(.95);}
 .fp-like.on{background:rgba(120,240,192,.13);border-color:rgba(120,240,192,.5);color:#bff5df;}
-.fp-act[disabled]{opacity:.45;cursor:default;}
+.fp-act[disabled],.fp-act.fp-like-locked{opacity:.45;cursor:default;}
 /* จอเตี้ย (มือถือแนวนอน 812×375): กล่องฟีดเหลือ ~160px — ตัดส่วนสรุป+บีบทุกช่องว่างให้การ์ดพอดีไม่มี scrollbar */
 @media (max-height:430px){
   .feed-list.feed-deck .fp-sum{display:none;}
@@ -3129,7 +3129,14 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .settings-box .set-hint{margin:0 0 clamp(4px,1vh,8px);font-size:clamp(10px,1.7vh,11.5px);flex:0 0 auto;}
 .set-tabs{display:flex;gap:6px;flex:0 0 auto;margin-bottom:clamp(6px,1.4vh,10px);}
 /* ⚠️ ต้อง .set-tabs .lb-tab (specificity 0,2,0) ไม่งั้นแพ้ .levelup-box button (0,1,1) เหมือนบทเรียนรอบ 803/886 */
-.set-tabs .lb-tab{flex:1;margin-top:0;padding:clamp(6px,1.5vh,9px) 4px;font-size:clamp(11.5px,2.4vh,13.5px);box-shadow:none;}
+/* 🔘 รอบ 1010: เดิม box-shadow:none ทับ .lb-tab.active (คนละ rule แต่ specificity เท่ากัน+มาทีหลัง) ทำให้แท็บที่เลือกอยู่ไม่มีเงาแยกจากแท็บอื่นเลย
+   ผู้ใช้บอก "แทบไม่รู้ว่าปุ่มไหนกด ปุ่มไหนกดได้" → เพิ่มกรอบให้ทุกแท็บดูกดได้ (affordance) + คืนเงา/ไฮไลต์ให้แท็บ active เด่นชัด + เอฟเฟกต์กดยุบตอนแตะ */
+.set-tabs .lb-tab{flex:1;margin-top:0;padding:clamp(6px,1.5vh,9px) 4px;font-size:clamp(11.5px,2.4vh,13.5px);
+  background:#efe7fb;color:#7a68a0;box-shadow:inset 0 0 0 1.5px rgba(154,111,220,.4),0 1px 0 rgba(154,111,220,.15);
+  transition:background .15s,color .15s,box-shadow .15s,transform .1s;}
+.set-tabs .lb-tab:active{transform:scale(.95);}
+.set-tabs .lb-tab.active{background:linear-gradient(180deg,#c39df0,#9a6fdc);color:#fff;
+  box-shadow:0 3px 0 #7d5fc0,inset 0 0 0 1.5px rgba(255,255,255,.5);}
 .set-panels{flex:1 1 auto;min-height:0;overflow:hidden;}
 .set-panel{display:none;}
 /* overflow-y:auto = ตาข่ายกันตาย ไม่ใช่การออกแบบให้เลื่อน — ทุกขนาดจอที่รองรับต้องพอดีอยู่แล้ว (วัดแล้ว 1311×613 / 812×375)
@@ -3208,12 +3215,13 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .settings-box .strip-arrow{background:linear-gradient(180deg,#b18cf0,#8a5fd6);border-color:#e7dbff;}
 /* 🐛 รอบ 803: .levelup-box button (specificity 0,1,1) ทับ background ของ .blk-mini (0,1,0) กลายเป็นสีม่วงเข้มแทนการ์ดม่วงอ่อนที่ตั้งใจ — ประกาศ background ซ้ำที่นี่ (specificity 0,2,0 ชนะ) */
 .settings-box .blk-mini{padding:6px;border-radius:16px;width:100%;background:#f6f0ff;border:2px solid #e0d4f0;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;}
 .settings-box .blk-mini.sel{background:linear-gradient(180deg,#fff9e0,#ffedb8);border-color:#e0a020;}
-/* สูงคุมด้วย vh (รูปใหญ่แต่ไม่ล้นกรอบจอเตี้ย) · width:auto+aspect-ratio กันรูปยุบ 0px + จองที่ก่อนรูปโหลด
-   🏷️ รอบ 893: อยู่แท็บเดี่ยว+แถวเดียวแล้ว มีที่สูงเหลือมากขึ้น ขยับช่วง vh ขึ้นจากเดิม (11→15) ให้รูปใหญ่ขึ้น */
-.settings-box .blk-mini img{width:auto;height:clamp(62px,15vh,120px);aspect-ratio:341/512;}
-.settings-box .blk-mini .blk-cap{display:flex;flex-direction:column;align-items:center;line-height:1.12;width:100%;overflow:hidden;}
+/* 🖼️ รอบ 1010: เดิม height คุมด้วย vh ล้วน (สูงสุด 120px) ทำให้รูปเล็กจิ๋วกลางป้ายที่เหลือที่ว่างเยอะมาก (ผู้ใช้: "ปรับตัวละครให้ใหญ่กว่านี้ จนเกือบเต็มป้าย")
+   → เปลี่ยนเป็น flex:1 กินพื้นที่สูงที่เหลือในป้าย (การ์ดสูงเท่าไรก็ขยายตาม) หลังหักพื้นที่คำบรรยายท้ายป้าย (.blk-cap) แล้ว
+   grid1x5 ทำให้ .blk-mini มีความสูงแน่นอนอยู่แล้ว (align-items:stretch เริ่มต้นของ grid) จึง flex-grow ได้ปกติ */
+.settings-box .blk-mini img{width:auto;max-width:100%;flex:1 1 auto;min-height:0;object-fit:contain;aspect-ratio:341/512;}
+.settings-box .blk-mini .blk-cap{display:flex;flex-direction:column;align-items:center;line-height:1.12;width:100%;overflow:hidden;flex:0 0 auto;}
 .settings-box .blk-mini .blk-cap-en{font-size:clamp(9px,1.25vh,11px);color:#5a3f8f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .settings-box .blk-mini .blk-cap-pron{font-size:clamp(8px,1.1vh,9.5px);color:#b0791f;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
 .settings-box .blk-mini .blk-cap-th{font-size:clamp(8.5px,1.2vh,10px);color:#8a72b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
