@@ -143,7 +143,7 @@
         <div class="pd-zoom" id="pd-zoom" hidden>
           <div class="pd-zoom-card">
             <button class="pd-zoom-close" id="pd-zoom-close" title="ปิด">✕</button>
-            <canvas id="pd-zoom-canvas"></canvas>
+            <canvas class="pd-zoom-canvas" id="pd-zoom-canvas"></canvas>
             <div class="pd-zoom-label"><b id="pd-zoom-en"></b><span id="pd-zoom-th"></span></div>
           </div>
         </div>
