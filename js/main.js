@@ -390,6 +390,7 @@ document.addEventListener('visibilitychange', ()=>{
     book:'#btn-vocab-book', cats:'#btn-cats', play:'#btn-play', bandexam:'#btn-band-exam',
     picmatch:'#btn-picmatch',                 // 🖼️ รอบ 977: เกมจับคู่ภาพ (ตึกในเมือง 3D → ปุ่มในล็อบบี้)
     picdict:'#btn-picdict',                   // 📖 รอบ 992: หนังสือ Picture Dictionary
+    picquiz:'#btn-picquiz',                   // 🎧 รอบ 994: โหมดครูถามศัพท์ในหนังสือ
     chat:'#btn-chat',
     ielts:'[data-xstd="ielts"]', toeic:'[data-xstd="toeic"]', toefl:'[data-xstd="toefl"]',
   };

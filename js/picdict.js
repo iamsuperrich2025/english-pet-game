@@ -75,6 +75,17 @@
     sec.innerHTML = `
       <button class="back-btn" id="pd-back">⬅ กลับ</button>
       <button class="pd-toc-btn" id="pd-tocbtn" title="กลับไปหน้าสารบัญ">📑 สารบัญ</button>
+      <!-- 🎧 รอบ 994: โหมดครูถามศัพท์ — ครูอ่านคำ เด็กแตะการ์ดให้ถูก ได้เหรียญเหมือนมินิเกมอื่น -->
+      <button class="pd-quiz-btn" id="pd-quizbtn" title="ครูอ่านคำ แล้วหนูแตะการ์ดให้ถูก">🎧 ครูถามศัพท์</button>
+      <div class="pd-qbar" id="pd-qbar" hidden>
+        <button class="pd-q-replay" id="pd-qreplay" title="ฟังอีกครั้ง">🔊 ฟังอีกที</button>
+        <div class="pd-q-ask" id="pd-qask">ครูกำลังอ่านคำ… ตั้งใจฟังนะ</div>
+        <div class="pd-q-score">
+          <span class="pd-q-coin" id="pd-qcoin">0 🪙</span>
+          <span class="pd-q-combo" id="pd-qcombo">Combo ×0</span>
+        </div>
+        <button class="pd-q-quit" id="pd-qquit" title="ออกจากโหมดครูถาม">✕ เลิกถาม</button>
+      </div>
       <div class="pd-stage" id="pd-stage">
         <!-- 📕 หนังสือปิดอยู่ (หน้าปก) -->
         <div class="pd-closed" id="pd-closed">
@@ -119,6 +130,9 @@
     $('pd-cr').addEventListener('click', ()=>step(1));
     $('pd-cl').addEventListener('click', ()=>step(-1));
     $('pd-tocbtn').addEventListener('click', ()=>{ if(pd.opened) goTo(0); });
+    $('pd-quizbtn').addEventListener('click', qzStart);
+    $('pd-qquit').addEventListener('click', ()=>qzStop(true));
+    $('pd-qreplay').addEventListener('click', qzReplay);
     /* จอเปลี่ยนขนาด/หมุนจอ → ตารางช่องคลิกต้องวางใหม่ให้ตรงภาพ
        ใช้ ResizeObserver เกาะตัวหนังสือ (อีเวนต์ resize ของ window มาไม่ถึงในบางเบราว์เซอร์/preview) */
     let rzT = 0;
@@ -192,6 +206,7 @@
           const c = document.createElement('button');
           c.className = 'pd-cell'; c.type = 'button';
           c.title = `${en} · ${th}`;
+          c.dataset.en = en; c.dataset.th = th;      // 🎧 รอบ 994: โหมดครูถามใช้หาช่องคำตอบ
           c.addEventListener('click', ev=>{ ev.stopPropagation(); sayCell(c, en, th); });
           ov.appendChild(c);
         });
@@ -203,8 +218,12 @@
   /* ---------- 🔊 แตะการ์ด = อ่านออกเสียง + บอลลูนคำ ---------- */
   let balloonT = 0;
   function sayCell(cell, en, th){
+    if(qz.on){ qzAnswer(cell, en, th); return; }   // 🎧 โหมดครูถามศัพท์ — แตะ = ตอบคำถาม
     if(has('speakWord')) speakWord(en);
     cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
+    showBalloon(cell, en, th);
+  }
+  function showBalloon(cell, en, th){
     const b = $('pd-balloon'), st = $('pd-stage');
     if(!b || !st) return;
     b.innerHTML = `🔊 <b>${esc(en)}</b><span>${esc(th)}</span>`;
@@ -235,6 +254,8 @@
     renderInto($('pd-pr'), pd.s*2+1);
     updateStacks();
     preload();
+    // 🎧 พลิกหน้าระหว่างโหมดครูถาม = ถามคำใหม่จากหน้าที่เห็นตอนนี้ (รอภาพวางช่องเสร็จก่อน)
+    if(qz.on) setTimeout(qzAsk, 260);
   }
   function updateStacks(){
     const m = maxSpread();
@@ -297,6 +318,153 @@
   const step = dir => flipTo(pd.s + dir, dir);
   const goTo = s   => flipTo(s, s > pd.s ? 1 : -1);
 
+  /* ============================================================
+     🎧 โหมดครูถามศัพท์ (รอบ 994 · ผู้ใช้สั่ง)
+     ครูอ่านคำอังกฤษ 1 คำ → เด็กแตะการ์ดบนหน้าที่กางอยู่ให้ถูก
+     · คำถามสุ่มจาก "การ์ดที่มองเห็นอยู่ตอนนี้" เท่านั้น (2 หน้าที่กาง) — เด็กหาเจอได้จริง
+     · ถูก = เหรียญ/EXP/RP/คอมโบ/แต้มโรงงาน **สูตรเดียวกับเกมจับคู่ภาพทุกบรรทัด**
+       (ตัวนับ game.* + addSessionCoins + showSessionSummary ชุดเดียวกัน สถิติจึงรวมกัน)
+     · ผิด 2 ครั้งในคำเดียว = การ์ดคำตอบเรืองให้เห็น (ไม่ปล่อยให้เด็กจมอยู่กับคำเดียว)
+     · พลิกหน้าระหว่างเล่นได้ — คำถามเปลี่ยนตามหน้าใหม่เอง
+     ============================================================ */
+  const qz = { on:false, cur:null, wrong:0, lock:false, asked:0, right:0 };
+
+  const qzCells = ()=> [ ...$('pd-pl').querySelectorAll('.pd-cell'),
+                         ...$('pd-pr').querySelectorAll('.pd-cell') ].filter(c=>c.dataset.en);
+
+  function qzStart(){
+    if(!pd.opened) return;
+    if(qzCells().length < 2){
+      if(has('toast')) toast('📖 หน้านี้ยังไม่มีคำให้ครูถาม ลองพลิกไปหน้าที่มีการ์ดคำก่อนนะ', 2200);
+      return;
+    }
+    if(qz.on) return;
+    qz.on = true; qz.asked = 0; qz.right = 0;
+    /* ตัวนับ "ครั้งนี้" ชุดเดียวกับเกมจับคู่คำศัพท์/จับคู่ภาพ (สถิติสัปดาห์+ตลอดกาลนับรวมกัน) */
+    if(typeof game !== 'undefined'){
+      game.combo = 0; game.sessionCoins = 0; game.sessionMatches = 0;
+      game.sessMilestone = 0; game.beatBestShown = false;
+      if(has('rolloverWeekBest')) rolloverWeekBest();
+      game.prevBest = state.weekBestCoins || 0;
+      game.prevAllBest = state.bestSessionCoins || 0;
+    }
+    sec.classList.add('quiz');
+    $('pd-qbar').hidden = false;
+    $('pd-quizbtn').hidden = true;
+    qzScore();
+    if(typeof sfx !== 'undefined') sfx.select();
+    qzAsk();
+  }
+
+  /* ปิดโหมด · คืน true ถ้าโชว์การ์ดสรุปรอบ (ผู้เรียกจะได้ไม่เด้งหน้าจอซ้อนการ์ด)
+     onClose = สิ่งที่ทำเมื่อกด "ออกไปพัก" บนการ์ดสรุป (กดเลิกถาม = อยู่ในหนังสือต่อ · กดกลับ = ออกไปล็อบบี้) */
+  function qzStop(summary, onClose){
+    if(!qz.on) return false;
+    qz.on = false; qz.cur = null; qz.lock = false;
+    sec.classList.remove('quiz');
+    $('pd-qbar').hidden = true;
+    $('pd-quizbtn').hidden = false;
+    qzCells().forEach(c=>c.classList.remove('qz-target','qz-ok','qz-no'));
+    const earned = (typeof game !== 'undefined') ? game.sessionCoins : 0;
+    if(!summary || earned <= 0 || !has('showSessionSummary')) return false;
+    if(has('feedEvent')) feedEvent('coin', `ครูถามศัพท์ในหนังสือภาพ ตอบถูก ${qz.right} คำ ได้ ${has('fmtNum')?fmtNum(earned):earned} เหรียญ 🎧`);
+    const isRecord = earned > (game.prevBest || 0);
+    const allTime  = isRecord && earned > (game.prevAllBest || 0);
+    showSessionSummary(earned, qz.right, isRecord, allTime, onClose || (()=>{}), qzStart);
+    return true;
+  }
+
+  function qzAsk(){
+    if(!qz.on) return;
+    const cells = qzCells();
+    if(cells.length < 2){        // พลิกมาหน้าที่ยังไม่มีคำ — รอจนกว่าจะพลิกไปหน้าที่มี
+      qz.cur = null;
+      $('pd-qask').innerHTML = '📖 หน้านี้ยังไม่มีการ์ดคำ — พลิกไปหน้าที่มีการ์ดต่อได้เลย';
+      return;
+    }
+    cells.forEach(c=>c.classList.remove('qz-target','qz-ok','qz-no'));
+    let pick = cells[Math.floor(Math.random()*cells.length)];
+    if(qz.cur && cells.length > 1){          // กันถามคำเดิมซ้ำติดกัน
+      let guard = 0;
+      while(pick.dataset.en === qz.cur.en && guard++ < 12)
+        pick = cells[Math.floor(Math.random()*cells.length)];
+    }
+    qz.cur = { en:pick.dataset.en, th:pick.dataset.th };
+    qz.wrong = 0; qz.lock = false; qz.asked++;
+    $('pd-qask').innerHTML = `👂 ครูถามคำที่ <b>${qz.asked}</b> — แตะการ์ดที่ครูอ่านให้ถูกนะ`;
+    setTimeout(qzReplay, 260);               // ให้ป้ายขึ้นก่อนแล้วค่อยอ่าน
+  }
+  function qzReplay(){
+    if(qz.on && qz.cur && has('speakWord')) speakWord(qz.cur.en);
+  }
+
+  function qzAnswer(cell, en, th){
+    if(!qz.cur || qz.lock) return;
+    if(en !== qz.cur.en){                    // ❌ ตอบผิด
+      qz.wrong++;
+      if(typeof game !== 'undefined') game.combo = 0;
+      qzScore();
+      cell.classList.remove('qz-no'); void cell.offsetWidth; cell.classList.add('qz-no');
+      if(typeof sfx !== 'undefined') sfx.wrong();
+      $('pd-qask').innerHTML = qz.wrong >= 2
+        ? `💡 คำตอบเรืองอยู่ตรงนั้น — แตะการ์ดนั้นได้เลย`
+        : `ยังไม่ใช่นะ ลองอีกครั้ง! (แตะ <b>🔊 ฟังอีกที</b> ได้)`;
+      if(qz.wrong >= 2){                     // ผิด 2 ครั้ง = เฉลยด้วยการเรืองการ์ด
+        const ans = qzCells().find(c=>c.dataset.en === qz.cur.en);
+        if(ans) ans.classList.add('qz-target');
+      }else{
+        setTimeout(qzReplay, 400);
+      }
+      return;
+    }
+
+    /* ✅ ตอบถูก — สูตรรางวัลชุดเดียวกับ js/picmatch.js (จับคู่ 1 คู่ = ตอบถูก 1 คำ) */
+    qz.lock = true; qz.right++;
+    cell.classList.remove('qz-no'); cell.classList.add('qz-ok');
+    if(typeof game !== 'undefined'){ game.combo++; game.sessionMatches++; }
+    if(typeof state !== 'undefined'){
+      state.totalMatches++;
+      state.pmPairs = (state.pmPairs || 0) + 1;
+      state.pmScore = Math.round((state.pmScore || 0) + 2);
+    }
+    if(has('questEvent')) questEvent('match');
+    if(has('vbRecord')) vbRecord(en, th, true);
+
+    const p = has('activePet') ? activePet() : null;
+    let coins = 10, exp = 5; const rp = 2, notes = [];
+    if(p && p.type === 'dragon' && has('abilityOn') && abilityOn(p) && game.combo >= 3){ coins *= 2; notes.push('🔥ไฟลุก x2'); }
+    if(state.phone && !state.netCut && typeof PHONE_BONUS !== 'undefined'){ coins += PHONE_BONUS; notes.push(`📱 มือถือ +${PHONE_BONUS}`); }
+    if(!p) exp = 0;
+    else if(p.sick){ exp = 0; notes.push('🤒 ป่วยอยู่ ไม่ได้ EXP'); }
+    else if(p.shape === 'strong' && typeof SHAPE_EXP_BONUS !== 'undefined'){ exp += SHAPE_EXP_BONUS; notes.push(`💪 ล่ำกำยำ +${SHAPE_EXP_BONUS} EXP`); }
+    if(has('addCoins')) addCoins(coins);
+    if(has('addSessionCoins')) addSessionCoins(coins);
+    if(has('addRP')) addRP(rp);
+    if(has('addCraft')){
+      const made = addCraft(1);
+      if(made && has('showCollectReveal')) setTimeout(()=>showCollectReveal(made, null, true), 650);
+    }
+    if(typeof sfx !== 'undefined'){ sfx.correct(); sfx.coin(); }
+    if(has('floatFx')) floatFx(`+${coins} 🪙 +${rp} RP${exp > 0 ? ` +${exp} EXP` : ''}`, '#f2994a');
+    if(game.combo >= 2 && has('floatFx')) setTimeout(()=>floatFx(`🔥 COMBO ×${game.combo}!`, '#ff6fa7'), 250);
+    if(notes.length && has('toast')) setTimeout(()=>toast(notes.join(' · '), 1200), 500);
+    if(exp > 0 && has('addExp')) addExp(exp, p);
+    if(has('saveState')) saveState();
+    qzScore();
+    $('pd-qask').innerHTML = `🎉 เก่งมาก! <b>${esc(en)}</b> = ${esc(th)}`;
+    showBalloon(cell, en, th);
+    setTimeout(()=>{ if(qz.on) qzAsk(); }, 1500);
+  }
+
+  function qzScore(){
+    const c = (typeof game !== 'undefined') ? game.sessionCoins : 0;
+    const k = (typeof game !== 'undefined') ? game.combo : 0;
+    $('pd-qcoin').textContent = (has('fmtNum') ? fmtNum(c) : c) + ' 🪙';
+    const cb = $('pd-qcombo');
+    cb.textContent = 'Combo ×' + k;
+    cb.classList.toggle('hot', k >= 2);
+  }
+
   /* ---------- เปิด/ปิดปก ---------- */
   function openBook(){
     if(pd.opened) return;
@@ -323,14 +491,45 @@
   }
   function exit(){
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
-    if(has('renderDashboard')) renderDashboard();
-    if(has('showScreen')) showScreen('screen-dashboard');
+    const back = ()=>{
+      if(has('renderDashboard')) renderDashboard();
+      if(has('showScreen')) showScreen('screen-dashboard');
+    };
+    // 🎧 เล่นโหมดครูถามค้างอยู่ = สรุปรอบก่อน (การ์ดสรุปพาออกเองตอนกด "ออกไปพัก")
+    if(qz.on && qzStop(true, back)) return;
+    back();
+  }
+
+  /* เปิดหนังสือแล้วเริ่มโหมดครูถามให้เลย (ปุ่ม 🎧 ในล็อบบี้ / ตึกในเมือง 3D)
+     ถ้ายังไม่เคยเปิดหนังสือ = ยังอยู่หน้าปก → เปิดปกให้เองแล้วค่อยเริ่มถาม
+     ถ้าหน้าที่ค้างไว้ไม่มีการ์ดคำ (เช่นสารบัญ) → พาไปหน้าแรกที่มีคำแล้วเริ่ม */
+  function openQuiz(){
+    open();
+    const go = ()=>{
+      if(qz.on) return;
+      if(qzCells().length >= 2){ qzStart(); return; }
+      const first = pd.pages.findIndex(p => p.type === 'sheet' &&
+        typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[p.file]);
+      if(first < 0){ if(has('toast')) toast('📖 ยังไม่มีคำในหนังสือให้ครูถามเลย'); return; }
+      goTo(Math.floor(first/2));
+      /* รอจน "ช่องคลิกวางเสร็จจริง" แล้วค่อยเริ่มถาม — ตั้งเวลาตายตัวไม่พอ
+         เครื่องช้า/เน็ตช้าโหลดภาพนานกว่า 1 วิได้ (ช่องคลิกวางหลังภาพ onload) */
+      let tries = 0;
+      const wait = setInterval(()=>{
+        if(qz.on || ++tries > 40){ clearInterval(wait); return; }   // 40×150ms = 6 วิ
+        if(!pd.busy && qzCells().length >= 2){ clearInterval(wait); qzStart(); }
+      }, 150);
+    };
+    if(!pd.opened){ openBook(); setTimeout(go, 900); }
+    else setTimeout(go, 260);
   }
 
   /* ---------- ปุ่มเข้า (ล็อบบี้เดิม) + Esc = ออก ---------- */
   function bind(){
     const b = $('btn-picdict');
     if(b) b.addEventListener('click', open);
+    const q = $('btn-picquiz');
+    if(q) q.addEventListener('click', openQuiz);
     document.addEventListener('keydown', e=>{
       if(!sec || !sec.classList.contains('active')) return;
       if(e.key === 'Escape') exit();
@@ -340,5 +539,6 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicDict = { open, exit, _t:{ pd, flipTo, goTo, sayCell, buildPages, renderSpread } };
+  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, flipTo, goTo, sayCell, buildPages, renderSpread,
+                                      qzStart, qzStop, qzAsk, qzCells } };
 })();

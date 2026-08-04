@@ -180,8 +180,62 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-balloon.show{animation:pd-pop .22s;}
 @keyframes pd-pop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
 
+/* ============================================================
+   🎧 โหมดครูถามศัพท์ (รอบ 994)
+   แถบคำถามอยู่บนสุด · ตัวหนังสือกางอยู่ใต้แถบตามเดิม (แถบไม่ทับหนังสือ — pd-stage ยืดตาม)
+   ============================================================ */
+#screen-picdict .pd-quiz-btn{
+  position:absolute;top:8px;right:112px;z-index:9;border:none;border-radius:12px;
+  padding:8px 13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
+  background:#2e7d32;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.28);
+}
+#screen-picdict .pd-quiz-btn:active{transform:scale(.95);}
+/* แถบคำถามเป็นลูกแรกของจอ (flex column) → ต้องเว้นซ้ายให้พ้นปุ่ม ⬅ กลับ ที่ลอยอยู่
+   ระหว่างถาม ปุ่ม 📑 สารบัญ ถูกซ่อน (กลับสารบัญกลางคันไม่มีการ์ดให้ตอบ) แถบจึงกินขวาได้เต็ม */
+#screen-picdict.quiz .pd-toc-btn{display:none;}
+#screen-picdict .pd-qbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;z-index:9;
+  margin:6px max(8px,env(safe-area-inset-right)) 0 max(96px,env(safe-area-inset-left));
+  padding:6px 10px;border-radius:14px;background:rgba(255,248,225,.96);
+  box-shadow:0 3px 10px rgba(0,0,0,.3);
+}
+#screen-picdict .pd-q-ask{
+  flex:1 1 auto;min-width:0;text-align:center;color:#4e3609;font-weight:700;
+  font-size:clamp(12px,2.6vh,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+#screen-picdict .pd-q-ask b{color:#c2185b;}
+#screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{
+  flex:0 0 auto;border:none;border-radius:99px;cursor:pointer;font-family:inherit;font-weight:700;
+  font-size:clamp(11px,2.4vh,14px);padding:6px 12px;
+}
+#screen-picdict .pd-q-replay{background:#ffd54f;color:#4e3609;}
+#screen-picdict .pd-q-quit{background:#ffcdd2;color:#8a2743;}
+#screen-picdict .pd-q-replay:active,#screen-picdict .pd-q-quit:active{transform:scale(.94);}
+#screen-picdict .pd-q-score{flex:0 0 auto;display:flex;gap:6px;align-items:center;
+  font-size:clamp(11px,2.4vh,14px);font-weight:800;}
+#screen-picdict .pd-q-coin{background:#fff3d6;color:#7a5a22;border-radius:99px;padding:4px 10px;}
+#screen-picdict .pd-q-combo{background:#ede7f6;color:#5e35b1;border-radius:99px;padding:4px 10px;}
+#screen-picdict .pd-q-combo.hot{background:#ff6fa7;color:#fff;}
+/* ระหว่างถาม: ช่องคำตอบต้องกดง่ายและเห็นว่าแตะได้ */
+#screen-picdict.quiz .pd-cell{background:rgba(255,255,255,.01);}
+#screen-picdict.quiz .pd-cell:hover{background:rgba(76,175,80,.16);box-shadow:inset 0 0 0 2px rgba(46,125,50,.5);}
+#screen-picdict .pd-cell.qz-ok{animation:pd-qok .9s;}
+#screen-picdict .pd-cell.qz-no{animation:pd-qno .5s;}
+#screen-picdict .pd-cell.qz-target{animation:pd-qhint 1s ease-in-out infinite;}
+@keyframes pd-qok{0%{box-shadow:inset 0 0 0 4px #43a047;background:rgba(76,175,80,.45)}
+                  100%{box-shadow:inset 0 0 0 0 transparent;background:transparent}}
+@keyframes pd-qno{0%,100%{transform:translateX(0)}
+                  20%{transform:translateX(-5px)}60%{transform:translateX(5px)}
+                  0%{box-shadow:inset 0 0 0 3px #e53935}}
+@keyframes pd-qhint{0%,100%{box-shadow:inset 0 0 0 3px rgba(255,179,0,.35)}
+                    50%{box-shadow:inset 0 0 0 4px #ffb300;background:rgba(255,214,79,.35)}}
+
 /* ── จอเตี้ย (มือถือแนวนอน 812×375) ── */
 @media (max-height:430px){
+  #screen-picdict .pd-quiz-btn{top:4px;right:88px;padding:5px 9px;font-size:12px;}
+  #screen-picdict .pd-qbar{margin:3px 6px 0 78px;padding:4px 8px;gap:6px;}
+  #screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:4px 9px;}
+  #screen-picdict .pd-q-coin,#screen-picdict .pd-q-combo{padding:3px 8px;}
   #screen-picdict .pd-bookwrap{padding-top:6px;}
   #screen-picdict .back-btn,#screen-picdict .pd-toc-btn{top:4px;padding:5px 9px;font-size:12px;}
   #screen-picdict .pd-arrow{width:34px;height:34px;font-size:20px;}
