@@ -402,7 +402,7 @@ PICDICT_WORDS['Trees.png'] = {cols:8, rows:7, words:[
   ["Balsa","ต้นบัลซา"],["Cypress","ต้นไซเปรส"],["Juniper","ต้นจูนิเปอร์"],["Magnolia","ต้นแมกโนเลีย"],["Sweet Gum","ต้นสวีทกัม"],["Norfolk Pine","ต้นสนแกะนอร์ฟอล์ก"],["Weeping Fig","ต้นไทรร้องไห้"],["Money Tree","ต้นเงินต้นทอง"],
 ]};
 
-PICDICT_WORDS['Vegetables.png'] = {cols:8, rows:8, words:[
+PICDICT_WORDS['Vegetables.png'] = {cols:8, rows:7, words:[
   ["Carrot","แครอท"],["Broccoli","บรอกโคลี"],["Cabbage","กะหล่ำปลี"],["Spinach","ผักโขม"],["Lettuce","ผักกาดหอม"],["Tomato","มะเขือเทศ"],["Cucumber","แตงกวา"],["Eggplant","มะเขือม่วง"],
   ["Potato","มันฝรั่ง"],["Sweet Potato","มันเทศ"],["Onion","หอมหัวใหญ่"],["Garlic","กระเทียม"],["Ginger","ขิง"],["Bell Pepper","พริกหวาน"],["Red Pepper","พริกแดง"],["Yellow Pepper","พริกเหลือง"],
   ["Chili","พริก"],["Green Beans","ถั่วฝักยาว"],["Peas","ถั่วลันเตา"],["Corn","ข้าวโพด"],["Cauliflower","กะหล่ำดอก"],["Radish","หัวไชเท้า"],["Daikon","ไชเท้า"],["Beetroot","บีทรูท"],
@@ -421,4 +421,40 @@ PICDICT_WORDS['Weather.png'] = {cols:8, rows:8, words:[
   ["Sunrise","พระอาทิตย์ขึ้น"],["Sunset","พระอาทิตย์ตก"],["Night","กลางคืน"],["Midnight","เที่ยงคืน"],["Morning","เช้า"],["Afternoon","บ่าย"],["Evening","เย็น"],["Starry","ท้องฟ้าเต็มไปด้วยดาว"],
   ["Moonlit","แสงจันทร์"],["Full Moon","พระจันทร์เต็มดวง"],["New Moon","พระจันทร์ดับ"],["Light Cloud","เมฆบาง"],["Cumulus","เมฆก้อน"],["Cirrus","เมฆซีร์รัส"],["Stratus","เมฆชั้น"],["Nimbus","เมฆฝน"],
   ["Moderate","ปานกลาง"],["Sunny UV","แสงยูวีแรง"],["Umbrella","ร่ม"],["Raincoat","เสื้อกันฝน"],["Rain Boots","รองเท้าบูท"],["Sunglasses","แว่นกันแดด"],["Comfortable","อากาศสบาย"],["Changeable","อากาศแปรปรวน"],
+]};
+
+PICDICT_WORDS['WildAnimals.png'] = {cols:8, rows:6, words:[
+  ["Lion","สิงโต"],["Tiger","เสือ"],["Elephant","ช้าง"],["Giraffe","ยีราฟ"],["Zebra","ม้าลาย"],["Rhinoceros","แรด"],["Hippopotamus","ฮิปโปโปเตมัส"],["Buffalo","ควายป่า"],
+  ["Bear","หมี"],["Panda","แพนด้า"],["Koala","โคอาลา"],["Sloth","สลอธ"],["Kangaroo","จิงโจ้"],["Wolf","หมาป่า"],["Fox","สุนัขจิ้งจอก"],["Jackal","ไฮยีนา"],
+  ["Cheetah","เสือชีตาห์"],["Leopard","เสือดาว"],["Jaguar","จากัวร์"],["Snow Leopard","เสือดาวหิมะ"],["Puma","พูมา"],["Lynx","ลิงซ์"],["Wild Boar","หมูป่า"],["Wolverine","วูล์ฟเวอรีน"],
+  ["Deer","กวาง"],["Moose","กวางมูส"],["Antelope","แอนทิโลป"],["Gazelle","กวางกาเซลล์"],["Bison","ไบซัน"],["Yak","จามรี"],["Porcupine","เม่น"],["Armadillo","อาร์มาดิลโล"],
+  ["Squirrel","กระรอก"],["Chipmunk","ชิปมังก์"],["Rabbit","กระต่าย"],["Hare","กระต่ายป่า"],["Hedgehog","เม่นแคระ"],["Otter","นาก"],["Beaver","บีเวอร์"],["Badger","แบดเจอร์"],
+  ["Monkey","ลิง"],["Chimpanzee","ชิมแปนซี"],["Gorilla","กอริลลา"],["Orangutan","อุรังอุตัง"],["Gibbon","กิบบอน"],["Lemur","ลีเมอร์"],["Baboon","บาบูน"],["Mandrill","แมนดริล"],
+]};
+
+PICDICT_WORDS['animal1.png'] = {cols:6, rows:9, words:[
+  ["Cat","แมว"],["Dog","สุนัข"],["Cow","วัว"],["Bird","นก"],["Chicken","ไก่"],["Duck","เป็ด"],
+  ["Elephant","ช้าง"],["Lion","สิงโต"],["Tiger","เสือ"],["Bear","หมี"],["Panda","แพนด้า"],["Rabbit","กระต่าย"],
+  ["Goat","แพะ"],["Sheep","แกะ"],["Horse","ม้า"],["Zebra","ม้าลาย"],["Giraffe","ยีราฟ"],["Deer","กวาง"],
+  ["Monkey","ลิง"],["Squirrel","กระรอก"],["Fox","สุนัขจิ้งจอก"],["Wolf","หมาป่า"],["Hedgehog","เม่น"],["Bat","ค้างคาว"],
+  ["Turtle","เต่า"],["Frog","กบ"],["Crocodile","จระเข้"],["Snake","งู"],["Lizard","จิ้งจก"],["Chameleon","กิ้งก่า"],
+  ["Dolphin","โลมา"],["Whale","วาฬ"],["Shark","ฉลาม"],["Seal","แมวน้ำ"],["Octopus","ปลาหมึกยักษ์"],["Jellyfish","แมงกะพรุน"],
+  ["Goldfish","ปลาทอง"],["Clownfish","ปลาการ์ตูน"],["Starfish","ปลาดาว"],["Seahorse","ม้าน้ำ"],["Crab","ปู"],["Lobster","กุ้งล็อบสเตอร์"],
+  ["Pig","หมู"],["Buffalo","ควาย"],["Donkey","ลา"],["Camel","อูฐ"],["Rooster","ไก่ตัวผู้"],["Turkey","ไก่งวง"],
+  ["Hamster","แฮมสเตอร์"],["Guinea Pig","หนูตะเภา"],["Parrot","นกแก้ว"],["Peacock","นกยูง"],["Bee","ผึ้ง"],["Butterfly","ผีเสื้อ"],
+]};
+
+PICDICT_WORDS['animal2.png'] = {cols:8, rows:12, words:[
+  ["Lion","สิงโต"],["Elephant","ช้าง"],["Giraffe","ยีราฟ"],["Zebra","ม้าลาย"],["Panda","แพนด้า"],["Koala","โคอาลา"],["Bear","หมี"],["Tiger","เสือ"],
+  ["Leopard","เสือดาว"],["Cheetah","ชีตาห์"],["Wolf","หมาป่า"],["Fox","สุนัขจิ้งจอก"],["Raccoon","แรคคูน"],["Squirrel","กระรอก"],["Hedgehog","เม่น"],["Otter","นาก"],
+  ["Rabbit","กระต่าย"],["Monkey","ลิง"],["Gorilla","กอริลลา"],["Sloth","สลอธ"],["Kangaroo","จิงโจ้"],["Gibbon","ชะนี"],["Chipmunk","ชิปมังก์"],["Porcupine","เม่นแคระ"],
+  ["Horse","ม้า"],["Donkey","ลา"],["Pony","โพนี่"],["Cow","วัว"],["Buffalo","ควาย"],["Yak","ยัก"],["Goat","แพะ"],["Sheep","แกะ"],
+  ["Pig","หมู"],["Boar","หมูป่า"],["Camel","อูฐ"],["Llama","ลามะ"],["Alpaca","อัลปากา"],["Dog","สุนัข"],["Cat","แมว"],["Hamster","แฮมสเตอร์"],
+  ["Guinea Pig","หนูตะเภา"],["Chinchilla","ชินชิลลา"],["Parrot","นกแก้ว"],["Macaw","มาคอว์"],["Cockatoo","ค็อกคาทู"],["Lovebird","เลิฟเปิร์ด"],["Finch","ฟินช์"],["Canary","คานารี"],
+  ["Owl","นกฮูก"],["Eagle","นกอินทรี"],["Duck","เป็ด"],["Goose","ห่าน"],["Swan","หงส์"],["Peacock","นกยูง"],["Pigeon","นกพิราบ"],["Woodpecker","นกหัวขวาน"],
+  ["Crocodile","จระเข้"],["Alligator","อัลลิเกเตอร์"],["Turtle","เต่า"],["Tortoise","เต่ายักษ์"],["Snake","งู"],["Lizard","จิ้งจก"],["Chameleon","กิ้งก่า"],["Frog","กบ"],
+  ["Toad","คางคก"],["Gecko","ตุ๊กแก"],["Iguana","อีกัวน่า"],["Tree Frog","กบต้นไม้"],["Grasshopper","ตั๊กแตน"],["Dragonfly","แมลงปอ"],["Butterfly","ผีเสื้อ"],["Ladybug","เต่าทอง"],
+  ["Ant","มด"],["Bee","ผึ้ง"],["Wasp","ตัวต่อ"],["Beetle","ด้วง"],["Scorpion","แมงป่อง"],["Snail","หอยทาก"],["Spider","แมงมุม"],["Centipede","ตะขาบ"],
+  ["Shark","ฉลาม"],["Dolphin","โลมา"],["Whale","วาฬ"],["Orca","วาฬเพชฌฆาต"],["Seal","แมวน้ำ"],["Sea Lion","สิงโตทะเล"],["Octopus","ปลาหมึกยักษ์"],["Squid","ปลาหมึก"],
+  ["Starfish","ปลาดาว"],["Jellyfish","แมงกะพรุน"],["Clownfish","ปลาการ์ตูน"],["Seahorse","ม้าน้ำ"],["Oyster","หอยตลับ"],["Angelfish","ปลานางฟ้า"],["Goldfish","ปลาทอง"],["Stingray","ปลากระเบน"],
 ]};
