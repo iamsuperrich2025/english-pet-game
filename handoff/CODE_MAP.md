@@ -844,7 +844,7 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,311 บรรทัด · 774 selector)
+## css/lobby.css (5,315 บรรทัด · 774 selector)
 :root:6,5165 · html:15 · body:16,5129,5171 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
@@ -972,8 +972,8 @@ vbRender:148 · vbCardHTML:194
 .tp-snd-ic:5000 · .tp-snd-track:5001 · .tp-snd-thumb:5003 · .tp-prompt:5010 · .tp-word:5012,5026,5027 · .tp-ch:5014,5019,5020,5022
 .tp-thai:5030 · .tp-hint:5032 · .tp-empty:5034 · .tp-keys:5037 · .tp-row:5039 · .tp-row-fn:5041,5074
 .tp-key:5045,5057,5059,5065(+2) · .tp-key-fn:5072 · .tp-fx:5078 · .tp-coinpop:5079 · .tp-pop-pt:5084 · #city-backdrop:5098,5104
-.city-arrive:5105,5106 · .night:5120,5140,5141,5143(+2) · #night-veil:5166 · #screen-picmatch:5219,5220,5240,5241(+11) · .pm-grid:5221 · .pm-card:5223,5227,5228,5231(+7)
-.pm-right:5245 · .pm-now:5246,5252 · #pm-now-en:5253 · .pm-now-th:5254 · .pm-mode-btn:5285,5288 · .pm-wordcard:5289,5290,5292
+.city-arrive:5105,5106 · .night:5120,5140,5141,5143(+2) · #night-veil:5166 · #screen-picmatch:5219,5220,5244,5245(+11) · .pm-grid:5221 · .pm-card:5223,5227,5228,5231(+7)
+.pm-right:5249 · .pm-now:5250,5256 · #pm-now-en:5257 · .pm-now-th:5258 · .pm-mode-btn:5289,5292 · .pm-wordcard:5293,5294,5296
 
 ## css/style.css (2,206 บรรทัด · 552 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
