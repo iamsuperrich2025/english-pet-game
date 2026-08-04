@@ -293,80 +293,15 @@
   }
 
   /* ============================================================
-     🧭 หากริดการ์ดจริงจากพิกเซลของแผ่น (รอบ 1003)
-     ⚠️ แผ่นโปสเตอร์ "ไม่ได้แบ่งช่องเท่า ๆ กัน" — วัดแผ่น Birds จริงแล้วแถวสูง 264→159px
-     ไล่เตี้ยลงเรื่อย ๆ (บางแผ่นมีแถบหัวเรื่องกินด้านบนอีก) การหารช่องเท่ากันจึงเลื่อนสะสม
-     จนช่องไปคร่อมการ์ดใบอื่น (ผู้ใช้เจอ: แตะ Budgerigar แต่กรอบไปครอบ Robin ที่อยู่แถวบน)
-     → หา "ร่องว่างระหว่างการ์ด" จากภาพจริง แล้ววางช่องตามเส้นแบ่งนั้น
-     ตรวจไม่ผ่าน (จำนวนแถว/คอลัมน์ไม่ตรงข้อมูลคำ) → ถอยไปใช้กริดหารเท่ากันแบบเดิม
-     ============================================================ */
-  const gridCache = Object.create(null);
-  /* profile = สัดส่วน "พิกเซลพื้นหลัง" ของแต่ละแถว/คอลัมน์ → คืนเส้นแบ่ง need+1 เส้น
-     ⚠️ ในการ์ดใบเดียวกันก็มีแถบพื้นหลังบาง ๆ คั่น (ระหว่างรูปกับตัวหนังสือ) วัดจริงได้ 3px
-     ส่วนร่องระหว่างการ์ดจริงกว้าง 8–17px → คัดเอา "ร่องกว้างสุด" เท่าที่ต้องการ ที่เหลือทิ้ง */
-  function boundaries(profile, len, need, th, minw){
-    const runs = [];
-    let st = -1;
-    for(let i = 0; i < len; i++){
-      const gap = profile[i] >= th;                // เกือบทั้งแถวเป็นพื้นหลัง = ร่องระหว่างการ์ด
-      if(gap && st < 0) st = i;
-      if(!gap && st >= 0){ if(i - st >= minw) runs.push([st, i-1]); st = -1; }
-    }
-    if(st >= 0 && len - st >= minw) runs.push([st, len-1]);
-    if(!runs.length) return null;
-    /* w = ความกว้างร่อง (ใช้จัดอันดับ) · ขอบภาพที่ไม่มีร่องติด = เส้นแบ่งโดยปริยาย ห้ามตัดทิ้ง */
-    const b = runs.map(r => ({ v:(r[0] + r[1]) / 2, w:r[1] - r[0] + 1 }));
-    if(runs[0][0] > 0) b.unshift({ v:0, w:Infinity });
-    if(runs[runs.length-1][1] < len-1) b.push({ v:len, w:Infinity });
-    if(b.length < need + 1) return null;           // ร่องน้อยกว่าที่ควรมี = ยังอ่านไม่ออกที่เกณฑ์นี้
-    return b.sort((p,q) => q.w - p.w).slice(0, need + 1)
-            .sort((p,q) => p.v - q.v).map(p => p.v);
-  }
-  /* ไล่เกณฑ์จากเข้มไปหลวม — บางแผ่นพิมพ์ร่องไม่ขาวสนิท/แคบกว่าเพื่อน (วัดจริงครบ 46 แผ่น
-     ผ่านหมดด้วยชุดนี้: 42 แผ่นใช้ 0.985 · ที่เหลือต้องหลวมถึง 0.92) */
-  function solveAxis(profile, len, need){
-    for(const th of [0.985, 0.97, 0.95, 0.92, 0.88])
-      for(const mw of [3, 2]){
-        const b = boundaries(profile, len, need, th, mw);
-        if(b) return b;
-      }
-    return null;
-  }
-  function detectGrid(img, file, cols, rows){
-    if(file in gridCache) return gridCache[file];
-    let out = null;
-    try{
-      const iw = img.naturalWidth, ih = img.naturalHeight;
-      if(!iw || !ih) return null;                  // ภาพยังไม่โหลด — ยังไม่ cache ไว้ค่อยลองใหม่
-      const cv = document.createElement('canvas');
-      cv.width = iw; cv.height = ih;
-      const ctx = cv.getContext('2d', {willReadFrequently:true});
-      ctx.drawImage(img, 0, 0);
-      const d = ctx.getImageData(0, 0, iw, ih).data;
-      /* 🔑 หาแถวสแกน "เกือบเต็มกว้าง" ได้ แต่หาคอลัมน์ต้องสแกนเฉพาะกลางแผ่น —
-         แผ่นส่วนใหญ่มีแถบหัวเรื่องพาดเต็มความกว้าง ถ้านับทั้งภาพจะไม่มีคอลัมน์ไหนว่างเลย
-         (เจอจริง: 7 ใน 16 แผ่นแรกหาคอลัมน์ไม่เจอเพราะเหตุนี้) */
-      const rx0 = Math.round(iw*0.03), rx1 = Math.round(iw*0.97);
-      const cy0 = Math.round(ih*0.25), cy1 = Math.round(ih*0.88);
-      const rowBg = new Float64Array(ih), colBg = new Float64Array(iw);
-      for(let y = 0; y < ih; y++){
-        const off = y * iw * 4, inCol = y >= cy0 && y < cy1;
-        for(let x = 0; x < iw; x++){
-          const i = off + x*4;
-          if(d[i] > 240 && d[i+1] > 240 && d[i+2] > 240){
-            if(x >= rx0 && x < rx1) rowBg[y]++;
-            if(inCol) colBg[x]++;
-          }
-        }
-      }
-      for(let y = 0; y < ih; y++) rowBg[y] /= (rx1 - rx0);
-      for(let x = 0; x < iw; x++) colBg[x] /= (cy1 - cy0);
-      const ys = solveAxis(rowBg, ih, rows), xs = solveAxis(colBg, iw, cols);
-      if(ys && xs) out = { xs: xs.map(v => v/iw), ys: ys.map(v => v/ih) };   // เก็บเป็นสัดส่วน 0..1
-    }catch(e){ out = null; }                       // canvas อ่านไม่ได้ (ภาพข้ามโดเมน) → กริดเดิม
-    gridCache[file] = out;
-    return out;
-  }
+     📐 กรอบการ์ดรายช่อง (รอบ 1005 — เปลี่ยนจาก "ตรวจจับสด" เป็น "ตารางอบล่วงหน้า")
+     แผ่นแบ่งช่องไม่เท่ากัน + มีร่องปลอม 3 ตระกูล (รูป↔ป้ายอังกฤษ↔ป้ายไทย↔การ์ดถัดไป)
+     คาบซ้ำกันเป๊ะ — ตรวจสดตอนรันไทม์เฟสหลุดง่าย (รอบ 1003/1005 พลาดมา 3 แบบ:
+     แถวเบี้ยว/กริดเสมือนล้วน/เส้นตกหลังป้ายอังกฤษ) · แผ่นมี 46 ใบคงที่ จึงคำนวณครั้งเดียว
+     ด้วย tools/picdict_gridlab.js (ตรวจอัตโนมัติ+ดูภาพจริงครบ) แล้วฝังผลใน
+     js/data/picdict_grid.js — เกมแค่เปิดตาราง ทุกเครื่องได้ผลเหมือนกันเป๊ะ
+     · แผ่นใหม่ที่ยังไม่ได้อบ = ถอยไปกริดหารเท่า (ต้องรัน GridLab แล้ว export ใหม่) */
+  const bakedGrid = file =>
+    (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
 
   /* วางตารางช่องคลิกทับภาพ (ตำแหน่ง = สัดส่วนภาพที่ contain อยู่ในกล่อง) */
   function placeCells(pageEl, idx){
@@ -391,10 +326,9 @@
           ov.appendChild(c);
         });
       }
-      const rows = Math.ceil(W.words.length / W.cols);
-      const g = detectGrid(img, pg.file, W.cols, rows);
+      const g = bakedGrid(pg.file);
       if(g){
-        /* 🧭 รอบ 1003: วางช่องตามเส้นแบ่งการ์ดจริงในภาพ (สัดส่วนคงที่ ไม่ต้องคิดใหม่ตอนจอเปลี่ยน)
+        /* 📐 g = กรอบรายช่อง [x0,y0,x1,y1] (สัดส่วน 0..1 ของภาพ) เรียงตาม words — วางตรง ๆ ทีละใบ
            ⚠️ ขนาด overlay ต้องเป็น 100% ไม่ใช่ px — ตั้งเป็น px แล้วค้างไม่ตรงกล่องเมื่อเล่มถูก
            กางใหม่โดยที่ fit() ยังไม่ถูกเรียกซ้ำ (เจอจริง: กล่อง 277px แต่ overlay ค้าง 285px
            ช่องเลื่อนไปคร่อมการ์ดใบข้างเคียงอีก) แบบ % ตามกล่องเองเสมอ ไม่มีจังหวะค้าง */
@@ -402,13 +336,13 @@
         ov.style.left = '0px'; ov.style.top = '0px';
         ov.style.width = '100%'; ov.style.height = '100%';
         [...ov.children].forEach((c,i)=>{
-          const r = Math.floor(i / W.cols), q = i % W.cols;
-          if(r >= g.ys.length - 1){ c.style.display = 'none'; return; }
+          const b = g[i];
+          if(!b){ c.style.display = 'none'; return; }
           c.style.display = '';
-          c.style.left   = (g.xs[q]*100) + '%';
-          c.style.top    = (g.ys[r]*100) + '%';
-          c.style.width  = ((g.xs[q+1] - g.xs[q])*100) + '%';
-          c.style.height = ((g.ys[r+1] - g.ys[r])*100) + '%';
+          c.style.left   = (b[0]*100) + '%';
+          c.style.top    = (b[1]*100) + '%';
+          c.style.width  = ((b[2] - b[0])*100) + '%';
+          c.style.height = ((b[3] - b[1])*100) + '%';
         });
         return;
       }
@@ -451,7 +385,7 @@
     if(!box || !img || !img.naturalWidth || !zoom || !canvas) return;
     const br = box.getBoundingClientRect(), cr = cell.getBoundingClientRect();
     if(!br.width || !br.height) return;
-    /* ช่องถูกวางตามเส้นแบ่งการ์ดจริงแล้ว (detectGrid) จึงเผื่อขอบแค่บาง ๆ พอไม่ให้ชิดเกินไป
+    /* ช่องถูกวางตามกรอบการ์ดจริงแล้ว (ตารางอบ picdict_grid.js) จึงเผื่อขอบแค่บาง ๆ พอไม่ให้ชิดเกินไป
        — เผื่อเยอะเหมือนเดิมจะติดการ์ดใบข้างเข้ามาในกรอบ */
     const padX = cr.width * 0.03, padY = cr.height * 0.03;
     const sx = Math.max(0, (cr.left - br.left - padX) / br.width  * img.naturalWidth);
