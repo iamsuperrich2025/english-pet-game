@@ -873,7 +873,7 @@ html.no-anim body.quake{animation:none;}
   display:flex;align-items:center;justify-content:center;padding:10px;
   background:linear-gradient(165deg,#eaf5ff 0%,#c7e3fb 58%,#aed4f6 100%);
   border:2px solid #bcdcf7;box-shadow:inset 0 2px 16px rgba(30,90,160,.12);}
-.home-img-big{width:100%;height:100%;max-height:46vh;object-fit:contain;
+.home-img-big{width:100%;height:100%;max-height:46vh;object-fit:contain;border-radius:12px;
   filter:drop-shadow(0 10px 16px rgba(20,60,110,.32));}
 .home-pic-col .home-emoji{font-size:96px;}
 .home-info-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px;
@@ -892,21 +892,38 @@ html.no-anim body.quake{animation:none;}
 
 .home-shop-box{border-color:var(--blue-d);max-width:360px;}
 .home-shop-box h2{color:#3d7fb5;}
-.home-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.home-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
 .home-option{
   display:flex;align-items:center;gap:10px;background:#f4faff;border:2px solid #cde4f5;
-  border-radius:16px;padding:8px 10px;cursor:pointer;text-align:left;transition:transform .1s;
+  border-radius:16px;padding:6px 9px;cursor:pointer;text-align:left;transition:transform .1s;
 }
 .home-option:active{transform:scale(.97);}
 .home-option.current{border-color:var(--green-d);background:var(--green);}
 .home-option.cant-afford{opacity:.55;}
-.home-opt-img{width:56px;height:56px;object-fit:contain;flex-shrink:0;}
+/* 🏠 รอบ 1017: ภาพบ้านชุดใหม่ (ตัดจาก img/home/newHouse.png) เป็นภาพแนวนอนมีฉากหลังกลางคืน
+   → ช่องภาพในร้านต้องเป็นแนวนอน + มุมมน ไม่งั้นเหลือแถบเตี้ยๆ ในกรอบจัตุรัสเดิม */
+.home-opt-img{width:84px;height:54px;object-fit:contain;flex-shrink:0;border-radius:9px;}
 .home-option .home-emoji{font-size:38px;}
 .home-opt-body{flex:1;font-size:14px;line-height:1.35;}
-.home-opt-body small{color:#8aa0b5;font-size:11.5px;display:block;}
+.home-opt-body small{color:#8aa0b5;font-size:11.5px;display:block;line-height:1.25;}
 .home-price{
   display:inline-block;margin-top:3px;background:var(--yellow);border:2px solid var(--yellow-d);
   border-radius:999px;padding:0 10px;font-size:12.5px;font-weight:bold;color:#c8901a;
+}
+/* 🏠 รอบ 1017 (กฎทองข้อ 7 — ทุก dialog ต้องเห็นครบทั้งใบ ไม่ต้องเลื่อน):
+   จอเตี้ย (ไม่ถึง 720px) รายการบ้าน 3 หลังเรียงแนวตั้งแล้วยาวเกินกรอบมาแต่เดิม (812×375 ต้องการ 621 มีให้ 315)
+   → พลิกเป็น 3 การ์ดเรียงแนวนอน ภาพบ้านแนวนอนอยู่บน ข้อความอยู่ล่าง = เห็นครบทั้งใบ + ภาพบ้านใหญ่ขึ้นด้วย */
+@media (max-height:719px) and (min-width:560px){
+  /* ⚠️ ต้องเป็น .levelup-box.home-shop-box (0,2,0) — ไม่งั้นแพ้ `.levelup-box`/`.levelup-box h2`
+     ที่ประกาศทีหลังในไฟล์เดียวกัน (บทเรียนลำดับ CSS รอบ 1007) */
+  .levelup-box.home-shop-box{padding:10px 12px;}
+  .levelup-box.home-shop-box h2{font-size:16px;margin:0 0 2px;}
+  .home-list{flex-direction:row;gap:6px;align-items:stretch;margin-top:6px;}
+  .home-option{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:5px 6px;}
+  .home-opt-img{width:100%;height:auto;max-height:50px;}
+  .home-opt-body{font-size:11.5px;line-height:1.18;width:100%;}
+  .home-opt-body small{font-size:9.5px;line-height:1.15;}
+  .home-shop-box .food-cancel{margin-top:6px;padding:6px;font-size:13px;}
 }
 
 .reset-link{
