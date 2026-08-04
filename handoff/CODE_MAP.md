@@ -664,7 +664,7 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picdict.js (961 บรรทัด · 0 รายการ)
+## js/picdict.js (982 บรรทัด · 0 รายการ)
 
 ## js/picmatch.js (461 บรรทัด · 0 รายการ)
 
@@ -846,13 +846,13 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,374 บรรทัด · 784 selector)
+## css/lobby.css (5,383 บรรทัด · 784 selector)
 :root:6,5183 · html:15 · body:16,5147,5189 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
 .login-rule:133,134,135 · .login-tag:136 · #screen-game:185,186,187,188(+7) · #screen-quiz:199,200,201,202(+6) · #quiz-choices:211,212 · .word-card:219
 .quiz-choice:220,221,222 · .big-btn:225,226,227,228 · #screen-dashboard:233,1133,1141 · .lobby-top:240,875,876,877(+36) · .top-flex:241 · .profile-plate:242,246,796,3683(+12)
-#rain-fx:251 · .rain-glass:255 · .glass-drop:256 · .rain-vignette:275 · .no-anim:282,444,457,518(+59) · .rail-btn:285,891,897,899(+19)
+#rain-fx:251 · .rain-glass:255 · .glass-drop:256 · .rain-vignette:275 · .no-anim:282,444,457,518(+58) · .rail-btn:285,891,897,899(+19)
 .rail-badge:286 · .fr-code-box:291 · .fr-code-label:295 · .fr-code-row:296 · .fr-code:297 · .fr-copy-btn:302,306,311,312
 .fr-search-btn:307 · .fr-add-btn:308 · .fr-accept:309 · .fr-decline:310 · #fr-search-input:313 · #fr-search-result:317
 .fr-found:318 · .fr-hint:322 · .fr-list-title:323 · .fr-row:324 · .fr-req:328 · .fr-row-name:330,334,4887
@@ -975,9 +975,9 @@ vbRender:148 · vbCardHTML:194
 .tp-snd:5014,5017,5023,5024 · .tp-snd-ic:5018 · .tp-snd-track:5019 · .tp-snd-thumb:5021 · .tp-prompt:5028 · .tp-word:5030,5044,5045
 .tp-ch:5032,5037,5038,5040 · .tp-thai:5048 · .tp-hint:5050 · .tp-empty:5052 · .tp-keys:5055 · .tp-row:5057
 .tp-row-fn:5059,5092 · .tp-key:5063,5075,5077,5083(+2) · .tp-key-fn:5090 · .tp-fx:5096 · .tp-coinpop:5097 · .tp-pop-pt:5102
-#city-backdrop:5116,5122 · .city-arrive:5123,5124 · .night:5138,5158,5159,5161(+2) · #night-veil:5184 · .theme-emerald:5209,5224,5227,5228(+1) · .theme-plum:5215,5235
-#theme-veil:5229 · #screen-picmatch:5278,5279,5303,5304(+11) · .pm-grid:5280 · .pm-card:5282,5286,5287,5290(+7) · .pm-right:5308 · .pm-now:5309,5315
-#pm-now-en:5316 · .pm-now-th:5317 · .pm-mode-btn:5348,5351 · .pm-wordcard:5352,5353,5355
+#city-backdrop:5116,5122 · .city-arrive:5123,5124 · .night:5138,5158,5159,5161(+2) · #night-veil:5184 · .theme-emerald:5213,5225,5232,5234(+5) · .theme-plum:5218,5229,5233,5235(+3)
+#theme-veil:5245 · #screen-picmatch:5287,5288,5312,5313(+11) · .pm-grid:5289 · .pm-card:5291,5295,5296,5299(+7) · .pm-right:5317 · .pm-now:5318,5324
+#pm-now-en:5325 · .pm-now-th:5326 · .pm-mode-btn:5357,5360 · .pm-wordcard:5361,5362,5364
 
 ## css/picdict.css (293 บรรทัด · 1 selector)
 #screen-picdict:9,16,17,22(+97)
