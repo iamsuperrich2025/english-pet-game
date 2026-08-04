@@ -739,6 +739,17 @@ html.no-anim body.quake{animation:none;}
 }
 .food-item:active{transform:scale(.93);}
 .food-item.cant-afford{opacity:.45;}
+/* 🔒 รอบ 1008: เมนูที่กดไม่ได้เพราะน้องอิ่มเต็มหลอดแล้ว — ต้องดู "ปิดอยู่" ชัดกว่าแค่จาง
+   (ผู้เล่นทดสอบเข้าใจว่าเกมพัง เพราะกดได้แต่ชุด 1,000 โดยไม่มีอะไรบอกว่าใบอื่นถูกล็อก) */
+.food-item.food-locked{
+  opacity:.5;filter:grayscale(.85);cursor:not-allowed;
+  background:#f2f0ee;border-color:#d8d2cc;border-style:dashed;
+}
+.food-item.food-locked:active{transform:none;}
+.fd-lock{
+  display:inline-block;background:#8d8378;color:#fff;border-radius:999px;
+  padding:0 8px;font-size:10.5px;margin-bottom:2px;white-space:nowrap;
+}
 .food-item .fd-emoji{font-size:34px;display:block;}
 .food-item .fd-en{font-size:15px;font-weight:bold;color:#2f6ea5;display:block;}
 .food-item .fd-name{font-size:12px;color:#9a8aac;display:block;}

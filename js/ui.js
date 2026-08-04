@@ -5165,28 +5165,35 @@ function feedPet(){
     alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">หนูป่วยเพราะไม่ได้กินข้าวเย็น</div><div class="ab-desc">ตอนป่วยเพราะหิว <b>ซื้อของกินไม่ได้</b> นะ — ไปหาหมอรักษาให้หายก่อน แล้วค่อยกลับมาซื้ออาหารให้น้อง 🩺</div>', 'ไว้ก่อน',
       {text:`🩺 ไปรักษา (🪙${fmtNum(CURE_COST)})`, onClick:dinnerClick}); return;
   }
-  const hungry = petHungry(p);
+  const canEat = petCanEat(p);          // 🍽️ รอบ 1008: ดูหลอดความอิ่มจริง ไม่ใช่ petHungry อย่างเดียว
   const canFeast = p.fedUpTo < nextSlotStart(Date.now());
-  if(!hungry && !canFeast){
+  if(!canEat && !canFeast){
     sfx.select(); toast('😋 น้องอิ่มแปล้ถึงมื้อหน้าแล้ว ไว้ค่อยกินใหม่นะ'); return;
   }
-  openFoodMenu(p, hungry);
+  openFoodMenu(p);
 }
 
-function openFoodMenu(p, hungry){
+function openFoodMenu(p){
   /* 🚫 รอบ 952: กันทุกทางเข้า — ป่วยเพราะหิว (คนหรือน้อง) ห้ามเปิดเมนูซื้ออาหาร */
   if(p.sick || state.playerSick){ sfx.wrong(); toast(hungerSickMsg('ของกิน') || '🤒 ป่วยอยู่ ต้องรักษาก่อนถึงจะซื้อของกินได้นะ'); return; }
   sfx.select();
+  /* 🍽️ รอบ 1008: กินอาหารธรรมดาได้ไหม = หลอดความอิ่มของมื้อนี้ยังไม่เต็ม (petCanEat)
+     ของเดิมใช้ petHungry ซึ่งเป็น false ตลอดตอน level 1 → ทั้งเมนูล็อก เหลือแต่ชุด 1,000
+     ถ้าล็อกจริง (อิ่มเต็มหลอดแล้ว) ต้องบอกบนการ์ดทุกใบว่าล็อกเพราะอะไร + กินได้อีกทีเมื่อไหร่ (กฎทองข้อ 1) */
+  const canEat = petCanEat(p);
+  const nowTs = Date.now();
+  const nextMeal = p.fedUpTo > currentSlotStart(nowTs) ? nextSlotStart(nowTs) + SLOT_MS : nextSlotStart(nowTs);
   const fav = Object.assign({id:'favorite'}, PETS[p.type].favFood);
   /* ข้อ 5.1: แยกเมนู 2 ชุด — ชุดอาหารสัตว์ (fav+ปลอดภัย) กับชุดอาหารคน (บางอย่างเป็นโทษ) */
   const petFoods = [fav, ...FOODS.filter(f=>!f.human)];
   const humanFoods = FOODS.filter(f=>f.human);
   const menuFoods = [...petFoods, ...humanFoods];
   const itemHTML = f=>{
-    const usable = hungry || f.skipNext;
+    const usable = canEat || f.skipNext;
     const bad = foodBadFor(f, p.type);
     return `
-        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${(state.coins < f.price || !usable) ? 'cant-afford' : ''}" data-food="${f.id}">
+        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${!usable ? 'food-locked' : ''} ${(state.coins < f.price) ? 'cant-afford' : ''}" data-food="${f.id}">
+          ${usable ? '' : `<span class="fd-lock">🔒 อิ่มแล้ว</span>`}<!-- เวลากินได้อีกทีอยู่บนหัวกล่อง+toast (ป้ายบนการ์ดสั้นไว้ กันกล่องยาวเกินจอเตี้ย) -->
           ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
           ${bad ? `<span class="bad-tag">⚠️ เป็นโทษกับน้อง!</span>` : ''}
           <span class="fd-emoji">${f.emoji}</span>
@@ -5203,9 +5210,9 @@ function openFoodMenu(p, hungry){
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box food-box">
     <h2>🍽️ เลือกเมนูให้น้องกิน</h2>
-    ${hungry
+    ${canEat
       ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
-      : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มมื้อนี้แล้ว — มีแต่ชุดอาหารวิเศษที่กินตุนข้ามมื้อพรุ่งนี้ได้</p>`}
+      : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มเต็มหลอดแล้ว (<b>${MEAL_FULL}/${MEAL_FULL}</b>) — เมนูอื่นจะกดได้อีกทีตอน <b>${mealLabel(nextMeal)}</b><br>ตอนนี้มีแต่ 🍱 ชุดอาหารวิเศษที่กินตุนล่วงหน้าได้ (ไม่จำเป็นต้องซื้อ รอมื้อหน้าก็ได้นะ)</p>`}
     <div class="food-grid">
       <div class="food-sec">🐾 ชุดอาหารสัตว์ (ปลอดภัย)</div>
       ${petFoods.map(itemHTML).join('')}
@@ -5218,8 +5225,8 @@ function openFoodMenu(p, hungry){
   overlay.querySelectorAll('.food-item').forEach(el=>{
     el.addEventListener('click', ()=>{
       const food = menuFoods.find(f=>f.id===el.dataset.food);
-      if(!hungry && !food.skipNext){
-        sfx.wrong(); toast('น้องอิ่มมื้อนี้แล้ว เมนูนี้ไว้มื้อหน้านะ 😊'); return;
+      if(!canEat && !food.skipNext){
+        sfx.wrong(); toast(`😊 น้องอิ่มเต็มหลอดแล้ว เมนูนี้กินได้อีกทีตอน ${mealLabel(nextMeal)}`); return;
       }
       if(state.coins < food.price){
         sfx.wrong();
@@ -5305,7 +5312,7 @@ function showFeedResult(p, food, shapeChange){
   const happyImg = IMG_FILES[`${p.type}_${stage}_happy`] || IMG_FILES[`${p.type}_${stage}_normal`];
   const gotToxin = foodBadFor(food, p.type);            // ข้อ 5.1: มื้อนี้ได้พิษสะสมมาด้วย
   const toxinSick = p.sick && p.sickCause === 'toxin';  // พิษเต็ม 100 → ป่วยทันที
-  const stillHungry = petHungry(p) && !p.sick;          // กินแล้วแต่ยังไม่เต็มหลอด → ชวนกินต่อ (ป่วยแล้วห้ามกินต่อ)
+  const stillHungry = petCanEat(p) && !p.sick;          // 🍽️ รอบ 1008: ยังไม่เต็มหลอด → ชวนกินต่อ (น้อง level 1 ก็ต้องชวนด้วย · ป่วยแล้วห้ามกินต่อ)
   const nextMeal = p.fedUpTo >= nextSlotStart(Date.now()) - 1
     ? nextSlotStart(Date.now()) + SLOT_MS : nextSlotStart(Date.now());
   overlay.innerHTML = `<div class="levelup-box feed-box">
@@ -5327,7 +5334,7 @@ function showFeedResult(p, food, shapeChange){
   </div>`;
   overlay.querySelector('button').addEventListener('click', ()=>{
     overlay.remove();
-    if(stillHungry){ openFoodMenu(p, true); }
+    if(stillHungry){ openFoodMenu(p); }
     else renderDashboard();
   });
   document.body.appendChild(overlay);

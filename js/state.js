@@ -739,6 +739,10 @@ function rainProtected(){             // กันฝนได้ต้องม
   return !!state.home && !homeDecayed();
 }
 function petHungry(p){ return p.level >= 2 && p.fedUpTo < currentSlotStart(Date.now()); }
+/* 🍽️ รอบ 1008: "ป้อนอาหารธรรมดาได้ไหม" — ต้องดูหลอดความอิ่มของมื้อปัจจุบันจริง ๆ
+   ห้ามใช้ petHungry ตัดสินแทน เพราะ petHungry เป็น false เสมอตอน level 1 (น้องเล็กยังไม่หิว/ไม่ป่วย)
+   ทำให้เมนูอาหารทั้งกระดานถูกล็อก เหลือกดได้แต่ชุดอาหารวิเศษ 1,000 (ผู้เล่นทดสอบเจอ 4 ส.ค. 2026) */
+function petCanEat(p){ return petHungry(p) || (p.fullness||0) < MEAL_FULL; }
 
 /* ============================================================
    🚫🍽️ ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952 · ผู้ใช้สั่ง 3 ส.ค. 2026)
@@ -1075,9 +1079,11 @@ function careTick(){
   const slot = currentSlotStart(now);
   const hourNow = thHour(now);         // 🇹🇭 รอบ 988: ชั่วโมงไทย
   for(const p of state.pets){
-    if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
     // ข้อ 3: ขึ้นมื้อใหม่ (18:00) แล้วยังไม่อิ่มครอบมื้อนี้ → เริ่มนับความอิ่มสะสมใหม่จาก 0
+    // 🍚 รอบ 1008: ย้ายขึ้นมาก่อน `continue` — น้อง level 1 ก็ต้องรีเซ็ตหลอดตามมื้อด้วย
+    //   (เดิมอยู่ใต้ continue → กินชุดวิเศษทีเดียวหลอดค้าง 100 ตลอดกาล เมนูอาหารธรรมดาเลยล็อกถาวร)
     if(p.mealSlot !== slot && p.fedUpTo < slot){ p.mealSlot = slot; p.fullness = 0; p.mealJunk = false; }
+    if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
     // ข้อ 2: หิวมื้อเย็น 18:00 — เกิน 2 ชม. (20:00) ยังกินไม่เต็มหลอด → ป่วย
     if(!p.sick && p.fedUpTo < slot && (now - slot) >= HUNGRY_SICK_MS){
       p.sick = true; p.sickCause = 'hunger';
