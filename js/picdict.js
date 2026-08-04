@@ -48,9 +48,26 @@
   }
   const maxSpread = () => Math.ceil(pd.pages.length/2) - 1;
 
-  /* ---------- 🔊 เสียงพลิกกระดาษ (สังเคราะห์ noise สั้น ๆ — ไม่ใช้ไฟล์เสียง) ---------- */
-  let actx = null;
+  /* ---------- 🔊 เสียงพลิกกระดาษ ----------
+     ชั้น 1: ไฟล์จริง sound/OpenBookSound.mp3 (รอบ 995 ผู้ใช้ให้ไฟล์มา)
+     ชั้น 2 (ไฟล์หาย/เล่นไม่ได้): สังเคราะห์ noise สั้น ๆ ของเดิม กันเสียงหายไปเฉย ๆ */
+  let flipAudio = null, flipFileMiss = false;
   function flipSfx(){
+    if(typeof state !== 'undefined' && !state.sound) return;
+    if(!flipFileMiss){
+      try{
+        flipAudio = flipAudio || new Audio('sound/OpenBookSound.mp3');
+        flipAudio.onerror = ()=>{ flipFileMiss = true; flipSfxSynth(); };
+        flipAudio.currentTime = 0;
+        const p = flipAudio.play();
+        if(p && p.catch) p.catch(()=>{ flipFileMiss = true; flipSfxSynth(); });
+        return;
+      }catch(e){ flipFileMiss = true; }
+    }
+    flipSfxSynth();
+  }
+  let actx = null;
+  function flipSfxSynth(){
     if(typeof state !== 'undefined' && !state.sound) return;
     try{
       actx = actx || new (window.AudioContext||window.webkitAudioContext)();
