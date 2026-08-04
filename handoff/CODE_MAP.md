@@ -664,7 +664,7 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picdict.js (544 บรรทัด · 0 รายการ)
+## js/picdict.js (741 บรรทัด · 0 รายการ)
 
 ## js/picmatch.js (461 บรรทัด · 0 รายการ)
 
@@ -977,8 +977,8 @@ vbRender:148 · vbCardHTML:194
 .city-arrive:5105,5106 · .night:5120,5140,5141,5143(+2) · #night-veil:5166 · #screen-picmatch:5219,5220,5244,5245(+11) · .pm-grid:5221 · .pm-card:5223,5227,5228,5231(+7)
 .pm-right:5249 · .pm-now:5250,5256 · #pm-now-en:5257 · .pm-now-th:5258 · .pm-mode-btn:5289,5292 · .pm-wordcard:5293,5294,5296
 
-## css/picdict.css (244 บรรทัด · 1 selector)
-#screen-picdict:9,16,17,22(+83)
+## css/picdict.css (258 บรรทัด · 1 selector)
+#screen-picdict:9,16,17,22(+85)
 
 ## css/style.css (2,206 บรรทัด · 552 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
