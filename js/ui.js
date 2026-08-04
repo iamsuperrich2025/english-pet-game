@@ -3699,7 +3699,7 @@ function fpostHTML(it, opt){
         : `<span class="fp-big">${img ? (img.emoji || fc.e) : fc.e}</span>`)}</div>
     ${fpStatsHTML(it)}
     <div class="fp-bar">
-      <button class="fp-act fp-like${my ? ' on' : ''}" type="button" data-key="${k}"${can ? '' : ' disabled'}>
+      <button class="fp-act fp-like${my ? ' on' : ''}${can ? '' : ' fp-like-locked'}" type="button" data-key="${k}">
         ${my ? `${my.e} <span class="fp-en">${my.en}</span>` : '👍 ถูกใจ'}</button>
       <button class="fp-act fp-cmt" type="button" data-key="${k}">💬 คอมเมนต์</button>
     </div>
@@ -4191,7 +4191,8 @@ function bindFeedPostEvents(){
     const like = t.closest('.fp-like');
     if(like){
       if(__rxLpFired){ __rxLpFired = false; return; }   // เพิ่งกดค้างเลือกรีแอ็กชันไป = ไม่ต้องสลับซ้ำ
-      if(like.disabled) return;
+      /* ❤️ กดไม่ได้เพราะไม่ใช่โพสต์ตัวเอง/เพื่อน — ต้องบอกเหตุผลบนจอเสมอ (กฎทองข้อ 1) เดิมปิดเงียบด้วย disabled ล้วน ๆ */
+      if(like.classList.contains('fp-like-locked')){ sfx.wrong(); toast('👍 ถูกใจได้เฉพาะโพสต์ของตัวเองกับเพื่อนเท่านั้น — ส่งคำขอเป็นเพื่อนก่อนนะ'); return; }
       const it = feedPostByKey(like.dataset.key);
       feedPickRx(like.dataset.key, it && it.myRx ? it.myRx : 'like', like);
       return;
@@ -4214,7 +4215,7 @@ function bindFeedPostEvents(){
   const lpEnd = ()=>clearTimeout(__rxLpT);
   document.addEventListener('pointerdown', (e)=>{
     const b = e.target.closest && e.target.closest('.fp-like');
-    if(!b || b.disabled) return;
+    if(!b || b.classList.contains('fp-like-locked')) return;
     __rxLpFired = false;
     clearTimeout(__rxLpT);
     __rxLpT = setTimeout(()=>{ __rxLpFired = true; openRxPicker(b, b.dataset.key); }, 420);
