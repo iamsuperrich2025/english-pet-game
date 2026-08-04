@@ -14,5 +14,15 @@ home_castle.png  ปราสาทราชวังอังกฤษ (คฤ�
    css/style.css โซน .home-opt-img / .home-img-big / media query จอเตี้ยของ .home-shop-box
    ภาพชุดเก่า (พื้นหลังโปร่ง) ยังกู้ได้จาก git: git show HEAD~1:img/home/home_basic.png
 
+🆕 รอบ 1018 (4 ส.ค. 2026): เพิ่ม home_<id>_decayed.png + home_<id>_dark.png (6 ไฟล์)
+   "อบ" ฟิลเตอร์ CSS เดิม (.home-decayed-img / .home-dark-img ใน css/style.css) ลงเป็นภาพจริง
+   ด้วยสูตร CSS Filter Effects spec ตรงเป๊ะ (sepia/saturate/brightness/contrast matrix — สคริปต์
+   อยู่ scratchpad ของ session นั้น ไม่ได้เก็บในโปรเจกต์ เพราะรันครั้งเดียวจบ):
+     decayed = sepia(.55) saturate(.5) brightness(.78)   (บ้านทรุดโทรม ค้างค่าบำรุง)
+     dark    = brightness(.42) saturate(.55) contrast(1.05)   (บ้านถูกตัดไฟ)
+   js/images.js probe ไฟล์เหล่านี้อัตโนมัติอยู่แล้ว (ไม่ต้องแก้โค้ด) — มีไฟล์จริงจะใช้ไฟล์ก่อนเสมอ
+   ระบบ CSS filter เดิมยังอยู่ ทำหน้าที่ fallback ถ้าใครเพิ่มบ้านแบบใหม่แล้วยังไม่ทันทำภาพ _decayed/_dark
+   ⚠️ ไม่มี _nowater/_ruined ให้ (ตั้งใจ — ตัดน้ำใช้ tag+กล่องบิลบอกแทนภาพเดิม ไม่เคยมีฟิลเตอร์ให้อบ)
+
 prompt เจนภาพชุดเก่าอยู่ใน PROMPTS_RANK_HOME.md (โฟลเดอร์หลักของเกม)
 ยังไม่มีภาพ เกมจะใช้อีโมจิแทนให้อัตโนมัติ
