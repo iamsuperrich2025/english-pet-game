@@ -5148,7 +5148,7 @@ body{
     linear-gradient(180deg,
       rgba(38,22,10,calc(.74 * var(--night-k,0))) 0%,  rgba(48,28,12,calc(.40 * var(--night-k,0))) 30%,
       rgba(44,25,10,calc(.52 * var(--night-k,0))) 62%, rgba(24,13,5,calc(.88 * var(--night-k,0))) 100%),
-    linear-gradient(180deg, rgba(31,100,186,.40) 0%, rgba(31,100,186,.05) 26%, rgba(31,100,186,.10) 58%, rgba(31,100,186,.62) 100%),
+    linear-gradient(180deg, var(--tint1,rgba(31,100,186,.40)) 0%, var(--tint2,rgba(31,100,186,.05)) 26%, var(--tint3,rgba(31,100,186,.10)) 58%, var(--tint4,rgba(31,100,186,.62)) 100%),
     url('../img/theme/theme_city_cod.png'),
     url('../img/theme/theme_bg_wide.png');
   background-size:100% 100%, 100% 100%, cover, cover;
@@ -5194,7 +5194,8 @@ body::after{
 html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 
 /* ============================================================
-   🎨 รอบ 996 (ผู้ใช้สั่ง "เดิมสว่างแสบตา ขอสีสบายตากว่านี้แต่ยังหรูหรา"): 3 ธีมสีล็อบบี้เลือกได้
+   🎨 รอบ 997/998 (ผู้ใช้สั่ง "เดิมสว่างแสบตา ขอสีสบายตากว่านี้แต่ยังหรูหรา" แล้วรอบ 998 ส่งภาพยืนยัน
+   "สีไม่เข้มพอ"): 3 ธีมสีล็อบบี้เลือกได้
    สลับ = คลาส html.theme-navy/emerald/plum (ตั้งจาก ThemeUI ใน index_classic.html ก่อน paint แรก
    เหมือน NightUI) ทำ 2 ชั้นเหมือนกลไกกลางคืนทุกประการ:
    ① ทับ :root variables (--navy/--sky/--panel-bg/--ink2/...) ให้ชิ้นที่อ้างตัวแปรเปลี่ยนสีตาม
@@ -5206,22 +5207,40 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 html.theme-navy{
   --navy:#12335e; --navy-2:#1c4a85; --sky:#2d6bb0; --sky-d:#123a6b;
   --panel-bg:#e7edf5; --ink2:#1c2b3f;
-  --glass:rgba(14,36,68,.82); --glass-line:rgba(140,175,220,.32);
+  --glass:rgba(9,24,46,.88); --glass-line:rgba(140,175,220,.32);
+  --tint1:rgba(6,16,32,.72); --tint2:rgba(9,22,42,.42); --tint3:rgba(7,19,38,.48); --tint4:rgba(4,11,24,.82);
 }
 html.theme-emerald{
   --navy:#0e2e28; --navy-2:#154238; --sky:#1d9e75; --sky-d:#0f6e56;
   --panel-bg:#e8f3ee; --ink2:#1c2f29;
-  --glass:rgba(10,40,32,.82); --glass-line:rgba(130,200,175,.32);
+  --glass:rgba(6,26,20,.88); --glass-line:rgba(130,200,175,.32);
+  --tint1:rgba(5,20,16,.72); --tint2:rgba(7,28,22,.42); --tint3:rgba(6,24,19,.48); --tint4:rgba(3,13,10,.82);
 }
 html.theme-plum{
   --navy:#2a1a3d; --navy-2:#3a2354; --sky:#7f77dd; --sky-d:#534ab7;
   --panel-bg:#efe9f5; --ink2:#2a2035;
-  --glass:rgba(38,20,58,.82); --glass-line:rgba(180,155,215,.32);
+  --glass:rgba(24,12,36,.88); --glass-line:rgba(180,155,215,.32);
+  --tint1:rgba(16,8,26,.72); --tint2:rgba(22,11,34,.42); --tint3:rgba(18,9,29,.48); --tint4:rgba(10,5,17,.82);
 }
+/* 🎯 รอบ 998 (ผู้ใช้ส่งภาพยืนยัน "สีไม่เข้มเหมือนตัวอย่าง"): ผ้าคลุม mix-blend-mode:color เพียว ๆ
+   คง "ความสว่าง" เดิมไว้เสมอ (นั่นคือจุดเด่นตอนใช้กับกลางคืน) → ปุ่ม/แผงที่พื้นเดิมค่อนข้างสว่างอยู่แล้ว
+   จะยัง "สว่างเท่าเดิมแค่เปลี่ยนเฉด" ไม่มืดลงจริงอย่างที่ตัวอย่างสีเข้ม → ต้อง "ทับสีตรง" องค์ประกอบหลักที่
+   ฮาร์ดโค้ดสีฟ้าไว้ (ปุ่มไอคอน/แถบคำใหม่/ชิประดับชั้น/ปุ่มราง) ด้วย var(--navy/--navy-2/--sky) โดยตรง
+   แทนที่จะพึ่งผ้าคลุมอย่างเดียว — ผ้าคลุมเหลือไว้เป็นตาข่ายกันหลุดสำหรับจุดเล็ก ๆ ที่ไล่ไม่ครบ */
+html.theme-navy .lobby-top .icon-btn, html.theme-emerald .lobby-top .icon-btn, html.theme-plum .lobby-top .icon-btn,
+html.theme-navy .lobby-top .coin-block .grade-pill, html.theme-emerald .lobby-top .coin-block .grade-pill, html.theme-plum .lobby-top .coin-block .grade-pill,
+html.theme-navy .newword-banner, html.theme-emerald .newword-banner, html.theme-plum .newword-banner{
+  background:linear-gradient(180deg, var(--navy-2), var(--navy));
+  box-shadow:0 6px 18px rgba(0,0,0,.4);
+}
+html.theme-navy .lobby-top .icon-btn:hover, html.theme-emerald .lobby-top .icon-btn:hover, html.theme-plum .lobby-top .icon-btn:hover{background:var(--sky);}
+html.theme-navy .rail-btn:hover, html.theme-emerald .rail-btn:hover, html.theme-plum .rail-btn:hover{background:var(--navy-2);}
+html.theme-navy .rail-scroll::before, html.theme-emerald .rail-scroll::before, html.theme-plum .rail-scroll::before{background:linear-gradient(to bottom, var(--navy), transparent);}
+html.theme-navy .rail-scroll::after, html.theme-emerald .rail-scroll::after, html.theme-plum .rail-scroll::after{background:linear-gradient(to top, var(--navy), transparent);}
 #theme-veil{
   position:fixed;inset:0;z-index:99997;pointer-events:none;
   mix-blend-mode:color;transition:opacity .45s ease;
-  opacity:calc(.4 * (1 - var(--night-k,0)));
+  opacity:calc(.5 * (1 - var(--night-k,0)));
 }
 html.theme-navy #theme-veil{background:#12335e;}
 html.theme-emerald #theme-veil{background:#0f6e56;}
