@@ -666,7 +666,7 @@ openPhotoCrop:224
 
 ## js/picdict.js (1,002 บรรทัด · 0 รายการ)
 
-## js/picmatch.js (461 บรรทัด · 0 รายการ)
+## js/picmatch.js (460 บรรทัด · 0 รายการ)
 
 ## js/pmaward.js (28 บรรทัด · 0 รายการ)
 
