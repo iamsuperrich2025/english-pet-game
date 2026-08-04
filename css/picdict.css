@@ -161,6 +161,9 @@ body #screen-picdict.screen.active{
 }
 /* ตารางช่องคลิก (ทับภาพพอดี — js ตั้งตำแหน่ง/ขนาด) */
 #screen-picdict .pd-cells{position:absolute;display:grid;}
+/* 🧭 รอบ 1003: แผ่นที่อ่านเส้นแบ่งการ์ดจากภาพได้ → วางช่องเองทีละใบ (แถวไม่เท่ากัน กริดจึงใช้ไม่ได้) */
+#screen-picdict .pd-cells.pd-cells-abs{display:block;}
+#screen-picdict .pd-cells-abs .pd-cell{position:absolute;}
 #screen-picdict .pd-cell{
   border:none;background:transparent;cursor:pointer;border-radius:10%;padding:0;
 }
