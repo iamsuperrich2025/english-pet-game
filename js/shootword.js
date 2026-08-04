@@ -714,10 +714,10 @@
 #sg-cross i:nth-child(2){top:50%;left:2px;right:2px;height:2px;margin-top:-1px}
 /* 🔴 รอบ 936: โหมดเล็ง เดิมซ่อนกากบาททิ้งทั้งอัน (นึกว่าศูนย์ปืนในภาพพอ) — ผู้ใช้เล็ง B "อยู่ในวงศูนย์แล้ว"
    แต่จุดยิงจริงอยู่ต่ำกว่านั้น ~30px เลยยิงลอดช่องว่าง → เปลี่ยนเป็นจุดแดงเล็กตรงจุดยิงจริงเป๊ะ ๆ แทน
-   (เอาแผ่นตัวอักษรมาทาบจุดแดง = โดนแน่) */
-#sg-overlay.aim #sg-cross{width:9px;height:9px;opacity:.92;border-radius:50%;
-  background:rgba(255,64,64,.9);box-shadow:0 0 0 1.5px #fff,0 0 6px rgba(0,0,0,.55)}
-#sg-overlay.aim #sg-cross i{display:none}
+   (เอาแผ่นตัวอักษรมาทาบจุดแดง = โดนแน่)
+   🎯 รอบ 1002: ผู้ใช้สั่งลบจุดแดงทิ้ง (ดูรก) — ซ่อนทั้งอัน ⚠️ ความเสี่ยงเดิมจากรอบ 936 ยังอยู่ (จุดยิงจริงไม่ตรงรูศูนย์ในภาพเป๊ะ
+   ยิ่งห่างขึ้นอีกหลัง AIM_DOT_GAP รอบ 1001) กันพลาดด้วย SNAP_R (รัศมีช่วยเล็ง) แทน — ถ้าเจอบั๊ก "เล็งอยู่ในศูนย์แล้วไม่โดน" ให้กลับมาดูจุดนี้ */
+#sg-overlay.aim #sg-cross{display:none}
 #sg-hint{position:absolute;bottom:1.2vh;left:50%;transform:translateX(-50%);color:#fff;
   background:rgba(29,32,58,.6);border-radius:10px;padding:.4vh 12px;font-size:clamp(10px,2.4vh,13px);
   white-space:nowrap;transition:opacity .6s}
