@@ -5237,7 +5237,20 @@ html.no-anim #night-veil,html.no-anim body::after{transition:none;}
 .pm-card.shake{animation:shake .4s;}
 #screen-picmatch .pm-note{margin-top:4px;}
 #screen-picmatch .timer-wrap{margin-bottom:6px;}
-/* 🐱 รอบ N (ผู้ใช้สั่ง "ขยับปุ่มน้องแมวไปริมล่างขวา แล้วขยับข้อความที่ตกขอบขึ้นมา"):
+/* 🔊 รอบ 989 (ผู้ใช้สั่ง "ย้ายยอดเหรียญไปข้าง Combo แล้วเอาที่ว่างตรงกลางใส่เสียงอ่าน+ความหมายไทย"):
+   ยอดเหรียญ+Combo จับคู่ในกล่องเดียว .pm-right ให้อยู่ติดกัน · ป้าย .pm-now โชว์คำอังกฤษ/ไทยของใบล่าสุดที่แตะ กดซ้ำ = ฟังอีกที */
+#screen-picmatch .game-top{gap:10px;}
+.pm-right{display:flex;align-items:center;gap:8px;flex:0 0 auto;}
+.pm-now{
+  display:flex;align-items:baseline;justify-content:center;gap:4px;flex:1 1 auto;min-width:0;
+  font-family:inherit;cursor:pointer;background:linear-gradient(180deg,#eaf7ff,#dcf1ff);
+  border:2px solid #bfe3ff;border-radius:999px;padding:6px 16px;
+  box-shadow:0 2px 0 rgba(120,170,220,.45);
+}
+.pm-now:active{transform:scale(.97);}
+#pm-now-en{font-weight:800;color:#2f7ac9;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pm-now-th{font-weight:700;color:#e07a3f;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+/* 🐱 รอบ 987 (ผู้ใช้สั่ง "ขยับปุ่มน้องแมวไปริมล่างขวา แล้วขยับข้อความที่ตกขอบขึ้นมา"):
    ปุ่มลอยมุมล่างขวา ดึงออกจาก flex flow ของ section → พื้นที่ที่เคยกินไปคืนให้ .pm-note ขยับขึ้นมาแทน */
 #screen-picmatch .hint-btn{
   position:absolute;right:max(10px,env(safe-area-inset-right));
@@ -5289,5 +5302,8 @@ body #screen-picmatch.screen.active .pm-grid{width:100%;}
   /* ⚠️ รอบ 984: ห้ามตั้ง gap ตายตัวที่นี่ — จะทับ gap:var(--pmg) ที่ fitGrid คำนวณ แล้วแถวกว้างเกินจอ
      (เจอจริง: กระดาน 40 คู่ที่ 812×375 ล้นข้างละ 11px การ์ดริมโดนตัด) */
   .pm-mode-btn{font-size:11px;padding:3px 8px;}
+  #screen-picmatch .pm-now{padding:3px 10px;gap:3px;}
+  #screen-picmatch #pm-now-en{font-size:12px;}
+  #screen-picmatch .pm-now-th{font-size:11px;}
   .pm-wordcard .pm-word-text{font-size:clamp(10px,1.9vh,14px);}
 }

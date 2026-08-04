@@ -78,8 +78,11 @@
         <button class="back-btn" id="pm-back">⬅ กลับ</button>
         <div class="game-avatar" id="pm-avatar" title="ตัวละครของหนูมาเชียร์!"></div>
         <button class="pm-mode-btn" id="pm-mode" title="สลับโหมดเกม">🖼️ ภาพ-ภาพ</button>
-        <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="pm-coin">0</span></div>
-        <div class="combo-pill" id="pm-combo">Combo ×0</div>
+        <button class="pm-now" id="pm-now" title="แตะฟังเสียงอีกครั้ง">🔊 <span id="pm-now-en">แตะภาพฟังเสียง</span><span class="pm-now-th" id="pm-now-th"></span></button>
+        <div class="pm-right">
+          <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="pm-coin">0</span></div>
+          <div class="combo-pill" id="pm-combo">Combo ×0</div>
+        </div>
       </div>
       <div class="timer-wrap"><div class="timer-fill" id="pm-timer"></div></div>
       <!-- 🔀 รอบ 985 (ผู้ใช้สั่ง): กระดานเดียว ภาพ 2 ชุดคละกันทั้งกระดาน (เลิกแยกแถวบน/แถวล่าง)
@@ -93,6 +96,7 @@
     $('pm-back').addEventListener('click', exit);
     $('pm-hint').addEventListener('click', hint);
     $('pm-mode').addEventListener('click', toggleMode);
+    $('pm-now').addEventListener('click', replayNow);
     return sec;
   }
 
@@ -145,6 +149,7 @@
     pm.sel1 = pm.sel2 = null;
     pm.matched = 0; pm.checking = false; pm.hintUsed = false;
     pm.roundAt = Date.now(); pm.clean = true;
+    resetNow();                        // 🔊 การ์ดชุดใหม่ทั้งกระดาน → เคลียร์ป้ายเสียง/ความหมายรอบก่อน
 
     const imgCard = (side, sheetFile, it) =>
       `<button class="pm-card" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="${side}">
@@ -270,6 +275,23 @@
     }
   }
 
+  /* 🗣️ ป้ายกลางบนจอ: คำอังกฤษ + ความหมายไทยของใบล่าสุดที่แตะ (แทนที่พื้นที่ว่างหลังย้ายเหรียญไปข้าง Combo) */
+  function updateNow(en, th){
+    pm.lastEn = en; pm.lastTh = th;
+    const e = $('pm-now-en'), t = $('pm-now-th');
+    if(e) e.textContent = en;
+    if(t) t.textContent = th ? ' · ' + th : '';
+  }
+  function resetNow(){
+    pm.lastEn = pm.lastTh = null;
+    const e = $('pm-now-en'), t = $('pm-now-th');
+    if(e) e.textContent = 'แตะภาพฟังเสียง';
+    if(t) t.textContent = '';
+  }
+  function replayNow(){
+    if(pm.lastEn) speakWord(pm.lastEn);
+  }
+
   /* ---------- แตะภาพ ---------- */
   /* 🔀 รอบ 985: กระดานคละกันแล้ว → แตะใบไหนก่อนก็ได้ (เดิมต้องแถวบน 1 ใบ + แถวล่าง 1 ใบ)
      ใบแรกที่แตะ = sel1 · ใบที่สอง = sel2 → ตรวจทันที · แตะใบเดิมซ้ำ = ยกเลิกการเลือก */
@@ -277,6 +299,7 @@
     if(pm.checking || c.classList.contains('matched')) return;
     if(typeof sfx !== 'undefined') sfx.select();
     speakWord(c.dataset.en);                       // 🔊 เสียงอ่านชื่อสัตว์ภาษาอังกฤษ (ทุกใบในกระดาน)
+    updateNow(c.dataset.en, c.dataset.th);          // 🗣️ ป้ายกลางบน: คำอังกฤษ+ความหมายไทยของใบล่าสุดที่แตะ
     if(pm.sel1 === c){ c.classList.remove('selected'); pm.sel1 = null; return; }
     if(!pm.sel1){ pm.sel1 = c; c.classList.add('selected'); return; }
     pm.sel2 = c;
