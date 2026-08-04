@@ -6336,7 +6336,7 @@ function bindInput(){
   document.getElementById('inv-mapgo').addEventListener('click',applySpawnPick);
   /* 🎯 รอบ 431: วนเลือก "จุดสูงข่ม" ที่คำนวณจากเนินเขาจริง (กดซ้ำ = จุดถัดไป) */
   document.getElementById('inv-mapsnipe').addEventListener('click',()=>{
-    if(!sniperSpots.length) return;
+    if(!sniperSpots.length){ toastBan('🎯 <b>ยังหาจุดสูงข่มไม่เจอ</b><br><span class="ib-sub">แผนที่นี้ไม่มีเนินสูงพอ ลองเลือกจุดเองบนแผนที่แทนนะ</span>',2000); return; }
     snipeIdx=(snipeIdx+1)%sniperSpots.length;
     const s=sniperSpots[snipeIdx];
     mapPick={x:s.x,z:s.z};
