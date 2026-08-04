@@ -199,3 +199,76 @@ PICDICT_WORDS['House.png'] = {cols:8, rows:8, words:[
   ["Toilet","โถส้วม"],["Sink","อ่างล้างหน้า"],["Shower","ฝักบัว"],["Bathtub","อ่างอาบน้ำ"],["Towel","ผ้าเช็ดตัว"],["Soap","สบู่"],["Toothbrush","แปรงสีฟัน"],["Toilet Paper","กระดาษชำระ"],
   ["Front Door","ประตูหน้า"],["Back Door","ประตูหลัง"],["Mailbox","ตู้จดหมาย"],["Doorbell","กริ่งประตู"],["Curtain","ผ้าม่าน"],["Doormat","พรมเช็ดเท้า"],["Key","กุญแจ"],["Lock","แม่กุญแจ"],
 ]};
+
+PICDICT_WORDS['Insects.png'] = {cols:8, rows:8, words:[
+  ["Ant","มด"],["Bee","ผึ้ง"],["Butterfly","ผีเสื้อ"],["Ladybug","เต่าทอง"],["Dragonfly","แมลงปอ"],["Grasshopper","ตั๊กแตน"],["Cricket","จิ้งหรีด"],["Mosquito","ยุง"],
+  ["Fly","แมลงวัน"],["Cicada","จักจั่น"],["Beetle","ด้วง"],["Stag Beetle","ด้วงกว่าง"],["Firefly","หิ่งห้อย"],["Termite","ปลวก"],["Cockroach","แมลงสาบ"],["Moth","มอด"],
+  ["Wasp","แตน"],["Hornet","ตัวต่อ"],["Aphid","เพลี้ย"],["Caterpillar","หนอนผีเสื้อ"],["Earthworm","ไส้เดือนดิน"],["Centipede","ตะขาบ"],["Millipede","กิ้งกือ"],["Snail","หอยทาก"],
+  ["Slug","ทาก"],["Praying Mantis","ตั๊กแตนตำข้าว"],["Leaf Insect","แมลงใบไม้"],["Stick Insect","แมลงกิ่งไม้"],["Dung Beetle","ด้วงมูล"],["Bumblebee","ผึ้งกู่"],["Carpenter Ant","มดช่างไม้"],["Weevil","ด้วงงวง"],
+  ["Pill Bug","ตัวตัดไม้"],["Silverfish","แมลงเงิน"],["Lacewing","แมลงช้างปีกใส"],["Leafhopper","เพลี้ยจักจั่น"],["Bedbug","ตัวเรือด"],["Flea","หมัด"],["Louse","เหา"],["Thrips","เพลี้ยไฟ"],
+  ["Whitefly","แมลงหวี่ขาว"],["Scale Insect","เพลี้ยหอย"],["Mealybug","เพลี้ยแป้ง"],["Leaf Miner","หนอนชอนใบ"],["Sawfly","ตัวต่อเลื่อย"],["Soldier Beetle","ด้วงทหาร"],["Rove Beetle","ด้วงกันกระดก"],["Water Strider","แมงมุมขายาว"],
+  ["Backswimmer","แมลงดำน้ำ"],["Giant Water Bug","แมลงดินน้ำ"],["Alderfly","แมลงคริสตัล"],["Dobsonfly","แมลงตะปู"],["Antlion","มดสิงโต"],["Sand Flea","หมัดทราย"],["False Scorpion","แมงป่องเทียม"],["Springtail","สัตว์หางกระโดด"],
+  ["Stonefly","แมลงหิน"],["Mayfly","แมลงเม่า"],["Caddisfly","แมลงหวี่น้ำ"],["Blackfly","แมลงกันปล่อง"],["Midge","แมลงหวี"],["Gnat","แมลงหวี่"],["Sandfly","แมลงทราย"],["Tsetse Fly","แมลงวันเซ"],
+]};
+
+PICDICT_WORDS['Jobs.png'] = {cols:8, rows:6, words:[
+  ["Teacher","ครู"],["Doctor","หมอ"],["Nurse","พยาบาล"],["Police Officer","ตำรวจ"],["Firefighter","นักดับเพลิง"],["Chef","เชฟ"],["Farmer","เกษตรกร"],["Driver","คนขับรถ"],
+  ["Pilot","นักบิน"],["Flight Attendant","พนักงานต้อนรับบนเครื่องบิน"],["Scientist","นักวิทยาศาสตร์"],["Engineer","วิศวกร"],["Architect","สถาปนิก"],["Dentist","ทันตแพทย์"],["Vet","สัตวแพทย์"],["Pharmacist","เภสัชกร"],
+  ["Lawyer","ทนายความ"],["Judge","ผู้พิพากษา"],["Accountant","นักบัญชี"],["Banker","พนักงานธนาคาร"],["Reporter","นักข่าว"],["Photographer","ช่างภาพ"],["Musician","นักดนตรี"],["Artist","จิตรกร"],
+  ["Singer","นักร้อง"],["Dancer","นักเต้น"],["Teacher Assistant","ผู้ช่วยครู"],["Librarian","บรรณารักษ์"],["Postman","บุรุษไปรษณีย์"],["Delivery Driver","พนักงานส่งของ"],["Cleaner","พนักงานทำความสะอาด"],["Gardener","คนสวน"],
+  ["Barber","ช่างตัดผม"],["Beautician","ช่างเสริมสวย"],["Tailor","ช่างตัดเสื้อ"],["Baker","คนทำขนมปัง"],["Butcher","พ่อค้าเนื้อ"],["Fishmonger","พ่อค้าปลา"],["Carpenter","ช่างไม้"],["Electrician","ช่างไฟ"],
+  ["Plumber","ช่างประปา"],["Mechanic","ช่างยนต์"],["Security Guard","รปภ."],["Zoo Keeper","ผู้ดูแลสวนสัตว์"],["Astronaut","นักบินอวกาศ"],["Soldier","ทหาร"],["Lifeguard","เจ้าหน้าที่ช่วยชีวิต"],["Counselor","ที่ปรึกษา"],
+]};
+
+PICDICT_WORDS['Kitchen.png'] = {cols:8, rows:8, words:[
+  ["Pot","หม้อ"],["Pan","กระทะ"],["Kettle","กาต้มน้ำ"],["Saucepan","หม้อด้าม"],["Rice Cooker","หม้อหุงข้าว"],["Pressure Cooker","หม้ออัดความดัน"],["Stove","เตา"],["Microwave","ไมโครเวฟ"],
+  ["Refrigerator","ตู้เย็น"],["Toaster","เครื่องปิ้งขนมปัง"],["Blender","เครื่องปั่น"],["Food Processor","เครื่องเตรียมอาหาร"],["Dishwasher","เครื่องล้างจาน"],["Sink","อ่างล้างจาน"],["Faucet","ก๊อกน้ำ"],["Dish Rack","ชั้นวางจาน"],
+  ["Plate","จาน"],["Bowl","ชาม"],["Soup Bowl","ชามซุป"],["Glass","แก้วน้ำ"],["Mug","แก้วมัค"],["Cup","ถ้วย"],["Water Bottle","ขวดน้ำ"],["Thermos","กระติกน้ำ"],
+  ["Spoon","ช้อน"],["Fork","ส้อม"],["Knife","มีด"],["Cutting Board","เขียง"],["Chef's Knife","มีดเชฟ"],["Ladle","ทัพพี"],["Spatula","ตะหลิว"],["Tongs","ที่คีบอาหาร"],
+  ["Whisk","ตะกร้อมือ"],["Grater","ที่ขูด"],["Colander","ตะแกรง"],["Strainer","กระชอน"],["Measuring Cup","ถ้วยตวง"],["Measuring Spoons","ช้อนตวง"],["Kitchen Scale","ตาชั่งดิจิทัล"],["Kitchen Timer","นาฬิกาจับเวลา"],
+  ["Salt","เกลือ"],["Pepper","พริกไทย"],["Sugar","น้ำตาล"],["Cooking Oil","น้ำมันปรุงอาหาร"],["Soy Sauce","ซีอิ๊ว"],["Vinegar","น้ำส้มสายชู"],["Ketchup","ซอสมะเขือเทศ"],["Mayonnaise","มายองเนส"],
+  ["Pot Holder","ผ้ารองหม้อ"],["Oven Mitt","ถุงมือกันร้อน"],["Apron","ผ้ากันเปื้อน"],["Kitchen Towel","ผ้าเช็ดมือ"],["Paper Towel","กระดาษทิชชู่"],["Trash Can","ถังขยะ"],["Recycling Bin","ถังรีไซเคิล"],["Garbage Bag","ถุงขยะ"],
+  ["Lunch Box","กล่องอาหาร"],["Food Container","กล่องเก็บอาหาร"],["Cling Wrap","ฟิล์มถนอมอาหาร"],["Aluminum Foil","อลูมิเนียมฟอยล์"],["Baking Tray","ถาดอบ"],["Muffin Pan","พิมพ์คัพเค้ก"],["Cooling Rack","ตะแกรงพักขนม"],["Rolling Pin","ไม้คลึงแป้ง"],
+]};
+
+PICDICT_WORDS['MusicalInstruments.png'] = {cols:8, rows:5, words:[
+  ["Piano","เปียโน"],["Violin","ไวโอลิน"],["Guitar","กีตาร์"],["Trumpet","ทรัมเป็ต"],["Saxophone","แซกโซโฟน"],["Clarinet","คลาริเน็ต"],["Flute","ขลุ่ย"],["Trombone","ทรอมโบน"],
+  ["Drums","กลองชุด"],["Tambourine","แทมบูรีน"],["Triangle","สามเหลี่ยม"],["Maracas","มาราคัส"],["Xylophone","ไซโลโฟน"],["Glockenspiel","กล็อคเคนซปีล"],["Harp","ฮาร์ป"],["Accordion","แอคคอร์เดียน"],
+  ["Ukulele","อูคูเลเล่"],["Banjo","แบนโจ"],["Mandolin","แมนโดลิน"],["Cello","เชลโล"],["Double Bass","ดับเบิลเบส"],["Recorder","รีคอร์เดอร์"],["Ocarina","โอคารินา"],["Harmonica","ฮาร์โมนิกา"],
+  ["Bagpipes","ปี่สก็อต"],["French Horn","เฟรนช์ฮอร์น"],["Tuba","ทูบา"],["Euphonium","ยูโฟเนียม"],["Oboe","โอโบ"],["Bassoon","บาสซูน"],["Kalimba","คาลิมบา"],["Castanets","คาสทาเน็ตส์"],
+  ["Cymbals","ฉาบ"],["Bongos","บองโก"],["Congas","คองกา"],["Djembe","เจมเบ้"],["Snare Drum","สแนร์ดรัม"],["Bass Drum","เบสดรัม"],["Timpani","ทิมพานี"],["Melodica","เมโลดิกา"],
+]};
+
+PICDICT_WORDS['Nature.png'] = {cols:8, rows:9, words:[
+  ["Sun","ดวงอาทิตย์"],["Moon","ดวงจันทร์"],["Star","ดาว"],["Cloud","เมฆ"],["Rainbow","สายรุ้ง"],["Sky","ท้องฟ้า"],["Wind","ลม"],["Air","อากาศ"],
+  ["Rain","ฝน"],["Snow","หิมะ"],["Lightning","ฟ้าผ่า"],["Thunder","ฟ้าร้อง"],["Storm","พายุ"],["Fog","หมอก"],["Dew","น้ำค้าง"],["Frost","น้ำค้างแข็ง"],
+  ["Water","น้ำ"],["Ocean","มหาสมุทร"],["Sea","ทะเล"],["Lake","ทะเลสาบ"],["River","แม่น้ำ"],["Stream","ลำธาร"],["Pond","บึง"],["Waterfall","น้ำตก"],
+  ["Mountain","ภูเขา"],["Hill","เนินเขา"],["Valley","หุบเขา"],["Volcano","ภูเขาไฟ"],["Cave","ถ้ำ"],["Cliff","หน้าผา"],["Desert","ทะเลทราย"],["Island","เกาะ"],
+  ["Forest","ป่า"],["Jungle","ป่าดงดิบ"],["Tree","ต้นไม้"],["Flower","ดอกไม้"],["Grass","หญ้า"],["Leaf","ใบไม้"],["Plant","พืช"],["Mushroom","เห็ด"],
+  ["Rose","กุหลาบ"],["Sunflower","ทานตะวัน"],["Tulip","ทิวลิป"],["Lotus","ดอกบัว"],["Cactus","กระบองเพชร"],["Bamboo","ไผ่"],["Pine Tree","ต้นสน"],["Palm Tree","ต้นปาล์ม"],
+  ["Butterfly","ผีเสื้อ"],["Bee","ผึ้ง"],["Ant","มด"],["Ladybug","แมลงเต่าทอง"],["Dragonfly","แมลงปอ"],["Bird","นก"],["Fish","ปลา"],["Frog","กบ"],
+  ["Rabbit","กระต่าย"],["Squirrel","กระรอก"],["Deer","กวาง"],["Bear","หมี"],["Elephant","ช้าง"],["Lion","สิงโต"],["Giraffe","ยีราฟ"],["Turtle","เต่า"],
+  ["Rock","หิน"],["Soil","ดิน"],["Sand","ทราย"],["Spring","ฤดูใบไม้ผลิ"],["Summer","ฤดูร้อน"],["Autumn","ฤดูใบไม้ร่วง"],["Winter","ฤดูหนาว"],["Earth","โลก"],
+]};
+
+PICDICT_WORDS['Opposites.png'] = {cols:8, rows:8, words:[
+  ["Happy","มีความสุข"],["Sad","เศร้า"],["Big","ใหญ่"],["Small","เล็ก"],["Strong","แข็งแรง"],["Weak","อ่อนแอ"],["Tall","สูง"],["Short","เตี้ย"],
+  ["Hot","ร้อน"],["Cold","หนาว"],["Clean","สะอาด"],["Dirty","สกปรก"],["Open","เปิด"],["Close","ปิด"],["Full","เต็ม"],["Empty","ว่างเปล่า"],
+  ["Bright","สว่าง"],["Dark","มืด"],["Loud","ดัง"],["Quiet","เงียบ"],["Early","เช้า"],["Late","ดึก"],["Easy","ง่าย"],["Difficult","ยาก"],
+  ["Generous","ใจกว้าง"],["Selfish","เห็นแก่ตัว"],["Kind","ใจดี"],["Mean","ใจร้าย"],["Honest","ซื่อสัตย์"],["Dishonest","ไม่ซื่อสัตย์"],["Brave","กล้าหาญ"],["Scared","กลัว"],
+  ["New","ใหม่"],["Old","เก่า"],["Expensive","แพง"],["Cheap","ถูก"],["Interesting","น่าสนใจ"],["Boring","น่าเบื่อ"],["Patient","อดทน"],["Impatient","ใจร้อน"],
+  ["Fast","เร็ว"],["Slow","ช้า"],["Heavy","หนัก"],["Light","เบา"],["Healthy","แข็งแรง"],["Sick","ป่วย"],["Hard","แข็ง"],["Soft","นุ่ม"],
+  ["Neat","เป็นระเบียบ"],["Messy","รก"],["Wet","เปียก"],["Dry","แห้ง"],["Safe","ปลอดภัย"],["Dangerous","อันตราย"],["Lucky","โชคดี"],["Unlucky","โชคร้าย"],
+  ["On","เปิด"],["Off","ปิด"],["First","แรก"],["Last","สุดท้าย"],["Left","ซ้าย"],["Right","ขวา"],["Up","ขึ้น"],["Down","ลง"],
+]};
+
+PICDICT_WORDS['Places.png'] = {cols:8, rows:8, words:[
+  ["School","โรงเรียน"],["Hospital","โรงพยาบาล"],["Bank","ธนาคาร"],["Post Office","ไปรษณีย์"],["Police Station","สถานีตำรวจ"],["Fire Station","สถานีดับเพลิง"],["Library","ห้องสมุด"],["Supermarket","ซูเปอร์มาร์เก็ต"],
+  ["Park","สวนสาธารณะ"],["Playground","สนามเด็กเล่น"],["Zoo","สวนสัตว์"],["Museum","พิพิธภัณฑ์"],["Art Gallery","แกลเลอรีศิลปะ"],["Theater","โรงละคร"],["Cinema","โรงภาพยนตร์"],["Concert Hall","หอคอนเสิร์ต"],
+  ["Restaurant","ร้านอาหาร"],["Cafe","คาเฟ่"],["Bakery","ร้านเบเกอรี่"],["Bookstore","ร้านหนังสือ"],["Toy Store","ร้านของเล่น"],["Flower Shop","ร้านดอกไม้"],["Clothing Store","ร้านเสื้อผ้า"],["Electronics Store","ร้านอิเล็กทรอนิกส์"],
+  ["Airport","สนามบิน"],["Bus Station","สถานีขนส่ง"],["Train Station","สถานีรถไฟ"],["Subway Station","สถานีรถไฟใต้ดิน"],["Pier","ท่าเรือ"],["Harbor","ท่าเรือขนส่ง"],["Gas Station","ปั้มน้ำมัน"],["Parking Lot","ลานจอดรถ"],
+  ["House","บ้าน"],["Apartment","อพาร์ตเมนต์"],["Condominium","คอนโดมิเนียม"],["Hotel","โรงแรม"],["Resort","รีสอร์ท"],["Villa","วิลล่า"],["Guesthouse","เกสต์เฮาส์"],["Campsite","ลานกางเต็นท์"],
+  ["Beach","ชายหาด"],["Island","เกาะ"],["Mountain","ภูเขา"],["Waterfall","น้ำตก"],["Forest","ป่า"],["Lake","ทะเลสาบ"],["River","แม่น้ำ"],["Cave","ถ้ำ"],
+  ["Farm","ฟาร์ม"],["Greenhouse","เรือนกระจก"],["Swimming Pool","สระว่ายน้ำ"],["Gym","ยิม"],["Stadium","สนามกีฬา"],["Golf Course","สนามกอล์ฟ"],["Tennis Court","สนามเทนนิส"],["Skate Park","สเกตพาร์ก"],
+  ["Church","โบสถ์"],["Temple","วัด"],["Mosque","มัสยิด"],["Shrine","ศาลเจ้า"],["Cemetery","สุสาน"],["Lighthouse","ประภาคาร"],["Lookout Point","จุดชมวิว"],["Observatory","หอดูดาว"],
+]};
