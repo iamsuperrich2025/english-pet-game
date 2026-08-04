@@ -732,6 +732,7 @@ html.no-anim body.quake{animation:none;}
 /* ---------- เมนูเลือกอาหาร ---------- */
 .food-box{border-color:var(--orange-d);max-width:340px;}
 .food-box h2{color:#e0812f;}
+.food-hunger-bar{height:16px;margin-top:6px;}
 .food-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
 .food-item{
   background:#fff8ef;border:2px solid #f5ddc0;border-radius:16px;padding:10px 6px 8px;

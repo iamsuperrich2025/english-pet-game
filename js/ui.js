@@ -5206,12 +5206,15 @@ function openFoodMenu(p){
                 : f.human ? `<span class="fd-safe">✅ ${p.type==='dragon' ? 'มังกรกินได้' : 'น้องกินได้'}</span>` : ''}
         </div>`;
   };
+  /* 📊 รอบ 1009: หลอดความอิ่มจริงบนหัวเมนู (เดิมมีแต่ตัวเลข X/100 อ่านยากกว่ากราฟ) — ใช้คลาส hunger-bar/hunger-fill ชุดเดียวกับแดชบอร์ด */
+  const fullPct = Math.min(100, p.fullness||0);
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box food-box">
     <h2>🍽️ เลือกเมนูให้น้องกิน</h2>
+    <div class="hunger-bar food-hunger-bar"><div class="hunger-fill ${canEat ? '' : 'buffed'}" style="width:${fullPct}%"></div></div>
     ${canEat
-      ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
+      ? `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">ความอิ่มตอนนี้ <b>${fullPct}/${MEAL_FULL}</b> — เลือกกินหลายอย่างให้เต็มหลอดนะ</p>`
       : `<p style="margin:4px 0;font-size:13.5px;color:#9a8aac">น้องอิ่มเต็มหลอดแล้ว (<b>${MEAL_FULL}/${MEAL_FULL}</b>) — เมนูอื่นจะกดได้อีกทีตอน <b>${mealLabel(nextMeal)}</b><br>ตอนนี้มีแต่ 🍱 ชุดอาหารวิเศษที่กินตุนล่วงหน้าได้ (ไม่จำเป็นต้องซื้อ รอมื้อหน้าก็ได้นะ)</p>`}
     <div class="food-grid">
       <div class="food-sec">🐾 ชุดอาหารสัตว์ (ปลอดภัย)</div>
