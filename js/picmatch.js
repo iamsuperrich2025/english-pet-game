@@ -381,11 +381,11 @@
     A.classList.add('matched'); B.classList.add('matched');
     pm.sel1 = pm.sel2 = null; pm.checking = false;
 
-    // 🫥 รอบ 990 (ผู้ใช้สั่ง "คำที่จับคู่ได้แล้วให้หายไปจากกระดาน จะได้ไม่ขวางตัวที่เหลือ"):
-    // โชว์กรอบเขียว "matched" สักครู่ก่อน แล้วค่อยหด+หายไปจาก DOM จริง → fitGrid() คำนวณใหม่ ใบที่เหลือขยายมาเต็มพื้นที่ว่าง
+    // 🫥 รอบ 990/991 (ผู้ใช้สั่ง "คำที่จับคู่ได้แล้วให้หายไปจากกระดาน จะได้ไม่ขวางตัวที่เหลือ" + "หมุนหาย"):
+    // โชว์กรอบเขียว "matched" สักครู่ก่อน แล้วค่อยหมุน+หดหายไปจาก DOM จริง → fitGrid() คำนวณใหม่ ใบที่เหลือขยายมาเต็มพื้นที่ว่าง
     setTimeout(()=>{
       A.classList.add('gone'); B.classList.add('gone');
-      setTimeout(()=>{ A.remove(); B.remove(); fitGrid(); }, 220);
+      setTimeout(()=>{ A.remove(); B.remove(); fitGrid(); }, 450);
     }, 500);
 
     if(pm.matched === pm.pairs.length){
