@@ -3132,7 +3132,35 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .set-tabs .lb-tab{flex:1;margin-top:0;padding:clamp(6px,1.5vh,9px) 4px;font-size:clamp(11.5px,2.4vh,13.5px);box-shadow:none;}
 .set-panels{flex:1 1 auto;min-height:0;overflow:hidden;}
 .set-panel{display:none;}
-.set-panel.active{display:flex;flex-direction:column;gap:clamp(6px,1.3vh,10px);height:100%;overflow:hidden;}
+/* overflow-y:auto = ตาข่ายกันตาย ไม่ใช่การออกแบบให้เลื่อน — ทุกขนาดจอที่รองรับต้องพอดีอยู่แล้ว (วัดแล้ว 1311×613 / 812×375)
+   แต่ถ้าเจอจอแปลก ๆ เตี้ยกว่านั้น ให้ "เลื่อนดูได้" ดีกว่า "ตัดหายเงียบ ๆ" แบบบั๊กที่แก้ในรอบ 1007 · ซ่อนแถบเลื่อนไม่ให้เกะกะ */
+.set-panel.active{display:flex;flex-direction:column;gap:clamp(6px,1.3vh,10px);height:100%;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none;}
+.set-panel.active::-webkit-scrollbar{display:none;width:0;}
+/* 📐 รอบ 1007 (ผู้ใช้ส่งภาพ "มีข้อความถูกตัด"): แบ่งแท็บอย่างเดียว (รอบ 893) ยังไม่พอ —
+   เรียงแถวเดียวในแนวตั้ง แท็บ 🔊ทั่วไป ต้องการ 380px แต่กรอบมีให้ 236px (812×375) = หายท้ายไป 2 แถวเงียบ ๆ
+   → จอแนวนอนแตกเป็น 2 คอลัมน์ เห็นครบทั้งใบโดยไม่ต้องย่อตัวอักษร/ไม่ต้องเลื่อน (กฎทอง #7) */
+@media (min-width:520px){
+  .set-panel[data-panel="general"].active,
+  .set-panel[data-panel="feed"].active{
+    display:grid;grid-template-columns:1fr 1fr;align-content:stretch;
+    column-gap:clamp(8px,1.6vw,16px);height:100%;
+    grid-auto-rows:minmax(min-content,1fr);   /* min-content = ไม่บีบเนื้อหาตอนจอเตี้ย · 1fr = กินที่ว่างจอสูงให้แถวใหญ่ กดง่าย */
+  }
+  .set-panel[data-panel="feed"].active{grid-template-rows:min-content;}   /* หัวข้อ 📰 ไม่ต้องยืด */
+  .settings-box .set-feed-head{grid-column:1/-1;}
+  /* 🌙 คอลัมน์แคบ: ปุ่ม 3 โหมด (flex:none 206px) เคยบีบชื่อเหลือ 62px จนคำไทยหักเป็น 5 บรรทัด สูง 136px
+     → กันที่ให้ชื่อขั้นต่ำ 150px ถ้าไม่พอปุ่มตกลงบรรทัดล่างเต็มความกว้างแทน อ่านง่ายกว่าและเตี้ยลง */
+  .settings-box .set-night-row{flex-wrap:wrap;}
+  .settings-box .set-night-row .set-lwrap{min-width:110px;}   /* 110 = เกณฑ์ที่ยังไม่ตกบรรทัดทั้ง 812×375 และ 667×340 · แคบกว่านั้นปุ่มค่อยตกลงบรรทัดล่าง */
+  .settings-box .set-night-row .set-seg{flex:0 1 auto;justify-content:flex-end;}   /* 0 = ห้ามยืด (เคยยืดไป 393px บีบชื่อเหลือ 187px) · shrink ได้เวลาที่ไม่พอ */
+}
+/* 📱 จอเตี้ย+แคบ (มือถือเล็กแนวนอนที่แถบเบราว์เซอร์กินที่ เช่น 667×340): ย่อปุ่ม 3 โหมดกลางคืน
+   ให้กลับไปอยู่บรรทัดเดียวกับชื่อ — ปุ่มยังกว้าง 46px (นิ้วเด็กกดได้) และยังมีคำกำกับครบ ไม่ตัดข้อความทิ้ง */
+@media (max-height:430px) and (max-width:820px){
+  .settings-box .set-seg{gap:4px;padding:3px;}
+  .settings-box .set-seg .set-seg-btn{min-width:46px;padding:5px 4px;font-size:10.5px;}
+  .settings-box .set-seg .set-seg-btn span{font-size:9.5px;}
+}
 .settings-box .set-switch{width:clamp(74px,14vh,92px);height:clamp(30px,5.8vh,36px);}
 .settings-box .set-sw-knob{width:clamp(22px,4.6vh,28px);height:clamp(22px,4.6vh,28px);top:4px;}
 .settings-box .set-switch.on .set-sw-knob{left:calc(100% - 4px - clamp(22px,4.6vh,28px));}
@@ -3150,6 +3178,22 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 }
 .settings-box .set-help{flex:1 1 160px;margin-top:0;padding:clamp(7px,1.6vh,10px);font-size:clamp(12px,2.3vh,14px);}
 .settings-box .set-close{flex:1 1 120px;margin-top:0;padding:clamp(7px,1.6vh,10px) 20px;font-size:clamp(13px,2.5vh,15px);}
+/* 🔠 รอบ 1007 (ต่อจากบล็อก 2 คอลัมน์ด้านบน — ต้องอยู่ "หลัง" กฎ .set-label/.set-desc เดิม ไม่งั้นแพ้ลำดับ):
+   พอเรียง 2 คอลัมน์แล้วเหลือที่ว่างแนวตั้งเกินครึ่ง → คืนที่ว่างเป็นตัวอักษรใหญ่ขึ้นให้เด็กอ่านง่าย
+   (จอเตี้ยยังชนเพดาน clamp ตัวล่างเท่าเดิม ไม่ล้น) */
+@media (min-width:520px){
+  .settings-box .set-row,.settings-box .set-feed-row{padding:clamp(7px,2vh,15px) clamp(10px,2vw,16px);}
+  .settings-box .set-label{font-size:clamp(13px,3.2vh,19px);}
+  .settings-box .set-desc{font-size:clamp(10.5px,2.3vh,14.5px);}
+  .settings-box .set-feed-head{font-size:clamp(12px,2.7vh,17px);}
+  .settings-box .set-feed-sub{font-size:clamp(9.5px,2vh,13px);}
+}
+/* จอเตี้ย: บีบระยะห่างแนวตั้งลงนิดเดียว (ไม่แตะขนาดตัวอักษร) = เหลือที่กันเผื่อฟอนต์/ภาษาเพี้ยนข้ามเครื่อง
+   ⚠️ ต้องอยู่ "หลัง" บล็อก min-width:520px ด้านบน ไม่งั้น padding ย่อ (0,2,0 เท่ากัน) แพ้ลำดับซอร์ส */
+@media (max-height:430px){
+  .settings-box .set-row,.settings-box .set-feed-row{padding-top:6px;padding-bottom:6px;}
+  .set-panel.active{gap:5px;}
+}
 /* 🦸 รอบ 243/893: แถวเลือกตัวละคร — แท็บของตัวเองแล้ว ใช้พื้นที่เต็มความกว้างกล่อง */
 .settings-box .set-blk-row{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;min-height:0;flex:1 1 auto;}
 .settings-box .set-blk-row .set-label{display:block;margin:0 0 clamp(4px,1vh,8px);text-align:left;font-size:clamp(12.5px,2.2vh,14.5px);flex:0 0 auto;}
