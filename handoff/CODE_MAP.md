@@ -664,7 +664,7 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picdict.js (758 บรรทัด · 0 รายการ)
+## js/picdict.js (879 บรรทัด · 0 รายการ)
 
 ## js/picmatch.js (461 บรรทัด · 0 รายการ)
 
@@ -846,7 +846,7 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,367 บรรทัด · 785 selector)
+## css/lobby.css (5,386 บรรทัด · 785 selector)
 :root:6,5182 · html:15 · body:16,5146,5188 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
@@ -975,12 +975,12 @@ vbRender:148 · vbCardHTML:194
 .tp-snd:5013,5016,5022,5023 · .tp-snd-ic:5017 · .tp-snd-track:5018 · .tp-snd-thumb:5020 · .tp-prompt:5027 · .tp-word:5029,5043,5044
 .tp-ch:5031,5036,5037,5039 · .tp-thai:5047 · .tp-hint:5049 · .tp-empty:5051 · .tp-keys:5054 · .tp-row:5056
 .tp-row-fn:5058,5091 · .tp-key:5062,5074,5076,5082(+2) · .tp-key-fn:5089 · .tp-fx:5095 · .tp-coinpop:5096 · .tp-pop-pt:5101
-#city-backdrop:5115,5121 · .city-arrive:5122,5123 · .night:5137,5157,5158,5160(+2) · #night-veil:5183 · .theme-navy:5206,5226 · .theme-emerald:5211,5227
-.theme-plum:5216,5228 · #theme-veil:5221 · #screen-picmatch:5271,5272,5296,5297(+11) · .pm-grid:5273 · .pm-card:5275,5279,5280,5283(+7) · .pm-right:5301
-.pm-now:5302,5308 · #pm-now-en:5309 · .pm-now-th:5310 · .pm-mode-btn:5341,5344 · .pm-wordcard:5345,5346,5348
+#city-backdrop:5115,5121 · .city-arrive:5122,5123 · .night:5137,5157,5158,5160(+2) · #night-veil:5183 · .theme-navy:5207,5232,5236,5237(+3) · .theme-emerald:5213,5246
+.theme-plum:5219,5247 · #theme-veil:5240 · #screen-picmatch:5290,5291,5315,5316(+11) · .pm-grid:5292 · .pm-card:5294,5298,5299,5302(+7) · .pm-right:5320
+.pm-now:5321,5327 · #pm-now-en:5328 · .pm-now-th:5329 · .pm-mode-btn:5360,5363 · .pm-wordcard:5364,5365,5367
 
-## css/picdict.css (258 บรรทัด · 1 selector)
-#screen-picdict:9,16,17,22(+85)
+## css/picdict.css (290 บรรทัด · 1 selector)
+#screen-picdict:9,16,17,22(+95)
 
 ## css/style.css (2,206 บรรทัด · 552 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
