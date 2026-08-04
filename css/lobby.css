@@ -5297,6 +5297,17 @@ html.theme-plum .rail-scroll::after{background:linear-gradient(to top,rgba(22,11
 /* 🚫 รอบ 1004: ผ้าคลุมเกษียณถาวร — เหลือกฎกันเหนียวไว้กรณี div ยังถูกสร้างจากสคริปต์เก่า/แคช */
 #theme-veil{display:none!important;}
 
+/* 🎨 รอบ 1012 (ผู้ใช้: "ให้แผง panel ย่อย (ตลาด/โรงงาน/บ้าน/เพื่อน) เปลี่ยนสีหัวการ์ด/แถบตามธีมด้วย"):
+   .panel-head (แถบหัวแผงทุกใบ) ใช้ var(--navy-2) อยู่แล้วจึงเปลี่ยนสีตามธีมเองอัตโนมัติ ไม่ต้องเพิ่มกฎ —
+   ที่ยังฮาร์ดโค้ดฟ้า/ม่วงเดิมค้างอยู่มีแค่ 2 ชิ้นในแผงตลาด/โรงงาน (บ้าน/เพื่อนไม่มีแถบสีของตัวเอง ใช้ .panel-head ร่วม)
+   ทับสีตรงด้วย var(--sky)/var(--sky-d) ของธีมนั้น (สีเด่นเดิมของธีมอยู่แล้ว ไม่ตั้งค่าใหม่ · คงมุม/ทิศทาง gradient เดิมเป๊ะ) */
+html.theme-emerald .hq-head,html.theme-plum .hq-head{
+  background:linear-gradient(180deg,var(--sky),var(--sky-d));
+}
+html.theme-emerald .mkt-group-head,html.theme-plum .mkt-group-head{
+  background:linear-gradient(135deg,var(--sky),var(--sky-d));
+}
+
 /* ============================================================
    🧭 หัวล็อบบี้ตรงแนวกล่องด้านล่าง (รอบ 971 · ผู้ใช้สั่ง 3 ส.ค. 2026)
    ① การ์ดผู้เล่น (.id-card) ต้องกว้างชนขอบขวากล่อง Global Feed เสมอ
