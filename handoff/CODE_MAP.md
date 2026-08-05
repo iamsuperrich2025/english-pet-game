@@ -987,7 +987,7 @@ vbRender:148 · vbCardHTML:194
 #theme-veil:5315 · #screen-picmatch:5368,5369,5393,5394(+11) · .pm-grid:5370 · .pm-card:5372,5376,5377,5380(+7) · .pm-right:5398 · .pm-now:5399,5405
 #pm-now-en:5406 · .pm-now-th:5407 · .pm-mode-btn:5438,5441 · .pm-wordcard:5442,5443,5445
 
-## css/picdict.css (314 บรรทัด · 1 selector)
+## css/picdict.css (317 บรรทัด · 1 selector)
 #screen-picdict:9,16,17,22(+104)
 
 ## css/picquiz_online.css (119 บรรทัด · 37 selector)
