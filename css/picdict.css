@@ -218,17 +218,17 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-zoom.listening .pd-zoom-speaker{animation:pd-speaker-pulse .7s ease-in-out infinite alternate;}
 #screen-picdict .pd-zoom.locked-pulse .pd-zoom-card{animation:pd-lock-shake .38s ease;}
 #screen-picdict .pd-zoom-reward{
-  position:absolute;left:50%;top:34%;z-index:3;transform:translate(-50%,-50%) scale(.65);
+  position:absolute;left:calc(100% + 14px);top:50%;z-index:3;transform:translate(-10px,-50%) scale(.65);
   display:flex;flex-direction:column;align-items:center;min-width:180px;padding:13px 20px;
   border-radius:18px;background:#fffef5;border:4px solid #ffd54f;
   box-shadow:0 10px 28px rgba(0,0,0,.34);opacity:0;pointer-events:none;
 }
 #screen-picdict .pd-zoom-reward.show{animation:pd-reward-pop 1.6s ease both;}
 #screen-picdict .pd-zoom-reward b{font-size:clamp(28px,7vh,44px);color:#ef8f00;line-height:1;}
-#screen-picdict .pd-zoom-reward span{margin-top:6px;color:#6d4c1b;font-weight:800;font-size:clamp(12px,2.5vh,16px);}
+#screen-picdict .pd-zoom-reward span{margin-top:6px;color:#6d4c1b;font-weight:800;font-size:clamp(12px,2.5vh,16px);white-space:nowrap;}
 @keyframes pd-speaker-pulse{to{transform:scale(1.24);filter:drop-shadow(0 0 4px #42a5f5)}}
 @keyframes pd-lock-shake{20%,60%{transform:translateX(-7px) scale(1)}40%,80%{transform:translateX(7px) scale(1)}}
-@keyframes pd-reward-pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.55)}12%,82%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-62%) scale(1.08)}}
+@keyframes pd-reward-pop{0%{opacity:0;transform:translate(-10px,-50%) scale(.55)}12%,82%{opacity:1;transform:translate(0,-50%) scale(1)}100%{opacity:0;transform:translate(10px,-58%) scale(1.05)}}
 /* ── บอลลูนคำที่แตะ ── */
 #screen-picdict .pd-balloon{
   position:absolute;z-index:20;transform:translate(-50%,-100%);pointer-events:none;
@@ -311,4 +311,7 @@ body #screen-picdict.screen.active{
   #screen-picdict .pd-zoom-canvas{max-height:40vh;}
   #screen-picdict .pd-zoom-listen{min-height:22px;padding:2px 9px;font-size:10.5px;}
   #screen-picdict .pd-zoom-close{width:26px;height:26px;font-size:13px;top:-9px;right:-9px;}
+  #screen-picdict .pd-zoom-reward{left:calc(100% + 8px);min-width:140px;padding:9px 12px;border-width:3px;}
+  #screen-picdict .pd-zoom-reward b{font-size:24px;}
+  #screen-picdict .pd-zoom-reward span{margin-top:4px;font-size:11px;}
 }
