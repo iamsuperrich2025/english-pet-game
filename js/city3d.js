@@ -2984,12 +2984,13 @@ function setChip(txt){
    จำสถานะเปิด/ปิดใน localStorage (vwCityBgm) · ซ่อนแท็บ = หยุด กลับมา = เล่นต่อ
    ============================================================ */
 const BGM_KEY='vwCityBgm', BGM_VOL=0.6, BGM_SRC='sound/bgm/bgm_01.mp3';
-let bgmAudio=null, bgmBtn=null;
+const BGM_DUCK_PICTURE_DICTIONARY=0.2;
+let bgmAudio=null, bgmBtn=null, bgmDuck=1;
 function bgmWant(){ try{ return localStorage.getItem(BGM_KEY)!=='0'; }catch(e){ return true; } }
 function bgmEnsure(){
   if(!bgmAudio){
     bgmAudio = new Audio(BGM_SRC);
-    bgmAudio.loop = true; bgmAudio.volume = BGM_VOL; bgmAudio.preload = 'auto';
+    bgmAudio.loop = true; bgmAudio.volume = BGM_VOL * bgmDuck; bgmAudio.preload = 'auto';
   }
   return bgmAudio;
 }
@@ -2997,6 +2998,12 @@ function bgmEnsure(){
    รบกวนผู้ใช้จริง (เจอ 2 ส.ค.) · ผู้เล่นจริงบน vocabworld.web.app ไม่กระทบ ยังเล่นอัตโนมัติ · ปุ่ม 🎵 กดเล่นเองได้เสมอ */
 const BGM_DEV = /^(localhost|127\.)/.test(location.hostname);
 function bgmPlay(force){ if(bgmWant() && (!BGM_DEV || force)) bgmEnsure().play().catch(()=>{}); }   // โดนบล็อก = เงียบไว้ รอ gesture
+/* ลดเพลงเมืองขณะอ่าน/ทำแบบฝึกใน Picture Dictionary โดยไม่เปลี่ยนความตั้งใจเปิด-ปิดเพลงของผู้เล่น */
+function bgmDuckForPictureDictionary(on){
+  bgmDuck = on ? BGM_DUCK_PICTURE_DICTIONARY : 1;
+  if(bgmAudio) bgmAudio.volume = BGM_VOL * bgmDuck;
+}
+window.bgmDuckForPictureDictionary = bgmDuckForPictureDictionary;
 function bgmRefreshBtn(){
   if(!bgmBtn) return;
   const on = bgmWant();

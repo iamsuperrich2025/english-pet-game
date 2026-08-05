@@ -1033,6 +1033,7 @@
   function open(){
     build();
     buildPages();
+    if(typeof window.bgmDuckForPictureDictionary === 'function') window.bgmDuckForPictureDictionary(true);
     if(has('closePanel')) closePanel();
     if(has('showScreen')) showScreen('screen-picdict');
     /* ⚠️ ต้องวัดขนาดหลัง showScreen เสมอ (ก่อนหน้านั้นจอยังไม่ active → clientWidth = 0) */
@@ -1040,6 +1041,7 @@
   }
   function exit(){
     if(!closeZoom()) return;
+    if(typeof window.bgmDuckForPictureDictionary === 'function') window.bgmDuckForPictureDictionary(false);
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     const back = ()=>{
       if(has('renderDashboard')) renderDashboard();
