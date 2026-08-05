@@ -21,6 +21,7 @@
 <link rel="stylesheet" href="css/lobby.css">
 <link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
 <link rel="stylesheet" href="css/picdict.css">  <!-- 📖 รอบ 992: หนังสือ Picture Dictionary -->
+<link rel="stylesheet" href="css/picquiz_online.css">  <!-- 🌐🎧 ห้องแข่งครูถามศัพท์ออนไลน์ -->
 <!-- 🌙 รอบ 882/886: โหมดกลางคืนล็อบบี้ (โทนอุ่นมืดลง) — วางไว้ตรงนี้ (ก่อน <body>) เพื่อใส่คลาส `night`
      ตั้งแต่ก่อน paint แรก ไม่งั้นจอสว่างวาบก่อนแล้วค่อยมืด · หน้าตาทั้งหมดอยู่ใน css/lobby.css โซน 🌙 รอบ 882
      กติกา 3 โหมด (เลือกได้ในหน้า ⚙️ ตั้งค่า — set-night-row ใน js/util.js openSettings()):
@@ -716,6 +717,7 @@
 <script src="js/photo.js"></script>  <!-- 📷 รอบ 709: รูปโปรไฟล์อัปโหลดเอง (ครอป/ย่อในเครื่อง → localStorage + /pphoto) -->
 <script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->
 <script src="js/online.js"></script>
+<script src="js/picquiz_online.js"></script>  <!-- 🌐 ห้องละ 50 คน + แชท + group voice -->
 <script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
 <script src="js/music.js"></script>  <!-- ระบบเพลงพื้นหลัง + วิทยุในรถ (รอบ 181) -->
 <script src="js/main.js"></script>
@@ -818,7 +820,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
    +'<ol>'
    +'<li>🎓 <b>เกมเพื่อการศึกษา:</b> ช่วยเด็กเรียนคำศัพท์ผ่านการเล่น · แนะนำให้ผู้ปกครองดูแลการเล่นของเด็ก</li>'
    +'<li>🔐 <b>ข้อมูลส่วนตัว:</b> เกมเก็บความคืบหน้าไว้ในเครื่องและบัญชี Google ของคุณ (ผ่าน Firebase) · ใช้อีเมลเพื่อเข้าสู่ระบบและบันทึกข้อมูลเท่านั้น · เราไม่ขายข้อมูล · ไม่เก็บชื่อจริงของเด็ก (ใช้ชื่อเล่น)</li>'
-   +'<li>💬 <b>ฟีเจอร์ออนไลน์:</b> พบเพื่อนผู้เล่นและแชทได้ (มีตัวกรองคำหยาบ) · โปรดใช้ถ้อยคำสุภาพ และไม่เปิดเผยข้อมูลส่วนตัว</li>'
+   +'<li>💬 <b>ฟีเจอร์ออนไลน์:</b> พบเพื่อน แชท และคุยสายเสียงกลุ่มได้ · โปรดใช้ถ้อยคำสุภาพและไม่เปิดเผยข้อมูลส่วนตัว · ไมโครโฟนเปิดเฉพาะเมื่อกดรับ/เข้าสาย และไม่มีการอัดเสียง</li>'
    +'<li>🪙 <b>เหรียญในเกม:</b> เหรียญและสินค้าทั้งหมดเป็นของในเกม ไม่มีมูลค่าเป็นเงินจริง · <b>ไม่สามารถเพิ่มเหรียญหรือซื้อสินค้าในเกมด้วยเงินจริงได้</b> เหรียญและสินค้าจะเพิ่มได้ด้วยความวิริยะอุตสาหะในการมุ่งมั่นพัฒนาตนเอง เรียนรู้คำศัพท์ และความสามารถในการบริหารจัดการเหรียญภายในเกมด้วยตัวผู้เล่นเองเท่านั้น (ผู้เล่นที่มีเหรียญเยอะ = ผู้เล่นที่มีความใฝ่รู้และมีความสามารถในการบริหารจัดการที่ดี)</li>'
    +'<li>⚠️ <b>ให้บริการ "ตามสภาพ":</b> พัฒนาอย่างตั้งใจแต่ไม่รับประกันว่าไร้ข้อผิดพลาด · ข้อมูลอาจสูญหายได้ แนะนำให้สำรองข้อมูลเป็นระยะ</li>'
    +'<li>✅ การกด "ยอมรับ" ถือว่าคุณหรือผู้ปกครองยอมรับเงื่อนไขและนโยบายความเป็นส่วนตัวนี้</li>'
@@ -827,7 +829,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
    +'<ol class="cg-en">'
    +'<li>🎓 <b>Educational game:</b> helps children learn vocabulary through play. Parental guidance is recommended.</li>'
    +'<li>🔐 <b>Privacy:</b> progress is stored on this device and in your Google account (via Firebase). Your email is used only for sign-in and saving data. We do not sell your data, and we do not collect children’s real names (nicknames only).</li>'
-   +'<li>💬 <b>Online features:</b> you may meet other players and chat (with a profanity filter). Please be polite and never share personal information.</li>'
+   +'<li>💬 <b>Online features:</b> you may meet players, chat and join group voice calls. Please be polite and never share personal information. The microphone starts only after you accept/join a call; calls are not recorded.</li>'
    +'<li>🪙 <b>In-game coins:</b> all coins and items are virtual, with no real-world monetary value. <b>Coins and items can never be bought or topped up with real money.</b> They can only be earned through the player’s own diligence — staying committed to learning vocabulary and managing coins wisely within the game (players with more coins are players who are more studious and better at managing resources).</li>'
    +'<li>⚠️ <b>Provided “as is”:</b> built with care but not guaranteed error-free. Data may be lost — please back up periodically.</li>'
    +'<li>✅ By tapping “Accept”, you (or a parent/guardian) agree to these Terms and this Privacy notice.</li>'
