@@ -281,7 +281,8 @@ function showProgressReport(){
     : `<div class="rp-row"><span>✈️ ใบอนุญาตนักบิน (โลกเฮลิฯ)</span><span style="color:#9a8aac">ยังไม่ได้ — บินเก็บ 5 คำติดไม่ชน 🥉</span></div>`;
   /* 🐾 รอบ 323: แถวเข็มเพื่อนซี้ — อิงสตรีค "วันที่ลูบน้องติดกัน" (เหมือนนักบิน ไม่ใช่ยอดสะสม)
      โชว์สตรีคปัจจุบัน + สถิติดีสุด + บอกว่าอีกกี่วันได้เข็มถัดไป */
-  const bffNow  = state.patStreak || 0;
+  /* 🔥 รอบ 1035: ใช้สตรีค "ตอนนี้" (ขาดแล้ว = 0) — เดิมอ่าน state.patStreak ตรง ๆ เลยค้างเลขเก่าไว้ตลอด */
+  const bffNow  = (typeof patStreakNow === 'function') ? patStreakNow() : (state.patStreak || 0);
   // เข็มถัดไป = ระดับที่ "ยังไม่เคยได้" (ไม่ใช่แค่ยังไม่ถึงสตรีค — สตรีคขาดแล้วเริ่มใหม่ เข็มเก่ายังอยู่)
   const bffNext = BFF_TIERS.find(t=>t[1] > (state.bffBadge || 0));
   const bffHtml = `<div class="rp-row"><span>🐾 เพื่อนซี้ (ลูบน้องค้างในล็อบบี้ วันละครั้ง)</span><span>`

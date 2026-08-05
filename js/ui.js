@@ -464,7 +464,7 @@ function patRemindTick(){
   state.patRemindDay = day;
   saveState();
   const p = activePet();
-  const streak = state.patStreak || 0;
+  const streak = patStreakNow();       // 🔥 รอบ 1035: สตรีคที่ยังต่อได้จริง (ขาดแล้วอย่าชวนต่อสตรีคเก่า)
   /* ⚠️ ถ้อยคำต้องเลี่ยงคำใน TOAST_WARN_RE (util.js) เช่น "ยังไม่" / "ไม่ได้" —
      ไม่งั้น toast กลายเป็นแบบ "คำเตือน" = ค้างจอรอกดปิด + เสียงเตือน + สั่น (ไม่ใช่เตือนอ่อนๆ) */
   toast(streak > 0
@@ -5542,7 +5542,8 @@ function patCalendarHTML(){
     const cls = (days.has(key) ? ' on' : '') + (key === today ? ' today' : '');
     cells.push(`<span class="pi-dot${cls}" title="${key}"></span>`);
   }
-  const now = state.patStreak || 0;
+  const now = patStreakNow();                 // 🔥 รอบ 1035: ค่าจริงตอนนี้ (ขาดแล้ว = 0) ไม่ใช่ค่าค้างจากวันที่ลูบล่าสุด
+  const broke = !now && (state.patStreak || 0) > 0 && !!state.patStreakDay;
   const best = state.patStreakBest || 0;
   const badge = (typeof bffEmoji === 'function' && state.bffBadge) ? ` ${bffEmoji(state.bffBadge)}` : '';
   return `<div class="pi-streak">
@@ -5551,7 +5552,9 @@ function patCalendarHTML(){
     <div class="pi-dots">${cells.join('')}</div>
     <div class="pi-streak-note">${days.has(today)
       ? 'วันนี้ลูบแล้ว เก่งมาก! 🥰'
-      : 'วันนี้ยังไม่ได้ลูบ — กดค้างที่ตัวน้องในล็อบบี้ได้เลย 🐾'}</div>
+      : broke
+        ? `สตรีคขาดไปแล้ว (ลูบครั้งล่าสุด ${escapeHTML(state.patStreakDay)}) — ลูบวันนี้เริ่มนับใหม่ที่ 1 🐾`
+        : 'วันนี้ยังไม่ได้ลูบ — กดค้างที่ตัวน้องในล็อบบี้ได้เลย 🐾'}</div>
   </div>`;
 }
 
@@ -5559,6 +5562,19 @@ function patCalendarHTML(){
    นับ "วันละครั้ง" ไม่ว่าจะลูบกี่ตัว (สตรีคเป็นของผู้เล่น ไม่ใช่ของสัตว์รายตัว)
    ลูบต่อจากเมื่อวาน = +1 · ขาดไปเกิน 1 วัน = เริ่มนับใหม่ที่ 1 · เข็มที่ได้แล้วไม่หายแม้สตรีคขาด
    คืนจำนวนวันสตรีคปัจจุบัน (null = วันนี้นับไปแล้ว) */
+/* 🔥 รอบ 1035: สตรีคที่ "ยังมีชีวิตอยู่จริง ณ ตอนนี้"
+   state.patStreak เป็นค่าที่แช่แข็งไว้ตอนลูบครั้งล่าสุด — ไม่มีใครลดมันตอนสตรีคขาด
+   ผลคือหยุดลูบไป 10 วัน หน้าโปรไฟล์ยังโชว์ "🔥 ลูบติดกัน 5 วัน" เหมือนเดิม (ผู้ใช้ทัก 5 ส.ค. 2026)
+   → ทุกที่ที่ "แสดงผล" ต้องเรียกตัวนี้ ไม่ใช่อ่าน state ตรง ๆ (ค่าที่เก็บไม่แตะ เข็ม/สถิติดีสุดคงเดิม) */
+function patDayKey(ms){
+  const d = thDate(ms);
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function patStreakNow(){
+  const last = state.patStreakDay || '';
+  if(!last) return 0;
+  return (last === patDayKey(Date.now()) || last === patDayKey(Date.now() - TH_DAY_MS)) ? (state.patStreak || 0) : 0;
+}
 function patStreakTick(day){
   if(state.patStreakDay === day) return null;                 // ลูบตัวที่ 2 ของวันเดียวกัน — ไม่นับซ้ำ
   const yd = thDate(Date.now() - TH_DAY_MS);      // 🇹🇭 รอบ 988: เมื่อวานตามวันไทย
