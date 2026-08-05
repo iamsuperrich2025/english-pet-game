@@ -160,6 +160,40 @@ function __clipReady(p){
   return !!(k && CLIP_FILES[k]);
 }
 
+/* 🐾 รอบ 1024: ภาพต่อเนื่อง 6 เฟรมจาก img/animation/ ถูกครอป+บีบเป็น WebP แถวเดียว
+   ใช้เป็นฉากสำรองหน้า lobby เมื่อคลิปยังไม่พร้อม — โหลดเพียงชุดของสัตว์ที่กำลังแสดง */
+const PET_SHOW_SEQ = {
+  cat: {
+    baby:  { file:'img/anim/pet_cat_baby_happy.webp',  frames:6, fw:275, fh:364, fps:6 },
+    adult: { file:'img/anim/pet_cat_adult_happy.webp', frames:6, fw:341, fh:346, fps:6 },
+  },
+  dog: {
+    baby:  { file:'img/anim/pet_dog_baby_happy.webp',  frames:6, fw:355, fh:361, fps:6 },
+    adult: { file:'img/anim/pet_dog_adult_happy.webp', frames:6, fw:331, fh:357, fps:6 },
+  },
+  dragon: {
+    baby:  { file:'img/anim/pet_dragon_baby_happy.webp',  frames:6, fw:313, fh:369, fps:6 },
+    adult: { file:'img/anim/pet_dragon_adult_happy.webp', frames:6, fw:340, fh:351, fps:6 },
+  },
+};
+
+function petShowSeqHTML(p, stage, base, wearOv){
+  const a = PET_SHOW_SEQ[p.type] && PET_SHOW_SEQ[p.type][stage];
+  const worn = (typeof equippedItem === 'function') ? equippedItem(p) : null;
+  const shaped = stage === 'adult' && p.shape && p.shape !== 'normal';
+  const hungry = typeof petHungry === 'function' && petHungry(p);
+  if(!a || !base || wearOv || worn || shaped || state.noAnim || p.sick || p.sleeping || hungry) return '';
+  const dur = (a.frames / a.fps).toFixed(2);
+  const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
+  return `<span class="ps-seq-wrap ps-fr" style="aspect-ratio:${a.fw}/${a.fh}">`
+    + `<img class="pet-img ps-seq-fallback" src="${base}" alt="${escapeHTML(p.name)}">`
+    + `<span class="ps-seq" aria-hidden="true" style="background-image:url('${a.file}');`
+    + `background-size:${a.frames * 100}% 100%;--ps-seq-end:${bpx}%;`
+    + `animation-duration:${dur}s;--ps-seq-steps:${a.frames}"></span>`
+    + `<img class="ps-seq-probe" src="${a.file}" alt="" aria-hidden="true" `
+    + `onload="this.parentElement.classList.add('ready')"></span>`;
+}
+
 /* ตัวน้อง + ท่าเล่นในคลิป (คลาส .pet-stage / id #pet-tap คงเดิม —
    ระบบเก่ายังยึดไว้ใช้: applyPatRemindGlow, heartsFx, cureCelebrateFx, bindPetTap) */
 function petShowHTML(p, clipUrl){
@@ -169,22 +203,24 @@ function petShowHTML(p, clipUrl){
      ⚠️ ตอนซ้อนชุดต้องเหลือเฟรมเดียว: เฟรม "ดีใจ" เป็นคนละท่า หมุดชุดคนละที่ สลับแล้วชุดจะลอย */
   const wearOv = petWearOverlay(p, base);
   // เฟรมที่ 2 ของคลิป = ภาพ "ดีใจ" ของวัยเดียวกัน (มีไฟล์ถึงใช้ · ไม่มีก็เล่นเฟรมเดียว)
-  const happy = (!wearOv && stage !== 'egg' && !p.sick && !p.sleeping) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
-  const calm  = !!(p.sick || p.sleeping || stage === 'egg');
-  const badge = p.sick ? '🤒' : (p.sleeping ? '💤' : (petHungry(p) ? '😫' : ''));
-  const core = base
+  const hungry = petHungry(p);
+  const happy = (!wearOv && stage !== 'egg' && !p.sick && !p.sleeping && !hungry) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
+  const calm  = !!(p.sick || p.sleeping || hungry || stage === 'egg');
+  const badge = p.sick ? '🤒' : (p.sleeping ? '💤' : (hungry ? '😫' : ''));
+  const seq = petShowSeqHTML(p, stage, base, wearOv);
+  const core = seq || (base
     ? (wearOv
         ? `<span class="pet-wear ps-fr"><img class="pet-img" src="${base}" alt="${escapeHTML(p.name)}">${wearLayerHTML(wearOv)}</span>`
         : `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
           + (happy && happy !== base ? `<img class="pet-img ps-fr ps-f2" src="${happy}" alt="">` : ''))
-    : `<span class="pet-emoji">${(PETS[p.type] || {})[stage] || '🐾'}</span>`;
+    : `<span class="pet-emoji">${(PETS[p.type] || {})[stage] || '🐾'}</span>`);
   /* 🎬 รอบ 605: มีคลิปวิดีโอของวัยนี้ = เล่นเต็มกรอบเวที (คลิปมีฉากในตัวเอง พื้นหลังดำ)
      ภาพนิ่ง+ฉากการ์ตูนยังวาดไว้ข้างใต้เสมอ — คลิปโหลดไม่ได้/ออฟไลน์ ถอด ps-clip-mode แล้วเห็นของเดิมทันที
      ⚠️ .ps-pod ต้องอยู่เสมอ (แม้โปร่งใส) เพราะ #pet-tap / heartsFx / applyPatRemindGlow ยึดไว้ */
   const video = clipUrl
     ? `<video class="ps-video" src="${clipUrl}" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>`
     : '';
-  return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}">
+  return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}${seq ? ' ps-seq-mode' : ''}">
     ${video}
     <div class="pet-stage ps-pod">
       <div class="ps-travel">

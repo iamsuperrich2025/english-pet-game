@@ -1,47 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
+<html lang="th">
 <meta charset="utf-8">
-<title>ดูสไปรต์น้องเดินในกรอบล็อบบี้ (เครื่องมือพัฒนา)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vocab World lobby sprite preview</title>
 <link rel="stylesheet" href="../css/lobby.css">
 <style>
-  body{margin:0;background:linear-gradient(#1a3a6b,#0d1e3d);min-height:100vh;
-       display:flex;gap:18px;flex-wrap:wrap;align-items:center;justify-content:center;
-       font-family:system-ui;padding:24px}
-  /* จำลองกรอบเวทีป้าย rank ในล็อบบี้ (ขนาดใกล้ของจริง) */
-  .stage-hero{width:420px;height:300px;border-radius:18px;position:relative;overflow:hidden;
-              background:radial-gradient(circle at 50% 40%,#2a5590,#12294c);border:2px solid #3a76d8}
-  .hero-scene{position:absolute;inset:0;align-items:flex-end;justify-content:center;padding-bottom:26px;--pet-vh:29}
-  .ground{position:absolute;left:8%;right:8%;bottom:24px;height:3px;border-radius:9px;
-          background:linear-gradient(90deg,transparent,#7fd0ff88,transparent)}
-  .lbl{position:absolute;top:8px;left:12px;color:#cfe4ff;font-size:13px;font-weight:600}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;padding:18px;background:#10284c;color:#e9f6ff;
+    font-family:system-ui,sans-serif;display:grid;grid-template-columns:repeat(3,minmax(220px,1fr));gap:14px}
+  .stage-hero.preview-card{width:auto;height:250px;min-height:250px;border:2px solid #72c7ef;border-radius:22px;
+    position:relative;overflow:hidden;padding:0;background:linear-gradient(#bcecff 0 43%,#ffd4e6 44% 76%,#f9a8cc 77%)}
+  .preview-card .hero-scene{position:absolute;inset:0;container-type:inline-size}
+  .preview-label{position:absolute;z-index:5;top:10px;left:12px;padding:4px 10px;border-radius:999px;
+    background:#16436dcc;font-weight:800;font-size:14px}
+  .preview-card .pet-show{padding-bottom:2%}
+  @media(max-width:780px){body{grid-template-columns:repeat(2,minmax(150px,1fr));padding:10px;gap:8px}
+    .stage-hero.preview-card{height:170px;min-height:170px}}
 </style>
-
+<body>
 <script>
-  // ค่าชุดเดียวกับ PET_ANIM ใน js/ui.js (path เติม ../ เพราะไฟล์นี้อยู่ใน tools/)
-  const PET_ANIM = {
-    cat:    { file:'../img/anim/pet_cat_walk.webp',    frames:24, fw:172, fh:172, fps:14, roam:true  },
-    dog:    { file:'../img/anim/pet_dog_walk.webp',    frames:24, fw:127, fh:165, fps:14, roam:true, flip:true },
-    dragon: { file:'../img/anim/pet_dragon_idle.webp', frames:24, fw:147, fh:139, fps:12, roam:true  },
-  };
-  // ก้อน HTML เดียวกับ petAnimHTML() ใน ui.js (รวม flip แล้ว)
-  function petAnimHTML(a){
-    const dur = (a.frames / a.fps).toFixed(2);
-    const bpx = (100 * a.frames / (a.frames - 1)).toFixed(3);
-    return `<div class="pet-stage"><div class="pet-wrap">`
-      + `<div class="pet-roam${a.roam===false?' no-roam':''}"><div class="pet-anim" style="`
-      + `aspect-ratio:${a.fw}/${a.fh};background-image:url('${a.file}');`
-      + `background-size:${a.frames*100}% 100%;--bpx:${bpx}%;`
-      + `${a.flip ? 'transform:scaleX(-1);' : ''}`
-      + `animation:petWalk ${dur}s steps(${a.frames}) infinite"></div></div>`
-      + `</div></div>`;
-  }
-  document.addEventListener('DOMContentLoaded', ()=>{
-    for(const [key,a] of Object.entries(PET_ANIM)){
-      const box = document.createElement('div');
-      box.className = 'stage-hero';
-      box.innerHTML = `<div class="lbl">${key}${a.flip?' · flip':''}${a.roam===false?' · no-roam':''}</div>`
-        + `<div class="ground"></div>`
-        + `<div class="hero-scene" style="--pet-vh:34">${petAnimHTML(a)}</div>`;
-      document.body.appendChild(box);
-    }
-  });
+if(new URLSearchParams(location.search).has('noanim')) document.documentElement.classList.add('no-anim');
+const PET_SHOW_SEQ = {
+  'cat baby':    {file:'../img/anim/pet_cat_baby_happy.webp',fw:275,fh:364,fps:6},
+  'cat adult':   {file:'../img/anim/pet_cat_adult_happy.webp',fw:341,fh:346,fps:6},
+  'dog baby':    {file:'../img/anim/pet_dog_baby_happy.webp',fw:355,fh:361,fps:6},
+  'dog adult':   {file:'../img/anim/pet_dog_adult_happy.webp',fw:331,fh:357,fps:6},
+  'dragon baby': {file:'../img/anim/pet_dragon_baby_happy.webp',fw:313,fh:369,fps:6},
+  'dragon adult':{file:'../img/anim/pet_dragon_adult_happy.webp',fw:340,fh:351,fps:6},
+};
+for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
+  const card=document.createElement('section'); card.className='stage-hero pet-show-mode preview-card';
+  card.innerHTML=`<div class="preview-label">${name} · 6 fps</div><div class="hero-scene" style="--ps-h:72">`
+    + `<div class="pet-show ps-seq-mode"><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`
+    + `<div class="ps-jump"><div class="pet-wrap"><div class="ps-body"><span class="ps-seq-wrap ps-fr ready" style="aspect-ratio:${a.fw}/${a.fh}">`
+    + `<span class="ps-seq" style="background-image:url('${a.file}');background-size:600% 100%;--ps-seq-end:120%;--ps-seq-steps:6;animation-duration:${(6/a.fps).toFixed(2)}s"></span>`
+    + `</span></div></div></div></div></div></div></div>`;
+  document.body.appendChild(card);
+}
 </script>
+</body>
+</html>

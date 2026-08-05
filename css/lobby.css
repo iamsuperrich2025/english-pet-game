@@ -3931,6 +3931,22 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
   transform-origin:50% 100%;animation:psBody 9s ease-in-out infinite;}
 .stage-hero.pet-show-mode .hero-scene .pet-show .ps-fr{
   height:100%;width:auto;max-width:none;max-height:none;display:block;}
+/* 🐾 รอบ 1024: สไปรต์ภาพต่อเนื่อง 6 เฟรม — ใช้เฟรมที่ครอปด้วยกรอบร่วมกัน
+   เท้าจึงไม่เด้งจากการครอปคนละขนาด และไม่ซ้อน squash/jump ของภาพนิ่งเดิม */
+.pet-show .ps-seq-wrap{position:relative;flex:0 0 auto;overflow:hidden;}
+.pet-show .ps-seq-fallback{height:100%;width:100%;object-fit:contain;display:block;}
+.pet-show .ps-seq{display:none;position:absolute;inset:0;background-repeat:no-repeat;
+  background-position:0 0;transform:translateZ(0);will-change:background-position;
+  animation-name:psPetSeq;animation-timing-function:steps(var(--ps-seq-steps));
+  animation-iteration-count:infinite;animation-direction:alternate;}
+.pet-show .ps-seq-wrap.ready .ps-seq-fallback{visibility:hidden;}
+.pet-show .ps-seq-wrap.ready .ps-seq{display:block;}
+.pet-show .ps-seq-probe{display:none;width:1px;height:1px;}
+@keyframes psPetSeq{to{background-position:var(--ps-seq-end) 0}}
+.pet-show.ps-seq-mode .ps-travel,
+.pet-show.ps-seq-mode .ps-jump,
+.pet-show.ps-seq-mode .ps-body{animation:none;}
+.pet-show.ps-seq-mode .ps-shadow{display:none;}
 /* เฟรมที่ 2 (ภาพ "ดีใจ") ซ้อนทับพอดีตัว — margin:auto จัดกลางแทน transform
    (transform สงวนไว้ให้ footAlign เล็งเท้าลงพื้น ทับกันไม่ได้) */
 .pet-show .ps-fr.ps-f2{position:absolute;left:0;right:0;bottom:0;margin-inline:auto;opacity:0;
@@ -4031,7 +4047,8 @@ html.no-anim .pet-show .ps-body,
 html.no-anim .pet-show .ps-shadow,
 html.no-anim .pet-show .ps-emote,
 html.no-anim .pet-show .ps-badge,
-html.no-anim .pet-show .ps-fr.ps-f2{animation:none;}
+html.no-anim .pet-show .ps-fr.ps-f2,
+html.no-anim .pet-show .ps-seq{animation:none;}
 html.no-anim .pet-show .ps-emote{display:none;}
 
 /* ============================================================
