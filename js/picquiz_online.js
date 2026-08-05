@@ -557,7 +557,7 @@
       let a=$('pqr-audio-'+safeId(uid));if(!a){a=document.createElement('audio');a.id='pqr-audio-'+safeId(uid);a.autoplay=true;$('pqr-audio').appendChild(a);}a.srcObject=e.streams[0];a.play().catch(()=>{});
     };
     pc.onconnectionstatechange=()=>{if(['failed','closed'].includes(pc.connectionState))voiceDropPeer(uid);};
-    if(offerer) setTimeout(async()=>{try{const o=await pc.createOffer();await pc.setLocalDescription(o);voiceSig(uid,'offer',pc.localDescription.toJSON());}catch(e){}},240);
+    if(offerer) setTimeout(()=>{pc.createOffer().then(o=>pc.setLocalDescription(o)).then(()=>voiceSig(uid,'offer',pc.localDescription.toJSON())).catch(()=>{});},240);
     return p;
   }
   function safeId(s){return String(s).replace(/[^a-zA-Z0-9_-]/g,'_');}
