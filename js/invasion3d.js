@@ -6256,40 +6256,64 @@ function bindInput(){
   joyEl.addEventListener('touchstart',e=>{ const t=e.changedTouches[0];
     joy.id=t.identifier; const r=joyEl.getBoundingClientRect();
     joy.cx=r.left+r.width/2; joy.cy=r.top+r.height/2; moveJoy(t); e.preventDefault(); },{passive:false});
-  /* ลากครึ่งขวาของจอ = เล็ง */
+  /* 👆 รอบ 1023 (ผู้ใช้: "บางครั้งเลื่อนซ้ายขวาแล้วจอไม่ยอมหัน เหมือนหน่วง/ค้าง" — อาการเดียวกับซุ้มยิงเป้ารอบ 1006)
+     เดิมนิ้วจะได้เป็น "นิ้วมอง" ก็ต่อเมื่อ *แตะครั้งแรก* ในครึ่งขวา + ไม่ได้แตะบนปุ่ม + ไม่มีนิ้วมองอยู่ก่อน
+     → พลาดได้ 3 ทาง ซึ่งเกิดสลับกันเลยรู้สึกเป็น "บางครั้ง": ① นิ้วลงครึ่งซ้าย (นอกจอย) แล้วลาก = ไม่มีอะไรเกิดขึ้น
+     ② นิ้วเริ่มบนปุ่ม (กดยิงค้างแล้วไถออกมาเล็ง) = ไม่ถูกนับตลอดการลากนั้น  ③ `lookId` ค้างจากนิ้วเก่าที่จังหวะ
+     ปล่อยหลุดไป (แผงแผนที่/ออกเกมเปิดคร่อมกลางคัน) → ที่นั่งนิ้วมองไม่เคยว่าง ลากอีกกี่นิ้วจอก็ไม่หันจนกว่าจะออก-เข้าใหม่
+     แก้: ถือทะเบียนนิ้วที่ยังไม่มีหน้าที่ไว้ พอ "ลากจริง" เกิน ADOPT_PX ก็รับเป็นนิ้วมองให้เอง (ตั้งจุดอ้างอิงใหม่ กล้องไม่กระตุก)
+     + เช็ก `lookId` ทุกครั้งว่ายังเป็นนิ้วที่แตะจออยู่จริงไหม (`e.touches`) ไม่จริง = ปล่อยที่ว่างทันที */
+  const PANELS='#inv-intro,#inv-exitbox,#inv-mapbox,#inv-chatbar';   // แผงป๊อปอัป: แตะแล้วไม่ใช่การมองรอบ
+  const ADOPT_PX=12;
+  const cand=new Map();                                   // นิ้วที่ยังไม่มีหน้าที่ (รอดูว่าจะลากไหม)
+  const lookAlive=e=>{                                    // นิ้วมองยังคาจออยู่จริงไหม (กัน lookId ค้าง)
+    if(lookId===null) return false;
+    for(const t of e.touches) if(t.identifier===lookId) return true;
+    lookId=null; phClimb=0; return false;
+  };
+  const takeLook=t=>{ lookId=t.identifier; lookX=t.clientX; lookY=t.clientY; cand.delete(t.identifier); };
   wrapEl.addEventListener('touchstart',e=>{
     for(const t of e.changedTouches){
       if(t.identifier===joy.id) continue;
-      if(t.target.closest('button')) continue;
-      if(t.clientX>window.innerWidth*0.4 && lookId===null){
-        lookId=t.identifier; lookX=t.clientX; lookY=t.clientY;
-      }
+      if(t.target.closest&&t.target.closest(PANELS)) continue;
+      const onBtn=t.target.closest&&t.target.closest('button');
+      if(!onBtn && t.clientX>window.innerWidth*0.4 && !lookAlive(e)) takeLook(t);
+      else cand.set(t.identifier,{x:t.clientX,y:t.clientY});
     }
     resumeAudio();
   },{passive:true});
-  wrapEl.addEventListener('touchmove',e=>{
+  const onMove=e=>{
+    if(!running) return;
     for(const t of e.changedTouches){
-      if(t.identifier===joy.id){ moveJoy(t); e.preventDefault(); }
-      else if(t.identifier===lookId){
-        const sc=1-(1-SNIPER_SENS)*adsT;
-        yaw-=(t.clientX-lookX)*PAD_SENS*sc;
-        /* 🚁 รอบ 562 (ผู้ใช้สั่ง — เลิกใช้ปุ่ม ▲▼): นักบินที่เครื่องพร้อมบินแล้ว
-           → "ลากนิ้วมือขวาขึ้น-ลง" = คันเร่งขึ้น/ลง (collective) สูตรเดียวกับโลกเฮลิฯ เป๊ะ
-           ระหว่างสตาร์ทเครื่อง (ยังบินไม่ได้) ยังลากดูรอบ ๆ ได้เหมือนเดิม */
-        if(heliPiloting()) phClimb=clamp(phClimb-(t.clientY-lookY)*HELI_COL_SENS,-1,1);
-        else               pitch=clamp(pitch-(t.clientY-lookY)*PAD_SENS*sc,PITCH_MIN,PITCH_MAX);
-        lookX=t.clientX; lookY=t.clientY; e.preventDefault();
+      if(t.identifier===joy.id){ moveJoy(t); if(e.cancelable) e.preventDefault(); continue; }
+      if(t.identifier!==lookId){
+        const c=cand.get(t.identifier);                   // นิ้วสำรอง: ลากจริงเมื่อไหร่ค่อยรับเป็นนิ้วมอง
+        if(!c || Math.abs(t.clientX-c.x)+Math.abs(t.clientY-c.y)<ADOPT_PX || lookAlive(e)) continue;
+        takeLook(t); continue;                            // รับแล้วข้ามเฟรมนี้ไป — จุดอ้างอิง=ตำแหน่งปัจจุบัน กล้องจึงไม่กระโดด
       }
+      const sc=1-(1-SNIPER_SENS)*adsT;
+      yaw-=(t.clientX-lookX)*PAD_SENS*sc;
+      /* 🚁 รอบ 562 (ผู้ใช้สั่ง — เลิกใช้ปุ่ม ▲▼): นักบินที่เครื่องพร้อมบินแล้ว
+         → "ลากนิ้วมือขวาขึ้น-ลง" = คันเร่งขึ้น/ลง (collective) สูตรเดียวกับโลกเฮลิฯ เป๊ะ
+         ระหว่างสตาร์ทเครื่อง (ยังบินไม่ได้) ยังลากดูรอบ ๆ ได้เหมือนเดิม */
+      if(heliPiloting()) phClimb=clamp(phClimb-(t.clientY-lookY)*HELI_COL_SENS,-1,1);
+      else               pitch=clamp(pitch-(t.clientY-lookY)*PAD_SENS*sc,PITCH_MIN,PITCH_MAX);
+      lookX=t.clientX; lookY=t.clientY; if(e.cancelable) e.preventDefault();
     }
-  },{passive:false});
+  };
   const endTouch=e=>{
     for(const t of e.changedTouches){
+      cand.delete(t.identifier);
       if(t.identifier===joy.id){ joy.id=null; joy.dx=joy.dy=0; joyKnob.style.transform=''; }
       /* 🚁 รอบ 562: ปล่อยนิ้ว = คันเร่งกลับศูนย์ → ลอยนิ่ง (hover) เหมือนโลกเฮลิฯ */
       if(t.identifier===lookId){ lookId=null; phClimb=0; }
     }
   };
-  wrapEl.addEventListener('touchend',endTouch); wrapEl.addEventListener('touchcancel',endTouch);
+  /* ผูกที่ window (capture) แทน wrapEl — จังหวะ "ปล่อยนิ้ว" จะไม่มีทางหลุด แม้ชิ้นที่นิ้วแตะอยู่ถูกวาดใหม่/ซ่อนกลางคัน
+     (ต้นเหตุข้อ ③) · ยังกิน touch เฉพาะตอน running และเฉพาะนิ้วของโลกนี้เท่านั้น */
+  window.addEventListener('touchmove',onMove,{passive:false,capture:true});
+  window.addEventListener('touchend',endTouch,{capture:true});
+  window.addEventListener('touchcancel',endTouch,{capture:true});
   /* ปุ่มยิง (กดค้าง = ยิงรัว) */
   const hold=(el,on,off)=>{
     el.addEventListener('touchstart',e=>{ on(); e.preventDefault(); },{passive:false});
