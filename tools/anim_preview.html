@@ -3,7 +3,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab World lobby sprite preview</title>
-<link rel="stylesheet" href="../css/lobby.css">
+<link rel="stylesheet" href="../css/lobby.css?pb=1">
+<script src="../js/petbehavior.js?pb=1"></script>
 <style>
   *{box-sizing:border-box}
   body{margin:0;min-height:100vh;padding:18px;background:#10284c;color:#e9f6ff;
@@ -19,7 +20,10 @@
 </style>
 <body>
 <script>
-if(new URLSearchParams(location.search).has('noanim')) document.documentElement.classList.add('no-anim');
+const params=new URLSearchParams(location.search);
+if(params.has('noanim')) document.documentElement.classList.add('no-anim');
+const forcedState=params.get('state');
+const videoMode=params.has('video');
 const PET_SHOW_SEQ = {
   'cat baby':    {file:'../img/anim/pet_cat_baby_happy.webp',fw:275,fh:364,fps:6},
   'cat adult':   {file:'../img/anim/pet_cat_adult_happy.webp',fw:341,fh:346,fps:6},
@@ -28,14 +32,30 @@ const PET_SHOW_SEQ = {
   'dragon baby': {file:'../img/anim/pet_dragon_baby_happy.webp',fw:313,fh:369,fps:6},
   'dragon adult':{file:'../img/anim/pet_dragon_adult_happy.webp',fw:340,fh:351,fps:6},
 };
-for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
+if(!videoMode) for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
   const card=document.createElement('section'); card.className='stage-hero pet-show-mode preview-card';
-  card.innerHTML=`<div class="preview-label">${name} · 6 fps</div><div class="hero-scene" style="--ps-h:72">`
+  card.innerHTML=`<div class="preview-label">${name} · <span class="preview-state">…</span></div><div class="hero-scene" style="--ps-h:72">`
     + `<div class="pet-show ps-seq-mode"><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`
     + `<div class="ps-jump"><div class="pet-wrap"><div class="ps-body"><span class="ps-seq-wrap ps-fr ready" style="aspect-ratio:${a.fw}/${a.fh}">`
     + `<span class="ps-seq" style="background-image:url('${a.file}');background-size:600% 100%;--ps-seq-end:120%;--ps-seq-steps:6;animation-duration:${(6/a.fps).toFixed(2)}s"></span>`
     + `</span></div></div></div></div></div></div></div>`;
   document.body.appendChild(card);
+  const show=card.querySelector('.pet-show');
+  show.addEventListener('petbehaviorchange',e=>card.querySelector('.preview-state').textContent=e.detail.state);
+  PetBehavior.start(show,{type:name.split(' ')[0],stage:name.split(' ')[1],speed:.16});
+  if(forcedState) PetBehavior.force(show,forcedState);
+}
+if(videoMode) for(const type of ['cat','dog','dragon']){
+  const card=document.createElement('section'); card.className='stage-hero pet-show-mode ps-clip-mode preview-card';
+  card.innerHTML=`<div class="preview-label">${type} adult · <span class="preview-state">…</span></div>`
+    + `<div class="hero-scene"><div class="pet-show"><video class="ps-video" muted playsinline preload="auto" `
+    + `src="../clip/sm/${type}_adult_normal.mp4"></video><div class="pet-stage ps-pod"></div></div></div>`;
+  document.body.appendChild(card);
+  const show=card.querySelector('.pet-show');
+  const video=card.querySelector('video');
+  show.addEventListener('petbehaviorchange',e=>card.querySelector('.preview-state').textContent=e.detail.state);
+  PetBehavior.start(show,{video,type,stage:'adult',speed:.20});
+  if(forcedState) PetBehavior.force(show,forcedState);
 }
 </script>
 </body>

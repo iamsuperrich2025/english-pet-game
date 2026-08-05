@@ -218,7 +218,7 @@ function petShowHTML(p, clipUrl){
      ภาพนิ่ง+ฉากการ์ตูนยังวาดไว้ข้างใต้เสมอ — คลิปโหลดไม่ได้/ออฟไลน์ ถอด ps-clip-mode แล้วเห็นของเดิมทันที
      ⚠️ .ps-pod ต้องอยู่เสมอ (แม้โปร่งใส) เพราะ #pet-tap / heartsFx / applyPatRemindGlow ยึดไว้ */
   const video = clipUrl
-    ? `<video class="ps-video" src="${clipUrl}" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>`
+    ? `<video class="ps-video" src="${clipUrl}" autoplay muted playsinline preload="auto" disablepictureinpicture></video>`
     : '';
   return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}${seq ? ' ps-seq-mode' : ''}">
     ${video}
@@ -5033,6 +5033,9 @@ function renderDashboard(){
      → จำว่าไม่มี แล้วถอยไปฉากการ์ตูน CSS ทันที ไม่มีจอดำค้าง · autoplay ถูกบล็อกก็ลองเล่นซ้ำแบบเงียบ ๆ */
   {
     const vid = card.querySelector('.ps-video');
+    const behaviorRoot = card.querySelector('.pet-show');
+    const behaviorForced = p.sleeping ? 'sleep' : (p.sick ? 'idle' : (petHungry(p) ? 'sit' : ''));
+    const behaviorOptions = videoEl=>({video:videoEl || null,type:p.type,stage,forced:behaviorForced});
     if(vid){
       const heroEl = card.querySelector('.stage-hero');
       const key = petClipKey(p);
@@ -5046,6 +5049,8 @@ function renderDashboard(){
         }
         if(key) CLIP_FILES[key] = null;
         if(heroEl) heroEl.classList.remove('ps-clip-mode');
+        if(behaviorRoot && typeof PetBehavior !== 'undefined' && !state.noAnim)
+          PetBehavior.start(behaviorRoot, behaviorOptions(null));
         vid.remove();
       });
       const tryPlay = ()=>{ const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{}); };
@@ -5054,7 +5059,9 @@ function renderDashboard(){
       const goClip = ()=>{
         if(key) CLIP_FILES[key] = vid.getAttribute('src');
         if(heroEl) heroEl.classList.add('ps-clip-mode');
-        tryPlay();
+        if(behaviorRoot && typeof PetBehavior !== 'undefined' && !state.noAnim)
+          PetBehavior.start(behaviorRoot, behaviorOptions(vid));
+        else{ vid.loop = true; tryPlay(); }
       };
       vid.addEventListener('canplay', goClip, {once:true});
       // ⚠️ เรียก play() ทันทีหลังตั้ง src มักโดน AbortError (ยังโหลดไม่ถึงเฟรมแรก) — ปล่อยให้ canplay สั่งแทน
@@ -5064,7 +5071,9 @@ function renderDashboard(){
       const heroForBtn = heroEl;
       vid.addEventListener('playing', ()=>{ if(heroForBtn) heroForBtn.classList.remove('ps-clip-blocked'); });
       setTimeout(()=>{
-        if(document.body.contains(vid) && vid.paused && heroForBtn && heroForBtn.classList.contains('ps-clip-mode'))
+        if(document.body.contains(vid) && vid.paused && behaviorRoot
+          && !behaviorRoot.classList.contains('pb-hold') && !behaviorRoot.classList.contains('pb-changing')
+          && heroForBtn && heroForBtn.classList.contains('ps-clip-mode'))
           heroForBtn.classList.add('ps-clip-blocked');
       }, 1500);
       const playBtn = card.querySelector('.ps-play');
@@ -5072,6 +5081,8 @@ function renderDashboard(){
         e.stopPropagation();
         const pr = vid.play(); if(pr && pr.catch) pr.catch(()=>{});
       });
+    }else if(behaviorRoot && typeof PetBehavior !== 'undefined' && !state.noAnim){
+      PetBehavior.start(behaviorRoot, behaviorOptions(null));
     }
   }
   /* 🎀 รอบ 609: ปุ่มสลับ "คลิปน้อง ↔ น้องใส่ชุด" (โผล่เฉพาะตอนน้องใส่ชุดอยู่) */
@@ -5093,7 +5104,10 @@ function renderDashboard(){
     window.__clipTapBound = true;
     document.addEventListener('pointerdown', ()=>{
       const v = document.querySelector('.ps-video');
-      if(v && v.paused){ const pr = v.play(); if(pr && pr.catch) pr.catch(()=>{}); }
+      const behaviorRoot = v && v.closest('.pet-show');
+      if(v && v.paused && !(behaviorRoot && (behaviorRoot.classList.contains('pb-hold') || behaviorRoot.classList.contains('pb-changing')))){
+        const pr = v.play(); if(pr && pr.catch) pr.catch(()=>{});
+      }
     }, true);
   }
   if(window.__piOverlay) window.__piOverlay.refresh();   // overlay เปิดค้างอยู่ → เนื้อหาตาม state ใหม่

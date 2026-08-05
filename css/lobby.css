@@ -3947,6 +3947,81 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
 .pet-show.ps-seq-mode .ps-jump,
 .pet-show.ps-seq-mode .ps-body{animation:none;}
 .pet-show.ps-seq-mode .ps-shadow{display:none;}
+
+/* ==== 🐾 PET BEHAVIOR รอบ 1030 — idle / walk / look / sit / play / sleep ====
+   js/petbehavior.js เปลี่ยน state แบบสุ่มอย่างมีน้ำหนัก; คลิปใช้ช่วงเวลาจริง
+   ส่วนภาพสำรองใช้ motion ชุดนี้ จึงไม่กลับไปวนท่าเดิมซ้ำตลอดเวลา */
+.stage-hero.ps-clip-mode .pet-show[data-pb-state] .ps-video{transition-duration:.22s;}
+.stage-hero.ps-clip-mode .pet-show.pb-changing .ps-video{opacity:.06;}
+.pet-show.pb-hold .ps-video{filter:saturate(.98) brightness(.995);}
+.pet-show[data-pb-state] .ps-emote{animation:none;opacity:0;}
+.pet-show.pb-play .ps-emote{animation:pbEmote 1.8s ease-out infinite;}
+.pet-show.pb-play .ps-emote.e2{animation-delay:.28s;}
+.pet-show.pb-play .ps-emote.e3{animation-delay:.56s;}
+
+.pet-show.pb-idle .ps-body{animation:pbBreathe 3.8s ease-in-out infinite;}
+.pet-show.pb-look .ps-body{animation:pbLook 2.5s cubic-bezier(.45,0,.35,1) infinite;}
+.pet-show.pb-sit .ps-body{animation:pbSit 4.6s ease-in-out infinite;}
+.pet-show.pb-play .ps-jump{animation:pbPlay 1.55s cubic-bezier(.35,0,.25,1) infinite;}
+.pet-show.pb-play .ps-body{animation:pbPlayBody 1.55s ease-in-out infinite;}
+.pet-show.pb-walk .ps-travel{animation:pbWalkRoam 4.8s cubic-bezier(.42,0,.58,1) infinite;}
+.pet-show.pb-walk .ps-body{animation:pbStep .72s ease-in-out infinite;}
+.pet-show.pb-sleep .ps-body{animation:pbSleepBreathe 5.4s ease-in-out infinite;}
+
+.pet-show.ps-seq-mode[data-pb-state] .ps-shadow{display:block;opacity:.55;}
+.pet-show.pb-idle .ps-seq,
+.pet-show.pb-look .ps-seq,
+.pet-show.pb-sit .ps-seq,
+.pet-show.pb-sleep .ps-seq{animation-play-state:paused;background-position:0 0!important;}
+.pet-show.pb-play .ps-seq{animation-play-state:running;animation-duration:.82s!important;}
+.pet-show.pb-walk .ps-seq{animation-play-state:running;animation-duration:1.08s!important;}
+
+@keyframes pbBreathe{
+  0%,100%{transform:translateY(0) scale(1)}
+  48%{transform:translateY(-.7%) scale(1.006,.991)}
+  58%{transform:translateY(-.3%) scale(1.003,.996)}}
+@keyframes pbLook{
+  0%,16%,100%{transform:translate(0,0) rotate(0)}
+  35%,52%{transform:translate(-1.5%,-.5%) rotate(-2.4deg)}
+  70%,84%{transform:translate(1%,-.2%) rotate(1.8deg)}}
+@keyframes pbSit{
+  0%,100%{transform:translateY(1.2%) scale(1,.982)}
+  52%{transform:translateY(.4%) scale(1.004,.988)}}
+@keyframes pbPlay{
+  0%,100%{transform:translateY(0)}
+  28%{transform:translateY(-7%)}
+  48%{transform:translateY(0)}
+  68%{transform:translateY(-3%)}
+  82%{transform:translateY(0)}}
+@keyframes pbPlayBody{
+  0%,100%{transform:rotate(0) scale(1)}
+  28%{transform:rotate(-2deg) scale(1.015,.985)}
+  68%{transform:rotate(1.5deg) scale(1.008,.992)}}
+@keyframes pbWalkRoam{
+  0%,6%{transform:translateX(-11%) scaleX(-1)}
+  44%{transform:translateX(11%) scaleX(-1)}
+  50%{transform:translateX(11%) scaleX(1)}
+  94%{transform:translateX(-11%) scaleX(1)}
+  100%{transform:translateX(-11%) scaleX(-1)}}
+@keyframes pbStep{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.35%)}}
+@keyframes pbSleepBreathe{
+  0%,100%{transform:translateY(1%) scale(1,.985)}
+  55%{transform:translateY(.3%) scale(1.008,.994)}}
+@keyframes pbEmote{
+  0%{opacity:0;transform:translate(-50%,16%) scale(.7)}
+  24%{opacity:1}
+  75%{opacity:.7}
+  100%{opacity:0;transform:translate(-50%,-75%) scale(1.08)}}
+
+html.no-anim .pet-show.pb-idle .ps-body,
+html.no-anim .pet-show.pb-look .ps-body,
+html.no-anim .pet-show.pb-sit .ps-body,
+html.no-anim .pet-show.pb-play .ps-jump,
+html.no-anim .pet-show.pb-play .ps-body,
+html.no-anim .pet-show.pb-walk .ps-travel,
+html.no-anim .pet-show.pb-walk .ps-body,
+html.no-anim .pet-show.pb-sleep .ps-body,
+html.no-anim .pet-show.pb-play .ps-emote{animation:none;}
 /* เฟรมที่ 2 (ภาพ "ดีใจ") ซ้อนทับพอดีตัว — margin:auto จัดกลางแทน transform
    (transform สงวนไว้ให้ footAlign เล็งเท้าลงพื้น ทับกันไม่ได้) */
 .pet-show .ps-fr.ps-f2{position:absolute;left:0;right:0;bottom:0;margin-inline:auto;opacity:0;
