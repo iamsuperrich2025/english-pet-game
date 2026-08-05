@@ -664,9 +664,11 @@ photoFetch:44 · photoAfterChange:61 · photoPush:65 · photoVerify:83 · photoS
 photoPullMine:106 · photoBlkSrc:122 · photoMiniHTML:129 · openPhotoMenu:137 · photoLoadImgEl:203 · photoLoadFile:211
 openPhotoCrop:224
 
-## js/picdict.js (1,024 บรรทัด · 0 รายการ)
+## js/picdict.js (1,100 บรรทัด · 0 รายการ)
 
 ## js/picmatch.js (460 บรรทัด · 0 รายการ)
+
+## js/picquiz_online.js (602 บรรทัด · 0 รายการ)
 
 ## js/pmaward.js (28 บรรทัด · 0 รายการ)
 
@@ -813,15 +815,20 @@ buyMarketItem:8265 · showCollectReveal:8294 · buyAC:8332 · openHomeShop:8351 
 renderStats:8508 · showTeacherCard:8615 · CALL_REACT_EMOS:8659 · CALL_TALK_MIN:8662 · CALL_TALK_HOLD:8663 · CALL_ORDER_GAP:8665
 CALL_TONES:8671 · startCall:9045
 
-## js/util.js (1,182 บรรทัด · 47 รายการ)
+## js/util.js (1,204 บรรทัด · 47 รายการ)
+### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
+- 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
+- 24-1173 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1174-1204 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · showScreen:113
 TOAST_WARN_RE:123 · restackToasts:126 · clearWarnToasts:152 · toast:156 · toastLink:183 · floatFx:201
 beep:212 · soundStatus:233 · PET_MOOD:346 · petVoiceSynth:353 · sirenSynth:430 · playCashier:454
 cashierSynth:468 · keyTapSynth:501 · playSpark:542 · sparkSynth:556 · thunderFx:591 · wordAudioFile:659
-speakCutOff:668 · speakWord:672 · speakLetter:696 · pickSpeakVoice:719 · speakWordTTS:730 · askNameDialog:750
-askConfirm:795 · alertBox:813 · applyNoAnim:833 · BLK_VOCAB:840 · openSettings:888 · openHelp:1091
-openTeacherGuide:1117 · TAPGLOW_SEL:1141 · TOUCH_INPUT_SEEN:1160 · mouseLockOK:1169 · lockMouse3D:1175
+speakCutOff:668 · speakWord:672 · speakLetter:711 · pickSpeakVoice:734 · speakWordTTS:745 · askNameDialog:772
+askConfirm:817 · alertBox:835 · applyNoAnim:855 · BLK_VOCAB:862 · openSettings:910 · openHelp:1113
+openTeacherGuide:1139 · TAPGLOW_SEL:1163 · TOUCH_INPUT_SEEN:1182 · mouseLockOK:1191 · lockMouse3D:1197
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
@@ -980,8 +987,17 @@ vbRender:148 · vbCardHTML:194
 #theme-veil:5315 · #screen-picmatch:5368,5369,5393,5394(+11) · .pm-grid:5370 · .pm-card:5372,5376,5377,5380(+7) · .pm-right:5398 · .pm-now:5399,5405
 #pm-now-en:5406 · .pm-now-th:5407 · .pm-mode-btn:5438,5441 · .pm-wordcard:5442,5443,5445
 
-## css/picdict.css (289 บรรทัด · 1 selector)
-#screen-picdict:9,16,17,22(+95)
+## css/picdict.css (314 บรรทัด · 1 selector)
+#screen-picdict:9,16,17,22(+104)
+
+## css/picquiz_online.css (119 บรรทัด · 37 selector)
+#pqr-root:5,6,7,8(+3) · .pqr-shade:13 · .pqr-card:15 · .pqr-mode-card:17,18,19 · .pqr-x:20 · .pqr-mode-grid:21
+.pqr-mode-btn:22,24,25,26 · .pqr-full:28,30,32,33 · .pqr-net:34 · .pqr-hub-body:35,36,37,39(+3) · .pqr-bigicon:38 · .pqr-code-input:42
+.pqr-primary:43,44 · .pqr-room-head:47 · .pqr-code-chip:48 · .pqr-head-actions:49,50 · .pqr-call:51 · .pqr-room-grid:52,53,54
+.pqr-members:55 · .pqr-member:56,57,58 · .pqr-wait:59 · .pqr-room-hero:60 · .pqr-start:61 · .pqr-voice-note:62
+.pqr-chat:63 · .pqr-msg:64,65,66 · .pqr-chat-form:67,68 · .pqr-hud:70 · .pqr-hud-main:72,73,74,75 · .pqr-hud-actions:76,77,78
+.pqr-drawer:80 · .pqr-drawer-card:81 · #pqr-drawer-body:82 · .pqr-chat-draw:83 · .pqr-score-row:84,85 · .pqr-incoming:87,88,89,90
+#screen-picdict:97,98,99,100(+2)
 
 ## css/style.css (2,235 บรรทัด · 554 selector)
 :root:5 · *:15 · html:16,21 · input:25 · body:29 · #app:35
