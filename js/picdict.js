@@ -9,6 +9,10 @@
      (ตำแหน่งช่องมาจาก PICDICT_WORDS ใน js/data/picdict_words.js — แผ่นที่ยัง
       ไม่ถูกถอดคำ เปิดดูได้ปกติ แค่ยังไม่มีเสียง)
    · เข้า: ปุ่ม 📖 ล่างล็อบบี้เดิม (#btn-picdict) + ตึกในเมือง 3D (?go=picdict)
+   🆕 รอบ 1022: ปกไม่ใช่หนังสือคนละใบแล้ว — ปก = "แผ่นพลิกใบขวา" ของเล่มนี้เอง จึงเปิดจากปก
+      แล้วเจอสารบัญด้วยการพลิกใบเดียว (ไม่มีจังหวะ "ทั้งเล่มโผล่") · ปัดขวา→ซ้าย = หน้าถัดไป
+      ปัดซ้าย→ขวา = ย้อนกลับ · อยู่หน้าสารบัญแล้วปัดซ้าย→ขวา = ปิดเล่มกลับไปเห็นปก
+      (โซน "📕 โหมดปก" ท้ายไฟล์)
    🆕 รอบ 995: กางเล่มเต็มจอ+กึ่งกลางเป๊ะด้วย fitBook() (วัดจอจริง ไม่ใช้ aspect-ratio ตายตัว)
       · ภาพเต็มหน้ากระดาษ (object-fit:fill ยืดได้ไม่เกิน PD_STRETCH)
       · ถอดปุ่มลูกศร ‹ › ออก — พลิกหน้าด้วยการ "ปัดซ้าย/ขวา" ลากตามนิ้วแบบหนังสือจริง
@@ -107,21 +111,8 @@
         <button class="pd-q-quit" id="pd-qquit" title="ออกจากโหมดครูถาม">✕ เลิกถาม</button>
       </div>
       <div class="pd-stage" id="pd-stage">
-        <!-- 📕 หนังสือปิดอยู่ (หน้าปก) -->
-        <div class="pd-closed" id="pd-closed">
-          <div class="pd-cover" id="pd-cover">
-            <div class="pd-cover-edge"></div>
-            <div class="pd-cover-in">
-              <div class="pd-cover-top">🐶 🐱 🐰</div>
-              <div class="pd-cover-book">📖</div>
-              <h1>Picture<br>Dictionary</h1>
-              <p>พจนานุกรมภาพ แตะแล้วออกเสียงได้</p>
-              <span class="pd-cover-hint">👈 ปัดจากขวาไปซ้าย เพื่อเปิดหนังสือ</span>
-            </div>
-          </div>
-        </div>
-        <!-- 📖 หนังสือกางอยู่ -->
-        <div class="pd-bookwrap" id="pd-bookwrap" hidden>
+        <!-- 📖 หนังสือ (ปกก็คือ "แผ่นพลิกใบขวา" ของเล่มนี้เอง — ดูโซนโหมดปก รอบ 1022) -->
+        <div class="pd-bookwrap" id="pd-bookwrap">
           <div class="pd-book" id="pd-book">
             <div class="pd-stack pd-stack-l" id="pd-stack-l"></div>
             <div class="pd-stack pd-stack-r" id="pd-stack-r"></div>
@@ -151,7 +142,6 @@
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pd-back').addEventListener('click', exit);
-    bindCoverSwipe();
     $('pd-cr').addEventListener('click', ()=>step(1));
     $('pd-cl').addEventListener('click', ()=>step(-1));
     $('pd-tocbtn').addEventListener('click', ()=>{ if(pd.opened) goTo(0); });
@@ -164,9 +154,9 @@
        ใช้ ResizeObserver เกาะตัวหนังสือ (อีเวนต์ resize ของ window มาไม่ถึงในบางเบราว์เซอร์/preview) */
     let rzT = 0;
     const refit = ()=>{
-      if(!sec.classList.contains('active') || !pd.opened || pd.busy) return;
+      if(!sec.classList.contains('active') || pd.busy) return;
       clearTimeout(rzT);
-      rzT = setTimeout(renderSpread, 120);
+      rzT = setTimeout(pd.opened ? renderSpread : coverSetup, 120);   // ยังไม่เปิด = จัดท่า "ปกปิด" ใหม่
     };
     window.addEventListener('resize', refit);
     if(window.ResizeObserver){
@@ -378,6 +368,90 @@
   /* ---------- 🔍 แตะการ์ด = ป๊อปอัปซูมรูปนั้นให้ใหญ่ชัด (รอบ 998) ----------
      ครอปเฉพาะส่วนของภาพแผ่นที่ตรงกับช่องนั้นด้วย canvas แล้ววาดขยายในป๊อปอัป
      (ภาพเป็น object-fit:fill → กล่อง .pd-imgbox แมปตรงกับพิกเซลจริงของภาพ 1:1 ตามสัดส่วน) */
+  /* 🧲 เก็บขอบครอปแนวตั้งให้เป๊ะระดับพิกเซล (รอบ 1016 — ผู้ใช้เจอ 3 เคส: Snail ขอบบนขาด/ล่างเกิน ·
+     Harp Seal ป้าย "ปลาบิน" ของการ์ดบนหลุดเข้ามา · Camel เห็นเศษการ์ดล่าง)
+     ตารางอบ (picdict_grid.js) แม่นพอสำหรับ "โซนคลิก" แต่ครอปโชว์ใหญ่คลาดไม่กี่ px ก็เห็น
+     → เดินแถบเนื้อหารอบ "ก้อนรูป" ของช่องนี้เอง โดยอาศัยเลย์เอาต์ที่คงที่ทั้งเล่ม (ป้ายอยู่ใต้รูปเสมอ):
+     ขึ้นบน: เก็บได้แค่เส้นขอบการ์ดบาง ๆ (≤5px) เจอแถบหนา = ป้ายของการ์ดบน → หยุด
+     ลงล่าง: เก็บป้าย/เส้นขอบของตัวเอง · แถบบางที่ตามด้วยก้อนใหญ่ = เส้นขอบบนของการ์ดถัดไป → ไม่เอา */
+  function refineCropV(img, sx, sy, sw, sh){
+    try{
+      const natW = img.naturalWidth, natH = img.naturalHeight;
+      const ext = Math.round(sh*0.15);
+      const ry0 = Math.max(0, Math.round(sy - ext)), ry1 = Math.min(natH, Math.round(sy + sh + ext));
+      /* หนีบข้างแค่ 6% + เกณฑ์หมึก 1.5% — ป้ายไทยสั้น ๆ (เช่น "อูฐ") ใน strip แคบ/เกณฑ์แข็ง
+         จะแตกเป็นเศษ 1-2px จนตรรกะเดินแถบพัง (เจอจริงแผ่น animal2 การ์ดเล็ก) */
+      const ix0 = Math.max(0, Math.round(sx + sw*0.06)), ix1 = Math.min(natW, Math.round(sx + sw*0.94));
+      if(ix1 - ix0 < 8 || ry1 - ry0 < 20) return null;
+      const cv = document.createElement('canvas');
+      cv.width = ix1 - ix0; cv.height = ry1 - ry0;
+      const ctx = cv.getContext('2d', {willReadFrequently:true});
+      ctx.drawImage(img, ix0, ry0, cv.width, cv.height, 0, 0, cv.width, cv.height);
+      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      const need = Math.max(2, Math.round(cv.width*0.015));
+      const raw = [];
+      let st = -1;
+      for(let y = 0; y < cv.height; y++){
+        let ink = 0;
+        for(let x = 0; x < cv.width; x++){
+          const i = (y*cv.width + x)*4;
+          if(!(d[i] > 240 && d[i+1] > 240 && d[i+2] > 240) && ++ink >= need) break;
+        }
+        const has = ink >= need;
+        if(has && st < 0) st = y;
+        if(!has && st >= 0){ raw.push([st, y-1]); st = -1; }
+      }
+      if(st >= 0) raw.push([st, cv.height-1]);
+      /* รวมเศษที่ห่างกัน ≤2px (รอย anti-alias/เส้นประขาด) */
+      const bands = [];
+      for(const b of raw){
+        const last = bands[bands.length-1];
+        if(last && b[0]-last[1] <= 2) last[1] = b[1]; else bands.push([b[0], b[1]]);
+      }
+      if(!bands.length) return null;
+      /* ก้อนรูป = แถบสูงสุดที่คาบเกี่ยวช่วงกลางช่อง (กันหยิบรูปของการ์ดข้างในโซนเผื่อ) */
+      const c0 = (sy - ry0) + sh*0.15, c1 = (sy - ry0) + sh*0.85;
+      let big = -1;
+      for(let i = 0; i < bands.length; i++){
+        if(bands[i][1] < c0 || bands[i][0] > c1) continue;
+        if(big < 0 || bands[i][1]-bands[i][0] > bands[big][1]-bands[big][0]) big = i;
+      }
+      if(big < 0) return null;
+      /* แถบที่โดนขอบเขตสแกนตัด นับความสูงไม่ได้จริง — ถ้าที่เห็น ≥12% ของช่อง ให้ถือเป็นก้อนใหญ่ */
+      const isBig = b => (b[1]-b[0] > sh*0.30) ||
+                         ((b[0] <= 1 || b[1] >= cv.height-2) && b[1]-b[0] >= sh*0.12);
+      /* ⬆️ เก็บเส้นขอบการ์ดตัวเอง (เส้นประ = แถบบางหลายชิ้น ร่องถี่) — จำกัดระยะไต่ ≤12% ของช่อง
+         (เส้นขอบอยู่ชิดรูป · ของการ์ดบน (ป้าย/เส้นขอบล่าง) อยู่ไกลกว่านั้น — วัดจริง 14-17%) */
+      let top = big;
+      while(top > 0){
+        const p = bands[top-1];
+        if(p[1]-p[0] <= 7 && bands[top][0]-p[1] <= 6 && bands[big][0]-p[0] <= sh*0.12) top--;
+        else break;
+      }
+      /* ⬇️ เก็บป้ายอังกฤษ/ไทย/เส้นขอบล่างของตัวเอง · หยุดก่อน "จุดเริ่มการ์ดถัดไป" */
+      let bot = big, taken = 0;
+      const cellBotRel = (sy + sh) - ry0;
+      while(bot < bands.length-1 && taken < 4){
+        const nx = bands[bot+1];
+        if(nx[0] - bands[bot][1] > sh*0.12) break;                   // ร่องกว้างผิดปกติ = ข้ามการ์ดแล้ว
+        if(isBig(nx)) break;                                         // ก้อนใหญ่ = รูปการ์ดถัดไป
+        if(nx[0] > cellBotRel + sh*0.05) break;                      // เริ่มเกินขอบล่างช่อง = ของการ์ดล่าง
+        /* แถบบางที่ประชิดก้อนใหญ่ถัดไป = เส้นขอบบนของการ์ดล่าง — หยุดก่อนถึง */
+        if(nx[1]-nx[0] <= 7 && bot+2 < bands.length && isBig(bands[bot+2]) &&
+           bands[bot+2][0]-nx[1] <= sh*0.05) break;
+        bot++; taken++;
+      }
+      /* ระยะหายใจรอบการ์ด — หนีบไม่ให้ล้ำไปโดนแถบเพื่อนบ้าน */
+      let pad = Math.max(3, Math.round(sh*0.02));
+      let padUp = pad, padDn = pad;
+      if(top > 0) padUp = Math.min(padUp, Math.max(1, bands[top][0] - bands[top-1][1] - 1));
+      if(bot < bands.length-1) padDn = Math.min(padDn, Math.max(1, bands[bot+1][0] - bands[bot][1] - 1));
+      const nyO = Math.max(0, ry0 + bands[top][0] - padUp);
+      const nh  = Math.min(natH, ry0 + bands[bot][1] + padDn) - nyO;
+      if(nh < sh*0.45 || nh > sh*1.35) return null;                  // เพี้ยนผิดปกติ → ใช้กรอบเดิม
+      return {sy: nyO, sh: nh};
+    }catch(e){ return null; }
+  }
   function zoomCell(cell, en, th){
     const box = cell.closest('.pd-imgbox');
     const img = box && box.querySelector('img');
@@ -389,10 +463,12 @@
        — เผื่อเยอะเหมือนเดิมจะติดการ์ดใบข้างเข้ามาในกรอบ */
     const padX = cr.width * 0.03, padY = cr.height * 0.03;
     const sx = Math.max(0, (cr.left - br.left - padX) / br.width  * img.naturalWidth);
-    const sy = Math.max(0, (cr.top  - br.top  - padY) / br.height * img.naturalHeight);
+    let   sy = Math.max(0, (cr.top  - br.top  - padY) / br.height * img.naturalHeight);
     const sw = Math.min(img.naturalWidth  - sx, (cr.width  + padX*2) / br.width  * img.naturalWidth);
-    const sh = Math.min(img.naturalHeight - sy, (cr.height + padY*2) / br.height * img.naturalHeight);
+    let   sh = Math.min(img.naturalHeight - sy, (cr.height + padY*2) / br.height * img.naturalHeight);
     if(sw <= 0 || sh <= 0) return;
+    const fine = refineCropV(img, sx, sy, sw, sh);
+    if(fine){ sy = fine.sy; sh = fine.sh; }
     const outW = 480, outH = Math.max(1, Math.round(outW * sh / sw));
     canvas.width = outW; canvas.height = outH;
     const ctx = canvas.getContext('2d');
@@ -511,6 +587,7 @@
   }
 
   function flipTo(target, dir){
+    if(!pd.opened) return;                                   // ยังปิดปกอยู่ ยังพลิกหน้าไม่ได้
     if(pd.busy || target < 0 || target > maxSpread() || target === pd.s) return;
     pd.busy = true;
     prepFaces(target, dir);
@@ -536,16 +613,20 @@
      แผ่นกระดาษหมุนตามนิ้วทีละองศาแบบหนังสือจริง (fliphtml5): ลากไปครึ่งทางแล้วเปลี่ยนใจ
      ลากกลับได้ · ปล่อยเกินครึ่ง (หรือปัดเร็ว ๆ) = พลิกต่อจนสุด · ไม่ถึง = ไหลกลับที่เดิม
      ============================================================ */
-  const dg = { id:null, x0:0, y0:0, on:false, dir:0, target:0, prog:0, t0:0, endAt:0 };
+  const dg = { id:null, x0:0, y0:0, on:false, dir:0, target:0, prog:0, t0:0, endAt:0, cover:0 };
   const halfW = ()=> Math.max(60, $('pd-book').clientWidth/2);
 
   function setTurn(prog){
     const turn = $('pd-turn'), book = $('pd-book');
     turn.style.transform = `rotateY(${(dg.dir > 0 ? -180 : 180) * prog}deg)`;
     book.style.setProperty('--pdp', Math.sin(Math.min(prog,1)*Math.PI).toFixed(3));
+    /* 📕 โหมดปก: เล่มต้องเลื่อนไป-กลับด้วย (ปิด = ครึ่งขวาอยู่กลางจอ · เปิด = ทั้งเล่มอยู่กลางจอ)
+       ตอน "ปิดเล่ม" ซ่อนหน้าซ้ายตลอดทาง — ใต้ปกที่กำลังปิดต้องไม่มีอะไร ไม่ใช่สารบัญ ๑ ซ้ำอีกใบ */
+    if(dg.cover) coverShift(dg.cover === 'open' ? prog : 1 - prog,
+                            dg.cover === 'close' ? true : undefined);
   }
   function dragDown(e){
-    if(pd.busy || !pd.opened || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if(pd.busy || (e.pointerType === 'mouse' && e.button !== 0)) return;
     dg.id = e.pointerId; dg.x0 = e.clientX; dg.y0 = e.clientY;
     dg.on = false; dg.prog = 0; dg.t0 = (performance && performance.now) ? performance.now() : Date.now();
   }
@@ -555,11 +636,18 @@
     if(!dg.on){
       if(Math.abs(dx) < 12 || Math.abs(dx) <= Math.abs(dy)) return;   // ยังไม่ชัดว่าปัดแนวนอน
       const dir = dx < 0 ? 1 : -1, target = pd.s + dir;
-      if(pd.busy || target < 0 || target > maxSpread()){ dg.id = null; return; }   // สุดเล่มแล้ว
-      pd.busy = true; dg.on = true; dg.dir = dir; dg.target = target;
-      prepFaces(target, dir);
+      /* 📕 รอบ 1022 — ท่าปัดที่ปกกับหน้าสารบัญ:
+         ปกปิดอยู่ + ปัดขวา→ซ้าย = เปิดปก (พลิกใบเดียวเจอสารบัญ)
+         อยู่หน้าสารบัญ + ปัดซ้าย→ขวา = ปิดเล่มกลับไปเห็นปก */
+      const cover = !pd.opened ? (dir > 0 ? 'open' : 0)
+                  : (dir < 0 && pd.s === 0 ? 'close' : 0);
+      if(pd.busy || (!cover && (target < 0 || target > maxSpread()))){ dg.id = null; return; }  // สุดเล่มแล้ว
+      pd.busy = true; dg.on = true; dg.dir = dir; dg.target = target; dg.cover = cover;
       const turn = $('pd-turn'), book = $('pd-book');
+      if(cover) coverPrep(cover === 'open' ? 1 : -1);
+      else      prepFaces(target, dir);
       turn.style.transition = 'none';
+      book.style.transition = 'none';
       book.classList.add('dragging'); book.classList.remove('settle');
       try{ book.setPointerCapture(e.pointerId); }catch(_){}
     }
@@ -578,6 +666,7 @@
     const to = go ? 1 : 0, dur = Math.max(200, Math.round(640*Math.abs(to - dg.prog)));
     book.classList.add('settle');
     turn.style.transition = `transform ${dur}ms cubic-bezier(.25,.6,.3,1)`;
+    book.style.transition = `transform ${dur}ms cubic-bezier(.25,.6,.3,1)`;
     requestAnimationFrame(()=>{ setTurn(to); });
     if(go) flipSfx();
     dg.endAt = (performance && performance.now) ? performance.now() : Date.now();
@@ -587,7 +676,11 @@
       clearTimeout(tm);
       turn.removeEventListener('transitionend', end);
       dg.endAt = (performance && performance.now) ? performance.now() : Date.now();
-      if(go) finishFlip(dg.target); else cancelFlip();
+      const cv = dg.cover; dg.cover = 0;
+      if(cv === 'open')       go ? finishOpen() : coverSetup();       // ปล่อยไม่ถึง = คืนท่าปกปิด
+      else if(cv === 'close') go ? finishClose() : (coverEnd(), renderSpread(), pd.busy = false);
+      else if(go)             finishFlip(dg.target);
+      else                    cancelFlip();
     };
     turn.addEventListener('transitionend', end);
     tm = setTimeout(end, dur + 260);
@@ -763,91 +856,121 @@
     clearTimeout(hintT);
     hintT = setTimeout(()=>{ h.hidden = true; }, 2900);
   }
-  function openBook(){
-    if(pd.opened) return;
-    pd.opened = true;
-    flipSfx();
-    const cl = $('pd-closed'), bw = $('pd-bookwrap');
-    cl.classList.add('opening');
-    setTimeout(()=>{
-      cl.hidden = true; cl.classList.remove('opening');
-      bw.hidden = false;
-      renderSpread();
-      showHint();
-    }, 560);
-  }
 
   /* ============================================================
-     👈 ปัดปกจากขวาไปซ้ายเพื่อเปิดหนังสือ (รอบ 997 · ผู้ใช้สั่ง "เปลี่ยนจากแตะ เป็นปัด เพื่อความสมจริง")
-     ปกหมุนตามนิ้วระหว่างลาก (เหมือนพลิกหน้าแรกของหนังสือจริง) ปล่อยเกินเกณฑ์ = เปิดต่อจนสุด
-     ปล่อยไม่ถึง = ไหลกลับปิดเหมือนเดิม — ใช้กลไกเดียวกับการปัดพลิกหน้าในเล่มที่กางอยู่
+     📕 โหมดปก — "ปกคือแผ่นพลิกใบขวาของเล่มเดียวกัน" (รอบ 1022 · ผู้ใช้สั่ง 5 ส.ค.)
+     เดิม (รอบ 997) ปกเป็นหนังสือคนละใบวางกลางจอ พอเปิดแล้วปกหมุนหายไปทั้งใบ
+     แล้วเล่มกาง 2 หน้าค่อย "โผล่มาทั้งเล่ม" — ผู้ใช้บอกว่าเหมือนยกทั้งเล่ม ไม่ใช่เปิดทีละหน้า
+     ตอนนี้: ปิดอยู่ = เลื่อนเล่มไปซ้าย 25% ให้ "ครึ่งขวา (= ปก)" อยู่กลางจอพอดี หน้าซ้ายซ่อนไว้
+             เปิด   = ปกหมุนรอบสัน 0 → -180° (พลิกใบเดียว) หลังปก = สารบัญ ๑ · ใต้ปก = สารบัญ ๒
+                      พร้อมเลื่อนเล่มกลับมากลางจอ → จบลงที่หน้าสารบัญพอดี ไม่มีเฟรม "ทั้งเล่มโผล่"
+             ปิดกลับ = ทำย้อนกลับทุกขั้น (ปัดซ้าย→ขวาตอนอยู่หน้าสารบัญ)
      ============================================================ */
-  const cvg = { id:null, x0:0, on:false, prog:0 };
-  function setCoverTilt(prog){
-    const cov = $('pd-cover');
-    cov.style.transformOrigin = 'left center';
-    cov.style.transform = `rotateY(${-6 - 102*prog}deg)`;
-    cov.style.opacity = String(1 - prog*0.6);
+  const COVER_HTML = `
+    <div class="pd-cover-in">
+      <div class="pd-cover-top">🐶 🐱 🐰</div>
+      <div class="pd-cover-book">📖</div>
+      <h1>Picture<br>Dictionary</h1>
+      <p>พจนานุกรมภาพ แตะแล้วออกเสียงได้</p>
+      <span class="pd-cover-hint">👈 ปัดจากขวาไปซ้าย เพื่อเปิดหนังสือ</span>
+    </div>`;
+
+  /* เลื่อนเล่มตามความคืบหน้าการเปิดปก (0 = ปิดสนิท · 1 = กางเต็มกลางจอ)
+     half = บังคับซ่อน/โชว์หน้าซ้าย (ปกติซ่อนจนกว่าแผ่นปกจะพลิกพ้นครึ่งทาง) */
+  function coverShift(prog, half){
+    const book = $('pd-book');
+    if(!book) return;
+    book.style.transform = `translateX(${(-25*(1-prog)).toFixed(2)}%)`;
+    book.classList.toggle('cover-half', half === undefined ? prog < 0.5 : !!half);
   }
-  function coverDown(e){
-    if(pd.opened || (e.pointerType === 'mouse' && e.button !== 0)) return;
-    cvg.id = e.pointerId; cvg.x0 = e.clientX; cvg.on = false; cvg.prog = 0;
-  }
-  function coverMove(e){
-    if(cvg.id === null || e.pointerId !== cvg.id) return;
-    const dx = e.clientX - cvg.x0;
-    const cov = $('pd-cover');
-    if(!cvg.on){
-      if(dx > -10) return;              // รอให้ลากไปทางซ้ายชัดเจนก่อน (กันชนกับการเลื่อนจอแนวตั้ง)
-      cvg.on = true;
-      cov.style.transition = 'none';
-      cov.style.animationPlayState = 'paused';
-      try{ cov.setPointerCapture(e.pointerId); }catch(_){}
-    }
-    const w = cov.getBoundingClientRect().width || 300;
-    cvg.prog = Math.min(1, Math.max(0, -dx / (w*0.55)));
-    setCoverTilt(cvg.prog);
-    e.preventDefault();
-  }
-  function coverUp(e){
-    if(cvg.id === null || (e && e.pointerId !== cvg.id)) return;
-    cvg.id = null;
-    if(!cvg.on) return;
-    cvg.on = false;
-    const cov = $('pd-cover');
-    if(cvg.prog > 0.32){
-      /* คืนอินไลน์ทั้งหมดในจังหวะเดียวกับที่สั่งเปิด — transition ของ .opening (คลาสเดิม)
-         จะรับช่วงต่อจากมุมที่ลากค้างไว้ให้เอง ไม่กระตุก (ไม่มีการวาดเฟรมคั่นกลาง) */
-      cov.style.transition = '';
-      cov.style.animationPlayState = '';
-      cov.style.transform = '';
-      cov.style.opacity = '';
-      cov.style.transformOrigin = '';
-      openBook();
+  /* เตรียมแผ่นปก: dir=1 กำลังจะเปิด (ปกอยู่ครึ่งขวา) · dir=-1 กำลังจะปิด (ปกอยู่ด้านหลังหน้าซ้าย) */
+  function coverPrep(dir){
+    const book = $('pd-book'), turn = $('pd-turn'), ff = $('pd-ff'), fb = $('pd-fb');
+    book.classList.add('cover-mode');
+    book.classList.remove('fwd','bwd');
+    book.classList.add(dir > 0 ? 'fwd' : 'bwd');
+    turn.classList.toggle('back', dir < 0);
+    /* ⚠️ ต้องล้างคลาส pd-cover-face ของอีกด้านทุกครั้ง ไม่งั้นหน้าสารบัญติดพื้นแดงของปกมาด้วย */
+    if(dir > 0){
+      ff.className = 'pd-face pd-face-f pd-cover-face'; ff.innerHTML = COVER_HTML;
+      fb.className = 'pd-face pd-face-b';
+      renderInto(fb, 0);                 // หลังปก = สารบัญ ๑ (กลายเป็นหน้าซ้ายเมื่อเปิดเสร็จ)
+      renderInto($('pd-pl'), 0);
+      renderInto($('pd-pr'), 1);         // ใต้ปก = สารบัญ ๒ รออยู่แล้ว
     }else{
-      /* ไหลกลับปิด — เคลียร์ค่าจริงทันทีในจังหวะเดียวกับตั้ง transition (ไม่พึ่ง requestAnimationFrame
-         ซึ่งไม่ยิงตอนแท็บถูกซ่อน/พับ — พึ่งแล้วเคยเจอปกค้างกลางทางถาวรตอนเทสต์) ยังลื่นเหมือนเดิมเพราะ
-         เอนจิน transition เทียบจากเฟรมที่วาดจริงล่าสุด (มุมที่ลากค้าง) ไปยังค่าใหม่อยู่ดี */
-      cov.style.transition = 'transform .32s ease, opacity .32s ease';
-      cov.style.transform = '';
-      cov.style.opacity = '';
-      let done = false;
-      const cleanup = ()=>{
-        if(done) return; done = true;
-        cov.style.transition = ''; cov.style.transformOrigin = ''; cov.style.animationPlayState = '';
-        cov.removeEventListener('transitionend', cleanup);
-      };
-      cov.addEventListener('transitionend', cleanup);
-      setTimeout(cleanup, 420);
+      ff.className = 'pd-face pd-face-f';
+      renderInto(ff, 0);                 // หน้าแผ่นพลิก = สารบัญ ๑ (หน้าซ้ายที่กำลังจะถูกปิดทับ)
+      fb.className = 'pd-face pd-face-b pd-cover-face'; fb.innerHTML = COVER_HTML;
     }
+    turn.hidden = false;
   }
-  function bindCoverSwipe(){
-    const cov = $('pd-cover');
-    cov.addEventListener('pointerdown', coverDown);
-    cov.addEventListener('pointermove', coverMove);
-    cov.addEventListener('pointerup', coverUp);
-    cov.addEventListener('pointercancel', coverUp);
-    cov.addEventListener('dragstart', e=>e.preventDefault());
+  /* จัดเล่มให้อยู่ท่า "ปกปิด" ทั้งชุด (ใช้ตอนเข้าหน้าครั้งแรก / ปัดเปิดไม่ถึงเกณฑ์ / ปิดเล่มสำเร็จ) */
+  function coverSetup(){
+    const book = $('pd-book'), turn = $('pd-turn');
+    if(!book) return;
+    pd.s = 0;
+    coverPrep(1);
+    book.classList.remove('dragging','settle','fwd','bwd');
+    book.style.transition = 'none';
+    turn.style.transition = 'none';
+    turn.style.transform = 'rotateY(0deg)';
+    book.style.removeProperty('--pdp');
+    coverShift(0, true);
+    relayout();
+    updateStacks();
+    preload();
+    pd.busy = false;
+  }
+  /* ออกจากโหมดปก คืนเล่มให้เป็นหนังสือกางปกติ */
+  function coverEnd(){
+    const book = $('pd-book'), turn = $('pd-turn'), ff = $('pd-ff'), fb = $('pd-fb');
+    turn.hidden = true;
+    turn.style.transition = 'none';
+    turn.style.transform = 'rotateY(0deg)';
+    turn.classList.remove('back');
+    ff.className = 'pd-face pd-face-f';
+    fb.className = 'pd-face pd-face-b';
+    book.classList.remove('cover-mode','cover-half','fwd','bwd','dragging','settle');
+    book.style.transition = 'none';
+    book.style.transform = '';
+    book.style.removeProperty('--pdp');
+  }
+  function finishOpen(){                 // ปกพลิกจบ = อยู่หน้าสารบัญเต็ม ๆ
+    pd.opened = true; pd.s = 0;
+    coverEnd();
+    renderSpread();
+    pd.busy = false;
+    showHint();
+  }
+  function finishClose(){                // ปิดเล่มจบ = กลับไปท่าปกปิด
+    pd.opened = false;
+    coverSetup();
+  }
+  /* เปิดปกแบบสั่งเอง (ปุ่ม 🎧 ครูถามศัพท์ที่พาเข้าหนังสือให้เลย) — ใช้แผ่น/ระยะเดียวกับการปัด */
+  function openBook(){
+    if(pd.opened || pd.busy) return;
+    pd.busy = true;
+    dg.cover = 'open'; dg.dir = 1;
+    coverPrep(1);
+    const turn = $('pd-turn'), book = $('pd-book');
+    turn.style.transition = 'none'; turn.style.transform = 'rotateY(0deg)';
+    book.style.transition = 'none'; coverShift(0, true);
+    void turn.offsetWidth;                                   // force reflow ก่อนเริ่ม transition
+    const ease = 'transform .8s cubic-bezier(.35,.06,.28,.99)';
+    turn.style.transition = ease; book.style.transition = ease;
+    turn.style.transform = 'rotateY(-180deg)';
+    coverShift(1, true);                                     // หน้าซ้ายยังซ่อน รอแผ่นปกพลิกพ้นครึ่งทาง
+    flipSfx();
+    setTimeout(()=>{ if(!pd.opened) book.classList.remove('cover-half'); }, 420);
+    let fin = false;
+    const done = ()=>{
+      if(fin) return; fin = true;
+      turn.removeEventListener('transitionend', done);
+      dg.cover = 0;
+      finishOpen();
+    };
+    turn.addEventListener('transitionend', done);
+    setTimeout(done, 1000);
   }
 
   /* ---------- เข้า/ออก ---------- */
@@ -855,10 +978,9 @@
     build();
     buildPages();
     if(has('closePanel')) closePanel();
-    if(pd.opened){ $('pd-closed').hidden = true; $('pd-bookwrap').hidden = false; }
-    else         { $('pd-closed').hidden = false; $('pd-bookwrap').hidden = true; }
     if(has('showScreen')) showScreen('screen-picdict');
-    if(pd.opened){ renderSpread(); showHint(); } else preload();
+    /* ⚠️ ต้องวัดขนาดหลัง showScreen เสมอ (ก่อนหน้านั้นจอยังไม่ active → clientWidth = 0) */
+    if(pd.opened){ coverEnd(); renderSpread(); showHint(); } else coverSetup();
   }
   function exit(){
     closeZoom();
@@ -892,7 +1014,7 @@
         if(!pd.busy && qzCells().length >= 2){ clearInterval(wait); qzStart(); }
       }, 150);
     };
-    if(!pd.opened){ openBook(); setTimeout(go, 900); }
+    if(!pd.opened){ openBook(); setTimeout(go, 1150); }      // ปกพลิก .8s + จัดหน้าใหม่
     else setTimeout(go, 260);
   }
 
@@ -911,6 +1033,7 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, dg, cvg, flipTo, goTo, step, sayCell, buildPages,
-                                      renderSpread, fitBook, openBook, qzStart, qzStop, qzAsk, qzCells } };
+  window.PicDict = { open, openQuiz, exit, _t:{ pd, qz, dg, flipTo, goTo, step, sayCell, buildPages,
+                                      renderSpread, fitBook, openBook, coverSetup, coverShift,
+                                      finishOpen, finishClose, qzStart, qzStop, qzAsk, qzCells } };
 })();

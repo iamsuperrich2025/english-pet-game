@@ -25,26 +25,20 @@ body #screen-picdict.screen.active{
 /* ⚠️ กฎ display ของคลาสชนะ attribute hidden (UA style) — ต้องบังคับซ่อนเองเสมอ */
 #screen-picdict [hidden]{display:none !important;}
 
-/* ── 📕 หนังสือปิด (หน้าปก) ── */
-#screen-picdict .pd-closed{perspective:1600px;}
-/* 👈 รอบ 997: เปิดปกด้วยการ "ปัดขวาไปซ้าย" แทนแตะ — touch-action:none กันเบราว์เซอร์แย่งท่าทาง
-   (เลื่อนจอ/ย้อนกลับหน้าเว็บ) ระหว่างลาก */
-#screen-picdict .pd-cover{
-  position:relative;height:min(80vh,470px);aspect-ratio:2/3;cursor:grab;border-radius:8px 16px 16px 8px;
-  touch-action:none;user-select:none;-webkit-user-drag:none;
+/* ── 📕 ปกหนังสือ = "แผ่นพลิกใบขวา" ของเล่มเดียวกัน (รอบ 1022) ──
+   เดิมปกเป็น div คนละใบวางกลางจอ พอเปิดแล้วหมุนหายไปทั้งใบ แล้วเล่มกางโผล่มาทั้งเล่ม
+   (ผู้ใช้: "เหมือนเปิดยกทั้งเล่ม") → ตอนนี้ปกเป็นหน้ากระดาษใบหนึ่งในเล่ม พลิกใบเดียวเจอสารบัญ
+   ท่า "ปิดอยู่" = js เลื่อนเล่มไปซ้าย 25% (coverShift) ให้ครึ่งขวาอยู่กลางจอ + ซ่อนหน้าซ้าย */
+#screen-picdict .pd-face.pd-cover-face{
+  padding:0;cursor:grab;
   background:linear-gradient(135deg,#e8536b 0%,#d63e5c 45%,#b92746 100%);
-  box-shadow:inset 0 0 0 4px rgba(255,255,255,.12), inset 10px 0 18px rgba(0,0,0,.28),
-             0 18px 40px rgba(0,0,0,.5);
-  transform:rotateY(-6deg);transition:transform .5s cubic-bezier(.3,.1,.3,1), opacity .35s;
-  animation:pd-bob 3.2s ease-in-out infinite;
+  box-shadow:inset 0 0 0 4px rgba(255,255,255,.12), inset 10px 0 18px rgba(0,0,0,.28);
 }
-@keyframes pd-bob{0%,100%{translate:0 0}50%{translate:0 -7px}}
-#screen-picdict .pd-cover:hover{transform:rotateY(-14deg) scale(1.02);}
-#screen-picdict .pd-cover-edge{           /* ขอบตั้งกระดาษข้างขวาของเล่มปิด */
-  position:absolute;top:5px;bottom:5px;right:-9px;width:10px;border-radius:0 4px 4px 0;
-  background:repeating-linear-gradient(180deg,#fffbea 0 2px,#e8ddbc 2px 3px);
-  box-shadow:2px 2px 6px rgba(0,0,0,.35);
-}
+/* ปิดอยู่: ไม่มีมุมพับ/ขอบกระดาษฝั่งซ้ายให้เห็น (ยังไม่ได้เปิดเล่ม) */
+#screen-picdict .pd-book.cover-mode .pd-corner,
+#screen-picdict .pd-book.cover-mode .pd-stack-l{display:none;}
+/* แผ่นปกยังพลิกไม่พ้นครึ่งทาง = หน้าซ้ายต้องยังไม่โผล่ (ไม่งั้นเห็นเล่มกางทั้งเล่มตั้งแต่ยังไม่เปิด) */
+#screen-picdict .pd-book.cover-half .pd-static-l{visibility:hidden;}
 #screen-picdict .pd-cover-in{
   position:absolute;inset:12px;border:3px dashed rgba(255,235,180,.75);border-radius:10px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
@@ -52,17 +46,16 @@ body #screen-picdict.screen.active{
 }
 #screen-picdict .pd-cover-top{font-size:clamp(18px,4.5vh,26px);letter-spacing:4px;}
 #screen-picdict .pd-cover-book{font-size:clamp(40px,12vh,72px);filter:drop-shadow(0 4px 6px rgba(0,0,0,.3));}
-#screen-picdict .pd-cover h1{
+#screen-picdict .pd-cover-in h1{
   margin:0;font-size:clamp(20px,5.5vh,34px);line-height:1.1;letter-spacing:.5px;
   color:#ffe9a8;text-shadow:0 2px 0 rgba(0,0,0,.25);
 }
-#screen-picdict .pd-cover p{margin:0;font-size:clamp(11px,2.6vh,15px);opacity:.95;}
+#screen-picdict .pd-cover-in p{margin:0;font-size:clamp(11px,2.6vh,15px);opacity:.95;}
 #screen-picdict .pd-cover-hint{
   margin-top:4px;font-size:clamp(11px,2.6vh,14px);font-weight:700;background:rgba(255,255,255,.18);
   border-radius:99px;padding:5px 12px;animation:pd-hint 1.4s ease-in-out infinite;
 }
 @keyframes pd-hint{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-#screen-picdict .pd-closed.opening .pd-cover{transform:rotateY(-108deg);opacity:0;transform-origin:left center;}
 
 /* ── 📖 หนังสือกาง ──
    ⚠️ ขนาดเล่ม (width/height) + ระยะขอบบน-ล่าง คำนวณด้วย fitBook() ใน js/picdict.js
@@ -230,9 +223,12 @@ body #screen-picdict.screen.active{
    แถบคำถามอยู่บนสุด · ตัวหนังสือกางอยู่ใต้แถบตามเดิม (แถบไม่ทับหนังสือ — pd-stage ยืดตาม)
    ============================================================ */
 /* 🆕 รอบ 995: ย้ายมา "ซ้อนใต้ปุ่มสารบัญ" แทนการวางเรียงข้างกัน — เรียงข้างกันกินความกว้าง
-   มุมบนขวาไปเกือบ 220px ทำให้ fitBook ต้องหดหนังสือลงเยอะ (ปุ่มห้ามทับหน้ากระดาษ) */
+   มุมบนขวาไปเกือบ 220px ทำให้ fitBook ต้องหดหนังสือลงเยอะ (ปุ่มห้ามทับหน้ากระดาษ)
+   🆕 รอบ 1022 (ผู้ใช้: "อยู่ใกล้กันเกิน เสี่ยงกดผิด"): ถอยลงมาอีก 34px → ช่องไฟระหว่างปุ่ม
+   จาก ~8px เป็น ~35px (นิ้วเด็กพลาดไปโดนโหมดครูถามยาก) · ยังเกาะขวาเหมือนเดิม
+   เขตหวงห้ามด้านข้างจึงเท่าเดิม fitBook ไม่ต้องหดหนังสือเพิ่ม */
 #screen-picdict .pd-quiz-btn{
-  position:absolute;top:50px;right:8px;z-index:9;border:none;border-radius:12px;
+  position:absolute;top:84px;right:8px;z-index:9;border:none;border-radius:12px;
   padding:8px 13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
   background:#2e7d32;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.28);
 }
@@ -279,7 +275,7 @@ body #screen-picdict.screen.active{
 
 /* ── จอเตี้ย (มือถือแนวนอน 812×375) ── */
 @media (max-height:430px){
-  #screen-picdict .pd-quiz-btn{top:36px;right:6px;padding:5px 9px;font-size:12px;}
+  #screen-picdict .pd-quiz-btn{top:62px;right:6px;padding:5px 9px;font-size:12px;}   /* รอบ 1022: ห่างปุ่มสารบัญ ~33px */
   #screen-picdict .pd-qbar{margin:3px 6px 0 78px;padding:4px 8px;gap:6px;}
   #screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:4px 9px;}
   #screen-picdict .pd-q-coin,#screen-picdict .pd-q-combo{padding:3px 8px;}
