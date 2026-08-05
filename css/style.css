@@ -732,6 +732,14 @@ html.no-anim body.quake{animation:none;}
 /* ---------- เมนูเลือกอาหาร ---------- */
 .food-box{border-color:var(--orange-d);max-width:340px;}
 .food-box h2{color:#e0812f;}
+/* ❌ รอบ 1034: ปุ่มปิดมุมบนขวา ติดหนึบ (sticky) ตอนเลื่อนเมนู — เดิมมีแต่ปุ่ม "ไว้ก่อน" ล่างสุด */
+.food-x{
+  position:sticky;top:0;z-index:6;display:block;margin:0 0 -10px auto;
+  width:38px;height:38px;border-radius:50%;border:2px solid #f0b8b8;
+  background:#fff0f0;color:#b23a48;font-size:19px;font-weight:bold;line-height:1;
+  cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.12);
+}
+.food-x:active{transform:scale(.9);}
 .food-hunger-bar{height:16px;margin-top:6px;}
 .food-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
 .food-item{

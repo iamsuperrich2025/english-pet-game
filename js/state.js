@@ -273,6 +273,7 @@ function newPet(type, name){
           junkMeals:0,      // ข้อ 5.2: มื้อที่มีอาหารโทษติดต่อกัน (ครบ 3 → อ้วน)
           cleanMeals:0,     // ข้อ 5.2: มื้อสะอาดเต็มหลอดติดต่อกัน (ครบ 3 → ล่ำกำยำ)
           missedMeals:0,    // ข้อ 5.2: มื้อที่อดจนป่วยติดต่อกัน (ครบ 2 → ผอมโซ)
+          hungerSickSlot:0, // 🩺 รอบ 1034: slot มื้อที่ป่วยเพราะหิวไปแล้ว (กันป่วยซ้ำมื้อเดิมหลังรักษา)
           mealJunk:false,   // ข้อ 5.2: มื้อปัจจุบันกินอาหารโทษไปแล้วหรือยัง (รีเซ็ตเมื่อขึ้นมื้อใหม่/นับมื้อจบ)
           shapeSlot:0,      // ข้อ 5.2: slot มื้อล่าสุดที่นับรูปร่างไปแล้ว (กัน feast/กินซ้ำนับมื้อเดียวสองรอบ)
           sleeping:false,   // ข้อ 1: กำลังหลับอยู่ (ตื่นเอง 06:00)
@@ -337,6 +338,17 @@ function loadState(){
           p.sleepSickDay = nightKeyOf(nowMig);
         }
         if(typeof p.mealSlot !== 'number') p.mealSlot = 0;
+        /* 🩺 รอบ 1034: กู้เซฟที่ค้างจากบั๊กเดิม — curePet เก่าตั้ง fedUpTo=มื้อนี้ + fullness เต็ม ทั้งที่น้องยังไม่ได้กิน
+           เครื่องหมายที่ชี้ชัดว่า "อิ่มปลอม": ถ้ากินเต็มหลอดจริงมื้อนี้ shapeMealDone จะล้าง missedMeals=0 เสมอ
+           → missedMeals>0 พร้อมกับ fedUpTo อยู่ในมื้อนี้ = โดนโกงจากการรักษา คืนหลอดให้ป้อนข้าวได้ทันที */
+        if(typeof p.hungerSickSlot !== 'number'){
+          p.hungerSickSlot = 0;
+          const sNow = currentSlotStart(Date.now());
+          if((p.missedMeals||0) > 0 && p.fedUpTo >= sNow && p.fedUpTo < sNow + SLOT_MS){
+            p.fedUpTo = sNow - 1; p.fullness = 0; p.mealSlot = sNow;
+            p.hungerSickSlot = sNow;          // มื้อนี้ป่วย+รักษาไปแล้ว ไม่ป่วยซ้ำ แค่ให้ป้อนข้าวได้
+          }
+        }
         if(typeof p.toxin !== 'number') p.toxin = 0;   // ข้อ 5.1: เซฟเก่าเริ่มบาร์พิษว่าง
         // ข้อ 5.2: เซฟเก่าเริ่มรูปร่างปกติ นับมื้อใหม่จากศูนย์
         if(typeof p.shape !== 'string') p.shape = 'normal';
@@ -753,9 +765,12 @@ function petCanEat(p){ return petHungry(p) || (p.fullness||0) < MEAL_FULL; }
    ============================================================ */
 function hungerSickLock(){
   if(typeof state === 'undefined' || !state) return null;
-  if(state.playerSick)
-    return {who:'player', name:'หนู', why:'หนูป่วยเพราะไม่ได้กินข้าวเย็น',
+  if(state.playerSick){
+    /* 👧 รอบ 1034: ใส่ชื่อผู้เล่นต่อท้าย "หนู" ให้รู้ว่าหมายถึงคน ไม่ใช่น้องสัตว์ */
+    const me = (typeof selfName === 'function') ? selfName() : 'หนู';
+    return {who:'player', name:me, why:`${me} ป่วยเพราะไม่ได้กินข้าวเย็น (คนนะ ไม่ใช่น้องสัตว์)`,
             fix:'ต้องไปรักษาให้หายก่อน (แตะปุ่ม 🤒 มุมขวาบน)'};
+  }
   const p = (state.pets || []).find(pp=>pp.sick && pp.sickCause === 'hunger');
   if(p) return {who:'pet', name:p.name, why:`${p.name}ป่วยเพราะหิวนานเกินไป`,
                 fix:'ต้องพาไปรักษาให้หายก่อน (ปุ่ม 💊 รักษา ในหน้าข้อมูลน้อง)'};
@@ -1085,8 +1100,11 @@ function careTick(){
     if(p.mealSlot !== slot && p.fedUpTo < slot){ p.mealSlot = slot; p.fullness = 0; p.mealJunk = false; }
     if(p.level < 2) continue;                    // ไข่/แรกเกิดยังไม่หิวไม่ร้อน ไม่ต้องนอน
     // ข้อ 2: หิวมื้อเย็น 18:00 — เกิน 2 ชม. (20:00) ยังกินไม่เต็มหลอด → ป่วย
-    if(!p.sick && p.fedUpTo < slot && (now - slot) >= HUNGRY_SICK_MS){
-      p.sick = true; p.sickCause = 'hunger';
+    /* 🩺 รอบ 1034: ป่วยเพราะหิวได้ "มื้อละครั้ง" — จำมื้อที่ป่วยไปแล้วไว้ที่ hungerSickSlot
+       เดิมกันป่วยซ้ำด้วยการให้ curePet ตั้ง fedUpTo=slot + fullness เต็ม (= โกงว่ากินแล้วทั้งที่ยังไม่ได้กิน)
+       ผลคือรักษาหายปุ๊บ ป้อนข้าวไม่ได้เลยจนถึง 18:00 วันถัดไป น้องค้างผอมโซ (ผู้ใช้เจอ 5 ส.ค. 2026) */
+    if(!p.sick && p.fedUpTo < slot && p.hungerSickSlot !== slot && (now - slot) >= HUNGRY_SICK_MS){
+      p.sick = true; p.sickCause = 'hunger'; p.hungerSickSlot = slot;
       // ข้อ 5.2: อดข้าวติดกันหลายมื้อ → ผอมโซ
       p.missedMeals = (p.missedMeals||0) + 1; p.cleanMeals = 0; p.mealJunk = false;
       updatePetShape(p);

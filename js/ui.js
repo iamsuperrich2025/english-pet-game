@@ -666,6 +666,14 @@ function renderClock(){
    คนก็ต้องกินมื้อเย็น 18:00 — เกิน 20:00 ไม่กิน → ป่วย จ่ายค่ารักษา 1,000
    ปุ่ม 🍚 ใน header โผล่ช่วงเย็น (18:00 ถึงตี 6) จนกว่าจะกิน · ป่วย → กลายเป็น 🤒
    ============================================================ */
+/* 👧 รอบ 1034: ทุกข้อความเรื่อง "ข้าวเย็นของคน" ต้องต่อชื่อผู้เล่นไว้ด้วย
+   เด็กอ่านแค่ "หนูป่วยเพราะไม่ได้กินข้าวเย็น" แล้วนึกว่าหมายถึงสัตว์เลี้ยง (ผู้ใช้แจ้ง 5 ส.ค. 2026) */
+function selfName(){
+  const n = (typeof state !== 'undefined' && state)
+    ? (state.profileName || (state.student ? state.student.first : '')) : '';
+  return n ? `หนู (${n})` : 'หนู';
+}
+function selfNameHTML(){ return escapeHTML(selfName()); }
 function dinnerDue(now){
   now = now || Date.now();
   const h = thHour(now);                                       // 🇹🇭 รอบ 988: เวลาไทย
@@ -676,18 +684,18 @@ function renderDinnerChip(){
   if(!btn || typeof state === 'undefined') return;
   if(state.playerSick){
     btn.style.display = ''; btn.textContent = '🤒';
-    btn.title = 'หนูป่วยเพราะไม่กินข้าวเย็น — แตะเพื่อไปรักษา';
+    btn.title = `${selfName()} ป่วยเพราะไม่กินข้าวเย็น — แตะเพื่อไปรักษา (คนนะ ไม่ใช่น้องสัตว์)`;
   }else if(dinnerDue()){
     btn.style.display = ''; btn.textContent = '🍚';
-    btn.title = `ได้เวลากินข้าวเย็นของหนูแล้ว (🪙${fmtNum(DINNER_COST)})`;
+    btn.title = `ได้เวลากินข้าวเย็นของ ${selfName()} แล้ว (🪙${fmtNum(DINNER_COST)})`;
   }else btn.style.display = 'none';
 }
 function dinnerClick(){
   sfx.select();
   if(state.playerSick){
     askConfirm(`<div style="font-size:56px;line-height:1">🤒</div>
-      <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">หนูป่วยเพราะไม่ได้กินข้าวเย็น</div>
-      <div style="margin-top:8px;color:#6a5a78;line-height:1.5">ไปหาหมอรักษาให้หายก่อนนะ<br>ค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
+      <div style="font-size:21px;font-weight:bold;margin-top:8px;color:#b23a48">${selfNameHTML()} ป่วยเพราะไม่ได้กินข้าวเย็น</div>
+      <div style="margin-top:8px;color:#6a5a78;line-height:1.5"><b>คนป่วยนะ ไม่ใช่น้องสัตว์</b> — ไปหาหมอรักษาให้หายก่อน<br>ค่ารักษา <b>🪙${fmtNum(CURE_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
       `💊 รักษา 🪙${fmtNum(CURE_COST)}`, ()=>{
         if(state.coins < CURE_COST){ sfx.wrong(); toast(`ค่ารักษา 🪙${fmtNum(CURE_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ`); return; }
         state.coins -= CURE_COST;
@@ -701,8 +709,8 @@ function dinnerClick(){
   }
   if(!dinnerDue()){ toast('😋 วันนี้กินข้าวเย็นแล้ว ไว้เจอกันมื้อพรุ่งนี้ 18:00 นะ'); return; }
   askConfirm(`<div style="font-size:56px;line-height:1">🍚</div>
-    <div style="font-size:21px;font-weight:bold;margin-top:8px">กินข้าวเย็นของหนู</div>
-    <div style="margin-top:8px;color:#6a5a78;line-height:1.5">คนก็ต้องกินข้าวให้ตรงเวลาเหมือนน้องนะ<br>ค่าข้าวเย็น <b>🪙${fmtNum(DINNER_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
+    <div style="font-size:21px;font-weight:bold;margin-top:8px">กินข้าวเย็นของ ${selfNameHTML()}</div>
+    <div style="margin-top:8px;color:#6a5a78;line-height:1.5"><b>ข้าวของคนนะ ไม่ใช่ของน้องสัตว์</b> — คนก็ต้องกินให้ตรงเวลาเหมือนน้อง<br>ค่าข้าวเย็น <b>🪙${fmtNum(DINNER_COST)}</b> (มี 🪙${fmtNum(Math.floor(state.coins))})</div>`,
     `🍽️ กินเลย 🪙${fmtNum(DINNER_COST)}`, ()=>{
       if(state.coins < DINNER_COST){ sfx.wrong(); toast(`ค่าข้าวเย็น 🪙${fmtNum(DINNER_COST)} — เหรียญไม่พอ ไปเล่นเกมเก็บเหรียญก่อนนะ`); return; }
       state.coins -= DINNER_COST;
@@ -2406,8 +2414,8 @@ function openAttentionSummary(){
     rows.push({ico:'📨', txt:`คำเชิญเล่นด้วยกัน ${invEntries.length} รายการ`,
       sub:`${escapeHTML(firstInv.n)} ชวนไปเล่น${w} · แตะเพื่อไปเลย`, act:'tinv'});
   }
-  if(state.playerSick)   rows.push({ico:'🤒', txt:'หนูป่วยเพราะไม่กินข้าวเย็น', sub:`ไปหาหมอ ค่ารักษา 🪙${fmtNum(CURE_COST)}`, act:'dinner'});
-  else if(dinnerDue())   rows.push({ico:'🍚', txt:'ยังไม่ได้กินข้าวเย็นของหนู', sub:`กินก่อน 20:00 ไม่งั้นป่วยนะ · 🪙${fmtNum(DINNER_COST)}`, act:'dinner'});
+  if(state.playerSick)   rows.push({ico:'🤒', txt:`${selfName()} ป่วยเพราะไม่กินข้าวเย็น`, sub:`คนป่วยนะ ไม่ใช่น้องสัตว์ · ไปหาหมอ ค่ารักษา 🪙${fmtNum(CURE_COST)}`, act:'dinner'});
+  else if(dinnerDue())   rows.push({ico:'🍚', txt:`${selfName()} ยังไม่ได้กินข้าวเย็น`, sub:`ข้าวของคน · กินก่อน 20:00 ไม่งั้นป่วยนะ · 🪙${fmtNum(DINNER_COST)}`, act:'dinner'});
   if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay attn-overlay';
@@ -4817,7 +4825,10 @@ function renderDashboard(){
       barPct = petHungry(p) ? Math.min(100, p.fullness||0) : 100;
     }else if(hungry){
       const msLeft = Math.max(0, HUNGRY_SICK_MS - (now - slot));
-      hungerStatus = `😫 หิวข้าวเย็นแล้ว! ความอิ่ม <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — กินให้เต็มหลอดภายใน <b>${fmtMins(msLeft)}</b> ไม่งั้นน้องจะป่วยนะ`;
+      /* 🩺 รอบ 1034: มื้อนี้ป่วยเพราะหิว+รักษาหายไปแล้ว → ไม่ป่วยซ้ำอีก แต่ยังต้องป้อนข้าว (ห้ามขู่ผิด) */
+      hungerStatus = (p.hungerSickSlot === slot)
+        ? `🍽️ ยังไม่ได้กินมื้อนี้เลย! ความอิ่ม <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — ป้อนให้เต็มหลอดนะ (มื้อนี้รักษาแล้ว ไม่ป่วยซ้ำ)`
+        : `😫 หิวข้าวเย็นแล้ว! ความอิ่ม <b>${Math.min(100, p.fullness||0)}/${MEAL_FULL}</b> — กินให้เต็มหลอดภายใน <b>${fmtMins(msLeft)}</b> ไม่งั้นน้องจะป่วยนะ`;
       barPct = Math.min(100, p.fullness||0); barCls = 'hungry';
     }else{
       const covered = p.fedUpTo >= nextSlotStart(now) - 1;   // feast ครอบมื้อพรุ่งนี้แล้ว
@@ -5213,7 +5224,7 @@ function feedPet(){
   if(p.sleeping){ sfx.wrong(); toast('😴 น้องหลับอยู่ อย่าเพิ่งปลุกมากินข้าวเลยนะ'); return; }
   /* 🚫 รอบ 952: คนป่วยเพราะไม่ได้กินข้าวเย็น = ซื้อของกินไม่ได้ (กติกาเดียวกับน้องป่วยเพราะหิว) */
   if(state.playerSick){
-    alertBox('<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">หนูป่วยเพราะไม่ได้กินข้าวเย็น</div><div class="ab-desc">ตอนป่วยเพราะหิว <b>ซื้อของกินไม่ได้</b> นะ — ไปหาหมอรักษาให้หายก่อน แล้วค่อยกลับมาซื้ออาหารให้น้อง 🩺</div>', 'ไว้ก่อน',
+    alertBox(`<div class="ab-emoji">🤒</div><div class="ab-title" style="color:#b23a48">${selfNameHTML()} ป่วยเพราะไม่ได้กินข้าวเย็น</div><div class="ab-desc"><b>คนป่วยนะ ไม่ใช่น้องสัตว์</b> — ตอนป่วยเพราะหิว <b>ซื้อของกินไม่ได้</b> ไปหาหมอรักษาให้หายก่อน แล้วค่อยกลับมาซื้ออาหารให้น้อง 🩺</div>`, 'ไว้ก่อน',
       {text:`🩺 ไปรักษา (🪙${fmtNum(CURE_COST)})`, onClick:dinnerClick}); return;
   }
   const canEat = petCanEat(p);          // 🍽️ รอบ 1008: ดูหลอดความอิ่มจริง ไม่ใช่ petHungry อย่างเดียว
@@ -5267,6 +5278,8 @@ function openFoodMenu(p){
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay';
   overlay.innerHTML = `<div class="levelup-box food-box">
+    <!-- ❌ รอบ 1034: ปุ่มปิดด้านบน (ติดหนึบตอนเลื่อน) — เดิมมีแต่ปุ่ม "ไว้ก่อน" ล่างสุด ต้องเลื่อนหาทุกครั้ง -->
+    <button class="food-x" aria-label="ปิดเมนูอาหาร" title="ปิด">✕</button>
     <h2>🍽️ เลือกเมนูให้น้องกิน</h2>
     <div class="hunger-bar food-hunger-bar"><div class="hunger-fill ${canEat ? '' : 'buffed'}" style="width:${fullPct}%"></div></div>
     ${canEat
@@ -5281,6 +5294,7 @@ function openFoodMenu(p){
     <button class="food-cancel">ไว้ก่อน</button>
   </div>`;
   overlay.querySelector('.food-cancel').addEventListener('click', ()=>overlay.remove());
+  overlay.querySelector('.food-x').addEventListener('click', ()=>{ sfx.select(); overlay.remove(); });
   overlay.querySelectorAll('.food-item').forEach(el=>{
     el.addEventListener('click', ()=>{
       const food = menuFoods.find(f=>f.id===el.dataset.food);
@@ -5415,12 +5429,19 @@ function curePet(){
   state.coins -= CURE_COST;
   if(p.sickCause === 'toxin') p.toxin = 0;           // ข้อ 5.1: หมอขับพิษให้ตอนรักษา (เฉพาะป่วยจากพิษ)
   p.sick = false; p.sickCause = null;
-  p.fedUpTo = currentSlotStart(Date.now());          // หายป่วยแล้วอิ่มมีแรง
-  p.fullness = MEAL_FULL; p.mealSlot = p.fedUpTo;
+  /* 🍚 รอบ 1034: หายป่วยแล้ว "ยังไม่ได้กินข้าว" ต้องป้อนได้ทันที
+     ของเดิมตั้ง fedUpTo=มื้อนี้ + fullness เต็ม (นับว่ากินแล้วทั้งที่ยังไม่ได้กิน) → เมนูอาหารล็อกยกกระดาน
+     ถึงพรุ่งนี้ 18:00 น้องเลยค้างผอมโซ เพราะ missedMeals ล้างได้ตอนกินเต็มหลอดเท่านั้น
+     ตอนนี้กันป่วยซ้ำมื้อเดิมด้วย hungerSickSlot แทน (ดู careTick ใน state.js) */
+  const slotNow = currentSlotStart(Date.now());
+  p.hungerSickSlot = slotNow;
+  const stillHungryAfterCure = p.fedUpTo < slotNow;
   p.heatFrom = (p.type === 'dragon' || heatProtected()) ? null : Date.now();
   p.thirstFrom = state.waterCut ? Date.now() : null; // ยังถูกตัดน้ำอยู่ → เริ่มนับรอบใหม่
   sfx.levelup();
-  toast('💊 รักษาหายแล้ว! น้องกลับมาแข็งแรงร่าเริง 🎉');
+  toast(stillHungryAfterCure
+    ? '💊 รักษาหายแล้ว! แต่น้องยังไม่ได้กินมื้อนี้เลย — กด 🍽️ ให้อาหารได้เลยนะ'
+    : '💊 รักษาหายแล้ว! น้องกลับมาแข็งแรงร่าเริง 🎉');
   saveState();
   renderDashboard();
   cureCelebrateFx();   // เรียกหลัง render เพื่อให้คลาสเด้งเกาะ .pet-stage ตัวใหม่ (ที่ไม่ grayscale แล้ว)
