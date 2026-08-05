@@ -4040,7 +4040,10 @@ html.no-anim .pet-show.pb-play .ps-emote{animation:none;}
 .pet-show .ps-tag{position:absolute;right:10px;top:8px;z-index:2;
   background:rgba(255,255,255,.82);border:1px solid rgba(255,255,255,.95);border-radius:999px;
   padding:2px 11px;font-size:clamp(10px,2.2vh,13px);color:#26456d;
-  box-shadow:0 3px 10px rgba(20,50,90,.22);max-width:60%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  box-shadow:0 3px 10px rgba(20,50,90,.22);max-width:84%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pet-show .ps-behavior-state{display:inline-block;margin-left:6px;padding-left:7px;border-left:1px solid rgba(38,69,109,.25);
+  color:#0e6a74;font-weight:800;transition:color .18s ease;}
+.stage-hero.ps-clip-mode .pet-show .ps-behavior-state{color:#0b6670;}
 
 /* เดินออกซ้าย-ขวา (แกน X เท่านั้น — เงาเดินตามด้วยเพราะอยู่ใน .ps-travel) */
 @keyframes psTravel{

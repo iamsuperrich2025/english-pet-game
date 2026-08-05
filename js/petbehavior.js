@@ -1,16 +1,20 @@
-/* petbehavior.js — 🐾 ระบบพฤติกรรมน้องหน้า Lobby (รอบ 1030)
+/* petbehavior.js — 🐾 ระบบพฤติกรรมน้องหน้า Lobby (รอบ 1030 · ป้าย/จังหวะชัดขึ้นรอบ 1031)
    แบ่งคลิป 8 วินาทีเดิมเป็นท่าสั้น ๆ แล้วเลือกต่อกันแบบมีน้ำหนัก
    เครื่องที่เล่นคลิปไม่ได้ยังใช้ state เดียวกันกับภาพ/sprite fallback */
 (function(){
   'use strict';
 
   const STATE_NAMES = ['idle','walk','look','sit','play','sleep'];
+  const STATE_LABELS = {
+    idle:'🌿 พักหายใจ', walk:'🐾 เดินเล่น', look:'👀 มองรอบตัว',
+    sit:'🪑 นั่งพัก', play:'🎾 เล่นสนุก', sleep:'💤 กำลังหลับ',
+  };
   const SEGMENTS = {
-    sit:  { from:0.05, to:0.80, rate:[0.70,0.88], hold:[1800,3600] },
-    idle: { from:0.75, to:1.75, rate:[0.68,0.90], hold:[900,2200] },
-    look: { from:1.70, to:3.25, rate:[0.78,1.00], hold:[500,1400] },
-    play: { from:3.20, to:5.25, rate:[0.90,1.08], hold:[350,900] },
-    walk: { from:5.20, to:7.78, rate:[0.82,1.04], hold:[450,1100] },
+    sit:  { from:0.05, to:0.80, rate:[0.86,1.00], hold:[500,1200] },
+    idle: { from:0.75, to:1.75, rate:[0.90,1.05], hold:[350,900] },
+    look: { from:1.70, to:3.25, rate:[0.92,1.08], hold:[250,600] },
+    play: { from:3.20, to:5.25, rate:[0.98,1.12], hold:[150,350] },
+    walk: { from:5.20, to:7.78, rate:[0.94,1.10], hold:[150,350] },
   };
   const FALLBACK_TIME = {
     idle:[2800,5000], look:[1600,2800], sit:[3500,6500],
@@ -55,6 +59,8 @@
     for(const state of STATE_NAMES) root.classList.remove(`pb-${state}`);
     root.classList.add(`pb-${name}`);
     root.dataset.pbState = name;
+    const label = root.querySelector('.ps-behavior-state');
+    if(label) label.textContent = STATE_LABELS[name] || STATE_LABELS.idle;
     ctrl.state = name;
     root.dispatchEvent(new CustomEvent('petbehaviorchange',{detail:{state:name}}));
   }
@@ -137,11 +143,12 @@
       ctrl.video.addEventListener('timeupdate', ctrl.onTime);
       ctrl.video.addEventListener('ended', ctrl.onEnded);
       ctrl.video.addEventListener('error', ctrl.onError, {once:true});
-      const begin = ()=>run(ctrl, ctrl.forced || (ctrl.type === 'cat' ? 'sit' : 'idle'));
+      const first = {cat:'look',dog:'play',dragon:'play'}[ctrl.type] || 'look';
+      const begin = ()=>run(ctrl, ctrl.forced || first);
       if(ctrl.video.readyState >= 1) begin();
       else ctrl.video.addEventListener('loadedmetadata', begin, {once:true});
     }else{
-      runFallback(ctrl, ctrl.forced || (ctrl.type === 'cat' ? 'sit' : 'idle'));
+      runFallback(ctrl, ctrl.forced || ({cat:'look',dog:'play',dragon:'play'}[ctrl.type] || 'look'));
     }
     return ctrl;
   }

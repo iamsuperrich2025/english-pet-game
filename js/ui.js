@@ -234,7 +234,7 @@ function petShowHTML(p, clipUrl){
         </div>
       </div>
     </div>
-    <div class="ps-tag"><b>${escapeHTML(p.name)}</b> · ${PET_SHOW_STAGE[stage] || ''}</div>
+    <div class="ps-tag"><b>${escapeHTML(p.name)}</b> · ${PET_SHOW_STAGE[stage] || ''}<span class="ps-behavior-state">${state.noAnim ? '⏸ ปิดเอฟเฟกต์' : '🐾 กำลังเริ่มขยับ…'}</span></div>
     ${(()=>{ const h = petClipHint(p, clipUrl); return h ? `<div class="ps-hint">${h}</div>` : ''; })()}
     <button class="ps-play" type="button">▶️ แตะเพื่อเล่นคลิปน้อง</button>
     ${(()=>{   // 🎀 รอบ 609: ใส่ชุดอยู่ = เลือกได้ว่าจะดูคลิป หรือดูน้องใส่ชุด

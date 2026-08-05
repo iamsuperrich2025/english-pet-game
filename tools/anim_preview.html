@@ -35,7 +35,7 @@ const PET_SHOW_SEQ = {
 if(!videoMode) for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
   const card=document.createElement('section'); card.className='stage-hero pet-show-mode preview-card';
   card.innerHTML=`<div class="preview-label">${name} · <span class="preview-state">…</span></div><div class="hero-scene" style="--ps-h:72">`
-    + `<div class="pet-show ps-seq-mode"><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`
+    + `<div class="pet-show ps-seq-mode"><div class="ps-tag"><span class="ps-behavior-state">…</span></div><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`
     + `<div class="ps-jump"><div class="pet-wrap"><div class="ps-body"><span class="ps-seq-wrap ps-fr ready" style="aspect-ratio:${a.fw}/${a.fh}">`
     + `<span class="ps-seq" style="background-image:url('${a.file}');background-size:600% 100%;--ps-seq-end:120%;--ps-seq-steps:6;animation-duration:${(6/a.fps).toFixed(2)}s"></span>`
     + `</span></div></div></div></div></div></div></div>`;
@@ -49,7 +49,7 @@ if(videoMode) for(const type of ['cat','dog','dragon']){
   const card=document.createElement('section'); card.className='stage-hero pet-show-mode ps-clip-mode preview-card';
   card.innerHTML=`<div class="preview-label">${type} adult · <span class="preview-state">…</span></div>`
     + `<div class="hero-scene"><div class="pet-show"><video class="ps-video" muted playsinline preload="auto" `
-    + `src="../clip/sm/${type}_adult_normal.mp4"></video><div class="pet-stage ps-pod"></div></div></div>`;
+    + `src="../clip/sm/${type}_adult_normal.mp4"></video><div class="ps-tag"><span class="ps-behavior-state">…</span></div><div class="pet-stage ps-pod"></div></div></div>`;
   document.body.appendChild(card);
   const show=card.querySelector('.pet-show');
   const video=card.querySelector('video');
