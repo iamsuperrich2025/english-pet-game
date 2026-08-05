@@ -119,6 +119,20 @@ window.GridLab = (function(){
     return fixed;
   }
 
+  /* A false separator can split one card row into its picture half and label
+     half. Prefer candidates whose row heights do not suddenly collapse and
+     then jump back up (Bathroom used to pass judge 0% with that exact phase). */
+  function rowJumpPenalty(ys){
+    const hs=[];
+    for(let i=1;i<ys.length;i++) hs.push(Math.max(1,ys[i]-ys[i-1]));
+    let penalty=0;
+    for(let i=1;i<hs.length-1;i++){
+      const ratio=hs[i]/hs[i-1];
+      if(ratio>1.35) penalty+=ratio-1.35;
+    }
+    return penalty;
+  }
+
   /* ---- สร้างช่องจากชุดเส้นแถว: คอลัมน์แยกทีละแถว + บีบขอบแถวเข้าหาการ์ด ---- */
   function buildCells(S, ys, cols, wordsN){
     const {iw, ih, bgAt} = S;
@@ -235,8 +249,10 @@ window.GridLab = (function(){
       const v=validate(S, cells);
       if(!v) continue;
       const j=judge(S, cells);
-      if(!best || j<best.j || (j===best.j && v.dirty<best.dirty)){
-        best={j, dirty:v.dirty, cells};
+      const rowPenalty=rowJumpPenalty(ys);
+      if(!best || j<best.j || (j===best.j &&
+        (rowPenalty<best.rowPenalty || (rowPenalty===best.rowPenalty && v.dirty<best.dirty)))){
+        best={j, dirty:v.dirty, rowPenalty, cells};
       }
     }
     if(!best) return {file, ok:false};
@@ -302,6 +318,6 @@ window.GridLab = (function(){
       'const PICDICT_GRID = {\n'+lines.join(',\n')+'\n};\n';
   }
 
-  return {bakeAll, bakeSheet, report, strip, exportJs, _internals:{axisSolutions, phaseFix, buildCells, validate, judge}};
+  return {bakeAll, bakeSheet, report, strip, exportJs, _internals:{axisSolutions, phaseFix, rowJumpPenalty, buildCells, validate, judge}};
 })();
 'GridLab ready';

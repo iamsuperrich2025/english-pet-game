@@ -132,10 +132,16 @@
         <div class="pd-hint" id="pd-hint" hidden>👆 ปัดซ้าย–ขวา เพื่อพลิกหน้า</div>
         <!-- 🔍 รอบ 998: ป๊อปอัปซูมการ์ดที่แตะให้ใหญ่ชัด -->
         <div class="pd-zoom" id="pd-zoom" hidden>
-          <div class="pd-zoom-card">
+          <div class="pd-zoom-card" id="pd-zoom-card">
             <button class="pd-zoom-close" id="pd-zoom-close" title="ปิด">✕</button>
             <canvas class="pd-zoom-canvas" id="pd-zoom-canvas"></canvas>
             <div class="pd-zoom-label"><b id="pd-zoom-en"></b><span id="pd-zoom-th"></span></div>
+            <div class="pd-zoom-listen" id="pd-zoom-listen" aria-live="polite">
+              <span class="pd-zoom-speaker">🔊</span><span id="pd-zoom-listen-text">กำลังฟังคำศัพท์…</span>
+            </div>
+            <div class="pd-zoom-reward" id="pd-zoom-reward" hidden>
+              <b>+1 🪙</b><span>ฟังจบแล้ว เงินเข้าแล้ว!</span>
+            </div>
           </div>
         </div>
       </div>`;
@@ -360,10 +366,10 @@
     const now = (performance && performance.now) ? performance.now() : Date.now();
     if(dg.endAt && now - dg.endAt < 350) return;
     if(qz.on){ qzAnswer(cell, en, th); return; }   // 🎧 โหมดครูถามศัพท์ — แตะ = ตอบคำถาม
-    if(has('speakWord')) speakWord(en);
     cell.classList.remove('hit'); void cell.offsetWidth; cell.classList.add('hit');
     showBalloon(cell, en, th);
     zoomCell(cell, en, th);
+    startZoomListen(en);
   }
 
   /* ---------- 🔍 แตะการ์ด = ป๊อปอัปซูมรูปนั้นให้ใหญ่ชัด (รอบ 998) ----------
@@ -438,6 +444,65 @@
       return {sx,sy,sw,sh};
     }
   }
+  let zoomListening = false, zoomListenSeq = 0, zoomRewardT = 0;
+  const zoomOpen = ()=>{
+    const zoom = $('pd-zoom');
+    return !!zoom && !zoom.hidden;
+  };
+  function zoomListenUI(mode){
+    const zoom=$('pd-zoom'), card=$('pd-zoom-card'), close=$('pd-zoom-close');
+    const text=$('pd-zoom-listen-text'), reward=$('pd-zoom-reward');
+    if(!zoom || !card || !close || !text || !reward) return;
+    zoomListening = mode === 'listening';
+    zoom.classList.toggle('listening', zoomListening);
+    card.classList.toggle('listening', zoomListening);
+    close.disabled = zoomListening;
+    close.title = zoomListening ? 'ปิดได้เมื่ออ่านคำศัพท์จบ' : 'ปิด';
+    if(mode === 'listening') text.textContent = 'กำลังฟัง… ปิดได้เมื่ออ่านจบ';
+    else if(mode === 'done') text.textContent = '✅ ฟังจบแล้ว · ได้รับ 1 เหรียญ';
+    else if(mode === 'failed') text.textContent = '⚠️ เสียงไม่สำเร็จ จึงยังไม่ได้เหรียญ';
+    else text.textContent = '🔇 เปิดเสียงก่อน จึงจะรับเหรียญได้';
+    if(mode !== 'done'){
+      clearTimeout(zoomRewardT);
+      reward.hidden = true;
+      reward.classList.remove('show');
+    }
+  }
+  function pulseZoomLock(){
+    const zoom=$('pd-zoom');
+    if(!zoom) return;
+    zoom.classList.remove('locked-pulse'); void zoom.offsetWidth; zoom.classList.add('locked-pulse');
+    setTimeout(()=>zoom.classList.remove('locked-pulse'), 430);
+  }
+  function zoomListenReward(seq){
+    if(seq !== zoomListenSeq || !zoomOpen()) return;
+    zoomListenUI('done');
+    if(has('addCoins')) addCoins(1);
+    if(has('saveState')) saveState();
+    const card=$('pd-zoom-card'), reward=$('pd-zoom-reward');
+    if(reward){
+      reward.hidden=false; reward.classList.remove('show'); void reward.offsetWidth; reward.classList.add('show');
+      clearTimeout(zoomRewardT);
+      zoomRewardT=setTimeout(()=>{ reward.classList.remove('show'); setTimeout(()=>reward.hidden=true,180); },1650);
+    }
+    if(has('coinFlyFx')) coinFlyFx(card,1);
+    if(typeof sfx !== 'undefined'){
+      if(sfx.coinGetTier) sfx.coinGetTier(1); else if(sfx.coinGet) sfx.coinGet(); else if(sfx.coin) sfx.coin();
+    }
+    if(typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate([15,30,15]);
+
+  }
+  function startZoomListen(en){
+    const seq=++zoomListenSeq;
+    const canSpeak=has('speakWord') && typeof state !== 'undefined' && state.sound !== false;
+    zoomListenUI(canSpeak ? 'listening' : 'muted');
+    if(!canSpeak) return;
+    speakWord(en, ok=>{
+      if(seq !== zoomListenSeq || !zoomOpen()) return;
+      if(ok) zoomListenReward(seq);
+      else zoomListenUI('failed');
+    });
+  }
   function zoomCell(cell, en, th){
     const box = cell.closest('.pd-imgbox');
     const img = box && box.querySelector('img');
@@ -467,9 +532,15 @@
   }
   function closeZoom(){
     const zoom = $('pd-zoom');
-    if(!zoom || zoom.hidden) return;
-    zoom.classList.remove('show');
+    if(!zoom || zoom.hidden) return true;
+    if(zoomListening){ pulseZoomLock(); return false; }
+    zoomListenSeq++;
+    clearTimeout(zoomRewardT);
+    const reward=$('pd-zoom-reward');
+    if(reward){ reward.hidden=true; reward.classList.remove('show'); }
+    zoom.classList.remove('show','listening','locked-pulse');
     setTimeout(()=>{ if(!zoom.classList.contains('show')) zoom.hidden = true; }, 180);
+    return true;
   }
   function showBalloon(cell, en, th){
     const b = $('pd-balloon'), st = $('pd-stage');
@@ -678,8 +749,8 @@
     book.addEventListener('pointercancel', dragUp);
     book.addEventListener('dragstart', e=>e.preventDefault());
   }
-  const step = dir => flipTo(pd.s + dir, dir);
-  const goTo = s   => flipTo(s, s > pd.s ? 1 : -1);
+  const step = dir =>{ if(zoomOpen()){ closeZoom(); return false; } return flipTo(pd.s + dir, dir); };
+  const goTo = s   =>{ if(zoomOpen()){ closeZoom(); return false; } return flipTo(s, s > pd.s ? 1 : -1); };
 
   /* ============================================================
      🎧 โหมดครูถามศัพท์ (รอบ 994 · ผู้ใช้สั่ง)
@@ -702,7 +773,7 @@
       return;
     }
     if(qz.on) return;
-    closeZoom();
+    if(!closeZoom()) return;
     qz.on = true; qz.asked = 0; qz.right = 0;
     /* ตัวนับ "ครั้งนี้" ชุดเดียวกับเกมจับคู่คำศัพท์/จับคู่ภาพ (สถิติสัปดาห์+ตลอดกาลนับรวมกัน) */
     if(typeof game !== 'undefined'){
@@ -968,7 +1039,7 @@
     if(pd.opened){ coverEnd(); renderSpread(); showHint(); } else coverSetup();
   }
   function exit(){
-    closeZoom();
+    if(!closeZoom()) return;
     try{ if(window.speechSynthesis) speechSynthesis.cancel(); }catch(e){}
     const back = ()=>{
       if(has('renderDashboard')) renderDashboard();
@@ -1011,6 +1082,11 @@
     if(q) q.addEventListener('click', openQuiz);
     document.addEventListener('keydown', e=>{
       if(!sec || !sec.classList.contains('active')) return;
+      if(zoomOpen()){
+        if(e.key === 'Escape') closeZoom();
+        if(e.key === 'Escape' || e.key === 'ArrowRight' || e.key === 'ArrowLeft') e.preventDefault();
+        return;
+      }
       if(e.key === 'Escape') exit();
       else if(e.key === 'ArrowRight') step(1);
       else if(e.key === 'ArrowLeft') step(-1);

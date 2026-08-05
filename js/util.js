@@ -669,26 +669,41 @@ function speakCutOff(err){
   const n = err && err.name;
   return n === 'AbortError' || n === 'NotAllowedError';
 }
-function speakWord(word){
-  if(!state.sound || !word) return;
+function speakWord(word, onDone){
+  const notify = ok=>{ if(typeof onDone === 'function') onDone(!!ok); };
+  if(!state.sound || !word){ setTimeout(()=>notify(false), 0); return null; }
   try{
     if(wordAudioNow){ wordAudioNow.pause(); }      // ตัดเสียงเก่า กันพูดซ้อนตอนแตะรัว
     const key = word.toLowerCase();
-    if(wordAudio[key] === 'miss') return speakWordTTS(word);
+    if(wordAudio[key] === 'miss') return speakWordTTS(word, notify);
     const a = wordAudio[key] || new Audio(wordAudioFile(word));
     wordAudio[key] = a;
-    let failed = false;
-    const fail = (err)=>{
-      if(failed) return; failed = true;
-      if(speakCutOff(err)) return;                 // โดนตัด/ถูกบล็อก ไม่ใช่ไฟล์หาย (ดู speakCutOff)
-      wordAudio[key] = 'miss'; speakWordTTS(word);
+    let finished = false;
+    const finish = ok=>{
+      if(finished) return;
+      finished = true;
+      a.onended = a.onerror = a.onpause = null;
+      if(wordAudioNow === a) wordAudioNow = null;
+      notify(ok);
+    };
+    const fail = err=>{
+      if(finished) return;
+      if(speakCutOff(err)){ finish(false); return; } // โดนตัด/ถูกบล็อก ไม่ใช่ไฟล์หาย (ดู speakCutOff)
+      finished = true;
+      a.onended = a.onerror = a.onpause = null;
+      if(wordAudioNow === a) wordAudioNow = null;
+      wordAudio[key] = 'miss';
+      speakWordTTS(word, notify);
     };
     a.onerror = fail;
+    a.onended = ()=>finish(true);
+    a.onpause = ()=>{ if(!a.ended) finish(false); };
     wordAudioNow = a;
     a.currentTime = 0;
     const p = a.play();
     if(p && p.catch) p.catch(fail);
-  }catch(e){ speakWordTTS(word); }
+    return a;
+  }catch(e){ return speakWordTTS(word, notify); }
 }
 /* 🔠 เสียงชื่อตัวอักษร (เอ บี ซี — เก็บตัวอักษรในโลก 3D เด็กเล็กฝึกจำตัวอักษร)
    ไฟล์ sound/letters/<a-z>.mp3 (เจนจากสคริปต์เดียวกัน) · แชร์ตัวเล่นกับ speakWord —
@@ -727,8 +742,11 @@ function pickSpeakVoice(){
   };
   return vs.sort((a,b)=>score(b)-score(a))[0];
 }
-function speakWordTTS(word){
-  if(!state.sound || !word || !('speechSynthesis' in window)) return;
+function speakWordTTS(word, onDone){
+  const notify = ok=>{ if(typeof onDone === 'function') onDone(!!ok); };
+  if(!state.sound || !word || !('speechSynthesis' in window)){
+    setTimeout(()=>notify(false), 0); return null;
+  }
   try{
     if(!speakVoice){
       speakVoice = pickSpeakVoice();
@@ -739,10 +757,14 @@ function speakWordTTS(word){
     const u = new SpeechSynthesisUtterance(word);
     u.lang = 'en-US'; u.rate = 0.9; u.pitch = 1;
     if(speakVoice) u.voice = speakVoice;
+    let finished = false;
+    const finish = ok=>{ if(finished) return; finished = true; notify(ok); };
+    u.onend = ()=>finish(true);
+    u.onerror = ()=>finish(false);
     window.speechSynthesis.speak(u);
-  }catch(e){}
+    return u;
+  }catch(e){ setTimeout(()=>notify(false), 0); return null; }
 }
-
 /* ---------- ป๊อปอัพตั้งชื่อ (ใช้ร่วม: ชื่อในเกมข้อ 0.2 + ชื่อสัตว์ข้อ 7) ----------
    opt = {emoji, title, desc(html), placeholder, value, min, max,
           okText, cancelText (ไม่ใส่ = บังคับตั้ง ปิดข้ามไม่ได้), onOk(name), onCancel}
