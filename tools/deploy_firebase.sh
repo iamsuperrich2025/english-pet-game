@@ -24,6 +24,10 @@ cd "$REPO"
 git archive HEAD | tar -x -C "$STAGE/public"
 rm -rf "$STAGE/public/handoff" "$STAGE/public/tools" "$STAGE/public/store"   # store/ = ภาพหน้าร้าน Play Store ไม่ใช่ของผู้เล่น
 rm -f  "$STAGE/public"/*.md              # PROMPTS_*.md / TASK_*.md ไม่ใช่ของผู้เล่น
+# 🛑 รอบ 1022: ไฟล์ "รันได้" (.bat/.exe/…) ห้ามขึ้น Firebase Hosting แผน Spark — deploy จะพังทั้งรอบ
+#    ("Executable files are forbidden on the Spark billing plan") เจอครั้งแรกตอน ship.bat (รอบ 1021)
+#    เข้ามาอยู่ราก repo · ลบทิ้งตรงนี้ + กันซ้ำอีกชั้นด้วย "ignore" ใน firebase.json ข้างล่าง
+find "$STAGE/public" -type f \( -iname '*.bat' -o -iname '*.cmd' -o -iname '*.exe' -o -iname '*.com' -o -iname '*.ps1' -o -iname '*.dll' \) -delete
 
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง
 #    (ตรวจสำเนา staged = git HEAD ไม่ใช่ working tree → ตรงกับของที่ผู้เล่นจะได้เป๊ะ)
@@ -67,7 +71,7 @@ cat > "$STAGE/firebase.json" <<'EOF'
   "hosting": {
     "site": "vocabworld",
     "public": "public",
-    "ignore": ["firebase.json"],
+    "ignore": ["firebase.json", "**/*.@(bat|cmd|exe|com|ps1|dll)"],
     "headers": [
       { "source": "**/*.@(js|css|html|json)", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
       { "source": "/", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
