@@ -302,6 +302,7 @@
     const box = pageEl.querySelector('.pd-imgbox'), img = pageEl.querySelector('img'),
           ov  = pageEl.querySelector('.pd-cells');
     if(!W || !box || !img || !ov) return;
+    ov.dataset.file = pg.file;
     const fit = ()=>{
       /* 🖼️ รอบ 995: ภาพเป็น object-fit:fill → เต็มกล่องพอดี ไม่มีขอบว่างให้ชดเชยอีก */
       const iw = box.clientWidth, ih = box.clientHeight;
@@ -368,89 +369,74 @@
   /* ---------- 🔍 แตะการ์ด = ป๊อปอัปซูมรูปนั้นให้ใหญ่ชัด (รอบ 998) ----------
      ครอปเฉพาะส่วนของภาพแผ่นที่ตรงกับช่องนั้นด้วย canvas แล้ววาดขยายในป๊อปอัป
      (ภาพเป็น object-fit:fill → กล่อง .pd-imgbox แมปตรงกับพิกเซลจริงของภาพ 1:1 ตามสัดส่วน) */
-  /* 🧲 เก็บขอบครอปแนวตั้งให้เป๊ะระดับพิกเซล (รอบ 1016 — ผู้ใช้เจอ 3 เคส: Snail ขอบบนขาด/ล่างเกิน ·
-     Harp Seal ป้าย "ปลาบิน" ของการ์ดบนหลุดเข้ามา · Camel เห็นเศษการ์ดล่าง)
-     ตารางอบ (picdict_grid.js) แม่นพอสำหรับ "โซนคลิก" แต่ครอปโชว์ใหญ่คลาดไม่กี่ px ก็เห็น
-     → เดินแถบเนื้อหารอบ "ก้อนรูป" ของช่องนี้เอง โดยอาศัยเลย์เอาต์ที่คงที่ทั้งเล่ม (ป้ายอยู่ใต้รูปเสมอ):
-     ขึ้นบน: เก็บได้แค่เส้นขอบการ์ดบาง ๆ (≤5px) เจอแถบหนา = ป้ายของการ์ดบน → หยุด
-     ลงล่าง: เก็บป้าย/เส้นขอบของตัวเอง · แถบบางที่ตามด้วยก้อนใหญ่ = เส้นขอบบนของการ์ดถัดไป → ไม่เอา */
-  function refineCropV(img, sx, sy, sw, sh){
+  /*
+   * The baked rectangle is the verified boundary of one vocabulary card.
+   * Do not expand it: even whitespace can contain a neighbour's label/frame.
+   */
+  function bakedCrop(cell, img){
+    const ov = cell.parentElement;
+    const g = ov && bakedGrid(ov.dataset.file);
+    const idx = ov ? [...ov.children].indexOf(cell) : -1;
+    const b = g && g[idx];
+    if(!b) return null;
+
+    const sx = b[0] * img.naturalWidth, sy = b[1] * img.naturalHeight;
+    const sw = (b[2]-b[0]) * img.naturalWidth, sh = (b[3]-b[1]) * img.naturalHeight;
     try{
-      const natW = img.naturalWidth, natH = img.naturalHeight;
-      const ext = Math.round(sh*0.15);
-      const ry0 = Math.max(0, Math.round(sy - ext)), ry1 = Math.min(natH, Math.round(sy + sh + ext));
-      /* หนีบข้างแค่ 6% + เกณฑ์หมึก 1.5% — ป้ายไทยสั้น ๆ (เช่น "อูฐ") ใน strip แคบ/เกณฑ์แข็ง
-         จะแตกเป็นเศษ 1-2px จนตรรกะเดินแถบพัง (เจอจริงแผ่น animal2 การ์ดเล็ก) */
-      const ix0 = Math.max(0, Math.round(sx + sw*0.06)), ix1 = Math.min(natW, Math.round(sx + sw*0.94));
-      if(ix1 - ix0 < 8 || ry1 - ry0 < 20) return null;
+      /* Analyse only inside this baked rectangle. The previous version scanned
+         15% outside it, which is how neighbouring labels and frames leaked in. */
+      const ix0 = Math.round(sx + sw*0.12), ix1 = Math.round(sx + sw*0.88);
+      const iy0 = Math.round(sy), iy1 = Math.round(sy + sh);
+      if(ix1-ix0 < 8 || iy1-iy0 < 20) return {sx,sy,sw,sh};
       const cv = document.createElement('canvas');
-      cv.width = ix1 - ix0; cv.height = ry1 - ry0;
+      cv.width = ix1-ix0; cv.height = iy1-iy0;
       const ctx = cv.getContext('2d', {willReadFrequently:true});
-      ctx.drawImage(img, ix0, ry0, cv.width, cv.height, 0, 0, cv.width, cv.height);
-      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      ctx.drawImage(img, ix0, iy0, cv.width, cv.height, 0, 0, cv.width, cv.height);
+      const data = ctx.getImageData(0,0,cv.width,cv.height).data;
       const need = Math.max(2, Math.round(cv.width*0.015));
-      const raw = [];
-      let st = -1;
-      for(let y = 0; y < cv.height; y++){
+      const raw = []; let start = -1;
+      for(let y=0; y<cv.height; y++){
         let ink = 0;
-        for(let x = 0; x < cv.width; x++){
-          const i = (y*cv.width + x)*4;
-          if(!(d[i] > 240 && d[i+1] > 240 && d[i+2] > 240) && ++ink >= need) break;
+        for(let x=0; x<cv.width; x++){
+          const p = (y*cv.width+x)*4;
+          if(!(data[p]>240 && data[p+1]>240 && data[p+2]>240) && ++ink>=need) break;
         }
-        const has = ink >= need;
-        if(has && st < 0) st = y;
-        if(!has && st >= 0){ raw.push([st, y-1]); st = -1; }
+        if(ink>=need && start<0) start=y;
+        if(ink<need && start>=0){ raw.push([start,y-1]); start=-1; }
       }
-      if(st >= 0) raw.push([st, cv.height-1]);
-      /* รวมเศษที่ห่างกัน ≤2px (รอย anti-alias/เส้นประขาด) */
+      if(start>=0) raw.push([start,cv.height-1]);
       const bands = [];
-      for(const b of raw){
+      raw.forEach(band=>{
         const last = bands[bands.length-1];
-        if(last && b[0]-last[1] <= 2) last[1] = b[1]; else bands.push([b[0], b[1]]);
-      }
-      if(!bands.length) return null;
-      /* ก้อนรูป = แถบสูงสุดที่คาบเกี่ยวช่วงกลางช่อง (กันหยิบรูปของการ์ดข้างในโซนเผื่อ) */
-      const c0 = (sy - ry0) + sh*0.15, c1 = (sy - ry0) + sh*0.85;
-      let big = -1;
-      for(let i = 0; i < bands.length; i++){
-        if(bands[i][1] < c0 || bands[i][0] > c1) continue;
-        if(big < 0 || bands[i][1]-bands[i][0] > bands[big][1]-bands[big][0]) big = i;
-      }
-      if(big < 0) return null;
-      /* แถบที่โดนขอบเขตสแกนตัด นับความสูงไม่ได้จริง — ถ้าที่เห็น ≥12% ของช่อง ให้ถือเป็นก้อนใหญ่ */
-      const isBig = b => (b[1]-b[0] > sh*0.30) ||
-                         ((b[0] <= 1 || b[1] >= cv.height-2) && b[1]-b[0] >= sh*0.12);
-      /* ⬆️ เก็บเส้นขอบการ์ดตัวเอง (เส้นประ = แถบบางหลายชิ้น ร่องถี่) — จำกัดระยะไต่ ≤12% ของช่อง
-         (เส้นขอบอยู่ชิดรูป · ของการ์ดบน (ป้าย/เส้นขอบล่าง) อยู่ไกลกว่านั้น — วัดจริง 14-17%) */
+        if(last && band[0]-last[1]<=2) last[1]=band[1]; else bands.push(band);
+      });
+      if(!bands.length) return {sx,sy,sw,sh};
+
+      let big = 0;
+      for(let i=1; i<bands.length; i++)
+        if(bands[i][1]-bands[i][0] > bands[big][1]-bands[big][0]) big=i;
       let top = big;
-      while(top > 0){
-        const p = bands[top-1];
-        if(p[1]-p[0] <= 7 && bands[top][0]-p[1] <= 6 && bands[big][0]-p[0] <= sh*0.12) top--;
+      while(top>0){
+        const prev=bands[top-1], gap=bands[top][0]-prev[1];
+        if(prev[1]-prev[0]<=8 && gap<=sh*0.08 && bands[big][0]-prev[0]<=sh*0.16) top--;
         else break;
       }
-      /* ⬇️ เก็บป้ายอังกฤษ/ไทย/เส้นขอบล่างของตัวเอง · หยุดก่อน "จุดเริ่มการ์ดถัดไป" */
-      let bot = big, taken = 0;
-      const cellBotRel = (sy + sh) - ry0;
-      while(bot < bands.length-1 && taken < 4){
-        const nx = bands[bot+1];
-        if(nx[0] - bands[bot][1] > sh*0.12) break;                   // ร่องกว้างผิดปกติ = ข้ามการ์ดแล้ว
-        if(isBig(nx)) break;                                         // ก้อนใหญ่ = รูปการ์ดถัดไป
-        if(nx[0] > cellBotRel + sh*0.05) break;                      // เริ่มเกินขอบล่างช่อง = ของการ์ดล่าง
-        /* แถบบางที่ประชิดก้อนใหญ่ถัดไป = เส้นขอบบนของการ์ดล่าง — หยุดก่อนถึง */
-        if(nx[1]-nx[0] <= 7 && bot+2 < bands.length && isBig(bands[bot+2]) &&
-           bands[bot+2][0]-nx[1] <= sh*0.05) break;
-        bot++; taken++;
+      let bottom=big, taken=0;
+      while(bottom<bands.length-1 && taken<3){
+        const next=bands[bottom+1], gap=next[0]-bands[bottom][1];
+        if(gap>sh*0.12 || next[1]-next[0]>sh*0.30) break;
+        bottom++; taken++;
       }
-      /* ระยะหายใจรอบการ์ด — หนีบไม่ให้ล้ำไปโดนแถบเพื่อนบ้าน */
-      let pad = Math.max(3, Math.round(sh*0.02));
-      let padUp = pad, padDn = pad;
-      if(top > 0) padUp = Math.min(padUp, Math.max(1, bands[top][0] - bands[top-1][1] - 1));
-      if(bot < bands.length-1) padDn = Math.min(padDn, Math.max(1, bands[bot+1][0] - bands[bot][1] - 1));
-      const nyO = Math.max(0, ry0 + bands[top][0] - padUp);
-      const nh  = Math.min(natH, ry0 + bands[bot][1] + padDn) - nyO;
-      if(nh < sh*0.45 || nh > sh*1.35) return null;                  // เพี้ยนผิดปกติ → ใช้กรอบเดิม
-      return {sy: nyO, sh: nh};
-    }catch(e){ return null; }
+      const topPad=Math.max(2,Math.round(sh*0.02));
+      let trimTop=Math.max(0,bands[top][0]-topPad);
+      if(top===big && bands[big][0]<sh*0.12) trimTop=0;
+      const trimBottom=Math.min(cv.height,bands[bottom][1]+1);
+      const trimmedH=trimBottom-trimTop;
+      if(trimmedH<sh*0.45 || trimmedH>sh) return {sx,sy,sw,sh};
+      return {sx,sy:sy+trimTop,sw,sh:trimmedH};
+    }catch(e){
+      return {sx,sy,sw,sh};
+    }
   }
   function zoomCell(cell, en, th){
     const box = cell.closest('.pd-imgbox');
@@ -462,13 +448,12 @@
     /* ช่องถูกวางตามกรอบการ์ดจริงแล้ว (ตารางอบ picdict_grid.js) จึงเผื่อขอบแค่บาง ๆ พอไม่ให้ชิดเกินไป
        — เผื่อเยอะเหมือนเดิมจะติดการ์ดใบข้างเข้ามาในกรอบ */
     const padX = cr.width * 0.03, padY = cr.height * 0.03;
-    const sx = Math.max(0, (cr.left - br.left - padX) / br.width  * img.naturalWidth);
-    let   sy = Math.max(0, (cr.top  - br.top  - padY) / br.height * img.naturalHeight);
-    const sw = Math.min(img.naturalWidth  - sx, (cr.width  + padX*2) / br.width  * img.naturalWidth);
-    let   sh = Math.min(img.naturalHeight - sy, (cr.height + padY*2) / br.height * img.naturalHeight);
+    const safe = bakedCrop(cell, img);
+    const sx = safe ? safe.sx : Math.max(0, (cr.left - br.left - padX) / br.width  * img.naturalWidth);
+    const sy = safe ? safe.sy : Math.max(0, (cr.top  - br.top  - padY) / br.height * img.naturalHeight);
+    const sw = safe ? safe.sw : Math.min(img.naturalWidth  - sx, (cr.width  + padX*2) / br.width  * img.naturalWidth);
+    const sh = safe ? safe.sh : Math.min(img.naturalHeight - sy, (cr.height + padY*2) / br.height * img.naturalHeight);
     if(sw <= 0 || sh <= 0) return;
-    const fine = refineCropV(img, sx, sy, sw, sh);
-    if(fine){ sy = fine.sy; sh = fine.sh; }
     const outW = 480, outH = Math.max(1, Math.round(outW * sh / sw));
     canvas.width = outW; canvas.height = outH;
     const ctx = canvas.getContext('2d');
