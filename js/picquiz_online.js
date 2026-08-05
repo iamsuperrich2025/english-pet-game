@@ -18,11 +18,12 @@
   const esc = s => typeof escapeHTML === 'function' ? escapeHTML(String(s == null ? '' : s))
                                                     : String(s == null ? '' : s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const now = ()=>Date.now() + (P.serverOffset || 0);
-  const myUid = ()=> typeof onlineKey === 'function' ? onlineKey() : (window.Auth && Auth.user && Auth.user.uid) || '';
-  const myName = ()=> typeof onlineDisplayName === 'function' ? onlineDisplayName() : (window.state && state.student && state.student.name) || 'ผู้เล่น';
-  const myGrade = ()=> (window.state && state.student && state.student.grade) || '';
-  const serverTS = ()=> window.firebase && firebase.database ? firebase.database.ServerValue.TIMESTAMP : Date.now();
-  const dbReady = ()=> !!(window.Online && Online.ready && Online.db && myUid());
+  const myUid = ()=> typeof onlineKey === 'function' ? onlineKey() : (typeof Auth !== 'undefined' && Auth.user && Auth.user.uid) || '';
+  const myName = ()=> typeof onlineDisplayName === 'function' ? onlineDisplayName() : (typeof state !== 'undefined' && state.student && state.student.name) || 'ผู้เล่น';
+  const myGrade = ()=> (typeof state !== 'undefined' && state.student && state.student.grade) || '';
+  const serverTS = ()=> typeof firebase !== 'undefined' && firebase.database ? firebase.database.ServerValue.TIMESTAMP : Date.now();
+  // Online/Auth/state เป็น lexical globals จาก <script> ปกติ จึงไม่อยู่บน window
+  const dbReady = ()=> !!(typeof Online !== 'undefined' && Online.ready && Online.db && myUid());
   const tell = (msg, ms)=> typeof toast === 'function' ? toast(msg, ms) : void 0;
 
   const P = {
