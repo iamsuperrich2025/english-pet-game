@@ -5242,6 +5242,9 @@ function openFoodMenu(p){
   const itemHTML = f=>{
     const usable = canEat || f.skipNext;
     const bad = foodBadFor(f, p.type);
+    /* 🔒 รอบ 1033: ป้ายล็อกเดิมอยู่หัวการ์ดใบเดียว พอเมนูเลื่อนแล้วหลุดจอ
+       → ผู้เล่นเห็นแค่ "ปลา 300 กดได้ แต่แอปเปิ้ล 150 เทา" นึกว่าเกมบังคับซื้อของแพง
+       เลยย้ำเหตุผล+เวลากินได้อีกทีไว้ท้ายการ์ดทุกใบ และติดป้ายให้ใบที่กดได้จริงด้วย */
     return `
         <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${!usable ? 'food-locked' : ''} ${(state.coins < f.price) ? 'cant-afford' : ''}" data-food="${f.id}">
           ${usable ? '' : `<span class="fd-lock">🔒 อิ่มแล้ว</span>`}<!-- เวลากินได้อีกทีอยู่บนหัวกล่อง+toast (ป้ายบนการ์ดสั้นไว้ กันกล่องยาวเกินจอเตี้ย) -->
@@ -5253,6 +5256,8 @@ function openFoodMenu(p){
           <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม +${f.fill}</span>
           ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
           ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
+          ${usable ? (canEat ? '' : `<span class="fd-nowok">✅ ใบเดียวที่กดได้ตอนนี้ (กินตุนล่วงหน้า)</span>`)
+                   : `<span class="fd-lock-when">🔒 น้องอิ่มเต็มหลอด — กินได้อีกทีตอน ${mealLabel(nextMeal)}</span>`}
           ${bad ? `<span class="fd-toxin">☠️ พิษสะสม +${f.toxin}</span>`
                 : f.human ? `<span class="fd-safe">✅ ${p.type==='dragon' ? 'มังกรกินได้' : 'น้องกินได้'}</span>` : ''}
         </div>`;

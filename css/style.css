@@ -764,6 +764,17 @@ html.no-anim body.quake{animation:none;}
   from{box-shadow:0 0 8px 1px rgba(245,197,66,.4);}
   to{box-shadow:0 0 16px 4px rgba(245,197,66,.75);}
 }
+/* 🔒 รอบ 1033: การ์ด "เมนูโปรด" ตอนถูกล็อกต้องดูล็อกจริง
+   เดิมขอบทองกะพริบ (favGlow) ทับสไตล์ล็อกไว้ → ผู้เล่นเห็นปลา 300 เหมือนกดได้
+   แต่แอปเปิ้ล/น่องไก่ที่ถูกกว่าเป็นสีเทา เลยนึกว่าเกมบังคับให้ซื้อของแพง */
+.food-item.food-locked.food-fav{
+  background:#f2f0ee;border:2px dashed #d8d2cc;box-shadow:none;animation:none;
+}
+/* บอกเหตุผลล็อกไว้ "ท้ายการ์ด" ด้วย — ป้าย 🔒 อยู่หัวการ์ด พอเลื่อนเมนูแล้วมองไม่เห็น (กฎทองข้อ 1) */
+.fd-lock-when{display:block;margin-top:3px;font-size:11.5px;color:#6f675e;font-weight:bold;}
+.fd-nowok{
+  display:block;margin-top:3px;font-size:12px;font-weight:bold;color:#2e7d43;
+}
 .fav-tag{
   display:inline-block;background:var(--pink-d);color:#fff;border-radius:999px;
   padding:1px 10px;font-size:11.5px;margin-bottom:2px;
