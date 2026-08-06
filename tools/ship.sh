@@ -7,7 +7,7 @@
 # finish_round.sh เดิมต้องกรอกเอง 4 อย่าง (เลขรอบ/ข้อความ/รายชื่อไฟล์/ออปชัน) = จำยาก พลาดง่าย
 # ตัวนี้ "เดาให้ครบทุกช่อง" แล้วให้แค่ยืนยัน y/n
 #
-# ใช้ (ดับเบิลคลิก tools\ship.bat ก็ได้):
+# ใช้ (แนะนำ: ดับเบิลคลิก COMMIT_DEPLOY.bat ที่หน้าแรกของโปรเจกต์):
 #   bash tools/ship.sh                    ← เดาทุกอย่าง แล้วถามยืนยัน
 #   bash tools/ship.sh "ข้อความ commit"   ← กำหนดข้อความเอง (เลขรอบยังเติมให้)
 #   bash tools/ship.sh -y                 ← ไม่ต้องถาม ลุยเลย
@@ -26,7 +26,7 @@ YES=0; DRY=0; MSG=""
 while [[ $# -gt 0 ]]; do case "$1" in
   -y|--yes) YES=1; shift;;
   --dry) DRY=1; shift;;
-  -h|--help) sed -n '2,25p' "$0"; exit 0;;
+  -h|--help) sed -n '2,25p' "$0"; exit 10;;
   *) MSG="$1"; shift;;
 esac; done
 
@@ -61,7 +61,7 @@ fi
 if [[ ${#CHANGED[@]} -eq 0 ]]; then
   say "✅ ไม่มีไฟล์ที่แก้ค้างอยู่ — ไม่มีอะไรต้อง ship ครับ"
   say "   (ถ้าเพิ่งให้ AI แก้ ลองเช็กว่ามันเขียนลงโฟลเดอร์นี้จริงไหม: $REPO)"
-  exit 0
+  exit 10
 fi
 
 # ── 2) แยกประเภท: ปกติ / ต้องยืนยันก่อน / ห้ามแตะ ───────────────────────
@@ -150,8 +150,8 @@ git diff --stat HEAD -- "${FILES[@]}" | tail -1 | sed 's/^/📊 /'
 if ! git diff --quiet HEAD -- handoff/TASKS.md; then say "📒 มีบันทึกรอบใน handoff/TASKS.md แล้ว ✓"
 else say "📒 ⚠️ ยังไม่มีบันทึกรอบใน handoff/TASKS.md (session หน้าจะไม่รู้ว่าทำอะไรไป)"; fi
 say "════════════════════════════════════════"
-if [[ $DRY -eq 1 ]]; then say "🧪 dry — ไม่ได้แตะอะไรจริง"; exit 0; fi
-if [[ $YES -eq 0 ]]; then ask "ส่งขึ้นเลยไหม? (y/n)" || { say "ยกเลิกครับ ไฟล์ยังอยู่ครบ"; exit 0; }; fi
+if [[ $DRY -eq 1 ]]; then say "🧪 dry — ไม่ได้แตะอะไรจริง"; exit 10; fi
+if [[ $YES -eq 0 ]]; then ask "ส่งขึ้นเลยไหม? (y/n)" || { say "ยกเลิกครับ ไฟล์ยังอยู่ครบ"; exit 10; }; fi
 
 # ── 6) ส่งจริงผ่าน finish_round.sh (ตรรกะเดิมที่ใช้อยู่ทุกวัน) ──────────
 say ""

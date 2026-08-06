@@ -6261,7 +6261,7 @@ function bindInput(){
      → พลาดได้ 3 ทาง ซึ่งเกิดสลับกันเลยรู้สึกเป็น "บางครั้ง": ① นิ้วลงครึ่งซ้าย (นอกจอย) แล้วลาก = ไม่มีอะไรเกิดขึ้น
      ② นิ้วเริ่มบนปุ่ม (กดยิงค้างแล้วไถออกมาเล็ง) = ไม่ถูกนับตลอดการลากนั้น  ③ `lookId` ค้างจากนิ้วเก่าที่จังหวะ
      ปล่อยหลุดไป (แผงแผนที่/ออกเกมเปิดคร่อมกลางคัน) → ที่นั่งนิ้วมองไม่เคยว่าง ลากอีกกี่นิ้วจอก็ไม่หันจนกว่าจะออก-เข้าใหม่
-     แก้: ถือทะเบียนนิ้วที่ยังไม่มีหน้าที่ไว้ พอ "ลากจริง" เกิน ADOPT_PX ก็รับเป็นนิ้วมองให้เอง (ตั้งจุดอ้างอิงใหม่ กล้องไม่กระตุก)
+     แก้: ถือทะเบียนนิ้วที่ยังไม่มีหน้าที่ไว้ พอ "ลากจริง" เกิน ADOPT_PX ก็รับเป็นนิ้วมองให้เอง
      + เช็ก `lookId` ทุกครั้งว่ายังเป็นนิ้วที่แตะจออยู่จริงไหม (`e.touches`) ไม่จริง = ปล่อยที่ว่างทันที */
   const PANELS='#inv-intro,#inv-exitbox,#inv-mapbox,#inv-chatbar';   // แผงป๊อปอัป: แตะแล้วไม่ใช่การมองรอบ
   const ADOPT_PX=12;
@@ -6271,7 +6271,12 @@ function bindInput(){
     for(const t of e.touches) if(t.identifier===lookId) return true;
     lookId=null; phClimb=0; return false;
   };
-  const takeLook=t=>{ lookId=t.identifier; lookX=t.clientX; lookY=t.clientY; cand.delete(t.identifier); };
+  /* 👆⚡ รอบ 1036: ตอนรับนิ้วสำรอง ห้ามตั้งจุดอ้างอิงเป็นตำแหน่งปัจจุบันแล้วทิ้ง touchmove เฟรมนั้น
+     บนเครื่องที่ฉาก 3D หนัก swipe สั้นอาจถูกส่งมาแค่ 1 move ก่อน touchend → yaw ไม่เปลี่ยนเลยและดูเหมือนจอค้าง
+     เก็บจุดเริ่มของ candidate ไว้ แล้วใช้ delta แรกที่ผ่าน dead-zone ในเฟรมเดียวกัน จึงตอบสนองทันทีโดยยังกรองนิ้วสั่น <12px */
+  const takeLook=(t,x=t.clientX,y=t.clientY)=>{
+    lookId=t.identifier; lookX=x; lookY=y; cand.delete(t.identifier);
+  };
   wrapEl.addEventListener('touchstart',e=>{
     for(const t of e.changedTouches){
       if(t.identifier===joy.id) continue;
@@ -6289,7 +6294,7 @@ function bindInput(){
       if(t.identifier!==lookId){
         const c=cand.get(t.identifier);                   // นิ้วสำรอง: ลากจริงเมื่อไหร่ค่อยรับเป็นนิ้วมอง
         if(!c || Math.abs(t.clientX-c.x)+Math.abs(t.clientY-c.y)<ADOPT_PX || lookAlive(e)) continue;
-        takeLook(t); continue;                            // รับแล้วข้ามเฟรมนี้ไป — จุดอ้างอิง=ตำแหน่งปัจจุบัน กล้องจึงไม่กระโดด
+        takeLook(t,c.x,c.y);                              // รับแล้วใช้ movement แรกทันที — swipe เฟรมเดียวก็หันได้
       }
       const sc=1-(1-SNIPER_SENS)*adsT;
       yaw-=(t.clientX-lookX)*PAD_SENS*sc;
