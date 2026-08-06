@@ -6551,9 +6551,10 @@ async function loadAdv3d(){
 /* ============================================================
    🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
    แยกเอนจินออกจาก adventure3d.js ที่เกิน 12,000 บรรทัดแล้ว เพื่อไม่ทำให้ไฟล์เดิมบวมขึ้น
+   🤝👑 รอบ 1048 — Co-op PvE 2–4 คน + บอสคำศัพท์รายบท + revive + รางวัลทีม
    ============================================================ */
 async function loadVocabArena3d(){
-  await loadScriptOnce('js/arena3d.js');
+  await loadScriptOnce('js/arena3d.js?arena-test=1048');
 }
 let advLoading = false;
 async function enterAdventure3D(){
@@ -6592,7 +6593,7 @@ function pickAdvMap(){
                   padding:clamp(8px,2vh,14px) 6px;color:#e8fbff;cursor:pointer;box-shadow:inset 0 0 18px rgba(93,222,255,.08)">
             <div style="font-size:clamp(26px,7vh,38px)">🌀</div>
             <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">Vocab Arena</div>
-            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">สู้ปีศาจตัวอักษร 👾 เก็บอักษรประกอบคำ<br>ตัวละครโปรไฟล์ 88 แบบ + น้องวิ่งตาม</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">Co-op 2–4 คน 🤝 บอสคำศัพท์รายบท 👑<br>ช่วยชุบเพื่อน + แบ่งรางวัลอย่างยุติธรรม</div>
           </button>
           <button class="am-c" data-m="heli" style="flex:1;background:rgba(41,182,246,.13);border:2px solid #4fc3f7;border-radius:14px;
                   padding:clamp(8px,2vh,14px) 6px;color:#e5f6ff;cursor:pointer">

@@ -121,8 +121,9 @@ const Music = (function(){
   /* ---------- 🤫 รอบ 859 (ผู้ใช้สั่ง): เปิดหน้าสอบ/ควิซ/เกมจากแถบล่าง Lobby → เพลงค่อยๆ เฟดเงียบ
      ปิดหน้านั้นแล้วเพลงค่อยๆ กลับมาดังเอง — ตรวจจับจาก DOM กลางทาง (ไม่ต้องไปฝัง hook ทุกจุดเปิด/ปิด)
      ครอบคลุม: IELTS/TOEIC/TOEFL (#xs-picker/#xs-screen/#xs-review) · ควิซอาหาร (.fq-box)
-     · หมวดคำศัพท์+แบบทดสอบ (screen-cats/screen-quiz) · เกมจับคู่คำศัพท์ (screen-game) */
-  const DUCK_SEL = '#xs-picker,#xs-screen,#xs-review,.fq-box,#screen-cats.active,#screen-quiz.active,#screen-game.active';
+     · หมวดคำศัพท์+แบบทดสอบ (screen-cats/screen-quiz) · เกมจับคู่คำศัพท์ (screen-game)
+     · 🖼️ จับคู่ภาพ · 📖 Picture Dictionary/ครูถามศัพท์ · 📝 แผงสอบเลื่อนขั้น (รอบ 1048) */
+  const DUCK_SEL = '#xs-picker,#xs-screen,#xs-review,.fq-box,#screen-cats.active,#screen-quiz.active,#screen-game.active,#screen-picmatch.active,#screen-picdict.active,#bsp-overlay';
   let ducked = false, duckFadeT = 0;
   function fadeBgTo(target, done){                     // ไล่ volume ทีละสเต็ปทุก 60ms (~0.85 วิเต็มช่วง)
     clearInterval(duckFadeT);

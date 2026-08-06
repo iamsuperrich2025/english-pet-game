@@ -61,6 +61,39 @@
 .va-bag-letter{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:900;
   background:linear-gradient(145deg,#1f6f9d,#542c91);border:1px solid #82eaff;box-shadow:0 0 9px rgba(57,220,255,.3)}
 
+/* ============================================================
+   🤝👑 รอบ 1048 — ปาร์ตี้ Co-op / บอสรายบท / revive
+   ใช้ภาษาภาพเดิมของ Arena: กระจกน้ำเงิน + แสง cyan/violet/gold
+   ============================================================ */
+.va-party{position:absolute;right:max(12px,env(safe-area-inset-right));top:68px;width:min(29vw,260px);min-height:42px;
+  border-radius:14px;padding:5px 7px;display:flex;align-items:center;gap:6px;pointer-events:auto}
+.va-party-find{width:31px;height:31px;flex:0 0 31px;border-radius:10px;border:1px solid rgba(119,231,255,.45);
+  background:linear-gradient(145deg,#236b91,#37357d);cursor:pointer;padding:0}.va-party-find.off{filter:grayscale(.8);opacity:.58}
+.va-party b{display:block;font-size:9px;line-height:1.1;color:#bff7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.va-party-list{display:flex;gap:3px;margin-top:3px;min-width:0;overflow:hidden}.va-party-list span{max-width:72px;border-radius:7px;padding:1px 5px;
+  background:rgba(65,199,229,.13);color:#9ff3d3;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.va-party-list span.self{color:#fff09b}.va-party-list span.down{background:rgba(255,67,103,.2);color:#ffc2d0;animation:vaPulse .7s infinite}
+
+.va-boss{position:absolute;left:50%;top:99px;transform:translate(-50%,-8px) scale(.96);width:min(40vw,430px);border-radius:15px;
+  padding:5px 9px 6px;opacity:0;visibility:hidden;pointer-events:none;transition:.24s;border-color:rgba(255,207,91,.52)}
+.va-boss.on{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}.va-boss.won{filter:brightness(1.35)}
+.va-boss-head{display:flex;align-items:center;gap:6px;font-size:9px;line-height:1.1}.va-boss-head span{color:#ffe17b;font-weight:900;white-space:nowrap}
+.va-boss-head b{flex:1;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.va-boss-head em{font-style:normal;color:#ffd8e5;font-weight:900}
+.va-boss-track{height:7px;margin-top:4px;border-radius:99px;background:rgba(25,3,23,.82);overflow:hidden;border:1px solid rgba(255,219,131,.2)}
+.va-boss-fill{height:100%;width:100%;border-radius:inherit;background:linear-gradient(90deg,#ff476f,#bc55e8 52%,#ffe06b);box-shadow:0 0 14px #ff6498;transition:width .16s linear}
+.va-boss-word{text-align:center;color:#fff0a3;font-size:9px;font-weight:800;letter-spacing:.08em;margin-top:2px}
+
+.va-downed{position:absolute;left:50%;top:48%;transform:translate(-50%,-50%) scale(.92);z-index:12;min-width:min(340px,78vw);border-radius:18px;
+  padding:12px 18px;text-align:center;background:linear-gradient(145deg,rgba(73,10,38,.94),rgba(20,14,49,.94));border:2px solid #ff668a;
+  box-shadow:0 0 42px rgba(255,50,102,.32);opacity:0;visibility:hidden;pointer-events:none;transition:.18s}
+.va-downed.on{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);animation:vaDown 1s ease-in-out infinite}
+.va-downed strong{display:block;font-size:clamp(18px,4vh,28px);color:#ffd8e1}.va-downed span{display:block;font-weight:900;color:#fff1a0;margin-top:2px}.va-downed small{font-size:9px;color:#f5afc2}
+.va-revive{display:none;position:absolute;z-index:13;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(240px,30vw);
+  border:1px solid #75ffd3;border-radius:15px;padding:7px 10px;background:linear-gradient(145deg,rgba(12,75,72,.94),rgba(17,32,68,.95));box-shadow:0 6px 24px rgba(0,0,0,.35);cursor:pointer}
+.va-revive.on{display:block}.va-revive b{display:block;font-size:11px;color:#dcfff3}.va-revive>span{display:block;height:6px;margin:4px 0 2px;border-radius:99px;background:#102c37;overflow:hidden}
+.va-revive i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#5bf0ba,#fff079);box-shadow:0 0 10px #6dffd1}.va-revive small{font-size:8px;color:#acd9d3}
+.va-skill.down{filter:grayscale(.9) brightness(.45);pointer-events:none}
+
 .va-hp{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));
   width:min(23vw,210px);height:18px;border-radius:999px;padding:3px 6px 3px 42px;pointer-events:none}
 .va-hp b{position:absolute;left:7px;top:1px;font-size:10px;color:#dff}
@@ -136,7 +169,7 @@
 .va-intro-logo{font-size:clamp(23px,5vh,38px);font-weight:900;letter-spacing:.06em;
   background:linear-gradient(90deg,#66e9ff,#d076ff,#ffe064);-webkit-background-clip:text;background-clip:text;color:transparent}
 .va-intro-sub{font-size:clamp(10px,2.2vh,13px);color:#acd1e7;margin:2px 0 8px}
-.va-intro-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 9px}
+.va-intro-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:0 0 9px}
 .va-intro-step{border-radius:13px;padding:7px 5px;background:rgba(31,74,105,.36);border:1px solid rgba(103,217,255,.22);
   font-size:clamp(8px,1.7vh,10px);line-height:1.3}.va-intro-step b{display:block;font-size:clamp(18px,4.4vh,27px);margin-bottom:2px}
 .va-start{border:0;border-radius:14px;padding:8px 28px;font-size:clamp(13px,2.8vh,17px);font-weight:900;cursor:pointer;
@@ -150,16 +183,18 @@
 @keyframes vaPulse{50%{filter:brightness(1.45);opacity:.78}}
 @keyframes vaUlt{50%{box-shadow:0 5px 20px rgba(0,0,0,.38),0 0 28px #ffec6c,inset 0 0 15px #fff}}
 @keyframes vaFeed{from{opacity:0;transform:translateX(14px)}}
+@keyframes vaDown{50%{box-shadow:0 0 55px rgba(255,50,102,.5)}}
 
 @media (max-height:480px){
   .va-top{height:44px}.va-player-card{height:42px}.va-exit,.va-shop-btn,.va-icon-btn{height:38px}
   .va-word-card{min-height:44px;padding-top:3px}.va-word-en{font-size:16px}.va-word-th{font-size:8px}
-  .va-energy{top:57px;height:18px}.va-bag{top:58px}.va-feed{top:80px}
+  .va-energy{top:57px;height:18px}.va-bag{top:58px}.va-party{top:55px;min-height:36px}.va-party-find{width:27px;height:27px;flex-basis:27px}.va-feed{top:119px}
+  .va-boss{top:78px;padding:3px 7px 4px}.va-boss-track{height:5px}.va-boss-word{font-size:8px}.va-downed{padding:7px 14px}.va-revive{bottom:7px;padding:5px 8px}
   .va-stick{bottom:20px;width:88px;height:88px}.va-hp{bottom:9px;left:118px;width:150px}
   .va-skills{bottom:7px;width:190px;height:118px}
   .va-store-item{min-height:72px;padding:6px 6px 5px 53px}.va-store-ico{left:7px;top:8px;width:38px;height:38px;font-size:22px}
   .va-store-desc{font-size:8px}.va-store-price{margin-top:1px}.va-panel{padding:8px}.va-panel-head{margin-bottom:5px}
 }
-@media (max-width:760px){.va-player-card{min-width:105px;max-width:135px}.va-player-name{font-size:10px}.va-coins{padding:0 8px}.va-shop-btn{padding:0 8px}.va-word-card{width:42vw}.va-bag{width:27vw}.va-feed{display:none}}
+@media (max-width:760px){.va-player-card{min-width:105px;max-width:135px}.va-player-name{font-size:10px}.va-coins{padding:0 8px}.va-shop-btn{padding:0 8px}.va-word-card{width:42vw}.va-bag{width:27vw}.va-party{width:28vw}.va-feed{display:none}.va-revive{width:28vw}.va-intro-steps{gap:4px}}
 @media (orientation:portrait){#va-root .va-portrait{display:grid}}
 @media (prefers-reduced-motion:reduce){#va-root *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}

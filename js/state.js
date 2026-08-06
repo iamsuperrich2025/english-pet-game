@@ -47,8 +47,10 @@ const DEFAULT_STATE = {
   advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
   advDone:[],                         // ข้อ 8: คำที่ประกอบสำเร็จแล้วในโลกผจญภัย 3D (ไม่สุ่มซ้ำ · ครบทุกคำของระดับชั้นแล้วล้างเริ่มรอบใหม่)
   arenaItems:{},                      // 🌀 รอบ 1045: ไอเทมพลังถาวรใน Vocab Arena {prism,storm,echo,wing:true}
-  arenaStats:{words:0,kills:0,bestCombo:0}, // สถิติต่อสู้ PvE สะสม (ไม่มี PvP)
+  arenaStats:{words:0,kills:0,bestCombo:0,bossWins:0,revives:0,coopWords:0,fairCoins:0,bestChapter:0}, // 🤝👑 รอบ 1048: สถิติ Co-op/บอส/ช่วยชุบ
   arenaIntro:false,                   // เคยอ่านวิธีเล่นโลกผจญภัยฉบับใหม่แล้ว
+  arenaChapter:1,                    // บอสคำศัพท์บทปัจจุบัน 1..4
+  arenaBossClaims:[],                // encounter ที่รับรางวัลแล้ว (กันรับซ้ำเมื่อสลับหัวหน้าปาร์ตี้)
   advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
   hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
@@ -417,9 +419,12 @@ function loadState(){
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
       if(!s.arenaItems || typeof s.arenaItems !== 'object' || Array.isArray(s.arenaItems)) s.arenaItems = {}; // 🌀 รอบ 1045
-      if(!s.arenaStats || typeof s.arenaStats !== 'object') s.arenaStats = {words:0,kills:0,bestCombo:0};
-      for(const k of ['words','kills','bestCombo']) if(typeof s.arenaStats[k] !== 'number') s.arenaStats[k] = 0;
+      if(!s.arenaStats || typeof s.arenaStats !== 'object') s.arenaStats = {words:0,kills:0,bestCombo:0,bossWins:0,revives:0,coopWords:0,fairCoins:0,bestChapter:0};
+      for(const k of ['words','kills','bestCombo','bossWins','revives','coopWords','fairCoins','bestChapter']) if(typeof s.arenaStats[k] !== 'number') s.arenaStats[k] = 0;
       if(typeof s.arenaIntro !== 'boolean') s.arenaIntro = false;
+      if(!Number.isInteger(s.arenaChapter) || s.arenaChapter < 1 || s.arenaChapter > 4) s.arenaChapter = 1;
+      if(!Array.isArray(s.arenaBossClaims)) s.arenaBossClaims = [];
+      s.arenaBossClaims = s.arenaBossClaims.filter(x => typeof x === 'string').slice(-20);
       s.advHurt = false;   // รอบ 255: เลิกระบบบาดเจ็บถาวร (โลก 3D ไม่มีตาย/เกมโอเวอร์) — ล้าง flag ค้างของเซฟเก่าด้วย
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];

@@ -9,6 +9,18 @@
 (function(){
   const TAU=Math.PI*2, ARENA_R=32, BOT_TARGET=8, ENERGY_MAX=10;
   const SKILL_CD={basic:.34,arc:4,nova:7,ult:15};
+  /* ============================================================
+     🤝👑 รอบ 1048 — CO-OP PVE + CHAPTER BOSSES
+     ใช้ NetRoom/Firebase fields เดิมเท่านั้น: ห้องละ 2–4 คน, ผู้นำห้อง
+     กระจาย state ของบอส, revive แบบกดค้าง และรางวัลฐานเท่ากันทุกคน
+     ============================================================ */
+  const PARTY_MAX=4, BOSS_WORD_GOAL=3, REVIVE_HOLD_MS=2200, DOWN_MS=12000;
+  const CHAPTERS=[
+    {id:1,ico:'🌿',name:'ประตูอักษร',boss:'ผู้พิทักษ์คำสั้น',min:3,max:4,color:0x59f0ba},
+    {id:2,ico:'🌊',name:'สายน้ำความหมาย',boss:'อสูรสะท้อนคำ',min:4,max:5,color:0x50d9ff},
+    {id:3,ico:'🌙',name:'หอคอยประโยค',boss:'จอมเวทพจนานุกรม',min:5,max:6,color:0xbe72ff},
+    {id:4,ico:'☀️',name:'แกนปริซึม',boss:'ราชันคำศัพท์',min:6,max:8,color:0xffcf62},
+  ];
   const STORE=[
     {id:'prism',ico:'💠',name:'แกนปริซึม',price:250,desc:'พลังโจมตีทุกสกิล +25%'},
     {id:'storm',ico:'🌀',name:'ตราวายุ',price:600,desc:'วงระเบิด Nova กว้างขึ้น 35%'},
@@ -27,6 +39,9 @@
   let cooldown={basic:0,arc:0,nova:0,ult:0},lastFrame=0,lastBotEnsure=0,lastPetStrike=0,lastHitAt=0;
   let hp=100,maxHp=100,shield=0,maxShield=0;
   let texLoader,audioCtx=null,fxLow=false;
+  let room=null,myUid='local',peers={},peerActors={},lastNetSend=0,lastPartyPaint=0;
+  let downed=false,downUntil=0,reviveHold=null,reviveSignal='-',reviveSeq=0,revivesGiven=0,lastReviveSent=0;
+  let chapter=1,waveBase=0,bossPhase='wave',boss=null,bossEncounter='',bossMax=0,bossHp=0,bossWord='',bossContribution=0,bossWordSolved=false,bossVictoryAt=0,bossReward=0;
   const ui={};
 
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -44,8 +59,10 @@
   function addListener(el,type,fn,opt){ el.addEventListener(type,fn,opt); listeners.push(()=>el.removeEventListener(type,fn,opt)); }
   function ensureState(){
     if(!state.arenaItems||typeof state.arenaItems!=='object'||Array.isArray(state.arenaItems)) state.arenaItems={};
-    if(!state.arenaStats||typeof state.arenaStats!=='object') state.arenaStats={words:0,kills:0,bestCombo:0};
-    for(const k of ['words','kills','bestCombo']) if(typeof state.arenaStats[k]!=='number') state.arenaStats[k]=0;
+    if(!state.arenaStats||typeof state.arenaStats!=='object') state.arenaStats={words:0,kills:0,bestCombo:0,bossWins:0,revives:0,coopWords:0,fairCoins:0,bestChapter:0};
+    for(const k of ['words','kills','bestCombo','bossWins','revives','coopWords','fairCoins','bestChapter']) if(typeof state.arenaStats[k]!=='number') state.arenaStats[k]=0;
+    if(!Number.isInteger(state.arenaChapter)||state.arenaChapter<1||state.arenaChapter>CHAPTERS.length) state.arenaChapter=1;
+    if(!Array.isArray(state.arenaBossClaims)) state.arenaBossClaims=[];
   }
 
   function createDom(){
@@ -64,6 +81,8 @@
       </div>
       <div class="va-energy va-glass" id="va-energy"><span class="va-energy-label">พลังอักษร</span><div class="va-energy-track"><div class="va-energy-fill" id="va-energy-fill"></div></div><span class="va-energy-power" id="va-energy-power">×1.0</span></div>
       <div class="va-bag va-glass"><span class="va-bag-label">กระเป๋า</span><div class="va-bag-list" id="va-bag-list"></div></div>
+      <div class="va-party va-glass" id="va-party"><button id="va-party-friends" class="va-party-find" aria-label="ไปหาเพื่อน">👥</button><div><b id="va-party-status">กำลังหาปาร์ตี้…</b><div class="va-party-list" id="va-party-list"></div></div></div>
+      <div class="va-boss va-glass" id="va-boss"><div class="va-boss-head"><span id="va-boss-chapter">บท 1</span><b id="va-boss-name">ผู้พิทักษ์คำศัพท์</b><em id="va-boss-hp-text">100%</em></div><div class="va-boss-track"><div class="va-boss-fill" id="va-boss-fill"></div></div><div class="va-boss-word" id="va-boss-word"></div></div>
       <div class="va-hp va-glass" id="va-hp"><b>HP</b><div class="va-hp-track"><div class="va-hp-fill" id="va-hp-fill"></div></div></div>
       <div class="va-stick" id="va-stick"><div class="va-stick-knob" id="va-stick-knob"></div></div>
       <div class="va-skills">
@@ -74,19 +93,24 @@
       </div>
       <div class="va-feed" id="va-feed"></div>
       <div class="va-pop" id="va-pop"><strong></strong><span></span></div>
+      <div class="va-downed" id="va-downed"><strong>ต้องการความช่วยเหลือ!</strong><span id="va-down-time">รอเพื่อนมาชุบ 12 วิ</span><small>ยังขยับช้า ๆ ไปหาเพื่อนได้ · ไม่เสียเหรียญ</small></div>
+      <button class="va-revive" id="va-revive"><b>🤝 กดค้างเพื่อช่วยเพื่อน</b><span><i id="va-revive-fill"></i></span><small id="va-revive-name"></small></button>
       <div class="va-modal" id="va-shop"><div class="va-panel">
         <div class="va-panel-head"><div><div class="va-panel-title">🛒 คลังพลังอักษร</div><div class="va-panel-sub">ใช้เหรียญรวมที่มีอยู่ ซื้อครั้งเดียว ใช้ได้ถาวร</div></div><div class="va-panel-coins">🪙 <span id="va-shop-coins"></span></div><button class="va-close" id="va-shop-close">✕</button></div>
         <div class="va-store-grid" id="va-store-grid"></div>
       </div></div>
       <div class="va-modal" id="va-intro"><div class="va-panel va-intro-panel">
         <div class="va-intro-logo">VOCAB ARENA</div><div class="va-intro-sub">สนามผจญภัยพลังคำศัพท์ฉบับใหม่ของ Vocab World</div>
-        <div class="va-intro-steps"><div class="va-intro-step"><b>👾</b>กำจัดปีศาจที่มีตัวอักษร</div><div class="va-intro-step"><b>🔤</b>เดินเก็บอักษรที่ตก</div><div class="va-intro-step"><b>📖</b>ประกอบคำครบ รับเหรียญ</div><div class="va-intro-step"><b>✨</b>อักษรยิ่งมาก พลังยิ่งแรง</div></div>
+        <div class="va-intro-steps"><div class="va-intro-step"><b>👥</b>รวมปาร์ตี้ Co-op 2–4 คน</div><div class="va-intro-step"><b>👾</b>กำจัดปีศาจ เก็บอักษร</div><div class="va-intro-step"><b>👑</b>ครบ 3 คำ เจอบอสประจำบท</div><div class="va-intro-step"><b>🤝</b>กดค้างช่วยเพื่อนที่ล้ม</div><div class="va-intro-step"><b>⚖️</b>ทุกคนได้ฐานเท่ากัน + โบนัสช่วยทีม</div></div>
         <button class="va-start" id="va-start">เริ่มภารกิจ ✦</button>
       </div></div>
       <div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
     document.body.appendChild(root);
+    if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).get('arena_test')==='1'){
+      const test=document.createElement('div');test.id='va-test-tools';test.style.cssText='position:absolute;left:44%;bottom:2px;z-index:90;display:flex;gap:3px';test.innerHTML='<button data-va-test="boss">TEST BOSS</button><button data-va-test="word">TEST WORD</button><button data-va-test="down">TEST DOWN</button><button data-va-test="peer">TEST PEER DOWN</button><button data-va-test="win">TEST WIN</button>';root.appendChild(test);
+    }
     canvas=root.querySelector('#va-canvas');
-    ['wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','hp','hpFill','feed','pop','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
+    ['wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
       const id='va-'+k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); ui[k]=root.querySelector('#'+id);
     });
     bindDom();
@@ -100,6 +124,8 @@
     addListener(root.querySelector('#va-exit'),'click',stop);
     addListener(root.querySelector('#va-shop-open'),'click',()=>toggleShop(true));
     addListener(root.querySelector('#va-shop-close'),'click',()=>toggleShop(false));
+    root.querySelectorAll('[data-va-test]').forEach(b=>addListener(b,'click',()=>{const k=b.dataset.vaTest;if(k==='boss'&&bossPhase==='wave')startBossAsLeader();else if(k==='word'&&target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}else if(k==='down')downPlayer();else if(k==='peer')onPeer('peer-arena-test',{n:'เพื่อนทดสอบ',x:player.pos.x+2,z:player.pos.z,av:'blk6',m:1,w:0,c:'-',ct:0,cw:'',hp:'A2:0:1:-',y:0});else if(k==='win'&&boss)hitBot(boss,bossMax*2);}));
+    addListener(root.querySelector('#va-party-friends'),'click',()=>{ if(room&&room.online)room.openFriends();else feed('📡 ต้องออนไลน์ก่อน จึงจะชวนหรือไปหาเพื่อนได้','bad'); });
     addListener(ui.shop,'click',e=>{ if(e.target===ui.shop) toggleShop(false); });
     addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b) buyItem(b.dataset.buy); });
     root.querySelectorAll('[data-skill]').forEach(b=>addListener(b,'pointerdown',e=>{ e.preventDefault(); castSkill(b.dataset.skill); }));
@@ -114,6 +140,9 @@
     const joyEnd=e=>{ if(joy.id!==e.pointerId) return; joy.id=null; joy.x=joy.z=0; ui.stickKnob.style.transform='translate(-50%,-50%)'; };
     addListener(st,'pointerdown',e=>{ e.preventDefault(); joy.id=e.pointerId; st.setPointerCapture&&st.setPointerCapture(e.pointerId); joyMove(e); });
     addListener(st,'pointermove',joyMove); addListener(st,'pointerup',joyEnd); addListener(st,'pointercancel',joyEnd);
+    const reviveStart=e=>{e.preventDefault();const p=nearestDownedPeer();if(!p)return;reviveHold={uid:p.uid,at:performance.now(),pointer:e.pointerId};ui.revive.setPointerCapture&&ui.revive.setPointerCapture(e.pointerId);};
+    const reviveEnd=e=>{if(reviveHold&&(!e||e.pointerId===reviveHold.pointer))reviveHold=null;};
+    addListener(ui.revive,'pointerdown',reviveStart);addListener(ui.revive,'pointerup',reviveEnd);addListener(ui.revive,'pointercancel',reviveEnd);addListener(ui.revive,'pointerleave',reviveEnd);
     addListener(canvas,'pointerdown',e=>{ if(e.pointerType==='mouse'&&e.button===0) castSkill('basic'); });
     addListener(root.querySelector('#va-start'),'click',()=>{
       state.arenaIntro=true; saveState(); ui.intro.classList.remove('on'); paused=false; clock.getDelta(); feed('กำจัดปีศาจ แล้วเดินเข้าไปเก็บอักษรครับ','gold');
@@ -226,6 +255,66 @@
     petComp={group,spr,glow,vel:new THREE.Vector3(),type:p.type,data:p,phase:Math.random()*TAU};
   }
 
+  function coopReady(){return typeof Online!=='undefined'&&Online.ready&&Online.db&&typeof NetRoom!=='undefined'&&typeof onlineKey==='function';}
+  function safeAvatar(v){return /^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(v||'')?v:'blk1';}
+  function parseArenaStatus(v){
+    const p=String(v||'').split(':');
+    return p[0]==='A2'?{hp:clamp(parseInt(p[1],10)||0,0,100),down:p[2]==='1',enc:p[3]||'-'}:null;
+  }
+  function isArenaPeer(d){return !!(d&&parseArenaStatus(d.hp));}
+  function partyUids(){return [myUid].concat(Object.keys(peers).filter(uid=>isArenaPeer(peers[uid]))).sort();}
+  function leaderId(){return partyUids()[0]||myUid;}
+  function isLeader(){return leaderId()===myUid;}
+  function partyWords(){let n=sessionWords;for(const uid in peers)if(isArenaPeer(peers[uid]))n+=Math.max(0,Number(peers[uid].w)||0);return n;}
+  function packArenaStatus(){return `A2:${Math.ceil(hp)}:${downed?1:0}:${bossEncounter||'-'}`.slice(0,28);}
+  function buildPeerActor(uid,d){
+    const group=new THREE.Group();group.position.set(Number(d.x)||0,0,Number(d.z)||0);scene.add(group);
+    const aura=new THREE.Mesh(new THREE.RingGeometry(.72,1.12,36),new THREE.MeshBasicMaterial({color:0x7be8ff,transparent:true,opacity:.42,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,depthWrite:false}));aura.rotation.x=-Math.PI/2;aura.position.y=.05;group.add(aura);
+    const shadow=new THREE.Mesh(new THREE.CircleGeometry(.86,28),new THREE.MeshBasicMaterial({color:0x000000,transparent:true,opacity:.24,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.02;group.add(shadow);
+    const spr=loadSprite(`img/blocks/${safeAvatar(d.av)}.png`);spr.scale.set(3.05,4.2,1);spr.position.y=2.1;group.add(spr);
+    const name=makeTextSprite(String(d.n||'เพื่อน').slice(0,18),0xdffbff,320,80);name.scale.set(2.7,.68,1);name.position.y=4.35;group.add(name);
+    const hpBack=new THREE.Mesh(new THREE.PlaneGeometry(2.2,.13),new THREE.MeshBasicMaterial({color:0x170e24,transparent:true,opacity:.84,side:THREE.DoubleSide}));hpBack.position.y=3.83;group.add(hpBack);
+    const hpBar=new THREE.Mesh(new THREE.PlaneGeometry(2.12,.08),new THREE.MeshBasicMaterial({color:0x56efa7,side:THREE.DoubleSide}));hpBar.position.set(0,3.83,.01);group.add(hpBar);
+    return peerActors[uid]={uid,group,spr,aura,name,hpBar,target:new THREE.Vector3(group.position.x,0,group.position.z),phase:Math.random()*TAU};
+  }
+  function removePeerActor(uid){const a=peerActors[uid];if(!a)return;if(scene)scene.remove(a.group);disposeTree(a.group);delete peerActors[uid];}
+  function onPeer(uid,d){
+    peers[uid]=d||{};let a=peerActors[uid];if(!a&&scene)a=buildPeerActor(uid,d||{});
+    if(a){a.target.set(Number(d.x)||0,0,Number(d.z)||0);a.data=d||{};}
+    const evt=String(d&&d.c||'');
+    if(downed&&evt.startsWith('R|')){const p=evt.split('|'),key=uid+'|'+p[2];if(p[1]===myUid&&!onPeer._seen.has(key)){onPeer._seen.add(key);recoverPlayer('เพื่อนช่วยชุบ');}}
+    syncLeaderState();renderPartyHud();
+  }
+  onPeer._seen=new Set();
+  function onPeerGone(uid){delete peers[uid];removePeerActor(uid);syncLeaderState();renderPartyHud();}
+  function netToast(html){const d=document.createElement('div');d.innerHTML=html;feed(d.textContent||'อัปเดตสนาม Co-op','gold');}
+  function setupCoop(){
+    myUid=coopReady()?onlineKey():'local';renderPartyHud();
+    if(!coopReady()){feed('📡 โหมดฝึกเดี่ยว — ล็อกอินออนไลน์เพื่อเล่น Co-op 2–4 คน','bad');return;}
+    room=NetRoom.create({map:'adv',roomMax:PARTY_MAX,sendMs:170,push:()=>netSend(true),onPeer,onPeerGone,onStatus:renderPartyHud,toast:netToast,roomNoun:'ปาร์ตี้',roomIcon:'🤝',roomFmt:i=>'ปาร์ตี้ '+i});
+    room.join();
+  }
+  function netSend(force){
+    if(!room||!player)return;
+    const yaw=Math.atan2(player.facing.x,player.facing.z),payload={n:String(state.profileName||'นักผจญภัย').slice(0,40),x:+player.pos.x.toFixed(2),z:+player.pos.z.toFixed(2),y:Math.round(bossContribution),yaw:+yaw.toFixed(3),av:profileAvatar(),m:downed?1:0,w:sessionWords,c:reviveSignal||'-',ct:revivesGiven,cw:isLeader()?bossWire():'',hp:packArenaStatus()};
+    room.send(payload,!!force);
+  }
+  function tickCoop(t){
+    if(room){room.tick(t);if(t-lastNetSend>110){lastNetSend=t;netSend(false);}}
+    updatePeerActors(t);updateRevive(t);driveBoss(t);
+    if(t-lastPartyPaint>350){lastPartyPaint=t;renderPartyHud();}
+  }
+  function updatePeerActors(t){
+    for(const uid in peerActors){const a=peerActors[uid],d=peers[uid]||{},st=parseArenaStatus(d.hp),isDown=!!(st&&st.down);a.group.position.lerp(a.target,.16);a.spr.position.y=2.1+Math.sin(t*.006+a.phase)*(isDown?.035:.09);a.spr.material.opacity=isDown?.48:1;a.spr.material.rotation=isDown?-.34:0;a.aura.rotation.z+=.025;a.aura.material.color.setHex(isDown?0xff5d75:0x7be8ff);a.hpBar.scale.x=st?clamp(st.hp/100,0,1):1;a.hpBar.position.x=-(1-a.hpBar.scale.x)*1.06;a.hpBar.material.color.setHex(isDown?0xff5d75:0x56efa7);a.group.lookAt(camera.position.x,a.group.position.y,camera.position.z);}
+  }
+  function renderPartyHud(){
+    if(!ui.partyStatus)return;const members=[{uid:myUid,n:state.profileName||'เรา',hp,down:downed,self:true}];
+    for(const uid of Object.keys(peers))if(isArenaPeer(peers[uid])){const st=parseArenaStatus(peers[uid].hp);members.push({uid,n:peers[uid].n||'เพื่อน',hp:st.hp,down:st.down});}
+    let status;if(!coopReady())status='สนามฝึกเดี่ยว · ออฟไลน์';else if(!room||!room.joined)status='กำลังหาปาร์ตี้ Co-op…';else status=`Co-op ${members.length}/${PARTY_MAX} · ปาร์ตี้ ${room.roomLabel}${members.length<2?' · รอเพื่อนได้':''}`;
+    ui.partyStatus.textContent=status;ui.partyList.innerHTML=members.slice(0,PARTY_MAX).map(m=>`<span class="${m.down?'down':''}${m.self?' self':''}" title="${esc(m.n)}">${m.down?'🆘':'●'} ${esc(m.self?'เรา':m.n)}</span>`).join('');
+    const btn=root&&root.querySelector('#va-party-friends');if(btn)btn.classList.toggle('off',!room||!room.online);
+  }
+
   function makeTextSprite(text,color=0xffffff,w=256,h=128){
     const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');
     x.clearRect(0,0,w,h);x.textAlign='center';x.textBaseline='middle';x.font=`900 ${Math.round(h*.62)}px Kanit,Arial`;
@@ -248,6 +337,78 @@
     const a=Math.random()*TAU,r=rnd(17,28);group.position.set(Math.sin(a)*r,0,Math.cos(a)*r);scene.add(group);
     const mhp=elite?180:80+rnd(-8,16),bot={group,body,letter,bar,col,ch,elite,hp:mhp,maxHp:mhp,vel:new THREE.Vector3(),attackAt:rnd(.3,1.2),phase:Math.random()*TAU,dead:false,slow:0};
     bots.push(bot);return bot;
+  }
+
+  function chapterDef(id){return CHAPTERS[(clamp(parseInt(id,10)||1,1,CHAPTERS.length)-1)];}
+  function bossWire(){
+    if(bossPhase==='boss')return `B:${chapter}:${bossEncounter}:${Math.round(bossMax)}:${Math.round(bossHp)}:${bossWord}`.slice(0,60);
+    if(bossPhase==='victory')return `V:${chapter}:${bossEncounter}:${Math.round(bossReward)}:${bossWord}`.slice(0,60);
+    return `W:${chapter}:${Math.round(waveBase)}`;
+  }
+  function syncLeaderState(){
+    if(!running||isLeader())return;const d=peers[leaderId()];if(d&&typeof d.cw==='string'&&d.cw)applyLeaderWire(d.cw);
+  }
+  function applyLeaderWire(wire){
+    const p=String(wire||'').split(':'),kind=p[0],ch=clamp(parseInt(p[1],10)||1,1,CHAPTERS.length);
+    if(kind==='B'){
+      const enc=p[2]||'',max=Math.max(100,parseInt(p[3],10)||100),left=clamp(parseInt(p[4],10)||0,0,max),word=String(p[5]||'WORD').replace(/[^A-Z]/gi,'').slice(0,8).toUpperCase()||'WORD';
+      if(enc&&enc!==bossEncounter)startBoss(ch,word,max,enc,false);setBossHp(left);
+    }else if(kind==='V'){
+      const enc=p[2]||'',reward=Math.max(1,parseInt(p[3],10)||1),word=String(p[4]||bossWord||'WORD').replace(/[^A-Z]/gi,'').slice(0,8).toUpperCase();
+      if(enc&&bossPhase!=='victory')beginBossVictory(ch,enc,reward,word,false);
+    }else if(kind==='W'){
+      const base=Math.max(0,parseInt(p[2],10)||0);
+      if(bossPhase!=='wave')finishBossVictory(false,ch);chapter=ch;waveBase=base;
+    }
+  }
+  function pickBossWord(ch){
+    const cfg=chapterDef(ch),all=(typeof vocabForStudent==='function'?vocabForStudent():[]).filter(x=>x&&/^[a-z]+$/i.test(x[0])&&String(x[0]).length>=cfg.min&&String(x[0]).length<=cfg.max);
+    const pool=all.length?all:[['cat','แมว'],['book','หนังสือ'],['planet','ดาวเคราะห์'],['teacher','ครู']].filter(x=>x[0].length>=cfg.min&&x[0].length<=cfg.max);
+    const pick=pool[Math.floor(Math.random()*pool.length)]||['word','คำศัพท์'];return {en:String(pick[0]).toUpperCase(),th:String(pick[1]||'คำศัพท์')};
+  }
+  function buildChapterBoss(word,ch,max){
+    const cfg=chapterDef(ch),b=buildBot(word.charAt(0),true);b.boss=true;b.chapter=ch;b.hp=max;b.maxHp=max;b.group.position.set(0,0,-10);b.group.scale.setScalar(1.18+.05*ch);b.attackAt=performance.now()+1400;
+    b.group.remove(b.letter);disposeTree(b.letter);b.letter=makeTextSprite(word,cfg.color,420,130);b.letter.scale.set(3.2,1.08,1);b.letter.position.y=3.5;b.group.add(b.letter);
+    b.body.material.color.setHex(0x111c3d);b.body.material.emissive.setHex(cfg.color);b.body.material.emissiveIntensity=.78;b.bar.material.color.setHex(cfg.color);return b;
+  }
+  function startBoss(ch,word,max,enc,leader){
+    chapter=ch;bossPhase='boss';bossEncounter=enc;bossMax=max;bossHp=max;bossWord=word;bossContribution=0;bossWordSolved=false;bossVictoryAt=0;bossReward=0;wordBusy=false;
+    if(boss){const i=bots.indexOf(boss);if(i>=0)bots.splice(i,1);scene.remove(boss.group);disposeTree(boss.group);}
+    boss=buildChapterBoss(word,ch,max);target={en:word,th:`คำผนึกบอส · ${chapterDef(ch).name}`,boss:true};updateWord();updateBossHud();
+    showPop(`${chapterDef(ch).ico} BOSS บท ${ch}`,`${chapterDef(ch).boss} · สะกด ${word} เพื่อทำลายเกราะ`);feed(`👑 บอสประจำบทมาแล้ว! ทุกคนโจมตีร่วมกัน และเก็บอักษรสะกด ${word}`,'gold');ringFx(boss.group.position,chapterDef(ch).color,10,.9);tone(92,.75,.2,'sawtooth');haptic([40,55,75]);
+    if(leader)netSend(true);
+  }
+  function startBossAsLeader(){
+    const chosen=pickBossWord(chapter),size=partyUids().length,max=Math.round((420+chapter*120)*(1+.55*(size-1))),enc=(Date.now().toString(36)+Math.floor(Math.random()*1296).toString(36)).slice(-8);
+    startBoss(chapter,chosen.en,max,enc,true);
+  }
+  function setBossHp(v){bossHp=clamp(Number(v)||0,0,bossMax||1);if(boss){boss.hp=bossHp;const k=clamp(bossHp/boss.maxHp,0,1);boss.bar.scale.x=k;boss.bar.position.x=-(1-k)*1.31;}updateBossHud();}
+  function bossImpact(){let total=bossContribution;for(const uid in peers){const d=peers[uid],st=parseArenaStatus(d&&d.hp);if(st&&st.enc===bossEncounter)total+=Math.max(0,Number(d.y)||0);}return total;}
+  function driveBoss(t){
+    if(!isLeader()){syncLeaderState();return;}
+    if(bossPhase==='wave'){
+      if(partyWords()-waveBase>=BOSS_WORD_GOAL)startBossAsLeader();
+    }else if(bossPhase==='boss'){
+      setBossHp(Math.max(0,bossMax-bossImpact()));if(bossHp<=0)beginBossVictory(chapter,bossEncounter,160+chapter*45,bossWord,true);
+    }else if(bossPhase==='victory'&&t-bossVictoryAt>3600)finishBossVictory(true);
+  }
+  function beginBossVictory(ch,enc,reward,word,leader){
+    chapter=ch;bossEncounter=enc;bossReward=reward;bossWord=word;bossPhase='victory';bossVictoryAt=performance.now();setBossHp(0);awardBoss(enc,ch,reward);
+    if(boss){boss.dead=true;boss.group.scale.multiplyScalar(1.08);burst(boss.group.position,chapterDef(ch).color,52,8);ringFx(boss.group.position,0xffe77a,14,1.1);}
+    showPop('พิชิตบอส!',`${chapterDef(ch).name} · รางวัลแบ่งแบบทีม`);feed('⚖️ ทุกคนได้รางวัลฐานเท่ากัน 80% และโบนัสช่วยทีมสูงสุด 20%','gold');tone(196,.55,.2,'sawtooth');setTimeout(()=>tone(784,.7,.16,'sine'),130);haptic([45,55,90]);if(leader)netSend(true);
+  }
+  function awardBoss(enc,ch,totalReward){
+    if(!enc||state.arenaBossClaims.includes(enc))return;
+    const count=Math.max(1,partyUids().length),total=Math.max(1,bossImpact()),fair=total/count,ratio=clamp(bossContribution/fair,0,1),base=Math.round(totalReward*.8),bonus=Math.round(totalReward*.2*ratio),reward=base+bonus;
+    state.arenaBossClaims.push(enc);state.arenaBossClaims=state.arenaBossClaims.slice(-20);state.arenaStats.bossWins++;state.arenaStats.fairCoins+=reward;state.arenaStats.bestChapter=Math.max(state.arenaStats.bestChapter||0,ch);state.arenaChapter=ch%CHAPTERS.length+1;
+    addCoins(reward);sessionCoins+=reward;saveState();showPop(`+${fmt(reward)} 🪙`,`ฐานทีม ${fmt(base)} + โบนัสช่วยทีม ${fmt(bonus)}`);feed(`🏆 รางวัลบอส ${fmt(reward)} เหรียญ — ไม่มีการแย่ง Last Hit`,'gold');updateHud();
+  }
+  function finishBossVictory(leader,nextChapter){
+    if(boss){const i=bots.indexOf(boss);if(i>=0)bots.splice(i,1);scene.remove(boss.group);disposeTree(boss.group);boss=null;}
+    chapter=nextChapter||chapter%CHAPTERS.length+1;bossPhase='wave';bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossReward=0;waveBase=partyWords();wordBusy=false;nextWord();updateBossHud();feed(`📖 เริ่มบท ${chapter}: ${chapterDef(chapter).name} · ครบอีก ${BOSS_WORD_GOAL} คำจะพบบอส`,'gold');if(leader)netSend(true);
+  }
+  function updateBossHud(){
+    if(!ui.boss)return;const on=bossPhase==='boss'||bossPhase==='victory',cfg=chapterDef(chapter);ui.boss.classList.toggle('on',on);ui.boss.classList.toggle('won',bossPhase==='victory');ui.bossChapter.textContent=`${cfg.ico} บท ${chapter}`;ui.bossName.textContent=cfg.boss;ui.bossHpText.textContent=bossMax?`${Math.ceil(bossHp/bossMax*100)}%`:'100%';ui.bossFill.style.width=(bossMax?bossHp/bossMax*100:100)+'%';ui.bossWord.textContent=bossWord?`คำผนึก: ${bossWord}`:'';
   }
 
   function missingLetters(){
@@ -274,7 +435,7 @@
   }
 
   function castSkill(kind){
-    if(!running||paused||performance.now()<cooldown[kind]) return;
+    if(!running||paused||downed||performance.now()<cooldown[kind]) return;
     ensureAudio();
     const now=performance.now(),mult=powerMult();
     if(kind==='ult'&&energy<5){ feed(`ต้องเก็บอักษรอีก ${5-energy} ตัว เพื่อเปิด WORDSTORM`,'bad');pulseButton('ult');return; }
@@ -308,13 +469,18 @@
     shots.push({mesh,target:bot,damage,color,fromEnemy:false,ttl:1.7,lastSpark:0,speed:fromPet?19:24});
   }
   function enemyBolt(bot){
-    const mesh=new THREE.Mesh(new THREE.SphereGeometry(bot.elite?.25:.18,9,7),new THREE.MeshBasicMaterial({color:bot.elite?0xffb141:0xff4e89,transparent:true,opacity:.92,blending:THREE.AdditiveBlending}));
+    const shotColor=bot.boss?chapterDef(bot.chapter).color:(bot.elite?0xffb141:0xff4e89),shotSize=bot.boss ? 0.31 : (bot.elite ? 0.25 : 0.18),mesh=new THREE.Mesh(new THREE.SphereGeometry(shotSize,9,7),new THREE.MeshBasicMaterial({color:shotColor,transparent:true,opacity:.92,blending:THREE.AdditiveBlending}));
     mesh.position.copy(bot.group.position);mesh.position.y=1.3;scene.add(mesh);
     // สนามนี้เน้นฝึกคำศัพท์ เด็กต้องมีเวลาวิ่งเก็บอักษร — กระสุนบอทจึงเป็นแรงกดดันเบา ไม่รุมตายเร็ว
-    const to=player.pos.clone().sub(bot.group.position).setY(0).normalize();shots.push({mesh,vel:to.multiplyScalar(bot.elite?8.5:7),damage:bot.elite?9:4,color:bot.elite?0xffb141:0xff4e89,fromEnemy:true,ttl:2.7,lastSpark:0});
+    const to=player.pos.clone().sub(bot.group.position).setY(0).normalize();shots.push({mesh,vel:to.multiplyScalar(bot.boss?9.2:(bot.elite?8.5:7)),damage:bot.boss?10+bot.chapter*2:(bot.elite?9:4),color:shotColor,fromEnemy:true,ttl:2.7,lastSpark:0});
   }
   function hitBot(b,dmg){
     if(!b||b.dead)return;
+    if(b.boss){
+      bossContribution=Math.min(bossMax*1.5,bossContribution+Math.max(0,dmg));
+      b.body.material.emissiveIntensity=2.4;setTimeout(()=>{if(b&&!b.dead)b.body.material.emissiveIntensity=.78;},70);
+      floatText(b.group.position,`-${Math.round(dmg)}`,dmg>70?0xffef75:0x9df5ff);burst(b.group.position,b.col,7,2.2);netSend(false);return;
+    }
     b.hp-=dmg;b.bar.scale.x=clamp(b.hp/b.maxHp,0,1);b.bar.position.x=-(1-b.bar.scale.x)*(b.elite?1.31:1.01);
     b.body.material.emissiveIntensity=2.2;setTimeout(()=>{if(b&&!b.dead)b.body.material.emissiveIntensity=.42;},70);
     floatText(b.group.position,`-${Math.round(dmg)}`,dmg>70?0xffef75:0x9df5ff);burst(b.group.position,b.col,6,1.8);
@@ -354,13 +520,19 @@
   }
   function checkWord(){ if(canBuild()&&!wordBusy)completeWord(); }
   function completeWord(){
+    if(target&&target.boss)return completeBossWord();
     wordBusy=true;for(const ch of target.en)bag[ch]--;
     const reward=40+target.en.length*15+Math.min(100,energy*5),word=target.en,meaning=target.th;
     if(!Array.isArray(state.advDone))state.advDone=[];if(!state.advDone.includes(word.toLowerCase()))state.advDone.push(word.toLowerCase());
-    addCoins(reward);sessionWords++;sessionCoins+=reward;state.arenaStats.words=(state.arenaStats.words||0)+1;saveState();
+    addCoins(reward);sessionWords++;sessionCoins+=reward;state.arenaStats.words=(state.arenaStats.words||0)+1;if(partyUids().length>1)state.arenaStats.coopWords=(state.arenaStats.coopWords||0)+1;saveState();
     showPop(word,`${meaning} · +${fmt(reward)} 🪙`);feed(`🎉 ประกอบ ${word} สำเร็จ ได้ ${fmt(reward)} เหรียญ`,'gold');
     ringFx(player.pos,0xffe36d,8,.65);burst(player.pos,0xffe36d,38,7);tone(523,.42,.16,'sine');setTimeout(()=>tone(784,.45,.13,'sine'),90);
-    updateHud();setTimeout(()=>{if(running)nextWord();},1350);
+    updateHud();netSend(true);setTimeout(()=>{if(running)nextWord();},1350);
+  }
+  function completeBossWord(){
+    if(!target||!target.boss||bossWordSolved)return;wordBusy=true;bossWordSolved=true;for(const ch of target.en)bag[ch]--;
+    const boost=Math.round(bossMax*.18);bossContribution+=boost;sessionWords++;state.arenaStats.words=(state.arenaStats.words||0)+1;if(partyUids().length>1)state.arenaStats.coopWords=(state.arenaStats.coopWords||0)+1;saveState();
+    showPop(target.en,`ทำลายเกราะคำศัพท์ · พลังทีม +${fmt(boost)}`);feed(`📖 สะกด ${target.en} สำเร็จ! บอสเสียพลังครั้งใหญ่`,'gold');ringFx(boss?boss.group.position:player.pos,0xffe36d,11,.8);if(boss)burst(boss.group.position,0xffe36d,42,7);tone(523,.42,.16,'sine');setTimeout(()=>tone(880,.45,.13,'sine'),90);updateHud();netSend(true);
   }
 
   function buyItem(id){
@@ -385,13 +557,13 @@
     if(keys.has('KeyA')||keys.has('ArrowLeft'))x-=1;if(keys.has('KeyD')||keys.has('ArrowRight'))x+=1;
     if(keys.has('KeyW')||keys.has('ArrowUp'))z-=1;if(keys.has('KeyS')||keys.has('ArrowDown'))z+=1;
     const len=Math.hypot(x,z);if(len>1){x/=len;z/=len;}
-    const petSpeed=petComp&&petComp.type==='dog'?1.08:1,speed=7.5*petSpeed;
+    const petSpeed=petComp&&petComp.type==='dog'?1.08:1,speed=7.5*petSpeed*(downed?.24:1);
     player.vel.x+=(x*speed-player.vel.x)*Math.min(1,dt*10);player.vel.z+=(z*speed-player.vel.z)*Math.min(1,dt*10);
     if(len<.05){player.vel.x*=Math.max(0,1-dt*7);player.vel.z*=Math.max(0,1-dt*7);}
     player.pos.x+=player.vel.x*dt;player.pos.z+=player.vel.z*dt;
     const r=Math.hypot(player.pos.x,player.pos.z);if(r>ARENA_R-1.8){player.pos.x*=((ARENA_R-1.8)/r);player.pos.z*=((ARENA_R-1.8)/r);}
     if(player.vel.lengthSq()>.12)player.facing.set(player.vel.x,0,player.vel.z).normalize();
-    player.spr.position.y=2.3+Math.sin(t*.012)*(len>.1?.12:.045);player.aura.rotation.z+=dt*(1.4+energy*.16);player.aura.material.color.setHex(energy>=5?0xff79dd:0x5de8ff);player.crown.material.opacity=.55+Math.sin(t*.006)*.3;
+    player.spr.position.y=2.3+Math.sin(t*.012)*(len>.1?.12:.045);player.spr.material.opacity=downed?.52:1;player.spr.material.rotation=downed?-.34:0;player.aura.rotation.z+=dt*(1.4+energy*.16);player.aura.material.color.setHex(downed?0xff5577:(energy>=5?0xff79dd:0x5de8ff));player.crown.material.opacity=.55+Math.sin(t*.006)*.3;
   }
 
   function updatePet(dt,t){
@@ -406,13 +578,14 @@
   function updateBots(dt,t){
     const ppos=player.pos;
     for(const b of bots){
+      if(b.dead)continue;
       const to=ppos.clone().sub(b.group.position).setY(0),d=to.length(),dir=to.normalize(),desired=new THREE.Vector3();
       if(d>8.5)desired.copy(dir).multiplyScalar(b.elite?3.5:2.7);else if(d<5.2)desired.copy(dir).multiplyScalar(-1.8);else desired.set(-dir.z,0,dir.x).multiplyScalar(Math.sin(t*.001+b.phase)>0?1.4:-1.4);
       if(b.slow>t)desired.multiplyScalar(.45);b.vel.lerp(desired,Math.min(1,dt*2.8));b.group.position.addScaledVector(b.vel,dt);
       const rr=Math.hypot(b.group.position.x,b.group.position.z);if(rr>ARENA_R-1){b.group.position.multiplyScalar((ARENA_R-1)/rr);}
       b.body.rotation.y+=dt*(b.elite?1.7:1.1);b.body.position.y=1.25+Math.sin(t*.003+b.phase)*.16;b.letter.position.y=3.25+Math.sin(t*.004+b.phase)*.13;
       b.group.lookAt(camera.position.x,b.group.position.y,camera.position.z);
-      if(d<9.5&&t>b.attackAt){enemyBolt(b);b.attackAt=t+(b.elite?1500:rnd(2200,3200));}
+      if(d<9.5&&t>b.attackAt&&!downed){enemyBolt(b);if(b.boss&&b.chapter>=2)setTimeout(()=>{if(running&&boss===b&&!b.dead&&!downed)enemyBolt(b);},230);b.attackAt=t+(b.boss?Math.max(850,1750-b.chapter*140):(b.elite?1500:rnd(2200,3200)));}
     }
   }
 
@@ -425,14 +598,33 @@
   }
   function removeShot(i){const s=shots[i];if(!s)return;scene.remove(s.mesh);s.mesh.geometry.dispose();s.mesh.material.dispose();shots.splice(i,1);}
   function damagePlayer(n){
+    if(downed)return true;
     if(shield>0){const use=Math.min(shield,n);shield-=use;n-=use;if(use)floatText(player.pos,`โล่ -${Math.ceil(use)}`,0x79dfff);}
     if(n>0)hp=Math.max(0,hp-n);lastHitAt=performance.now();root.animate([{filter:'none'},{filter:'drop-shadow(0 0 26px #ff315f)'},{filter:'none'}],{duration:220});tone(95,.12,.12,'square');haptic(28);
-    const revived=hp<=0;if(revived)revive();updateHud();return revived;
+    const fell=hp<=0;if(fell)downPlayer();updateHud();return fell;
   }
-  function revive(){
-    hp=maxHp;shield=maxShield;energy=Math.max(0,energy-2);player.pos.set(0,0,7);
+  function downPlayer(){
+    if(downed)return;downed=true;downUntil=performance.now()+DOWN_MS;hp=0;reviveHold=null;ui.downed.classList.add('on');
     for(let i=shots.length-1;i>=0;i--)if(shots[i].fromEnemy)removeShot(i);
-    showPop('คืนพลัง','ไม่เสียเหรียญ · พลังอักษรลด 2 หน่วย');feed('🪽 กลับเข้าสนามแล้ว ไม่มีการหักเหรียญ','bad');ringFx(player.pos,0x79f5ff,6,.7);
+    showPop('ล้มแล้ว!','เพื่อนยืนใกล้แล้วกดค้าง 2.2 วิ เพื่อช่วยชุบ');feed('🆘 ล้มแล้ว — คลานไปหาเพื่อนได้ และไม่เสียเหรียญ','bad');ringFx(player.pos,0xff5577,5,.65);netSend(true);
+  }
+  function recoverPlayer(source){
+    if(!downed)return;downed=false;downUntil=0;hp=source==='เพื่อนช่วยชุบ'?Math.round(maxHp*.7):Math.round(maxHp*.45);shield=Math.round(maxShield*.5);energy=Math.max(0,energy-(source==='เพื่อนช่วยชุบ'?0:2));ui.downed.classList.remove('on');
+    showPop('กลับมาสู้ต่อ!',source==='เพื่อนช่วยชุบ'?'เพื่อนช่วยชุบ · HP 70%':'พลังสำรอง · HP 45%');feed(`🪽 ${source} — ไม่มีการหักเหรียญ`,'gold');ringFx(player.pos,0x79f5ff,7,.8);burst(player.pos,0x79f5ff,30,5);tone(660,.35,.14,'sine');netSend(true);updateHud();
+  }
+  function nearestDownedPeer(){
+    let best=null,bd=3.8;for(const uid in peers){const d=peers[uid],st=parseArenaStatus(d&&d.hp),a=peerActors[uid];if(!st||!st.down||!a)continue;const dist=flatDist(player.pos,a.group.position);if(dist<bd){bd=dist;best={uid,d,a,dist};}}return best;
+  }
+  function finishRevive(p){
+    if(!p||performance.now()-lastReviveSent<900)return;lastReviveSent=performance.now();reviveSeq++;reviveSignal=`R|${p.uid}|${reviveSeq}`;revivesGiven++;state.arenaStats.revives=(state.arenaStats.revives||0)+1;
+    if(bossPhase==='boss'){const support=Math.round(bossMax*.06);bossContribution+=support;feed(`✨ พลังช่วยทีมสวนกลับบอส +${fmt(support)}`,'gold');}
+    saveState();netSend(true);setTimeout(()=>{if(reviveSignal.startsWith('R|')){reviveSignal='-';netSend(true);}},1800);ringFx(p.a.group.position,0x6fffd1,5,.7);burst(p.a.group.position,0x6fffd1,24,4);showPop('ช่วยเพื่อนสำเร็จ','นับเป็นผลงานทีมสำหรับโบนัสรางวัล');tone(740,.3,.14,'sine');haptic([25,35,45]);reviveHold=null;
+  }
+  function updateRevive(t){
+    if(!ui.revive)return;
+    if(downed){ui.revive.classList.remove('on');ui.downTime.textContent=`รอเพื่อนมาชุบ ${Math.max(0,Math.ceil((downUntil-t)/1000))} วิ`;if(t>=downUntil)recoverPlayer('พลังสำรองอัตโนมัติ');return;}
+    const p=nearestDownedPeer(),show=!!p&&t-lastReviveSent>1100;ui.revive.classList.toggle('on',show);if(!show){reviveHold=null;ui.reviveFill.style.width='0%';return;}
+    ui.reviveName.textContent=`${p.d.n||'เพื่อน'} · ต้องอยู่ใกล้ตลอด`;if(reviveHold&&reviveHold.uid===p.uid){const k=clamp((t-reviveHold.at)/REVIVE_HOLD_MS,0,1);ui.reviveFill.style.width=(k*100)+'%';if(k>=1)finishRevive(p);}else{reviveHold=null;ui.reviveFill.style.width='0%';}
   }
 
   function updateDrops(dt,t){
@@ -457,6 +649,7 @@
     if(!running)return;raf=requestAnimationFrame(loop);const dt=Math.min(.034,lastFrame?(t-lastFrame)/1000:.016);lastFrame=t;
     if(!paused){updatePlayer(dt,t);updatePet(dt,t);updateBots(dt,t);updateShots(dt,t);updateDrops(dt,t);updateEffects(dt);ensureBots(t);cameraTick(dt);
       if(maxShield&&t-lastHitAt>4200)shield=Math.min(maxShield,shield+dt*4.5);if(arenaMotes)arenaMotes.rotation.y+=dt*.015;updateCooldownUi(t);}
+    tickCoop(t);
     renderer.render(scene,camera);
   }
 
@@ -477,14 +670,14 @@
   }
   function showPop(big,small){if(!ui.pop)return;ui.pop.querySelector('strong').textContent=big;ui.pop.querySelector('span').textContent=small||'';ui.pop.classList.add('on');clearTimeout(ui.pop._t);ui.pop._t=setTimeout(()=>ui.pop.classList.remove('on'),1450);}
   function updateWord(){
-    if(!target)return;ui.wordTh.textContent=`${target.th} · กำจัดปีศาจแล้วเก็บอักษร`;ui.wordEn.textContent=target.en;
+    if(!target)return;ui.wordTh.textContent=target.boss?(bossWordSolved?'✅ ทำลายเกราะคำศัพท์แล้ว · ช่วยทีมโจมตีต่อ':`${target.th} · ทุกคนช่วยกันได้`):`${target.th} · กำจัดปีศาจแล้วเก็บอักษร`;ui.wordEn.textContent=target.en;
     const have={...bag};ui.wordSlots.innerHTML=Array.from(target.en).map(ch=>{const got=have[ch]>0;if(got)have[ch]--;return `<i class="${got?'got':''}"></i>`;}).join('');
   }
   function updateHud(){
     if(!root)return;ui.coins.textContent=fmt(state.coins||0);ui.shopCoins.textContent=fmt(state.coins||0);ui.energyFill.style.width=(energy/ENERGY_MAX*100)+'%';ui.energy.classList.toggle('hot',energy>=5);ui.energyPower.textContent='×'+powerMult().toFixed(1);
     ui.hpFill.style.width=(hp/maxHp*100)+'%';ui.hp.classList.toggle('low',hp/maxHp<.3);ui.hp.querySelector('b').textContent=maxShield?`HP ${Math.ceil(hp)} · 🛡${Math.ceil(shield)}`:`HP ${Math.ceil(hp)}`;
     const entries=Object.entries(bag).filter(x=>x[1]>0).slice(-8);ui.bagList.innerHTML=entries.length?entries.map(([ch,n])=>`<span class="va-bag-letter">${ch}${n>1?`<small>×${n}</small>`:''}</span>`).join(''):'<span style="font-size:9px;color:#7795aa">ยังไม่มีอักษร</span>';
-    root.querySelector('[data-skill="ult"]').classList.toggle('ready',energy>=5);root.querySelector('[data-skill="ult"]').classList.toggle('locked',energy<5);updateWord();
+    root.querySelectorAll('[data-skill]').forEach(b=>b.classList.toggle('down',downed));root.querySelector('[data-skill="ult"]').classList.toggle('ready',energy>=5&&!downed);root.querySelector('[data-skill="ult"]').classList.toggle('locked',energy<5||downed);updateWord();updateBossHud();
   }
   function updateCooldownUi(t){
     root.querySelectorAll('[data-skill]').forEach(b=>{const k=b.dataset.skill,left=Math.max(0,cooldown[k]-t),total=SKILL_CD[k]*1000;b.classList.toggle('cool',left>0);b.style.setProperty('--cd',Math.round(left/total*100)+'%');b.querySelector('.cd').textContent=left>0?(left/1000).toFixed(left>950?0:1):'';});
@@ -498,20 +691,21 @@
   function resize(){if(!renderer||!camera)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
 
   function resetRound(){
-    bots=[];drops=[];shots=[];effects=[];respawns=[];bag={};recentLetters=[];energy=0;kills=0;sessionWords=0;sessionCoins=0;cooldown={basic:0,arc:0,nova:0,ult:0};hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;
+    bots=[];drops=[];shots=[];effects=[];respawns=[];bag={};recentLetters=[];energy=0;kills=0;sessionWords=0;sessionCoins=0;cooldown={basic:0,arc:0,nova:0,ult:0};hp=maxHp;shield=maxShield;wordBusy=false;lastPetStrike=performance.now();lastHitAt=0;downed=false;downUntil=0;reviveHold=null;reviveSignal='-';reviveSeq=0;revivesGiven=0;chapter=state.arenaChapter||1;waveBase=0;bossPhase='wave';boss=null;bossEncounter='';bossMax=bossHp=bossContribution=0;bossWord='';bossWordSolved=false;bossVictoryAt=0;bossReward=0;onPeer._seen.clear();
     player.pos.set(0,0,7);player.vel.set(0,0,0);if(petComp){petComp.group.position.set(-1.8,0,9);petComp.vel.set(0,0,0);}nextWord();for(let i=0;i<BOT_TARGET;i++)buildBot(chooseBotLetter(),false);updateHud();
   }
 
   function start(){
     if(running)return;ensureState();fxLow=!!state.noAnim||(navigator.hardwareConcurrency&&navigator.hardwareConcurrency<=4);
     if(typeof clearWarnToasts==='function')clearWarnToasts();if(typeof Music!=='undefined')Music.suspendBg();
-    createDom();initThree();resetRound();running=true;paused=!state.arenaIntro;lastFrame=0;
+    createDom();initThree();resetRound();running=true;paused=!state.arenaIntro;lastFrame=0;setupCoop();
     if(!state.arenaIntro)ui.intro.classList.add('on');else feed('เดินด้วยจอยซ้าย · กดพลังด้านขวา · เก็บอักษรให้ครบคำ','gold');
     raf=requestAnimationFrame(loop);
   }
 
   function stop(){
     if(!running)return;running=false;paused=false;cancelAnimationFrame(raf);raf=0;listeners.splice(0).forEach(fn=>{try{fn();}catch(e){}});keys.clear();joy={x:0,z:0,id:null};
+    if(room){room.leave();room=null;}Object.keys(peerActors).forEach(removePeerActor);peers={};peerActors={};
     for(const s of shots)if(s.mesh.parent)scene.remove(s.mesh);if(scene)disposeTree(scene);if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();renderer.setSize(2,2,false);}
     if(root)root.remove();root=null;built=false;renderer=scene=camera=clock=null;bots=[];drops=[];shots=[];effects=[];petComp=null;player=null;
     saveState();if(typeof Music!=='undefined')Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();
@@ -521,7 +715,7 @@
   window.VocabArena3D={start,stop,_t:{
     get running(){return running},get bots(){return bots},get drops(){return drops},get bag(){return bag},get target(){return target},get energy(){return energy},
     cast:castSkill,kill:(i=0)=>bots[i]&&hitBot(bots[i],9999),collect:(i=0)=>drops[i]&&collectDrop(drops[i]),complete:()=>{if(target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}},
-    buy:buyItem,player:()=>player,resize,
+    buy:buyItem,player:()=>player,resize,down:downPlayer,recover:()=>recoverPlayer('เพื่อนช่วยชุบ'),boss:()=>({phase:bossPhase,chapter,encounter:bossEncounter,hp:bossHp,max:bossMax,word:bossWord,contribution:bossContribution}),triggerBoss:()=>{if(bossPhase==='wave')startBossAsLeader();},wire:applyLeaderWire,peer:onPeer,gone:onPeerGone,party:()=>({leader:leaderId(),members:partyUids(),online:!!(room&&room.online)}),
     /* ทดสอบแยกเฟสเมื่อ WebView เครื่องใดสร้างฉากไม่ผ่าน — ไม่ทำงานเองในเกมจริง */
     stage(part){
       if(part==='dom'){ensureState();createDom();return 'dom';}

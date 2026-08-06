@@ -201,6 +201,11 @@ function authEnterOffline(){
   setTimeout(()=>toast('📴 เล่นแบบออฟไลน์ — ต่อเน็ตเมื่อไหร่ คะแนนจะขึ้นเซิร์ฟเวอร์ให้เอง', 3000), 700);
 }
 
+/* TEMP local Arena test hook — remove before commit. */
+if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).get('arena_test')==='1'){
+  window.addEventListener('load',()=>setTimeout(()=>{if(!Auth.booted)authEnterOffline();state.advTicket=true;state.coins=Math.max(state.coins||0,5000);saveState();if(typeof renderDashboard==='function')renderDashboard();},50));
+}
+
 /* เน็ตกลับมาหลังเล่นออฟไลน์: บัญชีที่เครื่องจำไว้กลับมา → ดันเซฟในเครื่องขึ้น cloud + เปิดระบบออนไลน์
    (เซฟในเครื่องคือเซสชันที่กำลังเล่น = ใหม่สุดเสมอ ไม่ดึง cloud มาทับ) */
 function authLateSync(user){

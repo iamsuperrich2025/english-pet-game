@@ -696,7 +696,7 @@
 <script src="js/state.js"></script>
 <script src="js/images.js"></script>
 <script src="js/petbehavior.js"></script> <!-- 🐾 state machine ท่าน้อง: idle/walk/look/sit/play/sleep -->
-<script src="js/ui.js"></script>
+<script src="js/ui.js?arena-test=1048"></script>
 <script src="js/gradelock.js"></script>  <!-- 🔒 รอบ 647: ล็อกเปลี่ยนระดับชั้น (เดือนละครั้ง · ขึ้นได้อย่างเดียว) — ต้องมาหลัง state.js/util.js -->
 
 <script src="js/lobby3d.js"></script>  <!-- โมเดล 3D ตัวละครหน้า lobby (idle + ปัดหมุน · รอบ 104) -->
@@ -717,7 +717,7 @@
 <script src="js/picdict.js"></script>            <!-- 📖 รอบ 992: หนังสือพจนานุกรมภาพ พลิกหน้าแบบ 3D -->
 <script src="js/cert.js"></script>  <!-- 🎖️ รอบ 712: ประกาศนียบัตรสอบผ่าน (วาด SVG + ตู้เก็บในโปรไฟล์) -->
 <script src="js/photo.js"></script>  <!-- 📷 รอบ 709: รูปโปรไฟล์อัปโหลดเอง (ครอป/ย่อในเครื่อง → localStorage + /pphoto) -->
-<script src="js/auth.js"></script>   <!-- ต้องมาก่อน online.js (online.js เรียก authStart/authGateOffline) -->
+<script src="js/auth.js?arena-test=1048b"></script>   <!-- TEMP local Arena test cache-bust; remove before commit -->
 <script src="js/online.js"></script>
 <script src="js/picquiz_online.js"></script>  <!-- 🌐 ห้องละ 50 คน + แชท + group voice -->
 <script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
