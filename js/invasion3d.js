@@ -2887,6 +2887,12 @@ function makeFighter(letterIdx){
   const eng=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0x66e0ff,transparent:true,opacity:.8,
     blending:THREE.AdditiveBlending,depthWrite:false}));   /* 🔆 รอบ 580: ไฟท้ายเป็นดวงกลม ไม่ใช่จัตุรัสฟ้าลอย */
   eng.scale.setScalar(4.2*FIGHTER_SIZE/7); eng.position.set(0,0,2.4*FIGHTER_SIZE/7); grp.add(eng);
+  /* 🚨 รอบ 1044: สัญญาณแดงเปิดเฉพาะลำที่ hostile กับผู้เล่นคนนี้
+     ใช้ Sprite ไม่มี PointLight/เงา และไม่ render ตอนปกติ เพื่อคุมภาระ GPU มือถือ */
+  const hostileLight=new THREE.Sprite(new THREE.SpriteMaterial({map:fxGlow(),color:0xff261f,transparent:true,opacity:.95,
+    blending:THREE.AdditiveBlending,depthWrite:false}));
+  hostileLight.scale.setScalar(FIGHTER_SIZE*.22); hostileLight.position.set(0,FIGHTER_SIZE*.38,0);
+  hostileLight.visible=false; grp.add(hostileLight);
   /* 🔤 รอบ 556: letterIdx = ดัชนี a-z (0..25) · ลำที่ตัวอักษรอยู่ในคำ = ป้ายเขียวใหญ่ "ยิงลำนี้!" */
   const ch=AZ[letterIdx], need=word.en.includes(ch);
   const lb=new THREE.Sprite(new THREE.SpriteMaterial({map:letterSpriteTex(ch,need),transparent:true,depthTest:false}));
@@ -2903,7 +2909,7 @@ function makeFighter(letterIdx){
   const a=srnd(sd)*TAU, r=F_R*(0.45+srnd(sd+1)*0.55);
   grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
-  const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP, hostile:false,
+  const f={grp,eye,eng,hostileLight,label:lb,letterIdx,ch,hp:F_HP, hostile:false,
            bar:{spr:bar,cv:bcv,tx:btx},
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0,
@@ -2917,7 +2923,7 @@ function makeFighter(letterIdx){
      ต้นฉบับ `alien_fighter.glb` ยังอยู่ครบ ไม่ได้แตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
   loadGlb('img/models/alien_fighter_lite.glb',(obj)=>{
     fitInto(obj,FIGHTER_SIZE);
-    grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng&&c!==bar) grp.remove(c); });
+    grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng&&c!==hostileLight&&c!==bar) grp.remove(c); });
     grp.add(obj);
   });
   return f;
@@ -6429,7 +6435,7 @@ function damageFighter(f,dmg,now,byMe){
   if(f.dead) return;
   /* 🦅 รอบ 1043: เป็นศัตรูกับ "ผู้เล่นคนนี้" หลังถูกผู้เล่นคนนี้ยิงโดนจริงเท่านั้น
      ดาเมจจากบอทฝ่ายเรา/เพื่อนออนไลน์ไม่ทำให้ยานหันมายิงใส่เครื่องของเรา */
-  if(byMe===undefined||byMe===true) f.hostile=true;
+  if(byMe===undefined||byMe===true){ f.hostile=true; f.hostileLight.visible=true; }
   f.hp-=dmg; f.hitAt=now||performance.now();
   if(f.hp>0){ drawFighterBar(f); return; }        // ❤️ รอบ 557: อัปเดตแถบพลังตอนโดนยิง
   dropFighter(f, byMe!==false, byMe==='ally');
@@ -7991,6 +7997,8 @@ function tickFighters(dt,now){
     /* ⚡ รอบ 579: ลำที่เร่งเครื่อง = ไฟท้ายโตขึ้น + เปลี่ยนเป็นสีส้มร้อน (เด็กแยกออกทันทีว่าลำไหนเร็ว) */
     f.eng.scale.setScalar((4.2+Math.sin(now*(tb>1?.05:.02)+f.ang)*.6)*(tb>1?1.75:1));
     f.eng.material.color.setHex(tb>1?0xffb03a:0x66e0ff);
+    /* 🚨 ไฟ hostile เต้นพร้อมกันด้วย scale เท่านั้น — ไม่สร้าง material/texture ใหม่ใน render loop */
+    if(f.hostile) f.hostileLight.scale.setScalar(FIGHTER_SIZE*(.20+.045*(1+Math.sin(now*.012+f.ang))));
     /* 🦅 รอบ 1043: ยังไม่ถูกเรายิง = บินผ่านอย่างเดียว; ถูกยิงแล้วจึงตอบโต้ผู้เล่นคนนั้น */
     if(f.hostile && now>f.shotAt){
       /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย
