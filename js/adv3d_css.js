@@ -140,6 +140,10 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     border-radius:16px;padding:12px 22px;max-width:86vw;z-index:5}
   #adv-banner.show{animation:advBan 2.4s ease-out}
   #adv-banner.stay{opacity:1;animation:none;pointer-events:auto}
+  /* 🕯️ รอบ 1060: ข้อความภารกิจโรงแรมต้องอ่านง่ายแต่ไม่บังฉากหลอน */
+  .adv-haunt #adv-banner{font-size:clamp(13px,2.6vh,17px);line-height:1.35;padding:8px 14px;
+    max-width:min(72vw,620px);border-radius:11px;background:rgba(3,3,5,.68)}
+  .adv-haunt #adv-banner small{font-size:.82em;font-weight:560;color:#e8e1d6}
   .adv-ban-coin{color:#ffd54f;font-weight:900}
   @keyframes advBan{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
     20%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}

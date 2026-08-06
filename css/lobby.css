@@ -5480,8 +5480,9 @@ html.theme-emerald .mkt-group-head,html.theme-plum .mkt-group-head{
   font-family:inherit;font-size:12px;color:#79520a;font-weight:700;cursor:pointer;box-shadow:var(--card-shadow);
   white-space:nowrap;max-width:min(28vw,260px);overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;}
 .pm-category-btn:active{transform:scale(.95);}
-.pm-sheet-card-img .pm-sheet-img{display:block;height:100%;width:auto;max-width:100%;aspect-ratio:var(--pm-img-ar,.66);
-  background-repeat:no-repeat;pointer-events:none;user-select:none;}
+.pm-sheet-card-img .pm-sheet-img{display:block;width:min(100%,calc(100% * var(--pm-img-ar,.72)));
+  height:min(100%,calc(100% * var(--pm-img-inv,1.39)));aspect-ratio:var(--pm-img-ar,.72);
+  background-repeat:no-repeat;background-color:#fff;pointer-events:none;user-select:none;}
 .pm-card.matched .pm-sheet-img{opacity:.55;}
 
 #screen-picmatch .pm-label{margin:4px 2px 3px;text-align:center;}

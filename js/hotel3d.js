@@ -1,5 +1,5 @@
 /* ============================================================
-   hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ผู้ใช้สั่งเปลี่ยนโลกผีสิงใหม่ทั้งโลก)
+   hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060)
    สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง)
    ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
    ▶ แยกไฟล์เพราะ adventure3d.js แตะ 10,700 บรรทัดแล้ว (กฎทอง #2 ห้ามให้ไฟล์อ้วนโตอีก)
@@ -126,6 +126,9 @@ function makeMats(){
        จะได้กลืนกับพื้นรอบ ๆ เหมือนทางเดินปูจริง ไม่ใช่แผ่นสีทับ */
     porch : L(0x585349,'tex_concrete',1,1,0x565b62),
     leaf  : L(0x2c4a2e),
+    funeralWood:L(0x24120d,'tex_hotel_wood',1,1,0x2f211b),
+    funeralWhite:L(0xd7d2c7),
+    funeralBlack:L(0x111116),
   };
   /* ไฟ/หน้าต่าง = MeshBasic (ไม่ง้อแสง) + fog:false → ยังเรืองแสงทะลุหมอกกลางคืน
      ทำให้ตอนเดินเข้ามาเห็น "โรงแรมหรูไฟสว่าง" ชัดจากไกล (ข้อ 3) */
@@ -220,7 +223,8 @@ function build(THREE_,opt){
   TEX=opt.tex||function(){};
   const M=makeMats();
   const grp=new T.Group();
-  const H={grp, mats:M, solids:[], rooms:[], spots:[], portraits:[], wardrobes:[],
+  const H={grp, mats:M, solids:[], rooms:[], spots:[], portraits:[], wardrobes:[], specialWardrobes:[],
+           funeral:null, funeralBulbs:[],
            lamps:[M.lamp,M.win], lightsOn:true, FLOOR_H, FLOORS, BX, BZ, CZ, floorY};
 
   /* กล่องกันชน (AABB) — y0..y1 คุมว่าอยู่ชั้นไหน */
@@ -228,7 +232,8 @@ function build(THREE_,opt){
   /* กำแพง: วางกล่อง + กันชนพร้อมกัน (thick = ความหนา) */
   const A={ struct:Acc(), room:Acc(), carpet:Acc(), marble:Acc(), wood:Acc(), ceil:Acc(),
             tile:Acc(), porc:Acc(), gold:Acc(), cloth:Acc(), sheet:Acc(), metal:Acc(),
-            facade:Acc(), stone:Acc(), porch:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc() };
+            facade:Acc(), stone:Acc(), porch:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc(),
+            funeralWood:Acc(), funeralWhite:Acc(), funeralBlack:Acc() };
   function wall(acc,x0,x1,z0,z1,y,h,uv,noSolid){
     if(x1<=x0||z1<=z0) return;
     accBox(acc,(x0+x1)/2,y+h/2,(z0+z1)/2,x1-x0,h,z1-z0,uv||2.4);
@@ -486,12 +491,8 @@ function build(THREE_,opt){
     dl.position.set(0,0,.575); dr.position.set(0,0,-.575);
     hingeL.add(dl); hingeR.add(dr); g.add(hingeL,hingeR);
     let gh=null;
-    if(opt.makeGhost){
-      gh=opt.makeGhost();
-      if(gh){ gh.scale.set(1.5,1.5,1); gh.position.set(-HX+.75,.95,-HZ+2.0); gh.visible=false; g.add(gh); }
-    }
     const W={room:R, hingeL, hingeR, ghost:gh, open:false, t:0, knockAt:0, done:false,
-             haunted:Math.random()<.42,
+             haunted:false, interactive:false,
              x:R.cx+(R.rot?-1:1)*(-HX+.9), z:R.cz+(R.rot?-1:1)*(-HZ+2.0), y:R.y};
     H.wardrobes.push(W); R.wardrobe=W;
     /* 🩹 ประตูห้องเปิดแง้ม (เดินเข้าออกได้ ไม่มีกล่องกันชน)
@@ -600,6 +601,114 @@ function build(THREE_,opt){
       solid(p[0]-.3,p[0]+.3,p[1]-.3,p[1]+.3,0,3,'pole');
     });
   }
+
+  /* ============================================================
+     ⚰️🕯️ รอบ 1060 — ศาลางานศพไทยที่ปลายทางเดินชั้น 3
+     งานภาพอ้างอิงธรรมเนียมร่วมสมัย: หีบไม้ลายทองบนฐานต่างระดับ รูปผู้เสียชีวิต
+     กรอบทอง ดอกไม้ขาว-ดำ และสายไฟประดับหน้าแท่น โดยใช้ใบหน้าบุคคลสมมติที่เจนใหม่
+     ไฟชุดนี้แยกจากไฟโรงแรม จึงยังกะพริบอยู่แม้ไฟทั้งตึกดับตามเนื้อเรื่อง
+     ============================================================ */
+  {
+    const fy=floorY(2), fx=18.25, fz=0;
+    // ฐานต่างระดับ + หีบทรงไทยไม้เข้ม คิ้ว/ลายทอง
+    accBox(A.funeralBlack,fx,fy+.12,fz,3.25,.24,4.25,0);
+    accBox(A.funeralWood,fx+.15,fy+.56,fz,2.30,.88,3.10,1.2);
+    accBox(A.funeralWood,fx+.15,fy+1.05,fz,2.48,.14,3.28,1.2);
+    accBox(A.gold,fx-1.03,fy+.60,fz,.08,.56,3.12,0);
+    accBox(A.gold,fx+1.33,fy+.60,fz,.08,.56,3.12,0);
+    for(let z=-1.32;z<=1.32;z+=.66){
+      accBox(A.gold,fx-1.04,fy+.83,z,.07,.20,.25,0);
+      accBox(A.gold,fx+1.34,fy+.83,z,.07,.20,.25,0);
+    }
+    // ฝาหีบยกสันเล็กน้อยแบบงานไม้แกะไทย (ทึบสงบ ไม่แสดงร่าง)
+    accBox(A.funeralWood,fx+.15,fy+1.18,fz,1.45,.22,3.35,1.2,{z:.20});
+    accBox(A.funeralWood,fx+.15,fy+1.18,fz,1.45,.22,3.35,1.2,{z:-.20});
+    accBox(A.gold,fx+.15,fy+1.31,fz,.10,.09,3.44,0);
+    solid(fx-1.45,fx+1.65,-1.8,1.8,fy,fy+1.5,'funeral');
+
+    // รูปผู้เสียชีวิตสมมติในกรอบทอง ตั้งสูงที่ผนังปลายทางเดิน
+    const pm=new T.MeshPhongMaterial({color:0xffffff,shininess:5,specular:0x111111});
+    TEX(pm,'tex_hotel_funeral_portrait',1,1,null,true);
+    const pf=new T.Group(); pf.position.set(BX-.42,fy+2.06,0); pf.rotation.y=-Math.PI/2;
+    pf.add(new T.Mesh(new T.BoxGeometry(1.55,2.05,.14),M.gold));
+    const pa=new T.Mesh(new T.PlaneGeometry(1.25,1.68),pm); pa.position.z=.082; pf.add(pa); grp.add(pf);
+
+    // พวงมาลัยขาว-ดำพาดกรอบ: เม็ดดอกเล็กเรียงเป็นตัวยู ดูสมจริงกว่าทรงทึบชิ้นเดียว
+    const whiteMat=new T.MeshPhongMaterial({color:0xe8e3da,shininess:10});
+    const blackMat=new T.MeshPhongMaterial({color:0x17171b,shininess:4});
+    const beadGeo=new T.SphereGeometry(.075,8,6);
+    for(let i=0;i<19;i++){
+      const t=i/18, x=-.58+t*1.16, y=.68-Math.sin(t*Math.PI)*.62;
+      const b=new T.Mesh(beadGeo,(i%5===0)?blackMat:whiteMat);
+      b.position.set(x,y,.18); pf.add(b);
+    }
+    // พุ่มดอกไม้ขาว-ดำสองข้างหน้าโลง
+    [[16.65,-1.55],[16.65,1.55]].forEach((p,side)=>{
+      for(let i=0;i<22;i++){
+        const a=i*2.399, rr=.15+.58*Math.sqrt(i/22);
+        const b=new T.Mesh(beadGeo,(i+side)%6===0?blackMat:whiteMat);
+        b.scale.setScalar(.82+((i*7)%5)*.04);
+        b.position.set(p[0]+Math.cos(a)*rr,fy+.38+(i%4)*.09,p[1]+Math.sin(a)*rr); grp.add(b);
+      }
+    });
+
+    // หลอดไฟงานศพ: ทำเป็นสามชุด material เพื่อกระพริบสลับจังหวะ แต่ไม่เพิ่ม material ต่อหลอด
+    const bulbGeo=new T.SphereGeometry(.055,7,5), bulbMats=[0,1,2].map(()=>new T.MeshBasicMaterial({color:0xffd782,fog:false}));
+    const addBulb=(x,y,z,i)=>{ const b=new T.Mesh(bulbGeo,bulbMats[i%3]); b.position.set(x,y,z); grp.add(b);
+      H.funeralBulbs.push({m:b,phase:(i%3)*2.1}); };
+    let bi=0;
+    for(let z=-1.55;z<=1.55;z+=.31){ addBulb(16.82,fy+.20,z,bi++); addBulb(19.72,fy+.20,z,bi++); }
+    for(let y=fy+1.18;y<=fy+2.95;y+=.25){ addBulb(BX-.28,y,-.93,bi++); addBulb(BX-.28,y,.93,bi++); }
+
+    H.funeral={x:fx,z:fz,y:fy,letterSpot:{x:16.18,z:0,y:fy},portrait:pf};
+  }
+
+  /* ============================================================
+     🚪🚪🚪🚪🚪 รอบ 1060 — ห้องในสุดชั้น 4 มีตู้ภารกิจ 5 ใบ
+     ตำแหน่งตู้คงที่เพื่อให้ห้องอ่านง่าย แต่ “ของข้างใน” สุ่มสลับทุกครั้งที่เข้าเล่น:
+     ตัวอักษร / ว่าง / รูปหน้าโลง / ห่อผ้าขาว / ห่อผ้าขาว
+     ============================================================ */
+  {
+    const fy=floorY(3), z=9.40;
+    const whiteMat=new T.MeshPhongMaterial({color:0xe8e3da,shininess:10});
+    const blackMat=new T.MeshPhongMaterial({color:0x17171b,shininess:4});
+    const beadGeo=new T.SphereGeometry(.075,8,6);
+    const bodyGeo=new T.SphereGeometry(.48,12,9);
+    const mkBundle=()=>{
+      const g=new T.Group();
+      const torso=new T.Mesh(bodyGeo,M.funeralWhite); torso.scale.set(.56,1.72,.42); torso.position.y=.92; g.add(torso);
+      const fold=new T.Mesh(new T.TorusGeometry(.30,.035,6,18),M.funeralWhite); fold.rotation.x=Math.PI/2; fold.position.y=1.34; g.add(fold);
+      return g;
+    };
+    for(let i=0;i<5;i++){
+      const x=10.35+i*2.10, g=new T.Group(); g.position.set(x,fy,z); grp.add(g);
+      const part=(sx,sy,sz,px,py,pz,mat)=>{ const m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),mat||M.funeralWood); m.position.set(px,py,pz); g.add(m); };
+      part(1.72,.13,.92,0,.065,0); part(1.72,.13,.92,0,2.555,0);
+      part(.13,2.62,.92,-.795,1.31,0); part(.13,2.62,.92,.795,1.31,0);
+      part(1.50,2.38,.10,0,1.31,.43,M.funeralBlack);              // หลังตู้เปิดโล่งด้านหน้า
+      const hingeL=new T.Group(), hingeR=new T.Group();
+      hingeL.position.set(-.83,1.31,-.52); hingeR.position.set(.83,1.31,-.52);
+      const dl=new T.Mesh(new T.BoxGeometry(.82,2.52,.08),M.funeralWood), dr=dl.clone();
+      dl.position.x=.41; dr.position.x=-.41; hingeL.add(dl); hingeR.add(dr); g.add(hingeL,hingeR);
+
+      const photo=new T.Group(); photo.position.set(0,1.38,.36); photo.rotation.y=Math.PI;
+      const pmat=new T.MeshPhongMaterial({color:0xffffff,shininess:4}); TEX(pmat,'tex_hotel_funeral_portrait',1,1,null,true);
+      photo.add(new T.Mesh(new T.BoxGeometry(.93,1.35,.07),M.gold));
+      const art=new T.Mesh(new T.PlaneGeometry(.72,1.05),pmat); art.position.z=.045; photo.add(art);
+      for(let j=0;j<13;j++){ const t=j/12, b=new T.Mesh(beadGeo,j%4===0?blackMat:whiteMat);
+        b.scale.setScalar(.65); b.position.set(-.34+t*.68,.47-Math.sin(t*Math.PI)*.40,.09); photo.add(b); }
+      g.add(photo);
+
+      const bundleA=mkBundle(); bundleA.position.set(0,.02,.04); bundleA.rotation.z=.06; g.add(bundleA);
+      const bundleB=mkBundle(); bundleB.position.set(0,.02,.04); bundleB.rotation.z=-.07; g.add(bundleB);
+      photo.visible=bundleA.visible=bundleB.visible=false;
+      const W={special:true,interactive:true,slot:i,x,z:z-.72,y:fy,room:{rot:0},hingeL,hingeR,open:false,t:0,done:false,
+               content:'empty',visuals:{photo,bundleA,bundleB},letter:null};
+      H.wardrobes.push(W); H.specialWardrobes.push(W);
+      solid(x-.88,x+.88,z-.48,z+.48,fy,fy+2.65,'questWardrobe');
+    }
+    shuffleSpecialWardrobes(H);
+  }
   /* ป้ายชื่อโรงแรมเหนือประตูหน้า */
   {
     const sg=new T.Mesh(new T.PlaneGeometry(8.4,2.1),
@@ -637,6 +746,7 @@ function build(THREE_,opt){
     const er=PE.r/EYE_R0;
     e1.position.set(PE.lx,PE.y,.07); e2.position.set(PE.rx,PE.y,.07);
     e1.scale.set(er,er,1); e2.scale.set(er,er,1);
+    e1.visible=e2.visible=false;                    // ภาพไทยชุดใหม่มีม่านตา/รูม่านตาสมจริงอยู่แล้ว
     g.add(e1,e2);
     /* lat/ver = ตำแหน่งตาปัจจุบัน (หน่วงตามด้วย lerp) · blinkT/blinkAt = จังหวะกะพริบสุ่มต่อกรอบ
        eyeLX/eyeRX/eyeY/eyeR = ตำแหน่ง/ขนาดฐานของภาพนี้ (per-photo ไม่ใช่ค่าคงที่เดียวเหมือนเดิม) */
@@ -683,6 +793,9 @@ function build(THREE_,opt){
   accMesh(A.glass,M.glass,grp);
   accMesh(A.win,M.win,grp);
   accMesh(A.lamp,M.lamp,grp);
+  accMesh(A.funeralWood,M.funeralWood,grp);
+  accMesh(A.funeralWhite,M.funeralWhite,grp);
+  accMesh(A.funeralBlack,M.funeralBlack,grp);
 
   /* จุดวางตัวอักษรในล็อบบี้/ทางเดิน (นอกห้องพัก) */
   for(let f=0;f<FLOORS;f++){
@@ -779,6 +892,18 @@ function setLights(H,on){
   if(H.signMat) H.signMat.color.setHex(on?0xffffff:0x2a2a2a);
 }
 
+/* สุ่มของในตู้ภารกิจ 5 ใบใหม่ทุกครั้ง โดยคงจำนวนแต่ละชนิดเป๊ะ */
+function shuffleSpecialWardrobes(H){
+  if(!H || !H.specialWardrobes) return;
+  const types=['letter','empty','photo','bundleA','bundleB'];
+  for(let i=types.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [types[i],types[j]]=[types[j],types[i]]; }
+  H.specialWardrobes.forEach((W,i)=>{
+    W.content=types[i]; W.open=false; W.done=false; W.t=0; W.letter=null;
+    W.hingeL.rotation.y=0; W.hingeR.rotation.y=0;
+    Object.keys(W.visuals).forEach(k=>W.visuals[k].visible=(k===W.content));
+  });
+}
+
 /* ============================================================
    ⏱ อัปเดตทุกเฟรม: ลูกตาในรูปมองตาม · ลิฟต์วิ่ง · บานตู้เปิด
    ============================================================ */
@@ -786,13 +911,11 @@ const BLINK_DUR=140;             // ms กะพริบ 1 ครั้ง (ห
 const BLINK_MIN=2200, BLINK_GAP=4200;   // ช่วงเวลาสุ่มระหว่างกะพริบ (ต่อกรอบ ไม่พร้อมกันหมด)
 /* 🔴 รอบ 697: ตอนไฟดับ ตาทุกกรอบทั้งโรงแรมแดงวาบพร้อมกัน (H.eyeMat ใช้ร่วมทั้ง 30 กรอบ ต้นทุนแทบเป็นศูนย์) */
 function tick(H,dt,now,cam){
-  if(!H.lightsOn){
-    const p=.5+.5*Math.sin(now*.0055);               // หายใจแดงช้า ๆ ไม่กะพริบถี่จนแสบตา
-    H.eyeMat.color.setRGB(.4+p*.55,.02,.03);
-    H._eyeDark=true;
-  }else if(H._eyeDark){
-    H.eyeMat.color.setHex(0x0b0a09); H._eyeDark=false;   // ไฟกลับมา = ตากลับดำเหมือนเดิม (ทำครั้งเดียวตอนสลับ)
-  }
+  /* ภาพชุดใหม่มีดวงตาจริงอยู่ในไฟล์แล้ว จึงไม่ทำตาแดงเรืองทับหน้า (ดูเป็นการ์ตูนและเสียความสมจริง) */
+  if(H.funeralBulbs) H.funeralBulbs.forEach((b,i)=>{
+    const pulse=.45+.55*Math.max(0,Math.sin(now*.008+b.phase));
+    b.m.visible=pulse>.54; b.m.scale.setScalar(.72+pulse*.42);
+  });
   /* 🖼️ ลูกตามองตาม — เฉพาะรูปที่อยู่ใกล้และชั้นเดียวกัน (คุมงานต่อเฟรม)
      รูปหันไป local +Z → ระยะเยื้องซ้าย-ขวาของผู้เล่นในแกนรูป = face*(camX - รูปX)
      🐌 รอบ 697: เดิมตากระโดดไปตำแหน่งเป้าหมายทันที (สะดุดตา ดูเป็นกลไก) → lerp หน่วงให้เนียนเหมือนหันตามจริง */
@@ -860,11 +983,16 @@ function nearWardrobe(H,x,z,y){
   let best=null,bd=2.2;
   for(let i=0;i<H.wardrobes.length;i++){
     const W=H.wardrobes[i];
+    if(W.interactive===false) continue;
     if(Math.abs(W.y-y)>1.6) continue;
     const d=Math.hypot(W.x-x,W.z-z);
     if(d<bd){ bd=d; best=W; }
   }
   return best;
+}
+function nearFuneral(H,x,z,y,dist){
+  if(!H || !H.funeral || Math.abs(H.funeral.y-y)>1.6) return false;
+  return Math.hypot(H.funeral.x-x,H.funeral.z-z)<(dist||6.5);
 }
 /* ---------- อยู่หน้า/ในลิฟต์ไหม ---------- */
 function inLift(H,x,z,y){
@@ -883,6 +1011,6 @@ function randomHaunt(H,floorPref){
 }
 
 return { build, surfaceY, collide, setLights, tick, roomAt, nearWardrobe, inLift, atLiftDoor,
-         randomHaunt, insideHotel, floorOf, floorY,
+         randomHaunt, insideHotel, floorOf, floorY, nearFuneral, shuffleSpecialWardrobes,
          FLOOR_H, FLOORS, BX, BZ, CZ, WEST, CORE_E, SHAFT_E, ENTRY_HW, PLAYER_R };
 })();

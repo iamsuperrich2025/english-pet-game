@@ -17,6 +17,7 @@
 # ที่มาของข้อความ commit (ไล่ตามลำดับ):
 #   1) อาร์กิวเมนต์ที่พิมพ์มา
 #   2) ไฟล์ handoff/SHIP.txt บรรทัดแรก (ให้ AI เขียนทิ้งไว้ — ลบให้อัตโนมัติเมื่อสำเร็จ)
+#      ถ้ามีบรรทัด `FILE: path` จะส่งเฉพาะรายการนั้น รวมไฟล์ asset ใหม่ได้โดยไม่กวาดงาน session อื่น
 #   3) บรรทัด "**รอบ N ..." ที่เพิ่งถูกเพิ่มใน handoff/TASKS.md
 #   4) ถามผู้ใช้
 # ============================================================
@@ -48,7 +49,21 @@ ask(){ # y/n — ไม่มี tty ให้ถือว่า "ไม่" (�
 
 # ── 1) หาไฟล์ที่เปลี่ยน (เฉพาะที่ git ติดตามอยู่แล้ว) ────────────────────
 # ไฟล์ untracked (img/ sound/ ฯลฯ) ไม่ถูกหยิบโดยตั้งใจ = กันเผลอ commit asset ผู้ใช้
-if [[ ${#ONLY[@]} -gt 0 ]]; then
+SHIPNOTE="handoff/SHIP.txt"
+MANIFEST=()
+if [[ -f "$SHIPNOTE" ]]; then
+  mapfile -t MANIFEST < <(sed -n 's/^FILE:[[:space:]]*//p' "$SHIPNOTE" | sed 's/\r$//' | sed '/^$/d')
+fi
+if [[ ${#MANIFEST[@]} -gt 0 ]]; then
+  CHANGED=()
+  for f in "${MANIFEST[@]}"; do
+    [[ "$f" != /* && "$f" != *".."* ]] || { say "❌ FILE path ไม่ปลอดภัย: $f"; exit 2; }
+    [[ -e "$f" ]] || { say "❌ FILE ไม่พบในเครื่อง: $f"; exit 2; }
+    CHANGED+=("$f")
+  done
+  mapfile -t CHANGED < <(printf '%s\n' "${CHANGED[@]}" | sort -u)
+  say "🎯 ใช้รายการไฟล์เฉพาะรอบจาก $SHIPNOTE: ${#CHANGED[@]} ไฟล์"
+elif [[ ${#ONLY[@]} -gt 0 ]]; then
   CHANGED=()
   for f in "${ONLY[@]}"; do
     # รอบ 1054: โหมด scope สำหรับเครื่องที่หลายแชทแก้ main พร้อมกัน — รับเฉพาะ path tracked แบบตรงตัว
@@ -66,7 +81,7 @@ fi
 # ไฟล์ "สร้างใหม่" ที่ยังไม่เข้า git — หยิบเฉพาะไฟล์โค้ดจริง (AI สร้างไฟล์ใหม่บ่อย เช่น js/data/picdict_grid.js)
 # allowlist เข้มมาก เพราะโฟลเดอร์นี้มี asset/ของชั่วคราว untracked เต็มไปหมด (img/ sound/ *.wav *.patch ฯลฯ)
 NEWF=()
-if [[ ${#ONLY[@]} -eq 0 ]]; then
+if [[ ${#ONLY[@]} -eq 0 && ${#MANIFEST[@]} -eq 0 ]]; then
   mapfile -t NEWF < <(git ls-files --others --exclude-standard -- . \
     | grep -E '^(js/[^/]+\.js|js/data/[^/]+\.js|css/[^/]+\.css|tools/[^/]+\.(sh|py|js)|[^/]+\.(html|bat))$' \
     | grep -vE '^js/data/vocab' | sort -u)
@@ -124,7 +139,6 @@ if [[ ${#STALE[@]} -gt 0 ]]; then
 fi
 
 # ── 3) ข้อความ commit + เลขรอบ ──────────────────────────────────────────
-SHIPNOTE="handoff/SHIP.txt"
 if [[ -z "$MSG" && -f "$SHIPNOTE" ]]; then
   MSG="$(grep -m1 -v '^[[:space:]]*$' "$SHIPNOTE" || true)"
   [[ -n "$MSG" ]] && say "📝 ใช้ข้อความจาก $SHIPNOTE"
