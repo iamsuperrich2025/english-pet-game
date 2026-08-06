@@ -2,7 +2,7 @@
 /* ============================================================
    ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
    - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง
-   - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 50
+   - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 100
    ------------------------------------------------------------
    หลักการ "มีก็ใช้ ไม่มีก็ไม่พัง": โหลด Firebase SDK แบบ dynamic
    ถ้าออฟไลน์/โหลดไม่สำเร็จ → Online.ready = false ตลอด
@@ -20,8 +20,8 @@ const Online = {
   started:false,    // onlineStart รันแล้ว (กันรันซ้ำ — เรียกได้จาก authEnterGame/authLateSync)
   db:null,
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
-  board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
-  bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะะเหรียญรวมน้อย)
+  board:[],         // Leaderboard Top 100 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
+  bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะเหรียญรวมน้อย)
   lastScoreSig:null, // ลายเซ็น coins|av|ni ล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำ)
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
@@ -149,19 +149,19 @@ function onlinePushScore(){
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
-  // (pm = รอบ 979 รอ publish → ถอยไปก้อน sg+tp+tw ก่อน แล้วค่อยถอยลงอีกทีละขั้น)
+  // bb เป็น field ใหม่สุด: ถ้า rules ยังไม่ publish ให้ลองก้อนเดิมที่ตัด bb ออก แล้วค่อยถอยตามลำดับเดิม
   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb}, base)).catch(()=>{
    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
-    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
-     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
-      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
-       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
-        Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
+      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
+       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
+        Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk}, base)).catch(()=>{
+         Online.db.ref('leaderboard/' + onlineKey()).set(base).catch(()=>{});
+        });
        });
       });
      });
-    });
     });
    });
   });
@@ -1959,7 +1959,7 @@ function onlineStart(){
     onlineRerender();
   });
 
-  // ฟัง Leaderboard Top 50 (RTDB ให้มาเรียงน้อย→มาก กลับด้านเป็นมาก→น้อย)
+  // ฟัง Leaderboard Top 100 (RTDB ให้มาเรียงน้อย→มาก กลับด้านเป็นมาก→น้อย)
   Online.db.ref('leaderboard').orderByChild('coins').limitToLast(LEADERBOARD_SIZE).on('value', (snap)=>{
     const out = [];
     snap.forEach(ch=>{

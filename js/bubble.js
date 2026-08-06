@@ -117,19 +117,26 @@
     const cols=Math.max(1,Math.min(n,Math.ceil(Math.sqrt(n*aspect))));
     const rows=Math.ceil(n/cols);
     const d=Math.max(38,Math.min(92,Math.min(w/(cols+.35),h/(rows+.25))*.72));
-    const pad=d*.58, min=d*.9, pts=[];
-    els.forEach((el,idx)=>{
+    const pad=d*.58, min=d+14, pts=[];                 // เผื่อระยะลอยขึ้น-ลงต่างจังหวะ ไม่ให้วงฟองชนกันขณะขยับ
+    let failed=false;
+    for(let idx=0;idx<n;idx++){
       let x=pad,y=pad,ok=false;
-      for(let t=0;t<180&&!ok;t++){
+      for(let t=0;t<240&&!ok;t++){
         x=pad+Math.random()*Math.max(1,w-pad*2); y=pad+Math.random()*Math.max(1,h-pad*2);
         ok=pts.every(p=>Math.hypot(p.x-x,p.y-y)>=min);
       }
-      if(!ok){
-        const c=idx%cols,r=Math.floor(idx/cols),cw=w/cols,ch=h/rows;
-        x=(c+.5)*cw+(Math.random()-.5)*Math.max(0,cw-d)*.65;
-        y=(r+.5)*ch+(Math.random()-.5)*Math.max(0,ch-d)*.65;
-      }
-      pts.push({x,y}); el.style.setProperty('--bb-size',d.toFixed(1)+'px');
+      if(!ok){ failed=true; break; }
+      pts.push({x,y});
+    }
+    /* คำยาว/จอเตี้ยบางครั้งสุ่มแบบอิสระไม่ลงตัว → สุ่มช่อง grid ทั้งชุดใหม่ (ห้ามผสมจุดสุ่มกับ fallback เพราะอาจซ้อนกัน) */
+    if(failed){
+      pts.length=0; const cw=w/cols,ch=h/rows,slots=shuffle(Array.from({length:n},(_,i)=>i));
+      slots.forEach(slot=>{ const c=slot%cols,r=Math.floor(slot/cols);
+        pts.push({x:(c+.5)*cw+(Math.random()-.5)*Math.max(0,cw-d)*.22,
+                  y:(r+.5)*ch+(Math.random()-.5)*Math.max(0,ch-d)*.22}); });
+    }
+    els.forEach((el,idx)=>{
+      const {x,y}=pts[idx]; el.style.setProperty('--bb-size',d.toFixed(1)+'px');
       el.style.left=x.toFixed(1)+'px'; el.style.top=y.toFixed(1)+'px';
       el.style.setProperty('--bb-drift',(Math.random()*2.2+2).toFixed(2)+'s');
       el.style.setProperty('--bb-delay',(-Math.random()*2).toFixed(2)+'s');
