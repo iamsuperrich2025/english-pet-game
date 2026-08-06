@@ -3600,10 +3600,9 @@ html.no-anim #btn-music.playing::before{animation:none;background:none;
   background:rgba(20,52,96,.7);border:1px solid rgba(95,200,255,.18);line-height:1;
   transition:opacity .35s ease,transform .35s ease,background .18s,color .18s,box-shadow .18s;}
 .ws-cell.sel{background:#4fd0ff;color:#062247;box-shadow:0 0 10px rgba(120,225,255,.8);}
-/* ✅ รอบ 588: คำที่เจอ = ไฮไลต์เขียว "นิ่ง ๆ" ไม่กระพริบ
-   (เดิมรอบ 205 เป็นคลื่นไฟฟ้าวิ่ง animation:wsFlow — ผู้ใช้สั่งเอาออก 26 ก.ค. 2026) */
-.ws-cell.found{background:linear-gradient(160deg,#28e08a,#12b06a);color:#fff;
-  border-color:#7bffbe;box-shadow:0 0 8px rgba(40,224,138,.45);}
+/* คำที่เจอแต่ละคำมีสีประจำคำ; ช่องตัดกันรับ gradient จาก JS */
+.ws-cell.found{background:var(--ws-found-bg,#18c97a);color:#fff;
+  border-color:var(--ws-found-border,#76ffc0);box-shadow:0 0 8px var(--ws-found-glow,rgba(24,201,122,.48));}
 /* 💡 รอบ 589: ใบ้ตำแหน่งคร่าว ๆ (แถว/หลัก/โซนทแยง) หลังกดที่ชิปคำ — จาง ๆ ไม่ชี้ตัวอักษร */
 .ws-cell.hint{background:rgba(94,166,255,.45);border-color:rgba(180,225,255,.75);
   box-shadow:0 0 10px rgba(140,215,255,.45) inset;color:#fff;}
@@ -3668,7 +3667,9 @@ html.no-anim .ws-combo{transition:none;animation:none;}
 html.no-anim .ws-word{transition:none;}
 .ws-word small{display:block;font-size:11.5px;font-weight:400;letter-spacing:0;color:#a9c8e8;margin-top:2px;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
-.ws-word.got{background:rgba(40,224,138,.18);border-color:#3be8a0;color:#8bffcb;text-decoration:line-through;opacity:.75;}
+.ws-word.got{background:var(--ws-found-soft,rgba(24,201,122,.18));
+  border-color:var(--ws-found-border,#76ffc0);color:var(--ws-found-text,#8bffcb);
+  box-shadow:0 0 10px var(--ws-found-glow,rgba(24,201,122,.48));text-decoration:line-through;opacity:.82;}
 .ws-actions{flex-shrink:0;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;z-index:1;}
 .ws-actions button{border:none;border-radius:12px;font-family:inherit;font-weight:800;font-size:13.5px;
   padding:7px 15px;cursor:pointer;transition:transform .1s;}

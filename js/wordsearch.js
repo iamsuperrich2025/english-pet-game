@@ -23,6 +23,18 @@
   const COLS=[10,13,16], WANT_BY_COLS={10:5, 13:6, 16:8};
   const DIRS=[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]];
   const AZ='ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  /* คำที่เจอแต่ละคำใช้คนละสี (วนพาเลตต์เมื่อมีมากกว่า 8 คำ)
+     เก็บ index สีไว้กับคำ/เซลล์ เพื่อให้สีไม่เปลี่ยนเมื่อปิดแล้วกลับมาเล่นต่อ */
+  const FOUND_COLORS=[
+    {bg:'#18c97a',border:'#76ffc0',glow:'rgba(24,201,122,.48)',soft:'rgba(24,201,122,.18)',text:'#8bffcb'},
+    {bg:'#8b5cf6',border:'#c8b5ff',glow:'rgba(139,92,246,.52)',soft:'rgba(139,92,246,.20)',text:'#d9ceff'},
+    {bg:'#f08a24',border:'#ffd08a',glow:'rgba(240,138,36,.52)',soft:'rgba(240,138,36,.20)',text:'#ffd39a'},
+    {bg:'#2586e8',border:'#91ceff',glow:'rgba(37,134,232,.52)',soft:'rgba(37,134,232,.20)',text:'#acd9ff'},
+    {bg:'#e94f91',border:'#ffabd0',glow:'rgba(233,79,145,.52)',soft:'rgba(233,79,145,.20)',text:'#ffc0dd'},
+    {bg:'#11aeb8',border:'#82f2f5',glow:'rgba(17,174,184,.52)',soft:'rgba(17,174,184,.20)',text:'#a7fbff'},
+    {bg:'#e14c4c',border:'#ffaaaa',glow:'rgba(225,76,76,.52)',soft:'rgba(225,76,76,.20)',text:'#ffc1c1'},
+    {bg:'#b89b12',border:'#ffe772',glow:'rgba(184,155,18,.52)',soft:'rgba(184,155,18,.20)',text:'#fff09b'}
+  ];
 
   let wsGame=null;                    // เกมปัจจุบัน (อยู่ในหน่วยความจำ · เก็บชั่วคราวลง state.wordSearch)
   let queue=[], qi=0, qGrade=null;    // คิวคำสุ่ม (ไม่ซ้ำข้ามเกมจนกว่าจะหมดคลัง)
@@ -127,7 +139,31 @@
     if(!g.rows) g.rows=g.grid.length;
     if(!g.cols) g.cols=g.grid[0].length;
     g.size=g.cols;
+    /* migrate กระดานที่เซฟจากเวอร์ชันสีเขียวล้วน */
+    g.grid.forEach(row=>row.forEach(cell=>{ if(!Array.isArray(cell.foundColors)) cell.foundColors=[]; }));
+    (g.words||[]).forEach((w,wi)=>{
+      if(!w.found) return;
+      if(!Number.isInteger(w.color)) w.color=wi%FOUND_COLORS.length;
+      (w.cells||[]).forEach(([r,c])=>{
+        const cell=g.grid[r]&&g.grid[r][c]; if(!cell) return;
+        cell.found=true;
+        if(!cell.foundColors.includes(w.color)) cell.foundColors.push(w.color);
+      });
+    });
     return g;
+  }
+
+  function colorVars(p){
+    return `--ws-found-bg:${p.bg};--ws-found-border:${p.border};--ws-found-glow:${p.glow};--ws-found-soft:${p.soft};--ws-found-text:${p.text}`;
+  }
+  function cellColorVars(cell){
+    const ids=Array.isArray(cell.foundColors)?[...new Set(cell.foundColors)]:[];
+    if(!ids.length) ids.push(0);                              // fallback สำหรับเซฟเก่ามาก
+    const ps=ids.map(i=>FOUND_COLORS[i%FOUND_COLORS.length]);
+    if(ps.length===1) return colorVars(ps[0]);
+    const stops=ps.map((p,i)=>`${p.bg} ${(i/ps.length*100).toFixed(1)}% ${((i+1)/ps.length*100).toFixed(1)}%`).join(',');
+    const last=ps[ps.length-1];
+    return `--ws-found-bg:linear-gradient(135deg,${stops});--ws-found-border:${last.border};--ws-found-glow:${last.glow}`;
   }
 
   /* ---------- DOM ---------- */
@@ -221,9 +257,9 @@
     gridEl.style.setProperty('--ws-c', wsGame.cols);
     gridEl.style.setProperty('--ws-ar', (wsGame.cols/wsGame.rows).toFixed(4));
     gridEl.innerHTML=wsGame.grid.map((row,r)=>row.map((cell,c)=>
-      `<div class="ws-cell${cell.found?' found':''}" data-r="${r}" data-c="${c}"${cell.found?` style="--zi:${cell.zi||0}"`:''}>${cell.ch}</div>`).join('')).join('');
+      `<div class="ws-cell${cell.found?' found':''}" data-r="${r}" data-c="${c}"${cell.found?` style="${cellColorVars(cell)}"`:''}>${cell.ch}</div>`).join('')).join('');
     wordsEl.innerHTML=wsGame.words.map((w,i)=>
-      `<span class="ws-word${w.found?' got':''}" data-i="${i}" title="กดเพื่อฟังเสียง${w.found?'':' + ใบ้ตำแหน่ง'}">${w.w}<small>${(typeof escapeHTML==='function')?escapeHTML(w.th):w.th}</small></span>`).join('');
+      `<span class="ws-word${w.found?' got':''}" data-i="${i}"${w.found?` style="${colorVars(FOUND_COLORS[(Number.isInteger(w.color)?w.color:i)%FOUND_COLORS.length])}"`:''} title="กดเพื่อฟังเสียง${w.found?'':' + ใบ้ตำแหน่ง'}">${w.w}<small>${(typeof escapeHTML==='function')?escapeHTML(w.th):w.th}</small></span>`).join('');
     updateProg();
     syncSizeBtns();
     overlay.querySelector('.ws-grade').textContent='ระดับชั้น '+grade();
@@ -267,7 +303,12 @@
     const hit=wsGame.words.find(w=>!w.found && (w.w===str || w.w===rev));
     if(!hit){ if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong(); flashWrong(cells); return; }
     hit.found=true;
-    hit.cells.forEach(([r,c],i)=>{ wsGame.grid[r][c].found=true; wsGame.grid[r][c].zi=i; });   // zi = ลำดับตัวอักษร (คลื่นไฟฟ้าไล่)
+    hit.color=wsGame.words.indexOf(hit)%FOUND_COLORS.length;
+    hit.cells.forEach(([r,c])=>{
+      const cell=wsGame.grid[r][c]; cell.found=true;
+      if(!Array.isArray(cell.foundColors)) cell.foundColors=[];
+      if(!cell.foundColors.includes(hit.color)) cell.foundColors.push(hit.color);
+    });
     if(typeof vbRecord==='function') vbRecord(hit.w, hit.th, true);   // 📒 รอบ 291: ลงสมุดคำศัพท์ถาวร (normalize ตัวเล็กใน vbRecord)
     /* 🔥 รอบ 601: คอมโบ — หาคำถัดไปได้ภายใน COMBO_MS นับต่อเนื่อง ตัวคูณเหรียญ ×1 → ×2 → ×3 (ตัน)
        ลากผิดไม่ตัดคอมโบ (เด็กจะได้ไม่ท้อ) · ตัดเมื่อ "ช้าเกิน 3 วิ" อย่างเดียว */
