@@ -4462,3 +4462,13 @@
 - **รอบ 1028 (5 ส.ค. · Picture Dictionary ฟังคำรับเหรียญ + ซ่อมภาพหมวดห้องน้ำ):** `js/picdict.js`+CSS ล็อกหน้าต่างซูมจนเสียงจบ แล้วให้ 1 เหรียญทุกครั้งพร้อมภาพ/เสียงยืนยัน; `js/util.js` เพิ่ม callback จบเสียง MP3/TTS โดยไม่กระทบ caller เดิม
   - `tools/picdict_gridlab.js` ตรวจแถวที่ถูกแยกรูป/ป้ายผิดเฟส และอบ `Bathroom.png` ใหม่ใน `js/data/picdict_grid.js` ให้ครบ 64 คำ; Clothes Hamper/Stain Remover/Waste Bin/Water Heater ตรงภาพแล้ว
   - ยืนยันฟังซ้ำ 2 ครั้งเหรียญ 100→102, ปิดไม่ได้ก่อนเสียงจบ, GridLab 46/46 ไม่ fail, browser 1280×720 + 812×375 ไม่มี scroll/console error และ syntax/diff-check ผ่าน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-06 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1030 (5 ส.ค. · สัตว์ Lobby เคลื่อนไหวเป็นธรรมชาติ):** เพิ่ม `js/petbehavior.js` แบ่งคลิป 8 วินาทีเป็น idle/walk/look/sit/play และผูก sleep กับสถานะเกม เลือกท่าต่อกันแบบมีน้ำหนักต่างกันสำหรับแมว/หมา/มังกร พร้อมความเร็วและช่วงพักสุ่ม; เปลี่ยนท่าด้วย crossfade แทนการวนคลิปเดิมซ้ำ
+  - `js/ui.js` เชื่อม controller กับคลิปจริงและ fallback ภาพ/sprite; `css/lobby.css` เพิ่มหายใจ มอง นั่ง เดิน เล่น หลับ และหยุดครบเมื่อปิดเอฟเฟกต์; `index_classic.html`+`sw.js` โหลดไฟล์ใหม่
+  - ยืนยัน preview คลิปจริงเปลี่ยน state/time/rate, fallback บังคับครบ 6 state, no-anim หยุดทั้งหมด, 1280×720/812×375 ไม่ล้น; Node syntax + diff-check ผ่าน
+- **รอบ 1029 (5 ส.ค. · Picture Dictionary กล่องเหรียญไม่บังคำศัพท์):** css/picdict.css ย้ายกล่องแจ้ง +1 เหรียญไปด้านขวานอกการ์ดซูม ทำให้ภาพ ชื่ออังกฤษ และคำแปลมองเห็นครบตลอด
+  - จอมือถือแนวนอนใช้กล่องขนาดย่อ; Browser 1280×720 และ 812×375 ยืนยันว่าไม่ซ้อนการ์ด อยู่ใน viewport และ git diff --check ผ่าน
+
