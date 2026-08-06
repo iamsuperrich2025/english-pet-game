@@ -2333,11 +2333,11 @@ function buildScene(md){
     const sun=new THREE.DirectionalLight(0xfff2cc,.8); sun.position.set(30,60,20); sc.add(sun);
   }else if(md==='haunt'){
     /* 🏨 รอบ 684: โลกผีสิง = โรงแรม 5 ชั้น (ตัวตึกอยู่ js/hotel3d.js) — แสงเก็บ ref ไว้หรี่ตอนไฟดับ */
-    hotelHemi=new THREE.HemisphereLight(0x9db4ff,0x1a2418,.72); sc.add(hotelHemi);
-    hotelMoonL=new THREE.DirectionalLight(0xcfe0ff,.55); hotelMoonL.position.set(40,50,30); sc.add(hotelMoonL);
-    /* 💡 แสงในอาคารตอนไฟยังติด — โคมไฟในตึกเป็นแค่ material เรืองแสง (ไม่ใช่ดวงไฟจริง เพราะ PointLight
-       หลายสิบดวงมือถือไม่ไหว) จึงใช้ ambient อุ่น ๆ แทน "แสงจากโคมทั้งตึก" แล้วดับพร้อมกันตอนไฟดับ */
-    hotelAmb=new THREE.AmbientLight(0xffe3bb,.62); sc.add(hotelAmb);
+    hotelHemi=new THREE.HemisphereLight(0x9db4ff,0x1a2418,.46); sc.add(hotelHemi);
+    hotelMoonL=new THREE.DirectionalLight(0xcfe0ff,.30); hotelMoonL.position.set(40,50,30); sc.add(hotelMoonL);
+    /* 💡 รอบปรับ corridor สมจริง: ambient เป็น fill บาง ๆ เท่านั้น ส่วน pool แสงอุ่น 2800K
+       มาจาก PointLight จำกัด 2 ดวง/ชั้นใน hotel3d.js (ไม่เปิดเงา จึงยังเหมาะกับมือถือ) */
+    hotelAmb=new THREE.AmbientLight(0xffe3bb,.24); sc.add(hotelAmb);
     buildHauntSky(sc);          // 🌌 รอบ 694: ฟ้าไล่สี+ดาว+จันทร์+เมฆ+หมอก (แทนจันทร์แผ่นแบนใบเดิม)
   }
   // (โหมด heli ใส่แสงของตัวเองในบล็อกเมืองด้านล่าง)
@@ -3692,9 +3692,9 @@ function hotelReset(){
     });
     hotelQuestReset();                            // สุ่มของในตู้ภารกิจ 5 ใบใหม่ทุกครั้ง
   }
-  if(hotelHemi) hotelHemi.intensity=.58;
-  if(hotelMoonL) hotelMoonL.intensity=.38;
-  if(hotelAmb) hotelAmb.intensity=.44;
+  if(hotelHemi) hotelHemi.intensity=.46;
+  if(hotelMoonL) hotelMoonL.intensity=.30;
+  if(hotelAmb) hotelAmb.intensity=.22;
   if(scene && scene.fog){ scene.fog.near=M.fogN; scene.fog.far=M.fogF; }
   if(hTorchHintEl) hTorchHintEl.style.display='none';
   if(hTorchBtn) hTorchBtn.classList.remove('on');
@@ -3756,9 +3756,9 @@ function hotelBlackout(permanent,quiet){
 function hotelLightsOn(quiet){
   if(!hotel || (hQuest&&hQuest.permanentDark)) return;
   blackedOut=false; HOTEL3D.setLights(hotel,true);
-  if(hotelHemi) hotelHemi.intensity=.58;
-  if(hotelMoonL) hotelMoonL.intensity=.38;
-  if(hotelAmb) hotelAmb.intensity=.44;
+  if(hotelHemi) hotelHemi.intensity=.46;
+  if(hotelMoonL) hotelMoonL.intensity=.30;
+  if(hotelAmb) hotelAmb.intensity=.22;
   if(scene&&scene.fog){ scene.fog.near=M.fogN; scene.fog.far=M.fogF; }
   letters.forEach(l=>tintSprite(l.spr.material));
   if(hQuest) hQuest.lightStage=Math.max(2,hQuest.lightStage||0);
@@ -3779,8 +3779,8 @@ function hotelFlicker(now){
   hFlickerN++;
   const on=(hFlickerN%2===0);
   HOTEL3D.setLights(hotel,on);
-  if(hotelHemi) hotelHemi.intensity=on?.58:.035;
-  if(hotelAmb) hotelAmb.intensity=on?.44:.018;
+  if(hotelHemi) hotelHemi.intensity=on?.46:.035;
+  if(hotelAmb) hotelAmb.intensity=on?.22:.018;
   if(on) HSound.eerie();
 }
 
@@ -12847,9 +12847,9 @@ function exitWorld(){
   if(mode==='haunt'){
     setTorch(false);
     if(hotel) HOTEL3D.setLights(hotel,true);
-    if(hotelHemi) hotelHemi.intensity=.72;
-    if(hotelMoonL) hotelMoonL.intensity=.55;
-    if(hotelAmb) hotelAmb.intensity=.62;
+    if(hotelHemi) hotelHemi.intensity=.46;
+    if(hotelMoonL) hotelMoonL.intensity=.30;
+    if(hotelAmb) hotelAmb.intensity=.24;
     if(hActEl) hActEl.style.display='none';
     if(hTorchHintEl) hTorchHintEl.style.display='none';
   }
