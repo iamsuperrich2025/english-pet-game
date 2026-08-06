@@ -75,8 +75,6 @@ const CORE_Y=150, CORE_Z=-170, CORE_R=45;
 const F_HP=20, F_SPEED=17, F_Y_MIN=26, F_Y_MAX=80, F_R=190;   // 441: เพดานบินต่ำลงนิด กันชนหนามใต้ท้องยานที่ใหญ่ขึ้น
 const FIGHTER_SIZE=11.5;               // 📏 รอบ 432: ขนาดยานลูก = เท่าเฮลิคอปเตอร์ (เดิม 7 ม. เล็กจนมองไม่เห็น)
 const F_SHOT_GAP=2600, F_SHOT_SPD=52, F_SHOT_DMG=9;
-const MS_BEAM_GAP=5200, MS_BEAM_DMG=14;   // ยานแม่ยิงลำแสงหนักเป็นระยะ
-
 /* 🔫 อาวุธผู้เล่น */
 const GUN_GAP=95, GUN_DMG=1, GUN_SPREAD=0.006, GUN_HEAT=3.2, GUN_COOL=42;
 /* ============================================================
@@ -1053,7 +1051,7 @@ function buildDom(){
       ได้ยิน<b>เสียงเตือนตุ๊บถี่ ๆ</b> พร้อมแถบแดง 🔒 เมื่อไหร่ ให้กดปุ่ม 🔥 (คีย์ <b>X</b>) โปรยพลุหลอกจรวด แล้วหักเลี้ยวออกข้าง · แฟลร์เติมคืนเองเรื่อย ๆ<br>
       <small>📱 มือถือ: วงกลมซ้าย = เดิน/บิน · ลากครึ่งขวาของจอ = เล็ง · 🔫 ยิง (กดค้างได้) · 🚀 มิสไซล์ · 🔥 แฟลร์ · 🏃 วิ่ง · 🚁 ขึ้นเฮลิ (ขับเฮลิ: <b>ลากครึ่งขวาขึ้น-ลง = ไต่/ลดระดับ</b> ปล่อยนิ้ว = ลอยนิ่ง) · 💬 คุยกับเพื่อน<br>
       💻 คอม: คลิกจอล็อกเมาส์ · WASD เดิน · Shift วิ่ง · คลิกซ้ายยิง · R มิสไซล์ · <b>X แฟลร์</b> · <b>F สลับปืน · G/คลิกขวา ส่องกล้อง</b> · H ขึ้นเฮลิ · Esc ปลดเมาส์<br>
-      ⚠️ ระวังลำแสงจากยานลูกและยานแม่ — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง</small></p>
+      ⚠️ ระวังลำแสงจากยานลูก — โดนแล้วพลังลด แต่<b>ไม่มีตาย</b> หลบสักพักพลังฟื้นเอง · ยานแม่ลอยคุมสนามแต่ไม่ยิงผู้เล่น</small></p>
       <button class="inv-btn" id="inv-go">⚔️ เข้าสมรภูมิ!</button>
     </div></div>
     <div id="inv-mapbox"><div class="inv-card">
@@ -1752,7 +1750,9 @@ const texCache={};
 function tryTex(mat,path,rx,ry){
   const img=new Image();
   img.onload=()=>{ const t=new THREE.Texture(img); t.wrapS=t.wrapT=THREE.RepeatWrapping;
-    t.repeat.set(rx||1,ry||1); t.needsUpdate=true; mat.map=t; mat.needsUpdate=true; };
+    t.repeat.set(rx||1,ry||1); t.colorSpace=THREE.SRGBColorSpace||t.colorSpace;
+    if(renderer&&renderer.capabilities) t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+    t.needsUpdate=true; mat.map=t; mat.needsUpdate=true; };
   img.onerror=()=>{};
   img.src=path;
 }
@@ -1789,6 +1789,7 @@ function sandTex(){
     x.stroke(); }
   x.globalAlpha=1;
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(70,70);
+  t.colorSpace=THREE.SRGBColorSpace||t.colorSpace;
   return texCache.sand=t;
 }
 /* 🧱 ผนังดินเผา/ปูนฉาบ แบบบ้านตะวันออกกลาง */
@@ -1804,6 +1805,7 @@ function wallTex(tone){
   for(let i=0;i<7;i++){ x.beginPath(); let px=Math.random()*128, py=Math.random()*128; x.moveTo(px,py);
     for(let s=0;s<5;s++){ px+=rnd(-14,14); py+=rnd(4,16); x.lineTo(px,py); } x.stroke(); }
   const t=new THREE.CanvasTexture(cv); t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  t.colorSpace=THREE.SRGBColorSpace||t.colorSpace;
   return texCache[k]=t;
 }
 
@@ -1811,11 +1813,12 @@ function wallTex(tone){
    🌍 สถานะฉาก
    ============================================================ */
 let built=false, running=false, rafId=0, lastT=0;
+let perfFrames=0, perfAt=0, perfFps=0;             // 📊 รอบ 1040: baseline/มือถืออ่าน FPS + renderer.info ได้ตรง ๆ
 let renderer,scene,camera;
 let px=0, pz=90, py=EYE, yaw=0, pitch=0.35;
 let word=null, letters=[];            // 🔤 รอบ 556: letters = ช่องของคำใน HUD [{ch,down}] (ไม่มี mesh แล้ว)
 let wordDeadline=0, hudTickAt=0;      // ⏰ รอบ 556: เส้นตายของคำปัจจุบัน + จังหวะอัปเดต HUD วินาทีละครั้ง
-let mother=null, msArmor=MS_HP, msDead=false, msBeamAt=0, msRecover=false;
+let mother=null, msArmor=MS_HP, msDead=false, msRecover=false;
 let fighters=[], fShots=[], myShots=[], missiles=[], fx=[], squad=[], helis=[];
 /* 🚀 รอบ 467: กระสุนมีเวลาเดินทาง — ความเร็ว (ม./วิ) + คิวกระสุนที่ยังลอยอยู่ */
 const BULLET_SPD_R93=760, BULLET_SPD_RIFLE=420;
@@ -1898,8 +1901,8 @@ function tameGlbMaterials(root){
   root.traverse(c=>{
     if(!c.isMesh||!c.material) return;
     (Array.isArray(c.material)?c.material:[c.material]).forEach(m=>{
-      if(typeof m.metalness==='number') m.metalness=Math.min(m.metalness,.28);
-      if(typeof m.roughness==='number') m.roughness=Math.max(m.roughness,.45);
+      if(typeof m.metalness==='number') m.metalness=Math.min(m.metalness,.42);
+      if(typeof m.roughness==='number') m.roughness=Math.max(m.roughness,.52);
       if(m.color && (m.color.r+m.color.g+m.color.b)<.28) m.color.setRGB(.17,.17,.19);
       m.needsUpdate=true;
     });
@@ -1958,9 +1961,9 @@ function buildTerrain(){
   for(let i=0;i<p.count;i++) p.setZ(i,H(p.getX(i),-p.getY(i)));   // ยังไม่หมุน: y ของ plane = -z ของโลก
   g.computeVertexNormals();
   /* สีวัสดุ = ขาวล้วน ปล่อยให้ภาพทรายคุมโทนเอง (เคยใส่สีอุ่นทับ + ไฟแรง = พื้นสว่างจ้าจนแสบตา) */
-  const m=new THREE.MeshLambertMaterial({color:0xffffff,map:sandTex()});
+  const m=new THREE.MeshStandardMaterial({color:0xd2b388,map:sandTex(),roughness:.96,metalness:0});
   tryTex(m,'img/invasion/sand.png',70,70);
-  const ground=new THREE.Mesh(g,m); ground.rotation.x=-Math.PI/2; scene.add(ground);
+  const ground=new THREE.Mesh(g,m); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
 }
 /* 🏗️ รอบ 430: ระดับฐานของสิ่งปลูกสร้างบนพื้นลาด — ใช้ "มุมที่ต่ำที่สุด" ของฐาน
    (พื้นเป็นเนินแล้ว ถ้ายังวางที่ความสูงจุดกึ่งกลาง มุมตึกด้านลาดลงจะลอยเห็นใต้ท้อง) */
@@ -1972,11 +1975,11 @@ function baseLow(x,z,r){
 /* 🏘️ บ้านดินเผาหลังคาแบน + โดม + หอมินาเรต + ต้นอินทผลัม */
 function buildTown(){
   const tones=['#d8bc93','#c9a87c','#e2cda9','#bfa07a','#d2b489'];
-  const mats=tones.map(t=>{ const m=new THREE.MeshLambertMaterial({color:0xffffff,map:wallTex(t)});
+  const mats=tones.map(t=>{ const m=new THREE.MeshStandardMaterial({color:0xd7c0a0,map:wallTex(t),roughness:.91,metalness:0});
     tryTex(m,'img/invasion/wall.png',1,1); return m; });
   const winMat=new THREE.MeshBasicMaterial({color:0x24303f});
-  const domeMat=new THREE.MeshLambertMaterial({color:0xd8d2c4});
-  const Twin=[], Tleaf=[], Trock=[];      // ⚡ คิวของซ้ำ → InstancedMesh ตอนท้าย (ลด draw call บนมือถือ)
+  const domeMat=new THREE.MeshStandardMaterial({color:0xbdb7aa,roughness:.82,metalness:0});
+  const Twin=[], Tleaf=[], Trock=[], Tbody=tones.map(()=>[]), Tpar=tones.map(()=>[]);      // ⚡ คิวของซ้ำ → InstancedMesh ตอนท้าย (ลด draw call บนมือถือ)
   /* 💡 จำนวนพวกนี้คุม draw call โดยตรง (มือถือเด็กเป็นหลัก) — บ้าน 1 หลัง ≈ 4 ชิ้น, ต้นอินทผลัม 1 ต้น ≈ 7 ชิ้น
      กระตุกบนมือถือจริงเมื่อไหร่ ลดเลข 80 / 34 / 45 ตรงนี้ก่อนเป็นอันดับแรก */
   for(let i=0;i<80;i++){
@@ -1984,15 +1987,13 @@ function buildTown(){
     const x=Math.cos(a)*r, z=Math.sin(a)*r;
     if(Math.hypot(x,z-pz)<18) continue;                     // เว้นที่ยืนของผู้เล่น
     const w=rnd(6,14), d=rnd(6,14), h=rnd(4,13);
-    const base=baseLow(x,z,Math.max(w,d)*0.5);
-    const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mats[(Math.random()*mats.length)|0]);
-    b.position.set(x,base+h/2,z); b.rotation.y=rnd(0,TAU); scene.add(b);
+    const base=baseLow(x,z,Math.max(w,d)*0.5), rot=rnd(0,TAU), mi=(Math.random()*mats.length)|0;
+    Tbody[mi].push({p:[x,base+h/2,z],r:[0,rot,0],s:[w,h,d]});
     /* 🧱 รอบ 557: เก็บกล่องจริง (ครึ่งกว้าง/ลึก+มุมหมุน+ยอดตึก) — วงกลมเดิมคลุมไม่ถึงมุมตึก เดินทะลุมุมได้ */
-    solids.push({x,z,r:Math.max(w,d)*0.55, hw:w/2+.3, hd:d/2+.3, rot:b.rotation.y, top:base+h+.8, tall:true});
-    const par=new THREE.Mesh(new THREE.BoxGeometry(w+.6,.7,d+.6),b.material);   // ขอบดาดฟ้า
-    par.position.set(x,base+h+.35,z); par.rotation.y=b.rotation.y; scene.add(par);
+    solids.push({x,z,r:Math.max(w,d)*0.55, hw:w/2+.3, hd:d/2+.3, rot, top:base+h+.8, tall:true});
+    Tpar[mi].push({p:[x,base+h+.35,z],r:[0,rot,0],s:[w+.6,.7,d+.6]});   // ขอบดาดฟ้า
     for(let k=0;k<2;k++){                                    // หน้าต่างเล็กด้านหน้า (เก็บเข้าคิว instance)
-      const ang=b.rotation.y;
+      const ang=rot;
       Twin.push({p:[x+Math.sin(ang)*(d/2+.06)+Math.cos(ang)*(k?1.9:-1.9),
                     base+h*0.55, z+Math.cos(ang)*(d/2+.06)-Math.sin(ang)*(k?1.9:-1.9)],
                  r:[0,ang,0]});
@@ -2035,6 +2036,9 @@ function buildTown(){
     const x=Math.cos(a)*r, z=Math.sin(a)*r, s=rnd(.7,2.6);
     Trock.push({p:[x,terrainH(x,z)+s*.5,z], r:[rnd(0,3),rnd(0,3),rnd(0,3)], s});
   }
+  /* ⚡ อาคารกล่อง+ขอบดาดฟ้าใช้ instance ตามวัสดุ — ลดจาก ~160 draw call เหลือ 10 ก่อนเติมรายละเอียดสนาม */
+  const unitBox=new THREE.BoxGeometry(1,1,1);
+  mats.forEach((m,i)=>{ instancer(unitBox,m,Tbody[i]); instancer(unitBox,m,Tpar[i]); });
   /* ⚡ รวมของซ้ำในเมือง (หน้าต่าง ~240 · ใบอินทผลัม ~204 · ก้อนหิน 45) → 3 draw call */
   instancer(new THREE.PlaneGeometry(1,1.6), winMat, Twin);
   const leafIm=instancer(new THREE.PlaneGeometry(1.5,5.4), leafM, Tleaf);
@@ -2114,11 +2118,14 @@ const STREET_Z0=WORLD*0.42, STREET_LEN=150, STREET_HW=11;   // ปลายถ�
 function instancer(geo,mat,list){
   if(!list.length) return null;
   const im=new THREE.InstancedMesh(geo,mat,list.length);
+  im.castShadow=!!mat.isMeshStandardMaterial;
+  im.receiveShadow=!!mat.isMeshStandardMaterial;
   const d=new THREE.Object3D();
   list.forEach((t,i)=>{
     d.position.set(t.p[0],t.p[1],t.p[2]);
     d.rotation.set(t.r?t.r[0]:0, t.r?t.r[1]:0, t.r?t.r[2]:0);
-    d.scale.setScalar(t.s||1);
+    if(Array.isArray(t.s)) d.scale.set(t.s[0],t.s[1],t.s[2]);
+    else d.scale.setScalar(t.s||1);
     d.updateMatrix(); im.setMatrixAt(i,d.matrix);
   });
   im.instanceMatrix.needsUpdate=true;
@@ -2127,15 +2134,15 @@ function instancer(geo,mat,list){
 }
 function buildWarStreet(){
   /* คิวสะสมของซ้ำ — สร้างทีเดียวตอนท้ายเป็น InstancedMesh */
-  const Qwin=[], Qrub=[], Qsack=[], Qplank=[], Qdrum=[];
+  const Qwin=[], Qrub=[], Qsack=[], Qplank=[], Qdrum=[], Qac=[], Qtank=[], Qbeam=[], Qbody=[[],[],[]], Qpar=[[],[],[]];
   const wallM=[0xd0b38c,0xc0a075,0xdcc7a4].map(c=>{
-    const m=new THREE.MeshLambertMaterial({color:0xffffff,map:wallTex('#'+c.toString(16))});
+    const m=new THREE.MeshStandardMaterial({color:0xc7b092,map:wallTex('#'+c.toString(16)),roughness:.93,metalness:0});
     tryTex(m,'img/invasion/wall.png',1,1); return m; });
-  const concM=new THREE.MeshLambertMaterial({color:0xb9ab97});
-  const rubbleM=new THREE.MeshLambertMaterial({color:0x9d9080});
-  const sackM=new THREE.MeshLambertMaterial({color:0xa8946e});
-  const burnM=new THREE.MeshLambertMaterial({color:0x3b352f});
-  const rustM=new THREE.MeshLambertMaterial({color:0x6b4a34});
+  const concM=new THREE.MeshStandardMaterial({color:0x8c887f,roughness:.88,metalness:.02});
+  const rubbleM=new THREE.MeshStandardMaterial({color:0x827a70,roughness:.97,metalness:0});
+  const sackM=new THREE.MeshStandardMaterial({color:0x817052,roughness:1,metalness:0});
+  const burnM=new THREE.MeshStandardMaterial({color:0x242729,roughness:.76,metalness:.34});
+  const rustM=new THREE.MeshStandardMaterial({color:0x593b2c,roughness:.82,metalness:.38});
 
   /* 🏢 ตึกเรียง 2 ฝั่งถนน (บางหลังพังครึ่ง = ซากสงคราม) */
   for(let side=-1;side<=1;side+=2){
@@ -2144,12 +2151,10 @@ function buildWarStreet(){
       const w=rnd(9,15), d=rnd(10,16), h=rnd(7,17);
       const x=side*(STREET_HW+w/2+rnd(0,3));
       const base=baseLow(x,z,Math.max(w,d)*0.5);
-      const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),wallM[i%3]);
-      b.position.set(x,base+h/2,z); scene.add(b);
+      Qbody[i%3].push({p:[x,base+h/2,z],r:[0,0,0],s:[w,h,d]});
       solids.push({x,z,r:Math.max(w,d)*0.5, hw:w/2+.3, hd:d/2+.3, rot:0, top:base+h+.9, tall:true});   // 🧱 รอบ 557
       /* ขอบดาดฟ้า */
-      const par=new THREE.Mesh(new THREE.BoxGeometry(w+.7,.8,d+.7),wallM[i%3]);
-      par.position.set(x,base+h+.4,z); scene.add(par);
+      Qpar[i%3].push({p:[x,base+h+.4,z],r:[0,0,0],s:[w+.7,.8,d+.7]});
       /* ช่องหน้าต่างมืด เรียงเป็นชั้นๆ หันเข้าถนน */
       const rows=Math.max(1,Math.floor(h/3.6));
       for(let r=0;r<rows;r++)for(let c=-1;c<=1;c++){
@@ -2162,6 +2167,10 @@ function buildWarStreet(){
         const aw=new THREE.Mesh(new THREE.BoxGeometry(1.8,.22,d*0.7),concM);
         aw.position.set(x-side*(w/2+.9), base+rnd(3,6), z); scene.add(aw);
       }
+      /* เครื่องปรับอากาศ/แท็งก์/คานโผล่ช่วยบอกสเกลมนุษย์และร่องรอยอาคารเสียหาย */
+      if(i%2===0) Qac.push({p:[x-side*(w/2+.23),base+3.25,z+d*.29],r:[0,0,0],s:[.42,.72,.92]});
+      if(i%3===1) Qtank.push({p:[x,base+h+1.25,z],r:[0,0,0],s:[1.1,1.0,1.1]});
+      if(i%4===2) for(let k=0;k<3;k++) Qbeam.push({p:[x-side*(w/2+.35),base+1.0+k*1.2,z-d*.34],r:[0,0,side*.12],s:[.15,1.1,.15]});
       /* บางหลังพังครึ่ง → กองเศษปูนเชิงตึก */
       if(Math.random()<.45){
         for(let k=0;k<7;k++){
@@ -2223,11 +2232,152 @@ function buildWarStreet(){
     else           Qdrum.push({p:[x,base+.47,z], r:[0,0,Math.random()<.3?1.55:0]});
   }
   /* ⚡ สร้างของซ้ำทั้งหมดเป็น InstancedMesh — จาก ~400 draw call เหลือ 5 */
+  const unitBox=new THREE.BoxGeometry(1,1,1);
+  wallM.forEach((m,i)=>{ instancer(unitBox,m,Qbody[i]); instancer(unitBox,m,Qpar[i]); });
+  const detailM=new THREE.MeshStandardMaterial({color:0x4c5152,roughness:.72,metalness:.42});
+  const tankM=new THREE.MeshStandardMaterial({color:0x696b64,roughness:.78,metalness:.25});
+  instancer(unitBox,detailM,Qac);
+  instancer(new THREE.CylinderGeometry(1,1,1,10),tankM,Qtank);
+  instancer(unitBox,detailM,Qbeam);
   instancer(new THREE.PlaneGeometry(1.25,1.8), new THREE.MeshBasicMaterial({color:0x22292f}), Qwin);
   instancer(new THREE.DodecahedronGeometry(1,0), rubbleM, Qrub);
   instancer(THREE.CapsuleGeometry?new THREE.CapsuleGeometry(.28,.62,3,6):new THREE.CylinderGeometry(.3,.3,1.1,7), sackM, Qsack);
   instancer(new THREE.BoxGeometry(1.5,.09,.3), rustM, Qplank);
   instancer(new THREE.CylinderGeometry(.36,.36,.95,10), burnM, Qdrum);
+}
+
+/* ============================================================
+   🏜️🪖 รอบ 1040: ภูมิทัศน์สมรภูมิสมัยใหม่ — PBR + ร่องรอยการรบ (ต้นฉบับ)
+   แนวคิดจากภาษาภาพสนามรบสมัยใหม่: อ่านเส้นทางกลางให้ชัด, รายละเอียดรวมเป็นกลุ่มเหตุการณ์,
+   ผิวด้าน/ฝุ่นจับ/โลหะไหม้ต่างค่ากัน และใช้ instance/points คุม draw call มือถือ
+   ============================================================ */
+function roadSurfaceTex(){
+  if(texCache.road1040) return texCache.road1040;
+  const c=document.createElement('canvas'); c.width=256; c.height=512; const x=c.getContext('2d');
+  x.fillStyle='#504f49'; x.fillRect(0,0,c.width,c.height);
+  for(let i=0;i<22000;i++){
+    const v=(Math.random()*48)|0, a=rnd(.035,.13); x.fillStyle=`rgba(${54+v},${51+v},${45+v},${a})`;
+    const s=Math.random()<.96?1:2; x.fillRect(Math.random()*256,Math.random()*512,s,s);
+  }
+  /* ทรายทับขอบถนน + ร่องล้อหลายชั้น */
+  const eg=x.createLinearGradient(0,0,256,0);
+  eg.addColorStop(0,'rgba(190,158,112,.78)'); eg.addColorStop(.18,'rgba(158,132,96,.18)');
+  eg.addColorStop(.5,'rgba(0,0,0,0)'); eg.addColorStop(.82,'rgba(158,132,96,.18)'); eg.addColorStop(1,'rgba(190,158,112,.78)');
+  x.fillStyle=eg; x.fillRect(0,0,256,512);
+  x.lineCap='round';
+  [78,96,160,178].forEach((px,i)=>{ x.strokeStyle=i%2?'rgba(24,23,22,.24)':'rgba(25,24,22,.18)'; x.lineWidth=i%2?3:5;
+    x.setLineDash(i%2?[16,9]:[]); x.beginPath(); x.moveTo(px,0); x.bezierCurveTo(px+rnd(-5,5),180,px+rnd(-4,4),340,px,512); x.stroke(); });
+  x.setLineDash([]); x.strokeStyle='rgba(28,27,25,.38)'; x.lineWidth=1.4;
+  for(let i=0;i<18;i++){ let px=rnd(25,230),py=rnd(0,512); x.beginPath(); x.moveTo(px,py);
+    for(let k=0;k<rnd(3,7);k++){ px+=rnd(-12,13); py+=rnd(5,20); x.lineTo(px,py); } x.stroke(); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(1,8);
+  t.colorSpace=THREE.SRGBColorSpace||t.colorSpace; return texCache.road1040=t;
+}
+function fieldDecalTex(kind){
+  const key='fd1040_'+kind; if(texCache[key]) return texCache[key];
+  const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
+  if(kind==='shadow'){
+    const g=x.createRadialGradient(64,64,4,64,64,62); g.addColorStop(0,'rgba(0,0,0,.62)'); g.addColorStop(.65,'rgba(0,0,0,.24)'); g.addColorStop(1,'rgba(0,0,0,0)'); x.fillStyle=g; x.fillRect(0,0,128,128);
+  }else if(kind==='tracks'){
+    x.strokeStyle='rgba(20,18,16,.48)'; x.lineWidth=9; x.setLineDash([15,7]); [43,85].forEach(px=>{x.beginPath();x.moveTo(px,0);x.lineTo(px,128);x.stroke();});
+  }else{
+    const g=x.createRadialGradient(64,64,2,64,64,62); g.addColorStop(0,'rgba(18,16,14,.78)'); g.addColorStop(.5,'rgba(28,24,20,.42)'); g.addColorStop(1,'rgba(20,18,16,0)'); x.fillStyle=g; x.fillRect(0,0,128,128);
+    x.strokeStyle='rgba(28,24,20,.45)'; x.lineWidth=2;
+    for(let i=0;i<14;i++){const a=rnd(0,TAU),r=rnd(24,60);x.beginPath();x.moveTo(64+Math.cos(a)*8,64+Math.sin(a)*8);x.lineTo(64+Math.cos(a)*r,64+Math.sin(a)*r);x.stroke();}
+  }
+  const t=new THREE.CanvasTexture(c); return texCache[key]=t;
+}
+function buildGroundDetail(){
+  const len=STREET_LEN+34, center=STREET_Z0-STREET_LEN*.5-2;
+  const g=new THREE.PlaneGeometry(STREET_HW*2-1.2,len,2,72), p=g.attributes.position;
+  for(let i=0;i<p.count;i++){ const x=p.getX(i), z=center-p.getY(i); p.setZ(i,terrainH(x,z)+.075); }
+  g.computeVertexNormals();
+  const m=new THREE.MeshStandardMaterial({map:roadSurfaceTex(),color:0x8a8378,roughness:.94,metalness:.015});
+  const road=new THREE.Mesh(g,m); road.rotation.x=-Math.PI/2; road.position.z=center; road.receiveShadow=true; scene.add(road);
+  const pg=new THREE.PlaneGeometry(1,1); pg.rotateX(-Math.PI/2);
+  const scorch=[[-5,STREET_Z0-33,7,11,.4],[7,STREET_Z0-58,8,12,-.3],[-7,STREET_Z0-86,8,13,.8],[5,STREET_Z0-118,9,12,-.7],[-1,STREET_Z0-145,13,10,.2]]
+    .map(v=>({p:[v[0],terrainH(v[0],v[1])+.105,v[1]],r:[0,v[4],0],s:[v[2],v[3],1]}));
+  const sm=new THREE.MeshBasicMaterial({map:fieldDecalTex('scorch'),transparent:true,opacity:.76,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+  instancer(pg,sm,scorch);
+  const tracks=[-3.8,3.8].map((x,i)=>({p:[x,terrainH(x,center)+.115,center],r:[0,rnd(-.025,.025),0],s:[3.5,len*.95,1]}));
+  const tm=new THREE.MeshBasicMaterial({map:fieldDecalTex('tracks'),transparent:true,opacity:.42,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3});
+  instancer(pg,tm,tracks);
+}
+
+/* ---------- 1040A: จุดกำบัง/ซากยุทโธปกรณ์ — รวมชิ้นซ้ำเป็น instance ---------- */
+function buildMilitarySetDressing(){
+  const Qcrate=[],Qhesco=[],Qbar=[],Qarmor=[],Qwheel=[],Qmetal=[],Qshell=[],Qshadow=[];
+  const push=(q,x,z,y,rot,s)=>q.push({p:[x,terrainH(x,z)+y,z],r:[0,rot||0,0],s});
+  /* จุดบัญชาการหน้าแนว · จุดปะทะกลางซอย · จุดอพยพท้ายแนว (เว้นแกนกลางให้เล่นอ่านง่าย) */
+  [[-8.7,14],[8.8,25],[-9.2,47],[9,79],[-9,109],[8.8,137]].forEach(([x,d],i)=>{
+    const z=STREET_Z0-d; push(Qhesco,x,z,1.05,i%2?.12:-.12,[2.7,2.1,1.45]);
+    if(i%2===0) push(Qcrate,x+(x<0?2.2:-2.2),z+1,.55,.2,[1.25,1.1,1.0]);
+    Qshadow.push({p:[x-.8,terrainH(x,z)+.12,z+1.2],r:[0,.25,0],s:[7,5,1]});
+  });
+  [[-6.3,STREET_Z0-69,.35],[6.5,STREET_Z0-73,-.32],[-7,STREET_Z0-128,.55],[7.2,STREET_Z0-132,-.5]].forEach(([x,z,r])=>{
+    push(Qbar,x,z,.45,r,[3.1,.9,.55]); push(Qmetal,x,z+.1,1.05,r,[2.6,.12,.08]);
+  });
+  [[-10,STREET_Z0-22],[9.6,STREET_Z0-45],[-10.2,STREET_Z0-101],[9.7,STREET_Z0-145]].forEach(([x,z],i)=>{
+    for(let k=0;k<3;k++) push(Qcrate,x+(k%2)*1.05,z+(k>1?1.0:0),.46+(k>1?.9:0),i*.3,[.95,.9,.95]);
+  });
+  /* ชิ้นส่วนเสริมให้ซากรถเดิมอ่านเป็นรถทหาร/รถเกราะ ไม่ใช่กล่องดำ */
+  [[-6,STREET_Z0-34,.5],[7,STREET_Z0-58,-.35],[-8,STREET_Z0-86,.9],[6.5,STREET_Z0-118,-.8]].forEach(([x,z,r],idx)=>{
+    const part=(ox,oy,oz,s)=>{const cs=Math.cos(r),sn=Math.sin(r),wx=x+ox*cs+oz*sn,wz=z-ox*sn+oz*cs;push(Qarmor,wx,wz,oy,r,s);};
+    part(0,.45,0,[2.25,.38,4.9]); part(0,1.25,-.35,[1.95,.8,2.2]); part(0,1.12,1.55,[2.05,.35,1.3]);
+    if(idx===2){part(0,2.02,-.25,[1.15,.24,1.2]); part(0,2.28,-.25,[.35,.28,1.7]);}
+    [-1,1].forEach(sx=>[-1.55,1.55].forEach(oz=>{const cs=Math.cos(r),sn=Math.sin(r),wx=x+sx*.98*cs+oz*sn,wz=z-sx*.98*sn+oz*cs;
+      Qwheel.push({p:[wx,terrainH(wx,wz)+.48,wz],r:[0,r,Math.PI/2],s:[.46,.34,.46]});}));
+    Qshadow.push({p:[x-.6,terrainH(x,z)+.11,z+1.0],r:[0,r,0],s:[7.4,7.8,1]});
+  });
+  /* ปลอกกระสุน/เศษโลหะอยู่เป็นกองใกล้ที่กำบัง ไม่โรยทั่วจอ */
+  for(let i=0;i<46;i++){const x=(i<24?-6.8:7.2)+rnd(-2.7,2.7),z=STREET_Z0-(i<24?16:82)+rnd(-3,3);
+    Qshell.push({p:[x,terrainH(x,z)+.08,z],r:[rnd(0,TAU),rnd(0,TAU),rnd(0,TAU)],s:rnd(.6,1.25)});}
+  const crateM=new THREE.MeshStandardMaterial({color:0x4a513d,roughness:.8,metalness:.12});
+  const hescoM=new THREE.MeshStandardMaterial({color:0x8b8065,roughness:1,metalness:0});
+  const concM=new THREE.MeshStandardMaterial({color:0x777873,roughness:.94,metalness:0});
+  const armorM=new THREE.MeshStandardMaterial({color:0x292e2d,roughness:.66,metalness:.5});
+  const metalM=new THREE.MeshStandardMaterial({color:0x4b4037,roughness:.75,metalness:.58});
+  const shellM=new THREE.MeshStandardMaterial({color:0x92733b,roughness:.48,metalness:.72});
+  instancer(new THREE.BoxGeometry(1,1,1),crateM,Qcrate);
+  instancer(new THREE.BoxGeometry(1,1,1),hescoM,Qhesco);
+  instancer(new THREE.BoxGeometry(1,1,1),concM,Qbar);
+  instancer(new THREE.BoxGeometry(1,1,1),armorM,Qarmor);
+  instancer(new THREE.CylinderGeometry(1,1,1,10),metalM,Qwheel);
+  instancer(new THREE.BoxGeometry(1,1,1),metalM,Qmetal);
+  instancer(new THREE.CylinderGeometry(.055,.055,.28,6),shellM,Qshell);
+  const sg=new THREE.PlaneGeometry(1,1); sg.rotateX(-Math.PI/2);
+  instancer(sg,new THREE.MeshBasicMaterial({map:fieldDecalTex('shadow'),color:0x493c31,transparent:true,opacity:.36,depthWrite:false}),Qshadow);
+}
+
+/* ---------- 1040B: ควัน/เถ้าลอยแบบ Points 2 draw calls ---------- */
+let battleSmoke=null,battleEmbers=null;
+function smokePointTex(){
+  if(texCache.smoke1040) return texCache.smoke1040;
+  const c=document.createElement('canvas');c.width=c.height=64;const x=c.getContext('2d'),g=x.createRadialGradient(32,32,4,32,32,31);
+  g.addColorStop(0,'rgba(255,255,255,.62)');g.addColorStop(.45,'rgba(255,255,255,.34)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.fillRect(0,0,64,64);
+  return texCache.smoke1040=new THREE.CanvasTexture(c);
+}
+function buildBattlefieldAtmos(){
+  const sites=[[-6,STREET_Z0-34],[7,STREET_Z0-58],[-8,STREET_Z0-86],[6.5,STREET_Z0-118],[-14,STREET_Z0-151]];
+  const N=75,pos=new Float32Array(N*3),seed=[];
+  for(let i=0;i<N;i++){const s=i%sites.length,age=Math.random(),q=sites[s],y=age*28;
+    pos[i*3]=q[0]+rnd(-2,2)+age*5;pos[i*3+1]=terrainH(q[0],q[1])+2+y;pos[i*3+2]=q[1]+rnd(-2.5,2.5);seed.push({s,age,dr:rnd(.5,1.4),ph:rnd(0,TAU)});}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const pts=new THREE.Points(g,new THREE.PointsMaterial({map:smokePointTex(),color:0x403b37,size:9.5,transparent:true,opacity:.27,depthWrite:false,alphaTest:.015,fog:true,sizeAttenuation:true}));
+  scene.add(pts);battleSmoke={pts,sites,seed};
+  const EN=48,ep=new Float32Array(EN*3);
+  for(let i=0;i<EN;i++){const q=sites[i%4];ep[i*3]=q[0]+rnd(-1.8,1.8);ep[i*3+1]=terrainH(q[0],q[1])+rnd(1.2,8);ep[i*3+2]=q[1]+rnd(-1.6,1.6);}
+  const eg=new THREE.BufferGeometry();eg.setAttribute('position',new THREE.BufferAttribute(ep,3));
+  battleEmbers=new THREE.Points(eg,new THREE.PointsMaterial({color:0xff8a38,size:.13,transparent:true,opacity:.75,depthWrite:false,blending:THREE.AdditiveBlending}));scene.add(battleEmbers);
+}
+function tickBattlefieldAtmos(dt,now){
+  if(battleSmoke){const a=battleSmoke.pts.geometry.attributes.position.array;
+    battleSmoke.seed.forEach((o,i)=>{o.age+=dt*.045*o.dr;if(o.age>1)o.age-=1;const q=battleSmoke.sites[o.s],y=o.age*30;
+      a[i*3]=q[0]+Math.sin(o.ph+y*.11)*2.2+o.age*7;a[i*3+1]=terrainH(q[0],q[1])+2+y;a[i*3+2]=q[1]+Math.cos(o.ph+y*.08)*2.2;});
+    battleSmoke.pts.geometry.attributes.position.needsUpdate=true;
+    battleSmoke.pts.material.opacity=.20+.10*(1-nightK);
+  }
+  if(battleEmbers){const a=battleEmbers.geometry.attributes.position.array;for(let i=0;i<a.length;i+=3){a[i]+=dt*.35;a[i+1]+=dt*(.8+(i%7)*.08);if(a[i+1]>terrainH(a[i],a[i+2])+9)a[i+1]=terrainH(a[i],a[i+2])+1.2;}battleEmbers.geometry.attributes.position.needsUpdate=true;}
 }
 /* จุดวางแนวกระสอบทราย (ใช้ร่วมกับตำแหน่งหมอบของหน่วยรบ) */
 function sandbagWalls(){
@@ -2418,8 +2568,8 @@ function findSniperSpots(){
 function buildMothership(){
   const grp=new THREE.Group();
   grp.position.set(0,MS_Y,MS_Z);
-  const hullM=new THREE.MeshPhongMaterial({color:0x1c1f26,emissive:0x05070b,shininess:26,flatShading:true});
-  const darkM=new THREE.MeshPhongMaterial({color:0x101318,emissive:0x02040a,shininess:14,flatShading:true});
+  const hullM=new THREE.MeshStandardMaterial({color:0x24292d,emissive:0x06090b,roughness:.57,metalness:.48,flatShading:true});
+  const darkM=new THREE.MeshStandardMaterial({color:0x15191d,emissive:0x020407,roughness:.66,metalness:.38,flatShading:true});
 
   /* 🥞 ลำสำรอง (ใช้ระหว่างรอ mothership.glb โหลด · ถ้าโหลดไม่ได้ก็ใช้ตัวนี้ถาวร) อยู่ในกลุ่มย่อย "hull"
      แล้วบีบแกน y ให้เงาลำเท่าโมเดลจริง — ทรงกรวยชุดนี้สูง ±MS_R*0.50 แต่โมเดลจริงสูงแค่ ±MS_R*MS_FLAT
@@ -4374,9 +4524,9 @@ function buildGun(){
   vFill.position.set(-.5,-.15,.1); vmScene.add(vFill);
   /* 🌤️ รอบ 451: ปืนย้ายออกจากฉากหลัก จึงไม่ได้รับแดด/ฟ้าของฉากอีก — ใส่ชุดเดียวกันใน vmScene
      (ค่าเท่ากับฉากจริงเป๊ะ ๆ ปืนจึงยังดูกลืนกับสภาพแสงทะเลทรายเหมือนเดิม) */
-  vmHemi=new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52); vmScene.add(vmHemi);
-  const vSun=new THREE.DirectionalLight(0xfff0cc,.95); vSun.position.set(.7,.9,1.2); vmScene.add(vSun);
-  const vRim=new THREE.DirectionalLight(0x8aa4c8,.30); vRim.position.set(-.6,.5,-.9); vmScene.add(vRim);
+  vmHemi=new THREE.HemisphereLight(0xd7e4e8,0x55483d,.65); vmScene.add(vmHemi);
+  const vSun=new THREE.DirectionalLight(0xffdfb2,1.30); vSun.position.set(.7,.9,1.2); vmScene.add(vSun);
+  const vRim=new THREE.DirectionalLight(0x92aeca,.29); vRim.position.set(-.6,.5,-.9); vmScene.add(vRim);
   vmSun=vSun; vmRim=vRim;            // 🌙 รอบ 471: ปืนในมือต้องมืดตามฉาก ไม่งั้นลอยเป็นของกลางวันกลางคืนดึก
   loadGlb('img/models/gun_rifle.glb',(obj)=>{
     orientGunModel(obj);                                  // 🧭 จัดลำกล้องให้ชี้ −Z
@@ -7580,7 +7730,7 @@ function tickFighters(dt,now){
     }
   });
 }
-/* ยานแม่ยิงลำแสงหนักเป็นระยะ (ลำใหญ่ ช้ากว่า เห็นแล้วหลบทัน) */
+/* 🛸 ยานแม่ลอยคุมสนาม แต่ไม่ยิงใส่ผู้เล่น (ผู้ใช้สั่งถอดกฎการโจมตีของยานแม่) */
 function tickMother(dt,now){
   if(!mother) return;
   /* 🛸 รอบ 439: ลำลอยค้างฟ้าตลอดเวลา แม้ช่วงที่เพิ่งถูกทำลาย (เดิม return ทิ้งทั้งก้อน = ลำนิ่งสนิท/หายไป)
@@ -7596,12 +7746,6 @@ function tickMother(dt,now){
   /* ❌ รอบ 556: แผงตัวอักษร/แกนพลังงานถอดออกแล้ว — เหลือแค่ไฟลำ */
   if(msDead||msRecover){ msLamps.forEach(lp=>{ lp.visible=Math.sin(now*.0016+lp.userData.ph)>.72; }); return; }
   msLamps.forEach((lp,i)=>{ lp.visible=Math.sin(now*.004+lp.userData.ph)>-.2; });
-  if(now>msBeamAt){
-    msBeamAt=now+MS_BEAM_GAP*rnd(.8,1.3);
-    /* ลำแสงหนักยิงลงมาจาก "ท้องยานฝั่งที่มองเห็น" (ไม่ใช่กลางลำที่อยู่ไกลลิบ) */
-    const from=new THREE.Vector3(px+rnd(-260,260), MS_BELLY, pz+rnd(-500,-160));
-    spawnAlienShot(from,0xff5a8a,MS_BEAM_DMG,F_SHOT_SPD*.72,1.9);
-  }
 }
 /* aim = จุดเล็งที่คำนวณมาแล้ว (🔫↩️ รอบ 568: ยิงสวนแบบเผื่อนำเป้า) — ไม่ใส่ = เล็งตัวผู้เล่นแบบสุ่มเยื้องเหมือนเดิม */
 function spawnAlienShot(from,color,dmg,spd,scale,aim){
@@ -8461,8 +8605,8 @@ function tickHelis(dt,now){
       hemi ต่ำสุด .34 + ฟ้าอมน้ำเงิน (ไม่ใช่ดำสนิท) · ยานลูกมีตาเขียว/ไอพ่น/ป้ายตัวอักษร
       เป็น MeshBasic/Sprite อยู่แล้ว จึงยังเห็นชัดกลางคืน (เช็กแล้วตอนทำ)
    ============================================================ */
-const DAY  ={sky:0xd8c0a0,hemiSky:0xffe9c8,hemiGnd:0x6b5a42,hemi:.52,sun:.95,sunCol:0xfff0cc,
-             rim:.30,rimCol:0x8aa4c8,fogN:55,fogF:WORLD*1.55,dome:1};
+const DAY  ={sky:0x8f9698,hemiSky:0xd7e4e8,hemiGnd:0x55483d,hemi:.72,sun:2.05,sunCol:0xffdfb2,
+             rim:.34,rimCol:0x92aeca,fogN:78,fogF:WORLD*1.46,dome:.78};
 const NIGHT={sky:0x0a1224,hemiSky:0x2e4470,hemiGnd:0x11151f,hemi:.34,sun:.30,sunCol:0x9fc0ff,
              rim:.16,rimCol:0x46689c,fogN:38,fogF:WORLD*1.10,dome:.17,msEm:0x2a3f6e};
 /* เก็บวัสดุลำยานไว้ดัน emissive ตอนกลางคืน — เก็บสี "ตอนกลางวัน" ของแต่ละชิ้นไว้ด้วย
@@ -8866,10 +9010,10 @@ function applyNightLook(k){
   /* ปืนในมืออยู่คนละฉาก (vmScene) — ต้องหรี่คู่กัน ไม่งั้นกลางคืนแล้วปืนยังโดนแดดเต็ม ๆ
      ⚠️ vm หรี่ "ไม่สุด" เท่าฉาก (คูณ .55 ของช่วงที่ลด) เพราะปืนคือของที่เด็กต้องเห็นตลอด */
   if(vmHemi){ const q=k*.55;
-    vmHemi.intensity=.52+(NIGHT.hemi-.52)*q; vmHemi.color.copy(C(DAY.hemiSky,NIGHT.hemiSky));
+    vmHemi.intensity=DAY.hemi*.90+(NIGHT.hemi-DAY.hemi*.90)*q; vmHemi.color.copy(C(DAY.hemiSky,NIGHT.hemiSky));
     vmHemi.groundColor.copy(C(DAY.hemiGnd,NIGHT.hemiGnd));
-    vmSun.intensity=.95+(NIGHT.sun-.95)*q; vmSun.color.copy(C(DAY.sunCol,NIGHT.sunCol));
-    vmRim.intensity=.30+(NIGHT.rim-.30)*q; vmRim.color.copy(C(DAY.rimCol,NIGHT.rimCol));
+    vmSun.intensity=DAY.sun*.63+(NIGHT.sun-DAY.sun*.63)*q; vmSun.color.copy(C(DAY.sunCol,NIGHT.sunCol));
+    vmRim.intensity=DAY.rim*.85+(NIGHT.rim-DAY.rim*.85)*q; vmRim.color.copy(C(DAY.rimCol,NIGHT.rimCol));
   }
   /* 🌪️ รอบ 479: พายุทราย — ฟ้าขุ่นเป็นสีทราย + มองไกลไม่เห็น (คิดต่อจากค่ากลางวัน/กลางคืนด้านบน) */
   if(stormK>.005){
@@ -9233,6 +9377,7 @@ function tick(){
   frame(dt,now);
 }
 function frame(dt,now){
+  if(renderer&&renderer.info) renderer.info.reset();       // 📊 รอบ 1040: รวมหลาย render pass ของเฟรมนี้ให้ metrics ตรง
   if(riding) tickGunner(dt,now); else if(inHeli) tickHeliFlight(dt,now); else tickPlayer(dt,now);
   updateGunnerBtn(now);           // 🎖️ ปุ่มขึ้นเป็นพลปืนโผล่เมื่อมีลำอยู่ใกล้
   tickFighters(dt,now);
@@ -9253,6 +9398,7 @@ function frame(dt,now){
   tickReload(now);                  // 🎯 บรรจุกระสุน R93
   tickBarrelHeat(now);              // 🔥 รอบ 467: ปืนร้อน = ควันลอยจากลำกล้อง
   tickDust(dt,now);                 // 🌫️ ฝุ่นลอยตามลม
+  tickBattlefieldAtmos(dt,now);     // 🏜️🪖 รอบ 1040: ควันซากรถ + เถ้าลอย (Points งบต่ำ)
   tickHouseLod();                   // 🏠 บ้าน: ใกล้=โมเดลจริง · ไกล=กล่องแทน (คุมงบสามเหลี่ยม)
   tickTreeLod();                    // 🌳 รอบ 580: ต้นไม้โมเดลจริง — วาดเฉพาะต้นในระยะ TREE_LOD
   tickPads(dt,now);                 // 🚁 ใบพัดลำที่จอด/ที่กำลังสตาร์ท
@@ -9260,7 +9406,6 @@ function frame(dt,now){
   tickMisQueue(now);                // 🚀🔒 รอบ 564: ปล่อยมิสไซล์ตามคิว "รัวทีละชุด"
   tickCounter(dt,now);              // 🔫↩️ รอบ 568: ยานลูกที่ถูกล็อกยิงสวนใส่เฮลิเรา (ต้องมาหลัง tickRadar)
   tickSpike(dt,now);                // 🔥🛡️ รอบ 569: ถูกล็อก→เสียงเตือน→จรวดศัตรู + แฟลร์ของเรา (หลัง tickCounter)
-  tickMsBeam(dt,now);               // 🔵💀 รอบ 576: ลำแสงสีฟ้ายานแม่ — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
   tickTurbo(now);                   // ⚡👾 รอบ 579: ทุก 5 นาที สุ่มยานลูก 10 ลำเร่งความเร็ว 10 เท่า 10 วิ
   tickBullets(now);                 // 🚀 รอบ 467: กระสุนที่กำลังเดินทางถึงเป้า
   tickTargets(now);                 // 🎯 รอบ 471: เป้าฝึกยิง (ล้ม/ตั้งใหม่/ซ่อนตัวไกล)
@@ -9287,6 +9432,9 @@ function frame(dt,now){
     renderScopePass();
     if(nv) nvExit();
   }
+  perfFrames++;
+  if(!perfAt) perfAt=now;
+  else if(now-perfAt>=1000){ perfFps=perfFrames*1000/(now-perfAt); perfFrames=0; perfAt=now; }
 }
 
 /* ============================================================
@@ -9296,12 +9444,18 @@ function build(){
   buildDom();
   renderer=new THREE.WebGLRenderer({canvas:cvEl,antialias:false});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.6));
+  renderer.outputColorSpace=THREE.SRGBColorSpace||renderer.outputColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.02;
+  renderer.info.autoReset=false;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
   // 🚑 รอบ 859: การ์ดจอหลุด (หน่วยความจำ WebView เต็ม) ห้ามพังเงียบ — รายงานบนจอ (กฎทอง #1)
   cvEl.addEventListener('webglcontextlost',ev=>{ ev.preventDefault();
     if(typeof world3DFail==='function') world3DFail('โลกยานแม่','การ์ดจอหลุด (webglcontextlost) — หน่วยความจำกราฟิกเต็ม'); });
   scene=new THREE.Scene();
   /* ☀️ ท้องฟ้าทะเลทรายอบอ้าว + หมอกฝุ่นหนาแบบภาพอ้างอิง (ตึกไกลจมฝุ่น เห็นเป็นเงาซีด) */
-  const SKY=0xd8c0a0;
+  const SKY=0x8f9698;
   scene.background=new THREE.Color(SKY);
   /* ⚠️ หมอกแน่นเกินไปกลืน "ตัวอักษรบนยานแม่" (อยู่ไกล ~259m) จนอ่านไม่ออก — เคยพลาดมาแล้ว
      คุมให้ตึกไกลยังจมฝุ่นสวย แต่ยานแม่ยังอ่านได้ (ตัวอักษรตั้ง fog:false เพิ่มอีกชั้นกันเหนียว) */
@@ -9323,12 +9477,17 @@ function build(){
   camera=new THREE.PerspectiveCamera(FOV,innerWidth/innerHeight,.1,9000);
   scene.add(camera);
   /* 💡 แสงแบบภาพอ้างอิง: แดดแรงเฉียงจากด้านหลัง-ขวา + เงาฟ้าอมเทา + ฝุ่นฟุ้งรับแสง */
-  hemiL=new THREE.HemisphereLight(0xffe9c8,0x6b5a42,.52); scene.add(hemiL);
-  const sun=new THREE.DirectionalLight(0xfff0cc,.95); sun.position.set(70,90,120); scene.add(sun);
-  const rim=new THREE.DirectionalLight(0x8aa4c8,.30); rim.position.set(-60,50,-90); scene.add(rim);
+  hemiL=new THREE.HemisphereLight(0xd7e4e8,0x55483d,.72); scene.add(hemiL);
+  const sun=new THREE.DirectionalLight(0xffdfb2,2.05); sun.position.set(95,145,185); sun.castShadow=true;
+  sun.shadow.mapSize.set(1024,1024); sun.shadow.camera.left=-105; sun.shadow.camera.right=105;
+  sun.shadow.camera.top=105; sun.shadow.camera.bottom=-105; sun.shadow.camera.near=20; sun.shadow.camera.far=420;
+  sun.shadow.bias=-.00035; sun.shadow.normalBias=.045; sun.target.position.set(0,0,STREET_Z0-STREET_LEN*.52);
+  scene.add(sun); scene.add(sun.target);
+  const rim=new THREE.DirectionalLight(0x92aeca,.34); rim.position.set(-70,55,-110); scene.add(rim);
   sunL=sun; rimL=rim;                 // 🌙 รอบ 471: เก็บอ้างอิงไว้หรี่ตอนกลางคืน
   buildStars(); buildFlashlight();    // 🌙 ⭐ โดมดาว + 🔦 ไฟฉายติดปืน (อยู่ scene หลัก)
   buildTerrain();
+  buildGroundDetail();               // 🏜️🪖 รอบ 1040: ถนน PBR · รอยล้อ · รอยไหม้ · รอยแตก
   buildSelfShadow();                // 🌤️ รอบ 466
   /* 🔥 รอบ 469: ไฟแฟลชปากลำกล้อง "ส่องฉากจริง" — พื้นทราย/กำแพงรอบตัวสว่างวาบตอนยิง
      (คนละดวงกับ muzzleLight ที่อยู่ใน vmScene ซึ่งส่องเฉพาะตัวปืน) */
@@ -9337,8 +9496,10 @@ function build(){
   boomLight=new THREE.PointLight(0xffa851,0,30,1.8); scene.add(boomLight);
   buildTown();
   buildWarStreet();                 // 🏚️ รอบ 416: ถนนสมรภูมิหน้าจุดเกิด (กระสอบทราย/ซากรถ/เศษปูน/สายไฟ)
+  buildMilitarySetDressing();       // 🪖 รอบ 1040: ซากรถเกราะ · Hesco · ลัง · แบริเออร์ · ปลอกกระสุน
   buildStreetLamps();               // 💡 รอบ 474: ดวงไฟบนเสาถนน (ติดเองตอนมืด)
   buildBarrelFires();               // 🔥 รอบ 475: ถังไฟตามตรอก (หมุดนำทางกลางคืน)
+  buildBattlefieldAtmos();          // 💨 รอบ 1040: ควันซากรถ/เถ้าลอยแบบ Points 2 draw calls
   buildMist();                      // 🌫️ รอบ 477: แผ่นหมอกเกาะรอบตัวผู้เล่น
   buildTargets();                   // 🎯 รอบ 471: เป้าฝึกยิงตามปากตรอก/ริมกำแพง
   buildHouses();                    // 🏠 รอบ 431: บ้านที่วิ่งเข้าไปหลบซุ่มยิงได้
@@ -9409,8 +9570,6 @@ function start(){
   lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
   swAmp=0; swPhase=0;                                      // 🤝 รอบ 501: เข้าโลกด้วยท่าถือนิ่ง ๆ
   swapAt=0; swapTo=null; swapSnd=0;
-  msBeamAt=performance.now()+6000;
-  resetMsBeam();                       // 🔵💀 รอบ 576: เข้าโลกใหม่ = ล้างเคาน์เตอร์เตือน/การ์ดตาย
   resetTurbo();                        // ⚡👾 รอบ 579: เข้าโลกใหม่ = นับ 5 นาทีใหม่ ไม่มีลำไหนค้างสถานะเร่ง
   renderHp(); renderHeat(); renderMissiles();
   fit();
@@ -9485,6 +9644,7 @@ function start(){
   window.addEventListener('keyup',keyupFn);
   window.addEventListener('resize',resizeFn);
   running=true; lastT=performance.now();
+  perfFrames=0; perfAt=lastT; perfFps=0;
   rafId=requestAnimationFrame(tick);
 }
 function exitWorld(){
@@ -9534,6 +9694,9 @@ window.InvasionWorld={
     get msArmor(){return msArmor}, get wordDeadline(){return wordDeadline},
     get msDead(){return msDead}, get hp(){return hp}, get heat(){return heat}, set heat(v){heat=v}, get mis(){return misLeft},
     get coins(){return sessionCoins}, get words(){return sessionWords},
+    get perf(){ const r=renderer&&renderer.info&&renderer.info.render, m=renderer&&renderer.info&&renderer.info.memory;
+      return {fps:+perfFps.toFixed(1),calls:r?r.calls:0,triangles:r?r.triangles:0,points:r?r.points:0,lines:r?r.lines:0,
+        geometries:m?m.geometries:0,textures:m?m.textures:0,pixelRatio:renderer?renderer.getPixelRatio():0}; },
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     /* 🎆🧱🌳 รอบ 580: ระเบิดวงกลม · อาคารทึบ · ต้นไม้โมเดลจริง */

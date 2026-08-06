@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v247';  // v247: เพิ่มโปรแกรม COMMIT_DEPLOY แบบดับเบิลคลิก ใช้ง่ายและรายงานผลตรงสถานะจริง
+const CACHE_VERSION = 'pet-vocab-v248';  // v248: ยกเครื่องด่านยานแม่เป็นสมรภูมิสมัยใหม่แบบ PBR และคงกฎยานแม่ไม่ยิงผู้เล่น
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
