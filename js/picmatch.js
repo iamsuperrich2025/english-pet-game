@@ -11,12 +11,13 @@
    js/data/picdict.js + picdict_words.js + picdict_grid.js · img/matching/web/*.webp
    ============================================================ */
 (function(){
-  /* 🎚️ รอบ 981 (ผู้ใช้สั่ง): ขนาดกระดานตามระดับชั้น — ยิ่งโตยิ่งเยอะ ภาพยิ่งย่อ (แบบเกม onet แนวนอน)
-     [จำนวนคู่, วินาทีต่อรอบ] · เวลา = คู่ละ 15 วิ (กระดานใหญ่ลดเหลือคู่ละ 12 วิ ไม่งั้นนานเกินไป) */
+  /* 🎚️ รอบ 981/1057: ขนาดกระดานตามระดับชั้น — ชั้นโตสุดหยุดที่ 20 คู่
+     เพื่อให้ภาพจาก Picture Dictionary ใหญ่ ชัด และไม่ถูกบีบจนเสียสัดส่วน */
   const SIZE_LOW  = [4,  60];      // ต่ำกว่าประถม · ป.1-2  → 8 ภาพ
   const SIZE_MID  = [10, 150];     // ป.3-4                → 20 ภาพ
-  const SIZE_HIGH = [40, 480];     // ป.5 ขึ้นไป           → 80 ภาพ
+  const SIZE_HIGH = [20, 300];     // ป.5 ขึ้นไป           → 40 ภาพ
   const NAME_MIN  = 80;            // ช่องเล็กกว่านี้ = ไม่โชว์ป้ายชื่อใต้ภาพ (ตัวหนังสือจะเล็กจนอ่านไม่ออก)
+  const SHEET_AR  = 2 / 3;         // แผ่น Picture Dictionary ทุกใบ 1024×1536
 
   /* ระดับชั้นผู้เล่น → ระดับ 1(ป.1-2)/2(ป.3-4)/3(ป.5 ขึ้นไป) — ใช้คุมทั้งขนาดกระดานและกรองคลังสัตว์ (รอบ 980)
      คุมความยาก: ตรรกะเดียวกับ defaultSize ของเกมค้นหาคำ */
@@ -47,18 +48,45 @@
   const wordsFor = file => (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[file]) || null;
   const gridFor = file => (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
   const sheetSrc = file => `img/matching/web/${file.replace(/\.png$/i,'.webp')}`;
+  /* 🔎 รอบ 1057: สแกนกรอบ 2,641 ช่องแบบ lightweight พบกรอบกว้าง/แคบผิดแถว 63 จุด
+     รายการนี้คือจุดที่ภาพจริงยืนยันว่ามีเศษการ์ดข้างเคียงหรือโดนตัด (เช่น Blogging) */
+  const CROP_WIDTH_FIX = new Set([
+    'Holidays.png:6','Holidays.png:28',
+    'DailyRoutines.png:5','DailyRoutines.png:6','DailyRoutines.png:37',
+    'Prepositions.png:20','Prepositions.png:21','Prepositions.png:22','Prepositions.png:27',
+    'Prepositions.png:29','Prepositions.png:31','Prepositions.png:35','Prepositions.png:37','Prepositions.png:39',
+    'Family.png:3','Family.png:4','Family.png:13','Family.png:14','Family.png:20','Family.png:27','Family.png:41',
+  ]);
+  const CROP_RECT_FIX = {
+    /* เส้นประจริงของ Blogging: x 702–827px; กรอบอบเดิมลากถึง 864px กิน Bird Watching */
+    'Hobbies.png:19':[.698,.5156,.8075,.7578],
+  };
+  function cleanRect(file,index,rect,W,G){
+    let [x0,y0,x1,y1]=CROP_RECT_FIX[`${file}:${index}`] || rect;
+    if(G && CROP_WIDTH_FIX.has(`${file}:${index}`)){
+      const start=Math.floor(index/W.cols)*W.cols;
+      const row=G.slice(start,Math.min(start+W.cols,W.words.length));
+      const widths=row.map(r=>r[2]-r[0]).sort((a,b)=>a-b);
+      const med=widths[Math.floor(widths.length/2)], cx=(x0+x1)/2;
+      x0=Math.max(0,cx-med/2); x1=Math.min(1,cx+med/2);
+    }
+    const w=x1-x0, h=y1-y0;
+    x0+=w*.025; x1-=w*.025;             // กันเส้น/เศษภาพช่องข้างเคียง
+    y0+=h*.075; y1-=h*.025;             // กันเศษแถวก่อนหน้า โดยยังเก็บป้ายคำด้านล่าง
+    return [x0,y0,x1,y1];
+  }
   function sheetItems(file){
     const W = wordsFor(file), G = gridFor(file);
     if(!W) return [];
     return W.words.map(([en,th], index)=>({
       key:`${file}:${index}`, file, index, en, th,
-      rect:(G && G[index]) || [index%W.cols/W.cols, Math.floor(index/W.cols)/W.rows,
-        (index%W.cols+1)/W.cols, (Math.floor(index/W.cols)+1)/W.rows],
+      rect:cleanRect(file,index,(G && G[index]) || [index%W.cols/W.cols, Math.floor(index/W.cols)/W.rows,
+        (index%W.cols+1)/W.cols, (Math.floor(index/W.cols)+1)/W.rows],W,G),
     }));
   }
   function pageSize(){
     const n = sizeForGrade()[0];
-    return pm.mode === 'word' ? Math.min(20,n) : n; // คำต้องอ่านได้; ภาพ-ภาพใช้งบ 4/10/40 ตามชั้นตรง ๆ
+    return Math.min(20,n);              // รอบ 1057: ทุกโหมดไม่เกิน 20 คู่
   }
   const bank = () => pm.sheetFile
     ? sheetItems(pm.sheetFile).slice(pm.pageStart, pm.pageStart + pageSize()) : [];
@@ -98,10 +126,12 @@
       <div class="pm-grid pm-play" id="pm-grid-a"></div>
       <div class="pm-grid pm-play" id="pm-grid-b" hidden></div>
       <button class="hint-btn pm-play" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
-      <p class="game-endless-note pm-note pm-play">♾️ ภาพทุกใบมาจาก <b>Picture Dictionary</b> · แตะภาพ/คำเพื่อฟังเสียง · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>อยากเปลี่ยนหมวด กด <b>📚 หมวดภาพ</b> ด้านบนได้เสมอ 😊</span></p>`;
+      <p class="game-endless-note pm-note pm-play">♾️ ภาพทุกใบมาจาก <b>Picture Dictionary</b> · แตะภาพ/คำเพื่อฟังเสียง · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>อยากเปลี่ยนหมวด กด <b>📚 หมวดภาพ</b> ด้านบนได้เสมอ 😊</span></p>
+      <button class="pm-lobby-btn" id="pm-lobby">🚪 ออกไป Lobby</button>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
-    $('pm-back').addEventListener('click', exit);
+    $('pm-back').addEventListener('click', backToChooser);
+    $('pm-lobby').addEventListener('click', leaveLobby);
     $('pm-hint').addEventListener('click', hint);
     $('pm-mode').addEventListener('click', toggleMode);
     $('pm-category').addEventListener('click', showChooser);
@@ -135,7 +165,7 @@
 
   /* ============================================================
      📚 Picture Dictionary category chooser (รอบ 1053)
-     8 กลุ่ม + 46 หมวดใช้สารบัญเดียวกับหนังสือ; หมวดที่เกินงบ 4/10/40 คู่
+     8 กลุ่ม + 46 หมวดใช้สารบัญเดียวกับหนังสือ; หมวดที่เกินงบ 4/10/20 คู่
      แบ่งเป็นลิงก์ "ชุด" ใต้ชื่อหมวด เพื่อไม่ให้ภาพส่วนเกินหายไป
      ============================================================ */
   function renderChooser(){
@@ -159,13 +189,14 @@
   function showChooser(){
     clearInterval(pm.timerId); pm.choosing=true;
     sec.classList.add('choosing');
-    $('pm-back').textContent='⬅ กลับ Lobby';
+    $('pm-back').hidden=true;
     renderChooser();
   }
   function chooseSheet(file,en,th,start){
     pm.sheetFile=file; pm.sheetEn=en; pm.sheetTh=th; pm.pageStart=start; pm.choosing=false;
     sec.classList.remove('choosing');
-    $('pm-back').textContent='⬅ กลับ';
+    $('pm-back').hidden=false;
+    $('pm-back').textContent='⬅ กลับสารบัญ';
     const end=Math.min(sheetItems(file).length,start+pageSize());
     $('pm-category').textContent=`📚 ${th} ${start+1}–${end}`;
     updateLabels(); newRound(); fitGrid();
@@ -201,9 +232,6 @@
   function newRound(){
     clearInterval(pm.timerId);
     if(!pm.sheetFile){ showChooser(); return; }
-    let size = sizeForGrade();
-    // 🔤 โหมดภาพ-คำ: ตัวหนังสือต้องอ่านออก → กระดานใหญ่สุด 20 คู่ (40 คู่ = ช่องเล็กจนคำยาวโดนตัด)
-    if(pm.mode === 'word' && size[0] > 20) size = [20, 300];
     pm.pairs = take(pageSize());
     pm.sel1 = pm.sel2 = null;
     pm.matched = 0; pm.checking = false; pm.hintUsed = false;
@@ -215,7 +243,8 @@
       const px=w<.999 ? x0/(1-w)*100 : 0, py=h<.999 ? y0/(1-h)*100 : 0;
       // รอบ 1054: แยกการ escape ออกจาก ${...} ให้ทั้งคนและ static checker อ่านได้ตรงไปตรงมา
       const bg=encodeURI(sheetSrc(it.file)).split("'").join('%27');
-      return `background-image:url('${bg}');background-size:${100/w}% ${100/h}%;background-position:${px}% ${py}%`;
+      const ar=(w*SHEET_AR)/h;           // span อัตราส่วนเดียวกับ crop → ไม่ยืด/บีบภาพ
+      return `--pm-img-ar:${ar};background-image:url('${bg}');background-size:${100/w}% ${100/h}%;background-position:${px}% ${py}%`;
     };
     const imgCard = (side, it) =>
       `<button class="pm-card pm-sheet-card-img" data-key="${esc(it.key)}" data-en="${esc(it.en)}" data-th="${esc(it.th)}" data-side="${side}">
@@ -263,7 +292,7 @@
 
   /* ---------- 📐 จัดกริดให้พอดีจอ (รอบ 981 · กระดานเดียวคละกันตั้งแต่รอบ 985) ----------
      เลือก "จำนวนคอลัมน์" ที่ทำให้ช่องใหญ่ที่สุด โดยการ์ดทั้งกระดานยังอยู่ในจอครบ ไม่ต้องเลื่อน
-     กระดาน 40 คู่ (80 ภาพ) จึงย่อภาพลงเองแบบเกมจับคู่แนวนอน · ช่องเล็กกว่า NAME_MIN = ซ่อนป้ายชื่อ */
+     กระดานสูงสุด 20 คู่ (40 ภาพ) จึงยังเห็นภาพใหญ่ชัด · ช่องเล็กกว่า NAME_MIN = ซ่อนป้ายชื่อ */
   function fitGrid(){
     const totalN = pm.pairs.length * 2;                  // รอบ 985: ขนาด "รอบ" ทั้งหมด (คงที่ทั้งรอบ ไม่ผันตามใบที่หายไป)
     if(!totalN || !sec || !sec.classList.contains('active')) return;
@@ -450,7 +479,7 @@
 
     if(pm.matched === pm.pairs.length){
       clearInterval(pm.timerId);
-      // โบนัสเคลียร์รอบคิดตามขนาดกระดาน (4 คู่ = +20🪙 +5RP เท่าเกมจับคู่คำศัพท์เดิม · 40 คู่ = +200🪙 +50RP)
+      // โบนัสเคลียร์รอบคิดตามขนาดกระดาน (4 คู่ = +20🪙 +5RP · 20 คู่ = +100🪙 +25RP)
       const bCoin = pm.pairs.length * 5, bRp = Math.round(pm.pairs.length * 1.25);
       if(has('addCoins')) addCoins(bCoin);
       setSess(bCoin);
@@ -494,12 +523,25 @@
     setTimeout(()=>{ a.classList.remove('hint-glow'); if(b) b.classList.remove('hint-glow'); }, 2500);
   }
 
-  /* ---------- ออกจากเกม (การ์ดสรุปใบเดียวกับเกมจับคู่คำศัพท์) ---------- */
+  /* ---------- กลับสารบัญ / ออก Lobby ---------- */
+  function backToChooser(){
+    if(!pm.choosing) showChooser();
+  }
+  function lobbyBack(){
+    if(has('renderDashboard')) renderDashboard();
+    showScreen('screen-dashboard');
+  }
+  function leaveLobby(){
+    clearInterval(pm.timerId);
+    lobbyBack();
+  }
+
+  /* ---------- ออกจากเกม (API เดิมยังคงสรุปรางวัลก่อนกลับ Lobby) ---------- */
   function exit(){
     clearInterval(pm.timerId);
     const earned = (typeof game !== 'undefined') ? game.sessionCoins : 0;
     const matches = (typeof game !== 'undefined') ? game.sessionMatches : 0;
-    const back = ()=>{ if(has('renderDashboard')) renderDashboard(); showScreen('screen-dashboard'); };
+    const back = lobbyBack;
     if(earned <= 0 || !has('showSessionSummary')){ back(); return; }
     if(has('feedEvent')) feedEvent('coin', `จับคู่ภาพได้ ${has('fmtNum') ? fmtNum(earned) : earned} เหรียญ (${matches} คู่) 🖼️`);
     const isRecord = earned > (game.prevBest || 0);
@@ -512,10 +554,12 @@
     const b = $('btn-picmatch');
     if(b) b.addEventListener('click', ()=>{ if(has('closePanel')) closePanel(); open(); });
     document.addEventListener('keydown', e=>{
-      if(e.key === 'Escape' && sec && sec.classList.contains('active')) exit();
+      if(e.key === 'Escape' && sec && sec.classList.contains('active')){
+        if(pm.choosing) leaveLobby(); else backToChooser();
+      }
     });
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, get queue(){ return queue; }, bank } };
+  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, get queue(){ return queue; }, bank } };
 })();
