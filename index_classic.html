@@ -740,7 +740,8 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
 <script>
 (function(){
   if(!location.protocol.startsWith('http')) return;   // file:// ข้าม
-  var running = null;                                  // เวอร์ชันที่กำลังรันอยู่ (ตั้งจากการเช็กครั้งแรก)
+  var offeredVersion = null;                           // เวอร์ชันล่าสุดที่แถบนี้กำลังเสนอ
+  var ACK_KEY = 'vw-update-ack';                       // เวอร์ชันที่ผู้ใช้รับทราบแล้ว
   function fetchVer(){
     return fetch('version.json', {cache:'no-store'})   // no-store = ไม่เอาจาก HTTP cache (network-first ใน SW ดึงสดให้)
       .then(function(r){ return r.ok ? r.json() : null; })
@@ -751,7 +752,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
     if(document.getElementById('update-banner')) return;   // โชว์อยู่แล้ว
     var b = document.createElement('div');
     b.id = 'update-banner'; b.className = 'update-banner';
-    b.innerHTML = '<span>✨ มีเกมเวอร์ชันใหม่!</span>'
+    b.innerHTML = '<span>✨ มีการอัปเดตเกมใหม่!</span>'
       + '<button id="update-reload">🔄 อัปเดตเลย</button>'
       + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
     document.body.appendChild(b);
@@ -759,6 +760,7 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
        (เคยแก้ไว้รอบ 876 แต่หลุดหายไปจากไฟล์นี้ ระหว่างมีหลาย session เขียนพร้อมกัน — คืนกลับให้ถาวร) */
     b.querySelector('#update-reload').onclick = function(){
       var btn = this;
+      if(offeredVersion) localStorage.setItem(ACK_KEY, offeredVersion);
       btn.disabled = true; btn.textContent = '⏳ กำลังอัปเดต...';
       var swClear = ('serviceWorker' in navigator)
         ? navigator.serviceWorker.getRegistrations().then(function(rs){
@@ -770,14 +772,18 @@ if('serviceWorker' in navigator && location.protocol.startsWith('http')){
         : Promise.resolve();
       Promise.all([swClear, cacheClear]).catch(function(){}).then(function(){ location.reload(); });
     };
-    b.querySelector('#update-dismiss').onclick = function(){ b.remove(); };
+    b.querySelector('#update-dismiss').onclick = function(){
+      if(offeredVersion) localStorage.setItem(ACK_KEY, offeredVersion);
+      b.remove();
+    };
   }
   function check(){
     if(document.hidden) return;                        // อยู่แท็บอื่น → ข้าม
     fetchVer().then(function(v){
       if(!v) return;
-      if(running === null){ running = v; return; }     // ครั้งแรก = จำเวอร์ชันที่กำลังรัน (ไม่เด้ง)
-      if(v !== running) showBanner();                  // server เปลี่ยน → มีอัปเดต
+      if(localStorage.getItem(ACK_KEY) === v) return;
+      offeredVersion = v;
+      showBanner();                                    // ยังไม่เคยรับทราบเวอร์ชันนี้ → แจ้งทันที
     });
   }
   window.addEventListener('load', check);
