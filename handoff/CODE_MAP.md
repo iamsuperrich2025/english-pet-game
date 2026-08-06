@@ -180,15 +180,15 @@ savePhoto:12203 · clearEntities:12215 · INTRO_KEY:12237 · introSeenObj:12238 
 INTRO:12241 · INTRO_MODE:12243 · showIntro:12245 · HELI_KPP_BANNER:12271 · closeIntro:12273 · beginPlay:12279
 start:12281 · exitWorld:12513 · mechaRecapLine:12585
 
-## js/arena3d.js (728 บรรทัด · 0 รายการ)
+## js/arena3d.js (724 บรรทัด · 0 รายการ)
 
-## js/auth.js (409 บรรทัด · 34 รายการ)
+## js/auth.js (404 บรรทัด · 34 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
 isTester:44 · testerBoost:48 · authSetStatus:74 · authShowLogin:86 · authGateOffline:90 · authSaveRef:97
 authFetchCloud:98 · authWriteCloud:99 · authDeleteCloud:100 · authWriteProfileName:101 · authPushProfile:108 · authApplyProfileName:116
-authAskProfileName:132 · authEditProfileName:143 · authStart:154 · updateOfflinePill:184 · authEnterOffline:189 · authLateSync:211
-authIsAppMode:231 · AUTH_REDIRECT_CODES:239 · authLoginClick:241 · authOnLogin:261 · authSyncOnLogin:274 · authFreshStart:303
-authAskLink:312 · authEnterGame:362 · authPushSave:377 · authLogout:388
+authAskProfileName:132 · authEditProfileName:143 · authStart:154 · updateOfflinePill:184 · authEnterOffline:189 · authLateSync:206
+authIsAppMode:226 · AUTH_REDIRECT_CODES:234 · authLoginClick:236 · authOnLogin:256 · authSyncOnLogin:269 · authFreshStart:298
+authAskLink:307 · authEnterGame:357 · authPushSave:372 · authLogout:383
 
 ## js/award.js (274 บรรทัด · 0 รายการ)
 
@@ -865,18 +865,18 @@ vbRender:148 · vbCardHTML:194
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
 
-## css/arena3d.css (200 บรรทัด · 62 selector)
+## css/arena3d.css (201 บรรทัด · 62 selector)
 #va-root:5,7,9 · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20
 .va-exit:23,26 · .va-player-card:27,29 · .va-player-name:30 · .va-online:31 · .va-word-card:32,34,36 · .va-word-th:37
 .va-word-en:38 · .va-word-slots:40,41,43 · .va-coins:44 · .va-shop-btn:46 · .va-energy:48,54 · .va-energy-label:50
 .va-energy-track:51 · .va-energy-fill:52 · .va-energy-power:55 · .va-bag:57 · .va-bag-label:59 · .va-bag-list:60
-.va-bag-letter:61 · .va-party:68,72 · .va-party-find:70 · .va-party-list:73,75 · .va-boss:77,79 · .va-boss-head:80,81
-.va-boss-track:82 · .va-boss-fill:83 · .va-boss-word:84 · .va-downed:86,89,90 · .va-revive:91,93,94 · .va-skill:95,116,119,120(+9)
-.va-hp:97,99,102 · .va-hp-track:100 · .va-hp-fill:101 · .va-stick:104,108,109 · .va-stick-knob:110 · .va-skills:114
-.va-feed:135 · .va-feed-line:137,139 · .va-pop:141,143,144,147 · .va-modal:149,151 · .va-panel:152 · .va-panel-head:155
-.va-panel-title:156 · .va-panel-coins:157 · .va-store-grid:159 · .va-store-item:160,162,163 · .va-store-ico:164 · .va-store-name:166
-.va-store-price:167 · .va-intro-panel:168 · .va-intro-logo:169 · .va-intro-sub:171 · .va-intro-steps:172 · .va-intro-step:173
-.va-start:175,177 · .va-portrait:179
+.va-bag-letter:61 · .va-party:68,72,73 · .va-party-find:70 · .va-party-list:74,76 · .va-boss:78,80 · .va-boss-head:81,82
+.va-boss-track:83 · .va-boss-fill:84 · .va-boss-word:85 · .va-downed:87,90,91 · .va-revive:92,94,95 · .va-skill:96,117,120,121(+9)
+.va-hp:98,100,103 · .va-hp-track:101 · .va-hp-fill:102 · .va-stick:105,109,110 · .va-stick-knob:111 · .va-skills:115
+.va-feed:136 · .va-feed-line:138,140 · .va-pop:142,144,145,148 · .va-modal:150,152 · .va-panel:153 · .va-panel-head:156
+.va-panel-title:157 · .va-panel-coins:158 · .va-store-grid:160 · .va-store-item:161,163,164 · .va-store-ico:165 · .va-store-name:167
+.va-store-price:168 · .va-intro-panel:169 · .va-intro-logo:170 · .va-intro-sub:172 · .va-intro-steps:173 · .va-intro-step:174
+.va-start:176,178 · .va-portrait:180
 
 ## css/exam.css (352 บรรทัด · 75 selector)
 #xs-screen:8,33 · .xs-top:12 · .xs-badge:16 · .xs-mode:17 · .xs-time:18,19,21,22 · .no-anim:24

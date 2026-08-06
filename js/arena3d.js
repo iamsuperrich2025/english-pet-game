@@ -106,9 +106,6 @@
       </div></div>
       <div class="va-portrait"><div><b>📱↻</b>หมุนเครื่องเป็นแนวนอนเพื่อเข้าสนามครับ</div></div>`;
     document.body.appendChild(root);
-    if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).get('arena_test')==='1'){
-      const test=document.createElement('div');test.id='va-test-tools';test.style.cssText='position:absolute;left:44%;bottom:2px;z-index:90;display:flex;gap:3px';test.innerHTML='<button data-va-test="boss">TEST BOSS</button><button data-va-test="word">TEST WORD</button><button data-va-test="down">TEST DOWN</button><button data-va-test="peer">TEST PEER DOWN</button><button data-va-test="win">TEST WIN</button>';root.appendChild(test);
-    }
     canvas=root.querySelector('#va-canvas');
     ['wordTh','wordEn','wordSlots','coins','energy','energyFill','energyPower','bagList','party','partyStatus','partyList','boss','bossChapter','bossName','bossHpText','bossFill','bossWord','hp','hpFill','feed','pop','downed','downTime','revive','reviveFill','reviveName','shop','shopCoins','storeGrid','intro','stick','stickKnob'].forEach(k=>{
       const id='va-'+k.replace(/[A-Z]/g,m=>'-'+m.toLowerCase()); ui[k]=root.querySelector('#'+id);
@@ -124,7 +121,6 @@
     addListener(root.querySelector('#va-exit'),'click',stop);
     addListener(root.querySelector('#va-shop-open'),'click',()=>toggleShop(true));
     addListener(root.querySelector('#va-shop-close'),'click',()=>toggleShop(false));
-    root.querySelectorAll('[data-va-test]').forEach(b=>addListener(b,'click',()=>{const k=b.dataset.vaTest;if(k==='boss'&&bossPhase==='wave')startBossAsLeader();else if(k==='word'&&target){for(const ch of target.en)bag[ch]=(bag[ch]||0)+1;checkWord();}else if(k==='down')downPlayer();else if(k==='peer')onPeer('peer-arena-test',{n:'เพื่อนทดสอบ',x:player.pos.x+2,z:player.pos.z,av:'blk6',m:1,w:0,c:'-',ct:0,cw:'',hp:'A2:0:1:-',y:0});else if(k==='win'&&boss)hitBot(boss,bossMax*2);}));
     addListener(root.querySelector('#va-party-friends'),'click',()=>{ if(room&&room.online)room.openFriends();else feed('📡 ต้องออนไลน์ก่อน จึงจะชวนหรือไปหาเพื่อนได้','bad'); });
     addListener(ui.shop,'click',e=>{ if(e.target===ui.shop) toggleShop(false); });
     addListener(ui.storeGrid,'click',e=>{ const b=e.target.closest('[data-buy]'); if(b) buyItem(b.dataset.buy); });
@@ -300,7 +296,7 @@
     room.send(payload,!!force);
   }
   function tickCoop(t){
-    if(room){room.tick(t);if(t-lastNetSend>110){lastNetSend=t;netSend(false);}}
+    if(room){room.tick(t);if(t-lastNetSend>170){lastNetSend=t;netSend(false);}}
     updatePeerActors(t);updateRevive(t);driveBoss(t);
     if(t-lastPartyPaint>350){lastPartyPaint=t;renderPartyHud();}
   }
@@ -393,9 +389,9 @@
     }else if(bossPhase==='victory'&&t-bossVictoryAt>3600)finishBossVictory(true);
   }
   function beginBossVictory(ch,enc,reward,word,leader){
-    chapter=ch;bossEncounter=enc;bossReward=reward;bossWord=word;bossPhase='victory';bossVictoryAt=performance.now();setBossHp(0);awardBoss(enc,ch,reward);
+    chapter=ch;bossEncounter=enc;bossReward=reward;bossWord=word;bossPhase='victory';bossVictoryAt=performance.now();setBossHp(0);
     if(boss){boss.dead=true;boss.group.scale.multiplyScalar(1.08);burst(boss.group.position,chapterDef(ch).color,52,8);ringFx(boss.group.position,0xffe77a,14,1.1);}
-    showPop('พิชิตบอส!',`${chapterDef(ch).name} · รางวัลแบ่งแบบทีม`);feed('⚖️ ทุกคนได้รางวัลฐานเท่ากัน 80% และโบนัสช่วยทีมสูงสุด 20%','gold');tone(196,.55,.2,'sawtooth');setTimeout(()=>tone(784,.7,.16,'sine'),130);haptic([45,55,90]);if(leader)netSend(true);
+    showPop('พิชิตบอส!',`${chapterDef(ch).name} · รางวัลแบ่งแบบทีม`);feed('⚖️ ทุกคนได้รางวัลฐานเท่ากัน 80% และโบนัสช่วยทีมสูงสุด 20%','gold');awardBoss(enc,ch,reward);tone(196,.55,.2,'sawtooth');setTimeout(()=>tone(784,.7,.16,'sine'),130);haptic([45,55,90]);if(leader)netSend(true);
   }
   function awardBoss(enc,ch,totalReward){
     if(!enc||state.arenaBossClaims.includes(enc))return;

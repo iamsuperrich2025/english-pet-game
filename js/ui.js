@@ -6554,7 +6554,7 @@ async function loadAdv3d(){
    🤝👑 รอบ 1048 — Co-op PvE 2–4 คน + บอสคำศัพท์รายบท + revive + รางวัลทีม
    ============================================================ */
 async function loadVocabArena3d(){
-  await loadScriptOnce('js/arena3d.js?arena-test=1048');
+  await loadScriptOnce('js/arena3d.js');
 }
 let advLoading = false;
 async function enterAdventure3D(){

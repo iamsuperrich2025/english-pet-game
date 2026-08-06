@@ -69,12 +69,13 @@
   border-radius:14px;padding:5px 7px;display:flex;align-items:center;gap:6px;pointer-events:auto}
 .va-party-find{width:31px;height:31px;flex:0 0 31px;border-radius:10px;border:1px solid rgba(119,231,255,.45);
   background:linear-gradient(145deg,#236b91,#37357d);cursor:pointer;padding:0}.va-party-find.off{filter:grayscale(.8);opacity:.58}
+.va-party>div{flex:1;min-width:0}
 .va-party b{display:block;font-size:9px;line-height:1.1;color:#bff7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.va-party-list{display:flex;gap:3px;margin-top:3px;min-width:0;overflow:hidden}.va-party-list span{max-width:72px;border-radius:7px;padding:1px 5px;
+.va-party-list{display:flex;width:100%;gap:3px;margin-top:3px;min-width:0;overflow:hidden}.va-party-list span{flex:1;min-width:0;border-radius:7px;padding:1px 3px;
   background:rgba(65,199,229,.13);color:#9ff3d3;font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .va-party-list span.self{color:#fff09b}.va-party-list span.down{background:rgba(255,67,103,.2);color:#ffc2d0;animation:vaPulse .7s infinite}
 
-.va-boss{position:absolute;left:50%;top:99px;transform:translate(-50%,-8px) scale(.96);width:min(40vw,430px);border-radius:15px;
+.va-boss{position:absolute;left:50%;top:99px;transform:translate(-50%,-8px) scale(.96);width:min(38vw,430px);border-radius:15px;
   padding:5px 9px 6px;opacity:0;visibility:hidden;pointer-events:none;transition:.24s;border-color:rgba(255,207,91,.52)}
 .va-boss.on{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1)}.va-boss.won{filter:brightness(1.35)}
 .va-boss-head{display:flex;align-items:center;gap:6px;font-size:9px;line-height:1.1}.va-boss-head span{color:#ffe17b;font-weight:900;white-space:nowrap}
