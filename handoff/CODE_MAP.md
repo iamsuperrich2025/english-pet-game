@@ -201,7 +201,7 @@ bxRankNoteRefresh:338 · openBigExamRank:345 · bandAdvExamOpen:362 · bandAdvCa
 
 ## js/bbaward.js (14 บรรทัด · 0 รายการ)
 
-## js/bubble.js (193 บรรทัด · 0 รายการ)
+## js/bubble.js (200 บรรทัด · 0 รายการ)
 
 ## js/cert.js (655 บรรทัด · 32 รายการ)
 CERT_MAX:17 · CERT_ISSUER_EN:18 · CERT_MONTHS:19 · CERT_TOPIC_EN:23 · CERT_LEVEL_EN:44 · CERT_ADV_EN:49
