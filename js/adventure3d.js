@@ -2320,6 +2320,11 @@ function buildScene(md){
   const cfg=MODES[md];
   const sc=new THREE.Scene();
   const tr=[];
+  /* 🏨 รอบ 1062: โรงแรมยาวขึ้น 3 เท่า จึงใช้ขอบโลกแกน X ของโรงแรมเอง
+     โหมดอื่นยังคง -HALF..HALF เดิมทั้งหมด ไม่ถูกขยายตามโรงแรม */
+  const worldMinX=md==='haunt'?HOTEL3D.WORLD_X_MIN:-HALF;
+  const worldMaxX=md==='haunt'?HOTEL3D.WORLD_X_MAX: HALF;
+  const worldMidX=(worldMinX+worldMaxX)/2, worldSpanX=worldMaxX-worldMinX;
   sc.background=new THREE.Color(cfg.sky);
   sc.fog=new THREE.Fog(cfg.sky, cfg.fogN, cfg.fogF);
 
@@ -2343,10 +2348,10 @@ function buildScene(md){
      แก้ที่ต้นทางชั้นเดียว: ดัน "พื้น" ให้ถอยหลังในสมุดความลึกเล็กน้อย (polygonOffset)
      → ของที่วางแนบพื้นชนะเสมอ ไม่ต้องขยับ geometry ทีละชิ้น (ไม่เกิดช่องลอยใต้พุ่มไม้/รั้ว) */
   const ground=new THREE.Mesh(
-    new THREE.PlaneGeometry(HALF*2+20,HALF*2+20),
+    new THREE.PlaneGeometry(worldSpanX+20,HALF*2+20),
     new THREE.MeshLambertMaterial({color:cfg.ground,
       polygonOffset:true, polygonOffsetFactor:1, polygonOffsetUnits:1}));
-  ground.rotation.x=-Math.PI/2; sc.add(ground);
+  ground.rotation.x=-Math.PI/2; ground.position.x=worldMidX; sc.add(ground);
   // 🧱 พื้นภาพจริงในโลกเมือง (โดรนใส่ในบล็อกตัวเอง) · โลกผีใช้ภาพเดียวกันแต่ tint หม่นให้เข้ากับกลางคืน
   if(md==='heli') applyTex(ground.material,'tex_ground',26,26);
   /* 🌑 รอบ 694: หม่นลงอีกจาก 0x7d8490 — พื้นสว่างโพลนทำให้สวนกลางคืนดูเหมือนกลางวัน
@@ -2355,11 +2360,11 @@ function buildScene(md){
 
   // รั้วรอบแผนที่
   const fenceMat=new THREE.MeshLambertMaterial({color:md==='adv'?0xb98a5a:0x3a3a4a});
-  [[0,-HALF],[0,HALF]].forEach(([x,z])=>{
-    const f=new THREE.Mesh(new THREE.BoxGeometry(HALF*2,1.6,.4),fenceMat);
+  [[worldMidX,-HALF],[worldMidX,HALF]].forEach(([x,z])=>{
+    const f=new THREE.Mesh(new THREE.BoxGeometry(worldSpanX,1.6,.4),fenceMat);
     f.position.set(x,.8,z); sc.add(f);
   });
-  [[-HALF,0],[HALF,0]].forEach(([x,z])=>{
+  [[worldMinX,0],[worldMaxX,0]].forEach(([x,z])=>{
     const f=new THREE.Mesh(new THREE.BoxGeometry(.4,1.6,HALF*2),fenceMat);
     f.position.set(x,.8,z); sc.add(f);
   });
@@ -2649,7 +2654,7 @@ function buildScene(md){
     const farFromHotel=(x,z)=>(x>HOTEL3D.BX+9 || x<HOTEL3D.WEST-6 || Math.abs(z)>HOTEL3D.BZ+6) &&
                               !(Math.abs(z)<5 && x>HOTEL3D.BX && x<HOTEL3D.BX+16);
     for(let i=0;i<30;i++){
-      const x=(Math.random()*2-1)*(HALF-6), z=(Math.random()*2-1)*(HALF-6);
+      const x=worldMinX+6+Math.random()*(worldSpanX-12), z=(Math.random()*2-1)*(HALF-6);
       if(!farFromHotel(x,z)) continue;
       const t1=new THREE.Mesh(trunkG,trunkM); t1.position.set(x,1.7,z);
       const b1=new THREE.Mesh(branchG,trunkM);
@@ -3796,7 +3801,7 @@ function tickHotelPlayer(dt,now){
     const sp=PLAYER_SPEED*(blackedOut?.85:1)*dt;    // ไฟดับ เดินคลำทางช้าลงนิดเดียว
     let nx=camera.position.x+(-sin*fw+cos*sd)*sp;
     let nz=camera.position.z+(-cos*fw-sin*sd)*sp;
-    nx=Math.max(-HALF+1.2,Math.min(HALF-1.2,nx));
+    nx=Math.max(HOTEL3D.WORLD_X_MIN+1.2,Math.min(HOTEL3D.WORLD_X_MAX-1.2,nx));
     nz=Math.max(-HALF+1.2,Math.min(HALF-1.2,nz));
     for(const t of trees){                          // ต้นไม้/พุ่มในสวนหน้าโรงแรม
       const d=Math.hypot(nx-t.x,nz-t.z), min=t.r+.5;
