@@ -416,6 +416,38 @@ const srnd=(seed)=>{ const x=Math.sin(seed*127.1+311.7)*43758.5453; return x-Mat
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 
 /* ============================================================
+   🎛️ รอบ 1041: ภาษาภาพ HUD ยุทธวิธี — ไอคอนเวกเตอร์ต้นฉบับ
+   เส้นขาว/ฟ้าอ่านเร็วบนฉากสว่าง-มืด โดยไม่พึ่ง emoji หรือ asset จากเกมอื่น
+   ============================================================ */
+const HUD_ICON={
+  fire:'<path d="M3.5 10h8l2.3-2.4h6.7v6.8h-6.7L11.5 12H8v5H4.7v-5H3.5z"/><path d="M16.5 9.7v4.6M19 9.7v4.6"/>',
+  rocket:'<path d="M14.5 3.2c2.9-.5 5.1-.2 6.3.2.4 1.2.7 3.4.2 6.3l-6.7 6.7-4.9-1.2-1.2-4.9z"/><circle cx="16.7" cy="7.3" r="1.8"/><path d="m8.2 12-3.5 1.2-1.4 3.5 4.4-.4M12.2 16.2l-1.1 4.5 3.5-1.4 1.2-3.5M7.3 17.3 4 20.6"/>',
+  run:'<circle cx="14.8" cy="4.5" r="2"/><path d="m12.6 8.1-3.1 4.3 3 2.1 2.1 5.2M12 9.2l4.1 3 3.8-.5M12.5 14.5l-4.1 5.1M9.5 12.4l-4.2-1.3"/>',
+  heli:'<path d="M7 11.2h9.2c2.2 0 3.8 1.2 4.4 3.1H9.5L7 11.2zM4 14.3h5.5M8.5 17.2h8.7M12.8 8.2v3M7.8 7.3h10M18.8 10.2l2.1-1.6"/>',
+  parachute:'<path d="M3.5 10.5a8.5 7.5 0 0 1 17 0c-2.7-1.6-5.7-1.6-8.5 0-2.8-1.6-5.8-1.6-8.5 0zM5.5 10.3l5 7.1M18.5 10.3l-5 7.1M10.5 17.4h3v3h-3z"/>',
+  flare:'<path d="m12 4 1.2 4.1L17 10l-3.8 1.9L12 16l-1.2-4.1L7 10l3.8-1.9zM5 4l2 2M19 4l-2 2M5 16l2-2M19 16l-2-2"/>',
+  swap:'<path d="M5 7h12l-2.7-2.7M19 17H7l2.7 2.7"/><path d="m17 7-2.7 2.7M7 17l2.7-2.7"/>',
+  scope:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>',
+  breath:'<path d="M3 9h9c2.7 0 2.7-4 0-4-1.3 0-2 .7-2.3 1.5M3 13h14c3.3 0 3.3 5 0 5-1.5 0-2.4-.8-2.8-1.8M3 17h7"/>',
+  map:'<path d="m3.5 5 5-2 7 2 5-2v16l-5 2-7-2-5 2zM8.5 3v16M15.5 5v16"/>',
+  chat:'<path d="M4 4.5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/>',
+  cycle:'<circle cx="9" cy="10" r="4"/><path d="M9 2v2M9 16v2M1 10h2M15 10h2M3.3 4.3l1.4 1.4M13.3 14.3l1.4 1.4M3.3 15.7l1.4-1.4M13.3 5.7l1.4-1.4M17 15a4 4 0 0 0 4 4 4.5 4.5 0 1 1-4-4z"/>',
+  torch:'<path d="m8 3 8 2-1 4-5-1zM10 8l5 1-1.7 11H8.7z"/><path d="M5 4 2 2M18 6l4-1M17 10l4 2"/>',
+  glow:'<path d="M9 3h6l1.5 4v12H7.5V7zM8 8h8M10 12h4M10 15h4"/>',
+  gunner:'<path d="M4 15h16l-2 4H6zM8 15V9h8v6M12 9V5M8 5h8"/><circle cx="12" cy="5" r="1.5"/>',
+  eye:'<path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6z"/><circle cx="12" cy="12" r="2.7"/>',
+  camera:'<path d="M3.5 7h4l1.5-2h6l1.5 2h4v12h-17z"/><circle cx="12" cy="13" r="3.5"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/>',
+  reset:'<path d="M5 7V3l-2 2 2 2a8 8 0 1 1-1 8"/>',
+  check:'<path d="m4 12 5 5L20 6"/>',
+  close:'<path d="M5 5l14 14M19 5 5 19"/>'
+};
+function hudIcon(name,cap,badge){
+  return '<span class="hud-glyph"><svg viewBox="0 0 24 24" aria-hidden="true">'+(HUD_ICON[name]||HUD_ICON.scope)+'</svg></span>'+
+    (cap?'<span class="hud-cap">'+cap+'</span>':'')+(badge!=null?'<b class="hud-count">'+badge+'</b>':'');
+}
+
+/* ============================================================
    🎨 CSS + DOM overlay (self-contained ไม่แตะ css/style.css)
    ============================================================ */
 const CSS=`
@@ -954,6 +986,72 @@ const CSS=`
   #inv-stat{min-width:108px}
   #inv-stat .inv-lb{font-size:9px}
 }
+/* ============================================================
+   🎛️ รอบ 1041: HUD ยุทธวิธี + ตัวแก้ตำแหน่งแบบเกมยิงมือถือ
+   ============================================================ */
+:root{--inv-hud:#08131dcc;--inv-hud2:#102838d9;--inv-edge:#78b7ca;--inv-cyan:#80eaff;--inv-warn:#f2c66d}
+.hud-glyph{display:flex;align-items:center;justify-content:center;width:52%;height:52%;margin:0 auto;pointer-events:none}
+.hud-glyph svg{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.75))}
+.hud-cap{display:block;font:800 8px/1.05 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(226,244,250,.82);pointer-events:none;margin-top:2px;text-shadow:0 1px 2px #000}
+.hud-count{position:absolute!important;right:-3px!important;top:-4px!important;min-width:17px;height:17px;padding:0 4px!important;
+  display:flex!important;align-items:center;justify-content:center;border-radius:999px!important;background:#101c25!important;
+  border:1px solid rgba(255,255,255,.45)!important;color:#fff!important;font:900 10px/1 system-ui!important;box-shadow:0 2px 5px #0008}
+#inv-fire,#inv-fire2,#inv-rocket,#inv-run,#inv-heli,#inv-flare,#inv-swap,#inv-scope,#inv-breath,#inv-gunner,
+#inv-seat,#inv-extcam,#inv-chat,#inv-map,#inv-night,#inv-torch,#inv-glow{
+  box-sizing:border-box;color:#eaf8ff;background:linear-gradient(145deg,var(--inv-hud2),var(--inv-hud))!important;
+  border:1px solid rgba(132,190,207,.72)!important;box-shadow:inset 0 0 0 2px rgba(255,255,255,.035),0 5px 14px rgba(0,0,0,.52)!important;
+  backdrop-filter:blur(4px)}
+#inv-fire,#inv-fire2{color:#ffe4a8;border-color:rgba(242,198,109,.95)!important;
+  background:radial-gradient(circle at 45% 42%,rgba(85,69,38,.92),rgba(13,20,25,.94) 66%)!important}
+#inv-fire{box-shadow:inset 0 0 0 3px rgba(242,198,109,.10),0 0 0 2px rgba(6,15,20,.62),0 6px 18px #0009!important}
+#inv-rocket,#inv-flare{color:#ffc76e;border-color:rgba(238,153,61,.88)!important}
+#inv-run.on,#inv-scope.on{color:#9dffd5;border-color:#67d8aa!important;background:linear-gradient(145deg,#174436e8,#091b19ee)!important}
+#inv-heli.flying{color:#ffd0bf;border-color:#e98d78!important;background:linear-gradient(145deg,#512722e8,#191414f2)!important}
+#inv-mag{color:#eaf8ff;background:linear-gradient(145deg,var(--inv-hud2),var(--inv-hud));border:1px solid rgba(132,190,207,.72)}
+#inv-seat small,#inv-extcam small{display:block;font:800 8px/1 system-ui;letter-spacing:.04em;color:#dceef4;margin-top:1px}
+#inv-settings{position:absolute;right:180px;top:12px;z-index:8;width:46px;height:46px;padding:0;border-radius:13px;cursor:pointer;
+  color:var(--inv-cyan);background:linear-gradient(145deg,rgba(18,47,62,.96),rgba(6,17,25,.94));
+  border:1px solid rgba(128,234,255,.72);box-shadow:inset 0 0 0 2px rgba(128,234,255,.06),0 5px 16px #0009;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;-webkit-tap-highlight-color:transparent}
+#inv-settings .hud-glyph{width:22px;height:22px}#inv-settings .hud-cap{font-size:7px;color:#bcecf4}
+#inv-settings:active,#inv-settings.on{transform:translateY(1px);border-color:#fff;color:#fff;background:#123b4d}
+#inv-hudedit{position:absolute;inset:0;z-index:18;display:none;pointer-events:none;
+  background:linear-gradient(90deg,transparent 49.9%,rgba(128,234,255,.12) 50%,transparent 50.1%),
+             linear-gradient(transparent 49.9%,rgba(128,234,255,.12) 50%,transparent 50.1%)}
+#inv-hudedit.on{display:block}
+#inv-hudedit::after{content:"SAFE HUD AREA";position:absolute;inset:64px 10px 10px;border:1px dashed rgba(128,234,255,.32);
+  color:rgba(128,234,255,.48);font:800 9px/1 system-ui;letter-spacing:.12em;padding:6px;pointer-events:none}
+#inv-hudbar{position:absolute;left:50%;top:7px;transform:translateX(-50%);width:min(760px,calc(100vw - 250px));min-height:50px;
+  box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 10px;pointer-events:auto;
+  border-radius:12px;background:linear-gradient(180deg,rgba(8,25,36,.98),rgba(5,15,23,.98));border:1px solid rgba(128,234,255,.65);
+  box-shadow:0 8px 22px #000b;color:#eaf8ff}
+#inv-hudbar .he-title{min-width:116px;font:900 12px/1.1 system-ui;letter-spacing:.05em;color:#9eeeff}
+#inv-hudbar .he-title small{display:block;font-size:8px;color:#91aeb8;margin-top:3px;letter-spacing:0}
+#inv-hudbar label{display:flex;align-items:center;gap:5px;font:800 9px/1 system-ui;color:#b8d2da;white-space:nowrap}
+#inv-hudbar input[type=range]{width:84px;accent-color:#62d9ed}
+#inv-hudbar button{height:32px;border-radius:8px;padding:0 10px;border:1px solid rgba(150,203,216,.5);cursor:pointer;
+  color:#e9f7fa;background:#132c39;font:900 10px/1 system-ui;white-space:nowrap}
+#inv-hudbar button.primary{color:#062018;background:#79e5bc;border-color:#9effd9}
+#inv-hudbar button.danger{color:#ffd9cf;background:#4a2725;border-color:#a7685f}
+#inv-hudpick{max-width:86px;overflow:hidden;text-overflow:ellipsis;color:#ffe0a0!important}
+#inv-wrap.hud-editing [data-hud-key]{outline:2px solid rgba(128,234,255,.9);outline-offset:3px;cursor:grab;touch-action:none!important;
+  box-shadow:0 0 0 4px rgba(5,18,26,.58),0 0 18px rgba(80,220,245,.55)!important}
+#inv-wrap.hud-editing [data-hud-key]::before{content:attr(data-hud-label);position:absolute;left:50%;top:-20px;transform:translateX(-50%);
+  padding:3px 6px;border-radius:5px;background:#071720;color:#a9efff;border:1px solid #4f9fb2;font:900 8px/1 system-ui;
+  letter-spacing:.04em;white-space:nowrap;pointer-events:none}
+#inv-wrap.hud-editing [data-hud-key].hud-picked{outline-color:#ffd36f;box-shadow:0 0 0 4px rgba(30,22,6,.6),0 0 22px rgba(255,192,65,.7)!important}
+.hud-custom{transform:translate(-50%,-50%) scale(var(--hud-scale,1))!important;transform-origin:center!important}
+.hud-custom:active{transform:translate(-50%,-50%) scale(calc(var(--hud-scale,1) * .94))!important}
+@media (max-width:900px),(max-height:430px){
+  #inv-settings{right:166px;top:8px;width:40px;height:40px;border-radius:11px}
+  #inv-settings .hud-glyph{width:19px;height:19px}#inv-settings .hud-cap{font-size:6px}
+  #inv-hudbar{top:3px;width:calc(100vw - 118px);min-height:43px;gap:5px;padding:4px 6px}
+  #inv-hudbar .he-title{display:none}#inv-hudbar label{font-size:8px;gap:2px}#inv-hudbar input[type=range]{width:58px}
+  #inv-hudbar button{height:29px;padding:0 7px;font-size:9px}#inv-hudpick{max-width:58px}
+  #inv-hudedit::after{inset:50px 6px 6px}.hud-cap{font-size:6.5px}
+}
 `;
 
 let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,fire2Btn,rocketBtn,runBtn;
@@ -990,33 +1088,42 @@ function buildDom(){
     <div id="inv-cockpit"></div><canvas id="inv-gauges"></canvas>
     <div id="inv-start"></div>
     <div id="inv-board"></div>
-    <div id="inv-joy"><i></i></div>
-    <button id="inv-fire">🔫</button>
-    <button id="inv-fire2">🔫</button>
-    <button id="inv-rocket">🚀</button>
-    <button id="inv-flare">🔥<b>4</b></button>
-    <button id="inv-run">🏃</button>
-    <button id="inv-heli">🚁</button>
-    <button id="inv-swap">🎯</button>
-    <button id="inv-scope">🔭</button>
+    <div id="inv-joy" aria-label="จอยเดิน"><i></i></div>
+    <button id="inv-fire" aria-label="ยิง">${hudIcon('fire','ยิง')}</button>
+    <button id="inv-fire2" aria-label="ยิงด้วยนิ้วซ้าย">${hudIcon('fire','ยิงซ้าย')}</button>
+    <button id="inv-rocket" aria-label="ยิงจรวด">${hudIcon('rocket','จรวด')}</button>
+    <button id="inv-flare" aria-label="ปล่อยแฟลร์">${hudIcon('flare','แฟลร์','4')}</button>
+    <button id="inv-run" aria-label="วิ่งเร็ว">${hudIcon('run','วิ่ง')}</button>
+    <button id="inv-heli" aria-label="ขึ้นเฮลิคอปเตอร์">${hudIcon('heli','ขึ้นรถ')}</button>
+    <button id="inv-swap" aria-label="สลับอาวุธ">${hudIcon('swap','สลับ')}</button>
+    <button id="inv-scope" aria-label="เล็งผ่านกล้อง">${hudIcon('scope','เล็ง')}</button>
     <button id="inv-mag">6×</button>
-    <button id="inv-breath">🫁</button>
-    <button id="inv-gunner">🎖️</button>
-    <button id="inv-seat">👁️<small>มุมบิน</small></button>
-    <button id="inv-extcam">🎬<small>ท้ายลำ</small></button>
+    <button id="inv-breath" aria-label="กลั้นหายใจ">${hudIcon('breath','กลั้นลม')}</button>
+    <button id="inv-gunner" aria-label="ขึ้นเป็นพลปืน">${hudIcon('gunner','พลปืน')}</button>
+    <button id="inv-seat" aria-label="เปลี่ยนมุมบิน">${hudIcon('eye')}<small>มุมบิน</small></button>
+    <button id="inv-extcam" aria-label="เปลี่ยนกล้องภายนอก">${hudIcon('camera')}<small>ท้ายลำ</small></button>
     <div id="inv-keyhint"><b>⌨️ เล่นด้วยคอมพิวเตอร์</b>
       <div class="kh-row"><span class="kh-key" data-k="up">↑</span><span class="kh-tx">เอาเครื่อง<b>ขึ้น</b></span></div>
       <div class="kh-row"><span class="kh-key" data-k="dn">↓</span><span class="kh-tx">เอาเครื่อง<b>ลง</b></span></div>
     </div>
     <button id="inv-wheel"><span class="wh"><i class="s1"></i><i class="s2"></i><i class="s3"></i></span><small>🚁 เดินเข้ามาขึ้นเครื่อง</small></button>
-    <button id="inv-map">🗺️</button>
-    <button id="inv-night">🌙</button>
-    <button id="inv-torch">🔦</button>
-    <button id="inv-glow">🏮<b>12</b></button>
-    <button id="inv-chat">💬</button>
+    <button id="inv-map" aria-label="เปิดแผนที่">${hudIcon('map','แผนที่')}</button>
+    <button id="inv-night" aria-label="เปลี่ยนเวลา">${hudIcon('cycle','เวลา')}</button>
+    <button id="inv-torch" aria-label="เปิดหรือปิดไฟฉาย">${hudIcon('torch','ไฟฉาย')}</button>
+    <button id="inv-glow" aria-label="วางแท่งไฟ">${hudIcon('glow','แท่งไฟ','12')}</button>
+    <button id="inv-chat" aria-label="แชทกับเพื่อน">${hudIcon('chat','แชท')}</button>
     <div id="inv-chatbar"></div>
     <div id="inv-selfmsg"></div>
     <button id="inv-exit">⬅️ ออก</button>
+    <button id="inv-settings" aria-label="ตั้งค่าและจัดวางปุ่ม">${hudIcon('settings','HUD')}</button>
+    <div id="inv-hudedit"><div id="inv-hudbar">
+      <div class="he-title">HUD LAYOUT<small>ลากปุ่มไปยังตำแหน่งที่ถนัด</small></div>
+      <label>เลือก <b id="inv-hudpick">—</b></label>
+      <label>ขนาด <input id="inv-hudsize" type="range" min="70" max="135" step="5" value="100"></label>
+      <label>โปร่งใส <input id="inv-hudalpha" type="range" min="35" max="100" step="5" value="100"></label>
+      <button id="inv-hudreset">รีเซ็ต</button><button id="inv-hudcancel" class="danger">ยกเลิก</button>
+      <button id="inv-hudsave" class="primary">บันทึก</button>
+    </div></div>
     <canvas id="inv-radar" width="180" height="180"></canvas>
     <div id="inv-locks"></div>
     <div id="inv-spike"></div>
@@ -1165,10 +1272,98 @@ function buildDom(){
     introEl.classList.remove('on'); resumeAudio();
     openSpawnMap();                                   // 🗺️ อ่านวิธีเล่นจบ → เลือกจุดลงสนามก่อนเริ่ม
   });
-  document.getElementById('inv-exit').addEventListener('click',()=>{ exitBox.classList.add('on'); unlockMouse(); });
+  document.getElementById('inv-exit').addEventListener('click',()=>{ if(hudEditing){closeHudEditor(false);return;} exitBox.classList.add('on'); unlockMouse(); });
   document.getElementById('inv-exit-yes').addEventListener('click',exitWorld);
   document.getElementById('inv-exit-no').addEventListener('click',()=>exitBox.classList.remove('on'));
+  initHudEditor();                                  // 🎛️ รอบ 1041: ตั้งค่า/ลากย้ายปุ่มแบบ normalized responsive
   bindInput();
+}
+
+/* ============================================================
+   🎛️🧭 รอบ 1041: HUD LAYOUT EDITOR — ลาก/ย่อขยาย/ความทึบ/บันทึก
+   เก็บตำแหน่งเป็นสัดส่วน viewport จึงใช้ต่อได้เมื่อสลับมือถือคนละขนาด
+   ============================================================ */
+const HUD_LAYOUT_KEY='invHudLayout_v1';
+const HUD_TARGETS=[
+  ['joy','inv-joy','จอยเดิน'],['fire','inv-fire','ยิงขวา'],['fire2','inv-fire2','ยิงซ้าย'],
+  ['rocket','inv-rocket','จรวด'],['run','inv-run','วิ่ง'],['heli','inv-heli','ขึ้น/ลงเฮลิ'],
+  ['flare','inv-flare','แฟลร์'],['swap','inv-swap','สลับปืน'],['scope','inv-scope','กล้องเล็ง'],
+  ['mag','inv-mag','กำลังขยาย'],['breath','inv-breath','กลั้นหายใจ'],['gunner','inv-gunner','พลปืน'],
+  ['seat','inv-seat','มุมบิน'],['extcam','inv-extcam','กล้องภายนอก'],['map','inv-map','แผนที่'],
+  ['night','inv-night','กลางวัน/คืน'],['torch','inv-torch','ไฟฉาย'],['glow','inv-glow','แท่งไฟ'],['chat','inv-chat','แชท']
+];
+let hudLayout={},hudEditing=false,hudSnapshot=null,hudPicked=null,hudDrag=null;
+function hudCopy(v){return JSON.parse(JSON.stringify(v||{}));}
+function hudRead(){try{const v=JSON.parse(localStorage.getItem(HUD_LAYOUT_KEY)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
+function hudEl(key){const t=HUD_TARGETS.find(v=>v[0]===key);return t&&document.getElementById(t[1]);}
+function clearHudStyle(el){
+  el.classList.remove('hud-custom','hud-picked');
+  ['left','top','right','bottom','transform','transformOrigin','opacity','--hud-scale'].forEach(k=>el.style.removeProperty(k));
+}
+function applyHudOne(key){
+  const el=hudEl(key),v=hudLayout[key];if(!el)return;
+  if(!v||!Number.isFinite(v.x)||!Number.isFinite(v.y)){clearHudStyle(el);return;}
+  el.classList.add('hud-custom');el.style.left=(v.x*100).toFixed(3)+'vw';el.style.top=(v.y*100).toFixed(3)+'vh';
+  el.style.right='auto';el.style.bottom='auto';el.style.setProperty('--hud-scale',String(v.s||1));
+  el.style.transform='translate(-50%,-50%) scale(var(--hud-scale,1))';el.style.transformOrigin='center';
+  el.style.opacity=String(v.a==null?1:v.a);
+}
+function applyHudLayout(){HUD_TARGETS.forEach(v=>applyHudOne(v[0]));}
+function ensureHudEntry(el){
+  const key=el.dataset.hudKey;if(hudLayout[key])return hudLayout[key];
+  const r=el.getBoundingClientRect();
+  return hudLayout[key]={x:(r.left+r.width/2)/innerWidth,y:(r.top+r.height/2)/innerHeight,s:1,a:1};
+}
+function pickHudControl(el){
+  if(hudPicked)hudPicked.classList.remove('hud-picked');hudPicked=el;
+  if(!el)return;
+  el.classList.add('hud-picked');const v=hudLayout[el.dataset.hudKey]||{s:1,a:1};
+  const pick=document.getElementById('inv-hudpick'),sz=document.getElementById('inv-hudsize'),al=document.getElementById('inv-hudalpha');
+  if(pick)pick.textContent=el.dataset.hudLabel||el.dataset.hudKey;if(sz)sz.value=Math.round((v.s||1)*100);if(al)al.value=Math.round((v.a==null?1:v.a)*100);
+}
+function closeHudEditor(save){
+  if(!hudEditing)return;
+  if(save){
+    if(Object.keys(hudLayout).length)localStorage.setItem(HUD_LAYOUT_KEY,JSON.stringify(hudLayout));else localStorage.removeItem(HUD_LAYOUT_KEY);
+    toastBan('✅ <b>บันทึกตำแหน่ง HUD แล้ว</b><br><span class="ib-sub">ตำแหน่งจะปรับตามสัดส่วนหน้าจออัตโนมัติ</span>',1600);
+  }else{hudLayout=hudCopy(hudSnapshot);applyHudLayout();}
+  hudEditing=false;hudDrag=null;if(hudPicked)hudPicked.classList.remove('hud-picked');hudPicked=null;
+  wrapEl.classList.remove('hud-editing');document.getElementById('inv-hudedit').classList.remove('on');
+  document.getElementById('inv-settings').classList.remove('on');
+}
+function openHudEditor(){
+  if(hudEditing){closeHudEditor(true);return;}
+  unlockMouse();hudSnapshot=hudCopy(hudLayout);hudEditing=true;wrapEl.classList.add('hud-editing');
+  document.getElementById('inv-hudedit').classList.add('on');document.getElementById('inv-settings').classList.add('on');
+  const first=HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none');pickHudControl(first||null);
+}
+function initHudEditor(){
+  HUD_TARGETS.forEach(([key,id,label])=>{const el=document.getElementById(id);if(!el)return;el.dataset.hudKey=key;el.dataset.hudLabel=label;});
+  hudLayout=hudRead();applyHudLayout();
+  const settings=document.getElementById('inv-settings'),size=document.getElementById('inv-hudsize'),alpha=document.getElementById('inv-hudalpha');
+  settings.addEventListener('click',e=>{e.stopPropagation();openHudEditor();});
+  size.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.s=+size.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');});
+  alpha.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.a=+alpha.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');});
+  document.getElementById('inv-hudsave').addEventListener('click',()=>closeHudEditor(true));
+  document.getElementById('inv-hudcancel').addEventListener('click',()=>closeHudEditor(false));
+  document.getElementById('inv-hudreset').addEventListener('click',()=>{hudLayout={};applyHudLayout();pickHudControl(HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none')||null);});
+  const down=e=>{
+    if(!hudEditing)return;const el=e.target.closest&&e.target.closest('[data-hud-key]');if(!el)return;
+    e.preventDefault();e.stopImmediatePropagation();pickHudControl(el);const v=ensureHudEntry(el),r=el.getBoundingClientRect();
+    hudDrag={el,key:el.dataset.hudKey,dx:e.clientX-(r.left+r.width/2),dy:e.clientY-(r.top+r.height/2)};
+    if(el.setPointerCapture&&e.pointerId!=null)try{el.setPointerCapture(e.pointerId);}catch(_){}
+  };
+  wrapEl.addEventListener('pointerdown',down,true);
+  wrapEl.addEventListener('touchstart',e=>{if(hudEditing&&e.target.closest&&e.target.closest('[data-hud-key]')){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,passive:false});
+  wrapEl.addEventListener('mousedown',e=>{if(hudEditing&&e.target.closest&&e.target.closest('[data-hud-key]')){e.preventDefault();e.stopImmediatePropagation();}},true);
+  wrapEl.addEventListener('click',e=>{if(hudEditing&&e.target.closest&&e.target.closest('[data-hud-key]')){e.preventDefault();e.stopImmediatePropagation();}},true);
+  window.addEventListener('pointermove',e=>{
+    if(!hudEditing||!hudDrag)return;e.preventDefault();const el=hudDrag.el,v=ensureHudEntry(el),r=el.getBoundingClientRect();
+    const pad=8,cx=clamp(e.clientX-hudDrag.dx,r.width/2+pad,innerWidth-r.width/2-pad),cy=clamp(e.clientY-hudDrag.dy,r.height/2+pad,innerHeight-r.height/2-pad);
+    v.x=cx/innerWidth;v.y=cy/innerHeight;applyHudOne(hudDrag.key);el.classList.add('hud-picked');
+  },{capture:true,passive:false});
+  window.addEventListener('pointerup',()=>{hudDrag=null;},true);window.addEventListener('pointercancel',()=>{hudDrag=null;},true);
+  window.addEventListener('resize',()=>requestAnimationFrame(applyHudLayout));
 }
 
 /* ============================================================
@@ -3440,7 +3635,7 @@ function setSeatView(lv){
     /* 🎛️ รอบ 532: มีภาพค็อกพิตจริงแล้วและอยู่มุมมองภายใน → ใช้ภาพแทนกรอบ CSS */
     wrapEl.classList.toggle('cockpit', !!cpNat && !SEAT_VIEWS[seatLv].ext);
   }
-  if(seatBtn) seatBtn.innerHTML='👁️<small>'+SEAT_VIEWS[seatLv].label+'</small>';
+  if(seatBtn) seatBtn.innerHTML=hudIcon('eye')+'<small>'+SEAT_VIEWS[seatLv].label+'</small>';
   resetExtCam();                         // 🎥 รอบ 533: เพิ่งสลับมุม → วางกล้องภายนอกเข้าที่เลย ไม่ให้เหวี่ยงจากตำแหน่งเก่า
   syncExtBtn();                          // 🎬 รอบ 537: ปุ่มมุมกล้องโผล่/หายตามมุมมองภายนอก
   cpBox=''; layoutInvCockpit();          // ⚠️ วัดใหม่ทันที ห้ามรอเฟรมถัดไป (เหมือน setSeat ในโลกเฮลิฯ)
@@ -4934,7 +5129,7 @@ function renderAmmo(){
 }
 function syncWeaponBtns(){
   const W=WEAPONS[weapon];
-  if(swapBtn) swapBtn.textContent=(weapon==='rifle')?'🎯':'🔫';   // โชว์ปืนที่ "จะสลับไป"
+  if(swapBtn) swapBtn.innerHTML=(weapon==='rifle')?hudIcon('scope','R93'):hudIcon('fire','RIFLE');   // โชว์ปืนที่ "จะสลับไป"
   const show=(W.scope && !inHeli && !riding);
   if(scopeBtn) scopeBtn.style.display=show?'block':'none';
   /* ปุ่มเลือกกำลังขยายโชว์เฉพาะปืนที่มีหลายระดับ (ไรเฟิลมี 2× ระดับเดียว) */
@@ -6413,7 +6608,7 @@ function bindInput(){
      ปล่อยหลุดไป (แผงแผนที่/ออกเกมเปิดคร่อมกลางคัน) → ที่นั่งนิ้วมองไม่เคยว่าง ลากอีกกี่นิ้วจอก็ไม่หันจนกว่าจะออก-เข้าใหม่
      แก้: ถือทะเบียนนิ้วที่ยังไม่มีหน้าที่ไว้ พอ "ลากจริง" เกิน ADOPT_PX ก็รับเป็นนิ้วมองให้เอง
      + เช็ก `lookId` ทุกครั้งว่ายังเป็นนิ้วที่แตะจออยู่จริงไหม (`e.touches`) ไม่จริง = ปล่อยที่ว่างทันที */
-  const PANELS='#inv-intro,#inv-exitbox,#inv-mapbox,#inv-chatbar';   // แผงป๊อปอัป: แตะแล้วไม่ใช่การมองรอบ
+  const PANELS='#inv-intro,#inv-exitbox,#inv-mapbox,#inv-chatbar,#inv-hudedit,#inv-settings';   // แผงป๊อปอัป: แตะแล้วไม่ใช่การมองรอบ
   const ADOPT_PX=12;
   const cand=new Map();                                   // นิ้วที่ยังไม่มีหน้าที่ (รอดูว่าจะลากไหม)
   const lookAlive=e=>{                                    // นิ้วมองยังคาจออยู่จริงไหม (กัน lookId ค้าง)
@@ -6489,7 +6684,7 @@ function bindInput(){
     else if(inHeli) exitHeli(); else enterHeli(); });
   /* ปุ่ม 🚁 เปลี่ยนหน้าตาตามสถานะ: 🚁 ขึ้นขับ / 🪂 ลงจากเครื่อง (ทั้งนักบินและพลปืน) */
   const syncHeliBtn=()=>{ const fly=inHeli||riding;
-    heliBtn.textContent=fly?'🪂':'🚁'; heliBtn.classList.toggle('flying',!!fly); };
+    heliBtn.innerHTML=fly?hudIcon('parachute','ลง'):hudIcon('heli','ขึ้นรถ'); heliBtn.classList.toggle('flying',!!fly); };
   ['click'].forEach(()=>0);
   heliBtn.addEventListener('click',()=>setTimeout(syncHeliBtn,0));
   gunnerBtn.addEventListener('click',()=>setTimeout(syncHeliBtn,0));
@@ -6894,7 +7089,7 @@ function setRideView(on){
   rideExt=!!on;
   if(wrapEl) wrapEl.classList.toggle('gunext',rideExt);
   if(gunGrp) gunGrp.visible=!rideExt;               // มุมภายนอก = ซ่อนปืนในมือ ไม่งั้นปืนลอยกลางจอ
-  if(seatBtn) seatBtn.innerHTML='👁️<small>'+(rideExt?'ภายนอก':'ประตูลำ')+'</small>';
+  if(seatBtn) seatBtn.innerHTML=hudIcon('eye')+'<small>'+(rideExt?'ภายนอก':'ประตูลำ')+'</small>';
   rideHostP=null; rideSpd=0;
   resetExtCam();                                    // วางกล้องเข้าที่ทันที ไม่ให้กวาดมาจากตำแหน่งเก่า
   syncExtBtn();
@@ -7054,7 +7249,7 @@ function enterHeli(){
   if(seatBtn) seatBtn.style.display='block';
   if(wheelBtn) wheelBtn.style.display='none';       // 🎡 ขึ้นเครื่องแล้วซ่อนพวงมาลัย
   inHeli=true; setScoped(false);
-  wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.textContent='🪂';
+  wrapEl.classList.add('fly'); heliBtn.classList.add('flying'); heliBtn.innerHTML=hudIcon('parachute','ลง');
   phVel={x:0,y:0,z:0}; phClimb=0; hLanded=false;
   phMisLeft=PH_MIS_MAX; phMisReloadAt=0;
   phFlares=PH_FLARE_MAX; phFlareAt=0; phFlareReAt=0; renderFlareBtn();   // 🔥🛡️ รอบ 569: ลำใหม่ = แฟลร์เต็ม
@@ -7083,7 +7278,7 @@ function exitHeli(){
   if(startEl) startEl.classList.remove('on');
   if(wrapEl) wrapEl.classList.remove('seat0','seat1','seat2','seat3','cockpit');
   inHeli=false; hLanded=false;
-  wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
+  wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.innerHTML=hudIcon('heli','ขึ้นรถ');
   if(gunGrp) gunGrp.visible=true;
   py=terrainH(px,pz)+EYE; phClimb=0;
   misLeft=MIS_MAX; misReloadAt=0; renderMissiles(); syncBotHelis();
@@ -7146,7 +7341,7 @@ function syncExtBtn(){
   if(!extBtn) return;
   const on=(inHeli&&!!SEAT_VIEWS[seatLv].ext)||(!!riding&&rideExt);   // 🎖️ รอบ 539: พลปืนก็วนมุมกล้องได้
   extBtn.style.display=on?'block':'none';
-  if(on) extBtn.innerHTML=EXT_VIEWS[extV].ic+'<small>'+EXT_VIEWS[extV].label+'</small>';
+  if(on) extBtn.innerHTML=hudIcon('camera')+'<small>'+EXT_VIEWS[extV].label+'</small>';
 }
 function cycleExtView(d){
   const n=EXT_VIEWS.length;
@@ -8948,7 +9143,7 @@ function setDayMode(m,quiet){
   night=(dayMode==='night');
   if(dayMode==='auto') cycT=nightK<.5?0:CYCLE_MS/2;         // เริ่มหมุนจาก "ตอนนี้" ไม่กระโดดแสง
   lastPhase=nightK<.5?0:1;
-  if(nightBtn){ nightBtn.textContent=MODE_ICON[dayMode];
+  if(nightBtn){ nightBtn.innerHTML=hudIcon('cycle',dayMode==='day'?'กลางวัน':dayMode==='night'?'กลางคืน':'อัตโนมัติ');
     nightBtn.classList.toggle('night',dayMode!=='day'); }
   state.invDayMode=dayMode; state.invNight=night;           // (invNight เก็บไว้ให้เซฟเก่าอ่านได้)
   if(typeof saveState==='function') saveState();
@@ -9531,7 +9726,7 @@ function start(){
   sessionCoins=0; sessionWords=0; renderCoins();
   hp=PLAYER_HP; heat=0; overheat=false; misLeft=MIS_MAX; misReloadAt=0;
   firing=false; isRun=false; runBtn.classList.remove('on');
-  inHeli=false; wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.textContent='🚁';
+  inHeli=false; wrapEl.classList.remove('fly'); heliBtn.classList.remove('flying'); heliBtn.innerHTML=hudIcon('heli','ขึ้นรถ');
   phVel={x:0,y:0,z:0}; phClimb=0; phMisLeft=PH_MIS_MAX; phMisReloadAt=0; if(gunGrp) gunGrp.visible=true;
   Object.keys(peers).forEach(dropPeer); myChat=null; boardSig='';
   resetCrowdGuard();                                    // 🧯 รอบ 637: เข้ารอบใหม่ = เริ่มนับหัวใหม่ ไม่ค้างสถานะ "สนามเต็ม"
@@ -9697,6 +9892,9 @@ window.InvasionWorld={
     get perf(){ const r=renderer&&renderer.info&&renderer.info.render, m=renderer&&renderer.info&&renderer.info.memory;
       return {fps:+perfFps.toFixed(1),calls:r?r.calls:0,triangles:r?r.triangles:0,points:r?r.points:0,lines:r?r.lines:0,
         geometries:m?m.geometries:0,textures:m?m.textures:0,pixelRatio:renderer?renderer.getPixelRatio():0}; },
+    /* 🎛️ รอบ 1041: test hook ของตัวจัดวาง HUD */
+    get hudLayout(){return {editing:hudEditing,picked:hudPicked&&hudPicked.dataset.hudKey,layout:hudCopy(hudLayout)}},
+    openHudEditor, closeHudEditor, applyHudLayout,
     get pos(){return {x:px,y:py,z:pz,yaw,pitch}},
     set pos(v){ if('x'in v)px=v.x; if('z'in v)pz=v.z; if('yaw'in v)yaw=v.yaw; if('pitch'in v)pitch=v.pitch; },
     /* 🎆🧱🌳 รอบ 580: ระเบิดวงกลม · อาคารทึบ · ต้นไม้โมเดลจริง */
