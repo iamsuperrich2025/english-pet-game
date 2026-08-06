@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-06
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-07
 
 ## js/adv3d_css.js (1,218 บรรทัด · 0 รายการ)
 
@@ -684,7 +684,7 @@ openPhotoCrop:224
 
 ## js/picdict.js (1,102 บรรทัด · 0 รายการ)
 
-## js/picmatch.js (521 บรรทัด · 0 รายการ)
+## js/picmatch.js (565 บรรทัด · 0 รายการ)
 
 ## js/picquiz_online.js (603 บรรทัด · 0 รายการ)
 
@@ -904,7 +904,7 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lobby.css (5,593 บรรทัด · 786 selector)
+## css/lobby.css (5,601 บรรทัด · 787 selector)
 :root:6,5330 · html:15 · body:16,5294,5336 · *:36,37,38,39 · #app:42 · h1:44
 .subtitle:45 · .shop-title:46 · #rotate-overlay:49 · .screen:71 · #screen-select:80,81,82,83(+5) · .egg-need:90
 .petshop-topright:92 · .petshop-play-link:93,98 · #screen-login:112,137,138,143(+7) · .login-lux:122 · .login-crest:123 · .login-word:127
@@ -1034,8 +1034,9 @@ vbRender:148 · vbCardHTML:194
 .tp-ch:5179,5184,5185,5187 · .tp-thai:5195 · .tp-hint:5197 · .tp-empty:5199 · .tp-keys:5202 · .tp-row:5204
 .tp-row-fn:5206,5239 · .tp-key:5210,5222,5224,5230(+2) · .tp-key-fn:5237 · .tp-fx:5243 · .tp-coinpop:5244 · .tp-pop-pt:5249
 #city-backdrop:5263,5269 · .city-arrive:5270,5271 · .night:5285,5305,5306,5308(+2) · #night-veil:5331 · .theme-emerald:5360,5372,5379,5382(+7) · .theme-plum:5365,5376,5380,5383(+3)
-#theme-veil:5393 · #screen-picmatch:5446,5452,5453,5454(+29) · .pm-category-btn:5479,5482 · .pm-sheet-card-img:5483 · .pm-card:5484,5489,5493,5495(+9) · .pm-grid:5487
-.pm-right:5517 · .pm-now:5518,5524 · #pm-now-en:5525 · .pm-now-th:5526 · .pm-mode-btn:5557,5560 · .pm-wordcard:5561,5562,5564
+#theme-veil:5393 · #screen-picmatch:5446,5452,5453,5454(+29) · .pm-category-btn:5479,5482 · .pm-sheet-card-img:5483 · .pm-card:5485,5490,5494,5496(+9) · .pm-grid:5488
+.pm-right:5518 · .pm-now:5519,5525 · #pm-now-en:5526 · .pm-now-th:5527 · .pm-lobby-btn:5535,5539 · .pm-mode-btn:5564,5567
+.pm-wordcard:5568,5569,5571
 
 ## css/picdict.css (317 บรรทัด · 1 selector)
 #screen-picdict:9,16,17,22(+104)
