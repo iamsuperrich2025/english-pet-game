@@ -2110,6 +2110,9 @@ const imgTexPend={};                                   // key -> คิววั
 function applyTex(mat,key,rx,ry,tint,pngFirst){        // tint = สีคูณทับภาพ (โลกกลางคืนใช้ภาพเดียวกันแต่หม่นลง) · pngFirst = ภาพที่ต้องมีพื้นโปร่ง (หน้าต่าง/ประตู)
   if(!mat||!key) return;
   rx=rx||1; ry=ry||1;
+  /* 🖼️ รอบ 1067: ภาพบุคคลโรงแรมถูกเปลี่ยนจากชุดชาวต่างชาติเป็นคนไทยโดยใช้ชื่อไฟล์เดิม
+     SW/runtime cache ของเครื่องที่เคยเข้าโลกนี้จึงอาจคืนภาพเก่าแม้โค้ดใหม่แล้ว — bust เฉพาะ 7 ภาพนี้ ไม่รื้อ cache texture ทั้งเกม */
+  const assetRev=(key==='tex_hotel_funeral_portrait'||key.indexOf('tex_hotel_portrait_')===0)?'?thai=1067':'';
   const use=(m,img)=>{
     const t=new THREE.Texture(img); t.needsUpdate=true;
     t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(m.rx,m.ry);
@@ -2136,9 +2139,9 @@ function applyTex(mat,key,rx,ry,tint,pngFirst){        // tint = สีคูณ
     const second=new Image();
     second.onload=()=>done(second);
     second.onerror=()=>done(null);
-    second.src='img/tex/'+key+ext2;
+    second.src='img/tex/'+key+ext2+assetRev;
   };
-  first.src='img/tex/'+key+ext1;
+  first.src='img/tex/'+key+ext1+assetRev;
 }
 /* ============================================================
    🌌 ท้องฟ้ากลางคืนโรงแรมผีสิง (รอบ 694) — ผู้ใช้: "ข้างนอกโรงแรมยังไม่น่ากลัวพอ"
