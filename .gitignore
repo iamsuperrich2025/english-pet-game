@@ -31,3 +31,6 @@ store/android/
 # ตัดใหม่ได้ทุกเมื่อ: python tools/slice_matching.py
 img/matching/animal1.png
 img/matching/animal2.png
+
+# โน้ต commit ชั่วคราวที่ COMMIT_DEPLOY อ่านแล้วลบเอง — ห้ามเก็บเข้า handoff commit
+handoff/SHIP.txt

@@ -1,15 +1,14 @@
 "use strict";
 /* ============================================================
-   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · ผู้ใช้สั่ง 3 ส.ค. · โหมดภาพ-คำ รอบ 978 · กรองตามระดับชั้น รอบ 980)
+   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1052)
    2 โหมด สลับด้วยปุ่มบนกระดาน:
-   · "pic"  = แถวบน ภาพสัตว์ชุดที่ 1 ↔ แถวล่าง สัตว์ตัวเดียวกันคนละลายเส้น (ชุดที่ 2) — เฉพาะ 46 ตัวที่มีภาพครบ 2 แผ่น
-   · "word" = แถวบน ภาพสัตว์ (แผ่นเดียว) ↔ แถวล่าง คำศัพท์ภาษาอังกฤษ — ครบทั้ง 104 ตัวที่มีภาพอย่างน้อย 1 แผ่น
+   · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
+   · "word" = ภาพจาก Picture Dictionary ↔ คำศัพท์ภาษาอังกฤษ
    จับคู่ถูก = ได้เหรียญ/EXP/RP/คอมโบ/แต้มโรงงาน "สูตรเดียวกับเกมจับคู่คำศัพท์ทุกประการ" (ทั้ง 2 โหมด)
    (ใช้ตัวนับ game.* + addSessionCoins + showSessionSummary ชุดเดียวกับ js/game.js)
-   แตะภาพ/คำไหน = อ่านออกเสียงชื่อสัตว์เป็นภาษาอังกฤษ (speakWord → sound/words/<word>.mp3 · ไม่มีไฟล์ค่อย TTS)
-   ภาพ: img/matching/cards/a1_<key>.png / a2_<key>.png (ตัดจากแผ่นของผู้ใช้ด้วย tools/slice_matching.py)
-   คลังคำ: js/data/matchpics.js (โหมด pic · 46 ตัวครบ 2 แผ่น) · js/data/matchwords.js (โหมด word · 104 ตัว + sheet)
-   ระดับชั้น: js/data/animalgrade.js (key→tier 1-3 เจนจาก tools/gen_animalgrade.py) — bank() กรองสะสมตาม gradeTier()
+   แตะภาพ/คำไหน = อ่านออกเสียงภาษาอังกฤษ (speakWord → MP3/TTS)
+   หมวด/คำ/กรอบภาพใช้ข้อมูลชุดเดียวกับ Picture Dictionary:
+   js/data/picdict.js + picdict_words.js + picdict_grid.js · img/matching/web/*.webp
    ============================================================ */
 (function(){
   /* 🎚️ รอบ 981 (ผู้ใช้สั่ง): ขนาดกระดานตามระดับชั้น — ยิ่งโตยิ่งเยอะ ภาพยิ่งย่อ (แบบเกม onet แนวนอน)
@@ -31,40 +30,43 @@
   function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
 
-  let queue = [], qi = 0;          // คิวสัตว์สุ่มไม่ซ้ำจนกว่าจะครบคลัง (คลังคนละชุดต่อโหมด)
+  let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1052 ใช้คลังชุดที่ผู้เล่นเลือกแทน
   let sec = null;                  // <section id="screen-picmatch">
   const pm = {
-    mode:'pic',                    // 'pic' = จับคู่ภาพกับภาพ (เดิม) · 'word' = จับคู่ภาพกับคำอังกฤษ
+    mode:'pic',                    // 'pic' = ภาพเดียวกัน 2 ใบ · 'word' = ภาพกับคำอังกฤษ
     pairs:[], sel1:null, sel2:null, matched:0, checking:false,
     timerId:0, timeLeft:0, total:60, roundAt:0, clean:true, hintUsed:false,
+    choosing:true, group:0, sheetFile:'', sheetEn:'', sheetTh:'', pageStart:0,
   };
 
   const $  = id => document.getElementById(id);
   const has = f => typeof window[f] === 'function';
   const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
-  const bank = () => {
-    const arr = pm.mode === 'word'
-      ? (typeof MATCH_WORDS !== 'undefined' ? MATCH_WORDS : [])
-      : (typeof MATCH_PICS !== 'undefined' ? MATCH_PICS : []);
-    if(typeof ANIMAL_GRADE === 'undefined') return arr;      // ไฟล์กรองยังไม่โหลด — เล่นได้ครบคลังเดิม (กันพัง)
-    const tier = gradeTier();
-    // 🎓 รอบ 980: กรองสัตว์ตามระดับชั้นผู้เล่นแบบสะสม (tier สูง = เห็นของ tier ต่ำด้วยเสมอ ไม่มีวันเห็นน้อยลง)
-    const filtered = arr.filter(it => (ANIMAL_GRADE[it[0]] || 3) <= tier);
-    return filtered.length ? filtered : arr;                // กันคลังว่าง (เผื่อคีย์ไม่ตรงตารางในอนาคต)
-  };
-  const imgSrc = (sheet, key) => `img/matching/cards/${sheet}_${key}.png`;
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const book = () => typeof PICDICT_BOOK !== 'undefined' ? PICDICT_BOOK : [];
+  const wordsFor = file => (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[file]) || null;
+  const gridFor = file => (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
+  const sheetSrc = file => `img/matching/web/${file.replace(/\.png$/i,'.webp')}`;
+  function sheetItems(file){
+    const W = wordsFor(file), G = gridFor(file);
+    if(!W) return [];
+    return W.words.map(([en,th], index)=>({
+      key:`${file}:${index}`, file, index, en, th,
+      rect:(G && G[index]) || [index%W.cols/W.cols, Math.floor(index/W.cols)/W.rows,
+        (index%W.cols+1)/W.cols, (Math.floor(index/W.cols)+1)/W.rows],
+    }));
+  }
+  function pageSize(){
+    const n = sizeForGrade()[0];
+    return pm.mode === 'word' ? Math.min(20,n) : n; // คำต้องอ่านได้; ภาพ-ภาพใช้งบ 4/10/40 ตามชั้นตรง ๆ
+  }
+  const bank = () => pm.sheetFile
+    ? sheetItems(pm.sheetFile).slice(pm.pageStart, pm.pageStart + pageSize()) : [];
 
-  /* ---------- คิวสัตว์: สุ่มทั้งคลังแล้วจ่ายทีละรอบ ครบคลังค่อยสับใหม่ (เห็นภาพหลากหลาย ไม่วนซ้ำ) ---------- */
+  /* ---------- คลังชุดที่เลือก: ทุกภาพในลิงก์ชุดนั้นต้องได้ขึ้นกระดานครบ ---------- */
   function take(n){
-    const out = [];
-    n = Math.min(n, bank().length);   // 🛡️ รอบ 981: คลัง (หลังกรองตามชั้น) เล็กกว่าที่ขอ = เอาเท่าที่มี
-    while(out.length < n){            //    ไม่งั้นลูปหาตัวไม่ซ้ำไปเรื่อย ๆ ไม่มีวันจบ = เกมค้าง
-      if(qi >= queue.length){ queue = shuffle(bank().slice()); qi = 0; }
-      if(!queue.length) break;                       // คลังว่าง (ไฟล์ข้อมูลไม่โหลด) — กันลูปไม่รู้จบ
-      const it = queue[qi++];
-      if(!out.some(o => o[0] === it[0])) out.push(it);
-    }
-    return out;
+    queue = shuffle(bank().slice()); qi = Math.min(n, queue.length);
+    return queue.slice(0, qi);
   }
 
   /* ---------- สร้างหน้าจอครั้งเดียว ---------- */
@@ -77,26 +79,41 @@
       <div class="game-top">
         <button class="back-btn" id="pm-back">⬅ กลับ</button>
         <div class="game-avatar" id="pm-avatar" title="ตัวละครของหนูมาเชียร์!"></div>
+        <button class="pm-category-btn pm-play" id="pm-category" title="เลือกหมวดอื่น">📚 เลือกหมวด</button>
         <button class="pm-mode-btn" id="pm-mode" title="สลับโหมดเกม">🖼️ ภาพ-ภาพ</button>
-        <button class="pm-now" id="pm-now" title="แตะฟังเสียงอีกครั้ง">🔊 <span id="pm-now-en">แตะภาพฟังเสียง</span><span class="pm-now-th" id="pm-now-th"></span></button>
-        <div class="pm-right">
+        <button class="pm-now pm-play" id="pm-now" title="แตะฟังเสียงอีกครั้ง">🔊 <span id="pm-now-en">แตะภาพฟังเสียง</span><span class="pm-now-th" id="pm-now-th"></span></button>
+        <div class="pm-right pm-play">
           <div class="coin-pill"><img class="coin-ic" src="img/coins/coin_gold.png" alt="เหรียญ" onerror="this.replaceWith('🪙')"> <span id="pm-coin">0</span></div>
           <div class="combo-pill" id="pm-combo">Combo ×0</div>
         </div>
       </div>
-      <div class="timer-wrap"><div class="timer-fill" id="pm-timer"></div></div>
+      <div class="pm-chooser" id="pm-chooser">
+        <div class="pm-choose-head"><b>🖼️ เลือกหมวด Picture Dictionary</b><span id="pm-budget"></span></div>
+        <div class="pm-group-tabs" id="pm-group-tabs"></div>
+        <div class="pm-sheet-list" id="pm-sheet-list"></div>
+      </div>
+      <div class="timer-wrap pm-play"><div class="timer-fill" id="pm-timer"></div></div>
       <!-- 🔀 รอบ 985 (ผู้ใช้สั่ง): กระดานเดียว ภาพ 2 ชุดคละกันทั้งกระดาน (เลิกแยกแถวบน/แถวล่าง)
            #pm-grid-b เก็บไว้เป็นกล่องเปล่า เผื่อโค้ดเก่า/เทสต์ยังอ้างถึง -->
-      <div class="pm-grid" id="pm-grid-a"></div>
-      <div class="pm-grid" id="pm-grid-b" hidden></div>
-      <button class="hint-btn" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
-      <p class="game-endless-note pm-note">♾️ เล่นได้เรื่อยๆ ไม่มีวันตัน — แตะภาพ/คำเพื่อ<b>ฟังเสียงอ่านภาษาอังกฤษ</b> · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>เพลียเมื่อไหร่ กดปุ่ม <b>⬅ กลับ</b> มุมซ้ายบนพักได้เสมอ 😊</span></p>`;
+      <div class="pm-grid pm-play" id="pm-grid-a"></div>
+      <div class="pm-grid pm-play" id="pm-grid-b" hidden></div>
+      <button class="hint-btn pm-play" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
+      <p class="game-endless-note pm-note pm-play">♾️ ภาพทุกใบมาจาก <b>Picture Dictionary</b> · แตะภาพ/คำเพื่อฟังเสียง · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>อยากเปลี่ยนหมวด กด <b>📚 หมวดภาพ</b> ด้านบนได้เสมอ 😊</span></p>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pm-back').addEventListener('click', exit);
     $('pm-hint').addEventListener('click', hint);
     $('pm-mode').addEventListener('click', toggleMode);
+    $('pm-category').addEventListener('click', showChooser);
     $('pm-now').addEventListener('click', replayNow);
+    $('pm-group-tabs').addEventListener('click', e=>{
+      const b=e.target.closest('[data-group]'); if(!b) return;
+      pm.group=+b.dataset.group; renderChooser();
+    });
+    $('pm-sheet-list').addEventListener('click', e=>{
+      const b=e.target.closest('[data-file][data-start]'); if(!b) return;
+      chooseSheet(b.dataset.file,b.dataset.en,b.dataset.th,+b.dataset.start);
+    });
     return sec;
   }
 
@@ -106,15 +123,57 @@
     pm.mode = pm.mode === 'pic' ? 'word' : 'pic';
     queue = []; qi = 0;
     updateLabels();
-    newRound();
+    if(pm.choosing) renderChooser();
+    else{
+      pm.pageStart = Math.floor(pm.pageStart/pageSize())*pageSize();
+      newRound();
+    }
   }
   function updateLabels(){    // รอบ 985: เหลือแค่ปุ่มโหมด — ป้ายบอกแถวบน/ล่างถูกถอดออก (กระดานคละกันแล้ว)
     $('pm-mode').textContent = MODE_LABEL[pm.mode];
   }
 
+  /* ============================================================
+     📚 Picture Dictionary category chooser (รอบ 1052)
+     8 กลุ่ม + 46 หมวดใช้สารบัญเดียวกับหนังสือ; หมวดที่เกินงบ 4/10/40 คู่
+     แบ่งเป็นลิงก์ "ชุด" ใต้ชื่อหมวด เพื่อไม่ให้ภาพส่วนเกินหายไป
+     ============================================================ */
+  function renderChooser(){
+    const groups=book(), budget=pageSize();
+    const grade=String(typeof state !== 'undefined' && state.student ? state.student.grade : 'ป.1');
+    if(!groups.length) return;
+    pm.group=Math.max(0,Math.min(pm.group,groups.length-1));
+    $('pm-budget').textContent=`${grade} · ${budget} คู่/ชุด${pm.mode==='word'&&sizeForGrade()[0]>20?' (โหมดคำจำกัด 20 คู่เพื่อให้อ่านชัด)':''}`;
+    $('pm-group-tabs').innerHTML=groups.map((g,i)=>
+      `<button class="pm-group-tab${i===pm.group?' on':''}" data-group="${i}">${g.icon} ${esc(g.g)}</button>`).join('');
+    const gr=groups[pm.group];
+    $('pm-sheet-list').innerHTML=gr.sheets.map(([file,en,th])=>{
+      const count=sheetItems(file).length, pages=Math.ceil(count/budget);
+      const links=Array.from({length:pages},(_,i)=>{
+        const start=i*budget, end=Math.min(count,start+budget);
+        return `<button class="pm-set-link" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}</small></button>`;
+      }).join('');
+      return `<article class="pm-sheet-card"><div class="pm-sheet-title"><span>${gr.icon}</span><b>${esc(th)}</b><small>${esc(en)} · ${count} ภาพ</small></div><div class="pm-set-links">${links}</div></article>`;
+    }).join('');
+  }
+  function showChooser(){
+    clearInterval(pm.timerId); pm.choosing=true;
+    sec.classList.add('choosing');
+    $('pm-back').textContent='⬅ กลับ Lobby';
+    renderChooser();
+  }
+  function chooseSheet(file,en,th,start){
+    pm.sheetFile=file; pm.sheetEn=en; pm.sheetTh=th; pm.pageStart=start; pm.choosing=false;
+    sec.classList.remove('choosing');
+    $('pm-back').textContent='⬅ กลับ';
+    const end=Math.min(sheetItems(file).length,start+pageSize());
+    $('pm-category').textContent=`📚 ${th} ${start+1}–${end}`;
+    updateLabels(); newRound(); fitGrid();
+  }
+
   /* ---------- เปิดเกม ---------- */
   function open(){
-    if(!bank().length){
+    if(!book().length || typeof PICDICT_WORDS === 'undefined' || typeof PICDICT_GRID === 'undefined'){
       if(has('toast')) toast('⚠️ ยังโหลดคลังภาพไม่ได้ ลองรีเฟรชหน้าอีกครั้งนะ');
       return;
     }
@@ -134,38 +193,43 @@
     if(av && has('playerAvatarHTML')){ const h = playerAvatarHTML(''); av.innerHTML = h; av.style.display = h ? '' : 'none'; }
     const p = has('activePet') ? activePet() : null;
     $('pm-hint').style.display = (p && p.type === 'cat' && has('abilityOn') && abilityOn(p)) ? 'block' : 'none';
-    newRound();
     showScreen('screen-picmatch');
-    fitGrid();          // ตอน newRound จอยังไม่ active (วัดขนาดไม่ได้) — วัดจริงหลังโชว์จอ
+    updateLabels(); showChooser();
   }
 
   /* ---------- รอบใหม่ ---------- */
   function newRound(){
     clearInterval(pm.timerId);
+    if(!pm.sheetFile){ showChooser(); return; }
     let size = sizeForGrade();
     // 🔤 โหมดภาพ-คำ: ตัวหนังสือต้องอ่านออก → กระดานใหญ่สุด 20 คู่ (40 คู่ = ช่องเล็กจนคำยาวโดนตัด)
     if(pm.mode === 'word' && size[0] > 20) size = [20, 300];
-    pm.pairs = take(size[0]);
+    pm.pairs = take(pageSize());
     pm.sel1 = pm.sel2 = null;
     pm.matched = 0; pm.checking = false; pm.hintUsed = false;
     pm.roundAt = Date.now(); pm.clean = true;
     resetNow();                        // 🔊 การ์ดชุดใหม่ทั้งกระดาน → เคลียร์ป้ายเสียง/ความหมายรอบก่อน
 
-    const imgCard = (side, sheetFile, it) =>
-      `<button class="pm-card" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="${side}">
-         <img class="pm-img" src="${imgSrc(sheetFile, it[0])}" alt="${it[1]}" draggable="false">
-         <span class="pm-name">${it[1]} · ${it[2]}</span>
+    const cropStyle = it=>{
+      const [x0,y0,x1,y1]=it.rect, w=x1-x0, h=y1-y0;
+      const px=w<.999 ? x0/(1-w)*100 : 0, py=h<.999 ? y0/(1-h)*100 : 0;
+      return `background-image:url('${encodeURI(sheetSrc(it.file)).replace(/'/g,'%27')}');background-size:${100/w}% ${100/h}%;background-position:${px}% ${py}%`;
+    };
+    const imgCard = (side, it) =>
+      `<button class="pm-card pm-sheet-card-img" data-key="${esc(it.key)}" data-en="${esc(it.en)}" data-th="${esc(it.th)}" data-side="${side}">
+         <span class="pm-sheet-img" style="${cropStyle(it)}" role="img" aria-label="${esc(it.en)}"></span>
+         <span class="pm-name">${esc(it.en)} · ${esc(it.th)}</span>
        </button>`;
     const wordCard = it =>
-      `<button class="pm-card pm-wordcard" data-key="${it[0]}" data-en="${it[1]}" data-th="${it[2]}" data-side="a2">
-         <span class="pm-word-text">${it[1]}</span>
+      `<button class="pm-card pm-wordcard" data-key="${esc(it.key)}" data-en="${esc(it.en)}" data-th="${esc(it.th)}" data-side="a2">
+         <span class="pm-word-text">${esc(it.en)}</span>
        </button>`;
     /* 🔀 รอบ 985 (ผู้ใช้สั่ง "เอาภาพ 2 ชุดมาผสมกันเลย เค้าต้องคละกัน"):
        ทุกใบทั้ง 2 ชุดลงกริดเดียว สับไพ่รวมกันหมด — แตะใบไหนก่อนก็ได้ ขอแค่เป็นสัตว์ตัวเดียวกัน */
     const all = [];
     pm.pairs.forEach(it => {
-      all.push(imgCard('a1', pm.mode === 'word' ? (it[3] || 'a1') : 'a1', it));
-      all.push(pm.mode === 'word' ? wordCard(it) : imgCard('a2', 'a2', it));
+      all.push(imgCard('a1',it));
+      all.push(pm.mode === 'word' ? wordCard(it) : imgCard('a2',it));
     });
     $('pm-grid-a').innerHTML = shuffle(all).join('');
     $('pm-grid-b').innerHTML = '';
@@ -177,7 +241,7 @@
 
     const p = has('activePet') ? activePet() : null;
     // เวลา: ตามขนาดกระดาน (+20 วิ ถ้าเลี้ยงสุนัขโตเต็มวัยไม่ป่วย — กติกาเดียวกับเกมจับคู่คำศัพท์)
-    pm.total = size[1] + ((p && p.type === 'dog' && has('abilityOn') && abilityOn(p)) ? 20 : 0);
+    pm.total = Math.max(30,pm.pairs.length*(pm.pairs.length>20?12:15)) + ((p && p.type === 'dog' && has('abilityOn') && abilityOn(p)) ? 20 : 0);
     pm.timeLeft = pm.total;
     tickBar();
     pm.timerId = setInterval(()=>{
@@ -251,13 +315,8 @@
 
   let preImgs = [];
   function preload(){
-    const nx = queue.slice(qi, qi + pm.pairs.length);
     preImgs = [];
-    if(pm.mode === 'word'){
-      nx.forEach(it => { const i = new Image(); i.src = imgSrc(it[3] || 'a1', it[0]); preImgs.push(i); });
-    }else{
-      nx.forEach(it => ['a1','a2'].forEach(s => { const i = new Image(); i.src = imgSrc(s, it[0]); preImgs.push(i); }));
-    }
+    if(pm.sheetFile){ const i=new Image(); i.src=sheetSrc(pm.sheetFile); preImgs.push(i); }
   }
 
   function tickBar(){
@@ -440,7 +499,7 @@
     const matches = (typeof game !== 'undefined') ? game.sessionMatches : 0;
     const back = ()=>{ if(has('renderDashboard')) renderDashboard(); showScreen('screen-dashboard'); };
     if(earned <= 0 || !has('showSessionSummary')){ back(); return; }
-    if(has('feedEvent')) feedEvent('coin', `จับคู่ภาพสัตว์ได้ ${has('fmtNum') ? fmtNum(earned) : earned} เหรียญ (${matches} คู่) 🖼️`);
+    if(has('feedEvent')) feedEvent('coin', `จับคู่ภาพได้ ${has('fmtNum') ? fmtNum(earned) : earned} เหรียญ (${matches} คู่) 🖼️`);
     const isRecord = earned > (game.prevBest || 0);
     const allTime  = isRecord && earned > (game.prevAllBest || 0);
     showSessionSummary(earned, matches, isRecord, allTime, back, ()=>open());
@@ -456,5 +515,5 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, get queue(){ return queue; }, bank } };
+  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, get queue(){ return queue; }, bank } };
 })();
