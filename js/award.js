@@ -79,7 +79,8 @@
       if(typeof Online === 'undefined' || !Online.ready) return [];
       const myId = (typeof onlineKey === 'function') ? onlineKey() : '';
       const map = {};
-      (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n || '', g:r.g || '', v:r[F] || 0, v2:F2 ? (r[F2] || 0) : 0}; });
+      const board = cfg.boardOf ? cfg.boardOf() : Online.board;
+      (board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n || '', g:r.g || '', v:r[F] || 0, v2:F2 ? (r[F2] || 0) : 0}; });
       if(myId && typeof state !== 'undefined' && state.student){
         const nm = (state.profileName || state.student.first || 'หนู') + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
         map[myId] = {id:myId, n:nm, g:state.student.grade || '', v:Math.round(cfg.scoreOf() || 0),

@@ -386,7 +386,7 @@ document.addEventListener('visibilitychange', ()=>{
     home:'[data-panel="panel-home"]', farm:'[data-panel="panel-farm"]', factory:'[data-panel="panel-factory"]',
     market:'[data-panel="panel-market"]', friends:'[data-panel="panel-friends"]', gifts:'[data-panel="panel-gifts"]',
     rank:'#btn-rail-rank', stats:'#btn-stats', trophy:'#btn-rail-trophy',
-    wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', shootword:'#btn-rail-shootword', examstd:'#btn-rail-examstd',
+    wordsearch:'#btn-rail-wordsearch', typing:'#btn-rail-typing', bubble:'#btn-rail-bubble', shootword:'#btn-rail-shootword', examstd:'#btn-rail-examstd',
     book:'#btn-vocab-book', cats:'#btn-cats', play:'#btn-play', bandexam:'#btn-band-exam',
     picmatch:'#btn-picmatch',                 // 🖼️ รอบ 977: เกมจับคู่ภาพ (ตึกในเมือง 3D → ปุ่มในล็อบบี้)
     picdict:'#btn-picdict',                   // 📖 รอบ 992: หนังสือ Picture Dictionary

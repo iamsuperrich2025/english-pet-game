@@ -82,6 +82,10 @@ const DEFAULT_STATE = {
   tpUsed:[],                          // ⌨️ รอบ 648: คำที่พิมพ์สำเร็จแล้วในเกมพิมพ์คำศัพท์ — กติกา "คำห้ามซ้ำ" (หมดคลัง = ล้างแล้ววนใหม่)
   tpScore:0,                          // ⌨️ รอบ 649: แต้มสะสมตลอดกาลเกมพิมพ์คำ (ขึ้นกระดานอันดับ field tp)
   tpWords:0,                          // ⌨️ รอบ 649: จำนวนคำที่พิมพ์สำเร็จทั้งหมด (ไม่ล้างตอน tpUsed วนรอบใหม่)
+  bbUsed:[],                          // 🫧 คำที่เคยแตะฟองครบแล้ว (หมดคลังจึงวนใหม่)
+  bbScore:0,                          // 🫧 คะแนนสะสมตลอดกาล → leaderboard.bb
+  bbWords:0,                          // 🫧 จำนวนคำที่แตะฟองครบทั้งหมด
+  bbSoundOff:false,                   // 🫧 ปิดเฉพาะเสียงฟอง (ไม่กระทบเสียงเกมอื่น)
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
@@ -90,6 +94,9 @@ const DEFAULT_STATE = {
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
   tpAwardPaid:[],
   tpAwardLog:[],
+  bbAwardSeen:'',                     // 🫧🏆 รางวัลรายเดือนกระดานฟอง
+  bbAwardPaid:[],
+  bbAwardLog:[],
   sgScore:0,                          // 🎯 รอบ 917: แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (ขึ้นกระดานอันดับ field sg)
   sgWords:0,                          // 🎯 รอบ 917: จำนวนคำที่ยิงสะกดครบทั้งหมด (โชว์คู่แต้มใน HUD)
   sgIntro:0,                          // 🎯 รอบ 917: เคยเห็นการ์ดวิธีเล่นแล้ว (โชว์ครั้งแรกครั้งเดียว)
@@ -457,6 +464,10 @@ function loadState(){
       // เซฟเก่าที่เล่นรอบ 648 มาแล้ว (มี tpUsed แต่ยังไม่มี tpScore) → นับคำที่เคยพิมพ์เป็นจำนวนคำตั้งต้น
       // (ให้แต้มย้อนหลังไม่ได้เพราะไม่รู้ความยาว/ความแม่นของคำที่ลบไปแล้ว — เริ่มนับแต้มจาก 0 เท่ากันทุกคน)
       if(!s.tpWords && s.tpUsed.length) s.tpWords = s.tpUsed.length;
+      if(!Array.isArray(s.bbUsed)) s.bbUsed = [];
+      if(typeof s.bbScore !== 'number' || s.bbScore < 0) s.bbScore = 0;
+      if(typeof s.bbWords !== 'number' || s.bbWords < 0) s.bbWords = 0;
+      if(typeof s.bbSoundOff !== 'boolean') s.bbSoundOff = false;
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
@@ -465,6 +476,9 @@ function loadState(){
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
       if(!Array.isArray(s.tpAwardPaid)) s.tpAwardPaid = [];
       if(!Array.isArray(s.tpAwardLog)) s.tpAwardLog = [];
+      if(typeof s.bbAwardSeen !== 'string') s.bbAwardSeen = '';
+      if(!Array.isArray(s.bbAwardPaid)) s.bbAwardPaid = [];
+      if(!Array.isArray(s.bbAwardLog)) s.bbAwardLog = [];
       if(typeof s.sgScore !== 'number' || s.sgScore < 0) s.sgScore = 0;   // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำ
       if(typeof s.sgWords !== 'number' || s.sgWords < 0) s.sgWords = 0;
       if(typeof s.sgAwardSeen !== 'string') s.sgAwardSeen = '';   // 🏆 รอบ 917: รางวัลรายเดือนแท็บยิงเป้าคำ

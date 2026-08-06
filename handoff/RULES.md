@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+> ⚠️ **รอ publish เพิ่มโซน `bbAward` + field/index `bb` ของเกม 🫧 ฟอง** — ระหว่างยังไม่ publish เกมยังเล่นและเก็บคะแนนในเซฟได้ปกติ; client จะถอยไปเขียน leaderboard ก้อนเดิมอัตโนมัติ แต่คะแนนของเพื่อน/การตัดรอบรางวัลจะเริ่มหลัง publish ก้อนเต็มด้านล่าง
 > 🎉 **ผู้ใช้ publish ก้อนเต็ม 33 โซน / 555 บรรทัดแล้ว (3 ส.ค. 2026 · รอบ 983)** — ตรวจสดด้วย `firebase database:get "/.settings/rules" --project english-pet-game` แล้วเทียบทีละคีย์กับก้อนใน RULES.md: **331 คีย์ ตรงกันทั้งหมด ไม่มีคีย์หาย ไม่มีค่าเพี้ยน** → ของที่ค้างมาก่อนหน้า (`gnotif` รอบ 976 · `cl` รอบ 966 · `sgAward` รอบ 917 · `f1Rank` รอบ 903 · `f1` ใน wroom รอบ 896 · `pmAward`+`pm` รอบ 979) **ขึ้นครบพร้อมกันหมดแล้ว**
 - ✅ **รอบ 983 (3 ส.ค. 2026): ขยายโซน `gnotif` ให้เก็บ "ของขวัญ 🎁 · ทักทายน้อง 🐾 · คำขอเป็นเพื่อน 👋" ย้อนหลังด้วย (รวมทุกเรื่องไว้ในกล่อง 🔔 ใบเดียว) — ผู้ใช้ publish แล้ว 3 ส.ค. 2026 · ตรวจสดยืนยัน (ดูหมายเหตุบนสุด) (ก้อนเดียวกับรอบ 976 ด้านล่าง publish ครั้งเดียวได้ทั้งหมด):** เพิ่ม `t` อีก 3 ชนิด `gf`|`gr`|`fr` · **`pid` เปลี่ยนเป็น "ไม่บังคับ"** (ใบพวกนี้ไม่ได้มาจากโพสต์) — `.validate` บังคับ `['t','u','n','ts']` แล้วต้อง *มี `pid`* หรือ *เป็นชนิดใหม่* อย่างใดอย่างหนึ่ง (ยัดใบไม่มี pid เป็นชนิดไลก์/คอมเมนต์ไม่ได้) · **ทางเขียนใหม่ 2 เส้น เช็กของจริงในฐานข้อมูลก่อนเสมอ:** `gf`/`gr` ต้องมี `/gifts/<ผู้รับ>/<คนกด>` อยู่จริง (= ส่งของขวัญ/คำทักไปแล้วจริง) · `fr` ต้องมี `/friendReq/<ผู้รับ>/<คนกด>` อยู่จริง (= ส่งคำขอไปแล้วจริง) → **ไม่เปิดช่องใหม่ให้คนแปลกหน้าเลย** สิทธิ์เท่ากับการส่งของขวัญ/คำขอที่ทำได้อยู่แล้วเป๊ะ · ฟิลด์เดิมใช้ซ้ำทั้งหมด ไม่มีฟิลด์ใหม่ (`r`=shop/collect · `cm`=id ของขวัญ/รหัสคำทัก · `cid`=รหัสใบในกล่องของขวัญ กันนับซ้ำ)
   - **ทำไมต้องมี:** ของขวัญ/คำทักหายจากกล่อง 🎁 ทันทีที่กดรับ/ไม่รับ · คำขอเป็นเพื่อนถูกลบตอนกดรับ/ปฏิเสธ → เดิม**ไม่มีที่ไหนย้อนดูได้เลย**ว่าใครส่งอะไรมาเมื่อไหร่
@@ -93,7 +94,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     },
     "leaderboard": {
       ".read": true,
-      ".indexOn": "coins",
+      ".indexOn": ["coins", "bb"],
       "$uid": {
         ".write": "auth != null && auth.uid === $uid",
         ".validate": "newData.hasChildren(['n','g','coins','at'])",
@@ -110,6 +111,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "tw":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "sg":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "pm":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
+        "bb":    { ".validate": "newData.isNumber() && newData.val() >= 0" },
         "at":    { ".validate": "newData.isNumber()" },
         "$other": { ".validate": false }
       }
@@ -532,6 +534,26 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       }
     },
     "pmAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "bbAward": {
       ".read": true,
       "$m": {
         ".write": "auth != null && !data.exists()",

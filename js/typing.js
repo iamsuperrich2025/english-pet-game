@@ -333,6 +333,7 @@
 
   /* ---------- เปิด/ปิด ---------- */
   function open(){
+    if(typeof BubbleGame!=='undefined' && BubbleGame.close) BubbleGame.close();
     if(!overlay) build();
     overlay.style.display='flex';
     void boardEl.offsetWidth;

@@ -12,6 +12,7 @@
 #   bash tools/ship.sh "ข้อความ commit"   ← กำหนดข้อความเอง (เลขรอบยังเติมให้)
 #   bash tools/ship.sh -y                 ← ไม่ต้องถาม ลุยเลย
 #   bash tools/ship.sh --dry              ← ดูแผนเฉย ๆ ไม่แตะอะไร
+#   bash tools/ship.sh --only js/a.js ... ← ส่งเฉพาะไฟล์ tracked ที่ระบุ (กันกวาดงานแชทคู่ขนาน)
 #
 # ที่มาของข้อความ commit (ไล่ตามลำดับ):
 #   1) อาร์กิวเมนต์ที่พิมพ์มา
@@ -22,10 +23,13 @@
 set -e
 REPO="$(cd "$(dirname "$0")/.." && pwd)"; cd "$REPO"
 
-YES=0; DRY=0; MSG=""
+YES=0; DRY=0; MSG=""; ONLY=()
 while [[ $# -gt 0 ]]; do case "$1" in
   -y|--yes) YES=1; shift;;
   --dry) DRY=1; shift;;
+  --only)
+    [[ $# -ge 2 ]] || { echo "❌ --only ต้องตามด้วย path ไฟล์ tracked 1 ไฟล์"; exit 2; }
+    ONLY+=("$2"); shift 2;;
   -h|--help) sed -n '2,25p' "$0"; exit 10;;
   *) MSG="$1"; shift;;
 esac; done
@@ -44,13 +48,29 @@ ask(){ # y/n — ไม่มี tty ให้ถือว่า "ไม่" (�
 
 # ── 1) หาไฟล์ที่เปลี่ยน (เฉพาะที่ git ติดตามอยู่แล้ว) ────────────────────
 # ไฟล์ untracked (img/ sound/ ฯลฯ) ไม่ถูกหยิบโดยตั้งใจ = กันเผลอ commit asset ผู้ใช้
-mapfile -t CHANGED < <(git diff --name-only HEAD -- . | sort -u)
+if [[ ${#ONLY[@]} -gt 0 ]]; then
+  CHANGED=()
+  for f in "${ONLY[@]}"; do
+    # รอบ 1054: โหมด scope สำหรับเครื่องที่หลายแชทแก้ main พร้อมกัน — รับเฉพาะ path tracked แบบตรงตัว
+    # ไม่รับไฟล์ใหม่/glob/.. เพื่อไม่ให้ธงนี้กลายเป็นช่องกวาด asset หรือไฟล์นอกโปรเจกต์
+    [[ "$f" != /* && "$f" != *".."* ]] || { say "❌ --only path ไม่ปลอดภัย: $f"; exit 2; }
+    git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 || { say "❌ --only รับเฉพาะไฟล์ tracked: $f"; exit 2; }
+    git diff --quiet HEAD -- "$f" || CHANGED+=("$f")
+  done
+  mapfile -t CHANGED < <(printf '%s\n' "${CHANGED[@]}" | sed '/^$/d' | sort -u)
+  say "🎯 โหมดส่งเฉพาะงานรอบนี้ (--only): ${#CHANGED[@]} ไฟล์"
+else
+  mapfile -t CHANGED < <(git diff --name-only HEAD -- . | sort -u)
+fi
 
 # ไฟล์ "สร้างใหม่" ที่ยังไม่เข้า git — หยิบเฉพาะไฟล์โค้ดจริง (AI สร้างไฟล์ใหม่บ่อย เช่น js/data/picdict_grid.js)
 # allowlist เข้มมาก เพราะโฟลเดอร์นี้มี asset/ของชั่วคราว untracked เต็มไปหมด (img/ sound/ *.wav *.patch ฯลฯ)
-mapfile -t NEWF < <(git ls-files --others --exclude-standard -- . \
-  | grep -E '^(js/[^/]+\.js|js/data/[^/]+\.js|css/[^/]+\.css|tools/[^/]+\.(sh|py|js)|[^/]+\.(html|bat))$' \
-  | grep -vE '^js/data/vocab' | sort -u)
+NEWF=()
+if [[ ${#ONLY[@]} -eq 0 ]]; then
+  mapfile -t NEWF < <(git ls-files --others --exclude-standard -- . \
+    | grep -E '^(js/[^/]+\.js|js/data/[^/]+\.js|css/[^/]+\.css|tools/[^/]+\.(sh|py|js)|[^/]+\.(html|bat))$' \
+    | grep -vE '^js/data/vocab' | sort -u)
+fi
 if [[ ${#NEWF[@]} -gt 0 ]]; then
   say "🆕 เจอไฟล์โค้ดที่สร้างใหม่ (ยังไม่เคยเข้า git):"
   printf '   - %s\n' "${NEWF[@]}"

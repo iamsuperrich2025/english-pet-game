@@ -21,6 +21,7 @@ const Online = {
   db:null,
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 50 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
+  bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะะเหรียญรวมน้อย)
   lastScoreSig:null, // ลายเซ็น coins|av|ni ล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำ)
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
@@ -83,6 +84,8 @@ function onlineDisplayName(){
 
 /* ผู้เล่นกำลังทำอะไรอยู่ (ดูจากหน้าจอที่เปิด) — โชว์ในการ์ดเพื่อน */
 function onlineActivity(){
+  const bb=document.getElementById('bb-overlay');
+  if(bb&&bb.style.display==='flex') return 'กำลังเล่นฟองคำศัพท์ 🫧';
   const map = {
     'screen-game' : 'กำลังจับคู่คำศัพท์ 🎮',
     'screen-picmatch': 'กำลังจับคู่ภาพจาก Picture Dictionary 🖼️',
@@ -139,15 +142,17 @@ function onlinePushScore(){
   const tw    = Math.round(state.tpWords || 0);                            // ⌨️ รอบ 654: จำนวนคำที่พิมพ์สำเร็จ — **ตัวจัดอันดับแท็บพิมพ์คำ**
   const sg    = Math.round(state.sgScore || 0);                            // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์ (กระดานแท็บยิงเป้าคำ)
   const pm    = Math.round(state.pmScore || 0);                            // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ (กระดานแท็บจับคู่ภาพ)
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm;   // ค่าใดเปลี่ยน = re-push
+  const bb    = Math.round(state.bbScore || 0);                            // 🫧 คะแนนสะสมตลอดกาลเกมฟอง
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm + '|' + bb;   // ค่าใดเปลี่ยน = re-push
   if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำ/ยิงเป้าคำ/จับคู่ภาพไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
   // (pm = รอบ 979 รอ publish → ถอยไปก้อน sg+tp+tw ก่อน แล้วค่อยถอยลงอีกทีละขั้น)
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
-   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb}, base)).catch(()=>{
+   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs}, base)).catch(()=>{
@@ -156,6 +161,7 @@ function onlinePushScore(){
        });
       });
      });
+    });
     });
    });
   });
@@ -1967,11 +1973,20 @@ function onlineStart(){
                 tp: typeof v.tp === 'number' ? v.tp : 0,     // ⌨️ รอบ 649: เหรียญสะสมเกมพิมพ์คำ
                 tw: typeof v.tw === 'number' ? v.tw : 0,     // ⌨️ รอบ 654: จำนวนคำที่พิมพ์ (ตัวจัดอันดับ)
                 sg: typeof v.sg === 'number' ? v.sg : 0,     // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์
-                pm: typeof v.pm === 'number' ? v.pm : 0});   // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ
+                pm: typeof v.pm === 'number' ? v.pm : 0,     // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ
+                bb: typeof v.bb === 'number' ? v.bb : 0});   // 🫧 คะแนนสะสมเกมฟอง
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out;
     onlineRerender();
+  });
+
+  // 🫧 อันดับฟองต้องดึงด้วยคะแนน bb โดยตรง ไม่อิง Top เหรียญรวม
+  Online.db.ref('leaderboard').orderByChild('bb').limitToLast(LEADERBOARD_SIZE).on('value',(snap)=>{
+    const out=[];
+    snap.forEach(ch=>{ const v=ch.val(); if(!v||typeof v.n!=='string'||typeof v.bb!=='number'||v.bb<=0)return;
+      out.push({id:ch.key,n:v.n,g:v.g||'',bb:v.bb}); });
+    out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out; onlineRerender();
   });
 
   // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)

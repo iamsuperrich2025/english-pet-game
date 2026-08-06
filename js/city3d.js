@@ -987,6 +987,17 @@ const BUILDINGS = [
     return g;
   }),
   bld('typing',    '⌨️','พิมพ์คำ','typing',       116, BAND1_R, ()=>bShop({col:'#e5dbff', roof:0x9575cd, aw1:'#b39ddb', sign:'⌨️ TYPING', signBg:'#ede7f6'})),
+  /* 🫧 ร้านเกมฟอง — ดันออกจากวงในเล็กน้อย กันชนร้าน Typing/Word Hunt */
+  bld('bubble',    '🫧','ฟอง','bubble',              129, BAND1_R+14, ()=>{
+    const g=bShop({w:7,d:6,col:'#d9fbff',roof:0x4dd0e1,aw1:'#80deea',sign:'🫧 BUBBLE',signBg:'#e0f7fa'});
+    const cols=[0x9be8ff,0xb8a8ff,0xffb8e6];
+    for(let i=0;i<5;i++){
+      const m=new THREE.MeshPhongMaterial({color:cols[i%cols.length],transparent:true,opacity:.58,shininess:100});
+      const b=M(new THREE.SphereGeometry(.34+i*.045,12,9),m,(i-2)*.72,5.7+(i%2)*.55,0); g.add(b);
+      tickers.push((dt,t)=>{ b.position.y=5.7+(i%2)*.55+Math.sin(t*(1.25+i*.08)+i)*.22; b.scale.setScalar(1+Math.sin(t*1.7+i)*.08); });
+    }
+    return g;
+  }),
   bld('wordsearch','🔎','ค้นหาคำ','wordsearch',   141, BAND1_R, ()=>bShop({col:'#d4f2ff', roof:0x4fc3f7, aw1:'#4fc3f7', sign:'🔎 WORD HUNT', signBg:'#e1f5fe'})),
   bld('book',      '📒','สมุดคำศัพท์','book',     167, BAND1_R, ()=>bShop({col:'#ffe9c9', roof:0xffb74d, aw1:'#ffcc80', sign:'📒 MY BOOK', signBg:'#fff3e0'})),
   bld('home',      '🏠','บ้าน','home',            193, BAND1_R, ()=>bHouse({col:'#fff4dc', roof:0xef6c60})),

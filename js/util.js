@@ -282,6 +282,9 @@ const sfx = {
      down (up=false) = กดลงสุด: ช็อตนอยส์ "แคร่ก" + ตุบต่ำตอนแป้นชนฐาน · up = ปล่อยเด้งขึ้น เบา/แหลมกว่า
      bright=true (แป้นตัวถัดไปถูก) ปรับสีเสียงให้สดขึ้นเล็กน้อย ไม่ใช่เสียงคนละตัว */
   keyTap : (up, bright)=>{ keyTapSynth(!!up, !!bright); },
+  /* 🫧 เสียงฟอง: transient สั้น + resonance แบบหยดน้ำ สุ่ม pitch เล็กน้อยกันฟังเป็นเครื่องจักร */
+  bubblePop: (size)=>{ bubblePopSynth(size); },
+  bubbleTap: ()=>{ bubbleTapSynth(); },
   /* 🎉 รอบ 598: เก็บคำครบทั้งกระดาน (Word Search) — แฟนแฟร์ไต่ 4 ตัว + คอร์ดปิดค้าง
      (เดิม sfx.win ไม่มีจริง โค้ดเลยตกไปใช้ sfx.coin = จิ๊งเดียว ไม่สมกับการเก็บครบทั้งกระดาน) */
   win: ()=>{
@@ -532,6 +535,33 @@ function keyTapSynth(up, bright){
       o.connect(og); og.connect(keyTapComp);
       o.start(t); o.stop(t+.07);
     }
+  }catch(e){}
+}
+
+/* ---------- 🫧 เสียงฟองธรรมชาติ (เกมฟอง) ---------- */
+function bubblePopSynth(size){
+  if(!state.sound) return;
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume().catch(()=>{});
+    const t=audioCtx.currentTime, s=Math.max(38,Math.min(96,+size||64));
+    const base=(1150-(s-38)*7)*(0.94+Math.random()*.12);
+    const len=Math.ceil(audioCtx.sampleRate*.025),buf=audioCtx.createBuffer(1,len,audioCtx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<len;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/len,3);
+    const src=audioCtx.createBufferSource(),bp=audioCtx.createBiquadFilter(),ng=audioCtx.createGain(); src.buffer=buf;
+    bp.type='bandpass';bp.frequency.value=base*1.8;bp.Q.value=1.3;ng.gain.setValueAtTime(.22,t);ng.gain.exponentialRampToValueAtTime(.001,t+.03);
+    src.connect(bp);bp.connect(ng);ng.connect(audioCtx.destination);src.start(t);
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type='sine';
+    o.frequency.setValueAtTime(base*1.28,t);o.frequency.exponentialRampToValueAtTime(base*.72,t+.09);
+    g.gain.setValueAtTime(.14,t);g.gain.exponentialRampToValueAtTime(.001,t+.11);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.12);
+    const drop=audioCtx.createOscillator(),dg=audioCtx.createGain();drop.type='sine';drop.frequency.setValueAtTime(base*.46,t+.018);drop.frequency.exponentialRampToValueAtTime(base*.31,t+.13);
+    dg.gain.setValueAtTime(.001,t);dg.gain.linearRampToValueAtTime(.055,t+.025);dg.gain.exponentialRampToValueAtTime(.001,t+.14);drop.connect(dg);dg.connect(audioCtx.destination);drop.start(t);drop.stop(t+.15);
+  }catch(e){}
+}
+function bubbleTapSynth(){
+  if(!state.sound)return;
+  try{ audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)(); const t=audioCtx.currentTime,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.type='sine';o.frequency.setValueAtTime(210,t);o.frequency.exponentialRampToValueAtTime(145,t+.055);g.gain.setValueAtTime(.055,t);g.gain.exponentialRampToValueAtTime(.001,t+.06);o.connect(g);g.connect(audioCtx.destination);o.start(t);o.stop(t+.065);
   }catch(e){}
 }
 

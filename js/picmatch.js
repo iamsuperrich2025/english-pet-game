@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1052)
+   🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053)
    2 โหมด สลับด้วยปุ่มบนกระดาน:
    · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
    · "word" = ภาพจาก Picture Dictionary ↔ คำศัพท์ภาษาอังกฤษ
@@ -30,7 +30,7 @@
   function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
 
-  let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1052 ใช้คลังชุดที่ผู้เล่นเลือกแทน
+  let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1053 ใช้คลังชุดที่ผู้เล่นเลือกแทน
   let sec = null;                  // <section id="screen-picmatch">
   const pm = {
     mode:'pic',                    // 'pic' = ภาพเดียวกัน 2 ใบ · 'word' = ภาพกับคำอังกฤษ
@@ -134,7 +134,7 @@
   }
 
   /* ============================================================
-     📚 Picture Dictionary category chooser (รอบ 1052)
+     📚 Picture Dictionary category chooser (รอบ 1053)
      8 กลุ่ม + 46 หมวดใช้สารบัญเดียวกับหนังสือ; หมวดที่เกินงบ 4/10/40 คู่
      แบ่งเป็นลิงก์ "ชุด" ใต้ชื่อหมวด เพื่อไม่ให้ภาพส่วนเกินหายไป
      ============================================================ */
@@ -213,7 +213,9 @@
     const cropStyle = it=>{
       const [x0,y0,x1,y1]=it.rect, w=x1-x0, h=y1-y0;
       const px=w<.999 ? x0/(1-w)*100 : 0, py=h<.999 ? y0/(1-h)*100 : 0;
-      return `background-image:url('${encodeURI(sheetSrc(it.file)).replace(/'/g,'%27')}');background-size:${100/w}% ${100/h}%;background-position:${px}% ${py}%`;
+      // รอบ 1054: แยกการ escape ออกจาก ${...} ให้ทั้งคนและ static checker อ่านได้ตรงไปตรงมา
+      const bg=encodeURI(sheetSrc(it.file)).split("'").join('%27');
+      return `background-image:url('${bg}');background-size:${100/w}% ${100/h}%;background-position:${px}% ${py}%`;
     };
     const imgCard = (side, it) =>
       `<button class="pm-card pm-sheet-card-img" data-key="${esc(it.key)}" data-en="${esc(it.en)}" data-th="${esc(it.th)}" data-side="${side}">

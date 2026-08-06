@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v257';  // v257: รอบ 1052 (6 ส.ค. · จับคู่ภาพใช้คลัง Picture Dictionary):
+const CACHE_VERSION = 'pet-vocab-v258';  // v258: รอบ 1054 (6 ส.ค. · ซ่อมด่าน deploy ที่ฟ้อง undefined ผิด):
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
@@ -22,6 +22,7 @@ const SHELL = [
   './css/lobby.css',
   './css/exam.css',
   './css/arena3d.css',       // 🌀 รอบ 1045: HUD โลกผจญภัย Vocab Arena
+  './css/bubble.css',        // 🫧 เกมฟองคำศัพท์
   './js/data/pets.js',
   './js/data/items.js',
   './js/data/calendar.js',
@@ -49,6 +50,8 @@ const SHELL = [
   './js/auth.js',
   './js/online.js',
   './js/wsaward.js',
+  './js/bbaward.js',
+  './js/bubble.js',
   './js/main.js',
   './js/vendor/three.min.js',
   './js/adv3d_css.js',

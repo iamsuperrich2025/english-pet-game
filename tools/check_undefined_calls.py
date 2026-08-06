@@ -122,11 +122,37 @@ def strip_code(src: str) -> str:
                     break
                 if src[j] == "$" and j + 1 < n and src[j + 1] == "{":
                     depth, k = 1, j + 2
+                    expr_last_sig = ""                  # ใช้แยก /regex/ ออกจากเครื่องหมายหารภายใน ${...}
                     while k < n and depth:                 # หาปีกกาปิดของ ${...} (นับซ้อน + ข้ามสตริง/template ใน)
                         ch = src[k]
                         if ch == "\\":
                             k += 2
                             continue
+                        # รอบ 1054: regex ใน template expression อาจมี quote เช่น
+                        # `${url.replace(/'/g,'%27')}` — parser เดิมเห็น ' ใน regex เป็น string
+                        # แล้วกลืนโค้ดหลัง template ไปไกล ทำให้ฟ้องฟังก์ชันที่มีนิยามจริงว่า undefined
+                        if ch == "/" and k + 1 < n and src[k + 1] not in "/*" \
+                                and (expr_last_sig == "" or expr_last_sig in REGEX_PREV):
+                            q, ok = k + 1, False
+                            while q < n and src[q] != "\n":
+                                if src[q] == "\\":
+                                    q += 2
+                                    continue
+                                if src[q] == "[":
+                                    q += 1
+                                    while q < n and src[q] not in "]\n":
+                                        q += 2 if src[q] == "\\" else 1
+                                if q < n and src[q] == "/":
+                                    ok = True
+                                    q += 1
+                                    break
+                                q += 1
+                            if ok:
+                                while q < n and src[q].isalpha():
+                                    q += 1
+                                k = q
+                                expr_last_sig = "/"
+                                continue
                         if ch in "\"'`":
                             q, k = ch, k + 1
                             while k < n:
@@ -137,11 +163,14 @@ def strip_code(src: str) -> str:
                                     k += 1
                                     break
                                 k += 1
+                            expr_last_sig = q
                             continue
                         if ch == "{":
                             depth += 1
                         elif ch == "}":
                             depth -= 1
+                        if not ch.isspace():
+                            expr_last_sig = ch
                         k += 1
                     out.append(strip_code(src[j + 2:k - 1]))   # โค้ดข้างใน ${} เก็บไว้สแกนต่อ
                     out.append(";")
