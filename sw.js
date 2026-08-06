@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v249';  // v249: ยกเครื่องปุ่ม HUD แบบยุทธวิธีและเพิ่มระบบลากจัดวางบนมือถือ
+const CACHE_VERSION = 'pet-vocab-v250';  // v250: เพิ่มพรีเซ็ต HUD และแก้จอยเดินไม่ให้กลายเป็นก้มเงย
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)

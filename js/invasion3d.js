@@ -1031,6 +1031,8 @@ const CSS=`
 #inv-hudbar .he-title small{display:block;font-size:8px;color:#91aeb8;margin-top:3px;letter-spacing:0}
 #inv-hudbar label{display:flex;align-items:center;gap:5px;font:800 9px/1 system-ui;color:#b8d2da;white-space:nowrap}
 #inv-hudbar input[type=range]{width:84px;accent-color:#62d9ed}
+#inv-hudbar select{height:30px;max-width:104px;border-radius:7px;padding:0 22px 0 7px;border:1px solid rgba(150,203,216,.5);
+  color:#e9f7fa;background:#132c39;font:900 9px/1 system-ui;cursor:pointer}
 #inv-hudbar button{height:32px;border-radius:8px;padding:0 10px;border:1px solid rgba(150,203,216,.5);cursor:pointer;
   color:#e9f7fa;background:#132c39;font:900 10px/1 system-ui;white-space:nowrap}
 #inv-hudbar button.primary{color:#062018;background:#79e5bc;border-color:#9effd9}
@@ -1048,7 +1050,8 @@ const CSS=`
   #inv-settings{right:166px;top:8px;width:40px;height:40px;border-radius:11px}
   #inv-settings .hud-glyph{width:19px;height:19px}#inv-settings .hud-cap{font-size:6px}
   #inv-hudbar{top:3px;width:calc(100vw - 118px);min-height:43px;gap:5px;padding:4px 6px}
-  #inv-hudbar .he-title{display:none}#inv-hudbar label{font-size:8px;gap:2px}#inv-hudbar input[type=range]{width:58px}
+  #inv-hudbar .he-title,#inv-hudbar .he-picked{display:none}#inv-hudbar label{font-size:8px;gap:2px}#inv-hudbar input[type=range]{width:58px}
+  #inv-hudbar select{height:28px;max-width:86px;padding-left:5px;font-size:8px}
   #inv-hudbar button{height:29px;padding:0 7px;font-size:9px}#inv-hudpick{max-width:58px}
   #inv-hudedit::after{inset:50px 6px 6px}.hud-cap{font-size:6.5px}
 }
@@ -1118,9 +1121,13 @@ function buildDom(){
     <button id="inv-settings" aria-label="ตั้งค่าและจัดวางปุ่ม">${hudIcon('settings','HUD')}</button>
     <div id="inv-hudedit"><div id="inv-hudbar">
       <div class="he-title">HUD LAYOUT<small>ลากปุ่มไปยังตำแหน่งที่ถนัด</small></div>
-      <label>เลือก <b id="inv-hudpick">—</b></label>
+      <label class="he-picked">เลือก <b id="inv-hudpick">—</b></label>
       <label>ขนาด <input id="inv-hudsize" type="range" min="70" max="135" step="5" value="100"></label>
       <label>โปร่งใส <input id="inv-hudalpha" type="range" min="35" max="100" step="5" value="100"></label>
+      <label>พรีเซ็ต <select id="inv-hudpreset" aria-label="เลือกพรีเซ็ต HUD">
+        <option value="right">ถนัดขวา</option><option value="left">ถนัดซ้าย</option>
+        <option value="tablet">แท็บเล็ต</option><option value="custom" disabled>กำหนดเอง</option>
+      </select></label>
       <button id="inv-hudreset">รีเซ็ต</button><button id="inv-hudcancel" class="danger">ยกเลิก</button>
       <button id="inv-hudsave" class="primary">บันทึก</button>
     </div></div>
@@ -1292,10 +1299,47 @@ const HUD_TARGETS=[
   ['seat','inv-seat','มุมบิน'],['extcam','inv-extcam','กล้องภายนอก'],['map','inv-map','แผนที่'],
   ['night','inv-night','กลางวัน/คืน'],['torch','inv-torch','ไฟฉาย'],['glow','inv-glow','แท่งไฟ'],['chat','inv-chat','แชท']
 ];
+/* 🎛️🧭 รอบ 1042: พรีเซ็ต HUD ถนัดขวา/ถนัดซ้าย/แท็บเล็ต
+   ค่าเริ่มต้นถนัดขวาถอดสัดส่วนจากภาพอ้างอิงล่าสุด 1306×653 ของผู้ใช้:
+   จอยซ้าย · ยิงหลักขวาบน · จรวด/วิ่งกลางขวา · เล็งริมขวา · เครื่องมือเรียงล่างซ้าย */
+const HUD_PRESET_RIGHT={
+  joy:{x:.109,y:.634,s:1,a:1},fire:{x:.775,y:.422,s:1,a:1},fire2:{x:.167,y:.464,s:1,a:1},
+  rocket:{x:.666,y:.539,s:1,a:1},run:{x:.676,y:.748,s:1,a:1},heli:{x:.857,y:.342,s:1,a:1},
+  flare:{x:.923,y:.512,s:1,a:1},swap:{x:.162,y:.888,s:1,a:1},scope:{x:.923,y:.512,s:1,a:1},
+  mag:{x:.923,y:.625,s:1,a:1},breath:{x:.162,y:.888,s:1,a:1},gunner:{x:.857,y:.565,s:1,a:1},
+  seat:{x:.775,y:.700,s:1,a:1},extcam:{x:.775,y:.585,s:1,a:1},map:{x:.100,y:.888,s:1,a:1},
+  night:{x:.223,y:.888,s:1,a:1},torch:{x:.285,y:.888,s:1,a:1},glow:{x:.347,y:.888,s:1,a:1},
+  chat:{x:.038,y:.888,s:1,a:1}
+};
+const HUD_PRESET_LEFT=Object.fromEntries(Object.entries(HUD_PRESET_RIGHT).map(([k,v])=>[k,Object.assign({},v,{x:1-v.x})]));
+/* แท็บเล็ต: เว้นกลางจอให้เล็งและขยายปุ่มหลักเล็กน้อย เพราะนิ้วเอื้อมจากขอบเครื่อง */
+const HUD_PRESET_TABLET={
+  joy:{x:.095,y:.700,s:1.15,a:1},fire:{x:.895,y:.650,s:1.15,a:1},fire2:{x:.190,y:.535,s:1.08,a:1},
+  rocket:{x:.790,y:.535,s:1.08,a:1},run:{x:.790,y:.785,s:1.08,a:1},heli:{x:.895,y:.315,s:1.08,a:1},
+  flare:{x:.910,y:.455,s:1.08,a:1},swap:{x:.158,y:.925,s:1.05,a:1},scope:{x:.910,y:.455,s:1.08,a:1},
+  mag:{x:.910,y:.565,s:1.05,a:1},breath:{x:.158,y:.925,s:1.05,a:1},gunner:{x:.790,y:.315,s:1.05,a:1},
+  seat:{x:.790,y:.690,s:1.05,a:1},extcam:{x:.790,y:.575,s:1.05,a:1},map:{x:.095,y:.925,s:1.05,a:1},
+  night:{x:.221,y:.925,s:1.05,a:1},torch:{x:.284,y:.925,s:1.05,a:1},glow:{x:.347,y:.925,s:1.05,a:1},
+  chat:{x:.032,y:.925,s:1.05,a:1}
+};
+const HUD_PRESETS={right:HUD_PRESET_RIGHT,left:HUD_PRESET_LEFT,tablet:HUD_PRESET_TABLET};
 let hudLayout={},hudEditing=false,hudSnapshot=null,hudPicked=null,hudDrag=null;
 function hudCopy(v){return JSON.parse(JSON.stringify(v||{}));}
-function hudRead(){try{const v=JSON.parse(localStorage.getItem(HUD_LAYOUT_KEY)||'{}');return v&&typeof v==='object'?v:{};}catch(e){return {};}}
+function hudRead(){
+  try{
+    const raw=localStorage.getItem(HUD_LAYOUT_KEY);if(!raw)return hudCopy(HUD_PRESET_RIGHT);
+    const v=JSON.parse(raw);return v&&typeof v==='object'?v:hudCopy(HUD_PRESET_RIGHT);
+  }catch(e){return hudCopy(HUD_PRESET_RIGHT);}
+}
 function hudEl(key){const t=HUD_TARGETS.find(v=>v[0]===key);return t&&document.getElementById(t[1]);}
+function hudSame(a,b){
+  return HUD_TARGETS.every(([k])=>a[k]&&b[k]&&['x','y','s','a'].every(p=>Math.abs((a[k][p]??1)-(b[k][p]??1))<.0005));
+}
+function syncHudPreset(){
+  const sel=document.getElementById('inv-hudpreset');if(!sel)return;
+  sel.value=Object.keys(HUD_PRESETS).find(k=>hudSame(hudLayout,HUD_PRESETS[k]))||'custom';
+}
+function markHudCustom(){const sel=document.getElementById('inv-hudpreset');if(sel)sel.value='custom';}
 function clearHudStyle(el){
   el.classList.remove('hud-custom','hud-picked');
   ['left','top','right','bottom','transform','transformOrigin','opacity','--hud-scale'].forEach(k=>el.style.removeProperty(k));
@@ -1309,6 +1353,11 @@ function applyHudOne(key){
   el.style.opacity=String(v.a==null?1:v.a);
 }
 function applyHudLayout(){HUD_TARGETS.forEach(v=>applyHudOne(v[0]));}
+function applyHudPreset(name){
+  if(!HUD_PRESETS[name])return;hudLayout=hudCopy(HUD_PRESETS[name]);applyHudLayout();
+  const current=hudPicked&&getComputedStyle(hudPicked).display!=='none'?hudPicked:HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none');
+  pickHudControl(current||null);syncHudPreset();
+}
 function ensureHudEntry(el){
   const key=el.dataset.hudKey;if(hudLayout[key])return hudLayout[key];
   const r=el.getBoundingClientRect();
@@ -1335,18 +1384,19 @@ function openHudEditor(){
   if(hudEditing){closeHudEditor(true);return;}
   unlockMouse();hudSnapshot=hudCopy(hudLayout);hudEditing=true;wrapEl.classList.add('hud-editing');
   document.getElementById('inv-hudedit').classList.add('on');document.getElementById('inv-settings').classList.add('on');
-  const first=HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none');pickHudControl(first||null);
+  const first=HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none');pickHudControl(first||null);syncHudPreset();
 }
 function initHudEditor(){
   HUD_TARGETS.forEach(([key,id,label])=>{const el=document.getElementById(id);if(!el)return;el.dataset.hudKey=key;el.dataset.hudLabel=label;});
   hudLayout=hudRead();applyHudLayout();
-  const settings=document.getElementById('inv-settings'),size=document.getElementById('inv-hudsize'),alpha=document.getElementById('inv-hudalpha');
+  const settings=document.getElementById('inv-settings'),size=document.getElementById('inv-hudsize'),alpha=document.getElementById('inv-hudalpha'),preset=document.getElementById('inv-hudpreset');
   settings.addEventListener('click',e=>{e.stopPropagation();openHudEditor();});
-  size.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.s=+size.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');});
-  alpha.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.a=+alpha.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');});
+  size.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.s=+size.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');markHudCustom();});
+  alpha.addEventListener('input',()=>{if(!hudPicked)return;const v=ensureHudEntry(hudPicked);v.a=+alpha.value/100;applyHudOne(hudPicked.dataset.hudKey);hudPicked.classList.add('hud-picked');markHudCustom();});
+  preset.addEventListener('change',()=>applyHudPreset(preset.value));
   document.getElementById('inv-hudsave').addEventListener('click',()=>closeHudEditor(true));
   document.getElementById('inv-hudcancel').addEventListener('click',()=>closeHudEditor(false));
-  document.getElementById('inv-hudreset').addEventListener('click',()=>{hudLayout={};applyHudLayout();pickHudControl(HUD_TARGETS.map(v=>hudEl(v[0])).find(el=>el&&getComputedStyle(el).display!=='none')||null);});
+  document.getElementById('inv-hudreset').addEventListener('click',()=>applyHudPreset('right'));
   const down=e=>{
     if(!hudEditing)return;const el=e.target.closest&&e.target.closest('[data-hud-key]');if(!el)return;
     e.preventDefault();e.stopImmediatePropagation();pickHudControl(el);const v=ensureHudEntry(el),r=el.getBoundingClientRect();
@@ -1360,7 +1410,7 @@ function initHudEditor(){
   window.addEventListener('pointermove',e=>{
     if(!hudEditing||!hudDrag)return;e.preventDefault();const el=hudDrag.el,v=ensureHudEntry(el),r=el.getBoundingClientRect();
     const pad=8,cx=clamp(e.clientX-hudDrag.dx,r.width/2+pad,innerWidth-r.width/2-pad),cy=clamp(e.clientY-hudDrag.dy,r.height/2+pad,innerHeight-r.height/2-pad);
-    v.x=cx/innerWidth;v.y=cy/innerHeight;applyHudOne(hudDrag.key);el.classList.add('hud-picked');
+    v.x=cx/innerWidth;v.y=cy/innerHeight;applyHudOne(hudDrag.key);el.classList.add('hud-picked');markHudCustom();
   },{capture:true,passive:false});
   window.addEventListener('pointerup',()=>{hudDrag=null;},true);window.addEventListener('pointercancel',()=>{hudDrag=null;},true);
   window.addEventListener('resize',()=>requestAnimationFrame(applyHudLayout));
@@ -6597,10 +6647,28 @@ function toastBan(html,ms){
    🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
    ============================================================ */
 function bindInput(){
-  /* จอยเดินซ้าย */
-  joyEl.addEventListener('touchstart',e=>{ const t=e.changedTouches[0];
+  /* จอยเดินซ้าย — นิ้วที่เริ่มบนจอยต้องเป็น "นิ้วเดิน" เท่านั้น ห้ามหลุดไปเป็นนิ้วก้ม/เงยกล้อง
+     `changedTouches[0]` ไม่ปลอดภัยเมื่อแตะหลายจุดเกือบพร้อมกัน เพราะตัวแรกอาจเป็นนิ้วจากปุ่ม/จออีกฝั่ง */
+  const touchOnJoy=t=>t.target===joyEl||joyEl.contains(t.target);
+  const touchInJoy=t=>{const r=joyEl.getBoundingClientRect();return t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;};
+  const claimJoy=t=>{
     joy.id=t.identifier; const r=joyEl.getBoundingClientRect();
-    joy.cx=r.left+r.width/2; joy.cy=r.top+r.height/2; moveJoy(t); e.preventDefault(); },{passive:false});
+    joy.cx=r.left+r.width/2; joy.cy=r.top+r.height/2;
+    if(lookId===t.identifier) lookId=null;
+    moveJoy(t);
+  };
+  const joyAlive=e=>{
+    if(joy.id===null) return false;
+    for(const t of e.touches) if(t.identifier===joy.id) return true;
+    joy.id=null; joy.dx=joy.dy=0; joyKnob.style.transform=''; return false;
+  };
+  joyEl.addEventListener('touchstart',e=>{
+    if(!joyAlive(e)){
+      const t=Array.from(e.changedTouches).find(touchOnJoy);
+      if(t) claimJoy(t);
+    }
+    e.preventDefault();
+  },{passive:false});
   /* 👆 รอบ 1023 (ผู้ใช้: "บางครั้งเลื่อนซ้ายขวาแล้วจอไม่ยอมหัน เหมือนหน่วง/ค้าง" — อาการเดียวกับซุ้มยิงเป้ารอบ 1006)
      เดิมนิ้วจะได้เป็น "นิ้วมอง" ก็ต่อเมื่อ *แตะครั้งแรก* ในครึ่งขวา + ไม่ได้แตะบนปุ่ม + ไม่มีนิ้วมองอยู่ก่อน
      → พลาดได้ 3 ทาง ซึ่งเกิดสลับกันเลยรู้สึกเป็น "บางครั้ง": ① นิ้วลงครึ่งซ้าย (นอกจอย) แล้วลาก = ไม่มีอะไรเกิดขึ้น
@@ -6624,7 +6692,11 @@ function bindInput(){
   };
   wrapEl.addEventListener('touchstart',e=>{
     for(const t of e.changedTouches){
+      /* HUD ที่ย้าย/ขยายหรือ element โปร่งใสซ้อนอาจทำให้ target ไม่ใช่ #inv-joy แม้พิกัดอยู่ในวงจอย
+         ยึดพิกัดจริงเป็นชั้นสำรอง และกันนิ้วทุกนิ้วในวงจอยออกจาก candidate ของกล้อง */
+      if(!joyAlive(e)&&touchInJoy(t)) claimJoy(t);
       if(t.identifier===joy.id) continue;
+      if(touchInJoy(t)) continue;
       if(t.target.closest&&t.target.closest(PANELS)) continue;
       const onBtn=t.target.closest&&t.target.closest('button');
       if(!onBtn && t.clientX>window.innerWidth*0.4 && !lookAlive(e)) takeLook(t);
