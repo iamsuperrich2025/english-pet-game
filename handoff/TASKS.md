@@ -54,7 +54,6 @@
 - **รอบ 1056 (6 ส.ค. · เกม 🫧 ฟอง):** เพิ่มปุ่มรางซ้าย Lobby + ร้านฟองในเมือง 3D; แตะฟองตามลำดับคำ ตัวซ้ำมีฟองครบ สุ่มตำแหน่งไม่ซ้อน ไม่มีไฟใบ้ และเสียง pop WebAudio ธรรมชาติ
 - คะแนน `bbScore` สะสมตลอดกาล + กระดานเฉพาะ Top 10 + `bbAward` 10,000→1,000 เหรียญ; `handoff/RULES.md` มีก้อนเต็มรอ publish field/index `bb` และโซน `bbAward`
 - ยืนยัน BALLOON: ฟอง L/O ซ้ำครบ, แตะผิดไม่เดิน/จบคำ +5🪙 +19 คะแนน; 1280×720 + 812×375 ไม่ล้น, คำ 14 ตัวสุ่ม 12 รอบ overlaps=0/within=true, Lobby 3D + console สะอาด; node/checkers/diff ผ่าน
-- **รอบ 1054 (6 ส.ค. · ซ่อมด่าน deploy ที่ฟ้อง undefined ผิด):** `tools/check_undefined_calls.py` เพิ่มการข้าม regex literal ภายใน `${...}` ของ template string—กรณี `replace(/'/g,...)` เดิมทำ parser หลงกลืนโค้ดหลังบรรทัดนั้น จึงฟ้อง `resetNow/setCombo/setSess` และ CSS `:not()` ทั้งที่นิยาม/selectorถูกต้อง
 - ยืนยันตัวตรวจเต็มโปรเจกต์ 44 ไฟล์พบ 10,443 นิยามและ unknown=0; regression จำลอง regex ที่มี quote ใน template ผ่าน, `py_compile` และ `git diff --check` ผ่าน—พร้อม deploy commit รอบ 1053 ที่ค้างจากความล้มเหลวเดิมอีกครั้ง
 - ยืนยันข้อมูลครบ 2,641 ภาพ/46 แผ่น (words=grid ทุกใบ; ลิงก์ชุดครอบคลุมทุกดัชนีไม่ซ้ำ), browser 1280×720 + 812×375: 8/20/80 ใบไม่ล้น, ชุดท้าย 25–27 = 6 ใบ, จับคู่ได้ +10/Combo, `?go=picmatch` เข้า chooser, console 0 error; `node --check`/`git diff --check` ผ่าน และล้าง test hook/storage/server แล้ว
 - ยืนยัน `git check-ignore handoff/SHIP.txt`, `git diff --check` และสถานะ tracked หลังส่งต้องสะอาด; เป็นงานเครื่องมือ/เอกสารเท่านั้น จึงไม่ deploy เว็บซ้ำ
