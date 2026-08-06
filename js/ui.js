@@ -6548,30 +6548,34 @@ async function loadAdv3d(){
   await loadScriptOnce('js/hotel3d.js');       // 🏨 รอบ 684: ตัวตึกโรงแรมผีสิง 5 ชั้น (window.HOTEL3D)
   await loadScriptOnce('js/adventure3d.js');
 }
+/* ============================================================
+   🌀🔤 รอบ 1045 — Vocab Arena (โลกผจญภัยฉบับใหม่)
+   แยกเอนจินออกจาก adventure3d.js ที่เกิน 12,000 บรรทัดแล้ว เพื่อไม่ทำให้ไฟล์เดิมบวมขึ้น
+   ============================================================ */
+async function loadVocabArena3d(){
+  await loadScriptOnce('js/arena3d.js');
+}
 let advLoading = false;
 async function enterAdventure3D(){
   if(!state.advTicket || state.advHurt || advLoading) return advBusyMsg(enterAdventure3D);
-  if(!window.Adventure3D){
-    advLoading = Date.now();
-    toast('🌍 กำลังเปิดประตูโลกผจญภัย...');
-    try{
-      await loadScriptOnce('js/vendor/three.min.js');
-      await loadAdv3d();
-    }catch(e){
-      advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกผจญภัยไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
-    }
-    advLoading = false;
-  }
-  // 🗺️ รอบ 356: เลือกแผนที่ก่อน — ทุ่งผจญภัยดั้งเดิม หรือเดินเที่ยวเมืองเฮลิคอปเตอร์ (นั่งโดยสาร/วิงสูทฟรี · ขับเองต้องมีตั๋วเฮลิฯ)
+  // 🗺️ รอบ 1045: เลือกแผนที่ก่อน แล้วค่อยโหลดเฉพาะเอนจินที่ใช้จริง
+  // Vocab Arena เบากว่า adventure3d.js มาก จึงไม่บังคับมือถือโหลดโลกเฮลิคอปเตอร์ทั้งก้อนก่อนเข้าต่อสู้
   const map = await pickAdvMap();
   if(!map) return;
+  advLoading = Date.now();
+  toast(map==='heli'?'🚁 กำลังเปิดเมืองเฮลิคอปเตอร์...':'🌀 กำลังเปิด Vocab Arena...');
+  try{
+    await loadScriptOnce('js/vendor/three.min.js');
+    if(map==='heli') await loadAdv3d();
+    else await loadVocabArena3d();
+  }catch(e){
+    advLoading = false;
+    sfx.wrong(); toast('⚠️ โหลดโลกผจญภัยไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
+    return;
+  }
+  advLoading = false;
   if(map==='heli'){ Adventure3D.start('heli',{walkIn:true}); return; }
-  // 🧱 เลือกตัวละครบล็อกก่อนเข้า (เพื่อนใน map เห็นเราเป็นหุ่นบล็อกเดินได้) — ยกเลิก = ไม่เข้าโลก
-  const go = await Adventure3D.pickBlockAvatar('🌍 ลุยเลย!');
-  if(!go) return;
-  Adventure3D.start('adv');
+  VocabArena3D.start();
 }
 /* 🗺️ กล่องเลือกแผนที่โลกเดิน (รอบ 356) — 2 การ์ดใหญ่ แตะง่าย ออกแบบให้พอดีจอเตี้ย 812×375 ไม่มี scroll (กฎ 7) */
 function pickAdvMap(){
@@ -6584,11 +6588,11 @@ function pickAdvMap(){
                   max-height:94vh;display:flex;flex-direction:column;gap:clamp(6px,1.6vh,12px)">
         <div style="color:#ffd54f;font-weight:800;font-size:clamp(15px,3.4vh,19px);text-align:center">🗺️ วันนี้อยากไปเดินเล่นที่ไหน?</div>
         <div style="display:flex;gap:clamp(8px,2vw,14px)">
-          <button class="am-c" data-m="field" style="flex:1;background:rgba(76,175,80,.14);border:2px solid #66bb6a;border-radius:14px;
-                  padding:clamp(8px,2vh,14px) 6px;color:#eafbe7;cursor:pointer">
-            <div style="font-size:clamp(26px,7vh,38px)">🌳</div>
-            <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">ทุ่งผจญภัยดั้งเดิม</div>
-            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">เดินเก็บตัวอักษร ยิงมอนสเตอร์ 👾<br>สนุกแบบคลาสสิก</div>
+          <button class="am-c" data-m="field" style="flex:1;background:linear-gradient(145deg,rgba(38,202,225,.18),rgba(115,75,224,.2));border:2px solid #69e3ff;border-radius:14px;
+                  padding:clamp(8px,2vh,14px) 6px;color:#e8fbff;cursor:pointer;box-shadow:inset 0 0 18px rgba(93,222,255,.08)">
+            <div style="font-size:clamp(26px,7vh,38px)">🌀</div>
+            <div style="font-weight:800;font-size:clamp(13px,3vh,16px)">Vocab Arena</div>
+            <div style="font-size:clamp(10px,2.3vh,12px);opacity:.85;line-height:1.35">สู้ปีศาจตัวอักษร 👾 เก็บอักษรประกอบคำ<br>ตัวละครโปรไฟล์ 88 แบบ + น้องวิ่งตาม</div>
           </button>
           <button class="am-c" data-m="heli" style="flex:1;background:rgba(41,182,246,.13);border:2px solid #4fc3f7;border-radius:14px;
                   padding:clamp(8px,2vh,14px) 6px;color:#e5f6ff;cursor:pointer">

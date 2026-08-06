@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v252';  // v252: เพิ่มสัญญาณไฟแดงบนยานลูก hostile โดยคงตรรกะการยิงเดิม
+const CACHE_VERSION = 'pet-vocab-v253';  // v253: ยกเครื่องโลกผจญภัยเป็น Vocab Arena PvE พลังคำศัพท์พร้อมตัวละคร 88 แบบและสัตว์ติดตาม
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
@@ -21,6 +21,7 @@ const SHELL = [
   './css/style.css',
   './css/lobby.css',
   './css/exam.css',
+  './css/arena3d.css',       // 🌀 รอบ 1045: HUD โลกผจญภัย Vocab Arena
   './js/data/pets.js',
   './js/data/items.js',
   './js/data/calendar.js',
@@ -54,6 +55,7 @@ const SHELL = [
   './js/adv3d_intro.js',
   './js/adv3d_tex.js',
   './js/adventure3d.js',
+  './js/arena3d.js',         // 🌀 รอบ 1045: ต่อสู้ PvE→เก็บอักษร→ประกอบคำ→ร้านพลัง
   './img/icons/icon-192-flat.png',   // รอบ 859: ไอคอนพื้นเรียบสีเดียวกับ background_color (แก้ splash APK เห็นกรอบ)
   './img/icons/icon-512-flat.png',
   './img/icons/splash_logo.png',   // รอบ 757: โลโก้ splash — ต้องมีในแคชไม่งั้นเปิดออฟไลน์แล้วจอโหลดว่างเปล่า

@@ -46,6 +46,9 @@ const DEFAULT_STATE = {
   profAv:null,                        // 🖼️ รอบ 751: รูปโปรไฟล์/ตัวยืนในล็อบบี้ 'blk1'..'blk88' (blk9+ = ภาพ 2D อย่างเดียว ไม่มีโมเดลในโลก 3D)
   advTicket:false,                    // ข้อ 7: การ์ดตั๋วโลกผจญภัย (ซื้อได้เมื่อมีสัตว์โตเต็มวัย · ตั๋วเฉพาะตัว ขายต่อ/ส่งต่อไม่ได้)
   advDone:[],                         // ข้อ 8: คำที่ประกอบสำเร็จแล้วในโลกผจญภัย 3D (ไม่สุ่มซ้ำ · ครบทุกคำของระดับชั้นแล้วล้างเริ่มรอบใหม่)
+  arenaItems:{},                      // 🌀 รอบ 1045: ไอเทมพลังถาวรใน Vocab Arena {prism,storm,echo,wing:true}
+  arenaStats:{words:0,kills:0,bestCombo:0}, // สถิติต่อสู้ PvE สะสม (ไม่มี PvP)
+  arenaIntro:false,                   // เคยอ่านวิธีเล่นโลกผจญภัยฉบับใหม่แล้ว
   advHurt:false,                      // ข้อ 8: พลังหมด/โดนผีจับ → ต้องจ่ายค่ารักษา CURE_COST ก่อนเข้าโลก 3D ใหม่ (ใช้ร่วม 2 โลก)
   hauntTicket:false,                  // ตั๋วโลกผีสิงกลางคืน (ซื้อได้เมื่อมีตั๋วโลกผจญภัย · เฉพาะตัวเหมือนกัน)
   hauntDone:[],                       // คำที่ประกอบสำเร็จแล้วในโลกผีสิง (แยกจาก advDone)
@@ -413,6 +416,10 @@ function loadState(){
       if(!/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(s.profAv||'')) s.profAv = null;             // 🖼️ รูปโปรไฟล์/ตัวในล็อบบี้ blk1..blk88
       if(typeof s.advTicket !== 'boolean') s.advTicket = false;                            // ข้อ 7
       if(!Array.isArray(s.advDone)) s.advDone = [];                                        // ข้อ 8
+      if(!s.arenaItems || typeof s.arenaItems !== 'object' || Array.isArray(s.arenaItems)) s.arenaItems = {}; // 🌀 รอบ 1045
+      if(!s.arenaStats || typeof s.arenaStats !== 'object') s.arenaStats = {words:0,kills:0,bestCombo:0};
+      for(const k of ['words','kills','bestCombo']) if(typeof s.arenaStats[k] !== 'number') s.arenaStats[k] = 0;
+      if(typeof s.arenaIntro !== 'boolean') s.arenaIntro = false;
       s.advHurt = false;   // รอบ 255: เลิกระบบบาดเจ็บถาวร (โลก 3D ไม่มีตาย/เกมโอเวอร์) — ล้าง flag ค้างของเซฟเก่าด้วย
       if(typeof s.hauntTicket !== 'boolean') s.hauntTicket = false;                        // โลกผีสิง
       if(!Array.isArray(s.hauntDone)) s.hauntDone = [];

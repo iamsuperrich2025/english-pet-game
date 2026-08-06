@@ -1,0 +1,165 @@
+/* ============================================================
+   🌀🔤 รอบ 1045 — Vocab Arena
+   HUD โลกผจญภัยแบบ MOBA-inspired ที่ออกแบบใหม่ทั้งหมดสำหรับ Vocab World
+   ============================================================ */
+#va-root{position:fixed;inset:0;z-index:3500;overflow:hidden;background:#07111f;color:#f7fbff;
+  font-family:'Kanit','Segoe UI',sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+#va-root *{box-sizing:border-box}
+#va-canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#va-root button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+
+.va-vignette{position:absolute;inset:0;pointer-events:none;background:
+  radial-gradient(circle at 50% 44%,transparent 42%,rgba(2,7,16,.22) 73%,rgba(1,3,9,.62) 100%),
+  linear-gradient(180deg,rgba(12,42,66,.18),transparent 23%,transparent 75%,rgba(2,7,18,.32));
+  mix-blend-mode:multiply}
+.va-scan{position:absolute;inset:0;pointer-events:none;opacity:.12;background-image:
+  linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px);background-size:100% 4px}
+
+.va-top{position:absolute;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));
+  top:max(8px,env(safe-area-inset-top));height:52px;display:flex;align-items:center;gap:8px;pointer-events:none}
+.va-glass{background:linear-gradient(145deg,rgba(9,29,51,.87),rgba(8,17,35,.72));
+  border:1px solid rgba(124,224,255,.32);box-shadow:0 7px 24px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter:blur(9px)}
+.va-exit,.va-shop-btn,.va-icon-btn{pointer-events:auto;border:1px solid rgba(140,228,255,.45);border-radius:14px;
+  height:44px;min-width:44px;padding:0 12px;background:linear-gradient(150deg,rgba(16,61,91,.94),rgba(10,24,51,.92));
+  box-shadow:0 4px 16px rgba(0,0,0,.28);cursor:pointer;font-weight:800}
+.va-exit:active,.va-shop-btn:active,.va-icon-btn:active{transform:scale(.94)}
+.va-player-card{height:48px;min-width:160px;max-width:240px;border-radius:15px;padding:4px 10px 4px 5px;
+  display:grid;grid-template-columns:38px 1fr;grid-template-rows:1fr 1fr;column-gap:7px;align-items:center}
+.va-player-card img{grid-row:1/3;width:36px;height:40px;object-fit:contain;filter:drop-shadow(0 3px 5px rgba(0,0,0,.55))}
+.va-player-name{font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.va-online{font-size:9px;color:#8fffd7;letter-spacing:.08em}.va-online.off{color:#ffd37f}
+.va-word-card{position:absolute;left:50%;top:0;transform:translateX(-50%);width:min(43vw,430px);min-height:52px;
+  border-radius:17px;padding:5px 13px 6px;text-align:center;overflow:hidden}
+.va-word-card::before{content:'';position:absolute;inset:-80% -20%;background:conic-gradient(from 90deg,
+  transparent,#28d9ff55,transparent,#b46cff55,transparent);animation:vaSpin 7s linear infinite;pointer-events:none}
+.va-word-card>*{position:relative}
+.va-word-th{font-size:10px;color:#9bc4dd;line-height:1.1}
+.va-word-en{font-size:clamp(16px,2.4vw,23px);font-weight:900;letter-spacing:.18em;line-height:1.22;
+  text-shadow:0 0 14px rgba(65,218,255,.65)}
+.va-word-slots{display:flex;justify-content:center;gap:3px;min-height:5px}
+.va-word-slots i{display:block;width:clamp(10px,1.7vw,18px);height:3px;border-radius:5px;background:#385f78;
+  box-shadow:0 0 0 rgba(68,227,255,0);transition:.2s}
+.va-word-slots i.got{background:#61efff;box-shadow:0 0 9px #46dfff}
+.va-coins{margin-left:auto;height:42px;border-radius:14px;display:flex;align-items:center;gap:6px;padding:0 12px;
+  font-size:13px;font-weight:900;color:#ffe27a;white-space:nowrap}
+.va-shop-btn{font-size:12px;color:#dffbff}
+
+.va-energy{position:absolute;left:50%;top:68px;transform:translateX(-50%);width:min(38vw,330px);height:22px;
+  border-radius:999px;padding:3px 8px 3px 58px;overflow:visible;pointer-events:none}
+.va-energy-label{position:absolute;left:8px;top:2px;font-size:10px;font-weight:900;color:#d6faff;z-index:2}
+.va-energy-track{height:100%;border-radius:999px;background:rgba(1,10,24,.72);overflow:hidden;border:1px solid rgba(97,225,255,.22)}
+.va-energy-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#28cfff,#7c66ff 58%,#ff4fd8);
+  box-shadow:0 0 16px #3ae4ff;transition:width .28s ease}
+.va-energy.hot .va-energy-fill{background:linear-gradient(90deg,#56f5ff,#c66dff,#ffea68);animation:vaPulse .75s ease-in-out infinite}
+.va-energy-power{position:absolute;right:8px;top:1px;font-size:10px;font-weight:900;text-shadow:0 1px 4px #000}
+
+.va-bag{position:absolute;left:max(12px,env(safe-area-inset-left));top:72px;width:min(27vw,250px);min-height:31px;
+  border-radius:13px;padding:5px 8px;display:flex;align-items:center;gap:5px;pointer-events:none}
+.va-bag-label{font-size:9px;color:#9fc2d7;white-space:nowrap}
+.va-bag-list{display:flex;gap:3px;min-width:0;overflow:hidden}
+.va-bag-letter{width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:12px;font-weight:900;
+  background:linear-gradient(145deg,#1f6f9d,#542c91);border:1px solid #82eaff;box-shadow:0 0 9px rgba(57,220,255,.3)}
+
+.va-hp{position:absolute;left:max(12px,env(safe-area-inset-left));bottom:calc(18px + env(safe-area-inset-bottom));
+  width:min(23vw,210px);height:18px;border-radius:999px;padding:3px 6px 3px 42px;pointer-events:none}
+.va-hp b{position:absolute;left:7px;top:1px;font-size:10px;color:#dff}
+.va-hp-track{height:100%;border-radius:99px;overflow:hidden;background:#1a1522}
+.va-hp-fill{height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#36df94,#c7ff66);transition:width .18s}
+.va-hp.low .va-hp-fill{background:linear-gradient(90deg,#ff496c,#ffad4c);animation:vaPulse .65s infinite}
+
+.va-stick{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:calc(48px + env(safe-area-inset-bottom));
+  width:clamp(92px,14vw,126px);height:clamp(92px,14vw,126px);border-radius:50%;pointer-events:auto;
+  background:radial-gradient(circle,rgba(73,188,230,.1) 0 38%,rgba(16,47,75,.62) 40% 62%,rgba(72,197,236,.17) 64% 100%);
+  border:1px solid rgba(117,225,255,.35);box-shadow:inset 0 0 30px rgba(33,184,230,.12),0 5px 24px rgba(0,0,0,.25)}
+.va-stick::before,.va-stick::after{content:'';position:absolute;background:rgba(127,227,255,.11);pointer-events:none}
+.va-stick::before{left:50%;top:12%;bottom:12%;width:1px}.va-stick::after{top:50%;left:12%;right:12%;height:1px}
+.va-stick-knob{position:absolute;left:50%;top:50%;width:43%;height:43%;border-radius:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 35% 30%,#bdf8ff,#2e9aca 60%,#144c76);border:2px solid rgba(224,252,255,.8);
+  box-shadow:0 4px 12px rgba(0,0,0,.35),0 0 18px rgba(47,213,255,.32);pointer-events:none}
+
+.va-skills{position:absolute;right:max(17px,env(safe-area-inset-right));bottom:calc(18px + env(safe-area-inset-bottom));
+  width:clamp(190px,27vw,260px);height:clamp(118px,19vw,174px);pointer-events:none}
+.va-skill{position:absolute;border-radius:50%;pointer-events:auto;cursor:pointer;padding:0;overflow:hidden;
+  border:2px solid rgba(200,246,255,.78);background:radial-gradient(circle at 35% 28%,#7be7ff,#234ca9 48%,#111a48 76%);
+  box-shadow:0 5px 16px rgba(0,0,0,.38),0 0 13px rgba(80,213,255,.35),inset 0 0 12px rgba(255,255,255,.18)}
+.va-skill:active{transform:scale(.91)}
+.va-skill .ico{font-size:clamp(20px,3.7vw,34px);line-height:1;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+.va-skill .key{position:absolute;left:0;right:0;bottom:2px;font-size:8px;font-weight:900;color:#d8fbff;text-shadow:0 1px 3px #000}
+.va-skill .cd{position:absolute;inset:0;display:none;place-items:center;background:conic-gradient(rgba(1,7,21,.8) var(--cd,100%),transparent 0);
+  font-size:12px;font-weight:900;text-shadow:0 1px 3px #000}
+.va-skill.cool .cd{display:grid}
+.va-skill.locked{filter:grayscale(.75) brightness(.62)}
+.va-skill.basic{width:clamp(68px,9.2vw,92px);height:clamp(68px,9.2vw,92px);right:0;bottom:0;
+  background:radial-gradient(circle at 35% 28%,#fff3a4,#ff7b35 48%,#8f1e4c 78%);border-width:3px}
+.va-skill.arc{width:clamp(52px,7vw,68px);height:clamp(52px,7vw,68px);right:clamp(78px,10vw,103px);bottom:5px}
+.va-skill.nova{width:clamp(52px,7vw,68px);height:clamp(52px,7vw,68px);right:clamp(52px,7vw,72px);bottom:clamp(64px,8.6vw,86px);
+  background:radial-gradient(circle at 35% 28%,#ffc5ff,#a43ee4 52%,#34105f 82%)}
+.va-skill.ult{width:clamp(57px,7.6vw,75px);height:clamp(57px,7.6vw,75px);right:0;bottom:clamp(83px,11vw,110px);
+  background:radial-gradient(circle at 35% 28%,#fffbd1,#ff55d8 40%,#5431ba 76%)}
+.va-skill.ult.ready{animation:vaUlt 1.1s ease-in-out infinite;border-color:#fff4a3}
+
+.va-feed{position:absolute;right:max(12px,env(safe-area-inset-right));top:98px;width:min(26vw,260px);pointer-events:none;
+  display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.va-feed-line{max-width:100%;border-radius:10px;padding:5px 9px;background:rgba(7,19,39,.72);border-left:2px solid #56e8ff;
+  font-size:10px;line-height:1.25;animation:vaFeed .25s ease both;box-shadow:0 3px 10px rgba(0,0,0,.22)}
+.va-feed-line.gold{border-color:#ffe067;color:#fff1a8}.va-feed-line.bad{border-color:#ff6688;color:#ffd3dd}
+
+.va-pop{position:absolute;left:50%;top:26%;transform:translate(-50%,-50%) scale(.7);pointer-events:none;opacity:0;
+  text-align:center;font-weight:900;text-shadow:0 4px 18px #000;transition:.24s}
+.va-pop.on{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.va-pop strong{display:block;font-size:clamp(28px,5vw,58px);letter-spacing:.16em;
+  background:linear-gradient(180deg,#fffad2,#63efff 48%,#d76dff);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 14px rgba(94,230,255,.65))}
+.va-pop span{font-size:clamp(12px,1.8vw,18px);color:#fff0a6}
+
+.va-modal{position:absolute;inset:0;z-index:30;display:none;place-items:center;background:rgba(2,6,17,.68);backdrop-filter:blur(6px);
+  padding:10px;pointer-events:auto}
+.va-modal.on{display:grid}
+.va-panel{width:min(720px,95vw);max-height:calc(100vh - 20px);border-radius:22px;padding:clamp(10px,2vh,18px);
+  background:linear-gradient(150deg,rgba(11,35,59,.97),rgba(18,12,45,.97));border:1px solid rgba(116,225,255,.5);
+  box-shadow:0 24px 70px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.09);overflow:hidden}
+.va-panel-head{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.va-panel-title{font-size:clamp(17px,3.4vh,24px);font-weight:900;color:#dffbff}.va-panel-sub{font-size:10px;color:#9ebbd0}
+.va-panel-coins{margin-left:auto;color:#ffe16f;font-weight:900}.va-close{border:0;border-radius:10px;width:34px;height:34px;
+  background:rgba(255,255,255,.1);cursor:pointer}
+.va-store-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.va-store-item{position:relative;min-height:92px;border-radius:15px;padding:9px 9px 8px 64px;text-align:left;
+  border:1px solid rgba(112,211,255,.28);background:linear-gradient(145deg,rgba(26,68,98,.52),rgba(37,18,78,.52));cursor:pointer}
+.va-store-item:active{transform:scale(.985)}
+.va-store-item.owned{border-color:#72f5c6;background:linear-gradient(145deg,rgba(24,94,80,.55),rgba(31,45,78,.62))}
+.va-store-ico{position:absolute;left:10px;top:11px;width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:26px;
+  background:radial-gradient(circle at 35% 25%,#d5fbff,#4050a6 65%,#241555);box-shadow:0 0 14px rgba(85,213,255,.25)}
+.va-store-name{font-size:13px;font-weight:900}.va-store-desc{font-size:9px;line-height:1.35;color:#b9d2e3;margin-top:2px}
+.va-store-price{font-size:11px;font-weight:900;color:#ffe477;margin-top:4px}.va-store-item.owned .va-store-price{color:#8effcf}
+.va-intro-panel{width:min(650px,94vw);text-align:center}
+.va-intro-logo{font-size:clamp(23px,5vh,38px);font-weight:900;letter-spacing:.06em;
+  background:linear-gradient(90deg,#66e9ff,#d076ff,#ffe064);-webkit-background-clip:text;background-clip:text;color:transparent}
+.va-intro-sub{font-size:clamp(10px,2.2vh,13px);color:#acd1e7;margin:2px 0 8px}
+.va-intro-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:0 0 9px}
+.va-intro-step{border-radius:13px;padding:7px 5px;background:rgba(31,74,105,.36);border:1px solid rgba(103,217,255,.22);
+  font-size:clamp(8px,1.7vh,10px);line-height:1.3}.va-intro-step b{display:block;font-size:clamp(18px,4.4vh,27px);margin-bottom:2px}
+.va-start{border:0;border-radius:14px;padding:8px 28px;font-size:clamp(13px,2.8vh,17px);font-weight:900;cursor:pointer;
+  background:linear-gradient(90deg,#26cde3,#7969ff,#e958d0);box-shadow:0 5px 22px rgba(78,139,255,.35)}
+.va-start:active{transform:scale(.96)}
+
+.va-portrait{display:none;position:absolute;inset:0;z-index:80;place-items:center;text-align:center;background:#071321;
+  font-size:18px;font-weight:900;padding:24px}.va-portrait b{display:block;font-size:45px;margin-bottom:8px}
+
+@keyframes vaSpin{to{transform:rotate(1turn)}}
+@keyframes vaPulse{50%{filter:brightness(1.45);opacity:.78}}
+@keyframes vaUlt{50%{box-shadow:0 5px 20px rgba(0,0,0,.38),0 0 28px #ffec6c,inset 0 0 15px #fff}}
+@keyframes vaFeed{from{opacity:0;transform:translateX(14px)}}
+
+@media (max-height:480px){
+  .va-top{height:44px}.va-player-card{height:42px}.va-exit,.va-shop-btn,.va-icon-btn{height:38px}
+  .va-word-card{min-height:44px;padding-top:3px}.va-word-en{font-size:16px}.va-word-th{font-size:8px}
+  .va-energy{top:57px;height:18px}.va-bag{top:58px}.va-feed{top:80px}
+  .va-stick{bottom:20px;width:88px;height:88px}.va-hp{bottom:9px;left:118px;width:150px}
+  .va-skills{bottom:7px;width:190px;height:118px}
+  .va-store-item{min-height:72px;padding:6px 6px 5px 53px}.va-store-ico{left:7px;top:8px;width:38px;height:38px;font-size:22px}
+  .va-store-desc{font-size:8px}.va-store-price{margin-top:1px}.va-panel{padding:8px}.va-panel-head{margin-bottom:5px}
+}
+@media (max-width:760px){.va-player-card{min-width:105px;max-width:135px}.va-player-name{font-size:10px}.va-coins{padding:0 8px}.va-shop-btn{padding:0 8px}.va-word-card{width:42vw}.va-bag{width:27vw}.va-feed{display:none}}
+@media (orientation:portrait){#va-root .va-portrait{display:grid}}
+@media (prefers-reduced-motion:reduce){#va-root *{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
