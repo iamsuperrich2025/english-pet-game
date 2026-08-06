@@ -26,11 +26,18 @@ let TEX=function(){};            // applyTex ของ adventure3d (ไม่ม
 
 /* ---------- ค่าผังตึก (หน่วยเมตร) ---------- */
 const FLOOR_H=3.4, FLOORS=5, CEIL_H=3.2, SLAB=.2;
-const BX=20, BZ=10.5;            // ผนังนอกด้านใน (ครึ่งกว้าง/ครึ่งลึก)
+const BZ=10.5;                   // ผนังนอกด้านในตามแกน Z
 const CZ=2.5;                    // ครึ่งกว้างทางเดินกลาง
 const WEST=-19.5;                // ผนังตะวันตกด้านใน
 const SHAFT_E=-15;               // หน้าปล่องลิฟต์
 const CORE_E=-12.5;              // ขอบตะวันออกของแกนบันได/ลิฟต์
+/* 🏨 รอบ 1062: ยืด "แนวทางเดิน" จริง 3 เท่า โดยคงขนาดห้องเดิม
+   เดิม CORE_E..BASE_BX = 32.5 ม. และมี 3 ห้อง/ฝั่ง → ใหม่ยาว 97.5 ม. และมี 9 ห้อง/ฝั่ง
+   ไม่ใช้ scale ก้อนทั้งตึก เพราะจะทำให้ประตู ห้อง และความสูงผิดสัดส่วน */
+const HOTEL_LENGTH_SCALE=3, BASE_BX=20, BASE_ROOM_N=3;
+const BASE_CORRIDOR_LEN=BASE_BX-CORE_E;
+const BX=CORE_E+BASE_CORRIDOR_LEN*HOTEL_LENGTH_SCALE; // 85: ทางเดิน 97.5 ม. = เดิม 3 เท่า
+const WORLD_X_MIN=WEST-20, WORLD_X_MAX=BX+36;         // สวนหน้า/จุดเกิดนอกตึกต้องพ้นรั้วโลก
 const RZ0=-10.5, RZ1=-6.5;       // เลนโถงบันได (กว้าง 4 ม.)
 const LZ0=-6.5,  LZ1=-2.5;       // เลนชานพักหน้าบันได (พื้นราบทุกชั้น)
 /* 🪜 รอบ 850 (ผู้ใช้: "บันไดชิดผนังไม่สวย ค้นหลักการสร้างบันไดตึกจริง"): เปลี่ยนจากทางลาดยาว
@@ -48,7 +55,7 @@ const ST_RISE=FLOOR_H/2;         // 1.7 แต่ละช่วงขึ้น�
 const ST_STEPS=10;               // 10 ขั้น/ช่วง (ลูกตั้ง .17 · ลูกนอน .34)
 const ST_GAP0=-8.65, ST_GAP1=-8.35; // ช่องโล่งกลางระหว่าง 2 ช่วง (มีแผงราวกันตก)
 const ST_ZMID=-8.5;              // เส้นแบ่งเลนใต้/เลนเหนือ (ใช้ใน surfaceY)
-const ROOM_N=3;                  // ห้อง/ฝั่ง/ชั้น
+const ROOM_N=BASE_ROOM_N*HOTEL_LENGTH_SCALE; // 9 ห้อง/ฝั่ง/ชั้น — ขนาดห้องเท่าเดิม
 const RW=(BX-CORE_E)/ROOM_N;     // กว้างห้อง ~10.8
 const RD=BZ-CZ;                  // ลึกห้อง 8
 const DOOR_W=1.7;                // ช่องประตูห้อง
@@ -225,7 +232,8 @@ function build(THREE_,opt){
   const grp=new T.Group();
   const H={grp, mats:M, solids:[], rooms:[], spots:[], portraits:[], wardrobes:[], specialWardrobes:[],
            funeral:null, funeralBulbs:[],
-           lamps:[M.lamp,M.win], lightsOn:true, FLOOR_H, FLOORS, BX, BZ, CZ, floorY};
+           lamps:[M.lamp,M.win], lightsOn:true, FLOOR_H, FLOORS, BX, BZ, CZ,
+           HOTEL_LENGTH_SCALE, WORLD_X_MIN, WORLD_X_MAX, floorY};
 
   /* กล่องกันชน (AABB) — y0..y1 คุมว่าอยู่ชั้นไหน */
   const solid=(x0,x1,z0,z1,y0,y1,tag)=>{ H.solids.push({x0,x1,z0,z1,y0,y1,on:true,tag:tag||''}); };
@@ -287,7 +295,8 @@ function build(THREE_,opt){
   accBox(A.facade,BX+.75,(2.9+eh)/2+.05,0,.5,eh-2.9,ew*2,3.2);      // คานเหนือประตูหน้า
   for(let f=0;f<FLOORS;f++){
     const wy=floorY(f)+1.75;
-    for(let i=0;i<10;i++){                        // หน้าต่างเรียงหน้า-หลังตึก
+    const sideWindowN=Math.ceil((BX-WEST-4.8)/3.7); // รักษาระยะหน้าต่างเดิมตลอดปีกที่ยาวขึ้น
+    for(let i=0;i<sideWindowN;i++){                // หน้าต่างเรียงหน้า-หลังตึก
       const wx=WEST+2.4+i*3.7;
       accBox(A.win,wx,wy,-BZ-1.02,1.5,1.9,.06,0);
       accBox(A.win,wx,wy, BZ+1.02,1.5,1.9,.06,0);
@@ -531,41 +540,44 @@ function build(THREE_,opt){
 
   /* ---------- 🛎️ ล็อบบี้ชั้นล่าง ---------- */
   {
-    const y=0;
-    // พรมแดงจากประตูหน้าถึงลิฟต์
-    accBox(A.carpet,4,.03,0,30,.06,4.2,2.2);
+    const y=0, frontShift=BX-BASE_BX;              // ย้ายชุดล็อบบี้เดิมไปอยู่ใกล้ประตูหน้าใหม่
+    // พรมแดงจากประตูหน้าถึงลิฟต์ — ยาวเต็มโถงใหม่ ไม่ขาดกลางตึก
+    const carpetX0=CORE_E+1.5, carpetX1=BX-1;
+    accBox(A.carpet,(carpetX0+carpetX1)/2,.03,0,carpetX1-carpetX0,.06,4.2,2.2);
     // เคาน์เตอร์ต้อนรับ (ทรงตัว L) + ตู้กุญแจห้อง
-    accBox(A.wood,9,.6,-6.4,7.5,1.2,1.0,1.6); solid(5.25,12.75,-6.9,-5.9,y,y+1.2,'desk');
-    accBox(A.wood,12.4,.6,-4.6,1.0,1.2,4.6,1.6); solid(11.9,12.9,-6.9,-2.3,y,y+1.2,'desk');
-    accBox(A.gold,9,1.24,-6.4,7.6,.08,1.1,1.6);
-    accBox(A.wood,9,1.6,-8.6,7.0,3.0,.3,1.6); solid(5.5,12.5,-8.75,-8.45,y,y+3,'desk');
+    accBox(A.wood,9+frontShift,.6,-6.4,7.5,1.2,1.0,1.6); solid(5.25+frontShift,12.75+frontShift,-6.9,-5.9,y,y+1.2,'desk');
+    accBox(A.wood,12.4+frontShift,.6,-4.6,1.0,1.2,4.6,1.6); solid(11.9+frontShift,12.9+frontShift,-6.9,-2.3,y,y+1.2,'desk');
+    accBox(A.gold,9+frontShift,1.24,-6.4,7.6,.08,1.1,1.6);
+    accBox(A.wood,9+frontShift,1.6,-8.6,7.0,3.0,.3,1.6); solid(5.5+frontShift,12.5+frontShift,-8.75,-8.45,y,y+3,'desk');
     for(let i=0;i<7;i++) for(let j=0;j<4;j++)
-      accBox(A.gold,6+i*1.0,1.0+j*.55,-8.42,.8,.42,.05,0);           // ช่องกุญแจห้อง
+      accBox(A.gold,6+frontShift+i*1.0,1.0+j*.55,-8.42,.8,.42,.05,0); // ช่องกุญแจห้อง
     // เสาหินอ่อน 4 ต้น + คิ้วทอง
     [[-2,-6.5],[-2,6.5],[8,6.5],[15,-6.5]].forEach(p=>{
-      accBox(A.marble,p[0],1.6,p[1],1.1,3.2,1.1,2);
-      accBox(A.gold,p[0],3.1,p[1],1.35,.22,1.35,0);
-      solid(p[0]-.6,p[0]+.6,p[1]-.6,p[1]+.6,y,y+3.2,'col');
+      const x=p[0]+frontShift;
+      accBox(A.marble,x,1.6,p[1],1.1,3.2,1.1,2);
+      accBox(A.gold,x,3.1,p[1],1.35,.22,1.35,0);
+      solid(x-.6,x+.6,p[1]-.6,p[1]+.6,y,y+3.2,'col');
     });
     // โซฟา + โต๊ะกลาง
-    accBox(A.cloth,2.5,.35,6.0,3.4,.7,1.3,1.2); solid(.8,4.2,5.35,6.65,y,y+.7,'sofa');
-    accBox(A.cloth,2.5,.85,6.6,3.4,.9,.4,1.2);
-    accBox(A.wood,2.5,.28,4.0,1.6,.56,1.0,0);  solid(1.7,3.3,3.5,4.5,y,y+.56,'tbl');
+    accBox(A.cloth,2.5+frontShift,.35,6.0,3.4,.7,1.3,1.2); solid(.8+frontShift,4.2+frontShift,5.35,6.65,y,y+.7,'sofa');
+    accBox(A.cloth,2.5+frontShift,.85,6.6,3.4,.9,.4,1.2);
+    accBox(A.wood,2.5+frontShift,.28,4.0,1.6,.56,1.0,0); solid(1.7+frontShift,3.3+frontShift,3.5,4.5,y,y+.56,'tbl');
     // ต้นไม้ประดับ 2 กระถาง
     [[16.5,5.5],[16.5,-5.5]].forEach(p=>{
-      accBox(A.stone,p[0],.3,p[1],.9,.6,.9,0);
-      accBox(A.leaf,p[0],1.35,p[1],1.3,1.5,1.3,0);
-      solid(p[0]-.5,p[0]+.5,p[1]-.5,p[1]+.5,y,y+1.9,'pot');
+      const x=p[0]+frontShift;
+      accBox(A.stone,x,.3,p[1],.9,.6,.9,0);
+      accBox(A.leaf,x,1.35,p[1],1.3,1.5,1.3,0);
+      solid(x-.5,x+.5,p[1]-.5,p[1]+.5,y,y+1.9,'pot');
     });
     // โคมระย้ากลางล็อบบี้
-    accBox(A.gold,5,3.0,0,.12,.5,.12,0);
-    accBox(A.lamp,5,2.55,0,1.9,.35,1.9,0);
+    accBox(A.gold,5+frontShift,3.0,0,.12,.5,.12,0);
+    accBox(A.lamp,5+frontShift,2.55,0,1.9,.35,1.9,0);
     for(let i=0;i<8;i++){ const a=i/8*Math.PI*2;
-      accBox(A.lamp,5+Math.cos(a)*1.25,2.25,Math.sin(a)*1.25,.22,.5,.22,0); }
+      accBox(A.lamp,5+frontShift+Math.cos(a)*1.25,2.25,Math.sin(a)*1.25,.22,.5,.22,0); }
     // ไฟผนังทางเดิน/ล็อบบี้ทุกชั้น
     for(let f=0;f<FLOORS;f++){
       const fy=floorY(f);
-      for(let i=0;i<8;i++){
+      for(let i=0;i<8*HOTEL_LENGTH_SCALE;i++){
         const lx=CORE_E+1.6+i*4.2;
         accBox(A.lamp,lx,fy+2.35,-CZ+.12,.5,.34,.1,0);
         accBox(A.lamp,lx,fy+2.35, CZ-.12,.5,.34,.1,0);
@@ -609,7 +621,7 @@ function build(THREE_,opt){
      ไฟชุดนี้แยกจากไฟโรงแรม จึงยังกะพริบอยู่แม้ไฟทั้งตึกดับตามเนื้อเรื่อง
      ============================================================ */
   {
-    const fy=floorY(2), fx=18.25, fz=0;
+    const fy=floorY(2), fx=BX-1.75, fz=0;
     // ฐานต่างระดับ + หีบทรงไทยไม้เข้ม คิ้ว/ลายทอง
     accBox(A.funeralBlack,fx,fy+.12,fz,3.25,.24,4.25,0);
     accBox(A.funeralWood,fx+.15,fy+.56,fz,2.30,.88,3.10,1.2);
@@ -643,7 +655,7 @@ function build(THREE_,opt){
       b.position.set(x,y,.18); pf.add(b);
     }
     // พุ่มดอกไม้ขาว-ดำสองข้างหน้าโลง
-    [[16.65,-1.55],[16.65,1.55]].forEach((p,side)=>{
+    [[BX-3.35,-1.55],[BX-3.35,1.55]].forEach((p,side)=>{
       for(let i=0;i<22;i++){
         const a=i*2.399, rr=.15+.58*Math.sqrt(i/22);
         const b=new T.Mesh(beadGeo,(i+side)%6===0?blackMat:whiteMat);
@@ -657,10 +669,10 @@ function build(THREE_,opt){
     const addBulb=(x,y,z,i)=>{ const b=new T.Mesh(bulbGeo,bulbMats[i%3]); b.position.set(x,y,z); grp.add(b);
       H.funeralBulbs.push({m:b,phase:(i%3)*2.1}); };
     let bi=0;
-    for(let z=-1.55;z<=1.55;z+=.31){ addBulb(16.82,fy+.20,z,bi++); addBulb(19.72,fy+.20,z,bi++); }
+    for(let z=-1.55;z<=1.55;z+=.31){ addBulb(BX-3.18,fy+.20,z,bi++); addBulb(BX-.28,fy+.20,z,bi++); }
     for(let y=fy+1.18;y<=fy+2.95;y+=.25){ addBulb(BX-.28,y,-.93,bi++); addBulb(BX-.28,y,.93,bi++); }
 
-    H.funeral={x:fx,z:fz,y:fy,letterSpot:{x:16.18,z:0,y:fy},portrait:pf};
+    H.funeral={x:fx,z:fz,y:fy,letterSpot:{x:BX-3.82,z:0,y:fy},portrait:pf};
   }
 
   /* ============================================================
@@ -681,7 +693,7 @@ function build(THREE_,opt){
       return g;
     };
     for(let i=0;i<5;i++){
-      const x=10.35+i*2.10, g=new T.Group(); g.position.set(x,fy,z); grp.add(g);
+      const x=BX-9.65+i*2.10, g=new T.Group(); g.position.set(x,fy,z); grp.add(g);
       const part=(sx,sy,sz,px,py,pz,mat)=>{ const m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),mat||M.funeralWood); m.position.set(px,py,pz); g.add(m); };
       part(1.72,.13,.92,0,.065,0); part(1.72,.13,.92,0,2.555,0);
       part(.13,2.62,.92,-.795,1.31,0); part(.13,2.62,.92,.795,1.31,0);
@@ -759,9 +771,13 @@ function build(THREE_,opt){
      ประตูห้องอยู่ที่ กลางห้อง±1.9 (ดูตัวแปร dx ในลูปสร้างห้อง) = เหนือ -5.18/5.65/16.48 · ใต้ -8.98/1.85/12.68
      ตำแหน่งด้านล่างเลือกให้ห่างทั้งช่องประตู (±.85) และโคมไฟผนัง (x=CORE_E+1.6+i*4.2 กว้าง .62) แล้ว
      🛎️ ชั้น 0 เป็นล็อบบี้โล่ง **ไม่มีผนังทางเดิน** — รูปชุดเดิมจึงลอยกลางอากาศ ย้ายไปแขวนผนังนอกแทน */
-  const PORTRAIT_X_N=[-10.2,-1.5,2.9,11.2];        // ผนังทางเดินฝั่งเหนือ (ชั้น 1-4)
-  const PORTRAIT_X_S=[-4.5,7.0];                   // ผนังทางเดินฝั่งใต้ (ชั้น 1-4)
-  const LOBBY_X_N=[-8,-2,3,16], LOBBY_X_S=[-6,8];  // ล็อบบี้: ผนังนอกเหนือ/ใต้ (เลี่ยงเคาน์เตอร์+กระถาง)
+  const repeatWingXs=base=>{ const out=[];
+    for(let wing=0;wing<HOTEL_LENGTH_SCALE;wing++) base.forEach(x=>out.push(x+wing*BASE_CORRIDOR_LEN));
+    return out;
+  };
+  const PORTRAIT_X_N=repeatWingXs([-10.2,-1.5,2.9,11.2]); // รูปซ้ำจังหวะเดิมทุกปีก เลี่ยงประตู/โคมไฟ
+  const PORTRAIT_X_S=repeatWingXs([-4.5,7.0]);
+  const LOBBY_X_N=repeatWingXs([-8,-2,3,16]), LOBBY_X_S=repeatWingXs([-6,8]);
   for(let f=0;f<FLOORS;f++){
     const fy=floorY(f)+1.75;
     if(f===0){
@@ -800,13 +816,14 @@ function build(THREE_,opt){
   /* จุดวางตัวอักษรในล็อบบี้/ทางเดิน (นอกห้องพัก) */
   for(let f=0;f<FLOORS;f++){
     const y=floorY(f);
-    for(let i=0;i<4;i++) H.spots.push({x:CORE_E+3+i*4.2,z:(i%2?1.4:-1.4),y,room:'hall'+f});
+    let i=0;
+    for(let x=CORE_E+3;x<BX-1.5;x+=4.2,i++) H.spots.push({x,z:(i%2?1.4:-1.4),y,room:'hall'+f});
   }
   /* 🩹 รอบ 766: ล็อบบี้ชั้น 0 เดิมมีแค่ 5 จุด (hall 4+store 1) ทั้งที่ห้องโล่งกว้างมาก
      (ชั้นอื่นมีห้องพักละ 4 จุด × 6 ห้อง = 24 จุด) → ตัวอักษรกองกันแน่นที่ 5 จุดเดิมเวลาผู้เล่นอยู่ชั้นล่าง
      เติมจุดกระจายตามเฟอร์นิเจอร์จริงในล็อบบี้ (ข้างเสา/โซฟา/กระถางต้นไม้/หน้าเคาน์เตอร์/กลางพรม) */
   [[-2,-5.3],[-2,5.3],[8,5.3],[15,-5.3],[2.5,8],[9,-4],[16.5,3.5],[16.5,-3.5],[5,0],[17,0]]
-    .forEach(p=>H.spots.push({x:p[0],z:p[1],y:0,room:'lobby'}));
+    .forEach(p=>H.spots.push({x:p[0]+(BX-BASE_BX),z:p[1],y:0,room:'lobby'}));
   return H;
 }
 
@@ -1012,5 +1029,6 @@ function randomHaunt(H,floorPref){
 
 return { build, surfaceY, collide, setLights, tick, roomAt, nearWardrobe, inLift, atLiftDoor,
          randomHaunt, insideHotel, floorOf, floorY, nearFuneral, shuffleSpecialWardrobes,
-         FLOOR_H, FLOORS, BX, BZ, CZ, WEST, CORE_E, SHAFT_E, ENTRY_HW, PLAYER_R };
+         FLOOR_H, FLOORS, BX, BZ, CZ, WEST, CORE_E, SHAFT_E, ENTRY_HW, PLAYER_R,
+         HOTEL_LENGTH_SCALE, WORLD_X_MIN, WORLD_X_MAX };
 })();
