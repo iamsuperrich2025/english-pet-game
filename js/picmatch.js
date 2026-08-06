@@ -56,6 +56,15 @@
   const BEDROOM_ART_CUTS = [0.659,0.6562,0.6385,0.6383,0.6205,0.6174,0.66,0.66];
   const artRowsFor = file => file === 'Bedroom.png' ? BEDROOM_ART_ROWS : (PICDICT_ART_ROWS[file] || null);
   const artCutsFor = file => file === 'Bedroom.png' ? BEDROOM_ART_CUTS : (PICDICT_ART_CUTS[file] || null);
+  /* ตรวจภาพรวมจริงทั้งคลังแล้ว: 5 แถวนี้มีตัวอักษรแตะขอบ crop เพราะ browser
+     interpolate พิกเซลถัดจากจุดตัดขึ้นมา จึงเว้น white gap ก่อนชื่อเฉพาะแถวที่พบ */
+  const ART_CUT_FIX = Object.freeze({
+    'DailyRoutines.png:2':.575,
+    'Drinks.png:1':.575,
+    'Shapes.png:6':.557,
+    'Time.png:4':.575,
+    'Transportation.png:5':.54,
+  });
   const sheetSrc = file => `img/matching/web/${file.replace(/\.png$/i,'.webp')}`;
   /* 🔎 รอบ 1057: สแกนกรอบ 2,641 ช่องแบบ lightweight พบกรอบกว้าง/แคบผิดแถว 63 จุด
      รายการนี้คือจุดที่ภาพจริงยืนยันว่ามีเศษการ์ดข้างเคียงหรือโดนตัด (เช่น Blogging) */
@@ -81,7 +90,9 @@
     }
     const w=x1-x0, h=y1-y0, bx=x0, by=y0;
     const row=Math.floor(index/W.cols), cuts=artCutsFor(file);
-    const artBottom=cuts && Number.isFinite(cuts[row]) ? cuts[row] : .66;
+    const fixedBottom=ART_CUT_FIX[`${file}:${row}`];
+    const artBottom=Number.isFinite(fixedBottom) ? fixedBottom :
+      (cuts && Number.isFinite(cuts[row]) ? cuts[row] : .66);
     /* รอบ 1059: ใช้เฉพาะเขตภาพประกอบด้านบนของการ์ด Picture Dictionary
        - ตัดชื่ออังกฤษ/ไทยด้านล่างตามขอบที่อบด้วย row consensus ของแต่ละแผ่น
        - กันเส้นประรอบการ์ดออก แต่เหลือระยะเผื่อวัตถุที่วาดชิดขอบ
