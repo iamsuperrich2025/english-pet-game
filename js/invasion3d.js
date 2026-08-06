@@ -2868,7 +2868,7 @@ function layoutLetterPanels(){
 }
 
 /* ============================================================
-   👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ปล่อยลำแสงใส่ผู้เล่น)
+   👾 ยานลูก — 1 ลำต่อ 1 ตัวอักษร (บินเพ่นพ่าน + ยิงตอบเฉพาะผู้เล่นที่ยิงโดนลำนั้นก่อน)
    ============================================================ */
 function makeFighter(letterIdx){
   const grp=new THREE.Group();
@@ -2903,7 +2903,7 @@ function makeFighter(letterIdx){
   const a=srnd(sd)*TAU, r=F_R*(0.45+srnd(sd+1)*0.55);
   grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
-  const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP,
+  const f={grp,eye,eng,label:lb,letterIdx,ch,hp:F_HP, hostile:false,
            bar:{spr:bar,cv:bcv,tx:btx},
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0,
@@ -6427,6 +6427,9 @@ function raySphere(o,d,c,r){
      false          = เพื่อนยิง (sync มาจาก DB) → ไม่ให้เหรียญ ไม่นับเป็นผลงานเรา */
 function damageFighter(f,dmg,now,byMe){
   if(f.dead) return;
+  /* 🦅 รอบ 1043: เป็นศัตรูกับ "ผู้เล่นคนนี้" หลังถูกผู้เล่นคนนี้ยิงโดนจริงเท่านั้น
+     ดาเมจจากบอทฝ่ายเรา/เพื่อนออนไลน์ไม่ทำให้ยานหันมายิงใส่เครื่องของเรา */
+  if(byMe===undefined||byMe===true) f.hostile=true;
   f.hp-=dmg; f.hitAt=now||performance.now();
   if(f.hp>0){ drawFighterBar(f); return; }        // ❤️ รอบ 557: อัปเดตแถบพลังตอนโดนยิง
   dropFighter(f, byMe!==false, byMe==='ally');
@@ -7988,8 +7991,8 @@ function tickFighters(dt,now){
     /* ⚡ รอบ 579: ลำที่เร่งเครื่อง = ไฟท้ายโตขึ้น + เปลี่ยนเป็นสีส้มร้อน (เด็กแยกออกทันทีว่าลำไหนเร็ว) */
     f.eng.scale.setScalar((4.2+Math.sin(now*(tb>1?.05:.02)+f.ang)*.6)*(tb>1?1.75:1));
     f.eng.material.color.setHex(tb>1?0xffb03a:0x66e0ff);
-    /* ยิงใส่ผู้เล่น */
-    if(now>f.shotAt){
+    /* 🦅 รอบ 1043: ยังไม่ถูกเรายิง = บินผ่านอย่างเดียว; ถูกยิงแล้วจึงตอบโต้ผู้เล่นคนนั้น */
+    if(f.hostile && now>f.shotAt){
       /* 👤 รอบ 477: เราย่องอยู่ (ดับไฟฉาย+ไม่ยิง) = ลำนี้เว้นช่วงยิงนานขึ้นมาก และบางทีไม่ยิงเลย
          ⚖️ รอบ 556: มี 26 ลำพร้อมกัน — ถ่วงช่วงยิงตามจำนวนลำ ให้อัตรากระสุนรวมพอ ๆ กับสมัย 8 ลำ */
       f.shotAt=now+F_SHOT_GAP*rnd(.7,1.5)*(sneaking?2.8:1)*Math.max(1,fighters.length/8);
@@ -8272,7 +8275,7 @@ function tickMissiles(dt,now){
   }
 }
 /* ============================================================
-   🔫↩️ รอบ 568 (ผู้ใช้สั่ง): ยานลูกที่ "ถูกเรดาร์ล็อก" ยิงสวนกลับใส่เฮลิผู้เล่น
+   🔫↩️ รอบ 568/1043: ยานลูกที่ถูกผู้เล่นยิงโดนแล้ว และกำลัง "ถูกเรดาร์ล็อก" จึงยิงสวนใส่เฮลิผู้เล่น
    ต่อยอดเรดาร์ 563/564 + ระบบหลบมิสไซล์ 565 — เดิมการล็อกไม่มีต้นทุนเลย จ่อค้างนานแค่ไหนก็ได้
    ใหม่: ลำที่ติด 🔴 LOCK รู้ตัวว่าโดนเรดาร์จับ (RWR) แล้ว "หันมายิงสวน" ใส่เฮลิเรา
      ① ⏳ เตือนก่อนยิง — ป้ายกรอบล็อกขึ้น 🔫สวน! + เสียง Snd.rwr() + toast บอกวิธีแก้ (มีเวลา CTR_REACT)
@@ -8308,7 +8311,7 @@ function ctrAimPoint(f){
 }
 /* ลำนี้ "กำลังจะยิงสวน" ไหม — ใช้ร่วมกันทั้งป้ายกรอบล็อก เสียงเตือน และตัวตัดสินใจยิง */
 function ctrArming(l,now){
-  return !!(l && l.on && l.f && !l.f.dead && now>=(l.f.evaUntil||0) && now-(l.at||0)>=CTR_WARN);
+  return !!(l && l.on && l.f && l.f.hostile && !l.f.dead && now>=(l.f.evaUntil||0) && now-(l.at||0)>=CTR_WARN);
 }
 /* ยิงสวน 1 ชุด = เข้าคิวทีละนัด (ทยอยออกให้เห็นเป็นชุดกระสุน ไม่ใช่พรึ่บเดียว) */
 function counterFire(f,now){
@@ -8334,6 +8337,7 @@ function tickCounter(dt,now){
   let n=0;
   for(const l of rdrLocks){
     if(!l.on || l.f.dead) continue;                         // 🔶 กำลังจับ = ยังไม่ยิงสวน
+    if(!l.f.hostile) continue;                              // 🦅 รอบ 1043: ล็อกเป้าเฉยๆ ไม่ถือว่าโจมตียาน
     if(now<(l.f.evaUntil||0)) continue;                     // 🌀 รอบ 565: กำลังบิดหนีมิสไซล์ = ยิงสวนไม่ได้
     if(++n>CTR_MAX) break;
     /* เตือนก่อนนัดแรก (ครั้งเดียวต่อการล็อก 1 ครั้ง) */
