@@ -3477,7 +3477,7 @@ function hotelGhostCueStart(now){
   g.floorY=fy; g.spr.position.set(sx,fy+g.baseY,sz); g.st='wallPass'; g.at=now; g.vis=.86;
   g.cueZ0=sz; g.cueZ1=wallZ; g.cueYaw0=Math.atan2(sx-c.x,sz-c.z); g.cueYaw1=wallZ>0?0:Math.PI;
   g.spr.rotation.y=g.cueYaw0; setGhostVis(g,g.vis);
-  hQuest.ghostShown=true; hGhostCueAt=0; HSound.whisper();
+  hQuest.ghostShown=true; hGhostCueAt=0; HSound.cue();
 }
 function tickHotelGhostCue(dt,now){
   if(hGhostCueAt&&now>=hGhostCueAt) hotelGhostCueStart(now);
@@ -3670,7 +3670,7 @@ let blackedOut=false, hFlickerAt=0, hFlickerN=0;
 let torch=null, torchSpill=null, torchOn=false;   // 🔦 ไฟฉาย (ลำแสง + แสงฟุ้งรอบตัว)
 let ghostStalkAt=0, hKnockAt=0, hActEl=null, hTorchBtn=null, hTorchHintEl=null, hActNow=null;
 /* 📷 รอบ 850: head bob เดินให้สมจริง — เฟสก้าวผูกกับ "ระยะที่ขยับได้จริง" (ติดกำแพง = ไม่โยก) */
-let hStepPh=0, hBobAmt=0, hYawVel=0, hPrevYaw=0, hLocalStepDist=0;
+let hStepPh=0, hBobAmt=0, hYawVel=0, hPrevYaw=0;
 let hFlickerUntil=0, hFlickerPermanent=false, hPrevHotelFloor=0, hGhostCueAt=0;
 /* 🌑 sprite ตัวอักษรเป็นวัสดุ "ไม่รับแสง" — ไฟดับแล้วจะยังสว่างจ้าผิดธรรมชาติ
    จึงคูณสีให้หม่นลงตอนมืด แต่ยังเรือง ๆ พอให้เด็กหาเจอ
@@ -3682,7 +3682,7 @@ function tintSprite(mat){ if(mat) mat.color.setHex(blackedOut?DARK_LETTER:0xffff
 function hotelReset(){
   hotel=(worlds.haunt&&worlds.haunt.hotel)||null;
   hFootY=0; hotelInAt=0; blackedOut=false; hFlickerAt=0; hFlickerN=0;
-  hFlickerUntil=0; hFlickerPermanent=false; hPrevHotelFloor=0; hGhostCueAt=0; hLocalStepDist=0;
+  hFlickerUntil=0; hFlickerPermanent=false; hPrevHotelFloor=0; hGhostCueAt=0;
   ghostStalkAt=performance.now()+12000; hKnockAt=0; hActNow=null; hTorchWinAt=0;
   setTorch(false);
   if(hotel){
@@ -3831,10 +3831,10 @@ function tickHotelPlayer(dt,now){
      ▸ เฟสก้าวเดินหน้าเฉพาะเมื่อ "ขยับได้จริง" (ชนกำแพง = หยุดโยกทันที ไม่โยกฟรี)
      ▸ ขึ้นลง 2 จังหวะ/รอบก้าว + เอียงซ้ายขวาสลับเท้า (roll) + เอนตัวเข้าโค้งตอนหันกล้อง */
   const realSp=Math.hypot(camera.position.x-px,camera.position.z-pz)/Math.max(dt,1e-4);
-  if(moving&&realSp>.45){
-    hLocalStepDist+=realSp*dt;
-    if(hLocalStepDist>=1.18){ hLocalStepDist%=1.18; HSound.footstep(.34); }
-  }else hLocalStepDist=Math.min(hLocalStepDist,.55);
+  /* 🔊 รอบ 1071: concrete MP3 เป็นลูปแยกของตัวละครเราเอง — เริ่ม/หยุดตามระยะที่เดินได้จริง
+     (ชนกำแพงหรือปล่อยปุ่ม = หยุดทันที) และเร่ง playbackRate เล็กน้อยตามความเร็วเดิน */
+  const hotelWalking=moving&&realSp>.45;
+  HSound.walk('local',hotelWalking,.38,.88+Math.min(.18,realSp/PLAYER_SPEED*.18));
   hBobAmt+=(((moving&&realSp>.4)?1:0)-hBobAmt)*Math.min(1,dt*8);      // เข้า/ออกจังหวะโยกนุ่ม ๆ
   hStepPh+=realSp*dt*3.6;                                             // rad ต่อเมตร (~3.4 ก้าว/วิ ที่ 6 m/s)
   let dyaw=yaw-hPrevYaw; hPrevYaw=yaw;
@@ -3931,8 +3931,10 @@ function openWardrobe(W){
       showBanner('🚪 <b>ตู้ใบนี้ยังเงียบสนิท</b><br><small>ต้องเก็บตัวอักษรชั้นล่างสุดให้เกือบหมดก่อน</small>',2500);
     }
   }else if(W.content==='photo'){
+    HSound.sigh();
     showBanner('🖼️ <b>ภาพเดียวกับผู้เสียชีวิตหน้าโลง</b><br><small>กรอบทองลายไทยมีพวงมาลัยขาวดำพาดอยู่</small>',3000);
   }else if(W.content==='bundleA'||W.content==='bundleB'){
+    HSound.whisper();
     showBanner('⬜ <b>ห่อผ้าขาวรูปร่างคล้ายร่างคน</b><br><small>ผ้าปิดมิดชิด ไม่เห็นใบหน้า และไม่มีสิ่งใดขยับ</small>',2800);
   }else{
     showBanner('🚪 <b>ตู้ใบนี้ว่างเปล่า</b>',1700);
@@ -4196,64 +4198,107 @@ const LegacyHSound={
 };
 
 /* ============================================================
-   🔊 รอบ 1060 — เสียงโรงแรมแบบ file-only
+   🔊 รอบ 1071 — เสียงโรงแรมจากไฟล์จริง + ฝีเท้าแยกทุกตัวละคร
    ผู้ใช้กำหนดให้โลกนี้ห้ามใช้เสียงเดิม/เสียงสังเคราะห์ runtime: ทุกเมธอดด้านล่าง
-   จึงเล่นไฟล์จาก sound/ghost/ เท่านั้น รวมถึงเสียงเดินและเสียงโบนัสที่สร้างใหม่ในรอบนี้
+   ใช้สถานการณ์จาก sound/ghost/ ให้ครบที่สุด แต่ตัด strange-whispers ที่วัดแล้วเบาเกินออก
+   ส่วนตัวละครทุกตัวใช้ concrete-footsteps MP3 ตามคำสั่งใหม่ (ลูปคนละ Audio ไม่เล่นซ้อนเป็นกอง)
    ============================================================ */
 const HSound={
-  active:new Set(), loops:{}, eerieAt:0, stepN:0,
+  active:new Set(), loops:{}, walkers:new Map(), ones:{}, variantN:{}, eerieAt:0, stepN:0,
   files:{
     ambient:'sound/ghost/freesound_community-horror-suspense-76349.mp3',
-    eerie:'sound/ghost/u_wq5g39nvop-horror-sounds-tension-terror-2-252488.mp3',
-    whisper:'sound/ghost/u_5hx6qi66bg-strange-whispers-415245.mp3',
-    apparition:'sound/ghost/alesiadavina-ethereal-apparition-470761.mp3',
-    wail:'sound/ghost/alesiadavina-ghost-breath-6-vol-001-158367.mp3',
+    darkAmbient:'sound/ghost/freesound_community-ghost-dreamer-32184.mp3',
+    eerie:['sound/ghost/u_wq5g39nvop-horror-sounds-tension-terror-2-252488.mp3',
+           'sound/ghost/alesiadavina-eerie-horror-sound-ghostly-2-vol-005-175056.mp3'],
+    whisper:'sound/ghost/imagne_impossible-horror-scary-human-whisper-ghost-05-257014.mp3',
+    apparition:['sound/ghost/alesiadavina-ethereal-apparition-470761.mp3',
+                 'sound/ghost/u_xg7ssi08yr-ghost-1-355454.mp3'],
+    wail:['sound/ghost/alesiadavina-ghost-breath-6-vol-001-158367.mp3',
+          'sound/ghost/alesiadavina-ghost-sound-ghostly-9-vol-005-175015.mp3'],
+    sigh:'sound/ghost/freesound_community-ghost-sigh3-99231.mp3',
+    stinger:'sound/ghost/alesiadavina-creepy-ghost-sound-7-vol-001-158371.mp3',
     knock:'sound/ghost/alex_jauk-poltergeist-knocking-227003.mp3',
     door:'sound/ghost/spinopel-creaky-old-wooden-window-411674.mp3',
     power:'sound/ghost/spinopel-grinding-horror-411673.mp3',
     scare:'sound/ghost/freesound_community-scary-high-pitched-ghost-66066.mp3',
     letter:'sound/ghost/letter_collect.wav', bonus:'sound/ghost/reward_500_coins.wav',
-    steps:[1,2,3,4].map(i=>`sound/ghost/player_step_wood_${i}.wav`),
+    footsteps:'sound/freesound_community-concrete-footsteps-6752.mp3',
+  },
+  pick(src,key){
+    if(!Array.isArray(src)) return src;
+    const k=key||'default', n=this.variantN[k]||0; this.variantN[k]=n+1;
+    return src[n%src.length];
   },
   play(src,vol,opt){
     if(!state.sound||!src) return null;
     try{
-      const a=new Audio(src); opt=opt||{}; a.volume=Math.max(0,Math.min(1,vol===undefined?.5:vol));
+      opt=opt||{}; src=this.pick(src,opt.variant);
+      if(opt.one){ const old=this.ones[opt.one]; if(old&&!old.paused&&!old.ended) return old; }
+      const a=new Audio(src); a.volume=Math.max(0,Math.min(1,vol===undefined?.5:vol));
       a.loop=!!opt.loop; if(opt.rate) a.playbackRate=opt.rate;
+      if(opt.start){ const seek=()=>{ try{ a.currentTime=Math.min(opt.start,Math.max(0,a.duration-.1)); }catch(e){} };
+        if(a.readyState>=1) seek(); else a.addEventListener('loadedmetadata',seek,{once:true}); }
       if(opt.loop) this.loops[opt.key||src]=a;
-      else{ this.active.add(a); const done=()=>this.active.delete(a); a.addEventListener('ended',done,{once:true}); a.addEventListener('error',done,{once:true}); }
+      else{
+        this.active.add(a); if(opt.one) this.ones[opt.one]=a;
+        const done=()=>{ this.active.delete(a); if(opt.one&&this.ones[opt.one]===a) delete this.ones[opt.one]; };
+        a.addEventListener('ended',done,{once:true}); a.addEventListener('error',done,{once:true});
+        if(opt.stopAfter) setTimeout(()=>{ try{ a.pause(); }catch(e){} done(); },opt.stopAfter);
+      }
       a.play().catch(()=>{}); return a;
     }catch(e){ return null; }
   },
   startAmbient(){
     if(this.loops.ambient) return;
-    this.play(this.files.ambient,.27,{loop:true,key:'ambient'});
+    this.play(this.files.ambient,.28,{loop:true,key:'ambient'});
+  },
+  startDarkAmbient(){
+    if(!this.loops.darkAmbient) this.play(this.files.darkAmbient,.38,{loop:true,key:'darkAmbient',rate:.96});
   },
   eerie(){
     const now=performance.now(); if(now<this.eerieAt) return; this.eerieAt=now+2200;
-    this.play(this.files.eerie,.14,{rate:.92+Math.random()*.08});
+    const src=this.pick(this.files.eerie,'eerie');
+    this.play(src,src.includes('u_wq5')?.48:.20,{rate:.92+Math.random()*.06,one:'eerie'});
   },
-  whisper(){ this.play(this.files.whisper,.18,{rate:.96}); },
-  wail(){ this.play(this.files.wail,.16,{rate:.94}); },
-  whoosh(){ this.play(this.files.apparition,.18,{rate:1.03}); },
-  knock(){ this.play(this.files.knock,.42,{rate:.96+Math.random()*.05}); },
+  whisper(){ this.play(this.files.whisper,.24,{rate:.96,one:'whisper'}); },
+  wail(){ this.play(this.files.wail,.22,{rate:.94,variant:'wail',one:'wail'}); },
+  sigh(){ this.play(this.files.sigh,.24,{rate:.97,one:'sigh'}); },
+  whoosh(){ this.play(this.files.apparition,.24,{rate:1.03,variant:'apparition',one:'apparition',stopAfter:3600}); },
+  cue(){ this.whoosh(); this.whisper(); },
+  knock(){ this.play(this.files.knock,.34,{rate:.96+Math.random()*.05,one:'knock'}); },
   door(){ this.play(this.files.door,.28,{rate:.94+Math.random()*.08}); },
-  powerDown(){ this.play(this.files.power,.34,{rate:.88}); },
-  stinger(){ this.play(this.files.apparition,.16,{rate:1.05}); },
-  scream(){ this.play(this.files.scare,.18,{rate:.92}); },
+  powerDown(){ this.play(this.files.power,.72,{rate:.88,one:'power'}); this.startDarkAmbient(); },
+  stinger(){ this.play(this.files.stinger,.28,{rate:1.02,one:'stinger',stopAfter:3200}); },
+  scream(){ this.play(this.files.scare,.34,{rate:.92,one:'scream',start:1,stopAfter:3600}); },
   letter(){ this.play(this.files.letter,.30,{rate:.98+Math.random()*.05}); },
   ui(){ this.play(this.files.letter,.12,{rate:1.28}); },
   reward(){ this.play(this.files.letter,.42,{rate:.82}); },
   bonus(){ this.play(this.files.bonus,.75); },
+  walk(key,on,vol,rate){
+    let a=this.walkers.get(key);
+    if(!state.sound||!on||vol<=.01){ if(a&&!a.paused) try{ a.pause(); }catch(e){} return; }
+    if(!a){
+      a=new Audio(this.files.footsteps); a.loop=true; a.preload='auto';
+      const seek=()=>{ try{ a.currentTime=Math.random()*Math.max(1,a.duration-1); }catch(e){} };
+      a.addEventListener('loadedmetadata',seek,{once:true}); this.walkers.set(key,a);
+    }
+    a.volume=Math.max(.02,Math.min(.55,vol)); a.playbackRate=Math.max(.78,Math.min(1.16,rate||1));
+    if(a.paused) a.play().catch(()=>{});
+  },
+  stopWalk(key){
+    const a=this.walkers.get(key); if(!a) return;
+    try{ a.pause(); a.currentTime=0; }catch(e){} this.walkers.delete(key);
+  },
   footstep(vol){
-    const src=this.files.steps[this.stepN++%this.files.steps.length];
-    this.play(src,Math.max(.02,Math.min(.48,vol||.2)),{rate:.94+Math.random()*.12});
+    this.play(this.files.footsteps,Math.max(.02,Math.min(.48,vol||.2)),
+      {rate:.94+Math.random()*.12,start:(this.stepN++%16)*2.7,stopAfter:430});
   },
   step(vol){ this.footstep((vol||.2)*.72); },
   heartbeat(){},
   stopAll(){
     Object.keys(this.loops).forEach(k=>{ const a=this.loops[k]; try{a.pause();a.currentTime=0;}catch(e){} });
     this.loops={}; this.active.forEach(a=>{try{a.pause();a.currentTime=0;}catch(e){}}); this.active.clear();
+    this.ones={}; this.walkers.forEach(a=>{try{a.pause();a.currentTime=0;}catch(e){}}); this.walkers.clear();
   },
 };
 
@@ -4472,6 +4517,7 @@ function removePeer(uid){
   removePeerBubble(p);
   if(p.heliSpr){ scene.remove(p.heliSpr); disposeHeliMesh(p.heliSpr); p.heliSpr=null; }   // 🚁 รอบ 376
   peerRotorStop(p);                                                                        // 🔊 รอบ 386: ปิดเสียงใบพัดเพื่อน
+  HSound.stopWalk('peer:'+uid);                                                            // 🔊 รอบ 1071: ปิด concrete loop ของตัวละครที่ออกจากโรงแรม
   if(p.flySpr){ scene.remove(p.flySpr); disposeHeliMesh(p.flySpr); p.flySpr=null; }       // 🚁 รอบ 385: ลำบิน 3D
   if(p.micSpr){ scene.remove(p.micSpr); p.micSpr.material.dispose(); p.micSpr=null; }
   Voice.drop(uid);
@@ -4544,13 +4590,9 @@ function tickPeers(dt,now){
       const walkBase=(p.walk&&M.hotel)?(p.cur.y||0):0;
       p.spr.position.set(p.cur.x,walkBase+Math.abs(Math.sin(p.stride*fq))*(p.mech?.1:.045)*p.swing,p.cur.z);   // เด้งก้าว (หุ่นย่ำหนักกว่า)
       if(M.hotel&&p.walk&&moved>.001){
-        p.hStepD=(p.hStepD||0)+moved;
-        if(p.hStepD>=1.18){
-          p.hStepD%=1.18;
-          const d3=Math.hypot(p.cur.x-camera.position.x,(p.cur.y||0)-hFootY,p.cur.z-camera.position.z);
-          if(d3<34) HSound.footstep(.40*Math.max(.04,1-d3/34));
-        }
-      }
+        const d3=Math.hypot(p.cur.x-camera.position.x,(p.cur.y||0)-hFootY,p.cur.z-camera.position.z);
+        HSound.walk('peer:'+uid,d3<34,.46*Math.max(.04,1-d3/34),.92+speedN*.12);
+      }else if(M.hotel&&p.walk) HSound.walk('peer:'+uid,false,0);
       let dy=p.yawTgt-p.yawCur; dy=((dy+Math.PI)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)-Math.PI;
       p.yawCur+=dy*k; p.spr.rotation.y=p.yawCur;
     }else{
