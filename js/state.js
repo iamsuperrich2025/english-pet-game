@@ -13,12 +13,12 @@ const QUIZ_PASS_REWARD = 500;
 const CURE_COST      = 100;                // 🩹 รอบ 236: ลด 1000→100 (ตายในโลก 3D บ่อย เงินหมดไว ไม่สนุก)
 const HUNGRY_SICK_MS = 2*60*60*1000;       // หิวเกิน 2 ชม. (ถึง 20:00) ยังกินไม่เต็มหลอด → ป่วย
 /* คิว 7725691507 กลุ่ม A (ข้อ 1,2,3,6) */
-const MEAL_HOUR       = 18;                // ข้อ 2+6: มื้อเย็นวันละครั้ง 18:00 (ทั้งสัตว์และคน)
+const MEAL_HOUR       = 18;                // มื้อสัตว์ + กิจกรรมข้าวเย็นผู้เล่น เริ่ม 18:00
 const MEAL_FULL       = 100;               // ข้อ 3: ต้องกินสะสมความอิ่มครบ 100 ถึงนับว่าอิ่มมื้อนี้
 const SLEEP_FROM_HOUR = 20;                // ข้อ 1: พาสัตว์เข้านอนได้ตั้งแต่ 20:00
 const SLEEP_SICK_HOUR = 23;                // ข้อ 1: ถึง 23:00 ยังไม่นอน → ป่วย (ครั้งเดียวต่อคืน)
 const WAKE_HOUR       = 6;                 // ข้อ 1: ตื่นนอนอัตโนมัติ 06:00
-const DINNER_COST     = 200;               // ข้อ 6: ค่าข้าวเย็นของผู้เล่น (เมนูคนจริงมากลุ่ม B)
+const DINNER_COST     = 200;               // ค่ากิจกรรมข้าวเย็นของผู้เล่น (ไม่กินก็ไม่ป่วย)
 /* คิว 7725691507 ข้อ 5.1 (กลุ่ม B): พิษสะสมจากอาหารคนที่เป็นโทษกับสัตว์ */
 const TOXIN_FULL     = 100;                // พิษสะสมครบ 100 → ป่วยทันที cause 'toxin'
 const DETOX_COST     = 1000;               // ค่าขับพิษ (ล้างบาร์พิษก่อนป่วย) — พิษไม่ลดเอง
@@ -203,9 +203,6 @@ const DEFAULT_STATE = {
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
   musicMode:'all',                    // 🎵 รอบ 181: โหมดวิทยุในรถ 'all'|'one'|'shuffle' (music.js)
   musicOff:false,                     // 🎵 รอบ 184: ปิดเพลงพื้นหลัง (ปุ่ม 🎵 ใน Lobby · แยกจากสวิตช์เสียง)
-  playerSick:false,                   // ข้อ 6: ผู้เล่นป่วยเพราะไม่กินข้าวเย็น — จ่ายค่ารักษา 1,000 ถึงหาย
-  playerSickDay:'',                   // ข้อ 6: mealDayKey ที่ป่วยไปแล้ว (กันป่วยซ้ำมื้อเดียวกันหลังรักษา)
-  playerSickPending:false,            // ข้อ 6: เพิ่งป่วย รอ UI เด้งกล่องแจ้งครั้งเดียว
   feedShare:{coin:true, quiz:true, goods:true, other:true, assets:true},
                                       // 📰 รอบ 155 (default เปิดทุกหมวดตั้งแต่รอบ 565): หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed — ปิดเองได้ทีหลังในตั้งค่า
   follows:{},                         // 📰 รอบ 155: คนที่เรา follow {uid:{n:ชื่อ, g:ชั้น, ts}} — feed หน้า lobby รวมกิจกรรมของคนกลุ่มนี้
@@ -326,6 +323,9 @@ function loadState(){
       }
       for(const k of ['pet','level','exp','hunger','lastTick','hungrySince','sick','fullUntil','equipped','wearing'])
         delete s[k];
+      /* 🧑‍⚕️ เลิกระบบผู้เล่นป่วย: ล้างฟิลด์จากเซฟเก่า/เซฟ cloud ทันที
+         ระบบป่วยและค่ารักษาคงอยู่เฉพาะสัตว์เลี้ยงกับอาการบาดเจ็บในโลก 3D */
+      for(const k of ['playerSick','playerSickDay','playerSickPending']) delete s[k];
       // ทำความสะอาดข้อมูลสัตว์ทุกตัว (กันสัตว์ที่ถูกตัดออก/ฟิลด์หาย)
       s.pets = s.pets.filter(p=>p && PETS[p.type]);
       // ชื่อสัตว์ (ข้อ 7): ตัวเดิมไม่มีชื่อ → default ชื่อชนิด (เช่น "น้องหมา")
@@ -784,20 +784,13 @@ function petHungry(p){ return p.level >= 2 && p.fedUpTo < currentSlotStart(Date.
 function petCanEat(p){ return petHungry(p) || (p.fullness||0) < MEAL_FULL; }
 
 /* ============================================================
-   🚫🍽️ ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952 · ผู้ใช้สั่ง 3 ส.ค. 2026)
-   "ไม่ว่าคนหรือสัตว์ ถ้าป่วยเพราะหิว ให้ปุ่มที่ซื้อของกินใช้ไม่ได้ · รักษาแล้วจึงซื้อได้"
-   ใช้ตัวเดียวกันทุกจุดที่ซื้อของกิน (ปุ่มให้อาหารน้อง · ข้าวเย็นคน · ของสะสมหมวดอาหาร ·
+   🚫🍽️ สัตว์ป่วยเพราะหิว = ซื้อของกินไม่ได้ (รอบ 952)
+   ใช้ตัวเดียวกันทุกจุดที่ซื้อของกิน (ปุ่มให้อาหารน้อง · ของสะสมหมวดอาหาร ·
    ของขวัญเค้ก/ขนมให้เพื่อน) — คืน null = ซื้อได้ · คืนอ็อบเจ็กต์ = ล็อก
    หมายเหตุ: ป่วยสาเหตุอื่น (ร้อน/ฝน/พิษ/อดนอน) ไม่เข้ากฎนี้ — ปุ่มให้อาหารมีกติกาเดิมของตัวเองอยู่แล้ว
    ============================================================ */
 function hungerSickLock(){
   if(typeof state === 'undefined' || !state) return null;
-  if(state.playerSick){
-    /* 👧 รอบ 1034: ใส่ชื่อผู้เล่นต่อท้าย "หนู" ให้รู้ว่าหมายถึงคน ไม่ใช่น้องสัตว์ */
-    const me = (typeof selfName === 'function') ? selfName() : 'หนู';
-    return {who:'player', name:me, why:`${me} ป่วยเพราะไม่ได้กินข้าวเย็น (คนนะ ไม่ใช่น้องสัตว์)`,
-            fix:'ต้องไปรักษาให้หายก่อน (แตะปุ่ม 🤒 มุมขวาบน)'};
-  }
   const p = (state.pets || []).find(pp=>pp.sick && pp.sickCause === 'hunger');
   if(p) return {who:'pet', name:p.name, why:`${p.name}ป่วยเพราะหิวนานเกินไป`,
                 fix:'ต้องพาไปรักษาให้หายก่อน (ปุ่ม 💊 รักษา ในหน้าข้อมูลน้อง)'};
@@ -1174,13 +1167,6 @@ function careTick(){
         p.thirstFrom = now;                      // เริ่มนับรอบใหม่หลังหายป่วย
       }
     }
-  }
-  // ข้อ 6: ผู้เล่น (คน) ต้องกินข้าวเย็น 18:00 — เกิน 20:00 ยังไม่กิน → ป่วย (ครั้งเดียวต่อมื้อ)
-  const mKey = mealDayKey(now);
-  if(state.student && !state.playerSick && state.playerFedDay !== mKey && state.playerSickDay !== mKey
-     && (now - slot) >= HUNGRY_SICK_MS){
-    state.playerSick = true; state.playerSickDay = mKey;
-    state.playerSickPending = true;              // ให้ UI เด้งกล่องแจ้งครั้งเดียว
   }
   refreshRank();          // ตรวจเลื่อน/ลดแรงค์ตาม net worth ที่นิ่งแล้ว
   // 🚨 มีน้องเพิ่งล้มป่วยใน tick นี้ → หวอเบาๆ + toast บอกชื่อ (เด็กรู้ตัวไวแม้กำลังเล่นเกมอยู่
