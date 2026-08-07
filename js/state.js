@@ -197,7 +197,8 @@ const DEFAULT_STATE = {
   playerFedDay:'',                    // ข้อ 6: mealDayKey ของมื้อเย็นที่ผู้เล่น (คน) กินแล้ว
   foodQuizPlayDay:'',                  // ควิซอาหารปลอดภัย: วัน (toDateString) ที่นับจำนวนรอบที่เล่นอยู่
   foodQuizPlayCount:0,                 // ควิซอาหารปลอดภัย: เล่นไปแล้วกี่รอบในวันนั้น (เพดาน FOODQUIZ_MAX_PLAYS)
-  testerCoinDay:'',                   // 🧪 รอบ 163: วัน (toDateString) ที่เติมเหรียญผู้ทดสอบรอบวันนี้ไปแล้ว (เติมวันละครั้ง — ดู testerBoost ใน auth.js)
+  testerCoinDay:'',                   // 🧪 วันไทย+ยอดเป้าหมายที่เติมเหรียญผู้ทดสอบแล้ว (ดู testerBoost ใน auth.js)
+  testerAccess:false,                 // 🧪 รอบ 1070: สิทธิ์บัญชีทดสอบสำหรับหน้าเมือง 3D standalone (ตั้งจากอีเมลใน auth.js เท่านั้น)
   spellDay:'',                        // 🌀 รอบ 174: วัน (toDateString) ของตัวนับเกมสะกดคำรายวัน
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
   musicMode:'all',                    // 🎵 รอบ 181: โหมดวิทยุในรถ 'all'|'one'|'shuffle' (music.js)

@@ -49,6 +49,30 @@ function rnd(a,b){ return a+Math.random()*(b-a); }
 function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
 const TAU = Math.PI*2;
 
+/* ============================================================
+   🔒 รอบ 1070: ประตูโลกที่ยัง Coming soon — สิทธิ์ทดสอบมาจาก Auth ที่ฝังในเซฟ Lobby เดิม
+   ============================================================ */
+const CITY_WORLD_COMING_SOON = new Set(['w3d_adv','w3d_drive','w3d_moto','w3d_mecha']);
+const CITY_WORLD_TESTER_NAMES = new Set(['สัมปจิตฉามิ','ครูรุต']);
+function cityWorldTester(){
+  try{
+    const sv=JSON.parse(localStorage.getItem('petVocabAdventure_v1')||'null');
+    if(!sv) return false;
+    if(sv.testerAccess === true) return true;
+    /* migration ครั้งแรกหลัง deploy: เซฟเดิมยังไม่มี testerAccess และหน้าเมืองไม่มี Firebase Auth
+       จึงใช้ชื่อ 2 บัญชีที่ผู้ใช้ระบุเฉพาะตอน field ยังไม่เคยถูกเขียน; เข้า Lobby เดิมครั้งเดียว Auth จะตรึง field จริง */
+    if(sv.testerAccess == null){
+      const n=String(sv.profileName||'').normalize('NFC').replace(/\s+/g,'').toLocaleLowerCase('th-TH');
+      return CITY_WORLD_TESTER_NAMES.has(n);
+    }
+    return false;
+  }
+  catch(e){ return false; }
+}
+function cityWorldComingSoon(go){
+  return CITY_WORLD_COMING_SOON.has(go) && !cityWorldTester();
+}
+
 /* 🧱 ตัวละครบล็อก 8 ตัวแรก — ค่าสีชุดเดียวกับ BLOCK_AVATARS ใน js/adventure3d.js (คัดลอกเฉพาะ data
    เพราะไฟล์นั้น 12K บรรทัดโหลดในหน้าเมืองไม่คุ้ม) · blk9-88 ใช้ภาพ img/blocks/ เป็นป้าย 3 มิติ */
 const BLK8 = {
@@ -309,13 +333,19 @@ function roundRect(g,x,y,w,h,r){
 }
 
 /* 🎈 ไอคอนลอยหัวตึก (emoji ใหญ่ + ป้ายไทย) — sprite เด้งดึ๋งเรียกให้กด */
-function iconSprite(ico, label){
+function iconSprite(ico, label, locked){
   const c = cvs(256,300), g = c.getContext('2d');
   g.beginPath(); g.arc(128,110,92,0,TAU);
   g.fillStyle='rgba(255,255,255,.96)'; g.fill();
   g.lineWidth=10; g.strokeStyle='#ffb300'; g.stroke();
   g.font='120px system-ui, sans-serif'; g.textAlign='center'; g.textBaseline='middle';
   g.fillText(ico, 128, 118);
+  if(locked){
+    g.beginPath(); g.arc(194,48,39,0,TAU);
+    g.fillStyle='rgba(180,30,45,.96)'; g.fill();
+    g.lineWidth=6; g.strokeStyle='#fff'; g.stroke();
+    g.font='48px system-ui, sans-serif'; g.fillText('🔒',194,51);
+  }
   g.font='700 44px system-ui, sans-serif';
   g.lineWidth=12; g.strokeStyle='rgba(30,40,70,.85)'; g.lineJoin='round';
   g.strokeText(label, 128, 262); g.fillStyle='#fff'; g.fillText(label, 128, 262);
@@ -1113,7 +1143,7 @@ function buildCity(){
     g.rotation.y = Math.atan2(-x, -z);      // หันหน้าเข้าลานกลาง
     scene.add(g);
     BLD_AT[b.key] = {x, z, ry:g.rotation.y, h:g.userData.h||8};
-    const ic = iconSprite(b.ico, b.label);
+    const ic = iconSprite(b.ico, b.label, cityWorldComingSoon(b.go));
     ic.position.set(x, (g.userData.h||8)+1.8, z);
     ic.userData.baseY = ic.position.y;
     ic.userData.ph = rnd(0, TAU);
@@ -2881,6 +2911,11 @@ function captureCityShot(goKey, bldKey){
   }catch(e){}
 }
 function travelTo(b){
+  if(cityWorldComingSoon(b && b.go)){
+    setChip('🔒 Coming soon');
+    if(Live.self && Live.self.g) showBubble('__self', '🔒 Coming soon', Date.now());
+    return;
+  }
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)
   if(travelTo.busy){ captureCityShot(b.go, b.key); location.href=dest; return; }   // แตะซ้ำระหว่างเดิน = ขอข้ามไปเลย
   travelTo.busy = true;

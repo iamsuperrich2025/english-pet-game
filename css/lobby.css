@@ -952,6 +952,8 @@ html.no-anim .rail-nudge{animation:none !important;}
 .rail-btn.rail-world{position:relative;}
 .rail-btn.rail-world .rail-lock{position:absolute;top:3px;right:4px;font-size:11px;line-height:1;}
 .rail-btn.rail-world.locked{opacity:.62;}
+.rail-btn.rail-world.soon-locked{opacity:.72;filter:saturate(.55);}
+.rail-btn.rail-world.soon-locked .rail-lock{font-size:16px;top:2px;right:3px;filter:none;}
 /* จำนวนคำที่พิชิตในโลกนั้น (ปลดล็อกแล้ว) — เหรียญทอง = ความสำเร็จ ต่างจาก badge แดง(เตือน) */
 .rail-btn.rail-world .rail-count{
   position:absolute;top:2px;right:5px;min-width:17px;height:17px;padding:0 4px;

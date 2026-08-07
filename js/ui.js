@@ -6945,6 +6945,14 @@ const WORLD3D = [
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', doneKey:'mechaDone', enter:enterMecha3D },
   { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // 🏎️ รอบ 896: สนามซาเคียร์ Bahrain
 ];
+/* ============================================================
+   🔒 รอบ 1070: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
+   เทียบชื่อแบบ NFC + ตัดช่องว่าง กันชื่อไทยจากคนละคีย์บอร์ด/มีช่องว่างหลุดแล้วสิทธิ์ไม่ตรง
+   ============================================================ */
+const WORLD3D_COMING_SOON = new Set(['adv','drive','moto','mecha']);
+function world3DComingSoon(w){
+  return !!(w && WORLD3D_COMING_SOON.has(w.mode) && !(typeof isTester === 'function' && isTester()));
+}
 function gotoRobotShop(){
   if(typeof openPanel === 'function') openPanel('panel-market');
   setTimeout(()=>{ const s = document.getElementById('mkt-robots'); if(s) s.scrollIntoView({behavior:'smooth', block:'start'}); }, 150);
@@ -7004,6 +7012,9 @@ function world3DFail(label, err){
 }
 
 function railWorldClick(w){
+  if(world3DComingSoon(w)){
+    sfx.wrong(); toast('🔒 Coming soon'); return;
+  }
   /* 🔓 รอบ 943: ยกเลิกด่าน "ต้องปลดล็อกโลกก่อนหน้า" + ด่าน "ต้องมีหุ่น/รถก่อน" — จ่ายค่าเข้าแล้วเข้าได้ทุกโลก
      ไม่มีหุ่น/รถ = ระบบให้ยืมฟรีสำหรับรอบนั้น (enterMecha3D / enterDrive3D จัดการ) */
   if(state.advHurt){ sfx.wrong(); openHealDialog(); return; }
@@ -7135,6 +7146,16 @@ function renderRailWorlds(){
     const lk = b.querySelector('.rail-lock');
     const cnt = b.querySelector('.rail-count');
     const pr  = b.querySelector('.rail-price');
+    const comingSoon = world3DComingSoon(w);
+    b.classList.toggle('soon-locked', comingSoon);
+    b.title = comingSoon ? 'Coming soon' : '';
+    if(comingSoon){
+      b.classList.add('locked');
+      if(lk){ lk.style.display = ''; lk.textContent = '🔒'; lk.title = 'Coming soon'; }
+      if(cnt) cnt.style.display = 'none';
+      if(pr) pr.style.display = 'none';
+      return;
+    }
     /* 🔓 รอบ 943: ยกเลิกลำดับปลดล็อกโลก (prereq) + หุ่นรบเข้าระบบค่าเข้าเดียวกับโลกอื่น (ไม่มีหุ่น=ยืมฟรี)
        ล็อก 🔒 เหลือเคสเดียว: โลกผจญภัยยังไม่มีสัตว์โตเต็มวัย */
     const locked = w.mode === 'adv' && !state.advTicket && !state.pets.some(p=>isAdult(p));

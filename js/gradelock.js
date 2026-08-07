@@ -28,6 +28,7 @@ const GRADE_LOCK_MS   = GRADE_LOCK_DAYS*24*60*60*1000;
 /* อันดับของชั้น (ยิ่งมากยิ่งสูง) · -1 = ไม่รู้จัก (เซฟเก่า/ค่าเพี้ยน) */
 function gradeRank(g){ return GRADES.indexOf(String(g == null ? '' : g).trim()); }
 function myGrade(){ return state.student ? (state.student.grade || '') : ''; }
+function gradeTester(){ return typeof isTester === 'function' && isTester(); }
 
 /* ประวัติชั้น — migrate เซฟเก่าแบบขี้เกียจ (เรียกเมื่อไหร่ก็ได้ ปลอดภัยกับ state ที่ถูกโหลดใหม่จาก cloud) */
 function gradeHistList(){
@@ -49,11 +50,12 @@ function gradeLockLeftMs(){
 /* เหลืออีกกี่วัน (ปัดขึ้น — เหลือ 2 ชม. ก็ยังนับเป็น "อีก 1 วัน" ไม่ใช่ 0) */
 function gradeLockLeftDays(){ return Math.ceil(gradeLockLeftMs()/86400000); }
 function gradeUnlockAt(){ return (+state.gradeSetAt || 0) + GRADE_LOCK_MS; }
-function gradeLocked(){ return gradeLockLeftMs() > 0; }
+function gradeLocked(){ return !gradeTester() && gradeLockLeftMs() > 0; }
 
 /* ชั้นที่เลือกได้ตอนนี้ = สูงกว่าชั้นปัจจุบันเท่านั้น (ข้อ ②) */
 function gradeUpOptions(){
   const r = gradeRank(myGrade());
+  if(gradeTester()) return GRADES.filter(g=>g !== myGrade());
   return GRADES.filter((g,i)=> i > r);                // r = -1 (ชั้นเพี้ยน) → เลือกได้ทุกชั้น
 }
 
@@ -62,10 +64,11 @@ function gradeUpOptions(){
 function gradeChangeTo(newG){
   if(!state.student) return {ok:false, msg:'ยังไม่ได้ลงทะเบียน'};
   const cur = myGrade(), curR = gradeRank(cur), newR = gradeRank(newG);
+  const tester = gradeTester();
   if(newR < 0)      return {ok:false, msg:'ไม่รู้จักระดับชั้นนี้'};
   if(newR === curR) return {ok:false, msg:`ตอนนี้อยู่ ${cur} อยู่แล้ว`};
-  if(newR < curR)   return {ok:false, msg:`⛔ ลดระดับชั้นลงไม่ได้ (ตอนนี้ ${cur}) — เลือกได้เฉพาะชั้นที่สูงขึ้น`};
-  if(gradeLocked()) return {ok:false, msg:`🔒 เพิ่งเปลี่ยนชั้นไปเมื่อเร็ว ๆ นี้ — เปลี่ยนได้อีกครั้งในอีก ${gradeLockLeftDays()} วัน (${fmtThaiDate(gradeUnlockAt())})`};
+  if(!tester && newR < curR)   return {ok:false, msg:`⛔ ลดระดับชั้นลงไม่ได้ (ตอนนี้ ${cur}) — เลือกได้เฉพาะชั้นที่สูงขึ้น`};
+  if(!tester && gradeLocked()) return {ok:false, msg:`🔒 เพิ่งเปลี่ยนชั้นไปเมื่อเร็ว ๆ นี้ — เปลี่ยนได้อีกครั้งในอีก ${gradeLockLeftDays()} วัน (${fmtThaiDate(gradeUnlockAt())})`};
 
   const now = Date.now();
   gradeHistList().push({g:newG, at:now});             // เก็บชั้นเดิมไว้ครบ (ตัวก่อนหน้า = ชั้นเดิม)
@@ -79,12 +82,15 @@ function gradeChangeTo(newG){
   if(typeof onlinePushPresence === 'function')  onlinePushPresence();
   if(typeof onlinePushScore === 'function')     onlinePushScore();
   if(typeof renderDashboard === 'function')     renderDashboard();
-  return {ok:true, msg:`เปลี่ยนเป็น ${newG} เรียบร้อย 🎉 คำศัพท์จะยากขึ้นตามชั้นใหม่`};
+  return {ok:true, msg:tester
+    ? `🧪 เปลี่ยนเป็น ${newG} แล้ว — พร้อมทดสอบมุมมองระดับชั้นนี้`
+    : `เปลี่ยนเป็น ${newG} เรียบร้อย 🎉 คำศัพท์จะยากขึ้นตามชั้นใหม่`};
 }
 
 /* ---------- ป้ายสั้น ๆ ไว้ติดใน UI (ห้ามปิดเงียบ — กฎทอง #1) ---------- */
 function gradeLockNote(){
   if(!state.student) return '';
+  if(gradeTester()) return '🧪 บัญชีทดสอบ — เปลี่ยนเป็นระดับชั้นใดก็ได้ ไม่จำกัดครั้ง';
   if(gradeLocked()) return `🔒 เปลี่ยนชั้นได้อีกครั้งในอีก ${gradeLockLeftDays()} วัน (${fmtThaiDate(gradeUnlockAt())})`;
   if(!gradeUpOptions().length) return '🏆 อยู่ชั้นสูงสุดแล้ว เปลี่ยนต่อไม่ได้';
   return '✏️ เปลี่ยนระดับชั้นได้ 1 ครั้ง (เดือนละครั้ง · ขึ้นได้อย่างเดียว)';
@@ -97,11 +103,14 @@ function openGradeChange(){
   const cur = myGrade();
   const ups = gradeUpOptions();
   const locked = gradeLocked();
+  const tester = gradeTester();
   const hist = gradeHistList();
 
   /* แถบสถานะบนสุด — บอกเหตุผลเสมอว่าเปลี่ยนได้/ไม่ได้เพราะอะไร */
   let banner;
-  if(locked){
+  if(tester){
+    banner = `<div class="gl-ok">🧪 <b>โหมดบัญชีทดสอบ</b><span class="gl-lock-sub">เปลี่ยนเป็นระดับชั้นใดก็ได้ และเปลี่ยนซ้ำได้ทันที</span></div>`;
+  }else if(locked){
     banner = `<div class="gl-lock">🔒 <b>ยังเปลี่ยนไม่ได้</b><span class="gl-lock-sub">เหลืออีก <b>${gradeLockLeftDays()} วัน</b> · เปลี่ยนได้วันที่ ${fmtThaiDate(gradeUnlockAt())}
       <br>เปลี่ยนชั้นได้ <b>เดือนละ 1 ครั้ง</b> เท่านั้นนะ (เปลี่ยนล่าสุด ${fmtThaiDate(state.gradeSetAt)})</span></div>`;
   }else if(!ups.length){
@@ -130,8 +139,10 @@ function openGradeChange(){
         <div class="gl-cur">${escapeHTML(cur || '-')} ${gradeMark(cur)}</div></div>
     </div>
     ${banner}
-    <div class="gl-why">คำศัพท์ในเกมยาก-ง่ายตามระดับชั้น — ระบบจึงให้ <b>เปลี่ยนขึ้นได้อย่างเดียว</b> และ <b>เดือนละ 1 ครั้ง</b> เพื่อความยุติธรรมกับเพื่อน ๆ ทุกคน 🌟</div>
-    ${(!locked && ups.length) ? `<div class="gl-pick"><div class="gl-pick-lb">เลือกชั้นใหม่ (สูงกว่าเดิมเท่านั้น)</div><div class="gl-opts">${rows}</div></div>` : ''}
+    <div class="gl-why">${tester
+      ? 'บัญชีนี้ใช้ตรวจการมองเห็นของแต่ละระดับชั้น — เลือกชั้นที่ต้องการทดสอบได้เลย 🧪'
+      : 'คำศัพท์ในเกมยาก-ง่ายตามระดับชั้น — ระบบจึงให้ <b>เปลี่ยนขึ้นได้อย่างเดียว</b> และ <b>เดือนละ 1 ครั้ง</b> เพื่อความยุติธรรมกับเพื่อน ๆ ทุกคน 🌟'}</div>
+    ${(!locked && ups.length) ? `<div class="gl-pick"><div class="gl-pick-lb">${tester?'เลือกระดับชั้นที่ต้องการทดสอบ':'เลือกชั้นใหม่ (สูงกว่าเดิมเท่านั้น)'}</div><div class="gl-opts">${rows}</div></div>` : ''}
     ${hist.length ? `<div class="gl-hist"><div class="gl-pick-lb">📜 ประวัติระดับชั้น (เก่า → ใหม่)</div>
       <div class="gl-hline">${histChain}</div></div>` : ''}
     <div class="gl-foot"><button class="set-close">ปิด</button></div>
@@ -140,11 +151,11 @@ function openGradeChange(){
   overlay.querySelectorAll('.gl-opt').forEach(b=>b.addEventListener('click', ()=>{
     const g = b.dataset.g;
     if(typeof sfx !== 'undefined') sfx.select();
-    /* ยืนยันก่อนเสมอ — เปลี่ยนแล้วย้อนกลับไม่ได้ (ใช้กล่องของเกม ไม่ใช่ confirm ของเบราว์เซอร์) */
+    /* ยืนยันก่อนเสมอ (บัญชีปกติย้อนชั้นไม่ได้ · บัญชีทดสอบเปลี่ยนซ้ำได้) — ใช้กล่องของเกม ไม่ใช่ confirm เบราว์เซอร์ */
     askConfirm(`<h2 style="margin:0 0 6px">🎖️ เปลี่ยนเป็น ${escapeHTML(g)}?</h2>
-      <p class="gl-cf">• ลดกลับลงมา <b>ไม่ได้</b> อีกเลย<br>
-        • เปลี่ยนได้อีกครั้งในอีก <b>${GRADE_LOCK_DAYS} วัน</b><br>
-        • คำศัพท์จะ <b>ยากขึ้น</b> ตามชั้นใหม่</p>`, 'เปลี่ยนเลย', ()=>{
+      <p class="gl-cf">${tester
+        ? '🧪 เปลี่ยนได้อีกทันทีเมื่อต้องการทดสอบระดับชั้นอื่น'
+        : `• ลดกลับลงมา <b>ไม่ได้</b> อีกเลย<br>• เปลี่ยนได้อีกครั้งในอีก <b>${GRADE_LOCK_DAYS} วัน</b><br>• คำศัพท์จะ <b>ยากขึ้น</b> ตามชั้นใหม่`}</p>`, 'เปลี่ยนเลย', ()=>{
       const r = gradeChangeTo(g);
       if(typeof sfx !== 'undefined') (r.ok ? sfx.levelup() : sfx.wrong());
       toast(r.msg, r.ok ? 2600 : 4200);
