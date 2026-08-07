@@ -53,7 +53,6 @@
 - **รอบ 1057 (6 ส.ค. · จับคู่ภาพ 20 คู่ + ภาพสมส่วน + ทางออกชัด):** `js/picmatch.js` จำกัด ป.5+ จาก 40→20 คู่/ชุด, รักษา aspect ของ crop แทนการยืดเป็นสี่เหลี่ยม, ปุ่มซ้ายกลับสารบัญ และเพิ่ม `🚪 ออกไป Lobby` มุมขวาล่าง; `css/lobby.css` รองรับปุ่ม/จอเต็มโดยไม่ล้น
 - สแกน 2,641 crop แบบ lightweight พบ 63 candidate แล้วดู contact sheet คัด 22 จุดที่มีเศษข้างเคียง/โดนตัดมาปรับ; Blogging ล็อกตามเส้นจริง x=702–827px จึงไม่กิน Bird Watching
 - ยืนยัน browser: 20 คู่/40 ใบ, aspect error สูงสุด 0.00021, กลับสารบัญ/ออก Lobby ผ่าน, 1280×720 + 812×375 (`scroll=client`, ทุกใบ/ปุ่มอยู่ในจอ), console 0; node/undefined 44 ไฟล์ unknown=0/assets 251/template/diff ผ่าน
-- **รอบ 1056 (6 ส.ค. · เกม 🫧 ฟอง):** เพิ่มปุ่มรางซ้าย Lobby + ร้านฟองในเมือง 3D; แตะฟองตามลำดับคำ ตัวซ้ำมีฟองครบ สุ่มตำแหน่งไม่ซ้อน ไม่มีไฟใบ้ และเสียง pop WebAudio ธรรมชาติ
 - คะแนน `bbScore` สะสมตลอดกาล + กระดานเฉพาะ Top 10 + `bbAward` 10,000→1,000 เหรียญ; `handoff/RULES.md` มีก้อนเต็มรอ publish field/index `bb` และโซน `bbAward`
 - ยืนยัน BALLOON: ฟอง L/O ซ้ำครบ, แตะผิดไม่เดิน/จบคำ +5🪙 +19 คะแนน; 1280×720 + 812×375 ไม่ล้น, คำ 14 ตัวสุ่ม 12 รอบ overlaps=0/within=true, Lobby 3D + console สะอาด; node/checkers/diff ผ่าน
 - ยืนยันตัวตรวจเต็มโปรเจกต์ 44 ไฟล์พบ 10,443 นิยามและ unknown=0; regression จำลอง regex ที่มี quote ใน template ผ่าน, `py_compile` และ `git diff --check` ผ่าน—พร้อม deploy commit รอบ 1053 ที่ค้างจากความล้มเหลวเดิมอีกครั้ง
