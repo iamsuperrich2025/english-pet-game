@@ -853,21 +853,21 @@ openListDialog:8255 · cancelListing:8308 · buyMarketItem:8331 · showCollectRe
 renderPetShop:8476 · showLevelUp:8537 · renderStats:8574 · showTeacherCard:8681 · CALL_REACT_EMOS:8725 · CALL_TALK_MIN:8728
 CALL_TALK_HOLD:8729 · CALL_ORDER_GAP:8731 · CALL_TONES:8737 · startCall:9111
 
-## js/util.js (1,234 บรรทัด · 49 รายการ)
+## js/util.js (1,270 บรรทัด · 51 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1203 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1204-1234 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1239 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1240-1270 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
-gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · showScreen:113
-TOAST_WARN_RE:123 · restackToasts:126 · clearWarnToasts:152 · toast:156 · toastLink:183 · floatFx:201
-beep:212 · soundStatus:233 · PET_MOOD:349 · petVoiceSynth:356 · sirenSynth:433 · playCashier:457
-cashierSynth:471 · keyTapSynth:504 · bubblePopSynth:542 · bubbleTapSynth:561 · playSpark:572 · sparkSynth:586
-thunderFx:621 · wordAudioFile:689 · speakCutOff:698 · speakWord:702 · speakLetter:741 · pickSpeakVoice:764
-speakWordTTS:775 · askNameDialog:802 · askConfirm:847 · alertBox:865 · applyNoAnim:885 · BLK_VOCAB:892
-openSettings:940 · openHelp:1143 · openTeacherGuide:1169 · TAPGLOW_SEL:1193 · TOUCH_INPUT_SEEN:1212 · mouseLockOK:1221
-lockMouse3D:1227
+gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · IPHONE_LOBBY_VIEWPORT:118
+fitIPhoneLobbyViewport:129 · showScreen:148 · TOAST_WARN_RE:159 · restackToasts:162 · clearWarnToasts:188 · toast:192
+toastLink:219 · floatFx:237 · beep:248 · soundStatus:269 · PET_MOOD:385 · petVoiceSynth:392
+sirenSynth:469 · playCashier:493 · cashierSynth:507 · keyTapSynth:540 · bubblePopSynth:578 · bubbleTapSynth:597
+playSpark:608 · sparkSynth:622 · thunderFx:657 · wordAudioFile:725 · speakCutOff:734 · speakWord:738
+speakLetter:777 · pickSpeakVoice:800 · speakWordTTS:811 · askNameDialog:838 · askConfirm:883 · alertBox:901
+applyNoAnim:921 · BLK_VOCAB:928 · openSettings:976 · openHelp:1179 · openTeacherGuide:1205 · TAPGLOW_SEL:1229
+TOUCH_INPUT_SEEN:1248 · mouseLockOK:1257 · lockMouse3D:1263
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
