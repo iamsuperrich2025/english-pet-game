@@ -12,7 +12,12 @@
 /* เพจต้องพอดีจอเสมอ ไม่มี scrollbar ระดับเอกสาร — ทุก screen จัดการ scroll ภายในตัวเอง
    (กัน 2 ตัวการ: body min-height:100vh สูงกว่าจอจริงบนมือถือตอนแถบ URL โผล่ ·
     fadeIn translateY(10px) ดันก้นหน้าเกินจอตอนเปิดหน้า/แท็บ background) */
-html,body{height:100%;overflow:hidden;overscroll-behavior:none;}
+html,body{
+  height:100%;overflow:hidden;overscroll-behavior:none;
+  /* 📱 รอบ 1073: Safari แนวนอนอาจขยายตัวหนังสือเอง ทำให้ footer/หัวข้อบวมกว่า Android
+     ทั้งที่ viewport เท่ากัน — ล็อกขนาดตาม CSS ที่ responsive ไว้แล้ว */
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
 body{
   min-height:100dvh;
   font-family:'Kanit','Itim',sans-serif;
@@ -232,7 +237,14 @@ h1{color:var(--sky-d);text-shadow:none;}
    ============================================================ */
 #screen-dashboard.active{
   display:flex;flex-direction:column;gap:8px;
-  height:100vh;height:100dvh;padding:10px 14px 12px;overflow:hidden;
+  height:100vh;height:100dvh;
+  /* 📱 รอบ 1073: viewport-fit=cover ต้องกันรอยบาก/ขอบโค้ง iPhone เอง
+     ไม่งั้นรางซ้ายดูเหมือนอยู่ในจอ แต่พื้นที่แตะส่วนหนึ่งอยู่ในเขตที่ Safari/ตัวเครื่องรับไม่ได้ */
+  padding:max(10px,env(safe-area-inset-top,0px))
+          max(14px,env(safe-area-inset-right,0px))
+          max(12px,env(safe-area-inset-bottom,0px))
+          max(14px,env(safe-area-inset-left,0px));
+  overflow:hidden;
   width:auto;max-width:none;margin:0;background:none;border:none;box-shadow:none;
 }
 
@@ -887,7 +899,14 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
 /* 📌 รอบ 949: โซนเลื่อนจริง (ราง+ป้าย ▲/▼) — แยกออกจาก .rail-wrap เพราะปุ่ม "เมือง 3D"
    ถูกปักหมุดไว้เหนือกล่องนี้ (อยู่นอกการเลื่อน = เห็นตลอด ไม่หลุดจอเหมือนเดิม) */
 .rail-scroll{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
-.lobby-rail{display:flex;flex-direction:column;gap:7px;width:100%;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+.lobby-rail{
+  display:flex;flex-direction:column;gap:7px;width:100%;flex:1 1 auto;min-height:0;
+  overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+  /* 📱 รอบ 1073: scrollbar แบบ overlay ของ iOS/บาง browser เคยกินหน้าแตะจากรางแคบอีก ~10px
+     ป้าย ▲/▼ บอกทางอยู่แล้ว จึงซ่อนรางเลื่อนและคืนความกว้างเต็มให้ทุกปุ่ม */
+  scrollbar-width:none;-ms-overflow-style:none;
+}
+.lobby-rail::-webkit-scrollbar{display:none;}
 .rail-btn{
   display:flex;flex-direction:column;align-items:center;gap:1px;
   background:var(--glass);border:1px solid var(--glass-line);border-radius:14px;
@@ -2062,18 +2081,29 @@ html.no-anim .cs-big-img{animation:none}
 
 /* จอเตี้ยมาก (มือถือแนวนอน) — ย่อส่วนให้พอดีจอ */
 @media (max-height:430px){
-  #screen-dashboard.active{padding:6px 10px 8px;gap:5px;}
+  #screen-dashboard.active{
+    padding:max(6px,env(safe-area-inset-top,0px))
+            max(10px,env(safe-area-inset-right,0px))
+            max(8px,env(safe-area-inset-bottom,0px))
+            max(10px,env(safe-area-inset-left,0px));
+    gap:5px;
+  }
   .pet-stage{width:130px;height:130px;}
   .pet-img{width:118px;height:118px;}
   .pet-name{font-size:17px;}
   .lobby-side{width:205px;}
-  .rail-wrap{width:66px;}
+  /* ปุ่มซ้ายต้องกดง่ายบน iPhone แม้จอเตี้ย: กว้างขึ้นและ hit area ไม่น้อยกว่า 44px */
+  .rail-wrap{width:72px;}
   .rail-nudge{width:50px;font-size:9px;height:16px;}
-  .rail-btn{font-size:11px;padding:6px 2px;}
+  .rail-btn{font-size:11px;padding:4px 2px;min-height:44px;justify-content:center;touch-action:manipulation;}
   .rail-btn .rail-ico{font-size:18px;}
-  .lobby-play-btn{font-size:15px !important;padding:8px 20px !important;}
-  .lobby-quiz-btn{font-size:13px !important;padding:7px 14px !important;}
-  .lobby-exam-btn{padding:4px 14px !important;}                     /* รอบ 268: มี 2 บรรทัด — หดกันล้นจอเตี้ย */
+  /* Safari เคย inflate ตัวหนังสือจนปุ่มแถบล่างสูงเกินสัดส่วน — ชุดนี้คุมความสูงจริงไว้ราว 34–38px */
+  .lobby-bottom{gap:6px;padding-bottom:5px;margin-bottom:-5px;}
+  .lobby-play-btn{font-size:14px !important;padding:6px 16px !important;}
+  .lobby-quiz-btn{font-size:12px !important;padding:5px 11px !important;}
+  .lobby-bottom .lobby-std-btn{padding:5px 9px !important;}
+  .lobby-book-btn{font-size:15px !important;padding:5px 9px !important;}
+  .lobby-exam-btn{padding:3px 11px !important;}                     /* รอบ 268: มี 2 บรรทัด — หดกันล้นจอเตี้ย */
   .lobby-exam-btn .exam-sub{font-size:9.5px;margin-top:0;}
   .profile-plate .clock-chip{font-size:10px;}
 }

@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v270';  // v270: ถอดระบบผู้เล่นป่วย เหลือเฉพาะสัตว์ป่วย
+const CACHE_VERSION = 'pet-vocab-v271';  // v271: แก้ responsive iPhone 14 และขยายพื้นที่แตะรางซ้าย
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
