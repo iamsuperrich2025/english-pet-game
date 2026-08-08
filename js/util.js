@@ -110,7 +110,43 @@ function fmtThaiDate(ts){
 }
 
 /* ---------- screen navigation ---------- */
+/* 📱 รอบ 1076: iPhone landscape มี viewport จริงแค่ ~844×390 CSS px ขณะที่ Android ภาพอ้างอิง
+   มีพื้นที่ ~1280px → แม้ responsive จอเตี้ยจะไม่ล้น แต่การ์ด/ข้อความใหญ่จน Lobby แสดงไม่ครบ
+   ให้เฉพาะหน้า Lobby บน iPhone ใช้ผืนออกแบบ 1280px แล้ว Safari ย่อพอดีความกว้างเครื่อง
+   ออกจาก Lobby คืน viewport เดิมทันที จึงไม่กระทบเกม/ข้อสอบ/Android
+   `ios-preview=1` ใช้ได้เฉพาะ localhost สำหรับตรวจ layout โดยไม่ปลอม UA บน production */
+const IPHONE_LOBBY_VIEWPORT = (()=>{
+  const meta = document.querySelector('meta[name="viewport"]');
+  const base = meta ? meta.getAttribute('content') : '';
+  const localPreview = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+    && new URLSearchParams(location.search).has('ios-preview');
+  const isIPhone = /iphone|ipod/i.test(navigator.userAgent) || localPreview;
+  const deviceLong = localPreview
+    ? Math.max(innerWidth, innerHeight)
+    : Math.max(screen.width || 0, screen.height || 0, innerWidth, innerHeight);
+  return {meta, base, isIPhone, deviceLong};
+})();
+function fitIPhoneLobbyViewport(screenId){
+  const v = IPHONE_LOBBY_VIEWPORT;
+  if(!v.meta || !v.isIPhone) return;
+  const active = screenId === 'screen-dashboard' && matchMedia('(orientation:landscape)').matches;
+  document.documentElement.classList.toggle('iphone-lobby-wide', active);
+  if(!active){
+    if(v.meta.getAttribute('content') !== v.base) v.meta.setAttribute('content', v.base);
+    return;
+  }
+  const targetWidth = 1280;
+  const scale = Math.min(1, v.deviceLong / targetWidth).toFixed(5);
+  const wide = `width=${targetWidth}, initial-scale=${scale}, minimum-scale=${scale}, maximum-scale=${scale}, user-scalable=no, viewport-fit=cover`;
+  if(v.meta.getAttribute('content') !== wide) v.meta.setAttribute('content', wide);
+}
+window.addEventListener('orientationchange', ()=>setTimeout(()=>{
+  const active = document.querySelector('.screen.active');
+  fitIPhoneLobbyViewport(active && active.id);
+}, 120));
+
 function showScreen(id){
+  fitIPhoneLobbyViewport(id);
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);

@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (7 ส.ค.) — อ่านก่อน
+- **รอบ 1076 (8 ส.ค. · iPhone Lobby ให้สัดส่วนเหมือน Android):** ต้นตอคือ iPhone 14 landscape มี viewport เพียง ~844×390 CSS px จึงเข้า responsive จอเตี้ยและขยายการ์ด/ปุ่มจนแสดงองค์ประกอบไม่ครบ ต่างจาก Android ที่กว้าง ~1280px
+- แก้ `js/util.js` ให้เฉพาะ iPhone + `screen-dashboard` แนวนอนใช้ผืนเสมือน 1280px/สเกลตามความกว้างเครื่อง; ออกจาก Lobby/หมุนแนวตั้งคืน viewport เดิม และ Android ไม่ถูกแตะ
+- ยืนยัน VM iPhone ได้ 1280×~591/Android+portrait คง device-width, `node --check`, undefined 44 ไฟล์=0, template และ diff ผ่าน; visual Browser ทำไม่ได้เพราะ sandbox ไม่อนุญาตเปิด localhost background
 - **รอบ 1074 (8 ส.ค. · ปลดปักหมุดเมือง 3D/รักษา):** ย้ายปุ่ม `เมือง 3D` และ `รักษา` จาก `.rail-pinned` กลับเข้า `#lobby-rail` เป็นสองปุ่มแรก จึงเลื่อนไปพร้อมเมนูอื่นตามที่ผู้ใช้ขอ
 - ลบ CSS กล่องปักหมุดและ `alignCureBtn()` ที่ดันตำแหน่งรักษาเฉพาะ; คงสถานะรักษาจาง/กดไม่ได้เมื่อไม่มีสัตว์ป่วยตามระบบเดิม
 - ยืนยัน `node --check js/ui.js`, `git diff --check` และโครงสร้างไม่มี `rail-pinned`/`alignCureBtn`; Browser ทดสอบภาพจริงไม่ได้เพราะ policy บล็อก `file://`
