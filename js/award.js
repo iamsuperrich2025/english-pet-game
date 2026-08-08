@@ -81,7 +81,7 @@
       const map = {};
       const board = cfg.boardOf ? cfg.boardOf() : Online.board;
       (board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n || '', g:r.g || '', v:r[F] || 0, v2:F2 ? (r[F2] || 0) : 0}; });
-      if(myId && typeof state !== 'undefined' && state.student){
+      if(myId && typeof state !== 'undefined' && state.student && !(typeof isTester === 'function' && isTester())){
         const nm = (state.profileName || state.student.first || 'หนู') + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
         map[myId] = {id:myId, n:nm, g:state.student.grade || '', v:Math.round(cfg.scoreOf() || 0),
                      v2:F2 ? Math.round((cfg.scoreOf2 && cfg.scoreOf2()) || 0) : 0};

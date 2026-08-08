@@ -207,6 +207,10 @@ function bxrSubmit(catId, lvKey, sc, tt, sec){
   if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(false);
   const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
   if(!uid || !catId || !lvKey || !tt) return Promise.resolve(false);
+  if(typeof isTester === 'function' && isTester()){
+    const hiddenKey = bxrKey(catId, lvKey);
+    return Online.db.ref('bandRank/' + hiddenKey + '/' + uid).remove().then(()=>false).catch(()=>false);
+  }
   const bs  = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อ เหมือน leaderboard
   const row = {
     sc, tt, sec,
@@ -232,15 +236,16 @@ function bxrSubmit(catId, lvKey, sc, tt, sec){
    แล้วเรียงอันดับ — เขียน DB ไม่ผ่าน/ออฟไลน์ ก็ยังเห็นแถวตัวเองเสมอ */
 function bxrMerge(catId, lvKey, rows){
   const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
-  const out = rows.filter(r=>r.uid !== me);
-  let my = rows.find(r=>r.uid === me) || null;
+  const visible = rows.filter(r=>!(typeof rankUserExcluded === 'function' && rankUserExcluded(r.uid, r.name)));
+  const out = visible.filter(r=>r.uid !== me);
+  let my = visible.find(r=>r.uid === me) || null;
   const best = (typeof bandAdvExamBest === 'function') ? bandAdvExamBest(catId, lvKey) : null;
   if(best && best.t){
     const c = {uid:me, name:(typeof onlineDisplayName === 'function' ? onlineDisplayName() : '') || (state.student && state.student.name) || 'หนู',
                g:(state.student && state.student.grade) || '', sc:best.s, tt:best.t, sec:best.sec || 0, ts:Date.now()};
     if(!my || c.sc / c.tt > my.sc / my.tt || (c.sc / c.tt === my.sc / my.tt && c.sec < my.sec)) my = c;
   }
-  if(my){ my.me = true; out.push(my); }
+  if(my && !(typeof isTester === 'function' && isTester())){ my.me = true; out.push(my); }
   return out.sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
 }
 
@@ -252,7 +257,7 @@ function bxrFetch(catId, lvKey){
   if(__bxrPend[key])  return __bxrPend[key];
   const fin = rows=>{ __bxrCache[key] = rows; delete __bxrPend[key]; return rows; };
   if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(fin(bxrMerge(catId, lvKey, [])));
-  const p = Online.db.ref('bandRank/' + key).orderByChild('sc').limitToLast(BXR_READ).get().then(s=>{
+  const p = Online.db.ref('bandRank/' + key).orderByChild('sc').limitToLast(BXR_READ + 2).get().then(s=>{
     const v = (s && s.val()) || {}, out = [];
     Object.keys(v).forEach(u=>{
       const r = v[u];

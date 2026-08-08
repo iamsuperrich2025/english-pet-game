@@ -45,6 +45,15 @@ function isTester(){
   return !!(Auth.user && Auth.user.email
     && TESTER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
+/* 🧪 บัญชีทดสอบไม่เกี่ยวข้องกับอันดับสาธารณะ — เช็กทั้งบัญชีตัวเอง (อีเมลจริง)
+   และชื่อในแถวเก่าบน DB เพื่อให้เครื่องผู้เล่นอื่นซ่อนข้อมูลที่เคยส่งไว้ก่อนอัปเดตนี้ด้วย */
+const RANK_EXCLUDED_TESTER_NAMES = new Set(['ครูรุต', 'sumpajit', 'sumpajitshami', 'สัมปจิตฉามิ']);
+function rankUserExcluded(uid, name){
+  if(Auth.user && uid === Auth.user.uid && isTester()) return true;
+  const raw = (typeof splitNameBadges === 'function') ? splitNameBadges(name).name : String(name || '');
+  const key = String(raw || '').normalize('NFC').replace(/\s+/g, '').toLocaleLowerCase('th-TH');
+  return RANK_EXCLUDED_TESTER_NAMES.has(key);
+}
 function testerBoost(){
   if(!isTester()) return;
   const got = [];

@@ -683,6 +683,8 @@ function xrkSubmit(setId, sc, tt, sec){
   if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(false);
   const uid = (typeof onlineKey === 'function') ? onlineKey() : '';
   if(!uid || !setId || !tt) return Promise.resolve(false);
+  if(typeof isTester === 'function' && isTester())
+    return Online.db.ref('examRank/' + setId + '/' + uid).remove().then(()=>false).catch(()=>false);
   const bs  = (typeof badgeSuffix === 'function') ? badgeSuffix() : '';   // 🎖️ เข็มต่อท้ายชื่อ เหมือน leaderboard
   const row = {
     sc, tt, sec,
@@ -709,8 +711,9 @@ function xrkSubmit(setId, sc, tt, sec){
    ใบประกาศ (state.certs) เก็บสถิติที่ดีที่สุดของเราอยู่แล้ว → เขียน DB ไม่ผ่าน/ออฟไลน์ ก็ยังเห็นแถวตัวเองเสมอ */
 function xrkMerge(setId, rows){
   const me = (typeof onlineKey === 'function') ? onlineKey() : 'me';
-  const out = rows.filter(r=>r.uid !== me);
-  let my = rows.find(r=>r.uid === me) || null;
+  const visible = rows.filter(r=>!(typeof rankUserExcluded === 'function' && rankUserExcluded(r.uid, r.name)));
+  const out = visible.filter(r=>r.uid !== me);
+  let my = visible.find(r=>r.uid === me) || null;
   const cert = (typeof state !== 'undefined' && Array.isArray(state.certs))
     ? state.certs.find(c=>c.id === xsQuizId(setId) && c.sec) : null;
   if(cert && cert.tt){
@@ -718,7 +721,7 @@ function xrkMerge(setId, rows){
                g:(state.student && state.student.grade) || '', sc:cert.sc, tt:cert.tt, sec:cert.sec, ts:cert.ts || 0};
     if(!my || c.sc / c.tt > my.sc / my.tt || (c.sc / c.tt === my.sc / my.tt && c.sec < my.sec)) my = c;
   }
-  if(my){ my.me = true; out.push(my); }
+  if(my && !(typeof isTester === 'function' && isTester())){ my.me = true; out.push(my); }
   return out.sort((a, b)=>(b.sc / b.tt - a.sc / a.tt) || (a.sec - b.sec));
 }
 
@@ -754,7 +757,7 @@ function xrkFetch(setId){
   }
   const fin = rows=>{ __xrkCache[setId] = rows; delete __xrkPend[setId]; return rows; };
   if(typeof Online === 'undefined' || !Online.ready || !Online.db) return Promise.resolve(fin(xrkMerge(setId, [])));
-  const p = Online.db.ref('examRank/' + setId).orderByChild('sc').limitToLast(XRK_READ).get().then(s=>{
+  const p = Online.db.ref('examRank/' + setId).orderByChild('sc').limitToLast(XRK_READ + 2).get().then(s=>{
     const v = (s && s.val()) || {}, out = [];
     Object.keys(v).forEach(u=>{
       const r = v[u];

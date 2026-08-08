@@ -72,6 +72,7 @@ const Online = {
 const ONLINE_STALE_MS  = 10*60*1000;   // presence ค้างเกิน 10 นาที = ผีค้าง ไม่นับ
 const ONLINE_BEAT_MS   = 60*1000;      // ส่งสถานะ/คะแนนทุก 1 นาที
 const LEADERBOARD_SIZE = 100;   // รอบ 246: 50→100 (ผู้ใช้: กระดานเต็มจอ Top 100)
+const LEADERBOARD_QUERY_SIZE = LEADERBOARD_SIZE + 2;   // เผื่อ 2 บัญชีทดสอบที่ต้องกรองออก แล้วยังได้ผู้เล่นจริงครบ Top 100
 
 /* ชื่อที่โชว์สาธารณะ: ชื่อในเกม (ข้อ 0.2 — ผ่านตัวกรอง badwords แล้ว)
    fallback เซฟเก่าที่ยังไม่ทันตั้งชื่อ: ชื่อจริง + อักษรแรกนามสกุล (แบบเดิม) */
@@ -130,6 +131,11 @@ function onlinePushPresence(){
 }
 function onlinePushScore(){
   if(!Online.ready || !state.student) return;
+  if(typeof isTester === 'function' && isTester()){
+    if(Online.lastScoreSig !== 'tester-hidden') Online.db.ref('leaderboard/' + onlineKey()).remove().catch(()=>{});
+    Online.lastScoreSig = 'tester-hidden';
+    return;
+  }
   const coins = Math.round(state.coins);
   const av    = Math.round(assetValue());   // มูลค่าทรัพย์สินรวม (โชว์ในการ์ดผู้เล่น)
   const ni    = assetCount();               // จำนวนชิ้นทรัพย์สิน
@@ -1960,11 +1966,12 @@ function onlineStart(){
   });
 
   // ฟัง Leaderboard Top 100 (RTDB ให้มาเรียงน้อย→มาก กลับด้านเป็นมาก→น้อย)
-  Online.db.ref('leaderboard').orderByChild('coins').limitToLast(LEADERBOARD_SIZE).on('value', (snap)=>{
+  Online.db.ref('leaderboard').orderByChild('coins').limitToLast(LEADERBOARD_QUERY_SIZE).on('value', (snap)=>{
     const out = [];
     snap.forEach(ch=>{
       const v = ch.val();
       if(!v || typeof v.coins !== 'number' || typeof v.n !== 'string') return;
+      if(typeof rankUserExcluded === 'function' && rankUserExcluded(ch.key, v.n)) return;
       out.push({id: ch.key, n: v.n, g: v.g || '', coins: v.coins,
                 av: typeof v.av === 'number' ? v.av : null,
                 ni: typeof v.ni === 'number' ? v.ni : null,
@@ -1977,16 +1984,17 @@ function onlineStart(){
                 bb: typeof v.bb === 'number' ? v.bb : 0});   // 🫧 คะแนนสะสมเกมฟอง
     });
     out.sort((a,b)=>b.coins - a.coins);
-    Online.board = out;
+    Online.board = out.slice(0, LEADERBOARD_SIZE);
     onlineRerender();
   });
 
   // 🫧 อันดับฟองต้องดึงด้วยคะแนน bb โดยตรง ไม่อิง Top เหรียญรวม
-  Online.db.ref('leaderboard').orderByChild('bb').limitToLast(LEADERBOARD_SIZE).on('value',(snap)=>{
+  Online.db.ref('leaderboard').orderByChild('bb').limitToLast(LEADERBOARD_QUERY_SIZE).on('value',(snap)=>{
     const out=[];
     snap.forEach(ch=>{ const v=ch.val(); if(!v||typeof v.n!=='string'||typeof v.bb!=='number'||v.bb<=0)return;
+      if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
       out.push({id:ch.key,n:v.n,g:v.g||'',bb:v.bb}); });
-    out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out; onlineRerender();
+    out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out.slice(0,LEADERBOARD_SIZE); onlineRerender();
   });
 
   // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)

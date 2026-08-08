@@ -1510,13 +1510,14 @@ function bindLbGroupOpen(){
 function lbRankRows(tab){
   if(window.__LBDEMO) return lbDemoRows(tab);   // 🧪 รอบ 247 (ชั่วคราว): เดโม 100 คนดูผลบนมือถือ — ลบทั้งบล็อกเดโมหลังผู้ใช้ capture
   const myId = onlineKey();
+  const includeMe = !(typeof isTester === 'function' && isTester());
   const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู')
                + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
   const meG = state.student ? state.student.grade : '';
   if(tab === 'badges'){
     if(typeof badgeScore !== 'function') return [];
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
-    map[myId] = {id:myId, n:meName, g:meG};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG};
     let rows = Object.values(map).map(r=>{ const sp = splitNameBadges(r.n);
       return {id:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId}; })
       .filter(r=>r.score > 0);
@@ -1525,13 +1526,13 @@ function lbRankRows(tab){
   }
   if(tab === 'boss'){
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, bk:Math.round(state.mechaBoss||0)};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, bk:Math.round(state.mechaBoss||0)};
     const rows = Object.values(map).filter(r=>r.bk > 0).sort((a,b)=> b.bk - a.bk);
     return rows.map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`👾 ${fmtNum(r.bk)}`, val:r.bk, me:r.id===myId}));
   }
   if(tab === 'ws'){   // 🔎 รอบ 590: แต้มสะสมตลอดกาลเกมค้นหาคำ (field ws) — โชว์แค่ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, ws:r.ws||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, ws:Math.round(state.wsScore||0)};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, ws:Math.round(state.wsScore||0)};
     const rows = Object.values(map).filter(r=>r.ws > 0).sort((a,b)=> b.ws - a.ws).slice(0, LB_WS_TOP);
     // 🏆 รอบ 592: pz = เงินรางวัลรายเดือนของอันดับนั้น (โชว์ต่อท้ายชื่อ)
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🔎 ${fmtNum(r.ws)}`, val:r.ws,
@@ -1539,7 +1540,7 @@ function lbRankRows(tab){
   }
   if(tab === 'tp'){   // ⌨️ รอบ 649-650: เกมพิมพ์คำ — จัดอันดับด้วย "จำนวนคำ" (tw) · โชว์เหรียญสะสม (tp) คู่กัน
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, tw:r.tw||0, tp:r.tp||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, tw:Math.round(state.tpWords||0), tp:Math.round(state.tpScore||0)};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, tw:Math.round(state.tpWords||0), tp:Math.round(state.tpScore||0)};
     const rows = Object.values(map).filter(r=>r.tw > 0).sort((a,b)=> (b.tw - a.tw) || (b.tp - a.tp)).slice(0, LB_TP_TOP);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
       sc:`⌨️ ${fmtNum(r.tw)} คำ<span class="sc-sub"> · ${fmtNum(r.tp)} เหรียญ</span>`, val:r.tw,
@@ -1547,21 +1548,21 @@ function lbRankRows(tab){
   }
   if(tab === 'bb'){
     const map={}; (Online.bbBoard||[]).forEach(r=>{map[r.id]={id:r.id,n:r.n,g:r.g,bb:r.bb||0};});
-    map[myId]={id:myId,n:meName,g:meG,bb:Math.round(state.bbScore||0)};
+    if(includeMe) map[myId]={id:myId,n:meName,g:meG,bb:Math.round(state.bbScore||0)};
     const rows=Object.values(map).filter(r=>r.bb>0).sort((a,b)=>b.bb-a.bb).slice(0,LB_BB_TOP);
     return rows.map((r,i)=>({uid:r.id,name:splitNameBadges(r.n).name,g:r.g,dataN:r.n,sc:`🫧 ${fmtNum(r.bb)}`,val:r.bb,
       pz:(typeof BbAward!=='undefined')?BbAward.prizeFor(i+1):0,me:r.id===myId}));
   }
   if(tab === 'sg'){   // 🎯 รอบ 917: แต้มสะสมตลอดกาลเกมยิงเป้าคำศัพท์ (field sg) — โชว์แค่ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, sg:r.sg||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, sg:Math.round(state.sgScore||0)};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, sg:Math.round(state.sgScore||0)};
     const rows = Object.values(map).filter(r=>r.sg > 0).sort((a,b)=> b.sg - a.sg).slice(0, LB_SG_TOP);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🎯 ${fmtNum(r.sg)}`, val:r.sg,
       pz:(typeof SgAward !== 'undefined') ? SgAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   if(tab === 'pm'){   // 🖼️ รอบ 979: แต้มสะสมตลอดกาลเกมจับคู่ภาพ (field pm) — โชว์แค่ Top 10
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, pm:r.pm||0}; });
-    map[myId] = {id:myId, n:meName, g:meG, pm:Math.round(state.pmScore||0)};
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, pm:Math.round(state.pmScore||0)};
     const rows = Object.values(map).filter(r=>r.pm > 0).sort((a,b)=> b.pm - a.pm).slice(0, LB_PM_TOP);
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🖼️ ${fmtNum(r.pm)}`, val:r.pm,
       pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
@@ -1577,11 +1578,12 @@ const LB_BCAT_TOP = 5;   // แต่ละสายโชว์ Top กี่�
 function lbBadgeSections(){
   if(typeof badgeScore !== 'function' || typeof BADGE_CATS === 'undefined') return [];
   const myId = onlineKey();
+  const includeMe = !(typeof isTester === 'function' && isTester());
   const meName = (state.profileName || (state.student ? state.student.first : '') || 'หนู')
                + ((typeof badgeSuffix === 'function') ? badgeSuffix() : '');
   const meG = state.student ? state.student.grade : '';
   const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g}; });
-  map[myId] = {id:myId, n:meName, g:meG};
+  if(includeMe) map[myId] = {id:myId, n:meName, g:meG};
   const players = Object.values(map).map(r=>{
     const sp = splitNameBadges(r.n);
     return {uid:r.id, name:sp.name, badges:sp.badges, g:r.g, score:badgeScore(r.n), me:r.id===myId};
