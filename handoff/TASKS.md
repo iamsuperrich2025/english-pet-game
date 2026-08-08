@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (7 ส.ค.) — อ่านก่อน
+- **รอบ 1074 (8 ส.ค. · ปลดปักหมุดเมือง 3D/รักษา):** ย้ายปุ่ม `เมือง 3D` และ `รักษา` จาก `.rail-pinned` กลับเข้า `#lobby-rail` เป็นสองปุ่มแรก จึงเลื่อนไปพร้อมเมนูอื่นตามที่ผู้ใช้ขอ
+- ลบ CSS กล่องปักหมุดและ `alignCureBtn()` ที่ดันตำแหน่งรักษาเฉพาะ; คงสถานะรักษาจาง/กดไม่ได้เมื่อไม่มีสัตว์ป่วยตามระบบเดิม
+- ยืนยัน `node --check js/ui.js`, `git diff --check` และโครงสร้างไม่มี `rail-pinned`/`alignCureBtn`; Browser ทดสอบภาพจริงไม่ได้เพราะ policy บล็อก `file://`
 - **รอบ 1073 (8 ส.ค. · responsive iPhone 14 Lobby):** ต้นตอคือ `viewport-fit=cover` แต่ไม่กัน safe-area ซ้าย/ขวา + Safari landscape text autosizing + scrollbar กินความกว้างราง ทำให้ปุ่มซ้ายแตะยากและ footer/หัวข้อบวมผิดจาก Android
 - แก้ `css/lobby.css`: ล็อก text-size 100%, padding ตาม safe-area, รางซ้ายจอเตี้ย 72px/ปุ่มขั้นต่ำ 44px/ซ่อน scrollbar แต่ยังปัดได้ และย่อ footer จอเตี้ยเหลือ ~36px
 - ยืนยัน Browser 844×390 + 812×375 พร้อมจำลอง safe-area 47px/ข้าง: document ไม่ล้น, stage ยัง 421px, ปุ่มรางทุกใบ 72×44.9px กดได้และราง `pan-y`; `git diff --check` ผ่าน

@@ -896,8 +896,7 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
 
 /* 🧭 รอบ 602: กล่องห่อรางเมนูซ้าย — ที่ยึดของป้ายบอกทาง ▲/▼ (ราง = ตัวเลื่อนอยู่ข้างใน) */
 .rail-wrap{position:relative;display:flex;flex-direction:column;width:76px;flex-shrink:0;min-height:0;}
-/* 📌 รอบ 949: โซนเลื่อนจริง (ราง+ป้าย ▲/▼) — แยกออกจาก .rail-wrap เพราะปุ่ม "เมือง 3D"
-   ถูกปักหมุดไว้เหนือกล่องนี้ (อยู่นอกการเลื่อน = เห็นตลอด ไม่หลุดจอเหมือนเดิม) */
+/* โซนเลื่อนจริง (ราง+ป้าย ▲/▼) */
 .rail-scroll{position:relative;display:flex;flex-direction:column;flex:1 1 auto;min-height:0;}
 .lobby-rail{
   display:flex;flex-direction:column;gap:7px;width:100%;flex:1 1 auto;min-height:0;
@@ -918,10 +917,6 @@ html.no-anim .call-fx-emo{animation:callFloat 1.2s linear forwards;}
 a.rail-btn{text-decoration:none;text-align:center;}
 .rail-btn.rail-city{background:rgba(232,182,76,.18);border-color:rgba(232,182,76,.5);color:#ffe3a6;}
 .rail-btn.rail-city:hover{background:rgba(232,182,76,.3);}
-/* 📌 รอบ 949/950 (ผู้ใช้สั่ง "ปุ่มต้องมีตลอด"): กล่องปักหมุดนอกโซนเลื่อน — ลูกตรงของ .rail-wrap
-   → ไม่มี gap ของรางมาช่วยแล้ว ต้องเว้นระยะเอง (gap ระหว่างปุ่มปักหมุด + margin ก่อนโซนเลื่อน) */
-.rail-pinned{display:flex;flex-direction:column;gap:7px;flex:0 0 auto;margin-bottom:7px;z-index:5;}
-.rail-pinned .rail-btn{flex-shrink:0;}
 .rail-btn:hover{background:rgba(27,95,168,.85);}
 .rail-btn:active{transform:scale(.94);}
 .rail-btn.on{background:var(--sky);color:#fff;border-color:#7fc0f5;}
@@ -938,8 +933,7 @@ a.rail-btn{text-decoration:none;text-align:center;}
    แก้: ขอบรางด้านที่ยังมีปุ่มซ่อนอยู่ = ไล่สีจาง + ปุ่ม ▲/▼ กระดึ๊บเรียกสายตา
         กดแล้วเลื่อนให้เอง (▲ = กลับบนสุดทันที) · ไม่มีอะไรซ่อน = ไม่โผล่เลย
    ============================================================ */
-/* 📌 รอบ 949: ย้ายขอบจาง+ป้าย ▲/▼ มาอ้างอิง .rail-scroll (โซนเลื่อนจริง)
-   ไม่ใช่ .rail-wrap ทั้งกล่อง — ไม่งั้น ▲ จะไปทับปุ่ม "เมือง 3D" ที่ปักหมุดไว้ด้านบน */
+/* ขอบจาง+ป้าย ▲/▼ อ้างอิง .rail-scroll ซึ่งเป็นโซนเลื่อนจริง */
 .rail-scroll::before,.rail-scroll::after{
   content:'';position:absolute;left:0;right:0;height:20px;z-index:3;
   pointer-events:none;opacity:0;transition:opacity .18s;

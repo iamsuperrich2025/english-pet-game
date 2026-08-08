@@ -453,16 +453,12 @@
       <!-- 🧭 รางเมนูซ้าย: ห่อด้วย .rail-wrap เพื่อวางป้ายบอกทาง ▲/▼ ทับขอบราง
            (ผู้ใช้สั่ง 26 ก.ค. 2026 — เด็ก/ผู้ใหญ่ที่ไม่ชำนาญเลื่อนรางแล้วคิดว่า "ปุ่มหาย") -->
       <div class="rail-wrap" id="rail-wrap">
-        <!-- 📌 รอบ 949/950 (ผู้ใช้สั่ง "ให้มีปุ่มตลอด ไม่ใช่เดี๋ยวมีเดี๋ยวไม่มี"): ปุ่มที่ต้องเห็นตลอดไม่ว่าเลื่อนรางไปถึงไหน
-             ปักหมุดเป็นลูกตรงของ .rail-wrap (นอกโซนเลื่อน .rail-scroll) — เดิมทั้งคู่เคยอยู่ "ข้างใน" รางที่เลื่อนได้ ปุ่มเลยหลุดจอตอนเลื่อนหาปุ่มอื่น
-             🏙️ เมือง 3D = ทางกลับหน้าหลัก (รอบ 863/949) · 💊 รักษา = กดด่วนตอนน้องป่วย (รอบ 950 ย้ายมาจับคู่ — ก่อนหน้านี้ปักหมุดแค่เมือง 3D ปุ่มเดียว) -->
-        <div class="rail-pinned" id="rail-pinned">
-          <a class="rail-btn rail-city" id="btn-rail-city" href="index.html" title="กลับไปเมืองคำศัพท์ 3D (หน้าหลัก)"><span class="rail-ico">🏙️</span>เมือง 3D</a>
-          <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
-        </div>
-        <!-- โซนเลื่อน: ราง + ป้ายบอกทาง ▲/▼ (ป้ายอ้างอิงกล่องนี้ ไม่ใช่ทั้ง rail-wrap — ไม่งั้น ▲ ไปทับปุ่มที่ปักหมุด) -->
+        <!-- โซนเลื่อน: ราง + ป้ายบอกทาง ▲/▼ -->
         <div class="rail-scroll" id="rail-scroll">
       <nav class="lobby-rail" id="lobby-rail">
+        <!-- รอบ 1074: เมือง 3D + รักษา เลื่อนไปพร้อมปุ่มอื่น ไม่ปักหมุดแยกนอกราง -->
+        <a class="rail-btn rail-city" id="btn-rail-city" href="index.html" title="กลับไปเมืองคำศัพท์ 3D (หน้าหลัก)"><span class="rail-ico">🏙️</span>เมือง 3D</a>
+        <button class="rail-btn" id="btn-rail-cure" disabled><span class="rail-ico">💊</span>รักษา<span class="rail-badge" id="cure-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-home"><span class="rail-ico">🏠</span>บ้าน<span class="rail-badge" id="home-bill-badge" style="display:none"></span></button>
         <button class="rail-btn" data-panel="panel-farm"><span class="rail-ico">📈</span>ลงทุน</button>
         <button class="rail-btn" data-panel="panel-factory"><span class="rail-ico">🏭</span>โรงงาน</button>

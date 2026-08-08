@@ -4466,7 +4466,6 @@ function alignStageCols(){
    (เจอจริงรอบ 613: ย่อจอแล้วทั้ง 3 แถวค้างที่เส้นเก่า) → เลื่อนไปวัดใน rAF ซ้อน 2 ชั้น */
 let __alignRaf = 0;
 window.addEventListener('resize', ()=>{
-  if(typeof alignCureBtn === 'function') alignCureBtn();
   if(__alignRaf) cancelAnimationFrame(__alignRaf);
   __alignRaf = requestAnimationFrame(()=>{ __alignRaf = requestAnimationFrame(alignStageCols); });
 });
@@ -4479,21 +4478,6 @@ function watchStageCols(){
   if(!__heroRO) __heroRO = new ResizeObserver(()=>alignStageCols());
   __heroRO.disconnect();
   __heroRO.observe(hero);
-}
-
-/* รอบ 258 (ผู้ใช้สั่ง 17 ก.ค. 2026): ขยับแถบปุ่มซ้ายทั้งแถว — แนวบนปุ่ม 💊 รักษา ตรงกับขอบบนแถวชื่อสัตว์ (#pet-tabs)
-   (เดิมรอบ 254 ยึดปุ่มข้อมูลน้อง — ผู้ใช้ขอเลื่อนขึ้นมาเสมอแนวชื่อสัตว์แทน) · ดัน margin-top ปุ่มแรกของราง ทั้งแถวเลื่อนตาม */
-function alignCureBtn(){
-  const cure = document.getElementById('btn-rail-cure');
-  if(!cure) return;
-  const tabs = document.getElementById('pet-tabs');
-  const anchor = (tabs && tabs.style.display !== 'none') ? tabs : document.getElementById('btn-pet-info');
-  if(!anchor){ cure.style.marginTop = ''; return; }
-  cure.style.marginTop = '0px';
-  const c = cure.getBoundingClientRect(), b = anchor.getBoundingClientRect();
-  const rail = cure.parentElement;
-  const scale = rail && rail.offsetWidth ? rail.getBoundingClientRect().width / rail.offsetWidth : 1;  // เพจโดนย่อ (transform) → แปลงกลับ layout px
-  cure.style.marginTop = Math.max(0, (b.top - c.top) / scale) + 'px';
 }
 
 /* ============================================================
@@ -5039,7 +5023,6 @@ function renderDashboard(){
   const feedBell = document.getElementById('btn-feed-bell');    // 🔔 รอบ 701: แจ้งเตือนไลก์/คอมเมนต์โพสต์ของเรา
   if(feedBell) feedBell.addEventListener('click', openFeedNotif);
   renderFeedCard();
-  alignCureBtn();   // รอบ 254: ปุ่ม 💊 รักษา แนวบนตรงกับปุ่มข้อมูลน้อง
   /* 📐 รอบ 613: วัดตำแหน่งจริง "หลังการ์ดถูกสร้าง" — เวที (.stage-hero) เพิ่งมีจริงตรงนี้
      (เรียกตอนต้น renderDashboard ได้ค่าของการ์ดรอบก่อน → รอบแรกสุดยังไม่มีเวทีเลย) */
   alignStageCols();
