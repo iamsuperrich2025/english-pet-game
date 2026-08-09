@@ -10,7 +10,7 @@
   • ส่ง rules ต้อง "เต็มทั้งหน้า" เสมอ (ห้ามตัดเฉพาะโซน) — คัดลอกจากก้อนใน RULES.md ตรง ๆ ไม่ก๊อปมือ
   • ข้อความที่ปุ่มคัดลอกส่งเข้าคลิปบอร์ด = textContent ของ <pre> → ตรวจได้ว่า json.loads ผ่าน
 """
-import argparse, html, json, re, sys
+import argparse, hashlib, html, json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,11 +56,17 @@ def main():
 
     body = '\n'.join(('<mark>%s</mark>' % html.escape(ln)) if i in hot else html.escape(ln)
                      for i, ln in enumerate(lines))
+    # Fail closed: the rendered <pre>.textContent must equal the source JSON exactly.
+    copy_payload = html.unescape(re.sub(r'</?mark>', '', body))
+    if copy_payload != txt:
+        sys.exit('copy payload differs from handoff/RULES.md; artifact not written')
     zones = len(json.loads(txt)['rules'])
+    sha256 = hashlib.sha256(txt.encode('utf-8')).hexdigest().upper()
     head  = ('รอบ %s · ' % a.round if a.round else '') + '%d โซน · %d บรรทัด' % (zones, len(lines))
     note  = ('ไฮไลต์เหลือง = ส่วนที่เพิ่มใหม่: ' + ' · '.join(marks)) if marks else ''
 
-    (ROOT / a.out).write_text(TPL.format(head=html.escape(head), note=html.escape(note), body=body),
+    (ROOT / a.out).write_text(TPL.format(head=html.escape(head), note=html.escape(note),
+                                         sha256=sha256, body=body),
                               encoding='utf-8')
     print(('wrote %s (%s)' % (a.out, head)).encode('ascii', 'replace').decode())   # console Windows เป็น cp1252
 
@@ -93,7 +99,7 @@ TPL = """<title>Firebase Rules — ก้อนเต็ม (Vocab World)</title
 </style>
 <div class="wrap">
   <h1>🔐 Firebase Rules — ก้อนเต็มทั้งหน้า</h1>
-  <p class="sub">{head}<br>{note}</p>
+  <p class="sub">{head}<br>SHA-256: <code>{sha256}</code><br>{note}</p>
   <div class="steps">
     <b>วิธีใช้</b><br>
     1) กดปุ่ม <b>คัดลอกทั้งก้อน</b> ด้านล่าง<br>

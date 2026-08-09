@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1088 · กฎส่ง Firebase Rules แบบป้องกันข้อความตกหล่น:** ทุกครั้งต้องส่งก้อนเต็มผ่าน HTML ที่มีปุ่ม “คัดลอกทั้งก้อน” จาก `tools/gen_rules_artifact.py` เป็นทางหลัก; เครื่องมือตรวจ `json.loads`, payload หลัง render ตรง source ทุกตัวอักษร และแสดง SHA-256 ก่อนเขียนไฟล์; กฎถาวรอยู่ใน `handoff/RULES.md` + skill `vocab-world` · ทดสอบ artifact จริงผ่าน 37 โซน/45,250 ตัวอักษร/มี `hauntedHotel` · ผู้ใช้ยืนยัน Publish แล้ว 10 ส.ค.; Codex ยังเทียบ rules สดไม่ได้เพราะ browser ไม่มีสิทธิ์/เกมไม่ได้ล็อกอิน
 - **รอบ 1086 · Haunted Hotel Phase 4 (working tree ยังไม่ commit/deploy):** เพิ่ม placement pool stable ID/version 1 จากทุกห้องค้นได้+โถง/ทางเดิน และ derive จาก canonical `runId+seed` แบบกระจายหลายชั้น/ไม่กองห้อง โดยตัวหน้าโลง/ตู้ยังคงตำแหน่งพิเศษเดิม
 - เพิ่ม search timer local 45/85/135/190 วินาที, floor→room→strong proximity, distance check 500ms, pulse/เสียงเฉพาะเป้าหมาย และส่ง search event เข้า Horror Director โดยไม่เพิ่ม Firebase/frame sync
 - เพิ่ม critical hint queue จำกัด 4 ค้างจนกด X/“เข้าใจแล้ว”, แยกจาก ambient banner, ล้าง hint เก่าเมื่อ objective/word/reconnect เปลี่ยน, เปิด hint ล่าสุดซ้ำได้; จบภารกิจกลับ Lobby หลังผู้เล่นกดยืนยัน
