@@ -1139,10 +1139,19 @@ function bindOnlinePager(el){
   }, ONLINE_FLIP_MS);
 }
 
+/* รอบ 1080: รายชื่อออนไลน์ใช้ ticker เลื่อนขึ้นต่อเนื่องเหมือน "Feed ทุกคน"
+   (initSideScroll: วนไร้รอยต่อ · แตะ/ลากหยุดอ่าน · ปล่อย 5 วิเลื่อนต่อ) */
+function drawOnlineTicker(rows, flashSel){
+  const el = document.getElementById('online-card');
+  if(!el) return;
+  el.innerHTML = rows.join('');
+  initSideScroll(el);
+  if(flashSel) sideFlashRows(el, flashSel, 'on-flash');
+}
+
 function renderOnlineCard(){
   const el = document.getElementById('online-card');
   if(!el) return;
-  delete sideScrollSt[el.id];            // รอบ 178: เลิกเลื่อนวน — กัน ticker รอบ 149 มาห่อ ss-chunk
   const lab = document.getElementById('online-label');  // หัวข้อนอกกล่อง (รอบ 149) — ติดป้าย "ออนไลน์จริง" เมื่อต่อ Firebase สำเร็จ
   const sub = document.getElementById('online-sub');     // เลิกใช้แยกบรรทัด (รอบ N) — ยุบรวมกับ lab เป็นบรรทัดเดียว "กำลังออนไลน์ N คน"
   if(sub) sub.textContent = '';                           // เคลียร์ของเก่าเสมอ (กันค้างจากโหมดก่อนหน้า)
@@ -1213,21 +1222,12 @@ function renderOnlineCard(){
       </div>`;
     });
     bindInviteCards();
-    /* รอบ 603: การ์ดคำชวนยังหน้าละใบ (สำคัญ มีปุ่ม) · แถวเพื่อนหั่นหลายคนต่อหน้าตามที่ว่าง */
+    /* รอบ 1080: การ์ดคำชวน + รายชื่อทั้งหมดอยู่ใน ticker เดียว เลื่อนขึ้นเหมือน Feed ทุกคน */
     const bodyRows = [meRow, ...rows];
     if(!rows.length) bodyRows.push('<div class="online-note">ยังไม่มีเพื่อนคนอื่นออนไลน์ตอนนี้ — ชวนเพื่อนมาเล่นด้วยกันสิ! 🎉</div>');
-    const bodyPages = onChunk(bodyRows);
-    __onPages = [...invs, ...bodyPages];
-    /* เพื่อนใหม่/คำชวนใหม่ → พลิกไปหน้านั้นเลย + ค้าง 5 วิ (แถวติด on-flash มาแล้ว) */
-    if(flashInv !== null){
-      const i = invEntries.findIndex(([fid])=>fid === flashInv);
-      if(i >= 0){ __onPage = i; __onHold = Date.now() + QUEST_FLASH_HOLD; }
-    }else if(flashFid !== null){
-      const i = Online.friends.findIndex(f=>String(f.id||'') === flashFid);
-      if(i >= 0){ __onPage = invs.length + Math.floor((1 + i) / (__onRowsPP || 1)); __onHold = Date.now() + QUEST_FLASH_HOLD; }
-    }
-    onPageDraw('');
-    bindOnlinePager(el);
+    const flashSel = flashInv !== null ? `.inv-card[data-fid="${CSS.escape(flashInv)}"]`
+                   : flashFid !== null ? `.online-row[data-fid="${CSS.escape(flashFid)}"]` : '';
+    drawOnlineTicker([...invs, ...bodyRows], flashSel);
     return;
   }
   __onSeen = null;                           // หลุดออนไลน์ → เริ่มนับใหม่ตอนต่อกลับ (กันเน็ตกระพริบสแปม toast)
@@ -1248,10 +1248,8 @@ function renderOnlineCard(){
       <span class="online-act">${idTag(f.n)} · ${ONLINE_ACTIVITIES[Math.floor(rnd()*ONLINE_ACTIVITIES.length)]}</span>
     </div>`);
   if(lab) lab.innerHTML = `🧑‍🤝‍🧑 กำลังออนไลน์ ${count + 1} คน 💚`;
-  __onPages = onChunk([meRow, ...rows]);
-  onPageDraw('');
+  drawOnlineTicker([meRow, ...rows], '');
   bindPlayerClicks();
-  bindOnlinePager(el);
 }
 
 /* ============================================================

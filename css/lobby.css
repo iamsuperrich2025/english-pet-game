@@ -3467,8 +3467,9 @@ html.no-anim .hero-rank-bg .rank-floor{animation:none;}
 /* q-fit: เหลือ 2 บรรทัด (ชื่อภารกิจ + แถวความคืบหน้า/รางวัล/ปุ่ม) ฟอนต์ขนาดปกติ */
 #quest-card.q-fit .qb-bar,#quest-card.q-fit .q-dots{display:none;}
 #quest-card.q-fit .q-bigcard{gap:3px;padding:2px;}
-/* กล่องเพื่อน: โชว์ทีละหน้า (1 แถว = 2 บรรทัด) พลิก 180° แนวตั้ง */
-#online-card{height:auto;overflow:hidden;perspective:420px;touch-action:none;}
+/* รอบ 1080: กล่องเพื่อนเป็น ticker เลื่อนขึ้นต่อเนื่องเหมือน Feed ทุกคน */
+#online-card{height:auto;overflow-y:auto;perspective:none;touch-action:pan-y;scrollbar-width:none;overscroll-behavior:contain;}
+#online-card::-webkit-scrollbar{display:none;}
 #online-card .on-page .online-row{border-bottom:none;padding:2px 2px;margin-bottom:0;}
 #online-card .on-page .inv-card{margin:0;}
 #online-card .on-page .online-note{padding:2px;}
@@ -3741,8 +3742,10 @@ html.no-anim .ws-word{transition:none;}
 /* min-height = 1 แถวเต็ม ๆ (46px + padding กระจก) — จอเตี้ยมาก (662×307) ห้ามบีบจนแถวโดนตัดครึ่ง */
 .sec-online .side-glass{flex:1 1 auto;min-height:64px;}
 #online-card{height:100%;}
-/* แถวน้อย = กระจายให้เต็มกล่อง (ไม่ให้ดูโล่งครึ่งใบ) แต่ระยะห่างมีเพดาน (ui.js ตั้ง gap ให้)
-   → จอสูงมาก ๆ แถวจะไม่ลอยห่างกันจนดูแปลก แต่จับกลุ่มไว้กลางกล่องแทน */
+#online-card > .online-row,#online-card > .inv-card,#online-card > .online-note,
+#online-card > .ss-chunk > .online-row,#online-card > .ss-chunk > .inv-card,#online-card > .ss-chunk > .online-note{flex-shrink:0;}
+#online-card > .ss-chunk{display:flex;flex-direction:column;gap:clamp(5px,1.4vh,12px);padding-bottom:12px;}
+/* CSS ของเด็คเก่าเก็บไว้ให้โค้ดหน้าเดิมไม่พังระหว่าง cache สลับเวอร์ชัน */
 #online-card .on-page{display:flex;flex-direction:column;justify-content:center;
   height:100%;gap:1px;}
 #online-card .on-page .online-row,
