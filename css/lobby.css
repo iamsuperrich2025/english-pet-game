@@ -4812,25 +4812,37 @@ html.no-anim #panel-rank .rank-beam,html.no-anim #panel-rank .rank-edge{display:
 @media (max-width:520px){.grid2x8{--fc-n:3;}}
 
 /* ============================================================
-   🧩 กริด "1 แถว × 5 คอลัมน์" (รอบ 737) — แพทเทิร์นเดียวกับ .grid2x8 แต่แถวเดียว
-   ใช้ที่: เข็มเกียรติยศในการ์ดโปรไฟล์ 👤 (การ์ดใหญ่ 5 ใบต่อหน้าจอ เกิน 5 ปัดขวาเหมือนโรงงาน)
-   ตั้ง --fc-n:5 ตรงบนคลาสนี้เอง (ไม่พึ่งค่าที่สืบทอดจาก .pl-card.pl-wide ซึ่งเริ่มที่ 8) */
-.grid1x5{
-  --fc-n:5;--fc-gap:9px;
-  display:grid;grid-auto-flow:column;grid-template-rows:minmax(0,1fr);
-  grid-auto-columns:calc((100% - (var(--fc-n) - 1) * var(--fc-gap)) / var(--fc-n));
-  gap:var(--fc-gap);align-items:stretch;
+   🎖️ กริดเข็ม "3 แถว × 5 คอลัมน์" ปัดขึ้นลง (รอบ 1082)
+   ความกว้างยัง 5 ใบเท่าเดิม; แสดงได้ 15 เข็มต่อหน้า และเลื่อนแนวตั้งเมื่อมีมากกว่านั้น */
+.pl-badges-vwrap{position:relative;min-width:0;}
+.grid3x5{
+  --badge-gap:9px;--badge-row:clamp(130px,28vh,210px);
+  display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-auto-rows:var(--badge-row);
+  gap:var(--badge-gap);align-items:stretch;
 }
-.grid1x5>*{min-width:0;}
-@media (max-width:700px){.grid1x5{--fc-n:4;}}
-@media (max-width:520px){.grid1x5{--fc-n:3;}}
+.grid3x5>*{min-width:0;}
+.pl-badge-arrow{
+  position:absolute;z-index:3;left:50%;transform:translateX(-50%);width:34px;height:34px;
+  border-radius:999px;cursor:pointer;background:linear-gradient(180deg,#4aa3e8,#2a76c0);
+  color:#fff;border:2px solid #cfe7fb;font-family:inherit;font-size:13px;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 7px rgba(10,40,80,.42);
+}
+.pl-badge-arrow:active{transform:translateX(-50%) scale(.92);}
+.pba-u{top:4px}.pba-d{bottom:4px}
+.pl-badges-vwrap.at-top .pba-u,.pl-badges-vwrap.at-bottom .pba-d,.pl-badges-vwrap.no-y .pl-badge-arrow{display:none;}
 
 /* 🎖️ การ์ดเข็มเกียรติยศใหญ่ในโปรไฟล์ (รอบ 737) — หน้าตาชุดเดียวกับ .pl-assets/.hq-card
    (หัวน้ำเงินชื่อเข็ม → ภาพเหรียญใหญ่กลางการ์ด) ให้เห็นรายละเอียดชัดแทนชิปเล็กเดิม */
 .pl-badges-strip{
-  grid-template-rows:clamp(130px,28vh,210px);
+  max-height:calc(var(--badge-row) * 3 + var(--badge-gap) * 2 + 18px);
+  overflow-x:hidden;overflow-y:auto;scroll-snap-type:y proximity;overscroll-behavior-y:contain;touch-action:pan-y;
+  scrollbar-width:none;-ms-overflow-style:none;
   padding:9px;border-radius:16px;border:1px solid rgba(255,255,255,.16);box-sizing:border-box;
+  background:linear-gradient(180deg,#16385e,#0f2c4e);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.35),inset 0 -1px 0 rgba(255,255,255,.08);
 }
+.pl-badges-strip::-webkit-scrollbar{display:none;}
+.pl-badges-strip>*{scroll-snap-align:start;}
 .pl-badge-card{
   width:auto;height:100%;padding:0;overflow:hidden;
   background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;border-radius:14px;

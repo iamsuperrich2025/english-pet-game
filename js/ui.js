@@ -2000,19 +2000,20 @@ function bindPlayerClicks(){
 }
 
 function showPlayerCard(uid, name, grade){
-  // แยกเข็มออกจากชื่อ (เข็ม baked มากับชื่อจาก presence/leaderboard) → การ์ดเข็มใหญ่แถวบน (รอบ 737)
+  // แยกเข็มระดับสูงสุดที่ baked มากับชื่อ แล้วขยายเป็นทุกระดับที่ผู้เล่นเคยได้ (รอบ 1082)
   const sp = (typeof splitNameBadges === 'function') ? splitNameBadges(name) : {name, badges:''};
-  const arr = (typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : [];
+  const arr = (typeof earnedBadgeEmojis === 'function') ? earnedBadgeEmojis(sp.badges)
+    : ((typeof badgeEmojis === 'function') ? badgeEmojis(sp.badges) : []);
   const badgesHTML = arr.length
-    ? `<div class="strip-wrap"><button class="strip-arrow sa-l" aria-label="เลื่อนซ้าย">❮</button>
-        <div class="strip-x pl-badges-strip grid1x5" style="--fc-n:${Math.min(Math.max(arr.length,1),5)}">${arr.map(e=>{
+    ? `<div class="pl-badges-vwrap"><button class="pl-badge-arrow pba-u" aria-label="เลื่อนเข็มขึ้น">▲</button>
+        <div class="pl-badges-strip grid3x5">${arr.map(e=>{
           const nm = (BADGE_META[e]||{}).n || '';
           return `<div class="pl-badge-card" title="${escapeHTML(nm)}">
             ${(typeof badgeIcHTML==='function')?badgeIcHTML(e,'pl-badge-card-ic'):`<span class="pl-badge-card-ic badge-ic-fallback">${e}</span>`}
             <span class="pl-badge-card-nm">${escapeHTML(nm)}</span>
           </div>`;
         }).join('')}</div>
-        <button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`
+        <button class="pl-badge-arrow pba-d" aria-label="เลื่อนเข็มลง">▼</button></div>`
     : `<div class="pl-badges-empty">ยังไม่มีเข็มเกียรติยศ 🎖️<br><small>เล่นเกม สอบผ่าน หรือทำภารกิจพิเศษเพื่อปลดเข็มแรก!</small></div>`;
   // 📰 รอบ 155: การ์ดยืดกว้างเกือบเต็มจอ + ปุ่ม Follow + กิจกรรมล่าสุด + กริดทรัพย์สินที่เปิดเผย
   const me = (typeof onlineKey === 'function') && uid === onlineKey();
@@ -2071,7 +2072,7 @@ function showPlayerCard(uid, name, grade){
       </div>
     </div>`;
   document.body.appendChild(ov);
-  bindStripArrows(ov.querySelector('.pl-badges-col .strip-wrap'));   // 🎖️ รอบ 737: เข็มใหญ่ 5 คอลัมน์ ปัดขวาถ้าเกิน
+  bindProfileBadgeScroll(ov.querySelector('.pl-badges-vwrap'));   // 🎖️ รอบ 1082: 3 แถว × 5 คอลัมน์ ปัดขึ้นลง
   const close = ()=>ov.remove();
   ov.addEventListener('click', (e)=>{ if(e.target === ov) close(); });
   ov.querySelector('.pl-close').addEventListener('click', close);
@@ -2275,6 +2276,25 @@ function showPlayerCard(uid, name, grade){
     const src = img && img.getAttribute('src');
     if(src) openImgLightbox(src, cell.dataset.name || cell.getAttribute('title') || '');
   });
+}
+
+/* 🎖️ รอบ 1082: ปุ่มเสริมสำหรับตู้เข็มแนวตั้ง (การปัดนิ้วยังคงเป็นวิธีหลัก)
+   ซ่อนปุ่มบน/ล่างตามตำแหน่งจริง เพื่อบอกผู้เล่นทันทีว่ายังมีเข็มต่อด้านไหน */
+function bindProfileBadgeScroll(wrap){
+  if(!wrap) return;
+  const grid = wrap.querySelector('.pl-badges-strip');
+  const up = wrap.querySelector('.pba-u'), down = wrap.querySelector('.pba-d');
+  const page = ()=>Math.max(120, grid.clientHeight * .9);
+  const paint = ()=>{
+    const max = Math.max(0, grid.scrollHeight - grid.clientHeight);
+    wrap.classList.toggle('at-top', grid.scrollTop <= 2);
+    wrap.classList.toggle('at-bottom', grid.scrollTop >= max - 2);
+    wrap.classList.toggle('no-y', max <= 4);
+  };
+  up.addEventListener('click', ()=>{ sfx.select(); grid.scrollBy({top:-page(), behavior:'smooth'}); });
+  down.addEventListener('click', ()=>{ sfx.select(); grid.scrollBy({top:page(), behavior:'smooth'}); });
+  grid.addEventListener('scroll', paint, {passive:true});
+  setTimeout(paint, 0);
 }
 
 /* ภาพสัตว์เลี้ยงจากตัวย่อ {t,s,sh,e} — ใช้ไฟล์ภาพชุดเดียวกับในเกม (probe แล้วใน IMG_FILES) */

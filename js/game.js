@@ -555,6 +555,24 @@ const BADGE_CATS = [
   {emojis:['⌨️','🔠','📜','✒️','🦾'], label:'นักพิมพ์', desc:'พิมพ์คำสำเร็จสะสม (เกมพิมพ์คำ)'},
   {emojis:['🎓','🧠','🏛️'], label:'นักสอบใหญ่', desc:'ใบประกาศสอบใหญ่คลังศัพท์ขั้นสูง (30-50 ข้อ)'},
 ];
+/* 🎖️ รอบ 1082: presence/leaderboard ฝังท้ายชื่อเฉพาะเข็มระดับสูงสุดของแต่ละสายเพื่อให้ชื่อสั้น
+   แต่ตู้เข็มในโปรไฟล์ต้องโชว์ "ทุกเข็มที่เคยได้" — ขยายระดับสูงสุดย้อนเป็นระดับ 1..ปัจจุบัน
+   ได้ทั้งโปรไฟล์ตัวเองและเพื่อน โดยไม่ต้องเพิ่มข้อมูลใหม่ใน Firebase */
+function earnedBadgeEmojis(badges){
+  const encoded = badgeEmojis(badges), highest = new Map(), out = [], added = new Set();
+  encoded.forEach(e=>{
+    const ci = BADGE_CATS.findIndex(cat=>cat.emojis.includes(e));
+    if(ci >= 0) highest.set(ci, Math.max(highest.get(ci) ?? -1, BADGE_CATS[ci].emojis.indexOf(e)));
+  });
+  encoded.forEach(e=>{
+    const ci = BADGE_CATS.findIndex(cat=>cat.emojis.includes(e));
+    if(ci < 0){ if(!added.has(e)){ out.push(e); added.add(e); } return; }
+    if(added.has(`cat:${ci}`)) return;
+    BADGE_CATS[ci].emojis.slice(0, highest.get(ci) + 1).forEach(x=>{ out.push(x); added.add(x); });
+    added.add(`cat:${ci}`);
+  });
+  return out;
+}
 function bcatLevel(badges, cat){                        // ระดับของผู้เล่นในสายนี้ (0=ยังไม่ได้)
   for(let i=cat.emojis.length-1;i>=0;i--) if(badges.indexOf(cat.emojis[i])>=0) return i+1;
   return 0;
