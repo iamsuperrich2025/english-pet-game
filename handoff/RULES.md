@@ -7,6 +7,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+> ⏳ **Haunted Hotel Phase 2+3:** เพิ่ม `/hauntedHotel/<r0..r35>/run` และ compact current `/scare` event ในก้อนเต็มด้านล่างแล้ว แต่ยังไม่ publish ตามคำสั่งงาน (ห้าม deploy) — ต้อง publish rules พร้อมรอบส่งจริงก่อนเปิดให้ผู้เล่น
 > ✅ **เผยแพร่โซน `bbAward` + field/index `bb` ของเกม 🫧 ฟองแล้ว (7 ส.ค. 2026 · รอบ 1069)** — อ่านกฎสดด้วย Firebase CLI แล้วตรงกับก้อนเต็มด้านล่างทั้งไฟล์ (SHA-256 `63AEDC295B98CC0D1A7A28D375D3920871ED4DA09229E483F37EBE193A2BF085`): 36 โซน มี index/field `bb` และ `bbAward` ครบ
 > 🎉 **ผู้ใช้ publish ก้อนเต็ม 33 โซน / 555 บรรทัดแล้ว (3 ส.ค. 2026 · รอบ 983)** — ตรวจสดด้วย `firebase database:get "/.settings/rules" --project english-pet-game` แล้วเทียบทีละคีย์กับก้อนใน RULES.md: **331 คีย์ ตรงกันทั้งหมด ไม่มีคีย์หาย ไม่มีค่าเพี้ยน** → ของที่ค้างมาก่อนหน้า (`gnotif` รอบ 976 · `cl` รอบ 966 · `sgAward` รอบ 917 · `f1Rank` รอบ 903 · `f1` ใน wroom รอบ 896 · `pmAward`+`pm` รอบ 979) **ขึ้นครบพร้อมกันหมดแล้ว**
 - ✅ **รอบ 983 (3 ส.ค. 2026): ขยายโซน `gnotif` ให้เก็บ "ของขวัญ 🎁 · ทักทายน้อง 🐾 · คำขอเป็นเพื่อน 👋" ย้อนหลังด้วย (รวมทุกเรื่องไว้ในกล่อง 🔔 ใบเดียว) — ผู้ใช้ publish แล้ว 3 ส.ค. 2026 · ตรวจสดยืนยัน (ดูหมายเหตุบนสุด) (ก้อนเดียวกับรอบ 976 ด้านล่าง publish ครั้งเดียวได้ทั้งหมด):** เพิ่ม `t` อีก 3 ชนิด `gf`|`gr`|`fr` · **`pid` เปลี่ยนเป็น "ไม่บังคับ"** (ใบพวกนี้ไม่ได้มาจากโพสต์) — `.validate` บังคับ `['t','u','n','ts']` แล้วต้อง *มี `pid`* หรือ *เป็นชนิดใหม่* อย่างใดอย่างหนึ่ง (ยัดใบไม่มี pid เป็นชนิดไลก์/คอมเมนต์ไม่ได้) · **ทางเขียนใหม่ 2 เส้น เช็กของจริงในฐานข้อมูลก่อนเสมอ:** `gf`/`gr` ต้องมี `/gifts/<ผู้รับ>/<คนกด>` อยู่จริง (= ส่งของขวัญ/คำทักไปแล้วจริง) · `fr` ต้องมี `/friendReq/<ผู้รับ>/<คนกด>` อยู่จริง (= ส่งคำขอไปแล้วจริง) → **ไม่เปิดช่องใหม่ให้คนแปลกหน้าเลย** สิทธิ์เท่ากับการส่งของขวัญ/คำขอที่ทำได้อยู่แล้วเป๊ะ · ฟิลด์เดิมใช้ซ้ำทั้งหมด ไม่มีฟิลด์ใหม่ (`r`=shop/collect · `cm`=id ของขวัญ/รหัสคำทัก · `cid`=รหัสใบในกล่องของขวัญ กันนับซ้ำ)
@@ -283,6 +284,39 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
             "$other": { ".validate": false }
           }
         }
+      }
+    },
+    "hauntedHotel": {
+      "$room": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
+        "run": {
+          ".validate": "newData.hasChildren(['runId','seed','placementVersion','phase','wordIndex','ordinalMask','cabinetLetterSlot','completedAt','revision','wordSet','startedAt','updatedAt'])",
+          "runId": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+          "seed": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4294967295" },
+          "placementVersion": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 16" },
+          "phase": { ".validate": "newData.isString() && (newData.val() === 'ENTER' || newData.val() === 'ACTIVE_WORD' || newData.val() === 'TEMP_BLACKOUT' || newData.val() === 'RESTORE' || newData.val() === 'PERMANENT_DARK' || newData.val() === 'FINAL_CABINET' || newData.val() === 'COMPLETE' || newData.val() === 'RETURN')" },
+          "wordIndex": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
+          "ordinalMask": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 511" },
+          "cabinetLetterSlot": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
+          "completedAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "revision": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+          "wordSet": { ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 400" },
+          "startedAt": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "updatedAt": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "$other": { ".validate": false }
+        },
+        "scare": {
+          ".validate": "newData.hasChildren(['eventId','type','target','eventSeed','createdAt'])",
+          "eventId": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
+          "type": { ".validate": "newData.isString() && (newData.val() === 'majorCorridor' || newData.val() === 'groupKnock' || newData.val() === 'finalPresence')" },
+          "target": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 800" },
+          "eventSeed": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4294967295" },
+          "createdAt": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+          "$other": { ".validate": false }
+        },
+        "$other": { ".validate": false }
       }
     },
     "tinv": {

@@ -10,7 +10,7 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
-- **(ว่าง — ยังไม่มีงานมอบ Codex ค้างอยู่)** เมื่อมอบงานให้ Codex ทำ ให้จด: วันที่ / ไฟล์ที่คาดว่าจะแตะ / คำสั่งที่มอบสั้น ๆ ที่นี่ — ลบบรรทัดออกทันทีที่ Codex push งานเสร็จแล้ว (กันชนกับกฎ 🚦 ห้ามทำงานซ้ำกับ session คู่ขนาน ข้อ 10 ใน `HANDOFF.md`)
+- **10 ส.ค. 2026 — Haunted Hotel Phase 1–4 เสร็จและทดสอบแล้ว แต่ยังไม่ commit/deploy:** canonical mission + Horror Director + 6-player capacity + deterministic searchable letters/persistent hints; rules `/hauntedHotel` ยังไม่ publish
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
@@ -27,7 +27,19 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (8 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1086 · Haunted Hotel Phase 4 (working tree ยังไม่ commit/deploy):** เพิ่ม placement pool stable ID/version 1 จากทุกห้องค้นได้+โถง/ทางเดิน และ derive จาก canonical `runId+seed` แบบกระจายหลายชั้น/ไม่กองห้อง โดยตัวหน้าโลง/ตู้ยังคงตำแหน่งพิเศษเดิม
+- เพิ่ม search timer local 45/85/135/190 วินาที, floor→room→strong proximity, distance check 500ms, pulse/เสียงเฉพาะเป้าหมาย และส่ง search event เข้า Horror Director โดยไม่เพิ่ม Firebase/frame sync
+- เพิ่ม critical hint queue จำกัด 4 ค้างจนกด X/“เข้าใจแล้ว”, แยกจาก ambient banner, ล้าง hint เก่าเมื่อ objective/word/reconnect เปลี่ยน, เปิด hint ล่าสุดซ้ำได้; จบภารกิจกลับ Lobby หลังผู้เล่นกดยืนยัน
+- แก้ `js/hauntedhotel.js`, `js/hauntedhoteldirector.js`, `js/hotel3d.js`, `js/adventure3d.js`, `js/adv3d_css.js`, `handoff/RULES.md`; test Phase 4 + syntax/diff ผ่าน, Browser 812×375/1280×720 ไม่ล้น ปุ่ม 44px/เล่นต่อหลัง panel ได้
+- **รอบ 1085 · Haunted Hotel Phase 3 (working tree ยังไม่ commit/deploy):** เปลี่ยนเพดานเฉพาะ `haunt` เป็น 6 คนด้วย `HauntedHotelRuntime.MAX_PLAYERS`; NetRoom verifier เดิมกระจายคนที่ 7 ไปหลังถัดไปแบบ race-safe โดยไม่แตะเพดานโลกอื่น
+- เพิ่ม `js/hauntedhoteldirector.js`: tension 0..1/phase-aware/recovery, decision 400ms, local ambient·visual·environmental, isolation/subgroup/fairness และ compact `/hauntedHotel/rN/scare` transaction สำหรับ major event (ไม่ส่งตำแหน่ง/เฟรมเพิ่ม)
+- ต่อ lifecycle ผ่าน runtime/session, reuse peers+เสียง/ภาพ/ไฟเดิม, เพิ่ม rules `scare` และแก้คำอธิบาย 6 คน; reward security/NetRoom refactor/server authority ยังเลื่อนไว้
+- ยืนยัน Phase 2 regression, Phase 3 A–N + 6-client objective/shared race, NetRoom 7-player matrix (`r0:6,r1:1`), browser module smoke, syntax 9 ไฟล์, undefined 47=0, template/rules/diff ผ่าน
+- **รอบ 1084 · Haunted Hotel Phase 1+2 (working tree ยังไม่ commit/deploy):** runtime FSM `ENTER→ACTIVE_WORD→TEMP_BLACKOUT→RESTORE→PERMANENT_DARK→FINAL_CABINET→COMPLETE→RETURN` + canonical `/hauntedHotel/rN/run`
+- เพิ่ม transaction-safe init/expected-state mutation, shared seed+wordSet+cabinet slot, ordinal bitmask, stable completedAt, late join/reconnect snapshot และ listener cleanup; ไม่แก้ `netroom.js`/reward security
+- แก้ `js/hauntedhotelsession.js`, `js/hauntedhotel.js`, `js/adventure3d.js`, `js/hotel3d.js`, `js/ui.js`, `sw.js`, `handoff/RULES.md`; rules ใหม่ยังไม่ publish ตามคำสั่งห้าม deploy
+- ยืนยัน unit init race/double-solve/FSM/late join/reconnect/cleanup ผ่าน, browser smoke console 0, syntax 6 ไฟล์, undefined 46 ไฟล์=0, template/diff และ rules JSON ผ่าน
 - **รอบ 1082 (9 ส.ค. · ตู้เข็มโปรไฟล์ 5×3 แนวตั้ง):** เปลี่ยนเข็มจาก 1 แถวปัดซ้ายขวาเป็น 3 แถว × 5 คอลัมน์ ปัดขึ้นลง พร้อมปุ่มขึ้น/ลงที่ซ่อนตามตำแหน่ง
 - ขยายเข็มระดับสูงสุดที่ฝังท้ายชื่อกลับเป็นทุกระดับ 1..ปัจจุบัน จึงเห็นทุกเข็มที่ตัวเองและเพื่อนเคยได้โดยไม่เพิ่มข้อมูล Firebase; แก้ `js/game.js`, `js/ui.js`, `css/lobby.css`
 - ยืนยัน Browser 1280×720 + 812×375: 5 คอลัมน์/3 แถว, ปัดลงถึงท้าย, ไม่ล้นแนวนอน; unit expansion 36 เข็ม, `node --check` และ diff check ผ่าน
@@ -52,10 +64,8 @@
 - **รอบ 1071 (7 ส.ค. · เสียงโลกผีสิง):** เปลี่ยนเสียงเดินผู้เล่นเรา/ผู้เล่นอื่นเป็น `freesound_community-concrete-footsteps-6752.mp3` แบบลูป Audio แยกต่อตัว เริ่ม-หยุดตามการเดินจริงและลดระดับตามระยะ; ออกจากโรงแรม/เพื่อนออกแล้วปิดลูปครบ
 - ตรวจถอดรหัสไฟล์ concrete + `sound/ghost/` รวม 23 ไฟล์: ทุกไฟล์ใช้ได้ แต่ `u_5hx6qi66bg-strange-whispers-415245.mp3` เบามาก (peak −19.4/RMS −35.1 dBFS) จึงห้ามใช้; กระจาย 17 ไฟล์ที่ผ่านให้ ambient/ไฟดับ/ไฟกะพริบ/ผีโผล่/กระซิบ/ถอนหายใจ/เคาะ/ตู้/เก็บอักษร/รางวัล และกันเสียงยาวซ้อนตัวเอง
 - ยืนยัน runtime harness เดิน-หยุด-local/peer/stopAll, HTTP 18 asset=200+ขนาด>0, `node --check`, diff check, undefined 44 ไฟล์=0, missing assets 251=0 และ template check ผ่าน
-- **รอบ 1070 (7 ส.ค. · ล็อก 4 โลก 3D + สิทธิ์บัญชีทดสอบ):** Lobby เดิมและเมือง 3D ใส่ 🔒/`Coming soon` ให้ผจญภัย·ขับรถ·มอไซค์·หุ่นรบ; บัญชี `sumpajitshami@gmail.com` (สัมปจิตฉามิ) และ `freddommun@gmail.com` (ครูรุต) ผ่านได้ โดยเมืองอ่าน `testerAccess` จากเซฟ Auth
 - สองบัญชีทดสอบได้ยอดขั้นต่ำ 10,000,000 เหรียญทันที (marker วัน+ยอดใหม่ทำให้รับได้แม้วันนี้เคยรับ 500,000) และเปลี่ยนระดับชั้นขึ้น/ลง/ซ้ำได้ทุกชั้นโดยไม่ติด 30 วัน; บัญชีทั่วไปคงกฎเดิม
 - ยืนยัน VM ครบ tester/normal ทั้ง 2 Lobby + ลด ม.6→ป.1→สูงกว่าปริญญาตรี + ยอด 10M; Browser 1280×720 และ 812×375 ไม่ล้น, คลิกขึ้น `🔒 Coming soon`, console 0; syntax 5 ไฟล์/undefined 44 ไฟล์/template/assets/diff ผ่าน
-- **รอบ 1069 (7 ส.ค. · Publish Rules เกมฟอง):** ผู้ใช้เผยแพร่กฎเต็มแล้ว; อ่านสดจาก Firebase CLI ได้ 36 โซนและ SHA-256 ตรงกับ `handoff/RULES.md` ทั้งไฟล์
 - ยืนยัน `.indexOn` มี `bb`, `/leaderboard/$uid/bb` และ `/bbAward` ครบ; กระดาน Top 10/คะแนนเพื่อน/ตัดรอบรางวัลออนไลน์พร้อมใช้งาน ไม่มีไฟล์เกมเปลี่ยน
 - แก้ `js/wordsearch.js` + `css/lobby.css`; มี migration กระดานเขียวที่เซฟจากเวอร์ชันเก่า ยืนยัน render 8 คำ=8 สีที่ 1280×720 และ 812×375 ไม่ล้น/ทุกใบอยู่ในจอ พร้อม `node --check`, undefined 44 ไฟล์=0 และ diff check ผ่าน
 - กล้องผู้เล่นจริง 1280×720 มุมหนักสุด 1,151→353 calls / 67,820→50,194 tris / 57.7→59.6 FPS; 812×375 1,145→351 / 67,598→50,110 / 59.1→60 FPS, ชั้นปกติเหลือ PointLight 2 ดวงและช่วงต่อชั้น 4 ดวง

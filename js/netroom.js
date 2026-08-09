@@ -58,8 +58,8 @@ const CFG = {
 
 /* จำนวนสนามที่เปิดใช้จริง = คุมโดย WORLD_CAP (80/14 → 6 สนาม)
    cap = เพดานคนต่อสนามของ "โลกนั้น" (รอบ 685) — โลกที่จำกัดคนน้อย ต้องเปิดสนามเยอะขึ้น
-   ไม่งั้นโรงแรมผีสิง (2 คน/หลัง) จะรับได้แค่ 6×2=12 คนทั้งเกม แล้วคนที่ 13 ตกไปเล่นเดี่ยวทันที
-   2 คน/หลัง → ceil(80/2)=40 → ตัดที่เพดาน rules 36 หลัง = รับได้ 72 คน */
+   ไม่งั้นโลกที่ตั้งเพดานต่อห้องต่ำจะเปิดจำนวนห้องไม่พอกับ WORLD_CAP
+   เช่น โรงแรม 6 คน/หลัง → ceil(80/6)=14 หลัง รองรับผู้เล่นพร้อมกันตามงบโลก */
 function roomsAllowed(cap){
   const per=Math.max(1, cap || CFG.ROOM_MAX);
   return Math.max(1, Math.min(CFG.ROOMS_MAX, Math.ceil(CFG.WORLD_CAP / per)));
@@ -191,7 +191,7 @@ function create(opt){
   const ROOM_NOUN = opt.roomNoun || 'สนาม';
   const ROOM_ICON = opt.roomIcon || '🏟️';
   const ROOM_FMT  = opt.roomFmt  || function(i){ return ROOM_NOUN+' '+i; };
-  /* 🚦 รอบ 684: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมผีสิงส่ง 2 — ผู้ใช้สั่ง "เข้าได้ทีละ 2 คน")
+  /* 🚦 รอบ 684 + Phase 3: เพดานคนต่อสนามเฉพาะโลกนั้น ๆ (โรงแรมส่งค่ากำหนดของตัวเอง)
      ไม่ใส่ = ใช้ค่ากลาง ROOM_MAX เหมือนเดิมทุกโลก · เกินเพดาน = ระบบพาไปสนามถัดไปให้เอง */
   const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
 

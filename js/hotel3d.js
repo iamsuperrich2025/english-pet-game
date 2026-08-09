@@ -154,6 +154,7 @@ function makeMats(){
     funeralWood:L(0x24120d,'tex_hotel_wood',1,1,0x2f211b),
     funeralWhite:L(0xd7d2c7),
     funeralBlack:L(0x111116),
+    stain : new T.MeshStandardMaterial({color:0x3d4534,roughness:1,metalness:0,transparent:true,opacity:.24,depthWrite:false}),
   };
   /* ไฟ/หน้าต่าง = MeshBasic (ไม่ง้อแสง) + fog:false → ยังเรืองแสงทะลุหมอกกลางคืน
      ทำให้ตอนเดินเข้ามาเห็น "โรงแรมหรูไฟสว่าง" ชัดจากไกล (ข้อ 3) */
@@ -252,7 +253,7 @@ function build(THREE_,opt){
   const H={grp, mats:M, solids:[], rooms:[], spots:[], portraits:[], wardrobes:[], specialWardrobes:[], fixtureLights:[],
            floorVisuals:Array.from({length:FLOORS},()=>[]), visibleFloors:[],
            funeral:null, funeralBulbs:[],
-           lamps:[M.lamp,M.win], lightsOn:true, FLOOR_H, FLOORS, BX, BZ, CZ,
+           lamps:[M.lamp,M.win], lightsOn:true, lightLevel:1, FLOOR_H, FLOORS, BX, BZ, CZ,
            HOTEL_LENGTH_SCALE, WORLD_X_MIN, WORLD_X_MAX, floorY};
 
   /* กล่องกันชน (AABB) — y0..y1 คุมว่าอยู่ชั้นไหน */
@@ -260,8 +261,25 @@ function build(THREE_,opt){
   /* วัตถุแยกชิ้นที่อยู่ชั้นเดียวชัดเจน — ใช้ซ่อนชั้นอื่นซึ่งถูกผนัง/ฝ้าบังอยู่แล้ว
      (WebGL ไม่มี occlusion culling จึงยังส่งห้องหลังผนังเข้า GPU ถ้าไม่ปิด visibility เอง) */
   const floorVisual=(f,o)=>{ if(o&&f>=0&&f<FLOORS){ o.userData.hotelFloor=f; H.floorVisuals[f].push(o); } return o; };
+  // Repeated small props share geometry/material and collapse into one draw call.
+  const staticInstances=(geo,mat,items,parent,floor)=>{
+    const host=parent||grp;
+    if(!items.length)return null;
+    if(!T.InstancedMesh){
+      const fallback=new T.Group();
+      items.forEach(it=>{ const m=new T.Mesh(geo,mat); m.position.set(it.x,it.y,it.z); m.scale.setScalar(it.s||1); fallback.add(m); });
+      if(floor!==undefined)floorVisual(floor,fallback); host.add(fallback); return fallback;
+    }
+    const mesh=new T.InstancedMesh(geo,mat,items.length), matrix=new T.Matrix4();
+    const pos=new T.Vector3(), quat=new T.Quaternion(), scale=new T.Vector3();
+    items.forEach((it,i)=>{
+      pos.set(it.x,it.y,it.z); scale.setScalar(it.s||1); matrix.compose(pos,quat,scale); mesh.setMatrixAt(i,matrix);
+    });
+    mesh.instanceMatrix.needsUpdate=true;
+    if(floor!==undefined)floorVisual(floor,mesh); host.add(mesh); return mesh;
+  };
   /* กำแพง: วางกล่อง + กันชนพร้อมกัน (thick = ความหนา) */
-  const A={ struct:Acc(), room:Acc(), carpet:Acc(), marble:Acc(), wood:Acc(), trim:Acc(), ceil:Acc(),
+  const A={ struct:Acc(), room:Acc(), carpet:Acc(), marble:Acc(), wood:Acc(), trim:Acc(), ceil:Acc(), stain:Acc(),
             tile:Acc(), porc:Acc(), gold:Acc(), cloth:Acc(), sheet:Acc(), metal:Acc(),
             facade:Acc(), stone:Acc(), porch:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc(),
              indicator:Acc(), funeralWood:Acc(), funeralWhite:Acc(), funeralBlack:Acc() };
@@ -670,10 +688,22 @@ function build(THREE_,opt){
       // ไฟจริงเพียง 2 ดวง/ชั้น ไม่มีเงา: สร้าง pool แสง 2800K โดยไม่ทำ shader มือถือหนักเกินไป
       [1,2].forEach((q,qi)=>{
         const lx=CORE_E+(BX-CORE_E)*(q/3), side=(qi%2?1:-1);
-        const light=new T.PointLight(0xffc477,.82,20,2);
+        const base=.72+((f+qi)%3)*.10;
+        const light=new T.PointLight(qi?0xffbf72:0xffd092,base,21,2);
         light.position.set(lx,fy+2.12,side*(CZ-.32)); light.castShadow=false; grp.add(light);
+        light.userData.hotelBaseIntensity=base;
         H.fixtureLights.push(light); floorVisual(f,light);
       });
+      // Sparse moisture marks and one neglected service cart per floor add age without new materials/draw calls.
+      [CORE_E+5.8,BX-8.4].forEach((sx,si)=>{
+        const side=(f+si)%2?1:-1, z=side*(CZ-.018);
+        accBox(A.stain,sx,fy+.46,z,1.15,.72,.022,0);
+        accBox(A.stain,sx+.72,fy+.24,z,.42,.38,.024,0);
+      });
+      const cartX=CORE_E+8.5+f*3.1, cartZ=(f%2?1:-1)*(CZ-.48);
+      accBox(A.metal,cartX,fy+.36,cartZ,1.05,.72,.50,0);
+      accBox(A.wood,cartX,fy+.78,cartZ,1.12,.08,.56,0);
+      accBox(A.cloth,cartX-.32,fy+.92,cartZ,.34,.30,.42,0);
       // รายละเอียดโรงแรมจริงแบบประหยัด geometry: detector, ช่องลม, EXIT และตู้ดับเพลิง
       for(let wing=0;wing<HOTEL_LENGTH_SCALE;wing++){
         const ax=CORE_E+(wing+.5)*BASE_CORRIDOR_LEN;
@@ -749,30 +779,33 @@ function build(THREE_,opt){
     // พวงมาลัยขาว-ดำพาดกรอบ: เม็ดดอกเล็กเรียงเป็นตัวยู ดูสมจริงกว่าทรงทึบชิ้นเดียว
     const whiteMat=new T.MeshPhongMaterial({color:0xe8e3da,shininess:10});
     const blackMat=new T.MeshPhongMaterial({color:0x17171b,shininess:4});
-    const beadGeo=new T.SphereGeometry(.075,8,6);
+    const beadGeo=new T.SphereGeometry(.075,8,6), garlandWhite=[], garlandBlack=[];
     for(let i=0;i<19;i++){
       const t=i/18, x=-.58+t*1.16, y=.68-Math.sin(t*Math.PI)*.62;
-      const b=new T.Mesh(beadGeo,(i%5===0)?blackMat:whiteMat);
-      b.position.set(x,y,.18); pf.add(b);
+      ((i%5===0)?garlandBlack:garlandWhite).push({x,y,z:.18});
     }
+    staticInstances(beadGeo,whiteMat,garlandWhite,pf);
+    staticInstances(beadGeo,blackMat,garlandBlack,pf);
     // พุ่มดอกไม้ขาว-ดำสองข้างหน้าโลง
+    const flowerWhite=[], flowerBlack=[];
     [[BX-3.35,-1.55],[BX-3.35,1.55]].forEach((p,side)=>{
       for(let i=0;i<22;i++){
         const a=i*2.399, rr=.15+.58*Math.sqrt(i/22);
-        const b=new T.Mesh(beadGeo,(i+side)%6===0?blackMat:whiteMat);
-        floorVisual(2,b);
-        b.scale.setScalar(.82+((i*7)%5)*.04);
-        b.position.set(p[0]+Math.cos(a)*rr,fy+.38+(i%4)*.09,p[1]+Math.sin(a)*rr); grp.add(b);
+        const item={x:p[0]+Math.cos(a)*rr,y:fy+.38+(i%4)*.09,z:p[1]+Math.sin(a)*rr,s:.82+((i*7)%5)*.04};
+        ((i+side)%6===0?flowerBlack:flowerWhite).push(item);
       }
     });
+    staticInstances(beadGeo,whiteMat,flowerWhite,grp,2);
+    staticInstances(beadGeo,blackMat,flowerBlack,grp,2);
 
     // หลอดไฟงานศพ: ทำเป็นสามชุด material เพื่อกระพริบสลับจังหวะ แต่ไม่เพิ่ม material ต่อหลอด
     const bulbGeo=new T.SphereGeometry(.055,7,5), bulbMats=[0,1,2].map(()=>new T.MeshBasicMaterial({color:0xffd782,fog:false}));
-    const addBulb=(x,y,z,i)=>{ const b=new T.Mesh(bulbGeo,bulbMats[i%3]); floorVisual(2,b); b.position.set(x,y,z); grp.add(b);
-      H.funeralBulbs.push({m:b,phase:(i%3)*2.1}); };
+    const bulbItems=[[],[],[]];
+    const addBulb=(x,y,z,i)=>bulbItems[i%3].push({x,y,z});
     let bi=0;
     for(let z=-1.55;z<=1.55;z+=.31){ addBulb(BX-3.18,fy+.20,z,bi++); addBulb(BX-.28,fy+.20,z,bi++); }
     for(let y=fy+1.18;y<=fy+2.95;y+=.25){ addBulb(BX-.28,y,-.93,bi++); addBulb(BX-.28,y,.93,bi++); }
+    bulbItems.forEach((items,i)=>H.funeralBulbs.push({m:staticInstances(bulbGeo,bulbMats[i],items,grp,2),phase:i*2.1}));
 
     H.funeral={x:fx,z:fz,y:fy,letterSpot:{x:BX-3.82,z:0,y:fy},portrait:pf};
   }
@@ -821,7 +854,7 @@ function build(THREE_,opt){
       H.wardrobes.push(W); H.specialWardrobes.push(W);
       solid(x-.88,x+.88,z-.48,z+.48,fy,fy+2.65,'questWardrobe');
     }
-    shuffleSpecialWardrobes(H);
+    configureSpecialWardrobes(H,0,1);
   }
   /* ป้ายชื่อโรงแรมเหนือประตูหน้า */
   {
@@ -903,6 +936,7 @@ function build(THREE_,opt){
   accMesh(A.wood,M.wood,grp);
   accMesh(A.trim,M.trim,grp);
   accMesh(A.ceil,M.ceil,grp);
+  accMesh(A.stain,M.stain,grp);
   accMesh(A.tile,M.tile,grp);
   accMesh(A.porc,M.porc,grp);
   accMesh(A.gold,M.gold,grp);
@@ -1005,6 +1039,56 @@ function roomAt(H,x,z,y){
 function floorOf(y){ return Math.max(0,Math.min(FLOORS-1,Math.round(y/FLOOR_H))); }
 
 /* ============================================================
+   🔤🧭 รอบ 1086 — HAUNTED HOTEL PHASE 4 stable letter placement pool
+   Mission code may choose from these immutable semantic slots, but HOTEL3D
+   remains scene-only: it does not decide the active word or mission state.
+   Never use scene traversal order as a seed input. We sort by semantic room
+   and coordinates first, then assign a stable per-zone suffix.
+   ============================================================ */
+const LETTER_PLACEMENT_VERSION=1;
+function letterPlacementPool(H){
+  if(!H)return [];
+  if(H.letterPlacementPool)return H.letterPlacementPool;
+  const roomByKey={};
+  H.rooms.forEach(R=>{roomByKey[R.key]=R;});
+  const source=(H.spots||[]).slice().sort((a,b)=>{
+    const af=floorOf(a.y),bf=floorOf(b.y);
+    return af-bf || String(a.room||'').localeCompare(String(b.room||'')) || a.x-b.x || a.z-b.z;
+  });
+  const zoneCount={};
+  const pool=source.map(raw=>{
+    const floor=floorOf(raw.y),roomKey=String(raw.room||'open'),R=roomByKey[roomKey];
+    let zone='CORRIDOR',label=`ทางเดินชั้น ${floor+1}`,roomNumber=0;
+    if(R){
+      roomNumber=(R.f+1)*100+R.i*2+(R.side==='n'?1:2);
+      zone='ROOM_'+roomNumber; label=`ห้อง ${roomNumber}`;
+    }else if(roomKey==='lobby'){
+      zone='LOBBY'; label='โถงต้อนรับชั้น 1';
+    }else if(roomKey.indexOf('store')===0){
+      zone='STORE'; label=`ห้องเก็บของชั้น ${floor+1}`;
+    }else if(roomKey.indexOf('hall')===0){
+      zone='CORRIDOR'; label=`ทางเดินชั้น ${floor+1}`;
+    }
+    const zoneKey=`F${floor+1}_${zone}`;
+    const ordinal=(zoneCount[zoneKey]=(zoneCount[zoneKey]||0)+1);
+    const id=zoneKey+'_'+String(ordinal).padStart(2,'0');
+    return Object.freeze({id,x:raw.x,y:raw.y,z:raw.z,floor,room:roomKey,zone,label,roomNumber});
+  });
+  H.letterPlacementPool=Object.freeze(pool);
+  return H.letterPlacementPool;
+}
+function validateLetterPlacementPool(H){
+  const pool=letterPlacementPool(H),ids=new Set(),errors=[];
+  pool.forEach(slot=>{
+    if(!slot.id||ids.has(slot.id))errors.push('duplicate:'+slot.id);
+    ids.add(slot.id);
+    if(!Number.isFinite(slot.x)||!Number.isFinite(slot.y)||!Number.isFinite(slot.z))errors.push('position:'+slot.id);
+    if(slot.floor<0||slot.floor>=FLOORS)errors.push('floor:'+slot.id);
+  });
+  return {ok:errors.length===0,count:pool.length,version:LETTER_PLACEMENT_VERSION,errors};
+}
+
+/* ============================================================
    👁️‍🗨️ รอบ 1067 — visibility/light culling ตามชั้น
    วัตถุแบบรวม geometry (ผนัง/พื้น/corridor) คงเดิมทุกชิ้น จึงไม่ลดคุณภาพหรือทำให้รอยต่อหาย
    ซ่อนเฉพาะห้อง ประตู กระจก รูป ของภารกิจ และ PointLight ที่อยู่หลังพื้น/ฝ้าของชั้นอื่น
@@ -1031,23 +1115,44 @@ function updateFloorVisibility(H,cam){
 /* ============================================================
    💡 เปิด/ปิดไฟทั้งโรงแรม (ไฟดับ = มืดสนิท เหลือแค่ไฟฉาย)
    ============================================================ */
-function setLights(H,on){
-  H.lightsOn=!!on;
+function setLightLevel(H,level){
+  const t=Math.max(0,Math.min(1,Number(level)||0));
+  H.lightLevel=t; H.lightsOn=t>.04;
   const M=H.mats;
-  M.lamp.color.setHex(on?0xffe6ae:0x14100a);
-  M.win.color.setHex(on?0xffdf9e:0x0a0a10);
-  M.glass.color.setHex(on?0x121a2c:0x05060c);
-  M.mirror.color.setHex(on?0x2b3038:0x0b0d12);
-  M.indicator.color.setHex(on?0x6fe09b:0x10251a);
-  if(H.fixtureLights) H.fixtureLights.forEach((l,i)=>{ l.intensity=on?(.72+(i%3)*.08):0; });
-  if(H.signMat) H.signMat.color.setHex(on?0xffffff:0x2a2a2a);
+  if(!H._lightPalette){
+    const c=v=>new T.Color(v);
+    H._lightPalette={lamp:[c(0x14100a),c(0xffe6ae)],win:[c(0x0a0a10),c(0xffdf9e)],
+      glass:[c(0x05060c),c(0x121a2c)],mirror:[c(0x0b0d12),c(0x2b3038)],
+      indicator:[c(0x10251a),c(0x6fe09b)],sign:[c(0x2a2a2a),c(0xffffff)]};
+  }
+  const set=(mat,key)=>mat&&mat.color&&mat.color.copy(H._lightPalette[key][0]).lerp(H._lightPalette[key][1],t);
+  set(M.lamp,'lamp'); set(M.win,'win'); set(M.glass,'glass'); set(M.mirror,'mirror'); set(M.indicator,'indicator');
+  if(H.fixtureLights)H.fixtureLights.forEach(l=>{l.intensity=(l.userData.hotelBaseIntensity||.8)*t;});
+  if(H.signMat)set(H.signMat,'sign');
+}
+function setLights(H,on){
+  setLightLevel(H,on?1:0);
+}
+function updatePracticalLights(H,now,cam){
+  if(!H||!H.fixtureLights||!cam||now<(H._lightCullAt||0))return;
+  H._lightCullAt=now+250;
+  H.fixtureLights.forEach(light=>{
+    const floorOn=H.visibleFloors.indexOf(light.userData.hotelFloor)>=0;
+    const near=Math.hypot(cam.x-light.position.x,cam.z-light.position.z)<36;
+    light.visible=floorOn&&near&&(H.lightLevel===undefined||H.lightLevel>.02);
+  });
 }
 
-/* สุ่มของในตู้ภารกิจ 5 ใบใหม่ทุกครั้ง โดยคงจำนวนแต่ละชนิดเป๊ะ */
-function shuffleSpecialWardrobes(H){
+/* Phase 2: จัดของในตู้จาก seed ร่วม โดย cabinetLetterSlot คือเลขตู้ 0..4 ที่มีตัวอักษร
+   การจัดนี้เป็น scene consequence เท่านั้น; run/seed/slot ตัวจริงอยู่ใน HauntedHotelRuntime */
+function configureSpecialWardrobes(H,cabinetLetterSlot,seed){
   if(!H || !H.specialWardrobes) return;
-  const types=['letter','empty','photo','bundleA','bundleB'];
-  for(let i=types.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [types[i],types[j]]=[types[j],types[i]]; }
+  const slot=Math.max(0,Math.min(H.specialWardrobes.length-1,Number(cabinetLetterSlot)||0));
+  const types=['empty','photo','bundleA','bundleB'];
+  let x=(Number(seed)>>>0)||1;
+  const random=()=>{x=(x+0x6d2b79f5)>>>0;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
+  for(let i=types.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[types[i],types[j]]=[types[j],types[i]];}
+  types.splice(slot,0,'letter');
   H.specialWardrobes.forEach((W,i)=>{
     W.content=types[i]; W.open=false; W.done=false; W.t=0; W.letter=null;
     W.hingeL.rotation.y=0; W.hingeR.rotation.y=0;
@@ -1063,10 +1168,11 @@ const BLINK_MIN=2200, BLINK_GAP=4200;   // ช่วงเวลาสุ่ม�
 /* 🔴 รอบ 697: ตอนไฟดับ ตาทุกกรอบทั้งโรงแรมแดงวาบพร้อมกัน (H.eyeMat ใช้ร่วมทั้ง 30 กรอบ ต้นทุนแทบเป็นศูนย์) */
 function tick(H,dt,now,cam){
   updateFloorVisibility(H,cam);
+  updatePracticalLights(H,now,cam);
   /* ภาพชุดใหม่มีดวงตาจริงอยู่ในไฟล์แล้ว จึงไม่ทำตาแดงเรืองทับหน้า (ดูเป็นการ์ตูนและเสียความสมจริง) */
   if(H.funeralBulbs) H.funeralBulbs.forEach((b,i)=>{
     const pulse=.45+.55*Math.max(0,Math.sin(now*.008+b.phase));
-    b.m.visible=H.visibleFloors.indexOf(2)>=0 && pulse>.54; b.m.scale.setScalar(.72+pulse*.42);
+    if(b.m)b.m.visible=H.visibleFloors.indexOf(2)>=0 && pulse>.54;
   });
   /* 🖼️ ลูกตามองตาม — เฉพาะรูปที่อยู่ใกล้และชั้นเดียวกัน (คุมงานต่อเฟรม)
      รูปหันไป local +Z → ระยะเยื้องซ้าย-ขวาของผู้เล่นในแกนรูป = face*(camX - รูปX)
@@ -1162,8 +1268,9 @@ function randomHaunt(H,floorPref){
   return {x:R.cx+(Math.random()*2-1)*2.4, z:R.cz+(Math.random()*2-1)*2.0, y:R.y, room:R};
 }
 
-return { build, surfaceY, collide, setLights, tick, roomAt, nearWardrobe, inLift, atLiftDoor,
-         randomHaunt, insideHotel, floorOf, floorY, nearFuneral, shuffleSpecialWardrobes, updateFloorVisibility,
+return { build, surfaceY, collide, setLights, setLightLevel, tick, roomAt, nearWardrobe, inLift, atLiftDoor,
+         randomHaunt, insideHotel, floorOf, floorY, nearFuneral, configureSpecialWardrobes, updateFloorVisibility,
+         letterPlacementPool, validateLetterPlacementPool, LETTER_PLACEMENT_VERSION,
          FLOOR_H, FLOORS, BX, BZ, CZ, WEST, CORE_E, SHAFT_E, ENTRY_HW, PLAYER_R,
          HOTEL_LENGTH_SCALE, WORLD_X_MIN, WORLD_X_MAX };
 })();

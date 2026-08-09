@@ -145,6 +145,36 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     max-width:min(72vw,620px);border-radius:11px;background:rgba(3,3,5,.68)}
   .adv-haunt #adv-banner small{font-size:.82em;font-weight:560;color:#e8e1d6}
   .adv-ban-coin{color:#ffd54f;font-weight:900}
+  /* 🔤🧭 Haunted Hotel Phase 4 — persistent, non-modal critical hint queue.
+     The panel never times out and its 44px controls remain thumb-friendly. */
+  #adv-hh-hint{position:absolute;z-index:7;left:50%;top:54%;transform:translate(-50%,-50%);
+    display:none;width:min(560px,calc(100vw - 32px));box-sizing:border-box;padding:14px 16px 12px;
+    color:#f7f0e4;background:linear-gradient(180deg,rgba(18,15,20,.97),rgba(4,4,7,.96));
+    border:1px solid rgba(218,187,128,.72);border-radius:16px;box-shadow:0 14px 44px rgba(0,0,0,.72),0 0 22px rgba(122,82,36,.22);
+    pointer-events:auto;text-align:left;max-height:calc(100dvh - 20px);overflow:hidden}
+  .adv-haunt #adv-hh-hint.on{display:block;animation:hhHintIn .24s ease-out}
+  @keyframes hhHintIn{from{opacity:0;transform:translate(-50%,-44%) scale(.96)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+  #adv-hh-hint-title{padding-right:44px;color:#e8c98f;font-size:clamp(13px,2.5vh,17px);font-weight:900;
+    letter-spacing:.08em;text-transform:uppercase;text-shadow:0 1px 5px #000}
+  #adv-hh-hint-text{margin-top:7px;font-size:clamp(12px,2.4vh,15px);font-weight:620;line-height:1.42;color:#fffaf1}
+  #adv-hh-hint-text b{color:#ffe2a6}
+  #adv-hh-hint-x{position:absolute;right:8px;top:7px;width:44px;height:44px;border:0;border-radius:12px;
+    background:rgba(255,255,255,.09);color:#fff;font:900 28px/1 inherit;pointer-events:auto}
+  #adv-hh-hint-ok{display:block;min-width:132px;min-height:44px;margin:10px 0 0 auto;padding:7px 18px;
+    border:1px solid rgba(255,226,166,.75);border-radius:12px;background:linear-gradient(180deg,#6b4a28,#3f2b19);
+    color:#fff7e8;font-family:inherit;font-size:14px;font-weight:900;pointer-events:auto}
+  #adv-hh-history{position:absolute;z-index:6;right:86px;bottom:24px;display:none;align-items:center;justify-content:center;
+    min-width:54px;height:48px;padding:4px 9px;border:1px solid rgba(232,201,143,.7);border-radius:14px;
+    background:rgba(12,10,14,.86);color:#f4d79f;font:900 18px/1 inherit;pointer-events:auto}
+  #adv-hh-history small{display:block;margin-left:4px;font-size:10px}
+  .adv-haunt #adv-hh-history.on{display:flex}
+  @media (max-height:430px){
+    #adv-hh-hint{top:50%;width:min(560px,calc(100vw - 170px));padding:8px 12px 8px}
+    #adv-hh-hint-title{font-size:12px}#adv-hh-hint-text{margin-top:3px;font-size:11.5px;line-height:1.3;padding-right:34px}
+    #adv-hh-hint-ok{min-height:40px;margin-top:6px;padding:4px 14px;font-size:12px}
+    #adv-hh-hint-x{width:40px;height:40px}
+  }
+  @media (max-width:560px) and (min-height:431px){#adv-hh-hint{width:calc(100vw - 20px)}}
   @keyframes advBan{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}12%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}
     20%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
   .adv-ko{font-size:22px;font-weight:800}

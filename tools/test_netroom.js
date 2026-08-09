@@ -31,11 +31,11 @@ function tickAs(p){
 }
 
 /* ผู้เล่นจำลอง 1 คน = NetRoom หนึ่งตัว (uid สลับผ่าน onlineKey ก่อนเรียก join) */
-function makePlayer(uid, map){
+function makePlayer(uid, map, roomMax){
   window.onlineKey=function(){ return uid; };
   const seen={};
   const r=NetRoom.create({
-    map:map||'adv', sendMs:170,
+    map:map||'adv', sendMs:170, roomMax:roomMax||undefined,
     push(){ r.send({n:'เด็ก'+uid.slice(1), x:0, z:0, yaw:0, av:'foot', w:0}, true); },
     onPeer(u,d){ seen[u]=d; },
     onPeerGone(u){ delete seen[u]; },
@@ -69,6 +69,34 @@ function maxRoom(map){
 }
 
 const T={};
+
+/* ── Phase 3) Haunted Hotel 1–6 คน/หลัง; คนที่ 7 ต้องไปหลังถัดไป ── */
+T.hauntedCapacity=async function(){
+  FakeDB.reset(); clearInvites();
+  const vm=NetRoom.CFG.VERIFY_MS; NetRoom.CFG.VERIFY_MS=40;
+  const matrix=[];
+  for(let n=1;n<=6;n++){
+    FakeDB.reset();
+    const group=[];for(let i=0;i<n;i++)group.push(makePlayer('matrix'+n+'_'+i,'haunt',6));
+    await settle(group,3,55);
+    matrix.push(group.every(p=>p.joined&&p.room===0)&&maxRoom('haunt')===n);
+    group.forEach(p=>p.leave());await sleep(15);
+  }
+  ok('🏨 Haunted Hotel — matrix 1–6 คนอยู่หลังเดียวกันได้ครบ',matrix.every(Boolean),matrix.map((v,i)=>(i+1)+':'+(v?'ผ่าน':'พลาด')).join(' · '));
+  FakeDB.reset();
+  const ps=[];
+  for(let i=0;i<7;i++)ps.push(makePlayer('hh'+i,'haunt',6));
+  await settle(ps,6,80);
+  NetRoom.CFG.VERIFY_MS=vm;
+  const counts=roomsOf('haunt'),over=Object.keys(counts).filter(k=>counts[k]>6);
+  ok('🏨 Haunted Hotel — หลังหนึ่งไม่เกิน 6 คนแม้เข้า 7 คนพร้อมกัน',over.length===0&&maxRoom('haunt')===6,
+    JSON.stringify(counts));
+  ok('🏨 Haunted Hotel — คนที่ 7 ถูกพาไปหลังถัดไป',ps[6].joined&&ps[6].room!==ps[0].room,
+    'A–F หลัง '+(ps[0].room+1)+' · G หลัง '+(ps[6].room+1));
+  ok('🏨 Haunted Hotel — ผู้เล่นเดิม 6 คนไม่ถูกเตะ',ps.slice(0,6).every(p=>p.joined&&p.room===ps[0].room),
+    ps.slice(0,6).map(p=>p.room+1).join(','));
+  ps.forEach(p=>p.leave()); await sleep(30);
+};
 
 /* ── 1) 500 คนเข้าพร้อมกัน: กระจายลงสนามถูก + ไม่มีสนามไหนเกินเพดาน ── */
 T.scale500=async function(){
@@ -448,7 +476,7 @@ window.NRTest={
     log.length=0;
     if(!window.FakeDB) { console.error('ต้องโหลด tools/fakedb.js ก่อน'); return; }
     await FakeDB.install();
-    const names=['payload','scale500','worldCap','churn','ghost','friends','meetUp','followLobby','legacyFallback','legacyBridge'];
+    const names=['payload','hauntedCapacity','scale500','worldCap','churn','ghost','friends','meetUp','followLobby','legacyFallback','legacyBridge'];
     for(const n of names){
       console.log('\n── '+n+' ──');
       try{ await T[n](); }catch(e){ ok(n+' (ทำงานจนจบ)', false, e && e.message || e); }

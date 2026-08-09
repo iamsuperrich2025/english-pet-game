@@ -6550,6 +6550,9 @@ async function loadAdv3d(){
   await loadScriptOnce('js/adv3d_intro.js');   // ❓ เฟส 2 รอบ 545: data การ์ดวิธีเล่น
   await loadScriptOnce('js/adv3d_tex.js');     // 🖼️ เฟส 3 รอบ 546: texture ตัวอักษร/emoji/ป้าย (window.Adv3dTex)
   await loadScriptOnce('js/hotel3d.js');       // 🏨 รอบ 684: ตัวตึกโรงแรมผีสิง 5 ชั้น (window.HOTEL3D)
+  await loadScriptOnce('js/hauntedhotelsession.js'); // 🏨 Phase 2: canonical low-frequency Firebase run adapter
+  await loadScriptOnce('js/hauntedhoteldirector.js'); // 🏨 Phase 3: adaptive local horror + compact shared scare intent
+  await loadScriptOnce('js/hauntedhotel.js');  // 🏨 Phase 2+3: mission lifecycle + Horror Director boundary
   await loadScriptOnce('js/adventure3d.js');
 }
 /* ============================================================
