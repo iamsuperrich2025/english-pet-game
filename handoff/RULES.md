@@ -1,5 +1,7 @@
 # RULES.md — Firebase Security Rules
 
+> ⏳ **รอบ 1089 — รอ Publish:** Haunted Hotel เพิ่ม canonical `roomVisits` (ห้องไม่ซ้ำ สูงสุด 32 ห้อง) สำหรับจังหวะไฟ 5/10/13 ห้อง; ต้อง Publish กฎเต็มทั้งก้อนจาก artifact ปุ่ม Copy หลัง deploy รอบนี้
+
 > อ่านไฟล์นี้เมื่อ: แตะ Firebase / เพิ่มโซนใหม่ / ต้องส่ง rules ให้ผู้ใช้ publish
 > **⚠️ กติกาผู้ใช้: ส่ง rules ให้ผู้ใช้ต้องส่ง "เต็มทั้งหน้า" เสมอ ห้ามส่งเฉพาะโซน** (คัดลอกทั้งก้อนไปวางทับใน Firebase console → Realtime Database → Rules → Publish)
 > **📋 กฎถาวรเรื่องการคัดลอก (10 ส.ค. 2026):** ทุกครั้งที่ต้องให้ผู้ใช้อัปเดต Rules ต้องรัน `python tools/gen_rules_artifact.py <output.html> --round N --zone <zone>` และส่งหน้า HTML ที่มีปุ่ม **คัดลอกทั้งก้อน** เป็นทางหลัก ห้ามให้ลากเลือกจาก `.txt`/คัดลอก JSON ยาวด้วยมือ; ก่อนส่งต้องให้ `json.loads` ผ่านและยืนยันว่า payload ของปุ่ม Copy ตรงกับก้อนเต็มในไฟล์นี้ทุกตัวอักษร (แนบ `.json` เป็นสำรองได้) เพื่อป้องกัน comma/บรรทัดตกหล่น
@@ -293,14 +295,15 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         ".write": "auth != null",
         ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
         "run": {
-          ".validate": "newData.hasChildren(['runId','seed','placementVersion','phase','wordIndex','ordinalMask','cabinetLetterSlot','completedAt','revision','wordSet','startedAt','updatedAt'])",
+          ".validate": "newData.hasChildren(['runId','seed','placementVersion','phase','wordIndex','ordinalMask','cabinetLetterSlot','roomVisits','completedAt','revision','wordSet','startedAt','updatedAt'])",
           "runId": { ".validate": "newData.isString() && newData.val().length >= 8 && newData.val().length <= 64" },
           "seed": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 4294967295" },
           "placementVersion": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 16" },
-          "phase": { ".validate": "newData.isString() && (newData.val() === 'ENTER' || newData.val() === 'ACTIVE_WORD' || newData.val() === 'TEMP_BLACKOUT' || newData.val() === 'RESTORE' || newData.val() === 'PERMANENT_DARK' || newData.val() === 'FINAL_CABINET' || newData.val() === 'COMPLETE' || newData.val() === 'RETURN')" },
+          "phase": { ".validate": "newData.isString() && (newData.val() === 'ENTER' || newData.val() === 'ACTIVE_WORD' || newData.val() === 'TEMP_BLACKOUT' || newData.val() === 'RESTORE' || newData.val() === 'PERMANENT_DARK' || newData.val() === 'COMPLETE' || newData.val() === 'RETURN')" },
           "wordIndex": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
           "ordinalMask": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 511" },
           "cabinetLetterSlot": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 4" },
+          "roomVisits": { ".validate": "newData.isString() && newData.val().length <= 511 && (newData.val() === '' || newData.val().matches(/^F[1-5]_ROOM_[0-9]{3}(,F[1-5]_ROOM_[0-9]{3}){0,31}$/))" },
           "completedAt": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "revision": { ".validate": "newData.isNumber() && newData.val() >= 0" },
           "wordSet": { ".validate": "newData.isString() && newData.val().length >= 20 && newData.val().length <= 400" },

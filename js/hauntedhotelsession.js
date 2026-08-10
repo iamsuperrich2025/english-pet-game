@@ -86,6 +86,7 @@
     }
     function shouldReplace(run){
       if(!isRun(run) || typeof opt.isSoleOccupant!=='function' || !opt.isSoleOccupant()) return false;
+      if(typeof run.roomVisits!=='string') return true;
       if(run.phase==='RETURN') return true;
       const touched=Number(run.updatedAt)||Number(run.startedAt)||0;
       return touched>0 && Date.now()-touched>ABANDONED_MS;

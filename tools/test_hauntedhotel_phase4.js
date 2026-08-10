@@ -1,11 +1,11 @@
-/* Haunted Hotel Phase 4 deterministic placement + persistent hint regression. */
+/* Haunted Hotel Phase 4 deterministic placement + non-modal search assistance regression. */
 'use strict';
 const fs=require('fs');
 const vm=require('vm');
 const assert=require('assert');
 
 let clockNow=1000;
-const shown=[],hidden=[],proximity=[];
+const shown=[],hidden=[],proximity=[],searchEvents=[];
 let objective={key:'run:0:0',wordIndex:0,ordinal:0,x:0,y:0,z:0,floor:0,floorLabel:'ชั้น 1',zoneLabel:'ห้อง 101'};
 let player={id:'u1',x:80,y:0,z:80};
 let sessionState=null;
@@ -72,7 +72,8 @@ HH.init({
   floorOf:y=>Math.round(y/4),database:()=>null,userId:()=>player.id,sessionId:()=>'',isSoleOccupant:()=>true,
   createWordSet:()=>[['shadow','เงา'],['coffin','โลง'],['whisper','กระซิบ'],['ghost','ผี']].map(w=>({en:w[0],th:w[1]})),
   applyCanonicalState(){},currentSearchObjective:()=>objective,searchContext:()=>({player,players:[player]}),
-  showCriticalHint:item=>shown.push(item),hideCriticalHint:item=>hidden.push(item),applyObjectiveProximity:d=>proximity.push(d)
+  showCriticalHint:item=>shown.push(item),hideCriticalHint:item=>hidden.push(item),applyObjectiveProximity:d=>proximity.push(d),
+  onSearchEvent:(kind,detail)=>searchEvents.push({kind,detail})
 });
 HH.enter({footY:0});
 
@@ -91,18 +92,19 @@ assert.strictEqual(acknowledged,0,'important hint acknowledged itself without a 
 HH.dismissHint();
 assert.strictEqual(acknowledged,1,'explicit dismissal did not acknowledge the important hint');
 
+const shownBeforeSearch=shown.length;
 clockNow+=600; HH._setSearchElapsed(50000); HH.update(.5,clockNow,0);
 snap=HH.snapshot();
 assert.strictEqual(snap.search.hintLevel,1,'stuck timer did not escalate to level 1');
-assert.strictEqual(snap.search.currentHint,'search-run:0:0-1','progressive hint did not use objective identity');
-assert.ok(shown.at(-1).html.indexOf('กระซิบ')>=0,'level 1 should remain atmospheric');
-HH.dismissHint();
+assert.strictEqual(snap.search.currentHint,'','search timer should not open a blocking hint panel');
+assert.strictEqual(shown.length,shownBeforeSearch,'search timer displayed a removed hint panel');
+assert.ok(searchEvents.some(e=>e.kind==='stuck'&&e.detail.level===1),'level 1 stuck event was not emitted');
 
 clockNow+=600; HH._setSearchElapsed(200000); HH.update(.5,clockNow,0);
 snap=HH.snapshot();
 assert.strictEqual(snap.search.hintLevel,4,'stuck timer did not reach strong assistance');
-assert.ok(shown.at(-1).html.indexOf('ห้อง 101')>=0,'high-level hint should identify the real canonical zone');
-HH.dismissHint();
+assert.strictEqual(shown.length,shownBeforeSearch,'high-level search assistance displayed a removed hint panel');
+assert.ok(searchEvents.some(e=>e.kind==='stuck'&&e.detail.level===4),'level 4 stuck event was not emitted');
 
 player={id:'u1',x:2,y:0,z:2}; clockNow+=600; HH.update(.5,clockNow,0);
 assert.ok(proximity.at(-1).strength>=.82,'level 4 did not strengthen local discoverability');
@@ -114,4 +116,4 @@ assert.strictEqual(snap.search.hintLevel,0,'objective progress did not reset hin
 assert.strictEqual(snap.search.queuedHints.length,0,'obsolete objective hints survived progression');
 
 HH.exit();
-console.log('PASS Haunted Hotel Phase 4: deterministic spread, bounded persistent hints, escalation, proximity, reset');
+console.log('PASS Haunted Hotel Phase 4: deterministic spread, bounded manual hints, non-modal escalation, proximity, reset');

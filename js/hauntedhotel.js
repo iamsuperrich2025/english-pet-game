@@ -8,7 +8,7 @@
 
   const PHASE=Object.freeze({
     ENTER:'ENTER', ACTIVE_WORD:'ACTIVE_WORD', TEMP_BLACKOUT:'TEMP_BLACKOUT', RESTORE:'RESTORE',
-    PERMANENT_DARK:'PERMANENT_DARK', FINAL_CABINET:'FINAL_CABINET', COMPLETE:'COMPLETE', RETURN:'RETURN'
+    PERMANENT_DARK:'PERMANENT_DARK', COMPLETE:'COMPLETE', RETURN:'RETURN'
   });
   const PHASES=Object.freeze(Object.keys(PHASE).map(function(key){return PHASE[key];}));
   const LEGAL=Object.freeze({
@@ -16,8 +16,7 @@
     ACTIVE_WORD:[PHASE.TEMP_BLACKOUT],
     TEMP_BLACKOUT:[PHASE.RESTORE],
     RESTORE:[PHASE.PERMANENT_DARK],
-    PERMANENT_DARK:[PHASE.FINAL_CABINET],
-    FINAL_CABINET:[PHASE.COMPLETE],
+    PERMANENT_DARK:[],
     COMPLETE:[PHASE.RETURN],
     RETURN:[]
   });
@@ -30,6 +29,7 @@
   const HOTEL_WORDS=4;
   const MAX_PLAYERS=6; // Phase 3: the single Haunted Hotel-specific instance capacity
   const PLACEMENT_VERSION=1;
+  const ROOM_THRESHOLDS=Object.freeze({FIRST_DARK:5,RESTORE:10,SECOND_DARK:13});
   const SEARCH=Object.freeze({
     CHECK_MS:500, MEDIUM_R:30, NEAR_R:13, VERY_NEAR_R:5.2,
     HINT_AT:Object.freeze([0,45000,85000,135000,190000]), QUEUE_MAX:4
@@ -220,6 +220,30 @@
     });
     return placements;
   }
+  function parseRoomVisits(value){
+    if(typeof value!=='string'||!value)return [];
+    return Array.from(new Set(value.split(',').filter(function(id){return /^F[1-5]_ROOM_[0-9]{3}$/.test(id);}))).slice(0,32).sort();
+  }
+  function roomVisitCount(state){return parseRoomVisits(state&&state.roomVisits).length;}
+  /* One collectible in every guest room from floor 2 upward. Each room is a
+     stable semantic slot, while repeated copies map to the same canonical
+     ordinal so multiplayer still awards/solves every letter exactly once. */
+  function deriveRoomLetters(pool,state){
+    const view=publicState(state),word=view&&view.words[view.wordIndex];
+    if(!view||!word)return [];
+    const byRoom={};
+    (pool||[]).forEach(function(slot){
+      if(!slot||Number(slot.floor)<1||!/^F[2-5]_ROOM_[0-9]{3}_[0-9]{2}$/.test(String(slot.id||'')))return;
+      (byRoom[slot.room]||(byRoom[slot.room]=[])).push(slot);
+    });
+    const seed=hash32((Number(view.seed)||1)^hashString(view.runId)^hash32((view.wordIndex+1)*0x524f4f4d));
+    const rooms=seededShuffle(Object.keys(byRoom).sort(),seed);
+    return rooms.map(function(room,index){
+      const slots=byRoom[room].slice().sort(function(a,b){return String(a.id).localeCompare(String(b.id));});
+      const pick=slots[hash32(seed^hashString(room))%slots.length],ordinal=index%word.en.length;
+      return Object.assign({},pick,{ordinal:ordinal,ch:word.en.charAt(ordinal)});
+    });
+  }
   function randomSeed(){
     try{const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]||1;}catch(e){return hash32(Date.now()^Math.floor(Math.random()*0xffffffff))||1;}
   }
@@ -242,6 +266,7 @@
     return {
       runId:makeRunId(), seed:seed, phase:PHASE.ENTER, wordIndex:0, ordinalMask:0,
       placementVersion:PLACEMENT_VERSION,
+      roomVisits:'',
       cabinetLetterSlot:Math.floor(seededRandom(hash32(seed^0x484f5445))()*5),
       completedAt:0, revision:0, wordSet:JSON.stringify((words||[]).slice(0,HOTEL_WORDS).map(function(w){return [w.en,w.th||''];}))
     };
@@ -257,6 +282,7 @@
     if(!validCanonical(value))return null;
     const out=Object.assign({},value);
     out.placementVersion=Number(value.placementVersion)||PLACEMENT_VERSION;
+    out.roomVisits=parseRoomVisits(value.roomVisits).join(',');
     out.words=parseWords(value.wordSet);
     return out;
   }
@@ -268,6 +294,7 @@
   function bitCount(value){let n=Number(value)||0,c=0;while(n>0){c+=n%2;n=Math.floor(n/2);}return c;}
   function stamp(next){
     if(!next.placementVersion)next.placementVersion=PLACEMENT_VERSION;
+    next.roomVisits=parseRoomVisits(next.roomVisits).join(',');
     next.updatedAt=Date.now();next.revision=(Number(next.revision)||0)+1;return next;
   }
 
@@ -339,14 +366,6 @@
     searchCheckAt=0; proximityBand='far'; clearObjectiveHints(key);
     if(adapter&&adapter.onSearchObjectiveChanged)adapter.onSearchObjectiveChanged(objective,previous||null);
   }
-  function hintForLevel(level,objective){
-    const floorLabel=objective.floorLabel||('ชั้น '+(Number(objective.floor)+1));
-    const zoneLabel=objective.zoneLabel||objective.label||floorLabel;
-    if(level===1)return 'มีบางอย่างกำลังกระซิบอยู่ในความมืด… ลองฟังและสำรวจต่ออีกนิด';
-    if(level===2)return 'เสียงกระซิบชัดขึ้นจาก <b>'+floorLabel+'</b> — ตัวอักษรที่ตามหาอยู่บนชั้นนั้น';
-    if(level===3)return 'ความเย็นผิดปกติมาจาก <b>'+zoneLabel+'</b> ลองค้นรอบเฟอร์นิเจอร์และมุมห้องให้ดี';
-    return 'เสียงอยู่ใกล้มากแล้ว — เดินตามเสียงและแสงวูบเบา ๆ รอบตัวอักษรใน <b>'+zoneLabel+'</b>';
-  }
   function searchDistance(context,objective){
     const player=context&&context.player;
     if(!player||!objective)return Infinity;
@@ -374,8 +393,6 @@
     for(let level=1;level<SEARCH.HINT_AT.length;level++)if(elapsed>=SEARCH.HINT_AT[level])wanted=level;
     if(wanted>searchHintLevel){
       searchHintLevel=wanted;
-      importantHint({id:'search-'+searchKey+'-'+wanted,title:'คำใบ้ภารกิจ',html:hintForLevel(wanted,searchObjective),
-        scope:'objective',objectiveKey:searchKey,level:wanted});
       emitSearchEvent('stuck',{objective:searchObjective,level:wanted,elapsed:elapsed});
     }
   }
@@ -435,9 +452,15 @@
     const before=expected();
     const wi=canonical.wordIndex;
     return mutate(before,function(next){
-      next.wordIndex=wi+1;
-      next.ordinalMask=0;
-      if(wi===2)next.phase=PHASE.FINAL_CABINET;
+      if(wi>=HOTEL_WORDS-1){
+        next.wordIndex=HOTEL_WORDS;
+        next.ordinalMask=0;
+        next.phase=PHASE.COMPLETE;
+        if(!next.completedAt)next.completedAt=typeof firebase!=='undefined'&&firebase.database?firebase.database.ServerValue.TIMESTAMP:Date.now();
+      }else{
+        next.wordIndex=wi+1;
+        next.ordinalMask=0;
+      }
       return next;
     },'advance word '+wi);
   }
@@ -448,16 +471,12 @@
   function driveStateMachine(){
     if(!canonical||!active)return;
     const maskFull=canonical.ordinalMask===fullMask(canonical) && fullMask(canonical)>0;
+    const visits=roomVisitCount(canonical);
     if(canonical.phase===PHASE.ENTER){transitionTo(PHASE.ACTIVE_WORD,'run ready');return;}
-    if(canonical.wordIndex===0){
-      if(canonical.phase===PHASE.ACTIVE_WORD&&bitCount(canonical.ordinalMask)>=3){transitionTo(PHASE.TEMP_BLACKOUT,'first three letters');return;}
-      if(canonical.phase===PHASE.RESTORE&&maskFull){transitionTo(PHASE.PERMANENT_DARK,'funeral letter collected');return;}
-      if(canonical.phase===PHASE.PERMANENT_DARK&&maskFull){advanceWord();return;}
-    }
-    if(canonical.phase===PHASE.PERMANENT_DARK&&maskFull&&canonical.wordIndex<3){advanceWord();return;}
-    if(canonical.phase===PHASE.FINAL_CABINET&&maskFull&&canonical.wordIndex===3){
-      transitionTo(PHASE.COMPLETE,'final cabinet solved',function(next){if(!next.completedAt)next.completedAt=typeof firebase!=='undefined'&&firebase.database?firebase.database.ServerValue.TIMESTAMP:Date.now();});
-    }
+    if(canonical.phase===PHASE.ACTIVE_WORD&&visits>=ROOM_THRESHOLDS.FIRST_DARK){transitionTo(PHASE.TEMP_BLACKOUT,'five unique rooms visited');return;}
+    if(canonical.phase===PHASE.TEMP_BLACKOUT&&visits>=ROOM_THRESHOLDS.RESTORE){transitionTo(PHASE.RESTORE,'ten unique rooms visited');return;}
+    if(canonical.phase===PHASE.RESTORE&&visits>=ROOM_THRESHOLDS.SECOND_DARK){transitionTo(PHASE.PERMANENT_DARK,'thirteen unique rooms visited');return;}
+    if(maskFull&&canonical.wordIndex<HOTEL_WORDS)advanceWord();
   }
 
   function onSessionState(previous,next,meta){applyState(previous,next,meta||{});}
@@ -547,9 +566,18 @@
       return next;
     },'claim ordinal '+ordinal).then(function(result){pendingClaims.delete(key);return !!(result&&result.committed);},function(){pendingClaims.delete(key);return false;});
   }
-  function requestRestore(reason){
-    if(!canonical||canonical.phase!==PHASE.TEMP_BLACKOUT)return Promise.resolve(false);
-    return transitionTo(PHASE.RESTORE,reason||'returned to floor 3').then(function(result){return !!(result&&result.committed);});
+  function visitRoom(roomId){
+    const id=String(roomId||'');
+    if(!canonical||!/^F[1-5]_ROOM_[0-9]{3}$/.test(id))return Promise.resolve(false);
+    const visits=parseRoomVisits(canonical.roomVisits);
+    if(visits.indexOf(id)>=0)return Promise.resolve(false);
+    const before=expected();
+    return mutate(before,function(next){
+      const nextVisits=parseRoomVisits(next.roomVisits);
+      if(nextVisits.indexOf(id)>=0)return;
+      nextVisits.push(id); next.roomVisits=nextVisits.sort().join(',');
+      return next;
+    },'visit room '+id).then(function(result){return !!(result&&result.committed);});
   }
   function returnToLobby(){
     if(!canonical||canonical.phase!==PHASE.COMPLETE)return Promise.resolve(false);
@@ -576,11 +604,12 @@
 
   const api={
     PHASE:PHASE,PHASES:PHASES,LEGAL:LEGAL,LIGHTING:LIGHTING,FLOOR:FLOOR,HOTEL_WORDS:HOTEL_WORDS,MAX_PLAYERS:MAX_PLAYERS,
-    PLACEMENT_VERSION:PLACEMENT_VERSION,SEARCH:SEARCH,
+    PLACEMENT_VERSION:PLACEMENT_VERSION,SEARCH:SEARCH,ROOM_THRESHOLDS:ROOM_THRESHOLDS,
     init:init,enter:enter,update:update,exit:exit,dispose:dispose,reconcileSession:reconcileSession,
     floorIndex:floorIndex,setLighting:setLighting,startFlicker:startFlicker,cancelFlicker:cancelFlicker,
-    claimOrdinal:claimOrdinal,requestRestore:requestRestore,returnToLobby:returnToLobby,
-    seededRandom:seededRandom,seededShuffle:seededShuffle,hash32:hash32,hashString:hashString,parseWords:parseWords,derivePlacements:derivePlacements,
+    claimOrdinal:claimOrdinal,visitRoom:visitRoom,returnToLobby:returnToLobby,
+    seededRandom:seededRandom,seededShuffle:seededShuffle,hash32:hash32,hashString:hashString,parseWords:parseWords,
+    parseRoomVisits:parseRoomVisits,roomVisitCount:roomVisitCount,derivePlacements:derivePlacements,deriveRoomLetters:deriveRoomLetters,
     importantHint:importantHint,dismissHint:dismissHint,reopenHint:reopenHint,clearScopedHints:clearScopedHints,
     later:later,every:every,cancelTimer:cancelTimer,listen:listen,trackAudio:trackAudio,trackObject:trackObject,snapshot:snapshot,
     _validCanonical:validCanonical,_fullMask:fullMask,_bitCount:bitCount,_transitionTo:transitionTo,

@@ -6553,6 +6553,7 @@ async function loadAdv3d(){
   await loadScriptOnce('js/hauntedhotelsession.js'); // 🏨 Phase 2: canonical low-frequency Firebase run adapter
   await loadScriptOnce('js/hauntedhoteldirector.js'); // 🏨 Phase 3: adaptive local horror + compact shared scare intent
   await loadScriptOnce('js/hauntedhotel.js');  // 🏨 Phase 2+3: mission lifecycle + Horror Director boundary
+  await loadScriptOnce('js/hauntedhotelghost.js'); // 👻 PNG-only chase + lightweight hair/lighting shader
   await loadScriptOnce('js/adventure3d.js');
 }
 /* ============================================================

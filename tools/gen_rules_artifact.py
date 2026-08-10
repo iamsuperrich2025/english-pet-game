@@ -70,7 +70,10 @@ def main():
                               encoding='utf-8')
     print(('wrote %s (%s)' % (a.out, head)).encode('ascii', 'replace').decode())   # console Windows เป็น cp1252
 
-TPL = """<title>Firebase Rules — ก้อนเต็ม (Vocab World)</title>
+TPL = """<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Firebase Rules — ก้อนเต็ม (Vocab World)</title>
 <style>
  :root{{--bg:#0e1626;--panel:#16233a;--code:#101d31;--line:#27405f;--ink:#e7f1ff;--dim:#8fb4dd;
         --btn:#2f7ee0;--ok:#7ee08a;--hot:#f7d774;--hotink:#20303f;}}

@@ -100,6 +100,38 @@ function accMesh(A,mat,parent){
   return m;
 }
 
+/* คราบงานศพวาดครั้งเดียวบน CanvasTexture: ไม่มี asset เพิ่ม/ไม่มีงานสร้าง texture รายเฟรม */
+function funeralDecayTexture(kind){
+  const cv=document.createElement('canvas'); cv.width=cv.height=256;
+  const c=cv.getContext('2d'); c.clearRect(0,0,256,256);
+  if(kind==='contact'){
+    const g=c.createRadialGradient(128,128,18,128,128,126);
+    g.addColorStop(0,'rgba(0,0,0,.92)'); g.addColorStop(.58,'rgba(0,0,0,.56)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=g; c.fillRect(0,0,256,256);
+    const t=new T.CanvasTexture(cv); t.needsUpdate=true; return t;
+  }
+  let seed=kind==='floor'?0x51f15e:0x0ddba11;
+  const rnd=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+  const count=kind==='floor'?18:26;
+  for(let i=0;i<count;i++){
+    const x=rnd()*256,y=rnd()*256,rx=10+rnd()*42,ry=5+rnd()*(kind==='floor'?24:48);
+    const g=c.createRadialGradient(x,y,0,x,y,Math.max(rx,ry));
+    const alpha=(.035+rnd()*.10).toFixed(3);
+    g.addColorStop(0,kind==='floor'?`rgba(20,12,8,${alpha})`:`rgba(24,29,19,${alpha})`);
+    g.addColorStop(.58,kind==='floor'?'rgba(34,18,12,.045)':'rgba(38,31,22,.055)');
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    c.save(); c.translate(x,y); c.scale(1,ry/rx); c.translate(-x,-y);
+    c.fillStyle=g; c.fillRect(x-rx,y-rx,rx*2,rx*2); c.restore();
+  }
+  if(kind==='wall'){
+    c.strokeStyle='rgba(20,16,12,.18)'; c.lineWidth=2;
+    c.beginPath(); c.moveTo(35,5); c.lineTo(42,51); c.lineTo(37,92); c.lineTo(55,138); c.stroke();
+    c.strokeStyle='rgba(187,168,133,.10)'; c.lineWidth=5;
+    c.beginPath(); c.moveTo(222,21); c.lineTo(209,63); c.lineTo(218,102); c.stroke();
+  }
+  const t=new T.CanvasTexture(cv); t.needsUpdate=true; t.wrapS=t.wrapT=T.ClampToEdgeWrapping; return t;
+}
+
 /* ============================================================
    🎨 วัสดุ (ไม่มีไฟล์ภาพใน img/tex/ = ใช้สีล้วนที่ตั้งไว้ เกมไม่พัง)
    prompt ภาพทั้งชุดอยู่ใน handoff/PROMPTS_HOTEL.md
@@ -151,11 +183,23 @@ function makeMats(){
        จะได้กลืนกับพื้นรอบ ๆ เหมือนทางเดินปูจริง ไม่ใช่แผ่นสีทับ */
     porch : L(0x585349,'tex_concrete',1,1,0x565b62),
     leaf  : L(0x2c4a2e),
-    funeralWood:L(0x24120d,'tex_hotel_wood',1,1,0x2f211b),
-    funeralWhite:L(0xd7d2c7),
-    funeralBlack:L(0x111116),
+    funeralWood:L(0x351912,'tex_hotel_wood',1,1,0x4a2b22,.74,0,'wood'),
+    funeralEdge:L(0x54271a,'tex_hotel_wood',1,1,0x5b3528,.68,0,'wood'),
+    funeralIvory:L(0x70695a,null,1,1,null,.98),
+    funeralBlack:L(0x171316,null,1,1,null,.99),
+    funeralBrass:L(0x66502a,null,1,1,null,.76,.58),
+    funeralWax:L(0x91846b,null,1,1,null,.94),
+    funeralPetal:L(0x5f5849,null,1,1,null,.99),
+    funeralLeaf:L(0x302d20,null,1,1,null,1),
+    funeralCloth:L(0x21191a,null,1,1,null,1),
     stain : new T.MeshStandardMaterial({color:0x3d4534,roughness:1,metalness:0,transparent:true,opacity:.24,depthWrite:false}),
   };
+  M.funeralWallDecay=new T.MeshStandardMaterial({map:funeralDecayTexture('wall'),color:0x6b6250,
+    roughness:1,transparent:true,opacity:.88,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+  M.funeralFloorDecay=new T.MeshStandardMaterial({map:funeralDecayTexture('floor'),color:0x3a251f,
+    roughness:1,transparent:true,opacity:.95,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});
+  M.funeralContact=new T.MeshBasicMaterial({map:funeralDecayTexture('contact'),color:0x120d0b,
+    transparent:true,opacity:.68,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-3});
   /* ไฟ/หน้าต่าง = MeshBasic (ไม่ง้อแสง) + fog:false → ยังเรืองแสงทะลุหมอกกลางคืน
      ทำให้ตอนเดินเข้ามาเห็น "โรงแรมหรูไฟสว่าง" ชัดจากไกล (ข้อ 3) */
   M.lamp   =new T.MeshBasicMaterial({color:0xffe6ae,fog:false});   // ไฟในตึก (ดับตอนไฟดับ)
@@ -252,7 +296,7 @@ function build(THREE_,opt){
   const grp=new T.Group();
   const H={grp, mats:M, solids:[], rooms:[], spots:[], portraits:[], wardrobes:[], specialWardrobes:[], fixtureLights:[],
            floorVisuals:Array.from({length:FLOORS},()=>[]), visibleFloors:[],
-           funeral:null, funeralBulbs:[],
+           funeral:null, funeralFX:null,
            lamps:[M.lamp,M.win], lightsOn:true, lightLevel:1, FLOOR_H, FLOORS, BX, BZ, CZ,
            HOTEL_LENGTH_SCALE, WORLD_X_MIN, WORLD_X_MAX, floorY};
 
@@ -267,13 +311,15 @@ function build(THREE_,opt){
     if(!items.length)return null;
     if(!T.InstancedMesh){
       const fallback=new T.Group();
-      items.forEach(it=>{ const m=new T.Mesh(geo,mat); m.position.set(it.x,it.y,it.z); m.scale.setScalar(it.s||1); fallback.add(m); });
+      items.forEach(it=>{ const m=new T.Mesh(geo,mat); m.position.set(it.x,it.y,it.z);
+        m.rotation.set(it.rx||0,it.ry||0,it.rz||0); m.scale.set(it.sx||it.s||1,it.sy||it.s||1,it.sz||it.s||1); fallback.add(m); });
       if(floor!==undefined)floorVisual(floor,fallback); host.add(fallback); return fallback;
     }
     const mesh=new T.InstancedMesh(geo,mat,items.length), matrix=new T.Matrix4();
-    const pos=new T.Vector3(), quat=new T.Quaternion(), scale=new T.Vector3();
+    const pos=new T.Vector3(), quat=new T.Quaternion(), scale=new T.Vector3(), euler=new T.Euler();
     items.forEach((it,i)=>{
-      pos.set(it.x,it.y,it.z); scale.setScalar(it.s||1); matrix.compose(pos,quat,scale); mesh.setMatrixAt(i,matrix);
+      pos.set(it.x,it.y,it.z); euler.set(it.rx||0,it.ry||0,it.rz||0); quat.setFromEuler(euler);
+      scale.set(it.sx||it.s||1,it.sy||it.s||1,it.sz||it.s||1); matrix.compose(pos,quat,scale); mesh.setMatrixAt(i,matrix);
     });
     mesh.instanceMatrix.needsUpdate=true;
     if(floor!==undefined)floorVisual(floor,mesh); host.add(mesh); return mesh;
@@ -282,7 +328,7 @@ function build(THREE_,opt){
   const A={ struct:Acc(), room:Acc(), carpet:Acc(), marble:Acc(), wood:Acc(), trim:Acc(), ceil:Acc(), stain:Acc(),
             tile:Acc(), porc:Acc(), gold:Acc(), cloth:Acc(), sheet:Acc(), metal:Acc(),
             facade:Acc(), stone:Acc(), porch:Acc(), leaf:Acc(), glass:Acc(), win:Acc(), lamp:Acc(),
-             indicator:Acc(), funeralWood:Acc(), funeralWhite:Acc(), funeralBlack:Acc() };
+             indicator:Acc(), funeralWood:Acc(), funeralEdge:Acc(), funeralBlack:Acc() };
   function wall(acc,x0,x1,z0,z1,y,h,uv,noSolid){
     if(x1<=x0||z1<=z0) return;
     accBox(acc,(x0+x1)/2,y+h/2,(z0+z1)/2,x1-x0,h,z1-z0,uv||1.25);
@@ -746,67 +792,130 @@ function build(THREE_,opt){
   }
 
   /* ============================================================
-     ⚰️🕯️ รอบ 1060 — ศาลางานศพไทยที่ปลายทางเดินชั้น 3
-     งานภาพอ้างอิงธรรมเนียมร่วมสมัย: หีบไม้ลายทองบนฐานต่างระดับ รูปผู้เสียชีวิต
-     กรอบทอง ดอกไม้ขาว-ดำ และสายไฟประดับหน้าแท่น โดยใช้ใบหน้าบุคคลสมมติที่เจนใหม่
-     ไฟชุดนี้แยกจากไฟโรงแรม จึงยังกะพริบอยู่แม้ไฟทั้งตึกดับตามเนื้อเรื่อง
+     ⚰️🕯️ ABANDONED FUNERAL WAKE — local realism pass
+     ฉากนี้แยก group/ไฟ/particle จากระบบภารกิจทั้งหมด; ของตกแต่งไม่เพิ่ม collider
      ============================================================ */
   {
-    const fy=floorY(2), fx=BX-1.75, fz=0;
-    // ฐานต่างระดับ + หีบทรงไทยไม้เข้ม คิ้ว/ลายทอง
-    accBox(A.funeralBlack,fx,fy+.12,fz,3.25,.24,4.25,0);
-    accBox(A.funeralWood,fx+.15,fy+.56,fz,2.30,.88,3.10,1.2);
-    accBox(A.funeralWood,fx+.15,fy+1.05,fz,2.48,.14,3.28,1.2);
-    accBox(A.gold,fx-1.03,fy+.60,fz,.08,.56,3.12,0);
-    accBox(A.gold,fx+1.33,fy+.60,fz,.08,.56,3.12,0);
-    for(let z=-1.32;z<=1.32;z+=.66){
-      accBox(A.gold,fx-1.04,fy+.83,z,.07,.20,.25,0);
-      accBox(A.gold,fx+1.34,fy+.83,z,.07,.20,.25,0);
-    }
-    // ฝาหีบยกสันเล็กน้อยแบบงานไม้แกะไทย (ทึบสงบ ไม่แสดงร่าง)
-    accBox(A.funeralWood,fx+.15,fy+1.18,fz,1.45,.22,3.35,1.2,{z:.20});
-    accBox(A.funeralWood,fx+.15,fy+1.18,fz,1.45,.22,3.35,1.2,{z:-.20});
-    accBox(A.gold,fx+.15,fy+1.31,fz,.10,.09,3.44,0);
+    const fy=floorY(2), fx=BX-1.75, fz=0, fg=new T.Group();
+    floorVisual(2,fg); grp.add(fg);
+    const box=(mat,x,y,z,sx,sy,sz,rx=0,ry=0,rz=0)=>{
+      const m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),mat); m.position.set(x,y,z); m.rotation.set(rx,ry,rz); fg.add(m); return m;
+    };
+    // เงาสัมผัสแบบ baked-looking + ผ้าพิธีเก่าบนแท่น ช่วยให้โลงไม่ลอยโดยไม่เปิด shadow map
+    const coffinShadow=new T.Mesh(new T.PlaneGeometry(3.45,4.65),M.funeralContact);
+    coffinShadow.rotation.x=-Math.PI/2; coffinShadow.position.set(fx,fy+.018,fz); fg.add(coffinShadow);
+    box(M.funeralBlack,fx,fy+.13,fz,3.22,.25,4.18);
+    box(M.funeralCloth,fx-.18,fy+.265,fz,2.78,.055,3.72,0,0,-.018);
+    box(M.funeralCloth,fx-1.43,fy+.05,.18,.10,.62,3.36,0,0,-.035);
+
+    // โลงมะฮอกกานีเก่า: ผิวไม่ดำสนิท มีชั้นไม้ รอยต่อ แผงข้าง ฝายกสัน และขอบสึก
+    box(M.funeralWood,fx+.15,fy+.64,fz,2.30,.78,3.10);
+    box(M.funeralEdge,fx+.15,fy+.31,fz,2.40,.11,3.20);
+    box(M.funeralEdge,fx+.15,fy+1.025,fz,2.48,.13,3.28);
+    box(M.funeralEdge,fx-1.025,fy+.66,fz,.065,.55,3.00);
+    box(M.funeralEdge,fx+1.325,fy+.66,fz,.065,.55,3.00);
+    [-1.02,0,1.02].forEach(z=>box(M.funeralEdge,fx-1.065,fy+.67,z,.035,.34,.72));
+    box(M.funeralWood,fx-.20,fy+1.16,fz,1.34,.22,3.35,0,0,.12);
+    box(M.funeralWood,fx+.50,fy+1.16,fz,1.34,.22,3.35,0,0,-.12);
+    box(M.funeralEdge,fx+.15,fy+1.295,fz,.09,.075,3.42);
+    // รอยขีด/แผลบน varnish เฉพาะด้านที่ผู้เล่นเห็น
+    [[-.88,.54,-.82,.14],[-.90,.76,.21,-.10],[-.89,.61,.92,.08]].forEach(s=>
+      box(M.funeralEdge,fx+s[0],fy+s[1],s[2],.026,.018,.34,s[3]));
     solid(fx-1.45,fx+1.65,-1.8,1.8,fy,fy+1.5,'funeral');
 
-    // รูปผู้เสียชีวิตสมมติในกรอบทอง ตั้งสูงที่ผนังปลายทางเดิน
-    const pm=new T.MeshPhongMaterial({color:0xffffff,shininess:5,specular:0x111111});
-    TEX(pm,'tex_hotel_funeral_portrait',1,1,null,true);
-    const pf=new T.Group(); floorVisual(2,pf); pf.position.set(BX-.42,fy+2.06,0); pf.rotation.y=-Math.PI/2;
-    pf.add(new T.Mesh(new T.BoxGeometry(1.55,2.05,.14),M.gold));
-    const pa=new T.Mesh(new T.PlaneGeometry(1.25,1.68),pm); pa.position.z=.082; pf.add(pa); grp.add(pf);
+    // มือจับทองเหลืองดำหม่น ใช้ geometry เดียว instancing ทั้งหมด
+    const handleGeo=new T.TorusGeometry(.22,.033,5,12,Math.PI), handles=[];
+    [-.62,.62].forEach(x=>{
+      handles.push({x:fx+x,y:fy+.68,z:-1.585,rx:0,ry:0,rz:Math.PI});
+      handles.push({x:fx+x,y:fy+.68,z: 1.585,rx:0,ry:Math.PI,rz:Math.PI});
+    });
+    handles.push({x:fx-1.175,y:fy+.68,z:0,rx:0,ry:Math.PI/2,rz:Math.PI});
+    staticInstances(handleGeo,M.funeralBrass,handles,fg);
 
-    // พวงมาลัยขาว-ดำพาดกรอบ: เม็ดดอกเล็กเรียงเป็นตัวยู ดูสมจริงกว่าทรงทึบชิ้นเดียว
-    const whiteMat=new T.MeshPhongMaterial({color:0xe8e3da,shininess:10});
-    const blackMat=new T.MeshPhongMaterial({color:0x17171b,shininess:4});
-    const beadGeo=new T.SphereGeometry(.075,8,6), garlandWhite=[], garlandBlack=[];
-    for(let i=0;i<19;i++){
-      const t=i/18, x=-.58+t*1.16, y=.68-Math.sin(t*Math.PI)*.62;
-      ((i%5===0)?garlandBlack:garlandWhite).push({x,y,z:.18});
+    // ผนัง/พรมเสื่อมเฉพาะโซน: คราบชื้น deterministic ไม่ซ้ำพร่ำเพรื่อทั้งโรงแรม
+    const floorDecay=new T.Mesh(new T.PlaneGeometry(6.2,5.5),M.funeralFloorDecay);
+    floorDecay.rotation.x=-Math.PI/2; floorDecay.position.set(BX-3.25,fy+.031,0); fg.add(floorDecay);
+    [[-1,0],[1,Math.PI]].forEach((side)=>{
+      const d=new T.Mesh(new T.PlaneGeometry(6.0,2.75),M.funeralWallDecay);
+      d.position.set(BX-3.15,fy+1.39,side[0]*(CZ-.018)); d.rotation.y=side[1]; fg.add(d);
+    });
+
+    // รูปผู้เสียชีวิต: กรอบไม้ดำ คิ้วทองเหลืองหม่น ภาพซีดและมีฝุ่นทับบาง ๆ
+    const pm=new T.MeshStandardMaterial({color:0x81776a,roughness:.94,metalness:0,emissive:0x090706,emissiveIntensity:.08});
+    TEX(pm,'tex_hotel_funeral_portrait',1,1,0x81776a,true);
+    const pf=new T.Group(); pf.position.set(BX-.42,fy+2.06,0); pf.rotation.y=-Math.PI/2; fg.add(pf);
+    pf.add(new T.Mesh(new T.BoxGeometry(1.68,2.16,.16),M.funeralWood));
+    const inner=new T.Mesh(new T.BoxGeometry(1.43,1.91,.18),M.funeralBrass); inner.position.z=.025; pf.add(inner);
+    const pa=new T.Mesh(new T.PlaneGeometry(1.25,1.68),pm); pa.position.z=.121; pf.add(pa);
+    const pg=new T.Mesh(new T.PlaneGeometry(1.23,1.66),M.funeralWallDecay); pg.position.z=.125; pg.material=M.funeralWallDecay; pf.add(pg);
+    [[-.79,.99,.17],[.79,-.98,-.13]].forEach(e=>{
+      const chip=new T.Mesh(new T.BoxGeometry(.22,.08,.19),M.funeralBlack); chip.position.set(e[0],e[1],.02); chip.rotation.z=e[2]; pf.add(chip);
+    });
+
+    // พวงดอกไม้แห้งแทนเม็ด Sphere ขาว: กลีบทรงไม่สมบูรณ์ สีงาช้างหม่น ระยะ/ขนาดไม่เท่ากัน
+    const petalGeo=new T.ConeGeometry(.065,.13,5), fallenGeo=new T.CircleGeometry(.075,5), leafGeo=new T.ConeGeometry(.055,.16,4);
+    const garlandPetals=[],garlandLeaves=[];
+    for(let i=0;i<23;i++){
+      const t=i/22,x=-.61+t*1.22,y=.69-Math.sin(t*Math.PI)*.64,uneven=((i*17)%9-4)*.006;
+      const item={x:x+uneven,y:y+((i*7)%5-2)*.008,z:.205,sx:.65+((i*11)%7)*.055,
+        sy:.58+((i*5)%6)*.06,sz:.52+((i*3)%5)*.06,rx:i*.71,ry:i*.43,rz:i*.29};
+      (i%4===0?garlandLeaves:garlandPetals).push(item);
     }
-    staticInstances(beadGeo,whiteMat,garlandWhite,pf);
-    staticInstances(beadGeo,blackMat,garlandBlack,pf);
-    // พุ่มดอกไม้ขาว-ดำสองข้างหน้าโลง
-    const flowerWhite=[], flowerBlack=[];
-    [[BX-3.35,-1.55],[BX-3.35,1.55]].forEach((p,side)=>{
-      for(let i=0;i<22;i++){
-        const a=i*2.399, rr=.15+.58*Math.sqrt(i/22);
-        const item={x:p[0]+Math.cos(a)*rr,y:fy+.38+(i%4)*.09,z:p[1]+Math.sin(a)*rr,s:.82+((i*7)%5)*.04};
-        ((i+side)%6===0?flowerBlack:flowerWhite).push(item);
+    staticInstances(petalGeo,M.funeralIvory,garlandPetals,pf);
+    staticInstances(leafGeo,M.funeralLeaf,garlandLeaves,pf);
+
+    // พุ่มดอกไม้โรยและแจกันสองฝั่ง จัดไม่สมมาตรเล็กน้อย
+    const bouquetPetals=[],bouquetLeaves=[],fallenPetals=[];
+    [[BX-3.25,-1.62,17],[BX-3.42,1.48,13]].forEach((p,side)=>{
+      box(M.funeralBrass,p[0],fy+.23,p[1],.30,.45,.30);
+      for(let i=0;i<p[2];i++){
+        const a=i*2.399+side*.7,rr=.13+.48*Math.sqrt(i/p[2]);
+        const item={x:p[0]+Math.cos(a)*rr,y:fy+.45+(i%5)*.075,z:p[1]+Math.sin(a)*rr,
+          sx:.72+((i*7)%5)*.07,sy:.56+((i*3)%4)*.08,sz:.66+((i*11)%4)*.06,rx:a,ry:i*.33,rz:-a*.4};
+        (i%4===1?bouquetLeaves:bouquetPetals).push(item);
       }
     });
-    staticInstances(beadGeo,whiteMat,flowerWhite,grp,2);
-    staticInstances(beadGeo,blackMat,flowerBlack,grp,2);
+    [[fx-1.66,-.92,.65],[fx-1.82,.64,.48],[fx-.98,1.82,.55],[fx-2.08,1.18,.42],[fx-1.48,-1.72,.50]]
+      .forEach((p,i)=>fallenPetals.push({x:p[0],y:fy+.047,z:p[1],sx:p[2],sy:p[2]*.55,sz:1,rx:-Math.PI/2+i*.025,rz:i*.73}));
+    staticInstances(petalGeo,M.funeralPetal,bouquetPetals,fg);
+    staticInstances(leafGeo,M.funeralLeaf,bouquetLeaves,fg);
+    staticInstances(fallenGeo,M.funeralPetal,fallenPetals,fg);
 
-    // หลอดไฟงานศพ: ทำเป็นสามชุด material เพื่อกระพริบสลับจังหวะ แต่ไม่เพิ่ม material ต่อหลอด
-    const bulbGeo=new T.SphereGeometry(.055,7,5), bulbMats=[0,1,2].map(()=>new T.MeshBasicMaterial({color:0xffd782,fog:false}));
-    const bulbItems=[[],[],[]];
-    const addBulb=(x,y,z,i)=>bulbItems[i%3].push({x,y,z});
-    let bi=0;
-    for(let z=-1.55;z<=1.55;z+=.31){ addBulb(BX-3.18,fy+.20,z,bi++); addBulb(BX-.28,fy+.20,z,bi++); }
-    for(let y=fy+1.18;y<=fy+2.95;y+=.25){ addBulb(BX-.28,y,-.93,bi++); addBulb(BX-.28,y,.93,bi++); }
-    bulbItems.forEach((items,i)=>H.funeralBulbs.push({m:staticInstances(bulbGeo,bulbMats[i],items,grp,2),phase:i*2.1}));
+    // เทียนเก่า 3 เล่ม (หนึ่งดับ) + ขี้ผึ้ง/เชิงเทียน; ไฟจริงมีเพียง warm point light ดวงเดียว
+    const candleGeo=new T.CylinderGeometry(.055,.07,1,7), holderGeo=new T.CylinderGeometry(.12,.17,.08,8);
+    const candleDefs=[[fx-1.56,-1.26,.43,true],[fx-1.72,1.18,.58,true],[fx-1.12,1.68,.31,false]],flames=[];
+    candleDefs.forEach((d,i)=>{
+      const holder=new T.Mesh(holderGeo,M.funeralBrass); holder.position.set(d[0],fy+.10,d[1]); fg.add(holder);
+      const wax=new T.Mesh(candleGeo,M.funeralWax); wax.scale.y=d[2]; wax.position.set(d[0],fy+.14+d[2]/2,d[1]); wax.rotation.z=(i-1)*.025; fg.add(wax);
+      box(M.funeralWax,d[0]+.055,fy+.22,d[1],.022,.15,.018,0,0,.12);
+      if(d[3]){
+        const fm=new T.Mesh(new T.SphereGeometry(.038,6,5),new T.MeshBasicMaterial({color:0xffb24e,fog:false}));
+        fm.scale.set(.72,2.20,.72); fm.position.set(d[0],fy+.18+d[2],d[1]); fg.add(fm);
+        flames.push({m:fm,baseY:fm.position.y,phase:i*1.93,from:.72,to:1,next:0});
+      }
+    });
+    // กระถางธูปฝุ่นจับ + ธูปดับ 3 ก้าน (ไม่มีควันโปร่งใสหนัก ๆ)
+    const incenseCup=new T.Mesh(new T.CylinderGeometry(.13,.18,.20,8),M.funeralBrass);
+    incenseCup.position.set(fx-1.72,fy+.16,.72); fg.add(incenseCup);
+    [-.045,0,.045].forEach((x,i)=>box(M.funeralLeaf,fx-1.72+x,fy+.48,.72+i*.014,.013,.47,.013,0,0,(i-1)*.04));
 
+    const warm=new T.PointLight(0xffa94f,1.02,6.5,2.05); warm.position.set(fx-1.50,fy+1.05,-.15); warm.castShadow=false; fg.add(warm);
+    const cold=new T.PointLight(0x52666a,.22,9,2); cold.position.set(fx-4.7,fy+2.35,1.85); cold.castShadow=false; fg.add(cold);
+    const rim=new T.PointLight(0x8a6e4c,.25,4.2,2); rim.position.set(fx+1.15,fy+1.62,-1.25); rim.castShadow=false; fg.add(rim);
+
+    // ฝุ่นลอยเบาบาง; ลดจำนวนอัตโนมัติบนจอสัมผัส/CPU ขนาดเล็ก
+    const nav=typeof navigator==='object'?navigator:{},vw=typeof innerWidth==='number'?innerWidth:1280,vh=typeof innerHeight==='number'?innerHeight:720;
+    const lowFX=(nav.maxTouchPoints>0&&vw*vh<900000)||(nav.hardwareConcurrency&&nav.hardwareConcurrency<=4);
+    const dustCount=lowFX?14:28,dustPos=new Float32Array(dustCount*3),dustBase=new Float32Array(dustCount*3),dustPhase=new Float32Array(dustCount);
+    let ds=0x91e10da5; const dr=()=>{ds=(Math.imul(ds,1664525)+1013904223)>>>0;return ds/4294967296;};
+    for(let i=0;i<dustCount;i++){
+      const j=i*3; dustBase[j]=dustPos[j]=fx-3.7+dr()*4.3; dustBase[j+1]=dustPos[j+1]=fy+.25+dr()*2.55;
+      dustBase[j+2]=dustPos[j+2]=-2.05+dr()*4.1; dustPhase[i]=dr()*Math.PI*2;
+    }
+    const dustGeo=new T.BufferGeometry(); dustGeo.setAttribute('position',new T.BufferAttribute(dustPos,3));
+    const dust=new T.Points(dustGeo,new T.PointsMaterial({color:0xc9b58c,size:lowFX?.026:.032,transparent:true,opacity:.18,
+      depthWrite:false,sizeAttenuation:true,fog:true})); fg.add(dust);
+    H.funeralFX={group:fg,flames,warm,cold,rim,dust,dustPos,dustBase,dustPhase,dustAt:0,lowFX};
     H.funeral={x:fx,z:fz,y:fy,letterSpot:{x:BX-3.82,z:0,y:fy},portrait:pf};
   }
 
@@ -817,14 +926,14 @@ function build(THREE_,opt){
      ============================================================ */
   {
     const fy=floorY(3), z=9.40;
-    const whiteMat=new T.MeshPhongMaterial({color:0xe8e3da,shininess:10});
-    const blackMat=new T.MeshPhongMaterial({color:0x17171b,shininess:4});
-    const beadGeo=new T.SphereGeometry(.075,8,6);
+    const whiteMat=new T.MeshStandardMaterial({color:0x918976,roughness:.96});
+    const blackMat=new T.MeshStandardMaterial({color:0x211d1c,roughness:.98});
+    const ritualGeo=new T.TetrahedronGeometry(.075,0);
     const bodyGeo=new T.SphereGeometry(.48,12,9);
     const mkBundle=()=>{
       const g=new T.Group();
-      const torso=new T.Mesh(bodyGeo,M.funeralWhite); torso.scale.set(.56,1.72,.42); torso.position.y=.92; g.add(torso);
-      const fold=new T.Mesh(new T.TorusGeometry(.30,.035,6,18),M.funeralWhite); fold.rotation.x=Math.PI/2; fold.position.y=1.34; g.add(fold);
+      const torso=new T.Mesh(bodyGeo,M.funeralIvory); torso.scale.set(.56,1.72,.42); torso.position.y=.92; g.add(torso);
+      const fold=new T.Mesh(new T.TorusGeometry(.30,.035,6,18),M.funeralIvory); fold.rotation.x=Math.PI/2; fold.position.y=1.34; g.add(fold);
       return g;
     };
     for(let i=0;i<5;i++){
@@ -842,8 +951,9 @@ function build(THREE_,opt){
       const pmat=new T.MeshPhongMaterial({color:0xffffff,shininess:4}); TEX(pmat,'tex_hotel_funeral_portrait',1,1,null,true);
       photo.add(new T.Mesh(new T.BoxGeometry(.93,1.35,.07),M.gold));
       const art=new T.Mesh(new T.PlaneGeometry(.72,1.05),pmat); art.position.z=.045; photo.add(art);
-      for(let j=0;j<13;j++){ const t=j/12, b=new T.Mesh(beadGeo,j%4===0?blackMat:whiteMat);
-        b.scale.setScalar(.65); b.position.set(-.34+t*.68,.47-Math.sin(t*Math.PI)*.40,.09); photo.add(b); }
+      for(let j=0;j<13;j++){ const t=j/12, b=new T.Mesh(ritualGeo,j%4===0?blackMat:whiteMat);
+        b.scale.set(.52+((j*5)%4)*.05,.45+((j*7)%5)*.04,.48+((j*3)%3)*.05);
+        b.rotation.set(j*.37,j*.61,j*.23); b.position.set(-.34+t*.68,.47-Math.sin(t*Math.PI)*.40,.09); photo.add(b); }
       g.add(photo);
 
       const bundleA=mkBundle(); bundleA.position.set(0,.02,.04); bundleA.rotation.z=.06; g.add(bundleA);
@@ -952,7 +1062,7 @@ function build(THREE_,opt){
   accMesh(A.lamp,M.lamp,grp);
   accMesh(A.indicator,M.indicator,grp);
   accMesh(A.funeralWood,M.funeralWood,grp);
-  accMesh(A.funeralWhite,M.funeralWhite,grp);
+  accMesh(A.funeralEdge,M.funeralEdge,grp);
   accMesh(A.funeralBlack,M.funeralBlack,grp);
 
   /* จุดวางตัวอักษรในล็อบบี้/ทางเดิน (นอกห้องพัก) */
@@ -1037,6 +1147,11 @@ function roomAt(H,x,z,y){
   return null;
 }
 function floorOf(y){ return Math.max(0,Math.min(FLOORS-1,Math.round(y/FLOOR_H))); }
+function roomVisitId(R){
+  if(!R||!Number.isInteger(R.f)||!Number.isInteger(R.i))return '';
+  const number=(R.f+1)*100+R.i*2+(R.side==='n'?1:2);
+  return `F${R.f+1}_ROOM_${number}`;
+}
 
 /* ============================================================
    🔤🧭 รอบ 1086 — HAUNTED HOTEL PHASE 4 stable letter placement pool
@@ -1147,12 +1262,10 @@ function updatePracticalLights(H,now,cam){
    การจัดนี้เป็น scene consequence เท่านั้น; run/seed/slot ตัวจริงอยู่ใน HauntedHotelRuntime */
 function configureSpecialWardrobes(H,cabinetLetterSlot,seed){
   if(!H || !H.specialWardrobes) return;
-  const slot=Math.max(0,Math.min(H.specialWardrobes.length-1,Number(cabinetLetterSlot)||0));
-  const types=['empty','photo','bundleA','bundleB'];
+  const types=['empty','empty','photo','bundleA','bundleB'];
   let x=(Number(seed)>>>0)||1;
   const random=()=>{x=(x+0x6d2b79f5)>>>0;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};
   for(let i=types.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[types[i],types[j]]=[types[j],types[i]];}
-  types.splice(slot,0,'letter');
   H.specialWardrobes.forEach((W,i)=>{
     W.content=types[i]; W.open=false; W.done=false; W.t=0; W.letter=null;
     W.hingeL.rotation.y=0; W.hingeR.rotation.y=0;
@@ -1169,11 +1282,38 @@ const BLINK_MIN=2200, BLINK_GAP=4200;   // ช่วงเวลาสุ่ม�
 function tick(H,dt,now,cam){
   updateFloorVisibility(H,cam);
   updatePracticalLights(H,now,cam);
-  /* ภาพชุดใหม่มีดวงตาจริงอยู่ในไฟล์แล้ว จึงไม่ทำตาแดงเรืองทับหน้า (ดูเป็นการ์ตูนและเสียความสมจริง) */
-  if(H.funeralBulbs) H.funeralBulbs.forEach((b,i)=>{
-    const pulse=.45+.55*Math.max(0,Math.sin(now*.008+b.phase));
-    if(b.m)b.m.visible=H.visibleFloors.indexOf(2)>=0 && pulse>.54;
-  });
+  /* เทียนงานศพ: random interpolation ช้าและไม่เป็น sine-wave; ไฟ 3 ดวงทั้งหมดไม่ cast shadow */
+  const F=H.funeralFX;
+  if(F){
+    const floorOn=H.visibleFloors.indexOf(2)>=0,near=Math.hypot(cam.x-H.funeral.x,cam.z-H.funeral.z)<15;
+    let glow=0;
+    for(let i=0;i<F.flames.length;i++){
+      const f=F.flames[i];
+      if(now>=f.next){
+        f.from=f.to; let h=((Math.floor(now)+i*2654435761)>>>0); h=Math.imul(h^(h>>>16),2246822507)>>>0;
+        f.to=.82+(h&255)/255*.24; f.at=now; f.next=now+95+((h>>>8)&127);
+      }
+      const p=Math.max(0,Math.min(1,(now-f.at)/Math.max(1,f.next-f.at))),q=p*p*(3-2*p),v=f.from+(f.to-f.from)*q;
+      f.m.scale.set(.72+(1-v)*.16,2.20*v,.72+(1-v)*.10); f.m.position.y=f.baseY+(v-.9)*.018; glow+=v;
+    }
+    glow/=Math.max(1,F.flames.length);
+    const level=H.lightLevel===undefined?1:H.lightLevel;
+    F.warm.intensity=(.88+glow*.22)*(.82+level*.18);
+    F.cold.intensity=.055+level*.165;
+    F.rim.intensity=.09+level*.16;
+    F.warm.visible=F.cold.visible=F.rim.visible=floorOn&&near;
+    F.dust.visible=floorOn&&near;
+    if(F.dust.visible&&now>=F.dustAt){
+      F.dustAt=now+55;
+      for(let i=0;i<F.dustPhase.length;i++){
+        const j=i*3,ph=F.dustPhase[i];
+        F.dustPos[j]=F.dustBase[j]+Math.sin(now*.00011+ph)*.10;
+        F.dustPos[j+1]=F.dustBase[j+1]+Math.sin(now*.000075+ph*1.7)*.12;
+        F.dustPos[j+2]=F.dustBase[j+2]+Math.cos(now*.00009+ph*.8)*.08;
+      }
+      F.dust.geometry.attributes.position.needsUpdate=true;
+    }
+  }
   /* 🖼️ ลูกตามองตาม — เฉพาะรูปที่อยู่ใกล้และชั้นเดียวกัน (คุมงานต่อเฟรม)
      รูปหันไป local +Z → ระยะเยื้องซ้าย-ขวาของผู้เล่นในแกนรูป = face*(camX - รูปX)
      🐌 รอบ 697: เดิมตากระโดดไปตำแหน่งเป้าหมายทันที (สะดุดตา ดูเป็นกลไก) → lerp หน่วงให้เนียนเหมือนหันตามจริง */
@@ -1268,7 +1408,7 @@ function randomHaunt(H,floorPref){
   return {x:R.cx+(Math.random()*2-1)*2.4, z:R.cz+(Math.random()*2-1)*2.0, y:R.y, room:R};
 }
 
-return { build, surfaceY, collide, setLights, setLightLevel, tick, roomAt, nearWardrobe, inLift, atLiftDoor,
+return { build, surfaceY, collide, setLights, setLightLevel, tick, roomAt, roomVisitId, nearWardrobe, inLift, atLiftDoor,
          randomHaunt, insideHotel, floorOf, floorY, nearFuneral, configureSpecialWardrobes, updateFloorVisibility,
          letterPlacementPool, validateLetterPlacementPool, LETTER_PLACEMENT_VERSION,
          FLOOR_H, FLOORS, BX, BZ, CZ, WEST, CORE_E, SHAFT_E, ENTRY_HW, PLAYER_R,

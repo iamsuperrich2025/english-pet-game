@@ -6,7 +6,7 @@
    - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
    อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
 */
-const CACHE_VERSION = 'pet-vocab-v277';  // v277: Haunted Hotel Phase 1–4: canonical multiplayer, Horror Director, searchable letters and persistent hints
+const CACHE_VERSION = 'pet-vocab-v278';  // v278: Haunted Hotel กฎผีชุดใหม่ + ฉากโลงสมจริง + ลำดับเสียงไทย
 
 /* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
    รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
@@ -61,6 +61,7 @@ const SHELL = [
   './js/hauntedhotelsession.js',
   './js/hauntedhoteldirector.js',
   './js/hauntedhotel.js',
+  './js/hauntedhotelghost.js',
   './js/adventure3d.js',
   './js/arena3d.js',         // 🌀 รอบ 1045: ต่อสู้ PvE→เก็บอักษร→ประกอบคำ→ร้านพลัง
   './img/icons/icon-192-flat.png',   // รอบ 859: ไอคอนพื้นเรียบสีเดียวกับ background_color (แก้ splash APK เห็นกรอบ)

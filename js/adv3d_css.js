@@ -189,11 +189,21 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     filter:drop-shadow(0 0 55px #f00) contrast(1.12) saturate(1.15)}
   #adv-scare.has-img img{display:block}
   #adv-scare.has-img span{display:none}
+  #adv-scare.turn-scare.on{overflow:hidden;animation:hhTurnScare 3s cubic-bezier(.15,.72,.2,1) forwards;
+    background:radial-gradient(ellipse at 50% 30%,rgba(18,32,42,.24),#000 82%)}
+  #adv-scare.turn-scare img{display:block;width:100vw;height:100vh;max-width:none;max-height:none;object-fit:cover;
+    object-position:50% 8%;transform:scale(1.35);transform-origin:50% 8%;filter:contrast(1.38) brightness(.88) saturate(.62)
+    drop-shadow(0 0 18px rgba(130,205,225,.34))}
+  @keyframes hhTurnScare{0%{opacity:0;transform:scale(.45)}7%{opacity:1;transform:scale(1.08)}
+    16%{transform:scale(.98)}72%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.16)}}
   @keyframes advScare{0%{opacity:0;transform:scale(.25)}8%{opacity:1;transform:scale(1.15)}
     16%{transform:scale(.95)}24%{transform:scale(1.08)}70%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
   .adv-shake{animation:advShake .12s linear 9}
   @keyframes advShake{0%{transform:translate(0,0)}25%{transform:translate(-12px,6px)}50%{transform:translate(10px,-8px)}
     75%{transform:translate(-8px,-6px)}100%{transform:translate(9px,7px)}}
+  .adv-neck-breath{animation:hhNeckBreath .22s steps(2,end) infinite}
+  @keyframes hhNeckBreath{0%{transform:translate(-2px,1px) rotate(-.08deg)}50%{transform:translate(2px,-1px) rotate(.08deg)}
+    100%{transform:translate(-1px,2px) rotate(-.04deg)}}
   #adv-joy{position:absolute;bottom:18px;left:18px;width:110px;height:110px;border-radius:50%;
     background:rgba(255,255,255,.14);border:2px solid rgba(255,255,255,.4);pointer-events:none;display:none}
   #adv-joy-dot{position:absolute;left:50%;top:50%;width:44px;height:44px;border-radius:50%;
