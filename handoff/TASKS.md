@@ -10,8 +10,7 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
-- **10 ส.ค. 2026 — รอบ 1094 Rules ขึ้น production แล้ว แต่ยังห้าม ship:** Account & Privacy, หน้า Privacy/Delete Account และ Data Safety worksheet รอ commit/deploy Hosting และทดสอบบัญชีทิ้งจริงก่อนกรอก Play Console
-- **10 ส.ค. 2026 — รอบ 1095 แก้ deploy blocker แล้ว:** เปลี่ยน callback โหลด snapshot ใน `js/account-deletion.js` ให้ไม่ถูก undefined-call checker ตีความ `async()` ผิด; checker 50 ไฟล์=0, syntax และ deletion-plan 776 paths ผ่านแล้ว รอ build/commit/deploy Hosting ซ้ำ
+- **10 ส.ค. 2026 — รอบ 1096 Account deletion ผ่าน production แล้ว:** Rules ใหม่ publish/ตรวจสดตรง source และบัญชีทดสอบ `parkerhulk2020@gmail.com` ถูกลบสำเร็จ; รอ COMMIT_DEPLOY ส่ง client fix ที่ตัดพาธ reaction ว่างขึ้นเว็บ
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
@@ -29,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1096 · ปิดบั๊ก account deletion `permission_denied`:** ต้นตอคือ plan ส่ง `gfeed/<post>/lk/<uid>` และ `cm/<cid>/cl/<uid>` แม้ไม่มี reaction บนโพสต์คนแปลกหน้า; แก้ `js/account-deletion.js` ให้ส่งเฉพาะ reaction ที่มีจริง และ Rules อนุญาตเจ้าของ UID ลบ reaction ตัวเองแม้เลิกเป็นเพื่อน โดยไม่ขยายสิทธิ์สร้าง/แก้
+- Rules รอบ 1096 publish แล้วและ Firebase CLI เทียบสดตรง source 37 โซน/475 leaf (`missing/extra/changed=0`); destructive test ลบบัญชี `hulk`/`EZTSR3` สำเร็จ หน้าเกมกลับ login และ REST ยืนยัน friendCodes/presence/leaderboard ของ UID เดิมเป็น `null`
+- Regression ครอบ stranger/no-reaction + former-friend/owned-reaction ผ่าน 778 paths; syntax, undefined-call 50 ไฟล์=0, build 8,235 ไฟล์ และ PWA validator ผ่าน
+- แก้ `handoff/RULES.md`, `js/account-deletion.js`, `tools/test_account_deletion.js`; artifact full-copy รอบ 1096 ตรวจ JSON/Copy exact/37 zones/SHA-256 ผ่าน
 - **รอบ 1094 · แก้ Firebase Rules line 385 + Publish สำเร็จ:** คืน `.child('u').val()` และวงเล็บที่ตกใน `gnotif/$uid/n/$nid/.write`; generator ปฏิเสธ expression ที่วงเล็บ/quote ไม่ครบแล้ว · หลังผู้ใช้ Publish ตรวจ Rules สดด้วย Firebase CLI ตรง source ครบ 37 โซน/475 leaf keys (`missing/extra/changed=0`) · เว็บ live ยังเป็น policy เก่าและ `/delete-account.html` ยัง fallback เข้า City จึงเหลือ commit/deploy Hosting + ทดสอบบัญชีทิ้ง
 - **รอบ 1093 · Google Play privacy/account deletion remediation:** Settings มี entry ลบบัญชีจุดเดียว พร้อมคำเตือน → พิมพ์ `DELETE` → Google re-auth → RTDB multi-location delete → Firebase Auth delete; ถ้าลบ Auth ไม่สำเร็จหลัง RTDB จะค้างสถานะ finalize-only และไม่รายงานสำเร็จเท็จ
 - เพิ่ม `privacy.html` และ `delete-account.html` ไทย/อังกฤษ ครอบคลุมข้อมูลบัญชี/รูป/สังคม/WebRTC/local storage/ผู้ให้บริการ/retention/เด็ก/ช่องทางอีเมล; เพิ่ม `docs/GOOGLE_PLAY_PRIVACY_REMEDIATION.md` เป็น audit + Data Safety worksheet

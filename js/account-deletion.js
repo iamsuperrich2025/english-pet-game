@@ -160,8 +160,12 @@
     Object.entries(b.market||{}).forEach(([k,v])=>{if(v&&v.sid===uid)put(u,'market/'+k);});
     Object.entries(b.ads||{}).forEach(([k,v])=>{if(v&&v.uid===uid)put(u,'ads/'+k);});
     Object.entries(b.gfeed||{}).forEach(([pid,p])=>{
-      if(!p)return;if(p.u===uid){put(u,'gfeed/'+pid);return;}put(u,`gfeed/${pid}/lk/${uid}`);
-      Object.entries(p.cm||{}).forEach(([cid,c])=>{if(c&&c.u===uid)put(u,`gfeed/${pid}/cm/${cid}`);else put(u,`gfeed/${pid}/cm/${cid}/cl/${uid}`);});
+      if(!p)return;if(p.u===uid){put(u,'gfeed/'+pid);return;}
+      if(p.lk&&Object.prototype.hasOwnProperty.call(p.lk,uid))put(u,`gfeed/${pid}/lk/${uid}`);
+      Object.entries(p.cm||{}).forEach(([cid,c])=>{
+        if(c&&c.u===uid)put(u,`gfeed/${pid}/cm/${cid}`);
+        else if(c&&c.cl&&Object.prototype.hasOwnProperty.call(c.cl,uid))put(u,`gfeed/${pid}/cm/${cid}/cl/${uid}`);
+      });
     });
     Object.entries(b.awards||{}).forEach(([root,months])=>Object.keys(months||{}).forEach(m=>{if(months[m]&&months[m].w&&months[m].w[uid])put(u,`${root}/${m}/w/${uid}`);}));
     Object.entries(b.classes||{}).forEach(([map,c])=>Object.entries(c&&c.podium&&c.podium.top||{}).forEach(([i,row])=>{if(row&&row.u===uid)put(u,`class/${map}/podium/top/${i}`);}));

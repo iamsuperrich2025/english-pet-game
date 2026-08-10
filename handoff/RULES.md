@@ -1,6 +1,6 @@
 # RULES.md — Firebase Security Rules
 
-> ✅ **รอบ 1094 — Publish แล้ว 10 ส.ค. 2026:** กฎแก้ `gnotif` รวมสิทธิ์ลบข้อมูลบัญชีและ canonical `roomVisits` ของ Haunted Hotelขึ้น production ครบ; Firebase CLI อ่าน `/.settings/rules` สดแล้วเทียบ source ตรงทั้งก้อน
+> ✅ **รอบ 1096 — Publish/ตรวจสดแล้ว 10 ส.ค. 2026:** แก้ account deletion ให้เจ้าของ UID ลบ reaction ของตัวเอง (`gfeed/lk` และ `gfeed/cm/cl`) ได้แม้ความเป็นเพื่อนสิ้นสุดแล้ว โดยสิทธิ์สร้าง/แก้ reaction ยังคงต้องเป็นเจ้าของโพสต์หรือเพื่อนเหมือนเดิม; Firebase CLI เทียบสดตรง source ครบ 37 โซน / 475 leaf keys (`missing=0`, `extra=0`, `changed=0`)
 
 > อ่านไฟล์นี้เมื่อ: แตะ Firebase / เพิ่มโซนใหม่ / ต้องส่ง rules ให้ผู้ใช้ publish
 > **⚠️ กติกาผู้ใช้: ส่ง rules ให้ผู้ใช้ต้องส่ง "เต็มทั้งหน้า" เสมอ ห้ามส่งเฉพาะโซน** (คัดลอกทั้งก้อนไปวางทับใน Firebase console → Realtime Database → Rules → Publish)
@@ -431,7 +431,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "ts": { ".validate": "newData.isNumber()" },
         "lk": {
           "$uid": {
-            ".write": "auth != null && auth.uid === $uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+            ".write": "auth != null && auth.uid === $uid && (!newData.exists() || root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
             ".validate": "(newData.isBoolean() && newData.val() === true) || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 8)"
           }
         },
@@ -446,7 +446,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
             "p":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40 && root.child('gfeed').child($postId).child('cm').child(newData.val()).exists()" },
             "cl": {
               "$uid": {
-                ".write": "auth != null && auth.uid === $uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+                ".write": "auth != null && auth.uid === $uid && (!newData.exists() || root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
                 ".validate": "newData.isBoolean() && newData.val() === true"
               }
             },
