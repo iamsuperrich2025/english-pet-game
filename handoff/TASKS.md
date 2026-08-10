@@ -55,7 +55,6 @@
 - เพิ่ม search timer local 45/85/135/190 วินาที, floor→room→strong proximity, distance check 500ms, pulse/เสียงเฉพาะเป้าหมาย และส่ง search event เข้า Horror Director โดยไม่เพิ่ม Firebase/frame sync
 - เพิ่ม critical hint queue จำกัด 4 ค้างจนกด X/“เข้าใจแล้ว”, แยกจาก ambient banner, ล้าง hint เก่าเมื่อ objective/word/reconnect เปลี่ยน, เปิด hint ล่าสุดซ้ำได้; จบภารกิจกลับ Lobby หลังผู้เล่นกดยืนยัน
 - แก้ `js/hauntedhotel.js`, `js/hauntedhoteldirector.js`, `js/hotel3d.js`, `js/adventure3d.js`, `js/adv3d_css.js`, `handoff/RULES.md`; test Phase 4 + syntax/diff ผ่าน, Browser 812×375/1280×720 ไม่ล้น ปุ่ม 44px/เล่นต่อหลัง panel ได้
-- **รอบ 1085 · Haunted Hotel Phase 3 (working tree ยังไม่ commit/deploy):** เปลี่ยนเพดานเฉพาะ `haunt` เป็น 6 คนด้วย `HauntedHotelRuntime.MAX_PLAYERS`; NetRoom verifier เดิมกระจายคนที่ 7 ไปหลังถัดไปแบบ race-safe โดยไม่แตะเพดานโลกอื่น
 - เพิ่ม `js/hauntedhoteldirector.js`: tension 0..1/phase-aware/recovery, decision 400ms, local ambient·visual·environmental, isolation/subgroup/fairness และ compact `/hauntedHotel/rN/scare` transaction สำหรับ major event (ไม่ส่งตำแหน่ง/เฟรมเพิ่ม)
 - ต่อ lifecycle ผ่าน runtime/session, reuse peers+เสียง/ภาพ/ไฟเดิม, เพิ่ม rules `scare` และแก้คำอธิบาย 6 คน; reward security/NetRoom refactor/server authority ยังเลื่อนไว้
 - ยืนยัน Phase 2 regression, Phase 3 A–N + 6-client objective/shared race, NetRoom 7-player matrix (`r0:6,r1:1`), browser module smoke, syntax 9 ไฟล์, undefined 47=0, template/rules/diff ผ่าน

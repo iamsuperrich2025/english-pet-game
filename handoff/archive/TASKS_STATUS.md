@@ -4691,3 +4691,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-10 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1084 · Haunted Hotel Phase 1+2 (working tree ยังไม่ commit/deploy):** runtime FSM `ENTER→ACTIVE_WORD→TEMP_BLACKOUT→RESTORE→PERMANENT_DARK→FINAL_CABINET→COMPLETE→RETURN` + canonical `/hauntedHotel/rN/run`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-10 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1085 · Haunted Hotel Phase 3 (working tree ยังไม่ commit/deploy):** เปลี่ยนเพดานเฉพาะ `haunt` เป็น 6 คนด้วย `HauntedHotelRuntime.MAX_PLAYERS`; NetRoom verifier เดิมกระจายคนที่ 7 ไปหลังถัดไปแบบ race-safe โดยไม่แตะเพดานโลกอื่น
