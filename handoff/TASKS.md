@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1092 · Haunted Hotel ตู้/ผี/พลังชีวิต:** เปิดตู้ทุกใบไม่ Jump Scare ทันที; หลังบานเริ่มเปิด 650ms และผู้เล่นหันออก ≥1.05 rad จึงแสดงหน้าผีเต็มจอ 3 วิ โดยซ่อน HUD/ฉากอื่นทั้งหมด
+- ผีโจมตีหัก 1 จากหลอดพลัง 10/10 (ตู้+ประชิด; ประชิดพัก 4.5 วิ) และครบ 10 ครั้งหยุดเกม แสดง GAME OVER แล้วกลับ Lobby; intro อธิบายกติกาใหม่
+- ขณะไฟดับ การหลบในห้องเดียวครบ 120 วินาทีบังคับผีวาร์ปเข้าขอบเขตห้องและไล่ผู้เล่นคนนั้น; ออกจากห้อง/ไฟติด/เปลี่ยนห้องรีเซ็ตเวลา
+- แก้ `js/adventure3d.js`, `js/hauntedhotelghost.js`, `js/adv3d_css.js`, `tools/test_hauntedhotel_rules.js`; regression/syntax/undefined/template/diff ผ่าน และ Browser 1280×720 + 812×375 ยืนยัน face-only/HUD ไม่ล้น (overflow 0)
 - **รอบ 1091 · Firebase PWA + stable TWA:** เพิ่ม `npm run build` → `dist/`, `firebase.json`, `manifest.webmanifest`, Bubblewrap identity `app.web.vocabworld.twa`; Android ไม่มี game assets และ normal game update ไม่ต้อง rebuild AAB
 - `version.json` ใช้ `version/updated`; startup JS/CSS เป็น immutable hashed aliases, lazy GLB/ภาพ/เสียง/JSON ใช้ content-hash Cache Storage; SW install shell แบบ atomic เก็บ previous fallback, network-only version และไม่แตะ `petVocabAdventure_v1`
 - ยืนยัน build 8,230 ไฟล์/442.5 MiB + validator/JSON/syntax/diff ผ่าน; Browser City+Classic 1280×720/812×375 overflow=0 console=0, hashed scripts 59 และปิด server แล้ว offline reload Classic build เดิมผ่าน

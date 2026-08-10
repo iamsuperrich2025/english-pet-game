@@ -20,8 +20,8 @@ const GUIDE_WORDS  = 10;        // จำนวนคำ guideline บนจอ 
 const LETTER_RESPAWN_MS = 60000; // 🔠⏱️ รอบ 847 (ผู้ใช้สั่ง): เก็บตัวอักษรแล้วหาย → เกิดใหม่ "ที่เดิม" หลังผ่านไปเท่านี้ (เดิมมีระบบสุ่มย้ายที่ทุก 75 วิ — เอาออกแล้ว ตัวอักษรที่ยังไม่ถูกเก็บจะอยู่นิ่งตลอด)
 const HALF         = 60;        // ครึ่งความกว้างแผนที่ (โลก 120×120)
 const PLAYER_SPEED = 6;         // m/s
-const HAUNT_LIVES  = 3;         // 👻 หัวใจโลกผี: โดนแตะเสีย 1 ดวง หมดเมื่อไรจบ (กันตายทีเดียว)
-const HAUNT_IFRAME = 1500;      // กันโดนซ้ำหลังโดนแตะ (ms)
+const HAUNT_ATTACKS = 10;       // 👻 ผีโจมตีครบ 10 ครั้ง = Game Over
+const HAUNT_IFRAME = 1200;      // กันเหตุโจมตีซ้อนในเฟรมเดียวกัน (ms)
 const PICK_DIST    = 1.6;       // ระยะเดินเก็บตัวอักษร
 const EYE_H        = 1.6;
 const NET_SEND_MS  = 180;       // ส่งตำแหน่งขึ้น DB ถี่สุดเท่านี้ (~5.5Hz)
@@ -45,7 +45,7 @@ const MODES = {
     sky:0x05060e, fogN:26, fogF:155, ground:0x1a1c18,
     ghostMax:1, ghostSpeed:2.15, keepR:1.65, scareR:1.5,
     ghostEmoji:['👻','👻','👻','💀','🧟'],
-    intro:'🏨 <b>โรงแรมกำมะหยี่ — ภารกิจ 4 คำ</b><br><small>ตั้งแต่<b>ชั้น 2</b> ทุกห้องมีตัวอักษร 1 ตัว · เก็บให้ครบเพื่อประกอบคำและรับเหรียญ<br>เข้าห้องไม่ซ้ำครบ <b>5 ห้อง</b> ไฟจะกระพริบ 10 วินาทีก่อนดับ · ครบ 10 ห้องไฟติด และครบ 13 ห้องไฟดับอีกครั้ง 🔦<br>👻 หลังไฟดับ ผีจะลอยตามคนที่ใกล้ที่สุด — หลบเข้าในห้องเพื่อให้ผีลอยผ่านไป<br>หันกลับไปมองข้างหลังครบทุก 10 ครั้ง ระวังผีประชิดและเสียงหายใจรดต้นคอ!</small>',
+    intro:'🏨 <b>โรงแรมกำมะหยี่ — ภารกิจ 4 คำ</b><br><small>ตั้งแต่<b>ชั้น 2</b> ทุกห้องมีตัวอักษร 1 ตัว · เก็บให้ครบเพื่อประกอบคำและรับเหรียญ<br>เข้าห้องไม่ซ้ำครบ <b>5 ห้อง</b> ไฟจะกระพริบ 10 วินาทีก่อนดับ · ครบ 10 ห้องไฟติด และครบ 13 ห้องไฟดับอีกครั้ง 🔦<br>👻 หลังไฟดับ ผีจะลอยตามคนที่ใกล้ที่สุด — หลบในห้องได้ไม่เกิน <b>2 นาที</b> ไม่เช่นนั้นผีจะตามเข้าไป<br>เปิดตู้จะยังไม่ตกใจ แต่เมื่อหันไปทางอื่นจะเจอ Jump Scare · ถูกผีโจมตีครบ <b>10 ครั้ง = Game Over</b></small>',
     hint:'คลิกจอ=ล็อกเมาส์ · WASD เดิน · F=ไฟฉาย · E=ตู้/ลิฟต์ · ฟังเสียงรอบตัว · Esc ปลดเมาส์แล้วค่อยกดออก',
     koTitle:'💫 พลังหมดแล้ว!',
   },
@@ -489,7 +489,7 @@ const ATC={
 };
 let yaw=0, pitch=0;
 let hp=100, maxHp=100, sessionCoins=0, sessionWords=0;   // 🤖 รอบ 236: maxHp ต่อโลก (โลกหุ่น=MECHA_MAX_HP · อื่นๆ=100)
-let hauntLives=HAUNT_LIVES, hurtUntil=0;   // 👻 ระบบหัวใจโลกผี + ช่วงกันโดนซ้ำ
+let hurtUntil=0;                    // 👻 ช่วงกันเหตุโจมตีซ้อนในเฟรมเดียวกัน
 let hauntRunStart=0, hauntRecordShown=false;   // ⏱ รอบ 256: จับเวลา "หนีผีรอดนานสุด" (รอดต่อเนื่องไม่โดนจับ · สถิติใน state.hauntSurviveBest)
 let sessionWordLog=[];             // 📖 คำที่ประกอบสำเร็จรอบนี้ {en,th} — โชว์เป็นสมุดคำศัพท์ตอนออก (ทบทวนคำ)
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
@@ -3175,7 +3175,7 @@ function damagePlayer(n){
     showBanner('💔 <b>สตรีคนักบินขาดแล้ว!</b><br><small>เริ่มนับใหม่ — บินให้เนียนกว่าเดิมนะกัปตัน</small>');
   }
   renderHudTop();
-  if(hp<=0) knockedOut();
+  if(hp<=0){ if(M.hotel) hotelGameOver(); else knockedOut(); }
 }
 
 /* ---------- ยิง (เฉพาะโหมด adv) ---------- */
@@ -3219,7 +3219,7 @@ function tickShots(dt){
 /* ============================================================
    👻 รอบใหม่ — PNG-only ghost chase + client-side shader cosmetics
    กฎผีเก่าทั้งชุดถูกแทนที่: ผีมีหนึ่งตัว, ออกเฉพาะไฟดับ, ไล่ผู้เล่น
-   ใกล้ที่สุด และข้ามผู้เล่นที่หลบอยู่ในห้อง
+   ใกล้ที่สุด และข้ามผู้เล่นที่หลบอยู่ในห้องไม่เกิน 2 นาที
    ============================================================ */
 const GHOST_IMAGE_URL='img/ghosts/newGhost/ghost_attack_01.png';
 let hotelGhostFx=null;
@@ -3231,7 +3231,9 @@ function hotelGhostPlayers(){
   return context.players.map(player=>{
     const R=player.room;
     return {id:player.id,x:player.x,y:player.y,z:player.z,
-      room:R?(HOTEL3D.roomVisitId(R)||R.key||'room'):''};
+      room:R?(HOTEL3D.roomVisitId(R)||R.key||'room'):'',
+      roomBounds:R?{x0:R.x0,x1:R.x1,z0:Math.min(R.cz-HOTEL3D.CZ/2,R.cz+HOTEL3D.CZ/2),
+        z1:Math.max(R.cz-HOTEL3D.CZ/2,R.cz+HOTEL3D.CZ/2)}:null};
   });
 }
 function hotelTurnScare(ms){
@@ -3239,19 +3241,24 @@ function hotelTurnScare(ms){
   if(!scareEl||!img)return;
   img.src=GHOST_IMAGE_URL;
   scareEl.classList.add('has-img','turn-scare','on');
+  overlayEl.classList.add('adv-jumpscare');
   overlayEl.classList.remove('adv-shake'); void overlayEl.offsetWidth;
   overlayEl.classList.add('adv-shake');
   HSound.jumpScare();
   if(state.haptic!==false&&navigator.vibrate)navigator.vibrate([320,70,220,70,180]);
   HotelRuntime.later(()=>{
     if(scareEl)scareEl.classList.remove('on','turn-scare');
-    if(overlayEl)overlayEl.classList.remove('adv-shake');
+    if(overlayEl)overlayEl.classList.remove('adv-shake','adv-jumpscare');
   },duration);
 }
 function spawnGhost(){
   const fx=HauntedHotelGhost.create({
     THREE:THREE,scene:scene,camera:camera,
-    onJumpScare:hotelTurnScare,
+    onAttack:detail=>hotelGhostAttack(detail&&detail.kind||'chase'),
+    onRoomIntrusion:()=>{
+      HSound.wail();
+      showBanner('👻 <b>ซ่อนเกิน 2 นาที!</b><br><small>ผีตามเข้ามาในห้องแล้ว — รีบหนีออกไป</small>',3200);
+    },
     onBreathingStart:()=>{
       HSound.startBreathing();
       overlayEl.classList.add('adv-neck-breath');
@@ -3313,14 +3320,41 @@ function tickSurvive(){
   }
 }
 
-/* ---------- ❤️ หัวใจ: โรงแรมผีสิงไม่มีการเสียหัวใจแล้ว (ผีไม่ทำร้ายใคร) ----------
-   คงฟังก์ชันไว้เพราะ start()/โลกอื่นเรียกอยู่ — ในโรงแรมแค่ซ่อนหัวใจ เหลือนาฬิกาเวลาอยู่ในโรงแรม */
+/* ---------- ❤️ โรงแรมใช้หลอดพลังชีวิต 10 ช่องบน topbar; legacy hearts ไม่ใช้แล้ว ---------- */
 function renderHearts(){
   if(!hudHeartEl) return;
   hudHeartEl.style.display='none';
   if(hudSurvEl) hudSurvEl.style.display = (mode==='haunt') ? 'block' : 'none';
 }
-/* เอฟเฟกต์ตกใจจากสภาพแวดล้อมเท่านั้น; ผีประชิด+ไฟล์ jump_scare สงวนให้การหันหลังครบ 10 ครั้ง */
+function hotelGhostAttack(kind,force){
+  if(!running||mode!=='haunt'||hotelGameOverShown)return false;
+  const now=performance.now();
+  if(!force&&hWardrobeTurn&&hWardrobeTurn.snapshot())return false;
+  if(!force&&now<hurtUntil)return false;
+  hurtUntil=now+HAUNT_IFRAME;
+  hotelTurnScare(3000);
+  hp=Math.max(0,hp-1);
+  if(state.haptic!==false&&navigator.vibrate)navigator.vibrate([180,50,140]);
+  dmgFlashEl.classList.remove('on');void dmgFlashEl.offsetWidth;dmgFlashEl.classList.add('on');
+  renderHudTop();
+  if(hp<=0)hotelGameOver();
+  else showBanner(`💔 <b>ผีโจมตี ${HAUNT_ATTACKS-hp}/${HAUNT_ATTACKS} ครั้ง</b><br><small>เหลือพลังชีวิต ${hp} ช่อง</small>`,1800);
+  return true;
+}
+function hotelGameOver(){
+  if(hotelGameOverShown||mode!=='haunt')return;
+  hotelGameOverShown=true;running=false;hauntSurviveFinish();
+  HotelRuntime.later(()=>{
+    if(mode!=='haunt'||!overlayEl||!overlayEl.classList.contains('on'))return;
+    HSound.stopAll();
+    if(scareEl)scareEl.classList.remove('on','turn-scare');
+    HotelRuntime.clearScopedHints('','',true);
+    hotelImportantHint(`game-over-${Date.now()}`,
+      `ผีโจมตีครบ <b>${HAUNT_ATTACKS} ครั้ง</b><br>ภารกิจรอบนี้สิ้นสุดแล้ว`,
+      {title:'GAME OVER',scope:'gameover',onDismiss:()=>exitWorld()});
+  },3000);
+}
+/* เอฟเฟกต์ตกใจจากสภาพแวดล้อมเท่านั้น; ไม่หักพลังชีวิต (การโจมตีจริงผ่าน hotelGhostAttack) */
 function hotelScare(){
   HSound.stinger();
   if(state.haptic!==false && navigator.vibrate) navigator.vibrate([170,60,130]);
@@ -3351,6 +3385,8 @@ let hotelInAt=0;                         // เวลาที่ก้าวเ
 let blackedOut=false;
 let hLastRoomId='';                      // ห้องล่าสุดที่ยืนอยู่ ใช้นับห้องไม่ซ้ำแบบ canonical
 let hPendingRoomId='';
+let hWardrobeTurn=null;                   // เปิดตู้แล้วรอจนผู้เล่นหันไปทางอื่นจึง Jump Scare
+let hotelGameOverShown=false;
 let torch=null, torchSpill=null, torchOn=false;   // 🔦 ไฟฉาย (ลำแสง + แสงฟุ้งรอบตัว)
 let hKnockAt=0, hActEl=null, hTorchBtn=null, hTorchHintEl=null, hActNow=null;
 let hHintEl=null, hHintTitleEl=null, hHintTextEl=null, hHintHistoryEl=null;
@@ -3487,12 +3523,15 @@ function hotelShowCriticalHint(item){
   if(!hHintEl)return;
   hHintTitleEl.textContent=item&&item.title||'คำใบ้ภารกิจ';
   hHintTextEl.innerHTML=item&&item.html||'';
+  hHintEl.classList.toggle('game-over',!!(item&&item.scope==='gameover'));
+  const ok=hHintEl.querySelector('#adv-hh-hint-ok');if(ok)ok.textContent=item&&item.scope==='gameover'?'กลับ Lobby':'เข้าใจแล้ว';
   hHintEl.classList.add('on');
   hHintEl.setAttribute('aria-hidden','false');
   if(hHintHistoryEl)hHintHistoryEl.classList.remove('on');
 }
 function hotelHideCriticalHint(){
-  if(hHintEl){hHintEl.classList.remove('on');hHintEl.setAttribute('aria-hidden','true');}
+  if(hHintEl){hHintEl.classList.remove('on','game-over');hHintEl.setAttribute('aria-hidden','true');
+    const ok=hHintEl.querySelector('#adv-hh-hint-ok');if(ok)ok.textContent='เข้าใจแล้ว';}
   if(hHintHistoryEl&&M&&M.hotel)hHintHistoryEl.classList.add('on');
 }
 function hotelImportantHint(id,html,options){
@@ -3597,7 +3636,8 @@ function hotelRuntimeInit(){
 function hotelReset(){
   hotel=(worlds.haunt&&worlds.haunt.hotel)||null;
   hFootY=0; hotelInAt=0; blackedOut=false; hLastRoomId=''; hPendingRoomId=''; hFirstFlickerUntil=0; hotelGhostFx=null;
-  hKnockAt=0; hActNow=null;
+  hKnockAt=0; hActNow=null;hotelGameOverShown=false;
+  hWardrobeTurn=HauntedHotelGhost.createWardrobeTurnTrigger();
   setTorch(false);
   if(hotel){
     hotel.lift.floor=0; hotel.lift.target=0; hotel.lift.y=0; hotel.lift.cab.position.y=0;
@@ -3793,6 +3833,10 @@ function tickHotelWorld(dt,now){
   const inside=HOTEL3D.insideHotel(c.x,c.z);
   const currentRoom=HOTEL3D.roomAt(hotel,c.x,c.z,hFootY);
   const currentRoomId=HOTEL3D.roomVisitId(currentRoom);
+  const wardrobeScare=hWardrobeTurn&&hWardrobeTurn.update(yaw,now);
+  if(wardrobeScare){
+    hotelGhostAttack('wardrobe',true);
+  }
   if(currentRoomId&&currentRoomId!==hLastRoomId&&!hPendingRoomId){
     hPendingRoomId=currentRoomId;
     HotelRuntime.visitRoom(currentRoomId).then(()=>{
@@ -3847,6 +3891,7 @@ function hotelAct(){
 function openWardrobe(W){
   if(!W || W.open) return;
   W.open=true; W.done=true; HSound.door();
+  if(hWardrobeTurn)hWardrobeTurn.arm(W.slot||hotel.wardrobes.indexOf(W)+1,yaw,performance.now());
   if(!W.special) return;
   if(W.content==='letter'){
     if(hQuest&&hQuest.finalActive&&W.letter){
@@ -4931,6 +4976,11 @@ function showBanner(html){
 function renderHudTop(){
   hudHpEl.style.width=(maxHp?Math.max(0,Math.min(100,hp/maxHp*100)):hp)+'%';   // 🤖 รอบ 236: อิง maxHp ต่อโลก
   hudHpEl.className='adv-hp-fill'+(hp<=maxHp*0.3?' low':'');
+  const hpBox=hudHpEl.parentElement;
+  if(hpBox){
+    if(mode==='haunt')hpBox.dataset.hp=`❤ พลังชีวิต ${hp}/${maxHp}`;
+    else delete hpBox.dataset.hp;
+  }
   hudCoinEl.textContent=`🪙 +${fmtNum(sessionCoins)} · 📖 ${sessionWords} คำ`;
 }
 function renderHudWords(){   // โชว์คำเป้าหมายปัจจุบัน (words[0]) เป็นคำใหญ่ทีละคำ · ตัวอักษรที่เก็บแล้วไฮไลต์เขียว
@@ -12656,7 +12706,7 @@ function start(md,opt){
   solids=worlds[wk].solids||[];
 
   maxHp=100; hp=100; sessionCoins=0; sessionWords=0; sessionWordLog=[]; inv={}; keys={}; yaw=0; pitch=0;   // maxHp ปรับต่อโลกด้านล่าง
-  hauntLives=HAUNT_LIVES; hurtUntil=0;                                 // 👻 รีเซ็ตหัวใจโลกผี
+  hurtUntil=0;
   hauntRunStart=performance.now(); hauntRecordShown=false;             // ⏱ รอบ 256: เริ่มจับเวลาหนีผีรอด
   nmActive=false; nmMin=99; nmCrashed=false; nmCombo=0; nmLastAt=0;    // 💨 รีเซ็ตโบนัสบินเฉียด
   if(M.heli){
@@ -12749,6 +12799,7 @@ function start(md,opt){
     camera.position.set(0,MECHA_EYE,26); yaw=0; pitch=-0.06;
   }else if(M.hotel){
     /* 🏨 รอบ 684: เกิด "นอกโรงแรม" หันหน้าเข้าประตูหลัก — ให้เด็กได้เห็นตึกสวย ๆ ก่อนเดินเข้าไป (ข้อ 3) */
+    maxHp=HAUNT_ATTACKS;hp=maxHp;
     camera.position.set(HOTEL3D.BX+26,EYE_H,0);
     yaw=Math.PI/2; pitch=-.02;
     hotelReset();
@@ -12867,6 +12918,7 @@ function exitWorld(){
   // 🏨 รอบ 684: ออกจากโรงแรม = ปิดไฟฉาย + คืนไฟทั้งตึก + ซ่อน HUD เฉพาะโลกนี้
   if(mode==='haunt'){
     HotelRuntime.exit();
+    if(hWardrobeTurn)hWardrobeTurn.clear();
     disposeHotelTorch();
     if(hActEl) hActEl.style.display='none';
     if(hTorchHintEl) hTorchHintEl.style.display='none';
@@ -12894,7 +12946,7 @@ function exitWorld(){
   toggleChatBox(false);
   selfMsgEl.classList.remove('on');
   myChat=null;
-  overlayEl.classList.remove('on','adv-hunted','adv-shake','adv-neck-breath');
+  overlayEl.classList.remove('on','adv-hunted','adv-shake','adv-neck-breath','adv-jumpscare');
   if(introEl) introEl.classList.remove('on');
   scareEl.classList.remove('on','turn-scare');
   banEl.classList.remove('show','stay'); banEl.innerHTML='';

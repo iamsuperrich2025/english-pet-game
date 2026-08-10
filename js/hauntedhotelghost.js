@@ -7,7 +7,9 @@
   'use strict';
 
   const IMAGE='img/ghosts/newGhost/ghost_attack_01.png';
-  const TURN_TRIGGER=10;
+  const ROOM_HIDE_MS=120000;
+  const ATTACK_COOLDOWN_MS=4500;
+  const WARDROBE_TURN_RADIANS=1.05;
   let sharedTexture=null;
 
   function wrapAngle(value){
@@ -16,33 +18,50 @@
     if(out<-Math.PI)out+=Math.PI*2;
     return out;
   }
-  function createTurnCounter(){
-    let dark=false,anchor=0,armed=true,count=0;
+  function createWardrobeTurnTrigger(){
+    let pending=null;
     return {
-      setBlackout:function(on,yaw){
-        const next=!!on;
-        if(next&&!dark){anchor=Number(yaw)||0;armed=true;count=0;}
-        if(!next){armed=true;count=0;}
-        dark=next;
+      arm:function(id,yaw,now){
+        pending={id:String(id||'wardrobe'),yaw:Number(yaw)||0,openedAt:Number(now)||0,readyAt:(Number(now)||0)+650};
+        return pending;
       },
-      update:function(yaw){
-        if(!dark)return false;
-        const delta=Math.abs(wrapAngle((Number(yaw)||0)-anchor));
-        if(!armed&&delta<.72)armed=true;
-        if(armed&&delta>2.42){
-          armed=false; count++;
-          if(count>=TURN_TRIGGER){count=0;return true;}
-        }
+      clear:function(){pending=null;},
+      update:function(yaw,now){
+        if(!pending||(Number(now)||0)<pending.readyAt)return null;
+        if(Math.abs(wrapAngle((Number(yaw)||0)-pending.yaw))<WARDROBE_TURN_RADIANS)return null;
+        const fired=pending;pending=null;return fired;
+      },
+      snapshot:function(){return pending?Object.assign({},pending):null;}
+    };
+  }
+  function createRoomStayTracker(limitMs){
+    const limit=Math.max(1000,Number(limitMs)||ROOM_HIDE_MS);
+    let dark=false,room='',since=0,triggered=false;
+    return {
+      setBlackout:function(on,now){
+        const next=!!on;
+        if(next!==dark){dark=next;room='';since=Number(now)||0;triggered=false;}
+      },
+      update:function(player,now){
+        const current=dark&&player&&player.room?String(player.room):'';
+        const time=Number(now)||0;
+        if(!current){room='';since=time;triggered=false;return false;}
+        if(current!==room){room=current;since=time;triggered=false;return false;}
+        if(!triggered&&time-since>=limit){triggered=true;return true;}
         return false;
       },
-      snapshot:function(){return {dark:dark,count:count,armed:armed,anchor:anchor};}
+      snapshot:function(now){return {dark:dark,room:room,since:since,elapsed:room?Math.max(0,(Number(now)||0)-since):0,triggered:triggered};}
     };
   }
   function playerDistance(origin,player){
     const dy=(Number(player.y)||0)-(Number(origin.y)||0);
     return Math.hypot((Number(player.x)||0)-(Number(origin.x)||0),(Number(player.z)||0)-(Number(origin.z)||0),dy*.7);
   }
-  function chooseTarget(origin,players){
+  function chooseTarget(origin,players,forcedId){
+    if(forcedId){
+      const forced=(players||[]).find(function(player){return player&&String(player.id)===String(forcedId);});
+      if(forced)return forced;
+    }
     const visible=(players||[]).filter(function(player){return player&&!player.room;});
     if(!visible.length)return null;
     visible.sort(function(a,b){return playerDistance(origin,a)-playerDistance(origin,b)||String(a.id).localeCompare(String(b.id));});
@@ -124,44 +143,48 @@
     const mesh=new THREE.Mesh(geometry,material),group=new THREE.Group();
     mesh.position.y=0; mesh.renderOrder=8; mesh.frustumCulled=false; group.add(mesh); group.visible=false;
     if(scene)scene.add(group);
-    const counter=createTurnCounter();
+    const roomStay=createRoomStayTracker(opt.roomHideMs);
     let dark=false,opacity=0,velocity=new THREE.Vector3(),lastDir=new THREE.Vector3(1,0,0),turn=0;
-    let scareUntil=0,breathing=false,lastTarget='',passDir=1,disposed=false;
+    let breathing=false,lastTarget='',passDir=1,disposed=false,nextAttackAt=0,intrudingRoom='';
 
     function stopBreathing(){
       if(!breathing)return;
       breathing=false;
       if(typeof opt.onBreathingStop==='function')opt.onBreathingStop();
     }
-    function setBlackout(on,yaw){
+    function setBlackout(on,yaw,now){
       const next=!!on;
       if(next===dark)return;
-      dark=next; counter.setBlackout(next,yaw);
-      scareUntil=0; material.uniforms.uJump.value=0; stopBreathing();
+      dark=next; roomStay.setBlackout(next,now);intrudingRoom='';nextAttackAt=0;
+      material.uniforms.uJump.value=0; stopBreathing();
       if(next){group.visible=true;opacity=0;velocity.set(0,0,0);lastTarget='';}
     }
-    function beginScare(now){
-      scareUntil=now+3000; stopBreathing(); material.uniforms.uJump.value=1;
-      if(typeof opt.onJumpScare==='function')opt.onJumpScare(3000);
+    function intrude(local,yaw,now){
+      const bounds=local&&local.roomBounds||null,margin=.65;
+      let x=(Number(local.x)||0)-Math.sin(yaw)*2.25,z=(Number(local.z)||0)-Math.cos(yaw)*2.25;
+      if(bounds){
+        x=Math.max(Number(bounds.x0)+margin,Math.min(Number(bounds.x1)-margin,x));
+        z=Math.max(Number(bounds.z0)+margin,Math.min(Number(bounds.z1)-margin,z));
+      }
+      group.position.set(x,(Number(local.y)||0)+1.68,z);velocity.set(0,0,0);opacity=.98;group.visible=true;
+      intrudingRoom=String(local.room||'');lastTarget=String(local.id||'');
+      if(typeof opt.onRoomIntrusion==='function')opt.onRoomIntrusion({player:local,room:intrudingRoom,at:now});
     }
     function update(dt,now,context){
       if(disposed)return;
       const ctx=context||{},yaw=Number(ctx.yaw)||0,players=ctx.players||[],localId=String(ctx.localId||'');
-      setBlackout(!!ctx.blackout,yaw);
+      setBlackout(!!ctx.blackout,yaw,now);
       material.uniforms.uTime.value=(Number(now)||0)/1000;
       material.uniforms.uLight.value=Math.max(0,Math.min(1,Number(ctx.lightLevel)||0));
       material.uniforms.uBlackout.value=dark?1:0;
       if(!dark){opacity=Math.max(0,opacity-dt*2.8);material.uniforms.uOpacity.value=opacity;if(opacity<=.01)group.visible=false;return;}
       group.visible=true; opacity=Math.min(.94,opacity+dt*.72);
       const local=players.find(function(player){return String(player.id)===localId;})||players[0]||null;
-      if(counter.update(yaw)&&now>=scareUntil&&!breathing)beginScare(now);
-      if(scareUntil&&now>=scareUntil){
-        scareUntil=0; material.uniforms.uJump.value=0;
-        if(local&&!local.room){breathing=true;if(typeof opt.onBreathingStart==='function')opt.onBreathingStart();}
-      }
-      if(breathing&&local&&local.room)stopBreathing();
+      if(roomStay.update(local,now)&&local)intrude(local,yaw,now);
+      if(intrudingRoom&&(!local||String(local.room||'')!==intrudingRoom))intrudingRoom='';
+      if(breathing&&local&&local.room&&!intrudingRoom)stopBreathing();
 
-      const origin=group.position,target=chooseTarget(origin,players);
+      const origin=group.position,target=chooseTarget(origin,players,intrudingRoom&&local?localId:'');
       let tx=origin.x+passDir*8,tz=0,ty=origin.y;
       if(target){
         lastTarget=String(target.id); tx=Number(target.x)||0; tz=Number(target.z)||0; ty=(Number(target.y)||0)+1.68;
@@ -178,6 +201,14 @@
       }
       const dx=tx-origin.x,dy=ty-origin.y,dz=tz-origin.z,d=Math.hypot(dx,dy*.65,dz)||.001;
       const keep=target?1.65:.3,speed=d>17?2.75:2.15,wanted=d>keep?speed:0;
+      if(target&&String(target.id)===localId&&d<=1.82&&now>=nextAttackAt){
+        nextAttackAt=now+(Number(opt.attackCooldownMs)||ATTACK_COOLDOWN_MS);
+        stopBreathing();material.uniforms.uJump.value=1;
+        if(typeof opt.onAttack==='function')opt.onAttack({kind:intrudingRoom?'room':'chase',player:target,at:now});
+      }else if(now+350<nextAttackAt)material.uniforms.uJump.value=Math.max(0,material.uniforms.uJump.value-dt*2.6);
+      if(target&&String(target.id)===localId&&!target.room&&!breathing&&d<5.2){
+        breathing=true;if(typeof opt.onBreathingStart==='function')opt.onBreathingStart();
+      }
       const desired=new THREE.Vector3(dx/d*wanted,dy/d*wanted,dz/d*wanted);
       const smooth=Math.min(1,dt*(wanted>velocity.length()?1.9:2.8));
       velocity.lerp(desired,smooth);
@@ -195,9 +226,12 @@
       if(scene)scene.remove(group);geometry.dispose();material.dispose();
     }
     return {spr:group,mats:[material],update:update,setBlackout:setBlackout,stopBreathing:stopBreathing,dispose:dispose,
-      snapshot:function(){return {dark:dark,opacity:opacity,target:lastTarget,breathing:breathing,scareUntil:scareUntil,turns:counter.snapshot()};}};
+      snapshot:function(){return {dark:dark,opacity:opacity,target:lastTarget,breathing:breathing,nextAttackAt:nextAttackAt,
+        intrudingRoom:intrudingRoom,roomStay:roomStay.snapshot(performance.now())};}};
   }
 
-  window.HauntedHotelGhost={IMAGE:IMAGE,TURN_TRIGGER:TURN_TRIGGER,create:create,makeStatic:makeStatic,
-    _wrapAngle:wrapAngle,_chooseTarget:chooseTarget,_createTurnCounter:createTurnCounter};
+  window.HauntedHotelGhost={IMAGE:IMAGE,ROOM_HIDE_MS:ROOM_HIDE_MS,ATTACK_COOLDOWN_MS:ATTACK_COOLDOWN_MS,
+    WARDROBE_TURN_RADIANS:WARDROBE_TURN_RADIANS,create:create,makeStatic:makeStatic,
+    createWardrobeTurnTrigger:createWardrobeTurnTrigger,createRoomStayTracker:createRoomStayTracker,
+    _wrapAngle:wrapAngle,_chooseTarget:chooseTarget};
 })();

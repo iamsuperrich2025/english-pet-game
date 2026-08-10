@@ -10,8 +10,12 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   .adv-hud{position:absolute;pointer-events:none;font-family:inherit}
   #adv-topbar{top:8px;left:50%;transform:translateX(-50%);display:flex;gap:10px;align-items:center}
   .adv-hp{width:150px;height:16px;background:rgba(0,0,0,.45);border:2px solid #fff;border-radius:10px;overflow:hidden}
-  .adv-haunt .adv-hp{display:none}
+  .adv-haunt .adv-hp{display:block;position:relative;width:clamp(150px,24vw,190px);height:22px;border-color:#ffd6d6;
+    background:rgba(28,0,3,.78);box-shadow:0 0 12px rgba(190,0,20,.42)}
+  .adv-haunt .adv-hp::after{content:attr(data-hp);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:11px;font-weight:900;letter-spacing:.02em;text-shadow:0 1px 3px #000}
   .adv-hp-fill{height:100%;background:#66bb6a;transition:width .25s}
+  .adv-haunt .adv-hp-fill{background:linear-gradient(90deg,#ff243c,#ff6b6b)}
   .adv-hp-fill.low{background:#ef5350}
   #adv-coin{color:#fff;font-weight:800;font-size:14px;text-shadow:0 1px 3px #000;white-space:nowrap}
   #adv-board{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.5);border-radius:12px;
@@ -163,6 +167,11 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-hh-hint-ok{display:block;min-width:132px;min-height:44px;margin:10px 0 0 auto;padding:7px 18px;
     border:1px solid rgba(255,226,166,.75);border-radius:12px;background:linear-gradient(180deg,#6b4a28,#3f2b19);
     color:#fff7e8;font-family:inherit;font-size:14px;font-weight:900;pointer-events:auto}
+  #adv-hh-hint.game-over{border-color:#ff5268;background:linear-gradient(180deg,rgba(73,0,9,.98),rgba(8,0,2,.98));text-align:center}
+  #adv-hh-hint.game-over #adv-hh-hint-title{padding-right:0;color:#ff7183;font-size:clamp(24px,6vh,42px)}
+  #adv-hh-hint.game-over #adv-hh-hint-text{font-size:clamp(15px,3.5vh,21px)}
+  #adv-hh-hint.game-over #adv-hh-hint-x{display:none}
+  #adv-hh-hint.game-over #adv-hh-hint-ok{margin:12px auto 0;background:linear-gradient(180deg,#b52238,#70101f)}
   #adv-hh-history{position:absolute;z-index:6;right:86px;bottom:24px;display:none;align-items:center;justify-content:center;
     min-width:54px;height:48px;padding:4px 9px;border:1px solid rgba(232,201,143,.7);border-radius:14px;
     background:rgba(12,10,14,.86);color:#f4d79f;font:900 18px/1 inherit;pointer-events:auto}
@@ -183,6 +192,7 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
     font-weight:800;font-size:16px;padding:9px 20px;font-family:inherit}
   #adv-scare{position:absolute;inset:0;pointer-events:none;z-index:9;display:none;align-items:center;justify-content:center;
     background:radial-gradient(ellipse at center,rgba(120,0,0,.85),#000 78%)}
+  #adv-overlay.adv-jumpscare > :not(#adv-scare){visibility:hidden!important}
   #adv-scare.on{display:flex;animation:advScare 1.5s ease-out forwards}
   #adv-scare span{font-size:56vh;line-height:1;filter:drop-shadow(0 0 40px #f00)}
   #adv-scare img{display:none;max-width:100vw;max-height:100vh;object-fit:contain;
@@ -191,11 +201,11 @@ window.ADV3D_CSS=`  #adv-overlay{position:fixed;inset:0;z-index:95;background:#0
   #adv-scare.has-img span{display:none}
   #adv-scare.turn-scare.on{overflow:hidden;animation:hhTurnScare 3s cubic-bezier(.15,.72,.2,1) forwards;
     background:radial-gradient(ellipse at 50% 30%,rgba(18,32,42,.24),#000 82%)}
-  #adv-scare.turn-scare img{display:block;width:100vw;height:100vh;max-width:none;max-height:none;object-fit:cover;
-    object-position:50% 8%;transform:scale(1.35);transform-origin:50% 8%;filter:contrast(1.38) brightness(.88) saturate(.62)
+  #adv-scare.turn-scare img{display:block;position:absolute;left:0;top:39%;width:100vw;height:100vh;max-width:none;max-height:none;object-fit:cover;
+    object-position:50% 10%;transform:scale(4);transform-origin:50% 10%;filter:contrast(1.38) brightness(.88) saturate(.62)
     drop-shadow(0 0 18px rgba(130,205,225,.34))}
-  @keyframes hhTurnScare{0%{opacity:0;transform:scale(.45)}7%{opacity:1;transform:scale(1.08)}
-    16%{transform:scale(.98)}72%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.16)}}
+  @keyframes hhTurnScare{0%{opacity:0;transform:scale(1.02)}7%{opacity:1;transform:scale(1.08)}
+    16%{transform:scale(1)}72%{opacity:1;transform:scale(1.04)}100%{opacity:0;transform:scale(1.16)}}
   @keyframes advScare{0%{opacity:0;transform:scale(.25)}8%{opacity:1;transform:scale(1.15)}
     16%{transform:scale(.95)}24%{transform:scale(1.08)}70%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
   .adv-shake{animation:advShake .12s linear 9}

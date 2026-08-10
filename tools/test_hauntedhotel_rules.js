@@ -30,6 +30,9 @@ assert.ok(adventureSource.includes("thaiInstrument:'sound/ghost/thaiInstrumentGh
 assert.ok(/queueThaiInstrument\(\)[\s\S]*?120000[\s\S]*?5000/.test(adventureSource),'Thai ghost music does not wait 5 seconds then run for 2 minutes');
 assert.ok(/jumpScare\(\)[\s\S]*?onDone:[\s\S]*?queueThaiInstrument/.test(adventureSource),'Thai ghost music is not chained to jump-scare completion');
 assert.ok(/stopGhostVoices\(\)[\s\S]*?clearThaiSequence\(true\)/.test(adventureSource),'lights-on cleanup does not cancel Thai ghost music');
+assert.ok(adventureSource.includes('const HAUNT_ATTACKS = 10'),'Haunted Hotel attack limit is not ten');
+assert.ok(/maxHp=HAUNT_ATTACKS;hp=maxHp/.test(adventureSource),'Haunted Hotel health bar is not backed by ten attack points');
+assert.ok(/hotelGhostAttack\('wardrobe',true\)/.test(adventureSource),'wardrobe turn-away is not wired to a ghost attack');
 
 function state(){return {runId:'hh-test-room-rules',seed:77,placementVersion:1,phase:'ACTIVE_WORD',wordIndex:0,ordinalMask:0,
   cabinetLetterSlot:0,roomVisits:'',completedAt:0,revision:1,wordSet:JSON.stringify([['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ']])};}
@@ -62,14 +65,22 @@ assert.strictEqual(HH.parseRoomVisits('F2_ROOM_201,F2_ROOM_201,F3_ROOM_301').len
   }
   HH.exit();
 
-  const counter=GH._createTurnCounter();counter.setBlackout(true,0);
-  for(let i=0;i<9;i++){assert.strictEqual(counter.update(Math.PI),false);counter.update(0);}
-  assert.strictEqual(counter.update(Math.PI),true,'jump scare did not trigger on the tenth look-back');
-  counter.setBlackout(false,0);assert.strictEqual(counter.update(Math.PI),false,'look-back triggered while lights were on');
-  counter.setBlackout(true,0);assert.strictEqual(counter.snapshot().count,0,'new blackout did not reset look-back count');
+  const wardrobe=GH.createWardrobeTurnTrigger();
+  wardrobe.arm('cabinet-1',0,0);
+  assert.strictEqual(wardrobe.update(Math.PI,0),null,'opening a cabinet triggered an immediate jump scare');
+  assert.strictEqual(wardrobe.update(.8,700),null,'small glance away from a cabinet triggered too early');
+  assert.strictEqual(wardrobe.update(1.2,700).id,'cabinet-1','turning away from an opened cabinet did not trigger');
+  assert.strictEqual(wardrobe.update(Math.PI,900),null,'cabinet jump scare repeated after firing');
+  const roomStay=GH.createRoomStayTracker();roomStay.setBlackout(true,0);
+  assert.strictEqual(roomStay.update({room:'F2_ROOM_201'},0),false,'room ghost appeared immediately');
+  assert.strictEqual(roomStay.update({room:'F2_ROOM_201'},119999),false,'room ghost appeared before two minutes');
+  assert.strictEqual(roomStay.update({room:'F2_ROOM_201'},120000),true,'room ghost did not appear after two dark minutes');
+  assert.strictEqual(roomStay.update({room:'F2_ROOM_201'},150000),false,'room ghost repeated without leaving');
   const target=GH._chooseTarget({x:0,y:0,z:0},[
     {id:'hidden',x:1,y:0,z:0,room:'F2_ROOM_201'},{id:'far',x:8,y:0,z:0,room:''},{id:'near',x:3,y:0,z:0,room:''}
   ]);
   assert.strictEqual(target.id,'near','ghost did not ignore hidden player or select nearest visible player');
-  console.log('PASS Haunted Hotel replacement rules: room letters, 5/10/13 lighting, tenth look-back, hiding, nearest target and Thai music sequence');
+  const forced=GH._chooseTarget({x:0,y:0,z:0},[{id:'hidden',x:1,y:0,z:0,room:'F2_ROOM_201'}],'hidden');
+  assert.strictEqual(forced.id,'hidden','two-minute room intrusion did not target the hidden player');
+  console.log('PASS Haunted Hotel rules: room letters, 5/10/13 lighting, cabinet turn-away, two-minute intrusion, ten-hit health and Thai music sequence');
 })().catch(error=>{console.error(error);process.exitCode=1;});
