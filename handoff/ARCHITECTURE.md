@@ -45,10 +45,10 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 
 <!-- AUTO-FILES:BEGIN -->
 ### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-08-10
-- **js/adv3d_css.js** (1,262 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
+- **js/adv3d_css.js** (1,272 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
 - **js/adv3d_tex.js** (245 บรรทัด) — adv3d_tex.js — 🪓 เฟส 3 (รอบ 546): ผ่าจาก js/adventure3d.js โซน "Texture ตัวอักษร / emoji / ป้ายชื่อผู้เล่น (canvas → sprite)" · IIFE จบในตัว expose window.Adv3dTex — ไฟล์หลักคง alias ชื่อเดิม จุดเรียกทั้งไฟล์ไม่ต้องแก้ · โหลดก่อนไฟล์หลักใน loadAdv3d() (js/ui.js) · deps ตอนรัน: THREE (global) · ค่าจาก closure ไฟล์หลัก inject ผ่าน Adv3dTex.bind({adRenterActive…
-- **js/adventure3d.js** (13,177 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
+- **js/adventure3d.js** (13,229 บรรทัด) — adventure3d.js — โลก 3D First-person 2 โหมด (คิว 7725691507 ข้อ 8 + ต่อยอด) · 🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้ · 👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
 - **js/app-update.js** (169 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena3d.js** (724 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/auth.js** (420 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
@@ -65,7 +65,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/gradelock.js** (169 บรรทัด) — 🔒 GRADE LOCK — ล็อกการเปลี่ยนระดับชั้น (รอบ 647 · ผู้ใช้สั่ง 28 ก.ค. 2026) · เหตุผล: ระดับชั้นคุมความยากคำศัพท์ (vocabForStudent/gradeBand) → เด็กที่ "ลดชั้น" · จะได้คำง่าย ๆ แล้วปั๊มเหรียญได้เร็วผิดปกติ · ต่อยอดจากรอบ 643 (สัญลักษณ์ดาว/เพชรใต้ชื่อ)
 - **js/hauntedhotel.js** (621 บรรทัด) — hauntedhotel.js — Haunted Hotel mission runtime (Phase 2+3+4) · Owns lifecycle, explicit mission phases, canonical run reconciliation, · deterministic mission configuration and cancellable local effects.
 - **js/hauntedhoteldirector.js** (321 บรรทัด) — hauntedhoteldirector.js — Haunted Hotel Horror Director (Phase 3) · Lightweight local pacing + compact, transaction-claimed shared scare intent. · Mission authority, movement, rewards and scene rendering stay outside this module.
-- **js/hauntedhotelghost.js** (203 บรรทัด) — hauntedhotelghost.js — Haunted Hotel PNG ghost runtime · One lightweight subdivided plane + shader; no physics, post-processing, · dynamic lights or cosmetic Firebase state.
+- **js/hauntedhotelghost.js** (237 บรรทัด) — hauntedhotelghost.js — Haunted Hotel PNG ghost runtime · One lightweight subdivided plane + shader; no physics, post-processing, · dynamic lights or cosmetic Firebase state.
 - **js/hauntedhotelsession.js** (255 บรรทัด) — hauntedhotelsession.js — Haunted Hotel canonical run adapter · One low-frequency Firebase record per NetRoom hotel instance. · This module intentionally does not know about rendering, movement or rewards.
 - **js/hotel3d.js** (1,416 บรรทัด) — hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060) · สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง) · ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
 - **js/images.js** (216 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
@@ -103,6 +103,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,254 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (198 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
