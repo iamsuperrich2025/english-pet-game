@@ -4666,3 +4666,8 @@
 
 - **รอบ 1074 (8 ส.ค. · ปลดปักหมุดเมือง 3D/รักษา):** ย้ายปุ่ม `เมือง 3D` และ `รักษา` จาก `.rail-pinned` กลับเข้า `#lobby-rail` เป็นสองปุ่มแรก จึงเลื่อนไปพร้อมเมนูอื่นตามที่ผู้ใช้ขอ
 - **รอบ 1073 (8 ส.ค. · responsive iPhone 14 Lobby):** ต้นตอคือ `viewport-fit=cover` แต่ไม่กัน safe-area ซ้าย/ขวา + Safari landscape text autosizing + scrollbar กินความกว้างราง ทำให้ปุ่มซ้ายแตะยากและ footer/หัวข้อบวมผิดจาก Android
+
+
+## ⏬ ย้ายเมื่อ 2026-08-10 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1076 (8 ส.ค. · iPhone Lobby ให้สัดส่วนเหมือน Android):** ต้นตอคือ iPhone 14 landscape มี viewport เพียง ~844×390 CSS px จึงเข้า responsive จอเตี้ยและขยายการ์ด/ปุ่มจนแสดงองค์ประกอบไม่ครบ ต่างจาก Android ที่กว้าง ~1280px
