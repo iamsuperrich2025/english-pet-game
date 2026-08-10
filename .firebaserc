@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "english-pet-game"
+  },
+  "targets": {
+    "english-pet-game": {
+      "hosting": {
+        "vocabworld": [
+          "vocabworld"
+        ]
+      }
+    }
+  }
+}

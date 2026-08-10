@@ -26,6 +26,16 @@ img/models/ghost.glb
 # (signing.keystore + รหัสใน signing-key-info.txt = ใครได้ไปปลอมแอปเราได้)
 store/android/
 
+# Generated web output and generated Android wrapper artifacts.
+# Source-of-truth is package.json/firebase.json + android-twa/twa-manifest.json.
+dist/
+node_modules/
+android-twa/generated/
+android-twa/*.apk
+android-twa/*.aab
+android-twa/*.keystore
+android-twa/*.jks
+
 # แผ่นภาพสัตว์ต้นฉบับจากผู้ใช้ 4.2MB (รอบ 977 · img/matching/animal1.png, animal2.png)
 # เกมใช้เฉพาะการ์ดที่ตัดแล้ว img/matching/cards/*.png (200px ต่อใบ) — ต้นฉบับเก็บในเครื่องอย่างเดียว
 # ตัดใหม่ได้ทุกเมื่อ: python tools/slice_matching.py

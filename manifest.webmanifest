@@ -1,0 +1,52 @@
+{
+  "id": "/",
+  "name": "Vocab World",
+  "short_name": "Vocab World",
+  "description": "เกมคำศัพท์ภาษาอังกฤษโลกกว้าง — เลี้ยงสัตว์ สร้างตัว ค้าขาย และผจญภัยในโลก 3D",
+  "lang": "th",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#0a1f3c",
+  "theme_color": "#123a6b",
+  "categories": ["education", "games"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "/img/icons/icon-192-flat.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/icon-512-flat.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ล็อบบี้แบบเดิม",
+      "short_name": "ล็อบบี้เดิม",
+      "description": "เปิดล็อบบี้เกมและเมนูกิจกรรม",
+      "url": "/index_classic.html",
+      "icons": [
+        {
+          "src": "/img/icons/icon-192-flat.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

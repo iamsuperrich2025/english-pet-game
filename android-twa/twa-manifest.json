@@ -1,0 +1,52 @@
+{
+  "packageId": "app.web.vocabworld.twa",
+  "host": "vocabworld.web.app",
+  "name": "Vocab World",
+  "launcherName": "Vocab World",
+  "startUrl": "/",
+  "webManifestUrl": "https://vocabworld.web.app/manifest.webmanifest",
+  "fullScopeUrl": "https://vocabworld.web.app/",
+  "appVersion": "1.0.1",
+  "appVersionCode": 2,
+  "display": "fullscreen-sticky",
+  "orientation": "landscape",
+  "themeColor": "#123a6b",
+  "themeColorDark": "#0a1f3c",
+  "backgroundColor": "#0a1f3c",
+  "navigationColor": "#0a1f3c",
+  "navigationColorDark": "#0a1f3c",
+  "navigationDividerColor": "#0a1f3c",
+  "navigationDividerColorDark": "#0a1f3c",
+  "iconUrl": "https://vocabworld.web.app/img/icons/icon-512-flat.png",
+  "maskableIconUrl": "https://vocabworld.web.app/img/icons/icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "fallbackType": "customtabs",
+  "enableNotifications": false,
+  "enableSiteSettingsShortcut": true,
+  "additionalTrustedOrigins": [],
+  "shortcuts": [],
+  "minSdkVersion": 21,
+  "isChromeOSOnly": false,
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "signingKey": {
+    "path": "../store/android/signing.keystore",
+    "alias": "vocabworld-key"
+  },
+  "fingerprints": [
+    {
+      "name": "Google Play app signing",
+      "value": "10:3C:3C:A9:3C:4B:66:0E:14:67:EA:3E:36:C2:5B:20:B7:7D:43:85:5F:35:C2:27:10:4D:90:DF:5E:7E:10:0F"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli"
+}

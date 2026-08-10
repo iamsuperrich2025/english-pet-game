@@ -28,19 +28,29 @@ if [[ -z "$MSG" || $# -eq 0 ]]; then
 fi
 FILES=("$@")
 
-# ── 1) บัมพ์ version.json (+sw.js ถ้าสั่ง) ──────────────────────────────
+# ── 1) บัมพ์ version.json (SW/cache ใช้ build id นี้อัตโนมัติ) ─────────
 NEW=""
 if [[ $DEPLOY -eq 1 ]]; then
-  OLD=$(python -c "import json;print(json.load(open('version.json'))['v'])")
+  OLD=$(python -c "import json;d=json.load(open('version.json'));print(d.get('version') or d['v'])")
   NEW="$(date +%F).$(( ${OLD##*.} + 1 ))"
   echo "🔢 version: $OLD → $NEW"
-  [[ $DRY -eq 0 ]] && printf '{ "v": "%s" }\n' "$NEW" > version.json
+  if [[ $DRY -eq 0 ]]; then
+    NEW_VERSION="$NEW" python - <<'PY'
+import json, os
+from datetime import datetime
+from pathlib import Path
+
+data = {
+    "version": os.environ["NEW_VERSION"],
+    "updated": datetime.now().astimezone().isoformat(timespec="seconds"),
+}
+Path("version.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+  fi
   FILES+=(version.json)
 fi
 if [[ -n "$SW_NOTE" ]]; then
-  V=$(grep -oE "pet-vocab-v[0-9]+" sw.js | head -1 | grep -oE "[0-9]+")
-  echo "🧹 sw.js: v$V → v$((V+1)) ($SW_NOTE)"
-  [[ $DRY -eq 0 ]] && sed -i -E "s|pet-vocab-v$V';.*|pet-vocab-v$((V+1))';  // v$((V+1)): $SW_NOTE|" sw.js
+  echo "🧹 sw.js: cache namespace follows version.json ($SW_NOTE)"
   FILES+=(sw.js)
 fi
 if [[ $DRY -eq 1 ]]; then
@@ -63,7 +73,7 @@ if [[ $DEPLOY -eq 1 ]]; then
     echo "❌ deploy ล้มเหลว — log เต็ม:"; cat "$LOG"; rm -f "$LOG"; exit 1
   fi
   rm -f "$LOG"
-  LIVE=$(curl -s "https://vocabworld.web.app/version.json?t=$(date +%s)" | python -c "import json,sys;print(json.load(sys.stdin)['v'])")
+  LIVE=$(curl -s "https://vocabworld.web.app/version.json?t=$(date +%s)" | python -c "import json,sys;d=json.load(sys.stdin);print(d.get('version') or d['v'])")
   if [[ "$LIVE" == "$NEW" ]]; then echo "✅ live = $LIVE ตรงเลขที่บัมพ์"
   else echo "❌ live=$LIVE ≠ $NEW (เว็บยังไม่อัปเดต)"; exit 1; fi
 else

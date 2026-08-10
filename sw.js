@@ -1,127 +1,198 @@
-/* Service Worker — Pet Vocab Adventure (PWA)
-   กลยุทธ์:
-   - โค้ดเกม (HTML/JS/CSS): network-first → ออนไลน์ได้โค้ดใหม่เสมอ (กันปัญหาโค้ดค้าง),
-     ออฟไลน์ค่อย fallback แคช
-   - รูปภาพ/ฟอนต์: cache-first → โหลดไว ประหยัดเน็ต (รูปแทบไม่เปลี่ยน)
-   - คำขอข้ามโดเมน (Firebase/Google login/gstatic): ปล่อยผ่าน ไม่ยุ่ง
-   อัปเดตเวอร์ชัน: เปลี่ยน CACHE_VERSION แล้ว SW เก่าจะถูกล้างตอน activate
-*/
-const CACHE_VERSION = 'pet-vocab-v279';  // v279: เริ่ม Haunted Hotel รอบใหม่เมื่อผู้เล่นออกหมด
+/* Vocab World service worker
+ *
+ * Delivery contract:
+ * - HTML navigations are network-first with the last valid shell as fallback.
+ * - version.json is network-only and is never answered from Cache Storage.
+ * - immutable /assets/build URLs are cache-first.
+ * - every other same-origin asset uses its content hash from asset-manifest.json
+ *   as the Cache Storage key, so unchanged GLB/audio/texture/data files survive deploys.
+ * - player state lives outside Cache Storage (localStorage/Firebase) and is never touched here.
+ */
+'use strict';
 
-/* app shell — โครงหลักที่ต้องมีเพื่อเปิดเกมได้แม้ออฟไลน์
-   รอบ 863: index.html = ล็อบบี้เมือง 3D (city3d.js) · index_classic.html = ล็อบบี้เดิม (เกมทั้งหมด)
-   ต้องแคชทั้งคู่ ไม่งั้นออฟไลน์กดสลับหน้าแล้วตาย */
-const SHELL = [
-  './',
-  './index.html',
-  './index_classic.html',
-  './js/thaitime.js',        // 🇹🇭 รอบ 988: เวลาไทยกลางของเกม (สคริปต์แรกสุดของทั้ง 2 หน้า)
-  './js/city3d.js',
-  './manifest.json',
-  './css/style.css',
-  './css/lobby.css',
-  './css/exam.css',
-  './css/arena3d.css',       // 🌀 รอบ 1045: HUD โลกผจญภัย Vocab Arena
-  './css/bubble.css',        // 🫧 เกมฟองคำศัพท์
-  './js/data/pets.js',
-  './js/data/items.js',
-  './js/data/calendar.js',
-  './js/data/vocab.js',
-  './js/data/ranks.js',
-  './js/data/homes.js',
-  './js/data/fruits.js',
-  './js/data/collectibles.js',
-  './js/data/players.js',
-  './js/data/badwords.js',
-  './js/data/firebase-config.js',
-  './js/data/dict_band/manifest.js',
-  './js/data/exam/manifest.js',
-  './js/examstd.js',
-  './js/dictband.js',
-  './js/vocabbook.js',
-  './js/util.js',
-  './js/state.js',
-  './js/images.js',
-  './js/petbehavior.js',
-  './js/ui.js',
-  './js/lobby.js',
-  './js/game.js',
-  './js/cert.js',
-  './js/auth.js',
-  './js/online.js',
-  './js/wsaward.js',
-  './js/bbaward.js',
-  './js/bubble.js',
-  './js/main.js',
-  './js/vendor/three.min.js',
-  './js/adv3d_css.js',
-  './js/adv3d_intro.js',
-  './js/adv3d_tex.js',
-  './js/hotel3d.js',
-  './js/hauntedhotelsession.js',
-  './js/hauntedhoteldirector.js',
-  './js/hauntedhotel.js',
-  './js/hauntedhotelghost.js',
-  './js/adventure3d.js',
-  './js/arena3d.js',         // 🌀 รอบ 1045: ต่อสู้ PvE→เก็บอักษร→ประกอบคำ→ร้านพลัง
-  './img/icons/icon-192-flat.png',   // รอบ 859: ไอคอนพื้นเรียบสีเดียวกับ background_color (แก้ splash APK เห็นกรอบ)
-  './img/icons/icon-512-flat.png',
-  './img/icons/splash_logo.png',   // รอบ 757: โลโก้ splash — ต้องมีในแคชไม่งั้นเปิดออฟไลน์แล้วจอโหลดว่างเปล่า
-];
+const BUILD_ID = '__VW_BUILD_VERSION__';
+const SHELL_CACHE = `vw-shell-${BUILD_ID}`;
+const ASSET_CACHE = 'vw-assets-content-v1';
+const MANIFEST_URL = `/asset-manifest.json?v=${encodeURIComponent(BUILD_ID)}`;
+const PRECACHE = __VW_PRECACHE__;
+let assetManifestPromise = null;
 
-self.addEventListener('install', (e)=>{
-  e.waitUntil(
-    caches.open(CACHE_VERSION)
-      .then(c=>c.addAll(SHELL))
-      .then(()=>self.skipWaiting())          // ให้ SW ใหม่ทำงานทันที
-      .catch(()=>{})                          // ไฟล์ใดโหลดไม่ได้ ไม่ให้ install ล้มทั้งชุด
-  );
+function sameOrigin(url) {
+  return url.origin === self.location.origin;
+}
+
+function noStoreRequest(request) {
+  return new Request(request, { cache: 'no-store' });
+}
+
+async function fetchAssetManifest(forceNetwork = false) {
+  if (assetManifestPromise && !forceNetwork) return assetManifestPromise;
+  assetManifestPromise = (async () => {
+    const manifestRequest = new Request(MANIFEST_URL, { cache: 'no-store' });
+    const manifestCache = await caches.open(SHELL_CACHE);
+    try {
+      const response = await fetch(manifestRequest);
+      if (!response.ok) throw new Error(`asset manifest HTTP ${response.status}`);
+      const copy = response.clone();
+      const data = await response.json();
+      if (!data || data.build !== BUILD_ID || !data.files) throw new Error('asset manifest/build mismatch');
+      await manifestCache.put(manifestRequest, copy);
+      return data;
+    } catch (error) {
+      const cached = await manifestCache.match(manifestRequest);
+      if (cached) return cached.json();
+      throw error;
+    }
+  })();
+  return assetManifestPromise;
+}
+
+async function cacheShellAtomically() {
+  const cache = await caches.open(SHELL_CACHE);
+  try {
+    await Promise.all(PRECACHE.map(async (url) => {
+      const response = await fetch(new Request(url, { cache: 'reload' }));
+      if (!response.ok) throw new Error(`precache ${url}: HTTP ${response.status}`);
+      await cache.put(url, response);
+    }));
+    await fetchAssetManifest(true);
+  } catch (error) {
+    await caches.delete(SHELL_CACHE);
+    throw error;
+  }
+}
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(cacheShellAtomically().then(() => self.skipWaiting()));
 });
 
-self.addEventListener('activate', (e)=>{
-  e.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE_VERSION).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
+self.addEventListener('activate', (event) => {
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    const shellKeys = keys.filter((key) => key.startsWith('vw-shell-')).sort().reverse();
+    const keep = new Set([SHELL_CACHE, ...shellKeys.filter((key) => key !== SHELL_CACHE).slice(0, 1)]);
+    await Promise.all(shellKeys.filter((key) => !keep.has(key)).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener('fetch', (e)=>{
-  const req = e.request;
-  if(req.method !== 'GET') return;                        // เขียนข้อมูล → ปล่อยผ่าน
-  const url = new URL(req.url);
-  if(url.origin !== self.location.origin) return;         // Firebase/Google/ฟอนต์ → ปล่อยผ่าน
-  // 🎬 รอบ 605: คลิปน้อง (clip/*.mp4) — ปล่อยเบราว์เซอร์จัดการเอง
-  // (วิดีโอโหลดเป็นช่วง Range 206 · ถ้า SW เก็บ/คืนสำเนาบางส่วน เล่นพังหรือค้าง + กินที่แคชเป็น MB)
-  if(/\.(mp4|webm|mov|m4v)$/i.test(url.pathname)) return;
+async function cachedShellFallback(request) {
+  const direct = await caches.match(request, { ignoreSearch: true });
+  if (direct) return direct;
+  return (await caches.match('/index.html')) || (await caches.match('/offline.html'));
+}
 
-  const isImg = /\.(png|jpg|jpeg|gif|webp|svg|ico|mp3|wav|ogg)$/i.test(url.pathname)
-    || url.pathname.includes('/js/vendor/');   // vendor (three.min.js ~600KB) + เสียง แทบไม่เปลี่ยน → cache-first ประหยัดเน็ต
+async function networkFirstNavigation(request) {
+  try {
+    const response = await fetch(new Request(request, { cache: 'no-cache' }));
+    if (!response.ok) throw new Error(`navigation HTTP ${response.status}`);
+    const cache = await caches.open(SHELL_CACHE);
+    await cache.put(request, response.clone());
+    return response;
+  } catch {
+    return (await cachedShellFallback(request)) || Response.error();
+  }
+}
 
-  if(isImg){
-    // cache-first สำหรับรูป/เสียง/vendor — cache เฉพาะโหลดสำเร็จ (res.ok) เท่านั้น
-    // ห้าม cache 404: ภาพที่ยังไม่ได้เจน พอเจนเสร็จวางไฟล์แล้วต้องโผล่ได้เลย
-    e.respondWith(
-      caches.match(req).then(hit=> hit || fetch(req).then(res=>{
-        if(res.ok){
-          const copy = res.clone();
-          caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
-        }
-        return res;
-      }).catch(()=>hit))
-    );
+async function cacheFirstImmutable(request) {
+  const cache = await caches.open(ASSET_CACHE);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) await cache.put(request, response.clone());
+  return response;
+}
+
+function versionedCacheKey(pathname, hash) {
+  return new Request(`${self.location.origin}/__vw_asset__${pathname}?v=${encodeURIComponent(hash)}`);
+}
+
+async function previousAsset(pathname, cache) {
+  const expectedPath = `/__vw_asset__${pathname}`;
+  const keys = await cache.keys();
+  for (let index = keys.length - 1; index >= 0; index -= 1) {
+    if (new URL(keys[index].url).pathname === expectedPath) {
+      const hit = await cache.match(keys[index]);
+      if (hit) return hit;
+    }
+  }
+  return null;
+}
+
+async function contentHashCacheFirst(request, url) {
+  const cache = await caches.open(ASSET_CACHE);
+  let entry = null;
+  try {
+    const manifest = await fetchAssetManifest();
+    entry = manifest.files[url.pathname] || null;
+  } catch {
+    // A previous cache can still keep the current game playable while offline.
+  }
+
+  if (entry && entry.hash) {
+    const key = versionedCacheKey(url.pathname, entry.hash);
+    const cached = await cache.match(key);
+    if (cached) return cached;
+    try {
+      const response = await fetch(new Request(request, { cache: 'no-cache' }));
+      if (!response.ok) throw new Error(`asset HTTP ${response.status}`);
+      await cache.put(key, response.clone());
+      return response;
+    } catch {
+      const previous = await previousAsset(url.pathname, cache);
+      if (previous) return previous;
+      throw new Error(`No cached version of ${url.pathname}`);
+    }
+  }
+
+  const direct = await cache.match(request, { ignoreSearch: true });
+  if (direct) return direct;
+  try {
+    const response = await fetch(request);
+    if (response.ok) await cache.put(request, response.clone());
+    return response;
+  } catch {
+    return (await cachedShellFallback(request)) || Response.error();
+  }
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  if (!sameOrigin(url)) return;
+
+  if (url.pathname === '/version.json') {
+    event.respondWith(fetch(noStoreRequest(request)).catch(() => new Response(
+      JSON.stringify({ error: 'offline', version: null }),
+      { status: 503, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } },
+    )));
     return;
   }
 
-  // network-first สำหรับโค้ด/หน้าเว็บ (ออนไลน์ได้ของใหม่ ออฟไลน์ใช้แคช)
-  // cache เฉพาะ res.ok — กัน error ทับสำเนาดีที่เคยมี
-  e.respondWith(
-    fetch(req).then(res=>{
-      if(res.ok){
-        const copy = res.clone();
-        caches.open(CACHE_VERSION).then(c=>c.put(req, copy)).catch(()=>{});
-      }
-      return res;
-    }).catch(()=> caches.match(req).then(hit=> hit || caches.match('./index.html')))
-  );
+  if (url.pathname === '/sw.js' || url.pathname === '/asset-manifest.json') {
+    event.respondWith(fetch(noStoreRequest(request)));
+    return;
+  }
+
+  if (request.mode === 'navigate' || /\/(?:index(?:_classic)?|offline)\.html$/.test(url.pathname)) {
+    event.respondWith(networkFirstNavigation(request));
+    return;
+  }
+
+  // Range responses must remain browser-managed; caching a partial video corrupts later playback.
+  if (request.headers.has('range')) return;
+
+  if (url.pathname.startsWith('/assets/build/')) {
+    event.respondWith(cacheFirstImmutable(request));
+    return;
+  }
+
+  event.respondWith(contentHashCacheFirst(request, url));
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'VW_BUILD_INFO') {
+    event.source?.postMessage({ type: 'VW_BUILD_INFO', build: BUILD_ID });
+  }
 });

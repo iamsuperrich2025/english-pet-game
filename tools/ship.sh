@@ -58,7 +58,10 @@ if [[ ${#MANIFEST[@]} -gt 0 ]]; then
   CHANGED=()
   for f in "${MANIFEST[@]}"; do
     [[ "$f" != /* && "$f" != *".."* ]] || { say "❌ FILE path ไม่ปลอดภัย: $f"; exit 2; }
-    [[ -e "$f" ]] || { say "❌ FILE ไม่พบในเครื่อง: $f"; exit 2; }
+    # A tracked file may intentionally be deleted/renamed in this round. Keep its path so
+    # finish_round.sh can commit the deletion, while still rejecting unknown missing paths.
+    [[ -e "$f" ]] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1 \
+      || { say "❌ FILE ไม่พบในเครื่องและไม่ใช่ไฟล์ tracked: $f"; exit 2; }
     CHANGED+=("$f")
   done
   mapfile -t CHANGED < <(printf '%s\n' "${CHANGED[@]}" | sort -u)

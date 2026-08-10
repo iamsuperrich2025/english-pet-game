@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Vocab World 🌍 เกมคำศัพท์โลกกว้าง เลี้ยงสัตว์ สร้างตัว ผจญภัย 3D</title>
 <!-- PWA (ติดตั้งเป็นแอพบนมือถือได้) -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#123a6b">
+<meta name="vw-build-version" content="__VW_BUILD_VERSION__">
+<script src="js/app-update.js"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -726,72 +728,6 @@
 <!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash
      🖼️ รอบ 882: โหมดภาพ (window.__vwSplashPhoto) ข้ามบรรทัดนี้ไปก่อน — ค้างจอเปิดไว้จน ?go= handler ท้าย js/main.js สั่งจางเอง -->
 <script>if(window.__hideAppSplash && !window.__vwSplashPhoto) __hideAppSplash();</script>
-<!-- ลงทะเบียน Service Worker (PWA) — เฉพาะ https/localhost เท่านั้น (file:// ไม่รองรับ) -->
-<script>
-if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
-  });
-}
-</script>
-<!-- แจ้งเตือนเวอร์ชันใหม่: เทียบ version.json บน server กับเวอร์ชันที่กำลังรัน
-     ถ้าไม่ตรง = มีอัปเดต → เด้งแถบให้กดรีโหลด (ทำงานร่วมกับ network-first ใน sw.js)
-     ⚠️ เวลา deploy โค้ดใหม่ ให้บัมพ์เลข "v" ใน version.json ทุกครั้ง ผู้ใช้ถึงจะเห็นแถบนี้ -->
-<script>
-(function(){
-  if(!location.protocol.startsWith('http')) return;   // file:// ข้าม
-  var offeredVersion = null;                           // เวอร์ชันล่าสุดที่แถบนี้กำลังเสนอ
-  var ACK_KEY = 'vw-update-ack';                       // เวอร์ชันที่ผู้ใช้รับทราบแล้ว
-  function fetchVer(){
-    return fetch('version.json', {cache:'no-store'})   // no-store = ไม่เอาจาก HTTP cache (network-first ใน SW ดึงสดให้)
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(d){ return d && d.v != null ? String(d.v) : null; })
-      .catch(function(){ return null; });              // ออฟไลน์/ล้มเหลว → null (ไม่เด้งหลอก)
-  }
-  function showBanner(){
-    if(document.getElementById('update-banner')) return;   // โชว์อยู่แล้ว
-    var b = document.createElement('div');
-    b.id = 'update-banner'; b.className = 'update-banner';
-    b.innerHTML = '<span>✨ มีการอัปเดตเกมใหม่!</span>'
-      + '<button id="update-reload">🔄 อัปเดตเลย</button>'
-      + '<button id="update-dismiss" aria-label="ปิด">✕</button>';
-    document.body.appendChild(b);
-    /* 🔄 รอบ 920: reload เฉยๆ ไม่พอ — service worker cache เก่ายังค้าง กดอัปเดตแล้วเห็นโค้ดเก่าเหมือนเดิม
-       (เคยแก้ไว้รอบ 876 แต่หลุดหายไปจากไฟล์นี้ ระหว่างมีหลาย session เขียนพร้อมกัน — คืนกลับให้ถาวร) */
-    b.querySelector('#update-reload').onclick = function(){
-      var btn = this;
-      if(offeredVersion) localStorage.setItem(ACK_KEY, offeredVersion);
-      btn.disabled = true; btn.textContent = '⏳ กำลังอัปเดต...';
-      var swClear = ('serviceWorker' in navigator)
-        ? navigator.serviceWorker.getRegistrations().then(function(rs){
-            return Promise.all(rs.map(function(r){ return r.unregister(); }));
-          })
-        : Promise.resolve();
-      var cacheClear = ('caches' in window)
-        ? caches.keys().then(function(ks){ return Promise.all(ks.map(function(k){ return caches.delete(k); })); })
-        : Promise.resolve();
-      Promise.all([swClear, cacheClear]).catch(function(){}).then(function(){ location.reload(); });
-    };
-    b.querySelector('#update-dismiss').onclick = function(){
-      if(offeredVersion) localStorage.setItem(ACK_KEY, offeredVersion);
-      b.remove();
-    };
-  }
-  function check(){
-    if(document.hidden) return;                        // อยู่แท็บอื่น → ข้าม
-    fetchVer().then(function(v){
-      if(!v) return;
-      if(localStorage.getItem(ACK_KEY) === v) return;
-      offeredVersion = v;
-      showBanner();                                    // ยังไม่เคยรับทราบเวอร์ชันนี้ → แจ้งทันที
-    });
-  }
-  window.addEventListener('load', check);
-  setInterval(check, 3 * 60 * 1000);                   // เช็กทุก 3 นาที
-  document.addEventListener('visibilitychange', function(){ if(!document.hidden) check(); });
-  window.addEventListener('online', check);            // กลับมาออนไลน์ → เช็กทันที
-})();
-</script>
 <!-- 📜 รอบ 209: หน้ายอมรับข้อตกลง/กฎหมาย ก่อนเริ่มเล่น (EN + ไทย · ต้องกด "ยอมรับ") -->
 <script>
 (function(){

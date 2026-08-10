@@ -41,7 +41,7 @@ command -v "$PY" >/dev/null 2>&1 || PY=python3
 command -v "$PY" >/dev/null 2>&1 || PY=""
 
 # ── ดึงเลข deploy จาก version.json ที่ป้อนทาง stdin (ตรรกะเดียวกับ pre-commit เดิม ②) ──
-num(){ sed -n 's/.*"v"[^"]*"[0-9-]*\.\([0-9]\{1,\}\)".*/\1/p' 2>/dev/null | head -1; }
+num(){ sed -n -E 's/.*"(version|v)"[^"]*"[0-9-]*\.([0-9]+)".*/\2/p' 2>/dev/null | head -1; }
 
 # ── เลขรอบสูงสุดที่ commit ขึ้น main แล้ว (ผ่าน rotate_handoff.py จุดเดียว) ──
 #    ⚠️ ต้องเช็กว่าสคริปต์ "รองรับ --check-round" ก่อนเรียก — เช็กเอาต์เก่า (ก่อนรอบ 509) ยังไม่มีแฟลกนี้

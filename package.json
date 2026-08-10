@@ -1,0 +1,15 @@
+{
+  "name": "vocab-world-web",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Firebase-hosted Vocab World PWA and stable Android TWA wrapper",
+  "scripts": {
+    "build": "node tools/build_web.mjs",
+    "deploy": "npm run build && firebase deploy --only hosting:vocabworld --project english-pet-game",
+    "preview": "node tools/serve_dist.mjs",
+    "validate:build": "node tools/validate_web_build.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

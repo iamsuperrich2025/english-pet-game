@@ -18,16 +18,14 @@ PROJECT="english-pet-game"               # Firebase project เดิม (Auth/R
 #    แก้ไฟล์ handoff ใน working tree เท่านั้น (deploy ใช้ git HEAD ไม่กระทบ) — จบงานอย่าลืม commit handoff ตามปกติ
 python "$REPO/tools/rotate_handoff.py" || echo "⚠️ rotate_handoff ข้ามไป (ไม่กระทบ deploy)"
 
-echo "📦 เตรียมไฟล์จาก git HEAD → $STAGE"
-rm -rf "$STAGE" && mkdir -p "$STAGE/public"
+echo "📦 เตรียม source จาก git HEAD → $STAGE/source"
+rm -rf "$STAGE" && mkdir -p "$STAGE/source"
 cd "$REPO"
-git archive HEAD | tar -x -C "$STAGE/public"
-rm -rf "$STAGE/public/handoff" "$STAGE/public/tools" "$STAGE/public/store"   # store/ = ภาพหน้าร้าน Play Store ไม่ใช่ของผู้เล่น
-rm -f  "$STAGE/public"/*.md              # PROMPTS_*.md / TASK_*.md ไม่ใช่ของผู้เล่น
+git archive HEAD | tar -x -C "$STAGE/source"
 # 🛑 รอบ 1022: ไฟล์ "รันได้" (.bat/.exe/…) ห้ามขึ้น Firebase Hosting แผน Spark — deploy จะพังทั้งรอบ
 #    ("Executable files are forbidden on the Spark billing plan") เจอครั้งแรกตอน ship.bat (รอบ 1021)
 #    เข้ามาอยู่ราก repo · ลบทิ้งตรงนี้ + กันซ้ำอีกชั้นด้วย "ignore" ใน firebase.json ข้างล่าง
-find "$STAGE/public" -type f \( -iname '*.bat' -o -iname '*.cmd' -o -iname '*.exe' -o -iname '*.com' -o -iname '*.ps1' -o -iname '*.dll' \) -delete
+find "$STAGE/source" -type f \( -iname '*.exe' -o -iname '*.com' -o -iname '*.dll' \) -delete
 
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง
 #    (ตรวจสำเนา staged = git HEAD ไม่ใช่ working tree → ตรงกับของที่ผู้เล่นจะได้เป๊ะ)
@@ -35,7 +33,7 @@ find "$STAGE/public" -type f \( -iname '*.bat' -o -iname '*.cmd' -o -iname '*.ex
 # 📦 ด่านที่ 2 (รอบ 325): ไฟล์ที่ index.html อ้างถึงต้องมีอยู่ "ในชุดที่กำลังจะขึ้นเว็บ" จริงๆ
 #    (ไฟล์ untracked จะไม่ติดมากับ git archive → live 404 เงียบๆ แบบ word_new.js รอบ 324)
 echo "📦 ตรวจไฟล์ที่หน้าเว็บอ้างถึงครบไหม..."
-if ! python "$REPO/tools/check_missing_assets.py" --path "$STAGE/public"; then
+if ! python "$REPO/tools/check_missing_assets.py" --path "$STAGE/source"; then
   echo ""
   echo "❌ หยุด deploy: มีไฟล์ที่ index.html อ้างถึงแต่ไม่ได้ขึ้นเว็บ (ดูรายการด้านบน)"
   echo "   ส่วนใหญ่คือไฟล์ใหม่ที่ลืม git add — add + commit แล้ว deploy ใหม่"
@@ -44,7 +42,7 @@ if ! python "$REPO/tools/check_missing_assets.py" --path "$STAGE/public"; then
 fi
 
 echo "🕵️ ตรวจฟังก์ชันที่ไม่มีอยู่จริงก่อน deploy..."
-if ! python "$REPO/tools/check_undefined_calls.py" --path "$STAGE/public"; then
+if ! python "$REPO/tools/check_undefined_calls.py" --path "$STAGE/source"; then
   echo ""
   echo "❌ หยุด deploy: พบการเรียกฟังก์ชันที่ไม่มีนิยาม (ดูรายการด้านบน)"
   echo "   แก้โค้ด + commit ก่อน แล้วค่อย deploy ใหม่"
@@ -57,7 +55,7 @@ fi
 #    ต้นเหตุเว็บล่มรอบ 583 — คอมเมนต์ CSS ใส่ backtick ครอบชื่อคลาส สตริงขาดกลางคัน
 #    `node --check` ยัง "ผ่าน" แต่รันจริงโยน TypeError → InvasionWorld ไม่เกิด เกมค้างหน้าโหลด
 echo "🧵 ตรวจ backtick หลงในบล็อก template string (CSS) ก่อน deploy..."
-if ! python "$REPO/tools/check_template_backtick.py" --path "$STAGE/public"; then
+if ! python "$REPO/tools/check_template_backtick.py" --path "$STAGE/source"; then
   echo ""
   echo "❌ หยุด deploy: พบ backtick ที่ทำให้ template string ขาดกลางคัน (ดูรายการด้านบน)"
   echo "   แก้โค้ด + commit ก่อน แล้วค่อย deploy ใหม่ — เคสนี้ทำเว็บล่มทั้งเกม (รอบ 583)"
@@ -66,26 +64,13 @@ if ! python "$REPO/tools/check_template_backtick.py" --path "$STAGE/public"; the
   exit 2
 fi
 
-cat > "$STAGE/firebase.json" <<'EOF'
-{
-  "hosting": {
-    "site": "vocabworld",
-    "public": "public",
-    "ignore": ["firebase.json", "**/*.@(bat|cmd|exe|com|ps1|dll)"],
-    "headers": [
-      { "source": "**/*.@(js|css|html|json)", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
-      { "source": "/", "headers": [ { "key": "Cache-Control", "value": "no-cache" } ] },
-      { "source": "**/*.@(png|jpg|jpeg|webp|glb|mp3|ico)", "headers": [ { "key": "Cache-Control", "value": "public, max-age=604800" } ] }
-    ]
-  }
-}
-EOF
-cat > "$STAGE/.firebaserc" <<EOF
-{ "projects": { "default": "$PROJECT" } }
-EOF
+echo "🏗️ npm run build → dist/ (hashed startup assets + content manifest)"
+cd "$STAGE/source"
+npm run build
+npm run validate:build
 
 echo "🚀 deploy → https://$SITE.web.app"
-cd "$STAGE"
+cd "$STAGE/source"
 "$FB" deploy --only "hosting:$SITE" --project "$PROJECT"
 
 # 🧹 ล้าง Hosting versions เก่า (รอบ 158) — กันชนโควตา storage แผนฟรี (429)

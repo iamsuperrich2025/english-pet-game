@@ -5,11 +5,11 @@
 ## ภาพรวม
 **Pet Vocab Adventure** — เว็บเกมเลี้ยงสัตว์เพื่อเรียนคำศัพท์อังกฤษ สำหรับนักเรียน ป.1–ม.6
 - โฟลเดอร์: `C:\Users\rober\english-pet-game\` เปิดได้ทั้ง file:// และ http:// — **ห้าม fetch ไฟล์ local** ใช้ `new Image()` probe (`probeImages()`)
-- **🌐 ออนไลน์:** repo `iamsuperrich2025/english-pet-game` (branch `main`) + GitHub Pages → เล่นได้ที่ **https://iamsuperrich2025.github.io/english-pet-game/**
+- **🌐 ออนไลน์:** Firebase Hosting site `vocabworld` → **https://vocabworld.web.app** คือ runtime เกมทั้งหมด; Android บน Google Play เป็น TWA shell เท่านั้น
 - **🔥 Firebase:** ดู `handoff/RULES.md` (โปรเจกต์ english-pet-game · RTDB asia-southeast1)
 - เซฟใน LocalStorage key `petVocabAdventure_v1` ผ่าน `state` + `saveState()`/`loadState()` — `loadState()` มี migration เซฟรุ่นเก่า→ใหม่ (field ใหม่ทุกตัวต้องมี default)
-- ทดสอบ: preview server `english-pet-game` (python http.server พอร์ต 8642) — เครื่องนี้ไม่มี Node มีแต่ Python 3.12
-- **PWA:** `manifest.json` (`display:fullscreen`) + `sw.js` (network-first โค้ด/cache-first รูป/ข้าม Firebase · CACHE_VERSION='pet-vocab-v1') + `img/icons/` 4 ไฟล์ · ปุ่ม 📲 ติดตั้ง (`#btn-install`/`#btn-install-top`) · ระบบแจ้งเวอร์ชันใหม่ (`version.json` + `.update-banner`) · `.nojekyll` · **แก้ manifest (display/icon/ชื่อ) เท่านั้นที่ต้องติดตั้งใหม่** โค้ดปกติได้อัตโนมัติ (network-first)
+- ทดสอบ delivery: `npm run build` → `npm run validate:build` → `npm run preview` (Node พกพาอยู่ `C:\Users\rober\bin\node`)
+- **PWA/TWA delivery (รอบ 1091):** `manifest.webmanifest` fullscreen landscape + `version.json` schema `version/updated` + `js/app-update.js` + atomic `sw.js`; startup JS/CSS fingerprint อยู่ `/assets/build/`, asset lazy ทุกชนิดใช้ content hash จาก generated `asset-manifest.json`; เซฟ `petVocabAdventure_v1` อยู่นอก Cache Storage และไม่ถูกล้าง · Firebase config ถาวรอยู่ `firebase.json` · TWA identity อยู่ `android-twa/twa-manifest.json`
 
 ## โครงสร้างไฟล์ (แยก data ออกจาก logic)
 
