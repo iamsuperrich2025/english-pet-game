@@ -9,11 +9,50 @@
 กติกาผู้ใช้ที่สคริปต์นี้บังคับให้เอง:
   • ส่ง rules ต้อง "เต็มทั้งหน้า" เสมอ (ห้ามตัดเฉพาะโซน) — คัดลอกจากก้อนใน RULES.md ตรง ๆ ไม่ก๊อปมือ
   • ข้อความที่ปุ่มคัดลอกส่งเข้าคลิปบอร์ด = textContent ของ <pre> → ตรวจได้ว่า json.loads ผ่าน
+  • ตรวจวงเล็บ/วงเล็บเหลี่ยม/quote ของ Firebase expression ทุก .read/.write/.validate ก่อนเขียน artifact
 """
 import argparse, hashlib, html, json, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+EXPRESSION_KEYS = {'.read', '.write', '.validate'}
+
+def validate_expression(expr, path):
+    """ด่านเบื้องต้นที่ json.loads มองไม่เห็น เช่น Firebase expression ขาดวงเล็บ"""
+    pairs = {')': '(', ']': '['}
+    stack = []
+    quoted = False
+    escaped = False
+    for ch in expr:
+        if escaped:
+            escaped = False
+            continue
+        if ch == '\\':
+            escaped = True
+            continue
+        if ch == "'":
+            quoted = not quoted
+            continue
+        if quoted:
+            continue
+        if ch in '([':
+            stack.append(ch)
+        elif ch in pairs:
+            if not stack or stack.pop() != pairs[ch]:
+                sys.exit('Firebase expression วงเล็บผิดที่ %s' % path)
+    if quoted or stack:
+        sys.exit('Firebase expression ปิด quote/วงเล็บไม่ครบที่ %s' % path)
+
+def validate_rule_expressions(node, path='rules'):
+    if not isinstance(node, dict):
+        return
+    for key, value in node.items():
+        child_path = '%s/%s' % (path, key)
+        if key in EXPRESSION_KEYS and isinstance(value, str):
+            validate_expression(value, child_path)
+        elif isinstance(value, dict):
+            validate_rule_expressions(value, child_path)
 
 def rules_json_text():
     src = (ROOT / 'handoff' / 'RULES.md').read_text(encoding='utf-8')
@@ -21,7 +60,8 @@ def rules_json_text():
     if not m:
         sys.exit('หาบล็อก ```json ใต้หัวข้อ "## ก้อนเต็ม" ใน handoff/RULES.md ไม่เจอ')
     txt = m.group(1).rstrip('\n')
-    json.loads(txt)                      # พังตรงนี้ = ก้อนใน RULES.md เสีย ห้ามส่งให้ผู้ใช้
+    parsed = json.loads(txt)             # พังตรงนี้ = ก้อนใน RULES.md เสีย ห้ามส่งให้ผู้ใช้
+    validate_rule_expressions(parsed)
     return txt
 
 def zone_line_range(lines, zone):
@@ -41,6 +81,7 @@ def main():
     ap.add_argument('out')
     ap.add_argument('--round', default='')
     ap.add_argument('--zone', action='append', default=[])
+    ap.add_argument('--json-out', help='เขียนก้อน JSON เต็มสำรองสำหรับ Firebase CLI dry-run')
     a = ap.parse_args()
 
     txt   = rules_json_text()
@@ -68,6 +109,8 @@ def main():
     (ROOT / a.out).write_text(TPL.format(head=html.escape(head), note=html.escape(note),
                                          sha256=sha256, body=body),
                               encoding='utf-8')
+    if a.json_out:
+        Path(a.json_out).write_text(txt + '\n', encoding='utf-8')
     print(('wrote %s (%s)' % (a.out, head)).encode('ascii', 'replace').decode())   # console Windows เป็น cp1252
 
 TPL = """<!doctype html>

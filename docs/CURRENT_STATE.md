@@ -39,3 +39,9 @@ Snapshot verified 2026-08-09. Keep only durable facts here.
 - Firebase Hosting at `https://vocabworld.web.app` is the complete game runtime and the normal update channel.
 - The Google Play application is a stable TWA shell (`app.web.vocabworld.twa`) configured by `android-twa/twa-manifest.json`; it contains no game assets or executable game code.
 - Web updates are installed atomically for the essential shell and never clear the canonical `petVocabAdventure_v1` player save or other persistent player storage.
+
+## Account privacy and deletion
+
+- Account/privacy controls live in the classic lobby Settings under a single `Account & Privacy` tab. Permanent deletion requires exact typed `DELETE`, a recent Google re-authentication, one RTDB multi-location cleanup, and then Firebase Authentication deletion.
+- Public bilingual resources are `privacy.html` and `delete-account.html`. The latter documents both the in-app route and an email fallback for users who cannot sign in.
+- The browser cleanup intentionally deletes only paths attributable to the departing UID and does not erase other participants' shared content. Firebase Rules in `handoff/RULES.md` must be published before release, and an isolated disposable account must complete end-to-end acceptance testing before Play Console declarations are submitted.

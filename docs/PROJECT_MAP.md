@@ -202,6 +202,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `loadState`, `saveState`, `authStart`, `authS
 DEPENDENCIES: localStorage, Firebase Auth/RTDB.
 NOTES: Cloud save stores serialized state plus timestamp. Profile photo is deliberately stored separately from the main save.
 
+SYSTEM: Account privacy and deletion
+PURPOSE: Provides the single protected account-deletion entry point, typed confirmation, Google re-authentication, account-linked RTDB cleanup, Auth deletion, and public deletion instructions.
+PRIMARY FILE: `js/account-deletion.js`
+RELATED FILES: `css/account-deletion.css`, `js/auth.js`, `js/util.js`, `delete-account.html`, `privacy.html`, `handoff/RULES.md`, `tools/test_account_deletion.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `accountDeletionOpen`, `accountDeletionHandleRedirectResult`, `AccountDeletion`
+DEPENDENCIES: Firebase Authentication/Realtime Database, authenticated online state, Settings UI.
+NOTES: Destructive writes start only after typed `DELETE` plus recent Google re-authentication. RTDB cleanup is one multi-location update; Authentication is deleted only after it succeeds. Publishing the matching Firebase Rules is required before shipping.
+
 ## Assets, audio, effects, Firebase, and delivery
 
 SYSTEM: Image/video asset resolution

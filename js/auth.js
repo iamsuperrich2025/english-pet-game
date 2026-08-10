@@ -170,7 +170,9 @@ function authEditProfileName(){
 function authStart(){
   Auth.sdkReady = true;
   firebase.initializeApp(FIREBASE_CONFIG);
-  firebase.auth().getRedirectResult().catch(()=>{});   // เก็บผลกรณี login แบบ redirect
+  firebase.auth().getRedirectResult()
+    .then(result=>{ if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(result, null); })
+    .catch(error=>{ if(typeof accountDeletionHandleRedirectResult==='function') accountDeletionHandleRedirectResult(null, error); });
   firebase.auth().onAuthStateChanged(user=>{
     if(Auth.booted){                                   // เข้าเกมไปแล้ว (รวมโหมดออฟไลน์)
       if(user) authLateSync(user);                     // SDK เพิ่งมาหลังเล่นออฟไลน์ → sync ย้อนหลัง

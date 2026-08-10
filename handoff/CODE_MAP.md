@@ -4,6 +4,8 @@
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
 > css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-10
 
+## js/account-deletion.js (231 บรรทัด · 0 รายการ)
+
 ## js/adv3d_css.js (1,272 บรรทัด · 0 รายการ)
 
 ## js/adv3d_intro.js (86 บรรทัด · 0 รายการ)
@@ -189,13 +191,13 @@ beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
 ## js/arena3d.js (724 บรรทัด · 0 รายการ)
 
-## js/auth.js (420 บรรทัด · 36 รายการ)
+## js/auth.js (422 บรรทัด · 36 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
 isTester:44 · RANK_EXCLUDED_TESTER_NAMES:50 · rankUserExcluded:51 · testerBoost:57 · authSetStatus:90 · authShowLogin:102
 authGateOffline:106 · authSaveRef:113 · authFetchCloud:114 · authWriteCloud:115 · authDeleteCloud:116 · authWriteProfileName:117
-authPushProfile:124 · authApplyProfileName:132 · authAskProfileName:148 · authEditProfileName:159 · authStart:170 · updateOfflinePill:200
-authEnterOffline:205 · authLateSync:222 · authIsAppMode:242 · AUTH_REDIRECT_CODES:250 · authLoginClick:252 · authOnLogin:272
-authSyncOnLogin:285 · authFreshStart:314 · authAskLink:323 · authEnterGame:373 · authPushSave:388 · authLogout:399
+authPushProfile:124 · authApplyProfileName:132 · authAskProfileName:148 · authEditProfileName:159 · authStart:170 · updateOfflinePill:202
+authEnterOffline:207 · authLateSync:224 · authIsAppMode:244 · AUTH_REDIRECT_CODES:252 · authLoginClick:254 · authOnLogin:274
+authSyncOnLogin:287 · authFreshStart:316 · authAskLink:325 · authEnterGame:375 · authPushSave:390 · authLogout:401
 
 ## js/award.js (275 บรรทัด · 0 รายการ)
 
@@ -883,11 +885,11 @@ renderOrderClock:8227 · renderCollectMine:8237 · openListDialog:8279 · cancel
 buyAC:8422 · openHomeShop:8441 · renderPetShop:8500 · showLevelUp:8561 · renderStats:8598 · showTeacherCard:8705
 CALL_REACT_EMOS:8749 · CALL_TALK_MIN:8752 · CALL_TALK_HOLD:8753 · CALL_ORDER_GAP:8755 · CALL_TONES:8761 · startCall:9135
 
-## js/util.js (1,270 บรรทัด · 51 รายการ)
+## js/util.js (1,287 บรรทัด · 51 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1239 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1240-1270 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1256 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1257-1287 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · IPHONE_LOBBY_VIEWPORT:118
@@ -896,8 +898,8 @@ toastLink:219 · floatFx:237 · beep:248 · soundStatus:269 · PET_MOOD:385 · p
 sirenSynth:469 · playCashier:493 · cashierSynth:507 · keyTapSynth:540 · bubblePopSynth:578 · bubbleTapSynth:597
 playSpark:608 · sparkSynth:622 · thunderFx:657 · wordAudioFile:725 · speakCutOff:734 · speakWord:738
 speakLetter:777 · pickSpeakVoice:800 · speakWordTTS:811 · askNameDialog:838 · askConfirm:883 · alertBox:901
-applyNoAnim:921 · BLK_VOCAB:928 · openSettings:976 · openHelp:1179 · openTeacherGuide:1205 · TAPGLOW_SEL:1229
-TOUCH_INPUT_SEEN:1248 · mouseLockOK:1257 · lockMouse3D:1263
+applyNoAnim:921 · BLK_VOCAB:928 · openSettings:976 · openHelp:1196 · openTeacherGuide:1222 · TAPGLOW_SEL:1246
+TOUCH_INPUT_SEEN:1265 · mouseLockOK:1274 · lockMouse3D:1280
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
@@ -907,6 +909,10 @@ vbRender:148 · vbCardHTML:194
 ## js/wordsearch.js (455 บรรทัด · 0 รายการ)
 
 ## js/wsaward.js (32 บรรทัด · 0 รายการ)
+
+## css/account-deletion.css (15 บรรทัด · 11 selector)
+.account-delete-overlay:2 · .ad-box:3 · .ad-head:4 · .ad-warning:5 · .ad-grid:6 · .ad-shared:7
+.ad-actions:8 · .ad-safe:9 · .ad-type-label:10 · .ad-busy:11 · .set-account-panel:12
 
 ## css/arena3d.css (201 บรรทัด · 62 selector)
 #va-root:5,7,9 · #va-canvas:8 · .va-vignette:11 · .va-scan:15 · .va-top:18 · .va-glass:20

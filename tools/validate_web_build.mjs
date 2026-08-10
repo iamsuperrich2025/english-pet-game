@@ -17,7 +17,11 @@ const assetManifestText = await requireFile('asset-manifest.json');
 const sw = await requireFile('sw.js');
 const index = await requireFile('index.html');
 const classic = await requireFile('index_classic.html');
+const deletion = await requireFile('delete-account.html');
+const privacy = await requireFile('privacy.html');
 await requireFile('.well-known/assetlinks.json');
+if (!deletion.includes('freddommun@gmail.com') || !deletion.includes('Delete Account')) failures.push('delete-account.html is incomplete');
+if (!privacy.includes('delete-account.html') || !privacy.includes('Profile photos')) failures.push('privacy.html is incomplete');
 
 try {
   const version = JSON.parse(versionText);

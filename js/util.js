@@ -990,6 +990,7 @@ function openSettings(){
       <button class="lb-tab set-tab active" data-tab="general">🔊 ทั่วไป</button>
       <button class="lb-tab set-tab" data-tab="avatar">🦸 ตัวละคร</button>
       <button class="lb-tab set-tab" data-tab="feed">📰 เปิดเผย</button>
+      <button class="lb-tab set-tab" data-tab="account">🔐 บัญชี</button>
     </div>
     <div class="set-panels">
       <div class="set-panel active" data-panel="general">
@@ -1054,6 +1055,17 @@ function openSettings(){
             <span class="set-desc">${FEED_CATS[k].d}</span></span>
           <button class="set-switch" aria-label="สลับการเปิดเผย ${FEED_CATS[k].n}"></button>
         </div>`).join('')}
+      </div>
+      <div class="set-panel set-account-panel" data-panel="account">
+        <div class="set-account-card">
+          <div>
+            <h3>🔐 บัญชีและความเป็นส่วนตัว · Account &amp; Privacy</h3>
+            <p>${(typeof Auth!=='undefined'&&Auth.user) ? `บัญชี Google: <b>${escapeHTML(Auth.user.email||Auth.user.uid)}</b>` : 'ยังไม่ได้เชื่อมบัญชีออนไลน์ · No signed-in online account'}</p>
+            <p>ดูวิธีใช้ข้อมูล ขอความช่วยเหลือ หรือลบบัญชีและข้อมูลอย่างถาวร</p>
+            <div class="set-account-links"><a href="privacy.html" target="_blank" rel="noopener">นโยบายความเป็นส่วนตัว · Privacy Policy</a><a href="delete-account.html" target="_blank" rel="noopener">วิธีลบบัญชี · Deletion help</a></div>
+          </div>
+          <button class="set-delete-entry" id="set-delete-account" type="button">ลบบัญชีและข้อมูล<br>Delete account and data</button>
+        </div>
       </div>
     </div>
     <div class="set-foot">
@@ -1168,6 +1180,11 @@ function openSettings(){
   overlay.querySelector('#set-help').addEventListener('click', openHelp);
   const tg = overlay.querySelector('#set-teacher');
   if(tg) tg.addEventListener('click', openTeacherGuide);
+  const del=overlay.querySelector('#set-delete-account');
+  if(del) del.addEventListener('click', ()=>{
+    if(typeof accountDeletionOpen!=='function'){ toast('ระบบจัดการบัญชียังโหลดไม่เสร็จ ลองใหม่อีกครั้งนะ'); return; }
+    accountDeletionOpen();
+  });
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.querySelector('.set-x').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });

@@ -10,7 +10,7 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
-- **10 ส.ค. 2026 — รอบ 1091 พร้อม commit/deploy:** ย้าย delivery เป็น Firebase-hosted PWA + stable Android TWA wrapper; game mechanics/save เดิมไม่ถูกแก้
+- **10 ส.ค. 2026 — รอบ 1094 Rules ขึ้น production แล้ว แต่ยังห้าม ship:** Account & Privacy, หน้า Privacy/Delete Account และ Data Safety worksheet รอ commit/deploy Hosting และทดสอบบัญชีทิ้งจริงก่อนกรอก Play Console
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
@@ -28,6 +28,11 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1094 · แก้ Firebase Rules line 385 + Publish สำเร็จ:** คืน `.child('u').val()` และวงเล็บที่ตกใน `gnotif/$uid/n/$nid/.write`; generator ปฏิเสธ expression ที่วงเล็บ/quote ไม่ครบแล้ว · หลังผู้ใช้ Publish ตรวจ Rules สดด้วย Firebase CLI ตรง source ครบ 37 โซน/475 leaf keys (`missing/extra/changed=0`) · เว็บ live ยังเป็น policy เก่าและ `/delete-account.html` ยัง fallback เข้า City จึงเหลือ commit/deploy Hosting + ทดสอบบัญชีทิ้ง
+- **รอบ 1093 · Google Play privacy/account deletion remediation:** Settings มี entry ลบบัญชีจุดเดียว พร้อมคำเตือน → พิมพ์ `DELETE` → Google re-auth → RTDB multi-location delete → Firebase Auth delete; ถ้าลบ Auth ไม่สำเร็จหลัง RTDB จะค้างสถานะ finalize-only และไม่รายงานสำเร็จเท็จ
+- เพิ่ม `privacy.html` และ `delete-account.html` ไทย/อังกฤษ ครอบคลุมข้อมูลบัญชี/รูป/สังคม/WebRTC/local storage/ผู้ให้บริการ/retention/เด็ก/ช่องทางอีเมล; เพิ่ม `docs/GOOGLE_PLAY_PRIVACY_REMEDIATION.md` เป็น audit + Data Safety worksheet
+- Rules รอบ 1093 เพิ่มเฉพาะสิทธิ์ลบข้อมูลของ UID ตนเองใน 7 กลุ่มที่จำเป็น; JSON + artifact full-copy ตรง source ผ่าน แต่ **ยังไม่ publish** และไม่แตะ production ตามคำสั่ง
+- unit mock ยืนยัน deletion plan 776 paths ไม่ลบข้อมูลคู่สนทนา, build 8,235 ไฟล์/442.5 MiB + validator ผ่าน; Browser หน้า public 812×375 ไม่มี horizontal overflow/console issue และโหลด deletion JS/CSS hashed ครบ; ยังต้อง acceptance ด้วยบัญชีทิ้งหลัง publish/deploy
 - **รอบ 1092 · Haunted Hotel ตู้/ผี/พลังชีวิต:** เปิดตู้ทุกใบไม่ Jump Scare ทันที; หลังบานเริ่มเปิด 650ms และผู้เล่นหันออก ≥1.05 rad จึงแสดงหน้าผีเต็มจอ 3 วิ โดยซ่อน HUD/ฉากอื่นทั้งหมด
 - ผีโจมตีหัก 1 จากหลอดพลัง 10/10 (ตู้+ประชิด; ประชิดพัก 4.5 วิ) และครบ 10 ครั้งหยุดเกม แสดง GAME OVER แล้วกลับ Lobby; intro อธิบายกติกาใหม่
 - ขณะไฟดับ การหลบในห้องเดียวครบ 120 วินาทีบังคับผีวาร์ปเข้าขอบเขตห้องและไล่ผู้เล่นคนนั้น; ออกจากห้อง/ไฟติด/เปลี่ยนห้องรีเซ็ตเวลา
@@ -50,11 +55,9 @@
 - เพิ่ม `js/hauntedhoteldirector.js`: tension 0..1/phase-aware/recovery, decision 400ms, local ambient·visual·environmental, isolation/subgroup/fairness และ compact `/hauntedHotel/rN/scare` transaction สำหรับ major event (ไม่ส่งตำแหน่ง/เฟรมเพิ่ม)
 - ต่อ lifecycle ผ่าน runtime/session, reuse peers+เสียง/ภาพ/ไฟเดิม, เพิ่ม rules `scare` และแก้คำอธิบาย 6 คน; reward security/NetRoom refactor/server authority ยังเลื่อนไว้
 - ยืนยัน Phase 2 regression, Phase 3 A–N + 6-client objective/shared race, NetRoom 7-player matrix (`r0:6,r1:1`), browser module smoke, syntax 9 ไฟล์, undefined 47=0, template/rules/diff ผ่าน
-- **รอบ 1084 · Haunted Hotel Phase 1+2 (working tree ยังไม่ commit/deploy):** runtime FSM `ENTER→ACTIVE_WORD→TEMP_BLACKOUT→RESTORE→PERMANENT_DARK→FINAL_CABINET→COMPLETE→RETURN` + canonical `/hauntedHotel/rN/run`
 - เพิ่ม transaction-safe init/expected-state mutation, shared seed+wordSet+cabinet slot, ordinal bitmask, stable completedAt, late join/reconnect snapshot และ listener cleanup; ไม่แก้ `netroom.js`/reward security
 - แก้ `js/hauntedhotelsession.js`, `js/hauntedhotel.js`, `js/adventure3d.js`, `js/hotel3d.js`, `js/ui.js`, `sw.js`, `handoff/RULES.md`; rules ใหม่ยังไม่ publish ตามคำสั่งห้าม deploy
 - ยืนยัน unit init race/double-solve/FSM/late join/reconnect/cleanup ผ่าน, browser smoke console 0, syntax 6 ไฟล์, undefined 46 ไฟล์=0, template/diff และ rules JSON ผ่าน
-- **รอบ 1082 (9 ส.ค. · ตู้เข็มโปรไฟล์ 5×3 แนวตั้ง):** เปลี่ยนเข็มจาก 1 แถวปัดซ้ายขวาเป็น 3 แถว × 5 คอลัมน์ ปัดขึ้นลง พร้อมปุ่มขึ้น/ลงที่ซ่อนตามตำแหน่ง
 - ขยายเข็มระดับสูงสุดที่ฝังท้ายชื่อกลับเป็นทุกระดับ 1..ปัจจุบัน จึงเห็นทุกเข็มที่ตัวเองและเพื่อนเคยได้โดยไม่เพิ่มข้อมูล Firebase; แก้ `js/game.js`, `js/ui.js`, `css/lobby.css`
 - ยืนยัน Browser 1280×720 + 812×375: 5 คอลัมน์/3 แถว, ปัดลงถึงท้าย, ไม่ล้นแนวนอน; unit expansion 36 เข็ม, `node --check` และ diff check ผ่าน
 - คงเมนูแตะผู้เล่น การ์ดคำชวน และแฟลชเพื่อนใหม่; แก้ `js/ui.js` + `css/lobby.css`

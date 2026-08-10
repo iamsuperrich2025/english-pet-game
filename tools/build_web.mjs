@@ -16,6 +16,7 @@ const PUBLIC_ROOT_FILES = new Set([
   'index_classic.html',
   'offline.html',
   'privacy.html',
+  'delete-account.html',
   'manifest.webmanifest',
   'sw.js',
   'version.json',
@@ -41,7 +42,7 @@ async function sourceFiles() {
     const tracked = raw.split('\0').filter(Boolean).filter(isPublicPath);
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
-    for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js']) {
+    for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css']) {
       try {
         await fs.access(path.join(ROOT, rel));
         if (!tracked.includes(rel)) tracked.push(rel);

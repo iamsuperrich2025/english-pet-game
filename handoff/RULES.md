@@ -1,6 +1,6 @@
 # RULES.md — Firebase Security Rules
 
-> ⏳ **รอบ 1089 — รอ Publish:** Haunted Hotel เพิ่ม canonical `roomVisits` (ห้องไม่ซ้ำ สูงสุด 32 ห้อง) สำหรับจังหวะไฟ 5/10/13 ห้อง; ต้อง Publish กฎเต็มทั้งก้อนจาก artifact ปุ่ม Copy หลัง deploy รอบนี้
+> ✅ **รอบ 1094 — Publish แล้ว 10 ส.ค. 2026:** กฎแก้ `gnotif` รวมสิทธิ์ลบข้อมูลบัญชีและ canonical `roomVisits` ของ Haunted Hotelขึ้น production ครบ; Firebase CLI อ่าน `/.settings/rules` สดแล้วเทียบ source ตรงทั้งก้อน
 
 > อ่านไฟล์นี้เมื่อ: แตะ Firebase / เพิ่มโซนใหม่ / ต้องส่ง rules ให้ผู้ใช้ publish
 > **⚠️ กติกาผู้ใช้: ส่ง rules ให้ผู้ใช้ต้องส่ง "เต็มทั้งหน้า" เสมอ ห้ามส่งเฉพาะโซน** (คัดลอกทั้งก้อนไปวางทับใน Firebase console → Realtime Database → Rules → Publish)
@@ -10,6 +10,7 @@
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+> ✅ **Account deletion + `gnotif` syntax fix รอบ 1094 — ตรวจสดแล้ว 10 ส.ค. 2026:** 37 โซน / 475 leaf keys ตรง source ทั้งหมด (`missing=0`, `extra=0`, `changed=0`) หลังผู้ใช้ Publish ก้อนเต็มจาก artifact รอบ 1094
 > ✅ **Haunted Hotel Phase 2+3 — ผู้ใช้ยืนยันว่า Publish แล้ว 10 ส.ค. 2026:** ก้อนเต็ม 37 โซน / 755 บรรทัด มี `/hauntedHotel/<r0..r35>/run` + compact current `/scare` และ `placementVersion`; payload ที่ส่งผ่านปุ่ม Copy ตรง source ทุกตัวอักษร (45,250 ตัว · SHA-256 `22141EE741639B5C0F3C3B3AD8053964566E18255534AE3207397D86AC5DB8F8`) · **ยังไม่ได้เทียบ rules สดทั้งก้อนจาก Codex** เพราะบัญชี Firebase ใน in-app browser ไม่มีสิทธิ์และ session เกมไม่ได้ล็อกอิน จึงบันทึกหลักฐานตามคำยืนยันผู้ใช้โดยไม่อ้างว่าตรวจสดแล้ว
 > ✅ **เผยแพร่โซน `bbAward` + field/index `bb` ของเกม 🫧 ฟองแล้ว (7 ส.ค. 2026 · รอบ 1069)** — อ่านกฎสดด้วย Firebase CLI แล้วตรงกับก้อนเต็มด้านล่างทั้งไฟล์ (SHA-256 `63AEDC295B98CC0D1A7A28D375D3920871ED4DA09229E483F37EBE193A2BF085`): 36 โซน มี index/field `bb` และ `bbAward` ครบ
 > 🎉 **ผู้ใช้ publish ก้อนเต็ม 33 โซน / 555 บรรทัดแล้ว (3 ส.ค. 2026 · รอบ 983)** — ตรวจสดด้วย `firebase database:get "/.settings/rules" --project english-pet-game` แล้วเทียบทีละคีย์กับก้อนใน RULES.md: **331 คีย์ ตรงกันทั้งหมด ไม่มีคีย์หาย ไม่มีค่าเพี้ยน** → ของที่ค้างมาก่อนหน้า (`gnotif` รอบ 976 · `cl` รอบ 966 · `sgAward` รอบ 917 · `f1Rank` รอบ 903 · `f1` ใน wroom รอบ 896 · `pmAward`+`pm` รอบ 979) **ขึ้นครบพร้อมกันหมดแล้ว**
@@ -123,7 +124,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "friendCodes": {
       "$code": {
         ".read": true,
-        ".write": "auth != null && newData.val() === auth.uid",
+        ".write": "auth != null && (newData.val() === auth.uid || (!newData.exists() && data.val() === auth.uid))",
         ".validate": "newData.isString()"
       }
     },
@@ -169,6 +170,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "typing": {
       "$pairId": {
         ".read": "auth != null && $pairId.contains(auth.uid)",
+        ".write": "auth != null && $pairId.contains(auth.uid) && !newData.exists()",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid && $pairId.contains(auth.uid)",
           ".validate": "newData.isNumber()"
@@ -342,7 +344,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".read": "auth != null && auth.uid === $toUid",
           ".write": "auth != null && auth.uid === $toUid",
           "$msgId": {
-            ".write": "auth != null && newData.child('f').val() === auth.uid",
+            ".write": "auth != null && (newData.child('f').val() === auth.uid || (!newData.exists() && data.child('f').val() === auth.uid))",
             ".validate": "($map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'chat') && newData.hasChildren(['f','t','d','ts'])",
             "f":  { ".validate": "newData.isString() && newData.val().length <= 128" },
             "t":  { ".validate": "newData.isString() && (newData.val() === 'offer' || newData.val() === 'answer' || newData.val() === 'ice')" },
@@ -435,7 +437,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         },
         "cm": {
           "$cid": {
-            ".write": "auth != null && !data.exists() && newData.child('u').val() === auth.uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())",
+            ".write": "auth != null && ((!data.exists() && newData.child('u').val() === auth.uid && (root.child('gfeed').child($postId).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child($postId).child('u').val()).child(auth.uid).exists())) || (data.exists() && !newData.exists() && data.child('u').val() === auth.uid))",
             ".validate": "newData.hasChildren(['u','n','tx','ts'])",
             "u":  { ".validate": "newData.isString() && newData.val().length <= 128" },
             "n":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
@@ -462,8 +464,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".validate": "newData.isString() && newData.val().length <= 40"
         },
         "n": {
+          ".read": "auth != null && (auth.uid === $uid || (query.orderByChild === 'u' && query.equalTo === auth.uid))",
+          ".indexOn": "u",
           "$nid": {
-            ".write": "auth != null && (auth.uid === $uid || (!data.exists() && newData.child('u').val() === auth.uid && ((newData.hasChild('pid') && (root.child('gfeed').child(newData.child('pid').val()).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child(newData.child('pid').val()).child('u').val()).child(auth.uid).exists())) || ((newData.child('t').val() === 'gf' || newData.child('t').val() === 'gr') && root.child('gifts').child($uid).child(auth.uid).exists()) || (newData.child('t').val() === 'fr' && root.child('friendReq').child($uid).child(auth.uid).exists()))))",
+            ".write": "auth != null && (auth.uid === $uid || (data.exists() && !newData.exists() && data.child('u').val() === auth.uid) || (!data.exists() && newData.child('u').val() === auth.uid && ((newData.hasChild('pid') && (root.child('gfeed').child(newData.child('pid').val()).child('u').val() === auth.uid || root.child('friends').child(root.child('gfeed').child(newData.child('pid').val()).child('u').val()).child(auth.uid).exists())) || ((newData.child('t').val() === 'gf' || newData.child('t').val() === 'gr') && root.child('gifts').child($uid).child(auth.uid).exists()) || (newData.child('t').val() === 'fr' && root.child('friendReq').child($uid).child(auth.uid).exists()))))",
             ".validate": "newData.hasChildren(['t','u','n','ts']) && (newData.hasChild('pid') || newData.child('t').val() === 'gf' || newData.child('t').val() === 'gr' || newData.child('t').val() === 'fr')",
             "t":   { ".validate": "newData.isString() && (newData.val() === 'rx' || newData.val() === 'cm' || newData.val() === 'rp' || newData.val() === 'cl' || newData.val() === 'gf' || newData.val() === 'gr' || newData.val() === 'fr')" },
             "pid": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
@@ -518,6 +522,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
         "w": {
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
@@ -538,6 +543,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
         "w": {
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
@@ -559,6 +565,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
         "w": {
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
@@ -579,6 +586,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
         "w": {
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
@@ -599,6 +607,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
         "w": {
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
@@ -684,6 +693,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
         "scores": {
           ".write": "auth != null && auth.uid === root.child('pquizRooms').child($roomId).child('owner').val()",
           "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['n','score','ok','wrong'])",
             "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
             "score": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100000" },
@@ -738,7 +748,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           ".write": "auth != null && auth.uid === root.child('pquizRooms').child($roomId).child('owner').val()",
           "$round": {
             "$uid": {
-              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('pquizRooms').child($roomId).child('members').child(newData.child('s').val()).child('u').val() === auth.uid && root.child('pquizRooms').child($roomId).child('game').child('phase').val() === 'question'",
+              ".write": "auth != null && auth.uid === $uid && ((!data.exists() && root.child('pquizRooms').child($roomId).child('members').child(newData.child('s').val()).child('u').val() === auth.uid && root.child('pquizRooms').child($roomId).child('game').child('phase').val() === 'question') || (data.exists() && !newData.exists()))",
               ".validate": "newData.hasChildren(['qid','pick','s','ts']) && newData.child('qid').val() === root.child('pquizRooms').child($roomId).child('game').child('q').child('id').val()",
               "qid": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 80" },
               "pick": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
