@@ -3565,6 +3565,7 @@ function hotelRuntimeInit(){
     userId:()=>typeof onlineKey==='function'?onlineKey():'',
     sessionId:()=>room&&room.joined&&!room.legacy&&room.room>=0?'r'+room.room:'',
     isSoleOccupant:()=>!room||room.count<=1,
+    shouldStartFresh:()=>!!(room&&room.joined&&!room.legacy&&room.startedEmpty),
     directorContext:hotelDirectorContext,
     requestScare:hotelDirectorScare,
     createWordSet:hotelCreateWordSet,

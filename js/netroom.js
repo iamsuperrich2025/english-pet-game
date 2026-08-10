@@ -196,7 +196,7 @@ function create(opt){
   const ROOM_MAX = Math.max(1, Math.min(CFG.ROOM_MAX, opt.roomMax || CFG.ROOM_MAX));
 
   const peers = {};             // uid → {hot,cold,seen,legacy}
-  let myUid='', idx=-1, count=0, full=false, legacy=false, joined=false, netOk=false;
+  let myUid='', idx=-1, count=0, full=false, legacy=false, joined=false, netOk=false, startedEmpty=false;
   let hRef=null, iRef=null, myHot=null, myInfo=null, lgRef=null;
   let lastHot='', lastCold='', lastHotAt=0, beatAt=0, seatWritten=false, myJoinAt=0;
   let retryAt=0, sweepAt=0, verifyAt=0, busy=false, everOk=false;
@@ -262,6 +262,9 @@ function create(opt){
   /* ── เข้าสนาม i จริง (ต่อ listener + เริ่มส่ง) ───────────────── */
   function attach(i, n){
     idx=i; count=n; full=false; joined=true; netOk=true;
+    // Preserve the authoritative pre-join count. Consumers can use this once
+    // per seat occupancy to start a fresh shared activity after a room emptied.
+    startedEmpty=Number(n)===0;
     myJoinAt=Date.now(); seatWritten=false; lastHot=''; lastCold=''; lastHotAt=0; beatAt=0; reserveSince=0;
     hRef=hotRefOf(i); iRef=infoRefOf(i);
     myHot=hRef.child(myUid); myInfo=iRef.child(myUid);
@@ -282,7 +285,7 @@ function create(opt){
     if(iRef){ iRef.off('child_added'); iRef.off('child_changed'); iRef.off('child_removed'); }
     if(myHot){  try{ myHot.onDisconnect().cancel();  myHot.remove().catch(function(){});  }catch(e){} }
     if(myInfo){ try{ myInfo.onDisconnect().cancel(); myInfo.remove().catch(function(){}); }catch(e){} }
-    hRef=iRef=myHot=myInfo=null; joined=false; netOk=false; verifyAt=0;
+    hRef=iRef=myHot=myInfo=null; joined=false; netOk=false; startedEmpty=false; verifyAt=0;
   }
 
   /* ── รับข้อมูลเพื่อน (ร้อน/เย็น) แล้วรวมเป็น payload ชื่อฟิลด์เดิม ── */
@@ -437,7 +440,7 @@ function create(opt){
           '<span class="ib-sub">เล่นสนามฝึกส่วนตัวไปก่อน · ระบบจะพาเข้าให้เองเมื่อมีที่ว่าง 👌</span>', 3200);
         return;
       }
-      full=false; joined=true; netOk=true;
+      full=false; joined=true; netOk=true; startedEmpty=n===0;
       hRef=ref; myHot=ref.child(myUid); myInfo=null;
       lastHot=''; lastCold=''; lastHotAt=0;
       try{ myHot.onDisconnect().remove(); }catch(e){}
@@ -748,7 +751,7 @@ function create(opt){
     closeFriends();
     if(aimGet(map)) aimClear();          // 🎯 ออกจากโลกแล้ว = เป้า "ตามเพื่อน" ของโลกนี้หมดหน้าที่
     detachRoom(); bridgeOff(); dropAll();
-    idx=-1; count=0; full=false; legacy=false; joined=false; netOk=false;
+    idx=-1; count=0; full=false; legacy=false; joined=false; netOk=false; startedEmpty=false;
     retryAt=0; sweepAt=0; verifyAt=0; busy=false; everOk=false; seatWritten=false;
     meetLeft=0; meetAt=0; meetName=''; reserveSince=0;
   }
@@ -761,6 +764,7 @@ function create(opt){
     get count(){ return Object.keys(peers).length+1; },
     get full(){ return full; },
     get joined(){ return joined; },
+    get startedEmpty(){ return joined && startedEmpty; },
     get legacy(){ return legacy; },
     get online(){ return joined && netOk; },
     get sendGap(){ return gap(); },

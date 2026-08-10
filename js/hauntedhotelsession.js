@@ -33,6 +33,7 @@
     let retryAt=0;
     let generation=0;
     let currentScareId='';
+    let freshStartPending=false;
 
     function database(){ return typeof opt.database==='function'?opt.database():opt.database; }
     function serverNow(){
@@ -59,11 +60,13 @@
       initBusy=false;
       retryAt=0;
       currentScareId='';
+      freshStartPending=false;
     }
     function onValue(snapshot){
       if(!active) return;
       const value=snapshot.val();
       if(isRun(value)){
+        if(freshStartPending&&connected){initialize();return;}
         const wasReconnect=reconnecting;
         reconnecting=false;
         emit(value,{reconnect:wasReconnect,source:'firebase'});
@@ -85,7 +88,11 @@
       if(!duplicate&&typeof opt.onScare==='function')opt.onScare(value,{source:'firebase',reconnect:reconnecting});
     }
     function shouldReplace(run){
-      if(!isRun(run) || typeof opt.isSoleOccupant!=='function' || !opt.isSoleOccupant()) return false;
+      if(!isRun(run)) return false;
+      // NetRoom captured a zero pre-join occupancy for this seat. Consume this
+      // only after initialization succeeds so reconnects cannot restart a live run.
+      if(freshStartPending) return true;
+      if(typeof opt.isSoleOccupant!=='function' || !opt.isSoleOccupant()) return false;
       if(typeof run.roomVisits!=='string') return true;
       if(run.phase==='RETURN') return true;
       const touched=Number(run.updatedAt)||Number(run.startedAt)||0;
@@ -110,9 +117,11 @@
         if(myGeneration!==generation) return null;
         initBusy=false;
         retryAt=0;
+        freshStartPending=false;
         const value=result && result.snapshot && result.snapshot.val();
         if(result && result.committed){
           report('initialized',{sessionId:sessionId,runId:value&&value.runId});
+          if(isRun(value)) emit(value,{source:'initialized'});
         }else if(isRun(value)){
           report('adopted',{sessionId:sessionId,runId:value.runId});
           emit(value,{source:'initialize'});
@@ -131,6 +140,7 @@
       if(!active || !db || !nextId || nextId===sessionId) return;
       detachRun();
       sessionId=nextId;
+      freshStartPending=typeof opt.shouldStartFresh==='function'&&!!opt.shouldStartFresh();
       runRef=db.ref(ROOT+'/'+nextId+'/run');
       scareRef=db.ref(ROOT+'/'+nextId+'/scare');
       runRef.on('value',onValue,function(error){

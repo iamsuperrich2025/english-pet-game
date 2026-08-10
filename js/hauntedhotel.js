@@ -491,6 +491,7 @@
       database:function(){return adapter&&adapter.database?adapter.database():null;},
       sessionId:function(){return adapter&&adapter.sessionId?adapter.sessionId():'';},
       isSoleOccupant:function(){return !adapter||!adapter.isSoleOccupant||adapter.isSoleOccupant();},
+      shouldStartFresh:function(){return !!(adapter&&adapter.shouldStartFresh&&adapter.shouldStartFresh());},
       createInitial:initialRun,
       onState:onSessionState,
       onScare:function(event,meta){if(director)director.onSharedScare(event,meta||{});},

@@ -10,7 +10,7 @@
 
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
-- **10 ส.ค. 2026 — Haunted Hotel Phase 1–4 เสร็จและทดสอบแล้ว แต่ยังไม่ commit/deploy:** canonical mission + Horror Director + 6-player capacity + deterministic searchable letters/persistent hints; rules `/hauntedHotel` ยังไม่ publish
+- **10 ส.ค. 2026 — รอบ 1090 กำลังเตรียม commit/deploy:** เพิ่มการเริ่ม Haunted Hotel รอบใหม่เมื่อผู้เล่นคนแรกเข้าหลังโรงแรมว่าง; rules `/hauntedHotel` ชุดรอบ 1089 ผู้ใช้ยืนยัน Publish แล้ว
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 
@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1090 · รีเซ็ตรอบเมื่อ Haunted Hotel ว่าง:** NetRoom จำจำนวนผู้เล่นก่อนเข้าห้อง; ถ้าเป็น 0 ผู้เล่นคนแรกจะ transaction สร้าง canonical run ใหม่ทันทีและไม่แสดง state เก่าระหว่างรอล้าง ส่วนผู้เล่นที่เข้ามาสมทบยัง adopt run เดียวกันตามเดิม; fresh-start ถูก consume หลัง init สำเร็จจึงไม่รีเซ็ตซ้ำตอน Firebase reconnect · ไม่เพิ่ม field/ไม่ต้องแก้ Rules · เพิ่ม regression `tools/test_hauntedhotel_session_reset.js` และ Phase 4/rules/syntax/undefined/template/assets/diff ผ่าน
 - **รอบ 1089 · Haunted Hotel funeral/coffin realism pass (พร้อม commit/deploy):** ปรับเฉพาะ `js/hotel3d.js` ให้โลงมะฮอกกานีเก่าอ่านชั้นฝา/แผง/คิ้ว/มือจับ, แท่น+เงาสัมผัส, เทียน/ธูป/ดอกไม้แห้ง, ภาพกรอบผุ, คราบชื้น/พรม และตัดเม็ด Sphere/ไฟประดับขาวเดิม; collision เดิมคงพิกัดและไม่แตะ mission/multiplayer
 - แสงอุ่นเทียนแบบ random interpolation + cold fill/rim ไม่ cast shadow, ฝุ่น 28/14 จุดตามกำลังเครื่องและอัปเดต 55ms; Browser preview 1280×720/812×375 = 51–60/60 FPS, 83–95 calls, ~44K tris, console 0; Phase 4/rules regression + syntax/diff ผ่าน ไม่มี asset ใหม่
 - **รอบ 1089 · Haunted Hotel replacement rules + PNG ghost:** ตัวอักษร 1 ตัวทุกห้องชั้น 2–5, canonical ห้องไม่ซ้ำควบคุมไฟ 5→ดับหลัง flicker 10 วิ / 10→ติด / 13→ดับอีกครั้ง; ผีใช้ `ghost_attack_01.png` ไฟล์เดียว ไล่คนใกล้สุดและข้ามคนที่หลบในห้อง พร้อม shader cold tint/rim/face glow/flicker และผมปลิวแบบ GPU เบาโดยไม่ sync Firebase
