@@ -11,6 +11,7 @@
 ## 🤖 งานที่มอบ Codex (ChatGPT) ทำอยู่ตอนนี้ — เช็กก่อนเริ่มงานทุกครั้งกันชนกัน
 > ผู้ใช้เริ่มใช้ Codex ช่วยงานคู่ขนานกับ session Claude (4 ส.ค. 2026 เหตุ: Claude ติด rate limit) — Codex ไม่เห็น `img/`/`sound/` (ไม่อยู่ใน git) และ **deploy Firebase เองไม่ได้** ต้องรอผู้ใช้รันบนเครื่องเอง
 - **10 ส.ค. 2026 — รอบ 1094 Rules ขึ้น production แล้ว แต่ยังห้าม ship:** Account & Privacy, หน้า Privacy/Delete Account และ Data Safety worksheet รอ commit/deploy Hosting และทดสอบบัญชีทิ้งจริงก่อนกรอก Play Console
+- **10 ส.ค. 2026 — รอบ 1095 แก้ deploy blocker แล้ว:** เปลี่ยน callback โหลด snapshot ใน `js/account-deletion.js` ให้ไม่ถูก undefined-call checker ตีความ `async()` ผิด; checker 50 ไฟล์=0, syntax และ deletion-plan 776 paths ผ่านแล้ว รอ build/commit/deploy Hosting ซ้ำ
 
 ## 🎯 งานถัดไป — ▶️ START HERE (session ใหม่)
 

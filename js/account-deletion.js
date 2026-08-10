@@ -112,7 +112,7 @@
     const base={};
     const jobs={friends:'friends/'+uid,requests:'friendReq/'+uid,gifts:'gifts/'+uid,tinv:'tinv/'+uid,calls:'calls/'+uid,
       followers:'follow/'+uid,notifs:'gnotif/'+uid+'/n',msold:'msold/'+uid,market:'market',ads:'ads',gfeed:'gfeed'};
-    await Promise.all(Object.entries(jobs).map(async([k,p])=>{base[k]=await snap(p);}));
+    await Promise.all(Object.entries(jobs).map(([k,p])=>snap(p).then(value=>{base[k]=value;})));
     base.awards={};await Promise.all(AWARDS.map(async a=>{base.awards[a]=await snap(a);}));
     base.classes={};await Promise.all(CLASS_MAPS.map(async m=>{base.classes[m]=await snap('class/'+m);}));
     const contacts=new Set();
