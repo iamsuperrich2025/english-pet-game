@@ -4696,3 +4696,13 @@
 ## ⏬ ย้ายเมื่อ 2026-08-10 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1085 · Haunted Hotel Phase 3 (working tree ยังไม่ commit/deploy):** เปลี่ยนเพดานเฉพาะ `haunt` เป็น 6 คนด้วย `HauntedHotelRuntime.MAX_PLAYERS`; NetRoom verifier เดิมกระจายคนที่ 7 ไปหลังถัดไปแบบ race-safe โดยไม่แตะเพดานโลกอื่น
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1086 · Haunted Hotel Phase 4 (working tree ยังไม่ commit/deploy):** เพิ่ม placement pool stable ID/version 1 จากทุกห้องค้นได้+โถง/ทางเดิน และ derive จาก canonical `runId+seed` แบบกระจายหลายชั้น/ไม่กองห้อง โดยตัวหน้าโลง/ตู้ยังคงตำแหน่งพิเศษเดิม
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1088 · กฎส่ง Firebase Rules แบบป้องกันข้อความตกหล่น:** ทุกครั้งต้องส่งก้อนเต็มผ่าน HTML ที่มีปุ่ม “คัดลอกทั้งก้อน” จาก `tools/gen_rules_artifact.py` เป็นทางหลัก; เครื่องมือตรวจ `json.loads`, payload หลัง render ตรง source ทุกตัวอักษร และแสดง SHA-256 ก่อนเขียนไฟล์; กฎถาวรอยู่ใน `handoff/RULES.md` + skill `vocab-world` · ทดสอบ artifact จริงผ่าน 37 โซน/45,250 ตัวอักษร/มี `hauntedHotel` · ผู้ใช้ยืนยัน Publish แล้ว 10 ส.ค.; Codex ยังเทียบ rules สดไม่ได้เพราะ browser ไม่มีสิทธิ์/เกมไม่ได้ล็อกอิน
