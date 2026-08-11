@@ -4706,3 +4706,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1088 · กฎส่ง Firebase Rules แบบป้องกันข้อความตกหล่น:** ทุกครั้งต้องส่งก้อนเต็มผ่าน HTML ที่มีปุ่ม “คัดลอกทั้งก้อน” จาก `tools/gen_rules_artifact.py` เป็นทางหลัก; เครื่องมือตรวจ `json.loads`, payload หลัง render ตรง source ทุกตัวอักษร และแสดง SHA-256 ก่อนเขียนไฟล์; กฎถาวรอยู่ใน `handoff/RULES.md` + skill `vocab-world` · ทดสอบ artifact จริงผ่าน 37 โซน/45,250 ตัวอักษร/มี `hauntedHotel` · ผู้ใช้ยืนยัน Publish แล้ว 10 ส.ค.; Codex ยังเทียบ rules สดไม่ได้เพราะ browser ไม่มีสิทธิ์/เกมไม่ได้ล็อกอิน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1089 · Haunted Hotel replacement rules + PNG ghost:** ตัวอักษร 1 ตัวทุกห้องชั้น 2–5, canonical ห้องไม่ซ้ำควบคุมไฟ 5→ดับหลัง flicker 10 วิ / 10→ติด / 13→ดับอีกครั้ง; ผีใช้ `ghost_attack_01.png` ไฟล์เดียว ไล่คนใกล้สุดและข้ามคนที่หลบในห้อง พร้อม shader cold tint/rim/face glow/flicker และผมปลิวแบบ GPU เบาโดยไม่ sync Firebase
