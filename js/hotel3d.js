@@ -287,6 +287,68 @@ function signTexture(){
 }
 
 /* ============================================================
+   🪧 รอบ 1101 — ป้ายบอกชั้นอ่านชัดจากโถงลิฟต์
+   ============================================================ */
+function floorSignTexture(floor){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=384;
+  const c=cv.getContext('2d'), n=floor+1;
+  const bg=c.createLinearGradient(0,0,512,384);
+  bg.addColorStop(0,'#17100c'); bg.addColorStop(.52,'#302016'); bg.addColorStop(1,'#100c0a');
+  c.fillStyle=bg; c.fillRect(0,0,512,384);
+  c.strokeStyle='#b88a38'; c.lineWidth=18; c.strokeRect(18,18,476,348);
+  c.strokeStyle='#e0bb63'; c.lineWidth=3; c.strokeRect(34,34,444,316);
+  c.textAlign='center'; c.textBaseline='middle';
+  c.shadowColor='rgba(0,0,0,.9)'; c.shadowBlur=8; c.shadowOffsetY=4;
+  c.fillStyle='#f1d38a'; c.font='700 48px Tahoma,Arial,sans-serif'; c.fillText('ชั้น',256,76);
+  c.font='700 184px Georgia,serif'; c.fillText(String(n),256,205);
+  c.shadowBlur=3; c.fillStyle='#d9b969'; c.font='700 35px Georgia,serif';
+  c.fillText(floor===0?'LOBBY  ·  FLOOR 1':'GUEST ROOMS  ·  FLOOR '+n,256,326);
+  // คราบและรอยถลอกคงที่เล็กน้อย ทำให้ป้ายเข้ากับโรงแรมร้าง ไม่ดูเป็น HUD แปะผนัง
+  for(let i=0;i<32;i++){
+    const x=(i*149)%491+8,y=(i*83)%365+9,w=5+(i*11)%31;
+    c.fillStyle='rgba(8,5,3,'+(.025+(i%4)*.012)+')'; c.fillRect(x,y,w,1+(i%3));
+  }
+  const t=new T.CanvasTexture(cv); t.needsUpdate=true;
+  if(T.SRGBColorSpace)t.colorSpace=T.SRGBColorSpace;
+  return t;
+}
+
+/* ลายเทพพนมวาดใหม่สำหรับแผงข้างโลง: เทวดาคุกเข่าประนมมือ + กระหนกสมมาตร */
+function thepPhanomPanelTexture(){
+  const cv=document.createElement('canvas'); cv.width=1024; cv.height=320;
+  const c=cv.getContext('2d');
+  const bg=c.createLinearGradient(0,0,0,320); bg.addColorStop(0,'#32130e'); bg.addColorStop(.5,'#641e13'); bg.addColorStop(1,'#260d0a');
+  c.fillStyle=bg; c.fillRect(0,0,1024,320);
+  c.strokeStyle='#b47a28'; c.lineWidth=20; c.strokeRect(12,12,1000,296);
+  c.strokeStyle='#e0ad4f'; c.lineWidth=4; c.strokeRect(31,31,962,258);
+  const gold='#d4a247',dark='#6f431d';
+  c.strokeStyle=gold; c.fillStyle=gold; c.lineCap='round'; c.lineJoin='round';
+  // กระหนกซ้าย/ขวาแบบสมมาตร
+  for(const s of [-1,1]){
+    c.save(); c.translate(512,160); c.scale(s,1); c.lineWidth=10;
+    c.beginPath(); c.moveTo(92,244); c.bezierCurveTo(168,224,126,154,214,126); c.bezierCurveTo(286,103,284,53,386,42); c.stroke();
+    [[166,196,34,-42],[222,124,40,-48],[294,79,44,-34],[350,48,32,-20]].forEach(p=>{
+      c.save(); c.translate(p[0],p[1]); c.rotate(p[3]*Math.PI/180);
+      c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(35,-28,66,0); c.quadraticCurveTo(31,9,0,0); c.fill(); c.restore();
+    }); c.restore();
+  }
+  // เทพพนม: ชฎา ใบหน้า แขนประนม ลำตัว และเข่าพับ
+  c.fillStyle=gold; c.strokeStyle=dark; c.lineWidth=7;
+  c.beginPath(); c.moveTo(512,42); c.lineTo(476,100); c.lineTo(548,100); c.closePath(); c.fill(); c.stroke();
+  c.beginPath(); c.ellipse(512,113,31,37,0,0,Math.PI*2); c.fill(); c.stroke();
+  c.beginPath(); c.moveTo(469,153); c.quadraticCurveTo(512,130,555,153); c.lineTo(578,231); c.lineTo(446,231); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle=gold; c.lineWidth=25;
+  c.beginPath(); c.moveTo(477,158); c.quadraticCurveTo(489,184,506,204); c.moveTo(547,158); c.quadraticCurveTo(535,184,518,204); c.stroke();
+  c.fillStyle='#f0c96c'; c.beginPath(); c.moveTo(512,170); c.lineTo(497,204); c.lineTo(512,220); c.lineTo(527,204); c.closePath(); c.fill();
+  c.strokeStyle=gold; c.lineWidth=31; c.beginPath(); c.moveTo(472,232); c.quadraticCurveTo(428,264,382,249); c.moveTo(552,232); c.quadraticCurveTo(596,264,642,249); c.stroke();
+  c.fillStyle='rgba(20,8,4,.20)';
+  for(let i=0;i<38;i++)c.fillRect((i*173)%1008+4,(i*71)%306+7,3+(i%9),1+(i%2));
+  const t=new T.CanvasTexture(cv); t.needsUpdate=true;
+  if(T.SRGBColorSpace)t.colorSpace=T.SRGBColorSpace;
+  return t;
+}
+
+/* ============================================================
    🏗️ สร้างโรงแรมทั้งหลัง
    ============================================================ */
 function build(THREE_,opt){
@@ -538,6 +600,15 @@ function build(THREE_,opt){
     H.solids.push(guard);
     H.liftDoors.push({f,dl,dr,guard,t:0});
     accBox(A.gold,SHAFT_E-.02,y+2.72,0,.1,.34,CZ*2,0);               // คิ้วทองเหนือประตูลิฟต์
+
+    // ป้ายชั้นติดผนังข้างลิฟต์: ไทยเด่น + อังกฤษกำกับ มองเห็นทันทีเมื่อออกจากลิฟต์/บันได
+    const signGroup=new T.Group(); signGroup.position.set(-14.15,y+1.56,CZ-.065);
+    const signFrame=new T.Mesh(new T.BoxGeometry(1.62,1.22,.09),M.gold); signGroup.add(signFrame);
+    const signMat=new T.MeshStandardMaterial({map:floorSignTexture(f),color:0xffffff,roughness:.72,metalness:.04,
+      emissive:0x28160a,emissiveIntensity:.26});
+    const signFace=new T.Mesh(new T.PlaneGeometry(1.45,1.07),signMat);
+    signFace.position.z=-.051; signFace.rotation.y=Math.PI; signGroup.add(signFace);
+    floorVisual(f,signGroup); grp.add(signGroup);
   }
 
   /* ---------- 🛏️ เฟอร์นิเจอร์ห้องพัก (สร้างครั้งเดียว ใช้ซ้ำทุกห้อง) ----------
@@ -808,19 +879,40 @@ function build(THREE_,opt){
     box(M.funeralCloth,fx-.18,fy+.265,fz,2.78,.055,3.72,0,0,-.018);
     box(M.funeralCloth,fx-1.43,fy+.05,.18,.10,.62,3.36,0,0,-.035);
 
-    // โลงมะฮอกกานีเก่า: ผิวไม่ดำสนิท มีชั้นไม้ รอยต่อ แผงข้าง ฝายกสัน และขอบสึก
-    box(M.funeralWood,fx+.15,fy+.64,fz,2.30,.78,3.10);
-    box(M.funeralEdge,fx+.15,fy+.31,fz,2.40,.11,3.20);
-    box(M.funeralEdge,fx+.15,fy+1.025,fz,2.48,.13,3.28);
-    box(M.funeralEdge,fx-1.025,fy+.66,fz,.065,.55,3.00);
-    box(M.funeralEdge,fx+1.325,fy+.66,fz,.065,.55,3.00);
-    [-1.02,0,1.02].forEach(z=>box(M.funeralEdge,fx-1.065,fy+.67,z,.035,.34,.72));
-    box(M.funeralWood,fx-.20,fy+1.16,fz,1.34,.22,3.35,0,0,.12);
-    box(M.funeralWood,fx+.50,fy+1.16,fz,1.34,.22,3.35,0,0,-.12);
-    box(M.funeralEdge,fx+.15,fy+1.295,fz,.09,.075,3.42);
-    // รอยขีด/แผลบน varnish เฉพาะด้านที่ผู้เล่นเห็น
-    [[-.88,.54,-.82,.14],[-.90,.76,.21,-.10],[-.89,.61,.92,.08]].forEach(s=>
-      box(M.funeralEdge,fx+s[0],fy+s[1],s[2],.026,.018,.34,s[3]));
+    /* โลงเทพพนมแบบไทย: ฐานบัวซ้อน ตัวโลงชาดแดงเก่า แผงเทพพนมทอง ฝาทรงจั่ว และยอดปลายโลง
+       ลายทั้งหมดวาดใหม่ใน canvas ไม่ใช้ asset ภายนอก และคง collider/ตำแหน่งภารกิจเดิม */
+    const thaiRed=new T.MeshStandardMaterial({color:0x4c160f,roughness:.79,metalness:.02,bumpMap:M.funeralWood.bumpMap,bumpScale:.012});
+    const thaiGold=new T.MeshStandardMaterial({color:0xa87525,roughness:.62,metalness:.42});
+    box(M.funeralBlack,fx+.15,fy+.29,fz,2.62,.10,3.48);                 // ฐานเงา
+    box(thaiGold,fx+.15,fy+.36,fz,2.52,.08,3.38);                      // บัวล่างทอง
+    box(thaiRed,fx+.15,fy+.69,fz,2.34,.60,3.16);                       // ตัวโลงชาด
+    box(thaiGold,fx+.15,fy+.985,fz,2.46,.075,3.28);                    // บัวบน
+    box(thaiGold,fx-1.045,fy+.69,fz,.055,.55,3.08);
+    box(thaiGold,fx+1.345,fy+.69,fz,.055,.55,3.08);
+
+    const panelMat=new T.MeshStandardMaterial({map:thepPhanomPanelTexture(),color:0xffffff,roughness:.77,metalness:.03,
+      emissive:0x1a0904,emissiveIntensity:.08});
+    [-1,1].forEach(side=>{
+      const p=new T.Mesh(new T.PlaneGeometry(2.96,.49),panelMat);
+      p.position.set(fx+.15+side*1.174,fy+.69,fz); p.rotation.y=side*Math.PI/2; fg.add(p);
+    });
+    // ฝาทรงจั่วลาดเข้าหาสันกลาง อ่านเป็นโลงไทยชัดกว่าฝาเรียบแบบตะวันตก
+    box(thaiRed,fx-.43,fy+1.11,fz,1.28,.22,3.34,0,0,.18);
+    box(thaiRed,fx+.73,fy+1.11,fz,1.28,.22,3.34,0,0,-.18);
+    box(thaiGold,fx+.15,fy+1.235,fz,.10,.09,3.46);
+    box(thaiGold,fx-.99,fy+1.055,fz,.065,.08,3.34,0,0,.18);
+    box(thaiGold,fx+1.29,fy+1.055,fz,.065,.08,3.34,0,0,-.18);
+    // หน้าบัน/ยอดเปลวที่หัว-ท้าย ใช้ทรงเหลี่ยมต่ำเพื่อคง FPS มือถือ
+    const finialGeo=new T.ConeGeometry(.18,.58,4), finials=[];
+    [-1.57,1.57].forEach(z=>{
+      finials.push({x:fx+.15,y:fy+1.52,z,sx:.72,sy:1,sz:.72,ry:Math.PI/4});
+      box(thaiGold,fx+.15,fy+.83,z,2.28,.08,.07);
+    });
+    staticInstances(finialGeo,thaiGold,finials,fg);
+    // คิ้วทองแบ่งช่องและรอยถลอกบนรักแดง ทำให้พื้นผิวไม่ใหม่/แบนเกินไป
+    [-1.03,0,1.03].forEach(z=>box(thaiGold,fx-1.055,fy+.69,z,.025,.43,.055));
+    [[-.99,.55,-.76,.13],[-1.00,.78,.18,-.09],[-.985,.63,.91,.07]].forEach(s=>
+      box(M.funeralEdge,fx+s[0],fy+s[1],s[2],.024,.016,.30,s[3]));
     solid(fx-1.45,fx+1.65,-1.8,1.8,fy,fy+1.5,'funeral');
 
     // มือจับทองเหลืองดำหม่น ใช้ geometry เดียว instancing ทั้งหมด

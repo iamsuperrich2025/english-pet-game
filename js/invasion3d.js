@@ -6655,11 +6655,28 @@ function toastBan(html,ms){
 /* ============================================================
    🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
    ============================================================ */
+/* 🕹️🔒 รอบ 1101: ล็อกหน้าที่นิ้วจาก "ฝั่งที่เริ่มแตะ" ตั้งแต่ touchstart
+   เดิมนิ้วที่เริ่มฝั่งจอยแต่คลาดขอบวงนิดเดียวถูกเก็บเป็น candidate กล้อง พอลากเกิน 12px จึงก้ม/เงยแทนเดิน
+   เพิ่มขอบเผื่อนิ้วจริง 20px และสลับฝั่งมองอัตโนมัติเมื่อใช้พรีเซ็ตถนัดซ้าย (จอยอยู่ขวา) */
+const JOY_TOUCH_SLOP=20;
+function invTouchInRect(t,r,pad){
+  pad=pad||0;
+  return t.clientX>=r.left-pad&&t.clientX<=r.right+pad&&t.clientY>=r.top-pad&&t.clientY<=r.bottom+pad;
+}
+function invTouchLookSide(t,joyRect,screenW){
+  const joyOnLeft=joyRect.left+joyRect.width/2<=screenW/2;
+  return joyOnLeft?t.clientX>screenW*.4:t.clientX<screenW*.6;
+}
+function invTouchRole(t,joyRect,screenW,onButton,joyBusy){
+  const exact=invTouchInRect(t,joyRect,0);
+  const moveZone=exact||(!onButton&&invTouchInRect(t,joyRect,JOY_TOUCH_SLOP));
+  if(moveZone) return joyBusy?'move-reserved':'move';
+  return invTouchLookSide(t,joyRect,screenW)?'look':'ignored';
+}
 function bindInput(){
   /* จอยเดินซ้าย — นิ้วที่เริ่มบนจอยต้องเป็น "นิ้วเดิน" เท่านั้น ห้ามหลุดไปเป็นนิ้วก้ม/เงยกล้อง
      `changedTouches[0]` ไม่ปลอดภัยเมื่อแตะหลายจุดเกือบพร้อมกัน เพราะตัวแรกอาจเป็นนิ้วจากปุ่ม/จออีกฝั่ง */
   const touchOnJoy=t=>t.target===joyEl||joyEl.contains(t.target);
-  const touchInJoy=t=>{const r=joyEl.getBoundingClientRect();return t.clientX>=r.left&&t.clientX<=r.right&&t.clientY>=r.top&&t.clientY<=r.bottom;};
   const claimJoy=t=>{
     joy.id=t.identifier; const r=joyEl.getBoundingClientRect();
     joy.cx=r.left+r.width/2; joy.cy=r.top+r.height/2;
@@ -6701,14 +6718,15 @@ function bindInput(){
   };
   wrapEl.addEventListener('touchstart',e=>{
     for(const t of e.changedTouches){
-      /* HUD ที่ย้าย/ขยายหรือ element โปร่งใสซ้อนอาจทำให้ target ไม่ใช่ #inv-joy แม้พิกัดอยู่ในวงจอย
-         ยึดพิกัดจริงเป็นชั้นสำรอง และกันนิ้วทุกนิ้วในวงจอยออกจาก candidate ของกล้อง */
-      if(!joyAlive(e)&&touchInJoy(t)) claimJoy(t);
-      if(t.identifier===joy.id) continue;
-      if(touchInJoy(t)) continue;
       if(t.target.closest&&t.target.closest(PANELS)) continue;
       const onBtn=t.target.closest&&t.target.closest('button');
-      if(!onBtn && t.clientX>window.innerWidth*0.4 && !lookAlive(e)) takeLook(t);
+      /* HUD ที่ย้าย/ขยายหรือ element โปร่งใสซ้อนอาจทำให้ target ไม่ใช่ #inv-joy:
+         ใช้พิกัดจริง + ขอบเผื่อนิ้ว และห้ามนิ้วฝั่งเดินถูกนำไป adopt เป็นกล้องตลอดอายุ touch นั้น */
+      const role=invTouchRole(t,joyEl.getBoundingClientRect(),window.innerWidth,!!onBtn,joyAlive(e));
+      if(role==='move') claimJoy(t);
+      if(role==='move'||role==='move-reserved'||t.identifier===joy.id) continue;
+      if(role==='ignored'){ cand.delete(t.identifier); continue; }
+      if(!onBtn && !lookAlive(e)) takeLook(t);
       else cand.set(t.identifier,{x:t.clientX,y:t.clientY});
     }
     resumeAudio();

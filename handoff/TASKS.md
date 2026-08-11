@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1101 · แก้จอยเดินโลกยานแม่บางครั้งกลายเป็นก้ม/เงย:** ต้นเหตุคือนิ้วที่เริ่มฝั่งจอยแต่คลาดขอบถูกเก็บเป็น candidate กล้อง; `js/invasion3d.js` ล็อกบทบาท touch ตั้งแต่เริ่ม, เพิ่ม hit slop 20px และสลับฝั่งมองตามพรีเซ็ตถนัดซ้าย · regression 9 เคส, syntax/template/undefined, build 8,236 ไฟล์ + PWA validator และ Browser 812×375 console 0 ผ่าน
 - **รอบ 1100 · ส่งหน้า Login ขึ้น Firebase หลัง asset เข้า Git แล้ว:** รอบ 1099 commit/push โลโก้สำเร็จแต่ `ship.sh` จัด asset-only เป็น no-deploy จึง live ยัง `.1016`; เตรียม manifest ผูก `index_classic.html` เพื่อบัมพ์ version/build/deploy จริง โดยไม่แก้ UI/auth เพิ่ม
 - **รอบ 1099 · แก้ deploy รอบ 1098 ขาด asset โลโก้:** ต้นเหตุ `ship.sh` กัน asset untracked ตามปกติ จึง commit HTML/CSS แต่ไม่รวม PNG; เตรียม `handoff/SHIP.txt` ระบุเฉพาะ `img/phoneScreenShots/newVocabworldLogo.png` ให้ launcher add/commit/deploy โดยไม่กวาด asset อื่น
 - **รอบ 1097 · หน้า Login ใช้โลโก้ Vocab World ใหม่ (รอ visual review/ยังไม่ deploy):** แทน crest + หัวข้อซ้ำด้วย `img/phoneScreenShots/newVocabworldLogo.png`, ปรับการ์ด/พื้นหลัง/Google CTA น้ำเงิน-ฟ้า-ทอง และเปิด login แนวตั้งโดยไม่แตะ auth; build 8,236 ไฟล์ + validator ผ่าน, Browser 10 viewport 360×640–1920×1080 ไม่มี overflow/scroll โลโก้ 3:2 และ console ใหม่ 0 error
