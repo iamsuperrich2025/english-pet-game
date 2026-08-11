@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1097 · หน้า Login ใช้โลโก้ Vocab World ใหม่ (รอ visual review/ยังไม่ deploy):** แทน crest + หัวข้อซ้ำด้วย `img/phoneScreenShots/newVocabworldLogo.png`, ปรับการ์ด/พื้นหลัง/Google CTA น้ำเงิน-ฟ้า-ทอง และเปิด login แนวตั้งโดยไม่แตะ auth; build 8,236 ไฟล์ + validator ผ่าน, Browser 10 viewport 360×640–1920×1080 ไม่มี overflow/scroll โลโก้ 3:2 และ console ใหม่ 0 error
 - **รอบ 1096 · ปิดบั๊ก account deletion `permission_denied`:** ต้นตอคือ plan ส่ง `gfeed/<post>/lk/<uid>` และ `cm/<cid>/cl/<uid>` แม้ไม่มี reaction บนโพสต์คนแปลกหน้า; แก้ `js/account-deletion.js` ให้ส่งเฉพาะ reaction ที่มีจริง และ Rules อนุญาตเจ้าของ UID ลบ reaction ตัวเองแม้เลิกเป็นเพื่อน โดยไม่ขยายสิทธิ์สร้าง/แก้
 - Rules รอบ 1096 publish แล้วและ Firebase CLI เทียบสดตรง source 37 โซน/475 leaf (`missing/extra/changed=0`); destructive test ลบบัญชี `hulk`/`EZTSR3` สำเร็จ หน้าเกมกลับ login และ REST ยืนยัน friendCodes/presence/leaderboard ของ UID เดิมเป็น `null`
 - Regression ครอบ stranger/no-reaction + former-friend/owned-reaction ผ่าน 778 paths; syntax, undefined-call 50 ไฟล์=0, build 8,235 ไฟล์ และ PWA validator ผ่าน

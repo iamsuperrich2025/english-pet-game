@@ -110,43 +110,61 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 
 /* ============================================================
-   💎 รอบ 859 (ผู้ใช้สั่ง): หน้า login หรูหรา professional
-   ธีมน้ำเงิน-ทองเดียวกับ splash/ตราโล่ · ปุ่ม Google ตามมาตรฐานแบรนด์ (ขาว + ขอบ #dadce0)
-   ทุกขนาดอิง dvh — จอเตี้ย 812×375 ต้องเห็นครบไม่เลื่อน (กฎทองข้อ 7)
+   หน้า login — แฟนตาซีการศึกษาสีน้ำเงิน/ฟ้า/ทองตามโลโก้ Vocab World ใหม่
+   คง Google/Auth hooks เดิมทั้งหมด และบีบแนวตั้งให้ CTA อยู่ในจอเตี้ยได้
    ============================================================ */
+body:has(#screen-login.active){
+  background-color:#071c4c;
+  background-image:
+    radial-gradient(circle at 50% 42%,rgba(73,199,255,.35) 0%,rgba(25,103,211,.12) 29%,transparent 55%),
+    radial-gradient(circle at 52% 8%,rgba(255,203,53,.16),transparent 30%),
+    linear-gradient(180deg,rgba(3,24,73,.28) 0%,rgba(4,34,89,.12) 48%,rgba(2,16,48,.72) 100%),
+    url('../img/theme/theme_city_cod.png'),
+    url('../img/theme/theme_bg_wide.png');
+  background-size:100% 100%,100% 100%,100% 100%,cover,cover;
+  background-position:center,center,center,center bottom,center;
+  background-repeat:no-repeat;
+}
+body:has(#screen-login.active) #night-veil,
+body:has(#screen-login.active)::after{opacity:0 !important;}
+body:has(#screen-login.active) #app{
+  min-height:100dvh;display:flex;align-items:center;justify-content:center;
+  padding:max(8px,env(safe-area-inset-top)) 0 max(8px,env(safe-area-inset-bottom));box-sizing:border-box;
+}
 #screen-login.screen.active{
-  width:min(560px,94vw);
+  position:relative;isolation:isolate;
+  width:min(720px,calc(100vw - max(24px,env(safe-area-inset-left)) - max(24px,env(safe-area-inset-right))));
+  max-height:calc(100dvh - max(16px,env(safe-area-inset-top)) - max(16px,env(safe-area-inset-bottom)));
   background:
-    radial-gradient(ellipse at 50% -12%, rgba(245,197,66,.16), transparent 58%),
-    linear-gradient(168deg,#16355e 0%,#0e2647 55%,#0a1d38 100%);
-  border:1px solid rgba(245,197,66,.5);
-  box-shadow:0 24px 60px rgba(3,12,28,.6), inset 0 1px 0 rgba(255,255,255,.08);
-  padding:clamp(12px,3dvh,24px) clamp(18px,4vw,30px) clamp(14px,3dvh,24px);
-  margin:clamp(6px,1.5dvh,12px) auto;
+    radial-gradient(ellipse at 50% -8%,rgba(75,195,255,.22),transparent 48%),
+    linear-gradient(160deg,rgba(19,78,157,.93) 0%,rgba(10,48,112,.95) 52%,rgba(6,30,82,.97) 100%);
+  border:1px solid rgba(255,204,51,.68);border-radius:clamp(24px,3vw,32px);
+  box-shadow:0 0 0 1px rgba(70,192,255,.18),0 0 42px rgba(30,150,255,.28),0 24px 64px rgba(1,11,42,.62),inset 0 1px 0 rgba(255,255,255,.13);
+  padding:clamp(12px,2.8dvh,24px) clamp(18px,4vw,38px) clamp(14px,2.8dvh,24px);
+  margin:0 auto;
+  overflow-x:hidden;
 }
-.login-lux{width:100%;max-width:460px;margin:0 auto;text-align:center;}
-.login-crest{
-  width:clamp(64px,17dvh,118px);height:auto;display:inline-block;
-  filter:drop-shadow(0 8px 20px rgba(0,0,0,.5)) drop-shadow(0 0 16px rgba(245,197,66,.28));
+.login-lux{position:relative;z-index:1;width:100%;max-width:620px;margin:0 auto;text-align:center;}
+.login-logo{
+  width:clamp(220px,min(56vw,48dvh),430px);max-width:100%;height:auto;display:block;
+  margin:clamp(-8px,-1dvh,-2px) auto clamp(1px,.7dvh,6px);object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,10,52,.55)) drop-shadow(0 0 18px rgba(39,193,255,.24));
 }
-.login-word{
-  font-family:'Kanit','Itim',sans-serif;font-weight:700;margin:clamp(2px,1dvh,8px) 0 0;
-  font-size:clamp(19px,4.6dvh,29px);letter-spacing:.2em;text-indent:.2em;line-height:1.15;
-  background:linear-gradient(180deg,#fff3c4 0%,#f5c542 55%,#c9962a 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
+.login-tag{
+  display:flex;flex-direction:column;gap:1px;color:#e8f7ff;font-size:clamp(12px,2.25dvh,15px);
+  font-weight:500;line-height:1.45;margin:0 0 clamp(4px,1.1dvh,9px);text-shadow:0 2px 8px rgba(0,18,68,.9);
 }
-.login-rule{display:flex;align-items:center;gap:10px;max-width:300px;margin:clamp(2px,0.8dvh,6px) auto;color:#f5c542;font-size:10px;}
-.login-rule i{flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(245,197,66,.75));}
-.login-rule i:last-child{transform:scaleX(-1);}
-.login-tag{color:#a9c7e6;font-size:clamp(11.5px,2.2dvh,14px);margin:0 0 clamp(4px,1.4dvh,10px);}
-#screen-login .login-status{color:#d6e5f7;font-size:clamp(12.5px,2.4dvh,15px);min-height:18px;margin:0 0 clamp(6px,1.6dvh,12px);}
+#screen-login .login-status{color:#ffe38a;font-size:clamp(13px,2.45dvh,16px);font-weight:600;min-height:20px;margin:0 0 clamp(6px,1.35dvh,11px);text-shadow:0 2px 7px rgba(0,18,68,.85);}
 #screen-login .google-btn{
-  max-width:380px;margin:0 auto 6px;background:#fff;border:1px solid #dadce0;border-radius:14px;
-  padding:clamp(9px,2.2dvh,13px) 16px;font-size:clamp(15px,3.2dvh,18px);color:#3c4043;font-weight:600;
-  box-shadow:0 10px 26px rgba(2,10,24,.5), inset 0 -1px 0 rgba(0,0,0,.04);
+  min-height:56px;max-width:440px;margin:0 auto 6px;background:#fff;border:1px solid #dadce0;border-radius:18px;
+  padding:10px 18px;font-size:clamp(16px,3dvh,19px);color:#3c4043;font-weight:600;
+  box-shadow:0 10px 24px rgba(0,10,44,.42),inset 0 -1px 0 rgba(0,0,0,.05);
+  transition:transform .12s ease,box-shadow .12s ease,background-color .12s ease;
 }
+#screen-login .google-btn:hover{background:#f8fbff;box-shadow:0 13px 28px rgba(0,10,44,.48),0 0 0 2px rgba(92,196,255,.2);}
 #screen-login .google-btn:active{transform:translateY(2px);box-shadow:0 4px 12px rgba(2,10,24,.5);}
-#screen-login .login-note{color:#8fa9c9;font-size:clamp(10.5px,1.9dvh,12.5px);line-height:1.6;margin:clamp(5px,1.4dvh,10px) 0 0;}
+#screen-login .google-btn:focus-visible{outline:3px solid #67d4ff;outline-offset:3px;}
+#screen-login .login-note{color:#c3def7;font-size:clamp(10.5px,1.8dvh,12.5px);line-height:1.55;margin:clamp(5px,1.2dvh,10px) 0 0;text-shadow:0 1px 5px rgba(0,14,50,.8);}
 #screen-login .big-btn{display:block;max-width:380px;margin:6px auto 0;}
 #screen-login .offline-btn{
   background:rgba(255,255,255,.1);color:#cfe0f5;border:1px solid rgba(255,255,255,.22);
@@ -160,6 +178,24 @@ h1{color:var(--sky-d);text-shadow:none;}
 }
 #screen-login .install-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b98a12;}
 #screen-login .install-btn span{font-size:clamp(10px,2dvh,12px);}
+
+/* หน้า login ต้องใช้ได้แนวตั้ง แม้ตัวเกมด้านในยังคงบังคับหมุนแนวนอน */
+@media (orientation:portrait){
+  body:has(#screen-login.active) #rotate-overlay{display:none;}
+  #screen-login.screen.active{width:min(720px,calc(100vw - 24px));padding:clamp(14px,2.6dvh,22px) 16px;}
+  .login-logo{width:min(84vw,430px);}
+}
+/* จอแนวนอนเตี้ย: ย่อเฉพาะระยะ/โลโก้เพื่อให้ปุ่มทั้งหมดอยู่ในจอเดียว */
+@media (orientation:landscape) and (max-height:520px){
+  #screen-login.screen.active{padding:8px 22px 10px;max-height:calc(100dvh - 12px);}
+  .login-logo{width:clamp(210px,56dvh,280px);margin:-5px auto 0;}
+  .login-tag{flex-direction:row;justify-content:center;gap:.45em;font-size:clamp(11px,2.9dvh,13px);margin-bottom:3px;}
+  .login-tag span:first-child::after{content:' —';}
+  #screen-login .login-status{font-size:clamp(12px,3.2dvh,14px);min-height:17px;margin-bottom:4px;}
+  #screen-login .google-btn{min-height:52px;padding:8px 16px;font-size:clamp(15px,4dvh,18px);}
+  #screen-login .login-note{font-size:clamp(10px,2.65dvh,12px);line-height:1.35;margin-top:4px;}
+  #screen-login .install-btn{margin-top:5px;padding:7px 14px;}
+}
 
 /* เกมจับคู่: จอกว้าง → อังกฤษซ้าย ไทยขวา (แนวนอนเต็มตา) */
 @media (min-width:640px){
