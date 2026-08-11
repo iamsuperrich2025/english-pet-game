@@ -287,7 +287,7 @@ function signTexture(){
 }
 
 /* ============================================================
-   🪧 รอบ 1101 — ป้ายบอกชั้นอ่านชัดจากโถงลิฟต์
+   🪧 รอบ 1102 — ป้ายบอกชั้นอ่านชัดจากโถงลิฟต์
    ============================================================ */
 function floorSignTexture(floor){
   const cv=document.createElement('canvas'); cv.width=512; cv.height=384;
@@ -301,7 +301,7 @@ function floorSignTexture(floor){
   c.shadowColor='rgba(0,0,0,.9)'; c.shadowBlur=8; c.shadowOffsetY=4;
   c.fillStyle='#f1d38a'; c.font='700 48px Tahoma,Arial,sans-serif'; c.fillText('ชั้น',256,76);
   c.font='700 184px Georgia,serif'; c.fillText(String(n),256,205);
-  c.shadowBlur=3; c.fillStyle='#d9b969'; c.font='700 35px Georgia,serif';
+  c.shadowBlur=3; c.fillStyle='#d9b969'; c.font='700 '+(floor===0?35:29)+'px Georgia,serif';
   c.fillText(floor===0?'LOBBY  ·  FLOOR 1':'GUEST ROOMS  ·  FLOOR '+n,256,326);
   // คราบและรอยถลอกคงที่เล็กน้อย ทำให้ป้ายเข้ากับโรงแรมร้าง ไม่ดูเป็น HUD แปะผนัง
   for(let i=0;i<32;i++){
@@ -310,6 +310,7 @@ function floorSignTexture(floor){
   }
   const t=new T.CanvasTexture(cv); t.needsUpdate=true;
   if(T.SRGBColorSpace)t.colorSpace=T.SRGBColorSpace;
+  else if(T.sRGBEncoding)t.encoding=T.sRGBEncoding;
   return t;
 }
 
@@ -345,6 +346,7 @@ function thepPhanomPanelTexture(){
   for(let i=0;i<38;i++)c.fillRect((i*173)%1008+4,(i*71)%306+7,3+(i%9),1+(i%2));
   const t=new T.CanvasTexture(cv); t.needsUpdate=true;
   if(T.SRGBColorSpace)t.colorSpace=T.SRGBColorSpace;
+  else if(T.sRGBEncoding)t.encoding=T.sRGBEncoding;
   return t;
 }
 
@@ -890,11 +892,27 @@ function build(THREE_,opt){
     box(thaiGold,fx-1.045,fy+.69,fz,.055,.55,3.08);
     box(thaiGold,fx+1.345,fy+.69,fz,.055,.55,3.08);
 
-    const panelMat=new T.MeshStandardMaterial({map:thepPhanomPanelTexture(),color:0xffffff,roughness:.77,metalness:.03,
-      emissive:0x1a0904,emissiveIntensity:.08});
+    /* MeshBasic เฉพาะแผงลงรัก: รักษาสีชาด/รายละเอียดเทพพนมไม่ให้ไฟเทียนอุ่นเผาสีจนกลายเป็นแผ่นทองโล่ง */
+    const panelMat=new T.MeshBasicMaterial({map:thepPhanomPanelTexture(),color:0xffffff,side:T.DoubleSide,
+      polygonOffset:true,polygonOffsetFactor:-3});
+    const reliefGold=new T.MeshBasicMaterial({color:0x986321,fog:true});
     [-1,1].forEach(side=>{
-      const p=new T.Mesh(new T.PlaneGeometry(2.96,.49),panelMat);
-      p.position.set(fx+.15+side*1.174,fy+.69,fz); p.rotation.y=side*Math.PI/2; fg.add(p);
+      const p=new T.Mesh(new T.BoxGeometry(.035,.49,2.96),panelMat);
+      p.position.set(fx+.15+side*1.195,fy+.69,fz); fg.add(p);
+      // เทพพนมนูนจริงเหนือแผง: ชฎา/เศียร/แขนประนม/ท่านั่ง อ่านรูปทรงได้แม้ไฟฉายส่องเฉียง
+      const reliefX=fx+.15+side*1.225;
+      const head=new T.Mesh(new T.SphereGeometry(.105,10,8),reliefGold);
+      head.scale.x=.32; head.position.set(reliefX,fy+.79,0); fg.add(head);
+      const crown=new T.Mesh(new T.ConeGeometry(.12,.25,5),reliefGold);
+      crown.scale.x=.34; crown.position.set(reliefX,fy+.995,0); fg.add(crown);
+      const torso=new T.Mesh(new T.ConeGeometry(.20,.34,6),reliefGold);
+      torso.scale.x=.25; torso.rotation.z=Math.PI; torso.position.set(reliefX,fy+.59,0); fg.add(torso);
+      [[.15,.67,.43],[-.15,.67,-.43],[.33,.47,.09],[-.33,.47,-.09]].forEach(a=>
+        box(reliefGold,reliefX,a[1]+fy,a[0],.045,.065,a[1]>.6?.43:.54,a[2]));
+      [-.035,.035].forEach(z=>{
+        const hand=new T.Mesh(new T.SphereGeometry(.047,8,6),reliefGold);
+        hand.scale.x=.32; hand.position.set(reliefX,fy+.62,z); fg.add(hand);
+      });
     });
     // ฝาทรงจั่วลาดเข้าหาสันกลาง อ่านเป็นโลงไทยชัดกว่าฝาเรียบแบบตะวันตก
     box(thaiRed,fx-.43,fy+1.11,fz,1.28,.22,3.34,0,0,.18);

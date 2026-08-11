@@ -52,6 +52,10 @@
   #city-chip{top:calc(8px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));font-weight:800}
   #city-chip small{font-weight:600;color:#8fb4de}
   #online-chip{top:calc(8px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right))}
+  #city-login-link{top:calc(50px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));
+    display:none;text-decoration:none;color:#3a2606;background:linear-gradient(180deg,#ffe58a,#f5b82e);
+    border-color:rgba(255,255,255,.72);font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.24)}
+  #city-login-link:active{transform:scale(.96)}
   #back-chip{bottom:calc(10px + env(safe-area-inset-bottom));left:calc(10px + env(safe-area-inset-left));
     text-decoration:none;color:#eaf3ff}
   #hint-chip{bottom:calc(10px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
@@ -177,6 +181,7 @@
 
   <div class="chip" id="city-chip">🏙️ Vocab City <small>เมืองล็อบบี้ 3D</small></div>
   <div class="chip" id="online-chip">⏳ กำลังเชื่อมต่อ…</div>
+  <a class="chip" id="city-login-link" href="index_classic.html">🔑 เข้าสู่ระบบ</a>
   <a class="chip" id="back-chip" href="index_classic.html">🚪 ล็อบบี้แบบเดิม</a>
   <div class="chip" id="hint-chip">🖐️ นิ้วเดียวลาก = เลื่อนเมือง · ✌️ สองนิ้วบิด/ลาก/หนีบ = หมุน·เอียง·ซูม · แตะตึกเพื่อเข้าเลย!</div>
 

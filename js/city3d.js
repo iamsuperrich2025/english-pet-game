@@ -1541,6 +1541,8 @@ function liveStart(){
     Live.fb=firebase; Live.db=firebase.database();
     firebase.auth().onAuthStateChanged(u=>{
       Live.uid = u ? u.uid : null;
+      const loginLink=document.getElementById('city-login-link');
+      if(loginLink) loginLink.style.display = u ? 'none' : 'flex';
       if(!u){ setChip('🔑 ล็อกอินในเกมก่อน แล้วจะเห็นเพื่อนในเมือง'); return; }
       watchPresence();
       watchFriendChats();          // 💬 บับเบิลแชทสดของเพื่อนที่ยืนอยู่ในเมือง
