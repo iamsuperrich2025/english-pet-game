@@ -405,19 +405,20 @@ gradeChangeTo:64 · gradeLockNote:91 · openGradeChange:100
 
 ## js/hauntedhotelsession.js (255 บรรทัด · 0 รายการ)
 
-## js/hotel3d.js (1,416 บรรทัด · 60 รายการ)
+## js/hotel3d.js (1,508 บรรทัด · 62 รายการ)
 ### 🗂️ สารบัญโซน js/hotel3d.js (Read/Edit เฉพาะช่วง)
 - 1-65 hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060)
 - 66-134 🧱 ตัวช่วยรวมกล่องเป็น mesh เดียว (draw call น้อย = มือถือไหว)
 - 135-288 🎨 วัสดุ (ไม่มีไฟล์ภาพใน img/tex/ = ใช้สีล้วนที่ตั้งไว้ เกมไม่พัง)
-- 289-793 🏗️ สร้างโรงแรมทั้งหลัง
-- 794-921 ⚰️🕯️ ABANDONED FUNERAL WAKE — local realism pass
-- 922-1081 🚪🚪🚪🚪🚪 รอบ 1060 — ห้องในสุดชั้น 4 มีตู้ภารกิจ 5 ใบ
-- 1082-1155 🚶 ระบบเดิน: หาความสูงพื้นใต้เท้า + ชนกำแพง
-- 1156-1205 🔤🧭 รอบ 1086 — HAUNTED HOTEL PHASE 4 stable letter placement pool
-- 1206-1229 👁️‍🗨️ รอบ 1067 — visibility/light culling ตามชั้น
-- 1230-1275 💡 เปิด/ปิดไฟทั้งโรงแรม (ไฟดับ = มืดสนิท เหลือแค่ไฟฉาย)
-- 1276-1416 ⏱ อัปเดตทุกเฟรม: ลูกตาในรูปมองตาม · ลิฟต์วิ่ง · บานตู้เปิด
+- 289-350 🪧 รอบ 1101 — ป้ายบอกชั้นอ่านชัดจากโถงลิฟต์
+- 351-864 🏗️ สร้างโรงแรมทั้งหลัง
+- 865-1013 ⚰️🕯️ ABANDONED FUNERAL WAKE — local realism pass
+- 1014-1173 🚪🚪🚪🚪🚪 รอบ 1060 — ห้องในสุดชั้น 4 มีตู้ภารกิจ 5 ใบ
+- 1174-1247 🚶 ระบบเดิน: หาความสูงพื้นใต้เท้า + ชนกำแพง
+- 1248-1297 🔤🧭 รอบ 1086 — HAUNTED HOTEL PHASE 4 stable letter placement pool
+- 1298-1321 👁️‍🗨️ รอบ 1067 — visibility/light culling ตามชั้น
+- 1322-1367 💡 เปิด/ปิดไฟทั้งโรงแรม (ไฟดับ = มืดสนิท เหลือแค่ไฟฉาย)
+- 1368-1508 ⏱ อัปเดตทุกเฟรม: ลูกตาในรูปมองตาม · ลิฟต์วิ่ง · บานตู้เปิด
 ### รายการ js/hotel3d.js
 TEX:25 · FLOOR_H:28 · WEST:31 · SHAFT_E:32 · CORE_E:33 · HOTEL_LENGTH_SCALE:37
 BASE_CORRIDOR_LEN:38 · WORLD_X_MIN:40 · RZ0:41 · LZ0:42 · ST_LAND:50 · ST_XW:51
@@ -425,10 +426,11 @@ ST_XE:52 · ST_RUN:53 · ST_RISE:54 · ST_STEPS:55 · ST_GAP0:56 · ST_ZMID:57
 ROOM_N:58 · DOOR_W:61 · ENTRY_HW:62 · PLAYER_R:63 · floorY:64 · Acc:71
 accBox:72 · accGeo:88 · accMesh:96 · funeralDecayTexture:104 · makeMats:139 · PORTRAIT_PHOTOS:219
 EYE_R0:228 · PORTRAIT_EYE:229 · PORTRAIT_SKIN:237 · PORTRAIT_CLOTH:238 · portraitTexture:239 · signTexture:278
-build:292 · inRect:1085 · insideHotel:1086 · surfaceY:1089 · collide:1121 · roomAt:1141
-floorOf:1149 · roomVisitId:1150 · LETTER_PLACEMENT_VERSION:1163 · letterPlacementPool:1164 · validateLetterPlacementPool:1195 · updateFloorVisibility:1211
-setLightLevel:1233 · setLights:1248 · updatePracticalLights:1251 · configureSpecialWardrobes:1263 · BLINK_DUR:1279 · BLINK_MIN:1280
-tick:1282 · nearWardrobe:1380 · nearFuneral:1391 · inLift:1396 · atLiftDoor:1400 · randomHaunt:1404
+floorSignTexture:292 · thepPhanomPanelTexture:317 · build:354 · inRect:1177 · insideHotel:1178 · surfaceY:1181
+collide:1213 · roomAt:1233 · floorOf:1241 · roomVisitId:1242 · LETTER_PLACEMENT_VERSION:1255 · letterPlacementPool:1256
+validateLetterPlacementPool:1287 · updateFloorVisibility:1303 · setLightLevel:1325 · setLights:1340 · updatePracticalLights:1343 · configureSpecialWardrobes:1355
+BLINK_DUR:1371 · BLINK_MIN:1372 · tick:1374 · nearWardrobe:1472 · nearFuneral:1483 · inLift:1488
+atLiftDoor:1492 · randomHaunt:1496
 
 ## js/images.js (216 บรรทัด · 25 รายการ)
 IMG_FILES:11 · MOODS:12 · COLLECTIBLES_IMG_V:16 · GIFTS_IMG_V:17 · startImgKey:19 · petImageKeys:21
@@ -437,7 +439,7 @@ CLIP_SM:63 · clipCanWebm:79 · CLIP_ASSET_V:90 · clipFileFor:92 · petClipKey:
 equippedItem:121 · petStateImg:131 · petWearOverlay:152 · wearLayerHTML:173 · happyNow:180 · makeHappy:181
 currentPetImg:194
 
-## js/invasion3d.js (10,435 บรรทัด · 641 รายการ)
+## js/invasion3d.js (10,453 บรรทัด · 645 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 16-79 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 80-114 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -487,26 +489,26 @@ currentPetImg:194
 - 6427-6499 ⚔️ ดาเมจ / เงื่อนไขชนะ
 - 6500-6590 📖 คำศัพท์ + รอบเล่น
 - 6591-6654 🖥️ HUD
-- 6655-6841 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
-- 6842-6962 🚶 ผู้เล่น + AI + ลูป
-- 6963-6967 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
-- 6968-7126 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
-- 7127-7285 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
-- 7286-7647 🔭🚫 รอบ 575 (ผู้ใช้สั่ง): "ซูมปืนค้างไว้ = ขึ้นเฮลิไม่ได้ ต้องเลิกซูมก่อน"
-- 7648-7911 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
-- 7912-8057 🧯👥 กันผู้เล่นล้น — ฝั่งเรนเดอร์ของโลกนี้ (รอบ 637 · ยกส่วนกลางออกไป js/netroom.js รอบ 640)
-- 8058-8116 💨 ควันตามหลังมิสไซล์ (รอบ 531 — ผู้ใช้สั่ง) — สไปรต์ควันนุ่มปล่อยเป็นระยะ
-- 8117-8284 🔥🌀 รอบ 565 (ผู้ใช้สั่ง): ยานลูก "หลบมิสไซล์ที่ล็อกได้" — ปล่อยแฟลร์ + บิดหนี
-- 8285-8364 🔫↩️ รอบ 568/1043: ยานลูกที่ถูกผู้เล่นยิงโดนแล้ว และกำลัง "ถูกเรดาร์ล็อก" จึงยิงสวนใส่เฮลิผู้เล่น
-- 8365-8566 🔥🛡️ รอบ 569 (ผู้ใช้สั่ง): แฟลร์ของ "เฮลิผู้เล่น" + เสียงเตือนตอนถูกล็อก
-- 8567-8577 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
-- 8578-8703 🧘🎯 รอบ 586 (ผู้ใช้ส่งคลิป: "ตัวละครดิ้นไปดิ้นมา ไม่เป็นธรรมชาติ")
-- 8704-8879 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
-- 8880-9322 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
-- 9323-9589 🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
-- 9590-9640 ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
-- 9641-9718 🔁 ลูปหลัก
-- 9719-10435 ▶️ เข้า/ออกโลก
+- 6655-6859 🕹️ Input — มือถือ (จอย+ปุ่ม) และคอม (WASD + pointer lock)
+- 6860-6980 🚶 ผู้เล่น + AI + ลูป
+- 6981-6985 🚁 โหมดขับเฮลิคอปเตอร์เอง (รอบ 414 — ผู้ใช้สั่ง)
+- 6986-7144 🗺️ รอบ 417: แผนที่เลือกจุดลงสนาม (ผู้ใช้สั่ง) — เข้าเกมแล้วเลือกได้ว่าจะไปเกิดตรงไหน
+- 7145-7303 🎖️ รอบ 418: นั่งเฮลิลำเดียวกับเพื่อน — "นักบิน + พลปืนประจำประตู" (ผู้ใช้สั่ง)
+- 7304-7665 🔭🚫 รอบ 575 (ผู้ใช้สั่ง): "ซูมปืนค้างไว้ = ขึ้นเฮลิไม่ได้ ต้องเลิกซูมก่อน"
+- 7666-7929 🌐 ผู้เล่นออนไลน์ใน map เดียวกัน (รอบ 414) — Firebase /world/invasion
+- 7930-8075 🧯👥 กันผู้เล่นล้น — ฝั่งเรนเดอร์ของโลกนี้ (รอบ 637 · ยกส่วนกลางออกไป js/netroom.js รอบ 640)
+- 8076-8134 💨 ควันตามหลังมิสไซล์ (รอบ 531 — ผู้ใช้สั่ง) — สไปรต์ควันนุ่มปล่อยเป็นระยะ
+- 8135-8302 🔥🌀 รอบ 565 (ผู้ใช้สั่ง): ยานลูก "หลบมิสไซล์ที่ล็อกได้" — ปล่อยแฟลร์ + บิดหนี
+- 8303-8382 🔫↩️ รอบ 568/1043: ยานลูกที่ถูกผู้เล่นยิงโดนแล้ว และกำลัง "ถูกเรดาร์ล็อก" จึงยิงสวนใส่เฮลิผู้เล่น
+- 8383-8584 🔥🛡️ รอบ 569 (ผู้ใช้สั่ง): แฟลร์ของ "เฮลิผู้เล่น" + เสียงเตือนตอนถูกล็อก
+- 8585-8595 🏃🪖 รอบ 530: หน่วยรบเคลื่อนที่เชิงยุทธวิธี (ผู้ใช้สั่ง: "อย่าปักหลักยืนทื่อ
+- 8596-8721 🧘🎯 รอบ 586 (ผู้ใช้ส่งคลิป: "ตัวละครดิ้นไปดิ้นมา ไม่เป็นธรรมชาติ")
+- 8722-8897 📣 รอบ 471: ทหารฝ่ายเราตะโกนบอกทิศศัตรู (ผู้ใช้สั่ง)
+- 8898-9340 🌙 รอบ 471: โหมดกลางคืน — ฉากมืดสลัว + ท้องฟ้าดาว + ไฟฉายติดปืน
+- 9341-9607 🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
+- 9608-9658 ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
+- 9659-9736 🔁 ลูปหลัก
+- 9737-10453 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 WORD_COIN:23 · WORD_TIME:25 · WORLD:26 · EYE:27 · FOV:28 · LOOK_SENS:29
 PITCH_MIN:30 · MS_Y:52 · MS_FLAT:61 · MS_BELLY:62 · MS_HP:63 · MS_DMG_GUN:64
@@ -572,49 +574,50 @@ layoutRadar:6371 · lockTarget:6392 · rayTarget:6402 · raySphere:6419 · damag
 updateArmor:6472 · killMother:6479 · flashScreen:6494 · myUid:6504 · leaderUid:6505 · isLeader:6510
 pickWord:6511 · setWord:6524 · adoptWord:6534 · applyShared:6543 · startWave:6558 · completeWord:6568
 renderWord:6594 · renderTarget:6604 · tickWordTimer:6615 · renderCoins:6625 · renderHp:6626 · renderHeat:6632
-renderMissiles:6638 · toastBan:6648 · bindInput:6658 · moveJoy:6832 · unlockMouse:6840 · solidPushOut:6849
-tickPlayer:6864 · hurtPlayer:6944 · MAP_VIEW:6973 · mapToWorld:6974 · worldToMap:6975 · zoneName:6976
-buildMapShade:6990 · drawSpawnMap:7009 · safeSpawn:7084 · fitSpawnMap:7094 · openSpawnMap:7105 · applySpawnPick:7114
-RIDE_DIST:7137 · RIDE_UP:7138 · RIDE_OFF:7139 · rideableHelis:7140 · findRide:7146 · nearestRideable:7147
-ridePos:7157 · setRideView:7169 · boardGunner:7178 · dismountGunner:7197 · tickGunner:7213 · updateGunnerBtn:7253
-tickAutoBoard:7269 · heliCount:7281 · zoomBlocksBoard:7299 · enterHeli:7309 · exitHeli:7351 · EXT_CAM:7380
-EXT_VIEWS:7401 · EXT_SELF:7416 · EXT_RIDE:7417 · extP:7419 · syncExtBtn:7421 · cycleExtView:7427
-resetExtCam:7436 · angDiff:7438 · extCamClear:7443 · extCamera:7462 · seatCamera:7485 · tickHeliFlight:7506
-heliCrash:7605 · tickGpws:7615 · syncBotHelis:7637 · netReady:7653 · netJoin:7659 · netSend:7670
-peerColor:7692 · NAME_SPR_H:7696 · nameSprite:7697 · bakedSoldierGlb:7713 · loadPeerSoldier:7714 · peerRig:7723
-setPeerWeapon:7728 · peerBody:7733 · buildPeer:7762 · onPeer:7775 · dropPeer:7820 · netLeave:7827
-peerTick:7832 · renderBoard:7868 · sendChat:7893 · showPeerBubble:7900 · removePeerBubble:7906 · PEER_DRAW_MAX:7919
-PEER_DRAW_SLACK:7920 · DRAW_SWAP_MARGIN:7921 · JOIN_TOAST_MAX:7922 · drawnPeers:7925 · drawSlotFree:7926 · showPeerAgain:7929
-hidePeer:7936 · tickDrawBudget:7941 · tickCrowdGuard:7951 · resetCrowdGuard:7955 · tickFighters:7957 · tickMother:8012
-spawnAlienShot:8029 · tickAlienShots:8041 · smokeTex:8063 · spawnPuff:8074 · spawnSmoke:8084 · spawnDust:8086
-tickSmoke:8095 · clearSmoke:8105 · tickHeliDust:8108 · EVA_WARN:8130 · EVA_FLARE_D:8131 · EVA_TURN:8132
-EVA_SPIN_MUL:8133 · EVA_SPD_MAX:8134 · EVA_ROLL:8137 · EVA_Y:8138 · FLARE_PODS:8139 · FLARE_COOL:8140
-FLARE_N:8141 · FLARE_LIFE:8142 · FLARE_TRAP:8143 · FLARE_CH:8144 · incomingMis:8149 · startEvade:8160
-dropFlares:8169 · tickEvade:8197 · clearFlares:8229 · tickMissiles:8230 · CTR_REACT:8299 · CTR_WARN:8300
-CTR_GAP:8301 · CTR_BURST:8305 · CTR_BURST_MS:8306 · CTR_SPD:8307 · CTR_DMG:8308 · CTR_MAX:8309
-CTR_SPREAD:8310 · CTR_LEAD:8311 · ctrAimPoint:8314 · ctrArming:8321 · counterFire:8325 · tickCounter:8330
-SPK_RANGE:8382 · SPK_MS:8383 · SPK_GAP:8384 · SPK_WORLD_GAP:8385 · SPK_BEEP:8386 · AMIS_SPD:8387
-AMIS_TURN:8388 · AMIS_DMG:8389 · AMIS_LIFE:8390 · AMIS_MAX:8391 · AMIS_PROX:8392 · PH_FLARE_MAX:8393
-PH_FLARE_RE:8394 · PH_FLARE_N:8395 · PH_FLARE_COOL:8396 · PH_FLARE_BACK:8397 · PH_FLARE_DOWN:8398 · PH_TRAP:8399
-PH_FLARE_CH:8400 · renderFlareBtn:8403 · dropPlayerFlares:8409 · fireAlienMissile:8441 · clearAMis:8456 · resetSpike:8461
-spikeStart:8462 · aMisNear:8464 · tickSpike:8472 · tickAMis:8524 · SQUAD_COVERS:8576 · squadCoverPool:8577
-SQ_TURN:8587 · angWrap:8592 · turnTo:8594 · easeLook:8599 · squadTarget:8604 · pickSquadDest:8616
-tickSquadMove:8630 · tickSquad:8656 · CALL_DIST:8710 · CALL_NEAR:8711 · CALL_GAP_ALL:8712 · CALL_GAP_ONE:8713
-CALL_GAP_DIR:8714 · CALL_MS:8715 · CALL_LINES:8716 · CALL_SECTORS:8727 · bearingKey:8730 · clearSquadBubble:8738
-callSprite:8744 · squadShout:8756 · tickSquadCalls:8769 · CHAT_GAP_ALL:8796 · CHAT_LINES:8797 · tickSquadChatter:8803
-heliFireAt:8820 · nearestFighterTo:8832 · tickHelis:8838 · DAY:8887 · NIGHT:8889 · collectMsMats:8893
-CYCLE_MS:8904 · MODE_ICON:8906 · STORM_MS:8913 · buildStars:8920 · buildStreetLamps:8943 · glowTex:8961
-tickStreetLamps:8969 · beamPair:8986 · tickSearchBeams:8997 · buildBarrelFires:9034 · tickBarrels:9052 · tickShootingStar:9062
-buildMist:9087 · tickMist:9097 · tickNightSound:9140 · tickSneak:9149 · tickStorm:9160 · nvReady:9176
-nvEnter:9177 · nvExit:9183 · tickNvHint:9184 · dropGlowStick:9193 · tickGlowSticks:9210 · buildFlashlight:9219
-setNight:9224 · setDayMode:9225 · tickNight:9239 · applyNightLook:9271 · tickFlashlight:9311 · MSB_FIRST:9341
-MSB_GAP:9342 · MSB_WARN:9343 · MSB_KILL_WARN:9344 · MSB_NEAR:9345 · MSB_FLEE:9346 · MSB_R:9347
-MSB_HOLD:9348 · MSB_MAX:9349 · MSB_DEAD_MS:9350 · MSB_BEEP:9351 · MSB_COVER_R:9354 · MSB_PAD_R:9355
-MSB_COVER_RECHECK:9356 · msbEnsure:9361 · msbPlace:9378 · msbBarPos:9387 · msbHide:9394 · resetMsBeam:9398
-msbCoverAt:9413 · msbAimBeside:9434 · msbBegin:9440 · msbAim:9457 · msbStrike:9488 · msbKill:9527
-msbKickOut:9540 · tickMsBeam:9550 · TURBO_EVERY:9603 · TURBO_MS:9604 · TURBO_MUL:9605 · TURBO_N:9606
-TURBO_TRACK:9607 · resetTurbo:9609 · turboPick:9614 · turboBegin:9621 · tickTurbo:9633 · fit:9644
-tick:9650 · frame:9658 · build:9722 · start:9803 · exitWorld:9929
+renderMissiles:6638 · toastBan:6648 · JOY_TOUCH_SLOP:6661 · invTouchInRect:6662 · invTouchLookSide:6666 · invTouchRole:6670
+bindInput:6676 · moveJoy:6850 · unlockMouse:6858 · solidPushOut:6867 · tickPlayer:6882 · hurtPlayer:6962
+MAP_VIEW:6991 · mapToWorld:6992 · worldToMap:6993 · zoneName:6994 · buildMapShade:7008 · drawSpawnMap:7027
+safeSpawn:7102 · fitSpawnMap:7112 · openSpawnMap:7123 · applySpawnPick:7132 · RIDE_DIST:7155 · RIDE_UP:7156
+RIDE_OFF:7157 · rideableHelis:7158 · findRide:7164 · nearestRideable:7165 · ridePos:7175 · setRideView:7187
+boardGunner:7196 · dismountGunner:7215 · tickGunner:7231 · updateGunnerBtn:7271 · tickAutoBoard:7287 · heliCount:7299
+zoomBlocksBoard:7317 · enterHeli:7327 · exitHeli:7369 · EXT_CAM:7398 · EXT_VIEWS:7419 · EXT_SELF:7434
+EXT_RIDE:7435 · extP:7437 · syncExtBtn:7439 · cycleExtView:7445 · resetExtCam:7454 · angDiff:7456
+extCamClear:7461 · extCamera:7480 · seatCamera:7503 · tickHeliFlight:7524 · heliCrash:7623 · tickGpws:7633
+syncBotHelis:7655 · netReady:7671 · netJoin:7677 · netSend:7688 · peerColor:7710 · NAME_SPR_H:7714
+nameSprite:7715 · bakedSoldierGlb:7731 · loadPeerSoldier:7732 · peerRig:7741 · setPeerWeapon:7746 · peerBody:7751
+buildPeer:7780 · onPeer:7793 · dropPeer:7838 · netLeave:7845 · peerTick:7850 · renderBoard:7886
+sendChat:7911 · showPeerBubble:7918 · removePeerBubble:7924 · PEER_DRAW_MAX:7937 · PEER_DRAW_SLACK:7938 · DRAW_SWAP_MARGIN:7939
+JOIN_TOAST_MAX:7940 · drawnPeers:7943 · drawSlotFree:7944 · showPeerAgain:7947 · hidePeer:7954 · tickDrawBudget:7959
+tickCrowdGuard:7969 · resetCrowdGuard:7973 · tickFighters:7975 · tickMother:8030 · spawnAlienShot:8047 · tickAlienShots:8059
+smokeTex:8081 · spawnPuff:8092 · spawnSmoke:8102 · spawnDust:8104 · tickSmoke:8113 · clearSmoke:8123
+tickHeliDust:8126 · EVA_WARN:8148 · EVA_FLARE_D:8149 · EVA_TURN:8150 · EVA_SPIN_MUL:8151 · EVA_SPD_MAX:8152
+EVA_ROLL:8155 · EVA_Y:8156 · FLARE_PODS:8157 · FLARE_COOL:8158 · FLARE_N:8159 · FLARE_LIFE:8160
+FLARE_TRAP:8161 · FLARE_CH:8162 · incomingMis:8167 · startEvade:8178 · dropFlares:8187 · tickEvade:8215
+clearFlares:8247 · tickMissiles:8248 · CTR_REACT:8317 · CTR_WARN:8318 · CTR_GAP:8319 · CTR_BURST:8323
+CTR_BURST_MS:8324 · CTR_SPD:8325 · CTR_DMG:8326 · CTR_MAX:8327 · CTR_SPREAD:8328 · CTR_LEAD:8329
+ctrAimPoint:8332 · ctrArming:8339 · counterFire:8343 · tickCounter:8348 · SPK_RANGE:8400 · SPK_MS:8401
+SPK_GAP:8402 · SPK_WORLD_GAP:8403 · SPK_BEEP:8404 · AMIS_SPD:8405 · AMIS_TURN:8406 · AMIS_DMG:8407
+AMIS_LIFE:8408 · AMIS_MAX:8409 · AMIS_PROX:8410 · PH_FLARE_MAX:8411 · PH_FLARE_RE:8412 · PH_FLARE_N:8413
+PH_FLARE_COOL:8414 · PH_FLARE_BACK:8415 · PH_FLARE_DOWN:8416 · PH_TRAP:8417 · PH_FLARE_CH:8418 · renderFlareBtn:8421
+dropPlayerFlares:8427 · fireAlienMissile:8459 · clearAMis:8474 · resetSpike:8479 · spikeStart:8480 · aMisNear:8482
+tickSpike:8490 · tickAMis:8542 · SQUAD_COVERS:8594 · squadCoverPool:8595 · SQ_TURN:8605 · angWrap:8610
+turnTo:8612 · easeLook:8617 · squadTarget:8622 · pickSquadDest:8634 · tickSquadMove:8648 · tickSquad:8674
+CALL_DIST:8728 · CALL_NEAR:8729 · CALL_GAP_ALL:8730 · CALL_GAP_ONE:8731 · CALL_GAP_DIR:8732 · CALL_MS:8733
+CALL_LINES:8734 · CALL_SECTORS:8745 · bearingKey:8748 · clearSquadBubble:8756 · callSprite:8762 · squadShout:8774
+tickSquadCalls:8787 · CHAT_GAP_ALL:8814 · CHAT_LINES:8815 · tickSquadChatter:8821 · heliFireAt:8838 · nearestFighterTo:8850
+tickHelis:8856 · DAY:8905 · NIGHT:8907 · collectMsMats:8911 · CYCLE_MS:8922 · MODE_ICON:8924
+STORM_MS:8931 · buildStars:8938 · buildStreetLamps:8961 · glowTex:8979 · tickStreetLamps:8987 · beamPair:9004
+tickSearchBeams:9015 · buildBarrelFires:9052 · tickBarrels:9070 · tickShootingStar:9080 · buildMist:9105 · tickMist:9115
+tickNightSound:9158 · tickSneak:9167 · tickStorm:9178 · nvReady:9194 · nvEnter:9195 · nvExit:9201
+tickNvHint:9202 · dropGlowStick:9211 · tickGlowSticks:9228 · buildFlashlight:9237 · setNight:9242 · setDayMode:9243
+tickNight:9257 · applyNightLook:9289 · tickFlashlight:9329 · MSB_FIRST:9359 · MSB_GAP:9360 · MSB_WARN:9361
+MSB_KILL_WARN:9362 · MSB_NEAR:9363 · MSB_FLEE:9364 · MSB_R:9365 · MSB_HOLD:9366 · MSB_MAX:9367
+MSB_DEAD_MS:9368 · MSB_BEEP:9369 · MSB_COVER_R:9372 · MSB_PAD_R:9373 · MSB_COVER_RECHECK:9374 · msbEnsure:9379
+msbPlace:9396 · msbBarPos:9405 · msbHide:9412 · resetMsBeam:9416 · msbCoverAt:9431 · msbAimBeside:9452
+msbBegin:9458 · msbAim:9475 · msbStrike:9506 · msbKill:9545 · msbKickOut:9558 · tickMsBeam:9568
+TURBO_EVERY:9621 · TURBO_MS:9622 · TURBO_MUL:9623 · TURBO_N:9624 · TURBO_TRACK:9625 · resetTurbo:9627
+turboPick:9632 · turboBegin:9639 · tickTurbo:9651 · fit:9662 · tick:9668 · frame:9676
+build:9740 · start:9821 · exitWorld:9947
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29

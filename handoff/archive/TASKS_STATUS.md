@@ -4711,3 +4711,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1089 · Haunted Hotel replacement rules + PNG ghost:** ตัวอักษร 1 ตัวทุกห้องชั้น 2–5, canonical ห้องไม่ซ้ำควบคุมไฟ 5→ดับหลัง flicker 10 วิ / 10→ติด / 13→ดับอีกครั้ง; ผีใช้ `ghost_attack_01.png` ไฟล์เดียว ไล่คนใกล้สุดและข้ามคนที่หลบในห้อง พร้อม shader cold tint/rim/face glow/flicker และผมปลิวแบบ GPU เบาโดยไม่ sync Firebase
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1089 · Haunted Hotel funeral/coffin realism pass (พร้อม commit/deploy):** ปรับเฉพาะ `js/hotel3d.js` ให้โลงมะฮอกกานีเก่าอ่านชั้นฝา/แผง/คิ้ว/มือจับ, แท่น+เงาสัมผัส, เทียน/ธูป/ดอกไม้แห้ง, ภาพกรอบผุ, คราบชื้น/พรม และตัดเม็ด Sphere/ไฟประดับขาวเดิม; collision เดิมคงพิกัดและไม่แตะ mission/multiplayer
