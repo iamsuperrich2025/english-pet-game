@@ -132,19 +132,14 @@
     document.body.appendChild(offer);
   }
 
-  function check(registration, automatic) {
+  function check(registration) {
     if (document.hidden || applying) return;
-    // ตรวจ sw.js ก่อนเสมอ: ถ้า production shell ถูกแทนที่โดยเลข build เดิม
-    // (เช่น deploy คู่ขนาน) browser จะยังรับ HTML/JS ชุดใหม่และ controllerchange จะรีโหลดให้
-    registration.update().catch(function () {
-      // Offline ยังเล่น build ที่ cache ไว้ได้ตามปกติ
-    }).then(function () { return remoteVersion(); }).then(function (remoteBuild) {
+    remoteVersion().then(function (remoteBuild) {
       if (!remoteBuild || remoteBuild === CURRENT_BUILD) return;
       var reloaded = null;
       try { reloaded = sessionStorage.getItem(RELOAD_KEY); } catch (error) {}
-      if (reloaded === remoteBuild && !automatic) return;
-      if (automatic) applyUpdate(registration, remoteBuild);
-      else offerUpdate(registration, remoteBuild);
+      if (reloaded === remoteBuild) return;
+      offerUpdate(registration, remoteBuild);
     }).catch(function () {
       // Offline is not an update failure. The active/cached game continues unchanged.
     });
@@ -153,19 +148,13 @@
   function start() {
     addBuildLabel();
     if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
-    var controlledAtStart = !!navigator.serviceWorker.controller;
-    if (controlledAtStart) {
-      navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (!applying) location.reload();
-      });
-    }
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then(function (registration) {
-        check(registration, true);
-        checkTimer = setInterval(function () { check(registration, false); }, 3 * 60 * 1000);
-        window.addEventListener('online', function () { check(registration, false); });
+        check(registration);
+        checkTimer = setInterval(function () { check(registration); }, 15 * 1000);
+        window.addEventListener('online', function () { check(registration); });
         document.addEventListener('visibilitychange', function () {
-          if (!document.hidden) check(registration, false);
+          if (!document.hidden) check(registration);
         });
       })
       .catch(function () {
