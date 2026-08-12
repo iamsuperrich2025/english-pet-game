@@ -187,7 +187,7 @@ grabShot:12578 · savePhoto:12589 · clearEntities:12601 · INTRO_KEY:12624 · i
 markIntroSeen:12627 · INTRO:12628 · INTRO_MODE:12630 · showIntro:12632 · HELI_KPP_BANNER:12658 · closeIntro:12660
 beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
-## js/app-update.js (169 บรรทัด · 0 รายการ)
+## js/app-update.js (179 บรรทัด · 0 รายการ)
 
 ## js/arena3d.js (724 บรรทัด · 0 รายการ)
 
@@ -220,7 +220,7 @@ certAwardAdvSupreme:194 · certBackfill:210 · certCatNameById:238 · certFromPo
 certFitMeasured:292 · certHolder:301 · certSVG:311 · certChipHTML:593 · openCertBig:609 · openCertMine:625
 certStripHTML:633 · certBindStrip:647
 
-## js/city3d.js (3,315 บรรทัด · 210 รายการ)
+## js/city3d.js (3,328 บรรทัด · 211 รายการ)
 ### 🗂️ สารบัญโซน js/city3d.js (Read/Edit เฉพาะช่วง)
 - 2-18 city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 86
 - 19-51 ⚙️ CONFIG + เครื่องมือกลาง (รอบ 861)
@@ -233,19 +233,19 @@ certStripHTML:633 · certBindStrip:647
 - 941-997 🧍 ตัวละครผู้เล่น — blk1-8 = หุ่นบล็อก 3D · blk9-88 = ป้ายภาพ 2D ตั้งในโลก
 - 998-1349 🌆 ผังเมือง — อาคารทุกหลังผูก go=<key> (ตัวรับใน js/main.js)
 - 1350-1494 🎉 เทศกาลตามวันที่จริง — พลุปีใหม่ / สงกรานต์ / ลอยกระทง (รอบ 863)
-- 1495-1757 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
-- 1758-1914 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
-- 1915-2071 🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
-- 2072-2221 💬🔴 รอบ 873: ไอคอน "มีข้อความค้าง ยังไม่ได้อ่าน" ลอยเหนือหัวเพื่อน
-- 2222-2239 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
-- 2240-2474 🚪🔊 รอบ 890: บานประตูตึกเปิด-ปิดจริง + เสียงประตูสังเคราะห์เอง
-- 2475-2606 🚗🤖🛸 รอบ 900: ยานพาหนะแล่นออกจากช่องประตูม้วนที่เพิ่งเปิด → จอดรอหน้าประตู
-- 2607-2774 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
-- 2775-2859 🚪🚶 รอบ 886: กลับจากล็อบบี้เดิม → "เดินออกจากตึกมาหน้าประตู" (walkSelfTo ย้อนทาง)
-- 2860-3027 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
-- 3028-3081 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
-- 3082-3117 🚀 BOOT
-- 3118-3315 🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิดคือ "ภาพเมืองใบที่เพิ่งเดินออกไป"
+- 1495-1770 🧑‍🤝‍🧑 ผู้เล่นจริง (อ่านอย่างเดียว) — presence→ยืนตามอาคาร · world→ขับ/บินในเมือง
+- 1771-1927 💬 รอบ 866: บับเบิลแชทสดลอยหัวเพื่อนในเมือง
+- 1928-2084 🖊️💬 รอบ 868: พิมพ์ตอบแชทได้จากในเมือง (ไม่ต้องกลับล็อบบี้เดิม)
+- 2085-2234 💬🔴 รอบ 873: ไอคอน "มีข้อความค้าง ยังไม่ได้อ่าน" ลอยเหนือหัวเพื่อน
+- 2235-2252 🚪 รอบ 870: กลับจากล็อบบี้เดิม → โผล่ที่ "หน้าประตูตึกที่เพิ่งเข้า"
+- 2253-2487 🚪🔊 รอบ 890: บานประตูตึกเปิด-ปิดจริง + เสียงประตูสังเคราะห์เอง
+- 2488-2619 🚗🤖🛸 รอบ 900: ยานพาหนะแล่นออกจากช่องประตูม้วนที่เพิ่งเปิด → จอดรอหน้าประตู
+- 2620-2787 🚶 รอบ 866: ตัวเราเดินไปหน้าตึกก่อน แล้วค่อยเข้าหน้านั้น
+- 2788-2872 🚪🚶 รอบ 886: กลับจากล็อบบี้เดิม → "เดินออกจากตึกมาหน้าประตู" (walkSelfTo ย้อนทาง)
+- 2873-3040 👆 แตะ/คลิก: ตัวละคร→การ์ดโปรไฟล์ · อาคาร→เดินทางไปหน้านั้น · พื้น→ประกายดาว
+- 3041-3094 🎵 รอบ 873: เพลงประกอบเมือง (BGM) — ปุ่มเปิด/ปิดมุมขวาล่าง
+- 3095-3130 🚀 BOOT
+- 3131-3328 🎬 รอบ 880: กลับจากล็อบบี้เดิม → จอเปิดคือ "ภาพเมืองใบที่เพิ่งเดินออกไป"
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:46
 hash:47 · rnd:48 · clamp:49 · TAU:50 · CITY_WORLD_COMING_SOON:55 · CITY_WORLD_TESTER_NAMES:56
@@ -261,27 +261,28 @@ bJungleGate:800 · bDronePad:822 · miniCar:847 · miniMoto:866 · miniHeli:886 
 miniMecha:921 · makeBlockFigure:945 · makeSpriteFigure:981 · makeFigure:990 · pickBlk:993 · bld:1001
 BUILDINGS:1002 · BLD_AT:1121 · buildCity:1123 · buildPlaza:1174 · buildGreens:1220 · _glowTex:1265
 buildSky:1275 · buildAmbientTraffic:1337 · FESTIVAL:1354 · buildFestival:1366 · buildFireworks:1373 · buildSongkranDeco:1415
-buildLoiKrathongDeco:1447 · actBuilding:1518 · loadFirebase:1529 · liveStart:1537 · lbGet:1554 · watchPresence:1564
-spawnStander:1588 · WORLD_MAPS:1623 · pollWorlds:1630 · spawnVehicle:1681 · removeActor:1741 · markPickable:1754
-BUB_MS:1767 · BUB_FRESH:1768 · BUB_MAXCH:1769 · BUB_MAX:1770 · BUB_TEX_KEEP:1771 · bubTexture:1777
-bubTexRelease:1789 · bubbleSprite:1794 · bubDraw:1803 · killBubble:1830 · showBubble:1843 · flushBubble:1881
-watchFriendChats:1889 · CITY_CHAT_MAX:1928 · CITY_QUICK_REPLIES:1930 · bubSafeText:1933 · actorInfo:1939 · chatBoxCanSend:1949
-chatBoxWhy:1953 · chatBoxRefresh:1959 · openChatBox:1996 · closeChatBox:2008 · cbNote:2013 · sendCityChatText:2019
-sendCityChat:2049 · cityStopLive:2054 · SAVE_KEY:2083 · saveRead:2086 · pairIdOf:2089 · chatSeenTsCity:2091
-chatMarkSeenCity:2097 · unreadTexture:2110 · addUnreadBadge:2128 · removeUnreadBadge:2149 · setUnread:2159 · applyUnread:2165
-markReadCity:2167 · unreadCount:2175 · spawnSelf:2181 · DOOR_MEM:2232 · rememberDoor:2233 · lastDoorKey:2234
-DOOR_SWING:2256 · DOOR_OPEN_S:2257 · DOOR_SHUT_S:2258 · DOOR_AJAR:2262 · AJAR_QUIET_MS:2263 · ROLL_OPEN_S:2268
-ROLL_SHUT_S:2269 · ROLL_LIFT:2270 · ROLL_AJAR:2271 · registerDoor:2274 · doorLeadS:2287 · doorSpillTexture:2293
-doorCreakSfx:2304 · doorLatchSfx:2322 · shutterRollSfx:2345 · shutterClunkSfx:2372 · doorMoveSfx:2395 · setCityDoor:2402
-openCityDoor:2413 · closeCityDoor:2414 · setDoorRest:2416 · refreshDoorRest:2428 · applyDoorPose:2438 · RIDE_GATE:2490
-RIDE_OUT_S:2491 · RIDE_PARK_S:2492 · DOOR_RIDES:2495 · rideLeadS:2505 · rideSfx:2510 · ridePose:2535
-launchRide:2552 · releaseRide:2564 · WALK_SPD:2613 · WALK_MIN:2614 · WALK_MAX:2615 · DOOR_GAP:2616
-RECEPTION_SPOT:2620 · doorSpotOf:2621 · walkPose:2632 · footCtx:2647 · footStepSfx:2652 · footDustTexture:2673
-footDustPuff:2682 · footDustTick:2696 · FOOT_STEP_DIST:2711 · DOOR_OPEN_AT:2712 · walkSelfTo:2714 · EXIT_BACK:2786
-EXIT_DUR:2787 · EXIT_STEP:2788 · EXIT_CLEAR:2789 · EXIT_SHUT:2790 · stageExitWalk:2793 · walkSelfOut:2805
-onTap:2863 · captureCityShot:2882 · travelTo:2915 · sparkleAt:2956 · openProfile:2980 · refreshChip:3019
-setChip:3023 · BGM_KEY:3034 · BGM_DUCK_PICTURE_DICTIONARY:3035 · bgmWant:3037 · bgmEnsure:3038 · BGM_DEV:3047
-bgmPlay:3048 · bgmDuckForPictureDictionary:3050 · bgmRefreshBtn:3055 · bgmToggle:3062 · bgmSetup:3067 · boot:3085
+buildLoiKrathongDeco:1447 · actBuilding:1518 · loadFirebase:1529 · setCityLoginVisible:1538 · liveStart:1551 · lbGet:1567
+watchPresence:1577 · spawnStander:1601 · WORLD_MAPS:1636 · pollWorlds:1643 · spawnVehicle:1694 · removeActor:1754
+markPickable:1767 · BUB_MS:1780 · BUB_FRESH:1781 · BUB_MAXCH:1782 · BUB_MAX:1783 · BUB_TEX_KEEP:1784
+bubTexture:1790 · bubTexRelease:1802 · bubbleSprite:1807 · bubDraw:1816 · killBubble:1843 · showBubble:1856
+flushBubble:1894 · watchFriendChats:1902 · CITY_CHAT_MAX:1941 · CITY_QUICK_REPLIES:1943 · bubSafeText:1946 · actorInfo:1952
+chatBoxCanSend:1962 · chatBoxWhy:1966 · chatBoxRefresh:1972 · openChatBox:2009 · closeChatBox:2021 · cbNote:2026
+sendCityChatText:2032 · sendCityChat:2062 · cityStopLive:2067 · SAVE_KEY:2096 · saveRead:2099 · pairIdOf:2102
+chatSeenTsCity:2104 · chatMarkSeenCity:2110 · unreadTexture:2123 · addUnreadBadge:2141 · removeUnreadBadge:2162 · setUnread:2172
+applyUnread:2178 · markReadCity:2180 · unreadCount:2188 · spawnSelf:2194 · DOOR_MEM:2245 · rememberDoor:2246
+lastDoorKey:2247 · DOOR_SWING:2269 · DOOR_OPEN_S:2270 · DOOR_SHUT_S:2271 · DOOR_AJAR:2275 · AJAR_QUIET_MS:2276
+ROLL_OPEN_S:2281 · ROLL_SHUT_S:2282 · ROLL_LIFT:2283 · ROLL_AJAR:2284 · registerDoor:2287 · doorLeadS:2300
+doorSpillTexture:2306 · doorCreakSfx:2317 · doorLatchSfx:2335 · shutterRollSfx:2358 · shutterClunkSfx:2385 · doorMoveSfx:2408
+setCityDoor:2415 · openCityDoor:2426 · closeCityDoor:2427 · setDoorRest:2429 · refreshDoorRest:2441 · applyDoorPose:2451
+RIDE_GATE:2503 · RIDE_OUT_S:2504 · RIDE_PARK_S:2505 · DOOR_RIDES:2508 · rideLeadS:2518 · rideSfx:2523
+ridePose:2548 · launchRide:2565 · releaseRide:2577 · WALK_SPD:2626 · WALK_MIN:2627 · WALK_MAX:2628
+DOOR_GAP:2629 · RECEPTION_SPOT:2633 · doorSpotOf:2634 · walkPose:2645 · footCtx:2660 · footStepSfx:2665
+footDustTexture:2686 · footDustPuff:2695 · footDustTick:2709 · FOOT_STEP_DIST:2724 · DOOR_OPEN_AT:2725 · walkSelfTo:2727
+EXIT_BACK:2799 · EXIT_DUR:2800 · EXIT_STEP:2801 · EXIT_CLEAR:2802 · EXIT_SHUT:2803 · stageExitWalk:2806
+walkSelfOut:2818 · onTap:2876 · captureCityShot:2895 · travelTo:2928 · sparkleAt:2969 · openProfile:2993
+refreshChip:3032 · setChip:3036 · BGM_KEY:3047 · BGM_DUCK_PICTURE_DICTIONARY:3048 · bgmWant:3050 · bgmEnsure:3051
+BGM_DEV:3060 · bgmPlay:3061 · bgmDuckForPictureDictionary:3063 · bgmRefreshBtn:3068 · bgmToggle:3075 · bgmSetup:3080
+boot:3098
 
 ## js/dictband.js (410 บรรทัด · 27 รายการ)
 BAND_EMOJI:12 · BAND_SET_REWARD:13 · BAND_DONE_BONUS:14 · bandFailMsg:21 · bandLoad:28 · bandShortTH:60

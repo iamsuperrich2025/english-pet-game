@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+- **รอบ 1108 · กู้ปุ่ม Login เมื่อ PWA cache คนละชุด:** ภาพผู้ใช้ยืนยันข้อความ Login ขึ้นแต่ element ปุ่มหาย เพราะ shell เก่าถูก deploy ทับด้วยเลข build เดิม; `js/city3d.js` สร้างปุ่มสำรองเมื่อ HTML ไม่มี และ `js/app-update.js` ตรวจ SW ทุกครั้ง+รีโหลดเมื่อ controller เปลี่ยนแม้เลขเดิม · syntax/diff, stale-shell assertions, build 8,240 ไฟล์/PWA validator และ Browser 812×375 (gap 8.8px, overflow 0, Login ปลายทาง/console 0) ผ่าน
 - **รอบ 1106 · F1 realistic dynamic engine audio (ยังไม่ deploy):** แทนเครื่อง oscillator ด้วย `sound/racing/engineSound.mp3` แบบ single-sample RPM 4,000–19,000 / pitch 0.70×–1.60× ตาม throttle·speed·accel/decel·brake·เกียร์ 8 สปีด·กล้อง พร้อม synth fallback/crossfade/mobile node เดียว
 - แก้ `js/f1_3d.js`, `tools/build_web.mjs`, `tools/validate_web_build.mjs`; เพิ่ม `tools/test_f1_engine_audio.js` + MP3 และบังคับ build รวม asset แม้ยัง untracked โดยไม่แตะ physics/NetRoom/Firebase/โลกอื่น
 - regression/fallback/cleanup + syntax/template/undefined/diff ผ่าน; Browser Battery+Quality: ก่อน gesture=`off/0 context`, หลัง Start=`sample/1`, exit=`off/0`, console 0; build 8,237 ไฟล์/444.4 MiB + PWA validator ผ่าน · ค้างฟังจริงบนลำโพงมือถือ/จุน volume-loop ถ้าจำเป็น
@@ -43,7 +44,6 @@
 - Rules รอบ 1096 publish แล้วและ Firebase CLI เทียบสดตรง source 37 โซน/475 leaf (`missing/extra/changed=0`); destructive test ลบบัญชี `hulk`/`EZTSR3` สำเร็จ หน้าเกมกลับ login และ REST ยืนยัน friendCodes/presence/leaderboard ของ UID เดิมเป็น `null`
 - Regression ครอบ stranger/no-reaction + former-friend/owned-reaction ผ่าน 778 paths; syntax, undefined-call 50 ไฟล์=0, build 8,235 ไฟล์ และ PWA validator ผ่าน
 - แก้ `handoff/RULES.md`, `js/account-deletion.js`, `tools/test_account_deletion.js`; artifact full-copy รอบ 1096 ตรวจ JSON/Copy exact/37 zones/SHA-256 ผ่าน
-- **รอบ 1094 · แก้ Firebase Rules line 385 + Publish สำเร็จ:** คืน `.child('u').val()` และวงเล็บที่ตกใน `gnotif/$uid/n/$nid/.write`; generator ปฏิเสธ expression ที่วงเล็บ/quote ไม่ครบแล้ว · หลังผู้ใช้ Publish ตรวจ Rules สดด้วย Firebase CLI ตรง source ครบ 37 โซน/475 leaf keys (`missing/extra/changed=0`) · เว็บ live ยังเป็น policy เก่าและ `/delete-account.html` ยัง fallback เข้า City จึงเหลือ commit/deploy Hosting + ทดสอบบัญชีทิ้ง
 - เพิ่ม `privacy.html` และ `delete-account.html` ไทย/อังกฤษ ครอบคลุมข้อมูลบัญชี/รูป/สังคม/WebRTC/local storage/ผู้ให้บริการ/retention/เด็ก/ช่องทางอีเมล; เพิ่ม `docs/GOOGLE_PLAY_PRIVACY_REMEDIATION.md` เป็น audit + Data Safety worksheet
 - Rules รอบ 1093 เพิ่มเฉพาะสิทธิ์ลบข้อมูลของ UID ตนเองใน 7 กลุ่มที่จำเป็น; JSON + artifact full-copy ตรง source ผ่าน แต่ **ยังไม่ publish** และไม่แตะ production ตามคำสั่ง
 - unit mock ยืนยัน deletion plan 776 paths ไม่ลบข้อมูลคู่สนทนา, build 8,235 ไฟล์/442.5 MiB + validator ผ่าน; Browser หน้า public 812×375 ไม่มี horizontal overflow/console issue และโหลด deletion JS/CSS hashed ครบ; ยังต้อง acceptance ด้วยบัญชีทิ้งหลัง publish/deploy
