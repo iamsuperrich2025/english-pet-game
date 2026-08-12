@@ -4781,3 +4781,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1110 · transition release ทดสอบปุ่มอัปเดตด้วยรุ่นใหม่จริง:** `.1022` รับ `.1023` เงียบเพราะตัว updater เก่ายังทำงานก่อนถูกแทนที่ จึงต้องมี `.1024` เป็นรุ่นแรกที่ `.1023` ตรวจด้วยกติกาใหม่; `js/app-update.js` แสดงเลข build ปลายทางบนข้อความเพื่อยืนยัน · explicit-prompt/no-update-before-click assertion, syntax/diff, build 8,240 ไฟล์/PWA validator ผ่าน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1111 · ป้ายอัปเดตแบบยืนยัน แม้มือถือโหลด build ล่าสุดเอง:** ต้นเหตุ navigation network-first ทำให้กลับเข้า Lobby แล้ว `หน้า=server` จึงไม่เคยเห็นปุ่ม; `js/app-update.js` เพิ่ม `vw-update-acknowledged` ให้ป้าย “เกมรุ่นใหม่พร้อมแล้ว/เปิดเกมรุ่นใหม่” ค้างจนกด และยังคงเส้นทาง remote update เดิม · เพิ่ม `tools/test_app_update_prompt.js` ครบ loaded/acknowledged/remote; syntax/diff/build 8,240/PWA ผ่าน และ Browser 812×375 ป้ายเห็นจริง overflow/console 0 กดแล้วไม่เด้งซ้ำ
