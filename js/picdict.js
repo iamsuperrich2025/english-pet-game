@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🖼️ Picture Dictionary — single-page card gallery (รอบ 1118)
+   🖼️ Picture Dictionary — single-page card gallery (รอบ 1121)
    ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า
    (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
    หมวดและชุดคำเดิมมาจาก PICDICT_BOOK / PICDICT_WORDS / PICDICT_GRID
@@ -16,6 +16,7 @@
   let sec = null;
   const pd = { groups:[], sheets:[], group:0, sheet:0, page:0, total:0 };
   const qz = { on:false, cur:null, wrong:0, lock:false, asked:0, right:0 };
+  const swipe = { id:null, x0:0, y0:0, dx:0, active:false, suppressUntil:0 };
   const imageCache = new Map();
 
   function buildData(){
@@ -48,9 +49,8 @@
       </div>
       <div class="pd-gallery" id="pd-gallery" aria-live="polite"></div>
       <div class="pd-footer">
-        <button class="pd-page-btn" id="pd-prev">◀ ก่อนหน้า</button>
+        <div class="pd-swipe-hint">↔ ปัดซ้าย–ขวาเพื่อเปลี่ยนหน้า</div>
         <div class="pd-page-info"><b id="pd-page-info"></b><span id="pd-word-range"></span></div>
-        <button class="pd-page-btn" id="pd-next">ถัดไป ▶</button>
       </div>
       <div class="pd-catalog" id="pd-catalog-panel" hidden>
         <div class="pd-catalog-card">
@@ -74,12 +74,11 @@
     $('pd-catalog').addEventListener('click', openCatalog);
     $('pd-catalog-close').addEventListener('click', closeCatalog);
     $('pd-catalog-panel').addEventListener('click', e=>{ if(e.target === $('pd-catalog-panel')) closeCatalog(); });
-    $('pd-prev').addEventListener('click', ()=>changePage(-1));
-    $('pd-next').addEventListener('click', ()=>changePage(1));
     $('pd-quizbtn').addEventListener('click', qzStart);
     $('pd-qquit').addEventListener('click', ()=>qzStop(true));
     $('pd-qreplay').addEventListener('click', qzReplay);
     $('pd-zoom').addEventListener('click', e=>{ if(e.target === $('pd-zoom') || e.target === $('pd-zoom-close')) closeZoom(); });
+    bindSwipe();
     return sec;
   }
 
@@ -151,7 +150,7 @@
         const index=start+offset, card=document.createElement('button');
         card.className='pd-cell'; card.type='button'; card.dataset.en=en; card.dataset.th=th; card.dataset.index=index;
         card.innerHTML=`<canvas aria-hidden="true"></canvas><b>${esc(en)}</b><span>${esc(th)}</span>`;
-        card.addEventListener('click',()=>sayCell(card,en,th));
+        card.addEventListener('click',()=>{ if(performance.now() >= swipe.suppressUntil) sayCell(card,en,th); });
         gallery.appendChild(card);
       });
       /* วาดหลัง DOM ลงจอแล้ว 1 เฟรม: บาง WebView ยกเลิก Image decode ถ้าสร้าง canvas หลายใบ
@@ -160,8 +159,6 @@
     }
     $('pd-page-info').textContent=`หน้า ${pd.page+1} / ${pages}`;
     $('pd-word-range').textContent=words.length ? `คำที่ ${start+1}–${Math.min(start+PAGE_SIZE,words.length)} จาก ${words.length}` : 'ยังไม่มีคำ';
-    $('pd-prev').disabled=pd.page===0;
-    $('pd-next').disabled=pd.page>=pages-1;
     if(qz.on) setTimeout(qzAsk,120);
   }
 
@@ -171,6 +168,40 @@
     const next=pd.page+dir;
     if(next<0 || next>=pages) return;
     pd.page=next; render();
+  }
+
+  /* ปัดซ้าย = หน้าถัดไป · ปัดขวา = หน้าก่อนหน้า
+     ล็อกเมื่อแนวนอนชัดเจน เพื่อไม่ให้การแตะการ์ดหรือขยับนิ้วเล็กน้อยเปลี่ยนหน้า */
+  function bindSwipe(){
+    const gallery=$('pd-gallery');
+    gallery.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse' && e.button!==0) return;
+      swipe.id=e.pointerId; swipe.x0=e.clientX; swipe.y0=e.clientY; swipe.dx=0; swipe.active=false;
+    });
+    gallery.addEventListener('pointermove',e=>{
+      if(swipe.id===null || e.pointerId!==swipe.id) return;
+      const dx=e.clientX-swipe.x0, dy=e.clientY-swipe.y0;
+      if(!swipe.active){
+        if(Math.abs(dx)<12 || Math.abs(dx)<=Math.abs(dy)*1.15) return;
+        swipe.active=true;
+        try{ gallery.setPointerCapture(e.pointerId); }catch(_){}
+      }
+      swipe.dx=dx;
+      gallery.style.transform=`translateX(${Math.max(-48,Math.min(48,dx*.22))}px)`;
+      gallery.classList.add('swiping');
+      e.preventDefault();
+    });
+    const finish=e=>{
+      if(swipe.id===null || (e && e.pointerId!==swipe.id)) return;
+      const moved=swipe.active, dx=swipe.dx;
+      swipe.id=null; swipe.active=false; swipe.dx=0;
+      gallery.classList.remove('swiping'); gallery.style.transform='';
+      if(!moved) return;
+      swipe.suppressUntil=performance.now()+420;
+      if(Math.abs(dx)>=Math.max(46,gallery.clientWidth*.08)) changePage(dx<0?1:-1);
+    };
+    gallery.addEventListener('pointerup',finish);
+    gallery.addEventListener('pointercancel',finish);
   }
 
   function renderCatalog(){
@@ -314,5 +345,5 @@
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
-  window.PicDict={open,openQuiz,exit,_t:{pd,qz,render,changePage,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData}};
+  window.PicDict={open,openQuiz,exit,_t:{pd,qz,swipe,render,changePage,bindSwipe,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData}};
 })();

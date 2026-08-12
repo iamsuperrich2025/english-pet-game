@@ -1352,7 +1352,8 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','badges','boss','ws','pm','tp','bb','sg','bx','xr'];   // bb = 🫧 เกมฟอง
+const LB_TABS = ['coins','assets','badges','boss','ws','pm','tp','bb','sg','bx','xr'];   // assets = 🏆 มูลค่าทรัพย์สินรวม
+const LB_ASSET_TOP = 10;                               // 🏆 ทรัพย์สินรวม Top 10 + รางวัลรายเดือน 10,000→1,000
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_PM_TOP = 10;                                  // 🖼️ แท็บจับคู่ภาพโชว์ Top 10 all time (เรตเดียวกัน)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
@@ -1392,6 +1393,11 @@ function bindLbTabs(){
     if(e.target.closest('.pma-open')){
       e.stopPropagation();
       if(typeof PmAward !== 'undefined') PmAward.open();
+      return;
+    }
+    if(e.target.closest('.asa-open')){
+      e.stopPropagation();
+      if(typeof AssetAward !== 'undefined') AssetAward.open();
       return;
     }
     if(!e.target.closest('.wsa-open')) return;
@@ -1472,6 +1478,7 @@ function renderLeaderboardCard(){
   const out = document.getElementById('lb-tabs-out');
   if(out) out.innerHTML = `
     <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
+    <button class="lb-tab${lbTab==='assets' ? ' active' : ''}" data-tab="assets">🏆 ทรัพย์สินรวม</button>
     <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
     <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 บอส</button>
     <button class="lb-tab${lbTab==='ws' ? ' active' : ''}" data-tab="ws">🔎 ค้นหาคำ</button>
@@ -1521,6 +1528,14 @@ function lbRankRows(tab){
       .filter(r=>r.score > 0);
     rows.sort((a,b)=> b.score - a.score);
     return rows.map(r=>({uid:r.id, name:r.name, g:r.g, dataN:r.name + r.badges, sc:`🏅 ${r.score}`, val:r.score, me:r.me}));
+  }
+  if(tab === 'assets'){
+    const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, av:r.av||0}; });
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, av:Math.round(assetValue()||0)};
+    const rows = Object.values(map).filter(r=>r.av > 0).sort((a,b)=> b.av - a.av).slice(0, LB_ASSET_TOP);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
+      sc:`🏆 ${fmtNum(r.av)}`, val:r.av,
+      pz:(typeof AssetAward !== 'undefined') ? AssetAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   if(tab === 'boss'){
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
@@ -1600,7 +1615,7 @@ function lbBadgeSections(){
 /* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
    ไม่แตะ Firebase จริง เห็นเฉพาะเครื่องที่ใส่ param · **ลบทั้งบล็อกนี้ + บรรทัด __LBDEMO ใน lbRankRows/openLeaderboardFull หลังผู้ใช้ capture** */
 function lbDemoRows(tab){
-  const em = tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : tab === 'ws' ? '🔎' : '🪙';
+  const em = tab === 'assets' ? '🏆' : tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : tab === 'ws' ? '🔎' : '🪙';
   const names = ['ลูกหมูน้อย','เจ้าเหมียวส้ม','นักสะกดคำ','ดาวรุ่งพุ่งแรง','กัปตันมังกร','น้องข้าวปั้น','เก่งเวอร์','ยัยตัวป่วน','พ่อมดน้อย','เจ้าชายกบ','ราชินีผึ้ง','ฮีโร่ตัวจิ๋ว','นักผจญภัย','เพชรน้ำหนึ่ง','ต้นกล้า','ฟ้าใส','ข้าวโอ๊ต','มะนาว','ปลาทู','ส้มโอ'];
   const rows = [];
   for(let i=0;i<100;i++){
@@ -1633,12 +1648,13 @@ function lbChar(r){
    เครื่องจ่ายรางวัลคนละตัว (WsAward / TpAward) แต่หน้าตาแถบเหมือนกันเป๊ะ */
 function lbfAwardBarHtml(tab){
   const A = tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
+          : tab === 'assets' ? (typeof AssetAward !== 'undefined' ? AssetAward : null)
           : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
           : tab === 'bb' ? (typeof BbAward !== 'undefined' ? BbAward : null)
           : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null)
           : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
+  const cls = tab === 'assets' ? 'asa-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -1658,6 +1674,7 @@ function openLeaderboardFull(){
   const close = ()=> ov.remove();
   const tabsHtml = ()=> `
           <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
+          <button class="lb-tab${__lbfTab==='assets'?' active':''}" data-t="assets">🏆 ทรัพย์สินรวม</button>
           <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
@@ -1728,7 +1745,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
+    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
@@ -1759,7 +1776,8 @@ function openLeaderboardFull(){
         <span class="nm pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me ? '⭐ ' : ''}${escapeHTML(r.name)}${gradeMark(gradeOf(r.uid, r.g))}</span>
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
-    const title = __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
+    const title = __lbfTab === 'assets' ? '🏆 อันดับทรัพย์สินรวม'
+                : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
                 : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'pm' ? '🖼️ อันดับจับคู่ภาพ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ' : __lbfTab === 'bb' ? '🫧 อันดับฟอง'
                 : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : '🪙 อันดับเหรียญ';
     const allTime = (__lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg') ? ' (all time)' : '';

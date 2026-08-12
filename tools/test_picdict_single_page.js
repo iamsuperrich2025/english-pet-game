@@ -13,4 +13,7 @@ ok(/repeat\(6,minmax\(0,1fr\)\)/.test(css), 'gallery must have 6 columns');
 ok(/repeat\(3,minmax\(0,1fr\)\)/.test(css), 'gallery must have 3 rows');
 ok(!/pd-book|pd-turn|cover-mode/.test(js + css), 'legacy two-page book UI returned');
 ok(/qzCells=.*pd-gallery/.test(js), 'teacher quiz must use the 18 visible cards');
-console.log('PASS Picture Dictionary: single page, 18 cards, 6x3, no legacy book');
+ok(!/id="pd-prev"|id="pd-next"/.test(js), 'previous/next buttons must stay removed');
+ok(/function bindSwipe\(\)/.test(js) && /pointerdown/.test(js) && /pointerup/.test(js), 'horizontal swipe navigation is missing');
+ok(/touch-action:pan-y/.test(css), 'gallery must reserve horizontal gestures for paging');
+console.log('PASS Picture Dictionary: 18 cards, 6x3, swipe navigation, no legacy book/buttons');

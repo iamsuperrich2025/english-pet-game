@@ -89,6 +89,9 @@ const DEFAULT_STATE = {
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
+  assetAwardSeen:'',                  // 🏆 รางวัลรายเดือนกระดานมูลค่าทรัพย์สินรวม
+  assetAwardPaid:[],
+  assetAwardLog:[],
   typistBadge:0,                      // ⌨️ รอบ 654-655: เข็มนักพิมพ์สูงสุดที่เคยได้ 0=ไม่มี 1=⌨️(100 คำ) 2=🔠(500) 3=📜(1000) 4=✒️(3000) 5=🦾(10000) — ได้แล้วไม่หาย
   bigExamBadge:0,                     // 🎓 รอบ 781: เข็มนักสอบใหญ่สูงสุดที่เคยได้ 0=ไม่มี 1=🎓(3 ใบ) 2=🧠(6) 3=🏛️(10) — นับ "ใบประกาศสอบใหญ่" คลังขั้นสูง ได้แล้วไม่หาย
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
@@ -472,6 +475,9 @@ function loadState(){
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
+      if(typeof s.assetAwardSeen !== 'string') s.assetAwardSeen = '';
+      if(!Array.isArray(s.assetAwardPaid)) s.assetAwardPaid = [];
+      if(!Array.isArray(s.assetAwardLog)) s.assetAwardLog = [];
       if(typeof s.typistBadge !== 'number') s.typistBadge = 0;    // ⌨️ รอบ 654: เข็มนักพิมพ์
       if(typeof s.bigExamBadge !== 'number') s.bigExamBadge = 0;  // 🎓 รอบ 781: เข็มนักสอบใหญ่
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ

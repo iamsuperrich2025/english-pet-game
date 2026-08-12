@@ -4,8 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-from collections import deque
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -23,53 +23,107 @@ SETS = {
 OUT = ROOT / "assets/weapons/fps/runtime"
 RUNTIME_SIZE = (512, 512)
 
+# These hashes make the cleanup masks fail closed.  Every rectangle below was
+# audited against this exact source image; applying it to a replaced/reordered
+# sheet could erase weapon pixels.
+MASTER_SHA256 = {
+    "ads": "bbe02f5d2f9294a3526b04fcbaafc309ed5bb2a5e309c036b98909cfdcf5e606",
+    "walk": "12820daf2beb3cb7017265472b10c73f55f633f1197315490ca34050b0b148d0",
+    "sprint": "cf3e51d1fc6056a93923c774dacaee7f46c1573af934a6dc2b89e326b0233475",
+    "equip": "9ade78a9b3d80587b2634c81888d90bed3ee2bfac64002d720cb63649a88a8e2",
+    "fire": "c2fa8fa7e434eefd883d8c3e240e5cc281e5b98d4270c291ebd89ae2b60d8405",
+    "reload": "4f19ec2173d6a8f569f36f964f73b3a4008f3cd1a422dcc7021a78a2fbd1eac0",
+    "idle": "8e68fd8a43794602ac97ea60fff936e4568236158d2915557ab2090662225cbe",
+}
+
+# Crop-local, half-open rectangles covering only the printed frame badges.
+# They intentionally vary per frame because the source badges are not aligned.
+BADGE_RECTS = {
+    "ads": ((76, 22, 141, 89), (56, 22, 122, 89), (58, 22, 124, 89),
+            (76, 12, 141, 79), (56, 12, 122, 79), (58, 12, 124, 79)),
+    "walk": ((58, 13, 118, 72), (68, 13, 128, 72), (108, 13, 168, 72),
+             (74, 13, 135, 72), (58, 2, 118, 62), (68, 3, 129, 62),
+             (58, 2, 118, 62), (43, 2, 103, 62)),
+    "sprint": ((39, 38, 105, 104), (38, 36, 104, 102), (50, 36, 116, 102),
+               (25, 37, 91, 103), (34, 6, 100, 72), (34, 7, 100, 74),
+               (52, 8, 118, 74), (3, 9, 70, 75)),
+    "equip": ((6, 9, 64, 66), (0, 8, 52, 64), (6, 8, 63, 66),
+              (11, 8, 68, 66), (8, 32, 64, 88), (0, 31, 54, 88),
+              (3, 31, 60, 88), (8, 31, 65, 88)),
+    "reload": ((18, 5, 69, 57), (22, 6, 74, 59), (23, 6, 75, 59),
+               (16, 16, 69, 68), (13, 15, 66, 68), (24, 20, 76, 72),
+               (17, 5, 69, 57), (26, 5, 78, 58), (23, 6, 75, 58),
+               (14, 0, 67, 49), (20, 0, 72, 49), (21, 0, 74, 49)),
+}
+
+# Source-sheet row bleed confirmed by pixel inspection.  These masks are also
+# crop-local and avoid the current-frame barrel regions in reload frames 7-9.
+EDGE_CLEANUP_RECTS = {
+    # Each ADS frame has a verified weapon-free band above its first weapon
+    # pixel.  Clearing that exact band also removes faint background residue.
+    "ads": (
+        ((0, 0, 512, 148),), ((0, 0, 512, 70),), ((0, 0, 512, 76),),
+        ((0, 0, 512, 84),), ((0, 0, 512, 74),), ((0, 0, 512, 43),),
+    ),
+    "reload": (
+        (), (), (),
+        ((0, 0, 418, 44),), ((0, 0, 418, 41),), ((0, 0, 418, 22),),
+        ((0, 0, 170, 2), (250, 0, 418, 2)),
+        ((0, 0, 180, 2), (250, 0, 418, 2)),
+        ((0, 0, 135, 2), (235, 0, 418, 2)),
+        (), (), (),
+    ),
+}
+
+IDLE_SOURCE = ROOT / "assets/weapons/fps/fps_weapon_idle_master.png"
+
 
 def grid_edges(length: int, cells: int) -> list[int]:
     return [round(i * length / cells) for i in range(cells + 1)]
 
 
-def remove_number_badge(frame: Image.Image) -> None:
-    """Remove the detached numbered badge component without touching weapon pixels."""
-    alpha = frame.getchannel("A")
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verify_master(kind: str, source: Path) -> None:
+    actual = sha256_file(source)
+    expected = MASTER_SHA256[kind]
+    if actual != expected:
+        raise RuntimeError(
+            f"Refusing to apply audited {kind} masks: master SHA-256 changed "
+            f"(expected {expected}, got {actual})"
+        )
+
+
+def clear_rectangles(frame: Image.Image, rectangles: tuple[tuple[int, int, int, int], ...]) -> None:
+    """Clear only audited source-cell rectangles, including hidden RGB."""
     width, height = frame.size
-    limit_x = min(width, max(88, round(width * 0.34)))
-    limit_y = min(height, max(92, round(height * 0.20)))
-    pixels = alpha.load()
-    seen: set[tuple[int, int]] = set()
-    candidates: list[list[tuple[int, int]]] = []
+    for box in rectangles:
+        left, top, right, bottom = box
+        if not (0 <= left < right <= width and 0 <= top < bottom <= height):
+            raise ValueError(f"cleanup rectangle {box} outside frame {frame.size}")
+        frame.paste((0, 0, 0, 0), box)
 
-    for y in range(limit_y):
-        for x in range(limit_x):
-            if pixels[x, y] <= 16 or (x, y) in seen:
-                continue
-            queue = deque([(x, y)])
-            seen.add((x, y))
-            component: list[tuple[int, int]] = []
-            while queue:
-                cx, cy = queue.popleft()
-                component.append((cx, cy))
-                for nx, ny in ((cx - 1, cy), (cx + 1, cy), (cx, cy - 1), (cx, cy + 1)):
-                    if 0 <= nx < limit_x and 0 <= ny < limit_y and (nx, ny) not in seen and pixels[nx, ny] > 16:
-                        seen.add((nx, ny))
-                        queue.append((nx, ny))
-            candidates.append(component)
 
-    for component in candidates:
-        xs = [p[0] for p in component]
-        ys = [p[1] for p in component]
-        box = (min(xs), min(ys), max(xs) + 1, max(ys) + 1)
-        bw, bh = box[2] - box[0], box[3] - box[1]
-        if len(component) >= 350 and bw <= 120 and bh <= 120 and box[0] < width * 0.28 and box[1] < height * 0.15:
-            rgba = frame.load()
-            for px, py in component:
-                rgba[px, py] = (0, 0, 0, 0)
+def clean_frame(kind: str, index: int, frame: Image.Image) -> None:
+    rectangles: list[tuple[int, int, int, int]] = []
+    if kind in BADGE_RECTS:
+        rectangles.append(BADGE_RECTS[kind][index])
+    if kind in EDGE_CLEANUP_RECTS:
+        rectangles.extend(EDGE_CLEANUP_RECTS[kind][index])
+    clear_rectangles(frame, tuple(rectangles))
 
 
 def write_frame(kind: str, index: int, frame: Image.Image) -> str:
     folder = OUT / kind
     folder.mkdir(parents=True, exist_ok=True)
     name = f"fps_weapon_{kind}_{index:02d}.png"
-    frame.save(folder / name, optimize=True)
+    frame.save(folder / name, format="PNG", optimize=False, compress_level=9)
     return f"assets/weapons/fps/runtime/{kind}/{name}"
 
 
@@ -89,22 +143,23 @@ def build(clean: bool = False) -> dict[str, list[str]]:
     for kind, (source, columns, rows, count) in SETS.items():
         if not source.exists():
             raise FileNotFoundError(source)
+        verify_master(kind, source)
         sheet = Image.open(source).convert("RGBA")
         xs, ys = grid_edges(sheet.width, columns), grid_edges(sheet.height, rows)
         frames: list[str] = []
         for index in range(count):
             col, row = index % columns, index // columns
             frame = sheet.crop((xs[col], ys[row], xs[col + 1], ys[row + 1]))
-            remove_number_badge(frame)
+            clean_frame(kind, index, frame)
             frame = normalize_frame(frame)
             frames.append(write_frame(kind, index + 1, frame))
         manifest[kind] = frames
 
-    idle_source = ROOT / "assets/weapons/fps/fps_weapon_idle_master.png"
-    idle = normalize_frame(Image.open(idle_source).convert("RGBA"))
+    verify_master("idle", IDLE_SOURCE)
+    idle = normalize_frame(Image.open(IDLE_SOURCE).convert("RGBA"))
     idle_folder = OUT / "idle"
     idle_folder.mkdir(parents=True, exist_ok=True)
-    idle.save(idle_folder / "fps_weapon_idle.png", optimize=True)
+    idle.save(idle_folder / "fps_weapon_idle.png", format="PNG", optimize=False, compress_level=9)
     manifest["idle"] = ["assets/weapons/fps/runtime/idle/fps_weapon_idle.png"]
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return manifest

@@ -2078,7 +2078,7 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let vmScene=null, vmCam=null, muzzleLight=null, worldFlash=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let fpsWeapon=null, fpsWeaponReady=false;
+let fpsWeapon=null, fpsWeaponRenderer=null, fpsWeaponReady=false;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
@@ -4690,11 +4690,8 @@ function renderViewModel(){
    The 3D view model remains a safe fallback until the requested frame is cached.
    ============================================================ */
 function fpsWeaponFrame(src,state,ready){
-  fpsWeaponReady=!!(ready&&src&&!inHeli&&!riding&&(weapon==='rifle'||state==='RELOAD'));
-  if(!weaponSpriteEl) return;
-  weaponSpriteEl.style.display=fpsWeaponReady?'block':'none';
-  if(fpsWeaponReady) weaponSpriteEl.style.backgroundImage=`url("${src}")`;
-  weaponSpriteEl.dataset.state=state||'';
+  const eligible=!!(ready&&src&&!inHeli&&!riding&&(weapon==='rifle'||state==='RELOAD'));
+  fpsWeaponReady=fpsWeaponRenderer?fpsWeaponRenderer.render(src,state,eligible):eligible;
 }
 function fpsWeaponIntent(){
   return {enabled:!inHeli&&!riding&&(weapon==='rifle'||reloadAt>0), moving:moveLen>.05,
@@ -4702,10 +4699,11 @@ function fpsWeaponIntent(){
 }
 function initFpsWeapon(){
   if(!window.FpsWeaponRuntime) return;
-  if(!fpsWeapon) fpsWeapon=FpsWeaponRuntime.create({onFrame:fpsWeaponFrame});
+  if(!fpsWeapon) fpsWeapon=FpsWeaponRuntime.create();
+  if(!fpsWeaponRenderer) fpsWeaponRenderer=FpsWeaponRuntime.createRenderer(weaponSpriteEl);
   fpsWeapon.reset(); fpsWeaponReady=false;
-  if(weaponSpriteEl){ weaponSpriteEl.style.display='none'; weaponSpriteEl.style.backgroundImage=''; }
-  fpsWeapon.preload().then(()=>{ if(running&&fpsWeapon) fpsWeapon.step(0,fpsWeaponIntent()); });
+  fpsWeaponRenderer.reset();
+  fpsWeapon.preload().then(()=>{ if(running&&fpsWeapon) tickFpsWeapon(0); });
 }
 function tickFpsWeapon(dt){
   if(!fpsWeapon) return;
@@ -5881,7 +5879,10 @@ function fireGun(now){
     if(heat>=100){ overheat=true; toastBan('🔥 ปืนร้อนจัด! รอสักครู่',700); }
   }
   lastFire=now;
-  if(fpsWeapon&&weapon==='rifle') fpsWeapon.triggerFire();
+  if(fpsWeapon&&weapon==='rifle'){
+    fpsWeapon.triggerFire();
+    tickFpsWeapon(0);
+  }
   trgShots++;                                                  // 📊 รอบ 473: นับนัดที่ยิงจริง (เดินเท้าเท่านั้น)
   gunRecoil=W.recoil*recCfg().gun; muzzleUntil=now+(W.mag?90:55);   /* 💥 รอบ 500: สะบัดตัวปืนแยกตามกระบอก */
   /* 💥 รอบ 448 (ผู้ใช้ขอฟีลแบบคลิป): สไนเปอร์ = "กระแทก" ไม่ใช่แค่เด้ง
@@ -10290,7 +10291,8 @@ window.InvasionWorld={
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt},
-    get fpsWeapon(){return fpsWeapon?{state:fpsWeapon.state,frame:fpsWeapon.frame,cached:fpsWeapon.cached,visible:fpsWeaponReady}:null},
+    get fpsWeapon(){return fpsWeapon?{state:fpsWeapon.state,frame:fpsWeapon.frame,cached:fpsWeapon.cached,visible:fpsWeaponReady,
+      progress:fpsWeapon.adsProgress,fireFrame:fpsWeapon.fireFrame}:null},
     tickFpsWeapon,
     Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight},
     /* 🚀🔥🔓 รอบ 467 */

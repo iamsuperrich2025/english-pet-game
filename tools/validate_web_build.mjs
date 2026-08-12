@@ -4,7 +4,10 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const DIST = path.join(ROOT, 'dist');
+const DIST_ARG = process.argv.indexOf('--dist');
+const DIST = path.resolve(DIST_ARG >= 0 && process.argv[DIST_ARG + 1]
+  ? process.argv[DIST_ARG + 1]
+  : path.join(ROOT, 'dist'));
 const failures = [];
 const requireFile = async (rel) => {
   try { return await fs.readFile(path.join(DIST, rel), 'utf8'); }
