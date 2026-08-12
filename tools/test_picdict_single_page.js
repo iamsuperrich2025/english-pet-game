@@ -16,4 +16,7 @@ ok(/qzCells=.*pd-gallery/.test(js), 'teacher quiz must use the 18 visible cards'
 ok(!/id="pd-prev"|id="pd-next"/.test(js), 'previous/next buttons must stay removed');
 ok(/function bindSwipe\(\)/.test(js) && /pointerdown/.test(js) && /pointerup/.test(js), 'horizontal swipe navigation is missing');
 ok(/touch-action:pan-y/.test(css), 'gallery must reserve horizontal gestures for paging');
-console.log('PASS Picture Dictionary: 18 cards, 6x3, swipe navigation, no legacy book/buttons');
+ok(/const follow=canPage\(dir\) \? dx : dx\*\.22/.test(js), 'page must follow the finger 1:1 except for edge resistance');
+ok(/function settleSwipe\(/.test(js) && /gallery\.clientWidth/.test(js), 'release transition must slide pages out and in');
+ok(/\.pd-gallery\.settling\{transition:transform/.test(css), 'settle animation styling is missing');
+console.log('PASS Picture Dictionary: 18 cards, 6x3, drag-follow paging, no legacy book/buttons');

@@ -1,5 +1,5 @@
 /* ============================================================
-   🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1121)
+   🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1123)
    6×3 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
    ============================================================ */
 body #screen-picdict.screen.active{
@@ -25,9 +25,10 @@ body #screen-picdict.screen.active{
   flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
   gap:clamp(3px,.65vw,8px);padding:clamp(4px,.7vw,9px);border:1px solid rgba(119,82,27,.35);border-radius:15px;
   background:rgba(255,251,235,.94);box-shadow:inset 0 0 24px rgba(126,83,25,.13),0 8px 22px rgba(63,37,8,.2);overflow:hidden;
-  touch-action:pan-y;user-select:none;transition:transform .14s ease-out
+  touch-action:pan-y;user-select:none;will-change:transform
 }
 #screen-picdict .pd-gallery.swiping{transition:none}
+#screen-picdict .pd-gallery.settling{transition:transform .17s cubic-bezier(.22,.72,.3,1)}
 #screen-picdict .pd-cell{
   min-width:0;min-height:0;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto auto;align-items:center;justify-items:center;
   gap:1px;padding:3px 3px 2px;border:1px solid #b8dbe9;border-radius:9px;background:#fff;cursor:pointer;color:#15334a;

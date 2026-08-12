@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🖼️ Picture Dictionary — single-page card gallery (รอบ 1121)
+   🖼️ Picture Dictionary — single-page card gallery (รอบ 1123)
    ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า
    (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
    หมวดและชุดคำเดิมมาจาก PICDICT_BOOK / PICDICT_WORDS / PICDICT_GRID
@@ -16,7 +16,8 @@
   let sec = null;
   const pd = { groups:[], sheets:[], group:0, sheet:0, page:0, total:0 };
   const qz = { on:false, cur:null, wrong:0, lock:false, asked:0, right:0 };
-  const swipe = { id:null, x0:0, y0:0, dx:0, active:false, suppressUntil:0 };
+  const swipe = { id:null, x0:0, y0:0, dx:0, active:false, animating:false,
+                  lastFollow:0, maxFollow:0, suppressUntil:0 };
   const imageCache = new Map();
 
   function buildData(){
@@ -170,13 +171,50 @@
     pd.page=next; render();
   }
 
+  const pageCount=()=>Math.max(1,Math.ceil(wordsFor(currentSheet()).length/PAGE_SIZE));
+  const canPage=dir=>pd.page+dir>=0 && pd.page+dir<pageCount();
+
+  /* ปล่อยนิ้ว: ลากถึงเกณฑ์ = หน้าเดิมไหลออก แล้วหน้าใหม่ไหลเข้าจากอีกฝั่ง
+     ไม่ถึง/สุดรายการ = เด้งกลับอย่างนุ่มนวล */
+  function settleSwipe(gallery,dir,dx){
+    const go=Math.abs(dx)>=Math.max(46,gallery.clientWidth*.08) && canPage(dir);
+    gallery.classList.remove('swiping');
+    gallery.classList.add('settling');
+    if(!go){
+      gallery.style.transform='translateX(0px)';
+      setTimeout(()=>gallery.classList.remove('settling'),190);
+      return;
+    }
+    swipe.animating=true;
+    const width=gallery.clientWidth;
+    gallery.style.transform=`translateX(${dir>0?-width:width}px)`;
+    setTimeout(()=>{
+      pd.page+=dir;
+      render();
+      gallery.classList.remove('settling');
+      gallery.classList.add('swiping');
+      gallery.style.transform=`translateX(${dir>0?width:-width}px)`;
+      void gallery.offsetWidth;
+      gallery.classList.remove('swiping');
+      gallery.classList.add('settling');
+      requestAnimationFrame(()=>{ gallery.style.transform='translateX(0px)'; });
+      setTimeout(()=>{
+        gallery.classList.remove('settling');
+        gallery.style.transform='';
+        swipe.animating=false;
+      },190);
+    },170);
+  }
+
   /* ปัดซ้าย = หน้าถัดไป · ปัดขวา = หน้าก่อนหน้า
+     แผงทั้งหน้าตามนิ้วแบบ 1:1; ที่ขอบหน้าแรก/สุดท้ายมีแรงต้าน
      ล็อกเมื่อแนวนอนชัดเจน เพื่อไม่ให้การแตะการ์ดหรือขยับนิ้วเล็กน้อยเปลี่ยนหน้า */
   function bindSwipe(){
     const gallery=$('pd-gallery');
     gallery.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='mouse' && e.button!==0) return;
+      if(swipe.animating || (e.pointerType==='mouse' && e.button!==0)) return;
       swipe.id=e.pointerId; swipe.x0=e.clientX; swipe.y0=e.clientY; swipe.dx=0; swipe.active=false;
+      swipe.lastFollow=0; swipe.maxFollow=0;
     });
     gallery.addEventListener('pointermove',e=>{
       if(swipe.id===null || e.pointerId!==swipe.id) return;
@@ -187,7 +225,11 @@
         try{ gallery.setPointerCapture(e.pointerId); }catch(_){}
       }
       swipe.dx=dx;
-      gallery.style.transform=`translateX(${Math.max(-48,Math.min(48,dx*.22))}px)`;
+      const dir=dx<0?1:-1;
+      const follow=canPage(dir) ? dx : dx*.22;  // ขอบรายการ: ยืดได้เล็กน้อยแล้วเด้งกลับ
+      swipe.lastFollow=follow; swipe.maxFollow=Math.max(swipe.maxFollow,Math.abs(follow));
+      gallery.dataset.followPx=Math.round(follow);
+      gallery.style.transform=`translateX(${follow}px)`;
       gallery.classList.add('swiping');
       e.preventDefault();
     });
@@ -195,10 +237,10 @@
       if(swipe.id===null || (e && e.pointerId!==swipe.id)) return;
       const moved=swipe.active, dx=swipe.dx;
       swipe.id=null; swipe.active=false; swipe.dx=0;
-      gallery.classList.remove('swiping'); gallery.style.transform='';
       if(!moved) return;
+      gallery.dataset.maxFollowPx=Math.round(swipe.maxFollow);
       swipe.suppressUntil=performance.now()+420;
-      if(Math.abs(dx)>=Math.max(46,gallery.clientWidth*.08)) changePage(dx<0?1:-1);
+      settleSwipe(gallery,dx<0?1:-1,dx);
     };
     gallery.addEventListener('pointerup',finish);
     gallery.addEventListener('pointercancel',finish);
@@ -345,5 +387,5 @@
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
-  window.PicDict={open,openQuiz,exit,_t:{pd,qz,swipe,render,changePage,bindSwipe,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData}};
+  window.PicDict={open,openQuiz,exit,_t:{pd,qz,swipe,render,changePage,bindSwipe,settleSwipe,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData}};
 })();
