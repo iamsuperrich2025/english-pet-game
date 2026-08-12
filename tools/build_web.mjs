@@ -22,6 +22,7 @@ const PUBLIC_ROOT_FILES = new Set([
   'version.json',
 ]);
 const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'sound']);
+const PUBLIC_PREFIXES = ['assets/weapons/fps/runtime/'];
 const FORBIDDEN_NATIVE_EXT = /\.(?:aab|apk|bat|cmd|com|dex|dll|exe|jar|ps1|so)$/i;
 const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
@@ -33,6 +34,7 @@ function isPublicPath(relativePath) {
   const rel = posix(relativePath).replace(/^\.\//, '');
   if (!rel || rel.startsWith('../') || FORBIDDEN_NATIVE_EXT.test(rel)) return false;
   if (PUBLIC_ROOT_FILES.has(rel)) return true;
+  if (PUBLIC_PREFIXES.some((prefix) => rel.startsWith(prefix))) return true;
   return PUBLIC_DIRS.has(rel.split('/')[0]);
 }
 
@@ -43,12 +45,22 @@ async function sourceFiles() {
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
-      'sound/racing/engineSound.mp3']) {
+      'sound/racing/engineSound.mp3', 'js/fpsweapon.js']) {
       try {
         await fs.access(path.join(ROOT, rel));
         if (!tracked.includes(rel)) tracked.push(rel);
       } catch {}
     }
+    async function includeRuntime(dir, prefix = 'assets/weapons/fps/runtime') {
+      try {
+        for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+          const rel = posix(path.join(prefix, entry.name));
+          if (entry.isDirectory()) await includeRuntime(path.join(dir, entry.name), rel);
+          else if (isPublicPath(rel) && !tracked.includes(rel)) tracked.push(rel);
+        }
+      } catch {}
+    }
+    await includeRuntime(path.join(ROOT, 'assets/weapons/fps/runtime'));
     return tracked;
   } catch {
     const found = [];
@@ -56,7 +68,7 @@ async function sourceFiles() {
       for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
         const rel = posix(path.join(prefix, entry.name));
         if (entry.isDirectory()) {
-          if (PUBLIC_DIRS.has(rel.split('/')[0])) await walk(path.join(dir, entry.name), rel);
+          if (PUBLIC_DIRS.has(rel.split('/')[0]) || PUBLIC_PREFIXES.some((prefix) => (rel + '/').startsWith(prefix) || prefix.startsWith(rel + '/'))) await walk(path.join(dir, entry.name), rel);
         } else if (isPublicPath(rel)) {
           found.push(rel);
         }

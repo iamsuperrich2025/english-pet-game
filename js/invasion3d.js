@@ -701,6 +701,8 @@ const CSS=`
 #inv-heli:active{transform:scale(.94)}
 /* 🚁 กรอบห้องนักบิน (canopy) — โผล่เฉพาะตอนบิน */
 #inv-canopy{position:absolute;inset:0;z-index:2;pointer-events:none;display:none}
+#inv-weapon-sprite{position:absolute;inset:0;z-index:3;pointer-events:none;display:none;
+  background-repeat:no-repeat;background-position:50% 100%;background-size:contain;image-rendering:auto}
 #inv-wrap.fly #inv-canopy{display:block}
 #inv-canopy::before,#inv-canopy::after{content:"";position:absolute;background:rgba(20,26,34,.55)}
 #inv-canopy::before{left:0;right:0;top:0;height:8%;box-shadow:0 6px 14px rgba(0,0,0,.4)}
@@ -1057,14 +1059,14 @@ const CSS=`
 }
 `;
 
-let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,fire2Btn,rocketBtn,runBtn;
+let wrapEl,cvEl,wordEl,hpEl,heatEl,misEl,tgtEl,msBarEl,coinsEl,banEl,introEl,exitBox,crossEl,hurtEl,flashEl,joyEl,joyKnob,fireBtn,fire2Btn,rocketBtn,runBtn,weaponSpriteEl;
 let msbEl,deadEl,deadTEl;      // 🔵💀 รอบ 576: แถบเตือนลำแสงยานแม่ + การ์ดตอนโดนเต็ม ๆ
 
 function buildDom(){
   const st=document.createElement('style'); st.id='inv-style'; st.textContent=CSS; document.head.appendChild(st);
   wrapEl=document.createElement('div'); wrapEl.id='inv-wrap';
   wrapEl.innerHTML=`
-    <canvas id="inv-cv"></canvas>
+    <canvas id="inv-cv"></canvas><div id="inv-weapon-sprite" aria-hidden="true"></div>
     <div id="inv-vig"></div><div id="inv-hurt"></div><div id="inv-flash"></div>
     <div id="inv-scopeov">
       <div class="so-mask"></div>
@@ -1210,6 +1212,7 @@ function buildDom(){
   hurtEl=document.getElementById('inv-hurt'); flashEl=document.getElementById('inv-flash');
   joyEl=document.getElementById('inv-joy'); joyKnob=joyEl.querySelector('i');
   fireBtn=document.getElementById('inv-fire'); fire2Btn=document.getElementById('inv-fire2');
+  weaponSpriteEl=document.getElementById('inv-weapon-sprite');
   rocketBtn=document.getElementById('inv-rocket');
   runBtn=document.getElementById('inv-run');
   heliBtn=document.getElementById('inv-heli');
@@ -2075,6 +2078,7 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let vmScene=null, vmCam=null, muzzleLight=null, worldFlash=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
+let fpsWeapon=null, fpsWeaponReady=false;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
@@ -4667,7 +4671,7 @@ function tickSelfShadow(){
 /* 🎥 รอบ 451: รอบเรนเดอร์ของ view model — วาดปืนทับภาพฉากด้วยกล้อง near .01
    (ล้างเฉพาะ depth ไม่ล้างสี → ปืนอยู่หน้าสุดเสมอ ไม่โดนกำแพง/พื้นทะลุ และดึงเข้ามาชิดตาได้) */
 function renderViewModel(){
-  if(!vmScene||!vmCam||!gunGrp||!gunGrp.visible) return;
+  if(!vmScene||!vmCam||!gunGrp||!gunGrp.visible||fpsWeaponReady) return;
   /* 🔥 รอบ 465: ความสว่างไฟแฟลชตามจังหวะยิง (วางตำแหน่งตามปากกระบอกของกระบอกที่ถือ) */
   if(muzzleLight){
     const now=performance.now();
@@ -4680,6 +4684,33 @@ function renderViewModel(){
   renderer.clearDepth();
   renderer.render(vmScene,vmCam);
   renderer.autoClear=true;
+}
+/* ============================================================
+   🔫 FPS WEAPON SPRITE ADAPTER — isolated from gameplay/world state
+   The 3D view model remains a safe fallback until the requested frame is cached.
+   ============================================================ */
+function fpsWeaponFrame(src,state,ready){
+  fpsWeaponReady=!!(ready&&src&&!inHeli&&!riding&&(weapon==='rifle'||state==='RELOAD'));
+  if(!weaponSpriteEl) return;
+  weaponSpriteEl.style.display=fpsWeaponReady?'block':'none';
+  if(fpsWeaponReady) weaponSpriteEl.style.backgroundImage=`url("${src}")`;
+  weaponSpriteEl.dataset.state=state||'';
+}
+function fpsWeaponIntent(){
+  return {enabled:!inHeli&&!riding&&(weapon==='rifle'||reloadAt>0), moving:moveLen>.05,
+    sprinting:(isRun||keys.shift)&&moveLen>.05, ads:!!scoped, reloading:reloadAt>0};
+}
+function initFpsWeapon(){
+  if(!window.FpsWeaponRuntime) return;
+  if(!fpsWeapon) fpsWeapon=FpsWeaponRuntime.create({onFrame:fpsWeaponFrame});
+  fpsWeapon.reset(); fpsWeaponReady=false;
+  if(weaponSpriteEl){ weaponSpriteEl.style.display='none'; weaponSpriteEl.style.backgroundImage=''; }
+  fpsWeapon.preload().then(()=>{ if(running&&fpsWeapon) fpsWeapon.step(0,fpsWeaponIntent()); });
+}
+function tickFpsWeapon(dt){
+  if(!fpsWeapon) return;
+  const result=fpsWeapon.step(dt,fpsWeaponIntent());
+  fpsWeaponFrame(result.frame,result.state,result.ready);
 }
 /* กลุ่มปืนอยู่ใน vmScene (พิกัดเดียวกับ "ระบบพิกัดกล้อง") → แปลงเป็นพิกัดโลกด้วยกล้องหลัก */
 function vmToWorld(o){ const v=new THREE.Vector3(); o.getWorldPosition(v); return camera.localToWorld(v); }
@@ -4836,6 +4867,7 @@ function tickSwap(now){
 /* เปลี่ยนกระบอกจริง (โมเดล/ค่าท่าถือ/กระสุน/ปุ่ม) — แยกจากอนิเมชันเพื่อเรียกกลางทางได้ */
 function applyWeapon(w){
   weapon=w;
+  if(fpsWeaponReady) fpsWeaponFrame('',fpsWeapon?fpsWeapon.state:'',false);
   if(gunModels.rifle) gunModels.rifle.visible=(weapon==='rifle');
   if(gunModels.r93)   gunModels.r93.visible=(weapon==='r93');
   useGunView();
@@ -5849,6 +5881,7 @@ function fireGun(now){
     if(heat>=100){ overheat=true; toastBan('🔥 ปืนร้อนจัด! รอสักครู่',700); }
   }
   lastFire=now;
+  if(fpsWeapon&&weapon==='rifle') fpsWeapon.triggerFire();
   trgShots++;                                                  // 📊 รอบ 473: นับนัดที่ยิงจริง (เดินเท้าเท่านั้น)
   gunRecoil=W.recoil*recCfg().gun; muzzleUntil=now+(W.mag?90:55);   /* 💥 รอบ 500: สะบัดตัวปืนแยกตามกระบอก */
   /* 💥 รอบ 448 (ผู้ใช้ขอฟีลแบบคลิป): สไนเปอร์ = "กระแทก" ไม่ใช่แค่เด้ง
@@ -6051,7 +6084,7 @@ function addRecoil(){
 /* 🎯 บรรจุกระสุนใหม่ (R93) — เล่นเสียงลูกเลื่อนแล้วเติมเต็มแม็ก */
 function startReload(now){
   const W=WEAPONS[weapon];
-  if(!W.mag || reloadAt) return;
+  if(!W.mag || reloadAt || r93Ammo>=W.mag) return;
   reloadAt=now+W.reload;
   renderAmmo();
   Snd.bolt();
@@ -6944,6 +6977,7 @@ function tickPlayer(dt,now){
     gunGrp.userData.swayY=0;
   }
   tickAds(dt,now);                                // 🎬 ยกปืนเล็ง/ถอยออก + ขอบเลนส์ + หายใจ
+  tickFpsWeapon(dt);                              // 🔫 local sprite state machine (delta-time; cached frames)
   applyBreath(now);
   applyGasp();                                    // 🫁💨 รอบ 508: กล้องตกตอนลมหมดคาปุ่ม
   applyRecoil(dt);
@@ -9805,6 +9839,7 @@ function build(){
   buildDustMotes();                 // 🌫️ ฝุ่นฟุ้งในอากาศ
   buildMothership();
   buildGun();
+  initFpsWeapon();
   /* 👥 หน่วยรบภาคพื้น — ส่วนใหญ่หมอบยิงหลังแนวกระสอบทราย (เหมือนภาพอ้างอิง) ที่เหลือกระจายรอบ
      🔫 รอบ 519/521: โมเดล baked ถือปืนอบในตัว (ขยับเฉพาะขา) · รอบ 521 ผสม R93/KSR-77 ~ครึ่งต่อครึ่งให้ดูหลากหลาย */
   /* 🚫🤖 รอบ 637: ปิดบอทช่วยยิงแล้ว — ข้ามการเกิดหน่วยรบทั้งหมด (เปิดกลับที่ ALLY_BOTS) */
@@ -9867,6 +9902,7 @@ function start(){
   lastYaw=yaw; lastPitch=pitch; lagYaw=0; lagPitch=0;      // 🌀 รอบ 464: กันปืนสะบัดตอนเข้าโลก
   swAmp=0; swPhase=0;                                      // 🤝 รอบ 501: เข้าโลกด้วยท่าถือนิ่ง ๆ
   swapAt=0; swapTo=null; swapSnd=0;
+  initFpsWeapon();
   resetTurbo();                        // ⚡👾 รอบ 579: เข้าโลกใหม่ = นับ 5 นาทีใหม่ ไม่มีลำไหนค้างสถานะเร่ง
   renderHp(); renderHeat(); renderMissiles();
   fit();
@@ -9904,7 +9940,7 @@ function start(){
     else if(c==='ControlLeft'||c==='ControlRight') keys.ctrl=true;
     else if(c==='KeyQ') keys.q=true;      // 🚁 หันลำซ้าย (เหมือนโลกเฮลิฯ)
     else if(c==='KeyE') keys.e=true;      // 🚁 หันลำขวา
-    else if(c==='KeyR'&&!e.repeat) fireMissile(performance.now());
+    else if(c==='KeyR'&&!e.repeat){ if(!inHeli&&!riding&&WEAPONS[weapon].mag) startReload(performance.now()); else fireMissile(performance.now()); }
     else if(c==='KeyH'&&!e.repeat){ resumeAudio(); inHeli?exitHeli():enterHeli(); }
     else if(c==='KeyC'&&!e.repeat&&(inHeli||riding)){         // 🎬 รอบ 537: มุมกล้องภายนอก (รอบ 539: พลปืนด้วย)
       if(riding){ if(!rideExt) setRideView(true); else cycleExtView(1); }
@@ -9960,6 +9996,8 @@ function exitWorld(){
   if(hurtEl) hurtEl.classList.remove('on');
   netLeave();                                       // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
+  if(fpsWeapon) fpsWeapon.dispose(); fpsWeaponReady=false;
+  if(weaponSpriteEl){ weaponSpriteEl.style.display='none'; weaponSpriteEl.style.backgroundImage=''; }
   inHeli=false; riding=null; rideExt=false; rideHostP=null; rideSpd=0;
   setScoped(false); wrapEl.classList.remove('on','fly','gunner','gunext','scoped');
   if(seatBtn) seatBtn.style.display='none';
@@ -10252,6 +10290,8 @@ window.InvasionWorld={
     get riding(){return riding}, boardGunner, dismountGunner, nearestRideable, rideableHelis, ridePos, findRide,
     /* 🎯 รอบ 419: R93 */
     get weapon(){return weapon}, swapWeapon, applyWeapon, tickSwap, get swapping(){return !!swapAt},
+    get fpsWeapon(){return fpsWeapon?{state:fpsWeapon.state,frame:fpsWeapon.frame,cached:fpsWeapon.cached,visible:fpsWeaponReady}:null},
+    tickFpsWeapon,
     Snd, get swapSnd(){return swapSnd}, get muzzleLight(){return muzzleLight},
     /* 🚀🔥🔓 รอบ 467 */
     get bullets(){return bullets.length}, tickBullets, tickBarrelHeat, envHit, bulletHole, get holes(){return holes.length},

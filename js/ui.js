@@ -6890,6 +6890,7 @@ async function enterInvasion3D(){
     try{
       await loadScriptOnce('js/vendor/three.min.js');
       await loadScriptOnce('js/vendor/GLTFLoader.js');   // 🧩 โมเดล .glb ยานแม่/ยานลูก/ปืน (ไม่ได้อยู่ใน three.min.js)
+      await loadScriptOnce('js/fpsweapon.js');           // 🔫 FPS weapon presentation state machine + cached sprite frames
       await loadScriptOnce('js/invasion3d.js');
     }catch(e){
       advLoading = false;
