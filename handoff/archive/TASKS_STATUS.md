@@ -4733,3 +4733,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1094 · แก้ Firebase Rules line 385 + Publish สำเร็จ:** คืน `.child('u').val()` และวงเล็บที่ตกใน `gnotif/$uid/n/$nid/.write`; generator ปฏิเสธ expression ที่วงเล็บ/quote ไม่ครบแล้ว · หลังผู้ใช้ Publish ตรวจ Rules สดด้วย Firebase CLI ตรง source ครบ 37 โซน/475 leaf keys (`missing/extra/changed=0`) · เว็บ live ยังเป็น policy เก่าและ `/delete-account.html` ยัง fallback เข้า City จึงเหลือ commit/deploy Hosting + ทดสอบบัญชีทิ้ง
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1096 · ปิดบั๊ก account deletion `permission_denied`:** ต้นตอคือ plan ส่ง `gfeed/<post>/lk/<uid>` และ `cm/<cid>/cl/<uid>` แม้ไม่มี reaction บนโพสต์คนแปลกหน้า; แก้ `js/account-deletion.js` ให้ส่งเฉพาะ reaction ที่มีจริง และ Rules อนุญาตเจ้าของ UID ลบ reaction ตัวเองแม้เลิกเป็นเพื่อน โดยไม่ขยายสิทธิ์สร้าง/แก้
