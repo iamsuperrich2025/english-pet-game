@@ -367,8 +367,7 @@ fit:2707 · applyEnvironmentProfile:2718 · start:2740 · exitWorld:2806
 STORAGE_KEY:7 · DEFAULT_MODE:8 · CONTRACT:9 · freezeProfile:11 · PROFILES:17 · MODES:36
 normalize:43 · readPreference:44 · writePreference:48 · selection:53 · removeSelector:58 · openSelector:64
 
-## js/fpsweapon.js (95 บรรทัด · 6 รายการ)
-STATES:8 · CONFIG:12 · ASSETS:16 · validBase:26 · frameAt:27 · create:33
+## js/fpsweapon.js (159 บรรทัด · 0 รายการ)
 
 ## js/game.js (1,210 บรรทัด · 85 รายการ)
 ### 🗂️ สารบัญโซน js/game.js (Read/Edit เฉพาะช่วง)
@@ -439,7 +438,7 @@ CLIP_SM:63 · clipCanWebm:79 · CLIP_ASSET_V:90 · clipFileFor:92 · petClipKey:
 equippedItem:121 · petStateImg:131 · petWearOverlay:152 · wearLayerHTML:173 · happyNow:180 · makeHappy:181
 currentPetImg:194
 
-## js/invasion3d.js (10,493 บรรทัด · 649 รายการ)
+## js/invasion3d.js (10,494 บรรทัด · 649 รายการ)
 ### 🗂️ สารบัญโซน js/invasion3d.js (Read/Edit เฉพาะช่วง)
 - 16-79 ⚙️ ค่ากติกา (จูนฟีลทั้งหมดที่นี่)
 - 80-114 🎯 รอบ 419: ปืนกระบอกที่ 2 — R93 สไนเปอร์ (ตามสเปก Delta Force ที่ผู้ใช้ส่งมา)
@@ -509,7 +508,7 @@ currentPetImg:194
 - 9375-9641 🔵💀 รอบ 576 (ผู้ใช้สั่ง): ยานแม่ยิง "ลำแสงสีฟ้า" ลงมาใกล้ตัวผู้เล่น — เตือน 3 ครั้ง ครั้งที่ 4 ตายจริง
 - 9642-9692 ⚡👾 รอบ 579 (ผู้ใช้สั่ง): "ทุก 5 นาที สุ่มยานลูก 10 ลำ เร่งความเร็ว 10 เท่า นาน 10 วินาที แล้ววนลูป"
 - 9693-9770 🔁 ลูปหลัก
-- 9771-10493 ▶️ เข้า/ออกโลก
+- 9771-10494 ▶️ เข้า/ออกโลก
 ### รายการ js/invasion3d.js
 WORD_COIN:23 · WORD_TIME:25 · WORLD:26 · EYE:27 · FOV:28 · LOOK_SENS:29
 PITCH_MIN:30 · MS_Y:52 · MS_FLAT:61 · MS_BELLY:62 · MS_HP:63 · MS_DMG_GUN:64

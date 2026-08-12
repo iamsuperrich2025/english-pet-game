@@ -4764,3 +4764,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1103 · ปุ่มเข้าสู่ระบบใต้ข้อความหน้าเมือง:** เพิ่มปุ่ม `🔑 เข้าสู่ระบบ` ใต้สถานะ “ล็อกอินในเกมก่อน…” ใน `index.html` ลิงก์ไป `index_classic.html`; `js/city3d.js` แสดงเฉพาะตอนยังไม่ล็อกอินและซ่อนเมื่อ auth สำเร็จ · syntax/assertion/diff ผ่าน และ Browser 1280×720 + 812×375 ยืนยัน gap 8.8px, overflow 0, ปลายทางมี `#screen-login`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1105 · F1 Dual Graphics Mode Phase 1:** เพิ่ม Racing Mode Select ก่อนค่าเข้า, preference local, preview WebP 2 ภาพ และ `vw.f1.environment-profile/v1`; Battery Saver คงค่าฉากเดิม ส่วน High Graphics ปรับ profile บน scene/renderer ชุดเดียว โดยไม่แตะ physics/gameplay/NetRoom/Firebase
