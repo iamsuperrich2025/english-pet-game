@@ -4748,3 +4748,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1099 · แก้ deploy รอบ 1098 ขาด asset โลโก้:** ต้นเหตุ `ship.sh` กัน asset untracked ตามปกติ จึง commit HTML/CSS แต่ไม่รวม PNG; เตรียม `handoff/SHIP.txt` ระบุเฉพาะ `img/phoneScreenShots/newVocabworldLogo.png` ให้ launcher add/commit/deploy โดยไม่กวาด asset อื่น
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1100 · ส่งหน้า Login ขึ้น Firebase หลัง asset เข้า Git แล้ว:** รอบ 1099 commit/push โลโก้สำเร็จแต่ `ship.sh` จัด asset-only เป็น no-deploy จึง live ยัง `.1016`; เตรียม manifest ผูก `index_classic.html` เพื่อบัมพ์ version/build/deploy จริง โดยไม่แก้ UI/auth เพิ่ม
