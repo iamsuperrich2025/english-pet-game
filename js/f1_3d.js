@@ -142,6 +142,7 @@ const PIT_STOP_S   = 3.0;     // เปลี่ยนยางกี่วิ�
    ============================================================ */
 let built=false, running=false, rafId=0, lastT=0;
 let scene, camera, renderer;
+let envLights=null, activeGraphicsMode='battery', activeEnvironmentProfile=null;
 let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, exitBox, boardEl, chatBarEl, selfMsgEl;
 let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
@@ -182,10 +183,15 @@ const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
 const lerp=(a,b,t)=>a+(b-a)*t;
 
 /* ============================================================
-   🔊 เสียงสังเคราะห์ (เครื่องยนต์ V6 hybrid / สกิด / kerb / ลม)
+   🔊 F1 DYNAMIC ENGINE AUDIO — sample จริง + RPM/เกียร์เสมือน + synth fallback (รอบ 1106)
+   เสียงยาง / kerb / ลม / DRS คงระบบเดิมและใช้ AudioContext ก้อนเดียวกัน
    ============================================================ */
 const Snd=(function(){
-  let ac=null, eng=null, engHi=null, engGain=null, noise=null, noiseGain=null, skidGain=null, started=false;
+  const ENGINE_URL='sound/racing/engineSound.mp3';
+  const RPM_IDLE=4000, RPM_MAX=19000;
+  let ac=null, engineMaster=null, engineTone=null, engineSrc=null, sampleGain=null;
+  let synthEng=null, synthHi=null, synthGain=null, noise=null, noiseGain=null, skidGain=null, started=false;
+  let engineMode='off', loadToken=0, warned=false, lastGear=1, shiftDrop=0, lastV=0, actualRpm=RPM_IDLE;
   let windLp=null;      // 🪽 รอบ 908: ฟิลเตอร์เสียงลม — เปิดปีก DRS = ลมโปร่งขึ้น (คุมความถี่ตัดจาก tick)
   function ctx(){ if(!ac){ try{ ac=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return ac; }
   function noiseBuf(a){
@@ -193,15 +199,60 @@ const Snd=(function(){
     for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
     return b;
   }
+  function synthStart(a){
+    synthGain=a.createGain(); synthGain.gain.value=1; synthGain.connect(engineTone);
+    synthEng=a.createOscillator(); synthEng.type='sawtooth'; synthEng.frequency.value=70;
+    synthHi=a.createOscillator(); synthHi.type='square'; synthHi.frequency.value=140;
+    const hiG=a.createGain(); hiG.gain.value=0.35;
+    synthEng.connect(synthGain); synthHi.connect(hiG); hiG.connect(synthGain);
+    synthEng.start(); synthHi.start();
+  }
+  function synthStop(){
+    try{ if(synthEng) synthEng.stop(); }catch(e){}
+    try{ if(synthHi) synthHi.stop(); }catch(e){}
+    try{ if(synthEng) synthEng.disconnect(); }catch(e){}
+    try{ if(synthHi) synthHi.disconnect(); }catch(e){}
+    try{ if(synthGain) synthGain.disconnect(); }catch(e){}
+    synthEng=synthHi=synthGain=null;
+  }
+  async function sampleStart(a,token){
+    try{
+      const response=await fetch(ENGINE_URL,{cache:'force-cache'});
+      if(!response.ok) throw new Error('HTTP '+response.status);
+      const buffer=await a.decodeAudioData(await response.arrayBuffer());
+      if(!started||token!==loadToken||ac!==a||a.state==='closed') return;
+      const src=a.createBufferSource(), gain=a.createGain(), now=a.currentTime;
+      src.buffer=buffer; src.loop=true;
+      /* ตัดขอบ MP3 encoder padding สั้น ๆ ออกจากลูป ลด click โดยไม่เพิ่ม scheduler/node คู่บนมือถือ */
+      const trim=Math.min(0.08,buffer.duration*0.015);
+      if(buffer.duration-trim>trim+0.05){ src.loopStart=trim; src.loopEnd=buffer.duration-trim; }
+      gain.gain.setValueAtTime(0.0001,now);
+      gain.gain.linearRampToValueAtTime(1,now+0.28);
+      src.connect(gain); gain.connect(engineTone); src.start(now,trim);
+      engineSrc=src; sampleGain=gain; engineMode='sample';
+      if(synthGain){
+        synthGain.gain.cancelScheduledValues(now);
+        synthGain.gain.setValueAtTime(Math.max(0.0001,synthGain.gain.value),now);
+        synthGain.gain.linearRampToValueAtTime(0.0001,now+0.28);
+        setTimeout(()=>{ if(started&&token===loadToken&&engineMode==='sample') synthStop(); },360);
+      }
+    }catch(e){
+      if(!started||token!==loadToken) return;
+      engineMode='fallback';
+      if(!warned){ warned=true; console.warn('[F1 audio] Engine sample unavailable; using synthesized fallback.'); }
+    }
+  }
   function start(){
+    if(typeof state!=='undefined'&&state.sound===false) return;
     const a=ctx(); if(!a||started) return; started=true;
     if(a.state==='suspended') a.resume();
-    engGain=a.createGain(); engGain.gain.value=0; engGain.connect(a.destination);
-    eng=a.createOscillator(); eng.type='sawtooth'; eng.frequency.value=70;
-    engHi=a.createOscillator(); engHi.type='square'; engHi.frequency.value=140;
-    const hiG=a.createGain(); hiG.gain.value=0.35;
-    eng.connect(engGain); engHi.connect(hiG); hiG.connect(engGain);
-    eng.start(); engHi.start();
+    engineMode='loading'; lastGear=1; shiftDrop=0; lastV=0; rpm=0; actualRpm=RPM_IDLE;
+    engineMaster=a.createGain(); engineMaster.gain.value=0.075; engineMaster.connect(a.destination);
+    engineTone=a.createBiquadFilter(); engineTone.type='lowpass'; engineTone.frequency.value=3600; engineTone.Q.value=0.35;
+    engineTone.connect(engineMaster);
+    /* synth เริ่มทันที: กันช่วง decode เงียบ และเป็น fallback ถาวรถ้า asset โหลดไม่ได้ */
+    synthStart(a);
+    const token=++loadToken; sampleStart(a,token);
     /* ลม+ยาง */
     noiseGain=a.createGain(); noiseGain.gain.value=0;
     const lp=a.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=WIND_LP_SHUT;
@@ -216,24 +267,41 @@ const Snd=(function(){
     n2.connect(bp); bp.connect(skidGain); skidGain.connect(a.destination);
     n2.start();
   }
-  let rpm=0;
+  let rpm=0;            // normalized 0..1 ระหว่าง RPM_IDLE..RPM_MAX
   /* 🪽 รอบ 908: เสียงลมตอนปีกเปิด — ปีกกางออก = อากาศไหลผ่านโปร่ง เสียง "ซู่" แหลม/ดังขึ้น
      (ปิด = ลมตีปีกทึบ ทุ้มกว่า) · ค่าเป็นความถี่ตัดของ lowpass เส้นเสียงลมเดิม ไม่ได้เพิ่ม node ใหม่ */
   const WIND_LP_SHUT=900, WIND_LP_OPEN=2050, WIND_VOL_DRS=1.45;
-  function tick(v,thr,sliding,dt,drs){
+  function tick(v,thr,sliding,dt,drs,braking,cameraMode){
     if(!started||!ac) return;
-    /* เกียร์ 8 สปีด — rpm ไต่ในเกียร์ แล้วตกตอนเปลี่ยน */
-    const g=gearOf(v);
+    const soundOn=typeof state==='undefined'||state.sound!==false;
+    const av=Math.abs(v), g=gearOf(av);
+    /* เกียร์เสมือน 8 สปีดใช้ขอบเดียวกับฟิสิกส์/HUD: upshift จะตกรอบสั้น ๆ แล้วสร้างต่อ */
+    if(g>lastGear&&av>2) shiftDrop=1;
+    lastGear=g;
     const gLo=GEARS[g-1]||0, gHi=GEARS[g]||92;
-    const inGear=clamp((v-gLo)/Math.max(1,gHi-gLo),0,1);
-    const target=0.25+inGear*0.75;
-    rpm=lerp(rpm,target,clamp(dt*8,0,1));
-    const f=55+rpm*rpm*560+(thr>0.05?30:0);
-    eng.frequency.setTargetAtTime(f,ac.currentTime,0.03);
-    engHi.frequency.setTargetAtTime(f*2.01,ac.currentTime,0.03);
-    engGain.gain.setTargetAtTime(0.05+0.10*rpm+(thr>0.05?0.035:0),ac.currentTime,0.05);
-    noiseGain.gain.setTargetAtTime(clamp(v/92,0,1)*0.16*(drs?WIND_VOL_DRS:1),ac.currentTime,0.1);
-    skidGain.gain.setTargetAtTime(sliding?0.16:0,ac.currentTime,sliding?0.03:0.12);
+    const inGear=clamp((av-gLo)/Math.max(1,gHi-gLo),0,1);
+    const speedTarget=av<1?0:(0.24+inGear*0.76);
+    const accel=clamp((av-lastV)/Math.max(dt,0.001)/20,-1,1); lastV=av;
+    const freeRev=thr>0.02?0.08+thr*0.70:0;
+    let target=Math.max(speedTarget,freeRev)+Math.max(0,accel)*0.045-Math.max(0,-accel)*0.025;
+    if(braking) target-=0.055;
+    target-=shiftDrop*0.12;
+    target=clamp(target,0,1);
+    const response=target>rpm?7.8:(braking?4.3:2.6);
+    rpm=lerp(rpm,target,1-Math.exp(-Math.max(0,dt)*response));
+    shiftDrop=Math.max(0,shiftDrop-dt*7.5);
+    actualRpm=RPM_IDLE+(RPM_MAX-RPM_IDLE)*rpm;
+    /* sample หนึ่งชั้น: pitch 0.70×..1.60× + low-pass เปิดตามคันเร่ง/รอบ และนุ่มด้วย AudioParam */
+    const rate=0.70+rpm*0.90;
+    if(engineSrc) engineSrc.playbackRate.setTargetAtTime(rate,ac.currentTime,0.045);
+    const f=62+rpm*rpm*610+thr*26;
+    if(synthEng) synthEng.frequency.setTargetAtTime(f,ac.currentTime,0.035);
+    if(synthHi) synthHi.frequency.setTargetAtTime(f*2.01,ac.currentTime,0.035);
+    const cockpit=cameraMode==='cockpit', cameraK=cockpit?1:0.78;
+    engineMaster.gain.setTargetAtTime(soundOn?(0.075+0.055*rpm+0.018*thr)*cameraK:0,ac.currentTime,0.09);
+    engineTone.frequency.setTargetAtTime((1800+rpm*9000+thr*1500)*(cockpit?1:0.78),ac.currentTime,0.08);
+    noiseGain.gain.setTargetAtTime(soundOn?clamp(av/92,0,1)*0.16*(drs?WIND_VOL_DRS:1):0,ac.currentTime,0.1);
+    skidGain.gain.setTargetAtTime(soundOn&&sliding?0.16:0,ac.currentTime,sliding?0.03:0.12);
     /* 🪽 รอบ 908 — ลมเปลี่ยนเนื้อเสียงตามปีก (ไล่ 0.12 วิ ให้ได้ยินว่า "เปลี่ยน" ไม่ใช่กระตุก) */
     if(windLp) windLp.frequency.setTargetAtTime(drs?WIND_LP_OPEN:WIND_LP_SHUT,ac.currentTime,0.12);
   }
@@ -317,10 +385,13 @@ const Snd=(function(){
   }
   function stop(){
     if(!ac) return;
+    loadToken++;
     try{ ac.close(); }catch(e){}
-    ac=null; started=false; rpm=0; windLp=null;
+    ac=null; engineMaster=engineTone=engineSrc=sampleGain=synthGain=null; synthEng=synthHi=null;
+    noise=noiseGain=skidGain=null; started=false; rpm=0; actualRpm=RPM_IDLE; windLp=null; engineMode='off';
   }
   return {start,tick,kerb,wrench,tyreDone,blip,wing,stop,get rpm(){return rpm;},get on(){return started;},
+    get rpmActual(){return actualRpm;},get mode(){return engineMode;},get asset(){return ENGINE_URL;},
     get windHz(){return windLp?windLp.frequency.value:null;}};
 })();
 const GEARS=[0,13,21,30,40,52,65,79,93];      // ขอบบนความเร็วแต่ละเกียร์ (m/s)
@@ -1106,6 +1177,8 @@ const CSS=`
 #f1-intro h2{color:#ffd12e;font-size:clamp(15px,3.4vh,20px);margin:0 0 4px}
 #f1-intro button{background:#e10600;color:#fff;border:none;border-radius:12px;padding:clamp(6px,1.6vh,10px) 26px;
   font-size:clamp(13px,2.8vh,17px);font-weight:800;font-family:inherit;margin-top:8px;align-self:center}
+#f1-legalbtn{background:transparent!important;color:#b9c8e5!important;border:1px solid rgba(255,255,255,.25)!important;
+  padding:clamp(3px,1vh,5px) 10px!important;margin-left:7px!important;font-size:clamp(9px,2vh,11px)!important}
 /* 🏆 กระดานอันดับ Best Lap ในหน้า intro (รอบ 903) */
 #f1-intro .fi-cols{display:flex;gap:14px;text-align:left;margin-top:2px;min-height:0}
 /* 👥 รอบ 939: บีบระยะบรรทัดคอลัมน์กติกา (1.55→1.4) — เพิ่มข้อมูล "เล่นกับเพื่อน" แล้วต้องยังพอดีจอ ไม่มี scroll (กฎทอง #7) */
@@ -1135,6 +1208,16 @@ const CSS=`
 #f1-exitbox button{border:none;border-radius:12px;padding:9px 22px;font-size:15px;font-weight:800;font-family:inherit;margin:6px}
 #f1-stay{background:#2e9e4a;color:#fff}
 #f1-leave{background:#d81a1a;color:#fff}
+#f1-legal{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(4,8,18,.94);padding:8px;box-sizing:border-box}
+#f1-legal.on{display:flex}
+#f1-legal .box{width:min(920px,97vw);max-height:calc(100vh - 16px);overflow:hidden;background:#101a30;border:1px solid rgba(255,209,46,.45);
+  border-radius:16px;padding:clamp(8px,2vh,14px);box-sizing:border-box;text-align:left}
+#f1-legal h2{text-align:center;color:#ffd12e;margin:0 0 clamp(5px,1.5vh,9px);font-size:clamp(14px,3.5vh,20px)}
+#f1-legal .legal-cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(8px,2vw,18px)}
+#f1-legal .legal-copy{font-size:clamp(9px,2.25vh,12.5px);line-height:1.35;color:#d7e2f5}
+#f1-legal .legal-copy b{display:block;color:#67d8ff;margin-bottom:2px}
+#f1-legal #f1-legalclose{display:block;margin:clamp(6px,1.5vh,10px) auto 0;background:#33405a;color:#fff;border:0;border-radius:10px;
+  padding:clamp(5px,1.4vh,8px) 24px;font:800 clamp(11px,2.5vh,14px) inherit;cursor:pointer}
 @media (max-height:430px){
   #f1-speed{font-size:30px}
   /* 🧭 รอบ 914: จอเตี้ย — แถบเลี้ยวเตี้ยลงหน่อย แล้วยกมินิแมป/ปุ่มขวาบนให้พ้นกัน
@@ -1185,10 +1268,10 @@ function buildDom(){
       <button class="f1-pedal" id="f1-throttle">⚡</button>
     </div>
     <div id="f1-intro"><div class="box">
-      <h2>🏎️ สนามซาเคียร์ · บาห์เรน กรังด์ปรีซ์</h2>
+      <h2>🏎️ Vocab World Racing · Vocab Grand Circuit</h2>
       <div class="fi-cols">
         <div class="fi-rules">
-          สนามจริง 5.4 กม. 15 โค้ง กลางทะเลทรายใต้แสงไฟ!<br>
+          Vocab Motors VR-X1 · Open-Wheel Racing · สนามกลางทะเลทราย 5.4 กม. 15 โค้งใต้แสงไฟ!<br>
           ⚡ คันเร่ง · 🛑 เบรก · ลูกบิดส้ม = พวงมาลัย (คีย์บอร์ด W/S เร่ง-เบรก · A/D เลี้ยว)<br>
           🔤 เก็บตัวอักษรบนแทร็กประกอบคำ = <b style="color:#ffd12e">+${REWARD} 🪙</b><br>
           🏁 จับเวลาทุกรอบ — ทำ Best Lap ให้ไวสุด! 🚦 สตาร์ทจริง: ไฟแดง 5 ดวง<b style="color:#ffd12e">ดับพร้อมกัน = ออกตัว</b><br>
@@ -1208,7 +1291,15 @@ function buildDom(){
           <div class="fr-note"></div>
         </div>
       </div>
-      <button id="f1-go">สตาร์ทเครื่อง! 🏎️</button>
+      <button id="f1-go">สตาร์ทเครื่อง! 🏎️</button><button id="f1-legalbtn">⚖️ Legal / Third-Party Rights</button>
+    </div></div>
+    <div id="f1-legal" role="dialog" aria-modal="true" aria-labelledby="f1-legal-title"><div class="box">
+      <h2 id="f1-legal-title">⚖️ Legal / Third-Party Rights</h2>
+      <div class="legal-cols">
+        <div class="legal-copy"><b>English</b>Third-party names, trademarks, vehicle names, manufacturer names, logos, and other intellectual property are the property of their respective owners. Vocab World is an independent educational game and is not affiliated with, sponsored by, endorsed by, or officially associated with any automobile manufacturer, motorsport organization, racing team, championship, or other third-party rights holder.</div>
+        <div class="legal-copy"><b>ไทย</b>ชื่อ เครื่องหมายการค้า ชื่อรถ ชื่อผู้ผลิต โลโก้ และทรัพย์สินทางปัญญาของบุคคลภายนอก เป็นทรัพย์สินของเจ้าของสิทธิแต่ละราย Vocab World เป็นเกมเพื่อการศึกษาอิสระ และไม่มีความเกี่ยวข้อง การสนับสนุน การรับรอง หรือความสัมพันธ์อย่างเป็นทางการกับผู้ผลิตรถยนต์ องค์กรมอเตอร์สปอร์ต ทีมแข่ง รายการแข่งขัน หรือเจ้าของสิทธิบุคคลภายนอกใด ๆ</div>
+      </div>
+      <button id="f1-legalclose">ปิด / Close</button>
     </div></div>
     <div id="f1-exitbox"><div class="box">
       <div style="font-size:17px;font-weight:800;margin-bottom:4px">ออกจากสนามแข่ง?</div>
@@ -1245,6 +1336,9 @@ function buildDom(){
   gapEl=wrapEl.querySelector('#f1-gap');
   mapCv=wrapEl.querySelector('#f1-map'); mapCtx=mapCv.getContext('2d');
   wrapEl.querySelector('#f1-go').addEventListener('click',()=>{ introEl.style.display='none'; Snd.start(); beginLights(); });
+  const legalEl=wrapEl.querySelector('#f1-legal');
+  wrapEl.querySelector('#f1-legalbtn').addEventListener('click',()=>legalEl.classList.add('on'));
+  wrapEl.querySelector('#f1-legalclose').addEventListener('click',()=>legalEl.classList.remove('on'));
   wrapEl.querySelector('#f1-exitbtn').addEventListener('click',()=>exitBox.classList.add('on'));
   wrapEl.querySelector('#f1-stay').addEventListener('click',()=>exitBox.classList.remove('on'));
   wrapEl.querySelector('#f1-leave').addEventListener('click',exitWorld);
@@ -1320,11 +1414,12 @@ function build(){
   renderer=new THREE.WebGLRenderer({canvas:wrapEl.querySelector('#f1-cv'),antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
   /* แสงจัดแบบสนามไฟสปอตไลต์: ขาวนวลจ้าจากบน (ไฟสนาม) + อุ่นชดเชย + hemisphere หนา */
-  scene.add(new THREE.HemisphereLight(0x9aabdf,0x40361f,0.72));
+  const hemi=new THREE.HemisphereLight(0x9aabdf,0x40361f,0.72); scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xf4f7ff,1.05);
   sun.position.set(-300,500,-200); scene.add(sun);
   const warm=new THREE.DirectionalLight(0xffc98a,0.35);
   warm.position.set(200,120,300); scene.add(warm);
+  envLights={hemi,sun,warm};
   /* glow texture ไฟสนาม */
   TexLib.glow=texFromCanvas((g,w,h)=>{
     const gr=g.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);
@@ -1350,10 +1445,10 @@ function build(){
   texProbe('tower.jpg',TexLib.tower,t=>{ t.repeat.set(3,1); applyTex('tower',t); });
   TexLib.tent=tentTex();
   texProbe('tent.jpg',TexLib.tent,t=>{ t.repeat.set(1/18,1/18); applyTex('tent',t); });
-  TexLib.adGP=adTex('SAKHIR GRAND PRIX','#fff','#d81a1a');
-  TexLib.adSakhir=adTex('BAHRAIN','#fff','#0a3b8c');
-  TexLib.adVocab=adTex('VOCAB WORLD','#5c3500','#ffd12e');
-  TexLib.adSpeed=adTex('DESERT SPEED','#0af','#0c1220');
+  TexLib.adGP=adTex('VOCAB WORLD RACING','#fff','#d81a1a');
+  TexLib.adSakhir=adTex('VOCAB GRAND CIRCUIT','#fff','#0a3b8c');
+  TexLib.adVocab=adTex('VOCAB MOTORS','#5c3500','#ffd12e');
+  TexLib.adSpeed=adTex('WORDPOWER','#0af','#0c1220');
   buildTrackScene();
   buildDrsBoards();      // 🪽 รอบ 908 — ป้ายเสา DRS (ต้องมาหลัง TexLib.glow + findDrsZones + มี scene แล้ว)
   /* รถเรา */
@@ -1903,7 +1998,8 @@ function physTick(dt){
     (braking||thr<0.1)&&spd>10?((performance.now()/90|0)%2?0xff2020:0x550000):0x550000);
   /* ควันดริฟต์/ทราย */
   if((slide>0.35&&spd>14)||surf==='sand'&&spd>6) puffSmoke(surf==='sand');
-  Snd.tick(spd,thr,slide>0.4&&spd>12,dt,drsOn);   // 🪽 รอบ 908 — ส่งสถานะปีกไปเปลี่ยนเนื้อเสียงลม
+  const audioThr=clamp(padThr+(kThr?1:0),0,1);     // ให้เร่งเครื่องรอไฟสตาร์ทได้ โดยไม่ส่งแรงไปที่ล้อ
+  Snd.tick(spd,audioThr,slide>0.4&&spd>12,dt,drsOn,braking,camMode);   // sample RPM + เกียร์ + cockpit/chase
   /* 🛞 รอบ 905: ยางสึก + ลูปพิท */
   tyreWear(dt,surf);
   pitTick(dt);
@@ -3039,8 +3135,33 @@ function fit(){
 /* ============================================================
    🚪 เข้า/ออกโลก
    ============================================================ */
-function start(){
+function applyEnvironmentProfile(profile,mode){
+  if(!profile||profile.contract!=='vw.f1.environment-profile/v1') return;
+  const r=profile.renderer||{}, e=profile.environment||{};
+  activeGraphicsMode=mode||profile.id||'battery';
+  activeEnvironmentProfile=profile;
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,Number(r.pixelRatioCap)||2));
+  if(typeof THREE.NoToneMapping!=='undefined'&&typeof THREE.ACESFilmicToneMapping!=='undefined')
+    renderer.toneMapping=r.toneMapping==='aces'?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
+  if(Number.isFinite(r.exposure)) renderer.toneMappingExposure=r.exposure;
+  if(Number.isFinite(e.background)) scene.background.setHex(e.background);
+  if(scene.fog){
+    if(Number.isFinite(e.fogColor)) scene.fog.color.setHex(e.fogColor);
+    if(Number.isFinite(e.fogNear)) scene.fog.near=e.fogNear;
+    if(Number.isFinite(e.fogFar)) scene.fog.far=e.fogFar;
+  }
+  if(Number.isFinite(e.cameraFar)){camera.far=e.cameraFar;camera.updateProjectionMatrix();}
+  if(envLights){
+    if(Number.isFinite(e.hemisphere)) envLights.hemi.intensity=e.hemisphere;
+    if(Number.isFinite(e.keyLight)) envLights.sun.intensity=e.keyLight;
+    if(Number.isFinite(e.warmLight)) envLights.warm.intensity=e.warmLight;
+  }
+}
+function start(options){
+  if(running) return;
   if(!built) build();
+  options=options||{};
+  applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
   wrapEl.classList.add('on');
   introEl.style.display='flex';
@@ -3122,7 +3243,7 @@ function exitWorld(){
   saveState();
   if(typeof renderDashboard==='function') renderDashboard();
   if(sessionWords>0||sessionCoins>0)
-    toast(`🏎️ กลับจากสนามซาเคียร์ — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
+    toast(`🏎️ กลับจาก Vocab World Racing — ได้ ${sessionWords} คำ · +${fmtNum(sessionCoins)} 🪙`);
 }
 
 window.F1World={
@@ -3219,6 +3340,9 @@ window.F1World={
     netJoin, netLeave, renderBoard, sendChat,
     get room(){return room},
     get scene(){return scene}, get camera(){return camera}, get car(){return carGrp}, get renderer(){return renderer},
+    get graphics(){return {mode:activeGraphicsMode,profile:activeEnvironmentProfile,built,running,
+      scene:scene||null,renderer:renderer||null,instancePolicy:'single'}},
+    applyEnvironmentProfile,
     snd:Snd, gearOf,
     step(dt,n){ for(let i=0;i<(n||1);i++) frame(dt||1/60,performance.now()); },
     exitWorld, fit,

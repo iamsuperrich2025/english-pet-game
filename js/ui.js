@@ -6863,19 +6863,22 @@ async function enterF1_3D(){
   if(!state.f1Ticket || state.advHurt || advLoading) return advBusyMsg(enterF1_3D);
   if(!window.F1World || !window.F1_MAP){
     advLoading = Date.now();
-    toast('🏎️ กำลังเปิดสนามซาเคียร์ · บาห์เรน...');
+    toast('🏎️ กำลังเปิด Vocab World Racing...');
     try{
       await loadScriptOnce('js/vendor/three.min.js');
       await loadScriptOnce('js/vendor/GLTFLoader.js');
       await loadScriptOnce('js/data/f1_bahrain.js');
       await loadScriptOnce('js/f1_3d.js');
     }catch(e){
-      world3DFail('โลกแข่งรถ F1', e);
+      world3DFail('Vocab World Racing', e);
       return;
     }
     advLoading = false;
   }
-  try{ F1World.start(); }catch(e){ world3DFail('โลกแข่งรถ F1', e); }
+  try{
+    const graphics=window.F1Modes?F1Modes.getSelection():null;
+    F1World.start(graphics?{graphicsMode:graphics.id,environmentProfile:graphics.environment}:undefined);
+  }catch(e){ world3DFail('Vocab World Racing', e); }
 }
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
@@ -6915,7 +6918,7 @@ const WORLD3D = [
   { mode:'moto',  ico:'🏍️', label:'มอไซค์', ticketKey:'motoTicket', doneKey:'motoDone',  enter:enterMoto3D },
   { mode:'invasion',ico:'🛸',label:'ยานแม่', ticketKey:'invasionTicket',doneKey:'invasionDone', enter:enterInvasion3D },
   { mode:'mecha', ico:'🤖', label:'หุ่นรบ', ticketKey:'mechaTicket', doneKey:'mechaDone', enter:enterMecha3D },
-  { mode:'f1',    ico:'🏎️', label:'แข่ง F1', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // 🏎️ รอบ 896: สนามซาเคียร์ Bahrain
+  { mode:'f1',    ico:'🏎️', label:'Vocab World Racing', ticketKey:'f1Ticket',  doneKey:'f1Done',    enter:enterF1_3D },   // internal keys kept for compatibility
 ];
 /* ============================================================
    🔒 รอบ 1070: โลกที่ยังไม่เปิดสาธารณะ — เปิดให้บัญชีทดสอบ 2 ชื่อเท่านั้น
@@ -6995,6 +6998,12 @@ function railWorldClick(w){
   }
   if(w.mode === 'drive' && carDriveBlock() === 'overdue'){  // 🔐 ค้างงวดรถ = ขับไม่ได้จนกว่าจะจ่าย (ไม่มีรถไม่บล็อกแล้ว — ยืมรถระบบ)
     sfx.wrong(); showNeedCarDialog('overdue'); return;
+  }
+  if(w.mode==='f1'){
+    loadScriptOnce('js/f1_modes.js').then(()=>{
+      F1Modes.openSelector({onContinue:()=>openWorldEntryDialog(w)});
+    }).catch(err=>world3DFail('ตัวเลือก Vocab World Racing',err));
+    return;
   }
   openWorldEntryDialog(w);
 }
