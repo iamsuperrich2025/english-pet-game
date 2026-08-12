@@ -1,6 +1,6 @@
 /* ============================================================
-   🖼️ Picture Dictionary — หน้าเดียว 40 คำ (รอบ 1114)
-   8×5 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
+   🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1118)
+   6×3 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
    ============================================================ */
 body #screen-picdict.screen.active{
   position:fixed;inset:0;z-index:80;display:flex!important;flex-direction:column;
@@ -20,9 +20,9 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-title b{display:block;font-size:clamp(17px,3.5vh,25px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #screen-picdict .pd-title span{display:block;margin-top:2px;font-size:clamp(10px,2vh,13px);color:#806337}
 
-/* 40 การ์ด = 8 คอลัมน์ × 5 แถว ขนาดตายตัวตามพื้นที่ที่เหลือ */
+/* 18 การ์ด = 6 คอลัมน์ × 3 แถว ขนาดตายตัวตามพื้นที่ที่เหลือ */
 #screen-picdict .pd-gallery{
-  flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));
+  flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));
   gap:clamp(3px,.65vw,8px);padding:clamp(4px,.7vw,9px);border:1px solid rgba(119,82,27,.35);border-radius:15px;
   background:rgba(255,251,235,.94);box-shadow:inset 0 0 24px rgba(126,83,25,.13),0 8px 22px rgba(63,37,8,.2);overflow:hidden
 }
@@ -33,8 +33,8 @@ body #screen-picdict.screen.active{
 }
 #screen-picdict .pd-cell:hover,#screen-picdict .pd-cell:focus-visible{transform:translateY(-1px);box-shadow:0 3px 9px rgba(30,92,125,.28);background:#fffbea;outline:2px solid #ffc107;z-index:2}
 #screen-picdict .pd-cell canvas{display:block;width:100%;max-width:100%;height:100%;min-width:0;min-height:0;object-fit:contain}
-#screen-picdict .pd-cell b{max-width:100%;font-size:clamp(10px,1.85vh,15px);line-height:1.03;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0b395b}
-#screen-picdict .pd-cell span{max-width:100%;font-size:clamp(8.5px,1.6vh,12.5px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5f4931}
+#screen-picdict .pd-cell b{max-width:100%;font-size:clamp(12px,2.45vh,18px);line-height:1.03;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0b395b}
+#screen-picdict .pd-cell span{max-width:100%;font-size:clamp(10px,2vh,15px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5f4931}
 #screen-picdict .pd-empty{grid-column:1/-1;grid-row:1/-1;align-self:center;justify-self:center;font-size:18px;font-weight:800;color:#7d623b}
 
 /* แถบเปลี่ยนหน้า */
@@ -89,14 +89,14 @@ body #screen-picdict.screen.active{
 #screen-picdict .pd-zoom-card.locked-pulse{animation:pd-lock .38s}@keyframes pd-lock{25%,75%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
 #screen-picdict .pd-zoom-reward{position:absolute;left:calc(100% + 10px);top:50%;display:flex;flex-direction:column;align-items:center;min-width:150px;padding:10px;border:3px solid #ffd54f;border-radius:15px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);opacity:0;pointer-events:none}.pd-zoom-reward.show{animation:pd-reward 1.6s}.pd-zoom-reward b{font-size:30px;color:#ed9200}.pd-zoom-reward span{font-weight:800;color:#62461f;white-space:nowrap;font-size:12px}@keyframes pd-reward{12%,82%{opacity:1;transform:translateY(-50%) scale(1)}0%,100%{opacity:0;transform:translateY(-50%) scale(.7)}}
 
-/* จอเล็ก 812×375: คง 40 คำ แต่ตัดพื้นที่ตกแต่ง/ช่องว่าง ไม่ให้เกิด scrollbar */
+/* จอเล็ก 812×375: คง 18 คำ แต่ตัดพื้นที่ตกแต่ง/ช่องว่าง ไม่ให้เกิด scrollbar */
 @media (max-height:430px){
   body #screen-picdict.screen.active{padding-top:3px;padding-bottom:3px}
   #screen-picdict .pd-toolbar{min-height:36px;gap:5px;padding:1px 3px 3px}
   #screen-picdict .back-btn,#screen-picdict .pd-catalog-btn,#screen-picdict .pd-quiz-btn{padding:5px 8px;border-radius:8px;font-size:11px}
   #screen-picdict .pd-title b{font-size:15px}#screen-picdict .pd-title span{font-size:9px;margin-top:0}
   #screen-picdict .pd-gallery{gap:3px;padding:4px;border-radius:10px}
-  #screen-picdict .pd-cell{padding:1px 2px;border-radius:6px}#screen-picdict .pd-cell b{font-size:9.5px}#screen-picdict .pd-cell span{font-size:8px}
+  #screen-picdict .pd-cell{padding:2px 3px;border-radius:7px}#screen-picdict .pd-cell b{font-size:12px}#screen-picdict .pd-cell span{font-size:10px}
   #screen-picdict .pd-footer{min-height:30px;padding-top:3px;gap:8px}#screen-picdict .pd-page-btn{min-width:88px;padding:4px 9px;font-size:10px}#screen-picdict .pd-page-info{min-width:150px}#screen-picdict .pd-page-info b{font-size:10px}#screen-picdict .pd-page-info span{font-size:8px}
   #screen-picdict .pd-catalog-card{height:94vh}#screen-picdict .pd-catalog-head{padding:4px 9px;font-size:14px}#screen-picdict .pd-catalog-head button{width:26px;height:26px}#screen-picdict .pd-catalog-body{grid-template-columns:34% 1fr;gap:6px;padding:6px}.pd-groups{gap:3px!important}#screen-picdict .pd-group{padding:2px 6px;font-size:10px}#screen-picdict .pd-sheets{gap:4px}#screen-picdict .pd-sheet{padding:2px}#screen-picdict .pd-sheet b{font-size:10px}#screen-picdict .pd-sheet span{font-size:8px}
   #screen-picdict .pd-qbar{margin:0 3px 3px;padding:3px 6px}#screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:3px 7px;font-size:10px}#screen-picdict .pd-q-ask{font-size:10px}

@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (12 ส.ค.) — อ่านก่อน
+- **รอบ 1118 · Picture Dictionary แสดงครั้งละ 18 คำ:** ปรับจาก 8×5 เป็น 6 คอลัมน์ × 3 แถว เพื่อขยายภาพและคำอังกฤษ/ไทยให้ชัดขึ้นบนจอเล็ก; แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`
+- regression/syntax/diff ผ่าน; Browser 812×375 ยืนยัน 18 ใบ/6×3, การ์ด 129×94px, overflow 0, หน้า 2=18/หน้า 3=12 คำ, zoom+quiz ใช้ได้และ console 0; build 8,289 ไฟล์/454.8 MiB + PWA validator ผ่าน
 - **รอบ 1115 · Vocab World Racing แบบผู้เล่นล้วน:** ถอดรถ AI/bot ทั้ง runtime, minimap, DRS และ test hook; DRS เหลือคำนวณจากผู้เล่นออนไลน์จริงเท่านั้น
 - ถอดยางเสื่อม/ผลต่อเบรกและกริป/เกจ/พิทสต็อป/เสียง/ข้อความทั้งหมด โดยคง ghost ผู้เล่น, เลนพิทและลิมิต 80 กม./ชม.; แก้ `js/f1_3d.js` และเพิ่ม `tools/test_f1_solo_ghost.js`
 - solo/ghost + engine audio + graphics mode + syntax/undefined/template/diff ผ่าน; build 8,289 ไฟล์/454.8 MiB และ PWA validator ผ่าน · รอ COMMIT_DEPLOY ส่งขึ้นเว็บ

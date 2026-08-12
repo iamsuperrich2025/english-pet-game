@@ -1,15 +1,15 @@
 "use strict";
 /* ============================================================
-   🖼️ Picture Dictionary — single-page card gallery (รอบ 1114)
-   ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 40 คำต่อหน้า
-   (8 คอลัมน์ × 5 แถว) เพื่อให้ภาพและคำอ่านชัดบนจอเล็ก
+   🖼️ Picture Dictionary — single-page card gallery (รอบ 1118)
+   ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 18 คำต่อหน้า
+   (6 คอลัมน์ × 3 แถว) เพื่อให้ภาพและคำอ่านใหญ่ชัดบนจอเล็ก
    หมวดและชุดคำเดิมมาจาก PICDICT_BOOK / PICDICT_WORDS / PICDICT_GRID
    ============================================================ */
 (function(){
   const $ = id => document.getElementById(id);
   const has = f => typeof window[f] === 'function';
   const esc = s => has('escapeHTML') ? escapeHTML(String(s || '')) : String(s || '');
-  const PAGE_SIZE = 40;
+  const PAGE_SIZE = 18;
   const sheetSrc = file => '/img/matching/web/' + encodeURIComponent(file.replace(/\.png$/i,'') + '.webp');
   const sheetOrig = file => '/img/matching/' + encodeURIComponent(file);
 
@@ -154,7 +154,7 @@
         card.addEventListener('click',()=>sayCell(card,en,th));
         gallery.appendChild(card);
       });
-      /* วาดหลัง DOM ลงจอแล้ว 1 เฟรม: บาง WebView ยกเลิก Image decode ถ้าสร้าง canvas 40 ใบ
+      /* วาดหลัง DOM ลงจอแล้ว 1 เฟรม: บาง WebView ยกเลิก Image decode ถ้าสร้าง canvas หลายใบ
          ใน task เดียวกับการเปิดหน้าจอ (พบจริงบน preview จอ 812×375) */
       requestAnimationFrame(()=>paintCards(sheet,entry,gallery,start));
     }
