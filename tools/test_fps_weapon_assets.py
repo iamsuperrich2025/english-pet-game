@@ -17,6 +17,8 @@ import build_fps_weapon_frames as generator
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "assets/weapons/fps/runtime"
+WIDE_HIP = ROOT / "img/animation/fps_weapon/fps_weapon_hip_wide_v5.png"
+WIDE_HIP_SHA256 = "8e1b6040452bbde261d448f86d6ce0cf19c453d871cdfad83daa8e2a672bb1c7"
 EXPECTED = {"idle": 1, "walk": 8, "sprint": 8, "equip": 8, "ads": 6, "fire": 4, "reload": 12}
 EXPECTED_TOTAL = 47
 
@@ -166,6 +168,27 @@ for kind, files in manifest.items():
         images[(kind, index)] = rgba
         print(f"PASS {relative} RGBA 512x512 bbox={bbox}")
 
+# Wide viewmodel is the production non-ADS plate. Its front-sight cap must
+# converge on canvas centre, while only right/bottom edges intentionally exit.
+assert sha256_file(WIDE_HIP) == WIDE_HIP_SHA256, "wide hip viewmodel hash changed"
+wide = Image.open(WIDE_HIP).convert("RGBA")
+wide_alpha = wide.getchannel("A")
+wide_mask = wide_alpha.point(lambda value: 255 if value > 16 else 0)
+wide_box = wide_mask.getbbox()
+assert wide.size == (1672, 941) and wide_box == (445, 458, 1672, 941), f"wide hip geometry changed: {wide.size} {wide_box}"
+first_y = next(y for y in range(wide.height) if wide_mask.crop((0, y, wide.width, y + 1)).getbbox())
+sight = [(x, y) for y in range(first_y, first_y + 20) for x in range(wide.width) if wide_alpha.getpixel((x, y)) > 32]
+sight_x = sum(x for x, _y in sight) / len(sight)
+sight_y = sum(y for _x, y in sight) / len(sight)
+assert abs(sight_x - wide.width / 2) <= 1 and abs(sight_y - wide.height / 2) <= 1, (
+    f"wide hip sight misses centre: {(sight_x, sight_y)}"
+)
+assert wide_mask.crop((0, 0, 1, wide.height)).getbbox() is None, "wide hip touches left edge"
+assert wide_mask.crop((0, 0, wide.width, 1)).getbbox() is None, "wide hip touches top edge"
+assert wide_mask.crop((wide.width - 1, 0, wide.width, wide.height)).getbbox() is not None, "wide hip must exit right"
+assert wide_mask.crop((0, wide.height - 1, wide.width, wide.height)).getbbox() is not None, "wide hip must exit bottom"
+print(f"PASS wide hip RGBA 1672x941 sight=({sight_x:.2f},{sight_y:.2f}) bbox={wide_box}")
+
 # Every audited badge rectangle must be transparent after projection.  The
 # maximum 1-2 alpha introduced by Lanczos on resized sheets is still below the
 # explicit semi-opaque threshold of 16.
@@ -191,6 +214,17 @@ for index, opening in enumerate(ADS_OPENINGS, start=1):
     transparent = sum(histogram[:17])
     assert transparent / (alpha.width * alpha.height) >= 0.99, f"ADS {index} optic is not transparent"
 
+# Accepted idle v2 has a real transparent safe margin on the internal (left/top)
+# edges.  The arms and stock intentionally continue through bottom/right, which
+# are placed beyond the viewport by the runtime CSS.
+idle_alpha = images[("idle", 1)].getchannel("A").point(lambda value: 255 if value > 16 else 0)
+idle_box = idle_alpha.getbbox()
+assert idle_box is not None and idle_box[0] >= 96 and idle_box[1] >= 150, f"idle safe margin regressed: {idle_box}"
+assert idle_alpha.crop((0, 0, 1, 512)).getbbox() is None, "idle touches internal left canvas edge"
+assert idle_alpha.crop((0, 0, 512, 1)).getbbox() is None, "idle touches top canvas edge"
+assert idle_alpha.crop((511, 0, 512, 512)).getbbox() is not None, "idle no longer exits through right edge"
+assert idle_alpha.crop((0, 511, 512, 512)).getbbox() is not None, "idle no longer exits through bottom edge"
+
 for kind, index, box, minimum_pixels in WEAPON_GUARDS:
     actual = alpha_count(images[(kind, index)], box)
     assert actual >= minimum_pixels, f"weapon pixels cut from {kind} {index}: {actual}"
@@ -215,4 +249,4 @@ for kind, boxes in bboxes.items():
 print(f"PASS manifest inventory: {EXPECTED} total={EXPECTED_TOTAL}")
 print(f"PASS master integrity: {len(master_before)} SHA-256 locks unchanged")
 print(f"PASS deterministic SHA-256 x2: {aggregate_hash(round_two)}")
-print("PASS badges/edge residue/ADS optic/weapon guards/fire effects/bbox continuity")
+print("PASS badges/edge residue/ADS optic/idle safe margins/weapon guards/fire effects/bbox continuity")

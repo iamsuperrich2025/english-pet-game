@@ -92,6 +92,9 @@ const DEFAULT_STATE = {
   assetAwardSeen:'',                  // 🏆 รางวัลรายเดือนกระดานมูลค่าทรัพย์สินรวม
   assetAwardPaid:[],
   assetAwardLog:[],
+  onlineCoinAwardSeen:'',             // 🌐🏆 รางวัลรายเดือนกระดานเหรียญออนไลน์
+  onlineCoinAwardPaid:[],
+  onlineCoinAwardLog:[],
   typistBadge:0,                      // ⌨️ รอบ 654-655: เข็มนักพิมพ์สูงสุดที่เคยได้ 0=ไม่มี 1=⌨️(100 คำ) 2=🔠(500) 3=📜(1000) 4=✒️(3000) 5=🦾(10000) — ได้แล้วไม่หาย
   bigExamBadge:0,                     // 🎓 รอบ 781: เข็มนักสอบใหญ่สูงสุดที่เคยได้ 0=ไม่มี 1=🎓(3 ใบ) 2=🧠(6) 3=🏛️(10) — นับ "ใบประกาศสอบใหญ่" คลังขั้นสูง ได้แล้วไม่หาย
   tpAwardSeen:'',                     // 🏆 รอบ 649: เหมือน wsAward* ทุกอย่าง แต่ของกระดาน ⌨️ พิมพ์คำ
@@ -130,6 +133,7 @@ const DEFAULT_STATE = {
   tinvClaimed:{},                     // ส่วนลดชวนเพื่อน: {adv:true, haunt:true} = รับเงินคืน 🪙TINV_CASHBACK ของ map นั้นไปแล้ว (ครั้งเดียว/map)
   tinvSent:{},                        // คำเชิญที่เราส่งออก: {toUid:{map,ts}} (ฝั่งรับดูจาก DB /tinv — ฝั่งส่งจำในเซฟ)
   tinvTogether:{},                    // 🤝 รอบ 822: {map:{uid,since}} — จับเวลาอยู่ด้วยกันต่อเนื่อง ครบ TINV_TOGETHER_MS ถึงจ่ายเงินคืน (กันเทเลพอร์ตเข้า-ออก)
+  attentionSeen:{},                   // 🔔 รายการที่เห็นในหน้าสรุปแล้ว {fingerprint:ts} — ค้างงานได้แต่ไม่ขึ้นเลขแดงซ้ำจนมีของใหม่
   ticketsReset:false,                 // 🎫→💰 รอบ 822: เคยผ่าน migration คืนเงินตั๋วเก่า+รีเซ็ตเป็นจ่าย 500/ครั้งแล้วหรือยัง (กันคืนซ้ำ)
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
   voiceMode:'all',                    // voice chat: 'all'=คุยทุกคนใน map · 'friends'=เฉพาะเพื่อนที่ invite กันใน map นั้น (ไมค์ไม่จำ — ปิดทุกครั้งที่เข้า เพื่อความปลอดภัยเด็ก)
@@ -478,6 +482,9 @@ function loadState(){
       if(typeof s.assetAwardSeen !== 'string') s.assetAwardSeen = '';
       if(!Array.isArray(s.assetAwardPaid)) s.assetAwardPaid = [];
       if(!Array.isArray(s.assetAwardLog)) s.assetAwardLog = [];
+      if(typeof s.onlineCoinAwardSeen !== 'string') s.onlineCoinAwardSeen = '';
+      if(!Array.isArray(s.onlineCoinAwardPaid)) s.onlineCoinAwardPaid = [];
+      if(!Array.isArray(s.onlineCoinAwardLog)) s.onlineCoinAwardLog = [];
       if(typeof s.typistBadge !== 'number') s.typistBadge = 0;    // ⌨️ รอบ 654: เข็มนักพิมพ์
       if(typeof s.bigExamBadge !== 'number') s.bigExamBadge = 0;  // 🎓 รอบ 781: เข็มนักสอบใหญ่
       if(typeof s.tpAwardSeen !== 'string') s.tpAwardSeen = '';   // 🏆 รอบ 649: รางวัลรายเดือนแท็บพิมพ์คำ
@@ -553,6 +560,7 @@ function loadState(){
       if(!s.tinvClaimed || typeof s.tinvClaimed !== 'object') s.tinvClaimed = {};
       if(!s.tinvSent || typeof s.tinvSent !== 'object') s.tinvSent = {};
       if(!s.tinvTogether || typeof s.tinvTogether !== 'object') s.tinvTogether = {};   // 🤝 รอบ 822
+      if(!s.attentionSeen || typeof s.attentionSeen !== 'object' || Array.isArray(s.attentionSeen)) s.attentionSeen = {};
       if(typeof s.voiceSpk !== 'boolean') s.voiceSpk = true;
       if(s.voiceMode !== 'all' && s.voiceMode !== 'friends') s.voiceMode = 'all';
       // เซฟเก่าที่มีบ้านแต่ยังไม่มีระบบบิล → เริ่มนับเดือนนี้แบบฟรี (บิลจริงออกวันที่ 1 เดือนหน้า)

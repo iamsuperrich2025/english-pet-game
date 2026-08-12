@@ -96,8 +96,15 @@ document.getElementById('btn-quiz-back').addEventListener('click', ()=>{
 document.getElementById('btn-petshop-back').addEventListener('click', ()=>{ renderDashboard(); showScreen('screen-dashboard'); });
 document.getElementById('btn-petshop-play').addEventListener('click', ()=>startGame(null)); // ลิงก์ใต้เหรียญในร้านสัตว์เลี้ยง → เข้าเกมสะสมเหรียญ
 document.getElementById('btn-back').addEventListener('click', exitGame);   // ออกจากเกม + เด้งการ์ดสรุปถ้าทำสถิติใหม่ (exitGame ใน game.js)
-// หน้าตั้งค่า (รวมสวิตช์เสียง/สั่นไว้ที่เดียว — openSettings อยู่ใน util.js)
-document.getElementById('btn-settings').addEventListener('click', openSettings);
+// ปุ่ม ⚙️ ใช้เป็นศูนย์รวมสิ่งที่ต้องจัดการด้วย: ถ้ามี badge ให้แตะตรงไหนบนปุ่มก็เปิดสรุป
+// (เดิมเปิดสรุปได้เฉพาะแตะวงกลมเลขเล็ก ๆ จึงดูเหมือนกดแล้วไม่มีข้อความ)
+function settingsButtonClick(){
+  const badge = document.getElementById('settings-badge');
+  const hasAttention = badge && badge.style.display !== 'none' && Number(badge.textContent) > 0;
+  if(hasAttention) openAttentionSummary();
+  else openSettings();
+}
+document.getElementById('btn-settings').addEventListener('click', settingsButtonClick);
 // 💡 รอบ 156: แตะ pill ตัวเลขบน header Lobby → หน้าต่างอธิบายว่าเลขนี้คืออะไร (openPillInfo ใน ui.js)
 document.getElementById('coin-count').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('coins'));
 document.getElementById('coin-today').closest('.coin-pill').addEventListener('click', ()=>openPillInfo('today'));
@@ -122,8 +129,7 @@ document.getElementById('btn-music').addEventListener('click', ()=>{
   syncMusicBtn();
 });
 syncMusicBtn();
-// แตะ badge เลขรวมบนปุ่ม ⚙️ → เมนูสรุปสิ่งที่ค้าง (ไม่เปิดหน้าตั้งค่า)
-document.getElementById('settings-badge').addEventListener('click', (e)=>{ e.stopPropagation(); openAttentionSummary(); });
+// badge อยู่ภายในปุ่ม ⚙️ จึง bubble เข้า settingsButtonClick และเปิดสรุปทางเดียวกัน
 /* ปุ่มรีเซ็ตเกม (btn-reset) ถูกถอดออกตามคำสั่งผู้ใช้ 5 ก.ค. 2026 — อันตรายเกินไป
    (เด็กเข้าใจผิดว่าเป็น logout → เซฟหายถาวรทั้งเครื่องและ cloud)
    ถ้าต้องรีเซ็ตจริงให้ทำผ่าน console: localStorage.removeItem(STORAGE_KEY) + ลบ /users/<uid>/save ใน DB */

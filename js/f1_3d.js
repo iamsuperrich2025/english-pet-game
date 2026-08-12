@@ -34,6 +34,12 @@ const FP_FWD   = 0.5;    // ตำแหน่งหัวเยื้องไ�
 const FP_LOOK  = 17;     // จุดมองข้างหน้า (ม.)
 const FP_DROP  = 2.6;    // กดสายตาลง — ยกขอบฟ้าให้เห็นแทร็กผ่านช่องมองของภาพค็อกพิท
 const FP_FOV   = 70;     // FOV ฐานมุมคนขับ (มุมไล่หลังใช้ 62)
+/* ✨ Realistic Circuit ใช้มุมสายตานักขับสูงขึ้นและกดกล้องลงน้อยลง — แยกจาก Battery Saver ชัดเจน */
+const RFP_EYE  = 1.30;
+const RFP_FWD  = 0.38;
+const RFP_LOOK = 24;
+const RFP_DROP = 1.35;
+const RFP_FOV  = 66;
 /* 🛣️ รอบ 914 — มุมที่ 3 "มุมถนน": ตำแหน่งเดียวกับคนขับ แต่ไม่มีค็อกพิท/ล้อ/รถบัง เห็นถนนล้วน
    ยกสายตาสูงขึ้น + กดลงน้อยกว่า (ไม่ต้องเล็งผ่านช่องมองของภาพแล้ว) */
 const ROAD_EYE  = 1.45;
@@ -48,6 +54,11 @@ const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
 const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
 const FPW_H      = 0.80; //    ความสูงจุดกลางล้อ (ม.) — สูงกว่าจริง (0.34) จงใจ: ภาพอาร์ตวาดยางไว้ระดับข้างกระจก
                          //    ยกให้ตรงช่องโปร่งของภาพ (จุดสัมผัสพื้นโดนบอดี้อาร์ตทึบบัง มองไม่เห็นว่าลอย)
+/* Realistic: cue ล้อหน้าเล็กที่ขอบภาพ — ดันไปข้างหน้า/ออกด้านข้างและย่อ mesh กันล้อกินถนน */
+const RFPW_F     = 2.90;
+const RFPW_S     = 0.63;
+const RFPW_H     = -1.10;
+const RFPW_SCALE = 0.25;
 /* 🎡 พวงมาลัยหมุนตามการเลี้ยวจริง (รอบ 913) — ภาพแยกเป็น 2 ชั้น: cockpit_body.webp (ไม่มีพวงมาลัย) + wheel.webp */
 const WHEEL_HUB_X  = 49.41;  // แกนหมุน (ปุ่มกลมกลางพวงมาลัย) คิดเป็น % ของภาพ — ได้จาก tools/f1_split_wheel.py
 const WHEEL_HUB_Y  = 63.96;  // ⚠️ แก้ภาพใหม่เมื่อไหร่ ต้องเอาค่า hub pct จากสคริปต์มาใส่ตรงนี้ด้วย
@@ -131,6 +142,7 @@ const PIT_LIMIT    = 22.2;    // จำกัดความเร็วใน�
 let built=false, running=false, rafId=0, lastT=0;
 let scene, camera, renderer;
 let envLights=null, activeGraphicsMode='battery', activeEnvironmentProfile=null;
+let realisticRoot=null, realisticTier='off', realisticStats=null;
 let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, exitBox, boardEl, chatBarEl, selfMsgEl;
 let speedEl, gearEl, lapEl, bestEl, mapCv, mapCtx, mapBase=null, wrongEl, drsEl;
 let knobEl, padThr=0, padBr=false, steerCtl=0, kL=false, kR=false, kThr=false, kBack=false;
@@ -702,6 +714,215 @@ function buildBuildings(){
   }
   return g;
 }
+
+/* ============================================================
+   ✨ F1 REALISTIC CIRCUIT — ฉากสนามมืออาชีพเฉพาะ Realistic Mode (รอบ 1125)
+   Battery Saver ไม่สร้างกลุ่มนี้จนกว่าจะมีการเลือก Realistic และซ่อนทั้งกลุ่มเมื่อสลับกลับ
+   ของซ้ำใช้ InstancedMesh / geometry+material ร่วมกัน; ไฟส่วนใหญ่เป็น emissive ปลอม ไม่เพิ่ม point light
+   ============================================================ */
+function chooseRealisticTier(){
+  const mem=Number(navigator.deviceMemory)||8, cores=Number(navigator.hardwareConcurrency)||8;
+  if(mem<=3||cores<=4) return 'low';
+  if(mem<8||cores<=6) return 'medium';
+  return 'high';
+}
+function seededRand(seed){
+  let s=seed>>>0;
+  return ()=>{ s=(Math.imul(s,1664525)+1013904223)>>>0; return s/4294967296; };
+}
+function realisticAsphaltTex(){
+  const rnd=seededRand(1125);
+  const t=texFromCanvas((g,w,h)=>{
+    g.fillStyle='#30343a'; g.fillRect(0,0,w,h);
+    for(let i=0;i<6400;i++){
+      const v=34+(rnd()*48|0), a=.16+rnd()*.34, sz=rnd()>.83?2:1;
+      g.fillStyle='rgba('+v+','+(v+1)+','+(v+4)+','+a.toFixed(2)+')';
+      g.fillRect(rnd()*w,rnd()*h,sz,sz);
+    }
+    /* ร่องยางสองแนว + เนื้อยางสะสมกลาง racing line; ผิวด้าน ไม่ทำเป็นถนนเปียก */
+    const groove=g.createLinearGradient(0,0,0,h);
+    groove.addColorStop(0,'rgba(0,0,0,0)'); groove.addColorStop(.24,'rgba(0,0,0,0)');
+    groove.addColorStop(.34,'rgba(9,10,12,.42)'); groove.addColorStop(.45,'rgba(8,9,11,.18)');
+    groove.addColorStop(.55,'rgba(8,9,11,.18)'); groove.addColorStop(.66,'rgba(9,10,12,.42)');
+    groove.addColorStop(.76,'rgba(0,0,0,0)'); groove.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=groove; g.fillRect(0,0,w,h);
+    for(let i=0;i<42;i++){
+      const x=rnd()*w, y=h*(.27+rnd()*.46);
+      g.strokeStyle='rgba(5,6,8,'+(.05+rnd()*.08).toFixed(2)+')'; g.lineWidth=1+rnd()*2;
+      g.beginPath(); g.moveTo(x,y); g.lineTo(x+20+rnd()*70,y+(rnd()-.5)*5); g.stroke();
+    }
+  },512,256,1,1);
+  if(renderer&&renderer.capabilities) t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+  return t;
+}
+function linePose(obj,line,i,lat,y){
+  i=((i%line.n)+line.n)%line.n;
+  obj.position.set(line.x[i]+line.nx[i]*lat,y,line.z[i]+line.nz[i]*lat);
+  obj.rotation.set(0,Math.atan2(line.tx[i],line.tz[i]),0);
+  obj.scale.set(1,1,1); obj.updateMatrix();
+}
+function instancedFromSpots(geo,mat,spots,place){
+  const mesh=new THREE.InstancedMesh(geo,mat,spots.length), d=new THREE.Object3D();
+  spots.forEach((spot,i)=>{place(d,spot,i);d.updateMatrix();mesh.setMatrixAt(i,d.matrix);});
+  mesh.instanceMatrix.needsUpdate=true; mesh.frustumCulled=true;
+  return mesh;
+}
+function buildRealisticCircuit(tier){
+  const root=new THREE.Group(); root.name='F1_REALISTIC_CIRCUIT';
+  const cfg=tier==='high'
+    ?{barStep:3,fenceStep:6,lightStep:10,boards:48,stands:7,city:84,pit:14}
+    :tier==='medium'
+      ?{barStep:4,fenceStep:8,lightStep:14,boards:32,stands:5,city:54,pit:10}
+      :{barStep:6,fenceStep:12,lightStep:18,boards:20,stands:3,city:30,pit:7};
+  const stats={tier,instances:0,meshGroups:0,barriers:0,fencePosts:0,lightPoles:0,boards:0,
+    grandstands:cfg.stands,city:cfg.city,pitBays:PITL?cfg.pit:0,bridges:tier==='low'?1:3,marshalPosts:8};
+
+  /* ผิวแทร็กคุณภาพสูงทับผิวเดิมเฉพาะโหมดนี้: micro variation + roughness + racing groove */
+  const roadMat=new THREE.MeshStandardMaterial({map:realisticAsphaltTex(),color:0x8f949c,roughness:.86,metalness:.025});
+  root.add(new THREE.Mesh(ribbonGeo(HALF_W,0,.052,18),roadMat)); stats.meshGroups++;
+  const grooveMat=new THREE.MeshBasicMaterial({color:0x080a0d,transparent:true,opacity:.16,depthWrite:false});
+  root.add(new THREE.Mesh(ribbonGeo(2.15,0,.057,16),grooveMat)); stats.meshGroups++;
+
+  /* กำแพงแข่งแบบโมดูลสองชนิด + shadow gap เห็นแนวต่อชัด */
+  const barrierOff=HALF_W+RUNOFF_W+.75, barrierLen=cfg.barStep*SAMPLE_M+.35;
+  const barrierSpots=[[],[]];
+  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.barStep)
+    barrierSpots[(i/cfg.barStep+(side>0?1:0))&1].push({i,side});
+  const barrierGeo=new THREE.BoxGeometry(.72,1.18,barrierLen);
+  const barrierMats=[
+    new THREE.MeshLambertMaterial({color:0xc8ccd1}),
+    new THREE.MeshLambertMaterial({color:0x244d76})
+  ];
+  barrierSpots.forEach((spots,k)=>{
+    root.add(instancedFromSpots(barrierGeo,barrierMats[k],spots,(d,s)=>linePose(d,LINE,s.i,s.side*barrierOff,.57)));
+    stats.instances+=spots.length; stats.barriers+=spots.length; stats.meshGroups++;
+  });
+  const seamSpots=[];
+  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.barStep) seamSpots.push({i,side});
+  const seamGeo=new THREE.BoxGeometry(.78,1.2,.09);
+  root.add(instancedFromSpots(seamGeo,new THREE.MeshBasicMaterial({color:0x17202a}),seamSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff-.01),.58)));
+  stats.instances+=seamSpots.length; stats.meshGroups++;
+
+  /* catch fencing: เสา instanced + ลวดทั้งสนามรวมเป็น LineSegments draw call เดียว */
+  const fenceOff=barrierOff+.05, postSpots=[];
+  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.fenceStep) postSpots.push({i,side});
+  root.add(instancedFromSpots(new THREE.CylinderGeometry(.07,.09,3.5,5),
+    new THREE.MeshLambertMaterial({color:0x788695}),postSpots,(d,s)=>linePose(d,LINE,s.i,s.side*fenceOff,2.35)));
+  stats.instances+=postSpots.length; stats.fencePosts=postSpots.length; stats.meshGroups++;
+  const wire=[];
+  for(let side=-1;side<=1;side+=2){
+    for(let i=0;i<LINE.n;i+=cfg.fenceStep){
+      const j=(i+cfg.fenceStep)%LINE.n;
+      const ax=LINE.x[i]+LINE.nx[i]*side*fenceOff, az=LINE.z[i]+LINE.nz[i]*side*fenceOff;
+      const bx=LINE.x[j]+LINE.nx[j]*side*fenceOff, bz=LINE.z[j]+LINE.nz[j]*side*fenceOff;
+      for(const y of [1.45,2.1,2.75,3.35]) wire.push(ax,y,az,bx,y,bz);
+      const atopX=ax+LINE.nx[i]*side*.55, atopZ=az+LINE.nz[i]*side*.55;
+      const btopX=bx+LINE.nx[j]*side*.55, btopZ=bz+LINE.nz[j]*side*.55;
+      wire.push(ax,3.35,az,atopX,3.95,atopZ,bx,3.35,bz,btopX,3.95,btopZ,atopX,3.95,atopZ,btopX,3.95,btopZ);
+    }
+  }
+  const fenceGeo=new THREE.BufferGeometry(); fenceGeo.setAttribute('position',new THREE.Float32BufferAttribute(wire,3));
+  root.add(new THREE.LineSegments(fenceGeo,new THREE.LineBasicMaterial({color:0xa9b7c5,transparent:true,opacity:.48})));
+  stats.meshGroups++;
+
+  /* ไฟสนามต่อเนื่อง: เสา+หัวไฟ instanced, ไม่มี point light รายดวง */
+  const lightSpots=[];
+  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.lightStep) lightSpots.push({i,side});
+  const lightOff=barrierOff+5.7;
+  root.add(instancedFromSpots(new THREE.CylinderGeometry(.12,.24,18,6),
+    new THREE.MeshLambertMaterial({color:0x68727d}),lightSpots,(d,s)=>linePose(d,LINE,s.i,s.side*lightOff,9)));
+  root.add(instancedFromSpots(new THREE.BoxGeometry(4.5,.65,.55),
+    new THREE.MeshBasicMaterial({color:0xeef5ff,toneMapped:false}),lightSpots,(d,s)=>linePose(d,LINE,s.i,s.side*lightOff,18)));
+  stats.instances+=lightSpots.length*2; stats.lightPoles=lightSpots.length; stats.meshGroups+=2;
+
+  /* ป้าย fictional sponsor เป็น 6 batch แทน mesh แยกหลายสิบชิ้น */
+  const brands=[
+    ['VOCAB WORLD','#ffffff','#d81a1a'],['WORD BOOST','#071529','#67d8ff'],['LEXICON','#5b3300','#ffd12e'],
+    ['XP+','#ffffff','#6b39d8'],['VOCAB GP','#ffffff','#087e62'],['LEARN • RACE • WIN','#061325','#f2f5ff']
+  ];
+  const boardSets=brands.map(()=>[]);
+  for(let n=0;n<cfg.boards;n++){
+    const i=(sfIdx+28+n*Math.floor(LINE.n/cfg.boards))%LINE.n, side=n%2?1:-1;
+    boardSets[n%brands.length].push({i,side});
+  }
+  const boardGeo=new THREE.PlaneGeometry(12,1.65); boardGeo.rotateY(Math.PI/2);
+  boardSets.forEach((spots,k)=>{
+    const b=brands[k], mat=new THREE.MeshBasicMaterial({map:adTex(b[0],b[1],b[2]),side:THREE.DoubleSide,toneMapped:false});
+    root.add(instancedFromSpots(boardGeo,mat,spots,(d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff-.43),1.75)));
+    stats.instances+=spots.length; stats.boards+=spots.length; stats.meshGroups++;
+  });
+
+  /* อัฒจันทร์ low-poly/billboard crowd รอบ main straight และโค้งหลัก */
+  const standOffsets=[45,115,250,405,585,760,930].slice(0,cfg.stands);
+  const standSpots=standOffsets.map((off,n)=>({i:(sfIdx+off)%LINE.n,side:n%3===1?-1:1}));
+  const standOff=barrierOff+18;
+  root.add(instancedFromSpots(new THREE.BoxGeometry(17,4.5,46),new THREE.MeshLambertMaterial({color:0x525c68}),standSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*standOff,2.2)));
+  root.add(instancedFromSpots(new THREE.BoxGeometry(19,.65,49),new THREE.MeshLambertMaterial({color:0xd8dde3}),standSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*standOff,11.8)));
+  const crowdGeo=new THREE.PlaneGeometry(43,7.2); crowdGeo.rotateY(Math.PI/2);
+  root.add(instancedFromSpots(crowdGeo,matLit('crowd',{side:THREE.DoubleSide}),standSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*(standOff-8.7),7.5)));
+  stats.instances+=standSpots.length*3; stats.meshGroups+=3;
+
+  /* pit wall + garages + overhead light strips + signage ที่อ่านได้จาก cockpit */
+  if(PITL){
+    const pitSpots=[];
+    for(let n=0;n<cfg.pit;n++) pitSpots.push({i:Math.round((n+.5)*PITL.n/cfg.pit),n});
+    const pitSide=pitAt(LINE.x[sfIdx],LINE.z[sfIdx],0);
+    const laneSide=pitSide&&pitSide.lat>0?1:-1;
+    const pitBayLen=Math.max(7.5,PITL.len/cfg.pit*.88);
+    root.add(instancedFromSpots(new THREE.BoxGeometry(10,4.8,pitBayLen),new THREE.MeshLambertMaterial({color:0x6f7883}),pitSpots,
+      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),laneSide*(PIT_HALF_W+7.2),2.4)));
+    root.add(instancedFromSpots(new THREE.BoxGeometry(10,.28,pitBayLen+.1),new THREE.MeshBasicMaterial({color:0xeef6ff,toneMapped:false}),pitSpots,
+      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),laneSide*(PIT_HALF_W+7.15),5.05)));
+    const pitWall=[]; for(let i=0;i<PITL.n;i+=3) pitWall.push({i});
+    root.add(instancedFromSpots(new THREE.BoxGeometry(.5,1.05,15),new THREE.MeshLambertMaterial({color:0xd8dce1}),pitWall,
+      (d,s)=>linePose(d,PITL,s.i,-laneSide*(PIT_HALF_W-.4),.52)));
+    stats.instances+=pitSpots.length*2+pitWall.length; stats.meshGroups+=3;
+    for(const [idx,label] of [[2,'PIT →'],[PITL.n-3,'PIT EXIT']]){
+      const i=Math.max(0,Math.min(PITL.n-1,idx)), sp=makeTextSprite(label,'rgba(8,22,38,.96)','#8fffd4','',null);
+      sp.scale.set(11,2.8,1); sp.position.set(PITL.x[i],5.8,PITL.z[i]); root.add(sp);
+    }
+  }
+
+  /* กริดสตาร์ท/ยางเบรกสะสม/สกิดมาร์ก — geometry รวม ลด draw call */
+  const gridSpots=[];
+  for(let n=0;n<GRID_N;n++) gridSpots.push({i:(sfIdx-4-n*2+LINE.n)%LINE.n,side:n%2?1:-1});
+  root.add(instancedFromSpots(new THREE.BoxGeometry(4.4,.025,.16),new THREE.MeshBasicMaterial({color:0xf2f4f7}),gridSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*3.2,.074)));
+  stats.instances+=gridSpots.length; stats.meshGroups++;
+  const skid=[];
+  for(let i=4;i<LINE.n-18;i++){
+    if(Math.abs(LINE.curv[i])>.0065&&Math.abs(LINE.curv[i-4])<.0032){
+      for(let k=0;k<16;k++){
+        const j=(i-k+LINE.n)%LINE.n, lat=(k%2?-.9:.9);
+        skid.push(LINE.x[j]+LINE.nx[j]*lat,.071,LINE.z[j]+LINE.nz[j]*lat,
+                  LINE.x[(j+1)%LINE.n]+LINE.nx[(j+1)%LINE.n]*lat,.071,LINE.z[(j+1)%LINE.n]+LINE.nz[(j+1)%LINE.n]*lat);
+      }
+    }
+  }
+  const skidGeo=new THREE.BufferGeometry(); skidGeo.setAttribute('position',new THREE.Float32BufferAttribute(skid,3));
+  root.add(new THREE.LineSegments(skidGeo,new THREE.LineBasicMaterial({color:0x090a0c,transparent:true,opacity:.48}))); stats.meshGroups++;
+
+  /* สะพานคนเดิน + marshal posts + skyline ไกลแบบ instancing */
+  const bridgeSpots=[{i:(sfIdx+165)%LINE.n},{i:(sfIdx+510)%LINE.n},{i:(sfIdx+820)%LINE.n}].slice(0,stats.bridges);
+  root.add(instancedFromSpots(new THREE.BoxGeometry(HALF_W*2+13,2.2,3),new THREE.MeshLambertMaterial({color:0x26384c}),bridgeSpots,
+    (d,s)=>linePose(d,LINE,s.i,0,8.4)));
+  const marshalSpots=[]; for(let n=0;n<8;n++) marshalSpots.push({i:(sfIdx+80+n*Math.floor(LINE.n/8))%LINE.n,side:n%2?1:-1});
+  root.add(instancedFromSpots(new THREE.BoxGeometry(3.4,3.1,4.2),new THREE.MeshLambertMaterial({color:0xf07822}),marshalSpots,
+    (d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff+4.2),1.55)));
+  const rnd=seededRand(2511), citySpots=[];
+  for(let n=0;n<cfg.city;n++) citySpots.push({i:(n*Math.floor(LINE.n/cfg.city)+13)%LINE.n,side:n%2?1:-1,h:8+rnd()*28,off:95+rnd()*145});
+  const city=instancedFromSpots(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial({color:0x17283a}),citySpots,(d,s)=>{
+    linePose(d,LINE,s.i,s.side*s.off,s.h/2); d.scale.set(12+rnd()*18,s.h,10+rnd()*22);
+  });
+  root.add(city); stats.instances+=bridgeSpots.length+marshalSpots.length+citySpots.length; stats.meshGroups+=3;
+
+  root.userData.stats=stats;
+  return root;
+}
 function buildTrackScene(){
   /* พื้นทะเลทราย */
   const sand=new THREE.Mesh(new THREE.PlaneGeometry(4200,4200),matLam('sand'));
@@ -974,6 +1195,16 @@ const CSS=`
 #f1-cockpit{position:absolute;inset:0 0 -8% 0;z-index:5;pointer-events:none;display:none;overflow:hidden;
   background:url('img/f1/cockpit_body.webp') center bottom/cover no-repeat}   /* bottom -8% = จมูกรถจมลงใต้จอ เปิดมุมมองแทร็กกว้างขึ้น */
 #f1-wrap.fp #f1-cockpit{display:block}
+/* Realistic Circuit ต้องเห็น halo/จมูก/พวงมาลัย แต่ไม่ให้ภาพค็อกพิทปิดถนนเกือบทั้งจอ */
+#f1-wrap.realistic.fp #f1-cockpit{inset:0;background-image:url('img/f1/cockpit_body_realistic.png?v=4');
+  background-size:100% auto;background-position:center calc(100% + 1vh)}
+/* Realistic uses one coherent helmet-eye plate. The legacy 1536x1024 wheel layers
+   belong to Battery Saver and would otherwise create a second, misaligned photo. */
+#f1-wrap.realistic.fp #f1-wheel,#f1-wrap.realistic.fp #f1-leds{display:none!important}
+/* Keep live gear/speed/RPM on the integrated wheel. Coordinates follow the new
+   1672x941 landscape plate, independent of the legacy wheel-image layout. */
+#f1-wrap.realistic.fp #f1-dash{display:block!important;left:44vw!important;top:calc(101vh - 14vw)!important;
+  width:12vw!important;height:6.1vw!important;transform:none!important;transform-origin:center!important}
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
 #f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
@@ -991,6 +1222,9 @@ const CSS=`
    ตัดหน้าปัด/ขอบล่างทิ้งใต้จอแทน · บีบแนวตั้ง ~10% ตามองไม่ออก แต่เปิดพื้นที่เห็นแทร็กเพิ่มมาก */
 @media (min-aspect-ratio: 9/5){
   #f1-wrap.fp #f1-cockpit{inset:0;background-size:100% 128%;background-position:center top}
+  /* The wide plate already matches a landscape driver view; keep its sides at the
+     viewport edges so bodywork never terminates as a visible rectangular cutout. */
+  #f1-wrap.realistic.fp #f1-cockpit{background-size:100% auto;background-position:center calc(100% + 1vh)}
 }
 /* 🧭 รอบ 914: ย้ายปุ่ม "มุมกล้อง" + "ออก" ขึ้นแถวขวาบน เรียงก่อนถึงเหรียญ (เดิมอยู่ซ้ายล่าง ทับที่ของแถบเลี้ยว)
    เหรียญย้ายเข้ามาเป็นลูกของแถวนี้ด้วย จึงไม่ต้องเดาความกว้างเหรียญเวลาเลขยาว */
@@ -2124,10 +2358,20 @@ function inPitLane(x,z,lat){
 /* ============================================================
    🔤 คำศัพท์บนแทร็ก (แบบเดียวกับโลกมอเตอร์ไซค์ — REWARD สูงกว่า)
    ============================================================ */
+function racingLineLat(i){
+  /* ทางตรงอยู่กลางเลน; ก่อนเข้าโค้งออกด้านนอก แล้วตัดเข้า apex — ใช้ curvature ของเส้นสนามจริง */
+  const c0=LINE.curv[i], c1=LINE.curv[(i+8)%LINE.n], c2=LINE.curv[(i+18)%LINE.n];
+  if(Math.abs(c0)>.0048) return -Math.sign(c0)*(HALF_W*.42);
+  if(Math.abs(c1)>.0048) return Math.sign(c1)*(HALF_W*.38);
+  if(Math.abs(c2)>.0056) return Math.sign(c2)*(HALF_W*.26);
+  return 0;
+}
 function trackPointAhead(minM,maxM){
   const ahead=minM+Math.random()*(maxM-minM);
   const i=(myIdx+Math.round(ahead/SAMPLE_M))%LINE.n;
-  const lat=(Math.random()*2-1)*(HALF_W-2.2);
+  const lat=activeGraphicsMode==='quality'
+    ?clamp(racingLineLat(i)+(Math.random()*2-1)*.65,-HALF_W+2.2,HALF_W-2.2)
+    :(Math.random()*2-1)*(HALF_W-2.2);
   return {x:LINE.x[i]+LINE.nx[i]*lat,z:LINE.z[i]+LINE.nz[i]*lat};
 }
 function pickWord(){
@@ -2372,7 +2616,7 @@ function applyCamMode(){
   wrapEl.classList.toggle('fp',fp);
   if(camBtnEl) camBtnEl.textContent=CAM_NEXT_LABEL[camMode]||'📷 มุมรถ';
   if(carGrp) carGrp.visible=(camMode==='chase');   // 🛣️ มุมถนนก็ซ่อนรถ (นั่งในรถเหมือนกัน)
-  if(fpWheels) fpWheels.visible=fp;               // 🛞 ล้อหน้าโชว์เฉพาะมุมคนขับ
+  if(fpWheels) fpWheels.visible=fp&&activeGraphicsMode!=='quality';
   camInit=false;
   if(fp) layoutWheel();   // 🎡 รอบ 913 — ตอนซ่อนอยู่วัดขนาดไม่ได้ (0×0) ต้องวัดใหม่ทุกครั้งที่กลับมามุมคนขับ
 }
@@ -2380,6 +2624,7 @@ function applyCamMode(){
    (กลุ่มแยกในฉาก โชว์เฉพาะโหมด fp · ตำแหน่ง/มุมตามรถทุกเฟรม · ซี่ล้อสว่างให้ตาจับการหมุนได้) */
 function buildFpWheels(){
   const g=new THREE.Group();
+  g.name='F1_FP_WHEELS';
   /* 🛞 รอบ 912: เปลี่ยนเป็น MeshBasic (ไม่พึ่งแสง) — เดิม Lambert โดนไฟสนามข้างเดียว
      หน้าล้อฝั่งซ้ายมืดจนก้าน/แถบเหลืองจมหาย (ผู้ใช้เห็นจากเครื่องจริง) · Basic = สองฝั่งชัดเท่ากันเสมอ */
   const tyreM=new THREE.MeshBasicMaterial({color:0x101216});
@@ -2413,8 +2658,11 @@ function fpWheelTick(dt){
   if(!fpWheels||!fpWheels.visible) return;
   const fx=Math.sin(yaw), fz=Math.cos(yaw);              // ขวามือรถ = (-fz, fx)
   const vF=vx*fx+vz*fz, rollD=vF*dt/FPW_R, sv=-steer*1.15;
+  const realistic=activeGraphicsMode==='quality';
+  const wheelF=realistic?RFPW_F:FPW_F, wheelS=realistic?RFPW_S:FPW_S, wheelH=realistic?RFPW_H:FPW_H;
   for(const o of fpWheels.userData.spin){
-    o.wg.position.set(px+fx*FPW_F-fz*FPW_S*o.side, FPW_H, pz+fz*FPW_F+fx*FPW_S*o.side);
+    o.wg.position.set(px+fx*wheelF-fz*wheelS*o.side, wheelH, pz+fz*wheelF+fx*wheelS*o.side);
+    o.wg.scale.setScalar(realistic?RFPW_SCALE:1);
     o.wg.rotation.y=yaw+sv;                              // ล้อหน้าหักตามพวงมาลัย
     o.sg.rotation.x+=rollD;                              // หมุนตามความเร็วจริง (ถอย = หมุนกลับ)
   }
@@ -2632,7 +2880,11 @@ function ledTick(dt){
 function camTick(dt){
   if(camMode!=='chase'){                 // 🪖 คนขับ + 🛣️ ถนนล้วน ใช้จุดกล้องเดียวกัน ต่างแค่ระดับสายตา/FOV (รอบ 914)
     const road=camMode==='road';
-    const eyeH=road?ROAD_EYE:FP_EYE, dropH=road?ROAD_DROP:FP_DROP, fovBase=road?ROAD_FOV:FP_FOV;
+    const realistic=activeGraphicsMode==='quality'&&!road;
+    const eyeH=road?ROAD_EYE:(realistic?RFP_EYE:FP_EYE);
+    const dropH=road?ROAD_DROP:(realistic?RFP_DROP:FP_DROP);
+    const fovBase=road?ROAD_FOV:(realistic?RFP_FOV:FP_FOV);
+    const fwd=realistic?RFP_FWD:FP_FWD, look=realistic?RFP_LOOK:FP_LOOK;
     /* หัวคนขับตรึงกับรถ — ห้ามหน่วง ไม่งั้นโลก 3D กับภาพห้องคนขับแยกจากกัน */
     camYaw=yaw;
     const fx=Math.sin(yaw), fz=Math.cos(yaw);
@@ -2646,9 +2898,9 @@ function camTick(dt){
       oy=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
       ox=fz*sx; oz=-fx*sx;   // สั่นด้านข้างอิงทิศรถ (ตั้งฉากกับ fx,fz) ไม่ใช่แกนโลกตรง ๆ
     }
-    camera.position.set(px+fx*FP_FWD+ox,eyeH+oy,pz+fz*FP_FWD+oz);
-    camera.lookAt(px+fx*(FP_FWD+FP_LOOK)+ox,eyeH-dropH+oy,pz+fz*(FP_FWD+FP_LOOK)+oz);
-    const fov=fovBase+clamp(spd/92,0,1)*12;
+    camera.position.set(px+fx*fwd+ox,eyeH+oy,pz+fz*fwd+oz);
+    camera.lookAt(px+fx*(fwd+look)+ox,eyeH-dropH+oy,pz+fz*(fwd+look)+oz);
+    const fov=fovBase+clamp(spd/92,0,1)*(realistic?8:12);
     if(Math.abs(camera.fov-fov)>0.2){ camera.fov=fov; camera.updateProjectionMatrix(); }
     return;
   }
@@ -2720,7 +2972,20 @@ function applyEnvironmentProfile(profile,mode){
   const r=profile.renderer||{}, e=profile.environment||{};
   activeGraphicsMode=mode||profile.id||'battery';
   activeEnvironmentProfile=profile;
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,Number(r.pixelRatioCap)||2));
+  const realistic=activeGraphicsMode==='quality';
+  if(realistic&&!realisticRoot){
+    const requested=['low','medium','high'].includes(e.qualityTier)?e.qualityTier:chooseRealisticTier();
+    realisticTier=requested;
+    realisticRoot=buildRealisticCircuit(requested);
+    realisticStats=realisticRoot.userData.stats;
+    scene.add(realisticRoot);
+  }
+  if(realisticRoot) realisticRoot.visible=realistic;
+  if(wrapEl) wrapEl.classList.toggle('realistic',realistic);
+  if(fpWheels) fpWheels.visible=camMode==='cockpit'&&!realistic;
+  if(camMode==='cockpit'&&cockpitEl) requestAnimationFrame(layoutWheel);
+  const tierCap=realisticTier==='low'?1.45:(realisticTier==='medium'?1.8:Number(r.pixelRatioCap)||2.35);
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,realistic?tierCap:(Number(r.pixelRatioCap)||2)));
   if(typeof THREE.NoToneMapping!=='undefined'&&typeof THREE.ACESFilmicToneMapping!=='undefined')
     renderer.toneMapping=r.toneMapping==='aces'?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
   if(Number.isFinite(r.exposure)) renderer.toneMappingExposure=r.exposure;
@@ -2731,6 +2996,8 @@ function applyEnvironmentProfile(profile,mode){
     if(Number.isFinite(e.fogFar)) scene.fog.far=e.fogFar;
   }
   if(Number.isFinite(e.cameraFar)){camera.far=e.cameraFar;camera.updateProjectionMatrix();}
+  camera.near=realistic?.14:.3;
+  camera.updateProjectionMatrix();
   if(envLights){
     if(Number.isFinite(e.hemisphere)) envLights.hemi.intensity=e.hemisphere;
     if(Number.isFinite(e.keyLight)) envLights.sun.intensity=e.keyLight;
@@ -2899,7 +3166,10 @@ window.F1World={
     get room(){return room},
     get scene(){return scene}, get camera(){return camera}, get car(){return carGrp}, get renderer(){return renderer},
     get graphics(){return {mode:activeGraphicsMode,profile:activeEnvironmentProfile,built,running,
-      scene:scene||null,renderer:renderer||null,instancePolicy:'single'}},
+      scene:scene||null,renderer:renderer||null,instancePolicy:'single',realistic:{
+        built:!!realisticRoot,visible:!!(realisticRoot&&realisticRoot.visible),tier:realisticTier,
+        stats:realisticStats?Object.assign({},realisticStats):null}}},
+    racingLineLat,
     applyEnvironmentProfile,
     snd:Snd, gearOf,
     step(dt,n){ for(let i=0;i<(n||1);i++) frame(dt||1/60,performance.now()); },

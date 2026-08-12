@@ -33,7 +33,7 @@ MASTER_SHA256 = {
     "equip": "9ade78a9b3d80587b2634c81888d90bed3ee2bfac64002d720cb63649a88a8e2",
     "fire": "c2fa8fa7e434eefd883d8c3e240e5cc281e5b98d4270c291ebd89ae2b60d8405",
     "reload": "4f19ec2173d6a8f569f36f964f73b3a4008f3cd1a422dcc7021a78a2fbd1eac0",
-    "idle": "8e68fd8a43794602ac97ea60fff936e4568236158d2915557ab2090662225cbe",
+    "idle": "c891f66017550c509ce50a509d739f6d10b2773e6437144d23e6d3da3f0bca16",
 }
 
 # Crop-local, half-open rectangles covering only the printed frame badges.
@@ -75,7 +75,7 @@ EDGE_CLEANUP_RECTS = {
     ),
 }
 
-IDLE_SOURCE = ROOT / "assets/weapons/fps/fps_weapon_idle_master.png"
+IDLE_SOURCE = ROOT / "assets/weapons/fps/fps_weapon_idle_master_v2.png"
 
 
 def grid_edges(length: int, cells: int) -> list[int]:

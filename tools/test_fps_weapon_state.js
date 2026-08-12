@@ -15,6 +15,8 @@ const near=(actual,expected,tolerance,label)=>assert(Math.abs(actual-expected)<=
 const make=options=>API.create(options);
 const adsFrame=frame=>Number((String(frame).match(/_ads_(\d+)\.png$/)||[])[1]||0);
 const fireFrame=frame=>Number((String(frame).match(/_fire_(\d+)\.png$/)||[])[1]||0);
+const HIP='img/animation/fps_weapon/fps_weapon_hip_wide_v5.png';
+equal(API.ASSETS.hip[0],HIP,'production hip plate path');
 
 function finishEquip(machine,intent={},dt=1/60){
   for(let i=0;i<100&&machine.state==='EQUIP';i++) machine.step(dt,intent);
@@ -26,17 +28,18 @@ function advance(machine,seconds,intent={},maxDt=.05){
   return result;
 }
 function captureFire(machine,intentForStep,dt=1/60,maxSteps=100){
-  const seen=[]; let entered=false, terminalOpportunities=0;
+  const seen=[],samples=[]; let entered=false, terminalOpportunities=0;
   for(let i=0;i<maxSteps;i++){
     const intent=typeof intentForStep==='function'?intentForStep(i):intentForStep;
     const result=machine.step(dt,intent||{});
     if(result.state==='FIRE'){
       entered=true;
       const frame=result.fireFrame;
+      samples.push({fireFrame:frame,adsFire:result.adsFire,frame:result.frame});
       if(frame===4) terminalOpportunities++;
       if(frame&&seen[seen.length-1]!==frame) seen.push(frame);
     }else if(entered){
-      return {seen,terminalOpportunities,result,steps:i+1};
+      return {seen,samples,terminalOpportunities,result,steps:i+1};
     }
   }
   throw new Error('FIRE did not return to a base state');
@@ -52,11 +55,14 @@ equal(m.state,'EQUIP','starts EQUIP');
 finishEquip(m);
 equal(m.state,'IDLE','EQUIP -> IDLE');
 equal(m.step(.05,{moving:true}).state,'WALK','IDLE -> WALK');
+equal(m.frame,HIP,'WALK keeps audited hip geometry');
 equal(m.step(.05,{moving:true,sprinting:true}).state,'SPRINT','WALK -> SPRINT');
+equal(m.frame,HIP,'SPRINT keeps audited hip geometry');
 m.triggerFire();
 const sprintShot=m.step(0,{moving:true,sprinting:true});
 equal(sprintShot.state,'FIRE','fire request enters FIRE on the shot tick');
 equal(sprintShot.fireFrame,1,'sprint shot renders FIRE frame 1 immediately');
+equal(sprintShot.frame,HIP,'hip FIRE keeps audited hip geometry');
 const sprintFire=captureFire(m,{moving:true},1/60);
 sprintFire.seen.unshift(sprintShot.fireFrame);
 assertFireSequence(sprintFire,'synchronized sprint FIRE');
@@ -152,6 +158,8 @@ near(m.adsProgress,partialProgress,1e-9,'FIRE preserves partial ADS progress');
 m=make(); finishEquip(m); m.step(0,{ads:true}); advance(m,API.CONFIG.adsDuration,{ads:true});
 m.triggerFire(); result=captureFire(m,{ads:true},1/60);
 assertFireSequence(result,'full ADS FIRE');
+assert(result.samples.length>0&&result.samples.every(sample=>sample.adsFire),'full ADS FIRE exposes overlay signal on every FIRE sample');
+assert(result.samples.every(sample=>sample.frame===API.ASSETS.ads[API.ASSETS.ads.length-1]),'full ADS FIRE never swaps to a hip-fire sprite');
 equal(result.result.state,'ADS','FIRE from ADS returns to ADS while held');
 equal(result.result.frame,API.ASSETS.ads[API.ASSETS.ads.length-1],'ADS FIRE keeps optic-aligned sprite');
 

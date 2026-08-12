@@ -975,6 +975,8 @@ const BLK_VOCAB = {
 /* ---------- หน้าตั้งค่า (รวมสวิตช์ เสียง/สั่น/แอนิเมชัน + วิธีเล่น ไว้ที่เดียว) ---------- */
 function openSettings(){
   const hapticSupported = ('vibrate' in navigator);   // แถวสั่นโผล่เฉพาะเครื่องที่รองรับ
+  const attn = (typeof attentionSummaryData === 'function') ? attentionSummaryData() : {rows:[]};
+  const attnFirst = attn.rows[0];
   // 🖼️ รอบ 751: ตัวละครให้เลือก 88 ตัว (blk1-8 = ตัวบล็อกเดิมที่มีโมเดลในโลก 3D · blk9-blk88 = ภาพ 2D ชุดใหม่)
   const blkAvCount = (typeof PROF_AV_MAX === 'number') ? PROF_AV_MAX : 8;
   const blkAvList = Array.from({length: blkAvCount}, (_, i)=> 'blk' + (i + 1));
@@ -992,6 +994,11 @@ function openSettings(){
       <button class="lb-tab set-tab" data-tab="feed">📰 เปิดเผย</button>
       <button class="lb-tab set-tab" data-tab="account">🔐 บัญชี</button>
     </div>
+    ${attnFirst ? `<button class="set-attention-bar" type="button">
+      <span class="set-attention-ico">${attnFirst.ico}</span>
+      <span class="set-attention-copy"><b>มี ${attn.rows.length} รายการต้องจัดการ · ${attnFirst.txt}</b><small>${attnFirst.sub}</small></span>
+      <span class="set-attention-go">ดู ›</span>
+    </button>` : ''}
     <div class="set-panels">
       <div class="set-panel active" data-panel="general">
         <div class="set-row" id="set-sound">
@@ -1081,6 +1088,11 @@ function openSettings(){
     overlay.querySelectorAll('.set-panel').forEach(p=>p.classList.toggle('active', p.dataset.panel===tab.dataset.tab));
     sfx.select();
   }));
+  const attnBar = overlay.querySelector('.set-attention-bar');
+  if(attnBar) attnBar.addEventListener('click', ()=>{
+    overlay.remove();
+    if(typeof openAttentionSummary === 'function') openAttentionSummary();
+  });
   const setSwitch = (el, on)=>{   // แสดงสวิตช์เลื่อน: ลูกกลม + คำว่า เปิด/ปิด
     if(!el) return;
     el.className = 'set-switch ' + (on ? 'on' : 'off');

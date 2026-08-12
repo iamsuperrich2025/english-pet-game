@@ -180,6 +180,9 @@
 
   function start() {
     addBuildLabel();
+    // Local source preview must never install the production content-hash SW.
+    // The inline bootstrap before this file also removes any registration left from an older preview.
+    if (window.__vwLocalPreview) return;
     if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then(function (registration) {

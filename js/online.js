@@ -22,6 +22,7 @@ const Online = {
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 100 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
   bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะเหรียญรวมน้อย)
+  onlineCoinBoard:[], // 🌐 กระดานเหรียญออนไลน์เฉพาะ (ดึงด้วย field oe โดยตรง)
   lastScoreSig:null, // ลายเซ็น coins|av|ni ล่าสุดที่ส่งขึ้น leaderboard (กันเขียนซ้ำ)
   /* ---- ระบบเพื่อน (ข้อ 0.3) ---- */
   myCode:'',        // รหัสเพื่อนของเรา (6 ตัว จาก uid — โชว์ให้เพื่อนค้นหา)
@@ -149,15 +150,17 @@ function onlinePushScore(){
   const sg    = Math.round(state.sgScore || 0);                            // 🎯 รอบ 917: แต้มสะสมเกมยิงเป้าคำศัพท์ (กระดานแท็บยิงเป้าคำ)
   const pm    = Math.round(state.pmScore || 0);                            // 🖼️ รอบ 979: แต้มสะสมเกมจับคู่ภาพ (กระดานแท็บจับคู่ภาพ)
   const bb    = Math.round(state.bbScore || 0);                            // 🫧 คะแนนสะสมตลอดกาลเกมฟอง
-  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm + '|' + bb;   // ค่าใดเปลี่ยน = re-push
+  const oe    = Math.round(state.onlineEarned || 0);                       // 🌐 เหรียญที่ได้จากการเปิดเกมออนไลน์สะสมตลอดกาล
+  const sig   = coins + '|' + av + '|' + ni + '|' + bs + '|' + bk + '|' + ba + '|' + hs + '|' + ws + '|' + tp + '|' + tw + '|' + sg + '|' + pm + '|' + bb + '|' + oe;   // ค่าใดเปลี่ยน = re-push
   if(Online.lastScoreSig === sig) return;   // เงิน/ทรัพย์สิน/เข็ม/บอส/ค้นหาคำ/พิมพ์คำ/ยิงเป้าคำ/จับคู่ภาพไม่ขยับ ไม่ต้องเขียนซ้ำ
   Online.lastScoreSig = sig;
   const base = { n: onlineDisplayName() + bs, g: state.student.grade, coins,
                  at: firebase.database.ServerValue.TIMESTAMP };
   // เผื่อ rules ยังไม่รองรับฟิลด์ใหม่ (ช่วงอัปเดต) → ถอยทีละขั้น ไม่ให้ leaderboard พัง
-  // bb เป็น field ใหม่สุด: ถ้า rules ยังไม่ publish ให้ลองก้อนเดิมที่ตัด bb ออก แล้วค่อยถอยตามลำดับเดิม
-  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb}, base)).catch(()=>{
-   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
+  // oe เป็น field ใหม่สุด: ถ้า rules ยังไม่ publish ให้ถอยกลับก้อนเดิมที่มี bb เพื่อไม่ให้กระดานอื่นพัง
+  Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb, oe}, base)).catch(()=>{
+   Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm, bb}, base)).catch(()=>{
+    Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg, pm}, base)).catch(()=>{
     Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw, sg}, base)).catch(()=>{
      Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws, tp, tw}, base)).catch(()=>{
       Online.db.ref('leaderboard/' + onlineKey()).set(Object.assign({av, ni, bk, ba, hs, ws}, base)).catch(()=>{
@@ -168,6 +171,7 @@ function onlinePushScore(){
        });
       });
      });
+    });
     });
    });
   });
@@ -1996,6 +2000,15 @@ function onlineStart(){
       if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
       out.push({id:ch.key,n:v.n,g:v.g||'',bb:v.bb}); });
     out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out.slice(0,LEADERBOARD_SIZE); Online.bbBoardReady=true; onlineRerender();
+  });
+
+  // 🌐 อันดับเหรียญออนไลน์ต้องดึงด้วย oe โดยตรง ไม่อิง Top เหรียญคงเหลือ
+  Online.db.ref('leaderboard').orderByChild('oe').limitToLast(LEADERBOARD_QUERY_SIZE).on('value',(snap)=>{
+    const out=[];
+    snap.forEach(ch=>{ const v=ch.val(); if(!v||typeof v.n!=='string'||typeof v.oe!=='number'||v.oe<=0)return;
+      if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
+      out.push({id:ch.key,n:v.n,g:v.g||'',oe:v.oe}); });
+    out.sort((a,b)=>b.oe-a.oe); Online.onlineCoinBoard=out.slice(0,LEADERBOARD_SIZE); Online.onlineCoinBoardReady=true; onlineRerender();
   });
 
   // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)

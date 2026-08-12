@@ -33,6 +33,8 @@
   }
   function sizeForGrade(){ return [SIZE_LOW, SIZE_MID, SIZE_HIGH][gradeTier() - 1]; }
   const MODE_LABEL = {pic:'🖼️ ภาพ-ภาพ', word:'🔤 ภาพ-คำ'};
+  const RECENT_PAGE_LIMIT = 10;
+  const RECENT_PAGE_KEY = 'vocabworld_picmatch_recent_pages_v1';
 
   let queue = [], qi = 0;          // เก็บไว้ใน test API เดิม; รอบ 1053 ใช้คลังชุดที่ผู้เล่นเลือกแทน
   let sec = null;                  // <section id="screen-picmatch">
@@ -50,6 +52,27 @@
   const book = () => typeof PICDICT_BOOK !== 'undefined' ? PICDICT_BOOK : [];
   const wordsFor = file => (typeof PICDICT_WORDS !== 'undefined' && PICDICT_WORDS[file]) || null;
   const gridFor = file => (typeof PICDICT_GRID !== 'undefined' && PICDICT_GRID[file]) || null;
+  const pageKey = (file,start) => `${file}:${Math.max(0,+start || 0)}`;
+  function readRecentPages(){
+    try{
+      const value=JSON.parse(localStorage.getItem(RECENT_PAGE_KEY) || '[]');
+      return Array.isArray(value) ? value.filter(x=>typeof x==='string').slice(-RECENT_PAGE_LIMIT) : [];
+    }catch(_){ return []; }
+  }
+  function writeRecentPages(pages){
+    const clean=pages.filter(x=>typeof x==='string').slice(-RECENT_PAGE_LIMIT);
+    try{ localStorage.setItem(RECENT_PAGE_KEY,JSON.stringify(clean)); }catch(_){}
+    return clean;
+  }
+  function pageLock(file,start){
+    const pages=readRecentPages(), index=pages.indexOf(pageKey(file,start));
+    if(index<0) return {locked:false,remaining:0};
+    return {locked:true,remaining:RECENT_PAGE_LIMIT-(pages.length-1-index)};
+  }
+  function rememberPage(file,start){
+    const key=pageKey(file,start), pages=readRecentPages().filter(x=>x!==key);
+    pages.push(key); writeRecentPages(pages);
+  }
   /* Bedroom มีเส้นตกแต่งกลางแถวแรกที่ตัวตรวจพิกเซลอ่านเป็นเส้นแบ่งแถวผิด
      จึงยึดกรอบแถวเดิมที่ตรวจด้วยตาแล้ว และใช้จุดตัดก่อนป้ายคำของแต่ละแถว */
   const BEDROOM_ART_ROWS = [[0.0091,0.1595],[0.1634,0.3125],[0.3164,0.4518],[0.4557,0.5853],[0.5885,0.7116],[0.7135,0.8255],[0.8268,0.9212],[0.9212,1]];
@@ -155,7 +178,15 @@
       <div class="pm-grid pm-play" id="pm-grid-b" hidden></div>
       <button class="hint-btn pm-play" id="pm-hint" style="display:none">💡 น้องแมวช่วยตัดช้อยส์!</button>
       <p class="game-endless-note pm-note pm-play">♾️ ภาพทุกใบมาจาก <b>Picture Dictionary</b> · แตะภาพ/คำเพื่อฟังเสียง · ครั้งนี้เก็บไปแล้ว <b class="sess-coin" id="pm-sess">0 🪙</b><span class="pm-n2"><br>อยากเปลี่ยนหมวด กด <b>📚 หมวดภาพ</b> ด้านบนได้เสมอ 😊</span></p>
-      <button class="pm-lobby-btn" id="pm-lobby">🚪 ออกไป Lobby</button>`;
+      <button class="pm-lobby-btn" id="pm-lobby">🚪 ออกไป Lobby</button>
+      <div class="pm-rule-overlay" id="pm-rule-overlay" hidden>
+        <div class="pm-rule-box" role="dialog" aria-modal="true" aria-labelledby="pm-rule-title">
+          <div class="pm-rule-icon">🔄</div>
+          <h2 id="pm-rule-title">กติกาการเลือกหน้า</h2>
+          <p id="pm-rule-message"></p>
+          <button id="pm-rule-ok">รับทราบ ✅</button>
+        </div>
+      </div>`;
     const host = $('screen-game') ? $('screen-game').parentNode : document.body;
     host.appendChild(sec);
     $('pm-back').addEventListener('click', backToChooser);
@@ -164,12 +195,18 @@
     $('pm-mode').addEventListener('click', toggleMode);
     $('pm-category').addEventListener('click', showChooser);
     $('pm-now').addEventListener('click', replayNow);
+    $('pm-rule-ok').addEventListener('click', closeRuleNotice);
     $('pm-group-tabs').addEventListener('click', e=>{
       const b=e.target.closest('[data-group]'); if(!b) return;
       pm.group=+b.dataset.group; renderChooser();
     });
     $('pm-sheet-list').addEventListener('click', e=>{
       const b=e.target.closest('[data-file][data-start]'); if(!b) return;
+      const lock=pageLock(b.dataset.file,+b.dataset.start);
+      if(lock.locked){
+        showRuleNotice(`หน้านี้เพิ่งเล่นไปแล้ว กรุณาเล่นหน้าอื่นอีก ${lock.remaining} หน้า จึงจะกลับมาเล่นหน้านี้ได้`);
+        return;
+      }
       chooseSheet(b.dataset.file,b.dataset.en,b.dataset.th,+b.dataset.start);
     });
     return sec;
@@ -209,7 +246,8 @@
       const count=sheetItems(file).length, pages=Math.ceil(count/budget);
       const links=Array.from({length:pages},(_,i)=>{
         const start=i*budget, end=Math.min(count,start+budget);
-        return `<button class="pm-set-link" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}</small></button>`;
+        const lock=pageLock(file,start);
+        return `<button class="pm-set-link${lock.locked?' locked':''}" aria-disabled="${lock.locked?'true':'false'}" data-file="${esc(file)}" data-en="${esc(en)}" data-th="${esc(th)}" data-start="${start}">ชุด ${i+1} <small>${start+1}–${end}${lock.locked?` · 🔒 อีก ${lock.remaining} หน้า`:''}</small></button>`;
       }).join('');
       return `<article class="pm-sheet-card"><div class="pm-sheet-title"><span>${gr.icon}</span><b>${esc(th)}</b><small>${esc(en)} · ${count} ภาพ</small></div><div class="pm-set-links">${links}</div></article>`;
     }).join('');
@@ -220,7 +258,19 @@
     $('pm-back').hidden=true;
     renderChooser();
   }
+  function showRuleNotice(message){
+    $('pm-rule-message').textContent=message;
+    $('pm-rule-overlay').hidden=false;
+    setTimeout(()=>$('pm-rule-ok').focus(),0);
+  }
+  function closeRuleNotice(){ $('pm-rule-overlay').hidden=true; }
   function chooseSheet(file,en,th,start){
+    const lock=pageLock(file,start);
+    if(lock.locked){
+      showRuleNotice(`หน้านี้เพิ่งเล่นไปแล้ว กรุณาเล่นหน้าอื่นอีก ${lock.remaining} หน้า จึงจะกลับมาเล่นหน้านี้ได้`);
+      return false;
+    }
+    rememberPage(file,start);
     pm.sheetFile=file; pm.sheetEn=en; pm.sheetTh=th; pm.pageStart=start; pm.choosing=false;
     sec.classList.remove('choosing');
     $('pm-back').hidden=false;
@@ -228,6 +278,7 @@
     const end=Math.min(sheetItems(file).length,start+pageSize());
     $('pm-category').textContent=`📚 ${th} ${start+1}–${end}`;
     updateLabels(); newRound(); fitGrid();
+    return true;
   }
 
   /* ---------- เปิดเกม ---------- */
@@ -530,7 +581,10 @@
         if(typeof sfx !== 'undefined') sfx.levelup();
         if(has('floatFx')) floatFx(`🎉 เก่งมาก! โบนัส +${bCoin} 🪙 +${bRp} RP`, '#5fc46a');
       }, thunder ? 900 : 400);
-      setTimeout(newRound, thunder ? 2100 : 1600);
+      setTimeout(()=>{
+        showChooser();
+        showRuleNotice('เล่นหน้านี้เสร็จแล้ว กรุณาเลือกเล่นหน้าอื่นให้ครบ 10 หน้า ก่อนกลับมาเล่นหน้านี้อีกครั้ง');
+      }, thunder ? 2100 : 1600);
     }
   }
 
@@ -588,5 +642,5 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 
-  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, get queue(){ return queue; }, bank } };
+  window.PicMatch = { open, exit, _t:{ pm, newRound, check, pick, take, showChooser, chooseSheet, sheetItems, pageSize, cleanRect, pageKey, pageLock, rememberPage, readRecentPages, writeRecentPages, get queue(){ return queue; }, bank } };
 })();

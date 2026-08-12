@@ -26,6 +26,8 @@ const PUBLIC_PREFIXES = ['assets/weapons/fps/runtime/'];
 const FORBIDDEN_NATIVE_EXT = /\.(?:aab|apk|bat|cmd|com|dex|dll|exe|jar|ps1|so)$/i;
 const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
+const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
+const TOKEN_F1_COCKPIT_ASSET = /img\/f1\/cockpit_body_realistic\.png\?v=4/g;
 
 const posix = (value) => value.replaceAll('\\', '/');
 const sha = (data, length = 16) => createHash('sha256').update(data).digest('hex').slice(0, length);
@@ -45,7 +47,7 @@ async function sourceFiles() {
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
-      'sound/racing/engineSound.mp3', 'js/fpsweapon.js', 'js/assetaward.js']) {
+      'sound/racing/engineSound.mp3', 'img/f1/cockpit_body_realistic.png', 'js/fpsweapon.js', 'js/assetaward.js', 'js/onlinecoinaward.js']) {
       try {
         await fs.access(path.join(ROOT, rel));
         if (!tracked.includes(rel)) tracked.push(rel);
@@ -233,6 +235,22 @@ async function main() {
   for (const rel of ['index.html', 'index_classic.html', 'manifest.webmanifest', 'sw.js']) {
     await replaceBuildTokens(rel, build);
   }
+
+  /* The Realistic cockpit was introduced as a new untracked runtime asset. Give both
+     the image and lazy F1 engine immutable paths so a cached missing-image response
+     or an older engine can never produce a steering-wheel-only cockpit. */
+  const f1CockpitUrl = await makeImmutableAlias('img/f1/cockpit_body_realistic.png');
+  const f1File = path.join(OUT, 'js/f1_3d.js');
+  const f1Text = await fs.readFile(f1File, 'utf8');
+  await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_COCKPIT_ASSET, f1CockpitUrl));
+
+  /* F1 is lazy-loaded after startup, so give it the same immutable-path guarantee as
+     startup scripts. A query string is insufficient because older service workers
+     may match cached assets while ignoring URL search parameters. */
+  const f1EngineUrl = await makeImmutableAlias('js/f1_3d.js');
+  const uiFile = path.join(OUT, 'js/ui.js');
+  const uiText = await fs.readFile(uiFile, 'utf8');
+  await fs.writeFile(uiFile, uiText.replace(TOKEN_F1_ENGINE, f1EngineUrl));
 
   await fingerprintManifestIcons();
   const cityHtml = await fingerprintHtml('index.html');

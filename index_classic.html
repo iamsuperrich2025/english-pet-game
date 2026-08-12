@@ -8,7 +8,31 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#123a6b">
 <meta name="vw-build-version" content="__VW_BUILD_VERSION__">
-<script src="js/app-update.js"></script>
+<script>
+/* localhost ใช้ไฟล์ต้นฉบับบนดิสก์โดยตรง — ถอน SW production ที่อาจเสิร์ฟ JS เก่าจาก content cache */
+(function(){
+  var host = location.hostname;
+  if(host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') return;
+  window.__vwLocalPreview = true;
+  if(!('serviceWorker' in navigator)) return;
+  // กัน app-update.js รุ่นเก่าที่อาจยังอยู่ใน cache ลงทะเบียนกลับระหว่างกำลังถอนของเดิม
+  try{ navigator.serviceWorker.register = function(){ return Promise.reject(new Error('disabled in local preview')); }; }catch(e){}
+  Promise.all([
+    navigator.serviceWorker.getRegistrations().then(function(rs){
+      return Promise.all(rs.map(function(r){ return r.unregister(); }));
+    }),
+    ('caches' in window) ? caches.keys().then(function(keys){
+      return Promise.all(keys.filter(function(k){ return k.indexOf('vw-') === 0; }).map(function(k){ return caches.delete(k); }));
+    }) : Promise.resolve()
+  ]).then(function(){
+    var key = 'vw-local-sw-reset';
+    if(!navigator.serviceWorker.controller){ sessionStorage.removeItem(key); return; }
+    var tries = Number(sessionStorage.getItem(key) || 0);
+    if(tries < 2){ sessionStorage.setItem(key, String(tries + 1)); location.reload(); }
+  }).catch(function(){});
+}());
+</script>
+<script src="js/app-update.js?v=1126"></script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -21,7 +45,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/lobby.css">
+<link rel="stylesheet" href="css/lobby.css?v=1126">
 <link rel="stylesheet" href="css/account-deletion.css">
 <link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
 <link rel="stylesheet" href="css/picdict.css">  <!-- 📖 รอบ 992: หนังสือ Picture Dictionary -->
@@ -693,11 +717,11 @@
 <script src="js/data/wear.js"></script>  <!-- 🎀 รอบ 666: หมุดวาง "ชุดที่ใส่" ทับภาพน้องท่าอื่น (เจนด้วย tools/wearlab.py) -->
 <script src="js/data/badgeSprite.js"></script>  <!-- 🎖️ รอบ 677: ภาพเหรียญจริงแทนอิโมจิเข็ม (ตัดด้วย tools/badgelab.py) -->
 <!-- ============ ENGINE ============ -->
-<script src="js/util.js"></script>
-<script src="js/state.js"></script>
+<script src="js/util.js?v=1126"></script>
+<script src="js/state.js?v=1126"></script>
 <script src="js/images.js"></script>
 <script src="js/petbehavior.js"></script> <!-- 🐾 state machine ท่าน้อง: idle/walk/look/sit/play/sleep -->
-<script src="js/ui.js"></script>
+<script src="js/ui.js?v=1126"></script>
 <script src="js/gradelock.js"></script>  <!-- 🔒 รอบ 647: ล็อกเปลี่ยนระดับชั้น (เดือนละครั้ง · ขึ้นได้อย่างเดียว) — ต้องมาหลัง state.js/util.js -->
 
 <script src="js/lobby3d.js"></script>  <!-- โมเดล 3D ตัวละครหน้า lobby (idle + ปัดหมุน · รอบ 104) -->
@@ -710,6 +734,7 @@
 <script src="js/sgaward.js"></script>  <!-- 🏆 รอบ 917: รางวัลรายเดือน Top 10 แท็บยิงเป้าคำ (กติกาเดียวกับค้นหาคำ) -->
 <script src="js/pmaward.js"></script>  <!-- 🏆 รอบ 979: รางวัลรายเดือน Top 10 แท็บจับคู่ภาพ (กติกาเดียวกับค้นหาคำ) -->
 <script src="js/assetaward.js"></script>  <!-- 🏆 รางวัลรายเดือน Top 10 แท็บมูลค่าทรัพย์สินรวม -->
+<script src="js/onlinecoinaward.js"></script>  <!-- 🌐🏆 รางวัลรายเดือน Top 10 แท็บเหรียญออนไลน์ -->
 <script src="js/typing.js"></script>  <!-- ⌨️ รอบ 648: เกมพิมพ์คำศัพท์ แป้น 3 มิติเต็มจอ (5 เหรียญ/คำ · คำไม่ซ้ำ) -->
 <script src="js/bubble.js"></script>  <!-- 🫧 เกมแตะฟองสะกดคำ -->
 <script src="js/shootword.js"></script>  <!-- 🎯 รอบ 917: เกมยิงเป้าคำศัพท์ โลก 3D สวนสนุก (โหลด three.js ตอนกดปุ่มเท่านั้น) -->
@@ -727,7 +752,7 @@
 <script src="js/picquiz_online.js"></script>  <!-- 🌐 ห้องละ 50 คน + แชท + group voice -->
 <script src="js/netroom.js"></script>  <!-- 🏟️ รอบ 640: ระบบหลายสนาม (room sharding) กลางของทุกโลก 3D — ต้องมาก่อนไฟล์โลก 3D ทุกตัว (โหลดแบบ dynamic ทีหลัง) -->
 <script src="js/music.js"></script>  <!-- ระบบเพลงพื้นหลัง + วิทยุในรถ (รอบ 181) -->
-<script src="js/main.js"></script>
+<script src="js/main.js?v=1126"></script>
 <!-- 🛡️ รอบ 727: ถึงตรงนี้ main.js เรียก showScreen ครั้งแรกไปแล้ว (login/dashboard active) → ซ่อน splash
      🖼️ รอบ 882: โหมดภาพ (window.__vwSplashPhoto) ข้ามบรรทัดนี้ไปก่อน — ค้างจอเปิดไว้จน ?go= handler ท้าย js/main.js สั่งจางเอง -->
 <script>if(window.__hideAppSplash && !window.__vwSplashPhoto) __hideAppSplash();</script>

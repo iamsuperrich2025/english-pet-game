@@ -3199,6 +3199,18 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 .set-tabs .lb-tab:active{transform:scale(.95);}
 .set-tabs .lb-tab.active{background:linear-gradient(180deg,#c39df0,#9a6fdc);color:#fff;
   box-shadow:0 3px 0 #7d5fc0,inset 0 0 0 1.5px rgba(255,255,255,.5);}
+.settings-box .set-attention-bar{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;width:100%;min-height:clamp(32px,6.5vh,42px);
+  margin:0 0 clamp(5px,1vh,8px);padding:5px 10px;border:2px solid #ffb0a6;border-radius:12px;
+  background:linear-gradient(180deg,#fff4ef,#ffe1da);color:#78352e;text-align:left;
+  box-shadow:0 2px 0 #e9a095,inset 0 1px 0 #fff;cursor:pointer;
+}
+.settings-box .set-attention-bar:active{transform:translateY(2px);box-shadow:inset 0 1px 2px rgba(120,53,46,.18);}
+.set-attention-ico{font-size:clamp(17px,3.3vh,22px);flex:0 0 auto;}
+.set-attention-copy{min-width:0;display:flex;flex-direction:column;line-height:1.15;flex:1;}
+.set-attention-copy b{font-size:clamp(11px,2vh,13.5px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.set-attention-copy small{font-size:clamp(9px,1.55vh,10.5px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#966057;}
+.set-attention-go{font-size:clamp(11px,2vh,13px);font-weight:900;white-space:nowrap;color:#c34c42;}
 .set-panels{flex:1 1 auto;min-height:0;overflow:hidden;}
 .set-panel{display:none;}
 /* overflow-y:auto = ตาข่ายกันตาย ไม่ใช่การออกแบบให้เลื่อน — ทุกขนาดจอที่รองรับต้องพอดีอยู่แล้ว (วัดแล้ว 1311×613 / 812×375)
@@ -5568,6 +5580,15 @@ html.theme-emerald .mkt-group-head,html.theme-plum .mkt-group-head{
   font:700 11px/1.15 inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;}
 #screen-picmatch .pm-set-link small{font-size:9px;color:#6e84a0;text-decoration:none;}
 #screen-picmatch .pm-set-link:hover,#screen-picmatch .pm-set-link:focus-visible{background:#d4ebff;outline:2px solid #76baf0;}
+#screen-picmatch .pm-set-link.locked{background:#eeeaf3;color:#756e7d;text-decoration:none;opacity:.78;}
+#screen-picmatch .pm-set-link.locked small{color:#9b5260;font-weight:800;}
+#screen-picmatch .pm-rule-overlay{position:fixed;inset:0;z-index:10050;display:grid;place-items:center;padding:12px;background:rgba(31,38,68,.58);backdrop-filter:blur(3px);}
+#screen-picmatch .pm-rule-overlay[hidden]{display:none;}
+#screen-picmatch .pm-rule-box{width:min(92vw,480px);max-height:calc(100vh - 24px);overflow:hidden;padding:clamp(14px,3vh,24px);border:3px solid #ffc42e;border-radius:24px;background:linear-gradient(180deg,#fff,#fff8dc);box-shadow:0 18px 55px rgba(25,30,60,.35);text-align:center;}
+#screen-picmatch .pm-rule-icon{font-size:clamp(28px,8vh,52px);line-height:1;}
+#screen-picmatch .pm-rule-box h2{margin:5px 0;color:#6946a5;font-size:clamp(18px,4.5vh,27px);}
+#screen-picmatch .pm-rule-box p{margin:6px auto 14px;max-width:38ch;color:#42465b;font-size:clamp(13px,3.3vh,18px);line-height:1.45;font-weight:700;}
+#screen-picmatch .pm-rule-box button{border:0;border-radius:999px;padding:9px 24px;background:linear-gradient(180deg,#6ed678,#35ad55);box-shadow:0 4px 0 #238a40;color:#fff;font-size:clamp(14px,3.5vh,18px);font-weight:800;font-family:inherit;cursor:pointer;}
 .pm-category-btn{background:#fff7d9;border:3px solid #e9bd42;border-radius:999px;padding:4px 10px;
   font-family:inherit;font-size:12px;color:#79520a;font-weight:700;cursor:pointer;box-shadow:var(--card-shadow);
   white-space:nowrap;max-width:min(28vw,260px);overflow:hidden;text-overflow:ellipsis;flex:0 1 auto;}

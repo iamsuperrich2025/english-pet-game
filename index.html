@@ -13,7 +13,31 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0a1f3c">
 <meta name="vw-build-version" content="__VW_BUILD_VERSION__">
-<script src="js/app-update.js"></script>
+<script>
+/* localhost ใช้ไฟล์ต้นฉบับบนดิสก์โดยตรง — ถอน SW production ที่อาจเสิร์ฟ JS เก่าจาก content cache */
+(function(){
+  var host = location.hostname;
+  if(host !== 'localhost' && host !== '127.0.0.1' && host !== '[::1]') return;
+  window.__vwLocalPreview = true;
+  if(!('serviceWorker' in navigator)) return;
+  // กัน app-update.js รุ่นเก่าที่อาจยังอยู่ใน cache ลงทะเบียนกลับระหว่างกำลังถอนของเดิม
+  try{ navigator.serviceWorker.register = function(){ return Promise.reject(new Error('disabled in local preview')); }; }catch(e){}
+  Promise.all([
+    navigator.serviceWorker.getRegistrations().then(function(rs){
+      return Promise.all(rs.map(function(r){ return r.unregister(); }));
+    }),
+    ('caches' in window) ? caches.keys().then(function(keys){
+      return Promise.all(keys.filter(function(k){ return k.indexOf('vw-') === 0; }).map(function(k){ return caches.delete(k); }));
+    }) : Promise.resolve()
+  ]).then(function(){
+    var key = 'vw-local-sw-reset';
+    if(!navigator.serviceWorker.controller){ sessionStorage.removeItem(key); return; }
+    var tries = Number(sessionStorage.getItem(key) || 0);
+    if(tries < 2){ sessionStorage.setItem(key, String(tries + 1)); location.reload(); }
+  }).catch(function(){});
+}());
+</script>
+<script src="js/app-update.js?v=1126"></script>
 <style>
   html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0a1f3c;
     font-family:system-ui,'Segoe UI',sans-serif;-webkit-user-select:none;user-select:none;

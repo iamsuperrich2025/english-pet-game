@@ -1352,8 +1352,9 @@ function openFriendQuickMenu(uid, name, grade){
    ⌨️ พิมพ์คำ (รอบ 649 — แต้มสะสมตลอดกาล Top 10 · กติกา/รางวัลเหมือน 🔎 เป๊ะ)
    ข้อมูลจริงจาก Firebase — ออฟไลน์โชว์ข้อความเชิญชวนแทน
    ============================================================ */
-const LB_TABS = ['coins','assets','badges','boss','ws','pm','tp','bb','sg','bx','xr'];   // assets = 🏆 มูลค่าทรัพย์สินรวม
-const LB_ASSET_TOP = 10;                               // 🏆 ทรัพย์สินรวม Top 10 + รางวัลรายเดือน 10,000→1,000
+const LB_TABS = ['coins','assets','online','badges','boss','ws','pm','tp','bb','sg','bx','xr'];
+const LB_ASSET_TOP = 100;                              // 🏆 ทรัพย์สินรวมโชว์ Top 100 · รางวัลรายเดือนยังเฉพาะ Top 10
+const LB_ONLINE_TOP = 100;                             // 🌐 เหรียญออนไลน์สะสมตลอดกาล Top 100 · รางวัลเฉพาะ Top 10
 const LB_WS_TOP = 10;                                  // 🔎 แท็บค้นหาคำโชว์ Top 10 all time (ตามที่ผู้ใช้สั่ง)
 const LB_PM_TOP = 10;                                  // 🖼️ แท็บจับคู่ภาพโชว์ Top 10 all time (เรตเดียวกัน)
 const LB_TP_TOP = 10;                                  // ⌨️ แท็บพิมพ์คำโชว์ Top 10 all time (เรตเดียวกัน)
@@ -1398,6 +1399,11 @@ function bindLbTabs(){
     if(e.target.closest('.asa-open')){
       e.stopPropagation();
       if(typeof AssetAward !== 'undefined') AssetAward.open();
+      return;
+    }
+    if(e.target.closest('.oca-open')){
+      e.stopPropagation();
+      if(typeof OnlineCoinAward !== 'undefined') OnlineCoinAward.open();
       return;
     }
     if(!e.target.closest('.wsa-open')) return;
@@ -1480,6 +1486,7 @@ function renderLeaderboardCard(){
   if(out) out.innerHTML = `
     <button class="lb-tab${lbTab==='coins' ? ' active' : ''}" data-tab="coins">🪙 เหรียญ</button>
     <button class="lb-tab${lbTab==='assets' ? ' active' : ''}" data-tab="assets">🏆 ทรัพย์สินรวม</button>
+    <button class="lb-tab${lbTab==='online' ? ' active' : ''}" data-tab="online">🌐 เหรียญออนไลน์</button>
     <button class="lb-tab${lbTab==='badges' ? ' active' : ''}" data-tab="badges">🏅 เข็ม</button>
     <button class="lb-tab${lbTab==='boss' ? ' active' : ''}" data-tab="boss">🤖 บอส</button>
     <button class="lb-tab${lbTab==='ws' ? ' active' : ''}" data-tab="ws">🔎 ค้นหาคำ</button>
@@ -1491,7 +1498,7 @@ function renderLeaderboardCard(){
     initSideScroll(el);
     return;
   }
-  el.innerHTML = (lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml()
+  el.innerHTML = (lbTab === 'online' ? lbOnlineCoinHtml() : lbTab === 'badges' ? lbBadgeHtml() : lbTab === 'boss' ? lbBossHtml()
                 : lbTab === 'ws' ? lbWordSearchHtml() : lbTab === 'tp' ? lbTypingHtml() : lbTab === 'bb' ? lbBubbleHtml()
                 : lbTab === 'sg' ? lbShootHtml() : lbCoinHtml());
   bindPlayerClicks();
@@ -1504,7 +1511,7 @@ let __lbGroupBound = false;
 function bindLbGroupOpen(){
   if(__lbGroupBound) return; __lbGroupBound = true;
   // 🏆 รอบ 592: .wsa-open (แถบรางวัล) มี handler ของตัวเอง — ไม่ให้เปิดกระดานเต็มจอทับ
-  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open')) return; openLeaderboardFull(); };
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open') || e.target.closest('.asa-open') || e.target.closest('.oca-open')) return; openLeaderboardFull(); };
   const label = document.getElementById('lb-label');
   const card = document.getElementById('leaderboard-card');
   if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
@@ -1537,6 +1544,14 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
       sc:`🏆 ${fmtNum(r.av)}`, val:r.av,
       pz:(typeof AssetAward !== 'undefined') ? AssetAward.prizeFor(i+1) : 0, me:r.id===myId}));
+  }
+  if(tab === 'online'){
+    const map = {}; (Online.onlineCoinBoard || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, oe:r.oe||0}; });
+    if(includeMe) map[myId] = {id:myId, n:meName, g:meG, oe:Math.round(state.onlineEarned||0)};
+    const rows = Object.values(map).filter(r=>r.oe > 0).sort((a,b)=> b.oe - a.oe).slice(0, LB_ONLINE_TOP);
+    return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n,
+      sc:`🌐 ${fmtNum(r.oe)}`, val:r.oe,
+      pz:(typeof OnlineCoinAward !== 'undefined') ? OnlineCoinAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   if(tab === 'boss'){
     const map = {}; (Online.board || []).forEach(r=>{ map[r.id] = {id:r.id, n:r.n, g:r.g, bk:r.bk||0}; });
@@ -1593,6 +1608,7 @@ function lbRankRows(tab){
 const RANK_MOVE_TOPICS = [
   {key:'coins',  ico:'🪙', label:'เหรียญ'},
   {key:'assets', ico:'🏆', label:'ทรัพย์สินรวม'},
+  {key:'online', ico:'🌐', label:'เหรียญออนไลน์'},
   {key:'badges', ico:'🏅', label:'เข็ม'},
   {key:'boss',   ico:'🤖', label:'ล้มบอส'},
   {key:'ws',     ico:'🔎', label:'ค้นหาคำ'},
@@ -1626,6 +1642,7 @@ function rankMoveFeedCheck(){
   const fresh = [];
   RANK_MOVE_TOPICS.forEach(topic=>{
     if(topic.key === 'bb' && !Online.bbBoardReady) return;
+    if(topic.key === 'online' && !Online.onlineCoinBoardReady) return;
     const rows = lbRankRows(topic.key);
     const now = {};
     rows.forEach((row, i)=>{ if(row.uid) now[row.uid] = {rank:i+1, name:row.name || 'ผู้เล่น'}; });
@@ -1679,7 +1696,7 @@ function lbBadgeSections(){
 /* 🧪🧪 รอบ 247 บล็อกเดโมชั่วคราว — เปิดด้วย vocabworld.web.app/?lbdemo=1 (ดูผล 100 คนบนมือถือ)
    ไม่แตะ Firebase จริง เห็นเฉพาะเครื่องที่ใส่ param · **ลบทั้งบล็อกนี้ + บรรทัด __LBDEMO ใน lbRankRows/openLeaderboardFull หลังผู้ใช้ capture** */
 function lbDemoRows(tab){
-  const em = tab === 'assets' ? '🏆' : tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : tab === 'ws' ? '🔎' : '🪙';
+  const em = tab === 'assets' ? '🏆' : tab === 'online' ? '🌐' : tab === 'badges' ? '🏅' : tab === 'boss' ? '👾' : tab === 'ws' ? '🔎' : '🪙';
   const names = ['ลูกหมูน้อย','เจ้าเหมียวส้ม','นักสะกดคำ','ดาวรุ่งพุ่งแรง','กัปตันมังกร','น้องข้าวปั้น','เก่งเวอร์','ยัยตัวป่วน','พ่อมดน้อย','เจ้าชายกบ','ราชินีผึ้ง','ฮีโร่ตัวจิ๋ว','นักผจญภัย','เพชรน้ำหนึ่ง','ต้นกล้า','ฟ้าใส','ข้าวโอ๊ต','มะนาว','ปลาทู','ส้มโอ'];
   const rows = [];
   for(let i=0;i<100;i++){
@@ -1713,12 +1730,13 @@ function lbChar(r){
 function lbfAwardBarHtml(tab){
   const A = tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
           : tab === 'assets' ? (typeof AssetAward !== 'undefined' ? AssetAward : null)
+          : tab === 'online' ? (typeof OnlineCoinAward !== 'undefined' ? OnlineCoinAward : null)
           : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
           : tab === 'bb' ? (typeof BbAward !== 'undefined' ? BbAward : null)
           : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null)
           : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'assets' ? 'asa-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
+  const cls = tab === 'assets' ? 'asa-open' : tab === 'online' ? 'oca-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -1739,6 +1757,7 @@ function openLeaderboardFull(){
   const tabsHtml = ()=> `
           <button class="lb-tab${__lbfTab==='coins'?' active':''}" data-t="coins">🪙 เหรียญ</button>
           <button class="lb-tab${__lbfTab==='assets'?' active':''}" data-t="assets">🏆 ทรัพย์สินรวม</button>
+          <button class="lb-tab${__lbfTab==='online'?' active':''}" data-t="online">🌐 เหรียญออนไลน์</button>
           <button class="lb-tab${__lbfTab==='badges'?' active':''}" data-t="badges">🏅 เข็ม</button>
           <button class="lb-tab${__lbfTab==='boss'?' active':''}" data-t="boss">🤖 ล้มบอส</button>
           <button class="lb-tab${__lbfTab==='ws'?' active':''}" data-t="ws">🔎 ค้นหาคำ</button>
@@ -1809,7 +1828,7 @@ function openLeaderboardFull(){
       return;
     }
 
-    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
+    const cap = __lbfTab === 'assets' ? LB_ASSET_TOP : __lbfTab === 'online' ? LB_ONLINE_TOP : __lbfTab === 'ws' ? LB_WS_TOP : __lbfTab === 'pm' ? LB_PM_TOP : __lbfTab === 'tp' ? LB_TP_TOP : __lbfTab === 'bb' ? LB_BB_TOP : __lbfTab === 'sg' ? LB_SG_TOP : 100;
     const all = lbRankRows(__lbfTab).slice(0, cap);
     const top = all.slice(0, 5);          // 🏆 โพเดียม (ตัวละครยืนลดหลั่น)
     const rest = all.slice(5);            // ที่เหลือ → กริด 5 คอลัมน์เหมือนเดิม
@@ -1841,10 +1860,11 @@ function openLeaderboardFull(){
         <span class="sc">${r.sc}${r.pz ? ` <span class="cell-pz">🎁 ${fmtNum(r.pz)}</span>` : ''}</span>
       </div>`).join('');
     const title = __lbfTab === 'assets' ? '🏆 อันดับทรัพย์สินรวม'
+                : __lbfTab === 'online' ? '🌐 อันดับเหรียญออนไลน์'
                 : __lbfTab === 'boss' ? '🤖 อันดับล้มบอส'
                 : __lbfTab === 'ws' ? '🔎 อันดับค้นหาคำ' : __lbfTab === 'pm' ? '🖼️ อันดับจับคู่ภาพ' : __lbfTab === 'tp' ? '⌨️ อันดับพิมพ์คำ' : __lbfTab === 'bb' ? '🫧 อันดับฟอง'
                 : __lbfTab === 'sg' ? '🎯 อันดับยิงเป้าคำ' : '🪙 อันดับเหรียญ';
-    const allTime = (__lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg') ? ' (all time)' : '';
+    const allTime = (__lbfTab === 'online' || __lbfTab === 'ws' || __lbfTab === 'pm' || __lbfTab === 'tp' || __lbfTab === 'bb' || __lbfTab === 'sg') ? ' (all time)' : '';
     ov.innerHTML = `<div class="lbf-box">
       ${closeHeadHtml(`${title} · Top ${cap}${allTime}`)}
       ${lbfAwardBarHtml(__lbfTab)}
@@ -1878,6 +1898,23 @@ function seatPodChars(scope){
     img.style.marginTop = (-(p[0]*h) + 4).toFixed(1) + 'px';   // ครอปขอบใสบน เหลือช่อง ~4px ให้หัวห่างชื่อ (ชื่ออยู่เหนือหัว)
     img.style.marginBottom = (-(p[1]*h) + 2).toFixed(1) + 'px';// ดึงแท่นขึ้นชนเท้า (+2 เท้าจมแท่นนิด ดูยืนจริง)
   });
+}
+
+/* 🌐 เนื้อหาแท็บเหรียญออนไลน์ (การ์ดเล็ก legacy; ทางเข้าใช้งานจริงคือกระดานเต็ม Top 100) */
+function lbOnlineCoinHtml(){
+  const rows = lbRankRows('online');
+  if(!rows.length) return `<div class="lb-empty">ยังไม่มีใครได้รับเหรียญออนไลน์ — เปิดเกมออนไลน์สะสมเวลาเป็นคนแรกเลย! 🌐</div>`;
+  const myIdx = rows.findIndex(r=>r.me);
+  const medal = (i)=> i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1);
+  const list = rows.slice(0, 10).map((r,i)=>`
+    <div class="lb-row${r.me?' lb-me':''}">
+      <span class="lb-rank">${medal(i)}</span>
+      <span class="lb-name pl-click" data-uid="${escapeHTML(r.uid||'')}" data-n="${escapeHTML(r.dataN||r.name)}" data-g="${escapeHTML(r.g||'')}">${r.me?'⭐ ':''}${escapeHTML(r.name)}<small> ${idTag(r.uid)}${gradeMark(gradeOf(r.uid,r.g))}</small>${r.pz?`<small class="lb-prize">🎁 ${fmtNum(r.pz)} เหรียญ</small>`:''}</span>
+      <span class="lb-coins">${r.sc}</span>
+    </div>`).join('');
+  return `<div class="online-count">${myIdx>=0?`${selfPronoun()}อยู่อันดับที่ ${myIdx+1} ของ Top ${LB_ONLINE_TOP} · ${fmtNum(rows[myIdx].val)} เหรียญออนไลน์ 🌐`:`เปิดเว็บออนไลน์สะสมเวลาเพื่อขึ้น Top ${LB_ONLINE_TOP} นะ 💪`}</div>
+    <div class="lb-award-bar oca-open" role="button" tabindex="0">⏰ ตัดสินอันดับทุกวันที่ 1 เวลา 00:01 น. · รางวัลเฉพาะ Top 10<span class="lb-award-go">📜 กระดานประกาศรางวัล</span></div>
+    <div class="lb-list">${list}</div>`;
 }
 
 /* 🪙 เนื้อหาแท็บเหรียญ */
@@ -2489,25 +2526,65 @@ function tinvPendingCount(){
   return Object.keys(Online.tinv).filter(fid=>!hidden[fid]).length;
 }
 
+/* รายการดิบที่ใช้เลขแดง: fingerprint เปลี่ยนเฉพาะเมื่อมีของใหม่/ยอดเปลี่ยน
+   จึงแยก "เห็นแล้ว" ออกจาก "จัดการเสร็จแล้ว" ได้ โดยไม่ลบคำเชิญ/ข้อความ/บิลจริง */
+function attentionPendingItems(){
+  const items = [];
+  ['maint','elec','water','trash','net','data'].forEach(id=>{
+    const due = billOutstanding(id);
+    if(due > 0) items.push(`b:${id}:${due}`);
+  });
+  const reqs = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs : [];
+  reqs.forEach(r=>items.push(`r:${r.uid||''}:${r.ts||0}`));
+  const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Online.chatUnread : {};
+  Object.keys(chats).sort().forEach(uid=>items.push(`c:${uid}`));
+  const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn : [];
+  gifts.forEach(g=>items.push(`g:${g.key||''}:${g.from||''}:${g.id||''}:${g.ts||0}`));
+  if(typeof Online !== 'undefined' && Online.tinv){
+    const hidden = Online.tinvHidden || {};
+    Object.entries(Online.tinv).filter(([uid])=>!hidden[uid]).forEach(([uid,v])=>
+      items.push(`i:${uid}:${v.map||''}:${v.ts||0}`));
+  }
+  return items;
+}
+
+function attentionUnseenCount(){
+  const seen = (typeof state !== 'undefined' && state.attentionSeen) ? state.attentionSeen : {};
+  return attentionPendingItems().filter(key=>!seen[key]).length;
+}
+
+function attentionAcknowledge(){
+  if(typeof state === 'undefined') return;
+  if(!state.attentionSeen || typeof state.attentionSeen !== 'object') state.attentionSeen = {};
+  const now = Date.now();
+  attentionPendingItems().forEach(key=>{ state.attentionSeen[key] = now; });
+  // กันเซฟโตไม่จบ: เก็บลายนิ้วมือที่เห็นล่าสุดไม่เกิน 200 รายการ
+  const entries = Object.entries(state.attentionSeen).sort((a,b)=>(b[1]||0)-(a[1]||0)).slice(0,200);
+  state.attentionSeen = Object.fromEntries(entries);
+  saveState();
+  updateSettingsBadge();
+}
+
 /* เลขรวมบนปุ่ม ⚙️ ตั้งค่า = บิลค้าง + คำขอเพื่อน/แชท + ของขวัญที่ยังไม่เปิด + คำเชิญเล่นด้วยกัน (attention รวมให้เห็นแต่ไกล)
    🚨 รอบ 814: คำเชิญ (tinv) เดิมพึ่งแค่ toast (หายไว) + การ์ดในกล่องเพื่อนบนล็อบบี้ (ต้องเปิดจอถูกจังหวะ) — พลาดง่ายมาก
    เลยรวมเข้า badge ถาวรนี้ด้วย เห็นได้ทุกหน้าจอเหมือนของขวัญ/คำขอเพื่อน */
 function updateSettingsBadge(){
   const b = document.getElementById('settings-badge');
   if(!b) return;
-  const bills = ['maint','elec','water','trash','net','data'].filter(id => billOutstanding(id) > 0).length;
-  const reqs  = (typeof Online !== 'undefined' && Online.reqs) ? Online.reqs.length : 0;
-  const chats = (typeof Online !== 'undefined' && Online.chatUnread) ? Object.keys(Online.chatUnread).length : 0;
-  const gifts = (typeof Online !== 'undefined' && Online.giftIn) ? Online.giftIn.length : 0;
-  const invs  = tinvPendingCount();
-  const meal  = dinnerDue() ? 1 : 0;                         // กิจกรรมข้าวเย็นผู้เล่น (ไม่ทำให้ป่วย)
+  // มื้อเย็นเป็นกิจกรรมเสริม (ไม่กินก็ไม่ป่วย) และมีปุ่มเฉพาะของตัวเองอยู่แล้ว จึงไม่ใช่ปัญหาสีแดง
+  const total = attentionUnseenCount();
+  const btn = b.closest('#btn-settings');
+  if(btn){
+    btn.title = total > 0 ? `มี ${total} รายการต้องจัดการ · แตะเพื่อดู` : 'ตั้งค่า (เสียง/สั่น)';
+    btn.setAttribute('aria-label', total > 0 ? `มี ${total} รายการต้องจัดการ` : 'ตั้งค่า');
+  }
   // สั่นครั้งเดียวที่ badge รวม (แหล่งเดียว กันสั่นซ้ำกับ badge ย่อย) · badge ย่อยเด้งภาพพร้อมกันเอง
-  if(setBadge(b, bills + reqs + chats + gifts + invs + meal)
+  if(setBadge(b, total)
      && typeof state !== 'undefined' && state.haptic !== false && navigator.vibrate) navigator.vibrate(30);
 }
 
-/* แตะ badge บนปุ่ม ⚙️ → เมนูสรุปว่าค้างอะไร กดแถวไหนพาไปหน้านั้นเลย */
-function openAttentionSummary(){
+/* ข้อมูลต้นทางเดียวของ badge/เมนูสรุป/แถบบอกเหตุผลในหน้าตั้งค่า */
+function attentionSummaryData(){
   const homeIds = ['maint','elec','water','trash'], shopIds = ['net','data'];
   const homeBills = homeIds.filter(id => billOutstanding(id) > 0).length;
   const shopBills = shopIds.filter(id => billOutstanding(id) > 0).length;
@@ -2531,7 +2608,12 @@ function openAttentionSummary(){
     rows.push({ico:'📨', txt:`คำเชิญเล่นด้วยกัน ${invEntries.length} รายการ`,
       sub:`${escapeHTML(firstInv.n)} ชวนไปเล่น${w} · แตะเพื่อไปเลย`, act:'tinv'});
   }
-  if(dinnerDue())        rows.push({ico:'🍚', txt:`${selfName()} ยังไม่ได้กินข้าวเย็น`, sub:`กิจกรรมเสริมของผู้เล่น · ไม่กินก็ไม่ป่วย · 🪙${fmtNum(DINNER_COST)}`, act:'dinner'});
+  return {rows, billTotal};
+}
+
+/* แตะ badge บนปุ่ม ⚙️ → เมนูสรุปว่าค้างอะไร กดแถวไหนพาไปหน้านั้นเลย */
+function openAttentionSummary(){
+  const {rows, billTotal} = attentionSummaryData();
   if(!rows.length) return;   // ไม่มีอะไรค้าง (ปกติ badge ซ่อนอยู่แล้ว)
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay attn-overlay';
@@ -2549,8 +2631,7 @@ function openAttentionSummary(){
   overlay.querySelectorAll('.attn-row').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       overlay.remove();
-      if(btn.dataset.act === 'dinner') dinnerClick();       // ข้าวเย็นคน (ข้อ 6) เปิดกล่องกิน/รักษา
-      else if(btn.dataset.act === 'tinv'){                  // คำเชิญเล่นด้วยกัน → พาเข้าโลกที่ถูกชวนเลย (เช็คตั๋ว/บาดเจ็บ/รถให้ครบทาง railWorldClick)
+      if(btn.dataset.act === 'tinv'){                       // คำเชิญเล่นด้วยกัน → พาเข้าโลกที่ถูกชวนเลย (เช็คตั๋ว/บาดเจ็บ/รถให้ครบทาง railWorldClick)
         const entries = (typeof Online !== 'undefined' && Online.tinv)
           ? Object.entries(Online.tinv).filter(([fid])=>!(Online.tinvHidden && Online.tinvHidden[fid])) : [];
         const first = entries[0];
@@ -2563,6 +2644,7 @@ function openAttentionSummary(){
   overlay.querySelector('.set-close').addEventListener('click', ()=>overlay.remove());
   overlay.addEventListener('click', e=>{ if(e.target === overlay) overlay.remove(); });
   document.body.appendChild(overlay);
+  attentionAcknowledge();   // เห็นหน้าสรุปแล้ว = เลขแดงหายทันที แม้กดปิดโดยยังไม่จัดการรายการ
 }
 function updateFriendBadge(){
   const b = document.getElementById('friend-badge');
@@ -6950,7 +7032,10 @@ async function enterF1_3D(){
       await loadScriptOnce('js/vendor/three.min.js');
       await loadScriptOnce('js/vendor/GLTFLoader.js');
       await loadScriptOnce('js/data/f1_bahrain.js');
-      await loadScriptOnce('js/f1_3d.js');
+      /* The web build replaces this with an immutable content-hashed F1 engine path.
+         Source/dev fallback stays usable before the replacement runs. */
+      const f1EngineUrl='__VW_F1_ENGINE_URL__';
+      await loadScriptOnce(f1EngineUrl.startsWith('__VW_')?'js/f1_3d.js':f1EngineUrl);
     }catch(e){
       world3DFail('Vocab World Racing', e);
       return;

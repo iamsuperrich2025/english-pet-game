@@ -14,6 +14,7 @@
     adsExitDuration:.16, fireDuration:.045, reloadDuration:2.60, sprintExitDelay:.10
   });
   const ASSETS=Object.freeze({
+    hip:['img/animation/fps_weapon/fps_weapon_hip_wide_v5.png'],
     idle:['assets/weapons/fps/runtime/idle/fps_weapon_idle.png'],
     walk:Array.from({length:8},(_,i)=>`assets/weapons/fps/runtime/walk/fps_weapon_walk_${String(i+1).padStart(2,'0')}.png`),
     sprint:Array.from({length:8},(_,i)=>`assets/weapons/fps/runtime/sprint/fps_weapon_sprint_${String(i+1).padStart(2,'0')}.png`),
@@ -98,16 +99,16 @@
       return preloadPromise;
     };
     const chooseFrame=()=>{
-      if(state===STATES.EQUIP) return frameAt(ASSETS.equip,elapsed,CONFIG.equipDuration,false);
-      if(state===STATES.WALK) return frameAt(ASSETS.walk,elapsed,CONFIG.walkFps,true);
-      if(state===STATES.SPRINT) return frameAt(ASSETS.sprint,elapsed,CONFIG.sprintFps,true);
+      /* Hip states intentionally share one audited wide viewmodel. Motion/recoil is state-driven CSS,
+         so no generated frame can swap in a different crop, anatomy or barrel direction. */
+      if(state===STATES.EQUIP||state===STATES.WALK||state===STATES.SPRINT) return ASSETS.hip[0];
       if(state===STATES.ADS_ENTER||state===STATES.ADS_EXIT) return frameAtProgress(ASSETS.ads,adsProgress);
       if(state===STATES.ADS) return ASSETS.ads[ASSETS.ads.length-1];
       if(state===STATES.FIRE) return adsProgress>EPSILON
         ?frameAtProgress(ASSETS.ads,adsProgress)
-        :ASSETS.fire[fireFrameIndex];
-      if(state===STATES.RELOAD) return frameAt(ASSETS.reload,elapsed,CONFIG.reloadDuration,false);
-      return ASSETS.idle[0];
+        :ASSETS.hip[0];
+      if(state===STATES.RELOAD) return ASSETS.hip[0];
+      return ASSETS.hip[0];
     };
     function step(dt,intent){
       if(disposed) return {state,frame:'',ready:false};

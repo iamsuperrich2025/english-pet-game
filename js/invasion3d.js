@@ -702,7 +702,36 @@ const CSS=`
 /* 🚁 กรอบห้องนักบิน (canopy) — โผล่เฉพาะตอนบิน */
 #inv-canopy{position:absolute;inset:0;z-index:2;pointer-events:none;display:none}
 #inv-weapon-sprite{position:absolute;inset:0;z-index:3;pointer-events:none;display:none;
-  background-repeat:no-repeat;background-position:50% 100%;background-size:contain;image-rendering:auto}
+  background-repeat:no-repeat;background-position:50% 50%;background-size:cover;image-rendering:auto;
+  transform-origin:50% 50%}
+/* Hip/Walk/Sprint/Fire use a lower shoulder-held silhouette. ADS alone needs the full-height canvas
+   so the optic stays aligned with the screen center; no transition avoids input lag or size tweening. */
+#inv-weapon-sprite[data-state="ADS"],#inv-weapon-sprite[data-state="ADS_ENTER"],
+#inv-weapon-sprite[data-state="ADS_EXIT"]{background-position:50% 100%;background-size:contain}
+#inv-weapon-sprite[data-state="FIRE"][data-ads-fire]:not([data-ads-fire=""]){background-position:50% 100%;background-size:contain}
+#inv-weapon-sprite[data-state="WALK"]{animation:invHipWalk .7s steps(8) infinite}
+#inv-weapon-sprite[data-state="SPRINT"]{animation:invHipSprint .48s steps(8) infinite}
+#inv-weapon-sprite[data-state="EQUIP"]{animation:invHipEquip .34s ease-out both}
+#inv-weapon-sprite[data-state="RELOAD"]{animation:invHipReload 1.1s ease-in-out infinite}
+#inv-weapon-sprite[data-state="FIRE"]:not([data-ads-fire]),
+#inv-weapon-sprite[data-state="FIRE"][data-ads-fire=""]{animation:invHipFire .045s steps(4) both}
+@keyframes invHipWalk{0%,100%{transform:scale(1.018)}25%{transform:scale(1.018) translate(-.35%,.5%) rotate(-.18deg)}75%{transform:scale(1.018) translate(.35%,.5%) rotate(.18deg)}}
+@keyframes invHipSprint{0%,100%{transform:scale(1.035) translate(0,1%)}25%{transform:scale(1.035) translate(-1%,2.2%) rotate(-.6deg)}75%{transform:scale(1.035) translate(1%,2.2%) rotate(.6deg)}}
+@keyframes invHipEquip{from{transform:translate(7%,18%) rotate(5deg);opacity:.25}to{transform:none;opacity:1}}
+@keyframes invHipReload{0%,100%{transform:scale(1.035)}45%{transform:scale(1.035) translate(2%,5%) rotate(2deg)}65%{transform:scale(1.035) translate(-1%,3%) rotate(-1deg)}}
+@keyframes invHipFire{0%{transform:scale(1.012)}40%{transform:scale(1.012) translate(.35%,1.2%) rotate(.28deg)}100%{transform:scale(1.012)}}
+/* 🔥 ADS fire keeps the optic-aligned base sprite and paints one lightweight flash through the sight.
+   No transition/timer: fireFrame 1..4 is the animation clock, so rapid input cannot leave a stale flash. */
+#inv-weapon-sprite::after{content:"";position:absolute;left:53%;top:32.5%;width:clamp(28px,7vmin,52px);
+  aspect-ratio:1;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(.25);
+  background:radial-gradient(circle,#fff 0 7%,#fff4bd 8% 18%,#ffad32 31%,rgba(255,92,0,.35) 48%,transparent 70%);
+  clip-path:polygon(50% 0,59% 31%,83% 8%,71% 39%,100% 50%,69% 59%,91% 86%,60% 70%,50% 100%,41% 69%,13% 91%,31% 59%,0 50%,31% 40%,9% 13%,41% 31%);
+  filter:drop-shadow(0 0 7px rgba(255,174,52,.9))}
+#inv-weapon-sprite[data-ads-fire="1"]::after{opacity:.72;transform:translate(-50%,-50%) scale(.58)}
+#inv-weapon-sprite[data-ads-fire="2"]::after{opacity:1;transform:translate(-50%,-50%) scale(1)}
+#inv-weapon-sprite[data-ads-fire="3"]::after{opacity:.54;transform:translate(-50%,-50%) scale(.72)}
+#inv-weapon-sprite[data-ads-fire="4"]::after{opacity:.18;transform:translate(-50%,-50%) scale(.42)}
+#inv-weapon-sprite[data-state="FIRE"][data-ads-fire=""]::after{left:50%;top:50%;opacity:.88;transform:translate(-50%,-50%) scale(.62)}
 #inv-wrap.fly #inv-canopy{display:block}
 #inv-canopy::before,#inv-canopy::after{content:"";position:absolute;background:rgba(20,26,34,.55)}
 #inv-canopy::before{left:0;right:0;top:0;height:8%;box-shadow:0 6px 14px rgba(0,0,0,.4)}
@@ -2078,7 +2107,7 @@ let gunGrp=null, gunArms=null, gunRecoil=0, muzzle=null, muzzleUntil=0;
 let vmScene=null, vmCam=null, muzzleLight=null, worldFlash=null;      // 🎥 รอบ 451: ฉาก+กล้องเฉพาะของ view model (ปืนในมือ)
 /* 🎯 รอบ 419: ระบบ 2 กระบอก (ไรเฟิล / R93 สไนเปอร์) */
 let weapon='rifle', gunModels={}, r93Ammo=WEAPONS.r93.mag, reloadAt=0, scoped=false, firedThisPress=false;
-let fpsWeapon=null, fpsWeaponRenderer=null, fpsWeaponReady=false;
+let fpsWeapon=null, fpsWeaponRenderer=null, fpsWeaponReady=false, fpsWeaponAdsFire=0;
 let swapBtn=null, scopeBtn=null, magBtn=null, breathBtn=null, ammoEl=null, scopeMaskEl=null, scopeRingEl=null, scopeRngEl=null;
 let keys={}, joy={id:null,cx:0,cy:0,dx:0,dy:0}, lookId=null, lookX=0, lookY=0, isRun=false;
 let keydownFn,keyupFn,resizeFn;
@@ -2907,13 +2936,19 @@ function makeFighter(letterIdx){
   const bar=new THREE.Sprite(new THREE.SpriteMaterial({map:btx,transparent:true,depthTest:false}));
   bar.scale.set(6.2,0.95,1); bar.position.y=FIGHTER_SIZE*0.78-2.4; grp.add(bar);
 
+  /* Ownership boundary: generated fallback geometry/materials and the health-bar CanvasTexture
+     belong to this fighter. fxGlow/letterSpriteTex and GLB clone resources are cached/shared. */
+  const owned={geometries:new Set(),materials:new Set([bodyM,eye.material,eng.material,hostileLight.material,lb.material,bar.material]),
+               textures:new Set([btx])};
+  body.traverse(o=>{ if(o.geometry) owned.geometries.add(o.geometry); });
+
   /* 🤝 ตำแหน่งเกิดคำนวณจาก (เลขรอบ, ลำดับตัวอักษร) แบบสุ่มมีเมล็ด
      → ทุกเครื่องในห้องเห็นยานลูกอยู่ตำแหน่งเดียวกัน ไม่ใช่ต่างคนต่างสุ่ม */
   const sd=battleRound*97+letterIdx*13;
   const a=srnd(sd)*TAU, r=F_R*(0.45+srnd(sd+1)*0.55);
   grp.position.set(Math.cos(a)*r, F_Y_MIN+srnd(sd+2)*(F_Y_MAX-F_Y_MIN), Math.sin(a)*r);
   scene.add(grp);
-  const f={grp,eye,eng,hostileLight,label:lb,letterIdx,ch,hp:F_HP, hostile:false,
+  const f={grp,eye,eng,hostileLight,label:lb,letterIdx,ch,hp:F_HP, hostile:false,owned,resourcesDisposed:false,
            bar:{spr:bar,cv:bcv,tx:btx},
            ang:a, rad:r, spin:(srnd(sd+3)<.5?-1:1)*(.16+srnd(sd+4)*.16),
            tgtY:rnd(F_Y_MIN,F_Y_MAX), yAt:0, shotAt:performance.now()+rnd(1200,4200), hitAt:0,
@@ -2926,12 +2961,38 @@ function makeFighter(letterIdx){
   /* ⚡ รอบ 432: ใช้ตัวลดโพลี (8.2k tris จากต้นฉบับ 16.4k) — รอบ 556 มีพร้อมกัน 26 ลำ (a-z)
      ต้นฉบับ `alien_fighter.glb` ยังอยู่ครบ ไม่ได้แตะ (สูตรลดอยู่ใน handoff/NOTES.md) */
   loadGlb('img/models/alien_fighter_lite.glb',(obj)=>{
+    if(f.resourcesDisposed) return;
     fitInto(obj,FIGHTER_SIZE);
     grp.children.slice().forEach(c=>{ if(c!==lb&&c!==eng&&c!==hostileLight&&c!==bar) grp.remove(c); });
     grp.add(obj);
   });
   return f;
 }
+const FIGHTER_TEXTURE_KEYS=['map','alphaMap','emissiveMap','normalMap','roughnessMap','metalnessMap'];
+function disposeFighter(f){
+  if(!f||f.resourcesDisposed) return false;
+  f.resourcesDisposed=true;
+  if(scene&&f.grp) scene.remove(f.grp);
+  const owned=f.owned;
+  if(!owned) return true;
+  const dispose=(set,resource)=>{ if(resource&&set.has(resource)){ set.delete(resource); resource.dispose(); } };
+  /* Traverse current descendants first (including material arrays/maps), but only dispose resources
+     present in the fighter-owned sets. Shared cached textures and GLB resources never enter them. */
+  if(f.grp) f.grp.traverse(o=>{
+    dispose(owned.geometries,o.geometry);
+    const materials=o.material?(Array.isArray(o.material)?o.material:[o.material]):[];
+    materials.forEach(m=>{
+      FIGHTER_TEXTURE_KEYS.forEach(key=>dispose(owned.textures,m&&m[key]));
+      dispose(owned.materials,m);
+    });
+  });
+  /* Fallback meshes may already have been detached after the GLB clone arrived. */
+  Array.from(owned.textures).forEach(r=>dispose(owned.textures,r));
+  Array.from(owned.materials).forEach(r=>dispose(owned.materials,r));
+  Array.from(owned.geometries).forEach(r=>dispose(owned.geometries,r));
+  return true;
+}
+function clearFighters(){ fighters.slice().forEach(disposeFighter); fighters=[]; }
 /* ❤️ รอบ 557: วาดแถบพลังยานลูก — เรียกเฉพาะตอน hp เปลี่ยน (ไม่วาดทุกเฟรม)
    >60% เขียว · 30-60% เหลือง · ≤30% แดง (ตามผู้ใช้สั่ง) */
 function drawFighterBar(f){
@@ -4693,6 +4754,12 @@ function fpsWeaponFrame(src,state,ready){
   const eligible=!!(ready&&src&&!inHeli&&!riding&&(weapon==='rifle'||state==='RELOAD'));
   fpsWeaponReady=fpsWeaponRenderer?fpsWeaponRenderer.render(src,state,eligible):eligible;
 }
+function fpsWeaponFireFeedback(result){
+  const next=result&&result.adsFire?result.fireFrame:0;
+  if(next===fpsWeaponAdsFire) return;
+  fpsWeaponAdsFire=next;
+  if(weaponSpriteEl) weaponSpriteEl.dataset.adsFire=next?String(next):'';
+}
 function fpsWeaponIntent(){
   return {enabled:!inHeli&&!riding&&(weapon==='rifle'||reloadAt>0), moving:moveLen>.05,
     sprinting:(isRun||keys.shift)&&moveLen>.05, ads:!!scoped, reloading:reloadAt>0};
@@ -4701,14 +4768,16 @@ function initFpsWeapon(){
   if(!window.FpsWeaponRuntime) return;
   if(!fpsWeapon) fpsWeapon=FpsWeaponRuntime.create();
   if(!fpsWeaponRenderer) fpsWeaponRenderer=FpsWeaponRuntime.createRenderer(weaponSpriteEl);
-  fpsWeapon.reset(); fpsWeaponReady=false;
+  fpsWeapon.reset(); fpsWeaponReady=false; fpsWeaponAdsFire=0;
   fpsWeaponRenderer.reset();
+  if(weaponSpriteEl) weaponSpriteEl.dataset.adsFire='';
   fpsWeapon.preload().then(()=>{ if(running&&fpsWeapon) tickFpsWeapon(0); });
 }
 function tickFpsWeapon(dt){
   if(!fpsWeapon) return;
   const result=fpsWeapon.step(dt,fpsWeaponIntent());
   fpsWeaponFrame(result.frame,result.state,result.ready);
+  fpsWeaponFireFeedback(result);
 }
 /* กลุ่มปืนอยู่ใน vmScene (พิกัดเดียวกับ "ระบบพิกัดกล้อง") → แปลงเป็นพิกัดโลกด้วยกล้องหลัก */
 function vmToWorld(o){ const v=new THREE.Vector3(); o.getWorldPosition(v); return camera.localToWorld(v); }
@@ -5815,6 +5884,11 @@ const AIM_OFF=[0,-.46];   /* รอบ 460: ผู้ใช้ขีดเส้
       แก้ได้เฉพาะเมื่อผู้ใช้สั่งตรง ๆ · ปืนใหม่ให้เพิ่ม key ใหม่ ห้ามขยับของเดิม */
 const AIM_BY_GUN={ r93:[-0.016,-0.018] };
 function aimOffNow(){ if(inHeli||riding) return [0,0];
+  /* The baked FPS rifle frames are authored around the viewport centre (including ADS optic).
+     AIM_OFF belongs to the legacy 3D rifle pose at 73% screen height; reusing it makes bullets and
+     the green reticle leave the visible barrel in different directions. Keep the old pose fallback,
+     but converge sprite fire on the centre like a conventional FPS. */
+  if(fpsWeaponReady&&weapon==='rifle') return [0,0];
   const a=AIM_BY_GUN[weapon]||AIM_OFF; return [a[0], a[1]]; }
 /* จุดเล็งในหน่วย % ของจอ (ใช้วางวงเลนส์/หน้ากาก CSS) */
 /* ตำแหน่งท่าแนบไหล่ที่ "เลื่อนไปตรงจุดเล็ง" แล้ว (ADS_POS เก็บค่าเทียบแกนเล็ง ไม่ใช่เทียบกลางจอ) */
@@ -6481,8 +6555,7 @@ function dropFighter(f,mine,byAlly){
   if(f.dead) return;
   f.dead=true;
   boom(f.grp.position,1.35,0x8affc0);
-  scene.remove(f.grp);
-  if(f.bar){ f.bar.tx.dispose(); f.bar.spr.material.dispose(); }   // ❤️ รอบ 557: คืนหน่วยความจำแถบพลัง
+  disposeFighter(f);
   const i=fighters.indexOf(f); if(i>=0) fighters.splice(i,1);
   if(mine) myKill|=(1<<f.letterIdx);              // 🤝 บันทึกว่าลำนี้ตกบนเครื่องเรา → ส่งให้เพื่อนเห็นตรงกัน (บิต a-z)
   let match=false;
@@ -6590,7 +6663,7 @@ function applyShared(){
   if(mask) fighters.slice().forEach(f=>{ if(mask&(1<<f.letterIdx)) dropFighter(f,false); });
 }
 function startWave(){
-  fighters.slice().forEach(f=>scene.remove(f.grp)); fighters=[];
+  clearFighters();
   msDead=false; msArmor=MS_HP; msRecover=false;
   if(mother){ mother.visible=true; mother.scale.setScalar(1); mother.position.y=MS_Y; }
   letters.forEach(l=>{ l.down=false; });
@@ -6717,10 +6790,11 @@ function bindInput(){
     if(lookId===t.identifier) lookId=null;
     moveJoy(t);
   };
+  const resetJoy=()=>{ joy.id=null; joy.dx=joy.dy=0; if(joyKnob) joyKnob.style.transform=''; };
   const joyAlive=e=>{
     if(joy.id===null) return false;
     for(const t of e.touches) if(t.identifier===joy.id) return true;
-    joy.id=null; joy.dx=joy.dy=0; joyKnob.style.transform=''; return false;
+    resetJoy(); return false;
   };
   joyEl.addEventListener('touchstart',e=>{
     if(!joyAlive(e)){
@@ -6787,16 +6861,27 @@ function bindInput(){
   const endTouch=e=>{
     for(const t of e.changedTouches){
       cand.delete(t.identifier);
-      if(t.identifier===joy.id){ joy.id=null; joy.dx=joy.dy=0; joyKnob.style.transform=''; }
+      if(t.identifier===joy.id) resetJoy();
       /* 🚁 รอบ 562: ปล่อยนิ้ว = คันเร่งกลับศูนย์ → ลอยนิ่ง (hover) เหมือนโลกเฮลิฯ */
       if(t.identifier===lookId){ lookId=null; phClimb=0; }
     }
+    /* Some WebViews omit/reorder changedTouches during multi-touch release. The authoritative
+       active-touch list prevents stale joystick vectors even when the released id is missing. */
+    joyAlive(e);
   };
   /* ผูกที่ window (capture) แทน wrapEl — จังหวะ "ปล่อยนิ้ว" จะไม่มีทางหลุด แม้ชิ้นที่นิ้วแตะอยู่ถูกวาดใหม่/ซ่อนกลางคัน
      (ต้นเหตุข้อ ③) · ยังกิน touch เฉพาะตอน running และเฉพาะนิ้วของโลกนี้เท่านั้น */
   window.addEventListener('touchmove',onMove,{passive:false,capture:true});
   window.addEventListener('touchend',endTouch,{capture:true});
   window.addEventListener('touchcancel',endTouch,{capture:true});
+  /* Losing focus can swallow both touchend and keyup. Clear only transient movement input;
+     gameplay state and the user's run-mode preference remain unchanged. */
+  const releaseMovement=()=>{
+    resetJoy(); lookId=null; phClimb=0;
+    ['w','a','s','d','up','dn','shift','space','ctrl','q','e'].forEach(k=>{ keys[k]=false; });
+  };
+  window.addEventListener('blur',releaseMovement);
+  document.addEventListener('visibilitychange',()=>{ if(document.hidden) releaseMovement(); });
   /* ปุ่มยิง (กดค้าง = ยิงรัว) */
   const hold=(el,on,off)=>{
     el.addEventListener('touchstart',e=>{ on(); e.preventDefault(); },{passive:false});
@@ -9997,8 +10082,9 @@ function exitWorld(){
   if(hurtEl) hurtEl.classList.remove('on');
   netLeave();                                       // 🌐 ออกห้องสมรภูมิ + ลบตัวเองจาก DB
   keys={}; firing=false; joy.id=null; joy.dx=joy.dy=0; lookId=null;
-  if(fpsWeapon) fpsWeapon.dispose(); fpsWeaponReady=false;
-  if(weaponSpriteEl){ weaponSpriteEl.style.display='none'; weaponSpriteEl.style.backgroundImage=''; }
+  if(fpsWeapon) fpsWeapon.dispose(); fpsWeaponReady=false; fpsWeaponAdsFire=0;
+  if(weaponSpriteEl){ weaponSpriteEl.style.display='none'; weaponSpriteEl.style.backgroundImage=''; weaponSpriteEl.dataset.adsFire=''; }
+  clearFighters();
   inHeli=false; riding=null; rideExt=false; rideHostP=null; rideSpd=0;
   setScoped(false); wrapEl.classList.remove('on','fly','gunner','gunext','scoped');
   if(seatBtn) seatBtn.style.display='none';

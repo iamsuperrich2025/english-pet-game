@@ -33,4 +33,15 @@ eq(role(touch(620,260),rightJoy,812,false,false),'ignored','right-side miss neve
 eq(role(touch(110,180),rightJoy,812,false,false),'look','left side controls camera in left-handed layout');
 eq(role(touch(152,260),leftJoy,812,true,false),'ignored','nearby button is not swallowed by movement slop');
 
-console.log('PASS invasion touch roles: 9 cases');
+// Release hardening: changedTouches may omit the joystick id on some multi-touch WebViews.
+const bindStart=source.indexOf('function bindInput()');
+const bindEnd=source.indexOf('function moveJoy(',bindStart);
+const bindSource=source.slice(bindStart,bindEnd);
+eq(/const endTouch=e=>\{[\s\S]*?joyAlive\(e\);/.test(bindSource),true,'touchend reconciles against authoritative active touches');
+eq(/window\.addEventListener\('blur',releaseMovement\)/.test(bindSource),true,'focus loss clears transient movement');
+eq(/visibilitychange[\s\S]*?releaseMovement\(\)/.test(bindSource),true,'hidden page clears transient movement');
+eq(/#inv-weapon-sprite\{[\s\S]*?background-position:50% 50%;background-size:cover/.test(source),true,'wide hip viewmodel maps to the viewport without aspect distortion');
+eq(/data-state="ADS_EXIT"\]\{background-position:50% 100%;background-size:contain\}/.test(source),true,'ADS restores centered optic alignment');
+eq(/if\(fpsWeaponReady&&weapon==='rifle'\) return \[0,0\];/.test(source),true,'sprite rifle reticle and shot direction converge at screen centre');
+
+console.log('PASS invasion touch roles: 9 role cases + input guards + weapon/aim anchors');
