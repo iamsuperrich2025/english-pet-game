@@ -4722,3 +4722,9 @@
 
 - **รอบ 1091 · Firebase PWA + stable TWA:** เพิ่ม `npm run build` → `dist/`, `firebase.json`, `manifest.webmanifest`, Bubblewrap identity `app.web.vocabworld.twa`; Android ไม่มี game assets และ normal game update ไม่ต้อง rebuild AAB
 - **รอบ 1090 · รีเซ็ตรอบเมื่อ Haunted Hotel ว่าง:** NetRoom จำจำนวนผู้เล่นก่อนเข้าห้อง; ถ้าเป็น 0 ผู้เล่นคนแรกจะ transaction สร้าง canonical run ใหม่ทันทีและไม่แสดง state เก่าระหว่างรอล้าง ส่วนผู้เล่นที่เข้ามาสมทบยัง adopt run เดียวกันตามเดิม; fresh-start ถูก consume หลัง init สำเร็จจึงไม่รีเซ็ตซ้ำตอน Firebase reconnect · ไม่เพิ่ม field/ไม่ต้องแก้ Rules · เพิ่ม regression `tools/test_hauntedhotel_session_reset.js` และ Phase 4/rules/syntax/undefined/template/assets/diff ผ่าน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1093 · Google Play privacy/account deletion remediation:** Settings มี entry ลบบัญชีจุดเดียว พร้อมคำเตือน → พิมพ์ `DELETE` → Google re-auth → RTDB multi-location delete → Firebase Auth delete; ถ้าลบ Auth ไม่สำเร็จหลัง RTDB จะค้างสถานะ finalize-only และไม่รายงานสำเร็จเท็จ
+- **รอบ 1092 · Haunted Hotel ตู้/ผี/พลังชีวิต:** เปิดตู้ทุกใบไม่ Jump Scare ทันที; หลังบานเริ่มเปิด 650ms และผู้เล่นหันออก ≥1.05 rad จึงแสดงหน้าผีเต็มจอ 3 วิ โดยซ่อน HUD/ฉากอื่นทั้งหมด

@@ -61,7 +61,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/city3d.js** (3,315 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
 - **js/examstd.js** (945 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812 · โหมดจับเวลาจริง+สถิติต่อส่วน รอบ 814) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
-- **js/f1_3d.js** (3,257 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
+- **js/f1_3d.js** (3,351 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (123 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/game.js** (1,210 บรรทัด) — เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ · รางวัล: จับคู่ถูก +10🪙 +2RP +5EXP · เคลียร์รอบ +20🪙 +5RP · สอบผ่านครั้งแรก +รางวัลหมวด +100RP · ผ่านซ้ำ +20🪙 +30RP · ไม่ผ่าน +5RP
 - **js/gradelock.js** (169 บรรทัด) — 🔒 GRADE LOCK — ล็อกการเปลี่ยนระดับชั้น (รอบ 647 · ผู้ใช้สั่ง 28 ก.ค. 2026) · เหตุผล: ระดับชั้นคุมความยากคำศัพท์ (vocabForStudent/gradeBand) → เด็กที่ "ลดชั้น" · จะได้คำง่าย ๆ แล้วปั๊มเหรียญได้เร็วผิดปกติ · ต่อยอดจากรอบ 643 (สัญลักษณ์ดาว/เพชรใต้ชื่อ)
@@ -106,6 +106,8 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,254 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (198 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
+
 
 
 
