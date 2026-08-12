@@ -25,9 +25,11 @@ function element(tag) {
 async function boot({ current, remote, acknowledged }) {
   const nodes = new Map();
   const store = new Map(acknowledged ? [['vw-update-acknowledged', acknowledged]] : []);
+  const listeners = {};
   let reloads = 0;
   let updateCalls = 0;
   let intervalMs = 0;
+  let fetchCalls = 0;
   const body = element('body');
   const head = element('head');
   body.appendChild = (child) => { child._nodes = nodes; if (child.id) nodes.set(child.id, child); };
@@ -48,8 +50,8 @@ async function boot({ current, remote, acknowledged }) {
     document,
     navigator: { serviceWorker: { controller: {}, register() { return Promise.resolve(registration); }, addEventListener() {} } },
     location: { protocol: 'https:', reload() { reloads += 1; } },
-    window: { addEventListener() {} },
-    fetch() { return Promise.resolve({ ok: true, json: () => Promise.resolve({ version: remote }) }); },
+    window: { addEventListener(name, fn) { (listeners[name] ||= []).push(fn); } },
+    fetch() { fetchCalls += 1; return Promise.resolve({ ok: true, json: () => Promise.resolve({ version: remote }) }); },
     localStorage: { getItem: (key) => store.get(key) || null, setItem: (key, value) => store.set(key, value) },
     sessionStorage: { getItem() { return null; }, setItem() {} },
     setTimeout,
@@ -61,7 +63,12 @@ async function boot({ current, remote, acknowledged }) {
   };
   vm.runInNewContext(source, context);
   await new Promise((resolve) => setTimeout(resolve, 20));
-  return { nodes, store, registration, intervalMs, get reloads() { return reloads; }, get updateCalls() { return updateCalls; } };
+  return {
+    nodes, store, registration, listeners, intervalMs,
+    get fetchCalls() { return fetchCalls; },
+    get reloads() { return reloads; },
+    get updateCalls() { return updateCalls; },
+  };
 }
 
 (async () => {
@@ -86,7 +93,15 @@ async function boot({ current, remote, acknowledged }) {
   }
   if (available.updateCalls !== 0) throw new Error('Remote build updated before the user clicked');
 
-  console.log('PASS: explicit update prompts for loaded, acknowledged, and remote builds');
+  const beforeRestore = available.fetchCalls;
+  for (const fn of available.listeners.pagehide || []) fn({ persisted: true });
+  for (const fn of available.listeners.pageshow || []) fn({ persisted: true });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  if (available.fetchCalls <= beforeRestore || available.intervalMs !== 15000) {
+    throw new Error('A restored 3D Lobby did not resume update checks');
+  }
+
+  console.log('PASS: explicit update prompts for loaded, acknowledged, remote, and restored builds');
 })().catch((error) => {
   console.error(error.stack || error.message);
   process.exitCode = 1;

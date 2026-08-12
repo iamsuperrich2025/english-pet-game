@@ -7,6 +7,7 @@
   var RELOAD_KEY = 'vw-update-reloaded';
   var ACK_KEY = 'vw-update-acknowledged';
   var checkTimer = null;
+  var registrationRef = null;
   var applying = false;
 
   function validBuild(value) {
@@ -172,14 +173,21 @@
     });
   }
 
+  function scheduleChecks(registration) {
+    if (checkTimer) clearInterval(checkTimer);
+    checkTimer = setInterval(function () { check(registration); }, 15 * 1000);
+  }
+
   function start() {
     addBuildLabel();
     if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then(function (registration) {
+        registrationRef = registration;
         check(registration);
-        checkTimer = setInterval(function () { check(registration); }, 15 * 1000);
+        scheduleChecks(registration);
         window.addEventListener('online', function () { check(registration); });
+        window.addEventListener('focus', function () { check(registration); });
         document.addEventListener('visibilitychange', function () {
           if (!document.hidden) check(registration);
         });
@@ -191,5 +199,13 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
   else start();
-  window.addEventListener('pagehide', function () { if (checkTimer) clearInterval(checkTimer); }, { once: true });
+  window.addEventListener('pageshow', function () {
+    if (!registrationRef) return;
+    check(registrationRef);
+    scheduleChecks(registrationRef);
+  });
+  window.addEventListener('pagehide', function () {
+    if (checkTimer) clearInterval(checkTimer);
+    checkTimer = null;
+  });
 }());

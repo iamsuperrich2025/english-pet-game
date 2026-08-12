@@ -13,6 +13,8 @@
 const BUILD_ID = '__VW_BUILD_VERSION__';
 const SHELL_CACHE = `vw-shell-${BUILD_ID}`;
 const ASSET_CACHE = 'vw-assets-content-v1';
+const CITY_RECOVERY_CACHE = 'vw-city-update-recovery-v1';
+const CITY_RECOVERY_MARKER = '/__vw_recovery__/city-update-prompt-v1';
 const MANIFEST_URL = `/asset-manifest.json?v=${encodeURIComponent(BUILD_ID)}`;
 const PRECACHE = __VW_PRECACHE__;
 let assetManifestPromise = null;
@@ -70,9 +72,27 @@ self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
     const shellKeys = keys.filter((key) => key.startsWith('vw-shell-')).sort().reverse();
+    const hadPreviousShell = shellKeys.some((key) => key !== SHELL_CACHE);
     const keep = new Set([SHELL_CACHE, ...shellKeys.filter((key) => key !== SHELL_CACHE).slice(0, 1)]);
     await Promise.all(shellKeys.filter((key) => !keep.has(key)).map((key) => caches.delete(key)));
     await self.clients.claim();
+    /* รอบ 1112: กู้หน้า City ที่มือถือค้างไว้ใน memory/bfcache ก่อนระบบป้ายยืนยันรุ่นถูกติดตั้ง
+       ทำครั้งเดียวต่อเครื่องและเฉพาะ client หน้า City; หน้า Classic/เกมที่กำลังเล่นไม่ถูกรีโหลด */
+    if (hadPreviousShell) {
+      const recovery = await caches.open(CITY_RECOVERY_CACHE);
+      const recovered = await recovery.match(CITY_RECOVERY_MARKER);
+      if (!recovered) {
+        const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        const cityClients = clients.filter((client) => {
+          const pathname = new URL(client.url).pathname;
+          return pathname === '/' || pathname === '/index.html';
+        });
+        if (cityClients.length) {
+          await recovery.put(CITY_RECOVERY_MARKER, new Response(BUILD_ID));
+          await Promise.allSettled(cityClients.map((client) => client.navigate(client.url)));
+        }
+      }
+    }
   })());
 });
 
