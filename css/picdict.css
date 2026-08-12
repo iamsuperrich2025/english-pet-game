@@ -1,317 +1,106 @@
 /* ============================================================
-   📖 picdict.css — หนังสือ Picture Dictionary (รอบ 992)
-   จอเต็ม + หนังสือกาง 2 หน้า พลิกแบบ 3D · เลย์เอาต์ต้องพอดีจอทุกขนาด
-   (กฎทอง 7: ไม่มี scrollbar — ทดสอบ 812×375 เสมอ)
+   🖼️ Picture Dictionary — หน้าเดียว 40 คำ (รอบ 1114)
+   8×5 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
    ============================================================ */
-
-/* ⚠️ ต้องชนะ `.screen.active:not(#screen-dashboard){width:min(780px,94vw)}` ใน style.css
-   (:not(#id) นับ specificity เป็น id) → ใส่ body นำหน้า — บทเรียนรอบ 984 */
 body #screen-picdict.screen.active{
-  position:fixed;inset:0;margin:0;width:100vw;max-width:none;z-index:55;overflow:hidden;
-  display:flex;flex-direction:column;animation:none;padding:0;
-  background:
-    radial-gradient(ellipse at 50% -20%, #fff6df 0%, transparent 55%),
-    linear-gradient(180deg,#8a5a3b 0%,#75482c 45%,#5f3820 100%);   /* โต๊ะไม้อุ่น ๆ */
+  position:fixed;inset:0;z-index:80;display:flex!important;flex-direction:column;
+  width:100%;height:100%;min-height:0;margin:0;padding:max(5px,env(safe-area-inset-top)) max(7px,env(safe-area-inset-right)) max(5px,env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left));
+  overflow:hidden;background:linear-gradient(145deg,#efe3c8,#d7bd83 55%,#b78c4d);box-sizing:border-box;
 }
-#screen-picdict .back-btn{position:absolute;top:8px;left:8px;z-index:9;}
-#screen-picdict .pd-toc-btn{
-  position:absolute;top:8px;right:8px;z-index:9;border:none;border-radius:12px;
-  padding:8px 13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
-  background:#fff3d6;color:#6d4c1b;box-shadow:0 2px 6px rgba(0,0,0,.25);
-}
-#screen-picdict .pd-toc-btn:active{transform:scale(.95);}
+#screen-picdict [hidden]{display:none!important}
+#screen-picdict button{font-family:inherit}
 
-#screen-picdict .pd-stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
-/* ⚠️ กฎ display ของคลาสชนะ attribute hidden (UA style) — ต้องบังคับซ่อนเองเสมอ */
-#screen-picdict [hidden]{display:none !important;}
+/* หัวจอ — ปุ่มไม่ลอยทับเนื้อหา */
+#screen-picdict .pd-toolbar{flex:0 0 auto;min-height:46px;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:8px;padding:3px 5px 5px}
+#screen-picdict .back-btn,#screen-picdict .pd-catalog-btn,#screen-picdict .pd-quiz-btn{
+  position:static;border:0;border-radius:11px;padding:8px 13px;color:#fff;font-weight:800;font-size:clamp(12px,2.35vh,15px);cursor:pointer;box-shadow:0 3px 7px rgba(55,32,5,.28);white-space:nowrap
+}
+#screen-picdict .back-btn{background:#7b5a37}.pd-catalog-btn{background:#1769aa}.pd-quiz-btn{background:#2e7d32}
+#screen-picdict .pd-title{min-width:0;text-align:center;line-height:1.05;color:#4e3517}
+#screen-picdict .pd-title b{display:block;font-size:clamp(17px,3.5vh,25px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#screen-picdict .pd-title span{display:block;margin-top:2px;font-size:clamp(10px,2vh,13px);color:#806337}
 
-/* ── 📕 ปกหนังสือ = "แผ่นพลิกใบขวา" ของเล่มเดียวกัน (รอบ 1022) ──
-   เดิมปกเป็น div คนละใบวางกลางจอ พอเปิดแล้วหมุนหายไปทั้งใบ แล้วเล่มกางโผล่มาทั้งเล่ม
-   (ผู้ใช้: "เหมือนเปิดยกทั้งเล่ม") → ตอนนี้ปกเป็นหน้ากระดาษใบหนึ่งในเล่ม พลิกใบเดียวเจอสารบัญ
-   ท่า "ปิดอยู่" = js เลื่อนเล่มไปซ้าย 25% (coverShift) ให้ครึ่งขวาอยู่กลางจอ + ซ่อนหน้าซ้าย */
-#screen-picdict .pd-face.pd-cover-face{
-  padding:0;cursor:grab;
-  background:linear-gradient(135deg,#e8536b 0%,#d63e5c 45%,#b92746 100%);
-  box-shadow:inset 0 0 0 4px rgba(255,255,255,.12), inset 10px 0 18px rgba(0,0,0,.28);
+/* 40 การ์ด = 8 คอลัมน์ × 5 แถว ขนาดตายตัวตามพื้นที่ที่เหลือ */
+#screen-picdict .pd-gallery{
+  flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr));
+  gap:clamp(3px,.65vw,8px);padding:clamp(4px,.7vw,9px);border:1px solid rgba(119,82,27,.35);border-radius:15px;
+  background:rgba(255,251,235,.94);box-shadow:inset 0 0 24px rgba(126,83,25,.13),0 8px 22px rgba(63,37,8,.2);overflow:hidden
 }
-/* ปิดอยู่: ไม่มีมุมพับ/ขอบกระดาษฝั่งซ้ายให้เห็น (ยังไม่ได้เปิดเล่ม) */
-#screen-picdict .pd-book.cover-mode .pd-corner,
-#screen-picdict .pd-book.cover-mode .pd-stack-l{display:none;}
-/* แผ่นปกยังพลิกไม่พ้นครึ่งทาง = หน้าซ้ายต้องยังไม่โผล่ (ไม่งั้นเห็นเล่มกางทั้งเล่มตั้งแต่ยังไม่เปิด) */
-#screen-picdict .pd-book.cover-half .pd-static-l{visibility:hidden;}
-#screen-picdict .pd-cover-in{
-  position:absolute;inset:12px;border:3px dashed rgba(255,235,180,.75);border-radius:10px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-  color:#fff;text-align:center;padding:8px;
-}
-#screen-picdict .pd-cover-top{font-size:clamp(18px,4.5vh,26px);letter-spacing:4px;}
-#screen-picdict .pd-cover-book{font-size:clamp(40px,12vh,72px);filter:drop-shadow(0 4px 6px rgba(0,0,0,.3));}
-#screen-picdict .pd-cover-in h1{
-  margin:0;font-size:clamp(20px,5.5vh,34px);line-height:1.1;letter-spacing:.5px;
-  color:#ffe9a8;text-shadow:0 2px 0 rgba(0,0,0,.25);
-}
-#screen-picdict .pd-cover-in p{margin:0;font-size:clamp(11px,2.6vh,15px);opacity:.95;}
-#screen-picdict .pd-cover-hint{
-  margin-top:4px;font-size:clamp(11px,2.6vh,14px);font-weight:700;background:rgba(255,255,255,.18);
-  border-radius:99px;padding:5px 12px;animation:pd-hint 1.4s ease-in-out infinite;
-}
-@keyframes pd-hint{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-
-/* ── 📖 หนังสือกาง ──
-   ⚠️ ขนาดเล่ม (width/height) + ระยะขอบบน-ล่าง คำนวณด้วย fitBook() ใน js/picdict.js
-   (วัดจากจอจริงทุกครั้ง → กางเต็มความกว้าง + อยู่กึ่งกลางเป๊ะ) ห้ามตั้ง aspect-ratio ทับที่นี่ */
-#screen-picdict .pd-bookwrap{display:flex;align-items:center;gap:0;width:100%;height:100%;justify-content:center;padding:6px 0 8px;}
-#screen-picdict .pd-book{
-  position:relative;perspective:2400px;touch-action:none;   /* ปัดพลิกหน้าได้ ไม่ให้เบราว์เซอร์แย่งท่าทาง */
-  filter:drop-shadow(0 16px 30px rgba(0,0,0,.45));
-}
-/* กระดาษ: พื้นครีม + เงาโค้งเข้าหาสันหนังสือ */
-#screen-picdict .pd-page,#screen-picdict .pd-face{
-  position:absolute;top:0;bottom:0;width:50%;background:#fffdf4;overflow:hidden;
-  display:flex;flex-direction:column;padding:8px 10px 4px;
-}
-#screen-picdict .pd-static-l,#screen-picdict .pd-face.pd-face-b{border-radius:10px 0 0 10px;}
-#screen-picdict .pd-static-r,#screen-picdict .pd-face.pd-face-f{border-radius:0 10px 10px 0;}
-#screen-picdict .pd-static-l{left:0;background:linear-gradient(90deg,#fffdf4 0 88%,#f1e9cf 97%,#e5dab8 100%);}
-#screen-picdict .pd-static-r{right:0;background:linear-gradient(270deg,#fffdf4 0 88%,#f1e9cf 97%,#e5dab8 100%);}
-/* สันหนังสือ */
-#screen-picdict .pd-spine{
-  position:absolute;top:-2px;bottom:-2px;left:50%;width:14px;transform:translateX(-50%);z-index:4;
-  background:linear-gradient(90deg,transparent 0,rgba(90,60,20,.28) 46%,rgba(60,35,10,.4) 50%,rgba(90,60,20,.28) 54%,transparent 100%);
-  pointer-events:none;
-}
-/* ขอบตั้งกระดาษ 2 ข้าง — ความหนาเปลี่ยนตามหน้าที่อ่านถึง (js ตั้ง width) */
-#screen-picdict .pd-stack{
-  position:absolute;top:4px;bottom:4px;width:8px;z-index:0;transition:width .4s;
-  background:repeating-linear-gradient(90deg,#fffbea 0 2px,#ddd2ae 2px 3px);
-}
-#screen-picdict .pd-stack-l{left:0;transform:translateX(-100%);border-radius:4px 0 0 4px;box-shadow:-2px 3px 6px rgba(0,0,0,.3);}
-#screen-picdict .pd-stack-r{right:0;transform:translateX(100%);border-radius:0 4px 4px 0;box-shadow:2px 3px 6px rgba(0,0,0,.3);}
-
-/* ── แผ่นที่กำลังพลิก ── */
-#screen-picdict .pd-turn{
-  position:absolute;top:0;bottom:0;right:0;width:50%;z-index:6;
-  transform-style:preserve-3d;transform-origin:left center;
-}
-#screen-picdict .pd-turn.back{right:auto;left:0;transform-origin:right center;}
-#screen-picdict .pd-face{width:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-#screen-picdict .pd-face-b{transform:rotateY(180deg);}
-/* เงาบนผิวแผ่นพลิก (มืดตอนตั้งฉาก แล้วคลายออก) + เงาที่แผ่นทอดลงหน้านิ่งปลายทาง */
-#screen-picdict .pd-face::after{
-  content:'';position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(90deg,rgba(60,40,10,.42),transparent 55%);
-}
-#screen-picdict .pd-book.fwd .pd-face::after,
-#screen-picdict .pd-book.bwd .pd-face::after{animation:pd-shade .75s ease-in-out;}
-@keyframes pd-shade{0%{opacity:0}45%{opacity:1}100%{opacity:0}}
-#screen-picdict .pd-cast{
-  position:absolute;top:0;bottom:0;width:50%;z-index:5;pointer-events:none;opacity:0;
-}
-#screen-picdict .pd-book.fwd .pd-cast{left:0;background:linear-gradient(270deg,rgba(50,30,5,.35),transparent 70%);animation:pd-cast .75s ease-in;}
-#screen-picdict .pd-book.bwd .pd-cast{right:0;background:linear-gradient(90deg,rgba(50,30,5,.35),transparent 70%);animation:pd-cast .75s ease-in;}
-@keyframes pd-cast{0%{opacity:0}55%{opacity:0}80%{opacity:1}100%{opacity:0}}
-
-/* 👆 รอบ 995: ลากพลิกตามนิ้ว (drag-follow) — เงาต้องเดินตามองศาที่ลากจริง ไม่ใช่ keyframes
-   --pdp = ความคืบหน้าการพลิก 0..1 (js ตั้งทุกเฟรม) */
-#screen-picdict .pd-book.dragging .pd-face::after{animation:none;opacity:calc(var(--pdp,0) * .85);}
-#screen-picdict .pd-book.dragging .pd-cast{animation:none;opacity:calc(var(--pdp,0) * .75);}
-#screen-picdict .pd-book.dragging.settle .pd-face::after,
-#screen-picdict .pd-book.dragging.settle .pd-cast{transition:opacity .3s linear;}
-
-/* ── มุมพับกระดาษ (จุดกดพลิก) ── */
-#screen-picdict .pd-corner{position:absolute;bottom:0;width:46px;height:46px;z-index:7;cursor:pointer;}
-#screen-picdict .pd-corner-r{right:0;background:linear-gradient(315deg,#e9dfc2 0 12px,transparent 12px);border-radius:0 0 10px 0;}
-#screen-picdict .pd-corner-l{left:0;background:linear-gradient(45deg,#e9dfc2 0 12px,transparent 12px);border-radius:0 0 0 10px;}
-#screen-picdict .pd-corner-r:hover{background:linear-gradient(315deg,#d9cba0 0 18px,transparent 18px);}
-#screen-picdict .pd-corner-l:hover{background:linear-gradient(45deg,#d9cba0 0 18px,transparent 18px);}
-/* 👆 ป้ายบอกวิธีพลิก (ขึ้นตอนเปิดหนังสือ แล้วหายเอง — ปุ่มลูกศรถูกถอดออกรอบ 995) */
-#screen-picdict .pd-hint{
-  position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:12;pointer-events:none;
-  background:rgba(40,24,8,.72);color:#ffe9b0;border-radius:99px;padding:6px 16px;
-  font-size:clamp(12px,2.6vh,15px);font-weight:700;box-shadow:0 3px 10px rgba(0,0,0,.35);
-  animation:pd-hintfade 2.8s ease forwards;
-}
-@keyframes pd-hintfade{0%{opacity:0;transform:translate(-50%,8px)}12%{opacity:1;transform:translate(-50%,0)}
-                       75%{opacity:1}100%{opacity:0}}
-
-/* ── เนื้อหาหน้า: หัวเรื่อง + ภาพแผ่น + เลขหน้า ── */
-#screen-picdict .pd-ph{
-  flex:0 0 auto;display:flex;align-items:baseline;gap:6px;justify-content:center;
-  font-size:clamp(12px,2.8vh,17px);color:#5d451d;
-}
-#screen-picdict .pd-ph b{font-size:1.05em;}
-#screen-picdict .pd-ph span{font-size:.82em;color:#a08b5a;}
-#screen-picdict .pd-imgbox{position:relative;flex:1;min-height:0;}
-/* 🖼️ รอบ 995: แผ่นภาพ "เต็มหน้ากระดาษ" (object-fit:fill) — fitBook() คุมไม่ให้ยืดเกิน
-   PD_STRETCH (ดู js/picdict.js) จึงไม่บิดเบี้ยว · เดิม contain ทำให้เหลือขอบว่างข้างละ ~30px
-   ภาพเลยดูบีบแคบกว่าหน้ากระดาษจริง */
-#screen-picdict .pd-imgbox img{
-  position:absolute;inset:0;width:100%;height:100%;object-fit:fill;
-  -webkit-user-drag:none;user-select:none;
-}
-#screen-picdict .pd-pno{
-  flex:0 0 auto;text-align:center;font-size:clamp(9px,2vh,12px);color:#b3a075;padding-top:2px;
-}
-/* ตารางช่องคลิก (ทับภาพพอดี — js ตั้งตำแหน่ง/ขนาด) */
-#screen-picdict .pd-cells{position:absolute;display:grid;}
-/* 🧭 รอบ 1003: แผ่นที่อ่านเส้นแบ่งการ์ดจากภาพได้ → วางช่องเองทีละใบ (แถวไม่เท่ากัน กริดจึงใช้ไม่ได้) */
-#screen-picdict .pd-cells.pd-cells-abs{display:block;}
-#screen-picdict .pd-cells-abs .pd-cell{position:absolute;}
 #screen-picdict .pd-cell{
-  border:none;background:transparent;cursor:pointer;border-radius:10%;padding:0;
+  min-width:0;min-height:0;overflow:hidden;display:grid;grid-template-rows:minmax(0,1fr) auto auto;align-items:center;justify-items:center;
+  gap:1px;padding:3px 3px 2px;border:1px solid #b8dbe9;border-radius:9px;background:#fff;cursor:pointer;color:#15334a;
+  box-shadow:0 1px 3px rgba(30,67,88,.12);transition:transform .12s,box-shadow .12s,background .12s
 }
-#screen-picdict .pd-cell:hover{background:rgba(255,214,79,.18);box-shadow:inset 0 0 0 2px rgba(230,170,30,.55);}
-#screen-picdict .pd-cell.hit{animation:pd-hit .5s;}
-@keyframes pd-hit{0%{box-shadow:inset 0 0 0 3px #ffb300;background:rgba(255,214,79,.4)}100%{box-shadow:inset 0 0 0 0 transparent}}
+#screen-picdict .pd-cell:hover,#screen-picdict .pd-cell:focus-visible{transform:translateY(-1px);box-shadow:0 3px 9px rgba(30,92,125,.28);background:#fffbea;outline:2px solid #ffc107;z-index:2}
+#screen-picdict .pd-cell canvas{display:block;width:100%;max-width:100%;height:100%;min-width:0;min-height:0;object-fit:contain}
+#screen-picdict .pd-cell b{max-width:100%;font-size:clamp(10px,1.85vh,15px);line-height:1.03;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#0b395b}
+#screen-picdict .pd-cell span{max-width:100%;font-size:clamp(8.5px,1.6vh,12.5px);line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#5f4931}
+#screen-picdict .pd-empty{grid-column:1/-1;grid-row:1/-1;align-self:center;justify-self:center;font-size:18px;font-weight:800;color:#7d623b}
 
-/* ── สารบัญ ── */
-#screen-picdict .pd-toc-head{flex:0 0 auto;text-align:center;font-weight:800;color:#8a2743;font-size:clamp(13px,3vh,19px);}
-#screen-picdict .pd-toc-head small{display:block;font-weight:600;color:#a08b5a;font-size:.68em;}
-#screen-picdict .pd-toc{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-evenly;gap:2px;overflow:hidden;}
-#screen-picdict .pd-g-t{font-weight:800;color:#6d4c1b;font-size:clamp(11px,2.5vh,15px);margin-bottom:2px;}
-#screen-picdict .pd-chips{display:flex;flex-wrap:wrap;gap:4px;}
-#screen-picdict .pd-chip{
-  border:none;border-radius:99px;cursor:pointer;font-family:inherit;font-weight:600;
-  font-size:clamp(9.5px,2.2vh,13px);padding:3px 9px;background:#fdeed3;color:#7a5a22;
-  box-shadow:0 1px 2px rgba(0,0,0,.12);
-}
-#screen-picdict .pd-chip:hover{background:#ffd54f;color:#4e3609;}
-#screen-picdict .pd-endpage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a08b5a;}
-#screen-picdict .pd-endpage span{font-size:40px;}
+/* แถบเปลี่ยนหน้า */
+#screen-picdict .pd-footer{flex:0 0 auto;min-height:39px;display:flex;align-items:center;justify-content:center;gap:12px;padding-top:5px}
+#screen-picdict .pd-page-btn{min-width:110px;border:0;border-radius:10px;background:#8b5e2f;color:#fff;padding:7px 13px;font-size:clamp(11px,2.1vh,14px);font-weight:800;cursor:pointer;box-shadow:0 2px 5px rgba(50,28,5,.26)}
+#screen-picdict .pd-page-btn:disabled{opacity:.3;box-shadow:none;cursor:default}
+#screen-picdict .pd-page-info{min-width:190px;text-align:center;line-height:1.1;color:#533816}
+#screen-picdict .pd-page-info b{display:block;font-size:clamp(12px,2.2vh,15px)}
+#screen-picdict .pd-page-info span{display:block;font-size:clamp(9px,1.75vh,12px);color:#785d37}
 
-/* ── 🔍 ป๊อปอัปซูมการ์ดที่แตะ (รอบ 998) ── */
-#screen-picdict .pd-zoom{
-  position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;
-  background:rgba(20,12,4,.6);opacity:0;transition:opacity .18s;cursor:pointer;padding:10px;
-}
-#screen-picdict .pd-zoom.show{opacity:1;}
-#screen-picdict .pd-zoom-card{
-  position:relative;background:#fffdf4;border-radius:18px;padding:14px 20px 12px;
-  box-shadow:0 14px 36px rgba(0,0,0,.5);display:flex;flex-direction:column;align-items:center;gap:8px;
-  border:3px solid #ffd54f;max-width:min(440px,86vw);transform:scale(.85);transition:transform .18s;
-}
-#screen-picdict .pd-zoom.show .pd-zoom-card{transform:scale(1);}
-#screen-picdict .pd-zoom-canvas{
-  display:block;width:auto;height:auto;max-width:100%;max-height:min(52vh,320px);
-  border-radius:12px;background:#f6efd8;box-shadow:0 2px 8px rgba(0,0,0,.15);
-}
-#screen-picdict .pd-zoom-label{text-align:center;}
-#screen-picdict .pd-zoom-label b{display:block;font-size:clamp(19px,4.4vh,28px);color:#c2185b;}
-#screen-picdict .pd-zoom-label span{display:block;font-size:clamp(13px,3vh,18px);color:#7a5a22;margin-top:2px;}
-#screen-picdict .pd-zoom-close{
-  position:absolute;top:-12px;right:-12px;width:32px;height:32px;border-radius:50%;border:none;
-  background:#e53935;color:#fff;font-size:16px;font-weight:800;cursor:pointer;
-  box-shadow:0 3px 8px rgba(0,0,0,.35);
-}
-#screen-picdict .pd-zoom-close:active{transform:scale(.9);}
-#screen-picdict .pd-zoom-close:disabled{
-  background:#9ca3af;box-shadow:0 2px 5px rgba(0,0,0,.22);cursor:not-allowed;transform:none;
-}
-#screen-picdict .pd-zoom-card.listening{
-  border-color:#42a5f5;box-shadow:0 0 0 4px rgba(66,165,245,.24),0 14px 36px rgba(0,0,0,.5);
-}
-#screen-picdict .pd-zoom-listen{
-  min-height:26px;display:flex;align-items:center;justify-content:center;gap:6px;
-  padding:4px 12px;border-radius:999px;background:#eef7ff;color:#27658f;
-  font-size:clamp(11px,2.2vh,14px);font-weight:800;white-space:nowrap;
-}
-#screen-picdict .pd-zoom.listening .pd-zoom-speaker{animation:pd-speaker-pulse .7s ease-in-out infinite alternate;}
-#screen-picdict .pd-zoom.locked-pulse .pd-zoom-card{animation:pd-lock-shake .38s ease;}
-#screen-picdict .pd-zoom-reward{
-  position:absolute;left:calc(100% + 14px);top:50%;z-index:3;transform:translate(-10px,-50%) scale(.65);
-  display:flex;flex-direction:column;align-items:center;min-width:180px;padding:13px 20px;
-  border-radius:18px;background:#fffef5;border:4px solid #ffd54f;
-  box-shadow:0 10px 28px rgba(0,0,0,.34);opacity:0;pointer-events:none;
-}
-#screen-picdict .pd-zoom-reward.show{animation:pd-reward-pop 1.6s ease both;}
-#screen-picdict .pd-zoom-reward b{font-size:clamp(28px,7vh,44px);color:#ef8f00;line-height:1;}
-#screen-picdict .pd-zoom-reward span{margin-top:6px;color:#6d4c1b;font-weight:800;font-size:clamp(12px,2.5vh,16px);white-space:nowrap;}
-@keyframes pd-speaker-pulse{to{transform:scale(1.24);filter:drop-shadow(0 0 4px #42a5f5)}}
-@keyframes pd-lock-shake{20%,60%{transform:translateX(-7px) scale(1)}40%,80%{transform:translateX(7px) scale(1)}}
-@keyframes pd-reward-pop{0%{opacity:0;transform:translate(-10px,-50%) scale(.55)}12%,82%{opacity:1;transform:translate(0,-50%) scale(1)}100%{opacity:0;transform:translate(10px,-58%) scale(1.05)}}
-/* ── บอลลูนคำที่แตะ ── */
-#screen-picdict .pd-balloon{
-  position:absolute;z-index:20;transform:translate(-50%,-100%);pointer-events:none;
-  background:#fff;border-radius:14px;padding:6px 14px;text-align:center;white-space:nowrap;
-  box-shadow:0 4px 14px rgba(0,0,0,.3);border:2px solid #ffd54f;
-  font-size:clamp(13px,3vh,18px);color:#333;
-}
-#screen-picdict .pd-balloon.below{transform:translate(-50%,0);}
-#screen-picdict .pd-balloon b{color:#c2185b;margin-right:6px;}
-#screen-picdict .pd-balloon span{color:#666;font-size:.85em;}
-#screen-picdict .pd-balloon.show{animation:pd-pop .22s;}
-@keyframes pd-pop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+/* เมนูหมวด: ซ้าย 8 หมวดหลัก ขวาเฉพาะชุดย่อยของหมวดนั้น จึงไม่ต้องเลื่อน */
+#screen-picdict .pd-catalog{position:absolute;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:10px;background:rgba(36,23,8,.68)}
+#screen-picdict .pd-catalog-card{width:min(880px,94vw);height:min(500px,90vh);display:flex;flex-direction:column;border:3px solid #f2c14e;border-radius:18px;overflow:hidden;background:#fffaf0;box-shadow:0 18px 44px rgba(0,0,0,.45)}
+#screen-picdict .pd-catalog-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:8px 13px;background:#6d3f20;color:#fff;font-size:clamp(15px,3vh,21px)}
+#screen-picdict .pd-catalog-head button{width:32px;height:32px;border:0;border-radius:50%;background:#d73b38;color:#fff;font-weight:900;cursor:pointer}
+#screen-picdict .pd-catalog-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(180px,35%) 1fr;gap:10px;padding:10px}
+#screen-picdict .pd-groups{display:grid;grid-template-rows:repeat(8,minmax(0,1fr));gap:5px}
+#screen-picdict .pd-group{min-height:0;display:flex;align-items:center;gap:8px;border:1px solid #dcc7a1;border-radius:10px;padding:4px 10px;background:#f6ead4;color:#60411e;font-weight:800;font-size:clamp(11px,2.3vh,15px);cursor:pointer;text-align:left}
+#screen-picdict .pd-group.on{background:#1769aa;color:#fff;border-color:#0d4e82}
+#screen-picdict .pd-sheets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:7px;min-height:0}
+#screen-picdict .pd-sheet{min-height:0;border:1px solid #d8bd88;border-radius:11px;padding:5px;background:#fff;color:#5b3b18;cursor:pointer;overflow:hidden}
+#screen-picdict .pd-sheet b,#screen-picdict .pd-sheet span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#screen-picdict .pd-sheet b{font-size:clamp(11px,2.4vh,16px)}#screen-picdict .pd-sheet span{font-size:clamp(9px,1.9vh,12px);color:#8a704d}
+#screen-picdict .pd-sheet.on{background:#fff0b7;border:2px solid #ef9f0a}
 
-/* ============================================================
-   🎧 โหมดครูถามศัพท์ (รอบ 994)
-   แถบคำถามอยู่บนสุด · ตัวหนังสือกางอยู่ใต้แถบตามเดิม (แถบไม่ทับหนังสือ — pd-stage ยืดตาม)
-   ============================================================ */
-/* 🆕 รอบ 995: ย้ายมา "ซ้อนใต้ปุ่มสารบัญ" แทนการวางเรียงข้างกัน — เรียงข้างกันกินความกว้าง
-   มุมบนขวาไปเกือบ 220px ทำให้ fitBook ต้องหดหนังสือลงเยอะ (ปุ่มห้ามทับหน้ากระดาษ)
-   🆕 รอบ 1022 (ผู้ใช้: "อยู่ใกล้กันเกิน เสี่ยงกดผิด"): ถอยลงมาอีก 34px → ช่องไฟระหว่างปุ่ม
-   จาก ~8px เป็น ~35px (นิ้วเด็กพลาดไปโดนโหมดครูถามยาก) · ยังเกาะขวาเหมือนเดิม
-   เขตหวงห้ามด้านข้างจึงเท่าเดิม fitBook ไม่ต้องหดหนังสือเพิ่ม */
-#screen-picdict .pd-quiz-btn{
-  position:absolute;top:84px;right:8px;z-index:9;border:none;border-radius:12px;
-  padding:8px 13px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;
-  background:#2e7d32;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.28);
-}
-#screen-picdict .pd-quiz-btn:active{transform:scale(.95);}
-/* แถบคำถามเป็นลูกแรกของจอ (flex column) → ต้องเว้นซ้ายให้พ้นปุ่ม ⬅ กลับ ที่ลอยอยู่
-   ระหว่างถาม ปุ่ม 📑 สารบัญ ถูกซ่อน (กลับสารบัญกลางคันไม่มีการ์ดให้ตอบ) แถบจึงกินขวาได้เต็ม */
-#screen-picdict.quiz .pd-toc-btn{display:none;}
-#screen-picdict .pd-qbar{
-  flex:0 0 auto;display:flex;align-items:center;gap:8px;z-index:9;
-  margin:6px max(8px,env(safe-area-inset-right)) 0 max(96px,env(safe-area-inset-left));
-  padding:6px 10px;border-radius:14px;background:rgba(255,248,225,.96);
-  box-shadow:0 3px 10px rgba(0,0,0,.3);
-}
-#screen-picdict .pd-q-ask{
-  flex:1 1 auto;min-width:0;text-align:center;color:#4e3609;font-weight:700;
-  font-size:clamp(12px,2.6vh,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-}
-#screen-picdict .pd-q-ask b{color:#c2185b;}
-#screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{
-  flex:0 0 auto;border:none;border-radius:99px;cursor:pointer;font-family:inherit;font-weight:700;
-  font-size:clamp(11px,2.4vh,14px);padding:6px 12px;
-}
-#screen-picdict .pd-q-replay{background:#ffd54f;color:#4e3609;}
-#screen-picdict .pd-q-quit{background:#ffcdd2;color:#8a2743;}
-#screen-picdict .pd-q-replay:active,#screen-picdict .pd-q-quit:active{transform:scale(.94);}
-#screen-picdict .pd-q-score{flex:0 0 auto;display:flex;gap:6px;align-items:center;
-  font-size:clamp(11px,2.4vh,14px);font-weight:800;}
-#screen-picdict .pd-q-coin{background:#fff3d6;color:#7a5a22;border-radius:99px;padding:4px 10px;}
-#screen-picdict .pd-q-combo{background:#ede7f6;color:#5e35b1;border-radius:99px;padding:4px 10px;}
-#screen-picdict .pd-q-combo.hot{background:#ff6fa7;color:#fff;}
-/* ระหว่างถาม: ช่องคำตอบต้องกดง่ายและเห็นว่าแตะได้ */
-#screen-picdict.quiz .pd-cell{background:rgba(255,255,255,.01);}
-#screen-picdict.quiz .pd-cell:hover{background:rgba(76,175,80,.16);box-shadow:inset 0 0 0 2px rgba(46,125,50,.5);}
-#screen-picdict .pd-cell.qz-ok{animation:pd-qok .9s;}
-#screen-picdict .pd-cell.qz-no{animation:pd-qno .5s;}
-#screen-picdict .pd-cell.qz-target{animation:pd-qhint 1s ease-in-out infinite;}
-@keyframes pd-qok{0%{box-shadow:inset 0 0 0 4px #43a047;background:rgba(76,175,80,.45)}
-                  100%{box-shadow:inset 0 0 0 0 transparent;background:transparent}}
-@keyframes pd-qno{0%,100%{transform:translateX(0)}
-                  20%{transform:translateX(-5px)}60%{transform:translateX(5px)}
-                  0%{box-shadow:inset 0 0 0 3px #e53935}}
-@keyframes pd-qhint{0%,100%{box-shadow:inset 0 0 0 3px rgba(255,179,0,.35)}
-                    50%{box-shadow:inset 0 0 0 4px #ffb300;background:rgba(255,214,79,.35)}}
+/* ครูถามศัพท์ */
+#screen-picdict .pd-qbar{flex:0 0 auto;display:flex;align-items:center;gap:7px;margin:0 5px 5px;padding:5px 9px;border-radius:12px;background:#fff6d9;box-shadow:0 2px 8px rgba(63,37,8,.25)}
+#screen-picdict.quiz .pd-toolbar{min-height:38px}
+#screen-picdict .pd-q-ask{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#4e3609;font-weight:800;font-size:clamp(11px,2.3vh,15px)}
+#screen-picdict .pd-q-ask b{color:#c2185b}
+#screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{flex:0 0 auto;border:0;border-radius:99px;padding:5px 10px;font-weight:800;cursor:pointer}
+#screen-picdict .pd-q-replay{background:#ffd54f;color:#4e3609}.pd-q-quit{background:#ffcdd2;color:#8a2743}
+#screen-picdict .pd-q-score{display:flex;gap:5px;font-size:clamp(9px,1.8vh,12px);font-weight:800}.pd-q-score span{padding:3px 7px;border-radius:99px;background:#fff}.pd-q-score .hot,#screen-picdict #pd-qcombo.hot{background:#ff6fa7;color:#fff}
+#screen-picdict .pd-cell.qz-ok{animation:pd-qok .85s}#screen-picdict .pd-cell.qz-no{animation:pd-qno .45s}#screen-picdict .pd-cell.qz-target{animation:pd-qhint .9s ease-in-out infinite}
+@keyframes pd-qok{0%{box-shadow:inset 0 0 0 5px #43a047;background:#d5f4d6}100%{box-shadow:none;background:#fff}}
+@keyframes pd-qno{20%{transform:translateX(-5px)}60%{transform:translateX(5px)}}
+@keyframes pd-qhint{50%{box-shadow:inset 0 0 0 4px #ffb300;background:#fff5bb}}
 
-/* ── จอเตี้ย (มือถือแนวนอน 812×375) ── */
+/* แตะการ์ด: ป้ายสั้น + ซูม */
+#screen-picdict .pd-balloon{position:fixed;z-index:45;transform:translate(-50%,-100%);padding:5px 12px;border:2px solid #ffd54f;border-radius:12px;background:#fff;box-shadow:0 4px 14px rgba(0,0,0,.3);white-space:nowrap;pointer-events:none}
+#screen-picdict .pd-balloon b{color:#c2185b;margin:0 6px}.pd-balloon span{color:#695a48;font-size:.86em}
+#screen-picdict .pd-zoom{position:absolute;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:10px;background:rgba(20,12,4,.65);opacity:0;transition:opacity .17s}
+#screen-picdict .pd-zoom.show{opacity:1}
+#screen-picdict .pd-zoom-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;width:min(440px,82vw);max-height:92vh;padding:12px 18px 10px;border:3px solid #ffd54f;border-radius:18px;background:#fffdf4;box-shadow:0 16px 38px rgba(0,0,0,.48);transform:scale(.88);transition:transform .17s}
+#screen-picdict .pd-zoom.show .pd-zoom-card{transform:scale(1)}
+#screen-picdict .pd-zoom.listening .pd-zoom-card{border-color:#42a5f5;box-shadow:0 0 0 4px rgba(66,165,245,.25),0 16px 38px rgba(0,0,0,.48)}
+#screen-picdict .pd-zoom-canvas{display:block;max-width:100%;max-height:48vh;width:auto;height:auto;border-radius:12px;background:#fff}
+#screen-picdict .pd-zoom-label{text-align:center}.pd-zoom-label b{display:block;font-size:clamp(20px,4.5vh,29px);color:#c2185b}.pd-zoom-label span{display:block;font-size:clamp(14px,3vh,19px);color:#765720}
+#screen-picdict .pd-zoom-close{position:absolute;top:-11px;right:-11px;width:32px;height:32px;border:0;border-radius:50%;background:#dc3734;color:#fff;font-weight:900;cursor:pointer}.pd-zoom-close:disabled{background:#999}
+#screen-picdict .pd-zoom-listen{padding:4px 11px;border-radius:99px;background:#eef7ff;color:#27658f;font-size:clamp(10px,2vh,13px);font-weight:800}
+#screen-picdict .pd-zoom.listening .pd-zoom-speaker{display:inline-block;animation:pd-speaker .65s infinite alternate}@keyframes pd-speaker{to{transform:scale(1.25)}}
+#screen-picdict .pd-zoom-card.locked-pulse{animation:pd-lock .38s}@keyframes pd-lock{25%,75%{transform:translateX(-7px)}50%{transform:translateX(7px)}}
+#screen-picdict .pd-zoom-reward{position:absolute;left:calc(100% + 10px);top:50%;display:flex;flex-direction:column;align-items:center;min-width:150px;padding:10px;border:3px solid #ffd54f;border-radius:15px;background:#fff;box-shadow:0 10px 26px rgba(0,0,0,.3);opacity:0;pointer-events:none}.pd-zoom-reward.show{animation:pd-reward 1.6s}.pd-zoom-reward b{font-size:30px;color:#ed9200}.pd-zoom-reward span{font-weight:800;color:#62461f;white-space:nowrap;font-size:12px}@keyframes pd-reward{12%,82%{opacity:1;transform:translateY(-50%) scale(1)}0%,100%{opacity:0;transform:translateY(-50%) scale(.7)}}
+
+/* จอเล็ก 812×375: คง 40 คำ แต่ตัดพื้นที่ตกแต่ง/ช่องว่าง ไม่ให้เกิด scrollbar */
 @media (max-height:430px){
-  #screen-picdict .pd-quiz-btn{top:62px;right:6px;padding:5px 9px;font-size:12px;}   /* รอบ 1022: ห่างปุ่มสารบัญ ~33px */
-  #screen-picdict .pd-qbar{margin:3px 6px 0 78px;padding:4px 8px;gap:6px;}
-  #screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:4px 9px;}
-  #screen-picdict .pd-q-coin,#screen-picdict .pd-q-combo{padding:3px 8px;}
-  #screen-picdict .back-btn,#screen-picdict .pd-toc-btn{top:4px;padding:5px 9px;font-size:12px;}
-  #screen-picdict .pd-page,#screen-picdict .pd-face{padding:5px 6px 2px;}
-  #screen-picdict .pd-hint{bottom:4px;padding:4px 12px;}
-  #screen-picdict .pd-corner{width:34px;height:34px;}
-  #screen-picdict .pd-zoom-card{padding:10px 14px 8px;gap:5px;}
-  #screen-picdict .pd-zoom-canvas{max-height:40vh;}
-  #screen-picdict .pd-zoom-listen{min-height:22px;padding:2px 9px;font-size:10.5px;}
-  #screen-picdict .pd-zoom-close{width:26px;height:26px;font-size:13px;top:-9px;right:-9px;}
-  #screen-picdict .pd-zoom-reward{left:calc(100% + 8px);min-width:140px;padding:9px 12px;border-width:3px;}
-  #screen-picdict .pd-zoom-reward b{font-size:24px;}
-  #screen-picdict .pd-zoom-reward span{margin-top:4px;font-size:11px;}
+  body #screen-picdict.screen.active{padding-top:3px;padding-bottom:3px}
+  #screen-picdict .pd-toolbar{min-height:36px;gap:5px;padding:1px 3px 3px}
+  #screen-picdict .back-btn,#screen-picdict .pd-catalog-btn,#screen-picdict .pd-quiz-btn{padding:5px 8px;border-radius:8px;font-size:11px}
+  #screen-picdict .pd-title b{font-size:15px}#screen-picdict .pd-title span{font-size:9px;margin-top:0}
+  #screen-picdict .pd-gallery{gap:3px;padding:4px;border-radius:10px}
+  #screen-picdict .pd-cell{padding:1px 2px;border-radius:6px}#screen-picdict .pd-cell b{font-size:9.5px}#screen-picdict .pd-cell span{font-size:8px}
+  #screen-picdict .pd-footer{min-height:30px;padding-top:3px;gap:8px}#screen-picdict .pd-page-btn{min-width:88px;padding:4px 9px;font-size:10px}#screen-picdict .pd-page-info{min-width:150px}#screen-picdict .pd-page-info b{font-size:10px}#screen-picdict .pd-page-info span{font-size:8px}
+  #screen-picdict .pd-catalog-card{height:94vh}#screen-picdict .pd-catalog-head{padding:4px 9px;font-size:14px}#screen-picdict .pd-catalog-head button{width:26px;height:26px}#screen-picdict .pd-catalog-body{grid-template-columns:34% 1fr;gap:6px;padding:6px}.pd-groups{gap:3px!important}#screen-picdict .pd-group{padding:2px 6px;font-size:10px}#screen-picdict .pd-sheets{gap:4px}#screen-picdict .pd-sheet{padding:2px}#screen-picdict .pd-sheet b{font-size:10px}#screen-picdict .pd-sheet span{font-size:8px}
+  #screen-picdict .pd-qbar{margin:0 3px 3px;padding:3px 6px}#screen-picdict .pd-q-replay,#screen-picdict .pd-q-quit{padding:3px 7px;font-size:10px}#screen-picdict .pd-q-ask{font-size:10px}
+  #screen-picdict .pd-zoom-card{padding:8px 13px 7px;gap:3px;width:min(380px,80vw)}#screen-picdict .pd-zoom-canvas{max-height:38vh}#screen-picdict .pd-zoom-label b{font-size:18px}#screen-picdict .pd-zoom-label span{font-size:12px}#screen-picdict .pd-zoom-listen{padding:2px 8px;font-size:9px}#screen-picdict .pd-zoom-reward{left:calc(100% + 7px);min-width:128px;padding:7px}.pd-zoom-reward b{font-size:23px}.pd-zoom-reward span{font-size:10px}
 }
+
+@media (max-width:700px){#screen-picdict .pd-catalog-btn{font-size:0}#screen-picdict .pd-catalog-btn::after{content:'☰ หมวด';font-size:11px}}
