@@ -4743,3 +4743,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1097 · หน้า Login ใช้โลโก้ Vocab World ใหม่ (รอ visual review/ยังไม่ deploy):** แทน crest + หัวข้อซ้ำด้วย `img/phoneScreenShots/newVocabworldLogo.png`, ปรับการ์ด/พื้นหลัง/Google CTA น้ำเงิน-ฟ้า-ทอง และเปิด login แนวตั้งโดยไม่แตะ auth; build 8,236 ไฟล์ + validator ผ่าน, Browser 10 viewport 360×640–1920×1080 ไม่มี overflow/scroll โลโก้ 3:2 และ console ใหม่ 0 error
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1099 · แก้ deploy รอบ 1098 ขาด asset โลโก้:** ต้นเหตุ `ship.sh` กัน asset untracked ตามปกติ จึง commit HTML/CSS แต่ไม่รวม PNG; เตรียม `handoff/SHIP.txt` ระบุเฉพาะ `img/phoneScreenShots/newVocabworldLogo.png` ให้ launcher add/commit/deploy โดยไม่กวาด asset อื่น

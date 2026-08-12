@@ -187,7 +187,7 @@ grabShot:12578 · savePhoto:12589 · clearEntities:12601 · INTRO_KEY:12624 · i
 markIntroSeen:12627 · INTRO:12628 · INTRO_MODE:12630 · showIntro:12632 · HELI_KPP_BANNER:12658 · closeIntro:12660
 beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
-## js/app-update.js (169 บรรทัด · 0 รายการ)
+## js/app-update.js (195 บรรทัด · 0 รายการ)
 
 ## js/arena3d.js (724 บรรทัด · 0 รายการ)
 
