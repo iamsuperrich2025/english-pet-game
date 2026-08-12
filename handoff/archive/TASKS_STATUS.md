@@ -4753,3 +4753,9 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1100 · ส่งหน้า Login ขึ้น Firebase หลัง asset เข้า Git แล้ว:** รอบ 1099 commit/push โลโก้สำเร็จแต่ `ship.sh` จัด asset-only เป็น no-deploy จึง live ยัง `.1016`; เตรียม manifest ผูก `index_classic.html` เพื่อบัมพ์ version/build/deploy จริง โดยไม่แก้ UI/auth เพิ่ม
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1102 · Haunted Hotel โลงเทพพนม + ป้ายบอกชั้น:** เปลี่ยนโลงตะวันตกเป็นโลงไทยฐานบัว/ชาดแดง/ฝาจั่ว/ยอดเปลว พร้อมลาย canvas และเทพพนมนูนสองด้าน; เพิ่มป้ายไทย-อังกฤษชั้น 1–5 ข้างลิฟต์ทุกชั้นใน `js/hotel3d.js` โดยคง collider/mission เดิม · Haunted Hotel regression 3 ชุด, syntax/template/undefined/diff, build 8,236 ไฟล์ + PWA validator และ Browser 1280×720/812×375 overflow 0 ผ่าน
+- **รอบ 1101 · แก้จอยเดินโลกยานแม่บางครั้งกลายเป็นก้ม/เงย:** ต้นเหตุคือนิ้วที่เริ่มฝั่งจอยแต่คลาดขอบถูกเก็บเป็น candidate กล้อง; `js/invasion3d.js` ล็อกบทบาท touch ตั้งแต่เริ่ม, เพิ่ม hit slop 20px และสลับฝั่งมองตามพรีเซ็ตถนัดซ้าย · regression 9 เคส, syntax/template/undefined, build 8,236 ไฟล์ + PWA validator และ Browser 812×375 console 0 ผ่าน

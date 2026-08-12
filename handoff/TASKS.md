@@ -27,7 +27,10 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (10 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (12 ส.ค.) — อ่านก่อน
+- **รอบ 1115 · Vocab World Racing แบบผู้เล่นล้วน:** ถอดรถ AI/bot ทั้ง runtime, minimap, DRS และ test hook; DRS เหลือคำนวณจากผู้เล่นออนไลน์จริงเท่านั้น
+- ถอดยางเสื่อม/ผลต่อเบรกและกริป/เกจ/พิทสต็อป/เสียง/ข้อความทั้งหมด โดยคง ghost ผู้เล่น, เลนพิทและลิมิต 80 กม./ชม.; แก้ `js/f1_3d.js` และเพิ่ม `tools/test_f1_solo_ghost.js`
+- solo/ghost + engine audio + graphics mode + syntax/undefined/template/diff ผ่าน; build 8,289 ไฟล์/454.8 MiB และ PWA validator ผ่าน · รอ COMMIT_DEPLOY ส่งขึ้นเว็บ
 - **รอบ 1114 · ยกเลิกหนังสือ Picture Dictionary แบบกาง 2 หน้า:** คง 8 หมวดเดิม แต่เปลี่ยนเป็นหน้ารายการเดียว 40 คำ/หน้า (8×5) ภาพ+อังกฤษ+ไทยใหญ่ชัด พร้อมปุ่มก่อนหน้า/ถัดไปและเมนูหมวดแบบไม่ต้องเลื่อนบนจอเล็ก
 - แก้ `js/picdict.js`, `css/picdict.css`; เพิ่ม `tools/test_picdict_single_page.js` และคงแตะฟัง/ซูม/รับเหรียญ/ครูถามศัพท์เดิม
 - regression/syntax/diff ผ่าน; Browser 812×375 ยืนยันหน้าแรก 40/หน้าสอง 8 คำ, เมนู 8 หมวด, zoom+quiz ใช้ได้, console 0; build 8,289 ไฟล์/454.8 MiB + PWA validator ผ่าน
@@ -45,8 +48,6 @@
 - **รอบ 1105 · F1 Dual Graphics Mode Phase 1:** เพิ่ม Racing Mode Select ก่อนค่าเข้า, preference local, preview WebP 2 ภาพ และ `vw.f1.environment-profile/v1`; Battery Saver คงค่าฉากเดิม ส่วน High Graphics ปรับ profile บน scene/renderer ชุดเดียว โดยไม่แตะ physics/gameplay/NetRoom/Firebase
 - แก้ `js/f1_modes.js`, `js/ui.js`, `js/f1_3d.js` + preview/test; regression entry fee/สลับโหมด/cleanup/F1 offline, Browser 812×375 (ไม่มี overflow, scene=1/renderer=1), syntax/template/undefined และ build 8,239 ไฟล์/PWA validator ผ่าน
 - **รอบ 1103 · ปุ่มเข้าสู่ระบบใต้ข้อความหน้าเมือง:** เพิ่มปุ่ม `🔑 เข้าสู่ระบบ` ใต้สถานะ “ล็อกอินในเกมก่อน…” ใน `index.html` ลิงก์ไป `index_classic.html`; `js/city3d.js` แสดงเฉพาะตอนยังไม่ล็อกอินและซ่อนเมื่อ auth สำเร็จ · syntax/assertion/diff ผ่าน และ Browser 1280×720 + 812×375 ยืนยัน gap 8.8px, overflow 0, ปลายทางมี `#screen-login`
-- **รอบ 1102 · Haunted Hotel โลงเทพพนม + ป้ายบอกชั้น:** เปลี่ยนโลงตะวันตกเป็นโลงไทยฐานบัว/ชาดแดง/ฝาจั่ว/ยอดเปลว พร้อมลาย canvas และเทพพนมนูนสองด้าน; เพิ่มป้ายไทย-อังกฤษชั้น 1–5 ข้างลิฟต์ทุกชั้นใน `js/hotel3d.js` โดยคง collider/mission เดิม · Haunted Hotel regression 3 ชุด, syntax/template/undefined/diff, build 8,236 ไฟล์ + PWA validator และ Browser 1280×720/812×375 overflow 0 ผ่าน
-- **รอบ 1101 · แก้จอยเดินโลกยานแม่บางครั้งกลายเป็นก้ม/เงย:** ต้นเหตุคือนิ้วที่เริ่มฝั่งจอยแต่คลาดขอบถูกเก็บเป็น candidate กล้อง; `js/invasion3d.js` ล็อกบทบาท touch ตั้งแต่เริ่ม, เพิ่ม hit slop 20px และสลับฝั่งมองตามพรีเซ็ตถนัดซ้าย · regression 9 เคส, syntax/template/undefined, build 8,236 ไฟล์ + PWA validator และ Browser 812×375 console 0 ผ่าน
 - Rules รอบ 1096 publish แล้วและ Firebase CLI เทียบสดตรง source 37 โซน/475 leaf (`missing/extra/changed=0`); destructive test ลบบัญชี `hulk`/`EZTSR3` สำเร็จ หน้าเกมกลับ login และ REST ยืนยัน friendCodes/presence/leaderboard ของ UID เดิมเป็น `null`
 - Regression ครอบ stranger/no-reaction + former-friend/owned-reaction ผ่าน 778 paths; syntax, undefined-call 50 ไฟล์=0, build 8,235 ไฟล์ และ PWA validator ผ่าน
 - แก้ `handoff/RULES.md`, `js/account-deletion.js`, `tools/test_account_deletion.js`; artifact full-copy รอบ 1096 ตรวจ JSON/Copy exact/37 zones/SHA-256 ผ่าน

@@ -61,7 +61,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/city3d.js** (3,328 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
 - **js/examstd.js** (945 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812 · โหมดจับเวลาจริง+สถิติต่อส่วน รอบ 814) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
-- **js/f1_3d.js** (3,351 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
+- **js/f1_3d.js** (2,909 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (123 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/fpsweapon.js** (95 บรรทัด) — 🔫 FPS WEAPON STATE MACHINE — local adapter for invasion3d · Owns only weapon presentation state. Gameplay, aiming, damage, · controls and world lifecycle remain in js/invasion3d.js.
 - **js/game.js** (1,210 บรรทัด) — เกมจับคู่คำศัพท์ + หมวดคำศัพท์ & แบบทดสอบ · รางวัล: จับคู่ถูก +10🪙 +2RP +5EXP · เคลียร์รอบ +20🪙 +5RP · สอบผ่านครั้งแรก +รางวัลหมวด +100RP · ผ่านซ้ำ +20🪙 +30RP · ไม่ผ่าน +5RP
@@ -72,7 +72,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/hauntedhotelsession.js** (255 บรรทัด) — hauntedhotelsession.js — Haunted Hotel canonical run adapter · One low-frequency Firebase record per NetRoom hotel instance. · This module intentionally does not know about rendering, movement or rewards.
 - **js/hotel3d.js** (1,526 บรรทัด) — hotel3d.js — 🏨 โรงแรมผีสิง 5 ชั้น (รอบ 684 · ยกบรรยากาศ/ภารกิจงานศพไทยรอบ 1060) · สร้าง "ตัวโรงแรม" ล้วน ๆ (โมเดล+ชนกำแพง+บันได+ลิฟต์+เฟอร์นิเจอร์+รูปตามอง) · ส่วน "การเล่น" (ผี/ไฟฉาย/ตัวอักษร/เสียง) อยู่ในโซน 🏨 ของ js/adventure3d.js
 - **js/images.js** (216 บรรทัด) — ระบบตรวจหาภาพเจนอัตโนมัติ (ใช้ new Image() probe — ใช้ได้ทั้ง · file:// และ http:// ต่างจาก fetch ที่ถูกบล็อกใน file://) · โฟลเดอร์ภาพ:
-- **js/invasion3d.js** (10,492 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
+- **js/invasion3d.js** (10,493 บรรทัด) — 🛸 invasion3d.js — โลก "ยานแม่บุกโลก" (Invasion · รอบ 413 · กติกาใหม่รอบ 556) · FPS สไตล์ Delta Force ในเมืองทะเลทรายตะวันออกกลาง — ยานแม่ลำมหึมาลอยเต็มท้องฟ้า (สไตล์ ID4) · 🔤 กติการอบ 556 (ผู้ใช้สั่ง — แทนระบบแผงตัวอักษร+แกนพลังงานเดิมทั้งหมด):
 - **js/lobby.js** (52 บรรทัด) — LOBBY แนวนอน — ระบบแผงรายละเอียดกลางจอ (อัพเดท 5725691826) · คลิกเมนูซ้าย → เปิดแผง (panel) ทับฉาก Lobby · เนื้อหา scroll ในแผง · การ์ดเดิมทั้งหมด (home/phone/computer/farm/collect/rank) ย้ายเข้าแผง
 - **js/lobby3d.js** (780 บรรทัด) — lobby3d.js — โมเดล 3D ตัวละครในหน้า Lobby (รอบ 114) · โหลด GLB ผู้เลี้ยง + น้อง (img/models/*.glb) · idle เบาๆ (หายใจ/โยกตัว) + เล่น animation clip จากไฟล์ (Tripo ชื่อ NlaTrack → ใช้ clip แรก)
 - **js/main.js** (428 บรรทัด) — ปุ่มหลัก + INIT
@@ -82,7 +82,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/online.js** (2,050 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 100
 - **js/petbehavior.js** (182 บรรทัด) — petbehavior.js — 🐾 ระบบพฤติกรรมน้องหน้า Lobby (รอบ 1030 · ป้าย/จังหวะชัดขึ้นรอบ 1031) · แบ่งคลิป 8 วินาทีเดิมเป็นท่าสั้น ๆ แล้วเลือกต่อกันแบบมีน้ำหนัก · เครื่องที่เล่นคลิปไม่ได้ยังใช้ state เดียวกันกับภาพ/sprite fallback
 - **js/photo.js** (361 บรรทัด) — 📷 photo.js — รูปโปรไฟล์ของผู้เล่นเอง (อัปโหลดรูปแบบ Facebook) — รอบ 709 · เก็บที่ไหน: localStorage แยกก้อน (`petVocabAdventure_photo`) + RTDB `/pphoto/<uid>` · ตั้งใจ **ไม่ยัดลง state** เพราะ state ถูกเซฟขึ้น cloud ทั้งก้อนทุกครั้ง (รูป ~20KB จะทำให้เซฟบวมทุกครั้ง)
-- **js/picdict.js** (1,102 บรรทัด) — 📖 picdict.js — หนังสือ "Picture Dictionary" เล่มใหญ่ (รอบ 992 · ผู้ใช้สั่ง 4 ส.ค.) · หนังสือกาง 2 หน้า พลิกหน้าแบบ 3D เหมือนหนังสือจริง (rotateY ที่สันหนังสือ · + เงาวิ่งตามหน้ากระดาษ + เสียงพลิกกระดาษสังเคราะห์ + ขอบตั้งกระดาษ 2 ข้าง
+- **js/picdict.js** (318 บรรทัด) — 🖼️ Picture Dictionary — single-page card gallery (รอบ 1114) · ยกเลิกหนังสือกาง 2 หน้า/การพลิกกระดาษ แล้วแสดงการ์ด 40 คำต่อหน้า · (8 คอลัมน์ × 5 แถว) เพื่อให้ภาพและคำอ่านชัดบนจอเล็ก
 - **js/picmatch.js** (592 บรรทัด) — 🖼️ picmatch.js — เกม "จับคู่ภาพ" (รอบ 977 · เชื่อม Picture Dictionary รอบ 1053) · 2 โหมด สลับด้วยปุ่มบนกระดาน: · "pic"  = ภาพจาก Picture Dictionary ↔ ภาพเดียวกัน
 - **js/picquiz_online.js** (603 บรรทัด) — 🌐🎧 PICQUIZ ONLINE — แข่งครูถามศัพท์จากหนังสือ · ห้องส่วนตัวด้วยรหัส 6 ตัว · สูงสุด 50 คน · เจ้าของกดเริ่ม · 10 คำ/รอบ · ฟังเสียงแล้วแตะการ์ด · คะแนนตามความเร็ว
 - **js/pmaward.js** (28 บรรทัด) — 🏆 pmaward.js — รางวัลรายเดือนของกระดานอันดับ 🖼️ จับคู่ภาพ (รอบ 979) · ผู้ใช้สั่ง 3 ส.ค. 2026: ทำแท็บ+รางวัลรายเดือน Top 10 ให้เกมจับคู่ภาพ · ใช้กติกา/โครงเดียวกับ 🔎 ค้นหาคำ (js/wsaward.js) ทุกประการ — ต่างแค่ field/ชื่อเกม
@@ -102,11 +102,12 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/bubble.css** (54 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
 - **css/exam.css** (352 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/lobby.css** (5,680 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
-- **css/picdict.css** (317 บรรทัด) — 📖 picdict.css — หนังสือ Picture Dictionary (รอบ 992) · จอเต็ม + หนังสือกาง 2 หน้า พลิกแบบ 3D · เลย์เอาต์ต้องพอดีจอทุกขนาด · (กฎทอง 7: ไม่มี scrollbar — ทดสอบ 812×375 เสมอ)
+- **css/picdict.css** (106 บรรทัด) — 🖼️ Picture Dictionary — หน้าเดียว 40 คำ (รอบ 1114) · 8×5 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
 - **css/picquiz_online.css** (119 บรรทัด) — 🌐🎧 ห้องแข่งครูถามศัพท์จากหนังสือ · ห้อง/Modal/HUD ทุกใบต้อง fit 812×375 โดยไม่มี scrollbar ทั้งหน้า
 - **css/style.css** (2,254 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 
