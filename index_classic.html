@@ -441,12 +441,13 @@
           <!-- ปุ่ม "เริ่มเกมใหม่ทั้งหมด" ถูกถอดถาวร (5 ก.ค. 2026) — เหลือ logout อย่างเดียว -->
           <button class="icon-btn" id="btn-logout" title="ออกจากระบบ (เซฟเก็บในบัญชี Google แล้ว)">🚪</button>
         </div>
-        <!-- 🎨 รอบ 996: ปุ่มสลับธีมสีล็อบบี้ 3 แบบ (เนวี่เข้ม/เขียวมรกตเข้ม/ม่วงเบอร์กันดี้เข้ม — ทองเหมือนกันทุกแบบ)
-             ตัวคุมอยู่ใน ThemeUI (สคริปต์ inline หัวไฟล์ คู่กับ NightUI) — ค่าเริ่มต้น = navy -->
-        <div class="topbar-icons-row topbar-theme-row" id="theme-row" title="เปลี่ยนธีมสี">
-          <button class="theme-swatch" id="theme-navy" data-theme="navy" title="เนวี่เข้ม + ทอง"></button>
-          <button class="theme-swatch" id="theme-emerald" data-theme="emerald" title="เขียวมรกตเข้ม + ทอง"></button>
-          <button class="theme-swatch" id="theme-plum" data-theme="plum" title="ม่วงเบอร์กันดี้เข้ม + ทอง"></button>
+        <!-- 📈 ฟีดอันดับดีขึ้น: รายงานเฉพาะผู้เล่นที่อันดับสูงขึ้นในแต่ละหัวข้อ
+             เลื่อนขึ้นวนเอง · แตะ/ลากเพื่อหยุดอ่าน · ปล่อย 5 วินาทีแล้วเลื่อนต่อ -->
+        <div class="rank-move-box" aria-label="รายงานอันดับที่ดีขึ้น">
+          <div class="rank-move-head">📈 อันดับดีขึ้น</div>
+          <div class="rank-move-feed" id="rank-move-feed" tabindex="0">
+            <div class="rank-move-empty">กำลังติดตามกระดานอันดับ…</div>
+          </div>
         </div>
       </div>
     </header>

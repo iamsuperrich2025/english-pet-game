@@ -1985,6 +1985,7 @@ function onlineStart(){
     });
     out.sort((a,b)=>b.coins - a.coins);
     Online.board = out.slice(0, LEADERBOARD_SIZE);
+    Online.boardReady = true;
     onlineRerender();
   });
 
@@ -1994,7 +1995,7 @@ function onlineStart(){
     snap.forEach(ch=>{ const v=ch.val(); if(!v||typeof v.n!=='string'||typeof v.bb!=='number'||v.bb<=0)return;
       if(typeof rankUserExcluded==='function'&&rankUserExcluded(ch.key,v.n))return;
       out.push({id:ch.key,n:v.n,g:v.g||'',bb:v.bb}); });
-    out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out.slice(0,LEADERBOARD_SIZE); onlineRerender();
+    out.sort((a,b)=>b.bb-a.bb); Online.bbBoard=out.slice(0,LEADERBOARD_SIZE); Online.bbBoardReady=true; onlineRerender();
   });
 
   // ฟังกล่องของขวัญที่มีคนส่งมาหาเรา (ข้อ 0.5 — path คงที่ ตั้งครั้งเดียว)

@@ -1471,6 +1471,7 @@ function rankUpSound(rank, up){
 }
 function renderLeaderboardCard(){
   updateRankRailBadge();                 // 🥇 รอบ 595: ป้ายอันดับบนปุ่มราง (การ์ดเล็กถูกถอดแล้ว แต่ผู้เรียกเดิมยังพาข้อมูลใหม่มาให้)
+  rankMoveFeedCheck();                   // 📈 ฟีดหัวจอ: รายงานเฉพาะผู้เล่นที่อันดับดีขึ้น
   const el = document.getElementById('leaderboard-card');
   if(!el) return;
   bindLbTabs();
@@ -1581,6 +1582,69 @@ function lbRankRows(tab){
       pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
   return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
+}
+
+/* ============================================================
+   📈 ฟีดอันดับดีขึ้นบนหัวล็อบบี้
+   - snapshot ครั้งแรกของแต่ละหัวข้อเป็น baseline ไม่รายงานย้อนหลัง
+   - รายงานเฉพาะ current rank < previous rank; คนอันดับตกจะอัปเดต baseline เงียบ ๆ
+   - ใช้ initSideScroll: แตะ/ลากหยุดทันที ปล่อย 5 วินาทีแล้ววนต่อ
+   ============================================================ */
+const RANK_MOVE_TOPICS = [
+  {key:'coins',  ico:'🪙', label:'เหรียญ'},
+  {key:'assets', ico:'🏆', label:'ทรัพย์สินรวม'},
+  {key:'badges', ico:'🏅', label:'เข็ม'},
+  {key:'boss',   ico:'🤖', label:'ล้มบอส'},
+  {key:'ws',     ico:'🔎', label:'ค้นหาคำ'},
+  {key:'pm',     ico:'🖼️', label:'จับคู่ภาพ'},
+  {key:'tp',     ico:'⌨️', label:'พิมพ์คำ'},
+  {key:'bb',     ico:'🫧', label:'ฟอง'},
+  {key:'sg',     ico:'🎯', label:'ยิงเป้าคำ'}
+];
+const RANK_MOVE_MAX = 36;
+const __rankMovePrev = {};
+const __rankMoveItems = [];
+
+function rankMoveFeedRender(){
+  const el = document.getElementById('rank-move-feed');
+  if(!el) return;
+  if(!__rankMoveItems.length){
+    el.innerHTML = '<div class="rank-move-empty">กำลังติดตามกระดานอันดับ…</div>';
+    initSideScroll(el);
+    return;
+  }
+  el.innerHTML = __rankMoveItems.map(it=>`<div class="rank-move-row">
+    <span class="rank-move-up">▲${it.up}</span>
+    <span class="rank-move-name">${escapeHTML(it.name)}</span>
+    <span class="rank-move-topic">${it.ico} ${escapeHTML(it.topic)} · #${it.from}→#${it.to}</span>
+  </div>`).join('') + '<div class="rank-move-gap" aria-hidden="true"></div>';
+  initSideScroll(el);
+}
+
+function rankMoveFeedCheck(){
+  if(typeof Online === 'undefined' || !Online.ready || !Online.boardReady) return;
+  const fresh = [];
+  RANK_MOVE_TOPICS.forEach(topic=>{
+    if(topic.key === 'bb' && !Online.bbBoardReady) return;
+    const rows = lbRankRows(topic.key);
+    const now = {};
+    rows.forEach((row, i)=>{ if(row.uid) now[row.uid] = {rank:i+1, name:row.name || 'ผู้เล่น'}; });
+    const prev = __rankMovePrev[topic.key];
+    if(prev){
+      Object.keys(now).forEach(uid=>{
+        if(prev[uid] && now[uid].rank < prev[uid].rank){
+          fresh.push({uid, name:now[uid].name, ico:topic.ico, topic:topic.label,
+            from:prev[uid].rank, to:now[uid].rank, up:prev[uid].rank-now[uid].rank});
+        }
+      });
+    }
+    __rankMovePrev[topic.key] = now;
+  });
+  if(!fresh.length){ if(!__rankMoveItems.length) rankMoveFeedRender(); return; }
+  fresh.sort((a,b)=>b.up-a.up || a.to-b.to);
+  __rankMoveItems.unshift(...fresh);
+  if(__rankMoveItems.length > RANK_MOVE_MAX) __rankMoveItems.length = RANK_MOVE_MAX;
+  rankMoveFeedRender();
 }
 
 const LB_BCAT_TOP = 5;   // แต่ละสายโชว์ Top กี่คน (กันหน้ายาวเกิน — 10 สาย × 5 คน)
