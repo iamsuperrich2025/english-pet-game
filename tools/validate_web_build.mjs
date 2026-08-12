@@ -20,6 +20,10 @@ const classic = await requireFile('index_classic.html');
 const deletion = await requireFile('delete-account.html');
 const privacy = await requireFile('privacy.html');
 await requireFile('.well-known/assetlinks.json');
+try {
+  const engine = await fs.stat(path.join(DIST, 'sound/racing/engineSound.mp3'));
+  if (engine.size < 100000) failures.push('F1 engine audio asset is unexpectedly small');
+} catch { failures.push('missing dist/sound/racing/engineSound.mp3'); }
 if (!deletion.includes('freddommun@gmail.com') || !deletion.includes('Delete Account')) failures.push('delete-account.html is incomplete');
 if (!privacy.includes('delete-account.html') || !privacy.includes('Profile photos')) failures.push('privacy.html is incomplete');
 
