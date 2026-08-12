@@ -134,7 +134,11 @@
 
   function check(registration, automatic) {
     if (document.hidden || applying) return;
-    remoteVersion().then(function (remoteBuild) {
+    // ตรวจ sw.js ก่อนเสมอ: ถ้า production shell ถูกแทนที่โดยเลข build เดิม
+    // (เช่น deploy คู่ขนาน) browser จะยังรับ HTML/JS ชุดใหม่และ controllerchange จะรีโหลดให้
+    registration.update().catch(function () {
+      // Offline ยังเล่น build ที่ cache ไว้ได้ตามปกติ
+    }).then(function () { return remoteVersion(); }).then(function (remoteBuild) {
       if (!remoteBuild || remoteBuild === CURRENT_BUILD) return;
       var reloaded = null;
       try { reloaded = sessionStorage.getItem(RELOAD_KEY); } catch (error) {}
@@ -149,6 +153,12 @@
   function start() {
     addBuildLabel();
     if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
+    var controlledAtStart = !!navigator.serviceWorker.controller;
+    if (controlledAtStart) {
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!applying) location.reload();
+      });
+    }
     navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
       .then(function (registration) {
         check(registration, true);

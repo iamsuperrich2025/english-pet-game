@@ -1534,6 +1534,20 @@ function loadFirebase(){
     s.src=base+f; s.onload=res; s.onerror=rej; document.head.appendChild(s);
   })), Promise.resolve());
 }
+/* 🔑 ปุ่มเข้า Login ต้องรอดแม้เครื่องยังถือ HTML shell รุ่นเก่าที่ไม่มี element นี้ */
+function setCityLoginVisible(show){
+  let el=document.getElementById('city-login-link');
+  if(!el){
+    el=document.createElement('a');
+    el.id='city-login-link';
+    el.className='chip';
+    el.href='index_classic.html';
+    el.textContent='🔑 เข้าสู่ระบบ';
+    el.style.cssText='top:calc(50px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));text-decoration:none;color:#3a2606;background:linear-gradient(180deg,#ffe58a,#f5b82e);border-color:rgba(255,255,255,.72);font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.24)';
+    document.body.appendChild(el);
+  }
+  el.style.display = show ? 'flex' : 'none';
+}
 function liveStart(){
   if(typeof FIREBASE_CONFIG==='undefined') return setChip('📴 โหมดชมเมือง');
   loadFirebase().then(()=>{
@@ -1541,8 +1555,7 @@ function liveStart(){
     Live.fb=firebase; Live.db=firebase.database();
     firebase.auth().onAuthStateChanged(u=>{
       Live.uid = u ? u.uid : null;
-      const loginLink=document.getElementById('city-login-link');
-      if(loginLink) loginLink.style.display = u ? 'none' : 'flex';
+      setCityLoginVisible(!u);
       if(!u){ setChip('🔑 ล็อกอินในเกมก่อน แล้วจะเห็นเพื่อนในเมือง'); return; }
       watchPresence();
       watchFriendChats();          // 💬 บับเบิลแชทสดของเพื่อนที่ยืนอยู่ในเมือง
