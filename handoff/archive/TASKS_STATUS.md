@@ -4759,3 +4759,8 @@
 
 - **รอบ 1102 · Haunted Hotel โลงเทพพนม + ป้ายบอกชั้น:** เปลี่ยนโลงตะวันตกเป็นโลงไทยฐานบัว/ชาดแดง/ฝาจั่ว/ยอดเปลว พร้อมลาย canvas และเทพพนมนูนสองด้าน; เพิ่มป้ายไทย-อังกฤษชั้น 1–5 ข้างลิฟต์ทุกชั้นใน `js/hotel3d.js` โดยคง collider/mission เดิม · Haunted Hotel regression 3 ชุด, syntax/template/undefined/diff, build 8,236 ไฟล์ + PWA validator และ Browser 1280×720/812×375 overflow 0 ผ่าน
 - **รอบ 1101 · แก้จอยเดินโลกยานแม่บางครั้งกลายเป็นก้ม/เงย:** ต้นเหตุคือนิ้วที่เริ่มฝั่งจอยแต่คลาดขอบถูกเก็บเป็น candidate กล้อง; `js/invasion3d.js` ล็อกบทบาท touch ตั้งแต่เริ่ม, เพิ่ม hit slop 20px และสลับฝั่งมองตามพรีเซ็ตถนัดซ้าย · regression 9 เคส, syntax/template/undefined, build 8,236 ไฟล์ + PWA validator และ Browser 812×375 console 0 ผ่าน
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1103 · ปุ่มเข้าสู่ระบบใต้ข้อความหน้าเมือง:** เพิ่มปุ่ม `🔑 เข้าสู่ระบบ` ใต้สถานะ “ล็อกอินในเกมก่อน…” ใน `index.html` ลิงก์ไป `index_classic.html`; `js/city3d.js` แสดงเฉพาะตอนยังไม่ล็อกอินและซ่อนเมื่อ auth สำเร็จ · syntax/assertion/diff ผ่าน และ Browser 1280×720 + 812×375 ยืนยัน gap 8.8px, overflow 0, ปลายทางมี `#screen-login`
