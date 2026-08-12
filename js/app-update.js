@@ -124,7 +124,8 @@
     injectStyles();
     var offer = document.createElement('div');
     offer.id = 'vw-update-offer';
-    offer.innerHTML = '<span>✨ มีเกมรุ่นใหม่</span><button type="button">อัปเดตเมื่อพร้อม</button>';
+    offer.innerHTML = '<span></span><button type="button">อัปเดตเมื่อพร้อม</button>';
+    offer.querySelector('span').textContent = '✨ มีเกมรุ่นใหม่ ' + remoteBuild;
     offer.querySelector('button').onclick = function () {
       offer.remove();
       applyUpdate(registration, remoteBuild);
