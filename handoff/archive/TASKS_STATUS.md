@@ -4776,3 +4776,8 @@
 - **รอบ 1109 · ปุ่ม Login ต้องขึ้นแน่นอน + อัปเดตเมื่อกดเท่านั้น:** ภาพผู้ใช้ยืนยัน `.1022` ยังซ่อนปุ่มเพราะ HTML ตั้ง `display:none` แล้วรอ Firebase; เปลี่ยน `index.html` ให้แสดงตั้งแต่เฟรมแรกและซ่อนเฉพาะเมื่อ auth สำเร็จ พร้อมแก้ `js/app-update.js` ให้ตรวจทุก 15 วิ แสดงข้อเสนอก่อน และเรียก SW update หลังผู้ใช้กดเท่านั้น · assertions/build 8,240 ไฟล์/PWA validator ผ่าน; Browser 1321×618 หลัง Firebase ตอบยังเห็นปุ่ม gap 8.8px, overflow/console 0
 - **รอบ 1108 · กู้ปุ่ม Login เมื่อ PWA cache คนละชุด:** ภาพผู้ใช้ยืนยันข้อความ Login ขึ้นแต่ element ปุ่มหาย เพราะ shell เก่าถูก deploy ทับด้วยเลข build เดิม; `js/city3d.js` สร้างปุ่มสำรองเมื่อ HTML ไม่มี และ `js/app-update.js` ตรวจ SW ทุกครั้ง+รีโหลดเมื่อ controller เปลี่ยนแม้เลขเดิม · syntax/diff, stale-shell assertions, build 8,240 ไฟล์/PWA validator และ Browser 812×375 (gap 8.8px, overflow 0, Login ปลายทาง/console 0) ผ่าน
 - **รอบ 1106 · F1 realistic dynamic engine audio (ยังไม่ deploy):** แทนเครื่อง oscillator ด้วย `sound/racing/engineSound.mp3` แบบ single-sample RPM 4,000–19,000 / pitch 0.70×–1.60× ตาม throttle·speed·accel/decel·brake·เกียร์ 8 สปีด·กล้อง พร้อม synth fallback/crossfade/mobile node เดียว
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1110 · transition release ทดสอบปุ่มอัปเดตด้วยรุ่นใหม่จริง:** `.1022` รับ `.1023` เงียบเพราะตัว updater เก่ายังทำงานก่อนถูกแทนที่ จึงต้องมี `.1024` เป็นรุ่นแรกที่ `.1023` ตรวจด้วยกติกาใหม่; `js/app-update.js` แสดงเลข build ปลายทางบนข้อความเพื่อยืนยัน · explicit-prompt/no-update-before-click assertion, syntax/diff, build 8,240 ไฟล์/PWA validator ผ่าน
