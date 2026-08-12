@@ -5,6 +5,7 @@
   var CURRENT_BUILD = meta ? meta.content : '__VW_BUILD_VERSION__';
   var VERSION_URL = '/version.json';
   var RELOAD_KEY = 'vw-update-reloaded';
+  var ACK_KEY = 'vw-update-acknowledged';
   var checkTimer = null;
   var applying = false;
 
@@ -96,6 +97,7 @@
         done = true;
         clearTimeout(timer);
         try { sessionStorage.setItem(RELOAD_KEY, remoteBuild); } catch (error) {}
+        try { localStorage.setItem(ACK_KEY, remoteBuild); } catch (error) {}
         resolve();
       }, { once: true });
     });
@@ -133,10 +135,34 @@
     document.body.appendChild(offer);
   }
 
+  function acknowledged(build) {
+    try { return localStorage.getItem(ACK_KEY) === build; }
+    catch (error) { return false; }
+  }
+
+  function offerLoadedBuild(build) {
+    if (!validBuild(build) || acknowledged(build) || document.getElementById('vw-update-offer')) return;
+    injectStyles();
+    var offer = document.createElement('div');
+    offer.id = 'vw-update-offer';
+    offer.innerHTML = '<span></span><button type="button">เปิดเกมรุ่นใหม่</button>';
+    offer.querySelector('span').textContent = '✨ เกมรุ่นใหม่ ' + build + ' พร้อมแล้ว';
+    offer.querySelector('button').onclick = function () {
+      try { localStorage.setItem(ACK_KEY, build); } catch (error) {}
+      offer.remove();
+      location.reload();
+    };
+    document.body.appendChild(offer);
+  }
+
   function check(registration) {
     if (document.hidden || applying) return;
     remoteVersion().then(function (remoteBuild) {
-      if (!remoteBuild || remoteBuild === CURRENT_BUILD) return;
+      if (!remoteBuild) return;
+      if (remoteBuild === CURRENT_BUILD) {
+        offerLoadedBuild(CURRENT_BUILD);
+        return;
+      }
       var reloaded = null;
       try { reloaded = sessionStorage.getItem(RELOAD_KEY); } catch (error) {}
       if (reloaded === remoteBuild) return;
