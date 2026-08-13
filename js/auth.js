@@ -22,6 +22,8 @@ const Auth = {
 
 const AUTH_PUSH_MS        = 60*1000;   // push เซฟขึ้น cloud ทุก 1 นาที
 const AUTH_SDK_TIMEOUT_MS = 20*1000;   // รอ SDK นานสุดก่อนถือว่าออฟไลน์
+const AUTH_CLOUD_SLOW_MS  = 6*1000;    // นานกว่านี้ต้องมีทางออกให้ผู้เล่น ไม่ปล่อยหน้าค้างเงียบ
+const AUTH_CLOUD_TIMEOUT_MS = 12*1000; // RTDB get() อาจค้างไม่ resolve/reject เมื่อการเชื่อมต่อครึ่งหลุด
 
 /* ---------- บัญชีครู (รอบ 43+: ปุ่มคุมห้องในโลก 3D เช่น ปิดเสียงทั้งห้อง) ----------
    เพิ่มอีเมลครูต่อท้าย array ได้เลย (ตัวพิมพ์เล็ก) — บัญชีอื่นไม่เห็นปุ่มครู */
@@ -94,10 +96,18 @@ function authSetStatus(mode, msg){
   if(!st) return;
   st.textContent = msg || '';
   btn.style.display   = mode === 'ready'   ? '' : 'none';
-  retry.style.display = mode === 'offline' ? '' : 'none';
+  retry.style.display = (mode === 'offline' || mode === 'cloud-wait' || mode === 'cloud-error') ? '' : 'none';
+  retry.textContent = mode === 'offline' ? '🔄 ลองใหม่อีกครั้ง' : '🔄 รีเฟรชเกมแล้วลองใหม่';
   // รอบ 267: ต่อเน็ตไม่ได้ → เปิดทางเล่นออฟไลน์ (เซฟอยู่ในเครื่อง เน็ตกลับมาค่อย sync)
   const off = document.getElementById('btn-offline-play');
-  if(off) off.style.display = mode === 'offline' ? '' : 'none';
+  if(off){
+    const localSafe = mode === 'cloud-error' && authLocalSaveSafe(Auth.user && Auth.user.uid);
+    off.style.display = (mode === 'offline' || localSafe) ? '' : 'none';
+    off.textContent = localSafe ? '📴 ใช้เซฟในเครื่องไปก่อน' : '📴 เล่นแบบออฟไลน์ไปก่อน';
+  }
+}
+function authLocalSaveSafe(uid){
+  return !!(uid && state && state.student && state.ownerUid === uid);
 }
 function authShowLogin(){
   authSetStatus('ready', 'เข้าสู่ระบบเพื่อเริ่มผจญภัยเลย! 👇');
@@ -111,7 +121,26 @@ function authGateOffline(msg){
 
 /* ---------- จุดคุยกับ DB (แยกเป็นฟังก์ชันเล็กๆ ให้ mock ทดสอบง่าย) ---------- */
 function authSaveRef(uid){ return firebase.database().ref('users/' + uid + '/save'); }
-function authFetchCloud(uid){ return authSaveRef(uid).get().then(s=>s.val()); }
+function authFetchCloud(uid){
+  const read = authSaveRef(uid).get().then(s=>s.val());
+  return new Promise((resolve, reject)=>{
+    let done = false;
+    const timer = setTimeout(()=>{
+      if(done) return;
+      done = true;
+      const err = new Error('Cloud save read timed out');
+      err.code = 'cloud/timeout';
+      reject(err);
+    }, AUTH_CLOUD_TIMEOUT_MS);
+    read.then(value=>{
+      if(done) return;
+      done = true; clearTimeout(timer); resolve(value);
+    }, err=>{
+      if(done) return;
+      done = true; clearTimeout(timer); reject(err);
+    });
+  });
+}
 function authWriteCloud(uid, payload){ return authSaveRef(uid).set(payload); }
 function authDeleteCloud(uid){ return authSaveRef(uid).remove(); }
 function authWriteProfileName(uid, name){
@@ -275,12 +304,25 @@ function authOnLogin(user){
   Auth.user = user;
   authSetStatus('connecting', 'กำลังโหลดเซฟจากบัญชีของหนู... ☁️');
   showScreen('screen-login');
+  let cloudSettled = false;
+  const slowTimer = setTimeout(()=>{
+    if(cloudSettled || Auth.booted) return;
+    authSetStatus('cloud-wait', 'การเชื่อมต่อใช้เวลานานกว่าปกติ — กดรีเฟรชได้โดยเซฟในเครื่องจะไม่หาย');
+  }, AUTH_CLOUD_SLOW_MS);
   authFetchCloud(user.uid)
-    .then(cloud=>authSyncOnLogin(cloud, user.uid))
-    .catch(()=>{
-      // อ่าน cloud ไม่ได้ (rules ยังไม่วาง/เน็ตสะดุด) → เข้าเกมด้วยเซฟในเครื่องไปก่อน
-      toast('⚠️ เชื่อมเซฟ cloud ไม่สำเร็จ ใช้เซฟในเครื่องชั่วคราว', 2600);
-      authEnterGame();
+    .then(cloud=>{
+      cloudSettled = true; clearTimeout(slowTimer);
+      authSyncOnLogin(cloud, user.uid);
+    })
+    .catch(err=>{
+      cloudSettled = true; clearTimeout(slowTimer);
+      const code = String(err && (err.code || err.message) || 'unknown');
+      console.warn('[auth-cloud] load failed:', code);
+      const timedOut = code === 'cloud/timeout';
+      const localSafe = authLocalSaveSafe(user.uid);
+      const reason = timedOut ? 'Cloud ตอบช้าเกิน 12 วินาที' : 'Cloud ปฏิเสธหรือเครือข่ายขัดข้อง (' + code + ')';
+      authSetStatus('cloud-error', '⚠️ ' + reason + (localSafe ? ' — รีเฟรชหรือใช้เซฟในเครื่องไปก่อนได้' : ' — กรุณารีเฟรชเพื่อลองใหม่'));
+      showScreen('screen-login');
     });
 }
 

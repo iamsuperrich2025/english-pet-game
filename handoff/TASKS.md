@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1137 · หน้าโหลด Cloud ห้ามค้างไม่รู้จบ:** ครบ 6 วินาทีแสดงปุ่ม “รีเฟรชเกมแล้วลองใหม่”; ครบ 12 วินาทีตัด timeout พร้อมบอกสาเหตุ/รหัส error แทนการรอ Firebase ตลอดไป
+- อนุญาต “ใช้เซฟในเครื่องไปก่อน” เฉพาะเมื่อ `ownerUid` ตรงบัญชี Google ปัจจุบัน; เครื่องใหม่หรือเซฟคนละบัญชีจะไม่เข้าเกมและไม่เสี่ยงเขียนทับ Cloud
+- แก้ `js/auth.js`, `index_classic.html`; เพิ่ม `tools/test_auth_cloud_recovery.js`; syntax/recovery/update regression/diff ผ่าน
+- Browser 1280×720 + 812×375 เห็นข้อความ/ปุ่มครบ ไม่เลื่อน/console 0; build 8,302 ไฟล์ 456.3 MiB + PWA ผ่าน · พร้อมส่ง hotfix
 - **รอบ 1136 · Letter Cannon ล็อกเฉพาะ tester ก่อนขึ้นเว็บ:** ใช้สิทธิ์กลาง `isTester()`/`state.testerAccess`; ผู้เล่นทั่วไปเห็น 🔒 และข้อความ “เปิดให้เฉพาะบัญชีทดสอบ” ส่วน tester เข้าได้
 - ล็อกครอบคลุมปุ่ม Lobby, ทางเข้าจากเมือง 3D และ `LetterCannon.open()` โดยตรง; ไม่ทำรายชื่อบัญชีซ้ำและไม่เปลี่ยน Rules ที่ผู้ใช้ Publish แล้ว
 - แก้ `index_classic.html`, `css/lobby.css`, `js/lettercannon.js`, `tools/test_letter_cannon.js`; syntax/regression/diff ผ่าน
