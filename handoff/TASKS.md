@@ -66,7 +66,6 @@
 - **รอบ 1132 · ล็อก F1 + ยานแม่ก่อน deploy:** เพิ่มทั้งสองด่านเข้า Coming soon แบบเดียวกับมอเตอร์ไซค์ ผู้เล่นทั่วไปเห็น 🔒/กดแล้วถูกบล็อกก่อนหน้าจ่ายเงิน แต่บัญชี tester ยังเข้าได้; เพิ่ม regression `tools/test_f1_lobby_lock.js`
 - แก้ deploy F1 โดยรวม `img/f1/cockpit_body_realistic.png` เข้า release และขยาย `check_missing_assets.py` ให้จับ required build asset ที่ยังไม่อยู่ใน Git ก่อน build
 - production build ตัด cache-reset เฉพาะ localhost ออกจาก HTML และซ่อนข้อความ Git ที่ชวนเข้าใจผิด; syntax/regression/diff ผ่าน และจำลอง git HEAD+ไฟล์รอบนี้ build 8,248 ไฟล์/445.9 MiB + PWA validator ผ่าน · รอ COMMIT_DEPLOY
-- **รอบ 1130 · อันดับเหรียญออนไลน์สะสมตลอดกาล Top 100 + รางวัลรายเดือน:** เพิ่มแท็บ 🌐 จัดจาก `state.onlineEarned` ซึ่งเป็นเหรียญที่ได้จากเวลาออนไลน์และแสดงในกระเป๋า Lobby; ส่งค่า `leaderboard.oe` และใช้ query เฉพาะ `oe` เพื่อไม่ให้ยอดเหรียญคงเหลือกระทบอันดับ
 - อันดับ 1–10 ได้ 10,000–1,000 เหรียญผ่าน `onlineCoinAward`; Rules เพิ่ม index/validation `oe` และโซน `/onlineCoinAward`; regression/syntax ผ่าน และ Browser 812×375 ยืนยันครบ 100 อันดับ, ไม่ล้นแนวนอน, หน้ารางวัลครบ 10 ขั้น, console 0 · รอผู้ใช้ Publish Rules ก่อนส่งขึ้นเว็บ
 - regression/syntax/template/undefined/diff ผ่าน; Browser 812×375 เดโมยืนยันหัวข้อ Top 100, ครบ 100 รายชื่อ/อันดับสุดท้าย 100, overflow แนวนอน 0, console 0; build 8,294 ไฟล์สำเร็จ แต่ PWA validator ติดโค้ด localhost cache-reset ของรอบ 1126 ที่ค้างคู่ขนาน ไม่เกี่ยวกับรอบนี้ · รอรวมหลังงานคู่ขนานพร้อมส่ง
 - จบรอบไม่เริ่มหน้าเดิมอัตโนมัติ แต่กลับสารบัญพร้อม dialog กติกาและปุ่ม “รับทราบ”; กดหน้าล็อกจะแจ้งเหตุผลแบบเดียวกัน
