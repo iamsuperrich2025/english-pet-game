@@ -60,6 +60,11 @@ function isTeacher(){
   return !!(Auth.user && Auth.user.email
     && TEACHER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
+function syncOwnerAccess(){
+  const allowed=isTeacher();
+  if(state.ownerAccess!==allowed){state.ownerAccess=allowed;saveState();}
+  if(typeof LetterCannon!=='undefined'&&LetterCannon.refreshLock)LetterCannon.refreshLock();
+}
 
 /* ---------- บัญชีผู้ทดสอบเกม (รอบ 56 + 59) ----------
    สิทธิ์: (1) เหรียญต่ำกว่าเพดาน → เติมให้อัตโนมัติ — พอตั๋วโลก 3D ครบ 3 โลก
@@ -476,6 +481,7 @@ function authEnterGame(){
   Auth.booted = true;
   onlineStart();                                   // เพื่อนออนไลน์ + leaderboard (ใน online.js)
   bootGame();                                      // careTick + เข้าหน้า ลงทะเบียน/dashboard (ใน main.js)
+  syncOwnerAccess();                               // เจ้าของเท่านั้น: ป้ายล็อก Letter Cannon ใน Classic/เมือง 3D
   testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
   authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);

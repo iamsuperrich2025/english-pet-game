@@ -69,7 +69,14 @@ function cityWorldTester(){
   }
   catch(e){ return false; }
 }
+function cityLetterCannonOwner(){
+  try{
+    const sv=JSON.parse(localStorage.getItem('petVocabAdventure_v1')||'null');
+    return !!(sv && sv.ownerAccess===true);
+  }catch(e){return false;}
+}
 function cityWorldComingSoon(go){
+  if(go==='lettercannon') return !cityLetterCannonOwner();
   return CITY_WORLD_COMING_SOON.has(go) && !cityWorldTester();
 }
 
@@ -2937,8 +2944,9 @@ function captureCityShot(goKey, bldKey){
 }
 function travelTo(b){
   if(cityWorldComingSoon(b && b.go)){
-    setChip('🔒 Coming soon');
-    if(Live.self && Live.self.g) showBubble('__self', '🔒 Coming soon', Date.now());
+    const msg=b&&b.go==='lettercannon'?'🔒 เฉพาะบัญชีเจ้าของ':'🔒 Coming soon';
+    setChip(msg);
+    if(Live.self && Live.self.g) showBubble('__self', msg, Date.now());
     return;
   }
   const dest = 'index_classic.html?go='+encodeURIComponent(b.go);   // รอบ 863: ล็อบบี้เดิมย้ายชื่อไฟล์ (หน้านี้กลายเป็น index.html)

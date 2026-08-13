@@ -108,7 +108,7 @@ PRIMARY FILE: `js/lettercannon.js`
 RELATED FILES: `css/lettercannon.css`, `index_classic.html`, `js/city3d.js`, `js/main.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
 DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
-NOTES: Procedural art and synthesized SFX; no external game assets or WebGL lifecycle.
+NOTES: Canvas 2D gameplay with two-layer PNG turret assets under `assets/images/letter_cannon/`; synthesized SFX and no WebGL lifecycle.
 
 ## Player, camera, collision, animation, and NPCs
 

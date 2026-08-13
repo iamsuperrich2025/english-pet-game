@@ -55,7 +55,9 @@ async function sourceFiles() {
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
       'sound/racing/engineSound.mp3', 'img/f1/cockpit_body_realistic.png', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
-      'js/lettercannon.js', 'css/lettercannon.css']) {
+      'js/lettercannon.js', 'css/lettercannon.css',
+      'assets/images/letter_cannon/letter_cannon_base.png',
+      'assets/images/letter_cannon/letter_cannon_gun_head.png']) {
       try {
         await fs.access(path.join(ROOT, rel));
         if (!tracked.includes(rel)) tracked.push(rel);

@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1144 · Letter Cannon ป้อมภาพสองเลเยอร์ + owner-only:** ใช้ฐานนิ่ง/หัวป้อมกระบอกคู่หมุน 180° จาก PNG 1254×1254 โปร่งใส; ยิงสลับปากกระบอกจริงและทุก power-up ใช้ทิศเดียวกับหัวป้อม
+- แก้ gate จาก tester 2 บัญชีเป็น owner ผ่าน `isTeacher()` เดิม; เมือง 3D ใช้ `state.ownerAccess` เฉพาะป้าย/ทางเข้า ส่วน `LetterCannon.open()` ตรวจ Auth จริงและบล็อก route/API โดยตรง
+- แก้ `lettercannon.js`, `auth.js`, `state.js`, `city3d.js`, `index_classic.html`, build/test/map + เพิ่มภาพ 2 ไฟล์; input cleanup ครบ pointer/touch/blur/visibility/orientation และเข้าออกซ้ำไม่ค้าง
+- syntax + regression Auth/City/State + PNG alpha + Browser 1280×720/812×375 + build 8,304 ไฟล์ 459.7 MiB + PWA validator ผ่าน; พร้อม COMMIT_DEPLOY/owner production acceptance
 - **รอบ 1143 · คืนค่าเข้าเกมที่เล่นไม่ได้:** ครอบคลุมโลก 3D มีค่าเข้า 10 เส้นทาง; โหลด/start พัง, ยกเลิกก่อนเริ่ม หรือเครื่องค้าง/reload ใน 15 วินาทีแรก ได้คืนเต็มจำนวนและกันคืนซ้ำ
 - กล่องแจ้งบอกเกม/สาเหตุแบบสั้น + ยอด `+เหรียญ` ชัดเจน เล่นเสียงเงินเข้า 2 ครั้ง; Esc/พื้นหลังปิดไม่ได้ ต้องกด “รับทราบ” เท่านั้น
 - แก้ `js/state.js`, `js/ui.js`, `js/main.js`; เพิ่ม `tools/test_paid_game_entry_refund.js`; syntax + regression/F1 ผ่าน
