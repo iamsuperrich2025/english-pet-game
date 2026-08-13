@@ -3398,13 +3398,14 @@ html.no-anim .cert-lightbox,html.no-anim .cert-lightbox .clb-inner{transition:no
 
 /* ============================================================
    🌀 Spin-to-Spell (รอบ 171) — เกมวงแหวนสะกดคำบนเวที hero
-   วงแหวน/ตัวอักษร/ช่องเป้าอยู่ใน canvas 3D (z1) · ก้อนนี้คือ HUD HTML ทับเวที
+   ปุ่มเริ่มอยู่ต่อท้ายระดับชั้นบนแถบบน · HUD เกมยังทับเวทีตามเดิม
    ============================================================ */
-.spell-btn{position:absolute;left:10px;top:10px;z-index:3;cursor:pointer;   /* รอบ 245: ย้ายจากล่าง→บนซ้าย (ผู้ใช้: อยู่ล่างแล้วบังแมวที่เดินมาทางซ้าย) */
-  padding:6px 13px;border-radius:20px;border:1px solid rgba(120,210,255,.55);
+.spell-btn{flex-shrink:0;cursor:pointer;
+  padding:2px 12px;border-radius:10px;border:1px solid rgba(120,210,255,.55);
   background:linear-gradient(165deg,rgba(30,90,170,.88),rgba(12,40,90,.92));color:#dff1ff;
-  font:800 clamp(11px,2.8vh,13.5px) inherit;font-family:inherit;
+  font:800 13px/1.35 inherit;font-family:inherit;white-space:nowrap;
   box-shadow:0 0 14px rgba(80,180,255,.35), inset 0 1px 0 rgba(255,255,255,.18);}
+.spell-btn[hidden]{display:none;}
 .spell-btn:active{transform:scale(.94);}
 .sp-hud{position:absolute;inset:0;z-index:3;pointer-events:none;
   display:flex;flex-direction:column;align-items:center;}
@@ -4586,6 +4587,7 @@ button.ps-worn-pip:active{transform:scale(.95);}
 /* ---------- ② แถบตัวเลข: 3 ช่องในกล่องเดียว มีเส้นคั่น ---------- */
 /* 🪙 รอบ 695: ห่อ .coin-group + .grade-pill เป็นคอลัมน์เดียว (.coin-block) ให้ระดับชั้นตกลงมาอยู่แถวใต้ */
 .coin-block{display:flex;flex-direction:column;align-items:center;gap:4px;flex-shrink:0;}
+.coin-subrow{display:flex;align-items:center;justify-content:center;gap:5px;min-height:25px;}
 .coin-group{
   display:flex;align-items:stretch;flex-shrink:0;height:var(--top-h);
   background:linear-gradient(180deg,rgba(12,36,74,.82),rgba(6,20,44,.86));

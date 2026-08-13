@@ -701,15 +701,12 @@ const Lobby3D = (function(){
   }
   function spellBtnSync(){
     if(!heroEl) return;
-    const b=heroEl.querySelector('.spell-btn');
+    const b=document.getElementById('spell-btn');
     const want=!spellActive && curGiant===0 && !!(petRoot && petRoot.userData.gltf) && petRoot.visible &&
       canvas && canvas.style.display!=='none' && canvas.parentElement===heroEl;
-    if(want && !b){
-      const btn=document.createElement('button');
-      btn.className='spell-btn'; btn.innerHTML='🌀 สะกดคำ';
-      btn.addEventListener('click', spellStart);
-      heroEl.appendChild(btn);
-    }else if(!want && b) b.remove();
+    if(!b) return;
+    b.hidden=!want;
+    if(want) b.onclick=spellStart;
   }
 
   // ---- เริ่ม/จบเกม ----
@@ -777,4 +774,31 @@ const Lobby3D = (function(){
         letters:spellLetters.length, rot:+spellRot.toFixed(3), lock:spellLock,
         miss:spellMiss, cat:spellWord?spellWord.cat:null,
         wordsToday:(typeof state!=='undefined')?(state.spellWords||0):null}}) };
+})();
+
+/* 🌀 ย้ายปุ่มสะกดคำไปต่อท้าย "ระดับชั้น" บนแถบบน
+   ย้าย node เดิมทั้งก้อน จึงคง click handler และเงื่อนไขเดิมจาก renderDashboard() ไว้ครบ */
+(function(){
+  const grade = document.getElementById('grade-line');
+  const baseRenderDashboard = window.renderDashboard;
+  if(!grade || !grade.parentElement || typeof baseRenderDashboard !== 'function') return;
+
+  const row = document.createElement('div');
+  row.className = 'coin-subrow';
+  const slot = document.createElement('div');
+  slot.id = 'spell-slot';
+  grade.parentElement.insertBefore(row, grade);
+  row.appendChild(grade);
+  row.appendChild(slot);
+
+  window.renderDashboard = function(){
+    const result = baseRenderDashboard.apply(this, arguments);
+    const button = document.querySelector('.stage-hero .spell-btn');
+    slot.replaceChildren();
+    if(button){
+      button.id = 'spell-btn';
+      slot.appendChild(button);
+    }
+    return result;
+  };
 })();
