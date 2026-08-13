@@ -70,7 +70,7 @@ const worldFail = {mode:'adv', label:'ทดสอบ', ticketKey:'advTicket', e
   assert.match(stateSrc, /gameEntryTx:null/);
   assert.match(stateSrc, /gameEntryRefundNotice:null/);
   assert.ok(main.indexOf('recoverInterruptedGameEntry()') < main.indexOf('careTick();'));
-  assert.match(main, /showGameEntryRefundNotice\(showRankRewardNotice\)/);
+  assert.match(main, /showGameEntryRefundNotice\(\(\)=>showPetShoppingGrantNotice\(showRankRewardNotice\)\)/);
   assert.match(ui, /GAME_ENTRY_STABLE_MS\s*=\s*15000/);
   assert.match(ui, /tx\.startedAt\s*=\s*Date\.now\(\)[\s\S]{0,140}setTimeout\(\(\)=>gameEntryCommit\(tx\)/);
   for(const fn of ['enterAdventure3D','enterHaunted3D','enterHeli3D','enterDrone3D','enterDrive3D',

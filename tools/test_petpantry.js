@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('fs'),path=require('path'),vm=require('vm');
+const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');
+const assert=(x,m)=>{if(!x)throw new Error(m)};
+const ctx={console,window:{},structuredClone,saveState(){},renderDashboard(){},syncHeader(){},state:{coins:20000,petPantry:{shelfId:null,stock:{}},owned:[]},sfx:{buy(){}},activePet(){return {type:'cat'}},PETS:{dog:{favFood:{emoji:'🦴',name:'กระดูก',price:300}},cat:{favFood:{emoji:'🐟',name:'ปลา',price:300}},dragon:{favFood:{emoji:'🌶️',name:'พริก',price:300}}},FOODS:[{id:'apple',name:'แอปเปิ้ล',emoji:'🍎',price:150},{id:'feast',name:'ชุดอาหาร',emoji:'🍱',price:1000}],ITEMS:[]};
+vm.createContext(ctx);vm.runInContext(read('js/data/petshopping.js')+'\n'+read('js/petpantry.js'),ctx);
+const p=ctx.window.PetPantry;
+assert(p&&['ensureState','capacity','total','qty','buyShelf','buyFood','take','openPantry','openStore'].every(k=>typeof p[k]==='function'),'public API missing');
+let r=p.buyShelf('small');assert(r.ok&&r.cost===1500&&p.capacity()===30,'small empty shelf purchase failed');assert(p.total()===0,'new shelf must start empty');
+r=p.buyFood('apple',5);assert(r.ok&&r.cost===750&&p.qty('apple')===5,'food stock purchase failed');const coins=ctx.state.coins;assert(p.take('apple',1)&&p.qty('apple')===4&&ctx.state.coins===coins,'feeding take must debit stock only');
+r=p.buyShelf('medium');assert(r.ok&&r.cost===3500&&p.capacity()===75,'upgrade must charge difference');assert(p.buyShelf('small').code==='downgrade','downgrade must be blocked');
+ctx.state.petPantry.stock={apple:75};assert(p.buyFood('apple',1).code==='capacity','capacity limit missing');
+assert(p.stockId('favorite','cat')==='fav_cat'&&p.favoriteFor('dragon').id==='fav_dragon','favorite SKU alias broken');
+const css=read('css/petpantry.css');assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll CSS missing');
+console.log('PASS pet pantry: shelves, upgrade, capacity, stock-only feeding, favorites, compact UI');

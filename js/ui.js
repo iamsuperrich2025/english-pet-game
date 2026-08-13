@@ -261,23 +261,30 @@ function updatePetBondTalk(card, p, stateName){
   box.classList.toggle('is-care', stateName === 'care');
 }
 
-function startPetBondTalkHold(card){
-  if(!card || __petBondTalkSlots.has(card)) return;
+function startPetBondTalkHold(card, p){
+  if(!card) return;
+  const previous = __petBondTalkSlots.get(card);
+  if(previous && previous.timer) clearTimeout(previous.timer);
   // The message rendered with the card also deserves a full minute on screen.
-  __petBondTalkSlots.set(card, {nextAt:Date.now() + PET_BOND_TALK_MS, pendingState:'', timer:0});
+  // renderDashboard reuses the same card element when switching pets, so replace
+  // the whole slot to prevent a delayed line from the previously viewed pet.
+  __petBondTalkSlots.set(card, {pet:p, nextAt:Date.now() + PET_BOND_TALK_MS, pendingState:'', timer:0});
 }
 
 function queuePetBondTalk(card, p, stateName){
   if(!card) return;
-  startPetBondTalkHold(card);
-  const slot = __petBondTalkSlots.get(card);
+  let slot = __petBondTalkSlots.get(card);
+  if(!slot || slot.pet !== p){
+    startPetBondTalkHold(card, p);
+    slot = __petBondTalkSlots.get(card);
+  }
   if(!slot.pendingState || petBondTalkPriority(stateName) > petBondTalkPriority(slot.pendingState)){
     slot.pendingState = stateName;
   }
   if(slot.timer) return;
   slot.timer = setTimeout(()=>{
     slot.timer = 0;
-    if(!card.isConnected) return;
+    if(!card.isConnected || __petBondTalkSlots.get(card) !== slot || slot.pet !== p) return;
     const nextState = slot.pendingState || 'idle';
     slot.pendingState = '';
     updatePetBondTalk(card, p, nextState);
@@ -5505,7 +5512,7 @@ function renderDashboard(){
     const behaviorRoot = card.querySelector('.pet-show');
     const behaviorForced = p.sleeping ? 'sleep' : (p.sick ? 'idle' : (petHungry(p) ? 'sit' : ''));
     const behaviorOptions = videoEl=>({video:videoEl || null,type:p.type,stage,forced:behaviorForced});
-    startPetBondTalkHold(card);
+    startPetBondTalkHold(card, p);
     if(behaviorRoot) behaviorRoot.addEventListener('petbehaviorchange', e=>queuePetBondTalk(card, p, e.detail.state));
     if(vid){
       const heroEl = card.querySelector('.stage-hero');
@@ -7219,6 +7226,87 @@ async function enterDrone3D(){
   }
   Adventure3D.start('drone');
   return worldEntryStarted();
+}
+
+/* ==== 🐾🛍️ PET SHOPPING 3D — รอบ 1158 ====
+   โลกซื้อของใช้รถส่วนตัวฟรี; ผู้เล่นที่ยังไม่มีรถเช่า car_01 ครั้งละ 500 เหรียญ
+   หักค่าเช่าหลัง engine เปิดสำเร็จเท่านั้น เพื่อไม่กินเงินเมื่อโหลดไฟล์/WebGL ล้มเหลว */
+function confirmPetShoppingEntry(target, rental){
+  return new Promise(resolve=>{
+    const food = target === 'food';
+    const fee = (typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500;
+    const ov = document.createElement('div');
+    ov.className = 'levelup-overlay petshop-entry-overlay';
+    ov.innerHTML = `<div class="levelup-box petshop-entry-box">
+      <div class="petshop-entry-icon">${food ? '🥫🐾' : '🎀🐾'}</div>
+      <h2>${food ? 'ไปร้านอาหารสัตว์' : 'ไปร้านแฟชั่นสัตว์เลี้ยง'}</h2>
+      <p>พาน้องนั่งรถไปด้วย ขับตาม GPS ไปยังร้านที่อยู่ไม่ไกล แล้วเลือกซื้อที่หน้าร้านจริง</p>
+      ${rental
+        ? `<div class="petshop-rental-note">🚗 ยังไม่มีรถ — ระบบจะให้เช่า <b>รถแดงสายฟ้า</b> รอบนี้<br>ค่าเช่า <b>🪙${fmtNum(fee)}</b> (ไม่เพิ่มรถเข้าคลัง)</div>`
+        : `<div class="petshop-owncar-note">✅ ใช้รถส่วนตัวของหนู — <b>ไม่มีค่าเช่า</b></div>`}
+      <div class="cb-btns"><button class="cf-no">ไว้ก่อน</button><button class="cf-ok">ออกเดินทาง 🚗</button></div>
+    </div>`;
+    let done = false;
+    const finish = value=>{ if(done) return; done=true; ov.remove(); resolve(value); };
+    ov.querySelector('.cf-no').addEventListener('click', ()=>finish(false));
+    ov.querySelector('.cf-ok').addEventListener('click', ()=>finish(true));
+    ov.addEventListener('click', e=>{ if(e.target===ov) finish(false); });
+    document.body.appendChild(ov);
+    if(typeof fitQbp === 'function') fitQbp(ov.querySelector('.levelup-box'));
+  });
+}
+
+async function enterPetShopping3D(target='food'){
+  target = target === 'fashion' ? 'fashion' : 'food';
+  if(!activePet()){
+    toast('🐾 ต้องรับน้องมาเลี้ยงก่อน จึงจะพาน้องออกไปซื้อของได้');
+    return worldEntryStopped('ยังไม่มีสัตว์เลี้ยง');
+  }
+  if(target === 'food' && !(state.petPantry && state.petPantry.shelfId)){
+    toast('🗄️ ซื้อชั้นเปล่าก่อน เพื่อให้มีที่เก็บอาหารที่ซื้อกลับมา');
+    if(typeof PetPantry !== 'undefined') PetPantry.openPantry();
+    return worldEntryStopped('ยังไม่มีชั้นเก็บอาหาร');
+  }
+  if(advLoading){ advBusyMsg(()=>enterPetShopping3D(target)); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
+
+  const rental = !(state.cars && state.cars.length);
+  const fee = (typeof PET_SHOP_RENTAL_FEE === 'number') ? PET_SHOP_RENTAL_FEE : 500;
+  if(!rental && carDriveBlock() === 'overdue'){
+    sfx.wrong();
+    toast('🔒 รถคันนี้ค้างค่างวด — ชำระหรือสลับรถก่อนออกไปซื้อของนะ', 3200);
+    return worldEntryStopped('รถที่เลือกค้างค่างวด');
+  }
+  if(rental && state.coins < fee){
+    sfx.wrong();
+    toast(`🪙 ต้องมี ${fmtNum(fee)} เหรียญสำหรับเช่ารถรอบนี้ — เล่นเกมหาเหรียญเพิ่มก่อนนะ`, 3200);
+    return worldEntryStopped('เหรียญไม่พอค่าเช่ารถ');
+  }
+  if(!await confirmPetShoppingEntry(target, rental)) return worldEntryStopped('ยกเลิกก่อนออกเดินทาง');
+
+  advLoading = Date.now();
+  toast(target==='food' ? '🚗 กำลังเตรียมเส้นทางไปร้านอาหารสัตว์...' : '🚗 กำลังเตรียมเส้นทางไปร้านแฟชั่นสัตว์เลี้ยง...');
+  try{
+    await loadScriptOnce('js/vendor/three.min.js');
+    await loadScriptOnce('js/petshopping3d.js?v=1158');
+    if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
+    const own = rental ? null : myCar();
+    const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
+    if(started === false) throw new Error('เปิดฉาก Pet Shopping 3D ไม่สำเร็จ');
+    if(rental){
+      state.coins -= fee;
+      saveState();
+      if(typeof syncHeader === 'function') syncHeader();
+      if(typeof sfx !== 'undefined' && typeof sfx.buy === 'function') sfx.buy();
+      toast(`🚗 เช่ารถรอบนี้แล้ว 🪙${fmtNum(fee)} — ขับตาม GPS ไปที่ร้านได้เลย!`, 3000);
+    }
+    return worldEntryStarted();
+  }catch(e){
+    console.error('[pet-shopping-3d]', e);
+    toast('⚠️ เปิดโลกซื้อของไม่สำเร็จ — ยังไม่หักค่าเช่ารถ ลองใหม่อีกครั้งนะ', 3600);
+    return worldEntryStopped('โหลดโลกซื้อของไม่สำเร็จและไม่คิดค่าเช่า', e);
+  }finally{
+    advLoading = false;
+  }
 }
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */

@@ -12,6 +12,7 @@ assert(T.wordPool().some(x=>x.en==='APPLE'),'approved grade vocabulary');
 T.nextWord();const w=T.word.en;assert(w.length>=3,'word selected');
 T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next required letter guaranteed');
 const need=T.letters.find(x=>x.alive&&x.ch===w[0]),rewardId=need.rewardId;T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');assert.strictEqual(awarded,1,'one correct target awards exactly one real player coin');assert.strictEqual(saved,1,'coin award is persisted immediately');assert.strictEqual(T.coinsRun,1,'round coin HUD advances per correct letter');assert.strictEqual(T.awardLetterCoin({rewardId,coinAwarded:false},0,0),false,'the same target id cannot award twice even after its pooled object is reused');assert.strictEqual(awarded,1,'duplicate target id leaves the player balance unchanged');
+while(T.pos<w.length){const i=T.pos;T.hit({alive:true,kind:'letter',ch:w[i],x:0,y:0,r:20,rewardId:10000+i,coinAwarded:false},false);}assert.strictEqual(awarded,w.length+50,'completed word awards +1 per letter and exactly +50 bonus');assert.strictEqual(T.coinsRun,w.length+50,'round coin HUD includes letter rewards and word bonus');assert.strictEqual(saved,w.length+1,'each letter plus the word bonus is persisted');assert.strictEqual(T.awardWordBonus(T.word),false,'completed word bonus cannot be paid twice');
 const wrong=T.spawnLetter(w[1]==='Z'?'Y':'Z',false),before=T.pos,combo=T.combo;T.hit(wrong,false);assert.strictEqual(T.pos,before,'wrong letter has no penalty');assert.strictEqual(T.combo,combo,'wrong letter does not reset combo');
 assert(T.particles.length>=16&&T.shockwaves.length>=2,'correct and wrong targets create amplified particles and shockwaves');
 for(let i=0;i<40;i++)T.spawnLetter('A',false);assert(T.letters.filter(x=>x.alive).length<=T.MAX_LETTERS,'letter pool capped');
@@ -37,6 +38,8 @@ assert(!code.includes('adminAllowed')&&!code.includes('isAdmin')&&!code.includes
 assert(code.includes("addCoins==='function')addCoins(1)")&&code.includes("saveState==='function')saveState()")&&code.includes("authPushSave==='function')authPushSave(false)"),'one-coin award uses real state save plus cloud sync');
 assert(code.includes('coinAwarded:false')&&code.includes('rewardedLetters.has(o.rewardId)'),'per-target reward has a persistent duplicate guard across pooled object reuse');
 assert(code.includes("sound('coin')")&&css.includes('.lc-coinfx')&&css.includes('@keyframes lc-coin-rise'),'coin award has a visible animated effect and distinct confirmation sound');
+assert(code.includes("COIN_IMAGE='img/coins/coin_gold.png'")&&code.includes('lc-coin-stat')&&code.includes('class="lc-coin-img"'),'real gold coin artwork is visible in the round HUD and every money effect');
+assert(code.includes('WORD_BONUS=50')&&code.includes('rewardedWords.has(doneWord.rewardId)')&&code.includes("sound('coinBig')"),'completed word pays a duplicate-safe 50-coin bonus with a distinct celebration sound');
 assert(css.includes('rgba(7,24,63,.3)')&&css.includes('rgba(246,126,25,.52)')&&css.includes('backdrop-filter:blur(3px)'),'HUD and both control families use highly translucent blur while preserving sharp text');
 assert(code.includes('o.y>H*.72+o.r'),'letters retire above the bottom control stack instead of hiding behind it');
 assert(code.includes('เกมใหม่ Letter Cannon เปิดแล้ว!')&&code.includes('data-a="interest"')&&code.includes('scrollIntoView')&&code.includes('lc-menu-highlight'),'one-time announcement guides and highlights the menu entry');
@@ -48,4 +51,4 @@ assert(!code.includes('NetRoom.create')&&!code.includes('netJoin()')&&!code.incl
 assert(code.includes('function shockwave')&&code.includes('function impact')&&code.includes("globalCompositeOperation='lighter'"),'projectile and target impact spectacle included');
 assert(!code.includes('registerTap(now)')&&!code.includes('tapPointers.set'),'obsolete double-tap firing removed');
 assert(code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()")&&code.includes("movePointers.clear()"),'input and lifecycle cleanup paths included');
-console.log('PASS Letter Cannon: +1 safe coin per unique correct target, visible/audio reward, translucent controls, all-player access, announcement guide, solo press-to-fire');
+console.log('PASS Letter Cannon: real coin art in HUD/every reward, +1 per unique correct letter, duplicate-safe +50 completed-word bonus');

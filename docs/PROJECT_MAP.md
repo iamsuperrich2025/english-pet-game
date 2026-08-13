@@ -24,7 +24,7 @@ SYSTEM: Screen routing and level admission
 PURPOSE: Switches classic-lobby DOM screens and lazy-loads 3D engines when a world is entered.
 PRIMARY FILE: `js/ui.js`
 RELATED FILES: `js/util.js`, `js/main.js`, `js/data/calendar.js`
-PUBLIC ENTRY POINTS / KEY SYMBOLS: `showScreen`, `loadScriptOnce`, `loadAdv3d`, `enterAdventure3D`, `enterHeli3D`, `enterDrive3D`, `enterMoto3D`, `enterF1_3D`, `enterInvasion3D`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `showScreen`, `loadScriptOnce`, `loadAdv3d`, `enterAdventure3D`, `enterHeli3D`, `enterDrive3D`, `enterPetShopping3D`, `enterMoto3D`, `enterF1_3D`, `enterInvasion3D`
 DEPENDENCIES: `state`, ticket/health rules, `THREE`, world globals.
 NOTES: Inspect only the relevant loader/entry zone in `ui.js`.
 
@@ -61,6 +61,14 @@ RELATED FILES: `js/adventure3d.js`, `js/ui.js`
 PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.KPP_CITY`, `buildDriveCity`, drive grid/GPS symbols in Adventure3D
 DEPENDENCIES: Adventure3D.
 NOTES: Procedural rendering/collision/navigation are built from this data inside `adventure3d.js`.
+
+SYSTEM: Pet pantry and shopping trip
+PURPOSE: Replaces instant feeding/clothing purchases with shelf inventory and a short first-person driving trip to dedicated food/fashion stores.
+PRIMARY FILE: `js/petshopping3d.js`
+RELATED FILES: `js/petpantry.js`, `js/data/petshopping.js`, `js/state.js`, `js/ui.js`, `css/petpantry.css`, `css/petshopping3d.css`, `img/pet-shopping/`, `js/music.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.PetShopping3D`, `start`, `exit`, `window.PetPantry`, `ensureState`, `buyShelf`, `buyFood`, `take`, `openPantry`, `openStore`, `enterPetShopping3D`
+DEPENDENCIES: `THREE`, shared pet/economy state, `FOODS`, `ITEMS`, `Music`, local/cloud save.
+NOTES: `petshopping3d.js` is lazy-loaded. Food stock is consumable and excluded from net worth; the shelf is a permanent asset. Players without a car rent `car_01` per trip without acquiring it.
 
 SYSTEM: Vocab Arena
 PURPOSE: Lightweight combat-first vocabulary world with player/pet/bots, co-op boss state, pickups, HUD, and its own renderer lifecycle.

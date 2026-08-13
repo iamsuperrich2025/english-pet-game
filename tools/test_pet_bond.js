@@ -41,7 +41,12 @@ ok(ui.includes('const __petBondTalkSlots = new WeakMap()'), 'speech timing is is
 ok(ui.includes("if(stateName === 'care') return 3"), 'health-care speech has highest queue priority');
 ok(ui.includes("if(stateName === 'cuddle') return 2"), 'affection speech has priority over generic behavior');
 ok(ui.includes("e=>queuePetBondTalk(card, p, e.detail.state)"), 'fast animation changes queue speech instead of replacing it immediately');
-ok(ui.includes('if(!card.isConnected) return'), 'detached pet cards do not update after their timer fires');
+ok(ui.includes('if(!card.isConnected ||'), 'detached pet cards do not update after their timer fires');
+ok(ui.includes('function startPetBondTalkHold(card, p)'), 'speech hold is initialized with the currently viewed pet');
+ok(ui.includes('if(previous && previous.timer) clearTimeout(previous.timer)'), 'switching pets cancels the previous pet speech timer');
+ok(ui.includes('{pet:p, nextAt:Date.now() + PET_BOND_TALK_MS'), 'speech queue remembers which pet owns each message');
+ok(ui.includes('if(!slot || slot.pet !== p)'), 'a behavior event cannot reuse another pet speech queue');
+ok(ui.includes('__petBondTalkSlots.get(card) !== slot || slot.pet !== p'), 'an expired callback cannot show speech from a previously viewed pet');
 ok(css.includes('.bond-owner{left:-1%;height:min(44%,102px)}'), 'compact caretaker stays clear of nearby status text');
 ok(ui.includes("stateName === 'cuddle'"), 'bond bubble reacts to cuddle state');
 ok(ui.includes("stateName === 'care'"), 'bond bubble reacts to care state');

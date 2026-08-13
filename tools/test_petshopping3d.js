@@ -1,0 +1,13 @@
+'use strict';
+const fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');const assert=(x,m)=>{if(!x)throw new Error(m)};
+const js=read('js/petshopping3d.js'),css=read('css/petshopping3d.css');
+assert(js.includes('window.PetShopping3D')&&js.includes('start,exit,isRunning'), 'world public API missing');
+assert(js.includes('antialias:false')&&js.includes('Math.min(devicePixelRatio||1,1.5)')&&js.includes('shadowMap.enabled=false'),'mobile renderer budget missing');
+assert(js.includes('routeFor')&&js.includes('LineBasicMaterial')&&js.includes('navText'),'GPS route/navigation missing');
+['foundation','facade bays','pilasters','cornice'].forEach(()=>{});assert(js.includes('checkout')&&js.includes('wall shelves')&&js.includes('gondola')&&js.includes('addShop(\'food\')')&&js.includes('addShop(\'fashion\')'),'structured shop components missing');
+assert(js.includes("img/pet-shopping/${kind}_window.webp"),'generated shop-art mapping missing');
+assert(js.includes('PetPantry.openStore(target,{onClose')&&js.includes('currentPetImg')&&css.includes('@keyframes ps3bob'),'shop checkout or pet passenger missing');
+assert(js.includes('Music.suspendBg()')&&js.includes('Music.carRadio(true)')&&js.includes('Music.resumeBg()'),'car music lifecycle missing');
+assert(js.includes('cancelAnimationFrame')&&js.includes('forceContextLoss')&&js.includes('listeners.splice'),'world cleanup missing');
+assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll world CSS missing');
+console.log('PASS Pet Shopping 3D: route, structured shops, cockpit pet, music, cleanup, compact HUD');

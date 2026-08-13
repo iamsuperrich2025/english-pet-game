@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1159 · hotfix คิวคำพูดข้ามสัตว์:** เมื่อสลับแท็บสัตว์ ยกเลิก timer/คิวของตัวเดิมและผูก callback กับสัตว์เจ้าของข้อความ ป้องกันข้อความมังกรไปแสดงบนหมา; `test_pet_bond`, syntax, build `.1049` และ PWA validator ผ่าน
+- **รอบ 1158 · ชั้นอาหาร + โลก Pet Shopping 3D:** เปลี่ยนการให้อาหารเป็นหัก stock จากชั้น 30/75/160 ช่อง; ชั้นเริ่มว่างและอัปเกรดจ่ายส่วนต่าง. ปุ่มใต้ให้อาหารพาไปซื้ออาหาร/แฟชั่นในโลกขับรถมุมมองคนขับ มี GPS, หัวน้อง, วิทยุรถ, ร้านโครงสร้างครบ, รถส่วนตัวฟรี/ไม่มีรถเช่า `car_01` รอบละ 500 และหักหลังเปิดโลกสำเร็จ
+- ตู้เสื้อผ้าไม่ขายตรงแล้ว; ร้าน 3D ซื้อของเข้าตู้แต่ไม่สวมอัตโนมัติ. เงินปรับตัว 10,000 เข้า migration ครั้งเดียวและกล่องภาพ+เสียงค้างจนกดรับทราบ; สัตว์ป่วยยังหาเหรียญ/รายได้คอม/ออนไลน์ได้ตามปกติ
+- เพิ่มภาพ ImageGen WebP 3 ภาพใน `img/pet-shopping/`; Browser 812×375 ผ่าน pantry/store/cockpit/GPS/no-overflow/cleanup console 0; syntax + pantry/world/integration/dress/pet-bond/paid-entry/missing-assets + production build `.1049`/PWA validator ผ่าน
 - **รอบ 1157 · ย้ายปุ่ม “สะกดคำ” ออกจากเวทีน้อง:** ปุ่มอยู่ต่อท้ายแถบ “ระดับชั้น” ในช่องว่างด้านขวา โดยย้าย DOM node เดิมจึงคงเงื่อนไขแสดง/ซ่อนและ click handler ครบ; แก้ `css/lobby.css`, `js/lobby3d.js` และเพิ่ม regression test
 - `test_spell_header.js`, syntax และ diff-check ผ่าน; Browser runtime ที่ 1047×497/812×375 ยืนยันปุ่มอยูหลังระดับชั้น 5px, บรรทัดเดียวกัน, ไม่ทับเวที และ horizontal overflow = 0
 - **รอบ 1154 · ห้องแต่งตัวพรีเมียม + เสื้อผ้าใหม่:** เพิ่มภาพ ImageGen โปร่งใส 10 ชิ้น (เครื่องประดับ 6 / เสื้อผ้า 4) รวมสินค้าเป็น 18 ชิ้น พร้อมระดับ คลาสสิก/หายาก/มหัศจรรย์/ตำนาน ราคา ป้ายหมวด แสงอัญมณี และยอดขาย
@@ -57,7 +61,6 @@
 - **รอบ 1145 · hotfix asset 404 หลัง deploy:** `.1040` ขึ้นสำเร็จแต่ production manifest ไม่มีภาพป้อม เพราะ `build_web.mjs` fallback ใน git archive ไม่ผ่านรายการ explicit ของโหมดมี `.git`
 - เพิ่ม `assets/images/letter_cannon/` ใน `PUBLIC_PREFIXES` ให้ทั้ง tracked build และ archive fallback รวมภาพจริง; regression บังคับตรวจ prefix นี้กันย้อนกลับ
 - จำลอง build โดยตัดคำสั่ง git ออกจาก PATH แล้วภาพทั้งสองอยู่ output/manifest พร้อม hash ถูกต้อง; รอ deploy `.1041` และต้องตรวจ URL ตอบ 200 `image/png` ก่อนปิดงาน
-- **รอบ 1144 · Letter Cannon ป้อมภาพสองเลเยอร์ + owner-only:** ใช้ฐานนิ่ง/หัวป้อมกระบอกคู่หมุน 180° จาก PNG 1254×1254 โปร่งใส; ยิงสลับปากกระบอกจริงและทุก power-up ใช้ทิศเดียวกับหัวป้อม
 - แก้ gate จาก tester 2 บัญชีเป็น owner ผ่าน `isTeacher()` เดิม; เมือง 3D ใช้ `state.ownerAccess` เฉพาะป้าย/ทางเข้า ส่วน `LetterCannon.open()` ตรวจ Auth จริงและบล็อก route/API โดยตรง
 - แก้ `lettercannon.js`, `auth.js`, `state.js`, `city3d.js`, `index_classic.html`, build/test/map + เพิ่มภาพ 2 ไฟล์; input cleanup ครบ pointer/touch/blur/visibility/orientation และเข้าออกซ้ำไม่ค้าง
 - syntax + regression Auth/City/State + PNG alpha + Browser 1280×720/812×375 + build 8,304 ไฟล์ 459.7 MiB + PWA validator ผ่าน; พร้อม COMMIT_DEPLOY/owner production acceptance
