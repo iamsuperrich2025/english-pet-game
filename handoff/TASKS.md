@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1145 · hotfix asset 404 หลัง deploy:** `.1040` ขึ้นสำเร็จแต่ production manifest ไม่มีภาพป้อม เพราะ `build_web.mjs` fallback ใน git archive ไม่ผ่านรายการ explicit ของโหมดมี `.git`
+- เพิ่ม `assets/images/letter_cannon/` ใน `PUBLIC_PREFIXES` ให้ทั้ง tracked build และ archive fallback รวมภาพจริง; regression บังคับตรวจ prefix นี้กันย้อนกลับ
+- จำลอง build โดยตัดคำสั่ง git ออกจาก PATH แล้วภาพทั้งสองอยู่ output/manifest พร้อม hash ถูกต้อง; รอ deploy `.1041` และต้องตรวจ URL ตอบ 200 `image/png` ก่อนปิดงาน
 - **รอบ 1144 · Letter Cannon ป้อมภาพสองเลเยอร์ + owner-only:** ใช้ฐานนิ่ง/หัวป้อมกระบอกคู่หมุน 180° จาก PNG 1254×1254 โปร่งใส; ยิงสลับปากกระบอกจริงและทุก power-up ใช้ทิศเดียวกับหัวป้อม
 - แก้ gate จาก tester 2 บัญชีเป็น owner ผ่าน `isTeacher()` เดิม; เมือง 3D ใช้ `state.ownerAccess` เฉพาะป้าย/ทางเข้า ส่วน `LetterCannon.open()` ตรวจ Auth จริงและบล็อก route/API โดยตรง
 - แก้ `lettercannon.js`, `auth.js`, `state.js`, `city3d.js`, `index_classic.html`, build/test/map + เพิ่มภาพ 2 ไฟล์; input cleanup ครบ pointer/touch/blur/visibility/orientation และเข้าออกซ้ำไม่ค้าง

@@ -22,7 +22,7 @@ const PUBLIC_ROOT_FILES = new Set([
   'version.json',
 ]);
 const PUBLIC_DIRS = new Set(['.well-known', 'clip', 'css', 'img', 'js', 'sound']);
-const PUBLIC_PREFIXES = ['assets/weapons/fps/runtime/'];
+const PUBLIC_PREFIXES = ['assets/weapons/fps/runtime/', 'assets/images/letter_cannon/'];
 const FORBIDDEN_NATIVE_EXT = /\.(?:aab|apk|bat|cmd|com|dex|dll|exe|jar|ps1|so)$/i;
 const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;

@@ -31,6 +31,7 @@ function pngInfo(file){
   assert(transparent>0&&opaque>0,file+' has real transparent and opaque pixels');return{w,h};
 }
 for(const name of ['letter_cannon_base.png','letter_cannon_gun_head.png']){const path='assets/images/letter_cannon/'+name,info=pngInfo(path);assert.deepStrictEqual(info,{w:1254,h:1254},name+' dimensions');assert(build.includes(path),name+' copied by production build');}
+assert(build.includes("'assets/images/letter_cannon/'"),'git-archive fallback publishes the Letter Cannon asset directory');
 assert(html.includes('btn-rail-lettercannon')&&html.includes('js/lettercannon.js')&&html.includes('css/lettercannon.css'),'classic lobby entry and assets');
 assert(city.includes("bld('lettercannon'")&&city.includes('ป้อมพิทักษ์คำศัพท์'),'3D city entry and bilingual name');
 assert(main.includes("lettercannon:'#btn-rail-lettercannon'"),'3D go routing');
