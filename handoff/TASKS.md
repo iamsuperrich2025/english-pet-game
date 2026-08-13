@@ -27,7 +27,10 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (12 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1132 · ล็อก F1 + ยานแม่ก่อน deploy:** เพิ่มทั้งสองด่านเข้า Coming soon แบบเดียวกับมอเตอร์ไซค์ ผู้เล่นทั่วไปเห็น 🔒/กดแล้วถูกบล็อกก่อนหน้าจ่ายเงิน แต่บัญชี tester ยังเข้าได้; เพิ่ม regression `tools/test_f1_lobby_lock.js`
+- แก้ deploy F1 โดยรวม `img/f1/cockpit_body_realistic.png` เข้า release และขยาย `check_missing_assets.py` ให้จับ required build asset ที่ยังไม่อยู่ใน Git ก่อน build
+- production build ตัด cache-reset เฉพาะ localhost ออกจาก HTML และซ่อนข้อความ Git ที่ชวนเข้าใจผิด; syntax/regression/diff ผ่าน และจำลอง git HEAD+ไฟล์รอบนี้ build 8,248 ไฟล์/445.9 MiB + PWA validator ผ่าน · รอ COMMIT_DEPLOY
 - **รอบ 1130 · อันดับเหรียญออนไลน์สะสมตลอดกาล Top 100 + รางวัลรายเดือน:** เพิ่มแท็บ 🌐 จัดจาก `state.onlineEarned` ซึ่งเป็นเหรียญที่ได้จากเวลาออนไลน์และแสดงในกระเป๋า Lobby; ส่งค่า `leaderboard.oe` และใช้ query เฉพาะ `oe` เพื่อไม่ให้ยอดเหรียญคงเหลือกระทบอันดับ
 - อันดับ 1–10 ได้ 10,000–1,000 เหรียญผ่าน `onlineCoinAward`; Rules เพิ่ม index/validation `oe` และโซน `/onlineCoinAward`; regression/syntax ผ่าน และ Browser 812×375 ยืนยันครบ 100 อันดับ, ไม่ล้นแนวนอน, หน้ารางวัลครบ 10 ขั้น, console 0 · รอผู้ใช้ Publish Rules ก่อนส่งขึ้นเว็บ
 - **รอบ 1128 · อันดับทรัพย์สินรวมแสดง Top 100:** ขยายเฉพาะจำนวนรายชื่อจาก 10 เป็น 100 เหมือนกระดานเหรียญ โดยเงินรางวัลยังจำกัดอันดับ 1–10 = 10,000–1,000 เหรียญตามเดิม; แก้ `js/ui.js`, `tools/test_asset_leaderboard.js`
@@ -51,11 +54,9 @@
 - **รอบ 1119 · อันดับทรัพย์สินรวม Top 10 + รางวัลรายเดือน:** เพิ่มแท็บ 🏆 ใช้ค่า `leaderboard.av` เดิม จัดอันดับมูลค่าทรัพย์สินที่ถือครอง (ไม่รวมเหรียญ) และให้รางวัลอันดับ 1–10 = 10,000–1,000 เหรียญผ่านโรงงาน `award.js`
 - แก้ `js/ui.js`, `js/state.js`, `js/assetaward.js`, `index_classic.html`, `tools/build_web.mjs`, `tools/validate_web_build.mjs`, `handoff/RULES.md`; เพิ่ม regression `tools/test_asset_leaderboard.js` และโซน Rules `/assetAward`
 - regression/syntax/template/undefined/diff ผ่าน; Browser 812×375 ยืนยัน Top 10, กล่อง/กระดานประกาศไม่ล้น, รางวัล 10,000→1,000, console 0; build 8,291 ไฟล์/454.8 MiB + PWA validator ผ่าน · รอ Publish Rules + COMMIT_DEPLOY
-- **รอบ 1117 · FPS weapon state/presentation fix (ยังไม่ commit/deploy ตามคำสั่ง):** ADS ใช้ normalized progress 0..1 เดียว กลับทิศต่อจากตำแหน่งปัจจุบันและใช้เวลาที่เหลือตามสัดส่วน; FIRE คง logical `.045s` แต่รับประกันนำเสนอ 1→2→3→4 ก่อนคืน base state
 - แก้ `js/fpsweapon.js`, expose progress/frame สำหรับ QA ใน `js/invasion3d.js` และขยาย `tools/test_fps_weapon_state.js` ครบ reversal, fire/reload/queue/lifecycle, 30/60/120 FPS + dt spike โดยไม่แตะ balance/asset/Firebase
 - syntax/state/assets/diff ผ่าน; Browser harness โหลด runtime assets จริงที่ 1280×720 และ 812×375 ยืนยัน rapid reversal + FIRE `1>2>3>4`, overflow 0, console warning/error 0 แล้วลบ harness/ปิด server
 - ค้างผู้ใช้ตรวจผลและสั่งก่อน commit/push/deploy; **ยังไม่เปิด `COMMIT_DEPLOY.bat`**
-- **รอบ 1118 · Picture Dictionary แสดงครั้งละ 18 คำ:** ปรับจาก 8×5 เป็น 6 คอลัมน์ × 3 แถว เพื่อขยายภาพและคำอังกฤษ/ไทยให้ชัดขึ้นบนจอเล็ก; แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`
 - regression/syntax/diff ผ่าน; Browser 812×375 ยืนยัน 18 ใบ/6×3, การ์ด 129×94px, overflow 0, หน้า 2=18/หน้า 3=12 คำ, zoom+quiz ใช้ได้และ console 0; build 8,289 ไฟล์/454.8 MiB + PWA validator ผ่าน
 - ถอดยางเสื่อม/ผลต่อเบรกและกริป/เกจ/พิทสต็อป/เสียง/ข้อความทั้งหมด โดยคง ghost ผู้เล่น, เลนพิทและลิมิต 80 กม./ชม.; แก้ `js/f1_3d.js` และเพิ่ม `tools/test_f1_solo_ghost.js`
 - solo/ghost + engine audio + graphics mode + syntax/undefined/template/diff ผ่าน; build 8,289 ไฟล์/454.8 MiB และ PWA validator ผ่าน · รอ COMMIT_DEPLOY ส่งขึ้นเว็บ

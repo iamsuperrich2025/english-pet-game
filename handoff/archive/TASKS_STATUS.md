@@ -4798,3 +4798,13 @@
 - **รอบ 1115 · Vocab World Racing แบบผู้เล่นล้วน:** ถอดรถ AI/bot ทั้ง runtime, minimap, DRS และ test hook; DRS เหลือคำนวณจากผู้เล่นออนไลน์จริงเท่านั้น
 - **รอบ 1114 · ยกเลิกหนังสือ Picture Dictionary แบบกาง 2 หน้า:** คง 8 หมวดเดิม แต่เปลี่ยนเป็นหน้ารายการเดียว 40 คำ/หน้า (8×5) ภาพ+อังกฤษ+ไทยใหญ่ชัด พร้อมปุ่มก่อนหน้า/ถัดไปและเมนูหมวดแบบไม่ต้องเลื่อนบนจอเล็ก
 - **รอบ 1113 · FPS weapon sprite state machine (ยังไม่ commit/deploy ตามคำสั่ง):** สร้าง runtime frames 47 ภาพจาก master แบบ deterministic/alpha/512×512 anchor เดียว และต่อ `EQUIP/IDLE/WALK/SPRINT/ADS_ENTER/ADS/ADS_EXIT/FIRE/RELOAD` ผ่าน adapter local โดย reuse gameplay/ADS/fire/reload/mobile controls เดิมและ fallback โมเดล 3D เมื่อภาพยังไม่พร้อม
+
+
+## ⏬ ย้ายเมื่อ 2026-08-13 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1118 · Picture Dictionary แสดงครั้งละ 18 คำ:** ปรับจาก 8×5 เป็น 6 คอลัมน์ × 3 แถว เพื่อขยายภาพและคำอังกฤษ/ไทยให้ชัดขึ้นบนจอเล็ก; แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-13 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1117 · FPS weapon state/presentation fix (ยังไม่ commit/deploy ตามคำสั่ง):** ADS ใช้ normalized progress 0..1 เดียว กลับทิศต่อจากตำแหน่งปัจจุบันและใช้เวลาที่เหลือตามสัดส่วน; FIRE คง logical `.045s` แต่รับประกันนำเสนอ 1→2→3→4 ก่อนคืน base state
