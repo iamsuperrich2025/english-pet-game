@@ -2,7 +2,7 @@
 
 > วิธีใช้: หาชื่อฟังก์ชัน/ค่าคงที่/selector ในไฟล์นี้ (Grep หรือกวาดตา) → `Read` ไฟล์จริง `offset=<บรรทัด>` `limit=40`
 > 🗂️ ไฟล์อ้วนมี **สารบัญโซน** (`st-end ชื่อโซน`) — งานทั้งระบบ/โลก 3D: Grep ชื่อโซน → Read/Edit เฉพาะช่วงนั้น **ห้ามอ่านทั้งไฟล์** · เพิ่มระบบใหม่ในไฟล์อ้วนต้องครอบ banner `/* ==== */`+ชื่อโซน (สารบัญเจนเอง)
-> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-13
+> css = index `selector:บรรทัดทุกจุดที่ประกาศ` (บั๊ก UI เริ่มหาที่นี่) · เจนใหม่ทุกครั้งที่รัน `python tools/rotate_handoff.py` · อัปเดต: 2026-08-14
 
 ## js/account-deletion.js (235 บรรทัด · 0 รายการ)
 
@@ -630,7 +630,7 @@ msbKickOut:9678 · tickMsBeam:9688 · TURBO_EVERY:9741 · TURBO_MS:9742 · TURBO
 TURBO_TRACK:9745 · resetTurbo:9747 · turboPick:9752 · turboBegin:9759 · tickTurbo:9771 · fit:9782
 tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 
-## js/lettercannon.js (217 บรรทัด · 0 รายการ)
+## js/lettercannon.js (219 บรรทัด · 0 รายการ)
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29
@@ -973,11 +973,12 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lettercannon.css (42 บรรทัด · 24 selector)
+## css/lettercannon.css (44 บรรทัด · 25 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-wordbox:12
 .lc-target:13 · .lc-meaning:14 · .lc-progress:15 · .lc-slot:16,17 · .lc-actions:19 · .lc-iconbtn:20,21
-.lc-exitwide:22 · .lc-power:23 · .lc-power-name:24 · .lc-hint:25 · .lc-move:26,27 · .lc-modal:28,29
-.lc-count-exit:30 · .lc-card:31,32 · .lc-btn:33 · .lc-count:34 · .lc-toast:36 · .lc-rotate:38
+.lc-exitwide:22 · .lc-power:23 · .lc-power-name:24 · .lc-hint:25 · .lc-move:26,27 · .lc-shoot:28,29
+.lc-modal:30,31 · .lc-count-exit:32 · .lc-card:33,34 · .lc-btn:35 · .lc-count:36 · .lc-toast:38
+.lc-rotate:40
 
 ## css/lobby.css (5,738 บรรทัด · 801 selector)
 :root:6,5457 · html:15 · body:21,5421,5463 · *:41,42,43,44 · #app:47 · h1:49
