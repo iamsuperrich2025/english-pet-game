@@ -4075,7 +4075,10 @@ function bindPetPlateButtons(root){
   on('btn-detox', ()=>detoxPet(p));
   on('btn-foodquiz', openFoodQuiz);   // 🛡️ รอบ 951: ควิซอาหารปลอดภัย (ย้ายมาจากแถบล่างล็อบบี้)
   on('btn-pet-rename', ()=>renamePet(p));
-  on('btn-pi-dress', ()=>{           // รอบ 273: ปิด overlay แล้วเปิดห้องแต่งตัว (ซื้อ+สวมได้เลย)
+  on('btn-pi-pantry', ()=>{ if(typeof PetPantry !== 'undefined') PetPantry.openPantry(); });
+  on('btn-pi-food-trip', ()=>enterPetShopping3D('food'));
+  on('btn-pi-fashion-trip', ()=>enterPetShopping3D('fashion'));
+  on('btn-pi-dress', ()=>{           // ตู้เสื้อผ้าใช้สวมของที่มีแล้ว; ของใหม่ต้องขับรถไปซื้อที่ร้านแฟชั่น
     window.__piOverlay = null;
     const ov = root.closest ? (root.classList.contains('pi-overlay') ? root : root.closest('.pi-overlay')) : null;
     if(ov) ov.remove();
@@ -5269,7 +5272,7 @@ function renderDashboard(){
     if(p.sick){
       /* 🚫 รอบ 952: บอกตรงนี้เลยว่า "ซื้อของกินไม่ได้" — ปุ่มถูกปิดต้องมีเหตุผลบนจอ (กฎทองข้อ 1)
          เขียนทับบรรทัดเดิม ไม่เพิ่มบรรทัดใหม่ (แผงนี้ยาวชิดขอบจอเตี้ยอยู่แล้ว) */
-      hungerStatus = '🤒 ป่วยอยู่... <b>ซื้อของกินไม่ได้</b> ต้องรักษาให้หายก่อนนะ';
+      hungerStatus = '🤒 ป่วยอยู่... <b>ยังให้อาหารไม่ได้</b> ต้องรักษาให้หายก่อนนะ (ยังออกไปซื้อของมาตุนไว้ได้)';
       barPct = 0;
     }else if(p.sleeping){
       hungerStatus = `😴 กำลังหลับปุ๋ย... ตื่นเองตอน ${String(WAKE_HOUR).padStart(2,'0')}:00 น.`;
@@ -5357,14 +5360,11 @@ function renderDashboard(){
       shapeUI = `<div class="heat-text shape-text shape-progress">💪 กินดีต่อเนื่อง ${p.cleanMeals}/${SHAPE_CLEAN_MEALS} มื้อ — ครบแล้ว${escapeHTML(p.name)}จะล่ำกำยำ ได้โบนัส EXP!</div>`;
     }
 
-    /* 🚫 รอบ 952: สัตว์ป่วยเพราะหิว — ซื้อของกินไม่ได้จนกว่าจะรักษา
-       กฎทองข้อ 1: ปุ่มถูกปิดต้อง "บอกเหตุผลบนจอ" เสมอ ไม่ปิดเงียบ ๆ */
-    const foodLock = (typeof hungerSickLock === 'function') ? hungerSickLock() : null;
-    /* น้องป่วย = บรรทัดสถานะความอิ่มบอกอยู่แล้วว่าซื้อของกินไม่ได้ (ไม่เพิ่มบรรทัดซ้ำ กันแผงล้นจอเตี้ย กฎทองข้อ 7)
-       ถ้าน้องตัวอื่นป่วยเพราะหิว = โชว์ป้ายเล็กเหนือปุ่มดูแลของตัวที่กำลังเปิด */
-    const foodLockNote = (!p.sick && foodLock)
-      ? `<div class="food-lock-note">🚫🍽️ <b>ซื้อของกินไม่ได้ตอนนี้</b> — ${escapeHTML(foodLock.why)} · ${escapeHTML(foodLock.fix)} แล้วซื้อได้ทันที</div>`
-      : '';
+    const pantryShelf = (typeof PET_PANTRY_SHELVES !== 'undefined' && state.petPantry)
+      ? PET_PANTRY_SHELVES.find(x=>x.id===state.petPantry.shelfId) : null;
+    const pantryTotal = state.petPantry && state.petPantry.stock
+      ? Object.values(state.petPantry.stock).reduce((sum,n)=>sum+Math.max(0,Number(n)||0),0) : 0;
+    const pantryLabel = pantryShelf ? `${pantryTotal}/${pantryShelf.capacity} ช่อง` : 'ยังไม่มีชั้น';
 
     hungerUI = `
       <div class="level-row">
@@ -5378,11 +5378,17 @@ function renderDashboard(){
       ${shapeUI}
       ${p.sick ? `<div class="sick-banner">🤒 <b>${escapeHTML(p.name)}ป่วยแล้ว!</b> ${sickCauseText}<br>ตอนป่วยจะไม่ได้ EXP และใช้ความสามารถพิเศษไม่ได้<br>พาไปหาหมอเพื่อรักษาให้หายก่อนนะ</div>` : ''}
       ${sleepHintHTML(p, now)}
-      ${foodLockNote}
       <div class="care-row">
         <button class="care-btn btn-feed" id="btn-feed" ${(p.sick || p.sleeping)?'disabled':''}>🍽️ ให้อาหาร</button>
         ${sleepBtnHTML(p, now)}
         ${p.sick ? `<button class="care-btn btn-cure" id="btn-cure">💊 รักษา 🪙${fmtNum(CURE_COST)}</button>` : ''}
+      </div>
+      <div class="care-row pantry-main-row">
+        <button class="care-btn btn-pantry" id="btn-pi-pantry">🗄️ ชั้นเก็บอาหาร <small>${pantryLabel}</small></button>
+      </div>
+      <div class="care-row pantry-trip-row">
+        <button class="care-btn btn-food-trip" id="btn-pi-food-trip">🚗 ออกไปซื้ออาหารตุนไว้ให้น้อง</button>
+        <button class="care-btn btn-fashion-trip" id="btn-pi-fashion-trip">🎀 ไปซื้อเสื้อผ้า</button>
       </div>`;
   }
 
@@ -5681,6 +5687,19 @@ function feedPet(){
   if(!canEat && !canFeast){
     sfx.select(); toast('😋 น้องอิ่มแปล้ถึงมื้อหน้าแล้ว ไว้ค่อยกินใหม่นะ'); return;
   }
+  const shelf = state.petPantry && state.petPantry.shelfId;
+  const stockTotal = state.petPantry && state.petPantry.stock
+    ? Object.values(state.petPantry.stock).reduce((sum,n)=>sum+Math.max(0,Number(n)||0),0) : 0;
+  if(!shelf){
+    alertBox('<div class="ab-emoji">🗄️</div><div class="ab-title">ยังไม่มีชั้นเก็บอาหาร</div><div class="ab-desc">ซื้อชั้นเปล่าก่อน แล้วค่อยขับรถพาน้องไปซื้ออาหารมาตุนไว้นะ</div>', 'ไว้ก่อน',
+      {text:'เลือกซื้อชั้น', onClick:()=>PetPantry.openPantry()});
+    return;
+  }
+  if(stockTotal <= 0){
+    alertBox('<div class="ab-emoji">🥫</div><div class="ab-title">ชั้นยังว่างอยู่</div><div class="ab-desc">ให้อาหารไม่ได้จนกว่าจะมีอาหารบนชั้น — พาน้องนั่งรถไปเลือกซื้อของมาตุนกัน!</div>', 'ไว้ก่อน',
+      {text:'🚗 ออกไปซื้ออาหาร', onClick:()=>enterPetShopping3D('food')});
+    return;
+  }
   openFoodMenu(p);
 }
 
@@ -5694,29 +5713,32 @@ function openFoodMenu(p){
   const canEat = petCanEat(p);
   const nowTs = Date.now();
   const nextMeal = p.fedUpTo > currentSlotStart(nowTs) ? nextSlotStart(nowTs) + SLOT_MS : nextSlotStart(nowTs);
-  const fav = Object.assign({id:'favorite'}, PETS[p.type].favFood);
+  const favId = `fav_${p.type}`;
+  const fav = Object.assign({id:favId, stockId:favId}, PETS[p.type].favFood);
   /* ข้อ 5.1: แยกเมนู 2 ชุด — ชุดอาหารสัตว์ (fav+ปลอดภัย) กับชุดอาหารคน (บางอย่างเป็นโทษ) */
-  const petFoods = [fav, ...FOODS.filter(f=>!f.human)];
-  const humanFoods = FOODS.filter(f=>f.human);
+  const petFoods = [fav, ...FOODS.filter(f=>!f.human).map(f=>Object.assign({stockId:f.id},f))];
+  const humanFoods = FOODS.filter(f=>f.human).map(f=>Object.assign({stockId:f.id},f));
   const menuFoods = [...petFoods, ...humanFoods];
   const itemHTML = f=>{
-    const usable = canEat || f.skipNext;
+    const qty = (typeof PetPantry !== 'undefined') ? PetPantry.qty(f.stockId||f.id) : 0;
+    const usable = (canEat || f.skipNext) && qty > 0;
     const bad = foodBadFor(f, p.type);
     /* 🔒 รอบ 1033: ป้ายล็อกเดิมอยู่หัวการ์ดใบเดียว พอเมนูเลื่อนแล้วหลุดจอ
        → ผู้เล่นเห็นแค่ "ปลา 300 กดได้ แต่แอปเปิ้ล 150 เทา" นึกว่าเกมบังคับซื้อของแพง
        เลยย้ำเหตุผล+เวลากินได้อีกทีไว้ท้ายการ์ดทุกใบ และติดป้ายให้ใบที่กดได้จริงด้วย */
     return `
-        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${!usable ? 'food-locked' : ''} ${(state.coins < f.price) ? 'cant-afford' : ''}" data-food="${f.id}">
-          ${usable ? '' : `<span class="fd-lock">🔒 อิ่มแล้ว</span>`}<!-- เวลากินได้อีกทีอยู่บนหัวกล่อง+toast (ป้ายบนการ์ดสั้นไว้ กันกล่องยาวเกินจอเตี้ย) -->
+        <div class="food-item ${f.exp ? 'food-fav' : ''} ${f.special ? 'food-special' : ''} ${bad ? 'food-bad' : ''} ${!usable ? 'food-locked' : ''} ${qty<=0 ? 'food-out' : ''}" data-food="${f.id}">
+          ${qty<=0 ? `<span class="fd-lock">ชั้นว่าง</span>` : (!usable ? `<span class="fd-lock">🔒 อิ่มแล้ว</span>` : '')}
           ${f.exp ? `<span class="fav-tag">💖 เมนูโปรดของ${escapeHTML(p.name)}!</span>` : ''}
           ${bad ? `<span class="bad-tag">⚠️ เป็นโทษกับน้อง!</span>` : ''}
           <span class="fd-emoji">${f.emoji}</span>
           <span class="fd-en">${f.en}</span>
           <span class="fd-name">${f.name}</span>
-          <span class="fd-info">🪙${fmtNum(f.price)} · อิ่ม +${f.fill}</span>
+          <span class="fd-info">บนชั้น ×${qty} · อิ่ม +${f.fill}</span>
           ${f.exp ? `<span class="fd-exp">✨ ได้ EXP แถม +${f.exp}!</span>` : ''}
           ${f.skipNext ? `<span class="fd-exp">⏳ เต็มหลอดทันที + ตุนข้ามมื้อพรุ่งนี้!</span>` : ''}
-          ${usable ? (canEat ? '' : `<span class="fd-nowok">✅ ใบเดียวที่กดได้ตอนนี้ (กินตุนล่วงหน้า)</span>`)
+          ${qty<=0 ? `<span class="fd-lock-when">🚗 หมดแล้ว — ไปซื้อมาเติมชั้นก่อน</span>`
+                   : usable ? (canEat ? '' : `<span class="fd-nowok">✅ กินตุนล่วงหน้าได้</span>`)
                    : `<span class="fd-lock-when">🔒 น้องอิ่มเต็มหลอด — กินได้อีกทีตอน ${mealLabel(nextMeal)}</span>`}
           ${bad ? `<span class="fd-toxin">☠️ พิษสะสม +${f.toxin}</span>`
                 : f.human ? `<span class="fd-safe">✅ ${p.type==='dragon' ? 'มังกรกินได้' : 'น้องกินได้'}</span>` : ''}
@@ -5747,13 +5769,13 @@ function openFoodMenu(p){
   overlay.querySelectorAll('.food-item').forEach(el=>{
     el.addEventListener('click', ()=>{
       const food = menuFoods.find(f=>f.id===el.dataset.food);
+      if((typeof PetPantry === 'undefined') || PetPantry.qty(food.stockId||food.id) <= 0){
+        sfx.wrong();
+        toast('🥫 อาหารชนิดนี้หมดจากชั้นแล้ว — ขับรถไปซื้อมาเติมก่อนนะ');
+        return;
+      }
       if(!canEat && !food.skipNext){
         sfx.wrong(); toast(`😊 น้องอิ่มเต็มหลอดแล้ว เมนูนี้กินได้อีกทีตอน ${mealLabel(nextMeal)}`); return;
-      }
-      if(state.coins < food.price){
-        sfx.wrong();
-        toast(`เหรียญไม่พอ ${food.en} ราคา 🪙${food.price} — ไปเล่นเกมเก็บเหรียญกัน!`);
-        return;
       }
       overlay.remove();
       /* ข้อ 5.1: อาหารโทษ → ป๊อปอัพเตือนก่อน กดรับทราบแล้วถึงป้อนได้ (กินอิ่มจริงแต่พิษสะสม) */
@@ -5777,7 +5799,11 @@ function openFoodMenu(p){
 
 function feedWith(p, food){
   const now = Date.now();
-  state.coins -= food.price;
+  if(typeof PetPantry === 'undefined' || !PetPantry.take(food.stockId||food.id, 1)){
+    sfx.wrong();
+    toast('🥫 อาหารชิ้นนี้หมดจากชั้นแล้ว — ยังไม่ได้ให้น้องกินนะ');
+    return;
+  }
   // ข้อ 3: สะสมความอิ่ม — ครบ 100 ถึงนับว่าอิ่มมื้อนี้ (feast เต็มหลอด + ตุนข้ามมื้อพรุ่งนี้)
   p.mealSlot = currentSlotStart(now);
   if(food.skipNext){
@@ -6210,9 +6236,8 @@ function openFoodQuiz(){
 }
 
 /* ============================================================
-   🎀 ห้องแต่งตัวสัตว์เลี้ยง (รอบ 635: แยกออกจาก "ร้านค้า" เดิม —
-   เปิดเฉพาะจากปุ่ม 🎀 แต่งตัวน้อง ในหน้าข้อมูลน้อง ไม่ใช่แผงกลางจอแล้ว)
-   ล็อกช่วงแรกเกิด/ไข่ ตามกติกาใหม่
+   🎀 ตู้เสื้อผ้าสัตว์เลี้ยง — ใช้สวมเฉพาะของที่ซื้อมาแล้ว
+   ของใหม่ต้องขับรถไปซื้อที่ร้านแฟชั่นในโลก Pet Shopping 3D
    ============================================================ */
 function closeDressUpBoard(){
   const ov = document.querySelector('.dress-overlay');
@@ -6238,11 +6263,12 @@ function openDressUpBoard(){
   overlay.innerHTML = `<div class="levelup-box wl-box">
     <div class="wl-head">
       <div class="dress-title">
-        <span class="dress-kicker">✨ คอลเลกชันของน้อง</span>
-        <h2>🎀 ห้องแต่งตัวสุดพิเศษ</h2>
-        <p>เลือกใส่ได้ครั้งละ 1 ชิ้น • แตะแล้วน้องจะลองใส่ให้ดูทันที</p>
+        <span class="dress-kicker">✨ ของที่มีอยู่ในตู้</span>
+        <h2>🎀 ตู้เสื้อผ้าของน้อง</h2>
+        <p>เลือกใส่ได้ครั้งละ 1 ชิ้น • ของที่ยังไม่มีต้องขับรถไปซื้อที่ร้านแฟชั่น</p>
       </div>
       <div class="dress-wallet">🪙 <b>${fmtNum(state.coins)}</b></div>
+      <button class="dress-trip-btn" id="dress-shop-trip">🚗 ไปซื้อของใหม่</button>
       <button class="cf-ok" id="dress-done">เสร็จแล้ว ✅</button>
     </div>
     <div id="shop-grid-wrap"></div>
@@ -6250,6 +6276,10 @@ function openDressUpBoard(){
   document.body.appendChild(overlay);
   renderShop();
   document.getElementById('dress-done').addEventListener('click', closeDressUpBoard);
+  document.getElementById('dress-shop-trip').addEventListener('click', ()=>{
+    closeDressUpBoard();
+    enterPetShopping3D('fashion');
+  });
   overlay.addEventListener('click', e=>{ if(e.target === overlay) closeDressUpBoard(); });
   sfx.select();
 }
@@ -6270,16 +6300,15 @@ function renderShop(){
   grid.innerHTML = ITEMS.map(item=>{
     const owned = state.owned.includes(item.id);
     const equipped = p.equipped && p.equipped[item.slot] === item.id;
-    const affordable = state.coins >= item.price;
     const rarity = dressItemRarity(item);
     const art = item.img
       ? `<img class="it-art" src="${item.img}" alt="${item.name}" loading="lazy">`
       : `<span class="it-emoji" aria-hidden="true">${item.emoji}</span>`;
     let cls = `shop-item rarity-${rarity}`;
-    let action = `<span class="it-price">🪙 ${fmtNum(item.price)}</span>`;
+    let action = `<span class="it-price">🚗 ร้านแฟชั่น · 🪙${fmtNum(item.price)}</span>`;
     if(equipped){ cls += ' equipped'; action = `<span class="it-tag tag-on">✓ ใส่อยู่</span>`; }
     else if(owned){ cls += ' owned'; action = `<span class="it-tag tag-wear">ลองสวม</span>`; }
-    else if(!affordable){ cls += ' locked-price'; }
+    else cls += ' shop-trip-only';
     return `<div class="${cls}" data-item="${item.id}" data-rarity="${rarity}">
       <div class="it-topline">
         <span class="it-rarity">◆ ${dressRarityLabel(rarity)}</span>
@@ -6297,24 +6326,15 @@ function renderShop(){
       const item = ITEMS.find(i=>i.id===el.dataset.item);
       const owned = state.owned.includes(item.id);
       if(!owned){
-        if(state.coins < item.price){
-          sfx.wrong();
-          toast(`เหรียญไม่พอ ต้องมี 🪙${fmtNum(item.price)} — ไปเล่นเกมเก็บเหรียญกัน!`);
-          return;
-        }
-        state.coins -= item.price;
-        state.owned.push(item.id);
-        if(typeof sellInc==='function') sellInc('item_'+item.id);   // 🛒 นับยอดขายเครื่องแต่งตัว
-        p.equipped = {};                                  // ใส่ได้ทีละ 1 ชิ้น และรองรับ slot ใหม่ในอนาคต
-        p.equipped[item.slot] = item.id;                  // ซื้อแล้วใส่ให้ทันที
-        sfx.buy();
-        toast(`ซื้อ${item.name}สำเร็จ! น้องใส่ให้แล้ว 🥰`);
-      }else{
-        const wasOn = (p.equipped || {})[item.slot] === item.id;
-        p.equipped = {};
-        if(!wasOn) p.equipped[item.slot] = item.id;
-        sfx.select();
+        closeDressUpBoard();
+        toast(`🚗 ${item.name} มีขายที่ร้านแฟชั่น — ขับรถพาน้องไปเลือกซื้อกัน!`, 2600);
+        enterPetShopping3D('fashion');
+        return;
       }
+      const wasOn = (p.equipped || {})[item.slot] === item.id;
+      p.equipped = {};
+      if(!wasOn) p.equipped[item.slot] = item.id;
+      sfx.select();
       saveState();
       renderDashboard();
       closeDressUpBoard();   // รอบ 635: ซื้อ/สวมเสร็จ → ปิดห้องแต่งตัว เด้งกลับไปเห็นน้องใส่ชุดใหม่ตัวใหญ่ทันที (ฟีลห้องลองชุด)

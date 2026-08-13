@@ -57,6 +57,7 @@ document.getElementById('btn-register').addEventListener('click', ()=>{
   toast(`ยินดีต้อนรับ ${nick.name}! 🎉`);
   renderDashboard();
   showScreen('screen-dashboard');
+  setTimeout(()=>showPetShoppingGrantNotice(showRankRewardNotice), 700);
 });
 
 document.getElementById('btn-google-login').addEventListener('click', authLoginClick);
@@ -145,12 +146,50 @@ Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGi
 });
 
 /* ============================================================
+   🎁🗄️ เงินช่วยปรับตัวระบบชั้นอาหาร 10,000 เหรียญ
+   เหรียญเข้าใน loadState migration แล้ว; ใบนี้ทำให้ผู้เล่นเห็นภาพ+เสียงชัด และค้างจนกดรับทราบ
+   ============================================================ */
+function showPetShoppingGrantNotice(next){
+  const b = state.petShoppingGrantNotice;
+  if(!b || !(Number(b.amount)>0)){ if(typeof next === 'function') next(); return; }
+  if(document.querySelector('[data-pet-shopping-grant]')) return;
+  if(typeof sfx !== 'undefined' && sfx.coinGet){
+    sfx.coinGet();
+    setTimeout(()=>sfx.coinGet(), 420);
+    setTimeout(()=>sfx.coinGet(), 900);
+  }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay pantry-grant-overlay';
+  ov.dataset.petShoppingGrant = '1';
+  ov.innerHTML = `<div class="rankup-rays" style="--rank-color:#ffc85b"></div>
+    <div class="rankup-content qbp pantry-grant-card">
+      <div class="rankup-title">🎁 เงินช่วยปรับตัวระบบให้อาหารใหม่เข้าแล้ว!</div>
+      <img class="pantry-grant-art" src="img/pet-shopping/pantry_grant.webp" alt="กล่องเหรียญหน้าชั้นเก็บอาหารเปล่า">
+      <div class="rankup-name pantry-grant-amount">+${fmtNum(b.amount)} เหรียญ 🪙</div>
+      <p class="rankup-sub"><b>ระบบใหม่: ซื้อชั้น → ขับรถไปซื้ออาหาร → หยิบจากชั้นให้น้อง</b><br>
+        เงินก้อนนี้ช่วยให้ซื้อชั้น เช่ารถ และตุนอาหารช่วงเริ่มต้นได้สบายขึ้น<br>
+        <small>เงินเข้ากระเป๋าเรียบร้อยแล้ว และรับได้ครั้งเดียวต่อบัญชี</small></p>
+      <button class="rankup-btn">รับทราบ</button>
+    </div>`;
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    state.petShoppingGrantNotice = null;
+    saveState();
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    if(typeof next === 'function') next();
+  });
+  document.body.appendChild(ov); // ไม่มี backdrop/Esc handler: ต้องกดรับทราบเท่านั้น
+  if(typeof fitQbp === 'function') fitQbp(ov.querySelector('.qbp'));
+}
+
+/* ============================================================
    🎖️ รางวัลเลื่อนแรงค์ใหญ่ — แรงค์ละ 10,000 เหรียญ (ขั้นย่อย III/II/I ไม่นับ)
    ใบแจ้งค้างใน state จนกว่าผู้เล่นจะกดรับทราบ; reload แล้วยังกลับมาเห็น
    ============================================================ */
 function showRankRewardNotice(){
   const b = state.rankRewardNotice;
   if(!b || !b.total){ showQuizBackPay(); return; }
+  if(document.querySelector('[data-pet-shopping-grant]')) return; // เงินปรับตัวต้องอ่าน/รับทราบก่อน แล้วคิวนี้ถูกเรียกต่อจากปุ่ม
   if(document.querySelector('[data-rank-reward]')) return;
   const num = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const info = rankFromKey(b.toKey);
@@ -357,7 +396,7 @@ function bootGame(){
     renderDashboard();
     showScreen('screen-dashboard');
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
-    if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(showRankRewardNotice), 700); // คืนค่าเข้าก่อน → รางวัลแรงค์
+    if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(()=>showPetShoppingGrantNotice(showRankRewardNotice)), 700); // คืนค่าเข้า → เงินปรับตัว → รางวัลแรงค์
   }
 }
 
