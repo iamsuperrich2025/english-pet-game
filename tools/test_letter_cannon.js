@@ -15,6 +15,7 @@ T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next requir
 const need=T.letters.find(x=>x.alive&&x.ch===w[0]);T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');
 const wrong=T.spawnLetter(w[1]==='Z'?'Y':'Z',false),before=T.pos,combo=T.combo;T.hit(wrong,false);assert.strictEqual(T.pos,before,'wrong letter has no penalty');assert.strictEqual(T.combo,combo,'wrong letter does not reset combo');
 T.setAim(-Math.PI/2);assert(T.aim<=T.AIM_MAX&&T.aim>=T.AIM_MIN,'aim clamped to upper 180 degrees');
+T.resetTap();assert.strictEqual(T.registerTap(1000),false,'first tap only aims');assert.strictEqual(T.registerTap(1000+T.DOUBLE_TAP_MS-1),true,'second tap inside window fires');assert.strictEqual(T.registerTap(2000),false,'tap sequence resets after a shot');assert.strictEqual(T.registerTap(2000+T.DOUBLE_TAP_MS+1),false,'late second tap starts a new sequence');
 for(let i=0;i<40;i++)T.spawnLetter('A',false);assert(T.letters.filter(x=>x.alive).length<=T.MAX_LETTERS,'letter pool capped');
 T.POWER.forEach(p=>T.activate(p));assert(T.POWER.some(p=>p.id==='triple')&&T.POWER.some(p=>p.id==='beam')&&T.POWER.some(p=>p.id==='chain')&&T.POWER.some(p=>p.id==='homing')&&T.POWER.some(p=>p.id==='nova'),'required powers exposed');
 assert.deepStrictEqual(Array.from(T.seatOrder(7)),[0,-1,1,-2,2,-3,3],'turrets fill center then left/right without overlap');
@@ -40,5 +41,7 @@ assert(html.includes('btn-rail-lettercannon')&&html.includes('เปิดให
 assert(city.includes("go==='lettercannon'")&&city.includes('cityLetterCannonAdmin'),'3D city gate requires persisted admin authorization');
 assert(code.includes('function adminAllowed()')&&code.includes("if(!adminAllowed()){lockedNotice();return;}"),'admin-only gate protects direct game open and lobby event');
 assert(code.includes('drawImage(turretImages.base')&&code.includes('drawImage(turretImages.head')&&!code.includes("const base=ctx.createLinearGradient(-80"),'runtime uses new two-layer turret only');
+assert(!code.includes('id="lc-fire"')&&!code.includes('hud.fire')&&!code.includes('.lc-fire'),'old on-screen fire button and handlers removed');
+assert(code.includes('registerTap(now)')&&code.includes('tapPointers.set')&&code.includes('TAP_MOVE_PX'),'double tap fires globally while drag remains aim-only');assert((code.match(/resetTap\(\)/g)||[]).length>=4,'double-tap sequence resets on controls and lifecycle cleanup');
 assert(code.includes("touchcancel")&&code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()"),'input and lifecycle cleanup paths included');
-console.log('PASS Letter Cannon: admin-only gate, RGBA turret assets, rigid 180-degree head, twin muzzles, touch cleanup, grade words, no penalty, powers, multiplayer seats');
+console.log('PASS Letter Cannon: double-tap firing, no fire button, admin gate, RGBA turret, touch cleanup, grade words, no penalty, powers, multiplayer seats');
