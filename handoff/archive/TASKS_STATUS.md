@@ -4846,3 +4846,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-13 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1132 · ล็อก F1 + ยานแม่ก่อน deploy:** เพิ่มทั้งสองด่านเข้า Coming soon แบบเดียวกับมอเตอร์ไซค์ ผู้เล่นทั่วไปเห็น 🔒/กดแล้วถูกบล็อกก่อนหน้าจ่ายเงิน แต่บัญชี tester ยังเข้าได้; เพิ่ม regression `tools/test_f1_lobby_lock.js`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-13 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1134 · Letter Cannon (ยังไม่ commit/deploy ตามคำสั่ง):** เพิ่มเกม Canvas ยิงตัวอักษรตามลำดับคำจาก `vocabForStudent()` แบบ endless/ไม่ลงโทษ/ไม่มี Game Over พร้อม 7 power-up, reward เดิม และ cleanup ครบ

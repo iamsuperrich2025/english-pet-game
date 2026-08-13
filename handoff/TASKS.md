@@ -64,7 +64,6 @@
 - 🌐 ใช้ `state.onlineEarned` เดิมซึ่งสะสมตั้งแต่เริ่มระบบและไม่รีเซ็ตรายวัน; เพิ่มข้อความกติกาให้ชัด และคงยอดย้อนหลังเดิมทั้งหมด
 - กันบัญชีครูรุต/Sumpajit ทุกอันดับและแหล่งตัดรางวัล; อุด F1 ที่ยังขาด พร้อมลบแถว F1 เดิมเมื่อ tester ส่งเวลาใหม่
 - syntax/regression รวม F1 ทุกชุด + diff ผ่าน; Browser 812×375 กระดานรางวัลครบ 10 ขั้น/ไม่ล้น/console 0; build 8,302 ไฟล์ 456.3 MiB + PWA ผ่าน · ค้าง Publish Rules และรอรวมงานคู่ขนานก่อน COMMIT_DEPLOY
-- **รอบ 1134 · Letter Cannon (ยังไม่ commit/deploy ตามคำสั่ง):** เพิ่มเกม Canvas ยิงตัวอักษรตามลำดับคำจาก `vocabForStudent()` แบบ endless/ไม่ลงโทษ/ไม่มี Game Over พร้อม 7 power-up, reward เดิม และ cleanup ครบ
 - เชื่อมปุ่มราง Lobby + แท่นสองภาษาในเมือง 3D; ออนไลน์ผ่าน NetRoom ห้องละ 7 ป้อม วางกลาง→ซ้าย→ขวาไม่ทับ ห้องเต็มเปิดห้องใหม่ และออฟไลน์เล่นเดี่ยวได้
 - เพิ่ม `js/lettercannon.js`, `css/lettercannon.css`, regression + build allowlist/PROJECT_MAP; syntax/regression/diff + Browser 1280×720/812×375 + เข้าออก 5 รอบ console 0 + build 8,300 ไฟล์/PWA ผ่าน
 - `handoff/RULES.md` เพิ่ม map `lettercannon` ใน world/wroom/winfo; **ผู้ใช้ยืนยันว่า Publish Rules ก้อนเต็ม 829 บรรทัดแล้ว 13 ส.ค.** ค้างตรวจสดเมื่อเข้าถึงบัญชีเจ้าของได้ + ทดสอบผู้เล่นจริง ≥2 เครื่องก่อนถือว่าออนไลน์พร้อมใช้งาน
