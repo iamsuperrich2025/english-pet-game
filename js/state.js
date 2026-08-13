@@ -114,6 +114,8 @@ const DEFAULT_STATE = {
   sgAwardLog:[],
   rankSeen:0,                         // 🥇 รอบ 599: อันดับเหรียญที่เห็นล่าสุด (0=ยังไม่เคยติดกระดาน) — เลขใหม่น้อยกว่า = ไต่ขึ้น → ป้ายบนปุ่มรางเด้งฉลอง
   rankBest:0,                         // 🏅 รอบ 602: อันดับดีที่สุดที่เคยทำได้ (เลขน้อยสุด · 0=ยังไม่เคยติด) — โชว์ในหน้าสถิติ ไม่ลดลงเมื่ออันดับตก
+  rankMoveBest:{},                    // 📈 อันดับดีที่สุดแยกรายกระดาน — ใช้จ่ายรางวัลไต่อันดับโดยไม่จ่ายซ้ำหลังอันดับตก
+  rankMoveRewardNotice:null,          // กล่องยินดีรางวัลอันดับดีขึ้น ค้างจนกดรับทราบ
   cars:[],                            // 🚗 รอบ 211: รถส่วนตัวหลายคัน — [{id:'car_01'..'car_10', insured:bool, loan:null|{remain,perMonth,month,paid,carry}}]
   carIdx:0,                           //    คันที่เลือกใช้ขับตอนนี้ (index ใน cars) · myCar()=คันปัจจุบัน · ตั๋ว=สิทธิ์เข้าเมือง รถ=พาหนะ · loan.carry=งวดค้าง (>0=ล็อกขับ)
   glassCount:0,                       // รอบ 337: จำนวนบานกระจกที่ทุบแตกในโลกโดรน — สู่เข็มจอมทุบกระจก
@@ -191,6 +193,8 @@ const DEFAULT_STATE = {
   orders:[],                          // ออเดอร์พิเศษจากลูกค้าจำลอง: {key, id, buyer, grade, payout, expireAt}
   nextOrderAt:0,                      // เวลาที่ออเดอร์ใหม่จะเข้ามา (orderTick)
   rankKey:null,                       // key แรงค์ล่าสุดที่ฉลองไปแล้ว (ไว้เทียบเลื่อน/ลด — ดู refreshRank)
+  rankRewardIdx:0,                    // index แรงค์ใหญ่สูงสุดที่เคยรับรางวัลแล้ว (กันลดแรงค์แล้วไต่กลับมารับซ้ำ)
+  rankRewardNotice:null,              // กล่องยินดีที่ค้างจนผู้เล่นกดรับทราบ {count,total,toKey,backfill}
   onlineId:null,                      // id ประจำเครื่องสำหรับระบบออนไลน์ (สุ่มครั้งเดียวใน online.js)
   savedAt:0,                          // เวลาเซฟล่าสุด (ไว้เทียบเซฟเครื่อง vs cloud — ดู auth.js)
   ownerUid:null,                      // uid บัญชี Google เจ้าของเซฟนี้ (null = เซฟเก่ายังไม่ผูกบัญชี)
@@ -431,6 +435,12 @@ function loadState(){
       if(old.playerFedDay === undefined) s.playerFedDay = mealDayKey(Date.now());
       if(typeof s.foodQuizPlayDay !== 'string') s.foodQuizPlayDay = '';
       if(typeof s.foodQuizPlayCount !== 'number') s.foodQuizPlayCount = 0;
+      if(!s.rankMoveBest || typeof s.rankMoveBest !== 'object' || Array.isArray(s.rankMoveBest)) s.rankMoveBest = {};
+      if(!s.rankMoveRewardNotice || typeof s.rankMoveRewardNotice !== 'object') s.rankMoveRewardNotice = null;
+      // เซฟก่อนมีรางวัลแรงค์: null = ให้ refreshRank จ่ายย้อนหลังตามขั้นปัจจุบันครั้งเดียว
+      if(old.rankRewardIdx === undefined) s.rankRewardIdx = null;
+      else s.rankRewardIdx = Math.max(0, Math.min(RANKS.length-1, Math.floor(Number(s.rankRewardIdx)||0)));
+      if(!s.rankRewardNotice || typeof s.rankRewardNotice !== 'object') s.rankRewardNotice = null;
       if(s.playerAvatar !== 'male' && s.playerAvatar !== 'female') s.playerAvatar = null;  // ข้อ 4: ผู้เล่นเดิมค่อยเลือกในตั้งค่า
       if(!/^blk[1-8]$/.test(s.blockAv||'')) s.blockAv = null;                              // 🧱 ตัวละครบล็อกโลก 3D
       if(!/^blk([1-9]|[1-7][0-9]|8[0-8])$/.test(s.profAv||'')) s.profAv = null;             // 🖼️ รูปโปรไฟล์/ตัวในล็อบบี้ blk1..blk88
@@ -774,17 +784,49 @@ function assetCount(){
 
 /* ตรวจการเปลี่ยนแรงค์ที่ "จุดนิ่ง" (เรียกใน careTick หลัง net worth นิ่งแล้ว):
    เลื่อนข้ามแรงค์ใหญ่ → ฉากอลังการ · เลื่อนขั้นย่อย → toast · ลดลง → เงียบๆ */
+function grantRankPromotionRewards(){
+  const backfill = state.rankRewardIdx == null;
+  let paidRank = backfill ? 0 : state.rankRewardIdx;
+  let count = 0, total = 0, finalInfo = rankInfo(netWorth());
+  // เงินรางวัลเองอาจพาข้ามเส้นแรงค์ใหญ่ถัดไป → วนจนนิ่งและจ่ายครบทุกแรงค์ใหญ่ที่ข้าม
+  for(let guard = 0; guard < RANKS.length; guard++){
+    finalInfo = rankInfo(netWorth());
+    if(finalInfo.idx <= paidRank) break;
+    const gained = finalInfo.idx - paidRank;
+    const coins = gained * RANK_PROMOTION_REWARD;
+    count += gained; total += coins; paidRank = finalInfo.idx;
+    state.coins += coins;
+    state.lifetimeCoins = (state.lifetimeCoins||0) + coins;
+    if(!backfill){ dailyTick(); state.daily.coins += coins; }
+    state.rankRewardIdx = finalInfo.idx;
+  }
+  finalInfo = rankInfo(netWorth());
+  if(backfill && state.rankRewardIdx == null) state.rankRewardIdx = finalInfo.idx;
+  if(!count) return null;
+  state.rankRewardIdx = finalInfo.idx;
+  const prev = state.rankRewardNotice;
+  state.rankRewardNotice = {
+    count: count + (prev && prev.count || 0),
+    total: total + (prev && prev.total || 0),
+    toKey: finalInfo.key,
+    backfill: backfill || !!(prev && prev.backfill)
+  };
+  return state.rankRewardNotice;
+}
+
 function refreshRank(){
+  const beforeKey = state.rankKey;
+  const reward = grantRankPromotionRewards();
   const after = rankInfo(netWorth());
-  if(state.rankKey == null){ state.rankKey = after.key; return; }   // ครั้งแรก/เซฟเก่า — จำไว้เฉยๆ ไม่ฉลอง
-  if(after.key > state.rankKey){
-    const before = rankFromKey(state.rankKey);
-    if(after.idx > before.idx){
-      setTimeout(()=>showRankUp(before, after), 700);              // ข้ามแรงค์ใหญ่ → ฉากอลังการ
-    }else{
-      setTimeout(()=>{ sfx.levelup(); toast(`🎖️ เลื่อนขั้นเป็น ${after.rank.emoji} ${after.label}!`, 2400); }, 700);
-    }
-    if(typeof feedEvent === 'function') feedEvent('other', `เลื่อนแรงค์เป็น ${after.rank.emoji} ${after.label} 🎖️`);
+  if(reward){
+    setTimeout(()=>{ if(typeof showRankRewardNotice === 'function') showRankRewardNotice(); }, 700);
+    if(typeof feedEvent === 'function')
+      feedEvent('coin', `เลื่อนแรงค์เป็น ${after.rank.emoji} ${after.label} · รับรางวัล +${reward.total.toLocaleString()} 🪙`);
+  }else if(beforeKey != null && after.key > beforeKey){
+    // เคยรับรางวัลขั้นนี้แล้ว (ลดแรงค์แล้วไต่กลับ) — ฉลองได้แต่ห้ามรับเงินซ้ำ
+    const before = rankFromKey(beforeKey);
+    if(after.idx > before.idx) setTimeout(()=>showRankUp(before, after), 700);
+    else setTimeout(()=>{ sfx.levelup(); toast(`🎖️ เลื่อนขั้นเป็น ${after.rank.emoji} ${after.label}!`, 2400); }, 700);
   }
   state.rankKey = after.key;   // อัปเดตทั้งเลื่อนขึ้น (ฉลองแล้ว) และลดลง (เงียบๆ)
 }

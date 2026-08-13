@@ -1624,6 +1624,7 @@ const RANK_MOVE_TOPICS = [
   {key:'sg',     ico:'🎯', label:'ยิงเป้าคำ'}
 ];
 const RANK_MOVE_MAX = 36;
+const RANK_MOVE_REWARD = 1000;
 const __rankMovePrev = {};
 const __rankMoveItems = [];
 
@@ -1638,9 +1639,68 @@ function rankMoveFeedRender(){
   el.innerHTML = __rankMoveItems.map(it=>`<div class="rank-move-row">
     <span class="rank-move-up">▲${it.up}</span>
     <span class="rank-move-name">${escapeHTML(it.name)}</span>
-    <span class="rank-move-topic">${it.ico} ${escapeHTML(it.topic)} · #${it.from}→#${it.to}</span>
+    <span class="rank-move-topic">${it.ico} ${escapeHTML(it.topic)} · #${it.from}→#${it.to}${it.reward ? ` · +${fmtNum(it.reward)} 🪙` : ''}</span>
   </div>`).join('') + '<div class="rank-move-gap" aria-hidden="true"></div>';
   initSideScroll(el);
+}
+
+/* จ่ายให้เฉพาะเมื่ออันดับตัวเองดีกว่า "สถิติดีสุด" ของกระดานนั้น
+   อันดับตกไม่หักเงินและไม่รีเซ็ตฐาน → ไต่กลับมารับซ้ำไม่ได้ */
+function rankMoveRewardCheck(topic, rank){
+  if(!rank) return 0;
+  const best = Math.max(0, Math.floor(Number(state.rankMoveBest[topic.key]) || 0));
+  if(!best){ state.rankMoveBest[topic.key] = rank; saveState(); return 0; } // snapshot ครั้งแรก = baseline
+  if(rank >= best) return 0;
+  const up = best - rank;
+  const reward = up * RANK_MOVE_REWARD;
+  state.rankMoveBest[topic.key] = rank;
+  addCoins(reward);
+  const prev = state.rankMoveRewardNotice;
+  const items = prev && Array.isArray(prev.items) ? prev.items.slice(-3) : [];
+  items.push({ico:topic.ico, topic:topic.label, from:best, to:rank, up, reward});
+  state.rankMoveRewardNotice = {items, total:(prev && prev.total || 0) + reward,
+    count:(prev && prev.count || 0) + up};
+  saveState();
+  setTimeout(()=>{ if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice(); }, 250);
+  return reward;
+}
+
+function showRankMoveRewardNotice(){
+  const b = state.rankMoveRewardNotice;
+  if(!b || !b.total) return;
+  if(document.querySelector('[data-rank-move-reward]')) return;
+  if(document.querySelector('.rankup-overlay')){
+    setTimeout(showRankMoveRewardNotice, 800); // รอกล่องก่อนหน้า แต่ใบนี้ยังค้างใน state ไม่หาย
+    return;
+  }
+  if(typeof sfx !== 'undefined'){
+    if(sfx.rankup) sfx.rankup();
+    if(sfx.coinGet) setTimeout(()=>sfx.coinGet(), 430);
+  }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.dataset.rankMoveReward = '1';
+  const rows = (b.items || []).map(it=>`<div>${it.ico} ${escapeHTML(it.topic)} <b>#${it.from}→#${it.to}</b> · +${fmtNum(it.reward)} 🪙</div>`).join('');
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:#45d483"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">📈 ยินดีด้วย! อันดับดีขึ้น</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#45d483">+${fmtNum(b.total)} เหรียญ</div>
+      <p class="rankup-sub">ขยับดีขึ้นรวม <b>${fmtNum(b.count || b.total/RANK_MOVE_REWARD)} อันดับ</b> · อันดับละ <b>${fmtNum(RANK_MOVE_REWARD)} เหรียญ</b><br><small>${rows}<br>
+        อันดับตกไม่เสียเงิน และต้องทำลายอันดับดีที่สุดเดิมจึงจะได้รางวัลใหม่</small></p>
+      <button class="rankup-btn">รับทราบและรับรางวัล 🪙</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT=setTimeout(()=>fitQbp(ov.querySelector('.qbp')),140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT); window.removeEventListener('resize', refit);
+    state.rankMoveRewardNotice = null; saveState(); ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+  });
+  document.body.appendChild(ov);
+  fitQbp(ov.querySelector('.qbp'));
+  window.addEventListener('resize', refit);
 }
 
 function rankMoveFeedCheck(){
@@ -1652,12 +1712,17 @@ function rankMoveFeedCheck(){
     const rows = lbRankRows(topic.key);
     const now = {};
     rows.forEach((row, i)=>{ if(row.uid) now[row.uid] = {rank:i+1, name:row.name || 'ผู้เล่น'}; });
+    const myAt = rows.findIndex(row=>row.me);
+    const myReward = myAt >= 0 ? rankMoveRewardCheck(topic, myAt + 1) : 0;
     const prev = __rankMovePrev[topic.key];
     if(prev){
       Object.keys(now).forEach(uid=>{
         if(prev[uid] && now[uid].rank < prev[uid].rank){
-          fresh.push({uid, name:now[uid].name, ico:topic.ico, topic:topic.label,
-            from:prev[uid].rank, to:now[uid].rank, up:prev[uid].rank-now[uid].rank});
+          const mine = rows.some(row=>row.uid === uid && row.me);
+          const item = {uid, name:now[uid].name, ico:topic.ico, topic:topic.label,
+            from:prev[uid].rank, to:now[uid].rank, up:prev[uid].rank-now[uid].rank};
+          if(mine && myReward) item.reward = myReward;
+          fresh.push(item);
         }
       });
     }

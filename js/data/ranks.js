@@ -24,6 +24,7 @@ const RANKS = [
   {id:'marshal',  name:'Apex Wordmaster',   en:'APEX WORDMASTER',   emoji:'👑', color:'#e23b4e', min:20000000},   // ≥ 20,000,000
 ];
 const RANK_TIERS = ['III','II','I'];   // นับถอยหลัง: III ต่ำสุด → I สูงสุด
+const RANK_PROMOTION_REWARD = 10000;  // รับครั้งเดียวเมื่อขึ้นแรงค์ใหญ่; ขั้นย่อย III/II/I ไม่ได้รางวัล
 
 /* คืนข้อมูลแรงค์จากมูลค่าทรัพย์สินสุทธิ (net worth):
    {idx, rank, next, tier, tierIdx, prog(0-1 ไปแรงค์ถัดไป), key(ไว้เทียบเลื่อนขั้น), label} */

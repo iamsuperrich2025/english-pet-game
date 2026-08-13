@@ -180,9 +180,29 @@
       </div>
       <div class="ws-actions">
         <span class="ws-sizes"><span class="ws-sizes-lb">📐 ขนาดกระดาน</span><b class="ws-size-now"></b></span>
+        <button id="ws-combo-help" type="button" aria-haspopup="dialog">🔥 Combo คืออะไร?</button>
         <button id="ws-new" type="button">🎲 สุ่มเกมใหม่</button>
         <button id="ws-stash" type="button">📥 เก็บกระดานชั่วคราว</button>
         <button id="ws-clear" type="button">🧹 ล้างกระดาน — ออกจากเกม</button>
+      </div>
+      <div id="ws-combo-dialog" role="dialog" aria-modal="true" aria-labelledby="ws-combo-title" hidden>
+        <div class="ws-combo-card">
+          <button class="ws-combo-close" type="button" aria-label="ปิดหน้าต่าง">×</button>
+          <h2 id="ws-combo-title">🔥 ทำ Combo อย่างไร?</h2>
+          <p class="ws-combo-lead">หาคำให้เจอติดต่อกันอย่างรวดเร็ว เพื่อเพิ่มตัวคูณเหรียญ</p>
+          <div class="ws-combo-steps">
+            <div><b>คำแรก</b><strong>×1</strong><span>เริ่มนับ Combo</span></div>
+            <div><b>ภายใน 3 วิ</b><strong>×2</strong><span>หาคำถัดไปให้ทัน</span></div>
+            <div><b>ภายใน 3 วิอีกครั้ง</b><strong>×3</strong><span>ตัวคูณสูงสุด</span></div>
+          </div>
+          <ul>
+            <li>⏱️ เวลา 3 วินาทีเริ่มนับใหม่ทุกครั้งที่หาคำถูก</li>
+            <li>💛 ลากคำผิดไม่ทำให้ Combo หาย</li>
+            <li>⌛ หากช้ากว่า 3 วินาที คำถัดไปจะกลับไปเริ่มที่ ×1</li>
+            <li>🪙 เหรียญพื้นฐาน = จำนวนตัวอักษร ×2 แล้วคูณด้วย Combo</li>
+          </ul>
+          <button class="ws-combo-ok" type="button">เข้าใจแล้ว!</button>
+        </div>
       </div>
       <div id="ws-win"></div>
     </div>`;
@@ -193,6 +213,12 @@
     progEl =overlay.querySelector('#ws-prog');
     winEl  =overlay.querySelector('#ws-win');
     overlay.querySelector('#ws-new').addEventListener('click', ()=>{ if(typeof sfx!=='undefined')sfx.select(); newGame(); });
+    const comboDialog=overlay.querySelector('#ws-combo-dialog');
+    const closeComboHelp=()=>{ comboDialog.hidden=true; };
+    overlay.querySelector('#ws-combo-help').addEventListener('click', ()=>{ if(typeof sfx!=='undefined')sfx.select(); comboDialog.hidden=false; });
+    overlay.querySelector('.ws-combo-close').addEventListener('click', closeComboHelp);
+    overlay.querySelector('.ws-combo-ok').addEventListener('click', closeComboHelp);
+    comboDialog.addEventListener('click', e=>{ if(e.target===comboDialog) closeComboHelp(); });
     overlay.querySelector('#ws-stash').addEventListener('click', stash);
     overlay.querySelector('#ws-clear').addEventListener('click', clearExit);
     overlay.querySelector('.ws-grade').textContent='ระดับชั้น '+grade();
@@ -442,7 +468,11 @@
   function bindRail(){
     const btn=document.getElementById('btn-rail-wordsearch');
     if(btn) btn.addEventListener('click', ()=>{ if(typeof closePanel==='function')closePanel(); open(); });
-    document.addEventListener('keydown', e=>{ if(e.key==='Escape' && overlay && overlay.style.display==='flex' && boardEl.classList.contains('open')) stash(); });
+    document.addEventListener('keydown', e=>{ if(e.key!=='Escape'||!overlay||overlay.style.display!=='flex') return;
+      const dialog=overlay.querySelector('#ws-combo-dialog');
+      if(dialog&&!dialog.hidden){ dialog.hidden=true; return; }
+      if(boardEl.classList.contains('open')) stash();
+    });
     window.addEventListener('resize', ()=>{ if(overlay && overlay.style.display==='flex') fitGrid(); });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bindRail); else bindRail();

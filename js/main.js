@@ -145,6 +145,54 @@ Promise.all([probeRankImages(), probeHomeImages(), probeCollectImages(), probeGi
 });
 
 /* ============================================================
+   🎖️ รางวัลเลื่อนแรงค์ใหญ่ — แรงค์ละ 10,000 เหรียญ (ขั้นย่อย III/II/I ไม่นับ)
+   ใบแจ้งค้างใน state จนกว่าผู้เล่นจะกดรับทราบ; reload แล้วยังกลับมาเห็น
+   ============================================================ */
+function showRankRewardNotice(){
+  const b = state.rankRewardNotice;
+  if(!b || !b.total){ showQuizBackPay(); return; }
+  if(document.querySelector('[data-rank-reward]')) return;
+  const num = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
+  const info = rankFromKey(b.toKey);
+  const r = info.rank;
+  if(typeof sfx !== 'undefined'){
+    if(sfx.rankup) sfx.rankup();
+    if(sfx.coinGet){ setTimeout(()=>sfx.coinGet(), 420); setTimeout(()=>sfx.coinGet(), 900); }
+  }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.dataset.rankReward = '1';
+  ov.innerHTML = `
+    <div class="rankup-rays" style="--rank-color:${r.color}"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">🎉 ยินดีด้วย! เลื่อนแรงค์สำเร็จ</div>
+      <div class="rankup-badge" style="--rank-color:${r.color}">
+        ${rankBadgeHTML(r.id, r.emoji, 'rankup-badge-img')}
+      </div>
+      <div class="rankup-name" style="color:${r.color}">${escapeHTML(info.label)}</div>
+      <div class="rankup-name" style="color:#ffcf4a">+${num(b.total)} เหรียญ 🪙</div>
+      <p class="rankup-sub">${b.backfill ? 'รางวัลย้อนหลังสำหรับแรงค์ที่หนูเคยผ่านมาทั้งหมด' : 'รางวัลความสำเร็จเข้ากระเป๋าแล้ว'}<br>
+        <small>เลื่อนผ่าน <b>${num(b.count)} แรงค์ใหญ่</b> × แรงค์ละ <b>${num(RANK_PROMOTION_REWARD)} เหรียญ</b><br>
+        ขั้นย่อย III / II / I ไม่นับเป็นแรงค์ใหญ่ · แต่ละแรงค์รับได้ครั้งเดียว</small></p>
+      <button class="rankup-btn">รับทราบและรับรางวัล 🪙</button>
+    </div>`;
+  let refitT = 0;
+  const refit = ()=>{ clearTimeout(refitT); refitT = setTimeout(()=>fitQbp(ov.querySelector('.qbp')), 140); };
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    clearTimeout(refitT);
+    window.removeEventListener('resize', refit);
+    state.rankRewardNotice = null;
+    saveState();
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    showQuizBackPay();
+  });
+  document.body.appendChild(ov);
+  fitQbp(ov.querySelector('.qbp'));
+  window.addEventListener('resize', refit);
+}
+
+/* ============================================================
    🎁 เงินรางวัลย้อนหลัง (รอบ 593 · ผู้ใช้สั่ง) — ปรับรางวัลสอบผ่าน 10 ข้อ 100 → 500
    เซฟที่เคยสอบผ่านก่อนประกาศใหม่ ได้ส่วนต่างย้อนหลังตอนโหลด (คิดใน loadState → state.quizBackPay)
    ที่นี่ทำหน้าที่ "เด้งบอกเด็กครั้งเดียว" ว่าได้เพิ่มเท่าไหร่ เพราะอะไร
@@ -237,7 +285,7 @@ function showGiantRefund(){
    ============================================================ */
 function showTicketRefund(){
   const b = state.ticketRefund;
-  if(!b || !b.total) return;
+  if(!b || !b.total){ if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice(); return; }
   state.ticketRefund = null; saveState();
   const num  = (typeof fmtNum === 'function') ? fmtNum : (n)=>String(n);
   const name = state.profileName || (state.student && state.student.first) || 'หนู';
@@ -263,6 +311,7 @@ function showTicketRefund(){
     window.removeEventListener('resize', refit);
     ov.remove();
     if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    if(typeof showRankMoveRewardNotice === 'function') showRankMoveRewardNotice();
   });
   document.body.appendChild(ov);
   fitQbp(ov.querySelector('.qbp'));
@@ -307,7 +356,7 @@ function bootGame(){
     showScreen('screen-dashboard');
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
     if(!state.profileName) authAskProfileName();
-    else setTimeout(showQuizBackPay, 700);   // 🎁 รอบ 593: แจ้งเงินรางวัลย้อนหลัง (ถ้ามี) หลังหน้าจอนิ่ง
+    else setTimeout(showRankRewardNotice, 700);   // 🎖️ รางวัลแรงค์มาก่อน → ต่อคิวกล่องเงินย้อนหลังเดิม
   }
 }
 
