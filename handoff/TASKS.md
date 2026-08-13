@@ -61,7 +61,6 @@
 - อันดับตัวเองใน 10 กระดานทำลายสถิติดีสุดเดิมทุก 1 ตำแหน่งได้ 1,000; อันดับตกไม่หัก/ไม่รีเซ็ต จึงกลับมาไต่ซ้ำรับเงินซ้ำไม่ได้
 - กล่องทั้งสองระบบเล่นเสียงฉลอง+เหรียญชัด เก็บ notice ข้าม reload และปิดได้เฉพาะปุ่มรับทราบ; แก้ `ranks.js`, `state.js`, `ui.js`, `main.js`, `GAME_RULES.md` + regression ใหม่
 - syntax/diff + rank movement/regression ใหม่ผ่าน; build 8,302 ไฟล์ 456.3 MiB + PWA validator ผ่าน · รอ COMMIT_DEPLOY
-- **รอบ 1137 · หน้าโหลด Cloud ห้ามค้างไม่รู้จบ:** ครบ 6 วินาทีแสดงปุ่ม “รีเฟรชเกมแล้วลองใหม่”; ครบ 12 วินาทีตัด timeout พร้อมบอกสาเหตุ/รหัส error แทนการรอ Firebase ตลอดไป
 - อนุญาต “ใช้เซฟในเครื่องไปก่อน” เฉพาะเมื่อ `ownerUid` ตรงบัญชี Google ปัจจุบัน; เครื่องใหม่หรือเซฟคนละบัญชีจะไม่เข้าเกมและไม่เสี่ยงเขียนทับ Cloud
 - แก้ `js/auth.js`, `index_classic.html`; เพิ่ม `tools/test_auth_cloud_recovery.js`; syntax/recovery/update regression/diff ผ่าน
 - Browser 1280×720 + 812×375 เห็นข้อความ/ปุ่มครบ ไม่เลื่อน/console 0; build 8,302 ไฟล์ 456.3 MiB + PWA ผ่าน · พร้อมส่ง hotfix
