@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1136 · Letter Cannon ล็อกเฉพาะ tester ก่อนขึ้นเว็บ:** ใช้สิทธิ์กลาง `isTester()`/`state.testerAccess`; ผู้เล่นทั่วไปเห็น 🔒 และข้อความ “เปิดให้เฉพาะบัญชีทดสอบ” ส่วน tester เข้าได้
+- ล็อกครอบคลุมปุ่ม Lobby, ทางเข้าจากเมือง 3D และ `LetterCannon.open()` โดยตรง; ไม่ทำรายชื่อบัญชีซ้ำและไม่เปลี่ยน Rules ที่ผู้ใช้ Publish แล้ว
+- แก้ `index_classic.html`, `css/lobby.css`, `js/lettercannon.js`, `tools/test_letter_cannon.js`; syntax/regression/diff ผ่าน
+- production build 8,302 ไฟล์/456.3 MiB + PWA validator ผ่าน; พร้อม COMMIT_DEPLOY และรอ acceptance ออนไลน์ ≥2 เครื่อง
 - **รอบ 1135 · รางวัลแท็บเหรียญ + ยืนยันเหรียญออนไลน์สะสมตลอดกาล:** แท็บ 🪙 เหรียญให้ Top 10 = 10,000→1,000 รายเดือนผ่าน `coinAward`; เพิ่ม state/load/build/Rules และกระดานประกาศครบ
 - 🌐 ใช้ `state.onlineEarned` เดิมซึ่งสะสมตั้งแต่เริ่มระบบและไม่รีเซ็ตรายวัน; เพิ่มข้อความกติกาให้ชัด และคงยอดย้อนหลังเดิมทั้งหมด
 - กันบัญชีครูรุต/Sumpajit ทุกอันดับและแหล่งตัดรางวัล; อุด F1 ที่ยังขาด พร้อมลบแถว F1 เดิมเมื่อ tester ส่งเวลาใหม่
@@ -57,9 +61,7 @@
 - แก้ `index_classic.html`, `css/lobby.css`, `js/ui.js`, `js/online.js`; เพิ่ม `tools/test_rank_move_feed.js` ครบ loop/แตะหยุด/ปล่อย 5 วิ, Browser 1057×503 + 812×375 theme buttons/overflow/console=0, syntax/template/undefined/diff + build 8,291/PWA ผ่าน
 - **รอบ 1123 · Picture Dictionary ลากหน้าตามนิ้ว:** แผง 18 คำเลื่อนตามนิ้ว 1:1 ระหว่างปัด; ปล่อยถึงเกณฑ์ให้หน้าเดิมไหลออก/หน้าใหม่ไหลเข้า ไม่ถึงเกณฑ์หรือชนขอบให้เด้งกลับพร้อมแรงต้าน
 - แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`; Browser 812×375 ยืนยันลาก 300px ตาม 300px, เปลี่ยนหน้า/เด้งกลับที่ขอบ, แตะซูม, overflow และ console 0
-- **รอบ 1121 · Picture Dictionary เปลี่ยนหน้าด้วยการปัด:** ถอดปุ่มก่อนหน้า/ถัดไปออก คงเลขหน้าและเพิ่มคำแนะนำ; ปัดซ้ายไปหน้าใหม่ ปัดขวาย้อนกลับ พร้อม threshold กันการแตะ/ขยับนิ้วสั้นผิดความหมาย
 - แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`; Browser 812×375 ยืนยัน swipe ไป-กลับ/ขอบหน้าสุดท้าย/short drag/แตะซูม, 18 ใบและ overflow 0, console 0
-- **รอบ 1119 · อันดับทรัพย์สินรวม Top 10 + รางวัลรายเดือน:** เพิ่มแท็บ 🏆 ใช้ค่า `leaderboard.av` เดิม จัดอันดับมูลค่าทรัพย์สินที่ถือครอง (ไม่รวมเหรียญ) และให้รางวัลอันดับ 1–10 = 10,000–1,000 เหรียญผ่านโรงงาน `award.js`
 - แก้ `js/ui.js`, `js/state.js`, `js/assetaward.js`, `index_classic.html`, `tools/build_web.mjs`, `tools/validate_web_build.mjs`, `handoff/RULES.md`; เพิ่ม regression `tools/test_asset_leaderboard.js` และโซน Rules `/assetAward`
 - regression/syntax/template/undefined/diff ผ่าน; Browser 812×375 ยืนยัน Top 10, กล่อง/กระดานประกาศไม่ล้น, รางวัล 10,000→1,000, console 0; build 8,291 ไฟล์/454.8 MiB + PWA validator ผ่าน · รอ Publish Rules + COMMIT_DEPLOY
 - แก้ `js/fpsweapon.js`, expose progress/frame สำหรับ QA ใน `js/invasion3d.js` และขยาย `tools/test_fps_weapon_state.js` ครบ reversal, fire/reload/queue/lifecycle, 30/60/120 FPS + dt spike โดยไม่แตะ balance/asset/Firebase
