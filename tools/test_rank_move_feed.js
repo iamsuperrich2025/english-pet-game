@@ -19,7 +19,7 @@ const rowsByTab = {
 };
 let scrollInits = 0;
 const context = {
-  Online: {ready:true, boardReady:true, bbBoardReady:true},
+  Online: {ready:true, boardReady:true, bbBoardReady:true, onlineCoinBoardReady:true},
   document: {getElementById:id=>id === 'rank-move-feed' ? feed : null},
   escapeHTML:s=>String(s).replace(/[&<>"']/g, c=>({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'

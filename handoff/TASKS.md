@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (12 ส.ค.) — อ่านก่อน
+- **รอบ 1130 · อันดับเหรียญออนไลน์สะสมตลอดกาล Top 100 + รางวัลรายเดือน:** เพิ่มแท็บ 🌐 จัดจาก `state.onlineEarned` ซึ่งเป็นเหรียญที่ได้จากเวลาออนไลน์และแสดงในกระเป๋า Lobby; ส่งค่า `leaderboard.oe` และใช้ query เฉพาะ `oe` เพื่อไม่ให้ยอดเหรียญคงเหลือกระทบอันดับ
+- อันดับ 1–10 ได้ 10,000–1,000 เหรียญผ่าน `onlineCoinAward`; Rules เพิ่ม index/validation `oe` และโซน `/onlineCoinAward`; regression/syntax ผ่าน และ Browser 812×375 ยืนยันครบ 100 อันดับ, ไม่ล้นแนวนอน, หน้ารางวัลครบ 10 ขั้น, console 0 · รอผู้ใช้ Publish Rules ก่อนส่งขึ้นเว็บ
 - **รอบ 1128 · อันดับทรัพย์สินรวมแสดง Top 100:** ขยายเฉพาะจำนวนรายชื่อจาก 10 เป็น 100 เหมือนกระดานเหรียญ โดยเงินรางวัลยังจำกัดอันดับ 1–10 = 10,000–1,000 เหรียญตามเดิม; แก้ `js/ui.js`, `tools/test_asset_leaderboard.js`
 - regression/syntax/template/undefined/diff ผ่าน; Browser 812×375 เดโมยืนยันหัวข้อ Top 100, ครบ 100 รายชื่อ/อันดับสุดท้าย 100, overflow แนวนอน 0, console 0; build 8,294 ไฟล์สำเร็จ แต่ PWA validator ติดโค้ด localhost cache-reset ของรอบ 1126 ที่ค้างคู่ขนาน ไม่เกี่ยวกับรอบนี้ · รอรวมหลังงานคู่ขนานพร้อมส่ง
 - **รอบ 1127 · จับคู่ภาพห้ามเล่นหน้าเดิมจนผ่านหน้าอื่น 10 หน้า:** บันทึก 10 หน้าล่าสุดแบบ rolling ใน localStorage; ปุ่มหน้าที่ยังติดล็อกบอกจำนวนหน้าที่เหลือ และครบ 10 หน้าแล้ววนกลับมาเล่นได้
@@ -55,13 +57,10 @@
 - ค้างผู้ใช้ตรวจผลและสั่งก่อน commit/push/deploy; **ยังไม่เปิด `COMMIT_DEPLOY.bat`**
 - **รอบ 1118 · Picture Dictionary แสดงครั้งละ 18 คำ:** ปรับจาก 8×5 เป็น 6 คอลัมน์ × 3 แถว เพื่อขยายภาพและคำอังกฤษ/ไทยให้ชัดขึ้นบนจอเล็ก; แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`
 - regression/syntax/diff ผ่าน; Browser 812×375 ยืนยัน 18 ใบ/6×3, การ์ด 129×94px, overflow 0, หน้า 2=18/หน้า 3=12 คำ, zoom+quiz ใช้ได้และ console 0; build 8,289 ไฟล์/454.8 MiB + PWA validator ผ่าน
-- **รอบ 1115 · Vocab World Racing แบบผู้เล่นล้วน:** ถอดรถ AI/bot ทั้ง runtime, minimap, DRS และ test hook; DRS เหลือคำนวณจากผู้เล่นออนไลน์จริงเท่านั้น
 - ถอดยางเสื่อม/ผลต่อเบรกและกริป/เกจ/พิทสต็อป/เสียง/ข้อความทั้งหมด โดยคง ghost ผู้เล่น, เลนพิทและลิมิต 80 กม./ชม.; แก้ `js/f1_3d.js` และเพิ่ม `tools/test_f1_solo_ghost.js`
 - solo/ghost + engine audio + graphics mode + syntax/undefined/template/diff ผ่าน; build 8,289 ไฟล์/454.8 MiB และ PWA validator ผ่าน · รอ COMMIT_DEPLOY ส่งขึ้นเว็บ
-- **รอบ 1114 · ยกเลิกหนังสือ Picture Dictionary แบบกาง 2 หน้า:** คง 8 หมวดเดิม แต่เปลี่ยนเป็นหน้ารายการเดียว 40 คำ/หน้า (8×5) ภาพ+อังกฤษ+ไทยใหญ่ชัด พร้อมปุ่มก่อนหน้า/ถัดไปและเมนูหมวดแบบไม่ต้องเลื่อนบนจอเล็ก
 - แก้ `js/picdict.js`, `css/picdict.css`; เพิ่ม `tools/test_picdict_single_page.js` และคงแตะฟัง/ซูม/รับเหรียญ/ครูถามศัพท์เดิม
 - regression/syntax/diff ผ่าน; Browser 812×375 ยืนยันหน้าแรก 40/หน้าสอง 8 คำ, เมนู 8 หมวด, zoom+quiz ใช้ได้, console 0; build 8,289 ไฟล์/454.8 MiB + PWA validator ผ่าน
-- **รอบ 1113 · FPS weapon sprite state machine (ยังไม่ commit/deploy ตามคำสั่ง):** สร้าง runtime frames 47 ภาพจาก master แบบ deterministic/alpha/512×512 anchor เดียว และต่อ `EQUIP/IDLE/WALK/SPRINT/ADS_ENTER/ADS/ADS_EXIT/FIRE/RELOAD` ผ่าน adapter local โดย reuse gameplay/ADS/fire/reload/mobile controls เดิมและ fallback โมเดล 3D เมื่อภาพยังไม่พร้อม
 - แก้ `js/fpsweapon.js`, `js/invasion3d.js`, `js/ui.js`, `tools/build_web.mjs`; เพิ่ม build/asset/state tests และ `assets/weapons/fps/runtime/` โดยไม่แก้ master/Firebase/shared worlds
 - asset/state/touch/syntax/diff ผ่าน; production build ชั่วคราว 8,289 ไฟล์/454.9 MiB + PWA validator ผ่าน และ Browser desktop/mobile 812×375 โหลด cache 47 ภาพ/alpha sight โปร่ง/overflow 0; ค้าง manual acceptance ในโลกจริงและรอคำสั่ง commit/deploy
 - แก้ `js/f1_3d.js`, `tools/build_web.mjs`, `tools/validate_web_build.mjs`; เพิ่ม `tools/test_f1_engine_audio.js` + MP3 และบังคับ build รวม asset แม้ยัง untracked โดยไม่แตะ physics/NetRoom/Firebase/โลกอื่น

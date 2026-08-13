@@ -9,7 +9,7 @@ const html = fs.readFileSync('index_classic.html', 'utf8');
 const build = fs.readFileSync('tools/build_web.mjs', 'utf8');
 const rulesText = fs.readFileSync('handoff/RULES.md', 'utf8');
 
-assert.ok(ui.includes("'coins','assets','badges'"), 'assets tab missing from leaderboard order');
+assert.ok(ui.includes("'coins','assets','online','badges'"), 'assets tab missing from leaderboard order');
 assert.ok(ui.includes("data-t=\"assets\">🏆 ทรัพย์สินรวม"), 'full-screen assets tab missing');
 assert.ok(ui.includes('const LB_ASSET_TOP = 100;'), 'assets leaderboard must show Top 100');
 assert.ok(/if\(tab === 'assets'\)[\s\S]*?r\.av[\s\S]*?slice\(0, LB_ASSET_TOP\)/.test(ui), 'assets ranking must use leaderboard.av and cap at Top 100');

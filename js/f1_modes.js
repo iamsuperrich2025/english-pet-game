@@ -24,20 +24,20 @@ const PROFILES=freezeProfile({
       hemisphere:0.72,keyLight:1.05,warmLight:0.35,assetSet:'f1-current'},
   },
   quality:{
-    contract:CONTRACT, id:'quality', revision:1,
+    contract:CONTRACT, id:'quality', revision:2,
     ownership:{scene:'F1World',renderer:'F1World',instancePolicy:'single',switchPolicy:'mutate-shared-scene'},
     shared:{physics:'f1-shared-v1',gameplay:'f1-shared-v1',multiplayer:'netroom-f1-v1'},
-    renderer:{antialias:true,pixelRatioCap:2.5,powerPreference:'high-performance',toneMapping:'aces',exposure:1.08},
-    environment:{background:0x081226,fogColor:0x081226,fogNear:370,fogFar:1850,cameraFar:2350,
-      hemisphere:0.82,keyLight:1.18,warmLight:0.42,assetSet:'f1-quality-phase1'},
+    renderer:{antialias:true,pixelRatioCap:2.35,powerPreference:'high-performance',toneMapping:'aces',exposure:1.16},
+    environment:{background:0x020716,fogColor:0x06101f,fogNear:430,fogFar:2050,cameraFar:2500,
+      hemisphere:0.62,keyLight:1.34,warmLight:0.46,assetSet:'f1-realistic-circuit-v2',qualityTier:'auto'},
   },
 });
 
 const MODES=freezeProfile({
   battery:{id:'battery',label:'Battery Saver',thai:'ประหยัดแบต',icon:'🔋',recommended:true,
     preview:'img/f1/mode_battery_saver.webp',summary:'ฉากแข่งเดิม · ลื่นและเสถียรบนทุกเครื่อง'},
-  quality:{id:'quality',label:'High Graphics',thai:'ภาพสวย',icon:'✨',recommended:false,
-    preview:'img/f1/mode_high_graphics.webp',summary:'แสงและระยะมองไกลขึ้น · ใช้พลังเครื่องมากกว่า'},
+  quality:{id:'quality',label:'Realistic Circuit',thai:'สนามสมจริง',icon:'✨',recommended:false,
+    preview:'img/f1/mode_high_graphics.webp',summary:'ค็อกพิท · รั้ว · อัฒจันทร์ · พิทและไฟสนามเต็มรูปแบบ'},
 });
 
 function normalize(mode){ return Object.prototype.hasOwnProperty.call(MODES,mode)?mode:DEFAULT_MODE; }

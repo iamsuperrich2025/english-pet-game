@@ -4786,3 +4786,15 @@
 ## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1111 · ป้ายอัปเดตแบบยืนยัน แม้มือถือโหลด build ล่าสุดเอง:** ต้นเหตุ navigation network-first ทำให้กลับเข้า Lobby แล้ว `หน้า=server` จึงไม่เคยเห็นปุ่ม; `js/app-update.js` เพิ่ม `vw-update-acknowledged` ให้ป้าย “เกมรุ่นใหม่พร้อมแล้ว/เปิดเกมรุ่นใหม่” ค้างจนกด และยังคงเส้นทาง remote update เดิม · เพิ่ม `tools/test_app_update_prompt.js` ครบ loaded/acknowledged/remote; syntax/diff/build 8,240/PWA ผ่าน และ Browser 812×375 ป้ายเห็นจริง overflow/console 0 กดแล้วไม่เด้งซ้ำ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1112 · ส่งป้ายอัปเดตถึง Lobby 3D ที่ค้างใน memory/bfcache:** ภาพผู้ใช้ยืนยัน Classic โหลด `.1025` แต่ City ยังเป็นเอกสารเก่า (ปุ่ม Login ก็หายพร้อมกัน); `js/app-update.js` เริ่ม check/timer ใหม่บน pageshow/focus และ `sw.js` ทำ one-time recovery เฉพาะ client `/`/`index.html` ที่มี shell เก่า โดยไม่รีโหลด Classic/โลกเกม · regression restored prompt + SW city-only/once ผ่าน; build 8,240/PWA validator และ Browser รอบเดียวกัน 812×375 ยืนยัน City+Classic เห็นป้าย `.1025`, overflow/console 0
+
+
+## ⏬ ย้ายเมื่อ 2026-08-12 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1115 · Vocab World Racing แบบผู้เล่นล้วน:** ถอดรถ AI/bot ทั้ง runtime, minimap, DRS และ test hook; DRS เหลือคำนวณจากผู้เล่นออนไลน์จริงเท่านั้น
+- **รอบ 1114 · ยกเลิกหนังสือ Picture Dictionary แบบกาง 2 หน้า:** คง 8 หมวดเดิม แต่เปลี่ยนเป็นหน้ารายการเดียว 40 คำ/หน้า (8×5) ภาพ+อังกฤษ+ไทยใหญ่ชัด พร้อมปุ่มก่อนหน้า/ถัดไปและเมนูหมวดแบบไม่ต้องเลื่อนบนจอเล็ก
+- **รอบ 1113 · FPS weapon sprite state machine (ยังไม่ commit/deploy ตามคำสั่ง):** สร้าง runtime frames 47 ภาพจาก master แบบ deterministic/alpha/512×512 anchor เดียว และต่อ `EQUIP/IDLE/WALK/SPRINT/ADS_ENTER/ADS/ADS_EXIT/FIRE/RELOAD` ผ่าน adapter local โดย reuse gameplay/ADS/fire/reload/mobile controls เดิมและ fallback โมเดล 3D เมื่อภาพยังไม่พร้อม
