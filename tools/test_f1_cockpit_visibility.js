@@ -4,6 +4,7 @@ const fs=require('fs');
 const src=fs.readFileSync('js/f1_3d.js','utf8');
 const ui=fs.readFileSync('js/ui.js','utf8');
 const build=fs.readFileSync('tools/build_web.mjs','utf8');
+const preflight=fs.readFileSync('tools/check_missing_assets.py','utf8');
 
 assert.match(src,/const RFP_EYE\s*=\s*1\.30/,'Realistic eye height must stay at driver helmet height');
 assert.match(src,/const RFP_FOV\s*=\s*66/,'Realistic cockpit must use a natural helmet-eye FOV');
@@ -30,5 +31,7 @@ assert.match(build,/['"]img\/f1\/cockpit_body_realistic\.png['"]/,
   'The wheel-free Realistic cockpit asset must be copied even before its first commit');
 assert.match(build,/makeImmutableAlias\(['"]img\/f1\/cockpit_body_realistic\.png['"]\)/,
   'The Realistic cockpit asset must bypass cached missing-image responses');
+assert.match(preflight,/REQUIRED_BUILD_ASSETS[\s\S]*img\/f1\/cockpit_body_realistic\.png/,
+  'Deploy preflight must reject a git archive that omits the required cockpit asset');
 
 console.log('PASS F1 Realistic cockpit visibility contract');

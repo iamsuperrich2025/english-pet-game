@@ -12,6 +12,7 @@
     python tools/check_missing_assets.py --git           # ตรวจว่าไฟล์ที่อ้างถูก commit แล้วหรือยัง
 
 ตรวจอะไร: ทุก src=/href= ใน .html + `importScripts()`/รายการ cache ใน sw.js ที่เป็น path ภายในโปรเจกต์
+  + ไฟล์ runtime ที่ build ต้องอ่านโดยตรง แม้ไม่ได้อ้างจาก HTML (เช่น cockpit ของ F1)
   + 🎓 ไฟล์คลังศัพท์ขั้นสูงที่ `js/bandadv.js` fetch แบบขี้เกียจตามรายชื่อใน `js/data/band/manifest.js`
     (เกิดจากรอบ 767: ไฟล์คำ 20 ตัวไม่เคย commit — index.html ไม่ได้อ้างตรง ๆ จึงรอดด่านนี้ไป 12 วัน
      ผลคือกดการ์ด "ศัพท์วิชาการ/ธุรกิจ" แล้วขึ้น "โหลดคลังศัพท์ไม่สำเร็จ" บนเว็บจริง)
@@ -43,6 +44,12 @@ BAND_F_RE = re.compile(r'"f"\s*:\s*"([^"]+)"')
 LAZY_MANIFESTS = (
     ("js/data/band/manifest.js", "js/data/band/"),             # bandadv.js (fetch+json)
     ("js/data/dict_band/manifest.js", "js/data/dict_band/"),   # dictband.js (<script> tag)
+)
+
+# ไฟล์ที่ tools/build_web.mjs อ่านโดยตรงเพื่อสร้าง immutable alias จึงต้องอยู่ใน git HEAD
+# ไม่ใช่แค่มีใน working tree มิฉะนั้น local build ผ่าน แต่ staged deploy จาก git archive จะพัง
+REQUIRED_BUILD_ASSETS = (
+    ("tools/build_web.mjs", "img/f1/cockpit_body_realistic.png"),
 )
 
 PICDICT_RE = re.compile(r"""['"]([^'"/]+\.png)['"]""")
@@ -94,10 +101,10 @@ def main():
             elif GIT_MODE and rel not in tracked:
                 missing.append((hf.name, rel, "มีในเครื่องแต่ยังไม่ commit → deploy แล้วจะ 404"))
 
-    for src_name, rel in lazy_manifest_refs() + picdict_refs():
+    for src_name, rel in lazy_manifest_refs() + picdict_refs() + list(REQUIRED_BUILD_ASSETS):
         checked += 1
         if not (ROOT / rel).exists():
-            missing.append((src_name, rel, "ไม่มีไฟล์ (คลังศัพท์จะโหลดไม่ขึ้น)"))
+            missing.append((src_name, rel, "ไม่มีไฟล์ที่ runtime/build ต้องใช้"))
         elif GIT_MODE and rel not in tracked:
             missing.append((src_name, rel, "มีในเครื่องแต่ยังไม่ commit → deploy แล้วจะ 404"))
 

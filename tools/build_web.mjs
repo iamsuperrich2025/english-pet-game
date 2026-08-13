@@ -28,6 +28,7 @@ const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
 const TOKEN_F1_COCKPIT_ASSET = /img\/f1\/cockpit_body_realistic\.png\?v=4/g;
+const LOCAL_PREVIEW_BLOCK = /<!-- VW_LOCAL_PREVIEW_ONLY_START -->[\s\S]*?<!-- VW_LOCAL_PREVIEW_ONLY_END -->\s*/g;
 
 const posix = (value) => value.replaceAll('\\', '/');
 const sha = (data, length = 16) => createHash('sha256').update(data).digest('hex').slice(0, length);
@@ -42,7 +43,13 @@ function isPublicPath(relativePath) {
 
 async function sourceFiles() {
   try {
-    const raw = execFileSync('git', ['ls-files', '-z'], { cwd: ROOT, encoding: 'utf8' });
+    const raw = execFileSync('git', ['ls-files', '-z'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      // Deploy builds run inside a git-archive directory by design. The fallback below
+      // handles that case, so suppress Git's misleading fatal message on stderr.
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
     const tracked = raw.split('\0').filter(Boolean).filter(isPublicPath);
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
@@ -194,6 +201,14 @@ async function fingerprintHtml(file) {
   return html;
 }
 
+async function stripLocalPreviewBootstrap(file) {
+  const full = path.join(OUT, file);
+  const html = await fs.readFile(full, 'utf8');
+  const stripped = html.replace(LOCAL_PREVIEW_BLOCK, '');
+  if (stripped === html) throw new Error(`${file} is missing the marked local-preview bootstrap`);
+  await fs.writeFile(full, stripped);
+}
+
 async function fingerprintManifestIcons() {
   const full = path.join(OUT, 'manifest.webmanifest');
   const manifest = JSON.parse(await fs.readFile(full, 'utf8'));
@@ -231,6 +246,11 @@ async function main() {
   const build = await readVersion();
   const files = await sourceFiles();
   await copyPublicTree(files);
+
+  // Source HTML clears stale production caches only while developing on localhost.
+  // Never ship that destructive recovery bootstrap in the production HTML.
+  await stripLocalPreviewBootstrap('index.html');
+  await stripLocalPreviewBootstrap('index_classic.html');
 
   for (const rel of ['index.html', 'index_classic.html', 'manifest.webmanifest', 'sw.js']) {
     await replaceBuildTokens(rel, build);
