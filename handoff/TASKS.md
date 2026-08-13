@@ -56,9 +56,7 @@
 - **รอบ 1147 · Letter Cannon ปลดล็อกเฉพาะ Admin:** เปลี่ยน gate จากครู/เจ้าของ 1 บัญชีเป็น `isAdmin()` ซึ่งอ้าง allowlist กลาง `ADMIN_NAME_EMAILS` เดิม 3 บัญชี ไม่เพิ่มอีเมล/UID หรือแก้ Rules
 - sync `state.adminAccess` ให้เมือง 3D แสดงสิทธิ์ตรงบัญชี; Lobby, route และ `LetterCannon.open()` ตรวจ admin จริง ส่วนผู้เล่นทั่วไปยังเห็น 🔒
 - แก้ `auth.js`, `state.js`, `city3d.js`, `lettercannon.js`, `index_classic.html` และ tests; syntax/regression/admin allowlist/build 8,304 ไฟล์/PWA/dist gate+PNG ผ่าน
-- **รอบ 1146 · deploy-only สำหรับ hotfix ภาพป้อม:** รอบ 1145 commit/push สำเร็จแต่ `ship.sh` เห็นเฉพาะ tools/docs จึงเลือก `--no-deploy`; live ยัง `.1040` และภาพยัง 404
 - manifest รอบนี้รวม `js/lettercannon.js` (ไม่แก้เนื้อหา) เพื่อให้ launcher เลือก deploy จริง; ปิดงานได้เมื่อ live เป็น `.1041` และภาพสอง URL ตอบ 200 `image/png`
-- **รอบ 1145 · hotfix asset 404 หลัง deploy:** `.1040` ขึ้นสำเร็จแต่ production manifest ไม่มีภาพป้อม เพราะ `build_web.mjs` fallback ใน git archive ไม่ผ่านรายการ explicit ของโหมดมี `.git`
 - เพิ่ม `assets/images/letter_cannon/` ใน `PUBLIC_PREFIXES` ให้ทั้ง tracked build และ archive fallback รวมภาพจริง; regression บังคับตรวจ prefix นี้กันย้อนกลับ
 - จำลอง build โดยตัดคำสั่ง git ออกจาก PATH แล้วภาพทั้งสองอยู่ output/manifest พร้อม hash ถูกต้อง; รอ deploy `.1041` และต้องตรวจ URL ตอบ 200 `image/png` ก่อนปิดงาน
 - แก้ gate จาก tester 2 บัญชีเป็น owner ผ่าน `isTeacher()` เดิม; เมือง 3D ใช้ `state.ownerAccess` เฉพาะป้าย/ทางเข้า ส่วน `LetterCannon.open()` ตรวจ Auth จริงและบล็อก route/API โดยตรง
