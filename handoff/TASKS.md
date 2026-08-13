@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1146 · deploy-only สำหรับ hotfix ภาพป้อม:** รอบ 1145 commit/push สำเร็จแต่ `ship.sh` เห็นเฉพาะ tools/docs จึงเลือก `--no-deploy`; live ยัง `.1040` และภาพยัง 404
+- manifest รอบนี้รวม `js/lettercannon.js` (ไม่แก้เนื้อหา) เพื่อให้ launcher เลือก deploy จริง; ปิดงานได้เมื่อ live เป็น `.1041` และภาพสอง URL ตอบ 200 `image/png`
 - **รอบ 1145 · hotfix asset 404 หลัง deploy:** `.1040` ขึ้นสำเร็จแต่ production manifest ไม่มีภาพป้อม เพราะ `build_web.mjs` fallback ใน git archive ไม่ผ่านรายการ explicit ของโหมดมี `.git`
 - เพิ่ม `assets/images/letter_cannon/` ใน `PUBLIC_PREFIXES` ให้ทั้ง tracked build และ archive fallback รวมภาพจริง; regression บังคับตรวจ prefix นี้กันย้อนกลับ
 - จำลอง build โดยตัดคำสั่ง git ออกจาก PATH แล้วภาพทั้งสองอยู่ output/manifest พร้อม hash ถูกต้อง; รอ deploy `.1041` และต้องตรวจ URL ตอบ 200 `image/png` ก่อนปิดงาน
