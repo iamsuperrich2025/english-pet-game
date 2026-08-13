@@ -46,6 +46,9 @@ function canUseReservedAdminName(){
     ? String(Auth.user.email).trim().toLowerCase() : '';
   return ADMIN_NAME_EMAILS.has(email);
 }
+function isAdmin(){
+  return canUseReservedAdminName();
+}
 function checkProfileName(raw, min=2, max=20){
   if(isReservedAdminName(raw) && !canUseReservedAdminName()){
     return {ok:false, msg:'ชื่อ Admin และ แอดมิน สงวนไว้สำหรับบัญชีผู้ดูแลระบบเท่านั้น'};
@@ -60,9 +63,9 @@ function isTeacher(){
   return !!(Auth.user && Auth.user.email
     && TEACHER_EMAILS.includes(String(Auth.user.email).toLowerCase()));
 }
-function syncOwnerAccess(){
-  const allowed=isTeacher();
-  if(state.ownerAccess!==allowed){state.ownerAccess=allowed;saveState();}
+function syncAdminAccess(){
+  const allowed=isAdmin();
+  if(state.adminAccess!==allowed){state.adminAccess=allowed;saveState();}
   if(typeof LetterCannon!=='undefined'&&LetterCannon.refreshLock)LetterCannon.refreshLock();
 }
 
@@ -481,7 +484,7 @@ function authEnterGame(){
   Auth.booted = true;
   onlineStart();                                   // เพื่อนออนไลน์ + leaderboard (ใน online.js)
   bootGame();                                      // careTick + เข้าหน้า ลงทะเบียน/dashboard (ใน main.js)
-  syncOwnerAccess();                               // เจ้าของเท่านั้น: ป้ายล็อก Letter Cannon ใน Classic/เมือง 3D
+  syncAdminAccess();                               // admin allowlist เดิม: ป้ายล็อก Letter Cannon ใน Classic/เมือง 3D
   testerBoost();                                   // บัญชีผู้ทดสอบ → เติมเหรียญให้พอทดสอบโลก 3D
   authPushProfile();                               // sync ชื่อในเกมขึ้น profile ทุก login (กันโหนดหาย/เซฟย้ายเครื่อง)
   setInterval(()=>authPushSave(false), AUTH_PUSH_MS);

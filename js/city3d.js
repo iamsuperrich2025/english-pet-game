@@ -69,14 +69,14 @@ function cityWorldTester(){
   }
   catch(e){ return false; }
 }
-function cityLetterCannonOwner(){
+function cityLetterCannonAdmin(){
   try{
     const sv=JSON.parse(localStorage.getItem('petVocabAdventure_v1')||'null');
-    return !!(sv && sv.ownerAccess===true);
+    return !!(sv && sv.adminAccess===true);
   }catch(e){return false;}
 }
 function cityWorldComingSoon(go){
-  if(go==='lettercannon') return !cityLetterCannonOwner();
+  if(go==='lettercannon') return !cityLetterCannonAdmin();
   return CITY_WORLD_COMING_SOON.has(go) && !cityWorldTester();
 }
 
@@ -2944,7 +2944,7 @@ function captureCityShot(goKey, bldKey){
 }
 function travelTo(b){
   if(cityWorldComingSoon(b && b.go)){
-    const msg=b&&b.go==='lettercannon'?'🔒 เฉพาะบัญชีเจ้าของ':'🔒 Coming soon';
+    const msg=b&&b.go==='lettercannon'?'🔒 เฉพาะบัญชี Admin':'🔒 Coming soon';
     setChip(msg);
     if(Live.self && Live.self.g) showBubble('__self', msg, Date.now());
     return;

@@ -4,11 +4,11 @@ const code=fs.readFileSync('js/lettercannon.js','utf8');
 const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),net=fs.readFileSync('js/netroom.js','utf8'),rules=fs.readFileSync('handoff/RULES.md','utf8'),build=fs.readFileSync('tools/build_web.mjs','utf8');
 const listeners={};
 function el(){return {style:{},classList:{add(){},remove(){},toggle(){}},appendChild(){},remove(){},addEventListener(){},querySelector(){return el();},querySelectorAll(){return[];},setAttribute(){},getBoundingClientRect(){return{width:1280,height:720}},getContext(){return null}};}
-let teacher=true;
-const sandbox={console,performance:{now:()=>1000},Math,setTimeout:(fn)=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){}},document:{readyState:'complete',addEventListener(n,f){listeners[n]=f;},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false},isTeacher:()=>teacher,vocabForStudent:()=>[['apple','แอปเปิล'],['letter','ตัวอักษร'],['book','หนังสือ']],addCoins(){},saveState(){}};
+let admin=true;
+const sandbox={console,performance:{now:()=>1000},Math,setTimeout:(fn)=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){}},document:{readyState:'complete',addEventListener(n,f){listeners[n]=f;},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false},isAdmin:()=>admin,vocabForStudent:()=>[['apple','แอปเปิล'],['letter','ตัวอักษร'],['book','หนังสือ']],addCoins(){},saveState(){}};
 sandbox.window=sandbox;vm.createContext(sandbox);vm.runInContext(code,sandbox);
 const T=sandbox.LetterCannon._t;
-assert.strictEqual(T.ownerAllowed(),true,'existing owner authorization is allowed');teacher=false;assert.strictEqual(T.ownerAllowed(),false,'tester/general account cannot bypass owner gate');teacher=true;
+assert.strictEqual(T.adminAllowed(),true,'existing admin authorization is allowed');admin=false;assert.strictEqual(T.adminAllowed(),false,'non-admin account cannot bypass admin gate');admin=true;
 assert(T.wordPool().some(x=>x.en==='APPLE'),'approved grade vocabulary');
 T.nextWord();const w=T.word.en;assert(w.length>=3,'word selected');
 T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next required letter guaranteed');
@@ -36,9 +36,9 @@ assert(html.includes('btn-rail-lettercannon')&&html.includes('js/lettercannon.js
 assert(city.includes("bld('lettercannon'")&&city.includes('ป้อมพิทักษ์คำศัพท์'),'3D city entry and bilingual name');
 assert(main.includes("lettercannon:'#btn-rail-lettercannon'"),'3D go routing');
 assert(net.includes("'lettercannon'")&&rules.match(/\$map === 'lettercannon'/g).length>=3,'room discovery and Firebase map rules');
-assert(html.includes('btn-rail-lettercannon')&&html.includes('เปิดให้เฉพาะบัญชีเจ้าของ')&&html.includes('rail-lock'),'owner-only lobby lock is visible');
-assert(city.includes("go==='lettercannon'")&&city.includes('cityLetterCannonOwner'),'3D city gate requires persisted owner authorization');
-assert(code.includes('function ownerAllowed()')&&code.includes("if(!ownerAllowed()){lockedNotice();return;}"),'owner-only gate protects direct game open and lobby event');
+assert(html.includes('btn-rail-lettercannon')&&html.includes('เปิดให้เฉพาะบัญชี Admin')&&html.includes('rail-lock'),'admin-only lobby lock is visible');
+assert(city.includes("go==='lettercannon'")&&city.includes('cityLetterCannonAdmin'),'3D city gate requires persisted admin authorization');
+assert(code.includes('function adminAllowed()')&&code.includes("if(!adminAllowed()){lockedNotice();return;}"),'admin-only gate protects direct game open and lobby event');
 assert(code.includes('drawImage(turretImages.base')&&code.includes('drawImage(turretImages.head')&&!code.includes("const base=ctx.createLinearGradient(-80"),'runtime uses new two-layer turret only');
 assert(code.includes("touchcancel")&&code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()"),'input and lifecycle cleanup paths included');
-console.log('PASS Letter Cannon: owner-only gate, RGBA turret assets, rigid 180-degree head, twin muzzles, touch cleanup, grade words, no penalty, powers, multiplayer seats');
+console.log('PASS Letter Cannon: admin-only gate, RGBA turret assets, rigid 180-degree head, twin muzzles, touch cleanup, grade words, no penalty, powers, multiplayer seats');

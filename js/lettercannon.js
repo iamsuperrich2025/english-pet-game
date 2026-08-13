@@ -36,14 +36,14 @@
   let room=null,peers={},lastNetSend=0;
   let letters=[],bullets=[],particles=[],stars=[],clouds=[];
   let hud={},timers=new Set(),turretImages=null,turretLoad=null;
-  function ownerAllowed(){
-    return typeof isTeacher==='function' && isTeacher();
+  function adminAllowed(){
+    return typeof isAdmin==='function' && isAdmin();
   }
   function lockedNotice(){
     if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong();
-    if(typeof toast==='function')toast('🔒 Letter Cannon เปิดให้เฉพาะบัญชีเจ้าของในขณะนี้');
+    if(typeof toast==='function')toast('🔒 Letter Cannon เปิดให้เฉพาะบัญชี Admin ในขณะนี้');
   }
-  function refreshLock(){const b=document.getElementById('btn-rail-lettercannon');if(!b)return;const locked=!ownerAllowed();b.classList.toggle('tester-locked',locked);b.title=locked?'เปิดให้เฉพาะบัญชีเจ้าของ':'Letter Cannon';const lk=b.querySelector('.rail-lock');if(lk)lk.style.display=locked?'':'none';}
+  function refreshLock(){const b=document.getElementById('btn-rail-lettercannon');if(!b)return;const locked=!adminAllowed();b.classList.toggle('tester-locked',locked);b.title=locked?'เปิดให้เฉพาะบัญชี Admin':'Letter Cannon';const lk=b.querySelector('.rail-lock');if(lk)lk.style.display=locked?'':'none';}
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
   function loadTurretAssets(){
@@ -225,9 +225,9 @@
     document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['score','combo','words','coins','target','meaning','progress','power-name','power-fill','fire','pause-btn','exit','sound','room'].forEach(k=>hud[k.replace('-','')]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');
   }
   function startGame(){if(!opening||running)return;opening=false;buildDom();layout();bind();score=combo=wordsDone=coinsRun=pos=0;elapsed=0;spawnAt=.4;powerAt=9;letters=[];bullets=[];particles=[];peers={};activePower=null;barrelCycle=flashSide=0;running=true;paused=false;nextWord();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();netJoin();last=performance.now();raf=requestAnimationFrame(frame);tutorial();}
-  function open(){if(running||opening)return;if(!ownerAllowed()){lockedNotice();return;}opening=true;loadTurretAssets().then(startGame).catch(err=>{opening=false;console.error(err);if(typeof toast==='function')toast('⚠️ โหลดภาพป้อมไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
+  function open(){if(running||opening)return;if(!adminAllowed()){lockedNotice();return;}opening=true;loadTurretAssets().then(startGame).catch(err=>{opening=false;console.error(err);if(typeof toast==='function')toast('⚠️ โหลดภาพป้อมไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
   function close(){opening=false;running=false;firing=false;aimPointer=null;clearTimers();cancelAnimationFrame(raf);if(room){room.leave();room=null;}peers={};if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
-  function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b){refreshLock();b.addEventListener('click',()=>{refreshLock();if(!ownerAllowed()){lockedNotice();return;}if(typeof closePanel==='function')closePanel();open();});}}
+  function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b){refreshLock();b.addEventListener('click',()=>{refreshLock();if(!adminAllowed()){lockedNotice();return;}if(typeof closePanel==='function')closePanel();open();});}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
-  window.LetterCannon={open,close,refreshLock,_t:{ownerAllowed,wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,fire,hit,activate,seatOrder,turretGeometry,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get running(){return running;},get paused(){return paused;},get aim(){return aim;},get letters(){return letters;},get bullets(){return bullets;},get activePower(){return activePower;},setAim(a){targetAim=aim=clamp(a,AIM_MIN,AIM_MAX);},setViewport(w,h){W=w;H=h;},step(dt){update(dt||.016);},TURRET,AIM_MIN,AIM_MAX,POWER,MAX_LETTERS,MAX_BULLETS,ROOM_MAX}};
+  window.LetterCannon={open,close,refreshLock,_t:{adminAllowed,wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,fire,hit,activate,seatOrder,turretGeometry,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get running(){return running;},get paused(){return paused;},get aim(){return aim;},get letters(){return letters;},get bullets(){return bullets;},get activePower(){return activePower;},setAim(a){targetAim=aim=clamp(a,AIM_MIN,AIM_MAX);},setViewport(w,h){W=w;H=h;},step(dt){update(dt||.016);},TURRET,AIM_MIN,AIM_MAX,POWER,MAX_LETTERS,MAX_BULLETS,ROOM_MAX}};
 })();

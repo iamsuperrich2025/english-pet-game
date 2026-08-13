@@ -16,7 +16,8 @@ const sandbox = {};
 vm.runInNewContext(badwords + '\n' + authPrefix + `
   globalThis.__adminNameProbe = {
     check(raw, email){ Auth.user = email ? {email} : null; return checkProfileName(raw, 2, 20); },
-    reserved(raw){ return isReservedAdminName(raw); }
+    reserved(raw){ return isReservedAdminName(raw); },
+    admin(email){ Auth.user = email ? {email} : null; return isAdmin(); }
   };
 `, sandbox);
 const probe = sandbox.__adminNameProbe;
@@ -27,10 +28,12 @@ const allowed = [
   'parkerhulk2020@gmail.com',
 ];
 for(const email of allowed){
+  assert.strictEqual(probe.admin(email), true, `${email} ต้องได้สิทธิ์ admin กลาง`);
   for(const name of ['Admin', 'admin', 'ADMIN', 'aDmIn', 'แอดมิน']){
     assert.strictEqual(probe.check(name, email).ok, true, `${email} ต้องใช้ชื่อ ${name} ได้`);
   }
 }
+assert.strictEqual(probe.admin('player@example.com'), false, 'ผู้เล่นทั่วไปต้องไม่ได้สิทธิ์ admin กลาง');
 
 for(const name of ['Admin', 'admin', 'ADMIN', 'A d m i n', 'A\u200Bdmin', ' แอดมิน ']){
   assert.strictEqual(probe.reserved(name), true, `${JSON.stringify(name)} ต้องเป็นชื่อสงวน`);
@@ -48,6 +51,8 @@ assert.match(main, /if\(authEnsureProfileName\(\)\)/, 'ผู้เล่นเ�
 assert.match(util, /typeof opt\.validate === 'function'/, 'กล่องตั้งชื่อต้องรองรับ validator เฉพาะประเภท');
 assert.match(auth, /if\(!Auth\.user \|\| !state\.profileName \|\| !checkProfileName\(state\.profileName\)\.ok\) return;/,
   'ด่านส่งชื่อขึ้น profile ต้องตรวจชื่อซ้ำ');
+assert.match(auth, /function syncAdminAccess\(\)[\s\S]*const allowed=isAdmin\(\)/,
+  'Letter Cannon ต้อง sync สิทธิ์จาก admin allowlist กลาง');
 
 const rulesDoc = fs.readFileSync(path.join(root, 'handoff/RULES.md'), 'utf8');
 const jsonBlock = rulesDoc.match(/## ก้อนเต็ม[\s\S]*?```json\r?\n([\s\S]*?)```/);

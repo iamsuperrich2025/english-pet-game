@@ -215,7 +215,7 @@ const DEFAULT_STATE = {
   foodQuizPlayCount:0,                 // ควิซอาหารปลอดภัย: เล่นไปแล้วกี่รอบในวันนั้น (เพดาน FOODQUIZ_MAX_PLAYS)
   testerCoinDay:'',                   // 🧪 วันไทย+ยอดเป้าหมายที่เติมเหรียญผู้ทดสอบแล้ว (ดู testerBoost ใน auth.js)
   testerAccess:false,                 // 🧪 รอบ 1070: สิทธิ์บัญชีทดสอบสำหรับหน้าเมือง 3D standalone (ตั้งจากอีเมลใน auth.js เท่านั้น)
-  ownerAccess:false,                  // 🔒 Letter Cannon: สิทธิ์เจ้าของสำหรับป้ายล็อกเมือง 3D (จุดบังคับจริงยังใช้ isTeacher ในหน้า Classic)
+  adminAccess:false,                  // 🔒 Letter Cannon: สิทธิ์ admin สำหรับป้ายล็อกเมือง 3D (จุดบังคับจริงยังใช้ isAdmin ในหน้า Classic)
   spellDay:'',                        // 🌀 รอบ 174: วัน (toDateString) ของตัวนับเกมสะกดคำรายวัน
   spellWords:0,                       // 🌀 รอบ 174: จำนวนคำสะกดสำเร็จวันนี้ (5 คำแรกรางวัลเต็ม — ดู spellDayLeft ใน lobby3d.js)
   musicMode:'all',                    // 🎵 รอบ 181: โหมดวิทยุในรถ 'all'|'one'|'shuffle' (music.js)
