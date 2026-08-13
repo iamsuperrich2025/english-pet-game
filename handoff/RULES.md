@@ -1,5 +1,7 @@
 # RULES.md — Firebase Security Rules
 
+> ✅ **รอบ 1142 — ผู้ใช้ยืนยันว่า Publish แล้ว 13 ส.ค. 2026:** ล็อก `/users/<uid>/profile/name` ชื่อ `Admin` ทุกตัวพิมพ์และ `แอดมิน` ให้เขียนได้เฉพาะ `freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com`; ฝั่งเกมตรวจเข้มกว่านี้โดยตัดช่องว่างและอักขระซ่อนด้วย · ยังไม่ได้เทียบ Rules สดทั้งก้อน เพราะ sandbox อ่าน Firebase CLI token ใน `.config` ไม่ได้
+>
 > ✅ **รอบ 1096 — Publish/ตรวจสดแล้ว 10 ส.ค. 2026:** แก้ account deletion ให้เจ้าของ UID ลบ reaction ของตัวเอง (`gfeed/lk` และ `gfeed/cm/cl`) ได้แม้ความเป็นเพื่อนสิ้นสุดแล้ว โดยสิทธิ์สร้าง/แก้ reaction ยังคงต้องเป็นเจ้าของโพสต์หรือเพื่อนเหมือนเดิม; Firebase CLI เทียบสดตรง source ครบ 37 โซน / 475 leaf keys (`missing=0`, `extra=0`, `changed=0`)
 
 > อ่านไฟล์นี้เมื่อ: แตะ Firebase / เพิ่มโซนใหม่ / ต้องส่ง rules ให้ผู้ใช้ publish
@@ -212,7 +214,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "at":   { ".validate": "newData.isNumber()" }
         },
         "profile": {
-          "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20" }
+          "name": { ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 20 && ((!newData.val().matches(/^\\s*[Aa][Dd][Mm][Ii][Nn]\\s*$/) && !newData.val().matches(/^\\s*แอดมิน\\s*$/)) || auth.token.email === 'freddommun@gmail.com' || auth.token.email === 'sumpajitshami@gmail.com' || auth.token.email === 'parkerhulk2020@gmail.com')" }
         }
       }
     },

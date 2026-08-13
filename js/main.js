@@ -22,7 +22,7 @@ document.querySelectorAll('#reg-avatar .avatar-opt').forEach(btn=>{
 document.getElementById('btn-register').addEventListener('click', ()=>{
   const grade = document.getElementById('reg-grade').value;
   // 🛡️ รอบ 187: มาตรการคุ้มครองเด็ก — ไม่เก็บชื่อจริง/นามสกุล เหลือแค่ชื่อเล่น + ชั้น (ชั้นใช้เลือกความยากคำศัพท์ ไม่โชว์ในเกม)
-  const nick = checkName(document.getElementById('reg-nick').value, 2, 20);
+  const nick = checkProfileName(document.getElementById('reg-nick').value, 2, 20);
   if(!nick.ok){
     sfx.wrong();
     toast('ชื่อเล่น: ' + nick.msg, 2400);
@@ -339,6 +339,8 @@ function fitQbp(box){
    (ก่อนหน้านั้นห้ามเรียก careTick เพราะ saveState จะไปบัมพ์ savedAt
    ทำให้เซฟเก่าในเครื่องดู "ใหม่กว่า" เซฟ cloud ทั้งที่ไม่ได้เล่นจริง) */
 function bootGame(){
+  // ↩️ รอบ 1143: ถ้าเครื่องค้าง/reload หลังหักค่าเข้า ต้องคืนเงินหลัง sync Cloud เสร็จแล้วเท่านั้น
+  if(typeof recoverInterruptedGameEntry === 'function') recoverInterruptedGameEntry();
   // ตรวจหาภาพทุกแบบของสัตว์ที่เลี้ยงอยู่ (ทำหลัง sync — เซฟอาจเพิ่งโหลดมาจาก cloud)
   for(const p of state.pets){
     probeImages(petImageKeys(p.type)).then(()=>{
@@ -355,8 +357,7 @@ function bootGame(){
     renderDashboard();
     showScreen('screen-dashboard');
     // ผู้เล่นเดิมก่อนอัพเดทข้อ 0.2 ยังไม่มีชื่อในเกม → บังคับตั้งก่อนเล่นต่อ
-    if(!state.profileName) authAskProfileName();
-    else setTimeout(showRankRewardNotice, 700);   // 🎖️ รางวัลแรงค์มาก่อน → ต่อคิวกล่องเงินย้อนหลังเดิม
+    if(authEnsureProfileName()) setTimeout(()=>showGameEntryRefundNotice(showRankRewardNotice), 700); // คืนค่าเข้าก่อน → รางวัลแรงค์
   }
 }
 

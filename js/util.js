@@ -832,7 +832,7 @@ function speakWordTTS(word, onDone){
   }catch(e){ setTimeout(()=>notify(false), 0); return null; }
 }
 /* ---------- ป๊อปอัพตั้งชื่อ (ใช้ร่วม: ชื่อในเกมข้อ 0.2 + ชื่อสัตว์ข้อ 7) ----------
-   opt = {emoji, title, desc(html), placeholder, value, min, max,
+   opt = {emoji, title, desc(html), placeholder, value, min, max, validate(raw,min,max),
           okText, cancelText (ไม่ใส่ = บังคับตั้ง ปิดข้ามไม่ได้), onOk(name), onCancel}
    ตรวจด้วย checkName (badwords.js) — ไม่ผ่านโชว์ข้อความแดง กล่องไม่ปิด */
 function askNameDialog(opt){
@@ -858,7 +858,8 @@ function askNameDialog(opt){
   const stopKbFit = (typeof chatFitKeyboard === 'function')
     ? chatFitKeyboard(overlay, overlay.querySelector('.levelup-box')) : ()=>{};
   const submit = ()=>{
-    const r = checkName(input.value, opt.min, opt.max);
+    const validate = (typeof opt.validate === 'function') ? opt.validate : checkName;
+    const r = validate(input.value, opt.min, opt.max);
     if(!r.ok){
       sfx.wrong();
       err.textContent = r.msg;

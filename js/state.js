@@ -140,6 +140,8 @@ const DEFAULT_STATE = {
   tinvTogether:{},                    // 🤝 รอบ 822: {map:{uid,since}} — จับเวลาอยู่ด้วยกันต่อเนื่อง ครบ TINV_TOGETHER_MS ถึงจ่ายเงินคืน (กันเทเลพอร์ตเข้า-ออก)
   attentionSeen:{},                   // 🔔 รายการที่เห็นในหน้าสรุปแล้ว {fingerprint:ts} — ค้างงานได้แต่ไม่ขึ้นเลขแดงซ้ำจนมีของใหม่
   ticketsReset:false,                 // 🎫→💰 รอบ 822: เคยผ่าน migration คืนเงินตั๋วเก่า+รีเซ็ตเป็นจ่าย 500/ครั้งแล้วหรือยัง (กันคืนซ้ำ)
+  gameEntryTx:null,                   // ↩️ รอบ 1143: ธุรกรรมค่าเข้าโลก 3D ที่หักแล้วแต่ยังเปิดเกมไม่สำเร็จ; reload แล้วคืนได้
+  gameEntryRefundNotice:null,         // กล่องแจ้งคืนค่าเข้า ค้างจนผู้เล่นกดรับทราบ
   voiceSpk:true,                      // voice chat ในโลก 3D: เปิดลำโพง (ได้ยินคนอื่น) — จำข้ามรอบ
   voiceMode:'all',                    // voice chat: 'all'=คุยทุกคนใน map · 'friends'=เฉพาะเพื่อนที่ invite กันใน map นั้น (ไมค์ไม่จำ — ปิดทุกครั้งที่เข้า เพื่อความปลอดภัยเด็ก)
   quizLog:[],                         // ประวัติสอบ: {cat, score, total, passed, ts}
@@ -437,6 +439,8 @@ function loadState(){
       if(typeof s.foodQuizPlayCount !== 'number') s.foodQuizPlayCount = 0;
       if(!s.rankMoveBest || typeof s.rankMoveBest !== 'object' || Array.isArray(s.rankMoveBest)) s.rankMoveBest = {};
       if(!s.rankMoveRewardNotice || typeof s.rankMoveRewardNotice !== 'object') s.rankMoveRewardNotice = null;
+      if(!s.gameEntryTx || typeof s.gameEntryTx !== 'object') s.gameEntryTx = null;
+      if(!s.gameEntryRefundNotice || typeof s.gameEntryRefundNotice !== 'object') s.gameEntryRefundNotice = null;
       // เซฟก่อนมีรางวัลแรงค์: null = ให้ refreshRank จ่ายย้อนหลังตามขั้นปัจจุบันครั้งเดียว
       if(old.rankRewardIdx === undefined) s.rankRewardIdx = null;
       else s.rankRewardIdx = Math.max(0, Math.min(RANKS.length-1, Math.floor(Number(s.rankRewardIdx)||0)));

@@ -25,6 +25,34 @@ const AUTH_SDK_TIMEOUT_MS = 20*1000;   // รอ SDK นานสุดก่อ
 const AUTH_CLOUD_SLOW_MS  = 6*1000;    // นานกว่านี้ต้องมีทางออกให้ผู้เล่น ไม่ปล่อยหน้าค้างเงียบ
 const AUTH_CLOUD_TIMEOUT_MS = 12*1000; // RTDB get() อาจค้างไม่ resolve/reject เมื่อการเชื่อมต่อครึ่งหลุด
 
+/* 🛡️ รอบ 1142: ชื่อผู้ดูแลระบบสงวนไว้ให้ 3 บัญชีนี้เท่านั้น
+   normalize + ตัดช่องว่าง/zero-width เพื่อกันชื่อเลียนแบบ เช่น "A d m i n" */
+const ADMIN_NAME_EMAILS = new Set([
+  'freddommun@gmail.com',
+  'sumpajitshami@gmail.com',
+  'parkerhulk2020@gmail.com',
+]);
+function adminReservedNameKey(raw){
+  return String(raw || '').normalize('NFKC')
+    .replace(/[\s\u200B-\u200D\uFEFF]+/g, '')
+    .toLocaleLowerCase('th-TH');
+}
+function isReservedAdminName(raw){
+  const key = adminReservedNameKey(raw);
+  return key === 'admin' || key === 'แอดมิน';
+}
+function canUseReservedAdminName(){
+  const email = Auth.user && Auth.user.email
+    ? String(Auth.user.email).trim().toLowerCase() : '';
+  return ADMIN_NAME_EMAILS.has(email);
+}
+function checkProfileName(raw, min=2, max=20){
+  if(isReservedAdminName(raw) && !canUseReservedAdminName()){
+    return {ok:false, msg:'ชื่อ Admin และ แอดมิน สงวนไว้สำหรับบัญชีผู้ดูแลระบบเท่านั้น'};
+  }
+  return checkName(raw, min, max);
+}
+
 /* ---------- บัญชีครู (รอบ 43+: ปุ่มคุมห้องในโลก 3D เช่น ปิดเสียงทั้งห้อง) ----------
    เพิ่มอีเมลครูต่อท้าย array ได้เลย (ตัวพิมพ์เล็ก) — บัญชีอื่นไม่เห็นปุ่มครู */
 const TEACHER_EMAILS = ['freddommun@gmail.com'];
@@ -151,7 +179,7 @@ function authWriteProfileName(uid, name){
    สำเนาสาธารณะฝั่ง DB (rules validate ความยาว 2–20 ซ้ำอีกชั้น) —
    ข้อ 0.3 จะใช้ค้นหาเพื่อน · เรียกซ้ำได้ ปลอดภัย (เขียนค่าเดิมทับ) */
 function authPushProfile(){
-  if(!Auth.user || !state.profileName) return;
+  if(!Auth.user || !state.profileName || !checkProfileName(state.profileName).ok) return;
   try{
     authWriteProfileName(Auth.user.uid, state.profileName).catch(()=>{});
   }catch(e){ /* SDK ยังไม่พร้อม — รอบหน้าค่อยส่ง */ }
@@ -159,6 +187,13 @@ function authPushProfile(){
 
 /* บันทึกชื่อในเกม + อัปเดตทุกที่ที่ชื่อโชว์ (จุดเดียว — ใช้ทั้งตั้งครั้งแรก/แก้ชื่อ) */
 function authApplyProfileName(name){
+  const checked = checkProfileName(name);
+  if(!checked.ok){
+    sfx.wrong();
+    toast(checked.msg, 3200);
+    return false;
+  }
+  name = checked.name;
   state.profileName = name;
   saveState();
   authPushProfile();
@@ -170,15 +205,36 @@ function authApplyProfileName(name){
   sfx.levelup();
   toast(`📛 ชื่อในเกมของหนูคือ "${name}" 🎉`);
   renderDashboard();
+  return true;
+}
+
+/* ผู้เล่นเดิมที่เคยใช้ชื่อสงวนก่อนอัปเดต: ล้างชื่อสาธารณะและบังคับตั้งใหม่เมื่อเข้าเกม */
+function authEnsureProfileName(){
+  if(!state.profileName){ authAskProfileName(); return false; }
+  if(!isReservedAdminName(state.profileName) || canUseReservedAdminName()) return true;
+  state.profileName = null;
+  saveState();
+  try{
+    if(Auth.user) authWriteProfileName(Auth.user.uid, null).catch(()=>{});
+  }catch(e){ /* SDK ยังไม่พร้อม — เซฟรอบถัดไปยังคงไม่ส่งชื่อสงวน */ }
+  authPushSave(true);
+  if(typeof Online !== 'undefined') Online.lastCoins = null;
+  if(typeof onlinePushPresence === 'function') onlinePushPresence();
+  if(typeof onlinePushScore === 'function') onlinePushScore();
+  authAskProfileName(true);
+  return false;
 }
 
 /* ---------- กล่องบังคับตั้งชื่อในเกม (ผู้เล่นเดิมที่เซฟยังไม่มีชื่อ — ข้อ 0.2)
    ปิดข้ามไม่ได้: ชื่อนี้ใช้โชว์บน presence/leaderboard แทนชื่อจริง ---------- */
-function authAskProfileName(){
+function authAskProfileName(reservedReset=false){
   askNameDialog({
     emoji:'📛', title:'ตั้งชื่อในเกมกันเถอะ!',
-    desc:'ชื่อนี้คือชื่อที่เพื่อนๆ ทั้งเกมจะเห็น (ไทย/อังกฤษ 2–20 ตัว)<br>ไม่ต้องใช้ชื่อ-นามสกุลจริงก็ได้นะ 😊',
+    desc:(reservedReset
+      ? '<b>ชื่อ Admin/แอดมินใช้ได้เฉพาะบัญชีผู้ดูแลระบบ จึงต้องเปลี่ยนชื่อก่อนเล่นต่อนะ</b><br>'
+      : '') + 'ชื่อนี้คือชื่อที่เพื่อนๆ ทั้งเกมจะเห็น (ไทย/อังกฤษ 2–20 ตัว)<br>ไม่ต้องใช้ชื่อ-นามสกุลจริงก็ได้นะ 😊',
     placeholder:'เช่น น้องบีม, Beam123', min:2, max:20,
+    validate:checkProfileName,
     okText:'ใช้ชื่อนี้เลย ✅',
     onOk:authApplyProfileName,
   });
@@ -190,6 +246,7 @@ function authEditProfileName(){
     emoji:'✏️', title:'เปลี่ยนชื่อในเกม',
     desc:'ชื่อใหม่จะไปโชว์บนการ์ดเพื่อนและกระดานอันดับทันที (ไทย/อังกฤษ 2–20 ตัว)',
     placeholder:'เช่น น้องบีม, Beam123', value:state.profileName || '', min:2, max:20,
+    validate:checkProfileName,
     okText:'เปลี่ยนชื่อ ✅', cancelText:'ยกเลิก',
     onOk:authApplyProfileName,
   });

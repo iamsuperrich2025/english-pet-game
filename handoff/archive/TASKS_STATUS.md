@@ -4826,3 +4826,8 @@
 
 - **รอบ 1126 · badge ตั้งค่าเป็น “ยังไม่เห็น” จริง:** หน้าสรุปเดิมแสดงคำเชิญแล้วแต่เลขไม่หายจนกดเข้าโลก; ผู้ใช้กำหนดว่าแค่เห็นหน้าสรุปและกดปิดก็ควรถือว่าอ่านแล้ว โดยคำเชิญยังค้างไว้ได้
 - **รอบ 1125 · F1 Realistic Circuit visual upgrade (ยังไม่ commit/deploy ตามคำสั่ง):** Realistic Mode เพิ่ม cockpit/camera ระดับสายตา, asphalt+racing line, modular barriers/catch fence, fictional boards, grandstands, pit complex, floodlights, bridges/marshal posts/skyline; Battery Saver ใช้ค่ากับฉากเดิมและไม่สร้างชั้น Realistic
+
+
+## ⏬ ย้ายเมื่อ 2026-08-13 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1127 · จับคู่ภาพห้ามเล่นหน้าเดิมจนผ่านหน้าอื่น 10 หน้า:** บันทึก 10 หน้าล่าสุดแบบ rolling ใน localStorage; ปุ่มหน้าที่ยังติดล็อกบอกจำนวนหน้าที่เหลือ และครบ 10 หน้าแล้ววนกลับมาเล่นได้

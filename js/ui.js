@@ -6802,11 +6802,12 @@ async function loadVocabArena3d(){
 }
 let advLoading = false;
 async function enterAdventure3D(){
-  if(!state.advTicket || state.advHurt || advLoading) return advBusyMsg(enterAdventure3D);
+  if(!state.advTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterAdventure3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 1045: เลือกแผนที่ก่อน แล้วค่อยโหลดเฉพาะเอนจินที่ใช้จริง
   // Vocab Arena เบากว่า adventure3d.js มาก จึงไม่บังคับมือถือโหลดโลกเฮลิคอปเตอร์ทั้งก้อนก่อนเข้าต่อสู้
   const map = await pickAdvMap();
-  if(!map) return;
+  if(!map) return worldEntryStopped('ยกเลิกการเลือกแผนที่ก่อนเกมเริ่ม');
   advLoading = Date.now();
   toast(map==='heli'?'🚁 กำลังเปิดเมืองเฮลิคอปเตอร์...':'🌀 กำลังเปิด Vocab Arena...');
   try{
@@ -6815,12 +6816,12 @@ async function enterAdventure3D(){
     else await loadVocabArena3d();
   }catch(e){
     advLoading = false;
-    sfx.wrong(); toast('⚠️ โหลดโลกผจญภัยไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-    return;
+    return worldEntryStopped('โหลดไฟล์โลกผจญภัยไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
   }
   advLoading = false;
-  if(map==='heli'){ Adventure3D.start('heli',{walkIn:true}); return; }
+  if(map==='heli'){ Adventure3D.start('heli',{walkIn:true}); return worldEntryStarted(); }
   VocabArena3D.start();
+  return worldEntryStarted();
 }
 /* 🗺️ กล่องเลือกแผนที่โลกเดิน (รอบ 356) — 2 การ์ดใหญ่ แตะง่าย ออกแบบให้พอดีจอเตี้ย 812×375 ไม่มี scroll (กฎ 7) */
 function pickAdvMap(){
@@ -6859,7 +6860,8 @@ function pickAdvMap(){
 
 /* เข้าโลกผีสิงกลางคืน 👻 (ตั๋วแยก · ใช้ engine เดียวกัน โหมด haunt) */
 async function enterHaunted3D(){
-  if(!state.hauntTicket || state.advHurt || advLoading) return advBusyMsg(enterHaunted3D);
+  if(!state.hauntTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterHaunted3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
     toast('👻 กำลังเปิดประตูโลกผีสิง...');
@@ -6868,23 +6870,24 @@ async function enterHaunted3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกผีสิงไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกผีสิงไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   // 🧱 เลือกตัวละครบล็อกก่อนเข้า (เหมือนโลกผจญภัย/ขับรถ) — ยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar('👻 กล้าเข้าไป!');
-  if(!go) return;
+  if(!go) return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');
   Adventure3D.start('haunt');
+  return worldEntryStarted();
 }
 
 /* เข้าโลกเฮลิคอปเตอร์ (engine เดียวกัน โหมด heli) */
 async function enterHeli3D(){
-  if(!state.heliTicket || state.advHurt || advLoading) return advBusyMsg(enterHeli3D);
+  if(!state.heliTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterHeli3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🗺️ รอบ 815 (ผู้ใช้สั่ง): เลือกแผนที่ก่อนขึ้นบิน เหมือนตอนเข้าโลกขับรถ
   const hmap = await pickHeliMap();
-  if(!hmap) return;
+  if(!hmap) return worldEntryStopped('ยกเลิกการเลือกแผนที่ก่อนเกมเริ่ม');
   const needCity = hmap === 'kpp';                 // เมืองกำแพงเพชรใช้ข้อมูลแผนที่จริงชุดเดียวกับโลกขับรถ
   if(!window.Adventure3D || (needCity && !window.KPP_CITY)){
     advLoading = Date.now();
@@ -6895,12 +6898,12 @@ async function enterHeli3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกเฮลิคอปเตอร์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกเฮลิคอปเตอร์ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   Adventure3D.start('heli', {map:hmap});
+  return worldEntryStarted();
 }
 /* 🗺️🚁 รอบ 815: หน้าเลือกแผนที่โลกเฮลิคอปเตอร์ (ผู้ใช้สั่ง — ให้เหมือน pickDriveMap ของโลกขับรถ)
    คืน 'city' = เมืองเฮลิฯ เดิม (เดินเท้า/ลิฟต์/วิงสูท · ตัวอักษรบนดาดฟ้า)
@@ -6943,7 +6946,8 @@ function pickHeliMap(){
 
 /* เข้าโลกโดรน (engine เดียวกัน โหมด drone) */
 async function enterDrone3D(){
-  if(!state.droneTicket || state.advHurt || advLoading) return advBusyMsg(enterDrone3D);
+  if(!state.droneTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterDrone3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
     toast('🛸 กำลังอาร์มโดรน...');
@@ -6952,17 +6956,18 @@ async function enterDrone3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกโดรนไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกโดรนไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   Adventure3D.start('drone');
+  return worldEntryStarted();
 }
 
 /* เข้าโลกขับรถ (engine เดียวกัน โหมด drive) — โหลดแผนที่เมืองจริงเพิ่ม 1 ไฟล์ (~240KB โหลดครั้งเดียว) */
 async function enterDrive3D(){
-  if(!state.driveTicket || state.advHurt || advLoading) return advBusyMsg(enterDrive3D);
+  if(!state.driveTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterDrive3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   // 🔓 รอบ 943: ไม่มีรถไม่บล็อกแล้ว — ระบบให้ยืมรถขับฟรีสำหรับรอบนั้น (myCar()=null → โมเดล car_01 + สมรรถนะกลาง 3/3/3)
   const loanCar = !(state.cars && state.cars.length);
   if(loanCar) toast('🚗 รอบนี้ยืมรถของระบบขับฟรี — อยากได้คันของตัวเอง ซื้อที่หมวดยานพาหนะนะ');
@@ -6975,26 +6980,26 @@ async function enterDrive3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกขับรถไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกขับรถไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   // 🗺️ รอบ 317: เลือกแผนที่ก่อนออกรถ (ผู้ใช้สั่ง — รถยนต์ไปเล่นแผนที่บ้านโพธิ์สวัสดิ์ร่วมกับมอเตอร์ไซค์ได้)
   const map = await pickDriveMap();
-  if(!map) return;
+  if(!map) return worldEntryStopped('ยกเลิกการเลือกแผนที่ก่อนเกมเริ่ม');
   // 🚗 รอบ 233: เลือกรถออกขับ (เหมือนเลือกหุ่นออกรบ) — ตั้ง state.carIdx → สมรรถนะ (drivePerf) + ภายในรถ (loadCarDash) ตามคันที่เลือก
   if(!loanCar){
     const gotCar = await pickDriveCar();
-    if(!gotCar) return;
+    if(!gotCar) return worldEntryStopped('ยกเลิกการเลือกรถก่อนเกมเริ่ม');
     // 🔐 คันที่เลือกค้างค่างวด → ขับไม่ได้ (เลือกคันอื่นได้)
-    if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return; }
+    if(carDriveBlock()){ sfx.wrong(); showNeedCarDialog(carDriveBlock()); return worldEntryStopped('รถที่เลือกมีค่างวดค้างชำระ จึงยังขับไม่ได้'); }
   }
-  if(map === 'phosawat'){ await enterMotoMapAsCar(); return; }   // 🏫 ไปแผนที่บ้านโพธิ์สวัสดิ์ด้วยรถยนต์
+  if(map === 'phosawat') return await enterMotoMapAsCar();   // 🏫 ไปแผนที่บ้านโพธิ์สวัสดิ์ด้วยรถยนต์
   // 🧱 เลือกตัวละครบล็อกก่อนออกรถ (จำตัวล่าสุดไว้ · เพื่อนใน map เห็นเป็นตัวที่เลือก) — กดยกเลิก = ไม่เข้าโลก
   const go = await Adventure3D.pickBlockAvatar();
-  if(!go) return;
+  if(!go) return worldEntryStopped('ยกเลิกการเลือกตัวละครก่อนเกมเริ่ม');
   Adventure3D.start('drive');
+  return worldEntryStarted();
 }
 
 /* 🗺️ รอบ 317: หน้าเลือกแผนที่ของผู้เล่นโลกขับรถ (ผู้ใช้สั่ง)
@@ -7045,17 +7050,18 @@ async function enterMotoMapAsCar(){
       await loadScriptOnce('js/moto3d.js');
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดแผนที่บ้านโพธิ์สวัสดิ์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดแผนที่บ้านโพธิ์สวัสดิ์ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   MotoWorld.start({vehicle:'car'});
+  return worldEntryStarted();
 }
 
 /* เข้าโลกสนามฟุตบอล (engine เดียวกัน โหมด soccer) */
 async function enterSoccer3D(){
-  if(!state.soccerTicket || state.advHurt || advLoading) return advBusyMsg(enterSoccer3D);
+  if(!state.soccerTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterSoccer3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.Adventure3D){
     advLoading = Date.now();
     toast('⚽ กำลังเข้าสนาม...');
@@ -7064,17 +7070,18 @@ async function enterSoccer3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดสนามฟุตบอลไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดสนามฟุตบอลไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   Adventure3D.start('soccer');
+  return worldEntryStarted();
 }
 
 /* เข้าโลกมอเตอร์ไซค์ — engine แยก (js/moto3d.js) + แผนที่จริง 1 ไฟล์ (~190KB โหลดครั้งเดียว) */
 async function enterMoto3D(){
-  if(!state.motoTicket || state.advHurt || advLoading) return advBusyMsg(enterMoto3D);
+  if(!state.motoTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterMoto3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.MotoWorld || !window.MOTO_MAP){
     advLoading = Date.now();
     toast('🏍️ กำลังสตาร์ทมอเตอร์ไซค์ + โหลดแผนที่บ้านโพธิ์สวัสดิ์...');
@@ -7084,19 +7091,20 @@ async function enterMoto3D(){
       await loadScriptOnce('js/moto3d.js');
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกมอเตอร์ไซค์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกมอเตอร์ไซค์ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   MotoWorld.start();
+  return worldEntryStarted();
 }
 
 
 /* 🏎️ รอบ 896: เข้าโลกแข่งรถ F1 สนามซาเคียร์ (Bahrain) — engine แยก (js/f1_3d.js)
    + ข้อมูลสนามจริงจาก OSM (js/data/f1_bahrain.js) + GLTFLoader เผื่อผู้ใช้วางโมเดล f1_car.glb */
 async function enterF1_3D(){
-  if(!state.f1Ticket || state.advHurt || advLoading) return advBusyMsg(enterF1_3D);
+  if(!state.f1Ticket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterF1_3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.F1World || !window.F1_MAP){
     advLoading = Date.now();
     toast('🏎️ กำลังเปิด Vocab World Racing...');
@@ -7109,20 +7117,22 @@ async function enterF1_3D(){
       const f1EngineUrl='__VW_F1_ENGINE_URL__';
       await loadScriptOnce(f1EngineUrl.startsWith('__VW_')?'js/f1_3d.js':f1EngineUrl);
     }catch(e){
-      world3DFail('Vocab World Racing', e);
-      return;
+      advLoading = false;
+      return worldEntryStopped('โหลดสนามแข่งรถไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   try{
     const graphics=window.F1Modes?F1Modes.getSelection():null;
     F1World.start(graphics?{graphicsMode:graphics.id,environmentProfile:graphics.environment}:undefined);
-  }catch(e){ world3DFail('Vocab World Racing', e); }
+    return worldEntryStarted();
+  }catch(e){ return worldEntryStopped('เครื่องสร้างสนามแข่งรถไม่สำเร็จ', e); }
 }
 
 /* เข้าโลกยานแม่บุกโลก — engine แยก (js/invasion3d.js) ไม่แตะ adventure3d.js */
 async function enterInvasion3D(){
-  if(!state.invasionTicket || state.advHurt || advLoading) return advBusyMsg(enterInvasion3D);
+  if(!state.invasionTicket || state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterInvasion3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   if(!window.InvasionWorld){
     advLoading = Date.now();
     toast('🛸 กำลังเปิดสมรภูมิทะเลทราย...');
@@ -7133,12 +7143,12 @@ async function enterInvasion3D(){
       await loadScriptOnce('js/invasion3d.js');
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกยานแม่บุกโลกไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกยานแม่ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   InvasionWorld.start();
+  return worldEntryStarted();
 }
 
 /* ============================================================
@@ -7226,6 +7236,119 @@ function world3DFail(label, err){
   ov.querySelector('#w3f-close').addEventListener('click', ()=>ov.remove());
 }
 
+/* ============================================================
+   ↩️🪙 รอบ 1143 — ธุรกรรมค่าเข้าเกม + คืนเงินเมื่อเกมเปิดไม่สำเร็จ
+   หักเหรียญและเก็บ tx ใน state ก่อนเริ่มโหลด; ล้าง tx เมื่อ start() สำเร็จเท่านั้น
+   ถ้า throw/โหลดพัง/ยกเลิกก่อนเกมเริ่ม ให้คืนเต็มจำนวน; ถ้าเครื่องค้างกลางทาง bootGame กู้ tx ให้
+   ============================================================ */
+function worldEntryStarted(){ return {started:true}; }
+function worldEntryStopped(reason, err){ return {started:false, reason:String(reason||'เกมไม่ตอบสนองก่อนเปิดสำเร็จ'), error:err||null}; }
+const GAME_ENTRY_STABLE_MS = 15000; // ถ้าค้าง/reload ช่วงเริ่มเกม ให้ boot คืนค่าเข้า
+
+function gameEntryCommit(tx){
+  if(!tx || !state.gameEntryTx || state.gameEntryTx.id !== tx.id) return false;
+  state.gameEntryTx = null;
+  if(!tx.wasUnlocked && typeof sellInc === 'function') sellInc('tk_'+tx.mode);
+  saveState();
+  return true;
+}
+
+function gameEntryRefund(tx, reason){
+  if(!tx || !state.gameEntryTx || state.gameEntryTx.id !== tx.id) return false; // กันคืนซ้ำ
+  const amount = Math.max(0, Number(tx.amount)||0);
+  state.coins = Math.max(0, Number(state.coins)||0) + amount;
+  if(!tx.wasUnlocked && tx.ticketKey) state[tx.ticketKey] = false;
+  state.gameEntryTx = null;
+  state.gameEntryRefundNotice = {
+    id:tx.id, amount, game:String(tx.game||'เกม'),
+    reason:String(reason||'เกมไม่ตอบสนองก่อนเปิดสำเร็จ').slice(0,160), ts:Date.now()
+  };
+  saveState();
+  if(typeof renderRailWorlds === 'function') renderRailWorlds();
+  if(typeof syncCoinHeader === 'function') syncCoinHeader();
+  if(typeof feedEvent === 'function') feedEvent('coin', `คืนค่าเข้า${tx.game} +${fmtNum(amount)} 🪙 — ${state.gameEntryRefundNotice.reason}`);
+  return true;
+}
+
+function recoverInterruptedGameEntry(){
+  const tx = state.gameEntryTx;
+  if(!tx || !tx.id || !(Number(tx.amount)>0)) return false;
+  return gameEntryRefund(tx, tx.startedAt
+    ? 'เข้าเกมแล้วแต่เครื่องค้างก่อนจะเล่นได้'
+    : 'เกมหยุดหรือเครื่องค้างก่อนเปิดให้เล่นได้');
+}
+
+function showGameEntryRefundNotice(next){
+  const b = state.gameEntryRefundNotice;
+  if(!b || !(Number(b.amount)>0)){ if(typeof next === 'function') next(); return; }
+  if(document.querySelector('[data-game-entry-refund]')) return;
+  if(typeof sfx !== 'undefined' && sfx.coinGet){ sfx.coinGet(); setTimeout(()=>sfx.coinGet(), 420); }
+  const ov = document.createElement('div');
+  ov.className = 'rankup-overlay';
+  ov.dataset.gameEntryRefund = '1';
+  ov.innerHTML = `<div class="rankup-rays" style="--rank-color:#5dd7a8"></div>
+    <div class="rankup-content qbp">
+      <div class="rankup-title">↩️ คืนค่าเข้าแล้ว</div>
+      <div class="qbp-coin">🪙</div>
+      <div class="rankup-name" style="color:#18a76f">+${fmtNum(b.amount)} เหรียญ 🪙</div>
+      <p class="rankup-sub">เข้า${escapeHTML(b.game)}ไม่ได้: ${escapeHTML(b.reason)}<br>ระบบคืนค่าเข้า <b>🪙${fmtNum(b.amount)}</b> เข้ากระเป๋าแล้ว</p>
+      <button class="rankup-btn">รับทราบ</button>
+    </div>`;
+  ov.querySelector('.rankup-btn').addEventListener('click', ()=>{
+    state.gameEntryRefundNotice = null;
+    saveState();
+    ov.remove();
+    if(document.getElementById('screen-dashboard').classList.contains('active')) renderDashboard();
+    if(typeof next === 'function') next();
+  });
+  document.body.appendChild(ov); // ไม่ผูก backdrop/Esc: ต้องกด "รับทราบ" เท่านั้น
+  if(typeof fitQbp === 'function') fitQbp(ov.querySelector('.qbp'));
+}
+
+async function startWorldEntry(w, info, unlocked, overlay, button){
+  if(button) button.disabled = true;
+  let tx = null;
+  if(!info.free){
+    if(state.coins < info.fee){
+      if(button) button.disabled = false;
+      sfx.wrong(); toast(`เหรียญยังไม่พอ ต้องมี 🪙${fmtNum(info.fee)}`); return;
+    }
+    tx = {id:`${Date.now()}-${Math.random().toString(36).slice(2,9)}`, mode:w.mode,
+      game:`โลก${w.label}`, amount:info.fee, ticketKey:w.ticketKey, wasUnlocked:!!unlocked, ts:Date.now()};
+    state.gameEntryTx = tx;
+    state.coins -= info.fee;
+  }
+  state[w.ticketKey] = true; // ฟังก์ชัน enter ใช้เป็น guard; ถ้าล้มเหลวจะ rollback ให้
+  saveState();
+  renderRailWorlds();
+  overlay.remove();
+  if(!info.free) sfx.buy();
+  let out;
+  try{ out = await w.enter(); }
+  catch(err){ out = worldEntryStopped('เกมเกิดข้อผิดพลาดก่อนเปิดให้เล่นได้', err); }
+  if(out && out.started === true){
+    if(tx && state.gameEntryTx && state.gameEntryTx.id === tx.id){
+      tx.startedAt = Date.now();
+      saveState();
+      setTimeout(()=>gameEntryCommit(tx), GAME_ENTRY_STABLE_MS);
+    }else if(!unlocked && typeof sellInc === 'function'){
+      sellInc('tk_'+w.mode); saveState();
+    }
+    return;
+  }
+  const reason = out && out.reason ? out.reason : 'เกมไม่ตอบสนองก่อนเปิดให้เล่นได้';
+  if(out && out.error) console.error('world entry failed', w.mode, out.error);
+  advResetLoad();
+  if(tx){
+    gameEntryRefund(tx, reason);
+    showGameEntryRefundNotice();
+  }else{
+    if(!unlocked) state[w.ticketKey] = false;
+    saveState();
+    sfx.wrong(); toast(`⚠️ เข้าโลก${w.label}ไม่ได้ — ${reason}`);
+  }
+}
+
 function railWorldClick(w){
   if(world3DComingSoon(w)){
     sfx.wrong(); toast('🔒 Coming soon'); return;
@@ -7280,22 +7403,8 @@ function openWorldEntryDialog(w){
   overlay.addEventListener('click', e=>{ if(e.target===overlay) overlay.remove(); });
   overlay.querySelector('#we-cancel').addEventListener('click', ()=>overlay.remove());
   overlay.querySelector('#we-invite').addEventListener('click', ()=>openTinvPicker(w.mode));
-  overlay.querySelector('#we-enter').addEventListener('click', ()=>{
-    if(!info.free){
-      if(state.coins < info.fee){ sfx.wrong(); toast(`เหรียญยังไม่พอ ต้องมี 🪙${fmtNum(info.fee)}`); return; }
-      state.coins -= info.fee;
-    }
-    if(!unlocked){ state[w.ticketKey] = true; if(typeof sellInc==='function') sellInc('tk_'+w.mode); }
-    sfx.buy();
-    saveState();
-    renderRailWorlds();
-    overlay.remove();
-    // 🚑 รอบ 859: enter เป็น async — error ระหว่างสร้างโลก (เช่น WebGL พัง) ต้องโชว์กล่องบอกเหตุผล ไม่เงียบ
-    try{
-      const r = w.enter();
-      if(r && typeof r.catch === 'function') r.catch(err=>world3DFail('โลก'+w.label, err));
-    }catch(err){ world3DFail('โลก'+w.label, err); }
-  });
+  const enterBtn = overlay.querySelector('#we-enter');
+  enterBtn.addEventListener('click', ()=>startWorldEntry(w, info, unlocked, overlay, enterBtn));
 }
 
 /* ============================================================
@@ -8053,11 +8162,12 @@ function buyRobot(id){
 /* เลือกหุ่นก่อนเข้าโลก (ถ้ามีหลายตัว) แล้วเข้าโลก mecha
    🔓 รอบ 943: ไม่มีหุ่นของตัวเอง = ระบบให้ยืมหุ่นตัวแรก (robot_01) ฟรีสำหรับรอบนั้น — ไม่บันทึกเป็นทรัพย์สิน */
 async function enterMecha3D(){
-  if(state.advHurt || advLoading) return advBusyMsg(enterMecha3D);
+  if(state.advHurt) return worldEntryStopped('สิทธิ์เข้าเกมยังไม่พร้อม');
+  if(advLoading){ advBusyMsg(enterMecha3D); return worldEntryStopped('มีเกมอื่นกำลังโหลดอยู่'); }
   let chosen;
   if(state.robots && state.robots.length){
     chosen = await pickMechaRobot();
-    if(!chosen) return;
+    if(!chosen) return worldEntryStopped('ยกเลิกการเลือกหุ่นก่อนเกมเริ่ม');
   }else{
     chosen = ROBOTS[0].id;
     toast(`🤖 รอบนี้ยืมหุ่น ${ROBOTS[0].name} ของระบบออกรบฟรี — ซื้อหุ่นของตัวเองได้ที่ตลาดนะ`);
@@ -8071,12 +8181,12 @@ async function enterMecha3D(){
       await loadAdv3d();
     }catch(e){
       advLoading = false;
-      sfx.wrong(); toast('⚠️ โหลดโลกหุ่นยนต์ไม่สำเร็จ — เช็กอินเทอร์เน็ตแล้วลองใหม่นะ');
-      return;
+      return worldEntryStopped('โหลดไฟล์โลกหุ่นยนต์ไม่สำเร็จ อาจเกิดจากเน็ตหรือหน่วยความจำเครื่อง', e);
     }
     advLoading = false;
   }
   Adventure3D.start('mecha');
+  return worldEntryStarted();
 }
 /* หน้าต่างเลือกหุ่น (เฉพาะตัวที่ครอบครอง) — คืน id หรือ null ถ้ายกเลิก */
 function pickMechaRobot(){

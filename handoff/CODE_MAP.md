@@ -193,14 +193,15 @@ beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (464 บรรทัด · 39 รายการ)
-AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · TEACHER_EMAILS:30 · isTeacher:31
-TESTER_EMAILS:44 · TESTER_COINS:45 · isTester:46 · RANK_EXCLUDED_TESTER_NAMES:52 · rankUserExcluded:53 · testerBoost:59
-authSetStatus:92 · authLocalSaveSafe:109 · authShowLogin:112 · authGateOffline:116 · authSaveRef:123 · authFetchCloud:124
-authWriteCloud:144 · authDeleteCloud:145 · authWriteProfileName:146 · authPushProfile:153 · authApplyProfileName:161 · authAskProfileName:177
-authEditProfileName:188 · authStart:199 · updateOfflinePill:231 · authEnterOffline:236 · authLateSync:253 · authIsAppMode:273
-AUTH_REDIRECT_CODES:281 · authLoginClick:283 · authOnLogin:303 · authSyncOnLogin:329 · authFreshStart:358 · authAskLink:367
-authEnterGame:417 · authPushSave:432 · authLogout:443
+## js/auth.js (521 บรรทัด · 45 รายการ)
+AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · ADMIN_NAME_EMAILS:30 · adminReservedNameKey:35
+isReservedAdminName:40 · canUseReservedAdminName:44 · checkProfileName:49 · TEACHER_EMAILS:58 · isTeacher:59 · TESTER_EMAILS:72
+TESTER_COINS:73 · isTester:74 · RANK_EXCLUDED_TESTER_NAMES:80 · rankUserExcluded:81 · testerBoost:87 · authSetStatus:120
+authLocalSaveSafe:137 · authShowLogin:140 · authGateOffline:144 · authSaveRef:151 · authFetchCloud:152 · authWriteCloud:172
+authDeleteCloud:173 · authWriteProfileName:174 · authPushProfile:181 · authApplyProfileName:189 · authEnsureProfileName:212 · authAskProfileName:230
+authEditProfileName:244 · authStart:256 · updateOfflinePill:288 · authEnterOffline:293 · authLateSync:310 · authIsAppMode:330
+AUTH_REDIRECT_CODES:338 · authLoginClick:340 · authOnLogin:360 · authSyncOnLogin:386 · authFreshStart:415 · authAskLink:424
+authEnterGame:474 · authPushSave:489 · authLogout:500
 
 ## js/award.js (275 บรรทัด · 0 รายการ)
 
@@ -636,7 +637,7 @@ PANEL_TITLES:9 · openPanel:19 · closePanel:29
 
 ## js/lobby3d.js (780 บรรทัด · 0 รายการ)
 
-## js/main.js (483 บรรทัด · 8 รายการ)
+## js/main.js (482 บรรทัด · 8 รายการ)
 settingsButtonClick:101 · syncMusicBtn:117 · showRankRewardNotice:151 · showQuizBackPay:200 · showGiantRefund:245 · showTicketRefund:286
 fitQbp:327 · bootGame:341
 
@@ -907,11 +908,11 @@ buyMarketItem:8604 · showCollectReveal:8633 · buyAC:8671 · openHomeShop:8690 
 renderStats:8847 · showTeacherCard:8954 · CALL_REACT_EMOS:8998 · CALL_TALK_MIN:9001 · CALL_TALK_HOLD:9002 · CALL_ORDER_GAP:9004
 CALL_TONES:9010 · startCall:9384
 
-## js/util.js (1,299 บรรทัด · 51 รายการ)
+## js/util.js (1,300 บรรทัด · 51 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1268 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1269-1299 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1269 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1270-1300 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · IPHONE_LOBBY_VIEWPORT:118
@@ -919,9 +920,9 @@ fitIPhoneLobbyViewport:129 · showScreen:148 · TOAST_WARN_RE:159 · restackToas
 toastLink:219 · floatFx:237 · beep:248 · soundStatus:269 · PET_MOOD:385 · petVoiceSynth:392
 sirenSynth:469 · playCashier:493 · cashierSynth:507 · keyTapSynth:540 · bubblePopSynth:578 · bubbleTapSynth:597
 playSpark:608 · sparkSynth:622 · thunderFx:657 · wordAudioFile:725 · speakCutOff:734 · speakWord:738
-speakLetter:777 · pickSpeakVoice:800 · speakWordTTS:811 · askNameDialog:838 · askConfirm:883 · alertBox:901
-applyNoAnim:921 · BLK_VOCAB:928 · openSettings:976 · openHelp:1208 · openTeacherGuide:1234 · TAPGLOW_SEL:1258
-TOUCH_INPUT_SEEN:1277 · mouseLockOK:1286 · lockMouse3D:1292
+speakLetter:777 · pickSpeakVoice:800 · speakWordTTS:811 · askNameDialog:838 · askConfirm:884 · alertBox:902
+applyNoAnim:922 · BLK_VOCAB:929 · openSettings:977 · openHelp:1209 · openTeacherGuide:1235 · TAPGLOW_SEL:1259
+TOUCH_INPUT_SEEN:1278 · mouseLockOK:1287 · lockMouse3D:1293
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
