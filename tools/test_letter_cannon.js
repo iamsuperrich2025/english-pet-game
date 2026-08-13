@@ -1,7 +1,7 @@
 "use strict";
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),zlib=require('zlib');
 const code=fs.readFileSync('js/lettercannon.js','utf8');
-const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),net=fs.readFileSync('js/netroom.js','utf8'),rules=fs.readFileSync('handoff/RULES.md','utf8'),build=fs.readFileSync('tools/build_web.mjs','utf8');
+const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),build=fs.readFileSync('tools/build_web.mjs','utf8');
 const listeners={};
 function el(){return {style:{},classList:{add(){},remove(){},toggle(){}},appendChild(){},remove(){},addEventListener(){},querySelector(){return el();},querySelectorAll(){return[];},setAttribute(){},getBoundingClientRect(){return{width:1280,height:720}},getContext(){return null}};}
 let admin=true;
@@ -14,16 +14,12 @@ T.nextWord();const w=T.word.en;assert(w.length>=3,'word selected');
 T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next required letter guaranteed');
 const need=T.letters.find(x=>x.alive&&x.ch===w[0]);T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');
 const wrong=T.spawnLetter(w[1]==='Z'?'Y':'Z',false),before=T.pos,combo=T.combo;T.hit(wrong,false);assert.strictEqual(T.pos,before,'wrong letter has no penalty');assert.strictEqual(T.combo,combo,'wrong letter does not reset combo');
-T.setAim(-Math.PI/2);assert(T.aim<=T.AIM_MAX&&T.aim>=T.AIM_MIN,'aim clamped to upper 180 degrees');
-T.resetTap();assert.strictEqual(T.registerTap(1000),false,'first tap only aims');assert.strictEqual(T.registerTap(1000+T.DOUBLE_TAP_MS-1),true,'second tap inside window fires');assert.strictEqual(T.registerTap(2000),false,'tap sequence resets after a shot');assert.strictEqual(T.registerTap(2000+T.DOUBLE_TAP_MS+1),false,'late second tap starts a new sequence');
+assert(T.particles.length>=16&&T.shockwaves.length>=2,'correct and wrong targets create amplified particles and shockwaves');
 for(let i=0;i<40;i++)T.spawnLetter('A',false);assert(T.letters.filter(x=>x.alive).length<=T.MAX_LETTERS,'letter pool capped');
 T.POWER.forEach(p=>T.activate(p));assert(T.POWER.some(p=>p.id==='triple')&&T.POWER.some(p=>p.id==='beam')&&T.POWER.some(p=>p.id==='chain')&&T.POWER.some(p=>p.id==='homing')&&T.POWER.some(p=>p.id==='nova'),'required powers exposed');
-assert.deepStrictEqual(Array.from(T.seatOrder(7)),[0,-1,1,-2,2,-3,3],'turrets fill center then left/right without overlap');
-assert.strictEqual(T.ROOM_MAX,7,'full room opens next room at seven turrets');
-T.setViewport(1280,720);const up=T.turretGeometry(640,0,260,0,0),left=T.turretGeometry(640,-Math.PI/2,260,0,0),right=T.turretGeometry(640,Math.PI/2,260,1,0);
-assert(up.muzzles[0].x<640&&up.muzzles[1].x>640&&up.muzzles.every(m=>m.y<up.mountY),'up aim uses both real muzzle positions');
-assert(left.muzzles.every(m=>m.x<640)&&right.muzzles.every(m=>m.x>640),'left/right aim rotates both muzzles with the rigid head');
-assert.strictEqual(left.mountY,right.mountY,'stationary base mount does not rotate');
+T.setViewport(1280,720);assert(T.turretSize()<=190&&T.turretSize()<=720*.26,'cannon is compact so the playfield stays wide');T.setPlayerX(640);const gun=T.turretGeometry(640,180,0,0);assert(gun.muzzles[0].x<640&&gun.muzzles[1].x>640&&gun.muzzles.every(m=>m.y<gun.mountY),'small fixed cannon uses both real upward muzzle positions');
+const lim=T.cannonLimits();T.setPlayerX(-100);assert.strictEqual(T.playerX,lim.min,'left movement clamps inside screen');T.setPlayerX(9999);assert.strictEqual(T.playerX,lim.max,'right movement clamps inside screen');
+T.setPlayerX(640);T.setMove(true,false);T.step(.1);assert(T.playerX<640,'holding left moves cannon left');const afterLeft=T.playerX;T.setMove(false,true);T.step(.1);assert(T.playerX>afterLeft,'holding right moves cannon right');T.setMove(false,false);
 function pngInfo(file){
   const b=fs.readFileSync(file);assert.strictEqual(b.toString('ascii',1,4),'PNG',file+' is PNG');const w=b.readUInt32BE(16),h=b.readUInt32BE(20),depth=b[24],type=b[25],interlace=b[28];assert(depth===8&&type===6&&interlace===0,file+' is non-interlaced RGBA8');
   let at=8,idat=[];while(at<b.length){const n=b.readUInt32BE(at),name=b.toString('ascii',at+4,at+8);if(name==='IDAT')idat.push(b.subarray(at+8,at+8+n));at+=12+n;}
@@ -31,17 +27,18 @@ function pngInfo(file){
   for(let y=0;y<h;y++){const filter=raw[p++];for(let x=0;x<stride;x++){const v=raw[p++],a=x>=4?row[x-4]:0,bv=prev[x],c=x>=4?prev[x-4]:0;row[x]=(v+(filter===1?a:filter===2?bv:filter===3?Math.floor((a+bv)/2):filter===4?(()=>{const q=a+bv-c,pa=Math.abs(q-a),pb=Math.abs(q-bv),pc=Math.abs(q-c);return pa<=pb&&pa<=pc?a:pb<=pc?bv:c;})():0))&255;}for(let x=3;x<stride;x+=4){if(row[x]===0)transparent++;if(row[x]===255)opaque++;}row.copy(prev);}
   assert(transparent>0&&opaque>0,file+' has real transparent and opaque pixels');return{w,h};
 }
-for(const name of ['letter_cannon_base.png','letter_cannon_gun_head.png']){const path='assets/images/letter_cannon/'+name,info=pngInfo(path);assert.deepStrictEqual(info,{w:1254,h:1254},name+' dimensions');assert(build.includes(path),name+' copied by production build');}
+for(const name of ['letter_cannon_gun_head.png']){const path='assets/images/letter_cannon/'+name,info=pngInfo(path);assert.deepStrictEqual(info,{w:1254,h:1254},name+' dimensions');assert(build.includes(path),name+' copied by production build');}
 assert(build.includes("'assets/images/letter_cannon/'"),'git-archive fallback publishes the Letter Cannon asset directory');
 assert(html.includes('btn-rail-lettercannon')&&html.includes('js/lettercannon.js')&&html.includes('css/lettercannon.css'),'classic lobby entry and assets');
 assert(city.includes("bld('lettercannon'")&&city.includes('ป้อมพิทักษ์คำศัพท์'),'3D city entry and bilingual name');
 assert(main.includes("lettercannon:'#btn-rail-lettercannon'"),'3D go routing');
-assert(net.includes("'lettercannon'")&&rules.match(/\$map === 'lettercannon'/g).length>=3,'room discovery and Firebase map rules');
 assert(html.includes('btn-rail-lettercannon')&&html.includes('เปิดให้เฉพาะบัญชี Admin')&&html.includes('rail-lock'),'admin-only lobby lock is visible');
 assert(city.includes("go==='lettercannon'")&&city.includes('cityLetterCannonAdmin'),'3D city gate requires persisted admin authorization');
 assert(code.includes('function adminAllowed()')&&code.includes("if(!adminAllowed()){lockedNotice();return;}"),'admin-only gate protects direct game open and lobby event');
-assert(code.includes('drawImage(turretImages.base')&&code.includes('drawImage(turretImages.head')&&!code.includes("const base=ctx.createLinearGradient(-80"),'runtime uses new two-layer turret only');
-assert(!code.includes('id="lc-fire"')&&!code.includes('hud.fire')&&!code.includes('.lc-fire'),'old on-screen fire button and handlers removed');
-assert(code.includes('registerTap(now)')&&code.includes('tapPointers.set')&&code.includes('TAP_MOVE_PX'),'double tap fires globally while drag remains aim-only');assert((code.match(/resetTap\(\)/g)||[]).length>=4,'double-tap sequence resets on controls and lifecycle cleanup');
-assert(code.includes("touchcancel")&&code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()"),'input and lifecycle cleanup paths included');
-console.log('PASS Letter Cannon: double-tap firing, no fire button, admin gate, RGBA turret, touch cleanup, grade words, no penalty, powers, multiplayer seats');
+assert(code.includes('drawImage(turretImage')&&!code.includes('letter_cannon_base.png')&&!code.includes('baseClip'),'runtime renders only the smaller cannon head without its base');
+assert(code.includes('fire();')&&code.includes('const movePointers=new Map()')&&code.includes('id="lc-left"')&&code.includes('id="lc-right"'),'auto fire and left/right hold controls included');
+assert(!code.includes('NetRoom.create')&&!code.includes('netJoin()')&&!code.includes('drawPeerCannon'),'Letter Cannon is solo-only with no multiplayer runtime');
+assert(code.includes('function shockwave')&&code.includes('function impact')&&code.includes("globalCompositeOperation='lighter'"),'projectile and target impact spectacle included');
+assert(!code.includes('registerTap(now)')&&!code.includes('tapPointers.set'),'obsolete double-tap firing removed');
+assert(code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()")&&code.includes("movePointers.clear()"),'input and lifecycle cleanup paths included');
+console.log('PASS Letter Cannon: solo auto-fire, small base-free cannon, hold left/right movement, spectacle FX, admin gate, grade words, no penalty');

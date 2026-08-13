@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1149 · Letter Cannon โหมดปืนใหญ่เลื่อนอัตโนมัติ:** ตัดฐาน/การหมุน/reticle/double tap และ NetRoom ออกจาก runtime เหลือหัวปืนเล็กสูงไม่เกิน 25% ของสนาม ยิงขึ้นอัตโนมัติ เล่นเดี่ยว
+- เพิ่มปุ่มกดค้าง ◀ซ้าย/ขวา▶ ตรงสองมุมล่าง รองรับหลาย pointer+A/D/ลูกศรและ clamp ขอบจอ; ย้ายแถบพลังขึ้นไม่ทับปุ่ม พร้อม projectile glow/trail/muzzle shockwave/impact explosion
+- แก้ `lettercannon.js/css` + regression; syntax/regression/diff, build 8,304 ไฟล์/PWA และ Browser 1280×720 + 812×375 ผ่าน ไม่มี overflow/console error · รอ commit/deploy + Admin acceptance ออนไลน์
 - **รอบ 1148 · Letter Cannon ยิงด้วย double tap:** ถอดปุ่ม ยิง/FIRE และ CSS/handler เดิม; แตะหรือคลิกสองครั้งภายใน 380ms ที่ฝั่งซ้ายหรือขวาก็เล็งแล้วยิง 1 นัด โดยไม่ผูก pointer/มือ
 - ลากเกิน 24px ใช้เล็งอย่างเดียว ไม่ถูกนับเป็น tap; กดพัก/เสียง/ออก/สลับหน้าต่างจะล้างจังหวะแตะ กันยิงลั่น และ Spacebar ยังใช้เป็นทางเลือกบนคีย์บอร์ด
 - แก้ `lettercannon.js/css` + regression; syntax/regression/diff และ production build 8,304 ไฟล์/PWA/dist assertions ผ่าน · Browser local ถูก URL policy บล็อก จึงรอ acceptance บนหน้าออนไลน์หลัง deploy

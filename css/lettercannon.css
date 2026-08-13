@@ -1,5 +1,5 @@
 /* ============================================================
-   🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1134)
+   🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1149)
    Full-screen, landscape-first HUD. The game canvas owns scenery;
    this file keeps controls readable and dialogs inside 812×375.
    ============================================================ */
@@ -20,10 +20,11 @@
 .lc-iconbtn{width:clamp(32px,4.5vw,44px);height:clamp(30px,4.2vw,42px);border-radius:12px;border:1px solid rgba(166,238,255,.56);background:linear-gradient(#234f91,#172a67);color:#fff;font-size:clamp(15px,2.1vw,21px);box-shadow:0 4px 12px rgba(0,0,0,.28);cursor:pointer}
 .lc-iconbtn:active{transform:translateY(2px)}
 .lc-exitwide{width:auto;min-width:108px;padding:0 9px;font-size:clamp(10px,1.25vw,14px);font-weight:900;background:linear-gradient(#d85a63,#832c62);white-space:nowrap}
-.lc-room{position:absolute;top:calc(65px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));z-index:2;max-width:240px;padding:4px 10px;color:#bff5ff;font-size:clamp(9px,1.1vw,12px);text-align:right;pointer-events:none}
-.lc-power{grid-column:1;grid-row:3;align-self:end;padding:7px 10px;max-width:220px;font-size:clamp(9px,1.2vw,13px)}
+.lc-power{position:absolute;left:calc(9px + env(safe-area-inset-left));bottom:calc(clamp(46px,8vh,66px) + 16px + env(safe-area-inset-bottom));width:clamp(118px,20vw,220px);padding:7px 10px;font-size:clamp(9px,1.2vw,13px)}
 .lc-power-name{font-weight:900;color:#ffe76c}.lc-power-bar{height:6px;border-radius:9px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:4px}.lc-power-fill{height:100%;width:0;background:linear-gradient(90deg,#56ecff,#c764ff,#ffdb54);box-shadow:0 0 10px #6defff}
 .lc-hint{grid-column:2;grid-row:3;align-self:end;justify-self:center;padding:5px 12px;color:#d9f6ff;font-size:clamp(9px,1.2vw,13px);text-align:center;transition:opacity .25s}
+.lc-move{position:absolute;bottom:calc(7px + env(safe-area-inset-bottom));z-index:2;width:clamp(92px,14vw,150px);height:clamp(46px,8vh,66px);display:flex;align-items:center;justify-content:center;gap:9px;border:2px solid rgba(117,239,255,.9);border-radius:17px;background:linear-gradient(145deg,rgba(23,87,165,.9),rgba(36,24,112,.92));box-shadow:0 0 0 4px rgba(53,209,255,.15),inset 0 0 20px rgba(93,233,255,.2),0 8px 25px rgba(0,0,0,.32);color:#fff;font:900 clamp(17px,2.4vw,27px) Kanit;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+.lc-move span{font-size:.55em}.lc-move-left{left:calc(9px + env(safe-area-inset-left))}.lc-move-right{right:calc(9px + env(safe-area-inset-right))}.lc-move.down{transform:translateY(2px) scale(.96);filter:brightness(1.35);box-shadow:0 0 28px rgba(68,235,255,.85),inset 0 0 24px rgba(255,255,255,.28)}
 .lc-modal{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:10px;background:rgba(2,7,27,.62);backdrop-filter:blur(6px);pointer-events:auto}
 .lc-modal.lc-countdown{pointer-events:auto;background:rgba(2,7,27,.3)}
 .lc-count-exit{position:absolute;right:12px;bottom:12px}
@@ -36,6 +37,6 @@
 @keyframes lc-toast{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-85%) scale(.96)}}
 .lc-rotate{display:none}
 @media(orientation:portrait) and (max-width:700px){.lc-rotate{display:grid;position:absolute;inset:0;z-index:8;place-items:center;text-align:center;padding:28px;background:linear-gradient(145deg,#091943,#401d76);font-size:20px;font-weight:800}.lc-hud,.lc-game-canvas{visibility:hidden}}
-@media(max-height:430px){.lc-hud{padding-top:4px;padding-bottom:4px}.lc-glass{border-radius:11px}.lc-stats{padding:4px 7px}.lc-wordbox{padding:3px 12px}.lc-meaning{display:none}.lc-power{padding:4px 7px}.lc-hint{padding:3px 8px}.lc-card{padding:10px 14px}.lc-card p{margin:3px 0}.lc-card .lc-buttons{margin-top:6px}.lc-btn{padding:6px 14px}}
-@media(max-width:900px){.lc-hud{grid-template-columns:118px 1fr 190px}.lc-wordbox{padding-left:8px;padding-right:8px}.lc-room{top:53px}}
+@media(max-height:430px){.lc-hud{padding-top:4px;padding-bottom:4px}.lc-glass{border-radius:11px}.lc-stats{padding:4px 7px}.lc-wordbox{padding:3px 12px}.lc-meaning{display:none}.lc-power{padding:4px 7px}.lc-hint{padding:3px 8px}.lc-card{padding:10px 14px}.lc-card p{margin:3px 0}.lc-card .lc-buttons{margin-top:6px}.lc-btn{padding:6px 14px}.lc-move{bottom:4px;height:44px}}
+@media(max-width:900px){.lc-hud{grid-template-columns:118px 1fr 190px}.lc-wordbox{padding-left:8px;padding-right:8px}}
 @media(prefers-reduced-motion:reduce){#lc-game *{animation-duration:.01ms!important;transition-duration:.01ms!important}.lc-slot.done{animation:none}}
