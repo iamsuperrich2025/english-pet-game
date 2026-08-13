@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1150)
+   🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1152)
    Endless vocabulary spelling: shoot the next letter in order.
    No penalty, no health loss, no game over. Solo press-to-fire cannon.
    ============================================================ */
@@ -25,24 +25,25 @@
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   const pick=a=>a[(Math.random()*a.length)|0];
   const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];}return a;};
-  let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false;
+  const ANNOUNCEMENT_KEY='vwLetterCannonAnnouncement1152';
+  let root=null,canvas=null,ctx=null,raf=0,abort=null,audio=null,opening=false,saveTimer=0;
   let W=0,H=0,dpr=1,last=0,elapsed=0,running=false,paused=false,counting=false;
   let word=null,pos=0,queue=[],queueGrade='',score=0,combo=0,wordsDone=0,coinsRun=0;
   let fireAt=0,spawnAt=0,powerAt=0,playerX=0,playerVX=0;
   let activePower=null,powerLeft=0,powerTotal=0,shake=0,flash=0,flashSide=0,barrelCycle=0;
   const movePointers=new Map(),firePointers=new Map();let keyLeft=false,keyRight=false,keyFire=false;
-  let letters=[],bullets=[],particles=[],shockwaves=[],stars=[],clouds=[];
+  let letters=[],bullets=[],particles=[],shockwaves=[],stars=[],clouds=[],letterSeq=0,rewardedLetters=new Set();
   let hud={},timers=new Set(),turretImage=null,turretLoad=null;
-  function adminAllowed(){
-    return typeof isAdmin==='function' && isAdmin();
-  }
-  function lockedNotice(){
-    if(typeof sfx!=='undefined'&&sfx.wrong)sfx.wrong();
-    if(typeof toast==='function')toast('🔒 Letter Cannon เปิดให้เฉพาะบัญชี Admin ในขณะนี้');
-  }
-  function refreshLock(){const b=document.getElementById('btn-rail-lettercannon');if(!b)return;const locked=!adminAllowed();b.classList.toggle('tester-locked',locked);b.title=locked?'เปิดให้เฉพาะบัญชี Admin':'Letter Cannon';const lk=b.querySelector('.rail-lock');if(lk)lk.style.display=locked?'':'none';}
   function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn();},ms);timers.add(id);return id;}
   function clearTimers(){timers.forEach(clearTimeout);timers.clear();}
+  function queueCloudSave(){
+    if(saveTimer){clearTimeout(saveTimer);timers.delete(saveTimer);}
+    saveTimer=later(()=>{saveTimer=0;if(typeof authPushSave==='function')authPushSave(false);},650);
+  }
+  function flushCloudSave(){
+    if(saveTimer){clearTimeout(saveTimer);timers.delete(saveTimer);saveTimer=0;}
+    if(typeof authPushSave==='function')authPushSave(false);
+  }
   function loadTurretAssets(){
     if(turretImage)return Promise.resolve(turretImage);
     if(turretLoad)return turretLoad;
@@ -81,7 +82,7 @@
     if(letters.filter(o=>o.alive).length>=MAX_LETTERS)return null;
     const r=clamp(Math.min(W,H)*.041,19,35),level=Math.min(12,wordsDone);
     const o=letters.find(x=>!x.alive)||{};
-    Object.assign(o,{alive:true,kind:'letter',ch:ch||pick(AZ),x:safeX(r),y:-r-Math.random()*H*.08,r,vy:(H*(.052+level*.0026))*(priority?.86:1)*(activePower&&activePower.id==='freeze'?.46:1),phase:Math.random()*6.28,spin:(Math.random()-.5)*.45,priority:!!priority,hit:0});
+    Object.assign(o,{alive:true,kind:'letter',ch:ch||pick(AZ),x:safeX(r),y:-r-Math.random()*H*.08,r,vy:(H*(.052+level*.0026))*(priority?.86:1)*(activePower&&activePower.id==='freeze'?.46:1),phase:Math.random()*6.28,spin:(Math.random()-.5)*.45,priority:!!priority,hit:0,coinAwarded:false,rewardId:++letterSeq});
     if(!letters.includes(o))letters.push(o);return o;
   }
   function ensureNeeded(force){if(!word)return;if(force||!neededAlive())spawnLetter(nextNeeded(),true);}
@@ -116,7 +117,7 @@
     if(o.ch===nextNeeded()){correct(o);}else{wrong(o);}
   }
   function correct(o){
-    const x=o.x,y=o.y,r=o.r;o.alive=false;pos++;combo++;const mul=activePower&&activePower.id==='double'?2:1;score+=10*mul+Math.min(50,combo*2);impact(x,y,'#ffe96f',30,r);toast('✅ '+o.ch+(combo>2?'  COMBO '+combo:'') ,'#fff07b');sound('correct');
+    const x=o.x,y=o.y,r=o.r;o.alive=false;pos++;combo++;awardLetterCoin(o,x,y);const mul=activePower&&activePower.id==='double'?2:1;score+=10*mul+Math.min(50,combo*2);impact(x,y,'#ffe96f',30,r);toast('✅ '+o.ch+(combo>2?'  COMBO '+combo:'') ,'#fff07b');sound('correct');
     if(activePower&&activePower.id==='chain'){const decoy=letters.find(v=>v.alive&&v.kind==='letter'&&v.ch!==nextNeeded());if(decoy){decoy.alive=false;lightning(x,y,decoy.x,decoy.y);burst(decoy.x,decoy.y,'#b98aff',9);}}
     if(pos>=word.en.length)completeWord();else{ensureNeeded(true);renderHud();}
   }
@@ -124,9 +125,18 @@
     o.hit=.48;impact(o.x,o.y,'#76dfff',16,o.r*.72);toast('🔤 ต้องหา '+nextNeeded()+' — ลองใหม่นะ','#8fe9ff');sound('soft');
   }
   function completeWord(){
-    wordsDone++;const reward=word.en.length*(activePower&&activePower.id==='double'?2:1);coinsRun+=reward;score+=100+word.en.length*12;
-    if(typeof addCoins==='function')addCoins(reward);if(typeof saveState==='function')saveState();if(typeof speakWord==='function')speakWord(word.en.toLowerCase());
-    toast('🌟 '+word.en+' · '+word.th+'  +'+reward+' 🪙','#ffe85c');celebrate();later(()=>{if(running)nextWord();},820);
+    wordsDone++;score+=100+word.en.length*12;
+    if(typeof speakWord==='function')speakWord(word.en.toLowerCase());
+    toast('🌟 '+word.en+' · '+word.th+'  ครบคำ!','#ffe85c');celebrate();later(()=>{if(running)nextWord();},820);
+  }
+  function awardLetterCoin(o,x,y){
+    if(!o||o.coinAwarded||rewardedLetters.has(o.rewardId))return false;o.coinAwarded=true;rewardedLetters.add(o.rewardId);coinsRun++;
+    if(typeof addCoins==='function')addCoins(1);if(typeof saveState==='function')saveState();queueCloudSave();coinFx(x,y);sound('coin');renderHud();return true;
+  }
+  function coinFx(x,y){
+    if(!root)return;const e=document.createElement('div');e.className='lc-coinfx';e.style.left=x+'px';e.style.top=y+'px';e.innerHTML='<span class="lc-coin-disk">🪙</span><b>+1 เหรียญ</b>';root.appendChild(e);
+    if(hud.coins){hud.coins.classList.remove('pop');void hud.coins.offsetWidth;hud.coins.classList.add('pop');}
+    later(()=>{e.remove();if(hud.coins)hud.coins.classList.remove('pop');},1150);
   }
   function activate(p){
     if(p.id==='nova'){letters.forEach(o=>{if(o.alive&&o.kind==='letter'&&o.ch!==nextNeeded()){o.alive=false;burst(o.x,o.y,p.color,8);}});toast('✺ NOVA — เคลียร์ตัวหลอก!','#fff18c');shake=7;return;}
@@ -142,7 +152,7 @@
 
   function sound(type){
     if(typeof state!=='undefined'&&!state.sound)return;
-    try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const t=audio.currentTime,o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type=type==='shot'?'sawtooth':type==='soft'?'sine':'triangle';const f=type==='correct'?740:type==='win'?520:type==='power'?980:type==='beam'?1250:type==='soft'?260:155;o.frequency.setValueAtTime(f,t);o.frequency.exponentialRampToValueAtTime(type==='shot'?75:f*1.55,t+.12);g.gain.setValueAtTime(type==='shot'?.08:.06,t);g.gain.exponentialRampToValueAtTime(.001,t+(type==='win'?.42:.16));o.start(t);o.stop(t+.45);}catch(e){}
+    try{audio=audio||new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const t=audio.currentTime,f=type==='correct'?740:type==='coin'?880:type==='win'?520:type==='power'?980:type==='beam'?1250:type==='soft'?260:155,notes=type==='coin'?[f,f*1.5]:[f];notes.forEach((hz,i)=>{const at=t+i*.075,o=audio.createOscillator(),g=audio.createGain();o.connect(g);g.connect(audio.destination);o.type=type==='shot'?'sawtooth':type==='soft'?'sine':'triangle';o.frequency.setValueAtTime(hz,at);if(type==='shot')o.frequency.exponentialRampToValueAtTime(75,at+.12);g.gain.setValueAtTime(type==='shot'?.08:type==='coin'?.075:.06,at);g.gain.exponentialRampToValueAtTime(.001,at+(type==='win'?.42:.16));o.start(at);o.stop(at+.45);});}catch(e){}
   }
   function renderHud(){
     if(!root||!word)return;hud.target.textContent=word.en;hud.meaning.textContent=(word.th||'คำศัพท์ระดับ '+grade())+' · '+grade();hud.progress.innerHTML=word.en.split('').map((c,i)=>'<span class="lc-slot '+(i<pos?'done':'')+'">'+(i<pos?c:'•')+'</span>').join('');hud.score.textContent=score.toLocaleString();hud.combo.textContent=combo.toLocaleString();hud.words.textContent=wordsDone.toLocaleString();hud.coins.textContent=coinsRun.toLocaleString();
@@ -180,7 +190,7 @@
     if(elapsed>powerAt){spawnPower();powerAt=elapsed+14+Math.random()*8;}
     ensureNeeded(false);
     if(firePointers.size||keyFire)fire();
-    letters.forEach(o=>{if(!o.alive)return;o.hit=Math.max(0,o.hit-dt);const slow=activePower&&activePower.id==='freeze'?.44:1;o.y+=o.vy*slow*dt;if(o.y>H*.83+o.r){o.alive=false;burst(o.x,H*.8,'#59dfff',5);}});
+    letters.forEach(o=>{if(!o.alive)return;o.hit=Math.max(0,o.hit-dt);const slow=activePower&&activePower.id==='freeze'?.44:1;o.y+=o.vy*slow*dt;if(o.y>H*.72+o.r){o.alive=false;burst(o.x,H*.7,'#59dfff',5);}});
     bullets.forEach(b=>{if(!b.alive)return;b.px=b.x;b.py=b.y;if(b.homing){const n=letters.find(o=>o.alive&&o.kind==='letter'&&o.ch===nextNeeded());if(n){const a=Math.atan2(n.y-b.y,n.x-b.x),s=Math.hypot(b.vx,b.vy);b.vx+=(Math.cos(a)*s-b.vx)*dt*7;b.vy+=(Math.sin(a)*s-b.vy)*dt*7;}}b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;if(b.life<=0||b.x<0||b.x>W||b.y<0)b.alive=false;if(!b.alive)return;if(Math.random()<.8)particle(b.x,b.y,b.side?'#ffb25b':'#65f4ff',Math.atan2(-b.vy,-b.vx)+(Math.random()-.5)*.7,20+Math.random()*90,.2+Math.random()*.16,1.5+Math.random()*3);for(const o of letters){if(o.alive&&Math.hypot(b.x-o.x,b.y-o.y)<o.r+7){b.alive=false;hit(o,b.side);break;}}});
     particles.forEach(p=>{if(!p.alive)return;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=90*dt;p.life-=dt;if(p.life<=0)p.alive=false;});
     shockwaves.forEach(o=>{if(o.alive&&(o.life-=dt)<=0)o.alive=false;});
@@ -210,10 +220,20 @@
     root=document.createElement('div');root.id='lc-game';root.innerHTML='<canvas class="lc-game-canvas" aria-label="สนาม Letter Cannon — กดปุ่มยิงและเลื่อนปืนซ้ายขวา"></canvas><div class="lc-hud"><div class="lc-stats lc-glass"><div class="lc-stat"><span>คะแนน</span><b id="lc-score">0</b></div><div class="lc-stat"><span>Combo</span><b id="lc-combo">0</b></div><div class="lc-stat"><span>คำสำเร็จ</span><b id="lc-words">0</b></div><div class="lc-stat"><span>เหรียญรอบนี้</span><b id="lc-coins">0</b></div></div><div class="lc-wordbox lc-glass"><div class="lc-target" id="lc-target"></div><div class="lc-meaning" id="lc-meaning"></div><div class="lc-progress" id="lc-progress"></div></div><div class="lc-actions"><button class="lc-iconbtn" id="lc-sound" title="เปิด/ปิดเสียง">🔊</button><button class="lc-iconbtn" id="lc-pause-btn" title="พัก">⏸</button><button class="lc-iconbtn lc-exitwide" id="lc-exit" title="ออกจากเกมกลับ Lobby">🚪 ออกจากเกม</button></div><div class="lc-power lc-glass"><div class="lc-power-name" id="lc-power-name">ปืนพลังอักษร</div><div class="lc-power-bar"><div class="lc-power-fill" id="lc-power-fill"></div></div></div><div class="lc-hint lc-glass"><b>กดค้างปุ่มยิงเพื่อยิง</b> · เลื่อนซ้าย/ขวาอย่างลื่นไหล · ผิดไม่เสียอะไร</div><button class="lc-shoot lc-shoot-left" id="lc-fire-left" aria-label="ยิงจากปุ่มฝั่งซ้าย">🔥<span>ยิง</span></button><button class="lc-shoot lc-shoot-right" id="lc-fire-right" aria-label="ยิงจากปุ่มฝั่งขวา"><span>ยิง</span>🔥</button><button class="lc-move lc-move-left" id="lc-left" aria-label="เลื่อนปืนไปทางซ้าย">◀<span>ซ้าย</span></button><button class="lc-move lc-move-right" id="lc-right" aria-label="เลื่อนปืนไปทางขวา"><span>ขวา</span>▶</button></div><div class="lc-rotate">📱↻<br>หมุนโทรศัพท์เป็นแนวนอน<br>เพื่อเห็นสนามได้กว้างเต็มจอ</div>';
     document.body.appendChild(root);canvas=root.querySelector('canvas');ctx=canvas.getContext('2d',{alpha:false});['score','combo','words','coins','target','meaning','progress','power-name','power-fill','pause-btn','exit','sound','left','right','fire-left','fire-right'].forEach(k=>hud[k.replace(/-([a-z])/g,(_m,c)=>c.toUpperCase())]=root.querySelector('#lc-'+k));hud.powerName=root.querySelector('#lc-power-name');hud.powerFill=root.querySelector('#lc-power-fill');hud.pause=root.querySelector('#lc-pause-btn');
   }
-  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerVX=0;bind();score=combo=wordsDone=coinsRun=pos=0;elapsed=0;spawnAt=.4;powerAt=9;letters=[];bullets=[];particles=[];shockwaves=[];activePower=null;barrelCycle=flashSide=0;running=true;paused=false;nextWord();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();last=performance.now();raf=requestAnimationFrame(frame);tutorial();}
-  function open(){if(running||opening)return;if(!adminAllowed()){lockedNotice();return;}opening=true;loadTurretAssets().then(startGame).catch(err=>{opening=false;console.error(err);if(typeof toast==='function')toast('⚠️ โหลดภาพป้อมไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
-  function close(){opening=false;running=false;movePointers.clear();firePointers.clear();keyLeft=keyRight=keyFire=false;playerVX=0;clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
-  function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b){refreshLock();b.addEventListener('click',()=>{refreshLock();if(!adminAllowed()){lockedNotice();return;}if(typeof closePanel==='function')closePanel();open();});}}
+  function startGame(){if(!opening||running)return;opening=false;buildDom();layout();playerX=W*.5;playerVX=0;bind();score=combo=wordsDone=coinsRun=pos=0;elapsed=0;spawnAt=.4;powerAt=9;letters=[];bullets=[];particles=[];shockwaves=[];rewardedLetters.clear();activePower=null;barrelCycle=flashSide=0;running=true;paused=false;nextWord();if(typeof Music!=='undefined'&&Music.suspendBg)Music.suspendBg();last=performance.now();raf=requestAnimationFrame(frame);tutorial();}
+  function open(){if(running||opening)return;opening=true;loadTurretAssets().then(startGame).catch(err=>{opening=false;console.error(err);if(typeof toast==='function')toast('⚠️ โหลดภาพป้อมไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่');});}
+  function close(){opening=false;running=false;movePointers.clear();firePointers.clear();keyLeft=keyRight=keyFire=false;playerVX=0;flushCloudSave();clearTimers();cancelAnimationFrame(raf);if(abort)abort.abort();abort=null;letters.length=bullets.length=particles.length=shockwaves.length=0;try{if(audio&&audio.state==='running')audio.suspend();}catch(e){}if(root)root.remove();root=canvas=ctx=null;if(typeof Music!=='undefined'&&Music.resumeBg)Music.resumeBg();if(typeof renderDashboard==='function')renderDashboard();}
+  function announcementSeen(){try{return !!(typeof state!=='undefined'&&state.letterCannonAnnouncementSeen)||localStorage.getItem(ANNOUNCEMENT_KEY)==='1';}catch(e){return false;}}
+  function rememberAnnouncement(){try{localStorage.setItem(ANNOUNCEMENT_KEY,'1');}catch(e){}if(typeof state!=='undefined'){state.letterCannonAnnouncementSeen=true;if(typeof saveState==='function')saveState();if(typeof authPushSave==='function')authPushSave(false);}}
+  function guideToMenu(){if(typeof closePanel==='function')closePanel();const b=document.getElementById('btn-rail-lettercannon');if(!b)return;setTimeout(()=>{b.scrollIntoView({behavior:'smooth',block:'center'});b.classList.add('lc-menu-highlight');try{b.focus({preventScroll:true});}catch(e){b.focus();}setTimeout(()=>b.classList.remove('lc-menu-highlight'),5200);},120);}
+  function maybeShowAnnouncement(){
+    if(announcementSeen()||document.getElementById('lc-announce')||typeof state==='undefined'||!state.student||typeof Auth==='undefined'||!Auth.booted)return false;
+    const dashboard=document.getElementById('screen-dashboard');if(dashboard&&!dashboard.classList.contains('active'))return false;
+    const m=document.createElement('div');m.id='lc-announce';m.className='lc-announce';m.innerHTML='<div class="lc-announce-card" role="dialog" aria-modal="true" aria-labelledby="lc-announce-title"><button class="lc-announce-close" aria-label="ปิดประกาศ">×</button><div class="lc-announce-icon">🔤💥</div><h2 id="lc-announce-title">เกมใหม่ Letter Cannon เปิดแล้ว!</h2><p>เลื่อนปืนแล้วยิงตัวอักษรให้ครบคำ รับ <b>1 เหรียญทุกตัวอักษรที่ถูกต้อง</b><br>เล่นได้เรื่อย ๆ และยิงผิดไม่เสียอะไรครับ</p><div class="lc-buttons"><button class="lc-btn primary" data-a="interest">สนใจ</button><button class="lc-btn" data-a="close">ปิด</button></div></div>';document.body.appendChild(m);
+    const done=guide=>{rememberAnnouncement();m.remove();if(guide)guideToMenu();};m.querySelector('[data-a=interest]').onclick=()=>done(true);m.querySelector('[data-a=close]').onclick=()=>done(false);m.querySelector('.lc-announce-close').onclick=()=>done(false);return true;
+  }
+  function watchAnnouncement(){if(maybeShowAnnouncement()||typeof MutationObserver==='undefined')return;const ob=new MutationObserver(()=>{if(maybeShowAnnouncement())ob.disconnect();});ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});}
+  function bindRail(){const b=document.getElementById('btn-rail-lettercannon');if(b)b.addEventListener('click',()=>{if(typeof closePanel==='function')closePanel();open();});watchAnnouncement();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail);else bindRail();
-  window.LetterCannon={open,close,refreshLock,_t:{adminAllowed,wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,fire,hit,activate,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerVX(){return playerVX;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right){keyLeft=!!left;keyRight=!!right;},setFire(v){keyFire=!!v;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;},step(dt){update(dt||.016);},TURRET,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS}};
+  window.LetterCannon={open,close,maybeShowAnnouncement,guideToMenu,_t:{wordPool,nextWord,ensureNeeded,spawnLetter,spawnPower,fire,hit,activate,awardLetterCoin,turretGeometry,turretSize,cannonLimits,get word(){return word;},get pos(){return pos;},get score(){return score;},get combo(){return combo;},get wordsDone(){return wordsDone;},get coinsRun(){return coinsRun;},get running(){return running;},get paused(){return paused;},get playerX(){return playerX;},get playerVX(){return playerVX;},get letters(){return letters;},get bullets(){return bullets;},get particles(){return particles;},get shockwaves(){return shockwaves;},get activePower(){return activePower;},setPlayerX(x){playerX=clamp(x,cannonLimits().min,cannonLimits().max);playerVX=0;},setMove(left,right){keyLeft=!!left;keyRight=!!right;},setFire(v){keyFire=!!v;},setViewport(w,h){W=w;H=h;if(!playerX)playerX=W*.5;},step(dt){update(dt||.016);},TURRET,SHOT_ANGLE,POWER,MAX_LETTERS,MAX_BULLETS}};
 })();

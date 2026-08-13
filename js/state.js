@@ -164,6 +164,9 @@ const DEFAULT_STATE = {
   owned:[],                           // ไอเทมที่ซื้อแล้ว (ตู้เสื้อผ้ารวม ใช้ได้ทุกตัว)
   pets:[],                            // สัตว์ที่เลี้ยงอยู่ทั้งหมด (ซื้อเพิ่มได้ ไม่ลบตัวเดิม)
   active:0,                           // ตัวที่กำลังดูแลอยู่
+  petPantry:{shelfId:null,stock:{}},  // 🗄️ ชั้นอาหารที่ซื้อ + จำนวนอาหารแต่ละชนิด (อาหารทุกชิ้นใช้ 1 ช่อง)
+  petShoppingGrantVer:0,             // 🎁 รุ่นเงินช่วยปรับตัวระบบชั้นอาหาร (กันจ่าย 10,000 ซ้ำ)
+  petShoppingGrantNotice:null,       // กล่องเงินเข้าที่ค้างจนผู้เล่นกดรับทราบ
   home:null,                          // 'basic' | 'medium' | 'castle'
   ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
   bills:{},                           // บิลรายเดือน: {maint:{month:'YYYY-MM', due, paid}, ...} (ค่าไฟ/น้ำ/เน็ต/ขยะ เสียบเพิ่มได้ · trash มี field fine สะสมค่าปรับ)
@@ -225,6 +228,54 @@ const DEFAULT_STATE = {
                                       // 📰 รอบ 155 (default เปิดทุกหมวดตั้งแต่รอบ 565): หมวดกิจกรรมที่ยอมรายงานขึ้น profile/feed — ปิดเองได้ทีหลังในตั้งค่า
   follows:{},                         // 📰 รอบ 155: คนที่เรา follow {uid:{n:ชื่อ, g:ชั้น, ts}} — feed หน้า lobby รวมกิจกรรมของคนกลุ่มนี้
 };
+
+/* ============================================================
+   🗄️🐾 ระบบชั้นอาหาร + เงินช่วยปรับตัว
+   - normalize ทุกครั้งหลังอ่าน local/cloud save เพราะ nested object ไม่ได้ merge ลึกด้วย Object.assign
+   - เงิน 10,000 เข้าเพียงครั้งเดียวต่อรุ่น และ notice ไม่ถูกล้างจนกดรับทราบใน main.js
+   ============================================================ */
+function migratePetShoppingState(s){
+  const shelves = (typeof PET_PANTRY_SHELVES !== 'undefined' && Array.isArray(PET_PANTRY_SHELVES))
+    ? PET_PANTRY_SHELVES : [];
+  const shelfIds = new Set(shelves.map(x=>x.id));
+  const pantry = s.petPantry && typeof s.petPantry === 'object' && !Array.isArray(s.petPantry)
+    ? s.petPantry : {shelfId:null,stock:{}};
+  pantry.shelfId = shelfIds.has(pantry.shelfId) ? pantry.shelfId : null;
+  const rawStock = pantry.stock && typeof pantry.stock === 'object' && !Array.isArray(pantry.stock)
+    ? pantry.stock : {};
+  const validIds = new Set([
+    ...(typeof FOODS !== 'undefined' ? FOODS.map(f=>f.id) : []),
+    'fav_dog','fav_cat','fav_dragon',
+  ]);
+  const stock = {};
+  for(const id of validIds){
+    const n = Math.max(0, Math.floor(Number(rawStock[id]) || 0));
+    if(n) stock[id] = n;
+  }
+  const shelf = shelves.find(x=>x.id === pantry.shelfId);
+  let room = shelf ? Math.max(0, Math.floor(Number(shelf.capacity)||0)) : 0;
+  for(const id of Object.keys(stock)){
+    const keep = Math.min(stock[id], room);
+    if(keep) stock[id] = keep; else delete stock[id];
+    room -= keep;
+  }
+  pantry.stock = stock;
+  s.petPantry = pantry;
+
+  const ver = (typeof PET_SHOPPING_GRANT_VERSION === 'number') ? PET_SHOPPING_GRANT_VERSION : 1;
+  const amount = (typeof PET_SHOPPING_GRANT_AMOUNT === 'number') ? PET_SHOPPING_GRANT_AMOUNT : 10000;
+  const oldVer = Math.max(0, Math.floor(Number(s.petShoppingGrantVer)||0));
+  if(oldVer < ver){
+    s.coins = Math.max(0, Number(s.coins)||0) + amount;
+    s.lifetimeCoins = Math.max(0, Number(s.lifetimeCoins)||0) + amount;
+    s.petShoppingGrantVer = ver;
+    s.petShoppingGrantNotice = {version:ver,amount,at:Date.now()};
+  }else{
+    s.petShoppingGrantVer = oldVer;
+    if(!s.petShoppingGrantNotice || typeof s.petShoppingGrantNotice !== 'object') s.petShoppingGrantNotice = null;
+  }
+  return s;
+}
 
 /* 📰 รอบ 155: หมวดกิจกรรมที่รายงานได้ (ใช้ร่วม settings/profile/feed) */
 const FEED_CATS = {
@@ -644,10 +695,10 @@ function loadState(){
       for(const k of Object.keys(DEFAULT_STATE.feedShare))
         if(typeof s.feedShare[k] !== 'boolean') s.feedShare[k] = DEFAULT_STATE.feedShare[k];
       if(!s.follows || typeof s.follows !== 'object' || Array.isArray(s.follows)) s.follows = {};
-      return s;
+      return migratePetShoppingState(s);
     }
   }catch(e){ /* ข้อมูลเสีย เริ่มใหม่ */ }
-  return structuredClone(DEFAULT_STATE);
+  return migratePetShoppingState(structuredClone(DEFAULT_STATE));
 }
 function saveState(){
   state.savedAt = Date.now();          // ตราเวลาเซฟ (ไว้เทียบกับเซฟ cloud ใน auth.js)
@@ -757,6 +808,10 @@ function assetValue(){
   if(state.home){ const h = homeInfo(state.home); if(h) v += h.price; }                    // ที่พัก
   if(state.ac) v += AC_PRICE + AC_INSTALL;                                                 // แอร์ (รวมติดตั้ง)
   for(const id of state.owned){ const it = ITEMS.find(i=>i.id === id); if(it) v += it.price; } // เสื้อผ้าในตู้
+  if(state.petPantry && state.petPantry.shelfId && typeof PET_PANTRY_SHELVES !== 'undefined'){
+    const shelf = PET_PANTRY_SHELVES.find(x=>x.id === state.petPantry.shelfId);
+    if(shelf) v += shelf.price;                                                            // ชั้นอาหารเป็นทรัพย์สินถาวร; อาหารเป็นของสิ้นเปลืองจึงไม่นับ
+  }
   if(state.phone) v += PHONE_PRICE;                                                        // มือถือ (ราคาเต็ม)
   if(state.computer) v += COMP_PRICE;                                                      // คอม (ราคาเต็ม)
   // 🎫→💰 รอบ 822: ตั๋วโลก 3D ไม่ใช่ทรัพย์สินถาวรแล้ว (จ่าย WORLD_ENTRY_FEE เป็นค่าเข้าทุกครั้ง ไม่ใช่ของที่ถือครอง) — เลิกนับใน net worth
@@ -779,6 +834,7 @@ function assetCount(){
   if(state.home) n += 1;                   // ที่พัก
   if(state.ac) n += 1;                      // แอร์
   n += state.owned.length;                 // เสื้อผ้าในตู้
+  if(state.petPantry && state.petPantry.shelfId) n += 1; // ชั้นเก็บอาหาร
   if(state.phone) n += 1;                   // มือถือ
   if(state.computer) n += 1;                // คอม
   n += state.farm.length;                  // ต้นไม้ในสวน

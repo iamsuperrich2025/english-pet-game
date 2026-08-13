@@ -30,6 +30,27 @@
     pd.total = pd.sheets.length;
   }
 
+  /* API กลางสำหรับโหมดอื่นที่ต้องใช้คำ/ตำแหน่งในหนังสือ
+     เพื่อไม่ให้ผูกกับโครงหน้าภายใน (เดิมโหมดออนไลน์พังเมื่อเลิกใช้หนังสือสองหน้า) */
+  function wordEntries(){
+    buildData();
+    const out=[];
+    pd.sheets.forEach((sheet,sheetIndex)=>{
+      wordsFor(sheet).forEach((word,wordIndex)=>{
+        if(word&&word[0]) out.push({en:String(word[0]),th:String(word[1]||''),sheet:sheetIndex,word:wordIndex});
+      });
+    });
+    return out;
+  }
+
+  function goToWord(sheetIndex,wordIndex){
+    build(); buildData();
+    const next=Math.max(0,Math.min(pd.sheets.length-1,Number(sheetIndex)||0));
+    pd.sheet=next; pd.group=(currentSheet()&&currentSheet().group)||0;
+    pd.page=Math.max(0,Math.floor((Number(wordIndex)||0)/PAGE_SIZE));
+    render();
+  }
+
   function build(){
     if(sec) return sec;
     sec = document.createElement('section');
@@ -387,5 +408,5 @@
     });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bind); else bind();
-  window.PicDict={open,openQuiz,exit,_t:{pd,qz,swipe,render,changePage,bindSwipe,settleSwipe,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData}};
+  window.PicDict={open,openQuiz,exit,_t:{pd,qz,swipe,render,changePage,bindSwipe,settleSwipe,qzStart,qzStop,qzAsk,qzCells,drawCard,buildData,wordEntries,goToWord}};
 })();

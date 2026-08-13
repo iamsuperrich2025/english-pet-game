@@ -239,6 +239,15 @@ function petBondActionLine(p, stateName){
   return null;
 }
 
+const PET_BOND_TALK_MS = 60 * 1000;
+const __petBondTalkSlots = new WeakMap();
+
+function petBondTalkPriority(stateName){
+  if(stateName === 'care') return 3;
+  if(stateName === 'cuddle') return 2;
+  return 1;
+}
+
 function updatePetBondTalk(card, p, stateName){
   const box = card && card.querySelector('.bond-talk'); if(!box) return;
   const h = typeof homeInfo === 'function' ? homeInfo(state.home) : null;
@@ -250,6 +259,30 @@ function updatePetBondTalk(card, p, stateName){
   if(note) note.textContent = stateName === 'care' ? '🔬 เกร็ดวิทยาศาสตร์สุขภาพจากน้อง' : '💞 แตะตัวน้องเพื่อทักทาย';
   box.classList.toggle('is-cuddle', stateName === 'cuddle');
   box.classList.toggle('is-care', stateName === 'care');
+}
+
+function startPetBondTalkHold(card){
+  if(!card || __petBondTalkSlots.has(card)) return;
+  // The message rendered with the card also deserves a full minute on screen.
+  __petBondTalkSlots.set(card, {nextAt:Date.now() + PET_BOND_TALK_MS, pendingState:'', timer:0});
+}
+
+function queuePetBondTalk(card, p, stateName){
+  if(!card) return;
+  startPetBondTalkHold(card);
+  const slot = __petBondTalkSlots.get(card);
+  if(!slot.pendingState || petBondTalkPriority(stateName) > petBondTalkPriority(slot.pendingState)){
+    slot.pendingState = stateName;
+  }
+  if(slot.timer) return;
+  slot.timer = setTimeout(()=>{
+    slot.timer = 0;
+    if(!card.isConnected) return;
+    const nextState = slot.pendingState || 'idle';
+    slot.pendingState = '';
+    updatePetBondTalk(card, p, nextState);
+    slot.nextAt = Date.now() + PET_BOND_TALK_MS;
+  }, Math.max(0, slot.nextAt - Date.now()));
 }
 
 function petBondContextHTML(p){
@@ -5466,7 +5499,8 @@ function renderDashboard(){
     const behaviorRoot = card.querySelector('.pet-show');
     const behaviorForced = p.sleeping ? 'sleep' : (p.sick ? 'idle' : (petHungry(p) ? 'sit' : ''));
     const behaviorOptions = videoEl=>({video:videoEl || null,type:p.type,stage,forced:behaviorForced});
-    if(behaviorRoot) behaviorRoot.addEventListener('petbehaviorchange', e=>updatePetBondTalk(card, p, e.detail.state));
+    startPetBondTalkHold(card);
+    if(behaviorRoot) behaviorRoot.addEventListener('petbehaviorchange', e=>queuePetBondTalk(card, p, e.detail.state));
     if(vid){
       const heroEl = card.querySelector('.stage-hero');
       const key = petClipKey(p);

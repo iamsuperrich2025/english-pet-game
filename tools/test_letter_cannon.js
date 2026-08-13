@@ -1,18 +1,17 @@
 "use strict";
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),zlib=require('zlib');
 const code=fs.readFileSync('js/lettercannon.js','utf8');
-const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),build=fs.readFileSync('tools/build_web.mjs','utf8');
+const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),build=fs.readFileSync('tools/build_web.mjs','utf8'),css=fs.readFileSync('css/lettercannon.css','utf8'),stateCode=fs.readFileSync('js/state.js','utf8');
 const listeners={};
 function el(){return {style:{},classList:{add(){},remove(){},toggle(){}},appendChild(){},remove(){},addEventListener(){},querySelector(){return el();},querySelectorAll(){return[];},setAttribute(){},getBoundingClientRect(){return{width:1280,height:720}},getContext(){return null}};}
-let admin=true;
-const sandbox={console,performance:{now:()=>1000},Math,setTimeout:(fn)=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){}},document:{readyState:'complete',addEventListener(n,f){listeners[n]=f;},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false},isAdmin:()=>admin,vocabForStudent:()=>[['apple','แอปเปิล'],['letter','ตัวอักษร'],['book','หนังสือ']],addCoins(){},saveState(){}};
+let awarded=0,saved=0;
+const sandbox={console,performance:{now:()=>1000},Math,setTimeout:(fn)=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){}},document:{readyState:'complete',addEventListener(n,f){listeners[n]=f;},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false},vocabForStudent:()=>[['apple','แอปเปิล'],['letter','ตัวอักษร'],['book','หนังสือ']],addCoins(n){awarded+=n;},saveState(){saved++;}};
 sandbox.window=sandbox;vm.createContext(sandbox);vm.runInContext(code,sandbox);
 const T=sandbox.LetterCannon._t;
-assert.strictEqual(T.adminAllowed(),true,'existing admin authorization is allowed');admin=false;assert.strictEqual(T.adminAllowed(),false,'non-admin account cannot bypass admin gate');admin=true;
 assert(T.wordPool().some(x=>x.en==='APPLE'),'approved grade vocabulary');
 T.nextWord();const w=T.word.en;assert(w.length>=3,'word selected');
 T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next required letter guaranteed');
-const need=T.letters.find(x=>x.alive&&x.ch===w[0]);T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');
+const need=T.letters.find(x=>x.alive&&x.ch===w[0]),rewardId=need.rewardId;T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');assert.strictEqual(awarded,1,'one correct target awards exactly one real player coin');assert.strictEqual(saved,1,'coin award is persisted immediately');assert.strictEqual(T.coinsRun,1,'round coin HUD advances per correct letter');assert.strictEqual(T.awardLetterCoin({rewardId,coinAwarded:false},0,0),false,'the same target id cannot award twice even after its pooled object is reused');assert.strictEqual(awarded,1,'duplicate target id leaves the player balance unchanged');
 const wrong=T.spawnLetter(w[1]==='Z'?'Y':'Z',false),before=T.pos,combo=T.combo;T.hit(wrong,false);assert.strictEqual(T.pos,before,'wrong letter has no penalty');assert.strictEqual(T.combo,combo,'wrong letter does not reset combo');
 assert(T.particles.length>=16&&T.shockwaves.length>=2,'correct and wrong targets create amplified particles and shockwaves');
 for(let i=0;i<40;i++)T.spawnLetter('A',false);assert(T.letters.filter(x=>x.alive).length<=T.MAX_LETTERS,'letter pool capped');
@@ -32,9 +31,16 @@ assert(build.includes("'assets/images/letter_cannon/'"),'git-archive fallback pu
 assert(html.includes('btn-rail-lettercannon')&&html.includes('js/lettercannon.js')&&html.includes('css/lettercannon.css'),'classic lobby entry and assets');
 assert(city.includes("bld('lettercannon'")&&city.includes('ป้อมพิทักษ์คำศัพท์'),'3D city entry and bilingual name');
 assert(main.includes("lettercannon:'#btn-rail-lettercannon'"),'3D go routing');
-assert(html.includes('btn-rail-lettercannon')&&html.includes('เปิดให้เฉพาะบัญชี Admin')&&html.includes('rail-lock'),'admin-only lobby lock is visible');
-assert(city.includes("go==='lettercannon'")&&city.includes('cityLetterCannonAdmin'),'3D city gate requires persisted admin authorization');
-assert(code.includes('function adminAllowed()')&&code.includes("if(!adminAllowed()){lockedNotice();return;}"),'admin-only gate protects direct game open and lobby event');
+assert(html.includes('id="btn-rail-lettercannon" title="เล่น Letter Cannon"')&&!html.includes('เปิดให้เฉพาะบัญชี Admin'),'normal players see an unlocked lobby button');
+assert(!city.includes('cityLetterCannonAdmin')&&!city.includes("go==='lettercannon'"),'3D city route has no Letter Cannon authorization gate');
+assert(!code.includes('adminAllowed')&&!code.includes('isAdmin')&&!code.includes('lockedNotice'),'direct game open and lobby event are unlocked for every player');
+assert(code.includes("addCoins==='function')addCoins(1)")&&code.includes("saveState==='function')saveState()")&&code.includes("authPushSave==='function')authPushSave(false)"),'one-coin award uses real state save plus cloud sync');
+assert(code.includes('coinAwarded:false')&&code.includes('rewardedLetters.has(o.rewardId)'),'per-target reward has a persistent duplicate guard across pooled object reuse');
+assert(code.includes("sound('coin')")&&css.includes('.lc-coinfx')&&css.includes('@keyframes lc-coin-rise'),'coin award has a visible animated effect and distinct confirmation sound');
+assert(css.includes('rgba(7,24,63,.3)')&&css.includes('rgba(246,126,25,.52)')&&css.includes('backdrop-filter:blur(3px)'),'HUD and both control families use highly translucent blur while preserving sharp text');
+assert(code.includes('o.y>H*.72+o.r'),'letters retire above the bottom control stack instead of hiding behind it');
+assert(code.includes('เกมใหม่ Letter Cannon เปิดแล้ว!')&&code.includes('data-a="interest"')&&code.includes('scrollIntoView')&&code.includes('lc-menu-highlight'),'one-time announcement guides and highlights the menu entry');
+assert(stateCode.includes('letterCannonAnnouncementSeen:false')&&code.includes('state.letterCannonAnnouncementSeen=true'),'announcement acknowledgement persists in the player save');
 assert(code.includes('drawImage(turretImage')&&!code.includes('letter_cannon_base.png')&&!code.includes('baseClip'),'runtime renders only the smaller cannon head without its base');
 assert(code.includes('if(firePointers.size||keyFire)fire();')&&code.includes('const movePointers=new Map(),firePointers=new Map()'),'shots only repeat while a shoot control is held');
 assert(code.includes('id="lc-fire-left"')&&code.includes('id="lc-fire-right"')&&code.indexOf('id="lc-fire-left"')<code.indexOf('id="lc-left"')&&code.indexOf('id="lc-fire-right"')<code.indexOf('id="lc-right"'),'shoot button is present above each left/right movement control');
@@ -42,4 +48,4 @@ assert(!code.includes('NetRoom.create')&&!code.includes('netJoin()')&&!code.incl
 assert(code.includes('function shockwave')&&code.includes('function impact')&&code.includes("globalCompositeOperation='lighter'"),'projectile and target impact spectacle included');
 assert(!code.includes('registerTap(now)')&&!code.includes('tapPointers.set'),'obsolete double-tap firing removed');
 assert(code.includes("pointercancel")&&code.includes("orientationchange")&&code.includes("visibilitychange")&&code.includes("clearTimers()")&&code.includes("movePointers.clear()"),'input and lifecycle cleanup paths included');
-console.log('PASS Letter Cannon: press-to-fire controls on both sides, responsive smooth movement, preserved spectacle FX, admin gate, grade words, no penalty');
+console.log('PASS Letter Cannon: +1 safe coin per unique correct target, visible/audio reward, translucent controls, all-player access, announcement guide, solo press-to-fire');

@@ -337,20 +337,28 @@
   }
 
   /* ---------- 🏁 เกมแข่ง ---------- */
+  /* Firebase Rules เดิมอนุญาตตำแหน่งชื่อ spread เป็นเลข 0..60 เท่านั้น
+     จึงเก็บ sheet ในจำนวนเต็ม และ word+1 ในทศนิยมสามหลัก เพื่อไม่ต้องผ่อน Rules */
+  function locationToken(sheet,word){ return (Number(sheet)||0)+((Number(word)||0)+1)/1000; }
+  function locationFromToken(token){
+    const n=Math.max(0,Number(token)||0),sheet=Math.floor(n);
+    return {sheet,word:Math.max(0,Math.round((n-sheet)*1000)-1)};
+  }
   function makePool(){
     if(P.wordPool.length) return P.wordPool;
-    if(!window.PicDict||!PicDict._t) return [];
-    PicDict._t.buildPages();
-    P.wordPool=[];
-    PicDict._t.pd.pages.forEach((pg,idx)=>{
-      if(!pg||pg.type!=='sheet'||!window.PICDICT_WORDS||!PICDICT_WORDS[pg.file]) return;
-      PICDICT_WORDS[pg.file].words.forEach(w=>{ if(w&&w[0]) P.wordPool.push({en:String(w[0]),th:String(w[1]||''),spread:Math.floor(idx/2)}); });
-    });
+    if(!window.PicDict||!PicDict._t||typeof PicDict._t.wordEntries!=='function') return [];
+    P.wordPool=PicDict._t.wordEntries().map(w=>Object.assign({},w,{spread:locationToken(w.sheet,w.word)}));
     return P.wordPool;
   }
   async function startGame(){
     if(P.owner!==myUid()||!P.roomRef||P.status==='playing') return;
-    if(!makePool().length){ tell('⚠️ ยังไม่มีคำศัพท์ในหนังสือ'); return; }
+    try{
+      if(!makePool().length){ tell('⚠️ ยังไม่มีคำศัพท์ในหนังสือ'); return; }
+    }catch(e){
+      console.error('เริ่มห้องแข่งไม่ได้:',e);
+      tell('⚠️ เตรียมคำศัพท์ไม่สำเร็จ กรุณารีเฟรชแล้วลองใหม่',3600);
+      return;
+    }
     const scores={}; Object.keys(P.members).forEach(uid=>{scores[uid]={n:(P.members[uid].n||'ผู้เล่น').slice(0,40),score:0,ok:0,wrong:0};});
     const id=myUid().slice(-8)+'-'+now().toString(36);
     P.usedWords.clear(); P.answered='';
@@ -424,23 +432,20 @@
     if(!window.PicDict) return;
     P.room.hidden=true; P.hud.hidden=false; document.body.classList.add('pqr-playing');
     PicDict.open(); const sec=$('screen-picdict'); if(sec) sec.classList.add('pqr-online');
-    if(!PicDict._t.pd.opened){ PicDict._t.openBook(); }
-    if(P.game&&P.game.q) moveToQuestion(P.game.q.spread);
+    if(P.game&&P.game.q) moveToQuestion(P.game.q);
     $('pqr-round').textContent=P.game.phase==='countdown'?'เตรียมตัว':`คำที่ ${P.game.round}/${ROUND_TOTAL}`;
     paintVoiceButtons();
   }
-  function moveToQuestion(spread){
-    let tries=0; const go=()=>{
-      if(!P.code||!P.game||!P.game.q) return;
-      if(!PicDict._t.pd.opened||PicDict._t.pd.busy){ if(tries++<25)setTimeout(go,160);return; }
-      if(PicDict._t.pd.s!==spread) PicDict._t.goTo(spread); else PicDict._t.renderSpread();
-    }; go();
+  function moveToQuestion(q){
+    if(!P.code||!P.game||!q||!window.PicDict||!PicDict._t||typeof PicDict._t.goToWord!=='function') return;
+    const at=locationFromToken(q.spread);
+    PicDict._t.goToWord(at.sheet,at.word);
   }
   function showQuestion(){
     const g=P.game; if(!g||!g.q)return;
     $('pqr-round').textContent=`คำที่ ${g.round}/${ROUND_TOTAL}`;
     $('pqr-ask').innerHTML='👂 ฟังคำศัพท์แล้วแตะการ์ดให้ถูก';
-    moveToQuestion(g.q.spread); setTimeout(speakQuestion,650);
+    moveToQuestion(g.q); setTimeout(speakQuestion,650);
   }
   function speakQuestion(){ if(P.game&&P.game.q&&typeof speakWord==='function') speakWord(P.game.q.en); }
   function showResult(){

@@ -36,6 +36,13 @@ ok(behavior.includes("'cuddle','care'"), 'pet behavior engine includes cuddle an
 ok(behavior.includes("cuddle:'🥺 กำลังอ้อนหนู'"), 'cuddle state has a visible label');
 ok(behavior.includes("care:'💛 กำลังเป็นห่วงหนู'"), 'care state has a visible label');
 ok(ui.includes('function petBondActionLine(p, stateName)'), 'species-specific cuddle and care copy exists');
+ok(ui.includes('const PET_BOND_TALK_MS = 60 * 1000'), 'each pet message remains visible for one minute');
+ok(ui.includes('const __petBondTalkSlots = new WeakMap()'), 'speech timing is isolated per rendered pet card');
+ok(ui.includes("if(stateName === 'care') return 3"), 'health-care speech has highest queue priority');
+ok(ui.includes("if(stateName === 'cuddle') return 2"), 'affection speech has priority over generic behavior');
+ok(ui.includes("e=>queuePetBondTalk(card, p, e.detail.state)"), 'fast animation changes queue speech instead of replacing it immediately');
+ok(ui.includes('if(!card.isConnected) return'), 'detached pet cards do not update after their timer fires');
+ok(css.includes('.bond-owner{left:-1%;height:min(44%,102px)}'), 'compact caretaker stays clear of nearby status text');
 ok(ui.includes("stateName === 'cuddle'"), 'bond bubble reacts to cuddle state');
 ok(ui.includes("stateName === 'care'"), 'bond bubble reacts to care state');
 {

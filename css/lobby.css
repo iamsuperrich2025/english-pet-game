@@ -4105,7 +4105,9 @@ html.no-anim .pet-show-bg.ps-night::before{animation:none;opacity:.9;}
 .stage-hero.ps-clip-mode .bond-talk small{color:#ffb9da;}
 html.no-anim .bond-owner,html.no-anim .bond-owner-heart,html.no-anim .bond-home-img{animation:none;}
 @media (max-width:900px),(max-height:520px){
-  .bond-owner{left:2%;height:min(52%,118px)}
+  /* Keep the caretaker in a dedicated lower-left pocket on compact stages.
+     The previous 52% height reached into nearby status pills and hid their words. */
+  .bond-owner{left:-1%;height:min(44%,102px)}
   .bond-talk{left:16%;top:7%;max-width:40%;padding:5px 8px;border-radius:12px 12px 12px 4px}
   .bond-talk span{display:none}
   .bond-talk small{margin-top:2px}
