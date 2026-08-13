@@ -630,7 +630,7 @@ msbKickOut:9678 · tickMsBeam:9688 · TURBO_EVERY:9741 · TURBO_MS:9742 · TURBO
 TURBO_TRACK:9745 · resetTurbo:9747 · turboPick:9752 · turboBegin:9759 · tickTurbo:9771 · fit:9782
 tick:9788 · frame:9796 · build:9860 · start:9942 · exitWorld:10069
 
-## js/lettercannon.js (233 บรรทัด · 0 รายการ)
+## js/lettercannon.js (242 บรรทัด · 0 รายการ)
 
 ## js/lobby.js (52 บรรทัด · 3 รายการ)
 PANEL_TITLES:9 · openPanel:19 · closePanel:29
@@ -973,12 +973,11 @@ vbRender:148 · vbCardHTML:194
 .xsp-foot:235 · .xsb-box:250 · .xsb-head:255,256 · .xsb-grid:257 · .xsb-card:258,262 · .xsb-emoji:263
 .xsb-name:264 · .xsb-info:265 · .xsb-done:266
 
-## css/lettercannon.css (43 บรรทัด · 25 selector)
+## css/lettercannon.css (41 บรรทัด · 24 selector)
 #lc-game:6,7 · .lc-hud:8 · .lc-glass:9 · .lc-stats:10 · .lc-stat:11 · .lc-wordbox:12
 .lc-target:13 · .lc-meaning:14 · .lc-progress:15 · .lc-slot:16,17 · .lc-actions:19 · .lc-iconbtn:20,21
-.lc-exitwide:22 · .lc-room:23 · .lc-power:24 · .lc-power-name:25 · .lc-hint:26 · .lc-fire:27,28
-.lc-modal:29,30 · .lc-count-exit:31 · .lc-card:32,33 · .lc-btn:34 · .lc-count:35 · .lc-toast:37
-.lc-rotate:39
+.lc-exitwide:22 · .lc-room:23 · .lc-power:24 · .lc-power-name:25 · .lc-hint:26 · .lc-modal:27,28
+.lc-count-exit:29 · .lc-card:30,31 · .lc-btn:32 · .lc-count:33 · .lc-toast:35 · .lc-rotate:37
 
 ## css/lobby.css (5,738 บรรทัด · 801 selector)
 :root:6,5457 · html:15 · body:21,5421,5463 · *:41,42,43,44 · #app:47 · h1:49
