@@ -193,13 +193,14 @@ beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (422 บรรทัด · 36 รายการ)
-AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · TEACHER_EMAILS:28 · isTeacher:29 · TESTER_EMAILS:42 · TESTER_COINS:43
-isTester:44 · RANK_EXCLUDED_TESTER_NAMES:50 · rankUserExcluded:51 · testerBoost:57 · authSetStatus:90 · authShowLogin:102
-authGateOffline:106 · authSaveRef:113 · authFetchCloud:114 · authWriteCloud:115 · authDeleteCloud:116 · authWriteProfileName:117
-authPushProfile:124 · authApplyProfileName:132 · authAskProfileName:148 · authEditProfileName:159 · authStart:170 · updateOfflinePill:202
-authEnterOffline:207 · authLateSync:224 · authIsAppMode:244 · AUTH_REDIRECT_CODES:252 · authLoginClick:254 · authOnLogin:274
-authSyncOnLogin:287 · authFreshStart:316 · authAskLink:325 · authEnterGame:375 · authPushSave:390 · authLogout:401
+## js/auth.js (464 บรรทัด · 39 รายการ)
+AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · TEACHER_EMAILS:30 · isTeacher:31
+TESTER_EMAILS:44 · TESTER_COINS:45 · isTester:46 · RANK_EXCLUDED_TESTER_NAMES:52 · rankUserExcluded:53 · testerBoost:59
+authSetStatus:92 · authLocalSaveSafe:109 · authShowLogin:112 · authGateOffline:116 · authSaveRef:123 · authFetchCloud:124
+authWriteCloud:144 · authDeleteCloud:145 · authWriteProfileName:146 · authPushProfile:153 · authApplyProfileName:161 · authAskProfileName:177
+authEditProfileName:188 · authStart:199 · updateOfflinePill:231 · authEnterOffline:236 · authLateSync:253 · authIsAppMode:273
+AUTH_REDIRECT_CODES:281 · authLoginClick:283 · authOnLogin:303 · authSyncOnLogin:329 · authFreshStart:358 · authAskLink:367
+authEnterGame:417 · authPushSave:432 · authLogout:443
 
 ## js/award.js (275 บรรทัด · 0 รายการ)
 

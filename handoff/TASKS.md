@@ -61,9 +61,7 @@
 - แก้ `js/f1_3d.js`, `js/f1_modes.js`; เพิ่ม `tools/test_f1_realistic_circuit.js` และ adaptive high/medium/low โดยรวมของซ้ำ 3,054 instance เป็น 26 กลุ่มวาดบน tier high
 - F1 regressions 4 ชุด + syntax/diff ผ่าน; Browser 1280×720 และ 812×375 ยืนยันกล้อง 1.30 ม./FOV 72/near .14, cockpit+HUD ไม่ล้น, console 0; Battery เริ่มตรง 1.04 ม./70/.3 และ realistic `built=false`
 - final build 8,291 ไฟล์/454.8 MiB + PWA validator ผ่าน; ค้างเฉพาะผู้ใช้ acceptance ด้วยตาในเกมจริง · **ยังไม่เปิด `COMMIT_DEPLOY.bat`**
-- **รอบ 1124 · ฟีดรายงานอันดับดีขึ้นแทนปุ่มธีม 3 ปุ่ม:** หัวล็อบบี้แสดงชื่อผู้เล่น/หัวข้อ/#เดิม→#ใหม่เฉพาะอันดับที่สูงขึ้น ครอบคลุม 9 กระดาน; baseline ครั้งแรกและอันดับตกเงียบ ไม่สร้างข่าวย้อนหลังหรือข่าวลบ
 - แก้ `index_classic.html`, `css/lobby.css`, `js/ui.js`, `js/online.js`; เพิ่ม `tools/test_rank_move_feed.js` ครบ loop/แตะหยุด/ปล่อย 5 วิ, Browser 1057×503 + 812×375 theme buttons/overflow/console=0, syntax/template/undefined/diff + build 8,291/PWA ผ่าน
-- **รอบ 1123 · Picture Dictionary ลากหน้าตามนิ้ว:** แผง 18 คำเลื่อนตามนิ้ว 1:1 ระหว่างปัด; ปล่อยถึงเกณฑ์ให้หน้าเดิมไหลออก/หน้าใหม่ไหลเข้า ไม่ถึงเกณฑ์หรือชนขอบให้เด้งกลับพร้อมแรงต้าน
 - แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`; Browser 812×375 ยืนยันลาก 300px ตาม 300px, เปลี่ยนหน้า/เด้งกลับที่ขอบ, แตะซูม, overflow และ console 0
 - แก้ `js/picdict.js`, `css/picdict.css`, `tools/test_picdict_single_page.js`; Browser 812×375 ยืนยัน swipe ไป-กลับ/ขอบหน้าสุดท้าย/short drag/แตะซูม, 18 ใบและ overflow 0, console 0
 - แก้ `js/ui.js`, `js/state.js`, `js/assetaward.js`, `index_classic.html`, `tools/build_web.mjs`, `tools/validate_web_build.mjs`, `handoff/RULES.md`; เพิ่ม regression `tools/test_asset_leaderboard.js` และโซน Rules `/assetAward`
