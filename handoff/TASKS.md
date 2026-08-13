@@ -63,7 +63,6 @@
 - ล็อกครอบคลุมปุ่ม Lobby, ทางเข้าจากเมือง 3D และ `LetterCannon.open()` โดยตรง; ไม่ทำรายชื่อบัญชีซ้ำและไม่เปลี่ยน Rules ที่ผู้ใช้ Publish แล้ว
 - แก้ `index_classic.html`, `css/lobby.css`, `js/lettercannon.js`, `tools/test_letter_cannon.js`; syntax/regression/diff ผ่าน
 - production build 8,302 ไฟล์/456.3 MiB + PWA validator ผ่าน; พร้อม COMMIT_DEPLOY และรอ acceptance ออนไลน์ ≥2 เครื่อง
-- **รอบ 1135 · รางวัลแท็บเหรียญ + ยืนยันเหรียญออนไลน์สะสมตลอดกาล:** แท็บ 🪙 เหรียญให้ Top 10 = 10,000→1,000 รายเดือนผ่าน `coinAward`; เพิ่ม state/load/build/Rules และกระดานประกาศครบ
 - 🌐 ใช้ `state.onlineEarned` เดิมซึ่งสะสมตั้งแต่เริ่มระบบและไม่รีเซ็ตรายวัน; เพิ่มข้อความกติกาให้ชัด และคงยอดย้อนหลังเดิมทั้งหมด
 - กันบัญชีครูรุต/Sumpajit ทุกอันดับและแหล่งตัดรางวัล; อุด F1 ที่ยังขาด พร้อมลบแถว F1 เดิมเมื่อ tester ส่งเวลาใหม่
 - syntax/regression รวม F1 ทุกชุด + diff ผ่าน; Browser 812×375 กระดานรางวัลครบ 10 ขั้น/ไม่ล้น/console 0; build 8,302 ไฟล์ 456.3 MiB + PWA ผ่าน · ค้าง Publish Rules และรอรวมงานคู่ขนานก่อน COMMIT_DEPLOY

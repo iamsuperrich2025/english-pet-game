@@ -193,15 +193,15 @@ beginPlay:12666 · start:12668 · exitWorld:12899 · mechaRecapLine:12969
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (527 บรรทัด · 46 รายการ)
+## js/auth.js (530 บรรทัด · 47 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · ADMIN_NAME_EMAILS:30 · adminReservedNameKey:35
-isReservedAdminName:40 · canUseReservedAdminName:44 · checkProfileName:49 · TEACHER_EMAILS:58 · isTeacher:59 · syncOwnerAccess:63
-TESTER_EMAILS:77 · TESTER_COINS:78 · isTester:79 · RANK_EXCLUDED_TESTER_NAMES:85 · rankUserExcluded:86 · testerBoost:92
-authSetStatus:125 · authLocalSaveSafe:142 · authShowLogin:145 · authGateOffline:149 · authSaveRef:156 · authFetchCloud:157
-authWriteCloud:177 · authDeleteCloud:178 · authWriteProfileName:179 · authPushProfile:186 · authApplyProfileName:194 · authEnsureProfileName:217
-authAskProfileName:235 · authEditProfileName:249 · authStart:261 · updateOfflinePill:293 · authEnterOffline:298 · authLateSync:315
-authIsAppMode:335 · AUTH_REDIRECT_CODES:343 · authLoginClick:345 · authOnLogin:365 · authSyncOnLogin:391 · authFreshStart:420
-authAskLink:429 · authEnterGame:479 · authPushSave:495 · authLogout:506
+isReservedAdminName:40 · canUseReservedAdminName:44 · isAdmin:49 · checkProfileName:52 · TEACHER_EMAILS:61 · isTeacher:62
+syncAdminAccess:66 · TESTER_EMAILS:80 · TESTER_COINS:81 · isTester:82 · RANK_EXCLUDED_TESTER_NAMES:88 · rankUserExcluded:89
+testerBoost:95 · authSetStatus:128 · authLocalSaveSafe:145 · authShowLogin:148 · authGateOffline:152 · authSaveRef:159
+authFetchCloud:160 · authWriteCloud:180 · authDeleteCloud:181 · authWriteProfileName:182 · authPushProfile:189 · authApplyProfileName:197
+authEnsureProfileName:220 · authAskProfileName:238 · authEditProfileName:252 · authStart:264 · updateOfflinePill:296 · authEnterOffline:301
+authLateSync:318 · authIsAppMode:338 · AUTH_REDIRECT_CODES:346 · authLoginClick:348 · authOnLogin:368 · authSyncOnLogin:394
+authFreshStart:423 · authAskLink:432 · authEnterGame:482 · authPushSave:498 · authLogout:509
 
 ## js/award.js (275 บรรทัด · 0 รายการ)
 
@@ -253,7 +253,7 @@ certStripHTML:633 · certBindStrip:647
 ### รายการ js/city3d.js
 ISLAND_R:22 · RING_IN:23 · BAND1_R:24 · GROUND_TEX_PX:25 · NIGHT:26 · esc:46
 hash:47 · rnd:48 · clamp:49 · TAU:50 · CITY_WORLD_COMING_SOON:55 · CITY_WORLD_TESTER_NAMES:56
-cityWorldTester:57 · cityLetterCannonOwner:72 · cityWorldComingSoon:78 · BLK8:85 · CAR_COL:96 · gradeStars:101
+cityWorldTester:57 · cityLetterCannonAdmin:72 · cityWorldComingSoon:78 · BLK8:85 · CAR_COL:96 · gradeStars:101
 MAT:119 · mat:120 · GEO:124 · box:125 · cyl:126 · M:127
 groundAt:158 · setupInput:167 · twoState:229 · cvs:240 · ctex:241 · groundTexture:248
 wallTex:302 · wallMat:321 · shopSign:326 · roundRect:336 · iconSprite:343 · nameSprite:366
