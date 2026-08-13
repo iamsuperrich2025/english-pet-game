@@ -346,9 +346,10 @@ function iconSprite(ico, label, locked){
     g.lineWidth=6; g.strokeStyle='#fff'; g.stroke();
     g.font='48px system-ui, sans-serif'; g.fillText('🔒',194,51);
   }
-  g.font='700 44px system-ui, sans-serif';
-  g.lineWidth=12; g.strokeStyle='rgba(30,40,70,.85)'; g.lineJoin='round';
-  g.strokeText(label, 128, 262); g.fillStyle='#fff'; g.fillText(label, 128, 262);
+  const labelLines=String(label).split('\n').slice(0,2);
+  g.font=(labelLines.length>1?'700 25px':'700 44px')+' system-ui, sans-serif';
+  g.lineWidth=labelLines.length>1?8:12; g.strokeStyle='rgba(30,40,70,.85)'; g.lineJoin='round';
+  labelLines.forEach((line,i)=>{const y=labelLines.length>1?240+i*34:262;g.strokeText(line,128,y,238);g.fillStyle='#fff';g.fillText(line,128,y,238);});
   const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:ctex(c), transparent:true, depthTest:true}));
   sp.scale.set(5.6, 6.55, 1);
   return sp;
@@ -1115,6 +1116,15 @@ const BUILDINGS = [
       new THREE.MeshBasicMaterial({map:ctex(c), side:THREE.DoubleSide, transparent:true}), 0, 6.4, 0);
     g.add(t);
     tickers.push((dt,tm)=>{ t.rotation.z = tm*0.8; });
+    return g;
+  }),
+  /* 🔤💥 Letter Cannon — แท่นป้อมพลังเวทนอกวงหลัก ป้องกันคำศัพท์ไม่ชนซุ้มเดิม */
+  bld('lettercannon','🔤','LETTER CANNON\nป้อมพิทักษ์คำศัพท์','lettercannon', 28, BAND2_R+17, ()=>{
+    const g=bShop({col:'#ccecff',roof:0x5936a8,aw1:'#55dcff',sign:'🔤 LETTER CANNON',signBg:'#e3f8ff'});
+    const core=M(new THREE.OctahedronGeometry(.72,0),mat(0x7cecff,{emissive:0x174b66}),0,6.35,0);g.add(core);
+    const ring=M(new THREE.TorusGeometry(1.25,.09,8,28),mat(0xffd95a,{emissive:0x5a3500}),0,6.35,0);ring.rotation.x=Math.PI/2;g.add(ring);
+    const barrel=M(new THREE.CylinderGeometry(.14,.23,2.2,10),mat(0xb9f6ff,{emissive:0x123a55}),0,7.65,0);barrel.rotation.z=-.18;g.add(barrel);
+    tickers.push((dt,t)=>{core.rotation.y=t*1.7;core.position.y=6.35+Math.sin(t*2)*.16;ring.rotation.z=t*.85;barrel.rotation.z=-.18+Math.sin(t*.8)*.22;});
     return g;
   }),
 ];

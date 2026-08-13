@@ -89,6 +89,9 @@ const DEFAULT_STATE = {
   wsAwardSeen:'',                     // 🏆 รอบ 592: เดือนล่าสุดที่เช็ก/จ่ายรางวัลแล้ว ('YYYY-MM') — กันยิง DB ซ้ำ
   wsAwardPaid:[],                     // 🏆 รอบ 592: เดือนที่รับเหรียญรางวัลไปแล้ว (กันจ่ายซ้ำข้ามเครื่อง)
   wsAwardLog:[],                      // 🏆 รอบ 592: ประกาศรางวัลของตัวเอง [{m,r,p,s,at}] โชว์ในกระดานข้อความ
+  coinAwardSeen:'',                   // 🪙🏆 รางวัลรายเดือนกระดานเหรียญคงเหลือ
+  coinAwardPaid:[],
+  coinAwardLog:[],
   assetAwardSeen:'',                  // 🏆 รางวัลรายเดือนกระดานมูลค่าทรัพย์สินรวม
   assetAwardPaid:[],
   assetAwardLog:[],
@@ -479,6 +482,9 @@ function loadState(){
       if(typeof s.wsAwardSeen !== 'string') s.wsAwardSeen = '';   // 🏆 รอบ 592: รางวัลรายเดือนแท็บค้นหาคำ
       if(!Array.isArray(s.wsAwardPaid)) s.wsAwardPaid = [];
       if(!Array.isArray(s.wsAwardLog)) s.wsAwardLog = [];
+      if(typeof s.coinAwardSeen !== 'string') s.coinAwardSeen = '';
+      if(!Array.isArray(s.coinAwardPaid)) s.coinAwardPaid = [];
+      if(!Array.isArray(s.coinAwardLog)) s.coinAwardLog = [];
       if(typeof s.assetAwardSeen !== 'string') s.assetAwardSeen = '';
       if(!Array.isArray(s.assetAwardPaid)) s.assetAwardPaid = [];
       if(!Array.isArray(s.assetAwardLog)) s.assetAwardLog = [];

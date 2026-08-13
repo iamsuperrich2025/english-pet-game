@@ -1401,6 +1401,11 @@ function bindLbTabs(){
       if(typeof AssetAward !== 'undefined') AssetAward.open();
       return;
     }
+    if(e.target.closest('.coa-open')){
+      e.stopPropagation();
+      if(typeof CoinAward !== 'undefined') CoinAward.open();
+      return;
+    }
     if(e.target.closest('.oca-open')){
       e.stopPropagation();
       if(typeof OnlineCoinAward !== 'undefined') OnlineCoinAward.open();
@@ -1511,7 +1516,7 @@ let __lbGroupBound = false;
 function bindLbGroupOpen(){
   if(__lbGroupBound) return; __lbGroupBound = true;
   // 🏆 รอบ 592: .wsa-open (แถบรางวัล) มี handler ของตัวเอง — ไม่ให้เปิดกระดานเต็มจอทับ
-  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open') || e.target.closest('.asa-open') || e.target.closest('.oca-open')) return; openLeaderboardFull(); };
+  const open = (e)=>{ if(e.target.closest('.pl-click') || e.target.closest('.lb-tab') || e.target.closest('.wsa-open') || e.target.closest('.tpa-open') || e.target.closest('.bba-open') || e.target.closest('.sga-open') || e.target.closest('.coa-open') || e.target.closest('.asa-open') || e.target.closest('.oca-open')) return; openLeaderboardFull(); };
   const label = document.getElementById('lb-label');
   const card = document.getElementById('leaderboard-card');
   if(label){ label.style.cursor = 'pointer'; label.addEventListener('click', open); }
@@ -1596,7 +1601,8 @@ function lbRankRows(tab){
     return rows.map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🖼️ ${fmtNum(r.pm)}`, val:r.pm,
       pz:(typeof PmAward !== 'undefined') ? PmAward.prizeFor(i+1) : 0, me:r.id===myId}));
   }
-  return (Online.board || []).map(r=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins, me:r.id===myId}));
+  return (Online.board || []).map((r,i)=>({uid:r.id, name:splitNameBadges(r.n).name, g:r.g, dataN:r.n, sc:`🪙 ${fmtNum(r.coins)}`, val:r.coins,
+    pz:(typeof CoinAward !== 'undefined') ? CoinAward.prizeFor(i+1) : 0, me:r.id===myId}));
 }
 
 /* ============================================================
@@ -1728,7 +1734,8 @@ function lbChar(r){
 /* 🏆 แถบ "ตัดสินอันดับวันที่ 1" ในกระดานเต็มจอ — ใช้ร่วมแท็บ 🔎 (รอบ 592) และ ⌨️ (รอบ 649)
    เครื่องจ่ายรางวัลคนละตัว (WsAward / TpAward) แต่หน้าตาแถบเหมือนกันเป๊ะ */
 function lbfAwardBarHtml(tab){
-  const A = tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
+  const A = tab === 'coins' ? (typeof CoinAward !== 'undefined' ? CoinAward : null)
+          : tab === 'ws' ? (typeof WsAward !== 'undefined' ? WsAward : null)
           : tab === 'assets' ? (typeof AssetAward !== 'undefined' ? AssetAward : null)
           : tab === 'online' ? (typeof OnlineCoinAward !== 'undefined' ? OnlineCoinAward : null)
           : tab === 'tp' ? (typeof TpAward !== 'undefined' ? TpAward : null)
@@ -1736,7 +1743,7 @@ function lbfAwardBarHtml(tab){
           : tab === 'sg' ? (typeof SgAward !== 'undefined' ? SgAward : null)
           : tab === 'pm' ? (typeof PmAward !== 'undefined' ? PmAward : null) : null;
   if(!A) return '';
-  const cls = tab === 'assets' ? 'asa-open' : tab === 'online' ? 'oca-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
+  const cls = tab === 'coins' ? 'coa-open' : tab === 'assets' ? 'asa-open' : tab === 'online' ? 'oca-open' : tab === 'tp' ? 'tpa-open' : tab === 'bb' ? 'bba-open' : tab === 'sg' ? 'sga-open' : tab === 'pm' ? 'pma-open' : 'wsa-open';
   return `<div class="lbf-award ${cls}" role="button" tabindex="0">
     ⏰ ตัดสินอันดับ <b>ทุกวันที่ 1 ของเดือน เวลา 00:01 น. เท่านั้น</b> · ครั้งถัดไป ${A.fmtLeft(A.nextCutDate() - Date.now())}
     · 🎁 อันดับ 1 ได้ ${fmtNum(A.PRIZES[0])} เหรียญ ลดหลั่นถึงอันดับ ${A.TOP} ได้ ${fmtNum(A.PRIZES[A.TOP-1])} เหรียญ
@@ -6453,8 +6460,8 @@ function renderOnlineEarnPill(){
   if(!on && !(state.onlineEarned > 0)){ pill.style.display = 'none'; return; }
   pill.style.display = '';
   pill.classList.toggle('off', !on);
-  pill.title = on ? 'โบนัสออนไลน์: เปิดเกมออนไลน์อยู่ = เหรียญเพิ่มเอง +0.01/วินาที!'
-                  : 'โบนัสออนไลน์หยุดพัก (ต้อง login ออนไลน์ถึงจะเดิน)';
+  pill.title = on ? 'เหรียญออนไลน์สะสมตลอดกาล (ไม่รีเซ็ตรายวัน): เปิดเกมออนไลน์อยู่ = +0.01/วินาที!'
+                  : 'เหรียญออนไลน์สะสมตลอดกาลหยุดพัก (ต้อง login ออนไลน์ถึงจะเดิน)';
   const live = document.getElementById('net-live');
   if(live) live.textContent = onlineLiveTotal().toFixed(2);
 }

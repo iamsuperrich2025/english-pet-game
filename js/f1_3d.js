@@ -2065,6 +2065,8 @@ function frSubmit(sec){
   if(typeof Online==='undefined'||!Online.ready||!Online.db) return Promise.resolve(false);
   const uid=(typeof onlineKey==='function')?onlineKey():'';
   if(!uid||!(sec>0)) return Promise.resolve(false);
+  if(typeof isTester==='function'&&isTester())
+    return Online.db.ref('f1Rank/'+uid).remove().then(()=>false).catch(()=>false);
   const bs=(typeof badgeSuffix==='function')?badgeSuffix():'';
   const row={
     sec,
@@ -2078,13 +2080,14 @@ function frSubmit(sec){
 }
 function frMerge(rows){
   const me=(typeof onlineKey==='function')?onlineKey():'me';
-  const out=rows.filter(r=>r.uid!==me);
-  let my=rows.find(r=>r.uid===me)||null;
+  const visible=rows.filter(r=>!(typeof rankUserExcluded==='function'&&rankUserExcluded(r.uid,r.name)));
+  const out=visible.filter(r=>r.uid!==me);
+  let my=visible.find(r=>r.uid===me)||null;
   if(state.f1Best&&(!my||state.f1Best<my.sec)){
     my={uid:me, name:(typeof onlineDisplayName==='function'?onlineDisplayName():'')||(state.student&&state.student.name)||'หนู',
         g:(state.student&&state.student.grade)||'', sec:state.f1Best, ts:0};
   }
-  if(my){ my.me=true; out.push(my); }
+  if(my&&!(typeof isTester==='function'&&isTester())){ my.me=true; out.push(my); }
   return out.sort((a,b)=>a.sec-b.sec);
 }
 function frFetch(){
@@ -2092,7 +2095,7 @@ function frFetch(){
   if(__frPend) return __frPend;
   const fin=rows=>{ __frCache=rows; __frPend=null; return rows; };
   if(typeof Online==='undefined'||!Online.ready||!Online.db) return Promise.resolve(fin(frMerge([])));
-  const p=Online.db.ref('f1Rank').orderByChild('sec').limitToFirst(FR_READ).get().then(s=>{
+  const p=Online.db.ref('f1Rank').orderByChild('sec').limitToFirst(FR_READ+2).get().then(s=>{
     const v=(s&&s.val())||{}, out=[];
     Object.keys(v).forEach(u=>{
       const r=v[u];

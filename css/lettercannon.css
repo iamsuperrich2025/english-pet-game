@@ -1,0 +1,43 @@
+/* ============================================================
+   🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1134)
+   Full-screen, landscape-first HUD. The game canvas owns scenery;
+   this file keeps controls readable and dialogs inside 812×375.
+   ============================================================ */
+#lc-game{position:fixed;inset:0;z-index:12000;overflow:hidden;background:#061637;color:#fff;font-family:Kanit,system-ui,sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+#lc-game canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.lc-hud{position:absolute;inset:0;pointer-events:none;padding:calc(7px + env(safe-area-inset-top)) calc(9px + env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) calc(9px + env(safe-area-inset-left));display:grid;grid-template-columns:minmax(118px,20vw) 1fr minmax(190px,23vw);grid-template-rows:auto 1fr auto;gap:6px}
+.lc-glass{background:linear-gradient(145deg,rgba(7,24,63,.86),rgba(40,23,94,.62));border:1px solid rgba(139,228,255,.52);box-shadow:inset 0 0 22px rgba(71,194,255,.12),0 8px 26px rgba(0,0,0,.26);backdrop-filter:blur(8px);border-radius:15px}
+.lc-stats{grid-column:1;grid-row:1;padding:7px 10px;display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:clamp(10px,1.25vw,14px)}
+.lc-stat b{display:block;color:#82efff;font-size:1.2em}.lc-stat span{opacity:.78}
+.lc-wordbox{grid-column:2;grid-row:1;justify-self:center;text-align:center;padding:5px 18px;min-width:min(42vw,540px);max-width:52vw}
+.lc-target{font-size:clamp(17px,2.7vw,30px);font-weight:900;letter-spacing:.12em;line-height:1;color:#fff;text-shadow:0 0 10px #5be7ff,0 0 22px #8b5cff}
+.lc-meaning{font-size:clamp(9px,1.2vw,13px);color:#cdeaff;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-progress{margin-top:4px;display:flex;gap:clamp(3px,.7vw,8px);justify-content:center}
+.lc-slot{width:clamp(20px,3.4vw,38px);height:clamp(19px,3vw,33px);display:grid;place-items:center;border-bottom:2px solid rgba(151,231,255,.72);font-size:clamp(14px,2.2vw,24px);font-weight:900;color:rgba(255,255,255,.34)}
+.lc-slot.done{color:#ffe76c;text-shadow:0 0 10px #ff9c3c;animation:lc-pop .3s ease-out}
+@keyframes lc-pop{50%{transform:translateY(-5px) scale(1.25)}}
+.lc-actions{grid-column:3;grid-row:1;justify-self:end;display:flex;gap:5px;pointer-events:auto}
+.lc-iconbtn{width:clamp(32px,4.5vw,44px);height:clamp(30px,4.2vw,42px);border-radius:12px;border:1px solid rgba(166,238,255,.56);background:linear-gradient(#234f91,#172a67);color:#fff;font-size:clamp(15px,2.1vw,21px);box-shadow:0 4px 12px rgba(0,0,0,.28);cursor:pointer}
+.lc-iconbtn:active{transform:translateY(2px)}
+.lc-exitwide{width:auto;min-width:108px;padding:0 9px;font-size:clamp(10px,1.25vw,14px);font-weight:900;background:linear-gradient(#d85a63,#832c62);white-space:nowrap}
+.lc-room{position:absolute;top:calc(65px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));z-index:2;max-width:240px;padding:4px 10px;color:#bff5ff;font-size:clamp(9px,1.1vw,12px);text-align:right;pointer-events:none}
+.lc-power{grid-column:1;grid-row:3;align-self:end;padding:7px 10px;max-width:220px;font-size:clamp(9px,1.2vw,13px)}
+.lc-power-name{font-weight:900;color:#ffe76c}.lc-power-bar{height:6px;border-radius:9px;background:rgba(255,255,255,.16);overflow:hidden;margin-top:4px}.lc-power-fill{height:100%;width:0;background:linear-gradient(90deg,#56ecff,#c764ff,#ffdb54);box-shadow:0 0 10px #6defff}
+.lc-hint{grid-column:2;grid-row:3;align-self:end;justify-self:center;padding:5px 12px;color:#d9f6ff;font-size:clamp(9px,1.2vw,13px);text-align:center;transition:opacity .25s}
+.lc-fire{grid-column:3;grid-row:3;align-self:end;justify-self:end;pointer-events:auto;width:clamp(72px,10vw,102px);height:clamp(60px,9vw,90px);border-radius:50%;border:2px solid #fff6a3;color:#fff;font:900 clamp(14px,2.1vw,22px) Kanit;background:radial-gradient(circle at 36% 26%,#fff6a3 0 5%,#ff8b27 24%,#d12d59 68%,#5b164f 100%);box-shadow:0 0 0 5px rgba(255,158,49,.18),0 0 26px rgba(255,95,48,.76),inset 0 0 13px rgba(255,255,255,.45);touch-action:none}
+.lc-fire.down{transform:scale(.92);filter:brightness(1.3)}
+.lc-modal{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:10px;background:rgba(2,7,27,.62);backdrop-filter:blur(6px);pointer-events:auto}
+.lc-modal.lc-countdown{pointer-events:auto;background:rgba(2,7,27,.3)}
+.lc-count-exit{position:absolute;right:12px;bottom:12px}
+.lc-card{width:min(620px,92vw);max-height:calc(100vh - 20px);overflow:hidden;padding:clamp(12px,3vh,24px);text-align:center;border:1px solid rgba(151,232,255,.7);border-radius:22px;background:linear-gradient(145deg,rgba(10,42,89,.97),rgba(57,22,98,.96));box-shadow:0 0 50px rgba(92,207,255,.34)}
+.lc-card h2{margin:0 0 5px;font-size:clamp(19px,4vh,31px);color:#fff08b}.lc-card p{margin:5px 0;font-size:clamp(11px,2.4vh,16px);line-height:1.45}.lc-card .lc-buttons{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.lc-btn{border:1px solid rgba(255,255,255,.62);border-radius:13px;padding:8px 18px;color:#fff;background:linear-gradient(#2288cf,#174f9c);font:700 clamp(12px,2.5vh,16px) Kanit;cursor:pointer}.lc-btn.primary{background:linear-gradient(#ffbd39,#ef6a24);color:#251238}.lc-btn:active{transform:translateY(2px)}
+.lc-count{font-size:min(28vh,160px);font-weight:900;color:#fff08b;text-shadow:0 0 28px #ff6dcb,0 0 50px #43dfff;animation:lc-count .75s ease-out}
+@keyframes lc-count{from{transform:scale(1.7);opacity:.2}to{transform:scale(1);opacity:1}}
+.lc-toast{position:absolute;z-index:3;left:50%;top:28%;transform:translate(-50%,-50%);font-size:clamp(17px,4vw,38px);font-weight:900;text-align:center;color:#fff;text-shadow:0 2px 3px #13224f,0 0 18px currentColor;pointer-events:none;animation:lc-toast .9s ease-out forwards}
+@keyframes lc-toast{0%{opacity:0;transform:translate(-50%,-20%) scale(.6)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-85%) scale(.96)}}
+.lc-rotate{display:none}
+@media(orientation:portrait) and (max-width:700px){.lc-rotate{display:grid;position:absolute;inset:0;z-index:8;place-items:center;text-align:center;padding:28px;background:linear-gradient(145deg,#091943,#401d76);font-size:20px;font-weight:800}.lc-hud,.lc-game-canvas{visibility:hidden}}
+@media(max-height:430px){.lc-hud{padding-top:4px;padding-bottom:4px}.lc-glass{border-radius:11px}.lc-stats{padding:4px 7px}.lc-wordbox{padding:3px 12px}.lc-meaning{display:none}.lc-power{padding:4px 7px}.lc-hint{padding:3px 8px}.lc-card{padding:10px 14px}.lc-card p{margin:3px 0}.lc-card .lc-buttons{margin-top:6px}.lc-btn{padding:6px 14px}}
+@media(max-width:900px){.lc-hud{grid-template-columns:118px 1fr 190px}.lc-wordbox{padding-left:8px;padding-right:8px}.lc-room{top:53px}}
+@media(prefers-reduced-motion:reduce){#lc-game *{animation-duration:.01ms!important;transition-duration:.01ms!important}.lc-slot.done{animation:none}}

@@ -54,6 +54,7 @@
 <link rel="stylesheet" href="css/picquiz_online.css">  <!-- 🌐🎧 ห้องแข่งครูถามศัพท์ออนไลน์ -->
 <link rel="stylesheet" href="css/arena3d.css">  <!-- 🌀 รอบ 1045: HUD โลกผจญภัย Vocab Arena -->
 <link rel="stylesheet" href="css/bubble.css">  <!-- 🫧 เกมฟองคำศัพท์เต็มจอ -->
+<link rel="stylesheet" href="css/lettercannon.css">  <!-- 🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ -->
 <!-- 🌙 รอบ 882/886: โหมดกลางคืนล็อบบี้ (โทนอุ่นมืดลง) — วางไว้ตรงนี้ (ก่อน <body>) เพื่อใส่คลาส `night`
      ตั้งแต่ก่อน paint แรก ไม่งั้นจอสว่างวาบก่อนแล้วค่อยมืด · หน้าตาทั้งหมดอยู่ใน css/lobby.css โซน 🌙 รอบ 882
      กติกา 3 โหมด (เลือกได้ในหน้า ⚙️ ตั้งค่า — set-night-row ใน js/util.js openSettings()):
@@ -497,6 +498,7 @@
         <button class="rail-btn" id="btn-rail-bubble"><span class="rail-ico">🫧</span>ฟอง</button>
         <!-- 🎯 รอบ 917: เกมยิงเป้าคำศัพท์ (โลก 3D สวนสนุก ปืนอัดลม) — วางต่อกลุ่มเกมคำศัพท์ -->
         <button class="rail-btn" id="btn-rail-shootword"><span class="rail-ico">🎯</span>ยิงเป้าคำ</button>
+        <button class="rail-btn tester-locked" id="btn-rail-lettercannon" title="เปิดให้เฉพาะบัญชีทดสอบ"><span class="rail-ico">🔤💥</span>Letter Cannon<span class="rail-lock">🔒</span></button>
         <!-- 📋 รอบ 813: ทางลัดเข้าข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL ตรงจากรางเมนู
              (เดิมต้องกด "หมวดคำศัพท์ & แบบทดสอบ" แล้วเลื่อนหาการ์ดท้ายรายการก่อน) -->
         <button class="rail-btn" id="btn-rail-examstd"><span class="rail-ico">📋</span>ข้อสอบจริง</button>
@@ -735,11 +737,13 @@
 <script src="js/bbaward.js"></script>  <!-- 🫧🏆 รางวัลรายเดือน Top 10 เกมฟอง -->
 <script src="js/sgaward.js"></script>  <!-- 🏆 รอบ 917: รางวัลรายเดือน Top 10 แท็บยิงเป้าคำ (กติกาเดียวกับค้นหาคำ) -->
 <script src="js/pmaward.js"></script>  <!-- 🏆 รอบ 979: รางวัลรายเดือน Top 10 แท็บจับคู่ภาพ (กติกาเดียวกับค้นหาคำ) -->
+<script src="js/coinaward.js"></script>  <!-- 🪙🏆 รางวัลรายเดือน Top 10 แท็บเหรียญ -->
 <script src="js/assetaward.js"></script>  <!-- 🏆 รางวัลรายเดือน Top 10 แท็บมูลค่าทรัพย์สินรวม -->
 <script src="js/onlinecoinaward.js"></script>  <!-- 🌐🏆 รางวัลรายเดือน Top 10 แท็บเหรียญออนไลน์ -->
 <script src="js/typing.js"></script>  <!-- ⌨️ รอบ 648: เกมพิมพ์คำศัพท์ แป้น 3 มิติเต็มจอ (5 เหรียญ/คำ · คำไม่ซ้ำ) -->
 <script src="js/bubble.js"></script>  <!-- 🫧 เกมแตะฟองสะกดคำ -->
 <script src="js/shootword.js"></script>  <!-- 🎯 รอบ 917: เกมยิงเป้าคำศัพท์ โลก 3D สวนสนุก (โหลด three.js ตอนกดปุ่มเท่านั้น) -->
+<script src="js/lettercannon.js"></script>  <!-- 🔤💥 ป้อมยิงตัวอักษรประกอบคำตามระดับชั้น -->
 <script src="js/game.js"></script>
 <script src="js/picmatch.js"></script>  <!-- 🖼️ รอบ 977: เกมจับคู่ภาพสัตว์ (ใช้สูตรรางวัลชุดเดียวกับ game.js ต้องมาหลัง) -->
 <script src="js/data/picdict.js"></script>       <!-- 📖 รอบ 992: สารบัญหนังสือ Picture Dictionary -->

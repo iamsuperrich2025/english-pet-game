@@ -226,7 +226,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "world": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'lettercannon'",
         "$uid": {
           ".write": "auth != null && auth.uid === $uid",
           ".validate": "newData.hasChildren(['n','x','z','yaw','ts'])",
@@ -251,7 +251,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "wroom": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
@@ -273,7 +273,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "winfo": {
       "$map": {
         ".read": "auth != null",
-        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1'",
+        ".validate": "$map === 'adv' || $map === 'haunt' || $map === 'heli' || $map === 'drone' || $map === 'drive' || $map === 'moto' || $map === 'invasion' || $map === 'soccer' || $map === 'mecha' || $map === 'f1' || $map === 'lettercannon'",
         "$room": {
           ".validate": "$room.matches(/^r([0-9]|[1-2][0-9]|3[0-5])$/)",
           "$uid": {
@@ -610,6 +610,27 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "$uid": {
             ".write": "auth != null && auth.uid === $uid && !newData.exists()",
             ".validate": "newData.hasChildren(['r','p','n'])",
+            "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
+            "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
+            "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
+            "g": { ".validate": "newData.isString() && newData.val().length <= 20" },
+            "s": { ".validate": "newData.isNumber() && newData.val() >= 0" },
+            "$other": { ".validate": false }
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    },
+    "coinAward": {
+      ".read": true,
+      "$m": {
+        ".write": "auth != null && !data.exists()",
+        ".validate": "$m.matches(/^[0-9]{4}-[0-9]{2}$/) && newData.hasChildren(['at','w'])",
+        "at": { ".validate": "newData.isNumber() && newData.val() <= now + 60000" },
+        "w": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !newData.exists()",
+            ".validate": "newData.hasChildren(['r','p','n','g','s'])",
             "r": { ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 10" },
             "p": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 10000" },
             "n": { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },

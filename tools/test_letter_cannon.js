@@ -1,0 +1,26 @@
+"use strict";
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const code=fs.readFileSync('js/lettercannon.js','utf8');
+const html=fs.readFileSync('index_classic.html','utf8'),city=fs.readFileSync('js/city3d.js','utf8'),main=fs.readFileSync('js/main.js','utf8'),net=fs.readFileSync('js/netroom.js','utf8'),rules=fs.readFileSync('handoff/RULES.md','utf8');
+const listeners={};
+function el(){return {style:{},classList:{add(){},remove(){},toggle(){}},appendChild(){},remove(){},addEventListener(){},querySelector(){return el();},querySelectorAll(){return[];},setAttribute(){},getBoundingClientRect(){return{width:1280,height:720}},getContext(){return null}};}
+const sandbox={console,performance:{now:()=>1000},Math,setTimeout:(fn)=>0,clearTimeout(){},requestAnimationFrame:()=>1,cancelAnimationFrame(){},localStorage:{getItem:()=>null,setItem(){}},window:{addEventListener(){}},document:{readyState:'complete',addEventListener(n,f){listeners[n]=f;},getElementById(){return null},createElement:el,body:el()},state:{student:{grade:'ป.1'},sound:false},vocabForStudent:()=>[['apple','แอปเปิล'],['letter','ตัวอักษร'],['book','หนังสือ']],addCoins(){},saveState(){}};
+sandbox.window=sandbox;vm.createContext(sandbox);vm.runInContext(code,sandbox);
+const T=sandbox.LetterCannon._t;
+assert(T.wordPool().some(x=>x.en==='APPLE'),'approved grade vocabulary');
+T.nextWord();const w=T.word.en;assert(w.length>=3,'word selected');
+T.ensureNeeded(true);assert(T.letters.some(x=>x.alive&&x.ch===w[0]),'next required letter guaranteed');
+const need=T.letters.find(x=>x.alive&&x.ch===w[0]);T.hit(need,false);assert.strictEqual(T.pos,1,'correct letter advances exactly once');
+const wrong=T.spawnLetter(w[1]==='Z'?'Y':'Z',false),before=T.pos,combo=T.combo;T.hit(wrong,false);assert.strictEqual(T.pos,before,'wrong letter has no penalty');assert.strictEqual(T.combo,combo,'wrong letter does not reset combo');
+T.setAim(-Math.PI/2);assert(T.aim<=-.03&&T.aim>=-Math.PI+.03,'aim clamped to upper 180 degrees');
+for(let i=0;i<40;i++)T.spawnLetter('A',false);assert(T.letters.filter(x=>x.alive).length<=T.MAX_LETTERS,'letter pool capped');
+T.POWER.forEach(p=>T.activate(p));assert(T.POWER.some(p=>p.id==='triple')&&T.POWER.some(p=>p.id==='beam')&&T.POWER.some(p=>p.id==='chain')&&T.POWER.some(p=>p.id==='homing')&&T.POWER.some(p=>p.id==='nova'),'required powers exposed');
+assert.deepStrictEqual(Array.from(T.seatOrder(7)),[0,-1,1,-2,2,-3,3],'turrets fill center then left/right without overlap');
+assert.strictEqual(T.ROOM_MAX,7,'full room opens next room at seven turrets');
+assert(html.includes('btn-rail-lettercannon')&&html.includes('js/lettercannon.js')&&html.includes('css/lettercannon.css'),'classic lobby entry and assets');
+assert(city.includes("bld('lettercannon'")&&city.includes('ป้อมพิทักษ์คำศัพท์'),'3D city entry and bilingual name');
+assert(main.includes("lettercannon:'#btn-rail-lettercannon'"),'3D go routing');
+assert(net.includes("'lettercannon'")&&rules.match(/\$map === 'lettercannon'/g).length>=3,'room discovery and Firebase map rules');
+assert(html.includes('btn-rail-lettercannon')&&html.includes('tester-locked')&&html.includes('rail-lock'),'tester-only lobby lock is visible');
+assert(code.includes('function testerAllowed()')&&code.includes("if(!testerAllowed()){lockedNotice();return;}"),'tester-only gate protects direct game open');
+console.log('PASS Letter Cannon: grade words, ordered repeat-safe progress, no penalty, guaranteed target, 180-degree aim, caps, powers, multiplayer seats');

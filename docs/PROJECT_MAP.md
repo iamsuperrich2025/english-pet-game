@@ -102,6 +102,14 @@ PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.ShootWord`, `open`, `close`, `buildSc
 DEPENDENCIES: Lazily loaded `THREE`, shared state/UI/audio.
 NOTES: Separate from Invasion combat.
 
+SYSTEM: Letter Cannon vocabulary minigame
+PURPOSE: Endless, penalty-free spelling practice by shooting falling letters in word order.
+PRIMARY FILE: `js/lettercannon.js`
+RELATED FILES: `css/lettercannon.css`, `index_classic.html`, `js/city3d.js`, `js/main.js`
+PUBLIC ENTRY POINTS / KEY SYMBOLS: `window.LetterCannon`, `open`, `close`
+DEPENDENCIES: `vocabForStudent`, shared state/rewards/audio, Canvas 2D.
+NOTES: Procedural art and synthesized SFX; no external game assets or WebGL lifecycle.
+
 ## Player, camera, collision, animation, and NPCs
 
 SYSTEM: Player movement and mobile controls

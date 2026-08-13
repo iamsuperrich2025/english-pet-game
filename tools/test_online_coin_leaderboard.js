@@ -25,6 +25,10 @@ assert.ok(online.includes('Online.onlineCoinBoard=out.slice(0,LEADERBOARD_SIZE)'
 
 assert.ok(cfg.includes("field:   'oe'"), 'award must rank leaderboard.oe');
 assert.ok(cfg.includes('state.onlineEarned || 0'), 'self award score must use the Lobby online wallet total');
+assert.ok(cfg.includes('ไม่รีเซ็ตรายวัน'), 'online coin rules must state that the total never resets daily');
+assert.ok(state.includes('state.onlineEarned += whole'), 'online earnings must accumulate onto the saved lifetime total');
+const dailyTick = state.match(/function dailyTick\(\)\{([\s\S]*?)\n\}/)[1];
+assert.ok(!dailyTick.includes('onlineEarned'), 'online lifetime total must not reset with daily state');
 assert.ok(cfg.includes('Online.onlineCoinBoard || []'), 'monthly cut must use the dedicated online board');
 assert.ok(html.indexOf('js/award.js') < html.indexOf('js/onlinecoinaward.js'), 'online award must load after the shared factory');
 assert.ok(build.includes("'js/onlinecoinaward.js'"), 'production build must include the new module');

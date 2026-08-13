@@ -132,7 +132,7 @@ function aimClear(){ aim=null; }
    อ่าน node เย็น "โลกละ 1 ครั้ง" (rules ให้ `.read` ที่ระดับ $map อยู่แล้ว) = 9 อ่าน/ครั้ง
    ไม่ใช่ไล่ทีละสนาม (จะกลายเป็น 9×สนาม) · ความถี่คุมอีกชั้นที่ js/ui.js
    คืน {found:{uid:{map,room,n,t}}, denied:true ถ้าอ่านไม่ได้ (rules ยังไม่ publish)} */
-const MAPS3D = ['adv','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1'];   // 🏎️ รอบ 896: โลกแข่งรถ F1
+const MAPS3D = ['adv','haunt','heli','drone','drive','soccer','moto','invasion','mecha','f1','lettercannon'];
 function whereFriends(uids){
   const db=dbOf(), ids=uids||{};
   if(!db || !Object.keys(ids).length) return Promise.resolve({found:{}, denied:false});
