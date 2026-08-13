@@ -117,11 +117,14 @@ function petClipUrl(p){
   return CLIP_FILES[k] || clipFileFor(k);              // 🗜️ รอบ 611: ตัวเล็กที่เล่นได้ก่อน
 }
 
-/* ไอเทมที่สวมอยู่ของสัตว์ตัวหนึ่ง (ใส่ได้ทีละ 1 ชิ้น) */
+/* ไอเทมที่สวมอยู่ของสัตว์ตัวหนึ่ง (ใส่ได้ทีละ 1 ชิ้น)
+   รอบ 1152: อ่านทุก slot ใน p.equipped แทนการล็อก head/face/neck เพื่อรองรับ
+   เสื้อ body/back/feet และ slot ใหม่ของสัตว์ที่จะเพิ่มในอนาคตโดยไม่ต้องกลับมาแก้ฟังก์ชันนี้ */
 function equippedItem(p){
   p = p || activePet();
   if(!p) return null;
-  const id = p.equipped.head || p.equipped.face || p.equipped.neck;
+  const ids = Object.values(p.equipped || {}).filter(Boolean);
+  const id = ids.find(v=>ITEMS.some(i=>i.id === v));
   return ITEMS.find(i=>i.id === id) || null;
 }
 
@@ -159,8 +162,18 @@ function petWearOverlay(p, src){
   src = src || currentPetImg(p);
   if(!src || src === IMG_FILES[`${p.type}_${stage}_${worn.id}`]) return null;   // ภาพนี้ใส่ชุดอยู่แล้ว
   const a = WEAR_ANCHOR[src.replace(/^img\//, '').replace(/\.png$/, '')];
-  const w = WEAR_PIECE[`${p.type}_${worn.id}`];
+  // all_* ทำให้เครื่องประดับ/เสื้อผ้าชิ้นเดียวรองรับสัตว์สายพันธุ์ใหม่ได้ทันที
+  // ส่วน key รายสายพันธุ์มีไว้จูนตำแหน่งละเอียดโดยไม่ต้องสร้างภาพใหม่
+  const w = WEAR_PIECE[`${p.type}_${worn.id}`] || WEAR_PIECE[`all_${worn.id}`];
   if(!a || !w) return null;
+  if(w.mode === 'center'){
+    const size = w.size * a.ed * (w.k || 1);
+    const baseY = w.anchor === 'head' ? a.ht : a.ey;
+    const left = a.ex + (w.x || 0) * a.ed - size / 2;
+    const top = baseY + (w.y || 0) * a.ed;
+    return { f:w.f, left:+(left * 100).toFixed(2), top:+(top * 100).toFixed(2),
+             w:+(size * 100).toFixed(2), item:worn };
+  }
   const ed = a.ed, ww = w.w * ed * w.k;
   const head = w.s === 'head';                       // หมวก = ยึดยอดหัว · อื่น ๆ = ยึดเส้นตา
   const left = head ? a.ex - ww / 2 + w.ox * ed : a.ex + (w.dx * w.k + w.ox) * ed;

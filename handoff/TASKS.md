@@ -28,6 +28,19 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1154 · ห้องแต่งตัวพรีเมียม + เสื้อผ้าใหม่:** เพิ่มภาพ ImageGen โปร่งใส 10 ชิ้น (เครื่องประดับ 6 / เสื้อผ้า 4) รวมสินค้าเป็น 18 ชิ้น พร้อมระดับ คลาสสิก/หายาก/มหัศจรรย์/ตำนาน ราคา ป้ายหมวด แสงอัญมณี และยอดขาย
+- เพิ่ม `body` slot และ `wear_extra.js` แบบ center-anchor: ภาพเดียวใช้กับหมา/แมว/มังกร มี `all_*` fallback สำหรับสัตว์/slot ใหม่ โดยยังคงกติกาใส่ได้ทีละ 1 ชิ้น; จูนฮู้ด/ชุดนอนให้เห็นตาและรอยยิ้มครบ
+- Browser preview 1280×720 และ 812×375 แสดงครบ 18 ใบแบบ 9×2 ไม่มี scroll/overflow; ตรวจผ้าคลุม ฮู้ด ชุดนอน เสื้อกั๊ก เทียร่า บนสัตว์ทั้ง 3 ชนิดด้วยภาพจริง
+- syntax + `test_dress_luxury.js` + `test_pet_bond.js` + alpha validator ผ่าน; production build `.1045` 8,316 ไฟล์ 464.1 MiB และ PWA validator ผ่าน รวม PNG ใหม่ครบ 10 + fingerprint `wear_extra` แล้ว · รอ acceptance หลัง deploy
+- **รอบ 1153 · ปรับราคารถยนต์:** รถโชว์รูม 10 คันเรียงราคาใหม่จาก 400,000–500,000 เหรียญ โดยระบบซื้อสด/ดาวน์/ผ่อนอ่านราคาเดียวกันจาก `CARS`; syntax, ช่วงราคา และลำดับราคาผ่าน
+- **รอบ 1152 · Pet Bond Scene 2.5D:** รวมผู้เลี้ยง บ้านปัจจุบัน และสัตว์ไว้ในฉากเดียว พร้อมฉาก ImageGen แยกหมา/แมว/มังกรและปุ่มไปอัปเกรดบ้าน
+- เพิ่มพฤติกรรม `cuddle`/`care` พร้อม motion แบบการ์ตูนลื่น; ชุด/เครื่องประดับทุก slot ติดตามสองโพส และสัตว์/slot ในอนาคตใช้ fallback แบบ data-driven
+- สถานะห่วงใยหมุนคลังเกร็ดวิทยาศาสตร์สุขภาพสำหรับเด็ก 32 เรื่อง (น้ำ อาหารเค็ม/หวาน ฟัน มือ การนอน สายตา แดด การเคลื่อนไหว การได้ยิน และใจ) โดยจำลำดับข้ามการเข้าเกม
+- `tools/test_pet_bond.js`, syntax, diff, build และ PWA validator ผ่าน; Browser preview 1280×720/812×375 ผ่านทั้ง cuddle/care/no-anim ไม่มี overflow — ยังรอ acceptance ใน lobby บัญชีจริงหลัง deploy
+- **รอบ 1151 · ปุ่ม “เริ่มเกมตอนนี้” ห้องครูถามศัพท์กลับมาทำงาน:** ต้นตอ PicQuiz Online ยังเรียก API หนังสือสองหน้าที่ถูกถอดในรอบ 1123 จึงเกิด TypeError เงียบก่อนเริ่มเกม
+- เพิ่ม API กลางสำหรับอ่านคลังคำ/เปิดหน้าคำใน Picture Dictionary และย้ายโหมดออนไลน์มาใช้ API ใหม่ โดยแพ็กตำแหน่งลงฟิลด์ `spread` เดิมเพื่อใช้ Firebase Rules ปัจจุบันได้ทันที
+- แก้ `js/picdict.js`, `js/picquiz_online.js`; เพิ่ม `tools/test_picquiz_online_start.js` ตรวจปุ่มเขียน `playing/countdown`, API เก่าไม่หลงเหลือ และขีดจำกัดข้อมูลจริง
+- syntax/regression/diff ผ่าน; production build 8,304 ไฟล์ 459.7 MiB + PWA/cache/TWA validator ผ่าน · Browser localhost ถูก URL policy บล็อก จึงรอ acceptance ออนไลน์หลัง deploy
 - **รอบ 1150 · Letter Cannon ยิงด้วยปุ่ม + เลื่อนลื่น:** ยกเลิก auto-fire; ยิงเฉพาะเมื่อแตะหรือกดค้างปุ่ม 🔥 ยิง ซึ่งวางเหนือปุ่มซ้าย/ขวาทั้งสองฝั่งและรองรับ Spacebar
 - เปลี่ยนการเลื่อนเป็น velocity smoothing ที่ตอบสนองไว เร่งและผ่อนหยุดสั้น ๆ ไม่กระตุก/อืด โดยคงกระสุน glow/trail/muzzle shockwave/impact explosion เดิมทั้งหมด
 - แก้ `lettercannon.js/css` + regression; syntax/regression/diff, build 8,304 ไฟล์ และ Browser 1280×720 + 812×375 ผ่าน ปุ่มไม่ทับกัน/ไม่ยิงเอง/แตะยิงได้/console error 0 · รอ commit/deploy + Admin acceptance ออนไลน์
@@ -46,18 +59,14 @@
 - แก้ gate จาก tester 2 บัญชีเป็น owner ผ่าน `isTeacher()` เดิม; เมือง 3D ใช้ `state.ownerAccess` เฉพาะป้าย/ทางเข้า ส่วน `LetterCannon.open()` ตรวจ Auth จริงและบล็อก route/API โดยตรง
 - แก้ `lettercannon.js`, `auth.js`, `state.js`, `city3d.js`, `index_classic.html`, build/test/map + เพิ่มภาพ 2 ไฟล์; input cleanup ครบ pointer/touch/blur/visibility/orientation และเข้าออกซ้ำไม่ค้าง
 - syntax + regression Auth/City/State + PNG alpha + Browser 1280×720/812×375 + build 8,304 ไฟล์ 459.7 MiB + PWA validator ผ่าน; พร้อม COMMIT_DEPLOY/owner production acceptance
-- **รอบ 1143 · คืนค่าเข้าเกมที่เล่นไม่ได้:** ครอบคลุมโลก 3D มีค่าเข้า 10 เส้นทาง; โหลด/start พัง, ยกเลิกก่อนเริ่ม หรือเครื่องค้าง/reload ใน 15 วินาทีแรก ได้คืนเต็มจำนวนและกันคืนซ้ำ
 - กล่องแจ้งบอกเกม/สาเหตุแบบสั้น + ยอด `+เหรียญ` ชัดเจน เล่นเสียงเงินเข้า 2 ครั้ง; Esc/พื้นหลังปิดไม่ได้ ต้องกด “รับทราบ” เท่านั้น
 - แก้ `js/state.js`, `js/ui.js`, `js/main.js`; เพิ่ม `tools/test_paid_game_entry_refund.js`; syntax + regression/F1 ผ่าน
 - Browser 812×375 ยืนยันกล่องครบ/ไม่เลื่อน (`scrollHeight=clientHeight=257`), Esc/backdrop ยังค้าง/ปุ่มปิดได้; build 8,302 ไฟล์ 456.3 MiB + PWA validator ผ่าน
-- **รอบ 1142 · สงวนชื่อ Admin/แอดมิน:** เฉพาะ `freddommun@gmail.com`, `sumpajitshami@gmail.com`, `parkerhulk2020@gmail.com` ใช้ได้; บล็อกตัวพิมพ์ผสม ช่องว่าง และอักขระซ่อนทั้งสมัคร/เปลี่ยนชื่อ/ก่อนส่ง DB
 - ผู้เล่นเดิมที่ไม่ได้รับสิทธิ์แต่ใช้ชื่อสงวนจะถูกล้างชื่อสาธารณะและบังคับตั้งใหม่เมื่อเข้าเกม; ไม่กระทบชื่อสัตว์
 - แก้ `js/auth.js`, `js/main.js`, `js/util.js`, `handoff/RULES.md`; เพิ่ม `tools/test_admin_reserved_names.js`; syntax/test/build ผ่าน (`8302` ไฟล์)
 - ผู้ใช้ยืนยันว่า Publish Rules รอบ 1142 แล้ว 13 ส.ค.; ยังไม่ได้เทียบสดทั้งก้อนเพราะ sandbox อ่าน Firebase CLI token ใน `.config` ไม่ได้
-- **รอบ 1140 · Word Search เพิ่มคู่มือ Combo:** เพิ่มปุ่ม “🔥 Combo คืออะไร?” และ dialog อธิบาย ×1→×2→×3, ต้องหาคำถัดไปภายใน 3 วิ, ลากผิดไม่ตัด และสูตรเหรียญ
 - Dialog ปิดได้ 4 ทาง (×/เข้าใจแล้ว/พื้นหลัง/Esc) โดย Esc ปิดคู่มือก่อนออกเกม; CSS จำกัดความสูงและย่อด้วย `clamp()` สำหรับจอเตี้ยโดยไม่ใช้ scrollbar
 - แก้ `js/wordsearch.js`, `css/lobby.css`; เพิ่ม `tools/test_wordsearch_combo_help.js`; syntax/regression/diff ผ่าน แต่ visual Browser QA ถูกนโยบาย `file://` บล็อก จึงรอ acceptance หลังเปิด localhost จริง
-- **รอบ 1139 · รางวัลแรงค์+อันดับดีขึ้น:** เลื่อนแรงค์ใหญ่ได้ 10,000 (ขั้น III/II/I ไม่ได้); เซฟเก่ารับย้อนหลังตามแรงค์ใหญ่ปัจจุบันแบบครั้งเดียว
 - อันดับตัวเองใน 10 กระดานทำลายสถิติดีสุดเดิมทุก 1 ตำแหน่งได้ 1,000; อันดับตกไม่หัก/ไม่รีเซ็ต จึงกลับมาไต่ซ้ำรับเงินซ้ำไม่ได้
 - กล่องทั้งสองระบบเล่นเสียงฉลอง+เหรียญชัด เก็บ notice ข้าม reload และปิดได้เฉพาะปุ่มรับทราบ; แก้ `ranks.js`, `state.js`, `ui.js`, `main.js`, `GAME_RULES.md` + regression ใหม่
 - syntax/diff + rank movement/regression ใหม่ผ่าน; build 8,302 ไฟล์ 456.3 MiB + PWA validator ผ่าน · รอ COMMIT_DEPLOY

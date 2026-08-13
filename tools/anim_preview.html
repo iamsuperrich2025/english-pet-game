@@ -3,8 +3,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocab World lobby sprite preview</title>
-<link rel="stylesheet" href="../css/lobby.css?pb=1">
-<script src="../js/petbehavior.js?pb=1"></script>
+<link rel="stylesheet" href="../css/lobby.css?pb=1152">
+<script src="../js/petbehavior.js?pb=1152"></script>
 <style>
   *{box-sizing:border-box}
   body{margin:0;min-height:100vh;padding:18px;background:#10284c;color:#e9f6ff;
@@ -24,6 +24,7 @@ const params=new URLSearchParams(location.search);
 if(params.has('noanim')) document.documentElement.classList.add('no-anim');
 const forcedState=params.get('state');
 const videoMode=params.has('video');
+const bondMode=params.has('bond');
 const PET_SHOW_SEQ = {
   'cat baby':    {file:'../img/anim/pet_cat_baby_happy.webp',fw:275,fh:364,fps:6},
   'cat adult':   {file:'../img/anim/pet_cat_adult_happy.webp',fw:341,fh:346,fps:6},
@@ -32,7 +33,47 @@ const PET_SHOW_SEQ = {
   'dragon baby': {file:'../img/anim/pet_dragon_baby_happy.webp',fw:313,fh:369,fps:6},
   'dragon adult':{file:'../img/anim/pet_dragon_adult_happy.webp',fw:340,fh:351,fps:6},
 };
-if(!videoMode) for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
+if(bondMode){
+  const demos=[
+    {type:'dog',name:'น้องหมา',pet:'dog_adult_cap.png',gear:'🧢 หมวกแก๊ป',bg:'bond_dog.webp',home:'home_basic.png',homeName:'เพิงหลังคาไม้',careLead:'อย่าลืมจิบน้ำนะ',careSub:'น้ำช่วยควบคุมอุณหภูมิ และพาของเสียออกจากร่างกาย'},
+    {type:'cat',name:'น้องแมว',pet:'cat_adult_scarf.png',gear:'🧣 ผ้าพันคอ',bg:'bond_cat.webp',home:'home_medium.png',homeName:'บ้านสองชั้นน่ารัก',careLead:'อย่ากินเค็มจัดบ่อย ๆ นะ',careSub:'โซเดียมมากทำให้ความดันสูงขึ้น และทำให้หัวใจกับไตทำงานหนัก'},
+    {type:'dragon',name:'น้องมังกร',pet:'dragon_adult_crown.png',gear:'👑 มงกุฎ',bg:'bond_dragon.webp',home:'home_castle.png',homeName:'ปราสาทราชวังอังกฤษ',careLead:'พักสายตาจากจอบ้างนะ',careSub:'ทุก 20 นาที มองไกล 20 ฟุต 20 วินาที ช่วยลดความล้าของตา'},
+  ];
+  for(const d of demos){
+    const card=document.createElement('section'); card.className='stage-hero pet-show-mode bond-mode preview-card';
+    card.innerHTML=`<div class="pet-show-bg ps-${d.type} ps-generated"><img class="ps-generated-bg" src="../img/bond/${d.bg}" alt=""><div class="ps-vig"></div></div>`
+      + `<div class="bond-context"><div class="bond-owner"><span class="bond-owner-heart">💛</span><img src="../img/blocks/blk1.png" alt=""></div>`
+      + `<div class="bond-talk"><b>${d.name}รอหนูกลับบ้านทุกวัน</b><span>บ้านของเราทำให้น้องรู้สึกปลอดภัย</span><small>💞 แตะตัวน้องเพื่อทักทาย</small></div>`
+      + `<button class="bond-home-card" type="button"><span class="bond-home-art"><img class="bond-home-img" src="../img/home/${d.home}" alt=""></span>`
+      + `<span class="bond-home-copy"><b>🏠 ${d.homeName}</b><small>อัปเกรดแล้วน้องจะสบายขึ้น</small></span><span class="bond-home-go">⬆️ ดูและอัปเกรด</span></button>`
+      + `<span class="bond-gear worn">${d.gear} กำลังใส่อยู่</span></div>`
+      + `<div class="hero-scene" style="--ps-h:64"><div class="pet-show ps-cartoon-mode"><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`
+      + `<div class="ps-jump"><div class="pet-wrap"><div class="ps-body"><span class="ps-cartoon-stack ps-fr">`
+      + `<span class="ps-cartoon-frame cf-a"><span class="pet-wear"><img class="pet-img" src="../img/${d.pet}" alt=""></span></span>`
+      + `<span class="ps-cartoon-frame cf-b"><span class="pet-wear"><img class="pet-img" src="../img/${d.pet}" alt=""></span></span>`
+      + `</span></div><span class="ps-emote e1">💕</span><span class="ps-emote e2">🎵</span></div></div></div></div>`
+      + `<div class="ps-tag"><b>${d.name}</b><span class="ps-behavior-state">…</span></div></div></div>`;
+    document.body.appendChild(card);
+    const show=card.querySelector('.pet-show');
+    show.addEventListener('petbehaviorchange',e=>{
+      const talk=card.querySelector('.bond-talk');
+      const state=e.detail.state;
+      talk.classList.toggle('is-cuddle',state==='cuddle');
+      talk.classList.toggle('is-care',state==='care');
+      if(state==='cuddle'){
+        talk.querySelector('b').textContent=`${d.name}ขอซบหนูหน่อยได้ไหม?`;
+        talk.querySelector('span').textContent='อยู่ใกล้หนูแล้วน้องมีความสุขที่สุดเลย';
+      }else if(state==='care'){
+        talk.querySelector('b').textContent=`${d.name}เป็นห่วงนะ — ${d.careLead}`;
+        talk.querySelector('span').textContent=d.careSub;
+        talk.querySelector('small').textContent='🔬 เกร็ดวิทยาศาสตร์สุขภาพจากน้อง';
+      }
+    });
+    PetBehavior.start(show,{type:d.type,stage:'adult',speed:.16});
+    if(forcedState) PetBehavior.force(show,forcedState);
+  }
+}
+if(!videoMode && !bondMode) for(const [name,a] of Object.entries(PET_SHOW_SEQ)){
   const card=document.createElement('section'); card.className='stage-hero pet-show-mode preview-card';
   card.innerHTML=`<div class="preview-label">${name} · <span class="preview-state">…</span></div><div class="hero-scene" style="--ps-h:72">`
     + `<div class="pet-show ps-seq-mode"><div class="ps-tag"><span class="ps-behavior-state">…</span></div><div class="pet-stage ps-pod"><div class="ps-travel"><div class="ps-shadow"></div>`

@@ -47,7 +47,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Itim&family=Kanit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/lobby.css?v=1126">
+<link rel="stylesheet" href="css/lobby.css?v=1153">
 <link rel="stylesheet" href="css/account-deletion.css">
 <link rel="stylesheet" href="css/exam.css">  <!-- 📋 รอบ 812: จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL -->
 <link rel="stylesheet" href="css/picdict.css">  <!-- 📖 รอบ 992: หนังสือ Picture Dictionary -->
@@ -498,7 +498,7 @@
         <button class="rail-btn" id="btn-rail-bubble"><span class="rail-ico">🫧</span>ฟอง</button>
         <!-- 🎯 รอบ 917: เกมยิงเป้าคำศัพท์ (โลก 3D สวนสนุก ปืนอัดลม) — วางต่อกลุ่มเกมคำศัพท์ -->
         <button class="rail-btn" id="btn-rail-shootword"><span class="rail-ico">🎯</span>ยิงเป้าคำ</button>
-        <button class="rail-btn tester-locked" id="btn-rail-lettercannon" title="เปิดให้เฉพาะบัญชี Admin"><span class="rail-ico">🔤💥</span>Letter Cannon<span class="rail-lock">🔒</span></button>
+        <button class="rail-btn" id="btn-rail-lettercannon" title="เล่น Letter Cannon"><span class="rail-ico">🔤💥</span>Letter Cannon</button>
         <!-- 📋 รอบ 813: ทางลัดเข้าข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL ตรงจากรางเมนู
              (เดิมต้องกด "หมวดคำศัพท์ & แบบทดสอบ" แล้วเลื่อนหาการ์ดท้ายรายการก่อน) -->
         <button class="rail-btn" id="btn-rail-examstd"><span class="rail-ico">📋</span>ข้อสอบจริง</button>
@@ -694,7 +694,7 @@
 
 <!-- ============ DATA (แก้เพิ่มคำศัพท์/สัตว์/ไอเทมที่นี่ ไม่กระทบเซฟผู้เล่น) ============ -->
 <script src="js/data/pets.js"></script>
-<script src="js/data/items.js"></script>
+<script src="js/data/items.js?v=1153"></script>
 <script src="js/data/calendar.js"></script>  <!-- 📅 รอบ 822: ปฏิทินวันสำคัญไทย → ราคาเข้าโลก 3D วันนี้ (worldEntryInfo) -->
 <!-- ⚠️ ห้ามชี้ไป js/data/vocab/band1-5.js จนกว่างานแยกไฟล์คำศัพท์ (TASK_VOCAB_SONNET.md)
      จะเสร็จครบทุกไฟล์และ commit พร้อมกัน — เคยหลุดขึ้น production แล้วเกมเปิดไม่ได้ทั้งเว็บ (5 ก.ค. 2026) -->
@@ -719,13 +719,14 @@
 <script src="js/data/badwords.js"></script>  <!-- ตัวกรองชื่อ+คำหยาบ (ข้อ 0.2 ชื่อผู้เล่น / ข้อ 7 ชื่อสัตว์) -->
 <script src="js/data/firebase-config.js"></script>
 <script src="js/data/wear.js"></script>  <!-- 🎀 รอบ 666: หมุดวาง "ชุดที่ใส่" ทับภาพน้องท่าอื่น (เจนด้วย tools/wearlab.py) -->
+<script src="js/data/wear_extra.js?v=1153c"></script>  <!-- ✨ คอลเลกชันพรีเมียม: PNG ชิ้นเดียวใช้ข้ามสายพันธุ์ + รองรับเสื้อผ้า slot ใหม่ -->
 <script src="js/data/badgeSprite.js"></script>  <!-- 🎖️ รอบ 677: ภาพเหรียญจริงแทนอิโมจิเข็ม (ตัดด้วย tools/badgelab.py) -->
 <!-- ============ ENGINE ============ -->
 <script src="js/util.js?v=1126"></script>
 <script src="js/state.js?v=1126"></script>
-<script src="js/images.js"></script>
+<script src="js/images.js?v=1153"></script>
 <script src="js/petbehavior.js"></script> <!-- 🐾 state machine ท่าน้อง: idle/walk/look/sit/play/sleep -->
-<script src="js/ui.js?v=1126"></script>
+<script src="js/ui.js?v=1153"></script>
 <script src="js/gradelock.js"></script>  <!-- 🔒 รอบ 647: ล็อกเปลี่ยนระดับชั้น (เดือนละครั้ง · ขึ้นได้อย่างเดียว) — ต้องมาหลัง state.js/util.js -->
 
 <script src="js/lobby3d.js"></script>  <!-- โมเดล 3D ตัวละครหน้า lobby (idle + ปัดหมุน · รอบ 104) -->

@@ -55,7 +55,7 @@ async function sourceFiles() {
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
       'sound/racing/engineSound.mp3', 'img/f1/cockpit_body_realistic.png', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
-      'js/lettercannon.js', 'css/lettercannon.css',
+      'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
       'assets/images/letter_cannon/letter_cannon_base.png',
       'assets/images/letter_cannon/letter_cannon_gun_head.png']) {
       try {
@@ -73,6 +73,9 @@ async function sourceFiles() {
       } catch {}
     }
     await includeRuntime(path.join(ROOT, 'assets/weapons/fps/runtime'));
+    // Premium dress-up art is intentionally reusable runtime content. Include newly
+    // generated pieces before their first commit, without opening the build to other WIP img files.
+    await includeRuntime(path.join(ROOT, 'img/wear/premium'), 'img/wear/premium');
     return tracked;
   } catch {
     const found = [];

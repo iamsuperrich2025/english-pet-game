@@ -89,9 +89,9 @@ function petVisualHTML(p){
    ป่วย/หลับ/ยังเป็นไข่ = โหมด ps-calm (ไม่กระโดด ไม่มีหัวใจ) ให้ตรงกับอารมณ์น้อง
    ============================================================ */
 const PET_SHOW = {
-  dog:    { fall:['🌼','🍃','⭐','🐾'] },
-  cat:    { fall:['🌸','💕','✨','🐾'] },
-  dragon: { fall:['✨','🔥','💎','⭐'] },
+  dog:    { bg:'img/bond/bond_dog.webp',    fall:['🌼','🍃','⭐','🐾'] },
+  cat:    { bg:'img/bond/bond_cat.webp',    fall:['🌸','💕','✨','🐾'] },
+  dragon: { bg:'img/bond/bond_dragon.webp', fall:['✨','🔥','💎','⭐'] },
 };
 const PET_SHOW_STAGE = {egg:'👶 แรกเกิด', baby:'🍼 ร่างเด็ก', adult:'🌟 ร่างโตเต็มวัย'};
 // ความสูงน้องบนเวทีโชว์ = % ของกรอบเวที (CSS ตัดด้วย 66cqw อีกชั้น กันล้นจอแคบ)
@@ -100,14 +100,20 @@ const PET_SHOW_H = 64;
 
 /* ฉากหลังการ์ตูน (อยู่หลัง .hero-scene ทั้งใบ — ยังเห็นตอนเกมสะกดคำเปิดฉาก 3D ทับ) */
 function petShowBgHTML(p){
-  const cf = PET_SHOW[p.type] || PET_SHOW.dog;
+  /* สัตว์ใหม่เพิ่ม bond:{bg,fall} ใน PETS ได้เลย; ถ้ายังไม่ใส่จะได้ฉากกลางที่อ่านง่าย
+     ไม่แอบยืมฉากหมา เพราะจะทำให้ชนิดใหม่ดูเหมือนเป็นหมา */
+  const petCf = PETS[p.type] || {};
+  const bondCf = petCf.bond || {};
+  const cf = PET_SHOW[p.type] || {};
+  const bg = bondCf.bg || cf.bg || '';
+  const falls = bondCf.fall || cf.fall || ['✨','💛','🍃','🐾'];
   // ตำแหน่ง/จังหวะกลีบดอกไม้ deterministic ต่อชนิดสัตว์ (render ซ้ำแล้วไม่วูบวาบย้ายที่)
   let s = p.type.charCodeAt(0)*37 + 11, fall = '';
   const rnd = ()=>{ s = (s*16807) % 2147483647; return s/2147483647; };
   for(let i=0;i<11;i++){
     fall += `<span style="left:${(3+rnd()*94).toFixed(1)}%;font-size:${(9+rnd()*12).toFixed(0)}px;`
       + `animation-delay:${(rnd()*9).toFixed(2)}s;animation-duration:${(7.5+rnd()*6).toFixed(2)}s">`
-      + `${cf.fall[i % cf.fall.length]}</span>`;
+      + `${falls[i % falls.length]}</span>`;
   }
   /* 🌙 รอบ 678: ฉากกลางคืน (ฟ้ามืด/พระจันทร์/ดาว) — สีทั้งชุดสลับใน css/lobby.css
      🕗 รอบ 680: กลางคืนตาม "นาฬิกาเครื่องผู้เล่นจริง" ด้วย (isNightNow() = 20:00-06:00 ช่วงเดียวกับเวลานอนน้อง)
@@ -124,7 +130,8 @@ function petShowBgHTML(p){
     // ดาวตก 2 ดวง คนละมุมฟ้า + เหลื่อมเวลากันมาก → เห็นทีละดวง นาน ๆ ครั้ง
     fx += `<span class="ps-shoot s1"></span><span class="ps-shoot s2"></span>`;
   }
-  return `<div class="pet-show-bg ps-${p.type}${night ? ' ps-night' : ''}">
+  return `<div class="pet-show-bg ps-${p.type}${bg ? ' ps-generated' : ' ps-generic'}${night ? ' ps-night' : ''}">
+    ${bg ? `<img class="ps-generated-bg" src="${bg}" alt="" aria-hidden="true">` : ''}
     <div class="ps-sun"></div>
     <div class="ps-cloud c1"></div><div class="ps-cloud c2"></div><div class="ps-cloud c3"></div>
     <div class="ps-hill h1"></div><div class="ps-hill h2"></div>
@@ -132,6 +139,151 @@ function petShowBgHTML(p){
     <div class="ps-fall">${fall}</div>
     ${night ? `<div class="ps-night-fx">${fx}</div>` : ''}
     <div class="ps-vig"></div>
+  </div>`;
+}
+
+/* ============================================================
+   🏡💞 PET BOND SCENE รอบ 1152 — ผู้เล่น + บ้านจริง + น้องในฉากเดียว
+   ------------------------------------------------------------
+   บ้าน/ผู้เลี้ยง/ชุดอ่านจาก state ทุกครั้งที่ render จึงไม่เป็นภาพตายตัว:
+   · อัปเกรดบ้าน/ไฟดับ/น้ำถูกตัด/บ้านทรุด = ภาพเปลี่ยนทันที
+   · เครื่องประดับและเสื้อผ้า slot ใหม่ = อ่านผ่าน equippedItem() แบบ data-driven
+   · สัตว์ใหม่ไม่มีข้อความเฉพาะ = ใช้ข้อความกลางอย่างปลอดภัย; เพิ่ม PETS[type].bond.lines ได้ภายหลัง
+   ============================================================ */
+function petBondLine(p, h, worn){
+  const n = escapeHTML(p.name || (PETS[p.type] || {}).name || 'น้อง');
+  if(p.sick) return {lead:`${n}อยากให้หนูอยู่ข้าง ๆ`, sub:'หนูไม่สบาย…ลูบหัวเบา ๆ แล้วพาไปรักษานะ'};
+  if(p.sleeping) return {lead:`ฝันดีนะ ${n}`, sub:h ? 'บ้านของเราอุ่นและปลอดภัยจังเลย' : 'คืนนี้อยู่ใกล้ ๆ กันนะ หนูจะไม่ทิ้งน้อง'};
+  if(typeof petHungry === 'function' && petHungry(p)) return {lead:`${n}ท้องร้องแล้ว`, sub:'กินข้าวด้วยกันนะ แล้วน้องจะมีแรงมาเล่นกับหนู'};
+  if(!h) return {lead:`${n}อยากมีมุมปลอดภัย`, sub:'บ้านหลังแรกจะช่วยให้น้องไม่ต้องตากแดดตากฝน'};
+  if(typeof homeDecayed === 'function' && homeDecayed()) return {lead:`${n}ยังรักบ้านหลังนี้นะ`, sub:'ช่วยซ่อมและจ่ายค่าบำรุง แล้วบ้านของเราจะอบอุ่นอีกครั้ง'};
+  if(state.powerCut) return {lead:`${n}มองหาหนูในบ้านมืด ๆ`, sub:'ช่วยเปิดไฟให้บ้านกลับมาสว่างและเย็นสบายอีกครั้งนะ'};
+  if(state.waterCut) return {lead:`${n}อยากให้บ้านมีน้ำอีกครั้ง`, sub:'มีน้ำสะอาดแล้วน้องจะสดชื่นและแข็งแรงขึ้น'};
+  if(worn) return {lead:`${n}ชอบ${escapeHTML(worn.name)}มาก!`, sub:`ขอบคุณที่แต่งตัวให้น้องนะ ${worn.emoji || '💖'} มาเล่นด้วยกันเถอะ`};
+  const custom = (((PETS[p.type] || {}).bond || {}).lines || {})[h.id];
+  if(custom) return {lead:escapeHTML(custom.lead || `${n}รักบ้านของเรา`), sub:escapeHTML(custom.sub || 'อยู่กับหนูแล้วน้องอุ่นใจที่สุด')};
+  const typed = {
+    dog:    {lead:`${n}รอหนูกลับบ้านทุกวัน`, sub:'แตะน้องหน่อยนะ หางสั่นรออยู่แล้ว!'},
+    cat:    {lead:`${n}เลือกมุมโปรดในบ้านแล้ว`, sub:'มานั่งข้างกันสักพักนะ เหมียว~'},
+    dragon: {lead:`${n}จะเฝ้าบ้านให้หนูเอง`, sub:'บ้านยิ่งดี น้องยิ่งมีแรงออกผจญภัยไปด้วยกัน!'},
+  }[p.type];
+  return typed || {lead:`${n}รักบ้านของเรา`, sub:'แตะน้องเพื่อทักทาย แล้วอยู่ด้วยกันสักครู่นะ'};
+}
+
+/* 💛🔬 รอบ 1152: คลังคำห่วงใยเชิงวิทยาศาสตร์สุขภาพสำหรับเด็ก
+   อิงหลักทั่วไปจาก WHO / CDC / NIH และตั้งใจไม่ใส่ตัวเลขเฉพาะบุคคล
+   (ปริมาณน้ำ อาหาร และการนอนที่เหมาะสมต่างกันตามวัย/กิจกรรม/สุขภาพ)
+   เก็บหลายหมวดและหมุนวนโดยไม่ซ้ำติดกัน เพื่อให้น้องสอนได้หลากหลายอย่างเป็นธรรมชาติ */
+const PET_HEALTH_TIPS = Object.freeze([
+  {lead:'อย่าลืมจิบน้ำนะ', sub:'น้ำช่วยควบคุมอุณหภูมิ และพาของเสียออกจากร่างกาย'},
+  {lead:'เล่นหรือวิ่งแล้วพักดื่มน้ำด้วยนะ', sub:'ตอนเคลื่อนไหวร่างกายเสียเหงื่อ จึงต้องเติมน้ำกลับเข้าไป'},
+  {lead:'ถ้ากระหาย เลือกน้ำเปล่าก่อนนะ', sub:'น้ำไม่มีน้ำตาล จึงดีต่อฟันและไม่เพิ่มพลังงานเกินจำเป็น'},
+  {lead:'อากาศร้อนต้องใส่ใจน้ำมากขึ้นนะ', sub:'น้ำช่วยให้ร่างกายระบายความร้อนและทำงานเป็นปกติ'},
+  {lead:'อย่ากินเค็มจัดบ่อย ๆ นะ', sub:'โซเดียมมากทำให้ความดันสูงขึ้น และทำให้หัวใจกับไตทำงานหนัก'},
+  {lead:'ขนมกรุบกรอบกินแต่น้อยนะ', sub:'อาหารแปรรูปหลายชนิดมีโซเดียมซ่อนอยู่ แม้เราไม่ได้เติมเกลือ'},
+  {lead:'ลองชิมก่อนเติมน้ำปลาหรือซอสนะ', sub:'เครื่องปรุงเค็มมีโซเดียม การเติมน้อยลงช่วยดูแลความดัน'},
+  {lead:'กินหวานแต่พอดีนะ', sub:'น้ำตาลที่มากเกินไปเพิ่มโอกาสฟันผุและพลังงานเกิน'},
+  {lead:'น้ำหวานไม่ควรแทนน้ำเปล่านะ', sub:'เครื่องดื่มหวานเติมน้ำตาลได้มาก แต่ทำให้อิ่มสารอาหารน้อย'},
+  {lead:'กินขนมแล้วดูแลฟันด้วยนะ', sub:'แบคทีเรียเปลี่ยนน้ำตาลเป็นกรด ซึ่งค่อย ๆ ทำลายผิวฟัน'},
+  {lead:'แปรงฟันเช้าและก่อนนอนนะ', sub:'ยาสีฟันฟลูออไรด์ช่วยให้ผิวฟันแข็งแรงและลดฟันผุ'},
+  {lead:'อย่าใช้แปรงสีฟันร่วมกับคนอื่นนะ', sub:'เชื้อโรคจากน้ำลายอาจติดไปกับขนแปรงได้'},
+  {lead:'เพิ่มผักกับผลไม้หลายสีดีไหม?', sub:'สีที่ต่างกันมักมาพร้อมวิตามิน แร่ธาตุ และใยอาหารที่ต่างกัน'},
+  {lead:'ลองกินอาหารให้หลากหลายนะ', sub:'ไม่มีอาหารชนิดเดียวให้สารอาหารครบ ความหลากหลายช่วยให้ร่างกายเติบโต'},
+  {lead:'เลือกธัญพืชไม่ขัดสีบ้างนะ', sub:'ใยอาหารช่วยระบบขับถ่าย และทำให้อิ่มได้นานขึ้น'},
+  {lead:'ถั่วก็เป็นเพื่อนของร่างกายนะ', sub:'ถั่วให้โปรตีน ใยอาหาร และแร่ธาตุหลายชนิด'},
+  {lead:'ล้างมือก่อนกินข้าวนะ', sub:'สบู่ช่วยพาเชื้อโรคและสิ่งสกปรกหลุดออกจากมือ'},
+  {lead:'เข้าห้องน้ำแล้วล้างมือทุกครั้งนะ', sub:'มือสะอาดช่วยลดการส่งต่อเชื้อที่ทำให้ท้องเสียหรือหวัด'},
+  {lead:'ไอหรือจามใส่ข้อพับแขนนะ', sub:'ละอองจะกระจายไปหาคนอื่นและติดมือของเราน้อยลง'},
+  {lead:'อาหารสุกใหม่ปลอดภัยกว่านะ', sub:'ความร้อนที่ทั่วถึงช่วยลดเชื้อโรคหลายชนิดในอาหาร'},
+  {lead:'คืนนี้นอนให้พอนะ', sub:'ระหว่างหลับ สมองจัดระเบียบความจำและร่างกายซ่อมแซมตัวเอง'},
+  {lead:'เข้านอนเวลาใกล้เดิมทุกคืนดีไหม?', sub:'กิจวัตรสม่ำเสมอช่วยให้นาฬิกาชีวภาพรู้ว่าเมื่อไรควรพัก'},
+  {lead:'พักสายตาจากจอบ้างนะ', sub:'ทุก 20 นาที มองไกลประมาณ 20 ฟุต 20 วินาที ช่วยลดความล้าของตา'},
+  {lead:'อย่าจ้องดวงอาทิตย์ตรง ๆ นะ', sub:'แสงที่เข้มมากอาจทำอันตรายต่อจอประสาทตาได้'},
+  {lead:'ออกแดดอย่าลืมหาที่ร่มนะ', sub:'หมวก เสื้อคลุม และครีมกันแดดช่วยลดรังสีอัลตราไวโอเลตที่ถึงผิว'},
+  {lead:'ขยับตัวหรือเล่นให้หัวใจเต้นเร็วบ้างนะ', sub:'การเคลื่อนไหวช่วยให้หัวใจ ปอด กล้ามเนื้อ และกระดูกแข็งแรง'},
+  {lead:'นั่งนานแล้วลุกยืดตัวกันนะ', sub:'การพักขยับสั้น ๆ ช่วยให้กล้ามเนื้อได้เปลี่ยนท่าและเลือดไหลเวียนดีขึ้น'},
+  {lead:'ไปเดินเล่นกันสักหน่อยไหม?', sub:'การเคลื่อนไหวช่วยทั้งความจำ สมาธิ และอารมณ์'},
+  {lead:'เล่นกีฬาใส่อุปกรณ์ป้องกันด้วยนะ', sub:'หมวกกันน็อกและอุปกรณ์ที่พอดีช่วยลดความรุนแรงเมื่อเกิดอุบัติเหตุ'},
+  {lead:'ฟังเสียงไม่ต้องดังมากนะ', sub:'เสียงดังนาน ๆ ทำร้ายเซลล์รับเสียงในหู ซึ่งซ่อมแซมได้ยาก'},
+  {lead:'รู้สึกหนักใจก็บอกผู้ใหญ่ที่ไว้ใจนะ', sub:'การพูดถึงความรู้สึกช่วยให้เราได้รับการดูแลและไม่ต้องรับมือคนเดียว'},
+  {lead:'หายใจช้า ๆ ไปพร้อมกันไหม?', sub:'การผ่อนลมหายใจยาวช่วยให้ร่างกายค่อย ๆ ลดความตื่นตัว'},
+]);
+let __petHealthTipCursor = (()=>{
+  try{ return Math.max(0, Number(localStorage.getItem('vwPetHealthTipCursor')) || 0); }
+  catch(_){ return 0; }
+})();
+function nextPetHealthTip(p){
+  const tip = PET_HEALTH_TIPS[__petHealthTipCursor % PET_HEALTH_TIPS.length];
+  __petHealthTipCursor = (__petHealthTipCursor + 1) % PET_HEALTH_TIPS.length;
+  try{ localStorage.setItem('vwPetHealthTipCursor', String(__petHealthTipCursor)); }catch(_){ }
+  const n = escapeHTML(p.name || (PETS[p.type] || {}).name || 'น้อง');
+  return {lead:`${n}เป็นห่วงนะ — ${tip.lead}`, sub:tip.sub};
+}
+
+function petBondActionLine(p, stateName){
+  const n = escapeHTML(p.name || (PETS[p.type] || {}).name || 'น้อง');
+  const typed = {
+    dog: {
+      cuddle:{lead:`${n}ขอซบหน่อยได้ไหม?`, sub:'ขออยู่ใกล้ ๆ หนูอีกนิดนะ หางน้องหยุดสั่นไม่ได้เลย!'},
+    },
+    cat: {
+      cuddle:{lead:`${n}ขอคลอเคลียหน่อยนะ`, sub:'ลูบหัวให้น้องอีกนิดได้ไหม เหมียว~ น้องคิดถึงหนู'},
+    },
+    dragon: {
+      cuddle:{lead:`${n}ตัวใหญ่แต่ก็อยากอ้อนนะ`, sub:'ขอกอดอุ่น ๆ หน่อย แล้วน้องจะพาหนูบินชมฟ้า!'},
+    },
+  }[p.type];
+  if(typed && typed[stateName]) return typed[stateName];
+  if(stateName === 'cuddle') return {lead:`${n}ขออยู่ใกล้หนูหน่อยนะ`, sub:'ลูบหัวให้น้องอีกนิดได้ไหม น้องคิดถึงหนู'};
+  if(stateName === 'care') return nextPetHealthTip(p);
+  return null;
+}
+
+function updatePetBondTalk(card, p, stateName){
+  const box = card && card.querySelector('.bond-talk'); if(!box) return;
+  const h = typeof homeInfo === 'function' ? homeInfo(state.home) : null;
+  const worn = typeof equippedItem === 'function' ? equippedItem(p) : null;
+  const line = petBondActionLine(p, stateName) || petBondLine(p, h, worn);
+  const lead = box.querySelector('b'), sub = box.querySelector('span'), note = box.querySelector('small');
+  if(lead) lead.innerHTML = line.lead;
+  if(sub) sub.innerHTML = line.sub;
+  if(note) note.textContent = stateName === 'care' ? '🔬 เกร็ดวิทยาศาสตร์สุขภาพจากน้อง' : '💞 แตะตัวน้องเพื่อทักทาย';
+  box.classList.toggle('is-cuddle', stateName === 'cuddle');
+  box.classList.toggle('is-care', stateName === 'care');
+}
+
+function petBondContextHTML(p){
+  const h = typeof homeInfo === 'function' ? homeInfo(state.home) : null;
+  const worn = typeof equippedItem === 'function' ? equippedItem(p) : null;
+  const line = petBondLine(p, h, worn);
+  const decayed = !!(h && typeof homeDecayed === 'function' && homeDecayed());
+  const homeArt = h
+    ? homeVisualHTML(h, 'bond-home-img', decayed, !!state.powerCut, !!state.waterCut)
+    : `<span class="bond-home-empty" aria-hidden="true">🏕️</span>`;
+  const homeName = h ? `${h.emoji} ${h.name}` : '🌳 ยังไม่มีบ้านให้น้อง';
+  const homeStatus = !h ? 'น้องยังต้องอยู่กลางแจ้ง'
+    : decayed ? 'บ้านทรุดโทรม — น้องกำลังรอหนูดูแล'
+    : state.powerCut ? 'บ้านไฟดับ — น้องต้องการแสงสว่าง'
+    : state.waterCut ? 'บ้านไม่มีน้ำ — น้องต้องการน้ำสะอาด'
+    : h.id === 'castle' ? 'บ้านที่ดีที่สุดของน้องแล้ว!'
+    : 'อัปเกรดแล้วน้องจะสบายขึ้น';
+  const gear = worn
+    ? `<span class="bond-gear worn">${worn.emoji || '🎀'} กำลังใส่ <b>${escapeHTML(worn.name)}</b></span>`
+    : `<span class="bond-gear">🎀 เลือกเครื่องประดับหรือเสื้อผ้าให้น้องได้</span>`;
+  return `<div class="bond-context" data-bond-pet="${escapeHTML(p.type)}">
+    <div class="bond-owner" aria-label="ตัวละครผู้เลี้ยงของหนู">
+      <span class="bond-owner-heart" aria-hidden="true">💛</span>
+      <img src="img/blocks/${lobbyBlk()}.png" alt="ตัวละครผู้เลี้ยงของหนู">
+    </div>
+    <div class="bond-talk" aria-live="polite">
+      <b>${line.lead}</b><span>${line.sub}</span><small>💞 แตะตัวน้องเพื่อทักทาย</small>
+    </div>
+    <button class="bond-home-card" id="btn-bond-home" type="button" title="ดูบ้านและอัปเกรดบ้านให้น้อง">
+      <span class="bond-home-art">${homeArt}</span>
+      <span class="bond-home-copy"><b>${escapeHTML(homeName)}</b><small>${escapeHTML(homeStatus)}</small></span>
+      <span class="bond-home-go">${h && h.id === 'castle' ? '🏰 บ้านของเรา' : '⬆️ ดูและอัปเกรด'}</span>
+    </button>
+    ${gear}
   </div>`;
 }
 
@@ -194,6 +346,25 @@ function petShowSeqHTML(p, stage, base, wearOv){
     + `onload="this.parentElement.classList.add('ready')"></span>`;
 }
 
+/* เครื่องประดับ/เสื้อผ้าอยู่บนตัวจริงระหว่างแอนิเมชัน:
+   ใช้ภาพ pose ปกติ + pose ดีใจ แล้วตัดชิ้นชุดเดิมซ้อนตาม anchor ของแต่ละ pose
+   จึง crossfade ได้เนียนโดยชุดไม่ลอย และสัตว์/slot ใหม่ใช้กลไกเดียวกันเมื่อมี WEAR_* metadata */
+function petOutfitMotionHTML(p, stage){
+  const worn = (typeof equippedItem === 'function') ? equippedItem(p) : null;
+  if(!worn || stage === 'egg') return '';
+  const shaped = stage === 'adult' && p.shape && p.shape !== 'normal';
+  const poseA = (shaped && IMG_FILES[`${p.type}_adult_${p.shape}`])
+    || IMG_FILES[`${p.type}_${stage}_normal`] || null;
+  const poseB = IMG_FILES[`${p.type}_${stage}_happy`] || null;
+  const wearA = poseA ? petWearOverlay(p, poseA) : null;
+  const wearB = poseB ? petWearOverlay(p, poseB) : null;
+  if(!poseA || !wearA) return '';                       // ไม่มีชิ้นชุด/anchor → ใช้ภาพชุดสำเร็จรูปด้านล่าง
+  const frame = (src, ov, cls)=>`<span class="ps-cartoon-frame ${cls}">`
+    + `<span class="pet-wear"><img class="pet-img" src="${src}" alt="${escapeHTML(p.name)}">${wearLayerHTML(ov)}</span></span>`;
+  return `<span class="ps-cartoon-stack ps-fr">${frame(poseA, wearA, 'cf-a')}`
+    + `${poseB && wearB ? frame(poseB, wearB, 'cf-b') : ''}</span>`;
+}
+
 /* ตัวน้อง + ท่าเล่นในคลิป (คลาส .pet-stage / id #pet-tap คงเดิม —
    ระบบเก่ายังยึดไว้ใช้: applyPatRemindGlow, heartsFx, cureCelebrateFx, bindPetTap) */
 function petShowHTML(p, clipUrl){
@@ -207,8 +378,9 @@ function petShowHTML(p, clipUrl){
   const happy = (!wearOv && stage !== 'egg' && !p.sick && !p.sleeping && !hungry) ? IMG_FILES[`${p.type}_${stage}_happy`] : null;
   const calm  = !!(p.sick || p.sleeping || hungry || stage === 'egg');
   const badge = p.sick ? '🤒' : (p.sleeping ? '💤' : (hungry ? '😫' : ''));
-  const seq = petShowSeqHTML(p, stage, base, wearOv);
-  const core = seq || (base
+  const outfitMotion = calm ? '' : petOutfitMotionHTML(p, stage);
+  const seq = outfitMotion ? '' : petShowSeqHTML(p, stage, base, wearOv);
+  const core = outfitMotion || seq || (base
     ? (wearOv
         ? `<span class="pet-wear ps-fr"><img class="pet-img" src="${base}" alt="${escapeHTML(p.name)}">${wearLayerHTML(wearOv)}</span>`
         : `<img class="pet-img ps-fr" src="${base}" alt="${escapeHTML(p.name)}">`
@@ -220,7 +392,7 @@ function petShowHTML(p, clipUrl){
   const video = clipUrl
     ? `<video class="ps-video" src="${clipUrl}" autoplay muted playsinline preload="auto" disablepictureinpicture></video>`
     : '';
-  return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}${seq ? ' ps-seq-mode' : ''}">
+  return `<div class="pet-show${calm ? ' ps-calm' : ''}${p.sleeping ? ' ps-sleep' : ''}${seq ? ' ps-seq-mode' : ''}${outfitMotion ? ' ps-cartoon-mode' : ''}">
     ${video}
     <div class="pet-stage ps-pod">
       <div class="ps-travel">
@@ -5270,7 +5442,7 @@ function renderDashboard(){
         <div class="feed-list" id="feed-list"></div>
       </div>
     </div>
-    <div class="stage-hero hero-side pet-show-mode${__clipReady(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
+    <div class="stage-hero hero-side pet-show-mode bond-mode${__clipReady(p) ? ' ps-clip-mode' : ''}">${petShowBgHTML(p)}${petBondContextHTML(p)}<div class="hero-scene" style="${heroVars}">${petShowHTML(p, petClipUrl(p))}</div></div>`;
 
   const piBtn = document.getElementById('btn-pet-info');   // 🐾 รอบ 613: อยู่ในแถวแท็บแล้ว (สร้างก่อนการ์ดเสมอ)
   if(piBtn) piBtn.addEventListener('click', openPetInfoOverlay);
@@ -5278,6 +5450,8 @@ function renderDashboard(){
   if(feedAllBtn) feedAllBtn.addEventListener('click', openFeedBoard);
   const feedBell = document.getElementById('btn-feed-bell');    // 🔔 รอบ 701: แจ้งเตือนไลก์/คอมเมนต์โพสต์ของเรา
   if(feedBell) feedBell.addEventListener('click', openFeedNotif);
+  const bondHomeBtn = document.getElementById('btn-bond-home');
+  if(bondHomeBtn) bondHomeBtn.addEventListener('click', ()=>{ sfx.select(); openHomeShop(); });
   renderFeedCard();
   /* 📐 รอบ 613: วัดตำแหน่งจริง "หลังการ์ดถูกสร้าง" — เวที (.stage-hero) เพิ่งมีจริงตรงนี้
      (เรียกตอนต้น renderDashboard ได้ค่าของการ์ดรอบก่อน → รอบแรกสุดยังไม่มีเวทีเลย) */
@@ -5292,6 +5466,7 @@ function renderDashboard(){
     const behaviorRoot = card.querySelector('.pet-show');
     const behaviorForced = p.sleeping ? 'sleep' : (p.sick ? 'idle' : (petHungry(p) ? 'sit' : ''));
     const behaviorOptions = videoEl=>({video:videoEl || null,type:p.type,stage,forced:behaviorForced});
+    if(behaviorRoot) behaviorRoot.addEventListener('petbehaviorchange', e=>updatePetBondTalk(card, p, e.detail.state));
     if(vid){
       const heroEl = card.querySelector('.stage-hero');
       const key = petClipKey(p);
@@ -6009,13 +6184,31 @@ function closeDressUpBoard(){
   const ov = document.querySelector('.dress-overlay');
   if(ov) ov.remove();
 }
+function dressItemRarity(item){
+  if(item.rarity) return item.rarity;
+  if(item.price >= 25000) return 'legendary';
+  if(item.price >= 4000) return 'epic';
+  if(item.price >= 1500) return 'rare';
+  return 'common';
+}
+function dressRarityLabel(rarity){
+  return ({common:'คลาสสิก',rare:'หายาก',epic:'มหัศจรรย์',legendary:'ตำนาน'})[rarity] || 'คลาสสิก';
+}
+function dressSlotLabel(slot){
+  return ({head:'ศีรษะ',face:'ใบหน้า',neck:'คอ',body:'เสื้อผ้า'})[slot] || 'เครื่องแต่งกาย';
+}
 function openDressUpBoard(){
   closeDressUpBoard();   // กันซ้อนถ้าเผลอเปิดซ้ำ
   const overlay = document.createElement('div');
   overlay.className = 'levelup-overlay dress-overlay';
   overlay.innerHTML = `<div class="levelup-box wl-box">
     <div class="wl-head">
-      <h2>🎀 ห้องแต่งตัวน้อง</h2>
+      <div class="dress-title">
+        <span class="dress-kicker">✨ คอลเลกชันของน้อง</span>
+        <h2>🎀 ห้องแต่งตัวสุดพิเศษ</h2>
+        <p>เลือกใส่ได้ครั้งละ 1 ชิ้น • แตะแล้วน้องจะลองใส่ให้ดูทันที</p>
+      </div>
+      <div class="dress-wallet">🪙 <b>${fmtNum(state.coins)}</b></div>
       <button class="cf-ok" id="dress-done">เสร็จแล้ว ✅</button>
     </div>
     <div id="shop-grid-wrap"></div>
@@ -6042,15 +6235,25 @@ function renderShop(){
   const grid = document.getElementById('shop-grid');
   grid.innerHTML = ITEMS.map(item=>{
     const owned = state.owned.includes(item.id);
-    const equipped = p.equipped[item.slot] === item.id;
+    const equipped = p.equipped && p.equipped[item.slot] === item.id;
     const affordable = state.coins >= item.price;
-    let cls = 'shop-item', tag = `<span class="it-price">🪙${fmtNum(item.price)}</span>`;
-    if(equipped){ cls += ' equipped'; tag = `<span class="it-tag tag-on">ใส่อยู่</span>`; }
-    else if(owned){ cls += ' owned'; tag = `<span class="it-tag tag-wear">สวมใส่</span>`; }
+    const rarity = dressItemRarity(item);
+    const art = item.img
+      ? `<img class="it-art" src="${item.img}" alt="${item.name}" loading="lazy">`
+      : `<span class="it-emoji" aria-hidden="true">${item.emoji}</span>`;
+    let cls = `shop-item rarity-${rarity}`;
+    let action = `<span class="it-price">🪙 ${fmtNum(item.price)}</span>`;
+    if(equipped){ cls += ' equipped'; action = `<span class="it-tag tag-on">✓ ใส่อยู่</span>`; }
+    else if(owned){ cls += ' owned'; action = `<span class="it-tag tag-wear">ลองสวม</span>`; }
     else if(!affordable){ cls += ' locked-price'; }
-    return `<div class="${cls}" data-item="${item.id}">
-      <span class="it-emoji">${item.emoji}</span>
-      <span class="it-name">${item.name}</span>${tag}
+    return `<div class="${cls}" data-item="${item.id}" data-rarity="${rarity}">
+      <div class="it-topline">
+        <span class="it-rarity">◆ ${dressRarityLabel(rarity)}</span>
+        <span class="it-type">${dressSlotLabel(item.slot)}</span>
+      </div>
+      <div class="it-art-stage">${art}<i class="it-sparkle" aria-hidden="true"></i></div>
+      <span class="it-name">${item.name}</span>
+      <div class="it-action">${action}</div>
       ${soldBadge('item_'+item.id)}
     </div>`;
   }).join('');
@@ -6068,13 +6271,13 @@ function renderShop(){
         state.coins -= item.price;
         state.owned.push(item.id);
         if(typeof sellInc==='function') sellInc('item_'+item.id);   // 🛒 นับยอดขายเครื่องแต่งตัว
-        p.equipped = {head:null, face:null, neck:null};   // ใส่ได้ทีละ 1 ชิ้น
+        p.equipped = {};                                  // ใส่ได้ทีละ 1 ชิ้น และรองรับ slot ใหม่ในอนาคต
         p.equipped[item.slot] = item.id;                  // ซื้อแล้วใส่ให้ทันที
         sfx.buy();
         toast(`ซื้อ${item.name}สำเร็จ! น้องใส่ให้แล้ว 🥰`);
       }else{
-        const wasOn = p.equipped[item.slot] === item.id;
-        p.equipped = {head:null, face:null, neck:null};
+        const wasOn = (p.equipped || {})[item.slot] === item.id;
+        p.equipped = {};
         if(!wasOn) p.equipped[item.slot] = item.id;
         sfx.select();
       }

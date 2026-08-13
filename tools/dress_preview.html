@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dress-up Luxury Preview</title>
+  <link rel="stylesheet" href="../css/style.css?v=1153">
+  <link rel="stylesheet" href="../css/lobby.css?v=1153">
+  <style>
+    html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#172044;font-family:'Noto Sans Thai',Tahoma,sans-serif}
+    .wear-check{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:center;padding:24px;box-sizing:border-box;background:radial-gradient(circle at 50% 25%,#5966a0,#10142c 70%)}
+    .wear-card{height:min(84vh,620px);display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #f3d477;border-radius:24px;background:linear-gradient(160deg,#27386e,#171c3e);color:#fff5cf;box-shadow:0 15px 40px #070a20}
+    .wear-card h2{margin:0 0 4px}.wear-card p{margin:0;color:#bdc9ef}
+    .wear-pet{position:relative;width:min(30vw,430px);aspect-ratio:1}.wear-pet>img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.wear-pet .wear-layer{height:auto;right:auto;bottom:auto;filter:drop-shadow(0 5px 8px rgba(0,0,0,.45))}
+    @media(max-width:719px){.wear-check{gap:6px;padding:8px}.wear-card{height:88vh}.wear-card h2{font-size:14px}.wear-card p{font-size:9px}}
+  </style>
+</head>
+<body>
+  <script src="../js/data/items.js?v=1153"></script>
+  <script src="../js/data/wear.js?v=1153"></script>
+  <script src="../js/data/wear_extra.js?v=1153c"></script>
+  <script>
+    const fmtNum = n => Number(n || 0).toLocaleString('th-TH');
+    const rarityLabel = r => ({common:'คลาสสิก',rare:'หายาก',epic:'มหัศจรรย์',legendary:'ตำนาน'})[r] || 'คลาสสิก';
+    const slotLabel = s => ({head:'ศีรษะ',face:'ใบหน้า',neck:'คอ',body:'เสื้อผ้า'})[s] || 'เครื่องแต่งกาย';
+    const rarity = item => item.rarity || (item.price>=25000?'legendary':item.price>=4000?'epic':item.price>=1500?'rare':'common');
+    const params = new URLSearchParams(location.search);
+    const wearId = params.get('wear');
+
+    function overlay(type,itemId){
+      const key = type + '_adult_happy';
+      const a = WEAR_ANCHOR[key];
+      const w = WEAR_PIECE[type+'_'+itemId] || WEAR_PIECE['all_'+itemId];
+      if(!a || !w) return '';
+      if(w.mode === 'center'){
+        const size=w.size*a.ed*(w.k||1),baseY=w.anchor==='head'?a.ht:a.ey;
+        const left=a.ex+(w.x||0)*a.ed-size/2,top=baseY+(w.y||0)*a.ed;
+        return `<img class="wear-layer" src="../${w.f}" style="left:${(left*100).toFixed(2)}%;top:${(top*100).toFixed(2)}%;width:${(size*100).toFixed(2)}%">`;
+      }
+      return '';
+    }
+
+    if(wearId){
+      const item=ITEMS.find(x=>x.id===wearId) || ITEMS[ITEMS.length-1];
+      document.body.innerHTML=`<main class="wear-check">${['dog','cat','dragon'].map(type=>`<section class="wear-card">
+        <div class="wear-pet"><img src="../img/${type}_adult_happy.png">${overlay(type,item.id)}</div>
+        <h2>${item.name}</h2><p>${type} • ${slotLabel(item.slot)}</p>
+      </section>`).join('')}</main>`;
+    }else{
+      document.body.innerHTML=`<div class="levelup-overlay dress-overlay"><div class="levelup-box wl-box">
+        <div class="wl-head"><div class="dress-title"><span class="dress-kicker">✨ คอลเลกชันของน้อง</span><h2>🎀 ห้องแต่งตัวสุดพิเศษ</h2><p>เลือกใส่ได้ครั้งละ 1 ชิ้น • แตะแล้วน้องจะลองใส่ให้ดูทันที</p></div>
+        <div class="dress-wallet">🪙 <b>40,000</b></div><button class="cf-ok" id="dress-done">เสร็จแล้ว ✅</button></div>
+        <div id="shop-grid-wrap"><div class="shop-grid">${ITEMS.map((item,index)=>{
+          const r=rarity(item),equipped=item.id==='star_tiara',owned=index===1||index===4;
+          const art=item.img?`<img class="it-art" src="../${item.img}" alt="${item.name}">`:`<span class="it-emoji">${item.emoji}</span>`;
+          const action=equipped?'<span class="it-tag tag-on">✓ ใส่อยู่</span>':owned?'<span class="it-tag tag-wear">ลองสวม</span>':`<span class="it-price">🪙 ${fmtNum(item.price)}</span>`;
+          return `<div class="shop-item rarity-${r}${equipped?' equipped':owned?' owned':''}" data-rarity="${r}"><div class="it-topline"><span class="it-rarity">◆ ${rarityLabel(r)}</span><span class="it-type">${slotLabel(item.slot)}</span></div><div class="it-art-stage">${art}<i class="it-sparkle"></i></div><span class="it-name">${item.name}</span><div class="it-action">${action}</div><div class="sold-badge${index%4===0?' has':''}">🛒 ขายไปแล้ว <b>${index%4===0?index+3:0}</b> ชิ้น</div></div>`;
+        }).join('')}</div></div></div></div>`;
+    }
+  </script>
+</body>
+</html>

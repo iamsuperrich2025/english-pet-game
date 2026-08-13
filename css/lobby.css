@@ -2084,26 +2084,87 @@ html.no-anim .cs-big-img{animation:none}
 }
 .cb-btns .cf-ok.cant-afford{opacity:.55;}
 
-/* ร้านแต่งตัว: จัดทรงการ์ดสินค้าแบบเดียวกัน (CSS ล้วน — markup เดิม) */
-.shop-grid{grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;}
+/* ✨ ห้องแต่งตัวพรีเมียม — 18 ใบพอดีจอโดยไม่มี scrollbar (9×2 แนวนอน / 5×4 แนวตั้ง) */
+.dress-overlay{
+  background:radial-gradient(circle at 50% 25%,rgba(117,87,197,.52),rgba(10,13,40,.82) 72%);
+  backdrop-filter:blur(5px);
+}
+.levelup-box.wl-box{
+  position:relative;width:min(97vw,1280px);height:min(94vh,650px);max-width:none;max-height:none;
+  box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;text-align:left;
+  padding:clamp(9px,1.8vh,18px) clamp(10px,1.8vw,22px);
+  border:3px solid #f6cf68;border-radius:26px;
+  background:
+    radial-gradient(circle at 12% 0,rgba(111,84,190,.32),transparent 32%),
+    linear-gradient(145deg,#182452 0%,#101936 55%,#241641 100%);
+  box-shadow:0 0 0 2px rgba(255,248,203,.28) inset,0 22px 70px rgba(3,5,25,.58),0 0 34px rgba(247,199,83,.24);
+}
+.levelup-box.wl-box::before{
+  content:"";position:absolute;inset:7px;border:1px solid rgba(255,225,139,.24);border-radius:18px;pointer-events:none;
+}
+.dress-overlay .wl-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px;flex:0 0 auto;margin-bottom:clamp(6px,1.4vh,12px);}
+.dress-title{flex:1;min-width:0;line-height:1.12;}
+.dress-title .dress-kicker{display:block;color:#f8d77b;font-size:clamp(8px,1.25vw,12px);font-weight:900;letter-spacing:.08em;}
+.dress-overlay .dress-title h2{margin:2px 0 0;color:#fff5cf;font-size:clamp(15px,2.3vw,25px);text-shadow:0 2px 8px rgba(0,0,0,.45);}
+.dress-title p{margin:3px 0 0;color:#c8d7ff;font-size:clamp(8px,1.25vw,12px);font-weight:650;}
+.dress-wallet{flex:0 0 auto;padding:7px 12px;border:1px solid rgba(255,218,102,.58);border-radius:999px;
+  color:#ffea9d;background:linear-gradient(180deg,rgba(93,72,25,.72),rgba(35,28,17,.72));font-size:clamp(10px,1.5vw,14px);box-shadow:0 2px 12px rgba(0,0,0,.28) inset;}
+.dress-overlay .wl-head #dress-done{flex:0 0 auto;margin:0;padding:8px 15px;font-size:clamp(11px,1.45vw,15px);
+  background:linear-gradient(180deg,#b98aff,#7553d2);box-shadow:0 3px 0 #4d358f,0 0 14px rgba(178,135,255,.32);}
+#shop-grid-wrap{position:relative;z-index:1;flex:1 1 auto;min-height:0;}
+.shop-grid{display:grid;height:100%;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:clamp(4px,.75vw,9px);}
 .shop-item{
-  display:flex;flex-direction:column;padding:0;overflow:hidden;border-radius:14px;
-  background:linear-gradient(180deg,#f4faff,#d0e8fb);border:2px solid #7fb0e0;
-  box-shadow:0 4px 12px rgba(15,60,110,.22);
+  --rare:#77b8ff;--rare-rgb:119,184,255;position:relative;min-width:0;min-height:0;overflow:hidden;cursor:pointer;
+  display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;align-items:center;text-align:center;
+  border:1.5px solid var(--rare);border-radius:clamp(9px,1.1vw,15px);
+  background:linear-gradient(160deg,rgba(255,255,255,.15),rgba(var(--rare-rgb),.09) 46%,rgba(6,12,33,.78));
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset,0 7px 18px rgba(0,0,0,.3),0 0 14px rgba(var(--rare-rgb),.12);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
 }
-.shop-item .it-name{
-  order:-1;background:linear-gradient(180deg,#4aa3e8,#2a76c0);color:#fff;font-size:12px;font-weight:500;
-  padding:4px 4px;margin:0;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  text-shadow:0 1px 2px rgba(10,40,80,.4);
+.shop-item.rarity-common{--rare:#8fb6da;--rare-rgb:143,182,218;}
+.shop-item.rarity-rare{--rare:#58c7ff;--rare-rgb:88,199,255;}
+.shop-item.rarity-epic{--rare:#c18bff;--rare-rgb:193,139,255;}
+.shop-item.rarity-legendary{--rare:#ffd15e;--rare-rgb:255,209,94;}
+.shop-item::after{content:"";position:absolute;inset:-45% 54% -45% -30%;transform:rotate(18deg);pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.17),transparent);transition:transform .35s ease;}
+.shop-item:hover{transform:translateY(-3px);filter:brightness(1.09);box-shadow:0 0 0 1px rgba(255,255,255,.13) inset,0 10px 22px rgba(0,0,0,.36),0 0 20px rgba(var(--rare-rgb),.3);}
+.shop-item:hover::after{transform:translateX(230%) rotate(18deg);}
+.it-topline{display:flex;align-items:center;justify-content:space-between;gap:2px;min-width:0;padding:clamp(3px,.7vh,6px) 5px 1px;}
+.it-rarity,.it-type{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(6.5px,.78vw,9px);font-weight:900;}
+.it-rarity{color:var(--rare);text-shadow:0 0 8px rgba(var(--rare-rgb),.45);}
+.it-type{color:#aab9dd;font-weight:700;}
+.it-art-stage{position:relative;min-height:0;display:flex;align-items:center;justify-content:center;margin:0 4px;
+  border-radius:10px;background:radial-gradient(circle,rgba(var(--rare-rgb),.2),transparent 68%);}
+.it-art{display:block;width:min(94%,110px);height:min(100%,110px);object-fit:contain;filter:drop-shadow(0 5px 5px rgba(0,0,0,.42));}
+.it-emoji{font-size:clamp(25px,4.3vw,48px);line-height:1;filter:drop-shadow(0 5px 5px rgba(0,0,0,.42));}
+.it-sparkle{position:absolute;right:12%;top:10%;width:4px;height:4px;border-radius:50%;background:#fff8c7;
+  box-shadow:0 0 8px 2px rgba(255,245,177,.7),-52px 30px 0 -1px rgba(255,255,255,.72);pointer-events:none;}
+.shop-item .it-name{display:block;min-width:0;margin:0 4px;color:#fff;font-size:clamp(8px,1.05vw,11.5px);font-weight:900;
+  line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px #000;}
+.it-action{min-height:clamp(18px,3.4vh,27px);display:flex;align-items:center;justify-content:center;margin-top:2px;
+  background:linear-gradient(180deg,rgba(var(--rare-rgb),.2),rgba(0,0,0,.18));border-top:1px solid rgba(var(--rare-rgb),.28);}
+.shop-item .it-price{color:#ffe58e;font-size:clamp(8px,1vw,11px);font-weight:900;text-shadow:0 1px 3px #000;}
+.shop-item .it-tag{margin:0;padding:2px 8px;font-size:clamp(7px,.9vw,10px);font-weight:900;}
+.shop-item .sold-badge{margin:0;padding:2px 3px;border-radius:0;background:rgba(2,7,24,.38);color:#9fb0d6;
+  font-size:clamp(6px,.75vw,8.5px);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.shop-item .sold-badge.has{color:#ffe17b;background:rgba(93,64,8,.28);}
+.shop-item.equipped{border-color:#ffe47a;background:linear-gradient(160deg,rgba(255,232,127,.26),rgba(112,69,194,.28),rgba(6,12,33,.78));
+  box-shadow:0 0 0 2px rgba(255,238,145,.33) inset,0 0 24px rgba(255,210,75,.44);}
+.shop-item.owned:not(.equipped){border-color:#77e6a5;}
+.shop-item.locked-price{opacity:.58;filter:saturate(.62);}
+.shop-item.locked-price:hover{transform:none;filter:saturate(.62);}
+@media (max-width:719px){
+  .levelup-box.wl-box{height:min(96vh,720px);padding:9px 8px;}
+  .shop-grid{grid-template-columns:repeat(5,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr));gap:4px;}
+  .dress-title p{display:none;}.dress-wallet{padding:5px 8px;}.dress-overlay .wl-head #dress-done{padding:7px 10px;}
+  .it-type{display:none;}.it-art{width:min(94%,72px);height:min(100%,72px);}
 }
-.shop-item .it-emoji{font-size:38px;padding:12px 0 8px;}
-.shop-item .it-price{
-  background:#faeeda;border-top:2px solid #f0d68a;color:#7a5410;
-  font-size:12px;font-weight:500;padding:6px 2px;margin-top:auto;
+@media (max-height:430px) and (min-width:720px){
+  .levelup-box.wl-box{height:96vh;padding:7px 10px;}
+  .dress-overlay .wl-head{margin-bottom:4px;}.dress-title p{display:none;}
+  .it-topline{padding-top:2px}.it-art{width:min(90%,66px);height:min(100%,66px);}
+  .shop-item .sold-badge{padding:1px 2px;}.it-action{min-height:18px;}
 }
-.shop-item .it-tag{margin:6px auto 9px;font-size:11px;padding:1px 10px;}
-.shop-item.equipped{border-color:var(--gold);background:#fffbe8;}
-.shop-item.owned{border-color:var(--green-d);}
 .mkt-filter{border-color:var(--sky);color:var(--ink2);}
 .mkt-tab{border-color:#8ebbe8;color:#2a5580;background:rgba(255,255,255,.55);}
 .mkt-tab.on{border-color:var(--sky-d);color:var(--sky-d);background:#fff;box-shadow:0 3px 8px rgba(15,60,110,.2);}
@@ -3876,6 +3937,16 @@ html.no-anim .rank-tab.rk-up{animation:none;}
 .stage-hero.pet-show-mode::after{display:none !important;}
 .pet-show-bg{position:absolute;inset:0;z-index:0;overflow:hidden;border-radius:20px;pointer-events:none;
   background:linear-gradient(180deg, var(--sky1) 0%, var(--sky2) 56%, var(--sky3) 100%);}
+.pet-show-bg.ps-generic{--sky1:#9bd5ff;--sky2:#e7f3ff;--sky3:#dff2da;--hill1:#91cf9a;--hill2:#6eb780;
+  --gr1:#a9db98;--gr2:#66ad71;--cloud:#fff;--sun:rgba(255,245,200,.85);}
+.pet-show-bg .ps-generated-bg{position:absolute;inset:-2%;width:104%;height:104%;object-fit:cover;z-index:0;
+  transform:scale(1.03);animation:bondBackdrop 18s ease-in-out infinite alternate;}
+.pet-show-bg.ps-generated .ps-sun,
+.pet-show-bg.ps-generated .ps-cloud,
+.pet-show-bg.ps-generated .ps-hill,
+.pet-show-bg.ps-generated .ps-ground{display:none;}
+@keyframes bondBackdrop{from{transform:scale(1.03) translate3d(-.5%,0,0)}to{transform:scale(1.07) translate3d(.7%,-.45%,0)}}
+html.no-anim .pet-show-bg .ps-generated-bg{animation:none;transform:scale(1.04);}
 /* หมา = ทุ่งหญ้ากลางวันสดใส */
 .pet-show-bg.ps-dog{
   --sky1:#8ed6ff;--sky2:#d4f0ff;--sky3:#eafbe4;--hill1:#8ed98c;--hill2:#66c473;
@@ -3974,6 +4045,76 @@ html.no-anim .pet-show-bg .ps-fall{display:none;}
   background:radial-gradient(ellipse 78% 74% at 50% 52%, transparent 46%, rgba(4,9,28,.46) 100%);}
 html.no-anim .pet-show-bg.ps-night::before{animation:none;opacity:.9;}
 
+/* ============================================================
+   🏡💞 PET BOND SCENE รอบ 1152 — 2.5D ผู้เลี้ยง + บ้านปัจจุบัน + ชุดปัจจุบัน
+   ============================================================ */
+.bond-context{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;border-radius:20px;
+  container-type:size;--bond-ink:#183456;}
+.bond-owner{position:absolute;left:3.5%;bottom:3%;height:min(58%,190px);aspect-ratio:3/4;z-index:3;
+  display:flex;align-items:flex-end;justify-content:center;filter:drop-shadow(0 9px 9px rgba(31,45,76,.3));
+  transform-origin:50% 100%;animation:bondOwner 4.2s ease-in-out infinite;}
+.bond-owner::before{content:'';position:absolute;left:7%;right:7%;bottom:-1%;height:9%;border-radius:50%;
+  background:rgba(20,38,63,.22);filter:blur(3px);z-index:-1;}
+.bond-owner img{height:100%;width:100%;object-fit:contain;object-position:center bottom;}
+.bond-owner-heart{position:absolute;right:-3%;top:3%;font-size:clamp(12px,3.2cqh,22px);z-index:2;
+  animation:bondHeart 2.1s ease-in-out infinite;filter:drop-shadow(0 2px 3px rgba(0,0,0,.22));}
+.bond-talk{position:absolute;left:18%;top:9%;z-index:4;max-width:min(39%,330px);padding:8px 13px 7px;
+  border:1px solid rgba(255,255,255,.95);border-radius:18px 18px 18px 5px;
+  background:rgba(255,255,255,.9);color:var(--bond-ink);box-shadow:0 6px 20px rgba(26,52,88,.22);
+  backdrop-filter:blur(5px);line-height:1.25;}
+.bond-talk::after{content:'';position:absolute;left:-8px;bottom:8px;border-width:7px 9px 0 0;border-style:solid;
+  border-color:rgba(255,255,255,.92) transparent transparent transparent;}
+.bond-talk b,.bond-talk span,.bond-talk small{display:block;}
+.bond-talk b{font-size:clamp(10px,2.6cqh,15px);}
+.bond-talk span{font-size:clamp(9px,2.15cqh,12px);margin-top:2px;}
+.bond-talk small{font-size:clamp(8px,1.8cqh,10px);margin-top:4px;color:#9b4d72;font-weight:800;}
+.bond-talk.is-cuddle{background:rgba(255,241,249,.94);border-color:#ffc4df;box-shadow:0 7px 24px rgba(209,83,142,.28);}
+.bond-talk.is-care{background:rgba(255,251,224,.95);border-color:#ffe08b;box-shadow:0 7px 24px rgba(186,139,31,.25);}
+.bond-talk.is-cuddle small::before{content:'🥺 ';}
+.bond-talk.is-care small::before{content:'💛 ';}
+.bond-home-card{position:absolute;right:2.5%;bottom:5%;z-index:4;width:min(30%,220px);max-height:65%;
+  display:flex;flex-direction:column;align-items:stretch;gap:2px;padding:6px;border:1px solid rgba(255,255,255,.92);
+  border-radius:15px;background:rgba(247,251,255,.88);box-shadow:0 7px 22px rgba(20,45,80,.25);
+  font-family:inherit;color:var(--bond-ink);cursor:pointer;pointer-events:auto;overflow:hidden;backdrop-filter:blur(5px);
+  transition:transform .18s ease,box-shadow .18s ease;}
+.bond-home-card:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(20,45,80,.32);}
+.bond-home-card:active{transform:scale(.97);}
+.bond-home-art{display:flex;align-items:flex-end;justify-content:center;min-height:0;flex:1;overflow:hidden;border-radius:10px;
+  background:linear-gradient(180deg,rgba(114,160,220,.18),rgba(255,255,255,.55));}
+.bond-home-img{display:block;width:100%;height:100%;max-height:78px;object-fit:contain;object-position:center bottom;
+  animation:bondHome 7s ease-in-out infinite;}
+.bond-home-empty{font-size:clamp(24px,9cqh,54px);line-height:1.2;filter:grayscale(.15);}
+.bond-home-copy{display:block;min-width:0;text-align:left;padding:1px 3px;}
+.bond-home-copy b,.bond-home-copy small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bond-home-copy b{font-size:clamp(8.5px,2.2cqh,11px);}
+.bond-home-copy small{font-size:clamp(7.5px,1.8cqh,9.5px);color:#60738b;}
+.bond-home-go{display:block;border-radius:999px;padding:2px 7px;background:linear-gradient(135deg,#6f8cff,#785bd7);
+  color:#fff;font-size:clamp(8px,1.9cqh,10px);font-weight:900;text-align:center;white-space:nowrap;}
+.bond-gear{position:absolute;left:2.5%;bottom:2%;z-index:5;max-width:35%;padding:3px 9px;border-radius:999px;
+  background:rgba(255,255,255,.86);border:1px solid rgba(255,255,255,.95);color:#40566f;
+  box-shadow:0 3px 10px rgba(20,50,90,.18);font-size:clamp(8px,1.85cqh,10.5px);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;}
+.bond-gear.worn{color:#7a3769;background:rgba(255,240,250,.92);}
+@keyframes bondOwner{0%,100%{transform:rotate(-.6deg) translateY(0)}50%{transform:rotate(.7deg) translateY(-1.4%)}}
+@keyframes bondHeart{0%,100%{transform:scale(.88);opacity:.72}50%{transform:scale(1.12);opacity:1}}
+@keyframes bondHome{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-1.5%) scale(1.015)}}
+.stage-hero.ps-clip-mode .bond-context{background:linear-gradient(90deg,rgba(3,9,24,.34),transparent 34%,transparent 68%,rgba(3,9,24,.3));}
+.stage-hero.ps-clip-mode .bond-talk,.stage-hero.ps-clip-mode .bond-home-card,.stage-hero.ps-clip-mode .bond-gear{
+  background:rgba(10,27,57,.82);border-color:rgba(158,202,255,.48);color:#e7f3ff;}
+.stage-hero.ps-clip-mode .bond-talk span,.stage-hero.ps-clip-mode .bond-home-copy small{color:#c8d9ed;}
+.stage-hero.ps-clip-mode .bond-talk small{color:#ffb9da;}
+html.no-anim .bond-owner,html.no-anim .bond-owner-heart,html.no-anim .bond-home-img{animation:none;}
+@media (max-width:900px),(max-height:520px){
+  .bond-owner{left:2%;height:min(52%,118px)}
+  .bond-talk{left:16%;top:7%;max-width:40%;padding:5px 8px;border-radius:12px 12px 12px 4px}
+  .bond-talk span{display:none}
+  .bond-talk small{margin-top:2px}
+  .bond-home-card{right:1.5%;bottom:3%;width:min(28%,150px);padding:4px;border-radius:11px}
+  .bond-home-img{max-height:48px}
+  .bond-home-copy small{display:none}
+  .bond-gear{max-width:32%;padding:2px 6px}
+}
+
 /* ✨ รอบ 680: หิ่งห้อย + ดาวตก (เฉพาะกลางคืน · element เจนใน petShowBgHTML)
    ⚠️ ระยะ/ขนาดใช้ % ของกรอบฉาก ไม่ใช่ px — .pet-show-bg อยู่นอก .hero-scene จึงใช้ cqw ไม่ได้
       (cqw จะไปอิงคอนเทนเนอร์อื่น/viewport แล้วเพี้ยนบนจอเล็ก) */
@@ -4045,11 +4186,41 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
 .pet-show .ps-seq-probe{display:none;width:1px;height:1px;}
 @keyframes psPetSeq{to{background-position:var(--ps-seq-end) 0}}
 .pet-show.ps-seq-mode .ps-travel,
-.pet-show.ps-seq-mode .ps-jump,
-.pet-show.ps-seq-mode .ps-body{animation:none;}
+.pet-show.ps-seq-mode .ps-jump{animation:none;}
+.pet-show.ps-seq-mode .ps-body{animation:psSeqInbetween 2.4s cubic-bezier(.45,0,.35,1) infinite;}
 .pet-show.ps-seq-mode .ps-shadow{display:none;}
+@keyframes psSeqInbetween{
+  0%,100%{transform:translateY(0) rotate(-.25deg) scale(1)}
+  48%{transform:translateY(-.9%) rotate(.35deg) scale(1.004,.994)}
+  72%{transform:translateY(-.25%) rotate(0) scale(1.002,.998)}}
 
-/* ==== 🐾 PET BEHAVIOR รอบ 1030 — idle / walk / look / sit / play / sleep ====
+/* 🎞️ รอบ 1152: motion สอง pose สำหรับน้องที่ใส่เครื่องประดับ/เสื้อผ้า
+   แต่ละ pose มีชิ้นชุดที่ยึด anchor ของตัวเอง จึงไม่ลอยตอน crossfade */
+.pet-show .ps-cartoon-stack{position:relative;overflow:visible;isolation:isolate;will-change:transform;}
+.pet-show .ps-cartoon-frame{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;
+  transform-origin:50% 100%;will-change:opacity,transform;}
+.pet-show .ps-cartoon-frame .pet-wear{position:relative;display:block;height:100%;width:auto;aspect-ratio:1/1;}
+.pet-show .ps-cartoon-frame .pet-img{display:block;height:100%;width:auto;max-width:none;max-height:none;}
+.pet-show .ps-cartoon-frame.cf-a{opacity:1;animation:cartoonPoseA 7.2s cubic-bezier(.45,0,.25,1) infinite;}
+.pet-show .ps-cartoon-frame.cf-b{opacity:0;animation:cartoonPoseB 7.2s cubic-bezier(.45,0,.25,1) infinite;}
+.pet-show.ps-cartoon-mode .ps-shadow{animation-duration:7.2s;}
+@keyframes cartoonPoseA{
+  0%,40%{opacity:1;transform:translateY(0) rotate(0) scale(1)}
+  48%{opacity:1;transform:translateY(-1.4%) rotate(-1deg) scale(1.012,.988)}
+  57%{opacity:0;transform:translateY(-3.2%) rotate(1.2deg) scale(.992,1.02)}
+  76%{opacity:0;transform:translateY(-1.5%) rotate(-.5deg) scale(1.01,.99)}
+  86%,100%{opacity:1;transform:translateY(0) rotate(0) scale(1)}}
+@keyframes cartoonPoseB{
+  0%,48%{opacity:0;transform:translateY(1.2%) rotate(-1deg) scale(.97)}
+  58%{opacity:1;transform:translateY(-3.8%) rotate(1.3deg) scale(1.035,.965)}
+  70%{opacity:1;transform:translateY(-1.2%) rotate(-1deg) scale(.995,1.01)}
+  79%{opacity:1;transform:translateY(-2.8%) rotate(.8deg) scale(1.018,.982)}
+  88%,100%{opacity:0;transform:translateY(0) rotate(0) scale(1)}}
+html.no-anim .pet-show .ps-cartoon-frame{animation:none;transform:none;}
+html.no-anim .pet-show .ps-cartoon-frame.cf-a{opacity:1;}
+html.no-anim .pet-show .ps-cartoon-frame.cf-b{opacity:0;}
+
+/* ==== 🐾 PET BEHAVIOR รอบ 1030/1152 — idle / walk / look / sit / play / cuddle / care / sleep ====
    js/petbehavior.js เปลี่ยน state แบบสุ่มอย่างมีน้ำหนัก; คลิปใช้ช่วงเวลาจริง
    ส่วนภาพสำรองใช้ motion ชุดนี้ จึงไม่กลับไปวนท่าเดิมซ้ำตลอดเวลา */
 .stage-hero.ps-clip-mode .pet-show[data-pb-state] .ps-video{transition-duration:.22s;}
@@ -4059,6 +4230,11 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
 .pet-show.pb-play .ps-emote{animation:pbEmote 1.8s ease-out infinite;}
 .pet-show.pb-play .ps-emote.e2{animation-delay:.28s;}
 .pet-show.pb-play .ps-emote.e3{animation-delay:.56s;}
+.pet-show.pb-cuddle .ps-emote{animation:pbEmote 2.2s ease-out infinite;}
+.pet-show.pb-cuddle .ps-emote.e2{animation-delay:.38s;}
+.pet-show.pb-cuddle .ps-emote.e3{animation-delay:.76s;}
+.pet-show.pb-care .ps-emote.e1,.pet-show.pb-care .ps-emote.e3{animation:pbEmote 2.8s ease-out infinite;}
+.pet-show.pb-care .ps-emote.e3{animation-delay:1.1s;}
 
 .pet-show.pb-idle .ps-body{animation:pbBreathe 3.8s ease-in-out infinite;}
 .pet-show.pb-look .ps-body{animation:pbLook 2.5s cubic-bezier(.45,0,.35,1) infinite;}
@@ -4067,12 +4243,16 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
 .pet-show.pb-play .ps-body{animation:pbPlayBody 1.55s ease-in-out infinite;}
 .pet-show.pb-walk .ps-travel{animation:pbWalkRoam 4.8s cubic-bezier(.42,0,.58,1) infinite;}
 .pet-show.pb-walk .ps-body{animation:pbStep .72s ease-in-out infinite;}
+.pet-show.pb-cuddle .ps-body{animation:pbCuddle 3.2s cubic-bezier(.42,0,.25,1) infinite;}
+.pet-show.pb-care .ps-body{animation:pbCare 3.8s cubic-bezier(.42,0,.25,1) infinite;}
 .pet-show.pb-sleep .ps-body{animation:pbSleepBreathe 5.4s ease-in-out infinite;}
 
 .pet-show.ps-seq-mode[data-pb-state] .ps-shadow{display:block;opacity:.55;}
 .pet-show.pb-idle .ps-seq,
 .pet-show.pb-look .ps-seq,
 .pet-show.pb-sit .ps-seq,
+.pet-show.pb-cuddle .ps-seq,
+.pet-show.pb-care .ps-seq,
 .pet-show.pb-sleep .ps-seq{animation-play-state:paused;background-position:0 0!important;}
 .pet-show.pb-play .ps-seq{animation-play-state:running;animation-duration:.82s!important;}
 .pet-show.pb-walk .ps-seq{animation-play-state:running;animation-duration:1.08s!important;}
@@ -4105,6 +4285,18 @@ html.no-anim .ps-night-fx{display:none;}   /* ปิดเอฟเฟกต์�
   94%{transform:translateX(-11%) scaleX(1)}
   100%{transform:translateX(-11%) scaleX(-1)}}
 @keyframes pbStep{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.35%)}}
+/* อ้อน = ค่อย ๆ เอนตัวเข้าหาผู้เลี้ยงฝั่งซ้าย เงยหน้า แล้วถอยกลับอย่างนุ่ม */
+@keyframes pbCuddle{
+  0%,100%{transform:translate(0,0) rotate(0) scale(1)}
+  24%{transform:translate(-2%,-.5%) rotate(-1.5deg) scale(1.008,.992)}
+  48%,68%{transform:translate(-5%,-1.2%) rotate(-4deg) scale(1.025,.985)}
+  82%{transform:translate(-2.2%,-.3%) rotate(-1.2deg) scale(1.006,.996)}}
+/* ห่วงใย = ชะโงกมองผู้เลี้ยง เอียงหัวถาม แล้วพยักหน้าเบา ๆ */
+@keyframes pbCare{
+  0%,100%{transform:translate(0,0) rotate(0) scale(1)}
+  22%,38%{transform:translate(-2.5%,-.8%) rotate(-3.2deg) scale(1.012,.992)}
+  55%{transform:translate(-1.8%,.25%) rotate(-1.4deg) scale(1.018,.982)}
+  72%,84%{transform:translate(-3%,-.6%) rotate(-3.6deg) scale(1.01,.995)}}
 @keyframes pbSleepBreathe{
   0%,100%{transform:translateY(1%) scale(1,.985)}
   55%{transform:translateY(.3%) scale(1.008,.994)}}
@@ -4121,6 +4313,8 @@ html.no-anim .pet-show.pb-play .ps-jump,
 html.no-anim .pet-show.pb-play .ps-body,
 html.no-anim .pet-show.pb-walk .ps-travel,
 html.no-anim .pet-show.pb-walk .ps-body,
+html.no-anim .pet-show.pb-cuddle .ps-body,
+html.no-anim .pet-show.pb-care .ps-body,
 html.no-anim .pet-show.pb-sleep .ps-body,
 html.no-anim .pet-show.pb-play .ps-emote{animation:none;}
 /* เฟรมที่ 2 (ภาพ "ดีใจ") ซ้อนทับพอดีตัว — margin:auto จัดกลางแทน transform

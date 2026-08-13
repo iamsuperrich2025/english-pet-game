@@ -4,10 +4,11 @@
 (function(){
   'use strict';
 
-  const STATE_NAMES = ['idle','walk','look','sit','play','sleep'];
+  const STATE_NAMES = ['idle','walk','look','sit','play','cuddle','care','sleep'];
   const STATE_LABELS = {
     idle:'🌿 พักหายใจ', walk:'🐾 เดินเล่น', look:'👀 มองรอบตัว',
-    sit:'🪑 นั่งพัก', play:'🎾 เล่นสนุก', sleep:'💤 กำลังหลับ',
+    sit:'🪑 นั่งพัก', play:'🎾 เล่นสนุก', cuddle:'🥺 กำลังอ้อนหนู',
+    care:'💛 กำลังเป็นห่วงหนู', sleep:'💤 กำลังหลับ',
   };
   const SEGMENTS = {
     sit:  { from:0.05, to:0.80, rate:[0.86,1.00], hold:[500,1200] },
@@ -15,23 +16,27 @@
     look: { from:1.70, to:3.25, rate:[0.92,1.08], hold:[250,600] },
     play: { from:3.20, to:5.25, rate:[0.98,1.12], hold:[150,350] },
     walk: { from:5.20, to:7.78, rate:[0.94,1.10], hold:[150,350] },
+    cuddle:{from:1.70, to:3.25, rate:[0.82,0.96], hold:[700,1400] },
+    care:  {from:0.75, to:1.75, rate:[0.78,0.92], hold:[850,1500] },
   };
   const FALLBACK_TIME = {
     idle:[2800,5000], look:[1600,2800], sit:[3500,6500],
-    play:[1800,3000], walk:[3000,5200], sleep:[12000,18000],
+    play:[1800,3000], walk:[3000,5200], cuddle:[2800,4400], care:[3000,4800], sleep:[12000,18000],
   };
   const TRANSITIONS = {
-    idle:['look','sit','walk','play'],
-    look:['idle','walk','sit','play'],
-    sit:['idle','look','play'],
-    walk:['idle','look','sit'],
-    play:['idle','look','sit'],
-    sleep:['idle'],
+    idle:['look','sit','walk','play','cuddle','care'],
+    look:['idle','walk','sit','play','cuddle','care'],
+    sit:['idle','look','play','cuddle','care'],
+    walk:['idle','look','sit','care'],
+    play:['idle','look','sit','cuddle'],
+    cuddle:['idle','sit','care'],
+    care:['idle','look','cuddle'],
+    sleep:['idle','care'],
   };
   const WEIGHTS = {
-    cat:    { idle:30, look:26, sit:22, walk:14, play:8 },
-    dog:    { idle:20, look:15, sit:11, walk:25, play:29 },
-    dragon: { idle:32, look:24, sit:16, walk:9,  play:19 },
+    cat:    { idle:26, look:22, sit:18, walk:12, play:8,  cuddle:18, care:12 },
+    dog:    { idle:17, look:13, sit:9,  walk:20, play:24, cuddle:22, care:15 },
+    dragon: { idle:27, look:20, sit:13, walk:8,  play:16, cuddle:14, care:18 },
   };
   const ACTIVE = new WeakMap();
 

@@ -84,16 +84,16 @@ const CAR_DOWN_RATE   = .2;    // เงินดาวน์ 20% ของร�
    คันแพงกว่าเก่งกว่าโดยรวม แต่แต่ละคันมี "คาแรกเตอร์" ต่างกัน (บางคันเร็วแต่คุมยาก บางคันนุ่มเกาะถนนดี)
    → โชว์ป้ายในโชว์รูมให้เด็กเลือกตามสไตล์ + ผูกกับการขับจริงเบาๆ (adventure3d ใช้ตอนขับ) */
 const CARS = [
-  {id:'car_01', name:'แดงสายฟ้า',      price:30000,  c:'#e53935', spd:4, acc:4, grip:2},  // สปอร์ตราคาถูก ซิ่งแรงแต่คุมยาก
-  {id:'car_02', name:'ฟ้าใสซิ่ง',       price:38000,  c:'#42a5f5', spd:3, acc:3, grip:3},  // สมดุลทุกด้าน ขับง่าย
-  {id:'car_03', name:'เขียวธรรมชาติ',   price:46000,  c:'#66bb6a', spd:2, acc:3, grip:4},  // นุ่มนวล เกาะถนนดี ประหยัด
-  {id:'car_04', name:'ส้มเปลวไฟ',      price:55000,  c:'#fb8c00', spd:4, acc:4, grip:3},  // แรงร้อนแรง
-  {id:'car_05', name:'ชมพูหวานใจ',     price:64000,  c:'#f48fb1', spd:3, acc:4, grip:4},  // เร่งดี คุมง่าย
-  {id:'car_06', name:'ม่วงกาแล็กซี่',    price:74000,  c:'#7e57c2', spd:4, acc:3, grip:4},  // เร็ว+เกาะถนน
-  {id:'car_07', name:'เหลืองตาหมากรุก', price:85000,  c:'#fdd835', spd:5, acc:4, grip:3},  // เร็วที่สุด
-  {id:'car_08', name:'ขาวหิมะ',        price:96000,  c:'#b0bec5', spd:4, acc:5, grip:5},  // หรู คุมเยี่ยม
-  {id:'car_09', name:'ดำนีออน',        price:108000, c:'#37474f', spd:5, acc:5, grip:4},  // สปอร์ตชั้นสูง
-  {id:'car_10', name:'รุ้งพาสเทล',      price:120000, c:'#ba68c8', spd:5, acc:5, grip:5},  // ท็อปสุดทุกด้าน
+  {id:'car_01', name:'แดงสายฟ้า',      price:400000, c:'#e53935', spd:4, acc:4, grip:2},  // สปอร์ตราคาถูก ซิ่งแรงแต่คุมยาก
+  {id:'car_02', name:'ฟ้าใสซิ่ง',       price:410000, c:'#42a5f5', spd:3, acc:3, grip:3},  // สมดุลทุกด้าน ขับง่าย
+  {id:'car_03', name:'เขียวธรรมชาติ',   price:420000, c:'#66bb6a', spd:2, acc:3, grip:4},  // นุ่มนวล เกาะถนนดี ประหยัด
+  {id:'car_04', name:'ส้มเปลวไฟ',      price:430000, c:'#fb8c00', spd:4, acc:4, grip:3},  // แรงร้อนแรง
+  {id:'car_05', name:'ชมพูหวานใจ',     price:440000, c:'#f48fb1', spd:3, acc:4, grip:4},  // เร่งดี คุมง่าย
+  {id:'car_06', name:'ม่วงกาแล็กซี่',    price:450000, c:'#7e57c2', spd:4, acc:3, grip:4},  // เร็ว+เกาะถนน
+  {id:'car_07', name:'เหลืองตาหมากรุก', price:460000, c:'#fdd835', spd:5, acc:4, grip:3},  // เร็วที่สุด
+  {id:'car_08', name:'ขาวหิมะ',        price:470000, c:'#b0bec5', spd:4, acc:5, grip:5},  // หรู คุมเยี่ยม
+  {id:'car_09', name:'ดำนีออน',        price:480000, c:'#37474f', spd:5, acc:5, grip:4},  // สปอร์ตชั้นสูง
+  {id:'car_10', name:'รุ้งพาสเทล',      price:500000, c:'#ba68c8', spd:5, acc:5, grip:5},  // ท็อปสุดทุกด้าน
 ];
 function carInfo(id){ return CARS.find(c=>c.id === id) || null; }
 
@@ -123,4 +123,16 @@ const ITEMS = [
   {id:'tophat',     emoji:'🎩', name:'หมวกวิเศษ',       price:4000,  slot:'head'},
   {id:'sunglasses', emoji:'🕶️', name:'แว่นกันแดด',     price:5000,  slot:'face'},
   {id:'crown',      emoji:'👑', name:'มงกุฎ',           price:25000, slot:'head'},
+  // คอลเลกชันพรีเมียม: ภาพ PNG โปร่งใสใช้ได้ทั้งการ์ดสินค้าและชั้นสวมบนตัวน้อง
+  // slot เป็น data-driven เพื่อเพิ่มหมวดใหม่ในอนาคตได้ โดย UI ยังรักษากติกาใส่ทีละ 1 ชิ้น
+  {id:'flower_beret',    emoji:'🌺', img:'img/wear/premium/flower_beret.png',    name:'เบเรต์ดอกไม้วิเศษ', price:6500,  slot:'head', rarity:'rare'},
+  {id:'heart_glasses',   emoji:'💖', img:'img/wear/premium/heart_glasses.png',   name:'แว่นหัวใจอัญมณี',   price:4500,  slot:'face', rarity:'rare'},
+  {id:'aviator_goggles', emoji:'🥽', img:'img/wear/premium/aviator_goggles.png', name:'แว่นนักบินฟ้าใส',    price:8500,  slot:'face', rarity:'rare'},
+  {id:'pearl_collar',    emoji:'💎', img:'img/wear/premium/pearl_collar.png',    name:'ปลอกคอไข่มุกราชวงศ์',price:12000, slot:'neck', rarity:'epic'},
+  {id:'star_tiara',      emoji:'✨', img:'img/wear/premium/star_tiara.png',      name:'เทียร่าดาวประกาย',   price:20000, slot:'head', rarity:'epic'},
+  {id:'moon_hat',        emoji:'🌙', img:'img/wear/premium/moon_hat.png',        name:'หมวกจอมเวทแสงจันทร์',price:16000, slot:'head', rarity:'epic'},
+  {id:'rainbow_hoodie',  emoji:'🌈', img:'img/wear/premium/rainbow_hoodie.png',  name:'ฮู้ดเมฆสายรุ้ง',      price:9500,  slot:'body', rarity:'rare'},
+  {id:'explorer_vest',   emoji:'🧭', img:'img/wear/premium/explorer_vest.png',   name:'เสื้อนักสำรวจตัวจิ๋ว',price:11000, slot:'body', rarity:'rare'},
+  {id:'galaxy_pajamas',  emoji:'🌌', img:'img/wear/premium/galaxy_pajamas.png',  name:'ชุดนอนฝันกาแล็กซี',   price:15000, slot:'body', rarity:'epic'},
+  {id:'royal_cape',      emoji:'🛡️', img:'img/wear/premium/royal_cape.png',      name:'ผ้าคลุมผู้พิทักษ์',   price:30000, slot:'body', rarity:'legendary'},
 ];
