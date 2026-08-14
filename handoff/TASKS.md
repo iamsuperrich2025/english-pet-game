@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (14 ส.ค.) — อ่านก่อน
+- **รอบ 1169 · ปุ่ม Settings จอมือถือ landscape แคบ:** ต้นเหตุ header มีความกว้างขั้นต่ำจากการ์ดผู้เล่น+แถวเหรียญ ทำให้ก้อนปุ่มขวาถูก `overflow:hidden` ตัด; ที่ viewport ≤640×520 ยึดปุ่ม 5 ตัวไว้ขอบขวาใต้แถวเหรียญและซ่อนเฉพาะฟีดอันดับ
+- แก้ `css/lobby.css`, cache-bust `index_classic.html` และเพิ่ม `tools/test_lobby_settings_responsive.js`; Browser 520×375, 568×320, 640×360, 667×375, 812×375, 915×412, 1217×648, 1325×619 = ปุ่มครบ/inside/ไม่ทับเหรียญ/overflow 0 และกด Settings ได้
+- regression/syntax/diff ผ่าน; กล่อง Settings 520×375 `scrollHeight=clientHeight=375`; production build `.1056` 8,336 ไฟล์ 464.8 MiB + PWA/cache/TWA validator ผ่าน · พร้อม COMMIT_DEPLOY
 - **รอบ 1168 · รถชนแล้วเด้ง + คอนโซล/Equalizer responsive (ผู้ใช้อนุมัติภาพแล้ว):** collision เดิมคืนเพียงตำแหน่งเฟรมก่อนแต่แรงยังดันเข้า solid; แก้ normal/depth ดันพ้น 22 ซม., เด้ง 0.65–2.4 m/s, ขอบถนนดันเข้า 28 ซม. และพักคันเร่ง 0.32 วินาที โดยคงค่าซ่อม 100 เหรียญ
 - ตรวจ asset คอนโซล `1536×1024` พบจอจริง `[622,378]-[889,505]` แต่โค้ดใช้ rect เก่าและ crop คงที่; เปลี่ยนเป็น mapping จาก `naturalWidth/Height + object-fit/object-position` พร้อม mask/contain animation ในกรอบจริง
 - crop เฉพาะ `car_01` เป็น `50% 35%`, clip ขอบบนตามทรงโค้งคอนโซล, mobile landscape สูง 34vh และบังคับ asset cache `?v=1168`; ไม่แตะ gameplay/control/camera/HUD อื่น

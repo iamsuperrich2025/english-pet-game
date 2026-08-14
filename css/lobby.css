@@ -4682,6 +4682,21 @@ html.no-anim .coin-pill.comp .comp-flow .cf-c:nth-of-type(2),html.no-anim .coin-
    เพราะ .lobby-top ใช้ align-items:center ทั้งที่ .coin-block สูง 2 แถว (เหรียญ+ระดับชั้น) */
 .topbar-icons{display:flex;flex-direction:column;align-items:flex-end;gap:6px;align-self:flex-start;}
 .topbar-icons-row{display:flex;gap:8px;}
+/* 📱 รอบ 1169: มือถือ landscape บางรุ่นรายงาน viewport แคบเพียง ~520–620 CSS px
+   แต่หัวล็อบบี้ยังมีความกว้างขั้นต่ำจากการ์ดผู้เล่น+แถวเหรียญ ทำให้ก้อนปุ่มขวาล้นตาม
+   content width และปุ่ม ⚙️/🚪 ถูก #screen-dashboard (overflow:hidden) ตัดออกนอกจอ
+   จอช่วงนี้ให้ปุ่มระบบสำคัญกว่าฟีดอันดับ: ยึดปุ่มทั้ง 5 กับขอบขวาจริงใต้แถวเหรียญ
+   (ไม่ทับตัวเลข) และซ่อนเฉพาะฟีดสถานะซึ่งยังดูได้จากกระดานอันดับ */
+@media (max-width:640px) and (max-height:520px){
+  .lobby-top{position:relative;min-height:104px;}
+  .topbar-icons{
+    position:absolute;top:66px;right:0;width:calc(var(--top-h) * 5 + 32px);gap:0;
+  }
+  .topbar-icons-row{
+    display:flex;justify-content:flex-end;gap:8px;width:100%;
+  }
+  .topbar-icons .rank-move-box{display:none;}
+}
 /* 📈 ฟีดแทนปุ่มเปลี่ยนธีมเดิม — เลื่อนด้วย initSideScroll และซ่อน scrollbar แต่ยังลากขึ้นลงได้ */
 .rank-move-box{
   width:100%;height:50px;min-width:0;overflow:hidden;border-radius:10px;
