@@ -735,7 +735,7 @@ onlineStart:1898 · onlineLoadSDK:2039
 
 ## js/petpantry.js (88 บรรทัด · 0 รายการ)
 
-## js/petshopping3d.js (214 บรรทัด · 0 รายการ)
+## js/petshopping3d.js (227 บรรทัด · 0 รายการ)
 
 ## js/photo.js (361 บรรทัด · 25 รายการ)
 PHOTO_LS_KEY:12 · PHOTO_MAX:13 · PHOTO_PREFIX:14 · PHOTO_SIZES:15 · PHOTO_QS:16 · PHOTO_ZMAX:17
@@ -1134,11 +1134,11 @@ vbRender:148 · vbCardHTML:194
 ## css/petpantry.css (6 บรรทัด · 4 selector)
 .pantry-main-row:2 · .pantry-grant-overlay:3 · .petshop-entry-box:4 · .petpantry-overlay:5
 
-## css/petshopping3d.css (27 บรรทัด · 22 selector)
-.ps3-root:2,3 · .ps3-hud:4 · .ps3-gps:5 · .ps3-gps-icon:6 · .ps3-actions:7 · .ps3-windshield:8
-.ps3-visor:9 · .ps3-cardash:10 · .ps3-cargauge:11 · .ps3-pet:12 · .ps3-mirror:13 · .ps3-radio-screen:14
-.ps3-radio-list:15 · .ps3-steerpad:16 · .ps3-gaspad:17 · .ps3-geard:18 · .ps3-turnpad:19 · .ps3-tools:20
-.ps3-warning:21 · .ps3-carstart:22 · .ps3-law:23 · .cam3:24
+## css/petshopping3d.css (25 บรรทัด · 20 selector)
+.ps3-root:2,3 · .ps3-hud:4 · .ps3-gps:5 · .ps3-gps-icon:6 · .ps3-actions:7 · .ps3-turn-effects:8
+.ps3-cardash:9 · .ps3-cargauge:10 · .ps3-pet:11 · .ps3-radio-screen:12 · .ps3-radio-list:13 · .ps3-steerpad:14
+.ps3-gaspad:15 · .ps3-geard:16 · .ps3-turnpad:17 · .ps3-tools:18 · .ps3-warning:19 · .ps3-carstart:20
+.ps3-law:21 · .cam3:22
 
 ## css/picdict.css (108 บรรทัด · 1 selector)
 #screen-picdict:5,10,11,14(+54)
