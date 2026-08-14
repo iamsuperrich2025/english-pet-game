@@ -1,0 +1,23 @@
+/* 📈 กราฟอันดับ Top 30 */
+.rank-graph-btn{flex-shrink:0;display:inline-flex;align-items:center;gap:5px;cursor:pointer;padding:2px 11px;border-radius:10px;
+  border:1px solid rgba(126,235,196,.58);background:linear-gradient(165deg,rgba(15,125,105,.9),rgba(7,62,75,.94));color:#eafff7;
+  font:800 13px/1.35 inherit;font-family:inherit;white-space:nowrap;box-shadow:0 0 14px rgba(45,220,175,.28),inset 0 1px 0 rgba(255,255,255,.18)}
+.rank-graph-btn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7}.rank-graph-btn:active{transform:scale(.94)}
+.rg-overlay{position:fixed;inset:0;z-index:100120;display:flex;align-items:center;justify-content:center;padding:2.5dvh 2vw;background:rgba(2,11,27,.88);backdrop-filter:blur(7px)}
+.rg-box{width:min(96vw,1440px);height:min(94dvh,820px);min-height:0;display:flex;flex-direction:column;overflow:hidden;border-radius:22px;
+  color:#18324e;background:linear-gradient(180deg,#f8fcff,#e9f5ff);border:2px solid rgba(150,215,255,.8);box-shadow:0 24px 80px rgba(0,0,0,.55)}
+.rg-box>header{flex:0 0 auto;min-height:54px;display:flex;align-items:center;gap:12px;padding:8px 12px 8px 18px;color:#eefaff;background:linear-gradient(120deg,#09294e,#075b64)}
+.rg-box h2{font-size:clamp(18px,3.4vh,27px);margin:0;white-space:nowrap}.rg-box header p{margin:0;font-size:clamp(11px,2.2vh,14px);opacity:.8}
+.rg-close{margin-left:auto;min-width:96px;padding:9px 18px;border:2px solid #fff;border-radius:12px;background:#c93737;color:#fff;font:900 17px/1 inherit;font-family:inherit;cursor:pointer;box-shadow:0 4px 0 #7d1b1b}
+.rg-close:active{transform:translateY(3px);box-shadow:0 1px 0 #7d1b1b}
+.rg-tabs{flex:0 0 auto;display:grid;grid-template-columns:repeat(10,minmax(78px,1fr));gap:5px;padding:7px 9px;background:#d8ebf7}
+.rg-tab{position:relative;min-width:0;padding:6px 4px;border:1px solid #b4cadb;border-radius:9px;background:#fff;color:#40576a;font:800 12px/1.15 inherit;font-family:inherit;white-space:nowrap;cursor:pointer;overflow:hidden;text-overflow:ellipsis}
+.rg-tab i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rg-c);box-shadow:0 0 0 2px color-mix(in srgb,var(--rg-c),transparent 72%)}
+.rg-tab small{font-size:9px;opacity:.65}.rg-tab.active{color:#fff;background:var(--rg-c);border-color:var(--rg-c);box-shadow:0 3px 0 color-mix(in srgb,var(--rg-c),#000 30%)}.rg-tab.active i{background:#fff}
+.rg-stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:4px 10px 0}.rg-chart-head{flex:0 0 auto;display:flex;align-items:center;gap:12px;min-height:25px;padding:0 8px;font-size:13px}.rg-chart-head b{font-size:16px}.rg-chart-head span{color:#6b8296;font-size:11px}
+.rg-chart{display:block;flex:1 1 auto;min-height:0;width:100%;height:100%;overflow:visible}.rg-grid line{stroke:#b8cfdf;stroke-width:1}.rg-grid text{fill:#658096;font:11px Kanit,sans-serif}.rg-line{fill:none;stroke:var(--rg-c);stroke-width:4;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}
+.rg-point circle{fill:#fff;stroke:var(--rg-c);stroke-width:4}.rg-point:focus circle,.rg-point:hover circle{fill:var(--rg-c);r:9}.rg-stem{stroke:color-mix(in srgb,var(--rg-c),transparent 45%);stroke-width:1}.rg-name{fill:#173b58;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;font:700 10px Kanit,sans-serif}.rg-rank{fill:#526c80;font:700 10px Kanit,sans-serif}
+.rg-loading,.rg-empty{margin:auto;text-align:center;color:#48677f;font-size:18px}.rg-loading{display:flex;flex-direction:column;gap:5px}.rg-loading span,.rg-empty small{font-size:13px;font-weight:500}.rg-retry{display:block;margin:12px auto 0;padding:8px 22px;border:0;border-radius:10px;background:#087d73;color:#fff;font:800 15px inherit;font-family:inherit;cursor:pointer}
+.rg-box>footer{flex:0 0 auto;padding:3px 12px 5px;text-align:center;color:#697e8f;font-size:10.5px;background:#edf6fb}
+@media(max-width:900px){.rg-tabs{grid-template-columns:repeat(5,1fr)}.rg-tab{padding:4px 2px;font-size:10px}.rg-box>header{min-height:42px;padding:4px 7px 4px 10px}.rg-close{min-width:78px;padding:7px 10px;font-size:14px}.rg-chart-head{min-height:20px}.rg-chart-head b{font-size:12px}.rg-chart-head span{display:none}}
+@media(max-height:460px){.rg-overlay{padding:1dvh 1vw}.rg-box{width:98vw;height:98dvh;border-radius:13px}.rg-box h2{font-size:16px}.rg-box header p{display:none}.rg-tabs{gap:3px;padding:3px 5px}.rg-tab{padding:3px 1px}.rg-stage{padding:1px 5px 0}.rg-box>footer{padding:1px 6px;font-size:8.5px}}

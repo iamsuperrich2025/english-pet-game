@@ -776,8 +776,8 @@ const Lobby3D = (function(){
         wordsToday:(typeof state!=='undefined')?(state.spellWords||0):null}}) };
 })();
 
-/* 🌀 ย้ายปุ่มสะกดคำไปต่อท้าย "ระดับชั้น" บนแถบบน
-   ย้าย node เดิมทั้งก้อน จึงคง click handler และเงื่อนไขเดิมจาก renderDashboard() ไว้ครบ */
+/* 🌀📈 ปุ่มสะกดคำ + กราฟอันดับ ต่อท้าย "ระดับชั้น" บนแถบบน
+   ย้าย node สะกดคำเดิมทั้งก้อน จึงคง click handler และเงื่อนไขเดิมจาก renderDashboard() ไว้ครบ */
 (function(){
   const grade = document.getElementById('grade-line');
   const baseRenderDashboard = window.renderDashboard;
@@ -787,9 +787,15 @@ const Lobby3D = (function(){
   row.className = 'coin-subrow';
   const slot = document.createElement('div');
   slot.id = 'spell-slot';
+  const graph = document.createElement('button');
+  graph.id = 'rank-graph-btn';
+  graph.className = 'rank-graph-btn';
+  graph.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20V4M3 20h18M5 16l5-6 4 3 5-7 2 2"/></svg><span>กราฟอันดับ</span>';
+  graph.addEventListener('click', ()=>{ if(typeof openRankGraph==='function') openRankGraph(); });
   grade.parentElement.insertBefore(row, grade);
   row.appendChild(grade);
   row.appendChild(slot);
+  row.appendChild(graph);
 
   window.renderDashboard = function(){
     const result = baseRenderDashboard.apply(this, arguments);
