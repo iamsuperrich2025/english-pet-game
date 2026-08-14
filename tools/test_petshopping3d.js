@@ -1,6 +1,8 @@
 'use strict';
-const fs=require('fs'),path=require('path');const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');const assert=(x,m)=>{if(!x)throw new Error(m)};
+const fs=require('fs'),path=require('path'),vm=require('vm');const root=path.resolve(__dirname,'..'),read=r=>fs.readFileSync(path.join(root,r),'utf8');const assert=(x,m)=>{if(!x)throw new Error(m)};
 const js=read('js/petshopping3d.js'),css=read('css/petshopping3d.css'),ui=read('js/ui.js');
+const sandbox={window:{},console};vm.runInNewContext(js,sandbox);const testApi=sandbox.window.PetShopping3D._t,testRoute=testApi.routeFor({x:0,z:18},'fashion');
+assert(testRoute.every(p=>testApi.onRoad(p.x,p.z)),'GPS route must end on the drivable road');testApi.setPose(40,10,0);assert(!testApi.onRoad(40,10),'off-road fixture invalid');testApi.keepCarOnRoad();assert(testApi.onRoad(testApi.driveState.x,testApi.driveState.z),'off-road car was not projected back onto the road');
 assert(js.includes('window.PetShopping3D')&&js.includes('start,exit,isRunning'), 'world public API missing');
 assert(js.includes('antialias:false')&&js.includes('Math.min(devicePixelRatio||1,1.5)')&&js.includes('shadowMap.enabled=false'),'mobile renderer budget missing');
 assert(js.includes('routeFor')&&js.includes('LineBasicMaterial')&&js.includes('navText'),'GPS route/navigation missing');
@@ -15,6 +17,11 @@ assert(js.includes('setGear(!gearR)')&&js.includes('CarSnd.horn()')&&js.includes
 assert(js.includes('ps3-carstart')&&js.includes('cs-engine')&&js.includes('cs-belt')&&js.includes('CAR_FINE_BELT=300'),'KPP engine-start/seatbelt system missing');
 assert(js.includes('drawMirrors')&&js.includes('mirrorPass')&&js.includes('toggleCamera')&&js.includes('ps3-mirror-rear'),'KPP mirrors/camera system missing');
 assert(js.includes('turnTick')&&js.includes('turnReturnAt=now+900')&&js.includes('ps3-turnpad'),'KPP self-cancelling turn signal missing');
+assert(js.includes('CAR_REPAIR_FEE=100')&&!js.includes('CAR_REPAIR_FEE=1000'),'collision repair fee must be 100 coins');
+assert(js.includes('keepCarOnRoad()')&&js.includes('STORE_STOP_Z=-60')&&js.includes('ROAD_HALF_X=13')&&js.includes('ROAD_HALF_Z=11'),'road containment or safe store stop missing');
+assert(js.includes("listen(window,'blur'")&&js.includes("listen(document,'visibilitychange'"),'stuck steering/throttle release guards missing');
+assert(js.includes('radioPeaks')&&js.includes('PREMIUM SPECTRUM')&&js.includes('Math.pow(p,1.55)')&&js.includes('20k Hz'),'premium log-spectrum equalizer missing');
+assert(css.includes('#ff8a00')&&css.includes('width:28px;height:28px')&&css.includes('overflow:hidden'),'contained orange/amber turn signal styling missing');
 assert(js.includes('WORLD_HALF=700')&&js.includes('DRIVE_LIMIT=480')&&js.includes('WORLD_HALF*2'),'world floor/road must extend beyond every drivable boundary');
 assert(css.includes('min-width:50px;height:50px')&&css.includes('.ps3-actions{gap:10px}'),'adult-friendly top action targets/gaps missing');
 assert(js.includes('solidRect')&&js.includes('solidCircle')&&js.includes('hitsSolid(car.x,car.z)')&&js.includes('car.x=prevX;car.z=prevZ'),'building/tree collision response missing');
@@ -24,4 +31,4 @@ assert(js.includes('Music.suspendBg()')&&js.includes('Music.carRadio(true)')&&js
 assert(ui.includes('ps3Css')&&ui.includes("petshopping3d.css?v=1163")&&ui.includes("petshopping3d.js?v=1163"),'Pet Shopping runtime cache refresh missing');
 assert(js.includes('cancelAnimationFrame')&&js.includes('forceContextLoss')&&js.includes('listeners.splice'),'world cleanup missing');
 assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll world CSS missing');
-console.log('PASS Pet Shopping 3D: route, structured shops, cockpit pet, music, cleanup, compact HUD');
+console.log('PASS Pet Shopping 3D: road containment, 100-coin repair, premium spectrum, amber signals, cockpit and cleanup');
