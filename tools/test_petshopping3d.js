@@ -7,6 +7,16 @@ assert(js.includes('routeFor')&&js.includes('LineBasicMaterial')&&js.includes('n
 ['foundation','facade bays','pilasters','cornice'].forEach(()=>{});assert(js.includes('checkout')&&js.includes('wall shelves')&&js.includes('gondola')&&js.includes('addShop(\'food\')')&&js.includes('addShop(\'fashion\')'),'structured shop components missing');
 assert(js.includes("img/pet-shopping/${kind}_window.webp"),'generated shop-art mapping missing');
 assert(js.includes('PetPantry.openStore(target,{onClose')&&js.includes('currentPetImg')&&css.includes('@keyframes ps3bob'),'shop checkout or pet passenger missing');
+assert(js.includes('radioState')&&js.includes('Music.toggleCar()')&&css.includes('.ps3-eq')&&css.includes('@keyframes ps3eq'),'interactive car-radio equalizer missing');
+assert(js.includes('ps3-dash-shell')&&!js.includes('3d_dash_${carId}')&&css.includes('.ps3-speed'),'unified low-poly cockpit must not reuse photoreal dashboard art');
+assert(js.includes('function carDrive')&&js.includes('CAR_WB=2.6')&&js.includes('dVelX+=(sin*dSpeed-dVelX)*grip'),'moto3d bicycle-model driving port missing');
+assert(js.includes('ps3-steerhit')&&js.includes('ps3-throttle')&&js.includes('ps3-brake')&&js.includes('ps3-gear')&&js.includes('ps3-horn'),'moto3d steering/throttle/brake/gear/horn controls missing');
+assert(js.includes('setGear(!gearR)')&&js.includes('CarSnd.horn()')&&js.includes('CarSnd.revBeep()'),'moto3d gear/horn/reverse feedback missing');
+assert(js.includes('WORLD_HALF=700')&&js.includes('DRIVE_LIMIT=480')&&js.includes('WORLD_HALF*2'),'world floor/road must extend beyond every drivable boundary');
+assert(css.includes('min-width:50px;height:50px')&&css.includes('.ps3-actions{gap:10px}'),'adult-friendly top action targets/gaps missing');
+assert(js.includes('solidRect')&&js.includes('solidCircle')&&js.includes('hitsSolid(car.x,car.z)')&&js.includes('car.x=prevX;car.z=prevZ'),'building/tree collision response missing');
+assert(js.includes('cute_town_mural_v2.webp')&&js.includes('decorateTown(rows)'),'generated cute building mural decoration missing');
+assert(js.includes("fetch(url,{cache:'force-cache'})")&&js.includes('createImageBitmap')&&js.includes('TextureLoader().load(url,finish'),'reliable texture loader/fallback missing');
 assert(js.includes('Music.suspendBg()')&&js.includes('Music.carRadio(true)')&&js.includes('Music.resumeBg()'),'car music lifecycle missing');
 assert(js.includes('cancelAnimationFrame')&&js.includes('forceContextLoss')&&js.includes('listeners.splice'),'world cleanup missing');
 assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll world CSS missing');

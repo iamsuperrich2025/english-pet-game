@@ -59,6 +59,7 @@ async function sourceFiles() {
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
       'css/petpantry.css', 'css/petshopping3d.css',
       'img/pet-shopping/food_window.webp', 'img/pet-shopping/fashion_window.webp', 'img/pet-shopping/pantry_grant.webp',
+      'img/pet-shopping/cute_town_mural_v2.webp',
       'assets/images/letter_cannon/letter_cannon_base.png',
       'assets/images/letter_cannon/letter_cannon_gun_head.png']) {
       try {

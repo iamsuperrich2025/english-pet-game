@@ -7287,7 +7287,7 @@ async function enterPetShopping3D(target='food'){
   toast(target==='food' ? '🚗 กำลังเตรียมเส้นทางไปร้านอาหารสัตว์...' : '🚗 กำลังเตรียมเส้นทางไปร้านแฟชั่นสัตว์เลี้ยง...');
   try{
     await loadScriptOnce('js/vendor/three.min.js');
-    await loadScriptOnce('js/petshopping3d.js?v=1158');
+    await loadScriptOnce('js/petshopping3d.js?v=1160');
     if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
     const own = rental ? null : myCar();
     const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
