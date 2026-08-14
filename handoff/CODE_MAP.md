@@ -735,7 +735,7 @@ onlineStart:1898 · onlineLoadSDK:2039
 
 ## js/petpantry.js (88 บรรทัด · 0 รายการ)
 
-## js/petshopping3d.js (81 บรรทัด · 0 รายการ)
+## js/petshopping3d.js (141 บรรทัด · 0 รายการ)
 
 ## js/photo.js (361 บรรทัด · 25 รายการ)
 PHOTO_LS_KEY:12 · PHOTO_MAX:13 · PHOTO_PREFIX:14 · PHOTO_SIZES:15 · PHOTO_QS:16 · PHOTO_ZMAX:17
@@ -1132,8 +1132,10 @@ vbRender:148 · vbCardHTML:194
 ## css/petpantry.css (6 บรรทัด · 4 selector)
 .pantry-main-row:2 · .pantry-grant-overlay:3 · .petshop-entry-box:4 · .petpantry-overlay:5
 
-## css/petshopping3d.css (3 บรรทัด · 1 selector)
-.ps3-root:2
+## css/petshopping3d.css (26 บรรทัด · 17 selector)
+.ps3-root:2,3,4 · .ps3-hud:5 · .ps3-gps:6,8 · .ps3-gps-icon:7 · .ps3-actions:9 · .ps3-windshield:10
+.ps3-cockpit:11 · .ps3-dash-shell:12,13 · .ps3-dash-stitch:14 · .ps3-speed:15 · .ps3-wheel:16 · .ps3-radio:17
+.ps3-pet:18 · .ps3-slider:19 · .ps3-throttle:20 · .ps3-car-controls:21 · .ps3-store:22
 
 ## css/picdict.css (108 บรรทัด · 1 selector)
 #screen-picdict:5,10,11,14(+54)

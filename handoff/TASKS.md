@@ -57,7 +57,6 @@
 - **รอบ 1148 · Letter Cannon ยิงด้วย double tap:** ถอดปุ่ม ยิง/FIRE และ CSS/handler เดิม; แตะหรือคลิกสองครั้งภายใน 380ms ที่ฝั่งซ้ายหรือขวาก็เล็งแล้วยิง 1 นัด โดยไม่ผูก pointer/มือ
 - ลากเกิน 24px ใช้เล็งอย่างเดียว ไม่ถูกนับเป็น tap; กดพัก/เสียง/ออก/สลับหน้าต่างจะล้างจังหวะแตะ กันยิงลั่น และ Spacebar ยังใช้เป็นทางเลือกบนคีย์บอร์ด
 - แก้ `lettercannon.js/css` + regression; syntax/regression/diff และ production build 8,304 ไฟล์/PWA/dist assertions ผ่าน · Browser local ถูก URL policy บล็อก จึงรอ acceptance บนหน้าออนไลน์หลัง deploy
-- **รอบ 1147 · Letter Cannon ปลดล็อกเฉพาะ Admin:** เปลี่ยน gate จากครู/เจ้าของ 1 บัญชีเป็น `isAdmin()` ซึ่งอ้าง allowlist กลาง `ADMIN_NAME_EMAILS` เดิม 3 บัญชี ไม่เพิ่มอีเมล/UID หรือแก้ Rules
 - sync `state.adminAccess` ให้เมือง 3D แสดงสิทธิ์ตรงบัญชี; Lobby, route และ `LetterCannon.open()` ตรวจ admin จริง ส่วนผู้เล่นทั่วไปยังเห็น 🔒
 - แก้ `auth.js`, `state.js`, `city3d.js`, `lettercannon.js`, `index_classic.html` และ tests; syntax/regression/admin allowlist/build 8,304 ไฟล์/PWA/dist gate+PNG ผ่าน
 - manifest รอบนี้รวม `js/lettercannon.js` (ไม่แก้เนื้อหา) เพื่อให้ launcher เลือก deploy จริง; ปิดงานได้เมื่อ live เป็น `.1041` และภาพสอง URL ตอบ 200 `image/png`

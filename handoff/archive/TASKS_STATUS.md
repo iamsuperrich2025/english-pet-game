@@ -4885,3 +4885,8 @@
 
 - **รอบ 1146 · deploy-only สำหรับ hotfix ภาพป้อม:** รอบ 1145 commit/push สำเร็จแต่ `ship.sh` เห็นเฉพาะ tools/docs จึงเลือก `--no-deploy`; live ยัง `.1040` และภาพยัง 404
 - **รอบ 1145 · hotfix asset 404 หลัง deploy:** `.1040` ขึ้นสำเร็จแต่ production manifest ไม่มีภาพป้อม เพราะ `build_web.mjs` fallback ใน git archive ไม่ผ่านรายการ explicit ของโหมดมี `.git`
+
+
+## ⏬ ย้ายเมื่อ 2026-08-14 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1147 · Letter Cannon ปลดล็อกเฉพาะ Admin:** เปลี่ยน gate จากครู/เจ้าของ 1 บัญชีเป็น `isAdmin()` ซึ่งอ้าง allowlist กลาง `ADMIN_NAME_EMAILS` เดิม 3 บัญชี ไม่เพิ่มอีเมล/UID หรือแก้ Rules
