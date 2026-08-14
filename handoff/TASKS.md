@@ -59,7 +59,6 @@
 - เพิ่ม `body` slot และ `wear_extra.js` แบบ center-anchor: ภาพเดียวใช้กับหมา/แมว/มังกร มี `all_*` fallback สำหรับสัตว์/slot ใหม่ โดยยังคงกติกาใส่ได้ทีละ 1 ชิ้น; จูนฮู้ด/ชุดนอนให้เห็นตาและรอยยิ้มครบ
 - Browser preview 1280×720 และ 812×375 แสดงครบ 18 ใบแบบ 9×2 ไม่มี scroll/overflow; ตรวจผ้าคลุม ฮู้ด ชุดนอน เสื้อกั๊ก เทียร่า บนสัตว์ทั้ง 3 ชนิดด้วยภาพจริง
 - syntax + `test_dress_luxury.js` + `test_pet_bond.js` + alpha validator ผ่าน; production build `.1045` 8,316 ไฟล์ 464.1 MiB และ PWA validator ผ่าน รวม PNG ใหม่ครบ 10 + fingerprint `wear_extra` แล้ว · รอ acceptance หลัง deploy
-- **รอบ 1153 · ปรับราคารถยนต์:** รถโชว์รูม 10 คันเรียงราคาใหม่จาก 400,000–500,000 เหรียญ โดยระบบซื้อสด/ดาวน์/ผ่อนอ่านราคาเดียวกันจาก `CARS`; syntax, ช่วงราคา และลำดับราคาผ่าน
 - เพิ่มพฤติกรรม `cuddle`/`care` พร้อม motion แบบการ์ตูนลื่น; ชุด/เครื่องประดับทุก slot ติดตามสองโพส และสัตว์/slot ในอนาคตใช้ fallback แบบ data-driven
 - สถานะห่วงใยหมุนคลังเกร็ดวิทยาศาสตร์สุขภาพสำหรับเด็ก 32 เรื่อง (น้ำ อาหารเค็ม/หวาน ฟัน มือ การนอน สายตา แดด การเคลื่อนไหว การได้ยิน และใจ) โดยจำลำดับข้ามการเข้าเกม
 - `tools/test_pet_bond.js`, syntax, diff, build และ PWA validator ผ่าน; Browser preview 1280×720/812×375 ผ่านทั้ง cuddle/care/no-anim ไม่มี overflow — ยังรอ acceptance ใน lobby บัญชีจริงหลัง deploy
