@@ -1,4 +1,4 @@
-﻿# TASKS.md — งานถัดไป + ประวัติรอบ (เปิดตอนเลือกงาน / ตามบั๊ก)
+# TASKS.md — งานถัดไป + ประวัติรอบ (เปิดตอนเลือกงาน / ตามบั๊ก)
 
 > 📂 ราก `C:\Users\rober\english-pet-game\` · เปิดไฟล์ใช้ path เต็ม · สถานะย่อ + กฎ + testkit อยู่ใน `HANDOFF.md` (อ่านนั่นก่อน)
 >
@@ -28,6 +28,12 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1162 · กราฟอันดับ Top 30 หน้า Lobby:** เพิ่มปุ่ม “กราฟอันดับ” ถัดจาก “สะกดคำ”; กราฟ 10 หมวดคะแนนหลักใช้สีไม่ซ้ำ สลับหมวดได้ และติดชื่อผู้เล่นทุกจุด พร้อมปุ่ม “✕ ปิด” ชัดเจน
+- โหลด snapshot `/leaderboard` เฉพาะตอนเปิดและ cache 2 นาที จึงได้ Top 30 จริงของแต่ละหมวดโดยไม่เพิ่ม listener/Firebase Rules; สอบใหญ่/ข้อสอบมาตรฐานคงดูแยกชุดในแท็บเดิม
+- แก้ `rankgraph.js/css`, `lobby3d.js`, `index_classic.html`, build allowlist + regression; syntax/tests, Browser 1280×720 และ 812×375 no-overflow/30 จุด+30 ชื่อ, production build `.1051` 8,336 ไฟล์ + PWA validator ผ่าน
+- **รอบ 1163 · Pet Shopping ใช้ระบบขับรถเมืองกำแพงเพชรโดยตรง:** แทนชุด `moto3d` รอบ 1160 ด้วย physics/cockpit ตามรถ/เกจ/กระจก 3 บาน/กล้อง/สตาร์ท+เข็มขัด/D-R/ไฟเลี้ยวคืนกลาง/เสียง/วิทยุ+Equalizer
+- GPS ร้านอาหาร/แฟชั่นของ Pet Shopping ยังใช้ route/nav เดิม; เพิ่มปุ่มเพลง 50px และจัดควบคุมที่ 812×375 ไม่ซ้อน/ไม่ overflow; แก้ `petshopping3d.js/css`, cache `index_classic.html`+`ui.js`, regression test
+- syntax + pet-shopping/integration/dress + Browser 812×375/1280×720 ผ่าน, console error 0; production build/validator รอบสุดท้ายก่อนส่ง
 - **รอบ 1160 · hotfix Pet Shopping 3D จากภาพผู้เล่น:** เปลี่ยน cockpit ให้เข้ากับฉาก low-poly, ปุ่มมุมบน 50px+, equalizer เปิด/ปิดเพลง, และพวงมาลัย/เร่ง/เบรก/D-R/แตร+ฟิสิกส์/เสียงยกจาก `moto3d` รอบ 785
 - แก้ขับจนถนน/พื้นหายด้วยพื้น 1,400m + drive limit 480m; เพิ่ม collision อาคาร/ร้าน/ต้นไม้ 128 จุด ชนแล้วหยุด+เด้ง+สั่น ทะลุไม่ได้
 - สร้าง `img/pet-shopping/cute_town_mural_v2.webp` ด้วย ImageGen และติดลายอุ้งเท้า/ดอกไม้/ไหมพรมบน 50 อาคาร; แก้ texture loader เป็น fetch+ImageBitmap มี fallback ให้ภาพขึ้นจริง

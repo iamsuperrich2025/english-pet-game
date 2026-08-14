@@ -7286,8 +7286,10 @@ async function enterPetShopping3D(target='food'){
   advLoading = Date.now();
   toast(target==='food' ? '🚗 กำลังเตรียมเส้นทางไปร้านอาหารสัตว์...' : '🚗 กำลังเตรียมเส้นทางไปร้านแฟชั่นสัตว์เลี้ยง...');
   try{
+    const ps3Css = document.querySelector('link[href*="css/petshopping3d.css"]');
+    if(ps3Css && !ps3Css.href.includes('v=1163')) ps3Css.href='css/petshopping3d.css?v=1163';
     await loadScriptOnce('js/vendor/three.min.js');
-    await loadScriptOnce('js/petshopping3d.js?v=1160');
+    await loadScriptOnce('js/petshopping3d.js?v=1163');
     if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
     const own = rental ? null : myCar();
     const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
