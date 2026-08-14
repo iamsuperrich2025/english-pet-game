@@ -28,10 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (14 ส.ค.) — อ่านก่อน
-- **รอบ 1166 · รถ Pet Shopping อ่านเส้นทาง/ควบคุมได้ตรง UI:** ถอดกระจก 3 บานและชั้นกระจกหน้า พร้อมปุ่มที่ปัดน้ำฝน/ม่านที่หมดหน้าที่; คงไฟเลี้ยวเป็นเอฟเฟ็กต์แยก
-- เพิ่มราวเหล็กตามขอบถนนรูปกากบาท เว้นเฉพาะสี่แยกที่ขับได้ และป้าย `ROAD CLOSED / ห้ามผ่าน` ครบปลายทาง 4 ด้าน
-- ใช้ ImageGen แทนภาพคอนโซล car_01 ด้วยวัสดุสมจริง+crop โค้งสะอาด; เพิ่ม suspension pitch/heave, contact shadow และกดค้าง D/R แล้วรถวิ่งทันที
-- แก้ `petshopping3d.js/css`, `ui.js`, console PNG + regression; runtime D ลด GPS 83→80 ม., 812×375/1280×600, syntax/integration/dress, build `.1054` 8,336 ไฟล์ + PWA validator ผ่าน
+- **รอบ 1168 · รถชนแล้วเด้ง + คอนโซล/Equalizer responsive (ผู้ใช้อนุมัติภาพแล้ว):** collision เดิมคืนเพียงตำแหน่งเฟรมก่อนแต่แรงยังดันเข้า solid; แก้ normal/depth ดันพ้น 22 ซม., เด้ง 0.65–2.4 m/s, ขอบถนนดันเข้า 28 ซม. และพักคันเร่ง 0.32 วินาที โดยคงค่าซ่อม 100 เหรียญ
+- ตรวจ asset คอนโซล `1536×1024` พบจอจริง `[622,378]-[889,505]` แต่โค้ดใช้ rect เก่าและ crop คงที่; เปลี่ยนเป็น mapping จาก `naturalWidth/Height + object-fit/object-position` พร้อม mask/contain animation ในกรอบจริง
+- crop เฉพาะ `car_01` เป็น `50% 35%`, clip ขอบบนตามทรงโค้งคอนโซล, mobile landscape สูง 34vh และบังคับ asset cache `?v=1168`; ไม่แตะ gameplay/control/camera/HUD อื่น
+- syntax + pet-shopping/integration/dress + layout regression ผ่าน; Browser 1280×720, 1366×768, 812×375, 915×412 = inside ทุกขนาด/overflow 0/console error 0; build `.1055` 8,336 ไฟล์ 464.8 MiB + PWA validator ผ่าน · ผู้ใช้อนุมัติให้ commit/deploy
 - **รอบ 1164 · hotfix รถโลกซื้ออาหาร:** ปรับ cockpit ให้เต็มขอบ ล็อก crop แดชบอร์ด และขยายพวงมาลัยให้เห็นชัดทั้งจอปกติ/จอเตี้ย
 - ลด roll/bob ของกล้องให้ขับสบายขึ้น โดยคง GPS ร้านอาหาร/แฟชั่น ฟิสิกส์ การชน ระบบความปลอดภัย และวิทยุเดิมครบ
 - นำเข้าเฉพาะ `js/petshopping3d.js` และ `css/petshopping3d.css` จาก `work/ps3-hotfix-1164`; SHA-256 ตรงต้นฉบับทั้งสองไฟล์
