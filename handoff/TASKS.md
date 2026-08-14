@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (13 ส.ค.) — อ่านก่อน
+- **รอบ 1164 · hotfix รถโลกซื้ออาหาร:** ปรับ cockpit ให้เต็มขอบ ล็อก crop แดชบอร์ด และขยายพวงมาลัยให้เห็นชัดทั้งจอปกติ/จอเตี้ย
+- ลด roll/bob ของกล้องให้ขับสบายขึ้น โดยคง GPS ร้านอาหาร/แฟชั่น ฟิสิกส์ การชน ระบบความปลอดภัย และวิทยุเดิมครบ
+- นำเข้าเฉพาะ `js/petshopping3d.js` และ `css/petshopping3d.css` จาก `work/ps3-hotfix-1164`; SHA-256 ตรงต้นฉบับทั้งสองไฟล์
+- syntax + pet-shopping/integration/dress + regression hotfix ผ่าน; production build `.1052` 8,336 ไฟล์ 464.8 MiB ผ่าน
 - **รอบ 1162 · กราฟอันดับ Top 30 หน้า Lobby:** เพิ่มปุ่ม “กราฟอันดับ” ถัดจาก “สะกดคำ”; กราฟ 10 หมวดคะแนนหลักใช้สีไม่ซ้ำ สลับหมวดได้ และติดชื่อผู้เล่นทุกจุด พร้อมปุ่ม “✕ ปิด” ชัดเจน
 - โหลด snapshot `/leaderboard` เฉพาะตอนเปิดและ cache 2 นาที จึงได้ Top 30 จริงของแต่ละหมวดโดยไม่เพิ่ม listener/Firebase Rules; สอบใหญ่/ข้อสอบมาตรฐานคงดูแยกชุดในแท็บเดิม
 - แก้ `rankgraph.js/css`, `lobby3d.js`, `index_classic.html`, build allowlist + regression; syntax/tests, Browser 1280×720 และ 812×375 no-overflow/30 จุด+30 ชื่อ, production build `.1051` 8,336 ไฟล์ + PWA validator ผ่าน
@@ -53,7 +57,6 @@
 - เพิ่มพฤติกรรม `cuddle`/`care` พร้อม motion แบบการ์ตูนลื่น; ชุด/เครื่องประดับทุก slot ติดตามสองโพส และสัตว์/slot ในอนาคตใช้ fallback แบบ data-driven
 - สถานะห่วงใยหมุนคลังเกร็ดวิทยาศาสตร์สุขภาพสำหรับเด็ก 32 เรื่อง (น้ำ อาหารเค็ม/หวาน ฟัน มือ การนอน สายตา แดด การเคลื่อนไหว การได้ยิน และใจ) โดยจำลำดับข้ามการเข้าเกม
 - `tools/test_pet_bond.js`, syntax, diff, build และ PWA validator ผ่าน; Browser preview 1280×720/812×375 ผ่านทั้ง cuddle/care/no-anim ไม่มี overflow — ยังรอ acceptance ใน lobby บัญชีจริงหลัง deploy
-- **รอบ 1151 · ปุ่ม “เริ่มเกมตอนนี้” ห้องครูถามศัพท์กลับมาทำงาน:** ต้นตอ PicQuiz Online ยังเรียก API หนังสือสองหน้าที่ถูกถอดในรอบ 1123 จึงเกิด TypeError เงียบก่อนเริ่มเกม
 - เพิ่ม API กลางสำหรับอ่านคลังคำ/เปิดหน้าคำใน Picture Dictionary และย้ายโหมดออนไลน์มาใช้ API ใหม่ โดยแพ็กตำแหน่งลงฟิลด์ `spread` เดิมเพื่อใช้ Firebase Rules ปัจจุบันได้ทันที
 - แก้ `js/picdict.js`, `js/picquiz_online.js`; เพิ่ม `tools/test_picquiz_online_start.js` ตรวจปุ่มเขียน `playing/countdown`, API เก่าไม่หลงเหลือ และขีดจำกัดข้อมูลจริง
 - syntax/regression/diff ผ่าน; production build 8,304 ไฟล์ 459.7 MiB + PWA/cache/TWA validator ผ่าน · Browser localhost ถูก URL policy บล็อก จึงรอ acceptance ออนไลน์หลัง deploy
