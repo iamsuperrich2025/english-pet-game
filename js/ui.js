@@ -7289,7 +7289,7 @@ async function enterPetShopping3D(target='food'){
     const ps3Css = document.querySelector('link[href*="css/petshopping3d.css"]');
     if(ps3Css && !ps3Css.href.includes('v=1168')) ps3Css.href='css/petshopping3d.css?v=1168';
     await loadScriptOnce('js/vendor/three.min.js');
-    await loadScriptOnce('js/petshopping3d.js?v=1168');
+    await loadScriptOnce('js/petshopping3d.js?v=1169');
     if(!window.PetShopping3D || typeof PetShopping3D.start !== 'function') throw new Error('PetShopping3D API ไม่พร้อม');
     const own = rental ? null : myCar();
     const started = PetShopping3D.start({target, carId:own ? own.id : 'car_01', rental});
@@ -8158,7 +8158,7 @@ function renderMarketCard(){
   el.querySelectorAll('.order-deliver').forEach(b=>b.addEventListener('click', ()=>deliverOrder(+b.dataset.i)));
   el.querySelectorAll('.cc-list-btn').forEach(b=>b.addEventListener('click', ()=>openListDialog(b.dataset.id)));
   el.querySelectorAll('.ml-cancel').forEach(b=>b.addEventListener('click', ()=>cancelListing(+b.dataset.i)));
-  el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>buyMarketItem(b.dataset.key)));
+  el.querySelectorAll('.mb-buy').forEach(b=>b.addEventListener('click', ()=>openMarketBuyDialog(b.dataset.key)));
   el.querySelectorAll('.car-buy').forEach(b=>b.addEventListener('click', ()=>openCarBuyDialog(b.dataset.id)));
   if(typeof csInit==='function') csInit();   // 🚗 โชว์รูมรถ (thumb+จอใหญ่ ตัวรถ+ภายในห้องโดยสาร วนโชว์)
   if(typeof rsInit==='function') rsInit();   // 🤖 โชว์รูมหุ่นยนต์ (thumb+จอใหญ่วนโชว์)
@@ -8272,6 +8272,121 @@ function renderMarketBrowse(){
       }).join('') + `</div><button class="strip-arrow sa-r" aria-label="เลื่อนขวา">❯</button></div>`
     : `<div class="mkt-empty">ยังไม่มีเพื่อนลงขายตอนนี้ — ผลิตของแล้วมาเปิดร้านคนแรกกันเถอะ! 🏪</div>`;
   return `<div class="mkt-listhead">🌏 ตลาดเพื่อนออนไลน์ — ของที่เพื่อนผลิตเอง${items.length?` (${items.length} ชิ้น)`:''}</div>` + inner;
+}
+
+/* 🛒 รอบ 1235: ยืนยันการซื้อต้องผ่านรหัส 6 หลักก่อน — ไม่หักเงินตอนแตะการ์ด */
+function openMarketBuyDialog(key){
+  if(!key || mktBuying) return;
+  if(!Online.marketOk || !Array.isArray(Online.market)){
+    sfx.wrong();
+    toast('ยังโหลดตลาดไม่เสร็จ — ลองกดอีกครั้งนะ');
+    return;
+  }
+
+  const item = Online.market.find(m=>m.key === key);
+  if(!item){ sfx.wrong(); toast('รายการนี้ถูกซื้อไปแล้ว หรือยังไม่เปิดอยู่'); return; }
+
+  const c = collectInfo(item.id);
+  if(!c){
+    sfx.wrong();
+    toast('ข้อมูลสินค้าไม่ครบ — แจ้งทีมงานให้เพิ่มรูปและชื่อให้หนูได้ตรงๆ นะ');
+    return;
+  }
+
+  const pic = collectImg(item.id);
+  const picHtml = pic
+    ? `<img class="mkt-buy-pic-img" src="${pic}" alt="${escapeHTML(c.name)}">`
+    : `<span class="mkt-buy-pic-emoji">${c.emoji || '🧸'}</span>`;
+  const code = Math.floor(Math.random()*1000000).toString().padStart(6, '0');
+  const overlay = document.createElement('div');
+  overlay.className = 'levelup-overlay mkt-buy-overlay';
+  const price = Number(item.p) || 0;
+  const myCoins = Number(state.coins) || 0;
+  let input = '';
+  let processing = false;
+  const confirmText = `ยืนยันการซื้อ`;
+
+  overlay.innerHTML = `<div class="levelup-box mkt-buy-box">
+    <h2>ยืนยันการซื้อ</h2>
+    <div class="mkt-buy-item">
+      <div class="mkt-buy-pic">${picHtml}</div>
+      <div class="mkt-buy-meta">
+        <div class="mkt-buy-name">${escapeHTML(c.name)}</div>
+        <div class="mkt-buy-seller">ร้าน: ${escapeHTML(item.sn || 'เพื่อน')}</div>
+        <div class="mkt-buy-price">ราคา: 🪙${fmtNum(price)}</div>
+        <div class="mkt-buy-balance">เหรียญปัจจุบัน: 🪙${fmtNum(myCoins)}</div>
+      </div>
+    </div>
+    <div class="mkt-confirm-code-title">รหัสยืนยัน:</div>
+    <div class="mkt-code-target">${code}</div>
+    <div class="mkt-pin-note">กรุณากดตัวเลขด้านล่างให้ตรงกับรหัสด้านบน</div>
+    <div class="mkt-code-input" id="mkt-code-input"></div>
+    <div class="mkt-code-error" id="mkt-code-error"></div>
+    <div class="mkt-pin-grid">
+      <button class="mkt-pin-btn" data-d="1">1</button><button class="mkt-pin-btn" data-d="2">2</button><button class="mkt-pin-btn" data-d="3">3</button>
+      <button class="mkt-pin-btn" data-d="4">4</button><button class="mkt-pin-btn" data-d="5">5</button><button class="mkt-pin-btn" data-d="6">6</button>
+      <button class="mkt-pin-btn" data-d="7">7</button><button class="mkt-pin-btn" data-d="8">8</button><button class="mkt-pin-btn" data-d="9">9</button>
+      <button class="mkt-pin-btn" data-d="0">0</button>
+      <button class="mkt-pin-btn mkt-pin-del" data-act="del">⌫ ลบตัวเลขล่าสุด</button>
+      <button class="mkt-pin-btn mkt-pin-clear" data-act="clear">ล้างทั้งหมด</button>
+    </div>
+    <div class="mkt-buy-actions">
+      <button class="cf-no mkt-buy-cancel">ยกเลิก</button>
+      <button class="cf-ok mkt-buy-confirm" disabled>${confirmText}</button>
+    </div>
+  </div>`;
+
+  const inputEl = overlay.querySelector('#mkt-code-input');
+  const errEl = overlay.querySelector('#mkt-code-error');
+  const confirmBtn = overlay.querySelector('.mkt-buy-confirm');
+  const cancelBtn = overlay.querySelector('.mkt-buy-cancel');
+  const refresh = ()=>{
+    if(input.length < 6){
+      errEl.textContent = '';
+      confirmBtn.disabled = true;
+    }else{
+      if(input === code){
+        errEl.textContent = '';
+        confirmBtn.disabled = false;
+      }else{
+        errEl.textContent = 'รหัสไม่ถูกต้อง กรุณาลองใหม่';
+        confirmBtn.disabled = true;
+      }
+    }
+    const show = input + '_'.repeat(Math.max(0, 6 - input.length));
+    inputEl.textContent = show.split('').join(' ');
+  };
+  const close = ()=>{ if(overlay.parentNode) overlay.remove(); };
+  overlay.querySelectorAll('.mkt-pin-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(processing) return;
+      const d = btn.dataset.d;
+      const act = btn.dataset.act;
+      if(d && input.length < 6){ input += d; refresh(); sfx.select(); return; }
+      if(act === 'del'){ input = input.slice(0, -1); refresh(); sfx.select(); }
+      if(act === 'clear'){ input = ''; refresh(); sfx.select(); }
+    });
+  });
+  cancelBtn.addEventListener('click', ()=>{ if(!processing) close(); });
+  overlay.addEventListener('click', e=>{ if(e.target===overlay && !processing) close(); });
+  confirmBtn.addEventListener('click', ()=>{
+    if(processing || confirmBtn.disabled) return;
+    processing = true;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'กำลังดำเนินการ...';
+    cancelBtn.disabled = true;
+    buyMarketItem(item.key).then(r=>{
+      if(r && r.ok){
+        close();
+        return;
+      }
+      close();
+      renderMarketCard();
+    }).catch(()=>{ close(); });
+  });
+
+  refresh();
+  document.body.appendChild(overlay);
 }
 
 /* ============================================================
@@ -9059,30 +9174,61 @@ function cancelListing(i){
 /* 🏪 item 2: ซื้อของจากตลาดเพื่อนออนไลน์ (transaction คนแรกได้ · จ่ายเหรียญ + ของเข้าคลัง) */
 let mktBuying = false;                       // กันกดรัว/ซื้อซ้อนระหว่างรอ DB
 function buyMarketItem(key){
-  if(mktBuying) return;
+  if(mktBuying) return Promise.resolve({ok:false, reason:'busy'});
+
   const item = (Online.market || []).find(m=>m.key === key);
-  if(!item || typeof marketBuy !== 'function') return;
+  const me = (typeof onlineKey === 'function') ? onlineKey() : '';
+  if(!item || typeof marketBuy !== 'function') return Promise.resolve({ok:false, reason:'missing'});
+  if(!state || Number(state.coins) < 0 || !item || !item.id) return Promise.resolve({ok:false, reason:'missing'});
+
   const c = collectInfo(item.id);
-  if(!c) return;
-  /* 🚫 รอบ 952: ซื้อของกินจากตลาดเพื่อนก็ล็อกเหมือนกัน ตอนป่วยเพราะหิว */
-  if(c.cat === 'food' && hungerSickLock()){ sfx.wrong(); toast(hungerSickMsg(c.name)); return; }
-  if(item.sid === (typeof onlineKey === 'function' ? onlineKey() : '')) return;   // ของตัวเอง
-  if(state.coins < item.p){ sfx.wrong(); toast(`เหรียญไม่พอ (ต้องมี 🪙${fmtNum(item.p)}) สู้ๆ!`); return; }
+  if(!c) return Promise.resolve({ok:false, reason:'invalid_item'});
+  const price = Number(item.p) || 0;
+  if(price <= 0) return Promise.resolve({ok:false, reason:'invalid_price'});
+  if(item.sid === me){
+    return Promise.resolve({ok:false, reason:'own_item'});
+  }
+  if(c.cat === 'food' && hungerSickLock()){
+    sfx.wrong(); toast(hungerSickMsg(c.name)); return Promise.resolve({ok:false, reason:'food_lock'});
+  }
+  if(state.coins < price){
+    sfx.wrong();
+    toast(`เหรียญไม่พอ (ต้องมี 🪙${fmtNum(price)}) สู้ๆ!`);
+    return Promise.resolve({ok:false, reason:'not_enough_coins'});
+  }
+
   mktBuying = true;
-  marketBuy(item).then(ok=>{
-    mktBuying = false;
-    if(!ok){ sfx.wrong(); toast('😅 ช้าไปนิดเดียว — มีคนซื้อตัดหน้าไปแล้ว'); renderMarketCard(); return; }
-    state.coins -= item.p;
-    state.collection.push(item.id);
+  return marketBuy(item).then(out=>{
+    if(!out || !out.ok){
+      sfx.wrong();
+      if(out && out.reason === 'invalid') toast('ของในตลาดเปลี่ยนไปก่อนซื้อ เห็นไม่ทันหนู — ลองปิดแล้วเปิดใหม่อีกครั้งนะ');
+      else if(out && out.reason === 'sold_out') toast('😅 ช้าไปนิดเดียว — มีคนซื้อตัดหน้าไปแล้ว');
+      else if(out && out.reason === 'db_error') toast('😵 มีปัญหาเน็ตชั่วคราว — ลองใหม่อีกครั้งนะ');
+      else toast('⚠️ ไม่สามารถซื้อได้ตอนนี้ ลองใหม่อีกครั้งได้เลย');
+      renderMarketCard();
+      return {ok:false, reason:(out && out.reason) || 'failed'};
+    }
+    const b = out.item || item;
+    const finalPrice = Number(b.p);
+    if(!b || !b.id || !Number.isFinite(finalPrice) || finalPrice <= 0) return {ok:false, reason:'invalid_item'};
+    state.coins = Math.max(0, Number(state.coins) - finalPrice);
+    state.collection.push(b.id);
     // 💖 ได้ของที่เล็งไว้แล้ว → ถอนออกจากลิสต์อัตโนมัติ (รอบ 126)
     const wi = (state.wishlist || []).indexOf(item.id);
     if(wi >= 0) state.wishlist.splice(wi, 1);
     saveState();
     if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji} ${c.name} จากตลาดเพื่อน 🏪`);
-    showCollectReveal(item.id, item.p);
-    toast(`🌏 ซื้อ${c.name}จาก ${item.sn} สำเร็จ!`);
+    showCollectReveal(b.id, finalPrice);
+    sfx.buy();
+    if(out.warning === 'receipt_error') toast('⚠️ ซื้อเสร็จแล้ว — บางข้อมูลอัปเดตช้าค่ะ ลองเปิดตลาดอีกครั้ง');
+    toast(`🌏 ซื้อ${c.name}จาก ${b.sn || item.sn || 'เพื่อน'} สำเร็จ!`);
+    if(typeof syncCoinHeader === 'function') syncCoinHeader();
     renderDashboard();
-  });
+    renderMarketCard();
+    return {ok:true, item:b};
+  }).catch(()=>{
+    return {ok:false, reason:'failed'};
+  }).finally(()=>{ mktBuying = false; });
 }
 
 /* ฉากเปิดภาพใหญ่ตอนได้สินค้าใหม่ (สไตล์เดียวกับฉากอัปแรงค์ ใช้สีตามระดับ)

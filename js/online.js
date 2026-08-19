@@ -770,16 +770,48 @@ function marketUnlist(key){
 /* ซื้อของเพื่อน: ลบ node ด้วย transaction (คนแรกได้ คนช้าเจอ false) แล้วเขียนใบเสร็จให้คนขาย
    (cache อุ่นเสมอเพราะ marketWatch เปิด on('value') ค้างไว้ — transaction ไม่เจอ null หลอก) */
 function marketBuy(item){
-  if(!Online.ready || !Online.db) return Promise.resolve(false);
-  return Online.db.ref('market/' + item.key)
-    .transaction(cur=>cur === null ? undefined : null)
+  if(!Online.ready || !Online.db) return Promise.resolve({ok:false, reason:'db_off'});
+  if(!item || !item.key) return Promise.resolve({ok:false, reason:'invalid'});
+  const expected = {
+    key: String(item.key),
+    sid: String(item.sid || ''),
+    id: String(item.id || ''),
+    p: Number(item.p) || 0,
+    sn: String(item.sn || 'เพื่อน'),
+  };
+  if(!expected.id || !expected.sid || !(expected.p > 0)) return Promise.resolve({ok:false, reason:'invalid'});
+
+  return Online.db.ref('market/' + expected.key)
+    .transaction(cur=>{
+      if(!cur || typeof cur !== 'object') return;
+      if(String(cur.sid) !== expected.sid) return;
+      if(String(cur.id) !== expected.id) return;
+      const p = Number(cur.p);
+      if(p !== expected.p || !(p > 0)) return;
+      if(String(cur.sid) === (typeof onlineKey === 'function' ? String(onlineKey()) : '')) return;
+      return null;
+    })
     .then(r=>{
-      if(!r.committed) return false;
-      Online.db.ref('msold/' + item.sid + '/' + item.key)
-        .set({id: item.id, p: item.p, bn: onlineDisplayName() || 'เพื่อน',
-              ts: firebase.database.ServerValue.TIMESTAMP}).catch(()=>{});
-      return true;
-    }).catch(()=>false);
+      if(!r || !r.committed) return {ok:false, reason:'sold_out'};
+      const d = (r.snapshot && typeof r.snapshot.val === 'function') ? r.snapshot.val() : null;
+      if(!d || typeof d !== 'object') return {ok:false, reason:'invalid'};
+
+      const sid = String(d.sid || expected.sid);
+      const id = String(d.id || expected.id);
+      const p = Number(d.p || 0);
+      if(!sid || !id || !(p > 0)) return {ok:false, reason:'invalid'};
+
+      return Online.db.ref('msold/' + sid + '/' + expected.key)
+        .set({
+          id,
+          p,
+          bn: onlineDisplayName() || 'เพื่อน',
+          ts: firebase.database.ServerValue.TIMESTAMP,
+        })
+        .then(()=>({ok:true, item:{key:expected.key, sid, id, p, sn: d.sn || expected.sn}}))
+        .catch(()=>({ok:true, item:{key:expected.key, sid, id, p, sn: d.sn || expected.sn}, warning:'receipt_error'}));
+    })
+    .catch(()=>({ok:false, reason:'db_error'}));
 }
 /* ฝั่งคนขาย: เฝ้าใบเสร็จ — จับคู่ประกาศของเรา (netKey) + เช็กว่าของหลุดจากตลาดแล้วจริง (กันใบเสร็จปลอม) */
 function marketSoldWatch(){

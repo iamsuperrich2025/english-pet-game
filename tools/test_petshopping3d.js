@@ -9,6 +9,7 @@ testApi.clearTestSolids();testApi.setPose(13.1,0,Math.PI/2);testApi.keepCarOnRoa
 assert(js.includes('window.PetShopping3D')&&js.includes('start,exit,isRunning'), 'world public API missing');
 assert(js.includes('antialias:false')&&js.includes('Math.min(devicePixelRatio||1,1.5)')&&js.includes('shadowMap.enabled=false'),'mobile renderer budget missing');
 assert(js.includes('routeFor')&&js.includes('LineBasicMaterial')&&js.includes('navText'),'GPS route/navigation missing');
+assert(js.includes('new THREE.BoxGeometry(2.6,.055,len)')&&js.includes('tickRouteLights(t)')&&js.includes('new THREE.CircleGeometry(.78,12)'),'wide cyan route band or chasing guide lights missing');
 ['foundation','facade bays','pilasters','cornice'].forEach(()=>{});assert(js.includes('checkout')&&js.includes('wall shelves')&&js.includes('gondola')&&js.includes('addShop(\'food\')')&&js.includes('addShop(\'fashion\')'),'structured shop components missing');
 assert(js.includes("img/pet-shopping/${kind}_window.webp"),'generated shop-art mapping missing');
 assert(js.includes('PetPantry.openStore(target,{onClose')&&js.includes('currentPetImg')&&css.includes('@keyframes ps3Bob'),'shop checkout or pet passenger missing');
@@ -40,7 +41,7 @@ assert(js.includes('solidRect')&&js.includes('solidCircle')&&js.includes('solidC
 assert(js.includes('cute_town_mural_v2.webp')&&js.includes('decorateTown(rows)'),'generated cute building mural decoration missing');
 assert(js.includes("fetch(url,{cache:'force-cache'})")&&js.includes('createImageBitmap')&&js.includes('TextureLoader().load(url,finish'),'reliable texture loader/fallback missing');
 assert(js.includes('Music.suspendBg()')&&js.includes('Music.carRadio(true)')&&js.includes('Music.resumeBg()'),'car music lifecycle missing');
-assert(ui.includes('ps3Css')&&ui.includes("petshopping3d.css?v=1168")&&ui.includes("petshopping3d.js?v=1168"),'Pet Shopping runtime cache refresh missing');
+assert(ui.includes('ps3Css')&&ui.includes("petshopping3d.css?v=1168")&&ui.includes("petshopping3d.js?v=1169"),'Pet Shopping runtime cache refresh missing');
 assert(js.includes('cancelAnimationFrame')&&js.includes('forceContextLoss')&&js.includes('listeners.splice'),'world cleanup missing');
 assert(css.includes('@media(max-height:430px)')&&css.includes('overflow:hidden'),'812x375/no-scroll world CSS missing');
 console.log('PASS Pet Shopping 3D: responsive cockpit/equalizer mask, collision bounce, grounded suspension, barriers and cleanup');

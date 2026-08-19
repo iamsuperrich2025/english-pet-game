@@ -1,13 +1,13 @@
 "use strict";
 /* ============================================================
-   🚗🐾 PET SHOPPING 3D — รอบ 1168
+   🚗🐾 PET SHOPPING 3D — รอบ 1169
    โลกสั้น first-person แยกจาก Adventure3D: ร้านใกล้, GPS ชัด,
    ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
    ============================================================ */
 window.PetShopping3D=(()=>{
   const STORE_POS=Object.freeze({food:Object.freeze({x:-42,z:-82}),fashion:Object.freeze({x:42,z:-82})});
   let root,scene,camera,renderer,raf,last=0,running=false,paused=false,target='food',carId='car_01';
-  let car={x:0,z:18,yaw:Math.PI,speed:0,steer:0},keys={},listeners=[],routeLine,storeBtn,gpsEl,wheelEl,petEl,speedEl,radioEl;
+  let car={x:0,z:18,yaw:Math.PI,speed:0,steer:0},keys={},listeners=[],routeLine,routeLights=[],storeBtn,gpsEl,wheelEl,petEl,speedEl,radioEl;
   let steerCtl=0,padThr=false,padBr=false,gearR=false,kBack=false,dSpeed=0,dSteer=0,dVelX=0,dVelZ=0,dCamYaw=0,dRoll=0,dRollV=0,dPitch=0,dPitchV=0,dHeave=0,dHeaveV=0,carRevBeepAt=0,collisionAt=0,collisionBounceUntil=0;
   let steerHitEl,steerKnobEl,throttleEl,brakeEl,gearDEl,gearREl,hornEl,turnEl,turnDotEl;
   let dashEl,dashImgEl,gaugeEl,gaugeCtx,radioListEl,radioVizEl,radioVizCtx;
@@ -67,11 +67,20 @@ window.PetShopping3D=(()=>{
   }
   function listen(el,type,fn,opt){el.addEventListener(type,fn,opt);listeners.push(()=>el.removeEventListener(type,fn,opt));}
   function routeFor(start,kind){const p=STORE_POS[kind]||STORE_POS.food;return [{x:start.x,z:start.z},{x:0,z:ROAD_CENTER_Z},{x:p.x,z:ROAD_CENTER_Z},{x:p.x,z:STORE_STOP_Z}];}
+  /* ============================================================
+     💠💡 รอบ 1169 — แถบนำทางกว้าง + ไฟวิ่งจากรถสู่จุดหมาย
+     ============================================================ */
+  function clearRouteVisual(){if(!routeLine)return;scene.remove(routeLine);routeLine.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});routeLine=null;routeLights=[];}
+  function routePointAt(pts,d){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],len=Math.hypot(b.x-a.x,b.z-a.z);if(d<=len){const q=len?d/len:0;return{x:a.x+(b.x-a.x)*q,z:a.z+(b.z-a.z)*q};}d-=len;}return pts[pts.length-1];}
+  function tickRouteLights(t){
+    if(!routeLights.length)return;const pts=routeFor(car,target),lens=pts.slice(1).map((p,i)=>Math.hypot(p.x-pts[i].x,p.z-pts[i].z)),total=lens.reduce((a,n)=>a+n,0);if(total<1)return;
+    routeLights.forEach((m,i)=>{const d=(t*.016+i*total/routeLights.length)%total,p=routePointAt(pts,d),pulse=.72+.28*Math.sin(t*.012-i*.8);m.position.set(p.x,.35+Math.sin(t*.009-i)*.045,p.z);m.scale.setScalar(pulse);});
+  }
   function rebuildRoute(){
-    if(routeLine){scene.remove(routeLine);routeLine.geometry.dispose();}
-    const pts=routeFor(car,target).map(p=>new THREE.Vector3(p.x,.34,p.z));
-    const g=new THREE.BufferGeometry().setFromPoints(pts),m=new THREE.LineBasicMaterial({color:0x4fd5ff,transparent:true,opacity:.9});
-    routeLine=new THREE.Line(g,m);scene.add(routeLine);disposables.push(g,m);
+    clearRouteVisual();routeLine=new THREE.Group();const raw=routeFor(car,target),bandMat=new THREE.MeshBasicMaterial({color:0x17d9ff,transparent:true,opacity:.48,depthWrite:false,side:THREE.DoubleSide});
+    for(let i=1;i<raw.length;i++){const a=raw[i-1],b=raw[i],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<.2)continue;const g=new THREE.BoxGeometry(2.6,.055,len),m=new THREE.Mesh(g,bandMat);m.position.set((a.x+b.x)/2,.245,(a.z+b.z)/2);m.rotation.y=Math.atan2(dx,dz);m.renderOrder=1;routeLine.add(m);}
+    const pts=raw.map(p=>new THREE.Vector3(p.x,.31,p.z)),lineGeo=new THREE.BufferGeometry().setFromPoints(pts),lineMat=new THREE.LineBasicMaterial({color:0xc8f8ff,transparent:true,opacity:.95});routeLine.add(new THREE.Line(lineGeo,lineMat));
+    const lightGeo=new THREE.CircleGeometry(.78,12),lightMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,depthWrite:false,side:THREE.DoubleSide});for(let i=0;i<18;i++){const m=new THREE.Mesh(lightGeo,lightMat);m.rotation.x=-Math.PI/2;m.renderOrder=2;routeLine.add(m);routeLights.push(m);}scene.add(routeLine);
   }
   function addRoad(){
     const road=mat(C.road),walk=mat(C.walk),line=mat(0xffe8a8),grass=mat(0x9bcf8e);
@@ -222,12 +231,12 @@ window.PetShopping3D=(()=>{
     const kmh=Math.abs(dSpeed)*3.6;if(kmh>CAR_LEGAL_KMH){if(!carOverSpeed&&carFines.filter(f=>f.t==='speed').length<5)carFines.push({t:'speed',fine:CAR_FINE_SPEED});carOverSpeed=true;if(warningEl){warningEl.innerHTML=`🚨 เร็วเกิน ${CAR_LEGAL_KMH} กม./ชม. · ใบสั่ง ${carFines.filter(f=>f.t==='speed').length} ใบ`;warningEl.classList.add('show');}}else if(kmh<CAR_LEGAL_KMH-5){carOverSpeed=false;if(warningEl&&!warningEl.textContent.includes('รถชน'))warningEl.classList.remove('show');}
     if(!carBelted&&!carBeltFined&&kmh>10&&carEngineOn&&!carStartOpen){carBeltFined=true;carFines.push({t:'belt',fine:CAR_FINE_BELT});if(typeof state!=='undefined'){state.coins=Math.max(0,(state.coins||0)-CAR_FINE_BELT);if(typeof saveState==='function')saveState();}showLaw(true);}
   }
-  function tick(t){if(!running)return;raf=requestAnimationFrame(tick);const dt=Math.min(.04,(t-last)/1000||.016);last=t;if(!paused)carDrive(dt,t);dCamYaw+=(car.yaw-dCamYaw)*Math.min(1,dt*6.5);
+  function tick(t){if(!running)return;raf=requestAnimationFrame(tick);const dt=Math.min(.04,(t-last)/1000||.016);last=t;if(!paused)carDrive(dt,t);tickRouteLights(t);dCamYaw+=(car.yaw-dCamYaw)*Math.min(1,dt*6.5);
     const seatY=[0,.18,-.12][seatLevel]||0;if(cam3){if(carMesh){carMesh.position.set(car.x,0,car.z);carMesh.rotation.y=car.yaw;carMesh.rotation.z=dRoll;carMesh.rotation.x=dPitch*.55;(carMesh.userData.wheels||[]).forEach(w=>w.rotation.x-=dSpeed*dt/.5);}camera.position.set(car.x-Math.sin(dCamYaw)*7.4,3.15,car.z-Math.cos(dCamYaw)*7.4);camera.lookAt(car.x,1.65,car.z);}else{camera.position.set(car.x,CAR_EYE+seatY+dHeave,car.z);camera.rotation.set(-.008+dPitch,dCamYaw-Math.PI,-dRoll*.65,'YXZ');}const p=STORE_POS[target],dist=Math.hypot(car.x-p.x,car.z-p.z);gpsEl.textContent=navText(dist);storeBtn.classList.toggle('show',dist<27);renderer.render(scene,camera);drawCarGauges();drawRadioViz();
   }
   function start(opt={}){if(running||!window.THREE||!document.body)return false;target=opt.target==='fashion'?'fashion':'food';carId=/^car_\d+$/.test(opt.carId||'')?opt.carId:'car_01';car={x:0,z:18,yaw:Math.PI,speed:0,steer:0};keys={};steerCtl=0;padThr=padBr=gearR=kBack=false;dSpeed=dSteer=dVelX=dVelZ=dRoll=dRollV=dPitch=dPitchV=dHeave=dHeaveV=0;radioBars.fill(0);radioPeaks.fill(0);dCamYaw=car.yaw;carRevBeepAt=collisionAt=0;carEngineOn=carBelted=carBeltFined=carOverSpeed=false;carStartOpen=true;carFines=[];turnSet(0);cam3=false;seatLevel=0;root=document.createElement('div');root.className='ps3-root';document.body.appendChild(root);try{buildScene();carMesh=makeDriverCar();buildHUD(!!opt.rental);bind();if(typeof Music!=='undefined'){Music.suspendBg();Music.carRadio(true);radioState();}running=true;last=performance.now();raf=requestAnimationFrame(tick);return true;}catch(e){console.error(e);cleanup();return false;}}
   function settleFines(){const due=carFines.filter(f=>f.t!=='belt').reduce((s,f)=>s+f.fine,0);if(due&&typeof state!=='undefined'){state.coins=Math.max(0,(state.coins||0)-due);if(typeof saveState==='function')saveState();if(typeof toast==='function')setTimeout(()=>toast(`🚔 สรุปใบสั่ง/ค่าซ่อมรอบนี้ 🪙${due}`),180);}carFines=[];}
-  function cleanup(){cancelAnimationFrame(raf);listeners.splice(0).forEach(fn=>fn());CarSnd.stop();if(typeof Music!=='undefined'){Music.carRadio(false);Music.resumeBg();}if(scene)scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const a=Array.isArray(o.material)?o.material:[o.material];a.forEach(m=>m.dispose&&m.dispose());}});disposables.splice(0).forEach(x=>x&&x.dispose&&x.dispose());if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();}if(root)root.remove();root=scene=camera=renderer=routeLine=null;storeBtn=gpsEl=wheelEl=petEl=speedEl=radioEl=steerHitEl=steerKnobEl=throttleEl=brakeEl=gearDEl=gearREl=hornEl=turnEl=turnDotEl=dashEl=dashImgEl=gaugeEl=gaugeCtx=radioListEl=radioVizEl=radioVizCtx=engineEl=beltEl=goEl=startEl=lawEl=camEl=seatEl=warningEl=carMesh=null;running=paused=false;keys={};padThr=padBr=kBack=false;}
+  function cleanup(){cancelAnimationFrame(raf);listeners.splice(0).forEach(fn=>fn());CarSnd.stop();if(typeof Music!=='undefined'){Music.carRadio(false);Music.resumeBg();}if(scene)scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const a=Array.isArray(o.material)?o.material:[o.material];a.forEach(m=>m.dispose&&m.dispose());}});disposables.splice(0).forEach(x=>x&&x.dispose&&x.dispose());if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();}if(root)root.remove();root=scene=camera=renderer=routeLine=null;routeLights=[];storeBtn=gpsEl=wheelEl=petEl=speedEl=radioEl=steerHitEl=steerKnobEl=throttleEl=brakeEl=gearDEl=gearREl=hornEl=turnEl=turnDotEl=dashEl=dashImgEl=gaugeEl=gaugeCtx=radioListEl=radioVizEl=radioVizCtx=engineEl=beltEl=goEl=startEl=lawEl=camEl=seatEl=warningEl=carMesh=null;running=paused=false;keys={};padThr=padBr=kBack=false;}
   function exit(){if(!running)return;settleFines();cleanup();if(typeof renderDashboard==='function')renderDashboard();}
   return {start,exit,isRunning:()=>running,_t:{routeFor,onRoad,keepCarOnRoad,STORE_POS,WORLD_HALF,DRIVE_LIMIT,hitsSolid,solidContact,setPose(x,z,yaw=car.yaw){car.x=x;car.z=z;car.yaw=yaw;dSpeed=dVelX=dVelZ=0;collisionBounceUntil=0;},setSafety(engine,belt){carEngineOn=!!engine;carBelted=!!belt;carStartOpen=!engine;},setControls(throttle,reverse=false){padThr=!!throttle;gearR=!!reverse;},stepDrive(dt,now=1000){carDrive(dt,now);},setTestRect(x,z,w,d){solidRects=[{x,z,hw:w/2,hd:d/2}];solidCircles=[];},clearTestSolids(){solidRects=[];solidCircles=[];},get solids(){return {rects:solidRects.length,circles:solidCircles.length};},get driveState(){return {x:car.x,z:car.z,speed:dSpeed,steer:dSteer,gearR,engine:carEngineOn,belt:carBelted,cam3,turnSig,collisionBounceUntil};},get cleanupState(){return {running,paused,listeners:listeners.length};}}};
 })();
