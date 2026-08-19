@@ -5,7 +5,19 @@
    ร้านสร้างเป็นองค์ประกอบสถาปัตย์จริง ไม่ใช่กล่องแปะภาพ
    ============================================================ */
 window.PetShopping3D=(()=>{
-  const STORE_POS=Object.freeze({food:Object.freeze({x:-42,z:-82}),fashion:Object.freeze({x:42,z:-82})});
+  const DAY_SKY=0xbfe5ef,NIGHT_SKY=0x0b1630,DAY_FOG=0xaed8e8,NIGHT_FOG=0x080f1f;
+  const DAY_AMBIENT=0xfcfeff,NIGHT_AMBIENT=0x21374f,NIGHT_FILL=0x5e84a8,NIGHT_PULSE=0x80e0ff;
+  const SHOP_ORIG_Z=-82;
+  const ROAD_CENTER_Z=-55,ROAD_HALF_X=13,ROAD_HALF_Z=11,ROAD_CORRIDOR_HALF=14.5,ROAD_ENTRANCE_CORRIDOR_HALF=23.5;
+  const SIDE_ENTRANCE_GAP_LEAD=82,SIDE_ENTRANCE_GAP_TAIL=58;
+  const ROAD_ANCHOR=Object.freeze({x:0,z:18});
+  const SHOP_TURN_Z=ROAD_CENTER_Z-(Math.abs(SHOP_ORIG_Z-ROAD_CENTER_Z)*5); // เดินตรงอีก 5 เท่าก่อนเลี้ยวเข้าเลนย่อย
+  const SHOP_CENTER_Z=SHOP_TURN_Z-20,STORE_STOP_Z=SHOP_CENTER_Z-8;
+  const SHOP_CLEAR_RADIUS=24,SHOP_TRIGGER_CLEARANCE=27,SHOP_HINT_DIST=58;
+  const STORE_POS=Object.freeze({
+    food:Object.freeze({x:-42,z:SHOP_CENTER_Z}),
+    fashion:Object.freeze({x:42,z:SHOP_CENTER_Z})
+  });
   let root,scene,camera,renderer,raf,last=0,running=false,paused=false,target='food',carId='car_01';
   let car={x:0,z:18,yaw:Math.PI,speed:0,steer:0},keys={},listeners=[],routeLine,routeLights=[],storeBtn,gpsEl,wheelEl,petEl,speedEl,radioEl;
   let steerCtl=0,padThr=false,padBr=false,gearR=false,kBack=false,dSpeed=0,dSteer=0,dVelX=0,dVelZ=0,dCamYaw=0,dRoll=0,dRollV=0,dPitch=0,dPitchV=0,dHeave=0,dHeaveV=0,carRevBeepAt=0,collisionAt=0,collisionBounceUntil=0;
@@ -27,12 +39,35 @@ window.PetShopping3D=(()=>{
   const CAR_ACCEL=11,CAR_BRAKE=15,CAR_VMAX=55.6,CAR_VMAX_OFF=7,CAR_VREV=6.5,CAR_WB=2.6,CAR_STEER_MAX=.52;
   const CAR_EYE=1.55,CAR_LEGAL_KMH=90,CAR_FINE_SPEED=200,CAR_FINE_BELT=300,CAR_REPAIR_FEE=100;
   const CAR_ROLL_MAX=.035,CAR_ROLL_GAIN=.0024,CAR_ROLL_SPRING=36,CAR_ROLL_DAMP=14;
-  const ROAD_CENTER_Z=-55,ROAD_HALF_X=13,ROAD_HALF_Z=11,STORE_STOP_Z=-60;
   const WORLD_HALF=700,DRIVE_LIMIT=480;
   const RADIO_RECT=[560,514,835,606];
+  const ROUTE_LIGHT_COUNT=18,ROUTE_LIGHT_SPEED=22,ROUTE_LIGHT_WIDTH=0.86,ROUTE_LIGHT_PULSE=0.24;
+  const ROUTE_LIGHT_HEIGHT=.36,ROUTE_LIGHT_GAP_MIN=1.9;
+  const NIGHT_POLL_MS=30000,DAY_START=6,DAY_END=19;
+  let routePath=[],routeLength=0,routePulse=0,routePulseAt=0,routePulseMat=null,routeGlowMat=null,isNight=false,envWatchId=null;
+  let dayAmbient,daySun,dayFill,nightAmbient,nightFill,nightPoint,nightPulseAmbient;
+  let headTargets=[];
+  let carHeadlights=[],shopSpotLights=[];
   const CAR_RADIO_RECT={car_01:[622,378,889,505],car_02:[585,518,821,652],car_03:[555,524,787,645],car_04:[506,471,789,591],car_05:[512,543,749,669],car_06:[550,500,788,606],car_07:[563,580,782,685],car_08:[528,598,710,700],car_09:[550,501,786,592],car_10:[521,520,808,669]};
   const radioBars=new Float32Array(32),radioPeaks=new Float32Array(32);
-  function onRoad(x,z){return Math.abs(x)<=ROAD_HALF_X||Math.abs(z-ROAD_CENTER_Z)<=ROAD_HALF_Z;}
+  function pointSegmentDistSq(px,pz,a,b){
+    const vx=b.x-a.x,vz=b.z-a.z;
+    const wx=px-a.x,wz=pz-a.z;
+    const len2=vx*vx+vz*vz;
+    const t=len2?Math.max(0,Math.min(1,(wx*vx+wz*vz)/len2)):0;
+    const dx=px-(a.x+vx*t),dz=pz-(a.z+vz*t);
+    return dx*dx+dz*dz;
+  }
+  function onGuideRoad(x,z,kind=target){
+    const pts=routeFor(ROAD_ANCHOR,kind);
+    const half=(z>=SHOP_TURN_Z-SIDE_ENTRANCE_GAP_LEAD && z<=SHOP_TURN_Z+SIDE_ENTRANCE_GAP_TAIL)?ROAD_ENTRANCE_CORRIDOR_HALF:ROAD_CORRIDOR_HALF;
+    const w2=half*half;
+    for(let i=1;i<pts.length;i++){
+      if(pointSegmentDistSq(x,z,pts[i-1],pts[i])<=w2)return true;
+    }
+    return false;
+  }
+  function onRoad(x,z){return Math.abs(x)<=ROAD_HALF_X||Math.abs(z-ROAD_CENTER_Z)<=ROAD_HALF_Z||onGuideRoad(x,z);}
   function keepCarOnRoad(now=0){if(onRoad(car.x,car.z))return false;const dx=Math.abs(car.x)-ROAD_HALF_X,dz=Math.abs(car.z-ROAD_CENTER_Z)-ROAD_HALF_Z;let nx=0,nz=0;if(dx<=dz){const side=Math.sign(car.x)||1;car.x=side*(ROAD_HALF_X-.28);nx=-side;}else{const side=Math.sign(car.z-ROAD_CENTER_Z)||1;car.z=ROAD_CENTER_Z+side*(ROAD_HALF_Z-.28);nz=-side;}bounceCar(nx,nz,Math.hypot(dVelX,dVelZ),now);car.speed=Math.abs(dSpeed);return true;}
   const CarSnd={ctx:null,master:null,osc:null,osc2:null,gain:null,lp:null,on:false,rpm:0,skidGain:null,skidBp:null,
     ac(){if(!this.ctx){const A=window.AudioContext||window.webkitAudioContext;if(!A)return null;this.ctx=new A();this.master=this.ctx.createGain();this.master.gain.value=1;this.master.connect(this.ctx.destination);}if(this.ctx.state==='suspended')this.ctx.resume();return this.ctx;},
@@ -66,21 +101,137 @@ window.PetShopping3D=(()=>{
     else new THREE.TextureLoader().load(url,finish,undefined,()=>{});
   }
   function listen(el,type,fn,opt){el.addEventListener(type,fn,opt);listeners.push(()=>el.removeEventListener(type,fn,opt));}
-  function routeFor(start,kind){const p=STORE_POS[kind]||STORE_POS.food;return [{x:start.x,z:start.z},{x:0,z:ROAD_CENTER_Z},{x:p.x,z:ROAD_CENTER_Z},{x:p.x,z:STORE_STOP_Z}];}
+  function isNightNow(){const h=(new Date()).getHours();return h<DAY_START||h>=DAY_END;}
+  function routeFor(start,kind){
+    const p=STORE_POS[kind]||STORE_POS.food;
+    return [
+      {x:start.x,z:start.z},
+      {x:0,z:ROAD_CENTER_Z},
+      {x:0,z:SHOP_TURN_Z},
+      {x:p.x,z:SHOP_TURN_Z},
+      {x:p.x,z:STORE_STOP_Z}
+    ];
+  }
   /* ============================================================
      💠💡 รอบ 1169 — แถบนำทางกว้าง + ไฟวิ่งจากรถสู่จุดหมาย
      ============================================================ */
-  function clearRouteVisual(){if(!routeLine)return;scene.remove(routeLine);routeLine.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});routeLine=null;routeLights=[];}
-  function routePointAt(pts,d){for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],len=Math.hypot(b.x-a.x,b.z-a.z);if(d<=len){const q=len?d/len:0;return{x:a.x+(b.x-a.x)*q,z:a.z+(b.z-a.z)*q};}d-=len;}return pts[pts.length-1];}
+  function clearRouteVisual(){
+    if(!routeLine)return;
+    scene.remove(routeLine);
+    routeLine.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material)o.material.dispose();});
+    routeLine=null;
+    routeLights=[];
+  }
+  function normalizeRouteDist(d){
+    if(!routeLength)return 0;
+    const m=routeLength;
+    d%=m;
+    if(d<0)d+=m;
+    return d;
+  }
+  function routeSampleAt(pts,d,out){
+    if(!pts||!pts.length)return {x:0,z:0,tX:0,tZ:1};
+    const dist=normalizeRouteDist(d);
+    let remain=dist;
+    for(let i=1;i<pts.length;i++){
+      const a=pts[i-1],b=pts[i],seg=Math.hypot(b.x-a.x,b.z-a.z);
+      if(remain<=seg){
+        const q=seg?remain/seg:0;
+        out.x=a.x+(b.x-a.x)*q;
+        out.z=a.z+(b.z-a.z)*q;
+        out.tX=seg?((b.x-a.x)/seg):0;
+        out.tZ=seg?((b.z-a.z)/seg):1;
+        return out;
+      }
+      remain-=seg;
+    }
+    const last=pts[pts.length-1],prev=pts[pts.length-2];
+    out.x=last.x;
+    out.z=last.z;
+    out.tX=last.x-prev.x;
+    out.tZ=last.z-prev.z;
+    return out;
+  }
   function tickRouteLights(t){
-    if(!routeLights.length)return;const pts=routeFor(car,target),lens=pts.slice(1).map((p,i)=>Math.hypot(p.x-pts[i].x,p.z-pts[i].z)),total=lens.reduce((a,n)=>a+n,0);if(total<1)return;
-    routeLights.forEach((m,i)=>{const d=(t*.016+i*total/routeLights.length)%total,p=routePointAt(pts,d),pulse=.72+.28*Math.sin(t*.012-i*.8);m.position.set(p.x,.35+Math.sin(t*.009-i)*.045,p.z);m.scale.setScalar(pulse);});
+    if(!routeLights.length||!routeLength)return;
+    const now=t/1000,dt=Math.max(0,now-routePulseAt);
+    routePulseAt=now;
+    const nightSpeed=isNight?ROUTE_LIGHT_SPEED*2.7:ROUTE_LIGHT_SPEED*0.2;
+    routePulse=normalizeRouteDist(routePulse+dt*nightSpeed);
+    const wave=routeLength*ROUTE_LIGHT_PULSE;
+    const pA={x:0,z:0,tX:0,tZ:1};
+    routeLights.forEach((node,idx)=>{
+      const baseS=node.s;
+      const lead=1-Math.min(1,normalizeRouteDist(routePulse-baseS)/(wave||1));
+      const show=normalizeRouteDist(baseS+routePulse);
+      const q=routeSampleAt(routePath,show,pA);
+      const dir=Math.atan2(q.tX,q.tZ);
+      node.group.position.set(q.x,ROUTE_LIGHT_HEIGHT+lead*.09*Math.sin(now*6+idx*.4),q.z);
+      node.group.rotation.set(-Math.PI/2,dir,0);
+      if(isNight){
+        const glow=Math.max(0,Math.min(1,lead*1.6));
+        node.core.material.opacity=0.22+glow*0.7;
+        node.shell.material.opacity=0.14+glow*0.42;
+        node.group.scale.setScalar(0.52+glow*0.82);
+      }else{
+        node.core.material.opacity=0.18;
+        node.shell.material.opacity=0.08;
+        node.group.scale.setScalar(0.45);
+      }
+    });
+    if(routeLength>0){
+      const tone=Math.min(1,routePulse/routeLength);
+      if(nightPulseAmbient){
+        nightPulseAmbient.intensity=isNight?(0.36+tone*0.16):0;
+      }
+    }
   }
   function rebuildRoute(){
-    clearRouteVisual();routeLine=new THREE.Group();const raw=routeFor(car,target),bandMat=new THREE.MeshBasicMaterial({color:0x17d9ff,transparent:true,opacity:.48,depthWrite:false,side:THREE.DoubleSide});
-    for(let i=1;i<raw.length;i++){const a=raw[i-1],b=raw[i],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);if(len<.2)continue;const g=new THREE.BoxGeometry(2.6,.055,len),m=new THREE.Mesh(g,bandMat);m.position.set((a.x+b.x)/2,.245,(a.z+b.z)/2);m.rotation.y=Math.atan2(dx,dz);m.renderOrder=1;routeLine.add(m);}
-    const pts=raw.map(p=>new THREE.Vector3(p.x,.31,p.z)),lineGeo=new THREE.BufferGeometry().setFromPoints(pts),lineMat=new THREE.LineBasicMaterial({color:0xc8f8ff,transparent:true,opacity:.95});routeLine.add(new THREE.Line(lineGeo,lineMat));
-    const lightGeo=new THREE.CircleGeometry(.78,12),lightMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,depthWrite:false,side:THREE.DoubleSide});for(let i=0;i<18;i++){const m=new THREE.Mesh(lightGeo,lightMat);m.rotation.x=-Math.PI/2;m.renderOrder=2;routeLine.add(m);routeLights.push(m);}scene.add(routeLine);
+    clearRouteVisual();
+    routeLine=new THREE.Group();
+    const raw=routeFor(car,target),bandMat=new THREE.MeshBasicMaterial({color:0x17d9ff,transparent:true,opacity:.48,depthWrite:false,side:THREE.DoubleSide});
+    routePath=raw;
+    routeLength=0;
+    for(let i=1;i<raw.length;i++){const a=raw[i-1],b=raw[i];routeLength+=Math.hypot(b.x-a.x,b.z-a.z);}
+    if(!routeLength) {routeLength=1;}
+    for(let i=1;i<raw.length;i++){
+      const a=raw[i-1],b=raw[i],dx=b.x-a.x,dz=b.z-a.z,len=Math.hypot(dx,dz);
+      if(len<.2)continue;
+      const g=new THREE.BoxGeometry(2.6,.055,len),m=new THREE.Mesh(g,bandMat);
+      m.position.set((a.x+b.x)/2,.245,(a.z+b.z)/2);
+      m.rotation.y=Math.atan2(dx,dz);
+      m.renderOrder=1;
+      routeLine.add(m);
+    }
+    const pts=raw.map(p=>new THREE.Vector3(p.x,.31,p.z)),
+          lineGeo=new THREE.BufferGeometry().setFromPoints(pts),
+          lineMat=new THREE.LineBasicMaterial({color:0xc8f8ff,transparent:true,opacity:.95});
+    routeLine.add(new THREE.Line(lineGeo,lineMat));
+    const outer=new THREE.BoxGeometry(ROUTE_LIGHT_WIDTH,.1,ROUTE_LIGHT_WIDTH*0.28);
+    const inner=new THREE.BoxGeometry(ROUTE_LIGHT_WIDTH*.64,.12,ROUTE_LIGHT_WIDTH*.22);
+    routePulseMat=new THREE.MeshBasicMaterial({color:0x5cf4ff,transparent:true,opacity:.9,depthWrite:false,side:THREE.DoubleSide});
+    routeGlowMat=new THREE.MeshBasicMaterial({color:0x9cf3ff,transparent:true,opacity:.28,depthWrite:false,side:THREE.DoubleSide});
+    const gap=routeLength/ROUTE_LIGHT_COUNT;
+    for(let i=0;i<ROUTE_LIGHT_COUNT;i++){
+      const seed=i*gap;
+      const mark=routeSampleAt(raw,seed,{x:0,z:0,tX:0,tZ:1});
+      const node=new THREE.Group();
+      const core=new THREE.Mesh(outer,routePulseMat);
+      const shell=new THREE.Mesh(inner,routeGlowMat);
+      core.rotation.x=-Math.PI/2;
+      shell.rotation.x=-Math.PI/2;
+      node.add(core);
+      node.add(shell);
+      node.position.set(mark.x,ROUTE_LIGHT_HEIGHT,mark.z);
+      node.renderOrder=2;
+      node.rotation.y=Math.atan2(mark.tX,mark.tZ);
+      node.userData={routeS:seed};
+      routeLine.add(node);
+      routeLights.push({group:node,core,shell,s:seed});
+    }
+    scene.add(routeLine);
+    if(!routePulseAt)routePulseAt=(performance.now()/1000);
+    routePulse=0;
   }
   function addRoad(){
     const road=mat(C.road),walk=mat(C.walk),line=mat(0xffe8a8),grass=mat(0x9bcf8e);
@@ -92,10 +243,28 @@ window.PetShopping3D=(()=>{
   }
   function addRoadBarriers(){
     const steel=mat(0xb7c2c8,{metalness:.72,roughness:.28}),shadow=mat(0x35434a,{metalness:.5,roughness:.42}),amber=mat(0xff8a00,{metalness:.18,roughness:.3}),cream=mat(0xfff4d6);
-    const rails=[
-      {x:-15,z:193,w:.34,d:464},{x:15,z:193,w:.34,d:464},{x:-15,z:-303,w:.34,d:464},{x:15,z:-303,w:.34,d:464},
-      {x:-249,z:-69,w:462,d:.34},{x:-249,z:-41,w:462,d:.34},{x:249,z:-69,w:462,d:.34},{x:249,z:-41,w:462,d:.34}
-    ];
+    const sideGapStart=SHOP_TURN_Z-SIDE_ENTRANCE_GAP_LEAD;
+    const sideGapEnd=SHOP_TURN_Z+SIDE_ENTRANCE_GAP_TAIL;
+    const addRail=(x,z,w,d)=>rails.push({x,z,w,d});
+    const splitSideRail=(x,w,d,center,gapA,gapB)=>{
+      const half=d/2;
+      const s=center-half;
+      const e=center+half;
+      const g1=Math.max(s,gapA);
+      const g2=Math.min(e,gapB);
+      if(g1<=s && g2>=e){return;}
+      if(g1> s)addRail(x,(s+g1)/2,w,g1-s);
+      if(g2< e)addRail(x,(g2+e)/2,w,e-g2);
+    };
+    const rails=[];
+    addRail(-15,193,.34,464);
+    addRail(15,193,.34,464);
+    splitSideRail(-15,.34,464,-303,sideGapStart,sideGapEnd);
+    splitSideRail(15,.34,464,-303,sideGapStart,sideGapEnd);
+    addRail(-249,-69,462,.34);
+    addRail(-249,-41,462,.34);
+    addRail(249,-69,462,.34);
+    addRail(249,-41,462,.34);
     rails.forEach(r=>{box(r.x,.8,r.z,r.w,.28,r.d,steel);box(r.x,.35,r.z,r.w,.18,r.d,shadow);});
     const postGeo=new THREE.BoxGeometry(.42,1.35,.42),posts=[];
     rails.forEach(r=>{const vertical=r.d>r.w,len=vertical?r.d:r.w,n=Math.floor(len/16);for(let i=0;i<=n;i++){const v=-len/2+i*len/n;posts.push({x:r.x+(vertical?0:v),z:r.z+(vertical?v:0)});}});
@@ -123,21 +292,181 @@ window.PetShopping3D=(()=>{
     const sign=document.createElement('canvas');sign.width=512;sign.height=128;const c=sign.getContext('2d');c.fillStyle=kind==='food'?'#3d7a67':'#8d507e';c.fillRect(0,0,512,128);c.fillStyle='#fff5d1';c.textAlign='center';c.font='bold 42px sans-serif';c.fillText(kind==='food'?'PAWS & PANTRY':'MAISON DE PAWS',256,78);const tx=new THREE.CanvasTexture(sign);const sm=new THREE.MeshBasicMaterial({map:tx});disposables.push(tx,sm);box(0,10.6,-6.7,13,2.7,.12,sm,group);
     facadeTexture(kind);
   }
+  function buildFoodShop(group,p){
+    const bowl=mat(0x8f6a40),grain=mat(0xffe2c1),bone=mat(0xe7f3ff),bag=mat(0xf7b45f);
+    mesh(new THREE.CylinderGeometry(1.8,1.2,.9,14),bowl,0,4.8,-4.75,group);
+    mesh(new THREE.ConeGeometry(1.6,1.2,18),grain,0,4.95,-5.1,group);
+    mesh(new THREE.TorusGeometry(1.4,.2,12,20),mat(0xffdf9e),0,4.8,-5.15,group);
+    mesh(new THREE.CylinderGeometry(.32,.32,2.5,12),bone,0,5.2,-4,group);
+    mesh(new THREE.SphereGeometry(.4,12,8),bone,-1.2,5.1,-4.1,group);
+    mesh(new THREE.SphereGeometry(.4,12,8),bone,1.2,5.1,-4.1,group);
+    for(let i=0;i<4;i++){
+      const x=-1.2+i*0.95;
+      box(x,2.7,-6.1,0.7,.22,.12,bag,group);
+      box(x,2.2,-5.95,1.2,.18,.11,mat(0xfff2d0),group);
+    }
+    for(let i=0;i<4;i++){
+      const x=-4.8+i*2.8;
+      mesh(new THREE.BoxGeometry(2.1,0.95,1.05),bag,x,2.45,-6.6,group);
+      mesh(new THREE.BoxGeometry(1.95,0.9,0.16),mat(0xfff1dd),x+0.1,3.35,-6.6,group);
+      for(let j=0;j<2;j++)box(x-0.32+j*0.64,3.55,-6.58,0.26,0.15,0.18,mat(0x4a3424),group);
+    }
+  }
+  function buildFashionShop(group,p){
+    const ribbon=mat(0xff8fc4),cloth=mat(0xc5eef9),sat=mat(0x5b4a67);
+    for(const x of [-5,5]){box(x,1.2,3,0.2,4.4,5.6,mat(0x2f3338),group);}
+    for(let i=0;i<4;i++){
+      const z=-3.9+i*1.8;
+      box(0,4.25,z,7.5,1.05,0.18,cloth,group);
+      box(0,5.35,z,7.9,0.2,0.18,mat(0xfff6ef),group);
+      if(i%2===0){box(-2.6,3.15,z,2.2,2.2,0.16,sat,group);box(2.6,3.15,z,2.2,2.2,0.16,sat,group);}
+    }
+    for(const x of [-2,2]){box(x,2.7,-2.4,3.1,1.3,0.16,ribbon,group);box(x,2.8,2.7,2.5,1.8,0.2,mat(0xfff5df),group);}
+    mesh(new THREE.TorusGeometry(1.1,.17,10,16),ribbon,0,4.45,6.0,group);
+    mesh(new THREE.TorusGeometry(1.75,.35,8,18),mat(0xffd4f0),-2.9,2.2,6.2,group);
+    mesh(new THREE.ConeGeometry(.9,1.1,14),mat(0xfff7c4),2.9,1.85,5.95,group);
+    const lens=mat(0x6b8cff,{transparent:true,opacity:.78});
+    mesh(new THREE.TorusGeometry(.62,.14,10,16),mat(0x262e3d),3,2.33,6.6,group);
+    mesh(new THREE.TorusGeometry(.62,.14,10,16),mat(0x262e3d),4,2.15,6.22,group);
+    mesh(new THREE.BoxGeometry(0.9,.4,.06),lens,3.45,2.33,6.6,group);
+    mesh(new THREE.BoxGeometry(0.9,.4,.06),lens,4.02,2.15,6.22,group);
+    mesh(new THREE.SphereGeometry(.58,10,8),mat(0xff8ec7),1.55,2.35,5.9,group);
+  }
+  function addCuteShop(kind){
+    const p=STORE_POS[kind],accent=mat(C[kind]),stone=mat(kind==='food'?0xf7f3e8:0xfff0f8),dark=mat(0x2f3c45),glass=mat(0xbce7ed,{transparent:true,opacity:.34,roughness:.15}),wood=mat(0xa87955),gold=mat(0xc9a45c,{metalness:.55,roughness:.3});
+    const group=new THREE.Group();
+    group.position.set(p.x,0,p.z);
+    group.rotation.y=Math.PI;
+    scene.add(group);
+    solidRect(p.x,p.z,26,18,1.25);
+    box(0,.22,0,26,.4,18,dark,group);
+    box(0,4,0,24.5,7.8,12,stone,group);
+    box(0,8.3,-5.75,24.8,2.0,1.2,kind==='food'?accent:gold,group);
+    mesh(new THREE.CylinderGeometry(10.9,10.9,.95,16),mat(kind==='food'?0xd8f7ea:0xffd8ed),0,6.1,-6.2,group);
+    for(const x of [-6.9,6.9])for(let y=1.8;y<7;y+=1.65)box(x,y,-1.1,1.1,.2,8.1,wood,group);
+    for(const x of [-4.4,4.4])box(x,1.05,2.6,2.7,2,5.8,wood,group);
+    if(kind==='food')buildFoodShop(group,p);else buildFashionShop(group,p);
+    const sign=document.createElement('canvas');sign.width=512;sign.height=128;
+    const c=sign.getContext('2d');const head=kind==='food'?['#3a9a80','#7fcfda']:['#8d3b7d','#f5b0ff'];
+    const grad=c.createLinearGradient(0,0,512,128);grad.addColorStop(0,head[0]);grad.addColorStop(1,head[1]);c.fillStyle=grad;c.fillRect(0,0,512,128);
+    c.fillStyle='#fff6d4';c.textAlign='center';c.font='bold 44px sans-serif';c.fillText(kind==='food'?'PAWS & PANTRY':'MAISON DE PAWS',256,76);
+    const tx=new THREE.CanvasTexture(sign),sm=new THREE.MeshBasicMaterial({map:tx});
+    disposables.push(tx,sm);
+    box(0,10.55,-6.6,13.8,2.7,.12,sm,group);
+    facadeTexture(kind);
+    const spotCol=kind==='food'?0xffd08f:0xfed2fa;
+    for(let i=0;i<2;i++){const sx=i===0?-0.62:0.62;const light=new THREE.SpotLight(spotCol,0.58,26,Math.PI/2.7,0.45,0.78);light.position.set(sx,7.55,3.55);const t=new THREE.Object3D();t.position.set(sx,1.8,7.2);light.target=t;scene.add(t);group.add(light,t);shopSpotLights.push(light);}
+  }
   function decorateTown(rows){
     loadTexture('img/pet-shopping/cute_town_mural_v2.webp',tex=>{tex.anisotropy=Math.min(4,renderer&&renderer.capabilities?renderer.capabilities.getMaxAnisotropy():1);const mural=new THREE.MeshBasicMaterial({map:tex}),frame=mat(0xffefd0),awnings=[mat(0xff8f78),mat(0x55c9bd),mat(0xf3c957),mat(0xb69adc)];disposables.push(mural);rows.forEach(({x,z,h},i)=>{const fy=Math.min(h-2.5,5),awning=awnings[i%awnings.length];[-1,1].forEach(face=>{const fz=z+face*6.07;box(x,fy,fz,8,4.2,.13,mural);box(x,fy+2.25,fz,8.5,.28,.22,frame);box(x,fy-2.25,fz,8.5,.28,.22,frame);box(x,fy+2.45,z+face*6.45,9,.35,1.05,awning);});});Object.values(STORE_POS).forEach(p=>[-8.2,8.2].forEach(dx=>{box(p.x+dx,5.1,p.z+6.22,5.6,6.7,.16,mural);box(p.x+dx,8.58,p.z+6.25,6.1,.3,.24,frame);box(p.x+dx,1.62,p.z+6.25,6.1,.3,.24,frame);}));});
   }
   function addTown(){
     const colors=[0xf0c8ae,0xa7cfd4,0xd8c2e5,0xf0dda9],roof=mat(0x6f6564),rows=[];
-    for(let i=0;i<54;i++){const side=i%2?-1:1,x=side*(35+(i%3)*12),z=250-Math.floor(i/2)*29;if(Math.abs(z+82)<18)continue;const h=8+(i%4)*2,wall=mat(colors[i%colors.length]);box(x,h/2,z,13,h,12,wall);box(x,h+.4,z,14,.8,13,roof);solidRect(x,z,13,12);rows.push({x,z,side,h});for(let y=3;y<h;y+=3)for(const dx of [-3,3])box(x+dx,y,z-side*6.05,2,1.5,.15,mat(0xfff1b8));}
-    for(let z=245;z>-540;z-=20){if(Math.abs(z+82)>16){addTree(-23,z);addTree(23,z);}}
-    decorateTown(rows);addShop('food');addShop('fashion');
+    const nearShopArea=(z)=>Math.abs(z-SHOP_CENTER_Z)<=SHOP_CLEAR_RADIUS+2;
+    for(let i=0;i<54;i++){const side=i%2?-1:1,x=side*(35+(i%3)*12),z=250-Math.floor(i/2)*29;if(nearShopArea(z))continue;const h=8+(i%4)*2,wall=mat(colors[i%colors.length]);box(x,h/2,z,13,h,12,wall);box(x,h+.4,z,14,.8,13,roof);solidRect(x,z,13,12);rows.push({x,z,side,h});for(let y=3;y<h;y+=3)for(const dx of [-3,3])box(x+dx,y,z-side*6.05,2,1.5,.15,mat(0xfff1b8));}
+    for(let z=245;z>-540;z-=20){if(!nearShopArea(z)) {addTree(-23,z);addTree(23,z);}}
+    decorateTown(rows);addCuteShop('food');addCuteShop('fashion');
+  }
+  function applyEnv(nightNow=isNightNow()){
+    if(!scene||!dayAmbient)return;
+    isNight=!!nightNow;
+    scene.background.setHex(isNight?NIGHT_SKY:DAY_SKY);
+    scene.fog.color.setHex(isNight?NIGHT_FOG:DAY_FOG);
+    scene.fog.near=isNight?95:85;
+    scene.fog.far=isNight?240:220;
+    dayAmbient.intensity=isNight?0:1.05;
+    daySun.intensity=isNight?0:1.25;
+    dayFill.intensity=isNight?0:0.9;
+    nightAmbient.intensity=isNight?0.3:0;
+    nightFill.intensity=isNight?1.15:0;
+    nightPoint.intensity=isNight?0.55:0;
+    nightPulseAmbient.intensity=isNight?0.2:0;
+    if(shopSpotLights.length){
+      shopSpotLights.forEach((light)=>{light.intensity=isNight?0.58:0;});
+    }
+    updateHeadlights();
+    if(root)root.classList.toggle('night-mode',isNight);
+  }
+  function setupLighting(){
+    dayAmbient=new THREE.HemisphereLight(DAY_AMBIENT,0x55745c,1.08);
+    daySun=new THREE.DirectionalLight(0xffe7bd,1.25);
+    daySun.position.set(-30,50,20);
+    dayFill=new THREE.DirectionalLight(0xb7cbda,0.56);
+    dayFill.position.set(24,36,-40);
+    nightAmbient=new THREE.AmbientLight(NIGHT_AMBIENT,0.34);
+    nightFill=new THREE.DirectionalLight(NIGHT_FILL,0.9);
+    nightFill.position.set(-14,18,18);
+    nightFill.target.position.set(0,-3,0);
+    scene.add(dayAmbient,daySun,dayFill,nightAmbient,nightFill,nightFill.target);
+    nightFill.visible=true;
+    nightPoint=new THREE.PointLight(NIGHT_PULSE,0.4,85,1.72);
+    nightPoint.position.set(0,12,SHOP_CENTER_Z);
+    nightPoint.castShadow=false;
+    scene.add(nightPoint);
+    nightPulseAmbient=new THREE.PointLight(NIGHT_PULSE,0.14,190,1.8);
+    nightPulseAmbient.position.set(0,16,ROAD_CENTER_Z);
+    scene.add(nightPulseAmbient);
+    setupHeadlights();
+    dayAmbient.visible=true;
+    daySun.visible=true;
+    dayFill.visible=true;
+  }
+  function setupHeadlights(){
+    if(carHeadlights.length) return;
+    const mk=(i)=>{
+      const l=new THREE.SpotLight(0xfff8cb,0,56,Math.PI/4,0.45,0.75);
+      const t=new THREE.Object3D();
+      l.target=t;
+      l.castShadow=false;
+      l.visible=false;
+      return {light:l,target:t,side:i?1:-1};
+    };
+    const left=mk(-1),right=mk(1);
+    left.light.distance=42;
+    right.light.distance=42;
+    scene.add(left.light,left.target,right.light,right.target);
+    carHeadlights=[left,right];
+    headTargets=[left.target,right.target];
+  }
+  function updateHeadlights(){
+    if(!carHeadlights.length)return;
+    const fX=Math.sin(car.yaw),fZ=Math.cos(car.yaw);
+    const rX=Math.cos(car.yaw),rZ=-Math.sin(car.yaw);
+    carHeadlights.forEach((entry,idx)=>{
+      const side=idx===0?-1:1;
+      const light=entry.light;
+      const target=headTargets[idx];
+      const hx=car.x + rX*(0.58*side) + fX*0.9;
+      const hz=car.z + rZ*(0.58*side) + fZ*0.9;
+      const tx=car.x + fX*28 + rX*side*0.26;
+      const tz=car.z + fZ*28 + rZ*side*0.26;
+      light.visible=isNight;
+      light.intensity=isNight?1.45:0;
+      light.position.set(hx,1.05,hz);
+      if(target){
+        target.position.set(tx,0.7,tz);
+      }
+    });
   }
   function buildScene(){
     solidRects=[];solidCircles=[];collisionBounceUntil=0;
     scene=new THREE.Scene();scene.background=new THREE.Color(0xbfe5ef);scene.fog=new THREE.Fog(0xbfe5ef,85,220);
-    camera=new THREE.PerspectiveCamera(66,innerWidth/innerHeight,.1,300);scene.add(new THREE.HemisphereLight(0xfff5df,0x55745c,1.05));const sun=new THREE.DirectionalLight(0xffe7bd,1.25);sun.position.set(-30,50,20);scene.add(sun);
-    renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=false;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;root.prepend(renderer.domElement);
-    addRoad();addTown();rebuildRoute();
+    camera=new THREE.PerspectiveCamera(66,innerWidth/innerHeight,.1,300);
+    renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance'});
+    renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+    renderer.setSize(innerWidth,innerHeight);
+    renderer.shadowMap.enabled=false;
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
+    renderer.toneMapping=THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure=1.08;
+    root.prepend(renderer.domElement);
+    setupLighting();
+    addRoad();
+    addTown();
+    rebuildRoute();
+    applyEnv();
+    if(envWatchId) clearInterval(envWatchId);
+    envWatchId=setInterval(()=>applyEnv(),NIGHT_POLL_MS);
   }
   /* 🚗🏙️ Cockpit/controls below are direct adapters of KPP drive functions:
      loadCarDash/loadCarWheel, drawCarGauges, radio, start/belt and turn signal. */
@@ -219,8 +548,8 @@ window.PetShopping3D=(()=>{
     listen(camEl,'click',toggleCamera);listen(seatEl,'click',()=>{seatLevel=(seatLevel+1)%3;seatEl.classList.toggle('on',seatLevel!==0);seatEl.querySelector('span').textContent=['มุมนั่ง','นั่งสูง','นั่งต่ำ'][seatLevel];});
   }
   function toggleCamera(){cam3=!cam3;root.classList.toggle('cam3',cam3);camEl&&camEl.classList.toggle('on',cam3);if(carMesh)carMesh.visible=cam3;radioLayout();}
-  function openShop(){if(paused)return;const p=STORE_POS[target],d=Math.hypot(car.x-p.x,car.z-p.z);if(d>27)return;paused=true;car.speed=dSpeed=dVelX=dVelZ=0;PetPantry.openStore(target,{onClose(){paused=false;}});}
-  function navText(dist){if(dist<27)return 'ถึงร้านแล้ว · จอดรถแล้วกด “เข้าร้าน”';const p=STORE_POS[target],dx=p.x-car.x,dz=p.z-car.z;const ang=Math.atan2(dx,dz)-car.yaw,turn=Math.sin(ang)>0?'เลี้ยวซ้าย':'เลี้ยวขวา';return dist>55?`ตรงไป ${Math.round(dist-25)} ม. แล้ว${turn}`:`อีก ${Math.round(dist)} ม. · เตรียม${turn}`;}
+  function openShop(){if(paused)return;const p=STORE_POS[target],d=Math.hypot(car.x-p.x,car.z-p.z);if(d>SHOP_TRIGGER_CLEARANCE)return;paused=true;car.speed=dSpeed=dVelX=dVelZ=0;PetPantry.openStore(target,{onClose(){paused=false;}});}
+  function navText(dist){if(dist<SHOP_TRIGGER_CLEARANCE)return 'ถึงร้านแล้ว · จอดรถแล้วกด “เข้าร้าน”';const p=STORE_POS[target],dx=p.x-car.x,dz=p.z-car.z;const ang=Math.atan2(dx,dz)-car.yaw,turn=Math.sin(ang)>0?'เลี้ยวซ้าย':'เลี้ยวขวา';return dist>SHOP_HINT_DIST?`ตรงไป ${Math.round(Math.max(0,dist-25))} ม. แล้ว${turn}`:`อีก ${Math.round(dist)} ม. · เตรียม${turn}`;}
   function carDrive(dt,now){
     const prevLongSpeed=dSpeed;
     let sd=steerCtl;if(!!(keys.ArrowLeft||keys.KeyA)!==!!(keys.ArrowRight||keys.KeyD))sd=(keys.ArrowRight||keys.KeyD)?1:-1;let th=0;if(padThr||keys.ArrowUp||keys.KeyW)th=gearR?-1:1;if(kBack)th=-1;if(padBr||keys.Space)th=0;
@@ -232,11 +561,21 @@ window.PetShopping3D=(()=>{
     if(!carBelted&&!carBeltFined&&kmh>10&&carEngineOn&&!carStartOpen){carBeltFined=true;carFines.push({t:'belt',fine:CAR_FINE_BELT});if(typeof state!=='undefined'){state.coins=Math.max(0,(state.coins||0)-CAR_FINE_BELT);if(typeof saveState==='function')saveState();}showLaw(true);}
   }
   function tick(t){if(!running)return;raf=requestAnimationFrame(tick);const dt=Math.min(.04,(t-last)/1000||.016);last=t;if(!paused)carDrive(dt,t);tickRouteLights(t);dCamYaw+=(car.yaw-dCamYaw)*Math.min(1,dt*6.5);
-    const seatY=[0,.18,-.12][seatLevel]||0;if(cam3){if(carMesh){carMesh.position.set(car.x,0,car.z);carMesh.rotation.y=car.yaw;carMesh.rotation.z=dRoll;carMesh.rotation.x=dPitch*.55;(carMesh.userData.wheels||[]).forEach(w=>w.rotation.x-=dSpeed*dt/.5);}camera.position.set(car.x-Math.sin(dCamYaw)*7.4,3.15,car.z-Math.cos(dCamYaw)*7.4);camera.lookAt(car.x,1.65,car.z);}else{camera.position.set(car.x,CAR_EYE+seatY+dHeave,car.z);camera.rotation.set(-.008+dPitch,dCamYaw-Math.PI,-dRoll*.65,'YXZ');}const p=STORE_POS[target],dist=Math.hypot(car.x-p.x,car.z-p.z);gpsEl.textContent=navText(dist);storeBtn.classList.toggle('show',dist<27);renderer.render(scene,camera);drawCarGauges();drawRadioViz();
+    const seatY=[0,.18,-.12][seatLevel]||0;if(cam3){if(carMesh){carMesh.position.set(car.x,0,car.z);carMesh.rotation.y=car.yaw;carMesh.rotation.z=dRoll;carMesh.rotation.x=dPitch*.55;(carMesh.userData.wheels||[]).forEach(w=>w.rotation.x-=dSpeed*dt/.5);}camera.position.set(car.x-Math.sin(dCamYaw)*7.4,3.15,car.z-Math.cos(dCamYaw)*7.4);camera.lookAt(car.x,1.65,car.z);}else{camera.position.set(car.x,CAR_EYE+seatY+dHeave,car.z);camera.rotation.set(-.008+dPitch,dCamYaw-Math.PI,-dRoll*.65,'YXZ');}const p=STORE_POS[target],dist=Math.hypot(car.x-p.x,car.z-p.z);gpsEl.textContent=navText(dist);storeBtn.classList.toggle('show',dist<SHOP_TRIGGER_CLEARANCE);updateHeadlights();renderer.render(scene,camera);drawCarGauges();drawRadioViz();
   }
   function start(opt={}){if(running||!window.THREE||!document.body)return false;target=opt.target==='fashion'?'fashion':'food';carId=/^car_\d+$/.test(opt.carId||'')?opt.carId:'car_01';car={x:0,z:18,yaw:Math.PI,speed:0,steer:0};keys={};steerCtl=0;padThr=padBr=gearR=kBack=false;dSpeed=dSteer=dVelX=dVelZ=dRoll=dRollV=dPitch=dPitchV=dHeave=dHeaveV=0;radioBars.fill(0);radioPeaks.fill(0);dCamYaw=car.yaw;carRevBeepAt=collisionAt=0;carEngineOn=carBelted=carBeltFined=carOverSpeed=false;carStartOpen=true;carFines=[];turnSet(0);cam3=false;seatLevel=0;root=document.createElement('div');root.className='ps3-root';document.body.appendChild(root);try{buildScene();carMesh=makeDriverCar();buildHUD(!!opt.rental);bind();if(typeof Music!=='undefined'){Music.suspendBg();Music.carRadio(true);radioState();}running=true;last=performance.now();raf=requestAnimationFrame(tick);return true;}catch(e){console.error(e);cleanup();return false;}}
-  function settleFines(){const due=carFines.filter(f=>f.t!=='belt').reduce((s,f)=>s+f.fine,0);if(due&&typeof state!=='undefined'){state.coins=Math.max(0,(state.coins||0)-due);if(typeof saveState==='function')saveState();if(typeof toast==='function')setTimeout(()=>toast(`🚔 สรุปใบสั่ง/ค่าซ่อมรอบนี้ 🪙${due}`),180);}carFines=[];}
-  function cleanup(){cancelAnimationFrame(raf);listeners.splice(0).forEach(fn=>fn());CarSnd.stop();if(typeof Music!=='undefined'){Music.carRadio(false);Music.resumeBg();}if(scene)scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const a=Array.isArray(o.material)?o.material:[o.material];a.forEach(m=>m.dispose&&m.dispose());}});disposables.splice(0).forEach(x=>x&&x.dispose&&x.dispose());if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();}if(root)root.remove();root=scene=camera=renderer=routeLine=null;routeLights=[];storeBtn=gpsEl=wheelEl=petEl=speedEl=radioEl=steerHitEl=steerKnobEl=throttleEl=brakeEl=gearDEl=gearREl=hornEl=turnEl=turnDotEl=dashEl=dashImgEl=gaugeEl=gaugeCtx=radioListEl=radioVizEl=radioVizCtx=engineEl=beltEl=goEl=startEl=lawEl=camEl=seatEl=warningEl=carMesh=null;running=paused=false;keys={};padThr=padBr=kBack=false;}
+  function settleFines(){
+    const due = carFines.filter(f=>f.t!=='belt').reduce((s,f)=>s+f.fine,0);
+    if(due&&typeof state!=='undefined'){
+      state.coins = Math.max(0,(state.coins||0)-due);
+      if(typeof saveState==='function')saveState();
+      if(typeof toast==='function'){
+        toast(`สรุปค่าใช้จ่าย\nค่าซ่อม/คำสั่งรอบนี้: 🪙 ${due.toLocaleString()}\nยอดเงินถูกหักเรียบร้อยแล้ว`);
+      }
+    }
+    carFines=[];
+  }
+  function cleanup(){cancelAnimationFrame(raf);listeners.splice(0).forEach(fn=>fn());CarSnd.stop();if(envWatchId){clearInterval(envWatchId);envWatchId=null;}if(typeof Music!=='undefined'){Music.carRadio(false);Music.resumeBg();}if(scene)scene.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const a=Array.isArray(o.material)?o.material:[o.material];a.forEach(m=>m.dispose&&m.dispose());}});disposables.splice(0).forEach(x=>x&&x.dispose&&x.dispose());if(renderer){renderer.dispose();renderer.forceContextLoss&&renderer.forceContextLoss();}if(root)root.remove();root=scene=camera=renderer=routeLine=null;routePath=[];routeLength=0;routePulse=0;routePulseAt=0;routeLights=[];carHeadlights=[];headTargets=[];shopSpotLights=[];storeBtn=gpsEl=wheelEl=petEl=speedEl=radioEl=steerHitEl=steerKnobEl=throttleEl=brakeEl=gearDEl=gearREl=hornEl=turnEl=turnDotEl=dashEl=dashImgEl=gaugeEl=gaugeCtx=radioListEl=radioVizEl=radioVizCtx=engineEl=beltEl=goEl=startEl=lawEl=camEl=seatEl=warningEl=carMesh=null;running=paused=false;keys={};padThr=padBr=kBack=false;}
   function exit(){if(!running)return;settleFines();cleanup();if(typeof renderDashboard==='function')renderDashboard();}
   return {start,exit,isRunning:()=>running,_t:{routeFor,onRoad,keepCarOnRoad,STORE_POS,WORLD_HALF,DRIVE_LIMIT,hitsSolid,solidContact,setPose(x,z,yaw=car.yaw){car.x=x;car.z=z;car.yaw=yaw;dSpeed=dVelX=dVelZ=0;collisionBounceUntil=0;},setSafety(engine,belt){carEngineOn=!!engine;carBelted=!!belt;carStartOpen=!engine;},setControls(throttle,reverse=false){padThr=!!throttle;gearR=!!reverse;},stepDrive(dt,now=1000){carDrive(dt,now);},setTestRect(x,z,w,d){solidRects=[{x,z,hw:w/2,hd:d/2}];solidCircles=[];},clearTestSolids(){solidRects=[];solidCircles=[];},get solids(){return {rects:solidRects.length,circles:solidCircles.length};},get driveState(){return {x:car.x,z:car.z,speed:dSpeed,steer:dSteer,gearR,engine:carEngineOn,belt:carBelted,cam3,turnSig,collisionBounceUntil};},get cleanupState(){return {running,paused,listeners:listeners.length};}}};
 })();

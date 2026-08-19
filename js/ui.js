@@ -8615,7 +8615,7 @@ function buyRobot(id){
       sfx.buy();
       // 🧹 รอบ 941: ป้ายเตือน "ยังไม่มีหุ่นยนต์" เป็นแบบค้างจนกดปิด — ซื้อแล้วต้องหายเอง (ผู้ใช้เจอป้ายเก่าลอยทับทั้งที่มีหุ่นแล้ว)
       if(typeof clearWarnToasts==='function') clearWarnToasts(/หุ่นยนต์/);
-      toast(`🤖 ได้หุ่น ${r.name} แล้ว! เข้าโลกหุ่นยนต์นักรบได้เลย 💥`);
+      toast(`🤖 ได้หุ่น ${r.name} แล้ว! เข้าโลกหุ่นยนต์นักรบได้เลย 💥`,0);
       saveState();
       renderDashboard();
     });
@@ -9337,7 +9337,7 @@ function openHomeShop(){
           state.waterCut = false; state.plumbingBought = false;
           if(heatProtected()) for(const p of state.pets) p.heatFrom = null;
           sfx.buy();
-          toast(`🎉 ได้${h.name}แล้ว! น้องมีที่หลบแดดหลบฝนแล้ว`);
+          toast(`🎉 ได้${h.name}แล้ว! น้องมีที่หลบแดดหลบฝนแล้ว`,0);
           saveState();
           renderDashboard();
         });

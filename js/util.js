@@ -155,14 +155,23 @@ function showScreen(id){
 }
 
 /* ---------- FX ---------- */
-// คำเตือน/ทำรายการไม่สำเร็จ → ค้างจนผู้ใช้กดปิด · ข้อความแจ้งสำเร็จ → หายเอง
+// FINANCIAL TRANSACTION UI RULE:
+// Any message that confirms, charges, deducts, refunds, purchases, repairs,
+// or otherwise changes player coins must remain visible until explicit dismiss.
 const TOAST_WARN_RE = /ไม่สำเร็จ|ไม่พอ|ไม่ได้|ไม่มี|ยังไม่|หมดเวลา|หมดอายุ|ลองใหม่|ป่วย|ให้ครบ|มากกว่า 0|อินเทอร์เน็ต|ต้อง.{0,20}ก่อน|⚠️|❌|🚫|💔|⏰|🤒/;
+const TOAST_FINANCIAL_RE =
+  /(?:🪙|เหรียญ|เงิน|บาท|ค่า|ค่างวด|รายได้|รางวัล|โบนัส|เติมเงิน|ชำระ|จ่าย|หัก|หนี้|หักเงิน|หักเหรียญ|หักคะแนน|คืน|รีฟ|คืนเงิน|คืนเหรียญ|ค่าซ่อม|ค่าบำรุง|ค่าบริการ|ค่ารักษ|ค่าปรับ|ค่ารถ|ค่าข้าว|ค่าพิษ|ค่าเช่า|ค่าแฟชั่น|เช่า|เช่|ปลด|ปลดล็อก|ซื้อ|ขาย|ชำระเงิน|ยอด|สรุป|รีเซ็ต|ชำระงวด|ผ่อน|แลก|ถอน|ได้เหรียญ|เติม|payment|pay|paid|refund|refunds|charge|charged|deduct|deducted|purchase|reward|credits|debit|credit|cash|income)/i;
+const TOAST_FINANCIAL_AMOUNT_RE = /(?:\+|-\s*)?\d[\d,]*(?:\.\d+)?\s*(?:🪙|เหรียญ|บาท|coin|coins|cash|money)|(?:🪙|เหรียญ|บาท|coin|coins|cash|money)\s*(?:\+|-\s*)?\d[\d,]*(?:\.\d+)?/i;
+const isFinancialToastMsg = (msg) => {
+  const text = String(msg || '');
+  return TOAST_FINANCIAL_RE.test(text) || TOAST_FINANCIAL_AMOUNT_RE.test(text);
+};
 let lastWrongAt = 0;                       // กันเสียงเตือนซ้ำ (call site เรียก sfx.wrong ก่อน toast อยู่แล้ว)
 const nowMs = ()=> (window.performance ? performance.now() : Date.now());
 function restackToasts(){
   /* 🔗 รอบ 974: toast แบบมีลิงก์ (.toast-link) เข้ากองเดียวกับคำเตือน = ไม่ทับกันเวลามีหลายใบ
      แต่ clearWarnToasts ยังกวาดแค่ .toast-warn เหมือนเดิม (ลิงก์แจ้งเตือนไม่โดนล้างทิ้งกลางทาง) */
-  const list = [...document.querySelectorAll('.toast-warn, .toast-link')];
+  const list = [...document.querySelectorAll('.toast-warn, .toast-financial, .toast-link')];
   let b = 76;                              // ตรงกับ bottom ใน .toast (css)
   for(let i = list.length - 1; i >= 0; i--){   // อันใหม่สุดอยู่ล่างสุด อันเก่าดันขึ้นไป
     list[i].style.bottom = b + 'px';
@@ -193,14 +202,26 @@ function toast(msg, ms=1800){
   const t = document.createElement('div');
   // 💰 รอบ 859 (ผู้ใช้สั่ง): ms=0 = บังคับค้างจนผู้เล่นกดปิดเอง (ใช้กับแจ้งเรื่องเงินตอนบูต — เดิมหายก่อนอ่านทัน)
   const warn = TOAST_WARN_RE.test(msg);
-  if(warn || ms === 0){
-    t.className = 'toast toast-warn';
+  const financial = isFinancialToastMsg(msg);
+  const isWarnLike = warn || ms === 0 || financial;
+  if(isWarnLike){
+    t.className = financial ? 'toast toast-financial' : 'toast toast-warn';
     const span = document.createElement('span');
     span.className = 'toast-msg'; span.textContent = msg;
+    const close = ()=>{ t.remove(); restackToasts(); };
     const x = document.createElement('button');
     x.className = 'toast-x'; x.textContent = '✕'; x.setAttribute('aria-label','ปิด');
-    x.onclick = ()=>{ t.remove(); restackToasts(); };
+    x.onclick = close;
     t.appendChild(span); t.appendChild(x);
+    if(financial){
+      const ok = document.createElement('button');
+      ok.type = 'button';
+      ok.className = 'toast-ok';
+      ok.textContent = 'ปิด';
+      ok.setAttribute('aria-label','ปิด');
+      ok.onclick = close;
+      t.appendChild(ok);
+    }
     document.body.appendChild(t);
     if(warn){   // ข่าวเงินเข้า (ms=0 แต่ไม่ใช่คำเตือน) ไม่ต้องเล่นเสียงผิด/สั่น
       if(nowMs() - lastWrongAt > 200 && typeof sfx !== 'undefined') sfx.wrong();  // เสียงเตือน (ไม่ซ้ำถ้าเพิ่งเล่นไป)
@@ -231,7 +252,7 @@ function toastLink(msg, label, fn, ms = 7000){
   t.appendChild(s); t.appendChild(go); t.appendChild(x);
   document.body.appendChild(t);
   restackToasts();
-  if(ms > 0) setTimeout(()=>{ if(t.parentNode) close(); }, ms);
+  if(ms > 0 && !isFinancialToastMsg(msg)) setTimeout(()=>{ if(t.parentNode) close(); }, ms);
   return t;
 }
 function floatFx(text, color){

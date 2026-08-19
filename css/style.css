@@ -1688,6 +1688,34 @@ html.no-anim .tapglow-on::after{animation:none !important;}
   font-size:14px;line-height:1;padding:0;
 }
 .toast-warn .toast-x:hover{background:rgba(255,255,255,.4);}
+.toast-financial{
+  pointer-events:auto;cursor:default;
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,#1f7f9f,#2663c8);
+  white-space:normal;max-width:88vw;line-height:1.45;
+  padding:12px 14px 12px 16px;transition:bottom .18s;
+}
+.toast-financial .toast-msg{
+  flex:1;text-align:left;white-space:pre-line;
+}
+.toast-financial .toast-x{
+  flex:none;border:none;cursor:pointer;color:#fff;
+  background:rgba(255,255,255,.22);
+  width:28px;height:28px;border-radius:999px;
+  font-size:14px;line-height:1;padding:0;
+}
+.toast-financial .toast-x:hover{background:rgba(255,255,255,.4);}
+.toast-financial .toast-ok{
+  flex:none;border:none;cursor:pointer;color:#fff;
+  background:rgba(255,255,255,.22);
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:14px;
+  line-height:1;
+  font-weight:700;
+  white-space:nowrap;
+}
+.toast-financial .toast-ok:hover{background:rgba(255,255,255,.4);}
 /* 🔗 รอบ 974: แจ้งเตือนที่มี "ลิงก์ไปดูต้นเรื่อง" — สีน้ำเงินฟีด (ไม่ใช่สีคำเตือน) กดหรือไม่กดก็ได้ */
 .toast-link{
   pointer-events:auto;cursor:default;
