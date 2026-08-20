@@ -28,6 +28,9 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (14 ส.ค.) — อ่านก่อน
+- **รอบ 1172 · เก็บตัวอักษรโลกเฮลิคอปเตอร์ทีละคำตามลำดับ:** เดิมสร้าง 10 คำ+ตัวหลอก 8 ตัว; แก้ `js/adventure3d.js` ให้มีเฉพาะตัวของคำปัจจุบัน แยกคนละดาดฟ้า และปฏิเสธตัวที่ผิดลำดับ
+- รางวัลคง 1 เหรียญ/ตัว และปรับโบนัสเฮลิคอปเตอร์เป็น 50 เหรียญ/คำ; BUDGET ได้รวม 56 เหรียญ และเริ่มคำใหม่กลับมามีเพียงคำเดียวอัตโนมัติ
+- เพิ่ม `tools/test_heli_letter_round.js`; syntax/diff + Haunted Hotel 2 ชุดผ่าน และ Browser runtime ผ่าน 7/7 (จำนวน/คลัง/ลำดับ/เหรียญ/รอบใหม่)
 - **รอบ 1169 · ปุ่ม Settings จอมือถือ landscape แคบ:** ต้นเหตุ header มีความกว้างขั้นต่ำจากการ์ดผู้เล่น+แถวเหรียญ ทำให้ก้อนปุ่มขวาถูก `overflow:hidden` ตัด; ที่ viewport ≤640×520 ยึดปุ่ม 5 ตัวไว้ขอบขวาใต้แถวเหรียญและซ่อนเฉพาะฟีดอันดับ
 - แก้ `css/lobby.css`, cache-bust `index_classic.html` และเพิ่ม `tools/test_lobby_settings_responsive.js`; Browser 520×375, 568×320, 640×360, 667×375, 812×375, 915×412, 1217×648, 1325×619 = ปุ่มครบ/inside/ไม่ทับเหรียญ/overflow 0 และกด Settings ได้
 - regression/syntax/diff ผ่าน; กล่อง Settings 520×375 `scrollHeight=clientHeight=375`; production build `.1056` 8,336 ไฟล์ 464.8 MiB + PWA/cache/TWA validator ผ่าน · พร้อม COMMIT_DEPLOY
@@ -55,7 +58,6 @@
 - เพิ่มภาพ ImageGen WebP 3 ภาพใน `img/pet-shopping/`; Browser 812×375 ผ่าน pantry/store/cockpit/GPS/no-overflow/cleanup console 0; syntax + pantry/world/integration/dress/pet-bond/paid-entry/missing-assets + production build `.1049`/PWA validator ผ่าน
 - **รอบ 1157 · ย้ายปุ่ม “สะกดคำ” ออกจากเวทีน้อง:** ปุ่มอยู่ต่อท้ายแถบ “ระดับชั้น” ในช่องว่างด้านขวา โดยย้าย DOM node เดิมจึงคงเงื่อนไขแสดง/ซ่อนและ click handler ครบ; แก้ `css/lobby.css`, `js/lobby3d.js` และเพิ่ม regression test
 - `test_spell_header.js`, syntax และ diff-check ผ่าน; Browser runtime ที่ 1047×497/812×375 ยืนยันปุ่มอยูหลังระดับชั้น 5px, บรรทัดเดียวกัน, ไม่ทับเวที และ horizontal overflow = 0
-- **รอบ 1154 · ห้องแต่งตัวพรีเมียม + เสื้อผ้าใหม่:** เพิ่มภาพ ImageGen โปร่งใส 10 ชิ้น (เครื่องประดับ 6 / เสื้อผ้า 4) รวมสินค้าเป็น 18 ชิ้น พร้อมระดับ คลาสสิก/หายาก/มหัศจรรย์/ตำนาน ราคา ป้ายหมวด แสงอัญมณี และยอดขาย
 - เพิ่ม `body` slot และ `wear_extra.js` แบบ center-anchor: ภาพเดียวใช้กับหมา/แมว/มังกร มี `all_*` fallback สำหรับสัตว์/slot ใหม่ โดยยังคงกติกาใส่ได้ทีละ 1 ชิ้น; จูนฮู้ด/ชุดนอนให้เห็นตาและรอยยิ้มครบ
 - Browser preview 1280×720 และ 812×375 แสดงครบ 18 ใบแบบ 9×2 ไม่มี scroll/overflow; ตรวจผ้าคลุม ฮู้ด ชุดนอน เสื้อกั๊ก เทียร่า บนสัตว์ทั้ง 3 ชนิดด้วยภาพจริง
 - syntax + `test_dress_luxury.js` + `test_pet_bond.js` + alpha validator ผ่าน; production build `.1045` 8,316 ไฟล์ 464.1 MiB และ PWA validator ผ่าน รวม PNG ใหม่ครบ 10 + fingerprint `wear_extra` แล้ว · รอ acceptance หลัง deploy
