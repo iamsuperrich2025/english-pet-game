@@ -53,7 +53,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/app-update.js** (214 บรรทัด) — (ไม่มี comment หัวไฟล์)
 - **js/arena3d.js** (724 บรรทัด) — 🌀🔤 รอบ 1045 — VOCAB ARENA · โลกผจญภัย PvE มุมกล้อง MOBA-inspired ที่ออกแบบใหม่สำหรับ Vocab World · - ไม่ใช้แผนที่/ฮีโร่/ไอคอน/เอฟเฟกต์/เสียงจากเกมอื่น
 - **js/assetaward.js** (21 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 กระดานมูลค่าทรัพย์สินรวม — ใช้โรงงานกลางใน award.js
-- **js/auth.js** (531 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
+- **js/auth.js** (533 บรรทัด) — ENGINE: Google Login + Sync เซฟขึ้น cloud (backlog ข้อ 0.1) · กติกา (ผู้ใช้เลือกแบบ ก. 5 ก.ค. 2026): บังคับ login ด้วย Google · เท่านั้นก่อนเข้าเกม — offline/SDK โหลดไม่ได้ → หน้าประตูให้ลองใหม่
 - **js/award.js** (275 บรรทัด) — 🏆 award.js — เครื่องจ่าย "รางวัลรายเดือน Top 10" ใช้ร่วมทุกกระดาน (รอบ 649) · เดิมโค้ดก้อนนี้อยู่ใน js/wsaward.js เฉพาะแท็บ 🔎 ค้นหาคำ · รอบ 649 เพิ่มแท็บ ⌨️ พิมพ์คำ ที่ใช้กติกาเดียวกันเป๊ะ → ยกมาเป็นโรงงานกลาง
 - **js/bandadv.js** (452 บรรทัด) — BAND ADV — คลังศัพท์ขั้นสูงแยกหมวด (js/data/band/ · รอบ 681) · ต่างจาก js/dictband.js (DICT_BAND 1-5): ไม่ผูกชั้นเรียน เปิดเล่นได้ทุกคน · ไม่มี pos/ipa/ตัวอย่าง (entry แค่ [en, th]) จึงไม่มีชุดสอบย่อย/สอบซ่อม —
 - **js/bbaward.js** (14 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 ของเกม 🫧 ฟอง — คะแนนสะสมตลอดกาล
@@ -62,7 +62,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/city3d.js** (3,352 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
 - **js/coinaward.js** (21 บรรทัด) — 🪙🏆 รางวัลรายเดือน Top 10 กระดานเหรียญคงเหลือ
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
-- **js/examstd.js** (981 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
+- **js/examstd.js** (983 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
 - **js/f1_3d.js** (3,182 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (123 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/fpsweapon.js** (194 บรรทัด) — 🔫 FPS WEAPON STATE MACHINE — local adapter for invasion3d · Owns only weapon presentation state. Gameplay, aiming, damage, · controls and world lifecycle remain in js/invasion3d.js.
@@ -82,6 +82,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/moto3d.js** (2,776 บรรทัด) — 🏍️ moto3d.js — โลกมอเตอร์ไซค์บ้านโพธิ์สวัสดิ์ (รอบ 293) · ขับมอเตอร์ไซค์ third-person บนถนนจริงรอบโรงเรียนบ้านโพธิ์สวัสดิ์ รัศมี 30 กม. (js/data/moto_phosawat.js · OSM) · เล่นบน "เครื่องเกมพกพา" เต็มจอ — จอเกมอยู่ตรงกลางเครื่อง · สไลเดอร์ส้มซ้าย=เลี้ยว · ปุ่มฟ้าขวา=เร่ง · ปุ่มแดงบน=ปิดเครื่อง
 - **js/music.js** (205 บรรทัด) — music.js — ระบบเพลง (รอบ 181) · เพลงพื้นหลัง (instrument) เล่นวนทั้งเกม เริ่มหลัง gesture แรก (autoplay policy) · เข้าโลก 3D ใดๆ → พัก bg (โลกมี soundscape ของตัวเอง) · ออก → เล่นต่อ
 - **js/netroom.js** (811 บรรทัด) — 🏟️ netroom.js — ระบบ "หลายสนาม" (room sharding) กลางของทุกโลก 3D (รอบ 640) · ใช้ร่วมกันทั้ง js/adventure3d.js · js/invasion3d.js · js/moto3d.js — ห้ามก๊อปโค้ดซ้ำอีก · (ยกก้อน "กันผู้เล่นล้นสนาม" ของรอบ 637 ออกมาจาก invasion3d.js แล้วทำให้ทุกโลกใช้ได้)
+- **js/onetpromo.js** (78 บรรทัด) — 🇹🇭 รอบ 1184: ป้ายเชิญชวน O-NET หลัง login — ปิดแล้วไม่เด้งซ้ำตลอด session
 - **js/online.js** (2,165 บรรทัด) — ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database · - เพื่อนออนไลน์จริง (presence): เห็นผู้เล่นคนอื่นที่เปิดเกมอยู่จริง · - Leaderboard: อันดับผู้เล่นที่มีเหรียญมากที่สุด Top 100
 - **js/onlinecoinaward.js** (22 บรรทัด) — 🌐🏆 รางวัลรายเดือน Top 10 กระดานเหรียญออนไลน์สะสมตลอดกาล
 - **js/petbehavior.js** (187 บรรทัด) — petbehavior.js — 🐾 ระบบพฤติกรรมน้องหน้า Lobby (รอบ 1030 · ป้าย/จังหวะชัดขึ้นรอบ 1031) · แบ่งคลิป 8 วินาทีเดิมเป็นท่าสั้น ๆ แล้วเลือกต่อกันแบบมีน้ำหนัก · เครื่องที่เล่นคลิปไม่ได้ยังใช้ state เดียวกันกับภาพ/sprite fallback
@@ -100,7 +101,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/tpaward.js** (41 บรรทัด) — 🏆 tpaward.js — รางวัลรายเดือนของกระดานอันดับ ⌨️ พิมพ์คำ (รอบ 649 · แก้กติกาอันดับรอบ 654) · ผู้ใช้สั่ง 28 ก.ค. 2026: "ทำแบบเดียวกับแท็บ 🔎 ค้นหาคำ" · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
 - **js/typing.js** (370 บรรทัด) — ⌨️ typing.js — เกม "พิมพ์คำศัพท์" (Keyboard Typing) รอบ 648 · ผู้ใช้สั่ง 28 ก.ค. 2026 · ปุ่มรางซ้ายล็อบบี้ → กระดานเต็มจอ (มีปุ่มปิดชัดเจน) · - แป้นวางตามตำแหน่งคีย์บอร์ดจริง (QWERTY เหลื่อมแถว) · ปุ่มนูน 3 มิติ กดแล้วยุบ-เด้งขึ้นทันที
 - **js/ui.js** (10,008 บรรทัด) — UI: Dashboard / ร้านค้า / ที่พัก / ร้านสัตว์เลี้ยง / แรงค์ / สถิติ
-- **js/util.js** (1,322 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
+- **js/util.js** (1,326 บรรทัด) — UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
 - **js/vocabbook.js** (207 บรรทัด) — 📒 สมุดคำศัพท์ของฉัน + ข้อสอบทบทวนส่วนตัว (รอบ 288) · เก็บทุกคำที่เด็กเจอในเกมจับคู่/ข้อสอบทุกแบบ (รวม band) ลง state.vocabBook · ถาวรข้ามเซสชัน: {en: {th, c:ถูกกี่ครั้ง, w:ผิดกี่ครั้ง, t:เจอล่าสุด, lw:ครั้งล่าสุดผิด?}}
 - **js/wordsearch.js** (485 บรรทัด) — 🔎 wordsearch.js — เกมค้นหาคำศัพท์ (Word Search) รอบ 194 · แผงฟ้าล้ำยุคเลื่อนออกจากซ้าย · สุ่มคำไม่ซ้ำในแต่ละเกม · 🆕 รอบ 588: กระดานเกือบเต็มจอ · แถบ "หาคำเหล่านี้ให้เจอ" ย้ายขึ้นบนสุด จัดกึ่งกลาง
 - **js/wsaward.js** (32 บรรทัด) — 🏆 wsaward.js — รางวัลรายเดือนของกระดานอันดับ 🔎 ค้นหาคำ (รอบ 592) · ผู้ใช้สั่ง 26 ก.ค. 2026: · ① Top 10 ได้เหรียญรางวัลทุกวันที่ 1 ของเดือน (10,000 ลดหลั่นถึง 1,000)
@@ -110,6 +111,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/lettercannon.css** (48 บรรทัด) — 🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1158) · Full-screen, landscape-first HUD. The game canvas owns scenery; · this file keeps controls readable and dialogs inside 812×375.
 - **css/lobby.css** (5,954 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
+- **css/onetpromo.css** (37 บรรทัด) — 🇹🇭 รอบ 1184: ป้ายชวนทดลอง O-NET หลัง login — พอดีจอแนวนอน 812×375
 - **css/petpantry.css** (6 บรรทัด) — 🗄️🐾 Pet Pantry — รอบ 1158
 - **css/petshopping3d.css** (26 บรรทัด) — 🚗🐾 Pet Shopping 3D — รอบ 1168: collision bounce + responsive cockpit/equalizer mask; GPS คงเดิม
 - **css/picdict.css** (108 บรรทัด) — 🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1123) · 6×3 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
@@ -118,6 +120,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,425 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

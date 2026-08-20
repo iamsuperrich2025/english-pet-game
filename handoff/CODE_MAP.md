@@ -193,7 +193,7 @@ closeIntro:12713 · beginPlay:12719 · start:12721 · exitWorld:12953 · mechaRe
 
 ## js/assetaward.js (21 บรรทัด · 0 รายการ)
 
-## js/auth.js (531 บรรทัด · 48 รายการ)
+## js/auth.js (533 บรรทัด · 48 รายการ)
 AUTH_PUSH_MS:23 · AUTH_SDK_TIMEOUT_MS:24 · AUTH_CLOUD_SLOW_MS:25 · AUTH_CLOUD_TIMEOUT_MS:26 · ADMIN_NAME_EMAILS:30 · adminReservedNameKey:35
 isReservedAdminName:40 · canUseReservedAdminName:44 · isAdmin:49 · checkProfileName:52 · TEACHER_EMAILS:61 · isTeacher:62
 syncAdminAccess:66 · TESTER_EMAILS:80 · TESTER_COINS:81 · isTester:82 · RANK_EXCLUDED_TESTER_NAMES:88 · rankUserExcluded:89
@@ -298,7 +298,7 @@ bandTriedSets:132 · bandRetakeCat:143 · bandShowRetakeSummary:177 · bandSetsP
 bandUnlocked:286 · bandLockToast:291 · bandExamLobby:297 · updateBandExamBtn:306 · bandLobbyTick:323 · bandPlay:334
 bandSpeakSample:346 · bandPlayLobby:366 · bandCardsHTML:378
 
-## js/examstd.js (981 บรรทัด · 55 รายการ)
+## js/examstd.js (983 บรรทัด · 55 รายการ)
 XS_PASS_PCT:15 · XS_REWARD:16 · XS_REWARD_AGAIN:17 · XS_ONET_REWARD:18 · xsIsOnet:21 · xsReward:22
 XS_TIME_HINT:29 · XS_TIME_FALLBACK:30 · xsLimitSec:31 · XS_SCALE:35 · xsScaleText:41 · xsFindSet:52
 examStdLoad:64 · xsFailMsg:99 · xsQuizId:107 · xsBest:109 · XS_HIST_MAX:124 · xsHistory:125
@@ -697,6 +697,8 @@ mergeBack:88 · metUids:100 · AIM_TTL_MS:119 · aimAt:121 · aimGet:125 · aimC
 MAPS3D:135 · whereFriends:136 · dbOf:160 · envReady:161 · isDenied:164 · create:176
 drawBudget:784
 
+## js/onetpromo.js (78 บรรทัด · 0 รายการ)
+
 ## js/online.js (2,165 บรรทัด · 115 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
 - 2-235 ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
@@ -924,21 +926,21 @@ cancelListing:9164 · buyMarketItem:9188 · showCollectReveal:9253 · buyAC:9291
 showLevelUp:9430 · renderStats:9467 · showTeacherCard:9574 · CALL_REACT_EMOS:9618 · CALL_TALK_MIN:9621 · CALL_TALK_HOLD:9622
 CALL_ORDER_GAP:9624 · CALL_TONES:9630 · startCall:10004
 
-## js/util.js (1,322 บรรทัด · 53 รายการ)
+## js/util.js (1,326 บรรทัด · 53 รายการ)
 ### 🗂️ สารบัญโซน js/util.js (Read/Edit เฉพาะช่วง)
 - 2-23 UTIL: เสียง / เอฟเฟกต์ / เครื่องมือทั่วไป
-- 24-1291 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
-- 1292-1322 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
+- 24-1295 🎖️ รอบ 643: สัญลักษณ์ระดับชั้น (ผู้ใช้สั่ง 28 ก.ค. 2026)
+- 1296-1326 🖱️🚫 รอบ 833: กันกล่องดำ "To show your cursor, switch apps, reload the page…"
 ### รายการ js/util.js
 shuffle:6 · fmtNum:15 · escapeHTML:19 · gradeSymbol:32 · gradeMark:47 · nameWithGrade:55
 gradeMarkCanvas:61 · gradeOf:77 · seededRand:92 · fmtThaiDT:104 · fmtThaiDate:108 · IPHONE_LOBBY_VIEWPORT:118
-fitIPhoneLobbyViewport:129 · showScreen:148 · TOAST_WARN_RE:161 · TOAST_FINANCIAL_RE:162 · TOAST_FINANCIAL_AMOUNT_RE:164 · restackToasts:171
-clearWarnToasts:197 · toast:201 · toastLink:240 · floatFx:258 · beep:269 · soundStatus:290
-PET_MOOD:406 · petVoiceSynth:413 · sirenSynth:490 · playCashier:514 · cashierSynth:528 · keyTapSynth:561
-bubblePopSynth:599 · bubbleTapSynth:618 · playSpark:629 · sparkSynth:643 · thunderFx:678 · wordAudioFile:746
-speakCutOff:755 · speakWord:759 · speakLetter:798 · pickSpeakVoice:821 · speakWordTTS:832 · askNameDialog:859
-askConfirm:905 · alertBox:923 · applyNoAnim:943 · BLK_VOCAB:950 · openSettings:998 · openHelp:1230
-openTeacherGuide:1257 · TAPGLOW_SEL:1281 · TOUCH_INPUT_SEEN:1300 · mouseLockOK:1309 · lockMouse3D:1315
+fitIPhoneLobbyViewport:129 · showScreen:148 · TOAST_WARN_RE:165 · TOAST_FINANCIAL_RE:166 · TOAST_FINANCIAL_AMOUNT_RE:168 · restackToasts:175
+clearWarnToasts:201 · toast:205 · toastLink:244 · floatFx:262 · beep:273 · soundStatus:294
+PET_MOOD:410 · petVoiceSynth:417 · sirenSynth:494 · playCashier:518 · cashierSynth:532 · keyTapSynth:565
+bubblePopSynth:603 · bubbleTapSynth:622 · playSpark:633 · sparkSynth:647 · thunderFx:682 · wordAudioFile:750
+speakCutOff:759 · speakWord:763 · speakLetter:802 · pickSpeakVoice:825 · speakWordTTS:836 · askNameDialog:863
+askConfirm:909 · alertBox:927 · applyNoAnim:947 · BLK_VOCAB:954 · openSettings:1002 · openHelp:1234
+openTeacherGuide:1261 · TAPGLOW_SEL:1285 · TOUCH_INPUT_SEEN:1304 · mouseLockOK:1313 · lockMouse3D:1319
 
 ## js/vocabbook.js (207 บรรทัด · 14 รายการ)
 VB_MAX:11 · VB_QUIZ_N:12 · VB_QUIZ_MIN:13 · vbGroup:16 · VB_GROUP_UI:21 · vbRecord:24
@@ -1133,6 +1135,11 @@ vbRender:148 · vbCardHTML:194
 #night-veil:5674 · .theme-emerald:5703,5715,5722,5725(+7) · .theme-plum:5708,5719,5723,5726(+3) · #theme-veil:5736 · #screen-picmatch:5789,5795,5796,5797(+38) · .pm-category-btn:5831,5834
 .pm-sheet-card-img:5835 · .pm-card:5838,5843,5847,5849(+9) · .pm-grid:5841 · .pm-right:5871 · .pm-now:5872,5878 · #pm-now-en:5879
 .pm-now-th:5880 · .pm-lobby-btn:5888,5892 · .pm-mode-btn:5917,5920 · .pm-wordcard:5921,5922,5924
+
+## css/onetpromo.css (37 บรรทัด · 13 selector)
+.onet-promo-overlay:2 · .onet-promo-card:4 · .onet-promo-close:9 · .onet-promo-kicker:12 · .onet-promo-title:14 · .onet-promo-lead:16
+.onet-promo-grades:17,18 · .onet-promo-grid:20 · .onet-promo-stat:21,22 · .onet-promo-actions:23 · .onet-promo-go:24,25,29 · .onet-promo-later:27
+.onet-promo-note:28
 
 ## css/petpantry.css (6 บรรทัด · 4 selector)
 .pantry-main-row:2 · .pantry-grant-overlay:3 · .petshop-entry-box:4 · .petpantry-overlay:5
