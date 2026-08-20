@@ -6,13 +6,13 @@
 ทำไมต้องมี: ต้นฉบับ img/matching/*.png = 46 แผ่น ~91MB และเป็นไฟล์ untracked
   → tools/deploy_firebase.sh เอาไฟล์จาก `git archive HEAD` เท่านั้น = ไม่ขึ้นเว็บ
   → หน้าหนังสือบนเว็บจริงภาพ 404 (ยืนยันด้วย curl รอบ 993)
-วิธี: แปลงเป็น WebP คงความละเอียดเดิม (1024×1536 — ตัวหนังสือบนการ์ดต้องอ่านออก
-  บนจอ retina) ลงโฟลเดอร์ใหม่ img/matching/web/ แล้ว commit เฉพาะโฟลเดอร์นั้น
+วิธี: ย่อด้านกว้างเหลือ 768px แล้วแปลงเป็น WebP quality 72 ลง img/matching/web/
+  ภาพยังเกินขนาดที่ UI วาดจริง (canvas 240×128; zoom 480×256) และลด download ได้มาก
   ⛔ ไม่แตะ/ไม่ลบไฟล์ต้นฉบับของผู้ใช้เด็ดขาด (ต้นฉบับยังอยู่ในเครื่องเหมือนเดิม)
 
 ใช้:  python tools/shrink_matching.py            # ย่อทุกแผ่นที่ยังไม่มี/เก่ากว่าต้นฉบับ
       python tools/shrink_matching.py --force    # ทำใหม่ทุกแผ่น
-      python tools/shrink_matching.py --q 82     # ปรับคุณภาพ (ค่าเริ่ม 80)
+      python tools/shrink_matching.py --q 76 --width 896  # ปรับคุณภาพ/ขนาด
 """
 import argparse, os, glob, sys
 from PIL import Image
@@ -26,7 +26,8 @@ OUT = os.path.join(SRC, 'web')
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--q', type=int, default=80, help='คุณภาพ WebP (ค่าเริ่ม 80)')
+    ap.add_argument('--q', type=int, default=72, help='คุณภาพ WebP (ค่าเริ่ม 72)')
+    ap.add_argument('--width', type=int, default=768, help='ความกว้างภาพเว็บ px (ค่าเริ่ม 768; 0 = คงขนาดเดิม)')
     ap.add_argument('--force', action='store_true')
     a = ap.parse_args()
 
@@ -46,7 +47,9 @@ def main():
         im = Image.open(f)
         if im.mode not in ('RGB', 'RGBA'):
             im = im.convert('RGB')
-        im.save(dst, 'WEBP', quality=a.q, method=6)
+        if a.width > 0 and im.width > a.width:
+            im = im.resize((a.width, round(im.height * a.width / im.width)), Image.Resampling.LANCZOS)
+        im.save(dst, 'WEBP', quality=a.q, method=6, exact=True)
         si, so = os.path.getsize(f), os.path.getsize(dst)
         tot_in += si; tot_out += so; done += 1
         print(f'  {os.path.basename(f):28s} {si/1048576:5.2f}MB → {so/1024:6.0f}KB  ({so/si*100:4.1f}%)')

@@ -124,7 +124,7 @@
     const promise = new Promise((resolve,reject)=>{
       const img = new Image();
       img.onload = ()=>resolve(img);
-      /* ใช้แผ่น WebP ที่ถูก track/deploy จริง; 1024px กว้างพอสำหรับครอปการ์ด 8 คอลัมน์ */
+      /* ใช้แผ่น WebP ที่ถูก track/deploy จริง; 768px ยังเกินขนาด canvas ที่ UI วาดจริงและลด download */
       img.src = sheetSrc(sheet.file);
       img.onerror = ()=>reject(new Error('image unavailable: '+img.src));
     });

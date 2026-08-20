@@ -28,6 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (20 ส.ค.) — อ่านก่อน
+- **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
+- อัปเกรด `tools/shrink_matching.py` ให้เจนค่าเบาเป็นค่าเริ่ม และเพิ่ม `test_matching_web_assets.py` กันไฟล์หาย/เสียสัดส่วน/หนักกลับ; ไฟล์ใหญ่สุด 189.1KB
+- asset decode/budget, Picture Dictionary, picmatch cooldown, Browser 768×1152 no-console-error และ production build 8,336 ไฟล์ 459.7MiB + PWA/cache/TWA validator ผ่าน
+- **รอบ 1181 · ปิด RTDB DATA_WRITE Audit Logs:** หลังตลาด `/marketLedger` และ Functions ขึ้น production ผู้ใช้อนุญาตให้ปิด log ชั่วคราวเพื่อลดปริมาณ/ค่าใช้จ่าย; สำรอง IAM policy ก่อน–หลัง ยืนยัน `dataWriteEnabled=false` และ `bindingsUnchanged=true` (ไม่ deploy เว็บซ้ำ)
 - **รอบ 1180 · retry Eventarc อัตโนมัติ:** deploy รอบ 1179 สร้าง `marketBuySecure` สำเร็จ แต่ `resumeMarketSettlement` ถูกปฏิเสธชั่วคราวระหว่าง IAM ของ Eventarc service agent กำลัง propagate; ให้ deploy Functions ลองสูงสุด 3 ครั้ง เว้น 60 วินาที และหยุด Hosting/Push หากยังไม่ครบ
 - **รอบ 1179 · แก้ deploy Functions จาก staged Git:** รอบ 1178 commit สำเร็จแต่ Firebase CLI หา `firebase-functions` ไม่พบ เพราะ `git archive` ไม่รวม `node_modules`; เพิ่ม `npm ci --prefix functions --omit=dev` จาก lockfileใน staging และตรวจ Functions จากช่วง `origin/main..HEAD` เพื่อให้ retry หลัง commit แรกได้
 - **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
