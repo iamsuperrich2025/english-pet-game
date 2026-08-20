@@ -2107,10 +2107,36 @@ function heliKppSpawn(){
 /* ⚠️ รอบ 694: ถอด haunt ออกจากตารางนี้ — โลกโรงแรมใช้ "ท้องฟ้าวาดเอง" (buildHauntSky ด้านล่าง)
    เพราะต้องหรี่/สว่างตามจังหวะไฟดับได้ ภาพ panorama นิ่ง ๆ ทำแบบนั้นไม่ได้ */
 const SKY_IMG={ adv:'sky_day', heli:'sky_dawn', drone:'sky_storm', drive:'sky_dawn', soccer:'sky_day', mecha:'sky_alien' };
+const skyTexCache={};                    // heli/drive ใช้ sky_dawn ร่วมกัน — แปลงขอบและเก็บ GPU texture ครั้งเดียว
+/* ภาพท้องฟ้าบางชุดเป็น 2:1 แต่ไม่ได้ทำขอบซ้าย/ขวาให้ tileable จริง
+   เมื่อ EquirectangularReflectionMapping พับเป็น 360° สีสองขอบจึงชนกันเป็นเส้นตั้งชัดเจน
+   ผสม "คู่พิกเซลจากสองขอบ" เข้าหากันด้วย smoothstep: พิกเซลริมสุดเท่ากันเป๊ะ
+   แล้วค่อยคืนสู่ภาพเดิมภายใน 14% ของความกว้าง จึงไม่มีทั้งเส้นตัดและขอบเบลอแข็งใหม่ */
+function seamlessSkyCanvas(img){
+  const cv=document.createElement('canvas'), w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+  cv.width=w; cv.height=h;
+  const c=cv.getContext('2d',{willReadFrequently:true}); c.drawImage(img,0,0,w,h);
+  try{
+    const px=c.getImageData(0,0,w,h), d=px.data;
+    const band=Math.max(8,Math.min(512,Math.floor(w*.14)));
+    for(let y=0;y<h;y++) for(let x=0;x<band;x++){
+      const t=x/(band-1), smooth=t*t*(3-2*t), mix=.5*(1-smooth);
+      const li=(y*w+x)*4, ri=(y*w+(w-1-x))*4;
+      for(let ch=0;ch<3;ch++){
+        const l=d[li+ch], r=d[ri+ch];
+        d[li+ch]=Math.round(l*(1-mix)+r*mix);
+        d[ri+ch]=Math.round(r*(1-mix)+l*mix);
+      }
+    }
+    c.putImageData(px,0,0);
+  }catch(e){ /* canvas อ่านพิกเซลไม่ได้ = ใช้ภาพเดิมแทน เกมยังเปิดได้ */ }
+  return cv;
+}
 function applySky(sc, mode){
   const key=SKY_IMG[mode]; if(!key || !sc) return;
-  const set=img=>{ const tex=new THREE.Texture(img); tex.needsUpdate=true;
-    tex.mapping=THREE.EquirectangularReflectionMapping; sc.background=tex; };
+  if(skyTexCache[key]){ sc.background=skyTexCache[key]; return; }
+  const set=img=>{ const tex=new THREE.CanvasTexture(seamlessSkyCanvas(img)); tex.needsUpdate=true;
+    tex.mapping=THREE.EquirectangularReflectionMapping; skyTexCache[key]=tex; sc.background=tex; };
   const jpg=new Image();
   jpg.onload=()=>set(jpg);
   jpg.onerror=()=>{ const png=new Image(); png.onload=()=>set(png); png.src='img/sky/'+key+'.png'; };  // ลอง .png ถ้าไม่มี .jpg
