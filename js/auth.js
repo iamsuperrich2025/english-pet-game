@@ -511,6 +511,8 @@ function authLogout(){
   askConfirm(`<h2>🚪 ออกจากระบบ?</h2>
     <p style="font-size:15px">เซฟของหนูเก็บไว้ในบัญชี Google เรียบร้อย ☁️<br>เข้าสู่ระบบใหม่เมื่อไหร่ก็เล่นต่อได้เลย</p>`,
     'ออกจากระบบ', ()=>{
+      // 🇹🇭 รอบ 1184: login ครั้งถัดไปในแท็บเดิมต้องเห็นป้าย O-NET ได้อีกครั้ง
+      if(typeof onetPromoReset === 'function') onetPromoReset();
       let done = false;
       const finish = ()=>{
         if(done) return;

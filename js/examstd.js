@@ -970,6 +970,8 @@ function openExamStdBoard(onlyKeys, title){
   });
 }
 function openOnetBoard(){ openExamStdBoard(['onetp6','onetm3','onetm6'], 'O-NET ภาษาอังกฤษ'); }
+// 🇹🇭 รอบ 1184: CTA จากป้ายหลัง login อยู่คนละไฟล์ จึงเปิดทางเข้าแบบ explicit บน window
+window.openOnetBoard = openOnetBoard;
 (function bindExamStdRail(){
   const bind = ()=>{
     const btn = document.getElementById('btn-rail-examstd');

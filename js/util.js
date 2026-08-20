@@ -151,7 +151,11 @@ function showScreen(id){
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
   // 🧭 รอบ 602: กลับเข้าล็อบบี้ = รางเมนูซ้ายเด้งกลับบนสุดเสมอ (ปุ่มอยู่ที่เดิมทุกครั้ง ไม่ต้องตามหา)
-  if(id === 'screen-dashboard' && typeof railScrollTop === 'function') railScrollTop();
+  if(id === 'screen-dashboard'){
+    if(typeof railScrollTop === 'function') railScrollTop();
+    // 🇹🇭 รอบ 1184: หลัง login/ลงทะเบียนเสร็จ ชวนลอง O-NET หนึ่งครั้งต่อ session
+    if(typeof onetPromoMaybeShow === 'function') onetPromoMaybeShow();
+  }
 }
 
 /* ---------- FX ---------- */

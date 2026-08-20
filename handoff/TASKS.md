@@ -28,9 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
-- **รอบ 1183 · O-NET ป.6/ม.3/ม.6:** เพิ่ม 5 ชุด/ระดับ รวม 15 ชุด 620 ข้อ ตรง Test Blueprint สทศ. 2569 (32/32/60 ข้อ · 4/4/5 ตัวเลือก · 60/90/90 นาที · เรียงลำดับ 0/1/7)
-- สุ่มลำดับส่วน+ข้อ+ช้อยส์ทุกรอบ และกันลำดับรอบก่อนซ้ำ; รางวัลผ่านครั้งแรก 2,500/3,500/5,000 และผ่านซ้ำ 180/250/400 เหรียญ; ปุ่ม Lobby 2D + ตึก O-NET Lobby 3D ครบ
-- Node/regression + Browser 812×375 ผ่าน: แผง 3 ระดับ/5 ชุด overflow 0, จอ ม.6 มี 60 หมายเลข+5 ช้อยส์+ปุ่มออก, console error 0; production build `.1067` 8,351 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
+- **รอบ 1184 · ป้ายชวนทดลอง O-NET หลัง login:** เปิดอัตโนมัติเมื่อผู้เล่นเข้าสู่ Dashboard มี ป.6/ม.3/ม.6, 15 ชุด, 620 ข้อ และรางวัลสูงสุด 5,000 เหรียญ พร้อม CTA เปิดหน้าเลือกระดับ O-NET โดยตรง
+- มีปุ่ม `✕ ปิด` และ `ไว้ทีหลัง`; จำการปิดด้วย `sessionStorage` จึงไม่เด้งซ้ำระหว่าง Lobby 2D/3D แต่ล้างเมื่อ logout เพื่อให้ login ครั้งถัดไปเห็นใหม่
+- ป้ายรอ consent/กล่องสำคัญก่อนแสดง ไม่ชน notice หลัง login; export `window.openOnetBoard` ชัดเจนสำหรับ CTA ข้ามไฟล์ และเพิ่ม Preview/test regression
+- Node syntax + O-NET 15 ชุด/620 ข้อ + promo regression ผ่าน; Browser 812×375 card 225px, overflow 0, ปุ่มปิด/CTA ในจอครบ และ CTA เปิดแผง 3 ระดับได้จริง; production build `.1068` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
 - อัปเกรด `tools/shrink_matching.py` ให้เจนค่าเบาเป็นค่าเริ่ม และเพิ่ม `test_matching_web_assets.py` กันไฟล์หาย/เสียสัดส่วน/หนักกลับ; ไฟล์ใหญ่สุด 189.1KB
 - asset decode/budget, Picture Dictionary, picmatch cooldown, Browser 768×1152 no-console-error และ production build 8,336 ไฟล์ 459.7MiB + PWA/cache/TWA validator ผ่าน
