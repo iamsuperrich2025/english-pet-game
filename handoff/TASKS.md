@@ -28,10 +28,11 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (20 ส.ค.) — อ่านก่อน
+- **รอบ 1179 · แก้ deploy Functions จาก staged Git:** รอบ 1178 commit สำเร็จแต่ Firebase CLI หา `firebase-functions` ไม่พบ เพราะ `git archive` ไม่รวม `node_modules`; เพิ่ม `npm ci --prefix functions --omit=dev` จาก lockfileใน staging และตรวจ Functions จากช่วง `origin/main..HEAD` เพื่อให้ retry หลัง commit แรกได้
 - **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
 - ใช้ request id, transaction marker ใน save ผู้ซื้อ/ผู้ขาย, settlement lease และ refund/release แบบ idempotent จึง retry/crash ได้โดยไม่หักเงิน ส่งของ หรือจ่ายซ้ำ; รายการ `processing` ถูกซ่อนจากตลาดและผู้ขายเห็นสถานะกำลังนำเงินเข้าแทนคำว่าแขวนขาย
 - Rules ก้อนเต็มรอบ 1178 เพิ่ม private `/marketLedger`, จำกัดถอนประกาศเฉพาะเจ้าของก่อนล็อก และห้าม client สร้างใบเสร็จ; ผู้ใช้ Publish แล้วและ Firebase CLI เทียบสดครบ 41 โซน (`differences=0`); COMMIT_DEPLOY จะ deploy Functions ก่อน Hosting อัตโนมัติ
-- ทดสอบ client retry-id, reconcile, server buyer/seller/refund idempotency, syntax, Rules JSON และ Functions dry-run ผ่าน; production build `.1063` 8,336 ไฟล์ 464.9 MiB + PWA/cache/TWA validator ผ่าน
+- ทดสอบ client retry-id, reconcile, server buyer/seller/refund idempotency, syntax, Rules JSON และ Functions dry-run ผ่าน; production build `.1063` 8,336 ไฟล์ 464.9 MiB + PWA/cache/TWA validator ผ่าน; deploy staging ติดตั้ง dependency ด้วย `npm ci` จาก lockfile ก่อน Firebase วิเคราะห์ source
 - **รอบ 1177 · กู้สินค้าตลาดหายย้อนหลังตั้งแต่รหัสซื้อ 6 หลัก:** audit live 51 บัญชี พบผู้เสียหาย 12 บัญชี/29 ชิ้นจาก `netKey` ที่ไม่มีทั้ง `/market` และ `/msold`; Cloud Audit Logs ไม่ได้เปิดจึงระบุผู้ซื้อไม่ได้ และ flow เสียไม่เคยหักเงิน/ส่งของผู้ซื้อ
 - สำรอง `/users` `/market` `/msold` ก่อนแก้; คืนด้วย snapshot คู่ + ตรวจซ้ำรายบัญชี และใช้ Firebase ETag compare-and-set กับบัญชี active ป้องกันเขียนทับความคืบหน้า/คืนซ้ำ
 - ยืนยัน cloud ถาวรแล้ว 11 บัญชี/28 ชิ้น; อีก 1 บัญชี active ใช้ client เก่าเขียน listing กลับ จึงให้แพตช์รอบ 1176 ตรวจ path จริงและคืนจาก state สดทันทีหลังรับ deploy รอบนี้
@@ -61,7 +62,6 @@
 - **รอบ 1162 · กราฟอันดับ Top 30 หน้า Lobby:** เพิ่มปุ่ม “กราฟอันดับ” ถัดจาก “สะกดคำ”; กราฟ 10 หมวดคะแนนหลักใช้สีไม่ซ้ำ สลับหมวดได้ และติดชื่อผู้เล่นทุกจุด พร้อมปุ่ม “✕ ปิด” ชัดเจน
 - โหลด snapshot `/leaderboard` เฉพาะตอนเปิดและ cache 2 นาที จึงได้ Top 30 จริงของแต่ละหมวดโดยไม่เพิ่ม listener/Firebase Rules; สอบใหญ่/ข้อสอบมาตรฐานคงดูแยกชุดในแท็บเดิม
 - แก้ `rankgraph.js/css`, `lobby3d.js`, `index_classic.html`, build allowlist + regression; syntax/tests, Browser 1280×720 และ 812×375 no-overflow/30 จุด+30 ชื่อ, production build `.1051` 8,336 ไฟล์ + PWA validator ผ่าน
-- **รอบ 1163 · Pet Shopping ใช้ระบบขับรถเมืองกำแพงเพชรโดยตรง:** แทนชุด `moto3d` รอบ 1160 ด้วย physics/cockpit ตามรถ/เกจ/กระจก 3 บาน/กล้อง/สตาร์ท+เข็มขัด/D-R/ไฟเลี้ยวคืนกลาง/เสียง/วิทยุ+Equalizer
 - GPS ร้านอาหาร/แฟชั่นของ Pet Shopping ยังใช้ route/nav เดิม; เพิ่มปุ่มเพลง 50px และจัดควบคุมที่ 812×375 ไม่ซ้อน/ไม่ overflow; แก้ `petshopping3d.js/css`, cache `index_classic.html`+`ui.js`, regression test
 - syntax + pet-shopping/integration/dress + Browser 812×375/1280×720 ผ่าน, console error 0; production build/validator รอบสุดท้ายก่อนส่ง
 - แก้ขับจนถนน/พื้นหายด้วยพื้น 1,400m + drive limit 480m; เพิ่ม collision อาคาร/ร้าน/ต้นไม้ 128 จุด ชนแล้วหยุด+เด้ง+สั่น ทะลุไม่ได้

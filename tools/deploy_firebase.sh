@@ -29,9 +29,12 @@ find "$STAGE/source" -type f \( -iname '*.exe' -o -iname '*.com' -o -iname '*.dl
 
 # 🧾 รอบ 1178: ถ้า commit ล่าสุดแตะ Cloud Functions ให้ deploy backend ก่อนหน้าเว็บ
 # เพื่อไม่ให้ client รุ่นใหม่เรียกฟังก์ชันที่ยังไม่ขึ้นจริง (commit ปกติไม่แตะ functions = ไม่เสียเวลาส่วนนี้)
-if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^functions/'; then
+if git diff --name-only origin/main..HEAD | grep -q '^functions/'; then
   echo "☁️ deploy Cloud Functions สำหรับตลาดแบบ server-authoritative..."
   cd "$STAGE/source"
+  # รอบ 1179: git archive ไม่มี node_modules; ติดตั้งใน staging ไม่เช่นนั้น CLI หา firebase-functions ไม่พบ
+  echo "📦 ติดตั้ง Functions dependencies จาก package-lock ใน staging..."
+  npm ci --prefix functions --omit=dev --no-audit --no-fund
   # --force = ยืนยัน retry policy; function ใช้ tx marker + lease จึงทำซ้ำได้อย่างปลอดภัย
   "$FB" deploy --only functions --project "$PROJECT" --force
 fi
