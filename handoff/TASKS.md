@@ -59,7 +59,6 @@
 - สร้าง `img/pet-shopping/cute_town_mural_v2.webp` ด้วย ImageGen และติดลายอุ้งเท้า/ดอกไม้/ไหมพรมบน 50 อาคาร; แก้ texture loader เป็น fetch+ImageBitmap มี fallback ให้ภาพขึ้นจริง
 - syntax/regression/integration/dress, Browser 1280×720 + 812×375 no-overflow/console 0, จำลองชนอาคารหยุดที่ boundary, build `.1050` 8,332 ไฟล์ + PWA/TWA validator ผ่าน; รอ COMMIT_DEPLOY
 - **รอบ 1159 · hotfix คิวคำพูดข้ามสัตว์:** เมื่อสลับแท็บสัตว์ ยกเลิก timer/คิวของตัวเดิมและผูก callback กับสัตว์เจ้าของข้อความ ป้องกันข้อความมังกรไปแสดงบนหมา; `test_pet_bond`, syntax, build `.1049` และ PWA validator ผ่าน
-- **รอบ 1158 · ชั้นอาหาร + โลก Pet Shopping 3D:** เปลี่ยนการให้อาหารเป็นหัก stock จากชั้น 30/75/160 ช่อง; ชั้นเริ่มว่างและอัปเกรดจ่ายส่วนต่าง. ปุ่มใต้ให้อาหารพาไปซื้ออาหาร/แฟชั่นในโลกขับรถมุมมองคนขับ มี GPS, หัวน้อง, วิทยุรถ, ร้านโครงสร้างครบ, รถส่วนตัวฟรี/ไม่มีรถเช่า `car_01` รอบละ 500 และหักหลังเปิดโลกสำเร็จ
 - ตู้เสื้อผ้าไม่ขายตรงแล้ว; ร้าน 3D ซื้อของเข้าตู้แต่ไม่สวมอัตโนมัติ. เงินปรับตัว 10,000 เข้า migration ครั้งเดียวและกล่องภาพ+เสียงค้างจนกดรับทราบ; สัตว์ป่วยยังหาเหรียญ/รายได้คอม/ออนไลน์ได้ตามปกติ
 - เพิ่มภาพ ImageGen WebP 3 ภาพใน `img/pet-shopping/`; Browser 812×375 ผ่าน pantry/store/cockpit/GPS/no-overflow/cleanup console 0; syntax + pantry/world/integration/dress/pet-bond/paid-entry/missing-assets + production build `.1049`/PWA validator ผ่าน
 - `test_spell_header.js`, syntax และ diff-check ผ่าน; Browser runtime ที่ 1047×497/812×375 ยืนยันปุ่มอยูหลังระดับชั้น 5px, บรรทัดเดียวกัน, ไม่ทับเวที และ horizontal overflow = 0

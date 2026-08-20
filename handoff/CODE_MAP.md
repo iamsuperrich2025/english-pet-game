@@ -695,19 +695,19 @@ mergeBack:88 · metUids:100 · AIM_TTL_MS:119 · aimAt:121 · aimGet:125 · aimC
 MAPS3D:135 · whereFriends:136 · dbOf:160 · envReady:161 · isDenied:164 · create:176
 drawBudget:784
 
-## js/online.js (2,096 บรรทัด · 110 รายการ)
+## js/online.js (2,106 บรรทัด · 110 รายการ)
 ### 🗂️ สารบัญโซน js/online.js (Read/Edit เฉพาะช่วง)
 - 2-233 ENGINE: ระบบออนไลน์จริงผ่าน Firebase Realtime Database
 - 234-329 ระบบเพื่อน (ข้อ 0.3): รหัสเพื่อน + ค้นหา + ส่ง/รับคำขอ
 - 330-519 ระบบแชทกับเพื่อน (ข้อ 0.4)
 - 520-691 ระบบส่งของขวัญ (ข้อ 0.5)
-- 692-840 🏪 ตลาดออนไลน์จริง (item 2 backlog): ซื้อ-ขายสินค้าที่เพื่อน "ผลิตเอง" ข้ามผู้เล่น
-- 841-905 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
-- 906-1102 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1103-1110 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
-- 1111-1253 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
-- 1254-1486 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
-- 1487-2096 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
+- 692-850 🏪 ตลาดออนไลน์จริง (item 2 backlog): ซื้อ-ขายสินค้าที่เพื่อน "ผลิตเอง" ข้ามผู้เล่น
+- 851-915 คำเชิญเล่นโลก 3D ด้วยกัน — /tinv/<toUid>/<fromUid> = {map,n,ts}
+- 916-1112 📰 Follow + Feed กิจกรรม (รอบ 155) · 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1113-1120 🌍 หน้า Feed ทุกคน + ไลก์/คอมเมนต์ (รอบ 639)
+- 1121-1263 📰 รอบ 701 — ฟีดล็อบบี้ทีละโพสต์ + รีแอ็กชัน + แจ้งเตือน (ต่อยอดรอบ 639)
+- 1264-1496 🔔📥 รอบ 976 — เก็บแจ้งเตือนไลก์/คอมเมนต์ลง DB โซนใหม่ /gnotif/<uid>
+- 1497-2106 📞 โทรหาเพื่อน — Voice call / Video call แบบ LINE (รอบ 625 · กลุ่ม 3 คนรอบ 631)
 ### รายการ js/online.js
 ONLINE_STALE_MS:73 · ONLINE_BEAT_MS:74 · LEADERBOARD_SIZE:75 · LEADERBOARD_QUERY_SIZE:76 · onlineDisplayName:80 · onlineActivity:88
 ensureOnlineId:108 · onlineKey:118 · onlinePushPresence:123 · onlinePushScore:133 · fetchPlayerStats:184 · onlineRerender:206
@@ -718,16 +718,16 @@ chatClearTyping:403 · chatWatchTyping:411 · chatThemeRef:429 · chatSetTheme:4
 chatSeenTs:460 · chatMarkSeen:466 · chatUnreadCount:478 · chatWatchSync:481 · GIFT_EXPIRE_MS:531 · giftSend:534
 greetSend:552 · giftAccept:566 · giftDecline:570 · giftInWatch:576 · giftReclaim:607 · giftOutWatchSync:617
 giftOutRebuild:672 · salesWatch:702 · salesRerender:710 · sellInc:714 · marketWatch:722 · marketList:755
-marketUnlist:763 · marketBuy:772 · marketSoldWatch:817 · tinvSend:846 · tinvClear:853 · tinvPartyTick:861
-TINV_WORLD_LABEL:883 · tinvWatch:887 · FEED_MAX:914 · feedEvent:917 · feedPrune:929 · feedPurgeCat:940
-feedPushAssets:951 · petDescriptor:969 · feedPushPets:975 · fetchPlayerPets:989 · followSet:1005 · followUnset:1016
-feedRebuild:1023 · feedWatchSync:1035 · fetchPlayerFeed:1062 · fetchPlayerAssets:1075 · fetchFollowers:1094 · GFEED_READ:1120
-GFEED_KEEP_ME:1121 · gfeedPush:1124 · gfeedPrune:1138 · gfeedParse:1151 · gfeedWatchStart:1180 · gfeedWatchStop:1207
-gfeedNotifDiff:1215 · gfeedNotifPush:1250 · GNOTIF_KEEP:1278 · GNOTIF_QUIET:1280 · gnotifKeyOf:1283 · gnotifSend:1290
-gnotifAdd:1303 · gnotifRecount:1323 · gnotifMarkSeen:1328 · gnotifWatchStart:1339 · gnotifListen:1348 · gnotifWatchStop:1366
-gnotifPrune:1371 · uidDisplayName:1384 · gfeedRebuild:1395 · gfeedToggleLike:1412 · gfeedSetReaction:1417 · gfeedToggleCommentLike:1433
-gnotifTellComment:1451 · gfeedAddComment:1463 · CALL_RTC_CFG:1511 · CALL_RING_MS:1512 · CALL_MAX_MS:1513 · CALL_MAX_PEERS:1514
-onlineStart:1930 · onlineLoadSDK:2071
+marketUnlist:763 · marketBuy:772 · marketSoldWatch:827 · tinvSend:856 · tinvClear:863 · tinvPartyTick:871
+TINV_WORLD_LABEL:893 · tinvWatch:897 · FEED_MAX:924 · feedEvent:927 · feedPrune:939 · feedPurgeCat:950
+feedPushAssets:961 · petDescriptor:979 · feedPushPets:985 · fetchPlayerPets:999 · followSet:1015 · followUnset:1026
+feedRebuild:1033 · feedWatchSync:1045 · fetchPlayerFeed:1072 · fetchPlayerAssets:1085 · fetchFollowers:1104 · GFEED_READ:1130
+GFEED_KEEP_ME:1131 · gfeedPush:1134 · gfeedPrune:1148 · gfeedParse:1161 · gfeedWatchStart:1190 · gfeedWatchStop:1217
+gfeedNotifDiff:1225 · gfeedNotifPush:1260 · GNOTIF_KEEP:1288 · GNOTIF_QUIET:1290 · gnotifKeyOf:1293 · gnotifSend:1300
+gnotifAdd:1313 · gnotifRecount:1333 · gnotifMarkSeen:1338 · gnotifWatchStart:1349 · gnotifListen:1358 · gnotifWatchStop:1376
+gnotifPrune:1381 · uidDisplayName:1394 · gfeedRebuild:1405 · gfeedToggleLike:1422 · gfeedSetReaction:1427 · gfeedToggleCommentLike:1443
+gnotifTellComment:1461 · gfeedAddComment:1473 · CALL_RTC_CFG:1521 · CALL_RING_MS:1522 · CALL_MAX_MS:1523 · CALL_MAX_PEERS:1524
+onlineStart:1940 · onlineLoadSDK:2081
 
 ## js/onlinecoinaward.js (22 บรรทัด · 0 รายการ)
 
