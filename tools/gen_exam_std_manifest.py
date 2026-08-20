@@ -2,7 +2,7 @@
 """เจน js/data/exam/manifest.js จากไฟล์ชุดข้อสอบจริง js/data/exam/<exam>_<n>.json (รอบ 812)
 
 ทำ 2 อย่างในตัวเดียว:
-  ① ตรวจไฟล์ข้อสอบ (ผิดที่ไหน exit 1 พร้อมบอกไฟล์+ข้อ) — 4 ช้อยส์ทุกข้อ · a อยู่ในช่วง ·
+  ① ตรวจไฟล์ข้อสอบ (ผิดที่ไหน exit 1 พร้อมบอกไฟล์+ข้อ) — 4/5 ช้อยส์ตามสนามสอบ · a อยู่ในช่วง ·
      ห้ามช้อยส์ซ้ำข้อความ · ต้องมีเฉลย ex · total ตรงกับจำนวนข้อจริง · id ตรงชื่อไฟล์
   ② เขียน manifest.js (นับข้อ/ส่วน/บทอ่านให้เอง — ห้ามพิมพ์เลขมือ เดี๋ยวเพี้ยน)
 
@@ -24,6 +24,9 @@ EXAMS = {
   'ielts': {'emoji': '📘', 'label': 'IELTS Academic', 'sub': 'ไวยากรณ์ + การอ่านเชิงวิชาการ'},
   'toeic': {'emoji': '📗', 'label': 'TOEIC Reading', 'sub': 'ไวยากรณ์ + เอกสารธุรกิจ'},
   'toefl': {'emoji': '📙', 'label': 'TOEFL Structure & Reading', 'sub': 'โครงสร้างประโยค + บทอ่านวิชาการ'},
+  'onetp6': {'emoji': '🇹🇭', 'label': 'O-NET ป.6', 'sub': '32 ข้อ · 4 ตัวเลือก · 60 นาที · Test Blueprint สทศ. 2569'},
+  'onetm3': {'emoji': '🎓', 'label': 'O-NET ม.3', 'sub': '32 ข้อ · 31 ปรนัย + 1 เรียงลำดับ · 90 นาที · สทศ. 2569'},
+  'onetm6': {'emoji': '🏫', 'label': 'O-NET ม.6', 'sub': '60 ข้อ · 5 ตัวเลือก · 7 เรียงลำดับ · 90 นาที · สทศ. 2569'},
 }
 
 def die(msg):
@@ -56,13 +59,14 @@ def main():
             for ii, it in enumerate(items):
                 where = '%s ส่วน %d ข้อ %d' % (fn, si + 1, ii + 1)
                 ch = it.get('c') or []
-                if len(ch) != 4:
-                    die('%s: ต้องมี 4 ช้อยส์ (เจอ %d)' % (where, len(ch)))
-                if len(set(map(str.strip, ch))) != 4:
+                expected = 5 if exam == 'onetm6' else 4
+                if len(ch) != expected:
+                    die('%s: ต้องมี %d ช้อยส์ (เจอ %d)' % (where, expected, len(ch)))
+                if len(set(map(str.strip, ch))) != expected:
                     die('%s: ช้อยส์ซ้ำข้อความกัน' % where)
                 a = it.get('a')
-                if not isinstance(a, int) or not (0 <= a < 4):
-                    die('%s: เลขเฉลย a ต้องเป็น 0-3 (เจอ %r)' % (where, a))
+                if not isinstance(a, int) or not (0 <= a < expected):
+                    die('%s: เลขเฉลย a ต้องเป็น 0-%d (เจอ %r)' % (where, expected - 1, a))
                 if not str(it.get('q') or '').strip():
                     die('%s: ไม่มีโจทย์ q' % where)
                 if len(str(it.get('ex') or '').strip()) < 30:

@@ -1,6 +1,6 @@
 "use strict";
 /* ============================================================
-   📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812 · โหมดจับเวลาจริง+สถิติต่อส่วน รอบ 814)
+   📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183)
    คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th
    ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
    ทุกข้อมี "เฉลยละเอียด" อธิบายว่าทำไมข้อนั้นถูกและตัวลวงผิดเพราะอะไร
@@ -15,10 +15,18 @@
 const XS_PASS_PCT   = 0.7;          // เกณฑ์ผ่าน 70% (21/30) — ต่ำกว่าหมวดคำศัพท์ (80%) เพราะข้อสอบแนวนี้ยากกว่าจริง
 const XS_REWARD     = 900;          // ผ่านครั้งแรกของชุด (สอบซ้ำได้ 30)
 const XS_REWARD_AGAIN = 30;
+const XS_ONET_REWARD = {
+  onetp6:{first:2500, again:180}, onetm3:{first:3500, again:250}, onetm6:{first:5000, again:400}
+};
+function xsIsOnet(exam){ return /^onet/.test(exam || ''); }
+function xsReward(exam, first){
+  const r = XS_ONET_REWARD[exam];
+  return r ? (first ? r.first : r.again) : (first ? XS_REWARD : XS_REWARD_AGAIN);
+}
 /* ⏱️ เวลาต่อชุด (นาที) — เทียบสัดส่วนจากเวลาจริงของแต่ละสนามสอบ
    โหมด exam/practice = ใช้เป็น "เวลาแนะนำ" เท่านั้น ไม่ตัดจบ (เด็ก/ผู้เริ่มต้นควรได้อ่านจนจบ)
    โหมด timed (รอบ 814) = ใช้เป็น "เวลาจริง" นับถอยหลัง หมดแล้วส่งคำตอบอัตโนมัติ */
-const XS_TIME_HINT  = {ielts:45, toeic:25, toefl:40};
+const XS_TIME_HINT  = {ielts:45, toeic:25, toefl:40, onetp6:60, onetm3:90, onetm6:90};
 const XS_TIME_FALLBACK = 30;        // ถ้ามีสนามสอบใหม่ที่ยังไม่ตั้งเวลาไว้ (กันโหมดจับเวลาไม่มีลิมิต)
 function xsLimitSec(exam){ return (XS_TIME_HINT[exam] || XS_TIME_FALLBACK) * 60; }
 
@@ -77,7 +85,7 @@ function examStdLoad(setId){
     const items = [];
     (d.sections || []).forEach((sec, si)=>{
       (sec.items || []).forEach(it=>{
-        items.push({q:it.q, c:it.c, a:it.a, ex:it.ex, ref:it.ref || '', tag:it.tag || '',
+        items.push({q:it.q, c:it.c, a:it.a, ex:it.ex, ref:it.ref || '', tag:it.tag || '', srcI:items.length,
                     secI:si, secName:sec.n || '', secDesc:sec.d || '', p:sec.p || null});
       });
     });
@@ -157,6 +165,27 @@ const XS = {pack:null, mode:'exam', idx:0, ans:[], startAt:0, done:false,
 let __xsTimer = null;
 function xsIsPractice(){ return XS.mode === 'practice'; }   // อีก 2 โหมดพฤติกรรมเหมือนกัน (เฉลยตอนจบ)
 
+/* 🎲 รอบ 1183: กันจดจำเฉลย 1A 2C — สุ่มลำดับส่วน, ข้อในส่วน และตำแหน่งช้อยส์ใหม่ทุกรอบ
+   เก็บ signature รอบก่อนต่อชุด เพื่อรับประกันว่ากดฝึก→สอบจริง (หรือสอบซ้ำ) จะไม่ได้ลำดับเดิม */
+const __xsLastOrder = {};
+function xsShuffle(a){
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function xsRandomizedPack(base){
+  const bySec = {};
+  base.items.forEach(it=>(bySec[it.secI] || (bySec[it.secI]=[])).push(it));
+  const groups = xsShuffle(Object.keys(bySec).map(k=>xsShuffle(bySec[k].slice())));
+  let items = groups.flat().map(it=>{
+    const pairs = xsShuffle(it.c.map((text,i)=>({text, right:i===it.a})));
+    return Object.assign({}, it, {c:pairs.map(x=>x.text), a:pairs.findIndex(x=>x.right)});
+  });
+  let sig = items.map(x=>x.srcI).join(',');
+  if(__xsLastOrder[base.id] === sig && items.length > 1){ items.push(items.shift()); sig = items.map(x=>x.srcI).join(','); }
+  __xsLastOrder[base.id] = sig;
+  return Object.assign({}, base, {items});
+}
+
 function xsTimerStop(){ if(__xsTimer){ clearInterval(__xsTimer); __xsTimer = null; } }
 function xsElapsed(){ return XS.startAt ? Math.round((Date.now() - XS.startAt) / 1000) : 0; }
 function xsFmt(sec){
@@ -191,6 +220,7 @@ function examStdStart(setId, mode){
     if(!pack || !pack.items.length){ toast(xsFailMsg(setId)); return; }
     const ov = document.getElementById('xs-picker');
     if(ov) ov.remove();                       // ปิดแผงเลือกชุดก่อน ไม่ให้บังจอสอบ
+    pack = xsRandomizedPack(pack);
     XS.pack = pack;
     XS.mode = (mode === 'practice' || mode === 'timed') ? mode : 'exam';
     XS.idx = 0; XS.ans = new Array(pack.items.length).fill(-1);
@@ -310,7 +340,7 @@ function xsRender(){
     `<b>${escapeHTML(it.secName)}</b>${it.secDesc ? `<small>${escapeHTML(it.secDesc)}</small>` : ''}`;
   document.getElementById('xs-q').innerHTML =
     `<span class="xs-qno">ข้อ ${XS.idx + 1}</span> ${escapeHTML(it.q)}`;
-  const AB = ['A','B','C','D'];
+  const AB = ['A','B','C','D','E'];
   document.getElementById('xs-choices').innerHTML = it.c.map((c, i)=>{
     let cls = 'xs-ch';
     if(picked === i) cls += ' pick';
@@ -380,13 +410,13 @@ function xsGo(d){
   XS.idx = Math.min(n - 1, Math.max(0, XS.idx + d));
   xsRender();
 }
-/* คีย์บอร์ด: 1-4 หรือ a-d เลือกคำตอบ · ←→ เปลี่ยนข้อ · Enter ไปข้อถัดไป (ทำข้อสอบยาวได้ไวขึ้น) */
+/* คีย์บอร์ด: 1-5 หรือ a-e เลือกคำตอบ · ←→ เปลี่ยนข้อ · Enter ไปข้อถัดไป */
 document.addEventListener('keydown', e=>{
   const sc = document.getElementById('xs-screen');
   if(!sc || XS.done) return;
   const k = e.key.toLowerCase();
-  if('1234'.includes(k)){ e.preventDefault(); xsChoose(Number(k) - 1); }
-  else if('abcd'.includes(k) && k.length === 1){ e.preventDefault(); xsChoose('abcd'.indexOf(k)); }
+  if('12345'.includes(k)){ e.preventDefault(); xsChoose(Number(k) - 1); }
+  else if('abcde'.includes(k) && k.length === 1){ e.preventDefault(); xsChoose('abcde'.indexOf(k)); }
   else if(e.key === 'ArrowLeft'){ e.preventDefault(); xsGo(-1); }
   else if(e.key === 'ArrowRight' || e.key === 'Enter'){ e.preventDefault(); xsGo(1); }
 });
@@ -434,14 +464,15 @@ function xsFinish(){
   const passMark = Math.ceil(n * XS_PASS_PCT);
   const passed = correct >= passMark;
   const cid = xsQuizId(p.id);
-  const cat = {id:cid, name:p.label, emoji:p.examMeta.emoji, reward:XS_REWARD};
+  const firstReward = xsReward(p.exam, true), againReward = xsReward(p.exam, false);
+  const cat = {id:cid, name:p.label, emoji:p.examMeta.emoji, reward:firstReward};
   const firstPass = passed && !state.quizPassed.includes(cid);
   const prevBestSec = (passed && Array.isArray(state.certs))
     ? ((state.certs.find(c=>c.id === cid) || {}).sec || 0) : 0;
 
   let coins = 0, rp = 5, myCert = null;
   if(passed){
-    coins = firstPass ? XS_REWARD : XS_REWARD_AGAIN;
+    coins = firstPass ? firstReward : againReward;
     rp = firstPass ? 120 : 30;
     if(firstPass) state.quizPassed.push(cid);
     addCoins(coins);
@@ -458,7 +489,7 @@ function xsFinish(){
   const newRecord = !!(myCert && myCert.sec === secs && (!prevBestSec || secs < prevBestSec));
 
   const pct = Math.round(correct / n * 100);
-  const scale = xsScaleText(p.exam, correct);
+  const scale = xsIsOnet(p.exam) ? `${Math.round(correct / n * 100)}/100 คะแนน` : xsScaleText(p.exam, correct);
   /* ⏱️ ส่วนที่กินเวลาเกินสัดส่วนจำนวนข้อมากที่สุด — ชี้ให้เห็นตรงนี้เลยว่าต้องไปฝึกส่วนไหนให้เร็วขึ้น */
   const stats = xsSecStats();
   const totSec = stats.reduce((a, s)=>a + s.sec, 0);
@@ -541,7 +572,7 @@ function xsTimeTableHTML(){
 function xsShowReview(){
   const p = XS.pack;
   if(!p) return;
-  const AB = ['A','B','C','D'];
+  const AB = ['A','B','C','D','E'];
   let tab = 'wrong';
   const ov = document.createElement('div');
   ov.id = 'xs-review'; ov.className = 'pl-overlay';
@@ -607,18 +638,19 @@ function xsShowReview(){
 function openExamStdPicker(exam){
   const m = (typeof EXAM_STD_MANIFEST !== 'undefined') ? EXAM_STD_MANIFEST[exam] : null;
   if(!m) return;
+  const onet = xsIsOnet(exam), firstReward = xsReward(exam, true), againReward = xsReward(exam, false);
   const old = document.getElementById('xs-picker');
   if(old) old.remove();
   const ov = document.createElement('div');
   ov.id = 'xs-picker'; ov.className = 'pl-overlay';
   const passMark = s=>Math.ceil(s.q * XS_PASS_PCT);
-  ov.innerHTML = `<div class="xsp-box">
-    <button class="pl-close" id="xsp-close">✕</button>
-    <div class="xsp-head">${m.emoji} ข้อสอบจริงแบบมาตรฐาน · ${escapeHTML(m.label)}
+  ov.innerHTML = `<div class="xsp-box${onet ? ' onet-picker' : ''}">
+    <button class="pl-close" id="xsp-close">${onet ? '✕ ออก' : '✕'}</button>
+    <div class="xsp-head">${m.emoji} ${onet ? 'ตะลุยข้อสอบ O-NET' : 'ข้อสอบจริงแบบมาตรฐาน'} · ${escapeHTML(m.label)}
       <button class="bax-rank" id="xsp-rank">🏁 อันดับ</button>
       <span class="xsp-sub">${escapeHTML(m.sub)} · ${m.sets.length} ชุด × ${m.sets[0].q} ข้อ · ทุกข้อมีเฉลยละเอียด
         <br>⏱️ เวลาของสนามสอบนี้ ${Math.round(xsLimitSec(exam) / 60)} นาที/ชุด (2 โหมดแรกเป็นเวลาแนะนำ ไม่ตัดจบ · โหมดจับเวลาจริงตัดจบอัตโนมัติ) ·
-        ผ่านที่ ${Math.round(XS_PASS_PCT * 100)}% ขึ้นไป รับ ${fmtNum(XS_REWARD)} 🪙 + ใบประกาศ 🎖️</span></div>
+        ผ่านที่ ${Math.round(XS_PASS_PCT * 100)}% ขึ้นไป รับ ${fmtNum(firstReward)} 🪙 + ใบประกาศ 🎖️${onet ? ` · ผ่านซ้ำยังได้ ${fmtNum(againReward)} 🪙` : ''}</span></div>
     <div class="xsp-rows">${m.sets.map(s=>{
       const best = xsBest(s.id);
       const done = state.quizPassed.includes(xsQuizId(s.id));
@@ -632,8 +664,8 @@ function openExamStdPicker(exam){
           ${hist ? `<div class="xsp-hist" title="พัฒนาการคะแนน ${xsHistory(s.id).length} ครั้งล่าสุด (เก่า→ใหม่)">${hist}<small>📈 ${xsHistory(s.id).length} ครั้งล่าสุด</small></div>` : ''}
         </div>
         <div class="xsp-btns">
-          <button class="xsp-go exam" data-set="${s.id}" data-mode="exam">📋 สอบจริง (เฉลยตอนจบ)</button>
-          <button class="xsp-go practice" data-set="${s.id}" data-mode="practice">🎓 โหมดฝึก (เฉลยทันทีทุกข้อ)</button>
+          <button class="xsp-go exam" data-set="${s.id}" data-mode="exam">📋 ${onet ? 'สอบจริง' : 'สอบจริง (เฉลยตอนจบ)'}</button>
+          <button class="xsp-go practice" data-set="${s.id}" data-mode="practice">🎓 ${onet ? 'โหมดฝึก' : 'โหมดฝึก (เฉลยทันทีทุกข้อ)'}</button>
           <button class="xsp-go timed" data-set="${s.id}" data-mode="timed"
             ><span class="xsp-lg">⏱️ สอบจับเวลาจริง ${Math.round(xsLimitSec(exam) / 60)} นาที · หมดเวลาส่งอัตโนมัติ + สถิติเวลาต่อส่วน</span
             ><span class="xsp-sm">⏱️ จับเวลาจริง ${Math.round(xsLimitSec(exam) / 60)} นาที</span></button>
@@ -641,7 +673,7 @@ function openExamStdPicker(exam){
       </div>`;
     }).join('')}</div>
     <div class="xsp-foot">📝 ข้อสอบชุดนี้ <b>เขียนขึ้นใหม่ทั้งหมดตามรูปแบบและแนวข้อสอบจริง</b> (ไม่ใช่ข้อสอบเก่าของสนามสอบ) ·
-      เป็นข้อสอบแบบเลือกตอบ ไวยากรณ์ + การอ่านจับใจความ ไม่มีส่วนเขียนเรียงความ</div>
+      ${onet ? 'อิง Test Blueprint O-NET ปีการศึกษา 2569 ของ สทศ. · สุ่มทั้งลำดับข้อและตำแหน่งตัวเลือกใหม่ทุกรอบ' : 'เป็นข้อสอบแบบเลือกตอบ ไวยากรณ์ + การอ่านจับใจความ ไม่มีส่วนเขียนเรียงความ'}</div>
   </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click', e=>{ if(e.target === ov) ov.remove(); });
@@ -888,7 +920,7 @@ function examStdCardsHTML(){
           <span class="cat-name">ข้อสอบ ${escapeHTML(m.label)}</span>
           ${done === m.sets.length
             ? '<span class="cat-pass">✅ ผ่านครบทุกชุด</span>'
-            : `<span class="cat-pass" style="background:var(--yellow);color:#a8791a;border-color:var(--yellow-d)">🎁 รางวัล ${fmtNum(XS_REWARD)} 🪙</span>`}
+            : `<span class="cat-pass" style="background:var(--yellow);color:#a8791a;border-color:var(--yellow-d)">🎁 รางวัล ${fmtNum(xsReward(k, true))} 🪙</span>`}
         </div>
         <div class="cat-info">${escapeHTML(m.sub)} · ${m.sets.length} ชุด รวม ${nq} ข้อ${done ? ` · ผ่านแล้ว ${done}/${m.sets.length} ชุด` : ''}</div>
         <div class="cat-btns">
@@ -903,17 +935,18 @@ function examStdCardsHTML(){
    "หมวดคำศัพท์ & แบบทดสอบ" แล้วเลื่อนหาการ์ดท้ายรายการก่อนถึงจะเจอ 3 สนามสอบ
    แผงเล็กนี้ข้ามขั้นตอนนั้น เลือกสนามสอบแล้วเปิด openExamStdPicker ตรง ๆ
    ============================================================ */
-function openExamStdBoard(){
+function openExamStdBoard(onlyKeys, title){
   if(typeof EXAM_STD_MANIFEST === 'undefined') return;
-  const keys = Object.keys(EXAM_STD_MANIFEST);
+  const keys = (onlyKeys || Object.keys(EXAM_STD_MANIFEST)).filter(k=>EXAM_STD_MANIFEST[k]);
   if(!keys.length) return;
   const old = document.getElementById('xsb-board');
   if(old) old.remove();
   const ov = document.createElement('div');
   ov.id = 'xsb-board'; ov.className = 'pl-overlay';
-  ov.innerHTML = `<div class="xsb-box">
-    <button class="pl-close" id="xsb-close">✕</button>
-    <div class="xsb-head">📋 ข้อสอบจริงแบบมาตรฐาน<span class="xsb-sub">โจทย์เลือกตอบแนวข้อสอบจริง ไวยากรณ์ + การอ่านจับใจความ พร้อมเฉลยละเอียดทุกข้อ</span></div>
+  const onetOnly = keys.length && keys.every(xsIsOnet);
+  ov.innerHTML = `<div class="xsb-box${onetOnly ? ' onet-board' : ''}">
+    <button class="pl-close" id="xsb-close">✕ ออก</button>
+    <div class="xsb-head">${onetOnly ? '🇹🇭 ' : '📋 '}${escapeHTML(title || 'ข้อสอบจริงแบบมาตรฐาน')}<span class="xsb-sub">${onetOnly ? 'เลือกระดับชั้น · 5 ชุดต่อระดับ · รูปแบบและเวลาตรงตาม Test Blueprint สทศ. 2569' : 'โจทย์เลือกตอบแนวข้อสอบจริง พร้อมเฉลยละเอียดทุกข้อ'}</span></div>
     <div class="xsb-grid">${keys.map(k=>{
       const m = EXAM_STD_MANIFEST[k];
       const nq = m.sets.reduce((n, s)=>n + s.q, 0);
@@ -922,7 +955,7 @@ function openExamStdBoard(){
         <span class="xsb-emoji">${m.emoji}</span>
         <span class="xsb-name">${escapeHTML(m.label)}</span>
         <span class="xsb-info">${m.sets.length} ชุด · ${nq} ข้อ</span>
-        <span class="xsb-done">${done ? `✅ ผ่านแล้ว ${done}/${m.sets.length}` : `🎁 ${fmtNum(XS_REWARD)} 🪙`}</span>
+        <span class="xsb-done">${done ? `✅ ผ่านแล้ว ${done}/${m.sets.length}` : `🎁 ${fmtNum(xsReward(k, true))} 🪙`}</span>
       </button>`;
     }).join('')}</div>
   </div>`;
@@ -936,10 +969,13 @@ function openExamStdBoard(){
     openExamStdPicker(b.dataset.ex);
   });
 }
+function openOnetBoard(){ openExamStdBoard(['onetp6','onetm3','onetm6'], 'O-NET ภาษาอังกฤษ'); }
 (function bindExamStdRail(){
   const bind = ()=>{
     const btn = document.getElementById('btn-rail-examstd');
     if(btn) btn.addEventListener('click', ()=>{ if(typeof closePanel === 'function') closePanel(); openExamStdBoard(); });
+    const onet = document.getElementById('btn-rail-onet');
+    if(onet) onet.addEventListener('click', ()=>{ if(typeof closePanel === 'function') closePanel(); openOnetBoard(); });
   };
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
 })();

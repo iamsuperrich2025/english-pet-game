@@ -1705,6 +1705,9 @@ html.no-anim .q-bigcard{animation:none;}
 .lobby-bottom .lobby-std-btn.toeic:active{box-shadow:0 2px 0 #358550 !important;}
 .lobby-bottom .lobby-std-btn.toefl{background:linear-gradient(180deg,#ffc98f,#f0973c) !important;color:#5a3c05 !important;box-shadow:0 6px 0 #c8801f !important;}
 .lobby-bottom .lobby-std-btn.toefl:active{box-shadow:0 2px 0 #c8801f !important;}
+.lobby-bottom .lobby-std-btn.onet{background:linear-gradient(180deg,#fff1a8,#f5c542) !important;color:#5a3c05 !important;box-shadow:0 6px 0 #c79316 !important;border:2px solid #fff8d5 !important;}
+.lobby-bottom .lobby-std-btn.onet:active{box-shadow:0 2px 0 #c79316 !important;}
+.rail-onet{background:linear-gradient(180deg,#fff5c4,#ffd86b) !important;color:#6b4500 !important;border-color:#f3bd2e !important;}
 .lobby-quiz-btn{font-size:15px !important;padding:9px 20px !important;}
 .lobby-book-btn{padding:9px 13px !important;font-size:18px !important;background:linear-gradient(180deg,#f7bf8f,#e8945a);box-shadow:0 6px 0 #c06f33;}   /* 📒 สมุดคำศัพท์ — ไอคอนเดี่ยว ประหยัดที่แถบล่าง */
 .lobby-book-btn:active{box-shadow:0 2px 0 #c06f33;}

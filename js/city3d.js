@@ -1017,6 +1017,19 @@ const BUILDINGS = [
     });
     return g;
   }),
+  /* ============================================================
+     🇹🇭 O-NET EXAM HALL — ปุ่ม Lobby 3D (รอบ 1183)
+     ============================================================ */
+  bld('onet', '🇹🇭','O-NET ป.6 · ม.3 · ม.6','onet', 67, BAND2_R+14, ()=>{
+    const g=bTower({col:'#fff7dc',f:4,trim:0xd32f2f,setback:.84,sign:'🇹🇭 O-NET',signBg:'#fff3e0'});
+    [['ป.6',0x1565c0],['ม.3',0x2e7d32],['ม.6',0xc62828]].forEach((x,i)=>{
+      const c=cvs(96,54),q=c.getContext('2d'); q.fillStyle='#fff';q.fillRect(0,0,96,54);
+      q.fillStyle='#'+x[1].toString(16).padStart(6,'0');q.fillRect(0,0,12,54);q.fillRect(84,0,12,54);
+      q.fillStyle='#263238';q.font='700 25px system-ui';q.textAlign='center';q.textBaseline='middle';q.fillText(x[0],48,29);
+      g.add(M(new THREE.PlaneGeometry(1.35,.76),new THREE.MeshBasicMaterial({map:ctex(c),side:THREE.DoubleSide}),-1.7+i*1.7,5.15,.7));
+    });
+    return g;
+  }),
   bld('typing',    '⌨️','พิมพ์คำ','typing',       116, BAND1_R, ()=>bShop({col:'#e5dbff', roof:0x9575cd, aw1:'#b39ddb', sign:'⌨️ TYPING', signBg:'#ede7f6'})),
   /* 🫧 ร้านเกมฟอง — ดันออกจากวงในเล็กน้อย กันชนร้าน Typing/Word Hunt */
   bld('bubble',    '🫧','ฟอง','bubble',              129, BAND1_R+14, ()=>{
