@@ -2,7 +2,8 @@
 (function(){
   let pending = false;
   let retryTimer = 0;
-  const key = ()=> 'vwOnetPromoClosed:' + ((window.Auth && Auth.user && Auth.user.uid) || 'player');
+  let promoUid = '';
+  const key = ()=> 'vwOnetPromoClosed:' + (promoUid || (window.Auth && Auth.user && Auth.user.uid) || 'player');
   const closed = ()=> { try{return sessionStorage.getItem(key()) === '1';}catch(e){return false;} };
   const rememberClosed = ()=> { try{sessionStorage.setItem(key(),'1');}catch(e){} };
 
@@ -44,6 +45,7 @@
     el.querySelector('.onet-promo-go').addEventListener('click',()=>{
       closePromo(true);
       if(typeof window.openOnetBoard === 'function') window.openOnetBoard();
+      else location.href = 'index_classic.html?go=onet';
     });
     el.addEventListener('keydown',e=>{if(e.key === 'Escape') closePromo(true);});
     el.querySelector('.onet-promo-go').focus();
@@ -71,8 +73,22 @@
     try{sessionStorage.removeItem(key());}catch(e){}
   }
 
+  // 🏙️ รอบ 1185: หน้าแรกบนมือถือคือ Lobby 3D ซึ่งไม่มี Auth/state ของ Classic
+  // รับ uid จาก Firebase ของเมือง แล้วใช้ session key เดียวกันเพื่อไม่เด้งซ้ำข้ามสอง Lobby
+  function cityMaybeShow(uid){
+    promoUid = String(uid || '');
+    if(!promoUid || pending || closed() || document.getElementById('onet-promo-overlay')) return;
+    pending = true;
+    clearTimeout(retryTimer);
+    retryTimer = setTimeout(()=>{
+      pending = false;
+      openPromo();
+    }, 1100);
+  }
+
   window.onetPromoMaybeShow = maybeShow;
   window.onetPromoClose = closePromo;
   window.onetPromoReset = reset;
   window.onetPromoPreview = openPromo;
+  window.onetPromoCityMaybeShow = cityMaybeShow;
 }());

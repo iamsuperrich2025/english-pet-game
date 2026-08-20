@@ -6,6 +6,7 @@ const js = read('js/onetpromo.js');
 const css = read('css/onetpromo.css');
 const util = read('js/util.js');
 const auth = read('js/auth.js');
+const city = read('js/city3d.js');
 
 assert(html.includes('css/onetpromo.css') && html.includes('js/onetpromo.js'), 'promo assets missing from classic lobby');
 assert(js.includes('onet-promo-close') && js.includes('ไว้ทีหลัง'), 'explicit close controls missing');
@@ -14,5 +15,11 @@ assert(read('js/examstd.js').includes('window.openOnetBoard = openOnetBoard;'), 
 assert(js.includes('sessionStorage.setItem') && js.includes('vwOnetPromoClosed:'), 'session close guard missing');
 assert(util.includes("if(typeof onetPromoMaybeShow === 'function') onetPromoMaybeShow();"), 'dashboard hook missing');
 assert(auth.includes("if(typeof onetPromoReset === 'function') onetPromoReset();"), 'logout reset missing');
+assert(html.includes('css/onetpromo.css') && html.includes('js/onetpromo.js'), 'classic promo assets missing');
+const cityHtml = read('index.html');
+assert(cityHtml.includes('css/onetpromo.css') && cityHtml.includes('js/onetpromo.js'), '3D lobby promo assets missing');
+assert(city.includes("onetPromoCityMaybeShow(u.uid)"), '3D authenticated-user hook missing');
+assert(js.includes("location.href = 'index_classic.html?go=onet'"), '3D CTA fallback route missing');
+assert(js.includes("promoUid ||"), 'shared uid session key missing');
 assert(css.includes('@media(max-height:430px)') && css.includes('max-height:calc(100dvh - 12px)'), 'short landscape fit rules missing');
 console.log('PASS O-NET login promo wiring, close guard, CTA, and short-screen CSS');

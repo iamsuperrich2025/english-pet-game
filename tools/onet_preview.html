@@ -10,5 +10,5 @@ window.alertBox=()=>{}; window.sfx={click(){},correct(){},wrong(){},levelup(){}}
 </script>
 <script src="js/data/exam/manifest.js"></script><script src="js/examstd.js"></script><script src="js/onetpromo.js"></script>
 <script>addEventListener('load',()=>{const v=new URLSearchParams(location.search).get('view')||'board';
-if(v==='promo')onetPromoPreview();else if(v==='picker')openExamStdPicker('onetm6');else if(v==='exam')examStdStart('onetm6_1','practice');else openOnetBoard();});</script>
+if(v==='promo')onetPromoPreview();else if(v==='city'){window.openOnetBoard=undefined;onetPromoCityMaybeShow('mobile-test-'+Date.now());}else if(v==='picker')openExamStdPicker('onetm6');else if(v==='exam')examStdStart('onetm6_1','practice');else openOnetBoard();});</script>
 </body></html>

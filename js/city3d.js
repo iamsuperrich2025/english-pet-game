@@ -1584,6 +1584,8 @@ function liveStart(){
       watchFriendChats();          // 💬 บับเบิลแชทสดของเพื่อนที่ยืนอยู่ในเมือง
       pollWorlds();
       Live.pollT = setInterval(pollWorlds, 10000);   // โลก 3D poll ทุก 10 วิ (on() จะโดนสแปมตำแหน่งถี่เกิน)
+      // 🇹🇭 รอบ 1185: มือถือเข้าเมือง 3D เป็นหน้าแรก — ผู้ที่ login ค้างต้องเห็นป้าย O-NET ที่นี่ด้วย
+      if(typeof onetPromoCityMaybeShow === 'function') onetPromoCityMaybeShow(u.uid);
     });
   }).catch(()=>setChip('📴 โหมดชมเมือง (ออฟไลน์)'));
 }
