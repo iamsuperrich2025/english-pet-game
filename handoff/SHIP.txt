@@ -1,7 +1,6 @@
-รอบ 1185: แก้มือถือ Lobby 3D ให้เห็นป้าย O-NET เมื่อ login ค้าง
+รอบ 1186: แก้ Classic ไม่แสดงป้าย O-NET และเพิ่มป้ายเกือบเต็มจอ 3 Login พร้อม opt-out
 FILE: handoff/TASKS.md
-FILE: index.html
-FILE: js/city3d.js
+FILE: css/onetpromo.css
 FILE: js/onetpromo.js
 FILE: tools/onet_preview.html
 FILE: tools/test_onet_promo.js
