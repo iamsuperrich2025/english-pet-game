@@ -1,6 +1,5 @@
-รอบ 1186: แก้ Classic ไม่แสดงป้าย O-NET และเพิ่มป้ายเกือบเต็มจอ 3 Login พร้อม opt-out
+รอบ 1187: แก้ Auth guard ให้ป้าย O-NET Classic แสดงจริงและรีเซ็ต counter V4
 FILE: handoff/TASKS.md
-FILE: css/onetpromo.css
 FILE: js/onetpromo.js
 FILE: tools/onet_preview.html
 FILE: tools/test_onet_promo.js
