@@ -55,7 +55,6 @@
 - **รอบ 1176 · ตรวจตลาดจริงและคืนรายการขายค้างอัตโนมัติ:** เดิม UI เห็น `netKey` ก็อ้างว่าแขวนออนไลน์ แม้ `/market` ถูกลบแล้ว; เปลี่ยนเป็นสถานะ checking/online/sold จาก Firebase จริง
 - รายการที่ไม่พบทั้ง `/market/<key>` และ `/msold/<uid>/<key>` หลังเว้น 3.5 วินาที จะถูกลบจากรายการขาย คืนสินค้าเข้าคลังหนึ่งครั้ง และแจ้งเพียง “การลงขายสินค้านี้ไม่สำเร็จ”; อ่านยืนยันไม่ได้จะไม่แตะสินค้า
 - แก้ `js/online.js`, `js/ui.js`; เพิ่ม `tools/test_market_listing_reconcile.js` ครอบ live/sold/stale/retry-no-duplicate; market-buy regression, syntax/diff, build `.1062` 8,336 ไฟล์ 464.9 MiB และ PWA validator ผ่าน
-- **รอบ 1174 · แก้ซื้อของตลาดออนไลน์แล้วของหาย:** Firebase Transaction ลบ node ด้วย `null` ทำให้ snapshot หลังลบว่าง แต่โค้ดเดิมนำ snapshot ว่างไปออกใบเสร็จ จึงขึ้น `invalid` ทั้งที่ของถูกลบแล้ว
 - แก้ `js/online.js` สำเนารายการที่ตรวจผู้ขาย/สินค้า/ราคาครบภายใน transaction ก่อนลบ แล้วใช้สำเนาสร้างใบเสร็จและคืนผลให้ผู้ซื้อ; คนแรกได้ตามเดิม
 - เพิ่ม `tools/test_market_buy_transaction.js`; จำลอง snapshot หลังลบเป็น null แล้วยืนยันผู้ซื้อได้ข้อมูลครบ + ใบเสร็จ 1 ครั้ง; syntax/diff, production build `.1061` 8,336 ไฟล์ 464.9 MiB และ PWA validator ผ่าน
 - แก้ `js/adventure3d.js` ผสมคู่พิกเซลสองขอบด้วย smoothstep 14% ให้ริมตรงกันเป๊ะ คงกลางภาพคมเดิม และ cache texture ร่วม heli/drive ลดงานซ้ำบนมือถือ

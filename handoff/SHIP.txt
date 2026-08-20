@@ -1,6 +1,7 @@
-รอบ 1188: ให้โลกโดรนมีเฉพาะตัวอักษรคำปัจจุบัน เก็บตามลำดับ ตัวละ 1 เหรียญ และครบคำ +50 เหรียญ
-FILE: js/adventure3d.js
-FILE: js/adv3d_intro.js
-FILE: tools/test_heli_letter_round.js
-FILE: tools/test_drone_letter_round.js
+รอบ 1189: ล็อกซื้อบ้านลดระดับ กู้บ้านและคืนเงิน Moji love gay
+FILE: css/style.css
 FILE: handoff/TASKS.md
+FILE: js/data/homes.js
+FILE: js/state.js
+FILE: js/ui.js
+FILE: tools/test_home_downgrade_guard.js
