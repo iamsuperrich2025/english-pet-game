@@ -3,8 +3,8 @@
    🌍 adv   = โลกผจญภัยกลางวัน: เก็บตัวอักษรประกอบคำ 15🪙/คำ · monster ยิงสู้ได้
    👻 haunt = โรงแรมผีสิง: 25🪙/คำ · ผี PNG ไล่ผู้เล่นใกล้สุดหลังไฟดับ
    🚁 heli  = โลกเฮลิคอปเตอร์ (รอบ 52): 50🪙/คำ · ลงจอดดาดฟ้าเก็บตัวอักษรตามลำดับ
-   🛸 drone = โลกโดรน FPV Racing (รอบ 85): 35🪙/คำ · เร็ว/คล่องกว่าเฮลิฯ
-              บินลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้อง (บินเฉียด ไม่ต้องจอด)
+   🛸 drone = โลกโดรน FPV Racing (รอบ 85): 50🪙/คำ · เร็ว/คล่องกว่าเฮลิฯ
+              บินลอดหน้าต่างเข้าตึกร้าง เก็บตัวอักษรในห้องตามลำดับ (บินเฉียด ไม่ต้องจอด)
    ทั้ง 2 โลก multiplayer สไตล์ Roblox: ผู้เล่นอื่นโผล่ใน map ผ่าน Firebase
    (/world/<map>/<uid> = ตำแหน่ง) · เจอเพื่อนที่ชวน/ถูกชวน (tinv) ครั้งแรก
    ของ map → เงินคืนคนละ TINV_CASHBACK
@@ -58,10 +58,10 @@ const MODES = {
     koTitle:'🚁💥 เฮลิคอปเตอร์พังแล้ว!',
   },
   drone: {
-    label:'โลกโดรน FPV', emoji:'🛸', reward:35, doneKey:'droneDone',
+    label:'โลกโดรน FPV', emoji:'🛸', reward:50, doneKey:'droneDone',
     shoot:false, ghost:false, drone:true,
     sky:0x9aa6b2, fogN:32, fogF:135, ground:0x45484d,
-    intro:'🛸 <b>โลกโดรน FPV Racing!</b><br><small>บินเร็วสุดๆ ลอด<b>หน้าต่างตึกร้าง</b>เข้าไปในห้องต่างๆ<br>บินเฉียดตัวอักษรเพื่อเก็บ (ไม่ต้องจอด!) · ระวังชนกำแพง<br>💨 เฉียดกำแพงหวุดหวิดแบบไม่ชน = เหรียญโบนัส (ยิ่งเฉียด+คอมโบ ยิ่งได้)!</small>',
+    intro:'🛸 <b>โลกโดรน FPV Racing!</b><br><small>บินเร็วสุดๆ ลอด<b>หน้าต่างตึกร้าง</b>เข้าไปในห้องต่างๆ<br>เก็บเฉพาะตัวอักษรของคำปัจจุบัน<b>ตามลำดับ</b> (ไม่ต้องจอด!) · ตัวละ 1🪙 · ครบคำ +50🪙<br>💨 เฉียดกำแพงหวุดหวิดแบบไม่ชน = เหรียญโบนัส (ยิ่งเฉียด+คอมโบ ยิ่งได้)!</small>',
     hint:'W/S เดินหน้า-ถอย · A/D เอียงข้าง · Q/E หันหัว · Space ขึ้น · Shift ลง · บินเฉียดตัวอักษรเก็บได้เลย',
     koTitle:'🛸💥 โดรนพังแล้ว!',
   },
@@ -495,8 +495,10 @@ let sessionWordLog=[];             // 📖 คำที่ประกอบส�
 let inv={};                       // ตัวอักษรในกระเป๋า {a:2,...}
 let words=[];                     // guideline [{en,th}]
 let letters=[];                   // ตัวอักษรในโลก [{ch,spr,born}]
-let heliWordProgress=0, heliWrongAt=0; // 🚁 โหมดเฮลิฯ ต้องเก็บจากซ้ายไปขวาตามคำปัจจุบัน
+let orderedWordProgress=0, orderedWrongAt=0; // 🚁🛸 โลกบินเก็บจากซ้ายไปขวาตามคำปัจจุบัน
 let heliUsedRoofs=new Set();      // แยกตัวอักษรคนละดาดฟ้า กันป้ายซ้อนกันจนเห็นไม่ครบคำ
+let droneUsedRooms=new Set();     // แยกตัวอักษรคนละห้องในตึกร้างเมื่อมีห้องเพียงพอ
+function orderedLetterMode(){ return !!(M&&(M.heli||M.drone)); }
 let monsters=[];                  // adv: [{spr,hp,tgt,wanderAt,hitAt}] · haunt(ผี): [{spr,born,hunting,wailAt,tgt,wanderAt}]
 let shots=[];                     // [{mesh,dir,life}]
 let keys={}, joy={on:false,dx:0,dy:0}, lookTouch=null, lastShot=0, lastEnsure=0, lastSpawn=0;
@@ -2879,8 +2881,11 @@ function spawnLetter(ch,opt){
     spr.scale.set(3.4,3.4,1);                    // ใหญ่ มองเห็นแต่ไกลตอนขับ
   }else if(M.drone && buildings.length){
     // โหมดโดรน: ตัวอักษรซ่อนอยู่ในห้องต่างๆ ของตึกร้าง — บินลอดหน้าต่างเข้าไปเก็บ
-    const b=buildings[Math.floor(Math.random()*buildings.length)];
-    const r=b.rooms[Math.floor(Math.random()*b.rooms.length)];
+    const rooms=buildings.flatMap(b=>b.rooms||[]);
+    const free=rooms.filter(r=>!droneUsedRooms.has(r));
+    const pool=free.length?free:rooms;
+    const r=pool[Math.floor(Math.random()*pool.length)];
+    droneUsedRooms.add(r);
     spr.position.set(r.x+(Math.random()*2-1), r.y, r.z+(Math.random()*2-1));
     spr.scale.set(1.8,1.8,1);
   }else if(heliKpp()){
@@ -2929,8 +2934,8 @@ function ensureCoverage(){
     if(!letters.length && !hQuest.finish) hotelStartQuestWord();
     return;
   }
-  // 🚁 บนดาดฟ้ามีเฉพาะตัวอักษรของคำปัจจุบันที่ spawn ไว้พอดีแล้ว
-  if(M.heli) return;
+  // 🚁🛸 โลกบินแบบเรียงลำดับมีเฉพาะตัวอักษรของคำปัจจุบันที่ spawn ไว้พอดีแล้ว
+  if(orderedLetterMode()) return;
   /* 🏨 รอบ 778: โรงแรมผีสิงคุมเข้ม — เอาเฉพาะคำที่กำลังหาอยู่ (words[0]) และกวาดตัวที่ไม่เกี่ยวทิ้งก่อน */
   const tgtWords=words;
   const worldCnt={}; letters.forEach(l=>worldCnt[l.ch]=(worldCnt[l.ch]||0)+1);
@@ -3017,23 +3022,23 @@ function pickUpLetter(i,fromPeer){
     renderHudTop();
     return;
   }
-  if(M.heli){
-    const w=words[0], expected=w&&w.en[heliWordProgress];
+  if(orderedLetterMode()){
+    const w=words[0], expected=w&&w.en[orderedWordProgress];
     if(!expected || ch!==expected){
       const now=performance.now();
-      if(expected && now-heliWrongAt>1200){
-        heliWrongAt=now;
+      if(expected && now-orderedWrongAt>1200){
+        orderedWrongAt=now;
         showBanner(`🔤 ต้องเก็บ <b>${expected.toUpperCase()}</b> ก่อน · เก็บตามลำดับ ${w.en.toUpperCase()}`);
       }
       return;
     }
   }
   inv[ch]=(inv[ch]||0)+1;
-  if(M.heli) heliWordProgress++;
+  if(orderedLetterMode()) orderedWordProgress++;
   addCoins(LETTER_COIN);
   sessionCoins+=LETTER_COIN;                  // ให้สรุปท้ายรอบตรงกับที่ได้จริง
   // 🔠⏱️ รอบ 847: จำจุดเดิมไว้ — อีก LETTER_RESPAWN_MS ค่อยเกิดใหม่ "ที่นี่" (ไม่ใช่จุดสุ่มใหม่)
-  if(!M.hotel && !M.heli) letterRespawns.push({ch,x:at.x,y:l.baseY,z:at.z,scale:l.spr.scale.x,room:l.room,at:performance.now()+LETTER_RESPAWN_MS});
+  if(!M.hotel && !orderedLetterMode()) letterRespawns.push({ch,x:at.x,y:l.baseY,z:at.z,scale:l.spr.scale.x,room:l.room,at:performance.now()+LETTER_RESPAWN_MS});
   removeLetter(i);
   letterPop(at,ch);                           // 🅰️ ป้ายตัวอักษร +1🪙 เด้งตรงจุดที่เก็บ
   if(M.hotel) HSound.letter(); else letterChime(); // โรงแรมใช้ไฟล์ใหม่ใน sound/ghost เท่านั้น
@@ -3138,8 +3143,8 @@ function completeWord(i){
   words.splice(i,1);
   rewardCompletedWord(w);
   if(M.hotel)return;
-  if(M.heli){ heliWordProgress=0; heliUsedRoofs.clear(); }
-  const fresh=pickWords(1);                 // คำเดิมจบแล้ว → เติมคำใหม่ต่อท้ายคิว (8.4; โหมดเฮลิฯ มีคิวเดียว)
+  if(orderedLetterMode()){ orderedWordProgress=0; heliUsedRoofs.clear(); droneUsedRooms.clear(); }
+  const fresh=pickWords(1);                 // คำเดิมจบแล้ว → เติมคำใหม่ต่อท้ายคิว (8.4; โลกบินเรียงลำดับมีคิวเดียว)
   if(M.soccer){ fresh.forEach(nw=>words.push(nw)); soccerRetarget(); }   // ⚽ ป้ายคงที่ รีไซเคิลเอง (ไม่ spawn เพิ่ม)
   else{ fresh.forEach(nw=>{ words.push(nw); spawnLettersForWord(nw); }); ensureCoverage(); }
   if(netUp()) sendPos(true);                  // 🤝 ดันคำเป้าหมายใหม่ให้ลูกทีมตามทันที (ไม่ต้องรอขยับตำแหน่ง)
@@ -4759,9 +4764,9 @@ function syncPartyWord(){
   if(pw.e===lastSharedDone) return;
   const wordChanged=!words[0] || words[0].en!==pw.e;
   if(wordChanged){
-    if(M.heli){
+    if(orderedLetterMode()){
       for(let i=letters.length-1;i>=0;i--) removeLetter(i);
-      letterRespawns=[]; inv={}; heliWordProgress=0; heliUsedRoofs.clear();
+      letterRespawns=[]; inv={}; orderedWordProgress=0; heliUsedRoofs.clear(); droneUsedRooms.clear();
       words=[{en:pw.e,th:pw.t}];
       spawnLettersForWord(words[0]);
     }else{
@@ -5050,7 +5055,7 @@ function renderHudInv(){
   const ks=Object.keys(inv).sort();
   hudInvEl.innerHTML=ks.length
     ? ks.map(ch=>`<span class="adv-inv-ch">${ch.toUpperCase()}${inv[ch]>1?'×'+inv[ch]:''}</span>`).join('')
-    : `<span class="adv-inv-empty">${(M&&M.soccer)?'⚽ เตะบอลใส่ป้ายตัวอักษรเพื่อเก็บ':'เดินชนตัวอักษรเพื่อเก็บ ✨'}</span>`;   // ⚽ รอบ 399: สนามบอลไม่ได้เดินเก็บ
+    : `<span class="adv-inv-empty">${(M&&M.soccer)?'⚽ เตะบอลใส่ป้ายตัวอักษรเพื่อเก็บ':(M&&M.drone)?'🛸 บินเก็บตัวอักษรตามลำดับ ✨':'เดินชนตัวอักษรเพื่อเก็บ ✨'}</span>`;   // ⚽🛸 สนามบอลไม่ได้เดินเก็บ · โดรนต้องบอกลำดับ
 }
 /* ระดับเข็มนักผาดโผนจาก "ชื่อที่ sync มาแล้ว" (เข็มติดท้ายชื่อ) — ไม่ต้องเพิ่ม field/rules ใหม่ */
 function ddTierFromName(n){ n=n||''; if(n.indexOf('🔥')>=0) return 3; if(n.indexOf('🌀')>=0) return 2; if(n.indexOf('🎯')>=0) return 1; return 0; }
@@ -12863,15 +12868,15 @@ function start(md,opt){
   if(!Array.isArray(state[M.doneKey])) state[M.doneKey]=[];
   // Haunted Hotel waits for the canonical Firebase snapshot. Other worlds keep
   // their existing local word queue unchanged.
-  words=M.hotel?[]:pickWords(M.heli?1:GUIDE_WORDS);
-  heliWordProgress=0; heliWrongAt=0; heliUsedRoofs.clear();
+  words=M.hotel?[]:pickWords(orderedLetterMode()?1:GUIDE_WORDS);
+  orderedWordProgress=0; orderedWrongAt=0; heliUsedRoofs.clear(); droneUsedRooms.clear();
   if(M.soccer){ soccerBuildTargets(); }             // ⚽ ป้ายเป้าคงที่ (Plane หงายได้) แทนตัวอักษร sprite กระจาย
   else if(M.mecha){ startWave(1); }   // 🌊 รอบ 229: เริ่ม Endless Wave (เดิม spawn ALIEN_COUNT ตายตัว)
   /* 🏨 รอบ 778 (ผู้ใช้สั่งข้อ 5): โรงแรมผีสิงวางเฉพาะตัวอักษรของคำที่กำลังหาอยู่ — ไม่มีตัวหลอก ไม่มีของคำอื่น */
   else if(M.hotel){ /* canonical applyCanonicalState() spawns the active word */ }
   else{
     words.forEach(spawnLettersForWord);
-    if(!M.heli) for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
+    if(!orderedLetterMode()) for(let i=0;i<8;i++) spawnLetter('abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random()*26)]);
     ensureDriveAmbience();   // 🌳🪙 รอบ 811: เข้าโหมดขับรถ (M.drive) ต้องมีสำเนาตัวอักษร+เหรียญโบนัสให้เก็บตั้งแต่แรกเข้า ไม่ต้องรอ 5 วิ
   }
   if(M.ghost){

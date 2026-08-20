@@ -5,12 +5,12 @@ const src=fs.readFileSync('js/adventure3d.js','utf8');
 
 const checks=[
   ["label:'โลกเฮลิคอปเตอร์', emoji:'🚁', reward:50", 'โหมดเฮลิคอปเตอร์ให้โบนัสคำละ 50 เหรียญ'],
-  ['pickWords(M.heli?1:GUIDE_WORDS)', 'โหมดเฮลิคอปเตอร์ถือคำเป้าหมายเดียว'],
-  ["if(!M.heli) for(let i=0;i<8;i++) spawnLetter", 'ไม่สร้างตัวอักษรหลอกในโหมดเฮลิคอปเตอร์'],
+  ['pickWords(orderedLetterMode()?1:GUIDE_WORDS)', 'โลกบินเรียงลำดับถือคำเป้าหมายเดียว'],
+  ["if(!orderedLetterMode()) for(let i=0;i<8;i++) spawnLetter", 'ไม่สร้างตัวอักษรหลอกในโลกบินเรียงลำดับ'],
   ['const free=buildings.filter(b=>!heliUsedRoofs.has(b))', 'ตัวอักษรแต่ละตัวต้องอยู่คนละดาดฟ้าเมื่อมีตึกเพียงพอ'],
   ['if(!expected || ch!==expected)', 'ตัวอักษรผิดลำดับจะไม่ถูกเก็บ'],
-  ['if(M.heli) heliWordProgress++', 'ขยับลำดับเมื่อเก็บตัวที่ถูกเท่านั้น'],
-  ['if(!M.hotel && !M.heli) letterRespawns.push', 'ตัวอักษรคำเก่าไม่เกิดซ้ำในรอบคำใหม่'],
+  ['if(orderedLetterMode()) orderedWordProgress++', 'ขยับลำดับเมื่อเก็บตัวที่ถูกเท่านั้น'],
+  ['if(!M.hotel && !orderedLetterMode()) letterRespawns.push', 'ตัวอักษรคำเก่าไม่เกิดซ้ำในรอบคำใหม่'],
 ];
 for(const [needle,msg] of checks) assert(src.includes(needle),msg);
 
