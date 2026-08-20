@@ -1,10 +1,7 @@
-รอบ 1184: เพิ่มป้ายชวนทดลอง O-NET หลัง login พร้อมปุ่มปิดและ CTA เข้าสอบ
+รอบ 1185: แก้มือถือ Lobby 3D ให้เห็นป้าย O-NET เมื่อ login ค้าง
 FILE: handoff/TASKS.md
-FILE: index_classic.html
-FILE: css/onetpromo.css
+FILE: index.html
+FILE: js/city3d.js
 FILE: js/onetpromo.js
-FILE: js/examstd.js
-FILE: js/util.js
-FILE: js/auth.js
 FILE: tools/onet_preview.html
 FILE: tools/test_onet_promo.js
