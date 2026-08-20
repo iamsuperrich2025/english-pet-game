@@ -44,7 +44,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 
 
 <!-- AUTO-FILES:BEGIN -->
-### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-08-20
+### 🤖 ไฟล์ไหนทำอะไร — เจนอัตโนมัติจาก comment หัวไฟล์ (`tools/gen_code_map.py` · **ห้ามแก้มือในบล็อกนี้**) · อัปเดต 2026-08-21
 - **js/account-deletion.js** (235 บรรทัด) — Account deletion — protected, re-authenticated, multi-path cleanup · Destructive writes begin only after typed confirmation + recent Google auth.
 - **js/adv3d_css.js** (1,272 บรรทัด) — adv3d_css.js — CSS ของ DOM overlay โลก 3D ทุกโหมด (adv/haunt/heli/drone/ · drive/soccer/mecha) — 🪓 รอบ 544 เฟส 1: ผ่าออกจาก js/adventure3d.js · ไฟล์นี้เป็น "ข้อมูลล้วน" ห้ามมี logic — ประกาศ window.ADV3D_CSS อย่างเดียว
 - **js/adv3d_intro.js** (86 บรรทัด) — ❓ ADV3D_INTRO — data การ์ด "วิธีเล่น" ทุกโลก (ผ่าจาก js/adventure3d.js เฟส 2 รอบ 545) · data ล้วน ไม่มี logic · โหลดผ่าน loadAdv3d() ใน js/ui.js ก่อนไฟล์หลักเสมอ
@@ -59,10 +59,10 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **js/bbaward.js** (14 บรรทัด) — 🏆 รางวัลรายเดือน Top 10 ของเกม 🫧 ฟอง — คะแนนสะสมตลอดกาล
 - **js/bubble.js** (200 บรรทัด) — 🫧 bubble.js — เกมแตะฟองสะกดคำ · - ฟอง 1 ใบต่อ 1 ตัวอักษร: คำที่มีตัวซ้ำจะมีฟองซ้ำครบจำนวน · - สุ่มตำแหน่งใหม่ทุกคำ โดยไม่ซ้อนกัน และไม่เรืองแสงใบ้ฟองที่ต้องกด
 - **js/cert.js** (655 บรรทัด) — 🎖️ cert.js — ประกาศนียบัตร Vocab World (รอบ 712) · สอบผ่าน = ได้ "ใบประกาศ" อย่างเป็นทางการแทนอิโมจิ 📝 เดิม · ① ฟีด: การ์ดโพสต์หมวด quiz โชว์ใบประกาศเต็มกรอบ (แตะ = ดูใบใหญ่เต็มจอ)
-- **js/city3d.js** (3,339 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
+- **js/city3d.js** (3,352 บรรทัด) — city3d.js — 🏙️ VOCAB CITY: ล็อบบี้ 3D แบบเมืองลอยฟ้า (index.html = หน้าหลัก · รอบ 861 · สลับเป็นหน้าหลักรอบ 863) · เมือง toy-town พาสเทลบนเกาะลอยฟ้า (ออกแบบเอง ไม่อิงเกม city-builder ใด — กันลิขสิทธิ์) · กล้อง: 1 นิ้วลาก = เลื่อนแผนที่ · 2 นิ้ว = หมุน(บิด)/เอียง(ลากแนวตั้ง)/ซูม(ถ่าง-หนีบ)
 - **js/coinaward.js** (21 บรรทัด) — 🪙🏆 รางวัลรายเดือน Top 10 กระดานเหรียญคงเหลือ
 - **js/dictband.js** (410 บรรทัด) — DICT BAND — คลังศัพท์ใหญ่ตามระดับ (band 1-5) จาก js/data/dict_band/ · manifest.js โหลดตอนบูต (เบา) → ชิ้นข้อมูล db<band>_*.js โหลดขี้เกียจ · ตอนผู้เล่นกดเล่น แล้วต่อเข้าเครื่องยนต์เดิมทั้งคู่:
-- **js/examstd.js** (945 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL (รอบ 812 · โหมดจับเวลาจริง+สถิติต่อส่วน รอบ 814) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
+- **js/examstd.js** (981 บรรทัด) — 📋 EXAM STD — ข้อสอบจริงแบบมาตรฐาน IELTS / TOEIC / TOEFL / O-NET (รอบ 812 · O-NET รอบ 1183) · คนละระบบกับ js/bandadv.js (คลังศัพท์ IELTS/TOEIC/TOEFL รอบ 807) ซึ่งเป็นการจับคู่ en↔th · ที่นี่ = โจทย์เลือกตอบแบบข้อสอบจริง 30 ข้อ/ชุด: ไวยากรณ์ + การอ่านจับใจความ (ไม่มีเรียงความ)
 - **js/f1_3d.js** (3,182 บรรทัด) — 🏎️ f1_3d.js — โลกแข่งรถ F1 "สนามซาเคียร์" Bahrain International Circuit (รอบ 896) · ───────────────────────────────────────────────────────────────────── · แทร็กจริงจาก OpenStreetMap (js/data/f1_bahrain.js — GP Circuit 5,400 ม. ครบ 15 โค้ง)
 - **js/f1_modes.js** (123 บรรทัด) — 🏁 F1 Racing Mode Select — local graphics preference + environment profile contract (Phase 1) · UI/preference live here; physics, gameplay, rewards and multiplayer remain owned by js/f1_3d.js. · Both profiles mutate one shared F1 scene. A second renderer/scene is never created for mode switching.
 - **js/fpsweapon.js** (194 บรรทัด) — 🔫 FPS WEAPON STATE MACHINE — local adapter for invasion3d · Owns only weapon presentation state. Gameplay, aiming, damage, · controls and world lifecycle remain in js/invasion3d.js.
@@ -107,9 +107,9 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/account-deletion.css** (15 บรรทัด) — Protected account deletion — compact landscape-first dialogs
 - **css/arena3d.css** (201 บรรทัด) — 🌀🔤 รอบ 1045 — Vocab Arena · HUD โลกผจญภัยแบบ MOBA-inspired ที่ออกแบบใหม่ทั้งหมดสำหรับ Vocab World
 - **css/bubble.css** (54 บรรทัด) — 🫧 เกมฟองคำศัพท์ — เต็มจอ ไม่มี scrollbar ทั้ง desktop/mobile landscape
-- **css/exam.css** (352 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
+- **css/exam.css** (377 บรรทัด) — 📋 exam.css — จอข้อสอบจริงแบบมาตรฐาน IELTS/TOEIC/TOEFL (รอบ 812 · js/examstd.js) · กฎทองข้อ 7: กล่องทั้งใบต้องอยู่ในจอ หน้าไม่เลื่อน — บทอ่านยาวจึงเลื่อน "ในกรอบตัวเอง" · (ข้อสอบการอ่านเลี่ยงไม่ได้ที่จะมีบทความยาว แต่กรอบนอกไม่มี scrollbar)
 - **css/lettercannon.css** (48 บรรทัด) — 🔤💥 Letter Cannon — ป้อมพิทักษ์คำศัพท์ (รอบ 1158) · Full-screen, landscape-first HUD. The game canvas owns scenery; · this file keeps controls readable and dialogs inside 812×375.
-- **css/lobby.css** (5,951 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
+- **css/lobby.css** (5,954 บรรทัด) — THEME 2.0 "เมืองทันสมัยโทนฟ้า" — LOBBY แนวนอน + UI ยุคหลังทั้งหมด (โหลดทับ style.css · cascade ทีหลังชนะ · เปลี่ยนเฉพาะหน้าตา ไม่แตะ logic) · ครอบคลุม: แถบบน/ราง rail/แผง panel (ตลาด-โรงงาน-บ้าน-เพื่อน) · โชว์รูมหุ่น .rs-* รถ .cs-* · Word Search .ws-* · ข้อมูลน้อง .pi-* · แชท+ธีมแชท · กระดานอันดับ/เข็ม · สไปรต์น้อง .pet-anim/ฉาก .stage-hero · โทนสี: น้ำเงินเ…
 - **css/petpantry.css** (6 บรรทัด) — 🗄️🐾 Pet Pantry — รอบ 1158
 - **css/petshopping3d.css** (26 บรรทัด) — 🚗🐾 Pet Shopping 3D — รอบ 1168: collision bounce + responsive cockpit/equalizer mask; GPS คงเดิม
 - **css/picdict.css** (108 บรรทัด) — 🖼️ Picture Dictionary — หน้าเดียว 18 คำ (รอบ 1123) · 6×3 ทุกขนาดจอแนวนอน ไม่มี scrollbar และไม่มีรูปแบบหนังสือ
@@ -118,6 +118,7 @@ js/main.js            ปุ่ม + init: #screen-login รอ auth → bootGam
 - **css/style.css** (2,425 บรรทัด) — Pet Vocab Adventure — สไตล์พื้นฐานรุ่นแรกทั้งเกม (โดน lobby.css โหลดทับบางส่วน — แก้หน้าตาโซนล็อบบี้/UI ใหม่ให้ไปที่ lobby.css ก่อน) · ครอบคลุม: screens/login/dashboard · เกมจับคู่ .word-card + แบบทดสอบ .quiz-* · shop/ที่พัก/หมวดคำศัพท์ · หิว-ป่วย/สภาพอากาศ · ตั้งค่า/วิธีเล่น/level-up overlay · คลังของฉัน/กล่องขาย · เอฟเฟกต์ลอย/เหรียญ/rotate-overlay
 - **sw.js** (218 บรรทัด) — Vocab World service worker · Delivery contract: · - HTML navigations are network-first with the last valid shell as fallback.
 <!-- AUTO-FILES:END -->
+
 
 
 

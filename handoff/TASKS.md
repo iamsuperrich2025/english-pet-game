@@ -53,7 +53,6 @@
 - **รอบ 1173 · ลบรอยต่อท้องฟ้า 360°:** `sky_dawn.jpg` เป็น 2:1 แต่ขอบซ้าย/ขวาสีไม่ตรงกัน จึงเกิดเส้นตั้งใน equirectangular skybox
 - แก้ `js/adventure3d.js` ผสมคู่พิกเซลสองขอบด้วย smoothstep 14% ให้ริมตรงกันเป๊ะ คงกลางภาพคมเดิม และ cache texture ร่วม heli/drive ลดงานซ้ำบนมือถือ
 - เพิ่ม `tools/test_sky_seam.js`; RGB edge delta ภาพจริง mean 72.21/max 193 → 0/0, Browser WebGL หมุน 0°/90°/180°/270° ไม่มีรอยตัด; syntax/เฮลิฯ/โรงแรม/diff ผ่าน
-- **รอบ 1172 · เก็บตัวอักษรโลกเฮลิคอปเตอร์ทีละคำตามลำดับ:** เดิมสร้าง 10 คำ+ตัวหลอก 8 ตัว; แก้ `js/adventure3d.js` ให้มีเฉพาะตัวของคำปัจจุบัน แยกคนละดาดฟ้า และปฏิเสธตัวที่ผิดลำดับ
 - รางวัลคง 1 เหรียญ/ตัว และปรับโบนัสเฮลิคอปเตอร์เป็น 50 เหรียญ/คำ; BUDGET ได้รวม 56 เหรียญ และเริ่มคำใหม่กลับมามีเพียงคำเดียวอัตโนมัติ
 - เพิ่ม `tools/test_heli_letter_round.js`; syntax/diff + Haunted Hotel 2 ชุดผ่าน และ Browser runtime ผ่าน 7/7 (จำนวน/คลัง/ลำดับ/เหรียญ/รอบใหม่)
 - แก้ `css/lobby.css`, cache-bust `index_classic.html` และเพิ่ม `tools/test_lobby_settings_responsive.js`; Browser 520×375, 568×320, 640×360, 667×375, 812×375, 915×412, 1217×648, 1325×619 = ปุ่มครบ/inside/ไม่ทับเหรียญ/overflow 0 และกด Settings ได้
