@@ -781,19 +781,29 @@ function marketBuy(item){
   };
   if(!expected.id || !expected.sid || !(expected.p > 0)) return Promise.resolve({ok:false, reason:'invalid'});
 
+  let purchased = null;
   return Online.db.ref('market/' + expected.key)
     .transaction(cur=>{
+      purchased = null;
       if(!cur || typeof cur !== 'object') return;
       if(String(cur.sid) !== expected.sid) return;
       if(String(cur.id) !== expected.id) return;
       const p = Number(cur.p);
       if(p !== expected.p || !(p > 0)) return;
       if(String(cur.sid) === (typeof onlineKey === 'function' ? String(onlineKey()) : '')) return;
+      // Firebase คืน snapshot หลัง transaction; เมื่อลบด้วย null ค่าใน snapshot จึงเป็น null
+      // เก็บสำเนารายการที่ตรวจครบแล้วไว้ก่อนลบ เพื่อนำไปออกใบเสร็จและส่งของให้ผู้ซื้อ
+      purchased = {
+        sid: String(cur.sid),
+        id: String(cur.id),
+        p,
+        sn: String(cur.sn || expected.sn),
+      };
       return null;
     })
     .then(r=>{
       if(!r || !r.committed) return {ok:false, reason:'sold_out'};
-      const d = (r.snapshot && typeof r.snapshot.val === 'function') ? r.snapshot.val() : null;
+      const d = purchased;
       if(!d || typeof d !== 'object') return {ok:false, reason:'invalid'};
 
       const sid = String(d.sid || expected.sid);
