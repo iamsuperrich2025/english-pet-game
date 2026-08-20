@@ -919,6 +919,11 @@ html.no-anim body.quake{animation:none;}
 .home-option:active{transform:scale(.97);}
 .home-option.current{border-color:var(--green-d);background:var(--green);}
 .home-option.cant-afford{opacity:.55;}
+.home-option.downgrade-locked{
+  opacity:.58;cursor:not-allowed;border-color:#c8cbd4;background:#f2f3f6;filter:grayscale(.35);
+}
+.home-option.downgrade-locked:active{transform:none;}
+.home-downgrade-lock{display:inline-block;margin-top:3px;background:#e4e6eb;color:#5f6572;border-color:#b9bec8;}
 /* 🏠 รอบ 1017: ภาพบ้านชุดใหม่ (ตัดจาก img/home/newHouse.png) เป็นภาพแนวนอนมีฉากหลังกลางคืน
    → ช่องภาพในร้านต้องเป็นแนวนอน + มุมมน ไม่งั้นเหลือแถบเตี้ยๆ ในกรอบจัตุรัสเดิม */
 .home-opt-img{width:84px;height:54px;object-fit:contain;flex-shrink:0;border-radius:9px;}

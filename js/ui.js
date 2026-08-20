@@ -9316,13 +9316,14 @@ function openHomeShop(){
     <div class="home-list">
       ${HOMES.map(h=>{
         const current = state.home === h.id;
+        const downgradeLocked = homeDowngradeLocked(state.home, h.id);
         const afford = state.coins >= h.price;
-        return `<div class="home-option ${current?'current':''} ${!current && !afford?'cant-afford':''}" data-home="${h.id}">
+        return `<div class="home-option ${current?'current':''} ${downgradeLocked?'downgrade-locked':''} ${!current && !downgradeLocked && !afford?'cant-afford':''}" data-home="${h.id}"${downgradeLocked?' aria-disabled="true"':''}>
           ${homeVisualHTML(h, 'home-opt-img')}
           <div class="home-opt-body">
             <b>${h.emoji} ${h.name}</b>
             <small>${h.desc}<br>${h.acNote}<br>🧾 ค่าบำรุง 🪙${fmtNum(maintCost(h.id))} + ⚡ ค่าไฟ 🪙${fmtNum(elecCost(h.id))} + 🚰 ค่าน้ำ 🪙${fmtNum(waterCost(h.id))} + 🗑️ ค่าขยะ 🪙${fmtNum(trashCost(h.id))}/เดือน (จ่ายทุกวันที่ 1)${h.quizBonus > 0 ? `<br>🎁 ทำแบบทดสอบครบ 10 ข้อ รับโบนัส +${h.quizBonus} 🪙 ทุกครั้ง` : ''}</small>
-            ${current ? '<span class="it-tag tag-on">อยู่ปัจจุบัน</span>' : `<span class="home-price">🪙${fmtNum(h.price)}</span>`}
+            ${current ? '<span class="it-tag tag-on">อยู่ปัจจุบัน</span>' : downgradeLocked ? '<span class="it-tag home-downgrade-lock">🔒 ต่ำกว่าบ้านปัจจุบัน</span>' : `<span class="home-price">🪙${fmtNum(h.price)}</span>`}
             ${soldBadge('home_'+h.id)}
           </div>
         </div>`;}).join('')}
@@ -9334,6 +9335,9 @@ function openHomeShop(){
     el.addEventListener('click', ()=>{
       const h = homeInfo(el.dataset.home);
       if(state.home === h.id){ toast('อยู่ที่พักนี้อยู่แล้วจ้า 😊'); return; }
+      if(homeDowngradeLocked(state.home, h.id)){
+        sfx.wrong(); toast('🔒 เลือกบ้านที่ราคาต่ำกว่าบ้านปัจจุบันไม่ได้ เพื่อป้องกันบ้านเดิมหาย'); return;
+      }
       if(state.coins < h.price){
         sfx.wrong(); toast(`${h.name} ราคา 🪙${fmtNum(h.price)} — เหรียญยังไม่พอ สู้ๆ!`); return;
       }
@@ -9342,6 +9346,16 @@ function openHomeShop(){
         <p style="font-size:16px;margin:6px 0">${h.desc}<br>${h.acNote}<br>ราคา <b>🪙${fmtNum(h.price)}</b><br>
         <small>🧾 ค่าบำรุง 🪙${fmtNum(maintCost(h.id))} + ⚡ ค่าไฟ 🪙${fmtNum(elecCost(h.id))} + 🚰 ค่าน้ำ 🪙${fmtNum(waterCost(h.id))} + 🗑️ ค่าขยะ 🪙${fmtNum(trashCost(h.id))}/เดือน (เดือนแรกฟรี)</small></p>`,
         'ซื้อเลย!', ()=>{
+          // ตรวจซ้ำใน callback: กัน state เปลี่ยนระหว่างเปิดกล่องยืนยันและกดซื้อ
+          if(homeDowngradeLocked(state.home, h.id)){
+            sfx.wrong(); toast('🔒 ยกเลิกการซื้อ: บ้านนี้ต่ำกว่าบ้านปัจจุบัน'); return;
+          }
+          if(state.coins < h.price){
+            sfx.wrong(); toast(`${h.name} ราคา 🪙${fmtNum(h.price)} — เหรียญไม่พอแล้ว`); return;
+          }
+          if(!Array.isArray(state.homePurchaseLog)) state.homePurchaseLog = [];
+          state.homePurchaseLog.push({id:h.id, from:state.home || null, price:h.price, at:Date.now()});
+          state.homePurchaseLog = state.homePurchaseLog.slice(-20);
           state.coins -= h.price;
           state.home = h.id;
           if(typeof sellInc==='function') sellInc('home_'+h.id);   // 🛒 นับยอดขายที่พัก

@@ -168,6 +168,7 @@ const DEFAULT_STATE = {
   petShoppingGrantVer:0,             // 🎁 รุ่นเงินช่วยปรับตัวระบบชั้นอาหาร (กันจ่าย 10,000 ซ้ำ)
   petShoppingGrantNotice:null,       // กล่องเงินเข้าที่ค้างจนผู้เล่นกดรับทราบ
   home:null,                          // 'basic' | 'medium' | 'castle'
+  homePurchaseLog:[],                 // ประวัติซื้อบ้านล่าสุด (สูงสุด 20 รายการ) ใช้ตรวจสอบ/กู้คืนเมื่อมีข้อพิพาท
   ac:false,                           // ติดแอร์แล้ว (สำหรับบ้าน medium)
   bills:{},                           // บิลรายเดือน: {maint:{month:'YYYY-MM', due, paid}, ...} (ค่าไฟ/น้ำ/เน็ต/ขยะ เสียบเพิ่มได้ · trash มี field fine สะสมค่าปรับ)
   petFoodPaidMonth:'',                // 🍖 เดือนล่าสุด (YYYY-MM) ที่จ่ายเงินค่าอาหารสัตว์รายเดือนไปแล้ว (กันจ่ายซ้ำ)
@@ -484,6 +485,8 @@ function loadState(){
       if(s.active >= s.pets.length) s.active = 0;
       if(!s.daily || typeof s.daily !== 'object') s.daily = {date:'', coins:0};
       if(!s.bills || typeof s.bills !== 'object') s.bills = {};
+      if(!Array.isArray(s.homePurchaseLog)) s.homePurchaseLog = [];
+      s.homePurchaseLog = s.homePurchaseLog.filter(x=>x && homeInfo(x.id) && typeof x.price === 'number' && typeof x.at === 'number').slice(-20);
       if(s.pendingRuin === undefined) s.pendingRuin = null;
       if(!Array.isArray(s.pendingCut)) s.pendingCut = [];
       if(typeof s.noAnim !== 'boolean') s.noAnim = false;

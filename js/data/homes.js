@@ -18,6 +18,13 @@ const AC_PRICE   = 20000;   // ค่าเครื่องปรับอา�
 const AC_INSTALL = 5000;    // ค่าติดตั้ง
 function homeInfo(id){ return HOMES.find(h=>h.id===id) || null; }
 
+/* บ้านใช้ระบบอัปเกรดทางเดียว: เมื่อมีบ้านอยู่แล้ว ห้ามซื้อบ้านที่ราคาต่ำกว่า
+   แยกเป็น helper กลางเพื่อให้ทั้ง UI และจุดยืนยันก่อนหักเหรียญใช้กฎเดียวกัน */
+function homeDowngradeLocked(currentId, nextId){
+  const current = homeInfo(currentId), next = homeInfo(nextId);
+  return !!(current && next && next.price < current.price);
+}
+
 /* ---- ค่าบำรุงบ้านรายเดือน (เครื่องยนต์บิลอยู่ใน state.js: billTick) ----
    บิลออกทุกวันที่ 1 = 0.5% ของราคาบ้าน · เดือนแรกที่ซื้อฟรี
    ค้างจ่ายถึงวันที่ 5 → บ้านเสื่อมสภาพ (ภาพ home_<id>_decayed.png)
