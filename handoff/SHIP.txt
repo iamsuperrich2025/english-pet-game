@@ -1,5 +1,6 @@
-รอบ 1187: แก้ Auth guard ให้ป้าย O-NET Classic แสดงจริงและรีเซ็ต counter V4
+รอบ 1188: ให้โลกโดรนมีเฉพาะตัวอักษรคำปัจจุบัน เก็บตามลำดับ ตัวละ 1 เหรียญ และครบคำ +50 เหรียญ
+FILE: js/adventure3d.js
+FILE: js/adv3d_intro.js
+FILE: tools/test_heli_letter_round.js
+FILE: tools/test_drone_letter_round.js
 FILE: handoff/TASKS.md
-FILE: js/onetpromo.js
-FILE: tools/onet_preview.html
-FILE: tools/test_onet_promo.js
