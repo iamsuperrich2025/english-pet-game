@@ -28,10 +28,10 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
-- **รอบ 1185 · แก้มือถือไม่เห็นป้าย O-NET:** ต้นตอคือหน้าแรกมือถือเป็น Lobby 3D (`index.html`) แต่รอบ 1184 โหลดป้ายเฉพาะ Classic Dashboard จึงไม่เคยเรียกป้ายเมื่อ login ค้างอยู่
-- โหลด `onetpromo.css/js` ใน Lobby 3D และเรียก `onetPromoCityMaybeShow(uid)` จาก Firebase auth; ใช้ session key ตาม uid ร่วมกับ Classic จึงปิดแล้วไม่เด้งซ้ำข้ามสอง Lobby
-- CTA ใน 3D พาไป `index_classic.html?go=onet` เพื่อเปิดแผง O-NET โดยตรง ส่วน Classic ยังเรียก `openOnetBoard()` เดิม; ปุ่ม `✕ ปิด`/`ไว้ทีหลัง` คงเดิม
-- Node promo/O-NET regression + syntax ผ่าน; Browser จำลอง login ค้างใน 3D ที่ 812×375 เห็นป้าย 225px overflow 0 และ CTA navigation `?go=onet` ผ่าน
+- **รอบ 1186 · แก้ Classic ไม่แสดงป้าย O-NET + ยกเครื่อง 3 Login:** ต้นตอจริงคือ `state.js` ประกาศ top-level `let state` แต่ promo ตรวจ `window.state` จึง false เสมอ; อีกชั้นนับ overlay ที่ซ่อนเป็นตัวขวาง ทำให้รอไม่จบ
+- ตรวจ state ด้วย `typeof state`, blocker เฉพาะ element ที่มองเห็น; ป้ายใหม่กินพื้นที่ 96% ของจอ 812×375 (802×365px), overflow 0 มี `✕ ปิด`, `ไว้ทีหลัง` และ CTA
+- แสดงครั้งเดียวต่อ Login สูงสุด 3 ครั้ง/บัญชี พร้อมเลข 1/3–3/3; เก็บจำนวนและ `ไม่ต้องแสดงป้ายนี้อีก` ใน save บัญชี + local fallback ข้าม Classic/3D
+- Node promo/O-NET + syntax ผ่าน; Browser Classic hidden-overlay ยังขึ้น, 3 Login ขึ้นครบ/ครั้งที่ 4 ไม่ขึ้น, ติ๊ก opt-out แล้ว Login ถัดไปไม่ขึ้น
 - **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
 - อัปเกรด `tools/shrink_matching.py` ให้เจนค่าเบาเป็นค่าเริ่ม และเพิ่ม `test_matching_web_assets.py` กันไฟล์หาย/เสียสัดส่วน/หนักกลับ; ไฟล์ใหญ่สุด 189.1KB
 - asset decode/budget, Picture Dictionary, picmatch cooldown, Browser 768×1152 no-console-error และ production build 8,336 ไฟล์ 459.7MiB + PWA/cache/TWA validator ผ่าน

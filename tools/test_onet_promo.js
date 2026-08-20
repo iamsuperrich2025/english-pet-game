@@ -12,7 +12,11 @@ assert(html.includes('css/onetpromo.css') && html.includes('js/onetpromo.js'), '
 assert(js.includes('onet-promo-close') && js.includes('ไว้ทีหลัง'), 'explicit close controls missing');
 assert(js.includes("window.openOnetBoard()"), 'O-NET CTA is not wired');
 assert(read('js/examstd.js').includes('window.openOnetBoard = openOnetBoard;'), 'O-NET board opener is not exported');
-assert(js.includes('sessionStorage.setItem') && js.includes('vwOnetPromoClosed:'), 'session close guard missing');
+assert(js.includes("storeSet(sessionStorage,sessionKey(),'1')") && js.includes('vwOnetPromoLoginShown:'), 'one-show-per-login guard missing');
+assert(js.includes('const MAX_SHOWS = 3') && js.includes('seenCount() < MAX_SHOWS'), 'three-login limit missing');
+assert(js.includes('onet-promo-never') && js.includes('state.onetPromoNever=true'), 'never-show-again account preference missing');
+assert(js.includes("typeof state !== 'undefined'") && !js.includes('window.state &&'), 'Classic top-level state detection is unsafe');
+assert(js.includes('getComputedStyle(el)') && js.includes('visibleBlocker()'), 'visible-only blocker check missing');
 assert(util.includes("if(typeof onetPromoMaybeShow === 'function') onetPromoMaybeShow();"), 'dashboard hook missing');
 assert(auth.includes("if(typeof onetPromoReset === 'function') onetPromoReset();"), 'logout reset missing');
 assert(html.includes('css/onetpromo.css') && html.includes('js/onetpromo.js'), 'classic promo assets missing');
@@ -21,5 +25,5 @@ assert(cityHtml.includes('css/onetpromo.css') && cityHtml.includes('js/onetpromo
 assert(city.includes("onetPromoCityMaybeShow(u.uid)"), '3D authenticated-user hook missing');
 assert(js.includes("location.href = 'index_classic.html?go=onet'"), '3D CTA fallback route missing');
 assert(js.includes("promoUid ||"), 'shared uid session key missing');
-assert(css.includes('@media(max-height:430px)') && css.includes('max-height:calc(100dvh - 12px)'), 'short landscape fit rules missing');
-console.log('PASS O-NET login promo wiring, close guard, CTA, and short-screen CSS');
+assert(css.includes('@media(max-height:430px)') && css.includes('height:calc(100dvh - 10px)') && css.includes('overflow:hidden'), 'large short-landscape fit rules missing');
+console.log('PASS O-NET promo Classic state hook, 3-login cap, opt-out, CTA, and large short-screen CSS');
