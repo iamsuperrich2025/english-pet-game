@@ -1,12 +1,14 @@
 /* 🇹🇭 รอบ 1186: ป้าย O-NET เกือบเต็มจอ · สูงสุด 3 login/บัญชี · เลือกไม่แสดงอีกได้ */
 (function(){
   const MAX_SHOWS = 3;
-  const KEY_VER = 'v3';
+  const KEY_VER = 'v4';             // รอบ 1187: รีเซ็ต counter ที่อาจถูกนับผิดก่อนแก้ Auth guard
   let pending = false;
   let retryTimer = 0;
   let promoUid = '';
 
-  const uid = ()=> promoUid || (window.Auth && Auth.user && Auth.user.uid) || 'player';
+  // auth.js/state.js ใช้ top-level const/let จึงเข้าถึงผ่าน identifier โดยตรง ไม่ใช่ window.*
+  const authReady = ()=> typeof Auth !== 'undefined' && Auth.booted;
+  const uid = ()=> promoUid || (typeof Auth !== 'undefined' && Auth.user && Auth.user.uid) || 'player';
   const sessionKey = ()=> `vwOnetPromoLoginShown:${KEY_VER}:${uid()}`;
   const seenKey = ()=> `vwOnetPromoSeen:${KEY_VER}:${uid()}`;
   const neverKey = ()=> `vwOnetPromoNever:${KEY_VER}:${uid()}`;
@@ -16,9 +18,9 @@
   // state.js ประกาศด้วย top-level let จึงไม่มี window.state ใน production Classic
   const classicReady = ()=> typeof state !== 'undefined' && !!state.student;
   const localSeen = ()=> Math.max(0, Number(storeGet(localStorage,seenKey())) || 0);
-  const stateSeen = ()=> classicReady() ? Math.max(0, Number(state.onetPromoSeen) || 0) : 0;
+  const stateSeen = ()=> classicReady() ? Math.max(0, Number(state.onetPromoSeenV4) || 0) : 0;
   const seenCount = ()=> Math.max(localSeen(),stateSeen());
-  const neverAgain = ()=> storeGet(localStorage,neverKey()) === '1' || (classicReady() && state.onetPromoNever === true);
+  const neverAgain = ()=> storeGet(localStorage,neverKey()) === '1' || (classicReady() && state.onetPromoNeverV4 === true);
   const shownThisLogin = ()=> storeGet(sessionStorage,sessionKey()) === '1';
 
   function saveClassicPrefs(){
@@ -30,9 +32,9 @@
     if(!classicReady()) return;
     let changed = false;
     const n = localSeen();
-    if(n > stateSeen()){state.onetPromoSeen=n;changed=true;}
-    if(storeGet(localStorage,neverKey()) === '1' && state.onetPromoNever !== true){state.onetPromoNever=true;changed=true;}
-    if(state.onetPromoNever === true) storeSet(localStorage,neverKey(),'1');
+    if(n > stateSeen()){state.onetPromoSeenV4=n;changed=true;}
+    if(storeGet(localStorage,neverKey()) === '1' && state.onetPromoNeverV4 !== true){state.onetPromoNeverV4=true;changed=true;}
+    if(state.onetPromoNeverV4 === true) storeSet(localStorage,neverKey(),'1');
     if(stateSeen() > n) storeSet(localStorage,seenKey(),String(stateSeen()));
     if(changed) saveClassicPrefs();
   }
@@ -45,7 +47,7 @@
     storeSet(sessionStorage,sessionKey(),'1');
     storeSet(localStorage,seenKey(),String(n));
     if(classicReady()){
-      state.onetPromoSeen=n;
+      state.onetPromoSeenV4=n;
       saveClassicPrefs();
     }
     return n;
@@ -53,7 +55,7 @@
   function rememberNever(){
     storeSet(localStorage,neverKey(),'1');
     if(classicReady()){
-      state.onetPromoNever=true;
+      state.onetPromoNeverV4=true;
       saveClassicPrefs();
     }
   }
@@ -117,7 +119,7 @@
   }
   function maybeShow(){
     if(pending || document.getElementById('onet-promo-overlay')) return;
-    if(!window.Auth || !Auth.booted || !classicReady() || !allowed()) return;
+    if(!authReady() || !classicReady() || !allowed()) return;
     pending = true;
     clearTimeout(retryTimer);
     const attempt = ()=>{

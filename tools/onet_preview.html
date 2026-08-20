@@ -3,6 +3,7 @@
 <body><button id="btn-rail-examstd" hidden></button><button id="btn-rail-onet" hidden></button>
 <script>
 let state={quizPassed:[],quizLog:[],certs:[],student:{name:'Tester',grade:'ม.6'},vocabBook:{}}; // เหมือน production state.js: top-level let ไม่มี window.state
+const Auth={booted:true,user:{uid:'preview'}}; // เหมือน production auth.js: top-level const ไม่มี window.Auth
 window.escapeHTML=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 window.fmtNum=n=>Number(n).toLocaleString('th-TH'); window.toast=()=>{}; window.saveState=()=>{};
 window.addCoins=()=>{}; window.addRP=()=>{}; window.addCraft=()=>null; window.closePanel=()=>{};
@@ -10,5 +11,5 @@ window.alertBox=()=>{}; window.sfx={click(){},correct(){},wrong(){},levelup(){}}
 </script>
 <script src="js/data/exam/manifest.js"></script><script src="js/examstd.js"></script><script src="js/onetpromo.js"></script>
 <script>addEventListener('load',()=>{const p=new URLSearchParams(location.search),v=p.get('view')||'board';
-if(v==='promo')onetPromoPreview();else if(v==='classic'){window.Auth={booted:true,user:{uid:p.get('uid')||('classic-test-'+Date.now())}};const d=document.createElement('div');d.id='screen-dashboard';d.className='active';document.body.appendChild(d);const hidden=document.createElement('div');hidden.className='pl-overlay';hidden.style.display='none';document.body.appendChild(hidden);onetPromoMaybeShow();}else if(v==='city'){window.openOnetBoard=undefined;const uid=p.get('uid')||('mobile-test-'+Date.now());if(p.get('reset')){onetPromoCityMaybeShow(uid);onetPromoReset();}onetPromoCityMaybeShow(uid);}else if(v==='picker')openExamStdPicker('onetm6');else if(v==='exam')examStdStart('onetm6_1','practice');else openOnetBoard();});</script>
+if(v==='promo')onetPromoPreview();else if(v==='classic'){Auth.user={uid:p.get('uid')||('classic-test-'+Date.now())};const d=document.createElement('div');d.id='screen-dashboard';d.className='active';document.body.appendChild(d);const hidden=document.createElement('div');hidden.className='pl-overlay';hidden.style.display='none';document.body.appendChild(hidden);onetPromoMaybeShow();}else if(v==='city'){window.openOnetBoard=undefined;const uid=p.get('uid')||('mobile-test-'+Date.now());if(p.get('reset')){onetPromoCityMaybeShow(uid);onetPromoReset();}onetPromoCityMaybeShow(uid);}else if(v==='picker')openExamStdPicker('onetm6');else if(v==='exam')examStdStart('onetm6_1','practice');else openOnetBoard();});</script>
 </body></html>
