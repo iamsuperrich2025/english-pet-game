@@ -9082,9 +9082,16 @@ function renderCollectMine(){
     listUI = `<div class="mkt-listhead">🏷️ กำลังลงขายอยู่ (${state.listings.length} ชิ้น)</div>` +
       state.listings.map((l,i)=>{
         const c = collectInfo(l.id), img = collectImg(l.id);
-        const st = l.netKey
-          ? {t:'🌏 แขวนอยู่ในตลาดเพื่อนออนไลน์ — เพื่อนซื้อเมื่อไหร่เงินเข้าทันที', c:'#1f6fbf'}
-          : listingStatus(l.price / c.price);
+        const netState = l.netKey && typeof Online !== 'undefined' && Online.marketListingStatus
+          ? Online.marketListingStatus[l.netKey] : '';
+        const st = !l.netKey ? listingStatus(l.price / c.price)
+          : netState === 'online'
+            ? {t:'🌏 แขวนอยู่ในตลาดเพื่อนออนไลน์ — เพื่อนซื้อเมื่อไหร่เงินเข้าทันที', c:'#1f6fbf'}
+            : netState === 'sold'
+              ? {t:'⏳ ขายสำเร็จแล้ว — กำลังนำเงินเข้ากระเป๋า', c:'#8a6d1a'}
+              : (typeof Online !== 'undefined' && Online.marketOk)
+                ? {t:'⏳ กำลังตรวจสอบสถานะการขาย…', c:'#8a6d1a'}
+                : {t:'📡 ยังตรวจสอบสถานะตลาดไม่ได้', c:'#8a6d1a'};
         return `<div class="mkt-listing">
           <span class="mkt-emoji">${img?`<img src="${img}" alt="">`:c.emoji}</span>
           <div class="mkt-info"><b>${c.name}</b> · ตั้งขาย 🪙${fmtNum(l.price)}<br>
@@ -9136,7 +9143,10 @@ function openListDialog(id){
     // 🏪 item 2: พยายามแขวนขึ้นตลาดออนไลน์จริงก่อน — ไม่ได้ (ออฟไลน์/rules ยังไม่เปิด) fallback ตลาดจำลองเดิม
     const fin = (netKey)=>{
       const l = {id, price, listedAt: Date.now()};
-      if(netKey) l.netKey = netKey;
+      if(netKey){
+        l.netKey = netKey;
+        if(typeof Online !== 'undefined' && Online.marketListingStatus) Online.marketListingStatus[netKey] = 'online';
+      }
       state.listings.push(l);
       sfx.buy();
       toast(netKey ? `🌏 ลงขาย${c.name} 🪙${fmtNum(price)} ในตลาดเพื่อนออนไลน์แล้ว!`
@@ -9157,6 +9167,7 @@ function cancelListing(i){
   const finish = ()=>{
     state.listings.splice(i, 1);
     state.collection.push(l.id);
+    if(l.netKey && typeof Online !== 'undefined' && Online.marketListingStatus) delete Online.marketListingStatus[l.netKey];
     sfx.select();
     toast(`เก็บ${c ? c.name : 'สินค้า'}กลับเข้าคลังแล้ว`);
     saveState();

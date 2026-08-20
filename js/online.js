@@ -41,6 +41,7 @@ const Online = {
   /* ---- ตลาดออนไลน์จริง (item 2) ---- */
   market:[],        // ประกาศขายทั้งเซิร์ฟเวอร์ (รวมของเรา): [{key,sid,sn,id,p,ts}]
   marketOk:false,   // true = อ่าน /market ได้ (rules โซน market publish แล้ว) → เปิดตลาดจริง
+  marketListingStatus:{}, // netKey ของเรา → 'checking'|'online'|'sold' (ห้ามเดาจากการมี key อย่างเดียว)
   /* ---- Follow + Feed กิจกรรม (รอบ 155) ---- */
   feed:[],          // feed รวมของคนที่เรา follow เรียงใหม่→เก่า: [{uid,n,g,c,tx,ts}]
   feedBy:{},        // uid → โพสต์ล่าสุดของคนนั้น (จาก watcher)
@@ -719,6 +720,61 @@ function sellInc(id){
     .transaction(cur => (typeof cur === 'number' ? cur : 0) + 1)
     .catch(()=>{});
 }
+const marketListingChecks = Object.create(null);
+
+/* 🏪 รอบ 1176: รายการ local มี netKey ไม่ได้แปลว่ายังอยู่ในตลาดจริงเสมอ
+   ถ้าไม่พบทั้งประกาศและใบเสร็จหลังรอตัด race การซื้อ ให้คืนของ+ล้างรายการค้างอัตโนมัติ */
+function marketResolveMissingListing(key){
+  const me = (typeof onlineKey === 'function') ? String(onlineKey()) : '';
+  if(!key || !me || !Online.db) return Promise.resolve('unavailable');
+  return Promise.all([
+    Online.db.ref('market/' + key).once('value'),
+    Online.db.ref('msold/' + me + '/' + key).once('value'),
+  ]).then(([marketSnap, receiptSnap])=>{
+    if(marketSnap.exists()){
+      Online.marketListingStatus[key] = 'online';
+      if(typeof renderMarketCard === 'function') renderMarketCard();
+      return 'online';
+    }
+    if(receiptSnap.exists()){
+      Online.marketListingStatus[key] = 'sold';       // marketSoldWatch จะจ่ายเงินและลบรายการ
+      if(typeof renderMarketCard === 'function') renderMarketCard();
+      return 'sold';
+    }
+    const i = (state.listings || []).findIndex(l=>String(l.netKey || '') === key);
+    if(i < 0) return 'gone';                           // watcher/cancel จัดการไปแล้ว — ห้ามคืนซ้ำ
+    const failed = state.listings.splice(i, 1)[0];
+    state.collection.push(failed.id);
+    delete Online.marketListingStatus[key];
+    saveState();
+    if(typeof sfx !== 'undefined' && sfx.wrong) sfx.wrong();
+    if(typeof toast === 'function') toast('⚠️ การลงขายสินค้านี้ไม่สำเร็จ');
+    if(typeof renderMarketCard === 'function') renderMarketCard();
+    return 'restored';
+  }).catch(()=>{
+    delete Online.marketListingStatus[key];            // อ่านยืนยันไม่ได้ = ไม่แตะสินค้า
+    return 'error';
+  }).finally(()=>{ delete marketListingChecks[key]; });
+}
+
+function marketVerifyOwnListings(){
+  if(!Online.db || !Online.marketOk || !state || !Array.isArray(state.listings)) return;
+  const live = Object.create(null);
+  (Online.market || []).forEach(m=>{ live[String(m.key)] = true; });
+  state.listings.forEach(l=>{
+    const key = String(l.netKey || '');
+    if(!key) return;
+    if(live[key]){
+      Online.marketListingStatus[key] = 'online';
+      return;
+    }
+    if(marketListingChecks[key]) return;
+    marketListingChecks[key] = true;
+    Online.marketListingStatus[key] = 'checking';
+    // เว้นช่วงให้ผู้ซื้อเขียนใบเสร็จหลัง transaction ลบประกาศเสร็จก่อน จึงตรวจซ้ำจาก path จริง
+    setTimeout(()=>marketResolveMissingListing(key), 3500);
+  });
+}
 function marketWatch(){
   if(!Online.db) return;
   Online.db.ref('market').limitToLast(120).on('value', (snap)=>{
@@ -732,6 +788,7 @@ function marketWatch(){
     out.sort((a,b)=>b.ts - a.ts);
     Online.market = out;
     Online.marketOk = true;
+    marketVerifyOwnListings();
     // 💖 รอบ 126: ประกาศใหม่ (ไม่ใช่ของเรา) ตรงกับของที่เล็งไว้ → แจ้งเตือน (เด้งตัวแรกพอ กันรัว)
     const me = (typeof onlineKey === 'function') ? onlineKey() : '';
     let alerted = false;
@@ -834,6 +891,8 @@ function marketSoldWatch(){
     Online.db.ref('market/' + key).once('value').then(ms=>{
       if(ms.exists()) return;                          // ของยังแขวนอยู่ = ใบเสร็จปลอม ไม่จ่าย
       const l = state.listings.splice(i, 1)[0];
+      delete Online.marketListingStatus[key];
+      delete marketListingChecks[key];
       addCoins(l.price);
       state.tradeSold.push({id: l.id, price: l.price, ts: Date.now(), buyer: v.bn || 'เพื่อน'});
       if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
