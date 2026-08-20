@@ -9152,6 +9152,7 @@ function openListDialog(id){
       toast(netKey ? `🌏 ลงขาย${c.name} 🪙${fmtNum(price)} ในตลาดเพื่อนออนไลน์แล้ว!`
                    : `🏷️ ลงขาย${c.name} 🪙${fmtNum(price)} แล้ว! รอลูกค้ามาซื้อได้เลย`);
       saveState();
+      if(netKey && typeof authPushSave === 'function') authPushSave(true); // ให้เซิร์ฟเวอร์เห็นหลักฐานเจ้าของทันที
       renderDashboard();
     };
     if(typeof marketList === 'function') marketList(id, price).then(fin);
@@ -9182,7 +9183,7 @@ function cancelListing(i){
   });
 }
 
-/* 🏪 item 2: ซื้อของจากตลาดเพื่อนออนไลน์ (transaction คนแรกได้ · จ่ายเหรียญ + ของเข้าคลัง) */
+/* 🏪 รอบ 1178: เซิร์ฟเวอร์บันทึก ledger + หัก/จ่าย/ส่งของก่อน แล้ว local ทำตาม tx เดียวกัน */
 let mktBuying = false;                       // กันกดรัว/ซื้อซ้อนระหว่างรอ DB
 function buyMarketItem(key){
   if(mktBuying) return Promise.resolve({ok:false, reason:'busy'});
@@ -9214,7 +9215,8 @@ function buyMarketItem(key){
       sfx.wrong();
       if(out && out.reason === 'invalid') toast('ของในตลาดเปลี่ยนไปก่อนซื้อ เห็นไม่ทันหนู — ลองปิดแล้วเปิดใหม่อีกครั้งนะ');
       else if(out && out.reason === 'sold_out') toast('😅 ช้าไปนิดเดียว — มีคนซื้อตัดหน้าไปแล้ว');
-      else if(out && out.reason === 'db_error') toast('😵 มีปัญหาเน็ตชั่วคราว — ลองใหม่อีกครั้งนะ');
+      else if(out && (out.reason === 'db_error' || out.reason === 'save_error' || out.reason === 'processing')) toast('😵 ระบบกำลังยืนยันรายการอย่างปลอดภัย — กรุณาลองใหม่อีกครั้งนะ');
+      else if(out && out.reason === 'seller_not_ready') toast('⚠️ การขายสินค้านี้ไม่สำเร็จ กรุณาให้ผู้ขายลงขายใหม่');
       else toast('⚠️ ไม่สามารถซื้อได้ตอนนี้ ลองใหม่อีกครั้งได้เลย');
       renderMarketCard();
       return {ok:false, reason:(out && out.reason) || 'failed'};
@@ -9222,12 +9224,16 @@ function buyMarketItem(key){
     const b = out.item || item;
     const finalPrice = Number(b.p);
     if(!b || !b.id || !Number.isFinite(finalPrice) || finalPrice <= 0) return {ok:false, reason:'invalid_item'};
-    state.coins = Math.max(0, Number(state.coins) - finalPrice);
-    state.collection.push(b.id);
-    // 💖 ได้ของที่เล็งไว้แล้ว → ถอนออกจากลิสต์อัตโนมัติ (รอบ 126)
-    const wi = (state.wishlist || []).indexOf(item.id);
-    if(wi >= 0) state.wishlist.splice(wi, 1);
-    saveState();
+    if(!marketTxHasRole(out.tx, 'buyer')){
+      state.coins = Math.max(0, Number(state.coins) - finalPrice);
+      state.collection.push(b.id);
+      // 💖 ได้ของที่เล็งไว้แล้ว → ถอนออกจากลิสต์อัตโนมัติ (รอบ 126)
+      const wi = (state.wishlist || []).indexOf(item.id);
+      if(wi >= 0) state.wishlist.splice(wi, 1);
+      marketRememberTx(out.tx, 'buyer', {id:b.id, p:finalPrice, key:b.key || key});
+      saveState();
+      if(typeof authPushSave === 'function') authPushSave(true);
+    }
     if(typeof feedEvent === 'function') feedEvent('goods', `ซื้อ ${c.emoji} ${c.name} จากตลาดเพื่อน 🏪`);
     showCollectReveal(b.id, finalPrice);
     sfx.buy();

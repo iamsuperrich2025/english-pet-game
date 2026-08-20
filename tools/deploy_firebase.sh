@@ -27,6 +27,15 @@ git archive HEAD | tar -x -C "$STAGE/source"
 #    เข้ามาอยู่ราก repo · ลบทิ้งตรงนี้ + กันซ้ำอีกชั้นด้วย "ignore" ใน firebase.json ข้างล่าง
 find "$STAGE/source" -type f \( -iname '*.exe' -o -iname '*.com' -o -iname '*.dll' \) -delete
 
+# 🧾 รอบ 1178: ถ้า commit ล่าสุดแตะ Cloud Functions ให้ deploy backend ก่อนหน้าเว็บ
+# เพื่อไม่ให้ client รุ่นใหม่เรียกฟังก์ชันที่ยังไม่ขึ้นจริง (commit ปกติไม่แตะ functions = ไม่เสียเวลาส่วนนี้)
+if git diff-tree --no-commit-id --name-only -r HEAD | grep -q '^functions/'; then
+  echo "☁️ deploy Cloud Functions สำหรับตลาดแบบ server-authoritative..."
+  cd "$STAGE/source"
+  # --force = ยืนยัน retry policy; function ใช้ tx marker + lease จึงทำซ้ำได้อย่างปลอดภัย
+  "$FB" deploy --only functions --project "$PROJECT" --force
+fi
+
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง
 #    (ตรวจสำเนา staged = git HEAD ไม่ใช่ working tree → ตรงกับของที่ผู้เล่นจะได้เป๊ะ)
 #    เจอ = exit 2 → set -e หยุด deploy ทันที · บั๊กแบบ petPatFx (รอบ 320) แตะแล้วเงียบ จะไม่หลุดขึ้นเว็บอีก

@@ -19,6 +19,7 @@ const Online = {
   ready:false,      // ต่อ Firebase สำเร็จและกำลังเชื่อมต่ออยู่
   started:false,    // onlineStart รันแล้ว (กันรันซ้ำ — เรียกได้จาก authEnterGame/authLateSync)
   db:null,
+  functions:null,   // รอบ 1178: ซื้อขายผ่าน Cloud Function ที่เป็นผู้ตัดสินรายการเดียว
   friends:[],       // ผู้เล่นจริงคนอื่นที่ออนไลน์: [{id,n,g,act,at}]
   board:[],         // Leaderboard Top 100 (เรียงมาก→น้อยแล้ว): [{id,n,g,coins}]
   bbBoard:[],       // 🫧 กระดานเกมฟองเฉพาะ (ดึงด้วย field bb จึงไม่ตกหล่นเพราะเหรียญรวมน้อย)
@@ -721,6 +722,27 @@ function sellInc(id){
     .catch(()=>{});
 }
 const marketListingChecks = Object.create(null);
+const marketPurchaseRequests = Object.create(null);
+
+function marketRequestId(){
+  const bytes = new Uint8Array(18);
+  if(window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+  else for(let i=0;i<bytes.length;i++) bytes[i] = Math.floor(Math.random()*256);
+  return Array.from(bytes, b=>b.toString(16).padStart(2,'0')).join('');
+}
+function marketRememberTx(tx, role, item){
+  if(!tx) return;
+  if(!state.marketTx || typeof state.marketTx !== 'object' || Array.isArray(state.marketTx)) state.marketTx = {};
+  state.marketTx[tx] = {r:role, at:Date.now(), id:item.id, p:Number(item.p || item.price) || 0, key:item.key || item.netKey || ''};
+  const rows = Object.entries(state.marketTx);
+  if(rows.length > 120){
+    rows.sort((a,b)=>Number(b[1] && b[1].at || 0) - Number(a[1] && a[1].at || 0));
+    state.marketTx = Object.fromEntries(rows.slice(0,120));
+  }
+}
+function marketTxHasRole(tx, role){
+  return !!(tx && state.marketTx && state.marketTx[tx] && state.marketTx[tx].r === role);
+}
 
 /* 🏪 รอบ 1176: รายการ local มี netKey ไม่ได้แปลว่ายังอยู่ในตลาดจริงเสมอ
    ถ้าไม่พบทั้งประกาศและใบเสร็จหลังรอตัด race การซื้อ ให้คืนของ+ล้างรายการค้างอัตโนมัติ */
@@ -732,7 +754,8 @@ function marketResolveMissingListing(key){
     Online.db.ref('msold/' + me + '/' + key).once('value'),
   ]).then(([marketSnap, receiptSnap])=>{
     if(marketSnap.exists()){
-      Online.marketListingStatus[key] = 'online';
+      const marketValue = marketSnap.val() || {};
+      Online.marketListingStatus[key] = marketValue.st === 'processing' ? 'sold' : 'online';
       if(typeof renderMarketCard === 'function') renderMarketCard();
       return 'online';
     }
@@ -782,6 +805,7 @@ function marketWatch(){
     snap.forEach(ch=>{
       const v = ch.val();
       if(!v || typeof v.p !== 'number' || v.p <= 0 || !v.sid) return;
+      if(v.st === 'processing') return;                 // ถูกล็อกซื้อแล้ว: ไม่ให้ผู้ซื้อคนอื่นเห็นซ้ำ
       if(typeof collectInfo !== 'function' || !collectInfo(v.id)) return;
       out.push({key: ch.key, sid: v.sid, sn: v.sn || 'เพื่อน', id: v.id, p: v.p, ts: v.ts || 0});
     });
@@ -824,10 +848,9 @@ function marketUnlist(key){
     .then(r=>r.committed ? 'removed' : 'gone')
     .catch(()=>'error');
 }
-/* ซื้อของเพื่อน: ลบ node ด้วย transaction (คนแรกได้ คนช้าเจอ false) แล้วเขียนใบเสร็จให้คนขาย
-   (cache อุ่นเสมอเพราะ marketWatch เปิด on('value') ค้างไว้ — transaction ไม่เจอ null หลอก) */
+/* รอบ 1178: ซื้อผ่านเซิร์ฟเวอร์เท่านั้น — เซิร์ฟเวอร์เก็บ ledger ก่อน แล้วจึงหักเงิน/ส่งของ/จ่ายผู้ขาย */
 function marketBuy(item){
-  if(!Online.ready || !Online.db) return Promise.resolve({ok:false, reason:'db_off'});
+  if(!Online.ready || !Online.db || !Online.functions) return Promise.resolve({ok:false, reason:'db_off'});
   if(!item || !item.key) return Promise.resolve({ok:false, reason:'invalid'});
   const expected = {
     key: String(item.key),
@@ -838,49 +861,19 @@ function marketBuy(item){
   };
   if(!expected.id || !expected.sid || !(expected.p > 0)) return Promise.resolve({ok:false, reason:'invalid'});
 
-  let purchased = null;
-  return Online.db.ref('market/' + expected.key)
-    .transaction(cur=>{
-      purchased = null;
-      if(!cur || typeof cur !== 'object') return;
-      if(String(cur.sid) !== expected.sid) return;
-      if(String(cur.id) !== expected.id) return;
-      const p = Number(cur.p);
-      if(p !== expected.p || !(p > 0)) return;
-      if(String(cur.sid) === (typeof onlineKey === 'function' ? String(onlineKey()) : '')) return;
-      // Firebase คืน snapshot หลัง transaction; เมื่อลบด้วย null ค่าใน snapshot จึงเป็น null
-      // เก็บสำเนารายการที่ตรวจครบแล้วไว้ก่อนลบ เพื่อนำไปออกใบเสร็จและส่งของให้ผู้ซื้อ
-      purchased = {
-        sid: String(cur.sid),
-        id: String(cur.id),
-        p,
-        sn: String(cur.sn || expected.sn),
-      };
-      return null;
-    })
-    .then(r=>{
-      if(!r || !r.committed) return {ok:false, reason:'sold_out'};
-      const d = purchased;
-      if(!d || typeof d !== 'object') return {ok:false, reason:'invalid'};
-
-      const sid = String(d.sid || expected.sid);
-      const id = String(d.id || expected.id);
-      const p = Number(d.p || 0);
-      if(!sid || !id || !(p > 0)) return {ok:false, reason:'invalid'};
-
-      return Online.db.ref('msold/' + sid + '/' + expected.key)
-        .set({
-          id,
-          p,
-          bn: onlineDisplayName() || 'เพื่อน',
-          ts: firebase.database.ServerValue.TIMESTAMP,
-        })
-        .then(()=>({ok:true, item:{key:expected.key, sid, id, p, sn: d.sn || expected.sn}}))
-        .catch(()=>({ok:true, item:{key:expected.key, sid, id, p, sn: d.sn || expected.sn}, warning:'receipt_error'}));
-    })
-    .catch(()=>({ok:false, reason:'db_error'}));
+  const requestId = marketPurchaseRequests[expected.key] || (marketPurchaseRequests[expected.key] = marketRequestId());
+  const sync = typeof authPushSaveAwait === 'function' ? authPushSaveAwait(true) : Promise.resolve(false);
+  return sync.then(ok=>{
+    if(!ok) return {ok:false, reason:'save_error'};
+    const call = Online.functions.httpsCallable('marketBuySecure');
+    return call({listingKey:expected.key, requestId}).then(response=>{
+      const out = response && response.data ? response.data : {ok:false, reason:'invalid'};
+      if(out.ok || (out.reason && out.reason !== 'processing')) delete marketPurchaseRequests[expected.key];
+      return out;
+    });
+  }).catch(()=>({ok:false, reason:'db_error'}));
 }
-/* ฝั่งคนขาย: เฝ้าใบเสร็จ — จับคู่ประกาศของเรา (netKey) + เช็กว่าของหลุดจากตลาดแล้วจริง (กันใบเสร็จปลอม) */
+/* ฝั่งคนขาย: ใบเสร็จเป็นสัญญาณรีเฟรช local; เซิร์ฟเวอร์จ่ายเงินจริงและบันทึก marker ไปแล้ว */
 function marketSoldWatch(){
   if(!Online.db) return;
   Online.db.ref('msold/' + onlineKey()).on('child_added', (snap)=>{
@@ -893,10 +886,15 @@ function marketSoldWatch(){
       const l = state.listings.splice(i, 1)[0];
       delete Online.marketListingStatus[key];
       delete marketListingChecks[key];
-      addCoins(l.price);
-      state.tradeSold.push({id: l.id, price: l.price, ts: Date.now(), buyer: v.bn || 'เพื่อน'});
-      if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
+      const alreadyApplied = marketTxHasRole(v.tx, 'seller');
+      if(!alreadyApplied){
+        addCoins(l.price);
+        state.tradeSold.push({id: l.id, price: l.price, ts: Date.now(), buyer: v.bn || 'เพื่อน', tx:v.tx || ''});
+        if(state.tradeSold.length > 20) state.tradeSold = state.tradeSold.slice(-20);
+        marketRememberTx(v.tx, 'seller', {id:l.id, p:l.price, key});
+      }
       saveState();
+      if(typeof authPushSave === 'function') authPushSave(true);
       if(typeof sfx !== 'undefined' && sfx.buy) sfx.buy();
       if(typeof toast === 'function') toast(`🏪 ${v.bn || 'เพื่อน'} ซื้อของที่หนูลงขาย! +🪙${fmtNum(l.price)} เข้ากระเป๋าแล้ว`);
       if(typeof renderMarketCard === 'function') renderMarketCard();
@@ -2000,6 +1998,7 @@ function onlineStart(){
   if(Online.started) return;   // รอบ 267: กันรันซ้ำ (เรียกได้ทั้งจาก authEnterGame และ authLateSync หลังเล่นออฟไลน์)
   Online.started = true;
   Online.db = firebase.database();
+  Online.functions = typeof firebase.functions === 'function' ? firebase.app().functions('asia-southeast1') : null;
   const id = onlineKey();
   const presRef = Online.db.ref('presence/' + id);
 
@@ -2150,6 +2149,7 @@ function onlineLoadSDK(){
   load('firebase-app-compat.js')
     .then(()=>load('firebase-auth-compat.js'))
     .then(()=>load('firebase-database-compat.js'))
+    .then(()=>load('firebase-functions-compat.js').catch(()=>{})) // SDK ตลาดขัดข้องไม่ทำให้ login/เพื่อนออนไลน์พังตาม
     .then(()=>authStart())
     .catch(()=>{
       __sdkLoading = false;                        // เปิดทางลองใหม่รอบหน้า

@@ -495,14 +495,15 @@ function authEnterGame(){
 }
 
 /* ---------- push เซฟทั้งก้อนขึ้น cloud (เฉพาะตอนเซฟขยับ / force) ---------- */
-function authPushSave(force){
-  if(!Auth.user) return;
-  if(!state.student) return;                       // ยังไม่ลงทะเบียน — ไม่มีอะไรให้เซฟ
-  if(!force && state.savedAt === Auth.lastPushedAt) return;
+function authPushSaveAwait(force){
+  if(!Auth.user || !state.student) return Promise.resolve(false);
+  if(!force && state.savedAt === Auth.lastPushedAt) return Promise.resolve(true);
   const at = state.savedAt || Date.now();
-  authWriteCloud(Auth.user.uid, {data: JSON.stringify(state), at})
-    .then(()=>{ Auth.lastPushedAt = at; })
-    .catch(()=>{});                                // เน็ตสะดุด → รอบหน้าลองใหม่เอง
+  return authWriteCloud(Auth.user.uid, {data: JSON.stringify(state), at})
+    .then(()=>{ Auth.lastPushedAt = at; return true; });
+}
+function authPushSave(force){
+  authPushSaveAwait(force).catch(()=>{});           // เน็ตสะดุด → รอบหน้าลองใหม่เอง
 }
 
 /* ---------- ออกจากระบบ: push เซฟรอบสุดท้าย → signOut → ล้าง cache → reload ---------- */

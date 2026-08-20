@@ -4,57 +4,55 @@ const fs = require('fs');
 const vm = require('vm');
 
 const source = fs.readFileSync('js/online.js', 'utf8');
-const match = source.match(/function marketBuy\(item\)\{[\s\S]*?\n\}\n\/\* ฝั่งคนขาย:/);
-assert.ok(match, 'marketBuy function not found');
-const marketBuySource = match[0].replace(/\n\/\* ฝั่งคนขาย:[\s\S]*$/, '');
+const helpers = source.match(/const marketPurchaseRequests[\s\S]*?function marketResolveMissingListing/);
+const buy = source.match(/function marketBuy\(item\)\{[\s\S]*?\n\}\n\/\* ฝั่งคนขาย:/);
+assert.ok(helpers && buy, 'secure market client functions not found');
+const helperSource = helpers[0].replace(/function marketResolveMissingListing[\s\S]*$/, '');
+const buySource = buy[0].replace(/\n\/\* ฝั่งคนขาย:[\s\S]*$/, '');
 
-function makeContext(listing){
-  const writes = [];
+(async()=>{
+  const calls = [];
+  let syncCount = 0;
   const ctx = {
     Online: {
-      ready: true,
-      db: {
-        ref(path){
-          if(path.startsWith('market/')){
-            return {
-              transaction(update){
-                const next = update({...listing});
-                assert.strictEqual(next, null, 'validated listing must be deleted');
-                // Firebase returns the post-transaction snapshot, which is null after deletion.
-                return Promise.resolve({committed:true, snapshot:{val:()=>null}});
-              },
-            };
-          }
-          return {
-            set(value){ writes.push({path, value}); return Promise.resolve(); },
+      ready:true,
+      db:{},
+      functions:{
+        httpsCallable(name){
+          assert.strictEqual(name, 'marketBuySecure');
+          return payload=>{
+            calls.push(payload);
+            if(calls.length === 1) return Promise.resolve({data:{ok:false, reason:'processing', tx:'tx-1'}});
+            return Promise.resolve({data:{ok:true, tx:'tx-1', item:{key:'listing-1', sid:'seller-1', id:'product_1', p:1000000, sn:'ผู้ขาย'}}});
           };
         },
       },
     },
-    onlineKey: ()=>'buyer-1',
-    onlineDisplayName: ()=>'ผู้ซื้อ',
-    firebase: {database:{ServerValue:{TIMESTAMP:{'.sv':'timestamp'}}}},
+    authPushSaveAwait:()=>{ syncCount++; return Promise.resolve(true); },
+    window:{crypto:{getRandomValues(bytes){ for(let i=0;i<bytes.length;i++) bytes[i]=i+1; }}},
+    state:{marketTx:{}},
+    Uint8Array,
+    Array,
+    Number,
+    Object,
     Promise,
+    Math,
+    Date,
   };
   vm.createContext(ctx);
-  vm.runInContext(marketBuySource, ctx);
-  return {ctx, writes};
-}
+  vm.runInContext(`${helperSource}\n${buySource}`, ctx);
+  const listing = {key:'listing-1', sid:'seller-1', sn:'ผู้ขาย', id:'product_1', p:1000000};
+  const first = await ctx.marketBuy(listing);
+  const second = await ctx.marketBuy(listing);
 
-(async()=>{
-  const listing = {sid:'seller-1', sn:'ผู้ขาย', id:'product_1', p:1000000};
-  const {ctx, writes} = makeContext(listing);
-  const out = await ctx.marketBuy({key:'listing-1', ...listing});
+  assert.strictEqual(first.reason, 'processing');
+  assert.strictEqual(second.ok, true);
+  assert.strictEqual(syncCount, 2, 'buyer save must reach cloud before each callable attempt');
+  assert.strictEqual(calls.length, 2);
+  assert.strictEqual(calls[0].listingKey, 'listing-1');
+  assert.strictEqual(calls[0].requestId, calls[1].requestId, 'retry must reuse the same idempotency key');
+  assert.ok(!/\.transaction\(/.test(buySource), 'client must not delete market listings directly');
+  assert.ok(!/msold\//.test(buySource), 'client must not create seller receipts directly');
 
-  assert.strictEqual(out.ok, true, 'buyer must receive a successful result after deletion');
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(out.item)), {
-    key:'listing-1', sid:'seller-1', id:'product_1', p:1000000, sn:'ผู้ขาย',
-  });
-  assert.strictEqual(writes.length, 1, 'seller receipt must be written once');
-  assert.strictEqual(writes[0].path, 'msold/seller-1/listing-1');
-  assert.deepStrictEqual(JSON.parse(JSON.stringify(writes[0].value)), {
-    id:'product_1', p:1000000, bn:'ผู้ซื้อ', ts:{'.sv':'timestamp'},
-  });
-
-  console.log('PASS market buy transaction: captured listing survives null snapshot and creates receipt');
+  console.log('PASS secure market client: pre-syncs, calls server, and reuses retry id');
 })().catch(err=>{ console.error(err); process.exit(1); });

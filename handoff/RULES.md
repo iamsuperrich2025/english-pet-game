@@ -8,10 +8,11 @@
 > **⚠️ กติกาผู้ใช้: ส่ง rules ให้ผู้ใช้ต้องส่ง "เต็มทั้งหน้า" เสมอ ห้ามส่งเฉพาะโซน** (คัดลอกทั้งก้อนไปวางทับใน Firebase console → Realtime Database → Rules → Publish)
 > **📋 กฎถาวรเรื่องการคัดลอก (10 ส.ค. 2026):** ทุกครั้งที่ต้องให้ผู้ใช้อัปเดต Rules ต้องรัน `python tools/gen_rules_artifact.py <output.html> --round N --zone <zone>` และส่งหน้า HTML ที่มีปุ่ม **คัดลอกทั้งก้อน** เป็นทางหลัก ห้ามให้ลากเลือกจาก `.txt`/คัดลอก JSON ยาวด้วยมือ; ก่อนส่งต้องให้ `json.loads` ผ่านและยืนยันว่า payload ของปุ่ม Copy ตรงกับก้อนเต็มในไฟล์นี้ทุกตัวอักษร (แนบ `.json` เป็นสำรองได้) เพื่อป้องกัน comma/บรรทัดตกหล่น
 
-**Firebase:** โปรเจกต์ `english-pet-game` (Google account ผู้ใช้ · Spark ฟรี) · RTDB `https://english-pet-game-default-rtdb.asia-southeast1.firebasedatabase.app` · console: https://console.firebase.google.com/project/english-pet-game/database
+**Firebase:** โปรเจกต์ `english-pet-game` (Google account ผู้ใช้ · เปิด Billing สำหรับ Cloud Functions แล้ว) · RTDB `https://english-pet-game-default-rtdb.asia-southeast1.firebasedatabase.app` · console: https://console.firebase.google.com/project/english-pet-game/database
 Claude แก้ rules เองไม่ได้ — ต้องส่งให้ผู้ใช้วาง · ทดสอบ allow/deny ผ่าน REST `<dbURL>/<path>.json` ได้ (โซนที่มี auth ต้องทดสอบผ่านหน้าเกมจริง/Emulator เพราะ REST ธรรมดาไม่มี token)
 
 ## สถานะการ publish
+> ✅ **รอบ 1178 — ผู้ใช้ Publish/ตรวจสดแล้ว 20 ส.ค. 2026:** ตลาดแบบ server-authoritative เพิ่ม private `/marketLedger`; ผู้เล่นสร้างได้เฉพาะประกาศของตัวเองและถอนเฉพาะประกาศของตัวเองที่ยังไม่ถูกล็อกซื้อ ส่วน `/msold` ผู้เล่นอ่าน/ลบใบเสร็จของตัวเองได้ แต่สร้างเองไม่ได้อีกต่อไป; Firebase CLI เทียบสดตรง source ครบ 41 โซน (`differences=0`) · 833 บรรทัด/50,292 ตัวอักษร · SHA-256 `83BFC1910F9CCD1608E4F2D98C5EFB814968D380D72B2A0EA5B127710E92BEC7`
 > ✅ **Account deletion + `gnotif` syntax fix รอบ 1094 — ตรวจสดแล้ว 10 ส.ค. 2026:** 37 โซน / 475 leaf keys ตรง source ทั้งหมด (`missing=0`, `extra=0`, `changed=0`) หลังผู้ใช้ Publish ก้อนเต็มจาก artifact รอบ 1094
 > ✅ **Haunted Hotel Phase 2+3 — ผู้ใช้ยืนยันว่า Publish แล้ว 10 ส.ค. 2026:** ก้อนเต็ม 37 โซน / 755 บรรทัด มี `/hauntedHotel/<r0..r35>/run` + compact current `/scare` และ `placementVersion`; payload ที่ส่งผ่านปุ่ม Copy ตรง source ทุกตัวอักษร (45,250 ตัว · SHA-256 `22141EE741639B5C0F3C3B3AD8053964566E18255534AE3207397D86AC5DB8F8`) · **ยังไม่ได้เทียบ rules สดทั้งก้อนจาก Codex** เพราะบัญชี Firebase ใน in-app browser ไม่มีสิทธิ์และ session เกมไม่ได้ล็อกอิน จึงบันทึกหลักฐานตามคำยืนยันผู้ใช้โดยไม่อ้างว่าตรวจสดแล้ว
 > ✅ **เผยแพร่โซน `bbAward` + field/index `bb` ของเกม 🫧 ฟองแล้ว (7 ส.ค. 2026 · รอบ 1069)** — อ่านกฎสดด้วย Firebase CLI แล้วตรงกับก้อนเต็มด้านล่างทั้งไฟล์ (SHA-256 `63AEDC295B98CC0D1A7A28D375D3920871ED4DA09229E483F37EBE193A2BF085`): 36 โซน มี index/field `bb` และ `bbAward` ครบ
@@ -378,7 +379,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
     "market": {
       ".read": "auth != null",
       "$key": {
-        ".write": "auth != null && ((!data.exists() && newData.child('sid').val() === auth.uid) || (data.exists() && !newData.exists()))",
+        ".write": "auth != null && ((!data.exists() && newData.child('sid').val() === auth.uid) || (data.exists() && data.child('sid').val() === auth.uid && data.child('st').val() !== 'processing' && !newData.exists()))",
         ".validate": "newData.hasChildren(['sid','sn','id','p','ts'])",
         "sid": { ".validate": "newData.isString() && newData.val().length <= 128" },
         "sn":  { ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 40" },
@@ -392,7 +393,7 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
       "$uid": {
         ".read": "auth != null && auth.uid === $uid",
         "$key": {
-          ".write": "auth != null && ((!data.exists() && newData.exists()) || (auth.uid === $uid && !newData.exists()))",
+          ".write": "auth != null && auth.uid === $uid && data.exists() && !newData.exists()",
           ".validate": "newData.hasChildren(['id','p','bn','ts'])",
           "id": { ".validate": "newData.isString() && newData.val().length <= 40" },
           "p":  { ".validate": "newData.isNumber() && newData.val() >= 1" },
@@ -401,6 +402,10 @@ Claude แก้ rules เองไม่ได้ — ต้องส่งใ�
           "$other": { ".validate": false }
         }
       }
+    },
+    "marketLedger": {
+      ".read": false,
+      ".write": false
     },
     "feed": {
       "$uid": {

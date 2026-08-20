@@ -193,6 +193,7 @@ const DEFAULT_STATE = {
   collection:[],                      // สินค้าที่ถือครอง (array of id — มีชิ้นซ้ำได้)
   listings:[],                        // ของที่ลงขายในตลาดอยู่: {id, price, listedAt}
   tradeSold:[],                       // ของที่ลูกค้ามาซื้อไปแล้ว รอผู้เล่นกดรับทราบ: {id, price, ts}
+  marketTx:{},                        // รอบ 1178: หลักฐานรายการตลาดที่เซิร์ฟเวอร์ทำแล้ว (กันหักเงิน/ส่งของซ้ำ)
   producing:null,                     // งานผลิตในโรงงาน: {id, progress} (ตอบคำศัพท์ถูก 1 คำ = progress +1)
   producedCount:0,                    // จำนวนสินค้าที่ผลิตสำเร็จทั้งหมด (โชว์ในสถิติ)
   orders:[],                          // ออเดอร์พิเศษจากลูกค้าจำลอง: {key, id, buyer, grade, payout, expireAt}
@@ -670,6 +671,12 @@ function loadState(){
       if(!Array.isArray(s.listings)) s.listings = [];
       s.listings = s.listings.filter(l=>l && collectInfo(l.id) && typeof l.price === 'number' && typeof l.listedAt === 'number');
       if(!Array.isArray(s.tradeSold)) s.tradeSold = [];
+      if(!s.marketTx || typeof s.marketTx !== 'object' || Array.isArray(s.marketTx)) s.marketTx = {};
+      const marketTxRows = Object.entries(s.marketTx);
+      if(marketTxRows.length > 120){
+        marketTxRows.sort((a,b)=>Number(b[1] && b[1].at || 0) - Number(a[1] && a[1].at || 0));
+        s.marketTx = Object.fromEntries(marketTxRows.slice(0, 120));
+      }
       // โรงงานผลิต + ออเดอร์พิเศษ (5 ก.ค. 2026): เซฟเก่าไม่มี → เริ่มว่าง / คัดข้อมูลเสียทิ้ง
       if(!s.producing || !collectInfo(s.producing.id) || typeof s.producing.progress !== 'number' || s.producing.progress < 0) s.producing = null;
       if(typeof s.producedCount !== 'number') s.producedCount = 0;

@@ -27,7 +27,11 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (14 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (20 ส.ค.) — อ่านก่อน
+- **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
+- ใช้ request id, transaction marker ใน save ผู้ซื้อ/ผู้ขาย, settlement lease และ refund/release แบบ idempotent จึง retry/crash ได้โดยไม่หักเงิน ส่งของ หรือจ่ายซ้ำ; รายการ `processing` ถูกซ่อนจากตลาดและผู้ขายเห็นสถานะกำลังนำเงินเข้าแทนคำว่าแขวนขาย
+- Rules ก้อนเต็มรอบ 1178 เพิ่ม private `/marketLedger`, จำกัดถอนประกาศเฉพาะเจ้าของก่อนล็อก และห้าม client สร้างใบเสร็จ; ผู้ใช้ Publish แล้วและ Firebase CLI เทียบสดครบ 41 โซน (`differences=0`); COMMIT_DEPLOY จะ deploy Functions ก่อน Hosting อัตโนมัติ
+- ทดสอบ client retry-id, reconcile, server buyer/seller/refund idempotency, syntax, Rules JSON และ Functions dry-run ผ่าน; production build `.1063` 8,336 ไฟล์ 464.9 MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1177 · กู้สินค้าตลาดหายย้อนหลังตั้งแต่รหัสซื้อ 6 หลัก:** audit live 51 บัญชี พบผู้เสียหาย 12 บัญชี/29 ชิ้นจาก `netKey` ที่ไม่มีทั้ง `/market` และ `/msold`; Cloud Audit Logs ไม่ได้เปิดจึงระบุผู้ซื้อไม่ได้ และ flow เสียไม่เคยหักเงิน/ส่งของผู้ซื้อ
 - สำรอง `/users` `/market` `/msold` ก่อนแก้; คืนด้วย snapshot คู่ + ตรวจซ้ำรายบัญชี และใช้ Firebase ETag compare-and-set กับบัญชี active ป้องกันเขียนทับความคืบหน้า/คืนซ้ำ
 - ยืนยัน cloud ถาวรแล้ว 11 บัญชี/28 ชิ้น; อีก 1 บัญชี active ใช้ client เก่าเขียน listing กลับ จึงให้แพตช์รอบ 1176 ตรวจ path จริงและคืนจาก state สดทันทีหลังรับ deploy รอบนี้

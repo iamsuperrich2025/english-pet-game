@@ -9,21 +9,23 @@ const block = online.match(/const marketListingChecks = Object\.create\(null\);[
 assert.ok(block, 'market listing reconciliation block not found');
 const reconcileSource = block[0].replace(/\nfunction marketWatch\(\)\{$/, '');
 
-function snap(exists){ return {exists:()=>exists}; }
+function snap(value){ return {exists:()=>value !== null, val:()=>value}; }
 const paths = {
-  'market/live': true,
-  'msold/seller-1/live': false,
-  'market/sold': false,
-  'msold/seller-1/sold': true,
-  'market/stale': false,
-  'msold/seller-1/stale': false,
+  'market/live': {sid:'seller-1'},
+  'msold/seller-1/live': null,
+  'market/processing': {sid:'seller-1', st:'processing'},
+  'msold/seller-1/processing': null,
+  'market/sold': null,
+  'msold/seller-1/sold': {settled:true},
+  'market/stale': null,
+  'msold/seller-1/stale': null,
 };
 const messages = [];
 let saves = 0;
 let renders = 0;
 const context = {
   Online: {
-    db: {ref:path=>({once:()=>Promise.resolve(snap(!!paths[path]))})},
+    db: {ref:path=>({once:()=>Promise.resolve(snap(paths[path] === undefined ? null : paths[path]))})},
     marketOk: true,
     market: [],
     marketListingStatus: {},
@@ -53,6 +55,9 @@ vm.runInContext(reconcileSource, context);
   assert.strictEqual(await context.marketResolveMissingListing('live'), 'online');
   assert.strictEqual(context.Online.marketListingStatus.live, 'online');
 
+  assert.strictEqual(await context.marketResolveMissingListing('processing'), 'online');
+  assert.strictEqual(context.Online.marketListingStatus.processing, 'sold', 'claimed listing must show settlement state');
+
   assert.strictEqual(await context.marketResolveMissingListing('sold'), 'sold');
   assert.strictEqual(context.Online.marketListingStatus.sold, 'sold');
   assert.ok(context.state.listings.some(l=>l.netKey === 'sold'), 'receipt listing must wait for sold watcher');
@@ -62,7 +67,7 @@ vm.runInContext(reconcileSource, context);
   assert.ok(!context.state.listings.some(l=>l.netKey === 'stale'), 'stale listing must be removed');
   assert.strictEqual(messages[0], '⚠️ การลงขายสินค้านี้ไม่สำเร็จ');
   assert.strictEqual(saves, 1);
-  assert.strictEqual(renders, 3, 'live, sold, and restored states must each refresh the market UI');
+  assert.strictEqual(renders, 4, 'live, processing, sold, and restored states must each refresh the market UI');
 
   assert.strictEqual(await context.marketResolveMissingListing('stale'), 'gone');
   assert.deepStrictEqual(Array.from(context.state.collection), ['cake_stale'], 'retry must not duplicate restored item');
