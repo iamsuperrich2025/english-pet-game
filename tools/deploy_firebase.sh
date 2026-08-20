@@ -36,7 +36,19 @@ if git diff --name-only origin/main..HEAD | grep -q '^functions/'; then
   echo "📦 ติดตั้ง Functions dependencies จาก package-lock ใน staging..."
   npm ci --prefix functions --omit=dev --no-audit --no-fund
   # --force = ยืนยัน retry policy; function ใช้ tx marker + lease จึงทำซ้ำได้อย่างปลอดภัย
-  "$FB" deploy --only functions --project "$PROJECT" --force
+  # รอบ 1180: Eventarc service agent ที่เพิ่งสร้างอาจต้องรอ IAM propagate — retry เองแทนการหยุดทั้ง deploy
+  FUNCTIONS_OK=0
+  for ATTEMPT in 1 2 3; do
+    if "$FB" deploy --only functions --project "$PROJECT" --force; then
+      FUNCTIONS_OK=1
+      break
+    fi
+    if [[ "$ATTEMPT" -lt 3 ]]; then
+      echo "⏳ Functions attempt $ATTEMPT/3 ยังไม่สำเร็จ — รอสิทธิ์ Eventarc 60 วินาทีแล้วลองใหม่..."
+      sleep 60
+    fi
+  done
+  [[ "$FUNCTIONS_OK" -eq 1 ]] || { echo "❌ Cloud Functions ยัง deploy ไม่ครบหลังลอง 3 ครั้ง"; exit 1; }
 fi
 
 # 🕵️ ด่านกันบั๊กเงียบ (รอบ 323): สแกน "ฟังก์ชันที่ถูกเรียกแต่ไม่มีอยู่จริง" ในไฟล์ที่กำลังจะขึ้นเว็บจริง

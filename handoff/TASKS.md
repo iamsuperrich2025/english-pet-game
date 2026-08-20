@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (20 ส.ค.) — อ่านก่อน
+- **รอบ 1180 · retry Eventarc อัตโนมัติ:** deploy รอบ 1179 สร้าง `marketBuySecure` สำเร็จ แต่ `resumeMarketSettlement` ถูกปฏิเสธชั่วคราวระหว่าง IAM ของ Eventarc service agent กำลัง propagate; ให้ deploy Functions ลองสูงสุด 3 ครั้ง เว้น 60 วินาที และหยุด Hosting/Push หากยังไม่ครบ
 - **รอบ 1179 · แก้ deploy Functions จาก staged Git:** รอบ 1178 commit สำเร็จแต่ Firebase CLI หา `firebase-functions` ไม่พบ เพราะ `git archive` ไม่รวม `node_modules`; เพิ่ม `npm ci --prefix functions --omit=dev` จาก lockfileใน staging และตรวจ Functions จากช่วง `origin/main..HEAD` เพื่อให้ retry หลัง commit แรกได้
 - **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
 - ใช้ request id, transaction marker ใน save ผู้ซื้อ/ผู้ขาย, settlement lease และ refund/release แบบ idempotent จึง retry/crash ได้โดยไม่หักเงิน ส่งของ หรือจ่ายซ้ำ; รายการ `processing` ถูกซ่อนจากตลาดและผู้ขายเห็นสถานะกำลังนำเงินเข้าแทนคำว่าแขวนขาย
@@ -59,7 +60,6 @@
 - ลด roll/bob ของกล้องให้ขับสบายขึ้น โดยคง GPS ร้านอาหาร/แฟชั่น ฟิสิกส์ การชน ระบบความปลอดภัย และวิทยุเดิมครบ
 - นำเข้าเฉพาะ `js/petshopping3d.js` และ `css/petshopping3d.css` จาก `work/ps3-hotfix-1164`; SHA-256 ตรงต้นฉบับทั้งสองไฟล์
 - syntax + pet-shopping/integration/dress + regression hotfix ผ่าน; production build `.1052` 8,336 ไฟล์ 464.8 MiB ผ่าน
-- **รอบ 1162 · กราฟอันดับ Top 30 หน้า Lobby:** เพิ่มปุ่ม “กราฟอันดับ” ถัดจาก “สะกดคำ”; กราฟ 10 หมวดคะแนนหลักใช้สีไม่ซ้ำ สลับหมวดได้ และติดชื่อผู้เล่นทุกจุด พร้อมปุ่ม “✕ ปิด” ชัดเจน
 - โหลด snapshot `/leaderboard` เฉพาะตอนเปิดและ cache 2 นาที จึงได้ Top 30 จริงของแต่ละหมวดโดยไม่เพิ่ม listener/Firebase Rules; สอบใหญ่/ข้อสอบมาตรฐานคงดูแยกชุดในแท็บเดิม
 - แก้ `rankgraph.js/css`, `lobby3d.js`, `index_classic.html`, build allowlist + regression; syntax/tests, Browser 1280×720 และ 812×375 no-overflow/30 จุด+30 ชื่อ, production build `.1051` 8,336 ไฟล์ + PWA validator ผ่าน
 - GPS ร้านอาหาร/แฟชั่นของ Pet Shopping ยังใช้ route/nav เดิม; เพิ่มปุ่มเพลง 50px และจัดควบคุมที่ 812×375 ไม่ซ้อน/ไม่ overflow; แก้ `petshopping3d.js/css`, cache `index_classic.html`+`ui.js`, regression test
