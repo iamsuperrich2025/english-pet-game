@@ -50,7 +50,7 @@ LAZY_MANIFESTS = (
 # ไม่ใช่แค่มีใน working tree มิฉะนั้น local build ผ่าน แต่ staged deploy จาก git archive จะพัง
 REQUIRED_BUILD_ASSETS = (
     ("tools/build_web.mjs", "img/f1/cockpit_body_realistic.png"),
-    ("tools/build_web.mjs", "img/f1/peer_car_25d.png"),
+    ("tools/build_web.mjs", "img/f1/peer_car_25d.webp"),
 )
 
 PICDICT_RE = re.compile(r"""['"]([^'"/]+\.png)['"]""")

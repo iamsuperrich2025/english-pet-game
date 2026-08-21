@@ -28,7 +28,7 @@ const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
 const TOKEN_F1_COCKPIT_ASSET = /img\/f1\/cockpit_body_realistic\.png\?v=4/g;
-const TOKEN_F1_PEER_CAR_ASSET = /img\/f1\/peer_car_25d\.png/g;
+const TOKEN_F1_PEER_CAR_ASSET = /img\/f1\/peer_car_25d\.webp/g;
 const LOCAL_PREVIEW_BLOCK = /<!-- VW_LOCAL_PREVIEW_ONLY_START -->[\s\S]*?<!-- VW_LOCAL_PREVIEW_ONLY_END -->\s*/g;
 
 const posix = (value) => value.replaceAll('\\', '/');
@@ -51,11 +51,16 @@ async function sourceFiles() {
       // handles that case, so suppress Git's misleading fatal message on stderr.
       stdio: ['ignore', 'pipe', 'ignore'],
     });
-    const tracked = raw.split('\0').filter(Boolean).filter(isPublicPath);
+    const tracked = [];
+    for (const rel of raw.split('\0').filter(Boolean).filter(isPublicPath)) {
+      // Local replacement rounds can delete a tracked source before the deletion is committed.
+      // A git-archive deploy never has this mismatch; local builds should skip the absent old asset.
+      try { await fs.access(path.join(ROOT, rel)); tracked.push(rel); } catch {}
+    }
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
-      'sound/racing/engineSound.mp3', 'img/f1/cockpit_body_realistic.png', 'img/f1/peer_car_25d.png', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
+      'sound/racing/engineSound.mp3', 'img/f1/cockpit_body_realistic.png', 'img/f1/peer_car_25d.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
       'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
       'js/rankgraph.js', 'css/rankgraph.css',
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
@@ -272,7 +277,7 @@ async function main() {
      the image and lazy F1 engine immutable paths so a cached missing-image response
      or an older engine can never produce a steering-wheel-only cockpit. */
   const f1CockpitUrl = await makeImmutableAlias('img/f1/cockpit_body_realistic.png');
-  const f1PeerCarUrl = await makeImmutableAlias('img/f1/peer_car_25d.png');
+  const f1PeerCarUrl = await makeImmutableAlias('img/f1/peer_car_25d.webp');
   const f1File = path.join(OUT, 'js/f1_3d.js');
   const f1Text = await fs.readFile(f1File, 'utf8');
   await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_COCKPIT_ASSET, f1CockpitUrl).replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl));

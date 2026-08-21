@@ -1722,11 +1722,11 @@ function build(){
     g.fillStyle='#111a24';g.fillRect(-88,16,176,16);g.fillRect(-58,-5,116,15);
     g.fillStyle='#07090d';for(const x of [-65,65]){g.beginPath();g.ellipse(x,24,20,28,0,0,Math.PI*2);g.fill();}
   },256,160);
-  new THREE.TextureLoader().load('img/f1/peer_car_25d.png',t=>{
+  new THREE.TextureLoader().load('img/f1/peer_car_25d.webp',t=>{
     t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
     if('colorSpace' in t&&THREE.SRGBColorSpace) t.colorSpace=THREE.SRGBColorSpace;
     applyTex('peerCar',t);
-  },undefined,()=>console.warn('[F1] peer_car_25d.png unavailable; using procedural fallback'));
+  },undefined,()=>console.warn('[F1] peer_car_25d.webp unavailable; using procedural fallback'));
   /* texture หลัก — probe img/f1/*.jpg (ภาพผู้ใช้เจน) ก่อน · ไม่มี = canvas ที่วาดเอง */
   TexLib.asphalt=asphaltTex();
   texProbe('asphalt.jpg',TexLib.asphalt,t=>{ t.repeat.set(1,1); applyTex('asphalt',t);
@@ -2661,7 +2661,7 @@ function buildPeer(uid,p){
   const col=new THREE.Color(peerColor(uid)).getHex();
   const mat=new THREE.SpriteMaterial({map:TexLib.peerCar,transparent:true,alphaTest:.025,depthWrite:false});
   (TexUsers.peerCar||(TexUsers.peerCar=[])).push(mat);
-  const car=new THREE.Sprite(mat);car.scale.set(6.4,4.25,1);car.position.y=1.8;car.renderOrder=5;
+  const car=new THREE.Sprite(mat);car.scale.set(6.4,3.69,1);car.position.y=1.8;car.renderOrder=5;
   car.userData.view='camera-facing-rear-three-quarter';p.grp.add(car);p.grp.userData.peerCar25d=car;
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.55,18),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.24,depthWrite:false}));
   shadow.scale.set(1,1.85,1);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;p.grp.add(shadow);

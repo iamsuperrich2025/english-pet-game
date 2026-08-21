@@ -51,6 +51,11 @@ const peer=f1.slice(f1.indexOf('function buildPeer'),f1.indexOf('function onPeer
 assert.ok(peer.includes('TexLib.peerCar')&&peer.includes("view='camera-facing-rear-three-quarter'"),
   'remote racers must use the camera-facing 2.5D peer-car sprite');
 assert.ok(!/buildF1Car|makeCar\(/.test(peer),'remote racers must not build heavy 3D cars');
+assert.ok(/peer_car_25d\.webp/.test(f1)&&!/peer_car_25d\.png/.test(f1),
+  'peer sprite runtime must use the optimized transparent WebP, never the heavier PNG');
+const peerAsset=path.join(root,'img/f1/peer_car_25d.webp');
+assert.ok(fs.existsSync(peerAsset),'optimized peer-car WebP must ship with the runtime');
+assert.ok(fs.statSync(peerAsset).size<=80*1024,'peer-car WebP must stay under the 80 KiB mobile budget');
 
 /* Exact Phase-1 Battery Saver profile guard: this visual upgrade must not trade its quality away. */
 for(const token of [
