@@ -1,4 +1,4 @@
-รอบ 1192: ปรับเกมฟองคำศัพท์เป็นธีมอวกาศพาสเทลน่ารักตามภาพอ้างอิง
-FILE: css/bubble.css
+รอบ 1193: เพิ่มคลัง Bubble แยกตามระดับชั้น ชั้นละ 500 คำ
 FILE: js/bubble.js
+FILE: tools/test_bubble_grade_pool.js
 FILE: handoff/TASKS.md

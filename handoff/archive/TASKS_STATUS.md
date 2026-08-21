@@ -4978,3 +4978,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1177 · กู้สินค้าตลาดหายย้อนหลังตั้งแต่รหัสซื้อ 6 หลัก:** audit live 51 บัญชี พบผู้เสียหาย 12 บัญชี/29 ชิ้นจาก `netKey` ที่ไม่มีทั้ง `/market` และ `/msold`; Cloud Audit Logs ไม่ได้เปิดจึงระบุผู้ซื้อไม่ได้ และ flow เสียไม่เคยหักเงิน/ส่งของผู้ซื้อ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
