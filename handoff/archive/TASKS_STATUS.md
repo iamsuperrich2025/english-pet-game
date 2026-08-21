@@ -4998,3 +4998,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1181 · ปิด RTDB DATA_WRITE Audit Logs:** หลังตลาด `/marketLedger` และ Functions ขึ้น production ผู้ใช้อนุญาตให้ปิด log ชั่วคราวเพื่อลดปริมาณ/ค่าใช้จ่าย; สำรอง IAM policy ก่อน–หลัง ยืนยัน `dataWriteEnabled=false` และ `bindingsUnchanged=true` (ไม่ deploy เว็บซ้ำ)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้

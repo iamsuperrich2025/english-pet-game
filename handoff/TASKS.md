@@ -53,7 +53,6 @@
 - เพิ่ม `authReady()`/uid ที่อ่าน identifier `Auth` โดยตรง และ regression ห้าม `window.Auth/window.state`; เปลี่ยน counter/save เป็น V4 เพื่อเริ่ม 3 Login ใหม่ ไม่รับค่าที่อาจนับผิดจากรอบก่อน
 - Browser จำลอง Production ตรงตัว `window.Auth=undefined`, `window.state=undefined` พร้อม hidden overlay ที่ 1320×619 แล้วป้ายขึ้น 1080×605px; ขนาด 812×375/opt-out/3 Login เดิมคงผ่าน
 - แก้ `js/onetpromo.js`, Preview และ test; Node syntax + promo/O-NET regression ผ่าน
-- **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
 - อัปเกรด `tools/shrink_matching.py` ให้เจนค่าเบาเป็นค่าเริ่ม และเพิ่ม `test_matching_web_assets.py` กันไฟล์หาย/เสียสัดส่วน/หนักกลับ; ไฟล์ใหญ่สุด 189.1KB
 - asset decode/budget, Picture Dictionary, picmatch cooldown, Browser 768×1152 no-console-error และ production build 8,336 ไฟล์ 459.7MiB + PWA/cache/TWA validator ผ่าน
 - ใช้ request id, transaction marker ใน save ผู้ซื้อ/ผู้ขาย, settlement lease และ refund/release แบบ idempotent จึง retry/crash ได้โดยไม่หักเงิน ส่งของ หรือจ่ายซ้ำ; รายการ `processing` ถูกซ่อนจากตลาดและผู้ขายเห็นสถานะกำลังนำเงินเข้าแทนคำว่าแขวนขาย
