@@ -4988,3 +4988,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1179 · แก้ deploy Functions จาก staged Git:** รอบ 1178 commit สำเร็จแต่ Firebase CLI หา `firebase-functions` ไม่พบ เพราะ `git archive` ไม่รวม `node_modules`; เพิ่ม `npm ci --prefix functions --omit=dev` จาก lockfileใน staging และตรวจ Functions จากช่วง `origin/main..HEAD` เพื่อให้ retry หลัง commit แรกได้
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1180 · retry Eventarc อัตโนมัติ:** deploy รอบ 1179 สร้าง `marketBuySecure` สำเร็จ แต่ `resumeMarketSettlement` ถูกปฏิเสธชั่วคราวระหว่าง IAM ของ Eventarc service agent กำลัง propagate; ให้ deploy Functions ลองสูงสุด 3 ครั้ง เว้น 60 วินาที และหยุด Hosting/Push หากยังไม่ครบ

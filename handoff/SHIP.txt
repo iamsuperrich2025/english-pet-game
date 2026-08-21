@@ -1,5 +1,3 @@
-รอบ 1194: ปรับเกมยิงเป้าคำเป็น Cute Carnival Toy Shooter ตามภาพอ้างอิง
+รอบ 1196: แก้แขนลอยและเหลือการยิงปกติโหมดเดียว
 FILE: js/shootword.js
-FILE: img/shootword/carnival-bg.webp
-FILE: img/shootword/star-blaster.webp
 FILE: handoff/TASKS.md
