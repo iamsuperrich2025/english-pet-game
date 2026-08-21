@@ -29,8 +29,18 @@ const RUNOFF_W     = 9;       // runoff ยางมะตอยข้างแ�
 const BARRIER_LAT  = HALF_W+RUNOFF_W-.55; // จุดชนจริงอยู่ด้านในกำแพงเล็กน้อย กันรถเร็วทะลุ mesh
 const BARRIER_BOUNCE=.48;     // คืนแรงด้านข้าง 48% ให้รู้สึกว่าเด้ง แต่ไม่ปิงปองรุนแรง
 /* 🏎️💥 รอบ 1208 — กล่องชนรถ F1 จริง (แกนตาม yaw) + impulse/แรงเสียดทานตอนเบียด */
-const CAR_HALF_W   = 1.02;    // รถกว้าง ~2.04 ม.
-const CAR_HALF_L   = 2.68;    // รถยาว ~5.36 ม.
+/* รอบ 1210: footprint ตามชิ้นโมเดลจริง ไม่ใช้กล่องใหญ่ครอบอากาศรอบรถ
+   [x,z,halfWidth,halfLength] — ปีก, chassis และยางตรงกับ buildPeerF1Car */
+const CAR_HIT_PARTS=[
+  [0,3.34,1.00,.25],            // front wing
+  [0,2.18,.29,.92],             // nose
+  [0,.48,.76,1.14],             // monocoque + sidepods
+  [0,-1.24,.52,.64],            // engine/rear body
+  [0,-1.98,.76,.28],            // rear wing/diffuser
+  [-.96,1.52,.22,.45],[.96,1.52,.22,.45],       // front tyres
+  [-.96,-1.47,.22,.45],[.96,-1.47,.22,.45]      // rear tyres
+];
+const CAR_HIT_RADIUS=3.75;      // broad-phase เท่านั้น — ไม่สร้าง contact
 const CAR_RESTITUTION=.34;    // คืนความเร็วตามแนวชน 34% — เด้งแต่ไม่ปิงปอง
 const CAR_SIDE_FRICTION=.38;  // กินความเร็วสัมพัทธ์ตามแนวที่รถเบียดกัน
 const CAR_RUB_DRAG = 4.2;     // แรงต้านต่อวินาทีขณะสีข้างต่อเนื่อง
@@ -56,7 +66,7 @@ const ROAD_FOV  = 74;
 /* ⏪🏜️🛞 รอบ 911 — เกียร์ถอย + เกิดใหม่เมื่อหลุดสนาม + ล้อหน้ามุมคนขับ */
 const REV_A      = 7;    // ⏪ อัตราเร่งถอยหลัง (m/s²)
 const REV_MAX    = 8;    // ความเร็วถอยสูงสุด (m/s ≈ 29 กม./ชม.)
-const OFFTRACK_S = 2;    // 🌀 อยู่พ้นผิวถนน (runoff/ทราย) ต่อเนื่องกี่วิ = เปิดประตูมิติกลับจุดใกล้เดิม
+const OFFTRACK_S = 0;    // 🌀 รอบ 1210: พ้นผิวถนน = เปิดประตูมิติทันทีในเฟรมนั้น ไม่หน่วงเวลา
 const FPW_F      = 1.35; // 🛞 ล้อหน้ามุมคนขับ: เยื้องไปหน้ารถ (ม.) — 1.35 ให้ล้อฉาย ~44° โผล่ช่องโปร่งริมจอ (1.58 จะโดนแขนคาร์บอนของภาพบังมิด)
 const FPW_S      = 0.87; //    เยื้องข้าง (ม.)
 const FPW_R      = 0.34; //    รัศมีล้อ (ม.)
@@ -95,6 +105,15 @@ const F1_LEDS = [   // [left%, top%, width%, height%] ของภาพพว�
    พิกัดวัดจาก wheel.webp (1536×1024) ตรง ๆ แล้วแปลงเป็นสัดส่วนของกรอบภาพ → ทับตรงทุกขนาดจอ */
 const WHEEL_IMG_W = 1536, WHEEL_IMG_H = 1024;   // ขนาดจริงของ wheel.webp / cockpit_body.webp (เท่ากันเสมอ)
 const DASH_PX = {x:654, y:500, w:232, h:118};   // กรอบจอ (รวมแถบไฟรอบเครื่องด้านบน) เป็นพิกเซลของภาพต้นฉบับ
+/* Realistic cockpit is a separate 1672×941 plate. These three poses were measured
+   from the actual center/left/right WebP frames (not guessed from steering angle),
+   so the live canvas stays inside the photographed wheel display while it turns. */
+const QUALITY_PLATE_W=1672, QUALITY_PLATE_H=941;
+const QUALITY_DASH_POSE={
+  center:{cx:836.5,cy:767,w:201,h:102,deg:0},
+  left:  {cx:798.5,cy:758,w:200,h:100,deg:-23},
+  right: {cx:899.5,cy:771.5,w:200,h:101,deg:21.8}
+};
 const DASH_LED_N = 15;       // จำนวนดวงไฟรอบเครื่องบนขอบพวงมาลัย (ภาพต้นฉบับมี ~15 ขีด)
 const DASH_RPM_MIN = 3200;   // รอบเดินเบา (rpm) — ตัวเลขบนจอไล่จากนี่ถึง MAX ตามภาระเครื่องจริง
 const DASH_RPM_MAX = 15000;  // รอบสูงสุด (เครื่อง F1 จริงตัดที่ ~15,000)
@@ -150,6 +169,7 @@ const PIT_LIMIT    = 22.2;    // จำกัดความเร็วใน�
    ============================================================ */
 let built=false, running=false, rafId=0, lastT=0;
 let scene, camera, renderer;
+let racingSkyTex=null,racingSkyLoading=false;
 let envLights=null, activeGraphicsMode='battery', activeEnvironmentProfile=null;
 let realisticRoot=null, legacyArchitectureRoot=null, realisticTier='off', realisticStats=null;
 let wrapEl, screenEl, hudEl, wordEl, coinsEl, banEl, introEl, exitBox, boardEl, chatBarEl, selfMsgEl;
@@ -183,6 +203,9 @@ let PITL=null, inPit=false, pitLaneNow=false, pitLimited=false, lapPitted=false;
 /* เอฟเฟกต์ */
 let smokes=[], sparks=[];
 let glbSrc=null, glbTried=false;
+/* 🌡️ รอบ 1210: mobile thermal governor — ฟิสิกส์/เน็ตยัง tick ตาม RAF แต่ GPU render ตามความจำเป็น */
+let thermalMobile=false,thermalLevel=0,thermalAvgMs=16.7,thermalSlowT=0,thermalCoolT=0;
+let thermalBasePR=1,thermalTargetFps=60,thermalRenderAt=0,thermalRendered=0,thermalSkipped=0;
 
 const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
 const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
@@ -561,7 +584,7 @@ function surfAt(x,z,hint){
 /* ============================================================
    🏗️ สร้างฉาก: แทร็ก + kerb + runoff + อาคารจริง + ไฟ + ทะเลทราย
    ============================================================ */
-function ribbonGeo(halfW,off,yTop,uScale,everyCurv){
+function ribbonGeo(halfW,off,yTop,uScale,everyCurv,vScale){
   /* สร้างริบบิ้นตามเส้น (off=เลื่อนข้าง, everyCurv=วางเฉพาะช่วงโค้ง) */
   const pos=[],uv=[],idx=[];
   let vi=0;
@@ -572,7 +595,7 @@ function ribbonGeo(halfW,off,yTop,uScale,everyCurv){
     const cx=LINE.x[j]+LINE.nx[j]*off, cz=LINE.z[j]+LINE.nz[j]*off;
     pos.push(cx-LINE.nx[j]*halfW,yTop,cz-LINE.nz[j]*halfW, cx+LINE.nx[j]*halfW,yTop,cz+LINE.nz[j]*halfW);
     const u=LINE.cum[j]/uScale;
-    uv.push(u,0,u,1);
+    uv.push(u,0,u,vScale?(halfW*2/vScale):1);
     vi+=2;
   }
   for(let i=0;i<vi/2-1;i++) idx.push(i*2,i*2+1,i*2+2, i*2+1,i*2+3,i*2+2);
@@ -777,38 +800,117 @@ function buildBuildings(){
    ============================================================ */
 function chooseRealisticTier(){
   const mem=Number(navigator.deviceMemory)||8, cores=Number(navigator.hardwareConcurrency)||8;
+  if(isThermalMobile()) return 'low';
   if(mem<=3||cores<=4) return 'low';
   if(mem<8||cores<=6) return 'medium';
   return 'high';
+}
+function isThermalMobile(){
+  const coarse=typeof matchMedia==='function'&&matchMedia('(pointer:coarse)').matches;
+  return coarse||/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+}
+function useRacingSky(){
+  if(racingSkyTex){scene.background=racingSkyTex;return;}
+  if(racingSkyLoading)return;
+  racingSkyLoading=true;
+  new THREE.TextureLoader().load('img/f1/sky_racing_1024.webp',t=>{
+    t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;
+    t.minFilter=t.magFilter=THREE.LinearFilter;t.generateMipmaps=false;
+    if('colorSpace'in t&&THREE.SRGBColorSpace)t.colorSpace=THREE.SRGBColorSpace;
+    t.needsUpdate=true;racingSkyTex=t;racingSkyLoading=false;
+    if(activeGraphicsMode==='quality'&&scene)scene.background=t;
+  },undefined,()=>{racingSkyLoading=false;});
 }
 function seededRand(seed){
   let s=seed>>>0;
   return ()=>{ s=(Math.imul(s,1664525)+1013904223)>>>0; return s/4294967296; };
 }
-function realisticAsphaltTex(){
+function realisticAsphaltMaps(){
   const rnd=seededRand(1125);
-  const t=texFromCanvas((g,w,h)=>{
+  const map=texFromCanvas((g,w,h)=>{
     g.fillStyle='#30343a'; g.fillRect(0,0,w,h);
-    for(let i=0;i<6400;i++){
+    for(let i=0;i<4200;i++){
       const v=34+(rnd()*48|0), a=.16+rnd()*.34, sz=rnd()>.83?2:1;
       g.fillStyle='rgba('+v+','+(v+1)+','+(v+4)+','+a.toFixed(2)+')';
       g.fillRect(rnd()*w,rnd()*h,sz,sz);
     }
-    /* ร่องยางสองแนว + เนื้อยางสะสมกลาง racing line; ผิวด้าน ไม่ทำเป็นถนนเปียก */
-    const groove=g.createLinearGradient(0,0,0,h);
-    groove.addColorStop(0,'rgba(0,0,0,0)'); groove.addColorStop(.24,'rgba(0,0,0,0)');
-    groove.addColorStop(.34,'rgba(9,10,12,.42)'); groove.addColorStop(.45,'rgba(8,9,11,.18)');
-    groove.addColorStop(.55,'rgba(8,9,11,.18)'); groove.addColorStop(.66,'rgba(9,10,12,.42)');
-    groove.addColorStop(.76,'rgba(0,0,0,0)'); groove.addColorStop(1,'rgba(0,0,0,0)');
-    g.fillStyle=groove; g.fillRect(0,0,w,h);
-    for(let i=0;i<42;i++){
-      const x=rnd()*w, y=h*(.27+rnd()*.46);
-      g.strokeStyle='rgba(5,6,8,'+(.05+rnd()*.08).toFixed(2)+')'; g.lineWidth=1+rnd()*2;
-      g.beginPath(); g.moveTo(x,y); g.lineTo(x+20+rnd()*70,y+(rnd()-.5)*5); g.stroke();
+    for(let i=0;i<34;i++){
+      const x=rnd()*w,y=rnd()*h,r=2+rnd()*5;
+      g.fillStyle=rnd()>.5?'rgba(116,121,128,.055)':'rgba(7,9,12,.07)';
+      g.beginPath();g.ellipse(x,y,r,r*(.45+rnd()*.55),rnd()*Math.PI,0,Math.PI*2);g.fill();
     }
-  },512,256,1,1);
-  if(renderer&&renderer.capabilities) t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
-  return t;
+    /* รอยซ่อม/รอยต่ออยู่ใน tile เดียว จึงไม่เพิ่ม geometry หรือ draw call */
+    g.fillStyle='rgba(11,13,16,.18)';g.fillRect(0,h*.73,w,2);
+    g.fillStyle='rgba(126,132,138,.08)';g.fillRect(0,h*.73+2,w,1);
+    for(let i=0;i<9;i++){
+      const x=rnd()*w,y=rnd()*h;
+      g.strokeStyle='rgba(7,8,10,'+(.07+rnd()*.06).toFixed(2)+')';g.lineWidth=1;
+      g.beginPath();g.moveTo(x,y);g.lineTo(x+15+rnd()*42,y+(rnd()-.5)*3);g.stroke();
+    }
+  },256,256,1,1);
+  const normalMap=texFromCanvas((g,w,h)=>{
+    g.fillStyle='rgb(128,128,255)';g.fillRect(0,0,w,h);
+    for(let i=0;i<1900;i++){
+      const nx=116+(rnd()*25|0),ny=116+(rnd()*25|0),b=241+(rnd()*14|0);
+      g.fillStyle='rgb('+nx+','+ny+','+b+')';g.fillRect(rnd()*w,rnd()*h,rnd()>.88?2:1,rnd()>.88?2:1);
+    }
+  },128,128,1,1);
+  const roughnessMap=texFromCanvas((g,w,h)=>{
+    g.fillStyle='rgb(218,218,218)';g.fillRect(0,0,w,h);
+    for(let i=0;i<1300;i++){
+      const v=184+(rnd()*62|0);g.fillStyle='rgb('+v+','+v+','+v+')';g.fillRect(rnd()*w,rnd()*h,1,1);
+    }
+    g.fillStyle='rgb(196,196,196)';g.fillRect(0,h*.73,w,2);
+  },128,128,1,1);
+  const maxAniso=renderer&&renderer.capabilities?renderer.capabilities.getMaxAnisotropy():1;
+  map.anisotropy=Math.min(isThermalMobile()?2:4,maxAniso);
+  normalMap.anisotropy=roughnessMap.anisotropy=Math.min(2,maxAniso);
+  return {map,normalMap,roughnessMap};
+}
+function realisticRunoffTex(){
+  const rnd=seededRand(4821);
+  return texFromCanvas((g,w,h)=>{
+    g.fillStyle='#51565e';g.fillRect(0,0,w,h);
+    for(let i=0;i<2600;i++){
+      const v=55+(rnd()*38|0);g.fillStyle='rgba('+v+','+(v+2)+','+(v+5)+','+(.16+rnd()*.22).toFixed(2)+')';
+      g.fillRect(rnd()*w,rnd()*h,rnd()>.9?2:1,1);
+    }
+    for(let i=0;i<16;i++){
+      const x=rnd()*w,y=rnd()*h;g.strokeStyle='rgba(25,28,33,.18)';g.lineWidth=.7+rnd();
+      g.beginPath();g.moveTo(x,y);g.lineTo(x+8+rnd()*30,y+(rnd()-.5)*9);g.stroke();
+    }
+    g.fillStyle='rgba(25,28,33,.24)';g.fillRect(0,h*.48,w,2);
+    g.fillStyle='rgba(175,180,184,.08)';g.fillRect(0,h*.48+2,w,1);
+  },256,256,1,1);
+}
+function realisticSandTex(){
+  const rnd=seededRand(9017);
+  return texFromCanvas((g,w,h)=>{
+    g.fillStyle='#bda875';g.fillRect(0,0,w,h);
+    for(let i=0;i<22;i++){
+      const x=rnd()*w,y=rnd()*h,rx=12+rnd()*34,ry=5+rnd()*14;
+      g.fillStyle=rnd()>.5?'rgba(235,215,164,.075)':'rgba(93,77,47,.065)';
+      g.beginPath();g.ellipse(x,y,rx,ry,rnd()*Math.PI,0,Math.PI*2);g.fill();
+    }
+    for(let i=0;i<2100;i++){
+      g.fillStyle=rnd()>.5?'rgba(226,204,146,.24)':'rgba(116,98,62,.20)';
+      g.fillRect(rnd()*w,rnd()*h,1+rnd()*2,1);
+    }
+    for(let i=0;i<7;i++){
+      const y=rnd()*h;g.strokeStyle='rgba(101,85,55,.10)';g.beginPath();g.moveTo(0,y);g.bezierCurveTo(w*.3,y+5,w*.7,y-5,w,y+2);g.stroke();
+    }
+  },256,256,120,120);
+}
+function racingLineRibbonGeo(halfW,yTop,uScale){
+  const pos=[],uv=[],idx=[];
+  for(let i=0;i<=LINE.n;i++){
+    const j=i%LINE.n,off=racingLineLat(j),cx=LINE.x[j]+LINE.nx[j]*off,cz=LINE.z[j]+LINE.nz[j]*off;
+    pos.push(cx-LINE.nx[j]*halfW,yTop,cz-LINE.nz[j]*halfW,cx+LINE.nx[j]*halfW,yTop,cz+LINE.nz[j]*halfW);
+    const u=LINE.cum[j]/uScale;uv.push(u,0,u,1);
+  }
+  for(let i=0;i<LINE.n;i++)idx.push(i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(uv,2));g.setIndex(idx);g.computeVertexNormals();return g;
 }
 function linePose(obj,line,i,lat,y){
   i=((i%line.n)+line.n)%line.n;
@@ -831,35 +933,73 @@ function instancedFromSpots(geo,mat,spots,place){
 function buildRealisticCircuit(tier){
   const root=new THREE.Group(); root.name='F1_REALISTIC_CIRCUIT';
   const cfg=tier==='high'
-    ?{barStep:3,fenceStep:6,lightStep:10,boards:48,stands:7,city:84,pit:14}
+    ?{barStep:3,fenceStep:6,boards:48,stands:7,city:84,pit:14}
     :tier==='medium'
-      ?{barStep:4,fenceStep:8,lightStep:14,boards:32,stands:5,city:54,pit:10}
-      :{barStep:6,fenceStep:12,lightStep:18,boards:20,stands:3,city:30,pit:7};
+      ?{barStep:4,fenceStep:8,boards:32,stands:5,city:54,pit:10}
+      :{barStep:6,fenceStep:24,boards:12,stands:1,city:12,pit:5};
   const stats={tier,instances:0,meshGroups:0,barriers:0,fencePosts:0,lightPoles:0,boards:0,
     grandstands:cfg.stands,city:0,culledRoadCity:0,pitBays:PITL?cfg.pit:0,bridges:tier==='low'?1:3,marshalPosts:8};
 
-  /* ผิวแทร็กคุณภาพสูงทับผิวเดิมเฉพาะโหมดนี้: micro variation + roughness + racing groove */
-  const roadMat=new THREE.MeshStandardMaterial({map:realisticAsphaltTex(),color:0x8f949c,roughness:.86,metalness:.025});
-  root.add(new THREE.Mesh(ribbonGeo(HALF_W,0,.052,18),roadMat)); stats.meshGroups++;
+  /* ผิวคุณภาพสูง: square tiled UV จริง + map เล็ก 256² / normal+roughness 128² ที่แชร์ทั้งสนาม */
+  const asphalt=realisticAsphaltMaps();
+  const roadMat=new THREE.MeshStandardMaterial({map:asphalt.map,normalMap:asphalt.normalMap,roughnessMap:asphalt.roughnessMap,
+    color:0x92979f,roughness:.92,metalness:.015,normalScale:new THREE.Vector2(.14,.14)});
+  root.add(new THREE.Mesh(ribbonGeo(HALF_W,0,.052,4,null,4),roadMat));stats.meshGroups++;
+  root.add(new THREE.Mesh(ribbonGeo(HALF_W+RUNOFF_W,0,.012,5,null,5),
+    new THREE.MeshLambertMaterial({map:realisticRunoffTex(),color:0xaeb2b7})));stats.meshGroups++;
+  const qualitySand=new THREE.Mesh(new THREE.PlaneGeometry(4200,4200),new THREE.MeshLambertMaterial({map:realisticSandTex(),color:0xc4b184}));
+  qualitySand.rotation.x=-Math.PI/2;qualitySand.position.y=-.24;root.add(qualitySand);stats.meshGroups++;
+  /* racing groove follows the computed racing line instead of sitting as one straight center strip */
   const grooveMat=new THREE.MeshBasicMaterial({color:0x080a0d,transparent:true,opacity:.16,depthWrite:false});
-  root.add(new THREE.Mesh(ribbonGeo(2.15,0,.057,16),grooveMat)); stats.meshGroups++;
+  root.add(new THREE.Mesh(racingLineRibbonGeo(1.55,.058,12),grooveMat));stats.meshGroups++;
+  /* รอยต่อ asphalt ตามระยะจริง: geometry เส้นชุดเดียว/หนึ่ง draw call ไม่มี polygon mesh เพิ่มเป็นร้อยชิ้น */
+  const surfaceSeams=[];
+  for(let i=10;i<LINE.n;i+=8){
+    surfaceSeams.push(LINE.x[i]-LINE.nx[i]*(HALF_W-.35),.060,LINE.z[i]-LINE.nz[i]*(HALF_W-.35),
+      LINE.x[i]+LINE.nx[i]*(HALF_W-.35),.060,LINE.z[i]+LINE.nz[i]*(HALF_W-.35));
+  }
+  const surfaceSeamGeo=new THREE.BufferGeometry();surfaceSeamGeo.setAttribute('position',new THREE.Float32BufferAttribute(surfaceSeams,3));
+  root.add(new THREE.LineSegments(surfaceSeamGeo,new THREE.LineBasicMaterial({color:0x171a1e,transparent:true,opacity:.24})));stats.meshGroups++;
+  stats.surface={drawCalls:6,colorMap:256,normalMap:128,roughnessMap:128,tileMeters:4,dynamicShadows:0};
 
   /* กำแพงแข่งแบบโมดูลสองชนิด + shadow gap เห็นแนวต่อชัด */
-  const barrierOff=HALF_W+RUNOFF_W+.75, barrierLen=cfg.barStep*SAMPLE_M+.35;
-  const barrierSpots=[[],[]];
-  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.barStep)
-    barrierSpots[(i/cfg.barStep+(side>0?1:0))&1].push({i,side});
-  const barrierGeo=new THREE.BoxGeometry(.72,1.18,barrierLen);
+  const barrierOff=HALF_W+RUNOFF_W+.75, barrierSpots=[[],[]],allBarrierSpots=[];
+  const barrierChord=s=>{
+    const j=(s.i+s.step)%LINE.n;
+    const ax=LINE.x[s.i]+LINE.nx[s.i]*s.side*barrierOff,az=LINE.z[s.i]+LINE.nz[s.i]*s.side*barrierOff;
+    const bx=LINE.x[j]+LINE.nx[j]*s.side*barrierOff,bz=LINE.z[j]+LINE.nz[j]*s.side*barrierOff;
+    return {ax,az,bx,bz};
+  };
+  const barrierSpotClear=s=>{
+    const {ax,az,bx,bz}=barrierChord(s),dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz)||1,nx=dz/len,nz=-dx/len;
+    for(const k of [0,.25,.5,.75,1]) for(const side of [-.38,.38]){
+      const x=ax+dx*k+nx*side,z=az+dz*k+nz*side;
+      if(Math.abs(surfAt(x,z).lat)<=HALF_W+KERB_W+.25) return false;
+    }
+    return true;
+  };
+  /* รอบ 1210: ช่วงโค้งใช้กำแพงสั้น 5 ม. และหันตาม chord จริง
+     กันกล่องยาวที่อิง tangent เพียงจุดเดียวเหวี่ยงปลายเข้ามาบนผิวสนาม */
+  for(let side=-1;side<=1;side+=2) for(let i=0,n=0;i<LINE.n;n++){
+    const step=Math.min(Math.abs(LINE.curv[i])>.0045?1:cfg.barStep,LINE.n-i),s={i,side,step};
+    if(barrierSpotClear(s)){barrierSpots[(n+(side>0?1:0))&1].push(s);allBarrierSpots.push(s);}i+=step;
+  }
+  const barrierGeo=new THREE.BoxGeometry(.72,1.18,1);
+  const barrierPose=(d,s,y=.57)=>{
+    const {ax,az,bx,bz}=barrierChord(s);
+    d.position.set((ax+bx)*.5,y,(az+bz)*.5);d.rotation.set(0,Math.atan2(bx-ax,bz-az),0);
+    d.scale.set(1,1,Math.hypot(bx-ax,bz-az)+.18);
+  };
   const barrierMats=[
     new THREE.MeshLambertMaterial({color:0xc8ccd1}),
     new THREE.MeshLambertMaterial({color:0x244d76})
   ];
   barrierSpots.forEach((spots,k)=>{
-    root.add(instancedFromSpots(barrierGeo,barrierMats[k],spots,(d,s)=>linePose(d,LINE,s.i,s.side*barrierOff,.57)));
+    const mesh=instancedFromSpots(barrierGeo,barrierMats[k],spots,(d,s)=>barrierPose(d,s));
+    mesh.name='F1_REALISTIC_BARRIERS';root.add(mesh);
     stats.instances+=spots.length; stats.barriers+=spots.length; stats.meshGroups++;
   });
-  const seamSpots=[];
-  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.barStep) seamSpots.push({i,side});
+  const seamSpots=allBarrierSpots;
   const seamGeo=new THREE.BoxGeometry(.78,1.2,.09);
   root.add(instancedFromSpots(seamGeo,new THREE.MeshBasicMaterial({color:0x17202a}),seamSpots,
     (d,s)=>linePose(d,LINE,s.i,s.side*(barrierOff-.01),.58)));
@@ -887,15 +1027,8 @@ function buildRealisticCircuit(tier){
   root.add(new THREE.LineSegments(fenceGeo,new THREE.LineBasicMaterial({color:0xa9b7c5,transparent:true,opacity:.48})));
   stats.meshGroups++;
 
-  /* ไฟสนามต่อเนื่อง: เสา+หัวไฟ instanced, ไม่มี point light รายดวง */
-  const lightSpots=[];
-  for(let side=-1;side<=1;side+=2) for(let i=0;i<LINE.n;i+=cfg.lightStep) lightSpots.push({i,side});
-  const lightOff=barrierOff+5.7;
-  root.add(instancedFromSpots(new THREE.CylinderGeometry(.12,.24,18,6),
-    new THREE.MeshLambertMaterial({color:0x68727d}),lightSpots,(d,s)=>linePose(d,LINE,s.i,s.side*lightOff,9)));
-  root.add(instancedFromSpots(new THREE.BoxGeometry(4.5,.65,.55),
-    new THREE.MeshBasicMaterial({color:0xeef5ff,toneMapped:false}),lightSpots,(d,s)=>linePose(d,LINE,s.i,s.side*lightOff,18)));
-  stats.instances+=lightSpots.length*2; stats.lightPoles=lightSpots.length; stats.meshGroups+=2;
+  /* รอบ 1210: ตัดเสา+หัวไฟตกแต่งทั้งสนาม — ambient/key light ทำให้ถนนอ่านได้อยู่แล้ว
+     ประหยัด 2 draw calls และ instance หลายร้อยชิ้นทุกเฟรม; ไฟสตาร์ท/ป้าย gameplay ยังอยู่ */
 
   /* ป้าย fictional sponsor เป็น 6 batch แทน mesh แยกหลายสิบชิ้น */
   const brands=[
@@ -955,19 +1088,53 @@ function buildRealisticCircuit(tier){
 
   /* pit wall + garages + overhead light strips + signage ที่อ่านได้จาก cockpit */
   if(PITL){
-    const pitSpots=[];
-    for(let n=0;n<cfg.pit;n++) pitSpots.push({i:Math.round((n+.5)*PITL.n/cfg.pit),n});
     const pitSide=pitAt(LINE.x[sfIdx],LINE.z[sfIdx],0);
     const laneSide=pitSide&&pitSide.lat>0?1:-1;
     const pitBayLen=Math.max(7.5,PITL.len/cfg.pit*.88);
-    root.add(instancedFromSpots(new THREE.BoxGeometry(10,4.8,pitBayLen),new THREE.MeshLambertMaterial({color:0x6f7883}),pitSpots,
-      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),laneSide*(PIT_HALF_W+7.2),2.4)));
-    root.add(instancedFromSpots(new THREE.BoxGeometry(10,.28,pitBayLen+.1),new THREE.MeshBasicMaterial({color:0xeef6ff,toneMapped:false}),pitSpots,
-      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),laneSide*(PIT_HALF_W+7.15),5.05)));
-    const pitWall=[]; for(let i=0;i<PITL.n;i+=3) pitWall.push({i});
-    root.add(instancedFromSpots(new THREE.BoxGeometry(.5,1.05,15),new THREE.MeshLambertMaterial({color:0xd8dce1}),pitWall,
-      (d,s)=>linePose(d,PITL,s.i,-laneSide*(PIT_HALF_W-.4),.52)));
-    stats.instances+=pitSpots.length*2+pitWall.length; stats.meshGroups+=3;
+    /* เลือกด้านของพิทที่ไกลจากถนนหลักเป็นราย bay — ใช้ sign เดียวทั้งพิทไม่ได้ตรงจุดโค้ง/รวมเลน */
+    const pitSpots=[],pitBayOff=PIT_HALF_W+12.5;
+    const pitBayClearance=(s,lat)=>{
+      const i=Math.min(s.i,PITL.n-1),cx=PITL.x[i]+PITL.nx[i]*lat,cz=PITL.z[i]+PITL.nz[i]*lat;let clear=Infinity;
+      for(const u of [-5,0,5]) for(const v of [-pitBayLen*.5,0,pitBayLen*.5]){
+        const x=cx+PITL.nx[i]*u+PITL.tx[i]*v,z=cz+PITL.nz[i]*u+PITL.tz[i]*v;
+        clear=Math.min(clear,Math.abs(surfAt(x,z).lat));
+      }
+      return clear;
+    };
+    for(let n=0;n<cfg.pit;n++){
+      const s={i:Math.round((n+.5)*PITL.n/cfg.pit),n},a=pitBayOff,b=-pitBayOff,ca=pitBayClearance(s,a),cb=pitBayClearance(s,b);
+      s.lat=ca>=cb?a:b;if(Math.max(ca,cb)>HALF_W+KERB_W+.25)pitSpots.push(s);
+    }
+    const pitGarages=instancedFromSpots(new THREE.BoxGeometry(10,4.8,pitBayLen),new THREE.MeshLambertMaterial({color:0x6f7883}),pitSpots,
+      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),s.lat,2.4));
+    pitGarages.name='F1_REALISTIC_PIT_GARAGES';root.add(pitGarages);
+    const pitRoofLights=instancedFromSpots(new THREE.BoxGeometry(10,.28,pitBayLen+.1),new THREE.MeshBasicMaterial({color:0xeef6ff,toneMapped:false}),pitSpots,
+      (d,s)=>linePose(d,PITL,Math.min(s.i,PITL.n-1),s.lat-Math.sign(s.lat)*.05,5.05));
+    pitRoofLights.name='F1_REALISTIC_PIT_ROOF_LIGHTS';root.add(pitRoofLights);
+    const pitWall=[],pitLat=-laneSide*(PIT_HALF_W-.4);
+    const pitWallChord=s=>{
+      const j=s.i+s.step;
+      return {ax:PITL.x[s.i]+PITL.nx[s.i]*pitLat,az:PITL.z[s.i]+PITL.nz[s.i]*pitLat,
+        bx:PITL.x[j]+PITL.nx[j]*pitLat,bz:PITL.z[j]+PITL.nz[j]*pitLat};
+    };
+    const pitWallSpotClear=s=>{
+      const {ax,az,bx,bz}=pitWallChord(s),dx=bx-ax,dz=bz-az,len=Math.hypot(dx,dz)||1,nx=dz/len,nz=-dx/len;
+      for(const k of [0,.25,.5,.75,1]) for(const side of [-.27,.27]){
+        const x=ax+dx*k+nx*side,z=az+dz*k+nz*side;
+        if(Math.abs(surfAt(x,z).lat)<=HALF_W+KERB_W+.25) return false;
+      }
+      return true;
+    };
+    for(let i=0;i<PITL.n-1;){const step=Math.min(Math.abs(PITL.curv?.[i]||0)>.0045?1:3,PITL.n-1-i),s={i,step};
+      if(pitWallSpotClear(s))pitWall.push(s);i+=step;}
+    const pitWallMesh=instancedFromSpots(new THREE.BoxGeometry(.5,1.05,1),new THREE.MeshLambertMaterial({color:0xd8dce1}),pitWall,
+      (d,s)=>{
+        const {ax,az,bx,bz}=pitWallChord(s);
+        d.position.set((ax+bx)*.5,.52,(az+bz)*.5);d.rotation.set(0,Math.atan2(bx-ax,bz-az),0);
+        d.scale.set(1,1,Math.hypot(bx-ax,bz-az)+.12);
+      });
+    pitWallMesh.name='F1_REALISTIC_PIT_WALL';root.add(pitWallMesh);
+    stats.pitBays=pitSpots.length;stats.instances+=pitSpots.length*2+pitWall.length; stats.meshGroups+=3;
     for(const [idx,label] of [[2,'PIT →'],[PITL.n-3,'PIT EXIT']]){
       const i=Math.max(0,Math.min(PITL.n-1,idx)), sp=makeTextSprite(label,'rgba(8,22,38,.96)','#8fffd4','',null);
       sp.scale.set(11,2.8,1); sp.position.set(PITL.x[i],5.8,PITL.z[i]); root.add(sp);
@@ -1107,24 +1274,8 @@ function buildTrackScene(){
     sp.position.set(LINE.x[i]+LINE.nx[i]*off*side,4.5,LINE.z[i]+LINE.nz[i]*off*side);
     scene.add(sp);
   });
-  /* 💡 เสาไฟสปอตไลต์รอบสนาม (night race) */
-  const poleMat=new THREE.MeshLambertMaterial({color:0x555c66});
-  const headMat=new THREE.MeshBasicMaterial({color:0xf4f7ff});
-  for(let i=0;i<LINE.n;i+=54){
-    const side=(i/54|0)%2?1:-1;
-    const off=HALF_W+RUNOFF_W+6;
-    const grp=new THREE.Group();
-    const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.5,22,6),poleMat);
-    pole.position.y=11; grp.add(pole);
-    const head=new THREE.Mesh(new THREE.BoxGeometry(5.4,1.5,0.7),headMat);
-    head.position.y=22; grp.add(head);
-    const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,transparent:true,
-      blending:THREE.AdditiveBlending,depthWrite:false}));
-    glow.scale.set(24,10,1); glow.position.y=22; grp.add(glow);
-    grp.position.set(LINE.x[i]+LINE.nx[i]*off*side,0,LINE.z[i]+LINE.nz[i]*off*side);
-    grp.lookAt(LINE.x[i],0,LINE.z[i]);
-    scene.add(grp);
-  }
+  /* รอบ 1210: ลบเสาไฟ legacy ทั้งชุด (~20 กลุ่ม / ~60 draw calls: pole+head+additive glow)
+     ฉากยังอ่านทางด้วย hemisphere+key light; ไม่คุ้มเผา GPU เพื่อวัตถุตกแต่งซ้ำกับระบบ Realistic */
   /* 🌴 ต้นปาล์ม + เนินทรายรอบนอก */
   const trunkMat=new THREE.MeshLambertMaterial({color:0x7a5a38});
   const leafMat=new THREE.MeshLambertMaterial({color:0x2f7a3a});
@@ -1261,9 +1412,17 @@ function buildF1Car(color){
   g.userData.wheels=ws; g.userData.front=sp;
   return g;
 }
+let playerContactShadowGeo=null,playerContactShadowMat=null;
+function addPlayerContactShadow(g){
+  if(!g||g.getObjectByName('F1_PLAYER_CONTACT_SHADOW'))return;
+  playerContactShadowGeo=playerContactShadowGeo||new THREE.CircleGeometry(1.52,12);
+  playerContactShadowMat=playerContactShadowMat||new THREE.MeshBasicMaterial({color:0x050608,transparent:true,opacity:.24,depthWrite:false});
+  const shadow=new THREE.Mesh(playerContactShadowGeo,playerContactShadowMat);
+  shadow.name='F1_PLAYER_CONTACT_SHADOW';shadow.scale.set(1,1.8,1);shadow.rotation.x=-Math.PI/2;shadow.position.y=.024;g.add(shadow);
+}
 
 /* ============================================================
-   🏎️📱 รอบ 1209 — SEMI-REALISTIC LOW-POLY PEER F1 (GPU COOL)
+   🏎️📱 รอบ 1210 — SEMI-REALISTIC LOW-POLY PEER F1 (GPU COOL)
    geometry ใช้ร่วมกันทุกคัน · รวมชิ้นสีเดียว · ล้อ 4 วงเป็น InstancedMesh
    ไม่มี texture/PBR/reflection/dynamic shadow — รถผู้เล่น/ภาพ cockpit ไม่แตะ
    ============================================================ */
@@ -1271,10 +1430,11 @@ let peerF1Kit=null;
 function peerF1MergedGeometry(parts){
   const pos=[],idx=[];
   function wedge(p){
-    const x=p.x||0,z0=p.z-p.l*.5,z1=p.z+p.l*.5,y0=p.y,y1=p.y+p.h;
+    const x=p.x||0,z0=-p.l*.5,z1=p.l*.5,y0=p.y,y1=p.y+p.h,ry=p.ry||0,c=Math.cos(ry),s=Math.sin(ry);
     const wb=p.wb*.5,wf=p.wf*.5,b=pos.length/3;
-    pos.push(x-wb,y0,z0, x+wb,y0,z0, x+wb,y1,z0, x-wb,y1,z0,
-             x-wf,y0,z1, x+wf,y0,z1, x+wf,y1,z1, x-wf,y1,z1);
+    const put=(lx,y,lz)=>pos.push(x+lx*c+lz*s,y,p.z-lx*s+lz*c);
+    put(-wb,y0,z0);put(wb,y0,z0);put(wb,y1,z0);put(-wb,y1,z0);
+    put(-wf,y0,z1);put(wf,y0,z1);put(wf,y1,z1);put(-wf,y1,z1);
     idx.push(b,b+2,b+1,b,b+3,b+2, b+4,b+5,b+6,b+4,b+6,b+7,
       b,b+1,b+5,b,b+5,b+4, b+3,b+7,b+6,b+3,b+6,b+2,
       b,b+4,b+7,b,b+7,b+3, b+1,b+2,b+6,b+1,b+6,b+5);
@@ -1285,29 +1445,92 @@ function peerF1MergedGeometry(parts){
   geo.setIndex(idx);geo.computeVertexNormals();geo.computeBoundingSphere();
   return geo;
 }
+function peerF1LoftGeometry(shells,sides=8){
+  const pos=[],idx=[];
+  for(const rings of shells){
+    const base=pos.length/3;
+    rings.forEach(r=>{
+      for(let i=0;i<sides;i++){
+        const a=i/sides*Math.PI*2;
+        pos.push((r.x||0)+Math.cos(a)*r.w,r.y+Math.sin(a)*r.h,r.z);
+      }
+    });
+    for(let q=0;q<rings.length-1;q++) for(let i=0;i<sides;i++){
+      const a=base+q*sides+i,b=base+q*sides+(i+1)%sides,c=base+(q+1)*sides+(i+1)%sides,d=base+(q+1)*sides+i;
+      idx.push(a,b,c,a,c,d);
+    }
+    /* ปิดหัว/ท้ายโดยใช้ fan รอบจุดกึ่งกลาง — ยังเป็น geometry ก้อนเดียว */
+    const z0=rings[0],zn=rings[rings.length-1],c0=pos.length/3;
+    pos.push(z0.x||0,z0.y,z0.z,zn.x||0,zn.y,zn.z);
+    for(let i=0;i<sides;i++){
+      idx.push(c0,base+(i+1)%sides,base+i);
+      const e=base+(rings.length-1)*sides;idx.push(c0+1,e+i,e+(i+1)%sides);
+    }
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setIndex(idx);geo.computeVertexNormals();geo.computeBoundingSphere();
+  return geo;
+}
+function peerF1CombineGeometry(geos){
+  const pos=[],idx=[];
+  geos.forEach(g=>{
+    const off=pos.length/3,a=g.attributes.position.array;
+    for(let i=0;i<a.length;i++) pos.push(a[i]);
+    if(g.index) for(let i=0;i<g.index.count;i++) idx.push(off+g.index.getX(i));
+    else for(let i=0;i<g.attributes.position.count;i++) idx.push(off+i);
+  });
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);
+  geo.computeVertexNormals();geo.computeBoundingSphere();geos.forEach(g=>g.dispose());
+  return geo;
+}
 function peerF1KitGet(){
   if(peerF1Kit) return peerF1Kit;
-  /* ตัวถังทรงลิ่ม: จมูกเรียว → monocoque → sidepod → engine cover */
-  const body=peerF1MergedGeometry([
-    {x:0,y:.25,z:2.55,l:2.05,wb:.58,wf:.16,h:.34},
-    {x:0,y:.28,z:.38,l:2.55,wb:.92,wf:.52,h:.56},
-    {x:-.68,y:.24,z:-.28,l:1.82,wb:.68,wf:.48,h:.48},
-    {x:.68,y:.24,z:-.28,l:1.82,wb:.68,wf:.48,h:.48},
-    {x:0,y:.48,z:-1.05,l:1.72,wb:.58,wf:.72,h:.58},
-    {x:0,y:.98,z:-1.17,l:1.22,wb:.07,wf:.07,h:.38}
-  ]);
+  /* เปลือกทรงรีหลายหน้าตัด: silhouette ต่อเนื่อง ไม่ใช่กองกล่องแบบรอบ 1209 รุ่นแรก */
+  const bodyShell=peerF1LoftGeometry([
+    [
+      {x:0,y:.31,z:3.58,w:.055,h:.045},{x:0,y:.35,z:2.82,w:.13,h:.09},
+      {x:0,y:.40,z:1.82,w:.27,h:.15},{x:0,y:.49,z:.82,w:.39,h:.24},
+      {x:0,y:.58,z:.05,w:.46,h:.30},{x:0,y:.64,z:-.82,w:.42,h:.33},
+      {x:0,y:.61,z:-1.72,w:.24,h:.21}
+    ],
+    [
+      {x:-.57,y:.35,z:.92,w:.20,h:.12},{x:-.69,y:.40,z:.28,w:.34,h:.20},
+      {x:-.69,y:.41,z:-.62,w:.35,h:.22},{x:-.48,y:.43,z:-1.35,w:.19,h:.16}
+    ],
+    [
+      {x:.57,y:.35,z:.92,w:.20,h:.12},{x:.69,y:.40,z:.28,w:.34,h:.20},
+      {x:.69,y:.41,z:-.62,w:.35,h:.22},{x:.48,y:.43,z:-1.35,w:.19,h:.16}
+    ]
+  ],8);
+  /* cockpit surround เป็นสีเดียวกับตัวรถ — halo/พื้น/aero เท่านั้นที่เป็นคาร์บอนเข้ม */
+  const cockpitCowl=peerF1LoftGeometry([[
+    {x:0,y:.77,z:.88,w:.19,h:.055},{x:0,y:.83,z:.34,w:.31,h:.10},
+    {x:0,y:.82,z:-.22,w:.28,h:.09},{x:0,y:.75,z:-.55,w:.14,h:.045}
+  ]],8);
+  const body=peerF1CombineGeometry([bodyShell,cockpitCowl]);
   /* aero สีเข้มรวมชิ้นคงที่ไว้ draw call เดียว */
-  const aero=peerF1MergedGeometry([
+  const aeroParts=[
     {x:0,y:.16,z:0,l:3.75,wb:1.92,wf:1.92,h:.07},
-    {x:0,y:.19,z:3.34,l:.58,wb:2.02,wf:2.02,h:.08},
-    {x:-.99,y:.19,z:3.34,l:.62,wb:.07,wf:.07,h:.34},
-    {x:.99,y:.19,z:3.34,l:.62,wb:.07,wf:.07,h:.34},
-    {x:0,y:.77,z:-1.93,l:.34,wb:1.55,wf:1.55,h:.07},
-    {x:-.77,y:.75,z:-1.94,l:.54,wb:.07,wf:.07,h:.43},
-    {x:.77,y:.75,z:-1.94,l:.54,wb:.07,wf:.07,h:.43},
-    {x:0,y:.52,z:-2.08,l:.38,wb:1.34,wf:1.62,h:.16},
+    {x:0,y:.19,z:3.38,l:.48,wb:1.98,wf:1.90,h:.055},
+    {x:0,y:.25,z:3.10,l:.30,wb:1.48,wf:1.68,h:.045},
+    {x:-.96,y:.19,z:3.36,l:.50,wb:.055,wf:.055,h:.27},
+    {x:.96,y:.19,z:3.36,l:.50,wb:.055,wf:.055,h:.27},
+    {x:0,y:.78,z:-1.93,l:.29,wb:1.38,wf:1.38,h:.055},
+    {x:-.69,y:.76,z:-1.94,l:.46,wb:.055,wf:.055,h:.31},
+    {x:.69,y:.76,z:-1.94,l:.46,wb:.055,wf:.055,h:.31},
+    {x:0,y:.49,z:-2.08,l:.34,wb:1.18,wf:1.40,h:.13},
     {x:0,y:.70,z:.82,l:.10,wb:.08,wf:.08,h:.48}
-  ]);
+  ];
+  /* ปีกนกช่วงล่าง: คานบางเชื่อมล้อกับตัวรถ ทำให้ล้อไม่ดูหลุดลอย */
+  const arm=(x1,z1,x2,z2,y)=>{const dx=x2-x1,dz=z2-z1;aeroParts.push({x:(x1+x2)/2,y,z:(z1+z2)/2,
+    l:Math.hypot(dx,dz),wb:.055,wf:.055,h:.045,ry:Math.atan2(dx,dz)});};
+  for(const s of [-1,1]){
+    arm(s*.31,1.24,s*.91,1.50,.31);arm(s*.34,1.77,s*.91,1.55,.38);
+    arm(s*.34,-1.18,s*.91,-1.46,.31);arm(s*.32,-1.70,s*.91,-1.48,.39);
+  }
+  const aero=peerF1MergedGeometry(aeroParts);
   const tyre=new THREE.CylinderGeometry(.45,.45,.40,10,1,false);tyre.rotateZ(Math.PI/2);
   const rim=new THREE.CylinderGeometry(.255,.255,.415,8,1,false);rim.rotateZ(Math.PI/2);
   tyre.computeBoundingSphere();rim.computeBoundingSphere();
@@ -1414,10 +1637,8 @@ const CSS=`
 #f1-quality-wheel .qw-grip.r{right:3%;transform:scaleX(-1) rotate(-5deg)}
 #f1-quality-wheel .qw-led{position:absolute;left:31%;right:31%;top:19%;height:4%;border-radius:999px;
   background:linear-gradient(90deg,#28ef7b 0 32%,#ffd12e 33% 65%,#ff3548 66%);box-shadow:0 0 8px rgba(103,216,255,.6)}
-/* Keep live gear/speed/RPM on the integrated wheel. Coordinates follow the new
-   1672x941 landscape plate, independent of the legacy wheel-image layout. */
-#f1-wrap.realistic.fp #f1-dash{display:block!important;left:44vw!important;top:calc(101vh - 14vw)!important;
-  width:12vw!important;height:6.1vw!important;transform-origin:center!important}
+/* JS anchors the live display to measured locations in all three steering plates. */
+#f1-wrap.realistic.fp #f1-dash{display:block!important}
 /* 🎡 รอบ 913: ชั้นพวงมาลัยแยก — ขนาด/ตำแหน่งคำนวณจาก JS ให้ทับ "กรอบภาพจริง" ของ background ด้านบนเป๊ะ
    (overflow:hidden ข้างบน = ตัดส่วนเกินเหมือน background cover ทำ) */
 #f1-cockpit img,#f1-cockpit canvas{position:absolute;left:0;top:0;display:block;will-change:transform}
@@ -1470,32 +1691,43 @@ const CSS=`
 /* 🏜️ รอบ 911: ป้ายเกิดใหม่หลังหลุดสนาม */
 #f1-resp{position:absolute;top:42%;left:50%;transform:translateX(-50%);background:rgba(18,168,84,.92);color:#fff;
   font-weight:900;font-size:20px;border-radius:12px;padding:8px 18px;display:none;z-index:7}
-/* 🌀 รอบ 1208: ประตูมิติขาว–ชมพู–ม่วงตามต้นแบบ ศูนย์กลางโปร่งเห็นสนามปลายทาง */
+/* 🌀 รอบ 1210: ประตู plasma ขาวร้อน–ชมพู–ม่วงหลายชั้น ศูนย์กลางโปร่งเห็นสนามปลายทาง */
 #f1-portal{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden;opacity:0;
-  background:radial-gradient(ellipse at 50% 44%,transparent 0 29%,rgba(255,45,226,.16) 46%,rgba(89,23,180,.22) 61%,transparent 76%),
-    conic-gradient(from 9deg at 50% 44%,transparent 0 5%,rgba(218,50,255,.12) 5.5%,transparent 6.5% 14%,rgba(105,48,255,.13) 15%,transparent 16% 100%);
-  filter:saturate(1.28);transition:opacity .16s}
-#f1-portal .gate{position:absolute;left:50%;top:39%;width:min(69vw,760px);height:min(48vh,390px);border-radius:48%;
-  transform:translate(-50%,-50%) scale(.08);opacity:0;border:clamp(8px,1.35vw,17px) solid rgba(255,248,255,.98);
-  box-shadow:0 0 8px #fff,0 0 20px #fff,0 0 42px #ff2bdf,0 0 88px #9f25ff,0 0 145px rgba(73,18,180,.75),
-    inset 0 0 18px #fff,inset 0 0 42px #ff31df,inset 0 0 82px rgba(103,32,255,.72);
-  transition:transform .62s cubic-bezier(.18,.85,.25,1.2),opacity .16s;will-change:transform,opacity}
-/* วงพลังงานซ้อนเหลื่อมกัน: ขาวร้อนด้านใน ชมพูไฟฟ้ากลาง ม่วงเข้มด้านนอก */
-#f1-portal .gate:before,#f1-portal .gate:after{content:'';position:absolute;border-radius:50%;mix-blend-mode:screen}
-#f1-portal .gate:before{inset:-10%;border:clamp(3px,.5vw,7px) solid rgba(255,24,223,.82);
-  box-shadow:0 0 10px #fff,0 0 32px #ff28de,0 0 64px #7e22ff;animation:f1portalpulse .46s ease-in-out infinite alternate}
-#f1-portal .gate:after{inset:-17%;border:3px dashed rgba(164,76,255,.88);filter:drop-shadow(0 0 10px #ba35ff);
-  animation:f1portalorbit 2.2s linear infinite}
-#f1-portal .core{position:absolute;inset:1.5%;border-radius:48%;background:radial-gradient(ellipse,
-  transparent 0 43%,rgba(255,255,255,.08) 49%,rgba(255,36,222,.24) 61%,rgba(94,20,220,.24) 76%,transparent 91%);
-  box-shadow:inset 0 0 18px #fff,inset 0 0 48px rgba(255,34,223,.92),inset 0 0 96px rgba(94,31,255,.72)}
-#f1-portal .core:before,#f1-portal .core:after{content:'';position:absolute;inset:5%;border-radius:50%;
-  border:2px solid rgba(255,255,255,.72);filter:drop-shadow(0 0 8px #ff42e6);animation:f1portalpulse .34s ease-in-out infinite alternate-reverse}
-#f1-portal .core:after{inset:-4%;border-width:1px;border-style:dashed;border-color:#cf52ff;animation-duration:.62s}
-#f1-portal .sparks{position:absolute;inset:-30%;filter:drop-shadow(0 0 8px #ec46ff)}
-#f1-portal .sparks i{--a:0deg;position:absolute;left:50%;top:50%;width:clamp(2px,.38vw,6px);height:clamp(34px,6.5vw,96px);
-  border-radius:99px;background:linear-gradient(#fff 0 8%,#ff53ec 32%,rgba(118,35,255,.5) 62%,transparent);
-  transform-origin:50% 0;transform:rotate(var(--a)) translateY(-43vh);animation:f1portalspark .72s ease-in infinite}
+  background:radial-gradient(ellipse at 50% 42%,transparent 0 23%,rgba(255,255,255,.08) 31%,rgba(255,36,221,.24) 45%,rgba(105,25,229,.30) 59%,transparent 77%);
+  filter:saturate(1.42) contrast(1.08);transition:opacity .1s}
+#f1-portal .nebula{position:absolute;inset:-18%;opacity:.92;mix-blend-mode:screen;
+  background:repeating-conic-gradient(from 5deg at 50% 42%,transparent 0 4deg,rgba(255,72,236,.22) 4.4deg 5deg,transparent 5.5deg 13deg),
+    radial-gradient(ellipse at 50% 42%,transparent 0 28%,rgba(255,31,218,.17) 43%,rgba(105,26,234,.25) 58%,transparent 76%);
+  -webkit-mask:radial-gradient(ellipse at 50% 42%,transparent 0 25%,#000 36% 72%,transparent 86%);
+  mask:radial-gradient(ellipse at 50% 42%,transparent 0 25%,#000 36% 72%,transparent 86%);
+  animation:f1portalnebula 3.4s linear infinite;will-change:transform}
+#f1-portal .gate{position:absolute;left:50%;top:42%;width:min(78vw,1040px);height:min(62vh,560px);border-radius:50%;
+  transform:translate(-50%,-50%) scale(.12);opacity:0;mix-blend-mode:screen;
+  background:radial-gradient(ellipse,transparent 0 45%,rgba(255,255,255,.18) 47%,#fff 49%,#ff8af2 51%,#ff22db 55%,#9f25ff 60%,rgba(61,13,151,.38) 65%,transparent 70%);
+  filter:drop-shadow(0 0 8px #fff) drop-shadow(0 0 28px #ff2bdf) drop-shadow(0 0 70px #7b22ef);
+  transition:transform .48s cubic-bezier(.18,.85,.25,1.18),opacity .08s;will-change:transform,opacity}
+/* plasma แตกแขนงสองวง: ใช้ mask เจาะกลางให้เห็นสนามจริง ไม่ใช้ภาพ raster */
+#f1-portal .gate:before,#f1-portal .gate:after,#f1-portal .filaments{content:'';position:absolute;border-radius:50%;mix-blend-mode:screen}
+#f1-portal .gate:before{inset:-5%;background:repeating-conic-gradient(from 13deg,#fff 0 1.2deg,#ff34df 1.8deg 4deg,transparent 5deg 9deg,#b82cff 10deg 12deg,transparent 13deg 18deg);
+  -webkit-mask:radial-gradient(ellipse,transparent 0 51%,#000 53% 62%,transparent 65%);mask:radial-gradient(ellipse,transparent 0 51%,#000 53% 62%,transparent 65%);
+  filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 18px #ff31df);animation:f1portalpulse .34s ease-in-out infinite alternate}
+#f1-portal .gate:after{inset:-13%;background:repeating-conic-gradient(from -9deg,transparent 0 5deg,rgba(220,77,255,.92) 5.5deg 6.5deg,transparent 7deg 14deg);
+  -webkit-mask:radial-gradient(ellipse,transparent 0 55%,#000 57% 62%,transparent 65%);mask:radial-gradient(ellipse,transparent 0 55%,#000 57% 62%,transparent 65%);
+  filter:drop-shadow(0 0 10px #a92cff);animation:f1portalorbit 2.4s linear infinite}
+#f1-portal .filaments{inset:2%;background:repeating-conic-gradient(from 31deg,transparent 0 7deg,#fff 7.3deg 7.8deg,transparent 8.2deg 15deg,#ff44e7 15.4deg 16.6deg,transparent 17deg 23deg);
+  -webkit-mask:radial-gradient(ellipse,transparent 0 46%,#000 48% 55%,transparent 58%);mask:radial-gradient(ellipse,transparent 0 46%,#000 48% 55%,transparent 58%);
+  filter:drop-shadow(0 0 6px #fff);animation:f1portalorbit 1.35s linear infinite reverse}
+#f1-portal .core{position:absolute;inset:4%;border-radius:50%;background:radial-gradient(ellipse,
+  transparent 0 45%,rgba(255,255,255,.12) 47%,rgba(255,255,255,.94) 49%,rgba(255,47,224,.60) 53%,rgba(121,31,255,.40) 60%,transparent 69%);
+  box-shadow:inset 0 0 18px rgba(255,255,255,.85),inset 0 0 54px rgba(255,34,223,.72),0 0 54px rgba(132,34,255,.55)}
+#f1-portal .core:before,#f1-portal .core:after{content:'';position:absolute;inset:7%;border-radius:50%;border:2px solid rgba(255,255,255,.74);
+  filter:drop-shadow(0 0 8px #ff42e6);animation:f1portalpulse .28s ease-in-out infinite alternate-reverse}
+#f1-portal .core:after{inset:-2%;border:1px dashed #d95cff;animation-duration:.55s}
+#f1-portal .sparks{position:absolute;inset:-32%;filter:drop-shadow(0 0 7px #fff) drop-shadow(0 0 14px #ec46ff)}
+#f1-portal .sparks i{--a:0deg;position:absolute;left:50%;top:50%;width:clamp(2px,.28vw,5px);height:clamp(54px,9vw,150px);
+  border-radius:99px;background:linear-gradient(transparent,#6f28ff 18%,#ff3fe7 54%,#fff 86% 94%,transparent);
+  transform-origin:50% 0;transform:rotate(var(--a)) translateY(-31vh);animation:f1portalspark .66s ease-in-out infinite}
+#f1-portal .sparks i:nth-child(3n){height:clamp(85px,13vw,205px);width:2px}#f1-portal .sparks i:nth-child(4n){height:clamp(38px,6vw,92px)}
 #f1-portal .sparks i:nth-child(2){--a:20deg;animation-delay:-.12s}#f1-portal .sparks i:nth-child(3){--a:40deg;animation-delay:-.36s}
 #f1-portal .sparks i:nth-child(4){--a:60deg;animation-delay:-.21s}#f1-portal .sparks i:nth-child(5){--a:80deg;animation-delay:-.53s}
 #f1-portal .sparks i:nth-child(6){--a:100deg;animation-delay:-.29s}#f1-portal .sparks i:nth-child(7){--a:120deg;animation-delay:-.44s}
@@ -1506,11 +1738,13 @@ const CSS=`
 #f1-portal .sparks i:nth-child(16){--a:300deg;animation-delay:-.67s}#f1-portal .sparks i:nth-child(17){--a:320deg;animation-delay:-.31s}
 #f1-portal .sparks i:nth-child(18){--a:340deg;animation-delay:-.5s}
 #f1-portal.on{opacity:1}#f1-portal.on .gate{opacity:1;transform:translate(-50%,-50%) scale(1)}
-#f1-portal.jump{opacity:1;background:radial-gradient(ellipse at 50% 39%,#fff 0,rgba(255,214,251,.94) 34%,rgba(171,66,255,.75) 58%,rgba(38,9,78,.3) 100%)}
+#f1-portal.jump{opacity:1;background:radial-gradient(ellipse at 50% 42%,#fff 0,rgba(255,214,251,.96) 31%,rgba(171,66,255,.78) 56%,rgba(38,9,78,.28) 100%)}
 #f1-portal.jump .gate{opacity:0;transform:translate(-50%,-50%) scale(1.28)}
 @keyframes f1portalpulse{from{opacity:.38;transform:scale(.96)}to{opacity:1;transform:scale(1.035)}}
 @keyframes f1portalorbit{to{transform:rotate(360deg)}}
-@keyframes f1portalspark{0%{opacity:0;scale:.2}25%{opacity:1}100%{opacity:0;scale:1.5}}
+@keyframes f1portalnebula{to{transform:rotate(360deg) scale(1.04)}}
+@keyframes f1portalspark{0%{opacity:0;scale:.18}32%{opacity:1}68%{opacity:.78}100%{opacity:0;scale:1.35}}
+@media(max-width:700px){#f1-portal .gate{width:58vw;height:52vh;top:42%}#f1-portal .sparks i{transform:rotate(var(--a)) translateY(-27vh)}}
 /* 🪽 ป้าย DRS (รอบ 898) — ซ่อนตอนไม่อยู่ในโซน · เทาตอนยังเปิดไม่ได้ · เขียวเรืองตอนเปิด */
 #f1-drs{position:absolute;right:10px;bottom:calc(var(--f1-pedb) + 150px);z-index:6;pointer-events:none;display:none;text-align:right;
   border-radius:12px;padding:4px 11px;font-weight:900;font-size:19px;line-height:1.15;letter-spacing:.5px}
@@ -1669,6 +1903,9 @@ const CSS=`
 #f1-throttle b{color:#67ddff;text-shadow:0 0 10px rgba(0,190,255,.95)}
 #f1-hud{background:linear-gradient(180deg,rgba(21,31,44,.78),rgba(2,6,11,.82));border:1px solid rgba(179,220,243,.28);
   border-radius:16px;padding:4px 16px 6px;box-shadow:inset 0 1px rgba(255,255,255,.12),0 5px 20px rgba(0,0,0,.42)}
+/* Cockpit already has the same live data on its steering wheel; avoid a duplicate
+   floating box. Chase/road views keep the HUD because they have no wheel display. */
+#f1-wrap.fp #f1-hud{display:none}
 #f1-gear{clip-path:polygon(12% 0,88% 0,100% 25%,100% 75%,88% 100%,12% 100%,0 75%,0 25%);
   background:linear-gradient(180deg,#ff3145,#8d0712);border-radius:0;min-width:24px}
 @media (max-height:430px){
@@ -1711,7 +1948,7 @@ function buildDom(){
     <div id="f1-lights"><div class="row"><i></i><i></i><i></i><i></i><i></i></div><b>🚦 รอไฟดับก่อนออกตัว</b></div>
     <div id="f1-gap"></div>
     <div id="f1-wrong">↩️ วิ่งผิดทาง! กลับรถ</div>
-    <div id="f1-portal" aria-hidden="true"><div class="gate"><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+    <div id="f1-portal" aria-hidden="true"><div class="nebula"></div><div class="gate"><div class="filaments"></div><div class="core"></div><div class="sparks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
     <div id="f1-resp">🌀 กลับเข้าเส้นทางแล้ว!</div>
     <div id="f1-ban"></div>
     <div id="f1-selfmsg"></div>
@@ -1866,8 +2103,10 @@ function build(){
   scene.background=new THREE.Color(0x0d1430);
   scene.fog=new THREE.Fog(0x0d1430,340,1600);
   camera=new THREE.PerspectiveCamera(64,16/9,0.3,2100);
-  renderer=new THREE.WebGLRenderer({canvas:wrapEl.querySelector('#f1-cv'),antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));
+  thermalMobile=isThermalMobile();
+  /* MSAA คิดทุกพิกเซลทุกเฟรมและเครื่องมือถือมี DPR สูงอยู่แล้ว — ปิดเฉพาะมือถือเพื่อลดความร้อน */
+  renderer=new THREE.WebGLRenderer({canvas:wrapEl.querySelector('#f1-cv'),antialias:!thermalMobile});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,thermalMobile?1.25:2));
   /* แสงจัดแบบสนามไฟสปอตไลต์: ขาวนวลจ้าจากบน (ไฟสนาม) + อุ่นชดเชย + hemisphere หนา */
   const hemi=new THREE.HemisphereLight(0x9aabdf,0x40361f,0.72); scene.add(hemi);
   const sun=new THREE.DirectionalLight(0xf4f7ff,1.05);
@@ -1912,6 +2151,7 @@ function build(){
   buildDrsBoards();      // 🪽 รอบ 908 — ป้ายเสา DRS (ต้องมาหลัง TexLib.glow + findDrsZones + มี scene แล้ว)
   /* รถเรา */
   carGrp=buildF1Car(0xe10600);
+  addPlayerContactShadow(carGrp);
   scene.add(carGrp);
   attachDrsGlow(carGrp);                      // 🪽 รอบ 904 (รถเราคันเดียว — เพื่อนไม่ส่งสถานะ DRS)
   wheels=carGrp.userData.wheels||[]; steerParts=carGrp.userData.front||[];
@@ -1919,7 +2159,7 @@ function build(){
   makeCar(0xe10600,g=>{
     if(!g||g===carGrp) return;
     scene.remove(carGrp);
-    carGrp=g; scene.add(carGrp);
+    carGrp=g;addPlayerContactShadow(carGrp);scene.add(carGrp);
     attachDrsGlow(carGrp);
     wheels=g.userData.wheels||[]; steerParts=g.userData.front||[];
     if(camMode==='cockpit') carGrp.visible=false;   // 🪖 รอบ 901 — GLB มาทีหลัง ต้องซ่อนตามโหมด
@@ -2233,17 +2473,19 @@ function barrierBounce(){
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate(35);
   return true;
 }
-/* จุดชน OBB ของรถสองคัน — คืน normal จากรถ B มาหารถ A และระยะที่ซ้อนกันน้อยที่สุด */
-function carContact(ax,az,ay,bx,bz,by){
-  const dx=bx-ax,dz=bz-az;
+/* OBB ย่อยหนึ่งคู่ — คืน normal จาก B มาหา A */
+function carPartContact(ax,az,ay,ap,bx,bz,by,bp){
   const afx=Math.sin(ay),afz=Math.cos(ay),arx=afz,arz=-afx;
   const bfx=Math.sin(by),bfz=Math.cos(by),brx=bfz,brz=-bfx;
+  const acx=ax+arx*ap[0]+afx*ap[1],acz=az+arz*ap[0]+afz*ap[1];
+  const bcx=bx+brx*bp[0]+bfx*bp[1],bcz=bz+brz*bp[0]+bfz*bp[1];
+  const dx=bcx-acx,dz=bcz-acz;
   const axes=[[arx,arz],[afx,afz],[brx,brz],[bfx,bfz]];
   let best=Infinity,bnx=0,bnz=0;
   for(const a of axes){
     const nx=a[0],nz=a[1],proj=dx*nx+dz*nz;
-    const ra=CAR_HALF_W*Math.abs(nx*arx+nz*arz)+CAR_HALF_L*Math.abs(nx*afx+nz*afz);
-    const rb=CAR_HALF_W*Math.abs(nx*brx+nz*brz)+CAR_HALF_L*Math.abs(nx*bfx+nz*bfz);
+    const ra=ap[2]*Math.abs(nx*arx+nz*arz)+ap[3]*Math.abs(nx*afx+nz*afz);
+    const rb=bp[2]*Math.abs(nx*brx+nz*brz)+bp[3]*Math.abs(nx*bfx+nz*bfz);
     const over=ra+rb-Math.abs(proj);
     if(over<=0) return null;
     if(over<best){
@@ -2252,6 +2494,17 @@ function carContact(ax,az,ay,bx,bz,by){
     }
   }
   return {nx:bnx,nz:bnz,depth:best};
+}
+/* compound Formula footprint: broad phase แค่ตัดคันไกล; contact ต้องมาจากชิ้นโมเดลชนกันจริง */
+function carContact(ax,az,ay,bx,bz,by){
+  const dx=bx-ax,dz=bz-az;
+  if(dx*dx+dz*dz>(CAR_HIT_RADIUS*2)*(CAR_HIT_RADIUS*2)) return null;
+  let hit=null;
+  for(const ap of CAR_HIT_PARTS) for(const bp of CAR_HIT_PARTS){
+    const c=carPartContact(ax,az,ay,ap,bx,bz,by,bp);
+    if(c&&(!hit||c.depth>hit.depth)) hit=c;
+  }
+  return hit;
 }
 function resolvePeerCars(dt){
   let hit=false;
@@ -2383,8 +2636,7 @@ function physTick(dt){
   const audioThr=clamp(padThr+(kThr?1:0),0,1);     // ให้เร่งเครื่องรอไฟสตาร์ทได้ โดยไม่ส่งแรงไปที่ล้อ
   Snd.tick(spd,audioThr,slide>0.4&&spd>12,dt,drsOn,braking,camMode);   // sample RPM + เกียร์ + cockpit/chase
   /* หลุดจากผิวถนนแข่งต่อเนื่อง: runoff/ทรายเปิดประตูมิติ แล้วกลับตรง track segment ใกล้จุดที่หลุด */
-  if(surf==='sand'||surf==='runoff') sandT+=dt; else sandT=0;
-  if(sandT>=OFFTRACK_S) beginPortalReturn();
+  if(surf==='sand'||surf==='runoff'){sandT=OFFTRACK_S;beginPortalReturn();}else sandT=0;
   /* จับเวลา + เช็คทิศ */
   progressTick(dt);
 }
@@ -2444,7 +2696,9 @@ function fmtLap(t){
 }
 /* ควัน/ฝุ่น */
 function puffSmoke(sandy){
-  if(smokes.length>26) return;
+  /* มือถือไม่ต้องสะสม particle ที่ลับตา/ซ้อนกันหลายสิบก้อน — gameplay ไม่ได้ใช้ควันคำนวณ */
+  const cap=thermalMobile?(thermalLevel?4:8):26;
+  if(smokes.length>=cap) return;
   const m=new THREE.Sprite(new THREE.SpriteMaterial({map:TexLib.glow,transparent:true,
     color:sandy?0xcdb47f:0xbbbbbb,opacity:0.5,depthWrite:false}));
   m.position.set(px-Math.sin(yaw)*1.8+(Math.random()-0.5),0.5,pz-Math.cos(yaw)*1.8+(Math.random()-0.5));
@@ -3105,8 +3359,15 @@ function fpWheelTick(dt){
 function cockpitBox(){
   if(!cockpitEl) return null;
   const bw=cockpitEl.clientWidth, bh=cockpitEl.clientHeight;
-  const iw=WHEEL_IMG_W, ih=WHEEL_IMG_H;
+  const quality=activeGraphicsMode==='quality';
+  const iw=quality?QUALITY_PLATE_W:WHEEL_IMG_W, ih=quality?QUALITY_PLATE_H:WHEEL_IMG_H;
   if(!bw||!bh) return null;
+  /* The quality plate is CSS width:100%/height:auto and its image bottom is 1vh
+     below the cockpit. Return those exact painted bounds for the measured anchors. */
+  if(quality){
+    const w=bw,h=bw*ih/iw;
+    return {w,h,left:0,top:bh+bh*.01-h,sy:1};
+  }
   const cs=getComputedStyle(cockpitEl);
   let w,h;
   const pc=cs.backgroundSize.match(/(-?[\d.]+)%\s+(-?[\d.]+)%/);
@@ -3156,7 +3417,6 @@ function wheelTick(){
     sy2=Math.sin(shakeT*Math.PI*2*SHAKE_HZ*1.7+1.3)*a*0.6;
   }
   const r=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+deg.toFixed(2)+'deg)';
-  const qr=(shaking?'translate('+sx.toFixed(2)+'px,'+sy2.toFixed(2)+'px) ':'')+'rotate('+handDeg.toFixed(2)+'deg)';
   const tr=Math.abs(wheelSy-1)<0.01?r
     :'scaleY('+wheelSy.toFixed(4)+') '+r+' scaleY('+(1/wheelSy).toFixed(4)+')';
   wheelEl.style.transform=tr;
@@ -3169,7 +3429,10 @@ function wheelTick(){
   }
   if(knobEl) knobEl.style.setProperty('--ctl-turn',(deg*1.25).toFixed(2)+'deg');
   if(ledsEl) ledsEl.style.transform=wheelEl.style.transform;   // 🚥 รอบ 918 — ดวงไฟหมุนไปกับพวงมาลัย
-  if(dashEl) dashEl.style.transform=quality?qr:tr; // Quality ใช้องศาเดียวกับภาพมือ ±14°
+  if(dashEl){
+    if(quality) positionQualityDash(handDeg,sx,sy2);
+    else dashEl.style.transform=tr;
+  }
 }
 /* ============================================================
    🔢 รอบ 916 — จอบนพวงมาลัยเป็น "ของจริง"
@@ -3178,8 +3441,36 @@ function wheelTick(){
    หมุน+สั่นไปพร้อมพวงมาลัยเพราะใช้ transform และแกนหมุนชุดเดียวกัน (ดู wheelTick)
    ============================================================ */
 const DASH_FONT="'Kanit','Segoe UI',sans-serif";
+let qualityDashBox=null;
+function positionQualityDash(handDeg,shakeX=0,shakeY=0){
+  if(!dashEl||!qualityDashBox) return;
+  const b=qualityDashBox, center=QUALITY_DASH_POSE.center;
+  const t=clamp(Math.abs(handDeg)/QUALITY_HAND_MAX_DEG,0,1);
+  const edge=handDeg<0?QUALITY_DASH_POSE.left:QUALITY_DASH_POSE.right;
+  const p={
+    cx:lerp(center.cx,edge.cx,t),cy:lerp(center.cy,edge.cy,t),
+    w:lerp(center.w,edge.w,t),h:lerp(center.h,edge.h,t),deg:lerp(0,edge.deg,t)
+  };
+  const sx=b.w/QUALITY_PLATE_W,sy=b.h/QUALITY_PLATE_H,w=p.w*sx,h=p.h*sy;
+  dashEl.style.width=w+'px'; dashEl.style.height=h+'px';
+  dashEl.style.left=(b.left+p.cx*sx-w/2)+'px';
+  dashEl.style.top=(b.top+p.cy*sy-h/2)+'px';
+  dashEl.style.transformOrigin='50% 50%';
+  dashEl.style.transform=(shakeX||shakeY?'translate('+shakeX.toFixed(2)+'px,'+shakeY.toFixed(2)+'px) ':'')+'rotate('+p.deg.toFixed(2)+'deg)';
+}
 function layoutDash(b){
   if(!dashEl||!dashCtx) return;
+  if(activeGraphicsMode==='quality'){
+    qualityDashBox=b;
+    positionQualityDash(0);
+    const w=QUALITY_DASH_POSE.center.w*b.w/QUALITY_PLATE_W;
+    const k=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||1))*w/DASH_PX.w;
+    const cw=Math.max(1,Math.round(DASH_PX.w*k)),ch=Math.max(1,Math.round(DASH_PX.h*k));
+    if(dashEl.width!==cw||dashEl.height!==ch){dashEl.width=cw;dashEl.height=ch;}
+    dashK=k;dashSig='';
+    return;
+  }
+  qualityDashBox=null;
   const sx=b.w/WHEEL_IMG_W, sy=b.h/WHEEL_IMG_H;     // ภาพถูกย่อ/ยืดเท่าไหร่บนจอจริง (จอกว้างเตี้ยยืดแนวตั้ง)
   const w=DASH_PX.w*sx, h=DASH_PX.h*sy;
   dashEl.style.width=w+'px';  dashEl.style.height=h+'px';
@@ -3374,23 +3665,55 @@ function hudTick(){
   drsHud();
 }
 let mapAt=0, relocAt=0;
+function applyThermalPixelRatio(){
+  if(!renderer) return;
+  const k=thermalLevel>=2?0.72:(thermalLevel===1?0.86:1);
+  const next=thermalMobile?Math.max(.9,thermalBasePR*k):thermalBasePR;
+  if(Math.abs(renderer.getPixelRatio()-next)>.02) renderer.setPixelRatio(next);
+}
+function thermalGovernorTick(dt){
+  if(!thermalMobile) return;
+  thermalAvgMs=lerp(thermalAvgMs,dt*1000,.035);
+  const moving=spd>.8||padThr>.02||padBr||kThr||kBack||portalActive;
+  if(moving&&thermalAvgMs>25){thermalSlowT+=dt;thermalCoolT=0;}else if(thermalAvgMs<20){thermalCoolT+=dt;thermalSlowT=Math.max(0,thermalSlowT-dt*.5);}
+  else{thermalSlowT=Math.max(0,thermalSlowT-dt*.15);thermalCoolT=0;}
+  let next=thermalLevel;
+  if(thermalSlowT>7&&thermalAvgMs>31) next=2;
+  else if(thermalSlowT>3) next=Math.max(next,1);
+  else if(thermalCoolT>12) next=Math.max(0,next-1);
+  if(next!==thermalLevel){thermalLevel=next;thermalSlowT=0;thermalCoolT=0;applyThermalPixelRatio();}
+}
+function thermalRenderDue(now){
+  if(!thermalMobile){thermalTargetFps=60;thermalRendered++;return true;}
+  const important=portalActive||slide>.34;
+  const active=important||spd>.8||padThr>.02||padBr||kThr||kBack;
+  thermalTargetFps=important?45:(active?(thermalLevel>=2?30:(thermalLevel===1?36:45)):20);
+  const interval=1000/thermalTargetFps;
+  if(thermalRenderAt&&now-thermalRenderAt<interval-.5){thermalSkipped++;return false;}
+  /* เดิน deadline ต่อด้วย interval แทนตั้งเป็น now ทุกครั้ง: ได้ pattern 45/36/30 FPS บนจอ 60Hz จริง */
+  thermalRenderAt=thermalRenderAt?Math.max(now-interval,thermalRenderAt+interval):now;thermalRendered++;return true;
+}
 function frame(dt,now){
+  thermalGovernorTick(dt);
+  const visualDue=thermalRenderDue(now);
   lightsTick(dt);          // 🚦 รอบ 902 — ต้องมาก่อน physTick (ล็อกคันเร่งจนไฟดับ)
   peerTick(dt);            // 🏎️💥 รอบ 1208 — อัปเดตรถเพื่อนก่อนแก้การชน ให้ภาพ/ฟิสิกส์ใช้ตำแหน่งเฟรมเดียวกัน
   physTick(dt);
   ghostTick(dt);           // 👻 รอบ 902
   collectTick();
   smokeTick(dt);
-  fpWheelTick(dt);         // 🛞 รอบ 911 — ต้องมาหลัง physTick (ใช้ px/pz/yaw ล่าสุด)
+  if(visualDue) fpWheelTick(dt); // 🛞 visual-only: เฟรมที่ไม่ render ไม่ต้องขยับ mesh/DOM ซ้ำ
   camTick(dt);
-  wheelTick();             // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
-  dashTick(dt);            // 🔢 รอบ 916 — จอเกียร์/ความเร็ว/รอบเครื่องบนพวงมาลัย (ต้องมาหลัง wheelTick ให้ transform ตรงเฟรมเดียวกัน)
-  ledTick(dt);             // 🚥 รอบ 918 — ไฟบนขอบพวงมาลัย (ต้องมาหลัง dashTick: ใช้ dashRpm ก้อนเดียวกัน)
-  hudTick();
+  if(visualDue){
+    wheelTick();           // 🎡 รอบ 913 — พวงมาลัยหมุนตาม steer
+    dashTick(dt);          // 🔢 จอ canvas วาดเฉพาะเฟรมที่จะขึ้นจอ ลด CPU/GPU upload ตอน idle
+    ledTick(dt);
+    hudTick();
+  }
   netSend(false);
-  if(now-mapAt>200){ mapAt=now; drawMap(); }
+  if(visualDue&&now-mapAt>200){ mapAt=now; drawMap(); }
   if(now-relocAt>3000){ relocAt=now; relocTick(); }
-  renderer.render(scene,camera);
+  if(visualDue) renderer.render(scene,camera);
 }
 function tick(now){
   if(!running) return;
@@ -3430,12 +3753,16 @@ function applyEnvironmentProfile(profile,mode){
   if(wrapEl) wrapEl.classList.toggle('realistic',realistic);
   if(fpWheels) fpWheels.visible=camMode==='cockpit'&&!realistic;
   if(camMode==='cockpit'&&cockpitEl) requestAnimationFrame(layoutWheel);
-  const tierCap=realisticTier==='low'?1.45:(realisticTier==='medium'?1.8:Number(r.pixelRatioCap)||2.35);
-  renderer.setPixelRatio(Math.min(devicePixelRatio||1,realistic?tierCap:(Number(r.pixelRatioCap)||2)));
+  const tierCap=realisticTier==='low'?1.35:(realisticTier==='medium'?1.65:Number(r.pixelRatioCap)||2.35);
+  thermalMobile=isThermalMobile();
+  thermalBasePR=Math.min(devicePixelRatio||1,realistic?tierCap:(Number(r.pixelRatioCap)||2),thermalMobile?(realistic?1.25:1.35):99);
+  thermalLevel=0;thermalAvgMs=16.7;thermalSlowT=thermalCoolT=0;applyThermalPixelRatio();
   if(typeof THREE.NoToneMapping!=='undefined'&&typeof THREE.ACESFilmicToneMapping!=='undefined')
     renderer.toneMapping=r.toneMapping==='aces'?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
   if(Number.isFinite(r.exposure)) renderer.toneMappingExposure=r.exposure;
-  if(Number.isFinite(e.background)) scene.background.setHex(e.background);
+  const backgroundColor=Number.isFinite(e.background)?e.background:0x0d1430;
+  if(realistic)useRacingSky();
+  else scene.background=new THREE.Color(backgroundColor);
   if(scene.fog){
     if(Number.isFinite(e.fogColor)) scene.fog.color.setHex(e.fogColor);
     if(Number.isFinite(e.fogNear)) scene.fog.near=e.fogNear;
@@ -3448,6 +3775,7 @@ function applyEnvironmentProfile(profile,mode){
     if(Number.isFinite(e.hemisphere)) envLights.hemi.intensity=e.hemisphere;
     if(Number.isFinite(e.keyLight)) envLights.sun.intensity=e.keyLight;
     if(Number.isFinite(e.warmLight)) envLights.warm.intensity=e.warmLight;
+    envLights.warm.visible=!thermalMobile; // มือถือใช้ hemisphere+key ก็พอ ตัด directional-light evaluation รองทุก fragment
   }
 }
 function start(options){
@@ -3456,6 +3784,7 @@ function start(options){
   options=options||{};
   applyEnvironmentProfile(options.environmentProfile,options.graphicsMode);
   if(!Array.isArray(state[DONE_KEY])) state[DONE_KEY]=[];
+  thermalRenderAt=0;thermalRendered=0;thermalSkipped=0;
   wrapEl.classList.add('on');
   introEl.style.display='flex';
   exitBox.classList.remove('on');
@@ -3618,6 +3947,11 @@ window.F1World={
     get surf(){return surfNow}, setSurf(v){ surfNow=v; },   // 🫨🎡 รอบ 914 — เทสต์มือสั่นโดยไม่ต้องขับจริงไปชน kerb
     get portal(){return {active:portalActive,t:portalT,jumped:portalJumped,target:portalTargetIdx,
       cls:portalEl?portalEl.className:''};},
+    get thermal(){return {mobile:thermalMobile,level:thermalLevel,avgMs:thermalAvgMs,targetFps:thermalTargetFps,
+      pixelRatio:renderer?renderer.getPixelRatio():0,rendered:thermalRendered,skipped:thermalSkipped,
+      smokeCap:thermalMobile?(thermalLevel?4:8):26};},
+    setThermal(v){v=v||{};if('mobile'in v)thermalMobile=!!v.mobile;if('level'in v)thermalLevel=clamp(v.level|0,0,2);
+      thermalRenderAt=0;thermalRendered=thermalSkipped=0;applyThermalPixelRatio();},
     get camMode(){return camMode}, setCamMode(v){ camMode=v; applyCamMode(); },
     get peers(){return peers},
     fakePeer(uid,x,z,extra){ onPeer(uid,Object.assign({n:'เทส '+uid,x,z,yaw:0},extra||{})); return peers[uid]; },

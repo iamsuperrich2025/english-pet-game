@@ -53,6 +53,7 @@ REQUIRED_BUILD_ASSETS = (
     ("tools/build_web.mjs", "img/f1/cockpit_turn_left.webp"),
     ("tools/build_web.mjs", "img/f1/cockpit_turn_right.webp"),
     ("tools/build_web.mjs", "img/f1/peer_car_25d.webp"),
+    ("tools/build_web.mjs", "img/f1/sky_racing_1024.webp"),
 )
 
 PICDICT_RE = re.compile(r"""['"]([^'"/]+\.png)['"]""")

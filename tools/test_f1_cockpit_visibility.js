@@ -22,8 +22,16 @@ assert.match(src,/handDeg<0\?['"]img\/f1\/cockpit_turn_left\.webp['"]:['"]img\/f
   'The live steering direction must select genuinely different left/right hand poses');
 assert.match(src,/knobEl\.style\.setProperty\('--ctl-turn'/,
   'Touch/keyboard steering control must visibly rotate with actual steer');
-assert.match(src,/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important[^}]*left:44vw[^}]*top:calc\(101vh - 14vw\)/,
-  'Realistic must retain a correctly aligned live dashboard');
+assert.match(src,/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important\}/,
+  'Realistic must retain the live steering-wheel dashboard');
+assert.match(src,/QUALITY_DASH_POSE=\{[\s\S]*left:[\s\S]*deg:-23[\s\S]*right:[\s\S]*deg:21\.8/,
+  'Realistic dashboard must use locations measured from all three cockpit frames');
+assert.match(src,/function positionQualityDash\([\s\S]*lerp\(center\.cx,edge\.cx,t\)[\s\S]*rotate\('\+p\.deg/,
+  'Realistic dashboard must interpolate position and angle with the visible hand frame');
+assert.doesNotMatch(src,/#f1-wrap\.realistic\.fp #f1-dash\{[^}]*left:44vw/,
+  'Realistic dashboard must not drift from a viewport-relative hard-coded offset');
+assert.match(src,/#f1-wrap\.fp #f1-hud\{display:none\}/,
+  'Cockpit must not show the duplicate floating speed and gear box');
 assert.match(src,/g\.name=['"]F1_FP_WHEELS['"]/,
   'The separate first-person wheel group must remain identifiable for visual QA');
 assert.match(src,/fpWheels\.visible=fp&&activeGraphicsMode!==['"]quality['"]/,

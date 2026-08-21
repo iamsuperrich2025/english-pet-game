@@ -63,7 +63,7 @@ async function sourceFiles() {
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
       'sound/racing/engineSound.mp3', 'img/f1/cockpit_turn_center.webp', 'img/f1/cockpit_turn_left.webp',
-      'img/f1/cockpit_turn_right.webp', 'img/f1/peer_car_25d.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
+      'img/f1/cockpit_turn_right.webp', 'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
       'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
       'js/rankgraph.js', 'css/rankgraph.css',
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
