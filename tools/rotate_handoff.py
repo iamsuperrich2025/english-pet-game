@@ -3,11 +3,12 @@
 """rotate_handoff.py — เก็บกวาดไฟล์บูต (HANDOFF.md / handoff/TASKS.md) ให้ผอมเสมอ
 เพื่อประหยัด token ตอนเริ่ม session ใหม่ · **ย้ายทั้งก้อน verbatim ไม่ลบข้อมูล**
 
-ทำ 4 อย่าง:
+ทำ 5 อย่าง:
   1. HANDOFF.md  "## 📸 สถานะปัจจุบัน"    : เก็บ bullet รอบล่าสุด 3 อัน → ที่เหลือเข้า archive
   2. TASKS.md    "### 📌 สรุปสถานะล่าสุด"  : เก็บ bullet รอบล่าสุด 10 อัน → ที่เหลือเข้า archive
   3. TASKS.md    "### ... รอบ N ..." (รายละเอียดรอบ): เก็บ 6 section แรก → ที่เหลือเข้า archive
-  4. TASKS.md    "## 📌 ประวัติรอบล่าสุด" : ย้ายเนื้อทั้งหมดเข้า archive เหลือบรรทัดชี้
+  4. TASKS.md    "### 📌 สรุปสถานะล่าสุด" : เก็บ bullet ล่าสุดทั้งหัวข้อ 12 บรรทัด (รวมผลทดสอบที่ไม่มีคำว่า “รอบ”)
+  5. TASKS.md    "## 📌 ประวัติรอบล่าสุด" : ย้ายเนื้อทั้งหมดเข้า archive เหลือบรรทัดชี้
 
 ปลายทาง archive: handoff/archive/HANDOFF_STATUS.md · TASKS_STATUS.md · TASKS_ROUNDS.md
 ก่อนแก้จะสำรองไฟล์เดิมไว้ที่ backups/handoff_rotate/<timestamp>/ เสมอ (gitignore แล้ว)
@@ -30,6 +31,7 @@ BAK_ROOT = os.path.join(ROOT, "backups", "handoff_rotate")
 
 KEEP_HANDOFF_BULLETS = 3
 KEEP_TASKS_BULLETS = 10
+KEEP_TASKS_STATUS_LINES = 12  # กันรายละเอียด bullet ที่ไม่มี “รอบ N” สะสมจนไฟล์บูตบวม
 KEEP_TASKS_SECTIONS = 6
 KEEP_STATUS_HEADS = 8      # 🆕 เก็บ "### 📌 สรุปสถานะล่าสุด" ล่าสุดกี่หัวข้อ (ที่เหลือเข้า archive)
 
@@ -177,6 +179,27 @@ def rotate_status_bullets(lines, keep):
     append_archive("TASKS_STATUS.md", "handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)", moved_lines)
     print("  bullet ในหัวข้อสรุปสถานะ: ย้าย %d รอบ → TASKS_STATUS.md (เหลือ %d)" % (moved_n, kept))
     return [ln for k, ln in enumerate(lines) if k not in drop], moved_n
+
+
+def rotate_status_tail(lines, keep):
+    """เก็บ bullet ล่าสุดของหัวข้อสรุปทั้งก้อน ไม่ว่าบรรทัดนั้นจะมีคำว่า “รอบ N” หรือไม่.
+
+    ผลทดสอบมักเป็น bullet ต่อจากหัวข้อรอบ จึงหลุดจาก rotate_status_bullets เดิมและทำให้
+    TASKS.md โตเกินงบ แม้จะหมุน round header ไปแล้ว. ย้าย tail แบบ verbatim เข้า archive เสมอ.
+    """
+    s, e = find_section(lines, "### ", "สรุปสถานะล่าสุด", ["### ", "## "])
+    if s is None:
+        print("  bullet ทั้งหัวข้อสรุป: (ไม่พบหัวข้อ — ข้าม)")
+        return lines, 0
+    bullets = [i for i in range(s + 1, e) if lines[i].startswith("- ")]
+    if len(bullets) <= keep:
+        print("  bullet ทั้งหัวข้อสรุป: %d ≤ %d — ไม่ต้องหมุน" % (len(bullets), keep))
+        return lines, 0
+    cut = bullets[keep]
+    moved = lines[cut:e]
+    append_archive("TASKS_STATUS.md", "handoff/TASKS.md (รายละเอียดสรุปเกินงบ)", moved)
+    print("  bullet ทั้งหัวข้อสรุป: ย้าย %d bullet → TASKS_STATUS.md (เหลือ %d)" % (len(bullets) - keep, keep))
+    return lines[:cut] + lines[e:], len(bullets) - keep
 
 
 def rotate_status_heads(lines, keep):
@@ -374,13 +397,14 @@ def main():
 
     print("handoff/TASKS.md:")
     lines = read_lines(TASKS)
+    lines, n0 = rotate_status_tail(lines, KEEP_TASKS_STATUS_LINES)
     lines, n1 = rotate_status_bullets(lines, KEEP_TASKS_BULLETS)   # 🩹 รอบ 532: ไล่ "ทุก" หัวข้อ ไม่ใช่หัวข้อแรก
     lines, n2 = rotate_round_sections(lines, KEEP_TASKS_SECTIONS)
     lines, n3 = rotate_history_section(lines)
     lines, n4 = rotate_status_heads(lines, KEEP_STATUS_HEADS)   # 🆕 ต้นตอไฟล์บวม
-    if n1 or n2 or n3 or n4:
+    if n0 or n1 or n2 or n3 or n4:
         write_lines(TASKS, lines)
-    total += n1 + n2 + n3 + n4
+    total += n0 + n1 + n2 + n3 + n4
 
     report("📏 หลังหมุน —")
     warn_long_lines()

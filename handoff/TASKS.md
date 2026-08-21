@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1206 · handoff history compact:** ตัวหมุนเก็บ 12 bullet ล่าสุดของส่วนสรุปเท่านั้น และย้าย bullet เก่าทั้งก้อนไป `handoff/archive/TASKS_STATUS.md` อย่างปลอดภัย; `TASKS.md` ลดจากเกินงบเหลือ 17.8KB โดยไม่กระทบ runtime เกม
 - **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
 - **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
 - Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy
@@ -39,7 +40,6 @@
 - Node/Hotel regressions ผ่าน; Browser เกมจริงยืนยันหน้า atlas + viewport 1320×619/812×375 และ build `.1082` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1201 · อันดับพิมพ์คำแสดงผู้เล่นที่เหลือครบ:** แยก Top 10 ผู้รับรางวัลออกจากจำนวนแสดงเต็มจอ และขยายรายการเป็น Top 100 เท่าหมวดเหรียญ โดยอันดับ 11–100 ไม่มีรางวัลเพิ่ม (`js/ui.js`)
 - เพิ่ม regression กันตัดกลับเหลือ 10; syntax/diff ผ่าน และ Browser demo 100 คนที่ 812×375/1320×619 ยืนยันอันดับ 100 เลื่อนเห็นจริง กล่องอยู่ใน viewport, overflow X=0, console error 0
-- **รอบ 1200 · P0 ตัวละคร Soft Cuboid Chibi 3D:** Drive/Haunted Hotel/Soccer ใช้ rounded cuboid cache + สัดส่วนหัวใหญ่ตัวสั้นและใบหน้ายิ้ม; Soccer local/peer ตรงกัน ส่วน Adventure เดิมแยก `makeLegacyAdventureFigure()` จึงไม่รับ reskin (`js/adventure3d.js`)
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
