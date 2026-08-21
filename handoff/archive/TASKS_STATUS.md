@@ -5286,3 +5286,11 @@
 ## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - syntax + F1 Realistic + solo/ghost + collision/portal regressions ผ่าน (`tools/test_f1_realistic_circuit.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- Regression/syntax ผ่าน; Browser QA สูงสุด 9 คู่แข่งที่ 812×375 ได้ 60 FPS ในเครื่องทดสอบ และตรวจจริงทุกคัน `pbr=0`, `shadows=0` (`tools/test_f1_realistic_circuit.js`)
+- **รอบ 1208 · รถเพื่อน F1 ไม่ลอย/ไม่บิดเข้ากล้อง:** ต้นตอคือ camera-facing 2.5D sprite ที่ไม่เคยหันตามแทร็ก; เปลี่ยนเป็น low-poly F1 3D วางฐาน y=0 และหมุนตาม remote yaw จริง โดยคงเงา/ป้ายชื่อ/DRS (`js/f1_3d.js`)
+- เพิ่ม solid OBB ตาม yaw ของรถทุกคันและส่ง velocity ผ่าน NetRoom: ชนแล้วแยกไม่ทะลุ, สะท้อน 34%, มีแรงเสียดทานตอนเบียด; Browser QA ชน 22 m/s ได้ `hit=true` และเด้งกลับ 7.48 m/s
+- ปรับประตูมิติเป็นแกนขาวร้อน–ชมพูไฟฟ้า–ม่วงเข้ม 3 ชั้น + 18 energy rays, ศูนย์กลางโปร่งเห็นสนามและวางหลัง cockpit ตามภาพต้นแบบ; QA 730×400 ผ่าน
