@@ -109,6 +109,7 @@ const DASH_PX = {x:654, y:500, w:232, h:118};   // กรอบจอ (รวม
    from the actual center/left/right WebP frames (not guessed from steering angle),
    so the live canvas stays inside the photographed wheel display while it turns. */
 const QUALITY_PLATE_W=1672, QUALITY_PLATE_H=941;
+const QUALITY_DASH_SCALE=.82; // รอบ 1214: ให้จอสดอยู่ในขอบ LCD จริง ไม่ทับปุ่ม/กรอบพวงมาลัย
 const QUALITY_DASH_POSE={
   center:{cx:836.5,cy:767,w:201,h:102,deg:0},
   left:  {cx:798.5,cy:758,w:200,h:100,deg:-23},
@@ -180,7 +181,7 @@ let keydownFn, keyupFn, resizeFn;
 let px=0, pz=0, yaw=0, vx=0, vz=0, spd=0, steer=0, slide=0, carGrp=null, wheels=[], steerParts=[];
 let camPos=null, camInit=false, camYaw=0, shakeT=0;
 let camMode='cockpit', cockpitEl=null, cockpitTurnEl=null, cockpitTurnSrc='', camBtnEl=null;   // 🪖 รอบ 901 — มุมคนขับเป็นภาพหลัก
-let padRev=false, revNow=false, sandT=0, respEl=null, portalEl=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
+let padRev=false, revNow=false, sandT=0, respEl=null, portalEl=null, portalActive=false, portalT=0, portalJumped=false, portalTargetIdx=0, portalResumeSpeed=0, fpWheels=null;   // ⏪🏜️🛞 รอบ 911
 let wheelEl=null, qualityWheelEl=null, wheelDeg=null, wheelSy=1; // 🎡 ชั้นพวงมาลัยแยก: Battery image + Quality procedural wheel
 let ledsEl=null, ledEls=[], ledN=-1, ledRpm=0, ledFlashT=0, ledFlash=false;  // 🚥 รอบ 918 — ชั้นดวงไฟ LED รอบเครื่อง
 let dashEl=null, dashCtx=null, dashK=1, dashRpm=0, dashSig='';   // 🔢 รอบ 916 — จอตัวเลขจริงบนพวงมาลัย (K = พิกเซลภาพ→พิกเซล canvas)
@@ -2437,17 +2438,26 @@ function beginPortalReturn(){
   if(portalActive) return;
   portalActive=true; portalT=0; portalJumped=false; sandT=0;
   portalTargetIdx=nearIdx(px,pz,myIdx);
+  portalResumeSpeed=Math.hypot(vx,vz); // รอบ 1214: เก็บความเร็วจริงก่อนเอฟเฟกต์หน่วงรถ
   vx*=.22; vz*=.22; spd=Math.hypot(vx,vz);
   if(portalEl) portalEl.className='on';
   if(state.haptic!==false&&navigator.vibrate) navigator.vibrate([45,35,90]);
 }
 function portalTick(dt){
   portalT+=dt;
-  vx*=Math.pow(.025,dt); vz*=Math.pow(.025,dt); spd=Math.hypot(vx,vz);
+  if(!portalJumped){vx*=Math.pow(.025,dt);vz*=Math.pow(.025,dt);spd=Math.hypot(vx,vz);}
   if(!portalJumped&&portalT>=.68){
     portalJumped=true;
     respawnOnTrack(portalTargetIdx,false);
+    vx=LINE.tx[myIdx]*portalResumeSpeed;vz=LINE.tz[myIdx]*portalResumeSpeed;spd=portalResumeSpeed;
     if(portalEl) portalEl.className='on jump';
+  }
+  /* ประตูกำลังหุบแต่รถออกมาแล้ว: เดินหน้าต่อด้วยความเร็วเดิมและค่อยหันตาม tangent
+     ของสนาม เพื่อไม่ให้ภาพดูหยุดค้างหรือพุ่งตัดโค้งระหว่าง 0.48 วิสุดท้าย */
+  if(portalJumped&&portalResumeSpeed>0){
+    myIdx=nearIdx(px,pz,myIdx);yaw=Math.atan2(LINE.tx[myIdx],LINE.tz[myIdx]);
+    vx=LINE.tx[myIdx]*portalResumeSpeed;vz=LINE.tz[myIdx]*portalResumeSpeed;spd=portalResumeSpeed;
+    px+=vx*dt;pz+=vz*dt;
   }
   if(carGrp){carGrp.position.set(px,0,pz);carGrp.rotation.y=yaw;}
   if(portalT>=1.16){
@@ -3451,7 +3461,7 @@ function positionQualityDash(handDeg,shakeX=0,shakeY=0){
     cx:lerp(center.cx,edge.cx,t),cy:lerp(center.cy,edge.cy,t),
     w:lerp(center.w,edge.w,t),h:lerp(center.h,edge.h,t),deg:lerp(0,edge.deg,t)
   };
-  const sx=b.w/QUALITY_PLATE_W,sy=b.h/QUALITY_PLATE_H,w=p.w*sx,h=p.h*sy;
+  const sx=b.w/QUALITY_PLATE_W,sy=b.h/QUALITY_PLATE_H,w=p.w*sx*QUALITY_DASH_SCALE,h=p.h*sy*QUALITY_DASH_SCALE;
   dashEl.style.width=w+'px'; dashEl.style.height=h+'px';
   dashEl.style.left=(b.left+p.cx*sx-w/2)+'px';
   dashEl.style.top=(b.top+p.cy*sy-h/2)+'px';
@@ -3463,7 +3473,7 @@ function layoutDash(b){
   if(activeGraphicsMode==='quality'){
     qualityDashBox=b;
     positionQualityDash(0);
-    const w=QUALITY_DASH_POSE.center.w*b.w/QUALITY_PLATE_W;
+    const w=QUALITY_DASH_POSE.center.w*b.w/QUALITY_PLATE_W*QUALITY_DASH_SCALE;
     const k=Math.min(2.5,Math.max(1.5,window.devicePixelRatio||1))*w/DASH_PX.w;
     const cw=Math.max(1,Math.round(DASH_PX.w*k)),ch=Math.max(1,Math.round(DASH_PX.h*k));
     if(dashEl.width!==cw||dashEl.height!==ch){dashEl.width=cw;dashEl.height=ch;}
@@ -3802,7 +3812,7 @@ function start(options){
   pz=LINE.z[gi]+LINE.nz[gi]*side;
   yaw=Math.atan2(LINE.tx[gi],LINE.tz[gi]);
   vx=vz=spd=0; steer=0; slide=0; steerCtl=0; padThr=0; padBr=false;
-  padRev=false; revNow=false; sandT=0; portalActive=false; portalT=0; portalJumped=false;
+  padRev=false; revNow=false; sandT=0; portalActive=false; portalT=0; portalJumped=false;portalResumeSpeed=0;
   if(portalEl) portalEl.className='';   // ⏪🏜️🌀
   kL=kR=kThr=kBack=false;
   myIdx=gi; surfNow='track';
@@ -3854,7 +3864,7 @@ function exitWorld(){
   window.removeEventListener('keyup',keyupFn);
   window.removeEventListener('resize',resizeFn);
   Snd.stop();
-  portalActive=false; portalT=0; portalJumped=false;
+  portalActive=false; portalT=0; portalJumped=false;portalResumeSpeed=0;
   if(portalEl) portalEl.className='';
   letters.forEach(l=>scene.remove(l.spr)); letters=[]; word=null;
   smokes.forEach(s=>scene.remove(s.m)); smokes=[];
@@ -3945,7 +3955,7 @@ window.F1World={
         rect:{x:r.x,y:r.y,w:r.width,h:r.height}}; },
     layoutDash:()=>layoutWheel(), dashTick, dashRpmTick, setDashRpm(v){ dashRpm=clamp(v,0,1); dashSig=''; },
     get surf(){return surfNow}, setSurf(v){ surfNow=v; },   // 🫨🎡 รอบ 914 — เทสต์มือสั่นโดยไม่ต้องขับจริงไปชน kerb
-    get portal(){return {active:portalActive,t:portalT,jumped:portalJumped,target:portalTargetIdx,
+    get portal(){return {active:portalActive,t:portalT,jumped:portalJumped,target:portalTargetIdx,resumeSpeed:portalResumeSpeed,
       cls:portalEl?portalEl.className:''};},
     get thermal(){return {mobile:thermalMobile,level:thermalLevel,avgMs:thermalAvgMs,targetFps:thermalTargetFps,
       pixelRatio:renderer?renderer.getPixelRatio():0,rendered:thermalRendered,skipped:thermalSkipped,

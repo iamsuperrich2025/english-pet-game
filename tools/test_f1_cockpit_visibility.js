@@ -26,6 +26,8 @@ assert.match(src,/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important\}/,
   'Realistic must retain the live steering-wheel dashboard');
 assert.match(src,/QUALITY_DASH_POSE=\{[\s\S]*left:[\s\S]*deg:-23[\s\S]*right:[\s\S]*deg:21\.8/,
   'Realistic dashboard must use locations measured from all three cockpit frames');
+assert.match(src,/QUALITY_DASH_SCALE=\.82[\s\S]*p\.w\*sx\*QUALITY_DASH_SCALE[\s\S]*p\.h\*sy\*QUALITY_DASH_SCALE/,
+  'Realistic live screen must fit within the photographed LCD bezel at every steering pose');
 assert.match(src,/function positionQualityDash\([\s\S]*lerp\(center\.cx,edge\.cx,t\)[\s\S]*rotate\('\+p\.deg/,
   'Realistic dashboard must interpolate position and angle with the visible hand frame');
 assert.doesNotMatch(src,/#f1-wrap\.realistic\.fp #f1-dash\{[^}]*left:44vw/,

@@ -66,6 +66,11 @@ assert.ok(/const OFFTRACK_S\s*=\s*0/.test(f1)&&/if\(surf==='sand'\|\|surf==='run
   'portal recovery must open in the first off-road frame with no hidden 2-3 second timer');
 assert.ok(/if\(portalActive\)\{portalTick\(dt\);return;\}/.test(f1),
   'portal recovery must lock physics during the jump');
+assert.ok(/portalResumeSpeed=Math\.hypot\(vx,vz\)/.test(f1)&&
+  /vx=LINE\.tx\[myIdx\]\*portalResumeSpeed;vz=LINE\.tz\[myIdx\]\*portalResumeSpeed;spd=portalResumeSpeed/.test(f1),
+  'portal must restore the exact entry speed along the local track tangent after respawn');
+assert.ok(/if\(portalJumped&&portalResumeSpeed>0\)[\s\S]*px\+=vx\*dt;pz\+=vz\*dt/.test(f1),
+  'car must keep moving while the portal closes instead of visually pausing after the jump');
 assert.ok(/#f1-portal[^]*@keyframes f1portalpulse/.test(f1),
   'portal must be an animated lightweight procedural overlay, not another full-screen raster asset');
 const portalCss=f1.slice(f1.indexOf('#f1-portal{'),f1.indexOf('/* 🪽 ป้าย DRS'));
@@ -199,6 +204,8 @@ assert.ok(/cockpitTurnEl\.style\.opacity/.test(f1)&&/cockpit_turn_left\.webp[^]*
 assert.ok(/QUALITY_DASH_POSE=\{[\s\S]*left:[\s\S]*deg:-23[\s\S]*right:[\s\S]*deg:21\.8/.test(f1)&&
   /function positionQualityDash\([\s\S]*lerp\(center\.cx,edge\.cx,t\)[\s\S]*lerp\(0,edge\.deg,t\)/.test(f1),
   'live wheel dashboard must follow measured left/center/right screen poses instead of a guessed rotation');
+assert.ok(/QUALITY_DASH_SCALE=\.82/.test(f1)&&/p\.w\*sx\*QUALITY_DASH_SCALE/.test(f1)&&/p\.h\*sy\*QUALITY_DASH_SCALE/.test(f1),
+  'quality dashboard must shrink uniformly around its measured center so it stays inside the real LCD bezel');
 assert.ok(/#f1-wrap\.fp #f1-hud\{display:none\}/.test(f1),
   'cockpit must hide the duplicate floating gear/speed HUD while leaving non-cockpit views unchanged');
 assert.ok(/#f1-wrap\.realistic\.fp #f1-dash\{display:block!important\}/.test(f1)&&
