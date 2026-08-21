@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1212 · ปรับราคาหุ่นยนต์นักรบ:** ราคา `ROBOTS` ทั้ง 10 รุ่นไล่ระดับ 300,000–500,000 เหรียญ (เพิ่มรุ่นละ 20,000) ครอบคลุมป้ายโชว์รูม/ยืนยัน/หักเงินจากข้อมูลชุดเดียว; ตรวจช่วงราคาและ diff ผ่าน (`js/data/items.js`)
 - **รอบ 1210 · รถคู่แข่งใหม่ + contact ตามโมเดล:** ตัวถัง faceted loft ต่อเนื่อง/cockpit cowl สีเดียวกับรถ; collision เป็น 9 compound parts ตรงปีก/body/ล้อจริง—QA `5.90m=false, 5.80m=true, air-gap=false`; รถเพื่อนคง 8 calls/304 body triangles ไม่มี texture/PBR/dynamic shadow (`js/f1_3d.js`)
 - Mobile thermal governor 20 FPS idle/45 ขับ/30 เมื่อกดดัน, DPR 1.25→0.9, smoke 8→4, ปิด MSAA/ไฟรอง, ตัดเสาไฟราว 62 calls และ low-tier 4,006→2,131 instances; พื้นใหม่ square-tiled 4 ม. ใช้ color 256² + normal/roughness 128², racing line/skid/seam/runoff/sand และ contact shadow รวม 6 surface calls ไม่มี displacement/dynamic shadow
 - แก้กำแพง/โรงรถพิทยื่นเข้าถนน (clearance ต่ำสุด 9.32/9.54/13.60 ม.); runoff/ทรายเปิดประตูทันทีและใช้ plasma โปร่ง 3 ชั้น/18 streak; ท้องฟ้า PNG 1.53 MB ถูกทำเป็น WebP 1024×576 ขนาด 14 KiB โหลดเฉพาะ Realistic และปิด mipmaps (`img/f1/sky_racing_1024.webp`)
@@ -40,10 +41,6 @@
 - ปรับประตูมิติเป็นแกนขาวร้อน–ชมพูไฟฟ้า–ม่วงเข้ม 3 ชั้น + 18 energy rays, ศูนย์กลางโปร่งเห็นสนามและวางหลัง cockpit ตามภาพต้นแบบ; QA 730×400 ผ่าน
 - syntax + F1 Realistic + solo/ghost + collision/portal regressions ผ่าน (`tools/test_f1_realistic_circuit.js`)
 - **รอบ 1207 · Realistic Circuit ปิดช่องว่างภาพ/สนาม + ประตูมิติ:** เปลี่ยนค็อกพิทเป็น WebP alpha 3 เฟรม (กลาง/เลี้ยวซ้าย/เลี้ยวขวา) ให้มือทั้งสองกับพวงมาลัยหันไปทางเดียวกันตาม steering จริง รวมเพียง 204,792B และซ่อน procedural wheel เก่าที่เคยซ้อนภาพ (`img/f1/cockpit_turn_*.webp`, `js/f1_3d.js`)
-- ปิด legacy OSM architecture ทั้งก้อนเฉพาะ Realistic และคัด skyline ทุกหลังกับ track footprint จึงไม่มีกล่อง/อาคารโผล่กลางถนน; Battery Saver เก็บของเดิมไว้ครบ กำแพงข้างสนามยัง clamp+เด้ง
-- รถค้างบน runoff/ทราย 2 วินาทีเปิดประตูมิติ procedural สีม่วง แล้ววาร์ปกลับจุดถนนใกล้ตำแหน่งที่หลุด; ไม่เพิ่ม texture หนัก และ browser QA ยืนยันสถานะ `runoff → portal=true → track` อัตโนมัติ
-- Regression F1/syntax/assets ผ่าน, browser ตรวจเฟรมมือซ้าย-ขวาที่ desktop/mobile และกวาด 16 ช่วงสนาม; production build `.1086` 8,364 ไฟล์ 460.4MiB ผ่าน
-- **รอบ 1206 · handoff history compact:** ตัวหมุนเก็บ 12 bullet ล่าสุดของส่วนสรุปเท่านั้น และย้าย bullet เก่าทั้งก้อนไป `handoff/archive/TASKS_STATUS.md` อย่างปลอดภัย; `TASKS.md` ลดจากเกินงบเหลือ 17.8KB โดยไม่กระทบ runtime เกม
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`

@@ -5268,3 +5268,11 @@
 - **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
 - **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
 - Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- ปิด legacy OSM architecture ทั้งก้อนเฉพาะ Realistic และคัด skyline ทุกหลังกับ track footprint จึงไม่มีกล่อง/อาคารโผล่กลางถนน; Battery Saver เก็บของเดิมไว้ครบ กำแพงข้างสนามยัง clamp+เด้ง
+- รถค้างบน runoff/ทราย 2 วินาทีเปิดประตูมิติ procedural สีม่วง แล้ววาร์ปกลับจุดถนนใกล้ตำแหน่งที่หลุด; ไม่เพิ่ม texture หนัก และ browser QA ยืนยันสถานะ `runoff → portal=true → track` อัตโนมัติ
+- Regression F1/syntax/assets ผ่าน, browser ตรวจเฟรมมือซ้าย-ขวาที่ desktop/mobile และกวาด 16 ช่วงสนาม; production build `.1086` 8,364 ไฟล์ 460.4MiB ผ่าน
+- **รอบ 1206 · handoff history compact:** ตัวหมุนเก็บ 12 bullet ล่าสุดของส่วนสรุปเท่านั้น และย้าย bullet เก่าทั้งก้อนไป `handoff/archive/TASKS_STATUS.md` อย่างปลอดภัย; `TASKS.md` ลดจากเกินงบเหลือ 17.8KB โดยไม่กระทบ runtime เกม
