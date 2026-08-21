@@ -27,7 +27,11 @@
 #### 🏍️ งานโลกใหม่: ขับมอเตอร์ไซค์/รถยนต์ (30 ก.ค.)
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
-### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+### 📌 สรุปสถานะล่าสุด (22 ส.ค.) — อ่านก่อน
+- **รอบ 1216 · F1 Fantasy Air Routes:** เพิ่มเนินเสริมด้านข้าง 3 จุด (ทางหลักราบ), ballistic gravity/landing impact/กันคว่ำ, ส่ง y/vy/pitch/airborne ใน multiplayer และใช้ประตูมิติเดิมช่วยเมื่อพลาด; ฉาก low-poly ใช้ shared geometry, InstancedMesh, LOD และไม่มี texture/PBR/reflection/particle/dynamic shadow (`js/f1_3d.js`)
+- แก้ catch-fence ใช้ chord สั้นตามความโค้ง+ตรวจ clearance จึงไม่พาดถนน; ถอดป้าย “กลับเข้าเส้นทางแล้ว” และ popup “BEST LAP!” ที่บังทาง โดยคง HUD/สถิติ Best Lap; regression ครบใน `tools/test_f1_fantasy_jumps.js`/`test_f1_realistic_circuit.js`
+- **VIP PIT GARAGE:** ผู้เล่นเลือก/จำสี แดง-น้ำเงิน-เขียว-เหลือง-ส้มก่อนลงสนาม; cockpit 15 เฟรมและรถ low-poly/multiplayer ใช้สี index เดียวกัน (`cl`) โหลดเฉพาะสีที่เลือก, WebP RGBA 46–52 KiB/ภาพ; build alias+preflight รองรับครบ
+- QA ผ่าน: F1 tests 7 ชุด, build 8,389 files/104 aliases + PWA validator, Browser 1280×720 และมือถือ 844×390 (garage 620×266 อยู่ในจอครบ), cockpit โปร่งเห็นถนน/รั้วไม่ขวาง; mobile GPU budget ไม่มี PBR/texture รถ/dynamic shadows และ thermal governor เดิมยังผ่าน
 - **รอบ 1214 · Cockpit/ประตูมิติ:** ย่อจอสดเหลือ 82% รอบจุดกึ่งกลางเดิม จึงไม่ทับ bezel/ปุ่มและตาม center/left/right ครบ (Canvas upload ลดราว 33%); ประตูเก็บความเร็วก่อนวาร์ปและคืนตาม tangent พร้อมเคลื่อนต่อระหว่างประตูหุบ ไม่หยุดรถ; regression + Browser QA 1280×720 ผ่าน (`js/f1_3d.js`)
 - **รอบ 1212 · ปรับราคาหุ่นยนต์นักรบ:** ราคา `ROBOTS` ทั้ง 10 รุ่นไล่ระดับ 300,000–500,000 เหรียญ (เพิ่มรุ่นละ 20,000) ครอบคลุมป้ายโชว์รูม/ยืนยัน/หักเงินจากข้อมูลชุดเดียว; ตรวจช่วงราคาและ diff ผ่าน (`js/data/items.js`)
 - **รอบ 1210 · รถคู่แข่งใหม่ + contact ตามโมเดล:** ตัวถัง faceted loft ต่อเนื่อง/cockpit cowl สีเดียวกับรถ; collision เป็น 9 compound parts ตรงปีก/body/ล้อจริง—QA `5.90m=false, 5.80m=true, air-gap=false`; รถเพื่อนคง 8 calls/304 body triangles ไม่มี texture/PBR/dynamic shadow (`js/f1_3d.js`)

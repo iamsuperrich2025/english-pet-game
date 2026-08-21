@@ -27,9 +27,10 @@ const FORBIDDEN_NATIVE_EXT = /\.(?:aab|apk|bat|cmd|com|dex|dll|exe|jar|ps1|so)$/
 const TOKEN_BUILD = /__VW_BUILD_VERSION__/g;
 const TOKEN_UPDATED = /__VW_BUILD_UPDATED__/g;
 const TOKEN_F1_ENGINE = /__VW_F1_ENGINE_URL__/g;
-const TOKEN_F1_COCKPIT_CENTER_ASSET = /img\/f1\/cockpit_turn_center\.webp/g;
-const TOKEN_F1_COCKPIT_LEFT_ASSET = /img\/f1\/cockpit_turn_left\.webp/g;
-const TOKEN_F1_COCKPIT_RIGHT_ASSET = /img\/f1\/cockpit_turn_right\.webp/g;
+const F1_COCKPIT_ASSETS = ['red', 'blue', 'green', 'yellow', 'orange'].flatMap((color) =>
+  ['center', 'left', 'right'].map((pose) =>
+    `img/f1/cockpit_turn_${pose}${color === 'red' ? '' : `_${color}`}.webp`));
+const TOKEN_F1_COCKPIT_ASSET = /img\/f1\/cockpit_turn_(?:center|left|right)(?:_(?:blue|green|yellow|orange))?\.webp/g;
 const TOKEN_F1_PEER_CAR_ASSET = /img\/f1\/peer_car_25d\.webp/g;
 const LOCAL_PREVIEW_BLOCK = /<!-- VW_LOCAL_PREVIEW_ONLY_START -->[\s\S]*?<!-- VW_LOCAL_PREVIEW_ONLY_END -->\s*/g;
 
@@ -62,8 +63,8 @@ async function sourceFiles() {
     // Required delivery files may be newly created in the current migration before the first commit.
     // Arbitrary untracked game assets remain excluded so local WIP cannot leak into a deploy.
     for (const rel of [...PUBLIC_ROOT_FILES, 'js/app-update.js', 'js/account-deletion.js', 'css/account-deletion.css',
-      'sound/racing/engineSound.mp3', 'img/f1/cockpit_turn_center.webp', 'img/f1/cockpit_turn_left.webp',
-      'img/f1/cockpit_turn_right.webp', 'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
+      'sound/racing/engineSound.mp3', ...F1_COCKPIT_ASSETS,
+      'img/f1/peer_car_25d.webp', 'img/f1/sky_racing_1024.webp', 'js/fpsweapon.js', 'js/coinaward.js', 'js/assetaward.js', 'js/onlinecoinaward.js',
       'js/lettercannon.js', 'css/lettercannon.css', 'js/data/wear_extra.js',
       'js/rankgraph.js', 'css/rankgraph.css',
       'js/data/petshopping.js', 'js/petpantry.js', 'js/petshopping3d.js',
@@ -279,17 +280,15 @@ async function main() {
   /* The Realistic cockpit was introduced as a new untracked runtime asset. Give both
      the image and lazy F1 engine immutable paths so a cached missing-image response
      or an older engine can never produce a steering-wheel-only cockpit. */
-  const f1CockpitCenterUrl = await makeImmutableAlias('img/f1/cockpit_turn_center.webp');
-  const f1CockpitLeftUrl = await makeImmutableAlias('img/f1/cockpit_turn_left.webp');
-  const f1CockpitRightUrl = await makeImmutableAlias('img/f1/cockpit_turn_right.webp');
   const f1PeerCarUrl = await makeImmutableAlias('img/f1/peer_car_25d.webp');
   const f1File = path.join(OUT, 'js/f1_3d.js');
-  const f1Text = await fs.readFile(f1File, 'utf8');
-  await fs.writeFile(f1File, f1Text
-    .replace(TOKEN_F1_COCKPIT_CENTER_ASSET, f1CockpitCenterUrl)
-    .replace(TOKEN_F1_COCKPIT_LEFT_ASSET, f1CockpitLeftUrl)
-    .replace(TOKEN_F1_COCKPIT_RIGHT_ASSET, f1CockpitRightUrl)
-    .replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl));
+  let f1Text = await fs.readFile(f1File, 'utf8');
+  const cockpitRefs = [...new Set(f1Text.match(TOKEN_F1_COCKPIT_ASSET) || [])];
+  for (const asset of cockpitRefs) {
+    const immutableUrl = await makeImmutableAlias(asset);
+    f1Text = f1Text.replaceAll(asset, immutableUrl);
+  }
+  await fs.writeFile(f1File, f1Text.replace(TOKEN_F1_PEER_CAR_ASSET, f1PeerCarUrl));
 
   /* F1 is lazy-loaded after startup, so give it the same immutable-path guarantee as
      startup scripts. A query string is insufficient because older service workers

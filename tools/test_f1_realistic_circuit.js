@@ -62,8 +62,9 @@ assert.ok(/function barrierBounce\([\s\S]*BARRIER_BOUNCE/.test(f1)&&/px\+=vx\*dt
 assert.ok(/function beginPortalReturn\([\s\S]*portalTargetIdx=nearIdx/.test(f1)&&
   /function portalTick\([\s\S]*respawnOnTrack\(portalTargetIdx,false\)/.test(f1),
   'off-road recovery must open a portal and return to the nearest local track segment');
-assert.ok(/const OFFTRACK_S\s*=\s*0/.test(f1)&&/if\(surf==='sand'\|\|surf==='runoff'\)\{sandT=OFFTRACK_S;beginPortalReturn\(\);\}/.test(f1),
-  'portal recovery must open in the first off-road frame with no hidden 2-3 second timer');
+assert.ok(/const OFFTRACK_S\s*=\s*0/.test(f1)&&
+  /if\(missedJump\|\|\(!airborne&&\(surf==='sand'\|\|surf==='runoff'\)\)\)\{sandT=OFFTRACK_S;beginPortalReturn\(\);\}/.test(f1),
+  'portal recovery must open in the first grounded off-road/missed-jump frame without teleporting a valid airborne car');
 assert.ok(/if\(portalActive\)\{portalTick\(dt\);return;\}/.test(f1),
   'portal recovery must lock physics during the jump');
 assert.ok(/portalResumeSpeed=Math\.hypot\(vx,vz\)/.test(f1)&&
@@ -86,6 +87,8 @@ assert.ok(/class="nebula"/.test(portalHtml)&&/class="filaments"/.test(portalHtml
   'portal must include layered nebula, rotating plasma filaments and irregular energy streaks');
 assert.ok(!/f1-portal[^}]*url\(/.test(f1),
   'portal must remain a lightweight procedural effect without another raster texture');
+assert.ok(!/กลับเข้าเส้นทางแล้ว/.test(f1),
+  'portal animation must be the only recovery feedback; a center-screen return banner blocks the road');
 
 /* Round 1210 mobile thermal governor: keep simulation/network live while reducing continuous GPU work. */
 assert.ok(/function isThermalMobile\(\)/.test(f1)&&/if\(isThermalMobile\(\)\) return 'low'/.test(f1),
@@ -158,6 +161,10 @@ assert.ok(/Math\.abs\(LINE\.curv\[i\]\)>\.0045\?1:cfg\.barStep/.test(circuit)&&/
   'tight circuit bends must use short chord-aligned barrier modules');
 assert.ok(/new THREE\.BoxGeometry\(\.72,1\.18,1\)/.test(circuit)&&/Math\.hypot\(bx-ax,bz-az\)\+\.18/.test(circuit),
   'barrier length must be supplied by each actual offset-line chord, not one long tangent box');
+assert.ok(/const fenceChord=/.test(circuit)&&/const fenceSpotClear=/.test(circuit)&&
+  /Math\.abs\(LINE\.curv\[i\]\)>\.0032\?1:cfg\.fenceStep/.test(circuit)&&
+  /F1_REALISTIC_CATCH_FENCE_SAFE_CHORDS/.test(circuit),
+  'catch-fence wires must use curvature-adaptive safe chords instead of long spans that sweep across the road');
 assert.ok(/Math\.abs\(PITL\.curv\?\.\[i\]\|\|0\)>\.0045\?1:3/.test(circuit)&&/new THREE\.BoxGeometry\(\.5,1\.05,1\)/.test(circuit),
   'pit wall bends must use the same short chord-aligned protection');
 assert.ok(/const pitBayClearance=\(s,lat\)/.test(circuit)&&/s\.lat=ca>=cb\?a:b/.test(circuit)&&/Math\.max\(ca,cb\)>HALF_W\+KERB_W\+\.25/.test(circuit),

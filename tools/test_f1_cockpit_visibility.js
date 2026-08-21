@@ -10,15 +10,15 @@ assert.match(src,/const RFP_EYE\s*=\s*1\.30/,'Realistic eye height must stay at 
 assert.match(src,/const RFP_FOV\s*=\s*66/,'Realistic cockpit must use a natural helmet-eye FOV');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-cockpit\{[^}]*background-size:100% auto[^}]*calc\(100% \+ 1vh\)/,
   'Realistic cockpit must be a wide lower plate with a road-dominant helmet-eye view');
-assert.match(src,/realistic\.fp #f1-cockpit\{[^}]*cockpit_turn_center\.webp/,
-  'Realistic mode must use the optimized centered cockpit-and-hands frame');
+assert.match(src,/realistic\.fp #f1-cockpit\{[^}]*var\(--f1-cockpit-center\)/,
+  'Realistic mode must use the selected-color centered cockpit frame');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-wheel,#f1-wrap\.realistic\.fp #f1-leds,#f1-wrap\.realistic\.fp #f1-quality-wheel\{display:none!important\}/,
   'Realistic must not overlay either legacy wheel frame over its integrated cockpit plate');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-cockpit-turn\{display:block!important\}/,
   'Realistic must show the complete turning hands/wheel frame');
 assert.match(src,/#f1-wrap\.realistic\.fp #f1-quality-wheel\{display:none\}/,
   'Realistic must hide the obsolete procedural wheel so hands and wheel remain coherent');
-assert.match(src,/handDeg<0\?['"]img\/f1\/cockpit_turn_left\.webp['"]:['"]img\/f1\/cockpit_turn_right\.webp['"]/,
+assert.match(src,/cockpitAsset\(handDeg<0\?['"]left['"]:['"]right['"]\)/,
   'The live steering direction must select genuinely different left/right hand poses');
 assert.match(src,/knobEl\.style\.setProperty\('--ctl-turn'/,
   'Touch/keyboard steering control must visibly rotate with actual steer');
@@ -45,11 +45,23 @@ assert.match(src,/carGrp\.visible=\(camMode===['"]chase['"]\)/,
 assert.match(src,/camera\.near=realistic\?\.14:\.3/,'Realistic near plane regression');
 assert.match(ui,/const f1EngineUrl=['"]__VW_F1_ENGINE_URL__['"][\s\S]{0,160}loadScriptOnce\(f1EngineUrl\.startsWith/,
   'The local build must not reuse a stale pre-fix F1 engine from browser/service-worker cache');
-for(const name of ['center','left','right']){
-  const asset=`img/f1/cockpit_turn_${name}.webp`;
-  assert.ok(build.includes(`'${asset}'`),`${asset} must be copied even before its first commit`);
-  assert.ok(build.includes(`makeImmutableAlias('${asset}')`),`${asset} must bypass stale caches`);
-  assert.ok(preflight.includes(`"${asset}"`),`Deploy preflight must require ${asset}`);
+assert.match(src,/VIP PIT GARAGE[\s\S]*data-car-color/,'A premium pre-race color-selection garage must be present');
+assert.match(src,/localStorage\.setItem\(CAR_COLOR_KEY,playerCarStyle\.key\)/,'Selected car color must persist locally');
+assert.match(src,/cl:CAR_STYLES\.indexOf\(playerCarStyle\)/,'Multiplayer payload must carry the selected car color');
+assert.match(src,/buildPeerF1Car\(playerCarStyle\.value\)/,'The local 3D car must use the selected shared low-poly color');
+assert.match(build,/const F1_COCKPIT_ASSETS[\s\S]*\['red', 'blue', 'green', 'yellow', 'orange'\]/,
+  'Build must enumerate every supported cockpit color');
+assert.match(build,/for \(const asset of cockpitRefs\)[\s\S]*makeImmutableAlias\(asset\)/,
+  'Every referenced cockpit variant must receive an immutable build alias');
+for(const color of ['red','blue','green','yellow','orange']){
+  for(const name of ['center','left','right']){
+    const suffix=color==='red'?'':`_${color}`;
+    const asset=`img/f1/cockpit_turn_${name}${suffix}.webp`;
+    assert.ok(preflight.includes(`"${asset}"`),`Deploy preflight must require ${asset}`);
+    assert.ok(fs.existsSync(asset),`${asset} must exist`);
+    assert.ok(fs.statSync(asset).size<100*1024,`${asset} must remain mobile-light (<100 KiB)`);
+    assert.ok(fs.readFileSync(asset).includes(Buffer.from('ALPH')),`${asset} must preserve transparency so the road remains visible`);
+  }
 }
 
 console.log('PASS F1 Realistic cockpit visibility contract');
