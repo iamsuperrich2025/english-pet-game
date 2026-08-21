@@ -10,12 +10,21 @@
   const COIN_PER_WORD=5, PT_PER_BUBBLE=2, PERFECT_BONUS=5;
   const MINLEN=2, MAXLEN=14;
   let overlay=null, boardEl=null, stageEl=null, wordEl=null, thaiEl=null, statEl=null, fxEl=null;
-  let cur=null, queue=[], qGrade=null, locked=false, bubbles=[];
+  const GRADE_POOL_SIZE=500;
+  const GRADE_SPECS={
+    'ต่ำกว่าประถมศึกษา':{bands:[1,2],pos:0},'ป.1':{bands:[1,2],pos:0},'ป.2':{bands:[1,2],pos:1},
+    'ป.3':{bands:[2,3],pos:0},'ป.4':{bands:[2,3],pos:1},'ป.5':{bands:[3,4],pos:0},'ป.6':{bands:[3,4],pos:1},
+    'ม.1':{bands:[4,5],pos:0},'ม.2':{bands:[4,5],pos:.5},'ม.3':{bands:[4,5],pos:1},
+    'ม.4':{bands:[5,4],pos:0},'ม.5':{bands:[5,4],pos:.5},'ม.6':{bands:[5,4],pos:1},
+    'ปริญญาตรี':{bands:[5,4],pos:1},'สูงกว่าปริญญาตรี':{bands:[5,4],pos:1}
+  };
+  let cur=null, queue=[], qGrade=null, locked=false, bubbles=[], gradePools={};
 
   const grade=()=> (typeof state!=='undefined' && state.student) ? state.student.grade : 'ป.1';
   const shuffle=a=>{ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 
   function pool(){
+    if(gradePools[grade()]) return gradePools[grade()];
     const seen=new Set(), out=[];
     const src=(typeof vocabForStudent==='function')?vocabForStudent():[];
     src.forEach(pair=>{
@@ -27,21 +36,42 @@
     });
     return out;
   }
+  async function prepareGradePool(g=grade()){
+    if(gradePools[g]) return gradePools[g];
+    const spec=GRADE_SPECS[g]||GRADE_SPECS['ป.1'];
+    if(typeof bandLoad!=='function'||typeof bandCat!=='function') return pool();
+    await Promise.all(spec.bands.map(b=>bandLoad(b)));
+    const seen=new Set(), ranked=[];
+    spec.bands.forEach((b,rank)=>{
+      const cat=bandCat(b);
+      (cat&&cat.words||[]).forEach(pair=>{
+        const raw=String(pair[0]||'').trim().toLowerCase(), th=String(pair[1]||'').trim();
+        if(!/^[a-z]+$/.test(raw)||raw.length<MINLEN||raw.length>MAXLEN||!th||seen.has(raw))return;
+        seen.add(raw); ranked.push({w:raw.toUpperCase(),th,rank,len:raw.length});
+      });
+    });
+    ranked.sort((a,b)=>a.rank-b.rank||a.len-b.len||a.w.localeCompare(b.w));
+    const start=Math.round(Math.max(0,ranked.length-GRADE_POOL_SIZE)*spec.pos);
+    gradePools[g]=ranked.slice(start,start+GRADE_POOL_SIZE).map(x=>({w:x.w,th:x.th}));
+    return gradePools[g];
+  }
   function usedSet(){
     if(typeof state==='undefined') return new Set();
-    if(!Array.isArray(state.bbUsed)) state.bbUsed=[];
-    return new Set(state.bbUsed.map(x=>String(x).toUpperCase()));
+    if(!state.bbUsedByGrade||typeof state.bbUsedByGrade!=='object') state.bbUsedByGrade={};
+    if(!Array.isArray(state.bbUsedByGrade[grade()])) state.bbUsedByGrade[grade()]=[];
+    return new Set(state.bbUsedByGrade[grade()].map(x=>String(x).toUpperCase()));
   }
   function markUsed(w){
     if(typeof state==='undefined') return;
-    if(!Array.isArray(state.bbUsed)) state.bbUsed=[];
-    if(state.bbUsed.indexOf(w)<0) state.bbUsed.push(w);
+    if(!state.bbUsedByGrade||typeof state.bbUsedByGrade!=='object') state.bbUsedByGrade={};
+    if(!Array.isArray(state.bbUsedByGrade[grade()])) state.bbUsedByGrade[grade()]=[];
+    if(state.bbUsedByGrade[grade()].indexOf(w)<0) state.bbUsedByGrade[grade()].push(w);
   }
   function refill(announce){
     const all=pool(); if(!all.length){ queue=[]; return false; }
     const used=usedSet(); let left=all.filter(x=>!used.has(x.w));
     if(!left.length){
-      if(typeof state!=='undefined') state.bbUsed=[];
+      if(typeof state!=='undefined'&&state.bbUsedByGrade) state.bbUsedByGrade[grade()]=[];
       left=all.slice();
       if(announce && typeof toast==='function') toast('🎉 แตะฟองครบทุกคำในระดับชั้นแล้ว! เริ่มรอบใหม่');
     }
@@ -100,6 +130,11 @@
     if(!cur){ wordEl.innerHTML='<span class="bb-empty">ไม่มีคำศัพท์ในระดับชั้นนี้</span>'; thaiEl.textContent=''; stageEl.innerHTML=''; renderStat(); return; }
     wordEl.innerHTML=cur.w.split('').map((ch,i)=>`<span class="bb-ch${i<cur.at?' got':''}">${ch}</span>`).join('');
     thaiEl.textContent=cur.th||''; renderStat();
+  }
+  function renderLoading(){
+    if(!wordEl)return;
+    wordEl.innerHTML='<span class="bb-empty">กำลังเตรียมคำศัพท์ 500 คำ...</span>';
+    thaiEl.textContent=`คลังคำเฉพาะ ${grade()}`; stageEl.innerHTML=''; renderStat();
   }
   function renderStat(){
     if(!statEl)return; const st=(typeof state!=='undefined')?state:{};
@@ -183,9 +218,11 @@
     setTimeout(()=>{ wordEl.classList.remove('done'); locked=false; nextWord(); },820);
   }
 
-  function open(){
+  async function open(){
     if(typeof TypeGame!=='undefined'&&TypeGame.close)TypeGame.close();
     if(!overlay)build(); overlay.style.display='flex'; void boardEl.offsetWidth; boardEl.classList.add('open');
+    locked=true; if(!gradePools[grade()]){ renderLoading(); await prepareGradePool(); }
+    if(!overlay||overlay.style.display!=='flex')return;
     locked=false; if(qGrade!==grade())queue=[];
     if(!cur||cur.at>=cur.w.length)nextWord(); else{ renderWord(); renderBubbles(); }
     requestAnimationFrame(layoutBubbles); if(typeof sfx!=='undefined'&&sfx.select)sfx.select();
@@ -197,7 +234,7 @@
   function bindRail(){ const b=document.getElementById('btn-rail-bubble'); if(b)b.addEventListener('click',()=>{ if(typeof closePanel==='function')closePanel(); open(); }); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindRail); else bindRail();
 
-  window.BubbleGame={open,close,_t:{pool,refill,nextWord,layoutBubbles,hitBubble,skip,usedSet,markUsed,wordPoints,
+  window.BubbleGame={open,close,_t:{pool,prepareGradePool,refill,nextWord,layoutBubbles,hitBubble,skip,usedSet,markUsed,wordPoints,
     get cur(){return cur;},get bubbles(){return bubbles;},get locked(){return locked;},set locked(v){locked=!!v;},
-    get overlay(){return overlay;},get stage(){return stageEl;},COIN_PER_WORD,PT_PER_BUBBLE,PERFECT_BONUS}};
+    get overlay(){return overlay;},get stage(){return stageEl;},get gradePools(){return gradePools;},GRADE_POOL_SIZE,COIN_PER_WORD,PT_PER_BUBBLE,PERFECT_BONUS}};
 })();
