@@ -50,7 +50,6 @@
 - Node syntax + diff ผ่าน; Browser 1320×619/812×375 แสดงครบ overflow 0, ปุ่มยิงซ้าย/ขวากดได้ และ console error 0
 - **รอบ 1193 · Bubble มีคลังเฉพาะชั้นละ 500 คำ:** โหลดจากคลังพจนานุกรมตามช่วงชั้นแบบ lazy-load แล้วคัดคำเดี่ยว 2–14 ตัวอักษรเป็นชุด deterministic แยก ป.1–ม.6; ประวัติคำที่เล่นแล้วแยกตามชั้น ไม่ตัดคำข้ามระดับ (`js/bubble.js`)
 - เพิ่ม `tools/test_bubble_grade_pool.js`; ยืนยัน 12 ชั้น × 500 คำ ไม่มีซ้ำ/ไม่มีคำแปลว่าง/รูปแบบถูก, Browser runtime ป.1+ม.6 console error 0, build `.1076` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
-- **รอบ 1192 · Bubble โฉมน่ารักตามภาพอ้างอิง:** ปรับธีมอวกาศพาสเทล หัวคำศัพท์ใหญ่ ดาว/ดาวเคราะห์ เวทีแก้ว ฟอง 5 สีพร้อมสัญลักษณ์ฤดู และปุ่มล่าง โดยคงกติกา/คะแนนเดิม (`css/bubble.css`, `js/bubble.js`)
 - Node syntax + diff ผ่าน; Browser 1320×619/812×375 แสดงครบ `overflow=0`/ไม่มีชิ้นหลุด viewport และ production build `.1075` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
 - ทุกหมวดมีพื้นที่เลื่อนขึ้นลง ซ่อน scrollbar/ล็อกแนวนอน และขยายตัวอักษร; กราฟ Top 30 เปลี่ยนเป็นแถวแนวนอนอ่านชื่อ+คะแนนชัด ครอบทั้งจอ 812×375/1320×619
 - หมวดพิมพ์คำ Top 10 จ่ายจริง 20,000→2,000 ผ่าน prize table เฉพาะหมวด; syntax + regression 4 ชุดผ่าน, Browser overflow X=0/scroll Y ผ่าน/console error 0, build `.1074` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
