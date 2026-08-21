@@ -1,7 +1,11 @@
-รอบ 1189: ล็อกซื้อบ้านลดระดับ กู้บ้านและคืนเงิน Moji love gay
-FILE: css/style.css
+ยอดอันดับตรง lobby เลื่อนแนวตั้งอ่านง่าย กราฟใหม่ และรางวัลพิมพ์คำ x2
+FILE: css/lobby.css
+FILE: css/rankgraph.css
 FILE: handoff/TASKS.md
-FILE: js/data/homes.js
+FILE: index_classic.html
+FILE: js/award.js
+FILE: js/rankgraph.js
 FILE: js/state.js
+FILE: js/tpaward.js
 FILE: js/ui.js
-FILE: tools/test_home_downgrade_guard.js
+FILE: tools/test_leaderboard_scroll_rewards.js
