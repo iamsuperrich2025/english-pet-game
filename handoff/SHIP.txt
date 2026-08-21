@@ -1,4 +1,5 @@
-รอบ 1193: เพิ่มคลัง Bubble แยกตามระดับชั้น ชั้นละ 500 คำ
-FILE: js/bubble.js
-FILE: tools/test_bubble_grade_pool.js
+รอบ 1194: ปรับเกมยิงเป้าคำเป็น Cute Carnival Toy Shooter ตามภาพอ้างอิง
+FILE: js/shootword.js
+FILE: img/shootword/carnival-bg.webp
+FILE: img/shootword/star-blaster.webp
 FILE: handoff/TASKS.md

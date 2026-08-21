@@ -761,7 +761,7 @@ openPhotoCrop:224
 
 ## js/sgaward.js (28 บรรทัด · 0 รายการ)
 
-## js/shootword.js (1,085 บรรทัด · 0 รายการ)
+## js/shootword.js (1,106 บรรทัด · 0 รายการ)
 
 ## js/state.js (1,351 บรรทัด · 96 รายการ)
 ### 🗂️ สารบัญโซน js/state.js (Read/Edit เฉพาะช่วง)

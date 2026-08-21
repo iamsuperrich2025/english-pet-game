@@ -4983,3 +4983,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1178 · ตลาดแบบ server-authoritative + ledger ของเราเอง:** เพิ่ม Cloud Functions `marketBuySecure` และ `resumeMarketSettlement` (Singapore/Node 22) ให้บันทึก `/marketLedger/<tx>` และล็อกประกาศก่อนหักเหรียญ ส่งของ จ่ายผู้ขาย และออกใบเสร็จ; client ไม่ลบ `/market` หรือสร้าง `/msold` เองอีกต่อไป
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1179 · แก้ deploy Functions จาก staged Git:** รอบ 1178 commit สำเร็จแต่ Firebase CLI หา `firebase-functions` ไม่พบ เพราะ `git archive` ไม่รวม `node_modules`; เพิ่ม `npm ci --prefix functions --omit=dev` จาก lockfileใน staging และตรวจ Functions จากช่วง `origin/main..HEAD` เพื่อให้ retry หลัง commit แรกได้
