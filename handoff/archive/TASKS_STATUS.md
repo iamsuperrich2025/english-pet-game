@@ -5281,3 +5281,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
 
 - **รอบ 1207 · Realistic Circuit ปิดช่องว่างภาพ/สนาม + ประตูมิติ:** เปลี่ยนค็อกพิทเป็น WebP alpha 3 เฟรม (กลาง/เลี้ยวซ้าย/เลี้ยวขวา) ให้มือทั้งสองกับพวงมาลัยหันไปทางเดียวกันตาม steering จริง รวมเพียง 204,792B และซ่อน procedural wheel เก่าที่เคยซ้อนภาพ (`img/f1/cockpit_turn_*.webp`, `js/f1_3d.js`)
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- syntax + F1 Realistic + solo/ghost + collision/portal regressions ผ่าน (`tools/test_f1_realistic_circuit.js`)

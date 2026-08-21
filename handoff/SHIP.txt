@@ -1,3 +1,6 @@
-ROUND: 1212
-MESSAGE: ปรับราคาหุ่นยนต์นักรบ 300,000–500,000 เหรียญ
-FILE: js/data/items.js
+ROUND: 1214
+MESSAGE: Shrink F1 wheel dashboard and preserve speed continuously through portal return
+FILE: js/f1_3d.js
+FILE: tools/test_f1_realistic_circuit.js
+FILE: tools/test_f1_cockpit_visibility.js
+FILE: handoff/TASKS.md
