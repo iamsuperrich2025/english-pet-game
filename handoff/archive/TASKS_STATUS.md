@@ -4993,3 +4993,8 @@
 ## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
 
 - **รอบ 1180 · retry Eventarc อัตโนมัติ:** deploy รอบ 1179 สร้าง `marketBuySecure` สำเร็จ แต่ `resumeMarketSettlement` ถูกปฏิเสธชั่วคราวระหว่าง IAM ของ Eventarc service agent กำลัง propagate; ให้ deploy Functions ลองสูงสุด 3 ครั้ง เว้น 60 วินาที และหยุด Hosting/Push หากยังไม่ครบ
+
+
+## ⏬ ย้ายเมื่อ 2026-08-21 — จาก handoff/TASKS.md (bullet รอบเก่าในหัวข้อสรุปสถานะ)
+
+- **รอบ 1181 · ปิด RTDB DATA_WRITE Audit Logs:** หลังตลาด `/marketLedger` และ Functions ขึ้น production ผู้ใช้อนุญาตให้ปิด log ชั่วคราวเพื่อลดปริมาณ/ค่าใช้จ่าย; สำรอง IAM policy ก่อน–หลัง ยืนยัน `dataWriteEnabled=false` และ `bindingsUnchanged=true` (ไม่ deploy เว็บซ้ำ)

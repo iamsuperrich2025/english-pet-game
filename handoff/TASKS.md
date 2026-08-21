@@ -55,7 +55,6 @@
 - **รอบ 1182 · ลดน้ำหนักภาพ Picture Dictionary/เกมทายคำ:** WebP 46 แผ่นเดิม 1024×1536 quality 80 รวม 11.54MB → 768×1152 quality 72 รวม 6.36MB (-44.9%); PNG ต้นฉบับ 91.14MB ไม่ถูกแก้
 - อัปเกรด `tools/shrink_matching.py` ให้เจนค่าเบาเป็นค่าเริ่ม และเพิ่ม `test_matching_web_assets.py` กันไฟล์หาย/เสียสัดส่วน/หนักกลับ; ไฟล์ใหญ่สุด 189.1KB
 - asset decode/budget, Picture Dictionary, picmatch cooldown, Browser 768×1152 no-console-error และ production build 8,336 ไฟล์ 459.7MiB + PWA/cache/TWA validator ผ่าน
-- **รอบ 1181 · ปิด RTDB DATA_WRITE Audit Logs:** หลังตลาด `/marketLedger` และ Functions ขึ้น production ผู้ใช้อนุญาตให้ปิด log ชั่วคราวเพื่อลดปริมาณ/ค่าใช้จ่าย; สำรอง IAM policy ก่อน–หลัง ยืนยัน `dataWriteEnabled=false` และ `bindingsUnchanged=true` (ไม่ deploy เว็บซ้ำ)
 - ใช้ request id, transaction marker ใน save ผู้ซื้อ/ผู้ขาย, settlement lease และ refund/release แบบ idempotent จึง retry/crash ได้โดยไม่หักเงิน ส่งของ หรือจ่ายซ้ำ; รายการ `processing` ถูกซ่อนจากตลาดและผู้ขายเห็นสถานะกำลังนำเงินเข้าแทนคำว่าแขวนขาย
 - Rules ก้อนเต็มรอบ 1178 เพิ่ม private `/marketLedger`, จำกัดถอนประกาศเฉพาะเจ้าของก่อนล็อก และห้าม client สร้างใบเสร็จ; ผู้ใช้ Publish แล้วและ Firebase CLI เทียบสดครบ 41 โซน (`differences=0`); COMMIT_DEPLOY จะ deploy Functions ก่อน Hosting อัตโนมัติ
 - ทดสอบ client retry-id, reconcile, server buyer/seller/refund idempotency, syntax, Rules JSON และ Functions dry-run ผ่าน; production build `.1063` 8,336 ไฟล์ 464.9 MiB + PWA/cache/TWA validator ผ่าน; deploy staging ติดตั้ง dependency ด้วย `npm ci` จาก lockfile ก่อน Firebase วิเคราะห์ source
