@@ -5261,3 +5261,10 @@
 - เข้าสนาม Realistic โดยตรงชั่วคราว (Battery Saver/selector ยังอยู่), กำแพงชนแล้ว clamp+เด้ง, หนึ่งคำต่อรอบและวางตัวอักษรห่าง `TOTAL/word.length`; multiplayer เก็บตัวอักษร local ของใครของมัน ไม่แย่งกัน
 - รถผู้เล่นอื่นเปลี่ยนเป็น camera-facing 2.5D sprite โปร่งใส 768×512 (`img/f1/peer_car_25d.png`) พร้อม fallback/immutable build asset ลดภาระจากโมเดล 3D เต็มคัน
 - Focused regressions 5 ชุด + syntax/diff/asset check ผ่าน; Browser Realistic 1320×619 ยืนยัน steering, even letters, barrier bounce, peer sprite และ production build `.1083` 8,359 ไฟล์ 461.4MiB ผ่านก่อน multiplayer isolation guard
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
+- **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
+- Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy

@@ -1,4 +1,4 @@
-รอบ 1208: รถเพื่อน F1 3D ชนกันจริง + ประตูมิติแสงตามต้นแบบ
+รอบ 1209: รถคู่แข่ง F1 กึ่งสมจริง Low-poly ลด GPU มือถือ
 FILE: js/f1_3d.js
 FILE: tools/test_f1_realistic_circuit.js
 FILE: handoff/TASKS.md

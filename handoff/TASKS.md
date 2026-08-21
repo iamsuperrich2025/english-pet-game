@@ -40,9 +40,6 @@
 - รถค้างบน runoff/ทราย 2 วินาทีเปิดประตูมิติ procedural สีม่วง แล้ววาร์ปกลับจุดถนนใกล้ตำแหน่งที่หลุด; ไม่เพิ่ม texture หนัก และ browser QA ยืนยันสถานะ `runoff → portal=true → track` อัตโนมัติ
 - Regression F1/syntax/assets ผ่าน, browser ตรวจเฟรมมือซ้าย-ขวาที่ desktop/mobile และกวาด 16 ช่วงสนาม; production build `.1086` 8,364 ไฟล์ 460.4MiB ผ่าน
 - **รอบ 1206 · handoff history compact:** ตัวหมุนเก็บ 12 bullet ล่าสุดของส่วนสรุปเท่านั้น และย้าย bullet เก่าทั้งก้อนไป `handoff/archive/TASKS_STATUS.md` อย่างปลอดภัย; `TASKS.md` ลดจากเกินงบเหลือ 17.8KB โดยไม่กระทบ runtime เกม
-- **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
-- **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
-- Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy
 ### 🔒 สีธีมล็อบบี้ถูกล็อกแล้ว (4 ส.ค. 2026 · รอบ 1002) — อ่านก่อนแตะสี/ธีม/พาเลตต์ใด ๆ
 - ค่า navy ที่ล็อก: `--navy:#0a1f3c` · `--navy-2:#123a6b` · `--glass:rgba(7,25,52,.78)` · gradient `rgba(5,22,48,.58/.14/.20/.72)`; ค่าเริ่มต้นห้าม override/ห้าม veil/ห้ามเปลี่ยนความสว่าง
 - งานสีในอนาคตเปลี่ยนเฉพาะปุ่ม/ป้าย/แถบโดยทับสีตรงเท่านั้น; รายละเอียดคำสั่งผู้ใช้ บทเรียน และประวัติรอบ 993–1002 อยู่ `handoff/archive/TASKS_THEME_LOCK_AND_ROUNDS_993_1002.md`
