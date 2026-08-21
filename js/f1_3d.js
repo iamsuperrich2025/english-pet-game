@@ -1261,6 +1261,98 @@ function buildF1Car(color){
   g.userData.wheels=ws; g.userData.front=sp;
   return g;
 }
+
+/* ============================================================
+   🏎️📱 รอบ 1209 — SEMI-REALISTIC LOW-POLY PEER F1 (GPU COOL)
+   geometry ใช้ร่วมกันทุกคัน · รวมชิ้นสีเดียว · ล้อ 4 วงเป็น InstancedMesh
+   ไม่มี texture/PBR/reflection/dynamic shadow — รถผู้เล่น/ภาพ cockpit ไม่แตะ
+   ============================================================ */
+let peerF1Kit=null;
+function peerF1MergedGeometry(parts){
+  const pos=[],idx=[];
+  function wedge(p){
+    const x=p.x||0,z0=p.z-p.l*.5,z1=p.z+p.l*.5,y0=p.y,y1=p.y+p.h;
+    const wb=p.wb*.5,wf=p.wf*.5,b=pos.length/3;
+    pos.push(x-wb,y0,z0, x+wb,y0,z0, x+wb,y1,z0, x-wb,y1,z0,
+             x-wf,y0,z1, x+wf,y0,z1, x+wf,y1,z1, x-wf,y1,z1);
+    idx.push(b,b+2,b+1,b,b+3,b+2, b+4,b+5,b+6,b+4,b+6,b+7,
+      b,b+1,b+5,b,b+5,b+4, b+3,b+7,b+6,b+3,b+6,b+2,
+      b,b+4,b+7,b,b+7,b+3, b+1,b+2,b+6,b+1,b+6,b+5);
+  }
+  parts.forEach(wedge);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setIndex(idx);geo.computeVertexNormals();geo.computeBoundingSphere();
+  return geo;
+}
+function peerF1KitGet(){
+  if(peerF1Kit) return peerF1Kit;
+  /* ตัวถังทรงลิ่ม: จมูกเรียว → monocoque → sidepod → engine cover */
+  const body=peerF1MergedGeometry([
+    {x:0,y:.25,z:2.55,l:2.05,wb:.58,wf:.16,h:.34},
+    {x:0,y:.28,z:.38,l:2.55,wb:.92,wf:.52,h:.56},
+    {x:-.68,y:.24,z:-.28,l:1.82,wb:.68,wf:.48,h:.48},
+    {x:.68,y:.24,z:-.28,l:1.82,wb:.68,wf:.48,h:.48},
+    {x:0,y:.48,z:-1.05,l:1.72,wb:.58,wf:.72,h:.58},
+    {x:0,y:.98,z:-1.17,l:1.22,wb:.07,wf:.07,h:.38}
+  ]);
+  /* aero สีเข้มรวมชิ้นคงที่ไว้ draw call เดียว */
+  const aero=peerF1MergedGeometry([
+    {x:0,y:.16,z:0,l:3.75,wb:1.92,wf:1.92,h:.07},
+    {x:0,y:.19,z:3.34,l:.58,wb:2.02,wf:2.02,h:.08},
+    {x:-.99,y:.19,z:3.34,l:.62,wb:.07,wf:.07,h:.34},
+    {x:.99,y:.19,z:3.34,l:.62,wb:.07,wf:.07,h:.34},
+    {x:0,y:.77,z:-1.93,l:.34,wb:1.55,wf:1.55,h:.07},
+    {x:-.77,y:.75,z:-1.94,l:.54,wb:.07,wf:.07,h:.43},
+    {x:.77,y:.75,z:-1.94,l:.54,wb:.07,wf:.07,h:.43},
+    {x:0,y:.52,z:-2.08,l:.38,wb:1.34,wf:1.62,h:.16},
+    {x:0,y:.70,z:.82,l:.10,wb:.08,wf:.08,h:.48}
+  ]);
+  const tyre=new THREE.CylinderGeometry(.45,.45,.40,10,1,false);tyre.rotateZ(Math.PI/2);
+  const rim=new THREE.CylinderGeometry(.255,.255,.415,8,1,false);rim.rotateZ(Math.PI/2);
+  tyre.computeBoundingSphere();rim.computeBoundingSphere();
+  tyre.boundingSphere.radius=rim.boundingSphere.radius=3.8;
+  peerF1Kit={body,aero,tyre,rim,
+    halo:new THREE.TorusGeometry(.43,.045,4,10,Math.PI),
+    helmet:new THREE.SphereGeometry(.22,7,5),
+    flap:new THREE.BoxGeometry(1.52,.075,.48),
+    tail:new THREE.BoxGeometry(.10,.19,.055),
+    shadow:new THREE.CircleGeometry(1.55,12),
+    aeroMat:new THREE.MeshLambertMaterial({color:0x15191f,flatShading:true}),
+    tyreMat:new THREE.MeshLambertMaterial({color:0x111216,flatShading:true}),
+    rimMat:new THREE.MeshLambertMaterial({color:0x8b929b,flatShading:true}),
+    helmetMat:new THREE.MeshLambertMaterial({color:0xffcf32,flatShading:true}),
+    tailMat:new THREE.MeshBasicMaterial({color:0xff2525})};
+  return peerF1Kit;
+}
+function buildPeerF1Car(color){
+  const k=peerF1KitGet(),g=new THREE.Group();
+  const bodyMat=new THREE.MeshLambertMaterial({color,flatShading:true});
+  const body=new THREE.Mesh(k.body,bodyMat);g.add(body);
+  const aero=new THREE.Mesh(k.aero,k.aeroMat);g.add(aero);
+  /* halo 10 เหลี่ยม + cockpit/หมวกทรงต่ำ อ่านรูปทรงได้แต่ polygon น้อย */
+  const halo=new THREE.Mesh(k.halo,k.aeroMat);
+  halo.rotation.x=Math.PI/2;halo.position.set(0,1.02,.53);g.add(halo);
+  const helm=new THREE.Mesh(k.helmet,k.helmetMat);
+  helm.scale.y=.88;helm.position.set(0,.96,.25);g.add(helm);
+  /* ล้อทั้ง 4 = draw call เดียวต่อ material แทน 8 meshes */
+  const tyres=new THREE.InstancedMesh(k.tyre,k.tyreMat,4);
+  const rims=new THREE.InstancedMesh(k.rim,k.rimMat,4);
+  const m=new THREE.Matrix4(),wheelPos=[[-.96,.45,1.52],[.96,.45,1.52],[-.96,.45,-1.47],[.96,.45,-1.47]];
+  wheelPos.forEach((v,i)=>{m.makeTranslation(v[0],v[1],v[2]);tyres.setMatrixAt(i,m);rims.setMatrixAt(i,m);});
+  tyres.instanceMatrix.needsUpdate=true;rims.instanceMatrix.needsUpdate=true;g.add(tyres,rims);
+  /* DRS แยกเพียงชิ้นเดียวเพื่อให้ multiplayer ยังเปิดปีกได้ */
+  const flap=new THREE.Mesh(k.flap,k.aeroMat);
+  flap.position.set(0,1.04,-1.97);flap.rotation.x=DRS_FLAP_SHUT;g.add(flap);g.userData.drsFlap=flap;
+  const tail=new THREE.Mesh(k.tail,k.tailMat);
+  tail.position.set(0,.58,-2.2);g.add(tail);g.userData.tail=tail;
+  g.userData.wheels=[];g.userData.front=[];
+  g.userData.peerGpu={drawCalls:8,textures:0,pbr:0,dynamicShadows:0,
+    bodyTriangles:k.body.index.count/3,aeroTriangles:k.aero.index.count/3,
+    tyreSegments:10,rimSegments:8,sharedGeometry:true};
+  g.userData.disposePeer=()=>bodyMat.dispose();
+  return g;
+}
 function makeCar(color,cb){
   glbEnsure(src=>{
     if(!src){ cb(buildF1Car(color)); return; }
@@ -2819,16 +2911,18 @@ function buildPeer(uid,p){
   const col=new THREE.Color(peerColor(uid)).getHex();
   /* 🏎️ รอบ 1208: รถเพื่อนต้องเป็นวัตถุ 3D ที่วางบนพื้นและหันตาม yaw จริง
      ภาพ 2.5D เดิมหันเข้าหากล้องตลอด จึงดูเหมือนรถลอย/บิดขวางแทร็กจากมุม cockpit */
-  const car=buildF1Car(col);
+  const car=buildPeerF1Car(col);
   p.grp.add(car);p.grp.userData.peerCar3d=car;
-  const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.55,18),new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.24,depthWrite:false}));
+  const shadow=new THREE.Mesh(peerF1KitGet().shadow,new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.24,depthWrite:false}));
   shadow.scale.set(1,1.85,1);shadow.rotation.x=-Math.PI/2;shadow.position.y=.025;p.grp.add(shadow);
+  p.shadow=shadow;
   p.grp.userData.drsGlow=attachDrsGlow(car);
   p.grp.userData.drsFlap=car.userData.drsFlap||null;
   const pg=(typeof gradeOf==='function')?gradeOf(uid,p.g):'';
   const nm=makeTextSprite(p.n,'rgba(16,26,44,.85)','#ffffff','🏎️',pg);
   nm.scale.set(8,2,1); nm.position.y=4.05;
   p.grp.add(nm);
+  p.nameSprite=nm;
   p.grade=pg;
   p.grp.position.set(p.cur.x,0,p.cur.z);
   p.grp.rotation.y=p.yawCur;
@@ -2874,7 +2968,18 @@ function dropPeer(uid){
   const p=peers[uid];
   if(!p) return;
   removePeerBubble(p);
-  if(p.grp) scene.remove(p.grp);
+  if(p.grp){
+    const car=p.grp.userData&&p.grp.userData.peerCar3d;
+    if(car&&car.userData&&car.userData.disposePeer) car.userData.disposePeer();
+    const gl=p.grp.userData&&p.grp.userData.drsGlow;
+    if(gl&&gl.material) gl.material.dispose();
+    if(p.shadow&&p.shadow.material) p.shadow.material.dispose();
+    if(p.nameSprite&&p.nameSprite.material){
+      if(p.nameSprite.material.map) p.nameSprite.material.map.dispose();
+      p.nameSprite.material.dispose();
+    }
+    scene.remove(p.grp);
+  }
   delete peers[uid];
   renderBoard();
 }

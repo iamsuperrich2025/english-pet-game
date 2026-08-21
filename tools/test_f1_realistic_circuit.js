@@ -65,13 +65,35 @@ assert.ok(!/(?:got|letters|word)\s*:/.test(payload),'network payload must never 
 const receive=f1.slice(f1.indexOf('function onPeer'),f1.indexOf('function showPeerBubble'));
 assert.ok(!/\b(?:word|letters)\s*=|scene\.remove\(.*spr/.test(receive),'peer updates must never remove local letters');
 
-const peer=f1.slice(f1.indexOf('function buildPeer'),f1.indexOf('function onPeer'));
-assert.ok(peer.includes('buildF1Car(col)')&&peer.includes('peerCar3d'),
+const peer=f1.slice(f1.indexOf('function buildPeer(uid,p)'),f1.indexOf('function onPeer'));
+assert.ok(peer.includes('buildPeerF1Car(col)')&&peer.includes('peerCar3d'),
   'remote racers must use a ground-aligned 3D car that follows their real yaw');
 assert.ok(!/THREE\.Sprite|camera-facing-rear-three-quarter|peerCar25d/.test(peer),
   'remote racers must never use a camera-facing flat sprite');
 assert.ok(peer.includes('attachDrsGlow(car)')&&peer.includes('drsFlap'),
   'remote 3D cars must retain their DRS visual state');
+
+/* Round 1209 mobile thermal budget: improve silhouette while reducing render work. */
+const peerModel=f1.slice(f1.indexOf('SEMI-REALISTIC LOW-POLY PEER F1'),f1.indexOf('function makeCar'));
+assert.ok(/function buildPeerF1Car\(color\)/.test(peerModel)&&/peerF1MergedGeometry/.test(peerModel),
+  'peer racers must use their dedicated semi-realistic merged low-poly builder');
+assert.ok((peerModel.match(/new THREE\.InstancedMesh/g)||[]).length===2,
+  'four tyres and four rims must be batched into exactly two instanced draw calls');
+assert.ok(/if\(peerF1Kit\) return peerF1Kit/.test(peerModel)&&/sharedGeometry:true/.test(peerModel),
+  'all peer cars must share cached geometry instead of rebuilding GPU buffers per player');
+const peerBuilder=f1.slice(f1.indexOf('function buildPeerF1Car'),f1.indexOf('function makeCar'));
+assert.ok(!/new THREE\.(?:Box|Sphere|Torus|Cylinder|Circle)Geometry/.test(peerBuilder),
+  'joining peers must never allocate fresh geometry on the GPU');
+assert.ok(/drawCalls:8,textures:0,pbr:0,dynamicShadows:0/.test(peerModel),
+  'peer car GPU contract must stay at 8 base draw calls with no textures/PBR/dynamic shadows');
+assert.ok(/CylinderGeometry\(\.45,\.45,\.40,10/.test(peerModel)&&/CylinderGeometry\(\.255,\.255,\.415,8/.test(peerModel),
+  'peer wheel radial segments must stay capped at 10/8');
+assert.ok(!/MeshStandardMaterial|MeshPhysicalMaterial|TextureLoader|castShadow\s*=\s*true|receiveShadow\s*=\s*true/.test(peerModel),
+  'peer cars must not introduce PBR, textures or dynamic shadows');
+assert.ok(/function dropPeer[\s\S]*disposePeer[\s\S]*drsGlow[\s\S]*nameSprite\.material\.map\.dispose/.test(f1),
+  'leaving peers must release their unique color, glow and name-tag GPU resources');
+assert.ok(/f1_car_lite\.glb/.test(f1)&&/cockpit_turn_center\.webp/.test(f1),
+  'player realistic car/cockpit assets must remain untouched');
 
 /* Multiplayer cars must be solid oriented bodies, with bounce + rubbing resistance. */
 for(const token of ['CAR_HALF_W','CAR_HALF_L','CAR_RESTITUTION','CAR_SIDE_FRICTION','CAR_RUB_DRAG'])
