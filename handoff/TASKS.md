@@ -28,6 +28,7 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1205 · ผีในโรงแรมโปร่งใส 20%:** จำกัด opacity ของผีที่ลอยในฉากและตอนบุกเข้าห้องไว้ที่ 0.20 โดยภาพ jump scare เต็มจอคงเดิม (`js/hauntedhotelghost.js`); syntax + Haunted Hotel regression ผ่าน
 - **รอบ 1204 · ลดน้ำหนักรถผู้เล่นอื่น 87.8%:** crop ขอบโปร่ง + WebP alpha 640×369 q86/method 6 เหลือ 58,124B จาก PNG 476,443B; PSNR ฉากกลางคืน 33.55dB และคง procedural fallback (`img/f1/peer_car_25d.webp`)
 - Runtime/build/check/test เปลี่ยนเป็น WebP immutable ทั้งชุด, ปรับ sprite aspect ตรงภาพ และเพิ่มงบ regression ≤80KiB; local build ข้าม tracked asset เก่าที่ถูกลบก่อน commit ได้โดยไม่กระทบ git-archive deploy
 - **รอบ 1203 · Realistic Circuit premium + gameplay:** พวงมาลัย HUD/จอหมุนตามเลี้ยว, อาคาร/อัฒจันทร์เป็น modular 3D ไม่มี photo facade, ป้ายมีโครงจริง และคัด footprint ที่รุกเขตถนน (`js/f1_3d.js`)

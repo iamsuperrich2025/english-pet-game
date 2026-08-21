@@ -10,6 +10,8 @@
   const ROOM_HIDE_MS=120000;
   const ATTACK_COOLDOWN_MS=4500;
   const WARDROBE_TURN_RADIANS=1.05;
+  // In-world ghost only. The separate full-screen jump-scare image keeps its own appearance.
+  const GHOST_OPACITY=.20;
   let sharedTexture=null;
 
   function wrapAngle(value){
@@ -166,7 +168,7 @@
         x=Math.max(Number(bounds.x0)+margin,Math.min(Number(bounds.x1)-margin,x));
         z=Math.max(Number(bounds.z0)+margin,Math.min(Number(bounds.z1)-margin,z));
       }
-      group.position.set(x,(Number(local.y)||0)+1.68,z);velocity.set(0,0,0);opacity=.98;group.visible=true;
+      group.position.set(x,(Number(local.y)||0)+1.68,z);velocity.set(0,0,0);opacity=GHOST_OPACITY;group.visible=true;
       intrudingRoom=String(local.room||'');lastTarget=String(local.id||'');
       if(typeof opt.onRoomIntrusion==='function')opt.onRoomIntrusion({player:local,room:intrudingRoom,at:now});
     }
@@ -178,7 +180,7 @@
       material.uniforms.uLight.value=Math.max(0,Math.min(1,Number(ctx.lightLevel)||0));
       material.uniforms.uBlackout.value=dark?1:0;
       if(!dark){opacity=Math.max(0,opacity-dt*2.8);material.uniforms.uOpacity.value=opacity;if(opacity<=.01)group.visible=false;return;}
-      group.visible=true; opacity=Math.min(.94,opacity+dt*.72);
+      group.visible=true; opacity=Math.min(GHOST_OPACITY,opacity+dt*.72);
       const local=players.find(function(player){return String(player.id)===localId;})||players[0]||null;
       if(roomStay.update(local,now)&&local)intrude(local,yaw,now);
       if(intrudingRoom&&(!local||String(local.room||'')!==intrudingRoom))intrudingRoom='';
@@ -230,7 +232,7 @@
         intrudingRoom:intrudingRoom,roomStay:roomStay.snapshot(performance.now())};}};
   }
 
-  window.HauntedHotelGhost={IMAGE:IMAGE,ROOM_HIDE_MS:ROOM_HIDE_MS,ATTACK_COOLDOWN_MS:ATTACK_COOLDOWN_MS,
+  window.HauntedHotelGhost={IMAGE:IMAGE,ROOM_HIDE_MS:ROOM_HIDE_MS,ATTACK_COOLDOWN_MS:ATTACK_COOLDOWN_MS,GHOST_OPACITY:GHOST_OPACITY,
     WARDROBE_TURN_RADIANS:WARDROBE_TURN_RADIANS,create:create,makeStatic:makeStatic,
     createWardrobeTurnTrigger:createWardrobeTurnTrigger,createRoomStayTracker:createRoomStayTracker,
     _wrapAngle:wrapAngle,_chooseTarget:chooseTarget};

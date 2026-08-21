@@ -33,6 +33,8 @@ assert.ok(/stopGhostVoices\(\)[\s\S]*?clearThaiSequence\(true\)/.test(adventureS
 assert.ok(adventureSource.includes('const HAUNT_ATTACKS = 10'),'Haunted Hotel attack limit is not ten');
 assert.ok(/maxHp=HAUNT_ATTACKS;hp=maxHp/.test(adventureSource),'Haunted Hotel health bar is not backed by ten attack points');
 assert.ok(/hotelGhostAttack\('wardrobe',true\)/.test(adventureSource),'wardrobe turn-away is not wired to a ghost attack');
+assert.strictEqual(GH.GHOST_OPACITY,.20,'in-world ghost opacity is not 20%');
+assert.ok(/Math\.min\(GHOST_OPACITY,opacity\+dt\*\.72\)/.test(fs.readFileSync('js/hauntedhotelghost.js','utf8')),'in-world ghost can fade above 20% opacity');
 
 function state(){return {runId:'hh-test-room-rules',seed:77,placementVersion:1,phase:'ACTIVE_WORD',wordIndex:0,ordinalMask:0,
   cabinetLetterSlot:0,roomVisits:'',completedAt:0,revision:1,wordSet:JSON.stringify([['ghost','ผี'],['room','ห้อง'],['dark','มืด'],['light','ไฟ']])};}
