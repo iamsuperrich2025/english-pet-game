@@ -65,11 +65,13 @@
         <button class="bb-close" id="bb-close" type="button" title="ปิดเกม (หรือกด Esc)">✕ ปิดเกม</button>
       </div>
       <div class="bb-prompt">
+        <span class="bb-star bb-star-l" aria-hidden="true">⭐</span>
         <div class="bb-word" id="bb-word"></div>
+        <span class="bb-star bb-star-r" aria-hidden="true">⭐</span>
         <div class="bb-thai" id="bb-thai"></div>
-        <div class="bb-hint">แตะฟองเรียงตามคำ · ฟองทุกใบไม่มีไฟใบ้ตำแหน่ง</div>
+        <div class="bb-hint">💡 เลือกตัวอักษรให้ถูกต้องเพื่อสร้างคำศัพท์</div>
       </div>
-      <div class="bb-stage" id="bb-stage" aria-label="ฟองตัวอักษร"></div>
+      <div class="bb-stage" id="bb-stage" aria-label="ฟองตัวอักษร"><span class="bb-planet bb-planet-a" aria-hidden="true"></span><span class="bb-planet bb-planet-b" aria-hidden="true"></span></div>
       <div class="bb-tools">
         <button class="bb-tool" id="bb-speak" type="button">🔊 ฟังเสียง</button>
         <button class="bb-tool" id="bb-skip" type="button">⏭ ข้ามคำนี้</button>
@@ -106,7 +108,8 @@
   function renderBubbles(){
     if(!cur||!stageEl)return;
     bubbles=shuffle(cur.w.split('').map((ch,i)=>({id:i,ch,alive:true})));
-    stageEl.innerHTML=bubbles.map(b=>`<button class="bb-bubble" data-id="${b.id}" type="button" aria-label="ตัว ${b.ch}"><span>${b.ch}</span></button>`).join('');
+    const ornaments=['🌸','❄️','🍁','🍀','🌱'];
+    stageEl.innerHTML='<span class="bb-planet bb-planet-a" aria-hidden="true"></span><span class="bb-planet bb-planet-b" aria-hidden="true"></span>'+bubbles.map((b,i)=>`<button class="bb-bubble bb-color-${i%5}" data-id="${b.id}" type="button" aria-label="ตัว ${b.ch}"><span>${b.ch}</span><i aria-hidden="true">${ornaments[i%ornaments.length]}</i></button>`).join('');
     requestAnimationFrame(layoutBubbles);
   }
   function layoutBubbles(){
