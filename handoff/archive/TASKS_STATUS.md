@@ -5276,3 +5276,8 @@
 - รถค้างบน runoff/ทราย 2 วินาทีเปิดประตูมิติ procedural สีม่วง แล้ววาร์ปกลับจุดถนนใกล้ตำแหน่งที่หลุด; ไม่เพิ่ม texture หนัก และ browser QA ยืนยันสถานะ `runoff → portal=true → track` อัตโนมัติ
 - Regression F1/syntax/assets ผ่าน, browser ตรวจเฟรมมือซ้าย-ขวาที่ desktop/mobile และกวาด 16 ช่วงสนาม; production build `.1086` 8,364 ไฟล์ 460.4MiB ผ่าน
 - **รอบ 1206 · handoff history compact:** ตัวหมุนเก็บ 12 bullet ล่าสุดของส่วนสรุปเท่านั้น และย้าย bullet เก่าทั้งก้อนไป `handoff/archive/TASKS_STATUS.md` อย่างปลอดภัย; `TASKS.md` ลดจากเกินงบเหลือ 17.8KB โดยไม่กระทบ runtime เกม
+
+
+## ⏬ ย้ายเมื่อ 2026-08-22 — จาก handoff/TASKS.md (รายละเอียดสรุปเกินงบ)
+
+- **รอบ 1207 · Realistic Circuit ปิดช่องว่างภาพ/สนาม + ประตูมิติ:** เปลี่ยนค็อกพิทเป็น WebP alpha 3 เฟรม (กลาง/เลี้ยวซ้าย/เลี้ยวขวา) ให้มือทั้งสองกับพวงมาลัยหันไปทางเดียวกันตาม steering จริง รวมเพียง 204,792B และซ่อน procedural wheel เก่าที่เคยซ้อนภาพ (`img/f1/cockpit_turn_*.webp`, `js/f1_3d.js`)

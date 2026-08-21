@@ -1,9 +1,3 @@
-ROUND: 1210
-MESSAGE: Upgrade F1 cockpit, low-GPU surfaces/sky, collisions, obstacles, portal and mobile thermal load
-FILE: js/f1_3d.js
-FILE: tools/test_f1_realistic_circuit.js
-FILE: tools/test_f1_cockpit_visibility.js
-FILE: tools/build_web.mjs
-FILE: tools/check_missing_assets.py
-FILE: img/f1/sky_racing_1024.webp
-FILE: handoff/TASKS.md
+ROUND: 1212
+MESSAGE: ปรับราคาหุ่นยนต์นักรบ 300,000–500,000 เหรียญ
+FILE: js/data/items.js
