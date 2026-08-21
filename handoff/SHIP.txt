@@ -1,5 +1,8 @@
-รอบ 1199: ปรับ Word Search เป็น Dreamy Pastel ตามภาพอ้างอิงโดยไม่มีภาพสัตว์
-FILE: css/lobby.css
-FILE: js/wordsearch.js
-FILE: index_classic.html
+รอบ 1200: ปรับตัวละคร Drive Hotel Soccer เป็น Soft Cuboid Chibi 3D
+FILE: docs/CURRENT_STATE.md
+FILE: docs/PLAYER_CHARACTER_STYLE.md
+FILE: docs/PROJECT_MAP.md
 FILE: handoff/TASKS.md
+FILE: js/adventure3d.js
+FILE: tools/player_character_style_preview.html
+FILE: tools/test_player_character_style.js

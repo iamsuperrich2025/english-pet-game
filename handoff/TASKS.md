@@ -50,7 +50,6 @@
 - **รอบ 1189 · ปิดช่องซื้อบ้านลดระดับ + กู้ Moji love gay:** live RTDB คืน `basic→medium` และคืน 1,000 coins (`347,275→348,275`) พร้อม repair log; อ่านกลับตรง payload ทุกตัวอักษร
 - audit 51 บัญชีเทียบ snapshot 20 ส.ค. กับ live ไม่พบ downgrade รายอื่นหลัง baseline; schema เก่าไม่มีประวัติซื้อรายบุคคลก่อนวันนั้น จึงไม่เดาคืนจากยอดเหรียญ และเพิ่ม `homePurchaseLog` จำกัด 20 รายการสำหรับตรวจครั้งต่อไป
 - `homeDowngradeLocked` ล็อกต่ำกว่าทั้ง render/click/confirm; test 8 policy cases + syntax/diff ผ่าน, Browser 1000×640/812×375 กล่องไม่ล้นและ console error 0, build `.1073` 8,355 ไฟล์ 460.2MiB + PWA/cache/TWA validator ผ่าน
-- **รอบ 1188 · โลกโดรนใช้กติกาคำปัจจุบันแบบเรียงลำดับ:** แต่ละรอบมีเพียงตัวอักษรของคำเดียว ไม่มีตัวหลอก และแยกคนละห้องในตึกร้างเมื่อมีห้องเพียงพอ
 - เก็บผิดลำดับไม่หาย/ไม่เข้า inventory/ไม่ได้เหรียญ; เก็บถูกได้ตัวละ 1 เหรียญ ครบคำได้โบนัส 50 เหรียญ (BUDGET รวม 56) แล้วเริ่มคำใหม่หนึ่งคำทันที; multiplayer sync ใช้กติกาเดียวกัน
 - รวม state/order guard ของ heli+drone เป็น `orderedLetterMode()` โดยไม่เปลี่ยนสตรีคนักบิน/ตำแหน่งดาดฟ้าเฮลิฯ; ปรับ Intro/HUD โดรนให้บอกกติกาใหม่ตรงระบบ
 - เพิ่ม `tools/test_drone_letter_round.js` และอัปเดต heli regression; syntax/diff + heli/drone + Haunted Hotel 3 ชุด + sky seam ผ่าน และ Browser runtime โดรนผ่าน 7/7
