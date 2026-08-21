@@ -1,4 +1,6 @@
-รอบ 1205: ปรับผีโรงแรมโปร่งใส 20%
-FILE: js/hauntedhotelghost.js
-FILE: tools/test_hauntedhotel_rules.js
+รอบ 1206: กระชับ handoff history อย่างปลอดภัย
+FILE: tools/rotate_handoff.py
 FILE: handoff/TASKS.md
+FILE: handoff/archive/TASKS_STATUS.md
+FILE: handoff/CODE_MAP.md
+FILE: handoff/ARCHITECTURE.md
