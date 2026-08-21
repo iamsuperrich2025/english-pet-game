@@ -1,11 +1,4 @@
-ยอดอันดับตรง lobby เลื่อนแนวตั้งอ่านง่าย กราฟใหม่ และรางวัลพิมพ์คำ x2
-FILE: css/lobby.css
-FILE: css/rankgraph.css
+รอบ 1192: ปรับเกมฟองคำศัพท์เป็นธีมอวกาศพาสเทลน่ารักตามภาพอ้างอิง
+FILE: css/bubble.css
+FILE: js/bubble.js
 FILE: handoff/TASKS.md
-FILE: index_classic.html
-FILE: js/award.js
-FILE: js/rankgraph.js
-FILE: js/state.js
-FILE: js/tpaward.js
-FILE: js/ui.js
-FILE: tools/test_leaderboard_scroll_rewards.js
