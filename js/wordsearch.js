@@ -170,7 +170,7 @@
   function build(){
     overlay=document.createElement('div'); overlay.id='ws-overlay';
     overlay.innerHTML=`<div id="ws-board">
-      <div class="ws-head"><span class="ws-title">🔎 ค้นหาคำศัพท์ · Word Search</span>
+      <div class="ws-head"><span class="ws-title">ค้นหาคำศัพท์ · Word Search</span>
         <span class="ws-findbar"><span class="ws-find">🔤 หาคำเหล่านี้ให้เจอ</span><span id="ws-prog"></span>
           <span class="ws-tip">👆 กดที่คำ = ฟังเสียง + ใบ้ตำแหน่ง</span></span>
         <span class="ws-grade"></span></div>
@@ -179,11 +179,11 @@
         <div class="ws-gridwrap"><div id="ws-grid"></div></div>
       </div>
       <div class="ws-actions">
-        <span class="ws-sizes"><span class="ws-sizes-lb">📐 ขนาดกระดาน</span><b class="ws-size-now"></b></span>
+        <span class="ws-sizes"><span class="ws-sizes-lb">📏 ขนาดกระดาน</span><b class="ws-size-now"></b></span>
         <button id="ws-combo-help" type="button" aria-haspopup="dialog">🔥 Combo คืออะไร?</button>
         <button id="ws-new" type="button">🎲 สุ่มเกมใหม่</button>
         <button id="ws-stash" type="button">📥 เก็บกระดานชั่วคราว</button>
-        <button id="ws-clear" type="button">🧹 ล้างกระดาน — ออกจากเกม</button>
+        <button id="ws-clear" type="button">🪄 ล้างกระดาน — ออกจากเกม</button>
       </div>
       <div id="ws-combo-dialog" role="dialog" aria-modal="true" aria-labelledby="ws-combo-title" hidden>
         <div class="ws-combo-card">

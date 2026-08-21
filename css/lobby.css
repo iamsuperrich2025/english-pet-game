@@ -3880,6 +3880,169 @@ html.no-anim .ws-word{transition:none;}
 }
 
 /* ============================================================
+   🌈 รอบ 1199: Word Search — Dreamy Pastel Classroom
+   ยึดภาพอ้างอิง: ท้องฟ้าพาสเทล + กรอบม่วงแก้ว + ชิปคำสีลูกกวาด
+   (ตั้งใจไม่มีภาพสัตว์ตามคำสั่งผู้ใช้)
+   ============================================================ */
+#ws-overlay{
+  align-items:center;justify-content:center;padding:6px;box-sizing:border-box;
+  background:
+    radial-gradient(circle at 9% 12%,rgba(255,255,255,.96) 0 2px,transparent 3px),
+    radial-gradient(circle at 77% 8%,rgba(255,255,255,.92) 0 1.5px,transparent 2.5px),
+    radial-gradient(circle at 91% 24%,rgba(255,242,174,.95) 0 2px,transparent 3px),
+    linear-gradient(180deg,#159cf5 0%,#5bc7ff 35%,#d2b7ff 70%,#89c9ff 100%);
+}
+#ws-board{
+  width:100%;height:100%;padding:11px 25px 12px;gap:7px;border:3px solid #5de7ff;
+  border-radius:22px;color:#3e266f;
+  background:
+    radial-gradient(ellipse at 12% 25%,rgba(255,255,255,.88) 0 5%,transparent 10%),
+    radial-gradient(ellipse at 88% 22%,rgba(255,244,255,.88) 0 8%,transparent 15%),
+    radial-gradient(circle at 92% 9%,rgba(255,252,220,.86) 0 4%,transparent 12%),
+    linear-gradient(180deg,rgba(30,157,249,.97) 0%,rgba(99,184,255,.96) 22%,rgba(195,174,255,.98) 58%,rgba(117,198,255,.98) 100%);
+  box-shadow:0 0 0 3px rgba(17,43,91,.9),0 0 0 5px rgba(255,255,255,.62) inset,
+    0 0 30px rgba(255,255,255,.72) inset,0 12px 40px rgba(37,31,104,.38);
+  transform:translateX(-106%);overflow:hidden;
+}
+#ws-board.open{transform:translateX(0);}
+#ws-board::before{
+  content:"✦  ·  ✧      ✦        ·  ✧     ✦";position:absolute;inset:0 0 auto 0;height:44%;
+  padding:8px 5%;box-sizing:border-box;border-radius:20px;pointer-events:none;z-index:0;
+  color:rgba(255,255,255,.9);font-size:clamp(11px,1.8vw,24px);letter-spacing:clamp(18px,5vw,72px);
+  text-shadow:0 0 8px #fff,0 0 15px #7ff1ff;
+  background:
+    radial-gradient(ellipse at 9% 75%,rgba(255,255,255,.86) 0 7%,transparent 15%),
+    radial-gradient(ellipse at 84% 48%,rgba(255,255,255,.6) 0 6%,transparent 14%);
+}
+#ws-board::after{
+  content:"🌿  🌸  🌼      🌷  🌿             🌿  🌺  🌼  🌿";
+  position:absolute;left:0;right:0;bottom:0;height:48px;z-index:0;pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:space-around;overflow:hidden;
+  color:#35a957;font-size:clamp(20px,3.2vw,40px);letter-spacing:clamp(7px,2.4vw,34px);
+  text-shadow:0 -2px 2px rgba(255,255,255,.7),0 2px 3px rgba(32,91,52,.36);
+}
+.ws-head,.ws-body,.ws-actions{position:relative;z-index:2;}
+.ws-head{grid-template-columns:minmax(280px,1.1fr) minmax(310px,.9fr) minmax(160px,1.1fr);gap:12px;}
+.ws-title{
+  position:relative;justify-self:center;overflow:visible;padding:6px 22px 7px;border:2px solid #50e8ff;border-radius:22px;
+  font-size:clamp(19px,2.35vw,32px);font-weight:900;color:#fff7d5;line-height:1;letter-spacing:.2px;
+  background:linear-gradient(180deg,rgba(27,112,218,.96),rgba(55,58,178,.94));
+  box-shadow:0 0 0 3px rgba(255,255,255,.22) inset,0 5px 0 rgba(43,34,124,.62),0 0 18px rgba(100,247,255,.8);
+  text-shadow:-2px -2px 0 #56358e,2px -2px 0 #56358e,-2px 2px 0 #56358e,2px 2px 0 #56358e,0 3px 2px #382065;
+}
+.ws-title::before,.ws-title::after{content:"★";position:absolute;color:#ffe440;font-size:.7em;text-shadow:0 2px 0 #db9400,0 0 8px #fff;}
+.ws-title::before{margin-left:-23px;margin-top:-8px}.ws-title::after{margin-left:7px;margin-top:-9px}
+.ws-findbar{
+  gap:8px;padding:4px 10px;border:2px solid #5ae7ff;border-radius:24px;
+  background:linear-gradient(180deg,rgba(24,141,236,.98),rgba(15,82,181,.98));
+  box-shadow:0 0 0 3px rgba(255,255,255,.2) inset,0 4px 0 rgba(14,53,139,.62),0 0 14px rgba(79,226,255,.72);
+}
+.ws-find{font-size:clamp(11px,1.25vw,16px);color:#fff;font-weight:900;text-shadow:0 2px 2px #1d4c95;}
+.ws-tip{display:none;}
+#ws-prog{
+  padding:4px 11px;border:1px solid rgba(255,236,131,.8);font-size:clamp(11px,1.25vw,16px);color:#fff9c7;
+  background:linear-gradient(180deg,#1878d0,#0e4b9b);box-shadow:0 2px 5px rgba(7,41,111,.45) inset;text-shadow:0 2px 2px #173e7d;
+}
+.ws-grade{
+  position:relative;justify-self:end;padding:5px 15px 5px 34px;border:2px solid #fff;border-radius:24px;
+  font-size:clamp(12px,1.35vw,17px);font-weight:900;color:#5b3c99;
+  background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(240,203,255,.95));
+  box-shadow:0 4px 0 rgba(126,73,184,.42),0 0 0 3px rgba(89,235,255,.7),0 0 16px rgba(255,255,255,.84);
+}
+.ws-grade::before{content:"⭐";position:absolute;margin-left:-25px;margin-top:-1px;font-size:1.12em;}
+.ws-body{gap:7px;}
+#ws-words{
+  width:calc(100% - 28px);margin:0 auto;padding:8px 10px;box-sizing:border-box;overflow:visible;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:7px;
+  border:2px solid rgba(255,255,255,.82);border-radius:28px;
+  background:linear-gradient(180deg,rgba(250,211,255,.76),rgba(194,132,245,.76));
+  box-shadow:0 0 0 3px rgba(255,255,255,.22) inset,0 5px 14px rgba(84,38,147,.28),0 0 20px rgba(255,255,255,.55);
+}
+.ws-word{
+  position:relative;min-width:0;min-height:43px;padding:5px 4px 5px 27px;border:2px solid rgba(255,255,255,.78);border-radius:19px;
+  font-size:clamp(10px,1.2vw,15px);font-weight:900;line-height:1.02;color:#fff;
+  background:linear-gradient(180deg,#8c6ef5,#7042ce);box-shadow:0 4px 0 #51319c,0 0 0 2px rgba(255,255,255,.14) inset,0 0 10px rgba(255,255,255,.3);
+  text-shadow:0 2px 1px rgba(69,31,119,.72);
+}
+.ws-word::before{
+  content:"💖";position:absolute;left:5px;top:50%;transform:translateY(-50%);width:20px;height:20px;display:grid;place-items:center;
+  border-radius:50%;background:rgba(255,255,255,.25);font-size:14px;text-shadow:none;
+}
+.ws-word:nth-child(2n){background:linear-gradient(180deg,#f07bdd,#ca4ab5);box-shadow:0 4px 0 #95398c,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(3n){background:linear-gradient(180deg,#ff9e62,#f26b3f);box-shadow:0 4px 0 #b8482f,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(4n){background:linear-gradient(180deg,#ffd457,#f3a82e);box-shadow:0 4px 0 #bb791a,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(5n){background:linear-gradient(180deg,#34d9d2,#12a8b8);box-shadow:0 4px 0 #087886,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(6n){background:linear-gradient(180deg,#48baf8,#277ee0);box-shadow:0 4px 0 #1b58aa,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(7n){background:linear-gradient(180deg,#8f7bf6,#6252d9);box-shadow:0 4px 0 #4536a3,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(8n){background:linear-gradient(180deg,#ec76df,#c34cc5);box-shadow:0 4px 0 #8a328f,0 0 0 2px rgba(255,255,255,.14) inset;}
+.ws-word:nth-child(2)::before{content:"💝"}.ws-word:nth-child(3)::before{content:"📣"}.ws-word:nth-child(4)::before{content:"📰"}
+.ws-word:nth-child(5)::before{content:"💡"}.ws-word:nth-child(6)::before{content:"🏭"}.ws-word:nth-child(7)::before{content:"🪙"}.ws-word:nth-child(8)::before{content:"🧩"}
+.ws-word:hover,.ws-word.hinting{filter:brightness(1.1);border-color:#fff;box-shadow:0 4px 0 rgba(70,37,134,.7),0 0 14px rgba(255,255,255,.9);}
+.ws-word small{margin-top:3px;font-size:clamp(8px,.88vw,11px);font-weight:700;color:#fff;opacity:.94;text-shadow:0 1px 1px rgba(74,36,103,.7);}
+.ws-word.got{filter:saturate(.7);color:#fff;opacity:.78;text-decoration:line-through;}
+.ws-gridwrap{
+  margin:0 14px;padding:8px 10px;box-sizing:border-box;border:3px solid rgba(255,255,255,.78);border-radius:25px;
+  background:linear-gradient(180deg,rgba(168,113,229,.84),rgba(120,76,198,.88));
+  box-shadow:0 0 0 5px rgba(111,57,180,.45),0 0 0 8px rgba(255,255,255,.18),0 8px 20px rgba(56,29,116,.38),0 0 25px rgba(255,255,255,.34) inset;
+}
+#ws-grid{
+  gap:clamp(3px,.48vw,7px);padding:clamp(5px,.72vw,10px);border:0;border-radius:19px;
+  background:linear-gradient(180deg,rgba(164,105,221,.38),rgba(116,74,190,.52));
+  box-shadow:0 0 18px rgba(65,26,118,.38) inset;
+}
+.ws-cell{
+  border:2px solid #d4b9f4;border-radius:12px;color:#432975;
+  background:linear-gradient(180deg,#fffdf5 0%,#fff4dc 100%);
+  box-shadow:0 3px 0 #c7a9df,0 0 0 2px rgba(255,255,255,.72) inset,0 3px 8px rgba(68,32,114,.2);
+  text-shadow:0 1px 0 #fff;font-weight:900;
+}
+.ws-cell.sel{background:linear-gradient(180deg,#cfffff,#8ef7fa);color:#3d2770;border-color:#63e5ee;box-shadow:0 0 14px #74f5ff,0 3px 0 #63c6d4;}
+.ws-cell.hint{background:linear-gradient(180deg,#d5ffff,#93f1f4);border-color:#61d9e4;box-shadow:0 0 12px rgba(109,242,255,.9);color:#493072;}
+.ws-cell.bad{background:linear-gradient(180deg,#ffb5cf,#ff6c9d);border-color:#fff;color:#fff;}
+.ws-actions{gap:10px;flex-wrap:nowrap;padding:0 8%;}
+.ws-actions button,.ws-sizes{
+  min-height:39px;border:2px solid rgba(255,255,255,.78);border-radius:20px;padding:5px 18px;
+  font-size:clamp(11px,1.3vw,16px);box-shadow:0 4px 0 rgba(69,51,137,.58),0 0 0 2px rgba(255,255,255,.2) inset;
+  white-space:nowrap;text-shadow:0 2px 1px rgba(84,43,116,.48);
+}
+.ws-sizes{gap:8px;background:linear-gradient(180deg,#55c7f5,#1a8dd0);}
+.ws-sizes-lb{font-size:clamp(10px,1.2vw,15px);color:#fff;text-shadow:0 2px 1px #17669c;}
+.ws-size-now{font-size:clamp(11px,1.3vw,16px);color:#174a85;background:linear-gradient(180deg,#d5fbff,#83eaf7);border:1px solid #fff;border-radius:11px;padding:2px 10px;text-shadow:none;}
+#ws-new{background:linear-gradient(180deg,#72d7ff,#269eda);box-shadow:0 4px 0 #1476a8,0 0 0 2px rgba(255,255,255,.2) inset;}
+#ws-combo-help{background:linear-gradient(180deg,#ffb34c,#ff7b2f);box-shadow:0 4px 0 #bd4a20,0 0 0 2px rgba(255,255,255,.2) inset;}
+#ws-stash{background:linear-gradient(180deg,#ffd557,#f4ad25);box-shadow:0 4px 0 #bc7915,0 0 0 2px rgba(255,255,255,.2) inset;color:#74420e;}
+#ws-clear{background:linear-gradient(180deg,#ff79b8,#ec438d);box-shadow:0 4px 0 #a92a68,0 0 0 2px rgba(255,255,255,.2) inset;}
+.ws-flash{border-radius:20px;background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.86),rgba(150,248,255,.28) 42%,transparent 72%);}
+#ws-win{border-radius:20px;background:rgba(116,70,184,.58);backdrop-filter:blur(3px);}
+.ws-win-in{border-color:#fff;border-radius:24px;color:#fff8c7;background:linear-gradient(160deg,#8d66e8,#4a43b9);box-shadow:0 0 0 4px rgba(113,238,255,.72),0 0 30px rgba(255,255,255,.72);}
+.ws-win-in small{color:#fff;}
+
+@media (max-width:980px),(max-height:430px){
+  #ws-overlay{padding:3px;}
+  #ws-board{padding:6px 10px 7px;gap:4px;border-radius:15px;}
+  #ws-board::after{height:24px;font-size:19px;bottom:0;}
+  .ws-head{grid-template-columns:1.1fr .9fr auto;gap:5px;}
+  .ws-title{padding:4px 10px 5px;font-size:clamp(13px,2.4vw,19px);border-radius:15px;}
+  .ws-title::before,.ws-title::after{display:none;}
+  .ws-findbar{gap:3px;padding:2px 5px;}
+  .ws-find{font-size:clamp(8px,1.55vw,12px);}
+  #ws-prog{font-size:clamp(8px,1.55vw,11px);padding:2px 5px;}
+  .ws-grade{padding:3px 7px 3px 24px;font-size:clamp(9px,1.6vw,12px);}
+  .ws-grade::before{margin-left:-18px;}
+  .ws-body{gap:4px;}
+  #ws-words{width:calc(100% - 12px);padding:4px 5px;gap:4px;border-radius:17px;}
+  .ws-word{min-height:31px;padding:2px 2px 2px 20px;border-radius:12px;font-size:clamp(8px,1.55vw,11px);}
+  .ws-word::before{left:3px;width:15px;height:15px;font-size:10px;}
+  .ws-word small{margin-top:1px;font-size:clamp(7px,1.2vw,9px);}
+  .ws-gridwrap{margin:0 5px;padding:5px 7px;border-width:2px;border-radius:15px;box-shadow:0 0 0 3px rgba(111,57,180,.45),0 0 0 5px rgba(255,255,255,.18);}
+  #ws-grid{padding:4px;border-radius:11px;}
+  .ws-cell{border-width:1px;border-radius:7px;box-shadow:0 2px 0 #c7a9df,0 0 0 1px rgba(255,255,255,.72) inset;}
+  .ws-actions{gap:5px;padding:0 2%;}
+  .ws-actions button,.ws-sizes{min-height:29px;padding:3px 8px;border-radius:14px;font-size:clamp(8.5px,1.5vw,11px);}
+  .ws-sizes{gap:4px;}.ws-sizes-lb{font-size:clamp(8px,1.35vw,10px);}.ws-size-now{font-size:clamp(8.5px,1.45vw,11px);padding:1px 5px;}
+}
+
+/* ============================================================
    🧩 รอบ 603: จัดพื้นที่คอลัมน์ขวา (lobby-side) หลังถอด "กลุ่มอันดับ" ออกไปรางซ้าย (รอบ 594)
    เดิมกล่องอันดับเป็นตัว flex:1 กินที่ที่เหลือ → พอถอดออก คอลัมน์ว่าง ~64% ของความสูง
    ตอนนี้: 🎯 ภารกิจ = สูงพอโชว์เต็มใบ (แถบความคืบหน้า+จุด — ui.js ถอดคลาส q-fit ให้เองเมื่อจอสูงพอ)

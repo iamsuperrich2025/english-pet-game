@@ -28,6 +28,8 @@
 - ✅ ชนหมา = ปรับ 10 เหรียญ ต่อครั้ง — เสร็จรอบ 830
 
 ### 📌 สรุปสถานะล่าสุด (21 ส.ค.) — อ่านก่อน
+- **รอบ 1199 · Word Search เป็น Dreamy Pastel ตามภาพอ้างอิงโดยไม่มีสัตว์:** ยกเครื่องฟ้า–ม่วง/หัวป้าย/ชิปคำลูกกวาด/กรอบช่องครีม/ปุ่มล่าง และคง gameplay/คำตามชั้น/คอมโบ/ใบ้เดิม (`css/lobby.css`, `js/wordsearch.js`, `index_classic.html`)
+- Browser visual QA 1320×619 + 812×375: 80 ช่อง/8 ชิป/ทุกชิ้น inside, body+board overflow 0, console error 0; syntax/combo regression/diff และ production build `.1079` 8,357 ไฟล์ 460.5MiB + PWA/cache/TWA validator ผ่าน
 - **รอบ 1198 · ส่ง source of truth ที่เป็นไฟล์ใหม่ให้ครบ:** รอบ 1197 ผูกกฎครบแต่ตัว launcher เลือกเฉพาะ tracked files จึงเพิ่ม `docs/PLAYER_CHARACTER_STYLE.md` เข้า Git โดยตรงและตรวจ `git ls-files` หลังส่ง
 - **รอบ 1197 · บังคับมาตรฐานตัวละครผู้เล่น Soft Cuboid Chibi 3D:** เพิ่ม source of truth + ทะเบียนทยอย reskin (P0: drive/hotel/soccer; P1: Arena/heli/drone/City) พร้อม checklist งานออกแบบ/ตรวจรับ; ยกเว้นโลกยานแม่และ Adventure World โหมดเดิม (`docs/PLAYER_CHARACTER_STYLE.md`)
 - ผูกกฎเข้ากับ `PROJECT_MAP`, `CURRENT_STATE`, `GAME_RULES` และ router ใน `HANDOFF` เพื่อให้ session ถัดไปอ่านถูกจุด; ตรวจข้อความ/ลิงก์/ข้อยกเว้นด้วยสคริปต์เอกสารแล้ว
